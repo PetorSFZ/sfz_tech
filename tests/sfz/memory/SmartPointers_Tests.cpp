@@ -16,6 +16,9 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#pragma once
+#include "catch.hpp"
 
-#include "sfz/util/Allocators.hpp"
+TEST_CASE("Not a real test for now", "[sfkap]")
+{
+	REQUIRE(1 == 2 - 1);
+}

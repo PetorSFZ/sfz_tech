@@ -41,14 +41,16 @@ include_directories(
 	${CATCH_INCLUDE_DIRS}
 )
 
-set(SOURCE_UTIL_FILES
-	${INCLUDE_DIR}/sfz/Util.hpp
-	${INCLUDE_DIR}/sfz/util/Allocators.hpp
-	 ${SOURCE_DIR}/sfz/util/Allocators.cpp)
-source_group(sfz_util FILES ${SOURCE_UTIL_FILES})
+set(SOURCE_MEMORY_FILES
+	${INCLUDE_DIR}/sfz/Memory.hpp
+	${INCLUDE_DIR}/sfz/memory/Allocators.hpp
+	 ${SOURCE_DIR}/sfz/memory/Allocators.cpp
+	${INCLUDE_DIR}/sfz/memory/SmartPointers.hpp
+	 ${SOURCE_DIR}/sfz/memory/SmartPointers.cpp)
+source_group(sfz_memory FILES ${SOURCE_MEMORY_FILES})
 
 set(SOURCE_ALL_FILES
-	${SOURCE_UTIL_FILES})
+	${SOURCE_MEMORY_FILES})
 
 # Library compile target
 add_library(sfzCoreLib ${SOURCE_ALL_FILES})
@@ -81,13 +83,14 @@ if(SFZ_CORE_BUILD_TESTS)
 		${TESTS_DIR}/sfz/Main_Tests.cpp)
 	source_group(sfz_root FILES ${ROOT_TEST_FILES})
 
-	set(UTIL_TEST_FILES
-		${TESTS_DIR}/sfz/util/Allocators_Tests.cpp)
-	source_group(sfz_util FILES ${UTIL_TEST_FILES})
+	set(MEMORY_TEST_FILES
+		${TESTS_DIR}/sfz/memory/Allocators_Tests.cpp
+		${TESTS_DIR}/sfz/memory/SmartPointers_Tests.cpp)
+	source_group(sfz_memory FILES ${MEMORY_TEST_FILES})
 
 	set(ALL_TEST_FILES
 		${ROOT_TEST_FILES}
-		${UTIL_TEST_FILES})
+		${MEMORY_TEST_FILES})
 
 	enable_testing(true)
 	add_executable(sfzCoreTests ${ALL_TEST_FILES})

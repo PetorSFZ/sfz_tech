@@ -16,7 +16,7 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/util/Allocators.hpp"
+#include "sfz/memory/SmartPointers.hpp"
 
 namespace sfz {
 

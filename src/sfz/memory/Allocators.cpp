@@ -16,11 +16,39 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "catch.hpp"
+#include "sfz/memory/Allocators.hpp"
 
-TEST_CASE("Not a real test for now", "[sfkap]")
+#ifdef _WIN32
+#include <malloc.h>
+#else
+#include <stdlib.h>
+#endif
+
+namespace sfz {
+
+// Standard Allocator: Allocation functions
+// ------------------------------------------------------------------------------------------------
+
+void* StandardAllocator::allocate(size_t numBytes, size_t alignment) noexcept
 {
-	REQUIRE(1 == 2 - 1);
-
-	REQUIRE(1 == 2);
+#ifdef _WIN32
+	return _aligned_malloc(numBytes, alignment);
+#else
+	void* ptr = nullptr;
+	posix_memalign(&ptr, alignment, numBytes);
+	return ptr;
+#endif
 }
+
+void StandardAllocator::deallocate(void*& pointer) noexcept
+{
+#ifdef _WIN32
+	_aligned_free(pointer);
+	pointer = nullptr;
+#else
+	free(ptr);
+	pointer = nullptr;
+#endif
+}
+
+} // namespace sfz
