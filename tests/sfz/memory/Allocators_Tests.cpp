@@ -21,6 +21,7 @@
 #include "sfz/PopWarnings.hpp"
 
 #include "sfz/memory/Allocators.hpp"
+#include "sfz/memory/MemoryUtils.hpp"
 
 using namespace sfz;
 

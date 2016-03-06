@@ -18,7 +18,42 @@
 
 #pragma once
 
+#include <new>
+
 #include "sfz/memory/Allocators.hpp"
-#include "sfz/memory/MemoryUtils.hpp"
-#include "sfz/memory/New.hpp"
-#include "sfz/memory/SmartPointers.hpp"
+
+namespace sfz {
+
+// Default standard allocator
+// ------------------------------------------------------------------------------------------------
+
+inline StandardAllocator& defaultAllocator() noexcept
+{
+	static StandardAllocator DEFAULT_ALLOCATOR;
+	return DEFAULT_ALLOCATOR;
+}
+
+// New
+// ------------------------------------------------------------------------------------------------
+
+template<typename T>
+T* sfz_new(size_t alignment = alignof(T)) noexcept
+{
+	// TODO: Assert alignment >= alignof(T)
+	void* memPtr = defaultAllocator().allocate(sizeof(T), alignment);
+	T* objPtr = new(memPtr) T;
+	return objPtr;
+}
+
+// Delete
+// ------------------------------------------------------------------------------------------------
+
+template<typename T>
+void sfz_delete(T*& pointer) noexcept
+{
+	pointer->~T();
+	defaultAllocator().deallocate((void*&)pointer);
+	//TODO: Assert pointer == nullptr
+}
+
+} // namespace sfz

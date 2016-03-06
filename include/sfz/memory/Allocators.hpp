@@ -61,8 +61,8 @@ public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	StandardAllocator() noexcept = default;
-	StandardAllocator(const StandardAllocator&) noexcept = default;
+	constexpr StandardAllocator() noexcept = default;
+	constexpr StandardAllocator(const StandardAllocator&) noexcept = default;
 	StandardAllocator& operator= (const StandardAllocator&) noexcept = default;
 	~StandardAllocator() noexcept = default;
 
@@ -79,16 +79,5 @@ public:
 	/// \param pointer to the memory, will be set to nullptr if deallocation succeeded
 	void deallocate(void*& pointer) noexcept;
 };
-
-// Common memory functions
-// ------------------------------------------------------------------------------------------------
-
-/// Checks whether a pointer is aligned to a given byte aligment
-/// \param pointer the pointer to test
-/// \param alignment the byte aligment
-inline bool isAligned(const void* pointer, size_t alignment) noexcept
-{
-	return ((uintptr_t)pointer % alignment) == 0;
-}
 
 } // namespace sfz
