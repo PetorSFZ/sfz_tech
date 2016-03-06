@@ -16,7 +16,9 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
+#include "sfz/PushWarnings.hpp"
 #include "catch.hpp"
+#include "sfz/PopWarnings.hpp"
 
 #include "sfz/memory/Allocators.hpp"
 

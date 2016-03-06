@@ -16,9 +16,6 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
+#include "sfz/PushWarnings.hpp"
 #include "catch.hpp"
-
-TEST_CASE("Not a real test for now", "[sfkap]")
-{
-	REQUIRE(1 == 2 - 1);
-}
+#include "sfz/PopWarnings.hpp"
