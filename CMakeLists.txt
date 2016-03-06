@@ -41,6 +41,11 @@ include_directories(
 	${CATCH_INCLUDE_DIRS}
 )
 
+set(SOURCE_ROOT_FILES
+	${INCLUDE_DIR}/sfz/PopWarnings.hpp
+	${INCLUDE_DIR}/sfz/PushWarnings.hpp)
+source_group(sfz_root FILES ${SOURCE_ROOT_FILES})
+
 set(SOURCE_MEMORY_FILES
 	${INCLUDE_DIR}/sfz/Memory.hpp
 	${INCLUDE_DIR}/sfz/memory/Allocators.hpp
@@ -50,6 +55,7 @@ set(SOURCE_MEMORY_FILES
 source_group(sfz_memory FILES ${SOURCE_MEMORY_FILES})
 
 set(SOURCE_ALL_FILES
+	${SOURCE_ROOT_FILES}
 	${SOURCE_MEMORY_FILES})
 
 # Library compile target
