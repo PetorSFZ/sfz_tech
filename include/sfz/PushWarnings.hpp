@@ -8,7 +8,7 @@
 #define SFZ_WARNINGS_PUSHED
 
 #if defined(_MSC_VER)
-#pragma warning(push, 1)
+#pragma warning(push, 0)
 
 #elif defined(__clang__)
 #pragma clang diagnostic push
