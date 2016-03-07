@@ -18,7 +18,8 @@
 
 #pragma once
 
-#include <new>
+#include <new> // placement new
+#include <utility> // std::forward
 
 #include "sfz/memory/Allocators.hpp"
 
@@ -27,30 +28,32 @@ namespace sfz {
 // Default standard allocator
 // ------------------------------------------------------------------------------------------------
 
-inline StandardAllocator& defaultAllocator() noexcept
-{
-	static StandardAllocator DEFAULT_ALLOCATOR;
-	return DEFAULT_ALLOCATOR;
-}
+StandardAllocator& defaultAllocator() noexcept;
 
 // New
 // ------------------------------------------------------------------------------------------------
 
-template<typename T>
-T* sfz_new(size_t alignment = alignof(T)) noexcept
+/// Constructs a new object of type T with the default allocator
+/// The object is guaranteed to be 32-byte aligned
+/// \return nullptr if memory allocation failed
+template<typename T, typename... Args>
+T* sfz_new(Args&&... args) noexcept
 {
-	// TODO: Assert alignment >= alignof(T)
-	void* memPtr = defaultAllocator().allocate(sizeof(T), alignment);
-	T* objPtr = new(memPtr) T;
+	void* memPtr = defaultAllocator().allocate(sizeof(T), 32);
+	// TODO: Try-catch around constructor?
+	T* objPtr = new(memPtr) T{std::forward<Args>(args)...};
 	return objPtr;
 }
 
 // Delete
 // ------------------------------------------------------------------------------------------------
 
+/// Deletes an object created with sfz_new()
+/// \param pointer to the object, will be set to nullptr if destruction succeeded
 template<typename T>
 void sfz_delete(T*& pointer) noexcept
 {
+	// TODO: Try-catch around destructor?
 	pointer->~T();
 	defaultAllocator().deallocate((void*&)pointer);
 	//TODO: Assert pointer == nullptr
