@@ -25,23 +25,22 @@
 
 namespace sfz {
 
-// Default standard allocator
-// ------------------------------------------------------------------------------------------------
-
-StandardAllocator& defaultAllocator() noexcept;
-
 // New
 // ------------------------------------------------------------------------------------------------
 
 /// Constructs a new object of type T with the default allocator
 /// The object is guaranteed to be 32-byte aligned
-/// \return nullptr if memory allocation failed
+/// \return nullptr if memory allocation or object construction failed
 template<typename T, typename... Args>
 T* sfz_new(Args&&... args) noexcept
 {
-	void* memPtr = defaultAllocator().allocate(sizeof(T), 32);
-	// TODO: Try-catch around constructor?
-	T* objPtr = new(memPtr) T{std::forward<Args>(args)...};
+	void* memPtr = StandardAllocator::allocate(sizeof(T), 32);
+	T* objPtr = nullptr;
+	try {
+		objPtr = new(memPtr) T{std::forward<Args>(args)...};
+	} catch (...) {
+		StandardAllocator::deallocate(memPtr);
+	}
 	return objPtr;
 }
 
@@ -53,10 +52,13 @@ T* sfz_new(Args&&... args) noexcept
 template<typename T>
 void sfz_delete(T*& pointer) noexcept
 {
-	// TODO: Try-catch around destructor?
-	pointer->~T();
-	defaultAllocator().deallocate((void*&)pointer);
-	//TODO: Assert pointer == nullptr
+	try {
+		pointer->~T();
+	} catch (...) {
+		// This is potentially pretty bad, let's just quit the program
+		std::terminate();
+	}
+	StandardAllocator::deallocate((void*&)pointer);
 }
 
 } // namespace sfz

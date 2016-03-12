@@ -27,23 +27,21 @@ using namespace sfz;
 
 TEST_CASE("Testing alignment", "[sfz::StandardAllocator]")
 {
-	StandardAllocator allocator;
-
-	void* memory16byte = allocator.allocate(512, 16);
+	void* memory16byte = StandardAllocator::allocate(512, 16);
 	REQUIRE(memory16byte != nullptr);
 	REQUIRE(isAligned(memory16byte, 16));
-	allocator.deallocate(memory16byte);
+	StandardAllocator::deallocate(memory16byte);
 	REQUIRE(memory16byte == nullptr);
 
-	void* memory32byte = allocator.allocate(512, 32);
+	void* memory32byte = StandardAllocator::allocate(512, 32);
 	REQUIRE(memory32byte != nullptr);
 	REQUIRE(isAligned(memory32byte, 32));
-	allocator.deallocate(memory32byte);
+	StandardAllocator::deallocate(memory32byte);
 	REQUIRE(memory32byte == nullptr);
 
-	void* memory64byte = allocator.allocate(512, 64);
+	void* memory64byte = StandardAllocator::allocate(512, 64);
 	REQUIRE(memory64byte != nullptr);
 	REQUIRE(isAligned(memory64byte, 64));
-	allocator.deallocate(memory64byte);
+	StandardAllocator::deallocate(memory64byte);
 	REQUIRE(memory64byte == nullptr);
 }

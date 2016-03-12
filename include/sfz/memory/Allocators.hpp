@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+ // Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -30,26 +30,14 @@ using std::uintptr_t;
 // sfzCore Allocator Interface
 // ------------------------------------------------------------------------------------------------
 
-// An sfzCore allocator is a class which fulfills the following conditions:
+// An sfzCore allocator is a non-instantiable class with the following interface:
 //
-// 1, It must be default constructible and safely copyable.
+// static void* allocate(size_t size, size_t alignment = 32) noexcept;
+// static void* reallocate(void* previous, size_t newSize, size_t alignment = 32) noexcept;
+// static void deallocate(void*& pointer) noexcept;
 //
-// 2, Memory allocated through an allocator instance may only be deleted by the same instance.
-//
-// 3, It must implement the following methods:
-//
-// void* allocate(size_t numBytes, size_t alignment = 0) noexcept
-// void deallocate(void*& pointer) noexcept
-//
-// If allocation fails allocate() should preferably return nullptr, but it is allowed to crash
-// or terminate the program.
-//
-// Once the memory is deallocated deallocate() sets the pointer to nullptr. If deallocation fails
-// the pointer is untouched.
-//
-// The alignment parameters specifies the byte alignment of the allocation, i.e. a value of 8
-// would correspond to 8-byte alignment. The value of the alignment parameter must be a power of
-// two, otherwise the behavior is undefined.
+// Loosely allocate() maps to malloc(), reallocate() to realloc() and deallocate() to free().
+// See the standard allocator for more info on the requirements of each of these functions.
 
 // Standard allocator
 // ------------------------------------------------------------------------------------------------
@@ -58,26 +46,29 @@ using std::uintptr_t;
 class StandardAllocator final {
 public:
 
-	// Constructors & destructors
-	// --------------------------------------------------------------------------------------------
-
-	constexpr StandardAllocator() noexcept = default;
-	constexpr StandardAllocator(const StandardAllocator&) noexcept = default;
-	StandardAllocator& operator= (const StandardAllocator&) noexcept = default;
-	~StandardAllocator() noexcept = default;
-
-	// Allocation functions
-	// --------------------------------------------------------------------------------------------
+	StandardAllocator() = delete;
+	StandardAllocator(const StandardAllocator&) = delete;
+	StandardAllocator& operator= (const StandardAllocator&) = delete;
 
 	/// Allocates memory with the specified byte alignment
-	/// \param numBytes the number of bytes to allocate
-	/// \param alignment the byte alignment of the memory
+	/// \param size the number of bytes to allocate
+	/// \param alignment the byte alignment of the allocation
 	/// \return pointer to allocated memory, nullptr if allocation failed
-	void* allocate(size_t numBytes, size_t alignment = 0) noexcept;
+	static void* allocate(size_t size, size_t alignment = 32) noexcept;
 	
+	/// Reallocates memory to a new size
+	/// Will attempt to expand or contract the previous allocation if possible. Otherwise it will
+	/// allocate a new block and copy the memory from the previous block to it and then deallocate
+	/// the old block.
+	/// \param previous the previous allocation
+	/// \param newSize the new size of the allocation
+	/// \param alignment the byte alignment of the allocation, MUST be the same as of the old block
+	/// \return pointer to the new allocation
+	static void* reallocate(void* previous, size_t newSize, size_t alignment = 32) noexcept;
+
 	/// Deallocates memory previously allocated with this allocator instance
 	/// \param pointer to the memory, will be set to nullptr if deallocation succeeded
-	void deallocate(void*& pointer) noexcept;
+	static void deallocate(void*& pointer) noexcept;
 };
 
 } // namespace sfz

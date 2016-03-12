@@ -52,7 +52,6 @@ set(SOURCE_MEMORY_FILES
 	 ${SOURCE_DIR}/sfz/memory/Allocators.cpp
 	${INCLUDE_DIR}/sfz/memory/MemoryUtils.hpp
 	${INCLUDE_DIR}/sfz/memory/New.hpp
-	 ${SOURCE_DIR}/sfz/memory/New.cpp
 	${INCLUDE_DIR}/sfz/memory/SmartPointers.hpp
 	 ${SOURCE_DIR}/sfz/memory/SmartPointers.cpp)
 source_group(sfz_memory FILES ${SOURCE_MEMORY_FILES})
