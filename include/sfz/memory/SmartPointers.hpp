@@ -18,8 +18,73 @@
 
 #pragma once
 
+#include "sfz/memory/Allocators.hpp"
+
 namespace sfz {
 
+// UniquePtr
+// ------------------------------------------------------------------------------------------------
 
+/// Simple replacement for std::unique_ptr using sfz allocators
+template<typename T, typename Allocator = StandardAllocator>
+class UniquePtr final {
+public:
+	
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	UniquePtr() noexcept = default;
+	UniquePtr(const UniquePtr&) = delete;
+	UniquePtr& operator= (const UniquePtr&) = delete;
+	
+	UniquePtr(T* object) noexcept
+	:
+		mPtr{object}
+	{ }
+
+	UniquePtr(UniquePtr&& other) noexcept
+	{
+		T* tmp = other.mPtr;
+		other.mPtr = this->mPtr;
+		this->mPtr = tmp;
+	}
+
+	UniquePtr& operator= (UniquePtr&& other) noexcept
+	{
+		T* tmp = other.mPtr;
+		other.mPtr = this->mPtr;
+		this->mPtr = tmp;
+		return *this;
+	}
+
+	~UniquePtr() noexcept
+	{
+		this->destroy();
+	}
+
+	// Public methods
+	// --------------------------------------------------------------------------------------------
+
+	T* get() const noexcept { return mPtr; }
+	
+	/// Destroys the object held by this UniquePtr and deallocates its memory
+	/// After this method is called the internal pointer will be assigned nullptr as value. If the
+	/// internal pointer already is a nullptr this method will do nothing. It is not necessary to
+	/// call this method manually, it will automatically be called in UniquePtr's destructor.
+	void destroy() const noexcept
+	{
+		if (mPtr == nullptr) return;
+		try {
+			mPtr->~T();
+		} catch (...) {
+			// This is potentially pretty bad, let's just quit the program
+			std::terminate();
+		}
+		Allocator::deallocate((void*&)mPtr);
+	}
+
+private:
+	T* mPtr = nullptr;
+};
 
 } // namespace sfz

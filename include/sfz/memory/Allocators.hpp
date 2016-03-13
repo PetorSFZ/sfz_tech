@@ -67,6 +67,7 @@ public:
 	static void* reallocate(void* previous, size_t newSize, size_t alignment = 32) noexcept;
 
 	/// Deallocates memory previously allocated with this allocator instance
+	/// Attempting to deallocate nullptr is safe and will result in no change
 	/// \param pointer to the memory, will be set to nullptr if deallocation succeeded
 	static void deallocate(void*& pointer) noexcept;
 };

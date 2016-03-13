@@ -19,3 +19,36 @@
 #include "sfz/PushWarnings.hpp"
 #include "catch.hpp"
 #include "sfz/PopWarnings.hpp"
+
+#include "sfz/memory/New.hpp"
+#include "sfz/memory/SmartPointers.hpp"
+
+using namespace sfz;
+
+TEST_CASE("Testing UniquePtr", "[sfz::UniquePtr]")
+{
+	int flag = 0;
+
+	struct TestClass {
+		int* flagPtr;
+		TestClass(int* ptr)
+		{
+			flagPtr = ptr;
+			*flagPtr = 1;
+		}
+		~TestClass()
+		{
+			*flagPtr = 2;
+		}
+	};
+
+	UniquePtr<TestClass> ptr; // = nullptr
+	ptr = UniquePtr<TestClass>{sfz_new<TestClass>(&flag)};
+	REQUIRE(ptr.get() != nullptr);
+	REQUIRE(ptr.get()->flagPtr == &flag);
+	REQUIRE(flag == 1);
+
+	ptr.destroy();
+	REQUIRE(flag == 2);
+	REQUIRE(ptr.get() == nullptr);
+}

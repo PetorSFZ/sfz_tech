@@ -40,7 +40,7 @@ void* StandardAllocator::allocate(size_t numBytes, size_t alignment) noexcept
 #endif
 }
 
-void* StandardAllocator::reallocate(void* previous, size_t newSize, size_t alignment = 32) noexcept
+void* StandardAllocator::reallocate(void* previous, size_t newSize, size_t alignment) noexcept
 {
 #ifdef _WIN32
 	return _aligned_realloc(previous, newSize, alignment);
@@ -51,6 +51,7 @@ void* StandardAllocator::reallocate(void* previous, size_t newSize, size_t align
 
 void StandardAllocator::deallocate(void*& pointer) noexcept
 {
+	if (pointer == nullptr) return;
 #ifdef _WIN32
 	_aligned_free(pointer);
 	pointer = nullptr;

@@ -24,7 +24,7 @@
 
 using namespace sfz;
 
-TEST_CASE("Default constructed objects", "[sfz::sfz_new]")
+TEST_CASE("Basic tests", "[sfz::sfz_new]")
 {
 	int flag = 0;
 
