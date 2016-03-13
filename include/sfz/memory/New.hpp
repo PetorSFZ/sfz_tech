@@ -58,7 +58,8 @@ void sfz_delete(T*& pointer) noexcept
 		// This is potentially pretty bad, let's just quit the program
 		std::terminate();
 	}
-	StandardAllocator::deallocate((void*&)pointer);
+	StandardAllocator::deallocate(static_cast<void*>(pointer));
+	pointer = nullptr;
 }
 
 } // namespace sfz

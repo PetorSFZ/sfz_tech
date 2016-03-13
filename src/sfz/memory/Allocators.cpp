@@ -49,15 +49,13 @@ void* StandardAllocator::reallocate(void* previous, size_t newSize, size_t align
 #endif
 }
 
-void StandardAllocator::deallocate(void*& pointer) noexcept
+void StandardAllocator::deallocate(void* pointer) noexcept
 {
 	if (pointer == nullptr) return;
 #ifdef _WIN32
 	_aligned_free(pointer);
-	pointer = nullptr;
 #else
 	free(ptr);
-	pointer = nullptr;
 #endif
 }
 

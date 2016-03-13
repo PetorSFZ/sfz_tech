@@ -31,17 +31,14 @@ TEST_CASE("Testing alignment", "[sfz::StandardAllocator]")
 	REQUIRE(memory16byte != nullptr);
 	REQUIRE(isAligned(memory16byte, 16));
 	StandardAllocator::deallocate(memory16byte);
-	REQUIRE(memory16byte == nullptr);
 
 	void* memory32byte = StandardAllocator::allocate(512, 32);
 	REQUIRE(memory32byte != nullptr);
 	REQUIRE(isAligned(memory32byte, 32));
 	StandardAllocator::deallocate(memory32byte);
-	REQUIRE(memory32byte == nullptr);
-
+	
 	void* memory64byte = StandardAllocator::allocate(512, 64);
 	REQUIRE(memory64byte != nullptr);
 	REQUIRE(isAligned(memory64byte, 64));
 	StandardAllocator::deallocate(memory64byte);
-	REQUIRE(memory64byte == nullptr);
 }

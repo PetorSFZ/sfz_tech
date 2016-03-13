@@ -25,7 +25,7 @@
 
 using namespace sfz;
 
-TEST_CASE("Testing UniquePtr", "[sfz::UniquePtr]")
+TEST_CASE("Basic UniquePtr tests", "[sfz::UniquePtr]")
 {
 	int flag = 0;
 
@@ -42,10 +42,14 @@ TEST_CASE("Testing UniquePtr", "[sfz::UniquePtr]")
 		}
 	};
 
-	UniquePtr<TestClass> ptr; // = nullptr
+	UniquePtr<TestClass> ptr = nullptr;
+	REQUIRE(ptr == nullptr);
 	ptr = UniquePtr<TestClass>{sfz_new<TestClass>(&flag)};
 	REQUIRE(ptr.get() != nullptr);
+	REQUIRE(ptr != nullptr);
 	REQUIRE(ptr.get()->flagPtr == &flag);
+	REQUIRE((*ptr).flagPtr == &flag);
+	REQUIRE(ptr->flagPtr == &flag);
 	REQUIRE(flag == 1);
 
 	ptr.destroy();

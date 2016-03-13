@@ -34,10 +34,13 @@ using std::uintptr_t;
 //
 // static void* allocate(size_t size, size_t alignment = 32) noexcept;
 // static void* reallocate(void* previous, size_t newSize, size_t alignment = 32) noexcept;
-// static void deallocate(void*& pointer) noexcept;
+// static void deallocate(void* pointer) noexcept;
 //
 // Loosely allocate() maps to malloc(), reallocate() to realloc() and deallocate() to free().
 // See the standard allocator for more info on the requirements of each of these functions.
+//
+// Note that the noexcept specified is not optional, an sfzCore allocator may never throw
+// exceptions. It may, however, during exceptional circumstances terminate the program.
 
 // Standard allocator
 // ------------------------------------------------------------------------------------------------
@@ -68,8 +71,8 @@ public:
 
 	/// Deallocates memory previously allocated with this allocator instance
 	/// Attempting to deallocate nullptr is safe and will result in no change
-	/// \param pointer to the memory, will be set to nullptr if deallocation succeeded
-	static void deallocate(void*& pointer) noexcept;
+	/// \param pointer to the memory
+	static void deallocate(void* pointer) noexcept;
 };
 
 } // namespace sfz
