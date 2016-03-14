@@ -53,7 +53,7 @@ set(SOURCE_MEMORY_FILES
 	${INCLUDE_DIR}/sfz/memory/MemoryUtils.hpp
 	${INCLUDE_DIR}/sfz/memory/New.hpp
 	${INCLUDE_DIR}/sfz/memory/SmartPointers.hpp
-	 ${SOURCE_DIR}/sfz/memory/SmartPointers.cpp)
+	${INCLUDE_DIR}/sfz/memory/SmartPointers.inl)
 source_group(sfz_memory FILES ${SOURCE_MEMORY_FILES})
 
 set(SOURCE_ALL_FILES
