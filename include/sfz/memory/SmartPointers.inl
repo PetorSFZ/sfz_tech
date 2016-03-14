@@ -82,12 +82,8 @@ template<typename T, typename Allocator>
 void UniquePtr<T, Allocator>::destroy() noexcept
 {
 	if (mPtr == nullptr) return;
-	try {
-		mPtr->~T();
-	} catch (...) {
-		// This is potentially pretty bad, let's just quit the program
-		std::terminate();
-	}
+	mPtr->~T();
+	// If destructor throws exception std::terminate() will be called since function is noexcept
 	Allocator::deallocate(static_cast<void*>(mPtr));
 	mPtr = nullptr;
 }

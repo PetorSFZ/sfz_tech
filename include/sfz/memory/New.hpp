@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include <new> // placement new
 #include <utility> // std::forward
 
 #include "sfz/memory/Allocators.hpp"
@@ -30,17 +29,15 @@ namespace sfz {
 
 /// Constructs a new object of type T with the default allocator
 /// The object is guaranteed to be 32-byte aligned
-/// \return nullptr if memory allocation or object construction failed
+/// Will exit the program through std::terminate() if constructor throws an exception
+/// \return nullptr if memory allocation failede
 template<typename T, typename... Args>
 T* sfz_new(Args&&... args) noexcept
 {
 	void* memPtr = StandardAllocator::allocate(sizeof(T), 32);
 	T* objPtr = nullptr;
-	try {
-		objPtr = new(memPtr) T{std::forward<Args>(args)...};
-	} catch (...) {
-		StandardAllocator::deallocate(memPtr);
-	}
+	objPtr = new(memPtr) T{std::forward<Args>(args)...};
+	// If constructor throws exception std::terminate() will be called since function is noexcept
 	return objPtr;
 }
 
@@ -48,18 +45,15 @@ T* sfz_new(Args&&... args) noexcept
 // ------------------------------------------------------------------------------------------------
 
 /// Deletes an object created with sfz_new()
-/// \param pointer to the object, will be set to nullptr if destruction succeeded
+/// Will exit the program through std::terminate() if destructor throws an exception
+/// \param pointer to the object
 template<typename T>
-void sfz_delete(T*& pointer) noexcept
+void sfz_delete(T* pointer) noexcept
 {
-	try {
-		pointer->~T();
-	} catch (...) {
-		// This is potentially pretty bad, let's just quit the program
-		std::terminate();
-	}
+	if (pointer == nullptr) return;
+	pointer->~T();
+	// If destructor throws exception std::terminate() will be called since function is noexcept
 	StandardAllocator::deallocate(static_cast<void*>(pointer));
-	pointer = nullptr;
 }
 
 } // namespace sfz

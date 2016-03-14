@@ -16,37 +16,6 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/PushWarnings.hpp"
-#include "catch.hpp"
-#include "sfz/PopWarnings.hpp"
+#pragma once
 
-#include "sfz/memory/New.hpp"
-
-using namespace sfz;
-
-TEST_CASE("Basic tests", "[sfz::sfz_new]")
-{
-	int flag = 0;
-
-	struct TestClass {
-		int* flagPtr;
-		TestClass(int* ptr)
-		{
-			flagPtr = ptr;
-			*flagPtr = 1;
-		}
-		~TestClass()
-		{
-			*flagPtr = 2;
-		}
-	};
-
-	TestClass* ptr = nullptr;
-	ptr = sfz_new<TestClass>(&flag);
-	REQUIRE(ptr != nullptr);
-	REQUIRE(ptr->flagPtr == &flag);
-	REQUIRE(flag == 1);
-
-	sfz_delete<TestClass>(ptr);
-	REQUIRE(flag == 2);
-}
+#include "sfz/containers/DynArray.hpp"

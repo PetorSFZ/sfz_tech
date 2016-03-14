@@ -20,33 +20,42 @@
 #include "catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
-#include "sfz/memory/New.hpp"
+#include "sfz/containers/DynArray.hpp"
+#include "sfz/memory/SmartPointers.hpp"
 
 using namespace sfz;
 
-TEST_CASE("Basic tests", "[sfz::sfz_new]")
+TEST_CASE("Default constructor", "[sfz::DynArray]")
 {
-	int flag = 0;
+	DynArray<float> floatArray;
+	REQUIRE(floatArray.size() == 0);
+	REQUIRE(floatArray.capacity() == 0);
+	REQUIRE(floatArray.data() == nullptr);
+}
 
-	struct TestClass {
-		int* flagPtr;
-		TestClass(int* ptr)
-		{
-			flagPtr = ptr;
-			*flagPtr = 1;
-		}
-		~TestClass()
-		{
-			*flagPtr = 2;
-		}
-	};
+TEST_CASE("Fill constructor", "[sfz::DynArray]")
+{
+	DynArray<UniquePtr<int>> nullptrs{8};
+	for (uint32_t i = 0; i < 8; ++i) {
+		REQUIRE(nullptrs.data()[i] == nullptr);
+	}
+	REQUIRE(nullptrs.size() == 8);
+	REQUIRE(nullptrs.capacity() == 8);
 
-	TestClass* ptr = nullptr;
-	ptr = sfz_new<TestClass>(&flag);
-	REQUIRE(ptr != nullptr);
-	REQUIRE(ptr->flagPtr == &flag);
-	REQUIRE(flag == 1);
+	DynArray<int> twos{8, 2};
+	for (uint32_t i = 0; i < 8; ++i) {
+		REQUIRE(twos.data()[i] == 2);
+	}
+	REQUIRE(twos.size() == 8);
+	REQUIRE(twos.capacity() == 8);
 
-	sfz_delete<TestClass>(ptr);
-	REQUIRE(flag == 2);
+	nullptrs.destroy();
+	REQUIRE(nullptrs.data() == nullptr);
+	REQUIRE(nullptrs.size() == 0);
+	REQUIRE(nullptrs.capacity() == 0);
+
+	twos.destroy();
+	REQUIRE(twos.data() == nullptr);
+	REQUIRE(twos.size() == 0);
+	REQUIRE(twos.capacity() == 0);
 }
