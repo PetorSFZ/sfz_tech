@@ -19,6 +19,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring> // std::memcpy()
 #include <type_traits>
 
 #include "sfz/memory/Allocators.hpp"
@@ -50,22 +51,23 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	/// Creates an empty DynArray without allocating any memory
-	DynArray() noexcept;
+	DynArray() noexcept = default;
 
-	/// Creates a DynArray with the initial number of elements and internal array capacity being
-	/// equal to the specified size parameter. Each element will be initialized with the default
-	/// constructor.
-	/// \param size the number of elements to add, if size is 0 no memory will be allocated
-	explicit DynArray(uint32_t size) noexcept;
+	/// Creates a DynArray with size initial number of elements and internal array of size 
+	/// capacity. Each element will be initialized with the default constructor. If both size and
+	/// capacity is 0 no memory will be allocated. If capacity is less than size the internal
+	/// array will be of size size instead.
+	/// \param size the number of elements to add
+	/// \param capacity the capacity of the internal array
+	explicit DynArray(uint32_t size, uint32_t capacity = 0) noexcept;
 
-	/// Creates a DynArray with the initial number of elements and internal array capacity being
-	/// equal to the specified size parameter. Each element will be initialized to the value
-	/// parameter.
-	/// \param size the number of elements to add, if size is 0 no memory will be allocated
-	/// \param value the value to set each element to
-	DynArray(uint32_t size, const T& value) noexcept;
-
-	// TODO: Copy & move constructors
+	/// Creates a DynArray with size initial number of elements and internal array of size 
+	/// capacity. Each element will be initialized to the value parameter. If both size and
+	/// capacity is 0 no memory will be allocated. If capacity is less than size the internal
+	/// array will be of size size instead.
+	/// \param size the number of elements to add
+	/// \param capacity the capacity of the internal array
+	DynArray(uint32_t size, const T& value, uint32_t capacity = 0) noexcept;
 
 	/// Destroys the internal array using destroy()
 	~DynArray() noexcept;
@@ -87,6 +89,14 @@ public:
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
+	/// Sets the capacity of this DynArray. If the requested capacity is less than the size (number
+	/// of elements) in this DynArray then the capacity will be set to the size instead.
+	/// \param capacity the new capacity
+	void setCapacity(uint32_t capacity) noexcept;
+
+	/// Removes all elements from this DynArray without deallocating memory or changing capacity
+	void clear() noexcept;
+
 	/// Destroys all elements stored in this DynArray and deallocates all memory. After this
 	/// method is called the internal array is nullptr, size and capacity is 0. If the DynArray is
 	/// already empty then this method will do nothing. It is not necessary to call this method
@@ -97,8 +107,8 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 	
-	uint32_t mSize, mCapacity;
-	T* mDataPtr;
+	uint32_t mSize = 0, mCapacity = 0;
+	T* mDataPtr = nullptr;
 };
 
 } // namespace sfz

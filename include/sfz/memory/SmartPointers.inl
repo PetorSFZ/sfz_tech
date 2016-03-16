@@ -38,16 +38,12 @@ UniquePtr<T, Allocator>& UniquePtr<T, Allocator>::operator= (UniquePtr<T, Alloca
 
 template<typename T, typename Allocator>
 UniquePtr<T, Allocator>::UniquePtr() noexcept
-:
-	mPtr{nullptr}
 {
 	static_assert(!std::is_array<T>::value, "UniquePtr does not accept array types");
 }
 
 template<typename T, typename Allocator>
 UniquePtr<T, Allocator>::UniquePtr(nullptr_t) noexcept
-:
-	mPtr{nullptr}
 {
 	static_assert(!std::is_array<T>::value, "UniquePtr does not accept array types");
 }
