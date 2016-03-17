@@ -69,6 +69,12 @@ public:
 	/// \param capacity the capacity of the internal array
 	DynArray(uint32_t size, const T& value, uint32_t capacity = 0) noexcept;
 
+	DynArray(const DynArray& other) noexcept;
+	DynArray& operator= (const DynArray& other) noexcept;
+
+	DynArray(DynArray&& other) noexcept;
+	DynArray& operator= (DynArray&& other) noexcept;
+
 	/// Destroys the internal array using destroy()
 	~DynArray() noexcept;
 
@@ -88,6 +94,9 @@ public:
 
 	// Public methods
 	// --------------------------------------------------------------------------------------------
+
+	/// Swaps the contents of two DynArrays
+	void swap(DynArray& other) noexcept;
 
 	/// Sets the capacity of this DynArray. If the requested capacity is less than the size (number
 	/// of elements) in this DynArray then the capacity will be set to the size instead.

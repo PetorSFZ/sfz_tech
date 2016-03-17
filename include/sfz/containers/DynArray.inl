@@ -48,6 +48,59 @@ DynArray<T, Allocator>::DynArray(uint32_t size, const T& value, uint32_t capacit
 }
 
 template<typename T, typename Allocator>
+DynArray<T, Allocator>::DynArray(const DynArray& other) noexcept
+{
+	*this = other;
+}
+
+template<typename T, typename Allocator>
+DynArray<T, Allocator>& DynArray<T, Allocator>::operator= (const DynArray& other) noexcept
+{
+	// Don't copy to itself
+	if (this == &other) return *this;
+
+	// Don't copy if source is empty
+	if (other.data() == nullptr) {
+		this->destroy();
+		return *this;
+	}
+
+	// Clear old elements and set capacity
+	this->clear();
+	if (this->mCapacity < other.mCapacity) {
+		this->setCapacity(other.mCapacity);
+	}
+
+	this->mSize = other.mSize;
+	// Just memcpy if trivially copy constructible
+//	if (std::is_trivally_copyable<T>::value) {
+//		std::memcpy(this->mDataPtr, other.mDataPtr, mSize * sizeof(T));
+//	}
+
+	// Otherwise use copy constructor for each element
+	//else {
+		for (uint32_t i = 0; i < mSize; ++i) {
+			new (this->mDataPtr + i) T(*(other.mDataPtr + i));
+		}
+	//}
+
+	return *this;
+}
+
+template<typename T, typename Allocator>
+DynArray<T, Allocator>::DynArray(DynArray&& other) noexcept
+{
+	this->swap(other);
+}
+
+template<typename T, typename Allocator>
+DynArray<T, Allocator>& DynArray<T, Allocator>::operator= (DynArray&& other) noexcept
+{
+	this->swap(other);
+	return *this;
+}
+
+template<typename T, typename Allocator>
 DynArray<T, Allocator>::~DynArray() noexcept
 {
 	this->destroy();
@@ -55,6 +108,22 @@ DynArray<T, Allocator>::~DynArray() noexcept
 
 // DynArray (implementation): Public methods
 // ------------------------------------------------------------------------------------------------
+
+template<typename T, typename Allocator>
+void DynArray<T, Allocator>::swap(DynArray& other) noexcept
+{
+	uint32_t thisSize = this->mSize;
+	uint32_t thisCapacity = this->mCapacity;
+	T* thisDataPtr = this->mDataPtr;
+
+	this->mSize = other.mSize;
+	this->mCapacity = other.mCapacity;
+	this->mDataPtr = other.mDataPtr;
+
+	other.mSize = thisSize;
+	other.mCapacity = thisCapacity;
+	other.mDataPtr = thisDataPtr;
+}
 
 template<typename T, typename Allocator>
 void DynArray<T, Allocator>::setCapacity(uint32_t capacity) noexcept

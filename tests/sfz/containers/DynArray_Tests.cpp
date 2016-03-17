@@ -59,3 +59,32 @@ TEST_CASE("Fill constructor", "[sfz::DynArray]")
 	REQUIRE(twos.size() == 0);
 	REQUIRE(twos.capacity() == 0);
 }
+
+TEST_CASE("Copy constructors", "[sfz::DynArray]")
+{
+	DynArray<int> first{3,3};
+	DynArray<int> second;
+
+	REQUIRE(first.size() == 3);
+	REQUIRE(first.capacity() == 3);
+	REQUIRE(first.data()[0] == 3);
+	REQUIRE(first.data()[1] == 3);
+	REQUIRE(first.data()[2] == 3);
+
+	REQUIRE(second.size() == 0);
+	REQUIRE(second.capacity() == 0);
+	REQUIRE(second.data() == nullptr);
+
+	second = first;
+	first.destroy();
+
+	REQUIRE(first.size() == 0);
+	REQUIRE(first.capacity() == 0);
+	REQUIRE(first.data() == nullptr);
+
+	REQUIRE(second.size() == 3);
+	REQUIRE(second.capacity() == 3);
+	REQUIRE(second.data()[0] == 3);
+	REQUIRE(second.data()[1] == 3);
+	REQUIRE(second.data()[2] == 3);
+}
