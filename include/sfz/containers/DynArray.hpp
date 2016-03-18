@@ -69,9 +69,12 @@ public:
 	/// \param capacity the capacity of the internal array
 	DynArray(uint32_t size, const T& value, uint32_t capacity = 0) noexcept;
 
+	/// Copy constructors. If the target DynArray has larger capacity than the source DynArray
+	/// then the capacity remains intact and no memory reallocation is performed.
 	DynArray(const DynArray& other) noexcept;
 	DynArray& operator= (const DynArray& other) noexcept;
 
+	/// Move constructors. Equivalent to calling target.swap(source).
 	DynArray(DynArray&& other) noexcept;
 	DynArray& operator= (DynArray&& other) noexcept;
 

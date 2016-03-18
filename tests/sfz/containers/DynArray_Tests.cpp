@@ -88,3 +88,37 @@ TEST_CASE("Copy constructors", "[sfz::DynArray]")
 	REQUIRE(second.data()[1] == 3);
 	REQUIRE(second.data()[2] == 3);
 }
+
+TEST_CASE("Swap & move constructors", "[sfz::DynArray]")
+{
+	DynArray<int> v1;
+	DynArray<int> v2{2, 42, 32};
+
+	REQUIRE(v1.size() == 0);
+	REQUIRE(v1.capacity() == 0);
+	REQUIRE(v1.data() == nullptr);
+
+	REQUIRE(v2.size() == 2);
+	REQUIRE(v2.capacity() == 32);
+	REQUIRE(v2.data() != nullptr);
+
+	v1.swap(v2);
+
+	REQUIRE(v1.size() == 2);
+	REQUIRE(v1.capacity() == 32);
+	REQUIRE(v1.data() != nullptr);
+
+	REQUIRE(v2.size() == 0);
+	REQUIRE(v2.capacity() == 0);
+	REQUIRE(v2.data() == nullptr);
+
+	v1 = std::move(v2);
+
+	REQUIRE(v1.size() == 0);
+	REQUIRE(v1.capacity() == 0);
+	REQUIRE(v1.data() == nullptr);
+
+	REQUIRE(v2.size() == 2);
+	REQUIRE(v2.capacity() == 32);
+	REQUIRE(v2.data() != nullptr);
+}
