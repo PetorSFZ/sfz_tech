@@ -176,4 +176,43 @@ void DynArray<T, Allocator>::destroy() noexcept
 	mDataPtr = nullptr;
 }
 
+// DynArray (implementation): Iterators
+// --------------------------------------------------------------------------------------------
+
+template<typename T, typename Allocator>
+T* DynArray<T, Allocator>::begin() noexcept
+{
+	return mDataPtr;
+}
+
+template<typename T, typename Allocator>
+const T* DynArray<T, Allocator>::begin() const noexcept
+{
+	return mDataPtr;
+}
+
+template<typename T, typename Allocator>
+const T* DynArray<T, Allocator>::cbegin() const noexcept
+{
+	return mDataPtr;
+}
+
+template<typename T, typename Allocator>
+T* DynArray<T, Allocator>::end() noexcept
+{
+	return mDataPtr + mSize;
+}
+
+template<typename T, typename Allocator>
+const T* DynArray<T, Allocator>::end() const noexcept
+{
+	return mDataPtr + mSize;
+}
+
+template<typename T, typename Allocator>
+const T* DynArray<T, Allocator>::cend() const noexcept
+{
+	return mDataPtr + mSize;
+}
+
 } // namespace sfz

@@ -122,3 +122,33 @@ TEST_CASE("Swap & move constructors", "[sfz::DynArray]")
 	REQUIRE(v2.capacity() == 32);
 	REQUIRE(v2.data() != nullptr);
 }
+
+TEST_CASE("operator[]", "[sfz::DynArray]")
+{
+	DynArray<int> v{4};
+	v[0] = 0;
+	v[1] = 1;
+	v[2] = 2;
+	v[3] = 3;
+
+	const auto& cv = v;
+	REQUIRE(cv[0] == 0);
+	REQUIRE(cv[1] == 1);
+	REQUIRE(cv[2] == 2);
+	REQUIRE(cv[3] == 3);
+}
+
+TEST_CASE("iterators", "[sfz::DynArray]")
+{
+	DynArray<int> v{4};
+	v[0] = 0;
+	v[1] = 1;
+	v[2] = 2;
+	v[3] = 3;
+
+	int curr = 0;
+	for (int val : v) {
+		REQUIRE(val == curr);
+		curr += 1;
+	}
+}

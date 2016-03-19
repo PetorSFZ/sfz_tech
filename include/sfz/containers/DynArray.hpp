@@ -42,6 +42,9 @@ using std::uint32_t;
 /// memory. When inserting elements or resizing the internal array objects (or the whole array)
 /// may be moved to different memory locations without any copy or move constructors being called.
 ///
+/// DynArray iterators are simply pointers to the internal array. Modifying a DynArray while
+/// iterating over it while likely have unintended consequences if you are not very careful.
+///
 /// Every method in DynArray is declared noexcept. This means that if any constructor or
 /// destructor called throws an exception the program will terminate by std::terminate().
 template<typename T, typename Allocator = StandardAllocator>
@@ -95,6 +98,12 @@ public:
 	/// may be invalidated.
 	T* data() const noexcept { return mDataPtr; }
 
+	/// Element access operator. No range checks.
+	T& operator[] (uint32_t index) noexcept { return mDataPtr[index]; }
+
+	/// Element access operator. No range checks.
+	const T& operator[] (uint32_t index) const noexcept { return mDataPtr[index]; }
+
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
@@ -114,6 +123,17 @@ public:
 	/// already empty then this method will do nothing. It is not necessary to call this method
 	/// manually, it will automatically be called in the destructor.
 	void destroy() noexcept;
+
+	// Iterators
+	// --------------------------------------------------------------------------------------------
+
+	T* begin() noexcept;
+	const T* begin() const noexcept;
+	const T* cbegin() const noexcept;
+
+	T* end() noexcept;
+	const T* end() const noexcept;
+	const T* cend() const noexcept;
 
 private:
 	// Private members
