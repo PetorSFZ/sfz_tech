@@ -72,17 +72,12 @@ DynArray<T, Allocator>& DynArray<T, Allocator>::operator= (const DynArray& other
 	}
 
 	this->mSize = other.mSize;
-	// Just memcpy if trivially copy constructible
-//	if (std::is_trivally_copyable<T>::value) {
-//		std::memcpy(this->mDataPtr, other.mDataPtr, mSize * sizeof(T));
-//	}
 
-	// Otherwise use copy constructor for each element
-	//else {
-		for (uint32_t i = 0; i < mSize; ++i) {
-			new (this->mDataPtr + i) T(*(other.mDataPtr + i));
-		}
-	//}
+	// Copy elements
+	// TODO: memcpy for trivially copyable types?
+	for (uint32_t i = 0; i < mSize; ++i) {
+		new (this->mDataPtr + i) T(*(other.mDataPtr + i));
+	}
 
 	return *this;
 }
@@ -135,6 +130,30 @@ void DynArray<T, Allocator>::add(T&& value) noexcept
 	}
 	new (mDataPtr + mSize) T(std::move(value));
 	mSize += 1;
+}
+
+template<typename T, typename Allocator>
+void DynArray<T, Allocator>::add(const T* arrayPtr, uint32_t numElements) noexcept
+{
+	if (mCapacity < mSize + numElements) {
+		uint64_t newCapacity = uint64_t(CAPACITY_INCREASE_FACTOR * (mSize + numElements));
+		if (newCapacity > MAX_CAPACITY) newCapacity = MAX_CAPACITY;
+		// TODO: Assert mCapacity < newCapacity
+		setCapacity(uint32_t(newCapacity));
+	}
+
+	// Copy elements
+	// TODO: memcpy for trivially copyable types?
+	for (uint32_t i = 0; i < numElements; ++i) {
+		new (this->mDataPtr + mSize + i) T(*(arrayPtr + i));
+	}
+	mSize += numElements;
+}
+
+template<typename T, typename Allocator>
+void DynArray<T, Allocator>::add(const DynArray& elements) noexcept
+{
+	this->add(elements.data(), elements.size());
 }
 
 template<typename T, typename Allocator>

@@ -200,4 +200,18 @@ TEST_CASE("add()", "[sfz::DynArray]")
 	REQUIRE(v2.capacity() == DynArray<UniquePtr<int>>::DEFAULT_INITIAL_CAPACITY);
 	REQUIRE(*v2[0] == 3);
 	REQUIRE(*v2[1] == 42);
+
+
+	DynArray<int> v3;
+	v3.add(v);
+	v3.add(v);
+	REQUIRE(v3.size() == 8);
+	REQUIRE(v3[0] == -1);
+	REQUIRE(v3[1] == -1);
+	REQUIRE(v3[2] == 3);
+	REQUIRE(v3[3] == 3);
+	REQUIRE(v3[4] == -1);
+	REQUIRE(v3[5] == -1);
+	REQUIRE(v3[6] == 3);
+	REQUIRE(v3[7] == 3);
 }

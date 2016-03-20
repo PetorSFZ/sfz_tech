@@ -116,13 +116,19 @@ public:
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 	
-	/// Copy an element to the back of the vector. Will increase capacity of internal array if
-	/// needed.
+	/// Copy an element to the back of the internal array. Will increase capacity of internal 
+	/// array if needed.
 	void add(const T& value) noexcept;
 
-	/// Move an element to the back of the vector. Will increase capacity of the internal array if
-	/// needed.
+	/// Move an element to the back of the internal array. Will increase capacity of the internal
+	/// array if needed.
 	void add(T&& value) noexcept;
+
+	/// Copy a number of elements to the back of the DynArray from a contiguous array.
+	void add(const T* arrayPtr, uint32_t numElements) noexcept;
+
+	/// Copy all the elements from another DynArray to the back of this DynArray.
+	void add(const DynArray& elements) noexcept;
 
 	/// Swaps the contents of two DynArrays
 	void swap(DynArray& other) noexcept;
