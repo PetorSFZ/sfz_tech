@@ -52,7 +52,17 @@ TEST_CASE("Basic UniquePtr tests", "[sfz::UniquePtr]")
 	REQUIRE(ptr->flagPtr == &flag);
 	REQUIRE(flag == 1);
 
+	UniquePtr<TestClass> second;
+	REQUIRE(second == nullptr);
+	second = std::move(ptr);
+	REQUIRE(ptr == nullptr);
+	REQUIRE(second != nullptr);
+
 	ptr.destroy();
+	REQUIRE(flag == 1);
+	REQUIRE(ptr == nullptr);
+	
+	second.destroy();
 	REQUIRE(flag == 2);
-	REQUIRE(ptr.get() == nullptr);
+	REQUIRE(second == nullptr);
 }

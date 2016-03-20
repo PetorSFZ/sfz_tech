@@ -21,6 +21,7 @@
 #include "sfz/PopWarnings.hpp"
 
 #include "sfz/containers/DynArray.hpp"
+#include "sfz/memory/New.hpp"
 #include "sfz/memory/SmartPointers.hpp"
 
 using namespace sfz;
@@ -151,4 +152,52 @@ TEST_CASE("iterators", "[sfz::DynArray]")
 		REQUIRE(val == curr);
 		curr += 1;
 	}
+}
+
+TEST_CASE("add()", "[sfz::DynArray]")
+{
+	DynArray<int> v(2, -1, 2);
+
+	REQUIRE(v.size() == 2);
+	REQUIRE(v.capacity() == 2);
+	REQUIRE(v[0] == -1);
+	REQUIRE(v[1] == -1);
+
+	int a = 3;
+	v.add(a);
+	REQUIRE(v.size() == 3);
+	REQUIRE(v.capacity() == 3);
+	REQUIRE(v[0] == -1);
+	REQUIRE(v[1] == -1);
+	REQUIRE(v[2] == 3);
+
+	v.add(a);
+	REQUIRE(v.size() == 4);
+	REQUIRE(v.capacity() == 5);
+	REQUIRE(v[0] == -1);
+	REQUIRE(v[1] == -1);
+	REQUIRE(v[2] == 3);
+	REQUIRE(v[3] == 3);
+
+
+	DynArray<UniquePtr<int>> v2;
+
+	REQUIRE(v2.size() == 0);
+	REQUIRE(v2.capacity() == 0);
+	REQUIRE(v2.data() == nullptr);
+
+	v2.add(UniquePtr<int>(sfz_new<int>(3)));
+
+	REQUIRE(v2.size() == 1);
+	REQUIRE(v2.capacity() == DynArray<UniquePtr<int>>::DEFAULT_INITIAL_CAPACITY);
+	REQUIRE(*v2[0] == 3);
+
+	UniquePtr<int> b{sfz_new<int>(42)};
+
+	v2.add(std::move(b));
+
+	REQUIRE(v2.size() == 2);
+	REQUIRE(v2.capacity() == DynArray<UniquePtr<int>>::DEFAULT_INITIAL_CAPACITY);
+	REQUIRE(*v2[0] == 3);
+	REQUIRE(*v2[1] == 42);
 }

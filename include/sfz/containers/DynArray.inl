@@ -29,7 +29,7 @@ DynArray<T, Allocator>::DynArray(uint32_t size, uint32_t capacity) noexcept
 
 	// Calling constructor for each element if not trivially default constructible
 	if (!std::is_trivially_default_constructible<T>::value) {
-		for (uint32_t i = 0; i < mSize; ++i) {
+		for (uint64_t i = 0; i < mSize; ++i) {
 			new (mDataPtr + i) T();
 		}
 	}
@@ -42,7 +42,7 @@ DynArray<T, Allocator>::DynArray(uint32_t size, const T& value, uint32_t capacit
 	setCapacity(capacity);
 
 	// Calling constructor for each element
-	for (uint32_t i = 0; i < mSize; ++i) {
+	for (uint64_t i = 0; i < mSize; ++i) {
 		new (mDataPtr + i) T(value);
 	}
 }
@@ -110,6 +110,34 @@ DynArray<T, Allocator>::~DynArray() noexcept
 // ------------------------------------------------------------------------------------------------
 
 template<typename T, typename Allocator>
+void DynArray<T, Allocator>::add(const T& value) noexcept
+{
+	if (mSize >= mCapacity) {
+		uint64_t newCapacity = uint64_t(CAPACITY_INCREASE_FACTOR * mCapacity);
+		if (newCapacity == 0) newCapacity = DEFAULT_INITIAL_CAPACITY;
+		if (newCapacity > MAX_CAPACITY) newCapacity = MAX_CAPACITY;
+		// TODO: Assert mCapacity < newCapacity
+		setCapacity(uint32_t(newCapacity));
+	}
+	new (mDataPtr + mSize) T(value);
+	mSize += 1;
+}
+
+template<typename T, typename Allocator>
+void DynArray<T, Allocator>::add(T&& value) noexcept
+{
+	if (mSize >= mCapacity) {
+		uint64_t newCapacity = uint64_t(CAPACITY_INCREASE_FACTOR * mCapacity);
+		if (newCapacity == 0) newCapacity = DEFAULT_INITIAL_CAPACITY;
+		if (newCapacity > MAX_CAPACITY) newCapacity = MAX_CAPACITY;
+		// TODO: Assert mCapacity < newCapacity
+		setCapacity(uint32_t(newCapacity));
+	}
+	new (mDataPtr + mSize) T(std::move(value));
+	mSize += 1;
+}
+
+template<typename T, typename Allocator>
 void DynArray<T, Allocator>::swap(DynArray& other) noexcept
 {
 	uint32_t thisSize = this->mSize;
@@ -134,7 +162,7 @@ void DynArray<T, Allocator>::setCapacity(uint32_t capacity) noexcept
 	if (mDataPtr == nullptr) {
 		if (capacity == 0) return;
 		mCapacity = capacity;
-		mDataPtr = static_cast<T*>(Allocator::allocate(mCapacity * sizeof(T), 32));
+		mDataPtr = static_cast<T*>(Allocator::allocate(mCapacity * sizeof(T), ALIGNMENT));
 		// TODO: Handle error case where allocation failed
 		return;
 	}
@@ -145,7 +173,7 @@ void DynArray<T, Allocator>::setCapacity(uint32_t capacity) noexcept
 	}
 
 	mCapacity = capacity;
-	mDataPtr = static_cast<T*>(Allocator::reallocate(mDataPtr, mCapacity * sizeof(T), 32));
+	mDataPtr = static_cast<T*>(Allocator::reallocate(mDataPtr, mCapacity * sizeof(T), ALIGNMENT));
 	// TODO: Handle error case where reallocation failed
 }
 
@@ -154,7 +182,7 @@ void DynArray<T, Allocator>::clear() noexcept
 {
 	// Call destructor for each element if not trivially destructible
 	if (!std::is_trivially_destructible<T>::value) {
-		for (uint32_t i = 0; i < mSize; ++i) {
+		for (uint64_t i = 0; i < mSize; ++i) {
 			mDataPtr[i].~T();
 		}
 	}

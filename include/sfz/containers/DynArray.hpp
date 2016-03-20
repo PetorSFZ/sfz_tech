@@ -27,6 +27,7 @@
 namespace sfz {
 
 using std::uint32_t;
+using std::uint64_t;
 
 // DynArray (interface)
 // ------------------------------------------------------------------------------------------------
@@ -50,6 +51,14 @@ using std::uint32_t;
 template<typename T, typename Allocator = StandardAllocator>
 class DynArray final {
 public:
+	// Constants
+	// --------------------------------------------------------------------------------------------
+
+	static constexpr uint32_t ALIGNMENT = 32;
+	static constexpr uint32_t DEFAULT_INITIAL_CAPACITY = 64;
+	static constexpr uint32_t MAX_CAPACITY = 4294967295;
+	static constexpr float CAPACITY_INCREASE_FACTOR = 1.75f;
+
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
@@ -106,6 +115,14 @@ public:
 
 	// Public methods
 	// --------------------------------------------------------------------------------------------
+	
+	/// Copy an element to the back of the vector. Will increase capacity of internal array if
+	/// needed.
+	void add(const T& value) noexcept;
+
+	/// Move an element to the back of the vector. Will increase capacity of the internal array if
+	/// needed.
+	void add(T&& value) noexcept;
 
 	/// Swaps the contents of two DynArrays
 	void swap(DynArray& other) noexcept;
