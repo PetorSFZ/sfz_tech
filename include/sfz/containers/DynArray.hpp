@@ -56,7 +56,7 @@ public:
 
 	static constexpr uint32_t ALIGNMENT = 32;
 	static constexpr uint32_t DEFAULT_INITIAL_CAPACITY = 64;
-	static constexpr uint32_t MAX_CAPACITY = 4294967295;
+	static constexpr uint64_t MAX_CAPACITY = 4294967295;
 	static constexpr float CAPACITY_INCREASE_FACTOR = 1.75f;
 
 	// Constructors & destructors
@@ -113,6 +113,18 @@ public:
 	/// Element access operator. No range checks.
 	const T& operator[] (uint32_t index) const noexcept { return mDataPtr[index]; }
 
+	/// Accesses the first element. Undefined if DynArray does not contain at least one element.
+	T& first() noexcept { return mDataPtr[0]; }
+
+	/// Accesses the first element. Undefined if DynArray does not contain at least one element.
+	const T& first() const noexcept { return mDataPtr[0]; }
+
+	/// Accesses the last element. Undefined if DynArray does not contain at least one element.
+	T& last() noexcept { return mDataPtr[mSize - 1]; }
+	
+	/// Accesses the last element. Undefined if DynArray does not contain at least one element.
+	const T& last() const noexcept { return mDataPtr[mSize - 1]; }
+
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 	
@@ -124,11 +136,26 @@ public:
 	/// array if needed.
 	void add(T&& value) noexcept;
 
-	/// Copy a number of elements to the back of the DynArray from a contiguous array.
+	/// Copy a number of elements to the back of the DynArray from a contiguous array. Undefined
+	/// behaviour if trying to add elements from this DynArray.
 	void add(const T* arrayPtr, uint32_t numElements) noexcept;
 
-	/// Copy all the elements from another DynArray to the back of this DynArray.
+	/// Copy all the elements from another DynArray to the back of this DynArray. Undefined
+	/// behaviour if attempting to add elements from the same DynArray.
 	void add(const DynArray& elements) noexcept;
+
+	/// Insert an element to the specified position in the the internal array. Will move elements
+	/// one position ahead to make room. Will increase capacity of internal array if needed.
+	void insert(uint32_t position, const T& value) noexcept;
+
+	/// Insert an element to the specified position in the the internal array. Will move elements
+	/// one position ahead to make room. Will increase capacity of internal array if needed.
+	void insert(uint32_t position, T&& value) noexcept;
+	
+	/// Insert a number of elements to the internal array starting at the specified position. Will
+	/// move elements ahead to make room. Will increase capacity of the internal array if needed.
+	/// Undefined behaviour if trying to add elements from this DynArray.
+	void insert(uint32_t position, const T* arrayPtr, uint32_t numElements) noexcept;
 
 	/// Swaps the contents of two DynArrays
 	void swap(DynArray& other) noexcept;

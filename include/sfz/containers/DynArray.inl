@@ -135,9 +135,12 @@ void DynArray<T, Allocator>::add(T&& value) noexcept
 template<typename T, typename Allocator>
 void DynArray<T, Allocator>::add(const T* arrayPtr, uint32_t numElements) noexcept
 {
+	// TODO: Assert !(mDataPtr <= arrayPtr && arrayPtr < mDataPtr + mCapacity)
 	if (mCapacity < mSize + numElements) {
-		uint64_t newCapacity = uint64_t(CAPACITY_INCREASE_FACTOR * (mSize + numElements));
-		if (newCapacity > MAX_CAPACITY) newCapacity = MAX_CAPACITY;
+		uint64_t newCapacity = uint64_t(CAPACITY_INCREASE_FACTOR * (uint64_t(mSize) + uint64_t(numElements)));
+		if (newCapacity > MAX_CAPACITY) {
+			newCapacity = MAX_CAPACITY;
+		}
 		// TODO: Assert mCapacity < newCapacity
 		setCapacity(uint32_t(newCapacity));
 	}
@@ -154,6 +157,68 @@ template<typename T, typename Allocator>
 void DynArray<T, Allocator>::add(const DynArray& elements) noexcept
 {
 	this->add(elements.data(), elements.size());
+}
+
+template<typename T, typename Allocator>
+void DynArray<T, Allocator>::insert(uint32_t position, const T& value) noexcept
+{
+	// TODO: assert position <= mSize
+	if (mSize >= mCapacity) {
+		uint64_t newCapacity = uint64_t(CAPACITY_INCREASE_FACTOR * mCapacity);
+		if (newCapacity == 0) newCapacity = DEFAULT_INITIAL_CAPACITY;
+		if (newCapacity > MAX_CAPACITY) newCapacity = MAX_CAPACITY;
+		// TODO: Assert mCapacity < newCapacity
+		setCapacity(uint32_t(newCapacity));
+	}
+
+	// Move elements
+	std::memmove(mDataPtr + position + 1, mDataPtr + position, (mSize - position) * sizeof(T));
+	
+	// Insert element
+	new (mDataPtr + position) T(value);
+	mSize += 1;
+}
+
+template<typename T, typename Allocator>
+void DynArray<T, Allocator>::insert(uint32_t position, T&& value) noexcept
+{
+	// TODO: assert position <= mSize
+	if (mSize >= mCapacity) {
+		uint64_t newCapacity = uint64_t(CAPACITY_INCREASE_FACTOR * mCapacity);
+		if (newCapacity == 0) newCapacity = DEFAULT_INITIAL_CAPACITY;
+		if (newCapacity > MAX_CAPACITY) newCapacity = MAX_CAPACITY;
+		// TODO: Assert mCapacity < newCapacity
+		setCapacity(uint32_t(newCapacity));
+	}
+
+	// Move elements
+	std::memmove(mDataPtr + position + 1, mDataPtr + position, (mSize - position) * sizeof(T));
+
+	// Insert element
+	new (mDataPtr + position) T(std::move(value));
+	mSize += 1;
+}
+
+template<typename T, typename Allocator>
+void DynArray<T, Allocator>::insert(uint32_t position, const T* arrayPtr, uint32_t numElements) noexcept
+{
+	// TODO: assert position <= mSize
+	if (mCapacity < mSize + numElements) {
+		uint64_t newCapacity = uint64_t(CAPACITY_INCREASE_FACTOR * (uint64_t(mSize) + uint64_t(numElements)));
+		if (newCapacity > MAX_CAPACITY) newCapacity = MAX_CAPACITY;
+		// TODO: Assert mCapacity < newCapacity
+		setCapacity(uint32_t(newCapacity));
+	}
+
+	// Move elements
+	std::memmove(mDataPtr + position + numElements, mDataPtr + position, (mSize - position) * sizeof(T));
+
+	// Copy elements
+	// TODO: memcpy for trivially copyable types?
+	for (uint32_t i = 0; i < numElements; ++i) {
+		new (this->mDataPtr + position + i) T(*(arrayPtr + i));
+	}
+	mSize += numElements;
 }
 
 template<typename T, typename Allocator>

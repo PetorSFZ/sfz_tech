@@ -215,3 +215,39 @@ TEST_CASE("add()", "[sfz::DynArray]")
 	REQUIRE(v3[6] == 3);
 	REQUIRE(v3[7] == 3);
 }
+
+TEST_CASE("insert()", "[sfz::DynArray]")
+{
+	DynArray<int> v(2, -1, 2);
+
+	REQUIRE(v.size() == 2);
+	REQUIRE(v.capacity() == 2);
+	REQUIRE(v[0] == -1);
+	REQUIRE(v[1] == -1);
+
+	int a = 3;
+	v.insert(0, a);
+	REQUIRE(v.size() == 3);
+	REQUIRE(v.capacity() == 3);
+	REQUIRE(v[0] == 3);
+	REQUIRE(v[1] == -1);
+	REQUIRE(v[2] == -1);
+
+	v.insert(2, a);
+	REQUIRE(v.size() == 4);
+	REQUIRE(v.capacity() == 5);
+	REQUIRE(v[0] == 3);
+	REQUIRE(v[1] == -1);
+	REQUIRE(v[2] == 3);
+	REQUIRE(v[3] == -1);
+
+	DynArray<int> v2(3, 42);
+	v.insert(1, v2.data(), 2);
+	REQUIRE(v.size() == 6);
+	REQUIRE(v[0] == 3);
+	REQUIRE(v[1] == 42);
+	REQUIRE(v[2] == 42);
+	REQUIRE(v[3] == -1);
+	REQUIRE(v[4] == 3);
+	REQUIRE(v[5] == -1);
+}
