@@ -222,6 +222,26 @@ void DynArray<T, Allocator>::insert(uint32_t position, const T* arrayPtr, uint32
 }
 
 template<typename T, typename Allocator>
+void DynArray<T, Allocator>::remove(uint32_t position, uint32_t numElements) noexcept
+{
+	uint32_t numElementsToRemove = numElements;
+	if (numElementsToRemove > (mSize - position)) numElementsToRemove = (mSize - position);
+	
+	// Call destructor for each element if not trivially destructible
+	if (!std::is_trivially_destructible<T>::value) {
+		for (uint64_t i = 0; i < numElementsToRemove; ++i) {
+			mDataPtr[position + i].~T();
+		}
+	}
+
+	// Move elements back
+	uint32_t numElementsToMove = mSize - position - numElementsToRemove;
+	std::memmove(mDataPtr + position, mDataPtr + position + numElementsToRemove, numElementsToMove);
+
+	mSize -= numElementsToRemove;
+}
+
+template<typename T, typename Allocator>
 void DynArray<T, Allocator>::swap(DynArray& other) noexcept
 {
 	uint32_t thisSize = this->mSize;

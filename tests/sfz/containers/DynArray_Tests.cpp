@@ -251,3 +251,26 @@ TEST_CASE("insert()", "[sfz::DynArray]")
 	REQUIRE(v[4] == 3);
 	REQUIRE(v[5] == -1);
 }
+
+TEST_CASE("remove()", "[sfz::DynArray]")
+{
+	DynArray<int> v;
+	const int vals[] = {1, 2, 3, 4};
+	v.add(vals, 4);
+
+	REQUIRE(v.size() == 4);
+	REQUIRE(v[0] == 1);
+	REQUIRE(v[1] == 2);
+	REQUIRE(v[2] == 3);
+	REQUIRE(v[3] == 4);
+
+	v.remove(3, 1000);
+	REQUIRE(v.size() == 3);
+	REQUIRE(v[0] == 1);
+	REQUIRE(v[1] == 2);
+	REQUIRE(v[2] == 3);
+
+	v.remove(0, 2);
+	REQUIRE(v.size() == 1);
+	REQUIRE(v[0] == 3);
+}

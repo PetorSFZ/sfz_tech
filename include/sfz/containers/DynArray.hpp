@@ -157,6 +157,11 @@ public:
 	/// Undefined behaviour if trying to add elements from this DynArray.
 	void insert(uint32_t position, const T* arrayPtr, uint32_t numElements) noexcept;
 
+	/// Remove a number of elements starting at the specified position. Elements after the
+	/// specified range will be moved ahead in the array. If the numElements is larger than the
+	/// number of elements in the array only the available ones will be removed.
+	void remove(uint32_t position, uint32_t numElements = 1) noexcept;
+
 	/// Swaps the contents of two DynArrays
 	void swap(DynArray& other) noexcept;
 
