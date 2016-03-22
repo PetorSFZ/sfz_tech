@@ -16,7 +16,16 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#pragma once
+#include "sfz/PushWarnings.hpp"
+#include "catch.hpp"
+#include "sfz/PopWarnings.hpp"
 
-#include "sfz/containers/DynArray.hpp"
 #include "sfz/containers/StackString.hpp"
+
+using namespace sfz;
+
+TEST_CASE("const char* constructor", "[sfz::StackString]")
+{
+	StackString str = "hello";
+	REQUIRE(strcmp(str.string, "hello") == 0);
+}

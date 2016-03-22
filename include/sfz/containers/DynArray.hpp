@@ -44,7 +44,7 @@ using std::uint64_t;
 /// may be moved to different memory locations without any copy or move constructors being called.
 ///
 /// DynArray iterators are simply pointers to the internal array. Modifying a DynArray while
-/// iterating over it while likely have unintended consequences if you are not very careful.
+/// iterating over it will likely have unintended consequences if you are not very careful.
 ///
 /// Every method in DynArray is declared noexcept. This means that if any constructor or
 /// destructor called throws an exception the program will terminate by std::terminate().

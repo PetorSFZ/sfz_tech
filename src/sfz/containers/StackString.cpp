@@ -16,7 +16,34 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#pragma once
-
-#include "sfz/containers/DynArray.hpp"
 #include "sfz/containers/StackString.hpp"
+
+#include <cstring>
+
+namespace sfz {
+
+// StackStringTempl: Explicit instantiation
+// ------------------------------------------------------------------------------------------------
+
+template struct StackStringTempl<32>;
+template struct StackStringTempl<64>;
+template struct StackStringTempl<128>;
+template struct StackStringTempl<256>;
+template struct StackStringTempl<512>;
+template struct StackStringTempl<1024>;
+
+// StackStringTempl: Constructors & destructors
+// ------------------------------------------------------------------------------------------------
+
+template<size_t N>
+StackStringTempl<N>::StackStringTempl(const char* string) noexcept
+{
+	std::strncpy(this->string, string, N);
+	this->string[N-1] = '\0';
+}
+
+// StackStringTempl: Public methods
+// ------------------------------------------------------------------------------------------------
+
+
+} // namespace sfz

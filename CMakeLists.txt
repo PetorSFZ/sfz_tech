@@ -49,7 +49,9 @@ source_group(sfz_root FILES ${SOURCE_ROOT_FILES})
 set(SOURCE_CONTAINERS_FILES
 	${INCLUDE_DIR}/sfz/Containers.hpp
 	${INCLUDE_DIR}/sfz/containers/DynArray.hpp
-	${INCLUDE_DIR}/sfz/containers/DynArray.inl)
+	${INCLUDE_DIR}/sfz/containers/DynArray.inl
+	${INCLUDE_DIR}/sfz/containers/StackString.hpp
+	 ${SOURCE_DIR}/sfz/containers/StackString.cpp)
 source_group(sfz_containers FILES ${SOURCE_CONTAINERS_FILES})
 
 set(SOURCE_MEMORY_FILES
@@ -99,8 +101,9 @@ if(SFZ_CORE_BUILD_TESTS)
 	source_group(sfz_root FILES ${ROOT_TEST_FILES})
 
 	set(CONTAINERS_TEST_FILES
-		${TESTS_DIR}/sfz/containers/DynArray_Tests.cpp)
-	source_group(sfz_containers ${CONTAINERS_TEST_FILES})
+		${TESTS_DIR}/sfz/containers/DynArray_Tests.cpp
+		${TESTS_DIR}/sfz/containers/StackString_Tests.cpp)
+	source_group(sfz_containers FILES ${CONTAINERS_TEST_FILES})
 
 	set(MEMORY_TEST_FILES
 		${TESTS_DIR}/sfz/memory/Allocators_Tests.cpp
