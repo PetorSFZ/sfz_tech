@@ -47,18 +47,38 @@ struct StackStringTempl final {
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
-
+	
 	StackStringTempl() noexcept = default;
 	StackStringTempl(const StackStringTempl&) noexcept = default;
 	StackStringTempl& operator= (const StackStringTempl&) noexcept = default;
 	~StackStringTempl() noexcept = default;
 
+	/// Constructs a StackString with the given string. If the string is larger than the capacity
+	/// of this StackString then only what fits will be stored. The resulting StackString is
+	/// guaranteed to be null-terminated.
 	StackStringTempl(const char* string) noexcept;
 
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
-	
+	void printf(const char* format, ...) noexcept;
+
+	// Operators
+	// --------------------------------------------------------------------------------------------
+
+	bool operator== (const StackStringTempl& other) const noexcept;
+	bool operator!= (const StackStringTempl& other) const noexcept;
+	bool operator< (const StackStringTempl& other) const noexcept;
+	bool operator<= (const StackStringTempl& other) const noexcept;
+	bool operator> (const StackStringTempl& other) const noexcept;
+	bool operator>= (const StackStringTempl& other) const noexcept;
+
+	bool operator== (const char* other) const noexcept;
+	bool operator!= (const char* other) const noexcept;
+	bool operator< (const char* other) const noexcept;
+	bool operator<= (const char* other) const noexcept;
+	bool operator> (const char* other) const noexcept;
+	bool operator>= (const char* other) const noexcept;
 };
 
 // StackString types

@@ -18,6 +18,8 @@
 
 #include "sfz/containers/StackString.hpp"
 
+#include <cstdarg>
+#include <cstdio>
 #include <cstring>
 
 namespace sfz {
@@ -45,5 +47,88 @@ StackStringTempl<N>::StackStringTempl(const char* string) noexcept
 // StackStringTempl: Public methods
 // ------------------------------------------------------------------------------------------------
 
+template<size_t N>
+void StackStringTempl<N>::printf(const char* format, ...) noexcept
+{
+	va_list args;
+	va_start(args, format);
+	std::vsnprintf(this->string, N, format, args);
+	va_end(args);
+}
+
+// StackStringTempl: Operators
+// ------------------------------------------------------------------------------------------------
+
+template<size_t N>
+bool StackStringTempl<N>::operator== (const StackStringTempl& other) const noexcept
+{
+	return *this == other.string;
+}
+
+template<size_t N>
+bool StackStringTempl<N>::operator!= (const StackStringTempl& other) const noexcept
+{
+	return *this != other.string;
+}
+
+template<size_t N>
+bool StackStringTempl<N>::operator< (const StackStringTempl& other) const noexcept
+{
+	return *this < other.string;
+}
+
+template<size_t N>
+bool StackStringTempl<N>::operator<= (const StackStringTempl& other) const noexcept
+{
+	return *this <= other.string;
+}
+
+template<size_t N>
+bool StackStringTempl<N>::operator> (const StackStringTempl& other) const noexcept
+{
+	return *this > other.string;
+}
+
+template<size_t N>
+bool StackStringTempl<N>::operator>= (const StackStringTempl& other) const noexcept
+{
+	return *this >= other.string;
+}
+
+template<size_t N>
+bool StackStringTempl<N>::operator== (const char* other) const noexcept
+{
+	return std::strncmp(this->string, other, N) == 0;
+}
+
+template<size_t N>
+bool StackStringTempl<N>::operator!= (const char* other) const noexcept
+{
+	return !(*this == other);
+}
+
+template<size_t N>
+bool StackStringTempl<N>::operator< (const char* other) const noexcept
+{
+	return std::strncmp(this->string, other, N) < 0;
+}
+
+template<size_t N>
+bool StackStringTempl<N>::operator<= (const char* other) const noexcept
+{
+	return std::strncmp(this->string, other, N) <= 0;
+}
+
+template<size_t N>
+bool StackStringTempl<N>::operator> (const char* other) const noexcept
+{
+	return std::strncmp(this->string, other, N) > 0;
+}
+
+template<size_t N>
+bool StackStringTempl<N>::operator>= (const char* other) const noexcept
+{
+	return std::strncmp(this->string, other, N) >= 0;
+}
 
 } // namespace sfz
