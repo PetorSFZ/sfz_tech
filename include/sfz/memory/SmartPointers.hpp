@@ -83,8 +83,8 @@ public:
 	T& operator* () const noexcept { return *mPtr; }
 	T* operator-> () const noexcept { return mPtr; }
 
-	bool operator== (UniquePtr& other) const noexcept;
-	bool operator!= (UniquePtr& other) const noexcept;
+	bool operator== (const UniquePtr& other) const noexcept;
+	bool operator!= (const UniquePtr& other) const noexcept;
 
 	bool operator== (nullptr_t) const noexcept;
 	bool operator!= (nullptr_t) const noexcept;

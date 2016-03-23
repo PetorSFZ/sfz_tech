@@ -96,13 +96,13 @@ void UniquePtr<T, Allocator>::swap(UniquePtr& other) noexcept
 // ------------------------------------------------------------------------------------------------
 
 template<typename T, typename Allocator>
-bool UniquePtr<T, Allocator>::operator== (UniquePtr& other) const noexcept
+bool UniquePtr<T, Allocator>::operator== (const UniquePtr& other) const noexcept
 {
 	return this->mPtr == other.mPtr;
 }
 
 template<typename T, typename Allocator>
-bool UniquePtr<T, Allocator>::operator!= (UniquePtr& other) const noexcept
+bool UniquePtr<T, Allocator>::operator!= (const UniquePtr& other) const noexcept
 {
 	return !(*this == other);
 }
