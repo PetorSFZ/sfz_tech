@@ -42,6 +42,9 @@ include_directories(
 )
 
 set(SOURCE_ROOT_FILES
+	${INCLUDE_DIR}/sfz/Assert.hpp
+	${INCLUDE_DIR}/sfz/Assert.inl
+	 ${SOURCE_DIR}/sfz/Assert.cpp
 	${INCLUDE_DIR}/sfz/PopWarnings.hpp
 	${INCLUDE_DIR}/sfz/PushWarnings.hpp)
 source_group(sfz_root FILES ${SOURCE_ROOT_FILES})

@@ -16,24 +16,22 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-/// Header used to temporarily disable all warnings (or at least as many as possible)
-///
-/// Usage:
-/// #include <sfz/PushWarnings.hpp>
-/// // Code for which warnings will not be generated
-/// #include <sfz/PopWarnings.hpp>
+#include "sfz/Assert.hpp"
 
-#ifndef SFZ_WARNINGS_PUSHED
-#error "Must push warnings before they can be popped."
-#endif
-#undef SFZ_WARNINGS_PUSHED
+#include <cassert> // TODO: Remove
+#include <cstdio>
+#include <exception> // std::terminate()
 
-#if defined(_MSC_VER)
-#pragma warning(pop)
+namespace sfz {
 
-#elif defined(__clang__)
-#pragma clang diagnostic pop
+void printErrorMessage(const char* message) noexcept
+{
+	std::fprintf(stderr, "%s\n", message);
+}
 
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
+void terminateProgram() noexcept
+{
+	std::terminate();
+}
+
+} // namespace sfz
