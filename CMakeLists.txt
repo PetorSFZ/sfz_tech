@@ -57,6 +57,13 @@ set(SOURCE_CONTAINERS_FILES
 	 ${SOURCE_DIR}/sfz/containers/StackString.cpp)
 source_group(sfz_containers FILES ${SOURCE_CONTAINERS_FILES})
 
+set(SOURCE_MATH_FILES
+	${INCLUDE_DIR}/sfz/Math.hpp
+	${INCLUDE_DIR}/sfz/math/MathConstants.hpp
+	${INCLUDE_DIR}/sfz/math/Vector.hpp
+	${INCLUDE_DIR}/sfz/math/Vector.inl)
+source_group(sfz_math FILES ${SOURCE_MATH_FILES})
+
 set(SOURCE_MEMORY_FILES
 	${INCLUDE_DIR}/sfz/Memory.hpp
 	${INCLUDE_DIR}/sfz/memory/Allocators.hpp
@@ -70,6 +77,7 @@ source_group(sfz_memory FILES ${SOURCE_MEMORY_FILES})
 set(SOURCE_ALL_FILES
 	${SOURCE_ROOT_FILES}
 	${SOURCE_CONTAINERS_FILES}
+	${SOURCE_MATH_FILES}
 	${SOURCE_MEMORY_FILES})
 
 # Library compile target
@@ -108,6 +116,11 @@ if(SFZ_CORE_BUILD_TESTS)
 		${TESTS_DIR}/sfz/containers/StackString_Tests.cpp)
 	source_group(sfz_containers FILES ${CONTAINERS_TEST_FILES})
 
+	set(MATH_TEST_FILES
+		${TESTS_DIR}/sfz/math/MathConstants_Tests.cpp
+		${TESTS_DIR}/sfz/math/Vector_Tests.cpp)
+	source_group(sfz_math FILES ${MATH_TEST_FILES})
+	
 	set(MEMORY_TEST_FILES
 		${TESTS_DIR}/sfz/memory/Allocators_Tests.cpp
 		${TESTS_DIR}/sfz/memory/New_Tests.cpp
@@ -117,6 +130,7 @@ if(SFZ_CORE_BUILD_TESTS)
 	set(ALL_TEST_FILES
 		${ROOT_TEST_FILES}
 		${CONTAINERS_TEST_FILES}
+		${MATH_TEST_FILES}
 		${MEMORY_TEST_FILES})
 
 	enable_testing(true)

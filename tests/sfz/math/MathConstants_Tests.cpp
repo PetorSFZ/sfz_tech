@@ -20,33 +20,11 @@
 #include "catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
-#include <cstdio>
+#include "sfz/math/MathConstants.hpp"
 
-#include "sfz/containers/StackString.hpp"
-
-using namespace sfz;
-
-TEST_CASE("const char* constructor", "[sfz::StackString]")
+TEST_CASE("Pi constants", "[MathConstants]")
 {
-	StackString str = "hello";
-	REQUIRE(strcmp(str.string, "hello") == 0);
-
-	StackString str2 = "1234567890123456789012345678901234567890123456789012345678901234123456789012345678901234567890123456789012345678901234567890123extra";
-	REQUIRE(strcmp(str2.string, "1234567890123456789012345678901234567890123456789012345678901234123456789012345678901234567890123456789012345678901234567890123") == 0);
-}
-
-TEST_CASE("printf()", "[sfz::StackString]")
-{
-	StackString str;
-	str.printf("%s: %i", "Test", 1);
-	REQUIRE(strcmp(str.string, "Test: 1") == 0);
-}
-
-TEST_CASE("StackString comparison operators", "[sfz::StackString]")
-{
-	StackString str = "aba";
-	REQUIRE(str == "aba");
-	REQUIRE(str != "afae");
-	REQUIRE(str < "bbb");
-	REQUIRE(str > "aaa");
+	REQUIRE(3.1415f <= sfz::PI());
+	REQUIRE(sfz::PI() <= 3.1416f);
+	REQUIRE(sfz::PI<int>() == 3);
 }
