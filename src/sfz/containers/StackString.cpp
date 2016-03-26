@@ -27,6 +27,8 @@ namespace sfz {
 // StackStringTempl: Explicit instantiation
 // ------------------------------------------------------------------------------------------------
 
+template struct StackStringTempl<96>;
+
 template struct StackStringTempl<32>;
 template struct StackStringTempl<64>;
 template struct StackStringTempl<128>;

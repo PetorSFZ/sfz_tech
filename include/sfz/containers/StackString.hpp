@@ -34,8 +34,8 @@ using std::size_t;
 /// on the stack and potentially cause stack overflows. Use it responsibly.
 ///
 /// StackString is a template, but it is defined in a compilation unit (.cpp file). This means
-/// that only the predefined sizes is available. The default size is 128 chars, equivalent to the
-/// size of 16 64bit pointers. For other available sizes see StackString types further down in
+/// that only the predefined sizes is available. The default size is 96 chars, equivalent to the
+/// size of 12 64bit words. For other available sizes see StackString types further down in
 /// this file.
 template<size_t N>
 struct StackStringTempl final {
@@ -84,22 +84,13 @@ struct StackStringTempl final {
 // StackString types
 // ------------------------------------------------------------------------------------------------
 
-/// Extra small StackString, equivalent to the size of 4 64bit pointers.
-using StackStringXS = StackStringTempl<32>;
+using StackString = StackStringTempl<96>; // Size: 12 64bit words
 
-/// Small StackString, equivalent to the size of 8 64bit pointers.
-using StackStringS = StackStringTempl<64>;
-
-/// Default StackString, equivalent to the size of 16 64bit pointers.
-using StackString = StackStringTempl<128>;
-
-/// Large StackString, equivalent to the size of 32 64bit pointers.
-using StackStringL = StackStringTempl<256>;
-
-/// Extra large StackString, equivalent to the size of 64 64bit pointers
-using StackStringXL = StackStringTempl<512>;
-
-/// Extra extra large StackString, equivalent to the size of 128 64bit pointers.
-using StackStringXXL = StackStringTempl<1024>;
+using StackString32 = StackStringTempl<32>; // Size: 4 64bit words
+using StackString64 = StackStringTempl<64>; // Size: 8 64bit words
+using StackString128 = StackStringTempl<128>; // Size: 16 64bit words
+using StackString256 = StackStringTempl<256>; // Size: 32 64bit words
+using StackString512 = StackStringTempl<512>; // Size: 64 64bit words
+using StackString1024 = StackStringTempl<1024>; // Size: 128 64bit words
 
 } // namespace sfz
