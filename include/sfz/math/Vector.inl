@@ -435,18 +435,74 @@ size_t hash(const Vector<T,N>& vector) noexcept
 	return hash;
 }
 
-template<typename T, size_t N>
-std::string to_string(const Vector<T,N>& vector) noexcept
+template<size_t N>
+StackString toString(const Vector<float,N>& vector, uint32_t numDecimals) noexcept
 {
-	std::string str;
-	str += "[";
-	for (size_t i = 0; i < N; ++i) {
-		str += std::to_string(vector.elements[i]);
-		str += ", ";
-	}
-	str.erase(str.length()-2);
-	str += "]";
-	return std::move(str);
+	StackString tmp;
+	toString(vector, tmp, numDecimals);
+	return tmp;
+}
+
+template<size_t N>
+void toString(const Vector<float,N>& vector, StackString& string, uint32_t numDecimals) noexcept
+{
+	static_assert(false, "toString() not implemented for float vectors of this dimension");
+}
+
+template<>
+void toString(const vec2& vector, StackString& string, uint32_t numDecimals) noexcept
+{
+	StackString32 formatStr;
+	formatStr.printf("[%%.%uf, %%.%uf]", numDecimals, numDecimals);
+	string.printf(formatStr.string, vector.x, vector.y);
+}
+
+template<>
+void toString(const vec3& vector, StackString& string, uint32_t numDecimals) noexcept
+{
+	StackString32 formatStr;
+	formatStr.printf("[%%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals);
+	string.printf(formatStr.string, vector.x, vector.y, vector.z);
+}
+
+template<>
+void toString(const vec4& vector, StackString& string, uint32_t numDecimals) noexcept
+{
+	StackString32 formatStr;
+	formatStr.printf("[%%.%uf, %%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals, numDecimals);
+	string.printf(formatStr.string, vector.x, vector.y, vector.z, vector.w);
+}
+
+template<size_t N>
+StackString toString(const Vector<int32_t,N>& vector) noexcept
+{
+	StackString tmp;
+	toString(vector, tmp);
+	return tmp;
+}
+
+template<size_t N>
+void toString(const Vector<int32_t,N>& vector, StackString& string) noexcept
+{
+	static_assert(false, "toString() not implemented for int vectors of this dimension");
+}
+
+template<>
+void toString(const ivec2& vector, StackString& string) noexcept
+{
+	string.printf("[%i, %i]", vector.x, vector.y);
+}
+
+template<>
+void toString(const ivec3& vector, StackString& string) noexcept
+{
+	string.printf("[%i, %i, %i]", vector.x, vector.y, vector.z);
+}
+
+template<>
+void toString(const ivec4& vector, StackString& string) noexcept
+{
+	string.printf("[%i, %i, %i, %i]", vector.x, vector.y, vector.z, vector.w);
 }
 
 // Operators (arithmetic & assignment)
@@ -780,15 +836,6 @@ template<typename T, size_t N>
 bool operator!= (const Vector<T,N>& left, const Vector<T,N>& right) noexcept
 {
 	return !(left == right);
-}
-
-// Operators (other)
-// ------------------------------------------------------------------------------------------------
-
-template<typename T, size_t N>
-std::ostream& operator<< (std::ostream& ostream, const Vector<T,N>& vector) noexcept
-{
-	return ostream << sfz::to_string(vector);
 }
 
 // Standard iterator functions

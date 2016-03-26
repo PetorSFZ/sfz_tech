@@ -655,9 +655,12 @@ TEST_CASE("abs()", "[sfz::Vector]")
 
 TEST_CASE("Converting to string", "[sfz::Vector]")
 {
-	using sfz::to_string;
-	sfz::Vector<int, 3> v{-1, 2, 10};
-	REQUIRE(to_string(v) == "[-1, 2, 10]");
+	using namespace sfz;
+	ivec3 v{-1, 2, 10};
+	REQUIRE(toString(v) == "[-1, 2, 10]");
+
+	vec4 v2{1.0f, 2.0f, 3.0f, 4.0f};
+	REQUIRE(toString(v2, 1) == "[1.0, 2.0, 3.0, 4.0]");
 }
 
 TEST_CASE("Hashing", "[sfz::Vector]")

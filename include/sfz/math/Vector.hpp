@@ -22,10 +22,9 @@
 #include <cstddef> // std::size_t
 #include <cstdint> // std::int32_t
 #include <cmath> // std::sqrt
-#include <string>
-#include <iostream> // std::ostream
 
 #include "sfz/Assert.hpp"
+#include "sfz/containers/StackString.hpp"
 #include "sfz/math/MathConstants.hpp"
 
 /// A mathematical vector POD class that imitates a built-in primitive.
@@ -233,9 +232,21 @@ Vector<T,N> abs(const Vector<T,N>& vector) noexcept;
 template<typename T, size_t N>
 size_t hash(const Vector<T,N>& vector) noexcept;
 
-/// Creates string representation of the vector
-template<typename T, size_t N>
-std::string to_string(const Vector<T,N>& vector) noexcept;
+/// Creates string representation of a float vector
+template<size_t N>
+StackString toString(const Vector<float,N>& vector, uint32_t numDecimals = 2) noexcept;
+
+/// Creates string representation of a float vector
+template<size_t N>
+void toString(const Vector<float, N>& vector, StackString& string, uint32_t numDecimals = 2) noexcept;
+
+/// Creates string representation of an int vector
+template<size_t N>
+StackString toString(const Vector<int32_t,N>& vector) noexcept;
+
+/// Creates string representation of an int vector
+template<size_t N>
+void toString(const Vector<int32_t,N>& vector, StackString& string) noexcept;
 
 // Operators (arithmetic & assignment)
 // ------------------------------------------------------------------------------------------------
@@ -299,12 +310,6 @@ bool operator== (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
 template<typename T, size_t N>
 bool operator!= (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
-
-// Operators (other)
-// ------------------------------------------------------------------------------------------------
-
-template<typename T, size_t N>
-std::ostream& operator<< (std::ostream& ostream, const Vector<T,N>& vector) noexcept;
 
 // Standard iterator functions
 // ------------------------------------------------------------------------------------------------
