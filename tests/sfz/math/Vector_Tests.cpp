@@ -16,7 +16,6 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-
 #include "sfz/PushWarnings.hpp"
 #include "catch.hpp"
 #include "sfz/PopWarnings.hpp"
@@ -347,9 +346,9 @@ TEST_CASE("Arithmetic operators", "[sfz::Vector]")
 		REQUIRE(v2[2] == 1);
 	}
 	SECTION("Division by number") {
-		auto v1 = sfz::Vector<int,2>{2, -2}/2;
-		REQUIRE(v1[0] == 1);
-		REQUIRE(v1[1] == -1);
+		auto v3 = sfz::Vector<int,2>{2, -2}/2;
+		REQUIRE(v3[0] == 1);
+		REQUIRE(v3[1] == -1);
 	}
 	SECTION("Element-wise division") {
 		auto v3 = v1 / v1;

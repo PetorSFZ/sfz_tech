@@ -19,4 +19,7 @@
 #pragma once
 
 #include "sfz/math/MathConstants.hpp"
+#include "sfz/math/MathHelpers.hpp"
+#include "sfz/math/Matrix.hpp"
+#include "sfz/math/MatrixSupport.hpp"
 #include "sfz/math/Vector.hpp"

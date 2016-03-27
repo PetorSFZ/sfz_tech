@@ -10,7 +10,7 @@ endif(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
 # Compiler flags
 if(MSVC)
 	# MSVC flags
-	set(CMAKE_CXX_FLAGS "/Wall /Zi /EHsc /wd4201 /wd4350 /wd4514 /wd4571 /wd4668 /wd4710 /wd4711 /wd4820")
+	set(CMAKE_CXX_FLAGS "/Wall /Zi /EHsc /wd4201 /wd4350 /wd4514 /wd4571 /wd4668 /wd4710 /wd4711 /wd4820 /D_CRT_SECURE_NO_WARNINGS")
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/O2 /fp:fast /DEBUG /DSFZ_NO_DEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASE "/O2 /fp:fast /DSFZ_NO_DEBUG")
 	set(CMAKE_CXX_FLAGS_DEBUG  "/Od /DEBUG")
@@ -60,6 +60,12 @@ source_group(sfz_containers FILES ${SOURCE_CONTAINERS_FILES})
 set(SOURCE_MATH_FILES
 	${INCLUDE_DIR}/sfz/Math.hpp
 	${INCLUDE_DIR}/sfz/math/MathConstants.hpp
+	${INCLUDE_DIR}/sfz/math/MathHelpers.hpp
+	${INCLUDE_DIR}/sfz/math/MathHelpers.inl
+	${INCLUDE_DIR}/sfz/math/Matrix.hpp
+	${INCLUDE_DIR}/sfz/math/Matrix.inl
+	${INCLUDE_DIR}/sfz/math/MatrixSupport.hpp
+	${INCLUDE_DIR}/sfz/math/MatrixSupport.inl
 	${INCLUDE_DIR}/sfz/math/Vector.hpp
 	${INCLUDE_DIR}/sfz/math/Vector.inl)
 source_group(sfz_math FILES ${SOURCE_MATH_FILES})
@@ -118,6 +124,7 @@ if(SFZ_CORE_BUILD_TESTS)
 
 	set(MATH_TEST_FILES
 		${TESTS_DIR}/sfz/math/MathConstants_Tests.cpp
+		${TESTS_DIR}/sfz/math/Matrix_Tests.cpp
 		${TESTS_DIR}/sfz/math/Vector_Tests.cpp)
 	source_group(sfz_math FILES ${MATH_TEST_FILES})
 	
