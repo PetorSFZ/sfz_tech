@@ -450,7 +450,7 @@ void toString(const Vector<float,N>& vector, StackString& string, uint32_t numDe
 }
 
 template<>
-void toString(const vec2& vector, StackString& string, uint32_t numDecimals) noexcept
+inline void toString(const vec2& vector, StackString& string, uint32_t numDecimals) noexcept
 {
 	StackString32 formatStr;
 	formatStr.printf("[%%.%uf, %%.%uf]", numDecimals, numDecimals);
@@ -458,7 +458,7 @@ void toString(const vec2& vector, StackString& string, uint32_t numDecimals) noe
 }
 
 template<>
-void toString(const vec3& vector, StackString& string, uint32_t numDecimals) noexcept
+inline void toString(const vec3& vector, StackString& string, uint32_t numDecimals) noexcept
 {
 	StackString32 formatStr;
 	formatStr.printf("[%%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals);
@@ -466,7 +466,7 @@ void toString(const vec3& vector, StackString& string, uint32_t numDecimals) noe
 }
 
 template<>
-void toString(const vec4& vector, StackString& string, uint32_t numDecimals) noexcept
+inline void toString(const vec4& vector, StackString& string, uint32_t numDecimals) noexcept
 {
 	StackString32 formatStr;
 	formatStr.printf("[%%.%uf, %%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals, numDecimals);
@@ -488,19 +488,19 @@ void toString(const Vector<int32_t,N>& vector, StackString& string) noexcept
 }
 
 template<>
-void toString(const ivec2& vector, StackString& string) noexcept
+inline void toString(const ivec2& vector, StackString& string) noexcept
 {
 	string.printf("[%i, %i]", vector.x, vector.y);
 }
 
 template<>
-void toString(const ivec3& vector, StackString& string) noexcept
+inline void toString(const ivec3& vector, StackString& string) noexcept
 {
 	string.printf("[%i, %i, %i]", vector.x, vector.y, vector.z);
 }
 
 template<>
-void toString(const ivec4& vector, StackString& string) noexcept
+inline void toString(const ivec4& vector, StackString& string) noexcept
 {
 	string.printf("[%i, %i, %i, %i]", vector.x, vector.y, vector.z, vector.w);
 }

@@ -30,7 +30,7 @@
 /// A mathematical vector POD class that imitates a built-in primitive.
 ///
 /// Typedefs are provided for float vectors (vec2, vec3 and vec4) and (32-bit signed) integer
-/// vectors (vec2i, vec3i, vec4i). Note that for integers some operations, such as as calculating
+/// vectors (ivec2, ivec3, ivec4). Note that for integers some operations, such as as calculating
 /// the length, may give unexpected results due to truncation or overflow.
 ///
 /// 2, 3 and 4 dimensional vectors are specialized to have more constructors and ways of accessing
