@@ -29,17 +29,21 @@ using namespace sfz;
 TEST_CASE("const char* constructor", "[sfz::StackString]")
 {
 	StackString str = "hello";
-	REQUIRE(strcmp(str.string, "hello") == 0);
+	REQUIRE(strcmp(str.str, "hello") == 0);
 
 	StackString128 str2 = "1234567890123456789012345678901234567890123456789012345678901234123456789012345678901234567890123456789012345678901234567890123extra";
-	REQUIRE(strcmp(str2.string, "1234567890123456789012345678901234567890123456789012345678901234123456789012345678901234567890123456789012345678901234567890123") == 0);
+	REQUIRE(strcmp(str2.str, "1234567890123456789012345678901234567890123456789012345678901234123456789012345678901234567890123456789012345678901234567890123") == 0);
 }
 
-TEST_CASE("printf()", "[sfz::StackString]")
+TEST_CASE("printf() & printfAppend()", "[sfz::StackString]")
 {
 	StackString str;
 	str.printf("%s: %i", "Test", 1);
-	REQUIRE(strcmp(str.string, "Test: 1") == 0);
+	REQUIRE(strcmp(str.str, "Test: 1") == 0);
+
+	str.printfAppend(" && %s: %i", "Test", 2);
+	REQUIRE(strcmp(str.str, "Test: 1 && Test: 2") == 0);
+	
 }
 
 TEST_CASE("StackString comparison operators", "[sfz::StackString]")

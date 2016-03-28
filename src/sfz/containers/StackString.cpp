@@ -42,8 +42,8 @@ template struct StackStringTempl<1024>;
 template<size_t N>
 StackStringTempl<N>::StackStringTempl(const char* string) noexcept
 {
-	std::strncpy(this->string, string, N);
-	this->string[N-1] = '\0';
+	std::strncpy(this->str, string, N);
+	this->str[N-1] = '\0';
 }
 
 // StackStringTempl: Public methods
@@ -54,7 +54,17 @@ void StackStringTempl<N>::printf(const char* format, ...) noexcept
 {
 	va_list args;
 	va_start(args, format);
-	std::vsnprintf(this->string, N, format, args);
+	std::vsnprintf(this->str, N, format, args);
+	va_end(args);
+}
+
+template<size_t N>
+void StackStringTempl<N>::printfAppend(const char* format, ...) noexcept
+{
+	va_list args;
+	va_start(args, format);
+	size_t len = std::strlen(this->str);
+	std::vsnprintf(this->str + len, N - len, format, args);
 	va_end(args);
 }
 
@@ -64,43 +74,43 @@ void StackStringTempl<N>::printf(const char* format, ...) noexcept
 template<size_t N>
 bool StackStringTempl<N>::operator== (const StackStringTempl& other) const noexcept
 {
-	return *this == other.string;
+	return *this == other.str;
 }
 
 template<size_t N>
 bool StackStringTempl<N>::operator!= (const StackStringTempl& other) const noexcept
 {
-	return *this != other.string;
+	return *this != other.str;
 }
 
 template<size_t N>
 bool StackStringTempl<N>::operator< (const StackStringTempl& other) const noexcept
 {
-	return *this < other.string;
+	return *this < other.str;
 }
 
 template<size_t N>
 bool StackStringTempl<N>::operator<= (const StackStringTempl& other) const noexcept
 {
-	return *this <= other.string;
+	return *this <= other.str;
 }
 
 template<size_t N>
 bool StackStringTempl<N>::operator> (const StackStringTempl& other) const noexcept
 {
-	return *this > other.string;
+	return *this > other.str;
 }
 
 template<size_t N>
 bool StackStringTempl<N>::operator>= (const StackStringTempl& other) const noexcept
 {
-	return *this >= other.string;
+	return *this >= other.str;
 }
 
 template<size_t N>
 bool StackStringTempl<N>::operator== (const char* other) const noexcept
 {
-	return std::strncmp(this->string, other, N) == 0;
+	return std::strncmp(this->str, other, N) == 0;
 }
 
 template<size_t N>
@@ -112,25 +122,25 @@ bool StackStringTempl<N>::operator!= (const char* other) const noexcept
 template<size_t N>
 bool StackStringTempl<N>::operator< (const char* other) const noexcept
 {
-	return std::strncmp(this->string, other, N) < 0;
+	return std::strncmp(this->str, other, N) < 0;
 }
 
 template<size_t N>
 bool StackStringTempl<N>::operator<= (const char* other) const noexcept
 {
-	return std::strncmp(this->string, other, N) <= 0;
+	return std::strncmp(this->str, other, N) <= 0;
 }
 
 template<size_t N>
 bool StackStringTempl<N>::operator> (const char* other) const noexcept
 {
-	return std::strncmp(this->string, other, N) > 0;
+	return std::strncmp(this->str, other, N) > 0;
 }
 
 template<size_t N>
 bool StackStringTempl<N>::operator>= (const char* other) const noexcept
 {
-	return std::strncmp(this->string, other, N) >= 0;
+	return std::strncmp(this->str, other, N) >= 0;
 }
 
 } // namespace sfz

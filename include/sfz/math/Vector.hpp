@@ -238,7 +238,7 @@ StackString toString(const Vector<float,N>& vector, uint32_t numDecimals = 2) no
 
 /// Creates string representation of a float vector
 template<size_t N>
-void toString(const Vector<float, N>& vector, StackString& string, uint32_t numDecimals = 2) noexcept;
+void toString(const Vector<float,N>& vector, StackString& string, uint32_t numDecimals = 2) noexcept;
 
 /// Creates string representation of an int vector
 template<size_t N>

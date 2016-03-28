@@ -454,7 +454,7 @@ inline void toString(const vec2& vector, StackString& string, uint32_t numDecima
 {
 	StackString32 formatStr;
 	formatStr.printf("[%%.%uf, %%.%uf]", numDecimals, numDecimals);
-	string.printf(formatStr.string, vector.x, vector.y);
+	string.printf(formatStr.str, vector.x, vector.y);
 }
 
 template<>
@@ -462,7 +462,7 @@ inline void toString(const vec3& vector, StackString& string, uint32_t numDecima
 {
 	StackString32 formatStr;
 	formatStr.printf("[%%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals);
-	string.printf(formatStr.string, vector.x, vector.y, vector.z);
+	string.printf(formatStr.str, vector.x, vector.y, vector.z);
 }
 
 template<>
@@ -470,7 +470,7 @@ inline void toString(const vec4& vector, StackString& string, uint32_t numDecima
 {
 	StackString32 formatStr;
 	formatStr.printf("[%%.%uf, %%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals, numDecimals);
-	string.printf(formatStr.string, vector.x, vector.y, vector.z, vector.w);
+	string.printf(formatStr.str, vector.x, vector.y, vector.z, vector.w);
 }
 
 template<size_t N>

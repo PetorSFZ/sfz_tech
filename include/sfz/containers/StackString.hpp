@@ -43,7 +43,7 @@ struct StackStringTempl final {
 	// Public members
 	// --------------------------------------------------------------------------------------------
 
-	char string[N] = "\0";
+	char str[N] = "\0";
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -61,7 +61,11 @@ struct StackStringTempl final {
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
+	/// Calls snprintf() on the internal string, overwriting the content.
 	void printf(const char* format, ...) noexcept;
+
+	/// Calls snprintf() on the remaining part of the internal string, effectively appending to it.
+	void printfAppend(const char* format, ...) noexcept;
 
 	// Operators
 	// --------------------------------------------------------------------------------------------
