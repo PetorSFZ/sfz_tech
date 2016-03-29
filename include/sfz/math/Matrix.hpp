@@ -20,9 +20,9 @@
 
 #include <cstddef>
 #include <initializer_list>
-#include <string>
 
 #include "sfz/Assert.hpp"
+#include "sfz/containers/StackString.hpp"
 #include "sfz/math/Vector.hpp"
 
 namespace sfz {
@@ -127,8 +127,21 @@ Matrix<T,N,M> transpose(const Matrix<T,M,N>& matrix) noexcept;
 template<typename T, size_t M, size_t N>
 size_t hash(const Matrix<T,M,N>& matrix) noexcept;
 
-template<typename T, size_t M, size_t N>
-std::string to_string(const Matrix<T,M,N>& matrix) noexcept;
+/// Creates string representation of a float matrix
+template<size_t M, size_t N>
+StackString256 toString(const Matrix<float,M,N>& matrix, bool rowBreak = false, uint32_t numDecimals = 2) noexcept;
+
+/// Creates string representation of a float matrix
+template<size_t M, size_t N>
+void toString(const Matrix<float,M,N>& matrix, StackString256& string, bool rowBreak = false, uint32_t numDecimals = 2) noexcept;
+
+/// Creates string representation of an int matrix
+template<size_t M, size_t N>
+StackString256 toString(const Matrix<int32_t,M,N>& matrix, bool rowBreak = false) noexcept;
+
+/// Creates string representation of an int matrix
+template<size_t M, size_t N>
+void toString(const Matrix<int32_t,M,N>& matrix, StackString256& string, bool rowBreak = false) noexcept;
 
 // Operators (arithmetic & assignment)
 // ------------------------------------------------------------------------------------------------
