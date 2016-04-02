@@ -655,7 +655,7 @@ TEST_CASE("abs()", "[sfz::Vector]")
 TEST_CASE("Converting to string", "[sfz::Vector]")
 {
 	using namespace sfz;
-	ivec3 v{-1, 2, 10};
+	vec3i v{-1, 2, 10};
 	REQUIRE(toString(v) == "[-1, 2, 10]");
 
 	vec4 v2{1.0f, 2.0f, 3.0f, 4.0f};
@@ -675,34 +675,32 @@ TEST_CASE("Hashing", "[sfz::Vector]")
 TEST_CASE("Is proper POD", "[sfz::Vector]")
 {
 	REQUIRE(std::is_trivially_default_constructible<sfz::vec2>::value);
-	REQUIRE(std::is_trivially_default_constructible<sfz::ivec2>::value);
+	REQUIRE(std::is_trivially_default_constructible<sfz::vec2i>::value);
 	REQUIRE(std::is_trivially_default_constructible<sfz::vec3>::value);
-	REQUIRE(std::is_trivially_default_constructible<sfz::ivec3>::value);
+	REQUIRE(std::is_trivially_default_constructible<sfz::vec3i>::value);
 
 	REQUIRE(std::is_trivially_copyable<sfz::vec2>::value);
-	REQUIRE(std::is_trivially_copyable<sfz::ivec2>::value);
+	REQUIRE(std::is_trivially_copyable<sfz::vec2i>::value);
 	REQUIRE(std::is_trivially_copyable<sfz::vec3>::value);
-	REQUIRE(std::is_trivially_copyable<sfz::ivec3>::value);
+	REQUIRE(std::is_trivially_copyable<sfz::vec3i>::value);
 
 	REQUIRE(std::is_trivial<sfz::vec2>::value);
-	REQUIRE(std::is_trivial<sfz::ivec2>::value);
+	REQUIRE(std::is_trivial<sfz::vec2i>::value);
 	REQUIRE(std::is_trivial<sfz::vec3>::value);
-	REQUIRE(std::is_trivial<sfz::ivec3>::value);
+	REQUIRE(std::is_trivial<sfz::vec3i>::value);
 
 	REQUIRE(std::is_standard_layout<sfz::vec2>::value);
-	REQUIRE(std::is_standard_layout<sfz::ivec2>::value);
+	REQUIRE(std::is_standard_layout<sfz::vec2i>::value);
 	REQUIRE(std::is_standard_layout<sfz::vec3>::value);
-	REQUIRE(std::is_standard_layout<sfz::ivec3>::value);
+	REQUIRE(std::is_standard_layout<sfz::vec3i>::value);
 
-#ifndef _MSC_VER
 	REQUIRE(std::is_pod<sfz::vec2>::value);
-	REQUIRE(std::is_pod<sfz::ivec2>::value);
+	REQUIRE(std::is_pod<sfz::vec2i>::value);
 	REQUIRE(std::is_pod<sfz::vec3>::value);
-	REQUIRE(std::is_pod<sfz::ivec3>::value);
-#endif
+	REQUIRE(std::is_pod<sfz::vec3i>::value);
 
 	REQUIRE(std::is_literal_type<sfz::vec2>::value);
-	REQUIRE(std::is_literal_type<sfz::ivec2>::value);
+	REQUIRE(std::is_literal_type<sfz::vec2i>::value);
 	REQUIRE(std::is_literal_type<sfz::vec3>::value);
-	REQUIRE(std::is_literal_type<sfz::ivec3>::value);
+	REQUIRE(std::is_literal_type<sfz::vec3i>::value);
 }

@@ -198,9 +198,9 @@ using mat2 = Matrix<float,2,2>;
 using mat3 = Matrix<float,3,3>;
 using mat4 = Matrix<float,4,4>;
 
-using imat2 = Matrix<int,2,2>;
-using imat3 = Matrix<int,3,3>;
-using imat4 = Matrix<int,4,4>;
+using mat2i = Matrix<int,2,2>;
+using mat3i = Matrix<int,3,3>;
+using mat4i = Matrix<int,4,4>;
 
 } // namespace sfz
 

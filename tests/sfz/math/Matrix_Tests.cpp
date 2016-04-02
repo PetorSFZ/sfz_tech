@@ -35,16 +35,16 @@ TEST_CASE("Constructors", "[sfz::Matrix]")
 	SECTION("Array pointer constructor)") {
 		const int rowMajor[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
 		const int colMajor[] = {1, 4, 7, 2, 5, 8, 3, 6, 9};
-		sfz::imat3 m1{rowMajor, true};
-		sfz::imat3 m2{colMajor, false};
-		sfz::imat3 m3{rowMajor, false};
-		sfz::imat3 m4{colMajor, true};
+		sfz::mat3i m1{rowMajor, true};
+		sfz::mat3i m2{colMajor, false};
+		sfz::mat3i m3{rowMajor, false};
+		sfz::mat3i m4{colMajor, true};
 		
 		REQUIRE(m1 == m2);
 		REQUIRE(m3 == m4);
 	}
 	SECTION("Initializer list constructor") {
-		sfz::imat3 m1{{1, 2, 3},
+		sfz::mat3i m1{{1, 2, 3},
 		              {4, 5, 6},
 		              {7, 8, 9}};
 
@@ -68,7 +68,7 @@ TEST_CASE("Constructors", "[sfz::Matrix]")
 		REQUIRE(m1.elements[2][1] == 6);
 		REQUIRE(m1.elements[2][2] == 9);
 
-		sfz::imat2 m2{{1}};
+		sfz::mat2i m2{{1}};
 
 		REQUIRE(m2.at(0, 0) == 1);
 		REQUIRE(m2.at(0, 1) == 0);
@@ -115,9 +115,9 @@ TEST_CASE("Constructors", "[sfz::Matrix]")
 }
 
 TEST_CASE("data()", "[sfz::Matrix]") {
-	sfz::imat2 m1{{1, 2},
+	sfz::mat2i m1{{1, 2},
 	              {3, 4}};
-	const sfz::imat2 m2{{-1, -2},
+	const sfz::mat2i m2{{-1, -2},
 	                    {-3, -4}};
 	
 	int* ptr1 = m1.data();
@@ -186,9 +186,9 @@ TEST_CASE("Row and column getters/setters", "[sfz::Matrix]")
 
 TEST_CASE("Element-wise multiplication", "[sfz::Matrix]")
 {
-	sfz::imat2 m1{{1, 2},
+	sfz::mat2i m1{{1, 2},
 	              {3, 4}};
-	sfz::imat2 m2{{1, 2},
+	sfz::mat2i m2{{1, 2},
 	              {3, 4}};
 
 	auto res1 = elemMult(m1, m2);
@@ -203,12 +203,12 @@ TEST_CASE("Element-wise multiplication", "[sfz::Matrix]")
 
 TEST_CASE("Transpose", "[sfz::Matrix]")
 {
-	sfz::imat2 m1{{1, 2},
+	sfz::mat2i m1{{1, 2},
 	              {3, 4}};
 	sfz::Matrix<int, 2, 3> m2{{1, 2, 3},
 	                          {4, 5, 6}};
 
-	sfz::imat2 res1 = transpose(m1);
+	sfz::mat2i res1 = transpose(m1);
 	REQUIRE(res1 != m1);
 	REQUIRE(transpose(res1) == m1);
 
@@ -230,11 +230,11 @@ TEST_CASE("Transpose", "[sfz::Matrix]")
 
 TEST_CASE("Arhitmetic & assignment operators", "[sfz::Matrix]")
 {
-	sfz::imat2 m1{{1, 2},
+	sfz::mat2i m1{{1, 2},
 	              {3, 4}};
-	sfz::imat2 m2{{1, 2},
+	sfz::mat2i m2{{1, 2},
 	              {3, 4}};
-	sfz::imat2 m3{{-2, -1},
+	sfz::mat2i m3{{-2, -1},
 	              {3, 33}};
 
 	SECTION("+=") {
@@ -279,7 +279,7 @@ TEST_CASE("Arhitmetic & assignment operators", "[sfz::Matrix]")
 		REQUIRE(m3.at(1, 1) == -33);
 	}
 	SECTION("*= (matrix of same size)") {
-		sfz::imat2 m4{{1, 0}, {0, 1}};
+		sfz::mat2i m4{{1, 0}, {0, 1}};
 		auto m1cpy = m1;
 		m1cpy *= m4;
 
@@ -298,8 +298,8 @@ TEST_CASE("Arhitmetic & assignment operators", "[sfz::Matrix]")
 
 TEST_CASE("Arhitmetic operators", "[sfz::Matrix]")
 {
-	sfz::imat2 m1{{1, 2}, {3, 4}};
-	sfz::imat2 m2{{0, 1}, {0, 0}};
+	sfz::mat2i m1{{1, 2}, {3, 4}};
+	sfz::mat2i m2{{0, 1}, {0, 0}};
 	sfz::Matrix<int, 2, 3> m3{{1, 2, 3}, {4, 5, 6}};
 	sfz::Matrix<int, 3, 2> m4{{1, 0}, {0, 1}, {0, 0}};
 
@@ -358,20 +358,20 @@ TEST_CASE("Arhitmetic operators", "[sfz::Matrix]")
 		REQUIRE(res2.at(1, 0) == 0);
 		REQUIRE(res2.at(1, 1) == 0);
 
-		sfz::imat2 res3 = m3*m4;
+		sfz::mat2i res3 = m3*m4;
 		REQUIRE(res3.at(0, 0) == 1);
 		REQUIRE(res3.at(0, 1) == 2);
 		REQUIRE(res3.at(1, 0) == 4);
 		REQUIRE(res3.at(1, 1) == 5);
 	}
 	SECTION("* (vector)") {
-		ivec2 v1{1, -2};
+		vec2i v1{1, -2};
 
-		ivec2 res1 = m1*v1;
+		vec2i res1 = m1*v1;
 		REQUIRE(res1[0] == -3);
 		REQUIRE(res1[1] == -5);
 
-		ivec3 res2 = m4*v1;
+		vec3i res2 = m4*v1;
 		REQUIRE(res2[0] == 1);
 		REQUIRE(res2[1] == -2);
 		REQUIRE(res2[2] == 0);
@@ -393,11 +393,11 @@ TEST_CASE("Arhitmetic operators", "[sfz::Matrix]")
 
 TEST_CASE("Matrix comparison operators", "[sfz::Matrix]")
 {
-	sfz::imat2 m1{{1, 2},
+	sfz::mat2i m1{{1, 2},
 	              {3, 4}};
-	sfz::imat2 m2{{1, 2},
+	sfz::mat2i m2{{1, 2},
 	              {3, 4}};
-	sfz::imat2 m3{{-2, -1},
+	sfz::mat2i m3{{-2, -1},
 	              {3, 33}};
 
 	SECTION("==") {
@@ -420,11 +420,11 @@ TEST_CASE("Matrix comparison operators", "[sfz::Matrix]")
 
 TEST_CASE("Matrix hashing", "[sfz::Matrix]")
 {
-	sfz::imat2 m1{{2, 100},
+	sfz::mat2i m1{{2, 100},
 	              {1, -99}};
-	sfz::imat2 m2{{-1, 0},
+	sfz::mat2i m2{{-1, 0},
 	              {3, -10}};
-	sfz::imat2 m3{{0, -9},
+	sfz::mat2i m3{{0, -9},
 	              {32, 14}};
 
 	REQUIRE(hash(m1) != hash(m2));
@@ -437,7 +437,7 @@ TEST_CASE("Matrix toString()", "[sfz::Matrix]")
 	auto mStr1 = toString(m1, false, 1);
 	REQUIRE(mStr1 == "[[1.0, 2.0, 3.0, 4.0], [5.0, 6.0, 7.0, 8.0], [9.0, 10.0, 11.0, 12.0], [13.0, 14.0, 15.0, 16.0]]");
 
-	imat4 m2{{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}, {13, 14, 15, 16}};
+	mat4i m2{{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}, {13, 14, 15, 16}};
 	auto mStr2 = toString(m2, false);
 	REQUIRE(mStr2 == "[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]]");
 }
@@ -448,9 +448,7 @@ TEST_CASE("Matrix is proper POD", "[sfz::Matrix]")
 	REQUIRE(std::is_trivially_copyable<sfz::mat4>::value);
 	REQUIRE(std::is_trivial<sfz::mat4>::value);
 	REQUIRE(std::is_standard_layout<sfz::mat4>::value);
-#ifndef _MSC_VER
 	REQUIRE(std::is_pod<sfz::mat4>::value);
-#endif
 	REQUIRE(std::is_literal_type<sfz::mat4>::value);
 }
 

@@ -488,19 +488,19 @@ void toString(const Vector<int32_t,N>& vector, StackString& string) noexcept
 }
 
 template<>
-inline void toString(const ivec2& vector, StackString& string) noexcept
+inline void toString(const vec2i& vector, StackString& string) noexcept
 {
 	string.printf("[%i, %i]", vector.x, vector.y);
 }
 
 template<>
-inline void toString(const ivec3& vector, StackString& string) noexcept
+inline void toString(const vec3i& vector, StackString& string) noexcept
 {
 	string.printf("[%i, %i, %i]", vector.x, vector.y, vector.z);
 }
 
 template<>
-inline void toString(const ivec4& vector, StackString& string) noexcept
+inline void toString(const vec4i& vector, StackString& string) noexcept
 {
 	string.printf("[%i, %i, %i, %i]", vector.x, vector.y, vector.z, vector.w);
 }
