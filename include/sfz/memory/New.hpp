@@ -27,16 +27,16 @@ namespace sfz {
 // New
 // ------------------------------------------------------------------------------------------------
 
-/// Constructs a new object of type T with the default allocator
+/// Constructs a new object of type T with the specified allocator
 /// The object is guaranteed to be 32-byte aligned
 /// Will exit the program through std::terminate() if constructor throws an exception
-/// \return nullptr if memory allocation failede
-template<typename T, typename... Args>
+/// \return nullptr if memory allocation failed
+template<typename T, typename Allocator = StandardAllocator, typename... Args>
 T* sfz_new(Args&&... args) noexcept
 {
-	void* memPtr = StandardAllocator::allocate(sizeof(T), 32);
+	void* memPtr = Allocator::allocate(sizeof(T), 32);
 	T* objPtr = nullptr;
-	objPtr = new(memPtr) T{std::forward<Args>(args)...};
+	objPtr = new(memPtr) T(std::forward<Args>(args)...);
 	// If constructor throws exception std::terminate() will be called since function is noexcept
 	return objPtr;
 }
@@ -44,16 +44,16 @@ T* sfz_new(Args&&... args) noexcept
 // Delete
 // ------------------------------------------------------------------------------------------------
 
-/// Deletes an object created with sfz_new()
+/// Deletes an object created with the specified allocator
 /// Will exit the program through std::terminate() if destructor throws an exception
 /// \param pointer to the object
-template<typename T>
+template<typename T, typename Allocator = StandardAllocator>
 void sfz_delete(T* pointer) noexcept
 {
 	if (pointer == nullptr) return;
 	pointer->~T();
 	// If destructor throws exception std::terminate() will be called since function is noexcept
-	StandardAllocator::deallocate(static_cast<void*>(pointer));
+	Allocator::deallocate(static_cast<void*>(pointer));
 }
 
 } // namespace sfz

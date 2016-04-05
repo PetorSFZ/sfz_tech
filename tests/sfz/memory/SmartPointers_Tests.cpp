@@ -66,3 +66,14 @@ TEST_CASE("Basic UniquePtr tests", "[sfz::UniquePtr]")
 	REQUIRE(flag == 2);
 	REQUIRE(second == nullptr);
 }
+
+TEST_CASE("makeUnique()", "[sfz::SmartPointers]")
+{
+	struct Foo {
+		int a, b;
+		Foo(int a, int b) : a(a), b(b) {} 
+	};
+	auto ptr = makeUnique<Foo>(3, 4);
+	REQUIRE(ptr->a == 3);
+	REQUIRE(ptr->b == 4);
+}

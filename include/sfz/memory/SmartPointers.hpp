@@ -22,6 +22,7 @@
 #include <type_traits> // std::is_array
 
 #include "sfz/memory/Allocators.hpp"
+#include "sfz/memory/New.hpp"
 
 namespace sfz {
 
@@ -92,6 +93,15 @@ public:
 private:
 	T* mPtr = nullptr;
 };
+
+/// Constructs a new object of type T with the specified allocator and returns it in a UniquePtr
+/// Will exit the program through std::terminate() if constructor throws an exception
+/// \return nullptr if memory allocation failed
+template<typename T, typename Allocator = StandardAllocator, typename... Args>
+UniquePtr<T, Allocator> makeUnique(Args&&... args) noexcept
+{
+	return UniquePtr<T,Allocator>(sfz_new<T,Allocator>(std::forward<Args>(args)...));
+}
 
 } // namespace sfz
 
