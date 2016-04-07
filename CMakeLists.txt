@@ -5,7 +5,7 @@ project("sfzCore")
 # Sets build type to release if no build type is specified in a single-configuration generator.
 if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
-endif(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+endif()
 
 # Compiler flags
 if(MSVC)
@@ -13,13 +13,13 @@ if(MSVC)
 	set(CMAKE_CXX_FLAGS "/Wall /Zi /EHsc /wd4201 /wd4350 /wd4514 /wd4571 /wd4647 /wd4668 /wd4710 /wd4711 /wd4820 /D_CRT_SECURE_NO_WARNINGS")
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/O2 /fp:fast /DEBUG /DSFZ_NO_DEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASE "/O2 /fp:fast /DSFZ_NO_DEBUG")
-	set(CMAKE_CXX_FLAGS_DEBUG  "/Od /DEBUG")
+	set(CMAKE_CXX_FLAGS_DEBUG "/Od /DEBUG")
 else()
 	# GCC / Clang flags
 	set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wno-c++11-extensions -std=c++11 -pthread")
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
-	set(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
+	set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 endif()
 
 # Directories
@@ -32,12 +32,18 @@ set(CMAKE_MODULES ${CMAKE_CURRENT_LIST_DIR}/cmake)
 # Adds our cmake modules to module path.
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_MODULES})
 
+# SDL2 & SDL2_mixer (uses 'SDL2' system environment variable)
+find_package(SDL2 REQUIRED) # ${SDL2_INCLUDE_DIR}, ${SDL2_LIBRARY}
+find_package(SDL2_mixer REQUIRED) # ${SDL2_MIXER_INCLUDE_DIRS}, ${SDL2_MIXER_LIBRARIES}
+
 # Catch
 add_subdirectory(${EXTERNALS_DIR}/catch)
 
 # Include directories
 include_directories(
 	${INCLUDE_DIR}
+	${SDL2_INCLUDE_DIR}
+	${SDL2_MIXER_INCLUDE_DIRS}
 	${CATCH_INCLUDE_DIRS}
 )
 
@@ -90,21 +96,26 @@ set(SOURCE_ALL_FILES
 add_library(sfzCoreLib ${SOURCE_ALL_FILES})
 
 # Linking libraries
-# target_link_libraries(
-#	sfzCoreLib
-#)
+target_link_libraries(
+	sfzCoreLib
+
+	${SDL2_LIBRARY}
+	${SDL2_MIXER_LIBRARIES}
+)
 
 # Variables for linking library
 set(SFZ_CORE_INCLUDE_DIRS
 	${INCLUDE_DIR}
-#	${SDL2_INCLUDE_DIR}
+	${SDL2_INCLUDE_DIR}
+	${SDL2_MIXER_INCLUDE_DIRS}
 #	${TINYOBJLOADER_INCLUDE_DIRS}
 #	${GLEW_INCLUDE_DIRS}
 #	${OPENGL_INCLUDE_DIR}
 	PARENT_SCOPE)
 set(SFZ_CORE_LIBRARIES
 	sfzCoreLib
-#	${SDL2_LIBRARY}
+	${SDL2_LIBRARY}
+	${SDL2_MIXER_LIBRARIES}
 #	${TINYOBJLOADER_LIBRARIES}
 #	${GLEW_LIBRARIES}
 #	${OPENGL_LIBRARIES}

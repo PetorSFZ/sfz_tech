@@ -1,0 +1,20 @@
+FindSDL2.cmake
+
+Found at:
+https://github.com/Twinklebear/TwinklebearDev-Lessons/blob/master/cmake/FindSDL2.cmake
+(Twinklebear-Dev SDL tutorials)
+
+License:
+
+Probably BSD "the license" to Kitware, but it seems to have been modified by a number of people since then so I don't really know.
+
+
+FindSDL2_mixer.cmake
+
+Found at:
+https://github.com/dorkster/flare-engine-next/blob/master/cmake/FindSDL2_mixer.cmake
+and then modified by me
+
+License:
+
+Seems to have been created by Justin Jacobs (https://github.com/dorkster), license is BSD "the license".
