@@ -111,11 +111,9 @@ public:
 	void setSize(vec2i dimensions) noexcept;
 	void setVSync(VSync mode) noexcept;
 
-	/** 
-	 * @brief Sets fullscreen mode
-	 * Display index is only used for Fullscreen::EXCLUSIVE. Default (-1) means that the current
-	 * display of the window will be used.
-	 */
+	/// Sets fullscreen mode
+	/// Display index is only used for Fullscreen:EXCLUSIVE. Default (-1) means that the current
+	/// display of the window will be used.
 	void setFullscreen(Fullscreen mode, int displayIndex = -1) noexcept;
 
 private:
