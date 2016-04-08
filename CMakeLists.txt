@@ -86,11 +86,20 @@ set(SOURCE_MEMORY_FILES
 	${INCLUDE_DIR}/sfz/memory/SmartPointers.inl)
 source_group(sfz_memory FILES ${SOURCE_MEMORY_FILES})
 
+set(SOURCE_SDL_FILES
+	${INCLUDE_DIR}/sfz/SDL.hpp
+	${INCLUDE_DIR}/sfz/sdl/Session.hpp
+	 ${SOURCE_DIR}/sfz/sdl/Session.cpp
+	${INCLUDE_DIR}/sfz/sdl/Window.hpp
+	 ${SOURCE_DIR}/sfz/sdl/Window.cpp)
+source_group(sfz_sdl FILES ${SOURCE_SDL_FILES})
+
 set(SOURCE_ALL_FILES
 	${SOURCE_ROOT_FILES}
 	${SOURCE_CONTAINERS_FILES}
 	${SOURCE_MATH_FILES}
-	${SOURCE_MEMORY_FILES})
+	${SOURCE_MEMORY_FILES}
+	${SOURCE_SDL_FILES})
 
 # Library compile target
 add_library(sfzCoreLib ${SOURCE_ALL_FILES})

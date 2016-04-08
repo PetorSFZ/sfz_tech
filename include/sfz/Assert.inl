@@ -44,7 +44,6 @@
 #define sfz_assert_release_impl(condition) \
 { \
 	if (!condition) { \
-		sfz::printErrorMessage(message); \
 		assert(condition); \
 		sfz::terminateProgram(); \
 	} \
