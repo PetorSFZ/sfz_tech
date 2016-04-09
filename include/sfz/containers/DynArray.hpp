@@ -105,7 +105,11 @@ public:
 
 	/// Returns pointer to the internal array. Do note that if the capacity is changed this pointer
 	/// may be invalidated.
-	T* data() const noexcept { return mDataPtr; }
+	const T* data() const noexcept { return mDataPtr; }
+
+	/// Returns pointer to the internal array. Do note that if the capacity is changed this pointer
+	/// may be invalidated.
+	T* data() noexcept { return mDataPtr; }
 
 	/// Element access operator. No range checks.
 	T& operator[] (uint32_t index) noexcept { return mDataPtr[index]; }
