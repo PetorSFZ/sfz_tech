@@ -59,6 +59,8 @@ set(SOURCE_CONTAINERS_FILES
 	${INCLUDE_DIR}/sfz/Containers.hpp
 	${INCLUDE_DIR}/sfz/containers/DynArray.hpp
 	${INCLUDE_DIR}/sfz/containers/DynArray.inl
+	${INCLUDE_DIR}/sfz/containers/DynString.hpp
+	${INCLUDE_DIR}/sfz/containers/DynString.inl
 	${INCLUDE_DIR}/sfz/containers/StackString.hpp
 	 ${SOURCE_DIR}/sfz/containers/StackString.cpp)
 source_group(sfz_containers FILES ${SOURCE_CONTAINERS_FILES})
@@ -118,16 +120,12 @@ set(SFZ_CORE_INCLUDE_DIRS
 	${SDL2_INCLUDE_DIR}
 	${SDL2_MIXER_INCLUDE_DIRS}
 #	${TINYOBJLOADER_INCLUDE_DIRS}
-#	${GLEW_INCLUDE_DIRS}
-#	${OPENGL_INCLUDE_DIR}
 	PARENT_SCOPE)
 set(SFZ_CORE_LIBRARIES
 	sfzCoreLib
 	${SDL2_LIBRARY}
 	${SDL2_MIXER_LIBRARIES}
 #	${TINYOBJLOADER_LIBRARIES}
-#	${GLEW_LIBRARIES}
-#	${OPENGL_LIBRARIES}
 	PARENT_SCOPE)
 
 # Tests
@@ -139,6 +137,7 @@ if(SFZ_CORE_BUILD_TESTS)
 
 	set(CONTAINERS_TEST_FILES
 		${TESTS_DIR}/sfz/containers/DynArray_Tests.cpp
+		${TESTS_DIR}/sfz/containers/DynString_Tests.cpp
 		${TESTS_DIR}/sfz/containers/StackString_Tests.cpp)
 	source_group(sfz_containers FILES ${CONTAINERS_TEST_FILES})
 

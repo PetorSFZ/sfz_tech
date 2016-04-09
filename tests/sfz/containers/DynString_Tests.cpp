@@ -16,8 +16,29 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#pragma once
+#include "sfz/PushWarnings.hpp"
+#include "catch.hpp"
+#include "sfz/PopWarnings.hpp"
 
-#include "sfz/containers/DynArray.hpp"
 #include "sfz/containers/DynString.hpp"
-#include "sfz/containers/StackString.hpp"
+
+using namespace sfz;
+
+TEST_CASE("constructor (const char* string, uint32_t capacity)", "[sfz::StackString]")
+{
+	DynString str1("Hello World");
+	REQUIRE(std::strcmp(str1.str(), "Hello World") == 0);
+	REQUIRE(str1.capacity() == 12);
+
+	DynString str2(nullptr);
+	REQUIRE(str2.str() == nullptr);
+	REQUIRE(str2.capacity() == 0);;
+
+	DynString str3(nullptr, 16);
+	REQUIRE(str3.str() != nullptr);
+	REQUIRE(str3.capacity() == 16);
+
+	DynString str4("4th", 8);
+	REQUIRE(std::strcmp(str4.str(), "4th") == 0);
+	REQUIRE(str4.capacity() == 8);
+}

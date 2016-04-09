@@ -16,8 +16,28 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#pragma once
+namespace sfz {
 
-#include "sfz/containers/DynArray.hpp"
-#include "sfz/containers/DynString.hpp"
-#include "sfz/containers/StackString.hpp"
+// DynString (implementation): Constructors & destructors
+// ------------------------------------------------------------------------------------------------
+
+template<typename Allocator>
+DynStringTempl<Allocator>::DynStringTempl(const char* string, uint32_t capacity) noexcept
+{
+	if (string == nullptr) {
+		if (capacity > 0) {
+			mString.setCapacity(capacity);
+		}
+		return;
+	}
+
+	// Allocate memory
+	size_t length = std::strlen(string) + 1; // +1 for null-terminator
+	if (capacity < length) capacity = static_cast<uint32_t>(length);
+	mString.setCapacity(capacity);
+
+	// Copy string to internal DynArray
+	std::strcpy(mString.data(), string);
+}
+
+} // namespace sfz
