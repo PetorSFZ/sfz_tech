@@ -308,6 +308,14 @@ void DynArray<T, Allocator>::destroy() noexcept
 	mDataPtr = nullptr;
 }
 
+template<typename T, typename Allocator>
+void DynArray<T, Allocator>::setSize(uint32_t size) noexcept
+{
+	static_assert(std::is_trivial<T>::value, "Can only set size if type is trivial");
+	if (size > mCapacity) size = mCapacity;
+	mSize = size;
+}
+
 // DynArray (implementation): Iterators
 // --------------------------------------------------------------------------------------------
 

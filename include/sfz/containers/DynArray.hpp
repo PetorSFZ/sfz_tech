@@ -183,6 +183,10 @@ public:
 	/// manually, it will automatically be called in the destructor.
 	void destroy() noexcept;
 
+	/// Directly sets the internal size member. Only available if T is a trivial type. If the size
+	/// parameter is larger than the capacity the internal size it will be set to capacity instead.
+	void setSize(uint32_t size) noexcept;
+
 	// Iterators
 	// --------------------------------------------------------------------------------------------
 
