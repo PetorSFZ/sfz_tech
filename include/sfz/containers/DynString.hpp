@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <cstdarg>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -27,12 +28,17 @@
 
 namespace sfz {
 
+using std::int32_t;
 using std::size_t;
 using std::uint32_t;
 
 // DynString (interface)
 // ------------------------------------------------------------------------------------------------
 
+/// A class for managing a dynamic string allocated on the heap, replacement for std::string.
+///
+/// Implemented using a (private) DynArray, many of the functions are simply wrappers around the
+/// DynArray interface. Check out DynArray for more specific documentation on these functions.
 template<typename Allocator>
 class DynStringTempl final {
 public:
@@ -60,9 +66,32 @@ public:
 	const char* str() const noexcept { return mString.data(); }
 	char* str() noexcept { return mString.data(); }
 
-	uint32_t size() const noexcept { return mString.size(); }
+	/// Returns length of the internal string minus the null-terminator. If the size of the
+	/// internal DynArray is non-zero then this method will return DynArray.size() - 1.
+	uint32_t size() const noexcept;
 	uint32_t capacity() const noexcept { return mString.capacity(); }
 
+	const DynArray<char,Allocator>& internalDynArray() const noexcept { return mString; }
+	DynArray<char,Allocator>& internalDynArray() noexcept { return mString; }
+
+	// Public methods (DynArray)
+	// --------------------------------------------------------------------------------------------
+
+	void swap(DynStringTempl& other) noexcept { mString.swap(other.mString); }
+	void setCapacity(uint32_t capacity) noexcept { mString.setCapacity(capacity); }
+	void clear() noexcept { mString.clear(); }
+	void destroy() noexcept { mString.destroy(); }
+
+	// Public methods (DynString)
+	// --------------------------------------------------------------------------------------------
+
+	/// Calls snprintf() on the internal string, overwriting the content.
+	/// \return number of chars written
+	int32_t printf(const char* format, ...) noexcept;
+
+	/// Calls snprintf() on the remaining part of the internal string, effectively appending to it.
+	/// \return number of chars written
+	int32_t printfAppend(const char* format, ...) noexcept;
 
 private:
 	// Private members

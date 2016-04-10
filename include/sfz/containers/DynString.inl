@@ -35,9 +35,47 @@ DynStringTempl<Allocator>::DynStringTempl(const char* string, uint32_t capacity)
 	size_t length = std::strlen(string) + 1; // +1 for null-terminator
 	if (capacity < length) capacity = static_cast<uint32_t>(length);
 	mString.setCapacity(capacity);
+	mString.setSize(length);
 
 	// Copy string to internal DynArray
 	std::strcpy(mString.data(), string);
+}
+
+// DynString (implementation): Getters
+// ------------------------------------------------------------------------------------------------
+
+template<typename Allocator>
+uint32_t DynStringTempl<Allocator>::size() const noexcept
+{
+	uint32_t tmp = mString.size();
+	if (tmp == 0) return 0;
+	return tmp - 1; // Remove null-terminator
+}
+
+// DynString (implementation): Public methods (DynString)
+// ------------------------------------------------------------------------------------------------
+
+template<typename Allocator>
+int32_t DynStringTempl<Allocator>::printf(const char* format, ...) noexcept
+{
+	va_list args;
+	va_start(args, format);
+	int32_t res = std::vsnprintf(mString.data(), mString.capacity(), format, args);
+	va_end(args);
+	mString.setSize(res + 1); // +1 for null-terminator
+	return res;
+}
+
+template<typename Allocator>
+int32_t DynStringTempl<Allocator>::printfAppend(const char* format, ...) noexcept
+{
+	va_list args;
+	va_start(args, format);
+	uint32_t len = this->size();
+	int32_t res = std::vsnprintf(mString.data() + len, mString.capacity() - len, format, args);
+	va_end(args);
+	mString.setSize(len + res + 1); // +1 for null-terminator
+	return res;
 }
 
 } // namespace sfz

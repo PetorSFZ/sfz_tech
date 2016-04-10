@@ -24,21 +24,45 @@
 
 using namespace sfz;
 
-TEST_CASE("constructor (const char* string, uint32_t capacity)", "[sfz::StackString]")
+TEST_CASE("constructor (const char* string, uint32_t capacity)", "[sfz::DynString]")
 {
 	DynString str1("Hello World");
 	REQUIRE(std::strcmp(str1.str(), "Hello World") == 0);
+	REQUIRE(str1.size() == 11);
 	REQUIRE(str1.capacity() == 12);
 
 	DynString str2(nullptr);
 	REQUIRE(str2.str() == nullptr);
+	REQUIRE(str2.size() == 0);
 	REQUIRE(str2.capacity() == 0);;
 
 	DynString str3(nullptr, 16);
 	REQUIRE(str3.str() != nullptr);
+	REQUIRE(str3.size() == 0);
 	REQUIRE(str3.capacity() == 16);
 
 	DynString str4("4th", 8);
 	REQUIRE(std::strcmp(str4.str(), "4th") == 0);
+	REQUIRE(str4.size() == 3);
 	REQUIRE(str4.capacity() == 8);
+}
+
+TEST_CASE("DynString: printf() & printfAppend()", "[sfz::DynString]")
+{
+	DynString str(nullptr, 128);
+	str.printf("%s: %i", "Test", 1);
+	REQUIRE(strcmp(str.str(), "Test: 1") == 0);
+	REQUIRE(str.size() == std::strlen("Test: 1"));
+
+	str.printfAppend(" && %s: %i", "Test", 2);
+	REQUIRE(strcmp(str.str(), "Test: 1 && Test: 2") == 0);
+	REQUIRE(str.size() == std::strlen("Test: 1 && Test: 2"));
+
+	str.printfAppend(" && %s: %i", "Test", 3);
+	REQUIRE(strcmp(str.str(), "Test: 1 && Test: 2 && Test: 3") == 0);
+	REQUIRE(str.size() == std::strlen("Test: 1 && Test: 2 && Test: 3"));
+
+	str.printf("%s", "--");
+	REQUIRE(strcmp(str.str(), "--") == 0);
+	REQUIRE(str.size() == std::strlen("--"));
 }
