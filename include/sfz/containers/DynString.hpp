@@ -23,6 +23,7 @@
 #include <cstdio>
 #include <cstring>
 
+#include "sfz/Assert.hpp"
 #include "sfz/containers/DynArray.hpp"
 #include "sfz/memory/Allocators.hpp"
 
@@ -92,6 +93,23 @@ public:
 	/// Calls snprintf() on the remaining part of the internal string, effectively appending to it.
 	/// \return number of chars written
 	int32_t printfAppend(const char* format, ...) noexcept;
+
+	// Operators
+	// --------------------------------------------------------------------------------------------
+
+	bool operator== (const DynStringTempl& other) const noexcept;
+	bool operator!= (const DynStringTempl& other) const noexcept;
+	bool operator< (const DynStringTempl& other) const noexcept;
+	bool operator<= (const DynStringTempl& other) const noexcept;
+	bool operator> (const DynStringTempl& other) const noexcept;
+	bool operator>= (const DynStringTempl& other) const noexcept;
+
+	bool operator== (const char* other) const noexcept;
+	bool operator!= (const char* other) const noexcept;
+	bool operator< (const char* other) const noexcept;
+	bool operator<= (const char* other) const noexcept;
+	bool operator> (const char* other) const noexcept;
+	bool operator>= (const char* other) const noexcept;
 
 private:
 	// Private members

@@ -66,3 +66,12 @@ TEST_CASE("DynString: printf() & printfAppend()", "[sfz::DynString]")
 	REQUIRE(strcmp(str.str(), "--") == 0);
 	REQUIRE(str.size() == std::strlen("--"));
 }
+
+TEST_CASE("DynString comparison operators", "[sfz::DynString]")
+{
+	DynString str = "aba";
+	REQUIRE(str == "aba");
+	REQUIRE(str != "afae");
+	REQUIRE(str < "bbb");
+	REQUIRE(str > "aaa");
+}

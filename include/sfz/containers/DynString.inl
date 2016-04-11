@@ -78,4 +78,85 @@ int32_t DynStringTempl<Allocator>::printfAppend(const char* format, ...) noexcep
 	return res;
 }
 
+// DynString (implementation): Operators
+// ------------------------------------------------------------------------------------------------
+
+template<typename Allocator>
+bool DynStringTempl<Allocator>::operator== (const DynStringTempl& other) const noexcept
+{
+	return *this == other.mString.data();
+}
+
+template<typename Allocator>
+bool DynStringTempl<Allocator>::operator!= (const DynStringTempl& other) const noexcept
+{
+	return *this != other.mString.data();
+}
+
+template<typename Allocator>
+bool DynStringTempl<Allocator>::operator< (const DynStringTempl& other) const noexcept
+{
+	return *this < other.mString.data();
+}
+
+template<typename Allocator>
+bool DynStringTempl<Allocator>::operator<= (const DynStringTempl& other) const noexcept
+{
+	return *this <= other.mString.data();
+}
+
+template<typename Allocator>
+bool DynStringTempl<Allocator>::operator> (const DynStringTempl& other) const noexcept
+{
+	return *this > other.mString.data();
+}
+
+template<typename Allocator>
+bool DynStringTempl<Allocator>::operator>= (const DynStringTempl& other) const noexcept
+{
+	return *this >= other.mString.data();
+}
+
+template<typename Allocator>
+bool DynStringTempl<Allocator>::operator== (const char* other) const noexcept
+{
+	sfz_assert_debug(mString.data() != nullptr);
+	sfz_assert_debug(other != nullptr);
+	return std::strcmp(mString.data(), other) == 0;
+}
+
+template<typename Allocator>
+bool DynStringTempl<Allocator>::operator!= (const char* other) const noexcept
+{
+	return !(*this == other);
+}
+
+template<typename Allocator>
+bool DynStringTempl<Allocator>::operator< (const char* other) const noexcept
+{
+	sfz_assert_debug(mString.data() != nullptr);
+	sfz_assert_debug(other != nullptr);
+	return std::strcmp(mString.data(), other) < 0;
+}
+
+template<typename Allocator>
+bool DynStringTempl<Allocator>::operator<= (const char* other) const noexcept
+{
+	return !(*this > other);
+}
+
+template<typename Allocator>
+bool DynStringTempl<Allocator>::operator> (const char* other) const noexcept
+{
+	sfz_assert_debug(mString.data() != nullptr);
+	sfz_assert_debug(other != nullptr);
+	return std::strcmp(mString.data(), other) > 0;
+}
+
+template<typename Allocator>
+bool DynStringTempl<Allocator>::operator>= (const char* other) const noexcept
+{
+	return !(*this < other);
+}
+
 } // namespace sfz
