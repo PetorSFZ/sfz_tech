@@ -22,6 +22,8 @@
 #include <cstdio>
 #include <cstring>
 
+#include "sfz/Assert.hpp"
+
 namespace sfz {
 
 // StackStringTempl: Explicit instantiation
@@ -110,36 +112,42 @@ bool StackStringTempl<N>::operator>= (const StackStringTempl& other) const noexc
 template<size_t N>
 bool StackStringTempl<N>::operator== (const char* other) const noexcept
 {
+	sfz_assert_debug(other != nullptr);
 	return std::strncmp(this->str, other, N) == 0;
 }
 
 template<size_t N>
 bool StackStringTempl<N>::operator!= (const char* other) const noexcept
 {
+	sfz_assert_debug(other != nullptr);
 	return !(*this == other);
 }
 
 template<size_t N>
 bool StackStringTempl<N>::operator< (const char* other) const noexcept
 {
+	sfz_assert_debug(other != nullptr);
 	return std::strncmp(this->str, other, N) < 0;
 }
 
 template<size_t N>
 bool StackStringTempl<N>::operator<= (const char* other) const noexcept
 {
+	sfz_assert_debug(other != nullptr);
 	return std::strncmp(this->str, other, N) <= 0;
 }
 
 template<size_t N>
 bool StackStringTempl<N>::operator> (const char* other) const noexcept
 {
+	sfz_assert_debug(other != nullptr);
 	return std::strncmp(this->str, other, N) > 0;
 }
 
 template<size_t N>
 bool StackStringTempl<N>::operator>= (const char* other) const noexcept
 {
+	sfz_assert_debug(other != nullptr);
 	return std::strncmp(this->str, other, N) >= 0;
 }
 

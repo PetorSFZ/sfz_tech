@@ -35,7 +35,7 @@ DynStringTempl<Allocator>::DynStringTempl(const char* string, uint32_t capacity)
 	size_t length = std::strlen(string) + 1; // +1 for null-terminator
 	if (capacity < length) capacity = static_cast<uint32_t>(length);
 	mString.setCapacity(capacity);
-	mString.setSize(length);
+	mString.setSize(static_cast<uint32_t>(length));
 
 	// Copy string to internal DynArray
 	std::strcpy(mString.data(), string);
@@ -62,7 +62,8 @@ int32_t DynStringTempl<Allocator>::printf(const char* format, ...) noexcept
 	va_start(args, format);
 	int32_t res = std::vsnprintf(mString.data(), mString.capacity(), format, args);
 	va_end(args);
-	mString.setSize(res + 1); // +1 for null-terminator
+	sfz_assert_debug(res >= 0);
+	mString.setSize(static_cast<uint32_t>(res) + 1); // +1 for null-terminator
 	return res;
 }
 
@@ -74,7 +75,8 @@ int32_t DynStringTempl<Allocator>::printfAppend(const char* format, ...) noexcep
 	uint32_t len = this->size();
 	int32_t res = std::vsnprintf(mString.data() + len, mString.capacity() - len, format, args);
 	va_end(args);
-	mString.setSize(len + res + 1); // +1 for null-terminator
+	sfz_assert_debug(res >= 0);
+	mString.setSize(len + static_cast<uint32_t>(res) + 1); // +1 for null-terminator
 	return res;
 }
 
