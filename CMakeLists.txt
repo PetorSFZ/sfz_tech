@@ -96,12 +96,18 @@ set(SOURCE_SDL_FILES
 	 ${SOURCE_DIR}/sfz/sdl/Window.cpp)
 source_group(sfz_sdl FILES ${SOURCE_SDL_FILES})
 
+set(SOURCE_UTIL_FILES
+	${INCLUDE_DIR}/sfz/Util.hpp
+	${INCLUDE_DIR}/sfz/util/Hash.hpp)
+source_group(sfz_util FILES ${SOURCE_UTIL_FILES})
+
 set(SOURCE_ALL_FILES
 	${SOURCE_ROOT_FILES}
 	${SOURCE_CONTAINERS_FILES}
 	${SOURCE_MATH_FILES}
 	${SOURCE_MEMORY_FILES}
-	${SOURCE_SDL_FILES})
+	${SOURCE_SDL_FILES}
+	${SOURCE_UTIL_FILES})
 
 # Library compile target
 add_library(sfzCoreLib ${SOURCE_ALL_FILES})
