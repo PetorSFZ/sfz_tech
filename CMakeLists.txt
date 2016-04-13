@@ -98,7 +98,9 @@ source_group(sfz_sdl FILES ${SOURCE_SDL_FILES})
 
 set(SOURCE_UTIL_FILES
 	${INCLUDE_DIR}/sfz/Util.hpp
-	${INCLUDE_DIR}/sfz/util/Hash.hpp)
+	${INCLUDE_DIR}/sfz/util/Hash.hpp
+	${INCLUDE_DIR}/sfz/util/IO.hpp
+	 ${SOURCE_DIR}/sfz/util/IO.cpp)
 source_group(sfz_util FILES ${SOURCE_UTIL_FILES})
 
 set(SOURCE_ALL_FILES
@@ -159,11 +161,16 @@ if(SFZ_CORE_BUILD_TESTS)
 		${TESTS_DIR}/sfz/memory/SmartPointers_Tests.cpp)
 	source_group(sfz_memory FILES ${MEMORY_TEST_FILES})
 
+	set(UTIL_TEST_FILES
+		${TESTS_DIR}/sfz/util/IO_Tests.cpp)
+	source_group(sfz_util FILES ${UTIL_TEST_FILES})
+
 	set(ALL_TEST_FILES
 		${ROOT_TEST_FILES}
 		${CONTAINERS_TEST_FILES}
 		${MATH_TEST_FILES}
-		${MEMORY_TEST_FILES})
+		${MEMORY_TEST_FILES}
+		${UTIL_TEST_FILES})
 
 	enable_testing(true)
 	add_executable(sfzCoreTests ${ALL_TEST_FILES})

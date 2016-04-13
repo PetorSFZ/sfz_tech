@@ -282,6 +282,14 @@ void DynArray<T, Allocator>::setCapacity(uint32_t capacity) noexcept
 }
 
 template<typename T, typename Allocator>
+void DynArray<T, Allocator>::ensureCapacity(uint32_t capacity) noexcept
+{
+	if (mCapacity < capacity) {
+		this->setCapacity(capacity);
+	}
+}
+
+template<typename T, typename Allocator>
 void DynArray<T, Allocator>::clear() noexcept
 {
 	// Call destructor for each element if not trivially destructible

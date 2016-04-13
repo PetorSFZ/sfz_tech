@@ -174,6 +174,10 @@ public:
 	/// \param capacity the new capacity
 	void setCapacity(uint32_t capacity) noexcept;
 
+	/// Ensures this DynArray has at least the specified amount of capacity. If the current
+	/// capacity is less than the requested one then setCapacity() will be called.
+	void ensureCapacity(uint32_t capacity) noexcept;
+
 	/// Removes all elements from this DynArray without deallocating memory or changing capacity
 	void clear() noexcept;
 

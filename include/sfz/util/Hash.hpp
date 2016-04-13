@@ -21,9 +21,6 @@
 #include <cstddef>
 #include <functional>
 
-//#include "sfz/math/Vector.hpp" // TODO: Implement
-//#include "sfz/math/Matrix.hpp" // TODO: Implement
-
 namespace sfz {
 
 using std::size_t;
