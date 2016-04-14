@@ -124,7 +124,7 @@ bool DynStringTempl<Allocator>::operator== (const char* other) const noexcept
 {
 	sfz_assert_debug(mString.data() != nullptr);
 	sfz_assert_debug(other != nullptr);
-	return std::strcmp(mString.data(), other) == 0;
+	return std::strncmp(mString.data(), other, mString.size()) == 0;
 }
 
 template<typename Allocator>
@@ -138,7 +138,7 @@ bool DynStringTempl<Allocator>::operator< (const char* other) const noexcept
 {
 	sfz_assert_debug(mString.data() != nullptr);
 	sfz_assert_debug(other != nullptr);
-	return std::strcmp(mString.data(), other) < 0;
+	return std::strncmp(mString.data(), other, mString.size()) < 0;
 }
 
 template<typename Allocator>
@@ -152,7 +152,7 @@ bool DynStringTempl<Allocator>::operator> (const char* other) const noexcept
 {
 	sfz_assert_debug(mString.data() != nullptr);
 	sfz_assert_debug(other != nullptr);
-	return std::strcmp(mString.data(), other) > 0;
+	return std::strncmp(mString.data(), other, mString.size()) > 0;
 }
 
 template<typename Allocator>
