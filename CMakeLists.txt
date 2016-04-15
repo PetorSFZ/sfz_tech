@@ -92,6 +92,8 @@ set(SOURCE_SDL_FILES
 	${INCLUDE_DIR}/sfz/SDL.hpp
 	${INCLUDE_DIR}/sfz/sdl/Session.hpp
 	 ${SOURCE_DIR}/sfz/sdl/Session.cpp
+	${INCLUDE_DIR}/sfz/sdl/SoundEffect.hpp
+	 ${SOURCE_DIR}/sfz/sdl/SoundEffect.cpp
 	${INCLUDE_DIR}/sfz/sdl/Window.hpp
 	 ${SOURCE_DIR}/sfz/sdl/Window.cpp)
 source_group(sfz_sdl FILES ${SOURCE_SDL_FILES})
