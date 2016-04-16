@@ -56,8 +56,9 @@
 
 namespace sfz {
 
-/// Prints an error message in an appropriate way for the given context.
-void printErrorMessage(const char* message) noexcept;
+/// Prints an error message in an appropriate way for the given context, uses cstdio formatting.
+/// Will append a newline if appropriate, so this should not be manually done.
+void printErrorMessage(const char* format, ...) noexcept;
 
 /// Terminates the program (wrapper for std::terminate())
 void terminateProgram() noexcept;
