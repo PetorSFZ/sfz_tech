@@ -44,7 +44,6 @@
 
 #include "sfz/PopWarnings.hpp"
 
-#include "sfz/containers/StackString.hpp"
 #include "sfz/memory/Allocators.hpp"
 
 namespace sfz {
@@ -104,9 +103,7 @@ const char* basePath() noexcept
 	static const char* path = []() {
 		const char* tmp = SDL_GetBasePath();
 		if (tmp == nullptr) {
-			StackString256 tmpStr;
-			tmpStr.printf("SDL_GetBasePath() failed: %s", SDL_GetError());
-			sfz_error(tmpStr.str);
+			sfz::error("SDL_GetBasePath() failed: %s", SDL_GetError());
 		}
 		size_t len = std::strlen(tmp);
 		char* res = static_cast<char*>(StandardAllocator::allocate(len + 1));
@@ -123,7 +120,7 @@ const char* myDocumentsPath() noexcept
 #ifdef _WIN32
 		char* tmp = static_cast<char*>(StandardAllocator::allocate(MAX_PATH + 1));
 		HRESULT result = SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, tmp);
-		if (result != S_OK) sfz_error("Could not retrieve MyDocuments path.");
+		if (result != S_OK) sfz::error("%s", "Could not retrieve MyDocuments path.");
 		return tmp;
 #else
 		return std::getenv("HOME");

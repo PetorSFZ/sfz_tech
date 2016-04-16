@@ -22,7 +22,6 @@
 #include <algorithm>
 
 #include "sfz/Assert.hpp"
-#include "sfz/containers/StackString.hpp"
 
 namespace sfz {
 
@@ -45,9 +44,7 @@ SDL_Window* createWindow(const char* title, int width, int height, Uint32 flags)
 	window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 	                          width, height, flags);
 	if (window == NULL) {
-		StackString256 tmp;
-		tmp.printf("SDL_CreateWindow() failed: %s\n", SDL_GetError());
-		sfz_error(tmp.str);
+		sfz::error("SDL_CreateWindow() failed: %s", SDL_GetError());
 	}
 	return window;
 }
@@ -177,7 +174,7 @@ void Window::setVSync(VSync mode) noexcept
 		sfz_assert_release(false);
 	}
 	if (SDL_GL_SetSwapInterval(vsyncInterval) < 0) {
-		std::fprintf(stderr, "SDL_GL_SetSwapInterval() failed: %s\n", SDL_GetError());
+		sfz::printErrorMessage("SDL_GL_SetSwapInterval() failed: %s", SDL_GetError());
 	}
 }
 
@@ -195,16 +192,16 @@ void Window::setFullscreen(Fullscreen mode, int displayIndex) noexcept
 		{
 			// Acquiring the display index to use
 			const int numDisplays = SDL_GetNumVideoDisplays();
-			if (numDisplays < 0) std::fprintf(stderr, "SDL_GetNumVideoDisplays() failed: %s\n", SDL_GetError());
+			if (numDisplays < 0) sfz::printErrorMessage("SDL_GetNumVideoDisplays() failed: %s", SDL_GetError());
 			if (displayIndex >= numDisplays) {
-				std::fprintf(stderr, "Invalid display index (%i), using 0 instead.\n", displayIndex);
+				sfz::printErrorMessage("Invalid display index (%i), using 0 instead.", displayIndex);
 				displayIndex = 0;
 			}
 			// -1 Means that the user wants the currently used screen
 			if (displayIndex == -1) {
 				displayIndex = SDL_GetWindowDisplayIndex(mPtr);
 				if (displayIndex < 0) {
-					std::fprintf(stderr, "SDL_GetWindowDisplayIndex() failed: %s\n, using 0 instead.\n", SDL_GetError());
+					sfz::printErrorMessage("SDL_GetWindowDisplayIndex() failed: %s\n, using 0 instead.", SDL_GetError());
 					displayIndex = 0;
 				}
 			}
@@ -212,14 +209,10 @@ void Window::setFullscreen(Fullscreen mode, int displayIndex) noexcept
 			// Gets and sets the display mode to that of the wanted screen
 			SDL_DisplayMode desktopDisplayMode;
 			if (SDL_GetDesktopDisplayMode(displayIndex, &desktopDisplayMode) < 0) {
-				StackString256 tmp;
-				tmp.printf("SDL_GetDesktopDisplayMode() failed: %s\n", SDL_GetError());
-				sfz_error(tmp.str);
+				sfz::error("SDL_GetDesktopDisplayMode() failed: %s", SDL_GetError());
 			}
 			if (SDL_SetWindowDisplayMode(mPtr, &desktopDisplayMode) < 0) {
-				StackString256 tmp;
-				tmp.printf("SDL_SetWindowDisplayMode() failed: %s\n", SDL_GetError());
-				sfz_error(tmp.str);
+				sfz::error("SDL_SetWindowDisplayMode() failed: %s", SDL_GetError());
 			}
 		}
 		fullscreenFlags = SDL_WINDOW_FULLSCREEN;
@@ -231,9 +224,7 @@ void Window::setFullscreen(Fullscreen mode, int displayIndex) noexcept
 		sfz_assert_release(false);
 	}
 	if (SDL_SetWindowFullscreen(mPtr, fullscreenFlags) < 0) {
-		StackString256 tmp;
-		tmp.printf("SDL_SetWindowFullscreen() failed: %s\n", SDL_GetError());
-		sfz_error(tmp.str);
+		sfz::error("SDL_SetWindowFullscreen() failed: %s", SDL_GetError());
 	}
 }
 
@@ -245,9 +236,7 @@ DynArray<vec2i> getAvailableResolutions() noexcept
 	// Get number of displays
 	const int numDisplays = SDL_GetNumVideoDisplays();
 	if (numDisplays < 0) {
-		StackString256 tmp;
-		tmp.printf("SDL_GetNumVideoDisplays() failed: %s\n", SDL_GetError());
-		sfz_error(tmp.str);
+		sfz::error("SDL_GetNumVideoDisplays() failed: %s", SDL_GetError());
 	}
 
 	// Get all resolutions
@@ -256,16 +245,12 @@ DynArray<vec2i> getAvailableResolutions() noexcept
 	for (int index = 0; index < numDisplays; ++index) {
 		int numDisplayModes = SDL_GetNumDisplayModes(index);
 		if (numDisplayModes < 0) {
-			StackString256 tmp;
-			tmp.printf("SDL_GetNumDisplayModes() failed: %s\n", SDL_GetError());
-			sfz_error(tmp.str);
+			sfz::error("SDL_GetNumDisplayModes() failed: %s", SDL_GetError());
 		}
 		for (int i = 0; i < numDisplayModes; ++i) {
 			mode = {SDL_PIXELFORMAT_UNKNOWN, 0, 0, 0, 0};
 			if (SDL_GetDisplayMode(index, i, &mode) != 0) {
-				StackString256 tmp;
-				tmp.printf("SDL_GetDisplayMode() failed: %s\n", SDL_GetError());
-				sfz_error(tmp.str);
+				sfz::error("SDL_GetDisplayMode() failed: %s\n", SDL_GetError());
 			}
 			resolutions.add(vec2i{mode.w, mode.h});
 		}

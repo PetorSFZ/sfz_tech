@@ -62,18 +62,3 @@
 #define sfz_assert_release_impl(condition) ((void)0)
 #define sfz_assert_release_m_impl(condition, message) ((void)0)
 #endif
-
-// Errors
-// ------------------------------------------------------------------------------------------------
-
-#if !defined(SFZ_DISABLE_ERRORS)
-
-#define sfz_error_impl(message) \
-{ \
-	sfz::printErrorMessage("%s", message); \
-	sfz::terminateProgram(); \
-}
-
-#else
-#define sfz_error_impl(message) ((void)0)
-#endif

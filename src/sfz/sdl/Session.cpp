@@ -21,7 +21,6 @@
 #include <algorithm>
 
 #include "sfz/Assert.hpp"
-#include "sfz/containers/StackString.hpp"
 
 namespace sfz {
 
@@ -52,9 +51,7 @@ Session::Session(initializer_list<SDLInitFlags> sdlInitFlags,
 		sdlInitFlag = sdlInitFlag | static_cast<Uint32>(tempFlag);
 	}
 	if (SDL_Init(sdlInitFlag) < 0) {
-		StackString256 tmp;
-		tmp.printf("SDL_Init() failed: %s\n", SDL_GetError());
-		sfz_error(tmp.str);
+		sfz::error("SDL_Init() failed: %s", SDL_GetError());
 	}
 
 	// Initialize SDL2_mixer
@@ -64,16 +61,12 @@ Session::Session(initializer_list<SDLInitFlags> sdlInitFlags,
 	}
 	int mixInitted = Mix_Init(mixInitFlag);
 	if ((mixInitted & mixInitFlag) != mixInitFlag) {
-		StackString256 tmp;
-		tmp.printf("Mix_Init() failed: %s\n", Mix_GetError());
-		sfz_error(tmp.str);
+		sfz::error("Mix_Init() failed: %s", Mix_GetError());
 	}
 
 	// Open 44.1KHz, signed 16bit, system byte order, stereo audio, using 1024 byte chunks
 	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024) < 0) {
-		StackString256 tmp;
-		tmp.printf("Mix_OpenAudio() failed: %s\n", Mix_GetError());
-		sfz_error(tmp.str);
+		sfz::error("Mix_OpenAudio() failed: %s", Mix_GetError());
 	}
 
 	// Allocate mixing channels

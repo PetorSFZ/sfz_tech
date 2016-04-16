@@ -46,23 +46,26 @@
 /// Should normally always be enabled, but can be disabled by defining SFZ_NO_ASSERTIONS.
 #define sfz_assert_release_m(condition, message) sfz_assert_release_m_impl(condition, message)
 
+namespace sfz {
+
 // Errors
 // ------------------------------------------------------------------------------------------------
 
-/// Stops execution of program and displays message.
-/// This is meant to be used for errors that can't be recovered from and should crash the program.
-/// Should always be enabled, but can be disabled (not recommended) by defining SFZ_DISABLE_ERRORS.
-#define sfz_error(message) sfz_error_impl(message)
+/// Stops execution of program and displays message. This is meant to be used for errors that
+/// can't be recovered from and should crash the program. Uses standard printf() formatting for
+/// error message, will append a newline if appropriate so this should not be done manually.
+void error(const char* format, ...) noexcept;
 
-namespace sfz {
+// Debug utility functions
+// ------------------------------------------------------------------------------------------------
 
-/// Prints an error message in an appropriate way for the given context, uses cstdio formatting.
+/// Prints an error message in an appropriate way for the given context, uses printf() formatting.
 /// Will append a newline if appropriate, so this should not be manually done.
 void printErrorMessage(const char* format, ...) noexcept;
 
 /// Terminates the program (wrapper for std::terminate())
 void terminateProgram() noexcept;
 
-}
+} // namespace sfz
 
 #include "sfz/Assert.inl"
