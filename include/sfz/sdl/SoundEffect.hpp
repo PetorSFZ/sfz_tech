@@ -20,6 +20,8 @@
 
 #include <SDL_mixer.h>
 
+#include <sfz/containers/DynString.hpp>
+
 namespace sfz {
 
 namespace sdl {
@@ -27,8 +29,15 @@ namespace sdl {
 // SoundEffect class
 // ------------------------------------------------------------------------------------------------
 
+/// Class wrapping a Mix_Chunk from SDL_mixer.
 class SoundEffect final {
 public:
+	// Constructors functions
+	// --------------------------------------------------------------------------------------------
+	
+	static SoundEffect fromFile(const char* completePath) noexcept;
+	static SoundEffect fromFileNoLoad(const char* completePath) noexcept;
+
 	// Constructors and destructors
 	// --------------------------------------------------------------------------------------------
 
@@ -36,7 +45,6 @@ public:
 	SoundEffect(const SoundEffect&) = delete;
 	SoundEffect& operator= (const SoundEffect&) = delete;
 
-	SoundEffect(const char* path) noexcept;
 	SoundEffect(SoundEffect&& other) noexcept;
 	SoundEffect& operator= (SoundEffect&& other) noexcept;
 	~SoundEffect() noexcept;
@@ -44,6 +52,19 @@ public:
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
+	/// Loads the sound effect from the specified file. If no path is specified or if the sound
+	/// effect can't be loaded an error message will be printed and this function will return
+	/// false. If this SoundEffect is already loaded then it will first be unloaded and then
+	/// reloaded.
+	bool load() noexcept;
+	
+	/// Unloads the sound effect if it is loaded.
+	void unload() noexcept;
+
+	inline bool isLoaded() const noexcept { return mChunkPtr != nullptr; }
+	inline bool hasPath() const noexcept { return mFilePath.str() != nullptr; }
+
+	/// Plays sound effect (if loaded) on first free unreserved channel.
 	void play() noexcept;
 
 	/// Sets the volume of this sound effect, range [0, 1].
@@ -53,6 +74,7 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
+	DynString mFilePath;
 	Mix_Chunk* mChunkPtr = nullptr;
 };
 

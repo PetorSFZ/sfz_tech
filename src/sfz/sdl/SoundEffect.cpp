@@ -20,57 +20,94 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 
 #include "sfz/Assert.hpp"
-#include "sfz/containers/StackString.hpp"
 
 namespace sfz {
 
 namespace sdl {
 
-// SoundEffect: Constructors & destructors
+// SoundEffect: Constructor functions
 // ------------------------------------------------------------------------------------------------
 
-SoundEffect::SoundEffect(const char* path) noexcept
+SoundEffect SoundEffect::fromFile(const char* completePath) noexcept
 {
-	// SDL_OpenAudio() must have been called before this
-
-	Mix_Chunk* tmpPtr = Mix_LoadWAV(path);
-	if (tmpPtr == NULL) {
-		StackString512 tmp;
-		tmp.printf("Mix_LoadWAV() failed for \"%s\", error: ", path, Mix_GetError());
-		sfz_error(tmp.str);
-	} else {
-		mChunkPtr = tmpPtr;
-	}
+	SoundEffect tmp = SoundEffect::fromFileNoLoad(completePath);
+	tmp.load();
+	return std::move(tmp);
 }
+
+SoundEffect SoundEffect::fromFileNoLoad(const char* completePath) noexcept
+{
+	SoundEffect tmp;
+	tmp.mFilePath = DynString(completePath);
+	return std::move(tmp);
+}
+
+// SoundEffect: Constructors & destructors
+// ------------------------------------------------------------------------------------------------
 
 SoundEffect::SoundEffect(SoundEffect&& other) noexcept
 {
 	std::swap(this->mChunkPtr, other.mChunkPtr);
+	this->mFilePath.swap(other.mFilePath);
 }
 
 SoundEffect& SoundEffect::operator= (SoundEffect&& other) noexcept
 {
 	std::swap(this->mChunkPtr, other.mChunkPtr);
+	this->mFilePath.swap(other.mFilePath);
 	return *this;
 }
 
 SoundEffect::~SoundEffect() noexcept
 {
-	if (this->mChunkPtr != nullptr) { // The documentation doesn't say anything about freeing nullptr
-		Mix_FreeChunk(this->mChunkPtr);
-		// Do not use chunk after this without loading a new sample to it.
-		// Note: It's a bad idea to free a chunk that is still being played... 
-	}
+	this->unload();
 }
 
 // SoundEffect: Public methods
 // ------------------------------------------------------------------------------------------------
 
+bool SoundEffect::load() noexcept
+{
+	// Check if we have a path
+	if (mFilePath.str() == nullptr) {
+		sfz::printErrorMessage("%s", "SoundEffect: No path specified.");
+		return false;
+	}
+
+	// If already loaded we unload first
+	if (this->isLoaded()) {
+		this->unload();
+	}
+
+	Mix_Chunk* tmpPtr = Mix_LoadWAV(mFilePath.str());
+
+	// If load failed we print an error and return false
+	if (tmpPtr == NULL) {
+		sfz::printErrorMessage("Mix_LoadWAV() failed for \"%s\", error: %s",
+		                       mFilePath.str(), Mix_GetError());
+		return false;
+	}
+	
+	// If load was succesful we return true
+	mChunkPtr = tmpPtr;
+	return true;
+}
+
+void SoundEffect::unload() noexcept
+{
+	// The documentation doesn't say anything about freeing nullptr
+	if (mChunkPtr == nullptr) return;
+	// TODO: It's a bad idea to free a chunk that is still being played. Maybe check?
+	Mix_FreeChunk(mChunkPtr);
+	mChunkPtr = nullptr;
+}
+
 void SoundEffect::play() noexcept
 {
-	if (this->mChunkPtr == nullptr) return;
+	if (!this->isLoaded()) return;
 	// Channel to play on, or -1 for the first free unreserved channel. 
 	Mix_PlayChannel(-1, this->mChunkPtr, 0);
 	// Returns channel being played on, ignore for now
@@ -80,6 +117,8 @@ void SoundEffect::setVolume(float volume) noexcept
 {
 	sfz_assert_debug(0.0f <= volume);
 	sfz_assert_debug(volume <= 1.0f);
+
+	if (!this->isLoaded()) return;
 
 	int volumeInt = int(std::round(volume * MIX_MAX_VOLUME));
 	Mix_VolumeChunk(this->mChunkPtr, volumeInt);
