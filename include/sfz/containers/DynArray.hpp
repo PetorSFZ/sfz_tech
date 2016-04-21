@@ -166,6 +166,27 @@ public:
 	/// number of elements in the array only the available ones will be removed.
 	void remove(uint32_t position, uint32_t numElements = 1) noexcept;
 
+	/// Finds the first element in the array which satisfies the specified function. The function
+	/// must take an element of type T as parameter (by value or const ref) and return a bool that
+	/// specifies whether the element satisfies it or not.
+	/// \return pointer to element or nullptr if no element could be found
+	template<typename F>
+	T* find(F func) noexcept;
+
+	/// Finds the first element in the array which satisfies the specified function. The function
+	/// must take an element of type T as parameter (by value or const ref) and return a bool that
+	/// specifies whether the element satisfies it or not.
+	/// \return pointer to element or nullptr if no element could be found
+	template<typename F>
+	const T* find(F func) const noexcept;
+
+	/// Finds the first element in the array which satisfies the specified function. The function
+	/// must take an element of type T as parameter (by value or const ref) and return a bool that
+	/// specifies whether the element satisfies it or not.
+	/// \return index to element or -1 if no element could be found
+	template<typename F>
+	int64_t findIndex(F func) const noexcept;
+
 	/// Swaps the contents of two DynArrays
 	void swap(DynArray& other) noexcept;
 

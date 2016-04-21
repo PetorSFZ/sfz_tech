@@ -241,6 +241,38 @@ void DynArray<T, Allocator>::remove(uint32_t position, uint32_t numElements) noe
 	mSize -= numElementsToRemove;
 }
 
+
+template<typename T, typename Allocator>
+template<typename F>
+T* DynArray<T, Allocator>::find(F func) noexcept
+{
+	for (uint32_t i = 0; i < mSize; ++i) {
+		if (func(mDataPtr[i])) return &mDataPtr[i];
+	}
+	return nullptr;
+}
+
+template<typename T, typename Allocator>
+template<typename F>
+const T* DynArray<T, Allocator>::find(F func) const noexcept
+{
+	for (uint32_t i = 0; i < mSize; ++i) {
+		if (func(mDataPtr[i])) return &mDataPtr[i];
+	}
+	return nullptr;
+}
+
+template<typename T, typename Allocator>
+template<typename F>
+int64_t DynArray<T, Allocator>::findIndex(F func) const noexcept
+{
+	for (uint32_t i = 0; i < mSize; ++i) {
+		if (func(mDataPtr[i])) return int64_t(i);
+	}
+	return -1;
+}
+
+
 template<typename T, typename Allocator>
 void DynArray<T, Allocator>::swap(DynArray& other) noexcept
 {

@@ -274,3 +274,19 @@ TEST_CASE("remove()", "[sfz::DynArray]")
 	REQUIRE(v.size() == 1);
 	REQUIRE(v[0] == 3);
 }
+
+TEST_CASE("find()", "[sfz::DynArray]")
+{
+	DynArray<int> v;
+	const int vals[] = {1, 2, 3, 4};
+	v.add(vals, 4);
+
+	REQUIRE(v.find([](int) { return false; }) == nullptr);
+	REQUIRE(v.findIndex([](int) { return false; }) == -1);
+
+	REQUIRE(*v.find([](int) { return true; }) == 1);
+	REQUIRE(v.findIndex([](int) { return true; }) == 0);
+
+	REQUIRE(*v.find([](int param) { return param == 2; }) == 2);
+	REQUIRE(v.findIndex([](int param) { return param == 2; }) == 1);
+}

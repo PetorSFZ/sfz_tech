@@ -20,7 +20,7 @@
 
 #include <SDL_mixer.h>
 
-#include <sfz/containers/DynString.hpp>
+#include "sfz/containers/DynString.hpp"
 
 namespace sfz {
 
