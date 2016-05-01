@@ -90,6 +90,8 @@ source_group(sfz_memory FILES ${SOURCE_MEMORY_FILES})
 
 set(SOURCE_SDL_FILES
 	${INCLUDE_DIR}/sfz/SDL.hpp
+	${INCLUDE_DIR}/sfz/sdl/Music.hpp
+	 ${SOURCE_DIR}/sfz/sdl/Music.cpp
 	${INCLUDE_DIR}/sfz/sdl/Session.hpp
 	 ${SOURCE_DIR}/sfz/sdl/Session.cpp
 	${INCLUDE_DIR}/sfz/sdl/SoundEffect.hpp
