@@ -73,7 +73,7 @@ bool SoundEffect::load() noexcept
 {
 	// Check if we have a path
 	if (mFilePath.str() == nullptr) {
-		sfz::printErrorMessage("%s", "SoundEffect: No path specified.");
+		printErrorMessage("%s", "Attempting to load() sdl::SoundEffect without path.");
 		return false;
 	}
 
@@ -86,8 +86,8 @@ bool SoundEffect::load() noexcept
 
 	// If load failed we print an error and return false
 	if (tmpPtr == NULL) {
-		sfz::printErrorMessage("Mix_LoadWAV() failed for \"%s\", error: %s",
-		                       mFilePath.str(), Mix_GetError());
+		printErrorMessage("Mix_LoadWAV() failed for \"%s\", error: %s",
+		                  mFilePath.str(), Mix_GetError());
 		return false;
 	}
 	

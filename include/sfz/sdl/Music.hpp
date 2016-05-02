@@ -20,6 +20,8 @@
 
 #include <SDL_mixer.h>
 
+#include "sfz/containers/DynString.hpp"
+
 namespace sfz {
 
 namespace sdl {
@@ -27,8 +29,15 @@ namespace sdl {
 // Music class
 // ------------------------------------------------------------------------------------------------
 
+/// Class wrapping a Mix_Music from SDL_mixer
 class Music final {
 public:
+	// Constructors functions
+	// --------------------------------------------------------------------------------------------
+
+	static Music fromFile(const char* completePath) noexcept;
+	static Music fromFileNoLoad(const char* completePath) noexcept;
+
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
@@ -36,21 +45,39 @@ public:
 	Music(const Music&) = delete;
 	Music& operator= (const Music&) = delete;
 
-	Music(const char* path) noexcept;
 	Music(Music&& other) noexcept;
 	Music& operator= (Music&& other) noexcept;
 	~Music() noexcept;
 
+	// Getters
+	// --------------------------------------------------------------------------------------------
+
+	inline const DynString& filePath() const noexcept { return mFilePath; }
+	inline Mix_Music* musicPtr() const noexcept { return mMusicPtr; }
+
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
+	/// Loads the music from the specified file. If no path is specified or if the music can't be
+	/// loaded an error message will be printed and this function will return false. If this Music
+	/// is already loaded then it will first be unloaded and then reloaded.
+	bool load() noexcept;
+
+	/// Unloads the music if it is loaded.
+	void unload() noexcept;
+
+	inline bool isLoaded() const noexcept { return mMusicPtr != nullptr; }
+	inline bool hasPath() const noexcept { return mFilePath.str() != nullptr; }
+
+	/// Plays this music repeated infinitely until it is stopped.
 	void play() noexcept;
 
 private:
-	// Public members
+	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	Mix_Music* mPtr = nullptr;
+	DynString mFilePath;
+	Mix_Music* mMusicPtr = nullptr;
 };
 
 // Music functions

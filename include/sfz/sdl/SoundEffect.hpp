@@ -49,6 +49,12 @@ public:
 	SoundEffect& operator= (SoundEffect&& other) noexcept;
 	~SoundEffect() noexcept;
 
+	// Getters
+	// --------------------------------------------------------------------------------------------
+
+	inline const DynString& filePath() const noexcept { return mFilePath; }
+	inline Mix_Chunk* chunkPtr() const noexcept { return mChunkPtr; }
+
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
