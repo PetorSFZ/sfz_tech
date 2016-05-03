@@ -59,7 +59,7 @@ public:
 	/// internal capacity will be set to the specified capacity.
 	/// \param string a null-terminated string or nullptr
 	/// \param capacity the capacity of the internal DynArray
-	DynStringTempl(const char* string, uint32_t capacity = 0) noexcept;
+	explicit DynStringTempl(const char* string, uint32_t capacity = 0) noexcept;
 
 	// Getters
 	// --------------------------------------------------------------------------------------------

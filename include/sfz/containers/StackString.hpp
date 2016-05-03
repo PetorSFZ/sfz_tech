@@ -56,7 +56,7 @@ struct StackStringTempl final {
 	/// Constructs a StackString with the given string. If the string is larger than the capacity
 	/// of this StackString then only what fits will be stored. The resulting StackString is
 	/// guaranteed to be null-terminated.
-	StackStringTempl(const char* string) noexcept;
+	explicit StackStringTempl(const char* string) noexcept;
 
 	// Public methods
 	// --------------------------------------------------------------------------------------------

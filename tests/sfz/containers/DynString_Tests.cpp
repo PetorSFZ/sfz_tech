@@ -69,7 +69,7 @@ TEST_CASE("DynString: printf() & printfAppend()", "[sfz::DynString]")
 
 TEST_CASE("DynString comparison operators", "[sfz::DynString]")
 {
-	DynString str = "aba";
+	DynString str("aba");
 	REQUIRE(str == "aba");
 	REQUIRE(str != "afae");
 	REQUIRE(str < "bbb");

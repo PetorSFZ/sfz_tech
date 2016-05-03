@@ -28,10 +28,10 @@ using namespace sfz;
 
 TEST_CASE("const char* constructor", "[sfz::StackString]")
 {
-	StackString str = "hello";
+	StackString str("hello");
 	REQUIRE(strcmp(str.str, "hello") == 0);
 
-	StackString128 str2 = "1234567890123456789012345678901234567890123456789012345678901234123456789012345678901234567890123456789012345678901234567890123extra";
+	StackString128 str2("1234567890123456789012345678901234567890123456789012345678901234123456789012345678901234567890123456789012345678901234567890123extra");
 	REQUIRE(strcmp(str2.str, "1234567890123456789012345678901234567890123456789012345678901234123456789012345678901234567890123456789012345678901234567890123") == 0);
 }
 
@@ -48,7 +48,7 @@ TEST_CASE("printf() & printfAppend()", "[sfz::StackString]")
 
 TEST_CASE("StackString comparison operators", "[sfz::StackString]")
 {
-	StackString str = "aba";
+	StackString str("aba");
 	REQUIRE(str == "aba");
 	REQUIRE(str != "afae");
 	REQUIRE(str < "bbb");
