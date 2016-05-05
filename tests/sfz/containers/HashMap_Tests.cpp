@@ -16,9 +16,15 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#pragma once
+#include "sfz/PushWarnings.hpp"
+#include "catch.hpp"
+#include "sfz/PopWarnings.hpp"
 
-#include "sfz/containers/DynArray.hpp"
-#include "sfz/containers/DynString.hpp"
 #include "sfz/containers/HashMap.hpp"
-#include "sfz/containers/StackString.hpp"
+
+using namespace sfz;
+
+TEST_CASE("HashMap: Default constructor", "[sfz::HashMap]")
+{
+	HashMap<int,int> m1;
+}

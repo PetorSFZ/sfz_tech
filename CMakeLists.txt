@@ -61,6 +61,8 @@ set(SOURCE_CONTAINERS_FILES
 	${INCLUDE_DIR}/sfz/containers/DynArray.inl
 	${INCLUDE_DIR}/sfz/containers/DynString.hpp
 	${INCLUDE_DIR}/sfz/containers/DynString.inl
+	${INCLUDE_DIR}/sfz/containers/HashMap.hpp
+	${INCLUDE_DIR}/sfz/containers/HashMap.inl
 	${INCLUDE_DIR}/sfz/containers/StackString.hpp
 	 ${SOURCE_DIR}/sfz/containers/StackString.cpp)
 source_group(sfz_containers FILES ${SOURCE_CONTAINERS_FILES})
@@ -150,6 +152,7 @@ if(SFZ_CORE_BUILD_TESTS)
 	set(CONTAINERS_TEST_FILES
 		${TESTS_DIR}/sfz/containers/DynArray_Tests.cpp
 		${TESTS_DIR}/sfz/containers/DynString_Tests.cpp
+		${TESTS_DIR}/sfz/containers/HashMap_Tests.cpp
 		${TESTS_DIR}/sfz/containers/StackString_Tests.cpp)
 	source_group(sfz_containers FILES ${CONTAINERS_TEST_FILES})
 

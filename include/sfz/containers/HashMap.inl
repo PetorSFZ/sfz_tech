@@ -16,9 +16,8 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#pragma once
+namespace sfz {
 
-#include "sfz/containers/DynArray.hpp"
-#include "sfz/containers/DynString.hpp"
-#include "sfz/containers/HashMap.hpp"
-#include "sfz/containers/StackString.hpp"
+
+
+} // namespace sfz

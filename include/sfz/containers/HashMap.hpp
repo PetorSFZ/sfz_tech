@@ -18,7 +18,29 @@
 
 #pragma once
 
-#include "sfz/containers/DynArray.hpp"
-#include "sfz/containers/DynString.hpp"
-#include "sfz/containers/HashMap.hpp"
-#include "sfz/containers/StackString.hpp"
+#include "sfz/memory/Allocators.hpp"
+#include "sfz/util/Hash.hpp"
+
+namespace sfz {
+
+// HashMap (interface)
+// ------------------------------------------------------------------------------------------------
+
+template<typename K, typename V, typename Allocator = StandardAllocator>
+class HashMap {
+public:
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	
+
+private:
+	// Private members
+	// --------------------------------------------------------------------------------------------
+
+
+};
+
+} // namespace sfz
+
+#include "sfz/containers/HashMap.inl"
