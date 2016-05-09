@@ -27,4 +27,6 @@ using namespace sfz;
 TEST_CASE("HashMap: Default constructor", "[sfz::HashMap]")
 {
 	HashMap<int,int> m1;
+	REQUIRE(m1.size() == 0);
+	REQUIRE(m1.capacity() == 0);
 }

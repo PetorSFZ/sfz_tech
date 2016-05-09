@@ -18,6 +18,54 @@
 
 namespace sfz {
 
+// HashMap (implementation): Constructors & destructors
+// ------------------------------------------------------------------------------------------------
 
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+HashMap<K,V,HashFun,Allocator>::HashMap(const HashMap& other) noexcept
+{
+	// TODO: Implement
+}
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+HashMap<K,V,HashFun,Allocator>& HashMap<K,V,HashFun,Allocator>::operator= (const HashMap& other) noexcept
+{
+	// TODO: Implement
+}
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+HashMap<K,V,HashFun,Allocator>::HashMap(HashMap&& other) noexcept
+{
+	// TODO: Implement
+}
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+HashMap<K,V,HashFun,Allocator>& HashMap<K,V,HashFun,Allocator>::operator= (HashMap&& other) noexcept
+{
+	// TODO: Implement
+}
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+HashMap<K,V,HashFun,Allocator>::~HashMap() noexcept
+{
+	// TODO: Implement
+}
+
+// HashMap (implementation): Operators
+// ------------------------------------------------------------------------------------------------
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+V& HashMap<K,V,HashFun,Allocator>::operator[] (const K& key) noexcept
+{
+	// TODO: Implement
+	return *nullptr;
+}
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+const V& HashMap<K,V,HashFun,Allocator>::operator[] (const K& key) const noexcept
+{
+	// TODO: Implement
+	return *nullptr;
+}
 
 } // namespace sfz
