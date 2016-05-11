@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerstr�m (skipifzero.com, peter@hstroem.se)
+﻿// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -20,6 +20,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 
 #include "sfz/memory/Allocators.hpp"
 #include "sfz/util/Hash.hpp"
@@ -28,7 +29,7 @@ namespace sfz {
 
 using std::size_t;
 using std::uint32_t;
-using std::uint64_t;
+using std::uint8_t;
 
 // HashMap (interface)
 // ------------------------------------------------------------------------------------------------
@@ -44,8 +45,17 @@ template<typename K, typename V,
          size_t(*HashFun)(const K&) = sfz::hash<K>, typename Allocator = StandardAllocator>
 class HashMap {
 public:
+	// Constants
+	// --------------------------------------------------------------------------------------------
+
+	static constexpr uint32_t ALIGNMENT = 32;
+	static constexpr uint32_t MIN_EXPONENT = 6; // Capacity 2⁶ = 64
+	static constexpr uint32_t MAX_EXPONENT = 31; // Capacity 2³¹ = 2 147 483 648
+
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
+
+	explicit HashMap(uint32_t capacityExponent) noexcept;
 
 	HashMap() noexcept = default;
 	HashMap(const HashMap& other) noexcept;
@@ -64,26 +74,36 @@ public:
 	/// Returns the capacity of this HashMap.
 	uint32_t capacity() const noexcept { return mCapacity; }
 
-	// Operators
-	// --------------------------------------------------------------------------------------------
-
-	V& operator[] (const K& key) noexcept;
-
-	const V& operator[] (const K& key) const noexcept;
-
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
+	void clear() noexcept;
+
+	void destroy() noexcept;
 
 
 private:
+	// Private constants
+	// --------------------------------------------------------------------------------------------
+
+	static constexpr uint8_t BIT_INFO_EMPTY = 0;
+	static constexpr uint8_t BIT_INFO_REMOVED = 1;
+	static constexpr uint8_t BIT_INFO_OCCUPIED = 2;
+
+	// Private methods
+	// --------------------------------------------------------------------------------------------
+
+	size_t sizeofInfoBitsArray() const noexcept;
+	
+	uint8_t elementInfo(uint32_t index) const noexcept;
+
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
 	uint32_t mSize = 0, mCapacity = 0;
-	uint64_t* mExistsBitSet = nullptr;
-	K* mKeys = nullptr;
-	V* mValues = nullptr;
+	uint8_t* mInfoBitsPtr = nullptr; // 2 bits per element, 0 = empty, 1 = removed, 2 = occupied
+	K* mKeysPtr = nullptr;
+	V* mValuesPtr = nullptr;
 };
 
 } // namespace sfz
