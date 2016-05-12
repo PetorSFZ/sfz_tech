@@ -22,13 +22,12 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
-HashMap<K,V,HashFun,Allocator>::HashMap(uint32_t capacityExponent) noexcept
+HashMap<K,V,HashFun,Allocator>::HashMap(uint32_t suggestedCapacity) noexcept
 {
-	if (capacityExponent < MIN_EXPONENT) capacityExponent = MIN_EXPONENT;
-	else if (capacityExponent > MAX_EXPONENT) capacityExponent = MAX_EXPONENT;
-	
-	mCapacity = uint32_t(1) << capacityExponent; // 2^capacityExponent
-	// Allocate 2 bits per element, i.e. mCapacity / 4 bytes.
+	// Convert the suggested capacity to a larger (if possible) prime number
+	mCapacity = findPrimeCapacity(suggestedCapacity);
+
+	// Allocate memory
 	mInfoBitsPtr = static_cast<uint8_t*>(Allocator::allocate(sizeofInfoBitsArray(), ALIGNMENT));
 	mKeysPtr = static_cast<K*>(Allocator::allocate(mCapacity * sizeof(K), ALIGNMENT));
 	mValuesPtr = static_cast<V*>(Allocator::allocate(mCapacity * sizeof(V), ALIGNMENT));
@@ -124,9 +123,53 @@ void HashMap<K,V,HashFun,Allocator>::destroy() noexcept
 // ------------------------------------------------------------------------------------------------
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+uint32_t HashMap<K,V,HashFun,Allocator>::findPrimeCapacity(uint32_t capacity) const noexcept
+{
+	constexpr uint32_t PRIMES[] = {
+		67,
+		131,
+		257,
+		521,
+		1031,
+		2053,
+		4099,
+		8209,
+		16411,
+		32771,
+		65537,
+		131101,
+		262147,
+		524309,
+		1048583,
+		2097169,
+		4194319,
+		8388617,
+		16777259,
+		33554467,
+		67108879,
+		134217757,
+		268435459,
+		536870923,
+		1073741827,
+		2147483659
+	};
+
+	// Linear search is probably okay for an array this small
+	for (size_t i = 0; i < sizeof(PRIMES) / sizeof(uint32_t); ++i) {
+		if (PRIMES[i] >= capacity) return PRIMES[i];
+	}
+
+	// Found no prime, which means that the suggested capacity is too large.
+	return MAX_CAPACITY;
+}
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
 size_t HashMap<K,V,HashFun,Allocator>::sizeofInfoBitsArray() const noexcept
 {
-	return (size_t)mCapacity / 4;
+	// 4 bit pairs per byte
+	uint32_t baseSize = mCapacity >> 2; 
+	// + 1 since mCapacity is odd, since it is a prime
+	return baseSize + 1;
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
@@ -136,7 +179,7 @@ uint8_t HashMap<K,V,HashFun,Allocator>::elementInfo(uint32_t index) const noexce
 	uint32_t chunkIndexModulo = index & 0x03; // index % 4
 
 	uint8_t chunk = mInfoBitsPtr[chunkIndex];
-	uint8_t info = (chunk >> (2 * chunkIndexModulo)) & 0x3;
+	uint8_t info = static_cast<uint8_t>((chunk >> (2 * chunkIndexModulo)) & 0x3);
 
 	return info;
 }

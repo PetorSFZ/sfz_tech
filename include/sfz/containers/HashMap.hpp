@@ -34,13 +34,6 @@ using std::uint8_t;
 // HashMap (interface)
 // ------------------------------------------------------------------------------------------------
 
-/// HashMap using open adressing.
-/// TODO: Custom bitset class (to check whether a position is in use or not)
-/// can use popcnt on the bitset class to check how many elements in HashMap, should be reasonably
-/// fast
-/// +1 on failure ("linear probing")
-/// 
-
 template<typename K, typename V,
          size_t(*HashFun)(const K&) = sfz::hash<K>, typename Allocator = StandardAllocator>
 class HashMap {
@@ -49,13 +42,13 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	static constexpr uint32_t ALIGNMENT = 32;
-	static constexpr uint32_t MIN_EXPONENT = 6; // Capacity 2⁶ = 64
-	static constexpr uint32_t MAX_EXPONENT = 31; // Capacity 2³¹ = 2 147 483 648
+	static constexpr uint32_t MIN_CAPACITY = 67;
+	static constexpr uint32_t MAX_CAPACITY = 2147483659;
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	explicit HashMap(uint32_t capacityExponent) noexcept;
+	explicit HashMap(uint32_t suggestedCapacity) noexcept;
 
 	HashMap() noexcept = default;
 	HashMap(const HashMap& other) noexcept;
@@ -92,6 +85,9 @@ private:
 
 	// Private methods
 	// --------------------------------------------------------------------------------------------
+
+	/// Returns a prime number larger than the suggested capacity
+	uint32_t findPrimeCapacity(uint32_t capacity) const noexcept;
 
 	size_t sizeofInfoBitsArray() const noexcept;
 	
