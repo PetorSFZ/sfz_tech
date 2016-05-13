@@ -41,7 +41,8 @@ public:
 	// Constants
 	// --------------------------------------------------------------------------------------------
 
-	static constexpr uint32_t ALIGNMENT = 32;
+	static constexpr uint32_t ALIGNMENT_EXP = 5;
+	static constexpr uint32_t ALIGNMENT = 1 << ALIGNMENT_EXP; // 2^5 = 32
 	static constexpr uint32_t MIN_CAPACITY = 67;
 	static constexpr uint32_t MAX_CAPACITY = 2147483659;
 
@@ -89,17 +90,36 @@ private:
 	/// Returns a prime number larger than the suggested capacity
 	uint32_t findPrimeCapacity(uint32_t capacity) const noexcept;
 
-	size_t sizeofInfoBitsArray() const noexcept;
-	
+	/// Return the size of the memory allocation for the element info array in bytes
+	size_t sizeOfElementInfoArray() const noexcept;
+
+	/// Returns the size of the memory allocation for the key array in bytes
+	size_t sizeOfKeyArray() const noexcept;
+
+	/// Returns the size of the memory allocation for the value array in bytes
+	size_t sizeOfValueArray() const noexcept;
+
+	/// Returns the size of the allocated memory in bytes
+	size_t sizeOfAllocatedMemory() const noexcept;
+
+	/// Returns pointer to the info bits part of the allocated memory
+	uint8_t* elementInfoPtr() const noexcept;
+
+	/// Returns pointer to the key array part of the allocated memory
+	K* keysPtr() const noexcept;
+
+	/// Returns pointer to the value array port fo the allocated memory
+	V* valuesPtr() const noexcept;
+
+	/// Returns the 2 bit element info about an element position in the HashMap
+	/// 0 = empty, 1 = removed, 2 = occupied, (3 is unused)
 	uint8_t elementInfo(uint32_t index) const noexcept;
 
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
 	uint32_t mSize = 0, mCapacity = 0;
-	uint8_t* mInfoBitsPtr = nullptr; // 2 bits per element, 0 = empty, 1 = removed, 2 = occupied
-	K* mKeysPtr = nullptr;
-	V* mValuesPtr = nullptr;
+	uint8_t* mDataPtr = nullptr;
 };
 
 } // namespace sfz
