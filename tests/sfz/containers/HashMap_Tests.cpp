@@ -30,3 +30,20 @@ TEST_CASE("HashMap: Default constructor", "[sfz::HashMap]")
 	REQUIRE(m1.size() == 0);
 	REQUIRE(m1.capacity() == 0);
 }
+
+TEST_CASE("HashMap: Insertion and retrieval (temporary test)", "[sfz::HashMap]")
+{
+	HashMap<int, int> m1(64);
+	REQUIRE(m1.size() == 0);
+	REQUIRE(m1.capacity() == 67);
+
+	m1.add(2, 3);
+	REQUIRE(*m1.get(2) == 3);
+
+	m1.add(3, 1);
+	REQUIRE((*m1.get(3)) == 1);
+
+	REQUIRE(m1.get(6) == nullptr);
+	REQUIRE(m1.get(0) == nullptr);
+	REQUIRE(m1.get(1) == nullptr);
+}

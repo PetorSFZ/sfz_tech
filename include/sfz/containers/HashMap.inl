@@ -28,32 +28,33 @@ HashMap<K,V,HashFun,Allocator>::HashMap(uint32_t suggestedCapacity) noexcept
 	mCapacity = findPrimeCapacity(suggestedCapacity);
 
 	// Allocate memory
-	mDataPtr = Allocator::allocate(sizeOfAllocatedMemory(), ALIGNMENT);
+	mDataPtr = static_cast<uint8_t*>(Allocator::allocate(sizeOfAllocatedMemory(), ALIGNMENT));
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
 HashMap<K,V,HashFun,Allocator>::HashMap(const HashMap& other) noexcept
 {
-	// TODO: Implement
+	*this = other;
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
 HashMap<K,V,HashFun,Allocator>& HashMap<K,V,HashFun,Allocator>::operator= (const HashMap& other) noexcept
 {
 	// TODO: Implement
-
+	return *nullptr;
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
 HashMap<K,V,HashFun,Allocator>::HashMap(HashMap&& other) noexcept
 {
-	// TODO: Implement
+	this->swap(other);
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
 HashMap<K,V,HashFun,Allocator>& HashMap<K,V,HashFun,Allocator>::operator= (HashMap&& other) noexcept
 {
-	// TODO: Implement
+	this->swap(other)
+	return *this;
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
@@ -62,8 +63,103 @@ HashMap<K,V,HashFun,Allocator>::~HashMap() noexcept
 	this->destroy();
 }
 
+// HashMap (implementation): Getters
+// ------------------------------------------------------------------------------------------------
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+V* HashMap<K,V,HashFun,Allocator>::get(const K& key) noexcept
+{
+	// Hash the key and the probe to find empty index
+	uint32_t index = uint32_t(HashFun(key) % size_t(mCapacity));
+	uint8_t info = elementInfo(index);
+
+	K* keys = keysPtr();
+
+	for (size_t i = 0; i < size_t(mCapacity); ++i) {
+		// Return nullptr if there is no element at index
+		if (info <= BIT_INFO_REMOVED) return nullptr;
+
+		// Return pointer to value if it is the correct key
+		if (keys[index] == key) return &(valuesPtr()[index]);
+
+		// Try another index (linear probing)
+		index += 1;
+		info = elementInfo(index);
+	}
+
+	// Timed out
+	return nullptr;
+}
+
+/*template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+const V* HashMap<K,V,HashFun,Allocator>::get(const K& key) const noexcept
+{
+	// Hash the key and the probe to find empty index
+	uint32_t index = uint32_t(HashFun(key) % size_t(mCapacity));
+	uint8_t info = elementInfo(index);
+
+	K* keys = keysPtr();
+
+	for (size_t i = 0; i < size_t(mCapacity); ++i) {
+		// Return nullptr if there is no element at index
+		if (info <= BIT_INFO_REMOVED) return nullptr;
+
+		// Return pointer to value if it is the correct key
+		if (keys[index] == key) return &valuesPtr()[index];
+
+		// Try another index (linear probing)
+		index += 1;
+		info = elementInfo(index);
+	}
+
+	// Timed out
+	return nullptr;
+}*/
+
 // HashMap (implementation): Public methods
 // ------------------------------------------------------------------------------------------------
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+void HashMap<K,V,HashFun,Allocator>::add(const K& key, const V& value) noexcept
+{
+	if (mSize >= mCapacity) {
+		// TODO: Create more capacity
+		return;
+	}
+
+	// TODO: Maybe bool return value?
+
+	// Hash the key and the probe to find empty index
+	uint32_t index = uint32_t(HashFun(key) % size_t(mCapacity));
+	uint8_t info = elementInfo(index);
+
+	// TODO: Change to quadratic probe
+	while (info >= BIT_INFO_OCCUPIED) {
+		index += 1;
+		info = elementInfo(index);
+	}
+
+	// Insert info, key and value
+	setElementInfo(index, BIT_INFO_OCCUPIED);
+	new (keysPtr() + index) K(key);
+	new (valuesPtr() + index) V(value);
+}
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+void HashMap<K,V,HashFun,Allocator>::swap(HashMap& other) noexcept
+{
+	uint32_t thisSize = this->mSize;
+	uint32_t thisCapacity = this->mCapacity;
+	T* thisDataPtr = this->mDataPtr;
+
+	this->mSize = other.mSize;
+	this->mCapacity = other.mCapacity;
+	this->mDataPtr = other.mDataPtr;
+
+	other.mSize = thisSize;
+	other.mCapacity = thisCapacity;
+	other.mDataPtr = thisDataPtr;
+}
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
 void HashMap<K,V,HashFun,Allocator>::clear() noexcept
@@ -221,11 +317,28 @@ uint8_t HashMap<K,V,HashFun,Allocator>::elementInfo(uint32_t index) const noexce
 {
 	uint32_t chunkIndex = index >> 2; // index / 4;
 	uint32_t chunkIndexModulo = index & 0x03; // index % 4
+	uint32_t chunkIndexModuloTimes2 = chunkIndexModulo << 1;
 
 	uint8_t chunk = elementInfoPtr()[chunkIndex];
-	uint8_t info = static_cast<uint8_t>((chunk >> (2 * chunkIndexModulo)) & 0x3);
+	uint8_t info = static_cast<uint8_t>((chunk >> (chunkIndexModuloTimes2)) & 0x3);
 
 	return info;
+}
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+void HashMap<K,V,HashFun,Allocator>::setElementInfo(uint32_t index, uint8_t value) noexcept
+{
+	uint32_t chunkIndex = index >> 2; // index / 4;
+	uint32_t chunkIndexModulo = index & 0x03; // index % 4
+	uint32_t chunkIndexModuloTimes2 = chunkIndexModulo << 1;
+
+	uint8_t chunk = elementInfoPtr()[chunkIndex];
+	
+	// Remove previous info
+	chunk = chunk & (~(uint32_t(0x03) << chunkIndexModuloTimes2));
+	
+	// Insert new info
+	elementInfoPtr()[chunkIndex] =  chunk | (value << chunkIndexModuloTimes2);
 }
 
 } // namespace sfz

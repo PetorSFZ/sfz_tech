@@ -68,13 +68,27 @@ public:
 	/// Returns the capacity of this HashMap.
 	uint32_t capacity() const noexcept { return mCapacity; }
 
+	V* get(const K& key) noexcept;
+
+	//const V* get(const K& key) const noexcept;
+
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
+	// TODO: Document
+	void add(const K& key, const V& value) noexcept;
+
+	/// Swaps the contents of two HashMaps
+	void swap(HashMap& other) noexcept;
+
+	/// Removes all elements from this HashMap without deallocating memory or changing capacity
 	void clear() noexcept;
 
+	/// Destroys all elements stored in this DynArray and deallocates all memory. After this
+	/// method is called the size and capacity is 0. If the HashMap is already empty then this
+	/// method will do nothing. It is not necessary to call this method manually, it will
+	/// automatically be called in the destructor.
 	void destroy() noexcept;
-
 
 private:
 	// Private constants
@@ -114,6 +128,9 @@ private:
 	/// Returns the 2 bit element info about an element position in the HashMap
 	/// 0 = empty, 1 = removed, 2 = occupied, (3 is unused)
 	uint8_t elementInfo(uint32_t index) const noexcept;
+
+	/// Sets the 2 bit element info with the selected value
+	void setElementInfo(uint32_t index, uint8_t value) noexcept;
 
 	// Private members
 	// --------------------------------------------------------------------------------------------
