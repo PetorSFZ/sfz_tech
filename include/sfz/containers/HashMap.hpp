@@ -27,6 +27,7 @@
 
 namespace sfz {
 
+using std::int64_t;
 using std::size_t;
 using std::uint32_t;
 using std::uint8_t;
@@ -94,9 +95,9 @@ private:
 	// Private constants
 	// --------------------------------------------------------------------------------------------
 
-	static constexpr uint8_t BIT_INFO_EMPTY = 0;
-	static constexpr uint8_t BIT_INFO_REMOVED = 1;
-	static constexpr uint8_t BIT_INFO_OCCUPIED = 2;
+	static constexpr uint8_t ELEMENT_INFO_EMPTY = 0;
+	static constexpr uint8_t ELEMENT_INFO_REMOVED = 1;
+	static constexpr uint8_t ELEMENT_INFO_OCCUPIED = 2;
 
 	// Private methods
 	// --------------------------------------------------------------------------------------------
@@ -131,6 +132,14 @@ private:
 
 	/// Sets the 2 bit element info with the selected value
 	void setElementInfo(uint32_t index, uint8_t value) noexcept;
+
+	/// Finds the index of an element associated with the specified key. Whether an element is
+	/// found or not is returned through the elementFound parameter.
+	uint32_t findElementIndex(const K& key, bool& elementFound) const noexcept;
+
+	/// Finds the idex of the first free slot for a given key. If the key is already in the HashMap
+	/// the search stops and keyAlreadyExists is set to true.
+	uint32_t findFreeSlot(const K& key, bool& keyAlreadyExists) const noexcept;
 
 	// Private members
 	// --------------------------------------------------------------------------------------------

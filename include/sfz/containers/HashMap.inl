@@ -69,26 +69,12 @@ HashMap<K,V,HashFun,Allocator>::~HashMap() noexcept
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
 V* HashMap<K,V,HashFun,Allocator>::get(const K& key) noexcept
 {
-	// Hash the key and the probe to find empty index
-	uint32_t index = uint32_t(HashFun(key) % size_t(mCapacity));
-	uint8_t info = elementInfo(index);
+	bool elementFound = false;
+	uint32_t index = this->findElementIndex(key, elementFound);
 
-	K* keys = keysPtr();
+	if (!elementFound) return nullptr;
 
-	for (size_t i = 0; i < size_t(mCapacity); ++i) {
-		// Return nullptr if there is no element at index
-		if (info <= BIT_INFO_REMOVED) return nullptr;
-
-		// Return pointer to value if it is the correct key
-		if (keys[index] == key) return &(valuesPtr()[index]);
-
-		// Try another index (linear probing)
-		index += 1;
-		info = elementInfo(index);
-	}
-
-	// Timed out
-	return nullptr;
+	return &(valuesPtr()[index]);
 }
 
 /*template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
@@ -127,20 +113,17 @@ void HashMap<K,V,HashFun,Allocator>::add(const K& key, const V& value) noexcept
 		return;
 	}
 
-	// TODO: Maybe bool return value?
+	bool keyAlreadyExists = false;
+	uint32_t index = findFreeSlot(key, keyAlreadyExists);
 
-	// Hash the key and the probe to find empty index
-	uint32_t index = uint32_t(HashFun(key) % size_t(mCapacity));
-	uint8_t info = elementInfo(index);
-
-	// TODO: Change to quadratic probe
-	while (info >= BIT_INFO_OCCUPIED) {
-		index += 1;
-		info = elementInfo(index);
+	if (keyAlreadyExists) {
+		// TODO: Maybe should overwrite value of element?
+		// TODO: Maybe bool return value?
+		return;
 	}
 
 	// Insert info, key and value
-	setElementInfo(index, BIT_INFO_OCCUPIED);
+	setElementInfo(index, ELEMENT_INFO_OCCUPIED);
 	new (keysPtr() + index) K(key);
 	new (valuesPtr() + index) V(value);
 }
@@ -171,7 +154,7 @@ void HashMap<K,V,HashFun,Allocator>::clear() noexcept
 		K* keyPtr = keysPtr();
 		V* valuePtr = valuesPtr();
 		for (size_t i = 0; i < mCapacity; ++i) {
-			if (elementInfo((uint32_t)i) == BIT_INFO_OCCUPIED) {
+			if (elementInfo((uint32_t)i) == ELEMENT_INFO_OCCUPIED) {
 				keyPtr[i].~K();
 				valuePtr[i].~V();
 			}
@@ -180,7 +163,7 @@ void HashMap<K,V,HashFun,Allocator>::clear() noexcept
 	else if (!std::is_trivially_destructible<K>::value) {
 		K* keyPtr = keysPtr();
 		for (size_t i = 0; i < mCapacity; ++i) {
-			if (elementInfo((uint32_t)i) == BIT_INFO_OCCUPIED) {
+			if (elementInfo((uint32_t)i) == ELEMENT_INFO_OCCUPIED) {
 				keyPtr[i].~K();
 			}
 		}
@@ -188,7 +171,7 @@ void HashMap<K,V,HashFun,Allocator>::clear() noexcept
 	else if (!std::is_trivially_destructible<V>::value) {
 		V* valuePtr = valuesPtr();
 		for (size_t i = 0; i < mCapacity; ++i) {
-			if (elementInfo((uint32_t)i) == BIT_INFO_OCCUPIED) {
+			if (elementInfo((uint32_t)i) == ELEMENT_INFO_OCCUPIED) {
 				valuePtr[i].~V();
 			}
 		}
@@ -271,7 +254,7 @@ size_t HashMap<K,V,HashFun,Allocator>::sizeOfElementInfoArray() const noexcept
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
-size_t HashMap<K,V,HashFun,Allocator>::sizeOfKeyArray() const noexcept
+size_t HashMap<K, V, HashFun, Allocator>::sizeOfKeyArray() const noexcept
 {
 	// Calculate how many aligment sized chunks is needed to store keys
 	size_t keysMinRequiredSize = mCapacity * sizeof(K);
@@ -280,7 +263,7 @@ size_t HashMap<K,V,HashFun,Allocator>::sizeOfKeyArray() const noexcept
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
-size_t HashMap<K,V,HashFun,Allocator>::sizeOfValueArray() const noexcept
+size_t HashMap<K, V, HashFun, Allocator>::sizeOfValueArray() const noexcept
 {
 	// Calculate how many alignment sized chunks is needed to store values
 	size_t valuesMinRequiredSize = mCapacity * sizeof(V);
@@ -289,31 +272,31 @@ size_t HashMap<K,V,HashFun,Allocator>::sizeOfValueArray() const noexcept
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
-size_t HashMap<K,V,HashFun,Allocator>::sizeOfAllocatedMemory() const noexcept
+size_t HashMap<K, V, HashFun, Allocator>::sizeOfAllocatedMemory() const noexcept
 {
 	return sizeOfElementInfoArray() + sizeOfKeyArray() + sizeOfValueArray();
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
-uint8_t* HashMap<K,V,HashFun,Allocator>::elementInfoPtr() const noexcept
+uint8_t* HashMap<K, V, HashFun, Allocator>::elementInfoPtr() const noexcept
 {
 	return mDataPtr;
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
-K* HashMap<K,V,HashFun,Allocator>::keysPtr() const noexcept
+K* HashMap<K, V, HashFun, Allocator>::keysPtr() const noexcept
 {
 	return reinterpret_cast<K*>(mDataPtr + sizeOfElementInfoArray());
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
-V* HashMap<K,V,HashFun,Allocator>::valuesPtr() const noexcept
+V* HashMap<K, V, HashFun, Allocator>::valuesPtr() const noexcept
 {
 	return reinterpret_cast<V*>(mDataPtr + sizeOfElementInfoArray() + sizeOfKeyArray());
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
-uint8_t HashMap<K,V,HashFun,Allocator>::elementInfo(uint32_t index) const noexcept
+uint8_t HashMap<K, V, HashFun, Allocator>::elementInfo(uint32_t index) const noexcept
 {
 	uint32_t chunkIndex = index >> 2; // index / 4;
 	uint32_t chunkIndexModulo = index & 0x03; // index % 4
@@ -326,19 +309,119 @@ uint8_t HashMap<K,V,HashFun,Allocator>::elementInfo(uint32_t index) const noexce
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
-void HashMap<K,V,HashFun,Allocator>::setElementInfo(uint32_t index, uint8_t value) noexcept
+void HashMap<K, V, HashFun, Allocator>::setElementInfo(uint32_t index, uint8_t value) noexcept
 {
 	uint32_t chunkIndex = index >> 2; // index / 4;
 	uint32_t chunkIndexModulo = index & 0x03; // index % 4
 	uint32_t chunkIndexModuloTimes2 = chunkIndexModulo << 1;
 
 	uint8_t chunk = elementInfoPtr()[chunkIndex];
-	
+
 	// Remove previous info
 	chunk = chunk & (~(uint32_t(0x03) << chunkIndexModuloTimes2));
-	
+
 	// Insert new info
 	elementInfoPtr()[chunkIndex] =  chunk | (value << chunkIndexModuloTimes2);
+}
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+uint32_t HashMap<K, V, HashFun, Allocator>::findElementIndex(const K& key, bool& elementFound) const noexcept
+{
+	K* keys = keysPtr();
+
+	// Hash the key and find the base index
+	const int64_t baseIndex = int64_t(HashFun(key) % size_t(mCapacity));
+
+	// Check if base index holds the element
+	uint8_t info = elementInfo(uint32_t(baseIndex));
+	if (info == ELEMENT_INFO_EMPTY) {
+		elementFound = false;
+		return ~0;
+	}
+	if (info == ELEMENT_INFO_OCCUPIED) {
+		if (keys[baseIndex] == key) {
+			elementFound = true;
+			return baseIndex;
+		}
+	}
+
+	// Search for the element using quadratic probing
+	const int64_t maxNumProbingAttempts = int64_t(mCapacity) * 4;
+	for (int64_t i = 1; i < maxNumProbingAttempts; ++i) {
+		int64_t iSquared = i * i;
+
+		// Try (base + i²) index
+		int64_t index1 = (baseIndex + iSquared) % int64_t(mCapacity);
+		info = elementInfo(uint32_t(index1));
+		if (info == ELEMENT_INFO_EMPTY) break;
+		if (info == ELEMENT_INFO_OCCUPIED) {
+			elementFound = true;
+			return index1;
+		}
+
+		// Try (base - i²) index
+		int64_t index2 = (baseIndex - iSquared) % int64_t(mCapacity);
+		info = elementInfo(uint32_t(index2));
+		if (info == ELEMENT_INFO_EMPTY) break;
+		if (info == ELEMENT_INFO_OCCUPIED) {
+			elementFound = true;
+			return index2;
+		}
+	}
+
+	elementFound = false;
+	return ~0;
+}
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+uint32_t HashMap<K,V,HashFun,Allocator>::findFreeSlot(const K& key, bool& keyAlreadyExists) const noexcept
+{
+	K* keys = keysPtr();
+
+	// Hash the key and find the base index
+	const int64_t baseIndex = int64_t(HashFun(key) % size_t(mCapacity));
+
+	// Check if slot at base index is free
+	uint8_t info = elementInfo(uint32_t(baseIndex));
+	if (info <= ELEMENT_INFO_REMOVED) {
+		keyAlreadyExists = false;
+		return baseIndex;
+	} 
+	else if (keys[baseIndex] == key) {
+		keyAlreadyExists = true;
+		return ~0;
+	}
+
+	// Search for free slot using quadratic probing
+	const int64_t maxNumProbingAttempts = int64_t(mCapacity) * 4;
+	for (int64_t i = 1; i < maxNumProbingAttempts; ++i) {
+		int64_t iSquared = i * i;
+
+		// Try (base + i²) index
+		int64_t index1 = (baseIndex + iSquared) % int64_t(mCapacity);
+		info = elementInfo(uint32_t(index1));
+		if (info <= ELEMENT_INFO_REMOVED) {
+			keyAlreadyExists = false;
+			return index1;
+		}
+		else if (keys[index1] == key) {
+			break;
+		}
+
+		// Try (base - i²) index
+		int64_t index2 = (baseIndex - iSquared) % int64_t(mCapacity);
+		info = elementInfo(uint32_t(index2));
+		if (info <= ELEMENT_INFO_REMOVED) {
+			keyAlreadyExists = false;
+			return index2;
+		}
+		else if (keys[index2] == key) {
+			break;
+		}
+	}
+
+	keyAlreadyExists = true;
+	return ~0;
 }
 
 } // namespace sfz
