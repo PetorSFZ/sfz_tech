@@ -24,6 +24,8 @@ namespace sfz {
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
 HashMap<K,V,HashFun,Allocator>::HashMap(uint32_t suggestedCapacity) noexcept
 {
+	if (suggestedCapacity == 0) return;
+
 	// Convert the suggested capacity to a larger (if possible) prime number
 	mCapacity = findPrimeCapacity(suggestedCapacity);
 
@@ -53,7 +55,7 @@ HashMap<K,V,HashFun,Allocator>::HashMap(HashMap&& other) noexcept
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
 HashMap<K,V,HashFun,Allocator>& HashMap<K,V,HashFun,Allocator>::operator= (HashMap&& other) noexcept
 {
-	this->swap(other)
+	this->swap(other);
 	return *this;
 }
 
@@ -69,63 +71,80 @@ HashMap<K,V,HashFun,Allocator>::~HashMap() noexcept
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
 V* HashMap<K,V,HashFun,Allocator>::get(const K& key) noexcept
 {
+	// Finds the index of the element
 	bool elementFound = false;
 	uint32_t index = this->findElementIndex(key, elementFound);
 
+	// Returns nullptr if map doesn't contain element
 	if (!elementFound) return nullptr;
 
+	// Returns pointer to element
 	return &(valuesPtr()[index]);
 }
 
-/*template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
-const V* HashMap<K,V,HashFun,Allocator>::get(const K& key) const noexcept
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+const V* HashMap<K, V, HashFun, Allocator>::get(const K& key) const noexcept
 {
-	// Hash the key and the probe to find empty index
-	uint32_t index = uint32_t(HashFun(key) % size_t(mCapacity));
-	uint8_t info = elementInfo(index);
+	// Finds the index of the element
+	bool elementFound = false;
+	uint32_t index = this->findElementIndex(key, elementFound);
 
-	K* keys = keysPtr();
+	// Returns nullptr if map doesn't contain element
+	if (!elementFound) return nullptr;
 
-	for (size_t i = 0; i < size_t(mCapacity); ++i) {
-		// Return nullptr if there is no element at index
-		if (info <= BIT_INFO_REMOVED) return nullptr;
-
-		// Return pointer to value if it is the correct key
-		if (keys[index] == key) return &valuesPtr()[index];
-
-		// Try another index (linear probing)
-		index += 1;
-		info = elementInfo(index);
-	}
-
-	// Timed out
-	return nullptr;
-}*/
+	// Returns pointer to element
+	return &(valuesPtr()[index]);
+}
 
 // HashMap (implementation): Public methods
 // ------------------------------------------------------------------------------------------------
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
-void HashMap<K,V,HashFun,Allocator>::add(const K& key, const V& value) noexcept
+bool HashMap<K,V,HashFun,Allocator>::add(const K& key, const V& value) noexcept
 {
 	if (mSize >= mCapacity) {
 		// TODO: Create more capacity
-		return;
+		return false;
 	}
 
+	// Find free slot index
 	bool keyAlreadyExists = false;
 	uint32_t index = findFreeSlot(key, keyAlreadyExists);
 
-	if (keyAlreadyExists) {
-		// TODO: Maybe should overwrite value of element?
-		// TODO: Maybe bool return value?
-		return;
-	}
+	// Return false if key already exists
+	if (keyAlreadyExists) return false;
 
 	// Insert info, key and value
 	setElementInfo(index, ELEMENT_INFO_OCCUPIED);
 	new (keysPtr() + index) K(key);
 	new (valuesPtr() + index) V(value);
+
+	mSize += 1;
+	return true;
+}
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+bool HashMap<K, V, HashFun, Allocator>::add(const K& key, V&& value) noexcept
+{
+	if (mSize >= mCapacity) {
+		// TODO: Create more capacity
+		return false;
+	}
+
+	// Find free slot index
+	bool keyAlreadyExists = false;
+	uint32_t index = findFreeSlot(key, keyAlreadyExists);
+
+	// Return false if key already exists
+	if (keyAlreadyExists) return false;
+
+	// Insert info, key and value
+	setElementInfo(index, ELEMENT_INFO_OCCUPIED);
+	new (keysPtr() + index) K(key);
+	new (valuesPtr() + index) V(value);
+
+	mSize += 1;
+	return true;
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
@@ -133,7 +152,7 @@ void HashMap<K,V,HashFun,Allocator>::swap(HashMap& other) noexcept
 {
 	uint32_t thisSize = this->mSize;
 	uint32_t thisCapacity = this->mCapacity;
-	T* thisDataPtr = this->mDataPtr;
+	uint8_t* thisDataPtr = this->mDataPtr;
 
 	this->mSize = other.mSize;
 	this->mCapacity = other.mCapacity;
@@ -321,7 +340,7 @@ void HashMap<K, V, HashFun, Allocator>::setElementInfo(uint32_t index, uint8_t v
 	chunk = chunk & (~(uint32_t(0x03) << chunkIndexModuloTimes2));
 
 	// Insert new info
-	elementInfoPtr()[chunkIndex] =  chunk | (value << chunkIndexModuloTimes2);
+	elementInfoPtr()[chunkIndex] =  uint8_t(chunk | (value << chunkIndexModuloTimes2));
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
@@ -336,12 +355,12 @@ uint32_t HashMap<K, V, HashFun, Allocator>::findElementIndex(const K& key, bool&
 	uint8_t info = elementInfo(uint32_t(baseIndex));
 	if (info == ELEMENT_INFO_EMPTY) {
 		elementFound = false;
-		return ~0;
+		return uint32_t(~0);
 	}
 	if (info == ELEMENT_INFO_OCCUPIED) {
 		if (keys[baseIndex] == key) {
 			elementFound = true;
-			return baseIndex;
+			return uint32_t(baseIndex);
 		}
 	}
 
@@ -356,7 +375,7 @@ uint32_t HashMap<K, V, HashFun, Allocator>::findElementIndex(const K& key, bool&
 		if (info == ELEMENT_INFO_EMPTY) break;
 		if (info == ELEMENT_INFO_OCCUPIED) {
 			elementFound = true;
-			return index1;
+			return uint32_t(index1);
 		}
 
 		// Try (base - i²) index
@@ -365,12 +384,12 @@ uint32_t HashMap<K, V, HashFun, Allocator>::findElementIndex(const K& key, bool&
 		if (info == ELEMENT_INFO_EMPTY) break;
 		if (info == ELEMENT_INFO_OCCUPIED) {
 			elementFound = true;
-			return index2;
+			return uint32_t(index2);
 		}
 	}
 
 	elementFound = false;
-	return ~0;
+	return uint32_t(~0);
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
@@ -385,11 +404,11 @@ uint32_t HashMap<K,V,HashFun,Allocator>::findFreeSlot(const K& key, bool& keyAlr
 	uint8_t info = elementInfo(uint32_t(baseIndex));
 	if (info <= ELEMENT_INFO_REMOVED) {
 		keyAlreadyExists = false;
-		return baseIndex;
+		return uint32_t(baseIndex);
 	} 
 	else if (keys[baseIndex] == key) {
 		keyAlreadyExists = true;
-		return ~0;
+		return uint32_t(~0);
 	}
 
 	// Search for free slot using quadratic probing
@@ -402,7 +421,7 @@ uint32_t HashMap<K,V,HashFun,Allocator>::findFreeSlot(const K& key, bool& keyAlr
 		info = elementInfo(uint32_t(index1));
 		if (info <= ELEMENT_INFO_REMOVED) {
 			keyAlreadyExists = false;
-			return index1;
+			return uint32_t(index1);
 		}
 		else if (keys[index1] == key) {
 			break;
@@ -413,7 +432,7 @@ uint32_t HashMap<K,V,HashFun,Allocator>::findFreeSlot(const K& key, bool& keyAlr
 		info = elementInfo(uint32_t(index2));
 		if (info <= ELEMENT_INFO_REMOVED) {
 			keyAlreadyExists = false;
-			return index2;
+			return uint32_t(index2);
 		}
 		else if (keys[index2] == key) {
 			break;
@@ -421,7 +440,7 @@ uint32_t HashMap<K,V,HashFun,Allocator>::findFreeSlot(const K& key, bool& keyAlr
 	}
 
 	keyAlreadyExists = true;
-	return ~0;
+	return uint32_t(~0);
 }
 
 } // namespace sfz

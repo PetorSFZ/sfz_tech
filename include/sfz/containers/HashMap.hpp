@@ -50,6 +50,8 @@ public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
+	/// Constructs a new HashMap with a capacity larger than or equal to the suggested capacity.
+	/// If suggestedCapacity is 0 then no memory will be allocated.
 	explicit HashMap(uint32_t suggestedCapacity) noexcept;
 
 	HashMap() noexcept = default;
@@ -69,15 +71,28 @@ public:
 	/// Returns the capacity of this HashMap.
 	uint32_t capacity() const noexcept { return mCapacity; }
 
+	/// Returns pointer to the element associated with the given key. The pointer is owned by this
+	/// HashMap and will not necessarily be valid if any non-const operations are done to this
+	/// HashMap that can change the internal capacity, so make a copy if you intend to keep the
+	/// value. Returns nullptr if no element is associated with the given key.
 	V* get(const K& key) noexcept;
 
-	//const V* get(const K& key) const noexcept;
+	/// Returns pointer to the element associated with the given key. The pointer is owned by this
+	/// HashMap and will not necessarily be valid if any non-const operations are done to this
+	/// HashMap that can change the internal capacity, so make a copy if you intend to keep the
+	/// value. Returns nullptr if no element is associated with the given key.
+	const V* get(const K& key) const noexcept;
 
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
-	// TODO: Document
-	void add(const K& key, const V& value) noexcept;
+	/// Attempts to add the specified key value pair to this HashMap. Will return false if
+	/// insertion failed, for example if this HashMap already contains the key.
+	bool add(const K& key, const V& value) noexcept;
+
+	/// Attempts to add the specified key value pair to this HashMap. Will return false if
+	/// insertion failed, for example if this HashMap already contains the key.
+	bool add(const K& key, V&& value) noexcept;
 
 	/// Swaps the contents of two HashMaps
 	void swap(HashMap& other) noexcept;

@@ -31,19 +31,61 @@ TEST_CASE("HashMap: Default constructor", "[sfz::HashMap]")
 	REQUIRE(m1.capacity() == 0);
 }
 
-TEST_CASE("HashMap: Insertion and retrieval (temporary test)", "[sfz::HashMap]")
+// TODO: Copy constructors
+
+TEST_CASE("HashMap: Swap & move constructors", "[sfz::DynArray]")
 {
-	HashMap<int, int> m1(64);
+	HashMap<int,int> v1;
+	HashMap<int,int> v2(1);
+	v2.add(1, 2);
+	v2.add(2, 3);
+	v2.add(3, 4);
+
+	REQUIRE(v1.size() == 0);
+	REQUIRE(v1.capacity() == 0);
+	REQUIRE(v2.size() == 3);
+	REQUIRE(v2.capacity() != 0);
+
+	v1.swap(v2);
+
+	REQUIRE(v1.size() == 3);
+	REQUIRE(v1.capacity() != 0);
+	REQUIRE(v2.size() == 0);
+	REQUIRE(v2.capacity() == 0);
+
+	v1 = std::move(v2);
+
+	REQUIRE(v1.size() == 0);
+	REQUIRE(v1.capacity() == 0);
+	REQUIRE(v2.size() == 3);
+	REQUIRE(v2.capacity() != 0);
+}
+
+TEST_CASE("HashMap: Adding and retrieving elements", "[sfz::HashMap]")
+{
+	HashMap<int,int> m1(64);
+
 	REQUIRE(m1.size() == 0);
 	REQUIRE(m1.capacity() == 67);
 
 	m1.add(2, 3);
 	REQUIRE(*m1.get(2) == 3);
+	REQUIRE(m1.size() == 1);
 
 	m1.add(3, 1);
 	REQUIRE((*m1.get(3)) == 1);
+	REQUIRE(m1.size() == 2);
 
 	REQUIRE(m1.get(6) == nullptr);
 	REQUIRE(m1.get(0) == nullptr);
 	REQUIRE(m1.get(1) == nullptr);
+
+	
+	const HashMap<int, int>& mConst = m1;
+	REQUIRE(mConst.size() == 2);
+	REQUIRE(*mConst.get(2) == 3);
+	REQUIRE(*mConst.get(3) == 1);
+	REQUIRE(mConst.get(6) == nullptr);
+	REQUIRE(mConst.get(0) == nullptr);
+	REQUIRE(mConst.get(1) == nullptr);
 }
