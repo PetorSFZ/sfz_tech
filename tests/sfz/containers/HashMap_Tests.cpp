@@ -89,3 +89,29 @@ TEST_CASE("HashMap: Adding and retrieving elements", "[sfz::HashMap]")
 	REQUIRE(mConst.get(0) == nullptr);
 	REQUIRE(mConst.get(1) == nullptr);
 }
+
+size_t zeroHash(const int& i) noexcept
+{
+	return 0;
+}
+
+TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
+{
+	HashMap<int,int,zeroHash> m(1);
+	REQUIRE(m.size() == 0);
+	REQUIRE(m.capacity() != 0);
+
+	uint32_t sizeCount = 0;
+	for (int i = -24; i <= 24; ++i) {
+		REQUIRE(m.add(i, i - 1337));
+		sizeCount += 1;
+		REQUIRE(m.size() == sizeCount);
+		REQUIRE(m.get(i) != nullptr);
+		REQUIRE(*m.get(i) == (i - 1337));
+	}
+
+	for (int i = -24; i <= 24; ++i) {
+		REQUIRE(m.get(i) != nullptr);
+		REQUIRE(*m.get(i) == (i - 1337));
+	}
+}

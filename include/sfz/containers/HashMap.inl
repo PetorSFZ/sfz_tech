@@ -124,7 +124,7 @@ bool HashMap<K,V,HashFun,Allocator>::add(const K& key, const V& value) noexcept
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
-bool HashMap<K, V, HashFun, Allocator>::add(const K& key, V&& value) noexcept
+bool HashMap<K,V,HashFun,Allocator>::add(const K& key, V&& value) noexcept
 {
 	if (mSize >= mCapacity) {
 		// TODO: Create more capacity
@@ -374,17 +374,21 @@ uint32_t HashMap<K, V, HashFun, Allocator>::findElementIndex(const K& key, bool&
 		info = elementInfo(uint32_t(index1));
 		if (info == ELEMENT_INFO_EMPTY) break;
 		if (info == ELEMENT_INFO_OCCUPIED) {
-			elementFound = true;
-			return uint32_t(index1);
+			if (keys[index1] == key) {
+				elementFound = true;
+				return uint32_t(index1);
+			}
 		}
 
 		// Try (base - i²) index
-		int64_t index2 = (baseIndex - iSquared) % int64_t(mCapacity);
+		int64_t index2 = (((baseIndex - iSquared) % int64_t(mCapacity)) + int64_t(mCapacity)) % int64_t(mCapacity);
 		info = elementInfo(uint32_t(index2));
 		if (info == ELEMENT_INFO_EMPTY) break;
 		if (info == ELEMENT_INFO_OCCUPIED) {
-			elementFound = true;
-			return uint32_t(index2);
+			if (keys[index2] == key) {
+				elementFound = true;
+				return uint32_t(index2);
+			}
 		}
 	}
 
@@ -428,7 +432,7 @@ uint32_t HashMap<K,V,HashFun,Allocator>::findFreeSlot(const K& key, bool& keyAlr
 		}
 
 		// Try (base - i²) index
-		int64_t index2 = (baseIndex - iSquared) % int64_t(mCapacity);
+		int64_t index2 = (((baseIndex - iSquared) % int64_t(mCapacity)) + int64_t(mCapacity)) % int64_t(mCapacity);
 		info = elementInfo(uint32_t(index2));
 		if (info <= ELEMENT_INFO_REMOVED) {
 			keyAlreadyExists = false;
