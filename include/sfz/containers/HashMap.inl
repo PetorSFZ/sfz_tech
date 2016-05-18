@@ -148,6 +148,25 @@ bool HashMap<K,V,HashFun,Allocator>::add(const K& key, V&& value) noexcept
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+bool HashMap<K,V,HashFun,Allocator>::remove(const K& key) noexcept
+{
+	// Finds the index of the element
+	bool elementFound = false;
+	uint32_t index = this->findElementIndex(key, elementFound);
+
+	// Returns nullptr if map doesn't contain element
+	if (!elementFound) return false;
+
+	// Remove element
+	setElementInfo(index, ELEMENT_INFO_REMOVED);
+	keysPtr()[index].~K();
+	valuesPtr()[index].~V();
+
+	mSize -= 1;
+	return true;
+}
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
 void HashMap<K,V,HashFun,Allocator>::swap(HashMap& other) noexcept
 {
 	uint32_t thisSize = this->mSize;

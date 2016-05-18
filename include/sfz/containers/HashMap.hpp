@@ -94,6 +94,10 @@ public:
 	/// insertion failed, for example if this HashMap already contains the key.
 	bool add(const K& key, V&& value) noexcept;
 
+	/// Attempts to remove the element associated with the given key. Returns false if this
+	/// HashMap contains no such element. 
+	bool remove(const K& key) noexcept;
+
 	/// Swaps the contents of two HashMaps
 	void swap(HashMap& other) noexcept;
 
