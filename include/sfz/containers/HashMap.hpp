@@ -86,13 +86,13 @@ public:
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
-	/// Attempts to add the specified key value pair to this HashMap. Will return false if
-	/// insertion failed, for example if this HashMap already contains the key.
-	bool add(const K& key, const V& value) noexcept;
+	/// Adds the specified key value pair to this HashMap. If a value is already associated with
+	/// the given key it will be replaced with the new value.
+	void put(const K& key, const V& value) noexcept;
 
-	/// Attempts to add the specified key value pair to this HashMap. Will return false if
-	/// insertion failed, for example if this HashMap already contains the key.
-	bool add(const K& key, V&& value) noexcept;
+	/// Adds the specified key value pair to this HashMap. If a value is already associated with
+	/// the given key it will be replaced with the new value.
+	void put(const K& key, V&& value) noexcept;
 
 	/// Attempts to remove the element associated with the given key. Returns false if this
 	/// HashMap contains no such element. 
@@ -153,12 +153,10 @@ private:
 	void setElementInfo(uint32_t index, uint8_t value) noexcept;
 
 	/// Finds the index of an element associated with the specified key. Whether an element is
-	/// found or not is returned through the elementFound parameter.
-	uint32_t findElementIndex(const K& key, bool& elementFound) const noexcept;
-
-	/// Finds the idex of the first free slot for a given key. If the key is already in the HashMap
-	/// the search stops and keyAlreadyExists is set to true.
-	uint32_t findFreeSlot(const K& key, bool& keyAlreadyExists) const noexcept;
+	/// found or not is returned through the elementFound parameter. The first free slot found is
+	/// sent back through the firstFreeSlot parameter, if no free slot is found it will be set to
+	/// ~0.
+	uint32_t findElementIndex(const K& key, bool& elementFound, uint32_t& firstFreeSlot) const noexcept;
 
 	// Private members
 	// --------------------------------------------------------------------------------------------

@@ -37,9 +37,9 @@ TEST_CASE("HashMap: Swap & move constructors", "[sfz::DynArray]")
 {
 	HashMap<int,int> v1;
 	HashMap<int,int> v2(1);
-	v2.add(1, 2);
-	v2.add(2, 3);
-	v2.add(3, 4);
+	v2.put(1, 2);
+	v2.put(2, 3);
+	v2.put(3, 4);
 
 	REQUIRE(v1.size() == 0);
 	REQUIRE(v1.capacity() == 0);
@@ -68,11 +68,11 @@ TEST_CASE("HashMap: Adding and retrieving elements", "[sfz::HashMap]")
 	REQUIRE(m1.size() == 0);
 	REQUIRE(m1.capacity() == 67);
 
-	m1.add(2, 3);
+	m1.put(2, 3);
 	REQUIRE(*m1.get(2) == 3);
 	REQUIRE(m1.size() == 1);
 
-	m1.add(3, 1);
+	m1.put(3, 1);
 	REQUIRE((*m1.get(3)) == 1);
 	REQUIRE(m1.size() == 2);
 
@@ -102,14 +102,14 @@ TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
 	REQUIRE(m.capacity() != 0);
 
 	uint32_t sizeCount = 0;
-	for (int i = -24; i <= 24; ++i) {
-		REQUIRE(m.add(i, i - 1337));
+	for (int i = -32; i <= 32; ++i) {
+		m.put(i, i - 1337);
 		sizeCount += 1;
 		REQUIRE(m.size() == sizeCount);
 		REQUIRE(m.get(i) != nullptr);
 		REQUIRE(*m.get(i) == (i - 1337));
 
-		if ((i % 4) == 0) {
+		if ((i % 3) == 0) {
 			REQUIRE(m.remove(i));
 			REQUIRE(!m.remove(i));
 			sizeCount -= 1;
@@ -119,7 +119,7 @@ TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
 	}
 
 	for (int i = -24; i <= 24; ++i) {
-		if ((i % 4) == 0) {
+		if ((i % 3) == 0) {
 			REQUIRE(m.get(i) == nullptr);
 			continue;
 		}
