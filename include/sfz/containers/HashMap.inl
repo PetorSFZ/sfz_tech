@@ -156,6 +156,62 @@ void HashMap<K,V,HashFun,Allocator>::put(const K& key, V&& value) noexcept
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+V& HashMap<K,V,HashFun,Allocator>::operator[] (const K& key) noexcept
+{
+	// Finds the index of the element
+	uint32_t firstFreeSlot;
+	bool elementFound = false;
+	uint32_t index = this->findElementIndex(key, elementFound, firstFreeSlot);
+
+	// If element doesn't exist create it with default constructor
+	if (!elementFound) {
+		if (mSize >= mCapacity) {
+			// TODO: Create moar capacity
+			firstFreeSlot = uint32_t(~0);
+		}
+
+		index = firstFreeSlot;
+		mSize += 1;
+
+		// Otherwise insert info, key and value
+		setElementInfo(index, ELEMENT_INFO_OCCUPIED);
+		new (keysPtr() + index) K(key);
+		new (valuesPtr() + index) V();
+	}
+
+	// Returns pointer to element
+	return valuesPtr()[index];
+}
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+const V& HashMap<K,V,HashFun,Allocator>::operator[] (const K& key) const noexcept
+{
+	// Finds the index of the element
+	uint32_t firstFreeSlot;
+	bool elementFound = false;
+	uint32_t index = this->findElementIndex(key, elementFound, firstFreeSlot);
+
+	// If element doesn't exist create it with default constructor
+	if (!elementFound) {
+		if (mSize >= mCapacity) {
+			// TODO: Create moar capacity
+			firstFreeSlot = uint32_t(~0);
+		}
+
+		index = firstFreeSlot;
+		mSize += 1;
+
+		// Otherwise insert info, key and value
+		setElementInfo(index, ELEMENT_INFO_OCCUPIED);
+		new (keysPtr() + index) K(key);
+		new (valuesPtr() + index) V();
+	}
+
+	// Returns pointer to element
+	return valuesPtr()[index];
+}
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
 bool HashMap<K,V,HashFun,Allocator>::remove(const K& key) noexcept
 {
 	// Finds the index of the element

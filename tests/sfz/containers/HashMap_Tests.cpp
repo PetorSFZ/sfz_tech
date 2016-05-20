@@ -127,3 +127,28 @@ TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
 		REQUIRE(*m.get(i) == (i - 1337));
 	}
 }
+
+TEST_CASE("HashMap operator[]", "[sfz::HashMap]")
+{
+	HashMap<int, int> m(1);
+	REQUIRE(m.size() == 0);
+	REQUIRE(m.capacity() != 0);
+
+	uint32_t sizeCount = 0;
+	for (int i = -32; i <= 32; ++i) {
+		m[i] = i - 1337;
+		sizeCount += 1;
+		REQUIRE(m.size() == sizeCount);
+		REQUIRE(m[i] == (i - 1337));
+
+		if ((i % 3) == 0) {
+			REQUIRE(m.remove(i));
+			REQUIRE(!m.remove(i));
+			sizeCount -= 1;
+			REQUIRE(m.size() == sizeCount);
+			m[i];
+			sizeCount += 1;
+			REQUIRE(m.size() == sizeCount);
+		}
+	}
+}
