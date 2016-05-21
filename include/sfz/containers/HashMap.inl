@@ -301,6 +301,74 @@ void HashMap<K,V,HashFun,Allocator>::destroy() noexcept
 	mDataPtr = nullptr;
 }
 
+// HashMap (implementation): Iterators
+// ------------------------------------------------------------------------------------------------
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+typename HashMap<K,V,HashFun,Allocator>::Iterator& HashMap<K,V,HashFun,Allocator>::Iterator::operator++ () noexcept
+{
+	// Go through map until we find next occupied slot
+	for (uint32_t i = mIndex + 1; i < mHashMap->mCapacity; ++i) {
+		auto info = mHashMap->elementInfo(i);
+		if (info == ELEMENT_INFO_OCCUPIED) {
+			mIndex = i;
+			return *this;
+		}
+	}
+
+	// Did not find any more element, set to end
+	mIndex = uint32_t(~0);
+	return *this;
+}
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+typename HashMap<K,V,HashFun,Allocator>::Iterator HashMap<K,V,HashFun,Allocator>::Iterator::operator++ (int) noexcept
+{
+	auto copy = *this;
+	++(*this);
+	return copy;
+}
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+typename HashMap<K,V,HashFun,Allocator>::KeyValuePair HashMap<K,V,HashFun,Allocator>::Iterator::operator* () noexcept
+{
+	// TODO: Assert mIndex != ~0
+	// TODO: Assert mHashMap.elementInfo(mIndex) != ELEMENT_INFO_OCCUPIED
+	return KeyValuePair(mHashMap->keysPtr()[mIndex], mHashMap->valuesPtr()[mIndex]);
+}
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+bool HashMap<K,V,HashFun,Allocator>::Iterator::operator== (const Iterator& other) const noexcept
+{
+	return (this->mHashMap == other.mHashMap) && (this->mIndex == other.mIndex);
+}
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+bool HashMap<K,V,HashFun,Allocator>::Iterator::operator!= (const Iterator& other) const noexcept
+{
+	return !(*this == other);
+}
+
+// HashMap (implementation): Iterator methods
+// ------------------------------------------------------------------------------------------------
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+typename HashMap<K,V,HashFun,Allocator>::Iterator HashMap<K,V,HashFun,Allocator>::begin() noexcept
+{
+	Iterator it(*this, 0);
+	// Unless there happens to be an element in slot 0 we increment the iterator to find it
+	if (elementInfo(uint32_t(0)) != ELEMENT_INFO_OCCUPIED) {
+		++it;
+	}
+	return it;
+}
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+typename HashMap<K,V,HashFun,Allocator>::Iterator HashMap<K,V,HashFun,Allocator>::end() noexcept
+{
+	return Iterator(*this, uint32_t(~0));
+}
+
 // HashMap (implementation): Private methods
 // ------------------------------------------------------------------------------------------------
 

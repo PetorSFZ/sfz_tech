@@ -212,7 +212,7 @@ public:
 	/// parameter is larger than the capacity the internal size it will be set to capacity instead.
 	void setSize(uint32_t size) noexcept;
 
-	// Iterators
+	// Iterator methods
 	// --------------------------------------------------------------------------------------------
 
 	T* begin() noexcept;

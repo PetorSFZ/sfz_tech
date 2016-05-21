@@ -122,6 +122,41 @@ public:
 	/// automatically be called in the destructor.
 	void destroy() noexcept;
 
+	// Iterators
+	// --------------------------------------------------------------------------------------------
+
+	/// The return value when dereferencing an iterator
+	struct KeyValuePair {
+		const K& key; // Const so user doesn't change key, breaking invariants of the HashMap
+		V& value;
+		KeyValuePair(K& key, V& value) noexcept : key(key), value(value) { }
+		KeyValuePair(const KeyValuePair&) noexcept = default;
+		KeyValuePair& operator= (const KeyValuePair&) = delete; // Because references...
+	};
+
+	class Iterator {
+	public:
+		Iterator(HashMap& hashMap, uint32_t index) noexcept : mHashMap(&hashMap), mIndex(index) { }
+		Iterator(const Iterator&) noexcept = default;
+		Iterator& operator= (const Iterator&) noexcept = default;
+
+		Iterator& operator++ () noexcept; // Pre-increment
+		Iterator operator++ (int) noexcept; // Post-increment
+		KeyValuePair operator* () noexcept;
+		bool operator== (const Iterator& other) const noexcept;
+		bool operator!= (const Iterator& other) const noexcept;
+
+	private:
+		HashMap* mHashMap;
+		uint32_t mIndex;
+	};
+
+	// Iterator methods
+	// --------------------------------------------------------------------------------------------
+
+	Iterator begin() noexcept;
+	Iterator end() noexcept;
+
 private:
 	// Private constants
 	// --------------------------------------------------------------------------------------------

@@ -126,6 +126,14 @@ TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
 		REQUIRE(m.get(i) != nullptr);
 		REQUIRE(*m.get(i) == (i - 1337));
 	}
+
+	uint32_t numPairs = 0;
+	for (auto pair : m) {
+		numPairs += 1;
+		REQUIRE(m[pair.key] == pair.value);
+		REQUIRE((pair.key - 1337) == pair.value);
+	}
+	REQUIRE(numPairs == sizeCount);
 }
 
 TEST_CASE("HashMap operator[]", "[sfz::HashMap]")
