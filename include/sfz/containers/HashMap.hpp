@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <cstring>
 
+#include "sfz/Assert.hpp"
 #include "sfz/memory/Allocators.hpp"
 #include "sfz/util/Hash.hpp"
 
@@ -125,16 +126,18 @@ public:
 	// Iterators
 	// --------------------------------------------------------------------------------------------
 
-	/// The return value when dereferencing an iterator
-	struct KeyValuePair {
+	/// The return value when dereferencing an iterator. Contains references into the HashMap in
+	/// question, so it is only valid as long as no rehashing is performed.
+	struct KeyValuePair final {
 		const K& key; // Const so user doesn't change key, breaking invariants of the HashMap
 		V& value;
-		KeyValuePair(K& key, V& value) noexcept : key(key), value(value) { }
+		KeyValuePair(const K& key, V& value) noexcept : key(key), value(value) { }
 		KeyValuePair(const KeyValuePair&) noexcept = default;
 		KeyValuePair& operator= (const KeyValuePair&) = delete; // Because references...
 	};
 
-	class Iterator {
+	/// The normal non-const iterator for HashMap.
+	class Iterator final {
 	public:
 		Iterator(HashMap& hashMap, uint32_t index) noexcept : mHashMap(&hashMap), mIndex(index) { }
 		Iterator(const Iterator&) noexcept = default;
@@ -151,11 +154,44 @@ public:
 		uint32_t mIndex;
 	};
 
+	/// The return value when dereferencing a const iterator. Contains references into the HashMap
+	/// in question, so it is only valid as long as no rehashing is performed.
+	struct ConstKeyValuePair final {
+		const K& key;
+		const V& value;
+		ConstKeyValuePair(const K& key, const V& value) noexcept : key(key), value(value) {}
+		ConstKeyValuePair(const ConstKeyValuePair&) noexcept = default;
+		ConstKeyValuePair& operator= (const ConstKeyValuePair&) = delete; // Because references...
+	};
+
+	/// The const iterator for HashMap
+	class ConstIterator final {
+	public:
+		ConstIterator(const HashMap& hashMap, uint32_t index) noexcept : mHashMap(&hashMap), mIndex(index) {}
+		ConstIterator(const ConstIterator&) noexcept = default;
+		ConstIterator& operator= (const ConstIterator&) noexcept = default;
+
+		ConstIterator& operator++ () noexcept; // Pre-increment
+		ConstIterator operator++ (int) noexcept; // Post-increment
+		ConstKeyValuePair operator* () noexcept;
+		bool operator== (const ConstIterator& other) const noexcept;
+		bool operator!= (const ConstIterator& other) const noexcept;
+
+	private:
+		const HashMap* mHashMap;
+		uint32_t mIndex;
+	};
+
 	// Iterator methods
 	// --------------------------------------------------------------------------------------------
 
 	Iterator begin() noexcept;
+	ConstIterator begin() const noexcept;
+	ConstIterator cbegin() const noexcept;
+
 	Iterator end() noexcept;
+	ConstIterator end() const noexcept;
+	ConstIterator cend() const noexcept;
 
 private:
 	// Private constants
