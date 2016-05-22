@@ -24,13 +24,7 @@ namespace sfz {
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
 HashMap<K,V,HashFun,Allocator>::HashMap(uint32_t suggestedCapacity) noexcept
 {
-	if (suggestedCapacity == 0) return;
-
-	// Convert the suggested capacity to a larger (if possible) prime number
-	mCapacity = findPrimeCapacity(suggestedCapacity);
-
-	// Allocate memory
-	mDataPtr = static_cast<uint8_t*>(Allocator::allocate(sizeOfAllocatedMemory(), ALIGNMENT));
+	this->rehash(suggestedCapacity);
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
@@ -245,6 +239,32 @@ void HashMap<K,V,HashFun,Allocator>::swap(HashMap& other) noexcept
 	other.mSize = thisSize;
 	other.mCapacity = thisCapacity;
 	other.mDataPtr = thisDataPtr;
+}
+
+template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>
+void HashMap<K,V,HashFun,Allocator>::rehash(uint32_t suggestedCapacity) noexcept
+{
+	if (suggestedCapacity < mCapacity) suggestedCapacity = mCapacity;
+	if (suggestedCapacity == 0) return;
+
+	// Convert the suggested capacity to a larger (if possible) prime number
+	uint32_t newCapacity = findPrimeCapacity(suggestedCapacity);
+
+	// Create a new HashMap and allocate memory to it
+	HashMap tmp;
+	tmp.mCapacity = newCapacity;
+	tmp.mDataPtr = static_cast<uint8_t*>(Allocator::allocate(tmp.sizeOfAllocatedMemory(), ALIGNMENT));
+	std::memset(tmp.mDataPtr, 0, tmp.sizeOfAllocatedMemory());
+
+	// Iterate over all pairs of objects in this HashMap and move them to the new one
+	if (this->mDataPtr != nullptr) {
+		for (KeyValuePair pair : *this) {
+			tmp.put(pair.key, std::move(pair.value));
+		}
+	}
+
+	// Replace this HashMap with the new one
+	this->swap(tmp);
 }
 
 template<typename K, typename V, size_t(*HashFun)(const K&), typename Allocator>

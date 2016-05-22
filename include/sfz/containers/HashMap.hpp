@@ -52,7 +52,8 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	/// Constructs a new HashMap with a capacity larger than or equal to the suggested capacity.
-	/// If suggestedCapacity is 0 then no memory will be allocated.
+	/// If suggestedCapacity is 0 then no memory will be allocated. Equivalent to creating an empty
+	/// HashMap by default constructor and then calling rehash with the suggested capacity.
 	explicit HashMap(uint32_t suggestedCapacity) noexcept;
 
 	HashMap() noexcept = default;
@@ -113,6 +114,12 @@ public:
 
 	/// Swaps the contents of two HashMaps
 	void swap(HashMap& other) noexcept;
+
+	/// Rehashes this HashMap. Creates a new HashMap with at least the same capacity as the
+	/// current one, or larger if suggested by suggestedCapacity. Then iterates over all elements
+	/// in this HashMap and adds them to the new one. Finally this HashMap is replaced by the
+	/// new one. Obviously all pointers and references into the old HashMap are invalidated.
+	void rehash(uint32_t suggestedCapacity) noexcept;
 
 	/// Removes all elements from this HashMap without deallocating memory or changing capacity
 	void clear() noexcept;

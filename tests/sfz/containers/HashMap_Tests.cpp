@@ -33,7 +33,7 @@ TEST_CASE("HashMap: Default constructor", "[sfz::HashMap]")
 
 // TODO: Copy constructors
 
-TEST_CASE("HashMap: Swap & move constructors", "[sfz::DynArray]")
+TEST_CASE("HashMap: Swap & move constructors", "[sfz::HashMap]")
 {
 	HashMap<int,int> v1;
 	HashMap<int,int> v2(1);
@@ -61,6 +61,37 @@ TEST_CASE("HashMap: Swap & move constructors", "[sfz::DynArray]")
 	REQUIRE(v2.capacity() != 0);
 }
 
+TEST_CASE("HashMap: rehash()", "[sfz::HashMap]")
+{
+	HashMap<int,int> m1;
+	REQUIRE(m1.capacity() == 0);
+	REQUIRE(m1.size() == 0);
+
+	m1.rehash(1);
+	REQUIRE(m1.capacity() != 0);
+	REQUIRE(m1.size() == 0);
+
+	m1.put(1,2);
+	m1.put(2,3);
+	m1.put(3,4);
+	REQUIRE(m1[1] == 2);
+	REQUIRE(m1[2] == 3);
+	REQUIRE(m1[3] == 4);
+	REQUIRE(m1.size() == 3);
+	
+	m1.rehash(0);
+	REQUIRE(m1[1] == 2);
+	REQUIRE(m1[2] == 3);
+	REQUIRE(m1[3] == 4);
+	REQUIRE(m1.size() == 3);
+
+	m1.rehash(m1.capacity() + 4);
+	REQUIRE(m1[1] == 2);
+	REQUIRE(m1[2] == 3);
+	REQUIRE(m1[3] == 4);
+	REQUIRE(m1.size() == 3);
+}
+
 TEST_CASE("HashMap: Adding and retrieving elements", "[sfz::HashMap]")
 {
 	HashMap<int,int> m1(64);
@@ -80,7 +111,6 @@ TEST_CASE("HashMap: Adding and retrieving elements", "[sfz::HashMap]")
 	REQUIRE(m1.get(0) == nullptr);
 	REQUIRE(m1.get(1) == nullptr);
 
-	
 	const HashMap<int, int>& mConst = m1;
 	REQUIRE(mConst.size() == 2);
 	REQUIRE(*mConst.get(2) == 3);
