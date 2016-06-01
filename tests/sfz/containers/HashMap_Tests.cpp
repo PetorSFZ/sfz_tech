@@ -120,14 +120,16 @@ TEST_CASE("HashMap: Adding and retrieving elements", "[sfz::HashMap]")
 	REQUIRE(mConst.get(1) == nullptr);
 }
 
-size_t zeroHash(const int&) noexcept
-{
-	return 0;
-}
+struct ZeroHash {
+	size_t operator() (const int&)
+	{
+		return 0;
+	}
+};
 
 TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
 {
-	HashMap<int,int,zeroHash> m(1);
+	HashMap<int,int,ZeroHash> m(1);
 	REQUIRE(m.size() == 0);
 	REQUIRE(m.capacity() != 0);
 

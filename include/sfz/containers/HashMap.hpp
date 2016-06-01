@@ -21,10 +21,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <functional>
 
 #include "sfz/Assert.hpp"
 #include "sfz/memory/Allocators.hpp"
-#include "sfz/util/Hash.hpp"
 
 namespace sfz {
 
@@ -36,8 +36,8 @@ using std::uint8_t;
 // HashMap (interface)
 // ------------------------------------------------------------------------------------------------
 
-template<typename K, typename V,
-         size_t(*HashFun)(const K&) = sfz::hash<K>, typename Allocator = StandardAllocator>
+template<typename K, typename V, typename Hash = std::hash<K>,
+         typename KeyEqual = std::equal_to<K>, typename Allocator = StandardAllocator>
 class HashMap {
 public:
 	// Constants

@@ -18,5 +18,4 @@
 
 #pragma once
 
-#include "sfz/util/Hash.hpp"
 #include "sfz/util/IO.hpp"
