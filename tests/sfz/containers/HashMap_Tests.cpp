@@ -31,7 +31,50 @@ TEST_CASE("HashMap: Default constructor", "[sfz::HashMap]")
 	REQUIRE(m1.capacity() == 0);
 }
 
-// TODO: Copy constructors
+TEST_CASE("HashMap: Copy constructors", "[sfz::HashMap]")
+{
+	HashMap<int,int> m1(1);
+	m1.put(1, 2);
+	m1.put(2, 3);
+	m1.put(3, 4);
+	REQUIRE(m1.size() == 3);
+	REQUIRE(m1.capacity() != 0);
+	REQUIRE(m1[1] == 2);
+	REQUIRE(m1[2] == 3);
+	REQUIRE(m1[3] == 4);
+
+	auto m2 = m1;
+	REQUIRE(m2.size() == 3);
+	REQUIRE(m2.capacity() != 0);
+	REQUIRE(m2[1] == 2);
+	REQUIRE(m2[2] == 3);
+	REQUIRE(m2[3] == 4);
+
+	m2[1] = -1;
+	m2[2] = -2;
+	m2[3] = -3;
+	REQUIRE(m2.size() == 3);
+	REQUIRE(m2.capacity() != 0);
+	REQUIRE(m2[1] == -1);
+	REQUIRE(m2[2] == -2);
+	REQUIRE(m2[3] == -3);
+
+	REQUIRE(m1.size() == 3);
+	REQUIRE(m1.capacity() != 0);
+	REQUIRE(m1[1] == 2);
+	REQUIRE(m1[2] == 3);
+	REQUIRE(m1[3] == 4);
+
+	m1.destroy();
+	REQUIRE(m1.size() == 0);
+	REQUIRE(m1.capacity() == 0);
+
+	REQUIRE(m2.size() == 3);
+	REQUIRE(m2.capacity() != 0);
+	REQUIRE(m2[1] == -1);
+	REQUIRE(m2[2] == -2);
+	REQUIRE(m2[3] == -3);
+}
 
 TEST_CASE("HashMap: Swap & move constructors", "[sfz::HashMap]")
 {

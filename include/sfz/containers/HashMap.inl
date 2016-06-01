@@ -36,8 +36,16 @@ HashMap<K,V,Hash,KeyEqual,Allocator>::HashMap(const HashMap& other) noexcept
 template<typename K, typename V, typename Hash, typename KeyEqual, typename Allocator>
 HashMap<K,V,Hash,KeyEqual,Allocator>& HashMap<K,V,Hash,KeyEqual,Allocator>::operator= (const HashMap& other) noexcept
 {
-	// TODO: Implement
-	return *nullptr;
+	// Clear and rehash this HashMap
+	this->clear();
+	this->rehash(other.mCapacity);
+
+	// Add all elements from other HashMap
+	for (ConstKeyValuePair pair : other) {
+		this->put(pair.key, pair.value);
+	}
+
+	return *this;
 }
 
 template<typename K, typename V, typename Hash, typename KeyEqual, typename Allocator>
