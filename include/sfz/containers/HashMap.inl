@@ -74,9 +74,10 @@ template<typename K, typename V, typename Hash, typename KeyEqual, typename Allo
 V* HashMap<K,V,Hash,KeyEqual,Allocator>::get(const K& key) noexcept
 {
 	// Finds the index of the element
-	uint32_t unused;
+	uint32_t firstFreeSlot = uint32_t(~0);
 	bool elementFound = false;
-	uint32_t index = this->findElementIndex(key, elementFound, unused);
+	bool isPlaceholder = false;
+	uint32_t index = this->findElementIndex(key, elementFound, firstFreeSlot, isPlaceholder);
 
 	// Returns nullptr if map doesn't contain element
 	if (!elementFound) return nullptr;
@@ -89,9 +90,10 @@ template<typename K, typename V, typename Hash, typename KeyEqual, typename Allo
 const V* HashMap<K,V,Hash,KeyEqual,Allocator>::get(const K& key) const noexcept
 {
 	// Finds the index of the element
-	uint32_t unused;
+	uint32_t firstFreeSlot = uint32_t(~0);
 	bool elementFound = false;
-	uint32_t index = this->findElementIndex(key, elementFound, unused);
+	bool isPlaceholder = false;
+	uint32_t index = this->findElementIndex(key, elementFound, firstFreeSlot, isPlaceholder);
 
 	// Returns nullptr if map doesn't contain element
 	if (!elementFound) return nullptr;
@@ -111,10 +113,11 @@ void HashMap<K,V,Hash,KeyEqual,Allocator>::put(const K& key, const V& value) noe
 		return;
 	}
 
-	// Find element index or first free slot
-	uint32_t firstFreeSlot;
+	// Finds the index of the element
+	uint32_t firstFreeSlot = uint32_t(~0);
 	bool elementFound = false;
-	uint32_t index = findElementIndex(key, elementFound, firstFreeSlot);
+	bool isPlaceholder = false;
+	uint32_t index = this->findElementIndex(key, elementFound, firstFreeSlot, isPlaceholder);
 
 	// If map contains key just replace value and return
 	if (elementFound) {
@@ -128,6 +131,7 @@ void HashMap<K,V,Hash,KeyEqual,Allocator>::put(const K& key, const V& value) noe
 	new (valuesPtr() + firstFreeSlot) V(value);
 
 	mSize += 1;
+	if (isPlaceholder) mPlaceholders -= 1;
 }
 
 template<typename K, typename V, typename Hash, typename KeyEqual, typename Allocator>
@@ -138,10 +142,11 @@ void HashMap<K,V,Hash,KeyEqual,Allocator>::put(const K& key, V&& value) noexcept
 		return;
 	}
 
-	// Find element index or first free slot
-	uint32_t firstFreeSlot;
+	// Finds the index of the element
+	uint32_t firstFreeSlot = uint32_t(~0);
 	bool elementFound = false;
-	uint32_t index = findElementIndex(key, elementFound, firstFreeSlot);
+	bool isPlaceholder = false;
+	uint32_t index = this->findElementIndex(key, elementFound, firstFreeSlot, isPlaceholder);
 
 	// If map contains key just replace value and return
 	if (elementFound) {
@@ -155,15 +160,17 @@ void HashMap<K,V,Hash,KeyEqual,Allocator>::put(const K& key, V&& value) noexcept
 	new (valuesPtr() + firstFreeSlot) V(value);
 
 	mSize += 1;
+	if (isPlaceholder) mPlaceholders -= 1;
 }
 
 template<typename K, typename V, typename Hash, typename KeyEqual, typename Allocator>
 V& HashMap<K,V,Hash,KeyEqual,Allocator>::operator[] (const K& key) noexcept
 {
 	// Finds the index of the element
-	uint32_t firstFreeSlot;
+	uint32_t firstFreeSlot = uint32_t(~0);
 	bool elementFound = false;
-	uint32_t index = this->findElementIndex(key, elementFound, firstFreeSlot);
+	bool isPlaceholder = false;
+	uint32_t index = this->findElementIndex(key, elementFound, firstFreeSlot, isPlaceholder);
 
 	// If element doesn't exist create it with default constructor
 	if (!elementFound) {
@@ -174,6 +181,7 @@ V& HashMap<K,V,Hash,KeyEqual,Allocator>::operator[] (const K& key) noexcept
 
 		index = firstFreeSlot;
 		mSize += 1;
+		if (isPlaceholder) mPlaceholders -= 1;
 
 		// Otherwise insert info, key and value
 		setElementInfo(index, ELEMENT_INFO_OCCUPIED);
@@ -189,9 +197,10 @@ template<typename K, typename V, typename Hash, typename KeyEqual, typename Allo
 const V& HashMap<K,V,Hash,KeyEqual,Allocator>::operator[] (const K& key) const noexcept
 {
 	// Finds the index of the element
-	uint32_t firstFreeSlot;
+	uint32_t firstFreeSlot = uint32_t(~0);
 	bool elementFound = false;
-	uint32_t index = this->findElementIndex(key, elementFound, firstFreeSlot);
+	bool isPlaceholder = false;
+	uint32_t index = this->findElementIndex(key, elementFound, firstFreeSlot, isPlaceholder);
 
 	// If element doesn't exist create it with default constructor
 	if (!elementFound) {
@@ -202,6 +211,7 @@ const V& HashMap<K,V,Hash,KeyEqual,Allocator>::operator[] (const K& key) const n
 
 		index = firstFreeSlot;
 		mSize += 1;
+		if (isPlaceholder) mPlaceholders -= 1;
 
 		// Otherwise insert info, key and value
 		setElementInfo(index, ELEMENT_INFO_OCCUPIED);
@@ -217,19 +227,21 @@ template<typename K, typename V, typename Hash, typename KeyEqual, typename Allo
 bool HashMap<K,V,Hash,KeyEqual,Allocator>::remove(const K& key) noexcept
 {
 	// Finds the index of the element
-	uint32_t unused;
+	uint32_t firstFreeSlot = uint32_t(~0);
 	bool elementFound = false;
-	uint32_t index = this->findElementIndex(key, elementFound, unused);
+	bool isPlaceholder = false;
+	uint32_t index = this->findElementIndex(key, elementFound, firstFreeSlot, isPlaceholder);
 
 	// Returns nullptr if map doesn't contain element
 	if (!elementFound) return false;
 
 	// Remove element
-	setElementInfo(index, ELEMENT_INFO_REMOVED);
+	setElementInfo(index, ELEMENT_INFO_PLACEHOLDER);
 	keysPtr()[index].~K();
 	valuesPtr()[index].~V();
 
 	mSize -= 1;
+	mPlaceholders += 1;
 	return true;
 }
 
@@ -238,14 +250,17 @@ void HashMap<K,V,Hash,KeyEqual,Allocator>::swap(HashMap& other) noexcept
 {
 	uint32_t thisSize = this->mSize;
 	uint32_t thisCapacity = this->mCapacity;
+	uint32_t thisPlaceholders = this->mPlaceholders;
 	uint8_t* thisDataPtr = this->mDataPtr;
 
 	this->mSize = other.mSize;
 	this->mCapacity = other.mCapacity;
+	this->mPlaceholders = other.mPlaceholders;
 	this->mDataPtr = other.mDataPtr;
 
 	other.mSize = thisSize;
 	other.mCapacity = thisCapacity;
+	other.mPlaceholders = thisPlaceholders;
 	other.mDataPtr = thisDataPtr;
 }
 
@@ -313,6 +328,7 @@ void HashMap<K,V,Hash,KeyEqual,Allocator>::clear() noexcept
 
 	// Set size to 0
 	mSize = 0;
+	mPlaceholders = 0;
 }
 
 template<typename K, typename V, typename Hash, typename KeyEqual, typename Allocator>
@@ -326,6 +342,7 @@ void HashMap<K,V,Hash,KeyEqual,Allocator>::destroy() noexcept
 	// Deallocate memory
 	Allocator::deallocate(mDataPtr);
 	mCapacity = 0;
+	mPlaceholders = 0;
 	mDataPtr = nullptr;
 }
 
@@ -598,13 +615,14 @@ void HashMap<K,V,Hash,KeyEqual,Allocator>::setElementInfo(uint32_t index, uint8_
 }
 
 template<typename K, typename V, typename Hash, typename KeyEqual, typename Allocator>
-uint32_t HashMap<K,V,Hash,KeyEqual,Allocator>::findElementIndex(const K& key, bool& elementFound, uint32_t& firstFreeSlot) const noexcept
+uint32_t HashMap<K,V,Hash,KeyEqual,Allocator>::findElementIndex(const K& key, bool& elementFound, uint32_t& firstFreeSlot, bool& isPlaceholder) const noexcept
 {
 	Hash keyHasher;
 	KeyEqual keyComparer;
 
 	elementFound = false;
 	firstFreeSlot = uint32_t(~0);
+	isPlaceholder = false;
 	K* keys = keysPtr();
 
 	// Hash the key and find the base index
@@ -614,11 +632,11 @@ uint32_t HashMap<K,V,Hash,KeyEqual,Allocator>::findElementIndex(const K& key, bo
 	uint8_t info = elementInfo(uint32_t(baseIndex));
 	if (info == ELEMENT_INFO_EMPTY) {
 		firstFreeSlot = uint32_t(baseIndex);
-		elementFound = false;
 		return uint32_t(~0);
 	}
-	else if (info == ELEMENT_INFO_REMOVED) {
+	else if (info == ELEMENT_INFO_PLACEHOLDER) {
 		firstFreeSlot = uint32_t(baseIndex);
+		isPlaceholder = true;
 	}
 	else if (info == ELEMENT_INFO_OCCUPIED) {
 		if (keyComparer(keys[baseIndex], key)) {
@@ -639,8 +657,11 @@ uint32_t HashMap<K,V,Hash,KeyEqual,Allocator>::findElementIndex(const K& key, bo
 		if (info == ELEMENT_INFO_EMPTY) {
 			if (firstFreeSlot == uint32_t(~0)) firstFreeSlot = uint32_t(index);
 			break;
-		} else if (info == ELEMENT_INFO_REMOVED) {
-			if (firstFreeSlot == uint32_t(~0)) firstFreeSlot = uint32_t(index);
+		} else if (info == ELEMENT_INFO_PLACEHOLDER) {
+			if (firstFreeSlot == uint32_t(~0)) {
+				firstFreeSlot = uint32_t(index);
+				isPlaceholder = true;
+			}
 		} else if (info == ELEMENT_INFO_OCCUPIED) {
 			if (keyComparer(keys[index], key)) {
 				elementFound = true;
@@ -654,8 +675,11 @@ uint32_t HashMap<K,V,Hash,KeyEqual,Allocator>::findElementIndex(const K& key, bo
 		if (info == ELEMENT_INFO_EMPTY) {
 			if (firstFreeSlot == uint32_t(~0)) firstFreeSlot = uint32_t(index);
 			break;
-		} else if (info == ELEMENT_INFO_REMOVED) {
-			if (firstFreeSlot == uint32_t(~0)) firstFreeSlot = uint32_t(index);
+		} else if (info == ELEMENT_INFO_PLACEHOLDER) {
+			if (firstFreeSlot == uint32_t(~0)) {
+				firstFreeSlot = uint32_t(index);
+				isPlaceholder = true;
+			}
 		} else if (info == ELEMENT_INFO_OCCUPIED) {
 			if (keyComparer(keys[index], key)) {
 				elementFound = true;
@@ -664,7 +688,6 @@ uint32_t HashMap<K,V,Hash,KeyEqual,Allocator>::findElementIndex(const K& key, bo
 		}
 	}
 
-	elementFound = false;
 	return uint32_t(~0);
 }
 

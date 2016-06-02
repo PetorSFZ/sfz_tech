@@ -73,6 +73,10 @@ public:
 	/// Returns the capacity of this HashMap.
 	uint32_t capacity() const noexcept { return mCapacity; }
 
+	/// Returns the number of placeholder positions for removed elements. size + placeholders <=
+	/// capacity.
+	uint32_t placeholders() const noexcept { return mPlaceholders; }
+
 	/// Returns pointer to the element associated with the given key. The pointer is owned by this
 	/// HashMap and will not necessarily be valid if any non-const operations are done to this
 	/// HashMap that can change the internal capacity, so make a copy if you intend to keep the
@@ -205,7 +209,7 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	static constexpr uint8_t ELEMENT_INFO_EMPTY = 0;
-	static constexpr uint8_t ELEMENT_INFO_REMOVED = 1;
+	static constexpr uint8_t ELEMENT_INFO_PLACEHOLDER = 1;
 	static constexpr uint8_t ELEMENT_INFO_OCCUPIED = 2;
 
 	// Private methods
@@ -245,13 +249,14 @@ private:
 	/// Finds the index of an element associated with the specified key. Whether an element is
 	/// found or not is returned through the elementFound parameter. The first free slot found is
 	/// sent back through the firstFreeSlot parameter, if no free slot is found it will be set to
-	/// ~0.
-	uint32_t findElementIndex(const K& key, bool& elementFound, uint32_t& firstFreeSlot) const noexcept;
+	/// ~0. Whether the found free slot is a placeholder slot or not is sent back through the
+	/// isPlaceholder parameter.
+	uint32_t findElementIndex(const K& key, bool& elementFound, uint32_t& firstFreeSlot, bool& isPlaceholder) const noexcept;
 
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	uint32_t mSize = 0, mCapacity = 0;
+	uint32_t mSize = 0, mCapacity = 0, mPlaceholders = 0;
 	uint8_t* mDataPtr = nullptr;
 };
 

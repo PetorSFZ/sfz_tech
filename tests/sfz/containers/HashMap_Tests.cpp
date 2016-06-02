@@ -29,6 +29,7 @@ TEST_CASE("HashMap: Default constructor", "[sfz::HashMap]")
 	HashMap<int,int> m1;
 	REQUIRE(m1.size() == 0);
 	REQUIRE(m1.capacity() == 0);
+	REQUIRE(m1.placeholders() == 0);
 }
 
 TEST_CASE("HashMap: Copy constructors", "[sfz::HashMap]")
@@ -39,6 +40,7 @@ TEST_CASE("HashMap: Copy constructors", "[sfz::HashMap]")
 	m1.put(3, 4);
 	REQUIRE(m1.size() == 3);
 	REQUIRE(m1.capacity() != 0);
+	REQUIRE(m1.placeholders() == 0);
 	REQUIRE(m1[1] == 2);
 	REQUIRE(m1[2] == 3);
 	REQUIRE(m1[3] == 4);
@@ -46,6 +48,7 @@ TEST_CASE("HashMap: Copy constructors", "[sfz::HashMap]")
 	auto m2 = m1;
 	REQUIRE(m2.size() == 3);
 	REQUIRE(m2.capacity() != 0);
+	REQUIRE(m2.placeholders() == 0);
 	REQUIRE(m2[1] == 2);
 	REQUIRE(m2[2] == 3);
 	REQUIRE(m2[3] == 4);
@@ -55,12 +58,14 @@ TEST_CASE("HashMap: Copy constructors", "[sfz::HashMap]")
 	m2[3] = -3;
 	REQUIRE(m2.size() == 3);
 	REQUIRE(m2.capacity() != 0);
+	REQUIRE(m2.placeholders() == 0);
 	REQUIRE(m2[1] == -1);
 	REQUIRE(m2[2] == -2);
 	REQUIRE(m2[3] == -3);
 
 	REQUIRE(m1.size() == 3);
 	REQUIRE(m1.capacity() != 0);
+	REQUIRE(m1.placeholders() == 0);
 	REQUIRE(m1[1] == 2);
 	REQUIRE(m1[2] == 3);
 	REQUIRE(m1[3] == 4);
@@ -68,9 +73,11 @@ TEST_CASE("HashMap: Copy constructors", "[sfz::HashMap]")
 	m1.destroy();
 	REQUIRE(m1.size() == 0);
 	REQUIRE(m1.capacity() == 0);
+	REQUIRE(m1.placeholders() == 0);
 
 	REQUIRE(m2.size() == 3);
 	REQUIRE(m2.capacity() != 0);
+	REQUIRE(m2.placeholders() == 0);
 	REQUIRE(m2[1] == -1);
 	REQUIRE(m2[2] == -2);
 	REQUIRE(m2[3] == -3);
@@ -86,22 +93,28 @@ TEST_CASE("HashMap: Swap & move constructors", "[sfz::HashMap]")
 
 	REQUIRE(v1.size() == 0);
 	REQUIRE(v1.capacity() == 0);
+	REQUIRE(v1.placeholders() == 0);
 	REQUIRE(v2.size() == 3);
 	REQUIRE(v2.capacity() != 0);
+	REQUIRE(v1.placeholders() == 0);
 
 	v1.swap(v2);
 
 	REQUIRE(v1.size() == 3);
 	REQUIRE(v1.capacity() != 0);
+	REQUIRE(v1.placeholders() == 0);
 	REQUIRE(v2.size() == 0);
 	REQUIRE(v2.capacity() == 0);
+	REQUIRE(v2.placeholders() == 0);
 
 	v1 = std::move(v2);
 
 	REQUIRE(v1.size() == 0);
 	REQUIRE(v1.capacity() == 0);
+	REQUIRE(v1.placeholders() == 0);
 	REQUIRE(v2.size() == 3);
 	REQUIRE(v2.capacity() != 0);
+	REQUIRE(v2.placeholders() == 0);
 }
 
 TEST_CASE("HashMap: rehash()", "[sfz::HashMap]")
@@ -109,10 +122,12 @@ TEST_CASE("HashMap: rehash()", "[sfz::HashMap]")
 	HashMap<int,int> m1;
 	REQUIRE(m1.capacity() == 0);
 	REQUIRE(m1.size() == 0);
+	REQUIRE(m1.placeholders() == 0);
 
 	m1.rehash(1);
 	REQUIRE(m1.capacity() != 0);
 	REQUIRE(m1.size() == 0);
+	REQUIRE(m1.placeholders() == 0);
 
 	m1.put(1,2);
 	m1.put(2,3);
@@ -135,12 +150,30 @@ TEST_CASE("HashMap: rehash()", "[sfz::HashMap]")
 	REQUIRE(m1.size() == 3);
 }
 
+/*TEST_CASE("HashMap: Rehashing in put()", "[sfz::HashMap]")
+{
+	HashMap<int,int> m1;
+	REQUIRE(m1.size() == 0);
+	REQUIRE(m1.capacity() == 0);
+
+	for (int i = 0; i < 128; ++i) {
+		m1.put(i, i + 1);
+		REQUIRE(m1.size() == uint32_t(i+1));
+	}
+
+	for (int i = 0; i < 128; ++i) {
+		REQUIRE(m1.get(uint32_t(i)) != nullptr);
+		REQUIRE(*m1.get(uint32_t(i)) == (i+1));
+	}
+}*/
+
 TEST_CASE("HashMap: Adding and retrieving elements", "[sfz::HashMap]")
 {
 	HashMap<int,int> m1(64);
 
 	REQUIRE(m1.size() == 0);
 	REQUIRE(m1.capacity() == 67);
+	REQUIRE(m1.placeholders() == 0);
 
 	m1.put(2, 3);
 	REQUIRE(*m1.get(2) == 3);
@@ -161,6 +194,8 @@ TEST_CASE("HashMap: Adding and retrieving elements", "[sfz::HashMap]")
 	REQUIRE(mConst.get(6) == nullptr);
 	REQUIRE(mConst.get(0) == nullptr);
 	REQUIRE(mConst.get(1) == nullptr);
+
+	REQUIRE(m1.placeholders() == 0);
 }
 
 struct ZeroHash {
@@ -175,6 +210,7 @@ TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
 	HashMap<int,int,ZeroHash> m(1);
 	REQUIRE(m.size() == 0);
 	REQUIRE(m.capacity() != 0);
+	REQUIRE(m.placeholders() == 0);
 
 	uint32_t sizeCount = 0;
 	for (int i = -32; i <= 32; ++i) {
@@ -183,6 +219,7 @@ TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
 		REQUIRE(m.size() == sizeCount);
 		REQUIRE(m.get(i) != nullptr);
 		REQUIRE(*m.get(i) == (i - 1337));
+		REQUIRE(m.placeholders() == 0);
 
 		if ((i % 3) == 0) {
 			REQUIRE(m.remove(i));
@@ -190,6 +227,7 @@ TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
 			sizeCount -= 1;
 			REQUIRE(m.size() == sizeCount);
 			REQUIRE(m.get(i) == nullptr);
+			REQUIRE(m.placeholders() == 1); // Just removed an element (spot will be occupied again due to zero hash)
 		}
 	}
 
@@ -240,9 +278,11 @@ TEST_CASE("HashMap operator[]", "[sfz::HashMap]")
 			REQUIRE(!m.remove(i));
 			sizeCount -= 1;
 			REQUIRE(m.size() == sizeCount);
+			REQUIRE(m.placeholders() == 1);
 			m[i];
 			sizeCount += 1;
 			REQUIRE(m.size() == sizeCount);
+			REQUIRE(m.placeholders() == 0);
 		}
 	}
 }
