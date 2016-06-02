@@ -106,12 +106,6 @@ public:
 	/// keep it.
 	V& operator[] (const K& key) noexcept;
 
-	/// Access operator, will return a reference to the element associated with the given key. If
-	/// no such element exists it will be created with the default constructor. As always, the
-	/// reference will be invalidated if the HashMap is resized. So store a copy if you intend to
-	/// keep it.
-	const V& operator[] (const K& key) const noexcept;
-
 	/// Attempts to remove the element associated with the given key. Returns false if this
 	/// HashMap contains no such element. 
 	bool remove(const K& key) noexcept;

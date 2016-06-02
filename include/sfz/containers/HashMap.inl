@@ -194,36 +194,6 @@ V& HashMap<K,V,Hash,KeyEqual,Allocator>::operator[] (const K& key) noexcept
 }
 
 template<typename K, typename V, typename Hash, typename KeyEqual, typename Allocator>
-const V& HashMap<K,V,Hash,KeyEqual,Allocator>::operator[] (const K& key) const noexcept
-{
-	// Finds the index of the element
-	uint32_t firstFreeSlot = uint32_t(~0);
-	bool elementFound = false;
-	bool isPlaceholder = false;
-	uint32_t index = this->findElementIndex(key, elementFound, firstFreeSlot, isPlaceholder);
-
-	// If element doesn't exist create it with default constructor
-	if (!elementFound) {
-		if (mSize >= mCapacity) {
-			// TODO: Create moar capacity
-			firstFreeSlot = uint32_t(~0);
-		}
-
-		index = firstFreeSlot;
-		mSize += 1;
-		if (isPlaceholder) mPlaceholders -= 1;
-
-		// Otherwise insert info, key and value
-		setElementInfo(index, ELEMENT_INFO_OCCUPIED);
-		new (keysPtr() + index) K(key);
-		new (valuesPtr() + index) V();
-	}
-
-	// Returns pointer to element
-	return valuesPtr()[index];
-}
-
-template<typename K, typename V, typename Hash, typename KeyEqual, typename Allocator>
 bool HashMap<K,V,Hash,KeyEqual,Allocator>::remove(const K& key) noexcept
 {
 	// Finds the index of the element
