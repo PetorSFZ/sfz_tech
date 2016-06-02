@@ -48,6 +48,16 @@ public:
 	static constexpr uint32_t MIN_CAPACITY = 67;
 	static constexpr uint32_t MAX_CAPACITY = 2147483659;
 
+	/// This factor decides the maximum number of occupied slots (size + placeholders) this
+	/// HashMap may contain before it is rehashed by ensureProperlyHashed().
+	static constexpr float MAX_OCCUPIED_REHASH_FACTOR = 0.75f;
+
+	/// This factor decides the maximum size allowed to not increase the capacity when rehashing
+	/// in ensureProperlyHashed(). For example, size 50% and placeholders 30% would trigger a
+	/// rehash, but would not increase capacity. Size 70% and placeholders 10% would trigger a
+	/// rehash with capacity increase.
+	static constexpr float MAX_SIZE_KEEP_CAPACITY_FACTOR = 0.60f;
+
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
@@ -93,17 +103,18 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	/// Adds the specified key value pair to this HashMap. If a value is already associated with
-	/// the given key it will be replaced with the new value.
+	/// the given key it will be replaced with the new value. Will call ensureProperlyHashed().
 	void put(const K& key, const V& value) noexcept;
 
 	/// Adds the specified key value pair to this HashMap. If a value is already associated with
-	/// the given key it will be replaced with the new value.
+	/// the given key it will be replaced with the new value. Will call ensureProperlyHashed().
 	void put(const K& key, V&& value) noexcept;
 
 	/// Access operator, will return a reference to the element associated with the given key. If
 	/// no such element exists it will be created with the default constructor. As always, the
 	/// reference will be invalidated if the HashMap is resized. So store a copy if you intend to
-	/// keep it.
+	/// keep it. Will call ensureProperlyHashed() if capacity is 0 or if adding a key value pair
+	/// to the HashMap.
 	V& operator[] (const K& key) noexcept;
 
 	/// Attempts to remove the element associated with the given key. Returns false if this
@@ -118,6 +129,12 @@ public:
 	/// in this HashMap and adds them to the new one. Finally this HashMap is replaced by the
 	/// new one. Obviously all pointers and references into the old HashMap are invalidated.
 	void rehash(uint32_t suggestedCapacity) noexcept;
+
+	/// Checks if HashMap needs to be rehashed, and will do so if necessary. This method is
+	/// internally called by put() and operator[], if it is manually called before adding a single
+	/// key value pair with these methods they are guaranteed to not rehash. Will allocate capacity
+	/// if this HashMap is empty. Returns whether HashMap was rehashed.
+	bool ensureProperlyHashed() noexcept;
 
 	/// Removes all elements from this HashMap without deallocating memory or changing capacity
 	void clear() noexcept;

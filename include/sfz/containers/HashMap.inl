@@ -108,10 +108,7 @@ const V* HashMap<K,V,Hash,KeyEqual,Allocator>::get(const K& key) const noexcept
 template<typename K, typename V, typename Hash, typename KeyEqual, typename Allocator>
 void HashMap<K,V,Hash,KeyEqual,Allocator>::put(const K& key, const V& value) noexcept
 {
-	if (mSize >= mCapacity) {
-		// TODO: Create more capacity
-		return;
-	}
+	ensureProperlyHashed();
 
 	// Finds the index of the element
 	uint32_t firstFreeSlot = uint32_t(~0);
@@ -137,10 +134,7 @@ void HashMap<K,V,Hash,KeyEqual,Allocator>::put(const K& key, const V& value) noe
 template<typename K, typename V, typename Hash, typename KeyEqual, typename Allocator>
 void HashMap<K,V,Hash,KeyEqual,Allocator>::put(const K& key, V&& value) noexcept
 {
-	if (mSize >= mCapacity) {
-		// TODO: Create more capacity
-		return;
-	}
+	ensureProperlyHashed();
 
 	// Finds the index of the element
 	uint32_t firstFreeSlot = uint32_t(~0);
@@ -166,19 +160,24 @@ void HashMap<K,V,Hash,KeyEqual,Allocator>::put(const K& key, V&& value) noexcept
 template<typename K, typename V, typename Hash, typename KeyEqual, typename Allocator>
 V& HashMap<K,V,Hash,KeyEqual,Allocator>::operator[] (const K& key) noexcept
 {
+	if (mCapacity == 0) ensureProperlyHashed();
+
 	// Finds the index of the element
 	uint32_t firstFreeSlot = uint32_t(~0);
 	bool elementFound = false;
 	bool isPlaceholder = false;
 	uint32_t index = this->findElementIndex(key, elementFound, firstFreeSlot, isPlaceholder);
 
+	// Check if HashMap needs to rehashed
+	if (!elementFound) {
+		if (ensureProperlyHashed()) {
+			// If rehashed redo the search so we have valid indices
+			index = this->findElementIndex(key, elementFound, firstFreeSlot, isPlaceholder);
+		}
+	}
+
 	// If element doesn't exist create it with default constructor
 	if (!elementFound) {
-		if (mSize >= mCapacity) {
-			// TODO: Create moar capacity
-			firstFreeSlot = uint32_t(~0);
-		}
-
 		index = firstFreeSlot;
 		mSize += 1;
 		if (isPlaceholder) mPlaceholders -= 1;
@@ -258,6 +257,33 @@ void HashMap<K,V,Hash,KeyEqual,Allocator>::rehash(uint32_t suggestedCapacity) no
 
 	// Replace this HashMap with the new one
 	this->swap(tmp);
+}
+
+template<typename K, typename V, typename Hash, typename KeyEqual, typename Allocator>
+bool HashMap<K,V,Hash,KeyEqual,Allocator>::ensureProperlyHashed() noexcept
+{
+	// If HashMap is empty initialize with smallest size
+	if (mCapacity == 0) {
+		this->rehash(1);
+		return true;
+	}
+
+	// Check if HashMap needs to be rehashed
+	uint32_t maxOccupied = uint32_t(MAX_OCCUPIED_REHASH_FACTOR * mCapacity);
+	if ((mSize + mPlaceholders) > maxOccupied) {
+
+		// Determine whether capacity needs to be increased or not.
+		uint32_t newCapacity = mCapacity;
+		uint32_t maxSize = uint32_t(MAX_OCCUPIED_REHASH_FACTOR * mCapacity);
+		if (mSize > maxSize) {
+			mCapacity += 1;
+		}
+
+		this->rehash(newCapacity);
+		return true;
+	}
+
+	return false;
 }
 
 template<typename K, typename V, typename Hash, typename KeyEqual, typename Allocator>

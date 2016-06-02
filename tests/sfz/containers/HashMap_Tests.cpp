@@ -150,7 +150,7 @@ TEST_CASE("HashMap: rehash()", "[sfz::HashMap]")
 	REQUIRE(m1.size() == 3);
 }
 
-/*TEST_CASE("HashMap: Rehashing in put()", "[sfz::HashMap]")
+TEST_CASE("HashMap: Rehashing in put()", "[sfz::HashMap]")
 {
 	HashMap<int,int> m1;
 	REQUIRE(m1.size() == 0);
@@ -165,14 +165,14 @@ TEST_CASE("HashMap: rehash()", "[sfz::HashMap]")
 		REQUIRE(m1.get(uint32_t(i)) != nullptr);
 		REQUIRE(*m1.get(uint32_t(i)) == (i+1));
 	}
-}*/
+}
 
 TEST_CASE("HashMap: Adding and retrieving elements", "[sfz::HashMap]")
 {
-	HashMap<int,int> m1(64);
+	HashMap<int,int> m1;
 
 	REQUIRE(m1.size() == 0);
-	REQUIRE(m1.capacity() == 67);
+	REQUIRE(m1.capacity() == 0);
 	REQUIRE(m1.placeholders() == 0);
 
 	m1.put(2, 3);
@@ -207,13 +207,13 @@ struct ZeroHash {
 
 TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
 {
-	HashMap<int,int,ZeroHash> m(1);
+	HashMap<int,int,ZeroHash> m;
 	REQUIRE(m.size() == 0);
-	REQUIRE(m.capacity() != 0);
+	REQUIRE(m.capacity() == 0);
 	REQUIRE(m.placeholders() == 0);
 
 	uint32_t sizeCount = 0;
-	for (int i = -32; i <= 32; ++i) {
+	for (int i = -140; i <= 140; ++i) {
 		m.put(i, i - 1337);
 		sizeCount += 1;
 		REQUIRE(m.size() == sizeCount);
@@ -231,7 +231,7 @@ TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
 		}
 	}
 
-	for (int i = -24; i <= 24; ++i) {
+	for (int i = -140; i <= 140; ++i) {
 		if ((i % 3) == 0) {
 			REQUIRE(m.get(i) == nullptr);
 			continue;
