@@ -22,6 +22,7 @@
 #include <cstddef> // std::size_t
 #include <cstdint> // std::int32_t
 #include <cmath> // std::sqrt
+#include <functional>
 
 #include "sfz/Assert.hpp"
 #include "sfz/containers/StackString.hpp"
@@ -333,5 +334,17 @@ template<typename T, size_t N>
 const T* cend(const Vector<T,N>& vector) noexcept;
 
 } // namespace sfz
+
+// Specializations of standard library for sfz::Vector
+// ------------------------------------------------------------------------------------------------
+
+namespace std {
+
+template<typename T, size_t N>
+struct hash<sfz::Vector<T,N>> {
+	size_t operator() (const sfz::Vector<T,N>& vector) const noexcept;
+};
+
+} // namespace std
 
 #include "sfz/math/Vector.inl"

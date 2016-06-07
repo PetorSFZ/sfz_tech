@@ -670,6 +670,12 @@ TEST_CASE("Hashing", "[sfz::Vector]")
 
 	REQUIRE(sfz::hash(v1) != sfz::hash(v2));
 	REQUIRE(sfz::hash(v2) != sfz::hash(v3));
+
+	std::hash<sfz::Vector<int,3>> hasher;
+
+	REQUIRE(hasher(v1) == sfz::hash(v1));
+	REQUIRE(hasher(v2) == sfz::hash(v2));
+	REQUIRE(hasher(v3) == sfz::hash(v3));
 }
 
 TEST_CASE("Is proper POD", "[sfz::Vector]")
