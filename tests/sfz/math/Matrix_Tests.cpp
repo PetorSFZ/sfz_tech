@@ -429,6 +429,12 @@ TEST_CASE("Matrix hashing", "[sfz::Matrix]")
 
 	REQUIRE(hash(m1) != hash(m2));
 	REQUIRE(hash(m2) != hash(m3));
+
+	std::hash<sfz::mat2i> hasher;
+
+	REQUIRE(hasher(m1) == sfz::hash(m1));
+	REQUIRE(hasher(m2) == sfz::hash(m2));
+	REQUIRE(hasher(m3) == sfz::hash(m3));
 }
 
 TEST_CASE("Matrix toString()", "[sfz::Matrix]")

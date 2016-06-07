@@ -386,3 +386,16 @@ bool operator!= (const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept
 }
 
 } // namespace sfz
+
+// Specializations of standard library for sfz::Matrix
+// ------------------------------------------------------------------------------------------------
+
+namespace std {
+
+template<typename T, size_t M, size_t N>
+size_t hash<sfz::Matrix<T,M,N>>::operator() (const sfz::Matrix<T,M,N>& matrix) const noexcept
+{
+	return sfz::hash(matrix);
+}
+
+} // namespace std

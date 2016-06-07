@@ -204,5 +204,17 @@ using mat4i = Matrix<int,4,4>;
 
 } // namespace sfz
 
+// Specializations of standard library for sfz::Matrix
+// ------------------------------------------------------------------------------------------------
+
+namespace std {
+
+template<typename T, size_t M, size_t N>
+struct hash<sfz::Matrix<T,M,N>> {
+	size_t operator() (const sfz::Matrix<T,M,N>& matrix) const noexcept;
+};
+
+} // namespace std
+
 #include "sfz/math/Matrix.inl"
 #include "sfz/math/MatrixSupport.hpp"
