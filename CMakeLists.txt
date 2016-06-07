@@ -67,6 +67,12 @@ set(SOURCE_CONTAINERS_FILES
 	 ${SOURCE_DIR}/sfz/containers/StackString.cpp)
 source_group(sfz_containers FILES ${SOURCE_CONTAINERS_FILES})
 
+set(SOURCE_GEOMETRY_FILES
+	${INCLUDE_DIR}/sfz/Geometry.hpp
+	${INCLUDE_DIR}/sfz/geometry/AABB.hpp
+	${INCLUDE_DIR}/sfz/geometry/AABB.inl)
+source_group(sfz_geometry FILES ${SOURCE_GEOMETRY_FILES})
+
 set(SOURCE_MATH_FILES
 	${INCLUDE_DIR}/sfz/Math.hpp
 	${INCLUDE_DIR}/sfz/math/MathConstants.hpp
@@ -111,6 +117,7 @@ source_group(sfz_util FILES ${SOURCE_UTIL_FILES})
 set(SOURCE_ALL_FILES
 	${SOURCE_ROOT_FILES}
 	${SOURCE_CONTAINERS_FILES}
+	${SOURCE_GEOMETRY_FILES}
 	${SOURCE_MATH_FILES}
 	${SOURCE_MEMORY_FILES}
 	${SOURCE_SDL_FILES}
