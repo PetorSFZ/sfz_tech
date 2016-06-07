@@ -70,7 +70,11 @@ source_group(sfz_containers FILES ${SOURCE_CONTAINERS_FILES})
 set(SOURCE_GEOMETRY_FILES
 	${INCLUDE_DIR}/sfz/Geometry.hpp
 	${INCLUDE_DIR}/sfz/geometry/AABB.hpp
-	${INCLUDE_DIR}/sfz/geometry/AABB.inl)
+	${INCLUDE_DIR}/sfz/geometry/AABB.inl
+	${INCLUDE_DIR}/sfz/geometry/AABB2D.hpp
+	${INCLUDE_DIR}/sfz/geometry/AABB2D.inl
+	${INCLUDE_DIR}/sfz/geometry/Circle.hpp
+	${INCLUDE_DIR}/sfz/geometry/Circle.inl)
 source_group(sfz_geometry FILES ${SOURCE_GEOMETRY_FILES})
 
 set(SOURCE_MATH_FILES

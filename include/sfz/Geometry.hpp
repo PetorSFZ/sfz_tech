@@ -19,3 +19,5 @@
 #pragma once
 
 #include "sfz/geometry/AABB.hpp"
+#include "sfz/geometry/AABB2D.hpp"
+#include "sfz/geometry/Circle.hpp"
