@@ -36,6 +36,26 @@ using std::uint8_t;
 // HashMap (interface)
 // ------------------------------------------------------------------------------------------------
 
+/// A HashMap with closed hashing (open adressing).
+///
+/// Quadratic probing is used in the case of collisions, which can not guarantee that more than
+/// half the slots will be searched. For this reason the load factor is 49%, which should
+/// guarantee that this never poses a problem.
+///
+/// The capacity of the the HashMap is always a prime number, so when a certain capacity is
+/// suggested a prime bigger than the suggestion will simply be taken from an internal lookup
+/// table. In the case of a rehash the capacity generally increases by (approximately) a factor
+/// of 2.
+///
+/// Removal of elements is O(1), but will leave a placeholder on the previously occupied slot. The
+/// current number of placeholders can be queried by the placeholders() method. Both size and 
+/// placeholders count as load when checking if the HashMap needs to be rehashed or not.
+///
+/// \param K the key type
+/// \param V the value type
+/// \param Hash the hash function (by default std::hash)
+/// \param KeyEqual the function used to compare keys (by default operator ==)
+/// \param Allocator the sfz allocator used to allocate memory
 template<typename K, typename V, typename Hash = std::hash<K>,
          typename KeyEqual = std::equal_to<K>, typename Allocator = StandardAllocator>
 class HashMap {

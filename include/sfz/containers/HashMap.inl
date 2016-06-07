@@ -683,7 +683,6 @@ uint32_t HashMap<K,V,Hash,KeyEqual,Allocator>::findElementIndex(const K& key, bo
 		}
 	}
 
-	sfz::error("%s", "Unreachable, quadratic probing should hit at least half the slots.");
 	return uint32_t(~0);
 }
 

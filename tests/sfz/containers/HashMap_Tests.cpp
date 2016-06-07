@@ -156,14 +156,14 @@ TEST_CASE("HashMap: Rehashing in put()", "[sfz::HashMap]")
 	REQUIRE(m1.size() == 0);
 	REQUIRE(m1.capacity() == 0);
 
-	for (int i = 0; i < 128; ++i) {
+	for (int i = 0; i < 256; ++i) {
 		m1.put(i, i + 1);
 		REQUIRE(m1.size() == uint32_t(i+1));
 	}
 
-	for (int i = 0; i < 128; ++i) {
-		REQUIRE(m1.get(uint32_t(i)) != nullptr);
-		REQUIRE(*m1.get(uint32_t(i)) == (i+1));
+	for (int i = 0; i < 256; ++i) {
+		REQUIRE(m1.get(i) != nullptr);
+		REQUIRE(*m1.get(i) == (i+1));
 	}
 }
 
@@ -267,7 +267,7 @@ TEST_CASE("HashMap operator[]", "[sfz::HashMap]")
 	REQUIRE(m.capacity() != 0);
 
 	uint32_t sizeCount = 0;
-	for (int i = -32; i <= 32; ++i) {
+	for (int i = -256; i <= 256; ++i) {
 		m[i] = i - 1337;
 		sizeCount += 1;
 		REQUIRE(m.size() == sizeCount);
