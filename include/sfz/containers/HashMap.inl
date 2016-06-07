@@ -619,7 +619,7 @@ uint32_t HashMap<K,V,Hash,KeyEqual,Allocator>::findElementIndex(const K& key, bo
 	elementFound = false;
 	firstFreeSlot = uint32_t(~0);
 	isPlaceholder = false;
-	K* keys = keysPtr();
+	K* const keys = keysPtr();
 
 	// Hash the key and find the base index
 	const int64_t baseIndex = int64_t(keyHasher(key) % size_t(mCapacity));
@@ -642,13 +642,12 @@ uint32_t HashMap<K,V,Hash,KeyEqual,Allocator>::findElementIndex(const K& key, bo
 	}
 
 	// Search for the element using quadratic probing
-	const int64_t maxNumProbingAttempts = int64_t(mCapacity) * 4;
+	const int64_t maxNumProbingAttempts = int64_t(mCapacity);
 	for (int64_t i = 1; i < maxNumProbingAttempts; ++i) {
-		int64_t iSquared = i * i;
-		int64_t index;
-
+		const int64_t iSquared = i * i;
+		
 		// Try (base + i²) index
-		index = (baseIndex + iSquared) % int64_t(mCapacity);
+		int64_t index = (baseIndex + iSquared) % int64_t(mCapacity);
 		info = elementInfo(uint32_t(index));
 		if (info == ELEMENT_INFO_EMPTY) {
 			if (firstFreeSlot == uint32_t(~0)) firstFreeSlot = uint32_t(index);
@@ -684,6 +683,7 @@ uint32_t HashMap<K,V,Hash,KeyEqual,Allocator>::findElementIndex(const K& key, bo
 		}
 	}
 
+	sfz::error("%s", "Unreachable, quadratic probing should hit at least half the slots.");
 	return uint32_t(~0);
 }
 

@@ -50,13 +50,13 @@ public:
 
 	/// This factor decides the maximum number of occupied slots (size + placeholders) this
 	/// HashMap may contain before it is rehashed by ensureProperlyHashed().
-	static constexpr float MAX_OCCUPIED_REHASH_FACTOR = 0.75f;
+	static constexpr float MAX_OCCUPIED_REHASH_FACTOR = 0.49f;
 
 	/// This factor decides the maximum size allowed to not increase the capacity when rehashing
-	/// in ensureProperlyHashed(). For example, size 50% and placeholders 30% would trigger a
-	/// rehash, but would not increase capacity. Size 70% and placeholders 10% would trigger a
+	/// in ensureProperlyHashed(). For example, size 20% and placeholders 30% would trigger a
+	/// rehash, but would not increase capacity. Size 40% and placeholders 10% would trigger a
 	/// rehash with capacity increase.
-	static constexpr float MAX_SIZE_KEEP_CAPACITY_FACTOR = 0.60f;
+	static constexpr float MAX_SIZE_KEEP_CAPACITY_FACTOR = 0.35f;
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
