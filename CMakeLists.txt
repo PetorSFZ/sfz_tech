@@ -74,7 +74,17 @@ set(SOURCE_GEOMETRY_FILES
 	${INCLUDE_DIR}/sfz/geometry/AABB2D.hpp
 	${INCLUDE_DIR}/sfz/geometry/AABB2D.inl
 	${INCLUDE_DIR}/sfz/geometry/Circle.hpp
-	${INCLUDE_DIR}/sfz/geometry/Circle.inl)
+	${INCLUDE_DIR}/sfz/geometry/Circle.inl
+	${INCLUDE_DIR}/sfz/geometry/Intersection.hpp
+	 ${SOURCE_DIR}/sfz/geometry/Intersection.cpp
+	${INCLUDE_DIR}/sfz/geometry/OBB.hpp
+	${INCLUDE_DIR}/sfz/geometry/OBB.inl
+	${INCLUDE_DIR}/sfz/geometry/Plane.hpp
+	${INCLUDE_DIR}/sfz/geometry/Plane.inl
+	${INCLUDE_DIR}/sfz/geometry/Sphere.hpp
+	${INCLUDE_DIR}/sfz/geometry/Sphere.inl
+	${INCLUDE_DIR}/sfz/geometry/ViewFrustum.hpp
+	 ${SOURCE_DIR}/sfz/geometry/ViewFrustum.cpp)
 source_group(sfz_geometry FILES ${SOURCE_GEOMETRY_FILES})
 
 set(SOURCE_MATH_FILES
@@ -166,6 +176,10 @@ if(SFZ_CORE_BUILD_TESTS)
 		${TESTS_DIR}/sfz/containers/StackString_Tests.cpp)
 	source_group(sfz_containers FILES ${CONTAINERS_TEST_FILES})
 
+	set(GEOMETRY_TEST_FILES
+		${TESTS_DIR}/sfz/geometry/Intersection_Tests.cpp)
+	source_group(sfz_geometry FILES ${GEOMETRY_TEST_FILES})
+
 	set(MATH_TEST_FILES
 		${TESTS_DIR}/sfz/math/MathConstants_Tests.cpp
 		${TESTS_DIR}/sfz/math/Matrix_Tests.cpp
@@ -185,6 +199,7 @@ if(SFZ_CORE_BUILD_TESTS)
 	set(ALL_TEST_FILES
 		${ROOT_TEST_FILES}
 		${CONTAINERS_TEST_FILES}
+		${GEOMETRY_TEST_FILES}
 		${MATH_TEST_FILES}
 		${MEMORY_TEST_FILES}
 		${UTIL_TEST_FILES})
