@@ -18,4 +18,6 @@
 
 #pragma once
 
+#include "sfz/util/FrametimeStats.hpp"
+#include "sfz/util/IniParser.hpp"
 #include "sfz/util/IO.hpp"
