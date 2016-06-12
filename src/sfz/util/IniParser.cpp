@@ -39,9 +39,9 @@ static void toLowerCase(string& str) noexcept
 // IniParser: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-IniParser::IniParser(const string& path) noexcept
+IniParser::IniParser(const char* path) noexcept
 :
-	mPath{path}
+	mPath(path)
 { }
 	
 // IniParser: Loading and saving to file functions
@@ -49,7 +49,7 @@ IniParser::IniParser(const string& path) noexcept
 
 bool IniParser::load() noexcept
 {
-	std::ifstream file{mPath};
+	std::ifstream file{std::string(mPath.str())};
 	if (!file.is_open()) return false;
 
 	mIniTree.clear();
@@ -84,13 +84,8 @@ bool IniParser::load() noexcept
 
 bool IniParser::save() noexcept
 {
-	// Check if current file is correct
-	IniParser oldFileParser = *this;
-	oldFileParser.load();
-	if (mIniTree == oldFileParser.mIniTree) return true;
-
 	// Opens the file and clears it
-	std::ofstream file{mPath, std::ofstream::out | std::ofstream::trunc};
+	std::ofstream file{std::string(mPath.str()), std::ofstream::out | std::ofstream::trunc};
 	if (!file.is_open()) return false;
 
 	// Adds the global items first

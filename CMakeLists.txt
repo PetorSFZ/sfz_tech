@@ -197,6 +197,7 @@ if(SFZ_CORE_BUILD_TESTS)
 	source_group(sfz_memory FILES ${MEMORY_TEST_FILES})
 
 	set(UTIL_TEST_FILES
+		${TESTS_DIR}/sfz/util/IniParser_Tests.cpp
 		${TESTS_DIR}/sfz/util/IO_Tests.cpp)
 	source_group(sfz_util FILES ${UTIL_TEST_FILES})
 

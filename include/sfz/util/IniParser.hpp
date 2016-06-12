@@ -17,13 +17,13 @@
 // 3. This notice may not be removed or altered from any source distribution.
 
 #pragma once
-#ifndef SFZ_UTIL_INI_PARSER_HPP
-#define SFZ_UTIL_INI_PARSER_HPP
 
 #include <cstdint>
 #include <limits>
 #include <map>
 #include <string>
+
+#include <sfz/containers/DynString.hpp>
 
 namespace sfz {
 
@@ -46,7 +46,7 @@ public:
 	IniParser& operator= (const IniParser&) = default;
 	~IniParser() noexcept = default;
 
-	IniParser(const string& path) noexcept;
+	IniParser(const char* path) noexcept;
 	
 	// Loading and saving to file functions
 	// --------------------------------------------------------------------------------------------
@@ -105,9 +105,8 @@ public:
 	                    float maxValue = numeric_limits<float>::max()) noexcept;
 
 private:
-	string mPath;
+	DynString mPath;
 	map<string,map<string,string>> mIniTree;
 };
 
 } // namespace sfz
-#endif
