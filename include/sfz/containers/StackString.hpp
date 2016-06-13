@@ -93,6 +93,7 @@ using StackString = StackStringTempl<96>; // Size: 12 64bit words
 using StackString32 = StackStringTempl<32>; // Size: 4 64bit words
 using StackString64 = StackStringTempl<64>; // Size: 8 64bit words
 using StackString128 = StackStringTempl<128>; // Size: 16 64bit words
+using StackString192 = StackStringTempl<192>; // Size: 24 64bit words
 using StackString256 = StackStringTempl<256>; // Size: 32 64bit words
 using StackString512 = StackStringTempl<512>; // Size: 64 64bit words
 using StackString1024 = StackStringTempl<1024>; // Size: 128 64bit words
