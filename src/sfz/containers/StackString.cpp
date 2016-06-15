@@ -71,6 +71,15 @@ void StackStringTempl<N>::printfAppend(const char* format, ...) noexcept
 	va_end(args);
 }
 
+template<size_t N>
+void StackStringTempl<N>::insertChars(const char* first, size_t numChars) noexcept
+{
+	sfz_assert_debug(numChars < N);
+	std::strncpy(this->str, first, numChars);
+	first[N-1] = '\0';
+}
+
+
 // StackStringTempl: Operators
 // ------------------------------------------------------------------------------------------------
 
