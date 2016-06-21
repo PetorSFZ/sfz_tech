@@ -76,7 +76,7 @@ void StackStringTempl<N>::insertChars(const char* first, size_t numChars) noexce
 {
 	sfz_assert_debug(numChars < N);
 	std::strncpy(this->str, first, numChars);
-	first[N-1] = '\0';
+	this->str[numChars] = '\0';
 }
 
 

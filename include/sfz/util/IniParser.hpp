@@ -20,30 +20,35 @@
 
 #include <cstdint>
 #include <limits>
-#include <map>
-#include <string>
 
-#include <sfz/containers/DynString.hpp>
+#include "sfz/containers/DynArray.hpp"
+#include "sfz/containers/DynString.hpp"
+#include "sfz/containers/StackString.hpp"
 
 namespace sfz {
 
 using std::int32_t;
 using std::numeric_limits;
-using std::string;
-using std::map;
+using std::uint32_t;
 
 // IniParser class
 // ------------------------------------------------------------------------------------------------
 
 class IniParser final {
 public:
+	// Constants
+	// --------------------------------------------------------------------------------------------
+	
+	static constexpr int32_t DEFAULT_INT = 0;
+	static constexpr float DEFAULT_FLOAT = 0.0f;
+	static constexpr bool DEFAULT_BOOL = false;
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	IniParser() = default;
-	IniParser(const IniParser&) = default;
-	IniParser& operator= (const IniParser&) = default;
+	IniParser() noexcept = default;
+	IniParser(const IniParser&) noexcept = default;
+	IniParser& operator= (const IniParser&) noexcept = default;
 	~IniParser() noexcept = default;
 
 	IniParser(const char* path) noexcept;
@@ -54,59 +59,79 @@ public:
 	bool load() noexcept;
 	bool save() noexcept;
 
-	// Info about a specific item
-	// --------------------------------------------------------------------------------------------
-
-	bool itemExists(const string& section, const string& key) const noexcept;
-	bool itemIsBool(const string& section, const string& key) const noexcept;
-	bool itemIsInt(const string& section, const string& key) const noexcept;
-	bool itemIsFloat(const string& section, const string& key) const noexcept;
-
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
-	string getString(const string& section, const string& key,
-	                 const string& defaultValue = "") const noexcept;
+	const int32_t* getInt(const char* section, const char* key) const noexcept;
 
-	bool getBool(const string& section, const string& key,
-	             bool defaultValue = false) const noexcept;
+	const float* getFloat(const char* section, const char* key) const noexcept;
 
-	int32_t getInt(const string& section, const string& key,
-	               int32_t defaultValue = 0) const noexcept;
-
-	float getFloat(const string& section, const string& key,
-	               float defaultValue = 0.0f) const noexcept;
+	const bool* getBool(const char* section, const char* key) const noexcept;
 
 	// Setters
 	// --------------------------------------------------------------------------------------------
 
-	void setString(const string& section, const string& key, const string& value) noexcept;
-	void setBool(const string& section, const string& key, bool value) noexcept;
-	void setInt(const string& section, const string& key, int32_t value) noexcept;
-	void setFloat(const string& section, const string& key, float value) noexcept;
+	void setInt(const char* section, const char* key, int32_t value) noexcept;
+	void setFloat(const char* section, const char* key, float value) noexcept;
+	void setBool(const char* section, const char* key, bool value) noexcept;
 
 	// Sanitizers
 	// --------------------------------------------------------------------------------------------
 
-	string sanitizeString(const string& section, const string& key,
-	                      const string& defaultValue = "") noexcept;
-
-	bool sanitizeBool(const string& section, const string& key,
-	                  bool defaultValue = false) noexcept;
-
-	int32_t sanitizeInt(const string& section, const string& key,
-	                    int32_t defaultValue = 0,
+	int32_t sanitizeInt(const char* section, const char* key,
+	                    int32_t defaultValue = DEFAULT_INT,
 	                    int32_t minValue = numeric_limits<int32_t>::min(),
 	                    int32_t maxValue = numeric_limits<int32_t>::max()) noexcept;
 
-	float sanitizeFloat(const string& section, const string& key,
-	                    float defaultValue = 0.0f,
+	float sanitizeFloat(const char* section, const char* key,
+	                    float defaultValue = DEFAULT_FLOAT,
 	                    float minValue = numeric_limits<float>::min(),
 	                    float maxValue = numeric_limits<float>::max()) noexcept;
 
+	bool sanitizeBool(const char* section, const char* key,
+	                  bool defaultValue = DEFAULT_BOOL) noexcept;
+
 private:
+	// Private helper classes
+	// --------------------------------------------------------------------------------------------
+
+	enum class ItemType : uint32_t {
+		NUMBER, // int and/or float
+		BOOL,
+		COMMENT_OWN_ROW,
+		COMMENT_APPEND_PREVIOUS_ROW, // Appends a comment to the previous row
+	};
+
+	struct Item final {
+		ItemType type;
+		union {
+			struct { int32_t i; float f; };
+			bool b;
+		};
+		StackString192 str; // Name or comment depending on ItemType
+	};
+
+	struct Section final {
+		StackString64 name;
+		DynArray<Item> items;
+		Section() = default;
+		Section(const char* name) : name(name) { }
+	};
+
+	// Private methods
+	// --------------------------------------------------------------------------------------------
+
+	// Finds the specified item, returns nullptr if it doesn't exist
+	const Item* findItem(const char* section, const char* key) const noexcept;
+
+	// Finds the specified item, creates it if it doesn't exist
+	Item* findItemEnsureExists(const char* section, const char* key) noexcept;
+
+	// Private members
+	// --------------------------------------------------------------------------------------------
+
 	DynString mPath;
-	map<string,map<string,string>> mIniTree;
+	DynArray<Section> mSections;
 };
 
 } // namespace sfz

@@ -18,22 +18,37 @@
 
 #include "sfz/util/IniParser.hpp"
 
-#include "sfz/Assert.hpp"
-
 #include <algorithm>
 #include <cctype> // std::tolower()
-#include <fstream>
+
+#include "sfz/Assert.hpp"
+#include "sfz/math/MathHelpers.hpp"
+#include "sfz/util/IO.hpp"
 
 namespace sfz {
 
 // Static functions
 // ------------------------------------------------------------------------------------------------
 
-static void toLowerCase(string& str) noexcept
+static bool isWhitespace(char c) noexcept
 {
-	for (size_t i = 0; i < str.size(); ++i) {
-		str[i] = (char)std::tolower(str[i]);
+	return c == ' ' || c == '\t';
+}
+
+static void printLoadError(const DynString& path, uint32_t line, const char* message) noexcept
+{
+	printErrorMessage("Failed to load \"%s\" at line %u: %s\n", path.str(), line, message);
+}
+
+static bool equalsIgnoreCase(const char* lhs, const char* rhs) noexcept
+{
+	const size_t MAX_NUM_ITERATIONS = 1000; // 1000 iterations should be enough here
+	for (size_t i = 0; i < MAX_NUM_ITERATIONS; i++) {
+		if (lhs[i] == '\0' && rhs[i] == '\0') break;
+		if (lhs[i] == '\0' || rhs[i] == '\0') return false;
+		if ((char)std::tolower(lhs[i]) != (char)std::tolower(rhs[i])) return false;
 	}
+	return true;
 }
 
 // IniParser: Constructors & destructors
@@ -49,251 +64,478 @@ IniParser::IniParser(const char* path) noexcept
 
 bool IniParser::load() noexcept
 {
-	std::ifstream file{std::string(mPath.str())};
-	if (!file.is_open()) return false;
+	// Check if a path is available
+	if (mPath.str() == nullptr) {
+		printErrorMessage("Can't load ini file without path.");
+		return false;
+	}
 
-	mIniTree.clear();
+	// Read file
+	DynString fileContents = readTextFile(mPath.str());
+	if (fileContents.size() == 0) {
+		printLoadError(mPath, 0, "Ini file is empty.");
+		return false;
+	}	
 
-	std::string str;
-	std::string currentSection = "";
-	while (std::getline(file, str)) {
-		if (str == "") continue;
-		if (str[0] == ';') continue; // Remove comments
-		
-		// Check if new section
-		size_t sectLoc = str.find_first_of("[");
-		if (sectLoc != str.npos) {
-			size_t endLoc = str.find_first_of("]");
-			if (endLoc == str.npos) return false;
-			if (sectLoc >= endLoc) return false;
-			currentSection = str.substr(sectLoc+1, endLoc-sectLoc-1);
-			mIniTree.emplace(std::make_pair(currentSection, map<string,string>{}));
+	// Retrieve line information
+	struct LineInfo final {
+		uint32_t lineNumber = uint32_t(~0);
+		uint32_t startIndex = uint32_t(~0);
+		uint32_t length = uint32_t(~0);
+	};
+	DynArray<LineInfo> lines(0, 256);
+	{
+		LineInfo tmp;
+		tmp.lineNumber = 1;
+		for (uint32_t i = 0; i < fileContents.size(); i++) {
+			char c = fileContents.str()[i];
+
+			// Special case when line has not yet started
+			if (tmp.startIndex == uint32_t(~0)) {
+				
+				// Trim whitespace in beginning of line
+				if (isWhitespace(c)) continue;
+
+				// Skip empty rows
+				if (c == '\n') {
+					tmp.lineNumber += 1;
+					continue;
+				}
+
+				// Start line
+				tmp.startIndex = i;
+				tmp.length = 1;
+			}
+
+			// Continue if whitespace
+			if (isWhitespace(c)) continue;
+
+			// Add line 
+			if (c == '\n') {
+				lines.add(tmp);
+				tmp.lineNumber += 1;
+				tmp.startIndex = uint32_t(~0);
+				tmp.length = uint32_t(~0);
+				continue;
+			}
+
+			// Increase length
+			tmp.length = i - tmp.startIndex + 1;
+		}
+	}
+
+	// Create temporary parse tree and add the first initial empty section
+	DynArray<Section> newSections(0, 64);
+	newSections.add(Section(""));
+
+	// Parse contents of ini file
+	for (LineInfo line : lines) {
+		const char* startPtr = fileContents.str() + line.startIndex;
+		char firstChar = startPtr[0];
+
+		// Comment
+		if (firstChar == ';') {
+			if ((line.length - 1) > 191) {
+				printLoadError(mPath, line.lineNumber, "Too long comment, please split into multiple rows.");
+				return false;
+			}
+			Item comment;
+			comment.type = ItemType::COMMENT_OWN_ROW;
+			comment.str.insertChars(startPtr, (size_t)std::min(uint32_t(191), line.length));
+			newSections.last().items.add(comment);
 			continue;
 		}
 
-		// Add item to tree
-		size_t delimLoc = str.find_first_of("=");
-		if (delimLoc == str.npos) return false;
-		if (delimLoc == 0) return false;
-		if (delimLoc+1 == str.size()) return false;
-		mIniTree[currentSection][str.substr(0, delimLoc)] = str.substr(delimLoc+1, str.size()-delimLoc+1);
+		// Section
+		else if (firstChar == '[') {
+			
+			// Find length of section name
+			uint32_t index = 1;
+			bool foundEndToken = false;
+			while (index < line.length) {
+				if (startPtr[index] == ']') {
+					foundEndToken = true;
+					break;
+				}
+				index += 1;
+			}
+			uint32_t nameLength = index - 1;
+
+			if (!foundEndToken) {
+				printLoadError(mPath, line.lineNumber, "Missing ']'.");
+				return false;
+			}
+			if (nameLength > 191) {
+				printLoadError(mPath, line.lineNumber, "Too long section name.");
+				return false;
+			}
+
+			// Insert section
+			Section tmpSection;
+			tmpSection.name.insertChars(startPtr + 1, nameLength);
+			newSections.add(tmpSection);
+
+			// Find start of optional comment
+			index += 1; // Next token after ']'
+			bool foundCommentStart = false;
+			while (index < line.length) {
+				char c = startPtr[index];
+				if (c == ';') {
+					foundCommentStart = true;
+					index += 1;
+					break;
+				}
+				if (!isWhitespace(c)) {
+					printLoadError(mPath, line.lineNumber, "Invalid tokens after ']'.");
+					return false;
+				}
+				index += 1;
+			}
+
+			// Add optional comment if it exists
+			if (foundCommentStart) {\
+				uint32_t commentLength = line.length - index;
+
+				if (commentLength > 191) {
+					printLoadError(mPath, line.lineNumber, "Too long comment, please split into multiple rows.");
+					return false;
+				}
+
+				Item item;
+				item.type = ItemType::COMMENT_APPEND_PREVIOUS_ROW;
+				item.str.insertChars(startPtr + index, commentLength);		
+				newSections.last().items.add(item);
+			}
+		}
+
+		// Item
+		else {
+			
+			// Find name-value separator
+			uint32_t index = 0;
+			uint32_t lastNameCharIndex = 0;
+			bool separatorFound = false;
+			while (index < line.length) {
+				char c = startPtr[index];
+				if (c == '=') {
+					index += 1;
+					separatorFound = true;
+					break;
+				}
+				if (!isWhitespace(c)) {
+					if (index > 0 && ((lastNameCharIndex + 1) != index)) {
+						printLoadError(mPath, line.lineNumber, "White space in item name");
+						return false;
+					}
+					lastNameCharIndex = index;
+				}
+				index += 1;
+			}
+
+			if (!separatorFound) {
+				printLoadError(mPath, line.lineNumber, "Missing '='.");
+				return false;
+			}
+	
+			uint32_t nameLength = lastNameCharIndex + 1;
+			if (nameLength > 191) {
+				printLoadError(mPath, line.lineNumber, "Too long item name.");
+				return false;
+			}
+
+			// Insert name into item
+			Item item;
+			item.str.insertChars(startPtr, nameLength);
+
+			// Find first char of value
+			uint32_t valueIndex = uint32_t(~0);
+			while (index < line.length) {
+				if (!isWhitespace(startPtr[index])) {
+					valueIndex = index;
+					break;
+				}
+				index += 1;
+			}
+
+			if (valueIndex == uint32_t(~0)) {
+				printLoadError(mPath, line.lineNumber, "No value.");
+				return false;
+			}
+
+			char firstValueChar = std::tolower(startPtr[index]);
+
+			// Check if value is bool
+			if (firstValueChar == 't' || firstValueChar == 'f') {
+				if (strncmp(startPtr + index, "true", 4) == 0) {
+					item.b = true;
+				} else if (strncmp(startPtr + index, "false", 5) == 0) {
+					item.b = false;
+				} else {
+					printLoadError(mPath, line.lineNumber, "Invalid value.");
+					return false;
+				}
+				item.type = ItemType::BOOL;
+			}
+			// Otherwise assume value is a number
+			else {
+				item.type = ItemType::NUMBER;
+				item.i = std::atoi(startPtr + index);
+				item.f = std::atof(startPtr + index);
+				int floatToint = (int)item.f;
+				if (item.i != floatToint) {
+					printLoadError(mPath, line.lineNumber, "Invalid value.");
+					return false;
+				}
+			}
+			
+			// TODO: Check for comments
+
+			// Add item to current section
+			newSections.last().items.add(item);
+		}
 	}
 
+	// Swap the new parse tree with the old one and return
+	mSections = std::move(newSections);
 	return true;
 }
 
 bool IniParser::save() noexcept
 {
-	// Opens the file and clears it
-	std::ofstream file{std::string(mPath.str()), std::ofstream::out | std::ofstream::trunc};
-	if (!file.is_open()) return false;
-
-	// Adds the global items first
-	auto globalItr = mIniTree.find("");
-	if (globalItr != mIniTree.end()) {
-		for (auto& keyPair : globalItr->second) {
-			file << keyPair.first << "=" << keyPair.second << "\n";
+	// Delete current file
+	deleteFile(mPath.str());
+	
+	// Calculate upper bound for the memory requirements of the string representation
+	uint32_t memoryReqs = 0;
+	for (auto& sect : mSections) {
+		memoryReqs += 200;
+		for (auto& item : sect.items) {
+			memoryReqs += 200;
 		}
-		file << "\n";
 	}
 
-	// Adds the rest of the sections and items
-	for (auto& sectionPair : mIniTree) {
-		if (sectionPair.first == "") continue;
-		file << "[" << sectionPair.first << "]" << "\n";
-		
-		for (auto& keyPair : sectionPair.second) {
-			file << keyPair.first << "=" << keyPair.second << "\n";
+	// Create string representation from parse tree
+	DynString str("", memoryReqs);
+	for (Section& section : mSections) {
+
+		// Print section header
+		if (section.name != "") {
+			str.printfAppend("[%s]\n", section.name.str);
 		}
-		file << "\n";
+
+		for (uint32_t i = 0; i < section.items.size(); i++) {
+			Item& item = section.items[i];
+	
+			// Print items content to string
+			switch (item.type) {
+			case ItemType::NUMBER:
+				if (sfz::approxEqual(std::round(item.f), item.f)) {
+					str.printfAppend("%s=%i", item.str, item.i);
+				} else {
+					str.printfAppend("%s=%f", item.str, item.f);
+				}
+				break;
+			case ItemType::BOOL:
+				str.printfAppend("%s=%s", item.str, item.b ? "true" : "false");
+				break;
+			case ItemType::COMMENT_OWN_ROW:
+				str.printfAppend("; %s", item.str);
+				break;
+			case ItemType::COMMENT_APPEND_PREVIOUS_ROW:
+				continue;
+			}
+
+			// Append comment if next item is comment to append
+			if ((i + 1) < section.items.size()) {
+				Item& nextItem = section.items[i];
+				if (nextItem.type == ItemType::COMMENT_APPEND_PREVIOUS_ROW) {
+					str.printfAppend(" ; %s", nextItem.str);
+				}
+			}
+			str.printfAppend("\n");
+		}
 	}
 
-	file.flush();
-	return true;
-}
-
-// IniParser: Info about a specific item
-// ------------------------------------------------------------------------------------------------
-
-bool IniParser::itemExists(const string& section, const string& key) const noexcept
-{
-	auto sectionItr = mIniTree.find(section);
-	if (sectionItr == mIniTree.end()) return false;
-	auto keyItr = sectionItr->second.find(key);
-	if (keyItr == sectionItr->second.end()) return false;
-	return true;
-}
-
-bool IniParser::itemIsBool(const string& section, const string& key) const noexcept
-{
-	auto sectionItr = mIniTree.find(section);
-	if (sectionItr == mIniTree.end()) return false;
-	auto keyItr = sectionItr->second.find(key);
-	if (keyItr == sectionItr->second.end()) return false;
-
-	string val = keyItr->second;
-	toLowerCase(val);
-	return val == "true" || val == "false"
-	    || val == "on" || val == "off"
-	    || val == "1" || val == "0";
-}
-
-bool IniParser::itemIsInt(const string& section, const string& key) const noexcept
-{
-	auto sectionItr = mIniTree.find(section);
-	if (sectionItr == mIniTree.end()) return false;
-	auto keyItr = sectionItr->second.find(key);
-	if (keyItr == sectionItr->second.end()) return false;
-
-	string val = keyItr->second;
-	try {
-		std::stoi(val);
-		return true;
-	} catch (...) {
+	// Write string to file
+	bool success = sfz::writeBinaryFile(mPath.str(), reinterpret_cast<const uint8_t*>(str.str()), str.size());
+	if (!success) {
+		sfz::printErrorMessage("Failed to write ini file \"%s\"", mPath.str());
 		return false;
 	}
-}
 
-bool IniParser::itemIsFloat(const string& section, const string& key) const noexcept
-{
-	auto sectionItr = mIniTree.find(section);
-	if (sectionItr == mIniTree.end()) return false;
-	auto keyItr = sectionItr->second.find(key);
-	if (keyItr == sectionItr->second.end()) return false;
-
-	string val = keyItr->second;
-	try {
-		std::stof(val);
-		return true;
-	} catch (...) {
-		return false;
-	}
+	return true;
 }
 
 // IniParser: Getters
 // ------------------------------------------------------------------------------------------------
 
-string IniParser::getString(const string& section, const string& key,
-                            const string& defaultValue) const noexcept
+const int32_t* IniParser::getInt(const char* section, const char* key) const noexcept
 {
-	auto sectionItr = mIniTree.find(section);
-	if (sectionItr == mIniTree.end()) return defaultValue;
-	auto keyItr = sectionItr->second.find(key);
-	if (keyItr == sectionItr->second.end()) return defaultValue;
-	return keyItr->second;
+	// Attempt to find item, return nullptr if it doesn't exist
+	const Item* itemPtr = this->findItem(section, key);
+	if (itemPtr == nullptr) return nullptr;
+	if (itemPtr->type != ItemType::NUMBER) return nullptr;
+
+	// Return pointer to value
+	return &itemPtr->i;
 }
 
-bool IniParser::getBool(const string& section, const string& key,
-                        bool defaultValue) const noexcept
+const float* IniParser::getFloat(const char* section, const char* key) const noexcept
 {
-	string val = this->getString(section, key, defaultValue ? "true" : "false");
-	toLowerCase(val);
-	if (val == "true") return true;
-	if (val == "on") return true;
-	if (val == "1") return true;
-	return false;
+	// Attempt to find item, return nullptr if it doesn't exist
+	const Item* itemPtr = this->findItem(section, key);
+	if (itemPtr == nullptr) return nullptr;
+	if (itemPtr->type != ItemType::NUMBER) return nullptr;
 
+	// Return pointer to value
+	return &itemPtr->f;
 }
 
-int32_t IniParser::getInt(const string& section, const string& key,
-                          int32_t defaultValue) const noexcept
+const bool* IniParser::getBool(const char* section, const char* key) const noexcept
 {
-	string val = this->getString(section, key, std::to_string(defaultValue));
-	int32_t value;
-	try {
-		value = std::stoi(val);
-	} catch (...) {
-		value = defaultValue;
-	}
-	return value;
-}
+	// Attempt to find item, return nullptr if it doesn't exist
+	const Item* itemPtr = this->findItem(section, key);
+	if (itemPtr == nullptr) return nullptr;
+	if (itemPtr->type != ItemType::BOOL) return nullptr;
 
-float IniParser::getFloat(const string& section, const string& key,
-                          float defaultValue) const noexcept
-{
-	string val = this->getString(section, key, std::to_string(defaultValue));
-	float value;
-	try {
-		value = std::stof(val);
-	}
-	catch (...) {
-		value = defaultValue;
-	}
-	return value;
+	// Return pointer to value
+	return &itemPtr->b;
 }
 
 // IniParser: Setters
 // ------------------------------------------------------------------------------------------------
 
-void IniParser::setString(const string& section, const string& key, const string& value) noexcept
+void IniParser::setInt(const char* section, const char* key, int32_t value) noexcept
 {
-	mIniTree[section][key] = value;
+	Item* itemPtr = this->findItemEnsureExists(section, key);
+	itemPtr->type = ItemType::NUMBER;
+	itemPtr->i = value;
+	itemPtr->f = static_cast<float>(value);
 }
 
-void IniParser::setBool(const string& section, const string& key, bool value) noexcept
+void IniParser::setFloat(const char* section, const char* key, float value) noexcept
 {
-	this->setString(section, key, value ? "true" : "false");
+	Item* itemPtr = this->findItemEnsureExists(section, key);
+	itemPtr->type = ItemType::NUMBER;
+	itemPtr->f = value;
+	itemPtr->i = static_cast<int32_t>(std::round(value));
 }
 
-void IniParser::setInt(const string& section, const string& key, int32_t value) noexcept
+void IniParser::setBool(const char* section, const char* key, bool value) noexcept
 {
-	this->setString(section, key, std::to_string(value));
+	Item* itemPtr = this->findItemEnsureExists(section, key);
+	itemPtr->type = ItemType::BOOL;
+	itemPtr->b = value;
 }
 
-void IniParser::setFloat(const string& section, const string& key, float value) noexcept
-{
-	this->setString(section, key, std::to_string(value));
-}
-
-// Sanitizers
+// IniParser: Sanitizers
 // ------------------------------------------------------------------------------------------------
 
-string IniParser::sanitizeString(const string& section, const string& key,
-                                 const string& defaultValue) noexcept
-{
-	if (!this->itemExists(section, key)) {
-		this->setString(section, key, defaultValue);
-		return defaultValue;
-	}
-	return this->getString(section, key);
-}
-
-bool IniParser::sanitizeBool(const string& section, const string& key,
-                             bool defaultValue) noexcept
-{
-	if (!this->itemIsBool(section, key)) {
-		this->setBool(section, key, defaultValue);
-		return defaultValue;
-	}
-	return this->getBool(section, key);
-}
-
-int32_t IniParser::sanitizeInt(const string& section, const string& key,
+int32_t IniParser::sanitizeInt(const char* section, const char* key,
                                int32_t defaultValue, int32_t minValue, int32_t maxValue) noexcept
 {
 	sfz_assert_debug(minValue <= maxValue);
-	if (!this->itemIsInt(section, key)) {
+	const Item* itemPtr = this->findItem(section, key);
+	if (itemPtr == nullptr || itemPtr->type != ItemType::NUMBER) {
 		this->setInt(section, key, defaultValue);
-		return defaultValue;
+		itemPtr = this->findItem(section, key);
 	}
-	int32_t value = this->getInt(section, key);
-	if (value > maxValue) this->setInt(section, key, maxValue);
-	else if (value < minValue) this->setInt(section, key, minValue);
-	return this->getInt(section, key);
+
+	int32_t value = itemPtr->i;
+	if (value > maxValue) {
+		value = maxValue;
+		this->setInt(section, key, value);
+	} else if (value < minValue) {
+		value = minValue;
+		this->setInt(section, key, value);
+	}
+
+	return value;
 }
 
-float IniParser::sanitizeFloat(const string& section, const string& key,
+float IniParser::sanitizeFloat(const char* section, const char* key,
                                float defaultValue, float minValue, float maxValue) noexcept
 {
 	sfz_assert_debug(minValue <= maxValue);
-	if (!this->itemIsFloat(section, key)) {
+	const Item* itemPtr = this->findItem(section, key);
+	if (itemPtr == nullptr || itemPtr->type != ItemType::NUMBER) {
 		this->setFloat(section, key, defaultValue);
-		return defaultValue;
+		itemPtr = this->findItem(section, key);
 	}
-	float value = this->getFloat(section, key);
-	if (value > maxValue) this->setFloat(section, key, maxValue);
-	else if (value < minValue) this->setFloat(section, key, minValue);
-	return this->getFloat(section, key);
+
+	float value = itemPtr->f;
+	if (value > maxValue) {
+		value = maxValue;
+		this->setFloat(section, key, value);
+	} else if (value < minValue) {
+		value = minValue;
+		this->setFloat(section, key, value);
+	}
+
+	return value;
+}
+
+bool IniParser::sanitizeBool(const char* section, const char* key, bool defaultValue) noexcept
+{
+	const Item* itemPtr = this->findItem(section, key);
+	if (itemPtr == nullptr || itemPtr->type != ItemType::BOOL) {
+		this->setBool(section, key, defaultValue);
+		itemPtr = this->findItem(section, key);
+	}
+	return itemPtr->b;
+}
+
+// IniParser: Private methods
+// ------------------------------------------------------------------------------------------------
+
+const IniParser::Item* IniParser::findItem(const char* section, const char* key) const noexcept
+{
+	for (const Section& sect : mSections) {
+		if (sect.name != section) continue;
+		for (const Item& item : sect.items) {
+			if (item.str != key) continue;
+			return &item;
+		}
+		return nullptr;
+	}
+	return nullptr;
+}
+
+IniParser::Item* IniParser::findItemEnsureExists(const char* section, const char* key) noexcept
+{
+	// Find section
+	Section* sectPtr = nullptr;
+	for (Section& sect : mSections) {
+		if (sect.name == section) {
+			sectPtr = &sect;
+			break;
+		}
+	}
+
+	// Create section if it does not exist
+	if (sectPtr == nullptr) {
+		mSections.add(Section(section));
+		sectPtr = &mSections.last();
+	}
+
+	// Find item
+	Item* itemPtr = nullptr;
+	for (Item& item : sectPtr->items) {
+		if (item.str == key) {
+			itemPtr = &item;
+			break;
+		}
+	}
+
+	// Create item if it does not exist
+	if (itemPtr == nullptr) {
+		Item tmp;
+		tmp.str.printf(key);
+		sectPtr->items.add(tmp);
+		itemPtr = &sectPtr->items.last();
+	}
+
+	return itemPtr;
 }
 
 } // namespace sfz

@@ -53,10 +53,10 @@ TEST_CASE("Basic IniParser tests", "[sfz::IniParser]")
 	ini1.setFloat("Section2", "fFloat1", 3.5f);
 	ini1.setInt("Section2", "iInt1", -23);
 
-	REQUIRE(ini1.getBool("Section1", "bBool1") == true);
-	REQUIRE(ini1.getBool("Section1", "bBool2") == false);
-	REQUIRE(ini1.getFloat("Section2", "fFloat1") == 3.5f);
-	REQUIRE(ini1.getInt("Section2", "iInt1") == -23);
+	REQUIRE(*ini1.getBool("Section1", "bBool1") == true);
+	REQUIRE(*ini1.getBool("Section1", "bBool2") == false);
+	REQUIRE(*ini1.getFloat("Section2", "fFloat1") == 3.5f);
+	REQUIRE(*ini1.getInt("Section2", "iInt1") == -23);
 
 	deleteFile(fpath);
 	REQUIRE(ini1.save());
@@ -64,10 +64,10 @@ TEST_CASE("Basic IniParser tests", "[sfz::IniParser]")
 	IniParser ini2(fpath);
 	REQUIRE(ini2.load());
 
-	REQUIRE(ini2.getBool("Section1", "bBool1"));
-	REQUIRE(!ini2.getBool("Section1", "bBool2"));
-	REQUIRE(ini2.getFloat("Section2", "fFloat1") == 3.5f);
-	REQUIRE(ini2.getInt("Section2", "iInt1") == -23);
+	REQUIRE(*ini2.getBool("Section1", "bBool1"));
+	REQUIRE(!*ini2.getBool("Section1", "bBool2"));
+	REQUIRE(*ini2.getFloat("Section2", "fFloat1") == 3.5f);
+	REQUIRE(*ini2.getInt("Section2", "iInt1") == -23);
 
 	ini1.setBool("Section1", "bBool1", true);
 	ini1.setBool("Section1", "bBool2", false);

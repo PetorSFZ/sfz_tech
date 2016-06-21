@@ -46,6 +46,16 @@ TEST_CASE("printf() & printfAppend()", "[sfz::StackString]")
 	
 }
 
+TEST_CASE("insertChars()", "[sfz::StackString]")
+{
+	StackString32 str;
+	const char* aStr = "1234567890123456789012345678901234567890";
+	str.insertChars(aStr, 31);
+	REQUIRE(str == "1234567890123456789012345678901");
+	str.insertChars(aStr, 4);
+	REQUIRE(str == "1234");
+}
+
 TEST_CASE("StackString comparison operators", "[sfz::StackString]")
 {
 	StackString str("aba");
