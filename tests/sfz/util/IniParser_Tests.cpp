@@ -100,12 +100,39 @@ third=4
 fifth=false
 )";
 
+	const char INPUT_INI_2[] = 
+R"(    pi   =  3.0    ;comment
+	e	=	3.0  ;'nother comment
+
+; longer comment	
+; longer comment 2	
+[section1]
+[section2] ; comment sect 2
+[section3]
+var=true
+)";
+
+	const char OUTPUT_INI_2[] = 
+R"(pi=3 ;comment
+e=3 ;'nother comment
+; longer comment
+; longer comment 2
+
+[section1]
+var2=false
+
+[section2] ; comment sect 2
+
+[section3]
+var=true
+)";
+
 	SECTION("First ini") {
 		auto path = appendBasePath("test_ini_1.ini");
 		const char* cpath = path.str();
 
 		deleteFile(cpath);
-		REQUIRE(writeBinaryFile(cpath, reinterpret_cast<const uint8_t*>(OUTPUT_INI_1), sizeof(OUTPUT_INI_1)));
+		REQUIRE(writeBinaryFile(cpath, reinterpret_cast<const uint8_t*>(INPUT_INI_1), sizeof(INPUT_INI_1)));
 		
 		IniParser ini(cpath);
 		REQUIRE(ini.load());
@@ -134,5 +161,29 @@ fifth=false
 
 		DynString output = readTextFile(cpath);
 		REQUIRE(output == OUTPUT_INI_1);
+		deleteFile(cpath);
+	}
+
+	SECTION("Second ini") {
+		auto path = appendBasePath("test_ini_2.ini");
+		const char* cpath = path.str();
+
+		deleteFile(cpath);
+		REQUIRE(writeBinaryFile(cpath, reinterpret_cast<const uint8_t*>(INPUT_INI_2), sizeof(INPUT_INI_2)));
+
+		IniParser ini(cpath);
+		REQUIRE(ini.load());
+
+		// Adding var2 = false
+		REQUIRE(ini.getBool("section1", "var2") == nullptr);
+		ini.setBool("section1", "var2", false);
+		REQUIRE(ini.getBool("section1", "var2") != nullptr);
+		REQUIRE(*ini.getBool("section1", "var2") == false);
+
+		REQUIRE(ini.save());
+
+		DynString output = readTextFile(cpath);
+		REQUIRE(output == OUTPUT_INI_2);
+		deleteFile(cpath);
 	}
 }
