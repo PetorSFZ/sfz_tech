@@ -141,7 +141,7 @@ bool IniParser::load() noexcept
 			}
 			Item comment;
 			comment.type = ItemType::COMMENT_OWN_ROW;
-			comment.str.insertChars(startPtr, (size_t)std::min(uint32_t(191), line.length));
+			comment.str.insertChars(startPtr + 1, (size_t)std::min(uint32_t(191), line.length - 1));
 			newSections.last().items.add(comment);
 			continue;
 		}
@@ -193,7 +193,7 @@ bool IniParser::load() noexcept
 			}
 
 			// Add optional comment if it exists
-			if (foundCommentStart) {\
+			if (foundCommentStart) {
 				uint32_t commentLength = line.length - index;
 
 				if (commentLength > 191) {
@@ -262,7 +262,7 @@ bool IniParser::load() noexcept
 				return false;
 			}
 
-			char firstValueChar = std::tolower(startPtr[index]);
+			char firstValueChar = (char)std::tolower(startPtr[index]);
 
 			// Check if value is bool
 			if (firstValueChar == 't' || firstValueChar == 'f') {
@@ -280,7 +280,7 @@ bool IniParser::load() noexcept
 			else {
 				item.type = ItemType::NUMBER;
 				item.i = std::atoi(startPtr + index);
-				item.f = std::atof(startPtr + index);
+				item.f = (float)std::atof(startPtr + index);
 				int floatToint = (int)item.f;
 				if (item.i != floatToint) {
 					printLoadError(mPath, line.lineNumber, "Invalid value.");
@@ -288,10 +288,34 @@ bool IniParser::load() noexcept
 				}
 			}
 			
-			// TODO: Check for comments
-
 			// Add item to current section
 			newSections.last().items.add(item);
+
+			// Find start of optional comment
+			bool foundCommentStart = false;
+			while (index < line.length) {
+				if (startPtr[index] == ';') {
+					foundCommentStart = true;
+					index += 1;
+					break;
+				}
+				index += 1;
+			}
+
+			// Add optional comment if it exists
+			if (foundCommentStart) {
+				uint32_t commentLength = line.length - index;
+
+				if (commentLength > 191) {
+					printLoadError(mPath, line.lineNumber, "Too long comment, please split into multiple rows.");
+					return false;
+				}
+
+				Item commentItem;
+				commentItem.type = ItemType::COMMENT_APPEND_PREVIOUS_ROW;
+				commentItem.str.insertChars(startPtr + index, commentLength);
+				newSections.last().items.add(commentItem);
+			}
 		}
 	}
 
@@ -309,18 +333,21 @@ bool IniParser::save() noexcept
 	uint32_t memoryReqs = 0;
 	for (auto& sect : mSections) {
 		memoryReqs += 200;
-		for (auto& item : sect.items) {
-			memoryReqs += 200;
-		}
+		memoryReqs += sect.items.size() * 200;
 	}
 
 	// Create string representation from parse tree
 	DynString str("", memoryReqs);
-	for (Section& section : mSections) {
+	for (uint32_t sectIndex = 0; sectIndex < mSections.size(); sectIndex++) {
+		Section& section = mSections[sectIndex];
 
 		// Print section header
 		if (section.name != "") {
-			str.printfAppend("[%s]\n", section.name.str);
+			str.printfAppend("[%s]", section.name.str);
+			if (section.items.size() >= 1 && section.items[0].type == ItemType::COMMENT_APPEND_PREVIOUS_ROW) {
+				str.printfAppend(" ;%s", section.items[0].str.str);
+			}
+			str.printfAppend("\n");
 		}
 
 		for (uint32_t i = 0; i < section.items.size(); i++) {
@@ -339,7 +366,7 @@ bool IniParser::save() noexcept
 				str.printfAppend("%s=%s", item.str, item.b ? "true" : "false");
 				break;
 			case ItemType::COMMENT_OWN_ROW:
-				str.printfAppend("; %s", item.str);
+				str.printfAppend(";%s", item.str);
 				break;
 			case ItemType::COMMENT_APPEND_PREVIOUS_ROW:
 				continue;
@@ -347,11 +374,15 @@ bool IniParser::save() noexcept
 
 			// Append comment if next item is comment to append
 			if ((i + 1) < section.items.size()) {
-				Item& nextItem = section.items[i];
+				Item& nextItem = section.items[i + 1];
 				if (nextItem.type == ItemType::COMMENT_APPEND_PREVIOUS_ROW) {
-					str.printfAppend(" ; %s", nextItem.str);
+					str.printfAppend(" ;%s", nextItem.str);
 				}
 			}
+			str.printfAppend("\n");
+		}
+
+		if ((sectIndex + 1) < mSections.size()) {
 			str.printfAppend("\n");
 		}
 	}

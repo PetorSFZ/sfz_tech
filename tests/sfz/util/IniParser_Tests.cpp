@@ -20,12 +20,9 @@
 #include "catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
+#include "sfz/math/MathHelpers.hpp"
 #include "sfz/util/IniParser.hpp"
 #include "sfz/util/IO.hpp"
-
-
-#include <iostream>
-
 
 using namespace sfz;
 
@@ -75,4 +72,67 @@ TEST_CASE("Basic IniParser tests", "[sfz::IniParser]")
 	ini1.setInt("Section2", "iInt1", -23);
 	
 	deleteFile(fpath);
+}
+
+TEST_CASE("IniParser comparing input and output", "[sfz::IniParser]")
+{
+	const char INPUT_INI_1[] =
+R"(; This is a comment
+
+[sect1]
+          first=       2 ; comment 2
+second=     true
+
+       [sect2] ; comment 3
+     third      =4.0
+fifth    =false
+)";
+
+	const char OUTPUT_INI_1[] =
+R"(; This is a comment
+
+[sect1]
+first=2 ; comment 2
+second=true
+
+[sect2] ; comment 3
+third=4
+fifth=false
+)";
+
+	SECTION("First ini") {
+		auto path = appendBasePath("test_ini_1.ini");
+		const char* cpath = path.str();
+
+		deleteFile(cpath);
+		REQUIRE(writeBinaryFile(cpath, reinterpret_cast<const uint8_t*>(OUTPUT_INI_1), sizeof(OUTPUT_INI_1)));
+		
+		IniParser ini(cpath);
+		REQUIRE(ini.load());
+
+		REQUIRE(ini.getInt("sect1", "first") != nullptr);
+		REQUIRE(*ini.getInt("sect1", "first") == 2);
+		REQUIRE(ini.getFloat("sect1", "first") != nullptr);
+		REQUIRE(approxEqual(*ini.getFloat("sect1", "first"), 2.0f));
+		REQUIRE(ini.getBool("sect1", "first") == nullptr);
+		REQUIRE(ini.getBool("sect1", "second") != nullptr);
+		REQUIRE(*ini.getBool("sect1", "second") == true);
+		REQUIRE(ini.getInt("sect1", "second") == nullptr);
+		REQUIRE(ini.getFloat("sect1", "second") == nullptr);
+
+		REQUIRE(ini.getInt("sect2", "third") != nullptr);
+		REQUIRE(*ini.getInt("sect2", "third") == 4);
+		REQUIRE(ini.getFloat("sect2", "third") != nullptr);
+		REQUIRE(approxEqual(*ini.getFloat("sect2", "third"), 4.0f));
+		REQUIRE(ini.getBool("sect2", "third") == nullptr);
+		REQUIRE(ini.getBool("sect2", "fifth") != nullptr);
+		REQUIRE(*ini.getBool("sect2", "fifth") == false);
+		REQUIRE(ini.getInt("sect2", "fifth") == nullptr);
+		REQUIRE(ini.getFloat("sect2", "fifth") == nullptr);
+
+		REQUIRE(ini.save());
+
+		DynString output = readTextFile(cpath);
+		REQUIRE(output == OUTPUT_INI_1);
+	}
 }
