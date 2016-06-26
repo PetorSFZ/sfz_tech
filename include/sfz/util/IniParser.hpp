@@ -34,62 +34,88 @@ using std::uint32_t;
 // IniParser class
 // ------------------------------------------------------------------------------------------------
 
+/// Class used to parse ini files.
 class IniParser final {
 public:
-	// Constants
-	// --------------------------------------------------------------------------------------------
-	
-	static constexpr int32_t DEFAULT_INT = 0;
-	static constexpr float DEFAULT_FLOAT = 0.0f;
-	static constexpr bool DEFAULT_BOOL = false;
-
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
 	IniParser() noexcept = default;
 	IniParser(const IniParser&) noexcept = default;
 	IniParser& operator= (const IniParser&) noexcept = default;
+	IniParser(IniParser&&) noexcept = default;
+	IniParser& operator= (IniParser&&) noexcept = default;
 	~IniParser() noexcept = default;
 
+	/// Creates a IniParser with the specified path. Will not load or parse anything until load()
+	/// is called.
 	IniParser(const char* path) noexcept;
 	
 	// Loading and saving to file functions
 	// --------------------------------------------------------------------------------------------
 
+	/// Loads and parses the ini file at the stored path.
 	bool load() noexcept;
+
+	/// Saves the content of this IniParser to the ini file at the stored path.
 	bool save() noexcept;
 
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
+	/// Returns a pointer to the internal value of the specified section and key. This pointer
+	/// should not be saved and should be immediately dereferenced. Returns nullpointer if value
+	/// does not exist or if it is not of int type.
 	const int32_t* getInt(const char* section, const char* key) const noexcept;
 
+	/// Returns a pointer to the internal value of the specified section and key. This pointer
+	/// should not be saved and should be immediately dereferenced. Returns nullpointer if value
+	/// does not exist or if it is not of float type.
 	const float* getFloat(const char* section, const char* key) const noexcept;
 
+	/// Returns a pointer to the internal value of the specified section and key. This pointer
+	/// should not be saved and should be immediately dereferenced. Returns nullpointer if value
+	/// does not exist or if it is not of bool type.
 	const bool* getBool(const char* section, const char* key) const noexcept;
 
 	// Setters
 	// --------------------------------------------------------------------------------------------
 
+	/// Sets the key in specified section to the given value. Creates the section and or key if
+	/// they do not already exist. Eventual previous values will be overwritten and the type of
+	/// the key might be altered.
 	void setInt(const char* section, const char* key, int32_t value) noexcept;
+
+	/// Sets the key in specified section to the given value. Creates the section and or key if
+	/// they do not already exist. Eventual previous values will be overwritten and the type of
+	/// the key might be altered.
 	void setFloat(const char* section, const char* key, float value) noexcept;
+
+	/// Sets the key in specified section to the given value. Creates the section and or key if
+	/// they do not already exist. Eventual previous values will be overwritten and the type of
+	/// the key might be altered.
 	void setBool(const char* section, const char* key, bool value) noexcept;
 
 	// Sanitizers
 	// --------------------------------------------------------------------------------------------
 
+	/// Sanitizing int getter. Ensures that the the item exists and is inside the specified
+	/// interval.
 	int32_t sanitizeInt(const char* section, const char* key,
-	                    int32_t defaultValue = DEFAULT_INT,
+	                    int32_t defaultValue = 0,
 	                    int32_t minValue = numeric_limits<int32_t>::min(),
 	                    int32_t maxValue = numeric_limits<int32_t>::max()) noexcept;
-
+	
+	/// Sanitizing float getter. Ensures that the the item exists and is inside the specified
+	/// interval.
 	float sanitizeFloat(const char* section, const char* key,
-	                    float defaultValue = DEFAULT_FLOAT,
+	                    float defaultValue = 0.0f,
 	                    float minValue = numeric_limits<float>::min(),
 	                    float maxValue = numeric_limits<float>::max()) noexcept;
 
+	/// Sanitizing bool getter. Ensures that the the item exists.
 	bool sanitizeBool(const char* section, const char* key,
-	                  bool defaultValue = DEFAULT_BOOL) noexcept;
+	                  bool defaultValue = false) noexcept;
 
 private:
 	// Private helper classes

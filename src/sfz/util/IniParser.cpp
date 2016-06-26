@@ -40,17 +40,6 @@ static void printLoadError(const DynString& path, uint32_t line, const char* mes
 	printErrorMessage("Failed to load \"%s\" at line %u: %s\n", path.str(), line, message);
 }
 
-static bool equalsIgnoreCase(const char* lhs, const char* rhs) noexcept
-{
-	const size_t MAX_NUM_ITERATIONS = 1000; // 1000 iterations should be enough here
-	for (size_t i = 0; i < MAX_NUM_ITERATIONS; i++) {
-		if (lhs[i] == '\0' && rhs[i] == '\0') break;
-		if (lhs[i] == '\0' || rhs[i] == '\0') return false;
-		if ((char)std::tolower(lhs[i]) != (char)std::tolower(rhs[i])) return false;
-	}
-	return true;
-}
-
 // IniParser: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 

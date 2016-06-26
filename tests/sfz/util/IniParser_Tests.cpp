@@ -74,6 +74,62 @@ TEST_CASE("Basic IniParser tests", "[sfz::IniParser]")
 	deleteFile(fpath);
 }
 
+TEST_CASE("IniParser sanitizer methods", "[sfz::IniParser]")
+{
+	auto filePath = appendBasePath(stupidFileName);
+	const char* fpath = filePath.str();
+	
+	deleteFile(fpath);
+	IniParser ini(fpath);
+
+	SECTION("sanitizeInt()") {
+
+		REQUIRE(ini.getInt("", "val1") == nullptr);
+		REQUIRE(ini.sanitizeInt("", "val1") == 0);
+		REQUIRE(ini.getInt("", "val1") != nullptr);
+		REQUIRE(*ini.getInt("", "val1") == 0);
+	
+		REQUIRE(ini.getInt("", "val2") == nullptr);
+		REQUIRE(ini.sanitizeInt("", "val2", 37) == 37);
+		REQUIRE(ini.getInt("", "val2") != nullptr);
+		REQUIRE(*ini.getInt("", "val2") == 37);
+	
+		REQUIRE(ini.sanitizeInt("", "val2", 0, 0, 36) == 36);
+		REQUIRE(*ini.getInt("", "val2") == 36);
+		REQUIRE(ini.sanitizeInt("", "val2", 0, 38, 39) == 38);
+		REQUIRE(*ini.getInt("", "val2") == 38);
+	}
+	SECTION("sanitizeFloat()") {
+
+		REQUIRE(ini.getFloat("", "val1") == nullptr);
+		REQUIRE(approxEqual(ini.sanitizeFloat("", "val1"), 0.0f));
+		REQUIRE(ini.getFloat("", "val1") != nullptr);
+		REQUIRE(approxEqual(*ini.getFloat("", "val1"), 0.0f));
+
+		REQUIRE(ini.getFloat("", "val2") == nullptr);
+		REQUIRE(approxEqual(ini.sanitizeFloat("", "val2", 37.0f), 37.0f));
+		REQUIRE(ini.getFloat("", "val2") != nullptr);
+		REQUIRE(approxEqual(*ini.getFloat("", "val2"), 37.0f));
+
+		REQUIRE(approxEqual(ini.sanitizeFloat("", "val2", 0.0f, 0.0f, 36.0f), 36.0f));
+		REQUIRE(approxEqual(*ini.getFloat("", "val2"), 36.0f));
+		REQUIRE(approxEqual(ini.sanitizeFloat("", "val2", 0.0f, 38.0f, 39.0f), 38.0f));
+		REQUIRE(approxEqual(*ini.getFloat("", "val2"), 38.0f));
+	}
+	SECTION("sanitizeBool()") {
+
+		REQUIRE(ini.getBool("", "val1") == nullptr);
+		REQUIRE(ini.sanitizeBool("", "val1") == false);
+		REQUIRE(ini.getBool("", "val1") != nullptr);
+		REQUIRE(*ini.getBool("", "val1") == false);
+
+		REQUIRE(ini.getBool("", "val2") == nullptr);
+		REQUIRE(ini.sanitizeBool("", "val2", true) == true);
+		REQUIRE(ini.getBool("", "val2") != nullptr);
+		REQUIRE(*ini.getBool("", "val2") == true);
+	}
+}
+
 TEST_CASE("IniParser comparing input and output", "[sfz::IniParser]")
 {
 	const char INPUT_INI_1[] =
