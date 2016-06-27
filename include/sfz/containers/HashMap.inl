@@ -144,14 +144,14 @@ void HashMap<K,V,Hash,KeyEqual,Allocator>::put(const K& key, V&& value) noexcept
 
 	// If map contains key just replace value and return
 	if (elementFound) {
-		valuesPtr()[index] = value;
+		valuesPtr()[index] = std::move(value);
 		return;
 	}
 
 	// Otherwise insert info, key and value
 	setElementInfo(firstFreeSlot, ELEMENT_INFO_OCCUPIED);
 	new (keysPtr() + firstFreeSlot) K(key);
-	new (valuesPtr() + firstFreeSlot) V(value);
+	new (valuesPtr() + firstFreeSlot) V(std::move(value));
 
 	mSize += 1;
 	if (isPlaceholder) mPlaceholders -= 1;
