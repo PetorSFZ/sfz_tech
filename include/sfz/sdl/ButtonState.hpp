@@ -18,9 +18,20 @@
 
 #pragma once
 
-#include "sfz/sdl/ButtonState.hpp"
-#include "sfz/sdl/GameController.hpp"
-#include "sfz/sdl/Mouse.hpp"
-#include "sfz/sdl/Session.hpp"
-#include "sfz/sdl/SoundEffect.hpp"
-#include "sfz/sdl/Window.hpp"
+#include <cstdint>
+
+namespace sfz {
+
+namespace sdl {
+
+using std::uint8_t;
+
+enum class ButtonState : uint8_t {
+	NOT_PRESSED,
+	DOWN,
+	HELD,
+	UP
+};
+
+} // namespace sdl
+} // namespace sfz
