@@ -110,6 +110,13 @@ set(SOURCE_MEMORY_FILES
 	${INCLUDE_DIR}/sfz/memory/SmartPointers.inl)
 source_group(sfz_memory FILES ${SOURCE_MEMORY_FILES})
 
+set(SOURCE_SCREENS_FILES
+	${INCLUDE_DIR}/sfz/Screens.hpp
+	${INCLUDE_DIR}/sfz/screens/BaseScreen.hpp
+	${INCLUDE_DIR}/sfz/screens/GameLoop.hpp
+	 ${SOURCE_DIR}/sfz/screens/GameLoop.cpp)
+source_group(sfz_screens FILES ${SOURCE_SCREENS_FILES})
+
 set(SOURCE_SDL_FILES
 	${INCLUDE_DIR}/sfz/SDL.hpp
 	${INCLUDE_DIR}/sfz/sdl/ButtonState.hpp
@@ -143,6 +150,7 @@ set(SOURCE_ALL_FILES
 	${SOURCE_GEOMETRY_FILES}
 	${SOURCE_MATH_FILES}
 	${SOURCE_MEMORY_FILES}
+	${SOURCE_SCREENS_FILES}
 	${SOURCE_SDL_FILES}
 	${SOURCE_UTIL_FILES})
 
