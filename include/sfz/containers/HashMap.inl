@@ -292,7 +292,7 @@ void HashMap<K,V,Hash,KeyEqual,Allocator>::clear() noexcept
 	if (mSize == 0) return;
 
 	// Call destructor for all active keys and values if they are not trivially destructible
-	if (!std::is_trivially_destructible<K>::value && !std::is_trivially_destructible<K>::value) {
+	if (!std::is_trivially_destructible<K>::value && !std::is_trivially_destructible<V>::value) {
 		K* keyPtr = keysPtr();
 		V* valuePtr = valuesPtr();
 		for (size_t i = 0; i < mCapacity; ++i) {
