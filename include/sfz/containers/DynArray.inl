@@ -111,7 +111,7 @@ void DynArray<T, Allocator>::add(const T& value) noexcept
 		uint64_t newCapacity = uint64_t(CAPACITY_INCREASE_FACTOR * mCapacity);
 		if (newCapacity == 0) newCapacity = DEFAULT_INITIAL_CAPACITY;
 		if (newCapacity > MAX_CAPACITY) newCapacity = MAX_CAPACITY;
-		// TODO: Assert mCapacity < newCapacity
+		sfz_assert_debug(mCapacity < newCapacity);
 		setCapacity(uint32_t(newCapacity));
 	}
 	new (mDataPtr + mSize) T(value);
@@ -125,7 +125,7 @@ void DynArray<T, Allocator>::add(T&& value) noexcept
 		uint64_t newCapacity = uint64_t(CAPACITY_INCREASE_FACTOR * mCapacity);
 		if (newCapacity == 0) newCapacity = DEFAULT_INITIAL_CAPACITY;
 		if (newCapacity > MAX_CAPACITY) newCapacity = MAX_CAPACITY;
-		// TODO: Assert mCapacity < newCapacity
+		sfz_assert_debug(mCapacity < newCapacity);
 		setCapacity(uint32_t(newCapacity));
 	}
 	new (mDataPtr + mSize) T(std::move(value));
@@ -135,13 +135,15 @@ void DynArray<T, Allocator>::add(T&& value) noexcept
 template<typename T, typename Allocator>
 void DynArray<T, Allocator>::add(const T* arrayPtr, uint32_t numElements) noexcept
 {
-	// TODO: Assert !(mDataPtr <= arrayPtr && arrayPtr < mDataPtr + mCapacity)
+	// Assert that we do not attempt to add elements from this array to this array
+	sfz_assert_debug(!(mDataPtr <= arrayPtr && arrayPtr < mDataPtr + mCapacity));
+
 	if (mCapacity < mSize + numElements) {
 		uint64_t newCapacity = uint64_t(CAPACITY_INCREASE_FACTOR * (uint64_t(mSize) + uint64_t(numElements)));
 		if (newCapacity > MAX_CAPACITY) {
 			newCapacity = MAX_CAPACITY;
 		}
-		// TODO: Assert mCapacity < newCapacity
+		sfz_assert_debug(mCapacity < newCapacity);
 		setCapacity(uint32_t(newCapacity));
 	}
 
@@ -162,12 +164,12 @@ void DynArray<T, Allocator>::add(const DynArray& elements) noexcept
 template<typename T, typename Allocator>
 void DynArray<T, Allocator>::insert(uint32_t position, const T& value) noexcept
 {
-	// TODO: assert position <= mSize
+	sfz_assert_debug(position <= mSize);
 	if (mSize >= mCapacity) {
 		uint64_t newCapacity = uint64_t(CAPACITY_INCREASE_FACTOR * mCapacity);
 		if (newCapacity == 0) newCapacity = DEFAULT_INITIAL_CAPACITY;
 		if (newCapacity > MAX_CAPACITY) newCapacity = MAX_CAPACITY;
-		// TODO: Assert mCapacity < newCapacity
+		sfz_assert_debug(mCapacity < newCapacity);
 		setCapacity(uint32_t(newCapacity));
 	}
 
@@ -182,12 +184,12 @@ void DynArray<T, Allocator>::insert(uint32_t position, const T& value) noexcept
 template<typename T, typename Allocator>
 void DynArray<T, Allocator>::insert(uint32_t position, T&& value) noexcept
 {
-	// TODO: assert position <= mSize
+	sfz_assert_debug(position <= mSize);
 	if (mSize >= mCapacity) {
 		uint64_t newCapacity = uint64_t(CAPACITY_INCREASE_FACTOR * mCapacity);
 		if (newCapacity == 0) newCapacity = DEFAULT_INITIAL_CAPACITY;
 		if (newCapacity > MAX_CAPACITY) newCapacity = MAX_CAPACITY;
-		// TODO: Assert mCapacity < newCapacity
+		sfz_assert_debug(mCapacity < newCapacity);
 		setCapacity(uint32_t(newCapacity));
 	}
 
@@ -202,11 +204,11 @@ void DynArray<T, Allocator>::insert(uint32_t position, T&& value) noexcept
 template<typename T, typename Allocator>
 void DynArray<T, Allocator>::insert(uint32_t position, const T* arrayPtr, uint32_t numElements) noexcept
 {
-	// TODO: assert position <= mSize
+	sfz_assert_debug(position <= mSize);
 	if (mCapacity < mSize + numElements) {
 		uint64_t newCapacity = uint64_t(CAPACITY_INCREASE_FACTOR * (uint64_t(mSize) + uint64_t(numElements)));
 		if (newCapacity > MAX_CAPACITY) newCapacity = MAX_CAPACITY;
-		// TODO: Assert mCapacity < newCapacity
+		sfz_assert_debug(mCapacity < newCapacity);
 		setCapacity(uint32_t(newCapacity));
 	}
 
@@ -272,7 +274,6 @@ int64_t DynArray<T, Allocator>::findIndex(F func) const noexcept
 	return -1;
 }
 
-
 template<typename T, typename Allocator>
 void DynArray<T, Allocator>::swap(DynArray& other) noexcept
 {
@@ -299,7 +300,7 @@ void DynArray<T, Allocator>::setCapacity(uint32_t capacity) noexcept
 		if (capacity == 0) return;
 		mCapacity = capacity;
 		mDataPtr = static_cast<T*>(Allocator::allocate(mCapacity * sizeof(T), ALIGNMENT));
-		// TODO: Handle error case where allocation failed
+		sfz_assert_debug(mDataPtr != nullptr);
 		return;
 	}
 
@@ -310,7 +311,7 @@ void DynArray<T, Allocator>::setCapacity(uint32_t capacity) noexcept
 
 	mCapacity = capacity;
 	mDataPtr = static_cast<T*>(Allocator::reallocate(mDataPtr, mCapacity * sizeof(T), ALIGNMENT));
-	// TODO: Handle error case where reallocation failed
+	sfz_assert_debug(mDataPtr != nullptr);
 }
 
 template<typename T, typename Allocator>
