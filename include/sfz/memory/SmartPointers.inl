@@ -152,8 +152,8 @@ template<typename T, typename Allocator>
 SharedPtr<T, Allocator>::~SharedPtr() noexcept
 {
 	if (mPtr == nullptr) return;
-	(*mRefCountPtr)--;
-	if ((*mRefCountPtr) == 0) {
+	size_t count = mRefCountPtr->fetch_sub(1) - 1;
+	if (count == 0) {
 		sfz_delete<T, Allocator>(mPtr);
 		sfz_delete<std::atomic_size_t, Allocator>(mRefCountPtr);
 	}
