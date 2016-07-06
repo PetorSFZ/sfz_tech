@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
-
 project("sfzCore")
 
 # Sets build type to release if no build type is specified in a single-configuration generator.
@@ -25,6 +24,7 @@ endif()
 # Directories
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(INCLUDE_GL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include_gl)
 set(TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
 set(CMAKE_MODULES ${CMAKE_CURRENT_LIST_DIR}/cmake)
@@ -39,11 +39,35 @@ find_package(SDL2_mixer REQUIRED) # ${SDL2_MIXER_INCLUDE_DIRS}, ${SDL2_MIXER_LIB
 # Catch
 add_subdirectory(${EXTERNALS_DIR}/catch)
 
-# Include directories
-include_directories(
+# OpenGL only libraries
+if(SFZ_CORE_OPENGL)
+
+# GLEW (GLEW_INCLUDE_DIRS and GLEW_LIBRARIES)
+add_subdirectory(${EXTERNALS_DIR}/glew)
+
+# Links OpenGL
+find_package(OpenGL REQUIRED) # ${OPENGL_INCLUDE_DIR}, ${OPENGL_LIBRARIES}
+
+endif()
+
+# Accumulated variable with all includes to forward to caller
+set(FORWARD_INCLUDE_DIRS
 	${INCLUDE_DIR}
 	${SDL2_INCLUDE_DIR}
-	${SDL2_MIXER_INCLUDE_DIRS}
+	${SDL2_MIXER_INCLUDE_DIRS})
+if(SFZ_CORE_OPENGL)
+set(FORWARD_INCLUDE_DIRS
+	${FORWARD_INCLUDE_DIRS}
+	${INCLUDE_GL_DIR}
+	${GLEW_INCLUDE_DIRS}
+	${OPENGL_INCLUDE_DIR})
+endif()
+
+# Include variable returned to parent
+
+# Include directories
+include_directories(
+	${FORWARD_INCLUDE_DIRS}
 	${CATCH_INCLUDE_DIRS}
 )
 
@@ -86,6 +110,13 @@ set(SOURCE_GEOMETRY_FILES
 	${INCLUDE_DIR}/sfz/geometry/ViewFrustum.hpp
 	 ${SOURCE_DIR}/sfz/geometry/ViewFrustum.cpp)
 source_group(sfz_geometry FILES ${SOURCE_GEOMETRY_FILES})
+
+if(SFZ_CORE_OPENGL)
+set(SOURCE_GL_FILES
+	${INCLUDE_GL_DIR}/sfz/GL.hpp
+	${INCLUDE_GL_DIR}/sfz/gl/IncludeOpenGL.hpp)
+source_group(sfz_gl FILES ${SOURCE_GL_FILES})
+endif()
 
 set(SOURCE_MATH_FILES
 	${INCLUDE_DIR}/sfz/Math.hpp
@@ -148,6 +179,7 @@ set(SOURCE_ALL_FILES
 	${SOURCE_ROOT_FILES}
 	${SOURCE_CONTAINERS_FILES}
 	${SOURCE_GEOMETRY_FILES}
+	${SOURCE_GL_FILES}
 	${SOURCE_MATH_FILES}
 	${SOURCE_MEMORY_FILES}
 	${SOURCE_SCREENS_FILES}
@@ -165,19 +197,32 @@ target_link_libraries(
 	${SDL2_MIXER_LIBRARIES}
 )
 
-# Variables for linking library
+# Linking OpenGL only libraries
+if(SFZ_CORE_OPENGL)
+target_link_libraries(
+	sfzCoreLib
+
+	${GLEW_LIBRARIES}
+	${OPENGL_LIBRARIES}
+)
+endif()
+
+# Variables returned to parent
 set(SFZ_CORE_INCLUDE_DIRS
-	${INCLUDE_DIR}
-	${SDL2_INCLUDE_DIR}
-	${SDL2_MIXER_INCLUDE_DIRS}
-#	${TINYOBJLOADER_INCLUDE_DIRS}
+	${FORWARD_INCLUDE_DIRS}
 	PARENT_SCOPE)
 set(SFZ_CORE_LIBRARIES
 	sfzCoreLib
 	${SDL2_LIBRARY}
 	${SDL2_MIXER_LIBRARIES}
-#	${TINYOBJLOADER_LIBRARIES}
 	PARENT_SCOPE)
+if(SFZ_CORE_OPENGL)
+set(SFZ_CORE_LIBRARIES
+	${SFZ_CORE_LIBRARIES}
+	${GLEW_LIBRARIES}
+	${OPENGL_LIBRARIES}
+	PARENT_SCOPE)
+endif()
 
 # Tests
 if(SFZ_CORE_BUILD_TESTS)
