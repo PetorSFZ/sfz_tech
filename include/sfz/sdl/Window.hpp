@@ -77,10 +77,11 @@ public:
 	// Constructors and destructors
 	// --------------------------------------------------------------------------------------------
 
-	Window() noexcept = delete;
-	Window(const Window&) noexcept = delete;
-	Window& operator= (const Window&) noexcept = delete;
+	// Copying not allowed
+	Window(const Window&) = delete;
+	Window& operator= (const Window&) = delete;
 
+	Window() noexcept = default;
 	Window(Window&& other) noexcept;
 	Window& operator= (Window&& other) noexcept;
 

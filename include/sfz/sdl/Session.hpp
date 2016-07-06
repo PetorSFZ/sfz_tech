@@ -66,10 +66,11 @@ public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	Session() noexcept = delete;
-	Session(const Session&) noexcept = delete;
-	Session& operator= (const Session&) noexcept = delete;
+	// Copying not allowed
+	Session(const Session&) = delete;
+	Session& operator= (const Session&) = delete;
 
+	Session() noexcept = default;
 	Session(Session&& other) noexcept;
 	Session& operator= (Session&& other) noexcept;
 
