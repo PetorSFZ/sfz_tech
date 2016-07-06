@@ -114,6 +114,8 @@ source_group(sfz_geometry FILES ${SOURCE_GEOMETRY_FILES})
 if(SFZ_CORE_OPENGL)
 set(SOURCE_GL_FILES
 	${INCLUDE_GL_DIR}/sfz/GL.hpp
+	${INCLUDE_GL_DIR}/sfz/gl/Context.hpp
+	    ${SOURCE_DIR}/sfz/gl/Context.cpp
 	${INCLUDE_GL_DIR}/sfz/gl/Framebuffer.hpp
 	    ${SOURCE_DIR}/sfz/gl/Framebuffer.cpp
 	${INCLUDE_GL_DIR}/sfz/gl/IncludeOpenGL.hpp)
