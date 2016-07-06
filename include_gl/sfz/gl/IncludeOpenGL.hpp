@@ -18,6 +18,9 @@
 
 #pragma once
 
+// This header is used to include OpenGL and GLEW into a file. It is not meant to be included in
+// headers, only compilation units (.cpp).
+
 // GLEW
 #include <GL/glew.h>
 
