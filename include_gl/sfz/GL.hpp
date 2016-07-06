@@ -18,4 +18,6 @@
 
 #pragma once
 
+#include "sfz/gl/Context.hpp"
 #include "sfz/gl/Framebuffer.hpp"
+#include "sfz/gl/Program.hpp"

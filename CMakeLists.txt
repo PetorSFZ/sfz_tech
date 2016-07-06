@@ -118,7 +118,9 @@ set(SOURCE_GL_FILES
 	    ${SOURCE_DIR}/sfz/gl/Context.cpp
 	${INCLUDE_GL_DIR}/sfz/gl/Framebuffer.hpp
 	    ${SOURCE_DIR}/sfz/gl/Framebuffer.cpp
-	${INCLUDE_GL_DIR}/sfz/gl/IncludeOpenGL.hpp)
+	${INCLUDE_GL_DIR}/sfz/gl/IncludeOpenGL.hpp
+	${INCLUDE_GL_DIR}/sfz/gl/Program.hpp
+	    ${SOURCE_DIR}/sfz/gl/Program.cpp)
 source_group(sfz_gl FILES ${SOURCE_GL_FILES})
 endif()
 
