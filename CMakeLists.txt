@@ -43,6 +43,7 @@ add_subdirectory(${EXTERNALS_DIR}/catch)
 if(SFZ_CORE_OPENGL)
 
 # GLEW (GLEW_INCLUDE_DIRS and GLEW_LIBRARIES)
+add_definitions(-DGLEW_STATIC)
 add_subdirectory(${EXTERNALS_DIR}/glew)
 
 # Links OpenGL
