@@ -286,3 +286,23 @@ TEST_CASE("HashMap operator[]", "[sfz::HashMap]")
 		}
 	}
 }
+
+TEST_CASE("Empty HashMap", "[sfz::HashMap]")
+{
+	HashMap<int,int> m;
+	const HashMap<int,int> cm;
+
+	SECTION("Iterating") {
+		int times = 0;
+		for (HashMap<int,int>::KeyValuePair pair : m) {
+			times += 1;
+		}
+		REQUIRE(times == 0);
+
+		int ctimes = 0;
+		for (HashMap<int, int>::ConstKeyValuePair pair : cm) {
+			ctimes += 1;
+		}
+		REQUIRE(ctimes == 0);
+	}
+}

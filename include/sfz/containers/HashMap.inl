@@ -441,6 +441,7 @@ bool HashMap<K,V,Hash,KeyEqual,Allocator>::ConstIterator::operator!= (const Cons
 template<typename K, typename V, typename Hash, typename KeyEqual, typename Allocator>
 typename HashMap<K,V,Hash,KeyEqual,Allocator>::Iterator HashMap<K,V,Hash,KeyEqual,Allocator>::begin() noexcept
 {
+	if (this->size() == 0) return Iterator(*this, uint32_t(~0));
 	Iterator it(*this, 0);
 	// Unless there happens to be an element in slot 0 we increment the iterator to find it
 	if (elementInfo(uint32_t(0)) != ELEMENT_INFO_OCCUPIED) {
@@ -458,6 +459,7 @@ typename HashMap<K,V,Hash,KeyEqual,Allocator>::ConstIterator HashMap<K,V,Hash,Ke
 template<typename K, typename V, typename Hash, typename KeyEqual, typename Allocator>
 typename HashMap<K,V,Hash,KeyEqual,Allocator>::ConstIterator HashMap<K,V,Hash,KeyEqual,Allocator>::cbegin() const noexcept
 {
+	if (this->size() == 0) return ConstIterator(*this, uint32_t(~0));
 	ConstIterator it(*this, 0);
 	// Unless there happens to be an element in slot 0 we increment the iterator to find it
 	if (elementInfo(uint32_t(0)) != ELEMENT_INFO_OCCUPIED) {
