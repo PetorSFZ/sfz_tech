@@ -159,9 +159,7 @@ Program Program::postProcessFromSource(const char* postProcessSource) noexcept
 	Program tmp;
 	tmp = Program::fromSource(POST_PROCESS_VERTEX_SHADER_SOURCE, postProcessSource, [](uint32_t shaderProgram) {
 		glBindAttribLocation(shaderProgram, 0, "inPosition");
-		glBindAttribLocation(shaderProgram, 1, "inNormal");
-		glBindAttribLocation(shaderProgram, 2, "inUV");
-		glBindAttribLocation(shaderProgram, 3, "inMaterialID");
+		glBindAttribLocation(shaderProgram, 1, "inUV");
 	});
 	tmp.mIsPostProcess = true;
 	return std::move(tmp);

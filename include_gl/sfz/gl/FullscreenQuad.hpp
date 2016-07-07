@@ -18,8 +18,35 @@
 
 #pragma once
 
-#include "sfz/gl/Context.hpp"
-#include "sfz/gl/Framebuffer.hpp"
-#include "sfz/gl/FullscreenQuad.hpp"
-#include "sfz/gl/GLUtils.hpp"
-#include "sfz/gl/Program.hpp"
+#include <cstdint>
+
+namespace sfz {
+
+namespace gl {
+
+using std::uint32_t;
+
+/// A FullscreenQuad used to run the standard post-process shader in gl::Program
+class FullscreenQuad final {
+public:
+
+	// Copying not allowed
+	FullscreenQuad(const FullscreenQuad&) = delete;
+	FullscreenQuad& operator= (const FullscreenQuad&) = delete;
+
+	FullscreenQuad() noexcept;
+	FullscreenQuad(FullscreenQuad&& other) noexcept;
+	FullscreenQuad& operator= (FullscreenQuad&& other) noexcept;
+	~FullscreenQuad() noexcept;
+
+	void render() noexcept;
+
+private:
+	uint32_t mVAO = 0;
+	uint32_t mPosBuffer = 0;
+	uint32_t mUVBuffer = 0;
+	uint32_t mIndexBuffer = 0;
+};
+
+} // namespace gl
+} // namespace sfz
