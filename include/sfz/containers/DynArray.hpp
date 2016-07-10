@@ -20,6 +20,7 @@
 
 #include <cstdint>
 #include <cstring> // std::memcpy()
+#include <new> // Placement new
 #include <type_traits>
 
 #include "sfz/Assert.hpp"

@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <cstring>
 #include <functional>
+#include <new> // Placement new
 
 #include "sfz/Assert.hpp"
 #include "sfz/memory/Allocators.hpp"
