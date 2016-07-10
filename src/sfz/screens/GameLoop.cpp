@@ -68,7 +68,7 @@ static void initControllers(HashMap<int32_t, sdl::GameController>& controllers) 
 
 void runGameLoop(sdl::Window& window, SharedPtr<BaseScreen> currentScreen)
 {
-	UpdateState state{window};
+	UpdateState state(window);
 
 	// Initialize controllers
 	initControllers(state.controllers);
@@ -164,8 +164,6 @@ void runGameLoop(sdl::Window& window, SharedPtr<BaseScreen> currentScreen)
 
 		// Render current screen
 		currentScreen->render(state);
-
-		SDL_GL_SwapWindow(window.ptr());
 	}
 }
 
