@@ -122,4 +122,12 @@ TEST_CASE("readTextFile()", "[sfz::IO]")
 	REQUIRE(fileStr == strToWrite);
 
 	REQUIRE(sfz::deleteFile(fpath));
+
+	// Empty file
+	REQUIRE(sfz::writeBinaryFile(fpath, (const uint8_t*)"", 0));
+	REQUIRE(sfz::fileExists(fpath));
+	sfz::DynString emptyStr = sfz::readTextFile(fpath);
+	REQUIRE(emptyStr.size() == 0);
+	REQUIRE(emptyStr == "");
+	REQUIRE(sfz::deleteFile(fpath));
 }

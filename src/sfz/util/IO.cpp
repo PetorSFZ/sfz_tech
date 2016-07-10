@@ -276,10 +276,8 @@ DynArray<uint8_t> readBinaryFile(const char* path) noexcept
 DynString readTextFile(const char* path) noexcept
 {
 	DynArray<char> strData = readFileInternal<char>(path, false);
-	if (strData[strData.size()-1] != '\0') {
-		strData.ensureCapacity(strData.size() + 1);
-		strData.setSize(strData.size() + 1);
-		strData[strData.size()-1] = '\0';
+	if (strData.size() == 0 || strData[strData.size() - 1] != '\0') {
+		strData.add('\0');
 	}
 
 	DynString tmp;
