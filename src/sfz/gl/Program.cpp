@@ -59,58 +59,6 @@ static const char* POST_PROCESS_VERTEX_SHADER_SOURCE = R"(
 // Program: Constructor functions
 // ------------------------------------------------------------------------------------------------
 
-Program Program::fromSource(const char* vertexSrc, const char* geometrySrc, const char* fragmentSrc,
-                            void(*bindAttribFragFunc)(uint32_t shaderProgram)) noexcept
-{
-	GLuint vertexShader = compileShader(vertexSrc, GL_VERTEX_SHADER);
-	if (vertexShader == 0) {
-		sfz::printErrorMessage("Couldn't compile vertex shader.");
-		return Program();
-	}
-
-	GLuint geometryShader = compileShader(geometrySrc, GL_GEOMETRY_SHADER);
-	if (geometryShader == 0) {
-		sfz::printErrorMessage("Couldn't compile geometry shader.");
-		return Program();
-	}
-	
-	GLuint fragmentShader = compileShader(fragmentSrc, GL_FRAGMENT_SHADER);
-	if (fragmentShader == 0) {
-		sfz::printErrorMessage("Couldn't compile fragment shader.");
-		return Program();
-	}
-
-	GLuint shaderProgram = glCreateProgram();
-	
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, geometryShader);
-	glAttachShader(shaderProgram, fragmentShader);
-
-	// glBindAttribLocation() & glBindFragDataLocation()
-	if (bindAttribFragFunc != nullptr) bindAttribFragFunc(shaderProgram);
-
-	bool linkSuccess = linkProgram(shaderProgram);
-
-	glDetachShader(shaderProgram, vertexShader);
-	glDetachShader(shaderProgram, geometryShader);
-	glDetachShader(shaderProgram, fragmentShader);
-
-	glDeleteShader(vertexShader);
-	glDeleteShader(geometryShader);
-	glDeleteShader(fragmentShader);
-
-	if (!linkSuccess) {
-		glDeleteProgram(shaderProgram);
-		sfz::printErrorMessage("Couldn't link shader program.");
-		return Program();
-	}
-	
-	Program temp;
-	temp.mHandle = shaderProgram;
-	temp.mBindAttribFragFunc = bindAttribFragFunc;
-	return std::move(temp);
-}
-
 Program Program::fromSource(const char* vertexSrc, const char* fragmentSrc,
                             void(*bindAttribFragFunc)(uint32_t shaderProgram)) noexcept
 {
@@ -165,36 +113,32 @@ Program Program::postProcessFromSource(const char* postProcessSource) noexcept
 	return std::move(tmp);
 }
 
-
-Program Program::fromFile(const char* vertexPath, const char* geometryPath, const char* fragmentPath,
+Program Program::fromFile(const char* basePath, const char* vertexFile, const char* fragmentFile,
                           void(*bindAttribFragFunc)(uint32_t shaderProgram)) noexcept
 {
+	size_t basePathLen = std::strlen(basePath);
+	size_t vertexFileLen = std::strlen(vertexFile);
+	size_t fragmentFileLen = std::strlen(fragmentFile);
+
 	Program tmp;
-	tmp.mVertexPath = DynString(vertexPath);
-	tmp.mGeometryPath = DynString(geometryPath);
-	tmp.mFragmentPath = DynString(fragmentPath);
+	tmp.mVertexPath.setCapacity(uint32_t(basePathLen + vertexFileLen + 1));
+	tmp.mVertexPath.printf("%s%s", basePath, vertexFile);
+	tmp.mFragmentPath.setCapacity(uint32_t(basePathLen + fragmentFileLen + 1));
+	tmp.mFragmentPath.printf("%s%s", basePath, fragmentFile);
 	tmp.mBindAttribFragFunc = bindAttribFragFunc;
 	tmp.reload();
 	tmp.mWasReloaded = false;
 	return tmp;
 }
 
-Program Program::fromFile(const char* vertexPath, const char* fragmentPath,
-                          void(*bindAttribFragFunc)(uint32_t shaderProgram)) noexcept
+Program Program::postProcessFromFile(const char* basePath, const char* postProcessFile) noexcept
 {
-	Program tmp;
-	tmp.mVertexPath = DynString(vertexPath);
-	tmp.mFragmentPath = DynString(fragmentPath);
-	tmp.mBindAttribFragFunc = bindAttribFragFunc;
-	tmp.reload();
-	tmp.mWasReloaded = false;
-	return tmp;
-}
+	size_t basePathLen = std::strlen(basePath);
+	size_t postProcessFileLen = std::strlen(postProcessFile);
 
-Program Program::postProcessFromFile(const char* postProcessPath) noexcept
-{
 	Program tmp;
-	tmp.mFragmentPath = DynString(postProcessPath);
+	tmp.mFragmentPath.setCapacity(uint32_t(basePathLen + postProcessFileLen + 1));
+	tmp.mFragmentPath.printf("%s%s", basePath, postProcessFile);
 	tmp.mIsPostProcess = true;
 	tmp.reload();
 	tmp.mWasReloaded = false;
@@ -207,7 +151,6 @@ Program Program::postProcessFromFile(const char* postProcessPath) noexcept
 bool Program::reload() noexcept
 {
 	const DynString vertexSrc = sfz::readTextFile(mVertexPath.str());
-	const DynString geometrySrc = sfz::readTextFile(mGeometryPath.str());
 	const DynString fragmentSrc = sfz::readTextFile(mFragmentPath.str());
 
 	if (mIsPostProcess && (fragmentSrc.size() > 0)) {
@@ -216,19 +159,6 @@ bool Program::reload() noexcept
 
 		tmp.mFragmentPath = this->mFragmentPath;
 		tmp.mIsPostProcess = true;
-		tmp.mWasReloaded = true;
-		*this = std::move(tmp);
-		return true;
-	}
-	else if ((vertexSrc.size() > 0) && (geometrySrc.size() > 0) && (fragmentSrc.size() > 0)) {
-		Program tmp = Program::fromSource(vertexSrc.str(), geometrySrc.str(), fragmentSrc.str(),
-		                                  mBindAttribFragFunc);
-		if (!tmp.isValid()) return false;
-
-		tmp.mVertexPath = this->mVertexPath;
-		tmp.mGeometryPath = this->mGeometryPath;
-		tmp.mFragmentPath = this->mFragmentPath;
-		tmp.mBindAttribFragFunc = this->mBindAttribFragFunc;
 		tmp.mWasReloaded = true;
 		*this = std::move(tmp);
 		return true;
@@ -248,7 +178,6 @@ bool Program::reload() noexcept
 	return false;
 }
 
-
 // Program: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
@@ -256,7 +185,6 @@ Program::Program(Program&& other) noexcept
 {
 	std::swap(this->mHandle, other.mHandle);
 	std::swap(this->mVertexPath, other.mVertexPath);
-	std::swap(this->mGeometryPath, other.mGeometryPath);
 	std::swap(this->mFragmentPath, other.mFragmentPath);
 	std::swap(this->mIsPostProcess, other.mIsPostProcess);
 	std::swap(this->mWasReloaded, other.mWasReloaded);
@@ -267,7 +195,6 @@ Program& Program::operator= (Program&& other) noexcept
 {
 	std::swap(this->mHandle, other.mHandle);
 	std::swap(this->mVertexPath, other.mVertexPath);
-	std::swap(this->mGeometryPath, other.mGeometryPath);
 	std::swap(this->mFragmentPath, other.mFragmentPath);
 	std::swap(this->mIsPostProcess, other.mIsPostProcess);
 	std::swap(this->mWasReloaded, other.mWasReloaded);

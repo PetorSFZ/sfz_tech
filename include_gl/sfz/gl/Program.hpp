@@ -53,23 +53,20 @@ public:
 	/// \param bindAttribFragFunc an optional function pointer used to call glBindAttribLocation() & 
 	///                           glBindFragDataLocation()
 
-	static Program fromSource(const char* vertexSrc, const char* geometrySrc, const char* fragmentSrc,
-	                          void(*bindAttribFragFunc)(uint32_t shaderProgram) = nullptr) noexcept;
 	static Program fromSource(const char* vertexSrc, const char* fragmentSrc,
 	                          void(*bindAttribFragFunc)(uint32_t shaderProgram) = nullptr) noexcept;
 	static Program postProcessFromSource(const char* postProcessSource) noexcept;
 
 	/// Constructs an OpenGL program given file paths to source
 	/// The file paths are stored and when reload() is called the program will be recompiled.
-	/// \param *Path the path to the file containing the shader source for a specific shader
+	/// \param basePath the path to the directory the source files are located in
+	/// \param *File the filename of the file containing the shader source for a specific shader
 	/// \param bindAttribFragFunc an optional function pointer used to call glBindAttribLocation() & 
 	///                           glBindFragDataLocation()
 
-	static Program fromFile(const char* vertexPath, const char* geometryPath, const char* fragmentPath,
+	static Program fromFile(const char* basePath, const char* vertexFile, const char* fragmentFile,
 	                        void(*bindAttribFragFunc)(uint32_t shaderProgram) = nullptr) noexcept;
-	static Program fromFile(const char* vertexPath, const char* fragmentPath,
-	                        void(*bindAttribFragFunc)(uint32_t shaderProgram) = nullptr) noexcept;
-	static Program postProcessFromFile(const char* postProcessPath) noexcept;
+	static Program postProcessFromFile(const char* basePath, const char* postProcessFile) noexcept;
 
 	// Public methods
 	// --------------------------------------------------------------------------------------------
@@ -108,7 +105,6 @@ private:
 
 	// Optional paths to shader source files
 	DynString mVertexPath;
-	DynString mGeometryPath;
 	DynString mFragmentPath;
 
 	// Bool that specifies if program is post process or not
