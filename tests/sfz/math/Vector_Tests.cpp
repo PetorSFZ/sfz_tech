@@ -54,6 +54,11 @@ TEST_CASE("Vector<T,2> specialization", "[sfz::Vector]")
 		REQUIRE(v1[0] == 3);
 		REQUIRE(v1[1] == -1);
 	}
+	SECTION("Cast constructor") {
+		sfz::vec2i v1(sfz::vec2(-1.0f, 1.0f));
+		REQUIRE(v1.x == -1);
+		REQUIRE(v1.y == 1);
+	}
 	SECTION("Access [] operator") {
 		v[0] = 4;
 		v[1] = -2;
@@ -111,6 +116,12 @@ TEST_CASE("Vector<T,3> specialization", "[sfz::Vector]")
 		REQUIRE(v1[0] == 3);
 		REQUIRE(v1[1] == -1);
 		REQUIRE(v1[2] == -2);
+	}
+	SECTION("Cast constructor") {
+		sfz::vec3i v1(sfz::vec3(-1.0f, 1.0f, -2.0f));
+		REQUIRE(v1.x == -1);
+		REQUIRE(v1.y == 1);
+		REQUIRE(v1.z == -2);
 	}
 	SECTION("Access [] operator") {
 		v[0] = 4;
@@ -211,6 +222,13 @@ TEST_CASE("Vector<T,4> specialization", "[sfz::Vector]")
 		REQUIRE(v1[2] == -2);
 		REQUIRE(v1[3] == 9);
 	}
+	SECTION("Cast constructor") {
+		sfz::vec4i v1(sfz::vec4(-1.0f, 1.0f, -2.0f, 4.0f));
+		REQUIRE(v1.x == -1);
+		REQUIRE(v1.y == 1);
+		REQUIRE(v1.z == -2);
+		REQUIRE(v1.w == 4);
+	}
 	SECTION("Access [] operator") {
 		v[0] = 4;
 		v[1] = -2;
@@ -244,6 +262,17 @@ TEST_CASE("Vector<T,N> general definition", "[sfz::Vector]")
 		REQUIRE(v2[2] == 4);
 		REQUIRE(v2[3] == 5);
 		REQUIRE(v2[4] == 6);
+	}
+	SECTION("Cast constructor")
+	{
+		float numbers[] = {-1.0f, 1.0f, -2.0f, 4.0, -6.0f};
+		sfz::Vector<float,5> vf(numbers);
+		sfz::Vector<int,5> vi(vf);
+		REQUIRE(vi[0] == -1);
+		REQUIRE(vi[1] == 1);
+		REQUIRE(vi[2] == -2);
+		REQUIRE(vi[3] == 4);
+		REQUIRE(vi[4] == -6);
 	}
 	SECTION("Access [] operator") {
 		v[0] = 4;

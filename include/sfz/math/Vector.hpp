@@ -63,6 +63,9 @@ struct Vector final {
 
 	explicit Vector(const T* arrayPtr) noexcept;
 
+	template<typename T2>
+	explicit Vector(const Vector<T2,N>& other) noexcept;
+
 	T& operator[] (const size_t index) noexcept;
 	T operator[] (const size_t index) const noexcept;
 };
@@ -82,6 +85,9 @@ struct Vector<T,2> final {
 	explicit Vector(const T* arrayPtr) noexcept;
 	explicit Vector(T value) noexcept;
 	Vector(T x, T y) noexcept;
+
+	template<typename T2>
+	explicit Vector(const Vector<T2,2>& other) noexcept;
 
 	T& operator[] (const size_t index) noexcept;
 	T operator[] (const size_t index) const noexcept;
@@ -106,6 +112,9 @@ struct Vector<T,3> final {
 	Vector(T x, T y, T z) noexcept;
 	Vector(Vector<T,2> xy, T z) noexcept;
 	Vector(T x, Vector<T,2> yz) noexcept;
+
+	template<typename T2>
+	explicit Vector(const Vector<T2,3>& other) noexcept;
 
 	T& operator[] (const size_t index) noexcept;
 	T operator[] (const size_t index) const noexcept;
@@ -136,6 +145,9 @@ struct Vector<T,4> final {
 	Vector(Vector<T,2> xy, T z, T w) noexcept;
 	Vector(T x, Vector<T,2> yz, T w) noexcept;
 	Vector(T x, T y, Vector<T,2> zw) noexcept;
+
+	template<typename T2>
+	explicit Vector(const Vector<T2,4>& other) noexcept;
 
 	T& operator[] (const size_t index) noexcept;
 	T operator[] (const size_t index) const noexcept;

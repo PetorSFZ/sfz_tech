@@ -30,6 +30,15 @@ Vector<T,N>::Vector(const T* arrayPtr) noexcept
 }
 
 template<typename T, size_t N>
+template<typename T2>
+Vector<T,N>::Vector(const Vector<T2,N>& other) noexcept
+{
+	for (size_t i = 0; i < N; ++i) {
+		elements[i] = static_cast<T>(other[i]);
+	}
+}
+
+template<typename T, size_t N>
 T& Vector<T,N>::operator[] (const size_t index) noexcept
 {
 	sfz_assert_debug(index < N);
@@ -65,6 +74,14 @@ Vector<T,2>::Vector(T x, T y) noexcept
 :
 	x{x},
 	y{y}
+{ }
+
+template<typename T>
+template<typename T2>
+Vector<T,2>::Vector(const Vector<T2,2>& other) noexcept
+:
+	x(static_cast<T>(other.x)),
+	y(static_cast<T>(other.y))
 { }
 
 template<typename T>
@@ -122,6 +139,15 @@ Vector<T,3>::Vector(T x, Vector<T,2> yz) noexcept
 	x{x},
 	y{yz.elements[0]},
 	z{yz.elements[1]}
+{ }
+
+template<typename T>
+template<typename T2>
+Vector<T,3>::Vector(const Vector<T2,3>& other) noexcept
+:
+	x(static_cast<T>(other.x)),
+	y(static_cast<T>(other.y)),
+	z(static_cast<T>(other.z))
 { }
 
 template<typename T>
@@ -220,6 +246,16 @@ Vector<T,4>::Vector(T x, T y, Vector<T,2> zw) noexcept
 	y{y},
 	z{zw.elements[0]},
 	w{zw.elements[1]}
+{ }
+
+template<typename T>
+template<typename T2>
+Vector<T,4>::Vector(const Vector<T2,4>& other) noexcept
+:
+	x(static_cast<T>(other.x)),
+	y(static_cast<T>(other.y)),
+	z(static_cast<T>(other.z)),
+	w(static_cast<T>(other.w))
 { }
 
 template<typename T>
