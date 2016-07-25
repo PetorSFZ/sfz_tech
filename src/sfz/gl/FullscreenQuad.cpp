@@ -36,12 +36,6 @@ FullscreenQuad::FullscreenQuad() noexcept
 		-1.0f, 1.0f, 0.0f, // top-left
 		1.0f, 1.0f, 0.0f // top-right
 	};
-	const float normals[] = {
-		0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 1.0f,
-		0.0f, 0.0f, 1.0f
-	};
 	const float uvCoords[] = {
 		// bottom-left UV
 		0.0f, 0.0f,
@@ -51,9 +45,6 @@ FullscreenQuad::FullscreenQuad() noexcept
 		0.0f, 1.0f,
 		// top-right UV
 		1.0f, 1.0f
-	};
-	const int32_t materialIDs[] = {
-		-1, -1, -1, -1
 	};
 	const unsigned int indices[] = {
 		0, 1, 2,
@@ -83,7 +74,7 @@ FullscreenQuad::FullscreenQuad() noexcept
 
 	glBindBuffer(GL_ARRAY_BUFFER, mUVBuffer);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(1);
 }
 
 FullscreenQuad::FullscreenQuad(FullscreenQuad&& other) noexcept
