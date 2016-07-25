@@ -84,6 +84,10 @@ public:
 	/// \return whether the reload was successful or not
 	bool reload() noexcept;
 
+	/// Simple wrapper that calls glUseProgram() with the internal handle, will not do anything
+	/// if internal handle is 0.
+	void useProgram() noexcept;
+
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 

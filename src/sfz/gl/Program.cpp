@@ -178,6 +178,12 @@ bool Program::reload() noexcept
 	return false;
 }
 
+void Program::useProgram() noexcept
+{
+	if (!this->isValid()) return;
+	glUseProgram(mHandle);
+}
+
 // Program: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
