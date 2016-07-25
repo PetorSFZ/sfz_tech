@@ -488,6 +488,69 @@ uint32_t Framebuffer::stencilTexture() const noexcept
 	return mStencilTexture;
 }
 
+// Framebuffer: Public methods
+// ------------------------------------------------------------------------------------------------
+
+void Framebuffer::bind() noexcept
+{
+	if (!this->isValid()) return;
+	glBindFramebuffer(GL_FRAMEBUFFER, mFBO);
+}
+
+void Framebuffer::bindViewport() noexcept
+{
+	if (!this->isValid()) return;
+	glBindFramebuffer(GL_FRAMEBUFFER, mFBO);
+	glViewport(0, 0, mDim.x, mDim.y);
+}
+
+void Framebuffer::bindViewport(vec2i viewportMin, vec2i viewportMax) noexcept
+{
+	if (!this->isValid()) return;
+	glBindFramebuffer(GL_FRAMEBUFFER, mFBO);
+	glViewport(viewportMin.x, viewportMin.y, viewportMax.x, viewportMax.y);
+}
+
+void Framebuffer::bindViewportClearColor(vec4 clearColor) noexcept
+{
+	if (!this->isValid()) return;
+	glBindFramebuffer(GL_FRAMEBUFFER, mFBO);
+	glViewport(0, 0, mDim.x, mDim.y);
+	glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
+	glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void Framebuffer::bindViewportClearColor(vec2i viewportMin, vec2i viewportMax,
+                                         vec4 clearColor) noexcept
+{
+	if (!this->isValid()) return;
+	glBindFramebuffer(GL_FRAMEBUFFER, mFBO);
+	glViewport(viewportMin.x, viewportMin.y, viewportMax.x, viewportMax.y);
+	glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
+	glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void Framebuffer::bindViewportClearColorDepth(vec4 clearColor, float clearDepth) noexcept
+{
+	if (!this->isValid()) return;
+	glBindFramebuffer(GL_FRAMEBUFFER, mFBO);
+	glViewport(0, 0, mDim.x, mDim.y);
+	glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
+	glClearDepth(clearDepth);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void Framebuffer::bindViewportClearColorDepth(vec2i viewportMin, vec2i viewportMax,
+                                              vec4 clearColor, float clearDepth) noexcept
+{
+	if (!this->isValid()) return;
+	glBindFramebuffer(GL_FRAMEBUFFER, mFBO);
+	glViewport(viewportMin.x, viewportMin.y, viewportMax.x, viewportMax.y);
+	glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
+	glClearDepth(clearDepth);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
 // Framebuffer: Attach/detach component methods
 // ------------------------------------------------------------------------------------------------
 

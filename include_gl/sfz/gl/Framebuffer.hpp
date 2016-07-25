@@ -225,6 +225,22 @@ public:
 	inline float widthFloat() const noexcept { return (float)mDim.x; }
 	inline float heightFloat() const noexcept { return (float)mDim.y; }
 
+	// Public methods
+	// --------------------------------------------------------------------------------------------
+
+	/// Simple wrappers around glBindFramebuffer(), glViewport(), glClearColor(), glClearDepth()
+	/// and glClear(). If the fbo is not valid (mFBO == 0) these functions will not do anything.
+
+	void bind() noexcept;
+	void bindViewport() noexcept;
+	void bindViewport(vec2i viewportMin, vec2i viewportMax) noexcept;
+	void bindViewportClearColor(vec4 clearColor = vec4(0.0)) noexcept;
+	void bindViewportClearColor(vec2i viewportMin, vec2i viewportMax,
+	                            vec4 clearColor = vec4(0.0)) noexcept;
+	void bindViewportClearColorDepth(vec4 clearColor = vec4(0.0), float clearDepth = 1.0f) noexcept;
+	void bindViewportClearColorDepth(vec2i viewportMin, vec2i viewportMax,
+	                                 vec4 clearColor = vec4(0.0), float clearDepth = 1.0f) noexcept;
+
 	// Attaching external depth/stencil buffers/textures
 	// --------------------------------------------------------------------------------------------
 
