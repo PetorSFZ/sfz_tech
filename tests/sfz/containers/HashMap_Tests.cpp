@@ -305,4 +305,31 @@ TEST_CASE("Empty HashMap", "[sfz::HashMap]")
 		}
 		REQUIRE(ctimes == 0);
 	}
+	SECTION("Retrieving") {
+		int* ptr = m.get(0);
+		REQUIRE(ptr == nullptr);
+
+		const int* cPtr = cm.get(0);
+		REQUIRE(cPtr == nullptr);
+	}
+	SECTION("put()") {
+		int a = -1;
+		m.put(2, a);
+		m.put(3, 4);
+		REQUIRE(m.capacity() != 0);
+		REQUIRE(m.size() == 2);
+		REQUIRE(m[2] == -1);
+		REQUIRE(m.get(3) != nullptr);
+		REQUIRE(*m.get(3) == 4);
+	}
+	SECTION("operator[]") {
+		int a = -1;
+		m[2] = a;
+		m[3] = 4;
+		REQUIRE(m.capacity() != 0);
+		REQUIRE(m.size() == 2);
+		REQUIRE(m[2] == -1);
+		REQUIRE(m.get(3) != nullptr);
+		REQUIRE(*m.get(3) == 4);
+	}
 }

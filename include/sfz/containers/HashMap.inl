@@ -623,6 +623,9 @@ uint32_t HashMap<K,V,Hash,KeyEqual,Allocator>::findElementIndex(const K& key, bo
 	isPlaceholder = false;
 	K* const keys = keysPtr();
 
+	// Early exit if HashMap has no capacity
+	if (mCapacity == 0) return uint32_t(~0);
+
 	// Hash the key and find the base index
 	const int64_t baseIndex = int64_t(keyHasher(key) % size_t(mCapacity));
 
