@@ -469,6 +469,9 @@ TEST_CASE("Normalizing (making unit vector) vector", "[sfz::Vector]")
 		REQUIRE(posLower <= v1[3]);
 		REQUIRE(v1[3] <= posHigher);
 	}
+	SECTION("safeNormalize()") {
+		REQUIRE(safeNormalize(sfz::vec3(0.0f)) == sfz::vec3(0.0f));
+	}
 }
 
 TEST_CASE("Comparison operators", "[sfz::Vector]")

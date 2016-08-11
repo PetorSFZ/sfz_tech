@@ -313,7 +313,15 @@ Vector<T,N> normalize(const Vector<T,N>& vector) noexcept
 {
 	T lengthTmp = length(vector);
 	sfz_assert_debug(lengthTmp != 0);
-	return vector/lengthTmp;
+	return vector / lengthTmp;
+}
+
+template<typename T, size_t N>
+Vector<T,N> safeNormalize(const Vector<T,N>& vector) noexcept
+{
+	T lengthTmp = length(vector);
+	if (lengthTmp == T(0)) return Vector<T,N>(T(0));
+	return vector / lengthTmp;
 }
 
 template<typename T, size_t N>

@@ -189,6 +189,10 @@ T squaredLength(const Vector<T,N>& vector) noexcept;
 template<typename T, size_t N>
 Vector<T,N> normalize(const Vector<T,N>& vector) noexcept;
 
+/// Normalizes vector, returns zero if vector is zero
+template<typename T, size_t N>
+Vector<T, N> safeNormalize(const Vector<T, N>& vector) noexcept;
+
 /// Calculates the dot product of two vectors
 template<typename T, size_t N>
 T dot(const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
