@@ -97,6 +97,11 @@ TEST_CASE("writeBinaryFile() & readBinaryFile() & sizeofFile(), ", "[sfz::IO]")
 
 	REQUIRE(sfz::deleteFile(fpath));
 	REQUIRE(!sfz::fileExists(fpath));
+
+	// nullptrs
+	REQUIRE(sfz::readBinaryFile(nullptr).data() == nullptr);
+	REQUIRE(sfz::readTextFile(nullptr) == "");
+	REQUIRE(!sfz::writeBinaryFile(nullptr, nullptr, 0));
 }
 
 TEST_CASE("readTextFile()", "[sfz::IO]")

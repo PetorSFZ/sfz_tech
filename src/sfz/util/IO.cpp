@@ -58,6 +58,7 @@ template<typename T>
 static DynArray<T> readFileInternal(const char* path, bool binaryMode) noexcept
 {
 	// Open file
+	if (path == nullptr) return DynArray<T>();
 	std::FILE* file = std::fopen(path, binaryMode ? "rb" : "r");
 	if (file == NULL) return DynArray<T>();
 
@@ -289,6 +290,7 @@ DynString readTextFile(const char* path) noexcept
 bool writeBinaryFile(const char* path, const uint8_t* data, size_t numBytes) noexcept
 {
 	// Open file
+	if (path == nullptr) return false;
 	std::FILE* file = std::fopen(path, "wb");
 	if (file == NULL) return false;
 
