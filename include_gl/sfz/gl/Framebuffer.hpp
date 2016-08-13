@@ -130,9 +130,9 @@ public:
 	FramebufferBuilder& setDimensions(vec2i dimensions) noexcept;
 	FramebufferBuilder& addTexture(uint32_t index, FBTextureFormat format, FBTextureFiltering filtering) noexcept;
 	FramebufferBuilder& addDepthBuffer(FBDepthFormat format) noexcept;
-	FramebufferBuilder& addDepthTexture(FBDepthFormat format) noexcept;
+	FramebufferBuilder& addDepthTexture(FBDepthFormat format, FBTextureFiltering filtering) noexcept;
 	FramebufferBuilder& addStencilBuffer() noexcept;
-	FramebufferBuilder& addStencilTexture() noexcept;
+	FramebufferBuilder& addStencilTexture(FBTextureFiltering filtering) noexcept;
 
 	// Component removing methods
 	// --------------------------------------------------------------------------------------------
@@ -159,8 +159,8 @@ private:
 	bool mCreateStencilTexture = false;
 	FBTextureFormat mTextureFormat[8];
 	FBDepthFormat mDepthFormat;
-	FBTextureFiltering mTextureFiltering[8];
-	vec2i mDim{-1};
+	FBTextureFiltering mTextureFiltering[8], mDepthTextureFiltering, mStencilTextureFiltering;
+	vec2i mDim = vec2i(-1);
 };
 
 // Shadow Map Framebuffer builder function

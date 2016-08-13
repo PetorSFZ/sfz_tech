@@ -64,12 +64,13 @@ FramebufferBuilder& FramebufferBuilder::addDepthBuffer(FBDepthFormat format) noe
 	return *this;
 }
 
-FramebufferBuilder& FramebufferBuilder::addDepthTexture(FBDepthFormat format) noexcept
+FramebufferBuilder& FramebufferBuilder::addDepthTexture(FBDepthFormat format, FBTextureFiltering filtering) noexcept
 {
 	sfz_assert_debug(!mCreateDepthBuffer);
 	sfz_assert_debug(!mCreateDepthTexture);
 	mCreateDepthTexture = true;
 	mDepthFormat = format;
+	mDepthTextureFiltering = filtering;
 	return *this;
 }
 
@@ -81,11 +82,12 @@ FramebufferBuilder& FramebufferBuilder::addStencilBuffer() noexcept
 	return *this;
 }
 
-FramebufferBuilder& FramebufferBuilder::addStencilTexture() noexcept
+FramebufferBuilder& FramebufferBuilder::addStencilTexture(FBTextureFiltering filtering) noexcept
 {
 	sfz_assert_debug(!mCreateStencilBuffer);
 	sfz_assert_debug(!mCreateStencilTexture);
 	mCreateStencilTexture = true;
+	mStencilTextureFiltering = filtering;
 	return *this;
 }
 
@@ -310,6 +312,18 @@ Framebuffer FramebufferBuilder::build() const noexcept
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, mDim.x, mDim.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 			break;
 		}
+		switch (mDepthTextureFiltering) {
+		case FBTextureFiltering::NEAREST:
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			break;
+		case FBTextureFiltering::LINEAR:
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			break;
+		}
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, tmp.mDepthTexture, 0);
 	}
 
@@ -326,6 +340,18 @@ Framebuffer FramebufferBuilder::build() const noexcept
 		glGenTextures(1, &tmp.mStencilTexture);
 		glBindTexture(GL_TEXTURE_2D, tmp.mStencilTexture);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_STENCIL_INDEX8, mDim.x, mDim.y, 0, GL_STENCIL_INDEX, GL_FLOAT, NULL);
+		switch (mStencilTextureFiltering) {
+		case FBTextureFiltering::NEAREST:
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			break;
+		case FBTextureFiltering::LINEAR:
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			break;
+		}
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, tmp.mStencilTexture, 0);
 	}
 
