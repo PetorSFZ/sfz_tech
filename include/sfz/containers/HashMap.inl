@@ -272,14 +272,12 @@ bool HashMap<K,V,Hash,KeyEqual,Allocator>::ensureProperlyHashed() noexcept
 	uint32_t maxOccupied = uint32_t(MAX_OCCUPIED_REHASH_FACTOR * mCapacity);
 	if ((mSize + mPlaceholders) > maxOccupied) {
 
-		// Determine whether capacity needs to be increased or not.
-		uint32_t newCapacity = mCapacity;
+		// Determine whether capacity needs to be increase or if is enough to remove placeholders
 		uint32_t maxSize = uint32_t(MAX_OCCUPIED_REHASH_FACTOR * mCapacity);
-		if (mSize > maxSize) {
-			mCapacity += 1;
-		}
+		bool needCapacityIncrease = mSize > maxSize;
 
-		this->rehash(newCapacity);
+		// Rehash
+		this->rehash(mCapacity + (needCapacityIncrease ? 1 : 0));
 		return true;
 	}
 

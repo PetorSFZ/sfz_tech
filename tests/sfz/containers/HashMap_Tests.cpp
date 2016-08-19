@@ -20,6 +20,8 @@
 #include "catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
+#include <string>
+
 #include "sfz/containers/HashMap.hpp"
 
 using namespace sfz;
@@ -331,5 +333,27 @@ TEST_CASE("Empty HashMap", "[sfz::HashMap]")
 		REQUIRE(m[2] == -1);
 		REQUIRE(m.get(3) != nullptr);
 		REQUIRE(*m.get(3) == 4);
+	}
+}
+
+TEST_CASE("Actual HashMap error case", "[sfz::HashMap]")
+{
+	HashMap<std::string,uint32_t> mapping(0);
+	
+	const uint32_t NUM_TESTS = 100;
+
+	for (uint32_t i = 0; i < NUM_TESTS; i++) {
+		std::string str = "str" + std::to_string(i);
+		mapping.put(str, i);
+	}
+	
+	REQUIRE(mapping.size() == NUM_TESTS);
+	REQUIRE(mapping.capacity() >= mapping.size());
+
+	for (uint32_t i = 0; i < NUM_TESTS; i++) {
+		std::string str = "str" + std::to_string(i);
+		uint32_t* ptr = mapping.get(str);
+		REQUIRE(ptr != nullptr);
+		REQUIRE(*ptr == i);
 	}
 }
