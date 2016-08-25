@@ -213,6 +213,43 @@ var=true
 		REQUIRE(ini.getInt("sect2", "fifth") == nullptr);
 		REQUIRE(ini.getFloat("sect2", "fifth") == nullptr);
 
+		int itemCounter = 0;
+		for (IniParser::ItemAccessor i : ini) {
+			itemCounter += 1;
+		}
+		REQUIRE(itemCounter == 4);
+
+		IniParser::Iterator it = ini.begin();
+		REQUIRE(it != ini.end());
+		auto ac = *it;
+		REQUIRE(std::strcmp(ac.getSection(), "sect1") == 0);
+		REQUIRE(std::strcmp(ac.getKey(), "first") == 0);
+		REQUIRE(ac.getInt() != nullptr);
+		REQUIRE(*ac.getInt() == 2);
+		REQUIRE(*ac.getFloat() == 2.0f);
+		it++;
+		ac = *it;
+		REQUIRE(std::strcmp(ac.getSection(), "sect1") == 0);
+		REQUIRE(std::strcmp(ac.getKey(), "second") == 0);
+		REQUIRE(ac.getBool() != nullptr);
+		REQUIRE(*ac.getBool() == true);
+		it++;
+		ac = *it;
+		REQUIRE(std::strcmp(ac.getSection(), "sect2") == 0);
+		REQUIRE(std::strcmp(ac.getKey(), "third") == 0);
+		REQUIRE(ac.getInt() != nullptr);
+		REQUIRE(*ac.getInt() == 4);
+		REQUIRE(*ac.getFloat() == 4.0f);
+		it++;
+		ac = *it;
+		REQUIRE(std::strcmp(ac.getSection(), "sect2") == 0);
+		REQUIRE(std::strcmp(ac.getKey(), "fifth") == 0);
+		REQUIRE(ac.getBool() != nullptr);
+		REQUIRE(*ac.getBool() == false);
+		it++;
+		REQUIRE(it == ini.end());
+
+
 		REQUIRE(ini.save());
 
 		DynString output = readTextFile(cpath);

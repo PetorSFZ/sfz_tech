@@ -505,6 +505,150 @@ bool IniParser::sanitizeBool(const char* section, const char* key, bool defaultV
 	return itemPtr->b;
 }
 
+// IniParser: Iterators (ItemAccessor)
+// ------------------------------------------------------------------------------------------------
+
+IniParser::ItemAccessor::ItemAccessor(IniParser& iniParser, uint32_t sectionIndex, uint32_t keyIndex) noexcept
+:
+	mIniParser(&iniParser),
+	mSectionIndex(sectionIndex),
+	mKeyIndex(keyIndex)
+{ }
+
+const char* IniParser::ItemAccessor::getSection() const noexcept
+{
+	sfz_assert_debug(mIniParser != nullptr);
+	sfz_assert_debug(mSectionIndex < mIniParser->mSections.size());
+	sfz_assert_debug(mKeyIndex < mIniParser->mSections[mSectionIndex].items.size());
+	return mIniParser->mSections[mSectionIndex].name.str;
+}
+
+const char* IniParser::ItemAccessor::getKey() const noexcept
+{
+	sfz_assert_debug(mIniParser != nullptr);
+	sfz_assert_debug(mSectionIndex < mIniParser->mSections.size());
+	sfz_assert_debug(mKeyIndex < mIniParser->mSections[mSectionIndex].items.size());
+	return mIniParser->mSections[mSectionIndex].items[mKeyIndex].str.str;
+}
+
+const int32_t* IniParser::ItemAccessor::getInt() const noexcept
+{
+	sfz_assert_debug(mIniParser != nullptr);
+	sfz_assert_debug(mSectionIndex < mIniParser->mSections.size());
+	sfz_assert_debug(mKeyIndex < mIniParser->mSections[mSectionIndex].items.size());
+	const Item& item = mIniParser->mSections[mSectionIndex].items[mKeyIndex];
+	sfz_assert_debug(item.type == ItemType::NUMBER);
+	return &item.i;
+}
+
+const float* IniParser::ItemAccessor::getFloat() const noexcept
+{
+	sfz_assert_debug(mIniParser != nullptr);
+	sfz_assert_debug(mSectionIndex < mIniParser->mSections.size());
+	sfz_assert_debug(mKeyIndex < mIniParser->mSections[mSectionIndex].items.size());
+	const Item& item = mIniParser->mSections[mSectionIndex].items[mKeyIndex];
+	sfz_assert_debug(item.type == ItemType::NUMBER);
+	return &item.f;
+}
+
+const bool* IniParser::ItemAccessor::getBool() const noexcept
+{
+	sfz_assert_debug(mIniParser != nullptr);
+	sfz_assert_debug(mSectionIndex < mIniParser->mSections.size());
+	sfz_assert_debug(mKeyIndex < mIniParser->mSections[mSectionIndex].items.size());
+	const Item& item = mIniParser->mSections[mSectionIndex].items[mKeyIndex];
+	sfz_assert_debug(item.type == ItemType::BOOL);
+	return &item.b;
+}
+
+// IniParser: Iterators (Iterator)
+// ------------------------------------------------------------------------------------------------
+
+IniParser::Iterator::Iterator(IniParser& iniParser, uint32_t sectionIndex, uint32_t keyIndex) noexcept
+:
+	mIniParser(&iniParser),
+	mSectionIndex(sectionIndex),
+	mKeyIndex(keyIndex)
+{ }
+
+IniParser::Iterator& IniParser::Iterator::operator++ () noexcept
+{
+	// Go through IniParser until we find next item
+	uint32_t& s = mSectionIndex;
+	uint32_t& k = mKeyIndex;
+	k++;
+	while (s < mIniParser->mSections.size()) {
+		const Section& sect = mIniParser->mSections[s];
+		while (k < sect.items.size()) {
+			const Item& item = sect.items[k];
+			if (item.type == ItemType::NUMBER || item.type == ItemType::BOOL) {
+				mSectionIndex = s;
+				mKeyIndex = k;
+				return *this;
+			}
+			k++;
+		}
+		k = 0;
+		s++;
+	}
+
+	// Did not find any more items, set to end
+	s = uint32_t(~0);
+	k = uint32_t(~0);
+	return *this;
+}
+
+IniParser::Iterator IniParser::Iterator::operator++ (int) noexcept
+{
+	auto copy = *this;
+	++(*this);
+	return copy;
+}
+
+IniParser::ItemAccessor IniParser::Iterator::operator* () noexcept
+{
+	sfz_assert_debug(mIniParser != nullptr);
+	sfz_assert_debug(mSectionIndex < mIniParser->mSections.size());
+	sfz_assert_debug(mKeyIndex < mIniParser->mSections[mSectionIndex].items.size());
+	return ItemAccessor(*mIniParser, mSectionIndex, mKeyIndex);
+}
+
+bool IniParser::Iterator::operator== (const Iterator& other) const noexcept
+{
+	return this->mIniParser == other.mIniParser &&
+	       this->mSectionIndex == other.mSectionIndex &&
+	       this->mKeyIndex == other.mKeyIndex;
+}
+
+bool IniParser::Iterator::operator!= (const Iterator& other) const noexcept
+{
+	return !(*this == other);
+}
+
+// IniParser: Iterators (Iterator methods)
+// ------------------------------------------------------------------------------------------------
+
+IniParser::Iterator IniParser::begin() noexcept
+{
+	if (mSections.size() == 0) return this->end();
+	
+	// Check if first position is an item
+	Iterator it(*this, 0, 0);
+	if (mSections[0].items.size() > 0) {
+		ItemType t = mSections[0].items[0].type;
+		if (t == ItemType::NUMBER || t == ItemType::BOOL) return it;
+	}
+
+	// Iterate to first item
+	it++;
+	return it;
+}
+
+IniParser::Iterator IniParser::end() noexcept
+{
+	return Iterator(*this, uint32_t(~0), uint32_t(~0));
+}
+
 // IniParser: Private methods
 // ------------------------------------------------------------------------------------------------
 

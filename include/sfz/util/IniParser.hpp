@@ -117,6 +117,49 @@ public:
 	bool sanitizeBool(const char* section, const char* key,
 	                  bool defaultValue = false) noexcept;
 
+	// Iterators
+	// --------------------------------------------------------------------------------------------
+
+	class ItemAccessor final {
+	public:
+		ItemAccessor(IniParser& iniParser, uint32_t sectionIndex, uint32_t keyIndex) noexcept;
+		ItemAccessor() noexcept = default;
+		ItemAccessor(const ItemAccessor&) noexcept = default;
+		ItemAccessor& operator= (const ItemAccessor&) noexcept = default;
+
+		const char* getSection() const noexcept;
+		const char* getKey() const noexcept;
+		const int32_t* getInt() const noexcept;
+		const float* getFloat() const noexcept;
+		const bool* getBool() const noexcept;
+	
+	private:
+		IniParser* mIniParser = nullptr;
+		uint32_t mSectionIndex = uint32_t(~0);
+		uint32_t mKeyIndex = uint32_t(~0);
+	};
+
+	class Iterator final {
+	public:
+		Iterator(IniParser& iniParser, uint32_t sectionIndex, uint32_t keyIndex) noexcept;
+		Iterator(const Iterator&) noexcept = default;
+		Iterator& operator= (const Iterator&) noexcept = default;
+
+		Iterator& operator++ () noexcept; // Pre-increment
+		Iterator operator++ (int) noexcept; // Post-increment
+		ItemAccessor operator* () noexcept;
+		bool operator== (const Iterator& other) const noexcept;
+		bool operator!= (const Iterator& other) const noexcept;
+
+	private:
+		IniParser* mIniParser = nullptr;
+		uint32_t mSectionIndex = uint32_t(~0);
+		uint32_t mKeyIndex = uint32_t(~0);
+	};
+
+	Iterator begin() noexcept;
+	Iterator end() noexcept;
+
 private:
 	// Private helper classes
 	// --------------------------------------------------------------------------------------------
