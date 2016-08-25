@@ -513,52 +513,47 @@ IniParser::ItemAccessor::ItemAccessor(IniParser& iniParser, uint32_t sectionInde
 	mIniParser(&iniParser),
 	mSectionIndex(sectionIndex),
 	mKeyIndex(keyIndex)
-{ }
-
-const char* IniParser::ItemAccessor::getSection() const noexcept
 {
 	sfz_assert_debug(mIniParser != nullptr);
 	sfz_assert_debug(mSectionIndex < mIniParser->mSections.size());
 	sfz_assert_debug(mKeyIndex < mIniParser->mSections[mSectionIndex].items.size());
+}
+
+const char* IniParser::ItemAccessor::getSection() const noexcept
+{
 	return mIniParser->mSections[mSectionIndex].name.str;
 }
 
 const char* IniParser::ItemAccessor::getKey() const noexcept
 {
-	sfz_assert_debug(mIniParser != nullptr);
-	sfz_assert_debug(mSectionIndex < mIniParser->mSections.size());
-	sfz_assert_debug(mKeyIndex < mIniParser->mSections[mSectionIndex].items.size());
 	return mIniParser->mSections[mSectionIndex].items[mKeyIndex].str.str;
 }
 
 const int32_t* IniParser::ItemAccessor::getInt() const noexcept
 {
-	sfz_assert_debug(mIniParser != nullptr);
-	sfz_assert_debug(mSectionIndex < mIniParser->mSections.size());
-	sfz_assert_debug(mKeyIndex < mIniParser->mSections[mSectionIndex].items.size());
 	const Item& item = mIniParser->mSections[mSectionIndex].items[mKeyIndex];
-	sfz_assert_debug(item.type == ItemType::NUMBER);
-	return &item.i;
+	if (item.type == ItemType::NUMBER) {
+		return &item.i;
+	}
+	return nullptr;
 }
 
 const float* IniParser::ItemAccessor::getFloat() const noexcept
 {
-	sfz_assert_debug(mIniParser != nullptr);
-	sfz_assert_debug(mSectionIndex < mIniParser->mSections.size());
-	sfz_assert_debug(mKeyIndex < mIniParser->mSections[mSectionIndex].items.size());
 	const Item& item = mIniParser->mSections[mSectionIndex].items[mKeyIndex];
-	sfz_assert_debug(item.type == ItemType::NUMBER);
-	return &item.f;
+	if (item.type == ItemType::NUMBER) {
+		return &item.f;
+	}
+	return nullptr;
 }
 
 const bool* IniParser::ItemAccessor::getBool() const noexcept
 {
-	sfz_assert_debug(mIniParser != nullptr);
-	sfz_assert_debug(mSectionIndex < mIniParser->mSections.size());
-	sfz_assert_debug(mKeyIndex < mIniParser->mSections[mSectionIndex].items.size());
 	const Item& item = mIniParser->mSections[mSectionIndex].items[mKeyIndex];
-	sfz_assert_debug(item.type == ItemType::BOOL);
-	return &item.b;
+	if (item.type == ItemType::BOOL) {
+		return &item.b;
+	}
+	return nullptr;
 }
 
 // IniParser: Iterators (Iterator)
