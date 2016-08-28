@@ -36,7 +36,6 @@ mat4 perspectiveProjectionGL(float left, float bottom, float right, float top,
                              float zNear, float zFar) noexcept;
 
 /// Creates a perspective matrix for use with OpenGL.
-/// sfz_assert_debug: 0 < zNear < zFar
 /// \param yFovDeg the vertical fov in degrees
 /// \param aspectRatio the width / height ratio of the frustrum
 /// \param zNear the near plane
@@ -45,5 +44,15 @@ mat4 perspectiveProjectionGL(float yFovDeg, float aspectRatio, float zNear, floa
 
 // Projection matrices (D3D/Vulkan [0, 1] left-handed clip space, right handed view space)
 // ------------------------------------------------------------------------------------------------
+
+mat4 perspectiveProjectionVkD3d(float left, float bottom, float right, float top,
+                                float zNear, float zfar) noexcept;
+
+mat4 perspectiveProjectionVkD3d(float yFovDeg, float aspectRatio, float zNear, float zFar) noexcept;
+
+mat4 reversePerspectiveProjectionVkD3d(float left, float bottom, float right, float top,
+                                       float zNear, float zFar) noexcept;
+
+mat4 reversePerspectiveProjectionVkD3d(float yFovDeg, float aspectRatio, float zNear, float zFar) noexcept;
 
 } // namespace sfz
