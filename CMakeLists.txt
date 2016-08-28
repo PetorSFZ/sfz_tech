@@ -107,9 +107,7 @@ set(SOURCE_GEOMETRY_FILES
 	${INCLUDE_DIR}/sfz/geometry/Plane.hpp
 	${INCLUDE_DIR}/sfz/geometry/Plane.inl
 	${INCLUDE_DIR}/sfz/geometry/Sphere.hpp
-	${INCLUDE_DIR}/sfz/geometry/Sphere.inl
-	${INCLUDE_DIR}/sfz/geometry/ViewFrustum.hpp
-	 ${SOURCE_DIR}/sfz/geometry/ViewFrustum.cpp)
+	${INCLUDE_DIR}/sfz/geometry/Sphere.inl)
 source_group(sfz_geometry FILES ${SOURCE_GEOMETRY_FILES})
 
 if(SFZ_CORE_OPENGL)
