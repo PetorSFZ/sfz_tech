@@ -33,10 +33,9 @@ using std::uintptr_t;
 // An sfzCore allocator is a non-instantiable class with the following interface:
 //
 // static void* allocate(size_t size, size_t alignment = 32) noexcept;
-// static void* reallocate(void* previous, size_t newSize, size_t alignment = 32) noexcept;
 // static void deallocate(void* pointer) noexcept;
 //
-// Loosely allocate() maps to malloc(), reallocate() to realloc() and deallocate() to free().
+// Loosely allocate() maps to malloc() and deallocate() to free().
 // See the standard allocator for more info on the requirements of each of these functions.
 //
 // Note that the noexcept specified is not optional, an sfzCore allocator may never throw
@@ -59,16 +58,6 @@ public:
 	/// \return pointer to allocated memory, nullptr if allocation failed
 	static void* allocate(size_t size, size_t alignment = 32) noexcept;
 	
-	/// Reallocates memory to a new size
-	/// Will attempt to expand or contract the previous allocation if possible. Otherwise it will
-	/// allocate a new block and copy the memory from the previous block to it and then deallocate
-	/// the old block.
-	/// \param previous the previous allocation
-	/// \param newSize the new size of the allocation
-	/// \param alignment the byte alignment of the allocation, MUST be the same as of the old block
-	/// \return pointer to the new allocation
-	static void* reallocate(void* previous, size_t newSize, size_t alignment = 32) noexcept;
-
 	/// Deallocates memory previously allocated with this allocator instance
 	/// Attempting to deallocate nullptr is safe and will result in no change
 	/// \param pointer to the memory

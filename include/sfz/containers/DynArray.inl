@@ -309,9 +309,20 @@ void DynArray<T, Allocator>::setCapacity(uint32_t capacity) noexcept
 		return;
 	}
 
+	// Allocate new memory and move/copy over elements from old memory
+	T* newDataPtr = static_cast<T*>(Allocator::allocate(capacity * sizeof(T), ALIGNMENT));
+	for (uint32_t i = 0; i < mSize; i++) {
+		new (newDataPtr + i) T(std::move(mDataPtr[i]));
+	}
+
+	// Deallocate old memory
+	uint32_t sizeCopy = mSize;
+	this->destroy();
+
+	// Replace state with new buffer
+	mSize = sizeCopy;
 	mCapacity = capacity;
-	mDataPtr = static_cast<T*>(Allocator::reallocate(mDataPtr, mCapacity * sizeof(T), ALIGNMENT));
-	sfz_assert_debug(mDataPtr != nullptr);
+	mDataPtr = newDataPtr;
 }
 
 template<typename T, typename Allocator>

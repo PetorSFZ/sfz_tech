@@ -43,7 +43,7 @@ using std::uint64_t;
 /// DynArray guarantees that the elements are stored in a (32-byte aligned) contiguous array. It 
 /// does, however, not guarantee that a specific element will always occupy the same position in
 /// memory. When inserting elements or resizing the internal array objects (or the whole array)
-/// may be moved to different memory locations without any copy or move constructors being called.
+/// may be moved to different memory locations, using move or copy constructors.
 ///
 /// DynArray iterators are simply pointers to the internal array. Modifying a DynArray while
 /// iterating over it will likely have unintended consequences if you are not very careful.
