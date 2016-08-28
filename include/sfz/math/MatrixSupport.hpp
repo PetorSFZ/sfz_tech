@@ -118,33 +118,6 @@ Matrix<T,4,4> translationMatrix(T deltaX, T deltaY, T deltaZ) noexcept;
 template<typename T>
 Matrix<T,4,4> translationMatrix(const Vector<T,3>& delta) noexcept;
 
-// Projection matrices
-// ------------------------------------------------------------------------------------------------
-
-template<typename T>
-Matrix<T,4,4> orthogonalProjectionMatrix(T left, T bottom, T near,
-                                         T right, T top, T far) noexcept;
-
-template<typename T>
-Matrix<T,4,4> orthogonalProjectionMatrix(const Vector<T,3>& leftBottomNear,
-                                         const Vector<T,3>& rightTopFar) noexcept;
-
-template<typename T>
-Matrix<T,3,3> orthogonalProjectionMatrix2D(Vector<T,2> center, Vector<T,2> dimensions) noexcept;
-
-template<typename T>
-Matrix<T,4,4> perspectiveProjectionMatrix(T left, T bottom, T zNear,
-                                          T right, T top, T zFar) noexcept;
-
-/// Creates a perspective matrix for use with OpenGL.
-/// sfz_assert_debug: 0 < zNear < zFar
-/// \param yFovDeg the vertical fov in degrees
-/// \param aspectRatio the width / height ratio of the frustrum
-/// \param zNear the near plane
-/// \param zFar the far plane
-inline Matrix<float,4,4> perspectiveProjectionMatrix(float yFovDeg, float aspectRatio,
-                                                     float zNear, float zFar) noexcept;
-
 // View matrices
 // ------------------------------------------------------------------------------------------------
 

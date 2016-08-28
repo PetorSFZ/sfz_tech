@@ -346,61 +346,6 @@ Matrix<T,4,4> translationMatrix(const Vector<T,3>& delta) noexcept
 	return translationMatrix(delta[0], delta[1], delta[2]);
 }
 
-// Projection matrices
-// ------------------------------------------------------------------------------------------------
-
-template<typename T>
-Matrix<T,4,4> orthogonalProjectionMatrix(T left, T bottom, T zNear,
-                                         T right, T top, T zFar) noexcept
-{
-	return Matrix<T,4,4>{{2/(right-left), 0, 0, -((right+left)/(right-left))},
-	                     {0, 2/(top-bottom), 0, -((top+bottom)/(top-bottom))},
-	                     {0, 0, -2/(zFar-zNear), -(zFar+zNear)/(zFar-zNear)},
-	                     {0, 0, 0, 1}};
-}
-
-template<typename T>
-Matrix<T,4,4> orthogonalProjectionMatrix(const Vector<T,3>& leftBottomNear,
-                                         const Vector<T,3>& rightTopFar) noexcept
-{
-	return orthogonalProjectionMatrix(leftBottomNear[0], leftBottomNear[1], leftBottomNear[2],
-	                                  rightTopFar[0], rightTopFar[1], rightTopFar[2]);
-}
-
-template<typename T>
-Matrix<T,3,3> orthogonalProjectionMatrix2D(Vector<T,2> center, Vector<T,2> dimensions) noexcept
-{
-	T a = T(2)/dimensions[0];
-	T b = T(2)/dimensions[1];
-	return Matrix<T,3,3>{{a, 0, -(center[0]*a)},
-	                     {0, b, -(center[1]*b)},
-	                     {0, 0, 1}};
-}
-
-template<typename T>
-Matrix<T,4,4> perspectiveProjectionMatrix(T left, T bottom, T zNear,
-                                          T right, T top, T zFar) noexcept
-{
-	T zNear2 = 2*zNear;
-	T rightMLeft = right-left;
-	T topMBottom = top-bottom;
-	T zFarMzNear = zFar-zNear;
-	return Matrix<T,4,4>{{zNear2/rightMLeft, 0, (right+left)/rightMLeft, 0},
-	                     {0, zNear2/topMBottom, (top+bottom)/topMBottom, 0},
-	                     {0, 0, -(zFar+zNear)/zFarMzNear, -(zNear2*zFar)/zFarMzNear},
-	                     {0, 0, -1, 0}};
-}
-
-inline Matrix<float,4,4> perspectiveProjectionMatrix(float yFovDeg, float aspectRatio,
-                                                     float zNear, float zFar) noexcept
-{
-	sfz_assert_debug(0 < zNear);
-	sfz_assert_debug(zNear < zFar);
-	float yMax = zNear * tanf(yFovDeg * (PI()/360.f));
-	float xMax = yMax * aspectRatio;
-	return perspectiveProjectionMatrix(-xMax, -yMax, zNear, xMax, yMax, zFar);
-}
-
 // View matrices
 // ------------------------------------------------------------------------------------------------
 

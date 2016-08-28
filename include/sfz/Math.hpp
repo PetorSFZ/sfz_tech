@@ -22,4 +22,5 @@
 #include "sfz/math/MathHelpers.hpp"
 #include "sfz/math/Matrix.hpp"
 #include "sfz/math/MatrixSupport.hpp"
+#include "sfz/math/ProjectionMatrices.hpp"
 #include "sfz/math/Vector.hpp"

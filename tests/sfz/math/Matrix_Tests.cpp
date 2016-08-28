@@ -24,6 +24,7 @@
 #include "sfz/math/Matrix.hpp"
 #include "sfz/math/MatrixSupport.hpp"
 #include "sfz/math/MathHelpers.hpp"
+#include "sfz/math/ProjectionMatrices.hpp"
 
 #include <unordered_map>
 #include <type_traits>
@@ -883,10 +884,10 @@ TEST_CASE("Transformation matrices", "[sfz::MatrixSupport]")
 	}
 }
 
-TEST_CASE("Projection matrices", "[sfz::Matrix]")
+TEST_CASE("Projection matrices (Standard OpenGL)", "[sfz::ProjectionMatrices]")
 {
-	SECTION("orthogonalProjectionMatrix()") {
-		auto m = sfz::orthogonalProjectionMatrix(-4.f, -2.f, 10.f, 3.f, 2.f, -50.f);
+	SECTION("orthogonalProjectionGL()") {
+		auto m = sfz::orthogonalProjectionGL(-4.f, -2.f, 3.f, 2.f, 10.f, -50.f);
 
 		REQUIRE(approxEqual(m.at(0, 0), 0.285714f));
 		REQUIRE(approxEqual(m.at(0, 1), 0));
@@ -908,10 +909,10 @@ TEST_CASE("Projection matrices", "[sfz::Matrix]")
 		REQUIRE(approxEqual(m.at(3, 2), 0));
 		REQUIRE(approxEqual(m.at(3, 3), 1));		
 	}
-	SECTION("orthogonalProjectionMatrix2D()") {
+	SECTION("orthogonalProjection2DGL()") {
 		sfz::vec2 pos{-3.0f, 3.0f};
 		sfz::vec2 dim{4.0f, 2.0f};
-		auto m = sfz::orthogonalProjectionMatrix2D(pos, dim);
+		auto m = sfz::orthogonalProjection2DGL(pos, dim);
 
 		sfz::vec3 center3{pos[0], pos[1], 1.0f};
 		sfz::vec3 left3{pos[0]-(dim[0]/2), pos[1], 1.0f};
@@ -925,8 +926,8 @@ TEST_CASE("Projection matrices", "[sfz::Matrix]")
 		REQUIRE(approxEqual(m*bottom3, sfz::vec3{0.0f, -1.0f, 1.0f}));
 		REQUIRE(approxEqual(m*top3, sfz::vec3{0.0f, 1.0f, 1.0f}));
 	}
-	SECTION("perspectiveProjectionMatrix()") {
-		auto m = sfz::perspectiveProjectionMatrix(90.0f, 1.7778f, 0.01f, 500.0f);
+	SECTION("perspectiveProjectionGL()") {
+		auto m = sfz::perspectiveProjectionGL(90.0f, 1.7778f, 0.01f, 500.0f);
 
 		REQUIRE(approxEqual(m.at(0, 0), 0.562493f));
 		REQUIRE(approxEqual(m.at(0, 1), 0));
