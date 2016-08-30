@@ -22,6 +22,7 @@
 #include <cstring> // std::memcpy()
 #include <new> // Placement new
 #include <type_traits>
+#include <utility>
 
 #include "sfz/Assert.hpp"
 #include "sfz/memory/Allocators.hpp"

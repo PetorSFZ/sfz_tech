@@ -30,7 +30,7 @@ using std::uintptr_t;
 /// Checks whether a pointer is aligned to a given byte aligment
 /// \param pointer the pointer to test
 /// \param alignment the byte aligment
-constexpr inline bool isAligned(const void* pointer, size_t alignment) noexcept
+inline bool isAligned(const void* pointer, size_t alignment) noexcept
 {
 	return ((uintptr_t)pointer % alignment) == 0;
 }

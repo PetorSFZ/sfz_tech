@@ -26,21 +26,15 @@
 
 namespace sfz {
 
-// StackStringTempl: Explicit instantiation
-// ------------------------------------------------------------------------------------------------
-
-template struct StackStringTempl<96>;
-
-template struct StackStringTempl<32>;
-template struct StackStringTempl<64>;
-template struct StackStringTempl<128>;
-template struct StackStringTempl<192>;
-template struct StackStringTempl<256>;
-template struct StackStringTempl<512>;
-template struct StackStringTempl<1024>;
-
 // StackStringTempl: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
+
+template<size_t N>
+StackStringTempl<N>::StackStringTempl() noexcept
+{
+	static_assert(N > 0, "StackString capacity needs to be greater than 0");
+	str[0] = '\0';
+}
 
 template<size_t N>
 StackStringTempl<N>::StackStringTempl(const char* string) noexcept
@@ -160,5 +154,19 @@ bool StackStringTempl<N>::operator>= (const char* other) const noexcept
 	sfz_assert_debug(other != nullptr);
 	return std::strncmp(this->str, other, N) >= 0;
 }
+
+
+// StackStringTempl: Explicit instantiation
+// ------------------------------------------------------------------------------------------------
+
+template struct StackStringTempl<96>;
+
+template struct StackStringTempl<32ul>;
+template struct StackStringTempl<64ul>;
+template struct StackStringTempl<128ul>;
+template struct StackStringTempl<192ul>;
+template struct StackStringTempl<256ul>;
+template struct StackStringTempl<512ul>;
+template struct StackStringTempl<1024ul>;
 
 } // namespace sfz

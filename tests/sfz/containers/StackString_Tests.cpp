@@ -21,6 +21,7 @@
 #include "sfz/PopWarnings.hpp"
 
 #include <cstdio>
+#include <cstring>
 
 #include "sfz/containers/StackString.hpp"
 

@@ -89,13 +89,13 @@ bool UniquePtr<T, Allocator>::operator!= (const UniquePtr& other) const noexcept
 }
 
 template<typename T, typename Allocator>
-bool UniquePtr<T, Allocator>::operator== (nullptr_t) const noexcept
+bool UniquePtr<T, Allocator>::operator== (std::nullptr_t) const noexcept
 {
 	return this->mPtr == nullptr;
 }
 
 template<typename T, typename Allocator>
-bool UniquePtr<T, Allocator>::operator!= (nullptr_t) const noexcept
+bool UniquePtr<T, Allocator>::operator!= (std::nullptr_t) const noexcept
 {
 	return this->mPtr != nullptr;
 }
@@ -197,13 +197,13 @@ bool SharedPtr<T, Allocator>::operator!= (const SharedPtr& other) const noexcept
 }
 
 template<typename T, typename Allocator>
-bool SharedPtr<T, Allocator>::operator== (nullptr_t) const noexcept
+bool SharedPtr<T, Allocator>::operator== (std::nullptr_t) const noexcept
 {
 	return this->mPtr == nullptr;
 }
 
 template<typename T, typename Allocator>
-bool SharedPtr<T, Allocator>::operator!= (nullptr_t) const noexcept
+bool SharedPtr<T, Allocator>::operator!= (std::nullptr_t) const noexcept
 {
 	return this->mPtr != nullptr;
 }

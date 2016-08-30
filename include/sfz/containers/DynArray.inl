@@ -407,4 +407,13 @@ const T* DynArray<T, Allocator>::cend() const noexcept
 	return mDataPtr + mSize;
 }
 
+// DynArray (implementation): Extra declaration of static constexpr constants (not required by MSVC).
+// See: http://stackoverflow.com/a/14396189
+// ------------------------------------------------------------------------------------------------
+
+template<typename T, typename Allocator> constexpr uint32_t DynArray<T,Allocator>::ALIGNMENT;
+template<typename T, typename Allocator> constexpr uint32_t DynArray<T,Allocator>::DEFAULT_INITIAL_CAPACITY;
+template<typename T, typename Allocator> constexpr uint64_t DynArray<T,Allocator>::MAX_CAPACITY;
+template<typename T, typename Allocator> constexpr float DynArray<T,Allocator>::CAPACITY_INCREASE_FACTOR;
+
 } // namespace sfz

@@ -490,7 +490,8 @@ StackString toString(const Vector<float,N>& vector, uint32_t numDecimals) noexce
 template<size_t N>
 void toString(const Vector<float,N>& vector, StackString& string, uint32_t numDecimals) noexcept
 {
-	static_assert(false, "toString() not implemented for float vectors of this dimension");
+	// "N != N" instead of "false" to make a fake dependency. See: http://stackoverflow.com/a/14637372
+	static_assert(N != N, "toString() not implemented for float vectors of this dimension");
 }
 
 template<>
@@ -528,7 +529,8 @@ StackString toString(const Vector<int32_t,N>& vector) noexcept
 template<size_t N>
 void toString(const Vector<int32_t,N>& vector, StackString& string) noexcept
 {
-	static_assert(false, "toString() not implemented for int vectors of this dimension");
+	// "N != N" instead of "false" to make a fake dependency. See: http://stackoverflow.com/a/14637372
+	static_assert(N != N, "toString() not implemented for int vectors of this dimension");
 }
 
 template<>

@@ -192,7 +192,7 @@ bool IniParser::load() noexcept
 
 				Item item;
 				item.type = ItemType::COMMENT_APPEND_PREVIOUS_ROW;
-				item.str.insertChars(startPtr + index, commentLength);		
+				item.str.insertChars(startPtr + index, commentLength);
 				newSections.last().items.add(item);
 			}
 		}
@@ -346,16 +346,16 @@ bool IniParser::save() noexcept
 			switch (item.type) {
 			case ItemType::NUMBER:
 				if (sfz::approxEqual(std::round(item.f), item.f)) {
-					str.printfAppend("%s=%i", item.str, item.i);
+					str.printfAppend("%s=%i", item.str.str, item.i);
 				} else {
-					str.printfAppend("%s=%f", item.str, item.f);
+					str.printfAppend("%s=%f", item.str.str, item.f);
 				}
 				break;
 			case ItemType::BOOL:
-				str.printfAppend("%s=%s", item.str, item.b ? "true" : "false");
+				str.printfAppend("%s=%s", item.str.str, item.b ? "true" : "false");
 				break;
 			case ItemType::COMMENT_OWN_ROW:
-				str.printfAppend(";%s", item.str);
+				str.printfAppend(";%s", item.str.str);
 				break;
 			case ItemType::COMMENT_APPEND_PREVIOUS_ROW:
 				continue;
@@ -365,7 +365,7 @@ bool IniParser::save() noexcept
 			if ((i + 1) < section.items.size()) {
 				Item& nextItem = section.items[i + 1];
 				if (nextItem.type == ItemType::COMMENT_APPEND_PREVIOUS_ROW) {
-					str.printfAppend(" ;%s", nextItem.str);
+					str.printfAppend(" ;%s", nextItem.str.str);
 				}
 			}
 			str.printfAppend("\n");
