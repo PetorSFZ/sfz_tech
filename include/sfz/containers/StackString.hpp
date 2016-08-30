@@ -43,12 +43,12 @@ struct StackStringTempl final {
 	// Public members
 	// --------------------------------------------------------------------------------------------
 
-	char str[N] = "\0";
+	char str[N];
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
-	
-	StackStringTempl() noexcept = default;
+
+	StackStringTempl() noexcept;
 	StackStringTempl(const StackStringTempl&) noexcept = default;
 	StackStringTempl& operator= (const StackStringTempl&) noexcept = default;
 	~StackStringTempl() noexcept = default;

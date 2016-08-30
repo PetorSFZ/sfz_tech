@@ -46,7 +46,7 @@ void StandardAllocator::deallocate(void* pointer) noexcept
 #ifdef _WIN32
 	_aligned_free(pointer);
 #else
-	free(ptr);
+	free(pointer);
 #endif
 }
 

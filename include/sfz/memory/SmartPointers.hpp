@@ -48,7 +48,7 @@ public:
 	UniquePtr() noexcept = default;
 
 	/// Creates an empty UniquePtr (holding nullptr)
-	UniquePtr(nullptr_t) noexcept {};
+	UniquePtr(std::nullptr_t) noexcept {};
 	
 	/// Creates a UniquePtr with the specified object
 	/// This UniquePtr takes ownership of the specified object, thus the object in question must
@@ -92,8 +92,8 @@ public:
 	bool operator== (const UniquePtr& other) const noexcept;
 	bool operator!= (const UniquePtr& other) const noexcept;
 
-	bool operator== (nullptr_t) const noexcept;
-	bool operator!= (nullptr_t) const noexcept;
+	bool operator== (std::nullptr_t) const noexcept;
+	bool operator!= (std::nullptr_t) const noexcept;
 
 private:
 	T* mPtr = nullptr;
@@ -122,7 +122,7 @@ public:
 	SharedPtr() noexcept = default;
 
 	/// Creates an empty SharedPtr (holding nullptr and no counter)
-	SharedPtr(nullptr_t) noexcept { }
+	SharedPtr(std::nullptr_t) noexcept { }
 
 	/// Creates a SharedPtr with the specified object
 	/// This SharedPtr takes ownership of the specified object, thus the object in question must
@@ -162,8 +162,8 @@ public:
 	bool operator== (const SharedPtr& other) const noexcept;
 	bool operator!= (const SharedPtr& other) const noexcept;
 
-	bool operator== (nullptr_t) const noexcept;
-	bool operator!= (nullptr_t) const noexcept;
+	bool operator== (std::nullptr_t) const noexcept;
+	bool operator!= (std::nullptr_t) const noexcept;
 
 private:
 	T* mPtr = nullptr;

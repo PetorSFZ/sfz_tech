@@ -28,6 +28,9 @@ HashMap<K,V,Hash,KeyEqual,Allocator>::HashMap(uint32_t suggestedCapacity) noexce
 }
 
 template<typename K, typename V, typename Hash, typename KeyEqual, typename Allocator>
+HashMap<K,V,Hash,KeyEqual,Allocator>::HashMap() noexcept {}
+
+template<typename K, typename V, typename Hash, typename KeyEqual, typename Allocator>
 HashMap<K,V,Hash,KeyEqual,Allocator>::HashMap(const HashMap& other) noexcept
 {
 	*this = other;

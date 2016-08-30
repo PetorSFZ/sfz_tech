@@ -87,7 +87,7 @@ public:
 	/// HashMap by default constructor and then calling rehash with the suggested capacity.
 	explicit HashMap(uint32_t suggestedCapacity) noexcept;
 
-	HashMap() noexcept = default;
+	HashMap() noexcept;
 	HashMap(const HashMap& other) noexcept;
 	HashMap& operator= (const HashMap& other) noexcept;
 	HashMap(HashMap&& other) noexcept;
