@@ -56,9 +56,9 @@ static bool belowPlane(const Plane& plane, const vec3& position, float projected
 
 bool pointInside(const AABB& box, const vec3& point) noexcept
 {
-	return box.min()[0] < point[0] && point[0] < box.max()[0] &&
-	       box.min()[1] < point[1] && point[1] < box.max()[1] &&
-	       box.min()[2] < point[2] && point[2] < box.max()[2];
+	return box.min[0] < point[0] && point[0] < box.max[0] &&
+	       box.min[1] < point[1] && point[1] < box.max[1] &&
+	       box.min[2] < point[2] && point[2] < box.max[2];
 }
 
 bool pointInside(const OBB& box, const vec3& point) noexcept
@@ -101,9 +101,9 @@ bool pointInside(const AABB2D& rect, vec2 point) noexcept
 bool intersects(const AABB& boxA, const AABB& boxB) noexcept
 {
 	// Boxes intersect if they overlap on all axes.
-	if (boxA.max()[0] < boxB.min()[0] || boxA.min()[0] > boxB.max()[0]) return false;
-	if (boxA.max()[1] < boxB.min()[1] || boxA.min()[1] > boxB.max()[1]) return false;
-	if (boxA.max()[2] < boxB.min()[2] || boxA.min()[2] > boxB.max()[2]) return false;
+	if (boxA.max[0] < boxB.min[0] || boxA.min[0] > boxB.max[0]) return false;
+	if (boxA.max[1] < boxB.min[1] || boxA.min[1] > boxB.max[1]) return false;
+	if (boxA.max[2] < boxB.min[2] || boxA.min[2] > boxB.max[2]) return false;
 	return true;
 }
 

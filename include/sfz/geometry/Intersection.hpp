@@ -22,7 +22,7 @@
 
 // Forward declares geometry primitives
 namespace sfz {
-	class AABB;
+	struct AABB;
 	struct AABB2D;
 	struct Circle;
 	class OBB;
