@@ -37,11 +37,11 @@ using std::uint8_t;
 const char* basePath() noexcept;
 
 /// Returns path to MyDocuments on Windows, user root (~) on Unix. The string itself is owned by
-/// this function and should not be deallocated or modified.
+/// this function and should not be deallocated or modified. Guaranteed to end with path separator.
 const char* myDocumentsPath() noexcept;
 
 /// Returns path to where game folders with saves should be placed. The string itself is owned by
-/// this function and should not be deallocated or modified.
+/// this function and should not be deallocated or modified. Guaranteed to end with path separator.
 const char* gameBaseFolderPath() noexcept;
 
 // IO functions

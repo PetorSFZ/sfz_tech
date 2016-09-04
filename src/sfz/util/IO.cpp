@@ -119,9 +119,15 @@ const char* myDocumentsPath() noexcept
 {
 	static const char* path = []() {
 #ifdef _WIN32
-		char* tmp = static_cast<char*>(StandardAllocator::allocate(MAX_PATH + 1));
+		char* tmp = static_cast<char*>(StandardAllocator::allocate(MAX_PATH + 2));
 		HRESULT result = SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, tmp);
 		if (result != S_OK) sfz::error("%s", "Could not retrieve MyDocuments path.");
+
+		// Add path separator
+		size_t pathLen = std::strlen(tmp);
+		tmp[pathLen] = '/';
+		tmp[pathLen+1] = '\0';
+
 		return tmp;
 #else
 		return std::getenv("HOME");
@@ -136,7 +142,7 @@ const char* gameBaseFolderPath() noexcept
 		const char* myDocuments = myDocumentsPath();
 		size_t len = std::strlen(myDocuments);
 		char* tmp = static_cast<char*>(StandardAllocator::allocate(len + 32));
-		std::snprintf(tmp, len + 32, "%s%s", myDocuments, "/My Games");
+		std::snprintf(tmp, len + 32, "%s%s", myDocuments, "My Games/");
 		return tmp;
 	}();
 	return path;
