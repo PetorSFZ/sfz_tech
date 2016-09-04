@@ -16,52 +16,47 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/geometry/Intersection.hpp"
-
-#include "sfz/geometry/AABB.hpp"
-#include "sfz/geometry/AABB2D.hpp"
-#include "sfz/geometry/Circle.hpp"
-#include "sfz/geometry/OBB.hpp"
-#include "sfz/geometry/Plane.hpp"
-#include "sfz/geometry/Sphere.hpp"
-
 namespace sfz {
 
-// Static functions
+// Details
 // ------------------------------------------------------------------------------------------------
 
-static bool intersectsPlane(const Plane& plane, const vec3& position, float projectedRadius) noexcept
+namespace detail {
+
+inline bool intersectsPlane(const Plane& plane, const vec3& position, float projectedRadius) noexcept
 {
 	// Part of plane SAT algorithm from Real-Time Collision Detection
 	float dist = plane.signedDistance(position);
 	return std::abs(dist) <= projectedRadius;
 }
 
-static bool abovePlane(const Plane& plane, const vec3& position, float projectedRadius) noexcept
+inline bool abovePlane(const Plane& plane, const vec3& position, float projectedRadius) noexcept
 {
 	// Part of plane SAT algorithm from Real-Time Collision Detection
 	float dist = plane.signedDistance(position);
 	return dist >= (-projectedRadius);
 }
 
-static bool belowPlane(const Plane& plane, const vec3& position, float projectedRadius) noexcept
+inline bool belowPlane(const Plane& plane, const vec3& position, float projectedRadius) noexcept
 {
 	// Part of plane SAT algorithm from Real-Time Collision Detection
 	float dist = plane.signedDistance(position);
 	return dist <= projectedRadius;
 }
 
+} // namespace detail
+
 // Point inside primitive tests
 // ------------------------------------------------------------------------------------------------
 
-bool pointInside(const AABB& box, const vec3& point) noexcept
+inline bool pointInside(const AABB& box, const vec3& point) noexcept
 {
 	return box.min[0] < point[0] && point[0] < box.max[0] &&
 	       box.min[1] < point[1] && point[1] < box.max[1] &&
 	       box.min[2] < point[2] && point[2] < box.max[2];
 }
 
-bool pointInside(const OBB& box, const vec3& point) noexcept
+inline bool pointInside(const OBB& box, const vec3& point) noexcept
 {
 	// Modified closest point algorithm from Real-Time Collision Detection (Section 5.1.4)
 	const vec3 distToPoint = point - box.position();
@@ -75,13 +70,13 @@ bool pointInside(const OBB& box, const vec3& point) noexcept
 	return true;
 }
 
-bool pointInside(const Sphere& sphere, const vec3& point) noexcept
+inline bool pointInside(const Sphere& sphere, const vec3& point) noexcept
 {
 	const vec3 distToPoint = point - sphere.position();
 	return squaredLength(distToPoint) < sphere.radius() * sphere.radius();
 }
 
-bool pointInside(const Circle& circle, vec2 point) noexcept
+inline bool pointInside(const Circle& circle, vec2 point) noexcept
 {
 	// If the length from the circles center to the specified point is shorter than or equal to
 	// the radius then the Circle overlaps the point. Both sides of the equation is squared to
@@ -89,7 +84,7 @@ bool pointInside(const Circle& circle, vec2 point) noexcept
 	return squaredLength(point - circle.pos) <= (circle.radius*circle.radius);
 }
 
-bool pointInside(const AABB2D& rect, vec2 point) noexcept
+inline bool pointInside(const AABB2D& rect, vec2 point) noexcept
 {
 	return rect.min.x <= point.x && point.x <= rect.max.x &&
 	       rect.min.y <= point.y && point.y <= rect.max.y;
@@ -98,7 +93,7 @@ bool pointInside(const AABB2D& rect, vec2 point) noexcept
 // Primitive vs primitive tests (same type)
 // ------------------------------------------------------------------------------------------------
 
-bool intersects(const AABB& boxA, const AABB& boxB) noexcept
+inline bool intersects(const AABB& boxA, const AABB& boxB) noexcept
 {
 	// Boxes intersect if they overlap on all axes.
 	if (boxA.max[0] < boxB.min[0] || boxA.min[0] > boxB.max[0]) return false;
@@ -107,7 +102,7 @@ bool intersects(const AABB& boxA, const AABB& boxB) noexcept
 	return true;
 }
 
-bool intersects(const OBB& a, const OBB& b) noexcept
+inline bool intersects(const OBB& a, const OBB& b) noexcept
 {
 	// OBB vs OBB SAT (Separating Axis Theorem) test from Real-Time Collision Detection
 	// (chapter 4.4.1 OBB-OBB Intersection)
@@ -203,7 +198,7 @@ bool intersects(const OBB& a, const OBB& b) noexcept
 	return true;
 }
 
-bool intersects(const Sphere& sphereA, const Sphere& sphereB) noexcept
+inline bool intersects(const Sphere& sphereA, const Sphere& sphereB) noexcept
 {
 	const vec3 distVec = sphereA.position() - sphereB.position();
 	const float squaredDist = dot(distVec, distVec);
@@ -212,7 +207,7 @@ bool intersects(const Sphere& sphereA, const Sphere& sphereB) noexcept
 	return squaredDist <= squaredRadiusSum;
 }
 
-bool overlaps(const Circle& lhs, const Circle& rhs) noexcept
+inline bool overlaps(const Circle& lhs, const Circle& rhs) noexcept
 {
 	// If the length between the center of the two circles is less than or equal to the the sum of
 	// the circle's radiuses they overlap. Both sides of the equation is squared to avoid somewhat 
@@ -222,7 +217,7 @@ bool overlaps(const Circle& lhs, const Circle& rhs) noexcept
 	return distSquared <= (radiusSum * radiusSum);
 }
 
-bool overlaps(const AABB2D& lhs, const AABB2D& rhs) noexcept
+inline bool overlaps(const AABB2D& lhs, const AABB2D& rhs) noexcept
 {
 	return lhs.min.x <= rhs.max.x &&
 	       lhs.max.x >= rhs.min.x &&
@@ -233,7 +228,7 @@ bool overlaps(const AABB2D& lhs, const AABB2D& rhs) noexcept
 // AABB2D & Circle tests
 // ------------------------------------------------------------------------------------------------
 
-bool overlaps(const Circle& circle, const AABB2D& rect) noexcept
+inline bool overlaps(const Circle& circle, const AABB2D& rect) noexcept
 {
 	// If the length between the center of the circle and the closest point on the rectangle is
 	// less than or equal to the circles radius they overlap. Both sides of the equation is 
@@ -243,7 +238,7 @@ bool overlaps(const Circle& circle, const AABB2D& rect) noexcept
 	return squaredLength(e) <= circle.radius * circle.radius;
 }
 
-bool overlaps(const AABB2D& rect, const Circle& circle) noexcept
+inline bool overlaps(const AABB2D& rect, const Circle& circle) noexcept
 {
 	return overlaps(circle, rect);
 }
@@ -251,7 +246,7 @@ bool overlaps(const AABB2D& rect, const Circle& circle) noexcept
 // Plane & AABB tests
 // ------------------------------------------------------------------------------------------------
 
-bool intersects(const Plane& plane, const AABB& aabb) noexcept
+inline bool intersects(const Plane& plane, const AABB& aabb) noexcept
 {
 	// SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 
@@ -260,15 +255,15 @@ bool intersects(const Plane& plane, const AABB& aabb) noexcept
 	                      + aabb.halfYExtent() * std::abs(plane.normal()[1])
 	                      + aabb.halfZExtent() * std::abs(plane.normal()[2]);
 
-	return intersectsPlane(plane, aabb.position(), projectedRadius);
+	return detail::intersectsPlane(plane, aabb.position(), projectedRadius);
 }
 
-bool intersects(const AABB& aabb, const Plane& plane) noexcept
+inline bool intersects(const AABB& aabb, const Plane& plane) noexcept
 {
 	return intersects(plane, aabb);
 }
 
-bool abovePlane(const Plane& plane, const AABB& aabb) noexcept
+inline bool abovePlane(const Plane& plane, const AABB& aabb) noexcept
 {
 	// Modified SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 
@@ -277,10 +272,10 @@ bool abovePlane(const Plane& plane, const AABB& aabb) noexcept
 	                      + aabb.halfYExtent() * std::abs(plane.normal()[1])
 	                      + aabb.halfZExtent() * std::abs(plane.normal()[2]);
 
-	return abovePlane(plane, aabb.position(), projectedRadius);
+	return detail::abovePlane(plane, aabb.position(), projectedRadius);
 }
 
-bool belowPlane(const Plane& plane, const AABB& aabb) noexcept
+inline bool belowPlane(const Plane& plane, const AABB& aabb) noexcept
 {
 	// Modified SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 	// Projected radius on line towards closest point on plane
@@ -288,13 +283,13 @@ bool belowPlane(const Plane& plane, const AABB& aabb) noexcept
 	                      + aabb.halfYExtent() * std::abs(plane.normal()[1])
 	                      + aabb.halfZExtent() * std::abs(plane.normal()[2]);
 
-	return belowPlane(plane, aabb.position(), projectedRadius);
+	return detail::belowPlane(plane, aabb.position(), projectedRadius);
 }
 
 // Plane & OBB tests
 // ------------------------------------------------------------------------------------------------
 
-bool intersects(const Plane& plane, const OBB& obb) noexcept
+inline bool intersects(const Plane& plane, const OBB& obb) noexcept
 {
 	// SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 	// Projected radius on line towards closest point on plane
@@ -302,15 +297,15 @@ bool intersects(const Plane& plane, const OBB& obb) noexcept
 	                      + obb.halfYExtent() * std::abs(dot(plane.normal(), obb.yAxis()))
 	                      + obb.halfZExtent() * std::abs(dot(plane.normal(), obb.zAxis()));
 
-	return intersectsPlane(plane, obb.position(), projectedRadius);
+	return detail::intersectsPlane(plane, obb.position(), projectedRadius);
 }
 
-bool intersects(const OBB& obb, const Plane& plane) noexcept
+inline bool intersects(const OBB& obb, const Plane& plane) noexcept
 {
 	return intersects(plane, obb);
 }
 
-bool abovePlane(const Plane& plane, const OBB& obb) noexcept
+inline bool abovePlane(const Plane& plane, const OBB& obb) noexcept
 {
 	// Modified SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 	// Projected radius on line towards closest point on plane
@@ -318,10 +313,10 @@ bool abovePlane(const Plane& plane, const OBB& obb) noexcept
 	                      + obb.halfYExtent() * std::abs(dot(plane.normal(), obb.yAxis()))
 	                      + obb.halfZExtent() * std::abs(dot(plane.normal(), obb.zAxis()));
 
-	return abovePlane(plane, obb.position(), projectedRadius);
+	return detail::abovePlane(plane, obb.position(), projectedRadius);
 }
 
-bool belowPlane(const Plane& plane, const OBB& obb) noexcept
+inline bool belowPlane(const Plane& plane, const OBB& obb) noexcept
 {
 	// Modified SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 	// Projected radius on line towards closest point on plane
@@ -329,30 +324,30 @@ bool belowPlane(const Plane& plane, const OBB& obb) noexcept
 	                      + obb.halfYExtent() * std::abs(dot(plane.normal(), obb.yAxis()))
 	                      + obb.halfZExtent() * std::abs(dot(plane.normal(), obb.zAxis()));
 
-	return belowPlane(plane, obb.position(), projectedRadius);
+	return detail::belowPlane(plane, obb.position(), projectedRadius);
 }
 
 // Plane & Sphere tests
 // ------------------------------------------------------------------------------------------------
 
-bool intersects(const Plane& plane, const Sphere& sphere) noexcept
+inline bool intersects(const Plane& plane, const Sphere& sphere) noexcept
 {
-	return intersectsPlane(plane, sphere.position(), sphere.radius());
+	return detail::intersectsPlane(plane, sphere.position(), sphere.radius());
 }
 
-bool intersects(const Sphere& sphere, const Plane& plane) noexcept
+inline bool intersects(const Sphere& sphere, const Plane& plane) noexcept
 {
 	return intersects(plane, sphere);
 }
 
-bool abovePlane(const Plane& plane, const Sphere& sphere) noexcept
+inline bool abovePlane(const Plane& plane, const Sphere& sphere) noexcept
 {
-	return abovePlane(plane, sphere.position(), sphere.radius());
+	return detail::abovePlane(plane, sphere.position(), sphere.radius());
 }
 
-bool belowPlane(const Plane& plane, const Sphere& sphere) noexcept
+inline bool belowPlane(const Plane& plane, const Sphere& sphere) noexcept
 {
-	return belowPlane(plane, sphere.position(), sphere.radius());
+	return detail::belowPlane(plane, sphere.position(), sphere.radius());
 }
 
 } // namespace sfz

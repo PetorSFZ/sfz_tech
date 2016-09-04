@@ -101,7 +101,7 @@ set(SOURCE_GEOMETRY_FILES
 	${INCLUDE_DIR}/sfz/geometry/Circle.hpp
 	${INCLUDE_DIR}/sfz/geometry/Circle.inl
 	${INCLUDE_DIR}/sfz/geometry/Intersection.hpp
-	 ${SOURCE_DIR}/sfz/geometry/Intersection.cpp
+	${INCLUDE_DIR}/sfz/geometry/Intersection.inl
 	${INCLUDE_DIR}/sfz/geometry/OBB.hpp
 	${INCLUDE_DIR}/sfz/geometry/OBB.inl
 	${INCLUDE_DIR}/sfz/geometry/Plane.hpp
