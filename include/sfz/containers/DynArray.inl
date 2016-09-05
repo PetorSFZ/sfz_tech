@@ -226,23 +226,24 @@ void DynArray<T, Allocator>::insert(uint32_t position, const T* arrayPtr, uint32
 template<typename T, typename Allocator>
 void DynArray<T, Allocator>::remove(uint32_t position, uint32_t numElements) noexcept
 {
-	uint32_t numElementsToRemove = numElements;
-	if (numElementsToRemove > (mSize - position)) numElementsToRemove = (mSize - position);
-	
-	// Call destructor for each element if not trivially destructible
-	if (!std::is_trivially_destructible<T>::value) {
-		for (uint64_t i = 0; i < numElementsToRemove; ++i) {
-			mDataPtr[position + i].~T();
-		}
+	// Destroy the elements to remove
+	uint32_t numElementsToRemove = std::min(numElements, mSize - position);
+	for (uint32_t i = 0; i < numElementsToRemove; i++) {
+		mDataPtr[position + i].~T();
 	}
 
-	// Move elements back
+	// Move the elements after the removed elements
 	uint32_t numElementsToMove = mSize - position - numElementsToRemove;
-	std::memmove(mDataPtr + position, mDataPtr + position + numElementsToRemove, numElementsToMove);
+	for (uint32_t i = 0; i < numElementsToMove; i++) {
+		uint32_t toIndex = position + i;
+		uint32_t fromIndex = position + i + numElementsToRemove;
+
+		new (mDataPtr + toIndex) T(std::move(mDataPtr[fromIndex]));
+		mDataPtr[fromIndex].~T();
+	}
 
 	mSize -= numElementsToRemove;
 }
-
 
 template<typename T, typename Allocator>
 template<typename F>

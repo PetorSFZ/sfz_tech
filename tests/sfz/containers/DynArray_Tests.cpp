@@ -21,6 +21,7 @@
 #include "sfz/PopWarnings.hpp"
 
 #include "sfz/containers/DynArray.hpp"
+#include "sfz/math/Vector.hpp"
 #include "sfz/memory/New.hpp"
 #include "sfz/memory/SmartPointers.hpp"
 
@@ -254,25 +255,65 @@ TEST_CASE("insert()", "[sfz::DynArray]")
 
 TEST_CASE("remove()", "[sfz::DynArray]")
 {
-	DynArray<int> v;
-	const int vals[] = {1, 2, 3, 4};
-	v.add(vals, 4);
+	SECTION("Basic test") {
+		DynArray<int> v;
+		const int vals[] ={1, 2, 3, 4};
+		v.add(vals, 4);
 
-	REQUIRE(v.size() == 4);
-	REQUIRE(v[0] == 1);
-	REQUIRE(v[1] == 2);
-	REQUIRE(v[2] == 3);
-	REQUIRE(v[3] == 4);
+		REQUIRE(v.size() == 4);
+		REQUIRE(v[0] == 1);
+		REQUIRE(v[1] == 2);
+		REQUIRE(v[2] == 3);
+		REQUIRE(v[3] == 4);
 
-	v.remove(3, 1000);
-	REQUIRE(v.size() == 3);
-	REQUIRE(v[0] == 1);
-	REQUIRE(v[1] == 2);
-	REQUIRE(v[2] == 3);
+		v.remove(3, 1000);
+		REQUIRE(v.size() == 3);
+		REQUIRE(v[0] == 1);
+		REQUIRE(v[1] == 2);
+		REQUIRE(v[2] == 3);
 
-	v.remove(0, 2);
-	REQUIRE(v.size() == 1);
-	REQUIRE(v[0] == 3);
+		v.remove(0, 2);
+		REQUIRE(v.size() == 1);
+		REQUIRE(v[0] == 3);
+	}
+	SECTION("Bug where memmove was passed numElements instead of numBytes") {
+		DynArray<vec2i> v;
+		const vec2i vals[] = {vec2i(1), vec2i(2), vec2i(3), vec2i(4)};
+		v.add(vals, 4);
+
+		REQUIRE(v.size() == 4);
+		REQUIRE(v[0] == vec2i(1));
+		REQUIRE(v[1] == vec2i(2));
+		REQUIRE(v[2] == vec2i(3));
+		REQUIRE(v[3] == vec2i(4));
+
+		v.remove(1, 2);
+		REQUIRE(v.size() == 2);
+		REQUIRE(v[0] == vec2i(1));
+		REQUIRE(v[1] == vec2i(4));
+	}
+	SECTION("Bug where not enough elements are moved")
+	{
+		DynArray<int> v;
+		const int vals[] = {1, 2, 3, 4, 5, 6};
+		v.add(vals, 6);
+
+		REQUIRE(v.size() == 6);
+		REQUIRE(v[0] == 1);
+		REQUIRE(v[1] == 2);
+		REQUIRE(v[2] == 3);
+		REQUIRE(v[3] == 4);
+		REQUIRE(v[4] == 5);
+		REQUIRE(v[5] == 6);
+
+		v.remove(0, 1);
+		REQUIRE(v.size() == 5);
+		REQUIRE(v[0] == 2);
+		REQUIRE(v[1] == 3);
+		REQUIRE(v[2] == 4);
+		REQUIRE(v[3] == 5);
+		REQUIRE(v[4] == 6);
+	}
 }
 
 TEST_CASE("find()", "[sfz::DynArray]")
