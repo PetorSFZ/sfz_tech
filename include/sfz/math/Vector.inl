@@ -701,7 +701,6 @@ Vector<T,4>& operator*= (Vector<T,4>& left, const Vector<T,4>& right) noexcept
 template<typename T, size_t N>
 Vector<T,N>& operator/= (Vector<T,N>& left, T right) noexcept
 {
-	sfz_assert_debug(right != T(0));
 	for (size_t i = 0; i < N; ++i) {
 		left.elements[i] /= right;
 	}
@@ -711,7 +710,6 @@ Vector<T,N>& operator/= (Vector<T,N>& left, T right) noexcept
 template<typename T>
 Vector<T,2>& operator/= (Vector<T,2>& left, T right) noexcept
 {
-	sfz_assert_debug(right != T(0));
 	left.x /= right;
 	left.y /= right;
 	return left;
@@ -720,7 +718,6 @@ Vector<T,2>& operator/= (Vector<T,2>& left, T right) noexcept
 template<typename T>
 Vector<T,3>& operator/= (Vector<T,3>& left, T right) noexcept
 {
-	sfz_assert_debug(right != T(0));
 	left.x /= right;
 	left.y /= right;
 	left.z /= right;
@@ -730,7 +727,6 @@ Vector<T,3>& operator/= (Vector<T,3>& left, T right) noexcept
 template<typename T>
 Vector<T,4>& operator/= (Vector<T,4>& left, T right) noexcept
 {
-	sfz_assert_debug(right != T(0));
 	left.x /= right;
 	left.y /= right;
 	left.z /= right;
@@ -742,7 +738,6 @@ template<typename T, size_t N>
 Vector<T,N>& operator/= (Vector<T,N>& left, const Vector<T,N>& right) noexcept
 {
 	for (size_t i = 0; i < N; ++i) {
-		sfz_assert_debug(right.elements[i] != T(0));
 		left.elements[i] /= right.elements[i];
 	}
 	return left;
@@ -751,8 +746,6 @@ Vector<T,N>& operator/= (Vector<T,N>& left, const Vector<T,N>& right) noexcept
 template<typename T>
 Vector<T,2>& operator/= (Vector<T,2>& left, const Vector<T,2>& right) noexcept
 {
-	sfz_assert_debug(right.x != T(0));
-	sfz_assert_debug(right.y != T(0));
 	left.x /= right.x;
 	left.y /= right.y;
 	return left;
@@ -761,9 +754,6 @@ Vector<T,2>& operator/= (Vector<T,2>& left, const Vector<T,2>& right) noexcept
 template<typename T>
 Vector<T,3>& operator/= (Vector<T,3>& left, const Vector<T,3>& right) noexcept
 {
-	sfz_assert_debug(right.x != T(0));
-	sfz_assert_debug(right.y != T(0));
-	sfz_assert_debug(right.z != T(0));
 	left.x /= right.x;
 	left.y /= right.y;
 	left.z /= right.z;
@@ -773,10 +763,6 @@ Vector<T,3>& operator/= (Vector<T,3>& left, const Vector<T,3>& right) noexcept
 template<typename T>
 Vector<T,4>& operator/= (Vector<T,4>& left, const Vector<T,4>& right) noexcept
 {
-	sfz_assert_debug(right.x != T(0));
-	sfz_assert_debug(right.y != T(0));
-	sfz_assert_debug(right.z != T(0));
-	sfz_assert_debug(right.w != T(0));
 	left.x /= right.x;
 	left.y /= right.y;
 	left.z /= right.z;
