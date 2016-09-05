@@ -458,6 +458,26 @@ Vector<T,N> max(T scalar, const Vector<T,N>& vector) noexcept
 }
 
 template<typename T, size_t N>
+T minElement(const Vector<T,N>& vector) noexcept
+{
+	T tmp = vector[0];
+	for (size_t i = 1; i < N; i++) {
+		tmp = std::min(tmp, vector[i]);
+	}
+	return tmp;
+}
+
+template<typename T, size_t N>
+T maxElement(const Vector<T,N>& vector) noexcept
+{
+	T tmp = vector[0];
+	for (size_t i = 1; i < N; i++) {
+		tmp = std::max(tmp, vector[i]);
+	}
+	return tmp;
+}
+
+template<typename T, size_t N>
 Vector<T,N> abs(const Vector<T,N>& vector) noexcept
 {
 	Vector<T,N> temp;

@@ -241,6 +241,14 @@ Vector<T,N> max(const Vector<T,N>& vector, T scalar) noexcept;
 template<typename T, size_t N>
 Vector<T,N> max(T scalar, const Vector<T,N>& vector) noexcept;
 
+/// Returns the smallest element in a vector (as defined by the min function)
+template<typename T, size_t N>
+T minElement(const Vector<T,N>& vector) noexcept;
+
+/// Returns the largest element in a vector (as defined by the max function)
+template<typename T, size_t N>
+T maxElement(const Vector<T,N>& vector) noexcept;
+
 /// Returns the element-wise abs() of the vector.
 template<typename T, size_t N>
 Vector<T,N> abs(const Vector<T,N>& vector) noexcept;

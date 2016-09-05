@@ -671,6 +671,20 @@ TEST_CASE("min() & max()", "[sfz::Vector]")
 		REQUIRE(res2[1] == 3);
 		REQUIRE(res2[2] == 2);
 	}
+	SECTION("minElement()")
+	{
+		int res1 = minElement(v1);
+		int res2 = minElement(v2);
+		REQUIRE(res1 == -1);
+		REQUIRE(res2 == -1);
+	}
+	SECTION("maxElement")
+	{
+		int res1 = maxElement(v1);
+		int res2 = maxElement(v2);
+		REQUIRE(res1 == 1);
+		REQUIRE(res2 == 3);
+	}
 }
 
 TEST_CASE("abs()", "[sfz::Vector]")
