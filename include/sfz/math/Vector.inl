@@ -499,7 +499,7 @@ template<typename T>
 Vector<T,4> min(const Vector<T,4>& vector, T scalar) noexcept
 {
 	return Vector<T,4>(std::min(vector.x, scalar),
-	                   std::min(vector.y, scalar)
+	                   std::min(vector.y, scalar),
 	                   std::min(vector.z, scalar),
 	                   std::min(vector.w, scalar));
 }
