@@ -415,6 +415,29 @@ Vector<T,N> min(const Vector<T,N>& left, const Vector<T,N>& right) noexcept
 	return temp;
 }
 
+template<typename T>
+Vector<T,2> min(const Vector<T,2>& left, const Vector<T,2>& right) noexcept
+{
+	return Vector<T,2>(std::min(left.x, right.x), std::min(left.y, right.y));
+}
+
+template<typename T>
+Vector<T,3> min(const Vector<T,3>& left, const Vector<T,3>& right) noexcept
+{
+	return Vector<T,3>(std::min(left.x, right.x), 
+	                   std::min(left.y, right.y),
+	                   std::min(left.z, right.z));
+}
+
+template<typename T>
+Vector<T,4> min(const Vector<T,4>& left, const Vector<T,4>& right) noexcept
+{
+	return Vector<T,4>(std::min(left.x, right.x), 
+	                   std::min(left.y, right.y),
+	                   std::min(left.z, right.z),
+	                   std::min(left.w, right.w));
+}
+
 template<typename T, size_t N>
 Vector<T,N> max(const Vector<T,N>& left, const Vector<T,N>& right) noexcept
 {
@@ -425,6 +448,29 @@ Vector<T,N> max(const Vector<T,N>& left, const Vector<T,N>& right) noexcept
 	return temp;
 }
 
+template<typename T>
+Vector<T,2> max(const Vector<T,2>& left, const Vector<T,2>& right) noexcept
+{
+	return Vector<T,2>(std::max(left.x, right.x), std::max(left.y, right.y));
+}
+
+template<typename T>
+Vector<T,3> max(const Vector<T,3>& left, const Vector<T,3>& right) noexcept
+{
+	return Vector<T,3>(std::max(left.x, right.x),
+	                   std::max(left.y, right.y),
+	                   std::max(left.z, right.z));
+}
+
+template<typename T>
+Vector<T,4> max(const Vector<T,4>& left, const Vector<T,4>& right) noexcept
+{
+	return Vector<T,4>(std::max(left.x, right.x),
+	                   std::max(left.y, right.y),
+	                   std::max(left.z, right.z),
+	                   std::max(left.w, right.w));
+}
+
 template<typename T, size_t N>
 Vector<T,N> min(const Vector<T,N>& vector, T scalar) noexcept
 {
@@ -433,6 +479,29 @@ Vector<T,N> min(const Vector<T,N>& vector, T scalar) noexcept
 		temp[i] = std::min(vector[i], scalar);
 	}
 	return temp;
+}
+
+template<typename T>
+Vector<T,2> min(const Vector<T,2>& vector, T scalar) noexcept
+{
+	return Vector<T,2>(std::min(vector.x, scalar), std::min(vector.y, scalar));
+}
+
+template<typename T>
+Vector<T,3> min(const Vector<T,3>& vector, T scalar) noexcept
+{
+	return Vector<T,3>(std::min(vector.x, scalar),
+	                   std::min(vector.y, scalar),
+	                   std::min(vector.z, scalar));
+}
+
+template<typename T>
+Vector<T,4> min(const Vector<T,4>& vector, T scalar) noexcept
+{
+	return Vector<T,4>(std::min(vector.x, scalar),
+	                   std::min(vector.y, scalar)
+	                   std::min(vector.z, scalar),
+	                   std::min(vector.w, scalar));
 }
 
 template<typename T, size_t N>
@@ -451,6 +520,29 @@ Vector<T,N> max(const Vector<T,N>& vector, T scalar) noexcept
 	return temp;
 }
 
+template<typename T>
+Vector<T,2> max(const Vector<T,2>& vector, T scalar) noexcept
+{
+	return Vector<T,2>(std::max(vector.x, scalar), std::max(vector.y, scalar));
+}
+
+template<typename T>
+Vector<T,3> max(const Vector<T,3>& vector, T scalar) noexcept
+{
+	return Vector<T,3>(std::max(vector.x, scalar),
+	                   std::max(vector.y, scalar),
+	                   std::max(vector.z, scalar));
+}
+
+template<typename T>
+Vector<T,4> max(const Vector<T,4>& vector, T scalar) noexcept
+{
+	return Vector<T,4>(std::max(vector.x, scalar),
+	                   std::max(vector.y, scalar),
+	                   std::max(vector.z, scalar),
+	                   std::max(vector.w, scalar));
+}
+
 template<typename T, size_t N>
 Vector<T,N> max(T scalar, const Vector<T,N>& vector) noexcept
 {
@@ -467,6 +559,24 @@ T minElement(const Vector<T,N>& vector) noexcept
 	return tmp;
 }
 
+template<typename T>
+T minElement(const Vector<T,2>& vector) noexcept
+{
+	return std::min(vector.x, vector.y);
+}
+
+template<typename T>
+T minElement(const Vector<T,3>& vector) noexcept
+{
+	return std::min(std::min(vector.x, vector.y), vector.z);
+}
+
+template<typename T>
+T minElement(const Vector<T,4>& vector) noexcept
+{
+	return std::min(std::min(std::min(vector.x, vector.y), vector.z), vector.w);
+}
+
 template<typename T, size_t N>
 T maxElement(const Vector<T,N>& vector) noexcept
 {
@@ -477,6 +587,24 @@ T maxElement(const Vector<T,N>& vector) noexcept
 	return tmp;
 }
 
+template<typename T>
+T maxElement(const Vector<T,2>& vector) noexcept
+{
+	return std::max(vector.x, vector.y);
+}
+
+template<typename T>
+T maxElement(const Vector<T,3>& vector) noexcept
+{
+	return std::max(std::max(vector.x, vector.y), vector.z);
+}
+
+template<typename T>
+T maxElement(const Vector<T,4>& vector) noexcept
+{
+	return std::max(std::max(std::max(vector.x, vector.y), vector.z), vector.w);
+}
+
 template<typename T, size_t N>
 Vector<T,N> abs(const Vector<T,N>& vector) noexcept
 {
@@ -485,6 +613,24 @@ Vector<T,N> abs(const Vector<T,N>& vector) noexcept
 		temp[i] = std::abs(vector[i]);
 	}
 	return temp;
+}
+
+template<typename T>
+Vector<T,2> abs(const Vector<T,2>& vector) noexcept
+{
+	return Vector<T,2>(std::abs(vector.x), std::abs(vector.y));
+}
+
+template<typename T>
+Vector<T,3> abs(const Vector<T,3>& vector) noexcept
+{
+	return Vector<T,3>(std::abs(vector.x), std::abs(vector.y), std::abs(vector.z));
+}
+
+template<typename T>
+Vector<T,4> abs(const Vector<T,4>& vector) noexcept
+{
+	return Vector<T,4>(std::abs(vector.x), std::abs(vector.y), std::abs(vector.z), std::abs(vector.w));
 }
 
 template<typename T, size_t N>
