@@ -61,8 +61,8 @@ struct Matrix final {
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	constexpr Matrix() noexcept = default;
-	constexpr Matrix(const Matrix<T,M,N>&) noexcept = default;
+	Matrix() noexcept = default;
+	Matrix(const Matrix<T,M,N>&) noexcept = default;
 	Matrix<T,M,N>& operator= (const Matrix<T,M,N>&) noexcept = default;
 	~Matrix() noexcept = default;
 

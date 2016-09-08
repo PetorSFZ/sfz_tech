@@ -456,7 +456,6 @@ TEST_CASE("Matrix is proper POD", "[sfz::Matrix]")
 	REQUIRE(std::is_trivial<sfz::mat4>::value);
 	REQUIRE(std::is_standard_layout<sfz::mat4>::value);
 	REQUIRE(std::is_pod<sfz::mat4>::value);
-	REQUIRE(std::is_literal_type<sfz::mat4>::value);
 }
 
 

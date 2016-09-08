@@ -56,8 +56,8 @@ struct Vector final {
 
 	T elements[N];
 
-	constexpr Vector() noexcept = default;
-	constexpr Vector(const Vector<T,N>&) noexcept = default;
+	Vector() noexcept = default;
+	Vector(const Vector<T,N>&) noexcept = default;
 	Vector<T,N>& operator= (const Vector<T,N>&) noexcept = default;
 	~Vector() noexcept = default;
 
@@ -77,8 +77,8 @@ struct Vector<T,2> final {
 		struct { T x, y; };
 	};	
 
-	constexpr Vector() noexcept = default;
-	constexpr Vector(const Vector<T,2>&) noexcept = default;
+	Vector() noexcept = default;
+	Vector(const Vector<T,2>&) noexcept = default;
 	Vector<T,2>& operator= (const Vector<T,2>&) noexcept = default;
 	~Vector() noexcept = default;
 
@@ -102,8 +102,8 @@ struct Vector<T,3> final {
 		struct { T xAlias; Vector<T,2> yz; };
 	};
 
-	constexpr Vector() noexcept = default;
-	constexpr Vector(const Vector<T,3>&) noexcept = default;
+	Vector() noexcept = default;
+	Vector(const Vector<T,3>&) noexcept = default;
 	Vector<T,3>& operator= (const Vector<T,3>&) noexcept = default;
 	~Vector() noexcept = default;
 
@@ -131,8 +131,8 @@ struct Vector<T,4> final {
 		struct { T xAlias2; Vector<T,2> yz; };
 	};
 
-	constexpr Vector() noexcept = default;
-	constexpr Vector(const Vector<T,4>&) noexcept = default;
+	Vector() noexcept = default;
+	Vector(const Vector<T,4>&) noexcept = default;
 	Vector<T,4>& operator= (const Vector<T,4>&) noexcept = default;
 	~Vector() noexcept = default;
 
@@ -199,7 +199,7 @@ T dot(const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
 /// Calculates the cross product of two vectors
 template<typename T>
-constexpr Vector<T,3> cross(const Vector<T,3>& left, const Vector<T,3>& right) noexcept;
+Vector<T,3> cross(const Vector<T,3>& left, const Vector<T,3>& right) noexcept;
 
 /// Calculates the sum of all the elements in the vector
 template<typename T, size_t N>

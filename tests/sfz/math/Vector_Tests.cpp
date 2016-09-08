@@ -750,9 +750,4 @@ TEST_CASE("Is proper POD", "[sfz::Vector]")
 	REQUIRE(std::is_pod<sfz::vec2i>::value);
 	REQUIRE(std::is_pod<sfz::vec3>::value);
 	REQUIRE(std::is_pod<sfz::vec3i>::value);
-
-	REQUIRE(std::is_literal_type<sfz::vec2>::value);
-	REQUIRE(std::is_literal_type<sfz::vec2i>::value);
-	REQUIRE(std::is_literal_type<sfz::vec3>::value);
-	REQUIRE(std::is_literal_type<sfz::vec3i>::value);
 }

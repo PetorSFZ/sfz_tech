@@ -359,7 +359,7 @@ T dot(const Vector<T,4>& left, const Vector<T,4>& right) noexcept
 }
 
 template<typename T>
-constexpr Vector<T,3> cross(const Vector<T,3>& left, const Vector<T,3>& right) noexcept
+Vector<T,3> cross(const Vector<T,3>& left, const Vector<T,3>& right) noexcept
 {
 	return sfz::Vector<T,3>{left.y*right.z - left.z*right.y,
 	                        left.z*right.x - left.x*right.z,
