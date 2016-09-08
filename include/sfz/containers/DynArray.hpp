@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <algorithm> // std::min()
 #include <cstdint>
 #include <cstring> // std::memcpy()
 #include <new> // Placement new
