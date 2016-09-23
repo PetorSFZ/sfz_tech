@@ -25,7 +25,7 @@
 
 #define sfz_assert_debug_m_impl(condition, message) \
 { \
-	if (!condition) { \
+	if (!(condition)) { \
 		sfz::printErrorMessage("%s", message); \
 		assert(condition); \
 	} \
@@ -43,7 +43,7 @@
 
 #define sfz_assert_release_impl(condition) \
 { \
-	if (!condition) { \
+	if (!(condition)) { \
 		assert(condition); \
 		sfz::terminateProgram(); \
 	} \
@@ -51,7 +51,7 @@
 
 #define sfz_assert_release_m_impl(condition, message) \
 { \
-	if (!condition) { \
+	if (!(condition)) { \
 		sfz::printErrorMessage("%s", message); \
 		assert(condition); \
 		sfz::terminateProgram(); \
