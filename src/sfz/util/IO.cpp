@@ -130,7 +130,16 @@ const char* myDocumentsPath() noexcept
 
 		return tmp;
 #else
-		return std::getenv("HOME");
+		const char* envHome = std::getenv("HOME");
+		size_t pathLen = std::strlen(envHome);
+
+		char* tmp = static_cast<char*>(StandardAllocator::allocate(pathLen + 2));
+		std::strncpy(tmp, envHome, pathLen);
+
+		// Add path separator
+		tmp[pathLen] = '/';
+		tmp[pathLen + 1] = '\0';
+		return tmp;
 #endif
 	}();
 	return path;
