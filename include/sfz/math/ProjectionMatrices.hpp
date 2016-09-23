@@ -22,7 +22,12 @@
 
 namespace sfz {
 
-// Projection matrices (Standard OpenGL [-1, 1] right-handed clip space, right-handed view space)
+// GL View matrix (OGL right-handed, negative z into screen, positive x to the right)
+// ------------------------------------------------------------------------------------------------
+
+mat4 viewMatrixGL(const vec3& origin, const vec3& dir, const vec3& up) noexcept;
+
+// Projection matrices (Standard OpenGL [-1, 1] right-handed clip space, GL view space)
 // ------------------------------------------------------------------------------------------------
 
 mat4 orthogonalProjectionGL(float left, float bottom, float right, float top,
@@ -42,17 +47,21 @@ mat4 perspectiveProjectionGL(float left, float bottom, float right, float top,
 /// \param zFar the far plane
 mat4 perspectiveProjectionGL(float yFovDeg, float aspectRatio, float zNear, float zFar) noexcept;
 
-// Projection matrices (D3D/Vulkan [0, 1] left-handed clip space, right handed view space)
+// Projection matrices (D3D/Vulkan [0, 1] left-handed clip space, GL view space)
 // ------------------------------------------------------------------------------------------------
+
+/// These are meant to be used on OpenGL with D3D clip space and back face culling winding order.
+/// I.e. glClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE) and glFrontFace(GL_CW)
 
 mat4 perspectiveProjectionVkD3d(float left, float bottom, float right, float top,
                                 float zNear, float zfar) noexcept;
 
 mat4 perspectiveProjectionVkD3d(float yFovDeg, float aspectRatio, float zNear, float zFar) noexcept;
 
-mat4 reversePerspectiveProjectionVkD3d(float left, float bottom, float right, float top,
-                                       float zNear, float zFar) noexcept;
 
-mat4 reversePerspectiveProjectionVkD3d(float yFovDeg, float aspectRatio, float zNear, float zFar) noexcept;
+mat4 reverseInfinitePerspectiveProjectionVkD3d(float left, float bottom, float right, float top,
+                                               float zNear) noexcept;
+
+mat4 reverseInfinitePerspectiveProjectionVkD3d(float yFovDeg, float aspect, float zNear) noexcept;
 
 } // namespace sfz

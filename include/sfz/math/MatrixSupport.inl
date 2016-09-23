@@ -346,26 +346,6 @@ Matrix<T,4,4> translationMatrix(const Vector<T,3>& delta) noexcept
 	return translationMatrix(delta[0], delta[1], delta[2]);
 }
 
-// View matrices
-// ------------------------------------------------------------------------------------------------
-
-template<typename T>
-Matrix<T,4,4> lookAt(const Vector<T,3>& cameraPosition, const Vector<T,3> cameraTarget,
-                     const Vector<T,3> upVector) noexcept
-{
-	// Inspired by gluLookAt().
-	Vector<T,3> normalizedDir = normalize(cameraTarget - cameraPosition);
-	Vector<T,3> normalizedUpVec = normalize(upVector);
-	Vector<T,3> s = normalize(cross(normalizedDir, normalizedUpVec));
-	Vector<T,3> u = normalize(cross(normalize(s), normalizedDir));
-	return Matrix<T,4,4>{{s[0], s[1], s[2], 0},
-	                     {u[0], u[1], u[2], 0},
-	                     {-normalizedDir[0], -normalizedDir[1], -normalizedDir[2], 0},
-	                     {0, 0, 0, 1}}
-
-	                     * translationMatrix(-cameraPosition);
-}
-
 // Transform helper functions
 // ------------------------------------------------------------------------------------------------
 

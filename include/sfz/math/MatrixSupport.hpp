@@ -118,13 +118,6 @@ Matrix<T,4,4> translationMatrix(T deltaX, T deltaY, T deltaZ) noexcept;
 template<typename T>
 Matrix<T,4,4> translationMatrix(const Vector<T,3>& delta) noexcept;
 
-// View matrices
-// ------------------------------------------------------------------------------------------------
-
-template<typename T>
-Matrix<T,4,4> lookAt(const Vector<T,3>& cameraPosition, const Vector<T,3> cameraTarget,
-                     const Vector<T,3> upVector) noexcept;
-
 // Transform helper functions
 // ------------------------------------------------------------------------------------------------
 
