@@ -21,19 +21,15 @@
 
 #if !defined(SFZ_NO_DEBUG) && !defined(SFZ_NO_ASSERTIONS)
 
+#ifdef _WIN32
+#define sfz_assert_debug_impl(condition) { if (!(condition)) __debugbreak(); }
+#else
+// Just use standard assert on unknown platforms and hope it is not disabled
 #define sfz_assert_debug_impl(condition) assert(condition)
-
-#define sfz_assert_debug_m_impl(condition, message) \
-{ \
-	if (!(condition)) { \
-		sfz::printErrorMessage("%s", message); \
-		assert(condition); \
-	} \
-}
+#endif
 
 #else
 #define sfz_assert_debug_impl(condition) ((void)0)
-#define sfz_assert_debug_m_impl(condition, message) ((void)0)
 #endif
 
 // Release assert
@@ -41,24 +37,24 @@
 
 #if !defined(SFZ_NO_ASSERTIONS)
 
+#ifdef _WIN32
 #define sfz_assert_release_impl(condition) \
 { \
 	if (!(condition)) { \
-		assert(condition); \
+		__debugbreak(); \
 		sfz::terminateProgram(); \
 	} \
 }
-
-#define sfz_assert_release_m_impl(condition, message) \
+#else
+#define sfz_assert_release_impl(condition) \
 { \
 	if (!(condition)) { \
-		sfz::printErrorMessage("%s", message); \
-		assert(condition); \
+		assert((condition)); \
 		sfz::terminateProgram(); \
 	} \
 }
+#endif
 
 #else
 #define sfz_assert_release_impl(condition) ((void)0)
-#define sfz_assert_release_m_impl(condition, message) ((void)0)
 #endif

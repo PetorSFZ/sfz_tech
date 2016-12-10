@@ -18,20 +18,19 @@
 
 #pragma once
 
+#ifdef _WIN32
+#include <intrin.h>
+#else
 #include <cassert>
+#endif
 
 // Debug assert
 // ------------------------------------------------------------------------------------------------
 
 /// Stops program or opens debugger if condition is false.
 /// To be used often to catch bugs during debugging progress. Should normally only be enabled in
-/// debug builds.Disabled by defining SFZ_NO_DEBUG, but also by defining SFZ_NO_ASSERTIONS.
-#define sfz_assert_debug(condition) sfz_assert_debug_impl(condition)
-
-/// Stops program or opens debugger if condition is false and displays message.
-/// To be used often to catch bugs during debugging progress. Should normally only be enabled in
 /// debug builds. Disabled by defining SFZ_NO_DEBUG, but also by defining SFZ_NO_ASSERTIONS.
-#define sfz_assert_debug_m(condition, message) sfz_assert_debug_m_impl(condition, message)
+#define sfz_assert_debug(condition) sfz_assert_debug_impl(condition)
 
 // Release assert
 // ------------------------------------------------------------------------------------------------
@@ -40,11 +39,6 @@
 /// To be used for more serious things that you want to catch quickly even in a release build.
 /// Should normally always be enabled, but can be disabled by defining SFZ_NO_ASSERTIONS.
 #define sfz_assert_release(condition) sfz_assert_release_impl(condition)
-
-/// Stops program or opens debugger if condition is false and displays message.
-/// To be used for more serious things that you want to catch quickly even in a release build.
-/// Should normally always be enabled, but can be disabled by defining SFZ_NO_ASSERTIONS.
-#define sfz_assert_release_m(condition, message) sfz_assert_release_m_impl(condition, message)
 
 namespace sfz {
 
