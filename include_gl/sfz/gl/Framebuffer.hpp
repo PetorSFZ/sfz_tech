@@ -65,13 +65,25 @@ enum class FBTextureFormat : uint32_t {
 	RG_INT_U8,
 	RGB_INT_U8,
 	RGBA_INT_U8,
-	
+
+	// Unsigned non-normalized 16-bit int, maps to normal unsigned integer range [0, 65535]
+	R_INT_U16,
+	RG_INT_U16,
+	RGB_INT_U16,
+	RGBA_INT_U16,
+
 	// Signed non-normalized 8-bit int, maps to normal signed integer range [-128, 127]
 	R_INT_S8,
 	RG_INT_S8,
 	RGB_INT_S8,
 	RGBA_INT_S8,
-	
+
+	// Signed non-normalized 16-bit int, maps to normal signed integer range [-32768, 32767]
+	R_INT_S16,
+	RG_INT_S16,
+	RGB_INT_S16,
+	RGBA_INT_S16,
+
 	// 32-bit float, maps to normal 32-bit float range
 	R_F32,
 	RG_F32,
