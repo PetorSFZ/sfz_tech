@@ -25,7 +25,6 @@
 #include <functional>
 
 #include "sfz/Assert.hpp"
-#include "sfz/containers/StackString.hpp"
 #include "sfz/CudaCompatibility.hpp"
 #include "sfz/math/MathConstants.hpp"
 
@@ -206,7 +205,7 @@ SFZ_CUDA_CALL Vector<T,3> cross(const Vector<T,3>& left, const Vector<T,3>& righ
 
 /// Calculates the sum of all the elements in the vector
 template<typename T, size_t N>
-SFZ_CUDA_CALL T sum(const Vector<T,N>& vector) noexcept;
+SFZ_CUDA_CALL T elementSum(const Vector<T,N>& vector) noexcept;
 
 /// Returns the element-wise minimum of two vectors.
 template<typename T, size_t N>
@@ -243,22 +242,6 @@ SFZ_CUDA_CALL Vector<T,N> abs(const Vector<T,N>& vector) noexcept;
 /// Hashes the vector
 template<typename T, size_t N>
 size_t hash(const Vector<T,N>& vector) noexcept;
-
-/// Creates string representation of a float vector
-template<size_t N>
-StackString toString(const Vector<float,N>& vector, uint32_t numDecimals = 2) noexcept;
-
-/// Creates string representation of a float vector
-template<size_t N>
-void toString(const Vector<float,N>& vector, StackString& string, uint32_t numDecimals = 2) noexcept;
-
-/// Creates string representation of an int vector
-template<size_t N>
-StackString toString(const Vector<int32_t,N>& vector) noexcept;
-
-/// Creates string representation of an int vector
-template<size_t N>
-void toString(const Vector<int32_t,N>& vector, StackString& string) noexcept;
 
 // Operators (arithmetic & assignment)
 // ------------------------------------------------------------------------------------------------

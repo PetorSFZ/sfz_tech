@@ -192,62 +192,6 @@ size_t hash(const Matrix<T,M,N>& matrix) noexcept
 	return hash;
 }
 
-template<size_t M, size_t N>
-StackString256 toString(const Matrix<float,M,N>& matrix, bool rowBreak, uint32_t numDecimals) noexcept
-{
-	StackString256 tmp;
-	toString(matrix, tmp, rowBreak, numDecimals);
-	return tmp;
-}
-
-template<size_t M, size_t N>
-void toString(const Matrix<float,M,N>& matrix, StackString256& string, bool rowBreak, uint32_t numDecimals) noexcept
-{
-	string.str[0] = '\0';
-	string.printfAppend("[");
-	StackString tmp;
-	for (size_t i = 0; i < M; i++) {
-		toString(matrix.rowAt(i), tmp, numDecimals);
-		string.printfAppend("%s", tmp.str);
-		if (i < (M-1)) {
-			if (rowBreak) {
-				string.printfAppend(",\n ");
-			} else {
-				string.printfAppend(", ");
-			}
-		}
-	}
-	string.printfAppend("]");
-}
-
-template<size_t M, size_t N>
-StackString256 toString(const Matrix<int32_t,M,N>& matrix, bool rowBreak) noexcept
-{
-	StackString256 tmp;
-	toString(matrix, tmp, rowBreak);
-	return tmp;
-}
-
-template<size_t M, size_t N>
-void toString(const Matrix<int32_t,M,N>& matrix, StackString256& string, bool rowBreak) noexcept
-{
-	string.str[0] = '\0';
-	string.printfAppend("[");
-	StackString tmp;
-	for (size_t i = 0; i < M; i++) {
-		toString(matrix.rowAt(i), tmp);
-		string.printfAppend("%s", tmp.str);
-		if (i < (M-1)) {
-			if (rowBreak) {
-				string.printfAppend(",\n ");
-			} else {
-				string.printfAppend(", ");
-			}
-		}
-	}
-	string.printfAppend("]");
-}
-
 // Operators (arithmetic & sssignment)
 // ------------------------------------------------------------------------------------------------
 

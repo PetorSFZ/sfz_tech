@@ -133,6 +133,10 @@ set(SOURCE_MATH_FILES
 	${INCLUDE_DIR}/sfz/math/MathConstants.hpp
 	${INCLUDE_DIR}/sfz/math/MathHelpers.hpp
 	${INCLUDE_DIR}/sfz/math/MathHelpers.inl
+	${INCLUDE_DIR}/sfz/math/MathPrimitiveHashers.hpp
+	${INCLUDE_DIR}/sfz/math/MathPrimitiveHashers.inl
+	${INCLUDE_DIR}/sfz/math/MathPrimitiveToStrings.hpp
+	 ${SOURCE_DIR}/sfz/math/MathPrimitiveToStrings.cpp
 	${INCLUDE_DIR}/sfz/math/Matrix.hpp
 	${INCLUDE_DIR}/sfz/math/Matrix.inl
 	${INCLUDE_DIR}/sfz/math/MatrixSupport.hpp

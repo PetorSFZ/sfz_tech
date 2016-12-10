@@ -21,6 +21,7 @@
 #include "sfz/PopWarnings.hpp"
 
 #include "sfz/math/Vector.hpp"
+#include "sfz/math/MathPrimitiveToStrings.hpp"
 
 #include <type_traits>
 
@@ -550,9 +551,9 @@ TEST_CASE("Cross product", "[sfz::Vector]")
 
 TEST_CASE("Sum of vector", "[sfz::Vector]")
 {
-	using sfz::sum;
+	using sfz::elementSum;
 	sfz::Vector<int, 4> v1{1, 2, -4, 9};
-	REQUIRE(sum(v1) == 8);
+	REQUIRE(elementSum(v1) == 8);
 }
 
 TEST_CASE("min() & max()", "[sfz::Vector]")

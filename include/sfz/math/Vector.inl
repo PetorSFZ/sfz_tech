@@ -395,7 +395,7 @@ SFZ_CUDA_CALL Vector<T,3> cross(const Vector<T,3>& left, const Vector<T,3>& righ
 }
 
 template<typename T, size_t N>
-SFZ_CUDA_CALL T sum(const Vector<T,N>& vector) noexcept
+SFZ_CUDA_CALL T elementSum(const Vector<T,N>& vector) noexcept
 {
 	T result = T(0);
 	for (size_t i = 0; i < N; ++i) {
@@ -405,19 +405,19 @@ SFZ_CUDA_CALL T sum(const Vector<T,N>& vector) noexcept
 }
 
 template<typename T>
-SFZ_CUDA_CALL T sum(const Vector<T,2>& vector) noexcept
+SFZ_CUDA_CALL T elementSum(const Vector<T,2>& vector) noexcept
 {
 	return vector.x + vector.y;
 }
 
 template<typename T>
-SFZ_CUDA_CALL T sum(const Vector<T,3>& vector) noexcept
+SFZ_CUDA_CALL T elementSum(const Vector<T,3>& vector) noexcept
 {
 	return vector.x + vector.y + vector.z;
 }
 
 template<typename T>
-SFZ_CUDA_CALL T sum(const Vector<T,4>& vector) noexcept
+SFZ_CUDA_CALL T elementSum(const Vector<T,4>& vector) noexcept
 {
 	return vector.x + vector.y + vector.z + vector.w;
 }
@@ -660,78 +660,6 @@ size_t hash(const Vector<T,N>& vector) noexcept
 		hash ^= hasher(vector[i]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
 	}
 	return hash;
-}
-
-template<size_t N>
-StackString toString(const Vector<float,N>& vector, uint32_t numDecimals) noexcept
-{
-	StackString tmp;
-	toString(vector, tmp, numDecimals);
-	return tmp;
-}
-
-template<size_t N>
-void toString(const Vector<float,N>& vector, StackString& string, uint32_t numDecimals) noexcept
-{
-	// "N != N" instead of "false" to make a fake dependency. See: http://stackoverflow.com/a/14637372
-	static_assert(N != N, "toString() not implemented for float vectors of this dimension");
-}
-
-template<>
-inline void toString(const vec2& vector, StackString& string, uint32_t numDecimals) noexcept
-{
-	StackString32 formatStr;
-	formatStr.printf("[%%.%uf, %%.%uf]", numDecimals, numDecimals);
-	string.printf(formatStr.str, vector.x, vector.y);
-}
-
-template<>
-inline void toString(const vec3& vector, StackString& string, uint32_t numDecimals) noexcept
-{
-	StackString32 formatStr;
-	formatStr.printf("[%%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals);
-	string.printf(formatStr.str, vector.x, vector.y, vector.z);
-}
-
-template<>
-inline void toString(const vec4& vector, StackString& string, uint32_t numDecimals) noexcept
-{
-	StackString32 formatStr;
-	formatStr.printf("[%%.%uf, %%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals, numDecimals);
-	string.printf(formatStr.str, vector.x, vector.y, vector.z, vector.w);
-}
-
-template<size_t N>
-StackString toString(const Vector<int32_t,N>& vector) noexcept
-{
-	StackString tmp;
-	toString(vector, tmp);
-	return tmp;
-}
-
-template<size_t N>
-void toString(const Vector<int32_t,N>& vector, StackString& string) noexcept
-{
-	// "N != N" instead of "false" to make a fake dependency. See: http://stackoverflow.com/a/14637372
-	static_assert(N != N, "toString() not implemented for int vectors of this dimension");
-}
-
-template<>
-inline void toString(const vec2i& vector, StackString& string) noexcept
-{
-	string.printf("[%i, %i]", vector.x, vector.y);
-}
-
-template<>
-inline void toString(const vec3i& vector, StackString& string) noexcept
-{
-	string.printf("[%i, %i, %i]", vector.x, vector.y, vector.z);
-}
-
-template<>
-inline void toString(const vec4i& vector, StackString& string) noexcept
-{
-	string.printf("[%i, %i, %i, %i]", vector.x, vector.y, vector.z, vector.w);
 }
 
 // Operators (arithmetic & assignment)
