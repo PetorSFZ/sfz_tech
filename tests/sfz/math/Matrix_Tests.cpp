@@ -950,33 +950,6 @@ TEST_CASE("Projection matrices (Standard OpenGL)", "[sfz::ProjectionMatrices]")
 	}
 }
 
-TEST_CASE("View matrices", "[sfz::Matrix]")
-{
-	SECTION("lookAt()") {
-		auto m = sfz::lookAt(sfz::vec3{1, 2, 3}, sfz::vec3{25, 25, 25}, sfz::vec3{0, 1, 0});
-
-		REQUIRE(approxEqual(m.at(0, 0), -0.675725f));
-		REQUIRE(approxEqual(m.at(0, 1), 0));
-		REQUIRE(approxEqual(m.at(0, 2), 0.737154f));
-		REQUIRE(approxEqual(m.at(0, 3), -1.53574f));
-
-		REQUIRE(approxEqual(m.at(1, 0), -0.425328f));
-		REQUIRE(approxEqual(m.at(1, 1), 0.816754f));
-		REQUIRE(approxEqual(m.at(1, 2), -0.389884f));
-		REQUIRE(approxEqual(m.at(1, 3), -0.0385262f));
-
-		REQUIRE(approxEqual(m.at(2, 0), -0.602073f));
-		REQUIRE(approxEqual(m.at(2, 1), -0.576987f));
-		REQUIRE(approxEqual(m.at(2, 2), -0.5519f));
-		REQUIRE(approxEqual(m.at(2, 3), 3.41175f));
-
-		REQUIRE(approxEqual(m.at(3, 0), 0));
-		REQUIRE(approxEqual(m.at(3, 1), 0));
-		REQUIRE(approxEqual(m.at(3, 2), 0));
-		REQUIRE(approxEqual(m.at(3, 3), 1));		
-	}
-}
-
 TEST_CASE("Tranform helper functions", "[sfz::Matrix]")
 {
 	sfz::mat4 m{{1, 2, 3, 4},
