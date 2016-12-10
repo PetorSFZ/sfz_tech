@@ -246,6 +246,15 @@ void DynArray<T, Allocator>::remove(uint32_t position, uint32_t numElements) noe
 }
 
 template<typename T, typename Allocator>
+void DynArray<T, Allocator>::removeLast() noexcept
+{
+	if (mSize > 0) {
+		mSize -= 1;
+		mDataPtr[mSize].~T();
+	}
+}
+
+template<typename T, typename Allocator>
 template<typename F>
 T* DynArray<T, Allocator>::find(F func) noexcept
 {
