@@ -55,6 +55,8 @@ public:
 
 	static Program fromSource(const char* vertexSrc, const char* fragmentSrc,
 	                          void(*bindAttribFragFunc)(uint32_t shaderProgram) = nullptr) noexcept;
+	static Program fromSource(const char* vertexSrc, const char* geometrySrc, const char* fragmentSrc,
+	                          void(*bindAttribFragFunc)(uint32_t shaderProgram) = nullptr) noexcept;
 	static Program postProcessFromSource(const char* postProcessSource) noexcept;
 
 	/// Constructs an OpenGL program given file paths to source
@@ -65,6 +67,9 @@ public:
 	///                           glBindFragDataLocation()
 
 	static Program fromFile(const char* basePath, const char* vertexFile, const char* fragmentFile,
+	                        void(*bindAttribFragFunc)(uint32_t shaderProgram) = nullptr) noexcept;
+	static Program fromFile(const char* basePath, const char* vertexFile,
+	                        const char* geometryFile, const char* fragmentFile,
 	                        void(*bindAttribFragFunc)(uint32_t shaderProgram) = nullptr) noexcept;
 	static Program postProcessFromFile(const char* basePath, const char* postProcessFile) noexcept;
 
@@ -109,6 +114,7 @@ private:
 
 	// Optional paths to shader source files
 	DynString mVertexPath;
+	DynString mGeometryPath;
 	DynString mFragmentPath;
 
 	// Bool that specifies if program is post process or not
