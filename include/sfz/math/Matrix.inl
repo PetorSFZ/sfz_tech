@@ -342,7 +342,7 @@ Vector<T,M> operator* (const Matrix<T,M,N>& lhs, const Vector<T,N>& rhs) noexcep
 		T temp = 0;
 		size_t jInnerThis = 0;
 		for (size_t iVec = 0; iVec < N; ++iVec) {
-			temp += lhs.elements[jInnerThis][i] * rhs.elements[iVec];
+			temp += lhs.elements[jInnerThis][i] * rhs[iVec];
 			jInnerThis += 1;
 		}
 		resVector[i] = temp;

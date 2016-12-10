@@ -71,14 +71,15 @@ struct Vector final {
 
 	SFZ_CUDA_CALL T& operator[] (const size_t index) noexcept;
 	SFZ_CUDA_CALL T operator[] (const size_t index) const noexcept;
+
+	SFZ_CUDA_CALL T* elementsPtr() noexcept;
+	SFZ_CUDA_CALL const T* elementsPtr() const noexcept;
 };
 
 template<typename T>
 struct Vector<T,2> final {
-	union {
-		T elements[2];
-		struct { T x, y; };
-	};	
+
+	T x, y;
 
 	Vector() noexcept = default;
 	Vector(const Vector<T,2>&) noexcept = default;
@@ -94,12 +95,14 @@ struct Vector<T,2> final {
 
 	SFZ_CUDA_CALL T& operator[] (const size_t index) noexcept;
 	SFZ_CUDA_CALL T operator[] (const size_t index) const noexcept;
+
+	SFZ_CUDA_CALL T* elementsPtr() noexcept;
+	SFZ_CUDA_CALL const T* elementsPtr() const noexcept;
 };
 
 template<typename T>
 struct Vector<T,3> final {
 	union {
-		T elements[3];
 		struct { T x, y, z; };
 		struct { Vector<T,2> xy; };
 		struct { T xAlias; Vector<T,2> yz; };
@@ -121,12 +124,14 @@ struct Vector<T,3> final {
 
 	SFZ_CUDA_CALL T& operator[] (const size_t index) noexcept;
 	SFZ_CUDA_CALL T operator[] (const size_t index) const noexcept;
+
+	SFZ_CUDA_CALL T* elementsPtr() noexcept;
+	SFZ_CUDA_CALL const T* elementsPtr() const noexcept;
 };
 
 template<typename T>
 struct Vector<T,4> final {
 	union {
-		T elements[4];
 		struct { T x, y, z, w; };
 		struct { Vector<T,3> xyz; };
 		struct { T xAlias1; Vector<T,3> yzw; };
@@ -150,10 +155,13 @@ struct Vector<T,4> final {
 	SFZ_CUDA_CALL Vector(T x, T y, Vector<T,2> zw) noexcept;
 
 	template<typename T2>
-	SFZ_CUDA_CALL  Vector(const Vector<T2,4>& other) noexcept;
+	SFZ_CUDA_CALL explicit Vector(const Vector<T2,4>& other) noexcept;
 
 	SFZ_CUDA_CALL T& operator[] (const size_t index) noexcept;
 	SFZ_CUDA_CALL T operator[] (const size_t index) const noexcept;
+
+	SFZ_CUDA_CALL T* elementsPtr() noexcept;
+	SFZ_CUDA_CALL const T* elementsPtr() const noexcept;
 };
 
 using vec2 = Vector<float,2>;
@@ -199,22 +207,6 @@ SFZ_CUDA_CALL Vector<T,3> cross(const Vector<T,3>& left, const Vector<T,3>& righ
 /// Calculates the sum of all the elements in the vector
 template<typename T, size_t N>
 SFZ_CUDA_CALL T sum(const Vector<T,N>& vector) noexcept;
-
-/// Calculates the positive angle (in radians) between two vectors
-/// Range: [0, Pi)
-/// sfz_assert_debug: norm of both vectors != 0
-template<typename T, size_t N>
-SFZ_CUDA_CALL T angle(const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
-
-/// Calculates the positive angle (in radians) between the vector and the x-axis
-/// Range: [0, 2*Pi).
-/// sfz_assert_debug: norm of vector != 0
-template<typename T>
-SFZ_CUDA_CALL T angle(Vector<T,2> vector) noexcept;
-
-/// Rotates a 2-dimensional vector with the specified angle (in radians) around origo
-template<typename T>
-SFZ_CUDA_CALL Vector<T,2> rotate(Vector<T,2> vector, T angleRadians) noexcept;
 
 /// Returns the element-wise minimum of two vectors.
 template<typename T, size_t N>

@@ -52,28 +52,40 @@ SFZ_CUDA_CALL T Vector<T,N>::operator[] (const size_t index) const noexcept
 	return elements[index];
 }
 
+template<typename T, size_t N>
+SFZ_CUDA_CALL T* Vector<T,N>::elementsPtr() noexcept
+{
+	return elements;
+}
+
+template<typename T, size_t N>
+SFZ_CUDA_CALL const T* Vector<T,N>::elementsPtr() const noexcept
+{
+	return elements;
+}
+
 // Vector struct declaration: Vector<T,2>
 // ------------------------------------------------------------------------------------------------
 
 template<typename T>
 SFZ_CUDA_CALL Vector<T,2>::Vector(const T* arrayPtr) noexcept
 :
-	x{arrayPtr[0]},
-	y{arrayPtr[1]}
+	x(arrayPtr[0]),
+	y(arrayPtr[1])
 { }
 
 template<typename T>
 SFZ_CUDA_CALL Vector<T,2>::Vector(T value) noexcept
 :
-	x{value},
-	y{value}
+	x(value),
+	y(value)
 { }
 
 template<typename T>
 SFZ_CUDA_CALL Vector<T,2>::Vector(T x, T y) noexcept
 :
-	x{x},
-	y{y}
+	x(x),
+	y(y)
 { }
 
 template<typename T>
@@ -88,14 +100,26 @@ template<typename T>
 SFZ_CUDA_CALL T& Vector<T,2>::operator[] (const size_t index) noexcept
 {
 	sfz_assert_debug(index < 2);
-	return elements[index];
+	return elementsPtr()[index];
 }
 
 template<typename T>
 SFZ_CUDA_CALL T Vector<T,2>::operator[] (const size_t index) const noexcept
 {
 	sfz_assert_debug(index < 2);
-	return elements[index];
+	return elementsPtr()[index];
+}
+
+template<typename T>
+SFZ_CUDA_CALL T* Vector<T,2>::elementsPtr() noexcept
+{
+	return &x;
+}
+
+template<typename T>
+SFZ_CUDA_CALL const T* Vector<T,2>::elementsPtr() const noexcept
+{
+	return &x;
 }
 
 // Vector struct declaration: Vector<T,3>
@@ -104,41 +128,41 @@ SFZ_CUDA_CALL T Vector<T,2>::operator[] (const size_t index) const noexcept
 template<typename T>
 SFZ_CUDA_CALL Vector<T,3>::Vector(const T* arrayPtr) noexcept
 :
-	x{arrayPtr[0]},
-	y{arrayPtr[1]},
-	z{arrayPtr[2]}
+	x(arrayPtr[0]),
+	y(arrayPtr[1]),
+	z(arrayPtr[2])
 { }
 
 template<typename T>
 SFZ_CUDA_CALL Vector<T,3>::Vector(T value) noexcept
 :
-	x{value},
-	y{value},
-	z{value}
+	x(value),
+	y(value),
+	z(value)
 { }
 
 template<typename T>
 SFZ_CUDA_CALL Vector<T,3>::Vector(T x, T y, T z) noexcept
 :
-	x{x},
-	y{y},
-	z{z}
+	x(x),
+	y(y),
+	z(z)
 { }
 
 template<typename T>
 SFZ_CUDA_CALL Vector<T,3>::Vector(Vector<T,2> xy, T z) noexcept
 :
-	x{xy.elements[0]},
-	y{xy.elements[1]},
-	z{z}
+	x(xy.x),
+	y(xy.y),
+	z(z)
 { }
 
 template<typename T>
 SFZ_CUDA_CALL Vector<T,3>::Vector(T x, Vector<T,2> yz) noexcept
 :
-	x{x},
-	y{yz.elements[0]},
-	z{yz.elements[1]}
+	x(x),
+	y(yz.x),
+	z(yz.y)
 { }
 
 template<typename T>
@@ -154,14 +178,26 @@ template<typename T>
 SFZ_CUDA_CALL T& Vector<T,3>::operator[] (const size_t index) noexcept
 {
 	sfz_assert_debug(index < 3);
-	return elements[index];
+	return elementsPtr()[index];
 }
 
 template<typename T>
 SFZ_CUDA_CALL T Vector<T,3>::operator[] (const size_t index) const noexcept
 {
 	sfz_assert_debug(index < 3);
-	return elements[index];
+	return elementsPtr()[index];
+}
+
+template<typename T>
+SFZ_CUDA_CALL T* Vector<T,3>::elementsPtr() noexcept
+{
+	return &x;
+}
+
+template<typename T>
+SFZ_CUDA_CALL const T* Vector<T,3>::elementsPtr() const noexcept
+{
+	return &x;
 }
 
 // Vector struct declaration: Vector<T,4>
@@ -170,82 +206,82 @@ SFZ_CUDA_CALL T Vector<T,3>::operator[] (const size_t index) const noexcept
 template<typename T>
 SFZ_CUDA_CALL Vector<T,4>::Vector(const T* arrayPtr) noexcept
 :
-	x{arrayPtr[0]},
-	y{arrayPtr[1]},
-	z{arrayPtr[2]},
-	w{arrayPtr[3]}
+	x(arrayPtr[0]),
+	y(arrayPtr[1]),
+	z(arrayPtr[2]),
+	w(arrayPtr[3])
 { }
 
 template<typename T>
 SFZ_CUDA_CALL Vector<T,4>::Vector(T value) noexcept
 :
-	x{value},
-	y{value},
-	z{value},
-	w{value}
+	x(value),
+	y(value),
+	z(value),
+	w(value)
 { }
 
 template<typename T>
 SFZ_CUDA_CALL Vector<T,4>::Vector(T x, T y, T z, T w) noexcept
 :
-	x{x},
-	y{y},
-	z{z},
-	w{w}
+	x(x),
+	y(y),
+	z(z),
+	w(w)
 { }
 
 template<typename T>
 SFZ_CUDA_CALL Vector<T,4>::Vector(Vector<T,3> xyz, T w) noexcept
 :
-	x{xyz.elements[0]},
-	y{xyz.elements[1]},
-	z{xyz.elements[2]},
-	w{w}
+	x(xyz.x),
+	y(xyz.y),
+	z(xyz.z),
+	w(w)
 { }
 
 template<typename T>
 SFZ_CUDA_CALL Vector<T,4>::Vector(T x, Vector<T,3> yzw) noexcept
 :
-	x{x},
-	y{yzw.elements[0]},
-	z{yzw.elements[1]},
-	w{yzw.elements[2]}
+	x(x),
+	y(yzw.x),
+	z(yzw.y),
+	w(yzw.z)
 { }
 
 template<typename T>
 SFZ_CUDA_CALL Vector<T,4>::Vector(Vector<T,2> xy, Vector<T,2> zw) noexcept
 :
-	x{xy.elements[0]},
-	y{xy.elements[1]},
-	z{zw.elements[0]},
-	w{zw.elements[1]}
+	x(xy.x),
+	y(xy.y),
+	z(zw.x),
+	w(zw.y)
 { }
 
 template<typename T>
 SFZ_CUDA_CALL Vector<T,4>::Vector(Vector<T,2> xy, T z, T w) noexcept
 :
-	x{xy.elements[0]},
-	y{xy.elements[1]},
-	z{z},
-	w{w}
+	x(xy.x),
+	y(xy.y),
+	z(z),
+	w(w)
 { }
 
 template<typename T>
 SFZ_CUDA_CALL Vector<T,4>::Vector(T x, Vector<T,2> yz, T w) noexcept
 :
-	x{x},
-	y{yz.elements[0]},
-	z{yz.elements[1]},
-	w{w}
+	x(x),
+	y(yz.x),
+	z(yz.y),
+	w(w)
 { }
 
 template<typename T>
 SFZ_CUDA_CALL Vector<T,4>::Vector(T x, T y, Vector<T,2> zw) noexcept
 :
-	x{x},
-	y{y},
-	z{zw.elements[0]},
-	w{zw.elements[1]}
+	x(x),
+	y(y),
+	z(zw.x),
+	w(zw.y)
 { }
 
 template<typename T>
@@ -262,14 +298,26 @@ template<typename T>
 SFZ_CUDA_CALL T& Vector<T,4>::operator[] (const size_t index) noexcept
 {
 	sfz_assert_debug(index < 4);
-	return elements[index];
+	return elementsPtr()[index];
 }
 
 template<typename T>
 SFZ_CUDA_CALL T Vector<T,4>::operator[] (const size_t index) const noexcept
 {
 	sfz_assert_debug(index < 4);
-	return elements[index];
+	return elementsPtr()[index];
+}
+
+template<typename T>
+SFZ_CUDA_CALL T* Vector<T,4>::elementsPtr() noexcept
+{
+	return &x;
+}
+
+template<typename T>
+SFZ_CUDA_CALL const T* Vector<T,4>::elementsPtr() const noexcept
+{
+	return &x;
 }
 
 // Vector functions
@@ -278,7 +326,8 @@ SFZ_CUDA_CALL T Vector<T,4>::operator[] (const size_t index) const noexcept
 template<typename T, size_t N>
 SFZ_CUDA_CALL T length(const Vector<T,N>& vector) noexcept
 {
-	return T(std::sqrt(dot(vector, vector)));
+	using std::sqrt;
+	return T(sqrt(dot(vector, vector)));
 }
 
 template<typename T, size_t N>
@@ -340,9 +389,9 @@ SFZ_CUDA_CALL T dot(const Vector<T,4>& left, const Vector<T,4>& right) noexcept
 template<typename T>
 SFZ_CUDA_CALL Vector<T,3> cross(const Vector<T,3>& left, const Vector<T,3>& right) noexcept
 {
-	return sfz::Vector<T,3>{left.y*right.z - left.z*right.y,
+	return sfz::Vector<T,3>(left.y*right.z - left.z*right.y,
 	                        left.z*right.x - left.x*right.z,
-	                        left.x*right.y - left.y*right.x};
+	                        left.x*right.y - left.y*right.x);
 }
 
 template<typename T, size_t N>
@@ -350,38 +399,27 @@ SFZ_CUDA_CALL T sum(const Vector<T,N>& vector) noexcept
 {
 	T result = T(0);
 	for (size_t i = 0; i < N; ++i) {
-		result += vector.elements[i];
+		result += vector[i];
 	}
 	return result;
 }
 
-template<typename T, size_t N>
-SFZ_CUDA_CALL T angle(const Vector<T,N>& left, const Vector<T,N>& right) noexcept
+template<typename T>
+SFZ_CUDA_CALL T sum(const Vector<T,2>& vector) noexcept
 {
-	T squaredLengthLeft = squaredLength(left);
-	sfz_assert_debug(squaredLengthLeft != 0);
-	T squaredLengthRight = squaredLength(right);
-	sfz_assert_debug(squaredLengthRight != 0);
-	return std::acos(dot(left, right)/(std::sqrt(squaredLengthLeft*squaredLengthRight)));
+	return vector.x + vector.y;
 }
 
 template<typename T>
-SFZ_CUDA_CALL T angle(Vector<T,2> vector) noexcept
+SFZ_CUDA_CALL T sum(const Vector<T,3>& vector) noexcept
 {
-	sfz_assert_debug(!(vector.x == 0 && vector.y == 0));
-	T angle = std::atan2(vector.y, vector.x);
-	if (angle < T(0)) {
-		angle += T(2)*PI<T>();
-	}
-	return angle;
+	return vector.x + vector.y + vector.z;
 }
 
 template<typename T>
-SFZ_CUDA_CALL Vector<T,2> rotate(Vector<T,2> vector, T angleRadians) noexcept
+SFZ_CUDA_CALL T sum(const Vector<T,4>& vector) noexcept
 {
-	T cos = std::cos(angleRadians);
-	T sin = std::sin(angleRadians);
-	return Vector<T,2>{vector.x*cos - vector.y*sin, vector.x*sin + vector.y*cos};
+	return vector.x + vector.y + vector.z + vector.w;
 }
 
 template<typename T, size_t N>
@@ -619,7 +657,7 @@ size_t hash(const Vector<T,N>& vector) noexcept
 	size_t hash = 0;
 	for (size_t i = 0; i < N; ++i) {
 		// hash_combine algorithm from boost
-		hash ^= hasher(vector.elements[i]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		hash ^= hasher(vector[i]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
 	}
 	return hash;
 }
@@ -1021,37 +1059,37 @@ SFZ_CUDA_CALL bool operator!= (const Vector<T,N>& left, const Vector<T,N>& right
 template<typename T, size_t N>
 T* begin(Vector<T,N>& vector) noexcept
 {
-	return vector.elements;
+	return vector.elementsPtr();
 }
 
 template<typename T, size_t N>
 const T* begin(const Vector<T,N>& vector) noexcept
 {
-	return vector.elements;
+	return vector.elementsPtr();
 }
 
 template<typename T, size_t N>
 const T* cbegin(const Vector<T,N>& vector) noexcept
 {
-	return vector.elements;
+	return vector.elementsPtr();
 }
 
 template<typename T, size_t N>
 T* end(Vector<T,N>& vector) noexcept
 {
-	return vector.elements + N;
+	return vector.elementsPtr() + N;
 }
 
 template<typename T, size_t N>
 const T* end(const Vector<T,N>& vector) noexcept
 {
-	return vector.elements + N;
+	return vector.elementsPtr() + N;
 }
 
 template<typename T, size_t N>
 const T* cend(const Vector<T,N>& vector) noexcept
 {
-	return vector.elements + N;
+	return vector.elementsPtr() + N;
 }
 
 } // namespace sfz

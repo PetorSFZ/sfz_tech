@@ -29,9 +29,8 @@ TEST_CASE("Vector<T,2> specialization", "[sfz::Vector]")
 	sfz::Vector<int,2> v;
 	SECTION("Data") {
 		REQUIRE(sizeof(sfz::Vector<int,2>) == sizeof(int)*2);
-		REQUIRE(sizeof(v.elements) == sizeof(int)*2);
-		v.elements[0] = 1;
-		v.elements[1] = 2;
+		v.elementsPtr()[0] = 1;
+		v.elementsPtr()[1] = 2;
 		REQUIRE(v.x == 1);
 		REQUIRE(v.y == 2);
 	}
@@ -72,10 +71,9 @@ TEST_CASE("Vector<T,3> specialization", "[sfz::Vector]")
 	sfz::Vector<int,3> v;
 	SECTION("Data") {
 		REQUIRE(sizeof(sfz::Vector<int,3>) == sizeof(int)*3);
-		REQUIRE(sizeof(v.elements) == sizeof(int)*3);
-		v.elements[0] = 1;
-		v.elements[1] = 2;
-		v.elements[2] = 3;
+		v.elementsPtr()[0] = 1;
+		v.elementsPtr()[1] = 2;
+		v.elementsPtr()[2] = 3;
 		REQUIRE(v.x == 1);
 		REQUIRE(v.y == 2);
 		REQUIRE(v.z == 3);
@@ -138,11 +136,10 @@ TEST_CASE("Vector<T,4> specialization", "[sfz::Vector]")
 	sfz::Vector<int,4> v;
 	SECTION("Data") {
 		REQUIRE(sizeof(sfz::Vector<int,4>) == sizeof(int)*4);
-		REQUIRE(sizeof(v.elements) == sizeof(int)*4);
-		v.elements[0] = 1;
-		v.elements[1] = 2;
-		v.elements[2] = 3;
-		v.elements[3] = 4;
+		v.elementsPtr()[0] = 1;
+		v.elementsPtr()[1] = 2;
+		v.elementsPtr()[2] = 3;
+		v.elementsPtr()[3] = 4;
 		REQUIRE(v.x == 1);
 		REQUIRE(v.y == 2);
 		REQUIRE(v.z == 3);
@@ -556,74 +553,6 @@ TEST_CASE("Sum of vector", "[sfz::Vector]")
 	using sfz::sum;
 	sfz::Vector<int, 4> v1{1, 2, -4, 9};
 	REQUIRE(sum(v1) == 8);
-}
-
-TEST_CASE("Angle of vectors", "[sfz::VectorSupport]")
-{
-	sfz::Vector<float, 2> vRight{1, 0};
-	sfz::Vector<float, 2> vUp{0, 1};
-	sfz::Vector<float, 2> vDown{0, -1};
-
-	SECTION("(2D) Angle between y and (implicit) x-axis") {
-		auto angle = sfz::angle(vUp);
-		REQUIRE((3.1415f/2.f) <= angle);
-		REQUIRE(angle <= (3.1416f/2.f));
-	}
-	SECTION("Angle between y and (explicit) x-axis") {
-		auto angle = sfz::angle(vRight, vUp);
-		REQUIRE((3.1415f/2.f) <= angle);
-		REQUIRE(angle <= (3.1416f/2.f));
-	}
-	SECTION("Angle between same vectors") {
-		auto angle1 = angle(vRight);
-		REQUIRE(angle1 == 0);
-
-		auto angle2 = angle(vUp, vUp);
-		REQUIRE(angle2 == 0);
-	}
-	SECTION("(2D) Angle with implicit x-axis should never give negative angles") {
-		auto angle = sfz::angle(vDown);
-		REQUIRE((3.f*3.1415f/2.f) <= angle);
-		REQUIRE(angle <= (3.f*3.1416f/2.f));
-	}
-}
-
-TEST_CASE("Rotating vectors", "[sfz::VectorSupport]")
-{
-	sfz::Vector<float, 2> vRight{1, 0};
-	sfz::Vector<float, 2> vUp{0, 1};
-	
-	SECTION("Rotates in positive direction") {
-		auto res = sfz::rotate(vRight, 3.1415926f);
-		REQUIRE(-1.01f <= res[0]);
-		REQUIRE(res[0] <= -0.99f);
-		REQUIRE(-0.01f <= res[1]);
-		REQUIRE(res[1] <= 0.01f);
-
-		auto angleOrg = angle(vRight);
-		auto angleRes = angle(res);
-		REQUIRE((angleOrg + 3.1415f) <= angleRes);
-		REQUIRE(angleRes <= (angleOrg + 3.1416f));
-	}
-	SECTION("Rotates in negative direction") {
-		auto res = sfz::rotate(vUp, -3.1415926f);
-		REQUIRE(-0.01f <= res[0]);
-		REQUIRE(res[0] <= 0.01f);
-		REQUIRE(-1.01f <= res[1]);
-		REQUIRE(res[1] <= -0.99f);
-
-		auto angleOrg = angle(vUp);
-		auto angleRes = angle(res);
-		// "+" in this case since angle() returns positive angle from x-axis.
-		REQUIRE((angleOrg + 3.1415f) <= angleRes);
-		REQUIRE(angleRes <= (angleOrg + 3.1416f));
-	}
-	SECTION("Nothing happens when rotating with 0") {
-		auto resRight = sfz::rotate(vRight, 0.f);
-		REQUIRE(resRight == vRight);
-		auto resUp = sfz::rotate(vUp, 0.f);
-		REQUIRE(resUp == vUp);
-	}
 }
 
 TEST_CASE("min() & max()", "[sfz::Vector]")

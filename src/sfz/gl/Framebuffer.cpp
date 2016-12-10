@@ -437,7 +437,7 @@ Framebuffer createShadowMap(vec2i dimensions, FBDepthFormat depthFormat, bool pc
 	// Set texture wrap mode to CLAMP_TO_BORDER and set border color.
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor.elements);
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor.elementsPtr());
 
 	// Enable hardware shadow maps (becomes sampler2Dshadow)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
