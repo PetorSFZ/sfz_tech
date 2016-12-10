@@ -30,33 +30,33 @@ namespace sfz {
 using std::size_t;
 
 template<typename T>
-SFZ_CUDA_CALLABLE T defaultEpsilon() { return T(0.0001); }
+SFZ_CUDA_CALL T defaultEpsilon() { return T(0.0001); }
 
 template<typename T>
-SFZ_CUDA_CALLABLE bool approxEqual(T lhs, T rhs, T epsilon) noexcept;
+SFZ_CUDA_CALL bool approxEqual(T lhs, T rhs, T epsilon) noexcept;
 
 template<typename T>
-SFZ_CUDA_CALLABLE bool approxEqual(T lhs, T rhs) noexcept;
+SFZ_CUDA_CALL bool approxEqual(T lhs, T rhs) noexcept;
 
 template<typename T, size_t N>
-SFZ_CUDA_CALLABLE bool approxEqual(const Vector<T,N>& lhs, const Vector<T,N>& rhs, T epsilon) noexcept;
+SFZ_CUDA_CALL bool approxEqual(const Vector<T,N>& lhs, const Vector<T,N>& rhs, T epsilon) noexcept;
 
 template<typename T, size_t N>
-SFZ_CUDA_CALLABLE bool approxEqual(const Vector<T,N>& lhs, const Vector<T,N>& rhs) noexcept;
+SFZ_CUDA_CALL bool approxEqual(const Vector<T,N>& lhs, const Vector<T,N>& rhs) noexcept;
 
 template<typename T, size_t M, size_t N>
-SFZ_CUDA_CALLABLE bool approxEqual(const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs, T epsilon) noexcept;
+SFZ_CUDA_CALL bool approxEqual(const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs, T epsilon) noexcept;
 
 template<typename T, size_t M, size_t N>
-SFZ_CUDA_CALLABLE bool approxEqual(const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
+SFZ_CUDA_CALL bool approxEqual(const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
 
 /// Lerp function, v0 when t == 0 and v1 when t == 1
 /// See: http://en.wikipedia.org/wiki/Lerp_%28computing%29
 template<typename ArgT, typename FloatT>
-SFZ_CUDA_CALLABLE ArgT lerp(ArgT v0, ArgT v1, FloatT t) noexcept;
+SFZ_CUDA_CALL ArgT lerp(ArgT v0, ArgT v1, FloatT t) noexcept;
 
 template<typename T>
-SFZ_CUDA_CALLABLE T clamp(T value, T minValue, T maxValue);
+SFZ_CUDA_CALL T clamp(T value, T minValue, T maxValue);
 
 } // namespace sfz
 

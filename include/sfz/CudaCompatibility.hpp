@@ -18,13 +18,13 @@
 
 #pragma once
 
-// CUDA callable macro
+// CUDA call macro
 // ------------------------------------------------------------------------------------------------
 
 /// A macro to allow for functions to be called from CUDA.
 
 #if defined(__CUDACC__)
-#define SFZ_CUDA_CALLABLE inline __host__ __device__
+#define SFZ_CUDA_CALL inline __host__ __device__
 #else
-#define SFZ_CUDA_CALLABLE inline
+#define SFZ_CUDA_CALL inline
 #endif
