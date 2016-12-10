@@ -20,44 +20,32 @@
 
 #include <functional> // std::hash
 
-#include "sfz/Assert.hpp"
 #include "sfz/math/Vector.hpp"
 
 namespace sfz {
 
-/// Class representing a Sphere
-class Sphere final {
-public:
+struct Sphere final {
+
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	vec3 position;
+	float radius;
+
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	inline Sphere() noexcept = default;
+	Sphere() noexcept = default;
+	Sphere(const Sphere&) noexcept = default;
+	Sphere& operator= (const Sphere&) noexcept = default;
+	
+	inline Sphere(const vec3& position, float radius) noexcept;
 
-	/// sfz_assert_debug radius > 0
-	inline Sphere(const vec3& center, float radius) noexcept;
-
-	// Public member functions
+	// Member functions
 	// --------------------------------------------------------------------------------------------
 
 	inline size_t hash() const noexcept;
-	inline std::string to_string() const noexcept;
 	inline vec3 closestPoint(const vec3& point) const noexcept;
-
-	// Public getters/setters
-	// --------------------------------------------------------------------------------------------
-
-	inline vec3 position() const noexcept { return mCenter; }
-	inline float radius() const noexcept { return mRadius; }
-
-	inline void position(const vec3& newPosition) noexcept { mCenter = newPosition; }
-	inline void radius(float newRadius) noexcept;
-
-private:
-	// Private members
-	// --------------------------------------------------------------------------------------------
-
-	vec3 mCenter;
-	float mRadius;
 };
 
 } // namespace sfz

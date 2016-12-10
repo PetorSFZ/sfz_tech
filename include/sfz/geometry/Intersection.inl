@@ -72,8 +72,8 @@ inline bool pointInside(const OBB& box, const vec3& point) noexcept
 
 inline bool pointInside(const Sphere& sphere, const vec3& point) noexcept
 {
-	const vec3 distToPoint = point - sphere.position();
-	return squaredLength(distToPoint) < sphere.radius() * sphere.radius();
+	const vec3 distToPoint = point - sphere.position;
+	return squaredLength(distToPoint) < (sphere.radius * sphere.radius);
 }
 
 inline bool pointInside(const Circle& circle, vec2 point) noexcept
@@ -200,9 +200,9 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 
 inline bool intersects(const Sphere& sphereA, const Sphere& sphereB) noexcept
 {
-	const vec3 distVec = sphereA.position() - sphereB.position();
+	const vec3 distVec = sphereA.position - sphereB.position;
 	const float squaredDist = dot(distVec, distVec);
-	const float radiusSum = sphereA.radius() + sphereB.radius();
+	const float radiusSum = sphereA.radius + sphereB.radius;
 	const float squaredRadiusSum = radiusSum * radiusSum;
 	return squaredDist <= squaredRadiusSum;
 }
@@ -332,7 +332,7 @@ inline bool belowPlane(const Plane& plane, const OBB& obb) noexcept
 
 inline bool intersects(const Plane& plane, const Sphere& sphere) noexcept
 {
-	return detail::intersectsPlane(plane, sphere.position(), sphere.radius());
+	return detail::intersectsPlane(plane, sphere.position, sphere.radius);
 }
 
 inline bool intersects(const Sphere& sphere, const Plane& plane) noexcept
@@ -342,12 +342,12 @@ inline bool intersects(const Sphere& sphere, const Plane& plane) noexcept
 
 inline bool abovePlane(const Plane& plane, const Sphere& sphere) noexcept
 {
-	return detail::abovePlane(plane, sphere.position(), sphere.radius());
+	return detail::abovePlane(plane, sphere.position, sphere.radius);
 }
 
 inline bool belowPlane(const Plane& plane, const Sphere& sphere) noexcept
 {
-	return detail::belowPlane(plane, sphere.position(), sphere.radius());
+	return detail::belowPlane(plane, sphere.position, sphere.radius);
 }
 
 } // namespace sfz

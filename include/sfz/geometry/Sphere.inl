@@ -21,24 +21,23 @@ namespace sfz {
 // Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-inline Sphere::Sphere(const vec3& center, float radius) noexcept
+inline Sphere::Sphere(const vec3& positionIn, float radiusIn) noexcept
 :
-	mCenter(center),
-	mRadius{radius}
-{
-	sfz_assert_debug(radius > 0.0f);
-}
+	position(positionIn),
+	radius(radiusIn)
+{ }
+
 
 // Public member functions
 // ------------------------------------------------------------------------------------------------
 
 inline vec3 Sphere::closestPoint(const vec3& point) const noexcept
 {
-	const vec3 distToPoint = point - mCenter;
+	const vec3 distToPoint = point - position;
 	vec3 res = point;
-	if (squaredLength(distToPoint) > mRadius*mRadius)
+	if (squaredLength(distToPoint) > (radius * radius))
 	{
-		res = mCenter + normalize(distToPoint)*mRadius;
+		res = position + normalize(distToPoint) * radius;
 	}
 	return res;
 }
@@ -49,18 +48,9 @@ inline size_t Sphere::hash() const noexcept
 	std::hash<float> floatHasher;
 	size_t hash = 0;
 	// hash_combine algorithm from boost
-	hash ^= vecHasher(mCenter) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-	hash ^= floatHasher(mRadius) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+	hash ^= vecHasher(position) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+	hash ^= floatHasher(radius) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
 	return hash;
-}
-
-// Public getters/setters
-// ------------------------------------------------------------------------------------------------
-
-inline void Sphere::radius(float newRadius) noexcept
-{
-	sfz_assert_debug(newRadius > 0.0f);
-	mRadius = newRadius;
 }
 
 } // namespace sfz
