@@ -22,9 +22,18 @@
 // ------------------------------------------------------------------------------------------------
 
 /// A macro to allow for functions to be called from CUDA.
-
 #if defined(__CUDACC__)
 #define SFZ_CUDA_CALL inline __host__ __device__
 #else
 #define SFZ_CUDA_CALL inline
+#endif
+
+// CUDA device macro
+// ------------------------------------------------------------------------------------------------
+
+/// A macro that is defined if the code is currently being compiled for CUDA devices
+#if defined(__CUDACC__)
+#if defined(__CUDA_ARCH__)
+#define SFZ_CUDA_DEVICE_CODE 1
+#endif
 #endif
