@@ -20,7 +20,7 @@
 
 #include "sfz/Assert.hpp"
 #include "sfz/math/Vector.hpp"
-#include "sfz/math/MathHelpers.hpp"
+#include "sfz/math/MathSupport.hpp"
 
 namespace sfz {
 

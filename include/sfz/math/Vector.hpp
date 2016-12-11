@@ -24,7 +24,6 @@
 
 #include "sfz/Assert.hpp"
 #include "sfz/CudaCompatibility.hpp"
-#include "sfz/math/MathConstants.hpp"
 
 /// A mathematical vector POD class that imitates a built-in primitive.
 ///

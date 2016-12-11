@@ -185,4 +185,3 @@ using mat4i = Matrix<int,4,4>;
 } // namespace sfz
 
 #include "sfz/math/Matrix.inl"
-#include "sfz/math/MatrixSupport.hpp"

@@ -18,6 +18,8 @@
 
 #include "sfz/math/ProjectionMatrices.hpp"
 
+#include "sfz/math/MathSupport.hpp"
+
 namespace sfz {
 
 // GL View matrix (OGL right-handed, negative z into screen, positive x to the right)
