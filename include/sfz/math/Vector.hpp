@@ -19,8 +19,7 @@
 #pragma once
 
 #include <algorithm> // std::min & std::max
-#include <cstddef> // std::size_t
-#include <cstdint> // std::int32_t
+#include <cstdint>
 #include <cmath> // std::sqrt
 
 #include "sfz/Assert.hpp"
@@ -45,14 +44,13 @@
 
 namespace sfz {
 
-using std::size_t;
 using std::int32_t;
 using std::uint32_t;
 
 // Vector struct declaration
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 struct Vector final {
 
 	T elements[N];
@@ -67,8 +65,8 @@ struct Vector final {
 	template<typename T2>
 	SFZ_CUDA_CALL explicit Vector(const Vector<T2,N>& other) noexcept;
 
-	SFZ_CUDA_CALL T& operator[] (const size_t index) noexcept;
-	SFZ_CUDA_CALL T operator[] (const size_t index) const noexcept;
+	SFZ_CUDA_CALL T& operator[] (uint32_t index) noexcept;
+	SFZ_CUDA_CALL T operator[] (uint32_t index) const noexcept;
 
 	SFZ_CUDA_CALL T* elementsPtr() noexcept;
 	SFZ_CUDA_CALL const T* elementsPtr() const noexcept;
@@ -91,8 +89,8 @@ struct Vector<T,2> final {
 	template<typename T2>
 	SFZ_CUDA_CALL explicit Vector(const Vector<T2,2>& other) noexcept;
 
-	SFZ_CUDA_CALL T& operator[] (const size_t index) noexcept;
-	SFZ_CUDA_CALL T operator[] (const size_t index) const noexcept;
+	SFZ_CUDA_CALL T& operator[] (uint32_t index) noexcept;
+	SFZ_CUDA_CALL T operator[] (uint32_t index) const noexcept;
 
 	SFZ_CUDA_CALL T* elementsPtr() noexcept;
 	SFZ_CUDA_CALL const T* elementsPtr() const noexcept;
@@ -120,8 +118,8 @@ struct Vector<T,3> final {
 	template<typename T2>
 	SFZ_CUDA_CALL explicit Vector(const Vector<T2,3>& other) noexcept;
 
-	SFZ_CUDA_CALL T& operator[] (const size_t index) noexcept;
-	SFZ_CUDA_CALL T operator[] (const size_t index) const noexcept;
+	SFZ_CUDA_CALL T& operator[] (uint32_t index) noexcept;
+	SFZ_CUDA_CALL T operator[] (uint32_t index) const noexcept;
 
 	SFZ_CUDA_CALL T* elementsPtr() noexcept;
 	SFZ_CUDA_CALL const T* elementsPtr() const noexcept;
@@ -155,8 +153,8 @@ struct alignas(sizeof(T) * 4) Vector<T,4> final {
 	template<typename T2>
 	SFZ_CUDA_CALL explicit Vector(const Vector<T2,4>& other) noexcept;
 
-	SFZ_CUDA_CALL T& operator[] (const size_t index) noexcept;
-	SFZ_CUDA_CALL T operator[] (const size_t index) const noexcept;
+	SFZ_CUDA_CALL T& operator[] (uint32_t index) noexcept;
+	SFZ_CUDA_CALL T operator[] (uint32_t index) const noexcept;
 
 	SFZ_CUDA_CALL T* elementsPtr() noexcept;
 	SFZ_CUDA_CALL const T* elementsPtr() const noexcept;
@@ -178,24 +176,24 @@ using vec4u = Vector<uint32_t,4>;
 // ------------------------------------------------------------------------------------------------
 
 /// Calculates length of the vector
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL T length(const Vector<T,N>& vector) noexcept;
 
 /// Calculates squared length of vector
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL T squaredLength(const Vector<T,N>& vector) noexcept;
 
 /// Normalizes vector
 /// sfz_assert_debug: length of vector is not zero
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> normalize(const Vector<T,N>& vector) noexcept;
 
 /// Normalizes vector, returns zero if vector is zero
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> safeNormalize(const Vector<T,N>& vector) noexcept;
 
 /// Calculates the dot product of two vectors
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL T dot(const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
 /// Calculates the cross product of two vectors
@@ -203,121 +201,124 @@ template<typename T>
 SFZ_CUDA_CALL Vector<T,3> cross(const Vector<T,3>& left, const Vector<T,3>& right) noexcept;
 
 /// Calculates the sum of all the elements in the vector
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL T elementSum(const Vector<T,N>& vector) noexcept;
 
 /// Returns the element-wise minimum of two vectors.
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> min(const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
 /// Returns the element-wise maximum of two vectors.
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> max(const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
 /// Returns the element-wise minimum of a vector and a scalar.
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> min(const Vector<T,N>& vector, T scalar) noexcept;
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> min(T scalar, const Vector<T,N>& vector) noexcept;
 
 /// Returns the element-wise maximum of a vector and a scalar.
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> max(const Vector<T,N>& vector, T scalar) noexcept;
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> max(T scalar, const Vector<T,N>& vector) noexcept;
 
 /// Returns the smallest element in a vector (as defined by the min function)
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL T minElement(const Vector<T,N>& vector) noexcept;
 
 /// Returns the largest element in a vector (as defined by the max function)
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL T maxElement(const Vector<T,N>& vector) noexcept;
 
 /// Returns the element-wise abs() of the vector.
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> abs(const Vector<T,N>& vector) noexcept;
 
 // Operators (arithmetic & assignment)
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N>& operator+= (Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N>& operator-= (Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N>& operator*= (Vector<T,N>& left, T right) noexcept;
 
 /// Element-wise multiplication assignment
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N>& operator*= (Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N>& operator/= (Vector<T,N>& left, T right) noexcept;
 
 /// Element-wise division assignment
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N>& operator/= (Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
 // Operators (arithmetic)
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> operator+ (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> operator- (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> operator- (const Vector<T,N>& vector) noexcept;
 
-template<typename T, size_t N>
-SFZ_CUDA_CALL Vector<T,N> operator* (const Vector<T,N>& left, T right) noexcept;
-
 /// Element-wise multiplication of two vectors
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> operator* (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
+SFZ_CUDA_CALL Vector<T,N> operator* (const Vector<T,N>& left, T right) noexcept;
+
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> operator* (T left, const Vector<T,N>& right) noexcept;
 
-template<typename T, size_t N>
+/// Element-wise division of two vectors
+template<typename T, uint32_t N>
+SFZ_CUDA_CALL Vector<T,N> operator/ (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
+
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> operator/ (const Vector<T,N>& left, T right) noexcept;
 
-/// Element-wise division of two vectors
-template<typename T, size_t N>
-SFZ_CUDA_CALL Vector<T,N> operator/ (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
+template<typename T, uint32_t N>
+SFZ_CUDA_CALL Vector<T,N> operator/ (T left, const Vector<T,N>& right) noexcept;
 
 // Operators (comparison)
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL bool operator== (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL bool operator!= (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
 // Standard iterator functions
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 T* begin(Vector<T,N>& vector) noexcept;
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 const T* begin(const Vector<T,N>& vector) noexcept;
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 const T* cbegin(const Vector<T,N>& vector) noexcept;
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 T* end(Vector<T,N>& vector) noexcept;
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 const T* end(const Vector<T,N>& vector) noexcept;
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 const T* cend(const Vector<T,N>& vector) noexcept;
 
 } // namespace sfz

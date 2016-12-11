@@ -21,44 +21,44 @@ namespace sfz {
 // Vector struct declaration: Vector<T,N>
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N>::Vector(const T* arrayPtr) noexcept
 {
-	for (size_t i = 0; i < N; ++i) {
+	for (uint32_t i = 0; i < N; ++i) {
 		elements[i] = arrayPtr[i];
 	}
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 template<typename T2>
 SFZ_CUDA_CALL Vector<T,N>::Vector(const Vector<T2,N>& other) noexcept
 {
-	for (size_t i = 0; i < N; ++i) {
+	for (uint32_t i = 0; i < N; ++i) {
 		elements[i] = static_cast<T>(other[i]);
 	}
 }
 
-template<typename T, size_t N>
-SFZ_CUDA_CALL T& Vector<T,N>::operator[] (const size_t index) noexcept
+template<typename T, uint32_t N>
+SFZ_CUDA_CALL T& Vector<T,N>::operator[] (uint32_t index) noexcept
 {
 	sfz_assert_debug(index < N);
 	return elements[index];
 }
 
-template<typename T, size_t N>
-SFZ_CUDA_CALL T Vector<T,N>::operator[] (const size_t index) const noexcept
+template<typename T, uint32_t N>
+SFZ_CUDA_CALL T Vector<T,N>::operator[] (uint32_t index) const noexcept
 {
 	sfz_assert_debug(index < N);
 	return elements[index];
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL T* Vector<T,N>::elementsPtr() noexcept
 {
 	return elements;
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL const T* Vector<T,N>::elementsPtr() const noexcept
 {
 	return elements;
@@ -97,14 +97,14 @@ SFZ_CUDA_CALL Vector<T,2>::Vector(const Vector<T2,2>& other) noexcept
 { }
 
 template<typename T>
-SFZ_CUDA_CALL T& Vector<T,2>::operator[] (const size_t index) noexcept
+SFZ_CUDA_CALL T& Vector<T,2>::operator[] (uint32_t index) noexcept
 {
 	sfz_assert_debug(index < 2);
 	return elementsPtr()[index];
 }
 
 template<typename T>
-SFZ_CUDA_CALL T Vector<T,2>::operator[] (const size_t index) const noexcept
+SFZ_CUDA_CALL T Vector<T,2>::operator[] (uint32_t index) const noexcept
 {
 	sfz_assert_debug(index < 2);
 	return elementsPtr()[index];
@@ -175,14 +175,14 @@ SFZ_CUDA_CALL Vector<T,3>::Vector(const Vector<T2,3>& other) noexcept
 { }
 
 template<typename T>
-SFZ_CUDA_CALL T& Vector<T,3>::operator[] (const size_t index) noexcept
+SFZ_CUDA_CALL T& Vector<T,3>::operator[] (uint32_t index) noexcept
 {
 	sfz_assert_debug(index < 3);
 	return elementsPtr()[index];
 }
 
 template<typename T>
-SFZ_CUDA_CALL T Vector<T,3>::operator[] (const size_t index) const noexcept
+SFZ_CUDA_CALL T Vector<T,3>::operator[] (uint32_t index) const noexcept
 {
 	sfz_assert_debug(index < 3);
 	return elementsPtr()[index];
@@ -295,14 +295,14 @@ SFZ_CUDA_CALL Vector<T,4>::Vector(const Vector<T2,4>& other) noexcept
 { }
 
 template<typename T>
-SFZ_CUDA_CALL T& Vector<T,4>::operator[] (const size_t index) noexcept
+SFZ_CUDA_CALL T& Vector<T,4>::operator[] (uint32_t index) noexcept
 {
 	sfz_assert_debug(index < 4);
 	return elementsPtr()[index];
 }
 
 template<typename T>
-SFZ_CUDA_CALL T Vector<T,4>::operator[] (const size_t index) const noexcept
+SFZ_CUDA_CALL T Vector<T,4>::operator[] (uint32_t index) const noexcept
 {
 	sfz_assert_debug(index < 4);
 	return elementsPtr()[index];
@@ -323,20 +323,20 @@ SFZ_CUDA_CALL const T* Vector<T,4>::elementsPtr() const noexcept
 // Vector functions
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL T length(const Vector<T,N>& vector) noexcept
 {
 	using std::sqrt;
 	return T(sqrt(dot(vector, vector)));
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL T squaredLength(const Vector<T,N>& vector) noexcept
 {
 	return dot(vector, vector);
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> normalize(const Vector<T,N>& vector) noexcept
 {
 	T lengthTmp = length(vector);
@@ -344,7 +344,7 @@ SFZ_CUDA_CALL Vector<T,N> normalize(const Vector<T,N>& vector) noexcept
 	return vector / lengthTmp;
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> safeNormalize(const Vector<T,N>& vector) noexcept
 {
 	T lengthTmp = length(vector);
@@ -352,11 +352,11 @@ SFZ_CUDA_CALL Vector<T,N> safeNormalize(const Vector<T,N>& vector) noexcept
 	return vector / lengthTmp;
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL T dot(const Vector<T,N>& left, const Vector<T,N>& right) noexcept
 {
 	T product = T(0);
-	for (size_t i = 0; i < N; ++i) {
+	for (uint32_t i = 0; i < N; ++i) {
 		product += (left.elements[i]*right.elements[i]);
 	}
 	return product;
@@ -394,11 +394,11 @@ SFZ_CUDA_CALL Vector<T,3> cross(const Vector<T,3>& left, const Vector<T,3>& righ
 	                        left.x*right.y - left.y*right.x);
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL T elementSum(const Vector<T,N>& vector) noexcept
 {
 	T result = T(0);
-	for (size_t i = 0; i < N; ++i) {
+	for (uint32_t i = 0; i < N; ++i) {
 		result += vector[i];
 	}
 	return result;
@@ -422,11 +422,11 @@ SFZ_CUDA_CALL T elementSum(const Vector<T,4>& vector) noexcept
 	return vector.x + vector.y + vector.z + vector.w;
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> min(const Vector<T,N>& left, const Vector<T,N>& right) noexcept
 {
 	Vector<T,N> temp;
-	for (size_t i = 0; i < N; ++i) {
+	for (uint32_t i = 0; i < N; ++i) {
 		temp[i] = std::min(left[i], right[i]);
 	}
 	return temp;
@@ -455,11 +455,11 @@ SFZ_CUDA_CALL Vector<T,4> min(const Vector<T,4>& left, const Vector<T,4>& right)
 	                   std::min(left.w, right.w));
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> max(const Vector<T,N>& left, const Vector<T,N>& right) noexcept
 {
 	Vector<T,N> temp;
-	for (size_t i = 0; i < N; ++i) {
+	for (uint32_t i = 0; i < N; ++i) {
 		temp[i] = std::max(left[i], right[i]);
 	}
 	return temp;
@@ -488,11 +488,11 @@ SFZ_CUDA_CALL Vector<T,4> max(const Vector<T,4>& left, const Vector<T,4>& right)
 	                   std::max(left.w, right.w));
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> min(const Vector<T,N>& vector, T scalar) noexcept
 {
 	Vector<T,N> temp;
-	for (size_t i = 0; i < N; ++i) {
+	for (uint32_t i = 0; i < N; ++i) {
 		temp[i] = std::min(vector[i], scalar);
 	}
 	return temp;
@@ -521,17 +521,17 @@ SFZ_CUDA_CALL Vector<T,4> min(const Vector<T,4>& vector, T scalar) noexcept
 	                   std::min(vector.w, scalar));
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> min(T scalar, const Vector<T,N>& vector) noexcept
 {
 	return min(vector, scalar);
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> max(const Vector<T,N>& vector, T scalar) noexcept
 {
 	Vector<T,N> temp;
-	for (size_t i = 0; i < N; ++i) {
+	for (uint32_t i = 0; i < N; ++i) {
 		temp[i] = std::max(vector[i], scalar);
 	}
 	return temp;
@@ -560,17 +560,17 @@ SFZ_CUDA_CALL Vector<T,4> max(const Vector<T,4>& vector, T scalar) noexcept
 	                   std::max(vector.w, scalar));
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> max(T scalar, const Vector<T,N>& vector) noexcept
 {
 	return max(vector, scalar);
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL T minElement(const Vector<T,N>& vector) noexcept
 {
 	T tmp = vector[0];
-	for (size_t i = 1; i < N; i++) {
+	for (uint32_t i = 1; i < N; i++) {
 		tmp = std::min(tmp, vector[i]);
 	}
 	return tmp;
@@ -594,11 +594,11 @@ SFZ_CUDA_CALL T minElement(const Vector<T,4>& vector) noexcept
 	return std::min(std::min(std::min(vector.x, vector.y), vector.z), vector.w);
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL T maxElement(const Vector<T,N>& vector) noexcept
 {
 	T tmp = vector[0];
-	for (size_t i = 1; i < N; i++) {
+	for (uint32_t i = 1; i < N; i++) {
 		tmp = std::max(tmp, vector[i]);
 	}
 	return tmp;
@@ -622,11 +622,11 @@ SFZ_CUDA_CALL T maxElement(const Vector<T,4>& vector) noexcept
 	return std::max(std::max(std::max(vector.x, vector.y), vector.z), vector.w);
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> abs(const Vector<T,N>& vector) noexcept
 {
 	Vector<T,N> temp;
-	for (size_t i = 0; i < N; ++i) {
+	for (uint32_t i = 0; i < N; ++i) {
 		temp[i] = std::abs(vector[i]);
 	}
 	return temp;
@@ -653,10 +653,10 @@ SFZ_CUDA_CALL Vector<T,4> abs(const Vector<T,4>& vector) noexcept
 // Operators (arithmetic & assignment)
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N>& operator+= (Vector<T,N>& left, const Vector<T,N>& right) noexcept
 {
-	for (size_t i = 0; i < N; ++i) {
+	for (uint32_t i = 0; i < N; ++i) {
 		left.elements[i] += right.elements[i];
 	}
 	return left;
@@ -689,10 +689,10 @@ SFZ_CUDA_CALL Vector<T,4>& operator+= (Vector<T,4>& left, const Vector<T,4>& rig
 	return left;
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N>& operator-= (Vector<T,N>& left, const Vector<T,N>& right) noexcept
 {
-	for (size_t i = 0; i < N; ++i) {
+	for (uint32_t i = 0; i < N; ++i) {
 		left.elements[i] -= right.elements[i];
 	}
 	return left;
@@ -725,10 +725,10 @@ SFZ_CUDA_CALL Vector<T,4>& operator-= (Vector<T,4>& left, const Vector<T,4>& rig
 	return left;
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N>& operator*= (Vector<T,N>& left, T right) noexcept
 {
-	for (size_t i = 0; i < N; ++i) {
+	for (uint32_t i = 0; i < N; ++i) {
 		left.elements[i] *= right;
 	}
 	return left;
@@ -761,10 +761,10 @@ SFZ_CUDA_CALL Vector<T,4>& operator*= (Vector<T,4>& left, T right) noexcept
 	return left;
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N>& operator*= (Vector<T,N>& left, const Vector<T,N>& right) noexcept
 {
-	for (size_t i = 0; i < N; ++i) {
+	for (uint32_t i = 0; i < N; ++i) {
 		left.elements[i] *= right.elements[i];
 	}
 	return left;
@@ -797,10 +797,10 @@ SFZ_CUDA_CALL Vector<T,4>& operator*= (Vector<T,4>& left, const Vector<T,4>& rig
 	return left;
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N>& operator/= (Vector<T,N>& left, T right) noexcept
 {
-	for (size_t i = 0; i < N; ++i) {
+	for (uint32_t i = 0; i < N; ++i) {
 		left.elements[i] /= right;
 	}
 	return left;
@@ -833,10 +833,10 @@ SFZ_CUDA_CALL Vector<T,4>& operator/= (Vector<T,4>& left, T right) noexcept
 	return left;
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N>& operator/= (Vector<T,N>& left, const Vector<T,N>& right) noexcept
 {
-	for (size_t i = 0; i < N; ++i) {
+	for (uint32_t i = 0; i < N; ++i) {
 		left.elements[i] /= right.elements[i];
 	}
 	return left;
@@ -872,68 +872,75 @@ SFZ_CUDA_CALL Vector<T,4>& operator/= (Vector<T,4>& left, const Vector<T,4>& rig
 // Operators (arithmetic)
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> operator+ (const Vector<T,N>& left, const Vector<T,N>& right) noexcept
 {
 	Vector<T,N> temp = left;
 	return (temp += right);
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> operator- (const Vector<T,N>& left, const Vector<T,N>& right) noexcept
 {
 	Vector<T,N> temp = left;
 	return (temp -= right);
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> operator- (const Vector<T,N>& vector) noexcept
 {
 	Vector<T,N> temp = vector;
 	return (temp *= T(-1));
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
+SFZ_CUDA_CALL Vector<T,N> operator* (const Vector<T,N>& left, const Vector<T,N>& right) noexcept
+{
+	Vector<T, N> temp = left;
+	return (temp *= right);
+}
+
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> operator* (const Vector<T,N>& left, T right) noexcept
 {
 	Vector<T,N> temp = left;
 	return (temp *= right);
 }
 
-template<typename T, size_t N>
-SFZ_CUDA_CALL Vector<T,N> operator* (const Vector<T,N>& left, const Vector<T,N>& right) noexcept
-{
-	Vector<T,N> temp = left;
-	return (temp *= right);
-}
-
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> operator* (T left, const Vector<T,N>& right) noexcept
 {
 	return right * left;
 }
 
-template<typename T, size_t N>
-SFZ_CUDA_CALL Vector<T,N> operator/ (const Vector<T,N>& left, T right) noexcept
-{
-	Vector<T,N> temp = left;
-	return (temp /= right);
-}
-
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL Vector<T,N> operator/ (const Vector<T,N>& left, const Vector<T,N>& right) noexcept
 {
 	Vector<T,N> temp = left;
 	return (temp /= right);
 }
 
+template<typename T, uint32_t N>
+SFZ_CUDA_CALL Vector<T,N> operator/ (const Vector<T,N>& left, T right) noexcept
+{
+	Vector<T,N> temp = left;
+	return (temp /= right);
+}
+
+template<typename T, uint32_t N>
+SFZ_CUDA_CALL Vector<T,N> operator/ (T left, const Vector<T,N>& right) noexcept
+{
+	Vector<T,N> temp(left);
+	return (temp /= right);
+}
+
 // Operators (comparison)
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL bool operator== (const Vector<T,N>& left, const Vector<T,N>& right) noexcept
 {
-	for (size_t i = 0; i < N; ++i) {
+	for (uint32_t i = 0; i < N; ++i) {
 		if (left.elements[i] != right.elements[i]) return false;
 	}
 	return true;
@@ -963,7 +970,7 @@ SFZ_CUDA_CALL bool operator== (const Vector<T,4>& left, const Vector<T,4>& right
 	    && left.w == right.w;
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 SFZ_CUDA_CALL bool operator!= (const Vector<T,N>& left, const Vector<T,N>& right) noexcept
 {
 	return !(left == right);
@@ -972,37 +979,37 @@ SFZ_CUDA_CALL bool operator!= (const Vector<T,N>& left, const Vector<T,N>& right
 // Standard iterator functions
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 T* begin(Vector<T,N>& vector) noexcept
 {
 	return vector.elementsPtr();
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 const T* begin(const Vector<T,N>& vector) noexcept
 {
 	return vector.elementsPtr();
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 const T* cbegin(const Vector<T,N>& vector) noexcept
 {
 	return vector.elementsPtr();
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 T* end(Vector<T,N>& vector) noexcept
 {
 	return vector.elementsPtr() + N;
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 const T* end(const Vector<T,N>& vector) noexcept
 {
 	return vector.elementsPtr() + N;
 }
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 const T* cend(const Vector<T,N>& vector) noexcept
 {
 	return vector.elementsPtr() + N;
