@@ -45,11 +45,11 @@ inline AABB::AABB(const vec3& centerPos, float xExtent, float yExtent, float zEx
 // Public member functions
 // ------------------------------------------------------------------------------------------------
 
-inline std::array<vec3,8> AABB::corners() const noexcept
+inline AABBCorners AABB::corners() const noexcept
 {
-	std::array<vec3,8> result;
-	this->corners(&result[0]);
-	return result;
+	AABBCorners tmp;
+	this->corners(&tmp.corners[0]);
+	return tmp;
 }
 
 inline void AABB::corners(vec3* arrayOut) const noexcept
@@ -71,16 +71,6 @@ inline void AABB::corners(vec3* arrayOut) const noexcept
 inline vec3 AABB::closestPoint(const vec3& point) const noexcept
 {
 	return sfz::min(sfz::max(point, this->min), this->max);
-}
-
-inline size_t AABB::hash() const noexcept
-{
-	std::hash<vec3> hasher;
-	size_t hash = 0;
-	// hash_combine algorithm from boost
-	hash ^= hasher(this->min) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-	hash ^= hasher(this->max) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-	return hash;
 }
 
 // Public getters/setters
@@ -117,15 +107,3 @@ inline void AABB::zExtent(float newZExtent) noexcept
 }
 
 } // namespace sfz
-
-// Specializations of standard library for sfz::AABB
-// ------------------------------------------------------------------------------------------------
-
-namespace std {
-
-inline size_t hash<sfz::AABB>::operator() (const sfz::AABB& aabb) const noexcept
-{
-	return aabb.hash();
-}
-
-} // namespace std

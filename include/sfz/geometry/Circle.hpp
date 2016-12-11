@@ -18,10 +18,6 @@
 
 #pragma once
 
-#include <cmath> // std::abs
-#include <functional> // std::hash
-
-#include "sfz/math/MathConstants.hpp"
 #include "sfz/math/Vector.hpp"
 
 namespace sfz {
@@ -43,13 +39,17 @@ struct Circle final {
 	Circle& operator= (const Circle&) noexcept = default;
 	~Circle() noexcept = default;
 
-	inline Circle(vec2 centerPos, float radius) noexcept;
-	inline Circle(float centerX, float centerY, float radius) noexcept;
+	inline Circle::Circle(vec2 centerPos, float radius) noexcept
+	:
+		pos(centerPos),
+		radius(radius)
+	{ }
 
-	// Public methods
-	// --------------------------------------------------------------------------------------------
-
-	inline size_t hash() const noexcept;
+	inline Circle::Circle(float centerX, float centerY, float radius) noexcept
+	:
+		pos(centerX, centerY),
+		radius(radius)
+	{ }
 
 	// Public getters
 	// --------------------------------------------------------------------------------------------
@@ -60,22 +60,15 @@ struct Circle final {
 	// Comparison operators
 	// --------------------------------------------------------------------------------------------
 
-	inline bool operator== (const Circle& other) const noexcept;
-	inline bool operator!= (const Circle& other) const noexcept;
+	inline bool Circle::operator== (const Circle& other) const noexcept
+	{
+		return pos == other.pos && radius == other.radius;
+	}
+
+	inline bool Circle::operator!= (const Circle& other) const noexcept
+	{
+		return !((*this) == other);
+	}
 };
 
 } // namespace sfz
-
-// Specializations of standard library for sfz::Circle
-// ------------------------------------------------------------------------------------------------
-
-namespace std {
-
-template<>
-struct hash<sfz::Circle> {
-	inline size_t operator() (const sfz::Circle& circle) const noexcept;
-};
-
-} // namespace std
-
-#include "sfz/geometry/Circle.inl"

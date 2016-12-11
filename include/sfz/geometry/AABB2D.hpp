@@ -18,9 +18,6 @@
 
 #pragma once
 
-#include <cmath> // std::abs
-#include <functional> // std::hash
-
 #include "sfz/math/Vector.hpp"
 
 namespace sfz {
@@ -41,13 +38,17 @@ struct AABB2D final {
 	AABB2D& operator= (const AABB2D&) noexcept = default;
 	~AABB2D() noexcept = default;
 
-	inline AABB2D(vec2 centerPos, vec2 dimensions) noexcept;
-	inline AABB2D(float centerX, float centerY, float width, float height) noexcept;
+	inline AABB2D::AABB2D(vec2 centerPos, vec2 dimensions) noexcept
+	:
+		min(centerPos - (dimensions / 2.0f)),
+		max(centerPos + (dimensions / 2.0f))
+	{ }
 
-	// Public methods
-	// --------------------------------------------------------------------------------------------
-
-	inline size_t hash() const noexcept;
+	inline AABB2D::AABB2D(float centerX, float centerY, float width, float height) noexcept
+	:
+		min(vec2(centerX - (width / 2.0f), centerY - (height / 2.0f))),
+		max(vec2(centerX + (width / 2.0f), centerY + (height / 2.0f)))
+	{ }
 
 	// Public getters
 	// --------------------------------------------------------------------------------------------
@@ -62,27 +63,17 @@ struct AABB2D final {
 	// Comparison operators
 	// --------------------------------------------------------------------------------------------
 
-	inline bool operator== (const AABB2D& other) const noexcept;
-	inline bool operator!= (const AABB2D& other) const noexcept;
-};
+	inline bool AABB2D::operator== (const AABB2D& other) const noexcept
+	{
+		return min == other.min && max == other.max;
+	}
 
-// Standard typedefs
-// ------------------------------------------------------------------------------------------------
+	inline bool AABB2D::operator!= (const AABB2D& other) const noexcept
+	{
+		return !((*this) == other);
+	}
+};
 
 using Rectangle = AABB2D;
 
 } // namespace sfz
-
-// Specializations of standard library for sfz::AABB2D
-// ------------------------------------------------------------------------------------------------
-
-namespace std {
-
-template<>
-struct hash<sfz::AABB2D> {
-	inline size_t operator() (const sfz::AABB2D& aabb) const noexcept;
-};
-
-} // namespace std
-
-#include "sfz/geometry/AABB2D.inl"

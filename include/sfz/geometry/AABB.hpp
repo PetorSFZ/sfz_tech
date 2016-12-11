@@ -18,13 +18,19 @@
 
 #pragma once
 
-#include <array>
-#include <functional> // std::hash
-
-#include "sfz/Assert.hpp"
 #include "sfz/math/Vector.hpp"
 
 namespace sfz {
+
+// AABB helper structs
+// ------------------------------------------------------------------------------------------------
+
+struct AABBCorners final {
+	vec3 corners[8];
+};
+
+// AABB struct
+// ------------------------------------------------------------------------------------------------
 
 struct AABB final {
 	
@@ -47,11 +53,9 @@ struct AABB final {
 	// Member functions
 	// --------------------------------------------------------------------------------------------
 
-	inline std::array<vec3, 8> corners() const noexcept;
+	inline AABBCorners corners() const noexcept;
 	inline void corners(vec3* arrayOut) const noexcept;
 	inline vec3 closestPoint(const vec3& point) const noexcept;
-
-	inline size_t hash() const noexcept;
 
 	// Getters
 	// --------------------------------------------------------------------------------------------
@@ -77,17 +81,5 @@ struct AABB final {
 };
 
 } // namespace sfz
-
-// Specializations of standard library for sfz::AABB
-// ------------------------------------------------------------------------------------------------
-
-namespace std {
-
-template<>
-struct hash<sfz::AABB> {
-	inline size_t operator() (const sfz::AABB& aabb) const noexcept;
-};
-
-} // namespace std
 
 #include "sfz/geometry/AABB.inl"

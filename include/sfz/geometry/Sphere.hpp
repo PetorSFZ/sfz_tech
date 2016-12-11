@@ -18,8 +18,6 @@
 
 #pragma once
 
-#include <functional> // std::hash
-
 #include "sfz/math/Vector.hpp"
 
 namespace sfz {
@@ -39,27 +37,11 @@ struct Sphere final {
 	Sphere(const Sphere&) noexcept = default;
 	Sphere& operator= (const Sphere&) noexcept = default;
 	
-	inline Sphere(const vec3& position, float radius) noexcept;
-
-	// Member functions
-	// --------------------------------------------------------------------------------------------
-
-	inline size_t hash() const noexcept;
-	inline vec3 closestPoint(const vec3& point) const noexcept;
+	inline Sphere(const vec3& position, float radius) noexcept
+	:
+		position(position),
+		radius(radius)
+	{ }
 };
 
 } // namespace sfz
-
-// Specializations of standard library for sfz::Sphere
-// ------------------------------------------------------------------------------------------------
-
-namespace std {
-
-template<>
-struct hash<sfz::Sphere> {
-	inline size_t operator() (const sfz::Sphere& sphere) const noexcept;
-};
-
-} // namespace std
-
-#include "sfz/geometry/Sphere.inl"

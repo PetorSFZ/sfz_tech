@@ -22,7 +22,6 @@
 #include <cstddef> // std::size_t
 #include <cstdint> // std::int32_t
 #include <cmath> // std::sqrt
-#include <functional>
 
 #include "sfz/Assert.hpp"
 #include "sfz/CudaCompatibility.hpp"
@@ -129,7 +128,7 @@ struct Vector<T,3> final {
 };
 
 template<typename T>
-struct Vector<T,4> final {
+struct alignas(sizeof(T) * 4) Vector<T,4> final {
 	union {
 		struct { T x, y, z, w; };
 		struct { Vector<T,3> xyz; };
@@ -239,10 +238,6 @@ SFZ_CUDA_CALL T maxElement(const Vector<T,N>& vector) noexcept;
 template<typename T, size_t N>
 SFZ_CUDA_CALL Vector<T,N> abs(const Vector<T,N>& vector) noexcept;
 
-/// Hashes the vector
-template<typename T, size_t N>
-size_t hash(const Vector<T,N>& vector) noexcept;
-
 // Operators (arithmetic & assignment)
 // ------------------------------------------------------------------------------------------------
 
@@ -326,17 +321,5 @@ template<typename T, size_t N>
 const T* cend(const Vector<T,N>& vector) noexcept;
 
 } // namespace sfz
-
-// Specializations of standard library for sfz::Vector
-// ------------------------------------------------------------------------------------------------
-
-namespace std {
-
-template<typename T, size_t N>
-struct hash<sfz::Vector<T,N>> {
-	size_t operator() (const sfz::Vector<T,N>& vector) const noexcept;
-};
-
-} // namespace std
 
 #include "sfz/math/Vector.inl"

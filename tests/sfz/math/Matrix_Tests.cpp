@@ -27,7 +27,6 @@
 #include "sfz/math/ProjectionMatrices.hpp"
 #include "sfz/math/Vector.hpp"
 
-#include <unordered_map>
 #include <type_traits>
 
 using namespace sfz;
@@ -418,25 +417,6 @@ TEST_CASE("Matrix comparison operators", "[sfz::Matrix]")
 		REQUIRE(!(m1 != m2));
 		REQUIRE(!(m2 != m1));
 	}
-}
-
-TEST_CASE("Matrix hashing", "[sfz::Matrix]")
-{
-	sfz::mat2i m1{{2, 100},
-	              {1, -99}};
-	sfz::mat2i m2{{-1, 0},
-	              {3, -10}};
-	sfz::mat2i m3{{0, -9},
-	              {32, 14}};
-
-	REQUIRE(hash(m1) != hash(m2));
-	REQUIRE(hash(m2) != hash(m3));
-
-	std::hash<sfz::mat2i> hasher;
-
-	REQUIRE(hasher(m1) == sfz::hash(m1));
-	REQUIRE(hasher(m2) == sfz::hash(m2));
-	REQUIRE(hasher(m3) == sfz::hash(m3));
 }
 
 TEST_CASE("Matrix toString()", "[sfz::Matrix]")

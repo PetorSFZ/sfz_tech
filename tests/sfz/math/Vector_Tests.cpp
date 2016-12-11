@@ -638,22 +638,6 @@ TEST_CASE("Converting to string", "[sfz::Vector]")
 	REQUIRE(toString(v2, 1) == "[1.0, 2.0, 3.0, 4.0]");
 }
 
-TEST_CASE("Hashing", "[sfz::Vector]")
-{
-	sfz::Vector<int, 3> v1{2, 100, 32};
-	sfz::Vector<int, 3> v2{-1, 0, -10};
-	sfz::Vector<int, 3> v3{0, -9, 14};
-
-	REQUIRE(sfz::hash(v1) != sfz::hash(v2));
-	REQUIRE(sfz::hash(v2) != sfz::hash(v3));
-
-	std::hash<sfz::Vector<int,3>> hasher;
-
-	REQUIRE(hasher(v1) == sfz::hash(v1));
-	REQUIRE(hasher(v2) == sfz::hash(v2));
-	REQUIRE(hasher(v3) == sfz::hash(v3));
-}
-
 TEST_CASE("Is proper POD", "[sfz::Vector]")
 {
 	REQUIRE(std::is_trivially_default_constructible<sfz::vec2>::value);

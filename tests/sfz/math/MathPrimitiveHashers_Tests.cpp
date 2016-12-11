@@ -20,11 +20,39 @@
 #include "catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
-#include "sfz/math/MathConstants.hpp"
+#include "sfz/math/MathPrimitiveHashers.hpp"
 
-TEST_CASE("Pi constants", "[MathConstants]")
+TEST_CASE("Hashing", "[sfz::Vector]")
 {
-	REQUIRE(3.1415f <= sfz::PI());
-	REQUIRE(sfz::PI() <= 3.1416f);
-	REQUIRE(sfz::PI<int>() == 3);
+	sfz::Vector<int, 3> v1{2, 100, 32};
+	sfz::Vector<int, 3> v2{-1, 0, -10};
+	sfz::Vector<int, 3> v3{0, -9, 14};
+
+	REQUIRE(sfz::hash(v1) != sfz::hash(v2));
+	REQUIRE(sfz::hash(v2) != sfz::hash(v3));
+
+	std::hash<sfz::Vector<int, 3>> hasher;
+
+	REQUIRE(hasher(v1) == sfz::hash(v1));
+	REQUIRE(hasher(v2) == sfz::hash(v2));
+	REQUIRE(hasher(v3) == sfz::hash(v3));
+}
+
+TEST_CASE("Matrix hashing", "[sfz::Matrix]")
+{
+	sfz::mat2i m1{{2, 100},
+	{1, -99}};
+	sfz::mat2i m2{{-1, 0},
+	{3, -10}};
+	sfz::mat2i m3{{0, -9},
+	{32, 14}};
+
+	REQUIRE(hash(m1) != hash(m2));
+	REQUIRE(hash(m2) != hash(m3));
+
+	std::hash<sfz::mat2i> hasher;
+
+	REQUIRE(hasher(m1) == sfz::hash(m1));
+	REQUIRE(hasher(m2) == sfz::hash(m2));
+	REQUIRE(hasher(m3) == sfz::hash(m3));
 }

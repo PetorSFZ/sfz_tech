@@ -32,27 +32,4 @@ inline vec3 Plane::closestPoint(const vec3& point) const noexcept
 	return point - signedDistance(point)*mNormal;
 }
 
-inline size_t Plane::hash() const noexcept
-{
-	std::hash<float> fHasher;
-	std::hash<vec3> vecHasher;
-	size_t hash = 0;
-	// hash_combine algorithm from boost
-	hash ^= fHasher(mD) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-	hash ^= vecHasher(mNormal) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-	return hash;
-}
-
 } // namespace sfz
-
-// Specializations of standard library for sfz::Plane
-// ------------------------------------------------------------------------------------------------
-
-namespace std {
-
-inline size_t hash<sfz::Plane>::operator() (const sfz::Plane& plane) const noexcept
-{
-	return plane.hash();
-}
-
-} // namespace std

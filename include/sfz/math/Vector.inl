@@ -650,18 +650,6 @@ SFZ_CUDA_CALL Vector<T,4> abs(const Vector<T,4>& vector) noexcept
 	return Vector<T,4>(std::abs(vector.x), std::abs(vector.y), std::abs(vector.z), std::abs(vector.w));
 }
 
-template<typename T, size_t N>
-size_t hash(const Vector<T,N>& vector) noexcept
-{
-	std::hash<T> hasher;
-	size_t hash = 0;
-	for (size_t i = 0; i < N; ++i) {
-		// hash_combine algorithm from boost
-		hash ^= hasher(vector[i]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-	}
-	return hash;
-}
-
 // Operators (arithmetic & assignment)
 // ------------------------------------------------------------------------------------------------
 
@@ -1021,16 +1009,3 @@ const T* cend(const Vector<T,N>& vector) noexcept
 }
 
 } // namespace sfz
-
-// Specializations of standard library for sfz::Vector
-// ------------------------------------------------------------------------------------------------
-
-namespace std {
-
-template<typename T, size_t N>
-size_t hash<sfz::Vector<T,N>>::operator() (const sfz::Vector<T,N>& vector) const noexcept
-{
-	return sfz::hash(vector);
-}
-
-} // namespace std

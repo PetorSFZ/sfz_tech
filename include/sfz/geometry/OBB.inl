@@ -21,7 +21,7 @@ namespace sfz {
 // Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-inline OBB::OBB(const vec3& center, const array<vec3,3>& axes, const vec3& extents) noexcept
+inline OBB::OBB(const vec3& center, const OBBAxes& axes, const vec3& extents) noexcept
 :
 	mCenter(center),
 	mHalfExtents(extents/2.0f)
@@ -37,9 +37,9 @@ inline OBB::OBB(const vec3& center, const vec3& xAxis, const vec3& yAxis, const 
 	mCenter(center),
 	mHalfExtents(extents/2.0f)
 {
-	mAxes[0] = xAxis;
-	mAxes[1] = yAxis;
-	mAxes[2] = zAxis;
+	mAxes.axes[0] = xAxis;
+	mAxes.axes[1] = yAxis;
+	mAxes.axes[2] = zAxis;
 	ensureCorrectAxes();
 	ensureCorrectExtents();
 }
@@ -64,18 +64,18 @@ inline OBB::OBB(const AABB& aabb) noexcept
 // Public member functions
 // ------------------------------------------------------------------------------------------------
 
-inline array<vec3,8> OBB::corners() const noexcept
+inline OBBCorners OBB::corners() const noexcept
 {
-	std::array<vec3,8> result;
-	this->corners(&result[0]);
-	return result;
+	OBBCorners tmp;
+	this->corners(tmp.corners);
+	return tmp;
 }
 
 inline void OBB::corners(vec3* arrayOut) const noexcept
 {
-	vec3 halfXExtVec = mAxes[0]*mHalfExtents[0];
-	vec3 halfYExtVec = mAxes[1]*mHalfExtents[1];
-	vec3 halfZExtVec = mAxes[2]*mHalfExtents[2];
+	vec3 halfXExtVec = mAxes.axes[0] * mHalfExtents[0];
+	vec3 halfYExtVec = mAxes.axes[1] * mHalfExtents[1];
+	vec3 halfZExtVec = mAxes.axes[2] * mHalfExtents[2];
 	arrayOut[0] = mCenter - halfXExtVec - halfYExtVec - halfZExtVec; // Back-bottom-left
 	arrayOut[1] = mCenter - halfXExtVec - halfYExtVec + halfZExtVec; // Front-bottom-left
 	arrayOut[2] = mCenter - halfXExtVec + halfYExtVec - halfZExtVec; // Back-top-left
@@ -94,10 +94,10 @@ inline vec3 OBB::closestPoint(const vec3& point) const noexcept
 
 	float dist;
 	for (size_t i = 0; i < 3; i++) {
-		dist = dot(distToPoint, mAxes[i]);
+		dist = dot(distToPoint, mAxes.axes[i]);
 		if (dist > mHalfExtents[i]) dist = mHalfExtents[i];
 		if (dist < -mHalfExtents[i]) dist = -mHalfExtents[i];
-		res += (dist * mAxes[i]);
+		res += (dist * mAxes.axes[i]);
 	}
 
 	return res;
@@ -106,24 +106,11 @@ inline vec3 OBB::closestPoint(const vec3& point) const noexcept
 inline OBB OBB::transformOBB(const mat4& transform) const noexcept
 {
 	const vec3 newPos = transformPoint(transform, mCenter);
-	const vec3 newXHExt = transformDir(transform, mAxes[0] * mHalfExtents[0]);
-	const vec3 newYHExt = transformDir(transform, mAxes[1] * mHalfExtents[1]);
-	const vec3 newZHExt = transformDir(transform, mAxes[2] * mHalfExtents[2]);
+	const vec3 newXHExt = transformDir(transform, mAxes.axes[0] * mHalfExtents[0]);
+	const vec3 newYHExt = transformDir(transform, mAxes.axes[1] * mHalfExtents[1]);
+	const vec3 newZHExt = transformDir(transform, mAxes.axes[2] * mHalfExtents[2]);
 	return OBB{newPos, normalize(newXHExt), normalize(newYHExt), normalize(newZHExt),
 	           length(newXHExt), length(newYHExt), length(newZHExt)};
-}
-
-inline size_t OBB::hash() const noexcept
-{
-	std::hash<vec3> hasher;
-	size_t hash = 0;
-	// hash_combine algorithm from boost
-	hash ^= hasher(mCenter) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-	hash ^= hasher(mAxes[0]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-	hash ^= hasher(mAxes[1]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-	hash ^= hasher(mAxes[2]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-	hash ^= hasher(mHalfExtents) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-	return hash;
 }
 
 // Public getters/setters
@@ -183,14 +170,14 @@ inline void OBB::halfZExtent(float newHalfZExtent) noexcept
 inline void OBB::ensureCorrectAxes() const noexcept
 {
 	// Check if axes are orthogonal
-	sfz_assert_debug(approxEqual(dot(mAxes[0], mAxes[1]), 0.0f));
-	sfz_assert_debug(approxEqual(dot(mAxes[0], mAxes[2]), 0.0f));
-	sfz_assert_debug(approxEqual(dot(mAxes[1], mAxes[2]), 0.0f));
+	sfz_assert_debug(approxEqual(dot(mAxes.axes[0], mAxes.axes[1]), 0.0f));
+	sfz_assert_debug(approxEqual(dot(mAxes.axes[0], mAxes.axes[2]), 0.0f));
+	sfz_assert_debug(approxEqual(dot(mAxes.axes[1], mAxes.axes[2]), 0.0f));
 
 	// Check if axes are normalized
-	sfz_assert_debug(approxEqual(length(mAxes[0]), 1.0f));
-	sfz_assert_debug(approxEqual(length(mAxes[1]), 1.0f));
-	sfz_assert_debug(approxEqual(length(mAxes[2]), 1.0f));
+	sfz_assert_debug(approxEqual(length(mAxes.axes[0]), 1.0f));
+	sfz_assert_debug(approxEqual(length(mAxes.axes[1]), 1.0f));
+	sfz_assert_debug(approxEqual(length(mAxes.axes[2]), 1.0f));
 }
 
 inline void OBB::ensureCorrectExtents() const noexcept
@@ -202,15 +189,3 @@ inline void OBB::ensureCorrectExtents() const noexcept
 }
 
 } // namespace sfz
-
-// Specializations of standard library for sfz::OBB
-// ------------------------------------------------------------------------------------------------
-
-namespace std {
-
-inline size_t hash<sfz::OBB>::operator() (const sfz::OBB& obb) const noexcept
-{
-	return obb.hash();
-}
-
-} // namespace std

@@ -178,21 +178,7 @@ Matrix<T,N,M> transpose(const Matrix<T,M,N>& matrix) noexcept
 	return resMatrix;
 }
 
-template<typename T, size_t M, size_t N>
-size_t hash(const Matrix<T,M,N>& matrix) noexcept
-{
-	std::hash<T> hasher;
-	size_t hash = 0;
-	for (size_t i = 0; i < M; i++) {
-		for (size_t j = 0; j < N; j++) {
-			// hash_combine algorithm from boost
-			hash ^= hasher(matrix.elements[j][i]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-		}
-	}
-	return hash;
-}
-
-// Operators (arithmetic & sssignment)
+// Operators (arithmetic & assignment)
 // ------------------------------------------------------------------------------------------------
 
 template<typename T, size_t M, size_t N>
@@ -330,16 +316,3 @@ bool operator!= (const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept
 }
 
 } // namespace sfz
-
-// Specializations of standard library for sfz::Matrix
-// ------------------------------------------------------------------------------------------------
-
-namespace std {
-
-template<typename T, size_t M, size_t N>
-size_t hash<sfz::Matrix<T,M,N>>::operator() (const sfz::Matrix<T,M,N>& matrix) const noexcept
-{
-	return sfz::hash(matrix);
-}
-
-} // namespace std

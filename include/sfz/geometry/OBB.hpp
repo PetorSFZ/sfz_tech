@@ -18,9 +18,6 @@
 
 #pragma once
 
-#include <array>
-#include <functional> // std::hash
-
 #include "sfz/Assert.hpp"
 #include "sfz/math/MathHelpers.hpp"
 #include "sfz/math/Vector.hpp"
@@ -29,7 +26,22 @@
 
 namespace sfz {
 
-using std::array;
+// OBB helper structs
+// ------------------------------------------------------------------------------------------------
+
+struct OBBAxes final {
+	vec3 axes[3];
+
+	vec3& operator[] (size_t i) noexcept { return axes[i]; }
+	const vec3& operator[] (size_t i) const noexcept { return axes[i]; }
+};
+
+struct OBBCorners final {
+	vec3 corners[8];
+};
+
+// OBB class
+// ------------------------------------------------------------------------------------------------
 
 /// Class representing an Oriented Bounding Box
 class OBB final {
@@ -41,7 +53,7 @@ public:
 	OBB(const OBB&) noexcept = default;
 	OBB& operator= (const OBB&) noexcept = default;
 
-	inline OBB(const vec3& center, const array<vec3,3>& axes, const vec3& extents) noexcept;
+	inline OBB(const vec3& center, const OBBAxes& axes, const vec3& extents) noexcept;
 
 	inline OBB(const vec3& center, const vec3& xAxis, const vec3& yAxis, const vec3& zAxis,
 	           const vec3& extents) noexcept;
@@ -54,21 +66,19 @@ public:
 	// Public member functions
 	// --------------------------------------------------------------------------------------------
 
-	inline std::array<vec3,8> corners() const noexcept;
+	inline OBBCorners corners() const noexcept;
 	inline void corners(vec3* arrayOut) const noexcept;
 	inline vec3 closestPoint(const vec3& point) const noexcept;
 	inline OBB transformOBB(const mat4& transform) const noexcept;
-
-	inline size_t hash() const noexcept;
 
 	// Public getters/setters
 	// --------------------------------------------------------------------------------------------
 
 	inline vec3 position() const noexcept { return mCenter; }
-	inline const array<vec3,3>& axes() const noexcept { return mAxes; }
-	inline vec3 xAxis() const noexcept { return mAxes[0]; }
-	inline vec3 yAxis() const noexcept { return mAxes[1]; }
-	inline vec3 zAxis() const noexcept { return mAxes[2]; }
+	inline const OBBAxes& axes() const noexcept { return mAxes; }
+	inline vec3 xAxis() const noexcept { return mAxes.axes[0]; }
+	inline vec3 yAxis() const noexcept { return mAxes.axes[1]; }
+	inline vec3 zAxis() const noexcept { return mAxes.axes[2]; }
 	inline vec3 extents() const noexcept { return mHalfExtents * 2.0f; }
 	inline float xExtent() const noexcept { return mHalfExtents[0] * 2.0f; }
 	inline float yExtent() const noexcept { return mHalfExtents[1] * 2.0f; }
@@ -79,10 +89,10 @@ public:
 	inline float halfZExtent() const noexcept { return mHalfExtents[2]; }
 
 	inline void position(const vec3& newCenterPos) noexcept { mCenter = newCenterPos; }
-	inline void axes(const array<vec3,3>& newAxes) noexcept { mAxes = newAxes; }
-	inline void xAxis(const vec3& newXAxis) noexcept { mAxes[0] = newXAxis; }
-	inline void yAxis(const vec3& newYAxis) noexcept { mAxes[1] = newYAxis; }
-	inline void zAxis(const vec3& newZAxis) noexcept { mAxes[2] = newZAxis; }
+	inline void axes(const OBBAxes& newAxes) noexcept { mAxes = newAxes; }
+	inline void xAxis(const vec3& newXAxis) noexcept { mAxes.axes[0] = newXAxis; }
+	inline void yAxis(const vec3& newYAxis) noexcept { mAxes.axes[1] = newYAxis; }
+	inline void zAxis(const vec3& newZAxis) noexcept { mAxes.axes[2] = newZAxis; }
 	inline void extents(const vec3& newExtents) noexcept;
 	inline void xExtent(float newXExtent) noexcept;
 	inline void yExtent(float newYExtent) noexcept;
@@ -103,22 +113,10 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	vec3 mCenter;
-	array<vec3,3> mAxes;
+	OBBAxes mAxes;
 	vec3 mHalfExtents;
 };
 
 } // namespace sfz
-
-// Specializations of standard library for sfz::OBB
-// ------------------------------------------------------------------------------------------------
-
-namespace std {
-
-template<>
-struct hash<sfz::OBB> {
-	inline size_t operator() (const sfz::OBB& obb) const noexcept;
-};
-
-} // namespace std
 
 #include "sfz/geometry/OBB.inl"

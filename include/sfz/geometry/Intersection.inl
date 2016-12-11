@@ -60,10 +60,10 @@ inline bool pointInside(const OBB& box, const vec3& point) noexcept
 {
 	// Modified closest point algorithm from Real-Time Collision Detection (Section 5.1.4)
 	const vec3 distToPoint = point - box.position();
-	const std::array<vec3,3>& axes = box.axes();
+	const OBBAxes& axes = box.axes();
 	float dist;
 	for (size_t i = 0; i < 3; i++) {
-		dist = dot(distToPoint, axes[i]);
+		dist = dot(distToPoint, axes.axes[i]);
 		if (dist > box.halfExtents()[i]) return false;
 		if (dist < -box.halfExtents()[i]) return false;
 	}
@@ -107,9 +107,9 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 	// OBB vs OBB SAT (Separating Axis Theorem) test from Real-Time Collision Detection
 	// (chapter 4.4.1 OBB-OBB Intersection)
 
-	const std::array<vec3,3>& aU = a.axes();
+	const OBBAxes& aU = a.axes();
 	const vec3& aE = a.halfExtents();
-	const std::array<vec3,3>& bU = b.axes();
+	const OBBAxes& bU = b.axes();
 	const vec3& bE = b.halfExtents();
 
 	// Compute the rotation matrix from b to a
@@ -348,6 +348,19 @@ inline bool abovePlane(const Plane& plane, const Sphere& sphere) noexcept
 inline bool belowPlane(const Plane& plane, const Sphere& sphere) noexcept
 {
 	return detail::belowPlane(plane, sphere.position, sphere.radius);
+}
+
+// Closest point tests
+// ------------------------------------------------------------------------------------------------
+
+inline vec3 closestPoint(const Sphere& sphere, const vec3& point) noexcept
+{
+	const vec3 distToPoint = point - sphere.position;
+	vec3 res = point;
+	if (squaredLength(distToPoint) > (sphere.radius * sphere.radius)) {
+		res = sphere.position + normalize(distToPoint) * sphere.radius;
+	}
+	return res;
 }
 
 } // namespace sfz

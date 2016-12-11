@@ -16,8 +16,45 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
+#include <functional>
+
+#include "sfz/math/Matrix.hpp"
+#include "sfz/math/Vector.hpp"
+
 namespace sfz {
 
+// Vector hash function
+// ------------------------------------------------------------------------------------------------
 
+template<typename T, size_t N>
+size_t hash(const Vector<T,N>& vector) noexcept;
+
+// Matrix hash function
+// ------------------------------------------------------------------------------------------------
+
+template<typename T, size_t M, size_t N>
+size_t hash(const Matrix<T,M,N>& matrix) noexcept;
 
 } // namespace sfz
+
+namespace std {
+
+// Vector hash struct
+// ------------------------------------------------------------------------------------------------
+
+template<typename T, size_t N>
+struct hash<sfz::Vector<T,N>> {
+	size_t operator() (const sfz::Vector<T,N>& vector) const noexcept;
+};
+
+// Matrix hash struct
+// ------------------------------------------------------------------------------------------------
+
+template<typename T, size_t M, size_t N>
+struct hash<sfz::Matrix<T,M,N>> {
+	size_t operator() (const sfz::Matrix<T,M,N>& matrix) const noexcept;
+};
+
+} // namespace std
+
+#include "sfz/math/MathPrimitiveHashers.inl"

@@ -18,6 +18,58 @@
 
 namespace sfz {
 
+// Vector hash function
+// ------------------------------------------------------------------------------------------------
 
+template<typename T, size_t N>
+size_t hash(const Vector<T,N>& vector) noexcept
+{
+	std::hash<T> hasher;
+	size_t hash = 0;
+	for (size_t i = 0; i < N; ++i) {
+		// hash_combine algorithm from boost
+		hash ^= hasher(vector[i]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+	}
+	return hash;
+}
+
+// Matrix hash function
+// ------------------------------------------------------------------------------------------------
+
+template<typename T, size_t M, size_t N>
+size_t hash(const Matrix<T,M,N>& matrix) noexcept
+{
+	std::hash<T> hasher;
+	size_t hash = 0;
+	for (size_t i = 0; i < M; i++) {
+		for (size_t j = 0; j < N; j++) {
+			// hash_combine algorithm from boost
+			hash ^= hasher(matrix.elements[j][i]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		}
+	}
+	return hash;
+}
 
 } // namespace sfz
+
+namespace std {
+
+// Vector hash struct
+// ------------------------------------------------------------------------------------------------
+
+template<typename T, size_t N>
+size_t hash<sfz::Vector<T,N>>::operator() (const sfz::Vector<T,N>& vector) const noexcept
+{
+	return sfz::hash(vector);
+}
+
+// Matrix hash struct
+// ------------------------------------------------------------------------------------------------
+
+template<typename T, size_t M, size_t N>
+size_t hash<sfz::Matrix<T,M,N>>::operator() (const sfz::Matrix<T,M,N>& matrix) const noexcept
+{
+	return sfz::hash(matrix);
+}
+
+} // namespace std

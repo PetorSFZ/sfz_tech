@@ -18,10 +18,6 @@
 
 #pragma once
 
-#include <string>
-#include <iostream> // std::ostream
-#include <functional> // std::hash
-
 #include "sfz/Assert.hpp"
 #include "sfz/math/Vector.hpp"
 #include "sfz/math/MathHelpers.hpp"
@@ -51,7 +47,6 @@ public:
 	/// Returns the signed distance to the plane. Positive if above, negative if below.
 	inline float signedDistance(const vec3& point) const noexcept;
 	inline vec3 closestPoint(const vec3& point) const noexcept;
-	inline size_t hash() const noexcept;
 
 	// Public getters/setters
 	// --------------------------------------------------------------------------------------------
@@ -68,17 +63,5 @@ private:
 };
 
 } // namespace sfz
-
-// Specializations of standard library for sfz::Plane
-// ------------------------------------------------------------------------------------------------
-
-namespace std {
-
-template<>
-struct hash<sfz::Plane> {
-	inline size_t operator() (const sfz::Plane& plane) const noexcept;
-};
-
-} // namespace std
 
 #include "sfz/geometry/Plane.inl"

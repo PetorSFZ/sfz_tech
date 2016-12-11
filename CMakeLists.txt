@@ -98,17 +98,14 @@ set(SOURCE_GEOMETRY_FILES
 	${INCLUDE_DIR}/sfz/geometry/AABB.hpp
 	${INCLUDE_DIR}/sfz/geometry/AABB.inl
 	${INCLUDE_DIR}/sfz/geometry/AABB2D.hpp
-	${INCLUDE_DIR}/sfz/geometry/AABB2D.inl
 	${INCLUDE_DIR}/sfz/geometry/Circle.hpp
-	${INCLUDE_DIR}/sfz/geometry/Circle.inl
 	${INCLUDE_DIR}/sfz/geometry/Intersection.hpp
 	${INCLUDE_DIR}/sfz/geometry/Intersection.inl
 	${INCLUDE_DIR}/sfz/geometry/OBB.hpp
 	${INCLUDE_DIR}/sfz/geometry/OBB.inl
 	${INCLUDE_DIR}/sfz/geometry/Plane.hpp
 	${INCLUDE_DIR}/sfz/geometry/Plane.inl
-	${INCLUDE_DIR}/sfz/geometry/Sphere.hpp
-	${INCLUDE_DIR}/sfz/geometry/Sphere.inl)
+	${INCLUDE_DIR}/sfz/geometry/Sphere.hpp)
 source_group(sfz_geometry FILES ${SOURCE_GEOMETRY_FILES})
 
 if(SFZ_CORE_OPENGL)
@@ -263,7 +260,7 @@ if(SFZ_CORE_BUILD_TESTS)
 	source_group(sfz_geometry FILES ${GEOMETRY_TEST_FILES})
 
 	set(MATH_TEST_FILES
-		${TESTS_DIR}/sfz/math/MathConstants_Tests.cpp
+		${TESTS_DIR}/sfz/math/MathPrimitiveHashers_Tests.cpp
 		${TESTS_DIR}/sfz/math/Matrix_Tests.cpp
 		${TESTS_DIR}/sfz/math/Vector_Tests.cpp)
 	source_group(sfz_math FILES ${MATH_TEST_FILES})

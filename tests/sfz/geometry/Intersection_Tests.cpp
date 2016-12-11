@@ -92,7 +92,7 @@ TEST_CASE("OBB vs OBB test", "[sfz::Intersection]")
 {
 	using namespace sfz;
 
-	std::array<vec3,3> axisAlignedAxes{{vec3{1.0f, 0.0f, 0.0f},
+	OBBAxes axisAlignedAxes{{vec3{1.0f, 0.0f, 0.0f},
 	                                    vec3{0.0f, 1.0f, 0.0f},
 	                                    vec3{0.0f, 0.0f, 1.0f}}};
 	vec3 smallExts{1.0f, 1.0f, 1.0f};
