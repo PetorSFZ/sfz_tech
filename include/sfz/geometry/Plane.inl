@@ -27,9 +27,4 @@ inline float Plane::signedDistance(const vec3& point) const noexcept
 	return dot(mNormal, point) - mD; // mNormal MUST be normalized.
 }
 
-inline vec3 Plane::closestPoint(const vec3& point) const noexcept
-{
-	return point - signedDistance(point)*mNormal;
-}
-
 } // namespace sfz

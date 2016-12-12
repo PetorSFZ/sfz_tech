@@ -68,11 +68,6 @@ inline void AABB::corners(vec3* arrayOut) const noexcept
 	arrayOut[7] = this->max; // Front-top-right
 }
 
-inline vec3 AABB::closestPoint(const vec3& point) const noexcept
-{
-	return sfz::min(sfz::max(point, this->min), this->max);
-}
-
 // Public getters/setters
 // ------------------------------------------------------------------------------------------------
 

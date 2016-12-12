@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 
@@ -99,8 +100,86 @@ SFZ_CUDA_CALL vec4i sgn(vec4i val) noexcept;
 // min()
 // ------------------------------------------------------------------------------------------------
 
+/// Returns the minimum value of two elements. Element-wise results for vector types.
+
+SFZ_CUDA_CALL float min(float lhs, float rhs) noexcept;
+SFZ_CUDA_CALL int32_t min(int32_t lhs, int32_t rhs) noexcept;
+SFZ_CUDA_CALL uint32_t min(uint32_t lhs, uint32_t rhs) noexcept;
+
+SFZ_CUDA_CALL vec2 min(vec2 lhs, vec2 rhs) noexcept;
+SFZ_CUDA_CALL vec3 min(vec3 lhs, vec3 rhs) noexcept;
+SFZ_CUDA_CALL vec4 min(vec4 lhs, vec4 rhs) noexcept;
+
+SFZ_CUDA_CALL vec2 min(vec2 lhs, float rhs) noexcept;
+SFZ_CUDA_CALL vec2 min(float lhs, vec2 rhs) noexcept;
+SFZ_CUDA_CALL vec3 min(vec3 lhs, float rhs) noexcept;
+SFZ_CUDA_CALL vec3 min(float lhs, vec3 rhs) noexcept;
+SFZ_CUDA_CALL vec4 min(vec4 lhs, float rhs) noexcept;
+SFZ_CUDA_CALL vec4 min(float lhs, vec4 rhs) noexcept;
+
+SFZ_CUDA_CALL vec2i min(vec2i lhs, vec2i rhs) noexcept;
+SFZ_CUDA_CALL vec3i min(vec3i lhs, vec3i rhs) noexcept;
+SFZ_CUDA_CALL vec4i min(vec4i lhs, vec4i rhs) noexcept;
+
+SFZ_CUDA_CALL vec2i min(vec2i lhs, int32_t rhs) noexcept;
+SFZ_CUDA_CALL vec2i min(int32_t lhs, vec2i rhs) noexcept;
+SFZ_CUDA_CALL vec3i min(vec3i lhs, int32_t rhs) noexcept;
+SFZ_CUDA_CALL vec3i min(int32_t lhs, vec3i rhs) noexcept;
+SFZ_CUDA_CALL vec4i min(vec4i lhs, int32_t rhs) noexcept;
+SFZ_CUDA_CALL vec4i min(int32_t lhs, vec4i rhs) noexcept;
+
+SFZ_CUDA_CALL vec2u min(vec2u lhs, vec2u rhs) noexcept;
+SFZ_CUDA_CALL vec3u min(vec3u lhs, vec3u rhs) noexcept;
+SFZ_CUDA_CALL vec4u min(vec4u lhs, vec4u rhs) noexcept;
+
+SFZ_CUDA_CALL vec2u min(vec2u lhs, uint32_t rhs) noexcept;
+SFZ_CUDA_CALL vec2u min(uint32_t lhs, vec2u rhs) noexcept;
+SFZ_CUDA_CALL vec3u min(vec3u lhs, uint32_t rhs) noexcept;
+SFZ_CUDA_CALL vec3u min(uint32_t lhs, vec3u rhs) noexcept;
+SFZ_CUDA_CALL vec4u min(vec4u lhs, uint32_t rhs) noexcept;
+SFZ_CUDA_CALL vec4u min(uint32_t lhs, vec4u rhs) noexcept;
+
 // max()
 // ------------------------------------------------------------------------------------------------
+
+/// Returns the maximum value of two elements. Element-wise results for vector types.
+
+SFZ_CUDA_CALL float max(float lhs, float rhs) noexcept;
+SFZ_CUDA_CALL int32_t max(int32_t lhs, int32_t rhs) noexcept;
+SFZ_CUDA_CALL uint32_t max(uint32_t lhs, uint32_t rhs) noexcept;
+
+SFZ_CUDA_CALL vec2 max(vec2 lhs, vec2 rhs) noexcept;
+SFZ_CUDA_CALL vec3 max(vec3 lhs, vec3 rhs) noexcept;
+SFZ_CUDA_CALL vec4 max(vec4 lhs, vec4 rhs) noexcept;
+
+SFZ_CUDA_CALL vec2 max(vec2 lhs, float rhs) noexcept;
+SFZ_CUDA_CALL vec2 max(float lhs, vec2 rhs) noexcept;
+SFZ_CUDA_CALL vec3 max(vec3 lhs, float rhs) noexcept;
+SFZ_CUDA_CALL vec3 max(float lhs, vec3 rhs) noexcept;
+SFZ_CUDA_CALL vec4 max(vec4 lhs, float rhs) noexcept;
+SFZ_CUDA_CALL vec4 max(float lhs, vec4 rhs) noexcept;
+
+SFZ_CUDA_CALL vec2i max(vec2i lhs, vec2i rhs) noexcept;
+SFZ_CUDA_CALL vec3i max(vec3i lhs, vec3i rhs) noexcept;
+SFZ_CUDA_CALL vec4i max(vec4i lhs, vec4i rhs) noexcept;
+
+SFZ_CUDA_CALL vec2i max(vec2i lhs, int32_t rhs) noexcept;
+SFZ_CUDA_CALL vec2i max(int32_t lhs, vec2i rhs) noexcept;
+SFZ_CUDA_CALL vec3i max(vec3i lhs, int32_t rhs) noexcept;
+SFZ_CUDA_CALL vec3i max(int32_t lhs, vec3i rhs) noexcept;
+SFZ_CUDA_CALL vec4i max(vec4i lhs, int32_t rhs) noexcept;
+SFZ_CUDA_CALL vec4i max(int32_t lhs, vec4i rhs) noexcept;
+
+SFZ_CUDA_CALL vec2u max(vec2u lhs, vec2u rhs) noexcept;
+SFZ_CUDA_CALL vec3u max(vec3u lhs, vec3u rhs) noexcept;
+SFZ_CUDA_CALL vec4u max(vec4u lhs, vec4u rhs) noexcept;
+
+SFZ_CUDA_CALL vec2u max(vec2u lhs, uint32_t rhs) noexcept;
+SFZ_CUDA_CALL vec2u max(uint32_t lhs, vec2u rhs) noexcept;
+SFZ_CUDA_CALL vec3u max(vec3u lhs, uint32_t rhs) noexcept;
+SFZ_CUDA_CALL vec3u max(uint32_t lhs, vec3u rhs) noexcept;
+SFZ_CUDA_CALL vec4u max(vec4u lhs, uint32_t rhs) noexcept;
+SFZ_CUDA_CALL vec4u max(uint32_t lhs, vec4u rhs) noexcept;
 
 // old
 // ------------------------------------------------------------------------------------------------

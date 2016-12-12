@@ -203,26 +203,6 @@ SFZ_CUDA_CALL Vector<T,3> cross(const Vector<T,3>& left, const Vector<T,3>& righ
 template<typename T, uint32_t N>
 SFZ_CUDA_CALL T elementSum(const Vector<T,N>& vector) noexcept;
 
-/// Returns the element-wise minimum of two vectors.
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> min(const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
-
-/// Returns the element-wise maximum of two vectors.
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> max(const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
-
-/// Returns the element-wise minimum of a vector and a scalar.
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> min(const Vector<T,N>& vector, T scalar) noexcept;
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> min(T scalar, const Vector<T,N>& vector) noexcept;
-
-/// Returns the element-wise maximum of a vector and a scalar.
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> max(const Vector<T,N>& vector, T scalar) noexcept;
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> max(T scalar, const Vector<T,N>& vector) noexcept;
-
 /// Returns the smallest element in a vector (as defined by the min function)
 template<typename T, uint32_t N>
 SFZ_CUDA_CALL T minElement(const Vector<T,N>& vector) noexcept;

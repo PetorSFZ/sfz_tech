@@ -55,7 +55,6 @@ struct AABB final {
 
 	inline AABBCorners corners() const noexcept;
 	inline void corners(vec3* arrayOut) const noexcept;
-	inline vec3 closestPoint(const vec3& point) const noexcept;
 
 	// Getters
 	// --------------------------------------------------------------------------------------------

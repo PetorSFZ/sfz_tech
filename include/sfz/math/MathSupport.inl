@@ -224,6 +224,402 @@ SFZ_CUDA_CALL vec4i sgn(vec4i val) noexcept
 	// TODO: Implement SSE variant
 }
 
+// min() - scalars
+// ------------------------------------------------------------------------------------------------
+
+SFZ_CUDA_CALL float min(float lhs, float rhs) noexcept
+{
+	return std::min(lhs, rhs);
+}
+
+SFZ_CUDA_CALL int32_t min(int32_t lhs, int32_t rhs) noexcept
+{
+	return std::min(lhs, rhs);
+}
+
+SFZ_CUDA_CALL uint32_t min(uint32_t lhs, uint32_t rhs) noexcept
+{
+	return std::min(lhs, rhs);
+}
+
+// min() - float vectors
+// ------------------------------------------------------------------------------------------------
+
+SFZ_CUDA_CALL vec2 min(vec2 lhs, vec2 rhs) noexcept
+{
+	vec2 tmp;
+	tmp.x = sfz::min(lhs.x, rhs.x);
+	tmp.y = sfz::min(lhs.y, rhs.y);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec3 min(vec3 lhs, vec3 rhs) noexcept
+{
+	vec3 tmp;
+	tmp.x = sfz::min(lhs.x, rhs.x);
+	tmp.y = sfz::min(lhs.y, rhs.y);
+	tmp.z = sfz::min(lhs.z, rhs.z);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec4 min(vec4 lhs, vec4 rhs) noexcept
+{
+	vec4 tmp;
+	tmp.x = sfz::min(lhs.x, rhs.x);
+	tmp.y = sfz::min(lhs.y, rhs.y);
+	tmp.z = sfz::min(lhs.z, rhs.z);
+	tmp.w = sfz::min(lhs.w, rhs.w);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec2 min(vec2 lhs, float rhs) noexcept { return min(rhs, lhs); }
+SFZ_CUDA_CALL vec2 min(float lhs, vec2 rhs) noexcept
+{
+	vec2 tmp;
+	tmp.x = sfz::min(lhs, rhs.x);
+	tmp.y = sfz::min(lhs, rhs.y);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec3 min(vec3 lhs, float rhs) noexcept { return min(rhs, lhs); }
+SFZ_CUDA_CALL vec3 min(float lhs, vec3 rhs) noexcept
+{
+	vec3 tmp;
+	tmp.x = sfz::min(lhs, rhs.x);
+	tmp.y = sfz::min(lhs, rhs.y);
+	tmp.z = sfz::min(lhs, rhs.z);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec4 min(vec4 lhs, float rhs) noexcept { return min(rhs, lhs); }
+SFZ_CUDA_CALL vec4 min(float lhs, vec4 rhs) noexcept
+{
+	vec4 tmp;
+	tmp.x = sfz::min(lhs, rhs.x);
+	tmp.y = sfz::min(lhs, rhs.y);
+	tmp.z = sfz::min(lhs, rhs.z);
+	tmp.w = sfz::min(lhs, rhs.w);
+	return tmp;
+}
+
+// min() - int32_t vectors
+// ------------------------------------------------------------------------------------------------
+
+SFZ_CUDA_CALL vec2i min(vec2i lhs, vec2i rhs) noexcept
+{
+	vec2i tmp;
+	tmp.x = sfz::min(lhs.x, rhs.x);
+	tmp.y = sfz::min(lhs.y, rhs.y);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec3i min(vec3i lhs, vec3i rhs) noexcept
+{
+	vec3i tmp;
+	tmp.x = sfz::min(lhs.x, rhs.x);
+	tmp.y = sfz::min(lhs.y, rhs.y);
+	tmp.z = sfz::min(lhs.z, rhs.z);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec4i min(vec4i lhs, vec4i rhs) noexcept
+{
+	vec4i tmp;
+	tmp.x = sfz::min(lhs.x, rhs.x);
+	tmp.y = sfz::min(lhs.y, rhs.y);
+	tmp.z = sfz::min(lhs.z, rhs.z);
+	tmp.w = sfz::min(lhs.w, rhs.w);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec2i min(vec2i lhs, int32_t rhs) noexcept { return min(rhs, lhs); }
+SFZ_CUDA_CALL vec2i min(int32_t lhs, vec2i rhs) noexcept
+{
+	vec2i tmp;
+	tmp.x = sfz::min(lhs, rhs.x);
+	tmp.y = sfz::min(lhs, rhs.y);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec3i min(vec3i lhs, int32_t rhs) noexcept { return min(rhs, lhs); }
+SFZ_CUDA_CALL vec3i min(int32_t lhs, vec3i rhs) noexcept
+{
+	vec3i tmp;
+	tmp.x = sfz::min(lhs, rhs.x);
+	tmp.y = sfz::min(lhs, rhs.y);
+	tmp.z = sfz::min(lhs, rhs.z);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec4i min(vec4i lhs, int32_t rhs) noexcept { return min(rhs, lhs); }
+SFZ_CUDA_CALL vec4i min(int32_t lhs, vec4i rhs) noexcept
+{
+	vec4i tmp;
+	tmp.x = sfz::min(lhs, rhs.x);
+	tmp.y = sfz::min(lhs, rhs.y);
+	tmp.z = sfz::min(lhs, rhs.z);
+	tmp.w = sfz::min(lhs, rhs.w);
+	return tmp;
+}
+
+// min() - uint32_t vectors
+// ------------------------------------------------------------------------------------------------
+
+SFZ_CUDA_CALL vec2u min(vec2u lhs, vec2u rhs) noexcept
+{
+	vec2u tmp;
+	tmp.x = sfz::min(lhs.x, rhs.x);
+	tmp.y = sfz::min(lhs.y, rhs.y);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec3u min(vec3u lhs, vec3u rhs) noexcept
+{
+	vec3u tmp;
+	tmp.x = sfz::min(lhs.x, rhs.x);
+	tmp.y = sfz::min(lhs.y, rhs.y);
+	tmp.z = sfz::min(lhs.z, rhs.z);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec4u min(vec4u lhs, vec4u rhs) noexcept
+{
+	vec4u tmp;
+	tmp.x = sfz::min(lhs.x, rhs.x);
+	tmp.y = sfz::min(lhs.y, rhs.y);
+	tmp.z = sfz::min(lhs.z, rhs.z);
+	tmp.w = sfz::min(lhs.w, rhs.w);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec2u min(vec2u lhs, uint32_t rhs) noexcept { return min(rhs, lhs); }
+SFZ_CUDA_CALL vec2u min(uint32_t lhs, vec2u rhs) noexcept
+{
+	vec2u tmp;
+	tmp.x = sfz::min(lhs, rhs.x);
+	tmp.y = sfz::min(lhs, rhs.y);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec3u min(vec3u lhs, uint32_t rhs) noexcept { return min(rhs, lhs); }
+SFZ_CUDA_CALL vec3u min(uint32_t lhs, vec3u rhs) noexcept
+{
+	vec3u tmp;
+	tmp.x = sfz::min(lhs, rhs.x);
+	tmp.y = sfz::min(lhs, rhs.y);
+	tmp.z = sfz::min(lhs, rhs.z);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec4u min(vec4u lhs, uint32_t rhs) noexcept { return min(rhs, lhs); }
+SFZ_CUDA_CALL vec4u min(uint32_t lhs, vec4u rhs) noexcept
+{
+	vec4u tmp;
+	tmp.x = sfz::min(lhs, rhs.x);
+	tmp.y = sfz::min(lhs, rhs.y);
+	tmp.z = sfz::min(lhs, rhs.z);
+	tmp.w = sfz::min(lhs, rhs.w);
+	return tmp;
+}
+
+// max() - scalars
+// ------------------------------------------------------------------------------------------------
+
+SFZ_CUDA_CALL float max(float lhs, float rhs) noexcept
+{
+	return std::max(lhs, rhs);
+}
+
+SFZ_CUDA_CALL int32_t max(int32_t lhs, int32_t rhs) noexcept
+{
+	return std::max(lhs, rhs);
+}
+
+SFZ_CUDA_CALL uint32_t max(uint32_t lhs, uint32_t rhs) noexcept
+{
+	return std::max(lhs, rhs);
+}
+
+// max() - float vectors
+// ------------------------------------------------------------------------------------------------
+
+SFZ_CUDA_CALL vec2 max(vec2 lhs, vec2 rhs) noexcept
+{
+	vec2 tmp;
+	tmp.x = sfz::max(lhs.x, rhs.x);
+	tmp.y = sfz::max(lhs.y, rhs.y);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec3 max(vec3 lhs, vec3 rhs) noexcept
+{
+	vec3 tmp;
+	tmp.x = sfz::max(lhs.x, rhs.x);
+	tmp.y = sfz::max(lhs.y, rhs.y);
+	tmp.z = sfz::max(lhs.z, rhs.z);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec4 max(vec4 lhs, vec4 rhs) noexcept
+{
+	vec4 tmp;
+	tmp.x = sfz::max(lhs.x, rhs.x);
+	tmp.y = sfz::max(lhs.y, rhs.y);
+	tmp.z = sfz::max(lhs.z, rhs.z);
+	tmp.w = sfz::max(lhs.w, rhs.w);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec2 max(vec2 lhs, float rhs) noexcept { return max(rhs, lhs); }
+SFZ_CUDA_CALL vec2 max(float lhs, vec2 rhs) noexcept
+{
+	vec2 tmp;
+	tmp.x = sfz::max(lhs, rhs.x);
+	tmp.y = sfz::max(lhs, rhs.y);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec3 max(vec3 lhs, float rhs) noexcept { return max(rhs, lhs); }
+SFZ_CUDA_CALL vec3 max(float lhs, vec3 rhs) noexcept
+{
+	vec3 tmp;
+	tmp.x = sfz::max(lhs, rhs.x);
+	tmp.y = sfz::max(lhs, rhs.y);
+	tmp.z = sfz::max(lhs, rhs.z);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec4 max(vec4 lhs, float rhs) noexcept { return max(rhs, lhs); }
+SFZ_CUDA_CALL vec4 max(float lhs, vec4 rhs) noexcept
+{
+	vec4 tmp;
+	tmp.x = sfz::max(lhs, rhs.x);
+	tmp.y = sfz::max(lhs, rhs.y);
+	tmp.z = sfz::max(lhs, rhs.z);
+	tmp.w = sfz::max(lhs, rhs.w);
+	return tmp;
+}
+
+// max() - int32_t vectors
+// ------------------------------------------------------------------------------------------------
+
+SFZ_CUDA_CALL vec2i max(vec2i lhs, vec2i rhs) noexcept
+{
+	vec2i tmp;
+	tmp.x = sfz::max(lhs.x, rhs.x);
+	tmp.y = sfz::max(lhs.y, rhs.y);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec3i max(vec3i lhs, vec3i rhs) noexcept
+{
+	vec3i tmp;
+	tmp.x = sfz::max(lhs.x, rhs.x);
+	tmp.y = sfz::max(lhs.y, rhs.y);
+	tmp.z = sfz::max(lhs.z, rhs.z);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec4i max(vec4i lhs, vec4i rhs) noexcept
+{
+	vec4i tmp;
+	tmp.x = sfz::max(lhs.x, rhs.x);
+	tmp.y = sfz::max(lhs.y, rhs.y);
+	tmp.z = sfz::max(lhs.z, rhs.z);
+	tmp.w = sfz::max(lhs.w, rhs.w);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec2i max(vec2i lhs, int32_t rhs) noexcept { return max(rhs, lhs); }
+SFZ_CUDA_CALL vec2i max(int32_t lhs, vec2i rhs) noexcept
+{
+	vec2i tmp;
+	tmp.x = sfz::max(lhs, rhs.x);
+	tmp.y = sfz::max(lhs, rhs.y);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec3i max(vec3i lhs, int32_t rhs) noexcept { return max(rhs, lhs); }
+SFZ_CUDA_CALL vec3i max(int32_t lhs, vec3i rhs) noexcept
+{
+	vec3i tmp;
+	tmp.x = sfz::max(lhs, rhs.x);
+	tmp.y = sfz::max(lhs, rhs.y);
+	tmp.z = sfz::max(lhs, rhs.z);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec4i max(vec4i lhs, int32_t rhs) noexcept { return max(rhs, lhs); }
+SFZ_CUDA_CALL vec4i max(int32_t lhs, vec4i rhs) noexcept
+{
+	vec4i tmp;
+	tmp.x = sfz::max(lhs, rhs.x);
+	tmp.y = sfz::max(lhs, rhs.y);
+	tmp.z = sfz::max(lhs, rhs.z);
+	tmp.w = sfz::max(lhs, rhs.w);
+	return tmp;
+}
+
+// max() - uint32_t vectors
+// ------------------------------------------------------------------------------------------------
+
+SFZ_CUDA_CALL vec2u max(vec2u lhs, vec2u rhs) noexcept
+{
+	vec2u tmp;
+	tmp.x = sfz::max(lhs.x, rhs.x);
+	tmp.y = sfz::max(lhs.y, rhs.y);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec3u max(vec3u lhs, vec3u rhs) noexcept
+{
+	vec3u tmp;
+	tmp.x = sfz::max(lhs.x, rhs.x);
+	tmp.y = sfz::max(lhs.y, rhs.y);
+	tmp.z = sfz::max(lhs.z, rhs.z);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec4u max(vec4u lhs, vec4u rhs) noexcept
+{
+	vec4u tmp;
+	tmp.x = sfz::max(lhs.x, rhs.x);
+	tmp.y = sfz::max(lhs.y, rhs.y);
+	tmp.z = sfz::max(lhs.z, rhs.z);
+	tmp.w = sfz::max(lhs.w, rhs.w);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec2u max(vec2u lhs, uint32_t rhs) noexcept { return max(rhs, lhs); }
+SFZ_CUDA_CALL vec2u max(uint32_t lhs, vec2u rhs) noexcept
+{
+	vec2u tmp;
+	tmp.x = sfz::max(lhs, rhs.x);
+	tmp.y = sfz::max(lhs, rhs.y);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec3u max(vec3u lhs, uint32_t rhs) noexcept { return max(rhs, lhs); }
+SFZ_CUDA_CALL vec3u max(uint32_t lhs, vec3u rhs) noexcept
+{
+	vec3u tmp;
+	tmp.x = sfz::max(lhs, rhs.x);
+	tmp.y = sfz::max(lhs, rhs.y);
+	tmp.z = sfz::max(lhs, rhs.z);
+	return tmp;
+}
+
+SFZ_CUDA_CALL vec4u max(vec4u lhs, uint32_t rhs) noexcept { return max(rhs, lhs); }
+SFZ_CUDA_CALL vec4u max(uint32_t lhs, vec4u rhs) noexcept
+{
+	vec4u tmp;
+	tmp.x = sfz::max(lhs, rhs.x);
+	tmp.y = sfz::max(lhs, rhs.y);
+	tmp.z = sfz::max(lhs, rhs.z);
+	tmp.w = sfz::max(lhs, rhs.w);
+	return tmp;
+}
+
 // old
 // ------------------------------------------------------------------------------------------------
 

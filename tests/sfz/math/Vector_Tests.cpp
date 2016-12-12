@@ -556,67 +556,6 @@ TEST_CASE("Sum of vector", "[sfz::Vector]")
 	REQUIRE(elementSum(v1) == 8);
 }
 
-TEST_CASE("min() & max()", "[sfz::Vector]")
-{
-	using sfz::min;
-	using sfz::max;
-
-	sfz::Vector<int,3> v1{-1, 0, 1};
-	sfz::Vector<int,3> v2{2, 3, -1};
-
-	SECTION("min() of two vectors") {
-		auto res = min(v1, v2);
-		REQUIRE(res[0] == -1);
-		REQUIRE(res[1] == 0);
-		REQUIRE(res[2] == -1);
-	}
-	SECTION("max() of two vectors") {
-		auto res = max(v1, v2);
-		REQUIRE(res[0] == 2);
-		REQUIRE(res[1] == 3);
-		REQUIRE(res[2] == 1);
-	}
-	SECTION("min() of vector and scalar") {
-		auto res1 = min(v1, 0);
-		auto res2 = min(v2, 2);
-		REQUIRE(res1 == min(0, v1));
-		REQUIRE(res2 == min(2, v2));
-		REQUIRE(res1[0] == -1);
-		REQUIRE(res1[1] == 0);
-		REQUIRE(res1[2] == 0);
-		REQUIRE(res2[0] == 2);
-		REQUIRE(res2[1] == 2);
-		REQUIRE(res2[2] == -1);
-	}
-	SECTION("max() of vector and scalar")
-	{
-		auto res1 = max(v1, 0);
-		auto res2 = max(v2, 2);
-		REQUIRE(res1 == max(0, v1));
-		REQUIRE(res2 == max(2, v2));
-		REQUIRE(res1[0] == 0);
-		REQUIRE(res1[1] == 0);
-		REQUIRE(res1[2] == 1);
-		REQUIRE(res2[0] == 2);
-		REQUIRE(res2[1] == 3);
-		REQUIRE(res2[2] == 2);
-	}
-	SECTION("minElement()")
-	{
-		int res1 = minElement(v1);
-		int res2 = minElement(v2);
-		REQUIRE(res1 == -1);
-		REQUIRE(res2 == -1);
-	}
-	SECTION("maxElement")
-	{
-		int res1 = maxElement(v1);
-		int res2 = maxElement(v2);
-		REQUIRE(res1 == 1);
-		REQUIRE(res2 == 3);
-	}
-}
-
 TEST_CASE("Converting to string", "[sfz::Vector]")
 {
 	using namespace sfz;

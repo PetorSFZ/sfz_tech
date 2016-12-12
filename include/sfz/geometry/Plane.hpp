@@ -46,7 +46,6 @@ public:
 
 	/// Returns the signed distance to the plane. Positive if above, negative if below.
 	inline float signedDistance(const vec3& point) const noexcept;
-	inline vec3 closestPoint(const vec3& point) const noexcept;
 
 	// Public getters/setters
 	// --------------------------------------------------------------------------------------------

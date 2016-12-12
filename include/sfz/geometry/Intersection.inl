@@ -353,6 +353,33 @@ inline bool belowPlane(const Plane& plane, const Sphere& sphere) noexcept
 // Closest point tests
 // ------------------------------------------------------------------------------------------------
 
+inline vec3 closestPoint(const AABB& aabb, const vec3& point) noexcept
+{
+	return sfz::min(sfz::max(point, aabb.min), aabb.max);
+}
+
+inline vec3 closestPoint(const OBB& obb, const vec3& point) noexcept
+{
+	// Algorithm from Real-Time Collision Detection (Section 5.1.4)
+	const vec3 distToPoint = point - obb.position();
+	vec3 res = obb.position();;
+
+	float dist;
+	for (uint32_t i = 0; i < 3; i++) {
+		dist = dot(distToPoint, obb.axes()[i]);
+		if (dist > obb.halfExtents()[i]) dist = obb.halfExtents()[i];
+		if (dist < -obb.halfExtents()[i]) dist = -obb.halfExtents()[i];
+		res += (dist * obb.axes()[i]);
+	}
+
+	return res;
+}
+
+inline vec3 closestPoint(const Plane& plane, const vec3& point) noexcept
+{
+	return point - plane.signedDistance(point) * plane.normal();
+}
+
 inline vec3 closestPoint(const Sphere& sphere, const vec3& point) noexcept
 {
 	const vec3 distToPoint = point - sphere.position;
