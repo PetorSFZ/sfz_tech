@@ -622,34 +622,6 @@ SFZ_CUDA_CALL T maxElement(const Vector<T,4>& vector) noexcept
 	return std::max(std::max(std::max(vector.x, vector.y), vector.z), vector.w);
 }
 
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> abs(const Vector<T,N>& vector) noexcept
-{
-	Vector<T,N> temp;
-	for (uint32_t i = 0; i < N; ++i) {
-		temp[i] = std::abs(vector[i]);
-	}
-	return temp;
-}
-
-template<typename T>
-SFZ_CUDA_CALL Vector<T,2> abs(const Vector<T,2>& vector) noexcept
-{
-	return Vector<T,2>(std::abs(vector.x), std::abs(vector.y));
-}
-
-template<typename T>
-SFZ_CUDA_CALL Vector<T,3> abs(const Vector<T,3>& vector) noexcept
-{
-	return Vector<T,3>(std::abs(vector.x), std::abs(vector.y), std::abs(vector.z));
-}
-
-template<typename T>
-SFZ_CUDA_CALL Vector<T,4> abs(const Vector<T,4>& vector) noexcept
-{
-	return Vector<T,4>(std::abs(vector.x), std::abs(vector.y), std::abs(vector.z), std::abs(vector.w));
-}
-
 // Operators (arithmetic & assignment)
 // ------------------------------------------------------------------------------------------------
 

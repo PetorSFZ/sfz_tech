@@ -617,17 +617,6 @@ TEST_CASE("min() & max()", "[sfz::Vector]")
 	}
 }
 
-TEST_CASE("abs()", "[sfz::Vector]")
-{
-	using sfz::abs;
-
-	sfz::Vector<int,3> v1{-1, -2, 3};
-	auto res = abs(v1);
-	REQUIRE(res[0] == 1);
-	REQUIRE(res[1] == 2);
-	REQUIRE(res[2] == 3);
-}
-
 TEST_CASE("Converting to string", "[sfz::Vector]")
 {
 	using namespace sfz;

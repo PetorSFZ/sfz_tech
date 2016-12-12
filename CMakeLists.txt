@@ -260,6 +260,7 @@ if(SFZ_CORE_BUILD_TESTS)
 
 	set(MATH_TEST_FILES
 		${TESTS_DIR}/sfz/math/MathPrimitiveHashers_Tests.cpp
+		${TESTS_DIR}/sfz/math/MathSupport_Tests.cpp
 		${TESTS_DIR}/sfz/math/Matrix_Tests.cpp
 		${TESTS_DIR}/sfz/math/Vector_Tests.cpp)
 	source_group(sfz_math FILES ${MATH_TEST_FILES})

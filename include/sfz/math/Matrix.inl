@@ -84,7 +84,7 @@ Vector<T,N> Matrix<T,M,N>::rowAt(size_t i) const noexcept
 {
 	sfz_assert_debug(i < M);
 	Vector<T,N> row;
-	for (size_t j = 0; j < N; j++) {
+	for (uint32_t j = 0; j < N; j++) {
 		row[j] = elements[j][i];
 	}
 	return row;
@@ -95,7 +95,7 @@ Vector<T,M> Matrix<T,M,N>::columnAt(size_t j) const noexcept
 {
 	sfz_assert_debug(j < N);
 	Vector<T,M> column;
-	for (size_t i = 0; i < M; i++) {
+	for (uint32_t i = 0; i < M; i++) {
 		column[i] = elements[j][i];
 	}
 	return column;
@@ -113,7 +113,7 @@ template<typename T, size_t M, size_t N>
 void Matrix<T,M,N>::setRow(size_t i, const Vector<T,N>& row) noexcept
 {
 	sfz_assert_debug(i < M);
-	size_t j = 0;
+	uint32_t j = 0;
 	for (auto element : row) {
 		elements[j][i] = element;
 		j++;
@@ -124,7 +124,7 @@ template<typename T, size_t M, size_t N>
 void Matrix<T,M,N>::setColumn(size_t j, const Vector<T,M>& column) noexcept
 {
 	sfz_assert_debug(j < N);
-	size_t i = 0;
+	uint32_t i = 0;
 	for (auto element : column) {
 		elements[j][i] = element;
 		i++;

@@ -231,10 +231,6 @@ SFZ_CUDA_CALL T minElement(const Vector<T,N>& vector) noexcept;
 template<typename T, uint32_t N>
 SFZ_CUDA_CALL T maxElement(const Vector<T,N>& vector) noexcept;
 
-/// Returns the element-wise abs() of the vector.
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> abs(const Vector<T,N>& vector) noexcept;
-
 // Operators (arithmetic & assignment)
 // ------------------------------------------------------------------------------------------------
 

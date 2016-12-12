@@ -18,7 +18,10 @@
 
 #pragma once
 
+#include <cmath>
 #include <cstdint>
+
+#include <nmmintrin.h> // SSE 4.2
 
 #include "sfz/CudaCompatibility.hpp"
 #include "sfz/math/Matrix.hpp"
@@ -26,6 +29,7 @@
 
 namespace sfz {
 
+using std::int32_t;
 using std::uint32_t;
 
 // Floating-point constants
@@ -59,6 +63,38 @@ SFZ_CUDA_CALL bool approxEqual(const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rh
 
 // abs()
 // ------------------------------------------------------------------------------------------------
+
+/// Returns the absolute value of the argument. The vector versions returns the absolute value of
+/// each element in the vector.
+
+SFZ_CUDA_CALL float abs(float val) noexcept;
+SFZ_CUDA_CALL int32_t abs(int32_t val) noexcept;
+
+SFZ_CUDA_CALL vec2 abs(vec2 val) noexcept;
+SFZ_CUDA_CALL vec3 abs(vec3 val) noexcept;
+SFZ_CUDA_CALL vec4 abs(vec4 val) noexcept;
+
+SFZ_CUDA_CALL vec2i abs(vec2i val) noexcept;
+SFZ_CUDA_CALL vec3i abs(vec3i val) noexcept;
+SFZ_CUDA_CALL vec4i abs(vec4i val) noexcept;
+
+// sgn()
+// ------------------------------------------------------------------------------------------------
+
+/// Returns the sign of the parameter value. For integers it will return -1, 0 or 1. For floating
+/// points values it will always return -1.0f or 1.0f (as IEEE-754 has positive and negative 0).
+/// Element-wise results for vector types.
+
+SFZ_CUDA_CALL float sgn(float val) noexcept;
+SFZ_CUDA_CALL int32_t sgn(int32_t val) noexcept;
+
+SFZ_CUDA_CALL vec2 sgn(vec2 val) noexcept;
+SFZ_CUDA_CALL vec3 sgn(vec3 val) noexcept;
+SFZ_CUDA_CALL vec4 sgn(vec4 val) noexcept;
+
+SFZ_CUDA_CALL vec2i sgn(vec2i val) noexcept;
+SFZ_CUDA_CALL vec3i sgn(vec3i val) noexcept;
+SFZ_CUDA_CALL vec4i sgn(vec4i val) noexcept;
 
 // min()
 // ------------------------------------------------------------------------------------------------

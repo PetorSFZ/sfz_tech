@@ -93,7 +93,7 @@ inline vec3 OBB::closestPoint(const vec3& point) const noexcept
 	vec3 res = mCenter;
 
 	float dist;
-	for (size_t i = 0; i < 3; i++) {
+	for (uint32_t i = 0; i < 3; i++) {
 		dist = dot(distToPoint, mAxes.axes[i]);
 		if (dist > mHalfExtents[i]) dist = mHalfExtents[i];
 		if (dist < -mHalfExtents[i]) dist = -mHalfExtents[i];

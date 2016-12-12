@@ -62,7 +62,7 @@ inline bool pointInside(const OBB& box, const vec3& point) noexcept
 	const vec3 distToPoint = point - box.position();
 	const OBBAxes& axes = box.axes();
 	float dist;
-	for (size_t i = 0; i < 3; i++) {
+	for (uint32_t i = 0; i < 3; i++) {
 		dist = dot(distToPoint, axes.axes[i]);
 		if (dist > box.halfExtents()[i]) return false;
 		if (dist < -box.halfExtents()[i]) return false;
@@ -114,8 +114,8 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 
 	// Compute the rotation matrix from b to a
 	mat3 R;
-	for (size_t i = 0; i < 3; i++) {
-		for (size_t j = 0; j < 3; j++) {
+	for (uint32_t i = 0; i < 3; i++) {
+		for (uint32_t j = 0; j < 3; j++) {
 			R.set(i, j, dot(aU[i], bU[j]));
 		}
 	}
@@ -123,8 +123,8 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 	// Compute common subexpressions, epsilon term to counteract arithmetic errors
 	const float EPSILON = 0.00001f;
 	mat3 AbsR;
-	for (size_t i = 0; i < 3; i++) {
-		for (size_t j = 0; j < 3; j++) {
+	for (uint32_t i = 0; i < 3; i++) {
+		for (uint32_t j = 0; j < 3; j++) {
 			AbsR.set(i, j, std::abs(R.at(i, j)) + EPSILON);
 		}
 	}
