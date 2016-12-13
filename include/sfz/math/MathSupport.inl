@@ -728,6 +728,102 @@ SFZ_CUDA_CALL vec4u max(uint32_t lhs, vec4u rhs) noexcept
 #endif
 }
 
+// minElement()
+// ------------------------------------------------------------------------------------------------
+
+SFZ_CUDA_CALL float minElement(vec2 val) noexcept
+{
+	return sfz::min(val.x, val.y);
+}
+
+SFZ_CUDA_CALL float minElement(vec3 val) noexcept
+{
+	return sfz::min(sfz::min(val.x, val.y), val.z);
+}
+
+SFZ_CUDA_CALL float minElement(vec4 val) noexcept
+{
+	return sfz::min(sfz::min(sfz::min(val.x, val.y), val.z), val.w);
+}
+
+SFZ_CUDA_CALL int32_t minElement(vec2i val) noexcept
+{
+	return sfz::min(val.x, val.y);
+}
+
+SFZ_CUDA_CALL int32_t minElement(vec3i val) noexcept
+{
+	return sfz::min(sfz::min(val.x, val.y), val.z);
+}
+
+SFZ_CUDA_CALL int32_t minElement(vec4i val) noexcept
+{
+	return sfz::min(sfz::min(sfz::min(val.x, val.y), val.z), val.w);
+}
+
+SFZ_CUDA_CALL uint32_t minElement(vec2u val) noexcept
+{
+	return sfz::min(val.x, val.y);
+}
+
+SFZ_CUDA_CALL uint32_t minElement(vec3u val) noexcept
+{
+	return sfz::min(sfz::min(val.x, val.y), val.z);
+}
+
+SFZ_CUDA_CALL uint32_t minElement(vec4u val) noexcept
+{
+	return sfz::min(sfz::min(sfz::min(val.x, val.y), val.z), val.w);
+}
+
+// maxElement()
+// ------------------------------------------------------------------------------------------------
+
+SFZ_CUDA_CALL float maxElement(vec2 val) noexcept
+{
+	return sfz::max(val.x, val.y);
+}
+
+SFZ_CUDA_CALL float maxElement(vec3 val) noexcept
+{
+	return sfz::max(sfz::max(val.x, val.y), val.z);
+}
+
+SFZ_CUDA_CALL float maxElement(vec4 val) noexcept
+{
+	return sfz::max(sfz::max(sfz::max(val.x, val.y), val.z), val.w);
+}
+
+SFZ_CUDA_CALL int32_t maxElement(vec2i val) noexcept
+{
+	return sfz::max(val.x, val.y);
+}
+
+SFZ_CUDA_CALL int32_t maxElement(vec3i val) noexcept
+{
+	return sfz::max(sfz::max(val.x, val.y), val.z);
+}
+
+SFZ_CUDA_CALL int32_t maxElement(vec4i val) noexcept
+{
+	return sfz::max(sfz::max(sfz::max(val.x, val.y), val.z), val.w);
+}
+
+SFZ_CUDA_CALL uint32_t maxElement(vec2u val) noexcept
+{
+	return sfz::max(val.x, val.y);
+}
+
+SFZ_CUDA_CALL uint32_t maxElement(vec3u val) noexcept
+{
+	return sfz::max(sfz::max(val.x, val.y), val.z);
+}
+
+SFZ_CUDA_CALL uint32_t maxElement(vec4u val) noexcept
+{
+	return sfz::max(sfz::max(sfz::max(val.x, val.y), val.z), val.w);
+}
+
 // clamp()
 // ------------------------------------------------------------------------------------------------
 

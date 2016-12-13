@@ -422,62 +422,6 @@ SFZ_CUDA_CALL T elementSum(const Vector<T,4>& vector) noexcept
 	return vector.x + vector.y + vector.z + vector.w;
 }
 
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL T minElement(const Vector<T,N>& vector) noexcept
-{
-	T tmp = vector[0];
-	for (uint32_t i = 1; i < N; i++) {
-		tmp = std::min(tmp, vector[i]);
-	}
-	return tmp;
-}
-
-template<typename T>
-SFZ_CUDA_CALL T minElement(const Vector<T,2>& vector) noexcept
-{
-	return std::min(vector.x, vector.y);
-}
-
-template<typename T>
-SFZ_CUDA_CALL T minElement(const Vector<T,3>& vector) noexcept
-{
-	return std::min(std::min(vector.x, vector.y), vector.z);
-}
-
-template<typename T>
-SFZ_CUDA_CALL T minElement(const Vector<T,4>& vector) noexcept
-{
-	return std::min(std::min(std::min(vector.x, vector.y), vector.z), vector.w);
-}
-
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL T maxElement(const Vector<T,N>& vector) noexcept
-{
-	T tmp = vector[0];
-	for (uint32_t i = 1; i < N; i++) {
-		tmp = std::max(tmp, vector[i]);
-	}
-	return tmp;
-}
-
-template<typename T>
-SFZ_CUDA_CALL T maxElement(const Vector<T,2>& vector) noexcept
-{
-	return std::max(vector.x, vector.y);
-}
-
-template<typename T>
-SFZ_CUDA_CALL T maxElement(const Vector<T,3>& vector) noexcept
-{
-	return std::max(std::max(vector.x, vector.y), vector.z);
-}
-
-template<typename T>
-SFZ_CUDA_CALL T maxElement(const Vector<T,4>& vector) noexcept
-{
-	return std::max(std::max(std::max(vector.x, vector.y), vector.z), vector.w);
-}
-
 // Operators (arithmetic & assignment)
 // ------------------------------------------------------------------------------------------------
 

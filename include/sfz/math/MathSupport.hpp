@@ -181,6 +181,40 @@ SFZ_CUDA_CALL vec3u max(uint32_t lhs, vec3u rhs) noexcept;
 SFZ_CUDA_CALL vec4u max(vec4u lhs, uint32_t rhs) noexcept;
 SFZ_CUDA_CALL vec4u max(uint32_t lhs, vec4u rhs) noexcept;
 
+// minElement()
+// ------------------------------------------------------------------------------------------------
+
+/// Returns the smallest element in a vector.
+
+SFZ_CUDA_CALL float minElement(vec2 val) noexcept;
+SFZ_CUDA_CALL float minElement(vec3 val) noexcept;
+SFZ_CUDA_CALL float minElement(vec4 val) noexcept;
+
+SFZ_CUDA_CALL int32_t minElement(vec2i val) noexcept;
+SFZ_CUDA_CALL int32_t minElement(vec3i val) noexcept;
+SFZ_CUDA_CALL int32_t minElement(vec4i val) noexcept;
+
+SFZ_CUDA_CALL uint32_t minElement(vec2u val) noexcept;
+SFZ_CUDA_CALL uint32_t minElement(vec3u val) noexcept;
+SFZ_CUDA_CALL uint32_t minElement(vec4u val) noexcept;
+
+// maxElement()
+// ------------------------------------------------------------------------------------------------
+
+/// Returns the largest element in a vector.
+
+SFZ_CUDA_CALL float maxElement(vec2 val) noexcept;
+SFZ_CUDA_CALL float maxElement(vec3 val) noexcept;
+SFZ_CUDA_CALL float maxElement(vec4 val) noexcept;
+
+SFZ_CUDA_CALL int32_t maxElement(vec2i val) noexcept;
+SFZ_CUDA_CALL int32_t maxElement(vec3i val) noexcept;
+SFZ_CUDA_CALL int32_t maxElement(vec4i val) noexcept;
+
+SFZ_CUDA_CALL uint32_t maxElement(vec2u val) noexcept;
+SFZ_CUDA_CALL uint32_t maxElement(vec3u val) noexcept;
+SFZ_CUDA_CALL uint32_t maxElement(vec4u val) noexcept;
+
 // clamp()
 // ------------------------------------------------------------------------------------------------
 

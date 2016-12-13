@@ -60,7 +60,7 @@ TEST_CASE("sgn()", "[sfz::MathSupport]")
 	}
 }
 
-TEST_CASE("min", "[sfz::MathSupport]")
+TEST_CASE("min()", "[sfz::MathSupport]")
 {
 	SECTION("Scalars") {
 		REQUIRE(sfz::min(1.0f, 2.0f) == 1.0f);
@@ -83,7 +83,7 @@ TEST_CASE("min", "[sfz::MathSupport]")
 	}
 }
 
-TEST_CASE("max", "[sfz::MathSupport]")
+TEST_CASE("max()", "[sfz::MathSupport]")
 {
 	SECTION("Scalars") {
 		REQUIRE(sfz::max(1.0f, 2.0f) == 2.0f);
@@ -104,6 +104,14 @@ TEST_CASE("max", "[sfz::MathSupport]")
 		REQUIRE(sfz::max(vec4i(1, 2, -3, -4), 1) == vec4i(1, 2, 1, 1));
 		REQUIRE(sfz::max(vec4u(1u, 2u, 3u, 4u), 2u) == vec4u(2u, 2u, 3u, 4u));
 	}
+}
+
+TEST_CASE("minElement() & maxElement()", "[sfz::MathSuppor]")
+{
+	REQUIRE(sfz::minElement(vec4u(5u, 2u, 3u, 1u)) == 1u);
+	REQUIRE(sfz::minElement(vec4i(1, 2, -4, 0)) == -4);
+	REQUIRE(sfz::maxElement(vec4u(5u, 2u, 3u, 1u)) == 5u);
+	REQUIRE(sfz::maxElement(vec4i(1, 2, -4, 0)) == 2);
 }
 
 TEST_CASE("clamp()", "[sfz::MathSupport]")

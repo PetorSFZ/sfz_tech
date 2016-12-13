@@ -203,14 +203,6 @@ SFZ_CUDA_CALL Vector<T,3> cross(const Vector<T,3>& left, const Vector<T,3>& righ
 template<typename T, uint32_t N>
 SFZ_CUDA_CALL T elementSum(const Vector<T,N>& vector) noexcept;
 
-/// Returns the smallest element in a vector (as defined by the min function)
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL T minElement(const Vector<T,N>& vector) noexcept;
-
-/// Returns the largest element in a vector (as defined by the max function)
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL T maxElement(const Vector<T,N>& vector) noexcept;
-
 // Operators (arithmetic & assignment)
 // ------------------------------------------------------------------------------------------------
 
