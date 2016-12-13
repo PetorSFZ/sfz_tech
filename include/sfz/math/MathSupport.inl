@@ -728,21 +728,22 @@ SFZ_CUDA_CALL vec4u max(uint32_t lhs, vec4u rhs) noexcept
 #endif
 }
 
-// old
+// clamp()
+// ------------------------------------------------------------------------------------------------
+
+template<typename ArgT, typename LimitT>
+SFZ_CUDA_CALL ArgT clamp(const ArgT& value, const LimitT& minValue, const LimitT& maxValue) noexcept
+{
+	return sfz::max(minValue, sfz::min(value, maxValue));
+}
+
+// lerp()
 // ------------------------------------------------------------------------------------------------
 
 template<typename ArgT, typename FloatT>
 SFZ_CUDA_CALL ArgT lerp(ArgT v0, ArgT v1, FloatT t) noexcept
 {
 	return (FloatT(1)-t)*v0 + t*v1;
-}
-
-template<typename T>
-SFZ_CUDA_CALL T clamp(T value, T minValue, T maxValue)
-{
-	using std::min;
-	using std::max;
-	return max(minValue, min(value, maxValue));
 }
 
 } // namespace sfz

@@ -181,16 +181,17 @@ SFZ_CUDA_CALL vec3u max(uint32_t lhs, vec3u rhs) noexcept;
 SFZ_CUDA_CALL vec4u max(vec4u lhs, uint32_t rhs) noexcept;
 SFZ_CUDA_CALL vec4u max(uint32_t lhs, vec4u rhs) noexcept;
 
-// old
+// clamp()
 // ------------------------------------------------------------------------------------------------
 
-/// Lerp function, v0 when t == 0 and v1 when t == 1
-/// See: http://en.wikipedia.org/wiki/Lerp_%28computing%29
+template<typename ArgT, typename LimitT = ValT>
+SFZ_CUDA_CALL ArgT clamp(const ArgT& value, const LimitT& minValue, const LimitT& maxValue) noexcept;
+
+// lerp()
+// ------------------------------------------------------------------------------------------------
+
 template<typename ArgT, typename FloatT>
 SFZ_CUDA_CALL ArgT lerp(ArgT v0, ArgT v1, FloatT t) noexcept;
-
-template<typename T>
-SFZ_CUDA_CALL T clamp(T value, T minValue, T maxValue);
 
 } // namespace sfz
 
