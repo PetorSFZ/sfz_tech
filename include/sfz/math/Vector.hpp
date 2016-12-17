@@ -267,27 +267,6 @@ SFZ_CUDA_CALL bool operator== (const Vector<T,N>& left, const Vector<T,N>& right
 template<typename T, uint32_t N>
 SFZ_CUDA_CALL bool operator!= (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
-// Standard iterator functions
-// ------------------------------------------------------------------------------------------------
-
-template<typename T, uint32_t N>
-T* begin(Vector<T,N>& vector) noexcept;
-
-template<typename T, uint32_t N>
-const T* begin(const Vector<T,N>& vector) noexcept;
-
-template<typename T, uint32_t N>
-const T* cbegin(const Vector<T,N>& vector) noexcept;
-
-template<typename T, uint32_t N>
-T* end(Vector<T,N>& vector) noexcept;
-
-template<typename T, uint32_t N>
-const T* end(const Vector<T,N>& vector) noexcept;
-
-template<typename T, uint32_t N>
-const T* cend(const Vector<T,N>& vector) noexcept;
-
 } // namespace sfz
 
 #include "sfz/math/Vector.inl"

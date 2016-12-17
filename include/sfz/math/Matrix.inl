@@ -113,10 +113,8 @@ template<typename T, size_t M, size_t N>
 void Matrix<T,M,N>::setRow(size_t i, const Vector<T,N>& row) noexcept
 {
 	sfz_assert_debug(i < M);
-	uint32_t j = 0;
-	for (auto element : row) {
-		elements[j][i] = element;
-		j++;
+	for (uint32_t j = 0; j < N; j++) {
+		elements[j][i] = row[j];
 	}
 }
 
@@ -124,10 +122,8 @@ template<typename T, size_t M, size_t N>
 void Matrix<T,M,N>::setColumn(size_t j, const Vector<T,M>& column) noexcept
 {
 	sfz_assert_debug(j < N);
-	uint32_t i = 0;
-	for (auto element : column) {
-		elements[j][i] = element;
-		i++;
+	for (uint32_t i = 0; i < M; i++) {
+		elements[j][i] = column[i];
 	}
 }
 
