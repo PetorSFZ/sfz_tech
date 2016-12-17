@@ -22,7 +22,7 @@
 #include <cmath>
 #include <cstdint>
 
-#include <nmmintrin.h> // SSE 4.2
+#include <immintrin.h> // Intel AVX intrinsics
 
 #include "sfz/CudaCompatibility.hpp"
 #include "sfz/math/Matrix.hpp"
@@ -45,7 +45,7 @@ constexpr float RAD_TO_DEG = 180.0f/ PI;
 
 /// Approximate equal function for floating point types.
 
-constexpr float APPROX_EQUAL_EPS = 0.0001f;
+constexpr float APPROX_EQUAL_EPS = 0.001f;
 
 SFZ_CUDA_CALL bool approxEqual(float lhs, float rhs, float epsilon = APPROX_EQUAL_EPS) noexcept;
 

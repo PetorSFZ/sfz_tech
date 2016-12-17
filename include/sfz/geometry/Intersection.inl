@@ -73,7 +73,7 @@ inline bool pointInside(const OBB& box, const vec3& point) noexcept
 inline bool pointInside(const Sphere& sphere, const vec3& point) noexcept
 {
 	const vec3 distToPoint = point - sphere.position;
-	return squaredLength(distToPoint) < (sphere.radius * sphere.radius);
+	return dot(distToPoint, distToPoint) < (sphere.radius * sphere.radius);
 }
 
 inline bool pointInside(const Circle& circle, vec2 point) noexcept
@@ -81,7 +81,8 @@ inline bool pointInside(const Circle& circle, vec2 point) noexcept
 	// If the length from the circles center to the specified point is shorter than or equal to
 	// the radius then the Circle overlaps the point. Both sides of the equation is squared to
 	// avoid somewhat expensive sqrt() function.
-	return squaredLength(point - circle.pos) <= (circle.radius*circle.radius);
+	vec2 dist = point - circle.pos;
+	return dot(dist, dist) <= (circle.radius*circle.radius);
 }
 
 inline bool pointInside(const AABB2D& rect, vec2 point) noexcept
@@ -212,7 +213,7 @@ inline bool overlaps(const Circle& lhs, const Circle& rhs) noexcept
 	// If the length between the center of the two circles is less than or equal to the the sum of
 	// the circle's radiuses they overlap. Both sides of the equation is squared to avoid somewhat 
 	// expensive sqrt() function.
-	float distSquared = squaredLength(lhs.pos - rhs.pos);
+	float distSquared = dot(lhs.pos - rhs.pos, lhs.pos - rhs.pos);
 	float radiusSum = lhs.radius + rhs.radius;
 	return distSquared <= (radiusSum * radiusSum);
 }
@@ -235,7 +236,7 @@ inline bool overlaps(const Circle& circle, const AABB2D& rect) noexcept
 	// squared to avoid somewhat expensive sqrt() function.
 	vec2 e{max(rect.min - circle.pos, 0.0f)};
 	e += max(circle.pos - rect.max, 0.0f);
-	return squaredLength(e) <= circle.radius * circle.radius;
+	return dot(e, e) <= circle.radius * circle.radius;
 }
 
 inline bool overlaps(const AABB2D& rect, const Circle& circle) noexcept
@@ -384,7 +385,7 @@ inline vec3 closestPoint(const Sphere& sphere, const vec3& point) noexcept
 {
 	const vec3 distToPoint = point - sphere.position;
 	vec3 res = point;
-	if (squaredLength(distToPoint) > (sphere.radius * sphere.radius)) {
+	if (dot(distToPoint, distToPoint) > (sphere.radius * sphere.radius)) {
 		res = sphere.position + normalize(distToPoint) * sphere.radius;
 	}
 	return res;

@@ -41,14 +41,12 @@ SFZ_CUDA_CALL Vector<T,N>::Vector(const Vector<T2,N>& other) noexcept
 template<typename T, uint32_t N>
 SFZ_CUDA_CALL T& Vector<T,N>::operator[] (uint32_t index) noexcept
 {
-	sfz_assert_debug(index < N);
 	return elements[index];
 }
 
 template<typename T, uint32_t N>
 SFZ_CUDA_CALL T Vector<T,N>::operator[] (uint32_t index) const noexcept
 {
-	sfz_assert_debug(index < N);
 	return elements[index];
 }
 
@@ -99,14 +97,12 @@ SFZ_CUDA_CALL Vector<T,2>::Vector(const Vector<T2,2>& other) noexcept
 template<typename T>
 SFZ_CUDA_CALL T& Vector<T,2>::operator[] (uint32_t index) noexcept
 {
-	sfz_assert_debug(index < 2);
 	return elementsPtr()[index];
 }
 
 template<typename T>
 SFZ_CUDA_CALL T Vector<T,2>::operator[] (uint32_t index) const noexcept
 {
-	sfz_assert_debug(index < 2);
 	return elementsPtr()[index];
 }
 
@@ -177,14 +173,12 @@ SFZ_CUDA_CALL Vector<T,3>::Vector(const Vector<T2,3>& other) noexcept
 template<typename T>
 SFZ_CUDA_CALL T& Vector<T,3>::operator[] (uint32_t index) noexcept
 {
-	sfz_assert_debug(index < 3);
 	return elementsPtr()[index];
 }
 
 template<typename T>
 SFZ_CUDA_CALL T Vector<T,3>::operator[] (uint32_t index) const noexcept
 {
-	sfz_assert_debug(index < 3);
 	return elementsPtr()[index];
 }
 
@@ -297,14 +291,12 @@ SFZ_CUDA_CALL Vector<T,4>::Vector(const Vector<T2,4>& other) noexcept
 template<typename T>
 SFZ_CUDA_CALL T& Vector<T,4>::operator[] (uint32_t index) noexcept
 {
-	sfz_assert_debug(index < 4);
 	return elementsPtr()[index];
 }
 
 template<typename T>
 SFZ_CUDA_CALL T Vector<T,4>::operator[] (uint32_t index) const noexcept
 {
-	sfz_assert_debug(index < 4);
 	return elementsPtr()[index];
 }
 
@@ -324,7 +316,7 @@ SFZ_CUDA_CALL const T* Vector<T,4>::elementsPtr() const noexcept
 // ------------------------------------------------------------------------------------------------
 
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL T dot(const Vector<T,N>& lhs, const Vector<T,N>& rhs) noexcept
+SFZ_CUDA_CALL T dot(Vector<T,N> lhs, Vector<T,N> rhs) noexcept
 {
 	T product = T(0);
 	for (uint32_t i = 0; i < N; i++) {
@@ -334,14 +326,14 @@ SFZ_CUDA_CALL T dot(const Vector<T,N>& lhs, const Vector<T,N>& rhs) noexcept
 }
 
 template<typename T>
-SFZ_CUDA_CALL T dot(const Vector<T,2>& lhs, const Vector<T,2>& rhs) noexcept
+SFZ_CUDA_CALL T dot(Vector<T,2> lhs, Vector<T,2> rhs) noexcept
 {
 	return lhs.x * rhs.x
 	     + lhs.y * rhs.y;
 }
 
 template<typename T>
-SFZ_CUDA_CALL T dot(const Vector<T,3>& lhs, const Vector<T,3>& rhs) noexcept
+SFZ_CUDA_CALL T dot(Vector<T,3> lhs, Vector<T,3> rhs) noexcept
 {
 	return lhs.x * rhs.x
 	     + lhs.y * rhs.y
@@ -349,7 +341,7 @@ SFZ_CUDA_CALL T dot(const Vector<T,3>& lhs, const Vector<T,3>& rhs) noexcept
 }
 
 template<typename T>
-SFZ_CUDA_CALL T dot(const Vector<T,4>& lhs, const Vector<T,4>& rhs) noexcept
+SFZ_CUDA_CALL T dot(Vector<T,4> lhs, Vector<T,4> rhs) noexcept
 {
 	return lhs.x * rhs.x
 	     + lhs.y * rhs.y
@@ -357,13 +349,51 @@ SFZ_CUDA_CALL T dot(const Vector<T,4>& lhs, const Vector<T,4>& rhs) noexcept
 	     + lhs.w * rhs.w;
 }
 
-// Vector functions: squaredLength()
-// ------------------------------------------------------------------------------------------------
-
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL T squaredLength(const Vector<T,N>& v) noexcept
+template<>
+SFZ_CUDA_CALL float dot(vec2 lhs, vec2 rhs) noexcept
 {
-	return dot(v, v);
+#ifdef SFZ_CUDA_DEVICE_CODE
+	return fmaf(lhs.x, rhs.x,
+	            lhs.y * rhs.y);
+#else
+	return dot<float,2>(lhs, rhs);
+#endif
+}
+
+template<>
+SFZ_CUDA_CALL float dot(vec3 lhs, vec3 rhs) noexcept
+{
+#ifdef SFZ_CUDA_DEVICE_CODE
+	return fmaf(lhs.x, rhs.x,
+	       fmaf(lhs.y, rhs.y,
+	            lhs.z * rhs.z);
+#else
+	vec4 tmpLhs;
+	tmpLhs.xyz = lhs;
+	vec4 tmpRhs;
+	tmpRhs.xyz = rhs;
+
+	const __m128 lhsReg = _mm_load_ps(tmpLhs.elementsPtr());
+	const __m128 rhsReg = _mm_load_ps(tmpRhs.elementsPtr());
+	const __m128 dotProd = _mm_dp_ps(lhsReg, rhsReg, 0x71); // 0111 0001 (3 elements, store in lowest)
+	return _mm_cvtss_f32(dotProd);
+#endif
+}
+
+template<>
+SFZ_CUDA_CALL float dot(vec4 lhs, vec4 rhs) noexcept
+{
+#ifdef SFZ_CUDA_DEVICE_CODE
+	return fmaf(lhs.x, rhs.x,
+	       fmaf(lhs.y, rhs.y,
+	       fmaf(lhs.z, rhs.z,
+	            lhs.w * rhs.w);
+#else
+	const __m128 lhsReg = _mm_load_ps(lhs.elementsPtr());
+	const __m128 rhsReg = _mm_load_ps(rhs.elementsPtr());
+	const __m128 dotProd = _mm_dp_ps(lhsReg, rhsReg, 0xF1); // 1111 0001 (4 elements, store in lowest)
+	return _mm_cvtss_f32(dotProd);
+#endif
 }
 
 // Vector functions: length()
@@ -377,14 +407,28 @@ SFZ_CUDA_CALL float length(vec2 v) noexcept
 
 SFZ_CUDA_CALL float length(vec3 v) noexcept
 {
-	using std::sqrt;
-	return sqrt(dot(v, v));
+#ifdef SFZ_CUDA_DEVICE_CODE
+	return sqrtf(dot(v, v));
+#else
+	vec4 tmp;
+	tmp.xyz = v;
+	const __m128 reg = _mm_load_ps(tmp.elementsPtr());
+	const __m128 dotProd = _mm_dp_ps(reg, reg, 0x71); // 0111 0001 (3 elements, store in lowest)
+	const __m128 len = _mm_sqrt_ss(dotProd); // sqrt() of lowest
+	return _mm_cvtss_f32(len);
+#endif
 }
 
 SFZ_CUDA_CALL float length(vec4 v) noexcept
 {
-	using std::sqrt;
-	return sqrt(dot(v, v));
+#ifdef SFZ_CUDA_DEVICE_CODE
+	return sqrtf(dot(v, v));
+#else
+	const __m128 reg = _mm_load_ps(v.elementsPtr());
+	const __m128 dotProd = _mm_dp_ps(reg, reg, 0xF1); // 1111 0001 (4 elements, store in lowest)
+	const __m128 len = _mm_sqrt_ss(dotProd); // sqrt() of lowest
+	return _mm_cvtss_f32(len);
+#endif
 }
 
 // Vector functions: normalize()
@@ -392,23 +436,44 @@ SFZ_CUDA_CALL float length(vec4 v) noexcept
 
 SFZ_CUDA_CALL vec2 normalize(vec2 v) noexcept
 {
-	float lengthTmp = sfz::length(v);
-	sfz_assert_debug(lengthTmp != 0.0f || lengthTmp != -0.0f);
-	return v / lengthTmp;
+#ifdef SFZ_CUDA_DEVICE_CODE
+	float inverseSqrt = rsqrtf(sfz::dot(v, v));
+	return inverseSqrt * v;
+#else
+	return v / sfz::length(v);
+#endif
 }
 
 SFZ_CUDA_CALL vec3 normalize(vec3 v) noexcept
 {
-	float lengthTmp = sfz::length(v);
-	sfz_assert_debug(lengthTmp != 0.0f || lengthTmp != -0.0f);
-	return v / lengthTmp;
+#ifdef SFZ_CUDA_DEVICE_CODE
+	float inverseSqrt = rsqrtf(sfz::dot(v, v));
+	return inverseSqrt * v;
+#else
+	vec4 tmp;
+	tmp.xyz = v;
+	const __m128 reg = _mm_load_ps(tmp.elementsPtr());
+	const __m128 dotProd = _mm_dp_ps(reg, reg, 0x77); // 0111 0111 (3 elements, store in 3 lowest)
+	const __m128 inverseSqrt = _mm_rsqrt_ps(dotProd);
+	const __m128 res = _mm_mul_ps(reg, inverseSqrt);
+	_mm_store_ps(tmp.elementsPtr(), res);
+	return tmp.xyz;
+#endif
 }
 
 SFZ_CUDA_CALL vec4 normalize(vec4 v) noexcept
 {
-	float lengthTmp = sfz::length(v);
-	sfz_assert_debug(lengthTmp != 0.0f || lengthTmp != -0.0f);
-	return v / lengthTmp;
+#ifdef SFZ_CUDA_DEVICE_CODE
+	float inverseSqrt = rsqrtf(sfz::dot(v, v));
+	return inverseSqrt * v;
+#else
+	const __m128 reg = _mm_load_ps(v.elementsPtr());
+	const __m128 dotProd = _mm_dp_ps(reg, reg, 0xFF); // 1111 1111 (4 elements, store in all)
+	const __m128 inverseSqrt = _mm_rsqrt_ps(dotProd);
+	const __m128 res = _mm_mul_ps(reg, inverseSqrt);
+	_mm_store_ps(v.elementsPtr(), res);
+	return v;
+#endif
 }
 
 // Vector functions: safeNormalize()
@@ -439,7 +504,7 @@ SFZ_CUDA_CALL vec4 safeNormalize(vec4 v) noexcept
 // ------------------------------------------------------------------------------------------------
 
 template<typename T>
-SFZ_CUDA_CALL Vector<T,3> cross(const Vector<T,3>& lhs, const Vector<T,3>& rhs) noexcept
+SFZ_CUDA_CALL Vector<T,3> cross(Vector<T,3> lhs, Vector<T,3> rhs) noexcept
 {
 	return Vector<T,3>(lhs.y * rhs.z - lhs.z * rhs.y,
 	                   lhs.z * rhs.x - lhs.x * rhs.z,
@@ -450,7 +515,7 @@ SFZ_CUDA_CALL Vector<T,3> cross(const Vector<T,3>& lhs, const Vector<T,3>& rhs) 
 // ------------------------------------------------------------------------------------------------
 
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL T elementSum(const Vector<T,N>& v) noexcept
+SFZ_CUDA_CALL T elementSum(Vector<T,N> v) noexcept
 {
 	T result = T(0);
 	for (uint32_t i = 0; i < N; ++i) {
@@ -460,19 +525,19 @@ SFZ_CUDA_CALL T elementSum(const Vector<T,N>& v) noexcept
 }
 
 template<typename T>
-SFZ_CUDA_CALL T elementSum(const Vector<T,2>& v) noexcept
+SFZ_CUDA_CALL T elementSum(Vector<T,2> v) noexcept
 {
 	return v.x + v.y;
 }
 
 template<typename T>
-SFZ_CUDA_CALL T elementSum(const Vector<T,3>& v) noexcept
+SFZ_CUDA_CALL T elementSum(Vector<T,3> v) noexcept
 {
 	return v.x + v.y + v.z;
 }
 
 template<typename T>
-SFZ_CUDA_CALL T elementSum(const Vector<T,4>& v) noexcept
+SFZ_CUDA_CALL T elementSum(Vector<T,4> v) noexcept
 {
 	return v.x + v.y + v.z + v.w;
 }

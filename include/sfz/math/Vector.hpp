@@ -21,8 +21,17 @@
 #include <cstdint>
 #include <cmath> // std::sqrt
 
-#include "sfz/Assert.hpp"
+#include <immintrin.h> // Intel AVX intrinsics
+
 #include "sfz/CudaCompatibility.hpp"
+
+namespace sfz {
+
+using std::int32_t;
+using std::uint32_t;
+
+// Vector struct declaration
+// ------------------------------------------------------------------------------------------------
 
 /// A mathematical vector POD class that imitates a built-in primitive.
 ///
@@ -37,14 +46,6 @@
 ///
 /// Satisfies the conditions of std::is_pod, std::is_trivial and std::is_standard_layout if used
 /// with standard primitives.
-
-namespace sfz {
-
-using std::int32_t;
-using std::uint32_t;
-
-// Vector struct declaration
-// ------------------------------------------------------------------------------------------------
 
 template<typename T, uint32_t N>
 struct Vector final {
@@ -173,11 +174,7 @@ using vec4u = Vector<uint32_t,4>;
 
 /// Calculates the dot product of two vectors
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL T dot(const Vector<T,N>& lhs, const Vector<T,N>& rhs) noexcept;
-
-/// Calculates squared length of vector
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL T squaredLength(const Vector<T,N>& v) noexcept;
+SFZ_CUDA_CALL T dot(Vector<T,N> lhs, Vector<T,N> rhs) noexcept;
 
 /// Calculates length of the vector
 SFZ_CUDA_CALL float length(vec2 v) noexcept;
@@ -185,23 +182,22 @@ SFZ_CUDA_CALL float length(vec3 v) noexcept;
 SFZ_CUDA_CALL float length(vec4 v) noexcept;
 
 /// Normalizes vector
-/// sfz_assert_debug: length of vector is not zero
 SFZ_CUDA_CALL vec2 normalize(vec2 v) noexcept;
 SFZ_CUDA_CALL vec3 normalize(vec3 v) noexcept;
 SFZ_CUDA_CALL vec4 normalize(vec4 v) noexcept;
 
-/// Normalizes vector, returns zero if vector is zero
+/// Normalizes vector, returns zero if vector is zero. Not as optimized as normalize().
 SFZ_CUDA_CALL vec2 safeNormalize(vec2 v) noexcept;
 SFZ_CUDA_CALL vec3 safeNormalize(vec3 v) noexcept;
 SFZ_CUDA_CALL vec4 safeNormalize(vec4 v) noexcept;
 
 /// Calculates the cross product of two vectors
 template<typename T>
-SFZ_CUDA_CALL Vector<T,3> cross(const Vector<T,3>& lhs, const Vector<T,3>& rhs) noexcept;
+SFZ_CUDA_CALL Vector<T,3> cross(Vector<T,3> lhs, Vector<T,3> rhs) noexcept;
 
 /// Calculates the sum of all the elements in the vector
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL T elementSum(const Vector<T, N>& v) noexcept;
+SFZ_CUDA_CALL T elementSum(Vector<T,N> v) noexcept;
 
 // Operators (arithmetic & assignment)
 // ------------------------------------------------------------------------------------------------

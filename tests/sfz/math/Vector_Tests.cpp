@@ -424,17 +424,12 @@ TEST_CASE("Arithmetic operators", "[sfz::Vector]")
 
 TEST_CASE("Length of vector", "[sfz::Vector]")
 {
-	using sfz::squaredLength;
 	using sfz::length;
 	using sfz::approxEqual;
 	sfz::vec2 v1(2.0f, 0.0f);
 	float v2Arr[] = {-2.0f, 2.0f, 2.0f, -2.0f};
 	sfz::vec4 v2(v2Arr);
 
-	SECTION("squaredLength()") {
-		REQUIRE(approxEqual(squaredLength(v1), 4.0f));
-		REQUIRE(approxEqual(squaredLength(v2), 16.0f));
-	}
 	SECTION("length()") {
 		REQUIRE(approxEqual(length(v1), 2.0f));
 		REQUIRE(approxEqual(length(v2), 4.0f));
@@ -511,6 +506,11 @@ TEST_CASE("Dot (scalar) product", "[sfz::Vector]")
 		
 		REQUIRE(v1[0] == -3);
 		REQUIRE(v1[1] == 2);	
+	}
+	SECTION("_mm_dp_ps()") {
+		sfz::vec4 v1(1.0f, 2.0f, 3.0f, 4.0f);
+		sfz::vec4 v2(3.0f, -1.0f, -2.0f, 5.0f);
+		REQUIRE(sfz::approxEqual(sfz::dot(v1, v2), 15.0f));
 	}
 }
 
