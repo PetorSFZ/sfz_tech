@@ -824,13 +824,38 @@ SFZ_CUDA_CALL uint32_t maxElement(vec4u val) noexcept
 	return sfz::max(sfz::max(sfz::max(val.x, val.y), val.z), val.w);
 }
 
-// clamp()
+// clamp() & saturate()
 // ------------------------------------------------------------------------------------------------
 
 template<typename ArgT, typename LimitT>
 SFZ_CUDA_CALL ArgT clamp(const ArgT& value, const LimitT& minValue, const LimitT& maxValue) noexcept
 {
 	return sfz::max(minValue, sfz::min(value, maxValue));
+}
+
+SFZ_CUDA_CALL float saturate(float value) noexcept
+{
+#ifdef SFZ_CUDA_DEVICE_CODE
+	return __saturatef(value);
+#else
+	return sfz::clamp<float,float>(value, 0.0f, 1.0f);
+#endif
+}
+
+SFZ_CUDA_CALL vec2 saturate(vec2 value) noexcept
+{
+	return vec2(sfz::saturate(value.x), sfz::saturate(value.y));
+}
+
+SFZ_CUDA_CALL vec3 saturate(vec3 value) noexcept
+{
+	return vec3(sfz::saturate(value.x), sfz::saturate(value.y), sfz::saturate(value.z));
+}
+
+SFZ_CUDA_CALL vec4 saturate(vec4 value) noexcept
+{
+	return vec4(sfz::saturate(value.x), sfz::saturate(value.y),
+	            sfz::saturate(value.z), sfz::saturate(value.w));
 }
 
 // lerp()

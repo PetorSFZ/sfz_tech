@@ -106,7 +106,7 @@ TEST_CASE("max()", "[sfz::MathSupport]")
 	}
 }
 
-TEST_CASE("minElement() & maxElement()", "[sfz::MathSuppor]")
+TEST_CASE("minElement() & maxElement()", "[sfz::MathSupport]")
 {
 	REQUIRE(sfz::minElement(vec4u(5u, 2u, 3u, 1u)) == 1u);
 	REQUIRE(sfz::minElement(vec4i(1, 2, -4, 0)) == -4);
@@ -118,4 +118,12 @@ TEST_CASE("clamp()", "[sfz::MathSupport]")
 {
 	REQUIRE(sfz::clamp(vec4i(-2, 0, 2, 4), -1, 2) == vec4i(-1, 0, 2, 2));
 	REQUIRE(sfz::clamp(vec4i(-2, 0, 2, 4), vec4i(0, -1, -1, 5), vec4i(1, 1, 1, 6)) == vec4i(0, 0, 1, 5));
+}
+
+TEST_CASE("saturate()", "[sfz::MathSupport]")
+{
+	REQUIRE(sfz::saturate(4.0f) == 1.0f);
+	REQUIRE(sfz::saturate(-1.0f) == 0.0f);
+	REQUIRE(sfz::saturate(0.2f) == 0.2f);
+	REQUIRE(sfz::saturate(vec4(4.0f, -1.0f, 0.2f, 0.4f)) == vec4(1.0f, 0.0f, 0.2f, 0.4f));
 }
