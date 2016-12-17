@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include <algorithm> // std::min & std::max
 #include <cstdint>
 #include <cmath> // std::sqrt
 
@@ -29,8 +28,6 @@
 ///
 /// Typedefs are provided for float vectors (vec2, vec3 and vec4), (32-bit signed) integer
 /// vectors (vec2i, vec3i, vec4i) and (32-bit) unsigned integer vectors (vec2u, vec3u, vec4u).
-/// Note that for integers some operations, such as as calculating the length, may give unexpected
-/// results due to truncation or overflow.
 ///
 /// 2, 3 and 4 dimensional vectors are specialized to have more constructors and ways of accessing
 /// data. For example, you can construct a vec3 with 3 floats (vec3(x, y, z)), or with a vec2 and a 
@@ -174,34 +171,37 @@ using vec4u = Vector<uint32_t,4>;
 // Vector functions
 // ------------------------------------------------------------------------------------------------
 
-/// Calculates length of the vector
+/// Calculates the dot product of two vectors
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL T length(const Vector<T,N>& vector) noexcept;
+SFZ_CUDA_CALL T dot(const Vector<T,N>& lhs, const Vector<T,N>& rhs) noexcept;
 
 /// Calculates squared length of vector
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL T squaredLength(const Vector<T,N>& vector) noexcept;
+SFZ_CUDA_CALL T squaredLength(const Vector<T,N>& v) noexcept;
+
+/// Calculates length of the vector
+SFZ_CUDA_CALL float length(vec2 v) noexcept;
+SFZ_CUDA_CALL float length(vec3 v) noexcept;
+SFZ_CUDA_CALL float length(vec4 v) noexcept;
 
 /// Normalizes vector
 /// sfz_assert_debug: length of vector is not zero
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> normalize(const Vector<T,N>& vector) noexcept;
+SFZ_CUDA_CALL vec2 normalize(vec2 v) noexcept;
+SFZ_CUDA_CALL vec3 normalize(vec3 v) noexcept;
+SFZ_CUDA_CALL vec4 normalize(vec4 v) noexcept;
 
 /// Normalizes vector, returns zero if vector is zero
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> safeNormalize(const Vector<T,N>& vector) noexcept;
-
-/// Calculates the dot product of two vectors
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL T dot(const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
+SFZ_CUDA_CALL vec2 safeNormalize(vec2 v) noexcept;
+SFZ_CUDA_CALL vec3 safeNormalize(vec3 v) noexcept;
+SFZ_CUDA_CALL vec4 safeNormalize(vec4 v) noexcept;
 
 /// Calculates the cross product of two vectors
 template<typename T>
-SFZ_CUDA_CALL Vector<T,3> cross(const Vector<T,3>& left, const Vector<T,3>& right) noexcept;
+SFZ_CUDA_CALL Vector<T,3> cross(const Vector<T,3>& lhs, const Vector<T,3>& rhs) noexcept;
 
 /// Calculates the sum of all the elements in the vector
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL T elementSum(const Vector<T,N>& vector) noexcept;
+SFZ_CUDA_CALL T elementSum(const Vector<T, N>& v) noexcept;
 
 // Operators (arithmetic & assignment)
 // ------------------------------------------------------------------------------------------------

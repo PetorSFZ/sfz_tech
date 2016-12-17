@@ -19,6 +19,7 @@
 #include "sfz/gl/Framebuffer.hpp"
 
 #include <cstdio>
+#include <utility> // std::move()
 
 #include "sfz/gl/IncludeOpenGL.hpp"
 

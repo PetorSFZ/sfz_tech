@@ -92,8 +92,8 @@ inline OBB OBB::transformOBB(const mat4& transform) const noexcept
 	const vec3 newXHExt = transformDir(transform, mAxes.axes[0] * mHalfExtents[0]);
 	const vec3 newYHExt = transformDir(transform, mAxes.axes[1] * mHalfExtents[1]);
 	const vec3 newZHExt = transformDir(transform, mAxes.axes[2] * mHalfExtents[2]);
-	return OBB{newPos, normalize(newXHExt), normalize(newYHExt), normalize(newZHExt),
-	           length(newXHExt), length(newYHExt), length(newZHExt)};
+	return OBB(newPos, normalize(newXHExt), normalize(newYHExt), normalize(newZHExt),
+	           length(newXHExt), length(newYHExt), length(newZHExt));
 }
 
 // Public getters/setters

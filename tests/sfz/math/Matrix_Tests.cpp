@@ -521,8 +521,8 @@ TEST_CASE("Rotation matrices", "[sfz::MatrixSupport")
 	sfz::vec4 v1{1, 1, 1, 1};
 
 	SECTION("xRotationMatrix4()") {
-		sfz::mat4 xRot90 = sfz::xRotationMatrix4(sfz::PI()/2);
-		REQUIRE(approxEqual(xRot90, sfz::rotationMatrix4(sfz::vec3{1,0,0}, sfz::PI()/2.0f)));
+		sfz::mat4 xRot90 = sfz::xRotationMatrix4(sfz::PI/2.0f);
+		REQUIRE(approxEqual(xRot90, sfz::rotationMatrix4(sfz::vec3{1,0,0}, sfz::PI/2.0f)));
 
 		REQUIRE(approxEqual(xRot90.at(0, 0), 1.0f));
 		REQUIRE(approxEqual(xRot90.at(0, 1), 0.0f));
@@ -544,8 +544,8 @@ TEST_CASE("Rotation matrices", "[sfz::MatrixSupport")
 		REQUIRE(approxEqual(xRot90.at(3, 2), 0.0f));
 		REQUIRE(approxEqual(xRot90.at(3, 3), 1.0f));
 
-		sfz::mat4 xRot180 = sfz::xRotationMatrix4(sfz::PI());
-		REQUIRE(approxEqual(xRot180, sfz::rotationMatrix4(sfz::vec3{1,0,0}, sfz::PI())));
+		sfz::mat4 xRot180 = sfz::xRotationMatrix4(sfz::PI);
+		REQUIRE(approxEqual(xRot180, sfz::rotationMatrix4(sfz::vec3{1,0,0}, sfz::PI)));
 
 		REQUIRE(approxEqual(xRot180.at(0, 0), 1.0f));
 		REQUIRE(approxEqual(xRot180.at(0, 1), 0.0f));
@@ -580,8 +580,8 @@ TEST_CASE("Rotation matrices", "[sfz::MatrixSupport")
 		REQUIRE(approxEqual(v3[3], 1.0f));
 	}
 	SECTION("yRotationMatrix4()") {
-		sfz::mat4 yRot90 = sfz::yRotationMatrix4(sfz::PI()/2);
-		REQUIRE(approxEqual(yRot90, sfz::rotationMatrix4(sfz::vec3{0,1,0}, sfz::PI()/2)));
+		sfz::mat4 yRot90 = sfz::yRotationMatrix4(sfz::PI/2.0f);
+		REQUIRE(approxEqual(yRot90, sfz::rotationMatrix4(sfz::vec3{0,1,0}, sfz::PI/2.0f)));
 
 		REQUIRE(approxEqual(yRot90.at(0, 0), 0.0f));
 		REQUIRE(approxEqual(yRot90.at(0, 1), 0.0f));
@@ -603,8 +603,8 @@ TEST_CASE("Rotation matrices", "[sfz::MatrixSupport")
 		REQUIRE(approxEqual(yRot90.at(3, 2), 0.0f));
 		REQUIRE(approxEqual(yRot90.at(3, 3), 1.0f));
 
-		sfz::mat4 yRot180 = sfz::yRotationMatrix4(sfz::PI());
-		REQUIRE(approxEqual(yRot180, sfz::rotationMatrix4(sfz::vec3{0,1,0}, sfz::PI())));
+		sfz::mat4 yRot180 = sfz::yRotationMatrix4(sfz::PI);
+		REQUIRE(approxEqual(yRot180, sfz::rotationMatrix4(sfz::vec3{0,1,0}, sfz::PI)));
 
 		REQUIRE(approxEqual(yRot180.at(0, 0), -1.0f));
 		REQUIRE(approxEqual(yRot180.at(0, 1), 0.0f));
@@ -639,8 +639,8 @@ TEST_CASE("Rotation matrices", "[sfz::MatrixSupport")
 		REQUIRE(approxEqual(v3[3], 1.0f));
 	}
 	SECTION("zRotationMatrix4()") {
-		sfz::mat4 zRot90 = sfz::zRotationMatrix4(sfz::PI()/2);
-		REQUIRE(approxEqual(zRot90, sfz::rotationMatrix4(sfz::vec3{0,0,1}, sfz::PI()/2)));
+		sfz::mat4 zRot90 = sfz::zRotationMatrix4(sfz::PI/2.0f);
+		REQUIRE(approxEqual(zRot90, sfz::rotationMatrix4(sfz::vec3{0,0,1}, sfz::PI/2.0f)));
 
 		REQUIRE(approxEqual(zRot90.at(0, 0), 0.0f));
 		REQUIRE(approxEqual(zRot90.at(0, 1), -1.0f));
@@ -662,8 +662,8 @@ TEST_CASE("Rotation matrices", "[sfz::MatrixSupport")
 		REQUIRE(approxEqual(zRot90.at(3, 2), 0.0f));
 		REQUIRE(approxEqual(zRot90.at(3, 3), 1.0f));
 
-		sfz::mat4 zRot180 = sfz::zRotationMatrix4(sfz::PI());
-		REQUIRE(approxEqual(zRot180, sfz::rotationMatrix4(sfz::vec3{0,0,1}, sfz::PI())));
+		sfz::mat4 zRot180 = sfz::zRotationMatrix4(sfz::PI);
+		REQUIRE(approxEqual(zRot180, sfz::rotationMatrix4(sfz::vec3{0,0,1}, sfz::PI)));
 
 		REQUIRE(approxEqual(zRot180.at(0, 0), -1.0f));
 		REQUIRE(approxEqual(zRot180.at(0, 1), 0.0f));
@@ -701,7 +701,7 @@ TEST_CASE("Rotation matrices", "[sfz::MatrixSupport")
 		sfz::vec4 startPoint{1, 0, 0, 1};
 		const sfz::vec4 expectedEndPoint{0, 1, 0, 1};
 		sfz::vec3 axis = sfz::vec3{1, 1, 0} - sfz::vec3{0, 0, 0};
-		sfz::mat4 rot = sfz::rotationMatrix4(axis, sfz::PI());
+		sfz::mat4 rot = sfz::rotationMatrix4(axis, sfz::PI);
 
 		auto res = rot * startPoint;
 		
@@ -919,8 +919,8 @@ TEST_CASE("Tranform helper functions", "[sfz::Matrix]")
 	            {9, 10, 11, 12},
 	            {13, 14, 15, 16}};
 
-	const sfz::mat4 rotated = sfz::zRotationMatrix4(sfz::PI()/2)
-	                           * sfz::xRotationMatrix4(-sfz::PI()/2);
+	const sfz::mat4 rotated = sfz::zRotationMatrix4(sfz::PI/2.0f)
+	                           * sfz::xRotationMatrix4(-sfz::PI/2.0f);
 	const sfz::vec3 rotatedForward{-1, 0, 0};
 	const sfz::vec3 rotatedUp{0, 0, -1};
 	const sfz::vec3 rotatedRight{0, 1, 0};

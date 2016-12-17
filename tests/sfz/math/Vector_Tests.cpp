@@ -22,6 +22,7 @@
 
 #include "sfz/math/Vector.hpp"
 #include "sfz/math/MathPrimitiveToStrings.hpp"
+#include "sfz/math/MathSupport.hpp"
 
 #include <type_traits>
 
@@ -425,22 +426,18 @@ TEST_CASE("Length of vector", "[sfz::Vector]")
 {
 	using sfz::squaredLength;
 	using sfz::length;
-	sfz::Vector<int, 2> v1{2, 0};
-	int v2Arr[] = {-2, 2, 2, -2, 3};
-	sfz::Vector<int, 5> v2{v2Arr};
+	using sfz::approxEqual;
+	sfz::vec2 v1(2.0f, 0.0f);
+	float v2Arr[] = {-2.0f, 2.0f, 2.0f, -2.0f};
+	sfz::vec4 v2(v2Arr);
 
 	SECTION("squaredLength()") {
-		REQUIRE(squaredLength(v1) == 4);
-		REQUIRE(squaredLength(v2) == 25);
+		REQUIRE(approxEqual(squaredLength(v1), 4.0f));
+		REQUIRE(approxEqual(squaredLength(v2), 16.0f));
 	}
 	SECTION("length()") {
-		REQUIRE(length(v1) == 2);
-		REQUIRE(length(v2) == 5);
-	}
-	SECTION("Rounding down") {
-		sfz::Vector<int, 2> v3{2,1};
-		REQUIRE(squaredLength(v3) == 5);
-		REQUIRE(length(v3) == 2);
+		REQUIRE(approxEqual(length(v1), 2.0f));
+		REQUIRE(approxEqual(length(v2), 4.0f));
 	}
 }
 

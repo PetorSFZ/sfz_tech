@@ -18,30 +18,42 @@
 
 namespace sfz {
 
-// Approximate equal functions
+// approxEqual()
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, typename EpsT>
-SFZ_CUDA_CALL bool approxEqual(T lhs, T rhs, EpsT epsilon) noexcept
+SFZ_CUDA_CALL bool approxEqual(float lhs, float rhs, float epsilon) noexcept
 {
 	return (lhs <= (rhs + epsilon)) && (lhs >= (rhs - epsilon));
 }
 
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL bool approxEqual(const Vector<T,N>& lhs, const Vector<T,N>& rhs, T epsilon) noexcept
+SFZ_CUDA_CALL bool approxEqual(vec2 lhs, vec2 rhs, float epsilon) noexcept
 {
-	for (uint32_t i = 0; i < N; i++) {
-		if (!approxEqual<T,T>(lhs[i], rhs[i], epsilon)) return false;
-	}
-	return true;
+	return approxEqual(lhs.x, rhs.x, epsilon)
+	    && approxEqual(lhs.y, rhs.y, epsilon);
 }
 
-template<typename T, uint32_t M, uint32_t N>
-SFZ_CUDA_CALL bool approxEqual(const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs, T epsilon) noexcept
+SFZ_CUDA_CALL bool approxEqual(vec3 lhs, vec3 rhs, float epsilon) noexcept
+{
+	return approxEqual(lhs.x, rhs.x, epsilon)
+	    && approxEqual(lhs.y, rhs.y, epsilon)
+	    && approxEqual(lhs.z, rhs.z, epsilon);
+}
+
+SFZ_CUDA_CALL bool approxEqual(vec4 lhs, vec4 rhs, float epsilon) noexcept
+{
+	return approxEqual(lhs.x, rhs.x, epsilon)
+	    && approxEqual(lhs.y, rhs.y, epsilon)
+	    && approxEqual(lhs.z, rhs.z, epsilon)
+	    && approxEqual(lhs.w, rhs.w, epsilon);
+}
+
+template<uint32_t M, uint32_t N>
+SFZ_CUDA_CALL bool approxEqual(const Matrix<float,M,N>& lhs, const Matrix<float,M,N>& rhs,
+                               float epsilon) noexcept
 {
 	for (uint32_t i = 0; i < M; i++) {
 		for (uint32_t j = 0; j < N; j++) {
-			if (!approxEqual<T,T>(lhs.at(i, j), rhs.at(i, j), epsilon)) return false;
+			if (!approxEqual(lhs.at(i, j), rhs.at(i, j), epsilon)) return false;
 		}
 	}
 	return true;

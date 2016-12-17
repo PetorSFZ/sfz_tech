@@ -36,31 +36,26 @@ using std::uint32_t;
 // Floating-point constants
 // ------------------------------------------------------------------------------------------------
 
-template<typename T = float>
-SFZ_CUDA_CALL T PI() noexcept { return T(3.14159265358979323846); }
+constexpr float PI = 3.14159265358979323846f;
+constexpr float DEG_TO_RAD = PI / 180.0f;
+constexpr float RAD_TO_DEG = 180.0f/ PI;
 
-template<typename T = float>
-SFZ_CUDA_CALL T DEG_TO_RAD() noexcept { return PI<T>() / T(180); }
-
-template<typename T = float>
-SFZ_CUDA_CALL T RAD_TO_DEG() noexcept { return T(180) / PI<T>(); }
-
-template<typename T = float>
-SFZ_CUDA_CALL T defaultEpsilon() { return T(0.0001); }
-
-// Approximate equal functions
+// approxEqual()
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, typename EpsT = T>
-SFZ_CUDA_CALL bool approxEqual(T lhs, T rhs, EpsT epsilon = defaultEpsilon<EpsT>()) noexcept;
+/// Approximate equal function for floating point types.
 
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL bool approxEqual(const Vector<T,N>& lhs, const Vector<T,N>& rhs,
-                               T epsilon = defaultEpsilon<T>()) noexcept;
+constexpr float APPROX_EQUAL_EPS = 0.0001f;
 
-template<typename T, uint32_t M, uint32_t N>
-SFZ_CUDA_CALL bool approxEqual(const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs,
-                               T epsilon = defaultEpsilon<T>()) noexcept;
+SFZ_CUDA_CALL bool approxEqual(float lhs, float rhs, float epsilon = APPROX_EQUAL_EPS) noexcept;
+
+SFZ_CUDA_CALL bool approxEqual(vec2 lhs, vec2 rhs, float epsilon = APPROX_EQUAL_EPS) noexcept;
+SFZ_CUDA_CALL bool approxEqual(vec3 lhs, vec3 rhs, float epsilon = APPROX_EQUAL_EPS) noexcept;
+SFZ_CUDA_CALL bool approxEqual(vec4 lhs, vec4 rhs, float epsilon = APPROX_EQUAL_EPS) noexcept;
+
+template<uint32_t M, uint32_t N>
+SFZ_CUDA_CALL bool approxEqual(const Matrix<float,M,N>& lhs, const Matrix<float,M,N>& rhs,
+                               float epsilon = APPROX_EQUAL_EPS) noexcept;
 
 // abs()
 // ------------------------------------------------------------------------------------------------

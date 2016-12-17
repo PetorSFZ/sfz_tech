@@ -320,106 +320,161 @@ SFZ_CUDA_CALL const T* Vector<T,4>::elementsPtr() const noexcept
 	return &x;
 }
 
-// Vector functions
+// Vector functions: dot()
 // ------------------------------------------------------------------------------------------------
 
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL T length(const Vector<T,N>& vector) noexcept
-{
-	using std::sqrt;
-	return T(sqrt(dot(vector, vector)));
-}
-
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL T squaredLength(const Vector<T,N>& vector) noexcept
-{
-	return dot(vector, vector);
-}
-
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> normalize(const Vector<T,N>& vector) noexcept
-{
-	T lengthTmp = length(vector);
-	sfz_assert_debug(lengthTmp != 0);
-	return vector / lengthTmp;
-}
-
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> safeNormalize(const Vector<T,N>& vector) noexcept
-{
-	T lengthTmp = length(vector);
-	if (lengthTmp == T(0)) return Vector<T,N>(T(0));
-	return vector / lengthTmp;
-}
-
-template<typename T, uint32_t N>
-SFZ_CUDA_CALL T dot(const Vector<T,N>& left, const Vector<T,N>& right) noexcept
+SFZ_CUDA_CALL T dot(const Vector<T,N>& lhs, const Vector<T,N>& rhs) noexcept
 {
 	T product = T(0);
-	for (uint32_t i = 0; i < N; ++i) {
-		product += (left.elements[i]*right.elements[i]);
+	for (uint32_t i = 0; i < N; i++) {
+		product += lhs[i] * rhs[i];
 	}
 	return product;
 }
 
 template<typename T>
-SFZ_CUDA_CALL T dot(const Vector<T,2>& left, const Vector<T,2>& right) noexcept
+SFZ_CUDA_CALL T dot(const Vector<T,2>& lhs, const Vector<T,2>& rhs) noexcept
 {
-	return left.x * right.x
-	     + left.y * right.y;
+	return lhs.x * rhs.x
+	     + lhs.y * rhs.y;
 }
 
 template<typename T>
-SFZ_CUDA_CALL T dot(const Vector<T,3>& left, const Vector<T,3>& right) noexcept
+SFZ_CUDA_CALL T dot(const Vector<T,3>& lhs, const Vector<T,3>& rhs) noexcept
 {
-	return left.x * right.x
-	     + left.y * right.y
-	     + left.z * right.z;
+	return lhs.x * rhs.x
+	     + lhs.y * rhs.y
+	     + lhs.z * rhs.z;
 }
 
 template<typename T>
-SFZ_CUDA_CALL T dot(const Vector<T,4>& left, const Vector<T,4>& right) noexcept
+SFZ_CUDA_CALL T dot(const Vector<T,4>& lhs, const Vector<T,4>& rhs) noexcept
 {
-	return left.x * right.x
-	     + left.y * right.y
-	     + left.z * right.z
-	     + left.w * right.w;
+	return lhs.x * rhs.x
+	     + lhs.y * rhs.y
+	     + lhs.z * rhs.z
+	     + lhs.w * rhs.w;
 }
 
-template<typename T>
-SFZ_CUDA_CALL Vector<T,3> cross(const Vector<T,3>& left, const Vector<T,3>& right) noexcept
-{
-	return sfz::Vector<T,3>(left.y*right.z - left.z*right.y,
-	                        left.z*right.x - left.x*right.z,
-	                        left.x*right.y - left.y*right.x);
-}
+// Vector functions: squaredLength()
+// ------------------------------------------------------------------------------------------------
 
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL T elementSum(const Vector<T,N>& vector) noexcept
+SFZ_CUDA_CALL T squaredLength(const Vector<T,N>& v) noexcept
+{
+	return dot(v, v);
+}
+
+// Vector functions: length()
+// ------------------------------------------------------------------------------------------------
+
+SFZ_CUDA_CALL float length(vec2 v) noexcept
+{
+	using std::sqrt;
+	return sqrt(dot(v, v));
+}
+
+SFZ_CUDA_CALL float length(vec3 v) noexcept
+{
+	using std::sqrt;
+	return sqrt(dot(v, v));
+}
+
+SFZ_CUDA_CALL float length(vec4 v) noexcept
+{
+	using std::sqrt;
+	return sqrt(dot(v, v));
+}
+
+// Vector functions: normalize()
+// ------------------------------------------------------------------------------------------------
+
+SFZ_CUDA_CALL vec2 normalize(vec2 v) noexcept
+{
+	float lengthTmp = sfz::length(v);
+	sfz_assert_debug(lengthTmp != 0.0f || lengthTmp != -0.0f);
+	return v / lengthTmp;
+}
+
+SFZ_CUDA_CALL vec3 normalize(vec3 v) noexcept
+{
+	float lengthTmp = sfz::length(v);
+	sfz_assert_debug(lengthTmp != 0.0f || lengthTmp != -0.0f);
+	return v / lengthTmp;
+}
+
+SFZ_CUDA_CALL vec4 normalize(vec4 v) noexcept
+{
+	float lengthTmp = sfz::length(v);
+	sfz_assert_debug(lengthTmp != 0.0f || lengthTmp != -0.0f);
+	return v / lengthTmp;
+}
+
+// Vector functions: safeNormalize()
+// ------------------------------------------------------------------------------------------------
+
+SFZ_CUDA_CALL vec2 safeNormalize(vec2 v) noexcept
+{
+	float lengthTmp = sfz::length(v);
+	if (lengthTmp == 0.0f || lengthTmp == -0.0f) return vec2(0.0f);
+	return v / lengthTmp;
+}
+
+SFZ_CUDA_CALL vec3 safeNormalize(vec3 v) noexcept
+{
+	float lengthTmp = sfz::length(v);
+	if (lengthTmp == 0.0f || lengthTmp == -0.0f) return vec3(0.0f);
+	return v / lengthTmp;
+}
+
+SFZ_CUDA_CALL vec4 safeNormalize(vec4 v) noexcept
+{
+	float lengthTmp = sfz::length(v);
+	if (lengthTmp == 0.0f || lengthTmp == -0.0f) return vec4(0.0f);
+	return v / lengthTmp;
+}
+
+// Vector functions: cross()
+// ------------------------------------------------------------------------------------------------
+
+template<typename T>
+SFZ_CUDA_CALL Vector<T,3> cross(const Vector<T,3>& lhs, const Vector<T,3>& rhs) noexcept
+{
+	return Vector<T,3>(lhs.y * rhs.z - lhs.z * rhs.y,
+	                   lhs.z * rhs.x - lhs.x * rhs.z,
+	                   lhs.x * rhs.y - lhs.y * rhs.x);
+}
+
+// Vector functions: elementSum()
+// ------------------------------------------------------------------------------------------------
+
+template<typename T, uint32_t N>
+SFZ_CUDA_CALL T elementSum(const Vector<T,N>& v) noexcept
 {
 	T result = T(0);
 	for (uint32_t i = 0; i < N; ++i) {
-		result += vector[i];
+		result += v[i];
 	}
 	return result;
 }
 
 template<typename T>
-SFZ_CUDA_CALL T elementSum(const Vector<T,2>& vector) noexcept
+SFZ_CUDA_CALL T elementSum(const Vector<T,2>& v) noexcept
 {
-	return vector.x + vector.y;
+	return v.x + v.y;
 }
 
 template<typename T>
-SFZ_CUDA_CALL T elementSum(const Vector<T,3>& vector) noexcept
+SFZ_CUDA_CALL T elementSum(const Vector<T,3>& v) noexcept
 {
-	return vector.x + vector.y + vector.z;
+	return v.x + v.y + v.z;
 }
 
 template<typename T>
-SFZ_CUDA_CALL T elementSum(const Vector<T,4>& vector) noexcept
+SFZ_CUDA_CALL T elementSum(const Vector<T,4>& v) noexcept
 {
-	return vector.x + vector.y + vector.z + vector.w;
+	return v.x + v.y + v.z + v.w;
 }
 
 // Operators (arithmetic & assignment)
