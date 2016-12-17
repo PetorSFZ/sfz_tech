@@ -26,7 +26,7 @@ size_t hash(const Vector<T,N>& vector) noexcept
 {
 	std::hash<T> hasher;
 	size_t hash = 0;
-	for (size_t i = 0; i < N; ++i) {
+	for (uint32_t i = 0; i < N; ++i) {
 		// hash_combine algorithm from boost
 		hash ^= hasher(vector[i]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
 	}
@@ -41,8 +41,8 @@ size_t hash(const Matrix<T,M,N>& matrix) noexcept
 {
 	std::hash<T> hasher;
 	size_t hash = 0;
-	for (size_t i = 0; i < M; i++) {
-		for (size_t j = 0; j < N; j++) {
+	for (uint32_t i = 0; i < M; i++) {
+		for (uint32_t j = 0; j < N; j++) {
 			// hash_combine algorithm from boost
 			hash ^= hasher(matrix.elements[j][i]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
 		}

@@ -238,6 +238,17 @@ SFZ_CUDA_CALL vec4 saturate(vec4 value) noexcept;
 template<typename ArgT, typename FloatT = ArgT>
 SFZ_CUDA_CALL ArgT lerp(ArgT v0, ArgT v1, FloatT t) noexcept;
 
+// fma()
+// ------------------------------------------------------------------------------------------------
+
+/// Fused multiply add operation. Calculates a * b + c in one operation (if supported by the
+/// hardware).
+
+SFZ_CUDA_CALL float fma(float a, float b, float c) noexcept;
+SFZ_CUDA_CALL vec2 fma(vec2 a, vec2 b, vec2 c) noexcept;
+SFZ_CUDA_CALL vec3 fma(vec3 a, vec3 b, vec3 c) noexcept;
+SFZ_CUDA_CALL vec4 fma(vec4 a, vec4 b, vec4 c) noexcept;
+
 } // namespace sfz
 
 #include "sfz/math/MathSupport.inl"

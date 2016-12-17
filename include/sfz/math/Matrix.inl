@@ -264,10 +264,10 @@ template<typename T, size_t M, size_t N>
 Vector<T,M> operator* (const Matrix<T,M,N>& lhs, const Vector<T,N>& rhs) noexcept
 {
 	Vector<T,M> resVector;
-	for (size_t i = 0; i < M; ++i) {
+	for (uint32_t i = 0; i < M; ++i) {
 		T temp = 0;
-		size_t jInnerThis = 0;
-		for (size_t iVec = 0; iVec < N; ++iVec) {
+		uint32_t jInnerThis = 0;
+		for (uint32_t iVec = 0; iVec < N; ++iVec) {
 			temp += lhs.elements[jInnerThis][i] * rhs[iVec];
 			jInnerThis += 1;
 		}

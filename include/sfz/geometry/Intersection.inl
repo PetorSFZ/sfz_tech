@@ -136,14 +136,14 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 	float ra, rb;
 
 	// Test axes L = aU[0], aU[1], aU[2]
-	for (size_t i = 0; i < 3; i++) {
+	for (uint32_t i = 0; i < 3; i++) {
 		ra = aE[i];
 		rb = bE[0]*AbsR.at(i,0) + bE[1]*AbsR.at(i,1) + bE[2]*AbsR.at(i,2);
 		if (std::abs(t[i]) > ra + rb) return false;
 	}
 
 	// Test axes L = bU[0], bU[1], bU[2]
-	for (size_t i = 0; i < 3; i++) {
+	for (uint32_t i = 0; i < 3; i++) {
 		ra = aE[0]*AbsR.at(0,i) + aE[1]*AbsR.at(1,i) + aE[2]*AbsR.at(2,i);
 		rb = bE[i];
 		if (std::abs(t[0]*R.at(0,i) + t[1]*R.at(1,i) + t[2]*R.at(2,i)) > ra + rb) return false;

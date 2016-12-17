@@ -127,3 +127,10 @@ TEST_CASE("saturate()", "[sfz::MathSupport]")
 	REQUIRE(sfz::saturate(0.2f) == 0.2f);
 	REQUIRE(sfz::saturate(vec4(4.0f, -1.0f, 0.2f, 0.4f)) == vec4(1.0f, 0.0f, 0.2f, 0.4f));
 }
+
+TEST_CASE("fma()", "[sfz::MathSupport]")
+{
+	REQUIRE(approxEqual(sfz::fma(2.0f, -2.0f, 6.0f), 2.0f));
+	REQUIRE(approxEqual(sfz::fma(vec4(1.0f, 2.0f, 3.0f, 4.0f), vec4(-1.0f, -2.0f, 3.0f, 4.0f),
+	                    vec4(1.0f, 2.0f, 3.0f, 4.0f)), vec4(0.0f, -2.0f, 12.0f, 20.0f)));
+}

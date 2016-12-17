@@ -867,4 +867,37 @@ SFZ_CUDA_CALL ArgT lerp(ArgT v0, ArgT v1, FloatT t) noexcept
 	return (FloatT(1)-t)*v0 + t*v1;
 }
 
+// fma()
+// ------------------------------------------------------------------------------------------------
+
+SFZ_CUDA_CALL float fma(float a, float b, float c) noexcept
+{
+#ifdef SFZ_CUDA_DEVICE_CODE
+	return fmaf(a, b, c);
+#else
+	return a * b + c;
+#endif
+}
+
+SFZ_CUDA_CALL vec2 fma(vec2 a, vec2 b, vec2 c) noexcept
+{
+	return vec2(sfz::fma(a.x, b.x, c.x),
+	            sfz::fma(a.y, b.y, c.y));
+}
+
+SFZ_CUDA_CALL vec3 fma(vec3 a, vec3 b, vec3 c) noexcept
+{
+	return vec3(sfz::fma(a.x, b.x, c.x),
+	            sfz::fma(a.y, b.y, c.y),
+	            sfz::fma(a.z, b.z, c.z));
+}
+
+SFZ_CUDA_CALL vec4 fma(vec4 a, vec4 b, vec4 c) noexcept
+{
+	return vec4(sfz::fma(a.x, b.x, c.x),
+	            sfz::fma(a.y, b.y, c.y),
+	            sfz::fma(a.z, b.z, c.z),
+	            sfz::fma(a.w, b.w, c.w));
+}
+
 } // namespace sfz
