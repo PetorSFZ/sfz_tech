@@ -876,7 +876,44 @@ SFZ_CUDA_CALL vec4 saturate(vec4 value) noexcept
 template<typename ArgT, typename FloatT>
 SFZ_CUDA_CALL ArgT lerp(ArgT v0, ArgT v1, FloatT t) noexcept
 {
-	return (FloatT(1)-t)*v0 + t*v1;
+	return (FloatT(1) - t) * v0 + t * v1;
+}
+
+template<>
+SFZ_CUDA_CALL float lerp(float v0, float v1, float t) noexcept
+{
+#ifdef SFZ_CUDA_DEVICE_CODE
+	// https://devblogs.nvidia.com/parallelforall/lerp-faster-cuda/
+	return fma(t, v1, fma(-t, v0, v0));
+#else
+	return (1.0f - t) * v0 + t * v1;
+#endif
+}
+
+template<>
+SFZ_CUDA_CALL vec2 lerp(vec2 v0, vec2 v1, float t) noexcept
+{
+	return vec2(sfz::lerp(v0.x, v1.x, t),
+	            sfz::lerp(v0.y, v1.y, t));
+}
+
+template<>
+SFZ_CUDA_CALL vec3 lerp(vec3 v0, vec3 v1, float t) noexcept
+{
+	return vec3(sfz::lerp(v0.x, v1.x, t),
+	            sfz::lerp(v0.y, v1.y, t),
+	            sfz::lerp(v0.z, v1.z, t));
+}
+
+template<>
+SFZ_CUDA_CALL vec4 lerp(vec4 v0, vec4 v1, float t) noexcept
+{
+	return vec4(sfz::lerp(v0.x, v1.x, t),
+	            sfz::lerp(v0.y, v1.y, t),
+	            sfz::lerp(v0.z, v1.z, t),
+	            sfz::lerp(v0.w, v1.w, t));
+
+	// TODO: SSE version?
 }
 
 // fma()
