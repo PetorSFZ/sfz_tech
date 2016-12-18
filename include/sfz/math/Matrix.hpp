@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <cstddef>
+#include <cstdint>
 #include <initializer_list>
 
 #include "sfz/Assert.hpp"
@@ -26,7 +26,11 @@
 
 namespace sfz {
 
-using std::size_t;
+using std::int32_t;
+using std::uint32_t;
+
+// Matrix struct
+// ------------------------------------------------------------------------------------------------
 
 /// \brief A mathematical Matrix POD class that imitates a built-in primitive.
 ///
@@ -45,7 +49,7 @@ using std::size_t;
 /// \param T the element type
 /// \param M the amount of rows in the Matrix
 /// \param N the amount of columns in the Matrix
-template<typename T, size_t M, size_t N>
+template<typename T, uint32_t M, uint32_t N>
 struct Matrix final {
 
 	// Public members
@@ -81,98 +85,28 @@ struct Matrix final {
 
 	/// \brief General accessor returning the reference to element at the i:th row and j:th column
 	/// sfz_assert_debug: location must be in range
-	T& at(size_t i, size_t j) noexcept;
+	T& at(uint32_t i, uint32_t j) noexcept;
 
 	/// \brief Returns the element at the i:th row and j:th column
 	/// sfz_assert_debug: location must be in range
-	T at(size_t i, size_t j) const noexcept;
+	T at(uint32_t i, uint32_t j) const noexcept;
 
 	/// sfz_assert_debug: location must be in range
-	Vector<T,N> rowAt(size_t i) const noexcept;
+	Vector<T,N> rowAt(uint32_t i) const noexcept;
 
 	/// sfz_assert_debug: location must be in range
-	Vector<T,M> columnAt(size_t j) const noexcept;
+	Vector<T,M> columnAt(uint32_t j) const noexcept;
 
 	/// \brief Assigns value to element at the i:th row and j:th column
 	/// sfz_assert_debug: location must be in range
-	void set(size_t i, size_t j, T value) noexcept;
+	void set(uint32_t i, uint32_t j, T value) noexcept;
 
 	/// sfz_assert_debug: location must be in range
-	void setRow(size_t i, const Vector<T,N>& row) noexcept;
+	void setRow(uint32_t i, const Vector<T,N>& row) noexcept;
 
 	/// sfz_assert_debug: location must be in range
-	void setColumn(size_t j, const Vector<T,M>& column) noexcept;
+	void setColumn(uint32_t j, const Vector<T,M>& column) noexcept;
 };
-
-// Matrix constants
-// ------------------------------------------------------------------------------------------------
-
-template<typename T, size_t M, size_t N>
-Matrix<T,M,N> ZERO_MATRIX() noexcept;
-
-// Matrix functions
-// ------------------------------------------------------------------------------------------------
-
-template<typename T, size_t M, size_t N>
-void fill(Matrix<T,M,N>& matrix, T value);
-
-/// Element-wise multiplication of two matrices
-template<typename T, size_t M, size_t N>
-Matrix<T,M,N> elemMult(const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
-
-template<typename T, size_t M, size_t N>
-Matrix<T,N,M> transpose(const Matrix<T,M,N>& matrix) noexcept;
-
-// Operators (arithmetic & assignment)
-// ------------------------------------------------------------------------------------------------
-
-template<typename T, size_t M, size_t N>
-Matrix<T,M,N>& operator+= (Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
-
-template<typename T, size_t M, size_t N>
-Matrix<T,M,N>& operator-= (Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
-
-template<typename T, size_t M, size_t N>
-Matrix<T,M,N>& operator*= (Matrix<T,M,N>& lhs, T rhs) noexcept;
-
-template<typename T, size_t N>
-Matrix<T,N,N>& operator*= (Matrix<T,N,N>& lhs, const Matrix<T,N,N>& rhs) noexcept;
-
-// Operators (arithmetic)
-// ------------------------------------------------------------------------------------------------
-
-template<typename T, size_t M, size_t N>
-Matrix<T,M,N> operator+ (const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
-
-template<typename T, size_t M, size_t N>
-Matrix<T,M,N> operator- (const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
-
-template<typename T, size_t M, size_t N>
-Matrix<T,M,N> operator- (const Matrix<T,M,N>& matrix) noexcept;
-
-template<typename T, size_t M, size_t N, size_t P>
-Matrix<T,M,P> operator* (const Matrix<T,M,N>& lhs, const Matrix<T,N,P>& rhs) noexcept;
-
-template<typename T, size_t M, size_t N>
-Vector<T,M> operator* (const Matrix<T,M,N>& lhs, const Vector<T,N>& rhs) noexcept;
-
-template<typename T, size_t M, size_t N>
-Matrix<T,M,N> operator* (const Matrix<T,M,N>& lhs, T rhs) noexcept;
-
-template<typename T, size_t M, size_t N>
-Matrix<T,M,N> operator* (T lhs, const Matrix<T,M,N>& rhs) noexcept;
-
-// Operators (comparison)
-// ------------------------------------------------------------------------------------------------
-
-template<typename T, size_t M, size_t N>
-bool operator== (const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
-
-template<typename T, size_t M, size_t N>
-bool operator!= (const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
-
-// Standard typedefs
-// ------------------------------------------------------------------------------------------------
 
 using mat2 = Matrix<float,2,2>;
 using mat3 = Matrix<float,3,3>;
@@ -181,6 +115,73 @@ using mat4 = Matrix<float,4,4>;
 using mat2i = Matrix<int,2,2>;
 using mat3i = Matrix<int,3,3>;
 using mat4i = Matrix<int,4,4>;
+
+// Matrix constants
+// ------------------------------------------------------------------------------------------------
+
+template<typename T, uint32_t M, uint32_t N>
+Matrix<T,M,N> ZERO_MATRIX() noexcept;
+
+// Matrix functions
+// ------------------------------------------------------------------------------------------------
+
+template<typename T, uint32_t M, uint32_t N>
+void fill(Matrix<T,M,N>& matrix, T value);
+
+/// Element-wise multiplication of two matrices
+template<typename T, uint32_t M, uint32_t N>
+Matrix<T,M,N> elemMult(const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
+
+template<typename T, uint32_t M, uint32_t N>
+Matrix<T,N,M> transpose(const Matrix<T,M,N>& matrix) noexcept;
+
+// Operators (arithmetic & assignment)
+// ------------------------------------------------------------------------------------------------
+
+template<typename T, uint32_t M, uint32_t N>
+Matrix<T,M,N>& operator+= (Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
+
+template<typename T, uint32_t M, uint32_t N>
+Matrix<T,M,N>& operator-= (Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
+
+template<typename T, uint32_t M, uint32_t N>
+Matrix<T,M,N>& operator*= (Matrix<T,M,N>& lhs, T rhs) noexcept;
+
+template<typename T, uint32_t N>
+Matrix<T,N,N>& operator*= (Matrix<T,N,N>& lhs, const Matrix<T,N,N>& rhs) noexcept;
+
+// Operators (arithmetic)
+// ------------------------------------------------------------------------------------------------
+
+template<typename T, uint32_t M, uint32_t N>
+Matrix<T,M,N> operator+ (const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
+
+template<typename T, uint32_t M, uint32_t N>
+Matrix<T,M,N> operator- (const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
+
+template<typename T, uint32_t M, uint32_t N>
+Matrix<T,M,N> operator- (const Matrix<T,M,N>& matrix) noexcept;
+
+template<typename T, uint32_t M, uint32_t N, uint32_t P>
+Matrix<T,M,P> operator* (const Matrix<T,M,N>& lhs, const Matrix<T,N,P>& rhs) noexcept;
+
+template<typename T, uint32_t M, uint32_t N>
+Vector<T,M> operator* (const Matrix<T,M,N>& lhs, const Vector<T,N>& rhs) noexcept;
+
+template<typename T, uint32_t M, uint32_t N>
+Matrix<T,M,N> operator* (const Matrix<T,M,N>& lhs, T rhs) noexcept;
+
+template<typename T, uint32_t M, uint32_t N>
+Matrix<T,M,N> operator* (T lhs, const Matrix<T,M,N>& rhs) noexcept;
+
+// Operators (comparison)
+// ------------------------------------------------------------------------------------------------
+
+template<typename T, uint32_t M, uint32_t N>
+bool operator== (const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
+
+template<typename T, uint32_t M, uint32_t N>
+bool operator!= (const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
 
 } // namespace sfz
 
