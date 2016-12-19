@@ -428,7 +428,7 @@ void setUniform(const Program& program, const char* name, const float* floatArra
 
 void setUniform(int location, vec2 vector) noexcept
 {
-	glUniform2fv(location, 1, vector.elementsPtr());
+	glUniform2fv(location, 1, vector.data());
 }
 
 void setUniform(const Program& program, const char* name, vec2 vector) noexcept
@@ -440,7 +440,7 @@ void setUniform(const Program& program, const char* name, vec2 vector) noexcept
 void setUniform(int location, const vec2* vectorArray, size_t count) noexcept
 {
 	static_assert(sizeof(vec2) == sizeof(float)*2, "vec2 is padded");
-	glUniform2fv(location, (GLsizei)count, vectorArray[0].elementsPtr());
+	glUniform2fv(location, (GLsizei)count, vectorArray[0].data());
 }
 
 void setUniform(const Program& program, const char* name, const vec2* vectorArray, size_t count) noexcept
@@ -454,7 +454,7 @@ void setUniform(const Program& program, const char* name, const vec2* vectorArra
 
 void setUniform(int location, const vec3& vector) noexcept
 {
-	glUniform3fv(location, 1, vector.elementsPtr());
+	glUniform3fv(location, 1, vector.data());
 }
 
 void setUniform(const Program& program, const char* name, const vec3& vector) noexcept
@@ -466,7 +466,7 @@ void setUniform(const Program& program, const char* name, const vec3& vector) no
 void setUniform(int location, const vec3* vectorArray, size_t count) noexcept
 {
 	static_assert(sizeof(vec3) == sizeof(float)*3, "vec3 is padded");
-	glUniform3fv(location, (GLsizei)count, vectorArray[0].elementsPtr());
+	glUniform3fv(location, (GLsizei)count, vectorArray[0].data());
 }
 
 void setUniform(const Program& program, const char* name, const vec3* vectorArray, size_t count) noexcept
@@ -480,7 +480,7 @@ void setUniform(const Program& program, const char* name, const vec3* vectorArra
 
 void setUniform(int location, const vec4& vector) noexcept
 {
-	glUniform4fv(location, 1, vector.elementsPtr());
+	glUniform4fv(location, 1, vector.data());
 }
 
 void setUniform(const Program& program, const char* name, const vec4& vector) noexcept
@@ -492,7 +492,7 @@ void setUniform(const Program& program, const char* name, const vec4& vector) no
 void setUniform(int location, const vec4* vectorArray, size_t count) noexcept
 {
 	static_assert(sizeof(vec4) == sizeof(float)*4, "vec4 is padded");
-	glUniform4fv(location, (GLsizei)count, vectorArray[0].elementsPtr());
+	glUniform4fv(location, (GLsizei)count, vectorArray[0].data());
 }
 
 void setUniform(const Program& program, const char* name, const vec4* vectorArray, size_t count) noexcept

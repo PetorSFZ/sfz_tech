@@ -31,8 +31,8 @@ TEST_CASE("Vector<T,2> specialization", "[sfz::Vector]")
 	sfz::Vector<int,2> v;
 	SECTION("Data") {
 		REQUIRE(sizeof(sfz::Vector<int,2>) == sizeof(int)*2);
-		v.elementsPtr()[0] = 1;
-		v.elementsPtr()[1] = 2;
+		v.data()[0] = 1;
+		v.data()[1] = 2;
 		REQUIRE(v.x == 1);
 		REQUIRE(v.y == 2);
 	}
@@ -73,9 +73,9 @@ TEST_CASE("Vector<T,3> specialization", "[sfz::Vector]")
 	sfz::Vector<int,3> v;
 	SECTION("Data") {
 		REQUIRE(sizeof(sfz::Vector<int,3>) == sizeof(int)*3);
-		v.elementsPtr()[0] = 1;
-		v.elementsPtr()[1] = 2;
-		v.elementsPtr()[2] = 3;
+		v.data()[0] = 1;
+		v.data()[1] = 2;
+		v.data()[2] = 3;
 		REQUIRE(v.x == 1);
 		REQUIRE(v.y == 2);
 		REQUIRE(v.z == 3);
@@ -138,10 +138,10 @@ TEST_CASE("Vector<T,4> specialization", "[sfz::Vector]")
 	sfz::Vector<int,4> v;
 	SECTION("Data") {
 		REQUIRE(sizeof(sfz::Vector<int,4>) == sizeof(int)*4);
-		v.elementsPtr()[0] = 1;
-		v.elementsPtr()[1] = 2;
-		v.elementsPtr()[2] = 3;
-		v.elementsPtr()[3] = 4;
+		v.data()[0] = 1;
+		v.data()[1] = 2;
+		v.data()[2] = 3;
+		v.data()[3] = 4;
 		REQUIRE(v.x == 1);
 		REQUIRE(v.y == 2);
 		REQUIRE(v.z == 3);

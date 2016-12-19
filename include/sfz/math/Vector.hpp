@@ -52,6 +52,9 @@ struct Vector final {
 
 	T elements[N];
 
+	SFZ_CUDA_CALL T* data() noexcept { return elements; }
+	SFZ_CUDA_CALL const T* data() const noexcept { return elements; }
+
 	Vector() noexcept = default;
 	Vector(const Vector<T,N>&) noexcept = default;
 	Vector<T,N>& operator= (const Vector<T,N>&) noexcept = default;
@@ -64,15 +67,15 @@ struct Vector final {
 
 	SFZ_CUDA_CALL T& operator[] (uint32_t index) noexcept;
 	SFZ_CUDA_CALL T operator[] (uint32_t index) const noexcept;
-
-	SFZ_CUDA_CALL T* elementsPtr() noexcept;
-	SFZ_CUDA_CALL const T* elementsPtr() const noexcept;
 };
 
 template<typename T>
 struct Vector<T,2> final {
 
 	T x, y;
+
+	SFZ_CUDA_CALL T* data() noexcept { return &x; }
+	SFZ_CUDA_CALL const T* data() const noexcept { return &x; }
 
 	Vector() noexcept = default;
 	Vector(const Vector<T,2>&) noexcept = default;
@@ -88,9 +91,6 @@ struct Vector<T,2> final {
 
 	SFZ_CUDA_CALL T& operator[] (uint32_t index) noexcept;
 	SFZ_CUDA_CALL T operator[] (uint32_t index) const noexcept;
-
-	SFZ_CUDA_CALL T* elementsPtr() noexcept;
-	SFZ_CUDA_CALL const T* elementsPtr() const noexcept;
 };
 
 template<typename T>
@@ -100,6 +100,9 @@ struct Vector<T,3> final {
 		struct { Vector<T,2> xy; };
 		struct { T xAlias; Vector<T,2> yz; };
 	};
+
+	SFZ_CUDA_CALL T* data() noexcept { return &x; }
+	SFZ_CUDA_CALL const T* data() const noexcept { return &x; }
 
 	Vector() noexcept = default;
 	Vector(const Vector<T,3>&) noexcept = default;
@@ -117,9 +120,6 @@ struct Vector<T,3> final {
 
 	SFZ_CUDA_CALL T& operator[] (uint32_t index) noexcept;
 	SFZ_CUDA_CALL T operator[] (uint32_t index) const noexcept;
-
-	SFZ_CUDA_CALL T* elementsPtr() noexcept;
-	SFZ_CUDA_CALL const T* elementsPtr() const noexcept;
 };
 
 template<typename T>
@@ -131,6 +131,9 @@ struct alignas(sizeof(T) * 4) Vector<T,4> final {
 		struct { Vector<T,2> xy, zw; };
 		struct { T xAlias2; Vector<T,2> yz; };
 	};
+
+	SFZ_CUDA_CALL T* data() noexcept { return &x; }
+	SFZ_CUDA_CALL const T* data() const noexcept { return &x; }
 
 	Vector() noexcept = default;
 	Vector(const Vector<T,4>&) noexcept = default;
@@ -152,9 +155,6 @@ struct alignas(sizeof(T) * 4) Vector<T,4> final {
 
 	SFZ_CUDA_CALL T& operator[] (uint32_t index) noexcept;
 	SFZ_CUDA_CALL T operator[] (uint32_t index) const noexcept;
-
-	SFZ_CUDA_CALL T* elementsPtr() noexcept;
-	SFZ_CUDA_CALL const T* elementsPtr() const noexcept;
 };
 
 using vec2 = Vector<float,2>;
@@ -168,6 +168,18 @@ using vec4i = Vector<int32_t,4>;
 using vec2u = Vector<uint32_t,2>;
 using vec3u = Vector<uint32_t,3>;
 using vec4u = Vector<uint32_t,4>;
+
+static_assert(sizeof(vec2) == 8, "vec2 is padded");
+static_assert(sizeof(vec3) == 12, "vec3 is padded");
+static_assert(sizeof(vec4) == 16, "vec4 is padded");
+
+static_assert(sizeof(vec2i) == 8, "vec2i is padded");
+static_assert(sizeof(vec3i) == 12, "vec3i is padded");
+static_assert(sizeof(vec4i) == 16, "vec4i is padded");
+
+static_assert(sizeof(vec2u) == 8, "vec2u is padded");
+static_assert(sizeof(vec3u) == 12, "vec3u is padded");
+static_assert(sizeof(vec4u) == 16, "vec4u is padded");
 
 // Vector functions
 // ------------------------------------------------------------------------------------------------
