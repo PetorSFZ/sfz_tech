@@ -177,15 +177,15 @@ void setUniform(const Program& program, const char* name, const vec4& vector) no
 void setUniform(int location, const vec4* vectorArray, size_t count) noexcept;
 void setUniform(const Program& program, const char* name, const vec4* vectorArray, size_t count) noexcept;
 
-void setUniform(int location, const mat3& matrix) noexcept;
-void setUniform(const Program& program, const char* name, const mat3& matrix) noexcept;
-void setUniform(int location, const mat3* matrixArray, size_t count) noexcept;
-void setUniform(const Program& program, const char* name, const mat3* matrixArray, size_t count) noexcept;
+void setUniform(int location, const mat33& matrix) noexcept;
+void setUniform(const Program& program, const char* name, const mat33& matrix) noexcept;
+void setUniform(int location, const mat33* matrixArray, size_t count) noexcept;
+void setUniform(const Program& program, const char* name, const mat33* matrixArray, size_t count) noexcept;
 
-void setUniform(int location, const mat4& matrix) noexcept;
-void setUniform(const Program& program, const char* name, const mat4& matrix) noexcept;
-void setUniform(int location, const mat4* matrixArray, size_t count) noexcept;
-void setUniform(const Program& program, const char* name, const mat4* matrixArray, size_t count) noexcept;
+void setUniform(int location, const mat44& matrix) noexcept;
+void setUniform(const Program& program, const char* name, const mat44& matrix) noexcept;
+void setUniform(int location, const mat44* matrixArray, size_t count) noexcept;
+void setUniform(const Program& program, const char* name, const mat44* matrixArray, size_t count) noexcept;
 
 } // namespace gl
 } // namespace sfz

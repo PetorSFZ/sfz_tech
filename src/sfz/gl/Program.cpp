@@ -504,24 +504,24 @@ void setUniform(const Program& program, const char* name, const vec4* vectorArra
 // Uniform setters: mat3
 // ------------------------------------------------------------------------------------------------
 
-void setUniform(int location, const mat3& matrix) noexcept
+void setUniform(int location, const mat33& matrix) noexcept
 {
-	glUniformMatrix3fv(location, 1, false, matrix.data());
+	glUniformMatrix3fv(location, 1, true, matrix.data());
 }
 
-void setUniform(const Program& program, const char* name, const mat3& matrix) noexcept
+void setUniform(const Program& program, const char* name, const mat33& matrix) noexcept
 {
 	int loc = glGetUniformLocation(program.handle(), name);
 	setUniform(loc, matrix);
 }
 
-void setUniform(int location, const mat3* matrixArray, size_t count) noexcept
+void setUniform(int location, const mat33* matrixArray, size_t count) noexcept
 {
-	static_assert(sizeof(mat3) == sizeof(float)*9, "mat3 is padded");
-	glUniformMatrix3fv(location, (GLsizei)count, false, matrixArray[0].data());
+	static_assert(sizeof(mat33) == sizeof(float)*9, "mat33 is padded");
+	glUniformMatrix3fv(location, (GLsizei)count, true, matrixArray[0].data());
 }
 
-void setUniform(const Program& program, const char* name, const mat3* matrixArray, size_t count) noexcept
+void setUniform(const Program& program, const char* name, const mat33* matrixArray, size_t count) noexcept
 {
 	int loc = glGetUniformLocation(program.handle(), name);
 	setUniform(loc, matrixArray, count);
@@ -530,24 +530,24 @@ void setUniform(const Program& program, const char* name, const mat3* matrixArra
 // Uniform setters: mat4
 // ------------------------------------------------------------------------------------------------
 
-void setUniform(int location, const mat4& matrix) noexcept
+void setUniform(int location, const mat44& matrix) noexcept
 {
-	glUniformMatrix4fv(location, 1, false, matrix.data());
+	glUniformMatrix4fv(location, 1, true, matrix.data());
 }
 
-void setUniform(const Program& program, const char* name, const mat4& matrix) noexcept
+void setUniform(const Program& program, const char* name, const mat44& matrix) noexcept
 {
 	int loc = glGetUniformLocation(program.handle(), name);
 	setUniform(loc, matrix);
 }
 
-void setUniform(int location, const mat4* matrixArray, size_t count) noexcept
+void setUniform(int location, const mat44* matrixArray, size_t count) noexcept
 {
-	static_assert(sizeof(mat4) == sizeof(float)*16, "mat4 is padded");
-	glUniformMatrix4fv(location, (GLsizei)count, false, matrixArray[0].data());
+	static_assert(sizeof(mat44) == sizeof(float)*16, "mat44 is padded");
+	glUniformMatrix4fv(location, (GLsizei)count, true, matrixArray[0].data());
 }
 
-void setUniform(const Program& program, const char* name, const mat4* matrixArray, size_t count) noexcept
+void setUniform(const Program& program, const char* name, const mat44* matrixArray, size_t count) noexcept
 {
 	int loc = glGetUniformLocation(program.handle(), name);
 	setUniform(loc, matrixArray, count);
