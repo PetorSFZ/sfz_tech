@@ -140,37 +140,37 @@ void toString(const vec4u& vector, StackString& string) noexcept
 // Matrix toString()
 // ------------------------------------------------------------------------------------------------
 
-StackString256 toString(const mat2& matrix, bool rowBreak, uint32_t numDecimals) noexcept
+StackString256 toString(const mat22& matrix, bool rowBreak, uint32_t numDecimals) noexcept
 {
 	StackString256 tmp;
 	toString(matrix, tmp, rowBreak, numDecimals);
 	return tmp;
 }
 
-StackString256 toString(const mat3& matrix, bool rowBreak, uint32_t numDecimals) noexcept
+StackString256 toString(const mat33& matrix, bool rowBreak, uint32_t numDecimals) noexcept
 {
 	StackString256 tmp;
 	toString(matrix, tmp, rowBreak, numDecimals);
 	return tmp;
 }
 
-StackString256 toString(const mat4& matrix, bool rowBreak, uint32_t numDecimals) noexcept
+StackString256 toString(const mat44& matrix, bool rowBreak, uint32_t numDecimals) noexcept
 {
 	StackString256 tmp;
 	toString(matrix, tmp, rowBreak, numDecimals);
 	return tmp;
 }
 
-template<size_t M, size_t N>
-void toStringImpl(const Matrix<float,M,N>& matrix, StackString256& string, bool rowBreak, uint32_t numDecimals) noexcept
+template<uint32_t H, uint32_t W>
+void toStringImpl(const Matrix<float,H,W>& matrix, StackString256& string, bool rowBreak, uint32_t numDecimals) noexcept
 {
 	string.str[0] = '\0';
 	string.printfAppend("[");
 	StackString tmp;
-	for (size_t i = 0; i < M; i++) {
-		toString(matrix.rowAt(i), tmp, numDecimals);
+	for (uint32_t y = 0; y < H; y++) {
+		toString(matrix.rows[y], tmp, numDecimals);
 		string.printfAppend("%s", tmp.str);
-		if (i < (M-1)) {
+		if (y < (H-1)) {
 			if (rowBreak) {
 				string.printfAppend(",\n ");
 			} else {
@@ -181,17 +181,17 @@ void toStringImpl(const Matrix<float,M,N>& matrix, StackString256& string, bool 
 	string.printfAppend("]");
 }
 
-void toString(const mat2& matrix, StackString256& string, bool rowBreak, uint32_t numDecimals) noexcept
+void toString(const mat22& matrix, StackString256& string, bool rowBreak, uint32_t numDecimals) noexcept
 {
 	toStringImpl(matrix, string, rowBreak, numDecimals);
 }
 
-void toString(const mat3& matrix, StackString256& string, bool rowBreak, uint32_t numDecimals) noexcept
+void toString(const mat33& matrix, StackString256& string, bool rowBreak, uint32_t numDecimals) noexcept
 {
 	toStringImpl(matrix, string, rowBreak, numDecimals);
 }
 
-void toString(const mat4& matrix, StackString256& string, bool rowBreak, uint32_t numDecimals) noexcept
+void toString(const mat44& matrix, StackString256& string, bool rowBreak, uint32_t numDecimals) noexcept
 {
 	toStringImpl(matrix, string, rowBreak, numDecimals);
 }

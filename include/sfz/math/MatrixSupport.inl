@@ -100,19 +100,21 @@ template<typename T>
 Matrix<T,2,2> inverse(const Matrix<T,2,2>& m) noexcept
 {
 	const T det = determinant(m);
-	if (det == 0) return ZERO_MATRIX<T,2,2>();
+	if (det == 0) return Matrix<T,2,2>(T(0), T(0), T(0), T(0));
 
-	Matrix<T,2,2> temp{{m.at(1, 1), -m.at(0, 1)},
-	                  {-m.at(1,0), m.at(0,0)}};
+	Matrix<T,2,2> tmp(m.at(1, 1), -m.at(0, 1),
+	                  -m.at(1,0), m.at(0,0));
 
-	return (T(1)/det) * temp;
+	return (T(1) / det) * tmp;
 }
 
 template<typename T>
 Matrix<T,3,3> inverse(const Matrix<T,3,3>& m) noexcept
 {
 	const T det = determinant(m);
-	if (det == 0) return ZERO_MATRIX<T,3,3>();
+	if (det == 0) return Matrix<T,3,3>(T(0), T(0), T(0),
+	                                   T(0), T(0), T(0),
+	                                   T(0), T(0), T(0));
 
 	const T a = m.at(0,0);
 	const T b = m.at(0,1); 
@@ -135,15 +137,20 @@ Matrix<T,3,3> inverse(const Matrix<T,3,3>& m) noexcept
 	const T H = -(a*f - c*d);
 	const T I = (a*e - b*d);
 
-	Matrix<T,3,3> temp{{A, D, G}, {B, E, H}, {C, F, I}};
-	return (T(1)/det) * temp;
+	Matrix<T,3,3> tmp(A, D, G,
+	                  B, E, H,
+	                  C, F, I);
+	return (T(1) / det) * tmp;
 }
 
 template<typename T>
 Matrix<T,4,4> inverse(const Matrix<T,4,4>& m) noexcept
 {
 	const T det = determinant(m);
-	if (det == 0) return ZERO_MATRIX<T,4,4>();
+	if (det == 0) return Matrix<T,4,4>(T(0), T(0), T(0), T(0),
+	                                   T(0), T(0), T(0), T(0),
+	                                   T(0), T(0), T(0), T(0),
+	                                   T(0), T(0), T(0), T(0));
 
 	const T m00 = m.at(0, 0), m01 = m.at(0, 1), m02 = m.at(0, 2), m03 = m.at(0, 3),
 	        m10 = m.at(1, 0), m11 = m.at(1, 1), m12 = m.at(1, 2), m13 = m.at(1, 3),
@@ -167,11 +174,11 @@ Matrix<T,4,4> inverse(const Matrix<T,4,4>& m) noexcept
 	const T b32 = m00*m12*m31 + m01*m10*m32 + m02*m11*m30 - m00*m11*m32 - m01*m12*m30 - m02*m10*m31;
 	const T b33 = m00*m11*m22 + m01*m12*m20 + m02*m10*m21 - m00*m12*m21 - m01*m10*m22 - m02*m11*m20;
 
-	Matrix<T,4,4> temp{{b00, b01, b02, b03},
-	                   {b10, b11, b12, b13},
-	                   {b20, b21, b22, b23},
-	                   {b30, b31, b32, b33}};
-	return (T(1)/det) * temp;
+	Matrix<T,4,4> tmp(b00, b01, b02, b03,
+	                  b10, b11, b12, b13,
+	                  b20, b21, b22, b23,
+	                  b30, b31, b32, b33);
+	return (T(1) / det) * tmp;
 }
 
 // Rotation matrices

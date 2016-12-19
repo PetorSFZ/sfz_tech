@@ -21,7 +21,7 @@ namespace sfz {
 // Vector hash function
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 size_t hash(const Vector<T,N>& vector) noexcept
 {
 	std::hash<T> hasher;
@@ -36,15 +36,15 @@ size_t hash(const Vector<T,N>& vector) noexcept
 // Matrix hash function
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, size_t M, size_t N>
-size_t hash(const Matrix<T,M,N>& matrix) noexcept
+template<typename T, uint32_t H, uint32_t W>
+size_t hash(const Matrix<T,H,W>& matrix) noexcept
 {
 	std::hash<T> hasher;
 	size_t hash = 0;
-	for (uint32_t i = 0; i < M; i++) {
-		for (uint32_t j = 0; j < N; j++) {
+	for (uint32_t y = 0; y < H; y++) {
+		for (uint32_t x = 0; x < W; x++) {
 			// hash_combine algorithm from boost
-			hash ^= hasher(matrix.elements[j][i]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+			hash ^= hasher(matrix.at(y, x)) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
 		}
 	}
 	return hash;
@@ -57,7 +57,7 @@ namespace std {
 // Vector hash struct
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, size_t N>
+template<typename T, uint32_t N>
 size_t hash<sfz::Vector<T,N>>::operator() (const sfz::Vector<T,N>& vector) const noexcept
 {
 	return sfz::hash(vector);
@@ -66,8 +66,8 @@ size_t hash<sfz::Vector<T,N>>::operator() (const sfz::Vector<T,N>& vector) const
 // Matrix hash struct
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, size_t M, size_t N>
-size_t hash<sfz::Matrix<T,M,N>>::operator() (const sfz::Matrix<T,M,N>& matrix) const noexcept
+template<typename T, uint32_t H, uint32_t W>
+size_t hash<sfz::Matrix<T,H,W>>::operator() (const sfz::Matrix<T,H,W>& matrix) const noexcept
 {
 	return sfz::hash(matrix);
 }

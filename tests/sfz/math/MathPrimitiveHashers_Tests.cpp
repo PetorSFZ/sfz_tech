@@ -40,17 +40,17 @@ TEST_CASE("Hashing", "[sfz::Vector]")
 
 TEST_CASE("Matrix hashing", "[sfz::Matrix]")
 {
-	sfz::mat2i m1{{2, 100},
-	{1, -99}};
-	sfz::mat2i m2{{-1, 0},
-	{3, -10}};
-	sfz::mat2i m3{{0, -9},
-	{32, 14}};
+	sfz::Matrix<int32_t,2,2> m1(2, 100,
+	                            1, -99);
+	sfz::Matrix<int32_t,2,2> m2(-1, 0,
+	                            3, -10);
+	sfz::Matrix<int32_t,2,2> m3(0, -9,
+	                            32, 14);
 
 	REQUIRE(hash(m1) != hash(m2));
 	REQUIRE(hash(m2) != hash(m3));
 
-	std::hash<sfz::mat2i> hasher;
+	std::hash<sfz::Matrix<int32_t,2,2>> hasher;
 
 	REQUIRE(hasher(m1) == sfz::hash(m1));
 	REQUIRE(hasher(m2) == sfz::hash(m2));

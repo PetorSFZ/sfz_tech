@@ -19,7 +19,6 @@
 #pragma once
 
 #include <cstdint>
-#include <initializer_list>
 
 #include "sfz/Assert.hpp"
 #include "sfz/math/Vector.hpp"
@@ -29,123 +28,199 @@ namespace sfz {
 using std::int32_t;
 using std::uint32_t;
 
-// Matrix struct
+// Matrix struct declaration
 // ------------------------------------------------------------------------------------------------
 
-/// \brief A mathematical Matrix POD class that imitates a built-in primitive.
+/// A mathematical Matrix POD class that imitates a built-in primitive.
 ///
-/// It's important to note that the implementation of this Matrix is column-major order (and
-/// publically accessable). The reason for this is that this seems to be the most natural way to
-/// interact with OpenGL. What might be confusing is that some parts of the interface (most notably
-/// the initalizer_list constructor) uses row-major order as it's more natural to write matrices
-/// in code that way. Be extra careful when accesing or setting specific values in a matrix.
+/// Uses row-major memory storage. Assumes vectors are column matrices, i.e. normal standard math
+/// syntax. When uploading to OpenGL it needs to be transposed as OpenGL uses column-major storage.
+/// OpenGL also assumes that vectors are column matrices, so only the storage layout is different.
+/// This should not be confused with Direct3D which often assumes that vectors are row matrices.
+/// When two indices are used the first one is always used to specify row (i.e. y-direction) and
+/// the second one is used to specify column (i.e. x-direction).
 ///
-/// The template is designed to be used with floating point types in first hand. It's possible that
-/// using integer types might lead to truncation in some instances.
+/// The template is designed to be used with 32-bit floating points, other types may work, but no
+/// guarantees are given.
 ///
 /// Satisfies the conditions of std::is_pod, std::is_trivial and std::is_standard_layout if used
-/// with standard primitives.
+/// with float.
 ///
-/// \param T the element type
-/// \param M the amount of rows in the Matrix
-/// \param N the amount of columns in the Matrix
-template<typename T, uint32_t M, uint32_t N>
+/// \param T the element type (float)
+/// \param H the height (i.e. the amount of rows) of the Matrix
+/// \param W the width (i.e. the amount of columns) of the Matrix
+
+template<typename T, uint32_t H, uint32_t W>
 struct Matrix final {
+	
+	Vector<T,W> rows[H];
 
-	// Public members
-	// --------------------------------------------------------------------------------------------
-
-	/// The internal COLUMN-MAJOR (i.e. N columns of size M) order array of this Matrix.
-	T elements[N][M];
-
-	T* data() noexcept { return reinterpret_cast<T*>(elements); }
-	const T* data() const noexcept { return reinterpret_cast<const T*>(elements); }
-
-	// Constructors & destructors
-	// --------------------------------------------------------------------------------------------
+	T* data() noexcept { return &rows[0][0]; }
+	const T* data() const noexcept { return &rows[0][0]; }
 
 	Matrix() noexcept = default;
-	Matrix(const Matrix<T,M,N>&) noexcept = default;
-	Matrix<T,M,N>& operator= (const Matrix<T,M,N>&) noexcept = default;
+	Matrix(const Matrix<T,H,W>&) noexcept = default;
+	Matrix<T,H,W>& operator= (const Matrix<T,H,W>&) noexcept = default;
 	~Matrix() noexcept = default;
 
-	/// \brief Constructs a matrix with the elements in an array.
-	/// The rowMajorData flag determines whether the array is in row major or column major order.
-	Matrix(const T* arrayPtr, bool rowMajorData) noexcept;
+	/// Constructs a matrix with the elements in an array (assumes array is in row-major order)
+	Matrix(const T* arrayPtr) noexcept;
 
-	/// \brief Constructs a matrix with the given elements given in ROW-MAJOR order.
-	/// The elements are given in row-major order because it's more natural to write and read a
-	/// matrix that way in source. This is however not how the elements will be saved as the
-	/// internal representation uses column-major order. Any unspecified elements will be set to 0.
-	/// sfz_assert_debug: if any of the lists are larger than the row or column it's trying to fill
-	Matrix(std::initializer_list<std::initializer_list<T>> list) noexcept;
+	T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
+	T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
+	Vector<T,H> columnAt(uint32_t x) const noexcept;
 
-	// Member functions
-	// --------------------------------------------------------------------------------------------
-
-	/// \brief General accessor returning the reference to element at the i:th row and j:th column
-	/// sfz_assert_debug: location must be in range
-	T& at(uint32_t i, uint32_t j) noexcept;
-
-	/// \brief Returns the element at the i:th row and j:th column
-	/// sfz_assert_debug: location must be in range
-	T at(uint32_t i, uint32_t j) const noexcept;
-
-	/// sfz_assert_debug: location must be in range
-	Vector<T,N> rowAt(uint32_t i) const noexcept;
-
-	/// sfz_assert_debug: location must be in range
-	Vector<T,M> columnAt(uint32_t j) const noexcept;
-
-	/// \brief Assigns value to element at the i:th row and j:th column
-	/// sfz_assert_debug: location must be in range
-	void set(uint32_t i, uint32_t j, T value) noexcept;
-
-	/// sfz_assert_debug: location must be in range
-	void setRow(uint32_t i, const Vector<T,N>& row) noexcept;
-
-	/// sfz_assert_debug: location must be in range
-	void setColumn(uint32_t j, const Vector<T,M>& column) noexcept;
+	void set(uint32_t y, uint32_t x, T value) noexcept { this->at(y, x) = value; }
+	void setColumn(uint32_t x, Vector<T,H> column) noexcept;
 };
 
-using mat2 = Matrix<float,2,2>;
-using mat3 = Matrix<float,3,3>;
-using mat4 = Matrix<float,4,4>;
+template<typename T>
+struct Matrix<T,2,2> final {
 
-using mat2i = Matrix<int,2,2>;
-using mat3i = Matrix<int,3,3>;
-using mat4i = Matrix<int,4,4>;
+	union {
+		struct { Vector<T,2> rows[2]; };
+		struct { T e00, e01,
+		           e10, e11; };
+	};
 
-// Matrix constants
-// ------------------------------------------------------------------------------------------------
+	T* data() noexcept { return &e00; }
+	const T* data() const noexcept { return &e00; }
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N> ZERO_MATRIX() noexcept;
+	Matrix() noexcept = default;
+	Matrix(const Matrix<T,2,2>&) noexcept = default;
+	Matrix<T,2,2>& operator= (const Matrix<T,2,2>&) noexcept = default;
+	~Matrix() noexcept = default;
+
+	/// Constructs a matrix with the elements in an array (assumes array is in row-major order)
+	Matrix(const T* arrayPtr) noexcept;
+
+	Matrix(T e00, T e01,
+	       T e10, T e11) noexcept;
+
+	Matrix(Vector<T,2> row0,
+	       Vector<T,2> row1) noexcept;
+
+	T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
+	T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
+	Vector<T,2> columnAt(uint32_t x) const noexcept;
+
+	void set(uint32_t y, uint32_t x, T value) noexcept { this->at(y, x) = value; }
+	void setColumn(uint32_t x, Vector<T,2> column) noexcept;
+};
+
+template<typename T>
+struct Matrix<T,3,3> final {
+
+	union {
+		struct { Vector<T,3> rows[3]; };
+		struct { T e00, e01, e02,
+		           e10, e11, e12,
+		           e20, e21, e22; };
+	};
+
+	T* data() noexcept { return &e00; }
+	const T* data() const noexcept { return &e00; }
+
+	Matrix() noexcept = default;
+	Matrix(const Matrix<T,3,3>&) noexcept = default;
+	Matrix<T,3,3>& operator= (const Matrix<T,3,3>&) noexcept = default;
+	~Matrix() noexcept = default;
+
+	/// Constructs a matrix with the elements in an array (assumes array is in row-major order)
+	Matrix(const T* arrayPtr) noexcept;
+
+	Matrix(T e00, T e01, T e02,
+	       T e10, T e11, T e12,
+	       T e20, T e21, T e22) noexcept;
+
+	Matrix(Vector<T,3> row0,
+	       Vector<T,3> row1,
+	       Vector<T,3> row2) noexcept;
+
+	T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
+	T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
+	Vector<T,3> columnAt(uint32_t x) const noexcept;
+
+	void set(uint32_t y, uint32_t x, T value) noexcept { this->at(y, x) = value; }
+	void setColumn(uint32_t x, Vector<T,3> column) noexcept;
+};
+
+template<typename T>
+struct alignas(16) Matrix<T,4,4> final {
+
+	union {
+		struct { Vector<T,4> rows[4]; };
+		struct { T e00, e01, e02, e03,
+		           e10, e11, e12, e13,
+		           e20, e21, e22, e23,
+		           e30, e31, e32, e33; };
+	};
+
+	T* data() noexcept { return &e00; }
+	const T* data() const noexcept { return &e00; }
+
+	Matrix() noexcept = default;
+	Matrix(const Matrix<T,4,4>&) noexcept = default;
+	Matrix<T,4,4>& operator= (const Matrix<T,4,4>&) noexcept = default;
+	~Matrix() noexcept = default;
+
+	/// Constructs a matrix with the elements in an array (assumes array is in row-major order)
+	Matrix(const T* arrayPtr) noexcept;
+
+	Matrix(T e00, T e01, T e02, T e03,
+	       T e10, T e11, T e12, T e13,
+	       T e20, T e21, T e22, T e23,
+	       T e30, T e31, T e32, T e33) noexcept;
+
+	Matrix(Vector<T,4> row0,
+	       Vector<T,4> row1,
+	       Vector<T,4> row2,
+	       Vector<T,4> row3) noexcept;
+
+	T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
+	T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
+	Vector<T,4> columnAt(uint32_t x) const noexcept;
+
+	void set(uint32_t y, uint32_t x, T value) noexcept { this->at(y, x) = value; }
+	void setColumn(uint32_t x, Vector<T,4> column) noexcept;
+};
+
+using mat22 = Matrix<float,2,2>;
+using mat33 = Matrix<float,3,3>;
+using mat44 = Matrix<float,4,4>;
+
+using mat2 = mat22;
+using mat3 = mat33;
+using mat4 = mat44;
+
+static_assert(sizeof(mat22) == sizeof(float) * 2 * 2, "mat22 is padded");
+static_assert(sizeof(mat33) == sizeof(float) * 3 * 3, "mat33 is padded");
+static_assert(sizeof(mat44) == sizeof(float) * 4 * 4, "mat44 is padded");
 
 // Matrix functions
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, uint32_t M, uint32_t N>
-void fill(Matrix<T,M,N>& matrix, T value);
+template<typename T, uint32_t H, uint32_t W>
+void fill(Matrix<T,H,W>& matrix, T value);
 
 /// Element-wise multiplication of two matrices
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N> elemMult(const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,H,W> elemMult(const Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexcept;
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,N,M> transpose(const Matrix<T,M,N>& matrix) noexcept;
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,W,H> transpose(const Matrix<T,H,W>& matrix) noexcept;
 
 // Operators (arithmetic & assignment)
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N>& operator+= (Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,H,W>& operator+= (Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexcept;
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N>& operator-= (Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,H,W>& operator-= (Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexcept;
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N>& operator*= (Matrix<T,M,N>& lhs, T rhs) noexcept;
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,H,W>& operator*= (Matrix<T,H,W>& lhs, T rhs) noexcept;
 
 template<typename T, uint32_t N>
 Matrix<T,N,N>& operator*= (Matrix<T,N,N>& lhs, const Matrix<T,N,N>& rhs) noexcept;
@@ -153,35 +228,35 @@ Matrix<T,N,N>& operator*= (Matrix<T,N,N>& lhs, const Matrix<T,N,N>& rhs) noexcep
 // Operators (arithmetic)
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N> operator+ (const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,H,W> operator+ (const Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexcept;
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N> operator- (const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,H,W> operator- (const Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexcept;
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N> operator- (const Matrix<T,M,N>& matrix) noexcept;
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,H,W> operator- (const Matrix<T,H,W>& matrix) noexcept;
 
-template<typename T, uint32_t M, uint32_t N, uint32_t P>
-Matrix<T,M,P> operator* (const Matrix<T,M,N>& lhs, const Matrix<T,N,P>& rhs) noexcept;
+template<typename T, uint32_t H, uint32_t S, uint32_t W>
+Matrix<T,H,W> operator* (const Matrix<T,H,S>& lhs, const Matrix<T,S,W>& rhs) noexcept;
 
-template<typename T, uint32_t M, uint32_t N>
-Vector<T,M> operator* (const Matrix<T,M,N>& lhs, const Vector<T,N>& rhs) noexcept;
+template<typename T, uint32_t H, uint32_t W>
+Vector<T,H> operator* (const Matrix<T,H,W>& lhs, const Vector<T,W>& rhs) noexcept;
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N> operator* (const Matrix<T,M,N>& lhs, T rhs) noexcept;
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,H,W> operator* (const Matrix<T,H,W>& lhs, T rhs) noexcept;
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N> operator* (T lhs, const Matrix<T,M,N>& rhs) noexcept;
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,H,W> operator* (T lhs, const Matrix<T,H,W>& rhs) noexcept;
 
 // Operators (comparison)
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, uint32_t M, uint32_t N>
-bool operator== (const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
+template<typename T, uint32_t H, uint32_t W>
+bool operator== (const Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexcept;
 
-template<typename T, uint32_t M, uint32_t N>
-bool operator!= (const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept;
+template<typename T, uint32_t H, uint32_t W>
+bool operator!= (const Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexcept;
 
 } // namespace sfz
 

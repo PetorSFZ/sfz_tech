@@ -18,193 +18,264 @@
 
 namespace sfz {
 
-// Constructors & destructors
+// Matrix struct declaration: Matrix<T,H,W>
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N>::Matrix(const T* arrayPtr, bool rowMajorData) noexcept
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,H,W>::Matrix(const T* arrayPtr) noexcept
 {
-	static_assert(sizeof(elements) == (M*N*sizeof(T)), "Matrix is padded.");
 	T* data = this->data();
-	if (rowMajorData) {
-		for (uint32_t i = 0; i < M; ++i) {
-			for (uint32_t j = 0; j < N; ++j) {
-				data[j*M + i] = arrayPtr[i*N + j];
-			}
-		}
-	} else {
-		for (uint32_t i = 0; i < M*N; ++i) {
-			data[i] = arrayPtr[i];
-		}
+	for (uint32_t i = 0; i < (H * W); i++) {
+		data[i] = arrayPtr[i];
 	}
 }
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N>::Matrix(std::initializer_list<std::initializer_list<T>> list) noexcept
+template<typename T, uint32_t H, uint32_t W>
+Vector<T,H> Matrix<T,H,W>::columnAt(uint32_t x) const noexcept
 {
-	static_assert(sizeof(elements) == (M*N*sizeof(T)), "Matrix is padded.");
-
-	for (uint32_t j = 0; j < N; ++j) {
-		for (uint32_t i = 0; i < M; ++i) {
-			elements[j][i] = T(0);
-		}
-	}
-
-	sfz_assert_debug(list.size() <= M);
-	const std::initializer_list<T>* rowsPtr = list.begin();
-	for (uint32_t i = 0; i < list.size(); ++i) {
-		sfz_assert_debug(rowsPtr[i].size() <= N);
-		for (uint32_t j = 0; j < rowsPtr[i].size(); ++j) {
-			elements[j][i] = rowsPtr[i].begin()[j];
-		}
-	}
-}
-
-// Member functions
-// ------------------------------------------------------------------------------------------------
-
-template<typename T, uint32_t M, uint32_t N>
-T& Matrix<T,M,N>::at(uint32_t i, uint32_t j) noexcept
-{
-	sfz_assert_debug(i < M);
-	sfz_assert_debug(j < N);
-	return elements[j][i];
-}
-
-template<typename T, uint32_t M, uint32_t N>
-T Matrix<T,M,N>::at(uint32_t i, uint32_t j) const noexcept
-{
-	sfz_assert_debug(i < M);
-	sfz_assert_debug(j < N);
-	return elements[j][i];
-}
-
-template<typename T, uint32_t M, uint32_t N>
-Vector<T,N> Matrix<T,M,N>::rowAt(uint32_t i) const noexcept
-{
-	sfz_assert_debug(i < M);
-	Vector<T,N> row;
-	for (uint32_t j = 0; j < N; j++) {
-		row[j] = elements[j][i];
-	}
-	return row;
-}
-
-template<typename T, uint32_t M, uint32_t N>
-Vector<T,M> Matrix<T,M,N>::columnAt(uint32_t j) const noexcept
-{
-	sfz_assert_debug(j < N);
-	Vector<T,M> column;
-	for (uint32_t i = 0; i < M; i++) {
-		column[i] = elements[j][i];
+	Vector<T,H> column;
+	for (uint32_t y = 0; y < H; y++) {
+		column[y] = this->at(y, x);
 	}
 	return column;
 }
 
-template<typename T, uint32_t M, uint32_t N>
-void Matrix<T,M,N>::set(uint32_t i, uint32_t j, T value) noexcept
+template<typename T, uint32_t H, uint32_t W>
+void Matrix<T,H,W>::setColumn(uint32_t x, Vector<T,H> column) noexcept
 {
-	sfz_assert_debug(i < M);
-	sfz_assert_debug(j < N);
-	elements[j][i] = value;
-}
-
-template<typename T, uint32_t M, uint32_t N>
-void Matrix<T,M,N>::setRow(uint32_t i, const Vector<T,N>& row) noexcept
-{
-	sfz_assert_debug(i < M);
-	for (uint32_t j = 0; j < N; j++) {
-		elements[j][i] = row[j];
+	for (uint32_t y = 0; y < W; y++) {
+		this->at(y, x) = column(y);
 	}
 }
 
-template<typename T, uint32_t M, uint32_t N>
-void Matrix<T,M,N>::setColumn(uint32_t j, const Vector<T,M>& column) noexcept
-{
-	sfz_assert_debug(j < N);
-	for (uint32_t i = 0; i < M; i++) {
-		elements[j][i] = column[i];
-	}
-}
-
-// Matrix constants
+// Matrix struct declaration: Matrix<T,2,2>
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N> ZERO_MATRIX() noexcept
+template<typename T>
+Matrix<T,2,2>::Matrix(const T* arrayPtr) noexcept
 {
-	static const Matrix<T,M,N> ZERO = []{ Matrix<T,M,N> temp; fill(temp, T(0)); return temp; }();
-	return ZERO;
+	e00 = arrayPtr[0];
+	e01 = arrayPtr[1];
+	e10 = arrayPtr[2];
+	e11 = arrayPtr[3];
+}
+
+template<typename T>
+Matrix<T,2,2>::Matrix(T e00, T e01,
+                      T e10, T e11) noexcept
+:
+	e00(e00), e01(e01),
+	e10(e10), e11(e11)
+{ }
+
+template<typename T>
+Matrix<T,2,2>::Matrix(Vector<T,2> row0,
+                      Vector<T,2> row1) noexcept
+{
+	rows[0] = row0;
+	rows[1] = row1;
+}
+
+template<typename T>
+Vector<T,2> Matrix<T,2,2>::columnAt(uint32_t x) const noexcept
+{
+	return Vector<T,2>(this->at(0, x), this->at(1, x));
+}
+
+template<typename T>
+void Matrix<T,2,2>::setColumn(uint32_t x, Vector<T,2> column) noexcept
+{
+	this->set(0, x, column.x);
+	this->set(1, x, column.y);
+}
+
+// Matrix struct declaration: Matrix<T,3,3>
+// ------------------------------------------------------------------------------------------------
+
+template<typename T>
+Matrix<T,3,3>::Matrix(const T* arrayPtr) noexcept
+{
+	e00 = arrayPtr[0];
+	e01 = arrayPtr[1];
+	e02 = arrayPtr[2];
+
+	e10 = arrayPtr[3];
+	e11 = arrayPtr[4];
+	e12 = arrayPtr[5];
+
+	e20 = arrayPtr[6];
+	e21 = arrayPtr[7];
+	e22 = arrayPtr[8];
+}
+
+template<typename T>
+Matrix<T,3,3>::Matrix(T e00, T e01, T e02,
+                      T e10, T e11, T e12,
+                      T e20, T e21, T e22) noexcept
+:
+	e00(e00), e01(e01), e02(e02),
+	e10(e10), e11(e11), e12(e12),
+	e20(e20), e21(e21), e22(e22)
+{ }
+
+template<typename T>
+Matrix<T,3,3>::Matrix(Vector<T,3> row0,
+                      Vector<T,3> row1,
+                      Vector<T,3> row2) noexcept
+{
+	rows[0] = row0;
+	rows[1] = row1;
+	rows[2] = row2;
+}
+
+template<typename T>
+Vector<T,3> Matrix<T,3,3>::columnAt(uint32_t x) const noexcept
+{
+	return Vector<T,3>(this->at(0, x), this->at(1, x), this->at(2, x));
+}
+
+template<typename T>
+void Matrix<T,3,3>::setColumn(uint32_t x, Vector<T,3> column) noexcept
+{
+	this->set(0, x, column.x);
+	this->set(1, x, column.y);
+	this->set(2, x, column.z);
+}
+
+// Matrix struct declaration: Matrix<T,4,4>
+// ------------------------------------------------------------------------------------------------
+
+template<typename T>
+Matrix<T,4,4>::Matrix(const T* arrayPtr) noexcept
+{
+	e00 = arrayPtr[0];
+	e01 = arrayPtr[1];
+	e02 = arrayPtr[2];
+	e03 = arrayPtr[3];
+
+	e10 = arrayPtr[4];
+	e11 = arrayPtr[5];
+	e12 = arrayPtr[6];
+	e13 = arrayPtr[7];
+
+	e20 = arrayPtr[8];
+	e21 = arrayPtr[9];
+	e22 = arrayPtr[10];
+	e23 = arrayPtr[11];
+
+	e30 = arrayPtr[12];
+	e31 = arrayPtr[13];
+	e32 = arrayPtr[14];
+	e33 = arrayPtr[15];
+}
+
+template<typename T>
+Matrix<T,4,4>::Matrix(T e00, T e01, T e02, T e03,
+                      T e10, T e11, T e12, T e13,
+                      T e20, T e21, T e22, T e23,
+                      T e30, T e31, T e32, T e33) noexcept
+:
+	e00(e00), e01(e01), e02(e02), e03(e03),
+	e10(e10), e11(e11), e12(e12), e13(e13),
+	e20(e20), e21(e21), e22(e22), e23(e23),
+	e30(e30), e31(e31), e32(e32), e33(e33)
+{ }
+
+template<typename T>
+Matrix<T,4,4>::Matrix(Vector<T,4> row0,
+                      Vector<T,4> row1,
+                      Vector<T,4> row2,
+                      Vector<T,4> row3) noexcept
+{
+	rows[0] = row0;
+	rows[1] = row1;
+	rows[2] = row2;
+	rows[3] = row3;
+}
+
+template<typename T>
+Vector<T,4> Matrix<T,4,4>::columnAt(uint32_t x) const noexcept
+{
+	return Vector<T,4>(this->at(0, x), this->at(1, x), this->at(2, x), this->at(3, x));
+}
+
+template<typename T>
+void Matrix<T,4,4>::setColumn(uint32_t x, Vector<T,4> column) noexcept
+{
+	this->set(0, x, column.x);
+	this->set(1, x, column.y);
+	this->set(2, x, column.z);
+	this->set(3, x, column.w);
 }
 
 // Matrix functions
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, uint32_t M, uint32_t N>
-void fill(Matrix<T, M, N>& matrix, T value)
+template<typename T, uint32_t H, uint32_t W>
+void fill(Matrix<T,H,W>& matrix, T value)
 {
-	for (uint32_t i = 0; i < M; ++i) {
-		for (uint32_t j = 0; j < N; ++j) {
-			matrix.elements[j][i] = value;
+	for (uint32_t y = 0; y < H; y++) {
+		for (uint32_t x = 0; x < W; x++) {
+			matrix.set(y, x, value);
 		}
 	}
 }
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N> elemMult(const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,H,W> elemMult(const Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexcept
 {
-	Matrix<T,M,N> resMatrix;
-	for (uint32_t i = 0; i < M; i++) {
-		for (uint32_t j = 0; j < N; j++) {
-			resMatrix.elements[j][i] = lhs.elements[j][i] * rhs.elements[j][i];
+	Matrix<T,H,W> result;
+	for (uint32_t y = 0; y < H; y++) {
+		for (uint32_t x = 0; x < W; x++) {
+			result.at(y, x) = lhs.at(y, x) * rhs.at(y, x);
 		}
 	}
-	return resMatrix;
+	return result;
 }
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,N,M> transpose(const Matrix<T,M,N>& matrix) noexcept
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,W,H> transpose(const Matrix<T,H,W>& matrix) noexcept
 {
-	Matrix<T,N,M> resMatrix;
-	for (uint32_t i = 0; i < N; i++) {
-		for (uint32_t j = 0; j < M; j++) {
-			resMatrix.elements[j][i] = matrix.elements[i][j];
+	Matrix<T,W,H> result;
+	for (uint32_t y = 0; y < H; y++) {
+		for (uint32_t x = 0; x < W; x++) {
+			result.at(x, y) = matrix.at(y, x);
 		}
 	}
-	return resMatrix;
+	return result;
 }
 
 // Operators (arithmetic & assignment)
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N>& operator+= (Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,H,W>& operator+= (Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexcept
 {
-	for (uint32_t i = 0; i < M; ++i) {
-		for (uint32_t j = 0; j < N; ++j) {
-			lhs.elements[j][i] += rhs.elements[j][i];
+	for (uint32_t y = 0; y < H; y++) {
+		for (uint32_t x = 0; x < W; x++) {
+			lhs.at(y, x) += rhs.at(y, x);
 		}
 	}
 	return lhs;
 }
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N>& operator-= (Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,H,W>& operator-= (Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexcept
 {
-	for (uint32_t i = 0; i < M; ++i) {
-		for (uint32_t j = 0; j < N; ++j) {
-			lhs.elements[j][i] -= rhs.elements[j][i];
+	for (uint32_t y = 0; y < H; y++) {
+		for (uint32_t x = 0; x < W; x++) {
+			lhs.at(y, x) -= rhs.at(y, x);
 		}
 	}
 	return lhs;
 }
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N>& operator*= (Matrix<T,M,N>& lhs, T rhs) noexcept
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,H,W>& operator*= (Matrix<T,H,W>& lhs, T rhs) noexcept
 {
-	for (uint32_t i = 0; i < M; i++) {
-		for (uint32_t j = 0; j < N; j++) {
-			lhs.elements[j][i] *= rhs;
+	for (uint32_t y = 0; y < H; y++) {
+		for (uint32_t x = 0; x < W; x++) {
+			lhs.at(y, x) *= rhs;
 		}
 	}
 	return lhs;
@@ -219,72 +290,58 @@ Matrix<T,N,N>& operator*= (Matrix<T,N,N>& lhs, const Matrix<T,N,N>& rhs) noexcep
 // Operators (arithmetic)
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N> operator+ (const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,H,W> operator+ (const Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexcept
 {
-	Matrix<T,M,N> temp{lhs};
-	return (temp += rhs);
+	Matrix<T,H,W> tmp = lhs;
+	return (tmp += rhs);
 }
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N> operator- (const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,H,W> operator- (const Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexcept
 {
-	Matrix<T,M,N> temp{lhs};
-	return (temp -= rhs);
+	Matrix<T,H,W> tmp = lhs;
+	return (tmp -= rhs);
 }
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N> operator- (const Matrix<T,M,N>& matrix) noexcept
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,H,W> operator- (const Matrix<T,H,W>& matrix) noexcept
 {
-	Matrix<T,M,N> temp{matrix};
-	return (temp *= T(-1));
+	Matrix<T,H,W> tmp = matrix;
+	return (tmp *= T(-1));
 }
 
-template<typename T, uint32_t M, uint32_t N, uint32_t P>
-Matrix<T,M,P> operator* (const Matrix<T,M,N>& lhs, const Matrix<T,N,P>& rhs) noexcept
+template<typename T, uint32_t H, uint32_t S, uint32_t W>
+Matrix<T,H,W> operator* (const Matrix<T,H,S>& lhs, const Matrix<T,S,W>& rhs) noexcept
 {
-	Matrix<T,M,P> resMatrix;
-	for (uint32_t i = 0; i < M; i++) {
-		for (uint32_t j = 0; j < P; j++) {
-			T temp = 0;
-			uint32_t jInnerThis = 0;
-			uint32_t iInnerOther = 0;
-			while (jInnerThis < M) {
-				temp += lhs.elements[jInnerThis][i] * rhs.elements[j][iInnerOther];
-				jInnerThis++;
-				iInnerOther++;
-			}
-			resMatrix.elements[j][i] = temp;
+	Matrix<T,H,W> res;
+	for (uint32_t y = 0; y < H; y++) {
+		for (uint32_t x = 0; x < W; x++) {
+			res.at(y, x) = dot(lhs.rows[y], rhs.columnAt(x));
 		}
 	}
-	return resMatrix;
+	return res;
 }
 
-template<typename T, uint32_t M, uint32_t N>
-Vector<T,M> operator* (const Matrix<T,M,N>& lhs, const Vector<T,N>& rhs) noexcept
+template<typename T, uint32_t H, uint32_t W>
+Vector<T,H> operator* (const Matrix<T,H,W>& lhs, const Vector<T,W>& rhs) noexcept
 {
-	Vector<T,M> resVector;
-	for (uint32_t i = 0; i < M; ++i) {
-		T temp = 0;
-		uint32_t jInnerThis = 0;
-		for (uint32_t iVec = 0; iVec < N; ++iVec) {
-			temp += lhs.elements[jInnerThis][i] * rhs[iVec];
-			jInnerThis += 1;
-		}
-		resVector[i] = temp;
+	Vector<T,H> res;
+	for (uint32_t i = 0; i < H; i++) {
+		res[i] = dot(lhs.rows[i], rhs);
 	}
-	return resVector;
+	return res;
 }
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N> operator* (const Matrix<T,M,N>& lhs, T rhs) noexcept
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,H,W> operator* (const Matrix<T,H,W>& lhs, T rhs) noexcept
 {
-	Matrix<T,M,N> temp{lhs};
-	return (temp *= rhs);
+	Matrix<T,H,W> tmp = lhs;
+	return (tmp *= rhs);
 }
 
-template<typename T, uint32_t M, uint32_t N>
-Matrix<T,M,N> operator* (T lhs, const Matrix<T,M,N>& rhs) noexcept
+template<typename T, uint32_t H, uint32_t W>
+Matrix<T,H,W> operator* (T lhs, const Matrix<T,H,W>& rhs) noexcept
 {
 	return rhs * lhs;
 }
@@ -292,21 +349,19 @@ Matrix<T,M,N> operator* (T lhs, const Matrix<T,M,N>& rhs) noexcept
 // Operators (comparison)
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, uint32_t M, uint32_t N>
-bool operator== (const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept
+template<typename T, uint32_t H, uint32_t W>
+bool operator== (const Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexcept
 {
-	for (uint32_t i = 0; i < M; i++) {
-		for (uint32_t j = 0; j < N; j++) {
-			if (lhs.elements[j][i] != rhs.elements[j][i]) {
-				return false;
-			}
+	for (uint32_t y = 0; y < H; y++) {
+		for (uint32_t x = 0; x < W; x++) {
+			if (lhs.at(y, x) != rhs.at(y, x)) return false;
 		}
 	}
 	return true;
 }
 
-template<typename T, uint32_t M, uint32_t N>
-bool operator!= (const Matrix<T,M,N>& lhs, const Matrix<T,M,N>& rhs) noexcept
+template<typename T, uint32_t H, uint32_t W>
+bool operator!= (const Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexcept
 {
 	return !(lhs == rhs);
 }
