@@ -129,6 +129,14 @@ Matrix<T,3,3>::Matrix(Vector<T,3> row0,
 }
 
 template<typename T>
+Matrix<T,3,3>::Matrix(const Matrix<T,4,4>& matrix) noexcept
+{
+	rows[0] = matrix.rows[0].xyz;
+	rows[1] = matrix.rows[1].xyz;
+	rows[2] = matrix.rows[2].xyz;
+}
+
+template<typename T>
 Vector<T,3> Matrix<T,3,3>::columnAt(uint32_t x) const noexcept
 {
 	return Vector<T,3>(this->at(0, x), this->at(1, x), this->at(2, x));
@@ -191,6 +199,24 @@ Matrix<T,4,4>::Matrix(Vector<T,4> row0,
 	rows[1] = row1;
 	rows[2] = row2;
 	rows[3] = row3;
+}
+
+template<typename T>
+Matrix<T,4,4>::Matrix(const Matrix<T,3,3>& matrix) noexcept
+{
+	rows[0] = vec4(matrix.rows[0], T(0));
+	rows[1] = vec4(matrix.rows[1], T(0));
+	rows[2] = vec4(matrix.rows[2], T(0));
+	rows[3] = vec4(T(0), T(0), T(0), T(1));
+}
+
+template<typename T>
+Matrix<T,4,4>::Matrix(const Matrix<T,3,4>& matrix) noexcept
+{
+	rows[0] = matrix.rows[0];
+	rows[1] = matrix.rows[1];
+	rows[2] = matrix.rows[2];
+	rows[3] = vec4(T(0), T(0), T(0), T(1));
 }
 
 template<typename T>

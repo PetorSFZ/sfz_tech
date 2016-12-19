@@ -137,6 +137,9 @@ struct Matrix<T,3,3> final {
 	       Vector<T,3> row1,
 	       Vector<T,3> row2) noexcept;
 
+	/// Constructs a 3x3 matrix by removing elements from the specified matrix
+	Matrix(const Matrix<T,4,4>& matrix) noexcept;
+
 	T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
 	T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
 	Vector<T,3> columnAt(uint32_t x) const noexcept;
@@ -176,6 +179,10 @@ struct alignas(16) Matrix<T,4,4> final {
 	       Vector<T,4> row1,
 	       Vector<T,4> row2,
 	       Vector<T,4> row3) noexcept;
+
+	/// Constructs a 4x4 matrix by placing the specified matrix ontop a 4x4 identity matrix.
+	Matrix(const Matrix<T,3,3>& matrix) noexcept;
+	Matrix(const Matrix<T,3,4>& matrix) noexcept;
 
 	T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
 	T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
