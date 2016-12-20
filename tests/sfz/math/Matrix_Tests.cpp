@@ -117,6 +117,33 @@ TEST_CASE("Matrix<T,2,2> specialization", "[sfz::Matrix]")
 		REQUIRE(m1.columnAt(0) == vec2(1.0f, 3.0f));
 		REQUIRE(m1.columnAt(1) == vec2(2.0f, 4.0f));
 	}
+	SECTION("fill() constructor function") {
+		mat22 zero = mat22::fill(0.0f);
+		REQUIRE(zero.at(0, 0) == 0.0f);
+		REQUIRE(zero.at(0, 1) == 0.0f);
+		REQUIRE(zero.at(0, 2) == 0.0f);
+		REQUIRE(zero.at(0, 3) == 0.0f);
+		
+		mat22 one = mat22::fill(1.0f);
+		REQUIRE(one.at(0, 0) == 1.0f);
+		REQUIRE(one.at(0, 1) == 1.0f);
+		REQUIRE(one.at(0, 2) == 1.0f);
+		REQUIRE(one.at(0, 3) == 1.0f);
+	}
+	SECTION("identity() constructor function") {
+		mat22 ident = mat22::identity();
+		REQUIRE(ident.at(0, 0) == 1.0f);
+		REQUIRE(ident.at(0, 1) == 0.0f);
+		REQUIRE(ident.at(0, 2) == 0.0f);
+		REQUIRE(ident.at(0, 3) == 1.0f);
+	}
+	SECTION("scaling() constructor function") {
+		mat22 scale = mat22::scaling(2.0f);
+		REQUIRE(scale.at(0, 0) == 2.0f);
+		REQUIRE(scale.at(0, 1) == 0.0f);
+		REQUIRE(scale.at(0, 2) == 0.0f);
+		REQUIRE(scale.at(0, 3) == 2.0f);
+	}
 }
 
 TEST_CASE("Matrix<T,3,3> specialization", "[sfz::Matrix]")
@@ -239,6 +266,53 @@ TEST_CASE("Matrix<T,3,3> specialization", "[sfz::Matrix]")
 		REQUIRE(m2.at(2, 0) == 9.0f);
 		REQUIRE(m2.at(2, 1) == 10.0f);
 		REQUIRE(m2.at(2, 2) == 11.0f);
+	}
+	SECTION("fill() constructor function") {
+		mat33 zero = mat33::fill(0.0f);
+		REQUIRE(zero.at(0, 0) == 0.0f);
+		REQUIRE(zero.at(0, 1) == 0.0f);
+		REQUIRE(zero.at(0, 2) == 0.0f);
+		REQUIRE(zero.at(1, 0) == 0.0f);
+		REQUIRE(zero.at(1, 1) == 0.0f);
+		REQUIRE(zero.at(1, 2) == 0.0f);
+		REQUIRE(zero.at(2, 0) == 0.0f);
+		REQUIRE(zero.at(2, 1) == 0.0f);
+		REQUIRE(zero.at(2, 2) == 0.0f);
+		
+		mat33 one = mat33::fill(1.0f);
+		REQUIRE(one.at(0, 0) == 1.0f);
+		REQUIRE(one.at(0, 1) == 1.0f);
+		REQUIRE(one.at(0, 2) == 1.0f);
+		REQUIRE(one.at(1, 0) == 1.0f);
+		REQUIRE(one.at(1, 1) == 1.0f);
+		REQUIRE(one.at(1, 2) == 1.0f);
+		REQUIRE(one.at(2, 0) == 1.0f);
+		REQUIRE(one.at(2, 1) == 1.0f);
+		REQUIRE(one.at(2, 2) == 1.0f);
+	}
+	SECTION("identity() constructor function") {
+		mat33 ident = mat33::identity();
+		REQUIRE(ident.at(0, 0) == 1.0f);
+		REQUIRE(ident.at(0, 1) == 0.0f);
+		REQUIRE(ident.at(0, 2) == 0.0f);
+		REQUIRE(ident.at(1, 0) == 0.0f);
+		REQUIRE(ident.at(1, 1) == 1.0f);
+		REQUIRE(ident.at(1, 2) == 0.0f);
+		REQUIRE(ident.at(2, 0) == 0.0f);
+		REQUIRE(ident.at(2, 1) == 0.0f);
+		REQUIRE(ident.at(2, 2) == 1.0f);
+	}
+	SECTION("scaling() constructor function") {
+		mat33 scale = mat33::scaling(2.0f);
+		REQUIRE(scale.at(0, 0) == 2.0f);
+		REQUIRE(scale.at(0, 1) == 0.0f);
+		REQUIRE(scale.at(0, 2) == 0.0f);
+		REQUIRE(scale.at(1, 0) == 0.0f);
+		REQUIRE(scale.at(1, 1) == 2.0f);
+		REQUIRE(scale.at(1, 2) == 0.0f);
+		REQUIRE(scale.at(2, 0) == 0.0f);
+		REQUIRE(scale.at(2, 1) == 0.0f);
+		REQUIRE(scale.at(2, 2) == 2.0f);
 	}
 }
 
@@ -389,6 +463,65 @@ TEST_CASE("Matrix<T,3,4> specialization", "[sfz::Matrix]")
 		REQUIRE(m2.at(2, 1) == 10.0f);
 		REQUIRE(m2.at(2, 2) == 11.0f);
 		REQUIRE(m2.at(2, 3) == 12.0f);
+	}
+	SECTION("fill() constructor function") {
+		mat34 zero = mat34::fill(0.0f);
+		REQUIRE(zero.at(0, 0) == 0.0f);
+		REQUIRE(zero.at(0, 1) == 0.0f);
+		REQUIRE(zero.at(0, 2) == 0.0f);
+		REQUIRE(zero.at(0, 3) == 0.0f);
+		REQUIRE(zero.at(1, 0) == 0.0f);
+		REQUIRE(zero.at(1, 1) == 0.0f);
+		REQUIRE(zero.at(1, 2) == 0.0f);
+		REQUIRE(zero.at(1, 3) == 0.0f);
+		REQUIRE(zero.at(2, 0) == 0.0f);
+		REQUIRE(zero.at(2, 1) == 0.0f);
+		REQUIRE(zero.at(2, 2) == 0.0f);
+		REQUIRE(zero.at(2, 3) == 0.0f);
+
+		mat34 one = mat34::fill(1.0f);
+		REQUIRE(one.at(0, 0) == 1.0f);
+		REQUIRE(one.at(0, 1) == 1.0f);
+		REQUIRE(one.at(0, 2) == 1.0f);
+		REQUIRE(one.at(0, 3) == 1.0f);
+		REQUIRE(one.at(1, 0) == 1.0f);
+		REQUIRE(one.at(1, 1) == 1.0f);
+		REQUIRE(one.at(1, 2) == 1.0f);
+		REQUIRE(one.at(1, 3) == 1.0f);
+		REQUIRE(one.at(2, 0) == 1.0f);
+		REQUIRE(one.at(2, 1) == 1.0f);
+		REQUIRE(one.at(2, 2) == 1.0f);
+		REQUIRE(one.at(2, 3) == 1.0f);
+	}
+	SECTION("identity() constructor function") {
+		mat34 ident = mat34::identity();
+		REQUIRE(ident.at(0, 0) == 1.0f);
+		REQUIRE(ident.at(0, 1) == 0.0f);
+		REQUIRE(ident.at(0, 2) == 0.0f);
+		REQUIRE(ident.at(0, 3) == 0.0f);
+		REQUIRE(ident.at(1, 0) == 0.0f);
+		REQUIRE(ident.at(1, 1) == 1.0f);
+		REQUIRE(ident.at(1, 2) == 0.0f);
+		REQUIRE(ident.at(1, 3) == 0.0f);
+		REQUIRE(ident.at(2, 0) == 0.0f);
+		REQUIRE(ident.at(2, 1) == 0.0f);
+		REQUIRE(ident.at(2, 2) == 1.0f);
+		REQUIRE(ident.at(2, 3) == 0.0f);
+	}
+	SECTION("scaling() constructor function") {
+		mat34 scale = mat34::scaling(2.0f);
+		REQUIRE(scale.at(0, 0) == 2.0f);
+		REQUIRE(scale.at(0, 1) == 0.0f);
+		REQUIRE(scale.at(0, 2) == 0.0f);
+		REQUIRE(scale.at(0, 3) == 0.0f);
+		REQUIRE(scale.at(1, 0) == 0.0f);
+		REQUIRE(scale.at(1, 1) == 2.0f);
+		REQUIRE(scale.at(1, 2) == 0.0f);
+		REQUIRE(scale.at(1, 3) == 0.0f);
+		REQUIRE(scale.at(2, 0) == 0.0f);
+		REQUIRE(scale.at(2, 1) == 0.0f);
+		REQUIRE(scale.at(2, 2) == 2.0f);
+		REQUIRE(scale.at(2, 3) == 0.0f);
 	}
 }
 
@@ -576,6 +709,81 @@ TEST_CASE("Matrix<T,4,4> specialization", "[sfz::Matrix]")
 		REQUIRE(m2.at(3, 1) == 0.0f);
 		REQUIRE(m2.at(3, 2) == 0.0f);
 		REQUIRE(m2.at(3, 3) == 1.0f);
+	}
+	SECTION("fill() constructor function") {
+		mat44 zero = mat44::fill(0.0f);
+		REQUIRE(zero.at(0, 0) == 0.0f);
+		REQUIRE(zero.at(0, 1) == 0.0f);
+		REQUIRE(zero.at(0, 2) == 0.0f);
+		REQUIRE(zero.at(0, 3) == 0.0f);
+		REQUIRE(zero.at(1, 0) == 0.0f);
+		REQUIRE(zero.at(1, 1) == 0.0f);
+		REQUIRE(zero.at(1, 2) == 0.0f);
+		REQUIRE(zero.at(1, 3) == 0.0f);
+		REQUIRE(zero.at(2, 0) == 0.0f);
+		REQUIRE(zero.at(2, 1) == 0.0f);
+		REQUIRE(zero.at(2, 2) == 0.0f);
+		REQUIRE(zero.at(2, 3) == 0.0f);
+		REQUIRE(zero.at(3, 0) == 0.0f);
+		REQUIRE(zero.at(3, 1) == 0.0f);
+		REQUIRE(zero.at(3, 2) == 0.0f);
+		REQUIRE(zero.at(3, 3) == 0.0f);
+
+		mat44 one = mat44::fill(1.0f);
+		REQUIRE(one.at(0, 0) == 1.0f);
+		REQUIRE(one.at(0, 1) == 1.0f);
+		REQUIRE(one.at(0, 2) == 1.0f);
+		REQUIRE(one.at(0, 3) == 1.0f);
+		REQUIRE(one.at(1, 0) == 1.0f);
+		REQUIRE(one.at(1, 1) == 1.0f);
+		REQUIRE(one.at(1, 2) == 1.0f);
+		REQUIRE(one.at(1, 3) == 1.0f);
+		REQUIRE(one.at(2, 0) == 1.0f);
+		REQUIRE(one.at(2, 1) == 1.0f);
+		REQUIRE(one.at(2, 2) == 1.0f);
+		REQUIRE(one.at(2, 3) == 1.0f);
+		REQUIRE(one.at(3, 0) == 1.0f);
+		REQUIRE(one.at(3, 1) == 1.0f);
+		REQUIRE(one.at(3, 2) == 1.0f);
+		REQUIRE(one.at(3, 3) == 1.0f);
+	}
+	SECTION("identity() constructor function") {
+		mat44 ident = mat44::identity();
+		REQUIRE(ident.at(0, 0) == 1.0f);
+		REQUIRE(ident.at(0, 1) == 0.0f);
+		REQUIRE(ident.at(0, 2) == 0.0f);
+		REQUIRE(ident.at(0, 3) == 0.0f);
+		REQUIRE(ident.at(1, 0) == 0.0f);
+		REQUIRE(ident.at(1, 1) == 1.0f);
+		REQUIRE(ident.at(1, 2) == 0.0f);
+		REQUIRE(ident.at(1, 3) == 0.0f);
+		REQUIRE(ident.at(2, 0) == 0.0f);
+		REQUIRE(ident.at(2, 1) == 0.0f);
+		REQUIRE(ident.at(2, 2) == 1.0f);
+		REQUIRE(ident.at(2, 3) == 0.0f);
+		REQUIRE(ident.at(3, 0) == 0.0f);
+		REQUIRE(ident.at(3, 1) == 0.0f);
+		REQUIRE(ident.at(3, 2) == 0.0f);
+		REQUIRE(ident.at(3, 3) == 1.0f);
+	}
+	SECTION("scaling() constructor function") {
+		mat44 scale = mat44::scaling(2.0f);
+		REQUIRE(scale.at(0, 0) == 2.0f);
+		REQUIRE(scale.at(0, 1) == 0.0f);
+		REQUIRE(scale.at(0, 2) == 0.0f);
+		REQUIRE(scale.at(0, 3) == 0.0f);
+		REQUIRE(scale.at(1, 0) == 0.0f);
+		REQUIRE(scale.at(1, 1) == 2.0f);
+		REQUIRE(scale.at(1, 2) == 0.0f);
+		REQUIRE(scale.at(1, 3) == 0.0f);
+		REQUIRE(scale.at(2, 0) == 0.0f);
+		REQUIRE(scale.at(2, 1) == 0.0f);
+		REQUIRE(scale.at(2, 2) == 2.0f);
+		REQUIRE(scale.at(2, 3) == 0.0f);
+		REQUIRE(scale.at(3, 0) == 0.0f);
+		REQUIRE(scale.at(3, 1) == 0.0f);
+		REQUIRE(scale.at(3, 2) == 0.0f);
+		REQUIRE(scale.at(3, 3) == 1.0f);
 	}
 }
 
@@ -1121,90 +1329,6 @@ TEST_CASE("Rotation matrices", "[sfz::MatrixSupport")
 TEST_CASE("Transformation matrices", "[sfz::MatrixSupport]")
 {
 	sfz::vec4 v1{1, 1, 1, 1};
-	SECTION("identityMatrix4()") {
-		auto m = sfz::identityMatrix4<int>();
-		//REQUIRE(m == sfz::Matrix<int,4,4>(sfz::identityMatrix3<int>()));
-		
-		REQUIRE(m.at(0, 0) == 1);
-		REQUIRE(m.at(0, 1) == 0);
-		REQUIRE(m.at(0, 2) == 0);
-		REQUIRE(m.at(0, 3) == 0);
-
-		REQUIRE(m.at(1, 0) == 0);
-		REQUIRE(m.at(1, 1) == 1);
-		REQUIRE(m.at(1, 2) == 0);
-		REQUIRE(m.at(1, 3) == 0);
-
-		REQUIRE(m.at(2, 0) == 0);
-		REQUIRE(m.at(2, 1) == 0);
-		REQUIRE(m.at(2, 2) == 1);
-		REQUIRE(m.at(2, 3) == 0);
-
-		REQUIRE(m.at(3, 0) == 0);
-		REQUIRE(m.at(3, 1) == 0);
-		REQUIRE(m.at(3, 2) == 0);
-		REQUIRE(m.at(3, 3) == 1);
-	}
-	SECTION("scalingMatrix4(scaleFactor)") {
-		auto m = sfz::scalingMatrix4(2.0f);
-		REQUIRE(approxEqual(m, mat44(sfz::scalingMatrix3(2.0f))));
-
-		REQUIRE(approxEqual(m.at(0, 0), 2.0f));
-		REQUIRE(approxEqual(m.at(0, 1), 0.0f));
-		REQUIRE(approxEqual(m.at(0, 2), 0.0f));
-		REQUIRE(approxEqual(m.at(0, 3), 0.0f));
-
-		REQUIRE(approxEqual(m.at(1, 0), 0.0f));
-		REQUIRE(approxEqual(m.at(1, 1), 2.0f));
-		REQUIRE(approxEqual(m.at(1, 2), 0.0f));
-		REQUIRE(approxEqual(m.at(1, 3), 0.0f));
-
-		REQUIRE(approxEqual(m.at(2, 0), 0.0f));
-		REQUIRE(approxEqual(m.at(2, 1), 0.0f));
-		REQUIRE(approxEqual(m.at(2, 2), 2.0f));
-		REQUIRE(approxEqual(m.at(2, 3), 0.0f));
-
-		REQUIRE(approxEqual(m.at(3, 0), 0.0f));
-		REQUIRE(approxEqual(m.at(3, 1), 0.0f));
-		REQUIRE(approxEqual(m.at(3, 2), 0.0f));
-		REQUIRE(approxEqual(m.at(3, 3), 1.0f));
-
-		auto v2 = m*v1;
-		REQUIRE(approxEqual(v2[0], 2.0f));
-		REQUIRE(approxEqual(v2[1], 2.0f));
-		REQUIRE(approxEqual(v2[2], 2.0f));
-		REQUIRE(approxEqual(v2[3], 1.0f));
-	}
-	SECTION("scalingMatrix4(scaleX, scaleY, scaleZ)") {
-		auto m = sfz::scalingMatrix4(2.0f, 3.0f, 4.0f);
-		REQUIRE(approxEqual(m, mat44(sfz::scalingMatrix3(2.0f, 3.0f, 4.0f))));
-
-		REQUIRE(approxEqual(m.at(0, 0), 2.0f));
-		REQUIRE(approxEqual(m.at(0, 1), 0.0f));
-		REQUIRE(approxEqual(m.at(0, 2), 0.0f));
-		REQUIRE(approxEqual(m.at(0, 3), 0.0f));
-
-		REQUIRE(approxEqual(m.at(1, 0), 0.0f));
-		REQUIRE(approxEqual(m.at(1, 1), 3.0f));
-		REQUIRE(approxEqual(m.at(1, 2), 0.0f));
-		REQUIRE(approxEqual(m.at(1, 3), 0.0f));
-
-		REQUIRE(approxEqual(m.at(2, 0), 0.0f));
-		REQUIRE(approxEqual(m.at(2, 1), 0.0f));
-		REQUIRE(approxEqual(m.at(2, 2), 4.0f));
-		REQUIRE(approxEqual(m.at(2, 3), 0.0f));
-
-		REQUIRE(approxEqual(m.at(3, 0), 0.0f));
-		REQUIRE(approxEqual(m.at(3, 1), 0.0f));
-		REQUIRE(approxEqual(m.at(3, 2), 0.0f));
-		REQUIRE(approxEqual(m.at(3, 3), 1.0f));
-
-		auto v2 = m*v1;
-		REQUIRE(approxEqual(v2[0], 2.0f));
-		REQUIRE(approxEqual(v2[1], 3.0f));
-		REQUIRE(approxEqual(v2[2], 4.0f));
-		REQUIRE(approxEqual(v2[3], 1.0f));
-	}
 	SECTION("translationMatrix()") {
 		auto m = sfz::translationMatrix(-2.0f, 1.0f, 0.0f);
 

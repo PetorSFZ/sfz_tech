@@ -248,57 +248,6 @@ Matrix<T,4,4> rotationMatrix4(const sfz::Vector<T,3>& axis, T angleRads) noexcep
 // ------------------------------------------------------------------------------------------------
 
 template<typename T>
-Matrix<T,3,3> identityMatrix3() noexcept
-{
-	return Matrix<T,3,3>{{1, 0, 0},
-	                     {0, 1, 0},
-	                     {0, 0, 1}};
-}
-
-template<typename T>
-Matrix<T,4,4> identityMatrix4() noexcept
-{
-	return Matrix<T,4,4>{{1, 0, 0, 0},
-	                     {0, 1, 0, 0},
-	                     {0, 0, 1, 0},
-	                     {0, 0, 0, 1}};
-}
-
-template<typename T>
-Matrix<T,3,3> scalingMatrix3(T scaleFactor) noexcept
-{
-	return Matrix<T,3,3>{{scaleFactor, 0, 0},
-	                     {0, scaleFactor, 0},
-	                     {0, 0, scaleFactor}};
-}
-
-template<typename T>
-Matrix<T,4,4> scalingMatrix4(T scaleFactor) noexcept
-{
-	return Matrix<T,4,4>{{scaleFactor, 0, 0, 0},
-	                     {0, scaleFactor, 0, 0},
-	                     {0, 0, scaleFactor, 0},
-	                     {0, 0, 0, 1}};
-}
-
-template<typename T>
-Matrix<T,3,3> scalingMatrix3(T scaleX, T scaleY, T scaleZ) noexcept
-{
-	return Matrix<T,3,3>{{scaleX, 0, 0},
-	                     {0, scaleY, 0},
-	                     {0, 0, scaleZ}};
-}
-
-template<typename T>
-Matrix<T,4,4> scalingMatrix4(T scaleX, T scaleY, T scaleZ) noexcept
-{
-	return Matrix<T,4,4>{{scaleX, 0, 0, 0},
-	                     {0, scaleY, 0, 0},
-	                     {0, 0, scaleZ, 0},
-	                     {0, 0, 0, 1}};
-}
-
-template<typename T>
 Matrix<T,4,4> translationMatrix(T deltaX, T deltaY, T deltaZ) noexcept
 {
 	return Matrix<T,4,4>{{1, 0, 0, deltaX},

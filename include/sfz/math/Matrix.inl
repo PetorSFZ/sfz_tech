@@ -77,6 +77,27 @@ Matrix<T,2,2>::Matrix(Vector<T,2> row0,
 }
 
 template<typename T>
+Matrix<T,2,2> Matrix<T,2,2>::fill(T value) noexcept
+{
+	return Matrix<T,2,2>(value, value,
+	                     value, value);
+}
+
+template<typename T>
+Matrix<T,2,2> Matrix<T,2,2>::identity() noexcept
+{
+	return Matrix<T,2,2>(T(1), T(0),
+	                     T(0), T(1));
+}
+
+template<typename T>
+Matrix<T,2,2> Matrix<T,2,2>::scaling(T scale) noexcept
+{
+	return Matrix<T,2,2>(scale, T(0),
+	                     T(0), scale);
+}
+
+template<typename T>
 Vector<T,2> Matrix<T,2,2>::columnAt(uint32_t x) const noexcept
 {
 	return Vector<T,2>(this->at(0, x), this->at(1, x));
@@ -142,6 +163,30 @@ Matrix<T,3,3>::Matrix(const Matrix<T,4,4>& matrix) noexcept
 	rows[0] = matrix.rows[0].xyz;
 	rows[1] = matrix.rows[1].xyz;
 	rows[2] = matrix.rows[2].xyz;
+}
+
+template<typename T>
+Matrix<T,3,3> Matrix<T,3,3>::fill(T value) noexcept
+{
+	return Matrix<T,3,3>(value, value, value,
+	                     value, value, value,
+	                     value, value, value);
+}
+
+template<typename T>
+Matrix<T,3,3> Matrix<T,3,3>::identity() noexcept
+{
+	return Matrix<T,3,3>(T(1), T(0), T(0),
+	                     T(0), T(1), T(0),
+	                     T(0), T(0), T(1));
+}
+
+template<typename T>
+Matrix<T,3,3> Matrix<T,3,3>::scaling(T scale) noexcept
+{
+	return Matrix<T,3,3>(scale, T(0), T(0),
+	                     T(0), scale, T(0),
+	                     T(0), T(0), scale);
 }
 
 template<typename T>
@@ -214,6 +259,30 @@ Matrix<T,3,4>::Matrix(const Matrix<T,4,4>& matrix) noexcept
 	rows[0] = matrix.rows[0];
 	rows[1] = matrix.rows[1];
 	rows[2] = matrix.rows[2];
+}
+
+template<typename T>
+Matrix<T,3,4> Matrix<T,3,4>::fill(T value) noexcept
+{
+	return Matrix<T,3,4>(value, value, value, value,
+	                     value, value, value, value,
+	                     value, value, value, value);
+}
+
+template<typename T>
+Matrix<T,3,4> Matrix<T,3,4>::identity() noexcept
+{
+	return Matrix<T,3,4>(T(1), T(0), T(0), T(0),
+	                     T(0), T(1), T(0), T(0),
+	                     T(0), T(0), T(1), T(0));
+}
+
+template<typename T>
+Matrix<T,3,4> Matrix<T,3,4>::scaling(T scale) noexcept
+{
+	return Matrix<T,3,4>(scale, T(0), T(0), T(0),
+	                     T(0), scale, T(0), T(0),
+	                     T(0), T(0), scale, T(0));
 }
 
 template<typename T>
@@ -300,6 +369,33 @@ Matrix<T,4,4>::Matrix(const Matrix<T,3,4>& matrix) noexcept
 }
 
 template<typename T>
+Matrix<T,4,4> Matrix<T,4,4>::fill(T value) noexcept
+{
+	return Matrix<T,4,4>(value, value, value, value,
+	                     value, value, value, value,
+	                     value, value, value, value,
+	                     value, value, value, value);
+}
+
+template<typename T>
+Matrix<T,4,4> Matrix<T,4,4>::identity() noexcept
+{
+	return Matrix<T,4,4>(T(1), T(0), T(0), T(0),
+	                     T(0), T(1), T(0), T(0),
+	                     T(0), T(0), T(1), T(0),
+	                     T(0), T(0), T(0), T(1));
+}
+
+template<typename T>
+Matrix<T,4,4> Matrix<T,4,4>::scaling(T scale) noexcept
+{
+	return Matrix<T,4,4>(scale, T(0), T(0), T(0),
+	                     T(0), scale, T(0), T(0),
+	                     T(0), T(0), scale, T(0),
+	                     T(0), T(0), T(0), T(1));
+}
+
+template<typename T>
 Vector<T,4> Matrix<T,4,4>::columnAt(uint32_t x) const noexcept
 {
 	return Vector<T,4>(this->at(0, x), this->at(1, x), this->at(2, x), this->at(3, x));
@@ -316,16 +412,6 @@ void Matrix<T,4,4>::setColumn(uint32_t x, Vector<T,4> column) noexcept
 
 // Matrix functions
 // ------------------------------------------------------------------------------------------------
-
-template<typename T, uint32_t H, uint32_t W>
-void fill(Matrix<T,H,W>& matrix, T value)
-{
-	for (uint32_t y = 0; y < H; y++) {
-		for (uint32_t x = 0; x < W; x++) {
-			matrix.set(y, x, value);
-		}
-	}
-}
 
 template<typename T, uint32_t H, uint32_t W>
 Matrix<T,H,W> elemMult(const Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexcept

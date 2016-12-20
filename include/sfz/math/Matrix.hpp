@@ -64,7 +64,7 @@ struct Matrix final {
 	~Matrix() noexcept = default;
 
 	/// Constructs a matrix with the elements in an array (assumes array is in row-major order)
-	Matrix(const T* arrayPtr) noexcept;
+	explicit Matrix(const T* arrayPtr) noexcept;
 
 	T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
 	T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
@@ -92,13 +92,17 @@ struct Matrix<T,2,2> final {
 	~Matrix() noexcept = default;
 
 	/// Constructs a matrix with the elements in an array (assumes array is in row-major order)
-	Matrix(const T* arrayPtr) noexcept;
+	explicit Matrix(const T* arrayPtr) noexcept;
 
 	Matrix(T e00, T e01,
 	       T e10, T e11) noexcept;
 
 	Matrix(Vector<T,2> row0,
 	       Vector<T,2> row1) noexcept;
+
+	static Matrix fill(T value) noexcept;
+	static Matrix identity() noexcept;
+	static Matrix scaling(T scale) noexcept;
 
 	T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
 	T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
@@ -127,7 +131,7 @@ struct Matrix<T,3,3> final {
 	~Matrix() noexcept = default;
 
 	/// Constructs a matrix with the elements in an array (assumes array is in row-major order)
-	Matrix(const T* arrayPtr) noexcept;
+	explicit Matrix(const T* arrayPtr) noexcept;
 
 	Matrix(T e00, T e01, T e02,
 	       T e10, T e11, T e12,
@@ -138,8 +142,12 @@ struct Matrix<T,3,3> final {
 	       Vector<T,3> row2) noexcept;
 
 	/// Constructs a 3x3 matrix by removing elements from the specified matrix
-	Matrix(const Matrix<T,3,4>& matrix) noexcept;
-	Matrix(const Matrix<T,4,4>& matrix) noexcept;
+	explicit Matrix(const Matrix<T,3,4>& matrix) noexcept;
+	explicit Matrix(const Matrix<T,4,4>& matrix) noexcept;
+
+	static Matrix fill(T value) noexcept;
+	static Matrix identity() noexcept;
+	static Matrix scaling(T scale) noexcept;
 
 	T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
 	T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
@@ -168,7 +176,7 @@ struct alignas(16) Matrix<T,3,4> final {
 	~Matrix() noexcept = default;
 
 	/// Constructs a matrix with the elements in an array (assumes array is in row-major order)
-	Matrix(const T* arrayPtr) noexcept;
+	explicit Matrix(const T* arrayPtr) noexcept;
 
 	Matrix(T e00, T e01, T e02, T e03,
 	       T e10, T e11, T e12, T e13,
@@ -179,8 +187,12 @@ struct alignas(16) Matrix<T,3,4> final {
 	       Vector<T,4> row2) noexcept;
 
 	/// Constructs a 3x4 matrix by placing the specified matrix ontop a 3x4 identity-like matrix.
-	Matrix(const Matrix<T,3,3>& matrix) noexcept;
-	Matrix(const Matrix<T,4,4>& matrix) noexcept;
+	explicit Matrix(const Matrix<T,3,3>& matrix) noexcept;
+	explicit Matrix(const Matrix<T,4,4>& matrix) noexcept;
+
+	static Matrix fill(T value) noexcept;
+	static Matrix identity() noexcept; // Identity-like, identity does not exist for 3x4.
+	static Matrix scaling(T scale) noexcept;
 
 	T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
 	T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
@@ -210,7 +222,7 @@ struct alignas(16) Matrix<T,4,4> final {
 	~Matrix() noexcept = default;
 
 	/// Constructs a matrix with the elements in an array (assumes array is in row-major order)
-	Matrix(const T* arrayPtr) noexcept;
+	explicit Matrix(const T* arrayPtr) noexcept;
 
 	Matrix(T e00, T e01, T e02, T e03,
 	       T e10, T e11, T e12, T e13,
@@ -223,8 +235,12 @@ struct alignas(16) Matrix<T,4,4> final {
 	       Vector<T,4> row3) noexcept;
 
 	/// Constructs a 4x4 matrix by placing the specified matrix ontop a 4x4 identity matrix.
-	Matrix(const Matrix<T,3,3>& matrix) noexcept;
-	Matrix(const Matrix<T,3,4>& matrix) noexcept;
+	explicit Matrix(const Matrix<T,3,3>& matrix) noexcept;
+	explicit Matrix(const Matrix<T,3,4>& matrix) noexcept;
+
+	static Matrix fill(T value) noexcept;
+	static Matrix identity() noexcept;
+	static Matrix scaling(T scale) noexcept; // Note that the bottom right corner is 1 for 4x4
 
 	T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
 	T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
@@ -250,9 +266,6 @@ static_assert(sizeof(mat44) == sizeof(float) * 4 * 4, "mat44 is padded");
 
 // Matrix functions
 // ------------------------------------------------------------------------------------------------
-
-template<typename T, uint32_t H, uint32_t W>
-void fill(Matrix<T,H,W>& matrix, T value);
 
 /// Element-wise multiplication of two matrices
 template<typename T, uint32_t H, uint32_t W>
