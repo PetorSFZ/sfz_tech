@@ -352,11 +352,25 @@ Matrix<T,W,H> transpose(const Matrix<T,H,W>& matrix) noexcept
 }
 
 template<typename T>
+Vector<T,3> transformPoint(const Matrix<T,3,4>& m, const Vector<T,3>& p) noexcept
+{
+	Vector<T,4> v(p, T(1));
+	return m * v;
+}
+
+template<typename T>
 Vector<T,3> transformPoint(const Matrix<T,4,4>& m, const Vector<T,3>& p) noexcept
 {
 	Vector<T,4> v(p, T(1));
 	v = m * v;
 	return v.xyz / v.w;
+}
+
+template<typename T>
+Vector<T,3> transformDir(const Matrix<T,3,4>& m, const Vector<T,3>& d) noexcept
+{
+	Vector<T, 4> v(d, T(0));
+	return m * v;
 }
 
 template<typename T>

@@ -262,7 +262,13 @@ template<typename T, uint32_t H, uint32_t W>
 Matrix<T,W,H> transpose(const Matrix<T,H,W>& matrix) noexcept;
 
 template<typename T>
+Vector<T,3> transformPoint(const Matrix<T,3,4>& m, const Vector<T,3>& p) noexcept;
+
+template<typename T>
 Vector<T,3> transformPoint(const Matrix<T,4,4>& m, const Vector<T,3>& p) noexcept;
+
+template<typename T>
+Vector<T,3> transformDir(const Matrix<T,3,4>& m, const Vector<T,3>& d) noexcept;
 
 template<typename T>
 Vector<T,3> transformDir(const Matrix<T,4,4>& m, const Vector<T,3>& d) noexcept;

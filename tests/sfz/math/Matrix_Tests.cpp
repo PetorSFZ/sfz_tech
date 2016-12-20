@@ -801,22 +801,37 @@ TEST_CASE("Transpose", "[sfz::Matrix]")
 	REQUIRE(approxEqual(m2.at(2, 1), 6.0f));
 }
 
-TEST_CASE("Transforming 3D vector with 4x4 matrix", "[sfz::MatrixSupport]")
+TEST_CASE("Transforming 3D vector with 3x4 and 4x4 matrix", "[sfz::MatrixSupport]")
 {
-	mat44 m(2.0f, 0.0f, 0.0f, 1.0f,
-	        0.0f, 2.0f, 0.0f, 0.0f,
-	        0.0f, 0.0f, 2.0f, 0.0f,
-	        0.0f, 0.0f, 0.0f, 1.0f);
+	mat34 m1(2.0f, 0.0f, 0.0f, 1.0f,
+	         0.0f, 2.0f, 0.0f, 0.0f,
+	         0.0f, 0.0f, 2.0f, 0.0f);
+	mat44 m2(2.0f, 0.0f, 0.0f, 1.0f,
+	         0.0f, 2.0f, 0.0f, 0.0f,
+	         0.0f, 0.0f, 2.0f, 0.0f,
+	         0.0f, 0.0f, 0.0f, 1.0f);
 	vec3 v(1.0f, 1.0f, 1.0f);
 
-	SECTION("transformPoint()") {
-		vec3 v2 = transformPoint(m, v);
+	SECTION("transformPoint() 3x4") {
+		vec3 v2 = transformPoint(m1, v);
 		REQUIRE(approxEqual(v2.x, 3.0f));
 		REQUIRE(approxEqual(v2.y, 2.0f));
 		REQUIRE(approxEqual(v2.z, 2.0f));
 	}
-	SECTION("transformDir()") {
-		vec3 v2 = transformDir(m, v);
+	SECTION("transformPoint() 4x4") {
+		vec3 v2 = transformPoint(m2, v);
+		REQUIRE(approxEqual(v2.x, 3.0f));
+		REQUIRE(approxEqual(v2.y, 2.0f));
+		REQUIRE(approxEqual(v2.z, 2.0f));
+	}
+	SECTION("transformDir() 3x4") {
+		vec3 v2 = transformDir(m1, v);
+		REQUIRE(approxEqual(v2.x, 2.0f));
+		REQUIRE(approxEqual(v2.y, 2.0f));
+		REQUIRE(approxEqual(v2.z, 2.0f));
+	}
+	SECTION("transformDir() 4x4") {
+		vec3 v2 = transformDir(m2, v);
 		REQUIRE(approxEqual(v2.x, 2.0f));
 		REQUIRE(approxEqual(v2.y, 2.0f));
 		REQUIRE(approxEqual(v2.z, 2.0f));
