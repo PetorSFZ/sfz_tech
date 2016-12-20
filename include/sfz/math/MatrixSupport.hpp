@@ -25,15 +25,6 @@
 
 namespace sfz {
 
-// Transforming 3D vector helpers
-// ------------------------------------------------------------------------------------------------
-
-template<typename T>
-Vector<T,3> transformPoint(const Matrix<T,4,4>& m, const Vector<T,3>& p) noexcept;
-
-template<typename T>
-Vector<T,3> transformDir(const Matrix<T,4,4>& m, const Vector<T,3>& d) noexcept;
-
 // Common specialized operations
 // ------------------------------------------------------------------------------------------------
 

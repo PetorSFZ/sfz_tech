@@ -637,7 +637,27 @@ TEST_CASE("Transpose", "[sfz::Matrix]")
 	REQUIRE(approxEqual(m2.at(2, 1), 6.0f));
 }
 
+TEST_CASE("Transforming 3D vector with 4x4 matrix", "[sfz::MatrixSupport]")
+{
+	mat44 m(2.0f, 0.0f, 0.0f, 1.0f,
+	        0.0f, 2.0f, 0.0f, 0.0f,
+	        0.0f, 0.0f, 2.0f, 0.0f,
+	        0.0f, 0.0f, 0.0f, 1.0f);
+	vec3 v(1.0f, 1.0f, 1.0f);
 
+	SECTION("transformPoint()") {
+		vec3 v2 = transformPoint(m, v);
+		REQUIRE(approxEqual(v2.x, 3.0f));
+		REQUIRE(approxEqual(v2.y, 2.0f));
+		REQUIRE(approxEqual(v2.z, 2.0f));
+	}
+	SECTION("transformDir()") {
+		vec3 v2 = transformDir(m, v);
+		REQUIRE(approxEqual(v2.x, 2.0f));
+		REQUIRE(approxEqual(v2.y, 2.0f));
+		REQUIRE(approxEqual(v2.z, 2.0f));
+	}
+}
 
 
 
@@ -666,24 +686,7 @@ TEST_CASE("Matrix is proper POD", "[sfz::Matrix]")
 // MatrixSupport.hpp
 // ------------------------------------------------------------------------------------------------
 
-TEST_CASE("Transforming 3d vector with 4x4 matrix", "[sfz::MatrixSupport]")
-{
-	sfz::Matrix<int, 4, 4> m{{2, 0, 0, 1}, {0, 2, 0, 0}, {0, 0, 2, 0}, {0, 0, 0, 1}};
-	sfz::Vector<int, 3> v{1, 1, 1};
 
-	SECTION("transformPoint()") {
-		sfz::Vector<int, 3> v2 = sfz::transformPoint(m, v);
-		REQUIRE(v2[0] == 3);
-		REQUIRE(v2[1] == 2);
-		REQUIRE(v2[2] == 2);
-	}
-	SECTION("transformDir()") {
-		sfz::Vector<int, 3> v2 = sfz::transformDir(m, v);
-		REQUIRE(v2[0] == 2);
-		REQUIRE(v2[1] == 2);
-		REQUIRE(v2[2] == 2);
-	}
-}
 
 TEST_CASE("Determinants", "[sfz::MatrixSupport]")
 {

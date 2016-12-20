@@ -18,26 +18,6 @@
 
 namespace sfz {
 
-// Transforming 3D vector helpers
-// ------------------------------------------------------------------------------------------------
-
-template<typename T>
-Vector<T,3> transformPoint(const Matrix<T,4,4>& m, const Vector<T,3>& p) noexcept
-{
-	Vector<T,4> v4{p, T(1)};
-	v4 = m * v4;
-	v4 = v4 / v4[3];
-	return v4.xyz;
-}
-
-template<typename T>
-Vector<T,3> transformDir(const Matrix<T,4,4>& m, const Vector<T,3>& d) noexcept
-{
-	Vector<T,4> v4{d, T(0)};
-	v4 = m * v4;
-	return v4.xyz;
-}
-
 // Common specialized operations
 // ------------------------------------------------------------------------------------------------
 
