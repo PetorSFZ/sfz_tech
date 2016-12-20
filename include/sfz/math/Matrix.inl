@@ -91,7 +91,7 @@ Matrix<T,2,2> Matrix<T,2,2>::identity() noexcept
 }
 
 template<typename T>
-Matrix<T,2,2> Matrix<T,2,2>::scaling(T scale) noexcept
+Matrix<T,2,2> Matrix<T,2,2>::scaling2(T scale) noexcept
 {
 	return Matrix<T,2,2>(scale, T(0),
 	                     T(0), scale);
@@ -182,7 +182,7 @@ Matrix<T,3,3> Matrix<T,3,3>::identity() noexcept
 }
 
 template<typename T>
-Matrix<T,3,3> Matrix<T,3,3>::scaling(T scale) noexcept
+Matrix<T,3,3> Matrix<T,3,3>::scaling3(T scale) noexcept
 {
 	return Matrix<T,3,3>(scale, T(0), T(0),
 	                     T(0), scale, T(0),
@@ -278,7 +278,7 @@ Matrix<T,3,4> Matrix<T,3,4>::identity() noexcept
 }
 
 template<typename T>
-Matrix<T,3,4> Matrix<T,3,4>::scaling(T scale) noexcept
+Matrix<T,3,4> Matrix<T,3,4>::scaling3(T scale) noexcept
 {
 	return Matrix<T,3,4>(scale, T(0), T(0), T(0),
 	                     T(0), scale, T(0), T(0),
@@ -387,7 +387,7 @@ Matrix<T,4,4> Matrix<T,4,4>::identity() noexcept
 }
 
 template<typename T>
-Matrix<T,4,4> Matrix<T,4,4>::scaling(T scale) noexcept
+Matrix<T,4,4> Matrix<T,4,4>::scaling3(T scale) noexcept
 {
 	return Matrix<T,4,4>(scale, T(0), T(0), T(0),
 	                     T(0), scale, T(0), T(0),

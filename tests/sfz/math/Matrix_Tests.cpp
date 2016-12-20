@@ -137,8 +137,8 @@ TEST_CASE("Matrix<T,2,2> specialization", "[sfz::Matrix]")
 		REQUIRE(ident.at(0, 2) == 0.0f);
 		REQUIRE(ident.at(0, 3) == 1.0f);
 	}
-	SECTION("scaling() constructor function") {
-		mat22 scale = mat22::scaling(2.0f);
+	SECTION("scaling2() constructor function") {
+		mat22 scale = mat22::scaling2(2.0f);
 		REQUIRE(scale.at(0, 0) == 2.0f);
 		REQUIRE(scale.at(0, 1) == 0.0f);
 		REQUIRE(scale.at(0, 2) == 0.0f);
@@ -302,8 +302,8 @@ TEST_CASE("Matrix<T,3,3> specialization", "[sfz::Matrix]")
 		REQUIRE(ident.at(2, 1) == 0.0f);
 		REQUIRE(ident.at(2, 2) == 1.0f);
 	}
-	SECTION("scaling() constructor function") {
-		mat33 scale = mat33::scaling(2.0f);
+	SECTION("scaling3() constructor function") {
+		mat33 scale = mat33::scaling3(2.0f);
 		REQUIRE(scale.at(0, 0) == 2.0f);
 		REQUIRE(scale.at(0, 1) == 0.0f);
 		REQUIRE(scale.at(0, 2) == 0.0f);
@@ -508,8 +508,8 @@ TEST_CASE("Matrix<T,3,4> specialization", "[sfz::Matrix]")
 		REQUIRE(ident.at(2, 2) == 1.0f);
 		REQUIRE(ident.at(2, 3) == 0.0f);
 	}
-	SECTION("scaling() constructor function") {
-		mat34 scale = mat34::scaling(2.0f);
+	SECTION("scaling3() constructor function") {
+		mat34 scale = mat34::scaling3(2.0f);
 		REQUIRE(scale.at(0, 0) == 2.0f);
 		REQUIRE(scale.at(0, 1) == 0.0f);
 		REQUIRE(scale.at(0, 2) == 0.0f);
@@ -766,8 +766,8 @@ TEST_CASE("Matrix<T,4,4> specialization", "[sfz::Matrix]")
 		REQUIRE(ident.at(3, 2) == 0.0f);
 		REQUIRE(ident.at(3, 3) == 1.0f);
 	}
-	SECTION("scaling() constructor function") {
-		mat44 scale = mat44::scaling(2.0f);
+	SECTION("scaling3() constructor function") {
+		mat44 scale = mat44::scaling3(2.0f);
 		REQUIRE(scale.at(0, 0) == 2.0f);
 		REQUIRE(scale.at(0, 1) == 0.0f);
 		REQUIRE(scale.at(0, 2) == 0.0f);
