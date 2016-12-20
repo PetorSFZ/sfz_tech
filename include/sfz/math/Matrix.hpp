@@ -138,6 +138,48 @@ struct Matrix<T,3,3> final {
 	       Vector<T,3> row2) noexcept;
 
 	/// Constructs a 3x3 matrix by removing elements from the specified matrix
+	Matrix(const Matrix<T,3,4>& matrix) noexcept;
+	Matrix(const Matrix<T,4,4>& matrix) noexcept;
+
+	T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
+	T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
+	Vector<T,3> columnAt(uint32_t x) const noexcept;
+
+	void set(uint32_t y, uint32_t x, T value) noexcept { this->at(y, x) = value; }
+	void setColumn(uint32_t x, Vector<T,3> column) noexcept;
+};
+
+template<typename T>
+struct alignas(16) Matrix<T,3,4> final {
+
+	union {
+		struct { Vector<T,4> rows[3]; };
+		struct { T e00, e01, e02, e03,
+		           e10, e11, e12, e13,
+		           e20, e21, e22, e23; };
+	};
+
+	T* data() noexcept { return &e00; }
+	const T* data() const noexcept { return &e00; }
+
+	Matrix() noexcept = default;
+	Matrix(const Matrix<T,3,4>&) noexcept = default;
+	Matrix<T,3,4>& operator= (const Matrix<T,3,4>&) noexcept = default;
+	~Matrix() noexcept = default;
+
+	/// Constructs a matrix with the elements in an array (assumes array is in row-major order)
+	Matrix(const T* arrayPtr) noexcept;
+
+	Matrix(T e00, T e01, T e02, T e03,
+	       T e10, T e11, T e12, T e13,
+	       T e20, T e21, T e22, T e23) noexcept;
+
+	Matrix(Vector<T,4> row0,
+	       Vector<T,4> row1,
+	       Vector<T,4> row2) noexcept;
+
+	/// Constructs a 3x4 matrix by placing the specified matrix ontop a 3x4 identity-like matrix.
+	Matrix(const Matrix<T,3,3>& matrix) noexcept;
 	Matrix(const Matrix<T,4,4>& matrix) noexcept;
 
 	T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
@@ -194,6 +236,7 @@ struct alignas(16) Matrix<T,4,4> final {
 
 using mat22 = Matrix<float,2,2>;
 using mat33 = Matrix<float,3,3>;
+using mat34 = Matrix<float,3,4>;
 using mat44 = Matrix<float,4,4>;
 
 using mat2 = mat22;
@@ -202,6 +245,7 @@ using mat4 = mat44;
 
 static_assert(sizeof(mat22) == sizeof(float) * 2 * 2, "mat22 is padded");
 static_assert(sizeof(mat33) == sizeof(float) * 3 * 3, "mat33 is padded");
+static_assert(sizeof(mat34) == sizeof(float) * 3 * 4, "mat34 is padded");
 static_assert(sizeof(mat44) == sizeof(float) * 4 * 4, "mat44 is padded");
 
 // Matrix functions

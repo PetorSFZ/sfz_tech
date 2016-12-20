@@ -129,6 +129,14 @@ Matrix<T,3,3>::Matrix(Vector<T,3> row0,
 }
 
 template<typename T>
+Matrix<T,3,3>::Matrix(const Matrix<T,3,4>& matrix) noexcept
+{
+	rows[0] = matrix.rows[0].xyz;
+	rows[1] = matrix.rows[1].xyz;
+	rows[2] = matrix.rows[2].xyz;
+}
+
+template<typename T>
 Matrix<T,3,3>::Matrix(const Matrix<T,4,4>& matrix) noexcept
 {
 	rows[0] = matrix.rows[0].xyz;
@@ -144,6 +152,78 @@ Vector<T,3> Matrix<T,3,3>::columnAt(uint32_t x) const noexcept
 
 template<typename T>
 void Matrix<T,3,3>::setColumn(uint32_t x, Vector<T,3> column) noexcept
+{
+	this->set(0, x, column.x);
+	this->set(1, x, column.y);
+	this->set(2, x, column.z);
+}
+
+// Matrix struct declaration: Matrix<T,3,4>
+// ------------------------------------------------------------------------------------------------
+
+template<typename T>
+Matrix<T,3,4>::Matrix(const T* arrayPtr) noexcept
+{
+	e00 = arrayPtr[0];
+	e01 = arrayPtr[1];
+	e02 = arrayPtr[2];
+	e03 = arrayPtr[3];
+
+	e10 = arrayPtr[4];
+	e11 = arrayPtr[5];
+	e12 = arrayPtr[6];
+	e13 = arrayPtr[7];
+
+	e20 = arrayPtr[8];
+	e21 = arrayPtr[9];
+	e22 = arrayPtr[10];
+	e23 = arrayPtr[11];
+}
+
+template<typename T>
+Matrix<T,3,4>::Matrix(T e00, T e01, T e02, T e03,
+                      T e10, T e11, T e12, T e13,
+                      T e20, T e21, T e22, T e23) noexcept
+:
+	e00(e00), e01(e01), e02(e02), e03(e03),
+	e10(e10), e11(e11), e12(e12), e13(e13),
+	e20(e20), e21(e21), e22(e22), e23(e23)
+{ }
+
+template<typename T>
+Matrix<T,3,4>::Matrix(Vector<T,4> row0,
+                      Vector<T,4> row1,
+                      Vector<T,4> row2) noexcept
+{
+	rows[0] = row0;
+	rows[1] = row1;
+	rows[2] = row2;
+}
+
+template<typename T>
+Matrix<T,3,4>::Matrix(const Matrix<T,3,3>& matrix) noexcept
+{
+	rows[0] = vec4(matrix.rows[0], T(0));
+	rows[1] = vec4(matrix.rows[1], T(0));
+	rows[2] = vec4(matrix.rows[2], T(0));
+}
+
+template<typename T>
+Matrix<T,3,4>::Matrix(const Matrix<T,4,4>& matrix) noexcept
+{
+	rows[0] = matrix.rows[0];
+	rows[1] = matrix.rows[1];
+	rows[2] = matrix.rows[2];
+}
+
+template<typename T>
+Vector<T,3> Matrix<T,3,4>::columnAt(uint32_t x) const noexcept
+{
+	return Vector<T,3>(this->at(0, x), this->at(1, x), this->at(2, x));
+}
+
+template<typename T>
+void Matrix<T,3,4>::setColumn(uint32_t x, Vector<T,3> column) noexcept
 {
 	this->set(0, x, column.x);
 	this->set(1, x, column.y);

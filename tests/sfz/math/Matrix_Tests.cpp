@@ -209,6 +209,21 @@ TEST_CASE("Matrix<T,3,3> specialization", "[sfz::Matrix]")
 		REQUIRE(m1.columnAt(1) == vec3(2.0f, 5.0f, 8.0f));
 		REQUIRE(m1.columnAt(2) == vec3(3.0f, 6.0f, 9.0f));
 	}
+	SECTION("3x4 matrix constructor") {
+		mat34 m1(1.0f, 2.0f, 3.0f, 4.0f,
+		         5.0f, 6.0f, 7.0f, 8.0f,
+		         9.0f, 10.0f, 11.0f, 12.0f);
+		mat33 m2(m1);
+		REQUIRE(m2.at(0, 0) == 1.0f);
+		REQUIRE(m2.at(0, 1) == 2.0f);
+		REQUIRE(m2.at(0, 2) == 3.0f);
+		REQUIRE(m2.at(1, 0) == 5.0f);
+		REQUIRE(m2.at(1, 1) == 6.0f);
+		REQUIRE(m2.at(1, 2) == 7.0f);
+		REQUIRE(m2.at(2, 0) == 9.0f);
+		REQUIRE(m2.at(2, 1) == 10.0f);
+		REQUIRE(m2.at(2, 2) == 11.0f);
+	}
 	SECTION("4x4 matrix constructor") {
 		mat44 m1(1.0f, 2.0f, 3.0f, 4.0f,
 		         5.0f, 6.0f, 7.0f, 8.0f,
@@ -224,6 +239,156 @@ TEST_CASE("Matrix<T,3,3> specialization", "[sfz::Matrix]")
 		REQUIRE(m2.at(2, 0) == 9.0f);
 		REQUIRE(m2.at(2, 1) == 10.0f);
 		REQUIRE(m2.at(2, 2) == 11.0f);
+	}
+}
+
+TEST_CASE("Matrix<T,3,4> specialization", "[sfz::Matrix]")
+{
+	SECTION("Array pointer constructor") {
+		const float arr1[] = {1.0f, 2.0f, 3.0f, 4.0f,
+		                      5.0f, 6.0f, 7.0f, 8.0f,
+		                      9.0f, 10.0f, 11.0f, 12.0f};
+		mat34 m1(arr1);
+		REQUIRE(m1.at(0, 0) == 1.0f);
+		REQUIRE(m1.at(0, 1) == 2.0f);
+		REQUIRE(m1.at(0, 2) == 3.0f);
+		REQUIRE(m1.at(0, 3) == 4.0f);
+		REQUIRE(m1.at(1, 0) == 5.0f);
+		REQUIRE(m1.at(1, 1) == 6.0f);
+		REQUIRE(m1.at(1, 2) == 7.0f);
+		REQUIRE(m1.at(1, 3) == 8.0f);
+		REQUIRE(m1.at(2, 0) == 9.0f);
+		REQUIRE(m1.at(2, 1) == 10.0f);
+		REQUIRE(m1.at(2, 2) == 11.0f);
+		REQUIRE(m1.at(2, 3) == 12.0f);
+		REQUIRE(m1.e00 == 1.0f);
+		REQUIRE(m1.e01 == 2.0f);
+		REQUIRE(m1.e02 == 3.0f);
+		REQUIRE(m1.e03 == 4.0f);
+		REQUIRE(m1.e10 == 5.0f);
+		REQUIRE(m1.e11 == 6.0f);
+		REQUIRE(m1.e12 == 7.0f);
+		REQUIRE(m1.e13 == 8.0f);
+		REQUIRE(m1.e20 == 9.0f);
+		REQUIRE(m1.e21 == 10.0f);
+		REQUIRE(m1.e22 == 11.0f);
+		REQUIRE(m1.e23 == 12.0f);
+		REQUIRE(m1.rows[0] == vec4(1.0f, 2.0f, 3.0f, 4.0f));
+		REQUIRE(m1.rows[1] == vec4(5.0f, 6.0f, 7.0f, 8.0f));
+		REQUIRE(m1.rows[2] == vec4(9.0f, 10.0f, 11.0f, 12.0f));
+		REQUIRE(m1.columnAt(0) == vec3(1.0f, 5.0f, 9.0f));
+		REQUIRE(m1.columnAt(1) == vec3(2.0f, 6.0f, 10.0f));
+		REQUIRE(m1.columnAt(2) == vec3(3.0f, 7.0f, 11.0f));
+		REQUIRE(m1.columnAt(3) == vec3(4.0f, 8.0f, 12.0f));
+	}
+	SECTION("Individual element constructor") {
+		mat34 m1(1.0f, 2.0f, 3.0f, 4.0f,
+		         5.0f, 6.0f, 7.0f, 8.0f,
+		         9.0f, 10.0f, 11.0f, 12.0f);
+		REQUIRE(m1.at(0, 0) == 1.0f);
+		REQUIRE(m1.at(0, 1) == 2.0f);
+		REQUIRE(m1.at(0, 2) == 3.0f);
+		REQUIRE(m1.at(0, 3) == 4.0f);
+		REQUIRE(m1.at(1, 0) == 5.0f);
+		REQUIRE(m1.at(1, 1) == 6.0f);
+		REQUIRE(m1.at(1, 2) == 7.0f);
+		REQUIRE(m1.at(1, 3) == 8.0f);
+		REQUIRE(m1.at(2, 0) == 9.0f);
+		REQUIRE(m1.at(2, 1) == 10.0f);
+		REQUIRE(m1.at(2, 2) == 11.0f);
+		REQUIRE(m1.at(2, 3) == 12.0f);
+		REQUIRE(m1.e00 == 1.0f);
+		REQUIRE(m1.e01 == 2.0f);
+		REQUIRE(m1.e02 == 3.0f);
+		REQUIRE(m1.e03 == 4.0f);
+		REQUIRE(m1.e10 == 5.0f);
+		REQUIRE(m1.e11 == 6.0f);
+		REQUIRE(m1.e12 == 7.0f);
+		REQUIRE(m1.e13 == 8.0f);
+		REQUIRE(m1.e20 == 9.0f);
+		REQUIRE(m1.e21 == 10.0f);
+		REQUIRE(m1.e22 == 11.0f);
+		REQUIRE(m1.e23 == 12.0f);
+		REQUIRE(m1.rows[0] == vec4(1.0f, 2.0f, 3.0f, 4.0f));
+		REQUIRE(m1.rows[1] == vec4(5.0f, 6.0f, 7.0f, 8.0f));
+		REQUIRE(m1.rows[2] == vec4(9.0f, 10.0f, 11.0f, 12.0f));
+		REQUIRE(m1.columnAt(0) == vec3(1.0f, 5.0f, 9.0f));
+		REQUIRE(m1.columnAt(1) == vec3(2.0f, 6.0f, 10.0f));
+		REQUIRE(m1.columnAt(2) == vec3(3.0f, 7.0f, 11.0f));
+		REQUIRE(m1.columnAt(3) == vec3(4.0f, 8.0f, 12.0f));
+	}
+	SECTION("Row constructor") {
+		mat34 m1(vec4(1.0f, 2.0f, 3.0f, 4.0f),
+		         vec4(5.0f, 6.0f, 7.0f, 8.0f),
+		         vec4(9.0f, 10.0f, 11.0f, 12.0f));
+		REQUIRE(m1.at(0, 0) == 1.0f);
+		REQUIRE(m1.at(0, 1) == 2.0f);
+		REQUIRE(m1.at(0, 2) == 3.0f);
+		REQUIRE(m1.at(0, 3) == 4.0f);
+		REQUIRE(m1.at(1, 0) == 5.0f);
+		REQUIRE(m1.at(1, 1) == 6.0f);
+		REQUIRE(m1.at(1, 2) == 7.0f);
+		REQUIRE(m1.at(1, 3) == 8.0f);
+		REQUIRE(m1.at(2, 0) == 9.0f);
+		REQUIRE(m1.at(2, 1) == 10.0f);
+		REQUIRE(m1.at(2, 2) == 11.0f);
+		REQUIRE(m1.at(2, 3) == 12.0f);
+		REQUIRE(m1.e00 == 1.0f);
+		REQUIRE(m1.e01 == 2.0f);
+		REQUIRE(m1.e02 == 3.0f);
+		REQUIRE(m1.e03 == 4.0f);
+		REQUIRE(m1.e10 == 5.0f);
+		REQUIRE(m1.e11 == 6.0f);
+		REQUIRE(m1.e12 == 7.0f);
+		REQUIRE(m1.e13 == 8.0f);
+		REQUIRE(m1.e20 == 9.0f);
+		REQUIRE(m1.e21 == 10.0f);
+		REQUIRE(m1.e22 == 11.0f);
+		REQUIRE(m1.e23 == 12.0f);
+		REQUIRE(m1.rows[0] == vec4(1.0f, 2.0f, 3.0f, 4.0f));
+		REQUIRE(m1.rows[1] == vec4(5.0f, 6.0f, 7.0f, 8.0f));
+		REQUIRE(m1.rows[2] == vec4(9.0f, 10.0f, 11.0f, 12.0f));
+		REQUIRE(m1.columnAt(0) == vec3(1.0f, 5.0f, 9.0f));
+		REQUIRE(m1.columnAt(1) == vec3(2.0f, 6.0f, 10.0f));
+		REQUIRE(m1.columnAt(2) == vec3(3.0f, 7.0f, 11.0f));
+		REQUIRE(m1.columnAt(3) == vec3(4.0f, 8.0f, 12.0f));
+	}
+	SECTION("3x3 matrix constructor") {
+		mat33 m1(1.0f, 2.0f, 3.0f,
+		         4.0f, 5.0f, 6.0f,
+		         7.0f, 8.0f, 9.0f);
+		mat34 m2(m1);
+		REQUIRE(m2.at(0, 0) == 1.0f);
+		REQUIRE(m2.at(0, 1) == 2.0f);
+		REQUIRE(m2.at(0, 2) == 3.0f);
+		REQUIRE(m2.at(0, 3) == 0.0f);
+		REQUIRE(m2.at(1, 0) == 4.0f);
+		REQUIRE(m2.at(1, 1) == 5.0f);
+		REQUIRE(m2.at(1, 2) == 6.0f);
+		REQUIRE(m2.at(1, 3) == 0.0f);
+		REQUIRE(m2.at(2, 0) == 7.0f);
+		REQUIRE(m2.at(2, 1) == 8.0f);
+		REQUIRE(m2.at(2, 2) == 9.0f);
+		REQUIRE(m2.at(2, 3) == 0.0f);
+	}
+	SECTION("4x4 matrix constructor") {
+		mat44 m1(1.0f, 2.0f, 3.0f, 4.0f,
+		         5.0f, 6.0f, 7.0f, 8.0f,
+		         9.0f, 10.0f, 11.0f, 12.0f,
+		         13.0f, 14.0f, 15.0f, 16.0f);
+		mat34 m2(m1);
+		REQUIRE(m2.at(0, 0) == 1.0f);
+		REQUIRE(m2.at(0, 1) == 2.0f);
+		REQUIRE(m2.at(0, 2) == 3.0f);
+		REQUIRE(m2.at(0, 3) == 4.0f);
+		REQUIRE(m2.at(1, 0) == 5.0f);
+		REQUIRE(m2.at(1, 1) == 6.0f);
+		REQUIRE(m2.at(1, 2) == 7.0f);
+		REQUIRE(m2.at(1, 3) == 8.0f);
+		REQUIRE(m2.at(2, 0) == 9.0f);
+		REQUIRE(m2.at(2, 1) == 10.0f);
+		REQUIRE(m2.at(2, 2) == 11.0f);
+		REQUIRE(m2.at(2, 3) == 12.0f);
 	}
 }
 
@@ -391,10 +556,9 @@ TEST_CASE("Matrix<T,4,4> specialization", "[sfz::Matrix]")
 		REQUIRE(m2.at(3, 3) == 1.0f);
 	}
 	SECTION("4x3 matrix constructor") {
-		float arr[] = {1.0f, 2.0f, 3.0f, 4.0f,
-		               5.0f, 6.0f, 7.0f, 8.0f,
-		               9.0f, 10.0f, 11.0f, 12.0f};
-		sfz::Matrix<float,3,4> m1(arr);
+		mat34 m1(1.0f, 2.0f, 3.0f, 4.0f,
+		         5.0f, 6.0f, 7.0f, 8.0f,
+		         9.0f, 10.0f, 11.0f, 12.0f);
 		mat44 m2(m1);
 		REQUIRE(m2.at(0, 0) == 1.0f);
 		REQUIRE(m2.at(0, 1) == 2.0f);
