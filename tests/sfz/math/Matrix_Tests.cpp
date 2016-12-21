@@ -1046,7 +1046,28 @@ TEST_CASE("Transforming 3D vector with 3x4 and 4x4 matrix", "[sfz::MatrixSupport
 	}
 }
 
+TEST_CASE("Determinants", "[sfz::MatrixSupport]")
+{
+	mat22 m1(1.0f, 2.0f,
+	         3.0f, 4.0f);
+	REQUIRE(approxEqual(determinant(m1), -2.0f));
 
+	mat33 m2(-1.0f, 1.0f, 0.0f,
+	         3.0f, 5.0f, 1.0f,
+	         7.0f, 8.0f, 9.0f);
+	REQUIRE(approxEqual(determinant(m2), -57.0f));
+
+	mat33 m3(99.0f, -2.0f, 5.0f,
+	         8.0f, -4.0f, -1.0f,
+	         6.0f, 1.0f, -88.0f);
+	REQUIRE(approxEqual(determinant(m3), 33711.0f));
+
+	mat44 m4(1.0f, -2.0f, 1.0f, 3.0f,
+	         1.0f, 4.0f, -5.0f, 0.0f,
+	         -10.0f, 0.0f, 4.0f, 2.0f,
+	         -1.0f, 0.0f, 2.0f, 0.0f);
+	REQUIRE(approxEqual(determinant(m4), -204.0f));
+}
 
 
 
@@ -1075,20 +1096,7 @@ TEST_CASE("Matrix is proper POD", "[sfz::Matrix]")
 
 
 
-TEST_CASE("Determinants", "[sfz::MatrixSupport]")
-{
-	sfz::Matrix<int, 2, 2> m1{{1,2}, {3,4}};
-	REQUIRE(sfz::determinant(m1) == -2);
 
-	sfz::Matrix<int, 3, 3> m2{{-1,1,0}, {3,5,1}, {7,8,9}};
-	REQUIRE(sfz::determinant(m2) == -57);
-
-	sfz::Matrix<int, 3, 3> m3{{99,-2,5}, {8,-4,-1}, {6,1,-88}};
-	REQUIRE(sfz::determinant(m3) == 33711);
-
-	sfz::Matrix<int, 4, 4> m4{{1, -2, 1, 3}, {1, 4, -5, 0}, {-10, 0, 4, 2}, {-1, 0, 2, 0}};
-	REQUIRE(sfz::determinant(m4) == -204);
-}
 
 TEST_CASE("Inverse", "[sfz::MatrixSupport]")
 {

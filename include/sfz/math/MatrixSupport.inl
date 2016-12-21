@@ -22,41 +22,6 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 template<typename T>
-T determinant(const Matrix<T,2,2>& m) noexcept
-{
-	return m.at(0,0)*m.at(1,1) - m.at(0,1)*m.at(1,0);
-}
-
-template<typename T>
-T determinant(const Matrix<T,3,3>& m) noexcept
-{
-	return m.at(0, 0) * m.at(1, 1) * m.at(2, 2)
-	     + m.at(0, 1) * m.at(1, 2) * m.at(2, 0)
-	     + m.at(0, 2) * m.at(1, 0) * m.at(2, 1)
-	     - m.at(0, 2) * m.at(1, 1) * m.at(2, 0)
-	     - m.at(0, 1) * m.at(1, 0) * m.at(2, 2)
-	     - m.at(0, 0) * m.at(1, 2) * m.at(2, 1);
-}
-
-template<typename T>
-T determinant(const Matrix<T,4,4>& m) noexcept
-{
-	const T m00 = m.at(0, 0), m01 = m.at(0, 1), m02 = m.at(0, 2), m03 = m.at(0, 3),
-	        m10 = m.at(1, 0), m11 = m.at(1, 1), m12 = m.at(1, 2), m13 = m.at(1, 3),
-	        m20 = m.at(2, 0), m21 = m.at(2, 1), m22 = m.at(2, 2), m23 = m.at(2, 3),
-	        m30 = m.at(3, 0), m31 = m.at(3, 1), m32 = m.at(3, 2), m33 = m.at(3, 3);
-	
-	return m00*m11*m22*m33 + m00*m12*m23*m31 + m00*m13*m21*m32
-	     + m01*m10*m23*m32 + m01*m12*m20*m33 + m01*m13*m22*m30
-	     + m02*m10*m21*m33 + m02*m11*m23*m30 + m02*m13*m20*m31
-	     + m03*m10*m22*m31 + m03*m11*m20*m32 + m03*m12*m21*m30
-	     - m00*m11*m23*m32 - m00*m12*m21*m33 - m00*m13*m22*m31
-	     - m01*m10*m22*m33 - m01*m12*m23*m30 - m01*m13*m20*m32
-	     - m02*m10*m23*m31 - m02*m11*m20*m33 - m02*m13*m21*m30
-	     - m03*m10*m21*m32 - m03*m11*m22*m30 - m03*m12*m20*m31;
-}
-
-template<typename T>
 Matrix<T,2,2> inverse(const Matrix<T,2,2>& m) noexcept
 {
 	const T det = determinant(m);

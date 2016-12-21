@@ -426,12 +426,12 @@ Matrix<T,H,W> elemMult(const Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexc
 }
 
 template<typename T, uint32_t H, uint32_t W>
-Matrix<T,W,H> transpose(const Matrix<T,H,W>& matrix) noexcept
+Matrix<T,W,H> transpose(const Matrix<T,H,W>& m) noexcept
 {
 	Matrix<T,W,H> result;
 	for (uint32_t y = 0; y < H; y++) {
 		for (uint32_t x = 0; x < W; x++) {
-			result.at(x, y) = matrix.at(y, x);
+			result.at(x, y) = m.at(y, x);
 		}
 	}
 	return result;
@@ -465,6 +465,42 @@ Vector<T,3> transformDir(const Matrix<T,4,4>& m, const Vector<T,3>& d) noexcept
 	Vector<T,4> v(d, T(0));
 	v = m * v;
 	return v.xyz;
+}
+
+template<typename T, uint32_t N>
+T determinant(const Matrix<T,N,N>& m) noexcept
+{
+	static_assert(N != N, "determinant() not implemented for general case");
+}
+
+template<typename T>
+T determinant(const Matrix<T,2,2>& m) noexcept
+{
+	return m.e00 * m.e11 - m.e01 * m.e10;
+}
+
+template<typename T>
+T determinant(const Matrix<T,3,3>& m) noexcept
+{
+	return m.e00 * m.e11 * m.e22
+	     + m.e01 * m.e12 * m.e20
+	     + m.e02 * m.e10 * m.e21
+	     - m.e02 * m.e11 * m.e20
+	     - m.e01 * m.e10 * m.e22
+	     - m.e00 * m.e12 * m.e21;
+}
+
+template<typename T>
+T determinant(const Matrix<T,4,4>& m) noexcept
+{
+	return m.e00*m.e11*m.e22*m.e33 + m.e00*m.e12*m.e23*m.e31 + m.e00*m.e13*m.e21*m.e32
+	     + m.e01*m.e10*m.e23*m.e32 + m.e01*m.e12*m.e20*m.e33 + m.e01*m.e13*m.e22*m.e30
+	     + m.e02*m.e10*m.e21*m.e33 + m.e02*m.e11*m.e23*m.e30 + m.e02*m.e13*m.e20*m.e31
+	     + m.e03*m.e10*m.e22*m.e31 + m.e03*m.e11*m.e20*m.e32 + m.e03*m.e12*m.e21*m.e30
+	     - m.e00*m.e11*m.e23*m.e32 - m.e00*m.e12*m.e21*m.e33 - m.e00*m.e13*m.e22*m.e31
+	     - m.e01*m.e10*m.e22*m.e33 - m.e01*m.e12*m.e23*m.e30 - m.e01*m.e13*m.e20*m.e32
+	     - m.e02*m.e10*m.e23*m.e31 - m.e02*m.e11*m.e20*m.e33 - m.e02*m.e13*m.e21*m.e30
+	     - m.e03*m.e10*m.e21*m.e32 - m.e03*m.e11*m.e22*m.e30 - m.e03*m.e12*m.e20*m.e31;
 }
 
 // Operators (arithmetic & assignment)
