@@ -140,8 +140,6 @@ set(SOURCE_MATH_FILES
 	${INCLUDE_DIR}/sfz/math/MathSupport.inl
 	${INCLUDE_DIR}/sfz/math/Matrix.hpp
 	${INCLUDE_DIR}/sfz/math/Matrix.inl
-	${INCLUDE_DIR}/sfz/math/MatrixSupport.hpp
-	${INCLUDE_DIR}/sfz/math/MatrixSupport.inl
 	${INCLUDE_DIR}/sfz/math/ProjectionMatrices.hpp
 	 ${SOURCE_DIR}/sfz/math/ProjectionMatrices.cpp
 	${INCLUDE_DIR}/sfz/math/Vector.hpp

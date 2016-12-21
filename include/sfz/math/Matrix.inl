@@ -190,6 +190,24 @@ Matrix<T,3,3> Matrix<T,3,3>::scaling3(T scale) noexcept
 }
 
 template<typename T>
+Matrix<T,3,3> Matrix<T,3,3>::rotation3(Vector<T,3> axis, T angleRad) noexcept
+{
+	using std::cos;
+	using std::sin;
+	Vector<T,3> r = normalize(axis);
+	T x = r.x;
+	T y = r.y;
+	T z = r.z;
+	T c = cos(angleRad);
+	T s = sin(angleRad);
+	T cm1 = T(1) - c;
+	// Matrix by Goldman, page 71 of Real-Time Rendering.
+	return Matrix<T,3,3>(c + cm1*x*x, cm1*x*y - z*s, cm1*x*z + y*s,
+	                     cm1*x*y + z*s, c + cm1*y*y, cm1*y*z - x*s,
+	                     cm1*x*z - y*s, cm1*y*z + x*s, c + cm1*z*z);
+}
+
+template<typename T>
 Vector<T,3> Matrix<T,3,3>::columnAt(uint32_t x) const noexcept
 {
 	return Vector<T,3>(this->at(0, x), this->at(1, x), this->at(2, x));
@@ -284,6 +302,33 @@ Matrix<T,3,4> Matrix<T,3,4>::scaling3(T scale) noexcept
 	                     T(0), scale, T(0), T(0),
 	                     T(0), T(0), scale, T(0));
 }
+
+template<typename T>
+Matrix<T,3,4> Matrix<T,3,4>::rotation3(Vector<T,3> axis, T angleRad) noexcept
+{
+	using std::cos;
+	using std::sin;
+	Vector<T,3> r = normalize(axis);
+	T x = r.x;
+	T y = r.y;
+	T z = r.z;
+	T c = cos(angleRad);
+	T s = sin(angleRad);
+	T cm1 = T(1) - c;
+	// Matrix by Goldman, page 71 of Real-Time Rendering.
+	return Matrix<T,3,4>(c + cm1*x*x, cm1*x*y - z*s, cm1*x*z + y*s, T(0),
+	                     cm1*x*y + z*s, c + cm1*y*y, cm1*y*z - x*s, T(0),
+	                     cm1*x*z - y*s, cm1*y*z + x*s, c + cm1*z*z, T(0));
+}
+
+template<typename T>
+Matrix<T,3,4> Matrix<T,3,4>::translation3(Vector<T,3> delta) noexcept
+{
+	return Matrix<T,3,4>(T(1), T(0), T(0), delta.x,
+	                     T(0), T(1), T(0), delta.y,
+	                     T(0), T(0), T(1), delta.z);
+}
+
 
 template<typename T>
 Vector<T,3> Matrix<T,3,4>::columnAt(uint32_t x) const noexcept
@@ -392,6 +437,34 @@ Matrix<T,4,4> Matrix<T,4,4>::scaling3(T scale) noexcept
 	return Matrix<T,4,4>(scale, T(0), T(0), T(0),
 	                     T(0), scale, T(0), T(0),
 	                     T(0), T(0), scale, T(0),
+	                     T(0), T(0), T(0), T(1));
+}
+
+template<typename T>
+Matrix<T,4,4> Matrix<T,4,4>::rotation3(Vector<T,3> axis, T angleRad) noexcept
+{
+	using std::cos;
+	using std::sin;
+	Vector<T,3> r = normalize(axis);
+	T x = r.x;
+	T y = r.y;
+	T z = r.z;
+	T c = cos(angleRad);
+	T s = sin(angleRad);
+	T cm1 = T(1) - c;
+	// Matrix by Goldman, page 71 of Real-Time Rendering.
+	return Matrix<T,4,4>(c + cm1*x*x, cm1*x*y - z*s, cm1*x*z + y*s, T(0),
+	                     cm1*x*y + z*s, c + cm1*y*y, cm1*y*z - x*s, T(0),
+	                     cm1*x*z - y*s, cm1*y*z + x*s, c + cm1*z*z, T(0),
+	                     T(0), T(0), T(0), T(1));
+}
+
+template<typename T>
+Matrix<T,4,4> Matrix<T,4,4>::translation3(Vector<T,3> delta) noexcept
+{
+	return Matrix<T,4,4>(T(1), T(0), T(0), delta.x,
+	                     T(0), T(1), T(0), delta.y,
+	                     T(0), T(0), T(1), delta.z,
 	                     T(0), T(0), T(0), T(1));
 }
 

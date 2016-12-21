@@ -21,7 +21,6 @@
 #include "sfz/Assert.hpp"
 #include "sfz/math/MathSupport.hpp"
 #include "sfz/math/Matrix.hpp"
-#include "sfz/math/MatrixSupport.hpp"
 #include "sfz/math/Vector.hpp"
 #include "sfz/geometry/AABB.hpp"
 

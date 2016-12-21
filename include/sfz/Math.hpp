@@ -22,6 +22,5 @@
 #include "sfz/math/MathPrimitiveToStrings.hpp"
 #include "sfz/math/MathSupport.hpp"
 #include "sfz/math/Matrix.hpp"
-#include "sfz/math/MatrixSupport.hpp"
 #include "sfz/math/ProjectionMatrices.hpp"
 #include "sfz/math/Vector.hpp"

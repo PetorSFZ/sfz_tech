@@ -23,7 +23,6 @@
 #include "sfz/math/MathPrimitiveToStrings.hpp"
 #include "sfz/math/MathSupport.hpp"
 #include "sfz/math/Matrix.hpp"
-#include "sfz/math/MatrixSupport.hpp"
 #include "sfz/math/ProjectionMatrices.hpp"
 #include "sfz/math/Vector.hpp"
 
@@ -314,6 +313,20 @@ TEST_CASE("Matrix<T,3,3> specialization", "[sfz::Matrix]")
 		REQUIRE(scale.at(2, 1) == 0.0f);
 		REQUIRE(scale.at(2, 2) == 2.0f);
 	}
+	SECTION("rotation3() constructor function") {
+		vec3 startPoint(1.0f, 0.0f, 0.0f);
+		vec3 axis = vec3(1.0f, 1.0f, 0.0f);
+		mat33 rot = mat33::rotation3(axis, PI);
+		REQUIRE(approxEqual(rot * startPoint, vec3(0.0f, 1.0, 0.0f)));
+
+		mat33 xRot90 = mat33::rotation3(vec3(1.0f, 0.0f, 0.0f), PI/2.0f);
+		REQUIRE(approxEqual(xRot90, mat33(1.0f, 0.0f, 0.0f,
+		                                  0.0f, 0.0f, -1.0f,
+		                                  0.0f, 1.0f, 0.0f)));
+
+		vec3 v = xRot90 * vec3(1.0f);
+		REQUIRE(approxEqual(v, vec3(1.0f, -1.0f, 1.0f)));
+	}
 }
 
 TEST_CASE("Matrix<T,3,4> specialization", "[sfz::Matrix]")
@@ -522,6 +535,45 @@ TEST_CASE("Matrix<T,3,4> specialization", "[sfz::Matrix]")
 		REQUIRE(scale.at(2, 1) == 0.0f);
 		REQUIRE(scale.at(2, 2) == 2.0f);
 		REQUIRE(scale.at(2, 3) == 0.0f);
+	}
+	SECTION("rotation3() constructor function") {
+		vec3 startPoint(1.0f, 0.0f, 0.0f);
+		vec3 axis = vec3(1.0f, 1.0f, 0.0f);
+		mat34 rot = mat34::rotation3(axis, PI);
+		REQUIRE(approxEqual(transformPoint(rot, startPoint), vec3(0.0f, 1.0, 0.0f)));
+
+		mat34 xRot90 = mat34::rotation3(vec3(1.0f, 0.0f, 0.0f), PI/2.0f);
+		REQUIRE(approxEqual(xRot90, mat34(1.0f, 0.0f, 0.0f, 0.0f,
+		                                  0.0f, 0.0f, -1.0f, 0.0f,
+		                                  0.0f, 1.0f, 0.0f, 0.0f)));
+
+		vec3 v = transformPoint(xRot90, vec3(1.0f));
+		REQUIRE(approxEqual(v, vec3(1.0f, -1.0f, 1.0f)));
+	}
+	SECTION("translation3() constructor function") {
+		vec4 v1(1.0f, 1.0f, 1.0f, 1.0f);
+		mat44 m = mat44::translation3(vec3(-2.0f, 1.0f, 0.0f));
+		REQUIRE(approxEqual(m.at(0, 0), 1.0f));
+		REQUIRE(approxEqual(m.at(0, 1), 0.0f));
+		REQUIRE(approxEqual(m.at(0, 2), 0.0f));
+		REQUIRE(approxEqual(m.at(0, 3), -2.0f));
+		REQUIRE(approxEqual(m.at(1, 0), 0.0f));
+		REQUIRE(approxEqual(m.at(1, 1), 1.0f));
+		REQUIRE(approxEqual(m.at(1, 2), 0.0f));
+		REQUIRE(approxEqual(m.at(1, 3), 1.0f));
+		REQUIRE(approxEqual(m.at(2, 0), 0.0f));
+		REQUIRE(approxEqual(m.at(2, 1), 0.0f));
+		REQUIRE(approxEqual(m.at(2, 2), 1.0f));
+		REQUIRE(approxEqual(m.at(2, 3), 0.0f));
+		REQUIRE(approxEqual(m.at(3, 0), 0.0f));
+		REQUIRE(approxEqual(m.at(3, 1), 0.0f));
+		REQUIRE(approxEqual(m.at(3, 2), 0.0f));
+		REQUIRE(approxEqual(m.at(3, 3), 1.0f));
+		vec4 v2 = m * v1;
+		REQUIRE(approxEqual(v2.x, -1.0f));
+		REQUIRE(approxEqual(v2.y, 2.0f));
+		REQUIRE(approxEqual(v2.z, 1.0f));
+		REQUIRE(approxEqual(v2.w, 1.0f));
 	}
 }
 
@@ -784,6 +836,46 @@ TEST_CASE("Matrix<T,4,4> specialization", "[sfz::Matrix]")
 		REQUIRE(scale.at(3, 1) == 0.0f);
 		REQUIRE(scale.at(3, 2) == 0.0f);
 		REQUIRE(scale.at(3, 3) == 1.0f);
+	}
+	SECTION("rotation3() constructor function") {
+		vec4 startPoint(1.0f, 0.0f, 0.0f, 1.0f);
+		vec3 axis = vec3(1.0f, 1.0f, 0.0f);
+		mat44 rot = mat44::rotation3(axis, PI);
+		REQUIRE(approxEqual(rot * startPoint, vec4(0.0f, 1.0, 0.0f, 1.0f)));
+
+		mat44 xRot90 = mat44::rotation3(vec3(1.0f, 0.0f, 0.0f), PI/2.0f);
+		REQUIRE(approxEqual(xRot90, mat44(1.0f, 0.0f, 0.0f, 0.0f,
+		                                  0.0f, 0.0f, -1.0f, 0.0f,
+		                                  0.0f, 1.0f, 0.0f, 0.0f,
+		                                  0.0f, 0.0f, 0.0f, 1.0f)));
+
+		vec4 v = xRot90 * vec4(1.0f);
+		REQUIRE(approxEqual(v, vec4(1.0f, -1.0f, 1.0f, 1.0f)));
+	}
+	SECTION("translation3() constructor function") {
+		vec4 v1(1.0f, 1.0f, 1.0f, 1.0f);
+		mat44 m = mat44::translation3(vec3(-2.0f, 1.0f, 0.0f));
+		REQUIRE(approxEqual(m.at(0, 0), 1.0f));
+		REQUIRE(approxEqual(m.at(0, 1), 0.0f));
+		REQUIRE(approxEqual(m.at(0, 2), 0.0f));
+		REQUIRE(approxEqual(m.at(0, 3), -2.0f));
+		REQUIRE(approxEqual(m.at(1, 0), 0.0f));
+		REQUIRE(approxEqual(m.at(1, 1), 1.0f));
+		REQUIRE(approxEqual(m.at(1, 2), 0.0f));
+		REQUIRE(approxEqual(m.at(1, 3), 1.0f));
+		REQUIRE(approxEqual(m.at(2, 0), 0.0f));
+		REQUIRE(approxEqual(m.at(2, 1), 0.0f));
+		REQUIRE(approxEqual(m.at(2, 2), 1.0f));
+		REQUIRE(approxEqual(m.at(2, 3), 0.0f));
+		REQUIRE(approxEqual(m.at(3, 0), 0.0f));
+		REQUIRE(approxEqual(m.at(3, 1), 0.0f));
+		REQUIRE(approxEqual(m.at(3, 2), 0.0f));
+		REQUIRE(approxEqual(m.at(3, 3), 1.0f));
+		vec4 v2 = m * v1;
+		REQUIRE(approxEqual(v2.x, -1.0f));
+		REQUIRE(approxEqual(v2.y, 2.0f));
+		REQUIRE(approxEqual(v2.z, 1.0f));
+		REQUIRE(approxEqual(v2.w, 1.0f));
 	}
 }
 
@@ -1099,16 +1191,6 @@ TEST_CASE("Inverse", "[sfz::MatrixSupport]")
 	REQUIRE(approxEqual(inverse(mat44::identity()), mat44::identity()));
 }
 
-
-
-
-TEST_CASE("Matrix toString()", "[sfz::Matrix]")
-{
-	mat4 m1{{1.0f, 2.0f, 3.0f, 4.0f}, {5.0f, 6.0f, 7.0f, 8.0f}, {9.0f, 10.0f, 11.0f, 12.0f}, {13.0f, 14.0f, 15.0f, 16.0f}};
-	auto mStr1 = toString(m1, false, 1);
-	REQUIRE(mStr1 == "[[1.0, 2.0, 3.0, 4.0], [5.0, 6.0, 7.0, 8.0], [9.0, 10.0, 11.0, 12.0], [13.0, 14.0, 15.0, 16.0]]");
-}
-
 TEST_CASE("Matrix is proper POD", "[sfz::Matrix]")
 {
 	REQUIRE(std::is_trivially_default_constructible<sfz::mat4>::value);
@@ -1118,324 +1200,9 @@ TEST_CASE("Matrix is proper POD", "[sfz::Matrix]")
 	REQUIRE(std::is_pod<sfz::mat4>::value);
 }
 
-
-// MatrixSupport.hpp
-// ------------------------------------------------------------------------------------------------
-
-
-
-
-
-
-
-TEST_CASE("Rotation matrices", "[sfz::MatrixSupport")
+TEST_CASE("Matrix toString()", "[sfz::Matrix]")
 {
-	sfz::vec4 v1{1, 1, 1, 1};
-
-	SECTION("xRotationMatrix4()") {
-		sfz::mat4 xRot90 = sfz::xRotationMatrix4(sfz::PI/2.0f);
-		REQUIRE(approxEqual(xRot90, sfz::rotationMatrix4(sfz::vec3{1,0,0}, sfz::PI/2.0f)));
-
-		REQUIRE(approxEqual(xRot90.at(0, 0), 1.0f));
-		REQUIRE(approxEqual(xRot90.at(0, 1), 0.0f));
-		REQUIRE(approxEqual(xRot90.at(0, 2), 0.0f));
-		REQUIRE(approxEqual(xRot90.at(0, 3), 0.0f));
-
-		REQUIRE(approxEqual(xRot90.at(1, 0), 0.0f));
-		REQUIRE(approxEqual(xRot90.at(1, 1), 0.0f));
-		REQUIRE(approxEqual(xRot90.at(1, 2), -1.0f));
-		REQUIRE(approxEqual(xRot90.at(1, 3), 0.0f));
-
-		REQUIRE(approxEqual(xRot90.at(2, 0), 0.0f));
-		REQUIRE(approxEqual(xRot90.at(2, 1), 1.0f));
-		REQUIRE(approxEqual(xRot90.at(2, 2), 0.0f));
-		REQUIRE(approxEqual(xRot90.at(2, 3), 0.0f));
-
-		REQUIRE(approxEqual(xRot90.at(3, 0), 0.0f));
-		REQUIRE(approxEqual(xRot90.at(3, 1), 0.0f));
-		REQUIRE(approxEqual(xRot90.at(3, 2), 0.0f));
-		REQUIRE(approxEqual(xRot90.at(3, 3), 1.0f));
-
-		sfz::mat4 xRot180 = sfz::xRotationMatrix4(sfz::PI);
-		REQUIRE(approxEqual(xRot180, sfz::rotationMatrix4(sfz::vec3{1,0,0}, sfz::PI)));
-
-		REQUIRE(approxEqual(xRot180.at(0, 0), 1.0f));
-		REQUIRE(approxEqual(xRot180.at(0, 1), 0.0f));
-		REQUIRE(approxEqual(xRot180.at(0, 2), 0.0f));
-		REQUIRE(approxEqual(xRot180.at(0, 3), 0.0f));
-
-		REQUIRE(approxEqual(xRot180.at(1, 0), 0.0f));
-		REQUIRE(approxEqual(xRot180.at(1, 1), -1.0f));
-		REQUIRE(approxEqual(xRot180.at(1, 2), 0.0f));
-		REQUIRE(approxEqual(xRot180.at(1, 3), 0.0f));
-
-		REQUIRE(approxEqual(xRot180.at(2, 0), 0.0f));
-		REQUIRE(approxEqual(xRot180.at(2, 1), 0.0f));
-		REQUIRE(approxEqual(xRot180.at(2, 2), -1.0f));
-		REQUIRE(approxEqual(xRot180.at(2, 3), 0.0f));
-
-		REQUIRE(approxEqual(xRot180.at(3, 0), 0.0f));
-		REQUIRE(approxEqual(xRot180.at(3, 1), 0.0f));
-		REQUIRE(approxEqual(xRot180.at(3, 2), 0.0f));
-		REQUIRE(approxEqual(xRot180.at(3, 3), 1.0f));
-
-		auto v2 = xRot90*v1;
-		REQUIRE(approxEqual(v2[0], 1.0f));
-		REQUIRE(approxEqual(v2[1], -1.0f));
-		REQUIRE(approxEqual(v2[2], 1.0f));
-		REQUIRE(approxEqual(v2[3], 1.0f));
-
-		auto v3 = xRot180*v1;
-		REQUIRE(approxEqual(v3[0], 1.0f));
-		REQUIRE(approxEqual(v3[1], -1.0f));
-		REQUIRE(approxEqual(v3[2], -1.0f));
-		REQUIRE(approxEqual(v3[3], 1.0f));
-	}
-	SECTION("yRotationMatrix4()") {
-		sfz::mat4 yRot90 = sfz::yRotationMatrix4(sfz::PI/2.0f);
-		REQUIRE(approxEqual(yRot90, sfz::rotationMatrix4(sfz::vec3{0,1,0}, sfz::PI/2.0f)));
-
-		REQUIRE(approxEqual(yRot90.at(0, 0), 0.0f));
-		REQUIRE(approxEqual(yRot90.at(0, 1), 0.0f));
-		REQUIRE(approxEqual(yRot90.at(0, 2), 1.0f));
-		REQUIRE(approxEqual(yRot90.at(0, 3), 0.0f));
-
-		REQUIRE(approxEqual(yRot90.at(1, 0), 0.0f));
-		REQUIRE(approxEqual(yRot90.at(1, 1), 1.0f));
-		REQUIRE(approxEqual(yRot90.at(1, 2), 0.0f));
-		REQUIRE(approxEqual(yRot90.at(1, 3), 0.0f));
-
-		REQUIRE(approxEqual(yRot90.at(2, 0), -1.0f));
-		REQUIRE(approxEqual(yRot90.at(2, 1), 0.0f));
-		REQUIRE(approxEqual(yRot90.at(2, 2), 0.0f));
-		REQUIRE(approxEqual(yRot90.at(2, 3), 0.0f));
-
-		REQUIRE(approxEqual(yRot90.at(3, 0), 0.0f));
-		REQUIRE(approxEqual(yRot90.at(3, 1), 0.0f));
-		REQUIRE(approxEqual(yRot90.at(3, 2), 0.0f));
-		REQUIRE(approxEqual(yRot90.at(3, 3), 1.0f));
-
-		sfz::mat4 yRot180 = sfz::yRotationMatrix4(sfz::PI);
-		REQUIRE(approxEqual(yRot180, sfz::rotationMatrix4(sfz::vec3{0,1,0}, sfz::PI)));
-
-		REQUIRE(approxEqual(yRot180.at(0, 0), -1.0f));
-		REQUIRE(approxEqual(yRot180.at(0, 1), 0.0f));
-		REQUIRE(approxEqual(yRot180.at(0, 2), 0.0f));
-		REQUIRE(approxEqual(yRot180.at(0, 3), 0.0f));
-
-		REQUIRE(approxEqual(yRot180.at(1, 0), 0.0f));
-		REQUIRE(approxEqual(yRot180.at(1, 1), 1.0f));
-		REQUIRE(approxEqual(yRot180.at(1, 2), 0.0f));
-		REQUIRE(approxEqual(yRot180.at(1, 3), 0.0f));
-
-		REQUIRE(approxEqual(yRot180.at(2, 0), 0.0f));
-		REQUIRE(approxEqual(yRot180.at(2, 1), 0.0f));
-		REQUIRE(approxEqual(yRot180.at(2, 2), -1.0f));
-		REQUIRE(approxEqual(yRot180.at(2, 3), 0.0f));
-
-		REQUIRE(approxEqual(yRot180.at(3, 0), 0.0f));
-		REQUIRE(approxEqual(yRot180.at(3, 1), 0.0f));
-		REQUIRE(approxEqual(yRot180.at(3, 2), 0.0f));
-		REQUIRE(approxEqual(yRot180.at(3, 3), 1.0f));
-
-		auto v2 = yRot90*v1;
-		REQUIRE(approxEqual(v2[0], 1.0f));
-		REQUIRE(approxEqual(v2[1], 1.0f));
-		REQUIRE(approxEqual(v2[2], -1.0f));
-		REQUIRE(approxEqual(v2[3], 1.0f));
-
-		auto v3 = yRot180*v1;
-		REQUIRE(approxEqual(v3[0], -1.0f));
-		REQUIRE(approxEqual(v3[1], 1.0f));
-		REQUIRE(approxEqual(v3[2], -1.0f));
-		REQUIRE(approxEqual(v3[3], 1.0f));
-	}
-	SECTION("zRotationMatrix4()") {
-		sfz::mat4 zRot90 = sfz::zRotationMatrix4(sfz::PI/2.0f);
-		REQUIRE(approxEqual(zRot90, sfz::rotationMatrix4(sfz::vec3{0,0,1}, sfz::PI/2.0f)));
-
-		REQUIRE(approxEqual(zRot90.at(0, 0), 0.0f));
-		REQUIRE(approxEqual(zRot90.at(0, 1), -1.0f));
-		REQUIRE(approxEqual(zRot90.at(0, 2), 0.0f));
-		REQUIRE(approxEqual(zRot90.at(0, 3), 0.0f));
-
-		REQUIRE(approxEqual(zRot90.at(1, 0), 1.0f));
-		REQUIRE(approxEqual(zRot90.at(1, 1), 0.0f));
-		REQUIRE(approxEqual(zRot90.at(1, 2), 0.0f));
-		REQUIRE(approxEqual(zRot90.at(1, 3), 0.0f));
-
-		REQUIRE(approxEqual(zRot90.at(2, 0), 0.0f));
-		REQUIRE(approxEqual(zRot90.at(2, 1), 0.0f));
-		REQUIRE(approxEqual(zRot90.at(2, 2), 1.0f));
-		REQUIRE(approxEqual(zRot90.at(2, 3), 0.0f));
-
-		REQUIRE(approxEqual(zRot90.at(3, 0), 0.0f));
-		REQUIRE(approxEqual(zRot90.at(3, 1), 0.0f));
-		REQUIRE(approxEqual(zRot90.at(3, 2), 0.0f));
-		REQUIRE(approxEqual(zRot90.at(3, 3), 1.0f));
-
-		sfz::mat4 zRot180 = sfz::zRotationMatrix4(sfz::PI);
-		REQUIRE(approxEqual(zRot180, sfz::rotationMatrix4(sfz::vec3{0,0,1}, sfz::PI)));
-
-		REQUIRE(approxEqual(zRot180.at(0, 0), -1.0f));
-		REQUIRE(approxEqual(zRot180.at(0, 1), 0.0f));
-		REQUIRE(approxEqual(zRot180.at(0, 2), 0.0f));
-		REQUIRE(approxEqual(zRot180.at(0, 3), 0.0f));
-
-		REQUIRE(approxEqual(zRot180.at(1, 0), 0.0f));
-		REQUIRE(approxEqual(zRot180.at(1, 1), -1.0f));
-		REQUIRE(approxEqual(zRot180.at(1, 2), 0.0f));
-		REQUIRE(approxEqual(zRot180.at(1, 3), 0.0f));
-
-		REQUIRE(approxEqual(zRot180.at(2, 0), 0.0f));
-		REQUIRE(approxEqual(zRot180.at(2, 1), 0.0f));
-		REQUIRE(approxEqual(zRot180.at(2, 2), 1.0f));
-		REQUIRE(approxEqual(zRot180.at(2, 3), 0.0f));
-
-		REQUIRE(approxEqual(zRot180.at(3, 0), 0.0f));
-		REQUIRE(approxEqual(zRot180.at(3, 1), 0.0f));
-		REQUIRE(approxEqual(zRot180.at(3, 2), 0.0f));
-		REQUIRE(approxEqual(zRot180.at(3, 3), 1.0f));
-
-		auto v2 = zRot90*v1;
-		REQUIRE(approxEqual(v2[0], -1.0f));
-		REQUIRE(approxEqual(v2[1], 1.0f));
-		REQUIRE(approxEqual(v2[2], 1.0f));
-		REQUIRE(approxEqual(v2[3], 1.0f));
-
-		auto v3 = zRot180*v1;
-		REQUIRE(approxEqual(v3[0], -1.0f));
-		REQUIRE(approxEqual(v3[1], -1.0f));
-		REQUIRE(approxEqual(v3[2], 1.0f));
-		REQUIRE(approxEqual(v3[3], 1.0f));
-	}
-	SECTION("rotationMatrix4()") {
-		sfz::vec4 startPoint{1, 0, 0, 1};
-		const sfz::vec4 expectedEndPoint{0, 1, 0, 1};
-		sfz::vec3 axis = sfz::vec3{1, 1, 0} - sfz::vec3{0, 0, 0};
-		sfz::mat4 rot = sfz::rotationMatrix4(axis, sfz::PI);
-
-		auto res = rot * startPoint;
-		
-		REQUIRE(approxEqual(res[0], expectedEndPoint[0]));
-		REQUIRE(approxEqual(res[1], expectedEndPoint[1]));
-		REQUIRE(approxEqual(res[2], expectedEndPoint[2]));
-		REQUIRE(approxEqual(res[3], expectedEndPoint[3]));
-	}
-	SECTION("3 and 4 variants are identical") {
-		REQUIRE(approxEqual(sfz::xRotationMatrix4(2.5f), mat44(sfz::xRotationMatrix3(2.5f))));
-		REQUIRE(approxEqual(sfz::xRotationMatrix4(1.2f), mat44(sfz::xRotationMatrix3(1.2f))));
-
-		REQUIRE(approxEqual(sfz::yRotationMatrix4(2.5f), mat44(sfz::yRotationMatrix3(2.5f))));
-		REQUIRE(approxEqual(sfz::yRotationMatrix4(1.2f), mat44(sfz::yRotationMatrix3(1.2f))));
-
-		REQUIRE(approxEqual(sfz::zRotationMatrix4(2.5f), mat44(sfz::zRotationMatrix3(2.5f))));
-		REQUIRE(approxEqual(sfz::zRotationMatrix4(1.2f), mat44(sfz::zRotationMatrix3(1.2f))));
-
-		sfz::vec3 a{1, -1, 2};
-		REQUIRE(approxEqual(sfz::rotationMatrix4(a, 2.5f), mat44(sfz::rotationMatrix3(a, 2.5f))));
-		REQUIRE(approxEqual(sfz::rotationMatrix4(a, 1.2f), mat44(sfz::rotationMatrix3(a, 1.2f))));
-	}
-}
-
-
-TEST_CASE("Transformation matrices", "[sfz::MatrixSupport]")
-{
-	sfz::vec4 v1{1, 1, 1, 1};
-	SECTION("translationMatrix()") {
-		auto m = sfz::translationMatrix(-2.0f, 1.0f, 0.0f);
-
-		REQUIRE(approxEqual(m.at(0, 0), 1.0f));
-		REQUIRE(approxEqual(m.at(0, 1), 0.0f));
-		REQUIRE(approxEqual(m.at(0, 2), 0.0f));
-		REQUIRE(approxEqual(m.at(0, 3), -2.0f));
-
-		REQUIRE(approxEqual(m.at(1, 0), 0.0f));
-		REQUIRE(approxEqual(m.at(1, 1), 1.0f));
-		REQUIRE(approxEqual(m.at(1, 2), 0.0f));
-		REQUIRE(approxEqual(m.at(1, 3), 1.0f));
-
-		REQUIRE(approxEqual(m.at(2, 0), 0.0f));
-		REQUIRE(approxEqual(m.at(2, 1), 0.0f));
-		REQUIRE(approxEqual(m.at(2, 2), 1.0f));
-		REQUIRE(approxEqual(m.at(2, 3), 0.0f));
-
-		REQUIRE(approxEqual(m.at(3, 0), 0.0f));
-		REQUIRE(approxEqual(m.at(3, 1), 0.0f));
-		REQUIRE(approxEqual(m.at(3, 2), 0.0f));
-		REQUIRE(approxEqual(m.at(3, 3), 1.0f));
-
-		auto v2 = m*v1;
-		REQUIRE(approxEqual(v2[0], -1.0f));
-		REQUIRE(approxEqual(v2[1], 2.0f));
-		REQUIRE(approxEqual(v2[2], 1.0f));
-		REQUIRE(approxEqual(v2[3], 1.0f));
-	}
-}
-
-TEST_CASE("Projection matrices (Standard OpenGL)", "[sfz::ProjectionMatrices]")
-{
-	SECTION("orthogonalProjectionGL()") {
-		auto m = sfz::orthogonalProjectionGL(-4.f, -2.f, 3.f, 2.f, 10.f, -50.f);
-
-		REQUIRE(approxEqual(m.at(0, 0), 0.285714f));
-		REQUIRE(approxEqual(m.at(0, 1), 0.0f));
-		REQUIRE(approxEqual(m.at(0, 2), 0.0f));
-		REQUIRE(approxEqual(m.at(0, 3), 0.142857f));
-
-		REQUIRE(approxEqual(m.at(1, 0), 0.0f));
-		REQUIRE(approxEqual(m.at(1, 1), 0.5f));
-		REQUIRE(approxEqual(m.at(1, 2), 0.0f));
-		REQUIRE(approxEqual(m.at(1, 3), 0.0f));
-
-		REQUIRE(approxEqual(m.at(2, 0), 0.0f));
-		REQUIRE(approxEqual(m.at(2, 1), 0.0f));
-		REQUIRE(approxEqual(m.at(2, 2), 0.0333333f));
-		REQUIRE(approxEqual(m.at(2, 3), -0.666667f));
-
-		REQUIRE(approxEqual(m.at(3, 0), 0.0f));
-		REQUIRE(approxEqual(m.at(3, 1), 0.0f));
-		REQUIRE(approxEqual(m.at(3, 2), 0.0f));
-		REQUIRE(approxEqual(m.at(3, 3), 1.0f));
-	}
-	SECTION("orthogonalProjection2DGL()") {
-		sfz::vec2 pos{-3.0f, 3.0f};
-		sfz::vec2 dim{4.0f, 2.0f};
-		auto m = sfz::orthogonalProjection2DGL(pos, dim);
-
-		sfz::vec3 center3{pos[0], pos[1], 1.0f};
-		sfz::vec3 left3{pos[0]-(dim[0]/2), pos[1], 1.0f};
-		sfz::vec3 right3{pos[0]+(dim[0]/2), pos[1], 1.0f};
-		sfz::vec3 bottom3{pos[0], pos[1]-(dim[1]/2), 1.0f};
-		sfz::vec3 top3{pos[0], pos[1]+(dim[1]/2), 1.0f};
-
-		REQUIRE(approxEqual(m*center3, sfz::vec3{0.0f, 0.0f, 1.0f}));
-		REQUIRE(approxEqual(m*left3, sfz::vec3{-1.0f, 0.0f, 1.0f}));
-		REQUIRE(approxEqual(m*right3, sfz::vec3{1.0f, 0.0f, 1.0f}));
-		REQUIRE(approxEqual(m*bottom3, sfz::vec3{0.0f, -1.0f, 1.0f}));
-		REQUIRE(approxEqual(m*top3, sfz::vec3{0.0f, 1.0f, 1.0f}));
-	}
-	SECTION("perspectiveProjectionGL()") {
-		auto m = sfz::perspectiveProjectionGL(90.0f, 1.7778f, 0.01f, 500.0f);
-
-		REQUIRE(approxEqual(m.at(0, 0), 0.562493f));
-		REQUIRE(approxEqual(m.at(0, 1), 0.0f));
-		REQUIRE(approxEqual(m.at(0, 2), 0.0f));
-		REQUIRE(approxEqual(m.at(0, 3), 0.0f));
-
-		REQUIRE(approxEqual(m.at(1, 0), 0.0f));
-		REQUIRE(approxEqual(m.at(1, 1), 1.0f));
-		REQUIRE(approxEqual(m.at(1, 2), 0.0f));
-		REQUIRE(approxEqual(m.at(1, 3), 0.0f));
-
-		REQUIRE(approxEqual(m.at(2, 0), 0.0f));
-		REQUIRE(approxEqual(m.at(2, 1), 0.0f));
-		REQUIRE(approxEqual(m.at(2, 2), -1.00004f));
-		REQUIRE(approxEqual(m.at(2, 3), -0.0200004f));
-
-		REQUIRE(approxEqual(m.at(3, 0), 0.0f));
-		REQUIRE(approxEqual(m.at(3, 1), 0.0f));
-		REQUIRE(approxEqual(m.at(3, 2), -1.0f));
-		REQUIRE(approxEqual(m.at(3, 3), 0.0f));
-	}
+	mat4 m1{{1.0f, 2.0f, 3.0f, 4.0f}, {5.0f, 6.0f, 7.0f, 8.0f}, {9.0f, 10.0f, 11.0f, 12.0f}, {13.0f, 14.0f, 15.0f, 16.0f}};
+	auto mStr1 = toString(m1, false, 1);
+	REQUIRE(mStr1 == "[[1.0, 2.0, 3.0, 4.0], [5.0, 6.0, 7.0, 8.0], [9.0, 10.0, 11.0, 12.0], [13.0, 14.0, 15.0, 16.0]]");
 }

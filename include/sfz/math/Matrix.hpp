@@ -148,6 +148,7 @@ struct Matrix<T,3,3> final {
 	static Matrix fill(T value) noexcept;
 	static Matrix identity() noexcept;
 	static Matrix scaling3(T scale) noexcept;
+	static Matrix rotation3(Vector<T,3> axis, T angleRad) noexcept;
 
 	T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
 	T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
@@ -193,6 +194,8 @@ struct alignas(16) Matrix<T,3,4> final {
 	static Matrix fill(T value) noexcept;
 	static Matrix identity() noexcept; // Identity-like, identity does not exist for 3x4.
 	static Matrix scaling3(T scale) noexcept;
+	static Matrix rotation3(Vector<T,3> axis, T angleRad) noexcept;
+	static Matrix translation3(Vector<T,3> delta) noexcept;
 
 	T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
 	T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
@@ -241,6 +244,8 @@ struct alignas(16) Matrix<T,4,4> final {
 	static Matrix fill(T value) noexcept;
 	static Matrix identity() noexcept;
 	static Matrix scaling3(T scale) noexcept; // Note that the bottom right corner is 1 for 4x4
+	static Matrix rotation3(Vector<T,3> axis, T angleRad) noexcept;
+	static Matrix translation3(Vector<T,3> delta) noexcept;
 
 	T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
 	T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
