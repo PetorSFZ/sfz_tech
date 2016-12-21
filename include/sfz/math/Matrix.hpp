@@ -289,6 +289,9 @@ Vector<T,3> transformDir(const Matrix<T,4,4>& m, const Vector<T,3>& d) noexcept;
 template<typename T, uint32_t N>
 T determinant(const Matrix<T,N,N>& m) noexcept;
 
+template<typename T, uint32_t N>
+Matrix<T,N,N> inverse(const Matrix<T,N,N>& m) noexcept;
+
 // Operators (arithmetic & assignment)
 // ------------------------------------------------------------------------------------------------
 

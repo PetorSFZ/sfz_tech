@@ -503,6 +503,83 @@ T determinant(const Matrix<T,4,4>& m) noexcept
 	     - m.e03*m.e10*m.e21*m.e32 - m.e03*m.e11*m.e22*m.e30 - m.e03*m.e12*m.e20*m.e31;
 }
 
+template<typename T, uint32_t N>
+Matrix<T,N,N> inverse(const Matrix<T,N,N>& m) noexcept
+{
+	static_assert(N != N, "inverse() not implemented for general case");
+}
+
+template<typename T>
+Matrix<T,2,2> inverse(const Matrix<T,2,2>& m) noexcept
+{
+	const T det = determinant(m);
+	if (det == T(0)) return Matrix<T,2,2>::fill(T(0));
+
+	Matrix<T,2,2> tmp(m.e11, -m.e01,
+	                  -m.e10, m.e00);
+	return (T(1) / det) * tmp;
+}
+
+template<typename T>
+Matrix<T,3,3> inverse(const Matrix<T,3,3>& m) noexcept
+{
+	const T det = determinant(m);
+	if (det == 0) return Matrix<T,3,3>::fill(T(0));
+
+	const T A =  (m.e11 * m.e22 - m.e12 * m.e21);
+	const T B = -(m.e10 * m.e22 - m.e12 * m.e20);
+	const T C =  (m.e10 * m.e21 - m.e11 * m.e20);
+	const T D = -(m.e01 * m.e22 - m.e02 * m.e21);
+	const T E =  (m.e00 * m.e22 - m.e02 * m.e20);
+	const T F = -(m.e00 * m.e21 - m.e01 * m.e20);
+	const T G =  (m.e01 * m.e12 - m.e02 * m.e11);
+	const T H = -(m.e00 * m.e12 - m.e02 * m.e10);
+	const T I =  (m.e00 * m.e11 - m.e01 * m.e10);
+
+	Matrix<T,3,3> tmp(A, D, G,
+	                  B, E, H,
+	                  C, F, I);
+	return (T(1) / det) * tmp;
+}
+
+template<typename T>
+Matrix<T,4,4> inverse(const Matrix<T,4,4>& m) noexcept
+{
+	const T det = determinant(m);
+	if (det == 0) return Matrix<T,4,4>(T(0), T(0), T(0), T(0),
+	                                   T(0), T(0), T(0), T(0),
+	                                   T(0), T(0), T(0), T(0),
+	                                   T(0), T(0), T(0), T(0));
+
+	const T m00 = m.e00, m01 = m.e01, m02 = m.e02, m03 = m.e03,
+	        m10 = m.e10, m11 = m.e11, m12 = m.e12, m13 = m.e13,
+	        m20 = m.e20, m21 = m.e21, m22 = m.e22, m23 = m.e23,
+	        m30 = m.e30, m31 = m.e31, m32 = m.e32, m33 = m.e33;
+
+	const T b00 = m11*m22*m33 + m12*m23*m31 + m13*m21*m32 - m11*m23*m32 - m12*m21*m33 - m13*m22*m31;
+	const T b01 = m01*m23*m32 + m02*m21*m33 + m03*m22*m31 - m01*m22*m33 - m02*m23*m31 - m03*m21*m32;
+	const T b02 = m01*m12*m33 + m02*m13*m31 + m03*m11*m32 - m01*m13*m32 - m02*m11*m33 - m03*m12*m31;
+	const T b03 = m01*m13*m22 + m02*m11*m23 + m03*m12*m21 - m01*m12*m23 - m02*m13*m21 - m03*m11*m22;
+	const T b10 = m10*m23*m32 + m12*m20*m33 + m13*m22*m30 - m10*m22*m33 - m12*m23*m30 - m13*m20*m32;
+	const T b11 = m00*m22*m33 + m02*m23*m30 + m03*m20*m32 - m00*m23*m32 - m02*m20*m33 - m03*m22*m30;
+	const T b12 = m00*m13*m32 + m02*m10*m33 + m03*m12*m30 - m00*m12*m33 - m02*m13*m30 - m03*m10*m32;
+	const T b13 = m00*m12*m23 + m02*m13*m20 + m03*m10*m22 - m00*m13*m22 - m02*m10*m23 - m03*m12*m20;
+	const T b20 = m10*m21*m33 + m11*m23*m30 + m13*m20*m31 - m01*m23*m31 - m11*m20*m33 - m13*m21*m30;
+	const T b21 = m00*m23*m31 + m01*m20*m33 + m03*m21*m30 - m00*m21*m33 - m01*m23*m30 - m03*m20*m31;
+	const T b22 = m00*m11*m33 + m01*m13*m30 + m03*m10*m31 - m00*m13*m31 - m01*m10*m33 - m03*m11*m30;
+	const T b23 = m00*m13*m21 + m01*m10*m23 + m03*m11*m20 - m00*m11*m23 - m01*m13*m20 - m03*m10*m21;
+	const T b30 = m10*m22*m31 + m11*m20*m32 + m12*m21*m30 - m10*m21*m32 - m11*m22*m30 - m12*m20*m31;
+	const T b31 = m00*m21*m32 + m01*m22*m30 + m02*m20*m31 - m00*m22*m31 - m01*m20*m32 - m02*m21*m30;
+	const T b32 = m00*m12*m31 + m01*m10*m32 + m02*m11*m30 - m00*m11*m32 - m01*m12*m30 - m02*m10*m31;
+	const T b33 = m00*m11*m22 + m01*m12*m20 + m02*m10*m21 - m00*m12*m21 - m01*m10*m22 - m02*m11*m20;
+
+	Matrix<T,4,4> tmp(b00, b01, b02, b03,
+	                  b10, b11, b12, b13,
+	                  b20, b21, b22, b23,
+	                  b30, b31, b32, b33);
+	return (T(1) / det) * tmp;
+}
+
 // Operators (arithmetic & assignment)
 // ------------------------------------------------------------------------------------------------
 

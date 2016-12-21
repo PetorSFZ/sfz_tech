@@ -1069,7 +1069,35 @@ TEST_CASE("Determinants", "[sfz::MatrixSupport]")
 	REQUIRE(approxEqual(determinant(m4), -204.0f));
 }
 
+TEST_CASE("Inverse", "[sfz::MatrixSupport]")
+{
+	mat22 m1(1.0f, 1.0f,
+	         1.0f, 2.0f);
+	mat22 m1Inv(2.0f, -1.0f,
+	            -1.0f, 1.0f);
+	REQUIRE(approxEqual(inverse(m1), m1Inv));
+	REQUIRE(approxEqual(inverse(mat22::identity()), mat22::identity()));
 
+	mat33 m3(1.0f, 1.0f, 1.0f,
+	         1.0f, 1.0f, 2.0f,
+	         1.0f, 2.0f, 3.0f);
+	mat33 m3Inv(1.0f, 1.0f, -1.0f,
+	            1.0f, -2.0f, 1.0f,
+	            -1.0f, 1.0f, 0.0f);
+	REQUIRE(approxEqual(inverse(m3), m3Inv));
+	REQUIRE(approxEqual(inverse(mat33::identity()), mat33::identity()));
+
+	mat44 m5(1.0f, 1.0f, 1.0f, 1.0f,
+	         1.0f, 1.0f, 2.0f, 3.0f,
+	         1.0f, 2.0f, 3.0f, 4.0f,
+	         1.0f, 2.0f, 2.0f, 1.0f);
+	mat44 m5Inv(1.0f, 1.0f, -1.0f, 0.0f,
+	            2.0f, -3.0f, 2.0f, -1.0f,
+	            -3.0f, 3.0f, -2.0f, 2.0f,
+	            1.0f, -1.0f, 1.0f, -1.0f);
+	REQUIRE(approxEqual(inverse(m5), m5Inv));
+	REQUIRE(approxEqual(inverse(mat44::identity()), mat44::identity()));
+}
 
 
 
@@ -1098,30 +1126,7 @@ TEST_CASE("Matrix is proper POD", "[sfz::Matrix]")
 
 
 
-TEST_CASE("Inverse", "[sfz::MatrixSupport]")
-{
-	sfz::Matrix<int, 2, 2> m1{{1, 1}, {1, 2}};
-	sfz::Matrix<int, 2, 2> m1Inv{{2, -1}, {-1, 1}};
 
-	REQUIRE(sfz::inverse(m1) == m1Inv);
-
-	sfz::Matrix<int, 2, 2> m2{{1, 0}, {0, 1}};
-	REQUIRE(sfz::inverse(m2) == m2);
-
-	sfz::Matrix<int, 3, 3> m3{{1, 1, 1}, {1, 1, 2}, {1, 2, 3}};
-	sfz::Matrix<int, 3, 3> m3Inv{{1, 1, -1}, {1, -2, 1}, {-1, 1, 0}};
-	REQUIRE(sfz::inverse(m3) == m3Inv);
-
-	sfz::Matrix<int, 3, 3> m4{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
-	REQUIRE(sfz::inverse(m4) == m4);
-
-	sfz::Matrix<int, 4, 4> m5{{1, 1, 1, 1}, {1, 1, 2, 3}, {1, 2, 3, 4}, {1, 2, 2, 1}};
-	sfz::Matrix<int, 4, 4> m5Inv{{1, 1, -1, 0}, {2, -3, 2, -1}, {-3, 3, -2, 2}, {1, -1, 1, -1}};
-	REQUIRE(sfz::inverse(m5) == m5Inv);
-
-	sfz::Matrix<int, 4, 4> m6{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}};
-	REQUIRE(sfz::inverse(m6) == m6);
-}
 
 TEST_CASE("Rotation matrices", "[sfz::MatrixSupport")
 {
