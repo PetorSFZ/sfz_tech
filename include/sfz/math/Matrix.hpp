@@ -79,6 +79,7 @@ struct Matrix<T,2,2> final {
 
 	union {
 		struct { Vector<T,2> rows[2]; };
+		struct { Vector<T,2> row0, row1; };
 		struct { T e00, e01,
 		           e10, e11; };
 	};
@@ -117,6 +118,7 @@ struct Matrix<T,3,3> final {
 
 	union {
 		struct { Vector<T,3> rows[3]; };
+		struct { Vector<T,3> row0, row1, row2; };
 		struct { T e00, e01, e02,
 		           e10, e11, e12,
 		           e20, e21, e22; };
@@ -163,6 +165,7 @@ struct alignas(16) Matrix<T,3,4> final {
 
 	union {
 		struct { Vector<T,4> rows[3]; };
+		struct { Vector<T,4> row0, row1, row2; };
 		struct { T e00, e01, e02, e03,
 		           e10, e11, e12, e13,
 		           e20, e21, e22, e23; };
@@ -210,6 +213,7 @@ struct alignas(16) Matrix<T,4,4> final {
 
 	union {
 		struct { Vector<T,4> rows[4]; };
+		struct { Vector<T,4> row0, row1, row2, row3; };
 		struct { T e00, e01, e02, e03,
 		           e10, e11, e12, e13,
 		           e20, e21, e22, e23,

@@ -491,9 +491,7 @@ Matrix<T,H,W> elemMult(const Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexc
 {
 	Matrix<T,H,W> result;
 	for (uint32_t y = 0; y < H; y++) {
-		for (uint32_t x = 0; x < W; x++) {
-			result.at(y, x) = lhs.at(y, x) * rhs.at(y, x);
-		}
+		result.rows[y] = lhs.rows[y] * rhs.rows[y];
 	}
 	return result;
 }
@@ -660,9 +658,7 @@ template<typename T, uint32_t H, uint32_t W>
 Matrix<T,H,W>& operator+= (Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexcept
 {
 	for (uint32_t y = 0; y < H; y++) {
-		for (uint32_t x = 0; x < W; x++) {
-			lhs.at(y, x) += rhs.at(y, x);
-		}
+		lhs.rows[y] += rhs.rows[y];
 	}
 	return lhs;
 }
@@ -671,9 +667,7 @@ template<typename T, uint32_t H, uint32_t W>
 Matrix<T,H,W>& operator-= (Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexcept
 {
 	for (uint32_t y = 0; y < H; y++) {
-		for (uint32_t x = 0; x < W; x++) {
-			lhs.at(y, x) -= rhs.at(y, x);
-		}
+		lhs.rows[y] -= rhs.rows[y];
 	}
 	return lhs;
 }
@@ -682,9 +676,7 @@ template<typename T, uint32_t H, uint32_t W>
 Matrix<T,H,W>& operator*= (Matrix<T,H,W>& lhs, T rhs) noexcept
 {
 	for (uint32_t y = 0; y < H; y++) {
-		for (uint32_t x = 0; x < W; x++) {
-			lhs.at(y, x) *= rhs;
-		}
+		lhs.rows[y] *= rhs;
 	}
 	return lhs;
 }
@@ -735,8 +727,8 @@ template<typename T, uint32_t H, uint32_t W>
 Vector<T,H> operator* (const Matrix<T,H,W>& lhs, const Vector<T,W>& rhs) noexcept
 {
 	Vector<T,H> res;
-	for (uint32_t i = 0; i < H; i++) {
-		res[i] = dot(lhs.rows[i], rhs);
+	for (uint32_t y = 0; y < H; y++) {
+		res[y] = dot(lhs.rows[y], rhs);
 	}
 	return res;
 }
@@ -761,9 +753,7 @@ template<typename T, uint32_t H, uint32_t W>
 bool operator== (const Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexcept
 {
 	for (uint32_t y = 0; y < H; y++) {
-		for (uint32_t x = 0; x < W; x++) {
-			if (lhs.at(y, x) != rhs.at(y, x)) return false;
-		}
+		if (lhs.rows[y] != rhs.rows[y]) return false;
 	}
 	return true;
 }
