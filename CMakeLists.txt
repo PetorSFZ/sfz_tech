@@ -83,7 +83,8 @@ set(SOURCE_ROOT_FILES
 	 ${SOURCE_DIR}/sfz/Assert.cpp
 	${INCLUDE_DIR}/sfz/CudaCompatibility.hpp
 	${INCLUDE_DIR}/sfz/PopWarnings.hpp
-	${INCLUDE_DIR}/sfz/PushWarnings.hpp)
+	${INCLUDE_DIR}/sfz/PushWarnings.hpp
+	${INCLUDE_DIR}/sfz/SimdIntrinsics.hpp)
 source_group(sfz_root FILES ${SOURCE_ROOT_FILES})
 
 set(SOURCE_CONTAINERS_FILES

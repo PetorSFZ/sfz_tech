@@ -508,6 +508,40 @@ Matrix<T,W,H> transpose(const Matrix<T,H,W>& m) noexcept
 	return result;
 }
 
+template<>
+inline mat44 transpose(const mat44& m) noexcept
+{
+#ifdef SFZ_CUDA_DEVICE_CODE
+	mat44 tmp;
+	tmp.setColumn(0, m.row0);
+	tmp.setColumn(1, m.row1);
+	tmp.setColumn(2, m.row2);
+	tmp.setColumn(3, m.row3);
+	return tmp;
+#else
+	// Load matrix rows into SSE registers
+	const __m128 row0 = _mm_load_ps(m.row0.data());
+	const __m128 row1 = _mm_load_ps(m.row1.data());
+	const __m128 row2 = _mm_load_ps(m.row2.data());
+	const __m128 row3 = _mm_load_ps(m.row3.data());
+	
+	// Transpose matrix
+	__m128 col0 = row0;
+	__m128 col1 = row1;
+	__m128 col2 = row2;
+	__m128 col3 = row3;
+	_MM_TRANSPOSE4_PS(col0, col1, col2, col3);
+
+	// Return result
+	mat44 tmp;
+	_mm_store_ps(tmp.row0.data(), col0);
+	_mm_store_ps(tmp.row1.data(), col1);
+	_mm_store_ps(tmp.row2.data(), col2);
+	_mm_store_ps(tmp.row3.data(), col3);
+	return tmp;
+#endif
+}
+
 template<typename T>
 Vector<T,3> transformPoint(const Matrix<T,3,4>& m, const Vector<T,3>& p) noexcept
 {
@@ -731,6 +765,95 @@ Vector<T,H> operator* (const Matrix<T,H,W>& lhs, const Vector<T,W>& rhs) noexcep
 		res[y] = dot(lhs.rows[y], rhs);
 	}
 	return res;
+}
+
+template<>
+inline vec3 operator* (const mat34& lhs, const vec4& rhs) noexcept
+{
+#ifdef SFZ_CUDA_DEVICE_CODE
+	vec3 res;
+	res.x = dot(lhs.row0, rhs);
+	res.y = dot(lhs.row1, rhs);
+	res.z = dot(lhs.row2, rhs);
+	return res;
+#else
+	// Load matrix rows into SSE registers
+	const __m128 row0 = _mm_load_ps(lhs.row0.data());
+	const __m128 row1 = _mm_load_ps(lhs.row1.data());
+	const __m128 row2 = _mm_load_ps(lhs.row2.data());
+	const __m128 row3 = _mm_set1_ps(0.0f);
+	
+	// Transpose matrix
+	__m128 col0 = row0;
+	__m128 col1 = row1;
+	__m128 col2 = row2;
+	__m128 col3 = row3;
+	_MM_TRANSPOSE4_PS(col0, col1, col2, col3);
+
+	// Load vector and replicate each element into all four slots in four vectors
+	const __m128 v = _mm_load_ps(rhs.data());
+	const __m128 vxxxx = replicatePs<0>(v);
+	const __m128 vyyyy = replicatePs<1>(v);
+	const __m128 vzzzz = replicatePs<2>(v);
+	const __m128 vwwww = replicatePs<3>(v);
+
+	// Perform computations
+	const __m128 t0 = _mm_mul_ps(col0, vxxxx);
+	const __m128 t1 = _mm_mul_ps(col1, vyyyy);
+	const __m128 t2 = _mm_mul_ps(col2, vzzzz);
+	const __m128 t3 = _mm_mul_ps(col3, vwwww);
+	const __m128 result = _mm_add_ps(_mm_add_ps(t0, t1), _mm_add_ps(t2, t3));
+	
+	// Return result
+	vec4 tmp;
+	_mm_store_ps(tmp.data(), result);
+	return tmp.xyz;
+#endif
+}
+
+template<>
+inline vec4 operator* (const mat44& lhs, const vec4& rhs) noexcept
+{
+#ifdef SFZ_CUDA_DEVICE_CODE
+	vec4 res;
+	res.x = dot(lhs.row0, rhs);
+	res.y = dot(lhs.row1, rhs);
+	res.z = dot(lhs.row2, rhs);
+	res.w = dot(lhs.row3, rhs);
+	return res;
+#else
+	// Load matrix rows into SSE registers
+	const __m128 row0 = _mm_load_ps(lhs.row0.data());
+	const __m128 row1 = _mm_load_ps(lhs.row1.data());
+	const __m128 row2 = _mm_load_ps(lhs.row2.data());
+	const __m128 row3 = _mm_load_ps(lhs.row3.data());
+	
+	// Transpose matrix
+	__m128 col0 = row0;
+	__m128 col1 = row1;
+	__m128 col2 = row2;
+	__m128 col3 = row3;
+	_MM_TRANSPOSE4_PS(col0, col1, col2, col3);
+
+	// Load vector and replicate each element into all four slots in four vectors
+	const __m128 v = _mm_load_ps(rhs.data());
+	const __m128 vxxxx = replicatePs<0>(v);
+	const __m128 vyyyy = replicatePs<1>(v);
+	const __m128 vzzzz = replicatePs<2>(v);
+	const __m128 vwwww = replicatePs<3>(v);
+
+	// Perform computations
+	const __m128 t0 = _mm_mul_ps(col0, vxxxx);
+	const __m128 t1 = _mm_mul_ps(col1, vyyyy);
+	const __m128 t2 = _mm_mul_ps(col2, vzzzz);
+	const __m128 t3 = _mm_mul_ps(col3, vwwww);
+	const __m128 result = _mm_add_ps(_mm_add_ps(t0, t1), _mm_add_ps(t2, t3));
+	
+	// Return result
+	vec4 tmp;
+	_mm_store_ps(tmp.data(), result);
+	return tmp;
+#endif
 }
 
 template<typename T, uint32_t H, uint32_t W>

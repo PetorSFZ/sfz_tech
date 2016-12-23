@@ -23,6 +23,9 @@
 #include "sfz/Assert.hpp"
 #include "sfz/math/Vector.hpp"
 
+#include "sfz/CudaCompatibility.hpp"
+#include "sfz/SimdIntrinsics.hpp"
+
 namespace sfz {
 
 using std::int32_t;

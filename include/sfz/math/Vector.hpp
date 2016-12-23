@@ -21,9 +21,8 @@
 #include <cstdint>
 #include <cmath> // std::sqrt
 
-#include <immintrin.h> // Intel AVX intrinsics
-
 #include "sfz/CudaCompatibility.hpp"
+#include "sfz/SimdIntrinsics.hpp"
 
 namespace sfz {
 

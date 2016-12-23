@@ -1031,6 +1031,11 @@ TEST_CASE("Arhitmetic operators", "[sfz::Matrix]")
 		REQUIRE(approxEqual(res2.x, 1.0f));
 		REQUIRE(approxEqual(res2.y, -2.0f));
 		REQUIRE(approxEqual(res2.z, 0.0f));
+
+		mat34 m5(1.0f, 2.0f, 3.0f, 4.0f,
+		         5.0f, 6.0f, 7.0f, 8.0f,
+		         9.0f, 10.0f, 11.0f, 12.0f);
+		REQUIRE(approxEqual(m5 * vec4(1.0f), vec3(10.0f, 26.0f, 42.0f)));
 	}
 	SECTION("* (scalar)") {
 		auto res1 = m1 * 2.0f;
@@ -1099,6 +1104,15 @@ TEST_CASE("Transpose", "[sfz::Matrix]")
 	REQUIRE(approxEqual(m2.at(1, 1), 5.0f));
 	REQUIRE(approxEqual(m2.at(2, 0), 3.0f));
 	REQUIRE(approxEqual(m2.at(2, 1), 6.0f));
+
+	mat44 m3(1.0f, 2.0f, 3.0f, 4.0f,
+	         5.0f, 6.0f, 7.0f, 8.0f,
+	         9.0f, 10.0f, 11.0f, 12.0f,
+	         13.0f, 14.0f, 15.0f, 16.0f);
+	REQUIRE(approxEqual(transpose(m3), mat44(1.0f, 5.0f, 9.0f, 13.0f,
+	                                         2.0f, 6.0f, 10.0f, 14.0f,
+	                                         3.0f, 7.0f, 11.0f, 15.0f,
+	                                         4.0f, 8.0f, 12.0f, 16.0f)));
 }
 
 TEST_CASE("Transforming 3D vector with 3x4 and 4x4 matrix", "[sfz::MatrixSupport]")
