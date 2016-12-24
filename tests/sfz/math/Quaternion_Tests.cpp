@@ -16,12 +16,40 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#pragma once
+#include "sfz/PushWarnings.hpp"
+#include "catch.hpp"
+#include "sfz/PopWarnings.hpp"
 
-#include "sfz/math/MathPrimitiveHashers.hpp"
-#include "sfz/math/MathPrimitiveToStrings.hpp"
-#include "sfz/math/MathSupport.hpp"
-#include "sfz/math/Matrix.hpp"
-#include "sfz/math/ProjectionMatrices.hpp"
 #include "sfz/math/Quaternion.hpp"
-#include "sfz/math/Vector.hpp"
+
+using namespace sfz;
+
+TEST_CASE("Quaternion Constructors", "[sfz::Quaternion]")
+{
+	SECTION("(a,b,c,d) constructor") {
+		Quaternion q(1.0f, 2.0f, 3.0f, 4.0f);
+		REQUIRE(q.a == 1.0f);
+		REQUIRE(q.b == 2.0f);
+		REQUIRE(q.c == 3.0f);
+		REQUIRE(q.d == 4.0f);
+	}
+}
+
+TEST_CASE("Quaternion Operators", "[sfz::Quaternion]")
+{
+	Quaternion q1(1.0f, 2.0f, 3.0f, 4.0f), q2(-1.0f, 3.0f, 1.0f, 6.0f);
+
+	SECTION("Equality operators") {
+		REQUIRE(q1 == Quaternion(1.0f, 2.0f, 3.0f, 4.0f));
+		REQUIRE(q2 == Quaternion(-1.0f, 3.0f, 1.0f, 6.0f));
+		REQUIRE(q1 != q2);
+	}
+	SECTION("+ operator") {
+		Quaternion r1 = q1 + q2;
+		REQUIRE(r1 == Quaternion(0.0f, 5.0f, 4.0f, 10.0f));
+	}
+	SECTION("- operator") {
+		Quaternion r1 = q1 - q2;
+		REQUIRE(r1 == Quaternion(2.0f, -1.0f, 2.0f, -2.0f));
+	}
+}

@@ -143,6 +143,8 @@ set(SOURCE_MATH_FILES
 	${INCLUDE_DIR}/sfz/math/Matrix.inl
 	${INCLUDE_DIR}/sfz/math/ProjectionMatrices.hpp
 	 ${SOURCE_DIR}/sfz/math/ProjectionMatrices.cpp
+	${INCLUDE_DIR}/sfz/math/Quaternion.hpp
+	${INCLUDE_DIR}/sfz/math/Quaternion.inl
 	${INCLUDE_DIR}/sfz/math/Vector.hpp
 	${INCLUDE_DIR}/sfz/math/Vector.inl)
 source_group(sfz_math FILES ${SOURCE_MATH_FILES})
@@ -266,7 +268,8 @@ if(SFZ_CORE_BUILD_TESTS)
 		${TESTS_DIR}/sfz/math/MathPrimitiveHashers_Tests.cpp
 		${TESTS_DIR}/sfz/math/MathSupport_Tests.cpp
 		${TESTS_DIR}/sfz/math/Matrix_Tests.cpp
-		${TESTS_DIR}/sfz/math/Vector_Tests.cpp)
+		${TESTS_DIR}/sfz/math/Vector_Tests.cpp
+		${TESTS_DIR}/sfz/math/Quaternion_Tests.cpp)
 	source_group(sfz_math FILES ${MATH_TEST_FILES})
 	
 	set(MEMORY_TEST_FILES
