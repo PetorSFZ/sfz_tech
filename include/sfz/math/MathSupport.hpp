@@ -27,6 +27,7 @@
 #include "sfz/CudaCompatibility.hpp"
 #include "sfz/math/Matrix.hpp"
 #include "sfz/math/Vector.hpp"
+#include "sfz/math/Quaternion.hpp"
 
 namespace sfz {
 
@@ -56,6 +57,8 @@ SFZ_CUDA_CALL bool approxEqual(vec4 lhs, vec4 rhs, float epsilon = APPROX_EQUAL_
 template<uint32_t M, uint32_t N>
 SFZ_CUDA_CALL bool approxEqual(const Matrix<float,M,N>& lhs, const Matrix<float,M,N>& rhs,
                                float epsilon = APPROX_EQUAL_EPS) noexcept;
+
+SFZ_CUDA_CALL bool approxEqual(Quaternion lhs, Quaternion rhs, float epsilon = APPROX_EQUAL_EPS) noexcept;
 
 // abs()
 // ------------------------------------------------------------------------------------------------

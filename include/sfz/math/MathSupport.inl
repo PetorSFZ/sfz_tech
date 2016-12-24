@@ -59,6 +59,14 @@ SFZ_CUDA_CALL bool approxEqual(const Matrix<float,M,N>& lhs, const Matrix<float,
 	return true;
 }
 
+SFZ_CUDA_CALL bool approxEqual(Quaternion lhs, Quaternion rhs, float epsilon) noexcept
+{
+	return approxEqual(lhs.a, rhs.a, epsilon)
+	    && approxEqual(lhs.b, rhs.b, epsilon)
+	    && approxEqual(lhs.c, rhs.c, epsilon)
+	    && approxEqual(lhs.d, rhs.d, epsilon);
+}
+
 // abs()
 // ------------------------------------------------------------------------------------------------
 

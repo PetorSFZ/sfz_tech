@@ -21,6 +21,7 @@
 #include "sfz/PopWarnings.hpp"
 
 #include "sfz/math/Quaternion.hpp"
+#include "sfz/math/MathSupport.hpp"
 
 using namespace sfz;
 
@@ -28,10 +29,7 @@ TEST_CASE("Quaternion Constructors", "[sfz::Quaternion]")
 {
 	SECTION("(a,b,c,d) constructor") {
 		Quaternion q(1.0f, 2.0f, 3.0f, 4.0f);
-		REQUIRE(q.a == 1.0f);
-		REQUIRE(q.b == 2.0f);
-		REQUIRE(q.c == 3.0f);
-		REQUIRE(q.d == 4.0f);
+		REQUIRE(approxEqual(q, Quaternion(1.0f, 2.0f, 3.0f, 4.0f)));
 	}
 }
 
@@ -46,10 +44,10 @@ TEST_CASE("Quaternion Operators", "[sfz::Quaternion]")
 	}
 	SECTION("+ operator") {
 		Quaternion r1 = q1 + q2;
-		REQUIRE(r1 == Quaternion(0.0f, 5.0f, 4.0f, 10.0f));
+		REQUIRE(approxEqual(r1, Quaternion(0.0f, 5.0f, 4.0f, 10.0f)));
 	}
 	SECTION("- operator") {
 		Quaternion r1 = q1 - q2;
-		REQUIRE(r1 == Quaternion(2.0f, -1.0f, 2.0f, -2.0f));
+		REQUIRE(approxEqual(r1, Quaternion(2.0f, -1.0f, 2.0f, -2.0f)));
 	}
 }

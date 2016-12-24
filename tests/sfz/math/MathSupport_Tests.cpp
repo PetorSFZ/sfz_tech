@@ -24,6 +24,51 @@
 
 using namespace sfz;
 
+TEST_CASE("approxEqual()", "[sfz::MathSupport]")
+{
+	SECTION("float") {
+		REQUIRE(approxEqual(2.0f, 2.0f + (APPROX_EQUAL_EPS * 0.95f)));
+		REQUIRE(!approxEqual(2.0f, 2.0f + (APPROX_EQUAL_EPS * 1.05f)));
+		REQUIRE(approxEqual(2.0f, 2.0f - (APPROX_EQUAL_EPS * 0.95f)));
+		REQUIRE(!approxEqual(2.0f, 2.0f - (APPROX_EQUAL_EPS * 1.05f)));
+	}
+	SECTION("vec2") {
+		REQUIRE(approxEqual(vec2(2.0f), vec2(2.0f + (APPROX_EQUAL_EPS * 0.95f))));
+		REQUIRE(!approxEqual(vec2(2.0f), vec2(2.0f + (APPROX_EQUAL_EPS * 1.05f))));
+		REQUIRE(approxEqual(vec2(2.0f), vec2(2.0f - (APPROX_EQUAL_EPS * 0.95f))));
+		REQUIRE(!approxEqual(vec2(2.0f), vec2(2.0f - (APPROX_EQUAL_EPS * 1.05f))));
+	}
+	SECTION("vec3") {
+		REQUIRE(approxEqual(vec3(2.0f), vec3(2.0f + (APPROX_EQUAL_EPS * 0.95f))));
+		REQUIRE(!approxEqual(vec3(2.0f), vec3(2.0f + (APPROX_EQUAL_EPS * 1.05f))));
+		REQUIRE(approxEqual(vec3(2.0f), vec3(2.0f - (APPROX_EQUAL_EPS * 0.95f))));
+		REQUIRE(!approxEqual(vec3(2.0f), vec3(2.0f - (APPROX_EQUAL_EPS * 1.05f))));
+	}
+	SECTION("vec4") {
+		REQUIRE(approxEqual(vec4(2.0f), vec4(2.0f + (APPROX_EQUAL_EPS * 0.95f))));
+		REQUIRE(!approxEqual(vec4(2.0f), vec4(2.0f + (APPROX_EQUAL_EPS * 1.05f))));
+		REQUIRE(approxEqual(vec4(2.0f), vec4(2.0f - (APPROX_EQUAL_EPS * 0.95f))));
+		REQUIRE(!approxEqual(vec4(2.0f), vec4(2.0f - (APPROX_EQUAL_EPS * 1.05f))));
+	}
+	SECTION("mat44") {
+		REQUIRE(approxEqual(mat44::fill(2.0f), mat44::fill(2.0f + (APPROX_EQUAL_EPS * 0.95f))));
+		REQUIRE(!approxEqual(mat44::fill(2.0f), mat44::fill(2.0f + (APPROX_EQUAL_EPS * 1.05f))));
+		REQUIRE(approxEqual(mat44::fill(2.0f), mat44::fill(2.0f - (APPROX_EQUAL_EPS * 0.95f))));
+		REQUIRE(!approxEqual(mat44::fill(2.0f), mat44::fill(2.0f - (APPROX_EQUAL_EPS * 1.05f))));
+	}
+	SECTION("Quaternion") {
+		float base = 2.0;
+		float lowOut = base - (APPROX_EQUAL_EPS * 1.05f);
+		float lowIn = base - (APPROX_EQUAL_EPS * 0.95f);
+		float highIn = base + (APPROX_EQUAL_EPS * 0.95f);
+		float highOut = base + (APPROX_EQUAL_EPS * 1.05f);
+		REQUIRE(!approxEqual(Quaternion(base, base, base, base), Quaternion(lowOut, lowOut, lowOut, lowOut)));
+		REQUIRE(approxEqual(Quaternion(base, base, base, base), Quaternion(lowIn, lowIn, lowIn, lowIn)));
+		REQUIRE(approxEqual(Quaternion(base, base, base, base), Quaternion(highIn, highIn, highIn, highIn)));
+		REQUIRE(!approxEqual(Quaternion(base, base, base, base), Quaternion(highOut, highOut, highOut, highOut)));
+	}
+}
+
 TEST_CASE("abs()", "[sfz::MathSupport]")
 {
 	SECTION("Integer variant") {
