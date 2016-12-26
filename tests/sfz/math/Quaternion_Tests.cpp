@@ -35,6 +35,14 @@ TEST_CASE("Quaternion Constructors", "[sfz::Quaternion]")
 		Quaternion q(vec3(4.0f, 3.0f, 2.0f), 1.0f);
 		REQUIRE(approxEqual(q, Quaternion(4.0f, 3.0f, 2.0f, 1.0f)));
 	}
+	SECTION("identity() constructor function") {
+		Quaternion q = Quaternion::identity();
+		REQUIRE(approxEqual(q, Quaternion(0.0f, 0.0f, 0.0f, 1.0f)));
+		REQUIRE(approxEqual(q * q, Quaternion(0.0f, 0.0f, 0.0f, 1.0f)));
+		Quaternion q2(1.0f, 2.0f, 3.0f, 4.0f);
+		REQUIRE(approxEqual(q * q2, q2));
+		REQUIRE(approxEqual(q2 * q, q2));
+	}
 }
 
 TEST_CASE("Quaternion Operators", "[sfz::Quaternion]")

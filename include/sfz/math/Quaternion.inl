@@ -31,8 +31,13 @@ SFZ_CUDA_CALL Quaternion::Quaternion(float x, float y, float z, float w) noexcep
 
 SFZ_CUDA_CALL Quaternion::Quaternion(vec3 v, float w) noexcept
 :
-	v(v), w(w)
+	x(v.x), y(v.y), z(v.z), w(w)
 { }
+
+SFZ_CUDA_CALL Quaternion Quaternion::identity() noexcept
+{
+	return Quaternion(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 // Quaternion functions
 // ------------------------------------------------------------------------------------------------

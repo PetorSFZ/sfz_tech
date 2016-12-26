@@ -56,6 +56,9 @@ struct alignas(16) Quaternion final {
 
 	SFZ_CUDA_CALL Quaternion(float x, float y, float z, float w) noexcept;
 	SFZ_CUDA_CALL Quaternion(vec3 v, float w) noexcept;
+
+	/// Creates an identity quaternion representing a non-rotation, i.e. [0, 0, 0, 1]
+	static SFZ_CUDA_CALL Quaternion identity() noexcept;
 };
 
 static_assert(sizeof(Quaternion) == sizeof(float) * 4, "Quaternion is padded");
@@ -63,6 +66,10 @@ static_assert(sizeof(Quaternion) == sizeof(float) * 4, "Quaternion is padded");
 // Quaternion functions
 // ------------------------------------------------------------------------------------------------
 
+
+
+/// Calculates the conjugate quaternion, i.e. [-v, w]. If the quaternion is unit length this is
+/// the same as the inverse.
 SFZ_CUDA_CALL Quaternion conjugate(const Quaternion& q) noexcept;
 
 // Operators (comparison)
