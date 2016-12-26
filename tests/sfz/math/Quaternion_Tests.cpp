@@ -54,4 +54,15 @@ TEST_CASE("Quaternion Operators", "[sfz::Quaternion]")
 		Quaternion r1 = q1 - q2;
 		REQUIRE(approxEqual(r1, Quaternion(2.0f, -1.0f, 2.0f, -2.0f)));
 	}
+	SECTION("* operator") {
+		Quaternion l1(1.0f, 2.0f, 3.0f, 4.0f);
+		Quaternion r1(5.0f, 6.0f, 7.0f, 8.0f);
+		REQUIRE(approxEqual(l1 * r1, Quaternion(24.0f, 48.0f, 48.0f, -6.0f)));
+		REQUIRE(approxEqual(r1 * l1, Quaternion(32.0f, 32.0f, 56.0f, -6.0f)));
+
+		Quaternion l2(-1.0f, -4.0f, -2.0f, 6.0f);
+		Quaternion r2(-2.0f, 2.0f, -5.0f, 1.0f);
+		REQUIRE(approxEqual(l2 * r2, Quaternion(11.0f, 7.0f, -42.0f, 2.0f)));
+		REQUIRE(approxEqual(r2 * l2, Quaternion(-37.0f, 9.0f, -22.0f, 2.0f)));
+	}
 }

@@ -62,6 +62,15 @@ SFZ_CUDA_CALL Quaternion& operator-= (Quaternion& left, const Quaternion& right)
 	return left;
 }
 
+SFZ_CUDA_CALL Quaternion& operator*= (Quaternion& left, const Quaternion& right) noexcept
+{
+	Quaternion tmp;
+	tmp.v = cross(left.v, right.v) + right.w * left.v + left.w * right.v;
+	tmp.w = left.w * right.w - dot(left.v, right.v);
+	left = tmp;
+	return left;
+}
+
 // Quaternion:Operators (arithmetic)
 // ------------------------------------------------------------------------------------------------
 
@@ -75,6 +84,12 @@ SFZ_CUDA_CALL Quaternion operator- (const Quaternion& left, const Quaternion& ri
 {
 	Quaternion tmp = left;
 	return tmp -= right;
+}
+
+SFZ_CUDA_CALL Quaternion operator* (const Quaternion& left, const Quaternion& right) noexcept
+{
+	Quaternion tmp = left;
+	return tmp *= right;
 }
 
 } // namespace sfz

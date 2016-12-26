@@ -71,12 +71,14 @@ SFZ_CUDA_CALL bool operator!= (const Quaternion& lhs, const Quaternion& rhs) noe
 
 SFZ_CUDA_CALL Quaternion& operator+= (Quaternion& left, const Quaternion& right) noexcept;
 SFZ_CUDA_CALL Quaternion& operator-= (Quaternion& left, const Quaternion& right) noexcept;
+SFZ_CUDA_CALL Quaternion& operator*= (Quaternion& left, const Quaternion& right) noexcept;
 
 // Operators (arithmetic)
 // ------------------------------------------------------------------------------------------------
 
 SFZ_CUDA_CALL Quaternion operator+ (const Quaternion& left, const Quaternion& right) noexcept;
 SFZ_CUDA_CALL Quaternion operator- (const Quaternion& left, const Quaternion& right) noexcept;
+SFZ_CUDA_CALL Quaternion operator* (const Quaternion& left, const Quaternion& right) noexcept;
 
 } // namespace sfz
 
