@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "sfz/math/Vector.hpp"
+
 #include "sfz/CudaCompatibility.hpp"
 
 namespace sfz {
@@ -25,13 +27,24 @@ namespace sfz {
 // Quaternion struct
 // ------------------------------------------------------------------------------------------------
 
-struct Quaternion final {
-	
+struct alignas(16) Quaternion final {
+
 	// Members
 	// --------------------------------------------------------------------------------------------
 
-	/// a + b*i + c*j + d*k
-	float a, b, c, d;
+	/// i*x + j*y + k*z + w
+	/// or
+	/// [v, w], v = [x, y, z] in the imaginary space, w is scalar real part
+	/// where
+	/// i² = j² = k² = -1
+	/// j*k = -k*j = i
+	/// k*i = -i*k = j
+	/// i*j = -j*i = k
+	union {
+		struct { float x, y, z, w; };
+		struct { vec3 v; float wAlias; };
+		vec4 vector;
+	};
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -41,8 +54,11 @@ struct Quaternion final {
 	Quaternion& operator= (const Quaternion&) noexcept = default;
 	~Quaternion() noexcept = default;
 
-	SFZ_CUDA_CALL Quaternion(float a, float b, float c, float d) noexcept;
+	SFZ_CUDA_CALL Quaternion(float x, float y, float z, float w) noexcept;
+	SFZ_CUDA_CALL Quaternion(vec3 v, float w) noexcept;
 };
+
+static_assert(sizeof(Quaternion) == sizeof(float) * 4, "Quaternion is padded");
 
 // Operators (comparison)
 // ------------------------------------------------------------------------------------------------

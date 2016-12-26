@@ -27,9 +27,13 @@ using namespace sfz;
 
 TEST_CASE("Quaternion Constructors", "[sfz::Quaternion]")
 {
-	SECTION("(a,b,c,d) constructor") {
+	SECTION("(x,y,z,w) constructor") {
 		Quaternion q(1.0f, 2.0f, 3.0f, 4.0f);
 		REQUIRE(approxEqual(q, Quaternion(1.0f, 2.0f, 3.0f, 4.0f)));
+	}
+	SECTION("(v,w) constructor") {
+		Quaternion q(vec3(4.0f, 3.0f, 2.0f), 1.0f);
+		REQUIRE(approxEqual(q, Quaternion(4.0f, 3.0f, 2.0f, 1.0f)));
 	}
 }
 

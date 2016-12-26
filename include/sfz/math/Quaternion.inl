@@ -21,12 +21,17 @@ namespace sfz {
 // Quaternion: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-SFZ_CUDA_CALL Quaternion::Quaternion(float a, float b, float c, float d) noexcept
+SFZ_CUDA_CALL Quaternion::Quaternion(float x, float y, float z, float w) noexcept
 :
-	a(a),
-	b(b),
-	c(c),
-	d(d)
+	x(x),
+	y(y),
+	z(z),
+	w(w)
+{ }
+
+SFZ_CUDA_CALL Quaternion::Quaternion(vec3 v, float w) noexcept
+:
+	v(v), wAlias(w)
 { }
 
 // Quaternion:Operators (comparison)
@@ -34,7 +39,7 @@ SFZ_CUDA_CALL Quaternion::Quaternion(float a, float b, float c, float d) noexcep
 
 SFZ_CUDA_CALL bool operator== (const Quaternion& lhs, const Quaternion& rhs) noexcept
 {
-	return lhs.a == rhs.a && lhs.b == rhs.b && lhs.c == rhs.c && lhs.d == rhs.d;
+	return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z && lhs.w == rhs.w;
 }
 
 SFZ_CUDA_CALL bool operator!= (const Quaternion& lhs, const Quaternion& rhs) noexcept
@@ -47,19 +52,13 @@ SFZ_CUDA_CALL bool operator!= (const Quaternion& lhs, const Quaternion& rhs) noe
 
 SFZ_CUDA_CALL Quaternion& operator+= (Quaternion& left, const Quaternion& right) noexcept
 {
-	left.a += right.a;
-	left.b += right.b;
-	left.c += right.c;
-	left.d += right.d;
+	left.vector += right.vector;
 	return left;
 }
 
 SFZ_CUDA_CALL Quaternion& operator-= (Quaternion& left, const Quaternion& right) noexcept
 {
-	left.a -= right.a;
-	left.b -= right.b;
-	left.c -= right.c;
-	left.d -= right.d;
+	left.vector -= right.vector;
 	return left;
 }
 
