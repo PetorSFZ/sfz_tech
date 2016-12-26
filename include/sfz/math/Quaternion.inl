@@ -42,6 +42,11 @@ SFZ_CUDA_CALL Quaternion Quaternion::identity() noexcept
 // Quaternion functions
 // ------------------------------------------------------------------------------------------------
 
+SFZ_CUDA_CALL float length(const Quaternion& q) noexcept
+{
+	return length(q.vector);
+}
+
 SFZ_CUDA_CALL Quaternion conjugate(const Quaternion& q) noexcept
 {
 	return Quaternion(-q.v, q.w);

@@ -77,6 +77,9 @@ TEST_CASE("Quaternion Operators", "[sfz::Quaternion]")
 
 TEST_CASE("Quaternion functions", "[sfz::Quaternion]")
 {
+	SECTION("length()") {
+		REQUIRE(approxEqual(length(Quaternion::identity()), 1.0f));
+	}
 	SECTION("conjugate()") {
 		Quaternion q = conjugate(Quaternion(1.0f, 2.0f, 3.0f, 4.0f));
 		REQUIRE(approxEqual(q, Quaternion(-1.0f, -2.0f, -3.0f, 4.0f)));
