@@ -31,8 +31,16 @@ SFZ_CUDA_CALL Quaternion::Quaternion(float x, float y, float z, float w) noexcep
 
 SFZ_CUDA_CALL Quaternion::Quaternion(vec3 v, float w) noexcept
 :
-	v(v), wAlias(w)
+	v(v), w(w)
 { }
+
+// Quaternion functions
+// ------------------------------------------------------------------------------------------------
+
+SFZ_CUDA_CALL Quaternion conjugate(const Quaternion& q) noexcept
+{
+	return Quaternion(-q.v, q.w);
+}
 
 // Quaternion:Operators (comparison)
 // ------------------------------------------------------------------------------------------------

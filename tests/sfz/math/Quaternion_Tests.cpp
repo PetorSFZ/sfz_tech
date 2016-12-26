@@ -66,3 +66,11 @@ TEST_CASE("Quaternion Operators", "[sfz::Quaternion]")
 		REQUIRE(approxEqual(r2 * l2, Quaternion(-37.0f, 9.0f, -22.0f, 2.0f)));
 	}
 }
+
+TEST_CASE("Quaternion functions", "[sfz::Quaternion]")
+{
+	SECTION("conjugate()") {
+		Quaternion q = conjugate(Quaternion(1.0f, 2.0f, 3.0f, 4.0f));
+		REQUIRE(approxEqual(q, Quaternion(-1.0f, -2.0f, -3.0f, 4.0f)));
+	}
+}

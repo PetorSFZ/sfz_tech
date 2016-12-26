@@ -42,7 +42,7 @@ struct alignas(16) Quaternion final {
 	/// i*j = -j*i = k
 	union {
 		struct { float x, y, z, w; };
-		struct { vec3 v; float wAlias; };
+		struct { vec3 v; };
 		vec4 vector;
 	};
 
@@ -59,6 +59,11 @@ struct alignas(16) Quaternion final {
 };
 
 static_assert(sizeof(Quaternion) == sizeof(float) * 4, "Quaternion is padded");
+
+// Quaternion functions
+// ------------------------------------------------------------------------------------------------
+
+SFZ_CUDA_CALL Quaternion conjugate(const Quaternion& q) noexcept;
 
 // Operators (comparison)
 // ------------------------------------------------------------------------------------------------
