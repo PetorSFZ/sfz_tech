@@ -62,7 +62,7 @@ TEST_CASE("Quaternion Operators", "[sfz::Quaternion]")
 		Quaternion r1 = q1 - q2;
 		REQUIRE(approxEqual(r1, Quaternion(2.0f, -1.0f, 2.0f, -2.0f)));
 	}
-	SECTION("* operator") {
+	SECTION("* operator (Quaternion)") {
 		Quaternion l1(1.0f, 2.0f, 3.0f, 4.0f);
 		Quaternion r1(5.0f, 6.0f, 7.0f, 8.0f);
 		REQUIRE(approxEqual(l1 * r1, Quaternion(24.0f, 48.0f, 48.0f, -6.0f)));
@@ -72,6 +72,10 @@ TEST_CASE("Quaternion Operators", "[sfz::Quaternion]")
 		Quaternion r2(-2.0f, 2.0f, -5.0f, 1.0f);
 		REQUIRE(approxEqual(l2 * r2, Quaternion(11.0f, 7.0f, -42.0f, 2.0f)));
 		REQUIRE(approxEqual(r2 * l2, Quaternion(-37.0f, 9.0f, -22.0f, 2.0f)));
+	}
+	SECTION("* operator (scalar)") {
+		REQUIRE(approxEqual(2.0f * q1, Quaternion(2.0f, 4.0f, 6.0f, 8.0f)));
+		REQUIRE(approxEqual(q1 * 2.0f, Quaternion(2.0f, 4.0f, 6.0f, 8.0f)));
 	}
 }
 
@@ -83,5 +87,9 @@ TEST_CASE("Quaternion functions", "[sfz::Quaternion]")
 	SECTION("conjugate()") {
 		Quaternion q = conjugate(Quaternion(1.0f, 2.0f, 3.0f, 4.0f));
 		REQUIRE(approxEqual(q, Quaternion(-1.0f, -2.0f, -3.0f, 4.0f)));
+	}
+	SECTION("inverse()") {
+		Quaternion q = inverse(Quaternion(1.0f, 2.0f, 3.0f, 4.0f));
+		REQUIRE(approxEqual(q, Quaternion(-1.0f / 30.0f, -1.0f / 15.0f, -1.0f / 10.0f, 2.0f / 15.0f)));
 	}
 }

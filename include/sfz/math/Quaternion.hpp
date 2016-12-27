@@ -74,6 +74,11 @@ SFZ_CUDA_CALL float length(const Quaternion& q) noexcept;
 /// the same as the inverse.
 SFZ_CUDA_CALL Quaternion conjugate(const Quaternion& q) noexcept;
 
+/// Calculates the inverse for any Quaternion, i.e. (1 / length(q)²) * conjugate(q). For unit
+/// Quaternions (which should be the most common case) the conjugate() function should be used
+/// instead as it is way faster.
+SFZ_CUDA_CALL Quaternion inverse(const Quaternion& q) noexcept;
+
 // Operators (comparison)
 // ------------------------------------------------------------------------------------------------
 
@@ -86,6 +91,7 @@ SFZ_CUDA_CALL bool operator!= (const Quaternion& lhs, const Quaternion& rhs) noe
 SFZ_CUDA_CALL Quaternion& operator+= (Quaternion& left, const Quaternion& right) noexcept;
 SFZ_CUDA_CALL Quaternion& operator-= (Quaternion& left, const Quaternion& right) noexcept;
 SFZ_CUDA_CALL Quaternion& operator*= (Quaternion& left, const Quaternion& right) noexcept;
+SFZ_CUDA_CALL Quaternion& operator*= (Quaternion& q, float scalar) noexcept;
 
 // Operators (arithmetic)
 // ------------------------------------------------------------------------------------------------
@@ -93,6 +99,8 @@ SFZ_CUDA_CALL Quaternion& operator*= (Quaternion& left, const Quaternion& right)
 SFZ_CUDA_CALL Quaternion operator+ (const Quaternion& left, const Quaternion& right) noexcept;
 SFZ_CUDA_CALL Quaternion operator- (const Quaternion& left, const Quaternion& right) noexcept;
 SFZ_CUDA_CALL Quaternion operator* (const Quaternion& left, const Quaternion& right) noexcept;
+SFZ_CUDA_CALL Quaternion operator* (const Quaternion& q, float scalar) noexcept;
+SFZ_CUDA_CALL Quaternion operator* (float scalar, const Quaternion& q) noexcept;
 
 } // namespace sfz
 

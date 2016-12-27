@@ -52,6 +52,11 @@ SFZ_CUDA_CALL Quaternion conjugate(const Quaternion& q) noexcept
 	return Quaternion(-q.v, q.w);
 }
 
+SFZ_CUDA_CALL Quaternion inverse(const Quaternion& q) noexcept
+{
+	return (1.0f / dot(q.vector, q.vector)) * conjugate(q);
+}
+
 // Quaternion:Operators (comparison)
 // ------------------------------------------------------------------------------------------------
 
@@ -89,6 +94,12 @@ SFZ_CUDA_CALL Quaternion& operator*= (Quaternion& left, const Quaternion& right)
 	return left;
 }
 
+SFZ_CUDA_CALL Quaternion& operator*= (Quaternion& q, float scalar) noexcept
+{
+	q.vector *= scalar;
+	return q;
+}
+
 // Quaternion:Operators (arithmetic)
 // ------------------------------------------------------------------------------------------------
 
@@ -108,6 +119,18 @@ SFZ_CUDA_CALL Quaternion operator* (const Quaternion& left, const Quaternion& ri
 {
 	Quaternion tmp = left;
 	return tmp *= right;
+}
+
+SFZ_CUDA_CALL Quaternion operator* (const Quaternion& q, float scalar) noexcept
+{
+	Quaternion tmp = q;
+	return tmp *= scalar;
+}
+
+SFZ_CUDA_CALL Quaternion operator* (float scalar, const Quaternion& q) noexcept
+{
+	Quaternion tmp = q;
+	return tmp *= scalar;
 }
 
 } // namespace sfz
