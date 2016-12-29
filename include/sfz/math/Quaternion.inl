@@ -39,6 +39,18 @@ SFZ_CUDA_CALL Quaternion Quaternion::identity() noexcept
 	return Quaternion(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
+SFZ_CUDA_CALL Quaternion Quaternion::rotation(vec3 axis, float angleDeg) noexcept
+{
+	using std::sin;
+	using std::cos;
+	const float DEG_ANGLE_TO_RAD_HALF_ANGLE = (3.14159265358979323846f / 180.0f) / 2.0f;
+
+	const float halfAngleRad = angleDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE;
+	const vec3 normalizedAxis = normalize(axis);
+	
+	return Quaternion(sin(halfAngleRad) * normalizedAxis, cos(halfAngleRad));
+}
+
 // Quaternion functions
 // ------------------------------------------------------------------------------------------------
 
@@ -55,6 +67,20 @@ SFZ_CUDA_CALL Quaternion conjugate(const Quaternion& q) noexcept
 SFZ_CUDA_CALL Quaternion inverse(const Quaternion& q) noexcept
 {
 	return (1.0f / dot(q.vector, q.vector)) * conjugate(q);
+}
+
+SFZ_CUDA_CALL vec3 rotate(Quaternion q, vec3 v) noexcept
+{
+	return rotate(q, v, conjugate(q));
+}
+
+SFZ_CUDA_CALL vec3 rotate(Quaternion q, vec3 v, Quaternion qInv) noexcept
+{
+	Quaternion tmp;
+	tmp.v = v;
+	tmp.w = 0.0f;
+	tmp = q * tmp * qInv;
+	return tmp.v;
 }
 
 // Quaternion:Operators (comparison)

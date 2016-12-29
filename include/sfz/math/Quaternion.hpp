@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <cmath>
+
 #include "sfz/math/Vector.hpp"
 
 #include "sfz/CudaCompatibility.hpp"
@@ -59,6 +61,10 @@ struct alignas(16) Quaternion final {
 
 	/// Creates an identity quaternion representing a non-rotation, i.e. [0, 0, 0, 1]
 	static SFZ_CUDA_CALL Quaternion identity() noexcept;
+
+	/// Creates a unit quaternion representing a (right-handed) rotation around the specified axis.
+	/// The given axis will be automatically normalized.
+	static SFZ_CUDA_CALL Quaternion rotation(vec3 axis, float angleDeg) noexcept;
 };
 
 static_assert(sizeof(Quaternion) == sizeof(float) * 4, "Quaternion is padded");
@@ -78,6 +84,13 @@ SFZ_CUDA_CALL Quaternion conjugate(const Quaternion& q) noexcept;
 /// Quaternions (which should be the most common case) the conjugate() function should be used
 /// instead as it is way faster.
 SFZ_CUDA_CALL Quaternion inverse(const Quaternion& q) noexcept;
+
+/// Rotates a vector with the specified Quaternion, using q * v * qInv. Either the inverse can
+/// be specified manually, or it can be calculated automatically from the given Quaternion. When
+/// it is calculated automatically it is assumed that the Quaternion is unit, so the inverse is
+/// the conjugate.
+SFZ_CUDA_CALL vec3 rotate(Quaternion q, vec3 v) noexcept;
+SFZ_CUDA_CALL vec3 rotate(Quaternion q, vec3 v, Quaternion qInv) noexcept;
 
 // Operators (comparison)
 // ------------------------------------------------------------------------------------------------

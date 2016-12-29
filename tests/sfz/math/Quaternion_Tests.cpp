@@ -43,6 +43,14 @@ TEST_CASE("Quaternion Constructors", "[sfz::Quaternion]")
 		REQUIRE(approxEqual(q * q2, q2));
 		REQUIRE(approxEqual(q2 * q, q2));
 	}
+	SECTION("rotation() constructor function") {
+		float angle = 60.0f;
+		float halfAngleRad = (angle * DEG_TO_RAD) / 2.0f;
+		vec3 axis = normalize(vec3(0.25f, 1.0f, 1.2f));
+		Quaternion rot1(std::sin(halfAngleRad) * axis, std::cos(halfAngleRad));
+		Quaternion rot2 = Quaternion::rotation(axis, angle);
+		REQUIRE(approxEqual(rot1, rot2));
+	}
 }
 
 TEST_CASE("Quaternion Operators", "[sfz::Quaternion]")
@@ -91,5 +99,15 @@ TEST_CASE("Quaternion functions", "[sfz::Quaternion]")
 	SECTION("inverse()") {
 		Quaternion q = inverse(Quaternion(1.0f, 2.0f, 3.0f, 4.0f));
 		REQUIRE(approxEqual(q, Quaternion(-1.0f / 30.0f, -1.0f / 15.0f, -1.0f / 10.0f, 2.0f / 15.0f)));
+	}
+	SECTION("rotate()") {
+		float halfAngle1 = (90.0f * DEG_TO_RAD) / 2.0f;
+		Quaternion rot1(std::sin(halfAngle1) * vec3(0.0f, 1.0f, 0.0f), std::cos(halfAngle1));
+		vec3 p = rotate(rot1, vec3(1.0f, 0.0f, 0.0f));
+		REQUIRE(approxEqual(p, vec3(0.0f, 0.0f, -1.0f)));
+
+		Quaternion rot2 = Quaternion::rotation(vec3(0.0f, 0.0f, 1.0f), 90.0f);
+		vec3 p2 = rotate(rot2, vec3(1.0f, 0.0f, 0.0f));
+		REQUIRE(approxEqual(p2, vec3(0.0f, 1.0f, 0.0f)));
 	}
 }
