@@ -51,6 +51,62 @@ SFZ_CUDA_CALL Quaternion Quaternion::rotation(vec3 axis, float angleDeg) noexcep
 	return Quaternion(sin(halfAngleRad) * normalizedAxis, cos(halfAngleRad));
 }
 
+// Quaternion: Matrix conversion methods
+// ------------------------------------------------------------------------------------------------
+
+SFZ_CUDA_CALL mat33 Quaternion::toMat33() const noexcept
+{
+	// Algorithm from Real-Time Rendering, page 76
+	return mat33(1.0f - 2.0f*(y*y + z*z),  2.0f*(x*y - w*z),         2.0f*(x*z + w*y),
+	             2.0f*(x*y + w*z),         1.0f - 2.0f*(x*x + z*z),  2.0f*(y*z - w*x),
+	             2.0f*(x*z - w*y),         2.0f*(y*z + w*x),         1.0f - 2.0f*(x*x + y*y));
+}
+
+SFZ_CUDA_CALL mat34 Quaternion::toMat34() const noexcept
+{
+	// Algorithm from Real-Time Rendering, page 76
+	return mat34(1.0f - 2.0f*(y*y + z*z),  2.0f*(x*y - w*z),         2.0f*(x*z + w*y),         0.0f,
+	             2.0f*(x*y + w*z),         1.0f - 2.0f*(x*x + z*z),  2.0f*(y*z - w*x),         0.0f,
+	             2.0f*(x*z - w*y),         2.0f*(y*z + w*x),         1.0f - 2.0f*(x*x + y*y),  0.0f);
+}
+
+SFZ_CUDA_CALL mat44 Quaternion::toMat44() const noexcept
+{
+	// Algorithm from Real-Time Rendering, page 76
+	return mat44(1.0f - 2.0f*(y*y + z*z),  2.0f*(x*y - w*z),         2.0f*(x*z + w*y),         0.0f,
+	             2.0f*(x*y + w*z),         1.0f - 2.0f*(x*x + z*z),  2.0f*(y*z - w*x),         0.0f,
+	             2.0f*(x*z - w*y),         2.0f*(y*z + w*x),         1.0f - 2.0f*(x*x + y*y),  0.0f,
+	             0.0f,                     0.0f,                     0.0f,                     1.0f);
+}
+
+SFZ_CUDA_CALL mat33 Quaternion::toMat33NonUnit() const noexcept
+{
+	// Algorithm from Real-Time Rendering, page 76
+	float s = 2.0f / length(*this);
+	return mat33(1.0f - s*(y*y + z*z),  s*(x*y - w*z),         s*(x*z + w*y),
+	             s*(x*y + w*z),         1.0f - s*(x*x + z*z),  s*(y*z - w*x),
+	             s*(x*z - w*y),         s*(y*z + w*x),         1.0f - s*(x*x + y*y));
+}
+
+SFZ_CUDA_CALL mat34 Quaternion::toMat34NonUnit() const noexcept
+{
+	// Algorithm from Real-Time Rendering, page 76
+	float s = 2.0f / length(*this);
+	return mat34(1.0f - s*(y*y + z*z),  s*(x*y - w*z),         s*(x*z + w*y),         0.0f,
+	             s*(x*y + w*z),         1.0f - s*(x*x + z*z),  s*(y*z - w*x),         0.0f,
+	             s*(x*z - w*y),         s*(y*z + w*x),         1.0f - s*(x*x + y*y),  0.0f);
+}
+
+SFZ_CUDA_CALL mat44 Quaternion::toMat44NonUnit() const noexcept
+{
+	// Algorithm from Real-Time Rendering, page 76
+	float s = 2.0f / length(*this);
+	return mat44(1.0f - s*(y*y + z*z),  s*(x*y - w*z),         s*(x*z + w*y),         0.0f,
+	             s*(x*y + w*z),         1.0f - s*(x*x + z*z),  s*(y*z - w*x),         0.0f,
+	             s*(x*z - w*y),         s*(y*z + w*x),         1.0f - s*(x*x + y*y),  0.0f,
+	             0.0f,                  0.0f,                  0.0f,                  1.0f);
+}
+
 // Quaternion functions
 // ------------------------------------------------------------------------------------------------
 

@@ -20,6 +20,7 @@
 
 #include <cmath>
 
+#include "sfz/math/Matrix.hpp"
 #include "sfz/math/Vector.hpp"
 
 #include "sfz/CudaCompatibility.hpp"
@@ -65,6 +66,21 @@ struct alignas(16) Quaternion final {
 	/// Creates a unit quaternion representing a (right-handed) rotation around the specified axis.
 	/// The given axis will be automatically normalized.
 	static SFZ_CUDA_CALL Quaternion rotation(vec3 axis, float angleDeg) noexcept;
+
+	// Matrix conversion methods
+	// --------------------------------------------------------------------------------------------
+	
+	/// Converts the given Quaternion into a Matrix. The normal variants assume that the Quaternion
+	/// is unit, while the "non-unit" variants make no such assumptions.
+
+	SFZ_CUDA_CALL mat33 toMat33() const noexcept;
+	SFZ_CUDA_CALL mat34 toMat34() const noexcept;
+	SFZ_CUDA_CALL mat44 toMat44() const noexcept;
+
+	SFZ_CUDA_CALL mat33 toMat33NonUnit() const noexcept;
+	SFZ_CUDA_CALL mat34 toMat34NonUnit() const noexcept;
+	SFZ_CUDA_CALL mat44 toMat44NonUnit() const noexcept;
+
 };
 
 static_assert(sizeof(Quaternion) == sizeof(float) * 4, "Quaternion is padded");

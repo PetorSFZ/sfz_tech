@@ -105,9 +105,13 @@ TEST_CASE("Quaternion functions", "[sfz::Quaternion]")
 		Quaternion rot1(std::sin(halfAngle1) * vec3(0.0f, 1.0f, 0.0f), std::cos(halfAngle1));
 		vec3 p = rotate(rot1, vec3(1.0f, 0.0f, 0.0f));
 		REQUIRE(approxEqual(p, vec3(0.0f, 0.0f, -1.0f)));
+		mat33 rot1mat = rot1.toMat33();
+		REQUIRE(approxEqual(rot1mat * vec3(1.0f, 0.0f, 0.0f), vec3 (0.0f, 0.0f, -1.0f)));
 
 		Quaternion rot2 = Quaternion::rotation(vec3(0.0f, 0.0f, 1.0f), 90.0f);
 		vec3 p2 = rotate(rot2, vec3(1.0f, 0.0f, 0.0f));
 		REQUIRE(approxEqual(p2, vec3(0.0f, 1.0f, 0.0f)));
+		mat33 rot2mat = rot2.toMat33();
+		REQUIRE(approxEqual(rot2mat * vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f)));
 	}
 }
