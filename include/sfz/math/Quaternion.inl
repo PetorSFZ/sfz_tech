@@ -51,6 +51,23 @@ SFZ_CUDA_CALL Quaternion Quaternion::rotation(vec3 axis, float angleDeg) noexcep
 	return Quaternion(sin(halfAngleRad) * normalizedAxis, cos(halfAngleRad));
 }
 
+// Quaternion: Methods
+// ------------------------------------------------------------------------------------------------
+
+SFZ_CUDA_CALL vec3 Quaternion::rotationAxis() const noexcept
+{
+	return safeNormalize(this->v);
+}
+
+SFZ_CUDA_CALL float Quaternion::rotationAngleDeg() const noexcept
+{
+	using std::acos;
+	const float RAD_ANGLE_TO_DEG_NON_HALF_ANGLE = (180.0f / 3.14159265358979323846f) * 2.0f;
+	
+	float halfAngleRad = acos(this->w);
+	return halfAngleRad * RAD_ANGLE_TO_DEG_NON_HALF_ANGLE;
+}
+
 // Quaternion: Matrix conversion methods
 // ------------------------------------------------------------------------------------------------
 

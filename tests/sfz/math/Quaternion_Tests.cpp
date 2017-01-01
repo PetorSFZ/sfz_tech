@@ -50,6 +50,8 @@ TEST_CASE("Quaternion Constructors", "[sfz::Quaternion]")
 		Quaternion rot1(std::sin(halfAngleRad) * axis, std::cos(halfAngleRad));
 		Quaternion rot2 = Quaternion::rotation(axis, angle);
 		REQUIRE(approxEqual(rot1, rot2));
+		REQUIRE(approxEqual(rot2.rotationAxis(), normalize(vec3(0.25f, 1.0f, 1.2f))));
+		REQUIRE(approxEqual(rot2.rotationAngleDeg(), angle));
 	}
 }
 

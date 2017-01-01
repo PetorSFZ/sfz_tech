@@ -67,6 +67,16 @@ struct alignas(16) Quaternion final {
 	/// The given axis will be automatically normalized.
 	static SFZ_CUDA_CALL Quaternion rotation(vec3 axis, float angleDeg) noexcept;
 
+	// Methods
+	// --------------------------------------------------------------------------------------------
+	
+	/// Returns the normalized axis which the quaternion rotates around, returns 0 vector for
+	/// identity Quaternion. Includes a safeNormalize() call, not necessarily super fast.
+	SFZ_CUDA_CALL vec3 rotationAxis() const noexcept;
+
+	/// Returns the angle (degrees) this Quaternion rotates around the rotationAxis().
+	SFZ_CUDA_CALL float rotationAngleDeg() const noexcept;
+
 	// Matrix conversion methods
 	// --------------------------------------------------------------------------------------------
 	
