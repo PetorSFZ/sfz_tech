@@ -90,7 +90,6 @@ struct alignas(16) Quaternion final {
 	SFZ_CUDA_CALL mat33 toMat33NonUnit() const noexcept;
 	SFZ_CUDA_CALL mat34 toMat34NonUnit() const noexcept;
 	SFZ_CUDA_CALL mat44 toMat44NonUnit() const noexcept;
-
 };
 
 static_assert(sizeof(Quaternion) == sizeof(float) * 4, "Quaternion is padded");
@@ -101,6 +100,9 @@ static_assert(sizeof(Quaternion) == sizeof(float) * 4, "Quaternion is padded");
 /// Calculates the length (norm) of the Quaternion. A unit Quaternion has length 1. If the
 /// Quaternions are used for rotations they should always be unit.
 SFZ_CUDA_CALL float length(const Quaternion& q) noexcept;
+
+/// Normalizes the Quaternion into a unit Quaternion by dividing each component by the length.
+SFZ_CUDA_CALL Quaternion normalize(const Quaternion& q) noexcept;
 
 /// Calculates the conjugate quaternion, i.e. [-v, w]. If the quaternion is unit length this is
 /// the same as the inverse.

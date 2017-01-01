@@ -132,6 +132,13 @@ SFZ_CUDA_CALL float length(const Quaternion& q) noexcept
 	return length(q.vector);
 }
 
+SFZ_CUDA_CALL Quaternion normalize(const Quaternion& q) noexcept
+{
+	Quaternion tmp;
+	tmp.vector = normalize(q.vector);
+	return tmp;
+}
+
 SFZ_CUDA_CALL Quaternion conjugate(const Quaternion& q) noexcept
 {
 	return Quaternion(-q.v, q.w);
