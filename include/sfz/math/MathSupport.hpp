@@ -232,9 +232,14 @@ SFZ_CUDA_CALL vec4 saturate(vec4 value) noexcept;
 // ------------------------------------------------------------------------------------------------
 
 /// Linearly interpolates between two arguments. t should be a scalar in the range [0, 1].
+/// Quaternions has a specialized version, which assumes that both the parameter Quaternions are
+/// unit. In addition, the resulting Quaternion is normalized before returned.
 
 template<typename ArgT, typename FloatT = ArgT>
 SFZ_CUDA_CALL ArgT lerp(ArgT v0, ArgT v1, FloatT t) noexcept;
+
+template<>
+SFZ_CUDA_CALL Quaternion lerp(Quaternion q0, Quaternion q1, float t) noexcept;
 
 // fma()
 // ------------------------------------------------------------------------------------------------

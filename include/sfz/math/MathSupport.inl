@@ -921,6 +921,15 @@ SFZ_CUDA_CALL vec4 lerp(vec4 v0, vec4 v1, float t) noexcept
 	// TODO: SSE version?
 }
 
+template<>
+SFZ_CUDA_CALL Quaternion lerp(Quaternion q0, Quaternion q1, float t) noexcept
+{
+	Quaternion tmp;
+	tmp.vector = sfz::lerp(q0.vector, q1.vector, t);
+	tmp = normalize(tmp);
+	return tmp;
+}
+
 // fma()
 // ------------------------------------------------------------------------------------------------
 

@@ -159,6 +159,16 @@ TEST_CASE("minElement() & maxElement()", "[sfz::MathSupport]")
 	REQUIRE(sfz::maxElement(vec4i(1, 2, -4, 0)) == 2);
 }
 
+TEST_CASE("lerp()", "[sfz::MathSupport]")
+{
+	SECTION("Quaternion specialization") {
+		Quaternion q1 = Quaternion::rotation(vec3(1.0f, 1.0f, 1.0f), 0.0f);
+		Quaternion q2 = Quaternion::rotation(vec3(1.0f, 1.0f, 1.0f), 90.0f);
+		Quaternion q3 = Quaternion::rotation(vec3(1.0f, 1.0f, 1.0f), 45.0f);
+		REQUIRE(approxEqual(lerp(q1, q2, 0.5f), q3));
+	}
+}
+
 TEST_CASE("clamp()", "[sfz::MathSupport]")
 {
 	REQUIRE(sfz::clamp(vec4i(-2, 0, 2, 4), -1, 2) == vec4i(-1, 0, 2, 2));
