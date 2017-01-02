@@ -41,14 +41,40 @@ SFZ_CUDA_CALL Quaternion Quaternion::identity() noexcept
 
 SFZ_CUDA_CALL Quaternion Quaternion::rotation(vec3 axis, float angleDeg) noexcept
 {
-	using std::sin;
 	using std::cos;
+	using std::sin;
 	const float DEG_ANGLE_TO_RAD_HALF_ANGLE = (3.14159265358979323846f / 180.0f) / 2.0f;
 
 	const float halfAngleRad = angleDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE;
 	const vec3 normalizedAxis = normalize(axis);
 	
 	return Quaternion(sin(halfAngleRad) * normalizedAxis, cos(halfAngleRad));
+}
+
+SFZ_CUDA_CALL Quaternion Quaternion::fromEuler(float xDeg, float yDeg, float zDeg) noexcept
+{
+	using std::cos;
+	using std::sin;
+	const float DEG_ANGLE_TO_RAD_HALF_ANGLE = (3.14159265358979323846f / 180.0f) / 2.0f;
+
+	double cosZ = cos(zDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+	double sinZ = sin(zDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+	double cosY = cos(yDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+	double sinY = sin(yDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+	double cosX = cos(xDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+	double sinX = sin(xDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+
+	Quaternion tmp;
+	tmp.x = cosZ * sinX * cosY - sinZ * cosX * sinY;
+	tmp.y = cosZ * cosX * sinY + sinZ * sinX * cosY;
+	tmp.z = sinZ * cosX * cosY - cosZ * sinX * sinY;
+	tmp.w = cosZ * cosX * cosY + sinZ * sinX * sinY;
+	return tmp;
+}
+
+SFZ_CUDA_CALL Quaternion Quaternion::fromEuler(vec3 anglesDeg) noexcept
+{
+	return Quaternion::fromEuler(anglesDeg.x, anglesDeg.y, anglesDeg.z);
 }
 
 // Quaternion: Methods
