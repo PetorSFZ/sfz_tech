@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 
 #include "sfz/math/Matrix.hpp"
@@ -81,6 +82,10 @@ struct alignas(16) Quaternion final {
 
 	/// Returns the angle (degrees) this Quaternion rotates around the rotationAxis().
 	SFZ_CUDA_CALL float rotationAngleDeg() const noexcept;
+
+	/// Returns a Euler angle (degrees) representation of this Quaternion. Assumes the Quaternion
+	/// is unit.
+	SFZ_CUDA_CALL vec3 toEuler() const noexcept;
 
 	// Matrix conversion methods
 	// --------------------------------------------------------------------------------------------

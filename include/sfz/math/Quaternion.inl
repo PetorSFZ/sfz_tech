@@ -57,12 +57,12 @@ SFZ_CUDA_CALL Quaternion Quaternion::fromEuler(float xDeg, float yDeg, float zDe
 	using std::sin;
 	const float DEG_ANGLE_TO_RAD_HALF_ANGLE = (3.14159265358979323846f / 180.0f) / 2.0f;
 
-	double cosZ = cos(zDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
-	double sinZ = sin(zDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
-	double cosY = cos(yDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
-	double sinY = sin(yDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
-	double cosX = cos(xDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
-	double sinX = sin(xDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+	float cosZ = cos(zDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+	float sinZ = sin(zDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+	float cosY = cos(yDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+	float sinY = sin(yDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+	float cosX = cos(xDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+	float sinX = sin(xDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
 
 	Quaternion tmp;
 	tmp.x = cosZ * sinX * cosY - sinZ * cosX * sinY;
@@ -92,6 +92,21 @@ SFZ_CUDA_CALL float Quaternion::rotationAngleDeg() const noexcept
 	
 	float halfAngleRad = acos(this->w);
 	return halfAngleRad * RAD_ANGLE_TO_DEG_NON_HALF_ANGLE;
+}
+
+SFZ_CUDA_CALL vec3 Quaternion::toEuler() const noexcept
+{
+	using std::atan2;
+	using std::asin;
+	using std::max;
+	using std::min;
+	const float RAD_ANGLE_TO_DEG = 180.0f / 3.14159265358979323846f;
+
+	vec3 tmp;
+	tmp.x = atan2(2.0f * (w * x + y * z), 1.0f - 2.0f * (x * x + y * y)) * RAD_ANGLE_TO_DEG;
+	tmp.y = asin(min(max(2.0f * (w * y - z * x), -1.0f), 1.0f)) * RAD_ANGLE_TO_DEG;
+	tmp.z = atan2(2.0f * (w * z + x * y), 1.0f - 2.0f * (y * y + z * z)) * RAD_ANGLE_TO_DEG;
+	return tmp;
 }
 
 // Quaternion: Matrix conversion methods

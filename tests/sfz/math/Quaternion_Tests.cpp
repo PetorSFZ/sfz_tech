@@ -58,6 +58,8 @@ TEST_CASE("Quaternion Constructors", "[sfz::Quaternion]")
 		REQUIRE(approxEqual(Quaternion::fromEuler(90.0f, 0.0f, 0.0f), Quaternion::rotation(vec3(1.0f, 0.0f, 0.0f), 90.0f)));
 		REQUIRE(approxEqual(Quaternion::fromEuler(0.0f, 90.0f, 0.0f), Quaternion::rotation(vec3(0.0f, 1.0f, 0.0f), 90.0f)));
 		REQUIRE(approxEqual(Quaternion::fromEuler(0.0f, 0.0f, 90.0f), Quaternion::rotation(vec3(0.0f, 0.0f, 1.0f), 90.0f)));
+		vec3 angles(20.0f, 30.0f, 40.0f);
+		REQUIRE(approxEqual(Quaternion::fromEuler(angles).toEuler(), angles));
 	}
 }
 
