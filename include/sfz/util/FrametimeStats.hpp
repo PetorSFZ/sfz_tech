@@ -21,7 +21,7 @@
 #include <cstdint>
 
 #include "sfz/containers/DynArray.hpp"
-#include "sfz/containers/DynString.hpp"
+#include "sfz/strings/DynString.hpp"
 
 namespace sfz {
 

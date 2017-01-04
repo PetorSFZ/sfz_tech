@@ -20,7 +20,7 @@
 #include "catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
-#include "sfz/containers/DynString.hpp"
+#include "sfz/strings/DynString.hpp"
 
 using namespace sfz;
 

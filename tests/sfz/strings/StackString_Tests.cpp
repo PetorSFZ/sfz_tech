@@ -23,7 +23,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include "sfz/containers/StackString.hpp"
+#include "sfz/strings/StackString.hpp"
 
 using namespace sfz;
 

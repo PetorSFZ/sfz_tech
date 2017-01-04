@@ -22,8 +22,8 @@
 #include <limits>
 
 #include "sfz/containers/DynArray.hpp"
-#include "sfz/containers/DynString.hpp"
-#include "sfz/containers/StackString.hpp"
+#include "sfz/strings/DynString.hpp"
+#include "sfz/strings/StackString.hpp"
 
 namespace sfz {
 

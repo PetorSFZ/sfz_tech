@@ -20,9 +20,9 @@
 
 #include <cstdint>
 
-#include "sfz/containers/DynString.hpp"
 #include "sfz/math/Matrix.hpp"
 #include "sfz/math/Vector.hpp"
+#include "sfz/strings/DynString.hpp"
 
 namespace sfz {
 

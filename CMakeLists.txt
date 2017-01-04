@@ -91,12 +91,8 @@ set(SOURCE_CONTAINERS_FILES
 	${INCLUDE_DIR}/sfz/Containers.hpp
 	${INCLUDE_DIR}/sfz/containers/DynArray.hpp
 	${INCLUDE_DIR}/sfz/containers/DynArray.inl
-	${INCLUDE_DIR}/sfz/containers/DynString.hpp
-	${INCLUDE_DIR}/sfz/containers/DynString.inl
 	${INCLUDE_DIR}/sfz/containers/HashMap.hpp
-	${INCLUDE_DIR}/sfz/containers/HashMap.inl
-	${INCLUDE_DIR}/sfz/containers/StackString.hpp
-	 ${SOURCE_DIR}/sfz/containers/StackString.cpp)
+	${INCLUDE_DIR}/sfz/containers/HashMap.inl)
 source_group(sfz_containers FILES ${SOURCE_CONTAINERS_FILES})
 
 set(SOURCE_GEOMETRY_FILES
@@ -183,6 +179,14 @@ set(SOURCE_SDL_FILES
 	 ${SOURCE_DIR}/sfz/sdl/Window.cpp)
 source_group(sfz_sdl FILES ${SOURCE_SDL_FILES})
 
+set(SOURCE_STRINGS_FILES
+	${INCLUDE_DIR}/sfz/Strings.hpp
+	${INCLUDE_DIR}/sfz/strings/DynString.hpp
+	${INCLUDE_DIR}/sfz/strings/DynString.inl
+	${INCLUDE_DIR}/sfz/strings/StackString.hpp
+	 ${SOURCE_DIR}/sfz/strings/StackString.cpp)
+source_group(sfz_strings FILES ${SOURCE_STRINGS_FILES})
+
 set(SOURCE_UTIL_FILES
 	${INCLUDE_DIR}/sfz/Util.hpp
 	${INCLUDE_DIR}/sfz/util/FrametimeStats.hpp
@@ -202,6 +206,7 @@ set(SOURCE_ALL_FILES
 	${SOURCE_MEMORY_FILES}
 	${SOURCE_SCREENS_FILES}
 	${SOURCE_SDL_FILES}
+	${SOURCE_STRINGS_FILES}
 	${SOURCE_UTIL_FILES})
 
 # Library compile target
@@ -255,9 +260,7 @@ if(SFZ_CORE_BUILD_TESTS)
 
 	set(CONTAINERS_TEST_FILES
 		${TESTS_DIR}/sfz/containers/DynArray_Tests.cpp
-		${TESTS_DIR}/sfz/containers/DynString_Tests.cpp
-		${TESTS_DIR}/sfz/containers/HashMap_Tests.cpp
-		${TESTS_DIR}/sfz/containers/StackString_Tests.cpp)
+		${TESTS_DIR}/sfz/containers/HashMap_Tests.cpp)
 	source_group(sfz_containers FILES ${CONTAINERS_TEST_FILES})
 
 	set(GEOMETRY_TEST_FILES
@@ -278,6 +281,11 @@ if(SFZ_CORE_BUILD_TESTS)
 		${TESTS_DIR}/sfz/memory/SmartPointers_Tests.cpp)
 	source_group(sfz_memory FILES ${MEMORY_TEST_FILES})
 
+	set(STRINGS_TEST_FILES
+		${TESTS_DIR}/sfz/strings/DynString_Tests.cpp
+		${TESTS_DIR}/sfz/strings/StackString_Tests.cpp)
+	source_group(sfz_strings FILES ${STRINGS_TEST_FILES})
+
 	set(UTIL_TEST_FILES
 		${TESTS_DIR}/sfz/util/IniParser_Tests.cpp
 		${TESTS_DIR}/sfz/util/IO_Tests.cpp)
@@ -289,6 +297,7 @@ if(SFZ_CORE_BUILD_TESTS)
 		${GEOMETRY_TEST_FILES}
 		${MATH_TEST_FILES}
 		${MEMORY_TEST_FILES}
+		${STRINGS_TEST_FILES}
 		${UTIL_TEST_FILES})
 
 	enable_testing(true)

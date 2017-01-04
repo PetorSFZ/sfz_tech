@@ -125,4 +125,4 @@ using DynString = DynStringTempl<StandardAllocator>;
 
 } // namespace sfz
 
-#include "sfz/containers/DynString.inl"
+#include "sfz/strings/DynString.inl"
