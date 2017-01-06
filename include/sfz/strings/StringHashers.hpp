@@ -18,6 +18,37 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include "sfz/strings/DynString.hpp"
 #include "sfz/strings/StackString.hpp"
-#include "sfz/strings/StringHashers.hpp"
+
+namespace sfz {
+
+using std::uint64_t;
+
+// FNV-1A hash function, based on public domain reference code by "chongo <Landon Curt Noll> /\oo/\"
+// See http://isthe.com/chongo/tech/comp/fnv/
+inline uint64_t fnv1aHash(const char* str) noexcept
+{
+	// 64 bit FNV-1 non-zero initial basis, equal to the FNV-0 hash of
+	// "chongo <Landon Curt Noll> /\../\", ('\' is not an escape character in this string)
+	const uint64_t INITIAL_VALUE = uint64_t(0xCBF29CE484222325);
+
+	// 64-bit magic FNV-1a prime
+	const uint64_t FNV_64_PRIME = uint64_t(0x100000001B3);
+
+	// Hash all bytes in string
+	uint64_t tmp = INITIAL_VALUE;
+	while (char c = *str++) {
+		
+		// xor bottom with current byte
+		tmp ^= uint64_t(c);
+
+		// multiply with FNV magic prime
+		tmp *= FNV_64_PRIME;
+	}
+	return tmp;
+}
+
+} // namespace sfz

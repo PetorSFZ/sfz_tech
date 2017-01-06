@@ -184,7 +184,8 @@ set(SOURCE_STRINGS_FILES
 	${INCLUDE_DIR}/sfz/strings/DynString.hpp
 	${INCLUDE_DIR}/sfz/strings/DynString.inl
 	${INCLUDE_DIR}/sfz/strings/StackString.hpp
-	 ${SOURCE_DIR}/sfz/strings/StackString.cpp)
+	 ${SOURCE_DIR}/sfz/strings/StackString.cpp
+	${INCLUDE_DIR}/sfz/strings/StringHashers.hpp)
 source_group(sfz_strings FILES ${SOURCE_STRINGS_FILES})
 
 set(SOURCE_UTIL_FILES
@@ -283,7 +284,8 @@ if(SFZ_CORE_BUILD_TESTS)
 
 	set(STRINGS_TEST_FILES
 		${TESTS_DIR}/sfz/strings/DynString_Tests.cpp
-		${TESTS_DIR}/sfz/strings/StackString_Tests.cpp)
+		${TESTS_DIR}/sfz/strings/StackString_Tests.cpp
+		${TESTS_DIR}/sfz/strings/StringHashers_Tests.cpp)
 	source_group(sfz_strings FILES ${STRINGS_TEST_FILES})
 
 	set(UTIL_TEST_FILES
