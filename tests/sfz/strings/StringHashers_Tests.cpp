@@ -20,6 +20,7 @@
 #include "catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
+#include "sfz/containers/HashMap.hpp"
 #include "sfz/strings/StringHashers.hpp"
 
 using namespace sfz;
@@ -28,11 +29,40 @@ TEST_CASE("fnv1aHash()", "[sfz::StringHashers]")
 {
 	// Test values taken from public domain reference code by "chongo <Landon Curt Noll> /\oo/\"
 	// See http://isthe.com/chongo/tech/comp/fnv/
-	REQUIRE(sfz::fnv1aHash("") == uint64_t(0xcbf29ce484222325));
-	REQUIRE(sfz::fnv1aHash("a") == uint64_t(0xaf63dc4c8601ec8c));
-	REQUIRE(sfz::fnv1aHash("b") == uint64_t(0xaf63df4c8601f1a5));
-	REQUIRE(sfz::fnv1aHash("c") == uint64_t(0xaf63de4c8601eff2));
-	REQUIRE(sfz::fnv1aHash("foo") == uint64_t(0xdcb27518fed9d577));
-	REQUIRE(sfz::fnv1aHash("foobar") == uint64_t(0x85944171f73967e8));
-	REQUIRE(sfz::fnv1aHash("chongo was here!\n") == uint64_t(0x46810940eff5f915));
+	REQUIRE(detail::fnv1aHash("") == uint64_t(0xcbf29ce484222325));
+	REQUIRE(detail::fnv1aHash("a") == uint64_t(0xaf63dc4c8601ec8c));
+	REQUIRE(detail::fnv1aHash("b") == uint64_t(0xaf63df4c8601f1a5));
+	REQUIRE(detail::fnv1aHash("c") == uint64_t(0xaf63de4c8601eff2));
+	REQUIRE(detail::fnv1aHash("foo") == uint64_t(0xdcb27518fed9d577));
+	REQUIRE(detail::fnv1aHash("foobar") == uint64_t(0x85944171f73967e8));
+	REQUIRE(detail::fnv1aHash("chongo was here!\n") == uint64_t(0x46810940eff5f915));
+}
+
+TEST_CASE("Hash structs")
+{
+	sfz::RawStringHash cStrHasher;
+	std::hash<DynString> dynStrHasher;
+	std::hash<StackString> stackStrHasher;
+	
+	SECTION("Empty strings") {
+		REQUIRE(cStrHasher("") == dynStrHasher(DynString()));
+		REQUIRE(cStrHasher("") == dynStrHasher(DynString("")));
+		DynString dynTmp("Herro");
+		dynTmp.clear();
+		REQUIRE(cStrHasher("") == dynStrHasher(dynTmp));
+		dynTmp.destroy();
+		REQUIRE(cStrHasher("") == dynStrHasher(dynTmp));
+
+		REQUIRE(cStrHasher("") == stackStrHasher(StackString()));
+		REQUIRE(cStrHasher("") == stackStrHasher(StackString("")));
+	}
+	SECTION("Longer strings") {
+		REQUIRE(cStrHasher("foobar") == dynStrHasher(DynString("foobar")));
+		REQUIRE(cStrHasher("foobar") != dynStrHasher(DynString("fooba")));
+		REQUIRE(cStrHasher("foobar") != dynStrHasher(DynString("foobar\n")));
+
+		REQUIRE(cStrHasher("foobar") == stackStrHasher(StackString("foobar")));
+		REQUIRE(cStrHasher("foobar") != stackStrHasher(StackString("fooba")));
+		REQUIRE(cStrHasher("foobar") != stackStrHasher(StackString("foobar\n")));
+	}
 }

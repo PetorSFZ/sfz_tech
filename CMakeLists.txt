@@ -185,7 +185,8 @@ set(SOURCE_STRINGS_FILES
 	${INCLUDE_DIR}/sfz/strings/DynString.inl
 	${INCLUDE_DIR}/sfz/strings/StackString.hpp
 	 ${SOURCE_DIR}/sfz/strings/StackString.cpp
-	${INCLUDE_DIR}/sfz/strings/StringHashers.hpp)
+	${INCLUDE_DIR}/sfz/strings/StringHashers.hpp
+	${INCLUDE_DIR}/sfz/strings/StringHashers.inl)
 source_group(sfz_strings FILES ${SOURCE_STRINGS_FILES})
 
 set(SOURCE_UTIL_FILES

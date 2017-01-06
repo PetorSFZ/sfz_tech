@@ -16,46 +16,73 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#pragma once
-
-#include <cstdint>
-#include <functional> // std::hash
-
-#include "sfz/strings/DynString.hpp"
-#include "sfz/strings/StackString.hpp"
-
 namespace sfz {
 
-using std::size_t;
-using std::uint64_t;
-
-static_assert(sizeof(uint64_t) == sizeof(size_t), "size_t is not 64 bit");
-
-// Common hashing function for all sfz strings (and raw C strings)
+// FNV-1A hashing function
 // ------------------------------------------------------------------------------------------------
 
-/// Hashes a null-terminated C string. The exact hashing function used is currently FNV-1A, this
-/// might however change in the future.
-inline size_t hash(const char* str) noexcept;
+namespace detail {
+
+// FNV-1A hash function, based on public domain reference code by "chongo <Landon Curt Noll> /\oo/\"
+// See http://isthe.com/chongo/tech/comp/fnv/
+inline uint64_t fnv1aHash(const char* str) noexcept
+{
+	// 64 bit FNV-1 non-zero initial basis, equal to the FNV-0 hash of
+	// "chongo <Landon Curt Noll> /\../\", ('\' is not an escape character in this string)
+	const uint64_t INITIAL_VALUE = uint64_t(0xCBF29CE484222325);
+
+	// 64-bit magic FNV-1a prime
+	const uint64_t FNV_64_PRIME = uint64_t(0x100000001B3);
+
+	// Hash all bytes in string
+	uint64_t tmp = INITIAL_VALUE;
+	while (char c = *str++) {
+
+		// xor bottom with current byte
+		tmp ^= uint64_t(c);
+
+		// multiply with FNV magic prime
+		tmp *= FNV_64_PRIME;
+	}
+	return tmp;
+}
+
+}
+
+// Common hashing function for all sfz strings (and raw c strings)
+// ------------------------------------------------------------------------------------------------
+
+inline size_t hash(const char* str) noexcept
+{
+	return detail::fnv1aHash(str);
+}
 
 // DynString hash function
 // ------------------------------------------------------------------------------------------------
 
-template<typename Allocator = sfz::StandardAllocator>
-size_t hash(const DynStringTempl<Allocator>& str) noexcept;
+template<typename Allocator>
+size_t hash(const DynStringTempl<Allocator>& str) noexcept
+{
+	if (str.size() == 0) return sfz::hash(""); // Fix edge case where DynString has no memory
+	return sfz::hash(str.str());
+}
 
 // StackString hash function
 // ------------------------------------------------------------------------------------------------
 
 template<size_t N>
-size_t hash(const StackStringTempl<N>& str) noexcept;
+size_t hash(const StackStringTempl<N>& str) noexcept
+{
+	return sfz::hash(str.str);
+}
 
 // Raw C string hash struct (not std::hash specialization, but same interface)
 // ------------------------------------------------------------------------------------------------
 
-struct RawStringHash {
-	inline size_t operator() (const char* str) const noexcept;
-};
+inline size_t RawStringHash::operator() (const char* str) const noexcept
+{
+	return sfz::hash(str);
+}
 
 } // namespace sfz
 
@@ -65,18 +92,18 @@ namespace std {
 // ------------------------------------------------------------------------------------------------
 
 template<typename Allocator>
-struct hash<sfz::DynStringTempl<Allocator>> {
-	size_t operator() (const sfz::DynStringTempl<Allocator>& str) const noexcept;
-};
+size_t hash<sfz::DynStringTempl<Allocator>>::operator() (const sfz::DynStringTempl<Allocator>& str) const noexcept
+{
+	return sfz::hash<Allocator>(str);
+}
 
 // StackString hash struct
 // ------------------------------------------------------------------------------------------------
 
 template<size_t N>
-struct hash<sfz::StackStringTempl<N>> {
-	size_t operator() (const sfz::StackStringTempl<N>& str) const noexcept;
-};
+size_t hash<sfz::StackStringTempl<N>>::operator() (const sfz::StackStringTempl<N>& str) const noexcept
+{
+	return sfz::hash<N>(str);
+}
 
 } // namespace std
-
-#include "sfz/strings/StringHashers.inl"
