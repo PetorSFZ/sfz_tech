@@ -207,9 +207,19 @@ struct ZeroHash {
 	}
 };
 
+struct ZeroHashDescriptor final {
+	using KeyT = int;
+	using KeyHash = ZeroHash;
+	using KeyEqual = std::equal_to<int>;
+
+	using AltKeyT = KeyT;
+	using AltKeyHash = KeyHash;
+	using AltKeyKeyEqual = KeyEqual;
+};
+
 TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
 {
-	HashMap<int,int,ZeroHash> m;
+	HashMap<int,int,ZeroHashDescriptor> m;
 	REQUIRE(m.size() == 0);
 	REQUIRE(m.capacity() == 0);
 	REQUIRE(m.placeholders() == 0);

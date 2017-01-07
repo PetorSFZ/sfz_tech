@@ -25,6 +25,7 @@
 #include <new> // Placement new
 
 #include "sfz/Assert.hpp"
+#include "sfz/containers/HashTableKeyDescriptor.hpp"
 #include "sfz/memory/Allocators.hpp"
 
 namespace sfz {
@@ -54,11 +55,10 @@ using std::uint8_t;
 ///
 /// \param K the key type
 /// \param V the value type
-/// \param Hash the hash function (by default std::hash)
-/// \param KeyEqual the function used to compare keys (by default operator ==)
+/// \param Descr the HashTableKeyDescriptor (by default sfz::HashTableKeyDescriptor)
 /// \param Allocator the sfz allocator used to allocate memory
-template<typename K, typename V, typename Hash = std::hash<K>,
-         typename KeyEqual = std::equal_to<K>, typename Allocator = StandardAllocator>
+template<typename K, typename V, typename Descr = HashTableKeyDescriptor<K>,
+         typename Allocator = StandardAllocator>
 class HashMap {
 public:
 	// Constants

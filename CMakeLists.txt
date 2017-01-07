@@ -92,7 +92,8 @@ set(SOURCE_CONTAINERS_FILES
 	${INCLUDE_DIR}/sfz/containers/DynArray.hpp
 	${INCLUDE_DIR}/sfz/containers/DynArray.inl
 	${INCLUDE_DIR}/sfz/containers/HashMap.hpp
-	${INCLUDE_DIR}/sfz/containers/HashMap.inl)
+	${INCLUDE_DIR}/sfz/containers/HashMap.inl
+	${INCLUDE_DIR}/sfz/containers/HashTableKeyDescriptor.hpp)
 source_group(sfz_containers FILES ${SOURCE_CONTAINERS_FILES})
 
 set(SOURCE_GEOMETRY_FILES
