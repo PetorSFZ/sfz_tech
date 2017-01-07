@@ -20,9 +20,8 @@
 #include "catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
-#include <string>
-
 #include "sfz/containers/HashMap.hpp"
+#include "sfz/Strings.hpp"
 
 using namespace sfz;
 
@@ -346,24 +345,60 @@ TEST_CASE("Empty HashMap", "[sfz::HashMap]")
 	}
 }
 
-TEST_CASE("Actual HashMap error case", "[sfz::HashMap]")
+TEST_CASE("HashMap with strings", "[sfz::HashMap]")
 {
-	HashMap<std::string,uint32_t> mapping(0);
-	
-	const uint32_t NUM_TESTS = 100;
-
-	for (uint32_t i = 0; i < NUM_TESTS; i++) {
-		std::string str = "str" + std::to_string(i);
-		mapping.put(str, i);
+	SECTION("const char*") {
+		HashMap<const char*, uint32_t> m(0);
+		m.put("foo", 1);
+		m.put("bar", 2);
+		m.put("car", 3);
+		REQUIRE(m.get("foo") != nullptr);
+		REQUIRE(*m.get("foo") == 1);
+		REQUIRE(m.get("bar") != nullptr);
+		REQUIRE(*m.get("bar") == 2);
+		REQUIRE(m.get("car") != nullptr);
+		REQUIRE(*m.get("car") == 3);
 	}
-	
-	REQUIRE(mapping.size() == NUM_TESTS);
-	REQUIRE(mapping.capacity() >= mapping.size());
+	SECTION("DynString") {
+		HashMap<DynString,uint32_t> m(0);
 
-	for (uint32_t i = 0; i < NUM_TESTS; i++) {
-		std::string str = "str" + std::to_string(i);
-		uint32_t* ptr = mapping.get(str);
-		REQUIRE(ptr != nullptr);
-		REQUIRE(*ptr == i);
+		const uint32_t NUM_TESTS = 100;
+		for (uint32_t i = 0; i < NUM_TESTS; i++) {
+			DynString tmp("", 20);
+			tmp.printf("str%u", i);
+			m.put(tmp, i);
+		}
+
+		REQUIRE(m.size() == NUM_TESTS);
+		REQUIRE(m.capacity() >= m.size());
+
+		for (uint32_t i = 0; i < NUM_TESTS; i++) {
+			DynString tmp("", 20);
+			tmp.printf("str%u", i);
+			uint32_t* ptr = m.get(tmp);
+			REQUIRE(ptr != nullptr);
+			REQUIRE(*ptr == i);
+		}
+	}
+	SECTION("StackString") {
+		HashMap<StackString,uint32_t> m(0);
+
+		const uint32_t NUM_TESTS = 100;
+		for (uint32_t i = 0; i < NUM_TESTS; i++) {
+			StackString tmp;
+			tmp.printf("str%u", i);
+			m.put(tmp, i);
+		}
+
+		REQUIRE(m.size() == NUM_TESTS);
+		REQUIRE(m.capacity() >= m.size());
+
+		for (uint32_t i = 0; i < NUM_TESTS; i++) {
+			StackString tmp;
+			tmp.printf("str%u", i);
+			uint32_t* ptr = m.get(tmp);
+			REQUIRE(ptr != nullptr);
+			REQUIRE(*ptr == i);
+		}
 	}
 }

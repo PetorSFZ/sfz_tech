@@ -49,16 +49,13 @@ inline uint64_t fnv1aHash(const char* str) noexcept
 
 }
 
-// Common hashing function for all sfz strings (and raw c strings)
+// String hash functions
 // ------------------------------------------------------------------------------------------------
 
 inline size_t hash(const char* str) noexcept
 {
 	return detail::fnv1aHash(str);
 }
-
-// DynString hash function
-// ------------------------------------------------------------------------------------------------
 
 template<typename Allocator>
 size_t hash(const DynStringTempl<Allocator>& str) noexcept
@@ -67,17 +64,21 @@ size_t hash(const DynStringTempl<Allocator>& str) noexcept
 	return sfz::hash(str.str());
 }
 
-// StackString hash function
-// ------------------------------------------------------------------------------------------------
-
 template<size_t N>
 size_t hash(const StackStringTempl<N>& str) noexcept
 {
 	return sfz::hash(str.str);
 }
 
-// Raw C string hash struct (not std::hash specialization, but same interface)
+// Raw string hash specializations
 // ------------------------------------------------------------------------------------------------
+
+inline bool RawStringEqual::operator()(const char* lhs, const char* rhs) const
+{
+	if (lhs == nullptr && rhs == nullptr) return true;
+	else if (lhs == nullptr || rhs == nullptr) return false;
+	return std::strcmp(lhs, rhs) == 0;
+}
 
 inline size_t RawStringHash::operator() (const char* str) const noexcept
 {

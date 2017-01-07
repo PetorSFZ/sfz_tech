@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <functional> // std::hash
 
+#include "sfz/containers/HashTableKeyDescriptor.hpp"
 #include "sfz/strings/DynString.hpp"
 #include "sfz/strings/StackString.hpp"
 
@@ -31,30 +32,45 @@ using std::uint64_t;
 
 static_assert(sizeof(uint64_t) == sizeof(size_t), "size_t is not 64 bit");
 
-// Common hashing function for all sfz strings (and raw C strings)
+// String hash functions
 // ------------------------------------------------------------------------------------------------
 
-/// Hashes a null-terminated C string. The exact hashing function used is currently FNV-1A, this
+/// Hashes a null-terminated raw string. The exact hashing function used is currently FNV-1A, this
 /// might however change in the future.
 inline size_t hash(const char* str) noexcept;
 
-// DynString hash function
-// ------------------------------------------------------------------------------------------------
-
+/// Hashes a DynString, guaranteed to produce the same hash as an equivalent const char*.
 template<typename Allocator = sfz::StandardAllocator>
 size_t hash(const DynStringTempl<Allocator>& str) noexcept;
 
-// StackString hash function
-// ------------------------------------------------------------------------------------------------
-
+/// Hashes a StackString, guaranteed to produce the same hash as an equivalent const char*.
 template<size_t N>
 size_t hash(const StackStringTempl<N>& str) noexcept;
 
-// Raw C string hash struct (not std::hash specialization, but same interface)
+// Raw string hash specializations
 // ------------------------------------------------------------------------------------------------
 
+/// Struct with same interface as std::hash, hashes raw strings with sfz::hash()
 struct RawStringHash {
 	inline size_t operator() (const char* str) const noexcept;
+};
+
+/// Struct with same interface as std::equal_to, compares to raw strings with strcmp().
+struct RawStringEqual {
+	inline bool operator()(const char* lhs, const char* rhs) const;
+};
+
+/// Specialization of HashTableKeyDescriptor for const char*, makes it possible to use raw strings
+/// as keys in hash tables.
+template<>
+struct HashTableKeyDescriptor<const char*> final {
+	using KeyT = const char*;
+	using KeyHash = RawStringHash;
+	using KeyEqual = RawStringEqual;
+
+	using AltKeyT = KeyT;
+	using AltKeyHash = KeyHash;
+	using AltKeyKeyEqual = KeyEqual;
 };
 
 } // namespace sfz
