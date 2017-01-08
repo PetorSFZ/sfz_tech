@@ -422,3 +422,125 @@ TEST_CASE("HashMap with strings", "[sfz::HashMap]")
 		REQUIRE(m.get("str0") == nullptr);
 	}
 }
+
+struct MoveTestStruct {
+	int value = 0;
+	bool moved = false;
+
+	MoveTestStruct() = default;
+	MoveTestStruct(const MoveTestStruct&) = default;
+	MoveTestStruct& operator= (const MoveTestStruct&) = default;
+
+	MoveTestStruct(int value) : value(value) { }
+
+	MoveTestStruct(MoveTestStruct&& other)
+	{
+		*this = std::move(other);
+	}
+
+	MoveTestStruct& operator= (MoveTestStruct&& other)
+	{
+		this->value = other.value;
+		this->moved = true;
+		other.value = 0;
+		other.moved = true;
+		return *this;
+	}
+
+	bool operator== (const MoveTestStruct& other) const
+	{
+		return this->value == other.value;
+	}
+};
+
+namespace std {
+
+template<>
+struct hash<MoveTestStruct> {
+	inline size_t operator() (const MoveTestStruct& val) const
+	{
+		return val.value;
+	}
+};
+
+}
+
+TEST_CASE("Perfect forwarding in put()", "[sfz::HashMap]")
+{
+	HashMap<MoveTestStruct, MoveTestStruct> m;
+
+	SECTION("const ref, const ref") {
+		MoveTestStruct k = 2;
+		MoveTestStruct v = 3;
+		REQUIRE(!k.moved);
+		REQUIRE(!v.moved);
+		m.put(k, v);
+		REQUIRE(!k.moved);
+		REQUIRE(k.value == 2);
+		REQUIRE(!v.moved);
+		REQUIRE(v.value == 3);
+		
+		MoveTestStruct* ptr = m.get(k);
+		REQUIRE(ptr != nullptr);
+		REQUIRE(ptr->value == 3);
+
+		MoveTestStruct* ptr2 = m.get(MoveTestStruct(2));
+		REQUIRE(ptr2 != nullptr);
+		REQUIRE(ptr2->value == 3);
+	}
+	SECTION("const ref, rvalue") {
+		MoveTestStruct k = 2;
+		MoveTestStruct v = 3;
+		REQUIRE(!k.moved);
+		REQUIRE(!v.moved);
+		m.put(k, std::move(v));
+		REQUIRE(!k.moved);
+		REQUIRE(k.value == 2);
+		REQUIRE(v.moved);
+		REQUIRE(v.value == 0);
+		
+		MoveTestStruct* ptr = m.get(k);
+		REQUIRE(ptr != nullptr);
+		REQUIRE(ptr->value == 3);
+
+		MoveTestStruct* ptr2 = m.get(MoveTestStruct(2));
+		REQUIRE(ptr2 != nullptr);
+		REQUIRE(ptr2->value == 3);
+	}
+	SECTION("rvalue, const ref") {
+		MoveTestStruct k = 2;
+		MoveTestStruct v = 3;
+		REQUIRE(!k.moved);
+		REQUIRE(!v.moved);
+		m.put(std::move(k), v);
+		REQUIRE(k.moved);
+		REQUIRE(k.value == 0);
+		REQUIRE(!v.moved);
+		REQUIRE(v.value == 3);
+		
+		MoveTestStruct* ptr = m.get(k);
+		REQUIRE(ptr == nullptr);
+
+		MoveTestStruct* ptr2 = m.get(MoveTestStruct(2));
+		REQUIRE(ptr2 != nullptr);
+		REQUIRE(ptr2->value == 3);
+	}
+	SECTION("rvalue, rvalue") {
+		MoveTestStruct k = 2;
+		MoveTestStruct v = 3;
+		REQUIRE(!k.moved);
+		REQUIRE(!v.moved);
+		m.put(std::move(k), std::move(v));
+		REQUIRE(k.moved);
+		REQUIRE(k.value == 0);
+		REQUIRE(v.moved);
+		REQUIRE(v.value == 0);
+		
+		MoveTestStruct* ptr = m.get(k);
+		REQUIRE(ptr == nullptr);
+
+		MoveTestStruct* ptr2 = m.get(MoveTestStruct(2));
+		REQUIRE(ptr2 != nullptr);
+		REQUIRE(ptr2->value == 3);
+	}
+}

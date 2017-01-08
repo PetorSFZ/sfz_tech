@@ -102,7 +102,7 @@ public:
 	/// HashMap by default constructor and then calling rehash with the suggested capacity.
 	explicit HashMap(uint32_t suggestedCapacity) noexcept;
 
-	HashMap() noexcept;
+	HashMap() noexcept = default;
 	HashMap(const HashMap& other) noexcept;
 	HashMap& operator= (const HashMap& other) noexcept;
 	HashMap(HashMap&& other) noexcept;
@@ -138,16 +138,15 @@ public:
 	/// Adds the specified key value pair to this HashMap. If a value is already associated with
 	/// the given key it will be replaced with the new value. Will call ensureProperlyHashed().
 	void put(const K& key, const V& value) noexcept;
-
-	/// Adds the specified key value pair to this HashMap. If a value is already associated with
-	/// the given key it will be replaced with the new value. Will call ensureProperlyHashed().
 	void put(const K& key, V&& value) noexcept;
+	void put(K&& key, const V& value) noexcept;
+	void put(K&& key, V&& value) noexcept;
 
 	/// Access operator, will return a reference to the element associated with the given key. If
 	/// no such element exists it will be created with the default constructor. As always, the
 	/// reference will be invalidated if the HashMap is resized. So store a copy if you intend to
-	/// keep it. Will call ensureProperlyHashed() if capacity is 0 or if adding a key value pair
-	/// to the HashMap.
+	/// keep it. Will call ensureProperlyHashed() if capacity is 0 or if adding a new key to the
+	/// HashMap.
 	V& operator[] (const K& key) noexcept;
 
 	/// Attempts to remove the element associated with the given key. Returns false if this
@@ -296,20 +295,24 @@ private:
 	/// sent back through the firstFreeSlot parameter, if no free slot is found it will be set to
 	/// ~0. Whether the found free slot is a placeholder slot or not is sent back through the
 	/// isPlaceholder parameter.
-	/// KeyT: The key type, either K or AltK
+	/// KT: The key type, either K or AltK
 	/// KeyHash: Hasher for KeyT
 	/// KeyEqual: Comparer for KeyT and K (I.e. KeyEqual for K and AltKeyKeyEqual for AltK)
-	template<typename T, typename Hash, typename Equal>
-	uint32_t findElementIndex(const T& key, bool& elementFound, uint32_t& firstFreeSlot,
+	template<typename KT, typename Hash, typename Equal>
+	uint32_t findElementIndex(const KT& key, bool& elementFound, uint32_t& firstFreeSlot,
 	                          bool& isPlaceholder) const noexcept;
 	
 	/// Internal shared implementation of all get() methods
-	template<typename T, typename Hash, typename Equal>
-	V* getInternal(const T& key) const noexcept;
+	template<typename KT, typename Hash, typename Equal>
+	V* getInternal(const KT& key) const noexcept;
+
+	/// Internal shared implementation of all put() methods
+	template<typename KT, typename VT>
+	void putInternal(KT&& key, VT&& value) noexcept;
 
 	/// Internal shared implementation of all remove() methods
-	template<typename T, typename Hash, typename Equal>
-	bool removeInternal(const T& key) noexcept;
+	template<typename KT, typename Hash, typename Equal>
+	bool removeInternal(const KT& key) noexcept;
 
 	// Private members
 	// --------------------------------------------------------------------------------------------

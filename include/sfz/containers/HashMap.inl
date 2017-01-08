@@ -28,9 +28,6 @@ HashMap<K,V,Descr,Allocator>::HashMap(uint32_t suggestedCapacity) noexcept
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
-HashMap<K,V,Descr,Allocator>::HashMap() noexcept {}
-
-template<typename K, typename V, typename Descr, typename Allocator>
 HashMap<K,V,Descr,Allocator>::HashMap(const HashMap& other) noexcept
 {
 	*this = other;
@@ -103,53 +100,25 @@ const V* HashMap<K,V,Descr,Allocator>::get(const AltK& key) const noexcept
 template<typename K, typename V, typename Descr, typename Allocator>
 void HashMap<K,V,Descr,Allocator>::put(const K& key, const V& value) noexcept
 {
-	ensureProperlyHashed();
-
-	// Finds the index of the element
-	uint32_t firstFreeSlot = uint32_t(~0);
-	bool elementFound = false;
-	bool isPlaceholder = false;
-	uint32_t index = this->findElementIndex<K,KeyHash,KeyEqual>(key, elementFound, firstFreeSlot, isPlaceholder);
-
-	// If map contains key just replace value and return
-	if (elementFound) {
-		valuesPtr()[index] = value;
-		return;
-	}
-
-	// Otherwise insert info, key and value
-	setElementInfo(firstFreeSlot, ELEMENT_INFO_OCCUPIED);
-	new (keysPtr() + firstFreeSlot) K(key);
-	new (valuesPtr() + firstFreeSlot) V(value);
-
-	mSize += 1;
-	if (isPlaceholder) mPlaceholders -= 1;
+	this->putInternal<const K&, const V&>(key, value);
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
 void HashMap<K,V,Descr,Allocator>::put(const K& key, V&& value) noexcept
 {
-	ensureProperlyHashed();
+	this->putInternal<const K&, V>(key, std::move(value));
+}
 
-	// Finds the index of the element
-	uint32_t firstFreeSlot = uint32_t(~0);
-	bool elementFound = false;
-	bool isPlaceholder = false;
-	uint32_t index = this->findElementIndex<K,KeyHash,KeyEqual>(key, elementFound, firstFreeSlot, isPlaceholder);
+template<typename K, typename V, typename Descr, typename Allocator>
+void HashMap<K,V,Descr,Allocator>::put(K&& key, const V& value) noexcept
+{
+	this->putInternal<K, const V&>(std::move(key), value);
+}
 
-	// If map contains key just replace value and return
-	if (elementFound) {
-		valuesPtr()[index] = std::move(value);
-		return;
-	}
-
-	// Otherwise insert info, key and value
-	setElementInfo(firstFreeSlot, ELEMENT_INFO_OCCUPIED);
-	new (keysPtr() + firstFreeSlot) K(key);
-	new (valuesPtr() + firstFreeSlot) V(std::move(value));
-
-	mSize += 1;
-	if (isPlaceholder) mPlaceholders -= 1;
+template<typename K, typename V, typename Descr, typename Allocator>
+void HashMap<K,V,Descr,Allocator>::put(K&& key, V&& value) noexcept
+{
+	this->putInternal<K, V>(std::move(key), std::move(value));
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
@@ -596,8 +565,8 @@ void HashMap<K,V,Descr,Allocator>::setElementInfo(uint32_t index, uint8_t value)
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
-template<typename T, typename Hash, typename Equal>
-uint32_t HashMap<K,V,Descr,Allocator>::findElementIndex(const T& key, bool& elementFound,
+template<typename KT, typename Hash, typename Equal>
+uint32_t HashMap<K,V,Descr,Allocator>::findElementIndex(const KT& key, bool& elementFound,
                                                         uint32_t& firstFreeSlot, bool& isPlaceholder) const noexcept
 {
 	Hash keyHasher;
@@ -677,14 +646,14 @@ uint32_t HashMap<K,V,Descr,Allocator>::findElementIndex(const T& key, bool& elem
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
-template<typename T, typename Hash, typename Equal>
-V* HashMap<K,V,Descr,Allocator>::getInternal(const T& key) const noexcept
+template<typename KT, typename Hash, typename Equal>
+V* HashMap<K,V,Descr,Allocator>::getInternal(const KT& key) const noexcept
 {
 	// Finds the index of the element
 	uint32_t firstFreeSlot = uint32_t(~0);
 	bool elementFound = false;
 	bool isPlaceholder = false;
-	uint32_t index = this->findElementIndex<T,Hash,Equal>(key, elementFound, firstFreeSlot, isPlaceholder);
+	uint32_t index = this->findElementIndex<KT,Hash,Equal>(key, elementFound, firstFreeSlot, isPlaceholder);
 
 	// Returns nullptr if map doesn't contain element
 	if (!elementFound) return nullptr;
@@ -694,14 +663,46 @@ V* HashMap<K,V,Descr,Allocator>::getInternal(const T& key) const noexcept
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
-template<typename T, typename Hash, typename Equal>
-bool HashMap<K,V,Descr,Allocator>::removeInternal(const T& key) noexcept
+template<typename KT, typename VT>
+void HashMap<K,V,Descr,Allocator>::putInternal(KT&& key, VT&& value) noexcept
+{
+	// Utilizes perfect forwarding in order to determine if parameters are const references or rvalues.
+	// const reference: KT == const K&
+	// rvalue: KT == K
+	// std::forward<KT>(key) will then return the correct version of key
+
+	ensureProperlyHashed();
+
+	// Finds the index of the element
+	uint32_t firstFreeSlot = uint32_t(~0);
+	bool elementFound = false;
+	bool isPlaceholder = false;
+	uint32_t index = this->findElementIndex<K,KeyHash,KeyEqual>(key, elementFound, firstFreeSlot, isPlaceholder);
+
+	// If map contains key just replace value and return
+	if (elementFound) {
+		valuesPtr()[index] = std::forward<VT>(value);
+		return;
+	}
+
+	// Otherwise insert info, key and value
+	setElementInfo(firstFreeSlot, ELEMENT_INFO_OCCUPIED);
+	new (keysPtr() + firstFreeSlot) K(std::forward<KT>(key));
+	new (valuesPtr() + firstFreeSlot) V(std::forward<VT>(value));
+
+	mSize += 1;
+	if (isPlaceholder) mPlaceholders -= 1;
+}
+
+template<typename K, typename V, typename Descr, typename Allocator>
+template<typename KT, typename Hash, typename Equal>
+bool HashMap<K,V,Descr,Allocator>::removeInternal(const KT& key) noexcept
 {
 	// Finds the index of the element
 	uint32_t firstFreeSlot = uint32_t(~0);
 	bool elementFound = false;
 	bool isPlaceholder = false;
-	uint32_t index = this->findElementIndex<T,Hash,Equal>(key, elementFound, firstFreeSlot, isPlaceholder);
+	uint32_t index = this->findElementIndex<KT,Hash,Equal>(key, elementFound, firstFreeSlot, isPlaceholder);
 
 	// Returns nullptr if map doesn't contain element
 	if (!elementFound) return false;
