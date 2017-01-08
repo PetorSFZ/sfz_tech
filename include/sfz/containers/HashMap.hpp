@@ -53,6 +53,11 @@ using std::uint8_t;
 /// current number of placeholders can be queried by the placeholders() method. Both size and 
 /// placeholders count as load when checking if the HashMap needs to be rehashed or not.
 ///
+/// An alternate key type can be specified in the HashTableKeyDescriptor. This alt key can be used
+/// in some methods (such as get()) instead of the normal key type. This is mostly useful when
+/// string classes are used as keys, then const char* can be used as an alt key type. This removes
+/// the need to create a temporary key object (which might need to allocate memory).
+///
 /// \param K the key type
 /// \param V the value type
 /// \param Descr the HashTableKeyDescriptor (by default sfz::HashTableKeyDescriptor)
@@ -78,6 +83,16 @@ public:
 	/// rehash, but would not increase capacity. Size 40% and placeholders 10% would trigger a
 	/// rehash with capacity increase.
 	static constexpr float MAX_SIZE_KEEP_CAPACITY_FACTOR = 0.35f;
+
+	// Typedefs
+	// --------------------------------------------------------------------------------------------
+
+	using KeyHash = typename Descr::KeyHash;
+	using KeyEqual = typename Descr::KeyEqual;
+
+	using AltK = typename Descr::AltKeyT;
+	using AltKeyHash = typename Descr::AltKeyHash;
+	using AltKeyKeyEqual = typename Descr::AltKeyKeyEqual;
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -113,12 +128,9 @@ public:
 	/// HashMap that can change the internal capacity, so make a copy if you intend to keep the
 	/// value. Returns nullptr if no element is associated with the given key.
 	V* get(const K& key) noexcept;
-
-	/// Returns pointer to the element associated with the given key. The pointer is owned by this
-	/// HashMap and will not necessarily be valid if any non-const operations are done to this
-	/// HashMap that can change the internal capacity, so make a copy if you intend to keep the
-	/// value. Returns nullptr if no element is associated with the given key.
 	const V* get(const K& key) const noexcept;
+	V* get(const AltK& key) noexcept;
+	const V* get(const AltK& key) const noexcept;
 
 	// Public methods
 	// --------------------------------------------------------------------------------------------
@@ -283,7 +295,12 @@ private:
 	/// sent back through the firstFreeSlot parameter, if no free slot is found it will be set to
 	/// ~0. Whether the found free slot is a placeholder slot or not is sent back through the
 	/// isPlaceholder parameter.
-	uint32_t findElementIndex(const K& key, bool& elementFound, uint32_t& firstFreeSlot, bool& isPlaceholder) const noexcept;
+	/// KeyT: The key type, either K or AltK
+	/// KeyHash: Hasher for KeyT
+	/// KeyEqual: Comparer for KeyT and K (I.e. KeyEqual for K and AltKeyKeyEqual for AltK)
+	template<typename T, typename Hash, typename Equal>
+	uint32_t findElementIndex(const T& key, bool& elementFound, uint32_t& firstFreeSlot,
+	                          bool& isPlaceholder) const noexcept;
 
 	// Private members
 	// --------------------------------------------------------------------------------------------

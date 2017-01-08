@@ -211,9 +211,9 @@ struct ZeroHashDescriptor final {
 	using KeyHash = ZeroHash;
 	using KeyEqual = std::equal_to<int>;
 
-	using AltKeyT = KeyT;
-	using AltKeyHash = KeyHash;
-	using AltKeyKeyEqual = KeyEqual;
+	using AltKeyT = NO_ALT_KEY_TYPE;
+	using AltKeyHash = NO_ALT_KEY_TYPE;
+	using AltKeyKeyEqual = NO_ALT_KEY_TYPE;
 };
 
 TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
@@ -378,6 +378,11 @@ TEST_CASE("HashMap with strings", "[sfz::HashMap]")
 			uint32_t* ptr = m.get(tmp);
 			REQUIRE(ptr != nullptr);
 			REQUIRE(*ptr == i);
+
+			uint32_t* ptr2 = m.get(tmp.str()); // alt key variant
+			REQUIRE(ptr2 != nullptr);
+			REQUIRE(*ptr2 == i);
+			REQUIRE(*ptr2 == *ptr);
 		}
 	}
 	SECTION("StackString") {
@@ -399,6 +404,11 @@ TEST_CASE("HashMap with strings", "[sfz::HashMap]")
 			uint32_t* ptr = m.get(tmp);
 			REQUIRE(ptr != nullptr);
 			REQUIRE(*ptr == i);
+
+			uint32_t* ptr2 = m.get(tmp.str); // alt key variant
+			REQUIRE(ptr2 != nullptr);
+			REQUIRE(*ptr2 == i);
+			REQUIRE(*ptr2 == *ptr);
 		}
 	}
 }

@@ -68,16 +68,16 @@ struct HashTableKeyDescriptor<const char*> final {
 	using KeyHash = RawStringHash;
 	using KeyEqual = RawStringEqual;
 
-	using AltKeyT = KeyT;
-	using AltKeyHash = KeyHash;
-	using AltKeyKeyEqual = KeyEqual;
+	using AltKeyT = NO_ALT_KEY_TYPE;
+	using AltKeyHash = NO_ALT_KEY_TYPE;
+	using AltKeyKeyEqual = NO_ALT_KEY_TYPE;
 };
 
 } // namespace sfz
 
 namespace std {
 
-// DynString hash struct
+// DynString & StackString std::hash specializations
 // ------------------------------------------------------------------------------------------------
 
 template<typename Allocator>
@@ -85,14 +85,50 @@ struct hash<sfz::DynStringTempl<Allocator>> {
 	size_t operator() (const sfz::DynStringTempl<Allocator>& str) const noexcept;
 };
 
-// StackString hash struct
-// ------------------------------------------------------------------------------------------------
-
 template<size_t N>
 struct hash<sfz::StackStringTempl<N>> {
 	size_t operator() (const sfz::StackStringTempl<N>& str) const noexcept;
 };
 
 } // namespace std
+
+namespace sfz {
+
+// DynString & StackString HashTableKeyDescriptor specializations
+// ------------------------------------------------------------------------------------------------
+
+template<typename Allocator>
+struct EqualTo2<const char*, DynStringTempl<Allocator>> final {
+	bool operator() (const char* lhs, const DynStringTempl<Allocator>& rhs) noexcept;
+};
+
+template<typename Allocator>
+struct HashTableKeyDescriptor<DynStringTempl<Allocator>> final {
+	using KeyT = DynStringTempl<Allocator>;
+	using KeyHash = std::hash<KeyT>;
+	using KeyEqual = std::equal_to<KeyT>;
+
+	using AltKeyT = const char*;
+	using AltKeyHash = RawStringHash;
+	using AltKeyKeyEqual = EqualTo2<AltKeyT, KeyT>;
+};
+
+template<size_t N>
+struct EqualTo2<const char*, StackStringTempl<N>> final {
+	bool operator() (const char* lhs, const StackStringTempl<N>& rhs) noexcept;
+};
+
+template<size_t N>
+struct HashTableKeyDescriptor<StackStringTempl<N>> final {
+	using KeyT = StackStringTempl<N>;
+	using KeyHash = std::hash<KeyT>;
+	using KeyEqual = std::equal_to<KeyT>;
+
+	using AltKeyT = const char*;
+	using AltKeyHash = RawStringHash;
+	using AltKeyKeyEqual = EqualTo2<AltKeyT, KeyT>;
+};
+
+} // namespace sfz
 
 #include "sfz/strings/StringHashers.inl"

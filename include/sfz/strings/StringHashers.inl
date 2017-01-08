@@ -89,7 +89,7 @@ inline size_t RawStringHash::operator() (const char* str) const noexcept
 
 namespace std {
 
-// DynString hash struct
+// DynString & StackString std::hash specializations
 // ------------------------------------------------------------------------------------------------
 
 template<typename Allocator>
@@ -98,9 +98,6 @@ size_t hash<sfz::DynStringTempl<Allocator>>::operator() (const sfz::DynStringTem
 	return sfz::hash<Allocator>(str);
 }
 
-// StackString hash struct
-// ------------------------------------------------------------------------------------------------
-
 template<size_t N>
 size_t hash<sfz::StackStringTempl<N>>::operator() (const sfz::StackStringTempl<N>& str) const noexcept
 {
@@ -108,3 +105,24 @@ size_t hash<sfz::StackStringTempl<N>>::operator() (const sfz::StackStringTempl<N
 }
 
 } // namespace std
+
+namespace sfz {
+
+// DynString & StackString HashTableKeyDescriptor specializations
+// ------------------------------------------------------------------------------------------------
+
+template<typename Allocator>
+bool EqualTo2<const char*, DynStringTempl<Allocator>>::operator() (const char* lhs, const DynStringTempl<Allocator>& rhs) noexcept
+{
+	return rhs == lhs;
+}
+
+template<size_t N>
+bool EqualTo2<const char*, StackStringTempl<N>>::operator() (const char* lhs, const StackStringTempl<N>& rhs) noexcept
+{
+	return rhs == lhs;
+}
+
+} // namespace sfz
+
+

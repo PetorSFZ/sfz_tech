@@ -52,6 +52,16 @@ struct EqualTo2<T,T> final {
 // HashTableKeyDescriptor template
 // ------------------------------------------------------------------------------------------------
 
+/// Placeholder type used to specify that a given key does not have an alternate key type in a
+/// HashTableKeyDescriptor.
+struct NO_ALT_KEY_TYPE final {
+	NO_ALT_KEY_TYPE() = delete;
+	NO_ALT_KEY_TYPE(const NO_ALT_KEY_TYPE&) = delete;
+	NO_ALT_KEY_TYPE& operator= (const NO_ALT_KEY_TYPE&) = delete;
+	NO_ALT_KEY_TYPE(NO_ALT_KEY_TYPE&&) = delete;
+	NO_ALT_KEY_TYPE& operator= (NO_ALT_KEY_TYPE&&) = delete;
+};
+
 /// Template used to describe how a key is hashed and compared with other keys in a hash table. Of
 /// special note is the possibility to define an alternate key type compatible with the main type.
 /// This is mainly useful when the key is a string class, in that case "const char*" can be defined
@@ -59,16 +69,17 @@ struct EqualTo2<T,T> final {
 /// require memory allocation, can be avoided.
 /// 
 /// In order to be a HashTableKeyDescriptor the following typedefs need to be available:
-/// KeyT: The key type
-/// KeyHash: A type with the same interface as std::hash which can hash a key
-/// KeyEqual: A type with the same interface as std::equal_to which can compare two keys
-/// AltKeyT: An alternate key type compatible with KeyT. = KeyT if alt key not wanted.
+/// KeyT: The key type.
+/// KeyHash: A type with the same interface as std::hash which can hash a key.
+/// KeyEqual: A type with the same interface as std::equal_to which can compare two keys.
+///
+/// In addition the following typedefs used for the alternate key type needs to be available,
+/// if no alternate key type exist they MUST all be set to NO_ALT_KEY_TYPE.
+/// AltKeyT: An alternate key type compatible with KeyT.
 /// AltKeyHash: Key hasher but for AltKeyT, must produce same hash as KeyHash for equivalent keys
-/// (i.e. AltKeyKeyEqual says they are equal). = KeyHash if alt key not wanted.
+/// (i.e. AltKeyKeyEqual says they are equal).
 /// AltKeyKeyEqual: A type with the same interface as sfz::EqualTo2 which compares an AltKeyT
-/// (left-hand side) with a KeyT (right-hand side). = KeyEqual if no alt key is wanted (Note:
-/// KeyEqual and AltKeyKeyEqual does not usually have the same interface, but in the special case
-/// where there is no alt key they should be identical and it is fine to use KeyEqual).
+/// (left-hand side) with a KeyT (right-hand side).
 ///
 /// The default implementation uses std::hash<K> and std::equal_to<K>. In other words, as long
 /// as std::hash is specialized and an equality (==) operator is defined the default
@@ -84,9 +95,9 @@ struct HashTableKeyDescriptor final {
 	using KeyHash = std::hash<KeyT>;
 	using KeyEqual = std::equal_to<KeyT>;
 
-	using AltKeyT = KeyT;
-	using AltKeyHash = KeyHash;
-	using AltKeyKeyEqual = KeyEqual; // If specialized for alt key: EqualTo2<AltKeyT,KeyT>
+	using AltKeyT = NO_ALT_KEY_TYPE;
+	using AltKeyHash = NO_ALT_KEY_TYPE; // If specialized for alt key: std::hash<AltKeyT>
+	using AltKeyKeyEqual = NO_ALT_KEY_TYPE; // If specialized for alt key: EqualTo2<AltKeyT,KeyT>
 };
 
 } // namespace sfz
