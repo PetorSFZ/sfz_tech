@@ -384,6 +384,11 @@ TEST_CASE("HashMap with strings", "[sfz::HashMap]")
 			REQUIRE(*ptr2 == i);
 			REQUIRE(*ptr2 == *ptr);
 		}
+
+		REQUIRE(m.get("str0") != nullptr);
+		REQUIRE(*m.get("str0") == 0);
+		REQUIRE(m.remove("str0"));
+		REQUIRE(m.get("str0") == nullptr);
 	}
 	SECTION("StackString") {
 		HashMap<StackString,uint32_t> m(0);
@@ -410,5 +415,10 @@ TEST_CASE("HashMap with strings", "[sfz::HashMap]")
 			REQUIRE(*ptr2 == i);
 			REQUIRE(*ptr2 == *ptr);
 		}
+
+		REQUIRE(m.get("str0") != nullptr);
+		REQUIRE(*m.get("str0") == 0);
+		REQUIRE(m.remove("str0"));
+		REQUIRE(m.get("str0") == nullptr);
 	}
 }

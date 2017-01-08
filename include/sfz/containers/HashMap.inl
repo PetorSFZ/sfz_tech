@@ -76,65 +76,25 @@ HashMap<K,V,Descr,Allocator>::~HashMap() noexcept
 template<typename K, typename V, typename Descr, typename Allocator>
 V* HashMap<K,V,Descr,Allocator>::get(const K& key) noexcept
 {
-	// Finds the index of the element
-	uint32_t firstFreeSlot = uint32_t(~0);
-	bool elementFound = false;
-	bool isPlaceholder = false;
-	uint32_t index = this->findElementIndex<K,KeyHash,KeyEqual>(key, elementFound, firstFreeSlot, isPlaceholder);
-
-	// Returns nullptr if map doesn't contain element
-	if (!elementFound) return nullptr;
-
-	// Returns pointer to element
-	return &(valuesPtr()[index]);
+	return this->getInternal<K,KeyHash,KeyEqual>(key);
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
 const V* HashMap<K,V,Descr,Allocator>::get(const K& key) const noexcept
 {
-	// Finds the index of the element
-	uint32_t firstFreeSlot = uint32_t(~0);
-	bool elementFound = false;
-	bool isPlaceholder = false;
-	uint32_t index = this->findElementIndex<K,KeyHash,KeyEqual>(key, elementFound, firstFreeSlot, isPlaceholder);
-
-	// Returns nullptr if map doesn't contain element
-	if (!elementFound) return nullptr;
-
-	// Returns pointer to element
-	return &(valuesPtr()[index]);
+	return this->getInternal<K,KeyHash,KeyEqual>(key);
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
 V* HashMap<K,V,Descr,Allocator>::get(const AltK& key) noexcept
 {
-	// Finds the index of the element
-	uint32_t firstFreeSlot = uint32_t(~0);
-	bool elementFound = false;
-	bool isPlaceholder = false;
-	uint32_t index = this->findElementIndex<AltK,AltKeyHash,AltKeyKeyEqual>(key, elementFound, firstFreeSlot, isPlaceholder);
-
-	// Returns nullptr if map doesn't contain element
-	if (!elementFound) return nullptr;
-
-	// Returns pointer to element
-	return &(valuesPtr()[index]);
+	return this->getInternal<AltK,AltKeyHash,AltKeyKeyEqual>(key);
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
 const V* HashMap<K,V,Descr,Allocator>::get(const AltK& key) const noexcept
 {
-	// Finds the index of the element
-	uint32_t firstFreeSlot = uint32_t(~0);
-	bool elementFound = false;
-	bool isPlaceholder = false;
-	uint32_t index = this->findElementIndex<AltK,AltKeyHash,AltKeyKeyEqual>(key, elementFound, firstFreeSlot, isPlaceholder);
-
-	// Returns nullptr if map doesn't contain element
-	if (!elementFound) return nullptr;
-
-	// Returns pointer to element
-	return &(valuesPtr()[index]);
+	return this->getInternal<AltK,AltKeyHash,AltKeyKeyEqual>(key);
 }
 
 // HashMap (implementation): Public methods
@@ -230,23 +190,13 @@ V& HashMap<K,V,Descr,Allocator>::operator[] (const K& key) noexcept
 template<typename K, typename V, typename Descr, typename Allocator>
 bool HashMap<K,V,Descr,Allocator>::remove(const K& key) noexcept
 {
-	// Finds the index of the element
-	uint32_t firstFreeSlot = uint32_t(~0);
-	bool elementFound = false;
-	bool isPlaceholder = false;
-	uint32_t index = this->findElementIndex<K,KeyHash,KeyEqual>(key, elementFound, firstFreeSlot, isPlaceholder);
+	return this->removeInternal<K,KeyHash,KeyEqual>(key);
+}
 
-	// Returns nullptr if map doesn't contain element
-	if (!elementFound) return false;
-
-	// Remove element
-	setElementInfo(index, ELEMENT_INFO_PLACEHOLDER);
-	keysPtr()[index].~K();
-	valuesPtr()[index].~V();
-
-	mSize -= 1;
-	mPlaceholders += 1;
-	return true;
+template<typename K, typename V, typename Descr, typename Allocator>
+bool HashMap<K,V,Descr,Allocator>::remove(const AltK& key) noexcept
+{
+	return this->removeInternal<AltK,AltKeyHash,AltKeyKeyEqual>(key);
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
@@ -724,6 +674,46 @@ uint32_t HashMap<K,V,Descr,Allocator>::findElementIndex(const T& key, bool& elem
 	}
 
 	return uint32_t(~0);
+}
+
+template<typename K, typename V, typename Descr, typename Allocator>
+template<typename T, typename Hash, typename Equal>
+V* HashMap<K,V,Descr,Allocator>::getInternal(const T& key) const noexcept
+{
+	// Finds the index of the element
+	uint32_t firstFreeSlot = uint32_t(~0);
+	bool elementFound = false;
+	bool isPlaceholder = false;
+	uint32_t index = this->findElementIndex<T,Hash,Equal>(key, elementFound, firstFreeSlot, isPlaceholder);
+
+	// Returns nullptr if map doesn't contain element
+	if (!elementFound) return nullptr;
+
+	// Returns pointer to element
+	return &(valuesPtr()[index]);
+}
+
+template<typename K, typename V, typename Descr, typename Allocator>
+template<typename T, typename Hash, typename Equal>
+bool HashMap<K,V,Descr,Allocator>::removeInternal(const T& key) noexcept
+{
+	// Finds the index of the element
+	uint32_t firstFreeSlot = uint32_t(~0);
+	bool elementFound = false;
+	bool isPlaceholder = false;
+	uint32_t index = this->findElementIndex<T,Hash,Equal>(key, elementFound, firstFreeSlot, isPlaceholder);
+
+	// Returns nullptr if map doesn't contain element
+	if (!elementFound) return false;
+
+	// Remove element
+	setElementInfo(index, ELEMENT_INFO_PLACEHOLDER);
+	keysPtr()[index].~K();
+	valuesPtr()[index].~V();
+
+	mSize -= 1;
+	mPlaceholders += 1;
+	return true;
 }
 
 } // namespace sfz

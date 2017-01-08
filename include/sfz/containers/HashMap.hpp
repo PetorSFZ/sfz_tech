@@ -153,6 +153,7 @@ public:
 	/// Attempts to remove the element associated with the given key. Returns false if this
 	/// HashMap contains no such element. 
 	bool remove(const K& key) noexcept;
+	bool remove(const AltK& key) noexcept;
 
 	/// Swaps the contents of two HashMaps
 	void swap(HashMap& other) noexcept;
@@ -301,6 +302,14 @@ private:
 	template<typename T, typename Hash, typename Equal>
 	uint32_t findElementIndex(const T& key, bool& elementFound, uint32_t& firstFreeSlot,
 	                          bool& isPlaceholder) const noexcept;
+	
+	/// Internal shared implementation of all get() methods
+	template<typename T, typename Hash, typename Equal>
+	V* getInternal(const T& key) const noexcept;
+
+	/// Internal shared implementation of all remove() methods
+	template<typename T, typename Hash, typename Equal>
+	bool removeInternal(const T& key) noexcept;
 
 	// Private members
 	// --------------------------------------------------------------------------------------------
