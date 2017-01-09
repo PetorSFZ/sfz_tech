@@ -100,25 +100,37 @@ const V* HashMap<K,V,Descr,Allocator>::get(const AltK& key) const noexcept
 template<typename K, typename V, typename Descr, typename Allocator>
 void HashMap<K,V,Descr,Allocator>::put(const K& key, const V& value) noexcept
 {
-	this->putInternal<const K&, const V&>(key, value);
+	this->putInternal<const K&, const V&, KeyHash, KeyEqual>(key, value);
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
 void HashMap<K,V,Descr,Allocator>::put(const K& key, V&& value) noexcept
 {
-	this->putInternal<const K&, V>(key, std::move(value));
+	this->putInternal<const K&, V, KeyHash, KeyEqual>(key, std::move(value));
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
 void HashMap<K,V,Descr,Allocator>::put(K&& key, const V& value) noexcept
 {
-	this->putInternal<K, const V&>(std::move(key), value);
+	this->putInternal<K, const V&, KeyHash, KeyEqual>(std::move(key), value);
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
 void HashMap<K,V,Descr,Allocator>::put(K&& key, V&& value) noexcept
 {
-	this->putInternal<K, V>(std::move(key), std::move(value));
+	this->putInternal<K, V, KeyHash, KeyEqual>(std::move(key), std::move(value));
+}
+
+template<typename K, typename V, typename Descr, typename Allocator>
+void HashMap<K,V,Descr,Allocator>::put(const AltK& key, const V& value) noexcept
+{
+	this->putInternal<const AltK&, const V&, AltKeyHash, AltKeyKeyEqual>(key, value);
+}
+
+template<typename K, typename V, typename Descr, typename Allocator>
+void HashMap<K,V,Descr,Allocator>::put(const AltK& key, V&& value) noexcept
+{
+	this->putInternal<const AltK&, V, AltKeyHash, AltKeyKeyEqual>(key, std::move(value));
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
@@ -663,7 +675,7 @@ V* HashMap<K,V,Descr,Allocator>::getInternal(const KT& key) const noexcept
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
-template<typename KT, typename VT>
+template<typename KT, typename VT, typename Hash, typename Equal>
 void HashMap<K,V,Descr,Allocator>::putInternal(KT&& key, VT&& value) noexcept
 {
 	// Utilizes perfect forwarding in order to determine if parameters are const references or rvalues.
@@ -677,7 +689,7 @@ void HashMap<K,V,Descr,Allocator>::putInternal(KT&& key, VT&& value) noexcept
 	uint32_t firstFreeSlot = uint32_t(~0);
 	bool elementFound = false;
 	bool isPlaceholder = false;
-	uint32_t index = this->findElementIndex<K,KeyHash,KeyEqual>(key, elementFound, firstFreeSlot, isPlaceholder);
+	uint32_t index = this->findElementIndex<KT,Hash,Equal>(key, elementFound, firstFreeSlot, isPlaceholder);
 
 	// If map contains key just replace value and return
 	if (elementFound) {

@@ -543,4 +543,28 @@ TEST_CASE("Perfect forwarding in put()", "[sfz::HashMap]")
 		REQUIRE(ptr2 != nullptr);
 		REQUIRE(ptr2->value == 3);
 	}
+	SECTION("altKey, const ref") {
+		HashMap<StackString, MoveTestStruct> m2;
+		MoveTestStruct v(2);
+		REQUIRE(!v.moved);
+		m2.put("foo", v);
+		REQUIRE(!v.moved);
+		REQUIRE(v.value == 2);
+		MoveTestStruct* ptr = m2.get("foo");
+		REQUIRE(ptr != nullptr);
+		REQUIRE(ptr->value == 2);
+		REQUIRE(!ptr->moved);
+	}
+	SECTION("altKey, rvalue") {
+		HashMap<StackString, MoveTestStruct> m2;
+		MoveTestStruct v(2);
+		REQUIRE(!v.moved);
+		m2.put("foo", std::move(v));
+		REQUIRE(v.moved);
+		REQUIRE(v.value == 0);
+		MoveTestStruct* ptr = m2.get("foo");
+		REQUIRE(ptr != nullptr);
+		REQUIRE(ptr->value == 2);
+		REQUIRE(ptr->moved);
+	}
 }

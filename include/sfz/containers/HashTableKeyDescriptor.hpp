@@ -81,6 +81,10 @@ struct NO_ALT_KEY_TYPE final {
 /// AltKeyKeyEqual: A type with the same interface as sfz::EqualTo2 which compares an AltKeyT
 /// (left-hand side) with a KeyT (right-hand side).
 ///
+/// In addition there is one additional constraint on an alt key type, it must be possible to
+/// construct a normal key with the alt key. I.e., the key type needs a Key(AltKey alt)
+/// constructor.
+///
 /// The default implementation uses std::hash<K> and std::equal_to<K>. In other words, as long
 /// as std::hash is specialized and an equality (==) operator is defined the default
 /// HashTableKeyDescriptor should just work.

@@ -54,9 +54,11 @@ using std::uint8_t;
 /// placeholders count as load when checking if the HashMap needs to be rehashed or not.
 ///
 /// An alternate key type can be specified in the HashTableKeyDescriptor. This alt key can be used
-/// in some methods (such as get()) instead of the normal key type. This is mostly useful when
-/// string classes are used as keys, then const char* can be used as an alt key type. This removes
-/// the need to create a temporary key object (which might need to allocate memory).
+/// in most methods instead of the normal key type. This is mostly useful when string classes are
+/// used as keys, then const char* can be used as an alt key type. This removes the need to create
+/// a temporary key object (which might need to allocate memory). As specified in the
+/// HashTableKeyDescriptor documentation, the normal key type needs to be constructable using an
+/// alt key.
 ///
 /// \param K the key type
 /// \param V the value type
@@ -141,6 +143,8 @@ public:
 	void put(const K& key, V&& value) noexcept;
 	void put(K&& key, const V& value) noexcept;
 	void put(K&& key, V&& value) noexcept;
+	void put(const AltK& key, const V& value) noexcept;
+	void put(const AltK& key, V&& value) noexcept;
 
 	/// Access operator, will return a reference to the element associated with the given key. If
 	/// no such element exists it will be created with the default constructor. As always, the
@@ -307,7 +311,7 @@ private:
 	V* getInternal(const KT& key) const noexcept;
 
 	/// Internal shared implementation of all put() methods
-	template<typename KT, typename VT>
+	template<typename KT, typename VT, typename Hash, typename Equal>
 	void putInternal(KT&& key, VT&& value) noexcept;
 
 	/// Internal shared implementation of all remove() methods
