@@ -98,39 +98,39 @@ const V* HashMap<K,V,Descr,Allocator>::get(const AltK& key) const noexcept
 // ------------------------------------------------------------------------------------------------
 
 template<typename K, typename V, typename Descr, typename Allocator>
-void HashMap<K,V,Descr,Allocator>::put(const K& key, const V& value) noexcept
+V& HashMap<K,V,Descr,Allocator>::put(const K& key, const V& value) noexcept
 {
-	this->putInternal<const K&, const V&, KeyHash, KeyEqual>(key, value);
+	return this->putInternal<const K&, const V&, KeyHash, KeyEqual>(key, value);
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
-void HashMap<K,V,Descr,Allocator>::put(const K& key, V&& value) noexcept
+V& HashMap<K,V,Descr,Allocator>::put(const K& key, V&& value) noexcept
 {
-	this->putInternal<const K&, V, KeyHash, KeyEqual>(key, std::move(value));
+	return this->putInternal<const K&, V, KeyHash, KeyEqual>(key, std::move(value));
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
-void HashMap<K,V,Descr,Allocator>::put(K&& key, const V& value) noexcept
+V& HashMap<K,V,Descr,Allocator>::put(K&& key, const V& value) noexcept
 {
-	this->putInternal<K, const V&, KeyHash, KeyEqual>(std::move(key), value);
+	return this->putInternal<K, const V&, KeyHash, KeyEqual>(std::move(key), value);
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
-void HashMap<K,V,Descr,Allocator>::put(K&& key, V&& value) noexcept
+V& HashMap<K,V,Descr,Allocator>::put(K&& key, V&& value) noexcept
 {
-	this->putInternal<K, V, KeyHash, KeyEqual>(std::move(key), std::move(value));
+	return this->putInternal<K, V, KeyHash, KeyEqual>(std::move(key), std::move(value));
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
-void HashMap<K,V,Descr,Allocator>::put(const AltK& key, const V& value) noexcept
+V& HashMap<K,V,Descr,Allocator>::put(const AltK& key, const V& value) noexcept
 {
-	this->putInternal<const AltK&, const V&, AltKeyHash, AltKeyKeyEqual>(key, value);
+	return this->putInternal<const AltK&, const V&, AltKeyHash, AltKeyKeyEqual>(key, value);
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
-void HashMap<K,V,Descr,Allocator>::put(const AltK& key, V&& value) noexcept
+V& HashMap<K,V,Descr,Allocator>::put(const AltK& key, V&& value) noexcept
 {
-	this->putInternal<const AltK&, V, AltKeyHash, AltKeyKeyEqual>(key, std::move(value));
+	return this->putInternal<const AltK&, V, AltKeyHash, AltKeyKeyEqual>(key, std::move(value));
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>
@@ -676,7 +676,7 @@ V* HashMap<K,V,Descr,Allocator>::getInternal(const KT& key) const noexcept
 
 template<typename K, typename V, typename Descr, typename Allocator>
 template<typename KT, typename VT, typename Hash, typename Equal>
-void HashMap<K,V,Descr,Allocator>::putInternal(KT&& key, VT&& value) noexcept
+V& HashMap<K,V,Descr,Allocator>::putInternal(KT&& key, VT&& value) noexcept
 {
 	// Utilizes perfect forwarding in order to determine if parameters are const references or rvalues.
 	// const reference: KT == const K&
@@ -694,7 +694,7 @@ void HashMap<K,V,Descr,Allocator>::putInternal(KT&& key, VT&& value) noexcept
 	// If map contains key just replace value and return
 	if (elementFound) {
 		valuesPtr()[index] = std::forward<VT>(value);
-		return;
+		return valuesPtr()[index];
 	}
 
 	// Otherwise insert info, key and value
@@ -704,6 +704,7 @@ void HashMap<K,V,Descr,Allocator>::putInternal(KT&& key, VT&& value) noexcept
 
 	mSize += 1;
 	if (isPlaceholder) mPlaceholders -= 1;
+	return valuesPtr()[firstFreeSlot];
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>

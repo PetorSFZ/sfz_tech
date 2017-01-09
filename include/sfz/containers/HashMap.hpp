@@ -125,10 +125,12 @@ public:
 	/// capacity.
 	uint32_t placeholders() const noexcept { return mPlaceholders; }
 
-	/// Returns pointer to the element associated with the given key. The pointer is owned by this
-	/// HashMap and will not necessarily be valid if any non-const operations are done to this
-	/// HashMap that can change the internal capacity, so make a copy if you intend to keep the
-	/// value. Returns nullptr if no element is associated with the given key.
+	/// Returns pointer to the element associated with the given key, or nullptr if no such element
+	/// exists. The pointer is owned by this HashMap and will not be valid if it is rehashed,
+	/// which can automatically occur if for example keys are inserted via put() or operator[].
+	/// Instead it is recommended to make a copy of the returned value. This method is guaranteed
+	/// to never change the state of the HashMap (by causing a rehash), the pointer returned can
+	/// however be used to modify the stored value for an element.
 	V* get(const K& key) noexcept;
 	const V* get(const K& key) const noexcept;
 	V* get(const AltK& key) noexcept;
@@ -138,13 +140,23 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	/// Adds the specified key value pair to this HashMap. If a value is already associated with
-	/// the given key it will be replaced with the new value. Will call ensureProperlyHashed().
-	void put(const K& key, const V& value) noexcept;
-	void put(const K& key, V&& value) noexcept;
-	void put(K&& key, const V& value) noexcept;
-	void put(K&& key, V&& value) noexcept;
-	void put(const AltK& key, const V& value) noexcept;
-	void put(const AltK& key, V&& value) noexcept;
+	/// the given key it will be replaced with the new value. Returns a reference to the element
+	/// set. As usual, the reference will be invalidated if the HashMap is rehashed, so be careful.
+	/// This method will always call ensureProperlyHashed(), which might trigger a rehash.
+	///
+	/// In particular the following scenario presents a dangerous trap:
+	/// V& ref1 = m.put(key1, value1);
+	/// V& ref2 = m.put(key2, value2);
+	/// At this point only ref2 is guaranteed to be valid, as the second call might have triggered
+	/// a rehash. In this particular example consider ignoring the reference returned and instead
+	/// retrieve pointers via the get() method (which is guaranteed to not cause a rehash) after
+	/// all the keys have been inserted.
+	V& put(const K& key, const V& value) noexcept;
+	V& put(const K& key, V&& value) noexcept;
+	V& put(K&& key, const V& value) noexcept;
+	V& put(K&& key, V&& value) noexcept;
+	V& put(const AltK& key, const V& value) noexcept;
+	V& put(const AltK& key, V&& value) noexcept;
 
 	/// Access operator, will return a reference to the element associated with the given key. If
 	/// no such element exists it will be created with the default constructor. As always, the
@@ -312,7 +324,7 @@ private:
 
 	/// Internal shared implementation of all put() methods
 	template<typename KT, typename VT, typename Hash, typename Equal>
-	void putInternal(KT&& key, VT&& value) noexcept;
+	V& putInternal(KT&& key, VT&& value) noexcept;
 
 	/// Internal shared implementation of all remove() methods
 	template<typename KT, typename Hash, typename Equal>

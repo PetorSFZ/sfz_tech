@@ -36,9 +36,9 @@ TEST_CASE("HashMap: Default constructor", "[sfz::HashMap]")
 TEST_CASE("HashMap: Copy constructors", "[sfz::HashMap]")
 {
 	HashMap<int,int> m1(1);
-	m1.put(1, 2);
-	m1.put(2, 3);
-	m1.put(3, 4);
+	REQUIRE(m1.put(1, 2) == 2);
+	REQUIRE(m1.put(2, 3) == 3);
+	REQUIRE(m1.put(3, 4) == 4);
 	REQUIRE(m1.size() == 3);
 	REQUIRE(m1.capacity() != 0);
 	REQUIRE(m1.placeholders() == 0);
@@ -158,7 +158,7 @@ TEST_CASE("HashMap: Rehashing in put()", "[sfz::HashMap]")
 	REQUIRE(m1.capacity() == 0);
 
 	for (int i = 0; i < 256; ++i) {
-		m1.put(i, i + 1);
+		REQUIRE(m1.put(i, i + 1) == (i + 1));
 		REQUIRE(m1.size() == uint32_t(i+1));
 	}
 
@@ -459,7 +459,7 @@ template<>
 struct hash<MoveTestStruct> {
 	inline size_t operator() (const MoveTestStruct& val) const
 	{
-		return val.value;
+		return size_t(val.value);
 	}
 };
 
