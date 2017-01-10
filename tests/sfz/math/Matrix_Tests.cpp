@@ -142,6 +142,12 @@ TEST_CASE("Matrix<T,2,2> specialization", "[sfz::Matrix]")
 		REQUIRE(scale.at(0, 1) == 0.0f);
 		REQUIRE(scale.at(0, 2) == 0.0f);
 		REQUIRE(scale.at(0, 3) == 2.0f);
+
+		mat22 scale2 = mat22::scaling2(vec2(1.0f, 2.0f));
+		REQUIRE(scale2.at(0, 0) == 1.0f);
+		REQUIRE(scale2.at(0, 1) == 0.0f);
+		REQUIRE(scale2.at(0, 2) == 0.0f);
+		REQUIRE(scale2.at(0, 3) == 2.0f);
 	}
 }
 
@@ -312,6 +318,17 @@ TEST_CASE("Matrix<T,3,3> specialization", "[sfz::Matrix]")
 		REQUIRE(scale.at(2, 0) == 0.0f);
 		REQUIRE(scale.at(2, 1) == 0.0f);
 		REQUIRE(scale.at(2, 2) == 2.0f);
+
+		mat33 scale2 = mat33::scaling3(vec3(1.0f, 2.0f, 3.0f));
+		REQUIRE(scale2.at(0, 0) == 1.0f);
+		REQUIRE(scale2.at(0, 1) == 0.0f);
+		REQUIRE(scale2.at(0, 2) == 0.0f);
+		REQUIRE(scale2.at(1, 0) == 0.0f);
+		REQUIRE(scale2.at(1, 1) == 2.0f);
+		REQUIRE(scale2.at(1, 2) == 0.0f);
+		REQUIRE(scale2.at(2, 0) == 0.0f);
+		REQUIRE(scale2.at(2, 1) == 0.0f);
+		REQUIRE(scale2.at(2, 2) == 3.0f);
 	}
 	SECTION("rotation3() constructor function") {
 		vec3 startPoint(1.0f, 0.0f, 0.0f);
@@ -535,6 +552,20 @@ TEST_CASE("Matrix<T,3,4> specialization", "[sfz::Matrix]")
 		REQUIRE(scale.at(2, 1) == 0.0f);
 		REQUIRE(scale.at(2, 2) == 2.0f);
 		REQUIRE(scale.at(2, 3) == 0.0f);
+
+		mat34 scale2 = mat34::scaling3(vec3(1.0f, 2.0f, 3.0f));
+		REQUIRE(scale2.at(0, 0) == 1.0f);
+		REQUIRE(scale2.at(0, 1) == 0.0f);
+		REQUIRE(scale2.at(0, 2) == 0.0f);
+		REQUIRE(scale2.at(0, 3) == 0.0f);
+		REQUIRE(scale2.at(1, 0) == 0.0f);
+		REQUIRE(scale2.at(1, 1) == 2.0f);
+		REQUIRE(scale2.at(1, 2) == 0.0f);
+		REQUIRE(scale2.at(1, 3) == 0.0f);
+		REQUIRE(scale2.at(2, 0) == 0.0f);
+		REQUIRE(scale2.at(2, 1) == 0.0f);
+		REQUIRE(scale2.at(2, 2) == 3.0f);
+		REQUIRE(scale2.at(2, 3) == 0.0f);
 	}
 	SECTION("rotation3() constructor function") {
 		vec3 startPoint(1.0f, 0.0f, 0.0f);
@@ -836,6 +867,24 @@ TEST_CASE("Matrix<T,4,4> specialization", "[sfz::Matrix]")
 		REQUIRE(scale.at(3, 1) == 0.0f);
 		REQUIRE(scale.at(3, 2) == 0.0f);
 		REQUIRE(scale.at(3, 3) == 1.0f);
+
+		mat44 scale2 = mat44::scaling3(vec3(1.0f, 2.0f, 3.0f));
+		REQUIRE(scale2.at(0, 0) == 1.0f);
+		REQUIRE(scale2.at(0, 1) == 0.0f);
+		REQUIRE(scale2.at(0, 2) == 0.0f);
+		REQUIRE(scale2.at(0, 3) == 0.0f);
+		REQUIRE(scale2.at(1, 0) == 0.0f);
+		REQUIRE(scale2.at(1, 1) == 2.0f);
+		REQUIRE(scale2.at(1, 2) == 0.0f);
+		REQUIRE(scale2.at(1, 3) == 0.0f);
+		REQUIRE(scale2.at(2, 0) == 0.0f);
+		REQUIRE(scale2.at(2, 1) == 0.0f);
+		REQUIRE(scale2.at(2, 2) == 3.0f);
+		REQUIRE(scale2.at(2, 3) == 0.0f);
+		REQUIRE(scale2.at(3, 0) == 0.0f);
+		REQUIRE(scale2.at(3, 1) == 0.0f);
+		REQUIRE(scale2.at(3, 2) == 0.0f);
+		REQUIRE(scale2.at(3, 3) == 1.0f);
 	}
 	SECTION("rotation3() constructor function") {
 		vec4 startPoint(1.0f, 0.0f, 0.0f, 1.0f);

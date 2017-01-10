@@ -107,6 +107,8 @@ struct Matrix<T,2,2> final {
 	static SFZ_CUDA_CALL Matrix fill(T value) noexcept;
 	static SFZ_CUDA_CALL Matrix identity() noexcept;
 	static SFZ_CUDA_CALL Matrix scaling2(T scale) noexcept;
+	static SFZ_CUDA_CALL Matrix scaling2(T x, T y) noexcept;
+	static SFZ_CUDA_CALL Matrix scaling2(Vector<T,2> scale) noexcept;
 
 	SFZ_CUDA_CALL T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
 	SFZ_CUDA_CALL T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
@@ -153,6 +155,8 @@ struct Matrix<T,3,3> final {
 	static SFZ_CUDA_CALL Matrix fill(T value) noexcept;
 	static SFZ_CUDA_CALL Matrix identity() noexcept;
 	static SFZ_CUDA_CALL Matrix scaling3(T scale) noexcept;
+	static SFZ_CUDA_CALL Matrix scaling3(T x, T y, T z) noexcept;
+	static SFZ_CUDA_CALL Matrix scaling3(Vector<T,3> scale) noexcept;
 	static SFZ_CUDA_CALL Matrix rotation3(Vector<T,3> axis, T angleRad) noexcept;
 
 	SFZ_CUDA_CALL T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
@@ -200,6 +204,8 @@ struct alignas(16) Matrix<T,3,4> final {
 	static SFZ_CUDA_CALL Matrix fill(T value) noexcept;
 	static SFZ_CUDA_CALL Matrix identity() noexcept; // Identity-like, identity does not exist for 3x4.
 	static SFZ_CUDA_CALL Matrix scaling3(T scale) noexcept;
+	static SFZ_CUDA_CALL Matrix scaling3(T x, T y, T z) noexcept;
+	static SFZ_CUDA_CALL Matrix scaling3(Vector<T,3> scale) noexcept;
 	static SFZ_CUDA_CALL Matrix rotation3(Vector<T,3> axis, T angleRad) noexcept;
 	static SFZ_CUDA_CALL Matrix translation3(Vector<T,3> delta) noexcept;
 
@@ -251,6 +257,8 @@ struct alignas(16) Matrix<T,4,4> final {
 	static SFZ_CUDA_CALL Matrix fill(T value) noexcept;
 	static SFZ_CUDA_CALL Matrix identity() noexcept;
 	static SFZ_CUDA_CALL Matrix scaling3(T scale) noexcept; // Note that the bottom right corner is 1 for 4x4
+	static SFZ_CUDA_CALL Matrix scaling3(T x, T y, T z) noexcept; // Note that the bottom right corner is 1 for 4x4
+	static SFZ_CUDA_CALL Matrix scaling3(Vector<T,3> scale) noexcept; // Note that the bottom right corner is 1 for 4x4
 	static SFZ_CUDA_CALL Matrix rotation3(Vector<T,3> axis, T angleRad) noexcept;
 	static SFZ_CUDA_CALL Matrix translation3(Vector<T,3> delta) noexcept;
 

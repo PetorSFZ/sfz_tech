@@ -98,6 +98,19 @@ SFZ_CUDA_CALL Matrix<T,2,2> Matrix<T,2,2>::scaling2(T scale) noexcept
 }
 
 template<typename T>
+SFZ_CUDA_CALL Matrix<T,2,2> Matrix<T,2,2>::scaling2(T x, T y) noexcept
+{
+	return Matrix<T,2,2>(x, T(0),
+	                     T(0), y);
+}
+
+template<typename T>
+SFZ_CUDA_CALL Matrix<T,2,2> Matrix<T,2,2>::scaling2(Vector<T,2> scale) noexcept
+{
+	return Matrix<T,2,2>::scaling2(scale.x, scale.y);
+}
+
+template<typename T>
 SFZ_CUDA_CALL Vector<T,2> Matrix<T,2,2>::columnAt(uint32_t x) const noexcept
 {
 	return Vector<T,2>(this->at(0, x), this->at(1, x));
@@ -187,6 +200,20 @@ SFZ_CUDA_CALL Matrix<T,3,3> Matrix<T,3,3>::scaling3(T scale) noexcept
 	return Matrix<T,3,3>(scale, T(0), T(0),
 	                     T(0), scale, T(0),
 	                     T(0), T(0), scale);
+}
+
+template<typename T>
+SFZ_CUDA_CALL Matrix<T,3,3> Matrix<T,3,3>::scaling3(T x, T y, T z) noexcept
+{
+	return Matrix<T,3,3>(x, T(0), T(0),
+	                     T(0), y, T(0),
+	                     T(0), T(0), z);
+}
+
+template<typename T>
+SFZ_CUDA_CALL Matrix<T,3,3> Matrix<T,3,3>::scaling3(Vector<T,3> scale) noexcept
+{
+	return Matrix<T,3,3>::scaling3(scale.x, scale.y, scale.z);
 }
 
 template<typename T>
@@ -301,6 +328,20 @@ SFZ_CUDA_CALL Matrix<T,3,4> Matrix<T,3,4>::scaling3(T scale) noexcept
 	return Matrix<T,3,4>(scale, T(0), T(0), T(0),
 	                     T(0), scale, T(0), T(0),
 	                     T(0), T(0), scale, T(0));
+}
+
+template<typename T>
+SFZ_CUDA_CALL Matrix<T,3,4> Matrix<T,3,4>::scaling3(T x, T y, T z) noexcept
+{
+	return Matrix<T,3,4>(x, T(0), T(0), T(0),
+	                     T(0), y, T(0), T(0),
+	                     T(0), T(0), z, T(0));
+}
+
+template<typename T>
+SFZ_CUDA_CALL Matrix<T,3,4> Matrix<T,3,4>::scaling3(Vector<T,3> scale) noexcept
+{
+	return Matrix<T,3,4>::scaling3(scale.x, scale.y, scale.z);
 }
 
 template<typename T>
@@ -438,6 +479,21 @@ SFZ_CUDA_CALL Matrix<T,4,4> Matrix<T,4,4>::scaling3(T scale) noexcept
 	                     T(0), scale, T(0), T(0),
 	                     T(0), T(0), scale, T(0),
 	                     T(0), T(0), T(0), T(1));
+}
+
+template<typename T>
+SFZ_CUDA_CALL Matrix<T,4,4> Matrix<T,4,4>::scaling3(T x, T y, T z) noexcept
+{
+	return Matrix<T,4,4>(x, T(0), T(0), T(0),
+	                     T(0), y, T(0), T(0),
+	                     T(0), T(0), z, T(0),
+	                     T(0), T(0), T(0), T(1));
+}
+
+template<typename T>
+SFZ_CUDA_CALL Matrix<T,4,4> Matrix<T,4,4>::scaling3(Vector<T,3> scale) noexcept
+{
+	return Matrix<T,4,4>::scaling3(scale.x, scale.y, scale.z);
 }
 
 template<typename T>
