@@ -136,36 +136,25 @@ V& HashMap<K,V,Descr,Allocator>::put(const AltK& key, V&& value) noexcept
 template<typename K, typename V, typename Descr, typename Allocator>
 V& HashMap<K,V,Descr,Allocator>::operator[] (const K& key) noexcept
 {
-	if (mCapacity == 0) ensureProperlyHashed();
+	V* ptr = this->get(key);
+	if (ptr != nullptr) return *ptr;
+	return this->put(key, V());
+}
 
-	// Finds the index of the element
-	uint32_t firstFreeSlot = uint32_t(~0);
-	bool elementFound = false;
-	bool isPlaceholder = false;
-	uint32_t index = this->findElementIndex<K,KeyHash,KeyEqual>(key, elementFound, firstFreeSlot, isPlaceholder);
+template<typename K, typename V, typename Descr, typename Allocator>
+V& HashMap<K,V,Descr,Allocator>::operator[] (K&& key) noexcept
+{
+	V* ptr = this->get(key);
+	if (ptr != nullptr) return *ptr;
+	return this->put(std::move(key), V());
+}
 
-	// Check if HashMap needs to rehashed
-	if (!elementFound) {
-		if (ensureProperlyHashed()) {
-			// If rehashed redo the search so we have valid indices
-			index = this->findElementIndex<K,KeyHash,KeyEqual>(key, elementFound, firstFreeSlot, isPlaceholder);
-		}
-	}
-
-	// If element doesn't exist create it with default constructor
-	if (!elementFound) {
-		index = firstFreeSlot;
-		mSize += 1;
-		if (isPlaceholder) mPlaceholders -= 1;
-
-		// Otherwise insert info, key and value
-		setElementInfo(index, ELEMENT_INFO_OCCUPIED);
-		new (keysPtr() + index) K(key);
-		new (valuesPtr() + index) V();
-	}
-
-	// Returns pointer to element
-	return valuesPtr()[index];
+template<typename K, typename V, typename Descr, typename Allocator>
+V& HashMap<K,V,Descr,Allocator>::operator[] (const AltK& key) noexcept
+{
+	V* ptr = this->get(key);
+	if (ptr != nullptr) return *ptr;
+	return this->put(key, V());
 }
 
 template<typename K, typename V, typename Descr, typename Allocator>

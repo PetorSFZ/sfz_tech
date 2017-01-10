@@ -159,14 +159,18 @@ public:
 	V& put(const AltK& key, V&& value) noexcept;
 
 	/// Access operator, will return a reference to the element associated with the given key. If
-	/// no such element exists it will be created with the default constructor. As always, the
-	/// reference will be invalidated if the HashMap is resized. So store a copy if you intend to
-	/// keep it. Will call ensureProperlyHashed() if capacity is 0 or if adding a new key to the
-	/// HashMap.
+	/// no such element exists it will be created with the default constructor. This method is
+	/// implemented by a call to get(), and then a call to put() if no element existed. In
+	/// practice this means that this function is guaranteed to not rehash if the requested
+	/// element already exists. This might be dangerous to rely on, so get() should be preferred
+	/// if rehashing needs to be avoided. As always, the reference will be invalidated if the
+	/// HashMap is rehashed.
 	V& operator[] (const K& key) noexcept;
+	V& operator[] (K&& key) noexcept;
+	V& operator[] (const AltK& key) noexcept;
 
 	/// Attempts to remove the element associated with the given key. Returns false if this
-	/// HashMap contains no such element. 
+	/// HashMap contains no such element. Guaranteed to not rehash.
 	bool remove(const K& key) noexcept;
 	bool remove(const AltK& key) noexcept;
 
