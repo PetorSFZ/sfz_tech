@@ -1,3 +1,25 @@
+# Functions
+# ------------------------------------------------------------------------------------------------
+
+# Automatically set source group to correspond to directory structure.
+# From Stack Overflow post by Florian:
+# http://stackoverflow.com/a/31423421
+function(set_directory_source_group)
+	foreach(_source IN ITEMS ${ARGN})
+		if (IS_ABSOLUTE "${_source}")
+			file(RELATIVE_PATH _source_rel "${CMAKE_CURRENT_SOURCE_DIR}" "${_source}")
+		else()
+			set(source_rel "${_source}")
+		endif()
+		get_filename_component(_source_path "${_source_rel}" PATH)
+		string(REPLACE "/" "\\" _source_path_msvc "${_source_path}")
+		source_group("${_source_path_msvc}" FILES "${_source}")
+	endforeach()
+endfunction(set_directory_source_group)
+
+# Compiler flags and directories
+# ------------------------------------------------------------------------------------------------
+
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project("sfzCore")
 
@@ -14,9 +36,19 @@ endif()
 # Compiler flags
 if(MSVC)
 	# MSVC flags
-	set(CMAKE_CXX_FLAGS "/Wall /Zi /EHsc /arch:AVX /wd4201 /wd4350 /wd4514 /wd4571 /wd4647 /wd4668 /wd4710 /wd4711 /wd4820 /D_CRT_SECURE_NO_WARNINGS")
-	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/O2 /fp:fast /DEBUG /DSFZ_NO_DEBUG")
+	# /W4 = Warning level 4 (/Wall is too picky and has annoying warnings in standard headers)
+	# /wd4201 = Disable warning 4201 (nonstandard extension used : nameless struct/union)
+	# /Zi = Produce .pdb debug information. Does not affect optimizations, but does imply /debug.
+	# /arch:AVX = Enable (require) Intel AVX instruction for code generation
+	# /D_CRT_SECURE_NO_WARNINGS = Removes annyoing warning when using c standard library
+	set(CMAKE_CXX_FLAGS "/W4 /wd4201 /Zi /EHsc /arch:AVX /D_CRT_SECURE_NO_WARNINGS")
+	# /O2 = Optimize code for fastest speed
+	# /fp:fast = "optimize floating-point code for speed at the expense of accuracy and correctness"
+	# /DSFZ_NO_DEBUG = defines the "SFZ_NO_DEBUG" macro, which disables sfz_assert_debug()
 	set(CMAKE_CXX_FLAGS_RELEASE "/O2 /fp:fast /DSFZ_NO_DEBUG")
+	# /DEBUG = "creates debugging information for the .exe file or DLL"
+	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/O2 /fp:fast /DEBUG /DSFZ_NO_DEBUG")
+	# /Od = "disables optimization, speeding compilation and simplifying debugging"
 	set(CMAKE_CXX_FLAGS_DEBUG "/Od /DEBUG")
 else()
 	# GCC / Clang flags
@@ -37,9 +69,11 @@ set(CMAKE_MODULES ${CMAKE_CURRENT_LIST_DIR}/cmake)
 # Adds our cmake modules to module path.
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_MODULES})
 
-# SDL2 & SDL2_mixer (uses 'SDL2' system environment variable)
-find_package(SDL2 REQUIRED) # ${SDL2_INCLUDE_DIR}, ${SDL2_LIBRARY}
+# Dependencies
+# ------------------------------------------------------------------------------------------------
 
+# SDL2 (uses 'SDL2' system environment variable)
+find_package(SDL2 REQUIRED) # ${SDL2_INCLUDE_DIR}, ${SDL2_LIBRARY}
 
 # Catch
 add_subdirectory(${EXTERNALS_DIR}/catch)
@@ -68,34 +102,31 @@ set(FORWARD_INCLUDE_DIRS
 	${OPENGL_INCLUDE_DIR})
 endif()
 
-# Include variable returned to parent
-
 # Include directories
 include_directories(
 	${FORWARD_INCLUDE_DIRS}
 	${CATCH_INCLUDE_DIRS}
 )
 
-set(SOURCE_ROOT_FILES
+# sfzCore library
+# ------------------------------------------------------------------------------------------------
+
+set(SFZ_CORE_FILES
 	${INCLUDE_DIR}/sfz/Assert.hpp
 	${INCLUDE_DIR}/sfz/Assert.inl
 	 ${SOURCE_DIR}/sfz/Assert.cpp
 	${INCLUDE_DIR}/sfz/CudaCompatibility.hpp
 	${INCLUDE_DIR}/sfz/PopWarnings.hpp
 	${INCLUDE_DIR}/sfz/PushWarnings.hpp
-	${INCLUDE_DIR}/sfz/SimdIntrinsics.hpp)
-source_group(sfz_root FILES ${SOURCE_ROOT_FILES})
+	${INCLUDE_DIR}/sfz/SimdIntrinsics.hpp
 
-set(SOURCE_CONTAINERS_FILES
 	${INCLUDE_DIR}/sfz/Containers.hpp
 	${INCLUDE_DIR}/sfz/containers/DynArray.hpp
 	${INCLUDE_DIR}/sfz/containers/DynArray.inl
 	${INCLUDE_DIR}/sfz/containers/HashMap.hpp
 	${INCLUDE_DIR}/sfz/containers/HashMap.inl
-	${INCLUDE_DIR}/sfz/containers/HashTableKeyDescriptor.hpp)
-source_group(sfz_containers FILES ${SOURCE_CONTAINERS_FILES})
+	${INCLUDE_DIR}/sfz/containers/HashTableKeyDescriptor.hpp
 
-set(SOURCE_GEOMETRY_FILES
 	${INCLUDE_DIR}/sfz/Geometry.hpp
 	${INCLUDE_DIR}/sfz/geometry/AABB.hpp
 	${INCLUDE_DIR}/sfz/geometry/AABB.inl
@@ -107,27 +138,8 @@ set(SOURCE_GEOMETRY_FILES
 	${INCLUDE_DIR}/sfz/geometry/OBB.inl
 	${INCLUDE_DIR}/sfz/geometry/Plane.hpp
 	${INCLUDE_DIR}/sfz/geometry/Plane.inl
-	${INCLUDE_DIR}/sfz/geometry/Sphere.hpp)
-source_group(sfz_geometry FILES ${SOURCE_GEOMETRY_FILES})
+	${INCLUDE_DIR}/sfz/geometry/Sphere.hpp
 
-if(SFZ_CORE_OPENGL)
-set(SOURCE_GL_FILES
-	${INCLUDE_GL_DIR}/sfz/GL.hpp
-	${INCLUDE_GL_DIR}/sfz/gl/Context.hpp
-	    ${SOURCE_DIR}/sfz/gl/Context.cpp
-	${INCLUDE_GL_DIR}/sfz/gl/Framebuffer.hpp
-	    ${SOURCE_DIR}/sfz/gl/Framebuffer.cpp
-	${INCLUDE_GL_DIR}/sfz/gl/FullscreenQuad.hpp
-	    ${SOURCE_DIR}/sfz/gl/FullscreenQuad.cpp
-	${INCLUDE_GL_DIR}/sfz/gl/GLUtils.hpp
-	    ${SOURCE_DIR}/sfz/gl/GLUtils.cpp
-	${INCLUDE_GL_DIR}/sfz/gl/IncludeOpenGL.hpp
-	${INCLUDE_GL_DIR}/sfz/gl/Program.hpp
-	    ${SOURCE_DIR}/sfz/gl/Program.cpp)
-source_group(sfz_gl FILES ${SOURCE_GL_FILES})
-endif()
-
-set(SOURCE_MATH_FILES
 	${INCLUDE_DIR}/sfz/Math.hpp
 	${INCLUDE_DIR}/sfz/math/MathPrimitiveHashers.hpp
 	${INCLUDE_DIR}/sfz/math/MathPrimitiveHashers.inl
@@ -142,27 +154,21 @@ set(SOURCE_MATH_FILES
 	${INCLUDE_DIR}/sfz/math/Quaternion.hpp
 	${INCLUDE_DIR}/sfz/math/Quaternion.inl
 	${INCLUDE_DIR}/sfz/math/Vector.hpp
-	${INCLUDE_DIR}/sfz/math/Vector.inl)
-source_group(sfz_math FILES ${SOURCE_MATH_FILES})
+	${INCLUDE_DIR}/sfz/math/Vector.inl
 
-set(SOURCE_MEMORY_FILES
 	${INCLUDE_DIR}/sfz/Memory.hpp
 	${INCLUDE_DIR}/sfz/memory/Allocators.hpp
 	 ${SOURCE_DIR}/sfz/memory/Allocators.cpp
 	${INCLUDE_DIR}/sfz/memory/MemoryUtils.hpp
 	${INCLUDE_DIR}/sfz/memory/New.hpp
 	${INCLUDE_DIR}/sfz/memory/SmartPointers.hpp
-	${INCLUDE_DIR}/sfz/memory/SmartPointers.inl)
-source_group(sfz_memory FILES ${SOURCE_MEMORY_FILES})
+	${INCLUDE_DIR}/sfz/memory/SmartPointers.inl
 
-set(SOURCE_SCREENS_FILES
 	${INCLUDE_DIR}/sfz/Screens.hpp
 	${INCLUDE_DIR}/sfz/screens/BaseScreen.hpp
 	${INCLUDE_DIR}/sfz/screens/GameLoop.hpp
-	 ${SOURCE_DIR}/sfz/screens/GameLoop.cpp)
-source_group(sfz_screens FILES ${SOURCE_SCREENS_FILES})
+	 ${SOURCE_DIR}/sfz/screens/GameLoop.cpp
 
-set(SOURCE_SDL_FILES
 	${INCLUDE_DIR}/sfz/SDL.hpp
 	${INCLUDE_DIR}/sfz/sdl/ButtonState.hpp
 	${INCLUDE_DIR}/sfz/sdl/GameController.hpp
@@ -172,20 +178,16 @@ set(SOURCE_SDL_FILES
 	${INCLUDE_DIR}/sfz/sdl/Session.hpp
 	 ${SOURCE_DIR}/sfz/sdl/Session.cpp
 	${INCLUDE_DIR}/sfz/sdl/Window.hpp
-	 ${SOURCE_DIR}/sfz/sdl/Window.cpp)
-source_group(sfz_sdl FILES ${SOURCE_SDL_FILES})
+	 ${SOURCE_DIR}/sfz/sdl/Window.cpp
 
-set(SOURCE_STRINGS_FILES
 	${INCLUDE_DIR}/sfz/Strings.hpp
 	${INCLUDE_DIR}/sfz/strings/DynString.hpp
 	${INCLUDE_DIR}/sfz/strings/DynString.inl
 	${INCLUDE_DIR}/sfz/strings/StackString.hpp
 	 ${SOURCE_DIR}/sfz/strings/StackString.cpp
 	${INCLUDE_DIR}/sfz/strings/StringHashers.hpp
-	${INCLUDE_DIR}/sfz/strings/StringHashers.inl)
-source_group(sfz_strings FILES ${SOURCE_STRINGS_FILES})
+	${INCLUDE_DIR}/sfz/strings/StringHashers.inl
 
-set(SOURCE_UTIL_FILES
 	${INCLUDE_DIR}/sfz/Util.hpp
 	${INCLUDE_DIR}/sfz/util/FrametimeStats.hpp
 	 ${SOURCE_DIR}/sfz/util/FrametimeStats.cpp
@@ -193,22 +195,27 @@ set(SOURCE_UTIL_FILES
 	 ${SOURCE_DIR}/sfz/util/IniParser.cpp
 	${INCLUDE_DIR}/sfz/util/IO.hpp
 	 ${SOURCE_DIR}/sfz/util/IO.cpp)
-source_group(sfz_util FILES ${SOURCE_UTIL_FILES})
 
-set(SOURCE_ALL_FILES
-	${SOURCE_ROOT_FILES}
-	${SOURCE_CONTAINERS_FILES}
-	${SOURCE_GEOMETRY_FILES}
-	${SOURCE_GL_FILES}
-	${SOURCE_MATH_FILES}
-	${SOURCE_MEMORY_FILES}
-	${SOURCE_SCREENS_FILES}
-	${SOURCE_SDL_FILES}
-	${SOURCE_STRINGS_FILES}
-	${SOURCE_UTIL_FILES})
+if(SFZ_CORE_OPENGL)
+set(SFZ_CORE_FILES ${SFZ_CORE_FILES}
+	${INCLUDE_GL_DIR}/sfz/GL.hpp
+	${INCLUDE_GL_DIR}/sfz/gl/Context.hpp
+	    ${SOURCE_DIR}/sfz/gl/Context.cpp
+	${INCLUDE_GL_DIR}/sfz/gl/Framebuffer.hpp
+	    ${SOURCE_DIR}/sfz/gl/Framebuffer.cpp
+	${INCLUDE_GL_DIR}/sfz/gl/FullscreenQuad.hpp
+	    ${SOURCE_DIR}/sfz/gl/FullscreenQuad.cpp
+	${INCLUDE_GL_DIR}/sfz/gl/GLUtils.hpp
+	    ${SOURCE_DIR}/sfz/gl/GLUtils.cpp
+	${INCLUDE_GL_DIR}/sfz/gl/IncludeOpenGL.hpp
+	${INCLUDE_GL_DIR}/sfz/gl/Program.hpp
+	    ${SOURCE_DIR}/sfz/gl/Program.cpp)
+endif()
+
+set_directory_source_group(${SFZ_CORE_FILES})
 
 # Library compile target
-add_library(sfzCoreLib ${SOURCE_ALL_FILES})
+add_library(sfzCoreLib ${SFZ_CORE_FILES})
 
 # Linking libraries
 target_link_libraries(
@@ -227,7 +234,9 @@ target_link_libraries(
 )
 endif()
 
-# Variables returned to parent
+# Output variables
+# ------------------------------------------------------------------------------------------------
+
 set(SFZ_CORE_INCLUDE_DIRS
 	${FORWARD_INCLUDE_DIRS}
 	PARENT_SCOPE)
@@ -247,57 +256,38 @@ set(SFZ_CORE_LIBRARIES
 endif()
 
 # Tests
+# ------------------------------------------------------------------------------------------------
+
 if(SFZ_CORE_BUILD_TESTS)
 
-	set(ROOT_TEST_FILES
-		${TESTS_DIR}/sfz/Main_Tests.cpp)
-	source_group(sfz_root FILES ${ROOT_TEST_FILES})
+	set(SFZ_CORE_TEST_FILES
+		${TESTS_DIR}/sfz/Main_Tests.cpp
 
-	set(CONTAINERS_TEST_FILES
 		${TESTS_DIR}/sfz/containers/DynArray_Tests.cpp
-		${TESTS_DIR}/sfz/containers/HashMap_Tests.cpp)
-	source_group(sfz_containers FILES ${CONTAINERS_TEST_FILES})
+		${TESTS_DIR}/sfz/containers/HashMap_Tests.cpp
+		
+		${TESTS_DIR}/sfz/geometry/Intersection_Tests.cpp
 
-	set(GEOMETRY_TEST_FILES
-		${TESTS_DIR}/sfz/geometry/Intersection_Tests.cpp)
-	source_group(sfz_geometry FILES ${GEOMETRY_TEST_FILES})
-
-	set(MATH_TEST_FILES
 		${TESTS_DIR}/sfz/math/MathPrimitiveHashers_Tests.cpp
 		${TESTS_DIR}/sfz/math/MathSupport_Tests.cpp
 		${TESTS_DIR}/sfz/math/Matrix_Tests.cpp
 		${TESTS_DIR}/sfz/math/Vector_Tests.cpp
-		${TESTS_DIR}/sfz/math/Quaternion_Tests.cpp)
-	source_group(sfz_math FILES ${MATH_TEST_FILES})
-	
-	set(MEMORY_TEST_FILES
+		${TESTS_DIR}/sfz/math/Quaternion_Tests.cpp
+
 		${TESTS_DIR}/sfz/memory/Allocators_Tests.cpp
 		${TESTS_DIR}/sfz/memory/New_Tests.cpp
-		${TESTS_DIR}/sfz/memory/SmartPointers_Tests.cpp)
-	source_group(sfz_memory FILES ${MEMORY_TEST_FILES})
+		${TESTS_DIR}/sfz/memory/SmartPointers_Tests.cpp
 
-	set(STRINGS_TEST_FILES
 		${TESTS_DIR}/sfz/strings/DynString_Tests.cpp
 		${TESTS_DIR}/sfz/strings/StackString_Tests.cpp
-		${TESTS_DIR}/sfz/strings/StringHashers_Tests.cpp)
-	source_group(sfz_strings FILES ${STRINGS_TEST_FILES})
+		${TESTS_DIR}/sfz/strings/StringHashers_Tests.cpp
 
-	set(UTIL_TEST_FILES
 		${TESTS_DIR}/sfz/util/IniParser_Tests.cpp
 		${TESTS_DIR}/sfz/util/IO_Tests.cpp)
-	source_group(sfz_util FILES ${UTIL_TEST_FILES})
-
-	set(ALL_TEST_FILES
-		${ROOT_TEST_FILES}
-		${CONTAINERS_TEST_FILES}
-		${GEOMETRY_TEST_FILES}
-		${MATH_TEST_FILES}
-		${MEMORY_TEST_FILES}
-		${STRINGS_TEST_FILES}
-		${UTIL_TEST_FILES})
+	set_directory_source_group(${SFZ_CORE_TEST_FILES})
 
 	enable_testing(true)
-	add_executable(sfzCoreTests ${ALL_TEST_FILES})
+	add_executable(sfzCoreTests ${SFZ_CORE_TEST_FILES})
 	target_link_libraries(
 		sfzCoreTests
 
