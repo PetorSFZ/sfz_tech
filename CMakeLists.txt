@@ -39,7 +39,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_MODULES})
 
 # SDL2 & SDL2_mixer (uses 'SDL2' system environment variable)
 find_package(SDL2 REQUIRED) # ${SDL2_INCLUDE_DIR}, ${SDL2_LIBRARY}
-find_package(SDL2_mixer REQUIRED) # ${SDL2_MIXER_INCLUDE_DIRS}, ${SDL2_MIXER_LIBRARIES}
+
 
 # Catch
 add_subdirectory(${EXTERNALS_DIR}/catch)
@@ -59,8 +59,7 @@ endif()
 # Accumulated variable with all includes to forward to caller
 set(FORWARD_INCLUDE_DIRS
 	${INCLUDE_DIR}
-	${SDL2_INCLUDE_DIR}
-	${SDL2_MIXER_INCLUDE_DIRS})
+	${SDL2_INCLUDE_DIR})
 if(SFZ_CORE_OPENGL)
 set(FORWARD_INCLUDE_DIRS
 	${FORWARD_INCLUDE_DIRS}
@@ -170,12 +169,8 @@ set(SOURCE_SDL_FILES
 	 ${SOURCE_DIR}/sfz/sdl/GameController.cpp
 	${INCLUDE_DIR}/sfz/sdl/Mouse.hpp
 	 ${SOURCE_DIR}/sfz/sdl/Mouse.cpp
-	${INCLUDE_DIR}/sfz/sdl/Music.hpp
-	 ${SOURCE_DIR}/sfz/sdl/Music.cpp
 	${INCLUDE_DIR}/sfz/sdl/Session.hpp
 	 ${SOURCE_DIR}/sfz/sdl/Session.cpp
-	${INCLUDE_DIR}/sfz/sdl/SoundEffect.hpp
-	 ${SOURCE_DIR}/sfz/sdl/SoundEffect.cpp
 	${INCLUDE_DIR}/sfz/sdl/Window.hpp
 	 ${SOURCE_DIR}/sfz/sdl/Window.cpp)
 source_group(sfz_sdl FILES ${SOURCE_SDL_FILES})
@@ -220,7 +215,6 @@ target_link_libraries(
 	sfzCoreLib
 
 	${SDL2_LIBRARY}
-	${SDL2_MIXER_LIBRARIES}
 )
 
 # Linking OpenGL only libraries
@@ -241,7 +235,6 @@ if(SFZ_CORE_OPENGL)
 set(SFZ_CORE_LIBRARIES
 	sfzCoreLib
 	${SDL2_LIBRARY}
-	${SDL2_MIXER_LIBRARIES}
 	${SFZ_CORE_LIBRARIES}
 	${GLEW_LIBRARIES}
 	${OPENGL_LIBRARIES}
@@ -250,7 +243,6 @@ else()
 set(SFZ_CORE_LIBRARIES
 	sfzCoreLib
 	${SDL2_LIBRARY}
-	${SDL2_MIXER_LIBRARIES}
 	PARENT_SCOPE)
 endif()
 

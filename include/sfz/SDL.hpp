@@ -22,5 +22,4 @@
 #include "sfz/sdl/GameController.hpp"
 #include "sfz/sdl/Mouse.hpp"
 #include "sfz/sdl/Session.hpp"
-#include "sfz/sdl/SoundEffect.hpp"
 #include "sfz/sdl/Window.hpp"

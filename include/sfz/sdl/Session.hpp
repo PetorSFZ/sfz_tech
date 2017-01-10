@@ -21,7 +21,6 @@
 #include <initializer_list>
 
 #include <SDL.h>
-#include <SDL_mixer.h>
 
 namespace sfz {
 
@@ -45,19 +44,11 @@ enum class SDLInitFlags : Uint32 {
 	NOPARACHUTE = SDL_INIT_NOPARACHUTE
 };
 
-/// SDL2_mixer init flags
-enum class MixInitFlags {
-	FLAC = MIX_INIT_FLAC,
-	MOD = MIX_INIT_MOD,
-	MP3 = MIX_INIT_MP3,
-	OGG = MIX_INIT_OGG
-};
-
 // Session class
 // ------------------------------------------------------------------------------------------------
 
-/// Initializes SDL2 and SDL2_mixer upon construction and cleans up upon destruction. This object
-/// must be kept alive as long as SDL is used.
+/// Initializes SDL2 upon construction and cleans up upon destruction. This object must be kept
+/// alive as long as SDL is used.
 ///
 /// https://wiki.libsdl.org/SDL_Init
 /// https://wiki.libsdl.org/SDL_Quit
@@ -74,11 +65,8 @@ public:
 	Session(Session&& other) noexcept;
 	Session& operator= (Session&& other) noexcept;
 
-	/// Initializes SDL2 & SDL2_mixer with the specified flags
-	/// SDL_mixer will open audio with: 44.1KHz, signed 16bit, system byte order, stereo audio,
-	/// 1024 byte chunks. Additionally 64 mixing channels will be allocated.
-	Session(initializer_list<SDLInitFlags> sdlInitFlags,
-	        initializer_list<MixInitFlags> mixInitFlags) noexcept;
+	/// Initializes SDL2 with the specified flags
+	Session(initializer_list<SDLInitFlags> sdlInitFlags) noexcept;
 	~Session() noexcept;
 
 private:

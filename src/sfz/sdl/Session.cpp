@@ -40,8 +40,7 @@ Session& Session::operator= (Session&& other) noexcept
 	return *this;
 }
 
-Session::Session(initializer_list<SDLInitFlags> sdlInitFlags,
-                 initializer_list<MixInitFlags> mixInitFlags) noexcept
+Session::Session(initializer_list<SDLInitFlags> sdlInitFlags) noexcept
 :
 	mActive{true}
 {
@@ -53,34 +52,11 @@ Session::Session(initializer_list<SDLInitFlags> sdlInitFlags,
 	if (SDL_Init(sdlInitFlag) < 0) {
 		sfz::error("SDL_Init() failed: %s", SDL_GetError());
 	}
-
-	// Initialize SDL2_mixer
-	int mixInitFlag = 0;
-	for (MixInitFlags tempFlag : mixInitFlags) {
-		mixInitFlag = mixInitFlag | static_cast<int>(tempFlag);
-	}
-	int mixInitted = Mix_Init(mixInitFlag);
-	if ((mixInitted & mixInitFlag) != mixInitFlag) {
-		sfz::error("Mix_Init() failed: %s", Mix_GetError());
-	}
-
-	// Open 44.1KHz, signed 16bit, system byte order, stereo audio, using 1024 byte chunks
-	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024) < 0) {
-		sfz::error("Mix_OpenAudio() failed: %s", Mix_GetError());
-	}
-
-	// Allocate mixing channels
-	Mix_AllocateChannels(64);
 }
 	
 Session::~Session() noexcept
 {
 	if (mActive) {
-		// Cleanup SDL2_mixer
-		Mix_AllocateChannels(0); // Deallocate mixing channels
-		Mix_CloseAudio();
-		while (Mix_Init(0)) Mix_Quit();
-
 		// Cleanup SDL2
 		SDL_Quit();
 	}

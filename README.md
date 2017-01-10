@@ -2,7 +2,7 @@
 
 sfzCore is a base library for SkipIfZero graphical applications, replacing the now deprecated SkipIfZero Common library. It aims to provide high quality common components, while still keeping code bloat to a minimum. Among other things sfzCore contains:
 
-* Replacements for parts of STL (allocators, containers, etc) that aim to simpler, faster and slightly more low-level
+* Replacements for parts of STL (allocators, containers, etc) that aim to be simpler, faster and more low-level
 * Matrix and Vector primitives, along with some useful math functions
 * Geometric primitives (AABB, OBB, Spheres, etc) with some intersection tests
 * A simple game loop implementation
@@ -18,7 +18,6 @@ It is advisable to let CMake generate the wanted build solution in a directory c
 ### Requirements
 - __CMake__
 - __SDL2__
-- __SDL2_Mixer__
 - Windows: __Visual Studio 2015__ or newer
 
 ### Flags
@@ -34,8 +33,8 @@ Flags can be set using `-DNAME_OF_FLAG=TRUE` when generating a project, or by ca
 
 #### Installing dependencies
 
-##### SDL2 & SDL2 Mixer
-Download and install the SDL2 development libraries for Visual C++ from the official website. Then create an environment variable called `SDL2` and point it to the root of the SDL2 installation. Then do the same for the SDL2_Mixer library. Note that the `SDL2` variable should contain the path to both libraries.
+##### SDL2
+Download and install the SDL2 development libraries for Visual C++ from the official website. Then create an environment variable called `SDL2` and point it to the root of the SDL2 installation.
 
 #### Generating Visual Studio solution
 
