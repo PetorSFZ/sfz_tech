@@ -16,9 +16,36 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#pragma once
+#include "sfz/PushWarnings.hpp"
+#include "catch.hpp"
+#include "sfz/PopWarnings.hpp"
 
-#include "sfz/strings/DynString.hpp"
-#include "sfz/strings/StackString.hpp"
-#include "sfz/strings/StringHashers.hpp"
+#include <cstring>
+
 #include "sfz/strings/StringID.hpp"
+
+using namespace sfz;
+
+TEST_CASE("Testing StringCollection", "[sfz::StringID]")
+{
+	StringCollection collection(32);
+	REQUIRE(collection.numStringsHeld() == 0);
+	
+	StringID id1 = collection.getStringID("Hello");
+	REQUIRE(collection.numStringsHeld() == 1);
+	StringID id2 = collection.getStringID("World");
+	REQUIRE(collection.numStringsHeld() == 2);
+	
+	REQUIRE(id1 == id1);
+	REQUIRE(id2 == id2);
+	REQUIRE(id1 != id2);
+
+	REQUIRE(collection.getStringFromID(id1) != nullptr);
+	REQUIRE(std::strcmp("Hello", collection.getStringFromID(id1)) == 0);
+	REQUIRE(std::strcmp("World", collection.getStringFromID(id2)) == 0);
+
+	StringID badId;
+	badId.id = id1.id + id2.id;
+	REQUIRE(collection.getStringFromID(badId) == nullptr);
+	REQUIRE(collection.numStringsHeld() == 2);
+}

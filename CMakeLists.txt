@@ -187,6 +187,8 @@ set(SFZ_CORE_FILES
 	 ${SOURCE_DIR}/sfz/strings/StackString.cpp
 	${INCLUDE_DIR}/sfz/strings/StringHashers.hpp
 	${INCLUDE_DIR}/sfz/strings/StringHashers.inl
+	${INCLUDE_DIR}/sfz/strings/StringID.hpp
+	 ${SOURCE_DIR}/sfz/strings/StringID.cpp
 
 	${INCLUDE_DIR}/sfz/Util.hpp
 	${INCLUDE_DIR}/sfz/util/FrametimeStats.hpp
@@ -281,6 +283,7 @@ if(SFZ_CORE_BUILD_TESTS)
 		${TESTS_DIR}/sfz/strings/DynString_Tests.cpp
 		${TESTS_DIR}/sfz/strings/StackString_Tests.cpp
 		${TESTS_DIR}/sfz/strings/StringHashers_Tests.cpp
+		${TESTS_DIR}/sfz/strings/StringID_Tests.cpp
 
 		${TESTS_DIR}/sfz/util/IniParser_Tests.cpp
 		${TESTS_DIR}/sfz/util/IO_Tests.cpp)

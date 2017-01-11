@@ -73,7 +73,6 @@ void StackStringTempl<N>::insertChars(const char* first, size_t numChars) noexce
 	this->str[numChars] = '\0';
 }
 
-
 // StackStringTempl: Operators
 // ------------------------------------------------------------------------------------------------
 
@@ -155,18 +154,17 @@ bool StackStringTempl<N>::operator>= (const char* other) const noexcept
 	return std::strncmp(this->str, other, N) >= 0;
 }
 
-
 // StackStringTempl: Explicit instantiation
 // ------------------------------------------------------------------------------------------------
 
+template struct StackStringTempl<32>;
+template struct StackStringTempl<64>;
 template struct StackStringTempl<96>;
-
-template struct StackStringTempl<32ul>;
-template struct StackStringTempl<64ul>;
-template struct StackStringTempl<128ul>;
-template struct StackStringTempl<192ul>;
-template struct StackStringTempl<256ul>;
-template struct StackStringTempl<512ul>;
-template struct StackStringTempl<1024ul>;
+template struct StackStringTempl<128>;
+template struct StackStringTempl<192>;
+template struct StackStringTempl<256>;
+template struct StackStringTempl<320>;
+template struct StackStringTempl<512>;
+template struct StackStringTempl<1024>;
 
 } // namespace sfz
