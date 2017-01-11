@@ -40,12 +40,12 @@ TEST_CASE("Testing StringCollection", "[sfz::StringID]")
 	REQUIRE(id2 == id2);
 	REQUIRE(id1 != id2);
 
-	REQUIRE(collection.getStringFromID(id1) != nullptr);
-	REQUIRE(std::strcmp("Hello", collection.getStringFromID(id1)) == 0);
-	REQUIRE(std::strcmp("World", collection.getStringFromID(id2)) == 0);
+	REQUIRE(collection.getString(id1) != nullptr);
+	REQUIRE(std::strcmp("Hello", collection.getString(id1)) == 0);
+	REQUIRE(std::strcmp("World", collection.getString(id2)) == 0);
 
 	StringID badId;
 	badId.id = id1.id + id2.id;
-	REQUIRE(collection.getStringFromID(badId) == nullptr);
+	REQUIRE(collection.getString(badId) == nullptr);
 	REQUIRE(collection.numStringsHeld() == 2);
 }

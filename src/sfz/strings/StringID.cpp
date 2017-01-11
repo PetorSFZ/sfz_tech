@@ -112,7 +112,7 @@ StringID StringCollection::getStringID(const char* string) noexcept
 	return strId;
 }
 
-const char* StringCollection::getStringFromID(StringID id) const noexcept
+const char* StringCollection::getString(StringID id) const noexcept
 {
 	sfz_assert_debug(mImpl != nullptr);
 	DynString* strPtr = mImpl->strings.get(id);

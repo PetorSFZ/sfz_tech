@@ -99,7 +99,7 @@ public:
 	/// Returns the string associated with the given StringID. Returns nullptr if no such string
 	/// exists. The pointer is owned by the StringCollection, but it is safe to store it as long
 	/// as this StringCollection is not destroy():ed.
-	const char* getStringFromID(StringID id) const noexcept;
+	const char* getString(StringID id) const noexcept;
 
 private:
 	StringCollectionImpl* mImpl = nullptr;
