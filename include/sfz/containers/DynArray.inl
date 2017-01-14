@@ -310,8 +310,15 @@ void DynArray<T>::insert(uint32_t position, const T& value) noexcept
 	}
 
 	// Move elements
-	std::memmove(mDataPtr + position + 1, mDataPtr + position, (mSize - position) * sizeof(T));
-	
+	T* dstPtr = mDataPtr + position + 1;
+	T* srcPtr = mDataPtr + position;
+	uint32_t numElementsToMove = (mSize - position);
+	for (uint32_t i = numElementsToMove; i > 0; i--) {
+		uint32_t offs = i - 1;
+		new (dstPtr + offs) T(std::move(srcPtr[offs]));
+		srcPtr[offs].~T();
+	}
+
 	// Insert element
 	new (mDataPtr + position) T(value);
 	mSize += 1;
@@ -330,7 +337,14 @@ void DynArray<T>::insert(uint32_t position, T&& value) noexcept
 	}
 
 	// Move elements
-	std::memmove(mDataPtr + position + 1, mDataPtr + position, (mSize - position) * sizeof(T));
+	T* dstPtr = mDataPtr + position + 1;
+	T* srcPtr = mDataPtr + position;
+	uint32_t numElementsToMove = (mSize - position);
+	for (uint32_t i = numElementsToMove; i > 0; i--) {
+		uint32_t offs = i - 1;
+		new (dstPtr + offs) T(std::move(srcPtr[offs]));
+		srcPtr[offs].~T();
+	}
 
 	// Insert element
 	new (mDataPtr + position) T(std::move(value));
@@ -349,7 +363,14 @@ void DynArray<T>::insert(uint32_t position, const T* arrayPtr, uint32_t numEleme
 	}
 
 	// Move elements
-	std::memmove(mDataPtr + position + numElements, mDataPtr + position, (mSize - position) * sizeof(T));
+	T* dstPtr = mDataPtr + position + numElements;
+	T* srcPtr = mDataPtr + position;
+	uint32_t numElementsToMove = (mSize - position);
+	for (uint32_t i = numElementsToMove; i > 0; i--) {
+		uint32_t offs = i - 1;
+		new (dstPtr + offs) T(std::move(srcPtr[offs]));
+		srcPtr[offs].~T();
+	}
 
 	// Copy elements
 	// TODO: memcpy for trivially copyable types?
