@@ -101,11 +101,6 @@ public:
 	/// * Keep the name short (<32 chars)
 	virtual const char* getName() const noexcept { return "sfzCore Allocator"; }
 
-	/// Returns whether this Allocator is compatible with the specified Allocator. Being
-	/// compatible means that both instances can deallocate memory allocated by the other one.
-	/// By default only the same instance is compatible with itself.
-	virtual bool compatible(const Allocator* other) noexcept { return this == other; }
-
 	virtual ~Allocator() noexcept {}
 };
 

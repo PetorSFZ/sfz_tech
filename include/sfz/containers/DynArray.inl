@@ -21,40 +21,20 @@ namespace sfz {
 // DynArray (implementation): Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, typename Allocator>
-DynArray<T, Allocator>::DynArray(uint32_t size, uint32_t capacity) noexcept
+template<typename T>
+DynArray<T>::DynArray(uint32_t capacity, Allocator* allocator) noexcept
 {
-	mSize = size;
-	setCapacity(capacity);
-
-	// Calling constructor for each element if not trivially default constructible
-	if (!std::is_trivially_default_constructible<T>::value) {
-		for (uint64_t i = 0; i < mSize; ++i) {
-			new (mDataPtr + i) T();
-		}
-	}
+	this->create(capacity, allocator);
 }
 
-template<typename T, typename Allocator>
-DynArray<T, Allocator>::DynArray(uint32_t size, const T& value, uint32_t capacity) noexcept
-{
-	mSize = size;
-	setCapacity(capacity);
-
-	// Calling constructor for each element
-	for (uint64_t i = 0; i < mSize; ++i) {
-		new (mDataPtr + i) T(value);
-	}
-}
-
-template<typename T, typename Allocator>
-DynArray<T, Allocator>::DynArray(const DynArray& other) noexcept
+template<typename T>
+DynArray<T>::DynArray(const DynArray& other) noexcept
 {
 	*this = other;
 }
 
-template<typename T, typename Allocator>
-DynArray<T, Allocator>& DynArray<T, Allocator>::operator= (const DynArray& other) noexcept
+template<typename T>
+DynArray<T>& DynArray<T>::operator= (const DynArray& other) noexcept
 {
 	// Don't copy to itself
 	if (this == &other) return *this;
@@ -62,15 +42,19 @@ DynArray<T, Allocator>& DynArray<T, Allocator>::operator= (const DynArray& other
 	// Don't copy if source is empty
 	if (other.data() == nullptr) {
 		this->destroy();
+		this->mAllocator = other.mAllocator; // Other might still have allocator even if empty
 		return *this;
+	}
+
+	// Deallocate memory and set allocator if different
+	if (this->mAllocator != other.mAllocator) {
+		this->destroy();
+		this->mAllocator = other.mAllocator;
 	}
 
 	// Clear old elements and set capacity
 	this->clear();
-	if (this->mCapacity < other.mCapacity) {
-		this->setCapacity(other.mCapacity);
-	}
-
+	this->ensureCapacity(other.mCapacity);
 	this->mSize = other.mSize;
 
 	// Copy elements
@@ -82,30 +66,160 @@ DynArray<T, Allocator>& DynArray<T, Allocator>::operator= (const DynArray& other
 	return *this;
 }
 
-template<typename T, typename Allocator>
-DynArray<T, Allocator>::DynArray(DynArray&& other) noexcept
+template<typename T>
+DynArray<T>::DynArray(DynArray&& other) noexcept
 {
 	this->swap(other);
 }
 
-template<typename T, typename Allocator>
-DynArray<T, Allocator>& DynArray<T, Allocator>::operator= (DynArray&& other) noexcept
+template<typename T>
+DynArray<T>& DynArray<T>::operator= (DynArray&& other) noexcept
 {
 	this->swap(other);
 	return *this;
 }
 
-template<typename T, typename Allocator>
-DynArray<T, Allocator>::~DynArray() noexcept
+template<typename T>
+DynArray<T>::~DynArray() noexcept
 {
 	this->destroy();
+}
+
+// DynArray (implementation): State methods
+// ------------------------------------------------------------------------------------------------
+
+template<typename T>
+void DynArray<T>::create(uint32_t capacity, Allocator* allocator) noexcept
+{
+	this->destroy();
+	mAllocator = allocator;
+	this->setCapacity(capacity);
+}
+
+template<typename T>
+void DynArray<T>::swap(DynArray& other) noexcept
+{
+	uint32_t thisSize = this->mSize;
+	uint32_t thisCapacity = this->mCapacity;
+	T* thisDataPtr = this->mDataPtr;
+	Allocator* thisAllocator = this->mAllocator;
+
+	this->mSize = other.mSize;
+	this->mCapacity = other.mCapacity;
+	this->mDataPtr = other.mDataPtr;
+	this->mAllocator = other.mAllocator;
+
+	other.mSize = thisSize;
+	other.mCapacity = thisCapacity;
+	other.mDataPtr = thisDataPtr;
+	other.mAllocator = thisAllocator;
+}
+
+template<typename T>
+void DynArray<T>::destroy() noexcept
+{
+	if (mDataPtr == nullptr) {
+		mAllocator = nullptr;
+		return;
+	}
+
+	// Remove elements
+	this->clear();
+
+	// Deallocate memory
+	mAllocator->deallocate(mDataPtr);
+	mCapacity = 0;
+	mDataPtr = nullptr;
+	mAllocator = nullptr;
+}
+
+template<typename T>
+void DynArray<T>::clear() noexcept
+{
+	// Call destructor for each element if not trivially destructible
+	if (!std::is_trivially_destructible<T>::value) {
+		for (uint64_t i = 0; i < mSize; ++i) {
+			mDataPtr[i].~T();
+		}
+	}
+	mSize = 0;
+}
+
+template<typename T>
+void DynArray<T>::setSize(uint32_t size) noexcept
+{
+	static_assert(std::is_trivial<T>::value, "Can only set size if type is trivial");
+	if (size > mCapacity) size = mCapacity;
+	mSize = size;
+}
+
+template<typename T>
+void DynArray<T>::setCapacity(uint32_t capacity) noexcept
+{
+	// Can't have less capacity than what is needed to store current elements
+	if (mSize > capacity) capacity = mSize;
+
+	// Check if capacity is already correct
+	if (mCapacity == capacity) return;
+
+	// Check if this is initial memory allocation
+	if (mDataPtr == nullptr) {
+		if (capacity == 0) return;
+
+		// If no allocator is available, retrieve the default one
+		if (mAllocator == nullptr) mAllocator = getDefaultAllocator();
+
+		// Allocates memory and returns
+		mCapacity = capacity;
+		mDataPtr = (T*)mAllocator->allocate(mCapacity * sizeof(T),
+		                                    std::max<uint32_t>(MINIMUM_ALIGNMENT, alignof(T)),
+		                                    "DynArray");
+		sfz_assert_debug(mDataPtr != nullptr);
+		return;
+	}
+
+	// Backup allocator so we can restore it after destroy()
+	Allocator* allocatorBackup = mAllocator;
+
+	// Destroy DynArray (but keep allocator) if requested capacity is 0
+	if (capacity == 0) {
+		this->destroy();
+		mAllocator = allocatorBackup;
+		return;
+	}
+
+	// Allocate new memory and move/copy over elements from old memory
+	T* newDataPtr = (T*)mAllocator->allocate(mCapacity * sizeof(T),
+	                                         std::max<uint32_t>(MINIMUM_ALIGNMENT, alignof(T)),
+	                                         "DynArray");
+	for (uint32_t i = 0; i < mSize; i++) {
+		new (newDataPtr + i) T(std::move(mDataPtr[i]));
+	}
+
+	// Deallocate old memory
+	uint32_t sizeBackup = mSize;
+	this->destroy();
+	
+	// Replace state with new buffer
+	mSize = sizeBackup;
+	mCapacity = capacity;
+	mDataPtr = newDataPtr;
+	mAllocator = allocatorBackup;
+}
+
+template<typename T>
+void DynArray<T>::ensureCapacity(uint32_t capacity) noexcept
+{
+	if (mCapacity < capacity) {
+		this->setCapacity(capacity);
+	}
 }
 
 // DynArray (implementation): Public methods
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, typename Allocator>
-void DynArray<T, Allocator>::add(const T& value) noexcept
+template<typename T>
+void DynArray<T>::add(const T& value) noexcept
 {
 	if (mSize >= mCapacity) {
 		uint64_t newCapacity = uint64_t(CAPACITY_INCREASE_FACTOR * mCapacity);
@@ -118,8 +232,8 @@ void DynArray<T, Allocator>::add(const T& value) noexcept
 	mSize += 1;
 }
 
-template<typename T, typename Allocator>
-void DynArray<T, Allocator>::add(T&& value) noexcept
+template<typename T>
+void DynArray<T>::add(T&& value) noexcept
 {
 	if (mSize >= mCapacity) {
 		uint64_t newCapacity = uint64_t(CAPACITY_INCREASE_FACTOR * mCapacity);
@@ -132,8 +246,30 @@ void DynArray<T, Allocator>::add(T&& value) noexcept
 	mSize += 1;
 }
 
-template<typename T, typename Allocator>
-void DynArray<T, Allocator>::add(const T* arrayPtr, uint32_t numElements) noexcept
+template<typename T>
+void DynArray<T>::addMany(uint32_t numElements) noexcept
+{
+	if (numElements == 0) return;
+	this->ensureCapacity(mSize + numElements); // TODO: A bit lazy, should use increase factor
+	for (uint32_t i = 0; i < numElements; i++) {
+		new (mDataPtr + mSize + i) T();
+	}
+	mSize += numElements;
+}
+
+template<typename T>
+void DynArray<T>::addMany(uint32_t numElements, const T& value) noexcept
+{
+	if (numElements == 0) return;
+	this->ensureCapacity(mSize + numElements); // TODO: A bit lazy, should use increase factor
+	for (uint32_t i = 0; i < numElements; i++) {
+		new (mDataPtr + mSize + i) T(value);
+	}
+	mSize += numElements;
+}
+
+template<typename T>
+void DynArray<T>::add(const T* arrayPtr, uint32_t numElements) noexcept
 {
 	// Assert that we do not attempt to add elements from this array to this array
 	sfz_assert_debug(!(mDataPtr <= arrayPtr && arrayPtr < mDataPtr + mCapacity));
@@ -155,14 +291,14 @@ void DynArray<T, Allocator>::add(const T* arrayPtr, uint32_t numElements) noexce
 	mSize += numElements;
 }
 
-template<typename T, typename Allocator>
-void DynArray<T, Allocator>::add(const DynArray& elements) noexcept
+template<typename T>
+void DynArray<T>::add(const DynArray& elements) noexcept
 {
 	this->add(elements.data(), elements.size());
 }
 
-template<typename T, typename Allocator>
-void DynArray<T, Allocator>::insert(uint32_t position, const T& value) noexcept
+template<typename T>
+void DynArray<T>::insert(uint32_t position, const T& value) noexcept
 {
 	sfz_assert_debug(position <= mSize);
 	if (mSize >= mCapacity) {
@@ -181,8 +317,8 @@ void DynArray<T, Allocator>::insert(uint32_t position, const T& value) noexcept
 	mSize += 1;
 }
 
-template<typename T, typename Allocator>
-void DynArray<T, Allocator>::insert(uint32_t position, T&& value) noexcept
+template<typename T>
+void DynArray<T>::insert(uint32_t position, T&& value) noexcept
 {
 	sfz_assert_debug(position <= mSize);
 	if (mSize >= mCapacity) {
@@ -201,8 +337,8 @@ void DynArray<T, Allocator>::insert(uint32_t position, T&& value) noexcept
 	mSize += 1;
 }
 
-template<typename T, typename Allocator>
-void DynArray<T, Allocator>::insert(uint32_t position, const T* arrayPtr, uint32_t numElements) noexcept
+template<typename T>
+void DynArray<T>::insert(uint32_t position, const T* arrayPtr, uint32_t numElements) noexcept
 {
 	sfz_assert_debug(position <= mSize);
 	if (mCapacity < mSize + numElements) {
@@ -223,8 +359,8 @@ void DynArray<T, Allocator>::insert(uint32_t position, const T* arrayPtr, uint32
 	mSize += numElements;
 }
 
-template<typename T, typename Allocator>
-void DynArray<T, Allocator>::remove(uint32_t position, uint32_t numElements) noexcept
+template<typename T>
+void DynArray<T>::remove(uint32_t position, uint32_t numElements) noexcept
 {
 	// Destroy the elements to remove
 	uint32_t numElementsToRemove = std::min(numElements, mSize - position);
@@ -245,8 +381,8 @@ void DynArray<T, Allocator>::remove(uint32_t position, uint32_t numElements) noe
 	mSize -= numElementsToRemove;
 }
 
-template<typename T, typename Allocator>
-void DynArray<T, Allocator>::removeLast() noexcept
+template<typename T>
+void DynArray<T>::removeLast() noexcept
 {
 	if (mSize > 0) {
 		mSize -= 1;
@@ -254,9 +390,9 @@ void DynArray<T, Allocator>::removeLast() noexcept
 	}
 }
 
-template<typename T, typename Allocator>
+template<typename T>
 template<typename F>
-T* DynArray<T, Allocator>::find(F func) noexcept
+T* DynArray<T>::find(F func) noexcept
 {
 	for (uint32_t i = 0; i < mSize; ++i) {
 		if (func(mDataPtr[i])) return &mDataPtr[i];
@@ -264,9 +400,9 @@ T* DynArray<T, Allocator>::find(F func) noexcept
 	return nullptr;
 }
 
-template<typename T, typename Allocator>
+template<typename T>
 template<typename F>
-const T* DynArray<T, Allocator>::find(F func) const noexcept
+const T* DynArray<T>::find(F func) const noexcept
 {
 	for (uint32_t i = 0; i < mSize; ++i) {
 		if (func(mDataPtr[i])) return &mDataPtr[i];
@@ -274,9 +410,9 @@ const T* DynArray<T, Allocator>::find(F func) const noexcept
 	return nullptr;
 }
 
-template<typename T, typename Allocator>
+template<typename T>
 template<typename F>
-int64_t DynArray<T, Allocator>::findIndex(F func) const noexcept
+int64_t DynArray<T>::findIndex(F func) const noexcept
 {
 	for (uint32_t i = 0; i < mSize; ++i) {
 		if (func(mDataPtr[i])) return int64_t(i);
@@ -284,146 +420,13 @@ int64_t DynArray<T, Allocator>::findIndex(F func) const noexcept
 	return -1;
 }
 
-template<typename T, typename Allocator>
-void DynArray<T, Allocator>::swap(DynArray& other) noexcept
-{
-	uint32_t thisSize = this->mSize;
-	uint32_t thisCapacity = this->mCapacity;
-	T* thisDataPtr = this->mDataPtr;
-
-	this->mSize = other.mSize;
-	this->mCapacity = other.mCapacity;
-	this->mDataPtr = other.mDataPtr;
-
-	other.mSize = thisSize;
-	other.mCapacity = thisCapacity;
-	other.mDataPtr = thisDataPtr;
-}
-
-template<typename T, typename Allocator>
-void DynArray<T, Allocator>::setCapacity(uint32_t capacity) noexcept
-{
-	if (mSize > capacity) capacity = mSize;
-	if (mCapacity == capacity) return;
-
-	if (mDataPtr == nullptr) {
-		if (capacity == 0) return;
-		mCapacity = capacity;
-		mDataPtr = static_cast<T*>(Allocator::allocate(mCapacity * sizeof(T), ALIGNMENT));
-		sfz_assert_debug(mDataPtr != nullptr);
-		return;
-	}
-
-	if (capacity == 0) {
-		this->destroy();
-		return;
-	}
-
-	// Allocate new memory and move/copy over elements from old memory
-	T* newDataPtr = static_cast<T*>(Allocator::allocate(capacity * sizeof(T), ALIGNMENT));
-	for (uint32_t i = 0; i < mSize; i++) {
-		new (newDataPtr + i) T(std::move(mDataPtr[i]));
-	}
-
-	// Deallocate old memory
-	uint32_t sizeCopy = mSize;
-	this->destroy();
-
-	// Replace state with new buffer
-	mSize = sizeCopy;
-	mCapacity = capacity;
-	mDataPtr = newDataPtr;
-}
-
-template<typename T, typename Allocator>
-void DynArray<T, Allocator>::ensureCapacity(uint32_t capacity) noexcept
-{
-	if (mCapacity < capacity) {
-		this->setCapacity(capacity);
-	}
-}
-
-template<typename T, typename Allocator>
-void DynArray<T, Allocator>::clear() noexcept
-{
-	// Call destructor for each element if not trivially destructible
-	if (!std::is_trivially_destructible<T>::value) {
-		for (uint64_t i = 0; i < mSize; ++i) {
-			mDataPtr[i].~T();
-		}
-	}
-
-	mSize = 0;
-}
-
-template<typename T, typename Allocator>
-void DynArray<T, Allocator>::destroy() noexcept
-{
-	if (mDataPtr == nullptr) return;
-
-	// Remove elements
-	this->clear();
-
-	// Deallocate memory
-	Allocator::deallocate(mDataPtr);
-	mCapacity = 0;
-	mDataPtr = nullptr;
-}
-
-template<typename T, typename Allocator>
-void DynArray<T, Allocator>::setSize(uint32_t size) noexcept
-{
-	static_assert(std::is_trivial<T>::value, "Can only set size if type is trivial");
-	if (size > mCapacity) size = mCapacity;
-	mSize = size;
-}
-
-// DynArray (implementation): Iterators
-// --------------------------------------------------------------------------------------------
-
-template<typename T, typename Allocator>
-T* DynArray<T, Allocator>::begin() noexcept
-{
-	return mDataPtr;
-}
-
-template<typename T, typename Allocator>
-const T* DynArray<T, Allocator>::begin() const noexcept
-{
-	return mDataPtr;
-}
-
-template<typename T, typename Allocator>
-const T* DynArray<T, Allocator>::cbegin() const noexcept
-{
-	return mDataPtr;
-}
-
-template<typename T, typename Allocator>
-T* DynArray<T, Allocator>::end() noexcept
-{
-	return mDataPtr + mSize;
-}
-
-template<typename T, typename Allocator>
-const T* DynArray<T, Allocator>::end() const noexcept
-{
-	return mDataPtr + mSize;
-}
-
-template<typename T, typename Allocator>
-const T* DynArray<T, Allocator>::cend() const noexcept
-{
-	return mDataPtr + mSize;
-}
-
 // DynArray (implementation): Extra declaration of static constexpr constants (not required by MSVC).
 // See: http://stackoverflow.com/a/14396189
 // ------------------------------------------------------------------------------------------------
 
-template<typename T, typename Allocator> constexpr uint32_t DynArray<T,Allocator>::ALIGNMENT;
-template<typename T, typename Allocator> constexpr uint32_t DynArray<T,Allocator>::DEFAULT_INITIAL_CAPACITY;
-template<typename T, typename Allocator> constexpr uint64_t DynArray<T,Allocator>::MAX_CAPACITY;
-template<typename T, typename Allocator> constexpr float DynArray<T,Allocator>::CAPACITY_INCREASE_FACTOR;
+template<typename T> constexpr uint32_t DynArray<T>::MINIMUM_ALIGNMENT;
+template<typename T> constexpr uint32_t DynArray<T>::DEFAULT_INITIAL_CAPACITY;
+template<typename T> constexpr uint64_t DynArray<T>::MAX_CAPACITY;
+template<typename T> constexpr float DynArray<T>::CAPACITY_INCREASE_FACTOR;
 
 } // namespace sfz

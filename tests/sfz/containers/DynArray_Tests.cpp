@@ -37,14 +37,17 @@ TEST_CASE("Default constructor", "[sfz::DynArray]")
 
 TEST_CASE("Fill constructor", "[sfz::DynArray]")
 {
-	DynArray<UniquePtr<int>> nullptrs{8};
+	DynArray<UniquePtr<int>> nullptrs;
+	nullptrs.addMany(8);
 	for (uint32_t i = 0; i < 8; ++i) {
 		REQUIRE(nullptrs.data()[i] == nullptr);
 	}
 	REQUIRE(nullptrs.size() == 8);
 	REQUIRE(nullptrs.capacity() == 8);
 
-	DynArray<int> twos{8, 2};
+	DynArray<int> twos;
+	twos.addMany(8, 2);
+
 	for (uint32_t i = 0; i < 8; ++i) {
 		REQUIRE(twos.data()[i] == 2);
 	}
@@ -64,7 +67,8 @@ TEST_CASE("Fill constructor", "[sfz::DynArray]")
 
 TEST_CASE("Copy constructors", "[sfz::DynArray]")
 {
-	DynArray<int> first{3,3};
+	DynArray<int> first;
+	first.addMany(3, 3);
 	DynArray<int> second;
 
 	REQUIRE(first.size() == 3);
@@ -94,7 +98,8 @@ TEST_CASE("Copy constructors", "[sfz::DynArray]")
 TEST_CASE("Swap & move constructors", "[sfz::DynArray]")
 {
 	DynArray<int> v1;
-	DynArray<int> v2{2, 42, 32};
+	DynArray<int> v2(32);
+	v2.addMany(2, 42);
 
 	REQUIRE(v1.size() == 0);
 	REQUIRE(v1.capacity() == 0);
@@ -157,7 +162,10 @@ TEST_CASE("iterators", "[sfz::DynArray]")
 
 TEST_CASE("add()", "[sfz::DynArray]")
 {
-	DynArray<int> v(2, -1, 2);
+	DynArray<int> v(2);
+	REQUIRE(v.size() == 0);
+	REQUIRE(v.capacity() == 2);
+	v.addMany(2, -1);
 
 	REQUIRE(v.size() == 2);
 	REQUIRE(v.capacity() == 2);
@@ -219,7 +227,10 @@ TEST_CASE("add()", "[sfz::DynArray]")
 
 TEST_CASE("insert()", "[sfz::DynArray]")
 {
-	DynArray<int> v(2, -1, 2);
+	DynArray<int> v(2);
+	REQUIRE(v.size() == 0);
+	REQUIRE(v.capacity() == 2);
+	v.addMany(2, -1);
 
 	REQUIRE(v.size() == 2);
 	REQUIRE(v.capacity() == 2);
@@ -242,7 +253,8 @@ TEST_CASE("insert()", "[sfz::DynArray]")
 	REQUIRE(v[2] == 3);
 	REQUIRE(v[3] == -1);
 
-	DynArray<int> v2(3, 42);
+	DynArray<int> v2;
+	v2.addMany(3, 42);
 	v.insert(1, v2.data(), 2);
 	REQUIRE(v.size() == 6);
 	REQUIRE(v[0] == 3);
