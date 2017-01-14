@@ -16,47 +16,53 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
+#include "sfz/strings/DynString.hpp"
+
+#include <cstdarg>
+#include <cstdio>
+#include <cstring>
+
+#include "sfz/Assert.hpp"
+
 namespace sfz {
 
-// DynString (implementation): Constructors & destructors
+// DynString: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-template<typename Allocator>
-DynStringTempl<Allocator>::DynStringTempl(const char* string, uint32_t capacity) noexcept
+DynString::DynString(const char* string, uint32_t capacity, Allocator* allocator) noexcept
 {
+	// Special case when string is nullptr
 	if (string == nullptr) {
-		if (capacity > 0) {
-			mString.setCapacity(capacity);
-		}
+		mString.create(capacity, allocator);
 		return;
 	}
 
-	// Allocate memory
+	// Check if string length is larger than requested capacity 
 	size_t length = std::strlen(string) + 1; // +1 for null-terminator
-	if (capacity < length) capacity = static_cast<uint32_t>(length);
-	mString.setCapacity(capacity);
-	mString.setSize(static_cast<uint32_t>(length));
+	if (capacity < length) capacity = uint32_t(length);
+
+	// Set allocator and allocate memory
+	mString.create(capacity, allocator);
+	mString.setSize(uint32_t(length));
 
 	// Copy string to internal DynArray
 	std::strcpy(mString.data(), string);
 }
 
-// DynString (implementation): Getters
+// DynString: Getters
 // ------------------------------------------------------------------------------------------------
 
-template<typename Allocator>
-uint32_t DynStringTempl<Allocator>::size() const noexcept
+uint32_t DynString::size() const noexcept
 {
 	uint32_t tmp = mString.size();
 	if (tmp == 0) return 0;
 	return tmp - 1; // Remove null-terminator
 }
 
-// DynString (implementation): Public methods (DynString)
+// DynString: Public methods
 // ------------------------------------------------------------------------------------------------
 
-template<typename Allocator>
-int32_t DynStringTempl<Allocator>::printf(const char* format, ...) noexcept
+int32_t DynString::printf(const char* format, ...) noexcept
 {
 	va_list args;
 	va_start(args, format);
@@ -67,8 +73,7 @@ int32_t DynStringTempl<Allocator>::printf(const char* format, ...) noexcept
 	return res;
 }
 
-template<typename Allocator>
-int32_t DynStringTempl<Allocator>::printfAppend(const char* format, ...) noexcept
+int32_t DynString::printfAppend(const char* format, ...) noexcept
 {
 	va_list args;
 	va_start(args, format);
@@ -80,83 +85,71 @@ int32_t DynStringTempl<Allocator>::printfAppend(const char* format, ...) noexcep
 	return res;
 }
 
-// DynString (implementation): Operators
+// DynString: Operators
 // ------------------------------------------------------------------------------------------------
 
-template<typename Allocator>
-bool DynStringTempl<Allocator>::operator== (const DynStringTempl& other) const noexcept
+bool DynString::operator== (const DynString& other) const noexcept
 {
 	return *this == other.mString.data();
 }
 
-template<typename Allocator>
-bool DynStringTempl<Allocator>::operator!= (const DynStringTempl& other) const noexcept
+bool DynString::operator!= (const DynString& other) const noexcept
 {
 	return *this != other.mString.data();
 }
 
-template<typename Allocator>
-bool DynStringTempl<Allocator>::operator< (const DynStringTempl& other) const noexcept
+bool DynString::operator< (const DynString& other) const noexcept
 {
 	return *this < other.mString.data();
 }
 
-template<typename Allocator>
-bool DynStringTempl<Allocator>::operator<= (const DynStringTempl& other) const noexcept
+bool DynString::operator<= (const DynString& other) const noexcept
 {
 	return *this <= other.mString.data();
 }
 
-template<typename Allocator>
-bool DynStringTempl<Allocator>::operator> (const DynStringTempl& other) const noexcept
+bool DynString::operator> (const DynString& other) const noexcept
 {
 	return *this > other.mString.data();
 }
 
-template<typename Allocator>
-bool DynStringTempl<Allocator>::operator>= (const DynStringTempl& other) const noexcept
+bool DynString::operator>= (const DynString& other) const noexcept
 {
 	return *this >= other.mString.data();
 }
 
-template<typename Allocator>
-bool DynStringTempl<Allocator>::operator== (const char* other) const noexcept
+bool DynString::operator== (const char* other) const noexcept
 {
 	sfz_assert_debug(mString.data() != nullptr);
 	sfz_assert_debug(other != nullptr);
 	return std::strncmp(mString.data(), other, mString.size()) == 0;
 }
 
-template<typename Allocator>
-bool DynStringTempl<Allocator>::operator!= (const char* other) const noexcept
+bool DynString::operator!= (const char* other) const noexcept
 {
 	return !(*this == other);
 }
 
-template<typename Allocator>
-bool DynStringTempl<Allocator>::operator< (const char* other) const noexcept
+bool DynString::operator< (const char* other) const noexcept
 {
 	sfz_assert_debug(mString.data() != nullptr);
 	sfz_assert_debug(other != nullptr);
 	return std::strncmp(mString.data(), other, mString.size()) < 0;
 }
 
-template<typename Allocator>
-bool DynStringTempl<Allocator>::operator<= (const char* other) const noexcept
+bool DynString::operator<= (const char* other) const noexcept
 {
 	return !(*this > other);
 }
 
-template<typename Allocator>
-bool DynStringTempl<Allocator>::operator> (const char* other) const noexcept
+bool DynString::operator> (const char* other) const noexcept
 {
 	sfz_assert_debug(mString.data() != nullptr);
 	sfz_assert_debug(other != nullptr);
 	return std::strncmp(mString.data(), other, mString.size()) > 0;
 }
 
-template<typename Allocator>
-bool DynStringTempl<Allocator>::operator>= (const char* other) const noexcept
+bool DynString::operator>= (const char* other) const noexcept
 {
 	return !(*this < other);
 }

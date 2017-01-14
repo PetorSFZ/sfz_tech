@@ -57,8 +57,7 @@ inline size_t hash(const char* str) noexcept
 	return detail::fnv1aHash(str);
 }
 
-template<typename Allocator>
-size_t hash(const DynStringTempl<Allocator>& str) noexcept
+inline size_t hash(const DynString& str) noexcept
 {
 	if (str.size() == 0) return sfz::hash(""); // Fix edge case where DynString has no memory
 	return sfz::hash(str.str());
@@ -92,10 +91,9 @@ namespace std {
 // DynString & StackString std::hash specializations
 // ------------------------------------------------------------------------------------------------
 
-template<typename Allocator>
-size_t hash<sfz::DynStringTempl<Allocator>>::operator() (const sfz::DynStringTempl<Allocator>& str) const noexcept
+inline size_t hash<sfz::DynString>::operator() (const sfz::DynString& str) const noexcept
 {
-	return sfz::hash<Allocator>(str);
+	return sfz::hash(str);
 }
 
 template<size_t N>
@@ -111,8 +109,7 @@ namespace sfz {
 // DynString & StackString HashTableKeyDescriptor specializations
 // ------------------------------------------------------------------------------------------------
 
-template<typename Allocator>
-bool EqualTo2<const char*, DynStringTempl<Allocator>>::operator() (const char* lhs, const DynStringTempl<Allocator>& rhs) noexcept
+inline bool EqualTo2<const char*, DynString>::operator() (const char* lhs, const DynString& rhs) noexcept
 {
 	return rhs == lhs;
 }

@@ -18,40 +18,34 @@
 
 #pragma once
 
-#include <cstdarg>
 #include <cstdint>
-#include <cstdio>
-#include <cstring>
 
-#include "sfz/Assert.hpp"
 #include "sfz/containers/DynArray.hpp"
-#include "sfz/memory/Allocators.hpp"
+#include "sfz/memory/Allocator.hpp"
 
 namespace sfz {
 
 using std::int32_t;
-using std::size_t;
 using std::uint32_t;
 
-// DynString (interface)
+// DynString class
 // ------------------------------------------------------------------------------------------------
 
-/// A class for managing a dynamic string allocated on the heap, replacement for std::string.
+/// A class for managing a dynamic string, replacement for std::string.
 ///
 /// Implemented using a (private) DynArray, many of the functions are simply wrappers around the
 /// DynArray interface. Check out DynArray for more specific documentation on these functions.
-template<typename Allocator>
-class DynStringTempl final {
+class DynString final {
 public:
 	
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	DynStringTempl() noexcept = default;
-	DynStringTempl(const DynStringTempl&) noexcept = default;
-	DynStringTempl& operator= (const DynStringTempl&) noexcept = default;
-	DynStringTempl(DynStringTempl&&) noexcept = default;
-	DynStringTempl& operator= (DynStringTempl&&) noexcept = default;
+	DynString() noexcept = default;
+	DynString(const DynString&) noexcept = default;
+	DynString& operator= (const DynString&) noexcept = default;
+	DynString(DynString&&) noexcept = default;
+	DynString& operator= (DynString&&) noexcept = default;
 
 	/// Constructs a DynString with the specified string and capacity. The internal capacity will
 	/// be at least large enough to hold the entire string regardless of the value of the capacity
@@ -59,7 +53,8 @@ public:
 	/// internal capacity will be set to the specified capacity.
 	/// \param string a null-terminated string or nullptr
 	/// \param capacity the capacity of the internal DynArray
-	explicit DynStringTempl(const char* string, uint32_t capacity = 0) noexcept;
+	explicit DynString(const char* string, uint32_t capacity = 0,
+	                   Allocator* allocator = getDefaultAllocator()) noexcept;
 
 	// Getters
 	// --------------------------------------------------------------------------------------------
@@ -72,13 +67,15 @@ public:
 	uint32_t size() const noexcept;
 	uint32_t capacity() const noexcept { return mString.capacity(); }
 
-	const DynArray<char,Allocator>& internalDynArray() const noexcept { return mString; }
-	DynArray<char,Allocator>& internalDynArray() noexcept { return mString; }
+	Allocator* allocator() const noexcept { return mString.allocator(); }
+
+	const DynArray<char>& internalDynArray() const noexcept { return mString; }
+	DynArray<char>& internalDynArray() noexcept { return mString; }
 
 	// Public methods (DynArray)
 	// --------------------------------------------------------------------------------------------
 
-	void swap(DynStringTempl& other) noexcept { mString.swap(other.mString); }
+	void swap(DynString& other) noexcept { mString.swap(other.mString); }
 	void setCapacity(uint32_t capacity) noexcept { mString.setCapacity(capacity); }
 	void clear() noexcept { mString.clear(); }
 	void destroy() noexcept { mString.destroy(); }
@@ -97,12 +94,12 @@ public:
 	// Operators
 	// --------------------------------------------------------------------------------------------
 
-	bool operator== (const DynStringTempl& other) const noexcept;
-	bool operator!= (const DynStringTempl& other) const noexcept;
-	bool operator< (const DynStringTempl& other) const noexcept;
-	bool operator<= (const DynStringTempl& other) const noexcept;
-	bool operator> (const DynStringTempl& other) const noexcept;
-	bool operator>= (const DynStringTempl& other) const noexcept;
+	bool operator== (const DynString& other) const noexcept;
+	bool operator!= (const DynString& other) const noexcept;
+	bool operator< (const DynString& other) const noexcept;
+	bool operator<= (const DynString& other) const noexcept;
+	bool operator> (const DynString& other) const noexcept;
+	bool operator>= (const DynString& other) const noexcept;
 
 	bool operator== (const char* other) const noexcept;
 	bool operator!= (const char* other) const noexcept;
@@ -115,14 +112,7 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	DynArray<char,Allocator> mString;
+	DynArray<char> mString;
 };
 
-// Default typedef
-// ------------------------------------------------------------------------------------------------
-
-using DynString = DynStringTempl<StandardAllocator>;
-
 } // namespace sfz
-
-#include "sfz/strings/DynString.inl"

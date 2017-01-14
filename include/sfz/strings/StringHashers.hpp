@@ -40,8 +40,7 @@ static_assert(sizeof(uint64_t) == sizeof(size_t), "size_t is not 64 bit");
 inline size_t hash(const char* str) noexcept;
 
 /// Hashes a DynString, guaranteed to produce the same hash as an equivalent const char*.
-template<typename Allocator = sfz::StandardAllocator>
-size_t hash(const DynStringTempl<Allocator>& str) noexcept;
+inline size_t hash(const DynString& str) noexcept;
 
 /// Hashes a StackString, guaranteed to produce the same hash as an equivalent const char*.
 template<size_t N>
@@ -80,9 +79,9 @@ namespace std {
 // DynString & StackString std::hash specializations
 // ------------------------------------------------------------------------------------------------
 
-template<typename Allocator>
-struct hash<sfz::DynStringTempl<Allocator>> {
-	size_t operator() (const sfz::DynStringTempl<Allocator>& str) const noexcept;
+template<>
+struct hash<sfz::DynString> {
+	size_t operator() (const sfz::DynString& str) const noexcept;
 };
 
 template<size_t N>
@@ -97,14 +96,14 @@ namespace sfz {
 // DynString & StackString HashTableKeyDescriptor specializations
 // ------------------------------------------------------------------------------------------------
 
-template<typename Allocator>
-struct EqualTo2<const char*, DynStringTempl<Allocator>> final {
-	bool operator() (const char* lhs, const DynStringTempl<Allocator>& rhs) noexcept;
+template<>
+struct EqualTo2<const char*, DynString> final {
+	bool operator() (const char* lhs, const DynString& rhs) noexcept;
 };
 
-template<typename Allocator>
-struct HashTableKeyDescriptor<DynStringTempl<Allocator>> final {
-	using KeyT = DynStringTempl<Allocator>;
+template<>
+struct HashTableKeyDescriptor<DynString> final {
+	using KeyT = DynString;
 	using KeyHash = std::hash<KeyT>;
 	using KeyEqual = std::equal_to<KeyT>;
 

@@ -184,7 +184,7 @@ set(SFZ_CORE_FILES
 
 	${INCLUDE_DIR}/sfz/Strings.hpp
 	${INCLUDE_DIR}/sfz/strings/DynString.hpp
-	${INCLUDE_DIR}/sfz/strings/DynString.inl
+	 ${SOURCE_DIR}/sfz/strings/DynString.cpp
 	${INCLUDE_DIR}/sfz/strings/StackString.hpp
 	 ${SOURCE_DIR}/sfz/strings/StackString.cpp
 	${INCLUDE_DIR}/sfz/strings/StringHashers.hpp
