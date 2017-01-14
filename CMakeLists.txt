@@ -188,7 +188,7 @@ set(SFZ_CORE_FILES
 	${INCLUDE_DIR}/sfz/strings/StackString.hpp
 	 ${SOURCE_DIR}/sfz/strings/StackString.cpp
 	${INCLUDE_DIR}/sfz/strings/StringHashers.hpp
-	${INCLUDE_DIR}/sfz/strings/StringHashers.inl
+	 ${SOURCE_DIR}/sfz/strings/StringHashers.cpp
 	${INCLUDE_DIR}/sfz/strings/StringID.hpp
 	 ${SOURCE_DIR}/sfz/strings/StringID.cpp
 

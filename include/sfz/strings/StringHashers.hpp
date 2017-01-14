@@ -37,26 +37,26 @@ static_assert(sizeof(uint64_t) == sizeof(size_t), "size_t is not 64 bit");
 
 /// Hashes a null-terminated raw string. The exact hashing function used is currently FNV-1A, this
 /// might however change in the future.
-inline size_t hash(const char* str) noexcept;
+size_t hash(const char* str) noexcept;
 
 /// Hashes a DynString, guaranteed to produce the same hash as an equivalent const char*.
-inline size_t hash(const DynString& str) noexcept;
+size_t hash(const DynString& str) noexcept;
 
 /// Hashes a StackString, guaranteed to produce the same hash as an equivalent const char*.
 template<size_t N>
-size_t hash(const StackStringTempl<N>& str) noexcept;
+size_t hash(const StackStringTempl<N>& str) noexcept { return sfz::hash(str.str); }
 
 // Raw string hash specializations
 // ------------------------------------------------------------------------------------------------
 
 /// Struct with same interface as std::hash, hashes raw strings with sfz::hash()
 struct RawStringHash {
-	inline size_t operator() (const char* str) const noexcept;
+	size_t operator() (const char* str) const noexcept;
 };
 
 /// Struct with same interface as std::equal_to, compares to raw strings with strcmp().
 struct RawStringEqual {
-	inline bool operator()(const char* lhs, const char* rhs) const;
+	bool operator()(const char* lhs, const char* rhs) const;
 };
 
 /// Specialization of HashTableKeyDescriptor for const char*, makes it possible to use raw strings
@@ -86,7 +86,7 @@ struct hash<sfz::DynString> {
 
 template<size_t N>
 struct hash<sfz::StackStringTempl<N>> {
-	size_t operator() (const sfz::StackStringTempl<N>& str) const noexcept;
+	size_t operator() (const sfz::StackStringTempl<N>& str) const noexcept { return sfz::hash<N>(str); }
 };
 
 } // namespace std
@@ -98,7 +98,7 @@ namespace sfz {
 
 template<>
 struct EqualTo2<const char*, DynString> final {
-	bool operator() (const char* lhs, const DynString& rhs) noexcept;
+	bool operator() (const char* lhs, const DynString& rhs) noexcept { return rhs == lhs; }
 };
 
 template<>
@@ -114,7 +114,7 @@ struct HashTableKeyDescriptor<DynString> final {
 
 template<size_t N>
 struct EqualTo2<const char*, StackStringTempl<N>> final {
-	bool operator() (const char* lhs, const StackStringTempl<N>& rhs) noexcept;
+	bool operator() (const char* lhs, const StackStringTempl<N>& rhs) noexcept { return rhs == lhs; }
 };
 
 template<size_t N>
@@ -129,5 +129,3 @@ struct HashTableKeyDescriptor<StackStringTempl<N>> final {
 };
 
 } // namespace sfz
-
-#include "sfz/strings/StringHashers.inl"

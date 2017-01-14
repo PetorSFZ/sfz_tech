@@ -27,15 +27,17 @@ using namespace sfz;
 
 TEST_CASE("fnv1aHash()", "[sfz::StringHashers]")
 {
+	// Assumes sfz::hash() is a wrapper around fnv1aHash()
+
 	// Test values taken from public domain reference code by "chongo <Landon Curt Noll> /\oo/\"
 	// See http://isthe.com/chongo/tech/comp/fnv/
-	REQUIRE(detail::fnv1aHash("") == uint64_t(0xcbf29ce484222325));
-	REQUIRE(detail::fnv1aHash("a") == uint64_t(0xaf63dc4c8601ec8c));
-	REQUIRE(detail::fnv1aHash("b") == uint64_t(0xaf63df4c8601f1a5));
-	REQUIRE(detail::fnv1aHash("c") == uint64_t(0xaf63de4c8601eff2));
-	REQUIRE(detail::fnv1aHash("foo") == uint64_t(0xdcb27518fed9d577));
-	REQUIRE(detail::fnv1aHash("foobar") == uint64_t(0x85944171f73967e8));
-	REQUIRE(detail::fnv1aHash("chongo was here!\n") == uint64_t(0x46810940eff5f915));
+	REQUIRE(sfz::hash("") == uint64_t(0xcbf29ce484222325));
+	REQUIRE(sfz::hash("a") == uint64_t(0xaf63dc4c8601ec8c));
+	REQUIRE(sfz::hash("b") == uint64_t(0xaf63df4c8601f1a5));
+	REQUIRE(sfz::hash("c") == uint64_t(0xaf63de4c8601eff2));
+	REQUIRE(sfz::hash("foo") == uint64_t(0xdcb27518fed9d577));
+	REQUIRE(sfz::hash("foobar") == uint64_t(0x85944171f73967e8));
+	REQUIRE(sfz::hash("chongo was here!\n") == uint64_t(0x46810940eff5f915));
 }
 
 TEST_CASE("Hash structs")
