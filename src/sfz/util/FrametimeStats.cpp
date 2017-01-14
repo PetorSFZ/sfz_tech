@@ -28,9 +28,8 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 FrametimeStats::FrametimeStats(uint32_t maxNumSamples) noexcept
-:
-	mSamples(0, maxNumSamples)
 {
+	mSamples.create(maxNumSamples);
 	this->reset();
 }
 
