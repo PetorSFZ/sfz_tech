@@ -335,12 +335,12 @@ bool linkProgram(uint32_t program) noexcept
 
 void printShaderInfoLog(uint32_t shader) noexcept
 {
-	int logLength;
-	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
-	char* log = static_cast<char*>(StandardAllocator::allocate(size_t(logLength + 1)));
-	glGetShaderInfoLog(shader, logLength, NULL, log);
+	//int logLength;
+	//glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
+	const int MAX_LOG_LENGTH = 256;
+	char log[MAX_LOG_LENGTH];
+	glGetShaderInfoLog(shader, MAX_LOG_LENGTH, NULL, log);
 	printErrorMessage(log);
-	StandardAllocator::deallocate(log);
 }
 
 const char* postProcessVertexShaderSource() noexcept
