@@ -16,6 +16,13 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
+// Disable some MSVC warnings for this file
+#ifdef _WIN32
+#pragma warning(push)
+#pragma warning(disable : 4127)
+#pragma warning(disable : 4189)
+#endif
+
 namespace sfz {
 
 // HashMap (implementation): Constructors & destructors
@@ -720,3 +727,7 @@ bool HashMap<K,V,Descr,Allocator>::removeInternal(const KT& key) noexcept
 }
 
 } // namespace sfz
+
+#ifdef _WIN32
+#pragma warning(pop)
+#endif
