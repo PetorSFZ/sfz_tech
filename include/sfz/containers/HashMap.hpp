@@ -26,14 +26,16 @@
 
 #include "sfz/Assert.hpp"
 #include "sfz/containers/HashTableKeyDescriptor.hpp"
-#include "sfz/memory/Allocators.hpp"
+#include "sfz/memory/Allocator.hpp"
 
 namespace sfz {
 
-using std::int64_t;
 using std::size_t;
-using std::uint32_t;
 using std::uint8_t;
+using std::uint32_t;
+using std::uint64_t;
+
+static_assert(sizeof(size_t) == sizeof(uint64_t), "size_t is not 64 bit");
 
 // HashMap (interface)
 // ------------------------------------------------------------------------------------------------
@@ -60,12 +62,19 @@ using std::uint8_t;
 /// HashTableKeyDescriptor documentation, the normal key type needs to be constructable using an
 /// alt key.
 ///
+/// HashMap uses sfzCore allocators (read more about them in sfz/memory/Allocator.hpp). Basically
+/// they are instance based allocators, so each HashMap needs to have an Allocator pointer. The
+/// default constructor does not set any allocator (i.e. nullptr) and does not allocate any memory.
+/// An allocator can be set via the create() method or the constructor that takes an allocator.
+/// Once an allocator is set it can not be changed unless the HashMap is first destroy():ed, this
+/// is done automatically if create() is called again. If no allocator is available (nullptr) when
+/// attempting to allocate memory (rehash(), put(), etc), then the default allocator will be
+/// retrieved (getDefaultAllocator()) and set.
+///
 /// \param K the key type
 /// \param V the value type
 /// \param Descr the HashTableKeyDescriptor (by default sfz::HashTableKeyDescriptor)
-/// \param Allocator the sfz allocator used to allocate memory
-template<typename K, typename V, typename Descr = HashTableKeyDescriptor<K>,
-         typename Allocator = StandardAllocator>
+template<typename K, typename V, typename Descr = HashTableKeyDescriptor<K>>
 class HashMap {
 public:
 	// Constants
@@ -99,17 +108,54 @@ public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	/// Constructs a new HashMap with a capacity larger than or equal to the suggested capacity.
-	/// If suggestedCapacity is 0 then no memory will be allocated. Equivalent to creating an empty
-	/// HashMap by default constructor and then calling rehash with the suggested capacity.
-	explicit HashMap(uint32_t suggestedCapacity) noexcept;
+	/// Constructs a new HashMap using create()
+	explicit HashMap(uint32_t suggestedCapacity, Allocator* allocator = getDefaultAllocator()) noexcept;
 
+	/// Creates an empty HashMap without setting an allocator or allocating any memory.
 	HashMap() noexcept = default;
+
+	/// Copy constructors. Copies content and allocator.
 	HashMap(const HashMap& other) noexcept;
 	HashMap& operator= (const HashMap& other) noexcept;
+
+	/// Move constructors. Equivalent to calling target.swap(source).
 	HashMap(HashMap&& other) noexcept;
 	HashMap& operator= (HashMap&& other) noexcept;
+	
+	/// Destroys the HashMap using destroy().
 	~HashMap() noexcept;
+
+	// State methods
+	// --------------------------------------------------------------------------------------------
+
+	/// Calls destroy(), then constucts a new HashMap. Capacity will be larger than or equal to the
+	/// suggested capacity.
+	void create(uint32_t suggestedCapacity, Allocator* allocator = getDefaultAllocator()) noexcept;
+
+	/// Swaps the contents of two HashMaps, including the allocators.
+	void swap(HashMap& other) noexcept;
+
+	/// Destroys all elements stored in this DynArray, deallocates all memory and removes allocator.
+	/// After this method is called the size and capacity is 0, allocator is nullptr. If the HashMap
+	/// is already empty then this method will only remove the allocator if it exists. It is not
+	/// necessary to call this method manually, it will automatically be called in the destructor.
+	void destroy() noexcept;
+
+	/// Removes all elements from this HashMap without deallocating memory, changing capacity or
+	/// touching the allocator.
+	void clear() noexcept;
+
+	/// Rehashes this HashMap. Creates a new HashMap with at least the same capacity as the
+	/// current one, or larger if suggested by suggestedCapacity. Then iterates over all elements
+	/// in this HashMap and adds them to the new one. Finally this HashMap is replaced by the
+	/// new one. Obviously all pointers and references into the old HashMap are invalidated. If no
+	/// allocator is set then the default one will be retrieved and set.
+	void rehash(uint32_t suggestedCapacity) noexcept;
+
+	/// Checks if HashMap needs to be rehashed, and will do so if necessary. This method is
+	/// internally called by put() and operator[]. Will allocate capacity if this HashMap is
+	/// empty. Returns whether HashMap was rehashed.
+	bool ensureProperlyHashed() noexcept;
 
 	// Getters
 	// --------------------------------------------------------------------------------------------
@@ -124,6 +170,9 @@ public:
 	/// Returns the number of placeholder positions for removed elements. size + placeholders <=
 	/// capacity.
 	uint32_t placeholders() const noexcept { return mPlaceholders; }
+
+	/// Returns the allocator of this HashMap. Will return nullptr if no allocator is set.
+	Allocator* allocator() const noexcept { return mAllocator; }
 
 	/// Returns pointer to the element associated with the given key, or nullptr if no such element
 	/// exists. The pointer is owned by this HashMap and will not be valid if it is rehashed,
@@ -173,30 +222,6 @@ public:
 	/// HashMap contains no such element. Guaranteed to not rehash.
 	bool remove(const K& key) noexcept;
 	bool remove(const AltK& key) noexcept;
-
-	/// Swaps the contents of two HashMaps
-	void swap(HashMap& other) noexcept;
-
-	/// Rehashes this HashMap. Creates a new HashMap with at least the same capacity as the
-	/// current one, or larger if suggested by suggestedCapacity. Then iterates over all elements
-	/// in this HashMap and adds them to the new one. Finally this HashMap is replaced by the
-	/// new one. Obviously all pointers and references into the old HashMap are invalidated.
-	void rehash(uint32_t suggestedCapacity) noexcept;
-
-	/// Checks if HashMap needs to be rehashed, and will do so if necessary. This method is
-	/// internally called by put() and operator[], if it is manually called before adding a single
-	/// key value pair with these methods they are guaranteed to not rehash. Will allocate capacity
-	/// if this HashMap is empty. Returns whether HashMap was rehashed.
-	bool ensureProperlyHashed() noexcept;
-
-	/// Removes all elements from this HashMap without deallocating memory or changing capacity
-	void clear() noexcept;
-
-	/// Destroys all elements stored in this DynArray and deallocates all memory. After this
-	/// method is called the size and capacity is 0. If the HashMap is already empty then this
-	/// method will do nothing. It is not necessary to call this method manually, it will
-	/// automatically be called in the destructor.
-	void destroy() noexcept;
 
 	// Iterators
 	// --------------------------------------------------------------------------------------------
@@ -283,16 +308,16 @@ private:
 	uint32_t findPrimeCapacity(uint32_t capacity) const noexcept;
 
 	/// Return the size of the memory allocation for the element info array in bytes
-	size_t sizeOfElementInfoArray() const noexcept;
+	uint64_t sizeOfElementInfoArray() const noexcept;
 
 	/// Returns the size of the memory allocation for the key array in bytes
-	size_t sizeOfKeyArray() const noexcept;
+	uint64_t sizeOfKeyArray() const noexcept;
 
 	/// Returns the size of the memory allocation for the value array in bytes
-	size_t sizeOfValueArray() const noexcept;
+	uint64_t sizeOfValueArray() const noexcept;
 
 	/// Returns the size of the allocated memory in bytes
-	size_t sizeOfAllocatedMemory() const noexcept;
+	uint64_t sizeOfAllocatedMemory() const noexcept;
 
 	/// Returns pointer to the info bits part of the allocated memory
 	uint8_t* elementInfoPtr() const noexcept;
@@ -339,6 +364,7 @@ private:
 
 	uint32_t mSize = 0, mCapacity = 0, mPlaceholders = 0;
 	uint8_t* mDataPtr = nullptr;
+	Allocator* mAllocator = nullptr;
 };
 
 } // namespace sfz
