@@ -20,25 +20,25 @@
 #include "catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
-#include "sfz/memory/Allocators.hpp"
+#include "sfz/memory/Allocator.hpp"
 #include "sfz/memory/MemoryUtils.hpp"
 
 using namespace sfz;
 
 TEST_CASE("Testing alignment", "[sfz::StandardAllocator]")
 {
-	void* memory16byte = StandardAllocator::allocate(512, 16);
+	void* memory16byte = getDefaultAllocator()->allocate(512, 16);
 	REQUIRE(memory16byte != nullptr);
 	REQUIRE(isAligned(memory16byte, 16));
-	StandardAllocator::deallocate(memory16byte);
+	getDefaultAllocator()->deallocate(memory16byte);
 
-	void* memory32byte = StandardAllocator::allocate(512, 32);
+	void* memory32byte = getDefaultAllocator()->allocate(512, 32);
 	REQUIRE(memory32byte != nullptr);
 	REQUIRE(isAligned(memory32byte, 32));
-	StandardAllocator::deallocate(memory32byte);
+	getDefaultAllocator()->deallocate(memory32byte);
 	
-	void* memory64byte = StandardAllocator::allocate(512, 64);
+	void* memory64byte = getDefaultAllocator()->allocate(512, 64);
 	REQUIRE(memory64byte != nullptr);
 	REQUIRE(isAligned(memory64byte, 64));
-	StandardAllocator::deallocate(memory64byte);
+	getDefaultAllocator()->deallocate(memory64byte);
 }

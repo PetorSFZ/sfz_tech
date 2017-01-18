@@ -21,6 +21,7 @@
 #include <cstdint>
 
 #include "sfz/containers/DynArray.hpp"
+#include "sfz/memory/Allocator.hpp"
 #include "sfz/strings/DynString.hpp"
 
 namespace sfz {
@@ -76,10 +77,11 @@ int64_t sizeofFile(const char* path) noexcept;
 int32_t readBinaryFile(const char* path, uint8_t* dataOut, size_t maxNumBytes) noexcept;
 
 /// Reads binary file, returns empty DynArray if error.
-DynArray<uint8_t> readBinaryFile(const char* path) noexcept;
+DynArray<uint8_t> readBinaryFile(const char* path,
+                                 Allocator* allocator = getDefaultAllocator()) noexcept;
 
 /// Reads text file, returns empty string if error.
-DynString readTextFile(const char* path) noexcept;
+DynString readTextFile(const char* path, Allocator* allocator = getDefaultAllocator()) noexcept;
 
 /// Writes memory to binary file, returns whether successful or not.
 bool writeBinaryFile(const char* path, const uint8_t* data, size_t numBytes) noexcept;

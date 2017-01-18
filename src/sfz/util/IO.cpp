@@ -44,8 +44,6 @@
 
 #include "sfz/PopWarnings.hpp"
 
-#include "sfz/memory/Allocators.hpp"
-
 namespace sfz {
 
 using std::size_t;
@@ -55,7 +53,7 @@ using std::uint8_t;
 // ------------------------------------------------------------------------------------------------
 
 template<typename T>
-static DynArray<T> readFileInternal(const char* path, bool binaryMode) noexcept
+static DynArray<T> readFileInternal(const char* path, bool binaryMode, Allocator* allocator) noexcept
 {
 	// Open file
 	if (path == nullptr) return DynArray<T>();
@@ -72,8 +70,7 @@ static DynArray<T> readFileInternal(const char* path, bool binaryMode) noexcept
 	}
 
 	// Create array with enough capacity to fit file
-	DynArray<T> temp;
-	temp.setCapacity(static_cast<uint32_t>(size + 1));
+	DynArray<T> temp(uint32_t(size + 1), allocator);
 
 	// Read the file into the array
 	uint8_t buffer[BUFSIZ];
@@ -82,7 +79,7 @@ static DynArray<T> readFileInternal(const char* path, bool binaryMode) noexcept
 	while ((readSize = std::fread(buffer, 1, BUFSIZ, file)) > 0) {
 
 		// Ensure array has space.
-		temp.ensureCapacity(static_cast<uint32_t>(currOffs + readSize));
+		temp.ensureCapacity(uint32_t(currOffs + readSize));
 
 		// Copy chunk into array
 		std::memcpy(temp.data() + currOffs, buffer, readSize);
@@ -90,7 +87,7 @@ static DynArray<T> readFileInternal(const char* path, bool binaryMode) noexcept
 	}
 
 	// Set size of array
-	temp.setSize(static_cast<uint32_t>(currOffs));
+	temp.setSize(uint32_t(currOffs));
 
 	std::fclose(file);
 	return std::move(temp);
@@ -107,7 +104,7 @@ const char* basePath() noexcept
 			sfz::error("SDL_GetBasePath() failed: %s", SDL_GetError());
 		}
 		size_t len = std::strlen(tmp);
-		char* res = static_cast<char*>(StandardAllocator::allocate(len + 1));
+		char* res = static_cast<char*>(getDefaultAllocator()->allocate(len + 1, 32, "sfz::basePath()"));
 		std::strcpy(res, tmp);
 		SDL_free((void*)tmp);
 		return res;
@@ -119,7 +116,7 @@ const char* myDocumentsPath() noexcept
 {
 	static const char* path = []() {
 #ifdef _WIN32
-		char* tmp = static_cast<char*>(StandardAllocator::allocate(MAX_PATH + 2));
+		char* tmp = static_cast<char*>(getDefaultAllocator()->allocate(MAX_PATH + 2, 32, "sfz::myDocumentsPath()"));
 		HRESULT result = SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, tmp);
 		if (result != S_OK) sfz::error("%s", "Could not retrieve MyDocuments path.");
 
@@ -133,7 +130,7 @@ const char* myDocumentsPath() noexcept
 		const char* envHome = std::getenv("HOME");
 		size_t pathLen = std::strlen(envHome);
 
-		char* tmp = static_cast<char*>(StandardAllocator::allocate(pathLen + 2));
+		char* tmp = static_cast<char*>(getDefaultAllocator()->allocate(pathLen + 2, 32, "sfz::myDocumentsPath()"));
 		std::strncpy(tmp, envHome, pathLen);
 
 		// Add path separator
@@ -150,7 +147,7 @@ const char* gameBaseFolderPath() noexcept
 	static const char* path = []() {
 		const char* myDocuments = myDocumentsPath();
 		size_t len = std::strlen(myDocuments);
-		char* tmp = static_cast<char*>(StandardAllocator::allocate(len + 32));
+		char* tmp = static_cast<char*>(getDefaultAllocator()->allocate(len + 32, 32, "sfz::gameBaseFolderPath()"));
 		std::snprintf(tmp, len + 32, "%s%s", myDocuments, "My Games/");
 		return tmp;
 	}();
@@ -284,14 +281,14 @@ int32_t readBinaryFile(const char* path, uint8_t* dataOut, size_t maxNumBytes) n
 	return 0;
 }
 
-DynArray<uint8_t> readBinaryFile(const char* path) noexcept
+DynArray<uint8_t> readBinaryFile(const char* path, Allocator* allocator) noexcept
 {
-	return std::move(readFileInternal<uint8_t>(path, true));
+	return std::move(readFileInternal<uint8_t>(path, true, allocator));
 }
 
-DynString readTextFile(const char* path) noexcept
+DynString readTextFile(const char* path, Allocator* allocator) noexcept
 {
-	DynArray<char> strData = readFileInternal<char>(path, false);
+	DynArray<char> strData = readFileInternal<char>(path, false, allocator);
 	if (strData.size() == 0 || strData[strData.size() - 1] != '\0') {
 		strData.add('\0');
 	}

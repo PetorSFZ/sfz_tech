@@ -159,8 +159,6 @@ set(SFZ_CORE_FILES
 	${INCLUDE_DIR}/sfz/Memory.hpp
 	${INCLUDE_DIR}/sfz/memory/Allocator.hpp
 	 ${SOURCE_DIR}/sfz/memory/Allocator.cpp
-	${INCLUDE_DIR}/sfz/memory/Allocators.hpp
-	 ${SOURCE_DIR}/sfz/memory/Allocators.cpp
 	${INCLUDE_DIR}/sfz/memory/MemoryUtils.hpp
 	${INCLUDE_DIR}/sfz/memory/New.hpp
 	${INCLUDE_DIR}/sfz/memory/SmartPointers.hpp
