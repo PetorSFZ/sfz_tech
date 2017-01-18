@@ -18,9 +18,10 @@
 
 #pragma once
 
+#include <algorithm> // std::max()
 #include <utility> // std::forward
 
-#include "sfz/memory/Allocators.hpp"
+#include "sfz/memory/Allocator.hpp"
 
 namespace sfz {
 
@@ -30,15 +31,23 @@ namespace sfz {
 /// Constructs a new object of type T with the specified allocator
 /// The object is guaranteed to be 32-byte aligned
 /// Will exit the program through std::terminate() if constructor throws an exception
+/// \param allocator the allocator
 /// \return nullptr if memory allocation failed
-template<typename T, typename Allocator = StandardAllocator, typename... Args>
-T* sfz_new(Args&&... args) noexcept
+template<typename T, typename... Args>
+T* sfzNew(Allocator* allocator, Args&&... args) noexcept
 {
-	void* memPtr = Allocator::allocate(sizeof(T), 32);
+	void* memPtr = allocator->allocate(sizeof(T), std::max<uint32_t>(32, alignof(T)));
 	T* objPtr = nullptr;
 	objPtr = new(memPtr) T(std::forward<Args>(args)...);
 	// If constructor throws exception std::terminate() will be called since function is noexcept
 	return objPtr;
+}
+
+/// Constructs a new object of type T with the default allocator, see sfzNew().
+template<typename T, typename... Args>
+T* sfzNewDefault(Args&&... args) noexcept
+{
+	return sfzNew<T>(getDefaultAllocator(), std::forward<Args>(args)...);
 }
 
 // Delete
@@ -47,13 +56,21 @@ T* sfz_new(Args&&... args) noexcept
 /// Deletes an object created with the specified allocator
 /// Will exit the program through std::terminate() if destructor throws an exception
 /// \param pointer to the object
-template<typename T, typename Allocator = StandardAllocator>
-void sfz_delete(T* pointer) noexcept
+/// \param allocator the allocator used to allocate the object's memory
+template<typename T>
+void sfzDelete(T* pointer, Allocator* allocator) noexcept
 {
 	if (pointer == nullptr) return;
 	pointer->~T();
 	// If destructor throws exception std::terminate() will be called since function is noexcept
-	Allocator::deallocate(static_cast<void*>(pointer));
+	allocator->deallocate(static_cast<void*>(pointer));
+}
+
+/// Deletes an object created with the default allocator, sfzDelete().
+template<typename T>
+void sfzDeleteDefault(T* pointer) noexcept
+{
+	return sfzDelete<T>(pointer, getDefaultAllocator());
 }
 
 } // namespace sfz

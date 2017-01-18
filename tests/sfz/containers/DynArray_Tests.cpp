@@ -195,13 +195,13 @@ TEST_CASE("add()", "[sfz::DynArray]")
 	REQUIRE(v2.capacity() == 0);
 	REQUIRE(v2.data() == nullptr);
 
-	v2.add(UniquePtr<int>(sfz_new<int>(3)));
+	v2.add(makeUniqueDefault<int>(3));
 
 	REQUIRE(v2.size() == 1);
 	REQUIRE(v2.capacity() == DynArray<UniquePtr<int>>::DEFAULT_INITIAL_CAPACITY);
 	REQUIRE(*v2[0] == 3);
 
-	UniquePtr<int> b{sfz_new<int>(42)};
+	UniquePtr<int> b = makeUniqueDefault<int>(42);
 
 	v2.add(std::move(b));
 

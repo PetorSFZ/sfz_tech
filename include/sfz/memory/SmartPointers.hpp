@@ -22,7 +22,7 @@
 #include <cstddef> // nullptr_t
 #include <type_traits> // std::is_array
 
-#include "sfz/memory/Allocators.hpp"
+#include "sfz/memory/Allocator.hpp"
 #include "sfz/memory/New.hpp"
 
 namespace sfz {
@@ -30,9 +30,9 @@ namespace sfz {
 // UniquePtr (interface)
 // ------------------------------------------------------------------------------------------------
 
-/// Simple replacement for std::unique_ptr using sfz allocators
+/// Simple replacement for std::unique_ptr using sfzCore allocators
 /// Unlike std::unique_ptr there is NO support for arrays, use sfz::DynArray for that.
-template<typename T, typename Allocator = StandardAllocator>
+template<typename T>
 class UniquePtr final {
 public:
 	static_assert(!std::is_array<T>::value, "UniquePtr does not accept array types");
@@ -44,21 +44,19 @@ public:
 	UniquePtr(const UniquePtr&) = delete;
 	UniquePtr& operator= (const UniquePtr&) = delete;
 
-	/// Creates an empty UniquePtr (holding nullptr)
+	/// Creates an empty UniquePtr (holding nullptr, no allocator set)
 	UniquePtr() noexcept = default;
 
-	/// Creates an empty UniquePtr (holding nullptr)
+	/// Creates an empty UniquePtr (holding nullptr, no allocator set)
 	UniquePtr(std::nullptr_t) noexcept {};
 	
-	/// Creates a UniquePtr with the specified object
+	/// Creates a UniquePtr with the specified object and allocator
 	/// This UniquePtr takes ownership of the specified object, thus the object in question must
-	/// be allocated by the sfz allocator specified so it can be properly destroyed.
-	explicit UniquePtr(T* object) noexcept;
+	/// be allocated by the sfzCore allocator specified so it can be properly destroyed.
+	UniquePtr(T* object, Allocator* allocator) noexcept;
 
-	/// Move constructor
+	/// Move constructors. Equivalent to swap() method.
 	UniquePtr(UniquePtr&& other) noexcept;
-	
-	/// Move assignment constructor
 	UniquePtr& operator= (UniquePtr&& other) noexcept;
 
 	/// Destroys the object held using destroy()
@@ -67,21 +65,26 @@ public:
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
+	/// Swaps the internal pointers (and allocators) of this and the other UniquePtr
+	void swap(UniquePtr& other) noexcept;
+
+	/// Destroys the object held by this UniquePtr, deallocates its memory and removes allocator.
+	/// After this method is called the internal pointer and allocator will be assigned nullptr as
+	/// value. If the internal pointer already is a nullptr this method will do nothing. It is not
+	/// necessary to call this method manually, it will automatically be called in UniquePtr's
+	/// destructor.
+	void destroy() noexcept;
+
 	/// Returns the internal pointer
 	T* get() const noexcept { return mPtr; }
 	
+	/// Returns the allocator of this UniquePtr, returns nullptr if no allocator is set
+	Allocator* allocator() const noexcept { return mAllocator; }
+
 	/// Caller takes ownership of the internal pointer
-	/// The internal pointer will be set to nullptr without being destroyed
+	/// The internal pointer will be set to nullptr without being destroyed, allocator will be
+	/// set to nullptr
 	T* take() noexcept;
-
-	/// Destroys the object held by this UniquePtr and deallocates its memory
-	/// After this method is called the internal pointer will be assigned nullptr as value. If the
-	/// internal pointer already is a nullptr this method will do nothing. It is not necessary to
-	/// call this method manually, it will automatically be called in UniquePtr's destructor.
-	void destroy() noexcept;
-
-	/// Swaps the internal pointers of this and the other UniquePtr
-	void swap(UniquePtr& other) noexcept;
 
 	// Operators
 	// --------------------------------------------------------------------------------------------
@@ -92,25 +95,44 @@ public:
 	bool operator== (const UniquePtr& other) const noexcept;
 	bool operator!= (const UniquePtr& other) const noexcept;
 
-	bool operator== (std::nullptr_t) const noexcept;
-	bool operator!= (std::nullptr_t) const noexcept;
-
 private:
+	// Private members
+	// --------------------------------------------------------------------------------------------
+
 	T* mPtr = nullptr;
+	Allocator* mAllocator = nullptr;
 };
+
+template<typename T>
+bool operator== (const UniquePtr<T>& lhs, std::nullptr_t rhs) noexcept;
+
+template<typename T>
+bool operator== (std::nullptr_t lhs, const UniquePtr<T>& rhs) noexcept;
+
+template<typename T>
+bool operator!= (const UniquePtr<T>& lhs, std::nullptr_t rhs) noexcept;
+
+template<typename T>
+bool operator!= (std::nullptr_t lhs, const UniquePtr<T>& rhs) noexcept;
 
 /// Constructs a new object of type T with the specified allocator and returns it in a UniquePtr
 /// Will exit the program through std::terminate() if constructor throws an exception
 /// \return nullptr if memory allocation failed
-template<typename T, typename Allocator = StandardAllocator, typename... Args>
-UniquePtr<T,Allocator> makeUnique(Args&&... args) noexcept;
+template<typename T, typename... Args>
+UniquePtr<T> makeUnique(Allocator* allocator, Args&&... args) noexcept;
+
+/// Constructs a new object of type T with the default allocator and returns it in a UniquePtr
+/// Will exit the program through std::terminate() if constructor throws an exception
+/// \return nullptr if memory allocation failed
+template<typename T, typename... Args>
+UniquePtr<T> makeUniqueDefault(Args&&... args) noexcept;
 
 // SharedPtr (interface)
 // ------------------------------------------------------------------------------------------------
 
-/// Simple replacement for std::shared_ptr using sfz allocators
+/// Simple replacement for std::shared_ptr using sfzCore allocators
 /// Unlike std::shared_ptr there is NO support for arrays, use sfz::DynArray for that.
-template<typename T, typename Allocator = StandardAllocator>
+template<typename T>
 class SharedPtr final {
 public:
 	static_assert(!std::is_array<T>::value, "SharedPtr does not accept array types");
@@ -118,40 +140,47 @@ public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	/// Creates an empty SharedPtr (holding nullptr and no counter)
+	/// Creates an empty SharedPtr (holding nullptr and no state)
 	SharedPtr() noexcept = default;
 
-	/// Creates an empty SharedPtr (holding nullptr and no counter)
+	/// Creates an empty SharedPtr (holding nullptr and no state)
 	SharedPtr(std::nullptr_t) noexcept { }
 
 	/// Creates a SharedPtr with the specified object
 	/// This SharedPtr takes ownership of the specified object, thus the object in question must
-	/// be allocated by the sfz allocator specified so it can be properly destroyed.
-	explicit SharedPtr(T* object) noexcept;
+	/// be allocated by the sfzCore allocator specified so it can be properly destroyed.
+	SharedPtr(T* object, Allocator* allocator) noexcept;
 	
-	/// Copies a SharedPtr and increments the reference counter
+	/// Copy constructors. Copies a SharedPtr and increments the reference counter.
 	SharedPtr(const SharedPtr& other) noexcept;
-
-	/// Copies a SharedPtr and increments the reference counter
 	SharedPtr& operator= (const SharedPtr& other) noexcept;
 
+	/// Move constructors. Swaps two pointers (and states) using swap().
 	SharedPtr(SharedPtr&& other) noexcept;
 	SharedPtr& operator= (SharedPtr&& other) noexcept;
 
-	/// Decrements the reference counter, deletes both the object and counter if counter is 0.
+	/// Destroys this SharedPtr (not necessarily the object pointed at) with destroy().
 	~SharedPtr() noexcept;
 
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
+	/// Swaps the internal pointers and state of this and the other SharedPtr
+	void swap(SharedPtr& other) noexcept;
+
+	/// Decrements the reference counter and deletes both the object and state if counter is 0.
+	/// Will do nothing if no object is held. This SharedPointer will have no object or state after
+	/// destroy() is called.
+	void destroy() noexcept;
+
 	/// Returns the internal pointer
 	T* get() const noexcept { return mPtr; }
 
+	/// Returns the allocator used to allocate the internal object
+	Allocator* allocator() const noexcept;
+
 	/// Returns the number of references to the internal object (or 0 if counter doesn't exist)
 	size_t refCount() const noexcept;
-
-	/// Swaps the internal pointers and counters of this and the other SharedPtr
-	void swap(SharedPtr& other) noexcept;
 
 	// Operators
 	// --------------------------------------------------------------------------------------------
@@ -162,19 +191,42 @@ public:
 	bool operator== (const SharedPtr& other) const noexcept;
 	bool operator!= (const SharedPtr& other) const noexcept;
 
-	bool operator== (std::nullptr_t) const noexcept;
-	bool operator!= (std::nullptr_t) const noexcept;
-
 private:
+	// Private members
+	// --------------------------------------------------------------------------------------------
+
+	struct SharedState final {
+		Allocator* allocator = nullptr;
+		std::atomic_uint32_t refCount = 0;
+	};
+
 	T* mPtr = nullptr;
-	std::atomic_size_t* mRefCountPtr = nullptr;
+	SharedState* mState = nullptr;
 };
+
+template<typename T>
+bool operator== (const SharedPtr<T>& lhs, std::nullptr_t rhs) noexcept;
+
+template<typename T>
+bool operator== (std::nullptr_t lhs, const SharedPtr<T>& rhs) noexcept;
+
+template<typename T>
+bool operator!= (const SharedPtr<T>& lhs, std::nullptr_t rhs) noexcept;
+
+template<typename T>
+bool operator!= (std::nullptr_t lhs, const SharedPtr<T>& rhs) noexcept;
 
 /// Constructs a new object of type T with the specified allocator and returns it in a SharedPtr
 /// Will exit the program through std::terminate() if constructor throws an exception
 /// \return nullptr if memory allocation failed
-template<typename T, typename Allocator = StandardAllocator, typename... Args>
-SharedPtr<T,Allocator> makeShared(Args&&... args) noexcept;
+template<typename T, typename... Args>
+SharedPtr<T> makeShared(Allocator* allocator, Args&&... args) noexcept;
+
+/// Constructs a new object of type T with the default allocator and returns it in a SharedPtr
+/// Will exit the program through std::terminate() if constructor throws an exception
+/// \return nullptr if memory allocation failed
+template<typename T, typename... Args>
+SharedPtr<T> makeSharedDefault(Args&&... args) noexcept;
 
 } // namespace sfz
 

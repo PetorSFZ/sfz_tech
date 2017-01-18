@@ -42,11 +42,11 @@ TEST_CASE("Basic tests", "[sfz::sfz_new]")
 	};
 
 	TestClass* ptr = nullptr;
-	ptr = sfz_new<TestClass>(&flag);
+	ptr = sfzNewDefault<TestClass>(&flag);
 	REQUIRE(ptr != nullptr);
 	REQUIRE(ptr->flagPtr == &flag);
 	REQUIRE(flag == 1);
 
-	sfz_delete<TestClass>(ptr);
+	sfzDeleteDefault(ptr);
 	REQUIRE(flag == 2);
 }

@@ -28,7 +28,7 @@ using namespace sfz;
 
 TEST_CASE("Testing StringCollection", "[sfz::StringID]")
 {
-	StringCollection collection(32);
+	StringCollection collection(32, getDefaultAllocator());
 	REQUIRE(collection.numStringsHeld() == 0);
 	
 	StringID id1 = collection.getStringID("Hello");

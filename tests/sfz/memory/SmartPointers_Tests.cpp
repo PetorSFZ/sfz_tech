@@ -47,7 +47,7 @@ TEST_CASE("Basic UniquePtr tests", "[sfz::UniquePtr]")
 
 	UniquePtr<TestClass> ptr = nullptr;
 	REQUIRE(ptr == nullptr);
-	ptr = UniquePtr<TestClass>{sfz_new<TestClass>(&flag)};
+	ptr = UniquePtr<TestClass>(sfzNewDefault<TestClass>(&flag), getDefaultAllocator());
 	REQUIRE(ptr.get() != nullptr);
 	REQUIRE(ptr != nullptr);
 	REQUIRE(ptr.get()->flagPtr == &flag);
@@ -76,7 +76,7 @@ TEST_CASE("makeUnique()", "[sfz::SmartPointers]")
 		int a, b;
 		Foo(int a, int b) : a(a), b(b) {} 
 	};
-	auto ptr = makeUnique<Foo>(3, 4);
+	auto ptr = makeUniqueDefault<Foo>(3, 4);
 	REQUIRE(ptr->a == 3);
 	REQUIRE(ptr->b == 4);
 }
@@ -107,14 +107,14 @@ TEST_CASE("Basic SharedPtr tests", "[sfz::SharedPtr]")
 	};
 
 	REQUIRE(flag == 0);
-	TestClass* item = sfz_new<TestClass>(&flag);
+	TestClass* item = sfzNewDefault<TestClass>(&flag);
 	REQUIRE(flag == 1);
 
 	{
 		SharedPtr<TestClass> ptr = nullptr;
 		REQUIRE(ptr == nullptr);
 		REQUIRE(ptr.refCount() == 0);
-		ptr = SharedPtr<TestClass>(item);
+		ptr = SharedPtr<TestClass>(item, getDefaultAllocator());
 		REQUIRE(ptr != nullptr);
 		REQUIRE(ptr.refCount() == 1);
 	}
@@ -123,7 +123,7 @@ TEST_CASE("Basic SharedPtr tests", "[sfz::SharedPtr]")
 	flag = 0;
 	{
 		REQUIRE(flag == 0);
-		SharedPtr<TestClass> ptr(sfz_new<TestClass>(&flag));
+		SharedPtr<TestClass> ptr(sfzNewDefault<TestClass>(&flag), getDefaultAllocator());
 		REQUIRE(ptr != nullptr);
 		REQUIRE(ptr.refCount() == 1);
 		REQUIRE(flag == 1);
@@ -147,7 +147,7 @@ TEST_CASE("makeShared()", "[sfz::SmartPointers]")
 		int a, b;
 		Foo(int a, int b) : a(a), b(b) {}
 	};
-	auto ptr = makeShared<Foo>(3, 4);
+	auto ptr = makeSharedDefault<Foo>(3, 4);
 	REQUIRE(ptr->a == 3);
 	REQUIRE(ptr->b == 4);
 }

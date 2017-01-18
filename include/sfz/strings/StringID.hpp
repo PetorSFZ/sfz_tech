@@ -22,6 +22,8 @@
 #include <cstdint>
 #include <functional> // std::hash
 
+#include "sfz/memory/Allocator.hpp"
+
 namespace sfz {
 
 using std::uint64_t;
@@ -71,7 +73,7 @@ public:
 	StringCollection& operator= (const StringCollection&) = delete;
 
 	/// Creates a StringCollection by calling createStringCollection()
-	StringCollection(uint32_t initialCapacity) noexcept;
+	StringCollection(uint32_t initialCapacity, Allocator* allocator) noexcept;
 
 	/// Moves this StringCollection (by calling swap())
 	StringCollection(StringCollection&& other) noexcept;
@@ -83,7 +85,7 @@ public:
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	void createStringCollection(uint32_t initialCapacity) noexcept;
+	void createStringCollection(uint32_t initialCapacity, Allocator* allocator) noexcept;
 	void swap(StringCollection& other) noexcept;
 	void destroy() noexcept;
 

@@ -32,15 +32,16 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 struct StringCollectionImpl final {
+	Allocator* allocator;
 	HashMap<StringID, DynString> strings;
 };
 
 // StringCollection: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-StringCollection::StringCollection(uint32_t initialCapacity) noexcept
+StringCollection::StringCollection(uint32_t initialCapacity, Allocator* allocator) noexcept
 {
-	this->createStringCollection(initialCapacity);
+	this->createStringCollection(initialCapacity, allocator);
 }
 
 StringCollection::StringCollection(StringCollection&& other) noexcept
@@ -62,12 +63,13 @@ StringCollection::~StringCollection() noexcept
 // StringCollection: Methods
 // ------------------------------------------------------------------------------------------------
 
-void StringCollection::createStringCollection(uint32_t initialCapacity) noexcept
+void StringCollection::createStringCollection(uint32_t initialCapacity, Allocator* allocator) noexcept
 {
 	this->destroy();
 
-	mImpl = sfz_new<StringCollectionImpl>();
-	mImpl->strings = HashMap<StringID, DynString>(initialCapacity);
+	mImpl = sfzNew<StringCollectionImpl>(allocator);
+	mImpl->allocator = allocator;
+	mImpl->strings.create(initialCapacity, allocator);
 }
 
 void StringCollection::swap(StringCollection& other) noexcept
@@ -79,8 +81,8 @@ void StringCollection::destroy() noexcept
 {
 	if (mImpl == nullptr) return;
 
-	sfz_delete(this->mImpl);
-	this->mImpl = nullptr;
+	sfzDelete(mImpl, mImpl->allocator);
+	mImpl = nullptr;
 }
 
 uint32_t StringCollection::numStringsHeld() const noexcept
@@ -100,7 +102,7 @@ StringID StringCollection::getStringID(const char* string) noexcept
 	// Add string to HashMap if it does not exist
 	DynString* strPtr = mImpl->strings.get(strId);
 	if (strPtr == nullptr) {
-		strPtr = &mImpl->strings.put(strId, DynString(string));
+		strPtr = &mImpl->strings.put(strId, DynString(string, 0, mImpl->allocator));
 	}
 
 	// Check if string collision occurred
