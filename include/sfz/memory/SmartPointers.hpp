@@ -86,6 +86,11 @@ public:
 	/// set to nullptr
 	T* take() noexcept;
 
+	/// Casts the UniquePtr to a base class
+	/// The original UniquePtr will be destroyed afterwards (but not the object held).
+	template<typename T2>
+	UniquePtr<T2> castTake() noexcept;
+
 	// Operators
 	// --------------------------------------------------------------------------------------------
 

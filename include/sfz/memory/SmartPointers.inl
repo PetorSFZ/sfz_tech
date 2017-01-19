@@ -81,6 +81,16 @@ T* UniquePtr<T>::take() noexcept
 	return tmp;
 }
 
+template<typename T>
+template<typename T2>
+UniquePtr<T2> UniquePtr<T>::castTake() noexcept
+{
+	UniquePtr<T2> tmp(this->mPtr, this->mAllocator);
+	this->mPtr = nullptr;
+	this->mAllocator = nullptr;
+	return std::move(tmp);
+}
+
 // UniquePtr (implementation): Operators
 // ------------------------------------------------------------------------------------------------
 

@@ -25,6 +25,27 @@
 
 using namespace sfz;
 
+class Base {
+public:
+	int val = 0;
+	Base() = default;
+	Base(const Base&) = delete;
+	Base& operator= (const Base&) = delete;
+	Base(Base&&) = delete;
+	Base& operator= (Base&&) = delete;
+};
+
+class Derived : public Base {
+public:
+	Derived(int valIn) {
+		val = valIn;
+	}
+	Derived(const Derived&) = delete;
+	Derived& operator= (const Derived&) = delete;
+	Derived(Derived&&) = delete;
+	Derived& operator= (Derived&&) = delete;
+};
+
 // UniquePtr tests
 // ------------------------------------------------------------------------------------------------
 
@@ -79,6 +100,17 @@ TEST_CASE("makeUnique()", "[sfz::SmartPointers]")
 	auto ptr = makeUniqueDefault<Foo>(3, 4);
 	REQUIRE(ptr->a == 3);
 	REQUIRE(ptr->b == 4);
+}
+
+TEST_CASE("castTake()", "[sfz::SmartPointers]")
+{
+	UniquePtr<Derived> derived = makeUniqueDefault<Derived>(3);
+	REQUIRE(derived->val == 3);
+	UniquePtr<Base> base = derived.castTake<Base>();
+	REQUIRE(derived.get() == nullptr);
+	REQUIRE(derived.allocator() == nullptr);
+	REQUIRE(base->val == 3);
+	REQUIRE(base.allocator() == getDefaultAllocator());
 }
 
 // SharedPtr tests
