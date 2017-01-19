@@ -183,3 +183,19 @@ TEST_CASE("makeShared()", "[sfz::SmartPointers]")
 	REQUIRE(ptr->a == 3);
 	REQUIRE(ptr->b == 4);
 }
+
+TEST_CASE("cast()", "[sfz::SmartPointers]")
+{
+	SharedPtr<Derived> derived = makeSharedDefault<Derived>(3);
+	REQUIRE(derived->val == 3);
+	{
+		SharedPtr<Base> base = derived.cast<Base>();
+		REQUIRE(derived.get() != nullptr);
+		REQUIRE(derived.allocator() != nullptr);
+		REQUIRE(derived.refCount() == 2);
+		REQUIRE(base->val == 3);
+		REQUIRE(base.allocator() == getDefaultAllocator());
+		REQUIRE(base.refCount() == 2);
+	}
+	REQUIRE(derived.refCount() == 1);
+}

@@ -86,7 +86,7 @@ public:
 	/// set to nullptr
 	T* take() noexcept;
 
-	/// Casts the UniquePtr to a base class
+	/// Casts (static_cast) the UniquePtr to another type and destroys the original
 	/// The original UniquePtr will be destroyed afterwards (but not the object held).
 	template<typename T2>
 	UniquePtr<T2> castTake() noexcept;
@@ -134,6 +134,16 @@ UniquePtr<T> makeUniqueDefault(Args&&... args) noexcept;
 
 // SharedPtr (interface)
 // ------------------------------------------------------------------------------------------------
+
+namespace detail {
+
+/// Inner state of all SharedPtrs
+struct SharedPtrState final {
+	Allocator* allocator = nullptr;
+	std::atomic_uint32_t refCount = 0;
+};
+
+}
 
 /// Simple replacement for std::shared_ptr using sfzCore allocators
 /// Unlike std::shared_ptr there is NO support for arrays, use sfz::DynArray for that.
@@ -187,6 +197,15 @@ public:
 	/// Returns the number of references to the internal object (or 0 if counter doesn't exist)
 	size_t refCount() const noexcept;
 
+	/// Casts (static_cast) the pointer to another type. The original is preserved, increments
+	/// ref count by 1.
+	template<typename T2>
+	SharedPtr<T2> cast() const noexcept;
+
+	/// Sets the internal state of this SmartPointer. Should never be called. Exists for
+	/// implementation reasons.
+	void dangerousSetState(T* ptr, detail::SharedPtrState* state) noexcept;
+
 	// Operators
 	// --------------------------------------------------------------------------------------------
 
@@ -200,13 +219,8 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	struct SharedState final {
-		Allocator* allocator = nullptr;
-		std::atomic_uint32_t refCount = 0;
-	};
-
 	T* mPtr = nullptr;
-	SharedState* mState = nullptr;
+	detail::SharedPtrState* mState = nullptr;
 };
 
 template<typename T>

@@ -85,10 +85,10 @@ template<typename T>
 template<typename T2>
 UniquePtr<T2> UniquePtr<T>::castTake() noexcept
 {
-	UniquePtr<T2> tmp(this->mPtr, this->mAllocator);
+	UniquePtr<T2> tmp(static_cast<T2*>(this->mPtr), this->mAllocator);
 	this->mPtr = nullptr;
 	this->mAllocator = nullptr;
-	return std::move(tmp);
+	return tmp;
 }
 
 // UniquePtr (implementation): Operators
@@ -155,7 +155,7 @@ template<typename T>
 SharedPtr<T>::SharedPtr(T* object, Allocator* allocator) noexcept
 {
 	mPtr = object;
-	mState = sfzNew<SharedState>(allocator);
+	mState = sfzNew<detail::SharedPtrState>(allocator);
 	mState->allocator = allocator;
 	mState->refCount = 1;
 }
@@ -179,7 +179,7 @@ SharedPtr<T>& SharedPtr<T>::operator= (const SharedPtr& other) noexcept
 	if (other == nullptr) return *this;
 
 	// Increment ref counter
-	other.mState->refCount++;
+	other.mState->refCount += 1;
 	
 	// Copy pointer and state
 	this->mPtr = other.mPtr;
@@ -217,7 +217,7 @@ void SharedPtr<T>::swap(SharedPtr& other) noexcept
 	this->mPtr = other.mPtr;
 	other.mPtr = thisPtr;
 
-	SharedState* thisState = this->mState;
+	detail::SharedPtrState* thisState = this->mState;
 	this->mState = other.mState;
 	other.mState = thisState;
 }
@@ -247,6 +247,28 @@ size_t SharedPtr<T>::refCount() const noexcept
 {
 	if (mState == nullptr) return 0;
 	return mState->refCount;
+}
+
+template<typename T>
+template<typename T2>
+SharedPtr<T2> SharedPtr<T>::cast() const noexcept
+{
+	if (*this == nullptr) return nullptr;
+
+	// Increment ref counter
+	mState->refCount += 1;;
+
+	// Cast pointer
+	SharedPtr<T2> tmp;
+	tmp.dangerousSetState(static_cast<T2*>(this->mPtr), this->mState);
+	return tmp;
+}
+
+template<typename T>
+void SharedPtr<T>::dangerousSetState(T* ptr, detail::SharedPtrState* state) noexcept
+{
+	this->mPtr = ptr;
+	this->mState = state;
 }
 
 // SharedPtr (implementation): Operators
