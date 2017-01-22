@@ -60,6 +60,19 @@ HashMap<K,V,Descr>& HashMap<K,V,Descr>::operator= (const HashMap& other) noexcep
 }
 
 template<typename K, typename V, typename Descr>
+HashMap<K,V,Descr>::HashMap(const HashMap& other, Allocator* allocator) noexcept
+{
+	HashMap tmp(other.capacity(), allocator);
+
+	// Add all elements from other HashMap
+	for (ConstKeyValuePair pair : other) {
+		tmp.put(pair.key, pair.value);
+	}
+
+	*this = std::move(tmp);
+}
+
+template<typename K, typename V, typename Descr>
 HashMap<K,V,Descr>::HashMap(HashMap&& other) noexcept
 {
 	this->swap(other);

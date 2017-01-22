@@ -118,6 +118,10 @@ public:
 	HashMap(const HashMap& other) noexcept;
 	HashMap& operator= (const HashMap& other) noexcept;
 
+	/// Copy constructor that change allocator. Copies content but uses the specific allocator for
+	/// the copy instead of the original one.
+	HashMap(const HashMap& other, Allocator* allocator) noexcept;
+
 	/// Move constructors. Equivalent to calling target.swap(source).
 	HashMap(HashMap&& other) noexcept;
 	HashMap& operator= (HashMap&& other) noexcept;

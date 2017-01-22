@@ -21,6 +21,7 @@
 #include "sfz/PopWarnings.hpp"
 
 #include "sfz/containers/HashMap.hpp"
+#include "sfz/memory/DebugAllocator.hpp"
 #include "sfz/Strings.hpp"
 
 using namespace sfz;
@@ -83,6 +84,40 @@ TEST_CASE("HashMap: Copy constructors", "[sfz::HashMap]")
 	REQUIRE(m2[2] == -2);
 	REQUIRE(m2[3] == -3);
 }
+
+TEST_CASE("HashMap: Copy constructor with allocator", "[sfz::DynArray]")
+{
+	DebugAllocator first("first"), second("second");
+	REQUIRE(first.numAllocations() == 0);
+	REQUIRE(second.numAllocations() == 0);
+	{
+		HashMap<int,int> map1(10, &first);
+		REQUIRE(map1.allocator() == &first);
+		REQUIRE(first.numAllocations() == 1);
+
+		map1[2] = 2;
+		map1[3] = 3;
+		map1[4] = 4;
+		REQUIRE(map1.size() == 3);
+
+		{
+			HashMap<int,int> map2(map1, &second);
+			REQUIRE(map2.allocator() == &second);
+			REQUIRE(map2.capacity() == map1.capacity());
+			REQUIRE(map2.size() == map1.size());
+			REQUIRE(map2[2] == 2);
+			REQUIRE(map2[3] == 3);
+			REQUIRE(map2[4] == 4);
+			REQUIRE(first.numAllocations() == 1);
+			REQUIRE(second.numAllocations() == 1);
+		}
+		REQUIRE(first.numAllocations() == 1);
+		REQUIRE(second.numAllocations() == 0);
+	}
+	REQUIRE(first.numAllocations() == 0);
+	REQUIRE(second.numAllocations() == 0);
+}
+
 
 TEST_CASE("HashMap: Swap & move constructors", "[sfz::HashMap]")
 {
