@@ -96,6 +96,38 @@ TEST_CASE("Copy constructors", "[sfz::DynArray]")
 	REQUIRE(second.data()[2] == 3);
 }
 
+TEST_CASE("Copy constructor with allocator", "[sfz::DynArray]")
+{
+	DebugAllocator first("first"), second("second");
+	REQUIRE(first.numAllocations() == 0);
+	REQUIRE(second.numAllocations() == 0);
+	{
+		DynArray<int> arr1(10, &first);
+		REQUIRE(arr1.allocator() == &first);
+		REQUIRE(first.numAllocations() == 1);
+
+		arr1.add(2);
+		arr1.add(3);
+		arr1.add(4);
+		REQUIRE(arr1.size() == 3);
+
+		{
+			DynArray<int> arr2(arr1, &second);
+			REQUIRE(arr2.allocator() == &second);
+			REQUIRE(arr2.capacity() == arr1.capacity());
+			REQUIRE(arr2.size() == arr1.size());
+			REQUIRE(arr2[0] == 2);
+			REQUIRE(arr2[1] == 3);
+			REQUIRE(arr2[2] == 4);
+			REQUIRE(first.numAllocations() == 1);
+			REQUIRE(second.numAllocations() == 1);
+		}
+		REQUIRE(second.numAllocations() == 0);
+	}
+	REQUIRE(first.numAllocations() == 0);
+	REQUIRE(second.numAllocations() == 0);
+}
+
 TEST_CASE("Swap & move constructors", "[sfz::DynArray]")
 {
 	DynArray<int> v1;

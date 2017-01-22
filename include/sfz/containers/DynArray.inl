@@ -67,6 +67,20 @@ DynArray<T>& DynArray<T>::operator= (const DynArray& other) noexcept
 }
 
 template<typename T>
+DynArray<T>::DynArray(const DynArray& other, Allocator* allocator) noexcept
+{
+	DynArray<T> tmp(other.mCapacity, allocator);
+
+	// Copy elements
+	for (uint32_t i = 0; i < other.mSize; i++) {
+		new (tmp.mDataPtr + i) T(other[i]);
+	}
+	tmp.mSize = other.mSize;
+
+	*this = std::move(tmp);
+}
+
+template<typename T>
 DynArray<T>::DynArray(DynArray&& other) noexcept
 {
 	this->swap(other);

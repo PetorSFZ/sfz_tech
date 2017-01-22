@@ -86,6 +86,10 @@ public:
 	DynArray(const DynArray& other) noexcept;
 	DynArray& operator= (const DynArray& other) noexcept;
 
+	/// Copy constructor that change allocator. Copies content but uses the specified allocator
+	/// for the copy instead of the original one.
+	DynArray(const DynArray& other, Allocator* allocator) noexcept;
+
 	/// Move constructors. Equivalent to calling target.swap(source).
 	DynArray(DynArray&& other) noexcept;
 	DynArray& operator= (DynArray&& other) noexcept;
