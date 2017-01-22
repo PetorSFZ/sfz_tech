@@ -55,6 +55,10 @@ public:
 	/// be allocated by the sfzCore allocator specified so it can be properly destroyed.
 	UniquePtr(T* object, Allocator* allocator) noexcept;
 
+	/// Casts a subclass to a base class.
+	template<typename T2>
+	UniquePtr(UniquePtr<T2>&& subclassPtr) noexcept;
+
 	/// Move constructors. Equivalent to swap() method.
 	UniquePtr(UniquePtr&& other) noexcept;
 	UniquePtr& operator= (UniquePtr&& other) noexcept;
@@ -166,6 +170,14 @@ public:
 	/// be allocated by the sfzCore allocator specified so it can be properly destroyed.
 	SharedPtr(T* object, Allocator* allocator) noexcept;
 	
+	/// Casts a subclass to a base class.
+	template<typename T2>
+	SharedPtr(const SharedPtr<T2>& subclassPtr) noexcept;
+
+	/// Casts a subclasss UniquePtr to a base class SharedPtr
+	template<typename T2>
+	SharedPtr(UniquePtr<T2>&& subclassPtr) noexcept;
+
 	/// Copy constructors. Copies a SharedPtr and increments the reference counter.
 	SharedPtr(const SharedPtr& other) noexcept;
 	SharedPtr& operator= (const SharedPtr& other) noexcept;

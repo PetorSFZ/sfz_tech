@@ -29,6 +29,14 @@ UniquePtr<T>::UniquePtr(T* object, Allocator* allocator) noexcept
 { }
 
 template<typename T>
+template<typename T2>
+UniquePtr<T>::UniquePtr(UniquePtr<T2>&& subclassPtr) noexcept
+{
+	static_assert(std::is_base_of<T,T2>::value, "T2 is not a subclass of T");
+	*this = subclassPtr.castTake<T>();
+}
+
+template<typename T>
 UniquePtr<T>::UniquePtr(UniquePtr&& other) noexcept
 {
 	this->swap(other);
@@ -158,6 +166,27 @@ SharedPtr<T>::SharedPtr(T* object, Allocator* allocator) noexcept
 	mState = sfzNew<detail::SharedPtrState>(allocator);
 	mState->allocator = allocator;
 	mState->refCount = 1;
+}
+
+template<typename T>
+template<typename T2>
+SharedPtr<T>::SharedPtr(const SharedPtr<T2>& subclassPtr) noexcept
+{
+	static_assert(std::is_base_of<T,T2>::value, "T2 is not a subclass of T");
+	*this = subclassPtr.cast<T>();
+}
+
+template<typename T>
+template<typename T2>
+SharedPtr<T>::SharedPtr(UniquePtr<T2>&& subclassPtr) noexcept
+{
+	static_assert(std::is_base_of<T,T2>::value || std::is_same<T,T2>::value, "T2 is not a subclass of T");
+	if (subclassPtr == nullptr) return;
+
+	mState = sfzNew<detail::SharedPtrState>(subclassPtr.allocator());
+	mState->allocator = subclassPtr.allocator();
+	mState->refCount = 1;
+	mPtr = static_cast<T*>(subclassPtr.take());
 }
 
 template<typename T>
