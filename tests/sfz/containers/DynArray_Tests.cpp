@@ -22,6 +22,7 @@
 
 #include "sfz/containers/DynArray.hpp"
 #include "sfz/math/Vector.hpp"
+#include "sfz/memory/DebugAllocator.hpp"
 #include "sfz/memory/New.hpp"
 #include "sfz/memory/SmartPointers.hpp"
 
@@ -342,4 +343,34 @@ TEST_CASE("find()", "[sfz::DynArray]")
 
 	REQUIRE(*v.find([](int param) { return param == 2; }) == 2);
 	REQUIRE(v.findIndex([](int param) { return param == 2; }) == 1);
+}
+
+TEST_CASE("Allocator bug", "[sfz::DynArray]")
+{
+	DebugAllocator debugAlloc("DebugAlloc", 4u);
+	{
+		DynArray<DynArray<uint32_t>> arr(0, &debugAlloc);
+		REQUIRE(arr.size() == 0);
+		REQUIRE(arr.capacity() == 0);
+		REQUIRE(arr.allocator() == &debugAlloc);
+
+		for (uint32_t i = 0; i < 250; i++) {
+			arr.add(DynArray<uint32_t>());
+			REQUIRE(arr.allocator() == &debugAlloc);
+			REQUIRE(arr.size() == (i + 1));
+			DynArray<uint32_t>& inner = arr[i];
+			REQUIRE(inner.data() == nullptr);
+			REQUIRE(inner.allocator() == nullptr);
+			REQUIRE(inner.size() == 0);
+			REQUIRE(inner.capacity() == 0);
+		}
+
+		DynArray<DynArray<uint32_t>> arr2(0, &debugAlloc);
+		for (uint32_t i = 0; i < 250; i++) {
+			DynArray<uint32_t> tmp(i * 100, &debugAlloc);
+			tmp.addMany(i * 10, 0u);
+			arr2.add(std::move(tmp));
+		}
+	}
+	REQUIRE(debugAlloc.numAllocations() == 0);
 }

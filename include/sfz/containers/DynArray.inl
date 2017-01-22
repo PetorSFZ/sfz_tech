@@ -189,7 +189,7 @@ void DynArray<T>::setCapacity(uint32_t capacity) noexcept
 	}
 
 	// Allocate new memory and move/copy over elements from old memory
-	T* newDataPtr = (T*)mAllocator->allocate(mCapacity * sizeof(T),
+	T* newDataPtr = (T*)mAllocator->allocate(capacity * sizeof(T),
 	                                         std::max<uint32_t>(MINIMUM_ALIGNMENT, alignof(T)),
 	                                         "DynArray");
 	for (uint32_t i = 0; i < mSize; i++) {
