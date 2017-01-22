@@ -367,14 +367,22 @@ TEST_CASE("find()", "[sfz::DynArray]")
 	const int vals[] = {1, 2, 3, 4};
 	v.add(vals, 4);
 
-	REQUIRE(v.find([](int) { return false; }) == nullptr);
-	REQUIRE(v.findIndex([](int) { return false; }) == -1);
+	int* ptr = v.find([](int) { return false; });
+	REQUIRE(ptr == nullptr);
+	int64_t index = v.findIndex([](int) { return false; });
+	REQUIRE(index == -1);
 
-	REQUIRE(*v.find([](int) { return true; }) == 1);
-	REQUIRE(v.findIndex([](int) { return true; }) == 0);
+	ptr = v.find([](int) { return true; });
+	REQUIRE(ptr != nullptr);
+	REQUIRE(*ptr == 1);
+	index = v.findIndex([](int) { return true; });
+	REQUIRE(index == 0);
 
-	REQUIRE(*v.find([](int param) { return param == 2; }) == 2);
-	REQUIRE(v.findIndex([](int param) { return param == 2; }) == 1);
+	ptr = v.find([](int param) { return param == 2; });
+	REQUIRE(ptr != nullptr);
+	REQUIRE(*ptr == 2);
+	index = v.findIndex([](int param) { return param == 2; });
+	REQUIRE(index == 1);
 }
 
 TEST_CASE("Allocator bug", "[sfz::DynArray]")
