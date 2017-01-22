@@ -64,16 +64,12 @@ set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(INCLUDE_GL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include_gl)
 set(TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
-set(CMAKE_MODULES ${CMAKE_CURRENT_LIST_DIR}/cmake)
-
-# Adds our cmake modules to module path.
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_MODULES})
 
 # Dependencies
 # ------------------------------------------------------------------------------------------------
 
-# SDL2 (uses 'SDL2' system environment variable)
-find_package(SDL2 REQUIRED) # ${SDL2_INCLUDE_DIR}, ${SDL2_LIBRARY}
+# SDL2
+add_subdirectory(${EXTERNALS_DIR}/sdl2) # ${SDL2_INCLUDE_DIRS}, ${SDL2_LIBRARIES}, ${SDL2_DLLS}
 
 # Catch
 add_subdirectory(${EXTERNALS_DIR}/catch)
@@ -93,7 +89,7 @@ endif()
 # Accumulated variable with all includes to forward to caller
 set(FORWARD_INCLUDE_DIRS
 	${INCLUDE_DIR}
-	${SDL2_INCLUDE_DIR})
+	${SDL2_INCLUDE_DIRS})
 if(SFZ_CORE_OPENGL)
 set(FORWARD_INCLUDE_DIRS
 	${FORWARD_INCLUDE_DIRS}
@@ -225,7 +221,7 @@ add_library(sfzCoreLib ${SFZ_CORE_FILES})
 target_link_libraries(
 	sfzCoreLib
 
-	${SDL2_LIBRARY}
+	${SDL2_LIBRARIES}
 )
 
 # Linking OpenGL only libraries
@@ -247,17 +243,19 @@ set(SFZ_CORE_INCLUDE_DIRS
 if(SFZ_CORE_OPENGL)
 set(SFZ_CORE_LIBRARIES
 	sfzCoreLib
-	${SDL2_LIBRARY}
-	${SFZ_CORE_LIBRARIES}
+	${SDL2_LIBRARIES}
 	${GLEW_LIBRARIES}
 	${OPENGL_LIBRARIES}
 	PARENT_SCOPE)
 else()
 set(SFZ_CORE_LIBRARIES
 	sfzCoreLib
-	${SDL2_LIBRARY}
+	${SDL2_LIBRARIES}
 	PARENT_SCOPE)
 endif()
+set(SFZ_CORE_DLLS
+	${SDL2_DLLS}
+	PARENT_SCOPE)
 
 # Tests
 # ------------------------------------------------------------------------------------------------
@@ -300,4 +298,15 @@ if(SFZ_CORE_BUILD_TESTS)
 	)
 	add_test(sfzCoreTestsName sfzCoreTests)
 	
+endif()
+
+# Copy DLLs
+# ------------------------------------------------------------------------------------------------
+
+# Only copy DLLs if sfzCore is built individually, not if it is built as subproject
+get_directory_property(hasParent PARENT_DIRECTORY)
+if((NOT hasParent) AND MSVC)
+	file(COPY ${SDL2_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+	file(COPY ${SDL2_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/RelWithDebInfo)
+	file(COPY ${SDL2_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/Release)
 endif()
