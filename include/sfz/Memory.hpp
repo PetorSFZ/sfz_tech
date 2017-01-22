@@ -19,6 +19,7 @@
 #pragma once
 
 #include "sfz/memory/Allocator.hpp"
+#include "sfz/memory/DebugAllocator.hpp"
 #include "sfz/memory/MemoryUtils.hpp"
 #include "sfz/memory/New.hpp"
 #include "sfz/memory/SmartPointers.hpp"
