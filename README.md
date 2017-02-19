@@ -12,6 +12,7 @@ sfzCore is a base library for SkipIfZero graphical applications, replacing the n
 * An ini parser
 * Cross-platform IO functions
 * (Optionally) OpenGL wrappers, utilities and shaders
+* (Optionally) Header-only CUDA wrappers and utilities
 
 ## Building
 
@@ -27,6 +28,7 @@ Different parts of sfzCore will be activated depending on what flags are used. C
 
 * `SFZ_CORE_BUILD_TESTS`: Includes and builds the tests
 * `SFZ_CORE_OPENGL`: Includes the OpenGL part of the library
+* `SFZ_CORE_CUDA`: Includes the CUDA header-only part of the library
 
 Flags can be set using `-DNAME_OF_FLAG=TRUE` when generating a project, or by calling `set(NAME_OF_FLAG TRUE)` before including sfzCore in a CMake file.
 
@@ -38,13 +40,10 @@ Flags can be set using `-DNAME_OF_FLAG=TRUE` when generating a project, or by ca
 * Open CMD inside the `build` directory (shift + right click -> "Open command window here")
 * Run the following command:
 
+	// Building everything
+	cmake .. -G "Visual Studio 14 2015 Win64" -DSFZ_CORE_BUILD_TESTS=TRUE -DSFZ_CORE_OPENGL=TRUE -DSFZ_CORE_CUDA=TRUE
 
-	cmake .. -G "Visual Studio 14 2015 Win64" -DSFZ_CORE_BUILD_TESTS=TRUE -DSFZ_CORE_OPENGL=TRUE
-
-	// Or alternatively if you dont want OpenGL
-	cmake .. -G "Visual Studio 14 2015 Win64" -DSFZ_CORE_BUILD_TESTS=TRUE
-
-	// Or if you don't want tests
+	// Minimal build without tests, OpenGL and CUDA
 	cmake .. -G "Visual Studio 14 2015 Win64"
 
 
@@ -71,7 +70,7 @@ This will give you access to three CMake variables:
 * `${SFZ_CORE_LIBRARIES}`: The sfzCore libraries and sfzCore dependencies (such as SDL2)
 * `${SFZ_CORE_DLLS}`: A list with paths to all runtime DLLs needed to run sfzCore (such as `SDL2.dll`)
 
-As mentioned these variables not only include sfzCore, but also exposes the internal libraries used by sfzCore (such as SDL2). So by using them you are also using the necessary dependencies. You can then link sfzCore with the following commands:
+As mentioned these variables not only include sfzCore, but also exposes the internal libraries used by sfzCore (such as SDL2). An exception being CUDA, which you have to include and link on your own. By using these variables you are also using the necessary dependencies. You can then link sfzCore with the following commands:
 
 	include_directories(${SFZ_CORE_INCLUDE_DIRS})
 

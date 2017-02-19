@@ -39,7 +39,7 @@ if(MSVC)
 	# /W4 = Warning level 4 (/Wall is too picky and has annoying warnings in standard headers)
 	# /wd4201 = Disable warning 4201 (nonstandard extension used : nameless struct/union)
 	# /Zi = Produce .pdb debug information. Does not affect optimizations, but does imply /debug.
-	# /arch:AVX = Enable (require) Intel AVX instruction for code generation
+	# /arch:AVX = Enable (require) Intel AVX instructions for code generation
 	# /D_CRT_SECURE_NO_WARNINGS = Removes annyoing warning when using c standard library
 	set(CMAKE_CXX_FLAGS "/W4 /wd4201 /Zi /EHsc /arch:AVX /D_CRT_SECURE_NO_WARNINGS")
 	# /O2 = Optimize code for fastest speed
@@ -61,6 +61,7 @@ endif()
 # Directories
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(INCLUDE_CUDA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include_cuda)
 set(INCLUDE_GL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include_gl)
 set(TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
@@ -96,6 +97,11 @@ set(FORWARD_INCLUDE_DIRS
 	${INCLUDE_GL_DIR}
 	${GLEW_INCLUDE_DIRS}
 	${OPENGL_INCLUDE_DIR})
+endif()
+if(SFZ_CORE_CUDA)
+set(FORWARD_INCLUDE_DIRS
+	${FORWARD_INCLUDE_DIRS}
+	${INCLUDE_CUDA_DIR})
 endif()
 
 # Include directories
@@ -194,7 +200,8 @@ set(SFZ_CORE_FILES
 	${INCLUDE_DIR}/sfz/util/IniParser.hpp
 	 ${SOURCE_DIR}/sfz/util/IniParser.cpp
 	${INCLUDE_DIR}/sfz/util/IO.hpp
-	 ${SOURCE_DIR}/sfz/util/IO.cpp)
+	 ${SOURCE_DIR}/sfz/util/IO.cpp
+)
 
 if(SFZ_CORE_OPENGL)
 set(SFZ_CORE_FILES ${SFZ_CORE_FILES}
@@ -209,7 +216,16 @@ set(SFZ_CORE_FILES ${SFZ_CORE_FILES}
 	    ${SOURCE_DIR}/sfz/gl/GLUtils.cpp
 	${INCLUDE_GL_DIR}/sfz/gl/IncludeOpenGL.hpp
 	${INCLUDE_GL_DIR}/sfz/gl/Program.hpp
-	    ${SOURCE_DIR}/sfz/gl/Program.cpp)
+	    ${SOURCE_DIR}/sfz/gl/Program.cpp
+)
+endif()
+
+if(SFZ_CORE_CUDA)
+set(SFZ_CORE_FILES ${SFZ_CORE_FILES}
+	${INCLUDE_CUDA_DIR}/sfz/Cuda.hpp
+	${INCLUDE_CUDA_DIR}/sfz/cuda/Buffer.hpp
+	${INCLUDE_CUDA_DIR}/sfz/cuda/CudaUtils.hpp
+)
 endif()
 
 set_directory_source_group(${SFZ_CORE_FILES})
