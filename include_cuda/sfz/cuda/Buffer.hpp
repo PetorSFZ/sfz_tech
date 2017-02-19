@@ -46,7 +46,8 @@ using std::uint64_t;
 template<typename T>
 class Buffer final {
 public:
-	static_assert(std::is_trivial<T>::value, "T is not a trivial type");
+	static_assert(std::is_trivially_copyable<T>::value, "T is not a trivially copyable type");
+	static_assert(std::is_trivially_destructible<T>::value, "T is not a trivially destructible type");
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
