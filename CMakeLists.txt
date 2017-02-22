@@ -78,8 +78,10 @@ add_subdirectory(${EXTERNALS_DIR}/catch)
 # OpenGL only libraries
 if(SFZ_CORE_OPENGL)
 
-# GLEW (GLEW_INCLUDE_DIRS and GLEW_LIBRARIES)
+# GLEW (GLEW_INCLUDE_DIRS, GLEW_LIBRARIES and GLEW_DLLS)
+if(NOT WIN32)
 add_definitions(-DGLEW_STATIC)
+endif()
 add_subdirectory(${EXTERNALS_DIR}/glew)
 
 # Links OpenGL
@@ -256,6 +258,7 @@ endif()
 set(SFZ_CORE_INCLUDE_DIRS
 	${FORWARD_INCLUDE_DIRS}
 	PARENT_SCOPE)
+
 if(SFZ_CORE_OPENGL)
 set(SFZ_CORE_LIBRARIES
 	sfzCoreLib
@@ -269,9 +272,18 @@ set(SFZ_CORE_LIBRARIES
 	${SDL2_LIBRARIES}
 	PARENT_SCOPE)
 endif()
+
+if(SFZ_CORE_OPENGL)
+set(SFZ_CORE_DLLS
+	${SDL2_DLLS}
+	${GLEW_DLLS}
+	PARENT_SCOPE)
+else()
 set(SFZ_CORE_DLLS
 	${SDL2_DLLS}
 	PARENT_SCOPE)
+endif()
+
 
 # Tests
 # ------------------------------------------------------------------------------------------------
@@ -325,4 +337,8 @@ if((NOT hasParent) AND MSVC)
 	file(COPY ${SDL2_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/Debug)
 	file(COPY ${SDL2_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/RelWithDebInfo)
 	file(COPY ${SDL2_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/Release)
+
+	file(COPY ${GLEW_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+	file(COPY ${GLEW_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/RelWithDebInfo)
+	file(COPY ${GLEW_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/Release)
 endif()
