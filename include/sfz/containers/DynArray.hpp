@@ -70,7 +70,7 @@ public:
 	static constexpr uint32_t MINIMUM_ALIGNMENT = 32;
 	static constexpr uint32_t DEFAULT_INITIAL_CAPACITY = 64;
 	static constexpr uint64_t MAX_CAPACITY = 4294967295;
-	static constexpr float CAPACITY_INCREASE_FACTOR = 1.75f;
+	static constexpr double CAPACITY_INCREASE_FACTOR = 1.75;
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------

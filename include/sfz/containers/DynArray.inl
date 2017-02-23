@@ -462,6 +462,6 @@ int64_t DynArray<T>::findIndex(F func) const noexcept
 template<typename T> constexpr uint32_t DynArray<T>::MINIMUM_ALIGNMENT;
 template<typename T> constexpr uint32_t DynArray<T>::DEFAULT_INITIAL_CAPACITY;
 template<typename T> constexpr uint64_t DynArray<T>::MAX_CAPACITY;
-template<typename T> constexpr float DynArray<T>::CAPACITY_INCREASE_FACTOR;
+template<typename T> constexpr double DynArray<T>::CAPACITY_INCREASE_FACTOR;
 
 } // namespace sfz
