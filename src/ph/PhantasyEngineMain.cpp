@@ -1,4 +1,5 @@
 // Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+//               For other contributors see Contributors.txt
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -16,3 +17,13 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
+#include <ph/PhantasyEngineMain.hpp>
+
+namespace ph {
+
+void mainImpl(int argc, char* argv[])
+{
+
+}
+
+} // namespace ph

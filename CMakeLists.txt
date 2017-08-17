@@ -1,4 +1,5 @@
 # Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+#               For other contributors see Contributors.txt
 # 
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -78,21 +79,26 @@ set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 # Dependencies
 # ------------------------------------------------------------------------------------------------
 
-if (NOT SDL2_FOUND)
+if (NOT ${SDL2_FOUND})
 	message(FATAL_ERROR "PhantasyEngine requires SDL2. Add phDependency_SDL2.")
 endif()
 
 # PhantasyEngine
 # ------------------------------------------------------------------------------------------------
 
-set(PHANTASY_ENGINE_FILES
-	${INCLUDE_DIR}/PhantasyEngineMain.hpp
-	 ${SOURCE_DIR}/PhantasyEngineMain.hpp
+set(PHANTASY_ENGINE_HEADER_FILES
+	${INCLUDE_DIR}/ph/PhantasyEngineMain.hpp
 )
+source_group(TREE ${INCLUDE_DIR} FILES ${PHANTASY_ENGINE_HEADER_FILES})
 
-add_library(PhantasyEngineLib ${PHANTASY_ENGINE_FILES})
+set(PHANTASY_ENGINE_SOURCE_FILES
+	${SOURCE_DIR}/ph/PhantasyEngineMain.cpp
+)
+source_group(TREE ${SOURCE_DIR} FILES ${PHANTASY_ENGINE_SOURCE_FILES})
 
-target_include_directories(PhantasyEngineLib
+add_library(PhantasyEngineLib ${PHANTASY_ENGINE_HEADER_FILES} ${PHANTASY_ENGINE_SOURCE_FILES})
+
+target_include_directories(PhantasyEngineLib PUBLIC
 	${INCLUDE_DIR}
 	${SDL2_INCLUDE_DIRS}
 )
