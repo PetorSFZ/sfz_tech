@@ -19,11 +19,59 @@
 
 #include <ph/PhantasyEngineMain.hpp>
 
+#include <cstdlib>
+
+#ifdef _WIN32
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#undef near
+#undef far
+#include <direct.h>
+#endif
+
+#include <ph/utils/Logging.hpp>
+
 namespace ph {
 
-void mainImpl(int argc, char* argv[])
+int mainImpl(int argc, char* argv[])
 {
+	// Windwows specific hacks
+#ifdef _WIN32
+	// Enable hi-dpi awareness
+	SetProcessDPIAware();
 
+	// Set current working directory to SDL_GetBasePath()
+	char* basePath = SDL_GetBasePath();
+	_chdir(basePath);
+	SDL_free(basePath);
+#endif
+
+	// Init SDL2
+	if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
+		PH_LOG(LogLevel::ERROR_LVL, "SDL_Init() failed: %s", SDL_GetError());
+		return EXIT_FAILURE;
+	}
+
+	// Create Window
+	const char* title = "Temp Window Title";
+	const int width = 512;
+	const int height = 512;
+	SDL_Window* window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+	     width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+	if (window == NULL) {
+		PH_LOG(LogLevel::ERROR_LVL, "SDL_CreateWindow() failed: %s", SDL_GetError());
+		SDL_Quit();
+		return EXIT_FAILURE;
+	}
+
+
+
+	// Cleanup SDL2
+	SDL_DestroyWindow(window);
+	SDL_Quit();
+
+	return EXIT_SUCCESS;
 }
 
 } // namespace ph

@@ -24,10 +24,9 @@ namespace ph {
 #define PHANTASY_ENGINE_MAIN() \
 	int main(int argc, char* argv[]) \
 	{ \
-		detail::mainImpl(argc, argv); \
-		return 0; \
+		return detail::mainImpl(argc, argv); \
 	}
 
-void mainImpl(int argc, char* argv[]);
+int mainImpl(int argc, char* argv[]);
 
 } // namespace ph
