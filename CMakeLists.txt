@@ -42,11 +42,36 @@ set(INCLUDE_GL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include_gl)
 set(TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
 
+# Check if sfzCore is built individually or part of a project
+get_directory_property(hasParent PARENT_DIRECTORY)
+
 # Dependencies
 # ------------------------------------------------------------------------------------------------
 
+# Include DownloadProject if building individually
+if (NOT hasParent)
+	include(cmake/DownloadProject.cmake)
+endif()
+
 # SDL2
-add_subdirectory(${EXTERNALS_DIR}/sdl2) # ${SDL2_INCLUDE_DIRS}, ${SDL2_LIBRARIES}, ${SDL2_DLLS}
+# ${SDL2_FOUND}, ${SDL2_INCLUDE_DIRS}, ${SDL2_LIBRARIES} and ${SDL2_RUNTIME_FILES}
+if(hasParent)
+	if (NOT ${SDL2_FOUND})
+		message(FATAL_ERROR "sfzCore requires SDL2. Add phDependency_SDL2.")
+	endif()
+else()
+	message("Acquiring SDL2")
+	download_project(
+		PROJ                sdl2
+		PREFIX              externals
+		GIT_REPOSITORY      https://github.com/PhantasyEngine/phDependency_SDL2.git
+		GIT_TAG             22afd827fcedc880e4597a2df8fc8180c8349d8f
+		UPDATE_DISCONNECTED 1
+		QUIET
+	)
+	add_subdirectory(${sdl2_SOURCE_DIR})
+	message("Finished acquiring SDL2")
+endif()
 
 # Catch
 add_subdirectory(${EXTERNALS_DIR}/catch)
@@ -279,12 +304,12 @@ endif()
 
 if(SFZ_CORE_OPENGL)
 set(SFZ_CORE_DLLS
-	${SDL2_DLLS}
+	${SDL2_RUNTIME_FILES}
 	${GLEW_DLLS}
 	PARENT_SCOPE)
 else()
 set(SFZ_CORE_DLLS
-	${SDL2_DLLS}
+	${SDL2_RUNTIME_FILES}
 	PARENT_SCOPE)
 endif()
 
@@ -336,11 +361,10 @@ endif()
 # ------------------------------------------------------------------------------------------------
 
 # Only copy DLLs if sfzCore is built individually, not if it is built as subproject
-get_directory_property(hasParent PARENT_DIRECTORY)
 if((NOT hasParent) AND MSVC)
-	file(COPY ${SDL2_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/Debug)
-	file(COPY ${SDL2_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/RelWithDebInfo)
-	file(COPY ${SDL2_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/Release)
+	file(COPY ${SDL2_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+	file(COPY ${SDL2_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR}/RelWithDebInfo)
+	file(COPY ${SDL2_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR}/Release)
 
 	file(COPY ${GLEW_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/Debug)
 	file(COPY ${GLEW_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/RelWithDebInfo)
