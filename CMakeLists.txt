@@ -1,36 +1,12 @@
-# Functions
-# ------------------------------------------------------------------------------------------------
-
-# Automatically set source group to correspond to directory structure.
-# From Stack Overflow post by Florian:
-# http://stackoverflow.com/a/31423421
-function(set_directory_source_group)
-	foreach(_source IN ITEMS ${ARGN})
-		if (IS_ABSOLUTE "${_source}")
-			file(RELATIVE_PATH _source_rel "${CMAKE_CURRENT_SOURCE_DIR}" "${_source}")
-		else()
-			set(source_rel "${_source}")
-		endif()
-		get_filename_component(_source_path "${_source_rel}" PATH)
-		string(REPLACE "/" "\\" _source_path_msvc "${_source_path}")
-		source_group("${_source_path_msvc}" FILES "${_source}")
-	endforeach()
-endfunction(set_directory_source_group)
-
 # Compiler flags and directories
 # ------------------------------------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 project("sfzCore")
 
 # Sets build type to release if no build type is specified in a single-configuration generator.
 if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
-endif()
-
-# Require 64bit compiler
-if(NOT (CMAKE_SIZEOF_VOID_P EQUAL 8))
-	message(FATAL_ERROR "Can only compile in 64bit mode")
 endif()
 
 # Compiler flags
@@ -115,10 +91,9 @@ include_directories(
 # sfzCore library
 # ------------------------------------------------------------------------------------------------
 
-set(SFZ_CORE_FILES
+set(SFZ_CORE_INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/Assert.hpp
 	${INCLUDE_DIR}/sfz/Assert.inl
-	 ${SOURCE_DIR}/sfz/Assert.cpp
 	${INCLUDE_DIR}/sfz/CudaCompatibility.hpp
 	${INCLUDE_DIR}/sfz/PopWarnings.hpp
 	${INCLUDE_DIR}/sfz/PushWarnings.hpp
@@ -148,13 +123,11 @@ set(SFZ_CORE_FILES
 	${INCLUDE_DIR}/sfz/math/MathPrimitiveHashers.hpp
 	${INCLUDE_DIR}/sfz/math/MathPrimitiveHashers.inl
 	${INCLUDE_DIR}/sfz/math/MathPrimitiveToStrings.hpp
-	 ${SOURCE_DIR}/sfz/math/MathPrimitiveToStrings.cpp
 	${INCLUDE_DIR}/sfz/math/MathSupport.hpp
 	${INCLUDE_DIR}/sfz/math/MathSupport.inl
 	${INCLUDE_DIR}/sfz/math/Matrix.hpp
 	${INCLUDE_DIR}/sfz/math/Matrix.inl
 	${INCLUDE_DIR}/sfz/math/ProjectionMatrices.hpp
-	 ${SOURCE_DIR}/sfz/math/ProjectionMatrices.cpp
 	${INCLUDE_DIR}/sfz/math/Quaternion.hpp
 	${INCLUDE_DIR}/sfz/math/Quaternion.inl
 	${INCLUDE_DIR}/sfz/math/Vector.hpp
@@ -162,75 +135,106 @@ set(SFZ_CORE_FILES
 
 	${INCLUDE_DIR}/sfz/Memory.hpp
 	${INCLUDE_DIR}/sfz/memory/Allocator.hpp
-	 ${SOURCE_DIR}/sfz/memory/Allocator.cpp
 	${INCLUDE_DIR}/sfz/memory/DebugAllocator.hpp
-	 ${SOURCE_DIR}/sfz/memory/DebugAllocator.cpp
 	${INCLUDE_DIR}/sfz/memory/MemoryUtils.hpp
 	${INCLUDE_DIR}/sfz/memory/New.hpp
 	${INCLUDE_DIR}/sfz/memory/SmartPointers.hpp
 	${INCLUDE_DIR}/sfz/memory/SmartPointers.inl
-
+	
 	${INCLUDE_DIR}/sfz/Screens.hpp
 	${INCLUDE_DIR}/sfz/screens/BaseScreen.hpp
 	${INCLUDE_DIR}/sfz/screens/GameLoop.hpp
-	 ${SOURCE_DIR}/sfz/screens/GameLoop.cpp
 
 	${INCLUDE_DIR}/sfz/SDL.hpp
 	${INCLUDE_DIR}/sfz/sdl/ButtonState.hpp
 	${INCLUDE_DIR}/sfz/sdl/GameController.hpp
-	 ${SOURCE_DIR}/sfz/sdl/GameController.cpp
 	${INCLUDE_DIR}/sfz/sdl/Mouse.hpp
-	 ${SOURCE_DIR}/sfz/sdl/Mouse.cpp
 	${INCLUDE_DIR}/sfz/sdl/Session.hpp
-	 ${SOURCE_DIR}/sfz/sdl/Session.cpp
 	${INCLUDE_DIR}/sfz/sdl/Window.hpp
-	 ${SOURCE_DIR}/sfz/sdl/Window.cpp
 
 	${INCLUDE_DIR}/sfz/Strings.hpp
 	${INCLUDE_DIR}/sfz/strings/DynString.hpp
-	 ${SOURCE_DIR}/sfz/strings/DynString.cpp
 	${INCLUDE_DIR}/sfz/strings/StackString.hpp
-	 ${SOURCE_DIR}/sfz/strings/StackString.cpp
 	${INCLUDE_DIR}/sfz/strings/StringHashers.hpp
-	 ${SOURCE_DIR}/sfz/strings/StringHashers.cpp
 	${INCLUDE_DIR}/sfz/strings/StringID.hpp
-	 ${SOURCE_DIR}/sfz/strings/StringID.cpp
 
 	${INCLUDE_DIR}/sfz/Util.hpp
 	${INCLUDE_DIR}/sfz/util/FrametimeStats.hpp
-	 ${SOURCE_DIR}/sfz/util/FrametimeStats.cpp
 	${INCLUDE_DIR}/sfz/util/IniParser.hpp
-	 ${SOURCE_DIR}/sfz/util/IniParser.cpp
 	${INCLUDE_DIR}/sfz/util/IO.hpp
-	 ${SOURCE_DIR}/sfz/util/IO.cpp
 )
+source_group(TREE ${INCLUDE_DIR} FILES ${SFZ_CORE_INCLUDE_FILES})
+
+set(SFZ_CORE_SOURCE_FILES
+	
+	${SOURCE_DIR}/sfz/Assert.cpp
+
+	${SOURCE_DIR}/sfz/math/MathPrimitiveToStrings.cpp
+	${SOURCE_DIR}/sfz/math/ProjectionMatrices.cpp
+	
+	${SOURCE_DIR}/sfz/memory/Allocator.cpp
+	${SOURCE_DIR}/sfz/memory/DebugAllocator.cpp
+	
+	${SOURCE_DIR}/sfz/screens/GameLoop.cpp
+
+	${SOURCE_DIR}/sfz/sdl/GameController.cpp
+	${SOURCE_DIR}/sfz/sdl/Mouse.cpp
+	${SOURCE_DIR}/sfz/sdl/Session.cpp
+	${SOURCE_DIR}/sfz/sdl/Window.cpp
+
+	${SOURCE_DIR}/sfz/strings/DynString.cpp
+	${SOURCE_DIR}/sfz/strings/StackString.cpp
+	${SOURCE_DIR}/sfz/strings/StringHashers.cpp
+	${SOURCE_DIR}/sfz/strings/StringID.cpp
+
+	${SOURCE_DIR}/sfz/util/FrametimeStats.cpp
+	${SOURCE_DIR}/sfz/util/IniParser.cpp
+	${SOURCE_DIR}/sfz/util/IO.cpp
+)
+source_group(TREE ${SOURCE_DIR} FILES ${SFZ_CORE_SOURCE_FILES})
 
 if(SFZ_CORE_OPENGL)
-set(SFZ_CORE_FILES ${SFZ_CORE_FILES}
+set(SFZ_CORE_INCLUDE_GL_FILES
 	${INCLUDE_GL_DIR}/sfz/GL.hpp
 	${INCLUDE_GL_DIR}/sfz/gl/Context.hpp
-	    ${SOURCE_DIR}/sfz/gl/Context.cpp
 	${INCLUDE_GL_DIR}/sfz/gl/Framebuffer.hpp
-	    ${SOURCE_DIR}/sfz/gl/Framebuffer.cpp
 	${INCLUDE_GL_DIR}/sfz/gl/FullscreenQuad.hpp
-	    ${SOURCE_DIR}/sfz/gl/FullscreenQuad.cpp
 	${INCLUDE_GL_DIR}/sfz/gl/GLUtils.hpp
-	    ${SOURCE_DIR}/sfz/gl/GLUtils.cpp
 	${INCLUDE_GL_DIR}/sfz/gl/IncludeOpenGL.hpp
 	${INCLUDE_GL_DIR}/sfz/gl/Program.hpp
-	    ${SOURCE_DIR}/sfz/gl/Program.cpp
 )
+source_group(TREE ${INCLUDE_GL_DIR} FILES ${SFZ_CORE_INCLUDE_GL_FILES})
+set(SFZ_CORE_SOURCE_GL_FILES
+	${SOURCE_DIR}/sfz/gl/Context.cpp
+	${SOURCE_DIR}/sfz/gl/Framebuffer.cpp
+	${SOURCE_DIR}/sfz/gl/FullscreenQuad.cpp
+	${SOURCE_DIR}/sfz/gl/GLUtils.cpp
+	${SOURCE_DIR}/sfz/gl/Program.cpp
+)
+source_group(TREE ${SOURCE_DIR} FILES ${SFZ_CORE_SOURCE_GL_FILES})
+else()
+set(SFZ_CORE_INCLUDE_GL_FILES "")
+set(SFZ_CORE_SOURCE_GL_FILES "")
 endif()
 
 if(SFZ_CORE_CUDA)
-set(SFZ_CORE_FILES ${SFZ_CORE_FILES}
+set(SFZ_CORE_INCLUDE_CUDA_FILES
 	${INCLUDE_CUDA_DIR}/sfz/Cuda.hpp
 	${INCLUDE_CUDA_DIR}/sfz/cuda/Buffer.hpp
 	${INCLUDE_CUDA_DIR}/sfz/cuda/CudaUtils.hpp
 )
+source_group(TREE ${INCLUDE_CUDA_DIR} FILES ${SFZ_CORE_INCLUDE_CUDA_FILES})
+else()
+set(SFZ_CORE_INCLUDE_CUDA_FILES "")
 endif()
 
-set_directory_source_group(${SFZ_CORE_FILES})
+set(SFZ_CORE_FILES
+	${SFZ_CORE_INCLUDE_FILES}
+	${SFZ_CORE_SOURCE_FILES}
+	${SFZ_CORE_INCLUDE_GL_FILES}
+	${SFZ_CORE_SOURCE_GL_FILES}
+	${SFZ_CORE_INCLUDE_CUDA_FILES}
+)
 
 # Library compile target
 add_library(sfzCoreLib ${SFZ_CORE_FILES})
@@ -315,7 +319,7 @@ if(SFZ_CORE_BUILD_TESTS)
 
 		${TESTS_DIR}/sfz/util/IniParser_Tests.cpp
 		${TESTS_DIR}/sfz/util/IO_Tests.cpp)
-	set_directory_source_group(${SFZ_CORE_TEST_FILES})
+	source_group(TREE ${TESTS_DIR} FILES ${SFZ_CORE_TEST_FILES})
 
 	enable_testing(true)
 	add_executable(sfzCoreTests ${SFZ_CORE_TEST_FILES})

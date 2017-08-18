@@ -37,15 +37,18 @@ Flags can be set using `-DNAME_OF_FLAG=TRUE` when generating a project, or by ca
 #### Generating Visual Studio solution
 
 * Create a directory called `build` in the root sfzCore directory
+
 * Open CMD inside the `build` directory (shift + right click -> "Open command window here")
+
 * Run the following command:
 
-	// Building everything
-	cmake .. -G "Visual Studio 14 2015 Win64" -DSFZ_CORE_BUILD_TESTS=TRUE -DSFZ_CORE_OPENGL=TRUE -DSFZ_CORE_CUDA=TRUE
+~~~
+// Building everything
+cmake .. -G "Visual Studio 14 2015 Win64" -DSFZ_CORE_BUILD_TESTS=TRUE -DSFZ_CORE_OPENGL=TRUE -DSFZ_CORE_CUDA=TRUE
 
-	// Minimal build without tests, OpenGL and CUDA
-	cmake .. -G "Visual Studio 14 2015 Win64"
-
+// Minimal build without tests, OpenGL and CUDA
+cmake .. -G "Visual Studio 14 2015 Win64"
+~~~
 
 ### Mac OS X
 
