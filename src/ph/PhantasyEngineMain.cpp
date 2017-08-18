@@ -34,7 +34,7 @@
 
 namespace ph {
 
-int mainImpl(int argc, char* argv[])
+int mainImpl(int, char*[])
 {
 	// Windwows specific hacks
 #ifdef _WIN32
@@ -49,7 +49,7 @@ int mainImpl(int argc, char* argv[])
 
 	// Init SDL2
 	if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
-		PH_LOG(LogLevel::ERROR_LVL, "SDL_Init() failed: %s", SDL_GetError());
+		PH_LOG(LogLevel::ERROR_LVL, "PhantasyEngine", "SDL_Init() failed: %s", SDL_GetError());
 		return EXIT_FAILURE;
 	}
 
@@ -60,12 +60,13 @@ int mainImpl(int argc, char* argv[])
 	SDL_Window* window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 	     width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
 	if (window == NULL) {
-		PH_LOG(LogLevel::ERROR_LVL, "SDL_CreateWindow() failed: %s", SDL_GetError());
+		PH_LOG(LogLevel::ERROR_LVL, "PhantasyEngine", "SDL_CreateWindow() failed: %s", SDL_GetError());
 		SDL_Quit();
 		return EXIT_FAILURE;
 	}
 
-
+	// Wait for it
+	SDL_Delay(3000);
 
 	// Cleanup SDL2
 	SDL_DestroyWindow(window);

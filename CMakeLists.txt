@@ -28,11 +28,6 @@ if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
 endif()
 
-# Require 64bit compiler
-if(NOT (CMAKE_SIZEOF_VOID_P EQUAL 8))
-	message(FATAL_ERROR "Can only compile in 64bit mode")
-endif()
-
 # Compiler flags
 if(MSVC)
 	# Visual Studio flags
