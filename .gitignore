@@ -27,5 +27,9 @@ Makefile
 cmake_install.cmake
 install_manifest.txt
 
-# Build directory
+# Build directories
 build/
+build_web/
+build_cuda/
+build_gl/
+build_vulkan/
