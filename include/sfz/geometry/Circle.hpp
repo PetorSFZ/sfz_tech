@@ -39,13 +39,13 @@ struct Circle final {
 	Circle& operator= (const Circle&) noexcept = default;
 	~Circle() noexcept = default;
 
-	inline Circle::Circle(vec2 centerPos, float radius) noexcept
+	inline Circle(vec2 centerPos, float radius) noexcept
 	:
 		pos(centerPos),
 		radius(radius)
 	{ }
 
-	inline Circle::Circle(float centerX, float centerY, float radius) noexcept
+	inline Circle(float centerX, float centerY, float radius) noexcept
 	:
 		pos(centerX, centerY),
 		radius(radius)
@@ -60,12 +60,12 @@ struct Circle final {
 	// Comparison operators
 	// --------------------------------------------------------------------------------------------
 
-	inline bool Circle::operator== (const Circle& other) const noexcept
+	inline bool operator== (const Circle& other) const noexcept
 	{
 		return pos == other.pos && radius == other.radius;
 	}
 
-	inline bool Circle::operator!= (const Circle& other) const noexcept
+	inline bool operator!= (const Circle& other) const noexcept
 	{
 		return !((*this) == other);
 	}

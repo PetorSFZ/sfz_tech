@@ -18,6 +18,8 @@
 
 #pragma once
 
+#ifndef SFZ_EMSCRIPTEN
+
 #include <immintrin.h> // Intel AVX intrinsics
 
 namespace sfz {
@@ -39,3 +41,5 @@ inline __m128 replicatePs(__m128 v) noexcept
 }
 
 } // namespace sfz
+
+#endif

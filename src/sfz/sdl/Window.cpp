@@ -269,7 +269,7 @@ DynArray<vec2i> getAvailableResolutions() noexcept
 		}
 	}
 
-	return std::move(resolutions);
+	return resolutions;
 }
 
 } // namespace sdl

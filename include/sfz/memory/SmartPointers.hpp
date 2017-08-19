@@ -144,7 +144,7 @@ namespace detail {
 /// Inner state of all SharedPtrs
 struct SharedPtrState final {
 	Allocator* allocator = nullptr;
-	std::atomic_uint32_t refCount = 0;
+	std::atomic<uint32_t> refCount{0};
 };
 
 }

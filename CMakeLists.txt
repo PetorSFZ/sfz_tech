@@ -26,12 +26,25 @@ if(MSVC)
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/O2 /fp:fast /DEBUG /DSFZ_NO_DEBUG")
 	# /Od = "disables optimization, speeding compilation and simplifying debugging"
 	set(CMAKE_CXX_FLAGS_DEBUG "/Od /DEBUG")
+
+elseif(EMSCRIPTEN)
+	# Emscripten flags
+	# -Wall -Wextra = Enable most warnings
+	# -std=c++14 = Enable C++14 support
+	# -fno-strict-aliasing = Disable strict aliasing optimizations
+	# -s USE_SDL=2 = Use SDL2 library
+	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -fno-strict-aliasing -s USE_SDL=2 -DSFZ_EMSCRIPTEN")
+	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
+	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
+	set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+
 else()
 	# GCC / Clang flags
 	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -march=sandybridge -pthread -fno-strict-aliasing")
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
 	set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+
 endif()
 
 # Directories

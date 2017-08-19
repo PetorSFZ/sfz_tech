@@ -21,10 +21,10 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-
-#include <immintrin.h> // Intel AVX intrinsics
+#include <cstdlib>
 
 #include "sfz/CudaCompatibility.hpp"
+#include "sfz/SimdIntrinsics.hpp"
 #include "sfz/math/Matrix.hpp"
 #include "sfz/math/Vector.hpp"
 #include "sfz/math/Quaternion.hpp"

@@ -615,7 +615,7 @@ uint32_t HashMap<K,V,Descr>::findElementIndex(const KT& key, bool& elementFound,
 	if (mCapacity == 0) return uint32_t(~0);
 
 	// Hash the key and find the base index
-	const int64_t baseIndex = int64_t(keyHasher(key) % size_t(mCapacity));
+	const int64_t baseIndex = int64_t(keyHasher(key) % uint64_t(mCapacity));
 
 	// Check if base index holds the element
 	uint8_t info = elementInfo(uint32_t(baseIndex));

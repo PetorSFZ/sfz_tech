@@ -30,12 +30,9 @@
 
 namespace sfz {
 
-using std::size_t;
 using std::uint8_t;
 using std::uint32_t;
 using std::uint64_t;
-
-static_assert(sizeof(size_t) == sizeof(uint64_t), "size_t is not 64 bit");
 
 // HashMap (interface)
 // ------------------------------------------------------------------------------------------------

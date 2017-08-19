@@ -32,6 +32,7 @@ struct EqualTo2 final {
 	bool operator() (const LeftT& lhs, const RightT& rhs) noexcept
 	{
 		static_assert(sizeof(LeftT) != sizeof(LeftT), "EqualTo2 must be specialized by user");
+		return lhs == rhs;
 	}
 };
 

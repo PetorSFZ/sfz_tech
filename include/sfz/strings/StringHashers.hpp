@@ -28,23 +28,22 @@
 namespace sfz {
 
 using std::size_t;
+using std::uint32_t;
 using std::uint64_t;
-
-static_assert(sizeof(uint64_t) == sizeof(size_t), "size_t is not 64 bit");
 
 // String hash functions
 // ------------------------------------------------------------------------------------------------
 
 /// Hashes a null-terminated raw string. The exact hashing function used is currently FNV-1A, this
 /// might however change in the future.
-size_t hash(const char* str) noexcept;
+uint64_t hash(const char* str) noexcept;
 
 /// Hashes a DynString, guaranteed to produce the same hash as an equivalent const char*.
-size_t hash(const DynString& str) noexcept;
+uint64_t hash(const DynString& str) noexcept;
 
 /// Hashes a StackString, guaranteed to produce the same hash as an equivalent const char*.
-template<size_t N>
-size_t hash(const StackStringTempl<N>& str) noexcept { return sfz::hash(str.str); }
+template<uint32_t N>
+uint64_t hash(const StackStringTempl<N>& str) noexcept { return sfz::hash(str.str); }
 
 // Raw string hash specializations
 // ------------------------------------------------------------------------------------------------
@@ -86,7 +85,10 @@ struct hash<sfz::DynString> {
 
 template<size_t N>
 struct hash<sfz::StackStringTempl<N>> {
-	size_t operator() (const sfz::StackStringTempl<N>& str) const noexcept { return sfz::hash<N>(str); }
+	size_t operator() (const sfz::StackStringTempl<N>& str) const noexcept
+	{
+		return size_t(sfz::hash<N>(str));
+	}
 };
 
 } // namespace std

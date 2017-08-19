@@ -50,12 +50,12 @@ static uint64_t fnv1aHash(const char* str) noexcept
 // String hash functions
 // ------------------------------------------------------------------------------------------------
 
-size_t hash(const char* str) noexcept
+uint64_t hash(const char* str) noexcept
 {
 	return fnv1aHash(str);
 }
 
-size_t hash(const DynString& str) noexcept
+uint64_t hash(const DynString& str) noexcept
 {
 	if (str.size() == 0) return sfz::hash(""); // Fix edge case where DynString has no memory
 	return sfz::hash(str.str());
@@ -73,7 +73,7 @@ bool RawStringEqual::operator()(const char* lhs, const char* rhs) const
 
 size_t RawStringHash::operator() (const char* str) const noexcept
 {
-	return sfz::hash(str);
+	return size_t(sfz::hash(str));
 }
 
 } // namespace sfz
@@ -85,7 +85,7 @@ namespace std {
 
 size_t hash<sfz::DynString>::operator() (const sfz::DynString& str) const noexcept
 {
-	return sfz::hash(str);
+	return size_t(sfz::hash(str));
 }
 
 } // namespace std

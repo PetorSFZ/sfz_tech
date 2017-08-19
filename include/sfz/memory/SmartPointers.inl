@@ -33,7 +33,7 @@ template<typename T2>
 UniquePtr<T>::UniquePtr(UniquePtr<T2>&& subclassPtr) noexcept
 {
 	static_assert(std::is_base_of<T,T2>::value, "T2 is not a subclass of T");
-	*this = subclassPtr.castTake<T>();
+	*this = subclassPtr.template castTake<T>();
 }
 
 template<typename T>
@@ -173,7 +173,7 @@ template<typename T2>
 SharedPtr<T>::SharedPtr(const SharedPtr<T2>& subclassPtr) noexcept
 {
 	static_assert(std::is_base_of<T,T2>::value, "T2 is not a subclass of T");
-	*this = subclassPtr.cast<T>();
+	*this = subclassPtr.template cast<T>();
 }
 
 template<typename T>

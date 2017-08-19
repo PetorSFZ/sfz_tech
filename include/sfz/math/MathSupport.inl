@@ -72,7 +72,7 @@ SFZ_CUDA_CALL float abs(float val) noexcept
 #ifdef SFZ_CUDA_DEVICE_CODE
 	return fabsf(val);
 #else
-	return std::abs(val);
+	return std::fabs(val);
 #endif
 }
 
@@ -108,6 +108,12 @@ SFZ_CUDA_CALL vec4 abs(vec4 val) noexcept
 	val.z = sfz::abs(val.z);
 	val.w = sfz::abs(val.w);
 	return val;
+#elif SFZ_EMSCRIPTEN
+	val.x = sfz::abs(val.x);
+	val.y = sfz::abs(val.y);
+	val.z = sfz::abs(val.z);
+	val.w = sfz::abs(val.w);
+	return val;
 #else
 	// Floating points has a dedicated sign bit, simply mask it out
 	const __m128 SIGN_BIT_MASK = _mm_set1_ps(-0.0f);
@@ -136,6 +142,12 @@ SFZ_CUDA_CALL vec3i abs(vec3i val) noexcept
 SFZ_CUDA_CALL vec4i abs(vec4i val) noexcept
 {
 #ifdef SFZ_CUDA_DEVICE_CODE
+	val.x = sfz::abs(val.x);
+	val.y = sfz::abs(val.y);
+	val.z = sfz::abs(val.z);
+	val.w = sfz::abs(val.w);
+	return val;
+#elif SFZ_EMSCRIPTEN
 	val.x = sfz::abs(val.x);
 	val.y = sfz::abs(val.y);
 	val.z = sfz::abs(val.z);
@@ -199,6 +211,12 @@ SFZ_CUDA_CALL vec3 sgn(vec3 val) noexcept
 SFZ_CUDA_CALL vec4 sgn(vec4 val) noexcept
 {
 #ifdef SFZ_CUDA_DEVICE_CODE
+	val.x = sfz::sgn(val.x);
+	val.y = sfz::sgn(val.y);
+	val.z = sfz::sgn(val.z);
+	val.w = sfz::sgn(val.w);
+	return val;
+#elif SFZ_EMSCRIPTEN
 	val.x = sfz::sgn(val.x);
 	val.y = sfz::sgn(val.y);
 	val.z = sfz::sgn(val.z);
@@ -288,6 +306,13 @@ SFZ_CUDA_CALL vec4 min(vec4 lhs, vec4 rhs) noexcept
 	tmp.z = sfz::min(lhs.z, rhs.z);
 	tmp.w = sfz::min(lhs.w, rhs.w);
 	return tmp;
+#elif SFZ_EMSCRIPTEN
+	vec4 tmp;
+	tmp.x = sfz::min(lhs.x, rhs.x);
+	tmp.y = sfz::min(lhs.y, rhs.y);
+	tmp.z = sfz::min(lhs.z, rhs.z);
+	tmp.w = sfz::min(lhs.w, rhs.w);
+	return tmp;
 #else
 	const __m128 lhsReg = _mm_load_ps(lhs.data());
 	const __m128 rhsReg = _mm_load_ps(rhs.data());
@@ -321,6 +346,13 @@ SFZ_CUDA_CALL vec4 min(vec4 lhs, float rhs) noexcept { return min(rhs, lhs); }
 SFZ_CUDA_CALL vec4 min(float lhs, vec4 rhs) noexcept
 {
 #ifdef SFZ_CUDA_DEVICE_CODE
+	vec4 tmp;
+	tmp.x = sfz::min(lhs, rhs.x);
+	tmp.y = sfz::min(lhs, rhs.y);
+	tmp.z = sfz::min(lhs, rhs.z);
+	tmp.w = sfz::min(lhs, rhs.w);
+	return tmp;
+#elif SFZ_EMSCRIPTEN
 	vec4 tmp;
 	tmp.x = sfz::min(lhs, rhs.x);
 	tmp.y = sfz::min(lhs, rhs.y);
@@ -366,6 +398,13 @@ SFZ_CUDA_CALL vec4i min(vec4i lhs, vec4i rhs) noexcept
 	tmp.z = sfz::min(lhs.z, rhs.z);
 	tmp.w = sfz::min(lhs.w, rhs.w);
 	return tmp;
+#elif SFZ_EMSCRIPTEN
+	vec4i tmp;
+	tmp.x = sfz::min(lhs.x, rhs.x);
+	tmp.y = sfz::min(lhs.y, rhs.y);
+	tmp.z = sfz::min(lhs.z, rhs.z);
+	tmp.w = sfz::min(lhs.w, rhs.w);
+	return tmp;
 #else
 	const __m128i lhsReg = _mm_load_si128((const __m128i*)lhs.data());
 	const __m128i rhsReg = _mm_load_si128((const __m128i*)rhs.data());
@@ -399,6 +438,13 @@ SFZ_CUDA_CALL vec4i min(vec4i lhs, int32_t rhs) noexcept { return min(rhs, lhs);
 SFZ_CUDA_CALL vec4i min(int32_t lhs, vec4i rhs) noexcept
 {
 #ifdef SFZ_CUDA_DEVICE_CODE
+	vec4i tmp;
+	tmp.x = sfz::min(lhs, rhs.x);
+	tmp.y = sfz::min(lhs, rhs.y);
+	tmp.z = sfz::min(lhs, rhs.z);
+	tmp.w = sfz::min(lhs, rhs.w);
+	return tmp;
+#elif SFZ_EMSCRIPTEN
 	vec4i tmp;
 	tmp.x = sfz::min(lhs, rhs.x);
 	tmp.y = sfz::min(lhs, rhs.y);
@@ -444,6 +490,13 @@ SFZ_CUDA_CALL vec4u min(vec4u lhs, vec4u rhs) noexcept
 	tmp.z = sfz::min(lhs.z, rhs.z);
 	tmp.w = sfz::min(lhs.w, rhs.w);
 	return tmp;
+#elif SFZ_EMSCRIPTEN
+	vec4u tmp;
+	tmp.x = sfz::min(lhs.x, rhs.x);
+	tmp.y = sfz::min(lhs.y, rhs.y);
+	tmp.z = sfz::min(lhs.z, rhs.z);
+	tmp.w = sfz::min(lhs.w, rhs.w);
+	return tmp;
 #else
 	const __m128i lhsReg = _mm_load_si128((const __m128i*)lhs.data());
 	const __m128i rhsReg = _mm_load_si128((const __m128i*)rhs.data());
@@ -477,6 +530,13 @@ SFZ_CUDA_CALL vec4u min(vec4u lhs, uint32_t rhs) noexcept { return min(rhs, lhs)
 SFZ_CUDA_CALL vec4u min(uint32_t lhs, vec4u rhs) noexcept
 {
 #ifdef SFZ_CUDA_DEVICE_CODE
+	vec4u tmp;
+	tmp.x = sfz::min(lhs, rhs.x);
+	tmp.y = sfz::min(lhs, rhs.y);
+	tmp.z = sfz::min(lhs, rhs.z);
+	tmp.w = sfz::min(lhs, rhs.w);
+	return tmp;
+#elif SFZ_EMSCRIPTEN
 	vec4u tmp;
 	tmp.x = sfz::min(lhs, rhs.x);
 	tmp.y = sfz::min(lhs, rhs.y);
@@ -540,6 +600,13 @@ SFZ_CUDA_CALL vec4 max(vec4 lhs, vec4 rhs) noexcept
 	tmp.z = sfz::max(lhs.z, rhs.z);
 	tmp.w = sfz::max(lhs.w, rhs.w);
 	return tmp;
+#elif SFZ_EMSCRIPTEN
+	vec4 tmp;
+	tmp.x = sfz::max(lhs.x, rhs.x);
+	tmp.y = sfz::max(lhs.y, rhs.y);
+	tmp.z = sfz::max(lhs.z, rhs.z);
+	tmp.w = sfz::max(lhs.w, rhs.w);
+	return tmp;
 #else
 	const __m128 lhsReg = _mm_load_ps(lhs.data());
 	const __m128 rhsReg = _mm_load_ps(rhs.data());
@@ -573,6 +640,13 @@ SFZ_CUDA_CALL vec4 max(vec4 lhs, float rhs) noexcept { return max(rhs, lhs); }
 SFZ_CUDA_CALL vec4 max(float lhs, vec4 rhs) noexcept
 {
 #ifdef SFZ_CUDA_DEVICE_CODE
+	vec4 tmp;
+	tmp.x = sfz::max(lhs, rhs.x);
+	tmp.y = sfz::max(lhs, rhs.y);
+	tmp.z = sfz::max(lhs, rhs.z);
+	tmp.w = sfz::max(lhs, rhs.w);
+	return tmp;
+#elif SFZ_EMSCRIPTEN
 	vec4 tmp;
 	tmp.x = sfz::max(lhs, rhs.x);
 	tmp.y = sfz::max(lhs, rhs.y);
@@ -618,6 +692,13 @@ SFZ_CUDA_CALL vec4i max(vec4i lhs, vec4i rhs) noexcept
 	tmp.z = sfz::max(lhs.z, rhs.z);
 	tmp.w = sfz::max(lhs.w, rhs.w);
 	return tmp;
+#elif SFZ_EMSCRIPTEN
+	vec4i tmp;
+	tmp.x = sfz::max(lhs.x, rhs.x);
+	tmp.y = sfz::max(lhs.y, rhs.y);
+	tmp.z = sfz::max(lhs.z, rhs.z);
+	tmp.w = sfz::max(lhs.w, rhs.w);
+	return tmp;
 #else
 	const __m128i lhsReg = _mm_load_si128((const __m128i*)lhs.data());
 	const __m128i rhsReg = _mm_load_si128((const __m128i*)rhs.data());
@@ -651,6 +732,13 @@ SFZ_CUDA_CALL vec4i max(vec4i lhs, int32_t rhs) noexcept { return max(rhs, lhs);
 SFZ_CUDA_CALL vec4i max(int32_t lhs, vec4i rhs) noexcept
 {
 #ifdef SFZ_CUDA_DEVICE_CODE
+	vec4i tmp;
+	tmp.x = sfz::max(lhs, rhs.x);
+	tmp.y = sfz::max(lhs, rhs.y);
+	tmp.z = sfz::max(lhs, rhs.z);
+	tmp.w = sfz::max(lhs, rhs.w);
+	return tmp;
+#elif SFZ_EMSCRIPTEN
 	vec4i tmp;
 	tmp.x = sfz::max(lhs, rhs.x);
 	tmp.y = sfz::max(lhs, rhs.y);
@@ -696,6 +784,13 @@ SFZ_CUDA_CALL vec4u max(vec4u lhs, vec4u rhs) noexcept
 	tmp.z = sfz::max(lhs.z, rhs.z);
 	tmp.w = sfz::max(lhs.w, rhs.w);
 	return tmp;
+#elif SFZ_EMSCRIPTEN
+	vec4u tmp;
+	tmp.x = sfz::max(lhs.x, rhs.x);
+	tmp.y = sfz::max(lhs.y, rhs.y);
+	tmp.z = sfz::max(lhs.z, rhs.z);
+	tmp.w = sfz::max(lhs.w, rhs.w);
+	return tmp;
 #else
 	const __m128i lhsReg = _mm_load_si128((const __m128i*)lhs.data());
 	const __m128i rhsReg = _mm_load_si128((const __m128i*)rhs.data());
@@ -729,6 +824,13 @@ SFZ_CUDA_CALL vec4u max(vec4u lhs, uint32_t rhs) noexcept { return max(rhs, lhs)
 SFZ_CUDA_CALL vec4u max(uint32_t lhs, vec4u rhs) noexcept
 {
 #ifdef SFZ_CUDA_DEVICE_CODE
+	vec4u tmp;
+	tmp.x = sfz::max(lhs, rhs.x);
+	tmp.y = sfz::max(lhs, rhs.y);
+	tmp.z = sfz::max(lhs, rhs.z);
+	tmp.w = sfz::max(lhs, rhs.w);
+	return tmp;
+#elif SFZ_EMSCRIPTEN
 	vec4u tmp;
 	tmp.x = sfz::max(lhs, rhs.x);
 	tmp.y = sfz::max(lhs, rhs.y);

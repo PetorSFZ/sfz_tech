@@ -29,8 +29,6 @@ namespace sfz {
 using std::uint64_t;
 using std::size_t;
 
-static_assert(sizeof(uint64_t) == sizeof(size_t), "size_t must be 64 bit");
-
 // StringID struct
 // ------------------------------------------------------------------------------------------------
 
@@ -116,7 +114,7 @@ namespace std {
 
 template<>
 struct hash<sfz::StringID> {
-	inline size_t operator() (const sfz::StringID& str) const noexcept { return str.id; }
+	inline size_t operator() (const sfz::StringID& str) const noexcept { return size_t(str.id); }
 };
 
 } // namespace std

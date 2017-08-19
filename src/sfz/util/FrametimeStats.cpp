@@ -19,6 +19,7 @@
 #include "sfz/util/FrametimeStats.hpp"
 
 #include <algorithm>
+#include <cmath>
 
 #include <sfz/Assert.hpp>
 
@@ -58,7 +59,7 @@ void FrametimeStats::addSample(float sampleInSeconds) noexcept
 	for (float sample : mSamples) {
 		varianceSum += ((sample - mAvg) * (sample - mAvg));
 	}
-	mSD = std::sqrt(varianceSum / float(mSamples.size()));
+	mSD = std::sqrtf(varianceSum / float(mSamples.size()));
 
 	mString.printf("Avg: %.1fms, SD: %.1fms, Min: %.1fms, Max: %.1fms",
 	               mAvg * 1000.0f, mSD * 1000.0f, mMin * 1000.0f, mMax * 1000.0f);

@@ -38,24 +38,24 @@ struct AABB2D final {
 	AABB2D& operator= (const AABB2D&) noexcept = default;
 	~AABB2D() noexcept = default;
 
-	inline AABB2D::AABB2D(vec2 centerPos, vec2 dimensions) noexcept
+	inline AABB2D(vec2 centerPos, vec2 dimensions) noexcept
 	:
-		min(centerPos - (dimensions / 2.0f)),
-		max(centerPos + (dimensions / 2.0f))
+		min(centerPos - (dimensions * 0.5f)),
+		max(centerPos + (dimensions * 0.5f))
 	{ }
 
-	inline AABB2D::AABB2D(float centerX, float centerY, float width, float height) noexcept
+	inline AABB2D(float centerX, float centerY, float width, float height) noexcept
 	:
-		min(vec2(centerX - (width / 2.0f), centerY - (height / 2.0f))),
-		max(vec2(centerX + (width / 2.0f), centerY + (height / 2.0f)))
+		min(vec2(centerX - (width * 0.5f), centerY - (height * 0.5f))),
+		max(vec2(centerX + (width * 0.5f), centerY + (height * 0.5f)))
 	{ }
 
 	// Public getters
 	// --------------------------------------------------------------------------------------------
 
-	inline vec2 position() const noexcept { return (min + max) / 2.0f; }
-	inline float x() const noexcept { return (min.x + max.x) / 2.0f; }
-	inline float y() const noexcept { return (min.y + max.y) / 2.0f; }
+	inline vec2 position() const noexcept { return (min + max) * 0.5f; }
+	inline float x() const noexcept { return (min.x + max.x) * 0.5f; }
+	inline float y() const noexcept { return (min.y + max.y) * 0.5f; }
 	inline vec2 dimensions() const noexcept { return max - min; }
 	inline float width() const noexcept { return max.x - min.x; }
 	inline float height() const noexcept { return max.y - min.y; }
@@ -63,12 +63,12 @@ struct AABB2D final {
 	// Comparison operators
 	// --------------------------------------------------------------------------------------------
 
-	inline bool AABB2D::operator== (const AABB2D& other) const noexcept
+	inline bool operator== (const AABB2D& other) const noexcept
 	{
 		return min == other.min && max == other.max;
 	}
 
-	inline bool AABB2D::operator!= (const AABB2D& other) const noexcept
+	inline bool operator!= (const AABB2D& other) const noexcept
 	{
 		return !((*this) == other);
 	}

@@ -574,6 +574,13 @@ SFZ_CUDA_CALL mat44 transpose(const mat44& m) noexcept
 	tmp.setColumn(2, m.row2);
 	tmp.setColumn(3, m.row3);
 	return tmp;
+#elif SFZ_EMSCRIPTEN
+	mat44 tmp;
+	tmp.setColumn(0, m.row0);
+	tmp.setColumn(1, m.row1);
+	tmp.setColumn(2, m.row2);
+	tmp.setColumn(3, m.row3);
+	return tmp;
 #else
 	// Load matrix rows into SSE registers
 	const __m128 row0 = _mm_load_ps(m.row0.data());
@@ -632,6 +639,7 @@ template<typename T, uint32_t N>
 SFZ_CUDA_CALL T determinant(const Matrix<T,N,N>& m) noexcept
 {
 	static_assert(N != N, "determinant() not implemented for general case");
+	return m.at(0, 0);
 }
 
 template<typename T>
@@ -668,6 +676,7 @@ template<typename T, uint32_t N>
 SFZ_CUDA_CALL Matrix<T,N,N> inverse(const Matrix<T,N,N>& m) noexcept
 {
 	static_assert(N != N, "inverse() not implemented for general case");
+	return m;
 }
 
 template<typename T>
@@ -832,6 +841,12 @@ SFZ_CUDA_CALL vec3 operator* (const mat34& lhs, const vec4& rhs) noexcept
 	res.y = dot(lhs.row1, rhs);
 	res.z = dot(lhs.row2, rhs);
 	return res;
+#elif SFZ_EMSCRIPTEN
+	vec3 res;
+	res.x = dot(lhs.row0, rhs);
+	res.y = dot(lhs.row1, rhs);
+	res.z = dot(lhs.row2, rhs);
+	return res;
 #else
 	// Load matrix rows into SSE registers
 	const __m128 row0 = _mm_load_ps(lhs.row0.data());
@@ -871,6 +886,13 @@ template<>
 SFZ_CUDA_CALL vec4 operator* (const mat44& lhs, const vec4& rhs) noexcept
 {
 #ifdef SFZ_CUDA_DEVICE_CODE
+	vec4 res;
+	res.x = dot(lhs.row0, rhs);
+	res.y = dot(lhs.row1, rhs);
+	res.z = dot(lhs.row2, rhs);
+	res.w = dot(lhs.row3, rhs);
+	return res;
+#elif SFZ_EMSCRIPTEN
 	vec4 res;
 	res.x = dot(lhs.row0, rhs);
 	res.y = dot(lhs.row1, rhs);

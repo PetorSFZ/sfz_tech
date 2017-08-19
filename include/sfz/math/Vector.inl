@@ -319,6 +319,8 @@ SFZ_CUDA_CALL float dot(vec3 lhs, vec3 rhs) noexcept
 	return fmaf(lhs.x, rhs.x,
 	       fmaf(lhs.y, rhs.y,
 	            lhs.z * rhs.z));
+#elif SFZ_EMSCRIPTEN
+	return dot<float,3>(lhs, rhs);
 #else
 	vec4 tmpLhs;
 	tmpLhs.xyz = lhs;
@@ -340,6 +342,8 @@ SFZ_CUDA_CALL float dot(vec4 lhs, vec4 rhs) noexcept
 	       fmaf(lhs.y, rhs.y,
 	       fmaf(lhs.z, rhs.z,
 	            lhs.w * rhs.w)));
+#elif SFZ_EMSCRIPTEN
+	return dot<float,4>(lhs, rhs);
 #else
 	const __m128 lhsReg = _mm_load_ps(lhs.data());
 	const __m128 rhsReg = _mm_load_ps(rhs.data());
@@ -361,6 +365,9 @@ SFZ_CUDA_CALL float length(vec3 v) noexcept
 {
 #ifdef SFZ_CUDA_DEVICE_CODE
 	return sqrtf(dot(v, v));
+#elif SFZ_EMSCRIPTEN
+	using std::sqrt;
+	return sqrt(dot(v, v));
 #else
 	vec4 tmp;
 	tmp.xyz = v;
@@ -375,6 +382,9 @@ SFZ_CUDA_CALL float length(vec4 v) noexcept
 {
 #ifdef SFZ_CUDA_DEVICE_CODE
 	return sqrtf(dot(v, v));
+#elif SFZ_EMSCRIPTEN
+	using std::sqrt;
+	return sqrt(dot(v, v));
 #else
 	const __m128 reg = _mm_load_ps(v.data());
 	const __m128 dotProd = _mm_dp_ps(reg, reg, 0xF1); // 1111 0001 (4 elements, store in lowest)
@@ -401,6 +411,8 @@ SFZ_CUDA_CALL vec3 normalize(vec3 v) noexcept
 #ifdef SFZ_CUDA_DEVICE_CODE
 	float inverseSqrt = rsqrtf(sfz::dot(v, v));
 	return inverseSqrt * v;
+#elif SFZ_EMSCRIPTEN
+	return v / length(v);
 #else
 	vec4 tmp;
 	tmp.xyz = v;
@@ -418,6 +430,8 @@ SFZ_CUDA_CALL vec4 normalize(vec4 v) noexcept
 #ifdef SFZ_CUDA_DEVICE_CODE
 	float inverseSqrt = rsqrtf(sfz::dot(v, v));
 	return inverseSqrt * v;
+#elif SFZ_EMSCRIPTEN
+	return v / length(v);
 #else
 	const __m128 reg = _mm_load_ps(v.data());
 	const __m128 dotProd = _mm_dp_ps(reg, reg, 0xFF); // 1111 1111 (4 elements, store in all)
