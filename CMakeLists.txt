@@ -53,7 +53,8 @@ elseif(EMSCRIPTEN)
 	# -std=c++14 = Enable C++14 support
 	# -fno-strict-aliasing = Disable strict aliasing optimizations
 	# -s USE_SDL=2 = Use SDL2 library
-	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -fno-strict-aliasing -s USE_SDL=2 -DSFZ_EMSCRIPTEN")
+	# -s TOTAL_MEMORY=134217728 = 128MiB heap, TODO: should probably not hard-code this.
+	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -fno-strict-aliasing -s USE_SDL=2 -s TOTAL_MEMORY=134217728 -DSFZ_EMSCRIPTEN")
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
 	set(CMAKE_CXX_FLAGS_DEBUG "-O0")
@@ -78,17 +79,23 @@ if (NOT ${SDL2_FOUND})
 	message(FATAL_ERROR "PhantasyEngine requires SDL2. Add phDependency_SDL2.")
 endif()
 
+if (NOT ${SFZ_CORE_FOUND})
+	message(FATAL_ERROR "PhantasyEngine requires sfzCore. Add sfzCore.")
+endif()
+
 # PhantasyEngine
 # ------------------------------------------------------------------------------------------------
 
 set(PHANTASY_ENGINE_HEADER_FILES
 	${INCLUDE_DIR}/ph/PhantasyEngineMain.hpp
+	${INCLUDE_DIR}/ph/game_loop/GameLoop.hpp
 	${INCLUDE_DIR}/ph/utils/Logging.hpp
 )
 source_group(TREE ${INCLUDE_DIR} FILES ${PHANTASY_ENGINE_HEADER_FILES})
 
 set(PHANTASY_ENGINE_SOURCE_FILES
 	${SOURCE_DIR}/ph/PhantasyEngineMain.cpp
+	${SOURCE_DIR}/ph/game_loop/GameLoop.cpp
 	${SOURCE_DIR}/ph/utils/Logging.cpp
 )
 source_group(TREE ${SOURCE_DIR} FILES ${PHANTASY_ENGINE_SOURCE_FILES})
@@ -98,10 +105,12 @@ add_library(PhantasyEngineLib ${PHANTASY_ENGINE_HEADER_FILES} ${PHANTASY_ENGINE_
 target_include_directories(PhantasyEngineLib PUBLIC
 	${INCLUDE_DIR}
 	${SDL2_INCLUDE_DIRS}
+	${SFZ_CORE_INCLUDE_DIRS}
 )
 
 target_link_libraries(PhantasyEngineLib
 	${SDL2_LIBRARIES}
+	${SFZ_CORE_LIBRARIES}
 )
 
 # Output variables

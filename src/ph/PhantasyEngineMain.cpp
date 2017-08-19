@@ -30,6 +30,7 @@
 #include <direct.h>
 #endif
 
+#include <ph/game_loop/GameLoop.hpp>
 #include <ph/utils/Logging.hpp>
 
 namespace ph {
@@ -53,25 +54,22 @@ int mainImpl(int, char*[])
 		return EXIT_FAILURE;
 	}
 
-	// Create Window
-	const char* title = "Temp Window Title";
-	const int width = 512;
-	const int height = 512;
-	SDL_Window* window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-	     width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-	if (window == NULL) {
-		PH_LOG(LogLevel::ERROR_LVL, "PhantasyEngine", "SDL_CreateWindow() failed: %s", SDL_GetError());
+	// TODO: Should init RenderingSystem here
+
+	// Start game loop
+	PH_LOG(LogLevel::INFO, "PhantasyEngine", "Starting game loop");
+	runGameLoop(
+	
+	// Cleanup callback
+	[]() {
+		PH_LOG(LogLevel::INFO, "PhantasyEngine", "Exited game loop");
+
+		// TODO: Should deinit RenderingSystem here
+
+		// Cleanup SDL2
+		PH_LOG(LogLevel::INFO, "PhantasyEngine", "Cleaning up SDL2");
 		SDL_Quit();
-		return EXIT_FAILURE;
-	}
-
-	// Wait for it
-	SDL_Delay(3000);
-
-	// Cleanup SDL2
-	SDL_DestroyWindow(window);
-	SDL_Quit();
-
+	});
 	return EXIT_SUCCESS;
 }
 
