@@ -33,7 +33,8 @@ elseif(EMSCRIPTEN)
 	# -std=c++14 = Enable C++14 support
 	# -fno-strict-aliasing = Disable strict aliasing optimizations
 	# -s USE_SDL=2 = Use SDL2 library
-	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -fno-strict-aliasing -s USE_SDL=2 -DSFZ_EMSCRIPTEN")
+	# -s TOTAL_MEMORY=134217728 = 128MiB heap, TODO: should probably not hard-code this
+	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -fno-strict-aliasing -s USE_SDL=2 -s TOTAL_MEMORY=134217728 -DSFZ_EMSCRIPTEN")
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
 	set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
@@ -356,7 +357,8 @@ if(SFZ_CORE_BUILD_TESTS)
 		${TESTS_DIR}/sfz/strings/StringID_Tests.cpp
 
 		${TESTS_DIR}/sfz/util/IniParser_Tests.cpp
-		${TESTS_DIR}/sfz/util/IO_Tests.cpp)
+		${TESTS_DIR}/sfz/util/IO_Tests.cpp
+	)
 	source_group(TREE ${TESTS_DIR} FILES ${SFZ_CORE_TEST_FILES})
 
 	enable_testing(true)
