@@ -29,7 +29,7 @@
 #endif
 
 #else
-#define sfz_assert_debug_impl(condition) ((void)0)
+#define sfz_assert_debug_impl(condition) if ((condition)) { }
 #endif
 
 // Release assert
@@ -56,5 +56,5 @@
 #endif
 
 #else
-#define sfz_assert_release_impl(condition) ((void)0)
+#define sfz_assert_release_impl(condition) if ((condition)) { }
 #endif

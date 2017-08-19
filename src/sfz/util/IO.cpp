@@ -283,7 +283,7 @@ int32_t readBinaryFile(const char* path, uint8_t* dataOut, size_t maxNumBytes) n
 
 DynArray<uint8_t> readBinaryFile(const char* path, Allocator* allocator) noexcept
 {
-	return std::move(readFileInternal<uint8_t>(path, true, allocator));
+	return readFileInternal<uint8_t>(path, true, allocator);
 }
 
 DynString readTextFile(const char* path, Allocator* allocator) noexcept
@@ -296,7 +296,7 @@ DynString readTextFile(const char* path, Allocator* allocator) noexcept
 	DynString tmp;
 	tmp.internalDynArray().swap(strData);
 
-	return std::move(tmp);
+	return tmp;
 }
 
 bool writeBinaryFile(const char* path, const uint8_t* data, size_t numBytes) noexcept

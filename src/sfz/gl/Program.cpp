@@ -162,7 +162,7 @@ Program Program::postProcessFromSource(const char* postProcessSource) noexcept
 		glBindAttribLocation(shaderProgram, 1, "inUV");
 	});
 	tmp.mIsPostProcess = true;
-	return std::move(tmp);
+	return tmp;
 }
 
 Program Program::fromFile(const char* basePath, const char* vertexFile, const char* fragmentFile,

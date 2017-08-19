@@ -398,7 +398,7 @@ Framebuffer FramebufferBuilder::build() const noexcept
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-	return std::move(tmp);
+	return tmp;
 }
 
 // Shadow Map Framebuffer builder function
@@ -458,7 +458,7 @@ Framebuffer createShadowMap(vec2i dimensions, FBDepthFormat depthFormat, bool pc
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
-	return std::move(tmp);
+	return tmp;
 }
 
 // Framebuffer: Constructors & destructors
