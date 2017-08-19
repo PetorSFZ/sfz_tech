@@ -123,6 +123,7 @@ endif()
 # Include directories
 include_directories(
 	${FORWARD_INCLUDE_DIRS}
+	${SDL2_INCLUDE_DIRS}
 	${CATCH_INCLUDE_DIRS}
 )
 
