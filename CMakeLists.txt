@@ -106,8 +106,7 @@ endif()
 
 # Accumulated variable with all includes to forward to caller
 set(FORWARD_INCLUDE_DIRS
-	${INCLUDE_DIR}
-	${SDL2_INCLUDE_DIRS})
+	${INCLUDE_DIR})
 if(SFZ_CORE_OPENGL)
 set(FORWARD_INCLUDE_DIRS
 	${FORWARD_INCLUDE_DIRS}
@@ -298,6 +297,8 @@ endif()
 # Output variables
 # ------------------------------------------------------------------------------------------------
 
+set(SFZ_CORE_FOUND true PARENT_SCOPE)
+
 set(SFZ_CORE_INCLUDE_DIRS
 	${FORWARD_INCLUDE_DIRS}
 	PARENT_SCOPE)
@@ -305,26 +306,21 @@ set(SFZ_CORE_INCLUDE_DIRS
 if(SFZ_CORE_OPENGL)
 set(SFZ_CORE_LIBRARIES
 	sfzCoreLib
-	${SDL2_LIBRARIES}
 	${GLEW_LIBRARIES}
 	${OPENGL_LIBRARIES}
 	PARENT_SCOPE)
 else()
 set(SFZ_CORE_LIBRARIES
 	sfzCoreLib
-	${SDL2_LIBRARIES}
 	PARENT_SCOPE)
 endif()
 
 if(SFZ_CORE_OPENGL)
 set(SFZ_CORE_DLLS
-	${SDL2_RUNTIME_FILES}
 	${GLEW_DLLS}
 	PARENT_SCOPE)
 else()
-set(SFZ_CORE_DLLS
-	${SDL2_RUNTIME_FILES}
-	PARENT_SCOPE)
+set(SFZ_CORE_DLLS "" PARENT_SCOPE)
 endif()
 
 
