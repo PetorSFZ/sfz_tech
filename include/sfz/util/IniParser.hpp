@@ -123,7 +123,6 @@ public:
 	class ItemAccessor final {
 	public:
 		ItemAccessor(IniParser& iniParser, uint32_t sectionIndex, uint32_t keyIndex) noexcept;
-		ItemAccessor() noexcept = default;
 		ItemAccessor(const ItemAccessor&) noexcept = default;
 		ItemAccessor& operator= (const ItemAccessor&) noexcept = default;
 
