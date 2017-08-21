@@ -19,22 +19,18 @@
 
 #pragma once
 
-#include <sfz/memory/SmartPointers.hpp>
-
-#include "ph/game_loop/GameLoopUpdateable.hpp"
-
 namespace ph {
 
-using sfz::UniquePtr;
-
-// GameLoop entry function
+// GameLoopUpdateable
 // ------------------------------------------------------------------------------------------------
 
-/// Entry point for the main game loop of PhantasyEngine.
-/// NOTHING should be done in main() after this function has been called. This is due to
-/// limitations with Emscripten. Instead, if any cleanup should be performed after the main loop
-/// has exited it should be done in the callback function.
-/// \param cleanupCallback the callback function called before exiting the game loop
-void runGameLoop(UniquePtr<GameLoopUpdateable> updateable, void(*cleanupCallback)(void)) noexcept;
+class GameLoopUpdateable final {
+public:
+	virtual ~GameLoopUpdateable() = default;
+	
+	virtual void input() = 0;
+	virtual void updateTick() = 0;
+	virtual void render() = 0;
+};
 
 } // namespace ph

@@ -88,14 +88,19 @@ endif()
 
 set(PHANTASY_ENGINE_HEADER_FILES
 	${INCLUDE_DIR}/ph/PhantasyEngineMain.hpp
+
 	${INCLUDE_DIR}/ph/game_loop/GameLoop.hpp
+	${INCLUDE_DIR}/ph/game_loop/GameLoopUpdateable.hpp
+	
 	${INCLUDE_DIR}/ph/utils/Logging.hpp
 )
 source_group(TREE ${INCLUDE_DIR} FILES ${PHANTASY_ENGINE_HEADER_FILES})
 
 set(PHANTASY_ENGINE_SOURCE_FILES
 	${SOURCE_DIR}/ph/PhantasyEngineMain.cpp
+	
 	${SOURCE_DIR}/ph/game_loop/GameLoop.cpp
+
 	${SOURCE_DIR}/ph/utils/Logging.cpp
 )
 source_group(TREE ${SOURCE_DIR} FILES ${PHANTASY_ENGINE_SOURCE_FILES})

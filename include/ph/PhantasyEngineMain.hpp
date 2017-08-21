@@ -17,16 +17,37 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
+#pragma once
+
 #include <SDL.h>
+
+#include <sfz/memory/SmartPointers.hpp>
+
+#include "ph/game_loop/GameLoopUpdateable.hpp"
 
 namespace ph {
 
-int mainImpl(int argc, char* argv[]);
+using sfz::UniquePtr;
 
-#define PHANTASY_ENGINE_MAIN() \
+
+// Phantasy Engine main macro
+// ------------------------------------------------------------------------------------------------
+
+/// This is used to initialize PhantasyEngine.
+/// The "Main.cpp" file for your project should essentially only include this header and call this
+/// macro.
+/// \param createInitialUpdateable a function pointer to a function that returns a sfz::UniquePtr
+/// holding a GameLoopUpdateable. This function is only called once right before the game loop is
+/// started.
+#define PHANTASY_ENGINE_MAIN(createInitialUpdateable) \
 	int main(int argc, char* argv[]) \
 	{ \
-		return ph::mainImpl(argc, argv); \
+		return ph::mainImpl(argc, argv, (createInitialUpdateable)); \
 	}
+
+// Implementation function
+// ------------------------------------------------------------------------------------------------
+
+int mainImpl(int argc, char* argv[], UniquePtr<GameLoopUpdateable>(*createInitialUpdateable)(void));
 
 } // namespace ph

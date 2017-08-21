@@ -35,7 +35,7 @@
 
 namespace ph {
 
-int mainImpl(int, char*[])
+int mainImpl(int, char*[], UniquePtr<GameLoopUpdateable>(*createInitialUpdateable)(void))
 {
 	// Windwows specific hacks
 #ifdef _WIN32
@@ -59,6 +59,8 @@ int mainImpl(int, char*[])
 	// Start game loop
 	PH_LOG(LogLevel::INFO, "PhantasyEngine", "Starting game loop");
 	runGameLoop(
+	// Create initial GameLoopUpdateable with user-specified function
+	createInitialUpdateable(),
 	
 	// Cleanup callback
 	[]() {

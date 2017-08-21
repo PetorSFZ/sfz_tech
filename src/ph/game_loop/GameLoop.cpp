@@ -60,7 +60,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 // GameLoop entry function
 // ------------------------------------------------------------------------------------------------
 
-void runGameLoop(void(*cleanupCallback)(void)) noexcept
+void runGameLoop(UniquePtr<GameLoopUpdateable> updateable, void(*cleanupCallback)(void)) noexcept
 {
 	// // TODO: Should be done in RenderingSystem
 	const char* title = "Temp Window Title";
