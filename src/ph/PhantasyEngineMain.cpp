@@ -72,6 +72,11 @@ int mainImpl(int, char*[], UniquePtr<GameLoopUpdateable>(*createInitialUpdateabl
 		PH_LOG(LogLevel::INFO, "PhantasyEngine", "Cleaning up SDL2");
 		SDL_Quit();
 	});
+
+	// DEAD ZONE
+	// Don't place any code after the game loop has been initialized, it will never be called on
+	// some platforms.
+
 	return EXIT_SUCCESS;
 }
 

@@ -54,7 +54,7 @@ constexpr uint32_t NUM_LOG_LEVELS = uint32_t(LogLevel::END_TOKEN);
 // Logging function
 // ------------------------------------------------------------------------------------------------
 
-#define PH_LOG(logLevel, tag, format, ...) logImpl((logLevel), (tag), (format), ##__VA_ARGS__);
+#define PH_LOG(logLevel, tag, format, ...) ph::logImpl((logLevel), (tag), (format), ##__VA_ARGS__);
 
 // Implementation
 // ------------------------------------------------------------------------------------------------
