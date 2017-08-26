@@ -1,2 +1,2 @@
-# phRenderer_SharedInterface
-The shared interface of all Phantasy Engine renderers
+# Phantasy Engine - Shared Renderer Interface
+Shared interface for all Phantasy Engine renderers.
