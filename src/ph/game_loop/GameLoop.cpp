@@ -133,7 +133,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 
 	// Calculate delta since previous iteration
 	state.updateInfo.iterationDeltaSeconds = calculateDelta(state.previousItrTime);
-	PH_LOG(LogLevel::INFO, "PhantasyEngine", "Frametime = %.3f ms", state.updateInfo.iterationDeltaSeconds * 100.0f);
+	//PH_LOG(LogLevel::INFO, "PhantasyEngine", "Frametime = %.3f ms", state.updateInfo.iterationDeltaSeconds * 100.0f);
 
 	float totalAvailableTime = state.updateInfo.iterationDeltaSeconds + state.updateInfo.lagSeconds;
 
