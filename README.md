@@ -1,2 +1,2 @@
-# Phantasy Engine - Shared Renderer Interface
-Shared interface for all Phantasy Engine renderers.
+# Phantasy Engine - Shared Interface
+Shared interface for decoupled Phantasy Engine systems (such as renderers).

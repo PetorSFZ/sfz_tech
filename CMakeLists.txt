@@ -43,10 +43,10 @@ set(PH_RENDERER_SHARED_INTERFACE_HEADER_FILES
 source_group(TREE ${INCLUDE_DIR} FILES ${PH_RENDERER_SHARED_INTERFACE_HEADER_FILES})
 
 # Empty target in order to add headers to IDE
-add_custom_target(phRenderer_SharedInterface SOURCES ${PH_RENDERER_SHARED_INTERFACE_HEADER_FILES})
+add_custom_target(phSharedInterface SOURCES ${PH_RENDERER_SHARED_INTERFACE_HEADER_FILES})
 
 # Output variables
 # ------------------------------------------------------------------------------------------------
 
-set(PH_RENDERER_SHARED_INTERFACE_FOUND true PARENT_SCOPE)
-set(PH_RENDERER_SHARED_INTERFACE_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
+set(PH_SHARED_INTERFACE_FOUND true PARENT_SCOPE)
+set(PH_SHARED_INTERFACE_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
