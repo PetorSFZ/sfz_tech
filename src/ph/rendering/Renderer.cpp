@@ -47,7 +47,8 @@ using std::uint32_t;
 extern "C" {
 	struct FunctionTable {
 		uint32_t (*phRendererInterfaceVersion)(void);
-		
+		uint32_t (*phInitRenderer)(void*);
+		uint32_t (*phDeinitRenderer)(void);
 	};
 }
 
@@ -139,7 +140,18 @@ void Renderer::load(const char* modulePath, Allocator* allocator) noexcept
 		    modulePath, mFunctionTable->phRendererInterfaceVersion(), INTERFACE_VERSION);
 	}
 
+	// Load rest of functions
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phInitRenderer);
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phDeinitRenderer);
 #endif
+
+	// Initialize renderer
+	uint32_t initSuccess = mFunctionTable->phInitRenderer(allocator);
+	if (initSuccess == 0) {
+		PH_LOG(LogLevel::ERROR_LVL, "PhantasyEngine", "Renderer (%s) failed to initialize.",
+		    modulePath);
+		this->destroy();
+	}
 }
 
 void Renderer::swap(Renderer& other) noexcept
@@ -152,6 +164,9 @@ void Renderer::swap(Renderer& other) noexcept
 void Renderer::destroy() noexcept
 {
 	if (mModuleHandle != nullptr) {
+
+		// Deinit renderer
+		mFunctionTable->phDeinitRenderer();
 
 		// Unload DLL on Windows
 #ifdef _WIN32

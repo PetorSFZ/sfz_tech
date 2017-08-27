@@ -74,6 +74,8 @@ public:
 	/// See phRendererInterfaceVersion()
 	uint32_t rendererInterfaceVersion() const noexcept;
 
+
+
 private:
 	void* mModuleHandle = nullptr; // Holds a HMODULE on Windows
 	Allocator* mAllocator = nullptr;

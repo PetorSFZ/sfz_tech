@@ -80,7 +80,11 @@ if (NOT ${SDL2_FOUND})
 endif()
 
 if (NOT ${SFZ_CORE_FOUND})
-	message(FATAL_ERROR "PhantasyEngine requires sfzCore. Add sfzCore.")
+	message(FATAL_ERROR "PhantasyEngine requires sfzCore.")
+endif()
+
+if (NOT ${PH_SHARED_INTERFACE_FOUND})
+	message(FATAL_ERROR "PhantasyEngine requires phSharedInterface.")
 endif()
 
 # PhantasyEngine
@@ -109,15 +113,16 @@ set(PHANTASY_ENGINE_SOURCE_FILES
 )
 source_group(TREE ${SOURCE_DIR} FILES ${PHANTASY_ENGINE_SOURCE_FILES})
 
-add_library(PhantasyEngineLib ${PHANTASY_ENGINE_HEADER_FILES} ${PHANTASY_ENGINE_SOURCE_FILES})
+add_library(phCore ${PHANTASY_ENGINE_HEADER_FILES} ${PHANTASY_ENGINE_SOURCE_FILES})
 
-target_include_directories(PhantasyEngineLib PUBLIC
+target_include_directories(phCore PUBLIC
 	${INCLUDE_DIR}
 	${SDL2_INCLUDE_DIRS}
 	${SFZ_CORE_INCLUDE_DIRS}
+	${PH_SHARED_INTERFACE_INCLUDE_DIRS}
 )
 
-target_link_libraries(PhantasyEngineLib
+target_link_libraries(phCore
 	${SDL2_LIBRARIES}
 	${SFZ_CORE_LIBRARIES}
 )
@@ -127,4 +132,4 @@ target_link_libraries(PhantasyEngineLib
 
 set(PHANTASY_ENGINE_FOUND true PARENT_SCOPE)
 set(PHANTASY_ENGINE_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
-set(PHANTASY_ENGINE_LIBRARIES PhantasyEngineLib PARENT_SCOPE)
+set(PHANTASY_ENGINE_LIBRARIES phCore PARENT_SCOPE)
