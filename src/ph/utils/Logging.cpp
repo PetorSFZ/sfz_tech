@@ -24,7 +24,24 @@
 
 namespace ph {
 
-void logImpl(LogLevel level, const char* tag, const char* format, ...) noexcept
+// Logging function
+// ------------------------------------------------------------------------------------------------
+
+constexpr const char* LOG_LEVEL_STRINGS[] = {
+	"INFO_EXTRA_DETAILED",
+	"LOG_LEVEL_INFO_DETAILED",
+	"INFO",
+	"WARNING",
+	"ERROR",
+	"END_TOKEN"
+};
+
+static const char* toString(phLogLevel level) noexcept
+{
+	return LOG_LEVEL_STRINGS[int(level)];
+}
+
+static void logImpl(phLogLevel level, const char* tag, const char* format, ...) noexcept
 {
 	// Append LogLevel, tag and newline to format
 	char actualFormat[384]; // Large because the message might be passed in the format string
@@ -34,16 +51,29 @@ void logImpl(LogLevel level, const char* tag, const char* format, ...) noexcept
 	va_list args;
 	va_start(args, format);
 	switch(level) {
-	case LogLevel::INFO_INTRICATE:
-	case LogLevel::INFO:
-	case LogLevel::WARNING:
+	case LOG_LEVEL_INFO_EXTRA_DETAILED:
+	case LOG_LEVEL_INFO_DETAILED:
+	case LOG_LEVEL_INFO:
+	case LOG_LEVEL_WARNING:
 		std::vfprintf(stdout, actualFormat, args);
 		break;
-	case LogLevel::ERROR_LVL:
+	case LOG_LEVEL_ERROR:
 		std::vfprintf(stderr, actualFormat, args);
+		break;
+	case LOG_LEVEL_END_TOKEN:
+	default:
 		break;
 	}
 	va_end(args);
+}
+
+// Get logger function
+// ------------------------------------------------------------------------------------------------
+
+phLogger getLogger() noexcept
+{
+	static phLogger logger = {logImpl};
+	return logger;
 }
 
 } // namespace ph

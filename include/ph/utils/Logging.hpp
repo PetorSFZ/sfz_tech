@@ -19,46 +19,19 @@
 
 #pragma once
 
-#include <cstdint>
+#include <ph/LoggingInterface.hpp>
 
 namespace ph {
 
-using std::uint32_t;
-
-// LogLevel enum
+// Get logger function
 // ------------------------------------------------------------------------------------------------
 
-enum class LogLevel : uint32_t {
-	INFO_INTRICATE = 0, // Really detailed info for deep debugging, normally off to avoid spam
-	INFO,
-	WARNING,
-	ERROR_LVL, // Actually named ERROR, but that is defined by default. So _LVL to avoid conflicts.
-	END_TOKEN
-};
+/// Returns the PhantasyEngine logger
+phLogger getLogger() noexcept;
 
-constexpr const char* LOG_LEVEL_STRINGS[] = {
-	"INFO_INTRICATE",
-	"INFO",
-	"WARNING",
-	"ERROR",
-	"END_TOKEN"
-};
-
-inline const char* toString(LogLevel level) noexcept
-{
-	return LOG_LEVEL_STRINGS[uint32_t(level)];
-}
-
-constexpr uint32_t NUM_LOG_LEVELS = uint32_t(LogLevel::END_TOKEN);
-
-// Logging function
+// Logging macro
 // ------------------------------------------------------------------------------------------------
 
-#define PH_LOG(logLevel, tag, format, ...) ph::logImpl((logLevel), (tag), (format), ##__VA_ARGS__);
-
-// Implementation
-// ------------------------------------------------------------------------------------------------
-
-void logImpl(LogLevel level, const char* tag, const char* format, ...) noexcept;
+#define PH_LOG(logLevel, tag, format, ...) ph::getLogger().log((logLevel), (tag), (format), ##__VA_ARGS__)
 
 } // namespace ph

@@ -47,7 +47,7 @@ using std::uint32_t;
 extern "C" {
 	struct FunctionTable {
 		uint32_t (*phRendererInterfaceVersion)(void);
-		uint32_t (*phInitRenderer)(void*);
+		uint32_t (*phInitRenderer)(void*, phLogger);
 		uint32_t (*phDeinitRenderer)(void);
 	};
 }
@@ -73,7 +73,7 @@ static StackString192 getWindowsErrorMessage() noexcept
 		table->functionName = (FunctionType)GetProcAddress((HMODULE)module, #functionName); \
 		if (table->functionName == nullptr) { \
 			StackString192 error = getWindowsErrorMessage(); \
-			PH_LOG(LogLevel::ERROR_LVL, "PhantasyEngine", "Failed to load %s(), message: %s", \
+			PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Failed to load %s(), message: %s", \
 			    #functionName, error.str); \
 		} \
 	}
@@ -118,7 +118,7 @@ void Renderer::load(const char* modulePath, Allocator* allocator) noexcept
 	mModuleHandle = LoadLibrary(modulePath);
 	if (mModuleHandle == nullptr) {
 		StackString192 error = getWindowsErrorMessage();
-		PH_LOG(LogLevel::ERROR_LVL, "PhantasyEngine", "Failed to load DLL (%s), message: %s",
+		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Failed to load DLL (%s), message: %s",
 		    modulePath, error.str);
 		return;
 	}
@@ -136,7 +136,7 @@ void Renderer::load(const char* modulePath, Allocator* allocator) noexcept
 	// Start of with loading interface version function and checking that the correct interface is used
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRendererInterfaceVersion);
 	if (INTERFACE_VERSION != mFunctionTable->phRendererInterfaceVersion()) {
-		PH_LOG(LogLevel::ERROR_LVL, "PhantasyEngine", "Renderer DLL (%s) has wrong interface version (%u), expected (%u).",
+		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Renderer DLL (%s) has wrong interface version (%u), expected (%u).",
 		    modulePath, mFunctionTable->phRendererInterfaceVersion(), INTERFACE_VERSION);
 	}
 
@@ -146,9 +146,9 @@ void Renderer::load(const char* modulePath, Allocator* allocator) noexcept
 #endif
 
 	// Initialize renderer
-	uint32_t initSuccess = mFunctionTable->phInitRenderer(allocator);
+	uint32_t initSuccess = mFunctionTable->phInitRenderer(allocator, getLogger());
 	if (initSuccess == 0) {
-		PH_LOG(LogLevel::ERROR_LVL, "PhantasyEngine", "Renderer (%s) failed to initialize.",
+		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Renderer (%s) failed to initialize.",
 		    modulePath);
 		this->destroy();
 	}
@@ -173,7 +173,7 @@ void Renderer::destroy() noexcept
 		BOOL freeSuccess = FreeLibrary((HMODULE)mModuleHandle);
 		if (!freeSuccess) {
 			StackString192 error = getWindowsErrorMessage();
-			PH_LOG(LogLevel::ERROR_LVL, "PhantasyEngine", "Failed to unload DLL, message: %s",
+			PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Failed to unload DLL, message: %s",
 			    error.str);
 		}
 #endif

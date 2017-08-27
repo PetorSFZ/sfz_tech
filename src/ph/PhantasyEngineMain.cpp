@@ -50,26 +50,26 @@ int mainImpl(int, char*[], UniquePtr<GameLoopUpdateable>(*createInitialUpdateabl
 
 	// Init SDL2
 	if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
-		PH_LOG(LogLevel::ERROR_LVL, "PhantasyEngine", "SDL_Init() failed: %s", SDL_GetError());
+		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "SDL_Init() failed: %s", SDL_GetError());
 		return EXIT_FAILURE;
 	}
 
 	// TODO: Should init RenderingSystem here
 
 	// Start game loop
-	PH_LOG(LogLevel::INFO, "PhantasyEngine", "Starting game loop");
+	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Starting game loop");
 	runGameLoop(
 	// Create initial GameLoopUpdateable with user-specified function
 	createInitialUpdateable(),
 	
 	// Cleanup callback
 	[]() {
-		PH_LOG(LogLevel::INFO, "PhantasyEngine", "Exited game loop");
+		PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Exited game loop");
 
 		// TODO: Should deinit RenderingSystem here
 
 		// Cleanup SDL2
-		PH_LOG(LogLevel::INFO, "PhantasyEngine", "Cleaning up SDL2");
+		PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Cleaning up SDL2");
 		SDL_Quit();
 	});
 

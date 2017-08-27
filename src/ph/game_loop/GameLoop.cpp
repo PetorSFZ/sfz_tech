@@ -156,7 +156,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 		
 		// Quitting
 		case SDL_QUIT:
-			PH_LOG(LogLevel::INFO, "PhantasyEngine", "SDL_QUIT event recevied, quitting.");
+			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "SDL_QUIT event recevied, quitting.");
 			quit(state);
 			return;
 
