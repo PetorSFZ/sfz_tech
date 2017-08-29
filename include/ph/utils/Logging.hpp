@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <ph/LoggingInterface.hpp>
+#include <ph/LoggingInterface.h>
 
 namespace ph {
 

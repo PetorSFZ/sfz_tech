@@ -93,6 +93,9 @@ endif()
 set(PHANTASY_ENGINE_HEADER_FILES
 	${INCLUDE_DIR}/ph/PhantasyEngineMain.hpp
 
+	${INCLUDE_DIR}/ph/config/GlobalConfig.hpp
+	${INCLUDE_DIR}/ph/config/Setting.hpp
+
 	${INCLUDE_DIR}/ph/game_loop/GameLoop.hpp
 	${INCLUDE_DIR}/ph/game_loop/GameLoopUpdateable.hpp
 	
@@ -105,6 +108,9 @@ source_group(TREE ${INCLUDE_DIR} FILES ${PHANTASY_ENGINE_HEADER_FILES})
 set(PHANTASY_ENGINE_SOURCE_FILES
 	${SOURCE_DIR}/ph/PhantasyEngineMain.cpp
 	
+	${SOURCE_DIR}/ph/config/GlobalConfig.cpp
+	${SOURCE_DIR}/ph/config/Setting.cpp
+
 	${SOURCE_DIR}/ph/game_loop/GameLoop.cpp
 
 	${SOURCE_DIR}/ph/rendering/Renderer.cpp
