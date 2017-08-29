@@ -19,14 +19,15 @@
 
 #pragma once
 
-#include "LoggingInterface.hpp"
+#include <stdint.h>
+
+#include "ConfigInterface.h"
+#include "LoggingInterface.h"
 
 // C interface
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdint.h>
 
 // Macros
 // ------------------------------------------------------------------------------------------------
@@ -50,10 +51,11 @@ DLL_EXPORT uint32_t phRendererInterfaceVersion(void);
 /// previously been deinitialized it should be initialized to the same state as if it had not been
 /// initialized earlier.
 /// \param allocator the sfz::Allocator used to allocate all cpu memory used
+/// \param config the phConfig used for configuring the renderer
 /// \param logger the phLogger used to print debug information
 /// \return 0 if renderer is NOT initialized, i.e. if something went very wrong. If the renderer
 ///           has been previously initialized this value will still be a non-zero value.
-DLL_EXPORT uint32_t phInitRenderer(void* allocator, phLogger logger);
+DLL_EXPORT uint32_t phInitRenderer(void* allocator, phConfig config, phLogger logger);
 
 /// Deinitializes this renderer. This function should by design be completely safe to call multiple
 /// times in a row, including before the renderer has been initialized at all. Should also be safe

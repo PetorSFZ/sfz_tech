@@ -19,35 +19,53 @@
 
 #pragma once
 
+#include <stdint.h>
+
 // C interface
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// LogLevel enum
+// ValueType enum
 // ------------------------------------------------------------------------------------------------
 
 typedef enum {
-	LOG_LEVEL_INFO_EXTRA_DETAILED = 0,
-	LOG_LEVEL_INFO_DETAILED,
-	LOG_LEVEL_INFO,
-	LOG_LEVEL_WARNING,
-	LOG_LEVEL_ERROR,
-	LOG_LEVEL_END_TOKEN
-} phLogLevel;
+	VALUE_TYPE_INT,
+	VALUE_TYPE_FLOAT
+} phValueType;
 
-// Logger struct
+// Value structs
 // ------------------------------------------------------------------------------------------------
 
 typedef struct {
-	void (*log)(phLogLevel, const char*, const char*, ...);
-} phLogger;
+	float value;
+	float minValue, maxValue;
+} phFloatValue;
 
-// Logging function
+typedef struct {
+	int32_t value;
+	int32_t minValue, maxValue;
+} phIntValue;
+
+typedef struct {
+	phValueType type;
+	union {
+		phIntValue i;
+		phFloatValue f;
+	};
+} phSettingValue;
+
+// Config struct
 // ------------------------------------------------------------------------------------------------
 
-/// Example usage: PH_LOGGER_LOG(logger, LOG_LEVEL_WARNING, "GameplaySystem", "Too many enemies, num: %u", numEnemies);
-#define PH_LOGGER_LOG(logger, logLevel, tag, format, ...) (logger).log((logLevel), (tag), (format),  ##__VA_ARGS__)
+typedef struct {
+	/// Gets the specified Setting. If it does not exist it will be created (type int with value 0).
+	phSettingValue* (*getCreateSetting)(const char* section, const char* key);
+
+	/// Gets the specified Setting. Returns nullptr if it does not exist.
+	phSettingValue* (*getSetting)(const char* section, const char* key);
+} phConfig;
+
 
 // End C interface
 #ifdef __cplusplus

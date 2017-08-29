@@ -38,8 +38,9 @@ endif()
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set(PH_RENDERER_SHARED_INTERFACE_HEADER_FILES
-	${INCLUDE_DIR}/ph/LoggingInterface.hpp
-	${INCLUDE_DIR}/ph/RendererInterface.hpp
+	${INCLUDE_DIR}/ph/ConfigInterface.h
+	${INCLUDE_DIR}/ph/LoggingInterface.h
+	${INCLUDE_DIR}/ph/RendererInterface.h
 )
 source_group(TREE ${INCLUDE_DIR} FILES ${PH_RENDERER_SHARED_INTERFACE_HEADER_FILES})
 
