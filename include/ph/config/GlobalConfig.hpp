@@ -110,7 +110,7 @@ private:
 	// Private constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	GlobalConfig() noexcept = default;
+	inline GlobalConfig() noexcept : mImpl(nullptr) {} // Compile fix for Emscripten
 	GlobalConfig(const GlobalConfig&) = delete;
 	GlobalConfig& operator= (const GlobalConfig&) = delete;
 	GlobalConfig(GlobalConfig&&) = delete;
@@ -121,7 +121,7 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	GlobalConfigImpl* mImpl = nullptr;
+	GlobalConfigImpl* mImpl;
 };
 
 } // namespace ph

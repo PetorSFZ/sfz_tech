@@ -49,7 +49,7 @@ public:
 	Renderer(const Renderer&) = delete;
 	Renderer& operator= (const Renderer&) = delete;
 
-	Renderer(const char* modulePath, Allocator* allocator) noexcept;
+	Renderer(const char* moduleName, Allocator* allocator) noexcept;
 	Renderer(Renderer&& other) noexcept; 
 	Renderer& operator= (Renderer&& other) noexcept;
 	~Renderer() noexcept;
@@ -58,9 +58,9 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	/// Loads this renderer
-	/// \param modulePath the path to the DLL (on Windows)
+	/// \param moduleName the name of the DLL (on Windows)
 	/// \param allocator the sfz Allocator used to allocate memory on the CPU for this renderer
-	void load(const char* modulePath, Allocator* allocator) noexcept;
+	void load(const char* moduleName, Allocator* allocator) noexcept;
 
 	/// Swaps this renderer with another renderer
 	void swap(Renderer& other) noexcept;

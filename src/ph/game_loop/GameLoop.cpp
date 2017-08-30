@@ -45,6 +45,7 @@ using time_point = std::chrono::high_resolution_clock::time_point;
 
 struct GameLoopState final {
 	UniquePtr<GameLoopUpdateable> updateable;
+	UniquePtr<Renderer> renderer;
 	void(*cleanupCallback)(void) = nullptr;
 	bool quit = false;
 
@@ -61,8 +62,15 @@ struct GameLoopState final {
 static void quit(GameLoopState& gameLoopState) noexcept
 {
 	gameLoopState.quit = true; // Exit infinite while loop (on some platforms)
+	
+	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Destroying current updateable");
 	gameLoopState.updateable->onQuit();
 	gameLoopState.updateable.destroy(); // Destroy the current updateable
+
+	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Destroying renderer");
+	gameLoopState.renderer.destroy(); // Destroy the current renderer
+
+	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Calling cleanup callback");
 	gameLoopState.cleanupCallback(); // Call the cleanup callback
 	
 	// Exit program on Emscripten
@@ -207,17 +215,19 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	}
 
 	// Render
-	state.updateable->render(state.updateInfo);
+	state.updateable->render(*state.renderer, state.updateInfo);
 }
 
 // GameLoop entry function
 // ------------------------------------------------------------------------------------------------
 
-void runGameLoop(UniquePtr<GameLoopUpdateable> updateable, void(*cleanupCallback)(void)) noexcept
+void runGameLoop(UniquePtr<GameLoopUpdateable> updateable, UniquePtr<Renderer> renderer,
+                 void(*cleanupCallback)(void)) noexcept
 {
 	// Initialize game loop state
 	GameLoopState gameLoopState = {};
 	gameLoopState.updateable = std::move(updateable);
+	gameLoopState.renderer = std::move(renderer);
 	gameLoopState.cleanupCallback = cleanupCallback;
 
 	calculateDelta(gameLoopState.previousItrTime); // Sets previousItrTime to current time

@@ -102,7 +102,9 @@ int mainImpl(int, char*[], InitOptions&& options)
 		return EXIT_FAILURE;
 	}
 
-	// TODO: Should init RenderingSystem here
+	// Initializing renderer
+	UniquePtr<Renderer> renderer = sfz::makeUniqueDefault<Renderer>();
+	renderer->load(options.rendererName, sfz::getDefaultAllocator());
 
 	// Start game loop
 	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Starting game loop");
@@ -110,13 +112,12 @@ int mainImpl(int, char*[], InitOptions&& options)
 	
 	// Create initial GameLoopUpdateable
 	options.createInitialUpdateable(),
+
+	// Moving renderer
+	std::move(renderer),
 	
 	// Cleanup callback
 	[]() {
-		PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Exited game loop");
-
-		// TODO: Should deinit RenderingSystem here
-
 		// Store global settings
 		PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Saving global config to file");
 		GlobalConfig& cfg = GlobalConfig::instance();

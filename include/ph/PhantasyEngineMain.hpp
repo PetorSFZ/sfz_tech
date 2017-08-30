@@ -51,6 +51,10 @@ struct InitOptions final {
 	/// Function that creates the initial GameLoopUpdateable, will only be called once. It's okay
 	/// (and necessary) to use sfz::Allocator in this function, but nowhere else in the ini code.
 	UniquePtr<GameLoopUpdateable> (*createInitialUpdateable)(void);
+
+	/// The name of the renderer. This is used to choose which DLL to load on Windows. I.e. if the
+	/// name is "deferredGL" the engine will attempt to load a DLL by the name of "deferredGL.dll".
+	char* rendererName = "NO_RENDERER_NAME";
 };
 
 // Phantasy Engine main macro

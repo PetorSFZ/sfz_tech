@@ -39,6 +39,7 @@
 
 namespace ph {
 
+using sfz::StackString;
 using sfz::StackString192;
 using std::uint32_t;
 
@@ -83,9 +84,9 @@ static StackString192 getWindowsErrorMessage() noexcept
 // Renderer: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-Renderer::Renderer(const char* modulePath, Allocator* allocator) noexcept
+Renderer::Renderer(const char* moduleName, Allocator* allocator) noexcept
 {
-	this->load(modulePath, allocator);
+	this->load(moduleName, allocator);
 }
 
 Renderer::Renderer(Renderer&& other) noexcept
@@ -107,20 +108,24 @@ Renderer::~Renderer() noexcept
 // Renderer: Methods
 // ------------------------------------------------------------------------------------------------
 
-void Renderer::load(const char* modulePath, Allocator* allocator) noexcept
+void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 {
-	sfz_assert_debug(modulePath != nullptr);
+	sfz_assert_debug(moduleName != nullptr);
 	sfz_assert_debug(allocator != nullptr);
 	if (mModuleHandle != nullptr) this->destroy();
 
 	// Load DLL on Windows
 #ifdef _WIN32
 	// Load DLL
-	mModuleHandle = LoadLibrary(modulePath);
+	{
+		StackString dllName;
+		dllName.printf("%s.dll", moduleName);
+		mModuleHandle = LoadLibrary(dllName.str);
+	}
 	if (mModuleHandle == nullptr) {
 		StackString192 error = getWindowsErrorMessage();
 		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Failed to load DLL (%s), message: %s",
-		    modulePath, error.str);
+		    moduleName, error.str);
 		return;
 	}
 #endif
@@ -137,8 +142,8 @@ void Renderer::load(const char* modulePath, Allocator* allocator) noexcept
 	// Start of with loading interface version function and checking that the correct interface is used
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRendererInterfaceVersion);
 	if (INTERFACE_VERSION != mFunctionTable->phRendererInterfaceVersion()) {
-		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Renderer DLL (%s) has wrong interface version (%u), expected (%u).",
-		    modulePath, mFunctionTable->phRendererInterfaceVersion(), INTERFACE_VERSION);
+		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Renderer DLL (%s.dll) has wrong interface version (%u), expected (%u).",
+			moduleName, mFunctionTable->phRendererInterfaceVersion(), INTERFACE_VERSION);
 	}
 
 	// Load rest of functions
@@ -150,7 +155,7 @@ void Renderer::load(const char* modulePath, Allocator* allocator) noexcept
 	uint32_t initSuccess = mFunctionTable->phInitRenderer(allocator, GlobalConfig::cInstance(), getLogger());
 	if (initSuccess == 0) {
 		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Renderer (%s) failed to initialize.",
-		    modulePath);
+			moduleName);
 		this->destroy();
 	}
 }

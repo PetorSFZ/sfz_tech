@@ -30,6 +30,8 @@
 #include <sfz/sdl/GameController.hpp>
 #include <sfz/sdl/Mouse.hpp>
 
+#include "ph/rendering/Renderer.hpp"
+
 namespace ph {
 
 using std::int32_t;
@@ -150,7 +152,7 @@ public:
 	/// Called last each iteration of the game loop. Responsible for rendering everything. Of note
 	/// is updateInfo.lagSeconds, which contains the amount of time since the last tick update.
 	/// A good renderer should extrapolate objects positions before rendering them using this value.
-	virtual void render(const UpdateInfo& updateInfo) = 0;
+	virtual void render(Renderer& renderer, const UpdateInfo& updateInfo) = 0;
 
 	/// Called if the application is being shutdown. Either because a SDL_QUIT even was received or
 	/// because an UpdateOp::QUIT() operation was returned. Not called when changing updateable.

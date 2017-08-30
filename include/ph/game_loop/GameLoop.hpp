@@ -22,6 +22,7 @@
 #include <sfz/memory/SmartPointers.hpp>
 
 #include "ph/game_loop/GameLoopUpdateable.hpp"
+#include "ph/rendering/Renderer.hpp"
 
 namespace ph {
 
@@ -34,7 +35,10 @@ using sfz::UniquePtr;
 /// NOTHING should be done in main() after this function has been called. This is due to
 /// limitations with Emscripten. Instead, if any cleanup should be performed after the main loop
 /// has exited it should be done in the callback function.
+/// \param updateable the initial GameLoopUpdateable to receive input
+/// \param renderer the renderer to be used
 /// \param cleanupCallback the callback function called before exiting the game loop
-void runGameLoop(UniquePtr<GameLoopUpdateable> updateable, void(*cleanupCallback)(void)) noexcept;
+void runGameLoop(UniquePtr<GameLoopUpdateable> updateable, UniquePtr<Renderer> renderer,
+                 void(*cleanupCallback)(void)) noexcept;
 
 } // namespace ph
