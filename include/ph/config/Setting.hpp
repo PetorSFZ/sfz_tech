@@ -60,10 +60,8 @@ public:
 	Setting& operator= (Setting&&) = delete;
 	~Setting() noexcept = default;
 
+	/// Creates a Setting of type int with value 0
 	Setting(const char* section, const char* key) noexcept;
-	Setting(const char* section, const char* key, int32_t value) noexcept;
-	Setting(const char* section, const char* key, float value) noexcept;
-	Setting(const char* section, const char* key, bool value) noexcept;
 
 	// Getters
 	// --------------------------------------------------------------------------------------------

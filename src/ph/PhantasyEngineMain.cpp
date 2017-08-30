@@ -30,12 +30,33 @@
 #include <direct.h>
 #endif
 
-#include <ph/game_loop/GameLoop.hpp>
-#include <ph/utils/Logging.hpp>
+#include <sfz/strings/StackString.hpp>
+#include <sfz/util/IO.hpp>
+
+#include "ph/config/GlobalConfig.hpp"
+#include "ph/game_loop/GameLoop.hpp"
+#include "ph/utils/Logging.hpp"
 
 namespace ph {
 
-int mainImpl(int, char*[], UniquePtr<GameLoopUpdateable>(*createInitialUpdateable)(void))
+// Statics
+// ------------------------------------------------------------------------------------------------
+
+static void ensureAppUserDataDirExists(const char* appName)
+{
+	// Create "My Games" directory
+	sfz::createDirectory(sfz::gameBaseFolderPath());
+
+	// Create app directory in "My Games"
+	sfz::StackString320 tmp;
+	tmp.printf("%s%s/", sfz::gameBaseFolderPath(), appName);
+	sfz::createDirectory(tmp.str);
+}
+
+// Implementation function
+// ------------------------------------------------------------------------------------------------
+
+int mainImpl(int, char*[], InitOptions&& options)
 {
 	// Windwows specific hacks
 #ifdef _WIN32
@@ -43,11 +64,38 @@ int mainImpl(int, char*[], UniquePtr<GameLoopUpdateable>(*createInitialUpdateabl
 	SetProcessDPIAware();
 
 	// Set current working directory to SDL_GetBasePath()
-	char* basePath = SDL_GetBasePath();
-	_chdir(basePath);
-	SDL_free(basePath);
+	_chdir(sfz::basePath());
 #endif
 
+	// Load global settings
+	GlobalConfig& cfg = GlobalConfig::instance();
+	{
+		// Init config with ini location
+		if (options.iniLocation == IniLocation::NEXT_TO_EXECUTABLE) {
+			StackString192 iniFileName;
+			iniFileName.printf("%s.ini", options.appName);
+			cfg.init(sfz::basePath(), iniFileName.str);
+			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Ini location set to: %s%s", sfz::basePath(), iniFileName.str);
+		}
+		else if (options.iniLocation == IniLocation::MY_GAMES_DIR) {
+			
+			// Create user data directory
+			ensureAppUserDataDirExists(options.appName);
+			
+			// Initialize ini
+			StackString192 iniFileName;
+			iniFileName.printf("%s/%s.ini", options.appName, options.appName);
+			cfg.init(sfz::gameBaseFolderPath(), iniFileName.str);
+			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Ini location set to: %s%s", sfz::gameBaseFolderPath(), iniFileName.str);
+		}
+		else {
+			sfz_assert_release(false);
+		}
+
+		// Load ini file
+		cfg.load();
+	}
+	
 	// Init SDL2
 	if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
 		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "SDL_Init() failed: %s", SDL_GetError());
@@ -59,14 +107,23 @@ int mainImpl(int, char*[], UniquePtr<GameLoopUpdateable>(*createInitialUpdateabl
 	// Start game loop
 	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Starting game loop");
 	runGameLoop(
-	// Create initial GameLoopUpdateable with user-specified function
-	createInitialUpdateable(),
+	
+	// Create initial GameLoopUpdateable
+	options.createInitialUpdateable(),
 	
 	// Cleanup callback
 	[]() {
 		PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Exited game loop");
 
 		// TODO: Should deinit RenderingSystem here
+
+		// Store global settings
+		PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Saving global config to file");
+		GlobalConfig& cfg = GlobalConfig::instance();
+		if (!cfg.save()) {
+			PH_LOG(LOG_LEVEL_WARNING, "PhantasyEngine", "Failed to write ini file");
+		}
+		cfg.destroy();
 
 		// Cleanup SDL2
 		PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Cleaning up SDL2");

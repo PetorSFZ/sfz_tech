@@ -242,7 +242,6 @@ void runGameLoop(UniquePtr<GameLoopUpdateable> updateable, void(*cleanupCallback
 	while (!gameLoopState.quit) {
 		gameLoopIteration(&gameLoopState);
 	}
-	gameLoopState.cleanupCallback();
 #endif
 
 	// DEAD ZONE

@@ -28,37 +28,12 @@ namespace ph {
 // Setting: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-
 Setting::Setting(const char* section, const char* key) noexcept 
 :
 	mSection(section),
 	mKey(key)
 {
-	setInt(0);
-}
-
-Setting::Setting(const char* section, const char* key, int32_t value) noexcept
-:
-	mSection(section),
-	mKey(key)
-{
-	setInt(value);
-}
-
-Setting::Setting(const char* section, const char* key, float value) noexcept
-:
-	mSection(section),
-	mKey(key)
-{
-	setFloat(value);
-}
-
-Setting::Setting(const char* section, const char* key, bool value) noexcept
-:
-	mSection(section),
-	mKey(key)
-{
-	setBool(value);
+	setInt(0, std::numeric_limits<int32_t>::min(), std::numeric_limits<int32_t>::max());
 }
 
 // Setting: Getters

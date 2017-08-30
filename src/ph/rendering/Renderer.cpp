@@ -34,6 +34,7 @@
 #include <sfz/memory/New.hpp>
 #include <sfz/strings/StackString.hpp>
 
+#include "ph/config/GlobalConfig.hpp"
 #include "ph/utils/Logging.hpp"
 
 namespace ph {
@@ -47,7 +48,7 @@ using std::uint32_t;
 extern "C" {
 	struct FunctionTable {
 		uint32_t (*phRendererInterfaceVersion)(void);
-		uint32_t (*phInitRenderer)(void*, phLogger);
+		uint32_t (*phInitRenderer)(void*, phConfig, phLogger);
 		uint32_t (*phDeinitRenderer)(void);
 	};
 }
@@ -146,7 +147,7 @@ void Renderer::load(const char* modulePath, Allocator* allocator) noexcept
 #endif
 
 	// Initialize renderer
-	uint32_t initSuccess = mFunctionTable->phInitRenderer(allocator, getLogger());
+	uint32_t initSuccess = mFunctionTable->phInitRenderer(allocator, GlobalConfig::cInstance(), getLogger());
 	if (initSuccess == 0) {
 		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Renderer (%s) failed to initialize.",
 		    modulePath);

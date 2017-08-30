@@ -23,6 +23,8 @@
 #include <sfz/memory/SmartPointers.hpp>
 #include <sfz/util/IniParser.hpp>
 
+#include "ph/utils/Logging.hpp"
+
 namespace ph {
 
 using namespace sfz;
@@ -59,6 +61,18 @@ GlobalConfig& GlobalConfig::instance() noexcept
 	return config;
 }
 
+phConfig GlobalConfig::cInstance() noexcept
+{
+	phConfig config;
+	config.getCreateSetting = [](const char* section, const char* key) -> phSettingValue* {
+		return &instance().getCreateSetting(section, key)->value;
+	};
+	config.getSetting = [](const char* section, const char* key) -> phSettingValue* {
+		return &instance().getSetting(section, key)->value;
+	};
+	return config;
+}
+
 // GlobalConfig: Methods
 // ------------------------------------------------------------------------------------------------
 
@@ -80,14 +94,18 @@ void GlobalConfig::destroy() noexcept
 	mImpl = nullptr;
 }
 
-bool GlobalConfig::load() noexcept
+void GlobalConfig::load() noexcept
 {
 	sfz_assert_debug(mImpl != nullptr);
 	sfz_assert_debug(!mImpl->mLoaded); // TODO: Make it possible to reload settings from file
 
 	// Load ini file
 	IniParser& ini = mImpl->mIni;
-	ini.load();
+	if (ini.load()) {
+		PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Succesfully loaded config ini file");
+	} else {
+		PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Failed to load config ini file, expected if this is first run");
+	}
 
 	// Create setting items of all ini items
 	for (auto item : ini) {
@@ -114,7 +132,6 @@ bool GlobalConfig::load() noexcept
 	}
 
 	mImpl->mLoaded = true;
-	return true;
 }
 
 bool GlobalConfig::save() noexcept
@@ -134,11 +151,7 @@ bool GlobalConfig::save() noexcept
 	}
 
 	// Write to ini
-	if (ini.save()) {
-		return true;
-	}
-
-	return false;
+	return ini.save();
 }
 
 Setting* GlobalConfig::getCreateSetting(const char* section, const char* key, bool* created) noexcept

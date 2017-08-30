@@ -59,13 +59,16 @@ public:
 
 	static GlobalConfig& instance() noexcept;
 
+	/// Returns a phConfig struct representation of the global config.
+	static phConfig cInstance() noexcept;
+
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
 	void init(const char* basePath, const char* fileName) noexcept;
 	void destroy() noexcept;
 
-	bool load() noexcept;
+	void load() noexcept;
 	bool save() noexcept;
 
 	/// Gets the specified Setting. If it does not exist it will be created (type int with value 0).
