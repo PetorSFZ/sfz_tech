@@ -49,7 +49,7 @@ using std::uint32_t;
 extern "C" {
 	struct FunctionTable {
 		uint32_t (*phRendererInterfaceVersion)(void);
-		uint32_t (*phInitRenderer)(sfzAllocator*, phConfig, phLogger);
+		uint32_t (*phInitRenderer)(sfzAllocator*, phConfig*, phLogger*);
 		uint32_t (*phDeinitRenderer)(void);
 	};
 }
@@ -152,7 +152,9 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 #endif
 
 	// Initialize renderer
-	uint32_t initSuccess = mFunctionTable->phInitRenderer(allocator->cAllocator(), GlobalConfig::cInstance(), getLogger());
+	phConfig tmpConfig = GlobalConfig::cInstance();
+	phLogger tmpLogger = getLogger();
+	uint32_t initSuccess = mFunctionTable->phInitRenderer(allocator->cAllocator(), &tmpConfig, &tmpLogger);
 	if (initSuccess == 0) {
 		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Renderer (%s) failed to initialize.",
 			moduleName);
