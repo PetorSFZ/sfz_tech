@@ -19,7 +19,12 @@
 
 #pragma once
 
+#ifdef __cplusplus
+#include <cstdint>
+using std::int32_t;
+#else
 #include <stdint.h>
+#endif
 
 // C interface
 #ifdef __cplusplus

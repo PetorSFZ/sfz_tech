@@ -19,7 +19,14 @@
 
 #pragma once
 
+#ifdef __cplusplus
+#include <cstdint>
+using std::uint32_t;
+#else
 #include <stdint.h>
+#endif
+
+#include <sfz/memory/CAllocator.h>
 
 #include "ConfigInterface.h"
 #include "LoggingInterface.h"
@@ -38,7 +45,7 @@ extern "C" {
 #define DLL_EXPORT __declspec(dllexport)
 #endif
 
-// Interface
+// Init functions
 // ------------------------------------------------------------------------------------------------
 
 /// Returns the version of the renderer interface used by the .dll. Is used to check if a .dll has
@@ -55,7 +62,7 @@ DLL_EXPORT uint32_t phRendererInterfaceVersion(void);
 /// \param logger the phLogger used to print debug information
 /// \return 0 if renderer is NOT initialized, i.e. if something went very wrong. If the renderer
 ///           has been previously initialized this value will still be a non-zero value.
-DLL_EXPORT uint32_t phInitRenderer(void* allocator, phConfig config, phLogger logger);
+DLL_EXPORT uint32_t phInitRenderer(sfzAllocator* allocator, phConfig config, phLogger logger);
 
 /// Deinitializes this renderer. This function should by design be completely safe to call multiple
 /// times in a row, including before the renderer has been initialized at all. Should also be safe
