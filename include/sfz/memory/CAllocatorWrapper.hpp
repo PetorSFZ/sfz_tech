@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include "sfz/Assert.hpp"
 #include "sfz/memory/Allocator.hpp"
 #include "sfz/memory/CAllocator.h"
 
@@ -39,40 +40,47 @@ public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	CAllocatorWrapper() = delete;
 	CAllocatorWrapper(const CAllocatorWrapper&) = delete;
 	CAllocatorWrapper& operator= (const CAllocatorWrapper&) = delete;
 	CAllocatorWrapper(CAllocatorWrapper&&) = delete;
 	CAllocatorWrapper& operator= (CAllocatorWrapper&&) = delete;
 
-	CAllocatorWrapper(sfzAllocator* cAlloc) noexcept : cAlloc(cAlloc) {}
+	CAllocatorWrapper() noexcept = default;
 	~CAllocatorWrapper() noexcept override final;
+
+	void setCAllocator(sfzAllocator* cAlloc) noexcept
+	{
+		if (mCAlloc != nullptr) {
+			sfz_assert_release(false);
+		}
+		mCAlloc = cAlloc;
+	}
 
 	// Overriden Allocator methods
 	// --------------------------------------------------------------------------------------------
 
 	void* allocate(uint64_t size, uint64_t alignment, const char* name) noexcept override final
 	{
-		return SFZ_C_ALLOCATE(cAlloc, size, alignment, name);
+		return SFZ_C_ALLOCATE(mCAlloc, size, alignment, name);
 	}
 	void deallocate(void* pointer) noexcept override final
 	{
-		return SFZ_C_DEALLOCATE(cAlloc, pointer);
+		return SFZ_C_DEALLOCATE(mCAlloc, pointer);
 	}
 	const char* getName() const noexcept override final
 	{
-		return SFZ_C_GET_NAME(cAlloc);
+		return SFZ_C_GET_NAME(mCAlloc);
 	}
 	sfzAllocator* cAllocator() noexcept override final
 	{
-		return cAlloc;
+		return mCAlloc;
 	}
 
 private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	sfzAllocator* cAlloc;
+	sfzAllocator* mCAlloc = nullptr;
 };
 
 } // namespace sfz
