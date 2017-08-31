@@ -41,6 +41,7 @@ struct DebugAllocatorImpl final {
 	uint32_t alignmentIntegrityFactor;
 	std::unordered_map<void*, DebugAllocationInfo> allocations;
 	std::unordered_map<void*, DebugAllocationInfo> history;
+	sfzAllocator cAlloc = {};
 };
 
 // DebugAllocator: Constructors & destructors
@@ -51,6 +52,17 @@ DebugAllocator::DebugAllocator(const char* name, uint32_t alignmentIntegrityFact
 	mImpl = new (std::nothrow) DebugAllocatorImpl();
 	std::strncpy(mImpl->allocatorName, name, sizeof(mImpl->allocatorName));
 	mImpl->alignmentIntegrityFactor = alignmentIntegrityFactor * 2;
+	
+	// Set up C wrapper
+	mImpl->cAlloc.implData = this;
+	mImpl->cAlloc.allocate = [](void* implData, uint64_t size, uint64_t alignment, const char* name) {
+		DebugAllocator* allocator = static_cast<DebugAllocator*>(implData);
+		return allocator->allocate(size, alignment, name);
+	};
+	mImpl->cAlloc.deallocate = [](void* implData, void* pointer) {
+		DebugAllocator* allocator = static_cast<DebugAllocator*>(implData);
+		return allocator->deallocate(pointer);
+	};
 }
 
 DebugAllocator::~DebugAllocator() noexcept
@@ -151,6 +163,11 @@ void DebugAllocator::deallocate(void* pointer) noexcept
 const char* DebugAllocator::getName() const noexcept
 {
 	return mImpl->allocatorName;
+}
+
+sfzAllocator* DebugAllocator::cAllocator() noexcept
+{
+	return &mImpl->cAlloc;
 }
 
 // DebugAllocator: Methods

@@ -79,6 +79,7 @@ public:
 	void* allocate(uint64_t size, uint64_t alignment, const char* name) noexcept override final;
 	void deallocate(void* pointer) noexcept override final;
 	const char* getName() const noexcept override final;
+	sfzAllocator* cAllocator() noexcept override final;
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
