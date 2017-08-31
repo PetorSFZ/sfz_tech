@@ -38,11 +38,13 @@ extern "C" {
 typedef struct {
 	void* (*allocate)(void* implData, uint64_t size, uint64_t alignment, const char* name);
 	void (*deallocate)(void* implData, void* pointer);
+	const char* (*getName)(void* implData);
 	void* implData;
 } sfzAllocator;
 
 #define SFZ_C_ALLOCATE(allocator, size, alignment, name) (allocator)->allocate((allocator)->implData, (size), (alignment), (name))
 #define SFZ_C_DEALLOCATE(allocator, pointer) (allocator)->deallocate((allocator)->implData, (pointer))
+#define SFZ_C_GET_NAME(allocator) (allocator)->getName((allocator)->implData);
 
 // End C interface
 #ifdef __cplusplus

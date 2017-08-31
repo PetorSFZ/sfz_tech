@@ -175,6 +175,7 @@ set(SFZ_CORE_INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/Memory.hpp
 	${INCLUDE_DIR}/sfz/memory/Allocator.hpp
 	${INCLUDE_DIR}/sfz/memory/CAllocator.h
+	${INCLUDE_DIR}/sfz/memory/CAllocatorWrapper.hpp
 	${INCLUDE_DIR}/sfz/memory/DebugAllocator.hpp
 	${INCLUDE_DIR}/sfz/memory/MemoryUtils.hpp
 	${INCLUDE_DIR}/sfz/memory/New.hpp

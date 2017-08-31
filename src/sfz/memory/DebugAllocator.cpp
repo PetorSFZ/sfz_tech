@@ -63,6 +63,10 @@ DebugAllocator::DebugAllocator(const char* name, uint32_t alignmentIntegrityFact
 		DebugAllocator* allocator = static_cast<DebugAllocator*>(implData);
 		return allocator->deallocate(pointer);
 	};
+	mImpl->cAlloc.getName = [](void* implData) {
+		DebugAllocator* allocator = static_cast<DebugAllocator*>(implData);
+		return allocator->getName();
+	};
 }
 
 DebugAllocator::~DebugAllocator() noexcept

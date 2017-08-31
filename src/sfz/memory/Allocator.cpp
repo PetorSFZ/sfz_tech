@@ -49,6 +49,10 @@ public:
 			StandardAllocator* allocator = static_cast<StandardAllocator*>(implData);
 			return allocator->deallocate(pointer);
 		};
+		cAlloc.getName = [](void* implData) {
+			StandardAllocator* allocator = static_cast<StandardAllocator*>(implData);
+			return allocator->getName();
+		};
 	}
 
 	void* allocate(uint64_t size, uint64_t alignment, const char*) noexcept override final
