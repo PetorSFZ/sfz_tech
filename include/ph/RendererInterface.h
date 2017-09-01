@@ -28,6 +28,9 @@ using std::uint32_t;
 
 #include <sfz/memory/CAllocator.h>
 
+#include "ph/rendering/CameraData.h"
+#include "ph/rendering/RenderEntity.h"
+#include "ph/rendering/SphereLight.h"
 #include "ConfigInterface.h"
 #include "LoggingInterface.h"
 
@@ -58,8 +61,8 @@ DLL_EXPORT uint32_t phRendererInterfaceVersion(void);
 /// previously been deinitialized it should be initialized to the same state as if it had not been
 /// initialized earlier.
 /// \param allocator the sfz::Allocator used to allocate all cpu memory used
-/// \param config the phConfig used for configuring the renderer
-/// \param logger the phLogger used to print debug information
+/// \param config the phConfig used for configuring the renderer. Temporary pointer, make a copy.
+/// \param logger the phLogger used to print debug information. Temporary pointer, make a copy.
 /// \return 0 if renderer is NOT initialized, i.e. if something went very wrong. If the renderer
 ///           has been previously initialized this value will still be a non-zero value.
 DLL_EXPORT uint32_t phInitRenderer(sfzAllocator* allocator, phConfig* config, phLogger* logger);
@@ -68,6 +71,22 @@ DLL_EXPORT uint32_t phInitRenderer(sfzAllocator* allocator, phConfig* config, ph
 /// times in a row, including before the renderer has been initialized at all. Should also be safe
 /// to call if renderer failed to initialize.
 DLL_EXPORT void phDeinitRenderer();
+
+// Render commands
+// ------------------------------------------------------------------------------------------------
+
+/// Called first in a frame before issuing render commands.
+DLL_EXPORT void beginFrame(
+	const phCameraData* camera,
+	const phSphereLight* dynamicSphereLights,
+	uint32_t numDynamicSphereLights);
+
+/// Renders numEntities entities. Can be called multiple times before the beginFrame() and
+/// finishFrame() calls.
+DLL_EXPORT void render(const phRenderEntity* entities, uint32_t numEntities);
+
+/// Called last in a frame to finalize rendering to screen.
+DLL_EXPORT void finishFrame();
 
 
 // End C interface
