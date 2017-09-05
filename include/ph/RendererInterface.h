@@ -39,6 +39,9 @@ using std::uint32_t;
 extern "C" {
 #endif
 
+// Forward declare SDL_Window
+struct SDL_Window;
+
 // Macros
 // ------------------------------------------------------------------------------------------------
 
@@ -56,16 +59,27 @@ extern "C" {
 /// future interfaces.
 DLL_EXPORT uint32_t phRendererInterfaceVersion(void);
 
+/// Returns potential SDL_Window flags required by the renderer. Notably, an OpenGL renderer would
+/// return SDL_WINDOW_OPENGL and a Vulkan renderer SDL_WINDOW_VULKAN. Backends that don't require
+/// any special flags just return 0. This function is to be called before the renderer is
+/// initialized.
+DLL_EXPORT uint32_t phRequiredSDL2WindowFlags(void);
+
 /// Initializes this renderer. This function should by design be completely safe to call multiple
 /// times in a row. If the render is already initialized it should do nothing. If the renderer has
 /// previously been deinitialized it should be initialized to the same state as if it had not been
 /// initialized earlier.
+/// \param window the SDL_Window to render to
 /// \param allocator the sfz::Allocator used to allocate all cpu memory used
 /// \param config the phConfig used for configuring the renderer. Temporary pointer, make a copy.
 /// \param logger the phLogger used to print debug information. Temporary pointer, make a copy.
 /// \return 0 if renderer is NOT initialized, i.e. if something went very wrong. If the renderer
 ///           has been previously initialized this value will still be a non-zero value.
-DLL_EXPORT uint32_t phInitRenderer(sfzAllocator* allocator, phConfig* config, phLogger* logger);
+DLL_EXPORT uint32_t phInitRenderer(
+	SDL_Window* window,
+	sfzAllocator* allocator,
+	phConfig* config,
+	phLogger* logger);
 
 /// Deinitializes this renderer. This function should by design be completely safe to call multiple
 /// times in a row, including before the renderer has been initialized at all. Should also be safe
@@ -76,17 +90,22 @@ DLL_EXPORT void phDeinitRenderer();
 // ------------------------------------------------------------------------------------------------
 
 /// Called first in a frame before issuing render commands.
-DLL_EXPORT void beginFrame(
+/// \param camera the camera to render from. Temporary pointer, make a copy.
+/// \param dynamicSphereLights pointer to array of phSphereLights
+/// \param numDynamicSphereLights number of elements in dynamicSphereLights array
+DLL_EXPORT void phBeginFrame(
 	const phCameraData* camera,
 	const phSphereLight* dynamicSphereLights,
 	uint32_t numDynamicSphereLights);
 
 /// Renders numEntities entities. Can be called multiple times before the beginFrame() and
 /// finishFrame() calls.
-DLL_EXPORT void render(const phRenderEntity* entities, uint32_t numEntities);
+/// \param entities pointer to array of phRenderEntities
+/// \param numEntities number of elements in entities array
+DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities);
 
 /// Called last in a frame to finalize rendering to screen.
-DLL_EXPORT void finishFrame();
+DLL_EXPORT void phFinishFrame(void);
 
 
 // End C interface
