@@ -102,9 +102,25 @@ int mainImpl(int, char*[], InitOptions&& options)
 		return EXIT_FAILURE;
 	}
 
-	// Initializing renderer
+	// Load Renderer library (DLL on Windows)
 	UniquePtr<Renderer> renderer = sfz::makeUniqueDefault<Renderer>();
 	renderer->load(options.rendererName, sfz::getDefaultAllocator());
+
+	// Create SDL_Window
+	uint32_t windowFlags = renderer->requiredSDL2WindowFlags() | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+	const int width = 512; // TODO: Arbitrary value not taken from config
+	const int height = 512;
+	SDL_Window* window = SDL_CreateWindow(options.appName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+		width, height, windowFlags);
+	if (window == NULL) {
+		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "SDL_CreateWindow() failed: %s", SDL_GetError());
+		renderer.destroy();
+		SDL_Quit();
+		return EXIT_FAILURE;
+	}
+
+	// Initializing renderer
+	renderer->initRenderer(window);
 
 	// Start game loop
 	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Starting game loop");

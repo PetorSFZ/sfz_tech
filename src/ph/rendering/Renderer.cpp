@@ -30,6 +30,8 @@
 #undef far
 #endif
 
+#include <SDL.h>
+
 #include <sfz/Assert.hpp>
 #include <sfz/memory/New.hpp>
 #include <sfz/strings/StackString.hpp>
@@ -48,9 +50,16 @@ using std::uint32_t;
 
 extern "C" {
 	struct FunctionTable {
+		// Init functions
 		uint32_t (*phRendererInterfaceVersion)(void);
-		uint32_t (*phInitRenderer)(sfzAllocator*, phConfig*, phLogger*);
+		uint32_t (*phRequiredSDL2WindowFlags)(void);
+		uint32_t (*phInitRenderer)(SDL_Window*, sfzAllocator*, phConfig*, phLogger*);
 		uint32_t (*phDeinitRenderer)(void);
+
+		// Render commands
+		void (*phBeginFrame)(const phCameraData*, const phSphereLight*, uint32_t);
+		void (*phRender)(const phRenderEntity*, uint32_t);
+		void (*phFinishFrame)(void);
 	};
 }
 
@@ -146,20 +155,18 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 			moduleName, mFunctionTable->phRendererInterfaceVersion(), INTERFACE_VERSION);
 	}
 
-	// Load rest of functions
+	// Init functions
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRequiredSDL2WindowFlags);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phInitRenderer);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phDeinitRenderer);
+
+	// Render commands
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phBeginFrame);
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRender);
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phFinishFrame);
 #endif
 
-	// Initialize renderer
-	phConfig tmpConfig = GlobalConfig::cInstance();
-	phLogger tmpLogger = getLogger();
-	uint32_t initSuccess = mFunctionTable->phInitRenderer(allocator->cAllocator(), &tmpConfig, &tmpLogger);
-	if (initSuccess == 0) {
-		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Renderer (%s) failed to initialize.",
-			moduleName);
-		this->destroy();
-	}
+	
 }
 
 void Renderer::swap(Renderer& other) noexcept
@@ -174,7 +181,7 @@ void Renderer::destroy() noexcept
 	if (mModuleHandle != nullptr) {
 
 		// Deinit renderer
-		mFunctionTable->phDeinitRenderer();
+		this->deinitRenderer();
 
 		// Unload DLL on Windows
 #ifdef _WIN32
@@ -193,6 +200,7 @@ void Renderer::destroy() noexcept
 		mModuleHandle = nullptr;
 		mAllocator = nullptr;
 		mFunctionTable = nullptr;
+		mInited = false;
 	}
 }
 
@@ -204,6 +212,63 @@ uint32_t Renderer::rendererInterfaceVersion() const noexcept
 	sfz_assert_debug(mFunctionTable != nullptr);
 	sfz_assert_debug(mFunctionTable->phRendererInterfaceVersion != nullptr);
 	return mFunctionTable->phRendererInterfaceVersion();
+}
+
+uint32_t Renderer::requiredSDL2WindowFlags() const noexcept
+{
+	sfz_assert_debug(mFunctionTable != nullptr);
+	sfz_assert_debug(mFunctionTable->phRequiredSDL2WindowFlags != nullptr);
+	return mFunctionTable->phRequiredSDL2WindowFlags();
+}
+
+bool Renderer::initRenderer(SDL_Window* window) noexcept
+{
+	if (mInited) {
+		PH_LOG(LOG_LEVEL_WARNING, "PhantasyEngine", "Trying to init renderer that is already inited");
+		return true;
+	}
+
+	phConfig tmpConfig = GlobalConfig::cInstance();
+	phLogger tmpLogger = getLogger();
+	uint32_t initSuccess = mFunctionTable->phInitRenderer(window, mAllocator->cAllocator(), &tmpConfig, &tmpLogger);
+	if (initSuccess == 0) {
+		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Renderer failed to initialize.");
+		return false;
+	}
+
+	mInited = true;
+	return true;
+}
+
+void Renderer::deinitRenderer() noexcept
+{
+	sfz_assert_debug(mFunctionTable != nullptr);
+	sfz_assert_debug(mFunctionTable->phDeinitRenderer != nullptr);
+	if (mInited) {
+		mFunctionTable->phDeinitRenderer();
+	}
+	mInited = false;
+}
+
+// Renderer: Render commands
+// ------------------------------------------------------------------------------------------------
+
+void Renderer::beginFrame(
+	const phCameraData& camera,
+	const phSphereLight* dynamicSphereLights,
+	uint32_t numDynamicSphereLights) noexcept
+{
+	mFunctionTable->phBeginFrame(&camera, dynamicSphereLights, numDynamicSphereLights);
+}
+
+void Renderer::render(const phRenderEntity* entities, uint32_t numEntities) noexcept
+{
+	mFunctionTable->phRender(entities, numEntities);
+}
+
+void Renderer::finishFrame() noexcept
+{
+	mFunctionTable->phFinishFrame();
 }
 
 } // namespace ph

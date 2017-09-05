@@ -23,6 +23,12 @@
 
 #include <sfz/memory/Allocator.hpp>
 
+#include <ph/rendering/CameraData.h>
+#include <ph/rendering/RenderEntity.h>
+#include <ph/rendering/SphereLight.h>
+
+extern "C" struct SDL_Window; // Forward declare SDL_Window
+
 namespace ph {
 
 using sfz::Allocator;
@@ -57,7 +63,7 @@ public:
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	/// Loads this renderer
+	/// Loads the Renderer from DLL or such. Still needs to be initalized using initRenderer().
 	/// \param moduleName the name of the DLL (on Windows)
 	/// \param allocator the sfz Allocator used to allocate memory on the CPU for this renderer
 	void load(const char* moduleName, Allocator* allocator) noexcept;
@@ -68,18 +74,43 @@ public:
 	/// Destroys this renderer
 	void destroy() noexcept;
 
-	// Renderer functions
+	// Renderer: Init functions
 	// --------------------------------------------------------------------------------------------
 
 	/// See phRendererInterfaceVersion()
 	uint32_t rendererInterfaceVersion() const noexcept;
 
+	/// See phRequiredSDL2WindowFlags()
+	uint32_t requiredSDL2WindowFlags() const noexcept;
+
+	/// See phInitRenderer()
+	bool initRenderer(SDL_Window* window) noexcept;
+
+	/// See phDeinitRenderer(), is automatically called in destroy() or destructor. No need to call
+	/// manually.
+	void deinitRenderer() noexcept;
+
+	// Renderer: Render commands
+	// --------------------------------------------------------------------------------------------
+
+	/// See phBeginFrame()
+	void beginFrame(
+		const phCameraData& camera,
+		const phSphereLight* dynamicSphereLights,
+		uint32_t numDynamicSphereLights) noexcept;
+
+	/// See phRender()
+	void render(const phRenderEntity* entities, uint32_t numEntities) noexcept;
+
+	/// See phFinishFrame()
+	void finishFrame() noexcept;
 
 
 private:
 	void* mModuleHandle = nullptr; // Holds a HMODULE on Windows
 	Allocator* mAllocator = nullptr;
 	struct FunctionTable* mFunctionTable = nullptr;
+	bool mInited = false;
 };
 
 } // namespace ph
