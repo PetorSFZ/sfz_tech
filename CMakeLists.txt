@@ -78,8 +78,8 @@ else()
 	download_project(
 		PROJ                sdl2
 		PREFIX              externals
-		GIT_REPOSITORY      https://github.com/PhantasyEngine/phDependency_SDL2.git
-		GIT_TAG             22afd827fcedc880e4597a2df8fc8180c8349d8f
+		GIT_REPOSITORY      https://github.com/PhantasyEngine/Dependency-SDL2.git
+		GIT_TAG             9d205f6bd7e79b4489a221873668e110d0bc9867
 		UPDATE_DISCONNECTED 1
 		QUIET
 	)
