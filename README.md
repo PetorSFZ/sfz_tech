@@ -3,16 +3,34 @@
 sfzCore is a base library for SkipIfZero graphical applications, replacing the now deprecated SkipIfZero Common library. It aims to provide high quality common components, while still keeping code bloat to a minimum. Among other things sfzCore contains:
 
 * Replacement for parts of STL (allocators, containers, strings, smartpointers, etc) that aim to be simpler, faster and more low-level
+
 * Instance based allocators used for all memory allocation
+
 * Matrix, Vector and Quaternion primitives (Designed to also be usable in CUDA device code)
+
 * Math functions useful for graphics
+
 * Geometric primitives (AABB, OBB, Spheres, etc) with some intersection tests
+
 * A simple game loop implementation
+
 * Some wrappers around SDL to make it more intuitive to handle user input
+
 * An ini parser
+
 * Cross-platform IO functions
+
 * (Optionally) OpenGL wrappers, utilities and shaders
+
 * (Optionally) Header-only CUDA wrappers and utilities
+
+## TODO
+
+This readme is slightly outdated at this point. sfzCore is in the process of making some structural changes. The following needs to be updated in the readme:
+
+* Dependencies using DownloadProject
+* Compiler flags
+* DownloadProject for sfzCore
 
 ## Building
 

@@ -9,43 +9,60 @@ if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
 endif()
 
-# Compiler flags
-if(MSVC)
-	# MSVC flags
-	# /W4 = Warning level 4 (/Wall is too picky and has annoying warnings in standard headers)
-	# /wd4201 = Disable warning 4201 (nonstandard extension used : nameless struct/union)
-	# /Zi = Produce .pdb debug information. Does not affect optimizations, but does imply /debug.
-	# /arch:AVX = Enable (require) Intel AVX instructions for code generation
-	# /D_CRT_SECURE_NO_WARNINGS = Removes annyoing warning when using c standard library
-	set(CMAKE_CXX_FLAGS "/W4 /wd4201 /Zi /EHsc /arch:AVX /D_CRT_SECURE_NO_WARNINGS")
-	# /O2 = Optimize code for fastest speed
-	# /fp:fast = "optimize floating-point code for speed at the expense of accuracy and correctness"
-	# /DSFZ_NO_DEBUG = defines the "SFZ_NO_DEBUG" macro, which disables sfz_assert_debug()
-	set(CMAKE_CXX_FLAGS_RELEASE "/O2 /fp:fast /DSFZ_NO_DEBUG")
-	# /DEBUG = "creates debugging information for the .exe file or DLL"
-	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/O2 /fp:fast /DEBUG /DSFZ_NO_DEBUG")
-	# /Od = "disables optimization, speeding compilation and simplifying debugging"
-	set(CMAKE_CXX_FLAGS_DEBUG "/Od /DEBUG")
+# Check if sfzCore is built individually or part of a project
+get_directory_property(hasParent PARENT_DIRECTORY)
 
-elseif(EMSCRIPTEN)
-	# Emscripten flags
-	# -Wall -Wextra = Enable most warnings
-	# -std=c++14 = Enable C++14 support
-	# -fno-strict-aliasing = Disable strict aliasing optimizations
-	# -s USE_SDL=2 = Use SDL2 library
-	# -s TOTAL_MEMORY=134217728 = 128MiB heap, TODO: should probably not hard-code this
-	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -fno-strict-aliasing -s USE_SDL=2 -s TOTAL_MEMORY=134217728 -DSFZ_EMSCRIPTEN")
-	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
-	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
-	set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+# Set compiler flags only if building sfzCore individually
+if(NOT hasParent)
+	if(MSVC)
+		# MSVC flags
+		# /W4 = Warning level 4 (/Wall is too picky and has annoying warnings in standard headers)
+		# /wd4201 = Disable warning 4201 (nonstandard extension used : nameless struct/union)
+		# /Zi = Produce .pdb debug information. Does not affect optimizations, but does imply /debug.
+		# /arch:AVX = Enable (require) Intel AVX instructions for code generation
+		# /D_CRT_SECURE_NO_WARNINGS = Removes annyoing warning when using c standard library
+		set(CMAKE_CXX_FLAGS "/W4 /wd4201 /Zi /EHsc /arch:AVX /D_CRT_SECURE_NO_WARNINGS")
+		# /O2 = Optimize code for fastest speed
+		# /fp:fast = "optimize floating-point code for speed at the expense of accuracy and correctness"
+		# /DSFZ_NO_DEBUG = defines the "SFZ_NO_DEBUG" macro, which disables sfz_assert_debug()
+		set(CMAKE_CXX_FLAGS_RELEASE "/O2 /fp:fast /DSFZ_NO_DEBUG")
+		# /DEBUG = "creates debugging information for the .exe file or DLL"
+		set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/O2 /fp:fast /DEBUG /DSFZ_NO_DEBUG")
+		# /Od = "disables optimization, speeding compilation and simplifying debugging"
+		set(CMAKE_CXX_FLAGS_DEBUG "/Od /DEBUG")
 
-else()
-	# GCC / Clang flags
-	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -march=sandybridge -pthread -fno-strict-aliasing")
-	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
-	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
-	set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+	elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+		# macOS flags
+		# -Wall -Wextra = Enable most warnings
+		# -std=c++14 = Enable C++14 support
+		# -march=sandybridge = Require at least a Sandy Bridge Intel CPU to run code
+		# -fno-strict-aliasing = Disable strict aliasing optimizations
+		set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -march=sandybridge -fno-strict-aliasing")
+		set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
+		set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
+		set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 
+	elseif(EMSCRIPTEN)
+		# Emscripten flags
+		# -Wall -Wextra = Enable most warnings
+		# -std=c++14 = Enable C++14 support
+		# -fno-strict-aliasing = Disable strict aliasing optimizations
+		# -s USE_SDL=2 = Use SDL2 library
+		# -s TOTAL_MEMORY=134217728 = 128MiB heap, TODO: should probably not hard-code this
+		set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -fno-strict-aliasing -s USE_SDL=2 -s TOTAL_MEMORY=134217728 -DSFZ_EMSCRIPTEN")
+		set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
+		set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
+		set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+
+	else()
+		# GCC / Clang flags
+		
+		set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -march=sandybridge -pthread -fno-strict-aliasing")
+		set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
+		set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
+		set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+
+	endif()
 endif()
 
 # Directories
@@ -55,9 +72,6 @@ set(INCLUDE_CUDA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include_cuda)
 set(INCLUDE_GL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include_gl)
 set(TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
-
-# Check if sfzCore is built individually or part of a project
-get_directory_property(hasParent PARENT_DIRECTORY)
 
 # Dependencies
 # ------------------------------------------------------------------------------------------------
