@@ -45,10 +45,10 @@ struct SDL_Window;
 // Macros
 // ------------------------------------------------------------------------------------------------
 
-#ifdef SFZ_EMSCRIPTEN
-#define DLL_EXPORT
-#else
+#ifdef _WIN32
 #define DLL_EXPORT __declspec(dllexport)
+#else
+#define DLL_EXPORT
 #endif
 
 // Init functions
