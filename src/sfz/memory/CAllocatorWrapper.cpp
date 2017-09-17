@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -16,22 +16,47 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#pragma once
+#include "sfz/memory/CAllocatorWrapper.hpp"
 
-#include <cstdint>
 namespace sfz {
 
-using std::uintptr_t;
-
-// Memory utils
+// CAllocatorWrapper: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-/// Checks whether a pointer is aligned to a given byte aligment
-/// \param pointer the pointer to test
-/// \param alignment the byte aligment
-inline bool isAligned(const void* pointer, size_t alignment) noexcept
+CAllocatorWrapper::~CAllocatorWrapper() noexcept
 {
-	return ((uintptr_t)pointer % alignment) == 0;
+	// Do nothing
+}
+	
+void CAllocatorWrapper::setCAllocator(sfzAllocator* cAlloc) noexcept
+{
+	if (mCAlloc != nullptr) {
+		sfz_assert_release(false);
+	}
+	mCAlloc = cAlloc;
+}
+	
+// CAllocatorWrapper: Overriden Allocator methods
+// ------------------------------------------------------------------------------------------------
+
+void* CAllocatorWrapper::allocate(uint64_t size, uint64_t alignment, const char* name) noexcept
+{
+	return SFZ_C_ALLOCATE(mCAlloc, size, alignment, name);
 }
 
+void CAllocatorWrapper::deallocate(void* pointer) noexcept
+{
+	return SFZ_C_DEALLOCATE(mCAlloc, pointer);
+}
+
+const char* CAllocatorWrapper::getName() const noexcept
+{
+	return SFZ_C_GET_NAME(mCAlloc);
+}
+
+sfzAllocator* CAllocatorWrapper::cAllocator() noexcept
+{
+	return mCAlloc;
+}
+	
 } // namespace sfz

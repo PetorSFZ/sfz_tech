@@ -85,7 +85,7 @@ endif()
 # ${SDL2_FOUND}, ${SDL2_INCLUDE_DIRS}, ${SDL2_LIBRARIES} and ${SDL2_RUNTIME_FILES}
 if(hasParent)
 	if (NOT ${SDL2_FOUND})
-		message(FATAL_ERROR "sfzCore requires SDL2. Add phDependency_SDL2.")
+		message(FATAL_ERROR "sfzCore requires SDL2. Add Dependency-SDL2.")
 	endif()
 else()
 	message("Acquiring SDL2")
@@ -228,6 +228,7 @@ set(SFZ_CORE_SOURCE_FILES
 	${SOURCE_DIR}/sfz/math/ProjectionMatrices.cpp
 	
 	${SOURCE_DIR}/sfz/memory/Allocator.cpp
+	${SOURCE_DIR}/sfz/memory/CAllocatorWrapper.cpp
 	${SOURCE_DIR}/sfz/memory/DebugAllocator.cpp
 	
 	${SOURCE_DIR}/sfz/screens/GameLoop.cpp

@@ -48,33 +48,15 @@ public:
 	CAllocatorWrapper() noexcept = default;
 	~CAllocatorWrapper() noexcept override final;
 
-	void setCAllocator(sfzAllocator* cAlloc) noexcept
-	{
-		if (mCAlloc != nullptr) {
-			sfz_assert_release(false);
-		}
-		mCAlloc = cAlloc;
-	}
+	void setCAllocator(sfzAllocator* cAlloc) noexcept;
 
 	// Overriden Allocator methods
 	// --------------------------------------------------------------------------------------------
 
-	void* allocate(uint64_t size, uint64_t alignment, const char* name) noexcept override final
-	{
-		return SFZ_C_ALLOCATE(mCAlloc, size, alignment, name);
-	}
-	void deallocate(void* pointer) noexcept override final
-	{
-		return SFZ_C_DEALLOCATE(mCAlloc, pointer);
-	}
-	const char* getName() const noexcept override final
-	{
-		return SFZ_C_GET_NAME(mCAlloc);
-	}
-	sfzAllocator* cAllocator() noexcept override final
-	{
-		return mCAlloc;
-	}
+	void* allocate(uint64_t size, uint64_t alignment, const char* name) noexcept override final;
+	void deallocate(void* pointer) noexcept override final;
+	const char* getName() const noexcept override final;
+	sfzAllocator* cAllocator() noexcept override final;
 
 private:
 	// Private members

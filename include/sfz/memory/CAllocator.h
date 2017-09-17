@@ -44,7 +44,7 @@ typedef struct {
 
 #define SFZ_C_ALLOCATE(allocator, size, alignment, name) (allocator)->allocate((allocator)->implData, (size), (alignment), (name))
 #define SFZ_C_DEALLOCATE(allocator, pointer) (allocator)->deallocate((allocator)->implData, (pointer))
-#define SFZ_C_GET_NAME(allocator) (allocator)->getName((allocator)->implData);
+#define SFZ_C_GET_NAME(allocator) (allocator)->getName((allocator)->implData)
 
 // End C interface
 #ifdef __cplusplus
