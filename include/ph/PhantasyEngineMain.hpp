@@ -54,7 +54,7 @@ struct InitOptions final {
 
 	/// The name of the renderer. This is used to choose which DLL to load on Windows. I.e. if the
 	/// name is "deferredGL" the engine will attempt to load a DLL by the name of "deferredGL.dll".
-	char* rendererName = "NO_RENDERER_NAME";
+	const char* rendererName = "NO_RENDERER_NAME";
 };
 
 // Phantasy Engine main macro

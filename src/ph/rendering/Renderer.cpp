@@ -39,6 +39,10 @@
 #include "ph/config/GlobalConfig.hpp"
 #include "ph/utils/Logging.hpp"
 
+#if defined(PH_STATIC_LINK_RENDERER)
+#include "ph/RendererInterface.h"
+#endif
+
 namespace ph {
 
 using sfz::StackString;
@@ -66,7 +70,21 @@ extern "C" {
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-#ifdef _WIN32
+#if defined(PH_STATIC_LINK_RENDERER)
+
+#define CALL_RENDERER_FUNCTION(table, function, ...) \
+	(function(__VA_ARGS__))
+
+#elif defined(_WIN32)
+
+#define CALL_RENDERER_FUNCTION(table, function, ...) \
+	((table)->function(__VA_ARGS__))
+	
+#else
+#error "Not implemented"
+#endif
+	
+#if defined(_WIN32)
 static StackString192 getWindowsErrorMessage() noexcept
 {
 	StackString192 str;
@@ -121,8 +139,20 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 {
 	sfz_assert_debug(moduleName != nullptr);
 	sfz_assert_debug(allocator != nullptr);
-	if (mModuleHandle != nullptr) this->destroy();
+	this->destroy();
 
+	mAllocator = allocator;
+	
+	// If we statically link the renderer we only really need to check the interface version
+#if defined(PH_STATIC_LINK_RENDERER)
+
+	if (INTERFACE_VERSION != phRendererInterfaceVersion()) {
+		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Statically linked renderer has wrong interface version (%u), expected (%u).",
+			   mFunctionTable->phRendererInterfaceVersion(), INTERFACE_VERSION);
+	}
+
+	// If dynamically loading renderer we do this other stuff
+#else	
 	// Load DLL on Windows
 #ifdef _WIN32
 	// Load DLL
@@ -139,34 +169,30 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 	}
 #endif
 
-	// Set allocator
-	mAllocator = allocator;
-
 	// Create function table
 	mFunctionTable = sfz::sfzNew<FunctionTable>(allocator);
 	std::memset(mFunctionTable, 0, sizeof(FunctionTable));
-
-	// Load functions from DLL on Windows
+	
 #ifdef _WIN32
 	// Start of with loading interface version function and checking that the correct interface is used
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRendererInterfaceVersion);
 	if (INTERFACE_VERSION != mFunctionTable->phRendererInterfaceVersion()) {
 		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Renderer DLL (%s.dll) has wrong interface version (%u), expected (%u).",
-			moduleName, mFunctionTable->phRendererInterfaceVersion(), INTERFACE_VERSION);
+			   moduleName, mFunctionTable->phRendererInterfaceVersion(), INTERFACE_VERSION);
 	}
-
+	
 	// Init functions
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRequiredSDL2WindowFlags);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phInitRenderer);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phDeinitRenderer);
-
+	
 	// Render commands
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phBeginFrame);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRender);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phFinishFrame);
 #endif
 
-	
+#endif
 }
 
 void Renderer::swap(Renderer& other) noexcept
@@ -209,16 +235,20 @@ void Renderer::destroy() noexcept
 
 uint32_t Renderer::rendererInterfaceVersion() const noexcept
 {
+#if !defined(PH_STATIC_LINK_RENDERER)
 	sfz_assert_debug(mFunctionTable != nullptr);
 	sfz_assert_debug(mFunctionTable->phRendererInterfaceVersion != nullptr);
-	return mFunctionTable->phRendererInterfaceVersion();
+#endif
+	return CALL_RENDERER_FUNCTION(mFunctionTable, phRendererInterfaceVersion);
 }
 
 uint32_t Renderer::requiredSDL2WindowFlags() const noexcept
 {
+#if !defined(PH_STATIC_LINK_RENDERER)
 	sfz_assert_debug(mFunctionTable != nullptr);
 	sfz_assert_debug(mFunctionTable->phRequiredSDL2WindowFlags != nullptr);
-	return mFunctionTable->phRequiredSDL2WindowFlags();
+#endif
+	return CALL_RENDERER_FUNCTION(mFunctionTable, phRequiredSDL2WindowFlags);
 }
 
 bool Renderer::initRenderer(SDL_Window* window) noexcept
@@ -230,7 +260,7 @@ bool Renderer::initRenderer(SDL_Window* window) noexcept
 
 	phConfig tmpConfig = GlobalConfig::cInstance();
 	phLogger tmpLogger = getLogger();
-	uint32_t initSuccess = mFunctionTable->phInitRenderer(window, mAllocator->cAllocator(), &tmpConfig, &tmpLogger);
+	uint32_t initSuccess = CALL_RENDERER_FUNCTION(mFunctionTable, phInitRenderer, window, mAllocator->cAllocator(), &tmpConfig, &tmpLogger);
 	if (initSuccess == 0) {
 		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Renderer failed to initialize.");
 		return false;
@@ -242,10 +272,12 @@ bool Renderer::initRenderer(SDL_Window* window) noexcept
 
 void Renderer::deinitRenderer() noexcept
 {
+#if !defined(PH_STATIC_LINK_RENDERER)
 	sfz_assert_debug(mFunctionTable != nullptr);
 	sfz_assert_debug(mFunctionTable->phDeinitRenderer != nullptr);
+#endif
 	if (mInited) {
-		mFunctionTable->phDeinitRenderer();
+		CALL_RENDERER_FUNCTION(mFunctionTable, phDeinitRenderer);
 	}
 	mInited = false;
 }
@@ -258,17 +290,17 @@ void Renderer::beginFrame(
 	const phSphereLight* dynamicSphereLights,
 	uint32_t numDynamicSphereLights) noexcept
 {
-	mFunctionTable->phBeginFrame(&camera, dynamicSphereLights, numDynamicSphereLights);
+	CALL_RENDERER_FUNCTION(mFunctionTable, phBeginFrame, &camera, dynamicSphereLights, numDynamicSphereLights);
 }
 
 void Renderer::render(const phRenderEntity* entities, uint32_t numEntities) noexcept
 {
-	mFunctionTable->phRender(entities, numEntities);
+	CALL_RENDERER_FUNCTION(mFunctionTable, phRender, entities, numEntities);
 }
 
 void Renderer::finishFrame() noexcept
 {
-	mFunctionTable->phFinishFrame();
+	CALL_RENDERER_FUNCTION(mFunctionTable, phFinishFrame);
 }
 
 } // namespace ph

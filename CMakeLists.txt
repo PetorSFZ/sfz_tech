@@ -20,58 +20,6 @@
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 project("PhantasyEngine")
 
-# Compiler flags and directories
-# ------------------------------------------------------------------------------------------------
-
-# Sets build type to release if no build type is specified in a single-configuration generator.
-if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
-	set(CMAKE_BUILD_TYPE Release)
-endif()
-
-# Compiler flags
-if(MSVC)
-	# Visual Studio flags
-	# /W4 = Warning level 4 (/Wall is too picky and has annoying warnings in standard headers)
-	# /wd4201 = Disable warning 4201 (nonstandard extension used : nameless struct/union)
-	# /Zi = Produce .pdb debug information. Does not affect optimizations, but does imply /debug.
-	# /EHsc = TODO: Add explanation
-	# /arch:AVX = Enable (require) Intel AVX instructions for code generation
-	# /D_CRT_SECURE_NO_WARNINGS = Removes annyoing warning when using c standard library
-	set(CMAKE_CXX_FLAGS "/W4 /wd4201 /Zi /EHsc /arch:AVX /D_CRT_SECURE_NO_WARNINGS")
-	# /O2 = Optimize code for fastest speed
-	# /fp:fast = "optimize floating-point code for speed at the expense of accuracy and correctness"
-	# /DSFZ_NO_DEBUG = defines the "SFZ_NO_DEBUG" macro, which disables sfz_assert_debug()
-	set(CMAKE_CXX_FLAGS_RELEASE "/O2 /fp:fast /DSFZ_NO_DEBUG")
-	# /DEBUG = "creates debugging information for the .exe file or DLL"
-	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/O2 /fp:fast /DEBUG /DSFZ_NO_DEBUG")
-	# /Od = "disables optimization, speeding compilation and simplifying debugging"
-	set(CMAKE_CXX_FLAGS_DEBUG "/Od /DEBUG")
-
-elseif(EMSCRIPTEN)
-	# Emscripten flags
-	# -Wall -Wextra = Enable most warnings
-	# -std=c++14 = Enable C++14 support
-	# -fno-strict-aliasing = Disable strict aliasing optimizations
-	# -s USE_SDL=2 = Use SDL2 library
-	# -s TOTAL_MEMORY=134217728 = 128MiB heap, TODO: should probably not hard-code this.
-	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -fno-strict-aliasing -s USE_SDL=2 -s TOTAL_MEMORY=134217728 -DSFZ_EMSCRIPTEN")
-	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
-	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
-	set(CMAKE_CXX_FLAGS_DEBUG "-O0")
-
-else()
-	# GCC / Clang flags
-	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -march=sandybridge -pthread -fno-strict-aliasing")
-	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
-	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
-	set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-
-endif()
-
-# Directories
-set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
-set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
-
 # Dependencies
 # ------------------------------------------------------------------------------------------------
 
@@ -89,6 +37,10 @@ endif()
 
 # PhantasyEngine
 # ------------------------------------------------------------------------------------------------
+
+# Directories
+set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set(PHANTASY_ENGINE_HEADER_FILES
 	${INCLUDE_DIR}/ph/PhantasyEngineMain.hpp

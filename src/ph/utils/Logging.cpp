@@ -56,9 +56,16 @@ static void logImpl(phLogLevel level, const char* tag, const char* format, ...) 
 	case LOG_LEVEL_INFO:
 	case LOG_LEVEL_WARNING:
 		std::vfprintf(stdout, actualFormat, args);
+		std::fflush(stdout);
 		break;
 	case LOG_LEVEL_ERROR:
-		std::vfprintf(stderr, actualFormat, args);
+#ifdef SFZ_EMSCRIPTEN
+	std::vfprintf(stdout, actualFormat, args);
+	std::fflush(stdout);
+#else
+	std::vfprintf(stderr, actualFormat, args);
+	std::fflush(stderr);
+#endif
 		break;
 	case LOG_LEVEL_END_TOKEN:
 	default:
