@@ -574,7 +574,7 @@ SFZ_CUDA_CALL mat44 transpose(const mat44& m) noexcept
 	tmp.setColumn(2, m.row2);
 	tmp.setColumn(3, m.row3);
 	return tmp;
-#elif SFZ_EMSCRIPTEN
+#elif __EMSCRIPTEN__
 	mat44 tmp;
 	tmp.setColumn(0, m.row0);
 	tmp.setColumn(1, m.row1);
@@ -841,7 +841,7 @@ SFZ_CUDA_CALL vec3 operator* (const mat34& lhs, const vec4& rhs) noexcept
 	res.y = dot(lhs.row1, rhs);
 	res.z = dot(lhs.row2, rhs);
 	return res;
-#elif SFZ_EMSCRIPTEN
+#elif __EMSCRIPTEN__
 	vec3 res;
 	res.x = dot(lhs.row0, rhs);
 	res.y = dot(lhs.row1, rhs);
@@ -892,7 +892,7 @@ SFZ_CUDA_CALL vec4 operator* (const mat44& lhs, const vec4& rhs) noexcept
 	res.z = dot(lhs.row2, rhs);
 	res.w = dot(lhs.row3, rhs);
 	return res;
-#elif SFZ_EMSCRIPTEN
+#elif __EMSCRIPTEN__
 	vec4 res;
 	res.x = dot(lhs.row0, rhs);
 	res.y = dot(lhs.row1, rhs);

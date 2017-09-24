@@ -18,7 +18,7 @@
 
 #pragma once
 
-#ifndef SFZ_EMSCRIPTEN
+#ifndef __EMSCRIPTEN__
 
 #include <immintrin.h> // Intel AVX intrinsics
 

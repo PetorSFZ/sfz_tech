@@ -108,7 +108,7 @@ SFZ_CUDA_CALL vec4 abs(vec4 val) noexcept
 	val.z = sfz::abs(val.z);
 	val.w = sfz::abs(val.w);
 	return val;
-#elif SFZ_EMSCRIPTEN
+#elif __EMSCRIPTEN__
 	val.x = sfz::abs(val.x);
 	val.y = sfz::abs(val.y);
 	val.z = sfz::abs(val.z);
@@ -147,7 +147,7 @@ SFZ_CUDA_CALL vec4i abs(vec4i val) noexcept
 	val.z = sfz::abs(val.z);
 	val.w = sfz::abs(val.w);
 	return val;
-#elif SFZ_EMSCRIPTEN
+#elif __EMSCRIPTEN__
 	val.x = sfz::abs(val.x);
 	val.y = sfz::abs(val.y);
 	val.z = sfz::abs(val.z);
@@ -216,7 +216,7 @@ SFZ_CUDA_CALL vec4 sgn(vec4 val) noexcept
 	val.z = sfz::sgn(val.z);
 	val.w = sfz::sgn(val.w);
 	return val;
-#elif SFZ_EMSCRIPTEN
+#elif __EMSCRIPTEN__
 	val.x = sfz::sgn(val.x);
 	val.y = sfz::sgn(val.y);
 	val.z = sfz::sgn(val.z);
@@ -306,7 +306,7 @@ SFZ_CUDA_CALL vec4 min(vec4 lhs, vec4 rhs) noexcept
 	tmp.z = sfz::min(lhs.z, rhs.z);
 	tmp.w = sfz::min(lhs.w, rhs.w);
 	return tmp;
-#elif SFZ_EMSCRIPTEN
+#elif __EMSCRIPTEN__
 	vec4 tmp;
 	tmp.x = sfz::min(lhs.x, rhs.x);
 	tmp.y = sfz::min(lhs.y, rhs.y);
@@ -352,7 +352,7 @@ SFZ_CUDA_CALL vec4 min(float lhs, vec4 rhs) noexcept
 	tmp.z = sfz::min(lhs, rhs.z);
 	tmp.w = sfz::min(lhs, rhs.w);
 	return tmp;
-#elif SFZ_EMSCRIPTEN
+#elif __EMSCRIPTEN__
 	vec4 tmp;
 	tmp.x = sfz::min(lhs, rhs.x);
 	tmp.y = sfz::min(lhs, rhs.y);
@@ -398,7 +398,7 @@ SFZ_CUDA_CALL vec4i min(vec4i lhs, vec4i rhs) noexcept
 	tmp.z = sfz::min(lhs.z, rhs.z);
 	tmp.w = sfz::min(lhs.w, rhs.w);
 	return tmp;
-#elif SFZ_EMSCRIPTEN
+#elif __EMSCRIPTEN__
 	vec4i tmp;
 	tmp.x = sfz::min(lhs.x, rhs.x);
 	tmp.y = sfz::min(lhs.y, rhs.y);
@@ -444,7 +444,7 @@ SFZ_CUDA_CALL vec4i min(int32_t lhs, vec4i rhs) noexcept
 	tmp.z = sfz::min(lhs, rhs.z);
 	tmp.w = sfz::min(lhs, rhs.w);
 	return tmp;
-#elif SFZ_EMSCRIPTEN
+#elif __EMSCRIPTEN__
 	vec4i tmp;
 	tmp.x = sfz::min(lhs, rhs.x);
 	tmp.y = sfz::min(lhs, rhs.y);
@@ -490,7 +490,7 @@ SFZ_CUDA_CALL vec4u min(vec4u lhs, vec4u rhs) noexcept
 	tmp.z = sfz::min(lhs.z, rhs.z);
 	tmp.w = sfz::min(lhs.w, rhs.w);
 	return tmp;
-#elif SFZ_EMSCRIPTEN
+#elif __EMSCRIPTEN__
 	vec4u tmp;
 	tmp.x = sfz::min(lhs.x, rhs.x);
 	tmp.y = sfz::min(lhs.y, rhs.y);
@@ -536,7 +536,7 @@ SFZ_CUDA_CALL vec4u min(uint32_t lhs, vec4u rhs) noexcept
 	tmp.z = sfz::min(lhs, rhs.z);
 	tmp.w = sfz::min(lhs, rhs.w);
 	return tmp;
-#elif SFZ_EMSCRIPTEN
+#elif __EMSCRIPTEN__
 	vec4u tmp;
 	tmp.x = sfz::min(lhs, rhs.x);
 	tmp.y = sfz::min(lhs, rhs.y);
@@ -600,7 +600,7 @@ SFZ_CUDA_CALL vec4 max(vec4 lhs, vec4 rhs) noexcept
 	tmp.z = sfz::max(lhs.z, rhs.z);
 	tmp.w = sfz::max(lhs.w, rhs.w);
 	return tmp;
-#elif SFZ_EMSCRIPTEN
+#elif __EMSCRIPTEN__
 	vec4 tmp;
 	tmp.x = sfz::max(lhs.x, rhs.x);
 	tmp.y = sfz::max(lhs.y, rhs.y);
@@ -646,7 +646,7 @@ SFZ_CUDA_CALL vec4 max(float lhs, vec4 rhs) noexcept
 	tmp.z = sfz::max(lhs, rhs.z);
 	tmp.w = sfz::max(lhs, rhs.w);
 	return tmp;
-#elif SFZ_EMSCRIPTEN
+#elif __EMSCRIPTEN__
 	vec4 tmp;
 	tmp.x = sfz::max(lhs, rhs.x);
 	tmp.y = sfz::max(lhs, rhs.y);
@@ -692,7 +692,7 @@ SFZ_CUDA_CALL vec4i max(vec4i lhs, vec4i rhs) noexcept
 	tmp.z = sfz::max(lhs.z, rhs.z);
 	tmp.w = sfz::max(lhs.w, rhs.w);
 	return tmp;
-#elif SFZ_EMSCRIPTEN
+#elif __EMSCRIPTEN__
 	vec4i tmp;
 	tmp.x = sfz::max(lhs.x, rhs.x);
 	tmp.y = sfz::max(lhs.y, rhs.y);
@@ -738,7 +738,7 @@ SFZ_CUDA_CALL vec4i max(int32_t lhs, vec4i rhs) noexcept
 	tmp.z = sfz::max(lhs, rhs.z);
 	tmp.w = sfz::max(lhs, rhs.w);
 	return tmp;
-#elif SFZ_EMSCRIPTEN
+#elif __EMSCRIPTEN__
 	vec4i tmp;
 	tmp.x = sfz::max(lhs, rhs.x);
 	tmp.y = sfz::max(lhs, rhs.y);
@@ -784,7 +784,7 @@ SFZ_CUDA_CALL vec4u max(vec4u lhs, vec4u rhs) noexcept
 	tmp.z = sfz::max(lhs.z, rhs.z);
 	tmp.w = sfz::max(lhs.w, rhs.w);
 	return tmp;
-#elif SFZ_EMSCRIPTEN
+#elif __EMSCRIPTEN__
 	vec4u tmp;
 	tmp.x = sfz::max(lhs.x, rhs.x);
 	tmp.y = sfz::max(lhs.y, rhs.y);
@@ -830,7 +830,7 @@ SFZ_CUDA_CALL vec4u max(uint32_t lhs, vec4u rhs) noexcept
 	tmp.z = sfz::max(lhs, rhs.z);
 	tmp.w = sfz::max(lhs, rhs.w);
 	return tmp;
-#elif SFZ_EMSCRIPTEN
+#elif __EMSCRIPTEN__
 	vec4u tmp;
 	tmp.x = sfz::max(lhs, rhs.x);
 	tmp.y = sfz::max(lhs, rhs.y);
