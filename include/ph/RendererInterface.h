@@ -31,6 +31,7 @@ using std::uint32_t;
 #include "ph/rendering/CameraData.h"
 #include "ph/rendering/RenderEntity.h"
 #include "ph/rendering/SphereLight.h"
+#include "ph/rendering/Vertex.h"
 #include "ConfigInterface.h"
 #include "LoggingInterface.h"
 

@@ -45,6 +45,7 @@ set(PH_RENDERER_SHARED_INTERFACE_HEADER_FILES
 	${INCLUDE_DIR}/ph/rendering/CameraData.h
 	${INCLUDE_DIR}/ph/rendering/RenderEntity.h
 	${INCLUDE_DIR}/ph/rendering/SphereLight.h
+	${INCLUDE_DIR}/ph/rendering/Vertex.h
 )
 source_group(TREE ${INCLUDE_DIR} FILES ${PH_RENDERER_SHARED_INTERFACE_HEADER_FILES})
 
