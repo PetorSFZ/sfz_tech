@@ -24,7 +24,7 @@
 
 #include <SDL.h>
 
-#ifdef SFZ_EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
 
@@ -74,7 +74,7 @@ static void quit(GameLoopState& gameLoopState) noexcept
 	gameLoopState.cleanupCallback(); // Call the cleanup callback
 	
 	// Exit program on Emscripten
-#ifdef SFZ_EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 	emscripten_cancel_main_loop();
 #endif
 }
@@ -241,7 +241,7 @@ void runGameLoop(UniquePtr<GameLoopUpdateable> updateable, UniquePtr<Renderer> r
 	SDL_GameControllerEventState(SDL_ENABLE);
 
 	// Start the game loop
-#ifdef SFZ_EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 	// https://kripken.github.io/emscripten-site/docs/api_reference/emscripten.h.html#browser-execution-environment
 	// Setting 0 or a negative value as the fps will instead use the browser’s requestAnimationFrame mechanism to
 	// call the main loop function. This is HIGHLY recommended if you are doing rendering, as the browser’s

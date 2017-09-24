@@ -59,7 +59,7 @@ static void logImpl(phLogLevel level, const char* tag, const char* format, ...) 
 		std::fflush(stdout);
 		break;
 	case LOG_LEVEL_ERROR:
-#ifdef SFZ_EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 	std::vfprintf(stdout, actualFormat, args);
 	std::fflush(stdout);
 #else
