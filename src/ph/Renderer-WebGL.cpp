@@ -19,13 +19,233 @@
 
 #include "ph/RendererInterface.h"
 
+#include <algorithm> // std::swap()
+#include <cstddef> // offsetof()
+
 #include <SDL.h>
+#define GL_GLEXT_PROTOTYPES // This seems to enable extension use. Dunno if this is how to thing.
 #include <SDL_opengles2.h>
 
 #include <sfz/memory/CAllocatorWrapper.hpp>
 #include <sfz/memory/New.hpp>
 
+//#include <sfz/gl/Program.hpp>
+
 using namespace sfz;
+using namespace ph;
+
+// FullscreenVAO class
+// ------------------------------------------------------------------------------------------------
+
+class FullscreenVAO final {
+public:
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	FullscreenVAO() noexcept = default;
+	FullscreenVAO(const FullscreenVAO&) = delete;
+	FullscreenVAO& operator= (const FullscreenVAO&) = delete;
+	FullscreenVAO(FullscreenVAO&& other) noexcept { this->swap(other); }
+	FullscreenVAO& operator= (FullscreenVAO&& other) noexcept { this->swap(other); return *this; }
+	~FullscreenVAO() noexcept { this->destroy(); }
+
+	// Methods
+	// --------------------------------------------------------------------------------------------
+
+	void create() noexcept
+	{
+		Vertex vertices[3];
+
+		// Bottom left corner
+		vertices[0].pos = vec3(-1.0f, -1.0f, 0.0f);
+		vertices[0].normal = vec3(0.0f, 0.0f, 1.0f);
+		vertices[0].texcoord = vec2(0.0f, 0.0f);
+
+		// Bottom right corner
+		vertices[1].pos = vec3(3.0f, -1.0f, 0.0f);
+		vertices[1].normal = vec3(0.0f, 0.0f, 1.0f);
+		vertices[1].texcoord = vec2(2.0f, 0.0f);
+
+		// Top left corner
+		vertices[2].pos = vec3(-1.0f, 3.0f, 0.0f);
+		vertices[2].normal = vec3(0.0f, 0.0f, 1.0f);
+		vertices[2].texcoord = vec2(0.0f, 2.0f);
+
+		const uint32_t indices[3] = {0, 1, 2};
+
+		// Vertex array object
+		glGenVertexArraysOES(1, &mVAO);
+		glBindVertexArrayOES(mVAO);
+
+		// Buffer objects
+		glGenBuffers(1, &mVertexBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * 3, vertices, GL_STATIC_DRAW);
+
+		glGenBuffers(1, &mIndexBuffer);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+		    (void*)offsetof(Vertex, pos));
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+		    (void*)offsetof(Vertex, normal));
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+		    (void*)offsetof(Vertex, texcoord));
+
+	}
+
+	void swap(FullscreenVAO& other) noexcept
+	{
+		std::swap(this->mVAO, other.mVAO);
+		std::swap(this->mVertexBuffer, other.mVertexBuffer);
+		std::swap(this->mIndexBuffer, other.mIndexBuffer);
+	}
+
+	void destroy() noexcept
+	{
+		// Delete buffers
+		glDeleteBuffers(1, &mVertexBuffer);
+		glDeleteBuffers(1, &mIndexBuffer);
+		glDeleteVertexArraysOES(1, &mVAO);
+
+		// Reset variables
+		mVAO = 0;
+		mVertexBuffer = 0;
+		mIndexBuffer = 0;
+	}
+
+	void render() noexcept
+	{
+		glBindVertexArrayOES(mVAO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
+		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+	}
+
+private:
+	uint32_t mVAO = 0;
+	uint32_t mVertexBuffer = 0;
+	uint32_t mIndexBuffer = 0;
+};
+
+// Statics
+// ------------------------------------------------------------------------------------------------
+
+static void printShaderInfoLog(uint32_t shader) noexcept
+{
+	//int logLength;
+	//glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
+	const int MAX_LOG_LENGTH = 256;
+	char log[MAX_LOG_LENGTH];
+	glGetShaderInfoLog(shader, MAX_LOG_LENGTH, NULL, log);
+	printf("%s", log);
+}
+
+static uint32_t compileShader(const char* source, uint32_t shaderType) noexcept
+{
+	GLuint shader = glCreateShader(shaderType);
+	glShaderSource(shader, 1, &source, NULL);
+	glCompileShader(shader);
+
+	int compileSuccess;
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &compileSuccess);
+	if (!compileSuccess) {
+		printShaderInfoLog(shader);
+		glDeleteShader(shader);
+		return 0;
+	}
+
+	return shader;
+}
+
+static bool linkProgram(uint32_t program) noexcept
+{
+	glLinkProgram(program);
+	GLint linkSuccess = 0;
+	glGetProgramiv(program, GL_LINK_STATUS, &linkSuccess);
+	if (!linkSuccess) {
+		printShaderInfoLog(program);
+		return false;
+	}
+	return true;
+}
+
+static uint32_t compileTestShader() noexcept
+{
+	const char* vertexSrc = R"(
+		// Input
+		attribute vec3 inPos;
+		attribute vec3 inNormal;
+		attribute vec2 inTexcoord;
+
+		// Output
+		varying vec2 texcoord;
+
+		void main()
+		{
+			gl_Position = vec4(inPos, 1.0);
+			texcoord = inTexcoord;
+		}
+	)";
+
+	const char* fragmentSrc = R"(
+		precision mediump float;
+
+		// Input
+		varying vec2 texcoord;
+
+		void main()
+		{
+			gl_FragColor = vec4(texcoord.x, texcoord.y, 0.0, 1.0);
+			//gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
+		}
+	)";
+
+	GLuint vertexShader = compileShader(vertexSrc, GL_VERTEX_SHADER);
+	if (vertexShader == 0) {
+		printf("Couldn't compile vertex shader\n");
+		return 0;
+	}
+	
+	GLuint fragmentShader = compileShader(fragmentSrc, GL_FRAGMENT_SHADER);
+	if (fragmentShader == 0) {
+		printf("Couldn't compile fragment shader\n");
+		return 0;
+	}
+
+	GLuint shaderProgram = glCreateProgram();
+	
+	glAttachShader(shaderProgram, vertexShader);
+	glAttachShader(shaderProgram, fragmentShader);
+
+	// glBindAttribLocation() & glBindFragDataLocation()
+	//if (bindAttribFragFunc != nullptr) bindAttribFragFunc(shaderProgram);
+
+	// TODO: Temp
+	glBindAttribLocation(shaderProgram, 0, "inPos");
+	glBindAttribLocation(shaderProgram, 1, "inNormal");
+	glBindAttribLocation(shaderProgram, 2, "inTexcoord");
+
+
+	bool linkSuccess = linkProgram(shaderProgram);
+
+	glDetachShader(shaderProgram, vertexShader);
+	glDetachShader(shaderProgram, fragmentShader);
+
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+
+	if (!linkSuccess) {
+		glDeleteProgram(shaderProgram);
+		printf("Couldn't link shader program\n");
+		return 0;
+	}
+	
+	return shaderProgram;
+}
 
 // State struct
 // ------------------------------------------------------------------------------------------------
@@ -35,9 +255,11 @@ struct RendererState final {
 	SDL_Window* window = nullptr;
 	phConfig config = {};
 	phLogger logger = {};
-
-	
 	SDL_GLContext glContext = nullptr;
+
+	FullscreenVAO fullscreenVao;
+	//gl::Program shader;
+	uint32_t shaderProgram = 0;
 };
 
 // Statics
@@ -65,17 +287,40 @@ DLL_EXPORT uint32_t phInitRenderer(
 	phLogger* logger)
 {
 	if (statePtr != nullptr) {
-		PH_LOGGER_LOG(*logger, LOG_LEVEL_WARNING, "Renderer-WebGL", "Renderer already initialized, returning.");
+		PH_LOGGER_LOG(*logger, LOG_LEVEL_WARNING, "Renderer-WebGL",
+		    "Renderer already initialized, returning.");
 		return 1;
 	}
 
+	// Create OpenGL Context (OpenGL ES 2.0 == WebGL 1.0)
+	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Creating OpenGL context");
+	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2) < 0) {
+		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
+		    "Failed to set GL context major version: %s", SDL_GetError());
+		return 0;
+	}
+	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES) < 0) {
+		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
+		    "Failed to set GL context profile: %s", SDL_GetError());
+		return 0;
+	}
+	SDL_GLContext tmpContext = SDL_GL_CreateContext(window); 
+	if (tmpContext == nullptr) {
+		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
+		    "Failed to create GL context: %s", SDL_GetError());
+		return 0;
+	}
+
 	// Create internal state
+	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Creating internal state");
 	{
 		CAllocatorWrapper tmp;
 		tmp.setCAllocator(cAllocator);
 		statePtr = sfzNew<RendererState>(&tmp);
 		if (statePtr == nullptr) {
-			PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-WebGL", "Failed to allocate memory for internal state.");
+			PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
+			    "Failed to allocate memory for internal state.");
+			SDL_GL_DeleteContext(tmpContext);
 			return 0;
 		}
 		statePtr->allocator.setCAllocator(cAllocator);
@@ -86,45 +331,43 @@ DLL_EXPORT uint32_t phInitRenderer(
 	state.window = window;
 	state.config = *config;
 	state.logger = *logger;
-
-	// OpenGL Context (OpenGL ES 2.0 == WebGL 1.0)
-	bool failed = false;
-	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2) < 0) {
-		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-WebGL", "Failed to set gl context major version: %s", SDL_GetError());
-		failed = true;
-	}
-	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES) < 0) {
-		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-WebGL", "Failed to set gl context profile: %s", SDL_GetError());
-		failed = true;
-	}
-	bool debugContext = false;
-	if (debugContext) {
-		if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG) < 0) {
-			PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-WebGL", "Failed to request debug context: %s", SDL_GetError());
-			failed = true;
-		}
-	}
-
-	// Bail out if we couldn't set settings
-	if (failed) {
-		sfzDelete(statePtr, &state.allocator);
-		statePtr = nullptr;
-		return 0;
-	}
-
-	// Create context (and bail out on failure)
-	state.glContext = SDL_GL_CreateContext(state.window); 
-	if (state.glContext == nullptr) {
-		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-WebGL", "Failed to create GL context: %s", SDL_GetError());
-		sfzDelete(statePtr, &state.allocator);
-		statePtr = nullptr;
-		return 0;
-	}
+	state.glContext = tmpContext;
 
 	// Print information
-	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-WebGL", "\nVendor: %s\nVersion: %s\nRenderer: %s",
-	              glGetString(GL_VENDOR), glGetString(GL_VERSION), glGetString(GL_RENDERER));
+	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-WebGL",
+	     "\nVendor: %s\nVersion: %s\nRenderer: %s",
+	     glGetString(GL_VENDOR), glGetString(GL_VERSION), glGetString(GL_RENDERER));
+	//PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Extensions: %s",
+	//    glGetString(GL_EXTENSIONS));
 
+	// Loading shader
+	/*state.shader = gl::Program::postProcessFromSource(R"(
+		// Input
+		in vec2 uvCoord;
+		in vec3 nonNormRayDir;
+
+		// Output
+		out vec4 outFragColor;
+
+		void main()
+		{
+			outFragColor = vec4(0.0, 1.0, 0.0, 1.0);
+		}
+
+	)");*/
+
+
+	// Create FullscreenVAO
+	state.fullscreenVao.create();
+
+
+	state.shaderProgram = compileTestShader();
+
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+
+
+	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Finished initializing renderer");
 	return 1;
 }
 
@@ -133,17 +376,22 @@ DLL_EXPORT void phDeinitRenderer()
 	if (statePtr == nullptr) return;
 	RendererState& state = *statePtr;
 
-	// Destroy GL context
-	PH_LOGGER_LOG(state.logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Destroy OpenGL context");
-	SDL_GL_DeleteContext(state.glContext);
+	// Backups from state before destruction
+	phLogger logger = state.logger;
+	SDL_GLContext context = state.glContext;
 
 	// Deallocate state
+	PH_LOGGER_LOG(logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Destroying state");
 	{
 		CAllocatorWrapper tmp;
 		tmp.setCAllocator(state.allocator.cAllocator());
 		sfzDelete(statePtr, &tmp);
 	}
 	statePtr = nullptr;
+
+	// Destroy GL context
+	PH_LOGGER_LOG(logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Destroying OpenGL context");
+	SDL_GL_DeleteContext(context);
 }
 
 // Interface: Render commands
@@ -159,13 +407,30 @@ DLL_EXPORT void phBeginFrame(
 
 DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities)
 {
-	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-	//glClearDepth(1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
 }
 
 DLL_EXPORT void phFinishFrame(void)
 {
 	RendererState& state = *statePtr;
+
+	// Get size of default framebuffer
+	int w = 0, h = 0;
+	SDL_GL_GetDrawableSize(state.window, &w, &h);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, w, h);
+	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+	glClearDepthf(1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glUseProgram(state.shaderProgram);
+	state.fullscreenVao.render();
+
+	//state.shader.useProgram();
+	//FullscreenQuad quad;
+	//quad.render();
+	//state.quad.render();
+
 	SDL_GL_SwapWindow(state.window);
 }
