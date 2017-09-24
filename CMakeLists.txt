@@ -56,7 +56,6 @@ if(NOT hasParent)
 
 	else()
 		# GCC / Clang flags
-		
 		set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -march=sandybridge -pthread -fno-strict-aliasing")
 		set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
 		set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
@@ -104,38 +103,14 @@ endif()
 # Catch
 add_subdirectory(${EXTERNALS_DIR}/catch)
 
-# OpenGL only libraries
-if(SFZ_CORE_OPENGL)
-
-# GLEW (GLEW_INCLUDE_DIRS, GLEW_LIBRARIES and GLEW_DLLS)
-if(NOT WIN32)
-add_definitions(-DGLEW_STATIC)
-endif()
-add_subdirectory(${EXTERNALS_DIR}/glew)
-
-# Links OpenGL
-find_package(OpenGL REQUIRED) # ${OPENGL_INCLUDE_DIR}, ${OPENGL_LIBRARIES}
-
-endif()
-
 # Accumulated variable with all includes to forward to caller
-set(FORWARD_INCLUDE_DIRS
-	${INCLUDE_DIR})
-if(SFZ_CORE_OPENGL)
-set(FORWARD_INCLUDE_DIRS
-	${FORWARD_INCLUDE_DIRS}
-	${INCLUDE_GL_DIR}
-	${GLEW_INCLUDE_DIRS}
-	${OPENGL_INCLUDE_DIR})
-endif()
+set(FORWARD_INCLUDE_DIRS ${INCLUDE_DIR})
 if(SFZ_CORE_CUDA)
-set(FORWARD_INCLUDE_DIRS
-	${FORWARD_INCLUDE_DIRS}
-	${INCLUDE_CUDA_DIR})
+set(FORWARD_INCLUDE_DIRS ${FORWARD_INCLUDE_DIRS} ${INCLUDE_CUDA_DIR})
 endif()
 
 # Include directories
-include_directories(
+include_directories(	
 	${FORWARD_INCLUDE_DIRS}
 	${SDL2_INCLUDE_DIRS}
 	${CATCH_INCLUDE_DIRS}
@@ -249,30 +224,6 @@ set(SFZ_CORE_SOURCE_FILES
 )
 source_group(TREE ${SOURCE_DIR} FILES ${SFZ_CORE_SOURCE_FILES})
 
-if(SFZ_CORE_OPENGL)
-set(SFZ_CORE_INCLUDE_GL_FILES
-	${INCLUDE_GL_DIR}/sfz/GL.hpp
-	${INCLUDE_GL_DIR}/sfz/gl/Context.hpp
-	${INCLUDE_GL_DIR}/sfz/gl/Framebuffer.hpp
-	${INCLUDE_GL_DIR}/sfz/gl/FullscreenQuad.hpp
-	${INCLUDE_GL_DIR}/sfz/gl/GLUtils.hpp
-	${INCLUDE_GL_DIR}/sfz/gl/IncludeOpenGL.hpp
-	${INCLUDE_GL_DIR}/sfz/gl/Program.hpp
-)
-source_group(TREE ${INCLUDE_GL_DIR} FILES ${SFZ_CORE_INCLUDE_GL_FILES})
-set(SFZ_CORE_SOURCE_GL_FILES
-	${SOURCE_DIR}/sfz/gl/Context.cpp
-	${SOURCE_DIR}/sfz/gl/Framebuffer.cpp
-	${SOURCE_DIR}/sfz/gl/FullscreenQuad.cpp
-	${SOURCE_DIR}/sfz/gl/GLUtils.cpp
-	${SOURCE_DIR}/sfz/gl/Program.cpp
-)
-source_group(TREE ${SOURCE_DIR} FILES ${SFZ_CORE_SOURCE_GL_FILES})
-else()
-set(SFZ_CORE_INCLUDE_GL_FILES "")
-set(SFZ_CORE_SOURCE_GL_FILES "")
-endif()
-
 if(SFZ_CORE_CUDA)
 set(SFZ_CORE_INCLUDE_CUDA_FILES
 	${INCLUDE_CUDA_DIR}/sfz/Cuda.hpp
@@ -287,8 +238,6 @@ endif()
 set(SFZ_CORE_FILES
 	${SFZ_CORE_INCLUDE_FILES}
 	${SFZ_CORE_SOURCE_FILES}
-	${SFZ_CORE_INCLUDE_GL_FILES}
-	${SFZ_CORE_SOURCE_GL_FILES}
 	${SFZ_CORE_INCLUDE_CUDA_FILES}
 )
 
@@ -302,50 +251,18 @@ target_link_libraries(
 	${SDL2_LIBRARIES}
 )
 
-# Linking OpenGL only libraries
-if(SFZ_CORE_OPENGL)
-target_link_libraries(
-	sfzCoreLib
-
-	${GLEW_LIBRARIES}
-	${OPENGL_LIBRARIES}
-)
-endif()
-
 # Output variables
 # ------------------------------------------------------------------------------------------------
 
 set(SFZ_CORE_FOUND true PARENT_SCOPE)
-
-set(SFZ_CORE_INCLUDE_DIRS
-	${FORWARD_INCLUDE_DIRS}
-	PARENT_SCOPE)
-
-if(SFZ_CORE_OPENGL)
-set(SFZ_CORE_LIBRARIES
-	sfzCoreLib
-	${GLEW_LIBRARIES}
-	${OPENGL_LIBRARIES}
-	PARENT_SCOPE)
-else()
-set(SFZ_CORE_LIBRARIES
-	sfzCoreLib
-	PARENT_SCOPE)
-endif()
-
-if(SFZ_CORE_OPENGL)
-set(SFZ_CORE_DLLS
-	${GLEW_DLLS}
-	PARENT_SCOPE)
-else()
-set(SFZ_CORE_DLLS "" PARENT_SCOPE)
-endif()
-
+set(SFZ_CORE_INCLUDE_DIRS ${FORWARD_INCLUDE_DIRS} PARENT_SCOPE)
+set(SFZ_CORE_LIBRARIES sfzCoreLib PARENT_SCOPE)
+set(SFZ_CORE_RUNTIME_FILES "" PARENT_SCOPE)
 
 # Tests
 # ------------------------------------------------------------------------------------------------
 
-if(SFZ_CORE_BUILD_TESTS)
+if(NOT hasParent)
 
 	set(SFZ_CORE_TEST_FILES
 		${TESTS_DIR}/sfz/Main_Tests.cpp
@@ -394,8 +311,4 @@ if((NOT hasParent) AND MSVC)
 	file(COPY ${SDL2_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR}/Debug)
 	file(COPY ${SDL2_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR}/RelWithDebInfo)
 	file(COPY ${SDL2_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR}/Release)
-
-	file(COPY ${GLEW_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/Debug)
-	file(COPY ${GLEW_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/RelWithDebInfo)
-	file(COPY ${GLEW_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/Release)
 endif()
