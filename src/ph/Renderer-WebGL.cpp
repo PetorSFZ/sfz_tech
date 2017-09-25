@@ -29,107 +29,11 @@
 #include <sfz/memory/CAllocatorWrapper.hpp>
 #include <sfz/memory/New.hpp>
 
-//#include <sfz/gl/Program.hpp>
+#include <sfz/gl/Program.hpp>
+#include <sfz/gl/FullscreenGeometry.hpp>
 
 using namespace sfz;
 using namespace ph;
-
-// FullscreenVAO class
-// ------------------------------------------------------------------------------------------------
-
-class FullscreenVAO final {
-public:
-	// Constructors & destructors
-	// --------------------------------------------------------------------------------------------
-
-	FullscreenVAO() noexcept = default;
-	FullscreenVAO(const FullscreenVAO&) = delete;
-	FullscreenVAO& operator= (const FullscreenVAO&) = delete;
-	FullscreenVAO(FullscreenVAO&& other) noexcept { this->swap(other); }
-	FullscreenVAO& operator= (FullscreenVAO&& other) noexcept { this->swap(other); return *this; }
-	~FullscreenVAO() noexcept { this->destroy(); }
-
-	// Methods
-	// --------------------------------------------------------------------------------------------
-
-	void create() noexcept
-	{
-		Vertex vertices[3];
-
-		// Bottom left corner
-		vertices[0].pos = vec3(-1.0f, -1.0f, 0.0f);
-		vertices[0].normal = vec3(0.0f, 0.0f, 1.0f);
-		vertices[0].texcoord = vec2(0.0f, 0.0f);
-
-		// Bottom right corner
-		vertices[1].pos = vec3(3.0f, -1.0f, 0.0f);
-		vertices[1].normal = vec3(0.0f, 0.0f, 1.0f);
-		vertices[1].texcoord = vec2(2.0f, 0.0f);
-
-		// Top left corner
-		vertices[2].pos = vec3(-1.0f, 3.0f, 0.0f);
-		vertices[2].normal = vec3(0.0f, 0.0f, 1.0f);
-		vertices[2].texcoord = vec2(0.0f, 2.0f);
-
-		const uint32_t indices[3] = {0, 1, 2};
-
-		// Vertex array object
-		glGenVertexArraysOES(1, &mVAO);
-		glBindVertexArrayOES(mVAO);
-
-		// Buffer objects
-		glGenBuffers(1, &mVertexBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * 3, vertices, GL_STATIC_DRAW);
-
-		glGenBuffers(1, &mIndexBuffer);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-		    (void*)offsetof(Vertex, pos));
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-		    (void*)offsetof(Vertex, normal));
-		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-		    (void*)offsetof(Vertex, texcoord));
-
-	}
-
-	void swap(FullscreenVAO& other) noexcept
-	{
-		std::swap(this->mVAO, other.mVAO);
-		std::swap(this->mVertexBuffer, other.mVertexBuffer);
-		std::swap(this->mIndexBuffer, other.mIndexBuffer);
-	}
-
-	void destroy() noexcept
-	{
-		// Delete buffers
-		glDeleteBuffers(1, &mVertexBuffer);
-		glDeleteBuffers(1, &mIndexBuffer);
-		glDeleteVertexArraysOES(1, &mVAO);
-
-		// Reset variables
-		mVAO = 0;
-		mVertexBuffer = 0;
-		mIndexBuffer = 0;
-	}
-
-	void render() noexcept
-	{
-		glBindVertexArrayOES(mVAO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
-		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
-	}
-
-private:
-	uint32_t mVAO = 0;
-	uint32_t mVertexBuffer = 0;
-	uint32_t mIndexBuffer = 0;
-};
 
 // Statics
 // ------------------------------------------------------------------------------------------------
@@ -257,7 +161,7 @@ struct RendererState final {
 	phLogger logger = {};
 	SDL_GLContext glContext = nullptr;
 
-	FullscreenVAO fullscreenVao;
+	gl::FullscreenGeometry fullscreenGeom;
 	//gl::Program shader;
 	uint32_t shaderProgram = 0;
 };
@@ -358,7 +262,7 @@ DLL_EXPORT uint32_t phInitRenderer(
 
 
 	// Create FullscreenVAO
-	state.fullscreenVao.create();
+	state.fullscreenGeom.create(gl::FullscreenGeometryType::OGL_CLIP_SPACE_RIGHT_HANDED_FRONT_FACE);
 
 
 	state.shaderProgram = compileTestShader();
@@ -425,7 +329,7 @@ DLL_EXPORT void phFinishFrame(void)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glUseProgram(state.shaderProgram);
-	state.fullscreenVao.render();
+	state.fullscreenGeom.render();
 
 	//state.shader.useProgram();
 	//FullscreenQuad quad;

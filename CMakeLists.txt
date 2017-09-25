@@ -31,6 +31,10 @@ if (NOT ${SFZ_CORE_FOUND})
 	message(FATAL_ERROR "Renderer-WebGL requires sfzCore.")
 endif()
 
+if (NOT ${SFZ_GL_FOUND})
+	message(FATAL_ERROR "Renderer-WebGL requires sfzGL.")
+endif()
+
 if (NOT ${PH_SHARED_INTERFACE_FOUND})
 	message(FATAL_ERROR "Renderer-WebGL requires PhantasyEngine-SharedInterface.")
 endif()
@@ -54,12 +58,14 @@ target_include_directories(Renderer-WebGL PUBLIC
 	${INCLUDE_DIR}
 	${SDL2_INCLUDE_DIRS}
 	${SFZ_CORE_INCLUDE_DIRS}
+	${SFZ_GL_INCLUDE_DIRS}
 	${PH_SHARED_INTERFACE_INCLUDE_DIRS}
 )
 
 target_link_libraries(Renderer-WebGL
 	${SDL2_LIBRARIES}
 	${SFZ_CORE_LIBRARIES}
+	${SFZ_GL_LIBRARIES}
 )
 
 # Output variables
