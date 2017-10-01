@@ -35,122 +35,6 @@
 using namespace sfz;
 using namespace ph;
 
-// Statics
-// ------------------------------------------------------------------------------------------------
-
-static void printShaderInfoLog(uint32_t shader) noexcept
-{
-	//int logLength;
-	//glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
-	const int MAX_LOG_LENGTH = 256;
-	char log[MAX_LOG_LENGTH];
-	glGetShaderInfoLog(shader, MAX_LOG_LENGTH, NULL, log);
-	printf("%s", log);
-}
-
-static uint32_t compileShader(const char* source, uint32_t shaderType) noexcept
-{
-	GLuint shader = glCreateShader(shaderType);
-	glShaderSource(shader, 1, &source, NULL);
-	glCompileShader(shader);
-
-	int compileSuccess;
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &compileSuccess);
-	if (!compileSuccess) {
-		printShaderInfoLog(shader);
-		glDeleteShader(shader);
-		return 0;
-	}
-
-	return shader;
-}
-
-static bool linkProgram(uint32_t program) noexcept
-{
-	glLinkProgram(program);
-	GLint linkSuccess = 0;
-	glGetProgramiv(program, GL_LINK_STATUS, &linkSuccess);
-	if (!linkSuccess) {
-		printShaderInfoLog(program);
-		return false;
-	}
-	return true;
-}
-
-static uint32_t compileTestShader() noexcept
-{
-	const char* vertexSrc = R"(
-		// Input
-		attribute vec3 inPos;
-		attribute vec3 inNormal;
-		attribute vec2 inTexcoord;
-
-		// Output
-		varying vec2 texcoord;
-
-		void main()
-		{
-			gl_Position = vec4(inPos, 1.0);
-			texcoord = inTexcoord;
-		}
-	)";
-
-	const char* fragmentSrc = R"(
-		precision mediump float;
-
-		// Input
-		varying vec2 texcoord;
-
-		void main()
-		{
-			gl_FragColor = vec4(texcoord.x, texcoord.y, 0.0, 1.0);
-			//gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
-		}
-	)";
-
-	GLuint vertexShader = compileShader(vertexSrc, GL_VERTEX_SHADER);
-	if (vertexShader == 0) {
-		printf("Couldn't compile vertex shader\n");
-		return 0;
-	}
-	
-	GLuint fragmentShader = compileShader(fragmentSrc, GL_FRAGMENT_SHADER);
-	if (fragmentShader == 0) {
-		printf("Couldn't compile fragment shader\n");
-		return 0;
-	}
-
-	GLuint shaderProgram = glCreateProgram();
-	
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-
-	// glBindAttribLocation() & glBindFragDataLocation()
-	//if (bindAttribFragFunc != nullptr) bindAttribFragFunc(shaderProgram);
-
-	// TODO: Temp
-	glBindAttribLocation(shaderProgram, 0, "inPos");
-	glBindAttribLocation(shaderProgram, 1, "inNormal");
-	glBindAttribLocation(shaderProgram, 2, "inTexcoord");
-
-
-	bool linkSuccess = linkProgram(shaderProgram);
-
-	glDetachShader(shaderProgram, vertexShader);
-	glDetachShader(shaderProgram, fragmentShader);
-
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
-
-	if (!linkSuccess) {
-		glDeleteProgram(shaderProgram);
-		printf("Couldn't link shader program\n");
-		return 0;
-	}
-	
-	return shaderProgram;
-}
-
 // State struct
 // ------------------------------------------------------------------------------------------------
 
@@ -162,8 +46,7 @@ struct RendererState final {
 	SDL_GLContext glContext = nullptr;
 
 	gl::FullscreenGeometry fullscreenGeom;
-	//gl::Program shader;
-	uint32_t shaderProgram = 0;
+	gl::Program shader;
 };
 
 // Statics
@@ -244,32 +127,40 @@ DLL_EXPORT uint32_t phInitRenderer(
 	//PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Extensions: %s",
 	//    glGetString(GL_EXTENSIONS));
 
-	// Loading shader
-	/*state.shader = gl::Program::postProcessFromSource(R"(
-		// Input
-		in vec2 uvCoord;
-		in vec3 nonNormRayDir;
-
-		// Output
-		out vec4 outFragColor;
-
-		void main()
-		{
-			outFragColor = vec4(0.0, 1.0, 0.0, 1.0);
-		}
-
-	)");*/
-
-
 	// Create FullscreenVAO
 	state.fullscreenGeom.create(gl::FullscreenGeometryType::OGL_CLIP_SPACE_RIGHT_HANDED_FRONT_FACE);
 
+	// Compile shader program
+	state.shader = gl::Program::fromSource(R"(
+		// Input
+		attribute vec3 inPos;
+		attribute vec3 inNormal;
+		attribute vec2 inTexcoord;
 
-	state.shaderProgram = compileTestShader();
+		// Output
+		varying vec2 texcoord;
 
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
+		void main()
+		{
+			gl_Position = vec4(inPos, 1.0);
+			texcoord = inTexcoord;
+		}
+	)", R"(
+		precision mediump float;
 
+		// Input
+		varying vec2 texcoord;
+
+		void main()
+		{
+			gl_FragColor = vec4(texcoord.x, texcoord.y, 0.0, 1.0);
+			//gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
+		}
+	)", [](uint32_t shaderProgram) {
+		glBindAttribLocation(shaderProgram, 0, "inPos");
+		glBindAttribLocation(shaderProgram, 1, "inNormal");
+		glBindAttribLocation(shaderProgram, 2, "inTexcoord");
+	});
 
 	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Finished initializing renderer");
 	return 1;
@@ -328,13 +219,8 @@ DLL_EXPORT void phFinishFrame(void)
 	glClearDepthf(1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glUseProgram(state.shaderProgram);
+	state.shader.useProgram();
 	state.fullscreenGeom.render();
-
-	//state.shader.useProgram();
-	//FullscreenQuad quad;
-	//quad.render();
-	//state.quad.render();
 
 	SDL_GL_SwapWindow(state.window);
 }
