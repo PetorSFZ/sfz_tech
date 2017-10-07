@@ -23,7 +23,7 @@
 #include <cstddef> // offsetof()
 
 #include <SDL.h>
-#define GL_GLEXT_PROTOTYPES // This seems to enable extension use. Dunno if this is how to thing.
+#define GL_GLEXT_PROTOTYPES // This seems to enable extension use.
 #include <SDL_opengles2.h>
 
 #include <sfz/memory/CAllocatorWrapper.hpp>
@@ -34,6 +34,123 @@
 
 using namespace sfz;
 using namespace ph;
+
+
+// Random stuff
+// ------------------------------------------------------------------------------------------------
+
+class Model final {
+public:
+
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	Model() noexcept = default;
+	Model(const Model&) = delete;
+	Model& operator= (const Model&) = delete;
+
+	Model(const phMesh& mesh) noexcept { this->create(mesh); }
+	Model(Model&& other) noexcept { this->swap(other); }
+	Model& operator= (Model&& other) noexcept { this->swap(other); return *this; }
+	~Model() noexcept { this->destroy(); }
+
+	// State methods
+	// --------------------------------------------------------------------------------------------
+
+	void create(const phMesh& mesh) noexcept
+	{
+		this->destroy();
+
+		// Vertex array object
+		glGenVertexArraysOES(1, &mVAO);
+		glBindVertexArrayOES(mVAO);
+
+		// Vertex buffer
+		mNumIndices = mesh.numIndices;
+
+		glGenBuffers(1, &mVertexBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(phVertex) * mesh.numVertices,
+			mesh.vertices, GL_STATIC_DRAW);
+
+		glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(phVertex),
+			(void*)offsetof(phVertex, pos));
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(phVertex),
+			(void*)offsetof(Vertex, normal));
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(phVertex),
+			(void*)offsetof(Vertex, texcoord));
+
+		// Material index buffer
+		// TODO: Slightly complicated, WebGL does not support integer attributes.
+		/*glGenBuffers(1, &mMaterialIndexBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, mMaterialIndexBuffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(uint32_t) * mesh.numVertices,
+			mesh.materialIndices, GL_STATIC_DRAW);
+
+		glBindBuffer(GL_ARRAY_BUFFER, mMaterialIndexBuffer);
+		glEnableVertexAttribArray(3);
+		// TOOD: glVertexAttribIPointer?
+		glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)0);*/
+
+		// Index buffer
+		glGenBuffers(1, &mIndexBuffer);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * mesh.numIndices,
+			mesh.indices, GL_STATIC_DRAW);
+		
+		// Cleanup
+		glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
+		glBindVertexArrayOES(0);
+	}
+
+	void swap(Model& other) noexcept
+	{
+		std::swap(this->mVAO, other.mVAO);
+		std::swap(this->mVertexBuffer, other.mVertexBuffer);
+		std::swap(this->mMaterialIndexBuffer, other.mMaterialIndexBuffer);
+		std::swap(this->mIndexBuffer, other.mIndexBuffer);
+		std::swap(this->mNumIndices, other.mNumIndices);
+	}
+
+	void destroy() noexcept
+	{
+		// Delete buffers
+		glDeleteBuffers(1, &mVertexBuffer);
+		glDeleteBuffers(1, &mMaterialIndexBuffer);
+		glDeleteBuffers(1, &mIndexBuffer);
+		glDeleteVertexArraysOES(1, &mVAO);
+
+		// Reset members
+		mVAO = 0;
+		mVertexBuffer = 0;
+		mMaterialIndexBuffer = 0;
+		mIndexBuffer = 0;
+		mNumIndices = 0;
+	}
+
+	// Methods
+	// --------------------------------------------------------------------------------------------
+
+	bool isValid() const noexcept { return mVAO != 0; }
+
+	void render() noexcept
+	{
+		glBindVertexArrayOES(mVAO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
+		glDrawElements(GL_TRIANGLES, mNumIndices, GL_UNSIGNED_INT, 0);
+	}
+
+//private:
+	uint32_t mVAO = 0;
+	uint32_t mVertexBuffer = 0;
+	uint32_t mMaterialIndexBuffer = 0;
+	uint32_t mIndexBuffer = 0;
+	uint32_t mNumIndices = 0;
+};
 
 // State struct
 // ------------------------------------------------------------------------------------------------
@@ -47,10 +164,44 @@ struct RendererState final {
 
 	gl::FullscreenGeometry fullscreenGeom;
 	gl::Program shader;
+
+	Model model;
+	gl::Program modelShader;
 };
 
 // Statics
 // ------------------------------------------------------------------------------------------------
+
+#define CHECK_GL_ERROR(state) checkGLError(state, __FILE__, __LINE__)
+
+static void checkGLError(const RendererState& state, const char* file, int line) noexcept
+{
+	GLenum error;
+	while ((error = glGetError()) != GL_NO_ERROR) {
+
+		switch (error) {
+		case GL_INVALID_ENUM:
+			PH_LOGGER_LOG(state.logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
+				"%s:%i: GL_INVALID_ENUM", file, line);
+			break;
+		case GL_INVALID_VALUE:
+			PH_LOGGER_LOG(state.logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
+				"%s:%i: GL_INVALID_VALUE", file, line);
+			break;
+		case GL_INVALID_OPERATION:
+			PH_LOGGER_LOG(state.logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
+				"%s:%i: GL_INVALID_OPERATION", file, line);
+			break;
+		case GL_OUT_OF_MEMORY:
+			PH_LOGGER_LOG(state.logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
+				"%s:%i: GL_OUT_OF_MEMORY", file, line);
+			break;
+		case GL_INVALID_FRAMEBUFFER_OPERATION:
+			PH_LOGGER_LOG(state.logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
+				"%s:%i: GL_INVALID_FRAMEBUFFER_OPERATION", file, line);
+		}
+	}
+}
 
 static RendererState* statePtr = nullptr;
 
@@ -131,7 +282,49 @@ DLL_EXPORT uint32_t phInitRenderer(
 	state.fullscreenGeom.create(gl::FullscreenGeometryType::OGL_CLIP_SPACE_RIGHT_HANDED_FRONT_FACE);
 
 	// Compile shader program
-	state.shader = gl::Program::fromSource(R"(
+	state.shader = gl::Program::postProcessFromSource(R"(
+		precision mediump float;
+
+		// Input
+		varying vec2 texcoord;
+
+		void main()
+		{
+			gl_FragColor = vec4(texcoord.x, texcoord.y, 0.0, 1.0);
+			//gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
+		}
+	)");
+
+
+	ph::Mesh mesh;
+	mesh.vertices.create(3, &state.allocator);
+	mesh.vertices.addMany(3);
+
+	// Bottom left corner
+	mesh.vertices[0].pos = vec3(-1.0f, -1.0f, 0.0f);
+	mesh.vertices[0].texcoord = vec2(0.0f, 0.0f);
+
+	// Bottom right corner
+	mesh.vertices[1].pos = vec3(1.0f, -1.0f, 0.0f);
+	mesh.vertices[1].texcoord = vec2(2.0f, 0.0f);
+
+	// Top left corner
+	mesh.vertices[2].pos = vec3(-1.0f, 1.0f, 0.0f);
+	mesh.vertices[2].texcoord = vec2(0.0f, 2.0f);
+
+	mesh.materialIndices.create(3, &state.allocator);
+	mesh.materialIndices.addMany(3);
+
+	mesh.indices.create(3, &state.allocator);
+	mesh.indices.addMany(3);
+
+	mesh.indices[0] = 0;
+	mesh.indices[1] = 1;
+	mesh.indices[2] = 2;
+
+	state.model.create(mesh.cView());
+
+	state.modelShader = gl::Program::fromSource(R"(
 		// Input
 		attribute vec3 inPos;
 		attribute vec3 inNormal;
@@ -162,6 +355,7 @@ DLL_EXPORT uint32_t phInitRenderer(
 		glBindAttribLocation(shaderProgram, 2, "inTexcoord");
 	});
 
+	CHECK_GL_ERROR(state);
 	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Finished initializing renderer");
 	return 1;
 }
@@ -215,12 +409,16 @@ DLL_EXPORT void phFinishFrame(void)
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, w, h);
-	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClearDepthf(1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	state.shader.useProgram();
-	state.fullscreenGeom.render();
+	//state.shader.useProgram();
+	//state.fullscreenGeom.render();
+
+	state.modelShader.useProgram();
+	state.model.render();
 
 	SDL_GL_SwapWindow(state.window);
+	CHECK_GL_ERROR(state);
 }
