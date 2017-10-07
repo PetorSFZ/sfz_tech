@@ -29,6 +29,7 @@ using std::uint32_t;
 #include <sfz/memory/CAllocator.h>
 
 #include "ph/rendering/CameraData.h"
+#include "ph/rendering/Mesh.h"
 #include "ph/rendering/RenderEntity.h"
 #include "ph/rendering/SphereLight.h"
 #include "ph/rendering/Vertex.h"

@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //               For other contributors see Contributors.txt
 //
 // This software is provided 'as-is', without any express or implied
@@ -22,41 +22,54 @@
 #ifdef __cplusplus
 #include <cstdint>
 #include <sfz/math/Vector.hpp>
+#include <sfz/containers/DynArray.hpp>
 using std::uint32_t;
 #else
 #include <stdint.h>
 #endif
 
-// C Vertex struct
+#include "ph/rendering/Vertex.h"
+
+// C Mesh struct
 // ------------------------------------------------------------------------------------------------
 
 extern "C"
 typedef struct {
-	float pos[3];
-	float normal[3];
-	float texcoord[2];
-} phVertex;
+	phVertex* vertices;
+	uint32_t* materialIndices;
+	uint32_t numVertices;
+	uint32_t* indices;
+	uint32_t numIndices;
+} phMesh;
 
-// C++ Vertex struct
+// C++ Mesh struct
 // ------------------------------------------------------------------------------------------------
 
 #ifdef __cplusplus
 
 namespace ph {
 
-using sfz::vec3;
-using sfz::vec2;
+using sfz::DynArray;
 
-struct Vertex final {
-	vec3 pos = vec3(0.0f);
-	vec3 normal = vec3(0.0f);
-	vec2 texcoord = vec2(0.0f);
+struct Mesh final {
+	DynArray<Vertex> vertices;
+	DynArray<uint32_t> materialIndices;
+	DynArray<uint32_t> indices;
+
+	// Returns a phMesh that shows the contents of this Mesh. The phMesh does not own the memory
+	// and will only be valid as long as the Mesh instance is not modified.
+	inline phMesh cView() noexcept
+	{
+		phMesh tmp;
+		tmp.vertices = reinterpret_cast<phVertex*>(this->vertices.data());
+		tmp.materialIndices = this->materialIndices.data();
+		tmp.numVertices = this->vertices.size();
+		tmp.indices = this->indices.data();
+		tmp.numIndices = this->indices.size();
+		return tmp;
+	}
 };
 
 } // namespace ph
-
-static_assert(sizeof(ph::Vertex) == sizeof(float) * 8, "ph::Vertex is padded");
-static_assert(sizeof(phVertex) == sizeof(float) * 8, "phVertex is padded");
-static_assert(sizeof(ph::Vertex) == sizeof(phVertex), "phVertex and ph::Vertex are different size");
 
 #endif
