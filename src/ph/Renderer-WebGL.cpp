@@ -26,16 +26,207 @@
 #define GL_GLEXT_PROTOTYPES // This seems to enable extension use.
 #include <SDL_opengles2.h>
 
+#include <sfz/math/ProjectionMatrices.hpp>
 #include <sfz/memory/CAllocatorWrapper.hpp>
 #include <sfz/memory/New.hpp>
 
 #include <sfz/gl/Program.hpp>
 #include <sfz/gl/FullscreenGeometry.hpp>
+#include <sfz/gl/UniformSetters.hpp>
 
 #include "ph/Model.hpp"
 
 using namespace sfz;
 using namespace ph;
+
+// Cube model
+// ------------------------------------------------------------------------------------------------
+
+static const vec3 CUBE_POSITIONS[] = {
+	// x, y, z
+	// Left
+	vec3(0.0f, 0.0f, 0.0f), // 0, left-bottom-back
+	vec3(0.0f, 0.0f, 1.0f), // 1, left-bottom-front
+	vec3(0.0f, 1.0f, 0.0f), // 2, left-top-back
+	vec3(0.0f, 1.0f, 1.0f), // 3, left-top-front
+
+	// Right
+	vec3(1.0f, 0.0f, 0.0f), // 4, right-bottom-back
+	vec3(1.0f, 0.0f, 1.0f), // 5, right-bottom-front
+	vec3(1.0f, 1.0f, 0.0f), // 6, right-top-back
+	vec3(1.0f, 1.0f, 1.0f), // 7, right-top-front
+
+	// Bottom
+	vec3(0.0f, 0.0f, 0.0f), // 8, left-bottom-back
+	vec3(0.0f, 0.0f, 1.0f), // 9, left-bottom-front
+	vec3(1.0f, 0.0f, 0.0f), // 10, right-bottom-back
+	vec3(1.0f, 0.0f, 1.0f), // 11, right-bottom-front
+
+	// Top
+	vec3(0.0f, 1.0f, 0.0f), // 12, left-top-back
+	vec3(0.0f, 1.0f, 1.0f), // 13, left-top-front
+	vec3(1.0f, 1.0f, 0.0f), // 14, right-top-back
+	vec3(1.0f, 1.0f, 1.0f), // 15, right-top-front
+
+	// Back
+	vec3(0.0f, 0.0f, 0.0f), // 16, left-bottom-back
+	vec3(0.0f, 1.0f, 0.0f), // 17, left-top-back
+	vec3(1.0f, 0.0f, 0.0f), // 18, right-bottom-back
+	vec3(1.0f, 1.0f, 0.0f), // 19, right-top-back
+
+	// Front
+	vec3(0.0f, 0.0f, 1.0f), // 20, left-bottom-front
+	vec3(0.0f, 1.0f, 1.0f), // 21, left-top-front
+	vec3(1.0f, 0.0f, 1.0f), // 22, right-bottom-front
+	vec3(1.0f, 1.0f, 1.0f)  // 23, right-top-front
+};
+
+static const vec3 CUBE_NORMALS[] = {
+	// x, y, z
+	// Left
+	vec3(-1.0f, 0.0f, 0.0f), // 0, left-bottom-back
+	vec3(-1.0f, 0.0f, 0.0f), // 1, left-bottom-front
+	vec3(-1.0f, 0.0f, 0.0f), // 2, left-top-back
+	vec3(-1.0f, 0.0f, 0.0f), // 3, left-top-front
+
+	// Right
+	vec3(1.0f, 0.0f, 0.0f), // 4, right-bottom-back
+	vec3(1.0f, 0.0f, 0.0f), // 5, right-bottom-front
+	vec3(1.0f, 0.0f, 0.0f), // 6, right-top-back
+	vec3(1.0f, 0.0f, 0.0f), // 7, right-top-front
+
+	// Bottom
+	vec3(0.0f, -1.0f, 0.0f), // 8, left-bottom-back
+	vec3(0.0f, -1.0f, 0.0f), // 9, left-bottom-front
+	vec3(0.0f, -1.0f, 0.0f), // 10, right-bottom-back
+	vec3(0.0f, -1.0f, 0.0f), // 11, right-bottom-front
+
+	// Top
+	vec3(0.0f, 1.0f, 0.0f), // 12, left-top-back
+	vec3(0.0f, 1.0f, 0.0f), // 13, left-top-front
+	vec3(0.0f, 1.0f, 0.0f), // 14, right-top-back
+	vec3(0.0f, 1.0f, 0.0f), // 15, right-top-front
+
+	// Back
+	vec3(0.0f, 0.0f, -1.0f), // 16, left-bottom-back
+	vec3(0.0f, 0.0f, -1.0f), // 17, left-top-back
+	vec3(0.0f, 0.0f, -1.0f), // 18, right-bottom-back
+	vec3(0.0f, 0.0f, -1.0f), // 19, right-top-back
+
+	// Front
+	vec3(0.0f, 0.0f, 1.0f), // 20, left-bottom-front
+	vec3(0.0f, 0.0f, 1.0f), // 21, left-top-front
+	vec3(0.0f, 0.0f, 1.0f), // 22, right-bottom-front
+	vec3(0.0f, 0.0f, 1.0f)  // 23, right-top-front
+};
+
+static const vec2 CUBE_TEXCOORDS[] = {
+	// u, v
+	// Left
+	vec2(0.0f, 0.0f), // 0, left-bottom-back
+	vec2(1.0f, 0.0f), // 1, left-bottom-front
+	vec2(0.0f, 1.0f), // 2, left-top-back
+	vec2(1.0f, 1.0f), // 3, left-top-front
+
+	// Right
+	vec2(1.0f, 0.0f), // 4, right-bottom-back
+	vec2(0.0f, 0.0f), // 5, right-bottom-front
+	vec2(1.0f, 1.0f), // 6, right-top-back
+	vec2(0.0f, 1.0f), // 7, right-top-front
+
+	// Bottom
+	vec2(0.0f, 0.0f), // 8, left-bottom-back
+	vec2(0.0f, 1.0f), // 9, left-bottom-front
+	vec2(1.0f, 0.0f), // 10, right-bottom-back
+	vec2(1.0f, 1.0f), // 11, right-bottom-front
+
+	// Top
+	vec2(0.0f, 1.0f), // 12, left-top-back
+	vec2(0.0f, 0.0f), // 13, left-top-front
+	vec2(1.0f, 1.0f), // 14, right-top-back
+	vec2(1.0f, 0.0f), // 15, right-top-front
+
+	// Back
+	vec2(1.0f, 0.0f), // 16, left-bottom-back
+	vec2(1.0f, 1.0f), // 17, left-top-back
+	vec2(0.0f, 0.0f), // 18, right-bottom-back
+	vec2(0.0f, 1.0f), // 19, right-top-back
+
+	// Front
+	vec2(0.0f, 0.0f), // 20, left-bottom-front
+	vec2(0.0f, 1.0f), // 21, left-top-front
+	vec2(1.0f, 0.0f), // 22, right-bottom-front
+	vec2(1.0f, 1.0f)  // 23, right-top-front
+};
+
+static const uint32_t CUBE_MATERIALS[] = {
+	// Left
+	0, 0, 0, 0,
+	// Right
+	0, 0, 0, 0,
+	// Bottom
+	0, 0, 0, 0,
+	// Top
+	0, 0, 0, 0,
+	// Back
+	0, 0, 0, 0,
+	// Front
+	0, 0, 0, 0
+};
+
+static const uint32_t CUBE_INDICES[] = {
+	// Left
+	0, 1, 2,
+	3, 2, 1,
+
+	// Right
+	5, 4, 7,
+	6, 7, 4,
+
+	// Bottom
+	8, 10, 9,
+	11, 9, 10,
+
+	// Top
+	13, 15, 12,
+	14, 12, 15,
+
+	// Back
+	18, 16, 19,
+	17, 19, 16,
+
+	// Front
+	20, 22, 21,
+	23, 21, 22
+};
+
+static const uint32_t CUBE_NUM_VERTICES = sizeof(CUBE_POSITIONS) / sizeof(vec3);
+static const uint32_t CUBE_NUM_INDICES = sizeof(CUBE_INDICES) / sizeof(uint32_t);
+
+static Model createCubeModel(Allocator* allocator) noexcept
+{
+	// Create mesh from hardcoded values
+	ph::Mesh mesh;
+	mesh.vertices.create(CUBE_NUM_VERTICES, allocator);
+	mesh.vertices.addMany(CUBE_NUM_VERTICES);
+	mesh.materialIndices.create(CUBE_NUM_VERTICES, allocator);
+	mesh.materialIndices.addMany(CUBE_NUM_VERTICES);
+	for (uint32_t i = 0; i < CUBE_NUM_VERTICES; i++) {
+		mesh.vertices[i].pos = CUBE_POSITIONS[i];
+		mesh.vertices[i].normal = CUBE_NORMALS[i];
+		mesh.vertices[i].texcoord = CUBE_TEXCOORDS[i];
+		mesh.materialIndices[i] = CUBE_MATERIALS[i];
+	}
+	mesh.indices.create(CUBE_NUM_INDICES, allocator);
+	mesh.indices.add(CUBE_INDICES, CUBE_NUM_INDICES);
+
+	// Create model from mesh
+	Model tmpModel;
+	tmpModel.create(mesh.cView(), allocator);
+
+	// Return model
+	return tmpModel;
+}
 
 // State struct
 // ------------------------------------------------------------------------------------------------
@@ -181,33 +372,7 @@ DLL_EXPORT uint32_t phInitRenderer(
 	)");
 
 
-	ph::Mesh mesh;
-	mesh.vertices.create(3, &state.allocator);
-	mesh.vertices.addMany(3);
-
-	// Bottom left corner
-	mesh.vertices[0].pos = vec3(-1.0f, -1.0f, 0.0f);
-	mesh.vertices[0].texcoord = vec2(0.0f, 0.0f);
-
-	// Bottom right corner
-	mesh.vertices[1].pos = vec3(1.0f, -1.0f, 0.0f);
-	mesh.vertices[1].texcoord = vec2(2.0f, 0.0f);
-
-	// Top left corner
-	mesh.vertices[2].pos = vec3(-1.0f, 1.0f, 0.0f);
-	mesh.vertices[2].texcoord = vec2(0.0f, 2.0f);
-
-	mesh.materialIndices.create(3, &state.allocator);
-	mesh.materialIndices.addMany(3);
-
-	mesh.indices.create(3, &state.allocator);
-	mesh.indices.addMany(3);
-
-	mesh.indices[0] = 0;
-	mesh.indices[1] = 1;
-	mesh.indices[2] = 2;
-
-	state.model.create(mesh.cView(), &state.allocator);
+	state.model = createCubeModel(&state.allocator);
 
 	state.modelShader = gl::Program::fromSource(R"(
 		// Input
@@ -216,22 +381,41 @@ DLL_EXPORT uint32_t phInitRenderer(
 		attribute vec2 inTexcoord;
 
 		// Output
+		varying vec3 vsPos;
+		varying vec3 vsNormal;
 		varying vec2 texcoord;
+
+		// Uniforms
+		uniform mat4 uProjMatrix;
+		uniform mat4 uViewMatrix;
+		uniform mat4 uModelMatrix;
+		uniform mat4 uNormalMatrix; // inverse(transpose(modelViewMatrix)) for non-uniform scaling
 
 		void main()
 		{
-			gl_Position = vec4(inPos, 1.0);
+			vec4 vsPosTmp = uViewMatrix * uModelMatrix * vec4(inPos, 1.0);
+			
+			vsPos = vsPosTmp.xyz / vsPosTmp.w; // Unsure if division necessary.
+			vsNormal = (uNormalMatrix * vec4(inNormal, 0.0)).xyz;
 			texcoord = inTexcoord;
+
+			gl_Position = uProjMatrix * vsPosTmp;
 		}
 	)", R"(
 		precision mediump float;
 
 		// Input
+		varying vec3 vsPos;
+		varying vec3 vsNormal;
 		varying vec2 texcoord;
+
+		// Uniforms
+		uniform vec3 color;
 
 		void main()
 		{
-			gl_FragColor = vec4(texcoord.x, texcoord.y, 0.0, 1.0);
+			gl_FragColor = vec4(vsNormal, 1.0);
+			//gl_FragColor = vec4(texcoord.x, texcoord.y, 0.0, 1.0);
 			//gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
 		}
 	)", [](uint32_t shaderProgram) {
@@ -292,6 +476,10 @@ DLL_EXPORT void phFinishFrame(void)
 	int w = 0, h = 0;
 	SDL_GL_GetDrawableSize(state.window, &w, &h);
 
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, w, h);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -302,7 +490,22 @@ DLL_EXPORT void phFinishFrame(void)
 	//state.fullscreenGeom.render();
 
 	state.modelShader.useProgram();
-	state.model.bindVAO();
+
+	float yFovDeg = 90.0f;
+	float aspectRatio = 1.0f;
+	float zNear = 0.01f;
+	float zFar = 10.0f;
+	mat4 projMatrix = perspectiveProjectionGL(yFovDeg, aspectRatio, zNear, zFar);
+	mat4 viewMatrix = viewMatrixGL(vec3(3.0f, 3.0f, 3.0f), vec3(-1.0f, -0.25f, -1.0f), vec3(0.0f, 1.0f, 0.0f));
+	mat4 modelMatrix = mat4::identity();
+	mat4 normalMatrix = inverse(transpose(viewMatrix * modelMatrix));
+
+	gl::setUniform(state.modelShader, "uProjMatrix", projMatrix);
+	gl::setUniform(state.modelShader, "uViewMatrix", viewMatrix);
+	gl::setUniform(state.modelShader, "uModelMatrix", modelMatrix);
+	gl::setUniform(state.modelShader, "uNormalMatrix", normalMatrix);
+
+	state.model.bindVAO();	
 	auto& modelComponents = state.model.components();
 	for (auto& component : modelComponents) {
 
