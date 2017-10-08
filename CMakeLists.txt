@@ -43,11 +43,14 @@ endif()
 # ------------------------------------------------------------------------------------------------
 
 # Directories
+set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Source files
 set(PH_RENDERER_WEB_GL_SOURCE_FILES
-	${SOURCE_DIR}/ph/Renderer-WebGL.cpp
+	${INCLUDE_DIR}/ph/Model.hpp
+	 ${SOURCE_DIR}/ph/Model.cpp
+	 ${SOURCE_DIR}/ph/Renderer-WebGL.cpp
 )
 source_group(TREE ${SOURCE_DIR} FILES ${PH_RENDERER_WEB_GL_SOURCE_FILES})
 

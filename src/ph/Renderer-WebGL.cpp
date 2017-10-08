@@ -32,125 +32,10 @@
 #include <sfz/gl/Program.hpp>
 #include <sfz/gl/FullscreenGeometry.hpp>
 
+#include "ph/Model.hpp"
+
 using namespace sfz;
 using namespace ph;
-
-
-// Random stuff
-// ------------------------------------------------------------------------------------------------
-
-class Model final {
-public:
-
-	// Constructors & destructors
-	// --------------------------------------------------------------------------------------------
-
-	Model() noexcept = default;
-	Model(const Model&) = delete;
-	Model& operator= (const Model&) = delete;
-
-	Model(const phMesh& mesh) noexcept { this->create(mesh); }
-	Model(Model&& other) noexcept { this->swap(other); }
-	Model& operator= (Model&& other) noexcept { this->swap(other); return *this; }
-	~Model() noexcept { this->destroy(); }
-
-	// State methods
-	// --------------------------------------------------------------------------------------------
-
-	void create(const phMesh& mesh) noexcept
-	{
-		this->destroy();
-
-		// Vertex array object
-		glGenVertexArraysOES(1, &mVAO);
-		glBindVertexArrayOES(mVAO);
-
-		// Vertex buffer
-		mNumIndices = mesh.numIndices;
-
-		glGenBuffers(1, &mVertexBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(phVertex) * mesh.numVertices,
-			mesh.vertices, GL_STATIC_DRAW);
-
-		glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(phVertex),
-			(void*)offsetof(phVertex, pos));
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(phVertex),
-			(void*)offsetof(Vertex, normal));
-		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(phVertex),
-			(void*)offsetof(Vertex, texcoord));
-
-		// Material index buffer
-		// TODO: Slightly complicated, WebGL does not support integer attributes.
-		/*glGenBuffers(1, &mMaterialIndexBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, mMaterialIndexBuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(uint32_t) * mesh.numVertices,
-			mesh.materialIndices, GL_STATIC_DRAW);
-
-		glBindBuffer(GL_ARRAY_BUFFER, mMaterialIndexBuffer);
-		glEnableVertexAttribArray(3);
-		// TOOD: glVertexAttribIPointer?
-		glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)0);*/
-
-		// Index buffer
-		glGenBuffers(1, &mIndexBuffer);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * mesh.numIndices,
-			mesh.indices, GL_STATIC_DRAW);
-		
-		// Cleanup
-		glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
-		glBindVertexArrayOES(0);
-	}
-
-	void swap(Model& other) noexcept
-	{
-		std::swap(this->mVAO, other.mVAO);
-		std::swap(this->mVertexBuffer, other.mVertexBuffer);
-		std::swap(this->mMaterialIndexBuffer, other.mMaterialIndexBuffer);
-		std::swap(this->mIndexBuffer, other.mIndexBuffer);
-		std::swap(this->mNumIndices, other.mNumIndices);
-	}
-
-	void destroy() noexcept
-	{
-		// Delete buffers
-		glDeleteBuffers(1, &mVertexBuffer);
-		glDeleteBuffers(1, &mMaterialIndexBuffer);
-		glDeleteBuffers(1, &mIndexBuffer);
-		glDeleteVertexArraysOES(1, &mVAO);
-
-		// Reset members
-		mVAO = 0;
-		mVertexBuffer = 0;
-		mMaterialIndexBuffer = 0;
-		mIndexBuffer = 0;
-		mNumIndices = 0;
-	}
-
-	// Methods
-	// --------------------------------------------------------------------------------------------
-
-	bool isValid() const noexcept { return mVAO != 0; }
-
-	void render() noexcept
-	{
-		glBindVertexArrayOES(mVAO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
-		glDrawElements(GL_TRIANGLES, mNumIndices, GL_UNSIGNED_INT, 0);
-	}
-
-//private:
-	uint32_t mVAO = 0;
-	uint32_t mVertexBuffer = 0;
-	uint32_t mMaterialIndexBuffer = 0;
-	uint32_t mIndexBuffer = 0;
-	uint32_t mNumIndices = 0;
-};
 
 // State struct
 // ------------------------------------------------------------------------------------------------
@@ -322,7 +207,7 @@ DLL_EXPORT uint32_t phInitRenderer(
 	mesh.indices[1] = 1;
 	mesh.indices[2] = 2;
 
-	state.model.create(mesh.cView());
+	state.model.create(mesh.cView(), &state.allocator);
 
 	state.modelShader = gl::Program::fromSource(R"(
 		// Input
@@ -417,7 +302,15 @@ DLL_EXPORT void phFinishFrame(void)
 	//state.fullscreenGeom.render();
 
 	state.modelShader.useProgram();
-	state.model.render();
+	state.model.bindVAO();
+	auto& modelComponents = state.model.components();
+	for (auto& component : modelComponents) {
+
+		// TODO: Set material uniforms here
+		uint32_t materialIndex = component.materialIndex();
+
+		component.render();
+	}
 
 	SDL_GL_SwapWindow(state.window);
 	CHECK_GL_ERROR(state);
