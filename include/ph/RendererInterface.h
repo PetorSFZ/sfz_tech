@@ -88,6 +88,31 @@ DLL_EXPORT uint32_t phInitRenderer(
 /// to call if renderer failed to initialize.
 DLL_EXPORT void phDeinitRenderer();
 
+// Resource management (meshes)
+// ------------------------------------------------------------------------------------------------
+
+/// A PhantasyEngine renderer sorts geometry into two types, static and dynamic. Dynamic geometry
+/// can be rendered in any way desired each frame, while static geometry may not change in any way
+/// until it is replaced.
+
+/// Sets the dynamic meshes in this renderer. Will remove any old meshes already registered. Meshes
+/// are likely copied to GPU memory, but even CPU renderers are required to copy the meshes to
+/// their own memory space.
+/// \param meshes the array of meshes
+/// \param numMeshes the number of meshes in the array
+DLL_EXPORT void phSetDynamicMeshes(const phMesh* meshes, uint32_t numMeshes);
+
+/// Adds a dynamic mesh and returns its assigned index
+/// \param mesh the mesh to add
+/// \return the index assigned to the mesh
+DLL_EXPORT uint32_t phAddDynamicMesh(const phMesh* mesh);
+
+/// Updates (replaces) a mesh already registered to this renderer. Will return 0 and not do
+/// anything if the index does not have any mesh registered to it.
+/// \param mesh the mesh to add
+/// \param index the index to the registered mesh
+DLL_EXPORT uint32_t phUpdateDynamicMesh(const phMesh* mesh, uint32_t index);
+
 // Render commands
 // ------------------------------------------------------------------------------------------------
 

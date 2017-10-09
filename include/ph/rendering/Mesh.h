@@ -68,6 +68,19 @@ struct Mesh final {
 		tmp.numIndices = this->indices.size();
 		return tmp;
 	}
+
+	inline const phMesh cView() const noexcept
+	{
+		// Lots of ugly const_cast():ing. I think it should be safe in this instance, but not 100%
+		// sure.
+		phMesh tmp;
+		tmp.vertices = const_cast<phVertex*>(reinterpret_cast<const phVertex*>(this->vertices.data()));
+		tmp.materialIndices = const_cast<uint32_t*>(this->materialIndices.data());
+		tmp.numVertices = this->vertices.size();
+		tmp.indices = const_cast<uint32_t*>(this->indices.data());
+		tmp.numIndices = this->indices.size();
+		return tmp;
+	}
 };
 
 } // namespace ph
