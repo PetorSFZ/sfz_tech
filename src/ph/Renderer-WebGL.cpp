@@ -452,6 +452,24 @@ DLL_EXPORT void phDeinitRenderer()
 	SDL_GL_DeleteContext(context);
 }
 
+// Interface: Resource management (meshes)
+// ------------------------------------------------------------------------------------------------
+
+DLL_EXPORT void phSetDynamicMeshes(const phMesh* meshes, uint32_t numMeshes)
+{
+
+}
+
+DLL_EXPORT uint32_t phAddDynamicMesh(const phMesh* mesh)
+{
+
+}
+
+DLL_EXPORT uint32_t phUpdateDynamicMesh(const phMesh* mesh, uint32_t index)
+{
+
+}
+
 // Interface: Render commands
 // ------------------------------------------------------------------------------------------------
 
@@ -492,7 +510,7 @@ DLL_EXPORT void phFinishFrame(void)
 	state.modelShader.useProgram();
 
 	float yFovDeg = 90.0f;
-	float aspectRatio = 1.0f;
+	float aspectRatio = float(w) / float(h);
 	float zNear = 0.01f;
 	float zFar = 10.0f;
 	mat4 projMatrix = perspectiveProjectionGL(yFovDeg, aspectRatio, zNear, zFar);
