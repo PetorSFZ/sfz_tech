@@ -60,6 +60,11 @@ extern "C" {
 		uint32_t (*phInitRenderer)(SDL_Window*, sfzAllocator*, phConfig*, phLogger*);
 		uint32_t (*phDeinitRenderer)(void);
 
+		// Resource management (meshes)
+		void (*phSetDynamicMeshes)(const phMesh*, uint32_t);
+		uint32_t (*phAddDynamicMesh)(const phMesh*);
+		uint32_t (*phUpdateDynamicMesh)(const phMesh*, uint32_t);
+
 		// Render commands
 		void (*phBeginFrame)(const phCameraData*, const phSphereLight*, uint32_t);
 		void (*phRender)(const phRenderEntity*, uint32_t);
@@ -186,6 +191,11 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phInitRenderer);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phDeinitRenderer);
 	
+	// Resource management (meshes)
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phSetDynamicMeshes);
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phAddDynamicMesh);
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phUpdateDynamicMesh);
+
 	// Render commands
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phBeginFrame);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRender);
@@ -280,6 +290,33 @@ void Renderer::deinitRenderer() noexcept
 		CALL_RENDERER_FUNCTION(mFunctionTable, phDeinitRenderer);
 	}
 	mInited = false;
+}
+
+// Renderer: Resource management (meshes)
+// ------------------------------------------------------------------------------------------------
+
+void Renderer::setDynamicMeshes(const DynArray<Mesh>& meshes) noexcept
+{
+	// Convert from ph::Mesh to phMesh
+	DynArray<phMesh> tmpMeshes;
+	tmpMeshes.create(meshes.size(), mAllocator);
+	for (const auto& mesh : meshes) {
+		tmpMeshes.add(mesh.cView());
+	}
+
+	CALL_RENDERER_FUNCTION(mFunctionTable, phSetDynamicMeshes, tmpMeshes.data(), tmpMeshes.size());
+}
+
+uint32_t Renderer::addDynamicMesh(const Mesh& mesh) noexcept
+{
+	phMesh tmpMesh = mesh.cView();
+	return CALL_RENDERER_FUNCTION(mFunctionTable, phAddDynamicMesh, &tmpMesh);
+}
+
+bool Renderer::updateDynamicMesh(const Mesh& mesh, uint32_t index) noexcept
+{
+	phMesh tmpMesh = mesh.cView();
+	return CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateDynamicMesh, &tmpMesh, index) != 0;
 }
 
 // Renderer: Render commands

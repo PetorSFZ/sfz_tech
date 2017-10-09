@@ -21,9 +21,11 @@
 
 #include <cstdint>
 
+#include <sfz/containers/DynArray.hpp>
 #include <sfz/memory/Allocator.hpp>
 
 #include <ph/rendering/CameraData.h>
+#include <ph/rendering/Mesh.h>
 #include <ph/rendering/RenderEntity.h>
 #include <ph/rendering/SphereLight.h>
 
@@ -32,6 +34,7 @@ extern "C" struct SDL_Window; // Forward declare SDL_Window
 namespace ph {
 
 using sfz::Allocator;
+using sfz::DynArray;
 using std::uint32_t;
 
 // Renderer class
@@ -89,6 +92,18 @@ public:
 	/// See phDeinitRenderer(), is automatically called in destroy() or destructor. No need to call
 	/// manually.
 	void deinitRenderer() noexcept;
+
+	// Renderer: Resource management (meshes)
+	// --------------------------------------------------------------------------------------------
+
+	/// See phSetDynamicMeshes()
+	void setDynamicMeshes(const DynArray<Mesh>& meshes) noexcept;
+
+	/// See phAddDynamicMesh()
+	uint32_t addDynamicMesh(const Mesh& mesh) noexcept;
+
+	/// See phUpdateDynamicMesh()
+	bool updateDynamicMesh(const Mesh& mesh, uint32_t index) noexcept;
 
 	// Renderer: Render commands
 	// --------------------------------------------------------------------------------------------
