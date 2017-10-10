@@ -21,25 +21,40 @@
 
 #ifdef __cplusplus
 #include <cstdint>
+#include <sfz/math/Matrix.hpp>
 using std::uint32_t;
 #else
 #include <stdint.h>
 #endif
 
-// C interface
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-// RenderEntity struct
+// C RenderEntity struct
 // ------------------------------------------------------------------------------------------------
 
+extern "C"
 typedef struct {
 	float transform[12]; // 3x4 right-handed row-major matrix
 	uint32_t meshIndex; // The index of the mesh to render
+	uint32_t padding[3];
 } phRenderEntity;
 
-// End C interface
+// C++ RenderEntity struct
+// ------------------------------------------------------------------------------------------------
+
 #ifdef __cplusplus
-}
+
+namespace ph {
+
+using sfz::mat34;
+
+struct RenderEntity final {
+	mat34 transform = mat34::identity();
+	uint32_t meshIndex = ~0;
+	uint32_t padding[3];
+};
+
+static_assert(sizeof(phRenderEntity) == sizeof(RenderEntity), "RenderEntity is padded");
+static_assert(alignof(phRenderEntity) <= alignof(RenderEntity), "phRenderEntity has higher alignment requirements");
+
+} // namespace ph
+
 #endif
