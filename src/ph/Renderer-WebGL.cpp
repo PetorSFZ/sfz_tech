@@ -39,219 +39,42 @@
 using namespace sfz;
 using namespace ph;
 
-// Cube model
-// ------------------------------------------------------------------------------------------------
-
-static const vec3 CUBE_POSITIONS[] = {
-	// x, y, z
-	// Left
-	vec3(0.0f, 0.0f, 0.0f), // 0, left-bottom-back
-	vec3(0.0f, 0.0f, 1.0f), // 1, left-bottom-front
-	vec3(0.0f, 1.0f, 0.0f), // 2, left-top-back
-	vec3(0.0f, 1.0f, 1.0f), // 3, left-top-front
-
-	// Right
-	vec3(1.0f, 0.0f, 0.0f), // 4, right-bottom-back
-	vec3(1.0f, 0.0f, 1.0f), // 5, right-bottom-front
-	vec3(1.0f, 1.0f, 0.0f), // 6, right-top-back
-	vec3(1.0f, 1.0f, 1.0f), // 7, right-top-front
-
-	// Bottom
-	vec3(0.0f, 0.0f, 0.0f), // 8, left-bottom-back
-	vec3(0.0f, 0.0f, 1.0f), // 9, left-bottom-front
-	vec3(1.0f, 0.0f, 0.0f), // 10, right-bottom-back
-	vec3(1.0f, 0.0f, 1.0f), // 11, right-bottom-front
-
-	// Top
-	vec3(0.0f, 1.0f, 0.0f), // 12, left-top-back
-	vec3(0.0f, 1.0f, 1.0f), // 13, left-top-front
-	vec3(1.0f, 1.0f, 0.0f), // 14, right-top-back
-	vec3(1.0f, 1.0f, 1.0f), // 15, right-top-front
-
-	// Back
-	vec3(0.0f, 0.0f, 0.0f), // 16, left-bottom-back
-	vec3(0.0f, 1.0f, 0.0f), // 17, left-top-back
-	vec3(1.0f, 0.0f, 0.0f), // 18, right-bottom-back
-	vec3(1.0f, 1.0f, 0.0f), // 19, right-top-back
-
-	// Front
-	vec3(0.0f, 0.0f, 1.0f), // 20, left-bottom-front
-	vec3(0.0f, 1.0f, 1.0f), // 21, left-top-front
-	vec3(1.0f, 0.0f, 1.0f), // 22, right-bottom-front
-	vec3(1.0f, 1.0f, 1.0f)  // 23, right-top-front
-};
-
-static const vec3 CUBE_NORMALS[] = {
-	// x, y, z
-	// Left
-	vec3(-1.0f, 0.0f, 0.0f), // 0, left-bottom-back
-	vec3(-1.0f, 0.0f, 0.0f), // 1, left-bottom-front
-	vec3(-1.0f, 0.0f, 0.0f), // 2, left-top-back
-	vec3(-1.0f, 0.0f, 0.0f), // 3, left-top-front
-
-	// Right
-	vec3(1.0f, 0.0f, 0.0f), // 4, right-bottom-back
-	vec3(1.0f, 0.0f, 0.0f), // 5, right-bottom-front
-	vec3(1.0f, 0.0f, 0.0f), // 6, right-top-back
-	vec3(1.0f, 0.0f, 0.0f), // 7, right-top-front
-
-	// Bottom
-	vec3(0.0f, -1.0f, 0.0f), // 8, left-bottom-back
-	vec3(0.0f, -1.0f, 0.0f), // 9, left-bottom-front
-	vec3(0.0f, -1.0f, 0.0f), // 10, right-bottom-back
-	vec3(0.0f, -1.0f, 0.0f), // 11, right-bottom-front
-
-	// Top
-	vec3(0.0f, 1.0f, 0.0f), // 12, left-top-back
-	vec3(0.0f, 1.0f, 0.0f), // 13, left-top-front
-	vec3(0.0f, 1.0f, 0.0f), // 14, right-top-back
-	vec3(0.0f, 1.0f, 0.0f), // 15, right-top-front
-
-	// Back
-	vec3(0.0f, 0.0f, -1.0f), // 16, left-bottom-back
-	vec3(0.0f, 0.0f, -1.0f), // 17, left-top-back
-	vec3(0.0f, 0.0f, -1.0f), // 18, right-bottom-back
-	vec3(0.0f, 0.0f, -1.0f), // 19, right-top-back
-
-	// Front
-	vec3(0.0f, 0.0f, 1.0f), // 20, left-bottom-front
-	vec3(0.0f, 0.0f, 1.0f), // 21, left-top-front
-	vec3(0.0f, 0.0f, 1.0f), // 22, right-bottom-front
-	vec3(0.0f, 0.0f, 1.0f)  // 23, right-top-front
-};
-
-static const vec2 CUBE_TEXCOORDS[] = {
-	// u, v
-	// Left
-	vec2(0.0f, 0.0f), // 0, left-bottom-back
-	vec2(1.0f, 0.0f), // 1, left-bottom-front
-	vec2(0.0f, 1.0f), // 2, left-top-back
-	vec2(1.0f, 1.0f), // 3, left-top-front
-
-	// Right
-	vec2(1.0f, 0.0f), // 4, right-bottom-back
-	vec2(0.0f, 0.0f), // 5, right-bottom-front
-	vec2(1.0f, 1.0f), // 6, right-top-back
-	vec2(0.0f, 1.0f), // 7, right-top-front
-
-	// Bottom
-	vec2(0.0f, 0.0f), // 8, left-bottom-back
-	vec2(0.0f, 1.0f), // 9, left-bottom-front
-	vec2(1.0f, 0.0f), // 10, right-bottom-back
-	vec2(1.0f, 1.0f), // 11, right-bottom-front
-
-	// Top
-	vec2(0.0f, 1.0f), // 12, left-top-back
-	vec2(0.0f, 0.0f), // 13, left-top-front
-	vec2(1.0f, 1.0f), // 14, right-top-back
-	vec2(1.0f, 0.0f), // 15, right-top-front
-
-	// Back
-	vec2(1.0f, 0.0f), // 16, left-bottom-back
-	vec2(1.0f, 1.0f), // 17, left-top-back
-	vec2(0.0f, 0.0f), // 18, right-bottom-back
-	vec2(0.0f, 1.0f), // 19, right-top-back
-
-	// Front
-	vec2(0.0f, 0.0f), // 20, left-bottom-front
-	vec2(0.0f, 1.0f), // 21, left-top-front
-	vec2(1.0f, 0.0f), // 22, right-bottom-front
-	vec2(1.0f, 1.0f)  // 23, right-top-front
-};
-
-static const uint32_t CUBE_MATERIALS[] = {
-	// Left
-	0, 0, 0, 0,
-	// Right
-	0, 0, 0, 0,
-	// Bottom
-	0, 0, 0, 0,
-	// Top
-	0, 0, 0, 0,
-	// Back
-	0, 0, 0, 0,
-	// Front
-	0, 0, 0, 0
-};
-
-static const uint32_t CUBE_INDICES[] = {
-	// Left
-	0, 1, 2,
-	3, 2, 1,
-
-	// Right
-	5, 4, 7,
-	6, 7, 4,
-
-	// Bottom
-	8, 10, 9,
-	11, 9, 10,
-
-	// Top
-	13, 15, 12,
-	14, 12, 15,
-
-	// Back
-	18, 16, 19,
-	17, 19, 16,
-
-	// Front
-	20, 22, 21,
-	23, 21, 22
-};
-
-static const uint32_t CUBE_NUM_VERTICES = sizeof(CUBE_POSITIONS) / sizeof(vec3);
-static const uint32_t CUBE_NUM_INDICES = sizeof(CUBE_INDICES) / sizeof(uint32_t);
-
-static Model createCubeModel(Allocator* allocator) noexcept
-{
-	// Create mesh from hardcoded values
-	ph::Mesh mesh;
-	mesh.vertices.create(CUBE_NUM_VERTICES, allocator);
-	mesh.vertices.addMany(CUBE_NUM_VERTICES);
-	mesh.materialIndices.create(CUBE_NUM_VERTICES, allocator);
-	mesh.materialIndices.addMany(CUBE_NUM_VERTICES);
-	for (uint32_t i = 0; i < CUBE_NUM_VERTICES; i++) {
-		mesh.vertices[i].pos = CUBE_POSITIONS[i];
-		mesh.vertices[i].normal = CUBE_NORMALS[i];
-		mesh.vertices[i].texcoord = CUBE_TEXCOORDS[i];
-		mesh.materialIndices[i] = CUBE_MATERIALS[i];
-	}
-	mesh.indices.create(CUBE_NUM_INDICES, allocator);
-	mesh.indices.add(CUBE_INDICES, CUBE_NUM_INDICES);
-
-	// Create model from mesh
-	Model tmpModel;
-	tmpModel.create(mesh.cView(), allocator);
-
-	// Return model
-	return tmpModel;
-}
-
-// State struct
+// State
 // ------------------------------------------------------------------------------------------------
 
 struct RendererState final {
+	// Utilities
 	CAllocatorWrapper allocator;
 	SDL_Window* window = nullptr;
 	phConfig config = {};
 	phLogger logger = {};
 	SDL_GLContext glContext = nullptr;
 
+	// Resources
 	gl::FullscreenGeometry fullscreenGeom;
+	DynArray<Model> dynamicModels;
+
+	// Shaders
+
+
+	
 	gl::Program shader;
 
-	Model model;
 	gl::Program modelShader;
 };
+
+static RendererState* statePtr = nullptr;
 
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-#define CHECK_GL_ERROR(state) checkGLError(state, __FILE__, __LINE__)
+#define CHECK_GL_ERROR() checkGLError(__FILE__, __LINE__)
 
-static void checkGLError(const RendererState& state, const char* file, int line) noexcept
+static void checkGLError(const char* file, int line) noexcept
 {
+	if (statePtr == nullptr) return;
+	RendererState& state = *statePtr;
+
 	GLenum error;
 	while ((error = glGetError()) != GL_NO_ERROR) {
 
@@ -279,7 +102,7 @@ static void checkGLError(const RendererState& state, const char* file, int line)
 	}
 }
 
-static RendererState* statePtr = nullptr;
+
 
 // Interface: Init functions
 // ------------------------------------------------------------------------------------------------
@@ -354,8 +177,13 @@ DLL_EXPORT uint32_t phInitRenderer(
 	//PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Extensions: %s",
 	//    glGetString(GL_EXTENSIONS));
 
-	// Create FullscreenVAO
+	// Create FullscreenGeometry
 	state.fullscreenGeom.create(gl::FullscreenGeometryType::OGL_CLIP_SPACE_RIGHT_HANDED_FRONT_FACE);
+
+	// Init DynArray with dynamic models
+	state.dynamicModels.create(128, &state.allocator);
+
+	
 
 	// Compile shader program
 	state.shader = gl::Program::postProcessFromSource(R"(
@@ -370,9 +198,6 @@ DLL_EXPORT uint32_t phInitRenderer(
 			//gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
 		}
 	)");
-
-
-	state.model = createCubeModel(&state.allocator);
 
 	state.modelShader = gl::Program::fromSource(R"(
 		// Input
@@ -424,7 +249,7 @@ DLL_EXPORT uint32_t phInitRenderer(
 		glBindAttribLocation(shaderProgram, 2, "inTexcoord");
 	});
 
-	CHECK_GL_ERROR(state);
+	CHECK_GL_ERROR();
 	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Finished initializing renderer");
 	return 1;
 }
@@ -457,17 +282,35 @@ DLL_EXPORT void phDeinitRenderer()
 
 DLL_EXPORT void phSetDynamicMeshes(const phMesh* meshes, uint32_t numMeshes)
 {
-
+	RendererState& state = *statePtr;
+	
+	// Remove any previous models
+	state.dynamicModels.clear();
+	
+	// Create models from all meshes and add them to state
+	for (uint32_t i = 0; i < numMeshes; i++) {
+		state.dynamicModels.add(Model(meshes[i], &state.allocator));
+	}
 }
 
 DLL_EXPORT uint32_t phAddDynamicMesh(const phMesh* mesh)
 {
+	RendererState& state = *statePtr;
 
+	uint32_t index = state.dynamicModels.size();
+	state.dynamicModels.add(Model(*mesh, &state.allocator));
+	return index;
 }
 
 DLL_EXPORT uint32_t phUpdateDynamicMesh(const phMesh* mesh, uint32_t index)
 {
+	RendererState& state = *statePtr;
 
+	// Check if model exists
+	if (state.dynamicModels.size() <= index) return 0;
+
+	state.dynamicModels[index] = Model(*mesh, &state.allocator);
+	return 1;
 }
 
 // Interface: Render commands
@@ -478,17 +321,18 @@ DLL_EXPORT void phBeginFrame(
 	const phSphereLight* dynamicSphereLights,
 	uint32_t numDynamicSphereLights)
 {
+	RendererState& state = *statePtr;
+
+
 
 }
 
 DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities)
 {
-	
-}
-
-DLL_EXPORT void phFinishFrame(void)
-{
 	RendererState& state = *statePtr;
+
+	//Model& model 
+
 
 	// Get size of default framebuffer
 	int w = 0, h = 0;
@@ -523,16 +367,29 @@ DLL_EXPORT void phFinishFrame(void)
 	gl::setUniform(state.modelShader, "uModelMatrix", modelMatrix);
 	gl::setUniform(state.modelShader, "uNormalMatrix", normalMatrix);
 
-	state.model.bindVAO();	
-	auto& modelComponents = state.model.components();
-	for (auto& component : modelComponents) {
+	for (uint32_t i = 0; i < numEntities; i++) {
+		const auto& entity = reinterpret_cast<const ph::RenderEntity*>(entities)[i];
+		auto& model = state.dynamicModels[entity.meshIndex];
 
-		// TODO: Set material uniforms here
-		uint32_t materialIndex = component.materialIndex();
+		// TODO: Set model & normal matrix here
 
-		component.render();
+		model.bindVAO();	
+		auto& modelComponents = model.components();
+		for (auto& component : modelComponents) {
+
+			uint32_t materialIndex = component.materialIndex();
+			// TODO: Set material here
+
+			component.render();
+		}
 	}
+}
 
+DLL_EXPORT void phFinishFrame(void)
+{
+	RendererState& state = *statePtr;
+
+	
 	SDL_GL_SwapWindow(state.window);
-	CHECK_GL_ERROR(state);
+	CHECK_GL_ERROR();
 }
