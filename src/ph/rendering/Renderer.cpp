@@ -330,9 +330,10 @@ void Renderer::beginFrame(
 	CALL_RENDERER_FUNCTION(mFunctionTable, phBeginFrame, &camera, dynamicSphereLights, numDynamicSphereLights);
 }
 
-void Renderer::render(const phRenderEntity* entities, uint32_t numEntities) noexcept
+void Renderer::render(const RenderEntity* entities, uint32_t numEntities) noexcept
 {
-	CALL_RENDERER_FUNCTION(mFunctionTable, phRender, entities, numEntities);
+	CALL_RENDERER_FUNCTION(mFunctionTable, phRender,
+		reinterpret_cast<const phRenderEntity*>(entities), numEntities);
 }
 
 void Renderer::finishFrame() noexcept

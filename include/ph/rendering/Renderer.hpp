@@ -115,7 +115,7 @@ public:
 		uint32_t numDynamicSphereLights) noexcept;
 
 	/// See phRender()
-	void render(const phRenderEntity* entities, uint32_t numEntities) noexcept;
+	void render(const RenderEntity* entities, uint32_t numEntities) noexcept;
 
 	/// See phFinishFrame()
 	void finishFrame() noexcept;
