@@ -55,12 +55,13 @@ struct RendererState final {
 	DynArray<Model> dynamicModels;
 
 	// Shaders
-
-
-	
+	uint32_t fbWidth, fbHeight;
 	gl::Program shader;
-
 	gl::Program modelShader;
+
+	// Camera matrices
+	mat4 viewMatrix = mat4::identity();
+	mat4 projMatrix = mat4::identity();
 };
 
 static RendererState* statePtr = nullptr;
@@ -101,8 +102,6 @@ static void checkGLError(const char* file, int line) noexcept
 		}
 	}
 }
-
-
 
 // Interface: Init functions
 // ------------------------------------------------------------------------------------------------
@@ -182,8 +181,6 @@ DLL_EXPORT uint32_t phInitRenderer(
 
 	// Init DynArray with dynamic models
 	state.dynamicModels.create(128, &state.allocator);
-
-	
 
 	// Compile shader program
 	state.shader = gl::Program::postProcessFromSource(R"(
@@ -317,33 +314,36 @@ DLL_EXPORT uint32_t phUpdateDynamicMesh(const phMesh* mesh, uint32_t index)
 // ------------------------------------------------------------------------------------------------
 
 DLL_EXPORT void phBeginFrame(
-	const phCameraData* camera,
+	const phCameraData* cameraPtr,
 	const phSphereLight* dynamicSphereLights,
 	uint32_t numDynamicSphereLights)
 {
 	RendererState& state = *statePtr;
+	const CameraData& camera = *reinterpret_cast<const CameraData*>(cameraPtr);
 
+	// Get size of default framebuffer
+	int w = 0, h = 0;
+	SDL_GL_GetDrawableSize(state.window, &w, &h);
+	state.fbWidth = uint32_t(w);
+	state.fbHeight = uint32_t(h);
+	float aspect = float(w) / float(h);
 
+	// Create camera matrices
+	state.viewMatrix = viewMatrixGL(camera.pos, camera.dir, camera.up);
+	state.projMatrix = perspectiveProjectionGL(camera.vertFovDeg, aspect, camera.near, camera.far);
 
+	// Set some GL settings
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
 }
 
 DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities)
 {
 	RendererState& state = *statePtr;
 
-	//Model& model 
-
-
-	// Get size of default framebuffer
-	int w = 0, h = 0;
-	SDL_GL_GetDrawableSize(state.window, &w, &h);
-
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(0, 0, w, h);
+	glViewport(0, 0, state.fbWidth, state.fbHeight);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClearDepthf(1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -353,12 +353,8 @@ DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities)
 
 	state.modelShader.useProgram();
 
-	float yFovDeg = 90.0f;
-	float aspectRatio = float(w) / float(h);
-	float zNear = 0.01f;
-	float zFar = 10.0f;
-	mat4 projMatrix = perspectiveProjectionGL(yFovDeg, aspectRatio, zNear, zFar);
-	mat4 viewMatrix = viewMatrixGL(vec3(3.0f, 3.0f, 3.0f), vec3(-1.0f, -0.25f, -1.0f), vec3(0.0f, 1.0f, 0.0f));
+	const mat4& projMatrix = state.projMatrix;
+	const mat4& viewMatrix = state.viewMatrix;
 	mat4 modelMatrix = mat4::identity();
 	mat4 normalMatrix = inverse(transpose(viewMatrix * modelMatrix));
 
@@ -373,7 +369,7 @@ DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities)
 
 		// TODO: Set model & normal matrix here
 
-		model.bindVAO();	
+		model.bindVAO();
 		auto& modelComponents = model.components();
 		for (auto& component : modelComponents) {
 
