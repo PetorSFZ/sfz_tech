@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -37,7 +37,11 @@ void error(const char* format, ...) noexcept
 	// Print message to stderr
 	va_list args;
 	va_start(args, format);
+#ifdef __EMSCRIPTEN__
+	std::vfprintf(stdout, actualFormat, args);
+#else
 	std::vfprintf(stderr, actualFormat, args);
+#endif
 	va_end(args);
 
 	// Attempt to open debugger
@@ -59,7 +63,11 @@ void printErrorMessage(const char* format, ...) noexcept
 	// Print message to stderr
 	va_list args;
 	va_start(args, format);
+#ifdef __EMSCRIPTEN__
+	std::vfprintf(stdout, actualFormat, args);
+#else
 	std::vfprintf(stderr, actualFormat, args);
+#endif
 	va_end(args);
 }
 
