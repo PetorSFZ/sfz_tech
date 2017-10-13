@@ -323,11 +323,12 @@ bool Renderer::updateDynamicMesh(const Mesh& mesh, uint32_t index) noexcept
 // ------------------------------------------------------------------------------------------------
 
 void Renderer::beginFrame(
-	const phCameraData& camera,
+	const CameraData& camera,
 	const phSphereLight* dynamicSphereLights,
 	uint32_t numDynamicSphereLights) noexcept
 {
-	CALL_RENDERER_FUNCTION(mFunctionTable, phBeginFrame, &camera, dynamicSphereLights, numDynamicSphereLights);
+	CALL_RENDERER_FUNCTION(mFunctionTable, phBeginFrame,
+		reinterpret_cast<const phCameraData*>(&camera), dynamicSphereLights, numDynamicSphereLights);
 }
 
 void Renderer::render(const RenderEntity* entities, uint32_t numEntities) noexcept
