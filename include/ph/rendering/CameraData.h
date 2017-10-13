@@ -19,20 +19,39 @@
 
 #pragma once
 
-// C interface
 #ifdef __cplusplus
-extern "C" {
+#include <sfz/math/Vector.hpp>
 #endif
 
-// CameraData
+// C CameraData struct
 // ------------------------------------------------------------------------------------------------
 
+extern "C"
 typedef struct {
-	float viewMatrix[16]; // 4x4 right-handed row-major matrix
-	float near, far, vertFovDeg;
+	float pos[3]; float near;
+	float dir[3]; float far;
+	float up[3]; float vertFovDeg;
 } phCameraData;
 
-// End C interface
+// C++ CameraData struct
+// ------------------------------------------------------------------------------------------------
+
 #ifdef __cplusplus
-}
+
+namespace ph {
+
+using sfz::vec3;
+
+struct CameraData final {
+	vec3 pos = vec3(0.0f); float near = 0.0f;
+	vec3 dir = vec3(0.0f); float far = 0.0f;
+	vec3 up = vec3(0.0f); float vertFovDeg = 0.0f;
+};
+
+static_assert(sizeof(phCameraData) == sizeof(float) * 12, "phCameraData is padded");
+static_assert(sizeof(phCameraData) == sizeof(CameraData), "ph::CameraData is padded");
+static_assert(alignof(phCameraData) <= alignof(CameraData), "phCameraData has higher alignment requirements");
+
+} // namespace ph
+
 #endif
