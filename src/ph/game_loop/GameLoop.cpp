@@ -114,6 +114,7 @@ static bool handleUpdateOp(GameLoopState& state, UpdateOp& op) noexcept
 		return true;
 	case UpdateOpType::CHANGE_UPDATEABLE:
 		state.updateable = std::move(op.newUpdateable);
+		state.updateable->initialize(*state.renderer);
 		return true;
 	case UpdateOpType::CHANGE_TICK_RATE:
 		if (op.ticksPerSecond != 0) {
@@ -239,6 +240,9 @@ void runGameLoop(UniquePtr<GameLoopUpdateable> updateable, UniquePtr<Renderer> r
 	// Initialize controllers
 	initControllers(gameLoopState.userInput.controllers);
 	SDL_GameControllerEventState(SDL_ENABLE);
+
+	// Initialize GameLoopUpdateable
+	updateable->initialize(*gameLoopState.renderer);
 
 	// Start the game loop
 #ifdef __EMSCRIPTEN__

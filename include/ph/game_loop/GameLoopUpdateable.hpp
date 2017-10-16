@@ -139,6 +139,12 @@ struct UpdateInfo final {
 class GameLoopUpdateable {
 public:
 	virtual ~GameLoopUpdateable() = default;
+
+	/// Initializes this instance. Initialization should preferably be done in this method instead
+	/// of the constructor. Will be called by the gameloop. If you are reusing updateables you
+	/// should be careful to check if the updateable is already in an initialized state before
+	/// initializing.
+	virtual void initialize(Renderer& renderer) = 0;
 	
 	/// Called once every iteration of the game loop, all the user input since the previous
 	/// should be handled here.
