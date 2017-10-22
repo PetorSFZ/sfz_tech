@@ -242,7 +242,7 @@ void runGameLoop(UniquePtr<GameLoopUpdateable> updateable, UniquePtr<Renderer> r
 	SDL_GameControllerEventState(SDL_ENABLE);
 
 	// Initialize GameLoopUpdateable
-	updateable->initialize(*gameLoopState.renderer);
+	gameLoopState.updateable->initialize(*gameLoopState.renderer);
 
 	// Start the game loop
 #ifdef __EMSCRIPTEN__
