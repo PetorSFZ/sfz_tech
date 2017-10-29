@@ -26,9 +26,11 @@
 #define GL_GLEXT_PROTOTYPES // This seems to enable extension use.
 #include <SDL_opengles2.h>
 
+#include <sfz/math/MathSupport.hpp>
 #include <sfz/math/ProjectionMatrices.hpp>
 #include <sfz/memory/CAllocatorWrapper.hpp>
 #include <sfz/memory/New.hpp>
+#include <sfz/strings/StackString.hpp>
 
 #include <sfz/gl/Program.hpp>
 #include <sfz/gl/FullscreenGeometry.hpp>
@@ -38,6 +40,11 @@
 
 using namespace sfz;
 using namespace ph;
+
+// Constants
+// ------------------------------------------------------------------------------------------------
+
+static const uint32_t MAX_NUM_DYNAMIC_SPHERE_LIGHTS = 32;
 
 // State
 // ------------------------------------------------------------------------------------------------
@@ -62,6 +69,9 @@ struct RendererState final {
 	// Camera matrices
 	mat4 viewMatrix = mat4::identity();
 	mat4 projMatrix = mat4::identity();
+
+	// Scene
+	DynArray<ph::SphereLight> dynamicSphereLights;
 };
 
 static RendererState* statePtr = nullptr;
@@ -103,6 +113,24 @@ static void checkGLError(const char* file, int line) noexcept
 	}
 }
 
+static void stupidSetSphereLightUniform(
+	const gl::Program& program,
+	const char* name,
+	uint32_t index,
+	const ph::SphereLight& sphereLight,
+	const mat4& viewMatrix) noexcept
+{
+	StackString tmpStr;
+	tmpStr.printf("%s[%u].%s", name, index, "vsPos");
+	gl::setUniform(program, tmpStr.str, transformPoint(viewMatrix, sphereLight.pos));
+	tmpStr.printf("%s[%u].%s", name, index, "radius");
+	gl::setUniform(program, tmpStr.str, sphereLight.radius);
+	tmpStr.printf("%s[%u].%s", name, index, "range");
+	gl::setUniform(program, tmpStr.str, sphereLight.range);
+	tmpStr.printf("%s[%u].%s", name, index, "strength");
+	gl::setUniform(program, tmpStr.str, sphereLight.strength);
+}
+
 // Interface: Init functions
 // ------------------------------------------------------------------------------------------------
 
@@ -140,7 +168,7 @@ DLL_EXPORT uint32_t phInitRenderer(
 		    "Failed to set GL context profile: %s", SDL_GetError());
 		return 0;
 	}
-	SDL_GLContext tmpContext = SDL_GL_CreateContext(window); 
+	SDL_GLContext tmpContext = SDL_GL_CreateContext(window);
 	if (tmpContext == nullptr) {
 		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
 		    "Failed to create GL context: %s", SDL_GetError());
@@ -216,7 +244,7 @@ DLL_EXPORT uint32_t phInitRenderer(
 		void main()
 		{
 			vec4 vsPosTmp = uViewMatrix * uModelMatrix * vec4(inPos, 1.0);
-			
+
 			vsPos = vsPosTmp.xyz / vsPosTmp.w; // Unsure if division necessary.
 			vsNormal = (uNormalMatrix * vec4(inNormal, 0.0)).xyz;
 			texcoord = inTexcoord;
@@ -226,25 +254,51 @@ DLL_EXPORT uint32_t phInitRenderer(
 	)", R"(
 		precision mediump float;
 
+		// SphereLight struct
+		struct SphereLight {
+			vec3 vsPos;
+			float radius;
+			float range;
+			vec3 strength;
+		};
+
 		// Input
 		varying vec3 vsPos;
 		varying vec3 vsNormal;
 		varying vec2 texcoord;
 
 		// Uniforms
-		uniform vec3 color;
+		const int MAX_NUM_DYNAMIC_SPHERE_LIGHTS = 32;
+		uniform SphereLight uDynamicSphereLights[MAX_NUM_DYNAMIC_SPHERE_LIGHTS];
+		uniform int uNumDynamicSphereLights;
 
 		void main()
 		{
-			gl_FragColor = vec4(vsNormal, 1.0);
-			//gl_FragColor = vec4(texcoord.x, texcoord.y, 0.0, 1.0);
-			//gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
+			vec3 totalOutput = vec3(0.0);
+
+			for (int i = 0; i < MAX_NUM_DYNAMIC_SPHERE_LIGHTS; i++) {
+				SphereLight light = uDynamicSphereLights[i];
+
+				vec3 toLight = light.vsPos - vsPos;
+				vec3 toLightDir = normalize(toLight);
+
+				vec3 color = vec3(dot(toLightDir, vsNormal));
+
+				if (i < uNumDynamicSphereLights) {
+					totalOutput += clamp(color, vec3(0.0), vec3(1.0));
+				}
+			}
+
+			gl_FragColor = vec4(totalOutput, 1.0);
 		}
 	)", [](uint32_t shaderProgram) {
 		glBindAttribLocation(shaderProgram, 0, "inPos");
 		glBindAttribLocation(shaderProgram, 1, "inNormal");
 		glBindAttribLocation(shaderProgram, 2, "inTexcoord");
 	});
+
+	// Initialize array to hold dynamic sphere lights
+	state.dynamicSphereLights.create(MAX_NUM_DYNAMIC_SPHERE_LIGHTS, &state.allocator);
 
 	CHECK_GL_ERROR();
 	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Finished initializing renderer");
@@ -280,10 +334,10 @@ DLL_EXPORT void phDeinitRenderer()
 DLL_EXPORT void phSetDynamicMeshes(const phMesh* meshes, uint32_t numMeshes)
 {
 	RendererState& state = *statePtr;
-	
+
 	// Remove any previous models
 	state.dynamicModels.clear();
-	
+
 	// Create models from all meshes and add them to state
 	for (uint32_t i = 0; i < numMeshes; i++) {
 		state.dynamicModels.add(Model(meshes[i], &state.allocator));
@@ -332,10 +386,26 @@ DLL_EXPORT void phBeginFrame(
 	state.viewMatrix = viewMatrixGL(camera.pos, camera.dir, camera.up);
 	state.projMatrix = perspectiveProjectionGL(camera.vertFovDeg, aspect, camera.near, camera.far);
 
+	// Set dynamic sphere lights
+	state.dynamicSphereLights.clear();
+	state.dynamicSphereLights.insert(0,
+		reinterpret_cast<const ph::SphereLight*>(dynamicSphereLights),
+		min(numDynamicSphereLights, MAX_NUM_DYNAMIC_SPHERE_LIGHTS));
+
 	// Set some GL settings
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
+
+	// Upload dynamic sphere lights to shader
+	state.modelShader.useProgram();
+	gl::setUniform(state.modelShader, "uNumDynamicSphereLights", int(state.dynamicSphereLights.size()));
+	for (uint32_t i = 0; i < state.dynamicSphereLights.size(); i++) {
+		stupidSetSphereLightUniform(state.modelShader, "uDynamicSphereLights", i,
+			state.dynamicSphereLights[i], state.viewMatrix);
+	}
+
+	CHECK_GL_ERROR();
 }
 
 DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities)
@@ -385,7 +455,8 @@ DLL_EXPORT void phFinishFrame(void)
 {
 	RendererState& state = *statePtr;
 
-	
+
 	SDL_GL_SwapWindow(state.window);
 	CHECK_GL_ERROR();
 }
+
