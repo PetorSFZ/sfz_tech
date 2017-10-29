@@ -84,11 +84,11 @@ extern "C" {
 
 #define CALL_RENDERER_FUNCTION(table, function, ...) \
 	((table)->function(__VA_ARGS__))
-	
+
 #else
 #error "Not implemented"
 #endif
-	
+
 #if defined(_WIN32)
 static StackString192 getWindowsErrorMessage() noexcept
 {
@@ -147,7 +147,7 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 	this->destroy();
 
 	mAllocator = allocator;
-	
+
 	// If we statically link the renderer we only really need to check the interface version
 #if defined(PH_STATIC_LINK_RENDERER)
 
@@ -157,7 +157,7 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 	}
 
 	// If dynamically loading renderer we do this other stuff
-#else	
+#else
 	// Load DLL on Windows
 #ifdef _WIN32
 	// Load DLL
@@ -177,7 +177,7 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 	// Create function table
 	mFunctionTable = sfz::sfzNew<FunctionTable>(allocator);
 	std::memset(mFunctionTable, 0, sizeof(FunctionTable));
-	
+
 #ifdef _WIN32
 	// Start of with loading interface version function and checking that the correct interface is used
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRendererInterfaceVersion);
@@ -185,12 +185,12 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Renderer DLL (%s.dll) has wrong interface version (%u), expected (%u).",
 			   moduleName, mFunctionTable->phRendererInterfaceVersion(), INTERFACE_VERSION);
 	}
-	
+
 	// Init functions
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRequiredSDL2WindowFlags);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phInitRenderer);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phDeinitRenderer);
-	
+
 	// Resource management (meshes)
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phSetDynamicMeshes);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phAddDynamicMesh);
@@ -228,7 +228,7 @@ void Renderer::destroy() noexcept
 			    error.str);
 		}
 #endif
-		
+
 		// Deallocate function table
 		sfz::sfzDelete(mFunctionTable, mAllocator);
 
@@ -324,11 +324,22 @@ bool Renderer::updateDynamicMesh(const Mesh& mesh, uint32_t index) noexcept
 
 void Renderer::beginFrame(
 	const CameraData& camera,
-	const phSphereLight* dynamicSphereLights,
+	const ph::SphereLight* dynamicSphereLights,
 	uint32_t numDynamicSphereLights) noexcept
 {
 	CALL_RENDERER_FUNCTION(mFunctionTable, phBeginFrame,
-		reinterpret_cast<const phCameraData*>(&camera), dynamicSphereLights, numDynamicSphereLights);
+		reinterpret_cast<const phCameraData*>(&camera),
+		reinterpret_cast<const phSphereLight*>(dynamicSphereLights), numDynamicSphereLights);
+}
+
+void Renderer::beginFrame(
+	const CameraData& camera,
+	const DynArray<ph::SphereLight>& dynamicSphereLights) noexcept
+{
+	CALL_RENDERER_FUNCTION(mFunctionTable, phBeginFrame,
+		reinterpret_cast<const phCameraData*>(&camera),
+		reinterpret_cast<const phSphereLight*>(dynamicSphereLights.data()),
+		dynamicSphereLights.size());
 }
 
 void Renderer::render(const RenderEntity* entities, uint32_t numEntities) noexcept

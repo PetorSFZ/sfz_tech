@@ -59,7 +59,7 @@ public:
 	Renderer& operator= (const Renderer&) = delete;
 
 	Renderer(const char* moduleName, Allocator* allocator) noexcept;
-	Renderer(Renderer&& other) noexcept; 
+	Renderer(Renderer&& other) noexcept;
 	Renderer& operator= (Renderer&& other) noexcept;
 	~Renderer() noexcept;
 
@@ -111,8 +111,13 @@ public:
 	/// See phBeginFrame()
 	void beginFrame(
 		const CameraData& camera,
-		const phSphereLight* dynamicSphereLights,
+		const ph::SphereLight* dynamicSphereLights,
 		uint32_t numDynamicSphereLights) noexcept;
+
+	/// See phBeginFrame()
+	void beginFrame(
+		const CameraData& camera,
+		const DynArray<ph::SphereLight>& dynamicSphereLights) noexcept;
 
 	/// See phRender()
 	void render(const RenderEntity* entities, uint32_t numEntities) noexcept;
