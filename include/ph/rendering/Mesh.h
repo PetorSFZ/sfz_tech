@@ -28,12 +28,13 @@ using std::uint32_t;
 #include <stdint.h>
 #endif
 
+#include "ph/ExternC.h"
 #include "ph/rendering/Vertex.h"
 
 // C Mesh struct
 // ------------------------------------------------------------------------------------------------
 
-extern "C"
+PH_EXTERN_C
 typedef struct {
 	phVertex* vertices;
 	uint32_t* materialIndices;

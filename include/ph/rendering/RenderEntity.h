@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //               For other contributors see Contributors.txt
 //
 // This software is provided 'as-is', without any express or implied
@@ -27,10 +27,12 @@ using std::uint32_t;
 #include <stdint.h>
 #endif
 
+#include "ph/ExternC.h"
+
 // C RenderEntity struct
 // ------------------------------------------------------------------------------------------------
 
-extern "C"
+PH_EXTERN_C
 typedef struct {
 	float transform[12]; // 3x4 right-handed row-major matrix
 	uint32_t meshIndex; // The index of the mesh to render

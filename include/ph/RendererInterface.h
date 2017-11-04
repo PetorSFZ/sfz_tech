@@ -29,6 +29,7 @@ using std::uint32_t;
 #include <sfz/memory/CAllocator.h>
 
 #include "ph/rendering/CameraData.h"
+#include "ph/rendering/Material.h"
 #include "ph/rendering/Mesh.h"
 #include "ph/rendering/RenderEntity.h"
 #include "ph/rendering/SphereLight.h"
@@ -88,6 +89,40 @@ DLL_EXPORT uint32_t phInitRenderer(
 /// to call if renderer failed to initialize.
 DLL_EXPORT void phDeinitRenderer();
 
+// Resource management (materials)
+// ------------------------------------------------------------------------------------------------
+
+/// A material is used to describe how a surface should be rendered. Generally speaking a material
+/// can either contain everything necessary to render a surface, or point to textures from which
+/// this information can be retrieved.
+///
+/// Each material is assigned an index, each triangle in a mesh can then refer to this index. It is
+/// expected that a single mesh does not use too many materials, as some renderers may need to split
+/// the mesh by the number of materials used when rendering.
+///
+/// Materials are shared between all objects, static and dynamic alike. However, the renderer is
+/// allowed to assume that materials for static objects does not change. Some renderers may thus
+/// preprocess those materials in some way when the static geometry is set, i.e. updating those
+/// materials is not guaranteed to actually change the static geometry.
+
+/// Set the materials in this renderer. Will remove any old materials already registered. Materials
+/// will be copied to renderers internal memory. Material at index 0 will be assigned indexo 0, etc.
+/// \param materials the materials to add
+/// \param numMaterials the number of material to add
+DLL_EXPORT void phSetMaterials(const phMaterial* materials, uint32_t numMaterials);
+
+/// Adds a material and returns its assigned index
+/// \param material the material to add
+/// \return the index assigned to the material
+DLL_EXPORT uint32_t phAddMaterial(const phMaterial* material);
+
+/// Updates (replaces) a material already registered to this renderer. Will return 0 and not do
+/// anything if no material is registered to the specified index.
+/// \param material the material to add
+/// \param index the index to the registered material
+/// \return 1 on success, 0 on failure
+DLL_EXPORT uint32_t phUpdateMaterial(const phMaterial* material, uint32_t index);
+
 // Resource management (meshes)
 // ------------------------------------------------------------------------------------------------
 
@@ -97,7 +132,7 @@ DLL_EXPORT void phDeinitRenderer();
 
 /// Sets the dynamic meshes in this renderer. Will remove any old meshes already registered. Meshes
 /// are likely copied to GPU memory, but even CPU renderers are required to copy the meshes to
-/// their own memory space.
+/// their own memory space. Mesh at index 0 in array will be assigned index 0, etc.
 /// \param meshes the array of meshes
 /// \param numMeshes the number of meshes in the array
 DLL_EXPORT void phSetDynamicMeshes(const phMesh* meshes, uint32_t numMeshes);
@@ -111,6 +146,7 @@ DLL_EXPORT uint32_t phAddDynamicMesh(const phMesh* mesh);
 /// anything if the index does not have any mesh registered to it.
 /// \param mesh the mesh to add
 /// \param index the index to the registered mesh
+/// \return 1 on success, 0 on failure
 DLL_EXPORT uint32_t phUpdateDynamicMesh(const phMesh* mesh, uint32_t index);
 
 // Render commands

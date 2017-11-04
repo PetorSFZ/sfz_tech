@@ -22,53 +22,46 @@
 #ifdef __cplusplus
 #include <cstdint>
 #include <sfz/math/Vector.hpp>
-using std::uint32_t;
+using std::int32_t;
 #else
 #include <stdint.h>
 #endif
 
 #include "ph/ExternC.h"
 
-// SphereLight flags
-// ------------------------------------------------------------------------------------------------
-
-const uint32_t SPHERE_LIGHT_STATIC_SHADOWS_BIT = 1 << 0; // Static objects casts shadows
-const uint32_t SPHERE_LIGHT_DYNAMIC_SHADOWS_BIT = 1 << 1; // Dynamic objects casts shadows
-
-// C SphereLight struct
+// C Material struct
 // ------------------------------------------------------------------------------------------------
 
 PH_EXTERN_C
 typedef struct {
-	float pos[3];
-	float radius; // Size of the light emitter, 0 makes it a point light
-	float range; // Range of the emitted light
-	float strength[3]; // Strength (and color) of light source
-	uint32_t bitmaskFlags;
-	uint32_t padding[3];
-} phSphereLight;
+	int32_t albedoTexIndex, roughnessTexIndex, metallicTexIndex, padding;
+	float albedo[4];
+	float roughness, metallic, padding2, padding3;
+} phMaterial;
 
-// C++ SphereLight struct
+// C++ Material struct
 // ------------------------------------------------------------------------------------------------
 
 #ifdef __cplusplus
 
 namespace ph {
 
-using sfz::vec3;
+using sfz::vec4;
 
-struct SphereLight final {
-	vec3 pos = vec3(0.0f);
-	float radius = 0.0f; // Size of the light emitter, 0 makes it a point light
-	float range; // Range of the emitted light
-	vec3 strength; // Strength (and color) of light source
-	uint32_t bitmaskFlags;
-	uint32_t padding[3];
+struct Material final {
+	int32_t albedoTexIndex = -1;
+	int32_t roughnessTexIndex = -1;
+	int32_t metallicTexIndex = -1;
+	int32_t padding;
+	vec4 albedo = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	float roughness = 0.0f;
+	float metallic = 0.0f;
+	float padding2;
+	float padding3;
 };
 
-static_assert(sizeof(SphereLight) == sizeof(uint32_t) * 12, "ph::SphereLight is padded");
-static_assert(sizeof(phSphereLight) == sizeof(uint32_t) * 12, "phSphereLight is padded");
-static_assert(sizeof(ph::SphereLight) == sizeof(phSphereLight), "phSphereLight and ph::SphereLight are different size");
+static_assert(sizeof(phMaterial) == sizeof(int32_t) * 12, "phMaterial is padded");
+static_assert(sizeof(phMaterial) == sizeof(Material), "Material is padded");
 
 } // namespace ph
 

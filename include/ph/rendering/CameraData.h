@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //               For other contributors see Contributors.txt
 //
 // This software is provided 'as-is', without any express or implied
@@ -23,10 +23,12 @@
 #include <sfz/math/Vector.hpp>
 #endif
 
+#include "ph/ExternC.h"
+
 // C CameraData struct
 // ------------------------------------------------------------------------------------------------
 
-extern "C"
+PH_EXTERN_C
 typedef struct {
 	float pos[3]; float near;
 	float dir[3]; float far;
