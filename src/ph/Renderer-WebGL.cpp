@@ -328,6 +328,24 @@ DLL_EXPORT void phDeinitRenderer()
 	SDL_GL_DeleteContext(context);
 }
 
+// Resource management (materials)
+// ------------------------------------------------------------------------------------------------
+
+DLL_EXPORT void phSetMaterials(const phMaterial* materials, uint32_t numMaterials)
+{
+	// TODO: Implement
+}
+
+DLL_EXPORT uint32_t phAddMaterial(const phMaterial* material)
+{
+	// TODO: Implement
+}
+
+DLL_EXPORT uint32_t phUpdateMaterial(const phMaterial* material, uint32_t index)
+{
+	// TODO: Implement
+}
+
 // Interface: Resource management (meshes)
 // ------------------------------------------------------------------------------------------------
 
