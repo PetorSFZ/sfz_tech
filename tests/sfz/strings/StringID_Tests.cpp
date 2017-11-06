@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -30,12 +30,12 @@ TEST_CASE("Testing StringCollection", "[sfz::StringID]")
 {
 	StringCollection collection(32, getDefaultAllocator());
 	REQUIRE(collection.numStringsHeld() == 0);
-	
+
 	StringID id1 = collection.getStringID("Hello");
 	REQUIRE(collection.numStringsHeld() == 1);
 	StringID id2 = collection.getStringID("World");
 	REQUIRE(collection.numStringsHeld() == 2);
-	
+
 	REQUIRE(id1 == id1);
 	REQUIRE(id2 == id2);
 	REQUIRE(id1 != id2);

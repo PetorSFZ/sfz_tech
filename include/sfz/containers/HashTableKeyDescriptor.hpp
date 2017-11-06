@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -26,7 +26,7 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 /// Template used to compare two objects of different type for equality. Based on EASTL's similar
-/// equal_to_2 template. 
+/// equal_to_2 template.
 template<typename LeftT, typename RightT>
 struct EqualTo2 final {
 	bool operator() (const LeftT& lhs, const RightT& rhs) noexcept
@@ -68,7 +68,7 @@ struct NO_ALT_KEY_TYPE final {
 /// This is mainly useful when the key is a string class, in that case "const char*" can be defined
 /// as an alt key. This can improve performance of the hash table as temporary copies, which might
 /// require memory allocation, can be avoided.
-/// 
+///
 /// In order to be a HashTableKeyDescriptor the following typedefs need to be available:
 /// KeyT: The key type.
 /// KeyHash: A type with the same interface as std::hash which can hash a key.

@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -50,7 +50,7 @@ using std::uint64_t;
 /// * Allocators are not owned by the class instance, only a simple pointer (Allocator*) should be
 ///   kept.
 /// * Classes should not create or destroy allocators, they should be supplied an Allocator pointer
-///   upon creation. A class might use the Allocator supplied by getDefaultAllocator() if no 
+///   upon creation. A class might use the Allocator supplied by getDefaultAllocator() if no
 ///   Allocator is provided upon creation, or optionally simply require that an Allocator is
 ///   explicitly provided.
 /// * When a class instance is copied, the allocator (pointer) is also copied (in contrast to
@@ -73,7 +73,7 @@ using std::uint64_t;
 ///   any pointers to the instance before it is destroyed. In practice this can probably be
 ///   pretty hard except for small contained problems, so once an Allocator is instantiated it
 ///   will likely have to be kept alive for the rest of the program's lifetime.
-/// 
+///
 /// All virtual methods are marked noexcept, meaning an allocator may never throw exceptions. It
 /// may, however, during really exceptional circumstances terminate the program.
 class Allocator {

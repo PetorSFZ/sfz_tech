@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -45,7 +45,7 @@ TEST_CASE("Hash structs")
 	sfz::RawStringHash cStrHasher;
 	std::hash<DynString> dynStrHasher;
 	std::hash<StackString> stackStrHasher;
-	
+
 	SECTION("Empty strings") {
 		REQUIRE(cStrHasher("") == dynStrHasher(DynString()));
 		REQUIRE(cStrHasher("") == dynStrHasher(DynString("")));

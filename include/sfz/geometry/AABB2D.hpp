@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -24,7 +24,7 @@ namespace sfz {
 
 /// A POD class representing a 2D AABB
 struct AABB2D final {
-	
+
 	// Public members
 	// --------------------------------------------------------------------------------------------
 

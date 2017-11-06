@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -36,7 +36,7 @@ static ButtonState* buttonPtr(GameController& c, uint8_t sdlButton)
 	case SDL_CONTROLLER_BUTTON_B: return &c.b;
 	case SDL_CONTROLLER_BUTTON_X: return &c.x;
 	case SDL_CONTROLLER_BUTTON_Y: return &c.y;
-	
+
 	case SDL_CONTROLLER_BUTTON_LEFTSHOULDER: return &c.leftShoulder;
 	case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER: return &c.rightShoulder;
 	case SDL_CONTROLLER_BUTTON_LEFTSTICK: return &c.leftStickButton;
@@ -50,7 +50,7 @@ static ButtonState* buttonPtr(GameController& c, uint8_t sdlButton)
 	case SDL_CONTROLLER_BUTTON_START: return &c.start;
 	case SDL_CONTROLLER_BUTTON_BACK: return &c.back;
 	case SDL_CONTROLLER_BUTTON_GUIDE: return &c.guide;
-	
+
 	case SDL_CONTROLLER_BUTTON_INVALID:
 	case SDL_CONTROLLER_BUTTON_MAX:
 	default:
@@ -200,7 +200,7 @@ void update(HashMap<int32_t, GameController>& controllers, const DynArray<SDL_Ev
 		case SDL_CONTROLLERDEVICEREMAPPED:
 			// TODO: Nothing of value to do here?
 			break;
-			
+
 		case SDL_CONTROLLERBUTTONDOWN:
 		case SDL_CONTROLLERBUTTONUP:
 			{
@@ -294,8 +294,8 @@ static void updateProcessEvent(GameController& controller, const SDL_Event& even
 		/*std::cout << "Axis " << (int)event.caxis.axis << ", name: "
 					  << SDL_GameControllerGetStringForAxis((SDL_GameControllerAxis)event.caxis.axis)
 					  << ", value: " << event.caxis.value << std::endl;*/
-		
-		const float axisVal = static_cast<float>(event.caxis.value);		
+
+		const float axisVal = static_cast<float>(event.caxis.value);
 		switch (static_cast<SDL_GameControllerAxis>(event.caxis.axis)) {
 		case SDL_CONTROLLER_AXIS_LEFTX:
 			controller.leftStick[0] = axisVal/AXIS_MAX;
@@ -321,7 +321,7 @@ static void updateProcessEvent(GameController& controller, const SDL_Event& even
 		case SDL_CONTROLLER_AXIS_MAX:
 			printErrorMessage("event.caxis.axis == SDL_CONTROLLER_AXIS_MAX");
 			break;
-		} 
+		}
 		break;
 	}
 }

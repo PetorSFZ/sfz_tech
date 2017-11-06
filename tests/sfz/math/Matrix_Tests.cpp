@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -122,7 +122,7 @@ TEST_CASE("Matrix<T,2,2> specialization", "[sfz::Matrix]")
 		REQUIRE(zero.at(0, 1) == 0.0f);
 		REQUIRE(zero.at(0, 2) == 0.0f);
 		REQUIRE(zero.at(0, 3) == 0.0f);
-		
+
 		mat22 one = mat22::fill(1.0f);
 		REQUIRE(one.at(0, 0) == 1.0f);
 		REQUIRE(one.at(0, 1) == 1.0f);
@@ -283,7 +283,7 @@ TEST_CASE("Matrix<T,3,3> specialization", "[sfz::Matrix]")
 		REQUIRE(zero.at(2, 0) == 0.0f);
 		REQUIRE(zero.at(2, 1) == 0.0f);
 		REQUIRE(zero.at(2, 2) == 0.0f);
-		
+
 		mat33 one = mat33::fill(1.0f);
 		REQUIRE(one.at(0, 0) == 1.0f);
 		REQUIRE(one.at(0, 1) == 1.0f);
@@ -1031,7 +1031,7 @@ TEST_CASE("Arhitmetic operators", "[sfz::Matrix]")
 		auto res2 = m2 - m1;
 
 		REQUIRE(res1 != res2);
-		
+
 		REQUIRE(approxEqual(res1.at(0, 0), 1.0f));
 		REQUIRE(approxEqual(res1.at(0, 1), 1.0f));
 		REQUIRE(approxEqual(res1.at(1, 0), 3.0f));

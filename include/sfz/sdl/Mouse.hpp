@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -51,7 +51,7 @@ struct Mouse final {
 	vec2 position;
 	vec2 motion; // Positive-x: right, Positive-y: up
 	vec2 wheel;
-	
+
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -39,7 +39,7 @@ public:
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
-	
+
 	// Copying is prohibited
 	UniquePtr(const UniquePtr&) = delete;
 	UniquePtr& operator= (const UniquePtr&) = delete;
@@ -49,7 +49,7 @@ public:
 
 	/// Creates an empty UniquePtr (holding nullptr, no allocator set)
 	UniquePtr(std::nullptr_t) noexcept {};
-	
+
 	/// Creates a UniquePtr with the specified object and allocator
 	/// This UniquePtr takes ownership of the specified object, thus the object in question must
 	/// be allocated by the sfzCore allocator specified so it can be properly destroyed.
@@ -81,7 +81,7 @@ public:
 
 	/// Returns the internal pointer
 	T* get() const noexcept { return mPtr; }
-	
+
 	/// Returns the allocator of this UniquePtr, returns nullptr if no allocator is set
 	Allocator* allocator() const noexcept { return mAllocator; }
 
@@ -169,7 +169,7 @@ public:
 	/// This SharedPtr takes ownership of the specified object, thus the object in question must
 	/// be allocated by the sfzCore allocator specified so it can be properly destroyed.
 	SharedPtr(T* object, Allocator* allocator) noexcept;
-	
+
 	/// Casts a subclass to a base class.
 	template<typename T2>
 	SharedPtr(const SharedPtr<T2>& subclassPtr) noexcept;

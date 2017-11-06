@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -47,7 +47,7 @@ IniParser::IniParser(const char* path) noexcept
 :
 	mPath(path)
 { }
-	
+
 // IniParser: Loading and saving to file functions
 // ------------------------------------------------------------------------------------------------
 
@@ -64,7 +64,7 @@ bool IniParser::load() noexcept
 	if (fileContents.size() == 0) {
 		printLoadError(mPath, 0, "Ini file is empty.");
 		return false;
-	}	
+	}
 
 	// Retrieve line information
 	struct LineInfo final {
@@ -81,7 +81,7 @@ bool IniParser::load() noexcept
 
 			// Special case when line has not yet started
 			if (tmp.startIndex == uint32_t(~0)) {
-				
+
 				// Trim whitespace in beginning of line
 				if (isWhitespace(c)) continue;
 
@@ -99,7 +99,7 @@ bool IniParser::load() noexcept
 			// Continue if whitespace
 			if (isWhitespace(c)) continue;
 
-			// Add line 
+			// Add line
 			if (c == '\n') {
 				lines.add(tmp);
 				tmp.lineNumber += 1;
@@ -137,7 +137,7 @@ bool IniParser::load() noexcept
 
 		// Section
 		else if (firstChar == '[') {
-			
+
 			// Find length of section name
 			uint32_t index = 1;
 			bool foundEndToken = false;
@@ -199,7 +199,7 @@ bool IniParser::load() noexcept
 
 		// Item
 		else {
-			
+
 			// Find name-value separator
 			uint32_t index = 0;
 			uint32_t lastNameCharIndex = 0;
@@ -225,7 +225,7 @@ bool IniParser::load() noexcept
 				printLoadError(mPath, line.lineNumber, "Missing '='.");
 				return false;
 			}
-	
+
 			uint32_t nameLength = lastNameCharIndex + 1;
 			if (nameLength > 191) {
 				printLoadError(mPath, line.lineNumber, "Too long item name.");
@@ -276,7 +276,7 @@ bool IniParser::load() noexcept
 					return false;
 				}
 			}
-			
+
 			// Add item to current section
 			newSections.last().items.add(item);
 
@@ -317,7 +317,7 @@ bool IniParser::save() noexcept
 {
 	// Delete current file
 	deleteFile(mPath.str());
-	
+
 	// Calculate upper bound for the memory requirements of the string representation
 	uint32_t memoryReqs = 0;
 	for (auto& sect : mSections) {
@@ -341,7 +341,7 @@ bool IniParser::save() noexcept
 
 		for (uint32_t i = 0; i < section.items.size(); i++) {
 			Item& item = section.items[i];
-	
+
 			// Print items content to string
 			switch (item.type) {
 			case ItemType::NUMBER:
@@ -626,7 +626,7 @@ bool IniParser::Iterator::operator!= (const Iterator& other) const noexcept
 IniParser::Iterator IniParser::begin() noexcept
 {
 	if (mSections.size() == 0) return this->end();
-	
+
 	// Check if first position is an item
 	Iterator it(*this, 0, 0);
 	if (mSections[0].items.size() > 0) {

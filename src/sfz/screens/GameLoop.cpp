@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -54,7 +54,7 @@ static void initControllers(HashMap<int32_t, sdl::GameController>& controllers) 
 	int numJoysticks = SDL_NumJoysticks();
 	for (int i = 0; i < numJoysticks; ++i) {
 		if (!SDL_IsGameController(i)) continue;
-		
+
 		sdl::GameController c(i);
 		if (c.id() == -1) continue;
 		if (controllers.get(c.id()) != nullptr) continue;

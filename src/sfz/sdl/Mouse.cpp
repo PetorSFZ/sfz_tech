@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -35,7 +35,7 @@ static ButtonState* buttonStatePtr(Mouse& mouse, uint8_t button) noexcept
 	case SDL_BUTTON_LEFT: return &mouse.leftButton;
 	case SDL_BUTTON_RIGHT: return &mouse.rightButton;
 	case SDL_BUTTON_MIDDLE: return &mouse.middleButton;
-	
+
 	case SDL_BUTTON_X1:
 	case SDL_BUTTON_X2:
 	default:

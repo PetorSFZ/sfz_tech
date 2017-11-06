@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -213,7 +213,7 @@ void DynArray<T>::setCapacity(uint32_t capacity) noexcept
 	// Deallocate old memory
 	uint32_t sizeBackup = mSize;
 	this->destroy();
-	
+
 	// Replace state with new buffer
 	mSize = sizeBackup;
 	mCapacity = capacity;

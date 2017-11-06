@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -445,7 +445,7 @@ TEST_CASE("Normalizing (making unit vector) vector", "[sfz::Vector]")
 		const float posLower = 0.5f - delta;
 		const float posHigher = 0.5f + delta;
 		const float negLower = -0.5f - delta;
-		const float negHigher = -0.5f + delta;		
+		const float negHigher = -0.5f + delta;
 
 		REQUIRE(negLower <= v1[0]);
 		REQUIRE(v1[0] <= negHigher);
@@ -473,7 +473,7 @@ TEST_CASE("Comparison operators", "[sfz::Vector]")
 	SECTION("== and !=") {
 		REQUIRE(v1 == v1);
 		REQUIRE(v2 == v2);
-		REQUIRE(v3 == v3);	
+		REQUIRE(v3 == v3);
 		REQUIRE(v2 == v3);
 		REQUIRE(v3 == v2);
 		REQUIRE(v1 != v2);
@@ -488,9 +488,9 @@ TEST_CASE("Dot (scalar) product", "[sfz::Vector]")
 		sfz::Vector<int, 3> v1{1, 0, -2};
 		sfz::Vector<int, 3> v2{6, 2, 2};
 		int scalarProduct = dot(v1, v2);
-		
+
 		REQUIRE(scalarProduct == 2);
-		
+
 		REQUIRE(v1[0] == 1);
 		REQUIRE(v1[1] == 0);
 		REQUIRE(v1[2] == -2);
@@ -498,14 +498,14 @@ TEST_CASE("Dot (scalar) product", "[sfz::Vector]")
 		REQUIRE(v2[1] == 2);
 		REQUIRE(v2[2] == 2);
 	}
-	SECTION("Using same vector twice") {	
+	SECTION("Using same vector twice") {
 		sfz::Vector<int, 2> v1{-3, 2};
 		int scalarProduct = dot(v1, v1);
-		
+
 		REQUIRE(scalarProduct == 13);
-		
+
 		REQUIRE(v1[0] == -3);
-		REQUIRE(v1[1] == 2);	
+		REQUIRE(v1[1] == 2);
 	}
 	SECTION("_mm_dp_ps()") {
 		sfz::vec4 v1(1.0f, 2.0f, 3.0f, 4.0f);

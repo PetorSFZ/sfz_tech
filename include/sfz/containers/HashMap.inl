@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -110,7 +110,7 @@ void HashMap<K,V,Descr>::swap(HashMap& other) noexcept
 	uint32_t thisPlaceholders = this->mPlaceholders;
 	uint8_t* thisDataPtr = this->mDataPtr;
 	Allocator* thisAllocator = this->mAllocator;
-	
+
 	this->mSize = other.mSize;
 	this->mCapacity = other.mCapacity;
 	this->mPlaceholders = other.mPlaceholders;
@@ -173,7 +173,7 @@ void HashMap<K,V,Descr>::rehash(uint32_t suggestedCapacity) noexcept
 {
 	// Can't decrease capacity with rehash()
 	if (suggestedCapacity < mCapacity) suggestedCapacity = mCapacity;
-	
+
 	// Don't rehash if capacity already exists and there are no placeholders
 	if (suggestedCapacity == mCapacity && mPlaceholders == 0) return;
 
@@ -638,8 +638,8 @@ uint32_t HashMap<K,V,Descr>::findElementIndex(const KT& key, bool& elementFound,
 	const int64_t maxNumProbingAttempts = int64_t(mCapacity);
 	for (int64_t i = 1; i < maxNumProbingAttempts; ++i) {
 		const int64_t iSquared = i * i;
-		
-		// Try (base + i²) index
+
+		// Try (base + iÂ²) index
 		int64_t index = (baseIndex + iSquared) % int64_t(mCapacity);
 		info = elementInfo(uint32_t(index));
 		if (info == ELEMENT_INFO_EMPTY) {
@@ -657,7 +657,7 @@ uint32_t HashMap<K,V,Descr>::findElementIndex(const KT& key, bool& elementFound,
 			}
 		}
 
-		// Try (base - i²) index
+		// Try (base - iÂ²) index
 		index = (((baseIndex - iSquared) % int64_t(mCapacity)) + int64_t(mCapacity)) % int64_t(mCapacity);
 		info = elementInfo(uint32_t(index));
 		if (info == ELEMENT_INFO_EMPTY) {

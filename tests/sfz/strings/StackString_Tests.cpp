@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -44,7 +44,7 @@ TEST_CASE("printf() & printfAppend()", "[sfz::StackString]")
 
 	str.printfAppend(" && %s: %i", "Test", 2);
 	REQUIRE(strcmp(str.str, "Test: 1 && Test: 2") == 0);
-	
+
 }
 
 TEST_CASE("insertChars()", "[sfz::StackString]")

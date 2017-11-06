@@ -55,7 +55,7 @@ using std::uint32_t;
 
 template<typename T, uint32_t H, uint32_t W>
 struct Matrix final {
-	
+
 	Vector<T,W> rows[H];
 
 	SFZ_CUDA_CALL T* data() noexcept { return &rows[0][0]; }

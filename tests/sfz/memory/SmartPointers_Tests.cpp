@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -85,7 +85,7 @@ TEST_CASE("Basic UniquePtr tests", "[sfz::UniquePtr]")
 	ptr.destroy();
 	REQUIRE(flag == 1);
 	REQUIRE(ptr == nullptr);
-	
+
 	second.destroy();
 	REQUIRE(flag == 2);
 	REQUIRE(second == nullptr);
@@ -95,7 +95,7 @@ TEST_CASE("makeUnique()", "[sfz::SmartPointers]")
 {
 	struct Foo {
 		int a, b;
-		Foo(int a, int b) : a(a), b(b) {} 
+		Foo(int a, int b) : a(a), b(b) {}
 	};
 	auto ptr = makeUniqueDefault<Foo>(3, 4);
 	REQUIRE(ptr->a == 3);

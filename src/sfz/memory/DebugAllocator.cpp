@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -52,7 +52,7 @@ DebugAllocator::DebugAllocator(const char* name, uint32_t alignmentIntegrityFact
 	mImpl = new (std::nothrow) DebugAllocatorImpl();
 	std::strncpy(mImpl->allocatorName, name, sizeof(mImpl->allocatorName));
 	mImpl->alignmentIntegrityFactor = alignmentIntegrityFactor * 2;
-	
+
 	// Set up C wrapper
 	mImpl->cAlloc.implData = this;
 	mImpl->cAlloc.allocate = [](void* implData, uint64_t size, uint64_t alignment, const char* name) {

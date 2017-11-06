@@ -1,4 +1,4 @@
-﻿// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -49,7 +49,7 @@ using std::uint64_t;
 /// of 2.
 ///
 /// Removal of elements is O(1), but will leave a placeholder on the previously occupied slot. The
-/// current number of placeholders can be queried by the placeholders() method. Both size and 
+/// current number of placeholders can be queried by the placeholders() method. Both size and
 /// placeholders count as load when checking if the HashMap needs to be rehashed or not.
 ///
 /// An alternate key type can be specified in the HashTableKeyDescriptor. This alt key can be used
@@ -122,7 +122,7 @@ public:
 	/// Move constructors. Equivalent to calling target.swap(source).
 	HashMap(HashMap&& other) noexcept;
 	HashMap& operator= (HashMap&& other) noexcept;
-	
+
 	/// Destroys the HashMap using destroy().
 	~HashMap() noexcept;
 
@@ -347,7 +347,7 @@ private:
 	template<typename KT, typename Hash, typename Equal>
 	uint32_t findElementIndex(const KT& key, bool& elementFound, uint32_t& firstFreeSlot,
 	                          bool& isPlaceholder) const noexcept;
-	
+
 	/// Internal shared implementation of all get() methods
 	template<typename KT, typename Hash, typename Equal>
 	V* getInternal(const KT& key) const noexcept;

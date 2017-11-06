@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -68,7 +68,7 @@ public:
 
 	/// Creates a Buffer with numElements capacity, numElements will be uploaded from the dataPtr
 	Buffer(const T* dataPtr, uint32_t numElements) noexcept;
-	
+
 	/// Move constructors. Equivalent to using swap().
 	Buffer(Buffer&& other) noexcept;
 	Buffer& operator= (Buffer&& other) noexcept;
@@ -133,7 +133,7 @@ public:
 
 	/// Returns capacity of this Buffer.
 	inline uint32_t capacity() const noexcept { return mCapacity; }
-	
+
 private:
 	// Private members
 	// --------------------------------------------------------------------------------------------

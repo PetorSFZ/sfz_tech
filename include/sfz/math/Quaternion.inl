@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -47,7 +47,7 @@ SFZ_CUDA_CALL Quaternion Quaternion::rotation(vec3 axis, float angleDeg) noexcep
 
 	const float halfAngleRad = angleDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE;
 	const vec3 normalizedAxis = normalize(axis);
-	
+
 	return Quaternion(sin(halfAngleRad) * normalizedAxis, cos(halfAngleRad));
 }
 
@@ -89,7 +89,7 @@ SFZ_CUDA_CALL float Quaternion::rotationAngleDeg() const noexcept
 {
 	using std::acos;
 	const float RAD_ANGLE_TO_DEG_NON_HALF_ANGLE = (180.0f / 3.14159265358979323846f) * 2.0f;
-	
+
 	float halfAngleRad = acos(this->w);
 	return halfAngleRad * RAD_ANGLE_TO_DEG_NON_HALF_ANGLE;
 }

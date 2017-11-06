@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -172,7 +172,7 @@ TEST_CASE("HashMap: rehash()", "[sfz::HashMap]")
 	REQUIRE(m1[2] == 3);
 	REQUIRE(m1[3] == 4);
 	REQUIRE(m1.size() == 3);
-	
+
 	m1.rehash(0);
 	REQUIRE(m1[1] == 2);
 	REQUIRE(m1[2] == 3);
@@ -520,7 +520,7 @@ TEST_CASE("Perfect forwarding in put()", "[sfz::HashMap]")
 		REQUIRE(k.value == 2);
 		REQUIRE(!v.moved);
 		REQUIRE(v.value == 3);
-		
+
 		MoveTestStruct* ptr = m.get(k);
 		REQUIRE(ptr != nullptr);
 		REQUIRE(ptr->value == 3);
@@ -539,7 +539,7 @@ TEST_CASE("Perfect forwarding in put()", "[sfz::HashMap]")
 		REQUIRE(k.value == 2);
 		REQUIRE(v.moved);
 		REQUIRE(v.value == 0);
-		
+
 		MoveTestStruct* ptr = m.get(k);
 		REQUIRE(ptr != nullptr);
 		REQUIRE(ptr->value == 3);
@@ -558,7 +558,7 @@ TEST_CASE("Perfect forwarding in put()", "[sfz::HashMap]")
 		REQUIRE(k.value == 0);
 		REQUIRE(!v.moved);
 		REQUIRE(v.value == 3);
-		
+
 		MoveTestStruct* ptr = m.get(k);
 		REQUIRE(ptr == nullptr);
 
@@ -576,7 +576,7 @@ TEST_CASE("Perfect forwarding in put()", "[sfz::HashMap]")
 		REQUIRE(k.value == 0);
 		REQUIRE(v.moved);
 		REQUIRE(v.value == 0);
-		
+
 		MoveTestStruct* ptr = m.get(k);
 		REQUIRE(ptr == nullptr);
 

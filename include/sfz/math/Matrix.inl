@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -587,7 +587,7 @@ SFZ_CUDA_CALL mat44 transpose(const mat44& m) noexcept
 	const __m128 row1 = _mm_load_ps(m.row1.data());
 	const __m128 row2 = _mm_load_ps(m.row2.data());
 	const __m128 row3 = _mm_load_ps(m.row3.data());
-	
+
 	// Transpose matrix
 	__m128 col0 = row0;
 	__m128 col1 = row1;
@@ -853,7 +853,7 @@ SFZ_CUDA_CALL vec3 operator* (const mat34& lhs, const vec4& rhs) noexcept
 	const __m128 row1 = _mm_load_ps(lhs.row1.data());
 	const __m128 row2 = _mm_load_ps(lhs.row2.data());
 	const __m128 row3 = _mm_set1_ps(0.0f);
-	
+
 	// Transpose matrix
 	__m128 col0 = row0;
 	__m128 col1 = row1;
@@ -874,7 +874,7 @@ SFZ_CUDA_CALL vec3 operator* (const mat34& lhs, const vec4& rhs) noexcept
 	const __m128 t2 = _mm_mul_ps(col2, vzzzz);
 	const __m128 t3 = _mm_mul_ps(col3, vwwww);
 	const __m128 result = _mm_add_ps(_mm_add_ps(t0, t1), _mm_add_ps(t2, t3));
-	
+
 	// Return result
 	vec4 tmp;
 	_mm_store_ps(tmp.data(), result);
@@ -905,7 +905,7 @@ SFZ_CUDA_CALL vec4 operator* (const mat44& lhs, const vec4& rhs) noexcept
 	const __m128 row1 = _mm_load_ps(lhs.row1.data());
 	const __m128 row2 = _mm_load_ps(lhs.row2.data());
 	const __m128 row3 = _mm_load_ps(lhs.row3.data());
-	
+
 	// Transpose matrix
 	__m128 col0 = row0;
 	__m128 col1 = row1;
@@ -926,7 +926,7 @@ SFZ_CUDA_CALL vec4 operator* (const mat44& lhs, const vec4& rhs) noexcept
 	const __m128 t2 = _mm_mul_ps(col2, vzzzz);
 	const __m128 t3 = _mm_mul_ps(col3, vwwww);
 	const __m128 result = _mm_add_ps(_mm_add_ps(t0, t1), _mm_add_ps(t2, t3));
-	
+
 	// Return result
 	vec4 tmp;
 	_mm_store_ps(tmp.data(), result);

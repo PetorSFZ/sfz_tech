@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -200,16 +200,16 @@ SharedPtr<T>& SharedPtr<T>::operator= (const SharedPtr& other) noexcept
 {
 	// Don't copy to same SharedPointer
 	if (this == &other) return *this;
-	
+
 	// Destroy whatevers currently in this pointer
 	this->destroy();
-	
+
 	// If other is nullptr we are done
 	if (other == nullptr) return *this;
 
 	// Increment ref counter
 	other.mState->refCount += 1;
-	
+
 	// Copy pointer and state
 	this->mPtr = other.mPtr;
 	this->mState = other.mState;

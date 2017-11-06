@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -42,7 +42,7 @@ TEST_CASE("Basic IniParser tests", "[sfz::IniParser]")
 {
 	auto filePath = appendBasePath(stupidFileName);
 	const char* fpath = filePath.str();
-	
+
 	IniParser ini1(fpath);
 
 	ini1.setBool("Section1", "bBool1", true);
@@ -70,7 +70,7 @@ TEST_CASE("Basic IniParser tests", "[sfz::IniParser]")
 	ini1.setBool("Section1", "bBool2", false);
 	ini1.setFloat("Section2", "fFloat1", 3.5f);
 	ini1.setInt("Section2", "iInt1", -23);
-	
+
 	deleteFile(fpath);
 }
 
@@ -78,7 +78,7 @@ TEST_CASE("IniParser sanitizer methods", "[sfz::IniParser]")
 {
 	auto filePath = appendBasePath(stupidFileName);
 	const char* fpath = filePath.str();
-	
+
 	deleteFile(fpath);
 	IniParser ini(fpath);
 
@@ -88,12 +88,12 @@ TEST_CASE("IniParser sanitizer methods", "[sfz::IniParser]")
 		REQUIRE(ini.sanitizeInt("", "val1") == 0);
 		REQUIRE(ini.getInt("", "val1") != nullptr);
 		REQUIRE(*ini.getInt("", "val1") == 0);
-	
+
 		REQUIRE(ini.getInt("", "val2") == nullptr);
 		REQUIRE(ini.sanitizeInt("", "val2", 37) == 37);
 		REQUIRE(ini.getInt("", "val2") != nullptr);
 		REQUIRE(*ini.getInt("", "val2") == 37);
-	
+
 		REQUIRE(ini.sanitizeInt("", "val2", 0, 0, 36) == 36);
 		REQUIRE(*ini.getInt("", "val2") == 36);
 		REQUIRE(ini.sanitizeInt("", "val2", 0, 38, 39) == 38);
@@ -156,19 +156,19 @@ third=4
 fifth=false
 )";
 
-	const char INPUT_INI_2[] = 
+	const char INPUT_INI_2[] =
 R"(    pi   =  3.0    ;comment
 	e	=	3.0  ;'nother comment
 
-; longer comment	
-; longer comment 2	
+; longer comment
+; longer comment 2
 [section1]
 [section2] ; comment sect 2
 [section3]
 var=true
 )";
 
-	const char OUTPUT_INI_2[] = 
+	const char OUTPUT_INI_2[] =
 R"(pi=3 ;comment
 e=3 ;'nother comment
 ; longer comment
@@ -189,7 +189,7 @@ var=true
 
 		deleteFile(cpath);
 		REQUIRE(writeBinaryFile(cpath, reinterpret_cast<const uint8_t*>(INPUT_INI_1), sizeof(INPUT_INI_1)));
-		
+
 		IniParser ini(cpath);
 		REQUIRE(ini.load());
 

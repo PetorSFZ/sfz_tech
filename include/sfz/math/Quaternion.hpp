@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -40,7 +40,7 @@ struct alignas(16) Quaternion final {
 	/// or
 	/// [v, w], v = [x, y, z] in the imaginary space, w is scalar real part
 	/// where
-	/// i² = j² = k² = -1
+	/// iÂ² = jÂ² = kÂ² = -1
 	/// j*k = -k*j = i
 	/// k*i = -i*k = j
 	/// i*j = -j*i = k
@@ -75,7 +75,7 @@ struct alignas(16) Quaternion final {
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
-	
+
 	/// Returns the normalized axis which the quaternion rotates around, returns 0 vector for
 	/// identity Quaternion. Includes a safeNormalize() call, not necessarily super fast.
 	SFZ_CUDA_CALL vec3 rotationAxis() const noexcept;
@@ -89,7 +89,7 @@ struct alignas(16) Quaternion final {
 
 	// Matrix conversion methods
 	// --------------------------------------------------------------------------------------------
-	
+
 	/// Converts the given Quaternion into a Matrix. The normal variants assume that the Quaternion
 	/// is unit, while the "non-unit" variants make no such assumptions.
 
@@ -118,7 +118,7 @@ SFZ_CUDA_CALL Quaternion normalize(const Quaternion& q) noexcept;
 /// the same as the inverse.
 SFZ_CUDA_CALL Quaternion conjugate(const Quaternion& q) noexcept;
 
-/// Calculates the inverse for any Quaternion, i.e. (1 / length(q)²) * conjugate(q). For unit
+/// Calculates the inverse for any Quaternion, i.e. (1 / length(q)Â²) * conjugate(q). For unit
 /// Quaternions (which should be the most common case) the conjugate() function should be used
 /// instead as it is way faster.
 SFZ_CUDA_CALL Quaternion inverse(const Quaternion& q) noexcept;

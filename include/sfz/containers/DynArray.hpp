@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -75,7 +75,7 @@ public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	/// Creates an empty DynArray without setting an allocator or allocating any memory. 
+	/// Creates an empty DynArray without setting an allocator or allocating any memory.
 	DynArray() noexcept = default;
 
 	/// Creates a DynArray using create().
@@ -167,14 +167,14 @@ public:
 
 	/// Accesses the last element. Undefined if DynArray does not contain at least one element.
 	T& last() noexcept { return mDataPtr[mSize - 1]; }
-	
+
 	/// Accesses the last element. Undefined if DynArray does not contain at least one element.
 	const T& last() const noexcept { return mDataPtr[mSize - 1]; }
 
 	// Public methods
 	// --------------------------------------------------------------------------------------------
-	
-	/// Copy an element to the back of the internal array. Will increase capacity of internal 
+
+	/// Copy an element to the back of the internal array. Will increase capacity of internal
 	/// array if needed.
 	void add(const T& value) noexcept;
 
@@ -204,7 +204,7 @@ public:
 	/// Insert an element to the specified position in the the internal array. Will move elements
 	/// one position ahead to make room. Will increase capacity of internal array if needed.
 	void insert(uint32_t position, T&& value) noexcept;
-	
+
 	/// Insert a number of elements to the internal array starting at the specified position. Will
 	/// move elements ahead to make room. Will increase capacity of the internal array if needed.
 	/// Undefined behaviour if trying to add elements from this DynArray.
@@ -253,7 +253,7 @@ public:
 private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
-	
+
 	uint32_t mSize = 0, mCapacity = 0;
 	T* mDataPtr = nullptr;
 	Allocator* mAllocator = nullptr;

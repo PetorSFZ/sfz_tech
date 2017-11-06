@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -65,7 +65,7 @@ class StringCollection final {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
-	
+
 	StringCollection() noexcept = default;
 	StringCollection(const StringCollection&) = delete;
 	StringCollection& operator= (const StringCollection&) = delete;

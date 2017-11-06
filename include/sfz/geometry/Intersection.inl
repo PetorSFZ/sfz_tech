@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -211,7 +211,7 @@ inline bool intersects(const Sphere& sphereA, const Sphere& sphereB) noexcept
 inline bool overlaps(const Circle& lhs, const Circle& rhs) noexcept
 {
 	// If the length between the center of the two circles is less than or equal to the the sum of
-	// the circle's radiuses they overlap. Both sides of the equation is squared to avoid somewhat 
+	// the circle's radiuses they overlap. Both sides of the equation is squared to avoid somewhat
 	// expensive sqrt() function.
 	float distSquared = dot(lhs.pos - rhs.pos, lhs.pos - rhs.pos);
 	float radiusSum = lhs.radius + rhs.radius;
@@ -232,7 +232,7 @@ inline bool overlaps(const AABB2D& lhs, const AABB2D& rhs) noexcept
 inline bool overlaps(const Circle& circle, const AABB2D& rect) noexcept
 {
 	// If the length between the center of the circle and the closest point on the rectangle is
-	// less than or equal to the circles radius they overlap. Both sides of the equation is 
+	// less than or equal to the circles radius they overlap. Both sides of the equation is
 	// squared to avoid somewhat expensive sqrt() function.
 	vec2 e{max(rect.min - circle.pos, 0.0f)};
 	e += max(circle.pos - rect.max, 0.0f);

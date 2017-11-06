@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -37,7 +37,7 @@ using std::uint32_t;
 /// DynArray interface. Check out DynArray for more specific documentation on these functions.
 class DynString final {
 public:
-	
+
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
@@ -49,7 +49,7 @@ public:
 
 	/// Constructs a DynString with the specified string and capacity. The internal capacity will
 	/// be at least large enough to hold the entire string regardless of the value of the capacity
-	/// parameter. If the string is shorter than the specified capacity or a nullptr then the 
+	/// parameter. If the string is shorter than the specified capacity or a nullptr then the
 	/// internal capacity will be set to the specified capacity.
 	/// \param string a null-terminated string or nullptr
 	/// \param capacity the capacity of the internal DynArray

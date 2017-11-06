@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -37,7 +37,7 @@ DynString::DynString(const char* string, uint32_t capacity, Allocator* allocator
 		return;
 	}
 
-	// Check if string length is larger than requested capacity 
+	// Check if string length is larger than requested capacity
 	size_t length = std::strlen(string) + 1; // +1 for null-terminator
 	if (capacity < length) capacity = uint32_t(length);
 

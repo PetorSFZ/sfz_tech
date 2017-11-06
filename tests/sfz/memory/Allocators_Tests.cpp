@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -36,7 +36,7 @@ TEST_CASE("Testing alignment", "[sfz::StandardAllocator]")
 	REQUIRE(memory32byte != nullptr);
 	REQUIRE(isAligned(memory32byte, 32));
 	getDefaultAllocator()->deallocate(memory32byte);
-	
+
 	void* memory64byte = getDefaultAllocator()->allocate(512, 64);
 	REQUIRE(memory64byte != nullptr);
 	REQUIRE(isAligned(memory64byte, 64));
