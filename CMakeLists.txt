@@ -92,7 +92,7 @@ else()
 		PROJ                sdl2
 		PREFIX              externals
 		GIT_REPOSITORY      https://github.com/PhantasyEngine/Dependency-SDL2.git
-		GIT_TAG             9d205f6bd7e79b4489a221873668e110d0bc9867
+		GIT_TAG             4db8582803583c35d8377bc23795bfa0c0cbbc5f
 		UPDATE_DISCONNECTED 1
 		QUIET
 	)
@@ -110,7 +110,7 @@ set(FORWARD_INCLUDE_DIRS ${FORWARD_INCLUDE_DIRS} ${INCLUDE_CUDA_DIR})
 endif()
 
 # Include directories
-include_directories(	
+include_directories(
 	${FORWARD_INCLUDE_DIRS}
 	${SDL2_INCLUDE_DIRS}
 	${CATCH_INCLUDE_DIRS}
@@ -170,7 +170,7 @@ set(SFZ_CORE_INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/memory/New.hpp
 	${INCLUDE_DIR}/sfz/memory/SmartPointers.hpp
 	${INCLUDE_DIR}/sfz/memory/SmartPointers.inl
-	
+
 	${INCLUDE_DIR}/sfz/Screens.hpp
 	${INCLUDE_DIR}/sfz/screens/BaseScreen.hpp
 	${INCLUDE_DIR}/sfz/screens/GameLoop.hpp
@@ -196,16 +196,16 @@ set(SFZ_CORE_INCLUDE_FILES
 source_group(TREE ${INCLUDE_DIR} FILES ${SFZ_CORE_INCLUDE_FILES})
 
 set(SFZ_CORE_SOURCE_FILES
-	
+
 	${SOURCE_DIR}/sfz/Assert.cpp
 
 	${SOURCE_DIR}/sfz/math/MathPrimitiveToStrings.cpp
 	${SOURCE_DIR}/sfz/math/ProjectionMatrices.cpp
-	
+
 	${SOURCE_DIR}/sfz/memory/Allocator.cpp
 	${SOURCE_DIR}/sfz/memory/CAllocatorWrapper.cpp
 	${SOURCE_DIR}/sfz/memory/DebugAllocator.cpp
-	
+
 	${SOURCE_DIR}/sfz/screens/GameLoop.cpp
 
 	${SOURCE_DIR}/sfz/sdl/GameController.cpp
@@ -269,7 +269,7 @@ if(NOT hasParent)
 
 		${TESTS_DIR}/sfz/containers/DynArray_Tests.cpp
 		${TESTS_DIR}/sfz/containers/HashMap_Tests.cpp
-		
+
 		${TESTS_DIR}/sfz/geometry/Intersection_Tests.cpp
 
 		${TESTS_DIR}/sfz/math/MathPrimitiveHashers_Tests.cpp
@@ -300,7 +300,7 @@ if(NOT hasParent)
 		sfzCoreLib
 	)
 	add_test(sfzCoreTestsName sfzCoreTests)
-	
+
 endif()
 
 # Copy DLLs
