@@ -113,12 +113,12 @@ float Setting::floatMaxValue() const noexcept
 // Setting: Setters
 // ------------------------------------------------------------------------------------------------
 
-bool Setting::setInt(int32_t value) noexcept
+bool Setting::setInt(int32_t valueIn) noexcept
 {
 	int32_t minValue = intMinValue();
 	int32_t maxValue = intMaxValue();
-	int32_t clampedValue = sfz::clamp(value, minValue, maxValue);
-	bool clamped = clampedValue != value;
+	int32_t clampedValue = sfz::clamp(valueIn, minValue, maxValue);
+	bool clamped = clampedValue != valueIn;
 
 	this->value.type = VALUE_TYPE_INT;
 	this->value.i.value = clampedValue;
@@ -128,12 +128,12 @@ bool Setting::setInt(int32_t value) noexcept
 	return clamped;
 }
 
-bool Setting::setFloat(float value) noexcept
+bool Setting::setFloat(float valueIn) noexcept
 {
 	float minValue = floatMinValue();
 	float maxValue = floatMaxValue();
-	float clampedValue = sfz::clamp(value, minValue, maxValue);
-	bool clamped = clampedValue != value;
+	float clampedValue = sfz::clamp(valueIn, minValue, maxValue);
+	bool clamped = clampedValue != valueIn;
 
 	this->value.type = VALUE_TYPE_FLOAT;
 	this->value.f.value = clampedValue;
@@ -143,26 +143,26 @@ bool Setting::setFloat(float value) noexcept
 	return clamped;
 }
 
-void Setting::setInt(int32_t value, int32_t minValue, int32_t maxValue) noexcept
+void Setting::setInt(int32_t valueIn, int32_t minValue, int32_t maxValue) noexcept
 {
 	this->value.type = VALUE_TYPE_INT;
-	this->value.i.value = value;
+	this->value.i.value = valueIn;
 	this->value.i.minValue = minValue;
 	this->value.i.maxValue = maxValue;
 }
 
-void Setting::setFloat(float value, float minValue, float maxValue) noexcept
+void Setting::setFloat(float valueIn, float minValue, float maxValue) noexcept
 {
 	this->value.type = VALUE_TYPE_FLOAT;
-	this->value.f.value = value;
+	this->value.f.value = valueIn;
 	this->value.f.minValue = minValue;
 	this->value.f.maxValue = maxValue;
 }
 
-void Setting::setBool(bool value) noexcept
+void Setting::setBool(bool valueIn) noexcept
 {
 	this->value.type = VALUE_TYPE_INT;
-	this->value.i.value = value ? 1 : 0;
+	this->value.i.value = valueIn ? 1 : 0;
 	this->value.i.minValue = 0;
 	this->value.i.maxValue = 1;
 }
