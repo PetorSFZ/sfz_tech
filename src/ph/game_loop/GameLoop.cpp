@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //               For other contributors see Contributors.txt
 //
 // This software is provided 'as-is', without any express or implied
@@ -62,7 +62,7 @@ struct GameLoopState final {
 static void quit(GameLoopState& gameLoopState) noexcept
 {
 	gameLoopState.quit = true; // Exit infinite while loop (on some platforms)
-	
+
 	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Destroying current updateable");
 	gameLoopState.updateable->onQuit();
 	gameLoopState.updateable.destroy(); // Destroy the current updateable
@@ -72,7 +72,7 @@ static void quit(GameLoopState& gameLoopState) noexcept
 
 	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Calling cleanup callback");
 	gameLoopState.cleanupCallback(); // Call the cleanup callback
-	
+
 	// Exit program on Emscripten
 #ifdef __EMSCRIPTEN__
 	emscripten_cancel_main_loop();
@@ -162,7 +162,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	SDL_Event event;
 	while (SDL_PollEvent(&event) != 0) {
 		switch (event.type) {
-		
+
 		// Quitting
 		case SDL_QUIT:
 			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "SDL_QUIT event recevied, quitting.");
@@ -247,8 +247,8 @@ void runGameLoop(UniquePtr<GameLoopUpdateable> updateable, UniquePtr<Renderer> r
 	// Start the game loop
 #ifdef __EMSCRIPTEN__
 	// https://kripken.github.io/emscripten-site/docs/api_reference/emscripten.h.html#browser-execution-environment
-	// Setting 0 or a negative value as the fps will instead use the browser’s requestAnimationFrame mechanism to
-	// call the main loop function. This is HIGHLY recommended if you are doing rendering, as the browser’s
+	// Setting 0 or a negative value as the fps will instead use the browserâ€™s requestAnimationFrame mechanism to
+	// call the main loop function. This is HIGHLY recommended if you are doing rendering, as the browserâ€™s
 	// requestAnimationFrame will make sure you render at a proper smooth rate that lines up properly with the
 	// browser and monitor.
 	emscripten_set_main_loop_arg(gameLoopIteration, &gameLoopState, 0, true);

@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //               For other contributors see Contributors.txt
 //
 // This software is provided 'as-is', without any express or implied
@@ -28,7 +28,7 @@ namespace ph {
 // Setting: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-Setting::Setting(const char* section, const char* key) noexcept 
+Setting::Setting(const char* section, const char* key) noexcept
 :
 	mSection(section),
 	mKey(key)
@@ -119,7 +119,7 @@ bool Setting::setInt(int32_t value) noexcept
 	int32_t maxValue = intMaxValue();
 	int32_t clampedValue = sfz::clamp(value, minValue, maxValue);
 	bool clamped = clampedValue != value;
-	
+
 	this->value.type = VALUE_TYPE_INT;
 	this->value.i.value = clampedValue;
 	this->value.i.minValue = minValue;

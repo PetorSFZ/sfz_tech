@@ -78,10 +78,10 @@ int mainImpl(int, char*[], InitOptions&& options)
 			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Ini location set to: %s%s", sfz::basePath(), iniFileName.str);
 		}
 		else if (options.iniLocation == IniLocation::MY_GAMES_DIR) {
-			
+
 			// Create user data directory
 			ensureAppUserDataDirExists(options.appName);
-			
+
 			// Initialize ini
 			StackString192 iniFileName;
 			iniFileName.printf("%s/%s.ini", options.appName, options.appName);
@@ -95,7 +95,7 @@ int mainImpl(int, char*[], InitOptions&& options)
 		// Load ini file
 		cfg.load();
 	}
-	
+
 	// Init SDL2
 	if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
 		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "SDL_Init() failed: %s", SDL_GetError());
@@ -125,13 +125,13 @@ int mainImpl(int, char*[], InitOptions&& options)
 	// Start game loop
 	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Starting game loop");
 	runGameLoop(
-	
+
 	// Create initial GameLoopUpdateable
 	options.createInitialUpdateable(),
 
 	// Moving renderer
 	std::move(renderer),
-	
+
 	// Cleanup callback
 	[]() {
 		// Store global settings

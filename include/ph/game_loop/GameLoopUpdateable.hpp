@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //               For other contributors see Contributors.txt
 //
 // This software is provided 'as-is', without any express or implied
@@ -85,13 +85,13 @@ struct UpdateOp final {
 	{
 		return UpdateOp(UpdateOpType::CHANGE_UPDATEABLE, std::move(updateable), 0);
 	}
-	
+
 	/// Changes the current tick rate.
 	static inline UpdateOp CHANGE_TICK_RATE(uint32_t ticksPerSecond) noexcept
 	{
 		return UpdateOp(UpdateOpType::QUIT, nullptr, ticksPerSecond);
 	}
-	
+
 	/// Re-initializes controllers.
 	static inline UpdateOp REINIT_CONTROLLERS() noexcept
 	{
@@ -145,7 +145,7 @@ public:
 	/// should be careful to check if the updateable is already in an initialized state before
 	/// initializing.
 	virtual void initialize(Renderer& renderer) = 0;
-	
+
 	/// Called once every iteration of the game loop, all the user input since the previous
 	/// should be handled here.
 	virtual UpdateOp processInput(const UpdateInfo& updateInfo, const UserInput& input) = 0;
@@ -154,7 +154,7 @@ public:
 	/// Corresponds to updating the simulation a single tick, i.e. updateInfo.tickTimeSeconds
 	/// seconds.
 	virtual UpdateOp updateTick(const UpdateInfo& updateInfo) = 0;
-	
+
 	/// Called last each iteration of the game loop. Responsible for rendering everything. Of note
 	/// is updateInfo.lagSeconds, which contains the amount of time since the last tick update.
 	/// A good renderer should extrapolate objects positions before rendering them using this value.

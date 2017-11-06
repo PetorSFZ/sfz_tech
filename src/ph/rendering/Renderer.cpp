@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //               For other contributors see Contributors.txt
 //
 // This software is provided 'as-is', without any express or implied
@@ -164,6 +164,7 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 	{
 		StackString dllName;
 		dllName.printf("%s.dll", moduleName);
+		PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Trying to load renderer DLL: %s", dllName.str);
 		mModuleHandle = LoadLibrary(dllName.str);
 	}
 	if (mModuleHandle == nullptr) {
@@ -183,7 +184,7 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRendererInterfaceVersion);
 	if (INTERFACE_VERSION != mFunctionTable->phRendererInterfaceVersion()) {
 		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Renderer DLL (%s.dll) has wrong interface version (%u), expected (%u).",
-			   moduleName, mFunctionTable->phRendererInterfaceVersion(), INTERFACE_VERSION);
+		    moduleName, mFunctionTable->phRendererInterfaceVersion(), INTERFACE_VERSION);
 	}
 
 	// Init functions

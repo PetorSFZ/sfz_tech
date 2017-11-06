@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //               For other contributors see Contributors.txt
 //
 // This software is provided 'as-is', without any express or implied
@@ -46,7 +46,7 @@ class Setting final {
 public:
 	// Public members
 	// --------------------------------------------------------------------------------------------
-	
+
 	/// The value of this Setting
 	phSettingValue value;
 
@@ -81,7 +81,7 @@ public:
 	int32_t intMaxValue() const noexcept;
 	float floatMinValue() const noexcept;
 	float floatMaxValue() const noexcept;
-	
+
 	// Setters
 	// --------------------------------------------------------------------------------------------
 

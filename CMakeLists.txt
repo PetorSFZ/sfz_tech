@@ -1,14 +1,14 @@
 # Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
 #               For other contributors see Contributors.txt
-# 
+#
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
 # arising from the use of this software.
-# 
+#
 # Permission is granted to anyone to use this software for any purpose,
 # including commercial applications, and to alter it and redistribute it
 # freely, subject to the following restrictions:
-# 
+#
 # 1. The origin of this software must not be misrepresented; you must not
 #    claim that you wrote the original software. If you use this software
 #    in a product, an acknowledgment in the product documentation would be
@@ -24,7 +24,7 @@ project("PhantasyEngine")
 # ------------------------------------------------------------------------------------------------
 
 if (NOT ${SDL2_FOUND})
-	message(FATAL_ERROR "PhantasyEngine requires SDL2. Add phDependency_SDL2.")
+	message(FATAL_ERROR "PhantasyEngine requires SDL2. Add Dependency-SDL2.")
 endif()
 
 if (NOT ${SFZ_CORE_FOUND})
@@ -32,7 +32,7 @@ if (NOT ${SFZ_CORE_FOUND})
 endif()
 
 if (NOT ${PH_SHARED_INTERFACE_FOUND})
-	message(FATAL_ERROR "PhantasyEngine requires phSharedInterface.")
+	message(FATAL_ERROR "PhantasyEngine requires PhantasyEngine-SharedInterface.")
 endif()
 
 # PhantasyEngine
@@ -50,7 +50,7 @@ set(PHANTASY_ENGINE_HEADER_FILES
 
 	${INCLUDE_DIR}/ph/game_loop/GameLoop.hpp
 	${INCLUDE_DIR}/ph/game_loop/GameLoopUpdateable.hpp
-	
+
 	${INCLUDE_DIR}/ph/rendering/Renderer.hpp
 
 	${INCLUDE_DIR}/ph/utils/Logging.hpp
@@ -59,7 +59,7 @@ source_group(TREE ${INCLUDE_DIR} FILES ${PHANTASY_ENGINE_HEADER_FILES})
 
 set(PHANTASY_ENGINE_SOURCE_FILES
 	${SOURCE_DIR}/ph/PhantasyEngineMain.cpp
-	
+
 	${SOURCE_DIR}/ph/config/GlobalConfig.cpp
 	${SOURCE_DIR}/ph/config/Setting.cpp
 

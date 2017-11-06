@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //               For other contributors see Contributors.txt
 //
 // This software is provided 'as-is', without any express or implied
@@ -109,7 +109,7 @@ void GlobalConfig::load() noexcept
 
 	// Create setting items of all ini items
 	for (auto item : ini) {
-		
+
 		// Create new setting
 		mImpl->mSettings.add(makeUniqueDefault<Setting>(item.getSection(), item.getKey()));
 		Setting& setting = *mImpl->mSettings.last();
@@ -138,7 +138,7 @@ bool GlobalConfig::save() noexcept
 {
 	sfz_assert_debug(mImpl != nullptr);
 	IniParser& ini = mImpl->mIni;
-	
+
 	// Update internal ini with the current values of the setting
 	for (auto& setting : mImpl->mSettings) {
 		if (setting->isBoolValue()) {
@@ -157,7 +157,7 @@ bool GlobalConfig::save() noexcept
 Setting* GlobalConfig::getCreateSetting(const char* section, const char* key, bool* created) noexcept
 {
 	Setting* setting = this->getSetting(section, key);
-	
+
 	if (setting != nullptr) {
 		if (created != nullptr) *created = false;
 		return setting;
