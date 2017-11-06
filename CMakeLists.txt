@@ -18,7 +18,7 @@
 # 3. This notice may not be removed or altered from any source distribution.
 
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
-project("phRenderer_SharedInterface")
+project("PhantasyEngine-SharedInterface")
 
 # Dependencies
 # ------------------------------------------------------------------------------------------------
@@ -31,7 +31,7 @@ if (NOT ${SFZ_CORE_FOUND})
 	message(FATAL_ERROR "phRenderer_SharedInterface requires sfzCore.")
 endif()
 
-# phRenderer_SharedInterface
+# PhantasyEngine-SharedInterface
 # ------------------------------------------------------------------------------------------------
 
 # Directories

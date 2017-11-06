@@ -50,7 +50,7 @@ using sfz::mat34;
 
 struct RenderEntity final {
 	mat34 transform = mat34::identity();
-	uint32_t meshIndex = ~0;
+	uint32_t meshIndex = ~0u;
 	uint32_t padding[3];
 };
 
