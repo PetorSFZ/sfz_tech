@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -41,13 +41,13 @@ public:
 	FrametimeStats& operator= (FrametimeStats&&) noexcept = default;
 
 	FrametimeStats(uint32_t maxNumSamples) noexcept;
-	
+
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
 	void addSample(float sampleInSeconds) noexcept;
 	void reset() noexcept;
-	
+
 	inline uint32_t maxNumSamples() const noexcept { return mSamples.capacity(); }
 	inline uint32_t currentNumSamples() const noexcept { return mSamples.size(); }
 	inline float min() const noexcept { return mMin; }

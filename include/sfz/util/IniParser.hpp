@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -50,7 +50,7 @@ public:
 	/// Creates a IniParser with the specified path. Will not load or parse anything until load()
 	/// is called.
 	IniParser(const char* path) noexcept;
-	
+
 	// Loading and saving to file functions
 	// --------------------------------------------------------------------------------------------
 
@@ -105,7 +105,7 @@ public:
 	                    int32_t defaultValue = 0,
 	                    int32_t minValue = numeric_limits<int32_t>::min(),
 	                    int32_t maxValue = numeric_limits<int32_t>::max()) noexcept;
-	
+
 	/// Sanitizing float getter. Ensures that the the item exists and is inside the specified
 	/// interval.
 	float sanitizeFloat(const char* section, const char* key,
@@ -131,7 +131,7 @@ public:
 		const int32_t* getInt() const noexcept;
 		const float* getFloat() const noexcept;
 		const bool* getBool() const noexcept;
-	
+
 	private:
 		IniParser* mIniParser = nullptr;
 		uint32_t mSectionIndex = uint32_t(~0);
