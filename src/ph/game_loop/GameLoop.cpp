@@ -238,8 +238,8 @@ void runGameLoop(UniquePtr<GameLoopUpdateable> updateable, UniquePtr<Renderer> r
 	gameLoopState.updateInfo.tickTimeSeconds = 0.01f;
 
 	// Initialize controllers
-	initControllers(gameLoopState.userInput.controllers);
 	SDL_GameControllerEventState(SDL_ENABLE);
+	initControllers(gameLoopState.userInput.controllers);
 
 	// Initialize GameLoopUpdateable
 	gameLoopState.updateable->initialize(*gameLoopState.renderer);
