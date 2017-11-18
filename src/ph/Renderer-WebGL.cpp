@@ -50,6 +50,14 @@ static const uint32_t MAX_NUM_DYNAMIC_SPHERE_LIGHTS = 32;
 // ------------------------------------------------------------------------------------------------
 
 struct RendererState final {
+
+	// Disable copying & moving
+	RendererState() noexcept = default;
+	RendererState(const RendererState&) = delete;
+	RendererState& operator= (const RendererState&) = delete;
+	RendererState(RendererState&&) = delete;
+	RendererState& operator= (RendererState&&) = delete;
+
 	// Utilities
 	CAllocatorWrapper allocator;
 	SDL_Window* window = nullptr;
@@ -59,6 +67,7 @@ struct RendererState final {
 
 	// Resources
 	gl::FullscreenGeometry fullscreenGeom;
+	DynArray<Material> materials;
 	DynArray<Model> dynamicModels;
 
 	// Shaders
@@ -207,7 +216,8 @@ DLL_EXPORT uint32_t phInitRenderer(
 	// Create FullscreenGeometry
 	state.fullscreenGeom.create(gl::FullscreenGeometryType::OGL_CLIP_SPACE_RIGHT_HANDED_FRONT_FACE);
 
-	// Init DynArray with dynamic models
+	// Init resources arrays
+	state.materials.create(256, &state.allocator);
 	state.dynamicModels.create(128, &state.allocator);
 
 	// Compile shader program
@@ -280,9 +290,10 @@ DLL_EXPORT uint32_t phInitRenderer(
 				SphereLight light = uDynamicSphereLights[i];
 
 				vec3 toLight = light.vsPos - vsPos;
-				vec3 toLightDir = normalize(toLight);
+				float toLightDist = length(toLight);
+				vec3 toLightDir = toLight * (1.0 / toLightDist);
 
-				vec3 color = vec3(dot(toLightDir, vsNormal));
+				vec3 color = vec3(dot(toLightDir, vsNormal)) / toLightDist;
 
 				if (i < uNumDynamicSphereLights) {
 					totalOutput += clamp(color, vec3(0.0), vec3(1.0));
@@ -333,17 +344,33 @@ DLL_EXPORT void phDeinitRenderer()
 
 DLL_EXPORT void phSetMaterials(const phMaterial* materials, uint32_t numMaterials)
 {
-	// TODO: Implement
+	RendererState& state = *statePtr;
+
+	// Remove any previous materials
+	state.materials.clear();
+
+	// Add materials to state
+	state.materials.add(reinterpret_cast<const Material*>(materials), numMaterials);
 }
 
 DLL_EXPORT uint32_t phAddMaterial(const phMaterial* material)
 {
-	// TODO: Implement
+	RendererState& state = *statePtr;
+
+	uint32_t index = state.materials.size();
+	state.materials.add(*reinterpret_cast<const Material*>(material));
+	return index;
 }
 
 DLL_EXPORT uint32_t phUpdateMaterial(const phMaterial* material, uint32_t index)
 {
-	// TODO: Implement
+	RendererState& state = *statePtr;
+
+	// Check if material exists
+	if (state.materials.size() <= index) return 0;
+
+	state.materials[index] = *reinterpret_cast<const Material*>(material);
+	return 1;
 }
 
 // Interface: Resource management (meshes)
