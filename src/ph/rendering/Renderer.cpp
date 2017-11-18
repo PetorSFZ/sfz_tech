@@ -60,6 +60,11 @@ extern "C" {
 		uint32_t (*phInitRenderer)(SDL_Window*, sfzAllocator*, phConfig*, phLogger*);
 		uint32_t (*phDeinitRenderer)(void);
 
+		// Resource management (materials)
+		void (*phSetMaterials)(const phMaterial*, uint32_t);
+		uint32_t (*phAddMaterial)(const phMaterial*);
+		uint32_t (*phUpdateMaterial)(const phMaterial*, uint32_t);
+
 		// Resource management (meshes)
 		void (*phSetDynamicMeshes)(const phMesh*, uint32_t);
 		uint32_t (*phAddDynamicMesh)(const phMesh*);
@@ -192,6 +197,11 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phInitRenderer);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phDeinitRenderer);
 
+	// Resource management (materials)
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phSetMaterials);
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phAddMaterial);
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phUpdateMaterial);
+
 	// Resource management (meshes)
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phSetDynamicMeshes);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phAddDynamicMesh);
@@ -291,6 +301,27 @@ void Renderer::deinitRenderer() noexcept
 		CALL_RENDERER_FUNCTION(mFunctionTable, phDeinitRenderer);
 	}
 	mInited = false;
+}
+
+// Renderer:: Resource management (materials)
+// --------------------------------------------------------------------------------------------
+
+void Renderer::setMaterials(const DynArray<Material>& materials) noexcept
+{
+	CALL_RENDERER_FUNCTION(mFunctionTable, phSetMaterials,
+		reinterpret_cast<const phMaterial*>(materials.data()), materials.size());
+}
+
+uint32_t Renderer::addMaterial(const Material& material) noexcept
+{
+	return CALL_RENDERER_FUNCTION(mFunctionTable, phAddMaterial,
+		reinterpret_cast<const phMaterial*>(&material));
+}
+
+bool Renderer::updateMaterial(const Material& material, uint32_t index) noexcept
+{
+	return CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateMaterial,
+		reinterpret_cast<const phMaterial*>(&material), index) != 0;
 }
 
 // Renderer: Resource management (meshes)
