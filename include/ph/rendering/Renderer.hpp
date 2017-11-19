@@ -25,6 +25,7 @@
 #include <sfz/memory/Allocator.hpp>
 
 #include <ph/rendering/CameraData.h>
+#include <ph/rendering/Image.h>
 #include <ph/rendering/Material.h>
 #include <ph/rendering/Mesh.h>
 #include <ph/rendering/RenderEntity.h>
@@ -93,6 +94,18 @@ public:
 	/// See phDeinitRenderer(), is automatically called in destroy() or destructor. No need to call
 	/// manually.
 	void deinitRenderer() noexcept;
+
+	// Resource management (textures)
+	// --------------------------------------------------------------------------------------------
+
+	// See phSetTextures()
+	void setTextures(const DynArray<Image>& textures) noexcept;
+
+	/// See phAddTexture()
+	uint32_t addTexture(const Image& texture) noexcept;
+
+	/// See phUpdateTexture()
+	bool updateTexture(const Image& texture, uint32_t index) noexcept;
 
 	// Resource management (materials)
 	// --------------------------------------------------------------------------------------------
