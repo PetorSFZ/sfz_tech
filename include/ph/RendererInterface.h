@@ -29,6 +29,7 @@ using std::uint32_t;
 #include <sfz/memory/CAllocator.h>
 
 #include "ph/rendering/CameraData.h"
+#include "ph/rendering/Image.h"
 #include "ph/rendering/Material.h"
 #include "ph/rendering/Mesh.h"
 #include "ph/rendering/RenderEntity.h"
@@ -89,6 +90,33 @@ DLL_EXPORT uint32_t phInitRenderer(
 /// to call if renderer failed to initialize.
 DLL_EXPORT void phDeinitRenderer();
 
+// Resource management (textures)
+// ------------------------------------------------------------------------------------------------
+
+/// Each texture is assigned an index, which can be referred to from materials. Textures are shared
+/// between all objects, static and dynamic alike. The renderer is allowed to assume that textures
+/// used for static objects never changes, i.e. updating those textures is not guaranteed to
+/// change the appearance of the static geometry.
+
+/// Set the texturess in this renderer. Will remove any old textures already registered. Textures
+/// will be copied to the renderers internal memory. Texture at index 0 will be assigned index 0,
+/// etc.
+/// \param textures the textures to add
+/// \param numTextures the number of textures to add
+DLL_EXPORT void phSetTextures(const phConstImageView* textures, uint32_t numTextures);
+
+/// Adds a texture and returns its assigned index
+/// \param texture the texture to add
+/// \return the index assigned to the texture
+DLL_EXPORT uint32_t phAddTexture(const phConstImageView* texture);
+
+/// Updates (replaces) a texture already registered to this renderer. Will return 0 and not do
+/// anything if no texture is registered to the specified index.
+/// \param texture the texture to add
+/// \param index the index to the registered texture
+/// \return 1 on success, 0 on failure
+DLL_EXPORT uint32_t phUpdateTextures(const phConstImageView* texture, uint32_t index);
+
 // Resource management (materials)
 // ------------------------------------------------------------------------------------------------
 
@@ -135,19 +163,19 @@ DLL_EXPORT uint32_t phUpdateMaterial(const phMaterial* material, uint32_t index)
 /// their own memory space. Mesh at index 0 in array will be assigned index 0, etc.
 /// \param meshes the array of meshes
 /// \param numMeshes the number of meshes in the array
-DLL_EXPORT void phSetDynamicMeshes(const phMesh* meshes, uint32_t numMeshes);
+DLL_EXPORT void phSetDynamicMeshes(const phConstMeshView* meshes, uint32_t numMeshes);
 
 /// Adds a dynamic mesh and returns its assigned index
 /// \param mesh the mesh to add
 /// \return the index assigned to the mesh
-DLL_EXPORT uint32_t phAddDynamicMesh(const phMesh* mesh);
+DLL_EXPORT uint32_t phAddDynamicMesh(const phConstMeshView* mesh);
 
 /// Updates (replaces) a mesh already registered to this renderer. Will return 0 and not do
 /// anything if the index does not have any mesh registered to it.
 /// \param mesh the mesh to add
 /// \param index the index to the registered mesh
 /// \return 1 on success, 0 on failure
-DLL_EXPORT uint32_t phUpdateDynamicMesh(const phMesh* mesh, uint32_t index);
+DLL_EXPORT uint32_t phUpdateDynamicMesh(const phConstMeshView* mesh, uint32_t index);
 
 // Render commands
 // ------------------------------------------------------------------------------------------------

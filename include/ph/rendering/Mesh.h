@@ -41,7 +41,16 @@ typedef struct {
 	uint32_t numVertices;
 	uint32_t* indices;
 	uint32_t numIndices;
-} phMesh;
+} phMeshView;
+
+PH_EXTERN_C
+typedef struct {
+	const phVertex* vertices;
+	const uint32_t* materialIndices;
+	uint32_t numVertices;
+	const uint32_t* indices;
+	uint32_t numIndices;
+} phConstMeshView;
 
 // C++ Mesh struct
 // ------------------------------------------------------------------------------------------------
@@ -59,9 +68,9 @@ struct Mesh final {
 
 	// Returns a phMesh that shows the contents of this Mesh. The phMesh does not own the memory
 	// and will only be valid as long as the Mesh instance is not modified.
-	inline phMesh cView() noexcept
+	inline phMeshView meshView() noexcept
 	{
-		phMesh tmp;
+		phMeshView tmp;
 		tmp.vertices = reinterpret_cast<phVertex*>(this->vertices.data());
 		tmp.materialIndices = this->materialIndices.data();
 		tmp.numVertices = this->vertices.size();
@@ -70,15 +79,13 @@ struct Mesh final {
 		return tmp;
 	}
 
-	inline const phMesh cView() const noexcept
+	inline phConstMeshView meshView() const noexcept
 	{
-		// Lots of ugly const_cast():ing. I think it should be safe in this instance, but not 100%
-		// sure.
-		phMesh tmp;
-		tmp.vertices = const_cast<phVertex*>(reinterpret_cast<const phVertex*>(this->vertices.data()));
-		tmp.materialIndices = const_cast<uint32_t*>(this->materialIndices.data());
+		phConstMeshView tmp;
+		tmp.vertices = reinterpret_cast<const phVertex*>(this->vertices.data());
+		tmp.materialIndices = this->materialIndices.data();
 		tmp.numVertices = this->vertices.size();
-		tmp.indices = const_cast<uint32_t*>(this->indices.data());
+		tmp.indices = this->indices.data();
 		tmp.numIndices = this->indices.size();
 		return tmp;
 	}
