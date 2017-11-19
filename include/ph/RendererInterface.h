@@ -115,7 +115,7 @@ DLL_EXPORT uint32_t phAddTexture(const phConstImageView* texture);
 /// \param texture the texture to add
 /// \param index the index to the registered texture
 /// \return 1 on success, 0 on failure
-DLL_EXPORT uint32_t phUpdateTextures(const phConstImageView* texture, uint32_t index);
+DLL_EXPORT uint32_t phUpdateTexture(const phConstImageView* texture, uint32_t index);
 
 // Resource management (materials)
 // ------------------------------------------------------------------------------------------------
