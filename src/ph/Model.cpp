@@ -72,7 +72,7 @@ void ModelComponent::render() noexcept
 // Model: State methods
 // ------------------------------------------------------------------------------------------------
 
-void Model::create(const phMesh& mesh, Allocator* allocator) noexcept
+void Model::create(const phConstMeshView& mesh, Allocator* allocator) noexcept
 {
 	this->destroy();
 
@@ -147,7 +147,7 @@ void Model::create(const phMesh& mesh, Allocator* allocator) noexcept
 	for (auto& tmpIdxs : tmpIndices) {
 		mComponents.add(ModelComponent(tmpIdxs.indices.data(), tmpIdxs.indices.size(), tmpIdxs.materialIndex));
 	}
-	
+
 	// Cleanup
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
 	glBindVertexArrayOES(0);

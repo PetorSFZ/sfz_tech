@@ -339,6 +339,26 @@ DLL_EXPORT void phDeinitRenderer()
 	SDL_GL_DeleteContext(context);
 }
 
+// Resource management (textures)
+// ------------------------------------------------------------------------------------------------
+
+DLL_EXPORT void phSetTextures(const phConstImageView* textures, uint32_t numTextures)
+{
+
+}
+
+DLL_EXPORT uint32_t phAddTexture(const phConstImageView* texture)
+{
+
+	return 0;
+}
+
+DLL_EXPORT uint32_t phUpdateTexture(const phConstImageView* texture, uint32_t index)
+{
+
+	return 0;
+}
+
 // Resource management (materials)
 // ------------------------------------------------------------------------------------------------
 
@@ -376,7 +396,7 @@ DLL_EXPORT uint32_t phUpdateMaterial(const phMaterial* material, uint32_t index)
 // Interface: Resource management (meshes)
 // ------------------------------------------------------------------------------------------------
 
-DLL_EXPORT void phSetDynamicMeshes(const phMesh* meshes, uint32_t numMeshes)
+DLL_EXPORT void phSetDynamicMeshes(const phConstMeshView* meshes, uint32_t numMeshes)
 {
 	RendererState& state = *statePtr;
 
@@ -389,7 +409,7 @@ DLL_EXPORT void phSetDynamicMeshes(const phMesh* meshes, uint32_t numMeshes)
 	}
 }
 
-DLL_EXPORT uint32_t phAddDynamicMesh(const phMesh* mesh)
+DLL_EXPORT uint32_t phAddDynamicMesh(const phConstMeshView* mesh)
 {
 	RendererState& state = *statePtr;
 
@@ -398,7 +418,7 @@ DLL_EXPORT uint32_t phAddDynamicMesh(const phMesh* mesh)
 	return index;
 }
 
-DLL_EXPORT uint32_t phUpdateDynamicMesh(const phMesh* mesh, uint32_t index)
+DLL_EXPORT uint32_t phUpdateDynamicMesh(const phConstMeshView* mesh, uint32_t index)
 {
 	RendererState& state = *statePtr;
 

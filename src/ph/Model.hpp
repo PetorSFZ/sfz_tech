@@ -84,7 +84,7 @@ public:
 	Model(const Model&) = delete;
 	Model& operator= (const Model&) = delete;
 
-	Model(const phMesh& mesh, Allocator* allocator) noexcept { this->create(mesh, allocator); }
+	Model(const phConstMeshView& mesh, Allocator* allocator) noexcept { this->create(mesh, allocator); }
 	Model(Model&& other) noexcept { this->swap(other); }
 	Model& operator= (Model&& other) noexcept { this->swap(other); return *this; }
 	~Model() noexcept { this->destroy(); }
@@ -92,7 +92,7 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void create(const phMesh& mesh, Allocator* allocator) noexcept;
+	void create(const phConstMeshView& mesh, Allocator* allocator) noexcept;
 	void swap(Model& other) noexcept;
 	void destroy() noexcept;
 
