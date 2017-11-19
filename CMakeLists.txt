@@ -35,6 +35,15 @@ if (NOT ${PH_SHARED_INTERFACE_FOUND})
 	message(FATAL_ERROR "PhantasyEngine requires PhantasyEngine-SharedInterface.")
 endif()
 
+# Bundled dependencies
+# ------------------------------------------------------------------------------------------------
+
+set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
+
+# stb libraries
+# ${STB_INCLUDE_DIRS}
+add_subdirectory(${EXTERNALS_DIR}/stb_libraries)
+
 # PhantasyEngine
 # ------------------------------------------------------------------------------------------------
 
@@ -51,6 +60,7 @@ set(PHANTASY_ENGINE_HEADER_FILES
 	${INCLUDE_DIR}/ph/game_loop/GameLoop.hpp
 	${INCLUDE_DIR}/ph/game_loop/GameLoopUpdateable.hpp
 
+	${INCLUDE_DIR}/ph/rendering/Image.hpp
 	${INCLUDE_DIR}/ph/rendering/Renderer.hpp
 
 	${INCLUDE_DIR}/ph/utils/Logging.hpp
@@ -65,6 +75,7 @@ set(PHANTASY_ENGINE_SOURCE_FILES
 
 	${SOURCE_DIR}/ph/game_loop/GameLoop.cpp
 
+	${SOURCE_DIR}/ph/rendering/Image.cpp
 	${SOURCE_DIR}/ph/rendering/Renderer.cpp
 
 	${SOURCE_DIR}/ph/utils/Logging.cpp
@@ -78,6 +89,7 @@ target_include_directories(phCore PUBLIC
 	${SDL2_INCLUDE_DIRS}
 	${SFZ_CORE_INCLUDE_DIRS}
 	${PH_SHARED_INTERFACE_INCLUDE_DIRS}
+	${STB_INCLUDE_DIRS}
 )
 
 target_link_libraries(phCore
@@ -89,5 +101,5 @@ target_link_libraries(phCore
 # ------------------------------------------------------------------------------------------------
 
 set(PHANTASY_ENGINE_FOUND true PARENT_SCOPE)
-set(PHANTASY_ENGINE_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
+set(PHANTASY_ENGINE_INCLUDE_DIRS ${INCLUDE_DIR} ${STB_INCLUDE_DIRS} PARENT_SCOPE)
 set(PHANTASY_ENGINE_LIBRARIES phCore PARENT_SCOPE)
