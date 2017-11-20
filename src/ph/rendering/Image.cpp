@@ -139,7 +139,7 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 
 	// Create image from data
 	Image tmp;
-	tmp.rawData.create(0, static_allocator);
+	tmp.rawData.create(uint32_t(width * height * numChannels), static_allocator);
 	tmp.width = width;
 	tmp.height = height;
 	switch (numChannels) {
@@ -167,6 +167,8 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 	}
 
 	// Free temp memory used by stb_image and return image
+	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "loadImage(): Image \"%s\" loaded succesfully",
+		path.str);
 	stbi_image_free(img);
 	return tmp;
 }
