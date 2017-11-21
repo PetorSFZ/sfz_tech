@@ -1,14 +1,14 @@
 # Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
 #               For other contributors see Contributors.txt
-# 
+#
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
 # arising from the use of this software.
-# 
+#
 # Permission is granted to anyone to use this software for any purpose,
 # including commercial applications, and to alter it and redistribute it
 # freely, subject to the following restrictions:
-# 
+#
 # 1. The origin of this software must not be misrepresented; you must not
 #    claim that you wrote the original software. If you use this software
 #    in a product, an acknowledgment in the product documentation would be
@@ -51,6 +51,8 @@ set(PH_RENDERER_WEB_GL_SOURCE_FILES
 	${INCLUDE_DIR}/ph/Model.hpp
 	 ${SOURCE_DIR}/ph/Model.cpp
 	 ${SOURCE_DIR}/ph/Renderer-WebGL.cpp
+	${INCLUDE_DIR}/ph/Texture.hpp
+	 ${SOURCE_DIR}/ph/Texture.cpp
 )
 source_group(TREE ${SOURCE_DIR} FILES ${PH_RENDERER_WEB_GL_SOURCE_FILES})
 

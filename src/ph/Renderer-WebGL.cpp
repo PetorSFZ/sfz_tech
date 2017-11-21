@@ -37,6 +37,7 @@
 #include <sfz/gl/UniformSetters.hpp>
 
 #include "ph/Model.hpp"
+#include "ph/Texture.hpp"
 
 using namespace sfz;
 using namespace ph;
@@ -67,6 +68,7 @@ struct RendererState final {
 
 	// Resources
 	gl::FullscreenGeometry fullscreenGeom;
+	DynArray<Texture> textures;
 	DynArray<Material> materials;
 	DynArray<Model> dynamicModels;
 
@@ -217,6 +219,7 @@ DLL_EXPORT uint32_t phInitRenderer(
 	state.fullscreenGeom.create(gl::FullscreenGeometryType::OGL_CLIP_SPACE_RIGHT_HANDED_FRONT_FACE);
 
 	// Init resources arrays
+	state.textures.create(256, &state.allocator);
 	state.materials.create(256, &state.allocator);
 	state.dynamicModels.create(128, &state.allocator);
 
@@ -282,6 +285,8 @@ DLL_EXPORT uint32_t phInitRenderer(
 		uniform SphereLight uDynamicSphereLights[MAX_NUM_DYNAMIC_SPHERE_LIGHTS];
 		uniform int uNumDynamicSphereLights;
 
+		uniform sampler2D uTexture;
+
 		void main()
 		{
 			vec3 totalOutput = vec3(0.0);
@@ -293,7 +298,9 @@ DLL_EXPORT uint32_t phInitRenderer(
 				float toLightDist = length(toLight);
 				vec3 toLightDir = toLight * (1.0 / toLightDist);
 
-				vec3 color = vec3(dot(toLightDir, vsNormal)) / toLightDist;
+				//vec3 color = vec3(dot(toLightDir, vsNormal)) / toLightDist;
+
+				vec3 color = texture2D(uTexture, texcoord).rgb;
 
 				if (i < uNumDynamicSphereLights) {
 					totalOutput += clamp(color, vec3(0.0), vec3(1.0));
@@ -344,19 +351,35 @@ DLL_EXPORT void phDeinitRenderer()
 
 DLL_EXPORT void phSetTextures(const phConstImageView* textures, uint32_t numTextures)
 {
+	RendererState& state = *statePtr;
 
+	// Remove any previous textures
+	state.textures.clear();
+
+	// Create textures from all images and add them to state
+	for (uint32_t i = 0; i < numTextures; i++) {
+		state.textures.add(Texture(textures[i], TextureFiltering::TRILINEAR));
+	}
 }
 
 DLL_EXPORT uint32_t phAddTexture(const phConstImageView* texture)
 {
+	RendererState& state = *statePtr;
 
-	return 0;
+	uint32_t index = state.textures.size();
+	state.textures.add(Texture(*texture, TextureFiltering::TRILINEAR));
+	return index;
 }
 
 DLL_EXPORT uint32_t phUpdateTexture(const phConstImageView* texture, uint32_t index)
 {
+	RendererState& state = *statePtr;
 
-	return 0;
+	// Check if texture exists
+	if (state.textures.size() <= index) return 0;
+
+	state.textures[index] = Texture(*texture, TextureFiltering::TRILINEAR);
+	return 1;
 }
 
 // Resource management (materials)
@@ -498,6 +521,10 @@ DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities)
 	gl::setUniform(state.modelShader, "uModelMatrix", modelMatrix);
 	gl::setUniform(state.modelShader, "uNormalMatrix", normalMatrix);
 
+	gl::setUniform(state.modelShader, "uTexture", 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, state.textures[0].handle());
+
 	for (uint32_t i = 0; i < numEntities; i++) {
 		const auto& entity = reinterpret_cast<const ph::RenderEntity*>(entities)[i];
 		auto& model = state.dynamicModels[entity.meshIndex];
@@ -509,7 +536,10 @@ DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities)
 		for (auto& component : modelComponents) {
 
 			uint32_t materialIndex = component.materialIndex();
-			// TODO: Set material here
+			const auto& material = state.materials[materialIndex];
+
+			// TDOO
+
 
 			component.render();
 		}
