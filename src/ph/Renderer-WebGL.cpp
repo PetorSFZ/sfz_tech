@@ -47,6 +47,260 @@ using namespace ph;
 
 static const uint32_t MAX_NUM_DYNAMIC_SPHERE_LIGHTS = 32;
 
+// Shaders
+// ------------------------------------------------------------------------------------------------
+
+const char* VERTEX_SHADER_SRC = R"(
+
+// Input, output and uniforms
+// ------------------------------------------------------------------------------------------------
+
+// Input
+attribute vec3 inPos;
+attribute vec3 inNormal;
+attribute vec2 inTexcoord;
+
+// Output
+varying vec3 vsPos;
+varying vec3 vsNormal;
+varying vec2 texcoord;
+
+// Uniforms
+uniform mat4 uProjMatrix;
+uniform mat4 uViewMatrix;
+uniform mat4 uModelMatrix;
+uniform mat4 uNormalMatrix; // inverse(transpose(modelViewMatrix)) for non-uniform scaling
+
+// Main
+// ------------------------------------------------------------------------------------------------
+
+void main()
+{
+	vec4 vsPosTmp = uViewMatrix * uModelMatrix * vec4(inPos, 1.0);
+
+	vsPos = vsPosTmp.xyz / vsPosTmp.w; // Unsure if division necessary.
+	vsNormal = (uNormalMatrix * vec4(inNormal, 0.0)).xyz;
+	texcoord = inTexcoord;
+
+	gl_Position = uProjMatrix * vsPosTmp;
+}
+
+)";
+
+const char* FRAGMENT_SHADER_SRC = R"(
+
+precision mediump float;
+
+// Input, output and uniforms
+// ------------------------------------------------------------------------------------------------
+
+// Material struct
+struct Material {
+	int hasAlbedoTexture;
+	int hasRoughnessTexture;
+	int hasMetallicTexture;
+	vec4 albedo;
+	float roughness;
+	float metallic;
+};
+
+// SphereLight struct
+struct SphereLight {
+	vec3 vsPos;
+	float radius;
+	float range;
+	vec3 strength;
+};
+
+// Input
+varying vec3 vsPos;
+varying vec3 vsNormal;
+varying vec2 texcoord;
+
+// Uniforms (material)
+uniform Material uMaterial;
+uniform sampler2D uAlbedoTexture;
+uniform sampler2D uRoughnessTexture;
+uniform sampler2D uMetallicTexture;
+
+// Uniforms (dynamic spherelights)
+const int MAX_NUM_DYNAMIC_SPHERE_LIGHTS = 32;
+uniform SphereLight uDynamicSphereLights[MAX_NUM_DYNAMIC_SPHERE_LIGHTS];
+uniform int uNumDynamicSphereLights;
+
+// Gamma Correction Functions
+// ------------------------------------------------------------------------------------------------
+
+const vec3 gamma = vec3(2.2);
+
+vec3 linearize(vec3 rgbGamma)
+{
+	return pow(rgbGamma, gamma);
+}
+
+vec4 linearize(vec4 rgbaGamma)
+{
+	return vec4(linearize(rgbaGamma.rgb), rgbaGamma.a);
+}
+
+vec3 applyGammaCorrection(vec3 linearValue)
+{
+	return pow(linearValue, vec3(1.0 / gamma));
+}
+
+vec4 applyGammaCorrection(vec4 linearValue)
+{
+	return vec4(applyGammaCorrection(linearValue.rgb), linearValue.a);
+}
+
+// PBR shading functions
+// ------------------------------------------------------------------------------------------------
+
+const float PI = 3.14159265359;
+
+// References used:
+// https://de45xmedrsdbp.cloudfront.net/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf
+// http://blog.selfshadow.com/publications/s2016-shading-course/
+// http://www.codinglabs.net/article_physically_based_rendering_cook_torrance.aspx
+// http://graphicrants.blogspot.se/2013/08/specular-brdf-reference.html
+
+// Normal distribution function, GGX/Trowbridge-Reitz
+// a = roughness^2, UE4 parameterization
+// dot(n,h) term should be clamped to 0 if negative
+float ggx(float nDotH, float a)
+{
+	float a2 = a * a;
+	float div = PI * pow(nDotH * nDotH * (a2 - 1.0) + 1.0, 2.0);
+	return a2 / div;
+}
+
+// Schlick's model adjusted to fit Smith's method
+// k = a/2, where a = roughness^2, however, for analytical light sources (non image based)
+// roughness is first remapped to roughness = (roughnessOrg + 1) / 2.
+// Essentially, for analytical light sources:
+// k = (roughness + 1)^2 / 8
+// For image based lighting:
+// k = roughness^2 / 2
+float geometricSchlick(float nDotL, float nDotV, float k)
+{
+	float g1 = nDotL / (nDotL * (1.0 - k) + k);
+	float g2 = nDotV / (nDotV * (1.0 - k) + k);
+	return g1 * g2;
+}
+
+// Schlick's approximation. F0 should typically be 0.04 for dielectrics
+vec3 fresnelSchlick(float nDotL, vec3 f0)
+{
+	return f0 + (vec3(1.0) - f0) * clamp(pow(1.0 - nDotL, 5.0), 0.0, 1.0);
+}
+
+// Main
+// ------------------------------------------------------------------------------------------------
+
+void main()
+{
+	// Albedo (Gamma space)
+	vec3 albedo = uMaterial.albedo.rgb;
+	float alpha = uMaterial.albedo.a;
+	if (uMaterial.hasAlbedoTexture != 0) {
+		vec4 tmp = texture2D(uAlbedoTexture, texcoord);
+		albedo = tmp.rgb;
+		alpha = tmp.a;
+	}
+	albedo = linearize(albedo);
+
+	// Skip fragment if it is transparent
+	if (alpha < 0.1) discard;
+
+	// Roughness (Linear space)
+	float roughness = uMaterial.roughness;
+	if (uMaterial.hasRoughnessTexture != 0) {
+		roughness = texture2D(uRoughnessTexture, texcoord).r;
+	}
+
+	// Metallic (Liner space)
+	float metallic = uMaterial.metallic;
+	if (uMaterial.hasMetallicTexture != 0) {
+		metallic = texture2D(uMetallicTexture, texcoord).r;
+	}
+
+	// Fragment's position and normal
+	vec3 p = vsPos;
+	vec3 n = normalize(vsNormal);
+
+	vec3 v = normalize(-p); // to view
+	float nDotV = dot(n, v);
+
+	// Interpolation of normals sometimes makes them face away from the camera. Clamp
+	// these to almost zero, to not break shading calculations.
+	nDotV = max(0.001, nDotV);
+
+	vec3 totalOutput = vec3(0.0);
+
+	for (int i = 0; i < MAX_NUM_DYNAMIC_SPHERE_LIGHTS; i++) {
+
+		// Skip if we are out of light sources
+		if (i >= uNumDynamicSphereLights) break;
+
+		// Retrieve light source
+		SphereLight light = uDynamicSphereLights[i];
+
+		// Shading parameters
+		vec3 toLight = light.vsPos - p;
+		float toLightDist = length(toLight);
+		vec3 l = toLight * (1.0 / toLightDist); // to light
+		vec3 h = normalize(l + v); // half vector (normal of microfacet)
+
+		// If nDotL is <= 0 then the light source is not in the hemisphere of the surface, i.e.
+		// no shading needs to be performed
+		float nDotL = dot(n, l);
+		if (nDotL <= 0.0) continue;
+
+		// Lambert diffuse
+		vec3 diffuse = albedo / PI;
+
+		// Cook-Torrance specular
+		// Normal distribution function
+		float nDotH = max(dot(n, h), 0.0); // max() should be superfluous here
+		float ctD = ggx(nDotH, roughness * roughness);
+
+		// Geometric self-shadowing term
+		float k = pow(roughness + 1.0, 2.0) / 8.0;
+		float ctG = geometricSchlick(nDotL, nDotV, k);
+
+		// Fresnel function
+		// Assume all dielectrics have a f0 of 0.04, for metals we assume f0 == albedo
+		vec3 f0 = mix(vec3(0.04), albedo, metallic);
+		vec3 ctF = fresnelSchlick(nDotV, f0);
+
+		// Calculate final Cook-Torrance specular value
+		vec3 specular = ctD * ctF * ctG / (4.0 * nDotL * nDotV);
+
+		// Calculates light strength
+		float shadow = 1.0; // TODO: Shadow map
+		float fallofNumerator = pow(clamp(1.0 - pow(toLightDist / light.range, 4.0), 0.0, 1.0), 2.0);
+		float fallofDenominator = (toLightDist * toLightDist + 1.0);
+		float falloff = fallofNumerator / fallofDenominator;
+		vec3 lightContrib = falloff * light.strength * shadow;
+
+		vec3 ks = ctF;
+		vec3 kd = (1.0 - ks) * (1.0 - metallic);
+
+		// "Solves" reflectance equation under the assumption that the light source is a point light
+		// and that there is no global illumination.
+		totalOutput += (kd * diffuse + specular) * lightContrib * nDotL;
+
+		// TODO:PLSFIX AAOJGVOAIJEFIOAWJFIOWAJFIOWAJFIWAJFIOWAJFIWAJFWAIOJFIWOAJFIOWJFIOWAJFW  vvv falloffNumerator is black
+		//totalOutput += vec3(toLightDist);
+		//totalOutput += vec3(light.range);
+		//totalOutput += vec3(fallofNumerator);
+	}
+
+	gl_FragColor = vec4(applyGammaCorrection(totalOutput), 1.0);
+}
+
+)";
+
 // State
 // ------------------------------------------------------------------------------------------------
 
@@ -140,6 +394,26 @@ static void stupidSetSphereLightUniform(
 	gl::setUniform(program, tmpStr.str, sphereLight.range);
 	tmpStr.printf("%s[%u].%s", name, index, "strength");
 	gl::setUniform(program, tmpStr.str, sphereLight.strength);
+}
+
+static void stupidSetMaterialUniform(
+	const gl::Program& program,
+	const char* name,
+	const ph::Material& m) noexcept
+{
+	StackString tmpStr;
+	tmpStr.printf("%s.hasAlbedoTexture", name);
+	gl::setUniform(program, tmpStr.str, (m.albedoTexIndex == -1) ? 0 : 1);
+	tmpStr.printf("%s.hasRoughnessTexture", name);
+	gl::setUniform(program, tmpStr.str, (m.roughnessTexIndex == -1) ? 0 : 1);
+	tmpStr.printf("%s.hasMetallicTexture", name);
+	gl::setUniform(program, tmpStr.str, (m.metallicTexIndex == -1) ? 0 : 1);
+	tmpStr.printf("%s.albedo", name);
+	gl::setUniform(program, tmpStr.str, m.albedo);
+	tmpStr.printf("%s.roughness", name);
+	gl::setUniform(program, tmpStr.str, m.roughness);
+	tmpStr.printf("%s.metallic", name);
+	gl::setUniform(program, tmpStr.str, m.metallic);
 }
 
 // Interface: Init functions
@@ -237,79 +511,8 @@ DLL_EXPORT uint32_t phInitRenderer(
 		}
 	)");
 
-	state.modelShader = gl::Program::fromSource(R"(
-		// Input
-		attribute vec3 inPos;
-		attribute vec3 inNormal;
-		attribute vec2 inTexcoord;
-
-		// Output
-		varying vec3 vsPos;
-		varying vec3 vsNormal;
-		varying vec2 texcoord;
-
-		// Uniforms
-		uniform mat4 uProjMatrix;
-		uniform mat4 uViewMatrix;
-		uniform mat4 uModelMatrix;
-		uniform mat4 uNormalMatrix; // inverse(transpose(modelViewMatrix)) for non-uniform scaling
-
-		void main()
-		{
-			vec4 vsPosTmp = uViewMatrix * uModelMatrix * vec4(inPos, 1.0);
-
-			vsPos = vsPosTmp.xyz / vsPosTmp.w; // Unsure if division necessary.
-			vsNormal = (uNormalMatrix * vec4(inNormal, 0.0)).xyz;
-			texcoord = inTexcoord;
-
-			gl_Position = uProjMatrix * vsPosTmp;
-		}
-	)", R"(
-		precision mediump float;
-
-		// SphereLight struct
-		struct SphereLight {
-			vec3 vsPos;
-			float radius;
-			float range;
-			vec3 strength;
-		};
-
-		// Input
-		varying vec3 vsPos;
-		varying vec3 vsNormal;
-		varying vec2 texcoord;
-
-		// Uniforms
-		const int MAX_NUM_DYNAMIC_SPHERE_LIGHTS = 32;
-		uniform SphereLight uDynamicSphereLights[MAX_NUM_DYNAMIC_SPHERE_LIGHTS];
-		uniform int uNumDynamicSphereLights;
-
-		uniform sampler2D uTexture;
-
-		void main()
-		{
-			vec3 totalOutput = vec3(0.0);
-
-			for (int i = 0; i < MAX_NUM_DYNAMIC_SPHERE_LIGHTS; i++) {
-				SphereLight light = uDynamicSphereLights[i];
-
-				vec3 toLight = light.vsPos - vsPos;
-				float toLightDist = length(toLight);
-				vec3 toLightDir = toLight * (1.0 / toLightDist);
-
-				//vec3 color = vec3(dot(toLightDir, vsNormal)) / toLightDist;
-
-				vec3 color = texture2D(uTexture, texcoord).rgb;
-
-				if (i < uNumDynamicSphereLights) {
-					totalOutput += clamp(color, vec3(0.0), vec3(1.0));
-				}
-			}
-
-			gl_FragColor = vec4(totalOutput, 1.0);
-		}
-	)", [](uint32_t shaderProgram) {
+	state.modelShader = gl::Program::fromSource(VERTEX_SHADER_SRC, FRAGMENT_SHADER_SRC,
+		[](uint32_t shaderProgram) {
 		glBindAttribLocation(shaderProgram, 0, "inPos");
 		glBindAttribLocation(shaderProgram, 1, "inNormal");
 		glBindAttribLocation(shaderProgram, 2, "inTexcoord");
@@ -358,7 +561,7 @@ DLL_EXPORT void phSetTextures(const phConstImageView* textures, uint32_t numText
 
 	// Create textures from all images and add them to state
 	for (uint32_t i = 0; i < numTextures; i++) {
-		state.textures.add(Texture(textures[i], TextureFiltering::TRILINEAR));
+		state.textures.add(Texture(textures[i]));
 	}
 }
 
@@ -367,7 +570,7 @@ DLL_EXPORT uint32_t phAddTexture(const phConstImageView* texture)
 	RendererState& state = *statePtr;
 
 	uint32_t index = state.textures.size();
-	state.textures.add(Texture(*texture, TextureFiltering::TRILINEAR));
+	state.textures.add(Texture(*texture));
 	return index;
 }
 
@@ -378,7 +581,7 @@ DLL_EXPORT uint32_t phUpdateTexture(const phConstImageView* texture, uint32_t in
 	// Check if texture exists
 	if (state.textures.size() <= index) return 0;
 
-	state.textures[index] = Texture(*texture, TextureFiltering::TRILINEAR);
+	state.textures[index] = Texture(*texture);
 	return 1;
 }
 
@@ -521,9 +724,9 @@ DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities)
 	gl::setUniform(state.modelShader, "uModelMatrix", modelMatrix);
 	gl::setUniform(state.modelShader, "uNormalMatrix", normalMatrix);
 
-	gl::setUniform(state.modelShader, "uTexture", 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, state.textures[0].handle());
+	gl::setUniform(state.modelShader, "uAlbedoTexture", 0);
+	gl::setUniform(state.modelShader, "uRoughnessTexture", 1);
+	gl::setUniform(state.modelShader, "uMetallicTexture", 2);
 
 	for (uint32_t i = 0; i < numEntities; i++) {
 		const auto& entity = reinterpret_cast<const ph::RenderEntity*>(entities)[i];
@@ -535,12 +738,26 @@ DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities)
 		auto& modelComponents = model.components();
 		for (auto& component : modelComponents) {
 
+			// Upload component's material to shader
 			uint32_t materialIndex = component.materialIndex();
 			const auto& material = state.materials[materialIndex];
+			stupidSetMaterialUniform(state.modelShader, "uMaterial", material);
 
-			// TDOO
+			// Bind materials textures
+			if (material.albedoTexIndex != -1) {
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, state.textures[material.albedoTexIndex].handle());
+			}
+			if (material.roughnessTexIndex != -1) {
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, state.textures[material.roughnessTexIndex].handle());
+			}
+			if (material.metallicTexIndex != -1) {
+				glActiveTexture(GL_TEXTURE2);
+				glBindTexture(GL_TEXTURE_2D, state.textures[material.metallicTexIndex].handle());
+			}
 
-
+			// Render component of mesh
 			component.render();
 		}
 	}
