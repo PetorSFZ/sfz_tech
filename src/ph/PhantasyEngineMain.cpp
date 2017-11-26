@@ -126,26 +126,30 @@ int mainImpl(int, char*[], InitOptions&& options)
 	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Starting game loop");
 	runGameLoop(
 
-	// Create initial GameLoopUpdateable
-	options.createInitialUpdateable(),
+		// Create initial GameLoopUpdateable
+		options.createInitialUpdateable(),
 
-	// Moving renderer
-	std::move(renderer),
+		// Moving renderer
+		std::move(renderer),
 
-	// Cleanup callback
-	[]() {
-		// Store global settings
-		PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Saving global config to file");
-		GlobalConfig& cfg = GlobalConfig::instance();
-		if (!cfg.save()) {
-			PH_LOG(LOG_LEVEL_WARNING, "PhantasyEngine", "Failed to write ini file");
+		// Providing SDL Window handle
+		window,
+
+		// Cleanup callback
+		[]() {
+			// Store global settings
+			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Saving global config to file");
+			GlobalConfig& cfg = GlobalConfig::instance();
+			if (!cfg.save()) {
+				PH_LOG(LOG_LEVEL_WARNING, "PhantasyEngine", "Failed to write ini file");
+			}
+			cfg.destroy();
+
+			// Cleanup SDL2
+			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Cleaning up SDL2");
+			SDL_Quit();
 		}
-		cfg.destroy();
-
-		// Cleanup SDL2
-		PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Cleaning up SDL2");
-		SDL_Quit();
-	});
+	);
 
 	// DEAD ZONE
 	// Don't place any code after the game loop has been initialized, it will never be called on

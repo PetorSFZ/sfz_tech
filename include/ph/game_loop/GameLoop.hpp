@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <SDL.h>
+
 #include <sfz/memory/SmartPointers.hpp>
 
 #include "ph/game_loop/GameLoopUpdateable.hpp"
@@ -37,8 +39,12 @@ using sfz::UniquePtr;
 /// has exited it should be done in the callback function.
 /// \param updateable the initial GameLoopUpdateable to receive input
 /// \param renderer the renderer to be used
+/// \param window the window that is being rendered to be the renderer
 /// \param cleanupCallback the callback function called before exiting the game loop
-void runGameLoop(UniquePtr<GameLoopUpdateable> updateable, UniquePtr<Renderer> renderer,
-                 void(*cleanupCallback)(void)) noexcept;
+void runGameLoop(
+	UniquePtr<GameLoopUpdateable> updateable,
+	UniquePtr<Renderer> renderer,
+	SDL_Window* window,
+	void(*cleanupCallback)(void)) noexcept;
 
 } // namespace ph

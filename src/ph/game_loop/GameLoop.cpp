@@ -46,6 +46,7 @@ using time_point = std::chrono::high_resolution_clock::time_point;
 struct GameLoopState final {
 	UniquePtr<GameLoopUpdateable> updateable;
 	UniquePtr<Renderer> renderer;
+	SDL_Window* window = nullptr;
 	void(*cleanupCallback)(void) = nullptr;
 	bool quit = false;
 
@@ -69,6 +70,9 @@ static void quit(GameLoopState& gameLoopState) noexcept
 
 	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Destroying renderer");
 	gameLoopState.renderer.destroy(); // Destroy the current renderer
+
+	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Destroying SDL Window");
+	SDL_DestroyWindow(gameLoopState.window);
 
 	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Calling cleanup callback");
 	gameLoopState.cleanupCallback(); // Call the cleanup callback
@@ -203,7 +207,10 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	sdl::update(state.userInput.controllers, state.userInput.controllerEvents);
 
 	// Updates mouse
-	//state.userInput.rawMouse.update(window, state.mouseEvents);
+	int windowWidth = -1;
+	int windowHeight = -1;
+	SDL_GetWindowSize(state.window, &windowWidth, &windowHeight);
+	state.userInput.rawMouse.update(windowWidth, windowHeight, state.userInput.mouseEvents);
 
 	// Process input
 	UpdateOp op = state.updateable->processInput(state.updateInfo, state.userInput);
@@ -222,13 +229,17 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 // GameLoop entry function
 // ------------------------------------------------------------------------------------------------
 
-void runGameLoop(UniquePtr<GameLoopUpdateable> updateable, UniquePtr<Renderer> renderer,
-                 void(*cleanupCallback)(void)) noexcept
+void runGameLoop(
+	UniquePtr<GameLoopUpdateable> updateable,
+	UniquePtr<Renderer> renderer,
+	SDL_Window* window,
+	void(*cleanupCallback)(void)) noexcept
 {
 	// Initialize game loop state
 	GameLoopState gameLoopState = {};
 	gameLoopState.updateable = std::move(updateable);
 	gameLoopState.renderer = std::move(renderer);
+	gameLoopState.window = window;
 	gameLoopState.cleanupCallback = cleanupCallback;
 
 	calculateDelta(gameLoopState.previousItrTime); // Sets previousItrTime to current time
