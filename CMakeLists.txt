@@ -2,7 +2,7 @@
 # ------------------------------------------------------------------------------------------------
 
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
-project("sfzCore")
+project("sfzCore" CXX)
 
 # Sets build type to release if no build type is specified in a single-configuration generator.
 if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
@@ -21,7 +21,8 @@ if(NOT hasParent)
 		# /Zi = Produce .pdb debug information. Does not affect optimizations, but does imply /debug.
 		# /arch:AVX = Enable (require) Intel AVX instructions for code generation
 		# /D_CRT_SECURE_NO_WARNINGS = Removes annyoing warning when using c standard library
-		set(CMAKE_CXX_FLAGS "/W4 /wd4201 /Zi /EHsc /arch:AVX /D_CRT_SECURE_NO_WARNINGS")
+		# /utf-8 = Specifies that both the source and execution character sets are encoded using UTF-8.
+		set(CMAKE_CXX_FLAGS "/W4 /wd4201 /Zi /EHsc /arch:AVX /D_CRT_SECURE_NO_WARNINGS /utf-8")
 		# /O2 = Optimize code for fastest speed
 		# /fp:fast = "optimize floating-point code for speed at the expense of accuracy and correctness"
 		# /DSFZ_NO_DEBUG = defines the "SFZ_NO_DEBUG" macro, which disables sfz_assert_debug()
@@ -102,19 +103,6 @@ endif()
 
 # Catch
 add_subdirectory(${EXTERNALS_DIR}/catch)
-
-# Accumulated variable with all includes to forward to caller
-set(FORWARD_INCLUDE_DIRS ${INCLUDE_DIR})
-if(SFZ_CORE_CUDA)
-set(FORWARD_INCLUDE_DIRS ${FORWARD_INCLUDE_DIRS} ${INCLUDE_CUDA_DIR})
-endif()
-
-# Include directories
-include_directories(
-	${FORWARD_INCLUDE_DIRS}
-	${SDL2_INCLUDE_DIRS}
-	${CATCH_INCLUDE_DIRS}
-)
 
 # sfzCore library
 # ------------------------------------------------------------------------------------------------
@@ -224,16 +212,12 @@ set(SFZ_CORE_SOURCE_FILES
 )
 source_group(TREE ${SOURCE_DIR} FILES ${SFZ_CORE_SOURCE_FILES})
 
-if(SFZ_CORE_CUDA)
 set(SFZ_CORE_INCLUDE_CUDA_FILES
 	${INCLUDE_CUDA_DIR}/sfz/Cuda.hpp
 	${INCLUDE_CUDA_DIR}/sfz/cuda/Buffer.hpp
 	${INCLUDE_CUDA_DIR}/sfz/cuda/CudaUtils.hpp
 )
 source_group(TREE ${INCLUDE_CUDA_DIR} FILES ${SFZ_CORE_INCLUDE_CUDA_FILES})
-else()
-set(SFZ_CORE_INCLUDE_CUDA_FILES "")
-endif()
 
 set(SFZ_CORE_FILES
 	${SFZ_CORE_INCLUDE_FILES}
@@ -242,11 +226,26 @@ set(SFZ_CORE_FILES
 )
 
 # Library compile target
-add_library(sfzCoreLib ${SFZ_CORE_FILES})
+add_library(
+	sfzCore
+
+	${SFZ_CORE_INCLUDE_FILES}
+	${SFZ_CORE_SOURCE_FILES}
+	${SFZ_CORE_INCLUDE_CUDA_FILES}
+)
+
+# Include directories
+target_include_directories(
+	sfzCore
+	PRIVATE
+	${INCLUDE_DIR}
+	${INCLUDE_CUDA_DIR}
+	${SDL2_INCLUDE_DIRS}
+)
 
 # Linking libraries
 target_link_libraries(
-	sfzCoreLib
+	sfzCore
 
 	${SDL2_LIBRARIES}
 )
@@ -254,10 +253,12 @@ target_link_libraries(
 # Output variables
 # ------------------------------------------------------------------------------------------------
 
-set(SFZ_CORE_FOUND true PARENT_SCOPE)
-set(SFZ_CORE_INCLUDE_DIRS ${FORWARD_INCLUDE_DIRS} PARENT_SCOPE)
-set(SFZ_CORE_LIBRARIES sfzCoreLib PARENT_SCOPE)
-set(SFZ_CORE_RUNTIME_FILES "" PARENT_SCOPE)
+if(hasParent)
+	set(SFZ_CORE_FOUND true PARENT_SCOPE)
+	set(SFZ_CORE_INCLUDE_DIRS ${INCLUDE_DIR} ${INCLUDE_CUDA_DIR} PARENT_SCOPE)
+	set(SFZ_CORE_LIBRARIES sfzCore PARENT_SCOPE)
+	set(SFZ_CORE_RUNTIME_FILES "" PARENT_SCOPE)
+endif()
 
 # Tests
 # ------------------------------------------------------------------------------------------------
@@ -294,10 +295,18 @@ if(NOT hasParent)
 
 	enable_testing(true)
 	add_executable(sfzCoreTests ${SFZ_CORE_TEST_FILES})
+	target_include_directories(
+		sfzCoreTests
+		PRIVATE
+		${INCLUDE_DIR}
+		${INCLUDE_CUDA_DIR}
+		${SDL2_INCLUDE_DIRS}
+		${CATCH_INCLUDE_DIRS}
+	)
 	target_link_libraries(
 		sfzCoreTests
 
-		sfzCoreLib
+		sfzCore
 	)
 	add_test(sfzCoreTestsName sfzCoreTests)
 
