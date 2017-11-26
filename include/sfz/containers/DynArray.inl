@@ -184,7 +184,7 @@ void DynArray<T>::setCapacity(uint32_t capacity) noexcept
 		if (mAllocator == nullptr) mAllocator = getDefaultAllocator();
 
 		// Allocates memory and returns
-		mCapacity = capacity;
+		mCapacity = std::max(capacity, MIN_CAPACITY);
 		mDataPtr = (T*)mAllocator->allocate(mCapacity * sizeof(T),
 		                                    std::max<uint32_t>(MINIMUM_ALIGNMENT, alignof(T)),
 		                                    "DynArray");
@@ -203,6 +203,7 @@ void DynArray<T>::setCapacity(uint32_t capacity) noexcept
 	}
 
 	// Allocate new memory and move/copy over elements from old memory
+	capacity = std::max(capacity, MIN_CAPACITY);
 	T* newDataPtr = (T*)mAllocator->allocate(capacity * sizeof(T),
 	                                         std::max<uint32_t>(MINIMUM_ALIGNMENT, alignof(T)),
 	                                         "DynArray");
@@ -461,6 +462,7 @@ int64_t DynArray<T>::findIndex(F func) const noexcept
 
 template<typename T> constexpr uint32_t DynArray<T>::MINIMUM_ALIGNMENT;
 template<typename T> constexpr uint32_t DynArray<T>::DEFAULT_INITIAL_CAPACITY;
+template<typename T> constexpr uint32_t DynArray<T>::MIN_CAPACITY;
 template<typename T> constexpr uint64_t DynArray<T>::MAX_CAPACITY;
 template<typename T> constexpr double DynArray<T>::CAPACITY_INCREASE_FACTOR;
 

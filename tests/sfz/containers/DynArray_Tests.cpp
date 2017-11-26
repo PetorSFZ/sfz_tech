@@ -414,3 +414,30 @@ TEST_CASE("Allocator bug", "[sfz::DynArray]")
 	}
 	REQUIRE(debugAlloc.numAllocations() == 0);
 }
+
+TEST_CASE("Initial capacity == 1 bug", "[sfz::DynArray]")
+{
+	// Note, this test case does not actually reproduce the bug. But it should fix it anyway.
+	// The problem was essentially that the initial capacity could be 1, and then increasing by a
+	// factor of 1.75 would still yield a capacity of 1.
+
+	DebugAllocator debugAlloc("DebugAlloc", 12u);
+
+	DynArray<int> v;
+	v.create(0, &debugAlloc);
+	int vals[] = { 32 };
+	v.add(vals, 1);
+
+	REQUIRE(v.capacity() == DynArray<int>::MIN_CAPACITY);
+	REQUIRE(v.allocator() == &debugAlloc);
+	REQUIRE(v.size() == 1);
+	REQUIRE(v[0] == 32);
+
+	v.add(vals, 1);
+
+	REQUIRE(v.capacity() == DynArray<int>::MIN_CAPACITY);
+	REQUIRE(v.allocator() == &debugAlloc);
+	REQUIRE(v.size() == 2);
+	REQUIRE(v[0] == 32);
+	REQUIRE(v[1] == 32);
+}
