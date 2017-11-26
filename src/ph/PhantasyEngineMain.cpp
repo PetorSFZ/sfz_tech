@@ -42,6 +42,22 @@ namespace ph {
 // Statics
 // ------------------------------------------------------------------------------------------------
 
+const char* basePath() noexcept
+{
+	static const char* path = []() {
+		const char* tmp = SDL_GetBasePath();
+		if (tmp == nullptr) {
+			sfz::error("SDL_GetBasePath() failed: %s", SDL_GetError());
+		}
+		size_t len = std::strlen(tmp);
+		char* res = static_cast<char*>(sfz::getDefaultAllocator()->allocate(len + 1, 32, "sfz::basePath()"));
+		std::strcpy(res, tmp);
+		SDL_free((void*)tmp);
+		return res;
+	}();
+	return path;
+}
+
 static void ensureAppUserDataDirExists(const char* appName)
 {
 	// Create "My Games" directory
@@ -64,7 +80,7 @@ int mainImpl(int, char*[], InitOptions&& options)
 	SetProcessDPIAware();
 
 	// Set current working directory to SDL_GetBasePath()
-	_chdir(sfz::basePath());
+	_chdir(basePath());
 #endif
 
 	// Load global settings
@@ -74,8 +90,8 @@ int mainImpl(int, char*[], InitOptions&& options)
 		if (options.iniLocation == IniLocation::NEXT_TO_EXECUTABLE) {
 			StackString192 iniFileName;
 			iniFileName.printf("%s.ini", options.appName);
-			cfg.init(sfz::basePath(), iniFileName.str);
-			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Ini location set to: %s%s", sfz::basePath(), iniFileName.str);
+			cfg.init(basePath(), iniFileName.str);
+			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Ini location set to: %s%s", basePath(), iniFileName.str);
 		}
 		else if (options.iniLocation == IniLocation::MY_GAMES_DIR) {
 
