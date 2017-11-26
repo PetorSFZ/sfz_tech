@@ -66,6 +66,7 @@ set(PHANTASY_ENGINE_HEADER_FILES
 	${INCLUDE_DIR}/ph/sdl/ButtonState.hpp
 	${INCLUDE_DIR}/ph/sdl/GameController.hpp
 	${INCLUDE_DIR}/ph/sdl/Mouse.hpp
+	${INCLUDE_DIR}/ph/sdl/SDLAllocator.hpp
 
 	${INCLUDE_DIR}/ph/utils/Logging.hpp
 )
@@ -84,14 +85,15 @@ set(PHANTASY_ENGINE_SOURCE_FILES
 
 	${SOURCE_DIR}/ph/sdl/GameController.cpp
 	${SOURCE_DIR}/ph/sdl/Mouse.cpp
+	${SOURCE_DIR}/ph/sdl/SDLAllocator.cpp
 
 	${SOURCE_DIR}/ph/utils/Logging.cpp
 )
 source_group(TREE ${SOURCE_DIR} FILES ${PHANTASY_ENGINE_SOURCE_FILES})
 
-add_library(phCore ${PHANTASY_ENGINE_HEADER_FILES} ${PHANTASY_ENGINE_SOURCE_FILES})
+add_library(PhantasyEngineCore ${PHANTASY_ENGINE_HEADER_FILES} ${PHANTASY_ENGINE_SOURCE_FILES})
 
-target_include_directories(phCore PUBLIC
+target_include_directories(PhantasyEngineCore PUBLIC
 	${INCLUDE_DIR}
 	${SDL2_INCLUDE_DIRS}
 	${SFZ_CORE_INCLUDE_DIRS}
@@ -99,7 +101,7 @@ target_include_directories(phCore PUBLIC
 	${STB_INCLUDE_DIRS}
 )
 
-target_link_libraries(phCore
+target_link_libraries(PhantasyEngineCore
 	${SDL2_LIBRARIES}
 	${SFZ_CORE_LIBRARIES}
 )
@@ -109,4 +111,4 @@ target_link_libraries(phCore
 
 set(PHANTASY_ENGINE_FOUND true PARENT_SCOPE)
 set(PHANTASY_ENGINE_INCLUDE_DIRS ${INCLUDE_DIR} ${STB_INCLUDE_DIRS} PARENT_SCOPE)
-set(PHANTASY_ENGINE_LIBRARIES phCore PARENT_SCOPE)
+set(PHANTASY_ENGINE_LIBRARIES PhantasyEngineCore PARENT_SCOPE)

@@ -35,6 +35,7 @@
 
 #include "ph/config/GlobalConfig.hpp"
 #include "ph/game_loop/GameLoop.hpp"
+#include "ph/sdl/SDLAllocator.hpp"
 #include "ph/utils/Logging.hpp"
 
 namespace ph {
@@ -74,6 +75,9 @@ static void ensureAppUserDataDirExists(const char* appName)
 
 int mainImpl(int, char*[], InitOptions&& options)
 {
+    // Set SDL allocators
+    sdl::setSDLAllocator(sfz::getDefaultAllocator());
+    
 	// Windwows specific hacks
 #ifdef _WIN32
 	// Enable hi-dpi awareness
@@ -124,8 +128,8 @@ int mainImpl(int, char*[], InitOptions&& options)
 
 	// Create SDL_Window
 	uint32_t windowFlags = renderer->requiredSDL2WindowFlags() | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
-	const int width = 800; // TODO: Arbitrary value not taken from config
-	const int height = 500;
+	const int width = 1280; // TODO: Arbitrary value not taken from config
+	const int height = 650;
 	SDL_Window* window = SDL_CreateWindow(options.appName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 		width, height, windowFlags);
 	if (window == NULL) {
