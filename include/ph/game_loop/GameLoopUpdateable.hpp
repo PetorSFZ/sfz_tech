@@ -27,10 +27,10 @@
 #include <sfz/containers/HashMap.hpp>
 #include <sfz/math/Vector.hpp>
 #include <sfz/memory/SmartPointers.hpp>
-#include <sfz/sdl/GameController.hpp>
-#include <sfz/sdl/Mouse.hpp>
 
 #include "ph/rendering/Renderer.hpp"
+#include "ph/sdl/GameController.hpp"
+#include "ph/sdl/Mouse.hpp"
 
 namespace ph {
 
@@ -39,9 +39,9 @@ using sfz::DynArray;
 using sfz::HashMap;
 using sfz::UniquePtr;
 using sfz::vec2i;
-using sfz::sdl::GameController;
-using sfz::sdl::GameControllerState;
-using sfz::sdl::Mouse;
+using sdl::GameController;
+using sdl::GameControllerState;
+using sdl::Mouse;
 class GameLoopUpdateable; // Forward declaration
 
 // UpdateOp

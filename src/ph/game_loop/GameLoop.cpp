@@ -200,7 +200,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	for (auto pair : state.userInput.controllers) {
 		state.userInput.controllersLastFrameState[pair.key] = pair.value.state();
 	}
-	sfz::sdl::update(state.userInput.controllers, state.userInput.controllerEvents);
+	sdl::update(state.userInput.controllers, state.userInput.controllerEvents);
 
 	// Updates mouse
 	//state.userInput.rawMouse.update(window, state.mouseEvents);

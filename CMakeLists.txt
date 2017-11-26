@@ -63,6 +63,10 @@ set(PHANTASY_ENGINE_HEADER_FILES
 	${INCLUDE_DIR}/ph/rendering/Image.hpp
 	${INCLUDE_DIR}/ph/rendering/Renderer.hpp
 
+	${INCLUDE_DIR}/ph/sdl/ButtonState.hpp
+	${INCLUDE_DIR}/ph/sdl/GameController.hpp
+	${INCLUDE_DIR}/ph/sdl/Mouse.hpp
+
 	${INCLUDE_DIR}/ph/utils/Logging.hpp
 )
 source_group(TREE ${INCLUDE_DIR} FILES ${PHANTASY_ENGINE_HEADER_FILES})
@@ -77,6 +81,9 @@ set(PHANTASY_ENGINE_SOURCE_FILES
 
 	${SOURCE_DIR}/ph/rendering/Image.cpp
 	${SOURCE_DIR}/ph/rendering/Renderer.cpp
+
+	${SOURCE_DIR}/ph/sdl/GameController.cpp
+	${SOURCE_DIR}/ph/sdl/Mouse.cpp
 
 	${SOURCE_DIR}/ph/utils/Logging.cpp
 )
