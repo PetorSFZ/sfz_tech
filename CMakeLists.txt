@@ -159,17 +159,6 @@ set(SFZ_CORE_INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/memory/SmartPointers.hpp
 	${INCLUDE_DIR}/sfz/memory/SmartPointers.inl
 
-	${INCLUDE_DIR}/sfz/Screens.hpp
-	${INCLUDE_DIR}/sfz/screens/BaseScreen.hpp
-	${INCLUDE_DIR}/sfz/screens/GameLoop.hpp
-
-	${INCLUDE_DIR}/sfz/SDL.hpp
-	${INCLUDE_DIR}/sfz/sdl/ButtonState.hpp
-	${INCLUDE_DIR}/sfz/sdl/GameController.hpp
-	${INCLUDE_DIR}/sfz/sdl/Mouse.hpp
-	${INCLUDE_DIR}/sfz/sdl/Session.hpp
-	${INCLUDE_DIR}/sfz/sdl/Window.hpp
-
 	${INCLUDE_DIR}/sfz/Strings.hpp
 	${INCLUDE_DIR}/sfz/strings/DynString.hpp
 	${INCLUDE_DIR}/sfz/strings/StackString.hpp
@@ -193,13 +182,6 @@ set(SFZ_CORE_SOURCE_FILES
 	${SOURCE_DIR}/sfz/memory/Allocator.cpp
 	${SOURCE_DIR}/sfz/memory/CAllocatorWrapper.cpp
 	${SOURCE_DIR}/sfz/memory/DebugAllocator.cpp
-
-	${SOURCE_DIR}/sfz/screens/GameLoop.cpp
-
-	${SOURCE_DIR}/sfz/sdl/GameController.cpp
-	${SOURCE_DIR}/sfz/sdl/Mouse.cpp
-	${SOURCE_DIR}/sfz/sdl/Session.cpp
-	${SOURCE_DIR}/sfz/sdl/Window.cpp
 
 	${SOURCE_DIR}/sfz/strings/DynString.cpp
 	${SOURCE_DIR}/sfz/strings/StackString.cpp
