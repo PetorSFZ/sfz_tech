@@ -33,10 +33,6 @@ using std::uint8_t;
 // Paths
 // ------------------------------------------------------------------------------------------------
 
-/// Returns path to the the directory the application was run from, likely executable location.
-/// The string itself is owned by this function and should not be deallocated or modified.
-const char* basePath() noexcept;
-
 /// Returns path to MyDocuments on Windows, user root (~) on Unix. The string itself is owned by
 /// this function and should not be deallocated or modified. Guaranteed to end with path separator.
 const char* myDocumentsPath() noexcept;

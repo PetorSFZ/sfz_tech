@@ -48,9 +48,8 @@ if(NOT hasParent)
 		# -Wall -Wextra = Enable most warnings
 		# -std=c++14 = Enable C++14 support
 		# -fno-strict-aliasing = Disable strict aliasing optimizations
-		# -s USE_SDL=2 = Use SDL2 library
 		# -s TOTAL_MEMORY=134217728 = 128MiB heap, TODO: should probably not hard-code this
-		set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -fno-strict-aliasing -s USE_SDL=2 -s TOTAL_MEMORY=134217728")
+		set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -fno-strict-aliasing -s TOTAL_MEMORY=134217728")
 		set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
 		set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
 		set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
@@ -72,37 +71,6 @@ set(INCLUDE_CUDA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include_cuda)
 set(INCLUDE_GL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include_gl)
 set(TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
-
-# Dependencies
-# ------------------------------------------------------------------------------------------------
-
-# Include DownloadProject if building individually
-if (NOT hasParent)
-	include(cmake/DownloadProject.cmake)
-endif()
-
-# SDL2
-# ${SDL2_FOUND}, ${SDL2_INCLUDE_DIRS}, ${SDL2_LIBRARIES} and ${SDL2_RUNTIME_FILES}
-if(hasParent)
-	if (NOT ${SDL2_FOUND})
-		message(FATAL_ERROR "sfzCore requires SDL2. Add Dependency-SDL2.")
-	endif()
-else()
-	message("Acquiring SDL2")
-	download_project(
-		PROJ                sdl2
-		PREFIX              externals
-		GIT_REPOSITORY      https://github.com/PhantasyEngine/Dependency-SDL2.git
-		GIT_TAG             4db8582803583c35d8377bc23795bfa0c0cbbc5f
-		UPDATE_DISCONNECTED 1
-		QUIET
-	)
-	add_subdirectory(${sdl2_SOURCE_DIR})
-	message("Finished acquiring SDL2")
-endif()
-
-# Catch
-add_subdirectory(${EXTERNALS_DIR}/catch)
 
 # sfzCore library
 # ------------------------------------------------------------------------------------------------
@@ -222,14 +190,6 @@ target_include_directories(
 	PRIVATE
 	${INCLUDE_DIR}
 	${INCLUDE_CUDA_DIR}
-	${SDL2_INCLUDE_DIRS}
-)
-
-# Linking libraries
-target_link_libraries(
-	sfzCore
-
-	${SDL2_LIBRARIES}
 )
 
 # Output variables
@@ -246,6 +206,9 @@ endif()
 # ------------------------------------------------------------------------------------------------
 
 if(NOT hasParent)
+
+	# Catch
+	add_subdirectory(${EXTERNALS_DIR}/catch)
 
 	set(SFZ_CORE_TEST_FILES
 		${TESTS_DIR}/sfz/Main_Tests.cpp
@@ -292,14 +255,4 @@ if(NOT hasParent)
 	)
 	add_test(sfzCoreTestsName sfzCoreTests)
 
-endif()
-
-# Copy DLLs
-# ------------------------------------------------------------------------------------------------
-
-# Only copy DLLs if sfzCore is built individually, not if it is built as subproject
-if((NOT hasParent) AND MSVC)
-	file(COPY ${SDL2_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR}/Debug)
-	file(COPY ${SDL2_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR}/RelWithDebInfo)
-	file(COPY ${SDL2_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR}/Release)
 endif()

@@ -24,8 +24,6 @@
 #include <cstdint>
 #include <cstring>
 
-#include <SDL.h>
-
 #include "sfz/PushWarnings.hpp"
 
 #if defined(_WIN32)
@@ -95,22 +93,6 @@ static DynArray<T> readFileInternal(const char* path, bool binaryMode, Allocator
 
 // Paths
 // ------------------------------------------------------------------------------------------------
-
-const char* basePath() noexcept
-{
-	static const char* path = []() {
-		const char* tmp = SDL_GetBasePath();
-		if (tmp == nullptr) {
-			sfz::error("SDL_GetBasePath() failed: %s", SDL_GetError());
-		}
-		size_t len = std::strlen(tmp);
-		char* res = static_cast<char*>(getDefaultAllocator()->allocate(len + 1, 32, "sfz::basePath()"));
-		std::strcpy(res, tmp);
-		SDL_free((void*)tmp);
-		return res;
-	}();
-	return path;
-}
 
 const char* myDocumentsPath() noexcept
 {

@@ -28,20 +28,9 @@ using namespace sfz;
 
 static const char* stupidFileName = "fafeafeafeafaefa.ini";
 
-static DynString appendBasePath(const char* fileName) noexcept
-{
-	size_t baseLen = std::strlen(sfz::basePath());
-	size_t fileLen = std::strlen(fileName);
-	sfz::DynString tmp("", static_cast<uint32_t>(baseLen + fileLen + 10));
-	tmp.printf("%s", sfz::basePath());
-	tmp.printfAppend("%s", fileName);
-	return std::move(tmp);
-}
-
 TEST_CASE("Basic IniParser tests", "[sfz::IniParser]")
 {
-	auto filePath = appendBasePath(stupidFileName);
-	const char* fpath = filePath.str();
+	const char* fpath = stupidFileName;
 
 	IniParser ini1(fpath);
 
@@ -76,8 +65,7 @@ TEST_CASE("Basic IniParser tests", "[sfz::IniParser]")
 
 TEST_CASE("IniParser sanitizer methods", "[sfz::IniParser]")
 {
-	auto filePath = appendBasePath(stupidFileName);
-	const char* fpath = filePath.str();
+	const char* fpath = stupidFileName;
 
 	deleteFile(fpath);
 	IniParser ini(fpath);
@@ -184,8 +172,7 @@ var=true
 )";
 
 	SECTION("First ini") {
-		auto path = appendBasePath("test_ini_1.ini");
-		const char* cpath = path.str();
+		const char* cpath = "test_ini_1.ini";
 
 		deleteFile(cpath);
 		REQUIRE(writeBinaryFile(cpath, reinterpret_cast<const uint8_t*>(INPUT_INI_1), sizeof(INPUT_INI_1)));
@@ -258,8 +245,7 @@ var=true
 	}
 
 	SECTION("Second ini") {
-		auto path = appendBasePath("test_ini_2.ini");
-		const char* cpath = path.str();
+		const char* cpath = "test_ini_2.ini";
 
 		deleteFile(cpath);
 		REQUIRE(writeBinaryFile(cpath, reinterpret_cast<const uint8_t*>(INPUT_INI_2), sizeof(INPUT_INI_2)));

@@ -24,20 +24,9 @@
 
 static const char* stupidFileName = "jfioaejfaiojefaiojfeaojf.fajefaoejfa";
 
-static sfz::DynString appendBasePath(const char* fileName) noexcept
-{
-	size_t baseLen = std::strlen(sfz::basePath());
-	size_t fileLen = std::strlen(fileName);
-	sfz::DynString tmp("", static_cast<uint32_t>(baseLen + fileLen + 10));
-	tmp.printf("%s", sfz::basePath());
-	tmp.printfAppend("%s", fileName);
-	return std::move(tmp);
-}
-
 TEST_CASE("createFile() & fileExists() & deleteFile()", "[sfz::IO]")
 {
-	auto filePath = appendBasePath(stupidFileName);
-	const char* fpath = filePath.str();
+	const char* fpath = stupidFileName;
 
 	bool resExists1 = sfz::fileExists(fpath);
 	if (resExists1) {
@@ -54,8 +43,7 @@ TEST_CASE("createFile() & fileExists() & deleteFile()", "[sfz::IO]")
 
 TEST_CASE("createDirectory() & directoryExists() & deleteDirectory()", "[sfz::IO]")
 {
-	auto dirPath = appendBasePath(stupidFileName);
-	const char* dpath = dirPath.str();
+	const char* dpath = stupidFileName;
 
 	bool resExists1 = sfz::directoryExists(dpath);
 	if (resExists1) {
@@ -72,8 +60,7 @@ TEST_CASE("createDirectory() & directoryExists() & deleteDirectory()", "[sfz::IO
 
 TEST_CASE("writeBinaryFile() & readBinaryFile() & sizeofFile(), ", "[sfz::IO]")
 {
-	auto filePath = appendBasePath(stupidFileName);
-	const char* fpath = filePath.str();
+	const char* fpath = stupidFileName;
 	const uint8_t data[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0xA, 0xB, 0xC, 0xD, 0xE};
 	uint8_t data2[sizeof(data)];
 
@@ -106,8 +93,7 @@ TEST_CASE("writeBinaryFile() & readBinaryFile() & sizeofFile(), ", "[sfz::IO]")
 
 TEST_CASE("readTextFile()", "[sfz::IO]")
 {
-	auto filePath = appendBasePath(stupidFileName);
-	const char* fpath = filePath.str();
+	const char* fpath = stupidFileName;
 	const char* strToWrite = "Hello World!\nHello World 2!\nHello World 3!";
 	size_t strToWriteLen = std::strlen(strToWrite);
 
