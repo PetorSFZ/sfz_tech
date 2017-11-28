@@ -21,7 +21,7 @@
 
 #include <cstdint>
 
-#include <ph/rendering/Image.h>
+#include <ph/rendering/ImageView.h>
 
 namespace ph {
 
