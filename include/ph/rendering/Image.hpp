@@ -19,13 +19,34 @@
 
 #pragma once
 
+#include <sfz/containers/DynArray.hpp>
 #include <sfz/memory/Allocator.hpp>
 
-#include <ph/rendering/Image.h>
+#include <ph/rendering/ImageView.h>
 
 namespace ph {
 
 using sfz::Allocator;
+using sfz::DynArray;
+
+// Image struct
+// ------------------------------------------------------------------------------------------------
+
+struct Image final {
+	DynArray<uint8_t> rawData;
+	ImageType type = ImageType::UNDEFINED;
+	int32_t width = -1;
+	int32_t height = -1;
+	int32_t bytesPerPixel = -1;
+
+	inline ImageView toImageView() noexcept;
+	inline ConstImageView toImageView() const noexcept;
+	inline operator ImageView() noexcept;
+	inline operator ConstImageView() const noexcept;
+};
+
+// Image functions
+// ------------------------------------------------------------------------------------------------
 
 /// Sets the allocator used for stb_image and the output image from loadImage().
 /// This function should ONLY be called if no loadImage() calls is under process, otherwise
@@ -43,4 +64,39 @@ Image loadImage(const char* basePath, const char* fileName) noexcept;
 // Allocates a temporary buffer of the same width as the image
 void flipVertically(Image& image, Allocator* allocator) noexcept;
 
-} // namespacep h
+// Image struct implementation
+// ------------------------------------------------------------------------------------------------
+
+inline ImageView Image::toImageView() noexcept
+{
+	ImageView tmp;
+	tmp.rawData = this->rawData.data();
+	tmp.type = this->type;
+	tmp.width = this->width;
+	tmp.height = this->height;
+	tmp.bytesPerPixel = this->bytesPerPixel;
+	return tmp;
+}
+
+inline ConstImageView Image::toImageView() const noexcept
+{
+	ConstImageView tmp;
+	tmp.rawData = this->rawData.data();
+	tmp.type = this->type;
+	tmp.width = this->width;
+	tmp.height = this->height;
+	tmp.bytesPerPixel = this->bytesPerPixel;
+	return tmp;
+}
+
+inline Image::operator ImageView() noexcept
+{
+	return this->toImageView();
+}
+
+inline Image::operator ConstImageView() const noexcept
+{
+	return this->toImageView();
+}
+
+} // namespacep ph

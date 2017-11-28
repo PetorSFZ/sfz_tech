@@ -128,8 +128,8 @@ int mainImpl(int, char*[], InitOptions&& options)
 
 	// Create SDL_Window
 	uint32_t windowFlags = renderer->requiredSDL2WindowFlags() | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
-	const int width = 1280; // TODO: Arbitrary value not taken from config
-	const int height = 650;
+	const int width = 1000; // TODO: Arbitrary value not taken from config
+	const int height = 500;
 	SDL_Window* window = SDL_CreateWindow(options.appName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 		width, height, windowFlags);
 	if (window == NULL) {

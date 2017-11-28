@@ -316,28 +316,22 @@ void Renderer::deinitRenderer() noexcept
 // Resource management (textures)
 // ------------------------------------------------------------------------------------------------
 
-void Renderer::setTextures(const DynArray<Image>& textures) noexcept
+void Renderer::setTextures(const DynArray<ConstImageView>& textures) noexcept
 {
-	// Convert from Image to phConstImageView
-	DynArray<phConstImageView> tmpImages;
-	tmpImages.create(textures.size(), mAllocator);
-	for (const auto& texture : textures) {
-		tmpImages.add(texture.imageView());
-	}
-
-	CALL_RENDERER_FUNCTION(mFunctionTable, phSetTextures, tmpImages.data(), tmpImages.size());
+	CALL_RENDERER_FUNCTION(mFunctionTable, phSetTextures,
+		reinterpret_cast<const phConstImageView*>(textures.data()), textures.size());
 }
 
-uint32_t Renderer::addTexture(const Image& texture) noexcept
+uint32_t Renderer::addTexture(const ConstImageView& texture) noexcept
 {
-	phConstImageView tmpImage = texture.imageView();
-	return CALL_RENDERER_FUNCTION(mFunctionTable, phAddTexture, &tmpImage);
+	phConstImageView tmpView = texture;
+	return CALL_RENDERER_FUNCTION(mFunctionTable, phAddTexture, &tmpView);
 }
 
-bool Renderer::updateTexture(const Image& texture, uint32_t index) noexcept
+bool Renderer::updateTexture(const ConstImageView& texture, uint32_t index) noexcept
 {
-	phConstImageView tmpImage = texture.imageView();
-	return CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateTexture, &tmpImage, index) != 0;
+	phConstImageView tmpView = texture;
+	return CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateTexture, &tmpView, index) != 0;
 }
 
 // Renderer:: Resource management (materials)

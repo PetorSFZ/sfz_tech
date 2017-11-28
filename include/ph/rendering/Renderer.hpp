@@ -25,7 +25,7 @@
 #include <sfz/memory/Allocator.hpp>
 
 #include <ph/rendering/CameraData.h>
-#include <ph/rendering/Image.h>
+#include <ph/rendering/ImageView.h>
 #include <ph/rendering/Material.h>
 #include <ph/rendering/Mesh.h>
 #include <ph/rendering/RenderEntity.h>
@@ -99,13 +99,13 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	// See phSetTextures()
-	void setTextures(const DynArray<Image>& textures) noexcept;
+	void setTextures(const DynArray<ConstImageView>& textures) noexcept;
 
 	/// See phAddTexture()
-	uint32_t addTexture(const Image& texture) noexcept;
+	uint32_t addTexture(const ConstImageView& texture) noexcept;
 
 	/// See phUpdateTexture()
-	bool updateTexture(const Image& texture, uint32_t index) noexcept;
+	bool updateTexture(const ConstImageView& texture, uint32_t index) noexcept;
 
 	// Resource management (materials)
 	// --------------------------------------------------------------------------------------------
