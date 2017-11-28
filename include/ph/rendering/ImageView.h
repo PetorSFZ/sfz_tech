@@ -24,8 +24,6 @@
 using std::uint8_t;
 using std::uint32_t;
 using std::int32_t;
-#include <sfz/Assert.hpp>
-#include <sfz/containers/DynArray.hpp>
 #else
 #include <stdint.h>
 #endif
@@ -41,7 +39,7 @@ const uint32_t PH_IMAGE_GRAY_F32 = 2;
 const uint32_t PH_IMAGE_RGBA_F32 = 3;
 const uint32_t PH_IMAGE_UNDEFINED = ~0u;
 
-// ImageView structs (C-compatible)
+// ImageView structs (C)
 // ------------------------------------------------------------------------------------------------
 
 PH_EXTERN_C
@@ -62,17 +60,12 @@ typedef struct {
 	int32_t bytesPerPixel;
 } phConstImageView;
 
-// C++ only constructs
+// ImageView structs (C++)
 // ------------------------------------------------------------------------------------------------
 
 #ifdef __cplusplus
 
 namespace ph {
-
-using sfz::DynArray;
-
-// Typed enum version of image type constants
-// ------------------------------------------------------------------------------------------------
 
 enum class ImageType : uint32_t {
 	GRAY_U8 = PH_IMAGE_GRAY_U8,
@@ -82,63 +75,73 @@ enum class ImageType : uint32_t {
 	UNDEFINED = PH_IMAGE_UNDEFINED
 };
 
-// C++ image struct
-// ------------------------------------------------------------------------------------------------
-
-struct Image final {
-	DynArray<uint8_t> rawData;
+struct ImageView final {
+	uint8_t* rawData = nullptr;
 	ImageType type = ImageType::UNDEFINED;
 	int32_t width = -1;
 	int32_t height = -1;
 	int32_t bytesPerPixel = -1;
 
+	// Pixel accessors
 	inline uint8_t* pixelPtr(int32_t x, int32_t y) noexcept;
-	inline const uint8_t* pixelPtr(int32_t x, int32_t y) const noexcept;
 
 	template<typename T>
 	T& at(int32_t x, int32_t y) noexcept;
 
+	// Implicit conversions
+	ImageView() noexcept = default;
+	inline ImageView(const phImageView& view) noexcept;
+	inline operator phImageView() const noexcept;
+	inline operator phConstImageView() const noexcept;
+};
+static_assert(sizeof(ph::ImageView) == sizeof(phImageView), "Padded");
+
+struct ConstImageView final {
+	const uint8_t* rawData = nullptr;
+	ImageType type = ImageType::UNDEFINED;
+	int32_t width = -1;
+	int32_t height = -1;
+	int32_t bytesPerPixel = -1;
+
+	// Pixel accessors
+	inline const uint8_t* pixelPtr(int32_t x, int32_t y) const noexcept;
+
 	template<typename T>
 	const T& at(int32_t x, int32_t y) const noexcept;
 
-	inline phImageView imageView() noexcept;
-	inline phConstImageView imageView() const noexcept;
+	// Implicit conversions
+	ConstImageView() noexcept = default;
+	inline ConstImageView(const phImageView& view) noexcept;
+	inline ConstImageView(const phConstImageView& view) noexcept;
+	inline ConstImageView(const ImageView& view) noexcept;
+	inline operator phConstImageView() const noexcept;
 };
+static_assert(sizeof(ph::ConstImageView) == sizeof(phConstImageView), "Padded");
 
-inline uint8_t* Image::pixelPtr(int32_t x, int32_t y) noexcept
+inline uint8_t* ImageView::pixelPtr(int32_t x, int32_t y) noexcept
 {
-	sfz_assert_debug(rawData.data() != nullptr);
-	sfz_assert_debug(0 <= x && x < width);
-	sfz_assert_debug(0 <= y && y < height);
-	sfz_assert_debug(1 <= bytesPerPixel && bytesPerPixel <= 4);
-	return this->rawData.data() + y * width * bytesPerPixel + x * bytesPerPixel;
-}
-
-inline const uint8_t* Image::pixelPtr(int32_t x, int32_t y) const noexcept
-{
-	sfz_assert_debug(rawData.data() != nullptr);
-	sfz_assert_debug(0 <= x && x < width);
-	sfz_assert_debug(0 <= y && y < height);
-	sfz_assert_debug(1 <= bytesPerPixel && bytesPerPixel <= 4);
-	return this->rawData.data() + y * width * bytesPerPixel + x * bytesPerPixel;
+	return rawData + y * width * bytesPerPixel + x * bytesPerPixel;
 }
 
 template<typename T>
-T& Image::at(int32_t x, int32_t y) noexcept
+T& ImageView::at(int32_t x, int32_t y) noexcept
 {
 	return *reinterpret_cast<T*>(this->pixelPtr(x, y));
 }
 
-template<typename T>
-const T& Image::at(int32_t x, int32_t y) const noexcept
-{
-	return *reinterpret_cast<const T*>(this->pixelPtr(x, y));
-}
+inline ImageView::ImageView(const phImageView& view) noexcept
+:
+	rawData(view.rawData),
+	type(static_cast<ImageType>(view.type)),
+	width(view.width),
+	height(view.height),
+	bytesPerPixel(view.bytesPerPixel)
+{ }
 
-inline phImageView Image::imageView() noexcept
+inline ImageView::operator phImageView() const noexcept
 {
 	phImageView tmp;
-	tmp.rawData = this->rawData.data();
+	tmp.rawData = this->rawData;
 	tmp.type = uint32_t(this->type);
 	tmp.width = this->width;
 	tmp.height = this->height;
@@ -146,10 +149,55 @@ inline phImageView Image::imageView() noexcept
 	return tmp;
 }
 
-inline phConstImageView Image::imageView() const noexcept
+inline ImageView::operator phConstImageView() const noexcept
 {
 	phConstImageView tmp;
-	tmp.rawData = this->rawData.data();
+	tmp.rawData = this->rawData;
+	tmp.type = uint32_t(this->type);
+	tmp.width = this->width;
+	tmp.height = this->height;
+	tmp.bytesPerPixel = this->bytesPerPixel;
+	return tmp;
+}
+
+inline const uint8_t* ConstImageView::pixelPtr(int32_t x, int32_t y) const noexcept
+{
+	return rawData + y * width * bytesPerPixel + x * bytesPerPixel;
+}
+
+template<typename T>
+const T& ConstImageView::at(int32_t x, int32_t y) const noexcept
+{
+	return *reinterpret_cast<const T*>(this->pixelPtr(x, y));
+}
+
+inline ConstImageView::ConstImageView(const phImageView& view) noexcept
+:
+	ConstImageView(ImageView(view))
+{ }
+
+inline ConstImageView::ConstImageView(const phConstImageView& view) noexcept
+:
+	rawData(view.rawData),
+	type(static_cast<ImageType>(view.type)),
+	width(view.width),
+	height(view.height),
+	bytesPerPixel(view.bytesPerPixel)
+{ }
+
+inline ConstImageView::ConstImageView(const ImageView& view) noexcept
+:
+	rawData(view.rawData),
+	type(view.type),
+	width(view.width),
+	height(view.height),
+	bytesPerPixel(view.bytesPerPixel)
+{ }
+
+inline ConstImageView::operator phConstImageView() const noexcept
+{
+	phConstImageView tmp;
+	tmp.rawData = this->rawData;
 	tmp.type = uint32_t(this->type);
 	tmp.width = this->width;
 	tmp.height = this->height;
