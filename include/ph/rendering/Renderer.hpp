@@ -27,7 +27,7 @@
 #include <ph/rendering/CameraData.h>
 #include <ph/rendering/ImageView.h>
 #include <ph/rendering/Material.h>
-#include <ph/rendering/Mesh.h>
+#include <ph/rendering/MeshView.h>
 #include <ph/rendering/RenderEntity.h>
 #include <ph/rendering/SphereLight.h>
 
@@ -123,13 +123,13 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	/// See phSetDynamicMeshes()
-	void setDynamicMeshes(const DynArray<Mesh>& meshes) noexcept;
+	void setDynamicMeshes(const DynArray<ConstMeshView>& meshes) noexcept;
 
 	/// See phAddDynamicMesh()
-	uint32_t addDynamicMesh(const Mesh& mesh) noexcept;
+	uint32_t addDynamicMesh(const ConstMeshView& mesh) noexcept;
 
 	/// See phUpdateDynamicMesh()
-	bool updateDynamicMesh(const Mesh& mesh, uint32_t index) noexcept;
+	bool updateDynamicMesh(const ConstMeshView& mesh, uint32_t index) noexcept;
 
 	// Renderer: Render commands
 	// --------------------------------------------------------------------------------------------

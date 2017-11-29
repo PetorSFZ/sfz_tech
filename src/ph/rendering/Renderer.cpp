@@ -358,27 +358,27 @@ bool Renderer::updateMaterial(const Material& material, uint32_t index) noexcept
 // Renderer: Resource management (meshes)
 // ------------------------------------------------------------------------------------------------
 
-void Renderer::setDynamicMeshes(const DynArray<Mesh>& meshes) noexcept
+void Renderer::setDynamicMeshes(const DynArray<ConstMeshView>& meshes) noexcept
 {
 	// Convert from ph::Mesh to phMeshView
 	DynArray<phConstMeshView> tmpMeshes;
 	tmpMeshes.create(meshes.size(), mAllocator);
 	for (const auto& mesh : meshes) {
-		tmpMeshes.add(mesh.meshView());
+		tmpMeshes.add(mesh);
 	}
 
 	CALL_RENDERER_FUNCTION(mFunctionTable, phSetDynamicMeshes, tmpMeshes.data(), tmpMeshes.size());
 }
 
-uint32_t Renderer::addDynamicMesh(const Mesh& mesh) noexcept
+uint32_t Renderer::addDynamicMesh(const ConstMeshView& mesh) noexcept
 {
-	phConstMeshView tmpMesh = mesh.meshView();
+	phConstMeshView tmpMesh = mesh;
 	return CALL_RENDERER_FUNCTION(mFunctionTable, phAddDynamicMesh, &tmpMesh);
 }
 
-bool Renderer::updateDynamicMesh(const Mesh& mesh, uint32_t index) noexcept
+bool Renderer::updateDynamicMesh(const ConstMeshView& mesh, uint32_t index) noexcept
 {
-	phConstMeshView tmpMesh = mesh.meshView();
+	phConstMeshView tmpMesh = mesh;
 	return CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateDynamicMesh, &tmpMesh, index) != 0;
 }
 
