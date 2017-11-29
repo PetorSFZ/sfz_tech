@@ -46,7 +46,7 @@ set(PH_RENDERER_SHARED_INTERFACE_HEADER_FILES
 	${INCLUDE_DIR}/ph/rendering/CameraData.h
 	${INCLUDE_DIR}/ph/rendering/ImageView.h
 	${INCLUDE_DIR}/ph/rendering/Material.h
-	${INCLUDE_DIR}/ph/rendering/Mesh.h
+	${INCLUDE_DIR}/ph/rendering/MeshView.h
 	${INCLUDE_DIR}/ph/rendering/RenderEntity.h
 	${INCLUDE_DIR}/ph/rendering/SphereLight.h
 	${INCLUDE_DIR}/ph/rendering/Vertex.h

@@ -33,11 +33,11 @@ using std::int32_t;
 // Image type constants
 // ------------------------------------------------------------------------------------------------
 
-const uint32_t PH_IMAGE_GRAY_U8 = 0;
-const uint32_t PH_IMAGE_RGBA_U8 = 1;
-const uint32_t PH_IMAGE_GRAY_F32 = 2;
-const uint32_t PH_IMAGE_RGBA_F32 = 3;
-const uint32_t PH_IMAGE_UNDEFINED = ~0u;
+const uint32_t PH_IMAGE_UNDEFINED = 0;
+const uint32_t PH_IMAGE_GRAY_U8 = 1;
+const uint32_t PH_IMAGE_RGBA_U8 = 2;
+const uint32_t PH_IMAGE_GRAY_F32 = 3;
+const uint32_t PH_IMAGE_RGBA_F32 = 4;
 
 // ImageView structs (C)
 // ------------------------------------------------------------------------------------------------
@@ -68,19 +68,19 @@ typedef struct {
 namespace ph {
 
 enum class ImageType : uint32_t {
+	UNDEFINED = PH_IMAGE_UNDEFINED,
 	GRAY_U8 = PH_IMAGE_GRAY_U8,
 	RGBA_U8 = PH_IMAGE_RGBA_U8,
 	GRAY_F32 = PH_IMAGE_GRAY_F32,
-	RGBA_F32 = PH_IMAGE_RGBA_F32,
-	UNDEFINED = PH_IMAGE_UNDEFINED
+	RGBA_F32 = PH_IMAGE_RGBA_F32
 };
 
 struct ImageView final {
 	uint8_t* rawData = nullptr;
 	ImageType type = ImageType::UNDEFINED;
-	int32_t width = -1;
-	int32_t height = -1;
-	int32_t bytesPerPixel = -1;
+	int32_t width = 0;
+	int32_t height = 0;
+	int32_t bytesPerPixel = 0;
 
 	// Pixel accessors
 	inline uint8_t* pixelPtr(int32_t x, int32_t y) noexcept;
@@ -99,9 +99,9 @@ static_assert(sizeof(ph::ImageView) == sizeof(phImageView), "Padded");
 struct ConstImageView final {
 	const uint8_t* rawData = nullptr;
 	ImageType type = ImageType::UNDEFINED;
-	int32_t width = -1;
-	int32_t height = -1;
-	int32_t bytesPerPixel = -1;
+	int32_t width = 0;
+	int32_t height = 0;
+	int32_t bytesPerPixel = 0;
 
 	// Pixel accessors
 	inline const uint8_t* pixelPtr(int32_t x, int32_t y) const noexcept;
