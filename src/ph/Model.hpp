@@ -24,11 +24,12 @@
 #include <sfz/containers/DynArray.hpp>
 #include <sfz/memory/Allocator.hpp>
 
-#include <ph/rendering/Mesh.h>
+#include <ph/rendering/MeshView.h>
 
 namespace ph {
 
 using sfz::Allocator;
+using sfz::DynArray;
 using std::uint32_t;
 
 // ModelComponent class
