@@ -498,25 +498,32 @@ DLL_EXPORT uint32_t phInitRenderer(
 	state.dynamicModels.create(128, &state.allocator);
 
 	// Compile shader program
-	state.shader = gl::Program::postProcessFromSource(R"(
-		precision mediump float;
+	state.shader = gl::Program::postProcessFromSource(
+		"",
+		R"(
+			precision mediump float;
 
-		// Input
-		varying vec2 texcoord;
+			// Input
+			varying vec2 texcoord;
 
-		void main()
-		{
-			gl_FragColor = vec4(texcoord.x, texcoord.y, 0.0, 1.0);
-			//gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
-		}
-	)");
+			void main()
+			{
+				gl_FragColor = vec4(texcoord.x, texcoord.y, 0.0, 1.0);
+				//gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
+			}
+		)",
+		&state.allocator);
 
-	state.modelShader = gl::Program::fromSource(VERTEX_SHADER_SRC, FRAGMENT_SHADER_SRC,
+	state.modelShader = gl::Program::fromSource(
+		"",
+		VERTEX_SHADER_SRC,
+		FRAGMENT_SHADER_SRC,
 		[](uint32_t shaderProgram) {
-		glBindAttribLocation(shaderProgram, 0, "inPos");
-		glBindAttribLocation(shaderProgram, 1, "inNormal");
-		glBindAttribLocation(shaderProgram, 2, "inTexcoord");
-	});
+			glBindAttribLocation(shaderProgram, 0, "inPos");
+			glBindAttribLocation(shaderProgram, 1, "inNormal");
+			glBindAttribLocation(shaderProgram, 2, "inTexcoord");
+		},
+		&state.allocator);
 
 	// Initialize array to hold dynamic sphere lights
 	state.dynamicSphereLights.create(MAX_NUM_DYNAMIC_SPHERE_LIGHTS, &state.allocator);
