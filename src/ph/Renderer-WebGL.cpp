@@ -23,9 +23,8 @@
 #include <cstddef> // offsetof()
 
 #include <SDL.h>
-#define GL_GLEXT_PROTOTYPES // This seems to enable extension use.
-#include <SDL_opengles2.h>
 
+#include <sfz/gl/IncludeOpenGL.hpp>
 #include <sfz/math/MathSupport.hpp>
 #include <sfz/math/ProjectionMatrices.hpp>
 #include <sfz/memory/CAllocatorWrapper.hpp>
@@ -50,20 +49,67 @@ static const uint32_t MAX_NUM_DYNAMIC_SPHERE_LIGHTS = 32;
 // Shaders
 // ------------------------------------------------------------------------------------------------
 
+const char* SHADER_HEADER_SRC =
+
+#ifdef __EMSCRIPTEN__
+R"(
+precision mediump float;
+#define PH_WEB_GL 1
+#define PH_VERTEX_IN attribute
+#define PH_VERTEX_OUT varying
+#define PH_FRAGMENT_IN varying
+#define PH_TEXREAD(sampler, coord) texture2D(sampler, coord)
+)"
+#else
+R"(
+#version 330
+precision highp float;
+#define PH_DESKTOP_GL 1
+#define PH_VERTEX_IN in
+#define PH_VERTEX_OUT out
+#define PH_FRAGMENT_IN in
+#define PH_TEXREAD(sampler, coord) texture(sampler, coord)
+)"
+#endif
+
+R"(
+// Structs
+// ------------------------------------------------------------------------------------------------
+
+// Material struct
+struct Material {
+	int hasAlbedoTexture;
+	int hasRoughnessTexture;
+	int hasMetallicTexture;
+	vec4 albedo;
+	float roughness;
+	float metallic;
+};
+
+// SphereLight struct
+struct SphereLight {
+	vec3 vsPos;
+	float radius;
+	float range;
+	vec3 strength;
+};
+
+)";
+
 const char* VERTEX_SHADER_SRC = R"(
 
 // Input, output and uniforms
 // ------------------------------------------------------------------------------------------------
 
 // Input
-attribute vec3 inPos;
-attribute vec3 inNormal;
-attribute vec2 inTexcoord;
+PH_VERTEX_IN vec3 inPos;
+PH_VERTEX_IN vec3 inNormal;
+PH_VERTEX_IN vec2 inTexcoord;
 
 // Output
-varying vec3 vsPos;
-varying vec3 vsNormal;
-varying vec2 texcoord;
+PH_VERTEX_OUT vec3 vsPos;
+PH_VERTEX_OUT vec3 vsNormal;
+PH_VERTEX_OUT vec2 texcoord;
 
 // Uniforms
 uniform mat4 uProjMatrix;
@@ -89,33 +135,18 @@ void main()
 
 const char* FRAGMENT_SHADER_SRC = R"(
 
-precision mediump float;
-
 // Input, output and uniforms
 // ------------------------------------------------------------------------------------------------
 
-// Material struct
-struct Material {
-	int hasAlbedoTexture;
-	int hasRoughnessTexture;
-	int hasMetallicTexture;
-	vec4 albedo;
-	float roughness;
-	float metallic;
-};
-
-// SphereLight struct
-struct SphereLight {
-	vec3 vsPos;
-	float radius;
-	float range;
-	vec3 strength;
-};
-
 // Input
-varying vec3 vsPos;
-varying vec3 vsNormal;
-varying vec2 texcoord;
+PH_FRAGMENT_IN vec3 vsPos;
+PH_FRAGMENT_IN vec3 vsNormal;
+PH_FRAGMENT_IN vec2 texcoord;
+
+// Output
+#ifdef PH_DESKTOP_GL
+out vec4 fragOut;
+#endif
 
 // Uniforms (material)
 uniform Material uMaterial;
@@ -203,7 +234,7 @@ void main()
 	vec3 albedo = uMaterial.albedo.rgb;
 	float alpha = uMaterial.albedo.a;
 	if (uMaterial.hasAlbedoTexture != 0) {
-		vec4 tmp = texture2D(uAlbedoTexture, texcoord);
+		vec4 tmp = PH_TEXREAD(uAlbedoTexture, texcoord);
 		albedo = tmp.rgb;
 		alpha = tmp.a;
 	}
@@ -215,13 +246,13 @@ void main()
 	// Roughness (Linear space)
 	float roughness = uMaterial.roughness;
 	if (uMaterial.hasRoughnessTexture != 0) {
-		roughness = texture2D(uRoughnessTexture, texcoord).r;
+		roughness = PH_TEXREAD(uRoughnessTexture, texcoord).r;
 	}
 
 	// Metallic (Liner space)
 	float metallic = uMaterial.metallic;
 	if (uMaterial.hasMetallicTexture != 0) {
-		metallic = texture2D(uMetallicTexture, texcoord).r;
+		metallic = PH_TEXREAD(uMetallicTexture, texcoord).r;
 	}
 
 	// Fragment's position and normal
@@ -289,14 +320,14 @@ void main()
 		// "Solves" reflectance equation under the assumption that the light source is a point light
 		// and that there is no global illumination.
 		totalOutput += (kd * diffuse + specular) * lightContrib * nDotL;
-
-		// TODO:PLSFIX AAOJGVOAIJEFIOAWJFIOWAJFIOWAJFIWAJFIOWAJFIWAJFWAIOJFIWOAJFIOWJFIOWAJFW  vvv falloffNumerator is black
-		//totalOutput += vec3(toLightDist);
-		//totalOutput += vec3(light.range);
-		//totalOutput += vec3(fallofNumerator);
 	}
 
-	gl_FragColor = vec4(applyGammaCorrection(totalOutput), 1.0);
+	vec4 outTmp = vec4(applyGammaCorrection(totalOutput), 1.0);
+#ifdef PH_WEB_GL
+	gl_FragColor = outTmp;
+#else
+	fragOut = outTmp;
+#endif
 }
 
 )";
@@ -328,7 +359,6 @@ struct RendererState final {
 
 	// Shaders
 	uint32_t fbWidth, fbHeight;
-	gl::Program shader;
 	gl::Program modelShader;
 
 	// Camera matrices
@@ -441,9 +471,10 @@ DLL_EXPORT uint32_t phInitRenderer(
 		return 1;
 	}
 
+    PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Creating OpenGL context");
+#ifdef __EMSCRIPTEN__
 	// Create OpenGL Context (OpenGL ES 2.0 == WebGL 1.0)
-	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Creating OpenGL context");
-	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2) < 0) {
+    if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2) < 0) {
 		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
 		    "Failed to set GL context major version: %s", SDL_GetError());
 		return 0;
@@ -453,12 +484,40 @@ DLL_EXPORT uint32_t phInitRenderer(
 		    "Failed to set GL context profile: %s", SDL_GetError());
 		return 0;
 	}
+#else
+    // Create OpenGL Context (OpenGL 3.3)
+    if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3) < 0) {
+        PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-ModernGL",
+                      "Failed to set GL context major version: %s", SDL_GetError());
+        return 0;
+    }
+    if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3) < 0) {
+        PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-ModernGL",
+                      "Failed to set GL context minor version: %s", SDL_GetError());
+        return 0;
+    }
+    if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE) < 0) {
+        PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-ModernGL",
+                      "Failed to set GL context profile: %s", SDL_GetError());
+        return 0;
+    }
+#endif
+
 	SDL_GLContext tmpContext = SDL_GL_CreateContext(window);
 	if (tmpContext == nullptr) {
 		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
 		    "Failed to create GL context: %s", SDL_GetError());
 		return 0;
 	}
+
+    // Load GLEW on not emscripten
+#ifndef __EMSCRIPTEN__
+    GLenum glewError = glewInit();
+    if (glewError != GLEW_OK) {
+        PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
+                      "GLEW init failure: %s", glewGetErrorString(glewError));
+    }
+#endif
 
 	// Create internal state
 	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Creating internal state");
@@ -498,24 +557,8 @@ DLL_EXPORT uint32_t phInitRenderer(
 	state.dynamicModels.create(128, &state.allocator);
 
 	// Compile shader program
-	state.shader = gl::Program::postProcessFromSource(
-		"",
-		R"(
-			precision mediump float;
-
-			// Input
-			varying vec2 texcoord;
-
-			void main()
-			{
-				gl_FragColor = vec4(texcoord.x, texcoord.y, 0.0, 1.0);
-				//gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
-			}
-		)",
-		&state.allocator);
-
 	state.modelShader = gl::Program::fromSource(
-		"",
+		SHADER_HEADER_SRC,
 		VERTEX_SHADER_SRC,
 		FRAGMENT_SHADER_SRC,
 		[](uint32_t shaderProgram) {

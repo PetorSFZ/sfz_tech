@@ -57,7 +57,11 @@ set(PH_RENDERER_WEB_GL_SOURCE_FILES
 source_group(TREE ${SOURCE_DIR} FILES ${PH_RENDERER_WEB_GL_SOURCE_FILES})
 
 # Library
-add_library(Renderer-WebGL ${PH_RENDERER_WEB_GL_SOURCE_FILES})
+if(PH_RENDERER_WEB_GL_STATIC)
+	add_library(Renderer-WebGL ${PH_RENDERER_WEB_GL_SOURCE_FILES})
+else()
+	add_library(Renderer-WebGL SHARED ${PH_RENDERER_WEB_GL_SOURCE_FILES})
+endif()
 
 target_include_directories(Renderer-WebGL PUBLIC
 	${INCLUDE_DIR}

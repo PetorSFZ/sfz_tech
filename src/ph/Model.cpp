@@ -21,10 +21,8 @@
 
 #include <algorithm>
 
-#define GL_GLEXT_PROTOTYPES // This seems to enable extension use.
-#include <SDL_opengles2.h>
-
 #include <sfz/Assert.hpp>
+#include <sfz/gl/IncludeOpenGL.hpp>
 
 namespace ph {
 
@@ -77,9 +75,14 @@ void Model::create(const phConstMeshView& mesh, Allocator* allocator) noexcept
 	this->destroy();
 
 	// Vertex array object
+#ifdef __EMSCRIPTEN__
 	glGenVertexArraysOES(1, &mVAO);
 	glBindVertexArrayOES(mVAO);
-
+#else
+    glGenVertexArrays(1, &mVAO);
+    glBindVertexArray(mVAO);
+#endif
+    
 	// Vertex buffer
 	glGenBuffers(1, &mVertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
@@ -150,7 +153,11 @@ void Model::create(const phConstMeshView& mesh, Allocator* allocator) noexcept
 
 	// Cleanup
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
-	glBindVertexArrayOES(0);
+#ifdef __EMSCRIPTEN__
+    glBindVertexArrayOES(0);
+#else
+    glBindVertexArray(0);
+#endif
 }
 
 void Model::swap(Model& other) noexcept
@@ -165,7 +172,11 @@ void Model::destroy() noexcept
 	// Delete buffers
 	mComponents.destroy();
 	glDeleteBuffers(1, &mVertexBuffer);
-	glDeleteVertexArraysOES(1, &mVAO);
+#ifdef __EMSCRIPTEN__
+    glDeleteVertexArraysOES(1, &mVAO);
+#else
+    glDeleteVertexArrays(1, &mVAO);
+#endif
 
 	// Reset members
 	mVAO = 0;
@@ -177,7 +188,11 @@ void Model::destroy() noexcept
 
 void Model::bindVAO() noexcept
 {
-	glBindVertexArrayOES(mVAO);
+#ifdef __EMSCRIPTEN__
+    glBindVertexArrayOES(mVAO);
+#else
+    glBindVertexArray(mVAO);
+#endif
 }
 
 } // namespace ph
