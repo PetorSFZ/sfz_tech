@@ -18,28 +18,28 @@
 # 3. This notice may not be removed or altered from any source distribution.
 
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
-project("Renderer-WebGL")
+project("Renderer-CompatibleGL")
 
 # Dependencies
 # ------------------------------------------------------------------------------------------------
 
 if (NOT ${SDL2_FOUND})
-	message(FATAL_ERROR "Renderer-WebGL requires SDL2. Add Dependency-SDL2.")
+	message(FATAL_ERROR "Renderer-CompatibleGL requires SDL2. Add Dependency-SDL2.")
 endif()
 
 if (NOT ${SFZ_CORE_FOUND})
-	message(FATAL_ERROR "Renderer-WebGL requires sfzCore.")
+	message(FATAL_ERROR "Renderer-CompatibleGL requires sfzCore.")
 endif()
 
 if (NOT ${SFZ_GL_FOUND})
-	message(FATAL_ERROR "Renderer-WebGL requires sfzGL.")
+	message(FATAL_ERROR "Renderer-CompatibleGL requires sfzGL.")
 endif()
 
 if (NOT ${PH_SHARED_INTERFACE_FOUND})
-	message(FATAL_ERROR "Renderer-WebGL requires PhantasyEngine-SharedInterface.")
+	message(FATAL_ERROR "Renderer-CompatibleGL requires PhantasyEngine-SharedInterface.")
 endif()
 
-# Renderer-WebGL
+# Renderer-CompatibleGL
 # ------------------------------------------------------------------------------------------------
 
 # Directories
@@ -47,23 +47,23 @@ set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Source files
-set(PH_RENDERER_WEB_GL_SOURCE_FILES
+set(PH_RENDERER_COMPATIBLE_GL_SOURCE_FILES
 	${INCLUDE_DIR}/ph/Model.hpp
 	 ${SOURCE_DIR}/ph/Model.cpp
-	 ${SOURCE_DIR}/ph/Renderer-WebGL.cpp
+	 ${SOURCE_DIR}/ph/Renderer-CompatibleGL.cpp
 	${INCLUDE_DIR}/ph/Texture.hpp
 	 ${SOURCE_DIR}/ph/Texture.cpp
 )
-source_group(TREE ${SOURCE_DIR} FILES ${PH_RENDERER_WEB_GL_SOURCE_FILES})
+source_group(TREE ${SOURCE_DIR} FILES ${PH_RENDERER_COMPATIBLE_GL_SOURCE_FILES})
 
 # Library
-if(PH_RENDERER_WEB_GL_STATIC)
-	add_library(Renderer-WebGL ${PH_RENDERER_WEB_GL_SOURCE_FILES})
+if(PH_RENDERER_COMPATIBLE_GL_STATIC)
+	add_library(Renderer-CompatibleGL ${PH_RENDERER_COMPATIBLE_GL_SOURCE_FILES})
 else()
-	add_library(Renderer-WebGL SHARED ${PH_RENDERER_WEB_GL_SOURCE_FILES})
+	add_library(Renderer-CompatibleGL SHARED ${PH_RENDERER_COMPATIBLE_GL_SOURCE_FILES})
 endif()
 
-target_include_directories(Renderer-WebGL PUBLIC
+target_include_directories(Renderer-CompatibleGL PUBLIC
 	${INCLUDE_DIR}
 	${SDL2_INCLUDE_DIRS}
 	${SFZ_CORE_INCLUDE_DIRS}
@@ -71,7 +71,7 @@ target_include_directories(Renderer-WebGL PUBLIC
 	${PH_SHARED_INTERFACE_INCLUDE_DIRS}
 )
 
-target_link_libraries(Renderer-WebGL
+target_link_libraries(Renderer-CompatibleGL
 	${SDL2_LIBRARIES}
 	${SFZ_CORE_LIBRARIES}
 	${SFZ_GL_LIBRARIES}
@@ -80,5 +80,5 @@ target_link_libraries(Renderer-WebGL
 # Output variables
 # ------------------------------------------------------------------------------------------------
 
-set(PH_RENDERER_WEB_GL_FOUND true PARENT_SCOPE)
-set(PH_RENDERER_WEB_GL_LIBRARIES Renderer-WebGL PARENT_SCOPE)
+set(PH_RENDERER_COMPATIBLE_GL_FOUND true PARENT_SCOPE)
+set(PH_RENDERER_COMPATIBLE_GL_LIBRARIES Renderer-CompatibleGL PARENT_SCOPE)

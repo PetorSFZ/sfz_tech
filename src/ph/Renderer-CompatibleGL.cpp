@@ -386,23 +386,23 @@ static void checkGLError(const char* file, int line) noexcept
 
 		switch (error) {
 		case GL_INVALID_ENUM:
-			PH_LOGGER_LOG(state.logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
+			PH_LOGGER_LOG(state.logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
 				"%s:%i: GL_INVALID_ENUM", file, line);
 			break;
 		case GL_INVALID_VALUE:
-			PH_LOGGER_LOG(state.logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
+			PH_LOGGER_LOG(state.logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
 				"%s:%i: GL_INVALID_VALUE", file, line);
 			break;
 		case GL_INVALID_OPERATION:
-			PH_LOGGER_LOG(state.logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
+			PH_LOGGER_LOG(state.logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
 				"%s:%i: GL_INVALID_OPERATION", file, line);
 			break;
 		case GL_OUT_OF_MEMORY:
-			PH_LOGGER_LOG(state.logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
+			PH_LOGGER_LOG(state.logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
 				"%s:%i: GL_OUT_OF_MEMORY", file, line);
 			break;
 		case GL_INVALID_FRAMEBUFFER_OPERATION:
-			PH_LOGGER_LOG(state.logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
+			PH_LOGGER_LOG(state.logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
 				"%s:%i: GL_INVALID_FRAMEBUFFER_OPERATION", file, line);
 		}
 	}
@@ -466,38 +466,38 @@ DLL_EXPORT uint32_t phInitRenderer(
 	phLogger* logger)
 {
 	if (statePtr != nullptr) {
-		PH_LOGGER_LOG(*logger, LOG_LEVEL_WARNING, "Renderer-WebGL",
+		PH_LOGGER_LOG(*logger, LOG_LEVEL_WARNING, "Renderer-CompatibleGL",
 		    "Renderer already initialized, returning.");
 		return 1;
 	}
 
-    PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Creating OpenGL context");
+    PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL", "Creating OpenGL context");
 #ifdef __EMSCRIPTEN__
 	// Create OpenGL Context (OpenGL ES 2.0 == WebGL 1.0)
     if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2) < 0) {
-		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
+		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
 		    "Failed to set GL context major version: %s", SDL_GetError());
 		return 0;
 	}
 	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES) < 0) {
-		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
+		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
 		    "Failed to set GL context profile: %s", SDL_GetError());
 		return 0;
 	}
 #else
     // Create OpenGL Context (OpenGL 3.3)
     if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3) < 0) {
-        PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-ModernGL",
+        PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
                       "Failed to set GL context major version: %s", SDL_GetError());
         return 0;
     }
     if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3) < 0) {
-        PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-ModernGL",
+        PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
                       "Failed to set GL context minor version: %s", SDL_GetError());
         return 0;
     }
     if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE) < 0) {
-        PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-ModernGL",
+        PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
                       "Failed to set GL context profile: %s", SDL_GetError());
         return 0;
     }
@@ -505,7 +505,7 @@ DLL_EXPORT uint32_t phInitRenderer(
 
 	SDL_GLContext tmpContext = SDL_GL_CreateContext(window);
 	if (tmpContext == nullptr) {
-		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
+		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
 		    "Failed to create GL context: %s", SDL_GetError());
 		return 0;
 	}
@@ -514,19 +514,19 @@ DLL_EXPORT uint32_t phInitRenderer(
 #ifndef __EMSCRIPTEN__
     GLenum glewError = glewInit();
     if (glewError != GLEW_OK) {
-        PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
+        PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
                       "GLEW init failure: %s", glewGetErrorString(glewError));
     }
 #endif
 
 	// Create internal state
-	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Creating internal state");
+	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL", "Creating internal state");
 	{
 		CAllocatorWrapper tmp;
 		tmp.setCAllocator(cAllocator);
 		statePtr = sfzNew<RendererState>(&tmp);
 		if (statePtr == nullptr) {
-			PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-WebGL",
+			PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
 			    "Failed to allocate memory for internal state.");
 			SDL_GL_DeleteContext(tmpContext);
 			return 0;
@@ -542,10 +542,10 @@ DLL_EXPORT uint32_t phInitRenderer(
 	state.glContext = tmpContext;
 
 	// Print information
-	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-WebGL",
+	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL",
 	     "\nVendor: %s\nVersion: %s\nRenderer: %s",
 	     glGetString(GL_VENDOR), glGetString(GL_VERSION), glGetString(GL_RENDERER));
-	//PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Extensions: %s",
+	//PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL", "Extensions: %s",
 	//    glGetString(GL_EXTENSIONS));
 
 	// Create FullscreenGeometry
@@ -572,7 +572,7 @@ DLL_EXPORT uint32_t phInitRenderer(
 	state.dynamicSphereLights.create(MAX_NUM_DYNAMIC_SPHERE_LIGHTS, &state.allocator);
 
 	CHECK_GL_ERROR();
-	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Finished initializing renderer");
+	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL", "Finished initializing renderer");
 	return 1;
 }
 
@@ -586,7 +586,7 @@ DLL_EXPORT void phDeinitRenderer()
 	SDL_GLContext context = state.glContext;
 
 	// Deallocate state
-	PH_LOGGER_LOG(logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Destroying state");
+	PH_LOGGER_LOG(logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL", "Destroying state");
 	{
 		CAllocatorWrapper tmp;
 		tmp.setCAllocator(state.allocator.cAllocator());
@@ -595,7 +595,7 @@ DLL_EXPORT void phDeinitRenderer()
 	statePtr = nullptr;
 
 	// Destroy GL context
-	PH_LOGGER_LOG(logger, LOG_LEVEL_INFO, "Renderer-WebGL", "Destroying OpenGL context");
+	PH_LOGGER_LOG(logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL", "Destroying OpenGL context");
 	SDL_GL_DeleteContext(context);
 }
 
