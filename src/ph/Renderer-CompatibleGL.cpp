@@ -32,6 +32,7 @@
 #include <sfz/strings/StackString.hpp>
 
 #include <sfz/gl/Program.hpp>
+#include <sfz/gl/Framebuffer.hpp>
 #include <sfz/gl/FullscreenGeometry.hpp>
 #include <sfz/gl/UniformSetters.hpp>
 
@@ -332,6 +333,32 @@ void main()
 
 )";
 
+const char* COPY_OUT_SHADER_SRC = R"(
+
+// Input
+PH_FRAGMENT_IN vec2 texcoord;
+
+// Output
+#ifdef PH_DESKTOP_GL
+out vec4 fragOut;
+#endif
+
+// Uniforms
+uniform sampler2D uTexture;
+
+void main()
+{
+	vec3 val = PH_TEXREAD(uTexture, texcoord).rgb;
+
+#ifdef PH_WEB_GL
+	gl_FragColor = vec4(val, 1.0);
+#else
+	fragOut = vec4(val, 1.0);
+#endif
+}
+
+)";
+
 // State
 // ------------------------------------------------------------------------------------------------
 
@@ -357,9 +384,12 @@ struct RendererState final {
 	DynArray<Material> materials;
 	DynArray<Model> dynamicModels;
 
+	// Framebuffers
+	gl::Framebuffer internalFB;
+
 	// Shaders
 	uint32_t fbWidth, fbHeight;
-	gl::Program modelShader;
+	gl::Program modelShader, copyOutShader;
 
 	// Camera matrices
 	mat4 viewMatrix = mat4::identity();
@@ -556,7 +586,19 @@ DLL_EXPORT uint32_t phInitRenderer(
 	state.materials.create(256, &state.allocator);
 	state.dynamicModels.create(128, &state.allocator);
 
-	// Compile shader program
+	// Create Framebuffers
+	int w, h;
+	SDL_GL_GetDrawableSize(window, &w, &h);
+	state.internalFB = gl::FramebufferBuilder(w, h)
+		.addTexture(0, gl::FBTextureFormat::RGBA_U8, gl::FBTextureFiltering::LINEAR)
+#ifdef __EMSCRIPTEN__
+		.addDepthBuffer(gl::FBDepthFormat::F16)
+#else
+        .addDepthBuffer(gl::FBDepthFormat::F32)
+#endif
+		.build();
+
+	// Compile shaders
 	state.modelShader = gl::Program::fromSource(
 		SHADER_HEADER_SRC,
 		VERTEX_SHADER_SRC,
@@ -566,6 +608,11 @@ DLL_EXPORT uint32_t phInitRenderer(
 			glBindAttribLocation(shaderProgram, 1, "inNormal");
 			glBindAttribLocation(shaderProgram, 2, "inTexcoord");
 		},
+		&state.allocator);
+
+	state.copyOutShader = gl::Program::postProcessFromSource(
+		SHADER_HEADER_SRC,
+		COPY_OUT_SHADER_SRC,
 		&state.allocator);
 
 	// Initialize array to hold dynamic sphere lights
@@ -746,21 +793,15 @@ DLL_EXPORT void phBeginFrame(
 			state.dynamicSphereLights[i], state.viewMatrix);
 	}
 
+	// Prepare internal framebuffer for rendering
+	state.internalFB.bindViewportClearColorDepth(vec4(0.0f));
+
 	CHECK_GL_ERROR();
 }
 
 DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities)
 {
 	RendererState& state = *statePtr;
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(0, 0, state.fbWidth, state.fbHeight);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClearDepthf(1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	//state.shader.useProgram();
-	//state.fullscreenGeom.render();
 
 	state.modelShader.useProgram();
 
@@ -817,6 +858,19 @@ DLL_EXPORT void phFinishFrame(void)
 {
 	RendererState& state = *statePtr;
 
+	// Bind and clear output framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, state.fbWidth, state.fbHeight);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearDepthf(1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// Render out internal framebuffer to window using copyOutShader
+	state.copyOutShader.useProgram();
+	gl::setUniform(state.copyOutShader, "uTexture", 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, state.internalFB.textures[0]);
+	state.fullscreenGeom.render();
 
 	SDL_GL_SwapWindow(state.window);
 	CHECK_GL_ERROR();
