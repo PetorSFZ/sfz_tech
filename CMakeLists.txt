@@ -23,19 +23,19 @@ project("Renderer-CompatibleGL")
 # Dependencies
 # ------------------------------------------------------------------------------------------------
 
-if (NOT ${SDL2_FOUND})
+if (NOT SDL2_FOUND)
 	message(FATAL_ERROR "Renderer-CompatibleGL requires SDL2. Add Dependency-SDL2.")
 endif()
 
-if (NOT ${SFZ_CORE_FOUND})
+if (NOT SFZ_CORE_FOUND)
 	message(FATAL_ERROR "Renderer-CompatibleGL requires sfzCore.")
 endif()
 
-if (NOT ${SFZ_GL_FOUND})
+if (NOT SFZ_GL_FOUND)
 	message(FATAL_ERROR "Renderer-CompatibleGL requires sfzGL.")
 endif()
 
-if (NOT ${PH_SHARED_INTERFACE_FOUND})
+if (NOT PH_SHARED_INTERFACE_FOUND)
 	message(FATAL_ERROR "Renderer-CompatibleGL requires PhantasyEngine-SharedInterface.")
 endif()
 
