@@ -31,6 +31,10 @@ if (NOT STB_FOUND)
 	message(FATAL_ERROR "PhantasyEngine requires stb libraries. Add Dependency-stb.")
 endif()
 
+if (NOT IMGUI_FOUND)
+	message(FATAL_ERROR "PhantasyEngine requires dear imgui. Add Dependency-imgui.")
+endif()
+
 if (NOT SFZ_CORE_FOUND)
 	message(FATAL_ERROR "PhantasyEngine requires sfzCore.")
 endif()
@@ -95,16 +99,18 @@ target_include_directories(PhantasyEngineCore PUBLIC
 	${SFZ_CORE_INCLUDE_DIRS}
 	${PH_SHARED_INTERFACE_INCLUDE_DIRS}
 	${STB_INCLUDE_DIRS}
+	${IMGUI_INCLUDE_DIRS}
 )
 
 target_link_libraries(PhantasyEngineCore
 	${SDL2_LIBRARIES}
 	${SFZ_CORE_LIBRARIES}
+	${IMGUI_LIBRARIES}
 )
 
 # Output variables
 # ------------------------------------------------------------------------------------------------
 
 set(PHANTASY_ENGINE_FOUND true PARENT_SCOPE)
-set(PHANTASY_ENGINE_INCLUDE_DIRS ${INCLUDE_DIR} ${STB_INCLUDE_DIRS} PARENT_SCOPE)
+set(PHANTASY_ENGINE_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
 set(PHANTASY_ENGINE_LIBRARIES PhantasyEngineCore PARENT_SCOPE)
