@@ -23,12 +23,12 @@ project("PhantasyEngine-SharedInterface")
 # Dependencies
 # ------------------------------------------------------------------------------------------------
 
-if (NOT ${SDL2_FOUND})
-	message(FATAL_ERROR "phRenderer_SharedInterface requires SDL2. Add phDependency_SDL2.")
+if (NOT SDL2_FOUND)
+	message(FATAL_ERROR "PhantasyEngine-SharedInterface requires SDL2. Add Dependency-SDL2.")
 endif()
 
-if (NOT ${SFZ_CORE_FOUND})
-	message(FATAL_ERROR "phRenderer_SharedInterface requires sfzCore.")
+if (NOT SFZ_CORE_FOUND)
+	message(FATAL_ERROR "PhantasyEngine-SharedInterface requires sfzCore.")
 endif()
 
 # PhantasyEngine-SharedInterface
@@ -54,7 +54,7 @@ set(PH_RENDERER_SHARED_INTERFACE_HEADER_FILES
 source_group(TREE ${INCLUDE_DIR} FILES ${PH_RENDERER_SHARED_INTERFACE_HEADER_FILES})
 
 # Empty target in order to add headers to IDE
-add_custom_target(phSharedInterface SOURCES ${PH_RENDERER_SHARED_INTERFACE_HEADER_FILES})
+add_custom_target(PhantasyEngine-SharedInterface SOURCES ${PH_RENDERER_SHARED_INTERFACE_HEADER_FILES})
 
 # Output variables
 # ------------------------------------------------------------------------------------------------
