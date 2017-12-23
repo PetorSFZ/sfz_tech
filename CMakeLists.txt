@@ -27,6 +27,10 @@ if (NOT SDL2_FOUND)
 	message(FATAL_ERROR "PhantasyEngine-SharedInterface requires SDL2. Add Dependency-SDL2.")
 endif()
 
+if (NOT IMGUI_FOUND)
+	message(FATAL_ERROR "PhantasyEngine-SharedInterface requires dear imgui. Add Dependency-imgui.")
+endif()
+
 if (NOT SFZ_CORE_FOUND)
 	message(FATAL_ERROR "PhantasyEngine-SharedInterface requires sfzCore.")
 endif()
