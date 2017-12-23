@@ -23,26 +23,21 @@ project("PhantasyEngine")
 # Dependencies
 # ------------------------------------------------------------------------------------------------
 
-if (NOT ${SDL2_FOUND})
+if (NOT SDL2_FOUND)
 	message(FATAL_ERROR "PhantasyEngine requires SDL2. Add Dependency-SDL2.")
 endif()
 
-if (NOT ${SFZ_CORE_FOUND})
+if (NOT STB_FOUND)
+	message(FATAL_ERROR "PhantasyEngine requires stb libraries. Add Dependency-stb.")
+endif()
+
+if (NOT SFZ_CORE_FOUND)
 	message(FATAL_ERROR "PhantasyEngine requires sfzCore.")
 endif()
 
-if (NOT ${PH_SHARED_INTERFACE_FOUND})
+if (NOT PH_SHARED_INTERFACE_FOUND)
 	message(FATAL_ERROR "PhantasyEngine requires PhantasyEngine-SharedInterface.")
 endif()
-
-# Bundled dependencies
-# ------------------------------------------------------------------------------------------------
-
-set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
-
-# stb libraries
-# ${STB_INCLUDE_DIRS}
-add_subdirectory(${EXTERNALS_DIR}/stb_libraries)
 
 # PhantasyEngine
 # ------------------------------------------------------------------------------------------------
