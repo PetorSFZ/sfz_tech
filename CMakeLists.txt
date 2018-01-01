@@ -27,6 +27,10 @@ if (NOT SDL2_FOUND)
 	message(FATAL_ERROR "Renderer-CompatibleGL requires SDL2. Add Dependency-SDL2.")
 endif()
 
+if (NOT IMGUI_FOUND)
+	message(FATAL_ERROR "PhantasyEngine requires dear imgui. Add Dependency-imgui.")
+endif()
+
 if (NOT SFZ_CORE_FOUND)
 	message(FATAL_ERROR "Renderer-CompatibleGL requires sfzCore.")
 endif()
@@ -48,9 +52,13 @@ set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Source files
 set(PH_RENDERER_COMPATIBLE_GL_SOURCE_FILES
+	${INCLUDE_DIR}/ph/ImguiRendering.hpp
+	 ${SOURCE_DIR}/ph/ImguiRendering.cpp
 	${INCLUDE_DIR}/ph/Model.hpp
 	 ${SOURCE_DIR}/ph/Model.cpp
 	 ${SOURCE_DIR}/ph/Renderer-CompatibleGL.cpp
+	${INCLUDE_DIR}/ph/Shaders.hpp
+	 ${SOURCE_DIR}/ph/Shaders.cpp
 	${INCLUDE_DIR}/ph/Texture.hpp
 	 ${SOURCE_DIR}/ph/Texture.cpp
 )
@@ -66,6 +74,7 @@ endif()
 target_include_directories(Renderer-CompatibleGL PUBLIC
 	${INCLUDE_DIR}
 	${SDL2_INCLUDE_DIRS}
+	${IMGUI_INCLUDE_DIRS}
 	${SFZ_CORE_INCLUDE_DIRS}
 	${SFZ_GL_INCLUDE_DIRS}
 	${PH_SHARED_INTERFACE_INCLUDE_DIRS}
@@ -73,6 +82,7 @@ target_include_directories(Renderer-CompatibleGL PUBLIC
 
 target_link_libraries(Renderer-CompatibleGL
 	${SDL2_LIBRARIES}
+	${IMGUI_LIBRARIES}
 	${SFZ_CORE_LIBRARIES}
 	${SFZ_GL_LIBRARIES}
 )

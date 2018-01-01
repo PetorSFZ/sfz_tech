@@ -24,6 +24,8 @@
 
 #include <SDL.h>
 
+#include <imgui.h>
+
 #include <sfz/gl/IncludeOpenGL.hpp>
 #include <sfz/math/MathSupport.hpp>
 #include <sfz/math/ProjectionMatrices.hpp>
@@ -36,328 +38,13 @@
 #include <sfz/gl/FullscreenGeometry.hpp>
 #include <sfz/gl/UniformSetters.hpp>
 
+#include "ph/ImguiRendering.hpp"
 #include "ph/Model.hpp"
+#include "ph/Shaders.hpp"
 #include "ph/Texture.hpp"
 
 using namespace sfz;
 using namespace ph;
-
-// Constants
-// ------------------------------------------------------------------------------------------------
-
-static const uint32_t MAX_NUM_DYNAMIC_SPHERE_LIGHTS = 32;
-
-// Shaders
-// ------------------------------------------------------------------------------------------------
-
-const char* SHADER_HEADER_SRC =
-
-#ifdef __EMSCRIPTEN__
-R"(
-precision mediump float;
-#define PH_WEB_GL 1
-#define PH_VERTEX_IN attribute
-#define PH_VERTEX_OUT varying
-#define PH_FRAGMENT_IN varying
-#define PH_TEXREAD(sampler, coord) texture2D(sampler, coord)
-)"
-#else
-R"(
-#version 330
-precision highp float;
-#define PH_DESKTOP_GL 1
-#define PH_VERTEX_IN in
-#define PH_VERTEX_OUT out
-#define PH_FRAGMENT_IN in
-#define PH_TEXREAD(sampler, coord) texture(sampler, coord)
-)"
-#endif
-
-R"(
-// Structs
-// ------------------------------------------------------------------------------------------------
-
-// Material struct
-struct Material {
-	int hasAlbedoTexture;
-	int hasRoughnessTexture;
-	int hasMetallicTexture;
-	vec4 albedo;
-	float roughness;
-	float metallic;
-};
-
-// SphereLight struct
-struct SphereLight {
-	vec3 vsPos;
-	float radius;
-	float range;
-	vec3 strength;
-};
-
-)";
-
-const char* VERTEX_SHADER_SRC = R"(
-
-// Input, output and uniforms
-// ------------------------------------------------------------------------------------------------
-
-// Input
-PH_VERTEX_IN vec3 inPos;
-PH_VERTEX_IN vec3 inNormal;
-PH_VERTEX_IN vec2 inTexcoord;
-
-// Output
-PH_VERTEX_OUT vec3 vsPos;
-PH_VERTEX_OUT vec3 vsNormal;
-PH_VERTEX_OUT vec2 texcoord;
-
-// Uniforms
-uniform mat4 uProjMatrix;
-uniform mat4 uViewMatrix;
-uniform mat4 uModelMatrix;
-uniform mat4 uNormalMatrix; // inverse(transpose(modelViewMatrix)) for non-uniform scaling
-
-// Main
-// ------------------------------------------------------------------------------------------------
-
-void main()
-{
-	vec4 vsPosTmp = uViewMatrix * uModelMatrix * vec4(inPos, 1.0);
-
-	vsPos = vsPosTmp.xyz / vsPosTmp.w; // Unsure if division necessary.
-	vsNormal = (uNormalMatrix * vec4(inNormal, 0.0)).xyz;
-	texcoord = inTexcoord;
-
-	gl_Position = uProjMatrix * vsPosTmp;
-}
-
-)";
-
-const char* FRAGMENT_SHADER_SRC = R"(
-
-// Input, output and uniforms
-// ------------------------------------------------------------------------------------------------
-
-// Input
-PH_FRAGMENT_IN vec3 vsPos;
-PH_FRAGMENT_IN vec3 vsNormal;
-PH_FRAGMENT_IN vec2 texcoord;
-
-// Output
-#ifdef PH_DESKTOP_GL
-out vec4 fragOut;
-#endif
-
-// Uniforms (material)
-uniform Material uMaterial;
-uniform sampler2D uAlbedoTexture;
-uniform sampler2D uRoughnessTexture;
-uniform sampler2D uMetallicTexture;
-
-// Uniforms (dynamic spherelights)
-const int MAX_NUM_DYNAMIC_SPHERE_LIGHTS = 32;
-uniform SphereLight uDynamicSphereLights[MAX_NUM_DYNAMIC_SPHERE_LIGHTS];
-uniform int uNumDynamicSphereLights;
-
-// Gamma Correction Functions
-// ------------------------------------------------------------------------------------------------
-
-const vec3 gamma = vec3(2.2);
-
-vec3 linearize(vec3 rgbGamma)
-{
-	return pow(rgbGamma, gamma);
-}
-
-vec4 linearize(vec4 rgbaGamma)
-{
-	return vec4(linearize(rgbaGamma.rgb), rgbaGamma.a);
-}
-
-vec3 applyGammaCorrection(vec3 linearValue)
-{
-	return pow(linearValue, vec3(1.0 / gamma));
-}
-
-vec4 applyGammaCorrection(vec4 linearValue)
-{
-	return vec4(applyGammaCorrection(linearValue.rgb), linearValue.a);
-}
-
-// PBR shading functions
-// ------------------------------------------------------------------------------------------------
-
-const float PI = 3.14159265359;
-
-// References used:
-// https://de45xmedrsdbp.cloudfront.net/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf
-// http://blog.selfshadow.com/publications/s2016-shading-course/
-// http://www.codinglabs.net/article_physically_based_rendering_cook_torrance.aspx
-// http://graphicrants.blogspot.se/2013/08/specular-brdf-reference.html
-
-// Normal distribution function, GGX/Trowbridge-Reitz
-// a = roughness^2, UE4 parameterization
-// dot(n,h) term should be clamped to 0 if negative
-float ggx(float nDotH, float a)
-{
-	float a2 = a * a;
-	float div = PI * pow(nDotH * nDotH * (a2 - 1.0) + 1.0, 2.0);
-	return a2 / div;
-}
-
-// Schlick's model adjusted to fit Smith's method
-// k = a/2, where a = roughness^2, however, for analytical light sources (non image based)
-// roughness is first remapped to roughness = (roughnessOrg + 1) / 2.
-// Essentially, for analytical light sources:
-// k = (roughness + 1)^2 / 8
-// For image based lighting:
-// k = roughness^2 / 2
-float geometricSchlick(float nDotL, float nDotV, float k)
-{
-	float g1 = nDotL / (nDotL * (1.0 - k) + k);
-	float g2 = nDotV / (nDotV * (1.0 - k) + k);
-	return g1 * g2;
-}
-
-// Schlick's approximation. F0 should typically be 0.04 for dielectrics
-vec3 fresnelSchlick(float nDotL, vec3 f0)
-{
-	return f0 + (vec3(1.0) - f0) * clamp(pow(1.0 - nDotL, 5.0), 0.0, 1.0);
-}
-
-// Main
-// ------------------------------------------------------------------------------------------------
-
-void main()
-{
-	// Albedo (Gamma space)
-	vec3 albedo = uMaterial.albedo.rgb;
-	float alpha = uMaterial.albedo.a;
-	if (uMaterial.hasAlbedoTexture != 0) {
-		vec4 tmp = PH_TEXREAD(uAlbedoTexture, texcoord);
-		albedo = tmp.rgb;
-		alpha = tmp.a;
-	}
-	albedo = linearize(albedo);
-
-	// Skip fragment if it is transparent
-	if (alpha < 0.1) discard;
-
-	// Roughness (Linear space)
-	float roughness = uMaterial.roughness;
-	if (uMaterial.hasRoughnessTexture != 0) {
-		roughness = PH_TEXREAD(uRoughnessTexture, texcoord).r;
-	}
-
-	// Metallic (Liner space)
-	float metallic = uMaterial.metallic;
-	if (uMaterial.hasMetallicTexture != 0) {
-		metallic = PH_TEXREAD(uMetallicTexture, texcoord).r;
-	}
-
-	// Fragment's position and normal
-	vec3 p = vsPos;
-	vec3 n = normalize(vsNormal);
-
-	vec3 v = normalize(-p); // to view
-	float nDotV = dot(n, v);
-
-	// Interpolation of normals sometimes makes them face away from the camera. Clamp
-	// these to almost zero, to not break shading calculations.
-	nDotV = max(0.001, nDotV);
-
-	vec3 totalOutput = vec3(0.0);
-
-	for (int i = 0; i < MAX_NUM_DYNAMIC_SPHERE_LIGHTS; i++) {
-
-		// Skip if we are out of light sources
-		if (i >= uNumDynamicSphereLights) break;
-
-		// Retrieve light source
-		SphereLight light = uDynamicSphereLights[i];
-
-		// Shading parameters
-		vec3 toLight = light.vsPos - p;
-		float toLightDist = length(toLight);
-		vec3 l = toLight * (1.0 / toLightDist); // to light
-		vec3 h = normalize(l + v); // half vector (normal of microfacet)
-
-		// If nDotL is <= 0 then the light source is not in the hemisphere of the surface, i.e.
-		// no shading needs to be performed
-		float nDotL = dot(n, l);
-		if (nDotL <= 0.0) continue;
-
-		// Lambert diffuse
-		vec3 diffuse = albedo / PI;
-
-		// Cook-Torrance specular
-		// Normal distribution function
-		float nDotH = max(dot(n, h), 0.0); // max() should be superfluous here
-		float ctD = ggx(nDotH, roughness * roughness);
-
-		// Geometric self-shadowing term
-		float k = pow(roughness + 1.0, 2.0) / 8.0;
-		float ctG = geometricSchlick(nDotL, nDotV, k);
-
-		// Fresnel function
-		// Assume all dielectrics have a f0 of 0.04, for metals we assume f0 == albedo
-		vec3 f0 = mix(vec3(0.04), albedo, metallic);
-		vec3 ctF = fresnelSchlick(nDotV, f0);
-
-		// Calculate final Cook-Torrance specular value
-		vec3 specular = ctD * ctF * ctG / (4.0 * nDotL * nDotV);
-
-		// Calculates light strength
-		float shadow = 1.0; // TODO: Shadow map
-		float fallofNumerator = pow(clamp(1.0 - pow(toLightDist / light.range, 4.0), 0.0, 1.0), 2.0);
-		float fallofDenominator = (toLightDist * toLightDist + 1.0);
-		float falloff = fallofNumerator / fallofDenominator;
-		vec3 lightContrib = falloff * light.strength * shadow;
-
-		vec3 ks = ctF;
-		vec3 kd = (1.0 - ks) * (1.0 - metallic);
-
-		// "Solves" reflectance equation under the assumption that the light source is a point light
-		// and that there is no global illumination.
-		totalOutput += (kd * diffuse + specular) * lightContrib * nDotL;
-	}
-
-	vec4 outTmp = vec4(applyGammaCorrection(totalOutput), 1.0);
-#ifdef PH_WEB_GL
-	gl_FragColor = outTmp;
-#else
-	fragOut = outTmp;
-#endif
-}
-
-)";
-
-const char* COPY_OUT_SHADER_SRC = R"(
-
-// Input
-PH_FRAGMENT_IN vec2 texcoord;
-
-// Output
-#ifdef PH_DESKTOP_GL
-out vec4 fragOut;
-#endif
-
-// Uniforms
-uniform sampler2D uTexture;
-
-void main()
-{
-	vec3 val = PH_TEXREAD(uTexture, texcoord).rgb;
-
-#ifdef PH_WEB_GL
-	gl_FragColor = vec4(val, 1.0);
-#else
-	fragOut = vec4(val, 1.0);
-#endif
-}
-
-)";
 
 // State
 // ------------------------------------------------------------------------------------------------
@@ -389,7 +76,7 @@ struct RendererState final {
 
 	// Shaders
 	uint32_t fbWidth, fbHeight;
-	gl::Program modelShader, copyOutShader;
+	gl::Program modelShader, copyOutShader, imguiShader;
 
 	// Camera matrices
 	mat4 viewMatrix = mat4::identity();
@@ -397,6 +84,10 @@ struct RendererState final {
 
 	// Scene
 	DynArray<ph::SphereLight> dynamicSphereLights;
+
+	// Imgui
+	ImguiVertexData imguiGlCmdList;
+	Texture imguiFontTexture;
 };
 
 static RendererState* statePtr = nullptr;
@@ -404,36 +95,41 @@ static RendererState* statePtr = nullptr;
 // Statics
 // ------------------------------------------------------------------------------------------------
 
+#define LOG_INFO_F(format, ...) \
+	PH_LOGGER_LOG(statePtr->logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL", \
+		(format), ##__VA_ARGS__)
+
+#define LOG_WARNING_F(format, ...) \
+	PH_LOGGER_LOG(statePtr->logger, LOG_LEVEL_WARNING, "Renderer-CompatibleGL", \
+		(format), ##__VA_ARGS__)
+
+#define LOG_ERROR_F(format, ...) \
+	PH_LOGGER_LOG(statePtr->logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL", \
+		(format), ##__VA_ARGS__)
+
 #define CHECK_GL_ERROR() checkGLError(__FILE__, __LINE__)
 
 static void checkGLError(const char* file, int line) noexcept
 {
 	if (statePtr == nullptr) return;
-	RendererState& state = *statePtr;
 
 	GLenum error;
 	while ((error = glGetError()) != GL_NO_ERROR) {
-
 		switch (error) {
 		case GL_INVALID_ENUM:
-			PH_LOGGER_LOG(state.logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-				"%s:%i: GL_INVALID_ENUM", file, line);
+			LOG_ERROR_F("%s:%i: GL_INVALID_ENUM", file, line);
 			break;
 		case GL_INVALID_VALUE:
-			PH_LOGGER_LOG(state.logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-				"%s:%i: GL_INVALID_VALUE", file, line);
+			LOG_ERROR_F("%s:%i: GL_INVALID_VALUE", file, line);
 			break;
 		case GL_INVALID_OPERATION:
-			PH_LOGGER_LOG(state.logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-				"%s:%i: GL_INVALID_OPERATION", file, line);
+			LOG_ERROR_F("%s:%i: GL_INVALID_OPERATION", file, line);
 			break;
 		case GL_OUT_OF_MEMORY:
-			PH_LOGGER_LOG(state.logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-				"%s:%i: GL_OUT_OF_MEMORY", file, line);
+			LOG_ERROR_F("%s:%i: GL_OUT_OF_MEMORY", file, line);
 			break;
 		case GL_INVALID_FRAMEBUFFER_OPERATION:
-			PH_LOGGER_LOG(state.logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-				"%s:%i: GL_INVALID_FRAMEBUFFER_OPERATION", file, line);
+			LOG_ERROR_F("%s:%i: GL_INVALID_FRAMEBUFFER_OPERATION", file, line);
 		}
 	}
 }
@@ -474,6 +170,85 @@ static void stupidSetMaterialUniform(
 	gl::setUniform(program, tmpStr.str, m.roughness);
 	tmpStr.printf("%s.metallic", name);
 	gl::setUniform(program, tmpStr.str, m.metallic);
+}
+
+static void renderImgui(ImDrawData* drawDataIn) noexcept
+{
+	ImGuiIO& io = ImGui::GetIO();
+	ImDrawData& drawData = *drawDataIn;
+	RendererState& state = *statePtr;
+
+	if (!drawData.Valid) {
+		return;
+	}
+
+	// Store some previous OpenGL state
+	GLint lastScissorBox[4]; glGetIntegerv(GL_SCISSOR_BOX, lastScissorBox);
+
+	// Set some OpenGL state
+	glEnable(GL_BLEND);
+	glBlendEquation(GL_FUNC_ADD);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_SCISSOR_TEST);
+
+	// Bind imgui shader and set some uniforms
+	state.imguiShader.useProgram();
+
+	gl::setUniform(state.imguiShader, "uTexture", 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, state.imguiFontTexture.handle());
+
+	mat44 projMatrix;
+	projMatrix.row0 = vec4(2.0f / io.DisplaySize.x, 0.0f, 0.0f, -1.0f);
+	projMatrix.row1 = vec4(0.0f, 2.0f / -io.DisplaySize.y, 0.0f, 1.0f);
+	projMatrix.row2 = vec4(0.0f, 0.0f, -1.0f, 0.0f);
+	projMatrix.row3 = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	gl::setUniform(state.imguiShader, "uProjMatrix", projMatrix);
+
+	// Bind gl command list
+	state.imguiGlCmdList.bindVAO();
+
+	for (int i = 0; i < drawData.CmdListsCount; i++) {
+
+		// Upload command list to GPU
+		const ImDrawList& cmdList = *drawData.CmdLists[i];
+		state.imguiGlCmdList.upload(cmdList);
+
+		//const ImVector<ImDrawCmd>& cmdBuffer = cmdList.CmdBuffer;
+		//const ImVector<ImDrawIdx>& idxBuffer = cmdList.IdxBuffer;
+		//const ImVector<ImDrawVert>& vertexbuffer = cmdList.VtxBuffer;
+
+		const uint32_t* idxBufferOffset = 0;
+
+		// Render commands
+		for (int j = 0; j < cmdList.CmdBuffer.Size; j++) {
+			const ImDrawCmd& cmd = cmdList.CmdBuffer[j];
+
+			// If a user callback is available call it instead of rendering command
+			if (cmd.UserCallback != nullptr) {
+				cmd.UserCallback(&cmdList, &cmd);
+			}
+
+			// Render command
+			else {
+				glScissor(
+					cmd.ClipRect.x,
+					state.fbHeight - cmd.ClipRect.w,
+					cmd.ClipRect.z - cmd.ClipRect.x,
+					cmd.ClipRect.w - cmd.ClipRect.y);
+
+				state.imguiGlCmdList.render(cmd.ElemCount, idxBufferOffset);
+			}
+
+			idxBufferOffset += cmd.ElemCount;
+		}
+	}
+
+	// Restore some previous OpenGL state
+	glScissor(lastScissorBox[0], lastScissorBox[1], lastScissorBox[2], lastScissorBox[3]);
 }
 
 // Interface: Init functions
@@ -572,11 +347,8 @@ DLL_EXPORT uint32_t phInitRenderer(
 	state.glContext = tmpContext;
 
 	// Print information
-	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL",
-	     "\nVendor: %s\nVersion: %s\nRenderer: %s",
-	     glGetString(GL_VENDOR), glGetString(GL_VERSION), glGetString(GL_RENDERER));
-	//PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL", "Extensions: %s",
-	//    glGetString(GL_EXTENSIONS));
+	LOG_INFO_F("\nVendor: %s\nVersion: %s\nRenderer: %s",
+		glGetString(GL_VENDOR), glGetString(GL_VERSION), glGetString(GL_RENDERER));
 
 	// Create FullscreenGeometry
 	state.fullscreenGeom.create(gl::FullscreenGeometryType::OGL_CLIP_SPACE_RIGHT_HANDED_FRONT_FACE);
@@ -594,7 +366,7 @@ DLL_EXPORT uint32_t phInitRenderer(
 #ifdef __EMSCRIPTEN__
 		.addDepthBuffer(gl::FBDepthFormat::F16)
 #else
-        .addDepthBuffer(gl::FBDepthFormat::F32)
+		.addDepthBuffer(gl::FBDepthFormat::F32)
 #endif
 		.build();
 
@@ -615,11 +387,45 @@ DLL_EXPORT uint32_t phInitRenderer(
 		COPY_OUT_SHADER_SRC,
 		&state.allocator);
 
+	state.imguiShader = gl::Program::fromSource(
+		SHADER_HEADER_SRC,
+		IMGUI_VERTEX_SHADER_SRC,
+		IMGUI_FRAGMENT_SHADER_SRC,
+		[](uint32_t shaderProgram) {
+			glBindAttribLocation(shaderProgram, 0, "inPos");
+			glBindAttribLocation(shaderProgram, 1, "inTexcoord");
+			glBindAttribLocation(shaderProgram, 2, "inColor");
+		},
+		&state.allocator);
+
 	// Initialize array to hold dynamic sphere lights
 	state.dynamicSphereLights.create(MAX_NUM_DYNAMIC_SPHERE_LIGHTS, &state.allocator);
 
+
+	// Initialize imgui (TODO: Move out of renderer)
+	LOG_INFO_F("Initializing imgui");
+	ImGuiIO& io = ImGui::GetIO();
+	io.DisplaySize.x = 1000;
+	io.DisplaySize.y = 500;
+	io.RenderDrawListsFn = renderImgui;
+
+	// Load texture atlas
+	ImageView fontTexView;
+	io.Fonts->GetTexDataAsAlpha8(&fontTexView.rawData, &fontTexView.width, &fontTexView.height);
+	fontTexView.bytesPerPixel = 1;
+	fontTexView.type = ImageType::GRAY_U8;
+
+	// Upload texture to GL
+	state.imguiFontTexture.create(fontTexView);
+
+	// TODO: Store your texture pointer/identifier (whatever your engine uses) in 'io.Fonts->TexID'.
+	//m This will be passed back to your via the renderer.
+	//io.Fonts->TexID = (void*)texture;
+
+	state.imguiGlCmdList.create(1000, 1000);
+
 	CHECK_GL_ERROR();
-	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL", "Finished initializing renderer");
+	LOG_INFO_F("Finished initializing renderer");
 	return 1;
 }
 
@@ -782,8 +588,15 @@ DLL_EXPORT void phBeginFrame(
 
 	// Set some GL settings
 	glEnable(GL_CULL_FACE);
+
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
+
+	glEnable(GL_BLEND);
+	glBlendEquation(GL_FUNC_ADD);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glDisable(GL_SCISSOR_TEST);
 
 	// Upload dynamic sphere lights to shader
 	state.modelShader.useProgram();
@@ -795,6 +608,9 @@ DLL_EXPORT void phBeginFrame(
 
 	// Prepare internal framebuffer for rendering
 	state.internalFB.bindViewportClearColorDepth(vec4(0.0f));
+
+	// Indicate to Imgui that we have started rendering a new frame
+	ImGui::NewFrame();
 
 	CHECK_GL_ERROR();
 }
@@ -872,7 +688,9 @@ DLL_EXPORT void phFinishFrame(void)
 	glBindTexture(GL_TEXTURE_2D, state.internalFB.textures[0]);
 	state.fullscreenGeom.render();
 
+	// Render imgui UI
+	ImGui::Render();
+
 	SDL_GL_SwapWindow(state.window);
 	CHECK_GL_ERROR();
 }
-

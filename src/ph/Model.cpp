@@ -79,10 +79,10 @@ void Model::create(const phConstMeshView& mesh, Allocator* allocator) noexcept
 	glGenVertexArraysOES(1, &mVAO);
 	glBindVertexArrayOES(mVAO);
 #else
-    glGenVertexArrays(1, &mVAO);
-    glBindVertexArray(mVAO);
+	glGenVertexArrays(1, &mVAO);
+	glBindVertexArray(mVAO);
 #endif
-    
+
 	// Vertex buffer
 	glGenBuffers(1, &mVertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
@@ -92,7 +92,7 @@ void Model::create(const phConstMeshView& mesh, Allocator* allocator) noexcept
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(phVertex),
-		(void*)offsetof(phVertex, pos));
+		(void*)offsetof(Vertex, pos));
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(phVertex),
 		(void*)offsetof(Vertex, normal));
@@ -154,9 +154,9 @@ void Model::create(const phConstMeshView& mesh, Allocator* allocator) noexcept
 	// Cleanup
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
 #ifdef __EMSCRIPTEN__
-    glBindVertexArrayOES(0);
+	glBindVertexArrayOES(0);
 #else
-    glBindVertexArray(0);
+	glBindVertexArray(0);
 #endif
 }
 
@@ -173,9 +173,9 @@ void Model::destroy() noexcept
 	mComponents.destroy();
 	glDeleteBuffers(1, &mVertexBuffer);
 #ifdef __EMSCRIPTEN__
-    glDeleteVertexArraysOES(1, &mVAO);
+	glDeleteVertexArraysOES(1, &mVAO);
 #else
-    glDeleteVertexArrays(1, &mVAO);
+	glDeleteVertexArrays(1, &mVAO);
 #endif
 
 	// Reset members
@@ -189,9 +189,9 @@ void Model::destroy() noexcept
 void Model::bindVAO() noexcept
 {
 #ifdef __EMSCRIPTEN__
-    glBindVertexArrayOES(mVAO);
+	glBindVertexArrayOES(mVAO);
 #else
-    glBindVertexArray(mVAO);
+	glBindVertexArray(mVAO);
 #endif
 }
 
