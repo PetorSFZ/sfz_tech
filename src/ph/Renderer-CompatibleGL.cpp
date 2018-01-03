@@ -71,11 +71,15 @@ struct RendererState final {
 	DynArray<Material> materials;
 	DynArray<Model> dynamicModels;
 
+	// Window information
+	int32_t windowWidth, windowHeight;
+	int32_t fbWidth, fbHeight;
+	float aspect;
+
 	// Framebuffers
 	gl::Framebuffer internalFB;
 
 	// Shaders
-	uint32_t fbWidth, fbHeight;
 	gl::Program modelShader, copyOutShader, imguiShader;
 
 	// Camera matrices
@@ -192,7 +196,7 @@ static void renderImgui(ImDrawData* drawDataIn) noexcept
 
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
-	glEnable(GL_SCISSOR_TEST);
+	//glEnable(GL_SCISSOR_TEST);
 
 	// Bind imgui shader and set some uniforms
 	state.imguiShader.useProgram();
@@ -405,8 +409,8 @@ DLL_EXPORT uint32_t phInitRenderer(
 	// Initialize imgui (TODO: Move out of renderer)
 	LOG_INFO_F("Initializing imgui");
 	ImGuiIO& io = ImGui::GetIO();
-	io.DisplaySize.x = 1000;
-	io.DisplaySize.y = 500;
+	io.DisplaySize.x = w;
+	io.DisplaySize.y = h;
 	io.RenderDrawListsFn = renderImgui;
 
 	// Load texture atlas
@@ -416,7 +420,7 @@ DLL_EXPORT uint32_t phInitRenderer(
 	fontTexView.type = ImageType::GRAY_U8;
 
 	// Upload texture to GL
-	state.imguiFontTexture.create(fontTexView);
+	state.imguiFontTexture.create(fontTexView, TextureFiltering::NEAREST);
 
 	// TODO: Store your texture pointer/identifier (whatever your engine uses) in 'io.Fonts->TexID'.
 	//m This will be passed back to your via the renderer.
@@ -569,16 +573,15 @@ DLL_EXPORT void phBeginFrame(
 	RendererState& state = *statePtr;
 	const CameraData& camera = *reinterpret_cast<const CameraData*>(cameraPtr);
 
-	// Get size of default framebuffer
-	int w = 0, h = 0;
-	SDL_GL_GetDrawableSize(state.window, &w, &h);
-	state.fbWidth = uint32_t(w);
-	state.fbHeight = uint32_t(h);
-	float aspect = float(w) / float(h);
+	// Get size of default framebuffer and window
+	SDL_GetWindowSize(state.window, &state.windowWidth, &state.windowHeight);
+	SDL_GL_GetDrawableSize(state.window, &state.fbWidth, &state.fbHeight);
+	state.aspect = float(state.fbWidth) / float(state.fbHeight);
 
 	// Create camera matrices
 	state.viewMatrix = viewMatrixGL(camera.pos, camera.dir, camera.up);
-	state.projMatrix = perspectiveProjectionGL(camera.vertFovDeg, aspect, camera.near, camera.far);
+	state.projMatrix =
+		perspectiveProjectionGL(camera.vertFovDeg, state.aspect, camera.near, camera.far);
 
 	// Set dynamic sphere lights
 	state.dynamicSphereLights.clear();
@@ -608,6 +611,13 @@ DLL_EXPORT void phBeginFrame(
 
 	// Prepare internal framebuffer for rendering
 	state.internalFB.bindViewportClearColorDepth(vec4(0.0f));
+
+	// Set some Imgui stuff
+	ImGuiIO& io = ImGui::GetIO();
+	io.DisplaySize.x = state.windowWidth;
+	io.DisplaySize.y = state.windowHeight;
+	io.DisplayFramebufferScale.x = float(state.fbWidth) / float(state.windowWidth);
+	io.DisplayFramebufferScale.x = float(state.fbHeight) / float(state.windowHeight);
 
 	// Indicate to Imgui that we have started rendering a new frame
 	ImGui::NewFrame();
