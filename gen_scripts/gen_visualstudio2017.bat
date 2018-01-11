@@ -31,12 +31,12 @@ cd %dp0
 : Set working directory to root of project
 cd ..
 
-: Create build_msvc2015 directory (and delete old one if it exists)
-rmdir /S /Q build_msvc2015
-mkdir build_msvc2015
-cd build_msvc2015
+: Create build_msvc2017 directory (and delete old one if it exists)
+rmdir /S /Q build_msvc2017
+mkdir build_msvc2017
+cd build_msvc2017
 
 : Generate Visual Studio solution
-cmake .. -G "Visual Studio 14 2015 Win64"
+cmake .. -G "Visual Studio 15 2017 Win64" -T v140
 
 PAUSE

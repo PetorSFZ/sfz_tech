@@ -29,7 +29,8 @@ install_manifest.txt
 
 # Build directories
 build/
-build_msvc14/
+build_msvc2015/
+build_msvc2017/
 build_xcode/
 build_emscripten_debug/
 build_emscripten_release/

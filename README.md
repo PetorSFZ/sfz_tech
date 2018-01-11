@@ -23,6 +23,10 @@ As a pre-requisite __Visual Studio 2015__ and __CMake__ need to be installed. CM
 
 In order to generate the Visual Studio solution you only have to run `gen_visualstudio2015.bat` in the `gen_scripts` directory (double clicking is enough, no need to open a command prompt).
 
+#### Visual Studio 2017
+
+Same as for Visual Studio 2015, except `gen_visualstudio2017.bat` should be used instead. Builds using the `v140` (Visual Studio 2015) platform toolset by default, so that also needs to be installed (available through the `Tools/Get Tools and Features` menu). Should probably build fine using newer toolset, but this is not regularly tested.
+
 ### macOS
 
 #### Xcode
