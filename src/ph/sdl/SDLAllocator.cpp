@@ -48,39 +48,39 @@ struct BridgeState final {
 
 static BridgeState* bridgeState = nullptr;
 
-static SDLCALL void* mallocBridge(size_t size)
+static void* SDLCALL mallocBridge(size_t size)
 {
 	void* ptr = bridgeState->allocator->allocate(size, 32, "SDL");
-    if (ptr != nullptr) {
-        bridgeState->allocatedSizes[ptr] = size;
-    }
-    else {
-        PH_LOG(LOG_LEVEL_ERROR, "SDL", "mallocBridge() failed");
-    }
+	if (ptr != nullptr) {
+		bridgeState->allocatedSizes[ptr] = size;
+	}
+	else {
+		PH_LOG(LOG_LEVEL_ERROR, "SDL", "mallocBridge() failed");
+	}
 	return ptr;
 }
 
-static SDLCALL void* callocBridge(size_t nmemb, size_t size)
+static void* SDLCALL callocBridge(size_t nmemb, size_t size)
 {
 	size_t num_bytes = nmemb * size;
 	void* ptr = bridgeState->allocator->allocate(num_bytes, 32, "SDL");
-    if (ptr != nullptr) {
-        bridgeState->allocatedSizes[ptr] = num_bytes;
-    }
-    else {
-        PH_LOG(LOG_LEVEL_ERROR, "SDL", "callocBridge() failed");
-    }
+	if (ptr != nullptr) {
+		bridgeState->allocatedSizes[ptr] = num_bytes;
+	}
+	else {
+		PH_LOG(LOG_LEVEL_ERROR, "SDL", "callocBridge() failed");
+	}
 	std::memset(ptr, 0, num_bytes);
 	return ptr;
 }
 
-static SDLCALL void* reallocBridge(void* mem, size_t size)
+static void* SDLCALL reallocBridge(void* mem, size_t size)
 {
-    // If mem == nullptr just use callocBridge() instead.
-    if (mem == nullptr) {
-        return callocBridge(1, size);
-    }
-    
+	// If mem == nullptr just use callocBridge() instead.
+	if (mem == nullptr) {
+		return callocBridge(1, size);
+	}
+	
 	// Get size of previous allocation
 	size_t* sizePtr = bridgeState->allocatedSizes.get(mem);
 	if (sizePtr == nullptr) {
@@ -101,7 +101,7 @@ static SDLCALL void* reallocBridge(void* mem, size_t size)
 	return newPtr;
 }
 
-static SDLCALL void freeBridge(void* mem)
+static void SDLCALL freeBridge(void* mem)
 {
 	bridgeState->allocatedSizes.remove(mem);
 	bridgeState->allocator->deallocate(mem);
