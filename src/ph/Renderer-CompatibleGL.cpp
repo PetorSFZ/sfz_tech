@@ -215,15 +215,44 @@ static void renderImgui(ImDrawData* drawDataIn) noexcept
 	// Bind gl command list
 	state.imguiGlCmdList.bindVAO();
 
+
+
+	DynArray<ImguiVertex> vertices;
+	vertices.create(0, &state.allocator);
+
+	DynArray<uint32_t> indices;
+	indices.create(0, &state.allocator);
+
+
+
 	for (int i = 0; i < drawData.CmdListsCount; i++) {
 
 		// Upload command list to GPU
 		const ImDrawList& cmdList = *drawData.CmdLists[i];
-		state.imguiGlCmdList.upload(cmdList);
 
-		//const ImVector<ImDrawCmd>& cmdBuffer = cmdList.CmdBuffer;
+		vertices.clear();
+		const ImVector<ImDrawVert>& vtxBuffer = cmdList.VtxBuffer;
+		for (int j = 0; j < vtxBuffer.size(); j++) {
+			const ImDrawVert& imguiVertex = vtxBuffer[j];
+			
+			ImguiVertex convertedVertex;
+			convertedVertex.pos.x = imguiVertex.pos.x;
+			convertedVertex.pos.y = imguiVertex.pos.y;
+			convertedVertex.texcoord.x = imguiVertex.uv.x;
+			convertedVertex.texcoord.y = imguiVertex.uv.y;
+			convertedVertex.color = imguiVertex.col;
+
+			vertices.add(convertedVertex);
+		}
+
+		indices.clear();
+		indices.add(cmdList.IdxBuffer.Data, cmdList.IdxBuffer.Size);
+
+		state.imguiGlCmdList.upload(
+			vertices.data(), vertices.size(), indices.data(), indices.size());
+
+		//
 		//const ImVector<ImDrawIdx>& idxBuffer = cmdList.IdxBuffer;
-		//const ImVector<ImDrawVert>& vertexbuffer = cmdList.VtxBuffer;
 
 		const uint32_t* idxBufferOffset = 0;
 
@@ -409,8 +438,8 @@ DLL_EXPORT uint32_t phInitRenderer(
 	// Initialize imgui (TODO: Move out of renderer)
 	LOG_INFO_F("Initializing imgui");
 	ImGuiIO& io = ImGui::GetIO();
-	io.DisplaySize.x = w;
-	io.DisplaySize.y = h;
+	io.DisplaySize.x = float(w);
+	io.DisplaySize.y = float(h);
 	io.RenderDrawListsFn = renderImgui;
 
 	// Load texture atlas
@@ -614,8 +643,8 @@ DLL_EXPORT void phBeginFrame(
 
 	// Set some Imgui stuff
 	ImGuiIO& io = ImGui::GetIO();
-	io.DisplaySize.x = state.windowWidth;
-	io.DisplaySize.y = state.windowHeight;
+	io.DisplaySize.x = float(state.windowWidth);
+	io.DisplaySize.y = float(state.windowHeight);
 	io.DisplayFramebufferScale.x = float(state.fbWidth) / float(state.windowWidth);
 	io.DisplayFramebufferScale.x = float(state.fbHeight) / float(state.windowHeight);
 

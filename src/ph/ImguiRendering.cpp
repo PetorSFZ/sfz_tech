@@ -110,19 +110,19 @@ void ImguiVertexData::create(uint32_t maxNumVertices, uint32_t maxNumIndices) no
 	// Vertex buffer
 	glGenBuffers(1, &mVertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, maxNumVertices * sizeof(ImDrawVert),
+	glBufferData(GL_ARRAY_BUFFER, maxNumVertices * sizeof(ImguiVertex),
 		nullptr, GL_DYNAMIC_DRAW);
 
 	// Set location of vertex attributes
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert),
-		(void*)offsetof(ImDrawVert, pos));
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(ImguiVertex),
+		(void*)offsetof(ImguiVertex, pos));
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert),
-		(void*)offsetof(ImDrawVert, uv));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ImguiVertex),
+		(void*)offsetof(ImguiVertex, texcoord));
 	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImDrawVert),
-		(void*)offsetof(ImDrawVert, col));
+	glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImguiVertex),
+		(void*)offsetof(ImguiVertex, color));
 
 	// Index buffer
 	glGenBuffers(1, &mIndexBuffer);
@@ -148,7 +148,6 @@ void ImguiVertexData::swap(ImguiVertexData& other) noexcept
 
 	std::swap(this->mIndexBuffer, other.mIndexBuffer);
 	std::swap(this->mMaxNumIndices, other.mMaxNumIndices);
-	std::swap(this->mNumIndices, other.mNumIndices);
 }
 
 void ImguiVertexData::destroy() noexcept
@@ -169,36 +168,37 @@ void ImguiVertexData::destroy() noexcept
 
 	mIndexBuffer = 0;
 	mMaxNumIndices = 0;
-	mNumIndices = 0;
 }
 
-void ImguiVertexData::upload(const ImDrawList& cmdList) noexcept
+void ImguiVertexData::upload(
+	const ImguiVertex* vertices,
+	uint32_t numVertices,
+	const uint32_t* indices,
+	uint32_t numIndices) noexcept
 {
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
 
 	// Allocate more vertex GPU memory if necessary
-	if (cmdList.VtxBuffer.Size > mMaxNumVertices) {
-		mMaxNumVertices = cmdList.VtxBuffer.Size;
-		glBufferData(GL_ARRAY_BUFFER, mMaxNumVertices * sizeof(ImDrawVert),
+	if (numVertices > mMaxNumVertices) {
+		mMaxNumVertices = numVertices;
+		glBufferData(GL_ARRAY_BUFFER, mMaxNumVertices * sizeof(ImguiVertex),
 			nullptr, GL_DYNAMIC_DRAW);
 	}
 
 	// Upload vertex data to GPU
-	glBufferSubData(GL_ARRAY_BUFFER, 0, cmdList.VtxBuffer.Size * sizeof(ImDrawVert),
-		cmdList.VtxBuffer.Data);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, numVertices * sizeof(ImguiVertex), vertices);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
 
 	// Allocate more index GPU memory if necessary
-	if (cmdList.IdxBuffer.Size > mMaxNumIndices) {
-		mMaxNumIndices = cmdList.IdxBuffer.Size;
+	if (numIndices > mMaxNumIndices) {
+		mMaxNumIndices = numIndices;
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mMaxNumIndices * sizeof(uint32_t),
 			nullptr, GL_DYNAMIC_DRAW);
 	}
 
 	// Upload index data to GPU
-	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, cmdList.IdxBuffer.Size * sizeof(uint32_t),
-		cmdList.IdxBuffer.Data);
+	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, numIndices * sizeof(uint32_t), indices);
 }
 
 void ImguiVertexData::bindVAO() noexcept

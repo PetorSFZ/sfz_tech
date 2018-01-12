@@ -21,9 +21,11 @@
 
 #include <cstdint>
 
-#include <imgui.h>
+#include <sfz/math/Vector.hpp>
 
 namespace ph {
+
+using sfz::vec2;
 
 // Shader sources
 // ------------------------------------------------------------------------------------------------
@@ -31,6 +33,15 @@ namespace ph {
 extern const char* IMGUI_VERTEX_SHADER_SRC;
 
 extern const char* IMGUI_FRAGMENT_SHADER_SRC;
+
+// Structs
+// ------------------------------------------------------------------------------------------------
+
+struct ImguiVertex final {
+	vec2 pos;
+	vec2 texcoord;
+	uint32_t color;
+};
 
 // ImguiVertexData class
 // ------------------------------------------------------------------------------------------------
@@ -48,7 +59,11 @@ public:
 	void swap(ImguiVertexData& other) noexcept;
 	void destroy() noexcept;
 
-	void upload(const ImDrawList& cmdList) noexcept;
+	void upload(
+		const ImguiVertex* vertices,
+		uint32_t numVertices,
+		const uint32_t* indices,
+		uint32_t numIndices) noexcept;
 	void bindVAO() noexcept;
 	void render(int numElements, const uint32_t* idxBufferOffset) noexcept;
 
@@ -56,11 +71,10 @@ private:
 	uint32_t mVAO = 0;
 
 	uint32_t mVertexBuffer = 0;
-	int32_t mMaxNumVertices = 0;
+	uint32_t mMaxNumVertices = 0;
 
 	uint32_t mIndexBuffer = 0;
-	int32_t mMaxNumIndices = 0;
-	int32_t mNumIndices = 0;
+	uint32_t mMaxNumIndices = 0;
 };
 
 } // namespace ph
