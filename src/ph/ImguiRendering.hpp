@@ -42,6 +42,7 @@ struct ImguiVertex final {
 	vec2 texcoord;
 	uint32_t color;
 };
+static_assert(sizeof(ImguiVertex) == sizeof(float) * 5, "ImguiVertex is padded");
 
 // ImguiVertexData class
 // ------------------------------------------------------------------------------------------------
@@ -65,7 +66,7 @@ public:
 		const uint32_t* indices,
 		uint32_t numIndices) noexcept;
 	void bindVAO() noexcept;
-	void render(int numElements, const uint32_t* idxBufferOffset) noexcept;
+	void render(uint32_t indexOffset, uint32_t numIndices) noexcept;
 
 private:
 	uint32_t mVAO = 0;

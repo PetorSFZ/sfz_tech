@@ -215,15 +215,99 @@ static void renderImgui(ImDrawData* drawDataIn) noexcept
 	// Bind gl command list
 	state.imguiGlCmdList.bindVAO();
 
-
-
+	struct ImguiCommand {
+		uint32_t idxBufferOffset;
+		uint32_t numIndices;
+		vec4 clipRect;
+	};
+	
 	DynArray<ImguiVertex> vertices;
 	vertices.create(0, &state.allocator);
 
+	static_assert(sizeof(ImDrawIdx) == sizeof(uint32_t), "Invalid type of ImDrawIdx");
 	DynArray<uint32_t> indices;
 	indices.create(0, &state.allocator);
 
+	DynArray<ImguiCommand> commands;
+	commands.create(0, &state.allocator);
 
+	for (int i = 0; i < drawData.CmdListsCount; i++) {
+
+		const ImDrawList& cmdList = *drawData.CmdLists[i];
+
+		// indexOffset is the offset to offset all indices with
+		const uint32_t indexOffset = vertices.size();
+
+		// indexBufferOffset is the offset to where the indices start
+		uint32_t indexBufferOffset = indices.size();
+
+		// Convert vertices and add to global list
+		for (int j = 0; j < cmdList.VtxBuffer.size(); j++) {
+			const ImDrawVert& imguiVertex = cmdList.VtxBuffer[j];
+
+			ImguiVertex convertedVertex;
+			convertedVertex.pos = vec2(imguiVertex.pos.x, imguiVertex.pos.y);
+			convertedVertex.texcoord = vec2(imguiVertex.uv.x, imguiVertex.uv.y);
+			convertedVertex.color = imguiVertex.col;
+
+			vertices.add(convertedVertex);
+		}
+
+		// Fix indices and add to global list
+		for (int j = 0; j < cmdList.IdxBuffer.size(); j++) {
+			indices.add(cmdList.IdxBuffer[j] + indexOffset);
+		}
+
+		// Create new commands
+		for (int j = 0; j < cmdList.CmdBuffer.Size; j++) {
+			const ImDrawCmd& inCmd = cmdList.CmdBuffer[j];
+
+			ImguiCommand cmd;
+			cmd.idxBufferOffset = indexBufferOffset;
+			cmd.numIndices = inCmd.ElemCount;
+			indexBufferOffset += inCmd.ElemCount;
+			cmd.clipRect.x = inCmd.ClipRect.x;
+			cmd.clipRect.y = inCmd.ClipRect.y;
+			cmd.clipRect.z = inCmd.ClipRect.z;
+			cmd.clipRect.w = inCmd.ClipRect.w;
+
+			commands.add(cmd);
+		}
+	}
+
+	// Upload vertices and indices to GPU
+	state.imguiGlCmdList.upload(
+		vertices.data(), vertices.size(), indices.data(), indices.size());
+
+	printf("commands.size() == %u\n", commands.size());
+	printf("commands[0].numIndices == %u, .indexOffset == %u\n", commands[0].numIndices, commands[0].idxBufferOffset);
+	printf("commands[1].numIndices == %u, .indexOffset == %u\n", commands[1].numIndices, commands[1].idxBufferOffset);
+	printf("commands[2].numIndices == %u, .indexOffset == %u\n", commands[2].numIndices, commands[2].idxBufferOffset);
+	printf("commands[3].numIndices == %u, .indexOffset == %u\n", commands[3].numIndices, commands[3].idxBufferOffset);
+	printf("commands[4].numIndices == %u, .indexOffset == %u\n", commands[4].numIndices, commands[4].idxBufferOffset);
+	printf("commands[5].numIndices == %u, .indexOffset == %u\n", commands[5].numIndices, commands[5].idxBufferOffset);
+
+
+	static int counter = 0;
+	counter++;
+	counter %= 100;
+
+	if (counter < 50) {
+
+	// Render commands
+	for (const ImguiCommand& cmd : commands) {
+
+		/*glScissor(
+			cmd.clipRect.x,
+			state.fbHeight - cmd.clipRect.w,
+			cmd.clipRect.z - cmd.clipRect.x,
+			cmd.clipRect.w - cmd.clipRect.y);*/
+
+		state.imguiGlCmdList.render(cmd.idxBufferOffset, cmd.numIndices);
+	}
+
+	}
+	else {
 
 	for (int i = 0; i < drawData.CmdListsCount; i++) {
 
@@ -254,8 +338,8 @@ static void renderImgui(ImDrawData* drawDataIn) noexcept
 		//
 		//const ImVector<ImDrawIdx>& idxBuffer = cmdList.IdxBuffer;
 
-		const uint32_t* idxBufferOffset = 0;
-
+		uint32_t idxBufferOffset = 0;
+		
 		// Render commands
 		for (int j = 0; j < cmdList.CmdBuffer.Size; j++) {
 			const ImDrawCmd& cmd = cmdList.CmdBuffer[j];
@@ -267,17 +351,19 @@ static void renderImgui(ImDrawData* drawDataIn) noexcept
 
 			// Render command
 			else {
-				glScissor(
-					cmd.ClipRect.x,
-					state.fbHeight - cmd.ClipRect.w,
-					cmd.ClipRect.z - cmd.ClipRect.x,
-					cmd.ClipRect.w - cmd.ClipRect.y);
+				//glScissor(
+				//	cmd.ClipRect.x,
+				//	state.fbHeight - cmd.ClipRect.w,
+				//	cmd.ClipRect.z - cmd.ClipRect.x,
+				//	cmd.ClipRect.w - cmd.ClipRect.y);
 
-				state.imguiGlCmdList.render(cmd.ElemCount, idxBufferOffset);
+				state.imguiGlCmdList.render(idxBufferOffset, cmd.ElemCount);
 			}
 
 			idxBufferOffset += cmd.ElemCount;
 		}
+	}
+
 	}
 
 	// Restore some previous OpenGL state
@@ -726,6 +812,30 @@ DLL_EXPORT void phFinishFrame(void)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, state.internalFB.textures[0]);
 	state.fullscreenGeom.render();
+
+	ImGui::ShowTestWindow();
+
+	ImGui::Begin("Very long time testing window");
+	ImGui::Button("Button");
+	ImGui::Button("Button");
+	ImGui::Button("Button");
+	ImGui::Button("Button");
+	ImGui::Button("Button");
+	ImGui::Button("Button");
+	ImGui::Button("Button");
+	ImGui::Button("Button");
+	ImGui::Button("Button");
+	ImGui::Button("Button");
+	ImGui::Button("Button");
+	ImGui::Button("Button");
+	ImGui::Button("Button");
+	ImGui::Button("Button");
+	ImGui::Button("Button");
+	ImGui::Button("Button");
+	ImGui::Button("Button");
+	ImGui::Button("Button");
+	ImGui::Button("Button");
+	ImGui::End();
 
 	// Render imgui UI
 	ImGui::Render();

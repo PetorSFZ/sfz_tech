@@ -210,10 +210,11 @@ void ImguiVertexData::bindVAO() noexcept
 #endif
 }
 
-void ImguiVertexData::render(int numElements, const uint32_t* idxBufferOffset) noexcept
+void ImguiVertexData::render(uint32_t indexOffset, uint32_t numIndices) noexcept
 {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
-	glDrawElements(GL_TRIANGLES, numElements, GL_UNSIGNED_INT, idxBufferOffset);
+	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT,
+		(void*)(indexOffset * sizeof(ImguiVertex)));
 }
 
 } // namespace ph
