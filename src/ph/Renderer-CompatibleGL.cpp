@@ -220,7 +220,7 @@ static void renderImgui(ImDrawData* drawDataIn) noexcept
 		uint32_t numIndices;
 		vec4 clipRect;
 	};
-	
+
 	DynArray<ImguiVertex> vertices;
 	vertices.create(0, &state.allocator);
 
@@ -278,21 +278,7 @@ static void renderImgui(ImDrawData* drawDataIn) noexcept
 	// Upload vertices and indices to GPU
 	state.imguiGlCmdList.upload(
 		vertices.data(), vertices.size(), indices.data(), indices.size());
-
-	printf("commands.size() == %u\n", commands.size());
-	printf("commands[0].numIndices == %u, .indexOffset == %u\n", commands[0].numIndices, commands[0].idxBufferOffset);
-	printf("commands[1].numIndices == %u, .indexOffset == %u\n", commands[1].numIndices, commands[1].idxBufferOffset);
-	printf("commands[2].numIndices == %u, .indexOffset == %u\n", commands[2].numIndices, commands[2].idxBufferOffset);
-	printf("commands[3].numIndices == %u, .indexOffset == %u\n", commands[3].numIndices, commands[3].idxBufferOffset);
-	printf("commands[4].numIndices == %u, .indexOffset == %u\n", commands[4].numIndices, commands[4].idxBufferOffset);
-	printf("commands[5].numIndices == %u, .indexOffset == %u\n", commands[5].numIndices, commands[5].idxBufferOffset);
-
-
-	static int counter = 0;
-	counter++;
-	counter %= 100;
-
-	if (counter < 50) {
+	CHECK_GL_ERROR();
 
 	// Render commands
 	for (const ImguiCommand& cmd : commands) {
@@ -304,12 +290,10 @@ static void renderImgui(ImDrawData* drawDataIn) noexcept
 			cmd.clipRect.w - cmd.clipRect.y);*/
 
 		state.imguiGlCmdList.render(cmd.idxBufferOffset, cmd.numIndices);
+		CHECK_GL_ERROR();
 	}
 
-	}
-	else {
-
-	for (int i = 0; i < drawData.CmdListsCount; i++) {
+	/*for (int i = 0; i < drawData.CmdListsCount; i++) {
 
 		// Upload command list to GPU
 		const ImDrawList& cmdList = *drawData.CmdLists[i];
@@ -318,7 +302,7 @@ static void renderImgui(ImDrawData* drawDataIn) noexcept
 		const ImVector<ImDrawVert>& vtxBuffer = cmdList.VtxBuffer;
 		for (int j = 0; j < vtxBuffer.size(); j++) {
 			const ImDrawVert& imguiVertex = vtxBuffer[j];
-			
+
 			ImguiVertex convertedVertex;
 			convertedVertex.pos.x = imguiVertex.pos.x;
 			convertedVertex.pos.y = imguiVertex.pos.y;
@@ -334,12 +318,13 @@ static void renderImgui(ImDrawData* drawDataIn) noexcept
 
 		state.imguiGlCmdList.upload(
 			vertices.data(), vertices.size(), indices.data(), indices.size());
+		CHECK_GL_ERROR();
 
 		//
 		//const ImVector<ImDrawIdx>& idxBuffer = cmdList.IdxBuffer;
 
 		uint32_t idxBufferOffset = 0;
-		
+
 		// Render commands
 		for (int j = 0; j < cmdList.CmdBuffer.Size; j++) {
 			const ImDrawCmd& cmd = cmdList.CmdBuffer[j];
@@ -358,13 +343,12 @@ static void renderImgui(ImDrawData* drawDataIn) noexcept
 				//	cmd.ClipRect.w - cmd.ClipRect.y);
 
 				state.imguiGlCmdList.render(idxBufferOffset, cmd.ElemCount);
+				CHECK_GL_ERROR();
 			}
 
 			idxBufferOffset += cmd.ElemCount;
 		}
-	}
-
-	}
+	}*/
 
 	// Restore some previous OpenGL state
 	glScissor(lastScissorBox[0], lastScissorBox[1], lastScissorBox[2], lastScissorBox[3]);

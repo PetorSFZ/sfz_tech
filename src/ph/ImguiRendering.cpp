@@ -214,7 +214,7 @@ void ImguiVertexData::render(uint32_t indexOffset, uint32_t numIndices) noexcept
 {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
 	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT,
-		(void*)(indexOffset * sizeof(ImguiVertex)));
+		(void*)(indexOffset * sizeof(uint32_t)));
 }
 
 } // namespace ph
