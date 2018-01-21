@@ -21,11 +21,9 @@
 
 #include <cstdint>
 
-#include <sfz/math/Vector.hpp>
+#include "ph/rendering/ImguiRenderingData.h"
 
 namespace ph {
-
-using sfz::vec2;
 
 // Shader sources
 // ------------------------------------------------------------------------------------------------
@@ -33,16 +31,6 @@ using sfz::vec2;
 extern const char* IMGUI_VERTEX_SHADER_SRC;
 
 extern const char* IMGUI_FRAGMENT_SHADER_SRC;
-
-// Structs
-// ------------------------------------------------------------------------------------------------
-
-struct ImguiVertex final {
-	vec2 pos;
-	vec2 texcoord;
-	uint32_t color;
-};
-static_assert(sizeof(ImguiVertex) == sizeof(float) * 5, "ImguiVertex is padded");
 
 // ImguiVertexData class
 // ------------------------------------------------------------------------------------------------
@@ -61,7 +49,7 @@ public:
 	void destroy() noexcept;
 
 	void upload(
-		const ImguiVertex* vertices,
+		const phImguiVertex* vertices,
 		uint32_t numVertices,
 		const uint32_t* indices,
 		uint32_t numIndices) noexcept;

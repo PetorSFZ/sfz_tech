@@ -110,19 +110,19 @@ void ImguiVertexData::create(uint32_t maxNumVertices, uint32_t maxNumIndices) no
 	// Vertex buffer
 	glGenBuffers(1, &mVertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, maxNumVertices * sizeof(ImguiVertex),
+	glBufferData(GL_ARRAY_BUFFER, maxNumVertices * sizeof(phImguiVertex),
 		nullptr, GL_DYNAMIC_DRAW);
 
 	// Set location of vertex attributes
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(ImguiVertex),
-		(void*)offsetof(ImguiVertex, pos));
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(phImguiVertex),
+		(void*)offsetof(phImguiVertex, pos));
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ImguiVertex),
-		(void*)offsetof(ImguiVertex, texcoord));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(phImguiVertex),
+		(void*)offsetof(phImguiVertex, texcoord));
 	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImguiVertex),
-		(void*)offsetof(ImguiVertex, color));
+	glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(phImguiVertex),
+		(void*)offsetof(phImguiVertex, color));
 
 	// Index buffer
 	glGenBuffers(1, &mIndexBuffer);
@@ -171,7 +171,7 @@ void ImguiVertexData::destroy() noexcept
 }
 
 void ImguiVertexData::upload(
-	const ImguiVertex* vertices,
+	const phImguiVertex* vertices,
 	uint32_t numVertices,
 	const uint32_t* indices,
 	uint32_t numIndices) noexcept
@@ -181,12 +181,12 @@ void ImguiVertexData::upload(
 	// Allocate more vertex GPU memory if necessary
 	if (numVertices > mMaxNumVertices) {
 		mMaxNumVertices = numVertices;
-		glBufferData(GL_ARRAY_BUFFER, mMaxNumVertices * sizeof(ImguiVertex),
+		glBufferData(GL_ARRAY_BUFFER, mMaxNumVertices * sizeof(phImguiVertex),
 			nullptr, GL_DYNAMIC_DRAW);
 	}
 
 	// Upload vertex data to GPU
-	glBufferSubData(GL_ARRAY_BUFFER, 0, numVertices * sizeof(ImguiVertex), vertices);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, numVertices * sizeof(phImguiVertex), vertices);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
 

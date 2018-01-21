@@ -27,10 +27,6 @@ if (NOT SDL2_FOUND)
 	message(FATAL_ERROR "Renderer-CompatibleGL requires SDL2. Add Dependency-SDL2.")
 endif()
 
-if (NOT IMGUI_FOUND)
-	message(FATAL_ERROR "PhantasyEngine requires dear imgui. Add Dependency-imgui.")
-endif()
-
 if (NOT SFZ_CORE_FOUND)
 	message(FATAL_ERROR "Renderer-CompatibleGL requires sfzCore.")
 endif()
@@ -74,7 +70,6 @@ endif()
 target_include_directories(Renderer-CompatibleGL PUBLIC
 	${INCLUDE_DIR}
 	${SDL2_INCLUDE_DIRS}
-	${IMGUI_INCLUDE_DIRS}
 	${SFZ_CORE_INCLUDE_DIRS}
 	${SFZ_GL_INCLUDE_DIRS}
 	${PH_SHARED_INTERFACE_INCLUDE_DIRS}
@@ -82,7 +77,6 @@ target_include_directories(Renderer-CompatibleGL PUBLIC
 
 target_link_libraries(Renderer-CompatibleGL
 	${SDL2_LIBRARIES}
-	${IMGUI_LIBRARIES}
 	${SFZ_CORE_LIBRARIES}
 	${SFZ_GL_LIBRARIES}
 )

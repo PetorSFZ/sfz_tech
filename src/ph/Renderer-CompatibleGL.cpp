@@ -24,8 +24,6 @@
 
 #include <SDL.h>
 
-#include <imgui.h>
-
 #include <sfz/gl/IncludeOpenGL.hpp>
 #include <sfz/math/MathSupport.hpp>
 #include <sfz/math/ProjectionMatrices.hpp>
@@ -80,7 +78,7 @@ struct RendererState final {
 	gl::Framebuffer internalFB;
 
 	// Shaders
-	gl::Program modelShader, copyOutShader, imguiShader;
+	gl::Program modelShader, copyOutShader;
 
 	// Camera matrices
 	mat4 viewMatrix = mat4::identity();
@@ -92,6 +90,8 @@ struct RendererState final {
 	// Imgui
 	ImguiVertexData imguiGlCmdList;
 	Texture imguiFontTexture;
+	DynArray<ImguiCommand> imguiCommands;
+	gl::Program imguiShader;
 };
 
 static RendererState* statePtr = nullptr;
@@ -176,190 +176,12 @@ static void stupidSetMaterialUniform(
 	gl::setUniform(program, tmpStr.str, m.metallic);
 }
 
-static void renderImgui(ImDrawData* drawDataIn) noexcept
-{
-	ImGuiIO& io = ImGui::GetIO();
-	ImDrawData& drawData = *drawDataIn;
-	RendererState& state = *statePtr;
-
-	if (!drawData.Valid) {
-		return;
-	}
-
-	// Store some previous OpenGL state
-	GLint lastScissorBox[4]; glGetIntegerv(GL_SCISSOR_BOX, lastScissorBox);
-
-	// Set some OpenGL state
-	glEnable(GL_BLEND);
-	glBlendEquation(GL_FUNC_ADD);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
-	//glEnable(GL_SCISSOR_TEST);
-
-	// Bind imgui shader and set some uniforms
-	state.imguiShader.useProgram();
-
-	gl::setUniform(state.imguiShader, "uTexture", 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, state.imguiFontTexture.handle());
-
-	mat44 projMatrix;
-	projMatrix.row0 = vec4(2.0f / io.DisplaySize.x, 0.0f, 0.0f, -1.0f);
-	projMatrix.row1 = vec4(0.0f, 2.0f / -io.DisplaySize.y, 0.0f, 1.0f);
-	projMatrix.row2 = vec4(0.0f, 0.0f, -1.0f, 0.0f);
-	projMatrix.row3 = vec4(0.0f, 0.0f, 0.0f, 1.0f);
-	gl::setUniform(state.imguiShader, "uProjMatrix", projMatrix);
-
-	// Bind gl command list
-	state.imguiGlCmdList.bindVAO();
-
-	struct ImguiCommand {
-		uint32_t idxBufferOffset;
-		uint32_t numIndices;
-		vec4 clipRect;
-	};
-
-	DynArray<ImguiVertex> vertices;
-	vertices.create(0, &state.allocator);
-
-	static_assert(sizeof(ImDrawIdx) == sizeof(uint32_t), "Invalid type of ImDrawIdx");
-	DynArray<uint32_t> indices;
-	indices.create(0, &state.allocator);
-
-	DynArray<ImguiCommand> commands;
-	commands.create(0, &state.allocator);
-
-	for (int i = 0; i < drawData.CmdListsCount; i++) {
-
-		const ImDrawList& cmdList = *drawData.CmdLists[i];
-
-		// indexOffset is the offset to offset all indices with
-		const uint32_t indexOffset = vertices.size();
-
-		// indexBufferOffset is the offset to where the indices start
-		uint32_t indexBufferOffset = indices.size();
-
-		// Convert vertices and add to global list
-		for (int j = 0; j < cmdList.VtxBuffer.size(); j++) {
-			const ImDrawVert& imguiVertex = cmdList.VtxBuffer[j];
-
-			ImguiVertex convertedVertex;
-			convertedVertex.pos = vec2(imguiVertex.pos.x, imguiVertex.pos.y);
-			convertedVertex.texcoord = vec2(imguiVertex.uv.x, imguiVertex.uv.y);
-			convertedVertex.color = imguiVertex.col;
-
-			vertices.add(convertedVertex);
-		}
-
-		// Fix indices and add to global list
-		for (int j = 0; j < cmdList.IdxBuffer.size(); j++) {
-			indices.add(cmdList.IdxBuffer[j] + indexOffset);
-		}
-
-		// Create new commands
-		for (int j = 0; j < cmdList.CmdBuffer.Size; j++) {
-			const ImDrawCmd& inCmd = cmdList.CmdBuffer[j];
-
-			ImguiCommand cmd;
-			cmd.idxBufferOffset = indexBufferOffset;
-			cmd.numIndices = inCmd.ElemCount;
-			indexBufferOffset += inCmd.ElemCount;
-			cmd.clipRect.x = inCmd.ClipRect.x;
-			cmd.clipRect.y = inCmd.ClipRect.y;
-			cmd.clipRect.z = inCmd.ClipRect.z;
-			cmd.clipRect.w = inCmd.ClipRect.w;
-
-			commands.add(cmd);
-		}
-	}
-
-	// Upload vertices and indices to GPU
-	state.imguiGlCmdList.upload(
-		vertices.data(), vertices.size(), indices.data(), indices.size());
-	CHECK_GL_ERROR();
-
-	// Render commands
-	for (const ImguiCommand& cmd : commands) {
-
-		/*glScissor(
-			cmd.clipRect.x,
-			state.fbHeight - cmd.clipRect.w,
-			cmd.clipRect.z - cmd.clipRect.x,
-			cmd.clipRect.w - cmd.clipRect.y);*/
-
-		state.imguiGlCmdList.render(cmd.idxBufferOffset, cmd.numIndices);
-		CHECK_GL_ERROR();
-	}
-
-	/*for (int i = 0; i < drawData.CmdListsCount; i++) {
-
-		// Upload command list to GPU
-		const ImDrawList& cmdList = *drawData.CmdLists[i];
-
-		vertices.clear();
-		const ImVector<ImDrawVert>& vtxBuffer = cmdList.VtxBuffer;
-		for (int j = 0; j < vtxBuffer.size(); j++) {
-			const ImDrawVert& imguiVertex = vtxBuffer[j];
-
-			ImguiVertex convertedVertex;
-			convertedVertex.pos.x = imguiVertex.pos.x;
-			convertedVertex.pos.y = imguiVertex.pos.y;
-			convertedVertex.texcoord.x = imguiVertex.uv.x;
-			convertedVertex.texcoord.y = imguiVertex.uv.y;
-			convertedVertex.color = imguiVertex.col;
-
-			vertices.add(convertedVertex);
-		}
-
-		indices.clear();
-		indices.add(cmdList.IdxBuffer.Data, cmdList.IdxBuffer.Size);
-
-		state.imguiGlCmdList.upload(
-			vertices.data(), vertices.size(), indices.data(), indices.size());
-		CHECK_GL_ERROR();
-
-		//
-		//const ImVector<ImDrawIdx>& idxBuffer = cmdList.IdxBuffer;
-
-		uint32_t idxBufferOffset = 0;
-
-		// Render commands
-		for (int j = 0; j < cmdList.CmdBuffer.Size; j++) {
-			const ImDrawCmd& cmd = cmdList.CmdBuffer[j];
-
-			// If a user callback is available call it instead of rendering command
-			if (cmd.UserCallback != nullptr) {
-				cmd.UserCallback(&cmdList, &cmd);
-			}
-
-			// Render command
-			else {
-				//glScissor(
-				//	cmd.ClipRect.x,
-				//	state.fbHeight - cmd.ClipRect.w,
-				//	cmd.ClipRect.z - cmd.ClipRect.x,
-				//	cmd.ClipRect.w - cmd.ClipRect.y);
-
-				state.imguiGlCmdList.render(idxBufferOffset, cmd.ElemCount);
-				CHECK_GL_ERROR();
-			}
-
-			idxBufferOffset += cmd.ElemCount;
-		}
-	}*/
-
-	// Restore some previous OpenGL state
-	glScissor(lastScissorBox[0], lastScissorBox[1], lastScissorBox[2], lastScissorBox[3]);
-}
-
 // Interface: Init functions
 // ------------------------------------------------------------------------------------------------
 
 DLL_EXPORT uint32_t phRendererInterfaceVersion(void)
 {
-	return 1;
+	return 2;
 }
 
 DLL_EXPORT uint32_t phRequiredSDL2WindowFlags(void)
@@ -490,49 +312,15 @@ DLL_EXPORT uint32_t phInitRenderer(
 		COPY_OUT_SHADER_SRC,
 		&state.allocator);
 
-	state.imguiShader = gl::Program::fromSource(
-		SHADER_HEADER_SRC,
-		IMGUI_VERTEX_SHADER_SRC,
-		IMGUI_FRAGMENT_SHADER_SRC,
-		[](uint32_t shaderProgram) {
-			glBindAttribLocation(shaderProgram, 0, "inPos");
-			glBindAttribLocation(shaderProgram, 1, "inTexcoord");
-			glBindAttribLocation(shaderProgram, 2, "inColor");
-		},
-		&state.allocator);
-
 	// Initialize array to hold dynamic sphere lights
 	state.dynamicSphereLights.create(MAX_NUM_DYNAMIC_SPHERE_LIGHTS, &state.allocator);
-
-
-	// Initialize imgui (TODO: Move out of renderer)
-	LOG_INFO_F("Initializing imgui");
-	ImGuiIO& io = ImGui::GetIO();
-	io.DisplaySize.x = float(w);
-	io.DisplaySize.y = float(h);
-	io.RenderDrawListsFn = renderImgui;
-
-	// Load texture atlas
-	ImageView fontTexView;
-	io.Fonts->GetTexDataAsAlpha8(&fontTexView.rawData, &fontTexView.width, &fontTexView.height);
-	fontTexView.bytesPerPixel = 1;
-	fontTexView.type = ImageType::GRAY_U8;
-
-	// Upload texture to GL
-	state.imguiFontTexture.create(fontTexView, TextureFiltering::NEAREST);
-
-	// TODO: Store your texture pointer/identifier (whatever your engine uses) in 'io.Fonts->TexID'.
-	//m This will be passed back to your via the renderer.
-	//io.Fonts->TexID = (void*)texture;
-
-	state.imguiGlCmdList.create(1000, 1000);
 
 	CHECK_GL_ERROR();
 	LOG_INFO_F("Finished initializing renderer");
 	return 1;
 }
 
-DLL_EXPORT void phDeinitRenderer()
+DLL_EXPORT void phDeinitRenderer(void)
 {
 	if (statePtr == nullptr) return;
 	RendererState& state = *statePtr;
@@ -553,6 +341,49 @@ DLL_EXPORT void phDeinitRenderer()
 	// Destroy GL context
 	PH_LOGGER_LOG(logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL", "Destroying OpenGL context");
 	SDL_GL_DeleteContext(context);
+}
+
+DLL_EXPORT void phInitImgui(const phConstImageView* fontTexture)
+{
+	RendererState& state = *statePtr;
+
+	// Upload font texture to GL memory
+	state.imguiFontTexture.create(*fontTexture, TextureFiltering::NEAREST);
+
+	// Initialize cpu temp memory for imgui commands
+	state.imguiCommands.create(4096, &state.allocator);
+
+	// Creating OpenGL memory for vertices and indices
+	state.imguiGlCmdList.create(4096, 4096);
+
+	// Compile Imgui shader
+	state.imguiShader = gl::Program::fromSource(
+		SHADER_HEADER_SRC,
+		IMGUI_VERTEX_SHADER_SRC,
+		IMGUI_FRAGMENT_SHADER_SRC,
+		[](uint32_t shaderProgram) {
+			glBindAttribLocation(shaderProgram, 0, "inPos");
+			glBindAttribLocation(shaderProgram, 1, "inTexcoord");
+			glBindAttribLocation(shaderProgram, 2, "inColor");
+		},
+		&state.allocator);
+
+	// Always read font texture from location 0
+	state.imguiShader.useProgram();
+	gl::setUniform(state.imguiShader, "uTexture", 0);
+}
+
+// State query functions
+// ------------------------------------------------------------------------------------------------
+
+DLL_EXPORT void phImguiWindowDimensions(float* widthOut, float* heightOut)
+{
+	RendererState& state = *statePtr;
+
+	int w, h;
+	SDL_GL_GetDrawableSize(state.window, &w, &h);
+	if (widthOut != nullptr) *widthOut = float(w);
+	if (heightOut != nullptr) *heightOut = float(h);
 }
 
 // Resource management (textures)
@@ -711,18 +542,27 @@ DLL_EXPORT void phBeginFrame(
 	// Prepare internal framebuffer for rendering
 	state.internalFB.bindViewportClearColorDepth(vec4(0.0f));
 
-	// Set some Imgui stuff
-	ImGuiIO& io = ImGui::GetIO();
-	io.DisplaySize.x = float(state.windowWidth);
-	io.DisplaySize.y = float(state.windowHeight);
-	io.DisplayFramebufferScale.x = float(state.fbWidth) / float(state.windowWidth);
-	io.DisplayFramebufferScale.x = float(state.fbHeight) / float(state.windowHeight);
-
-	// Indicate to Imgui that we have started rendering a new frame
-	ImGui::NewFrame();
-
 	CHECK_GL_ERROR();
 }
+
+DLL_EXPORT void phRenderImgui(
+	const phImguiVertex* vertices,
+	uint32_t numVertices,
+	const uint32_t* indices,
+	uint32_t numIndices,
+	const phImguiCommand* commands,
+	uint32_t numCommands)
+{
+	RendererState& state = *statePtr;
+
+	// Clear and copy commands
+	state.imguiCommands.clear();
+	state.imguiCommands.add(reinterpret_cast<const ph::ImguiCommand*>(commands), numCommands);
+
+	// Upload vertices and indices to GPU
+	state.imguiGlCmdList.upload(vertices, numVertices, indices, numIndices);
+}
+
 
 DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities)
 {
@@ -797,33 +637,56 @@ DLL_EXPORT void phFinishFrame(void)
 	glBindTexture(GL_TEXTURE_2D, state.internalFB.textures[0]);
 	state.fullscreenGeom.render();
 
-	ImGui::ShowTestWindow();
 
-	ImGui::Begin("Very long time testing window");
-	ImGui::Button("Button");
-	ImGui::Button("Button");
-	ImGui::Button("Button");
-	ImGui::Button("Button");
-	ImGui::Button("Button");
-	ImGui::Button("Button");
-	ImGui::Button("Button");
-	ImGui::Button("Button");
-	ImGui::Button("Button");
-	ImGui::Button("Button");
-	ImGui::Button("Button");
-	ImGui::Button("Button");
-	ImGui::Button("Button");
-	ImGui::Button("Button");
-	ImGui::Button("Button");
-	ImGui::Button("Button");
-	ImGui::Button("Button");
-	ImGui::Button("Button");
-	ImGui::Button("Button");
-	ImGui::End();
+	// Imgui Rendering
 
-	// Render imgui UI
-	ImGui::Render();
+	// Store some previous OpenGL state
+	GLint lastScissorBox[4]; glGetIntegerv(GL_SCISSOR_BOX, lastScissorBox);
 
+	// Set some OpenGL state
+	glEnable(GL_BLEND);
+	glBlendEquation(GL_FUNC_ADD);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_SCISSOR_TEST);
+
+	// Bind imgui shader and set some uniforms
+	state.imguiShader.useProgram();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, state.imguiFontTexture.handle());
+
+	mat44 projMatrix;
+	projMatrix.row0 = vec4(2.0f / state.fbWidth, 0.0f, 0.0f, -1.0f);
+	projMatrix.row1 = vec4(0.0f, 2.0f / -state.fbHeight, 0.0f, 1.0f);
+	projMatrix.row2 = vec4(0.0f, 0.0f, -1.0f, 0.0f);
+	projMatrix.row3 = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	gl::setUniform(state.imguiShader, "uProjMatrix", projMatrix);
+
+	// Bind gl command list
+	state.imguiGlCmdList.bindVAO();
+
+	// Render commands
+	for (const ImguiCommand& cmd : state.imguiCommands) {
+
+		glScissor(
+			cmd.clipRect.x,
+			state.fbHeight - cmd.clipRect.w,
+			cmd.clipRect.z - cmd.clipRect.x,
+			cmd.clipRect.w - cmd.clipRect.y);
+
+		state.imguiGlCmdList.render(cmd.idxBufferOffset, cmd.numIndices);
+		CHECK_GL_ERROR();
+	}
+
+	// Restore some previous OpenGL state
+	glScissor(lastScissorBox[0], lastScissorBox[1], lastScissorBox[2], lastScissorBox[3]);
+	glDisable(GL_SCISSOR_TEST);
+
+
+
+	// Swap back and front buffers
 	SDL_GL_SwapWindow(state.window);
 	CHECK_GL_ERROR();
 }
