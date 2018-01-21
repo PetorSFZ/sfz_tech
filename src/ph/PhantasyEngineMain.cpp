@@ -35,6 +35,7 @@
 
 #include "ph/config/GlobalConfig.hpp"
 #include "ph/game_loop/GameLoop.hpp"
+#include "ph/rendering/ImguiSupport.hpp"
 #include "ph/sdl/SDLAllocator.hpp"
 #include "ph/utils/Logging.hpp"
 
@@ -141,6 +142,10 @@ int mainImpl(int, char*[], InitOptions&& options)
 
 	// Initializing renderer
 	renderer->initRenderer(window);
+
+	// Initializing Imgui
+	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Initializing Imgui");
+	initializeImgui(*renderer);
 
 	// Start game loop
 	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Starting game loop");

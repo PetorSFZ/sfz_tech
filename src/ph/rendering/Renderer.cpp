@@ -59,6 +59,10 @@ extern "C" {
 		uint32_t (*phRequiredSDL2WindowFlags)(void);
 		uint32_t (*phInitRenderer)(SDL_Window*, sfzAllocator*, phConfig*, phLogger*);
 		uint32_t (*phDeinitRenderer)(void);
+		void(*phInitImgui)(const phConstImageView*);
+
+		// State query functions
+		void (*phImguiWindowDimensions)(float*, float*);
 
 		// Resource management (textures)
 		void (*phSetTextures)(const phConstImageView*, uint32_t);
@@ -78,6 +82,8 @@ extern "C" {
 		// Render commands
 		void (*phBeginFrame)(const phCameraData*, const phSphereLight*, uint32_t);
 		void (*phRender)(const phRenderEntity*, uint32_t);
+		void (*phRenderImgui)(const phImguiVertex*, uint32_t, const uint32_t*, uint32_t,
+			const phImguiCommand*, uint32_t);
 		void (*phFinishFrame)(void);
 	};
 }
@@ -201,6 +207,10 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRequiredSDL2WindowFlags);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phInitRenderer);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phDeinitRenderer);
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phInitImgui);
+
+	// State query functions
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phImguiWindowDimensions);
 
 	// Resource management (textures)
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phSetTextures);
@@ -220,6 +230,7 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 	// Render commands
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phBeginFrame);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRender);
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRenderImgui);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phFinishFrame);
 #endif
 
@@ -311,6 +322,22 @@ void Renderer::deinitRenderer() noexcept
 		CALL_RENDERER_FUNCTION(mFunctionTable, phDeinitRenderer);
 	}
 	mInited = false;
+}
+
+void Renderer::initImgui(const ConstImageView& fontTexture) noexcept
+{
+	CALL_RENDERER_FUNCTION(mFunctionTable, phInitImgui,
+		reinterpret_cast<const phConstImageView*>(&fontTexture));
+}
+
+// Renderer: State query functions
+// --------------------------------------------------------------------------------------------
+
+vec2 Renderer::imguiWindowDimensions() const noexcept
+{
+	vec2 dims;
+	CALL_RENDERER_FUNCTION(mFunctionTable, phImguiWindowDimensions, &dims.x, &dims.y);
+	return dims;
 }
 
 // Resource management (textures)
@@ -409,6 +436,17 @@ void Renderer::render(const RenderEntity* entities, uint32_t numEntities) noexce
 {
 	CALL_RENDERER_FUNCTION(mFunctionTable, phRender,
 		reinterpret_cast<const phRenderEntity*>(entities), numEntities);
+}
+
+void Renderer::renderImgui(
+	const DynArray<ImguiVertex>& vertices,
+	const DynArray<uint32_t>& indices,
+	const DynArray<ImguiCommand>& commands) noexcept
+{
+	CALL_RENDERER_FUNCTION(mFunctionTable, phRenderImgui,
+		reinterpret_cast<const phImguiVertex*>(vertices.data()), vertices.size(),
+		indices.data(), indices.size(),
+		reinterpret_cast<const phImguiCommand*>(commands.data()), commands.size());
 }
 
 void Renderer::finishFrame() noexcept

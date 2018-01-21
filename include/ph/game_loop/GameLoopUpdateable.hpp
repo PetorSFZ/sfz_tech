@@ -148,7 +148,10 @@ public:
 
 	/// Called once every iteration of the game loop, all the user input since the previous
 	/// should be handled here.
-	virtual UpdateOp processInput(const UpdateInfo& updateInfo, const UserInput& input) = 0;
+	virtual UpdateOp processInput(
+		const UserInput& input,
+		const UpdateInfo& updateInfo,
+		Renderer& renderer) = 0;
 
 	/// Potentially called multiple times (or non at all) each iteration of the game loop.
 	/// Corresponds to updating the simulation a single tick, i.e. updateInfo.tickTimeSeconds
@@ -158,7 +161,7 @@ public:
 	/// Called last each iteration of the game loop. Responsible for rendering everything. Of note
 	/// is updateInfo.lagSeconds, which contains the amount of time since the last tick update.
 	/// A good renderer should extrapolate objects positions before rendering them using this value.
-	virtual void render(Renderer& renderer, const UpdateInfo& updateInfo) = 0;
+	virtual void render(const UpdateInfo& updateInfo, Renderer& renderer) = 0;
 
 	/// Called if the application is being shutdown. Either because a SDL_QUIT even was received or
 	/// because an UpdateOp::QUIT() operation was returned. Not called when changing updateable.

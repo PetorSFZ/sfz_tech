@@ -22,10 +22,12 @@
 #include <cstdint>
 
 #include <sfz/containers/DynArray.hpp>
+#include <sfz/math/Vector.hpp>
 #include <sfz/memory/Allocator.hpp>
 
 #include <ph/rendering/CameraData.h>
 #include <ph/rendering/ImageView.h>
+#include <ph/rendering/ImguiRenderingData.h>
 #include <ph/rendering/Material.h>
 #include <ph/rendering/MeshView.h>
 #include <ph/rendering/RenderEntity.h>
@@ -37,6 +39,7 @@ namespace ph {
 
 using sfz::Allocator;
 using sfz::DynArray;
+using sfz::vec2;
 using std::uint32_t;
 
 // Renderer class
@@ -51,7 +54,7 @@ public:
 
 	/// The interface version supported by this wrapper. Only renderers which return the same
 	/// version with "phRendererInterfaceVersion()" are compatible.
-	static constexpr uint32_t INTERFACE_VERSION = 1;
+	static constexpr uint32_t INTERFACE_VERSION = 2;
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -95,6 +98,15 @@ public:
 	/// manually.
 	void deinitRenderer() noexcept;
 
+	/// See phInitImgui()
+	void initImgui(const ConstImageView& fontTexture) noexcept;
+
+	// Renderer: State query functions
+	// --------------------------------------------------------------------------------------------
+
+	/// See phImguiWindowDimensions()
+	vec2 imguiWindowDimensions() const noexcept;
+
 	// Resource management (textures)
 	// --------------------------------------------------------------------------------------------
 
@@ -137,20 +149,25 @@ public:
 	/// See phBeginFrame()
 	void beginFrame(
 		const CameraData& camera,
-		const ph::SphereLight* dynamicSphereLights,
+		const SphereLight* dynamicSphereLights,
 		uint32_t numDynamicSphereLights) noexcept;
 
 	/// See phBeginFrame()
 	void beginFrame(
 		const CameraData& camera,
-		const DynArray<ph::SphereLight>& dynamicSphereLights) noexcept;
+		const DynArray<SphereLight>& dynamicSphereLights) noexcept;
 
 	/// See phRender()
 	void render(const RenderEntity* entities, uint32_t numEntities) noexcept;
 
+	/// See phRenderImgui()
+	void renderImgui(
+		const DynArray<ImguiVertex>& vertices,
+		const DynArray<uint32_t>& indices,
+		const DynArray<ImguiCommand>& commands) noexcept;
+
 	/// See phFinishFrame()
 	void finishFrame() noexcept;
-
 
 private:
 	void* mModuleHandle = nullptr; // Holds a HMODULE on Windows

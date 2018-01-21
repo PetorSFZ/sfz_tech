@@ -146,15 +146,18 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 
 	// Calculate delta since previous iteration
 	state.updateInfo.iterationDeltaSeconds = calculateDelta(state.previousItrTime);
-	//PH_LOG(LogLevel::INFO, "PhantasyEngine", "Frametime = %.3f ms", state.updateInfo.iterationDeltaSeconds * 100.0f);
+	//PH_LOG(LogLevel::INFO, "PhantasyEngine", "Frametime = %.3f ms",
+	//	state.updateInfo.iterationDeltaSeconds * 100.0f);
 
 	float totalAvailableTime = state.updateInfo.iterationDeltaSeconds + state.updateInfo.lagSeconds;
 
 	// Calculate how many updates should be performed
-	state.updateInfo.numUpdateTicks = uint32_t(std::floorf(totalAvailableTime / state.updateInfo.tickTimeSeconds));
+	state.updateInfo.numUpdateTicks =
+		uint32_t(std::floorf(totalAvailableTime / state.updateInfo.tickTimeSeconds));
 
 	// Calculate lag
-	float totalUpdateTime = float(state.updateInfo.numUpdateTicks) * state.updateInfo.tickTimeSeconds;
+	float totalUpdateTime =
+		float(state.updateInfo.numUpdateTicks) * state.updateInfo.tickTimeSeconds;
 	state.updateInfo.lagSeconds = std::max(totalAvailableTime - totalUpdateTime, 0.0f);
 
 	// Remove old events
@@ -213,7 +216,8 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	state.userInput.rawMouse.update(windowWidth, windowHeight, state.userInput.mouseEvents);
 
 	// Process input
-	UpdateOp op = state.updateable->processInput(state.updateInfo, state.userInput);
+	UpdateOp op = state.updateable->processInput(
+		state.userInput, state.updateInfo, *state.renderer);
 	if (handleUpdateOp(state, op)) return;
 
 	// Update
@@ -223,7 +227,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	}
 
 	// Render
-	state.updateable->render(*state.renderer, state.updateInfo);
+	state.updateable->render(state.updateInfo, *state.renderer);
 }
 
 // GameLoop entry function
@@ -258,10 +262,10 @@ void runGameLoop(
 	// Start the game loop
 #ifdef __EMSCRIPTEN__
 	// https://kripken.github.io/emscripten-site/docs/api_reference/emscripten.h.html#browser-execution-environment
-	// Setting 0 or a negative value as the fps will instead use the browser’s requestAnimationFrame mechanism to
-	// call the main loop function. This is HIGHLY recommended if you are doing rendering, as the browser’s
-	// requestAnimationFrame will make sure you render at a proper smooth rate that lines up properly with the
-	// browser and monitor.
+	// Setting 0 or a negative value as the fps will instead use the browser’s requestAnimationFrame
+	// mechanism to call the main loop function. This is HIGHLY recommended if you are doing
+	// rendering, as the browser’s requestAnimationFrame will make sure you render at a proper
+	// smooth rate that lines up properly with the browser and monitor.
 	emscripten_set_main_loop_arg(gameLoopIteration, &gameLoopState, 0, true);
 #else
 	while (!gameLoopState.quit) {

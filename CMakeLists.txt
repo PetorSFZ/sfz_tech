@@ -60,6 +60,7 @@ set(PHANTASY_ENGINE_HEADER_FILES
 	${INCLUDE_DIR}/ph/game_loop/GameLoopUpdateable.hpp
 
 	${INCLUDE_DIR}/ph/rendering/Image.hpp
+	${INCLUDE_DIR}/ph/rendering/ImguiSupport.hpp
 	${INCLUDE_DIR}/ph/rendering/Mesh.hpp
 	${INCLUDE_DIR}/ph/rendering/Renderer.hpp
 
@@ -81,6 +82,7 @@ set(PHANTASY_ENGINE_SOURCE_FILES
 	${SOURCE_DIR}/ph/game_loop/GameLoop.cpp
 
 	${SOURCE_DIR}/ph/rendering/Image.cpp
+	${SOURCE_DIR}/ph/rendering/ImguiSupport.cpp
 	${SOURCE_DIR}/ph/rendering/Renderer.cpp
 
 	${SOURCE_DIR}/ph/sdl/GameController.cpp
