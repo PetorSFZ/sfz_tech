@@ -30,6 +30,7 @@ using std::uint32_t;
 
 #include "ph/rendering/CameraData.h"
 #include "ph/rendering/ImageView.h"
+#include "ph/rendering/ImguiRenderingData.h"
 #include "ph/rendering/Material.h"
 #include "ph/rendering/MeshView.h"
 #include "ph/rendering/RenderEntity.h"
@@ -88,7 +89,19 @@ DLL_EXPORT uint32_t phInitRenderer(
 /// Deinitializes this renderer. This function should by design be completely safe to call multiple
 /// times in a row, including before the renderer has been initialized at all. Should also be safe
 /// to call if renderer failed to initialize.
-DLL_EXPORT void phDeinitRenderer();
+DLL_EXPORT void phDeinitRenderer(void);
+
+/// Initializes Imgui in this renderer. Expected to be called once after phInitRenderer().
+/// \param fontTexture the font texture atlas
+DLL_EXPORT void phInitImgui(const phConstImageView* fontTexture);
+
+// State query functions
+// ------------------------------------------------------------------------------------------------
+
+/// Returns the current dimensions of the window Imgui is being rendered to.
+/// \param widthOut the width of the window
+/// \param heightOut the height of the window
+DLL_EXPORT void phImguiWindowDimensions(float* widthOut, float* heightOut);
 
 // Resource management (textures)
 // ------------------------------------------------------------------------------------------------
@@ -194,6 +207,22 @@ DLL_EXPORT void phBeginFrame(
 /// \param entities pointer to array of phRenderEntities
 /// \param numEntities number of elements in entities array
 DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities);
+
+/// Renders the imgui UI. Expected to be called once right before phFinishFrame(). Input data is
+/// only required to be valid during the duration of the call.
+/// \param vertices the imgui vertices to upload
+/// \param numVertices the number of imgui vertices
+/// \param indices the imgui nidices to upload
+/// \param numIndices the number of imgui indices
+/// \param commands the imgui commands to perform
+/// \param numCommands the number of imgui commands
+DLL_EXPORT void phRenderImgui(
+	const phImguiVertex* vertices,
+	uint32_t numVertices,
+	const uint32_t* indices,
+	uint32_t numIndices,
+	const phImguiCommand* commands,
+	uint32_t numCommands);
 
 /// Called last in a frame to finalize rendering to screen.
 DLL_EXPORT void phFinishFrame(void);
