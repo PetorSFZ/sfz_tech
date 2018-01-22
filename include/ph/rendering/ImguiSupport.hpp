@@ -23,12 +23,20 @@
 #include <ph/rendering/ImguiRenderingData.h>
 
 #include "ph/rendering/Renderer.hpp"
+#include "ph/sdl/Mouse.hpp"
+#include "ph/sdl/GameController.hpp"
 
 namespace ph {
 
 using sfz::DynArray;
 
 void initializeImgui(Renderer& renderer) noexcept;
+
+void updateImgui(
+	Renderer& renderer,
+	const sdl::Mouse* rawMouse,
+	const DynArray<SDL_Event>* keyboardEvents,
+	const sdl::GameControllerState* controller) noexcept;
 
 void convertImguiDrawData(
 	DynArray<ImguiVertex>& vertices,
