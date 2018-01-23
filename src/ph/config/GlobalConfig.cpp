@@ -32,24 +32,16 @@ using namespace sfz;
 // GlobalConfigImpl
 // ------------------------------------------------------------------------------------------------
 
-class GlobalConfigImpl final {
-public:
-	// Members
-	// --------------------------------------------------------------------------------------------
+struct Section final {
+	StackString64 sectionKey;
+	DynArray<UniquePtr<Setting>> settings;
+};
 
-	IniParser mIni;
-	DynArray<UniquePtr<Setting>> mSettings;
-	bool mLoaded = false; // Can only be loaded once... for now
-
-	// Constructors & destructors
-	// --------------------------------------------------------------------------------------------
-
-	GlobalConfigImpl() noexcept = default;
-	GlobalConfigImpl(const GlobalConfigImpl&) = delete;
-	GlobalConfigImpl& operator= (const GlobalConfigImpl&) = delete;
-	GlobalConfigImpl(GlobalConfigImpl&&) = delete;
-	GlobalConfigImpl& operator= (GlobalConfigImpl&&) = delete;
-	~GlobalConfigImpl() noexcept = default;
+struct GlobalConfigImpl final {
+	Allocator* allocator = nullptr;
+	IniParser ini;
+	DynArray<Section> sections;
+	bool loaded = false; // Can only be loaded once... for now
 };
 
 // GlobalConfig: Singleton instance
@@ -76,31 +68,36 @@ phConfig GlobalConfig::cInstance() noexcept
 // GlobalConfig: Methods
 // ------------------------------------------------------------------------------------------------
 
-void GlobalConfig::init(const char* basePath, const char* fileName) noexcept
+void GlobalConfig::init(const char* basePath, const char* fileName, Allocator* allocator) noexcept
 {
 	if (mImpl != nullptr) this->destroy();
-	mImpl = sfzNewDefault<GlobalConfigImpl>();
+	mImpl = sfzNew<GlobalConfigImpl>(allocator);
+	mImpl->allocator = allocator;
 
 	// Initialize IniParser with path
 	StackString256 tmpPath;
 	tmpPath.printf("%s%s", basePath, fileName);
-	mImpl->mIni = IniParser(tmpPath.str);
+	mImpl->ini = IniParser(tmpPath.str);
+
+	// Initialize settings array with allocator
+	mImpl->sections.create(64, allocator);
 }
 
 void GlobalConfig::destroy() noexcept
 {
 	if (mImpl == nullptr) return;
-	sfzDeleteDefault<GlobalConfigImpl>(mImpl);
+	Allocator* allocator = mImpl->allocator;
+	sfzDelete<GlobalConfigImpl>(mImpl, allocator);
 	mImpl = nullptr;
 }
 
 void GlobalConfig::load() noexcept
 {
 	sfz_assert_debug(mImpl != nullptr);
-	sfz_assert_debug(!mImpl->mLoaded); // TODO: Make it possible to reload settings from file
+	sfz_assert_debug(!mImpl->loaded); // TODO: Make it possible to reload settings from file
 
 	// Load ini file
-	IniParser& ini = mImpl->mIni;
+	IniParser& ini = mImpl->ini;
 	if (ini.load()) {
 		PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Succesfully loaded config ini file");
 	} else {
@@ -110,9 +107,26 @@ void GlobalConfig::load() noexcept
 	// Create setting items of all ini items
 	for (auto item : ini) {
 
+		// Attempt to find section
+		Section* section = nullptr;
+		for (Section& s : mImpl->sections) {
+			if (s.sectionKey == item.getSection()) {
+				section = &s;
+				break;
+			}
+		}
+
+		// If section not found, create it
+		if (section == nullptr) {
+			mImpl->sections.add(Section());
+			section = &mImpl->sections.last();
+			section->sectionKey.printf("%s", item.getSection());
+			section->settings.create(64, mImpl->allocator);
+		}
+
 		// Create new setting
-		mImpl->mSettings.add(makeUniqueDefault<Setting>(item.getSection(), item.getKey()));
-		Setting& setting = *mImpl->mSettings.last();
+		section->settings.add(makeUniqueDefault<Setting>(item.getSection(), item.getKey()));
+		Setting& setting = *section->settings.last();
 
 		// Get value of setting
 		if (item.getFloat() != nullptr) {
@@ -131,22 +145,26 @@ void GlobalConfig::load() noexcept
 		}
 	}
 
-	mImpl->mLoaded = true;
+	mImpl->loaded = true;
 }
 
 bool GlobalConfig::save() noexcept
 {
 	sfz_assert_debug(mImpl != nullptr);
-	IniParser& ini = mImpl->mIni;
+	IniParser& ini = mImpl->ini;
 
 	// Update internal ini with the current values of the setting
-	for (auto& setting : mImpl->mSettings) {
-		if (setting->isBoolValue()) {
-			ini.setBool(setting->section().str, setting->key().str, setting->boolValue());
-		} else if (setting->type() == VALUE_TYPE_INT) {
-			ini.setInt(setting->section().str, setting->key().str, setting->intValue());
-		} else if (setting->type() == VALUE_TYPE_FLOAT) {
-			ini.setFloat(setting->section().str, setting->key().str, setting->floatValue());
+	for (auto& section : mImpl->sections) {
+		for (auto& setting : section.settings) {
+			if (setting->isBoolValue()) {
+				ini.setBool(setting->section().str, setting->key().str, setting->boolValue());
+			}
+			else if (setting->type() == VALUE_TYPE_INT) {
+				ini.setInt(setting->section().str, setting->key().str, setting->intValue());
+			}
+			else if (setting->type() == VALUE_TYPE_FLOAT) {
+				ini.setFloat(setting->section().str, setting->key().str, setting->floatValue());
+			}
 		}
 	}
 
@@ -158,14 +176,33 @@ Setting* GlobalConfig::getCreateSetting(const char* section, const char* key, bo
 {
 	Setting* setting = this->getSetting(section, key);
 
+	// Return setting if it already exists
 	if (setting != nullptr) {
 		if (created != nullptr) *created = false;
 		return setting;
 	}
 
-	mImpl->mSettings.add(makeUniqueDefault<Setting>(section, key));
+	// Attempt to find section
+	Section* sectionPtr = nullptr;
+	for (Section& s : mImpl->sections) {
+		if (s.sectionKey == section) {
+			sectionPtr = &s;
+			break;
+		}
+	}
+
+	// If section not found, create it
+	if (sectionPtr == nullptr) {
+		mImpl->sections.add(Section());
+		sectionPtr = &mImpl->sections.last();
+		sectionPtr->sectionKey.printf("%s", section);
+		sectionPtr->settings.create(64, mImpl->allocator);
+	}
+
+	// Create and return section
+	sectionPtr->settings.add(makeUniqueDefault<Setting>(section, key));
 	if (created != nullptr) *created = true;
-	return mImpl->mSettings.last().get();
+	return sectionPtr->settings.last().get();
 }
 
 // GlobalConfig: Getters
@@ -174,9 +211,10 @@ Setting* GlobalConfig::getCreateSetting(const char* section, const char* key, bo
 Setting* GlobalConfig::getSetting(const char* section, const char* key) noexcept
 {
 	sfz_assert_debug(mImpl != nullptr);
-	for (auto& setting : mImpl->mSettings) {
-		if (setting->section() == section && setting->key() == key) {
-			return setting.get();
+	for (auto& sec : mImpl->sections) {
+		if (sec.sectionKey != section) continue;
+		for (auto& setting : sec.settings) {
+			if (setting->key() == key) return setting.get();
 		}
 	}
 	return nullptr;
@@ -187,12 +225,45 @@ Setting* GlobalConfig::getSetting(const char* key) noexcept
 	return this->getSetting("", key);
 }
 
-void GlobalConfig::getSettings(DynArray<Setting*>& settings) noexcept
+void GlobalConfig::getAllSettings(DynArray<Setting*>& settings) noexcept
 {
 	sfz_assert_debug(mImpl != nullptr);
-	settings.ensureCapacity(mImpl->mSettings.size());
-	for (auto& setting : mImpl->mSettings) {
-		settings.add(setting.get());
+	for (auto& section : mImpl->sections) {
+		for (auto& setting : section.settings) {
+			settings.add(setting.get());
+		}
+	}
+}
+
+void GlobalConfig::getSections(DynArray<StackString64>& sections) noexcept
+{
+	sfz_assert_debug(mImpl != nullptr);
+	sections.ensureCapacity(mImpl->sections.size() + sections.size());
+	for (auto& section : mImpl->sections) {
+		sections.add(section.sectionKey);
+	}
+}
+
+void GlobalConfig::getSectionSettings(const char* section, DynArray<Setting*>& settings) noexcept
+{
+	sfz_assert_debug(mImpl != nullptr);
+
+	// Attempt to find section
+	Section* sectionPtr = nullptr;
+	for (Section& s : mImpl->sections) {
+		if (s.sectionKey == section) {
+			sectionPtr = &s;
+			break;
+		}
+	}
+
+	// If no section, just return
+	if (sectionPtr == nullptr) return;
+
+	// Add settings
+	settings.ensureCapacity(sectionPtr->settings.size() + settings.size());
+	for (auto& s : sectionPtr->settings) {
+		settings.add(s.get());
 	}
 }
 

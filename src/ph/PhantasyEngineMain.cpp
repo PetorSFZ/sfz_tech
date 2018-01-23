@@ -52,7 +52,8 @@ const char* basePath() noexcept
 			sfz::error("SDL_GetBasePath() failed: %s", SDL_GetError());
 		}
 		size_t len = std::strlen(tmp);
-		char* res = static_cast<char*>(sfz::getDefaultAllocator()->allocate(len + 1, 32, "sfz::basePath()"));
+		char* res = static_cast<char*>(
+			sfz::getDefaultAllocator()->allocate(len + 1, 32, "sfz::basePath()"));
 		std::strcpy(res, tmp);
 		SDL_free((void*)tmp);
 		return res;
@@ -95,8 +96,9 @@ int mainImpl(int, char*[], InitOptions&& options)
 		if (options.iniLocation == IniLocation::NEXT_TO_EXECUTABLE) {
 			StackString192 iniFileName;
 			iniFileName.printf("%s.ini", options.appName);
-			cfg.init(basePath(), iniFileName.str);
-			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Ini location set to: %s%s", basePath(), iniFileName.str);
+			cfg.init(basePath(), iniFileName.str, sfz::getDefaultAllocator());
+			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Ini location set to: %s%s",
+				basePath(), iniFileName.str);
 		}
 		else if (options.iniLocation == IniLocation::MY_GAMES_DIR) {
 
@@ -106,8 +108,9 @@ int mainImpl(int, char*[], InitOptions&& options)
 			// Initialize ini
 			StackString192 iniFileName;
 			iniFileName.printf("%s/%s.ini", options.appName, options.appName);
-			cfg.init(sfz::gameBaseFolderPath(), iniFileName.str);
-			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Ini location set to: %s%s", sfz::gameBaseFolderPath(), iniFileName.str);
+			cfg.init(sfz::gameBaseFolderPath(), iniFileName.str, sfz::getDefaultAllocator());
+			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Ini location set to: %s%s",
+				sfz::gameBaseFolderPath(), iniFileName.str);
 		}
 		else {
 			sfz_assert_release(false);
@@ -128,10 +131,12 @@ int mainImpl(int, char*[], InitOptions&& options)
 	renderer->load(options.rendererName, sfz::getDefaultAllocator());
 
 	// Create SDL_Window
-	uint32_t windowFlags = renderer->requiredSDL2WindowFlags() | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+	uint32_t windowFlags =
+		renderer->requiredSDL2WindowFlags() | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
 	const int width = 1000; // TODO: Arbitrary value not taken from config
 	const int height = 500;
-	SDL_Window* window = SDL_CreateWindow(options.appName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+	SDL_Window* window =
+		SDL_CreateWindow(options.appName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 		width, height, windowFlags);
 	if (window == NULL) {
 		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "SDL_CreateWindow() failed: %s", SDL_GetError());

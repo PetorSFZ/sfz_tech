@@ -22,19 +22,21 @@
 #include <limits>
 
 #include <sfz/containers/DynArray.hpp>
+#include <sfz/memory/Allocator.hpp>
 
 #include "ph/ConfigInterface.h"
 #include "ph/config/Setting.hpp"
 
 namespace ph {
 
+using sfz::Allocator;
 using sfz::DynArray;
 using std::numeric_limits;
 
 // GlobalConfig
 // ------------------------------------------------------------------------------------------------
 
-class GlobalConfigImpl; // Pimpl pattern
+struct GlobalConfigImpl; // Pimpl pattern
 
 /// The global config singleton
 ///
@@ -65,7 +67,7 @@ public:
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	void init(const char* basePath, const char* fileName) noexcept;
+	void init(const char* basePath, const char* fileName, Allocator* allocator) noexcept;
 	void destroy() noexcept;
 
 	void load() noexcept;
@@ -83,7 +85,13 @@ public:
 	Setting* getSetting(const char* key) noexcept;
 
 	/// Returns pointers to all available settings
-	void getSettings(DynArray<Setting*>& settings) noexcept;
+	void getAllSettings(DynArray<Setting*>& settings) noexcept;
+
+	/// Returns all sections available
+	void getSections(DynArray<StackString64>& sections) noexcept;
+
+	/// Returns all settings available in a given section
+	void getSectionSettings(const char* section, DynArray<Setting*>& settings) noexcept;
 
 	// Sanitizers
 	// --------------------------------------------------------------------------------------------
