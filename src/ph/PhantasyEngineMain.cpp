@@ -77,9 +77,9 @@ static void ensureAppUserDataDirExists(const char* appName)
 
 int mainImpl(int, char*[], InitOptions&& options)
 {
-    // Set SDL allocators
-    sdl::setSDLAllocator(sfz::getDefaultAllocator());
-    
+	// Set SDL allocators
+	if (!sdl::setSDLAllocator(sfz::getDefaultAllocator())) return EXIT_FAILURE;
+	
 	// Windwows specific hacks
 #ifdef _WIN32
 	// Enable hi-dpi awareness

@@ -120,8 +120,16 @@ bool setSDLAllocator(sfz::Allocator* allocator) noexcept
 	return true;
 
 #else
+
+	// Allow 2 previous allocations on Windows, probably a bug
+#ifdef _WIN32
+	const int MAX_NUM_SDL_ALLOCATIONS = 2;
+#else
+	const int MAX_NUM_SDL_ALLOCATIONS = 0;
+#endif
+
 	// Don't switch allocators if SDL has already allocated memory.
-	if (SDL_GetNumAllocations() != 0) {
+	if (SDL_GetNumAllocations() != MAX_NUM_SDL_ALLOCATIONS) {
 		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "SDL has already allocated memory, exiting.");
 		return false;
 	}
