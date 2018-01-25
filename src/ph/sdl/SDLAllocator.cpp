@@ -48,6 +48,8 @@ struct BridgeState final {
 
 static BridgeState* bridgeState = nullptr;
 
+static SDL_free_func oldSdlFree = nullptr;
+
 static void* SDLCALL mallocBridge(size_t size)
 {
 	void* ptr = bridgeState->allocator->allocate(size, 32, "SDL");
@@ -84,6 +86,8 @@ static void* SDLCALL reallocBridge(void* mem, size_t size)
 	// Get size of previous allocation
 	size_t* sizePtr = bridgeState->allocatedSizes.get(mem);
 	if (sizePtr == nullptr) {
+		// TODO: If we reach here it might be because we don't support the special case where the
+		// memory was allocated with the original allocator. Should hopefully never happen.
 		PH_LOG(LOG_LEVEL_ERROR, "SDL", "reallocBridge() failed");
 		sfz_assert_release(false);
 	}
@@ -103,8 +107,15 @@ static void* SDLCALL reallocBridge(void* mem, size_t size)
 
 static void SDLCALL freeBridge(void* mem)
 {
-	bridgeState->allocatedSizes.remove(mem);
-	bridgeState->allocator->deallocate(mem);
+	bool success = bridgeState->allocatedSizes.remove(mem);
+	if (success) {
+		bridgeState->allocator->deallocate(mem);
+		return;
+	}
+	
+	// If we failed it likely means that the allocation was made before we switched allocators, i.e.
+	// on Windows. Attempt to deallocate using the old SDL free().
+	oldSdlFree(mem);
 }
 
 #endif
@@ -147,6 +158,9 @@ bool setSDLAllocator(sfz::Allocator* allocator) noexcept
 
 	// Set allocator
 	bridgeState->allocator = allocator;
+
+	// Get old free() function
+	SDL_GetMemoryFunctions(nullptr, nullptr, nullptr, &oldSdlFree);
 
 	// Register allocator in SDL
 	int res = SDL_SetMemoryFunctions(mallocBridge, callocBridge, reallocBridge, freeBridge);
