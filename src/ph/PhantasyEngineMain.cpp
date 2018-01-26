@@ -130,14 +130,26 @@ int mainImpl(int, char*[], InitOptions&& options)
 	UniquePtr<Renderer> renderer = sfz::makeUniqueDefault<Renderer>();
 	renderer->load(options.rendererName, sfz::getDefaultAllocator());
 
+	// Window settings
+	// TODO: Step = 32
+	Setting* width = cfg.sanitizeInt("Window", "width", 1280, 32, 3840);
+	Setting* height = cfg.sanitizeInt("Window", "height", 800, 32, 2160);
+	Setting* fullscreen = cfg.sanitizeBool("Window", "fullscreen", false);
+	Setting* maximized = cfg.sanitizeBool("Window", "maximized", false);
+	if (fullscreen->boolValue() && maximized->boolValue()) {
+		maximized->setBool(false);
+	}
+
 	// Create SDL_Window
 	uint32_t windowFlags =
-		renderer->requiredSDL2WindowFlags() | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
-	const int width = 1000; // TODO: Arbitrary value not taken from config
-	const int height = 500;
+		renderer->requiredSDL2WindowFlags() |
+		SDL_WINDOW_RESIZABLE |
+		SDL_WINDOW_ALLOW_HIGHDPI |
+		(fullscreen->boolValue() ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0) |
+		(maximized->boolValue() ? SDL_WINDOW_MAXIMIZED : 0);
 	SDL_Window* window =
 		SDL_CreateWindow(options.appName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		width, height, windowFlags);
+		width->intValue(), height->intValue(), windowFlags);
 	if (window == NULL) {
 		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "SDL_CreateWindow() failed: %s", SDL_GetError());
 		renderer.destroy();

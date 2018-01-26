@@ -30,6 +30,7 @@
 
 #include <sfz/containers/DynArray.hpp>
 
+#include "ph/config/GlobalConfig.hpp"
 #include "ph/utils/Logging.hpp"
 
 namespace ph {
@@ -55,6 +56,14 @@ struct GameLoopState final {
 	// Input structs for updateable
 	UserInput userInput;
 	UpdateInfo updateInfo;
+
+	// Window settings
+	Setting* windowWidth = nullptr;
+	Setting* windowHeight = nullptr;
+	Setting* fullscreen = nullptr;
+	bool lastFullscreenValue;
+	Setting* maximized = nullptr;
+	bool lastMaximizedValue;
 };
 
 // Static helper functions
@@ -143,7 +152,7 @@ static bool handleUpdateOp(GameLoopState& state, UpdateOp& op) noexcept
 void gameLoopIteration(void* gameLoopStatePtr) noexcept
 {
 	GameLoopState& state = *static_cast<GameLoopState*>(gameLoopStatePtr);
-
+	
 	// Calculate delta since previous iteration
 	state.updateInfo.iterationDeltaSeconds = calculateDelta(state.previousItrTime);
 	//PH_LOG(LogLevel::INFO, "PhantasyEngine", "Frametime = %.3f ms",
@@ -164,6 +173,13 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	state.userInput.events.clear();
 	state.userInput.controllerEvents.clear();
 	state.userInput.mouseEvents.clear();
+
+	// Check window status
+	uint32_t currentWindowFlags = SDL_GetWindowFlags(state.window);
+	bool isFullscreen = (currentWindowFlags & SDL_WINDOW_FULLSCREEN_DESKTOP) != 0;
+	bool isMaximized = (currentWindowFlags & SDL_WINDOW_MAXIMIZED) != 0;
+	bool shouldBeFullscreen = state.fullscreen->boolValue();
+	bool shouldBeMaximized = state.maximized->boolValue();
 
 	// Process SDL events
 	SDL_Event event;
@@ -194,6 +210,37 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 			state.userInput.mouseEvents.add(event);
 			break;
 
+		// Window events
+		case SDL_WINDOWEVENT:
+			switch (event.window.event) {
+			case SDL_WINDOWEVENT_MAXIMIZED:
+				state.maximized->setBool(true);
+				isMaximized = true;
+				shouldBeMaximized = true;
+				break;
+			case SDL_WINDOWEVENT_RESIZED:
+				if (!isFullscreen && !isMaximized) {
+					state.windowWidth->setInt(event.window.data1);
+					state.windowHeight->setInt(event.window.data2);
+				}
+				break;
+			case SDL_WINDOWEVENT_RESTORED:
+				state.maximized->setBool(false);
+				isMaximized = false;
+				shouldBeMaximized = false;
+				state.fullscreen->setBool(false);
+				isFullscreen = false;
+				shouldBeFullscreen = false;
+				break;
+			default:
+				// Do nothing.
+				break;
+			}
+
+			// Still add event to user input
+			state.userInput.events.add(event);
+			break;
+
 		// All other events
 		default:
 			state.userInput.events.add(event);
@@ -201,6 +248,43 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 
 		}
 	}
+
+	// Resize window
+	if (!isFullscreen && !isMaximized) {
+		int prevWidth, prevHeight;
+		SDL_GetWindowSize(state.window, &prevWidth, &prevHeight);
+		int newWidth = state.windowWidth->intValue();
+		int newHeight = state.windowHeight->intValue();
+		if (prevWidth != newWidth || prevHeight != newHeight) {
+			SDL_SetWindowSize(state.window, newWidth, newHeight);
+		}
+	}
+	
+	// Set maximized
+	if (isMaximized != shouldBeMaximized && !isFullscreen && !shouldBeFullscreen) {
+		if (shouldBeMaximized) {
+			SDL_MaximizeWindow(state.window);
+		}
+		else {
+			SDL_RestoreWindow(state.window);
+		}
+	}
+
+	// Set fullscreen
+	if (isFullscreen != shouldBeFullscreen) {
+		uint32_t fullscreenFlags = shouldBeFullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
+		if (SDL_SetWindowFullscreen(state.window, fullscreenFlags) < 0) {
+			PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine",
+				"SDL_SetWindowFullscreen() failed: %s", SDL_GetError());
+		}
+		if (!shouldBeFullscreen) {
+			SDL_SetWindowSize(state.window,
+				state.windowWidth->intValue(), state.windowHeight->intValue());
+		}
+	}
+
+	
+
 
 	// Updates controllers
 	state.userInput.controllersLastFrameState.clear();
@@ -258,6 +342,16 @@ void runGameLoop(
 
 	// Initialize GameLoopUpdateable
 	gameLoopState.updateable->initialize(*gameLoopState.renderer);
+
+	// Get settings
+	GlobalConfig& cfg = GlobalConfig::instance();
+	gameLoopState.windowWidth = cfg.getSetting("Window", "width");
+	sfz_assert_debug(gameLoopState.windowWidth != nullptr);
+	gameLoopState.windowHeight = cfg.getSetting("Window", "height");
+	sfz_assert_debug(gameLoopState.windowHeight != nullptr);
+	gameLoopState.fullscreen = cfg.getSetting("Window", "fullscreen");
+	sfz_assert_debug(gameLoopState.fullscreen != nullptr);
+	gameLoopState.maximized = cfg.getSetting("Window", "maximized");
 
 	// Start the game loop
 #ifdef __EMSCRIPTEN__
