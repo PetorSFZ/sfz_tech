@@ -42,6 +42,7 @@ endif()
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set(PH_RENDERER_SHARED_INTERFACE_HEADER_FILES
+	${INCLUDE_DIR}/ph/Bool32.h
 	${INCLUDE_DIR}/ph/ConfigInterface.h
 	${INCLUDE_DIR}/ph/ExternC.h
 	${INCLUDE_DIR}/ph/LoggingInterface.h
