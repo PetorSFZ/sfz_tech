@@ -92,15 +92,17 @@ struct StackStringTempl final {
 // StackString types
 // ------------------------------------------------------------------------------------------------
 
-using StackString32 = StackStringTempl<32>; // Size: 4 64bit words
-using StackString64 = StackStringTempl<64>; // Size: 8 64bit words
-using StackString96 = StackStringTempl<96>; // Size: 12 64bit words
-using StackString128 = StackStringTempl<128>; // Size: 16 64bit words
-using StackString192 = StackStringTempl<192>; // Size: 24 64bit words
-using StackString256 = StackStringTempl<256>; // Size: 32 64bit words
-using StackString320 = StackStringTempl<320>; // Size: 40 64bit words
-using StackString512 = StackStringTempl<512>; // Size: 64 64bit words
-using StackString1024 = StackStringTempl<1024>; // Size: 128 64bit words
+using StackString32 = StackStringTempl<32>; // Size: 8 32bit words
+using StackString48 = StackStringTempl<48>; // Size: 12 32bit words
+using StackString64 = StackStringTempl<64>; // Size: 16 32bit words
+using StackString80 = StackStringTempl<80>; // Size: 20 32bit words
+using StackString96 = StackStringTempl<96>; // Size: 24 32bit words
+using StackString128 = StackStringTempl<128>; // Size: 32 32bit words
+using StackString192 = StackStringTempl<192>; // Size: 48 32bit words
+using StackString256 = StackStringTempl<256>; // Size: 64 32bit words
+using StackString320 = StackStringTempl<320>; // Size: 80 32bit words
+using StackString512 = StackStringTempl<512>; // Size: 128 32bit words
+using StackString1024 = StackStringTempl<1024>; // Size: 256 32bit words
 
 using StackString = StackString96;
 

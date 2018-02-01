@@ -158,7 +158,9 @@ bool StackStringTempl<N>::operator>= (const char* other) const noexcept
 // ------------------------------------------------------------------------------------------------
 
 template struct StackStringTempl<32>;
+template struct StackStringTempl<48>;
 template struct StackStringTempl<64>;
+template struct StackStringTempl<80>;
 template struct StackStringTempl<96>;
 template struct StackStringTempl<128>;
 template struct StackStringTempl<192>;
