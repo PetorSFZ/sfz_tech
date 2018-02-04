@@ -19,8 +19,9 @@
 
 #include "ph/config/Setting.hpp"
 
-#include <limits>
+#include <cmath>
 
+#include <sfz/Assert.hpp>
 #include <sfz/math/MathSupport.hpp>
 
 namespace ph {
@@ -33,138 +34,126 @@ Setting::Setting(const char* section, const char* key) noexcept
 	mSection(section),
 	mKey(key)
 {
-	setInt(0, std::numeric_limits<int32_t>::min(), std::numeric_limits<int32_t>::max());
+	mValue = SettingValue::createInt();
 }
 
 // Setting: Getters
 // ------------------------------------------------------------------------------------------------
 
-bool Setting::isBoolValue() const noexcept
-{
-	return value.type == VALUE_TYPE_INT &&
-	       value.i.minValue == 0 &&
-	       value.i.maxValue == 1;
-}
-
 int32_t Setting::intValue() const noexcept
 {
-	switch (value.type) {
-	case VALUE_TYPE_INT: return value.i.value;
-	case VALUE_TYPE_FLOAT: return int32_t(std::round(value.f.value));
-	}
-	return 0;
+	sfz_assert_debug(this->type() == ValueType::INT);
+	return mValue.i.value;
 }
 
 float Setting::floatValue() const noexcept
 {
-	switch (value.type) {
-	case VALUE_TYPE_INT: return float(value.i.value);
-	case VALUE_TYPE_FLOAT: return value.f.value;
-	}
-	return 0.0f;
+	sfz_assert_debug(this->type() == ValueType::FLOAT);
+	return mValue.f.value;
 }
 
 bool Setting::boolValue() const noexcept
 {
-
-	switch (value.type) {
-	case VALUE_TYPE_INT: return value.i.value != 0;
-	case VALUE_TYPE_FLOAT: return value.f.value != 0.0f; // TODO: Could potentially check bitpattern using "i"
-	}
-	return false;
+	sfz_assert_debug(this->type() == ValueType::BOOL);
+	return mValue.b.value;
 }
 
-int32_t Setting::intMinValue() const noexcept
+const IntBounds& Setting::intBounds() const noexcept
 {
-	switch (value.type) {
-	case VALUE_TYPE_INT: return value.i.minValue;
-	case VALUE_TYPE_FLOAT: return int32_t(std::round(value.f.minValue));
-	}
-	return std::numeric_limits<int32_t>::min();
+	sfz_assert_debug(this->type() == ValueType::INT);
+	return mValue.i.bounds;
 }
 
-int32_t Setting::intMaxValue() const noexcept
+const FloatBounds& Setting::floatBounds() const noexcept
 {
-	switch (value.type) {
-	case VALUE_TYPE_INT: return value.i.maxValue;
-	case VALUE_TYPE_FLOAT: return int32_t(std::round(value.f.maxValue));
-	}
-	return std::numeric_limits<int32_t>::max();
+	sfz_assert_debug(this->type() == ValueType::FLOAT);
+	return mValue.f.bounds;
 }
 
-float Setting::floatMinValue() const noexcept
+const BoolBounds& Setting::boolBounds() const noexcept
 {
-	switch (value.type) {
-	case VALUE_TYPE_INT: return float(value.i.minValue);
-	case VALUE_TYPE_FLOAT: return value.f.minValue;
-	}
-	return std::numeric_limits<float>::min();
-}
-
-float Setting::floatMaxValue() const noexcept
-{
-	switch (value.type) {
-	case VALUE_TYPE_INT: return float(value.i.maxValue);
-	case VALUE_TYPE_FLOAT: return value.f.maxValue;
-	}
-	return std::numeric_limits<float>::max();
+	sfz_assert_debug(this->type() == ValueType::BOOL);
+	return mValue.b.bounds;
 }
 
 // Setting: Setters
 // ------------------------------------------------------------------------------------------------
 
-bool Setting::setInt(int32_t valueIn) noexcept
+bool Setting::setInt(int32_t value) noexcept
 {
-	int32_t minValue = intMinValue();
-	int32_t maxValue = intMaxValue();
-	int32_t clampedValue = sfz::clamp(valueIn, minValue, maxValue);
-	bool clamped = clampedValue != valueIn;
+	if (this->type() != ValueType::INT) return false;
 
-	this->value.type = VALUE_TYPE_INT;
-	this->value.i.value = clampedValue;
-	this->value.i.minValue = minValue;
-	this->value.i.maxValue = maxValue;
+	// Clamp value
+	value = sfz::clamp(value, mValue.i.bounds.minValue, mValue.i.bounds.maxValue);
 
-	return clamped;
+	// Ensure value is of a valid step
+	int64_t diff = int64_t(value) - int64_t(mValue.i.bounds.minValue);
+	double stepsFractions = double(diff) / double(mValue.i.bounds.step);
+	int64_t steps = std::round(stepsFractions);
+	value = int32_t(int64_t(mValue.i.bounds.minValue) + steps * int64_t(mValue.i.bounds.step));
+	mValue.i.value = sfz::clamp(value, mValue.i.bounds.minValue, mValue.i.bounds.maxValue);
+
+	return true;
 }
 
-bool Setting::setFloat(float valueIn) noexcept
+bool Setting::setFloat(float value) noexcept
 {
-	float minValue = floatMinValue();
-	float maxValue = floatMaxValue();
-	float clampedValue = sfz::clamp(valueIn, minValue, maxValue);
-	bool clamped = clampedValue != valueIn;
-
-	this->value.type = VALUE_TYPE_FLOAT;
-	this->value.f.value = clampedValue;
-	this->value.f.minValue = minValue;
-	this->value.f.maxValue = maxValue;
-
-	return clamped;
+	if (this->type() != ValueType::FLOAT) return false;
+	mValue.f.value = sfz::clamp(value, mValue.f.bounds.minValue, mValue.f.bounds.maxValue);
+	return true;
 }
 
-void Setting::setInt(int32_t valueIn, int32_t minValue, int32_t maxValue) noexcept
+bool Setting::setBool(bool value) noexcept
 {
-	this->value.type = VALUE_TYPE_INT;
-	this->value.i.value = valueIn;
-	this->value.i.minValue = minValue;
-	this->value.i.maxValue = maxValue;
+	if (this->type() != ValueType::BOOL) return false;
+	mValue.b.value = value;
+	return true;
 }
 
-void Setting::setFloat(float valueIn, float minValue, float maxValue) noexcept
+bool Setting::create(const SettingValue& value) noexcept
 {
-	this->value.type = VALUE_TYPE_FLOAT;
-	this->value.f.value = valueIn;
-	this->value.f.minValue = minValue;
-	this->value.f.maxValue = maxValue;
-}
+	switch (value.type) {
+	case ValueType::INT:
+		{
+			int32_t val = value.i.value;
+			const IntBounds& bounds = value.i.bounds;
+			if (bounds.minValue >= bounds.maxValue) return false;
+			if (val < bounds.minValue || bounds.maxValue < val) return false;
+			if (bounds.defaultValue < bounds.minValue || bounds.maxValue < bounds.defaultValue)
+				return false;
 
-void Setting::setBool(bool valueIn) noexcept
-{
-	this->value.type = VALUE_TYPE_INT;
-	this->value.i.value = valueIn ? 1 : 0;
-	this->value.i.minValue = 0;
-	this->value.i.maxValue = 1;
+			int64_t diff = int64_t(val) - int64_t(bounds.minValue);
+			if((diff % int64_t(bounds.step)) != 0) return false;
+
+			diff = int64_t(bounds.defaultValue) - int64_t(bounds.minValue);
+			if((diff % int64_t(bounds.step)) != 0) return false;
+
+			mValue = value;
+			return true;
+		}
+		break;
+	case ValueType::FLOAT:
+		{
+			float val = value.f.value;
+			const FloatBounds& bounds = value.f.bounds;
+			if (bounds.minValue >= bounds.maxValue) return false;
+			if (val < bounds.minValue || bounds.maxValue < val) return false;
+			if (bounds.defaultValue < bounds.minValue || bounds.maxValue < bounds.defaultValue)
+				return false;
+
+			mValue = value;
+			return true;
+		}
+		break;
+	case ValueType::BOOL:
+		{
+			mValue = value;
+			return true;
+		}
+	}
+
+	// Invalid type
+	return false;
 }
 
 } // namespace ph

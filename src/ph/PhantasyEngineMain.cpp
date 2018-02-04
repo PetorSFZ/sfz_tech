@@ -41,6 +41,9 @@
 
 namespace ph {
 
+using sfz::StackString192;
+using sfz::StackString320;
+
 // Statics
 // ------------------------------------------------------------------------------------------------
 
@@ -67,7 +70,7 @@ static void ensureAppUserDataDirExists(const char* appName)
 	sfz::createDirectory(sfz::gameBaseFolderPath());
 
 	// Create app directory in "My Games"
-	sfz::StackString320 tmp;
+	StackString320 tmp;
 	tmp.printf("%s%s/", sfz::gameBaseFolderPath(), appName);
 	sfz::createDirectory(tmp.str);
 }
@@ -79,7 +82,7 @@ int mainImpl(int, char*[], InitOptions&& options)
 {
 	// Set SDL allocators
 	if (!sdl::setSDLAllocator(sfz::getDefaultAllocator())) return EXIT_FAILURE;
-	
+
 	// Windwows specific hacks
 #ifdef _WIN32
 	// Enable hi-dpi awareness
@@ -132,10 +135,10 @@ int mainImpl(int, char*[], InitOptions&& options)
 
 	// Window settings
 	// TODO: Step = 32
-	Setting* width = cfg.sanitizeInt("Window", "width", 1280, 32, 3840);
-	Setting* height = cfg.sanitizeInt("Window", "height", 800, 32, 2160);
-	Setting* fullscreen = cfg.sanitizeBool("Window", "fullscreen", false);
-	Setting* maximized = cfg.sanitizeBool("Window", "maximized", false);
+	Setting* width = cfg.sanitizeInt("Window", "width", false, 1280, 128, 3840, 32);
+	Setting* height = cfg.sanitizeInt("Window", "height", false, 800, 128, 2160, 32);
+	Setting* fullscreen = cfg.sanitizeBool("Window", "fullscreen", false, false);
+	Setting* maximized = cfg.sanitizeBool("Window", "maximized", false, false);
 	if (fullscreen->boolValue() && maximized->boolValue()) {
 		maximized->setBool(false);
 	}

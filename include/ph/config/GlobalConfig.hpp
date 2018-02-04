@@ -19,8 +19,6 @@
 
 #pragma once
 
-#include <limits>
-
 #include <sfz/containers/DynArray.hpp>
 #include <sfz/memory/Allocator.hpp>
 
@@ -75,7 +73,7 @@ public:
 
 	/// Gets the specified Setting. If it does not exist it will be created (type int with value 0).
 	/// The optional parameter "created" returns whether the Setting was created or already existed.
-	Setting* getCreateSetting(const char* section, const char* key, bool* created = nullptr) noexcept;
+	Setting* createSetting(const char* section, const char* key, bool* created = nullptr) noexcept;
 
 	// Getters
 	// --------------------------------------------------------------------------------------------
@@ -96,23 +94,45 @@ public:
 	// Sanitizers
 	// --------------------------------------------------------------------------------------------
 
-	/// A sanitizer is basically a wrapper around "getCreateSetting()", with the addition that it
-	/// also ensures that the Setting is of the requested type and with values in the specified
-	/// range. Values below or above min or max value are clamped. If the setting does not exist
-	/// or is of an incompatible type it will be set to the specified default value.
+	/// A sanitizer is basically a wrapper around createSetting, with the addition that it also
+	/// ensures that the Setting is of the requested type and with values conforming to the
+	/// specified bounds. If the setting does not exist or is of an incompatible type it will be
+	/// set to the specified default value.
 
-	Setting* sanitizeInt(const char* section, const char* key,
-	                     int32_t defaultValue = 0,
-	                     int32_t minValue = numeric_limits<int32_t>::min(),
-	                     int32_t maxValue = numeric_limits<int32_t>::max()) noexcept;
+	Setting* sanitizeInt(
+		const char* section, const char* key,
+		bool writeToFile = true,
+		const IntBounds& bounds = IntBounds(0)) noexcept;
 
-	Setting* sanitizeFloat(const char* section, const char* key,
-	                       float defaultValue = 0.0f,
-	                       float minValue = numeric_limits<float>::min(),
-	                       float maxValue = numeric_limits<float>::max()) noexcept;
+	Setting* sanitizeFloat(
+		const char* section, const char* key,
+		bool writeToFile = true,
+		const FloatBounds& bounds = FloatBounds(0.0f)) noexcept;
 
-	Setting* sanitizeBool(const char* section, const char* key,
-	                      bool defaultValue = false) noexcept;
+	Setting* sanitizeBool(
+		const char* section, const char* key,
+		bool writeToFile = true,
+		const BoolBounds& bounds = BoolBounds(false)) noexcept;
+
+	Setting* sanitizeInt(
+		const char* section, const char* key,
+		bool writeToFile = true,
+		int32_t defaultValue = 0,
+		int32_t minValue = INT32_MIN,
+		int32_t maxValue = INT32_MAX,
+		int32_t step = 1) noexcept;
+
+	Setting* sanitizeFloat(
+		const char* section, const char* key,
+		bool writeToFile = true,
+		float defaultValue = 0.0f,
+		float minValue = FLT_MIN,
+		float maxValue = FLT_MAX) noexcept;
+
+	Setting* sanitizeBool(
+		const char* section, const char* key,
+		bool writeToFile = true,
+		bool defaultValue = false) noexcept;
 
 private:
 	// Private constructors & destructors

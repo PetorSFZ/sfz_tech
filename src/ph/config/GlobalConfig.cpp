@@ -56,12 +56,58 @@ GlobalConfig& GlobalConfig::instance() noexcept
 phConfig GlobalConfig::cInstance() noexcept
 {
 	phConfig config;
-	config.getCreateSetting = [](const char* section, const char* key) -> phSettingValue* {
-		return &instance().getCreateSetting(section, key)->value;
+
+	config.getSetting = [](const char* section, const char* key) -> const phSettingValue* {
+		return reinterpret_cast<const phSettingValue*>(
+			&instance().getSetting(section, key)->value());
 	};
-	config.getSetting = [](const char* section, const char* key) -> phSettingValue* {
-		return &instance().getSetting(section, key)->value;
+
+	config.setInt = [](const char* section, const char* key, int32_t value) -> phBool32 {
+		Setting* setting = instance().getSetting(section, key);
+		if (setting == nullptr) return 0;
+		return Bool32(setting->setInt(value));
 	};
+	config.setFloat = [](const char* section, const char* key, float value) -> phBool32 {
+		Setting* setting = instance().getSetting(section, key);
+		if (setting == nullptr) return 0;
+		return Bool32(setting->setFloat(value));
+	};
+	config.setBool = [](const char* section, const char* key, phBool32 value) -> phBool32 {
+		Setting* setting = instance().getSetting(section, key);
+		if (setting == nullptr) return 0;
+		return Bool32(setting->setBool(Bool32(value)));
+	};
+
+	config.sanitizeInt = [](
+		const char* section, const char* key,
+		phBool32 writeToFile,
+		const phIntBounds* bounds) -> const phSettingValue* {
+
+		Setting* setting = instance().sanitizeInt(section, key, Bool32(writeToFile),
+			*reinterpret_cast<const IntBounds*>(bounds));
+		return reinterpret_cast<const phSettingValue*>(&setting->value());
+	};
+
+	config.sanitizeFloat = [](
+		const char* section, const char* key,
+		phBool32 writeToFile,
+		const phFloatBounds* bounds) -> const phSettingValue* {
+
+		Setting* setting = instance().sanitizeFloat(section, key, Bool32(writeToFile),
+			*reinterpret_cast<const FloatBounds*>(bounds));
+		return reinterpret_cast<const phSettingValue*>(&setting->value());
+	};
+
+	config.sanitizeBool = [](
+		const char* section, const char* key,
+		phBool32 writeToFile,
+		const phBoolBounds* bounds) -> const phSettingValue* {
+
+		Setting* setting = instance().sanitizeBool(section, key, Bool32(writeToFile),
+			*reinterpret_cast<const BoolBounds*>(bounds));
+		return reinterpret_cast<const phSettingValue*>(&setting->value());
+	};
+
 	return config;
 }
 
@@ -156,14 +202,20 @@ bool GlobalConfig::save() noexcept
 	// Update internal ini with the current values of the setting
 	for (auto& section : mImpl->sections) {
 		for (auto& setting : section.settings) {
-			if (setting->isBoolValue()) {
-				ini.setBool(setting->section().str, setting->key().str, setting->boolValue());
-			}
-			else if (setting->type() == VALUE_TYPE_INT) {
+
+			// Skip if setting should be not written to file
+			if (!setting->value().writeToFile) continue;
+
+			switch (setting->type()) {
+			case ValueType::INT:
 				ini.setInt(setting->section().str, setting->key().str, setting->intValue());
-			}
-			else if (setting->type() == VALUE_TYPE_FLOAT) {
+				break;
+			case ValueType::FLOAT:
 				ini.setFloat(setting->section().str, setting->key().str, setting->floatValue());
+				break;
+			case ValueType::BOOL:
+				ini.setBool(setting->section().str, setting->key().str, setting->boolValue());
+				break;
 			}
 		}
 	}
@@ -172,7 +224,7 @@ bool GlobalConfig::save() noexcept
 	return ini.save();
 }
 
-Setting* GlobalConfig::getCreateSetting(const char* section, const char* key, bool* created) noexcept
+Setting* GlobalConfig::createSetting(const char* section, const char* key, bool* created) noexcept
 {
 	Setting* setting = this->getSetting(section, key);
 
@@ -270,79 +322,159 @@ void GlobalConfig::getSectionSettings(const char* section, DynArray<Setting*>& s
 // GlobalConfig: Sanitizers
 // ------------------------------------------------------------------------------------------------
 
-Setting* GlobalConfig::sanitizeInt(const char* section, const char* key,
-                                   int32_t defaultValue,
-                                   int32_t minValue,
-                                   int32_t maxValue) noexcept
+Setting* GlobalConfig::sanitizeInt(
+	const char* section, const char* key,
+	bool writeToFile,
+	const IntBounds& bounds) noexcept
 {
-	sfz_assert_debug(mImpl != nullptr);
-
 	bool created = false;
-	Setting* setting = getCreateSetting(section, key, &created);
+	Setting* setting = this->createSetting(section, key, &created);
 
-	// Set default value if created
-	if (created) {
-		setting->setInt(defaultValue);
-		return setting;
+	// Store previous value
+	int32_t previousValue;
+	switch (setting->type()) {
+	case ValueType::INT:
+		previousValue = setting->intValue();
+		break;
+	case ValueType::FLOAT:
+		previousValue = int32_t(std::round(setting->floatValue()));
+		break;
+	case ValueType::BOOL:
+		previousValue = setting->boolValue() ? 1 : 0;
+		break;
 	}
 
-	// Make sure setting is of correct type
-	if (setting->type() != VALUE_TYPE_INT) {
-		setting->setInt(setting->intValue(), minValue, maxValue);
+	// Create setting according to bounds
+	bool boundsGood =
+		setting->create(SettingValue::createInt(bounds.defaultValue, writeToFile, bounds));
+
+	// Check if bounds were good
+	if (!boundsGood) {
+		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Provided bad bounds for setting: %s - %s",
+			section, key);
+		setting->create(SettingValue::createInt(0));
 	}
 
-	// Ensure value is in range
-	int32_t val = setting->intValue();
-	val = std::min(std::max(val, minValue), maxValue);
-	setting->setInt(val);
+	// If not created, restore previous value (will be sanitized here)
+	if (!created) {
+		setting->setInt(previousValue);
+	}
 
 	return setting;
 }
 
-Setting* GlobalConfig::sanitizeFloat(const char* section, const char* key,
-                                     float defaultValue,
-                                     float minValue,
-                                     float maxValue) noexcept
+Setting* GlobalConfig::sanitizeFloat(
+	const char* section, const char* key,
+	bool writeToFile,
+	const FloatBounds& bounds) noexcept
 {
 	bool created = false;
-	Setting* setting = getCreateSetting(section, key, &created);
+	Setting* setting = this->createSetting(section, key, &created);
 
-	// Set default value if created
-	if (created) {
-		setting->setFloat(defaultValue);
-		return setting;
+	// Store previous value
+	float previousValue;
+	switch (setting->type()) {
+	case ValueType::INT:
+		previousValue = float(setting->intValue());
+		break;
+	case ValueType::FLOAT:
+		previousValue = setting->floatValue();
+		break;
+	case ValueType::BOOL:
+		previousValue = setting->boolValue() ? 1.0f : 0.0f;
+		break;
 	}
 
-	// Make sure setting is of correct type
-	if (setting->type() != VALUE_TYPE_FLOAT) {
-		setting->setFloat(setting->floatValue(), minValue, maxValue);
+	// Create setting according to bounds
+	bool boundsGood =
+		setting->create(SettingValue::createFloat(bounds.defaultValue, writeToFile, bounds));
+
+	// Check if bounds were good
+	if (!boundsGood) {
+		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Provided bad bounds for setting: %s - %s",
+			section, key);
+		setting->create(SettingValue::createFloat(0.0f));
 	}
 
-	// Ensure value is in range
-	float val = setting->floatValue();
-	val = std::min(std::max(val, minValue), maxValue);
-	setting->setFloat(val);
+	// If not created, restore previous value (will be sanitized here)
+	if (!created) {
+		setting->setFloat(previousValue);
+	}
 
 	return setting;
 }
 
-Setting* GlobalConfig::sanitizeBool(const char* section, const char* key,
-                                    bool defaultValue) noexcept
+Setting* GlobalConfig::sanitizeBool(
+	const char* section, const char* key,
+	bool writeToFile,
+	const BoolBounds& bounds) noexcept
 {
 	bool created = false;
-	Setting* setting = getCreateSetting(section, key, &created);
+	Setting* setting = this->createSetting(section, key, &created);
 
-	// Set default value if created
-	if (created) {
-		setting->setBool(defaultValue);
-		return setting;
+	// Store previous value
+	bool previousValue;
+	switch (setting->type()) {
+	case ValueType::INT:
+		previousValue = setting->intValue() == 0 ? false : true;
+		break;
+	case ValueType::FLOAT:
+		previousValue = setting->floatValue() == 0.0f ? false : true;
+		break;
+	case ValueType::BOOL:
+		previousValue = setting->boolValue();
+		break;
 	}
 
-	// Make sure setting is of correct type
-	if (!setting->isBoolValue()) {
-		setting->setBool(defaultValue);
+	// Create setting according to bounds
+	bool boundsGood =
+		setting->create(SettingValue::createBool(bounds.defaultValue, writeToFile, bounds));
+
+	// Check if bounds were good
+	if (!boundsGood) {
+		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Provided bad bounds for setting: %s - %s",
+			section, key);
+		setting->create(SettingValue::createBool(false));
 	}
+
+	// If not created, restore previous value (will be sanitized here)
+	if (!created) {
+		setting->setBool(previousValue);
+	}
+
 	return setting;
+}
+
+Setting* GlobalConfig::sanitizeInt(
+	const char* section, const char* key,
+	bool writeToFile,
+	int32_t defaultValue,
+	int32_t minValue,
+	int32_t maxValue,
+	int32_t step) noexcept
+{
+	return this->sanitizeInt(section, key, writeToFile,
+		IntBounds(defaultValue, minValue, maxValue, step));
+}
+
+Setting* GlobalConfig::sanitizeFloat(
+	const char* section, const char* key,
+	bool writeToFile,
+	float defaultValue,
+	float minValue,
+	float maxValue) noexcept
+{
+	return this->sanitizeFloat(section, key, writeToFile,
+		FloatBounds(defaultValue, minValue, maxValue));
+}
+
+Setting* GlobalConfig::sanitizeBool(
+	const char* section, const char* key,
+	bool writeToFile,
+	bool defaultValue) noexcept
+{
+	return this->sanitizeBool(section, key, writeToFile,
+		BoolBounds(defaultValue));
 }
 
 // GlobalConfig: Private constructors & destructors
