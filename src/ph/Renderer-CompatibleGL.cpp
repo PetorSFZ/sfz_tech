@@ -92,6 +92,8 @@ struct RendererState final {
 	Texture imguiFontTexture;
 	DynArray<ImguiCommand> imguiCommands;
 	gl::Program imguiShader;
+	const phSettingValue* imguiScaleSetting = nullptr;
+	const phSettingValue* imguiFontLinearSetting = nullptr;
 };
 
 static RendererState* statePtr = nullptr;
@@ -347,8 +349,17 @@ DLL_EXPORT void phInitImgui(const phConstImageView* fontTexture)
 {
 	RendererState& state = *statePtr;
 
+	// Init imgui settings
+	state.imguiScaleSetting = state.config.sanitizeFloat("Imgui", "scale",
+		Bool32(true), FloatBounds(2.0f, 1.0f, 3.0f).cPtr());
+	state.imguiFontLinearSetting = state.config.sanitizeBool("Imgui", "bilinearFontSampling",
+		Bool32(true), BoolBounds(false).cPtr());
+
+	TextureFiltering fontFiltering = Bool32(state.imguiFontLinearSetting->b.value) ?
+		TextureFiltering::BILINEAR : TextureFiltering::NEAREST;
+
 	// Upload font texture to GL memory
-	state.imguiFontTexture.create(*fontTexture, TextureFiltering::NEAREST);
+	state.imguiFontTexture.create(*fontTexture, fontFiltering);
 
 	// Initialize cpu temp memory for imgui commands
 	state.imguiCommands.create(4096, &state.allocator);
@@ -380,10 +391,14 @@ DLL_EXPORT void phImguiWindowDimensions(float* widthOut, float* heightOut)
 {
 	RendererState& state = *statePtr;
 
+	// Retrieve scale factor from config
+	float scaleFactor = 1.0f;
+	if (state.imguiScaleSetting != nullptr) scaleFactor = 1.0f / state.imguiScaleSetting->f.value;
+
 	int w, h;
 	SDL_GL_GetDrawableSize(state.window, &w, &h);
-	if (widthOut != nullptr) *widthOut = float(w);
-	if (heightOut != nullptr) *heightOut = float(h);
+	if (widthOut != nullptr) *widthOut = float(w) * scaleFactor;
+	if (heightOut != nullptr) *heightOut = float(h) * scaleFactor;
 }
 
 // Resource management (textures)
@@ -657,9 +672,22 @@ DLL_EXPORT void phFinishFrame(void)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, state.imguiFontTexture.handle());
 
+	// Update font filtering
+	TextureFiltering imguiFontFiltering = Bool32(state.imguiFontLinearSetting->b.value) ?
+		TextureFiltering::BILINEAR : TextureFiltering::NEAREST;
+	state.imguiFontTexture.setFilteringFormat(imguiFontFiltering);
+
+	// Retrieve imgui scale factor
+	float imguiScaleFactor = 1.0f;
+	if (state.imguiScaleSetting != nullptr) imguiScaleFactor /= state.imguiScaleSetting->f.value;
+	float imguiInvScaleFactor = 1.0f / imguiScaleFactor;
+
+	float imguiWidth = state.fbWidth * imguiScaleFactor;
+	float imguiHeight = state.fbHeight * imguiScaleFactor;
+
 	mat44 projMatrix;
-	projMatrix.row0 = vec4(2.0f / state.fbWidth, 0.0f, 0.0f, -1.0f);
-	projMatrix.row1 = vec4(0.0f, 2.0f / -state.fbHeight, 0.0f, 1.0f);
+	projMatrix.row0 = vec4(2.0f / imguiWidth, 0.0f, 0.0f, -1.0f);
+	projMatrix.row1 = vec4(0.0f, 2.0f / -imguiHeight, 0.0f, 1.0f);
 	projMatrix.row2 = vec4(0.0f, 0.0f, -1.0f, 0.0f);
 	projMatrix.row3 = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	gl::setUniform(state.imguiShader, "uProjMatrix", projMatrix);
@@ -671,10 +699,10 @@ DLL_EXPORT void phFinishFrame(void)
 	for (const ImguiCommand& cmd : state.imguiCommands) {
 
 		glScissor(
-			cmd.clipRect.x,
-			state.fbHeight - cmd.clipRect.w,
-			cmd.clipRect.z - cmd.clipRect.x,
-			cmd.clipRect.w - cmd.clipRect.y);
+			cmd.clipRect.x * imguiInvScaleFactor,
+			state.fbHeight - (cmd.clipRect.w * imguiInvScaleFactor),
+			(cmd.clipRect.z - cmd.clipRect.x) * imguiInvScaleFactor,
+			(cmd.clipRect.w - cmd.clipRect.y) * imguiInvScaleFactor);
 
 		state.imguiGlCmdList.render(cmd.idxBufferOffset, cmd.numIndices);
 		CHECK_GL_ERROR();

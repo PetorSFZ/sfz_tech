@@ -96,7 +96,7 @@ void Texture::destroy() noexcept
 	mFiltering = TextureFiltering::NEAREST;
 }
 
-// Texture: Private methods
+// Texture: Methods
 // ------------------------------------------------------------------------------------------------
 
 void Texture::setFilteringFormat(TextureFiltering filtering) noexcept

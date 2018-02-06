@@ -73,13 +73,10 @@ public:
 
 	uint32_t handle() const noexcept { return mTextureHandle; }
 
-private:
-	// Private methods
-	// --------------------------------------------------------------------------------------------
-
 	/// Sets the texture filtering format (may generate mipmaps for some formats)
 	void setFilteringFormat(TextureFiltering filtering) noexcept;
 
+private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
