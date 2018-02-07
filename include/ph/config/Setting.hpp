@@ -72,6 +72,9 @@ public:
 	bool setFloat(float value) noexcept;
 	bool setBool(bool value) noexcept;
 
+	// Sets whether to save setting to file or not
+	void setWriteToFile(bool writeToFile) noexcept;
+
 	// Changes the setting to the specified value (type, bounds, value). Returns true on success,
 	// false if the value is invalid in some way.
 	bool create(const SettingValue& value) noexcept;

@@ -110,6 +110,11 @@ bool Setting::setBool(bool value) noexcept
 	return true;
 }
 
+void Setting::setWriteToFile(bool writeToFile) noexcept
+{
+	mValue.writeToFile = Bool32(writeToFile);
+}
+
 bool Setting::create(const SettingValue& value) noexcept
 {
 	switch (value.type) {

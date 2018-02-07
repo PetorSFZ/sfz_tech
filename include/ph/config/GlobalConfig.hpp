@@ -29,7 +29,6 @@ namespace ph {
 
 using sfz::Allocator;
 using sfz::DynArray;
-using std::numeric_limits;
 
 // GlobalConfig
 // ------------------------------------------------------------------------------------------------
