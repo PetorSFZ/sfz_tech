@@ -189,7 +189,6 @@ void convertImguiDrawData(
 	DynArray<uint32_t>& indices,
 	DynArray<ImguiCommand>& commands) noexcept
 {
-	ImGuiIO& io = ImGui::GetIO();
 	ImDrawData& drawData = *ImGui::GetDrawData();
 
 	// Clear old data

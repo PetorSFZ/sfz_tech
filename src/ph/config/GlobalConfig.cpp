@@ -331,7 +331,7 @@ Setting* GlobalConfig::sanitizeInt(
 	Setting* setting = this->createSetting(section, key, &created);
 
 	// Store previous value
-	int32_t previousValue;
+	int32_t previousValue = 0;
 	switch (setting->type()) {
 	case ValueType::INT:
 		previousValue = setting->intValue();
@@ -372,7 +372,7 @@ Setting* GlobalConfig::sanitizeFloat(
 	Setting* setting = this->createSetting(section, key, &created);
 
 	// Store previous value
-	float previousValue;
+	float previousValue = 0.0f;
 	switch (setting->type()) {
 	case ValueType::INT:
 		previousValue = float(setting->intValue());
@@ -413,7 +413,7 @@ Setting* GlobalConfig::sanitizeBool(
 	Setting* setting = this->createSetting(section, key, &created);
 
 	// Store previous value
-	bool previousValue;
+	bool previousValue = false;
 	switch (setting->type()) {
 	case ValueType::INT:
 		previousValue = setting->intValue() == 0 ? false : true;

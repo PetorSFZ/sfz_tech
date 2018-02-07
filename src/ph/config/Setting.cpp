@@ -89,7 +89,7 @@ bool Setting::setInt(int32_t value) noexcept
 	// Ensure value is of a valid step
 	int64_t diff = int64_t(value) - int64_t(mValue.i.bounds.minValue);
 	double stepsFractions = double(diff) / double(mValue.i.bounds.step);
-	int64_t steps = std::round(stepsFractions);
+	int64_t steps = int64_t(std::round(stepsFractions));
 	value = int32_t(int64_t(mValue.i.bounds.minValue) + steps * int64_t(mValue.i.bounds.step));
 	mValue.i.value = sfz::clamp(value, mValue.i.bounds.minValue, mValue.i.bounds.maxValue);
 
