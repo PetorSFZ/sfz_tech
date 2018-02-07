@@ -48,12 +48,12 @@ struct Bool32 final {
 	~Bool32() noexcept = default;
 
 	// (Implicit callable) constructors from boolean values
-	Bool32(phBool32 phBoolValue) noexcept : value((phBoolValue) ? 1 : 0) { }
+	Bool32(phBool32 phBoolValue) noexcept : value((phBoolValue != 0) ? 1 : 0) { }
 	Bool32(bool boolValue) noexcept : value(boolValue ? 1 : 0) { }
 
 	// Implicit cast to boolean values
 	operator bool() const noexcept { return value != 0; }
-	operator phBool32() const noexcept { return value; }
+	operator phBool32() const noexcept { return (value != 0) ? 1 : 0; }
 };
 static_assert(sizeof(phBool32) == sizeof(Bool32), "ph::Bool32 is padded");
 

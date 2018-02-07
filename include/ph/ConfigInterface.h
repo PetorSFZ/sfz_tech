@@ -166,8 +166,8 @@ struct IntBounds final {
 		step(step)
 	{ }
 
-	phIntBounds* toC() noexcept { return reinterpret_cast<phIntBounds*>(this); }
-	const phIntBounds* toC() const noexcept { return reinterpret_cast<const phIntBounds*>(this); }
+	phIntBounds* cPtr() noexcept { return reinterpret_cast<phIntBounds*>(this); }
+	const phIntBounds* cPtr() const noexcept { return reinterpret_cast<const phIntBounds*>(this); }
 };
 static_assert(sizeof(phIntBounds) == sizeof(int32_t) * 4, "phIntBounds is padded");
 static_assert(sizeof(phIntBounds) == sizeof(IntBounds), "IntBounds is padded");
@@ -188,8 +188,8 @@ struct FloatBounds final {
 		maxValue(maxValue)
 	{ }
 
-	phFloatBounds* toC() noexcept { return reinterpret_cast<phFloatBounds*>(this); }
-	const phFloatBounds* toC() const noexcept { return reinterpret_cast<const phFloatBounds*>(this); }
+	phFloatBounds* cPtr() noexcept { return reinterpret_cast<phFloatBounds*>(this); }
+	const phFloatBounds* cPtr() const noexcept { return reinterpret_cast<const phFloatBounds*>(this); }
 };
 static_assert(sizeof(phFloatBounds) == sizeof(float) * 3, "phFloatBounds is padded");
 static_assert(sizeof(phFloatBounds) == sizeof(FloatBounds), "FloatBounds is padded");
@@ -200,8 +200,8 @@ struct BoolBounds final {
 	BoolBounds() noexcept = default;
 	explicit BoolBounds(bool defaultValue) noexcept : defaultValue(defaultValue) { }
 
-	phBoolBounds* toC() noexcept { return reinterpret_cast<phBoolBounds*>(this); }
-	const phBoolBounds* toC() const noexcept { return reinterpret_cast<const phBoolBounds*>(this); }
+	phBoolBounds* cPtr() noexcept { return reinterpret_cast<phBoolBounds*>(this); }
+	const phBoolBounds* cPtr() const noexcept { return reinterpret_cast<const phBoolBounds*>(this); }
 };
 static_assert(sizeof(phBoolBounds) == sizeof(phBool32), "phBoolBounds is padded");
 static_assert(sizeof(phBoolBounds) == sizeof(BoolBounds), "BoolBounds is padded");
