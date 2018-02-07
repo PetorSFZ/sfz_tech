@@ -699,10 +699,10 @@ DLL_EXPORT void phFinishFrame(void)
 	for (const ImguiCommand& cmd : state.imguiCommands) {
 
 		glScissor(
-			cmd.clipRect.x * imguiInvScaleFactor,
-			state.fbHeight - (cmd.clipRect.w * imguiInvScaleFactor),
-			(cmd.clipRect.z - cmd.clipRect.x) * imguiInvScaleFactor,
-			(cmd.clipRect.w - cmd.clipRect.y) * imguiInvScaleFactor);
+			GLsizei(cmd.clipRect.x * imguiInvScaleFactor),
+			GLsizei(state.fbHeight - (cmd.clipRect.w * imguiInvScaleFactor)),
+			GLsizei((cmd.clipRect.z - cmd.clipRect.x) * imguiInvScaleFactor),
+			GLsizei((cmd.clipRect.w - cmd.clipRect.y) * imguiInvScaleFactor));
 
 		state.imguiGlCmdList.render(cmd.idxBufferOffset, cmd.numIndices);
 		CHECK_GL_ERROR();
