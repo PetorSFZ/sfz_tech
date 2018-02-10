@@ -286,9 +286,6 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 		}
 	}
 
-
-
-
 	// Updates controllers
 	state.userInput.controllersLastFrameState.clear();
 	for (auto pair : state.userInput.controllers) {

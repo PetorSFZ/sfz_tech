@@ -47,6 +47,9 @@ ImageView initializeImgui(Allocator* allocator) noexcept
 	// Create Imgui context
 	ImGui::CreateContext();
 
+	// Request dark style by default
+	ImGui::StyleColorsDark();
+
 	ImGuiIO& io = ImGui::GetIO();
 
 	// Enable GamePad navigation
