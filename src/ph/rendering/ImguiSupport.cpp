@@ -50,16 +50,14 @@ ImageView initializeImgui(Allocator* allocator) noexcept
 	ImGuiIO& io = ImGui::GetIO();
 
 	// Enable GamePad navigation
-	//io.NavFlags |= ImGuiNavFlags_EnableGamepad;
+	io.NavFlags |= ImGuiNavFlags_EnableGamepad;
 
 	// Enable keyboard navigation
 	io.NavFlags |= ImGuiNavFlags_EnableKeyboard;
 
 	// Disable draw function and set all window sizes to 1 (will be set proper in update)
-	io.DisplaySize.x = 1.0f;
-	io.DisplaySize.y = 1.0f;
-	io.DisplayFramebufferScale.x = 1.0f;
-	io.DisplayFramebufferScale.y = 1.0f;
+	io.DisplaySize = vec2(1.0f);
+	io.DisplayFramebufferScale = vec2(1.0f);
 	io.RenderDrawListsFn = nullptr;
 
 	// Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
@@ -107,8 +105,7 @@ void updateImgui(
 
 	// Set display dimensions
 	vec2 imguiDims = renderer.imguiWindowDimensions();
-	io.DisplaySize.x = imguiDims.x;
-	io.DisplaySize.y = imguiDims.y;
+	io.DisplaySize = imguiDims;
 
 	// Update mouse if available
 	if (rawMouse != nullptr) {
