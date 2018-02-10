@@ -27,22 +27,40 @@
 
 namespace ph {
 
-void initializeImgui(Renderer& renderer) noexcept
+static void* imguiAllocFunc(size_t size, void* userData) noexcept
 {
-	// Imgui
+	Allocator* allocator = reinterpret_cast<Allocator*>(userData);
+	return allocator->allocate(size, 32, "Imgui");
+}
+
+static void imguiFreeFunc(void* ptr, void* userData) noexcept
+{
+	Allocator* allocator = reinterpret_cast<Allocator*>(userData);
+	allocator->deallocate(ptr);
+}
+
+ImageView initializeImgui(Allocator* allocator) noexcept
+{
+	// Replace Imgui allocators with sfz::Allocator
+	ImGui::SetAllocatorFunctions(imguiAllocFunc, imguiFreeFunc, allocator);
+
+	// Create Imgui context
+	ImGui::CreateContext();
+
 	ImGuiIO& io = ImGui::GetIO();
-	vec2 imguiDims = renderer.imguiWindowDimensions();
-	io.DisplaySize.x = imguiDims.x;
-	io.DisplaySize.y = imguiDims.y;
+
+	// Enable GamePad navigation
+	//io.NavFlags |= ImGuiNavFlags_EnableGamepad;
+
+	// Enable keyboard navigation
+	io.NavFlags |= ImGuiNavFlags_EnableKeyboard;
+
+	// Disable draw function and set all window sizes to 1 (will be set proper in update)
+	io.DisplaySize.x = 1.0f;
+	io.DisplaySize.y = 1.0f;
 	io.DisplayFramebufferScale.x = 1.0f;
 	io.DisplayFramebufferScale.y = 1.0f;
 	io.RenderDrawListsFn = nullptr;
-
-	ImageView fontTexView;
-	io.Fonts->GetTexDataAsAlpha8(&fontTexView.rawData, &fontTexView.width, &fontTexView.height);
-	fontTexView.bytesPerPixel = 1;
-	fontTexView.type = ImageType::GRAY_U8;
-	renderer.initImgui(fontTexView);
 
 	// Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
 	io.KeyMap[ImGuiKey_Tab] = SDLK_TAB;
@@ -54,9 +72,10 @@ void initializeImgui(Renderer& renderer) noexcept
 	io.KeyMap[ImGuiKey_PageDown] = SDL_SCANCODE_PAGEDOWN;
 	io.KeyMap[ImGuiKey_Home] = SDL_SCANCODE_HOME;
 	io.KeyMap[ImGuiKey_End] = SDL_SCANCODE_END;
-	//io.KeyMap[ImGuiKey_Insert] = SDL_SCANCODE_INSERT;
+	io.KeyMap[ImGuiKey_Insert] = SDL_SCANCODE_INSERT;
 	io.KeyMap[ImGuiKey_Delete] = SDLK_DELETE;
 	io.KeyMap[ImGuiKey_Backspace] = SDLK_BACKSPACE;
+	io.KeyMap[ImGuiKey_Space] = SDLK_SPACE;
 	io.KeyMap[ImGuiKey_Enter] = SDLK_RETURN;
 	io.KeyMap[ImGuiKey_Escape] = SDLK_ESCAPE;
 	io.KeyMap[ImGuiKey_A] = SDLK_a;
@@ -65,6 +84,17 @@ void initializeImgui(Renderer& renderer) noexcept
 	io.KeyMap[ImGuiKey_X] = SDLK_x;
 	io.KeyMap[ImGuiKey_Y] = SDLK_y;
 	io.KeyMap[ImGuiKey_Z] = SDLK_z;
+
+	ImageView fontTexView;
+	io.Fonts->GetTexDataAsAlpha8(&fontTexView.rawData, &fontTexView.width, &fontTexView.height);
+	fontTexView.bytesPerPixel = 1;
+	fontTexView.type = ImageType::GRAY_U8;
+	return fontTexView;
+}
+
+void deinitializeImgui() noexcept
+{
+	ImGui::DestroyContext();
 }
 
 void updateImgui(
@@ -129,58 +159,41 @@ void updateImgui(
 		};
 
 		// press button, tweak value // e.g. Circle button
-		io.NavInputs[ImGuiNavInput_PadActivate] = buttonToImgui(c.a);
+		io.NavInputs[ImGuiNavInput_Activate] = buttonToImgui(c.a);
 
 		// close menu/popup/child, lose selection // e.g. Cross button
-		io.NavInputs[ImGuiNavInput_PadCancel] = buttonToImgui(c.b);
+		io.NavInputs[ImGuiNavInput_Cancel] = buttonToImgui(c.b);
 
 		// text input // e.g. Triangle button
-		io.NavInputs[ImGuiNavInput_PadInput] = buttonToImgui(c.y);
+		io.NavInputs[ImGuiNavInput_Input] = buttonToImgui(c.y);
 
 		// access menu, focus, move, resize // e.g. Square button
-		io.NavInputs[ImGuiNavInput_PadMenu] = buttonToImgui(c.x);
+		io.NavInputs[ImGuiNavInput_Menu] = buttonToImgui(c.x);
 
-		// Attempt to fix left stick a bit
+		// move / tweak / resize window (w/ PadMenu) // e.g. D-pad Left/Right/Up/Down
+		io.NavInputs[ImGuiNavInput_DpadUp] = buttonToImgui(c.padUp);
+		io.NavInputs[ImGuiNavInput_DpadDown] = buttonToImgui(c.padDown);
+		io.NavInputs[ImGuiNavInput_DpadLeft] = buttonToImgui(c.padLeft);
+		io.NavInputs[ImGuiNavInput_DpadRight] = buttonToImgui(c.padRight);
+
+		// scroll / move window (w/ PadMenu) // e.g. Left Analog Stick Left/Right/Up/Down
 		vec2 leftStick = c.leftStick;
-		if (leftStick != vec2(0.0f) && sfz::length(leftStick) < 0.6f) leftStick = vec2(0.0f);
-		
-		// move up, resize window (with PadMenu held) // e.g. D-pad up/down/left/right, analog
-		io.NavInputs[ImGuiNavInput_PadUp] = sfz::max(leftStick.y, 0.0f);
-		if (io.NavInputs[ImGuiNavInput_PadUp] == 0.0f)
-			io.NavInputs[ImGuiNavInput_PadUp] = buttonToImgui(c.padUp);
-		// move down
-		io.NavInputs[ImGuiNavInput_PadDown] = sfz::abs(sfz::min(leftStick.y, 0.0f));
-		if (io.NavInputs[ImGuiNavInput_PadDown] == 0.0f)
-			io.NavInputs[ImGuiNavInput_PadDown] = buttonToImgui(c.padDown);
-		// move left
-		io.NavInputs[ImGuiNavInput_PadLeft] = sfz::abs(sfz::min(leftStick.x, 0.0f));
-		if (io.NavInputs[ImGuiNavInput_PadLeft] == 0.0f)
-			io.NavInputs[ImGuiNavInput_PadLeft] = buttonToImgui(c.padLeft);
-		// move right
-		io.NavInputs[ImGuiNavInput_PadRight] = sfz::max(leftStick.x, 0.0f);
-		if (io.NavInputs[ImGuiNavInput_PadRight] == 0.0f)
-			io.NavInputs[ImGuiNavInput_PadRight] = buttonToImgui(c.padRight);
+		io.NavInputs[ImGuiNavInput_LStickUp] = sfz::max(leftStick.y, 0.0f);
+		io.NavInputs[ImGuiNavInput_LStickDown] = sfz::abs(sfz::min(leftStick.y, 0.0f));
+		io.NavInputs[ImGuiNavInput_LStickLeft] = sfz::abs(sfz::min(leftStick.x, 0.0f));
+		io.NavInputs[ImGuiNavInput_LStickRight] = sfz::max(leftStick.x, 0.0f);
 
-		// scroll up, move window (with PadMenu held) // e.g. right stick up/down/left/right, analog
-		io.NavInputs[ImGuiNavInput_PadScrollUp] = sfz::max(c.rightStick.y, 0.0f);
-		io.NavInputs[ImGuiNavInput_PadScrollDown] = sfz::abs(sfz::min(c.rightStick.y, 0.0f));
-		io.NavInputs[ImGuiNavInput_PadScrollLeft] = sfz::abs(sfz::min(c.rightStick.x, 0.0f));
-		io.NavInputs[ImGuiNavInput_PadScrollRight] = sfz::max(c.rightStick.x, 0.0f);
+		// next window (w/ PadMenu) // e.g. L1 or L2 (PS4), LB or LT (Xbox), L or ZL (Switch)
+		io.NavInputs[ImGuiNavInput_FocusPrev] = buttonToImgui(c.leftShoulder);
 
-		// next window (with PadMenu held) // e.g. L-trigger
-		io.NavInputs[ImGuiNavInput_PadFocusPrev] = buttonToImgui(c.leftShoulder);
+		// prev window (w/ PadMenu) // e.g. R1 or R2 (PS4), RB or RT (Xbox), R or ZL (Switch)
+		io.NavInputs[ImGuiNavInput_FocusNext] = buttonToImgui(c.rightShoulder);
 
-		// prev window (with PadMenu held) // e.g. R-trigger
-		io.NavInputs[ImGuiNavInput_PadFocusNext] = buttonToImgui(c.rightShoulder);
+		// slower tweaks // e.g. L1 or L2 (PS4), LB or LT (Xbox), L or ZL (Switch)
+		io.NavInputs[ImGuiNavInput_TweakSlow] = c.leftTrigger;
 
-		// slower tweaks // e.g. L-trigger, analog
-		io.NavInputs[ImGuiNavInput_PadTweakSlow] = c.leftTrigger;
-
-		// faster tweaks // e.g. R-trigger, analog
-		io.NavInputs[ImGuiNavInput_PadTweakFast] = c.rightTrigger;
-
-		// access menu // e.g. ALT
-		io.NavInputs[ImGuiNavInput_KeyMenu] = buttonToImgui(c.start);
+		// faster tweaks // e.g. R1 or R2 (PS4), RB or RT (Xbox), R or ZL (Switch)*
+		io.NavInputs[ImGuiNavInput_TweakFast] = c.rightTrigger;
 	}
 }
 

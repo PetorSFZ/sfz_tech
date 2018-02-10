@@ -134,7 +134,6 @@ int mainImpl(int, char*[], InitOptions&& options)
 	renderer->load(options.rendererName, sfz::getDefaultAllocator());
 
 	// Window settings
-	// TODO: Step = 32
 	Setting* width = cfg.sanitizeInt("Window", "width", false, 1280, 128, 3840, 32);
 	Setting* height = cfg.sanitizeInt("Window", "height", false, 800, 128, 2160, 32);
 	Setting* fullscreen = cfg.sanitizeBool("Window", "fullscreen", false, false);
@@ -160,12 +159,14 @@ int mainImpl(int, char*[], InitOptions&& options)
 		return EXIT_FAILURE;
 	}
 
-	// Initializing renderer
-	renderer->initRenderer(window);
-
 	// Initializing Imgui
 	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Initializing Imgui");
-	initializeImgui(*renderer);
+	ImageView imguiFontTexView = initializeImgui(sfz::getDefaultAllocator());
+
+	// Initializing renderer
+	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Initializing renderer");
+	renderer->initRenderer(window);
+	renderer->initImgui(imguiFontTexView);
 
 	// Start game loop
 	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Starting game loop");
@@ -189,6 +190,10 @@ int mainImpl(int, char*[], InitOptions&& options)
 				PH_LOG(LOG_LEVEL_WARNING, "PhantasyEngine", "Failed to write ini file");
 			}
 			cfg.destroy();
+
+			// Deinitializing Imgui
+			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Deinitializing Imgui");
+			deinitializeImgui();
 
 			// Cleanup SDL2
 			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Cleaning up SDL2");

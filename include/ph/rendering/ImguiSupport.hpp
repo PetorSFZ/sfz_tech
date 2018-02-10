@@ -28,9 +28,13 @@
 
 namespace ph {
 
+using sfz::Allocator;
 using sfz::DynArray;
 
-void initializeImgui(Renderer& renderer) noexcept;
+// Initializes imgui, returns font image view to be sent to renderers initImgui() function.
+ImageView initializeImgui(Allocator* allocator) noexcept;
+
+void deinitializeImgui() noexcept;
 
 void updateImgui(
 	Renderer& renderer,
