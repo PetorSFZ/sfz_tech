@@ -80,6 +80,9 @@ static void quit(GameLoopState& gameLoopState) noexcept
 	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Destroying renderer");
 	gameLoopState.renderer.destroy(); // Destroy the current renderer
 
+	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Closing SDL controllers");
+	gameLoopState.userInput.controllers.clear();
+
 	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Destroying SDL Window");
 	SDL_DestroyWindow(gameLoopState.window);
 
@@ -152,7 +155,7 @@ static bool handleUpdateOp(GameLoopState& state, UpdateOp& op) noexcept
 void gameLoopIteration(void* gameLoopStatePtr) noexcept
 {
 	GameLoopState& state = *static_cast<GameLoopState*>(gameLoopStatePtr);
-	
+
 	// Calculate delta since previous iteration
 	state.updateInfo.iterationDeltaSeconds = calculateDelta(state.previousItrTime);
 	//PH_LOG(LogLevel::INFO, "PhantasyEngine", "Frametime = %.3f ms",
@@ -259,7 +262,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 			SDL_SetWindowSize(state.window, newWidth, newHeight);
 		}
 	}
-	
+
 	// Set maximized
 	if (isMaximized != shouldBeMaximized && !isFullscreen && !shouldBeFullscreen) {
 		if (shouldBeMaximized) {
@@ -283,7 +286,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 		}
 	}
 
-	
+
 
 
 	// Updates controllers
