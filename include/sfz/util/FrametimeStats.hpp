@@ -45,6 +45,8 @@ public:
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
+	const DynArray<float>& samples() const noexcept { return mSamples; }
+
 	void addSample(float sampleInSeconds) noexcept;
 	void reset() noexcept;
 
@@ -54,6 +56,7 @@ public:
 	inline float max() const noexcept { return mMax; }
 	inline float avg() const noexcept { return mAvg; }
 	inline float sd() const noexcept { return mSD; }
+	inline float time() const noexcept { return mTotalTime; }
 	inline const char* toString() const noexcept { return mString.str(); }
 
 private:
@@ -62,7 +65,7 @@ private:
 
 	DynArray<float> mSamples;
 	DynString mString;
-	float mMin, mMax, mAvg, mSD;
+	float mMin, mMax, mAvg, mSD, mTotalTime;
 };
 
 } // namespace sfz

@@ -44,16 +44,16 @@ void FrametimeStats::addSample(float sampleInSeconds) noexcept
 	if (mSamples.size() == mSamples.capacity()) mSamples.remove(0);
 	mSamples.add(sampleInSeconds);
 
-	float sum = 0.0f;
+	mTotalTime = 0.0f;
 	mMin = 1000000000.0f;
 	mMax = -1000000000.0f;
 
 	for (float sample : mSamples) {
-		sum += sample;
+		mTotalTime += sample;
 		mMin = std::min(mMin, sample);
 		mMax = std::max(mMax, sample);
 	}
-	mAvg = sum / float(mSamples.size());
+	mAvg = mTotalTime / float(mSamples.size());
 
 	float varianceSum = 0.0f;
 	for (float sample : mSamples) {
@@ -61,8 +61,8 @@ void FrametimeStats::addSample(float sampleInSeconds) noexcept
 	}
 	mSD = std::sqrtf(varianceSum / float(mSamples.size()));
 
-	mString.printf("Avg: %.1fms, SD: %.1fms, Min: %.1fms, Max: %.1fms",
-	               mAvg * 1000.0f, mSD * 1000.0f, mMin * 1000.0f, mMax * 1000.0f);
+	mString.printf("%u samples (%.1fs) -- Avg: %.1fms -- SD: %.1fms -- Min: %.1fms -- Max: %.1fms",
+		mSamples.size(), mTotalTime, mAvg * 1000.0f, mSD * 1000.0f, mMin * 1000.0f, mMax * 1000.0f);
 }
 
 void FrametimeStats::reset() noexcept
