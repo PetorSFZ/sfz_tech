@@ -85,7 +85,7 @@ public:
 	void getAllSettings(DynArray<Setting*>& settings) noexcept;
 
 	/// Returns all sections available
-	void getSections(DynArray<StackString64>& sections) noexcept;
+	void getSections(DynArray<StackString32>& sections) noexcept;
 
 	/// Returns all settings available in a given section
 	void getSectionSettings(const char* section, DynArray<Setting*>& settings) noexcept;

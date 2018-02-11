@@ -33,7 +33,7 @@ using namespace sfz;
 // ------------------------------------------------------------------------------------------------
 
 struct Section final {
-	StackString64 sectionKey;
+	StackString32 sectionKey;
 	DynArray<UniquePtr<Setting>> settings;
 };
 
@@ -287,7 +287,7 @@ void GlobalConfig::getAllSettings(DynArray<Setting*>& settings) noexcept
 	}
 }
 
-void GlobalConfig::getSections(DynArray<StackString64>& sections) noexcept
+void GlobalConfig::getSections(DynArray<StackString32>& sections) noexcept
 {
 	sfz_assert_debug(mImpl != nullptr);
 	sections.ensureCapacity(mImpl->sections.size() + sections.size());

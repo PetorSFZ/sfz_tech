@@ -27,8 +27,8 @@
 
 namespace ph {
 
+using sfz::StackString32;
 using sfz::StackString48;
-using sfz::StackString64;
 
 // Setting class
 // ------------------------------------------------------------------------------------------------
@@ -50,8 +50,8 @@ public:
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
-	const StackString48& section() const noexcept { return mSection; }
-	const StackString64& key() const noexcept { return mKey; }
+	const StackString32& section() const noexcept { return mSection; }
+	const StackString48& key() const noexcept { return mKey; }
 	const SettingValue& value() const noexcept { return mValue; }
 	ValueType type() const noexcept { return mValue.type; }
 
@@ -84,8 +84,8 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	SettingValue mValue;
-	StackString48 mSection;
-	StackString64 mKey;
+	StackString32 mSection;
+	StackString48 mKey;
 };
 
 } // namespace ph
