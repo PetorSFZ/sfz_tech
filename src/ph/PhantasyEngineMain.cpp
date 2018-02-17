@@ -35,6 +35,7 @@
 
 #include "ph/config/GlobalConfig.hpp"
 #include "ph/game_loop/GameLoop.hpp"
+#include "ph/rendering/Image.hpp"
 #include "ph/rendering/ImguiSupport.hpp"
 #include "ph/sdl/SDLAllocator.hpp"
 #include "ph/utils/Logging.hpp"
@@ -82,6 +83,9 @@ int mainImpl(int, char*[], InitOptions&& options)
 {
 	// Set SDL allocators
 	if (!sdl::setSDLAllocator(sfz::getDefaultAllocator())) return EXIT_FAILURE;
+
+	// Set load image allocator
+	ph::setLoadImageAllocator(sfz::getDefaultAllocator());
 
 	// Windwows specific hacks
 #ifdef _WIN32
