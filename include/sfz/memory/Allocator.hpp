@@ -20,11 +20,7 @@
 
 #include <cstdint>
 
-#include "sfz/memory/CAllocator.h"
-
 namespace sfz {
-
-using std::uint64_t;
 
 // sfzCore Allocator Interface
 // ------------------------------------------------------------------------------------------------
@@ -102,11 +98,6 @@ public:
 	/// * Never change the name after it has been set
 	/// * Keep the name short (<32 chars)
 	virtual const char* getName() const noexcept { return "sfzCore Allocator"; }
-
-	/// Returns a C-compatible wrapper for this allocator. Useful if using for example DLLs with
-	/// C interfaces. Just be careful to actually pass a sfzAllocator instance to the DLL instead
-	/// of retrieving it there, otherwise it might use a different heap.
-	virtual sfzAllocator* cAllocator() noexcept = 0;
 
 	virtual ~Allocator() noexcept {}
 };

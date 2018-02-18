@@ -115,8 +115,6 @@ set(SFZ_CORE_INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/math/Vector.inl
 
 	${INCLUDE_DIR}/sfz/memory/Allocator.hpp
-	${INCLUDE_DIR}/sfz/memory/CAllocator.h
-	${INCLUDE_DIR}/sfz/memory/CAllocatorWrapper.hpp
 	${INCLUDE_DIR}/sfz/memory/DebugAllocator.hpp
 	${INCLUDE_DIR}/sfz/memory/MemoryUtils.hpp
 	${INCLUDE_DIR}/sfz/memory/New.hpp
@@ -142,7 +140,6 @@ set(SFZ_CORE_SOURCE_FILES
 	${SOURCE_DIR}/sfz/math/ProjectionMatrices.cpp
 
 	${SOURCE_DIR}/sfz/memory/Allocator.cpp
-	${SOURCE_DIR}/sfz/memory/CAllocatorWrapper.cpp
 	${SOURCE_DIR}/sfz/memory/DebugAllocator.cpp
 
 	${SOURCE_DIR}/sfz/strings/DynString.cpp
@@ -157,7 +154,6 @@ set(SFZ_CORE_SOURCE_FILES
 source_group(TREE ${SOURCE_DIR} FILES ${SFZ_CORE_SOURCE_FILES})
 
 set(SFZ_CORE_INCLUDE_CUDA_FILES
-	${INCLUDE_CUDA_DIR}/sfz/Cuda.hpp
 	${INCLUDE_CUDA_DIR}/sfz/cuda/Buffer.hpp
 	${INCLUDE_CUDA_DIR}/sfz/cuda/CudaUtils.hpp
 )

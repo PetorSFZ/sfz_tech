@@ -35,26 +35,6 @@ namespace sfz {
 
 class StandardAllocator final : public Allocator {
 public:
-
-	sfzAllocator cAlloc = {};
-
-	StandardAllocator()
-	{
-		cAlloc.implData = this;
-		cAlloc.allocate = [](void* implData, uint64_t size, uint64_t alignment, const char* name) {
-			StandardAllocator* allocator = static_cast<StandardAllocator*>(implData);
-			return allocator->allocate(size, alignment, name);
-		};
-		cAlloc.deallocate = [](void* implData, void* pointer) {
-			StandardAllocator* allocator = static_cast<StandardAllocator*>(implData);
-			return allocator->deallocate(pointer);
-		};
-		cAlloc.getName = [](void* implData) {
-			StandardAllocator* allocator = static_cast<StandardAllocator*>(implData);
-			return allocator->getName();
-		};
-	}
-
 	void* allocate(uint64_t size, uint64_t alignment, const char*) noexcept override final
 	{
 #ifdef _WIN32
@@ -79,11 +59,6 @@ public:
 	const char* getName() const noexcept override final
 	{
 		return "sfzCore default Allocator";
-	}
-
-	sfzAllocator* cAllocator() noexcept override final
-	{
-		return &cAlloc;
 	}
 };
 
