@@ -203,8 +203,32 @@ bool GlobalConfig::save() noexcept
 	for (auto& section : mImpl->sections) {
 		for (auto& setting : section.settings) {
 
-			// Skip if setting should be not written to file
-			if (!setting->value().writeToFile) continue;
+			// If setting should not be written to file, just write it if it did not exist in ini
+			// file already.
+			if (!setting->value().writeToFile)
+			{
+				switch (setting->type()) {
+				case ValueType::INT:
+					if (ini.getInt(setting->section().str, setting->key().str) == nullptr) {
+						ini.setInt(setting->section().str, setting->key().str,
+							setting->intBounds().defaultValue);
+					}
+					break;
+				case ValueType::FLOAT:
+					if (ini.getFloat(setting->section().str, setting->key().str) == nullptr) {
+						ini.setFloat(setting->section().str, setting->key().str,
+							setting->floatBounds().defaultValue);
+					}
+					break;
+				case ValueType::BOOL:
+					if (ini.getBool(setting->section().str, setting->key().str) == nullptr) {
+						ini.setBool(setting->section().str, setting->key().str,
+							setting->boolBounds().defaultValue);
+					}
+					break;
+				}
+				continue;
+			}
 
 			switch (setting->type()) {
 			case ValueType::INT:
