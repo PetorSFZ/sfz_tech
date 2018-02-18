@@ -130,7 +130,11 @@ const char* gameBaseFolderPath() noexcept
 		const char* myDocuments = myDocumentsPath();
 		size_t len = std::strlen(myDocuments);
 		char* tmp = static_cast<char*>(getDefaultAllocator()->allocate(len + 32, 32, "sfz::gameBaseFolderPath()"));
+#ifdef __APPLE__
+		std::snprintf(tmp, len + 32, "%s%s", myDocuments, "Library/Application Support/");
+#else
 		std::snprintf(tmp, len + 32, "%s%s", myDocuments, "My Games/");
+#endif
 		return tmp;
 	}();
 	return path;
