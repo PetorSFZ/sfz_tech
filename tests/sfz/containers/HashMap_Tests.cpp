@@ -22,7 +22,9 @@
 
 #include "sfz/containers/HashMap.hpp"
 #include "sfz/memory/DebugAllocator.hpp"
-#include "sfz/Strings.hpp"
+#include "sfz/strings/DynString.hpp"
+#include "sfz/strings/StackString.hpp"
+#include "sfz/strings/StringHashers.hpp"
 
 using namespace sfz;
 

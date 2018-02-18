@@ -83,14 +83,12 @@ set(SFZ_CORE_INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/PushWarnings.hpp
 	${INCLUDE_DIR}/sfz/SimdIntrinsics.hpp
 
-	${INCLUDE_DIR}/sfz/Containers.hpp
 	${INCLUDE_DIR}/sfz/containers/DynArray.hpp
 	${INCLUDE_DIR}/sfz/containers/DynArray.inl
 	${INCLUDE_DIR}/sfz/containers/HashMap.hpp
 	${INCLUDE_DIR}/sfz/containers/HashMap.inl
 	${INCLUDE_DIR}/sfz/containers/HashTableKeyDescriptor.hpp
 
-	${INCLUDE_DIR}/sfz/Geometry.hpp
 	${INCLUDE_DIR}/sfz/geometry/AABB.hpp
 	${INCLUDE_DIR}/sfz/geometry/AABB.inl
 	${INCLUDE_DIR}/sfz/geometry/AABB2D.hpp
@@ -103,7 +101,6 @@ set(SFZ_CORE_INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/geometry/Plane.inl
 	${INCLUDE_DIR}/sfz/geometry/Sphere.hpp
 
-	${INCLUDE_DIR}/sfz/Math.hpp
 	${INCLUDE_DIR}/sfz/math/MathPrimitiveHashers.hpp
 	${INCLUDE_DIR}/sfz/math/MathPrimitiveHashers.inl
 	${INCLUDE_DIR}/sfz/math/MathPrimitiveToStrings.hpp
@@ -117,7 +114,6 @@ set(SFZ_CORE_INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/math/Vector.hpp
 	${INCLUDE_DIR}/sfz/math/Vector.inl
 
-	${INCLUDE_DIR}/sfz/Memory.hpp
 	${INCLUDE_DIR}/sfz/memory/Allocator.hpp
 	${INCLUDE_DIR}/sfz/memory/CAllocator.h
 	${INCLUDE_DIR}/sfz/memory/CAllocatorWrapper.hpp
@@ -127,13 +123,11 @@ set(SFZ_CORE_INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/memory/SmartPointers.hpp
 	${INCLUDE_DIR}/sfz/memory/SmartPointers.inl
 
-	${INCLUDE_DIR}/sfz/Strings.hpp
 	${INCLUDE_DIR}/sfz/strings/DynString.hpp
 	${INCLUDE_DIR}/sfz/strings/StackString.hpp
 	${INCLUDE_DIR}/sfz/strings/StringHashers.hpp
 	${INCLUDE_DIR}/sfz/strings/StringID.hpp
 
-	${INCLUDE_DIR}/sfz/Util.hpp
 	${INCLUDE_DIR}/sfz/util/FrametimeStats.hpp
 	${INCLUDE_DIR}/sfz/util/IniParser.hpp
 	${INCLUDE_DIR}/sfz/util/IO.hpp
