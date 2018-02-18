@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Set PhantasyTestbed main directory as working directory
+# Set sfzCore main directory as working directory
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR/..
 
