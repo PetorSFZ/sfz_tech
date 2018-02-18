@@ -180,7 +180,7 @@ struct FloatBounds final {
 	FloatBounds() noexcept = default;
 	explicit FloatBounds(
 		float defaultValue,
-		float minValue = FLT_MIN,
+		float minValue = -FLT_MAX,
 		float maxValue = FLT_MAX) noexcept
 	:
 		defaultValue(defaultValue),
@@ -270,17 +270,17 @@ struct SettingValue final {
 	static SettingValue createInt(
 		int32_t value = 0,
 		bool writeToFile = true,
-		const IntBounds bounds = IntBounds(0));
+		const IntBounds& bounds = IntBounds(0));
 
 	static SettingValue createFloat(
 		float value = 0.0f,
 		bool writeToFile = true,
-		const FloatBounds bounds = FloatBounds(0.0f));
+		const FloatBounds& bounds = FloatBounds(0.0f));
 
 	static SettingValue createBool(
 		bool value = false,
 		bool writeToFile = true,
-		const BoolBounds bounds = BoolBounds(false));
+		const BoolBounds& bounds = BoolBounds(false));
 };
 static_assert(sizeof(phSettingValue) == sizeof(uint32_t) * 7, "phSettingValue is padded");
 static_assert(sizeof(phSettingValue) == sizeof(SettingValue), "SettingValue is padded");
@@ -288,7 +288,7 @@ static_assert(sizeof(phSettingValue) == sizeof(SettingValue), "SettingValue is p
 inline SettingValue SettingValue::createInt(
 	int32_t value,
 	bool writeToFile,
-	const IntBounds bounds)
+	const IntBounds& bounds)
 {
 	SettingValue setting;
 	setting.type = ValueType::INT;
@@ -299,9 +299,9 @@ inline SettingValue SettingValue::createInt(
 }
 
 inline SettingValue SettingValue::createFloat(
-	float value,
+	float value, 
 	bool writeToFile,
-	const FloatBounds bounds)
+	const FloatBounds& bounds)
 {
 	SettingValue setting;
 	setting.type = ValueType::FLOAT;
@@ -314,7 +314,7 @@ inline SettingValue SettingValue::createFloat(
 inline SettingValue SettingValue::createBool(
 	bool value,
 	bool writeToFile,
-	const BoolBounds bounds)
+	const BoolBounds& bounds)
 {
 	SettingValue setting;
 	setting.type = ValueType::BOOL;
