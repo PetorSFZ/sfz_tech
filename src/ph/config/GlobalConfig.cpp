@@ -147,7 +147,8 @@ void GlobalConfig::load() noexcept
 	if (ini.load()) {
 		PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Succesfully loaded config ini file");
 	} else {
-		PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Failed to load config ini file, expected if this is first run");
+		PH_LOG(LOG_LEVEL_INFO,
+			"PhantasyEngine", "Failed to load config ini file, expected if this is first run");
 	}
 
 	// Create setting items of all ini items
@@ -171,7 +172,8 @@ void GlobalConfig::load() noexcept
 		}
 
 		// Create new setting
-		section->settings.add(makeUniqueDefault<Setting>(item.getSection(), item.getKey()));
+		section->settings.add(
+			makeUnique<Setting>(mImpl->allocator, item.getSection(), item.getKey()));
 		Setting& setting = *section->settings.last();
 
 		// Get value of setting
@@ -179,15 +181,15 @@ void GlobalConfig::load() noexcept
 			float floatVal = *item.getFloat();
 			int32_t intVal = *item.getInt();
 			if (approxEqual(floatVal, float(intVal))) {
-				setting.setInt(intVal);
+				setting.create(SettingValue::createInt(intVal, true, IntBounds(0)));
 			}
 			else {
-				setting.setFloat(floatVal);
+				setting.create(SettingValue::createFloat(floatVal, true, FloatBounds(0.0f)));
 			}
 		}
 		else if (item.getBool() != nullptr) {
-			bool b = *item.getBool();
-			setting.setBool(b);
+			bool boolVal = *item.getBool();
+			setting.create(SettingValue::createBool(boolVal, true, BoolBounds(false)));
 		}
 	}
 
