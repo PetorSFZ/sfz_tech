@@ -89,5 +89,12 @@ target_include_directories(some_executable ${SFZ_CORE_INCLUDE_DIRS})
 target_link_libraries(some_executable ${SFZ_CORE_LIBRARIES})
 ~~~
 
+## Usage
+
+### Context creation
+
+sfzCore stores all of its global singletons inside a context. Such a contex must be set before sfzCore can be used, this can be accomplished by including `#include <sfz/Context.hpp>` and calling `sfz::setContext(sfz::getStandardContext());` in the beginning of your program before you start using sfzCore. The use of contexts makes it easier to use sfzCore with dynamic libraries. See the `Context.hpp` header for more documentation.
+
 ## License
+
 Licensed under zlib, this means that you can basically use the code however you want as long as you give credit and don't claim you wrote it yourself. See LICENSE file for more info.

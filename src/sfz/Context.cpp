@@ -16,37 +16,43 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/PushWarnings.hpp"
-#include "catch.hpp"
-#include "sfz/PopWarnings.hpp"
-
-#include <cstring>
-
 #include "sfz/Context.hpp"
-#include "sfz/strings/StringID.hpp"
 
-using namespace sfz;
+#include "sfz/Assert.hpp"
+#include "sfz/memory/StandardAllocator.hpp"
 
-TEST_CASE("Testing StringCollection", "[sfz::StringID]")
+namespace sfz {
+
+// Context getters/setters
+// ------------------------------------------------------------------------------------------------
+
+static Context* globalContextPtr = nullptr;
+
+Context* getContext() noexcept
 {
-	StringCollection collection(32, getDefaultAllocator());
-	REQUIRE(collection.numStringsHeld() == 0);
-
-	StringID id1 = collection.getStringID("Hello");
-	REQUIRE(collection.numStringsHeld() == 1);
-	StringID id2 = collection.getStringID("World");
-	REQUIRE(collection.numStringsHeld() == 2);
-
-	REQUIRE(id1 == id1);
-	REQUIRE(id2 == id2);
-	REQUIRE(id1 != id2);
-
-	REQUIRE(collection.getString(id1) != nullptr);
-	REQUIRE(std::strcmp("Hello", collection.getString(id1)) == 0);
-	REQUIRE(std::strcmp("World", collection.getString(id2)) == 0);
-
-	StringID badId;
-	badId.id = id1.id + id2.id;
-	REQUIRE(collection.getString(badId) == nullptr);
-	REQUIRE(collection.numStringsHeld() == 2);
+	sfz_assert_debug(globalContextPtr != nullptr);
+	return globalContextPtr;
 }
+
+bool setContext(Context* context) noexcept
+{
+	sfz_assert_release(context != nullptr);
+	if (globalContextPtr != nullptr) return false;
+	globalContextPtr = context;
+	return true;
+}
+
+// Standard context
+// ------------------------------------------------------------------------------------------------
+
+Context* getStandardContext() noexcept
+{
+	static Context context = []() {
+		Context tmp;
+		tmp.defaultAllocator = getStandardAllocator();
+		return tmp;
+	}();
+	return &context;
+}
+
+} // namespace sfz

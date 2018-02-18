@@ -22,6 +22,7 @@
 #include <cstddef> // nullptr_t
 #include <type_traits> // std::is_array
 
+#include "sfz/Context.hpp"
 #include "sfz/memory/Allocator.hpp"
 #include "sfz/memory/New.hpp"
 

@@ -16,37 +16,17 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/PushWarnings.hpp"
-#include "catch.hpp"
-#include "sfz/PopWarnings.hpp"
+#pragma once
 
-#include <cstring>
+#include "sfz/memory/Allocator.hpp"
 
-#include "sfz/Context.hpp"
-#include "sfz/strings/StringID.hpp"
+namespace sfz {
 
-using namespace sfz;
+// StandardAllocator retrieval function
+// ------------------------------------------------------------------------------------------------
 
-TEST_CASE("Testing StringCollection", "[sfz::StringID]")
-{
-	StringCollection collection(32, getDefaultAllocator());
-	REQUIRE(collection.numStringsHeld() == 0);
+/// Returns pointer to the standard allocator, which allocates memory using some sort of OS
+/// specific malloc()/free() functions with support for aligned memory.
+Allocator* getStandardAllocator() noexcept;
 
-	StringID id1 = collection.getStringID("Hello");
-	REQUIRE(collection.numStringsHeld() == 1);
-	StringID id2 = collection.getStringID("World");
-	REQUIRE(collection.numStringsHeld() == 2);
-
-	REQUIRE(id1 == id1);
-	REQUIRE(id2 == id2);
-	REQUIRE(id1 != id2);
-
-	REQUIRE(collection.getString(id1) != nullptr);
-	REQUIRE(std::strcmp("Hello", collection.getString(id1)) == 0);
-	REQUIRE(std::strcmp("World", collection.getString(id2)) == 0);
-
-	StringID badId;
-	badId.id = id1.id + id2.id;
-	REQUIRE(collection.getString(badId) == nullptr);
-	REQUIRE(collection.numStringsHeld() == 2);
-}
+} // namespace sfz

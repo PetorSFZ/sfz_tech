@@ -30,6 +30,8 @@ using namespace sfz;
 
 TEST_CASE("HashMap: Default constructor", "[sfz::HashMap]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	HashMap<int,int> m1;
 	REQUIRE(m1.size() == 0);
 	REQUIRE(m1.capacity() == 0);
@@ -38,6 +40,8 @@ TEST_CASE("HashMap: Default constructor", "[sfz::HashMap]")
 
 TEST_CASE("HashMap: Copy constructors", "[sfz::HashMap]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	HashMap<int,int> m1(1);
 	REQUIRE(m1.put(1, 2) == 2);
 	REQUIRE(m1.put(2, 3) == 3);
@@ -89,6 +93,8 @@ TEST_CASE("HashMap: Copy constructors", "[sfz::HashMap]")
 
 TEST_CASE("HashMap: Copy constructor with allocator", "[sfz::DynArray]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	DebugAllocator first("first"), second("second");
 	REQUIRE(first.numAllocations() == 0);
 	REQUIRE(second.numAllocations() == 0);
@@ -123,6 +129,8 @@ TEST_CASE("HashMap: Copy constructor with allocator", "[sfz::DynArray]")
 
 TEST_CASE("HashMap: Swap & move constructors", "[sfz::HashMap]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	HashMap<int,int> v1;
 	HashMap<int,int> v2(1);
 	v2.put(1, 2);
@@ -157,6 +165,8 @@ TEST_CASE("HashMap: Swap & move constructors", "[sfz::HashMap]")
 
 TEST_CASE("HashMap: rehash()", "[sfz::HashMap]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	HashMap<int,int> m1;
 	REQUIRE(m1.capacity() == 0);
 	REQUIRE(m1.size() == 0);
@@ -190,6 +200,8 @@ TEST_CASE("HashMap: rehash()", "[sfz::HashMap]")
 
 TEST_CASE("HashMap: Rehashing in put()", "[sfz::HashMap]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	HashMap<int,int> m1;
 	REQUIRE(m1.size() == 0);
 	REQUIRE(m1.capacity() == 0);
@@ -207,6 +219,8 @@ TEST_CASE("HashMap: Rehashing in put()", "[sfz::HashMap]")
 
 TEST_CASE("HashMap: Adding and retrieving elements", "[sfz::HashMap]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	HashMap<int,int> m1;
 
 	REQUIRE(m1.size() == 0);
@@ -255,6 +269,8 @@ struct ZeroHashDescriptor final {
 
 TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	HashMap<int,int,ZeroHashDescriptor> m;
 	REQUIRE(m.size() == 0);
 	REQUIRE(m.capacity() == 0);
@@ -310,6 +326,8 @@ TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
 
 TEST_CASE("HashMap operator[]", "[sfz::HashMap]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	HashMap<int, int> m(1);
 	REQUIRE(m.size() == 0);
 	REQUIRE(m.capacity() != 0);
@@ -337,6 +355,8 @@ TEST_CASE("HashMap operator[]", "[sfz::HashMap]")
 
 TEST_CASE("Empty HashMap", "[sfz::HashMap]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	HashMap<int,int> m;
 	const HashMap<int,int> cm;
 
@@ -384,6 +404,8 @@ TEST_CASE("Empty HashMap", "[sfz::HashMap]")
 
 TEST_CASE("HashMap with strings", "[sfz::HashMap]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	SECTION("const char*") {
 		HashMap<const char*, uint32_t> m(0);
 		m.put("foo", 1);
@@ -510,6 +532,8 @@ struct hash<MoveTestStruct> {
 
 TEST_CASE("Perfect forwarding in put()", "[sfz::HashMap]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	HashMap<MoveTestStruct, MoveTestStruct> m;
 
 	SECTION("const ref, const ref") {

@@ -26,6 +26,8 @@ using namespace sfz;
 
 TEST_CASE("Basic tests", "[sfz::sfz_new]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	int flag = 0;
 
 	struct TestClass {

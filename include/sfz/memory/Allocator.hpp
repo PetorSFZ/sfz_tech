@@ -102,21 +102,4 @@ public:
 	virtual ~Allocator() noexcept {}
 };
 
-// Default allocator
-// ------------------------------------------------------------------------------------------------
-
-/// Returns pointer to the default Allocator.
-Allocator* getDefaultAllocator() noexcept;
-
-/// Returns the number of times getDefaultAllocator() has been called since the start of the
-/// program.
-uint64_t getDefaultAllocatorNumTimesRetrieved() noexcept;
-
-/// Sets the default Allocator to a user-provided one. Must be the first thing the program does.
-/// Will terminate the program if getDefaultAllocatorNumTimesRetrieved() does not return 0.
-/// After this function is called getDefaultAllocator() will return the user-provided one instead
-/// of the original one, so the user is responsible for keeping the new Allocator alive for the
-/// rest of the program's lifetime.
-void setDefaultAllocator(Allocator* allocator) noexcept;
-
 } // namespace sfz

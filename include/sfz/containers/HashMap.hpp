@@ -26,6 +26,7 @@
 
 #include "sfz/Assert.hpp"
 #include "sfz/containers/HashTableKeyDescriptor.hpp"
+#include "sfz/Context.hpp"
 #include "sfz/memory/Allocator.hpp"
 
 namespace sfz {

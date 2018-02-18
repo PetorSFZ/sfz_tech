@@ -21,6 +21,7 @@
 #include <algorithm> // std::max()
 #include <utility> // std::forward
 
+#include "sfz/Context.hpp"
 #include "sfz/memory/Allocator.hpp"
 
 namespace sfz {

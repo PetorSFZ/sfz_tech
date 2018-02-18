@@ -16,7 +16,7 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/memory/Allocator.hpp"
+#include "sfz/memory/StandardAllocator.hpp"
 
 #include <cinttypes>
 
@@ -58,49 +58,17 @@ public:
 
 	const char* getName() const noexcept override final
 	{
-		return "sfzCore default Allocator";
+		return "sfzCore StandardAllocator";
 	}
 };
 
-// Default allocator
+// StandardAllocator retrieval function
 // ------------------------------------------------------------------------------------------------
 
-static Allocator* standardAllocator() noexcept
+Allocator* getStandardAllocator() noexcept
 {
 	static StandardAllocator allocator;
-	return static_cast<Allocator*>(&allocator);
-}
-
-static Allocator*& currentAllocator() noexcept
-{
-	static Allocator* allocator = standardAllocator();
-	return allocator;
-}
-
-static uint64_t& counter() noexcept
-{
-	static uint64_t c = 0;
-	return c;
-}
-
-Allocator* getDefaultAllocator() noexcept
-{
-	counter() += 1;
-	return currentAllocator();
-}
-
-uint64_t getDefaultAllocatorNumTimesRetrieved() noexcept
-{
-	return counter();
-}
-
-void setDefaultAllocator(Allocator* allocator) noexcept
-{
-	if (counter() != 0) {
-		sfz::error("setDefaultAllocator() failed: getDefaultAllocator() has been called " PRIu64 " times.",
-		            counter());
-	}
-	currentAllocator() = allocator;
+	return &allocator;
 }
 
 } // namespace sfz

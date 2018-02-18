@@ -51,6 +51,8 @@ public:
 
 TEST_CASE("Basic UniquePtr tests", "[sfz::UniquePtr]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	int flag = 0;
 
 	struct TestClass {
@@ -93,6 +95,8 @@ TEST_CASE("Basic UniquePtr tests", "[sfz::UniquePtr]")
 
 TEST_CASE("makeUnique()", "[sfz::SmartPointers]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	struct Foo {
 		int a, b;
 		Foo(int a, int b) : a(a), b(b) {}
@@ -104,6 +108,8 @@ TEST_CASE("makeUnique()", "[sfz::SmartPointers]")
 
 TEST_CASE("castTake()", "[sfz::SmartPointers]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	UniquePtr<Derived> derived = makeUniqueDefault<Derived>(3);
 	REQUIRE(derived->val == 3);
 	UniquePtr<Base> base = derived.castTake<Base>();
@@ -115,6 +121,8 @@ TEST_CASE("castTake()", "[sfz::SmartPointers]")
 
 TEST_CASE("Cast constructor", "[sfz::SmartPointers]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	UniquePtr<Base> ptr = makeUniqueDefault<Derived>(3);
 	REQUIRE(ptr->val == 3);
 }
@@ -124,6 +132,8 @@ TEST_CASE("Cast constructor", "[sfz::SmartPointers]")
 
 TEST_CASE("Basic SharedPtr tests", "[sfz::SharedPtr]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	int flag = 0;
 
 	struct TestClass {
@@ -181,6 +191,8 @@ TEST_CASE("Basic SharedPtr tests", "[sfz::SharedPtr]")
 
 TEST_CASE("makeShared()", "[sfz::SmartPointers]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	struct Foo {
 		int a, b;
 		Foo(int a, int b) : a(a), b(b) {}
@@ -192,6 +204,8 @@ TEST_CASE("makeShared()", "[sfz::SmartPointers]")
 
 TEST_CASE("cast()", "[sfz::SmartPointers]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	SharedPtr<Derived> derived = makeSharedDefault<Derived>(3);
 	REQUIRE(derived->val == 3);
 	{
@@ -208,6 +222,8 @@ TEST_CASE("cast()", "[sfz::SmartPointers]")
 
 TEST_CASE("Cast constructors", "[sfz::SmartPointers]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	SharedPtr<Base> ptr = makeSharedDefault<Derived>(3);
 	REQUIRE(ptr->val == 3);
 	REQUIRE(ptr.refCount() == 1);

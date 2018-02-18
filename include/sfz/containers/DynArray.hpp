@@ -26,6 +26,7 @@
 #include <utility> // std::move()
 
 #include "sfz/Assert.hpp"
+#include "sfz/Context.hpp"
 #include "sfz/memory/Allocator.hpp"
 
 namespace sfz {

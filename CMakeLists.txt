@@ -78,6 +78,7 @@ set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
 set(SFZ_CORE_INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/Assert.hpp
 	${INCLUDE_DIR}/sfz/Assert.inl
+	${INCLUDE_DIR}/sfz/Context.hpp
 	${INCLUDE_DIR}/sfz/CudaCompatibility.hpp
 	${INCLUDE_DIR}/sfz/PopWarnings.hpp
 	${INCLUDE_DIR}/sfz/PushWarnings.hpp
@@ -120,6 +121,7 @@ set(SFZ_CORE_INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/memory/New.hpp
 	${INCLUDE_DIR}/sfz/memory/SmartPointers.hpp
 	${INCLUDE_DIR}/sfz/memory/SmartPointers.inl
+	${INCLUDE_DIR}/sfz/memory/StandardAllocator.hpp
 
 	${INCLUDE_DIR}/sfz/strings/DynString.hpp
 	${INCLUDE_DIR}/sfz/strings/StackString.hpp
@@ -135,12 +137,13 @@ source_group(TREE ${INCLUDE_DIR} FILES ${SFZ_CORE_INCLUDE_FILES})
 set(SFZ_CORE_SOURCE_FILES
 
 	${SOURCE_DIR}/sfz/Assert.cpp
+	${SOURCE_DIR}/sfz/Context.cpp
 
 	${SOURCE_DIR}/sfz/math/MathPrimitiveToStrings.cpp
 	${SOURCE_DIR}/sfz/math/ProjectionMatrices.cpp
 
-	${SOURCE_DIR}/sfz/memory/Allocator.cpp
 	${SOURCE_DIR}/sfz/memory/DebugAllocator.cpp
+	${SOURCE_DIR}/sfz/memory/StandardAllocator.cpp
 
 	${SOURCE_DIR}/sfz/strings/DynString.cpp
 	${SOURCE_DIR}/sfz/strings/StackString.cpp

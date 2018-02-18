@@ -30,6 +30,8 @@ using namespace sfz;
 
 TEST_CASE("Default constructor", "[sfz::DynArray]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	DynArray<float> floatArray;
 	REQUIRE(floatArray.size() == 0);
 	REQUIRE(floatArray.capacity() == 0);
@@ -38,6 +40,8 @@ TEST_CASE("Default constructor", "[sfz::DynArray]")
 
 TEST_CASE("Fill constructor", "[sfz::DynArray]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	DynArray<UniquePtr<int>> nullptrs;
 	nullptrs.addMany(8);
 	for (uint32_t i = 0; i < 8; ++i) {
@@ -68,6 +72,8 @@ TEST_CASE("Fill constructor", "[sfz::DynArray]")
 
 TEST_CASE("Copy constructors", "[sfz::DynArray]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	DynArray<int> first;
 	first.addMany(3, 3);
 	DynArray<int> second;
@@ -98,6 +104,8 @@ TEST_CASE("Copy constructors", "[sfz::DynArray]")
 
 TEST_CASE("Copy constructor with allocator", "[sfz::DynArray]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	DebugAllocator first("first"), second("second");
 	REQUIRE(first.numAllocations() == 0);
 	REQUIRE(second.numAllocations() == 0);
@@ -130,6 +138,8 @@ TEST_CASE("Copy constructor with allocator", "[sfz::DynArray]")
 
 TEST_CASE("Swap & move constructors", "[sfz::DynArray]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	DynArray<int> v1;
 	DynArray<int> v2(32);
 	v2.addMany(2, 42);
@@ -165,6 +175,8 @@ TEST_CASE("Swap & move constructors", "[sfz::DynArray]")
 
 TEST_CASE("operator[]", "[sfz::DynArray]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	DynArray<int> v{4};
 	v[0] = 0;
 	v[1] = 1;
@@ -180,6 +192,8 @@ TEST_CASE("operator[]", "[sfz::DynArray]")
 
 TEST_CASE("iterators", "[sfz::DynArray]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	DynArray<int> v{4};
 	v[0] = 0;
 	v[1] = 1;
@@ -195,6 +209,8 @@ TEST_CASE("iterators", "[sfz::DynArray]")
 
 TEST_CASE("add()", "[sfz::DynArray]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	DynArray<int> v(2);
 	REQUIRE(v.size() == 0);
 	REQUIRE(v.capacity() == 2);
@@ -260,6 +276,8 @@ TEST_CASE("add()", "[sfz::DynArray]")
 
 TEST_CASE("insert()", "[sfz::DynArray]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	DynArray<int> v(2);
 	REQUIRE(v.size() == 0);
 	REQUIRE(v.capacity() == 2);
@@ -300,6 +318,8 @@ TEST_CASE("insert()", "[sfz::DynArray]")
 
 TEST_CASE("remove()", "[sfz::DynArray]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	SECTION("Basic test") {
 		DynArray<int> v;
 		const int vals[] ={1, 2, 3, 4};
@@ -363,6 +383,8 @@ TEST_CASE("remove()", "[sfz::DynArray]")
 
 TEST_CASE("find()", "[sfz::DynArray]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	DynArray<int> v;
 	const int vals[] = {1, 2, 3, 4};
 	v.add(vals, 4);
@@ -387,6 +409,8 @@ TEST_CASE("find()", "[sfz::DynArray]")
 
 TEST_CASE("Allocator bug", "[sfz::DynArray]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	DebugAllocator debugAlloc("DebugAlloc", 4u);
 	{
 		DynArray<DynArray<uint32_t>> arr(0, &debugAlloc);
@@ -417,6 +441,8 @@ TEST_CASE("Allocator bug", "[sfz::DynArray]")
 
 TEST_CASE("Initial capacity == 1 bug", "[sfz::DynArray]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	// Note, this test case does not actually reproduce the bug. But it should fix it anyway.
 	// The problem was essentially that the initial capacity could be 1, and then increasing by a
 	// factor of 1.75 would still yield a capacity of 1.

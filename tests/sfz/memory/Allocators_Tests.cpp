@@ -20,6 +20,7 @@
 #include "catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
+#include "sfz/Context.hpp"
 #include "sfz/memory/Allocator.hpp"
 #include "sfz/memory/MemoryUtils.hpp"
 
@@ -27,6 +28,8 @@ using namespace sfz;
 
 TEST_CASE("Testing alignment", "[sfz::StandardAllocator]")
 {
+	sfz::setContext(sfz::getStandardContext());
+
 	void* memory16byte = getDefaultAllocator()->allocate(512, 16);
 	REQUIRE(memory16byte != nullptr);
 	REQUIRE(isAligned(memory16byte, 16));
