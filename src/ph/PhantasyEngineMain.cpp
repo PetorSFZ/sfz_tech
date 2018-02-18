@@ -45,6 +45,14 @@ namespace ph {
 using sfz::StackString192;
 using sfz::StackString320;
 
+// Request dedicated graphics card over integrated on Windows
+// ------------------------------------------------------------------------------------------------
+
+#ifdef _WIN32
+extern "C" { _declspec(dllexport) DWORD NvOptimusEnablement = 1; }
+extern "C" { _declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 1; }
+#endif
+
 // Statics
 // ------------------------------------------------------------------------------------------------
 
