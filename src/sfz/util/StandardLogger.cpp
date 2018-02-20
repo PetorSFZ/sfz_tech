@@ -16,45 +16,65 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/Context.hpp"
-
-#include "sfz/Assert.hpp"
-#include "sfz/memory/StandardAllocator.hpp"
 #include "sfz/util/StandardLogger.hpp"
+
+#include <cstdarg>
+#include <cstdio>
+#include <cstring>
 
 namespace sfz {
 
-// Context getters/setters
+// Static functions
 // ------------------------------------------------------------------------------------------------
 
-static Context* globalContextPtr = nullptr;
+constexpr const char* LOG_LEVEL_STRINGS[] = {
+	"INFO_NOISY",
+	"INFO",
+	"WARNING",
+	"ERROR"
+};
 
-Context* getContext() noexcept
+static const char* toString(LogLevel level) noexcept
 {
-	sfz_assert_debug(globalContextPtr != nullptr);
-	return globalContextPtr;
+	return LOG_LEVEL_STRINGS[uint32_t(level)];
 }
 
-bool setContext(Context* context) noexcept
-{
-	sfz_assert_release(context != nullptr);
-	if (globalContextPtr != nullptr) return false;
-	globalContextPtr = context;
-	return true;
-}
-
-// Standard context
+// StandardLogger implementation
 // ------------------------------------------------------------------------------------------------
 
-Context* getStandardContext() noexcept
+class StandardLogger final : public LoggingInterface {
+public:
+	void log(const char* file, int line, LogLevel level, const char* tag,
+		const char* format, ...) override final
+	{
+		// Strip path from file
+		const char* strippedFile = std::strrchr(file, '/') + 1;
+		if (strippedFile == nullptr) strippedFile = file;
+
+		// Print log level, tag, file and line number.
+		printf("[%s] -- [%s] -- [%s:%i]: ", toString(level), tag, strippedFile, line);
+
+		// Print message
+		va_list args;
+		va_start(args, format);
+		vprintf(format, args);
+		va_end(args);
+
+		// Print newline
+		printf("\n");
+
+		// Flush stdout
+		fflush(stdout);
+	}
+};
+
+// StandardLogger retrieval function
+// ------------------------------------------------------------------------------------------------
+
+LoggingInterface* getStandardLogger() noexcept
 {
-	static Context context = []() {
-		Context tmp;
-		tmp.defaultAllocator = getStandardAllocator();
-		tmp.logger = getStandardLogger();
-		return tmp;
-	}();
-	return &context;
+	static StandardLogger logger;
+	return &logger;
 }
 
 } // namespace sfz

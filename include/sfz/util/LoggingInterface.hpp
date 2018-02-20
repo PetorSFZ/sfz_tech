@@ -16,45 +16,29 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/Context.hpp"
+#pragma once
 
-#include "sfz/Assert.hpp"
-#include "sfz/memory/StandardAllocator.hpp"
-#include "sfz/util/StandardLogger.hpp"
+#include <cstdint>
 
 namespace sfz {
 
-// Context getters/setters
+// LogLevel enum
 // ------------------------------------------------------------------------------------------------
 
-static Context* globalContextPtr = nullptr;
+enum class LogLevel : uint32_t {
+	INFO_NOISY = 0, // Extra detailed info that is not normally useful
+	INFO,
+	WARNING,
+	ERROR
+};
 
-Context* getContext() noexcept
-{
-	sfz_assert_debug(globalContextPtr != nullptr);
-	return globalContextPtr;
-}
-
-bool setContext(Context* context) noexcept
-{
-	sfz_assert_release(context != nullptr);
-	if (globalContextPtr != nullptr) return false;
-	globalContextPtr = context;
-	return true;
-}
-
-// Standard context
+// Logging interface
 // ------------------------------------------------------------------------------------------------
 
-Context* getStandardContext() noexcept
-{
-	static Context context = []() {
-		Context tmp;
-		tmp.defaultAllocator = getStandardAllocator();
-		tmp.logger = getStandardLogger();
-		return tmp;
-	}();
-	return &context;
-}
+class LoggingInterface {
+public:
+	virtual void log(
+		const char* file, int line, LogLevel level, const char* tag, const char* format, ...) = 0;
+};
 
 } // namespace sfz

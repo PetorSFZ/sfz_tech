@@ -18,7 +18,8 @@
 
 #pragma once
 
-#include <sfz/memory/Allocator.hpp>
+#include "sfz/util/LoggingInterface.hpp"
+#include "sfz/memory/Allocator.hpp"
 
 namespace sfz {
 
@@ -42,6 +43,10 @@ struct Context final {
 	/// by another allocator you must make very sure that sfzCore has not allocated any memory using
 	/// the previous instance, which can be very hard.
 	Allocator* defaultAllocator = nullptr;
+
+	/// The current logger used by sfzCore. See `sfz/logging/Logging.hpp` for the logging macros
+	/// use this logger.
+	LoggingInterface* logger = nullptr;
 };
 
 // Context getters/setters
@@ -65,6 +70,12 @@ bool setContext(Context* context) noexcept;
 inline Allocator* getDefaultAllocator() noexcept
 {
 	return getContext()->defaultAllocator;
+}
+
+/// Returns pointer to the current logger.
+inline LoggingInterface* getLogger() noexcept
+{
+	return getContext()->logger;
 }
 
 // Standard context

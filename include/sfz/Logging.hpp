@@ -16,45 +16,21 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
+#pragma once
+
 #include "sfz/Context.hpp"
+#include "sfz/util/LoggingInterface.hpp"
 
-#include "sfz/Assert.hpp"
-#include "sfz/memory/StandardAllocator.hpp"
-#include "sfz/util/StandardLogger.hpp"
-
-namespace sfz {
-
-// Context getters/setters
+// Logging macros
 // ------------------------------------------------------------------------------------------------
 
-static Context* globalContextPtr = nullptr;
+#define SFZ_LOG(logLevel, tag, format, ...) sfz::getLogger()->log( \
+	__FILE__, __LINE__, (logLevel), (tag), (format), ##__VA_ARGS__)
 
-Context* getContext() noexcept
-{
-	sfz_assert_debug(globalContextPtr != nullptr);
-	return globalContextPtr;
-}
+#define SFZ_INFO_NOISY(tag, format, ...) SFZ_LOG(sfz::LogLevel::INFO_NOISY, (tag), (format), ##__VA_ARGS__)
 
-bool setContext(Context* context) noexcept
-{
-	sfz_assert_release(context != nullptr);
-	if (globalContextPtr != nullptr) return false;
-	globalContextPtr = context;
-	return true;
-}
+#define SFZ_INFO(tag, format, ...) SFZ_LOG(sfz::LogLevel::INFO, (tag), (format), ##__VA_ARGS__)
 
-// Standard context
-// ------------------------------------------------------------------------------------------------
+#define SFZ_WARNING(tag, format, ...) SFZ_LOG(sfz::LogLevel::WARNING, (tag), (format), ##__VA_ARGS__)
 
-Context* getStandardContext() noexcept
-{
-	static Context context = []() {
-		Context tmp;
-		tmp.defaultAllocator = getStandardAllocator();
-		tmp.logger = getStandardLogger();
-		return tmp;
-	}();
-	return &context;
-}
-
-} // namespace sfz
+#define SFZ_ERROR(tag, format, ...) SFZ_LOG(sfz::LogLevel::ERROR, (tag), (format), ##__VA_ARGS__)

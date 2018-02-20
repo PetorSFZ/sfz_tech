@@ -80,6 +80,7 @@ set(SFZ_CORE_INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/Assert.inl
 	${INCLUDE_DIR}/sfz/Context.hpp
 	${INCLUDE_DIR}/sfz/CudaCompatibility.hpp
+	${INCLUDE_DIR}/sfz/Logging.hpp
 	${INCLUDE_DIR}/sfz/PopWarnings.hpp
 	${INCLUDE_DIR}/sfz/PushWarnings.hpp
 	${INCLUDE_DIR}/sfz/SimdIntrinsics.hpp
@@ -131,6 +132,8 @@ set(SFZ_CORE_INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/util/FrametimeStats.hpp
 	${INCLUDE_DIR}/sfz/util/IniParser.hpp
 	${INCLUDE_DIR}/sfz/util/IO.hpp
+	${INCLUDE_DIR}/sfz/util/LoggingInterface.hpp
+	${INCLUDE_DIR}/sfz/util/StandardLogger.hpp
 )
 source_group(TREE ${INCLUDE_DIR} FILES ${SFZ_CORE_INCLUDE_FILES})
 
@@ -153,6 +156,7 @@ set(SFZ_CORE_SOURCE_FILES
 	${SOURCE_DIR}/sfz/util/FrametimeStats.cpp
 	${SOURCE_DIR}/sfz/util/IniParser.cpp
 	${SOURCE_DIR}/sfz/util/IO.cpp
+	${SOURCE_DIR}/sfz/util/StandardLogger.cpp
 )
 source_group(TREE ${SOURCE_DIR} FILES ${SFZ_CORE_SOURCE_FILES})
 

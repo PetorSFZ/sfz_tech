@@ -16,45 +16,16 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/Context.hpp"
+#pragma once
 
-#include "sfz/Assert.hpp"
-#include "sfz/memory/StandardAllocator.hpp"
-#include "sfz/util/StandardLogger.hpp"
+#include "sfz/util/LoggingInterface.hpp"
 
 namespace sfz {
 
-// Context getters/setters
+// StandardLogger retrieval function
 // ------------------------------------------------------------------------------------------------
 
-static Context* globalContextPtr = nullptr;
-
-Context* getContext() noexcept
-{
-	sfz_assert_debug(globalContextPtr != nullptr);
-	return globalContextPtr;
-}
-
-bool setContext(Context* context) noexcept
-{
-	sfz_assert_release(context != nullptr);
-	if (globalContextPtr != nullptr) return false;
-	globalContextPtr = context;
-	return true;
-}
-
-// Standard context
-// ------------------------------------------------------------------------------------------------
-
-Context* getStandardContext() noexcept
-{
-	static Context context = []() {
-		Context tmp;
-		tmp.defaultAllocator = getStandardAllocator();
-		tmp.logger = getStandardLogger();
-		return tmp;
-	}();
-	return &context;
-}
+/// Returns pointer to the standard logger, which prints all messages to stdout.
+LoggingInterface* getStandardLogger() noexcept;
 
 } // namespace sfz
