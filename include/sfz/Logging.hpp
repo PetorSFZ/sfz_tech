@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include "sfz/Assert.hpp"
 #include "sfz/Context.hpp"
 #include "sfz/util/LoggingInterface.hpp"
 
@@ -34,3 +35,9 @@
 #define SFZ_WARNING(tag, format, ...) SFZ_LOG(sfz::LogLevel::WARNING, (tag), (format), ##__VA_ARGS__)
 
 #define SFZ_ERROR(tag, format, ...) SFZ_LOG(sfz::LogLevel::ERROR, (tag), (format), ##__VA_ARGS__)
+
+#define SFZ_ERROR_AND_EXIT(tag, format, ...) \
+{ \
+	SFZ_ERROR(tag, format, ##__VA_ARGS__); \
+	sfz_assert_release(false); \
+} \

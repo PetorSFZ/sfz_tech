@@ -21,6 +21,7 @@
 #include <cinttypes>
 
 #include "sfz/Assert.hpp"
+#include "sfz/Logging.hpp"
 #include "sfz/containers/HashMap.hpp"
 #include "sfz/memory/New.hpp"
 #include "sfz/strings/DynString.hpp"
@@ -107,8 +108,9 @@ StringID StringCollection::getStringID(const char* string) noexcept
 
 	// Check if string collision occurred
 	if (*strPtr != string) {
-		sfz::error("String hash collision occurred, \"%s\" and \"%s\" with hash %" PRIu64 "",
-		           strPtr->str(), string, strId.id);
+		SFZ_ERROR_AND_EXIT("sfzCore",
+			"String hash collision occurred, \"%s\" and \"%s\" with hash %" PRIu64 "",
+			strPtr->str(), string, strId.id);
 	}
 
 	return strId;

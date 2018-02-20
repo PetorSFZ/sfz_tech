@@ -30,6 +30,7 @@
 #endif
 
 #include "sfz/Assert.hpp"
+#include "sfz/Logging.hpp"
 
 namespace sfz {
 
@@ -107,10 +108,12 @@ void DebugAllocator::deallocate(void* pointer) noexcept
 		// Check if pointer has previously been allocated with this allocator
 		auto histItr = mImpl->history.find(pointer);
 		if (histItr == mImpl->history.end()) {
-			sfz::error("Pointer %p not allocated by %s.", pointer, mImpl->allocatorName);
+			SFZ_ERROR_AND_EXIT("sfzCore", "Pointer %p not allocated by %s.",
+				pointer, mImpl->allocatorName);
 		} else {
-			sfz::error("Allocation %s, pointer = %p has already been deallocated by %s.",
-			           histItr->second.name, pointer, mImpl->allocatorName);
+			SFZ_ERROR_AND_EXIT("sfzCore",
+				"Allocation %s, pointer = %p has already been deallocated by %s.",
+				histItr->second.name, pointer, mImpl->allocatorName);
 		}
 	}
 
@@ -129,14 +132,16 @@ void DebugAllocator::deallocate(void* pointer) noexcept
 	const char INTEGRITY_BYTES[] = "BOUNDS";
 	for (uint32_t i = 0; i < (halfIntegrityFactor * info.alignment); i++) {
 		if (bytePtr[i] != (INTEGRITY_BYTES[(i % 6)])) {
-			sfz::error("Allocator %s: Allocation %s has written out of bounds %u bytes before start of memory.",
-			           mImpl->allocatorName, info.name, (halfIntegrityFactor * info.alignment) - i);
+			SFZ_ERROR_AND_EXIT("sfzCore",
+				"Allocator %s: Allocation %s has written out of bounds %u bytes before start of memory.",
+				mImpl->allocatorName, info.name, (halfIntegrityFactor * info.alignment) - i);
 		}
 	}
 	for (uint32_t i = 0; i < (halfIntegrityFactor * info.alignment); i++) {
 		if (bytePtr[i + info.size + (halfIntegrityFactor * info.alignment)] != (INTEGRITY_BYTES[(i % 6)])) {
-			sfz::error("Allocator %s: Allocation %s has written out of bounds %u bytes after end of memory.",
-			           mImpl->allocatorName, info.name, i);
+			SFZ_ERROR_AND_EXIT("sfzCore",
+				"Allocator %s: Allocation %s has written out of bounds %u bytes after end of memory.",
+				mImpl->allocatorName, info.name, i);
 		}
 	}
 
@@ -175,7 +180,7 @@ DebugAllocationInfo* DebugAllocator::allocations(uint32_t* numAllocations) noexc
 {
 	*numAllocations = this->numAllocations();
 	DebugAllocationInfo* ptr = (DebugAllocationInfo*)this->allocate(
-	     sizeof(DebugAllocationInfo) * (*numAllocations), 32, "DebugAllocator::allocations()");
+		sizeof(DebugAllocationInfo) * (*numAllocations), 32, "DebugAllocator::allocations()");
 	uint32_t i = 0;
 	for (auto& pair : mImpl->allocations) {
 		ptr[i] = pair.second;
@@ -188,7 +193,7 @@ DebugAllocationInfo* DebugAllocator::deallocatedAllocations(uint32_t* numAllocat
 {
 	*numAllocations = this->numDeallocated();
 	DebugAllocationInfo* ptr = (DebugAllocationInfo*)this->allocate(
-	     sizeof(DebugAllocationInfo) * (*numAllocations), 32, "DebugAllocator::deallocatedAllocations()");
+		sizeof(DebugAllocationInfo) * (*numAllocations), 32, "DebugAllocator::deallocatedAllocations()");
 	uint32_t i = 0;
 	for (auto& pair : mImpl->history) {
 		ptr[i] = pair.second;

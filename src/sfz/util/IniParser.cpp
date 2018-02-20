@@ -22,6 +22,7 @@
 #include <cctype> // std::tolower()
 
 #include "sfz/Assert.hpp"
+#include "sfz/Logging.hpp"
 #include "sfz/math/MathSupport.hpp"
 #include "sfz/util/IO.hpp"
 
@@ -37,7 +38,7 @@ static bool isWhitespace(char c) noexcept
 
 static void printLoadError(const DynString& path, uint32_t line, const char* message) noexcept
 {
-	printErrorMessage("Failed to load \"%s\" at line %u: %s\n", path.str(), line, message);
+	SFZ_ERROR("sfzCore", "Failed to load \"%s\" at line %u: %s\n", path.str(), line, message);
 }
 
 // IniParser: Constructors & destructors
@@ -55,7 +56,7 @@ bool IniParser::load() noexcept
 {
 	// Check if a path is available
 	if (mPath.str() == nullptr) {
-		printErrorMessage("Can't load ini file without path.");
+		SFZ_ERROR("sfzCore", "Can't load ini file without path.");
 		return false;
 	}
 
@@ -379,7 +380,7 @@ bool IniParser::save() noexcept
 	// Write string to file
 	bool success = sfz::writeBinaryFile(mPath.str(), reinterpret_cast<const uint8_t*>(str.str()), str.size());
 	if (!success) {
-		sfz::printErrorMessage("Failed to write ini file \"%s\"", mPath.str());
+		SFZ_ERROR("sfzCore", "Failed to write ini file \"%s\"", mPath.str());
 		return false;
 	}
 

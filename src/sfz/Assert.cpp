@@ -18,58 +18,12 @@
 
 #include "sfz/Assert.hpp"
 
-#include <cassert>
-#include <cstdarg>
-#include <cstdio>
 #include <exception> // std::terminate()
 
 namespace sfz {
 
-// Errors
+// Utility functions
 // ------------------------------------------------------------------------------------------------
-
-void error(const char* format, ...) noexcept
-{
-	// Append newline to format
-	char actualFormat[384]; // Large because the message might be passed in the format string
-	std::snprintf(actualFormat, sizeof(actualFormat), "%s\n", format);
-
-	// Print message to stderr
-	va_list args;
-	va_start(args, format);
-#ifdef __EMSCRIPTEN__
-	std::vfprintf(stdout, actualFormat, args);
-#else
-	std::vfprintf(stderr, actualFormat, args);
-#endif
-	va_end(args);
-
-	// Attempt to open debugger
-	assert(false);
-
-	// Terminate program
-	terminateProgram();
-}
-
-// Debug utility functions
-// ------------------------------------------------------------------------------------------------
-
-void printErrorMessage(const char* format, ...) noexcept
-{
-	// Append newline to format
-	char actualFormat[384]; // Large because the message might be passed in the format string
-	std::snprintf(actualFormat, sizeof(actualFormat), "%s\n", format);
-
-	// Print message to stderr
-	va_list args;
-	va_start(args, format);
-#ifdef __EMSCRIPTEN__
-	std::vfprintf(stdout, actualFormat, args);
-#else
-	std::vfprintf(stderr, actualFormat, args);
-#endif
-	va_end(args);
-}
 
 void terminateProgram() noexcept
 {

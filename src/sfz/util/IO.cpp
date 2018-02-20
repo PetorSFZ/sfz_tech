@@ -18,6 +18,7 @@
 
 #include "sfz/util/IO.hpp"
 #include "sfz/Assert.hpp"
+#include "sfz/Logging.hpp"
 
 #include <cstdlib>
 #include <cstdio> // fopen, fwrite, BUFSIZ
@@ -100,7 +101,7 @@ const char* myDocumentsPath() noexcept
 #ifdef _WIN32
 		char* tmp = static_cast<char*>(getDefaultAllocator()->allocate(MAX_PATH + 2, 32, "sfz::myDocumentsPath()"));
 		HRESULT result = SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, tmp);
-		if (result != S_OK) sfz::error("%s", "Could not retrieve MyDocuments path.");
+		if (result != S_OK) SFZ_ERROR_AND_EXIT("sfzCore", "%s", "Could not retrieve MyDocuments path.");
 
 		// Add path separator
 		size_t pathLen = std::strlen(tmp);

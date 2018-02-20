@@ -21,6 +21,7 @@
 #include <cuda_runtime.h>
 
 #include "sfz/Assert.hpp"
+#include "sfz/Logging.hpp"
 #include "sfz/CudaCompatibility.hpp"
 
 // Macros
@@ -40,7 +41,8 @@ namespace cuda {
 inline cudaError_t checkCudaError(const char* file, int line, cudaError_t error) noexcept
 {
 	if (error == cudaSuccess) return error;
-	sfz::printErrorMessage("%s:%i: CUDA error: %s\n", file, line, cudaGetErrorString(error));
+	getLogger()->log(file, line, LogLevel::ERROR, "sfzCore", "CUDA error: %s\n",
+		cudaGetErrorString(error));
 	return error;
 }
 
