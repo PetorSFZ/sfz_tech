@@ -26,8 +26,6 @@ using std::uint32_t;
 #include <stdint.h>
 #endif
 
-#include <sfz/memory/CAllocator.h>
-
 #include "ph/rendering/CameraData.h"
 #include "ph/rendering/ImageView.h"
 #include "ph/rendering/ImguiRenderingData.h"
@@ -75,14 +73,16 @@ DLL_EXPORT uint32_t phRequiredSDL2WindowFlags(void);
 /// previously been deinitialized it should be initialized to the same state as if it had not been
 /// initialized earlier.
 /// \param window the SDL_Window to render to
+/// \param sfzCoreContext the sfzCore context, see "sfz/Context.hpp"
 /// \param allocator the sfz::Allocator used to allocate all cpu memory used
 /// \param config the phConfig used for configuring the renderer. Temporary pointer, make a copy.
 /// \param logger the phLogger used to print debug information. Temporary pointer, make a copy.
 /// \return 0 if renderer is NOT initialized, i.e. if something went very wrong. If the renderer
 ///           has been previously initialized this value will still be a non-zero value.
 DLL_EXPORT uint32_t phInitRenderer(
+	void* sfzCoreContext,
 	SDL_Window* window,
-	sfzAllocator* allocator,
+	void* allocator,
 	phConfig* config,
 	phLogger* logger);
 
