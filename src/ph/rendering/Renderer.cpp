@@ -33,6 +33,7 @@
 #include <SDL.h>
 
 #include <sfz/Assert.hpp>
+#include <sfz/Context.hpp>
 #include <sfz/memory/New.hpp>
 #include <sfz/strings/StackString.hpp>
 
@@ -57,7 +58,7 @@ extern "C" {
 		// Init functions
 		uint32_t (*phRendererInterfaceVersion)(void);
 		uint32_t (*phRequiredSDL2WindowFlags)(void);
-		uint32_t (*phInitRenderer)(SDL_Window*, sfzAllocator*, phConfig*, phLogger*);
+		uint32_t (*phInitRenderer)(void*, SDL_Window*, void*, phConfig*, phLogger*);
 		uint32_t (*phDeinitRenderer)(void);
 		void(*phInitImgui)(const phConstImageView*);
 
@@ -302,7 +303,8 @@ bool Renderer::initRenderer(SDL_Window* window) noexcept
 
 	phConfig tmpConfig = GlobalConfig::cInstance();
 	phLogger tmpLogger = getLogger();
-	uint32_t initSuccess = CALL_RENDERER_FUNCTION(mFunctionTable, phInitRenderer, window, mAllocator->cAllocator(), &tmpConfig, &tmpLogger);
+	uint32_t initSuccess = CALL_RENDERER_FUNCTION(mFunctionTable, phInitRenderer,
+		sfz::getContext(), window, mAllocator, &tmpConfig, &tmpLogger);
 	if (initSuccess == 0) {
 		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Renderer failed to initialize.");
 		return false;

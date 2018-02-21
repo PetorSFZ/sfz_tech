@@ -30,6 +30,8 @@
 #include <direct.h>
 #endif
 
+#include <sfz/Context.hpp>
+#include <sfz/Logging.hpp>
 #include <sfz/strings/StackString.hpp>
 #include <sfz/util/IO.hpp>
 
@@ -61,7 +63,7 @@ const char* basePath() noexcept
 	static const char* path = []() {
 		const char* tmp = SDL_GetBasePath();
 		if (tmp == nullptr) {
-			sfz::error("SDL_GetBasePath() failed: %s", SDL_GetError());
+			SFZ_ERROR_AND_EXIT("PhantasyEngine", "SDL_GetBasePath() failed: %s", SDL_GetError());
 		}
 		size_t len = std::strlen(tmp);
 		char* res = static_cast<char*>(
@@ -89,6 +91,9 @@ static void ensureAppUserDataDirExists(const char* appName)
 
 int mainImpl(int, char*[], InitOptions&& options)
 {
+	// Set sfzCore context
+	sfz::setContext(sfz::getStandardContext());
+
 	// Set SDL allocators
 	if (!sdl::setSDLAllocator(sfz::getDefaultAllocator())) return EXIT_FAILURE;
 
