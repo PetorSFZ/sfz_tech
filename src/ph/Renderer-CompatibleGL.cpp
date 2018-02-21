@@ -27,7 +27,6 @@
 #include <sfz/gl/IncludeOpenGL.hpp>
 #include <sfz/math/MathSupport.hpp>
 #include <sfz/math/ProjectionMatrices.hpp>
-#include <sfz/memory/CAllocatorWrapper.hpp>
 #include <sfz/memory/New.hpp>
 #include <sfz/strings/StackString.hpp>
 
@@ -57,7 +56,7 @@ struct RendererState final {
 	RendererState& operator= (RendererState&&) = delete;
 
 	// Utilities
-	CAllocatorWrapper allocator;
+	sfz::Allocator* allocator;
 	SDL_Window* window = nullptr;
 	phConfig config = {};
 	phLogger logger = {};
@@ -192,78 +191,78 @@ DLL_EXPORT uint32_t phRequiredSDL2WindowFlags(void)
 }
 
 DLL_EXPORT uint32_t phInitRenderer(
+	void* sfzCoreContext,
 	SDL_Window* window,
-	sfzAllocator* cAllocator,
+	void* allocator,
 	phConfig* config,
 	phLogger* logger)
 {
 	if (statePtr != nullptr) {
 		PH_LOGGER_LOG(*logger, LOG_LEVEL_WARNING, "Renderer-CompatibleGL",
-		    "Renderer already initialized, returning.");
+			"Renderer already initialized, returning.");
 		return 1;
 	}
 
-    PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL", "Creating OpenGL context");
+	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL", "Creating OpenGL context");
 #ifdef __EMSCRIPTEN__
 	// Create OpenGL Context (OpenGL ES 2.0 == WebGL 1.0)
-    if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2) < 0) {
+	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2) < 0) {
 		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-		    "Failed to set GL context major version: %s", SDL_GetError());
+			"Failed to set GL context major version: %s", SDL_GetError());
 		return 0;
 	}
 	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES) < 0) {
 		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-		    "Failed to set GL context profile: %s", SDL_GetError());
+			"Failed to set GL context profile: %s", SDL_GetError());
 		return 0;
 	}
 #else
-    // Create OpenGL Context (OpenGL 3.3)
-    if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3) < 0) {
-        PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-                      "Failed to set GL context major version: %s", SDL_GetError());
-        return 0;
-    }
-    if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3) < 0) {
-        PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-                      "Failed to set GL context minor version: %s", SDL_GetError());
-        return 0;
-    }
-    if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE) < 0) {
-        PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-                      "Failed to set GL context profile: %s", SDL_GetError());
-        return 0;
-    }
+	// Create OpenGL Context (OpenGL 3.3)
+	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3) < 0) {
+		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
+			"Failed to set GL context major version: %s", SDL_GetError());
+		return 0;
+	}
+	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3) < 0) {
+		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
+			"Failed to set GL context minor version: %s", SDL_GetError());
+		return 0;
+	}
+	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE) < 0) {
+		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
+			"Failed to set GL context profile: %s", SDL_GetError());
+		return 0;
+	}
 #endif
 
 	SDL_GLContext tmpContext = SDL_GL_CreateContext(window);
 	if (tmpContext == nullptr) {
 		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-		    "Failed to create GL context: %s", SDL_GetError());
+			"Failed to create GL context: %s", SDL_GetError());
 		return 0;
 	}
 
-    // Load GLEW on not emscripten
+	// Load GLEW on not emscripten
 #ifndef __EMSCRIPTEN__
-    GLenum glewError = glewInit();
-    if (glewError != GLEW_OK) {
-        PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-                      "GLEW init failure: %s", glewGetErrorString(glewError));
-    }
+	GLenum glewError = glewInit();
+	if (glewError != GLEW_OK) {
+		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
+			"GLEW init failure: %s", glewGetErrorString(glewError));
+	}
 #endif
 
 	// Create internal state
 	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL", "Creating internal state");
 	{
-		CAllocatorWrapper tmp;
-		tmp.setCAllocator(cAllocator);
-		statePtr = sfzNew<RendererState>(&tmp);
+		Allocator* tmp = reinterpret_cast<Allocator*>(allocator);
+		statePtr = sfzNew<RendererState>(tmp);
 		if (statePtr == nullptr) {
 			PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-			    "Failed to allocate memory for internal state.");
+				"Failed to allocate memory for internal state.");
 			SDL_GL_DeleteContext(tmpContext);
 			return 0;
 		}
-		statePtr->allocator.setCAllocator(cAllocator);
+		statePtr->allocator = tmp;
 	}
 	RendererState& state = *statePtr;
 
@@ -281,9 +280,9 @@ DLL_EXPORT uint32_t phInitRenderer(
 	state.fullscreenGeom.create(gl::FullscreenGeometryType::OGL_CLIP_SPACE_RIGHT_HANDED_FRONT_FACE);
 
 	// Init resources arrays
-	state.textures.create(256, &state.allocator);
-	state.materials.create(256, &state.allocator);
-	state.dynamicModels.create(128, &state.allocator);
+	state.textures.create(256, state.allocator);
+	state.materials.create(256, state.allocator);
+	state.dynamicModels.create(128, state.allocator);
 
 	// Create Framebuffers
 	int w, h;
@@ -307,15 +306,15 @@ DLL_EXPORT uint32_t phInitRenderer(
 			glBindAttribLocation(shaderProgram, 1, "inNormal");
 			glBindAttribLocation(shaderProgram, 2, "inTexcoord");
 		},
-		&state.allocator);
+		state.allocator);
 
 	state.copyOutShader = gl::Program::postProcessFromSource(
 		SHADER_HEADER_SRC,
 		COPY_OUT_SHADER_SRC,
-		&state.allocator);
+		state.allocator);
 
 	// Initialize array to hold dynamic sphere lights
-	state.dynamicSphereLights.create(MAX_NUM_DYNAMIC_SPHERE_LIGHTS, &state.allocator);
+	state.dynamicSphereLights.create(MAX_NUM_DYNAMIC_SPHERE_LIGHTS, state.allocator);
 
 	CHECK_GL_ERROR();
 	LOG_INFO_F("Finished initializing renderer");
@@ -334,9 +333,8 @@ DLL_EXPORT void phDeinitRenderer(void)
 	// Deallocate state
 	PH_LOGGER_LOG(logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL", "Destroying state");
 	{
-		CAllocatorWrapper tmp;
-		tmp.setCAllocator(state.allocator.cAllocator());
-		sfzDelete(statePtr, &tmp);
+		Allocator* tmp = state.allocator;
+		sfzDelete(statePtr, tmp);
 	}
 	statePtr = nullptr;
 
@@ -362,7 +360,7 @@ DLL_EXPORT void phInitImgui(const phConstImageView* fontTexture)
 	state.imguiFontTexture.create(*fontTexture, fontFiltering);
 
 	// Initialize cpu temp memory for imgui commands
-	state.imguiCommands.create(4096, &state.allocator);
+	state.imguiCommands.create(4096, state.allocator);
 
 	// Creating OpenGL memory for vertices and indices
 	state.imguiGlCmdList.create(4096, 4096);
@@ -377,7 +375,7 @@ DLL_EXPORT void phInitImgui(const phConstImageView* fontTexture)
 			glBindAttribLocation(shaderProgram, 1, "inTexcoord");
 			glBindAttribLocation(shaderProgram, 2, "inColor");
 		},
-		&state.allocator);
+		state.allocator);
 
 	// Always read font texture from location 0
 	state.imguiShader.useProgram();
@@ -483,7 +481,7 @@ DLL_EXPORT void phSetDynamicMeshes(const phConstMeshView* meshes, uint32_t numMe
 
 	// Create models from all meshes and add them to state
 	for (uint32_t i = 0; i < numMeshes; i++) {
-		state.dynamicModels.add(Model(meshes[i], &state.allocator));
+		state.dynamicModels.add(Model(meshes[i], state.allocator));
 	}
 }
 
@@ -492,7 +490,7 @@ DLL_EXPORT uint32_t phAddDynamicMesh(const phConstMeshView* mesh)
 	RendererState& state = *statePtr;
 
 	uint32_t index = state.dynamicModels.size();
-	state.dynamicModels.add(Model(*mesh, &state.allocator));
+	state.dynamicModels.add(Model(*mesh, state.allocator));
 	return index;
 }
 
@@ -503,7 +501,7 @@ DLL_EXPORT uint32_t phUpdateDynamicMesh(const phConstMeshView* mesh, uint32_t in
 	// Check if model exists
 	if (state.dynamicModels.size() <= index) return 0;
 
-	state.dynamicModels[index] = Model(*mesh, &state.allocator);
+	state.dynamicModels[index] = Model(*mesh, state.allocator);
 	return 1;
 }
 
