@@ -47,6 +47,12 @@ StackStringTempl<N>::StackStringTempl(const char* string) noexcept
 // ------------------------------------------------------------------------------------------------
 
 template<size_t N>
+size_t StackStringTempl<N>::size() const noexcept
+{
+	return std::strlen(this->str);
+}
+
+template<size_t N>
 void StackStringTempl<N>::printf(const char* format, ...) noexcept
 {
 	va_list args;

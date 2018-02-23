@@ -61,6 +61,12 @@ struct StackStringTempl final {
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
+	/// Returns the maximum size of the string.
+	size_t maxSize() const noexcept { return N; }
+
+	/// Returns the size of the currently held string.
+	size_t size() const noexcept;
+
 	/// Calls snprintf() on the internal string, overwriting the content.
 	void printf(const char* format, ...) noexcept;
 
