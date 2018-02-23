@@ -21,9 +21,8 @@
 
 #include <cstring>
 
+#include <sfz/Logging.hpp>
 #include <sfz/strings/StackString.hpp>
-
-#include "ph/utils/Logging.hpp"
 
 // stb_image implementation
 // ------------------------------------------------------------------------------------------------
@@ -105,11 +104,11 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 {
 	// Some input error handling
 	if (basePath == nullptr || fileName == nullptr) {
-		PH_LOG(LOG_LEVEL_WARNING, "PhantasyEngine", "loadImage(): invalid path to image");
+		SFZ_WARNING("PhantasyEngine", "loadImage(): invalid path to image");
 		return Image();
 	}
 	if (static_allocator == nullptr) {
-		PH_LOG(LOG_LEVEL_WARNING, "PhantasyEngine",
+		SFZ_WARNING("PhantasyEngine",
 			"loadImage(): allocator not specified, call setLoadImageAllocator() first");
 		return Image();
 	}
@@ -124,13 +123,12 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 
 	// Error checking
 	if (img == nullptr) {
-		PH_LOG(LOG_LEVEL_WARNING, "PhantasyEngine",
-			"loadImage(): Unable to load image \"%s\", reason: %s",
+		SFZ_WARNING("PhantasyEngine", "loadImage(): Unable to load image \"%s\", reason: %s",
 			path.str, stbi_failure_reason());
 		return Image();
 	}
 	if (numChannels != 1 && numChannels != 3 && numChannels != 4) {
-		PH_LOG(LOG_LEVEL_WARNING, "PhantasyEngine",
+		SFZ_WARNING("PhantasyEngine",
 			"loadImage(): Image \"%s\" has unsupported number of channels: %i",
 			path.str, numChannels);
 		stbi_image_free(img);
@@ -167,8 +165,7 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 	}
 
 	// Free temp memory used by stb_image and return image
-	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "loadImage(): Image \"%s\" loaded succesfully",
-		path.str);
+	SFZ_INFO("PhantasyEngine", "loadImage(): Image \"%s\" loaded succesfully", path.str);
 	stbi_image_free(img);
 	return tmp;
 }

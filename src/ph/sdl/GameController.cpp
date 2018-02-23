@@ -22,8 +22,7 @@
 #include <algorithm>
 
 #include <sfz/Assert.hpp>
-
-#include "ph/utils/Logging.hpp"
+#include <sfz/Logging.hpp>
 
 namespace ph {
 
@@ -64,15 +63,13 @@ static ButtonState* buttonPtr(GameController& c, uint8_t sdlButton)
 static SDL_GameController* openGameController(int deviceIndex) noexcept
 {
 	if (!SDL_IsGameController(deviceIndex)) {
-		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "deviceIndex: %i is not a GameController.",
-			deviceIndex);
+		SFZ_ERROR("PhantasyEngine", "deviceIndex: %i is not a GameController.", deviceIndex);
 		return nullptr;
 	}
 
 	SDL_GameController* ptr = SDL_GameControllerOpen(deviceIndex);
 	if (ptr == NULL) {
-		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine",
-			"Could not open GameController at device index %i, error: %s",
+		SFZ_ERROR("PhantasyEngine", "Could not open GameController at device index %i, error: %s",
 			deviceIndex, SDL_GetError());
 		return nullptr;
 	}
@@ -86,14 +83,14 @@ static int32_t getJoystickId(SDL_GameController* ptr) noexcept
 
 	SDL_Joystick* joystick = SDL_GameControllerGetJoystick(ptr);
 	if (joystick == NULL) {
-		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine",
+		SFZ_ERROR("PhantasyEngine",
 			"Could not retrieve SDL_Joystick* from GameController, error: %s", SDL_GetError());
 		return -1;
 	}
 
 	SDL_JoystickID id = SDL_JoystickInstanceID(joystick);
 	if (id < 0) {
-		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine",
+		SFZ_ERROR("PhantasyEngine",
 			"Could not retrieve JoystickID from GameController, error: %s", SDL_GetError());
 		return -1;
 	}
@@ -324,12 +321,10 @@ static void updateProcessEvent(GameController& controller, const SDL_Event& even
 			controller.rightTrigger = axisVal/TRIGGER_MAX;
 			break;
 		case SDL_CONTROLLER_AXIS_INVALID:
-			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine",
-				"event.caxis.axis == SDL_CONTROLLER_AXIS_INVALID");
+			SFZ_INFO("PhantasyEngine", "event.caxis.axis == SDL_CONTROLLER_AXIS_INVALID");
 			break;
 		case SDL_CONTROLLER_AXIS_MAX:
-			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine",
-				"event.caxis.axis == SDL_CONTROLLER_AXIS_MAX");
+			SFZ_INFO("PhantasyEngine", "event.caxis.axis == SDL_CONTROLLER_AXIS_MAX");
 			break;
 		}
 		break;

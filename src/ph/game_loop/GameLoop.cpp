@@ -28,10 +28,10 @@
 #include <emscripten.h>
 #endif
 
+#include <sfz/Logging.hpp>
 #include <sfz/containers/DynArray.hpp>
 
 #include "ph/config/GlobalConfig.hpp"
-#include "ph/utils/Logging.hpp"
 
 namespace ph {
 
@@ -73,20 +73,20 @@ static void quit(GameLoopState& gameLoopState) noexcept
 {
 	gameLoopState.quit = true; // Exit infinite while loop (on some platforms)
 
-	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Destroying current updateable");
+	SFZ_INFO("PhantasyEngine", "Destroying current updateable");
 	gameLoopState.updateable->onQuit();
 	gameLoopState.updateable.destroy(); // Destroy the current updateable
 
-	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Destroying renderer");
+	SFZ_INFO("PhantasyEngine", "Destroying renderer");
 	gameLoopState.renderer.destroy(); // Destroy the current renderer
 
-	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Closing SDL controllers");
+	SFZ_INFO("PhantasyEngine", "Closing SDL controllers");
 	gameLoopState.userInput.controllers.clear();
 
-	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Destroying SDL Window");
+	SFZ_INFO("PhantasyEngine", "Destroying SDL Window");
 	SDL_DestroyWindow(gameLoopState.window);
 
-	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Calling cleanup callback");
+	SFZ_INFO("PhantasyEngine", "Calling cleanup callback");
 	gameLoopState.cleanupCallback(); // Call the cleanup callback
 
 	// Exit program on Emscripten
@@ -191,7 +191,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 
 		// Quitting
 		case SDL_QUIT:
-			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "SDL_QUIT event recevied, quitting.");
+			SFZ_INFO("PhantasyEngine", "SDL_QUIT event recevied, quitting.");
 			quit(state);
 			return;
 
@@ -277,8 +277,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	if (isFullscreen != shouldBeFullscreen) {
 		uint32_t fullscreenFlags = shouldBeFullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
 		if (SDL_SetWindowFullscreen(state.window, fullscreenFlags) < 0) {
-			PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine",
-				"SDL_SetWindowFullscreen() failed: %s", SDL_GetError());
+			SFZ_ERROR("PhantasyEngine", "SDL_SetWindowFullscreen() failed: %s", SDL_GetError());
 		}
 		if (!shouldBeFullscreen) {
 			SDL_SetWindowSize(state.window,

@@ -25,10 +25,9 @@
 #include <SDL_stdinc.h>
 
 #include <sfz/Assert.hpp>
+#include <sfz/Logging.hpp>
 #include <sfz/containers/HashMap.hpp>
 #include <sfz/memory/New.hpp>
-
-#include "ph/utils/Logging.hpp"
 
 namespace ph {
 
@@ -57,7 +56,7 @@ static void* SDLCALL mallocBridge(size_t size)
 		bridgeState->allocatedSizes[ptr] = size;
 	}
 	else {
-		PH_LOG(LOG_LEVEL_ERROR, "SDL", "mallocBridge() failed");
+		SFZ_ERROR("SDL", "mallocBridge() failed");
 	}
 	return ptr;
 }
@@ -70,7 +69,7 @@ static void* SDLCALL callocBridge(size_t nmemb, size_t size)
 		bridgeState->allocatedSizes[ptr] = num_bytes;
 	}
 	else {
-		PH_LOG(LOG_LEVEL_ERROR, "SDL", "callocBridge() failed");
+		SFZ_ERROR("SDL", "callocBridge() failed");
 	}
 	std::memset(ptr, 0, num_bytes);
 	return ptr;
@@ -82,13 +81,13 @@ static void* SDLCALL reallocBridge(void* mem, size_t size)
 	if (mem == nullptr) {
 		return callocBridge(1, size);
 	}
-	
+
 	// Get size of previous allocation
 	size_t* sizePtr = bridgeState->allocatedSizes.get(mem);
 	if (sizePtr == nullptr) {
 		// TODO: If we reach here it might be because we don't support the special case where the
 		// memory was allocated with the original allocator. Should hopefully never happen.
-		PH_LOG(LOG_LEVEL_ERROR, "SDL", "reallocBridge() failed");
+		SFZ_ERROR("SDL", "reallocBridge() failed");
 		sfz_assert_release(false);
 	}
 	size_t sizePrevAlloc = *sizePtr;
@@ -112,7 +111,7 @@ static void SDLCALL freeBridge(void* mem)
 		bridgeState->allocator->deallocate(mem);
 		return;
 	}
-	
+
 	// If we failed it likely means that the allocation was made before we switched allocators, i.e.
 	// on Windows. Attempt to deallocate using the old SDL free().
 	oldSdlFree(mem);
@@ -141,14 +140,14 @@ bool setSDLAllocator(sfz::Allocator* allocator) noexcept
 
 	// Don't switch allocators if SDL has already allocated memory.
 	if (SDL_GetNumAllocations() != MAX_NUM_SDL_ALLOCATIONS) {
-		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "SDL has already allocated memory, exiting.");
+		SFZ_ERROR("PhantasyEngine", "SDL has already allocated memory, exiting.");
 		return false;
 	}
 
 	// Make sure allocators are only set once
 	static bool setBefore = false;
 	if (setBefore) {
-		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Attempting to change SDL allocators again.");
+		SFZ_ERROR("PhantasyEngine", "Attempting to change SDL allocators again.");
 		return false;
 	}
 	setBefore = true;
@@ -165,8 +164,7 @@ bool setSDLAllocator(sfz::Allocator* allocator) noexcept
 	// Register allocator in SDL
 	int res = SDL_SetMemoryFunctions(mallocBridge, callocBridge, reallocBridge, freeBridge);
 	if (res < 0) {
-		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "SDL_SetMemoryFunctions() failed: %s",
-			SDL_GetError());
+		SFZ_ERROR("PhantasyEngine", "SDL_SetMemoryFunctions() failed: %s", SDL_GetError());
 		return false;
 	}
 

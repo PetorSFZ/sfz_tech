@@ -19,11 +19,10 @@
 
 #include "ph/config/GlobalConfig.hpp"
 
+#include <sfz/Logging.hpp>
 #include <sfz/math/MathSupport.hpp>
 #include <sfz/memory/SmartPointers.hpp>
 #include <sfz/util/IniParser.hpp>
-
-#include "ph/utils/Logging.hpp"
 
 namespace ph {
 
@@ -145,10 +144,9 @@ void GlobalConfig::load() noexcept
 	// Load ini file
 	IniParser& ini = mImpl->ini;
 	if (ini.load()) {
-		PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Succesfully loaded config ini file");
+		SFZ_INFO("PhantasyEngine", "Succesfully loaded config ini file");
 	} else {
-		PH_LOG(LOG_LEVEL_INFO,
-			"PhantasyEngine", "Failed to load config ini file, expected if this is first run");
+		SFZ_INFO("PhantasyEngine", "Failed to load config ini file, expected if this is first run");
 	}
 
 	// Create setting items of all ini items
@@ -376,8 +374,7 @@ Setting* GlobalConfig::sanitizeInt(
 
 	// Check if bounds were good
 	if (!boundsGood) {
-		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Provided bad bounds for setting: %s - %s",
-			section, key);
+		SFZ_ERROR("PhantasyEngine", "Provided bad bounds for setting: %s - %s", section, key);
 		setting->create(SettingValue::createInt(0));
 	}
 
@@ -417,8 +414,7 @@ Setting* GlobalConfig::sanitizeFloat(
 
 	// Check if bounds were good
 	if (!boundsGood) {
-		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Provided bad bounds for setting: %s - %s",
-			section, key);
+		SFZ_ERROR("PhantasyEngine", "Provided bad bounds for setting: %s - %s", section, key);
 		setting->create(SettingValue::createFloat(0.0f));
 	}
 
@@ -458,8 +454,7 @@ Setting* GlobalConfig::sanitizeBool(
 
 	// Check if bounds were good
 	if (!boundsGood) {
-		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "Provided bad bounds for setting: %s - %s",
-			section, key);
+		SFZ_ERROR("PhantasyEngine", "Provided bad bounds for setting: %s - %s", section, key);
 		setting->create(SettingValue::createBool(false));
 	}
 

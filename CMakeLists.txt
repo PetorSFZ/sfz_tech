@@ -69,8 +69,6 @@ set(PHANTASY_ENGINE_HEADER_FILES
 	${INCLUDE_DIR}/ph/sdl/GameController.hpp
 	${INCLUDE_DIR}/ph/sdl/Mouse.hpp
 	${INCLUDE_DIR}/ph/sdl/SDLAllocator.hpp
-
-	${INCLUDE_DIR}/ph/utils/Logging.hpp
 )
 source_group(TREE ${INCLUDE_DIR} FILES ${PHANTASY_ENGINE_HEADER_FILES})
 
@@ -90,8 +88,6 @@ set(PHANTASY_ENGINE_SOURCE_FILES
 	${SOURCE_DIR}/ph/sdl/GameController.cpp
 	${SOURCE_DIR}/ph/sdl/Mouse.cpp
 	${SOURCE_DIR}/ph/sdl/SDLAllocator.cpp
-
-	${SOURCE_DIR}/ph/utils/Logging.cpp
 )
 source_group(TREE ${SOURCE_DIR} FILES ${PHANTASY_ENGINE_SOURCE_FILES})
 

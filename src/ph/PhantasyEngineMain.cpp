@@ -40,7 +40,6 @@
 #include "ph/rendering/Image.hpp"
 #include "ph/rendering/ImguiSupport.hpp"
 #include "ph/sdl/SDLAllocator.hpp"
-#include "ph/utils/Logging.hpp"
 
 namespace ph {
 
@@ -117,8 +116,7 @@ int mainImpl(int, char*[], InitOptions&& options)
 			StackString192 iniFileName;
 			iniFileName.printf("%s.ini", options.appName);
 			cfg.init(basePath(), iniFileName.str, sfz::getDefaultAllocator());
-			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Ini location set to: %s%s",
-				basePath(), iniFileName.str);
+			SFZ_INFO("PhantasyEngine", "Ini location set to: %s%s", basePath(), iniFileName.str);
 		}
 		else if (options.iniLocation == IniLocation::MY_GAMES_DIR) {
 
@@ -129,7 +127,7 @@ int mainImpl(int, char*[], InitOptions&& options)
 			StackString192 iniFileName;
 			iniFileName.printf("%s/%s.ini", options.appName, options.appName);
 			cfg.init(sfz::gameBaseFolderPath(), iniFileName.str, sfz::getDefaultAllocator());
-			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Ini location set to: %s%s",
+			SFZ_INFO("PhantasyEngine", "Ini location set to: %s%s",
 				sfz::gameBaseFolderPath(), iniFileName.str);
 		}
 		else {
@@ -142,7 +140,7 @@ int mainImpl(int, char*[], InitOptions&& options)
 
 	// Init SDL2
 	if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) {
-		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "SDL_Init() failed: %s", SDL_GetError());
+		SFZ_ERROR("PhantasyEngine", "SDL_Init() failed: %s", SDL_GetError());
 		return EXIT_FAILURE;
 	}
 
@@ -170,23 +168,23 @@ int mainImpl(int, char*[], InitOptions&& options)
 		SDL_CreateWindow(options.appName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 		width->intValue(), height->intValue(), windowFlags);
 	if (window == NULL) {
-		PH_LOG(LOG_LEVEL_ERROR, "PhantasyEngine", "SDL_CreateWindow() failed: %s", SDL_GetError());
+		SFZ_ERROR("PhantasyEngine", "SDL_CreateWindow() failed: %s", SDL_GetError());
 		renderer.destroy();
 		SDL_Quit();
 		return EXIT_FAILURE;
 	}
 
 	// Initializing Imgui
-	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Initializing Imgui");
+	SFZ_INFO("PhantasyEngine", "Initializing Imgui");
 	ImageView imguiFontTexView = initializeImgui(sfz::getDefaultAllocator());
 
 	// Initializing renderer
-	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Initializing renderer");
+	SFZ_INFO("PhantasyEngine", "Initializing renderer");
 	renderer->initRenderer(window);
 	renderer->initImgui(imguiFontTexView);
 
 	// Start game loop
-	PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Starting game loop");
+	SFZ_INFO("PhantasyEngine", "Starting game loop");
 	runGameLoop(
 
 		// Create initial GameLoopUpdateable
@@ -201,19 +199,19 @@ int mainImpl(int, char*[], InitOptions&& options)
 		// Cleanup callback
 		[]() {
 			// Store global settings
-			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Saving global config to file");
+			SFZ_INFO("PhantasyEngine", "Saving global config to file");
 			GlobalConfig& cfg = GlobalConfig::instance();
 			if (!cfg.save()) {
-				PH_LOG(LOG_LEVEL_WARNING, "PhantasyEngine", "Failed to write ini file");
+				SFZ_WARNING("PhantasyEngine", "Failed to write ini file");
 			}
 			cfg.destroy();
 
 			// Deinitializing Imgui
-			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Deinitializing Imgui");
+			SFZ_INFO("PhantasyEngine", "Deinitializing Imgui");
 			deinitializeImgui();
 
 			// Cleanup SDL2
-			PH_LOG(LOG_LEVEL_INFO, "PhantasyEngine", "Cleaning up SDL2");
+			SFZ_INFO("PhantasyEngine", "Cleaning up SDL2");
 			SDL_Quit();
 		}
 	);
