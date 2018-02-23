@@ -24,6 +24,8 @@
 
 #include <SDL.h>
 
+#include <sfz/Context.hpp>
+#include <sfz/Logging.hpp>
 #include <sfz/gl/IncludeOpenGL.hpp>
 #include <sfz/math/MathSupport.hpp>
 #include <sfz/math/ProjectionMatrices.hpp>
@@ -59,7 +61,6 @@ struct RendererState final {
 	sfz::Allocator* allocator;
 	SDL_Window* window = nullptr;
 	phConfig config = {};
-	phLogger logger = {};
 	SDL_GLContext glContext = nullptr;
 
 	// Resources
@@ -100,18 +101,6 @@ static RendererState* statePtr = nullptr;
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-#define LOG_INFO_F(format, ...) \
-	PH_LOGGER_LOG(statePtr->logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL", \
-		(format), ##__VA_ARGS__)
-
-#define LOG_WARNING_F(format, ...) \
-	PH_LOGGER_LOG(statePtr->logger, LOG_LEVEL_WARNING, "Renderer-CompatibleGL", \
-		(format), ##__VA_ARGS__)
-
-#define LOG_ERROR_F(format, ...) \
-	PH_LOGGER_LOG(statePtr->logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL", \
-		(format), ##__VA_ARGS__)
-
 #define CHECK_GL_ERROR() checkGLError(__FILE__, __LINE__)
 
 static void checkGLError(const char* file, int line) noexcept
@@ -122,19 +111,19 @@ static void checkGLError(const char* file, int line) noexcept
 	while ((error = glGetError()) != GL_NO_ERROR) {
 		switch (error) {
 		case GL_INVALID_ENUM:
-			LOG_ERROR_F("%s:%i: GL_INVALID_ENUM", file, line);
+			SFZ_ERROR("Renderer-CompatibleGL", "%s:%i: GL_INVALID_ENUM", file, line);
 			break;
 		case GL_INVALID_VALUE:
-			LOG_ERROR_F("%s:%i: GL_INVALID_VALUE", file, line);
+			SFZ_ERROR("Renderer-CompatibleGL", "%s:%i: GL_INVALID_VALUE", file, line);
 			break;
 		case GL_INVALID_OPERATION:
-			LOG_ERROR_F("%s:%i: GL_INVALID_OPERATION", file, line);
+			SFZ_ERROR("Renderer-CompatibleGL", "%s:%i: GL_INVALID_OPERATION", file, line);
 			break;
 		case GL_OUT_OF_MEMORY:
-			LOG_ERROR_F("%s:%i: GL_OUT_OF_MEMORY", file, line);
+			SFZ_ERROR("Renderer-CompatibleGL", "%s:%i: GL_OUT_OF_MEMORY", file, line);
 			break;
 		case GL_INVALID_FRAMEBUFFER_OPERATION:
-			LOG_ERROR_F("%s:%i: GL_INVALID_FRAMEBUFFER_OPERATION", file, line);
+			SFZ_ERROR("Renderer-CompatibleGL", "%s:%i: GL_INVALID_FRAMEBUFFER_OPERATION", file, line);
 		}
 	}
 }
@@ -194,51 +183,53 @@ DLL_EXPORT uint32_t phInitRenderer(
 	void* sfzCoreContext,
 	SDL_Window* window,
 	void* allocator,
-	phConfig* config,
-	phLogger* logger)
+	phConfig* config)
 {
+	// Return if already initialized
 	if (statePtr != nullptr) {
-		PH_LOGGER_LOG(*logger, LOG_LEVEL_WARNING, "Renderer-CompatibleGL",
-			"Renderer already initialized, returning.");
+		SFZ_WARNING("Renderer-CompatibleGL", "Renderer already initialized, returning.");
 		return 1;
 	}
 
-	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL", "Creating OpenGL context");
+	// Set sfzCore context
+	if (!sfz::setContext(reinterpret_cast<sfz::Context*>(sfzCoreContext))) {
+		SFZ_INFO("Renderer-CompatibleGL",
+			"sfzCore Context already set, expected if renderer is statically linked");
+	}
+
+	SFZ_INFO("Renderer-CompatibleGL", "Creating OpenGL context");
 #ifdef __EMSCRIPTEN__
 	// Create OpenGL Context (OpenGL ES 2.0 == WebGL 1.0)
 	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2) < 0) {
-		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-			"Failed to set GL context major version: %s", SDL_GetError());
+		SFZ_ERROR("Renderer-CompatibleGL", "Failed to set GL context major version: %s",
+			SDL_GetError());
 		return 0;
 	}
 	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES) < 0) {
-		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-			"Failed to set GL context profile: %s", SDL_GetError());
+		SFZ_ERROR("Renderer-CompatibleGL", "Failed to set GL context profile: %s", SDL_GetError());
 		return 0;
 	}
 #else
 	// Create OpenGL Context (OpenGL 3.3)
 	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3) < 0) {
-		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-			"Failed to set GL context major version: %s", SDL_GetError());
+		SFZ_ERROR("Renderer-CompatibleGL", "Failed to set GL context major version: %s",
+			SDL_GetError());
 		return 0;
 	}
 	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3) < 0) {
-		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-			"Failed to set GL context minor version: %s", SDL_GetError());
+		SFZ_ERROR("Renderer-CompatibleGL", "Failed to set GL context minor version: %s",
+			SDL_GetError());
 		return 0;
 	}
 	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE) < 0) {
-		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-			"Failed to set GL context profile: %s", SDL_GetError());
+		SFZ_ERROR("Renderer-CompatibleGL", "Failed to set GL context profile: %s", SDL_GetError());
 		return 0;
 	}
 #endif
 
 	SDL_GLContext tmpContext = SDL_GL_CreateContext(window);
 	if (tmpContext == nullptr) {
-		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-			"Failed to create GL context: %s", SDL_GetError());
+		SFZ_ERROR("Renderer-CompatibleGL", "Failed to create GL context: %s", SDL_GetError());
 		return 0;
 	}
 
@@ -246,19 +237,17 @@ DLL_EXPORT uint32_t phInitRenderer(
 #ifndef __EMSCRIPTEN__
 	GLenum glewError = glewInit();
 	if (glewError != GLEW_OK) {
-		PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-			"GLEW init failure: %s", glewGetErrorString(glewError));
+		SFZ_ERROR("Renderer-CompatibleGL", "GLEW init failure: %s", glewGetErrorString(glewError));
 	}
 #endif
 
 	// Create internal state
-	PH_LOGGER_LOG(*logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL", "Creating internal state");
+	SFZ_INFO("Renderer-CompatibleGL", "Creating internal state");
 	{
 		Allocator* tmp = reinterpret_cast<Allocator*>(allocator);
 		statePtr = sfzNew<RendererState>(tmp);
 		if (statePtr == nullptr) {
-			PH_LOGGER_LOG(*logger, LOG_LEVEL_ERROR, "Renderer-CompatibleGL",
-				"Failed to allocate memory for internal state.");
+			SFZ_ERROR("Renderer-CompatibleGL", "Failed to allocate memory for internal state.");
 			SDL_GL_DeleteContext(tmpContext);
 			return 0;
 		}
@@ -269,11 +258,10 @@ DLL_EXPORT uint32_t phInitRenderer(
 	// Store input parameters to state
 	state.window = window;
 	state.config = *config;
-	state.logger = *logger;
 	state.glContext = tmpContext;
 
 	// Print information
-	LOG_INFO_F("\nVendor: %s\nVersion: %s\nRenderer: %s",
+	SFZ_INFO("Renderer-CompatibleGL", "\nVendor: %s\nVersion: %s\nRenderer: %s",
 		glGetString(GL_VENDOR), glGetString(GL_VERSION), glGetString(GL_RENDERER));
 
 	// Create FullscreenGeometry
@@ -317,7 +305,7 @@ DLL_EXPORT uint32_t phInitRenderer(
 	state.dynamicSphereLights.create(MAX_NUM_DYNAMIC_SPHERE_LIGHTS, state.allocator);
 
 	CHECK_GL_ERROR();
-	LOG_INFO_F("Finished initializing renderer");
+	SFZ_INFO("Renderer-CompatibleGL", "Finished initializing renderer");
 	return 1;
 }
 
@@ -327,11 +315,10 @@ DLL_EXPORT void phDeinitRenderer(void)
 	RendererState& state = *statePtr;
 
 	// Backups from state before destruction
-	phLogger logger = state.logger;
 	SDL_GLContext context = state.glContext;
 
 	// Deallocate state
-	PH_LOGGER_LOG(logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL", "Destroying state");
+	SFZ_INFO("Renderer-CompatibleGL", "Destroying state");
 	{
 		Allocator* tmp = state.allocator;
 		sfzDelete(statePtr, tmp);
@@ -339,7 +326,7 @@ DLL_EXPORT void phDeinitRenderer(void)
 	statePtr = nullptr;
 
 	// Destroy GL context
-	PH_LOGGER_LOG(logger, LOG_LEVEL_INFO, "Renderer-CompatibleGL", "Destroying OpenGL context");
+	SFZ_INFO("Renderer-CompatibleGL", "Destroying OpenGL context");
 	SDL_GL_DeleteContext(context);
 }
 
