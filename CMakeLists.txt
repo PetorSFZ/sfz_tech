@@ -45,7 +45,6 @@ set(PH_RENDERER_SHARED_INTERFACE_HEADER_FILES
 	${INCLUDE_DIR}/ph/Bool32.h
 	${INCLUDE_DIR}/ph/ConfigInterface.h
 	${INCLUDE_DIR}/ph/ExternC.h
-	${INCLUDE_DIR}/ph/LoggingInterface.h
 	${INCLUDE_DIR}/ph/RendererInterface.h
 
 	${INCLUDE_DIR}/ph/rendering/CameraData.h

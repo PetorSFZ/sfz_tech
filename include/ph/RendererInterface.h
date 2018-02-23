@@ -19,12 +19,7 @@
 
 #pragma once
 
-#ifdef __cplusplus
 #include <cstdint>
-using std::uint32_t;
-#else
-#include <stdint.h>
-#endif
 
 #include "ph/rendering/CameraData.h"
 #include "ph/rendering/ImageView.h"
@@ -34,8 +29,7 @@ using std::uint32_t;
 #include "ph/rendering/RenderEntity.h"
 #include "ph/rendering/SphereLight.h"
 #include "ph/rendering/Vertex.h"
-#include "ConfigInterface.h"
-#include "LoggingInterface.h"
+#include "ph/ConfigInterface.h"
 
 // C interface
 #ifdef __cplusplus
@@ -83,8 +77,7 @@ DLL_EXPORT uint32_t phInitRenderer(
 	void* sfzCoreContext,
 	SDL_Window* window,
 	void* allocator,
-	phConfig* config,
-	phLogger* logger);
+	phConfig* config);
 
 /// Deinitializes this renderer. This function should by design be completely safe to call multiple
 /// times in a row, including before the renderer has been initialized at all. Should also be safe
