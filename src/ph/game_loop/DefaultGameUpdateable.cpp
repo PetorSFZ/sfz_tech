@@ -19,9 +19,12 @@
 
 #include "ph/game_loop/DefaultGameUpdateable.hpp"
 
+#include <cctype>
+
 #include <imgui.h>
 
 #include <sfz/math/MathSupport.hpp>
+#include <sfz/strings/StackString.hpp>
 #include <sfz/util/FrametimeStats.hpp>
 
 #include <ph/config/GlobalConfig.hpp>
@@ -31,7 +34,70 @@ namespace ph {
 
 using sfz::FrametimeStats;
 using sfz::StackString32;
+using sfz::StackString128;
 using sfz::StackString256;
+
+// Statics
+// ------------------------------------------------------------------------------------------------
+
+void strToLower(char* dst, const char* src) noexcept
+{
+	size_t srcLen = strlen(src);
+	for (size_t i = 0; i <= srcLen; i++) { // <= to catch null-terminator
+		dst[i] = tolower(src[i]);
+	}
+}
+
+void renderFilteredText(const char* str, const char* filter, vec4 filterColor) noexcept
+{
+	StackString128 lowerStackStr;
+	strToLower(lowerStackStr.str, str);
+
+	const char* currStr = str;
+	const char* currLowerStr = lowerStackStr.str;
+	const size_t filterLen = strlen(filter);
+
+	if (filterLen == 0) {
+		ImGui::PushStyleColor(ImGuiCol_Text, filterColor);
+		ImGui::TextUnformatted(str);
+		ImGui::PopStyleColor();
+		return;
+	}
+
+	while (true) {
+
+		const char* nextLower = strstr(currLowerStr, filter);
+
+		// Substring found
+		if (nextLower != nullptr) {
+
+			// Render part of string until next filter
+			if (nextLower != currLowerStr) {
+				size_t len = nextLower - currLowerStr;
+				ImGui::TextUnformatted(currStr, currStr + len);
+				currStr += len;
+				currLowerStr +=len;
+			}
+
+			// Render filter
+			else {
+				ImGui::PushStyleColor(ImGuiCol_Text, filterColor);
+				ImGui::TextUnformatted(currStr, currStr + filterLen);
+				ImGui::PopStyleColor();
+				currStr += filterLen;
+				currLowerStr += filterLen;
+			}
+
+			ImGui::SameLine(0.0f, 2.0f);
+		}
+
+		// If no more substrings can be found it is time to render the rest of the string
+		else {
+			ImGui::TextUnformatted(currStr);
+			return;
+		}
+	}
+}
 
 // DefaultGameUpdateable class
 // ------------------------------------------------------------------------------------------------
@@ -63,6 +129,7 @@ public:
 	DynArray<ph::ImguiCommand> mImguiCommands;
 
 	// Global Config
+	StackString32 mConfigFilterString;
 	DynArray<sfz::StackString32> mCfgSections;
 	DynArray<ph::Setting*> mCfgSectionSettings;
 
@@ -86,6 +153,8 @@ public:
 		mConsoleActive = mConsoleActiveSetting->boolValue();
 		mConsoleAlwaysShowPerformance =
 			cfg.sanitizeBool("Console", "alwaysShowPerformance", true, BoolBounds(false));
+
+		cfg.sanitizeInt("Console", "test", false, IntBounds(500, 100, 1000));
 
 		// Initialize logic
 		mLogic->initialize(mState, renderer);
@@ -184,81 +253,140 @@ private:
 	{
 		// Render performance window
 		if (mConsoleActive || mConsoleAlwaysShowPerformance->boolValue()) {
-			vec2 histogramDims = vec2(mStats.maxNumSamples() * 1.25f, 80.0f);
-			ImGui::SetNextWindowSize(histogramDims + vec2(17.0f, 50.0f));
-			ImGuiWindowFlags performanceWindowFlags = 0;
-			//performanceWindowFlags |= ImGuiWindowFlags_NoTitleBar;
-			performanceWindowFlags |= ImGuiWindowFlags_NoScrollbar;
-			//performanceWindowFlags |= ImGuiWindowFlags_NoMove;
-			performanceWindowFlags |= ImGuiWindowFlags_NoResize;
-			performanceWindowFlags |= ImGuiWindowFlags_NoCollapse;
-			performanceWindowFlags |= ImGuiWindowFlags_NoNav;
-			ImGui::Begin("Performance", nullptr, performanceWindowFlags);
-			ImGui::Text("%s", mStats.toString());
-			ImGui::PlotLines("Frametimes", mStats.samples().data(), mStats.samples().size(), 0, nullptr,
-				sfz::min(mStats.min(), 0.012f), sfz::max(mStats.max(), 0.020f), histogramDims);
-			ImGui::End();
+			this->renderPerformanceWindow();
 		}
 
 		// Render global config window
 		if (mConsoleActive) {
-			// Get Global Config sections
-			GlobalConfig& cfg = GlobalConfig::instance();
-			mCfgSections.clear();
-			cfg.getSections(mCfgSections);
+			this->renderConfigWindow();
+		}
+	}
 
-			// Global Config Window
-			ImGuiWindowFlags configWindowFlags = 0;
-			//configWindowFlags |= ImGuiWindowFlags_NoMove;
-			//configWindowFlags |= ImGuiWindowFlags_NoResize;
-			//configWindowFlags |= ImGuiWindowFlags_NoCollapse;
-			ImGui::SetNextWindowSize(vec2(550.0f, 0.0f));
-			ImGui::Begin("Config", nullptr, configWindowFlags);
+	void renderPerformanceWindow() noexcept
+	{
+		// Calculate and set size of window
+		vec2 histogramDims = vec2(mStats.maxNumSamples() * 1.25f, 80.0f);
+		ImGui::SetNextWindowSize(histogramDims + vec2(17.0f, 50.0f));
+
+		// Set window flags
+		ImGuiWindowFlags performanceWindowFlags = 0;
+		//performanceWindowFlags |= ImGuiWindowFlags_NoTitleBar;
+		performanceWindowFlags |= ImGuiWindowFlags_NoScrollbar;
+		//performanceWindowFlags |= ImGuiWindowFlags_NoMove;
+		performanceWindowFlags |= ImGuiWindowFlags_NoResize;
+		performanceWindowFlags |= ImGuiWindowFlags_NoCollapse;
+		performanceWindowFlags |= ImGuiWindowFlags_NoNav;
+
+		// Begin window
+		ImGui::Begin("Performance", nullptr, performanceWindowFlags);
+
+		// Render performance stats string
+		ImGui::Text("%s", mStats.toString());
+
+		// Render performance histogram
+		ImGui::PlotLines("Frametimes", mStats.samples().data(), mStats.samples().size(), 0, nullptr,
+			sfz::min(mStats.min(), 0.012f), sfz::max(mStats.max(), 0.020f), histogramDims);
+
+		// End window
+		ImGui::End();
+	}
+
+	void renderConfigWindow() noexcept
+	{
+		const vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		const char* filterTextEmpty = "";
+		StackString256 tmpStr;
+
+		// Get Global Config sections
+		GlobalConfig& cfg = GlobalConfig::instance();
+		mCfgSections.clear();
+		cfg.getSections(mCfgSections);
+
+		// Set window size
+		ImGui::SetNextWindowSize(vec2(550.0f, 0.0f));
+
+		// Set window flags
+		ImGuiWindowFlags configWindowFlags = 0;
+		//configWindowFlags |= ImGuiWindowFlags_NoMove;
+		//configWindowFlags |= ImGuiWindowFlags_NoResize;
+		//configWindowFlags |= ImGuiWindowFlags_NoCollapse;
+
+		// Begin window
+		ImGui::Begin("Config", nullptr, configWindowFlags);
+
+		// Config filter string
+		//ImGui::PushItemWidth(-1.0f);
+		ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
+		ImGui::InputText("Filter", mConfigFilterString.str, mConfigFilterString.maxSize());
+		ImGui::PopStyleColor();
+		strToLower(mConfigFilterString.str, mConfigFilterString.str);
+		if (mConfigFilterString == "") {
+			mConfigFilterString.printf("%s", filterTextEmpty);
+		}
+		bool filterMode = mConfigFilterString != filterTextEmpty;
+
+		// Add spacing and separator between filter and configs
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
+
+		if (filterMode) {
+
+			// Start columns
+			ImGui::Columns(4, "filter___columns___");
+
+			// Set columns widths
+			ImGui::SetColumnWidth(0, 40.0f);
+			ImGui::SetColumnWidth(1, 120.0f);
+			ImGui::SetColumnWidth(2, 200.0f);
+			ImGui::SetColumnWidth(3, 190.0f);
+
+			// Column headers
+			ImGui::Text("Save"); ImGui::NextColumn();
+			ImGui::Text("Section"); ImGui::NextColumn();
+			ImGui::Text("Setting"); ImGui::NextColumn();
+			ImGui::Text("Value"); ImGui::NextColumn();
+
 			for (auto& sectionKey : mCfgSections) {
 
 				// Get settings from Global Config
 				mCfgSectionSettings.clear();
 				cfg.getSectionSettings(sectionKey.str, mCfgSectionSettings);
 
-				// Skip if header is closed
-				if (!ImGui::CollapsingHeader(sectionKey.str)) continue;
-
-				// Start columns
-				StackString256 tmpStr;
-				tmpStr.printf("%s___column___", sectionKey.str);
-				ImGui::Columns(4, tmpStr.str);
-				ImGui::Separator();
-
-				// Set columns widths
-				ImGui::SetColumnWidth(0, 40.0f);
-				ImGui::SetColumnWidth(1, 210.0f);
-				ImGui::SetColumnWidth(2, 150.0f);
-				ImGui::SetColumnWidth(3, 150.0f);
-
-				// Column headers
-				ImGui::Text("Save"); ImGui::NextColumn();
-				ImGui::Text("Setting Key"); ImGui::NextColumn();
-				ImGui::Text("Value Input"); ImGui::NextColumn();
-				ImGui::Text("Alternate Input"); ImGui::NextColumn();
-
-				ImGui::Separator();
-
 				for (Setting* setting : mCfgSectionSettings) {
 
+					// Combine key strings
+					StackString128 combinedKeyStr;
+					combinedKeyStr.printf("%s  ---  %s", sectionKey.str, setting->key().str);
+					StackString128 combinedKeyLowerStr;
+					strToLower(combinedKeyLowerStr.str, combinedKeyStr.str);
+
+					// Check if setting contains filter
+					bool containsFilter = strstr(combinedKeyLowerStr.str, mConfigFilterString.str);
+					if (!containsFilter) continue;
+
+					ImGui::Separator();
+
 					// Write to file checkbox
-					tmpStr.printf("          %s___writeToFile___", setting->key().str);
+					tmpStr.printf("##%s___writeToFile___", setting->key().str);
 					bool writeToFile = setting->value().writeToFile;
 					if (ImGui::Checkbox(tmpStr.str, &writeToFile)) {
 						setting->setWriteToFile(writeToFile);
 					}
 					ImGui::NextColumn();
+					ImGui::PushItemWidth(-1.0f);
 
-					// Key text
-					ImGui::Text("%s", setting->key().str);
+					// Render section key
+					renderFilteredText(sectionKey.str, mConfigFilterString.str, filterTextColor);
 					ImGui::NextColumn();
 
+					// Render setting key
+					renderFilteredText(setting->key().str, mConfigFilterString.str, filterTextColor);
+					ImGui::NextColumn();
+					ImGui::PushItemWidth(-1.0f);
+
 					// Value input field
-					tmpStr.printf("                         %s___valueInput___", setting->key().str);
+					tmpStr.printf("##%s___valueInput___", setting->key().str);
 					switch (setting->type()) {
 					case ValueType::INT:
 						{
@@ -286,9 +414,88 @@ private:
 						break;
 					}
 					ImGui::NextColumn();
+				}
+			}
+
+			// Return to 1 column
+			ImGui::Columns(1);
+		}
+
+		else {
+			for (auto& sectionKey : mCfgSections) {
+				// Get settings from Global Config
+				mCfgSectionSettings.clear();
+				cfg.getSectionSettings(sectionKey.str, mCfgSectionSettings);
+
+				// Skip if header is closed
+				if (ImGui::CollapsingHeader(sectionKey.str)) continue;
+
+				// Start columns
+				tmpStr.printf("%s___column___", sectionKey.str);
+				ImGui::Columns(4, tmpStr.str);
+
+				// Set columns widths
+				ImGui::SetColumnWidth(0, 40.0f);
+				ImGui::SetColumnWidth(1, 210.0f);
+				ImGui::SetColumnWidth(2, 150.0f);
+				ImGui::SetColumnWidth(3, 150.0f);
+
+				// Column headers
+				ImGui::Text("Save"); ImGui::NextColumn();
+				ImGui::Text("Setting Key"); ImGui::NextColumn();
+				ImGui::Text("Value Input"); ImGui::NextColumn();
+				ImGui::Text("Alternate Input"); ImGui::NextColumn();
+
+				ImGui::Separator();
+
+				for (Setting* setting : mCfgSectionSettings) {
+
+					// Write to file checkbox
+					tmpStr.printf("##%s___writeToFile___", setting->key().str);
+					bool writeToFile = setting->value().writeToFile;
+					if (ImGui::Checkbox(tmpStr.str, &writeToFile)) {
+						setting->setWriteToFile(writeToFile);
+					}
+					ImGui::NextColumn();
+					ImGui::PushItemWidth(-1.0f);
+
+					// Key text
+					ImGui::Text("%s", setting->key().str);
+					ImGui::NextColumn();
+
+					// Value input field
+					tmpStr.printf("##%s___valueInput___", setting->key().str);
+					switch (setting->type()) {
+					case ValueType::INT:
+						{
+							int32_t i = setting->intValue();
+							if (ImGui::InputInt(tmpStr.str, &i, setting->value().i.bounds.step)) {
+								setting->setInt(i);
+							}
+						}
+						break;
+					case ValueType::FLOAT:
+						{
+							float f = setting->floatValue();
+							if (ImGui::InputFloat(tmpStr.str, &f, 0.25f)) {
+								setting->setFloat(f);
+							}
+						}
+						break;
+					case ValueType::BOOL:
+						{
+							bool b = setting->boolValue();
+							if (ImGui::Checkbox(tmpStr.str, &b)) {
+								setting->setBool(b);
+							}
+						}
+						break;
+					}
+					ImGui::NextColumn();
+					ImGui::PushItemWidth(-1.0f);
 
 					// Alternate value input field
-					tmpStr.printf("                         %s___altValueInput___", setting->key().str);
+					tmpStr.printf("##%s___altValueInput___", setting->key().str);
 					switch (setting->type()) {
 					case ValueType::INT:
 						{
@@ -317,15 +524,16 @@ private:
 						break;
 					}
 					ImGui::NextColumn();
-
 					ImGui::Separator();
 				}
 
 				// Return to 1 column
 				ImGui::Columns(1);
 			}
-			ImGui::End();
 		}
+
+		// End window
+		ImGui::End();
 	}
 };
 
