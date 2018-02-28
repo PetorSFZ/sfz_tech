@@ -40,7 +40,7 @@ using sfz::StackString256;
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-void strToLower(char* dst, const char* src) noexcept
+static void strToLower(char* dst, const char* src) noexcept
 {
 	size_t srcLen = strlen(src);
 	for (size_t i = 0; i <= srcLen; i++) { // <= to catch null-terminator
@@ -48,7 +48,7 @@ void strToLower(char* dst, const char* src) noexcept
 	}
 }
 
-void renderFilteredText(const char* str, const char* filter, vec4 filterColor) noexcept
+static void renderFilteredText(const char* str, const char* filter, vec4 filterColor) noexcept
 {
 	StackString128 lowerStackStr;
 	strToLower(lowerStackStr.str, str);
@@ -99,6 +99,16 @@ void renderFilteredText(const char* str, const char* filter, vec4 filterColor) n
 	}
 }
 
+static bool anyContainsFilter(const DynArray<Setting*>& settings, const char* filter) noexcept
+{
+	for (Setting* setting : settings) {
+		if (strstr(setting->key().str, filter) != nullptr) {
+			return true;
+		}
+	}
+	return false;
+}
+
 // DefaultGameUpdateable class
 // ------------------------------------------------------------------------------------------------
 
@@ -124,14 +134,14 @@ public:
 	int mStatsWarmup = 0;
 
 	// Imgui
-	DynArray<ph::ImguiVertex> mImguiVertices;
+	DynArray<ImguiVertex> mImguiVertices;
 	DynArray<uint32_t> mImguiIndices;
-	DynArray<ph::ImguiCommand> mImguiCommands;
+	DynArray<ImguiCommand> mImguiCommands;
 
 	// Global Config
 	StackString32 mConfigFilterString;
-	DynArray<sfz::StackString32> mCfgSections;
-	DynArray<ph::Setting*> mCfgSectionSettings;
+	DynArray<StackString32> mCfgSections;
+	DynArray<Setting*> mCfgSectionSettings;
 
 	// Console settings
 	Setting* mConsoleActiveSetting = nullptr;
@@ -294,7 +304,6 @@ private:
 	void renderConfigWindow() noexcept
 	{
 		const vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
-		const char* filterTextEmpty = "";
 		StackString256 tmpStr;
 
 		// Get Global Config sections
@@ -303,7 +312,7 @@ private:
 		cfg.getSections(mCfgSections);
 
 		// Set window size
-		ImGui::SetNextWindowSize(vec2(550.0f, 0.0f));
+		ImGui::SetNextWindowSize(vec2(400.0f, 0.0f));
 
 		// Set window flags
 		ImGuiWindowFlags configWindowFlags = 0;
@@ -320,217 +329,119 @@ private:
 		ImGui::InputText("Filter", mConfigFilterString.str, mConfigFilterString.maxSize());
 		ImGui::PopStyleColor();
 		strToLower(mConfigFilterString.str, mConfigFilterString.str);
-		if (mConfigFilterString == "") {
-			mConfigFilterString.printf("%s", filterTextEmpty);
-		}
-		bool filterMode = mConfigFilterString != filterTextEmpty;
+		bool filterMode = mConfigFilterString != "";
 
 		// Add spacing and separator between filter and configs
 		ImGui::Spacing();
 		ImGui::Separator();
-		ImGui::Spacing();
 
-		if (filterMode) {
+		// Start columns
+		ImGui::Columns(3);
+		ImGui::SetColumnWidth(0, 40.0f);
+		ImGui::SetColumnWidth(1, 200.0f);
+		ImGui::SetColumnWidth(2, 160.0f);
 
-			// Start columns
-			ImGui::Columns(4, "filter___columns___");
+		// Column headers
+		ImGui::Text("Save"); ImGui::NextColumn();
+		ImGui::Text("Setting"); ImGui::NextColumn();
+		ImGui::Text("Value"); ImGui::NextColumn();
 
-			// Set columns widths
-			ImGui::SetColumnWidth(0, 40.0f);
-			ImGui::SetColumnWidth(1, 120.0f);
-			ImGui::SetColumnWidth(2, 200.0f);
-			ImGui::SetColumnWidth(3, 190.0f);
+		for (auto& sectionKey : mCfgSections) {
 
-			// Column headers
-			ImGui::Text("Save"); ImGui::NextColumn();
-			ImGui::Text("Section"); ImGui::NextColumn();
-			ImGui::Text("Setting"); ImGui::NextColumn();
-			ImGui::Text("Value"); ImGui::NextColumn();
+			// Get settings from Global Config
+			mCfgSectionSettings.clear();
+			cfg.getSectionSettings(sectionKey.str, mCfgSectionSettings);
 
-			for (auto& sectionKey : mCfgSections) {
-
-				// Get settings from Global Config
-				mCfgSectionSettings.clear();
-				cfg.getSectionSettings(sectionKey.str, mCfgSectionSettings);
-
-				for (Setting* setting : mCfgSectionSettings) {
-
-					// Combine key strings
-					StackString128 combinedKeyStr;
-					combinedKeyStr.printf("%s  ---  %s", sectionKey.str, setting->key().str);
-					StackString128 combinedKeyLowerStr;
-					strToLower(combinedKeyLowerStr.str, combinedKeyStr.str);
-
-					// Check if setting contains filter
-					bool containsFilter = strstr(combinedKeyLowerStr.str, mConfigFilterString.str);
-					if (!containsFilter) continue;
-
-					ImGui::Separator();
-
-					// Write to file checkbox
-					tmpStr.printf("##%s___writeToFile___", setting->key().str);
-					bool writeToFile = setting->value().writeToFile;
-					if (ImGui::Checkbox(tmpStr.str, &writeToFile)) {
-						setting->setWriteToFile(writeToFile);
-					}
-					ImGui::NextColumn();
-					ImGui::PushItemWidth(-1.0f);
-
-					// Render section key
-					renderFilteredText(sectionKey.str, mConfigFilterString.str, filterTextColor);
-					ImGui::NextColumn();
-
-					// Render setting key
-					renderFilteredText(setting->key().str, mConfigFilterString.str, filterTextColor);
-					ImGui::NextColumn();
-					ImGui::PushItemWidth(-1.0f);
-
-					// Value input field
-					tmpStr.printf("##%s___valueInput___", setting->key().str);
-					switch (setting->type()) {
-					case ValueType::INT:
-						{
-							int32_t i = setting->intValue();
-							if (ImGui::InputInt(tmpStr.str, &i, setting->value().i.bounds.step)) {
-								setting->setInt(i);
-							}
-						}
-						break;
-					case ValueType::FLOAT:
-						{
-							float f = setting->floatValue();
-							if (ImGui::InputFloat(tmpStr.str, &f, 0.25f)) {
-								setting->setFloat(f);
-							}
-						}
-						break;
-					case ValueType::BOOL:
-						{
-							bool b = setting->boolValue();
-							if (ImGui::Checkbox(tmpStr.str, &b)) {
-								setting->setBool(b);
-							}
-						}
-						break;
-					}
-					ImGui::NextColumn();
-				}
+			// Skip section if nothing matches when filtering
+			if (filterMode) {
+				StackString32 sectionLowerStr;
+				strToLower(sectionLowerStr.str, sectionKey.str);
+				bool sectionFilter = strstr(sectionLowerStr.str, mConfigFilterString.str);
+				bool settingsFilter = anyContainsFilter(mCfgSectionSettings, mConfigFilterString.str);
+				if (!sectionFilter && !settingsFilter) continue;
 			}
 
-			// Return to 1 column
+			// Write header
 			ImGui::Columns(1);
-		}
-
-		else {
-			for (auto& sectionKey : mCfgSections) {
-				// Get settings from Global Config
-				mCfgSectionSettings.clear();
-				cfg.getSectionSettings(sectionKey.str, mCfgSectionSettings);
-
-				// Skip if header is closed
+			if (filterMode) {
+				ImGui::Separator();
+				renderFilteredText(sectionKey.str, mConfigFilterString.str, filterTextColor);
+			}
+			else {
 				if (ImGui::CollapsingHeader(sectionKey.str)) continue;
+			}
+			ImGui::Columns(3);
+			ImGui::SetColumnWidth(0, 40.0f);
+			ImGui::SetColumnWidth(1, 200.0f);
+			ImGui::SetColumnWidth(2, 160.0f);
 
-				// Start columns
-				tmpStr.printf("%s___column___", sectionKey.str);
-				ImGui::Columns(4, tmpStr.str);
+			for (Setting* setting : mCfgSectionSettings) {
 
-				// Set columns widths
-				ImGui::SetColumnWidth(0, 40.0f);
-				ImGui::SetColumnWidth(1, 210.0f);
-				ImGui::SetColumnWidth(2, 150.0f);
-				ImGui::SetColumnWidth(3, 150.0f);
+				// Combine key strings
+				StackString128 combinedKeyStr;
+				combinedKeyStr.printf("%s%s", sectionKey.str, setting->key().str);
+				StackString128 combinedKeyLowerStr;
+				strToLower(combinedKeyLowerStr.str, combinedKeyStr.str);
 
-				// Column headers
-				ImGui::Text("Save"); ImGui::NextColumn();
-				ImGui::Text("Setting Key"); ImGui::NextColumn();
-				ImGui::Text("Value Input"); ImGui::NextColumn();
-				ImGui::Text("Alternate Input"); ImGui::NextColumn();
+				// Check if setting contains filter
+				bool containsFilter = strstr(combinedKeyLowerStr.str, mConfigFilterString.str);
+				if (!containsFilter) continue;
 
 				ImGui::Separator();
 
-				for (Setting* setting : mCfgSectionSettings) {
-
-					// Write to file checkbox
-					tmpStr.printf("##%s___writeToFile___", setting->key().str);
-					bool writeToFile = setting->value().writeToFile;
-					if (ImGui::Checkbox(tmpStr.str, &writeToFile)) {
-						setting->setWriteToFile(writeToFile);
-					}
-					ImGui::NextColumn();
-					ImGui::PushItemWidth(-1.0f);
-
-					// Key text
-					ImGui::Text("%s", setting->key().str);
-					ImGui::NextColumn();
-
-					// Value input field
-					tmpStr.printf("##%s___valueInput___", setting->key().str);
-					switch (setting->type()) {
-					case ValueType::INT:
-						{
-							int32_t i = setting->intValue();
-							if (ImGui::InputInt(tmpStr.str, &i, setting->value().i.bounds.step)) {
-								setting->setInt(i);
-							}
-						}
-						break;
-					case ValueType::FLOAT:
-						{
-							float f = setting->floatValue();
-							if (ImGui::InputFloat(tmpStr.str, &f, 0.25f)) {
-								setting->setFloat(f);
-							}
-						}
-						break;
-					case ValueType::BOOL:
-						{
-							bool b = setting->boolValue();
-							if (ImGui::Checkbox(tmpStr.str, &b)) {
-								setting->setBool(b);
-							}
-						}
-						break;
-					}
-					ImGui::NextColumn();
-					ImGui::PushItemWidth(-1.0f);
-
-					// Alternate value input field
-					tmpStr.printf("##%s___altValueInput___", setting->key().str);
-					switch (setting->type()) {
-					case ValueType::INT:
-						{
-							const IntBounds& bounds = setting->value().i.bounds;
-							if (bounds.minValue != INT32_MIN || bounds.maxValue != INT32_MAX) {
-								int32_t i = setting->intValue();
-								if (ImGui::SliderInt(tmpStr.str, &i, bounds.minValue, bounds.maxValue)) {
-									setting->setInt(i);
-								}
-							}
-						}
-						break;
-					case ValueType::FLOAT:
-						{
-							const FloatBounds& bounds = setting->value().f.bounds;
-							if (bounds.minValue != FLT_MIN || bounds.maxValue != FLT_MAX) {
-								float f = setting->floatValue();
-								if (ImGui::SliderFloat(tmpStr.str, &f, bounds.minValue, bounds.maxValue)) {
-									setting->setFloat(f);
-								}
-							}
-						}
-						break;
-					default:
-						// Do nothing
-						break;
-					}
-					ImGui::NextColumn();
-					ImGui::Separator();
+				// Write to file checkbox
+				tmpStr.printf("##%s___writeToFile___", setting->key().str);
+				bool writeToFile = setting->value().writeToFile;
+				if (ImGui::Checkbox(tmpStr.str, &writeToFile)) {
+					setting->setWriteToFile(writeToFile);
 				}
+				ImGui::NextColumn();
+				ImGui::PushItemWidth(-1.0f);
 
-				// Return to 1 column
-				ImGui::Columns(1);
+				// Render setting key
+				if (filterMode) {
+					renderFilteredText(setting->key().str, mConfigFilterString.str, filterTextColor);
+				}
+				else {
+					ImGui::TextUnformatted(setting->key().str);
+				}
+				ImGui::NextColumn();
+				ImGui::PushItemWidth(-1.0f);
+
+				// Value input field
+				tmpStr.printf("##%s___valueInput___", setting->key().str);
+				switch (setting->type()) {
+				case ValueType::INT:
+					{
+						int32_t i = setting->intValue();
+						if (ImGui::InputInt(tmpStr.str, &i, setting->value().i.bounds.step)) {
+							setting->setInt(i);
+						}
+					}
+					break;
+				case ValueType::FLOAT:
+					{
+						float f = setting->floatValue();
+						if (ImGui::InputFloat(tmpStr.str, &f, 0.25f)) {
+							setting->setFloat(f);
+						}
+					}
+					break;
+				case ValueType::BOOL:
+					{
+						bool b = setting->boolValue();
+						if (ImGui::Checkbox(tmpStr.str, &b)) {
+							setting->setBool(b);
+						}
+					}
+					break;
+				}
+				ImGui::NextColumn();
 			}
 		}
+
+		// Return to 1 column
+		ImGui::Columns(1);
 
 		// End window
 		ImGui::End();
