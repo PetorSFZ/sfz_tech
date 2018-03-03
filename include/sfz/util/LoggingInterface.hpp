@@ -37,6 +37,7 @@ enum class LogLevel : uint32_t {
 
 class LoggingInterface {
 public:
+	virtual ~LoggingInterface() {}
 	virtual void log(
 		const char* file, int line, LogLevel level, const char* tag, const char* format, ...) = 0;
 };
