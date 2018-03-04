@@ -27,6 +27,23 @@ In order to generate the Visual Studio solution you only have to run `gen_visual
 
 Same as for Visual Studio 2015, except `gen_visualstudio2017.bat` should be used instead. Builds using the `v140` (Visual Studio 2015) platform toolset by default, so that also needs to be installed (available through the `Tools/Get Tools and Features` menu). Should probably build fine using newer toolset, but this is not regularly tested.
 
+#### Emscripten (Web)
+
+* Install Make for Windows (available in chocolatey)
+* Install Emscripten, run:
+  * `emsdk update`
+  * `emsdk install latest`
+  * `emsdk activate latest`
+* To use emscripten in a terminal first run `emsdk_env.bat`, then `emcc` is available.
+* Set the `EMSCRIPTEN` system variable properly
+* `cmake -DCMAKE_TOOLCHAIN_FILE="%EMSCRIPTEN%\cmake\Modules\Platform\Emscripten.cmake" .. -G "Unix Makefiles" `
+
+In order to run locally in a browser you need to host the files. Recommend using python http-here:
+
+* `pip install http-here`
+* `python3 -m http.server --bind 127.0.0.1`
+
+
 ### macOS
 
 #### Xcode
