@@ -29,7 +29,7 @@ enum class LogLevel : uint32_t {
 	INFO_NOISY = 0, // Extra detailed info that is not normally useful
 	INFO,
 	WARNING,
-	ERROR
+	ERROR_LVL // ERROR is macro defined on Windows, so we append _LVL
 };
 
 // Logging interface

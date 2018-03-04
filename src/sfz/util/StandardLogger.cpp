@@ -48,7 +48,11 @@ public:
 		const char* format, ...) override final
 	{
 		// Strip path from file
+#ifdef _WIN32
+		const char* strippedFile = std::strrchr(file, '\\') + 1;
+#else
 		const char* strippedFile = std::strrchr(file, '/') + 1;
+#endif
 		if (strippedFile == nullptr) strippedFile = file;
 
 		// Print log level, tag, file and line number.
