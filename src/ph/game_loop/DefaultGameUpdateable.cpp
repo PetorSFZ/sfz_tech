@@ -44,7 +44,7 @@ static void strToLower(char* dst, const char* src) noexcept
 {
 	size_t srcLen = strlen(src);
 	for (size_t i = 0; i <= srcLen; i++) { // <= to catch null-terminator
-		dst[i] = tolower(src[i]);
+		dst[i] = char(tolower(src[i]));
 	}
 }
 
@@ -356,7 +356,7 @@ private:
 			if (filterMode) {
 				StackString32 sectionLowerStr;
 				strToLower(sectionLowerStr.str, sectionKey.str);
-				bool sectionFilter = strstr(sectionLowerStr.str, mConfigFilterString.str);
+				bool sectionFilter = strstr(sectionLowerStr.str, mConfigFilterString.str) != nullptr;
 				bool settingsFilter = anyContainsFilter(mCfgSectionSettings, mConfigFilterString.str);
 				if (!sectionFilter && !settingsFilter) continue;
 			}
@@ -384,7 +384,7 @@ private:
 				strToLower(combinedKeyLowerStr.str, combinedKeyStr.str);
 
 				// Check if setting contains filter
-				bool containsFilter = strstr(combinedKeyLowerStr.str, mConfigFilterString.str);
+				bool containsFilter = strstr(combinedKeyLowerStr.str, mConfigFilterString.str) != nullptr;
 				if (!containsFilter) continue;
 
 				ImGui::Separator();
