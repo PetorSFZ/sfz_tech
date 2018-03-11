@@ -90,6 +90,8 @@ set(SFZ_CORE_INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/containers/HashMap.hpp
 	${INCLUDE_DIR}/sfz/containers/HashMap.inl
 	${INCLUDE_DIR}/sfz/containers/HashTableKeyDescriptor.hpp
+	${INCLUDE_DIR}/sfz/containers/RingBuffer.hpp
+	${INCLUDE_DIR}/sfz/containers/RingBuffer.inl
 
 	${INCLUDE_DIR}/sfz/geometry/AABB.hpp
 	${INCLUDE_DIR}/sfz/geometry/AABB.inl
@@ -212,6 +214,7 @@ if(NOT hasParent)
 
 		${TESTS_DIR}/sfz/containers/DynArray_Tests.cpp
 		${TESTS_DIR}/sfz/containers/HashMap_Tests.cpp
+		${TESTS_DIR}/sfz/containers/RingBuffer_Tests.cpp
 
 		${TESTS_DIR}/sfz/geometry/Intersection_Tests.cpp
 
