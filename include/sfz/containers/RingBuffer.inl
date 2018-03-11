@@ -22,7 +22,7 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 template<typename T>
-RingBuffer<T>::RingBuffer(uint32_t capacity, Allocator* allocator) noexcept
+RingBuffer<T>::RingBuffer(uint64_t capacity, Allocator* allocator) noexcept
 {
 	this->create(capacity, allocator);
 }
@@ -31,7 +31,7 @@ RingBuffer<T>::RingBuffer(uint32_t capacity, Allocator* allocator) noexcept
 // ------------------------------------------------------------------------------------------------
 
 template<typename T>
-void RingBuffer<T>::create(uint32_t capacity, Allocator* allocator) noexcept
+void RingBuffer<T>::create(uint64_t capacity, Allocator* allocator) noexcept
 {
 	// Make sure instance is in a clean state
 	this->destroy();
@@ -45,7 +45,7 @@ void RingBuffer<T>::create(uint32_t capacity, Allocator* allocator) noexcept
 
 	// Allocate memory
 	mDataPtr = (T*)mAllocator->allocate(
-		mCapacity * sizeof(T), std::max<uint32_t>(32, alignof(T)), "RingBuffer");
+		mCapacity * sizeof(T), std::max<uint64_t>(32, alignof(T)), "RingBuffer");
 }
 
 template<typename T>
@@ -53,9 +53,9 @@ void RingBuffer<T>::swap(RingBuffer& other) noexcept
 {
 	std::swap(this->mAllocator, other.mAllocator);
 	std::swap(this->mDataPtr, other.mDataPtr);
-	std::swap(this->mSize, other.mSize);
-	std::swap(this->mCapacity, other.mCapacity);
 	std::swap(this->mFirstIndex, other.mFirstIndex);
+	std::swap(this->mLastIndex, other.mLastIndex);
+	std::swap(this->mCapacity, other.mCapacity);
 }
 
 template<typename T>
@@ -81,57 +81,94 @@ template<typename T>
 void RingBuffer<T>::clear() noexcept
 {
 	// Call destructors
-	for (uint32_t i = 0; i < mSize; i++)
-	{
-		uint32_t index = (mFirstIndex + i) % mCapacity;
-		mDataPtr[index].~T();
+	for (uint64_t index = mFirstIndex; index < mLastIndex; index++) {
+		mDataPtr[mapIndex(index)].~T();
 	}
 
-	// Reset size and first index
-	mSize = 0;
-	mFirstIndex = 0;
+	// Reset indices
+	mFirstIndex = RINGBUFFER_BASE_IDX;
+	mLastIndex = RINGBUFFER_BASE_IDX;
 }
 
 // RingBuffer (implementation): Getters
 // ------------------------------------------------------------------------------------------------
 
 template<typename T>
-T& RingBuffer<T>::operator[] (uint32_t index) noexcept
+T& RingBuffer<T>::operator[] (uint64_t index) noexcept
 {
-	return mDataPtr[(mFirstIndex + index) % mCapacity];
+	return mDataPtr[mapIndex(mFirstIndex + index)];
 }
 
 template<typename T>
-const T& RingBuffer<T>::operator[] (uint32_t index) const noexcept
+const T& RingBuffer<T>::operator[] (uint64_t index) const noexcept
 {
-	return mDataPtr[(mFirstIndex + index) % mCapacity];
+	return mDataPtr[mapIndex(mFirstIndex + index)];
 }
 
-// RingBuffer (implementation): Methods
+// RingBuffer (implementation): Thread-safe methods
 // ------------------------------------------------------------------------------------------------
 
 template<typename T>
-bool RingBuffer<T>::add(const T& value, bool overwrite) noexcept
+bool RingBuffer<T>::add(const T& value) noexcept
 {
-	return this->addInternal<const T&>(value, overwrite);
+	return this->addInternal<const T&>(value);
 }
 
 template<typename T>
-bool RingBuffer<T>::add(T&& value, bool overwrite) noexcept
+bool RingBuffer<T>::add(T&& value) noexcept
 {
-	return this->addInternal<T>(std::move(value), overwrite);
+	return this->addInternal<T>(std::move(value));
 }
 
 template<typename T>
-bool RingBuffer<T>::addFirst(const T& value, bool overwrite) noexcept
+bool RingBuffer<T>::add() noexcept
 {
-	return this->addFirstInternal<const T&>(value, overwrite);
+	return this->addInternal<T>(T());
 }
 
 template<typename T>
-bool RingBuffer<T>::addFirst(T&& value, bool overwrite) noexcept
+bool RingBuffer<T>::pop(T& out) noexcept
 {
-	return this->addFirstInternal<T>(std::move(value), overwrite);
+	return this->popInternal(&out);
+}
+
+template<typename T>
+bool RingBuffer<T>::pop() noexcept
+{
+	return this->popInternal(nullptr);
+}
+
+// RingBuffer (implementation): Non-thread-safe methods
+// ------------------------------------------------------------------------------------------------
+
+template<typename T>
+bool RingBuffer<T>::addFirst(const T& value) noexcept
+{
+	return this->addFirstInternal<const T&>(value);
+}
+
+template<typename T>
+bool RingBuffer<T>::addFirst(T&& value) noexcept
+{
+	return this->addFirstInternal<T>(std::move(value));
+}
+
+template<typename T>
+bool RingBuffer<T>::addFirst() noexcept
+{
+	return this->addFirstInternal<T>(T());
+}
+
+template<typename T>
+bool RingBuffer<T>::popLast(T& out) noexcept
+{
+	return this->popLastInternal(&out);
+}
+
+template<typename T>
+bool RingBuffer<T>::popLast() noexcept
+{
+	return this->popLastInternal(nullptr);
 }
 
 // RingBuffer (implementation): Private methods
@@ -139,7 +176,7 @@ bool RingBuffer<T>::addFirst(T&& value, bool overwrite) noexcept
 
 template<typename T>
 template<typename PerfectT>
-bool RingBuffer<T>::addInternal(PerfectT&& value, bool overwrite) noexcept
+bool RingBuffer<T>::addInternal(PerfectT&& value) noexcept
 {
 	// Utilizes perfect forwarding to determine if parameters are const references or rvalues.
 	// const reference: PerfectT == const T&
@@ -149,32 +186,25 @@ bool RingBuffer<T>::addInternal(PerfectT&& value, bool overwrite) noexcept
 	// Do nothing if no memory is allocated.
 	if (mCapacity == 0) return false;
 
-	// Check if RingBuffer is full
-	if (mSize == mCapacity) {
+	// Map indices
+	uint64_t firstArrayIndex = mapIndex(mFirstIndex);
+	uint64_t lastArrayIndex = mapIndex(mLastIndex);
 
-		// Replace first element if overwrite
-		if (overwrite) {
-			mDataPtr[mFirstIndex] = std::forward<PerfectT>(value);
-			mFirstIndex = (mFirstIndex + 1) % mCapacity;
-			return true;
-		}
-
-		// Do not insert element if not overwrite
-		else {
-			return false;
-		}
+	// Don't insert if buffer is full
+	if (firstArrayIndex == lastArrayIndex) {
+		// Don't exit if buffer is empty
+		if (mFirstIndex  != mLastIndex) return false;
 	}
 
 	// Add element to buffer
-	uint32_t writeIndex = (mFirstIndex + mSize) % mCapacity;
-	new (mDataPtr + writeIndex) T(std::forward<PerfectT>(value));
-	mSize += 1;
+	new (mDataPtr + lastArrayIndex) T(std::forward<PerfectT>(value));
+	mLastIndex += 1; // Must increment after element creation, due to multi-threading
 	return true;
 }
 
 template<typename T>
 template<typename PerfectT>
-bool RingBuffer<T>::addFirstInternal(PerfectT&& value, bool overwrite) noexcept
+bool RingBuffer<T>::addFirstInternal(PerfectT&& value) noexcept
 {
 	// Utilizes perfect forwarding to determine if parameters are const references or rvalues.
 	// const reference: PerfectT == const T&
@@ -184,28 +214,56 @@ bool RingBuffer<T>::addFirstInternal(PerfectT&& value, bool overwrite) noexcept
 	// Do nothing if no memory is allocated.
 	if (mCapacity == 0) return false;
 
-	// Check if RingBuffer is full
-	if (mSize == mCapacity) {
+	// Map indices
+	uint64_t firstArrayIndex = mapIndex(mFirstIndex);
+	uint64_t lastArrayIndex = mapIndex(mLastIndex);
 
-		// Replace last element if overwrite
-		if (overwrite) {
-			uint32_t lastIndex = (mFirstIndex + mSize - 1) % mCapacity;
-			mDataPtr[lastIndex] = std::forward<PerfectT>(value);
-			mFirstIndex = lastIndex;
-			return true;
-		}
-
-		// Do not insert element if not overwrite
-		else {
-			return false;
-		}
+	// Don't insert if buffer is full
+	if (firstArrayIndex == lastArrayIndex) {
+		// Don't exit if buffer is empty
+		if (mFirstIndex != mLastIndex) return false;
 	}
 
 	// Add element to buffer
-	mFirstIndex = mFirstIndex == 0 ? (mCapacity - 1) : (mFirstIndex - 1);
-	if (mSize == 0) mFirstIndex = 0; // Special case were size == 0
-	new (mDataPtr + mFirstIndex) T(std::forward<PerfectT>(value));
-	mSize += 1;
+	firstArrayIndex = mapIndex(mFirstIndex - 1);
+	new (mDataPtr + firstArrayIndex) T(std::forward<PerfectT>(value));
+	mFirstIndex -= 1; // Must decrement after element creation, due to multi-threading
+	return true;
+}
+
+template<typename T>
+bool RingBuffer<T>::popInternal(T* out) noexcept
+{
+	// Return no element if buffer is empty
+	if (mFirstIndex == mLastIndex) return false;
+
+	// Move out element and call destructor.
+	uint64_t firstArrayIndex = mapIndex(mFirstIndex);
+	if (out != nullptr) *out = std::move(mDataPtr[firstArrayIndex]);
+	mDataPtr[firstArrayIndex].~T();
+
+	// Increment index (after destructor called, because multi-threading)
+	mFirstIndex += 1;
+
+	return true;
+}
+
+template<typename T>
+bool RingBuffer<T>::popLastInternal(T* out) noexcept
+{
+	// Return no element if buffer is empty
+	if (mFirstIndex == mLastIndex) return false;
+
+	// Map index to array
+	uint64_t lastArrayIndex = mapIndex(mLastIndex - 1);
+
+	// Move out element and call destructor.
+	if (out != nullptr) *out = std::move(mDataPtr[lastArrayIndex]);
+	mDataPtr[lastArrayIndex].~T();
+
+	// Decrement index (after destructor called, because multi-threading)
+	mLastIndex -= 1;
+
 	return true;
 }
 
