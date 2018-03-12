@@ -105,7 +105,7 @@ const T& RingBuffer<T>::operator[] (uint64_t index) const noexcept
 	return mDataPtr[mapIndex(mFirstIndex + index)];
 }
 
-// RingBuffer (implementation): Thread-safe methods
+// RingBuffer (implementation): Methods
 // ------------------------------------------------------------------------------------------------
 
 template<typename T>
@@ -137,9 +137,6 @@ bool RingBuffer<T>::pop() noexcept
 {
 	return this->popInternal(nullptr);
 }
-
-// RingBuffer (implementation): Non-thread-safe methods
-// ------------------------------------------------------------------------------------------------
 
 template<typename T>
 bool RingBuffer<T>::addFirst(const T& value) noexcept
