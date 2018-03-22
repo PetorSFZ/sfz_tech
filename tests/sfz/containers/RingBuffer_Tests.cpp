@@ -360,7 +360,7 @@ TEST_CASE("RingBuffer: Multi-threading", "[sfz::RingBuffer]")
 		bool results[NUM_RESULTS];
 		for (bool& b : results) b = false;
 
-		std::thread producer([&buffer]() {
+		std::thread producer([&buffer, NUM_RESULTS]() {
 			for (int32_t i = 0; i < int32_t(NUM_RESULTS); i++) {
 				std::this_thread::sleep_for(std::chrono::microseconds(250));
 				bool success = buffer.add(i);
@@ -368,7 +368,7 @@ TEST_CASE("RingBuffer: Multi-threading", "[sfz::RingBuffer]")
 			}
 		});
 
-		std::thread consumer([&buffer, &results]() {
+		std::thread consumer([&buffer, &results, NUM_RESULTS]() {
 			for (int32_t i = 0; i < int32_t(NUM_RESULTS); i++) {
 				int32_t out = -1;
 				bool success = buffer.pop(out);
@@ -395,14 +395,14 @@ TEST_CASE("RingBuffer: Multi-threading", "[sfz::RingBuffer]")
 		bool results[NUM_RESULTS];
 		for (bool& b : results) b = false;
 
-		std::thread producer([&buffer]() {
+		std::thread producer([&buffer, NUM_RESULTS]() {
 			for (int32_t i = 0; i < int32_t(NUM_RESULTS); i++) {
 				bool success = buffer.add(i);
 				if (!success) i--;
 			}
 		});
 
-		std::thread consumer([&buffer, &results]() {
+		std::thread consumer([&buffer, &results, NUM_RESULTS]() {
 			for (int32_t i = 0; i < int32_t(NUM_RESULTS); i++) {
 				std::this_thread::sleep_for(std::chrono::microseconds(250));
 				int32_t out = -1;
@@ -430,7 +430,7 @@ TEST_CASE("RingBuffer: Multi-threading", "[sfz::RingBuffer]")
 		bool results[NUM_RESULTS];
 		for (bool& b : results) b = false;
 
-		std::thread producer([&buffer]() {
+		std::thread producer([&buffer, NUM_RESULTS]() {
 			for (int32_t i = 0; i < int32_t(NUM_RESULTS); i++) {
 				std::this_thread::sleep_for(std::chrono::microseconds(250));
 				bool success = buffer.addFirst(i);
@@ -438,7 +438,7 @@ TEST_CASE("RingBuffer: Multi-threading", "[sfz::RingBuffer]")
 			}
 		});
 
-		std::thread consumer([&buffer, &results]() {
+		std::thread consumer([&buffer, &results, NUM_RESULTS]() {
 			for (int32_t i = 0; i < int32_t(NUM_RESULTS); i++) {
 				int32_t out = -1;
 				bool success = buffer.popLast(out);
@@ -465,14 +465,14 @@ TEST_CASE("RingBuffer: Multi-threading", "[sfz::RingBuffer]")
 		bool results[NUM_RESULTS];
 		for (bool& b : results) b = false;
 
-		std::thread producer([&buffer]() {
+		std::thread producer([&buffer, NUM_RESULTS]() {
 			for (int32_t i = 0; i < int32_t(NUM_RESULTS); i++) {
 				bool success = buffer.addFirst(i);
 				if (!success) i--;
 			}
 		});
 
-		std::thread consumer([&buffer, &results]() {
+		std::thread consumer([&buffer, &results, NUM_RESULTS]() {
 			for (int32_t i = 0; i < int32_t(NUM_RESULTS); i++) {
 				std::this_thread::sleep_for(std::chrono::microseconds(250));
 				int32_t out = -1;
@@ -502,7 +502,7 @@ TEST_CASE("RingBuffer: Multi-threading", "[sfz::RingBuffer]")
 		for (bool& b : results) b = false;
 
 		bool producerFirstNoSuccess = false;
-		std::thread producerFirst([&buffer, &producerFirstNoSuccess]() {
+		std::thread producerFirst([&buffer, &producerFirstNoSuccess, HALF_NUM_RESULTS]() {
 			for (int32_t i = 0; i < int32_t(HALF_NUM_RESULTS); i++) {
 				std::this_thread::sleep_for(std::chrono::microseconds(250));
 				bool success = buffer.addFirst(i);
@@ -514,7 +514,7 @@ TEST_CASE("RingBuffer: Multi-threading", "[sfz::RingBuffer]")
 		});
 
 		bool producerLastNoSuccess = false;
-		std::thread producerLast([&buffer, &producerLastNoSuccess]() {
+		std::thread producerLast([&buffer, &producerLastNoSuccess, HALF_NUM_RESULTS]() {
 			for (int32_t i = 0; i < int32_t(HALF_NUM_RESULTS); i++) {
 				std::this_thread::sleep_for(std::chrono::microseconds(250));
 				bool success = buffer.add(i);
