@@ -74,7 +74,7 @@ const char* basePath() noexcept
 	return path;
 }
 
-static void ensureAppUserDataDirExists(const char* appName)
+static void ensureAppUserDataDirExists(const char* appName) noexcept
 {
 	// Create "My Games" directory
 	sfz::createDirectory(sfz::gameBaseFolderPath());
@@ -83,6 +83,21 @@ static void ensureAppUserDataDirExists(const char* appName)
 	StackString320 tmp;
 	tmp.printf("%s%s/", sfz::gameBaseFolderPath(), appName);
 	sfz::createDirectory(tmp.str);
+}
+
+static void logSDL2Version() noexcept
+{
+	SDL_version version;
+
+	// Log SDL2 compiled version
+	SDL_VERSION(&version);
+	SFZ_INFO("SDL2", "Compiled version: %u.%u.%u",
+		uint32_t(version.major), uint32_t(version.minor), uint32_t(version.patch));
+
+	// Log SDL2 compiled version
+	SDL_GetVersion(&version);
+	SFZ_INFO("SDL2", "Linked version: %u.%u.%u",
+		uint32_t(version.major), uint32_t(version.minor), uint32_t(version.patch));
 }
 
 // Implementation function
@@ -143,6 +158,9 @@ int mainImpl(int, char*[], InitOptions&& options)
 		SFZ_ERROR("PhantasyEngine", "SDL_Init() failed: %s", SDL_GetError());
 		return EXIT_FAILURE;
 	}
+
+	// Log SDL2 version
+	logSDL2Version();
 
 	// Load Renderer library (DLL on Windows)
 	UniquePtr<Renderer> renderer = sfz::makeUniqueDefault<Renderer>();
