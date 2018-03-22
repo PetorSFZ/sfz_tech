@@ -17,7 +17,7 @@
 // 3. This notice may not be removed or altered from any source distribution.
 
 #include "sfz/PushWarnings.hpp"
-#include "catch.hpp"
+#include "catch2/catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
 #include "sfz/memory/New.hpp"
