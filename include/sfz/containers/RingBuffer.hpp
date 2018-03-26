@@ -144,7 +144,7 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	/// Maps an "infinite" index into an index into the data array
-	uint64_t mapIndex(uint64_t index) noexcept { return index % mCapacity; }
+	uint64_t mapIndex(uint64_t index) const noexcept { return index % mCapacity; }
 
 	/// Internal implementation of add(). Utilizes perfect forwarding in order to select whether to
 	/// use const& or &&.
