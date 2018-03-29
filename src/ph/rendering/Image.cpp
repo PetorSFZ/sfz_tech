@@ -104,12 +104,12 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 {
 	// Some input error handling
 	if (basePath == nullptr || fileName == nullptr) {
-		SFZ_WARNING("PhantasyEngine", "loadImage(): invalid path to image");
+		SFZ_WARNING("PhantasyEngine", "Invalid path to image");
 		return Image();
 	}
 	if (static_allocator == nullptr) {
 		SFZ_WARNING("PhantasyEngine",
-			"loadImage(): allocator not specified, call setLoadImageAllocator() first");
+			"Allocator not specified, call setLoadImageAllocator() first");
 		return Image();
 	}
 
@@ -123,13 +123,12 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 
 	// Error checking
 	if (img == nullptr) {
-		SFZ_WARNING("PhantasyEngine", "loadImage(): Unable to load image \"%s\", reason: %s",
+		SFZ_WARNING("PhantasyEngine", "Unable to load image \"%s\", reason: %s",
 			path.str, stbi_failure_reason());
 		return Image();
 	}
 	if (numChannels != 1 && numChannels != 3 && numChannels != 4) {
-		SFZ_WARNING("PhantasyEngine",
-			"loadImage(): Image \"%s\" has unsupported number of channels: %i",
+		SFZ_WARNING("PhantasyEngine", "Image \"%s\" has unsupported number of channels: %i",
 			path.str, numChannels);
 		stbi_image_free(img);
 		return Image();
@@ -165,7 +164,7 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 	}
 
 	// Free temp memory used by stb_image and return image
-	SFZ_INFO_NOISY("PhantasyEngine", "loadImage(): Image \"%s\" loaded succesfully", path.str);
+	SFZ_INFO_NOISY("PhantasyEngine", "Image \"%s\" loaded succesfully", path.str);
 	stbi_image_free(img);
 	return tmp;
 }

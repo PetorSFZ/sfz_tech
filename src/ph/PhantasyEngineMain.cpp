@@ -32,19 +32,19 @@
 
 #include <sfz/Context.hpp>
 #include <sfz/Logging.hpp>
+#include <sfz/memory/StandardAllocator.hpp>
 #include <sfz/strings/StackString.hpp>
 #include <sfz/util/IO.hpp>
 
+#include "ph/Context.hpp"
 #include "ph/config/GlobalConfig.hpp"
 #include "ph/game_loop/GameLoop.hpp"
 #include "ph/rendering/Image.hpp"
 #include "ph/rendering/ImguiSupport.hpp"
 #include "ph/sdl/SDLAllocator.hpp"
+#include "ph/util/TerminalLogger.hpp"
 
 namespace ph {
-
-using sfz::StackString192;
-using sfz::StackString320;
 
 // Request dedicated graphics card over integrated on Windows
 // ------------------------------------------------------------------------------------------------
@@ -57,7 +57,29 @@ extern "C" { _declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 1
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-const char* basePath() noexcept
+static void setupContexts() noexcept
+{
+	// Get sfz standard allocator
+	sfz::Allocator* allocator = sfz::getStandardAllocator();
+
+	// Create terminal logger
+	ph::TerminalLogger& logger = ph::TerminalLogger::instance();
+	logger.init(256, allocator);
+
+	// Setup context
+	ph::Context* context = ph::getStaticContext();
+	context->sfzContext.defaultAllocator = allocator;
+	context->sfzContext.logger = &logger;
+	context->logger = &logger;
+
+	// Set Phantasy Engine context
+	ph::setContext(context);
+
+	// Set sfzCore context
+	sfz::setContext(&context->sfzContext);
+}
+
+static const char* basePath() noexcept
 {
 	static const char* path = []() {
 		const char* tmp = SDL_GetBasePath();
@@ -80,7 +102,7 @@ static void ensureAppUserDataDirExists(const char* appName) noexcept
 	sfz::createDirectory(sfz::gameBaseFolderPath());
 
 	// Create app directory in "My Games"
-	StackString320 tmp;
+	sfz::StackString320 tmp;
 	tmp.printf("%s%s/", sfz::gameBaseFolderPath(), appName);
 	sfz::createDirectory(tmp.str);
 }
@@ -105,8 +127,8 @@ static void logSDL2Version() noexcept
 
 int mainImpl(int, char*[], InitOptions&& options)
 {
-	// Set sfzCore context
-	sfz::setContext(sfz::getStandardContext());
+	// Setup sfzCore and PhantasyEngine contexts
+	setupContexts();
 
 	// Set SDL allocators
 	if (!sdl::setSDLAllocator(sfz::getDefaultAllocator())) return EXIT_FAILURE;
@@ -128,7 +150,7 @@ int mainImpl(int, char*[], InitOptions&& options)
 	{
 		// Init config with ini location
 		if (options.iniLocation == IniLocation::NEXT_TO_EXECUTABLE) {
-			StackString192 iniFileName;
+			sfz::StackString192 iniFileName;
 			iniFileName.printf("%s.ini", options.appName);
 			cfg.init(basePath(), iniFileName.str, sfz::getDefaultAllocator());
 			SFZ_INFO("PhantasyEngine", "Ini location set to: %s%s", basePath(), iniFileName.str);
@@ -139,7 +161,7 @@ int mainImpl(int, char*[], InitOptions&& options)
 			ensureAppUserDataDirExists(options.appName);
 
 			// Initialize ini
-			StackString192 iniFileName;
+			sfz::StackString192 iniFileName;
 			iniFileName.printf("%s/%s.ini", options.appName, options.appName);
 			cfg.init(sfz::gameBaseFolderPath(), iniFileName.str, sfz::getDefaultAllocator());
 			SFZ_INFO("PhantasyEngine", "Ini location set to: %s%s",

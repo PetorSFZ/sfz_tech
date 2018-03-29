@@ -20,6 +20,7 @@
 #include "ph/game_loop/DefaultGameUpdateable.hpp"
 
 #include <cctype>
+#include <ctime>
 
 #include <imgui.h>
 
@@ -27,12 +28,15 @@
 #include <sfz/strings/StackString.hpp>
 #include <sfz/util/FrametimeStats.hpp>
 
-#include <ph/config/GlobalConfig.hpp>
-#include <ph/rendering/ImguiSupport.hpp>
+#include "ph/Context.hpp"
+#include "ph/config/GlobalConfig.hpp"
+#include "ph/rendering/ImguiSupport.hpp"
+#include "ph/util/TerminalLogger.hpp"
 
 namespace ph {
 
 using sfz::FrametimeStats;
+using sfz::StackString;
 using sfz::StackString32;
 using sfz::StackString128;
 using sfz::StackString256;
@@ -107,6 +111,24 @@ static bool anyContainsFilter(const DynArray<Setting*>& settings, const char* fi
 		}
 	}
 	return false;
+}
+
+static const char* toString(LogLevel level) noexcept
+{
+	switch (level) {
+	case LogLevel::INFO_NOISY: return "INFO_NOISY";
+	case LogLevel::INFO: return "INFO";
+	case LogLevel::WARNING: return "WARNING";
+	case LogLevel::ERROR_LVL: return "ERROR";
+	}
+	return "INVALID LOG LEVEL";
+}
+
+static void timeToString(StackString& stringOut, time_t timestamp) noexcept
+{
+	std::tm* tmPtr = std::localtime(&timestamp);
+	size_t res = std::strftime(stringOut.str, stringOut.maxSize(), "%Y-%m-%d %H:%M:%S", tmPtr);
+	if (res == 0) stringOut.printf("INVALID TIME");
 }
 
 // DefaultGameUpdateable class
@@ -269,6 +291,11 @@ private:
 		// Render global config window
 		if (mConsoleActive) {
 			this->renderConfigWindow();
+		}
+
+		// Render log window
+		if (mConsoleActive) {
+			this->renderLogWindow();
 		}
 	}
 
@@ -439,6 +466,76 @@ private:
 				ImGui::NextColumn();
 			}
 		}
+
+		// Return to 1 column
+		ImGui::Columns(1);
+
+		// End window
+		ImGui::End();
+	}
+
+	void renderLogWindow() noexcept
+	{
+		const TerminalLogger& logger = *getContext()->logger;
+		StackString timeStr;
+
+		// Set window size
+		ImGui::SetNextWindowSize(vec2(650.0f, 650.0f));
+
+		// Set window flags
+		ImGuiWindowFlags logWindowFlags = 0;
+		//logWindowFlags |= ImGuiWindowFlags_NoMove;
+		logWindowFlags |= ImGuiWindowFlags_NoResize;
+		//logWindowFlags |= ImGuiWindowFlags_NoCollapse;
+
+		// Begin window
+		ImGui::Begin("Log", nullptr, logWindowFlags);
+
+		// Print all messages
+		uint32_t numLogMessages = logger.numMessages();
+		for (uint32_t i = 0; i < numLogMessages; i++) {
+			const TerminalMessageItem& message = logger.getMessage(i);
+
+			// Get color of message
+			vec4 messageColor;
+			switch (message.level) {
+			case LogLevel::INFO_NOISY: messageColor = vec4(0.6f, 0.6f, 0.8f, 1.0f); break;
+			case LogLevel::INFO: messageColor = vec4(0.8f, 0.8f, 0.8f, 1.0f); break;
+			case LogLevel::WARNING: messageColor = vec4(1.0f, 1.0f, 0.0f, 1.0f); break;
+			case LogLevel::ERROR_LVL: messageColor = vec4(1.0f, 0.0f, 0.0f, 1.0f); break;
+			}
+
+			// Create columns
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, 170.0f);
+			ImGui::SetColumnWidth(1, 480.0f);
+
+			// Print tag and messagess
+			ImGui::Separator();
+			ImGui::PushStyleColor(ImGuiCol_Text, messageColor);
+			ImGui::TextUnformatted(message.tag.str); ImGui::NextColumn();
+			ImGui::TextWrapped("%s", message.message.str); ImGui::NextColumn();
+			ImGui::PopStyleColor();
+
+			// Restore to 1 column
+			ImGui::Columns(1);
+
+			// Tooltip with timestamp, file and explicit warning level
+			if (ImGui::IsItemHovered()) {
+
+				// Get time string
+				timeToString(timeStr, message.timestamp);
+
+				// Print tooltip
+				ImGui::BeginTooltip();
+				ImGui::Text("%s -- %s -- %s:%i",
+					toString(message.level), timeStr.str, message.file.str, message.lineNumber);
+				ImGui::EndTooltip();
+			}
+		}
+
+		// Show last message by default
+		ImGui::SetItemDefaultFocus();
 
 		// Return to 1 column
 		ImGui::Columns(1);
