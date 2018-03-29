@@ -79,6 +79,7 @@ target_link_libraries(Renderer-CompatibleGL
 	${SDL2_LIBRARIES}
 	${SFZ_CORE_LIBRARIES}
 	${SFZ_GL_LIBRARIES}
+	${PH_SHARED_INTERFACE_LIBRARIES}
 )
 
 # Output variables
