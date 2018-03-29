@@ -105,6 +105,7 @@ target_include_directories(PhantasyEngineCore PUBLIC
 target_link_libraries(PhantasyEngineCore
 	${SDL2_LIBRARIES}
 	${SFZ_CORE_LIBRARIES}
+	${PH_SHARED_INTERFACE_LIBRARIES}
 	${IMGUI_LIBRARIES}
 )
 
