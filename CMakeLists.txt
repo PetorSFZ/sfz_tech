@@ -40,8 +40,9 @@ endif()
 
 # Directories
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-set(PH_RENDERER_SHARED_INTERFACE_HEADER_FILES
+set(PH_SHARED_INTERFACE_HEADER_FILES
 	${INCLUDE_DIR}/ph/Bool32.h
 	${INCLUDE_DIR}/ph/ConfigInterface.h
 	${INCLUDE_DIR}/ph/ExternC.h
@@ -56,13 +57,35 @@ set(PH_RENDERER_SHARED_INTERFACE_HEADER_FILES
 	${INCLUDE_DIR}/ph/rendering/SphereLight.h
 	${INCLUDE_DIR}/ph/rendering/Vertex.h
 )
-source_group(TREE ${INCLUDE_DIR} FILES ${PH_RENDERER_SHARED_INTERFACE_HEADER_FILES})
+source_group(TREE ${INCLUDE_DIR} FILES ${PH_SHARED_INTERFACE_HEADER_FILES})
 
-# Empty target in order to add headers to IDE
-add_custom_target(PhantasyEngine-SharedInterface SOURCES ${PH_RENDERER_SHARED_INTERFACE_HEADER_FILES})
+set(PH_SHARED_INTERFACE_SOURCE_FILES
+	${SRC_DIR}/ph/Context.cpp
+)
+source_group(TREE ${SRC_DIR} FILES ${PH_SHARED_INTERFACE_SOURCE_FILES})
+
+add_library(
+	PhantasyEngine-SharedInterface
+
+	${PH_SHARED_INTERFACE_HEADER_FILES}
+	${PH_SHARED_INTERFACE_SOURCE_FILES}
+)
+
+target_include_directories(
+	PhantasyEngine-SharedInterface
+	PUBLIC
+	${INCLUDE_DIR}
+	${SFZ_CORE_INCLUDE_DIRS}
+)
+
+target_link_libraries(
+	PhantasyEngine-SharedInterface
+	${SFZ_CORE_LIBRARIES}
+)
 
 # Output variables
 # ------------------------------------------------------------------------------------------------
 
 set(PH_SHARED_INTERFACE_FOUND true PARENT_SCOPE)
 set(PH_SHARED_INTERFACE_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
+set(PH_SHARED_INTERFACE_LIBRARIES PhantasyEngine-SharedInterface PARENT_SCOPE)
