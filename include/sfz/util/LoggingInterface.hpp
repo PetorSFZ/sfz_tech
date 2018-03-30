@@ -32,6 +32,24 @@ enum class LogLevel : uint32_t {
 	ERROR_LVL // ERROR is macro defined on Windows, so we append _LVL
 };
 
+constexpr const char* LOG_LEVEL_STRINGS[] = {
+	"INFO_NOISY",
+	"INFO",
+	"WARNING",
+	"ERROR"
+};
+
+inline const char* toString(LogLevel level) noexcept
+{
+	return LOG_LEVEL_STRINGS[uint32_t(level)];
+}
+
+// Comparison operators, used to compare severity of log levels
+inline bool operator< (LogLevel l, LogLevel r) noexcept { return uint32_t(l) < uint32_t(r); }
+inline bool operator> (LogLevel l, LogLevel r) noexcept { return uint32_t(l) > uint32_t(r); }
+inline bool operator<= (LogLevel l, LogLevel r) noexcept { return uint32_t(l) <= uint32_t(r); }
+inline bool operator>= (LogLevel l, LogLevel r) noexcept { return uint32_t(l) >= uint32_t(r); }
+
 // Logging interface
 // ------------------------------------------------------------------------------------------------
 

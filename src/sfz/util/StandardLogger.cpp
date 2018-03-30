@@ -24,21 +24,6 @@
 
 namespace sfz {
 
-// Static functions
-// ------------------------------------------------------------------------------------------------
-
-constexpr const char* LOG_LEVEL_STRINGS[] = {
-	"INFO_NOISY",
-	"INFO",
-	"WARNING",
-	"ERROR"
-};
-
-static const char* toString(LogLevel level) noexcept
-{
-	return LOG_LEVEL_STRINGS[uint32_t(level)];
-}
-
 // StandardLogger implementation
 // ------------------------------------------------------------------------------------------------
 
