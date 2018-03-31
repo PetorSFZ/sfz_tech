@@ -480,7 +480,7 @@ private:
 	void renderLogWindow() noexcept
 	{
 		const vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
-		const TerminalLogger& logger = *getContext()->logger;
+		TerminalLogger& logger = *getContext()->logger;
 		StackString timeStr;
 
 		// Set window flags
@@ -492,6 +492,7 @@ private:
 		// Begin window
 		ImGui::Begin("Log", nullptr, logWindowFlags);
 
+		// Filtering options
 		ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
 		int logMinLevelVal = mLogMinLevelSetting->intValue();
 		ImGui::Combo("Minimum log level", &logMinLevelVal, sfz::LOG_LEVEL_STRINGS,
@@ -501,6 +502,11 @@ private:
 		strToLower(mLogTagFilter.str, mLogTagFilter.str);
 		bool tagFilterMode = mLogTagFilter != "";
 		ImGui::PopStyleColor();
+
+		// Button clear messages
+		if (ImGui::Button("Clear messages")) {
+			logger.clearMessages();
+		}
 
 		ImGui::Separator();
 		ImGui::Spacing();

@@ -70,6 +70,8 @@ public:
 	/// Returns message
 	const TerminalMessageItem& getMessage(uint32_t index) const noexcept;
 
+	void clearMessages() noexcept { mMessages.clear(); }
+
 	// Overriden methods from LoggingInterface
 	// --------------------------------------------------------------------------------------------
 
