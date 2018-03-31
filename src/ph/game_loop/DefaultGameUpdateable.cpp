@@ -24,6 +24,7 @@
 
 #include <imgui.h>
 
+#include <sfz/Logging.hpp>
 #include <sfz/math/MathSupport.hpp>
 #include <sfz/strings/StackString.hpp>
 #include <sfz/util/FrametimeStats.hpp>
@@ -52,7 +53,18 @@ static void strToLower(char* dst, const char* src) noexcept
 	}
 }
 
-static void renderFilteredText(const char* str, const char* filter, vec4 filterColor) noexcept
+static void imguiPrintText(const char* str, vec4 color, const char* strEnd = nullptr) noexcept
+{
+	ImGui::PushStyleColor(ImGuiCol_Text, color);
+	ImGui::TextUnformatted(str, strEnd);
+	ImGui::PopStyleColor();
+}
+
+static void renderFilteredText(
+	const char* str,
+	const char* filter,
+	vec4 stringColor,
+	vec4 filterColor) noexcept
 {
 	StackString128 lowerStackStr;
 	strToLower(lowerStackStr.str, str);
@@ -62,9 +74,7 @@ static void renderFilteredText(const char* str, const char* filter, vec4 filterC
 	const size_t filterLen = strlen(filter);
 
 	if (filterLen == 0) {
-		ImGui::PushStyleColor(ImGuiCol_Text, filterColor);
-		ImGui::TextUnformatted(str);
-		ImGui::PopStyleColor();
+		imguiPrintText(str, stringColor);
 		return;
 	}
 
@@ -78,16 +88,14 @@ static void renderFilteredText(const char* str, const char* filter, vec4 filterC
 			// Render part of string until next filter
 			if (nextLower != currLowerStr) {
 				size_t len = nextLower - currLowerStr;
-				ImGui::TextUnformatted(currStr, currStr + len);
+				imguiPrintText(currStr, stringColor, currStr + len);
 				currStr += len;
 				currLowerStr +=len;
 			}
 
 			// Render filter
 			else {
-				ImGui::PushStyleColor(ImGuiCol_Text, filterColor);
-				ImGui::TextUnformatted(currStr, currStr + filterLen);
-				ImGui::PopStyleColor();
+				imguiPrintText(currStr, filterColor, currStr + filterLen);
 				currStr += filterLen;
 				currLowerStr += filterLen;
 			}
@@ -97,7 +105,7 @@ static void renderFilteredText(const char* str, const char* filter, vec4 filterC
 
 		// If no more substrings can be found it is time to render the rest of the string
 		else {
-			ImGui::TextUnformatted(currStr);
+			imguiPrintText(currStr, stringColor);
 			return;
 		}
 	}
@@ -111,17 +119,6 @@ static bool anyContainsFilter(const DynArray<Setting*>& settings, const char* fi
 		}
 	}
 	return false;
-}
-
-static const char* toString(LogLevel level) noexcept
-{
-	switch (level) {
-	case LogLevel::INFO_NOISY: return "INFO_NOISY";
-	case LogLevel::INFO: return "INFO";
-	case LogLevel::WARNING: return "WARNING";
-	case LogLevel::ERROR_LVL: return "ERROR";
-	}
-	return "INVALID LOG LEVEL";
 }
 
 static void timeToString(StackString& stringOut, time_t timestamp) noexcept
@@ -165,6 +162,11 @@ public:
 	DynArray<StackString32> mCfgSections;
 	DynArray<Setting*> mCfgSectionSettings;
 
+	// Log
+	Setting* mLogMinLevelSetting = nullptr;
+	int mLogMinLevel = int(LogLevel::INFO_NOISY);
+	StackString mLogTagFilter;
+
 	// Console settings
 	Setting* mConsoleActiveSetting = nullptr;
 	bool mConsoleActive = false;
@@ -185,8 +187,7 @@ public:
 		mConsoleActive = mConsoleActiveSetting->boolValue();
 		mConsoleAlwaysShowPerformance =
 			cfg.sanitizeBool("Console", "alwaysShowPerformance", true, BoolBounds(false));
-
-		cfg.sanitizeInt("Console", "test", false, IntBounds(500, 100, 1000));
+		mLogMinLevelSetting = cfg.sanitizeInt("Console", "logMinLevel", false, IntBounds(0, 0, 3));
 
 		// Initialize logic
 		mLogic->initialize(mState, renderer);
@@ -392,7 +393,8 @@ private:
 			ImGui::Columns(1);
 			if (filterMode) {
 				ImGui::Separator();
-				renderFilteredText(sectionKey.str, mConfigFilterString.str, filterTextColor);
+				renderFilteredText(sectionKey.str, mConfigFilterString.str,
+					vec4(1.0f), filterTextColor);
 			}
 			else {
 				if (ImGui::CollapsingHeader(sectionKey.str)) continue;
@@ -427,7 +429,8 @@ private:
 
 				// Render setting key
 				if (filterMode) {
-					renderFilteredText(setting->key().str, mConfigFilterString.str, filterTextColor);
+					renderFilteredText(setting->key().str, mConfigFilterString.str,
+						vec4(1.0f), filterTextColor);
 				}
 				else {
 					ImGui::TextUnformatted(setting->key().str);
@@ -476,25 +479,59 @@ private:
 
 	void renderLogWindow() noexcept
 	{
+		const vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
 		const TerminalLogger& logger = *getContext()->logger;
 		StackString timeStr;
-
-		// Set window size
-		ImGui::SetNextWindowSize(vec2(650.0f, 650.0f));
 
 		// Set window flags
 		ImGuiWindowFlags logWindowFlags = 0;
 		//logWindowFlags |= ImGuiWindowFlags_NoMove;
-		logWindowFlags |= ImGuiWindowFlags_NoResize;
+		//logWindowFlags |= ImGuiWindowFlags_NoResize;
 		//logWindowFlags |= ImGuiWindowFlags_NoCollapse;
 
 		// Begin window
 		ImGui::Begin("Log", nullptr, logWindowFlags);
 
+		ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
+		int logMinLevelVal = mLogMinLevelSetting->intValue();
+		ImGui::Combo("Minimum log level", &logMinLevelVal, sfz::LOG_LEVEL_STRINGS,
+			IM_ARRAYSIZE(sfz::LOG_LEVEL_STRINGS));
+		mLogMinLevelSetting->setInt(logMinLevelVal);
+		ImGui::InputText("Tag filter", mLogTagFilter.str, mLogTagFilter.maxSize());
+		strToLower(mLogTagFilter.str, mLogTagFilter.str);
+		bool tagFilterMode = mLogTagFilter != "";
+		ImGui::PopStyleColor();
+
+		ImGui::Separator();
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		// Headings
+		ImGui::Columns(2);
+		ImGui::SetColumnWidth(0, 175.0f);
+		ImGui::TextUnformatted("Tag"); ImGui::NextColumn();
+		ImGui::TextUnformatted("Message"); ImGui::NextColumn();
+		ImGui::Columns(1);
+		ImGui::Separator();
+		ImGui::Spacing();
+		ImGui::Spacing();
+
 		// Print all messages
+		ImGui::BeginChild("LogItems");
 		uint32_t numLogMessages = logger.numMessages();
 		for (uint32_t i = 0; i < numLogMessages; i++) {
 			const TerminalMessageItem& message = logger.getMessage(i);
+
+			// Skip if log level is too low
+			if (message.level < LogLevel(mLogMinLevelSetting->intValue())) continue;
+
+			// Skip section if nothing matches when filtering
+			if (tagFilterMode) {
+				StackString32 tagLowerStr;
+				strToLower(tagLowerStr.str, message.tag.str);
+				bool tagFilter = strstr(tagLowerStr.str, mLogTagFilter.str) != nullptr;
+				if (!tagFilter) continue;
+			}
 
 			// Get color of message
 			vec4 messageColor;
@@ -507,13 +544,13 @@ private:
 
 			// Create columns
 			ImGui::Columns(2);
-			ImGui::SetColumnWidth(0, 170.0f);
-			ImGui::SetColumnWidth(1, 480.0f);
+			ImGui::SetColumnWidth(0, 175.0f);
 
 			// Print tag and messagess
-			ImGui::Separator();
+			if (i != 0) ImGui::Separator();
+			renderFilteredText(message.tag.str, mLogTagFilter.str, messageColor, filterTextColor);
+			ImGui::NextColumn();
 			ImGui::PushStyleColor(ImGuiCol_Text, messageColor);
-			ImGui::TextUnformatted(message.tag.str); ImGui::NextColumn();
 			ImGui::TextWrapped("%s", message.message.str); ImGui::NextColumn();
 			ImGui::PopStyleColor();
 
@@ -535,7 +572,7 @@ private:
 		}
 
 		// Show last message by default
-		ImGui::SetItemDefaultFocus();
+		ImGui::EndChild();
 
 		// Return to 1 column
 		ImGui::Columns(1);
