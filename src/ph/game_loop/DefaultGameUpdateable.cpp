@@ -171,6 +171,7 @@ public:
 	Setting* mConsoleActiveSetting = nullptr;
 	bool mConsoleActive = false;
 	Setting* mConsoleAlwaysShowPerformance = nullptr;
+	Setting* mConsoleAlwaysShowLog = nullptr;
 
 	// Overloaded methods from GameLoopUpdateable
 	// --------------------------------------------------------------------------------------------
@@ -187,6 +188,8 @@ public:
 		mConsoleActive = mConsoleActiveSetting->boolValue();
 		mConsoleAlwaysShowPerformance =
 			cfg.sanitizeBool("Console", "alwaysShowPerformance", true, BoolBounds(false));
+		mConsoleAlwaysShowLog =
+			cfg.sanitizeBool("Console", "alwaysShowLog", true, BoolBounds(false));
 		mLogMinLevelSetting = cfg.sanitizeInt("Console", "logMinLevel", false, IntBounds(0, 0, 3));
 
 		// Initialize logic
@@ -295,7 +298,7 @@ private:
 		}
 
 		// Render log window
-		if (mConsoleActive) {
+		if (mConsoleActive || mConsoleAlwaysShowLog->boolValue()) {
 			this->renderLogWindow();
 		}
 	}
@@ -507,10 +510,7 @@ private:
 		if (ImGui::Button("Clear messages")) {
 			logger.clearMessages();
 		}
-
 		ImGui::Separator();
-		ImGui::Spacing();
-		ImGui::Spacing();
 
 		// Headings
 		ImGui::Columns(2);
