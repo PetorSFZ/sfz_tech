@@ -529,7 +529,7 @@ private:
 			const TerminalMessageItem& message = logger.getMessage(i);
 
 			// Skip if log level is too low
-			if (message.level < LogLevel(mLogMinLevelSetting->intValue())) continue;
+			if (int32_t(message.level) < mLogMinLevelSetting->intValue()) continue;
 
 			// Skip section if nothing matches when filtering
 			if (tagFilterMode) {
