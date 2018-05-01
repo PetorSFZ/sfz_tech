@@ -26,6 +26,7 @@
 #include "ph/game_loop/GameLoopUpdateable.hpp"
 #include "ph/rendering/CameraData.h"
 #include "ph/rendering/Image.hpp"
+#include "ph/rendering/LevelAssets.hpp"
 #include "ph/rendering/Mesh.hpp"
 
 namespace ph {
@@ -39,7 +40,8 @@ using sfz::UniquePtr;
 
 struct UpdateableState final {
 	CameraData cam;
-
+	LevelAssets assets;
+	
 	DynArray<RenderEntity> renderEntities;
 	DynArray<SphereLight> dynamicSphereLights;
 };
