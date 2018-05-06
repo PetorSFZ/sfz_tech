@@ -40,7 +40,7 @@ using sfz::UniquePtr;
 
 struct UpdateableState final {
 	CameraData cam;
-	LevelAssets assets;
+	LevelAssets dynamicAssets;
 	
 	DynArray<RenderEntity> renderEntities;
 	DynArray<SphereLight> dynamicSphereLights;
