@@ -588,7 +588,7 @@ DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities)
 
 		// Set model and normal matrices
 		gl::setUniform(modelMatrixLoc, mat4(entity.transform));
-		mat4 normalMatrix = inverse(transpose(mat4(entity.transform)));
+		mat4 normalMatrix = inverse(transpose(viewMatrix * mat4(entity.transform)));
 		gl::setUniform(normalMatrixLoc, normalMatrix);
 
 		model.bindVAO();
