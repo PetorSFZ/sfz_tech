@@ -261,7 +261,7 @@ DLL_EXPORT uint32_t phInitRenderer(
 	state.glContext = tmpContext;
 
 	// Print information
-	SFZ_INFO("Renderer-CompatibleGL", "\nVendor: %s\nVersion: %s\nRenderer: %s",
+	SFZ_INFO("Renderer-CompatibleGL", "Vendor: %s\nVersion: %s\nRenderer: %s",
 		glGetString(GL_VENDOR), glGetString(GL_VERSION), glGetString(GL_RENDERER));
 
 	// Create FullscreenGeometry
@@ -572,23 +572,24 @@ DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities)
 
 	const mat4& projMatrix = state.projMatrix;
 	const mat4& viewMatrix = state.viewMatrix;
-	mat4 modelMatrix = mat4::identity();
-	mat4 normalMatrix = inverse(transpose(viewMatrix * modelMatrix));
 
 	gl::setUniform(state.modelShader, "uProjMatrix", projMatrix);
 	gl::setUniform(state.modelShader, "uViewMatrix", viewMatrix);
-	gl::setUniform(state.modelShader, "uModelMatrix", modelMatrix);
-	gl::setUniform(state.modelShader, "uNormalMatrix", normalMatrix);
+	int modelMatrixLoc = glGetUniformLocation(state.modelShader.handle(), "uModelMatrix");
+	int normalMatrixLoc = glGetUniformLocation(state.modelShader.handle(), "uNormalMatrix");
 
 	gl::setUniform(state.modelShader, "uAlbedoTexture", 0);
 	gl::setUniform(state.modelShader, "uRoughnessTexture", 1);
 	gl::setUniform(state.modelShader, "uMetallicTexture", 2);
 
 	for (uint32_t i = 0; i < numEntities; i++) {
-		const auto& entity = reinterpret_cast<const ph::RenderEntity*>(entities)[i];
+		const ph::RenderEntity& entity = reinterpret_cast<const ph::RenderEntity*>(entities)[i];
 		auto& model = state.dynamicModels[entity.meshIndex];
 
-		// TODO: Set model & normal matrix here
+		// Set model and normal matrices
+		gl::setUniform(modelMatrixLoc, mat4(entity.transform));
+		mat4 normalMatrix = inverse(transpose(mat4(entity.transform)));
+		gl::setUniform(normalMatrixLoc, normalMatrix);
 
 		model.bindVAO();
 		auto& modelComponents = model.components();
