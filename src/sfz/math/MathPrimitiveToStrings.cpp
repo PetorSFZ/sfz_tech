@@ -23,116 +23,116 @@ namespace sfz {
 // Vector toString()
 // ------------------------------------------------------------------------------------------------
 
-StackString toString(const vec2& vector, uint32_t numDecimals) noexcept
+StackString toString(const vec2_f32& vector, uint32_t numDecimals) noexcept
 {
 	StackString tmp;
 	toString(vector, tmp, numDecimals);
 	return tmp;
 }
 
-StackString toString(const vec3& vector, uint32_t numDecimals) noexcept
+StackString toString(const vec3_f32& vector, uint32_t numDecimals) noexcept
 {
 	StackString tmp;
 	toString(vector, tmp, numDecimals);
 	return tmp;
 }
 
-StackString toString(const vec4& vector, uint32_t numDecimals) noexcept
+StackString toString(const vec4_f32& vector, uint32_t numDecimals) noexcept
 {
 	StackString tmp;
 	toString(vector, tmp, numDecimals);
 	return tmp;
 }
 
-void toString(const vec2& vector, StackString& string, uint32_t numDecimals) noexcept
+void toString(const vec2_f32& vector, StackString& string, uint32_t numDecimals) noexcept
 {
 	StackString32 formatStr;
 	formatStr.printf("[%%.%uf, %%.%uf]", numDecimals, numDecimals);
 	string.printf(formatStr.str, vector.x, vector.y);
 }
 
-void toString(const vec3& vector, StackString& string, uint32_t numDecimals) noexcept
+void toString(const vec3_f32& vector, StackString& string, uint32_t numDecimals) noexcept
 {
 	StackString32 formatStr;
 	formatStr.printf("[%%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals);
 	string.printf(formatStr.str, vector.x, vector.y, vector.z);
 }
 
-void toString(const vec4& vector, StackString& string, uint32_t numDecimals) noexcept
+void toString(const vec4_f32& vector, StackString& string, uint32_t numDecimals) noexcept
 {
 	StackString32 formatStr;
 	formatStr.printf("[%%.%uf, %%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals, numDecimals);
 	string.printf(formatStr.str, vector.x, vector.y, vector.z, vector.w);
 }
 
-StackString toString(const vec2i& vector) noexcept
+StackString toString(const vec2_s32& vector) noexcept
 {
 	StackString tmp;
 	toString(vector, tmp);
 	return tmp;
 }
 
-StackString toString(const vec3i& vector) noexcept
+StackString toString(const vec3_s32& vector) noexcept
 {
 	StackString tmp;
 	toString(vector, tmp);
 	return tmp;
 }
 
-StackString toString(const vec4i& vector) noexcept
+StackString toString(const vec4_s32& vector) noexcept
 {
 	StackString tmp;
 	toString(vector, tmp);
 	return tmp;
 }
 
-void toString(const vec2i& vector, StackString& string) noexcept
+void toString(const vec2_s32& vector, StackString& string) noexcept
 {
 	string.printf("[%i, %i]", vector.x, vector.y);
 }
 
-void toString(const vec3i& vector, StackString& string) noexcept
+void toString(const vec3_s32& vector, StackString& string) noexcept
 {
 	string.printf("[%i, %i, %i]", vector.x, vector.y, vector.z);
 }
 
-void toString(const vec4i& vector, StackString& string) noexcept
+void toString(const vec4_s32& vector, StackString& string) noexcept
 {
 	string.printf("[%i, %i, %i, %i]", vector.x, vector.y, vector.z, vector.w);
 }
 
-StackString toString(const vec2u& vector) noexcept
+StackString toString(const vec2_u32& vector) noexcept
 {
 	StackString tmp;
 	toString(vector, tmp);
 	return tmp;
 }
 
-StackString toString(const vec3u& vector) noexcept
+StackString toString(const vec3_u32& vector) noexcept
 {
 	StackString tmp;
 	toString(vector, tmp);
 	return tmp;
 }
 
-StackString toString(const vec4u& vector) noexcept
+StackString toString(const vec4_u32& vector) noexcept
 {
 	StackString tmp;
 	toString(vector, tmp);
 	return tmp;
 }
 
-void toString(const vec2u& vector, StackString& string) noexcept
+void toString(const vec2_u32& vector, StackString& string) noexcept
 {
 	string.printf("[%u, %u]", vector.x, vector.y);
 }
 
-void toString(const vec3u& vector, StackString& string) noexcept
+void toString(const vec3_u32& vector, StackString& string) noexcept
 {
 	string.printf("[%u, %u, %u]", vector.x, vector.y, vector.z);
 }
 
-void toString(const vec4u& vector, StackString& string) noexcept
+void toString(const vec4_u32& vector, StackString& string) noexcept
 {
 	string.printf("[%u, %u, %u, %u]", vector.x, vector.y, vector.z, vector.w);
 }

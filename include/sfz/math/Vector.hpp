@@ -26,9 +26,6 @@
 
 namespace sfz {
 
-using std::int32_t;
-using std::uint32_t;
-
 // Vector struct declaration
 // ------------------------------------------------------------------------------------------------
 
@@ -156,29 +153,52 @@ struct alignas(sizeof(T) * 4) Vector<T,4> final {
 	SFZ_CUDA_CALL T operator[] (uint32_t index) const noexcept;
 };
 
-using vec2 = Vector<float,2>;
-using vec3 = Vector<float,3>;
-using vec4 = Vector<float,4>;
+// Typedefs
+// ------------------------------------------------------------------------------------------------
 
-using vec2i = Vector<int32_t,2>;
-using vec3i = Vector<int32_t,3>;
-using vec4i = Vector<int32_t,4>;
+using vec2_f32 = Vector<float,2>;
+using vec3_f32 = Vector<float,3>;
+using vec4_f32 = Vector<float,4>;
+static_assert(sizeof(vec2_f32) == sizeof(float) * 2, "vec2_f32 is padded");
+static_assert(sizeof(vec3_f32) == sizeof(float) * 3, "vec3_f32 is padded");
+static_assert(sizeof(vec4_f32) == sizeof(float) * 4, "vec4_f32 is padded");
+static_assert(alignof(vec4_f32) == 16, "vec4_f32 is not 16-byte aligned");
 
-using vec2u = Vector<uint32_t,2>;
-using vec3u = Vector<uint32_t,3>;
-using vec4u = Vector<uint32_t,4>;
+using vec2_s32 = Vector<int32_t,2>;
+using vec3_s32 = Vector<int32_t,3>;
+using vec4_s32 = Vector<int32_t,4>;
+static_assert(sizeof(vec2_s32) == sizeof(int32_t) * 2, "vec2_s32 is padded");
+static_assert(sizeof(vec3_s32) == sizeof(int32_t) * 3, "vec3_s32 is padded");
+static_assert(sizeof(vec4_s32) == sizeof(int32_t) * 4, "vec4_s32 is padded");
+static_assert(alignof(vec4_s32) == 16, "vec4_s32 is not 16-byte aligned");
 
-static_assert(sizeof(vec2) == 8, "vec2 is padded");
-static_assert(sizeof(vec3) == 12, "vec3 is padded");
-static_assert(sizeof(vec4) == 16, "vec4 is padded");
+using vec2_u32 = Vector<uint32_t,2>;
+using vec3_u32 = Vector<uint32_t,3>;
+using vec4_u32 = Vector<uint32_t,4>;
+static_assert(sizeof(vec2_u32) == sizeof(uint32_t) * 2, "vec2_u32 is padded");
+static_assert(sizeof(vec3_u32) == sizeof(uint32_t) * 3, "vec3_u32 is padded");
+static_assert(sizeof(vec4_u32) == sizeof(uint32_t) * 4, "vec4_u32 is padded");
+static_assert(alignof(vec4_u32) == 16, "vec4_u32 is not 16-byte aligned");
 
-static_assert(sizeof(vec2i) == 8, "vec2i is padded");
-static_assert(sizeof(vec3i) == 12, "vec3i is padded");
-static_assert(sizeof(vec4i) == 16, "vec4i is padded");
+using vec2_s8 = Vector<int8_t,2>;
+using vec3_s8 = Vector<int8_t,3>;
+using vec4_s8 = Vector<int8_t,4>;
+static_assert(sizeof(vec2_s8) == sizeof(int8_t) * 2, "vec2_s8 is padded");
+static_assert(sizeof(vec3_s8) == sizeof(int8_t) * 3, "vec3_s8 is padded");
+static_assert(sizeof(vec4_s8) == sizeof(int8_t) * 4, "vec4_s8 is padded");
+static_assert(alignof(vec4_s8) == 4, "vec4_s8 is not 4-byte aligned");
 
-static_assert(sizeof(vec2u) == 8, "vec2u is padded");
-static_assert(sizeof(vec3u) == 12, "vec3u is padded");
-static_assert(sizeof(vec4u) == 16, "vec4u is padded");
+using vec2_u8 = Vector<uint8_t,2>;
+using vec3_u8 = Vector<uint8_t,3>;
+using vec4_u8 = Vector<uint8_t,4>;
+static_assert(sizeof(vec2_u8) == sizeof(uint8_t) * 2, "vec2_u8 is padded");
+static_assert(sizeof(vec3_u8) == sizeof(uint8_t) * 3, "vec3_u8 is padded");
+static_assert(sizeof(vec4_u8) == sizeof(uint8_t) * 4, "vec4_u8 is padded");
+static_assert(alignof(vec4_u8) == 4, "vec4_u8 is not 4-byte aligned");
+
+using vec2 = vec2_f32;
+using vec3 = vec3_f32;
+using vec4 = vec4_f32;
 
 // Vector functions
 // ------------------------------------------------------------------------------------------------

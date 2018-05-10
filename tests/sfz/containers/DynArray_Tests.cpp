@@ -342,20 +342,20 @@ TEST_CASE("remove()", "[sfz::DynArray]")
 		REQUIRE(v[0] == 3);
 	}
 	SECTION("Bug where memmove was passed numElements instead of numBytes") {
-		DynArray<vec2i> v;
-		const vec2i vals[] = {vec2i(1), vec2i(2), vec2i(3), vec2i(4)};
+		DynArray<vec2_s32> v;
+		const vec2_s32 vals[] = {vec2_s32(1), vec2_s32(2), vec2_s32(3), vec2_s32(4)};
 		v.add(vals, 4);
 
 		REQUIRE(v.size() == 4);
-		REQUIRE(v[0] == vec2i(1));
-		REQUIRE(v[1] == vec2i(2));
-		REQUIRE(v[2] == vec2i(3));
-		REQUIRE(v[3] == vec2i(4));
+		REQUIRE(v[0] == vec2_s32(1));
+		REQUIRE(v[1] == vec2_s32(2));
+		REQUIRE(v[2] == vec2_s32(3));
+		REQUIRE(v[3] == vec2_s32(4));
 
 		v.remove(1, 2);
 		REQUIRE(v.size() == 2);
-		REQUIRE(v[0] == vec2i(1));
-		REQUIRE(v[1] == vec2i(4));
+		REQUIRE(v[0] == vec2_s32(1));
+		REQUIRE(v[1] == vec2_s32(4));
 	}
 	SECTION("Bug where not enough elements are moved")
 	{

@@ -202,6 +202,7 @@ var=true
 
 		int itemCounter = 0;
 		for (IniParser::ItemAccessor i : ini) {
+			(void)i;
 			itemCounter += 1;
 		}
 		REQUIRE(itemCounter == 4);
