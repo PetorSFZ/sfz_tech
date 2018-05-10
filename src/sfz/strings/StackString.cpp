@@ -37,10 +37,13 @@ StackStringTempl<N>::StackStringTempl() noexcept
 }
 
 template<size_t N>
-StackStringTempl<N>::StackStringTempl(const char* string) noexcept
+StackStringTempl<N>::StackStringTempl(const char* format, ...) noexcept
 {
-	std::strncpy(this->str, string, N);
-	this->str[N-1] = '\0';
+	va_list args;
+	va_start(args, format);
+	std::vsnprintf(this->str, N, format, args);
+	va_end(args);
+	str[N-1] = '\0';
 }
 
 // StackStringTempl: Public methods

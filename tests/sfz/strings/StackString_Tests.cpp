@@ -27,13 +27,25 @@
 
 using namespace sfz;
 
-TEST_CASE("const char* constructor", "[sfz::StackString]")
+TEST_CASE("printf() constructor", "[sfz::StackString]")
 {
-	StackString str("hello");
-	REQUIRE(strcmp(str.str, "hello") == 0);
+	StackString str1;
+	str1.printf("%s: %i", "Test", 1);
+	
+	StackString str2("%s: %i", "Test", 1);
+	REQUIRE(str1 == str2);
 
-	StackString128 str2("1234567890123456789012345678901234567890123456789012345678901234123456789012345678901234567890123456789012345678901234567890123extra");
-	REQUIRE(strcmp(str2.str, "1234567890123456789012345678901234567890123456789012345678901234123456789012345678901234567890123456789012345678901234567890123") == 0);
+	StackString128 str3("%s", "1234567890123456789012345678901234567890123456789012345678901234123456789012345678901234567890123456789012345678901234567890123extra");
+	REQUIRE(strcmp(str3.str, "1234567890123456789012345678901234567890123456789012345678901234123456789012345678901234567890123456789012345678901234567890123") == 0);
+
+	REQUIRE(str96("hello") == "hello");
+}
+
+TEST_CASE("Implicit conversion operators", "[sfz::StackString]")
+{
+	str96 str("Hello");
+	const char* contents = str;
+	REQUIRE(str == contents);
 }
 
 TEST_CASE("printf() & printfAppend()", "[sfz::StackString]")

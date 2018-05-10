@@ -53,10 +53,10 @@ struct StackStringTempl final {
 	StackStringTempl& operator= (const StackStringTempl&) noexcept = default;
 	~StackStringTempl() noexcept = default;
 
-	/// Constructs a StackString with the given string. If the string is larger than the capacity
+	/// Constructs a StackString with printf syntax. If the string is larger than the capacity
 	/// of this StackString then only what fits will be stored. The resulting StackString is
 	/// guaranteed to be null-terminated.
-	explicit StackStringTempl(const char* string) noexcept;
+	explicit StackStringTempl(const char* format, ...) noexcept;
 
 	// Public methods
 	// --------------------------------------------------------------------------------------------
@@ -79,6 +79,9 @@ struct StackStringTempl final {
 
 	// Operators
 	// --------------------------------------------------------------------------------------------
+
+	operator char*() noexcept { return this->str; }
+	operator const char*() const noexcept { return this->str; }
 
 	bool operator== (const StackStringTempl& other) const noexcept;
 	bool operator!= (const StackStringTempl& other) const noexcept;
@@ -111,5 +114,17 @@ using StackString512 = StackStringTempl<512>; // Size: 128 32bit words
 using StackString1024 = StackStringTempl<1024>; // Size: 256 32bit words
 
 using StackString = StackString96;
+
+using str32 = StackString32;
+using str48 = StackString48;
+using str64 = StackString64;
+using str80 = StackString80;
+using str96 = StackString96;
+using str128 = StackString128;
+using str192 = StackString192;
+using str256 = StackString256;
+using str320 = StackString320;
+using str512 = StackString512;
+using str1024 = StackString1024;
 
 } // namespace sfz
