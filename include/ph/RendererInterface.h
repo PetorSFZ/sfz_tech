@@ -24,7 +24,6 @@
 #include "ph/rendering/CameraData.h"
 #include "ph/rendering/ImageView.h"
 #include "ph/rendering/ImguiRenderingData.h"
-#include "ph/rendering/Material.h"
 #include "ph/rendering/MeshView.h"
 #include "ph/rendering/RenderEntity.h"
 #include "ph/rendering/SphereLight.h"
@@ -143,19 +142,19 @@ DLL_EXPORT uint32_t phUpdateTexture(const phConstImageView* texture, uint32_t in
 /// will be copied to renderers internal memory. Material at index 0 will be assigned indexo 0, etc.
 /// \param materials the materials to add
 /// \param numMaterials the number of material to add
-DLL_EXPORT void phSetMaterials(const phMaterial* materials, uint32_t numMaterials);
+DLL_EXPORT void phSetMaterials(const void* materials, uint32_t numMaterials);
 
 /// Adds a material and returns its assigned index
 /// \param material the material to add
 /// \return the index assigned to the material
-DLL_EXPORT uint32_t phAddMaterial(const phMaterial* material);
+DLL_EXPORT uint32_t phAddMaterial(const void* material);
 
 /// Updates (replaces) a material already registered to this renderer. Will return 0 and not do
 /// anything if no material is registered to the specified index.
 /// \param material the material to add
 /// \param index the index to the registered material
 /// \return 1 on success, 0 on failure
-DLL_EXPORT uint32_t phUpdateMaterial(const phMaterial* material, uint32_t index);
+DLL_EXPORT uint32_t phUpdateMaterial(const void* material, uint32_t index);
 
 // Resource management (meshes)
 // ------------------------------------------------------------------------------------------------

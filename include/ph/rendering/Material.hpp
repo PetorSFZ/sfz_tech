@@ -19,50 +19,29 @@
 
 #pragma once
 
-#ifdef __cplusplus
 #include <cstdint>
+
 #include <sfz/math/Vector.hpp>
-using std::int32_t;
-#else
-#include <stdint.h>
-#endif
-
-#include "ph/ExternC.h"
-
-// C Material struct
-// ------------------------------------------------------------------------------------------------
-
-PH_EXTERN_C
-typedef struct {
-	int32_t albedoTexIndex, roughnessTexIndex, metallicTexIndex, padding;
-	float albedo[4];
-	float roughness, metallic, padding2, padding3;
-} phMaterial;
-
-// C++ Material struct
-// ------------------------------------------------------------------------------------------------
-
-#ifdef __cplusplus
 
 namespace ph {
 
-using sfz::vec4;
+using sfz::vec4_u8;
+
+// Material struct
+// ------------------------------------------------------------------------------------------------
 
 struct Material final {
-	int32_t albedoTexIndex = -1;
-	int32_t roughnessTexIndex = -1;
-	int32_t metallicTexIndex = -1;
-	int32_t padding;
-	vec4 albedo = vec4(0.0f, 0.0f, 0.0f, 1.0f);
-	float roughness = 0.0f;
-	float metallic = 0.0f;
-	float padding2;
-	float padding3;
-};
+	vec4_u8 albedo = vec4_u8(0, 0, 0, 1);
+	vec4_u8 emissive = vec4_u8(0, 0, 0, 0);
+	uint8_t roughness = 0;
+	uint8_t metallic = 0;
 
-static_assert(sizeof(phMaterial) == sizeof(int32_t) * 12, "phMaterial is padded");
-static_assert(sizeof(phMaterial) == sizeof(Material), "Material is padded");
+	uint16_t albedoTexIndex = uint16_t(~0);
+	uint16_t metallicRoughnessTexIndex = uint16_t(~0);
+	uint16_t normalTexIndex = uint16_t(~0);
+	uint16_t occlusionTexIndex = uint16_t(~0);
+	uint16_t emissiveTexIndex = uint16_t(~0);
+};
+static_assert(sizeof(Material) == sizeof(uint32_t) * 5, "Material is padded");
 
 } // namespace ph
-
-#endif
