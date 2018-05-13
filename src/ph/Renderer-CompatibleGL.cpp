@@ -37,6 +37,7 @@
 #include <sfz/gl/FullscreenGeometry.hpp>
 #include <sfz/gl/UniformSetters.hpp>
 
+#include "ph/rendering/Material.hpp"
 #include "ph/ImguiRendering.hpp"
 #include "ph/Model.hpp"
 #include "ph/Shaders.hpp"
@@ -135,15 +136,11 @@ static void stupidSetSphereLightUniform(
 	const ph::SphereLight& sphereLight,
 	const mat4& viewMatrix) noexcept
 {
-	StackString tmpStr;
-	tmpStr.printf("%s[%u].%s", name, index, "vsPos");
-	gl::setUniform(program, tmpStr.str, transformPoint(viewMatrix, sphereLight.pos));
-	tmpStr.printf("%s[%u].%s", name, index, "radius");
-	gl::setUniform(program, tmpStr.str, sphereLight.radius);
-	tmpStr.printf("%s[%u].%s", name, index, "range");
-	gl::setUniform(program, tmpStr.str, sphereLight.range);
-	tmpStr.printf("%s[%u].%s", name, index, "strength");
-	gl::setUniform(program, tmpStr.str, sphereLight.strength);
+	gl::setUniform(program, str80("%s[%u].%s", name, index, "vsPos"),
+		transformPoint(viewMatrix, sphereLight.pos));
+	gl::setUniform(program, str80("%s[%u].%s", name, index, "radius"), sphereLight.radius);
+	gl::setUniform(program, str80("%s[%u].%s", name, index, "range"), sphereLight.range);
+	gl::setUniform(program, str80("%s[%u].%s", name, index, "strength"), sphereLight.strength);
 }
 
 static void stupidSetMaterialUniform(
@@ -151,19 +148,21 @@ static void stupidSetMaterialUniform(
 	const char* name,
 	const ph::Material& m) noexcept
 {
-	StackString tmpStr;
-	tmpStr.printf("%s.hasAlbedoTexture", name);
-	gl::setUniform(program, tmpStr.str, (m.albedoTexIndex == -1) ? 0 : 1);
-	tmpStr.printf("%s.hasRoughnessTexture", name);
-	gl::setUniform(program, tmpStr.str, (m.roughnessTexIndex == -1) ? 0 : 1);
-	tmpStr.printf("%s.hasMetallicTexture", name);
-	gl::setUniform(program, tmpStr.str, (m.metallicTexIndex == -1) ? 0 : 1);
-	tmpStr.printf("%s.albedo", name);
-	gl::setUniform(program, tmpStr.str, m.albedo);
-	tmpStr.printf("%s.roughness", name);
-	gl::setUniform(program, tmpStr.str, m.roughness);
-	tmpStr.printf("%s.metallic", name);
-	gl::setUniform(program, tmpStr.str, m.metallic);
+	auto toInt = [](uint16_t tex) -> int32_t {
+		return (tex == uint16_t(~0)) ? 0 : 1;
+	};
+
+	gl::setUniform(program, str80("%s.albedo", name), vec4(m.albedo) * (1.0f / 255.0f));
+	gl::setUniform(program, str80("%s.emissive", name), vec4(m.emissive) * (1.0f / 255.0f));
+	gl::setUniform(program, str80("%s.roughness", name), float(m.roughness) * (1.0f / 255.0f));
+	gl::setUniform(program, str80("%s.metallic", name), float(m.metallic) * (1.0f / 255.0f));
+
+	gl::setUniform(program, str80("%s.hasAlbedoTexture", name), toInt(m.albedoTexIndex));
+	gl::setUniform(program, str80("%s.hasMetallicRoughnessTexture", name),
+		toInt(m.metallicRoughnessTexIndex));
+	gl::setUniform(program, str80("%s.hasNormalTexture", name), toInt(m.normalTexIndex));
+	gl::setUniform(program, str80("%s.hasOcclusionTexture", name), toInt(m.occlusionTexIndex));
+	gl::setUniform(program, str80("%s.hasEmissiveTexture", name), toInt(m.emissiveTexIndex));
 }
 
 // Interface: Init functions
@@ -171,7 +170,7 @@ static void stupidSetMaterialUniform(
 
 DLL_EXPORT uint32_t phRendererInterfaceVersion(void)
 {
-	return 2;
+	return 3;
 }
 
 DLL_EXPORT uint32_t phRequiredSDL2WindowFlags(void)
@@ -425,7 +424,7 @@ DLL_EXPORT uint32_t phUpdateTexture(const phConstImageView* texture, uint32_t in
 // Resource management (materials)
 // ------------------------------------------------------------------------------------------------
 
-DLL_EXPORT void phSetMaterials(const phMaterial* materials, uint32_t numMaterials)
+DLL_EXPORT void phSetMaterials(const void* materials, uint32_t numMaterials)
 {
 	RendererState& state = *statePtr;
 
@@ -436,7 +435,7 @@ DLL_EXPORT void phSetMaterials(const phMaterial* materials, uint32_t numMaterial
 	state.materials.add(reinterpret_cast<const Material*>(materials), numMaterials);
 }
 
-DLL_EXPORT uint32_t phAddMaterial(const phMaterial* material)
+DLL_EXPORT uint32_t phAddMaterial(const void* material)
 {
 	RendererState& state = *statePtr;
 
@@ -445,7 +444,7 @@ DLL_EXPORT uint32_t phAddMaterial(const phMaterial* material)
 	return index;
 }
 
-DLL_EXPORT uint32_t phUpdateMaterial(const phMaterial* material, uint32_t index)
+DLL_EXPORT uint32_t phUpdateMaterial(const void* material, uint32_t index)
 {
 	RendererState& state = *statePtr;
 
@@ -579,8 +578,10 @@ DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities)
 	int normalMatrixLoc = glGetUniformLocation(state.modelShader.handle(), "uNormalMatrix");
 
 	gl::setUniform(state.modelShader, "uAlbedoTexture", 0);
-	gl::setUniform(state.modelShader, "uRoughnessTexture", 1);
-	gl::setUniform(state.modelShader, "uMetallicTexture", 2);
+	gl::setUniform(state.modelShader, "uMetallicRoughnessTexture", 1);
+	gl::setUniform(state.modelShader, "uNormalTexture", 2);
+	gl::setUniform(state.modelShader, "uOcclusionTexture", 3);
+	gl::setUniform(state.modelShader, "uEmissiveTexture", 4);
 
 	for (uint32_t i = 0; i < numEntities; i++) {
 		const ph::RenderEntity& entity = reinterpret_cast<const ph::RenderEntity*>(entities)[i];
@@ -601,17 +602,26 @@ DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities)
 			stupidSetMaterialUniform(state.modelShader, "uMaterial", material);
 
 			// Bind materials textures
-			if (material.albedoTexIndex != -1) {
+			if (material.albedoTexIndex != uint16_t(~0)) {
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, state.textures[material.albedoTexIndex].handle());
 			}
-			if (material.roughnessTexIndex != -1) {
+			if (material.metallicRoughnessTexIndex != uint16_t(~0)) {
 				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, state.textures[material.roughnessTexIndex].handle());
+				glBindTexture(GL_TEXTURE_2D,
+					state.textures[material.metallicRoughnessTexIndex].handle());
 			}
-			if (material.metallicTexIndex != -1) {
+			if (material.normalTexIndex != uint16_t(~0)) {
 				glActiveTexture(GL_TEXTURE2);
-				glBindTexture(GL_TEXTURE_2D, state.textures[material.metallicTexIndex].handle());
+				glBindTexture(GL_TEXTURE_2D, state.textures[material.normalTexIndex].handle());
+			}
+			if (material.occlusionTexIndex != uint16_t(~0)) {
+				glActiveTexture(GL_TEXTURE3);
+				glBindTexture(GL_TEXTURE_2D, state.textures[material.occlusionTexIndex].handle());
+			}
+			if (material.emissiveTexIndex != uint16_t(~0)) {
+				glActiveTexture(GL_TEXTURE4);
+				glBindTexture(GL_TEXTURE_2D, state.textures[material.emissiveTexIndex].handle());
 			}
 
 			// Render component of mesh

@@ -53,12 +53,16 @@ R"(
 
 // Material struct
 struct Material {
-	int hasAlbedoTexture;
-	int hasRoughnessTexture;
-	int hasMetallicTexture;
 	vec4 albedo;
+	vec4 emissive;
 	float roughness;
 	float metallic;
+
+	int hasAlbedoTexture;
+	int hasMetallicRoughnessTexture;
+	int hasNormalTexture;
+	int hasOcclusionTexture;
+	int hasEmissiveTexture;
 };
 
 // SphereLight struct
@@ -129,8 +133,10 @@ out vec4 fragOut;
 // Uniforms (material)
 uniform Material uMaterial;
 uniform sampler2D uAlbedoTexture;
-uniform sampler2D uRoughnessTexture;
-uniform sampler2D uMetallicTexture;
+uniform sampler2D uMetallicRoughnessTexture;
+uniform sampler2D uNormalTexture;
+uniform sampler2D uOcclusionTexture;
+uniform sampler2D uEmissiveTexture;
 
 // Uniforms (dynamic spherelights)
 const int MAX_NUM_DYNAMIC_SPHERE_LIGHTS = 32;
@@ -221,16 +227,13 @@ void main()
 	// Skip fragment if it is transparent
 	if (alpha < 0.1) discard;
 
-	// Roughness (Linear space)
-	float roughness = uMaterial.roughness;
-	if (uMaterial.hasRoughnessTexture != 0) {
-		roughness = PH_TEXREAD(uRoughnessTexture, texcoord).r;
-	}
-
-	// Metallic (Liner space)
+	// Metallic & Roughness (Linear space)
 	float metallic = uMaterial.metallic;
-	if (uMaterial.hasMetallicTexture != 0) {
-		metallic = PH_TEXREAD(uMetallicTexture, texcoord).r;
+	float roughness = uMaterial.roughness;
+	if (uMaterial.hasMetallicRoughnessTexture != 0) {
+		vec2 tmp = PH_TEXREAD(uMetallicRoughnessTexture, texcoord).rg;
+		metallic = tmp.r;
+		roughness = tmp.g;
 	}
 
 	// Fragment's position and normal
