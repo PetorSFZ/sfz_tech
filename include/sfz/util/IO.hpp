@@ -82,4 +82,8 @@ DynString readTextFile(const char* path, Allocator* allocator = getDefaultAlloca
 /// Writes memory to binary file, returns whether successful or not.
 bool writeBinaryFile(const char* path, const uint8_t* data, size_t numBytes) noexcept;
 
+// Writes string to file, returns whether succesful or not. If numChars is zero (default) all chars
+// until the null-terminator will be written.
+bool writeTextFile(const char* path, const char* str, size_t numChars = 0) noexcept;
+
 } // namespace sfz

@@ -20,6 +20,7 @@
 #include "catch2/catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
+#include "sfz/strings/StackString.hpp"
 #include "sfz/util/IO.hpp"
 
 static const char* stupidFileName = "jfioaejfaiojefaiojfeaojf.fajefaoejfa";
@@ -116,6 +117,49 @@ TEST_CASE("readTextFile()", "[sfz::IO]")
 
 	// Empty file
 	REQUIRE(sfz::writeBinaryFile(fpath, (const uint8_t*)"", 0));
+	REQUIRE(sfz::fileExists(fpath));
+	sfz::DynString emptyStr = sfz::readTextFile(fpath);
+	REQUIRE(emptyStr.size() == 0);
+	REQUIRE(emptyStr == "");
+	REQUIRE(sfz::deleteFile(fpath));
+}
+
+TEST_CASE("writeTextFile()", "[sfz::IO]")
+{
+	const char* fpath = stupidFileName;
+	sfz::str320 strToWrite("Hello World!\nHello World 2!\nHello World 3!");
+
+	bool fileExists = sfz::fileExists(fpath);
+	if (fileExists) {
+		REQUIRE(sfz::deleteFile(fpath));
+		fileExists = sfz::fileExists(fpath);
+	}
+	REQUIRE(!fileExists);
+
+	REQUIRE(sfz::writeTextFile(fpath, strToWrite));
+	REQUIRE(sfz::fileExists(fpath));
+
+	sfz::DynString fileStr = sfz::readTextFile(fpath);
+	REQUIRE(fileStr.size() == strToWrite.size());
+	REQUIRE(fileStr.size() == std::strlen(fileStr.str()));
+	REQUIRE(fileStr == strToWrite.str);
+
+	REQUIRE(sfz::deleteFile(fpath));
+
+	// Not all chars
+	REQUIRE(sfz::writeTextFile(fpath, strToWrite, 13));
+	REQUIRE(sfz::fileExists(fpath));
+
+	fileStr = sfz::readTextFile(fpath);
+	REQUIRE(fileStr.size() == 13);
+	REQUIRE(fileStr.size() == std::strlen(fileStr.str()));
+	REQUIRE(fileStr == "Hello World!\n");
+
+	REQUIRE(sfz::deleteFile(fpath));
+
+
+	// Empty file
+	REQUIRE(sfz::writeTextFile(fpath, ""));
 	REQUIRE(sfz::fileExists(fpath));
 	sfz::DynString emptyStr = sfz::readTextFile(fpath);
 	REQUIRE(emptyStr.size() == 0);

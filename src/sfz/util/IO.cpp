@@ -298,4 +298,20 @@ bool writeBinaryFile(const char* path, const uint8_t* data, size_t numBytes) noe
 	return (numWritten == numBytes);
 }
 
+bool writeTextFile(const char* path, const char* str, size_t numChars) noexcept
+{
+	// Open file
+	if (path == nullptr) return false;
+	std::FILE* file = std::fopen(path, "w");
+	if (file == NULL) return false;
+
+	// Get length of string if numChars not specified
+	if (numChars == 0) numChars = std::strlen(str);
+
+	// Write string
+	size_t numWritten = std::fwrite(str, 1, numChars, file);
+	std::fclose(file);
+	return (numWritten == numChars);
+}
+
 } // namespace sfz
