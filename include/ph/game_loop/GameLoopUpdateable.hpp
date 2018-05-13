@@ -38,7 +38,6 @@ using std::int32_t;
 using sfz::DynArray;
 using sfz::HashMap;
 using sfz::UniquePtr;
-using sfz::vec2i;
 using sdl::GameController;
 using sdl::GameControllerState;
 using sdl::Mouse;

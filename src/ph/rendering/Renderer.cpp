@@ -71,9 +71,9 @@ extern "C" {
 		uint32_t (*phUpdateTexture)(const phConstImageView*, uint32_t);
 
 		// Resource management (materials)
-		void (*phSetMaterials)(const phMaterial*, uint32_t);
-		uint32_t (*phAddMaterial)(const phMaterial*);
-		uint32_t (*phUpdateMaterial)(const phMaterial*, uint32_t);
+		void (*phSetMaterials)(const void*, uint32_t);
+		uint32_t (*phAddMaterial)(const void*);
+		uint32_t (*phUpdateMaterial)(const void*, uint32_t);
 
 		// Resource management (meshes)
 		void (*phSetDynamicMeshes)(const phConstMeshView*, uint32_t);
@@ -367,20 +367,17 @@ bool Renderer::updateTexture(const ConstImageView& texture, uint32_t index) noex
 
 void Renderer::setMaterials(const DynArray<Material>& materials) noexcept
 {
-	CALL_RENDERER_FUNCTION(mFunctionTable, phSetMaterials,
-		reinterpret_cast<const phMaterial*>(materials.data()), materials.size());
+	CALL_RENDERER_FUNCTION(mFunctionTable, phSetMaterials, materials.data(), materials.size());
 }
 
 uint32_t Renderer::addMaterial(const Material& material) noexcept
 {
-	return CALL_RENDERER_FUNCTION(mFunctionTable, phAddMaterial,
-		reinterpret_cast<const phMaterial*>(&material));
+	return CALL_RENDERER_FUNCTION(mFunctionTable, phAddMaterial, &material);
 }
 
 bool Renderer::updateMaterial(const Material& material, uint32_t index) noexcept
 {
-	return CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateMaterial,
-		reinterpret_cast<const phMaterial*>(&material), index) != 0;
+	return CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateMaterial, &material, index) != 0;
 }
 
 // Renderer: Resource management (meshes)

@@ -22,7 +22,7 @@
 #include <sfz/containers/DynArray.hpp>
 
 #include "ph/rendering/Image.hpp"
-#include "ph/rendering/Material.h"
+#include "ph/rendering/Material.hpp"
 #include "ph/rendering/Mesh.hpp"
 
 namespace ph {
