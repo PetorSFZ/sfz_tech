@@ -236,6 +236,12 @@ void main()
 		roughness = tmp.g;
 	}
 
+	// Emissive (Linear space??? TODO: Maybe gamma)
+	vec3 emissive = uMaterial.emissive.rgb;
+	if (uMaterial.hasEmissiveTexture != 0) {
+		emissive = PH_TEXREAD(uEmissiveTexture, texcoord).rgb;
+	}
+
 	// Fragment's position and normal
 	vec3 p = vsPos;
 	vec3 n = normalize(vsNormal);
@@ -247,7 +253,7 @@ void main()
 	// these to almost zero, to not break shading calculations.
 	nDotV = max(0.001, nDotV);
 
-	vec3 totalOutput = vec3(0.0);
+	vec3 totalOutput = emissive;
 
 	for (int i = 0; i < MAX_NUM_DYNAMIC_SPHERE_LIGHTS; i++) {
 
