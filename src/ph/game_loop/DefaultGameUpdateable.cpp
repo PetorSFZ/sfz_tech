@@ -256,6 +256,10 @@ public:
 
 	void render(const UpdateInfo& updateInfo, Renderer& renderer) override final
 	{
+		// Some assets sanity checks
+		sfz_assert_debug(mState.dynamicAssets.textures.size() ==
+			mState.dynamicAssets.textureFileMappings.size());
+
 		// Update performance stats
 		if (mStatsWarmup >= 8) mStats.addSample(updateInfo.iterationDeltaSeconds);
 		mStatsWarmup++;

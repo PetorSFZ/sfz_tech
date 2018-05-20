@@ -20,6 +20,7 @@
 #pragma once
 
 #include <sfz/containers/DynArray.hpp>
+#include <sfz/strings/StackString.hpp>
 
 #include "ph/rendering/Image.hpp"
 #include "ph/rendering/Material.hpp"
@@ -28,6 +29,17 @@
 namespace ph {
 
 using sfz::DynArray;
+using sfz::str96;
+using sfz::str256;
+
+// FileMapping struct
+// ------------------------------------------------------------------------------------------------
+
+struct FileMapping final {
+	bool hasFileMapping = false;
+	str256 dirPath;
+	str96 fileName;
+};
 
 // LevelAssets class
 // ------------------------------------------------------------------------------------------------
@@ -40,6 +52,8 @@ struct LevelAssets final {
 	DynArray<Mesh> meshes;
 	DynArray<Image> textures;
 	DynArray<Material> materials;
+
+	DynArray<FileMapping> textureFileMappings;
 };
 
 } // namespace ph
