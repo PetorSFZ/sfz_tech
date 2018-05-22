@@ -32,7 +32,7 @@ using sfz::vec4_u8;
 
 struct Material final {
 	vec4_u8 albedo = vec4_u8(0, 0, 0, 1);
-	vec4_u8 emissive = vec4_u8(0, 0, 0, 0);
+	vec4_u8 emissive = vec4_u8(0, 0, 0, 0); // Fourth value is unused
 	uint8_t roughness = 0;
 	uint8_t metallic = 0;
 
