@@ -64,6 +64,9 @@ Image loadImage(const char* basePath, const char* fileName) noexcept;
 // Allocates a temporary buffer of the same width as the image
 void flipVertically(Image& image, Allocator* allocator) noexcept;
 
+// Saves to file using stb_image_write
+bool saveImagePng(const Image& image, const char* path) noexcept;
+
 // Image struct implementation
 // ------------------------------------------------------------------------------------------------
 

@@ -41,6 +41,23 @@ static void sfz_free_wrapper(void* ptr);
 
 #include <sfz/PopWarnings.hpp>
 
+// stb_image_write implementation
+// ------------------------------------------------------------------------------------------------
+
+#include <sfz/PushWarnings.hpp>
+
+static void* sfz_malloc_wrapper(size_t size);
+static void* sfz_realloc_sized_wrapper(void* ptr, size_t oldSize, size_t newSize);
+static void sfz_free_wrapper(void* ptr);
+#define STBIW_MALLOC(size) sfz_malloc_wrapper(size)
+#define STBIW_REALLOC_SIZED(ptr, oldSize, newSize) sfz_realloc_sized_wrapper(ptr, oldSize, newSize)
+#define STBIW_FREE(ptr) sfz_free_wrapper(ptr)
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_STATIC
+#include <stb_image_write.h>
+
+#include <sfz/PopWarnings.hpp>
+
 // C allocation wrapper for stb_image
 // ------------------------------------------------------------------------------------------------
 
@@ -187,6 +204,18 @@ void flipVertically(Image& image, Allocator* allocator) noexcept
 	}
 
 	allocator->deallocate(buffer);
+}
+
+bool saveImagePng(const Image& image, const char* path) noexcept
+{
+	sfz_assert_debug(image.rawData.data() != nullptr);
+	sfz_assert_debug(image.width > 0);
+	sfz_assert_debug(image.height > 0);
+
+	int res = stbi_write_png(
+		path, image.width, image.height, image.bytesPerPixel, image.rawData.data(), 0);
+
+	return res != 0;
 }
 
 } // namespace ph
