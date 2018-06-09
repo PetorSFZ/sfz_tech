@@ -54,7 +54,7 @@ public:
 
 	/// The interface version supported by this wrapper. Only renderers which return the same
 	/// version with "phRendererInterfaceVersion()" are compatible.
-	static constexpr uint32_t INTERFACE_VERSION = 3;
+	static constexpr uint32_t INTERFACE_VERSION = 4;
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
