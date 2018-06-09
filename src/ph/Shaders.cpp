@@ -54,7 +54,7 @@ R"(
 // Material struct
 struct Material {
 	vec4 albedo;
-	vec4 emissive;
+	vec3 emissive;
 	float roughness;
 	float metallic;
 
@@ -219,8 +219,8 @@ void main()
 	float alpha = uMaterial.albedo.a;
 	if (uMaterial.hasAlbedoTexture != 0) {
 		vec4 tmp = PH_TEXREAD(uAlbedoTexture, texcoord);
-		albedo = tmp.rgb;
-		alpha = tmp.a;
+		albedo *= tmp.rgb;
+		alpha *= tmp.a;
 	}
 	albedo = linearize(albedo);
 
@@ -232,14 +232,14 @@ void main()
 	float roughness = uMaterial.roughness;
 	if (uMaterial.hasMetallicRoughnessTexture != 0) {
 		vec2 tmp = PH_TEXREAD(uMetallicRoughnessTexture, texcoord).rg;
-		metallic = tmp.r;
-		roughness = tmp.g;
+		metallic *= tmp.r;
+		roughness *= tmp.g;
 	}
 
 	// Emissive (Linear space??? TODO: Maybe gamma)
 	vec3 emissive = uMaterial.emissive.rgb;
 	if (uMaterial.hasEmissiveTexture != 0) {
-		emissive = PH_TEXREAD(uEmissiveTexture, texcoord).rgb;
+		emissive *= PH_TEXREAD(uEmissiveTexture, texcoord).rgb;
 	}
 
 	// Fragment's position and normal

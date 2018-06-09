@@ -153,7 +153,7 @@ static void stupidSetMaterialUniform(
 	};
 
 	gl::setUniform(program, str80("%s.albedo", name), vec4(m.albedo) * (1.0f / 255.0f));
-	gl::setUniform(program, str80("%s.emissive", name), vec4(m.emissive) * (1.0f / 255.0f));
+	gl::setUniform(program, str80("%s.emissive", name), vec3(m.emissive) * (1.0f / 255.0f));
 	gl::setUniform(program, str80("%s.roughness", name), float(m.roughness) * (1.0f / 255.0f));
 	gl::setUniform(program, str80("%s.metallic", name), float(m.metallic) * (1.0f / 255.0f));
 
@@ -170,7 +170,7 @@ static void stupidSetMaterialUniform(
 
 DLL_EXPORT uint32_t phRendererInterfaceVersion(void)
 {
-	return 3;
+	return 4;
 }
 
 DLL_EXPORT uint32_t phRequiredSDL2WindowFlags(void)
