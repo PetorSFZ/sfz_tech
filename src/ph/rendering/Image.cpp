@@ -144,7 +144,7 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 			path.str, stbi_failure_reason());
 		return Image();
 	}
-	if (numChannels != 1 && numChannels != 3 && numChannels != 4) {
+	if (numChannels != 1 && numChannels != 2 && numChannels != 3 && numChannels != 4) {
 		SFZ_WARNING("PhantasyEngine", "Image \"%s\" has unsupported number of channels: %i",
 			path.str, numChannels);
 		stbi_image_free(img);
@@ -159,8 +159,14 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 	switch (numChannels) {
 	case 1:
 		tmp.rawData.add(img, uint32_t(width * height * numChannels));
-		tmp.type = ImageType::GRAY_U8;
+		tmp.type = ImageType::R_U8;
 		tmp.bytesPerPixel = 1;
+		break;
+
+	case 2:
+		tmp.rawData.add(img, uint32_t(width * height * numChannels));
+		tmp.type = ImageType::RG_U8;
+		tmp.bytesPerPixel = 2;
 		break;
 
 	case 3:

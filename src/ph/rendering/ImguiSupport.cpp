@@ -89,7 +89,7 @@ ImageView initializeImgui(Allocator* allocator) noexcept
 	ImageView fontTexView;
 	io.Fonts->GetTexDataAsAlpha8(&fontTexView.rawData, &fontTexView.width, &fontTexView.height);
 	fontTexView.bytesPerPixel = 1;
-	fontTexView.type = ImageType::GRAY_U8;
+	fontTexView.type = ImageType::R_U8;
 	return fontTexView;
 }
 
