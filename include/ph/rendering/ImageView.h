@@ -34,10 +34,12 @@ using std::int32_t;
 // ------------------------------------------------------------------------------------------------
 
 const uint32_t PH_IMAGE_UNDEFINED = 0;
-const uint32_t PH_IMAGE_GRAY_U8 = 1;
-const uint32_t PH_IMAGE_RGBA_U8 = 2;
-const uint32_t PH_IMAGE_GRAY_F32 = 3;
-const uint32_t PH_IMAGE_RGBA_F32 = 4;
+const uint32_t PH_IMAGE_R_U8 = 1;
+const uint32_t PH_IMAGE_RG_U8 = 2;
+const uint32_t PH_IMAGE_RGBA_U8 = 3;
+const uint32_t PH_IMAGE_R_F32 = 4;
+const uint32_t PH_IMAGE_RG_F32 = 5;
+const uint32_t PH_IMAGE_RGBA_F32 = 6;
 
 // ImageView structs (C)
 // ------------------------------------------------------------------------------------------------
@@ -69,9 +71,11 @@ namespace ph {
 
 enum class ImageType : uint32_t {
 	UNDEFINED = PH_IMAGE_UNDEFINED,
-	GRAY_U8 = PH_IMAGE_GRAY_U8,
+	R_U8 = PH_IMAGE_R_U8,
+	RG_U8 = PH_IMAGE_RG_U8,
 	RGBA_U8 = PH_IMAGE_RGBA_U8,
-	GRAY_F32 = PH_IMAGE_GRAY_F32,
+	R_F32 = PH_IMAGE_R_F32,
+	RG_F32 = PH_IMAGE_RG_F32,
 	RGBA_F32 = PH_IMAGE_RGBA_F32
 };
 
