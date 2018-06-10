@@ -170,7 +170,7 @@ static void stupidSetMaterialUniform(
 
 DLL_EXPORT uint32_t phRendererInterfaceVersion(void)
 {
-	return 4;
+	return 5;
 }
 
 DLL_EXPORT uint32_t phRequiredSDL2WindowFlags(void)

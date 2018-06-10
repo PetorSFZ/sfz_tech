@@ -21,6 +21,7 @@
 
 #include <algorithm>
 
+#include <sfz/Logging.hpp>
 #include <sfz/gl/IncludeOpenGL.hpp>
 
 namespace ph {
@@ -44,6 +45,10 @@ void Texture::create(const phConstImageView& imageView, TextureFiltering filteri
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, imageView.width, imageView.height, 0,
 		             GL_LUMINANCE, GL_UNSIGNED_BYTE, imageView.rawData);
 		break;
+	case 2:
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, imageView.width, imageView.height, 0, GL_RG,
+		             GL_UNSIGNED_BYTE, imageView.rawData);
+		break;
 	case 3:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageView.width, imageView.height, 0,
 		             GL_RGB, GL_UNSIGNED_BYTE, imageView.rawData);
@@ -52,6 +57,8 @@ void Texture::create(const phConstImageView& imageView, TextureFiltering filteri
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageView.width, imageView.height, 0,
 		             GL_RGBA, GL_UNSIGNED_BYTE, imageView.rawData);
 		break;
+	default:
+		SFZ_ERROR("Renderer-CompatibleGL", "Unsupported number of elements per pixel");
 	}
 #else
 	switch (imageView.bytesPerPixel) {
@@ -71,6 +78,8 @@ void Texture::create(const phConstImageView& imageView, TextureFiltering filteri
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, imageView.width, imageView.height, 0, GL_RGBA,
 		             GL_UNSIGNED_BYTE, imageView.rawData);
 		break;
+	default:
+		SFZ_ERROR("Renderer-CompatibleGL", "Unsupported number of elements per pixel");
 	}
 #endif
 
