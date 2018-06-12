@@ -20,6 +20,7 @@
 #include "ph/util/TerminalLogger.hpp"
 
 #include <cstdarg>
+#include <cstdio>
 #include <cstring>
 
 namespace ph {
