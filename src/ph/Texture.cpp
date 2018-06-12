@@ -43,19 +43,19 @@ void Texture::create(const phConstImageView& imageView, TextureFiltering filteri
 	switch (imageView.bytesPerPixel) {
 	case 1:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, imageView.width, imageView.height, 0,
-		             GL_LUMINANCE, GL_UNSIGNED_BYTE, imageView.rawData);
+			GL_LUMINANCE, GL_UNSIGNED_BYTE, imageView.rawData);
 		break;
 	case 2:
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, imageView.width, imageView.height, 0, GL_RG,
-		             GL_UNSIGNED_BYTE, imageView.rawData);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, imageView.width, imageView.height, 0,
+			GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, imageView.rawData);
 		break;
 	case 3:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageView.width, imageView.height, 0,
-		             GL_RGB, GL_UNSIGNED_BYTE, imageView.rawData);
+			GL_RGB, GL_UNSIGNED_BYTE, imageView.rawData);
 		break;
 	case 4:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageView.width, imageView.height, 0,
-		             GL_RGBA, GL_UNSIGNED_BYTE, imageView.rawData);
+			GL_RGBA, GL_UNSIGNED_BYTE, imageView.rawData);
 		break;
 	default:
 		SFZ_ERROR("Renderer-CompatibleGL", "Unsupported number of elements per pixel");
@@ -64,19 +64,19 @@ void Texture::create(const phConstImageView& imageView, TextureFiltering filteri
 	switch (imageView.bytesPerPixel) {
 	case 1:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, imageView.width, imageView.height, 0, GL_RED,
-		             GL_UNSIGNED_BYTE, imageView.rawData);
+			GL_UNSIGNED_BYTE, imageView.rawData);
 		break;
 	case 2:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, imageView.width, imageView.height, 0, GL_RG,
-		             GL_UNSIGNED_BYTE, imageView.rawData);
+			GL_UNSIGNED_BYTE, imageView.rawData);
 		break;
 	case 3:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, imageView.width, imageView.height, 0, GL_RGB,
-		             GL_UNSIGNED_BYTE, imageView.rawData);
+			GL_UNSIGNED_BYTE, imageView.rawData);
 		break;
 	case 4:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, imageView.width, imageView.height, 0, GL_RGBA,
-		             GL_UNSIGNED_BYTE, imageView.rawData);
+			GL_UNSIGNED_BYTE, imageView.rawData);
 		break;
 	default:
 		SFZ_ERROR("Renderer-CompatibleGL", "Unsupported number of elements per pixel");
