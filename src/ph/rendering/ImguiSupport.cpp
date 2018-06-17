@@ -53,15 +53,14 @@ ImageView initializeImgui(Allocator* allocator) noexcept
 	ImGuiIO& io = ImGui::GetIO();
 
 	// Enable GamePad navigation
-	io.NavFlags |= ImGuiNavFlags_EnableGamepad;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
 	// Enable keyboard navigation
-	io.NavFlags |= ImGuiNavFlags_EnableKeyboard;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
 	// Disable draw function and set all window sizes to 1 (will be set proper in update)
 	io.DisplaySize = vec2(1.0f);
 	io.DisplayFramebufferScale = vec2(1.0f);
-	io.RenderDrawListsFn = nullptr;
 
 	// Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
 	io.KeyMap[ImGuiKey_Tab] = SDLK_TAB;
