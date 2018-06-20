@@ -37,10 +37,10 @@
 namespace ph {
 
 using sfz::FrametimeStats;
-using sfz::StackString;
-using sfz::StackString32;
-using sfz::StackString128;
-using sfz::StackString256;
+using sfz::str32;
+using sfz::str96;
+using sfz::str128;
+using sfz::str256;
 
 // Statics
 // ------------------------------------------------------------------------------------------------
@@ -66,7 +66,7 @@ static void renderFilteredText(
 	vec4 stringColor,
 	vec4 filterColor) noexcept
 {
-	StackString128 lowerStackStr;
+	str128 lowerStackStr;
 	strToLower(lowerStackStr.str, str);
 
 	const char* currStr = str;
@@ -121,7 +121,7 @@ static bool anyContainsFilter(const DynArray<Setting*>& settings, const char* fi
 	return false;
 }
 
-static void timeToString(StackString& stringOut, time_t timestamp) noexcept
+static void timeToString(str96& stringOut, time_t timestamp) noexcept
 {
 	std::tm* tmPtr = std::localtime(&timestamp);
 	size_t res = std::strftime(stringOut.str, stringOut.maxSize(), "%Y-%m-%d %H:%M:%S", tmPtr);
@@ -158,20 +158,23 @@ public:
 	DynArray<ImguiCommand> mImguiCommands;
 
 	// Global Config
-	StackString32 mConfigFilterString;
-	DynArray<StackString32> mCfgSections;
+	str32 mConfigFilterString;
+	DynArray<str32> mCfgSections;
 	DynArray<Setting*> mCfgSectionSettings;
 
 	// Log
 	Setting* mLogMinLevelSetting = nullptr;
 	int mLogMinLevel = int(LogLevel::INFO_NOISY);
-	StackString mLogTagFilter;
+	str96 mLogTagFilter;
 
 	// Console settings
 	Setting* mConsoleActiveSetting = nullptr;
 	bool mConsoleActive = false;
 	Setting* mConsoleAlwaysShowPerformance = nullptr;
 	Setting* mConsoleAlwaysShowLog = nullptr;
+
+	// Dynamic material editor
+	uint32_t mMaterialEditorCurrentIdx = 0;
 
 	// Overloaded methods from GameLoopUpdateable
 	// --------------------------------------------------------------------------------------------
@@ -270,7 +273,7 @@ public:
 
 		// Render Imgui
 		ImGui::NewFrame();
-		renderConsole();
+		renderConsole(renderer);
 		if (!mConsoleActive) mLogic->renderCustomImgui();
 		ImGui::Render();
 		convertImguiDrawData(mImguiVertices, mImguiIndices, mImguiCommands);
@@ -289,7 +292,7 @@ private:
 	// Private methods
 	// --------------------------------------------------------------------------------------------
 
-	void renderConsole() noexcept
+	void renderConsole(Renderer& renderer) noexcept
 	{
 		// Render performance window
 		if (mConsoleActive || mConsoleAlwaysShowPerformance->boolValue()) {
@@ -304,6 +307,11 @@ private:
 		// Render log window
 		if (mConsoleActive || mConsoleAlwaysShowLog->boolValue()) {
 			this->renderLogWindow();
+		}
+
+		// Render material editor window
+		if (mConsoleActive) {
+			this->renderMaterialEditorWindow(renderer);
 		}
 	}
 
@@ -339,7 +347,7 @@ private:
 	void renderConfigWindow() noexcept
 	{
 		const vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
-		StackString256 tmpStr;
+		str256 tmpStr;
 
 		// Get Global Config sections
 		GlobalConfig& cfg = GlobalConfig::instance();
@@ -389,7 +397,7 @@ private:
 
 			// Skip section if nothing matches when filtering
 			if (filterMode) {
-				StackString32 sectionLowerStr;
+				str32 sectionLowerStr;
 				strToLower(sectionLowerStr.str, sectionKey.str);
 				bool sectionFilter = strstr(sectionLowerStr.str, mConfigFilterString.str) != nullptr;
 				bool settingsFilter = anyContainsFilter(mCfgSectionSettings, mConfigFilterString.str);
@@ -414,9 +422,9 @@ private:
 			for (Setting* setting : mCfgSectionSettings) {
 
 				// Combine key strings
-				StackString128 combinedKeyStr;
+				str128 combinedKeyStr;
 				combinedKeyStr.printf("%s%s", sectionKey.str, setting->key().str);
-				StackString128 combinedKeyLowerStr;
+				str128 combinedKeyLowerStr;
 				strToLower(combinedKeyLowerStr.str, combinedKeyStr.str);
 
 				// Check if setting contains filter
@@ -488,7 +496,7 @@ private:
 	{
 		const vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
 		TerminalLogger& logger = *getContext()->logger;
-		StackString timeStr;
+		str96 timeStr;
 
 		// Set window flags
 		ImGuiWindowFlags logWindowFlags = 0;
@@ -537,7 +545,7 @@ private:
 
 			// Skip section if nothing matches when filtering
 			if (tagFilterMode) {
-				StackString32 tagLowerStr;
+				str32 tagLowerStr;
 				strToLower(tagLowerStr.str, message.tag.str);
 				bool tagFilter = strstr(tagLowerStr.str, mLogTagFilter.str) != nullptr;
 				if (!tagFilter) continue;
@@ -589,6 +597,131 @@ private:
 
 		// End window
 		ImGui::End();
+	}
+
+	void renderMaterialEditorWindow(Renderer& renderer) noexcept
+	{
+		// Set window flags
+		ImGuiWindowFlags materialEditorWindowFlags = 0;
+		//materialEditorWindowFlags |= ImGuiWindowFlags_NoMove;
+		//materialEditorWindowFlags |= ImGuiWindowFlags_NoResize;
+		//materialEditorWindowFlags |= ImGuiWindowFlags_NoCollapse;
+
+		// Begin window
+		ImGui::Begin("Dynamic Material Editor", nullptr, materialEditorWindowFlags);
+
+		// Ensure material index is in range
+		if (mMaterialEditorCurrentIdx > mState.dynamicAssets.materials.size()) {
+			mMaterialEditorCurrentIdx = 0;
+		}
+
+		// Material index selection combo box
+		if (ImGui::BeginCombo("Material", str32("%u", mMaterialEditorCurrentIdx).str)) {
+			for (uint32_t i = 0; i < mState.dynamicAssets.materials.size(); i++) {
+
+				// Convert index to string and check if it is selected
+				str32 materialStr = str32("%u", i);
+				bool isSelected = mMaterialEditorCurrentIdx == i;
+
+				// Report index to ImGui combo button and update current if it has changed
+				if (ImGui::Selectable(materialStr.str, isSelected)) {
+					mMaterialEditorCurrentIdx = i;
+				}
+			}
+			ImGui::EndCombo();
+		}
+
+		ImGui::Separator();
+
+		Material& material = mState.dynamicAssets.materials[mMaterialEditorCurrentIdx];
+		bool sendUpdatedMaterialToRenderer = false;
+
+		// Lambdas for converting vec4_u8 to vec4_f32 and back
+		auto u8ToF32 = [](vec4_u8 v) { return vec4(v) * (1.0f / 255.0f); };
+		auto f32ToU8 = [](vec4 v) { return vec4_u8(v * 255.0f); };
+
+		// Lambda for converting texture index to combo string label
+		auto textureToComboStr = [&](uint16_t idx) {
+			if (idx == uint16_t(~0)) return str128("~0 - NO TEXTURE");
+			const FileMapping& fileMapping = mState.dynamicAssets.textureFileMappings[idx];
+			if (fileMapping.hasFileMapping) {
+				return str128("%u - %s", uint32_t(idx), fileMapping.fileName.str);
+			}
+			else {
+				return str128("%u - NO FILE", uint32_t(idx));
+			}
+		};
+
+		// Lambda for creating a combo box to select texture
+		auto textureComboBox = [&](const char* comboName, uint16_t& texIndex) {
+			str128 selectedMaterialStr = textureToComboStr(texIndex);
+			if (ImGui::BeginCombo(comboName, selectedMaterialStr.str)) {
+
+				// Special case for no texture (~0)
+				{
+					bool isSelected = texIndex == uint16_t(~0);
+					if (ImGui::Selectable("~0 - NO TEXTURE", isSelected)) {
+						texIndex = uint16_t(~0);;
+						sendUpdatedMaterialToRenderer = true;
+					}
+				}
+
+				// Existing textures
+				for (uint32_t i = 0; i < mState.dynamicAssets.textures.size(); i++) {
+
+					// Convert index to string and check if it is selected
+					str128 materialStr = textureToComboStr(i);
+					bool isSelected = texIndex == i;
+
+					// Report index to ImGui combo button and update current if it has changed
+					if (ImGui::Selectable(materialStr.str, isSelected)) {
+						texIndex = i;
+						sendUpdatedMaterialToRenderer = true;
+					}
+				}
+				ImGui::EndCombo();
+			}
+		};
+
+		// Albedo
+		vec4 colorFloat = u8ToF32(material.albedo);
+		if (ImGui::ColorEdit4("Albedo Factor", colorFloat.data(),
+			ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_Float)) {
+			material.albedo = f32ToU8(colorFloat);
+			sendUpdatedMaterialToRenderer = true;
+		}
+		textureComboBox("Albedo Texture", material.albedoTexIndex);
+
+		// Emissive
+		colorFloat = u8ToF32(vec4_u8(material.emissive, 0));
+		if (ImGui::ColorEdit3("Emissive Factor", colorFloat.data(), ImGuiColorEditFlags_Float)) {
+			material.emissive = f32ToU8(colorFloat).xyz;
+			sendUpdatedMaterialToRenderer = true;
+		}
+		textureComboBox("Emissive Texture", material.emissiveTexIndex);
+
+		// Metallic & roughness
+		vec4_u8 metallicRoughnessU8(material.metallic, material.roughness, 0, 0);
+		vec4 metallicRoughness = u8ToF32(metallicRoughnessU8);
+		if (ImGui::SliderFloat2("Metallic Roughness Factors", metallicRoughness.data(), 0.f, 1.f)) {
+			metallicRoughnessU8 = f32ToU8(metallicRoughness);
+			material.metallic = metallicRoughnessU8.x;
+			material.roughness = metallicRoughnessU8.y;
+			sendUpdatedMaterialToRenderer = true;
+		}
+		textureComboBox("Metallic Roughness Texture", material.metallicRoughnessTexIndex);
+
+		// Normal and Occlusion textures
+		textureComboBox("Normal Texture", material.normalTexIndex);
+		textureComboBox("Occlusion Texture", material.occlusionTexIndex);
+
+		// End window
+		ImGui::End();
+
+		// Send updated material to renderer
+		if (sendUpdatedMaterialToRenderer) {
+			renderer.updateMaterial(material, mMaterialEditorCurrentIdx);
+		}
 	}
 };
 
