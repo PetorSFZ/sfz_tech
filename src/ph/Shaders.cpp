@@ -235,6 +235,7 @@ void main()
 		metallic *= tmp.r;
 		roughness *= tmp.g;
 	}
+	roughness = max(roughness, 0.01); // Div by 0 in ggx() if roughness = 0
 
 	// Emissive (Linear space??? TODO: Maybe gamma)
 	vec3 emissive = uMaterial.emissive.rgb;
