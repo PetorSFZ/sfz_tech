@@ -28,6 +28,9 @@
 #include <windows.h>
 #undef near
 #undef far
+
+#elif !defined(__EMSCRIPTEN__)
+#include <dlfcn.h>
 #endif
 
 #include <SDL.h>
@@ -46,8 +49,8 @@
 
 namespace ph {
 
-using sfz::StackString;
-using sfz::StackString192;
+using sfz::str96;
+using sfz::str192;
 using std::uint32_t;
 
 // Function Table struct
@@ -97,19 +100,17 @@ extern "C" {
 #define CALL_RENDERER_FUNCTION(table, function, ...) \
 	(function(__VA_ARGS__))
 
-#elif defined(_WIN32)
+#else
 
 #define CALL_RENDERER_FUNCTION(table, function, ...) \
 	((table)->function(__VA_ARGS__))
 
-#else
-#error "Not implemented"
 #endif
 
 #if defined(_WIN32)
-static StackString192 getWindowsErrorMessage() noexcept
+static str192 getWindowsErrorMessage() noexcept
 {
-	StackString192 str;
+	str192 str;
 	DWORD errorCode = GetLastError();
 	if (errorCode != 0) {
 		FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, errorCode,
@@ -123,11 +124,25 @@ static StackString192 getWindowsErrorMessage() noexcept
 		using FunctionType = decltype(FunctionTable::functionName); \
 		table->functionName = (FunctionType)GetProcAddress((HMODULE)module, #functionName); \
 		if (table->functionName == nullptr) { \
-			StackString192 error = getWindowsErrorMessage(); \
+			str192 error = getWindowsErrorMessage(); \
 			SFZ_ERROR("PhantasyEngine", "Failed to load %s(), message: %s", \
 				#functionName, error.str); \
 		} \
 	}
+
+#elif !defined(__EMSCRIPTEN__)
+
+#define LOAD_FUNCTION(module, table, functionName) \
+	{ \
+		using FunctionType = decltype(FunctionTable::functionName); \
+		table->functionName = (FunctionType)dlsym(module, #functionName); \
+		if (table->functionName == nullptr) { \
+			SFZ_ERROR("PhantasyEngine", "Failed to load %s(), message: %s", \
+				#functionName, dlerror()); \
+		} \
+	}
+
+
 #endif
 
 // Renderer: Constructors & destructors
@@ -180,23 +195,37 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 #ifdef _WIN32
 	// Load DLL
 	{
-		StackString dllName;
+		str96 dllName;
 		dllName.printf("%s.dll", moduleName);
 		SFZ_INFO("PhantasyEngine", "Trying to load renderer DLL: %s", dllName.str);
 		mModuleHandle = LoadLibrary(dllName.str);
 	}
 	if (mModuleHandle == nullptr) {
-		StackString192 error = getWindowsErrorMessage();
+		str192 error = getWindowsErrorMessage();
 		SFZ_ERROR("PhantasyEngine", "Failed to load DLL (%s), message: %s", moduleName, error.str);
 		return;
 	}
+
+	// Load shared library on unix like platforms
+#else
+	{
+		str96 sharedName;
+		sharedName.printf("lib%s.dylib", moduleName);
+		SFZ_INFO("PhantasyEngine", "Trying to load renderer shared library: %s", sharedName.str);
+		mModuleHandle = dlopen(sharedName.str, RTLD_LAZY);
+		if (mModuleHandle == nullptr) {
+			SFZ_ERROR("PhantasyEngine", "Failed to load shared library (%s), message: %s",
+				moduleName, dlerror());
+			return;
+		}
+	}
+
 #endif
 
 	// Create function table
 	mFunctionTable = sfz::sfzNew<FunctionTable>(allocator);
 	std::memset(mFunctionTable, 0, sizeof(FunctionTable));
 
-#ifdef _WIN32
 	// Start of with loading interface version function and checking that the correct interface is used
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRendererInterfaceVersion);
 	if (INTERFACE_VERSION != mFunctionTable->phRendererInterfaceVersion()) {
@@ -234,7 +263,6 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRender);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRenderImgui);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phFinishFrame);
-#endif
 
 #endif
 }
@@ -257,7 +285,7 @@ void Renderer::destroy() noexcept
 #ifdef _WIN32
 		BOOL freeSuccess = FreeLibrary((HMODULE)mModuleHandle);
 		if (!freeSuccess) {
-			StackString192 error = getWindowsErrorMessage();
+			str192 error = getWindowsErrorMessage();
 			SFZ_ERROR("PhantasyEngine", "Failed to unload DLL, message: %s", error.str);
 		}
 #endif
