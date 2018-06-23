@@ -25,8 +25,8 @@
 #include <sfz/math/Vector.hpp>
 #include <sfz/memory/Allocator.hpp>
 
-#include <ph/rendering/CameraData.h>
-#include <ph/rendering/ImageView.h>
+#include <ph/rendering/CameraData.hpp>
+#include <ph/rendering/ImageView.hpp>
 #include <ph/rendering/ImguiRenderingData.h>
 #include <ph/rendering/Material.hpp>
 #include <ph/rendering/MeshView.h>
@@ -54,7 +54,7 @@ public:
 
 	/// The interface version supported by this wrapper. Only renderers which return the same
 	/// version with "phRendererInterfaceVersion()" are compatible.
-	static constexpr uint32_t INTERFACE_VERSION = 6;
+	static constexpr uint32_t INTERFACE_VERSION = 7;
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -99,7 +99,7 @@ public:
 	void deinitRenderer() noexcept;
 
 	/// See phInitImgui()
-	void initImgui(const ConstImageView& fontTexture) noexcept;
+	void initImgui(phConstImageView fontTexture) noexcept;
 
 	// Renderer: State query functions
 	// --------------------------------------------------------------------------------------------
@@ -111,13 +111,13 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	// See phSetTextures()
-	void setTextures(const DynArray<ConstImageView>& textures) noexcept;
+	void setTextures(const DynArray<phConstImageView>& textures) noexcept;
 
 	/// See phAddTexture()
-	uint32_t addTexture(const ConstImageView& texture) noexcept;
+	uint32_t addTexture(phConstImageView texture) noexcept;
 
 	/// See phUpdateTexture()
-	bool updateTexture(const ConstImageView& texture, uint32_t index) noexcept;
+	bool updateTexture(phConstImageView texture, uint32_t index) noexcept;
 
 	// Resource management (materials)
 	// --------------------------------------------------------------------------------------------
@@ -148,13 +148,13 @@ public:
 
 	/// See phBeginFrame()
 	void beginFrame(
-		const CameraData& camera,
+		const phCameraData& camera,
 		const SphereLight* dynamicSphereLights,
 		uint32_t numDynamicSphereLights) noexcept;
 
 	/// See phBeginFrame()
 	void beginFrame(
-		const CameraData& camera,
+		const phCameraData& camera,
 		const DynArray<SphereLight>& dynamicSphereLights) noexcept;
 
 	/// See phRender()

@@ -22,7 +22,7 @@
 #include <sfz/containers/DynArray.hpp>
 #include <sfz/memory/Allocator.hpp>
 
-#include <ph/rendering/ImageView.h>
+#include <ph/rendering/ImageView.hpp>
 
 namespace ph {
 
@@ -39,10 +39,10 @@ struct Image final {
 	int32_t height = -1;
 	int32_t bytesPerPixel = -1;
 
-	inline ImageView toImageView() noexcept;
-	inline ConstImageView toImageView() const noexcept;
-	inline operator ImageView() noexcept;
-	inline operator ConstImageView() const noexcept;
+	inline phImageView toImageView() noexcept;
+	inline phConstImageView toImageView() const noexcept;
+	operator phImageView() noexcept { return this->toImageView(); }
+	operator phConstImageView() const noexcept { return this->toImageView(); }
 };
 
 // Image functions
@@ -70,36 +70,24 @@ bool saveImagePng(const Image& image, const char* path) noexcept;
 // Image struct implementation
 // ------------------------------------------------------------------------------------------------
 
-inline ImageView Image::toImageView() noexcept
+inline phImageView Image::toImageView() noexcept
 {
-	ImageView tmp;
+	phImageView tmp;
 	tmp.rawData = this->rawData.data();
 	tmp.type = this->type;
 	tmp.width = this->width;
 	tmp.height = this->height;
-	tmp.bytesPerPixel = this->bytesPerPixel;
 	return tmp;
 }
 
-inline ConstImageView Image::toImageView() const noexcept
+inline phConstImageView Image::toImageView() const noexcept
 {
-	ConstImageView tmp;
+	phConstImageView tmp;
 	tmp.rawData = this->rawData.data();
 	tmp.type = this->type;
 	tmp.width = this->width;
 	tmp.height = this->height;
-	tmp.bytesPerPixel = this->bytesPerPixel;
 	return tmp;
-}
-
-inline Image::operator ImageView() noexcept
-{
-	return this->toImageView();
-}
-
-inline Image::operator ConstImageView() const noexcept
-{
-	return this->toImageView();
 }
 
 } // namespacep ph

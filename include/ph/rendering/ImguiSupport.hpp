@@ -32,7 +32,7 @@ using sfz::Allocator;
 using sfz::DynArray;
 
 // Initializes imgui, returns font image view to be sent to renderers initImgui() function.
-ImageView initializeImgui(Allocator* allocator) noexcept;
+phImageView initializeImgui(Allocator* allocator) noexcept;
 
 void deinitializeImgui() noexcept;
 

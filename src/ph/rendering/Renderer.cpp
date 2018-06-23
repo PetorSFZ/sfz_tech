@@ -352,10 +352,9 @@ void Renderer::deinitRenderer() noexcept
 	mInited = false;
 }
 
-void Renderer::initImgui(const ConstImageView& fontTexture) noexcept
+void Renderer::initImgui(phConstImageView fontTexture) noexcept
 {
-	CALL_RENDERER_FUNCTION(mFunctionTable, phInitImgui,
-		reinterpret_cast<const phConstImageView*>(&fontTexture));
+	CALL_RENDERER_FUNCTION(mFunctionTable, phInitImgui, &fontTexture);
 }
 
 // Renderer: State query functions
@@ -371,22 +370,19 @@ vec2 Renderer::imguiWindowDimensions() const noexcept
 // Resource management (textures)
 // ------------------------------------------------------------------------------------------------
 
-void Renderer::setTextures(const DynArray<ConstImageView>& textures) noexcept
+void Renderer::setTextures(const DynArray<phConstImageView>& textures) noexcept
 {
-	CALL_RENDERER_FUNCTION(mFunctionTable, phSetTextures,
-		reinterpret_cast<const phConstImageView*>(textures.data()), textures.size());
+	CALL_RENDERER_FUNCTION(mFunctionTable, phSetTextures, textures.data(), textures.size());
 }
 
-uint32_t Renderer::addTexture(const ConstImageView& texture) noexcept
+uint32_t Renderer::addTexture(phConstImageView texture) noexcept
 {
-	phConstImageView tmpView = texture;
-	return CALL_RENDERER_FUNCTION(mFunctionTable, phAddTexture, &tmpView);
+	return CALL_RENDERER_FUNCTION(mFunctionTable, phAddTexture, &texture);
 }
 
-bool Renderer::updateTexture(const ConstImageView& texture, uint32_t index) noexcept
+bool Renderer::updateTexture(phConstImageView texture, uint32_t index) noexcept
 {
-	phConstImageView tmpView = texture;
-	return CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateTexture, &tmpView, index) != 0;
+	return CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateTexture, &texture, index) != 0;
 }
 
 // Renderer:: Resource management (materials)
@@ -438,21 +434,21 @@ bool Renderer::updateDynamicMesh(const ConstMeshView& mesh, uint32_t index) noex
 // ------------------------------------------------------------------------------------------------
 
 void Renderer::beginFrame(
-	const CameraData& camera,
+	const phCameraData& camera,
 	const ph::SphereLight* dynamicSphereLights,
 	uint32_t numDynamicSphereLights) noexcept
 {
 	CALL_RENDERER_FUNCTION(mFunctionTable, phBeginFrame,
-		reinterpret_cast<const phCameraData*>(&camera),
+		&camera,
 		reinterpret_cast<const phSphereLight*>(dynamicSphereLights), numDynamicSphereLights);
 }
 
 void Renderer::beginFrame(
-	const CameraData& camera,
+	const phCameraData& camera,
 	const DynArray<ph::SphereLight>& dynamicSphereLights) noexcept
 {
 	CALL_RENDERER_FUNCTION(mFunctionTable, phBeginFrame,
-		reinterpret_cast<const phCameraData*>(&camera),
+		&camera,
 		reinterpret_cast<const phSphereLight*>(dynamicSphereLights.data()),
 		dynamicSphereLights.size());
 }

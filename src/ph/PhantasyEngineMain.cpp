@@ -216,7 +216,7 @@ int mainImpl(int, char*[], InitOptions&& options)
 
 	// Initializing Imgui
 	SFZ_INFO("PhantasyEngine", "Initializing Imgui");
-	ImageView imguiFontTexView = initializeImgui(sfz::getDefaultAllocator());
+	phImageView imguiFontTexView = initializeImgui(sfz::getDefaultAllocator());
 
 	// Initializing renderer
 	SFZ_INFO("PhantasyEngine", "Initializing renderer");

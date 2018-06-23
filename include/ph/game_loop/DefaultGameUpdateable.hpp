@@ -24,7 +24,7 @@
 #include <sfz/memory/SmartPointers.hpp>
 
 #include "ph/game_loop/GameLoopUpdateable.hpp"
-#include "ph/rendering/CameraData.h"
+#include "ph/rendering/CameraData.hpp"
 #include "ph/rendering/Image.hpp"
 #include "ph/rendering/LevelAssets.hpp"
 #include "ph/rendering/Mesh.hpp"
@@ -39,7 +39,7 @@ using sfz::UniquePtr;
 // ------------------------------------------------------------------------------------------------
 
 struct UpdateableState final {
-	CameraData cam;
+	phCameraData cam;
 	LevelAssets dynamicAssets;
 	
 	DynArray<RenderEntity> renderEntities;

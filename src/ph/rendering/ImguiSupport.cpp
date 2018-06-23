@@ -39,7 +39,7 @@ static void imguiFreeFunc(void* ptr, void* userData) noexcept
 	allocator->deallocate(ptr);
 }
 
-ImageView initializeImgui(Allocator* allocator) noexcept
+phImageView initializeImgui(Allocator* allocator) noexcept
 {
 	// Replace Imgui allocators with sfz::Allocator
 	ImGui::SetAllocatorFunctions(imguiAllocFunc, imguiFreeFunc, allocator);
@@ -85,9 +85,8 @@ ImageView initializeImgui(Allocator* allocator) noexcept
 	io.KeyMap[ImGuiKey_Y] = SDLK_y;
 	io.KeyMap[ImGuiKey_Z] = SDLK_z;
 
-	ImageView fontTexView;
+	phImageView fontTexView;
 	io.Fonts->GetTexDataAsAlpha8(&fontTexView.rawData, &fontTexView.width, &fontTexView.height);
-	fontTexView.bytesPerPixel = 1;
 	fontTexView.type = ImageType::R_U8;
 	return fontTexView;
 }
