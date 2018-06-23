@@ -41,6 +41,8 @@ using sfz::str32;
 using sfz::str96;
 using sfz::str128;
 using sfz::str256;
+using sfz::vec4;
+using sfz::vec4_u8;
 
 // Statics
 // ------------------------------------------------------------------------------------------------
@@ -633,7 +635,7 @@ private:
 
 		ImGui::Separator();
 
-		Material& material = mState.dynamicAssets.materials[mMaterialEditorCurrentIdx];
+		phMaterial& material = mState.dynamicAssets.materials[mMaterialEditorCurrentIdx];
 		bool sendUpdatedMaterialToRenderer = false;
 
 		// Lambdas for converting vec4_u8 to vec4_f32 and back

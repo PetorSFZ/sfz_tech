@@ -43,9 +43,7 @@
 
 #include "ph/config/GlobalConfig.hpp"
 
-#if defined(PH_STATIC_LINK_RENDERER)
 #include "ph/RendererInterface.h"
-#endif
 
 namespace ph {
 
@@ -53,42 +51,43 @@ using sfz::str96;
 using sfz::str192;
 using std::uint32_t;
 
+static_assert(Renderer::INTERFACE_VERSION == PH_RENDERER_INTERFACE_VERSION, "Interface versions don't match");
+
 // Function Table struct
 // ------------------------------------------------------------------------------------------------
 
 extern "C" {
 	struct FunctionTable {
 		// Init functions
-		uint32_t (*phRendererInterfaceVersion)(void);
-		uint32_t (*phRequiredSDL2WindowFlags)(void);
-		uint32_t (*phInitRenderer)(void*, SDL_Window*, void*, phConfig*);
-		uint32_t (*phDeinitRenderer)(void);
-		void(*phInitImgui)(const phConstImageView*);
+		decltype(phRendererInterfaceVersion)* phRendererInterfaceVersion;
+		decltype(phRequiredSDL2WindowFlags)* phRequiredSDL2WindowFlags;
+		decltype(phInitRenderer)* phInitRenderer;
+		decltype(phDeinitRenderer)* phDeinitRenderer;
+		decltype(phInitImgui)* phInitImgui;
 
 		// State query functions
-		void (*phImguiWindowDimensions)(float*, float*);
+		decltype(phImguiWindowDimensions)* phImguiWindowDimensions;
 
 		// Resource management (textures)
-		void (*phSetTextures)(const phConstImageView*, uint32_t);
-		uint32_t (*phAddTexture)(const phConstImageView*);
-		uint32_t (*phUpdateTexture)(const phConstImageView*, uint32_t);
+		decltype(phSetTextures)* phSetTextures;
+		decltype(phAddTexture)* phAddTexture;
+		decltype(phUpdateTexture)* phUpdateTexture;
 
 		// Resource management (materials)
-		void (*phSetMaterials)(const void*, uint32_t);
-		uint32_t (*phAddMaterial)(const void*);
-		uint32_t (*phUpdateMaterial)(const void*, uint32_t);
+		decltype(phSetMaterials)* phSetMaterials;
+		decltype(phAddMaterial)* phAddMaterial;
+		decltype(phUpdateMaterial)* phUpdateMaterial;
 
 		// Resource management (meshes)
-		void (*phSetDynamicMeshes)(const phConstMeshView*, uint32_t);
-		uint32_t (*phAddDynamicMesh)(const phConstMeshView*);
-		uint32_t (*phUpdateDynamicMesh)(const phConstMeshView*, uint32_t);
+		decltype(phSetDynamicMeshes)* phSetDynamicMeshes;
+		decltype(phAddDynamicMesh)* phAddDynamicMesh;
+		decltype(phUpdateDynamicMesh)* phUpdateDynamicMesh;
 
 		// Render commands
-		void (*phBeginFrame)(const phCameraData*, const phSphereLight*, uint32_t);
-		void (*phRender)(const phRenderEntity*, uint32_t);
-		void (*phRenderImgui)(const phImguiVertex*, uint32_t, const uint32_t*, uint32_t,
-			const phImguiCommand*, uint32_t);
-		void (*phFinishFrame)(void);
+		decltype(phBeginFrame)* phBeginFrame;
+		decltype(phRender)* phRender;
+		decltype(phRenderImgui)* phRenderImgui;
+		decltype(phFinishFrame)* phFinishFrame;
 	};
 }
 
@@ -393,17 +392,17 @@ bool Renderer::updateTexture(const ConstImageView& texture, uint32_t index) noex
 // Renderer:: Resource management (materials)
 // ------------------------------------------------------------------------------------------------
 
-void Renderer::setMaterials(const DynArray<Material>& materials) noexcept
+void Renderer::setMaterials(const DynArray<phMaterial>& materials) noexcept
 {
 	CALL_RENDERER_FUNCTION(mFunctionTable, phSetMaterials, materials.data(), materials.size());
 }
 
-uint32_t Renderer::addMaterial(const Material& material) noexcept
+uint32_t Renderer::addMaterial(const phMaterial& material) noexcept
 {
 	return CALL_RENDERER_FUNCTION(mFunctionTable, phAddMaterial, &material);
 }
 
-bool Renderer::updateMaterial(const Material& material, uint32_t index) noexcept
+bool Renderer::updateMaterial(const phMaterial& material, uint32_t index) noexcept
 {
 	return CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateMaterial, &material, index) != 0;
 }

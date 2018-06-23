@@ -51,7 +51,7 @@ struct LevelAssets final {
 
 	DynArray<Mesh> meshes;
 	DynArray<Image> textures;
-	DynArray<Material> materials;
+	DynArray<phMaterial> materials;
 
 	DynArray<FileMapping> textureFileMappings;
 };
