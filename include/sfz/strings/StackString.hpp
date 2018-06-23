@@ -73,7 +73,7 @@ struct StackStringTempl final {
 
 	/// Inserts numChars characters into string. Will append null-terminator. Becomes a call to
 	/// strncpy() internally.
-	void insertChars(const char* first, size_t numChars) noexcept;
+	void insertChars(const char* first, uint32_t numChars) noexcept;
 
 	// Operators
 	// --------------------------------------------------------------------------------------------

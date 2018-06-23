@@ -75,10 +75,10 @@ void StackStringTempl<N>::printfAppend(const char* format, ...) noexcept
 }
 
 template<uint32_t N>
-void StackStringTempl<N>::insertChars(const char* first, size_t numChars) noexcept
+void StackStringTempl<N>::insertChars(const char* first, uint32_t numChars) noexcept
 {
 	sfz_assert_debug(numChars < N);
-	std::strncpy(this->str, first, numChars);
+	std::strncpy(this->str, first, size_t(numChars));
 	this->str[numChars] = '\0';
 }
 
