@@ -48,8 +48,8 @@ set(PH_SHARED_INTERFACE_HEADER_FILES
 	${INCLUDE_DIR}/ph/ExternC.h
 	${INCLUDE_DIR}/ph/RendererInterface.h
 
-	${INCLUDE_DIR}/ph/rendering/CameraData.h
-	${INCLUDE_DIR}/ph/rendering/ImageView.h
+	${INCLUDE_DIR}/ph/rendering/CameraData.hpp
+	${INCLUDE_DIR}/ph/rendering/ImageView.hpp
 	${INCLUDE_DIR}/ph/rendering/ImguiRenderingData.h
 	${INCLUDE_DIR}/ph/rendering/Material.hpp
 	${INCLUDE_DIR}/ph/rendering/MeshView.h

@@ -21,8 +21,6 @@
 
 #include <cstdint>
 
-#include "ph/rendering/CameraData.h"
-#include "ph/rendering/ImageView.h"
 #include "ph/rendering/ImguiRenderingData.h"
 #include "ph/rendering/MeshView.h"
 #include "ph/rendering/RenderEntity.h"
@@ -34,6 +32,9 @@
 // ------------------------------------------------------------------------------------------------
 
 struct SDL_Window;
+struct phCameraData;
+struct phImageView;
+struct phConstImageView;
 struct phMaterial;
 
 // Macros
@@ -52,7 +53,7 @@ struct phMaterial;
 // Interface version
 // ------------------------------------------------------------------------------------------------
 
-const uint32_t PH_RENDERER_INTERFACE_VERSION = 6;
+const uint32_t PH_RENDERER_INTERFACE_VERSION = 7;
 
 // Init functions
 // ------------------------------------------------------------------------------------------------
