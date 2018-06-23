@@ -18,11 +18,9 @@
 
 #pragma once
 
-#include <cstddef>
+#include <cstdint>
 
 namespace sfz {
-
-using std::size_t;
 
 // StackString template
 // ------------------------------------------------------------------------------------------------
@@ -37,7 +35,7 @@ using std::size_t;
 /// that only the predefined sizes is available. The default size is 96 chars, equivalent to the
 /// size of 12 64bit words. For other available sizes see StackString types further down in
 /// this file.
-template<size_t N>
+template<uint32_t N>
 struct StackStringTempl final {
 
 	// Public members
@@ -62,10 +60,10 @@ struct StackStringTempl final {
 	// --------------------------------------------------------------------------------------------
 
 	/// Returns the maximum size of the string.
-	size_t maxSize() const noexcept { return N; }
+	uint32_t maxSize() const noexcept { return N; }
 
 	/// Returns the size of the currently held string.
-	size_t size() const noexcept;
+	uint32_t size() const noexcept;
 
 	/// Calls snprintf() on the internal string, overwriting the content.
 	void printf(const char* format, ...) noexcept;

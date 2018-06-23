@@ -29,14 +29,14 @@ namespace sfz {
 // StackStringTempl: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-template<size_t N>
+template<uint32_t N>
 StackStringTempl<N>::StackStringTempl() noexcept
 {
 	static_assert(N > 0, "StackString capacity needs to be greater than 0");
 	str[0] = '\0';
 }
 
-template<size_t N>
+template<uint32_t N>
 StackStringTempl<N>::StackStringTempl(const char* format, ...) noexcept
 {
 	va_list args;
@@ -49,13 +49,13 @@ StackStringTempl<N>::StackStringTempl(const char* format, ...) noexcept
 // StackStringTempl: Public methods
 // ------------------------------------------------------------------------------------------------
 
-template<size_t N>
-size_t StackStringTempl<N>::size() const noexcept
+template<uint32_t N>
+uint32_t StackStringTempl<N>::size() const noexcept
 {
-	return std::strlen(this->str);
+	return uint32_t(std::strlen(this->str));
 }
 
-template<size_t N>
+template<uint32_t N>
 void StackStringTempl<N>::printf(const char* format, ...) noexcept
 {
 	va_list args;
@@ -64,7 +64,7 @@ void StackStringTempl<N>::printf(const char* format, ...) noexcept
 	va_end(args);
 }
 
-template<size_t N>
+template<uint32_t N>
 void StackStringTempl<N>::printfAppend(const char* format, ...) noexcept
 {
 	va_list args;
@@ -74,7 +74,7 @@ void StackStringTempl<N>::printfAppend(const char* format, ...) noexcept
 	va_end(args);
 }
 
-template<size_t N>
+template<uint32_t N>
 void StackStringTempl<N>::insertChars(const char* first, size_t numChars) noexcept
 {
 	sfz_assert_debug(numChars < N);
@@ -85,78 +85,78 @@ void StackStringTempl<N>::insertChars(const char* first, size_t numChars) noexce
 // StackStringTempl: Operators
 // ------------------------------------------------------------------------------------------------
 
-template<size_t N>
+template<uint32_t N>
 bool StackStringTempl<N>::operator== (const StackStringTempl& other) const noexcept
 {
 	return *this == other.str;
 }
 
-template<size_t N>
+template<uint32_t N>
 bool StackStringTempl<N>::operator!= (const StackStringTempl& other) const noexcept
 {
 	return *this != other.str;
 }
 
-template<size_t N>
+template<uint32_t N>
 bool StackStringTempl<N>::operator< (const StackStringTempl& other) const noexcept
 {
 	return *this < other.str;
 }
 
-template<size_t N>
+template<uint32_t N>
 bool StackStringTempl<N>::operator<= (const StackStringTempl& other) const noexcept
 {
 	return *this <= other.str;
 }
 
-template<size_t N>
+template<uint32_t N>
 bool StackStringTempl<N>::operator> (const StackStringTempl& other) const noexcept
 {
 	return *this > other.str;
 }
 
-template<size_t N>
+template<uint32_t N>
 bool StackStringTempl<N>::operator>= (const StackStringTempl& other) const noexcept
 {
 	return *this >= other.str;
 }
 
-template<size_t N>
+template<uint32_t N>
 bool StackStringTempl<N>::operator== (const char* other) const noexcept
 {
 	sfz_assert_debug(other != nullptr);
 	return std::strncmp(this->str, other, N) == 0;
 }
 
-template<size_t N>
+template<uint32_t N>
 bool StackStringTempl<N>::operator!= (const char* other) const noexcept
 {
 	sfz_assert_debug(other != nullptr);
 	return !(*this == other);
 }
 
-template<size_t N>
+template<uint32_t N>
 bool StackStringTempl<N>::operator< (const char* other) const noexcept
 {
 	sfz_assert_debug(other != nullptr);
 	return std::strncmp(this->str, other, N) < 0;
 }
 
-template<size_t N>
+template<uint32_t N>
 bool StackStringTempl<N>::operator<= (const char* other) const noexcept
 {
 	sfz_assert_debug(other != nullptr);
 	return std::strncmp(this->str, other, N) <= 0;
 }
 
-template<size_t N>
+template<uint32_t N>
 bool StackStringTempl<N>::operator> (const char* other) const noexcept
 {
 	sfz_assert_debug(other != nullptr);
 	return std::strncmp(this->str, other, N) > 0;
 }
 
-template<size_t N>
+template<uint32_t N>
 bool StackStringTempl<N>::operator>= (const char* other) const noexcept
 {
 	sfz_assert_debug(other != nullptr);
