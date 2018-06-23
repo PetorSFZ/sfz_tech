@@ -19,44 +19,36 @@
 
 #pragma once
 
-#ifdef __cplusplus
 #include <cstdint>
-#include <sfz/math/Matrix.hpp>
-using std::uint32_t;
-#else
-#include <stdint.h>
-#endif
 
-#include "ph/ExternC.h"
+#include "ph/rendering/Vertex.hpp"
 
-// C RenderEntity struct
+// MeshView structs
 // ------------------------------------------------------------------------------------------------
 
-PH_EXTERN_C
-typedef struct {
-	float transform[12]; // 3x4 right-handed row-major matrix
-	uint32_t meshIndex; // The index of the mesh to render
-	uint32_t padding[3];
-} phRenderEntity;
-
-// C++ RenderEntity struct
-// ------------------------------------------------------------------------------------------------
-
-#ifdef __cplusplus
-
-namespace ph {
-
-using sfz::mat34;
-
-struct RenderEntity final {
-	mat34 transform = mat34::identity();
-	uint32_t meshIndex = ~0u;
-	uint32_t padding[3];
+struct phMeshView {
+	phVertex* vertices = nullptr;
+	uint32_t* materialIndices = nullptr;
+	uint32_t numVertices = 0;
+	uint32_t* indices = nullptr;
+	uint32_t numIndices = 0;
 };
 
-static_assert(sizeof(phRenderEntity) == sizeof(RenderEntity), "RenderEntity is padded");
-static_assert(alignof(phRenderEntity) <= alignof(RenderEntity), "phRenderEntity has higher alignment requirements");
+struct phConstMeshView {
+	const phVertex* vertices = nullptr;
+	const uint32_t* materialIndices = nullptr;
+	uint32_t numVertices = 0;
+	const uint32_t* indices = nullptr;
+	uint32_t numIndices = 0;
 
-} // namespace ph
-
-#endif
+	// Implicit conversions
+	phConstMeshView() noexcept = default;
+	phConstMeshView(const phMeshView& view) noexcept
+	{
+		this->vertices = view.vertices;
+		this->materialIndices = view.materialIndices;
+		this->numVertices = view.numVertices;
+		this->indices = view.indices;
+		this->numIndices = view.numIndices;
+	}
+};

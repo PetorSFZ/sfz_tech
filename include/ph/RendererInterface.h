@@ -21,11 +21,6 @@
 
 #include <cstdint>
 
-#include "ph/rendering/ImguiRenderingData.h"
-#include "ph/rendering/MeshView.h"
-#include "ph/rendering/RenderEntity.h"
-#include "ph/rendering/SphereLight.h"
-#include "ph/rendering/Vertex.h"
 #include "ph/ConfigInterface.h"
 
 // Forward declarations
@@ -35,7 +30,12 @@ struct SDL_Window;
 struct phCameraData;
 struct phImageView;
 struct phConstImageView;
+struct phImguiVertex;
+struct phImguiCommand;
 struct phMaterial;
+struct phConstMeshView;
+struct phRenderEntity;
+struct phSphereLight;
 
 // Macros
 // ------------------------------------------------------------------------------------------------
@@ -53,7 +53,7 @@ struct phMaterial;
 // Interface version
 // ------------------------------------------------------------------------------------------------
 
-const uint32_t PH_RENDERER_INTERFACE_VERSION = 7;
+const uint32_t PH_RENDERER_INTERFACE_VERSION = 8;
 
 // Init functions
 // ------------------------------------------------------------------------------------------------

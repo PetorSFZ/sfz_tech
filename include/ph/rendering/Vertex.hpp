@@ -19,46 +19,15 @@
 
 #pragma once
 
-#ifdef __cplusplus
 #include <cstdint>
 #include <sfz/math/Vector.hpp>
-using std::uint32_t;
-#else
-#include <stdint.h>
-#endif
 
-#include "ph/ExternC.h"
-
-// C Vertex struct
+// Vertex struct
 // ------------------------------------------------------------------------------------------------
 
-PH_EXTERN_C
-typedef struct {
-	float pos[3];
-	float normal[3];
-	float texcoord[2];
-} phVertex;
-
-// C++ Vertex struct
-// ------------------------------------------------------------------------------------------------
-
-#ifdef __cplusplus
-
-namespace ph {
-
-using sfz::vec3;
-using sfz::vec2;
-
-struct Vertex final {
-	vec3 pos = vec3(0.0f);
-	vec3 normal = vec3(0.0f);
-	vec2 texcoord = vec2(0.0f);
+struct phVertex {
+	sfz::vec3 pos = sfz::vec3(0.0f);
+	sfz::vec3 normal = sfz::vec3(0.0f);
+	sfz::vec2 texcoord = sfz::vec2(0.0f);
 };
-
-} // namespace ph
-
-static_assert(sizeof(ph::Vertex) == sizeof(float) * 8, "ph::Vertex is padded");
 static_assert(sizeof(phVertex) == sizeof(float) * 8, "phVertex is padded");
-static_assert(sizeof(ph::Vertex) == sizeof(phVertex), "phVertex and ph::Vertex are different size");
-
-#endif

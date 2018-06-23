@@ -19,15 +19,8 @@
 
 #pragma once
 
-#ifdef __cplusplus
 #include <cstdint>
 #include <sfz/math/Vector.hpp>
-using std::uint32_t;
-#else
-#include <stdint.h>
-#endif
-
-#include "ph/ExternC.h"
 
 // SphereLight flags
 // ------------------------------------------------------------------------------------------------
@@ -35,41 +28,15 @@ using std::uint32_t;
 const uint32_t SPHERE_LIGHT_STATIC_SHADOWS_BIT = 1 << 0; // Static objects casts shadows
 const uint32_t SPHERE_LIGHT_DYNAMIC_SHADOWS_BIT = 1 << 1; // Dynamic objects casts shadows
 
-// C SphereLight struct
+// SphereLight struct
 // ------------------------------------------------------------------------------------------------
 
-PH_EXTERN_C
-typedef struct {
-	float pos[3];
-	float radius; // Size of the light emitter, 0 makes it a point light
-	float range; // Range of the emitted light
-	float strength[3]; // Strength (and color) of light source
-	uint32_t bitmaskFlags;
-	uint32_t padding[3];
-} phSphereLight;
-
-// C++ SphereLight struct
-// ------------------------------------------------------------------------------------------------
-
-#ifdef __cplusplus
-
-namespace ph {
-
-using sfz::vec3;
-
-struct SphereLight final {
-	vec3 pos = vec3(0.0f);
+struct phSphereLight {
+	sfz::vec3 pos = sfz::vec3(0.0f);
 	float radius = 0.0f; // Size of the light emitter, 0 makes it a point light
 	float range; // Range of the emitted light
-	vec3 strength; // Strength (and color) of light source
+	sfz::vec3 strength; // Strength (and color) of light source
 	uint32_t bitmaskFlags;
 	uint32_t padding[3];
 };
-
-static_assert(sizeof(SphereLight) == sizeof(uint32_t) * 12, "ph::SphereLight is padded");
 static_assert(sizeof(phSphereLight) == sizeof(uint32_t) * 12, "phSphereLight is padded");
-static_assert(sizeof(ph::SphereLight) == sizeof(phSphereLight), "phSphereLight and ph::SphereLight are different size");
-
-} // namespace ph
-
-#endif

@@ -19,59 +19,23 @@
 
 #pragma once
 
-#ifdef __cplusplus
 #include <cstdint>
 #include <sfz/math/Vector.hpp>
-using sfz::vec2;
-using sfz::vec4;
-#else
-#include <stdint.h>
-#endif
 
-#include "ph/ExternC.h"
-
-// C Imgui rendering structs
+// Imgui rendering structs
 // ------------------------------------------------------------------------------------------------
 
-PH_EXTERN_C
-typedef struct {
-	float pos[2];
-	float texcoord[2];
-	uint32_t color;
-} phImguiVertex;
-
-PH_EXTERN_C
-typedef struct {
-	uint32_t idxBufferOffset;
-	uint32_t numIndices;
-	uint32_t padding[2];
-	float clipRect[4];
-} phImguiCommand;
-
-// C++ Imgui rendering structs
-// ------------------------------------------------------------------------------------------------
-
-#ifdef __cplusplus
-
-namespace ph {
-
-struct ImguiVertex final {
-	vec2 pos;
-	vec2 texcoord;
+struct phImguiVertex {
+	sfz::vec2 pos;
+	sfz::vec2 texcoord;
 	uint32_t color;
 };
 static_assert(sizeof(phImguiVertex) == sizeof(float) * 5, "phImguiVertex is padded");
-static_assert(sizeof(phImguiVertex) == sizeof(ImguiVertex), "ImguiVertex is padded");
 
-struct ImguiCommand final {
+struct phImguiCommand {
 	uint32_t idxBufferOffset = 0;
 	uint32_t numIndices = 0;
 	uint32_t padding[2];
-	vec4 clipRect = vec4(0.0f);
+	sfz::vec4 clipRect = sfz::vec4(0.0f);
 };
 static_assert(sizeof(phImguiCommand) == sizeof(uint32_t) * 8, "phImguiCommand is padded");
-static_assert(sizeof(phImguiCommand) == sizeof(ImguiCommand), "ImguiCommand is padded");
-
-} // namespace ph
-
-#endif

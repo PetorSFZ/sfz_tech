@@ -50,12 +50,12 @@ set(PH_SHARED_INTERFACE_HEADER_FILES
 
 	${INCLUDE_DIR}/ph/rendering/CameraData.hpp
 	${INCLUDE_DIR}/ph/rendering/ImageView.hpp
-	${INCLUDE_DIR}/ph/rendering/ImguiRenderingData.h
+	${INCLUDE_DIR}/ph/rendering/ImguiRenderingData.hpp
 	${INCLUDE_DIR}/ph/rendering/Material.hpp
-	${INCLUDE_DIR}/ph/rendering/MeshView.h
-	${INCLUDE_DIR}/ph/rendering/RenderEntity.h
-	${INCLUDE_DIR}/ph/rendering/SphereLight.h
-	${INCLUDE_DIR}/ph/rendering/Vertex.h
+	${INCLUDE_DIR}/ph/rendering/MeshView.hpp
+	${INCLUDE_DIR}/ph/rendering/RenderEntity.hpp
+	${INCLUDE_DIR}/ph/rendering/SphereLight.hpp
+	${INCLUDE_DIR}/ph/rendering/Vertex.hpp
 )
 source_group(TREE ${INCLUDE_DIR} FILES ${PH_SHARED_INTERFACE_HEADER_FILES})
 
