@@ -23,11 +23,6 @@
 
 #include <sfz/math/Vector.hpp>
 
-namespace ph {
-
-using sfz::vec3_u8;
-using sfz::vec4_u8;
-
 // Material struct
 // ------------------------------------------------------------------------------------------------
 
@@ -51,9 +46,9 @@ using sfz::vec4_u8;
 //      albedo *= texFetch(albedoTex, vertex.texcoord);
 /// }
 /// // TODO: albedo is in gamma space, need to linearize before shading
-struct Material final {
-	vec4_u8 albedo = vec4_u8(255, 255, 255, 255);
-	vec3_u8 emissive = vec3_u8(255, 255, 255);
+struct phMaterial {
+	sfz::vec4_u8 albedo = sfz::vec4_u8(255, 255, 255, 255);
+	sfz::vec3_u8 emissive = sfz::vec3_u8(255, 255, 255);
 	uint8_t ___PADDING_UNUSED___ = 0;
 	uint8_t roughness = 255;
 	uint8_t metallic = 255;
@@ -64,6 +59,4 @@ struct Material final {
 	uint16_t occlusionTexIndex = uint16_t(~0);
 	uint16_t emissiveTexIndex = uint16_t(~0);
 };
-static_assert(sizeof(Material) == sizeof(uint32_t) * 5, "Material is padded");
-
-} // namespace ph
+static_assert(sizeof(phMaterial) == sizeof(uint32_t) * 5, "phMaterial is padded");

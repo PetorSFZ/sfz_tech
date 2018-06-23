@@ -30,22 +30,29 @@
 #include "ph/rendering/Vertex.h"
 #include "ph/ConfigInterface.h"
 
-// C interface
-#ifdef __cplusplus
-extern "C" {
-#endif
+// Forward declarations
+// ------------------------------------------------------------------------------------------------
 
-// Forward declare SDL_Window
 struct SDL_Window;
+struct phMaterial;
 
 // Macros
 // ------------------------------------------------------------------------------------------------
 
+#ifdef PH_EXPORTING_RENDERER_FUNCTIONS
 #ifdef _WIN32
-#define DLL_EXPORT __declspec(dllexport)
+#define PH_DLL_EXPORT __declspec(dllexport)
 #else
-#define DLL_EXPORT
+#define PH_DLL_EXPORT
 #endif
+#else
+#define PH_DLL_EXPORT
+#endif
+
+// Interface version
+// ------------------------------------------------------------------------------------------------
+
+const uint32_t PH_RENDERER_INTERFACE_VERSION = 6;
 
 // Init functions
 // ------------------------------------------------------------------------------------------------
@@ -53,13 +60,19 @@ struct SDL_Window;
 /// Returns the version of the renderer interface used by the .dll. Is used to check if a .dll has
 /// the expected interface. This function's signature may never be changed and must exist for all
 /// future interfaces.
-DLL_EXPORT uint32_t phRendererInterfaceVersion(void);
+///
+/// The implementation of this function should NOT just return PH_RENDERER_INTERFACE_VERSION. It
+/// should store an internal version number which should be manually updated when compliance with
+/// a new interface has been reached.
+extern "C" PH_DLL_EXPORT
+uint32_t phRendererInterfaceVersion(void);
 
 /// Returns potential SDL_Window flags required by the renderer. Notably, an OpenGL renderer would
 /// return SDL_WINDOW_OPENGL and a Vulkan renderer SDL_WINDOW_VULKAN. Backends that don't require
 /// any special flags just return 0. This function is to be called before the renderer is
 /// initialized.
-DLL_EXPORT uint32_t phRequiredSDL2WindowFlags(void);
+extern "C" PH_DLL_EXPORT
+uint32_t phRequiredSDL2WindowFlags(void);
 
 /// Initializes this renderer. This function should by design be completely safe to call multiple
 /// times in a row. If the render is already initialized it should do nothing. If the renderer has
@@ -72,7 +85,8 @@ DLL_EXPORT uint32_t phRequiredSDL2WindowFlags(void);
 /// \param logger the phLogger used to print debug information. Temporary pointer, make a copy.
 /// \return 0 if renderer is NOT initialized, i.e. if something went very wrong. If the renderer
 ///           has been previously initialized this value will still be a non-zero value.
-DLL_EXPORT uint32_t phInitRenderer(
+extern "C" PH_DLL_EXPORT
+uint32_t phInitRenderer(
 	void* sfzCoreContext,
 	SDL_Window* window,
 	void* allocator,
@@ -81,11 +95,13 @@ DLL_EXPORT uint32_t phInitRenderer(
 /// Deinitializes this renderer. This function should by design be completely safe to call multiple
 /// times in a row, including before the renderer has been initialized at all. Should also be safe
 /// to call if renderer failed to initialize.
-DLL_EXPORT void phDeinitRenderer(void);
+extern "C" PH_DLL_EXPORT
+void phDeinitRenderer(void);
 
 /// Initializes Imgui in this renderer. Expected to be called once after phInitRenderer().
 /// \param fontTexture the font texture atlas
-DLL_EXPORT void phInitImgui(const phConstImageView* fontTexture);
+extern "C" PH_DLL_EXPORT
+void phInitImgui(const phConstImageView* fontTexture);
 
 // State query functions
 // ------------------------------------------------------------------------------------------------
@@ -93,7 +109,8 @@ DLL_EXPORT void phInitImgui(const phConstImageView* fontTexture);
 /// Returns the current dimensions of the window Imgui is being rendered to.
 /// \param widthOut the width of the window
 /// \param heightOut the height of the window
-DLL_EXPORT void phImguiWindowDimensions(float* widthOut, float* heightOut);
+extern "C" PH_DLL_EXPORT
+void phImguiWindowDimensions(float* widthOut, float* heightOut);
 
 // Resource management (textures)
 // ------------------------------------------------------------------------------------------------
@@ -108,19 +125,22 @@ DLL_EXPORT void phImguiWindowDimensions(float* widthOut, float* heightOut);
 /// etc.
 /// \param textures the textures to add
 /// \param numTextures the number of textures to add
-DLL_EXPORT void phSetTextures(const phConstImageView* textures, uint32_t numTextures);
+extern "C" PH_DLL_EXPORT
+void phSetTextures(const phConstImageView* textures, uint32_t numTextures);
 
 /// Adds a texture and returns its assigned index
 /// \param texture the texture to add
 /// \return the index assigned to the texture
-DLL_EXPORT uint32_t phAddTexture(const phConstImageView* texture);
+extern "C" PH_DLL_EXPORT
+uint32_t phAddTexture(const phConstImageView* texture);
 
 /// Updates (replaces) a texture already registered to this renderer. Will return 0 and not do
 /// anything if no texture is registered to the specified index.
 /// \param texture the texture to add
 /// \param index the index to the registered texture
 /// \return 1 on success, 0 on failure
-DLL_EXPORT uint32_t phUpdateTexture(const phConstImageView* texture, uint32_t index);
+extern "C" PH_DLL_EXPORT
+uint32_t phUpdateTexture(const phConstImageView* texture, uint32_t index);
 
 // Resource management (materials)
 // ------------------------------------------------------------------------------------------------
@@ -142,19 +162,22 @@ DLL_EXPORT uint32_t phUpdateTexture(const phConstImageView* texture, uint32_t in
 /// will be copied to renderers internal memory. Material at index 0 will be assigned indexo 0, etc.
 /// \param materials the materials to add
 /// \param numMaterials the number of material to add
-DLL_EXPORT void phSetMaterials(const void* materials, uint32_t numMaterials);
+extern "C" PH_DLL_EXPORT
+void phSetMaterials(const phMaterial* materials, uint32_t numMaterials);
 
 /// Adds a material and returns its assigned index
 /// \param material the material to add
 /// \return the index assigned to the material
-DLL_EXPORT uint32_t phAddMaterial(const void* material);
+extern "C" PH_DLL_EXPORT
+uint32_t phAddMaterial(const phMaterial* material);
 
 /// Updates (replaces) a material already registered to this renderer. Will return 0 and not do
 /// anything if no material is registered to the specified index.
 /// \param material the material to add
 /// \param index the index to the registered material
 /// \return 1 on success, 0 on failure
-DLL_EXPORT uint32_t phUpdateMaterial(const void* material, uint32_t index);
+extern "C" PH_DLL_EXPORT
+uint32_t phUpdateMaterial(const phMaterial* material, uint32_t index);
 
 // Resource management (meshes)
 // ------------------------------------------------------------------------------------------------
@@ -168,19 +191,22 @@ DLL_EXPORT uint32_t phUpdateMaterial(const void* material, uint32_t index);
 /// their own memory space. Mesh at index 0 in array will be assigned index 0, etc.
 /// \param meshes the array of meshes
 /// \param numMeshes the number of meshes in the array
-DLL_EXPORT void phSetDynamicMeshes(const phConstMeshView* meshes, uint32_t numMeshes);
+extern "C" PH_DLL_EXPORT
+void phSetDynamicMeshes(const phConstMeshView* meshes, uint32_t numMeshes);
 
 /// Adds a dynamic mesh and returns its assigned index
 /// \param mesh the mesh to add
 /// \return the index assigned to the mesh
-DLL_EXPORT uint32_t phAddDynamicMesh(const phConstMeshView* mesh);
+extern "C" PH_DLL_EXPORT
+uint32_t phAddDynamicMesh(const phConstMeshView* mesh);
 
 /// Updates (replaces) a mesh already registered to this renderer. Will return 0 and not do
 /// anything if the index does not have any mesh registered to it.
 /// \param mesh the mesh to add
 /// \param index the index to the registered mesh
 /// \return 1 on success, 0 on failure
-DLL_EXPORT uint32_t phUpdateDynamicMesh(const phConstMeshView* mesh, uint32_t index);
+extern "C" PH_DLL_EXPORT
+uint32_t phUpdateDynamicMesh(const phConstMeshView* mesh, uint32_t index);
 
 // Render commands
 // ------------------------------------------------------------------------------------------------
@@ -189,7 +215,8 @@ DLL_EXPORT uint32_t phUpdateDynamicMesh(const phConstMeshView* mesh, uint32_t in
 /// \param camera the camera to render from. Temporary pointer, make a copy.
 /// \param dynamicSphereLights pointer to array of phSphereLights
 /// \param numDynamicSphereLights number of elements in dynamicSphereLights array
-DLL_EXPORT void phBeginFrame(
+extern "C" PH_DLL_EXPORT
+void phBeginFrame(
 	const phCameraData* camera,
 	const phSphereLight* dynamicSphereLights,
 	uint32_t numDynamicSphereLights);
@@ -198,7 +225,8 @@ DLL_EXPORT void phBeginFrame(
 /// finishFrame() calls.
 /// \param entities pointer to array of phRenderEntities
 /// \param numEntities number of elements in entities array
-DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities);
+extern "C" PH_DLL_EXPORT
+void phRender(const phRenderEntity* entities, uint32_t numEntities);
 
 /// Renders the imgui UI. Expected to be called once right before phFinishFrame(). Input data is
 /// only required to be valid during the duration of the call.
@@ -208,7 +236,8 @@ DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities);
 /// \param numIndices the number of imgui indices
 /// \param commands the imgui commands to perform
 /// \param numCommands the number of imgui commands
-DLL_EXPORT void phRenderImgui(
+extern "C" PH_DLL_EXPORT
+void phRenderImgui(
 	const phImguiVertex* vertices,
 	uint32_t numVertices,
 	const uint32_t* indices,
@@ -217,10 +246,5 @@ DLL_EXPORT void phRenderImgui(
 	uint32_t numCommands);
 
 /// Called last in a frame to finalize rendering to screen.
-DLL_EXPORT void phFinishFrame(void);
-
-
-// End C interface
-#ifdef __cplusplus
-}
-#endif
+extern "C" PH_DLL_EXPORT
+void phFinishFrame(void);
