@@ -42,7 +42,7 @@ struct phImageView {
 	ImageType type = ImageType::UNDEFINED;
 	int32_t width = 0;
 	int32_t height = 0;
-	
+
 	template<typename T>
 	T* rowPtr(int32_t y) noexcept
 	{
@@ -50,7 +50,7 @@ struct phImageView {
 	}
 
 	template<typename T>
-	T* at(int32_t x, int32_t y) noexcept { return this->rowPtr(y) + x; }
+	T* at(int32_t x, int32_t y) noexcept { return this->rowPtr<T>(y) + x; }
 };
 
 struct phConstImageView {
@@ -66,7 +66,7 @@ struct phConstImageView {
 	}
 
 	template<typename T>
-	const T* at(int32_t x, int32_t y) noexcept { return this->rowPtr(y) + x; }
+	const T* at(int32_t x, int32_t y) noexcept { return this->rowPtr<T>(y) + x; }
 
 	// Implicit conversion from phImageView
 	phConstImageView() noexcept = default;
