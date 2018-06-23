@@ -552,7 +552,7 @@ private:
 			}
 
 			// Get color of message
-			vec4 messageColor;
+			vec4 messageColor = vec4(0.0f);
 			switch (message.level) {
 			case LogLevel::INFO_NOISY: messageColor = vec4(0.6f, 0.6f, 0.8f, 1.0f); break;
 			case LogLevel::INFO: messageColor = vec4(0.8f, 0.8f, 0.8f, 1.0f); break;
@@ -670,12 +670,12 @@ private:
 				for (uint32_t i = 0; i < mState.dynamicAssets.textures.size(); i++) {
 
 					// Convert index to string and check if it is selected
-					str128 materialStr = textureToComboStr(i);
+					str128 materialStr = textureToComboStr(uint16_t(i));
 					bool isSelected = texIndex == i;
 
 					// Report index to ImGui combo button and update current if it has changed
 					if (ImGui::Selectable(materialStr.str, isSelected)) {
-						texIndex = i;
+						texIndex = uint16_t(i);
 						sendUpdatedMaterialToRenderer = true;
 					}
 				}

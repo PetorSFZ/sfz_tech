@@ -44,7 +44,7 @@ void TerminalLogger::init(uint32_t numHistoryItems, Allocator* allocator) noexce
 
 uint32_t TerminalLogger::numMessages() const noexcept
 {
-	return mMessages.size();
+	return uint32_t(mMessages.size());
 }
 
 const TerminalMessageItem& TerminalLogger::getMessage(uint32_t index) const noexcept
