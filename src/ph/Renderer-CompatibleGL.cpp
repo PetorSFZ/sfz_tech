@@ -40,7 +40,11 @@
 
 #include <ph/rendering/CameraData.hpp>
 #include <ph/rendering/ImageView.hpp>
+#include <ph/rendering/ImguiRenderingData.hpp>
 #include <ph/rendering/Material.hpp>
+#include <ph/rendering/MeshView.hpp>
+#include <ph/rendering/RenderEntity.hpp>
+#include <ph/rendering/SphereLight.hpp>
 
 #include "ph/ImguiRendering.hpp"
 #include "ph/Model.hpp"
@@ -90,12 +94,12 @@ struct RendererState final {
 	mat4 projMatrix = mat4::identity();
 
 	// Scene
-	DynArray<ph::SphereLight> dynamicSphereLights;
+	DynArray<phSphereLight> dynamicSphereLights;
 
 	// Imgui
 	ImguiVertexData imguiGlCmdList;
 	Texture imguiFontTexture;
-	DynArray<ImguiCommand> imguiCommands;
+	DynArray<phImguiCommand> imguiCommands;
 	gl::Program imguiShader;
 	const phSettingValue* imguiScaleSetting = nullptr;
 	const phSettingValue* imguiFontLinearSetting = nullptr;
@@ -137,7 +141,7 @@ static void stupidSetSphereLightUniform(
 	const gl::Program& program,
 	const char* name,
 	uint32_t index,
-	const ph::SphereLight& sphereLight,
+	const phSphereLight& sphereLight,
 	const mat4& viewMatrix) noexcept
 {
 	gl::setUniform(program, str80("%s[%u].%s", name, index, "vsPos"),
@@ -175,7 +179,7 @@ static void stupidSetMaterialUniform(
 extern "C" PH_DLL_EXPORT
 uint32_t phRendererInterfaceVersion(void)
 {
-	return 7;
+	return 8;
 }
 
 extern "C" PH_DLL_EXPORT
@@ -533,8 +537,7 @@ void phBeginFrame(
 
 	// Set dynamic sphere lights
 	state.dynamicSphereLights.clear();
-	state.dynamicSphereLights.insert(0,
-		reinterpret_cast<const ph::SphereLight*>(dynamicSphereLights),
+	state.dynamicSphereLights.insert(0, dynamicSphereLights,
 		min(numDynamicSphereLights, MAX_NUM_DYNAMIC_SPHERE_LIGHTS));
 
 	// Set some GL settings
@@ -576,7 +579,7 @@ void phRenderImgui(
 
 	// Clear and copy commands
 	state.imguiCommands.clear();
-	state.imguiCommands.add(reinterpret_cast<const ph::ImguiCommand*>(commands), numCommands);
+	state.imguiCommands.add(commands, numCommands);
 
 	// Upload vertices and indices to GPU
 	state.imguiGlCmdList.upload(vertices, numVertices, indices, numIndices);
@@ -604,7 +607,7 @@ void phRender(const phRenderEntity* entities, uint32_t numEntities)
 	gl::setUniform(state.modelShader, "uEmissiveTexture", 4);
 
 	for (uint32_t i = 0; i < numEntities; i++) {
-		const ph::RenderEntity& entity = reinterpret_cast<const ph::RenderEntity*>(entities)[i];
+		const phRenderEntity& entity = entities[i];
 		auto& model = state.dynamicModels[entity.meshIndex];
 
 		// Set model and normal matrices
@@ -713,7 +716,7 @@ void phFinishFrame(void)
 	state.imguiGlCmdList.bindVAO();
 
 	// Render commands
-	for (const ImguiCommand& cmd : state.imguiCommands) {
+	for (const phImguiCommand& cmd : state.imguiCommands) {
 
 		glScissor(
 			GLsizei(cmd.clipRect.x * imguiInvScaleFactor),

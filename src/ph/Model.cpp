@@ -92,13 +92,13 @@ void Model::create(const phConstMeshView& mesh, Allocator* allocator) noexcept
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(phVertex),
-		(void*)offsetof(Vertex, pos));
+		(void*)offsetof(phVertex, pos));
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(phVertex),
-		(void*)offsetof(Vertex, normal));
+		(void*)offsetof(phVertex, normal));
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(phVertex),
-		(void*)offsetof(Vertex, texcoord));
+		(void*)offsetof(phVertex, texcoord));
 
 	// Create components
 	struct MaterialIndices {

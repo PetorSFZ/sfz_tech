@@ -24,7 +24,7 @@
 #include <sfz/containers/DynArray.hpp>
 #include <sfz/memory/Allocator.hpp>
 
-#include <ph/rendering/MeshView.h>
+#include <ph/rendering/MeshView.hpp>
 
 namespace ph {
 

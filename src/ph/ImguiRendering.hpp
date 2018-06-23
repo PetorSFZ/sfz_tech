@@ -21,7 +21,7 @@
 
 #include <cstdint>
 
-#include "ph/rendering/ImguiRenderingData.h"
+#include <ph/rendering/ImguiRenderingData.hpp>
 
 namespace ph {
 
