@@ -17,6 +17,7 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
+#define PH_EXPORTING_RENDERER_FUNCTIONS
 #include "ph/RendererInterface.h"
 
 #include <algorithm> // std::swap()
@@ -67,7 +68,7 @@ struct RendererState final {
 	// Resources
 	gl::FullscreenGeometry fullscreenGeom;
 	DynArray<Texture> textures;
-	DynArray<Material> materials;
+	DynArray<phMaterial> materials;
 	DynArray<Model> dynamicModels;
 
 	// Window information
@@ -146,7 +147,7 @@ static void stupidSetSphereLightUniform(
 static void stupidSetMaterialUniform(
 	const gl::Program& program,
 	const char* name,
-	const ph::Material& m) noexcept
+	const phMaterial& m) noexcept
 {
 	auto toInt = [](uint16_t tex) -> int32_t {
 		return (tex == uint16_t(~0)) ? 0 : 1;
@@ -168,17 +169,20 @@ static void stupidSetMaterialUniform(
 // Interface: Init functions
 // ------------------------------------------------------------------------------------------------
 
-DLL_EXPORT uint32_t phRendererInterfaceVersion(void)
+extern "C" PH_DLL_EXPORT
+uint32_t phRendererInterfaceVersion(void)
 {
 	return 5;
 }
 
-DLL_EXPORT uint32_t phRequiredSDL2WindowFlags(void)
+extern "C" PH_DLL_EXPORT
+uint32_t phRequiredSDL2WindowFlags(void)
 {
 	return SDL_WINDOW_OPENGL;
 }
 
-DLL_EXPORT uint32_t phInitRenderer(
+extern "C" PH_DLL_EXPORT
+uint32_t phInitRenderer(
 	void* sfzCoreContext,
 	SDL_Window* window,
 	void* allocator,
@@ -308,7 +312,8 @@ DLL_EXPORT uint32_t phInitRenderer(
 	return 1;
 }
 
-DLL_EXPORT void phDeinitRenderer(void)
+extern "C" PH_DLL_EXPORT
+void phDeinitRenderer(void)
 {
 	if (statePtr == nullptr) return;
 	RendererState& state = *statePtr;
@@ -329,7 +334,8 @@ DLL_EXPORT void phDeinitRenderer(void)
 	SDL_GL_DeleteContext(context);
 }
 
-DLL_EXPORT void phInitImgui(const phConstImageView* fontTexture)
+extern "C" PH_DLL_EXPORT
+void phInitImgui(const phConstImageView* fontTexture)
 {
 	RendererState& state = *statePtr;
 
@@ -371,7 +377,8 @@ DLL_EXPORT void phInitImgui(const phConstImageView* fontTexture)
 // State query functions
 // ------------------------------------------------------------------------------------------------
 
-DLL_EXPORT void phImguiWindowDimensions(float* widthOut, float* heightOut)
+extern "C" PH_DLL_EXPORT
+void phImguiWindowDimensions(float* widthOut, float* heightOut)
 {
 	RendererState& state = *statePtr;
 
@@ -388,7 +395,8 @@ DLL_EXPORT void phImguiWindowDimensions(float* widthOut, float* heightOut)
 // Resource management (textures)
 // ------------------------------------------------------------------------------------------------
 
-DLL_EXPORT void phSetTextures(const phConstImageView* textures, uint32_t numTextures)
+extern "C" PH_DLL_EXPORT
+void phSetTextures(const phConstImageView* textures, uint32_t numTextures)
 {
 	RendererState& state = *statePtr;
 
@@ -401,7 +409,8 @@ DLL_EXPORT void phSetTextures(const phConstImageView* textures, uint32_t numText
 	}
 }
 
-DLL_EXPORT uint32_t phAddTexture(const phConstImageView* texture)
+extern "C" PH_DLL_EXPORT
+uint32_t phAddTexture(const phConstImageView* texture)
 {
 	RendererState& state = *statePtr;
 
@@ -410,7 +419,8 @@ DLL_EXPORT uint32_t phAddTexture(const phConstImageView* texture)
 	return index;
 }
 
-DLL_EXPORT uint32_t phUpdateTexture(const phConstImageView* texture, uint32_t index)
+extern "C" PH_DLL_EXPORT
+uint32_t phUpdateTexture(const phConstImageView* texture, uint32_t index)
 {
 	RendererState& state = *statePtr;
 
@@ -424,7 +434,8 @@ DLL_EXPORT uint32_t phUpdateTexture(const phConstImageView* texture, uint32_t in
 // Resource management (materials)
 // ------------------------------------------------------------------------------------------------
 
-DLL_EXPORT void phSetMaterials(const void* materials, uint32_t numMaterials)
+extern "C" PH_DLL_EXPORT
+void phSetMaterials(const phMaterial* materials, uint32_t numMaterials)
 {
 	RendererState& state = *statePtr;
 
@@ -432,33 +443,36 @@ DLL_EXPORT void phSetMaterials(const void* materials, uint32_t numMaterials)
 	state.materials.clear();
 
 	// Add materials to state
-	state.materials.add(reinterpret_cast<const Material*>(materials), numMaterials);
+	state.materials.add(materials, numMaterials);
 }
 
-DLL_EXPORT uint32_t phAddMaterial(const void* material)
+extern "C" PH_DLL_EXPORT
+uint32_t phAddMaterial(const phMaterial* material)
 {
 	RendererState& state = *statePtr;
 
 	uint32_t index = state.materials.size();
-	state.materials.add(*reinterpret_cast<const Material*>(material));
+	state.materials.add(*material);
 	return index;
 }
 
-DLL_EXPORT uint32_t phUpdateMaterial(const void* material, uint32_t index)
+extern "C" PH_DLL_EXPORT
+uint32_t phUpdateMaterial(const phMaterial* material, uint32_t index)
 {
 	RendererState& state = *statePtr;
 
 	// Check if material exists
 	if (state.materials.size() <= index) return 0;
 
-	state.materials[index] = *reinterpret_cast<const Material*>(material);
+	state.materials[index] = *material;
 	return 1;
 }
 
 // Interface: Resource management (meshes)
 // ------------------------------------------------------------------------------------------------
 
-DLL_EXPORT void phSetDynamicMeshes(const phConstMeshView* meshes, uint32_t numMeshes)
+extern "C" PH_DLL_EXPORT
+void phSetDynamicMeshes(const phConstMeshView* meshes, uint32_t numMeshes)
 {
 	RendererState& state = *statePtr;
 
@@ -471,7 +485,8 @@ DLL_EXPORT void phSetDynamicMeshes(const phConstMeshView* meshes, uint32_t numMe
 	}
 }
 
-DLL_EXPORT uint32_t phAddDynamicMesh(const phConstMeshView* mesh)
+extern "C" PH_DLL_EXPORT
+uint32_t phAddDynamicMesh(const phConstMeshView* mesh)
 {
 	RendererState& state = *statePtr;
 
@@ -480,7 +495,8 @@ DLL_EXPORT uint32_t phAddDynamicMesh(const phConstMeshView* mesh)
 	return index;
 }
 
-DLL_EXPORT uint32_t phUpdateDynamicMesh(const phConstMeshView* mesh, uint32_t index)
+extern "C" PH_DLL_EXPORT
+uint32_t phUpdateDynamicMesh(const phConstMeshView* mesh, uint32_t index)
 {
 	RendererState& state = *statePtr;
 
@@ -494,7 +510,8 @@ DLL_EXPORT uint32_t phUpdateDynamicMesh(const phConstMeshView* mesh, uint32_t in
 // Interface: Render commands
 // ------------------------------------------------------------------------------------------------
 
-DLL_EXPORT void phBeginFrame(
+extern "C" PH_DLL_EXPORT
+void phBeginFrame(
 	const phCameraData* cameraPtr,
 	const phSphereLight* dynamicSphereLights,
 	uint32_t numDynamicSphereLights)
@@ -544,7 +561,8 @@ DLL_EXPORT void phBeginFrame(
 	CHECK_GL_ERROR();
 }
 
-DLL_EXPORT void phRenderImgui(
+extern "C" PH_DLL_EXPORT
+void phRenderImgui(
 	const phImguiVertex* vertices,
 	uint32_t numVertices,
 	const uint32_t* indices,
@@ -562,8 +580,8 @@ DLL_EXPORT void phRenderImgui(
 	state.imguiGlCmdList.upload(vertices, numVertices, indices, numIndices);
 }
 
-
-DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities)
+extern "C" PH_DLL_EXPORT
+void phRender(const phRenderEntity* entities, uint32_t numEntities)
 {
 	RendererState& state = *statePtr;
 
@@ -630,7 +648,8 @@ DLL_EXPORT void phRender(const phRenderEntity* entities, uint32_t numEntities)
 	}
 }
 
-DLL_EXPORT void phFinishFrame(void)
+extern "C" PH_DLL_EXPORT
+void phFinishFrame(void)
 {
 	RendererState& state = *statePtr;
 
@@ -707,7 +726,6 @@ DLL_EXPORT void phFinishFrame(void)
 	// Restore some previous OpenGL state
 	glScissor(lastScissorBox[0], lastScissorBox[1], lastScissorBox[2], lastScissorBox[3]);
 	glDisable(GL_SCISSOR_TEST);
-
 
 
 	// Swap back and front buffers
