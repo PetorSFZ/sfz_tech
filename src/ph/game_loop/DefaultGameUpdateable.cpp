@@ -155,9 +155,9 @@ public:
 	int mStatsWarmup = 0;
 
 	// Imgui
-	DynArray<ImguiVertex> mImguiVertices;
+	DynArray<phImguiVertex> mImguiVertices;
 	DynArray<uint32_t> mImguiIndices;
-	DynArray<ImguiCommand> mImguiCommands;
+	DynArray<phImguiCommand> mImguiCommands;
 
 	// Global Config
 	str32 mConfigFilterString;

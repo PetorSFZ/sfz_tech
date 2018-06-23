@@ -21,26 +21,26 @@
 
 #include <sfz/containers/DynArray.hpp>
 
-#include <ph/rendering/MeshView.h>
+#include <ph/rendering/MeshView.hpp>
 
 namespace ph {
 
 using sfz::DynArray;
 
 struct Mesh final {
-	DynArray<Vertex> vertices;
+	DynArray<phVertex> vertices;
 	DynArray<uint32_t> materialIndices;
 	DynArray<uint32_t> indices;
 
-	inline MeshView toMeshView() noexcept;
-	inline ConstMeshView toMeshView() const noexcept;
-	inline operator MeshView() noexcept;
-	inline operator ConstMeshView() const noexcept;
+	inline phMeshView toMeshView() noexcept;
+	inline phConstMeshView toMeshView() const noexcept;
+	operator phMeshView() noexcept { return this->toMeshView(); }
+	operator phConstMeshView() const noexcept { return this->toMeshView(); }
 };
 
-inline MeshView Mesh::toMeshView() noexcept
+inline phMeshView Mesh::toMeshView() noexcept
 {
-	MeshView tmp;
+	phMeshView tmp;
 	tmp.vertices = this->vertices.data();
 	tmp.materialIndices = this->materialIndices.data();
 	tmp.numVertices = this->vertices.size();
@@ -49,25 +49,15 @@ inline MeshView Mesh::toMeshView() noexcept
 	return tmp;
 }
 
-inline ConstMeshView Mesh::toMeshView() const noexcept
+inline phConstMeshView Mesh::toMeshView() const noexcept
 {
-	ConstMeshView tmp;
+	phConstMeshView tmp;
 	tmp.vertices = this->vertices.data();
 	tmp.materialIndices = this->materialIndices.data();
 	tmp.numVertices = this->vertices.size();
 	tmp.indices = this->indices.data();
 	tmp.numIndices = this->indices.size();
 	return tmp;
-}
-
-inline Mesh::operator MeshView() noexcept
-{
-	return this->toMeshView();
-}
-
-inline Mesh::operator ConstMeshView() const noexcept
-{
-	return this->toMeshView();
 }
 
 } // namespace ph

@@ -20,7 +20,7 @@
 #pragma once
 
 #include <sfz/containers/DynArray.hpp>
-#include <ph/rendering/ImguiRenderingData.h>
+#include <ph/rendering/ImguiRenderingData.hpp>
 
 #include "ph/rendering/Renderer.hpp"
 #include "ph/sdl/Mouse.hpp"
@@ -43,8 +43,8 @@ void updateImgui(
 	const sdl::GameControllerState* controller) noexcept;
 
 void convertImguiDrawData(
-	DynArray<ImguiVertex>& vertices,
+	DynArray<phImguiVertex>& vertices,
 	DynArray<uint32_t>& indices,
-	DynArray<ImguiCommand>& commands) noexcept;
+	DynArray<phImguiCommand>& commands) noexcept;
 
 } // namespace ph

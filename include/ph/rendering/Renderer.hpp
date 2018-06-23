@@ -27,11 +27,11 @@
 
 #include <ph/rendering/CameraData.hpp>
 #include <ph/rendering/ImageView.hpp>
-#include <ph/rendering/ImguiRenderingData.h>
+#include <ph/rendering/ImguiRenderingData.hpp>
 #include <ph/rendering/Material.hpp>
-#include <ph/rendering/MeshView.h>
-#include <ph/rendering/RenderEntity.h>
-#include <ph/rendering/SphereLight.h>
+#include <ph/rendering/MeshView.hpp>
+#include <ph/rendering/RenderEntity.hpp>
+#include <ph/rendering/SphereLight.hpp>
 
 extern "C" struct SDL_Window; // Forward declare SDL_Window
 
@@ -54,7 +54,7 @@ public:
 
 	/// The interface version supported by this wrapper. Only renderers which return the same
 	/// version with "phRendererInterfaceVersion()" are compatible.
-	static constexpr uint32_t INTERFACE_VERSION = 7;
+	static constexpr uint32_t INTERFACE_VERSION = 8;
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -135,13 +135,13 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	/// See phSetDynamicMeshes()
-	void setDynamicMeshes(const DynArray<ConstMeshView>& meshes) noexcept;
+	void setDynamicMeshes(const DynArray<phConstMeshView>& meshes) noexcept;
 
 	/// See phAddDynamicMesh()
-	uint32_t addDynamicMesh(const ConstMeshView& mesh) noexcept;
+	uint32_t addDynamicMesh(const phConstMeshView& mesh) noexcept;
 
 	/// See phUpdateDynamicMesh()
-	bool updateDynamicMesh(const ConstMeshView& mesh, uint32_t index) noexcept;
+	bool updateDynamicMesh(const phConstMeshView& mesh, uint32_t index) noexcept;
 
 	// Renderer: Render commands
 	// --------------------------------------------------------------------------------------------
@@ -149,22 +149,22 @@ public:
 	/// See phBeginFrame()
 	void beginFrame(
 		const phCameraData& camera,
-		const SphereLight* dynamicSphereLights,
+		const phSphereLight* dynamicSphereLights,
 		uint32_t numDynamicSphereLights) noexcept;
 
 	/// See phBeginFrame()
 	void beginFrame(
 		const phCameraData& camera,
-		const DynArray<SphereLight>& dynamicSphereLights) noexcept;
+		const DynArray<phSphereLight>& dynamicSphereLights) noexcept;
 
 	/// See phRender()
-	void render(const RenderEntity* entities, uint32_t numEntities) noexcept;
+	void render(const phRenderEntity* entities, uint32_t numEntities) noexcept;
 
 	/// See phRenderImgui()
 	void renderImgui(
-		const DynArray<ImguiVertex>& vertices,
+		const DynArray<phImguiVertex>& vertices,
 		const DynArray<uint32_t>& indices,
-		const DynArray<ImguiCommand>& commands) noexcept;
+		const DynArray<phImguiCommand>& commands) noexcept;
 
 	/// See phFinishFrame()
 	void finishFrame() noexcept;

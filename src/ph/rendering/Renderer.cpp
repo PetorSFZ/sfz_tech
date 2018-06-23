@@ -406,7 +406,7 @@ bool Renderer::updateMaterial(const phMaterial& material, uint32_t index) noexce
 // Renderer: Resource management (meshes)
 // ------------------------------------------------------------------------------------------------
 
-void Renderer::setDynamicMeshes(const DynArray<ConstMeshView>& meshes) noexcept
+void Renderer::setDynamicMeshes(const DynArray<phConstMeshView>& meshes) noexcept
 {
 	// Convert from ph::Mesh to phMeshView
 	DynArray<phConstMeshView> tmpMeshes;
@@ -418,16 +418,14 @@ void Renderer::setDynamicMeshes(const DynArray<ConstMeshView>& meshes) noexcept
 	CALL_RENDERER_FUNCTION(mFunctionTable, phSetDynamicMeshes, tmpMeshes.data(), tmpMeshes.size());
 }
 
-uint32_t Renderer::addDynamicMesh(const ConstMeshView& mesh) noexcept
+uint32_t Renderer::addDynamicMesh(const phConstMeshView& mesh) noexcept
 {
-	phConstMeshView tmpMesh = mesh;
-	return CALL_RENDERER_FUNCTION(mFunctionTable, phAddDynamicMesh, &tmpMesh);
+	return CALL_RENDERER_FUNCTION(mFunctionTable, phAddDynamicMesh, &mesh);
 }
 
-bool Renderer::updateDynamicMesh(const ConstMeshView& mesh, uint32_t index) noexcept
+bool Renderer::updateDynamicMesh(const phConstMeshView& mesh, uint32_t index) noexcept
 {
-	phConstMeshView tmpMesh = mesh;
-	return CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateDynamicMesh, &tmpMesh, index) != 0;
+	return CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateDynamicMesh, &mesh, index) != 0;
 }
 
 // Renderer: Render commands
@@ -435,39 +433,33 @@ bool Renderer::updateDynamicMesh(const ConstMeshView& mesh, uint32_t index) noex
 
 void Renderer::beginFrame(
 	const phCameraData& camera,
-	const ph::SphereLight* dynamicSphereLights,
+	const phSphereLight* dynamicSphereLights,
 	uint32_t numDynamicSphereLights) noexcept
 {
 	CALL_RENDERER_FUNCTION(mFunctionTable, phBeginFrame,
-		&camera,
-		reinterpret_cast<const phSphereLight*>(dynamicSphereLights), numDynamicSphereLights);
+		&camera, dynamicSphereLights, numDynamicSphereLights);
 }
 
 void Renderer::beginFrame(
 	const phCameraData& camera,
-	const DynArray<ph::SphereLight>& dynamicSphereLights) noexcept
+	const DynArray<phSphereLight>& dynamicSphereLights) noexcept
 {
 	CALL_RENDERER_FUNCTION(mFunctionTable, phBeginFrame,
-		&camera,
-		reinterpret_cast<const phSphereLight*>(dynamicSphereLights.data()),
-		dynamicSphereLights.size());
+		&camera, dynamicSphereLights.data(), dynamicSphereLights.size());
 }
 
-void Renderer::render(const RenderEntity* entities, uint32_t numEntities) noexcept
+void Renderer::render(const phRenderEntity* entities, uint32_t numEntities) noexcept
 {
-	CALL_RENDERER_FUNCTION(mFunctionTable, phRender,
-		reinterpret_cast<const phRenderEntity*>(entities), numEntities);
+	CALL_RENDERER_FUNCTION(mFunctionTable, phRender, entities, numEntities);
 }
 
 void Renderer::renderImgui(
-	const DynArray<ImguiVertex>& vertices,
+	const DynArray<phImguiVertex>& vertices,
 	const DynArray<uint32_t>& indices,
-	const DynArray<ImguiCommand>& commands) noexcept
+	const DynArray<phImguiCommand>& commands) noexcept
 {
-	CALL_RENDERER_FUNCTION(mFunctionTable, phRenderImgui,
-		reinterpret_cast<const phImguiVertex*>(vertices.data()), vertices.size(),
-		indices.data(), indices.size(),
-		reinterpret_cast<const phImguiCommand*>(commands.data()), commands.size());
+	CALL_RENDERER_FUNCTION(mFunctionTable, phRenderImgui, vertices.data(), vertices.size(),
+		indices.data(), indices.size(), commands.data(), commands.size());
 }
 
 void Renderer::finishFrame() noexcept

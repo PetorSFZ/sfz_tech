@@ -42,8 +42,8 @@ struct UpdateableState final {
 	phCameraData cam;
 	LevelAssets dynamicAssets;
 	
-	DynArray<RenderEntity> renderEntities;
-	DynArray<SphereLight> dynamicSphereLights;
+	DynArray<phRenderEntity> renderEntities;
+	DynArray<phSphereLight> dynamicSphereLights;
 };
 
 struct ImguiControllers final {

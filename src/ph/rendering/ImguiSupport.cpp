@@ -196,9 +196,9 @@ void updateImgui(
 }
 
 void convertImguiDrawData(
-	DynArray<ImguiVertex>& vertices,
+	DynArray<phImguiVertex>& vertices,
 	DynArray<uint32_t>& indices,
-	DynArray<ImguiCommand>& commands) noexcept
+	DynArray<phImguiCommand>& commands) noexcept
 {
 	ImDrawData& drawData = *ImGui::GetDrawData();
 
@@ -222,7 +222,7 @@ void convertImguiDrawData(
 		for (int j = 0; j < cmdList.VtxBuffer.size(); j++) {
 			const ImDrawVert& imguiVertex = cmdList.VtxBuffer[j];
 
-			ImguiVertex convertedVertex;
+			phImguiVertex convertedVertex;
 			convertedVertex.pos = vec2(imguiVertex.pos.x, imguiVertex.pos.y);
 			convertedVertex.texcoord = vec2(imguiVertex.uv.x, imguiVertex.uv.y);
 			convertedVertex.color = imguiVertex.col;
@@ -239,7 +239,7 @@ void convertImguiDrawData(
 		for (int j = 0; j < cmdList.CmdBuffer.Size; j++) {
 			const ImDrawCmd& inCmd = cmdList.CmdBuffer[j];
 
-			ImguiCommand cmd;
+			phImguiCommand cmd;
 			cmd.idxBufferOffset = indexBufferOffset;
 			cmd.numIndices = inCmd.ElemCount;
 			indexBufferOffset += inCmd.ElemCount;
