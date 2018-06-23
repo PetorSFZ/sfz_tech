@@ -40,20 +40,16 @@ void Texture::create(const phConstImageView& imageView, TextureFiltering filteri
 
 	// Transfer data from raw image
 #ifdef __EMSCRIPTEN__
-	switch (imageView.bytesPerPixel) {
-	case 1:
+	switch (imageView.type) {
+	case ImageType::R_U8:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, imageView.width, imageView.height, 0,
 			GL_LUMINANCE, GL_UNSIGNED_BYTE, imageView.rawData);
 		break;
-	case 2:
+	case ImageType::RG_U8:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, imageView.width, imageView.height, 0,
 			GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, imageView.rawData);
 		break;
-	case 3:
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageView.width, imageView.height, 0,
-			GL_RGB, GL_UNSIGNED_BYTE, imageView.rawData);
-		break;
-	case 4:
+	case ImageType::RGBA_U8:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageView.width, imageView.height, 0,
 			GL_RGBA, GL_UNSIGNED_BYTE, imageView.rawData);
 		break;
@@ -61,20 +57,16 @@ void Texture::create(const phConstImageView& imageView, TextureFiltering filteri
 		SFZ_ERROR("Renderer-CompatibleGL", "Unsupported number of elements per pixel");
 	}
 #else
-	switch (imageView.bytesPerPixel) {
-	case 1:
+	switch (imageView.type) {
+	case ImageType::R_U8:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, imageView.width, imageView.height, 0, GL_RED,
 			GL_UNSIGNED_BYTE, imageView.rawData);
 		break;
-	case 2:
+	case ImageType::RG_U8:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, imageView.width, imageView.height, 0, GL_RG,
 			GL_UNSIGNED_BYTE, imageView.rawData);
 		break;
-	case 3:
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, imageView.width, imageView.height, 0, GL_RGB,
-			GL_UNSIGNED_BYTE, imageView.rawData);
-		break;
-	case 4:
+	case ImageType::RGBA_U8:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, imageView.width, imageView.height, 0, GL_RGBA,
 			GL_UNSIGNED_BYTE, imageView.rawData);
 		break;

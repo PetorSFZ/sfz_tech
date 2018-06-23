@@ -38,7 +38,10 @@
 #include <sfz/gl/FullscreenGeometry.hpp>
 #include <sfz/gl/UniformSetters.hpp>
 
-#include "ph/rendering/Material.hpp"
+#include <ph/rendering/CameraData.hpp>
+#include <ph/rendering/ImageView.hpp>
+#include <ph/rendering/Material.hpp>
+
 #include "ph/ImguiRendering.hpp"
 #include "ph/Model.hpp"
 #include "ph/Shaders.hpp"
@@ -172,7 +175,7 @@ static void stupidSetMaterialUniform(
 extern "C" PH_DLL_EXPORT
 uint32_t phRendererInterfaceVersion(void)
 {
-	return 5;
+	return 7;
 }
 
 extern "C" PH_DLL_EXPORT
@@ -512,12 +515,11 @@ uint32_t phUpdateDynamicMesh(const phConstMeshView* mesh, uint32_t index)
 
 extern "C" PH_DLL_EXPORT
 void phBeginFrame(
-	const phCameraData* cameraPtr,
+	const phCameraData* camera,
 	const phSphereLight* dynamicSphereLights,
 	uint32_t numDynamicSphereLights)
 {
 	RendererState& state = *statePtr;
-	const CameraData& camera = *reinterpret_cast<const CameraData*>(cameraPtr);
 
 	// Get size of default framebuffer and window
 	SDL_GetWindowSize(state.window, &state.windowWidth, &state.windowHeight);
@@ -525,9 +527,9 @@ void phBeginFrame(
 	state.aspect = float(state.fbWidth) / float(state.fbHeight);
 
 	// Create camera matrices
-	state.viewMatrix = viewMatrixGL(camera.pos, camera.dir, camera.up);
+	state.viewMatrix = viewMatrixGL(camera->pos, camera->dir, camera->up);
 	state.projMatrix =
-		perspectiveProjectionGL(camera.vertFovDeg, state.aspect, camera.near, camera.far);
+		perspectiveProjectionGL(camera->vertFovDeg, state.aspect, camera->near, camera->far);
 
 	// Set dynamic sphere lights
 	state.dynamicSphereLights.clear();
