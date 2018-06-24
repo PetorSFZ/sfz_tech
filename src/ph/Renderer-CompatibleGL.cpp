@@ -38,6 +38,8 @@
 #include <sfz/gl/FullscreenGeometry.hpp>
 #include <sfz/gl/UniformSetters.hpp>
 
+#include <ph/Context.hpp>
+#include <ph/config/GlobalConfig.hpp>
 #include <ph/rendering/CameraData.hpp>
 #include <ph/rendering/ImageView.hpp>
 #include <ph/rendering/ImguiRenderingData.hpp>
@@ -69,7 +71,6 @@ struct RendererState final {
 	// Utilities
 	sfz::Allocator* allocator;
 	SDL_Window* window = nullptr;
-	phConfig config = {};
 	SDL_GLContext glContext = nullptr;
 
 	// Resources
@@ -101,8 +102,8 @@ struct RendererState final {
 	Texture imguiFontTexture;
 	DynArray<phImguiCommand> imguiCommands;
 	gl::Program imguiShader;
-	const phSettingValue* imguiScaleSetting = nullptr;
-	const phSettingValue* imguiFontLinearSetting = nullptr;
+	const ph::Setting* imguiScaleSetting = nullptr;
+	const ph::Setting* imguiFontLinearSetting = nullptr;
 };
 
 static RendererState* statePtr = nullptr;
@@ -179,7 +180,7 @@ static void stupidSetMaterialUniform(
 extern "C" PH_DLL_EXPORT
 uint32_t phRendererInterfaceVersion(void)
 {
-	return 8;
+	return 9;
 }
 
 extern "C" PH_DLL_EXPORT
@@ -190,10 +191,9 @@ uint32_t phRequiredSDL2WindowFlags(void)
 
 extern "C" PH_DLL_EXPORT
 uint32_t phInitRenderer(
-	void* sfzCoreContext,
+	phContext* context,
 	SDL_Window* window,
-	void* allocator,
-	phConfig* config)
+	void* allocator)
 {
 	// Return if already initialized
 	if (statePtr != nullptr) {
@@ -202,9 +202,15 @@ uint32_t phInitRenderer(
 	}
 
 	// Set sfzCore context
-	if (!sfz::setContext(reinterpret_cast<sfz::Context*>(sfzCoreContext))) {
+	if (!sfz::setContext(&context->sfzContext)) {
 		SFZ_INFO("Renderer-CompatibleGL",
 			"sfzCore Context already set, expected if renderer is statically linked");
+	}
+
+	// Set Phantasy Engine context
+	if (!ph::setContext(context)) {
+		SFZ_INFO("Renderer-CompatibleGL",
+			"PhantasyEngine Context already set, expected if renderer is statically linked");
 	}
 
 	SFZ_INFO("Renderer-CompatibleGL", "Creating OpenGL context");
@@ -267,7 +273,6 @@ uint32_t phInitRenderer(
 
 	// Store input parameters to state
 	state.window = window;
-	state.config = *config;
 	state.glContext = tmpContext;
 
 	// Print information
@@ -345,14 +350,15 @@ extern "C" PH_DLL_EXPORT
 void phInitImgui(const phConstImageView* fontTexture)
 {
 	RendererState& state = *statePtr;
+	GlobalConfig& cfg = getGlobalConfig();
 
 	// Init imgui settings
-	state.imguiScaleSetting = state.config.sanitizeFloat("Imgui", "scale",
-		Bool32(true), FloatBounds(2.0f, 1.0f, 3.0f).cPtr());
-	state.imguiFontLinearSetting = state.config.sanitizeBool("Imgui", "bilinearFontSampling",
-		Bool32(true), BoolBounds(false).cPtr());
+	state.imguiScaleSetting =  cfg.sanitizeFloat("Imgui", "scale",
+		true, FloatBounds(2.0f, 1.0f, 3.0f));
+	state.imguiFontLinearSetting = cfg.sanitizeBool("Imgui", "bilinearFontSampling",
+		true, BoolBounds(false));
 
-	TextureFiltering fontFiltering = Bool32(state.imguiFontLinearSetting->b.value) ?
+	TextureFiltering fontFiltering = state.imguiFontLinearSetting->boolValue() ?
 		TextureFiltering::BILINEAR : TextureFiltering::NEAREST;
 
 	// Upload font texture to GL memory
@@ -391,7 +397,7 @@ void phImguiWindowDimensions(float* widthOut, float* heightOut)
 
 	// Retrieve scale factor from config
 	float scaleFactor = 1.0f;
-	if (state.imguiScaleSetting != nullptr) scaleFactor = 1.0f / state.imguiScaleSetting->f.value;
+	if (state.imguiScaleSetting != nullptr) scaleFactor = 1.0f / state.imguiScaleSetting->floatValue();
 
 	int w, h;
 	SDL_GL_GetDrawableSize(state.window, &w, &h);
@@ -693,13 +699,13 @@ void phFinishFrame(void)
 	glBindTexture(GL_TEXTURE_2D, state.imguiFontTexture.handle());
 
 	// Update font filtering
-	TextureFiltering imguiFontFiltering = Bool32(state.imguiFontLinearSetting->b.value) ?
+	TextureFiltering imguiFontFiltering = state.imguiFontLinearSetting->boolValue() ?
 		TextureFiltering::BILINEAR : TextureFiltering::NEAREST;
 	state.imguiFontTexture.setFilteringFormat(imguiFontFiltering);
 
 	// Retrieve imgui scale factor
 	float imguiScaleFactor = 1.0f;
-	if (state.imguiScaleSetting != nullptr) imguiScaleFactor /= state.imguiScaleSetting->f.value;
+	if (state.imguiScaleSetting != nullptr) imguiScaleFactor /= state.imguiScaleSetting->floatValue();
 	float imguiInvScaleFactor = 1.0f / imguiScaleFactor;
 
 	float imguiWidth = state.fbWidth * imguiScaleFactor;
