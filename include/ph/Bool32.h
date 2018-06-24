@@ -19,11 +19,7 @@
 
 #pragma once
 
-#ifdef __cplusplus
 #include <cstdint>
-#else
-#include <stdint.h>
-#endif
 
 // C typedef
 // ------------------------------------------------------------------------------------------------
@@ -33,7 +29,6 @@ typedef uint32_t phBool32;
 // C++ Bool32 struct
 // ------------------------------------------------------------------------------------------------
 
-#ifdef __cplusplus
 namespace ph {
 
 struct Bool32 final {
@@ -58,4 +53,3 @@ struct Bool32 final {
 static_assert(sizeof(phBool32) == sizeof(Bool32), "ph::Bool32 is padded");
 
 } // namespace ph
-#endif

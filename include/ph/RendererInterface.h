@@ -21,6 +21,8 @@
 
 #include <cstdint>
 
+#include "ph/Bool32.h"
+
 // Forward declarations
 // ------------------------------------------------------------------------------------------------
 
@@ -52,7 +54,7 @@ struct phSphereLight;
 // Interface version
 // ------------------------------------------------------------------------------------------------
 
-const uint32_t PH_RENDERER_INTERFACE_VERSION = 9;
+const uint32_t PH_RENDERER_INTERFACE_VERSION = 10;
 
 // Init functions
 // ------------------------------------------------------------------------------------------------
@@ -81,10 +83,10 @@ uint32_t phRequiredSDL2WindowFlags(void);
 /// \param window the SDL_Window to render to
 /// \param context the PhantasyEngine context, see "ph/Context.hpp"
 /// \param allocator the sfz::Allocator used to allocate all cpu memory used
-/// \return 0 if renderer is NOT initialized, i.e. if something went very wrong. If the renderer
-///           has been previously initialized this value will still be a non-zero value.
+/// \return false if renderer is NOT initialized, i.e. if something went very wrong. If the renderer
+///           has been previously initialized this value will still be true.
 extern "C" PH_DLL_EXPORT
-uint32_t phInitRenderer(
+phBool32 phInitRenderer(
 	phContext* context,
 	SDL_Window* window,
 	void* allocator);
@@ -135,9 +137,9 @@ uint32_t phAddTexture(const phConstImageView* texture);
 /// anything if no texture is registered to the specified index.
 /// \param texture the texture to add
 /// \param index the index to the registered texture
-/// \return 1 on success, 0 on failure
+/// \return true on success, false on failure
 extern "C" PH_DLL_EXPORT
-uint32_t phUpdateTexture(const phConstImageView* texture, uint32_t index);
+phBool32 phUpdateTexture(const phConstImageView* texture, uint32_t index);
 
 // Resource management (materials)
 // ------------------------------------------------------------------------------------------------
@@ -172,9 +174,9 @@ uint32_t phAddMaterial(const phMaterial* material);
 /// anything if no material is registered to the specified index.
 /// \param material the material to add
 /// \param index the index to the registered material
-/// \return 1 on success, 0 on failure
+/// \return true on success, false on failure
 extern "C" PH_DLL_EXPORT
-uint32_t phUpdateMaterial(const phMaterial* material, uint32_t index);
+phBool32 phUpdateMaterial(const phMaterial* material, uint32_t index);
 
 // Resource management (meshes)
 // ------------------------------------------------------------------------------------------------
@@ -201,9 +203,9 @@ uint32_t phAddDynamicMesh(const phConstMeshView* mesh);
 /// anything if the index does not have any mesh registered to it.
 /// \param mesh the mesh to add
 /// \param index the index to the registered mesh
-/// \return 1 on success, 0 on failure
+/// \return true on success, false on failure
 extern "C" PH_DLL_EXPORT
-uint32_t phUpdateDynamicMesh(const phConstMeshView* mesh, uint32_t index);
+phBool32 phUpdateDynamicMesh(const phConstMeshView* mesh, uint32_t index);
 
 // Render commands
 // ------------------------------------------------------------------------------------------------
