@@ -26,6 +26,48 @@
 
 namespace ph {
 
+// SettingValue
+// ------------------------------------------------------------------------------------------------
+
+SettingValue SettingValue::createInt(
+	int32_t value,
+	bool writeToFile,
+	const IntBounds& bounds)
+{
+	SettingValue setting;
+	setting.type = ValueType::INT;
+	setting.writeToFile = writeToFile;
+	setting.i.value = value;
+	setting.i.bounds = bounds;
+	return setting;
+}
+
+SettingValue SettingValue::createFloat(
+	float value,
+	bool writeToFile,
+	const FloatBounds& bounds)
+{
+	SettingValue setting;
+	setting.type = ValueType::FLOAT;
+	setting.writeToFile = writeToFile;
+	setting.f.value = value;
+	setting.f.bounds = bounds;
+	return setting;
+}
+
+SettingValue SettingValue::createBool(
+	bool value,
+	bool writeToFile,
+	const BoolBounds& bounds)
+{
+	SettingValue setting;
+	setting.type = ValueType::BOOL;
+	setting.writeToFile = writeToFile;
+	setting.b.value = value;
+	setting.b.bounds = bounds;
+	return setting;
+}
+
 // Setting: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 

@@ -26,8 +26,8 @@
 
 namespace ph {
 
-using sfz::StackString32;
-using sfz::StackString48;
+using sfz::str32;
+using sfz::str48;
 
 // Value type enum
 // ------------------------------------------------------------------------------------------------
@@ -156,45 +156,6 @@ struct SettingValue final {
 		const BoolBounds& bounds = BoolBounds(false));
 };
 
-inline SettingValue SettingValue::createInt(
-	int32_t value,
-	bool writeToFile,
-	const IntBounds& bounds)
-{
-	SettingValue setting;
-	setting.type = ValueType::INT;
-	setting.writeToFile = writeToFile;
-	setting.i.value = value;
-	setting.i.bounds = bounds;
-	return setting;
-}
-
-inline SettingValue SettingValue::createFloat(
-	float value,
-	bool writeToFile,
-	const FloatBounds& bounds)
-{
-	SettingValue setting;
-	setting.type = ValueType::FLOAT;
-	setting.writeToFile = writeToFile;
-	setting.f.value = value;
-	setting.f.bounds = bounds;
-	return setting;
-}
-
-inline SettingValue SettingValue::createBool(
-	bool value,
-	bool writeToFile,
-	const BoolBounds& bounds)
-{
-	SettingValue setting;
-	setting.type = ValueType::BOOL;
-	setting.writeToFile = writeToFile;
-	setting.b.value = value;
-	setting.b.bounds = bounds;
-	return setting;
-}
-
 // Setting class
 // ------------------------------------------------------------------------------------------------
 
@@ -215,8 +176,8 @@ public:
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
-	const StackString32& section() const noexcept { return mSection; }
-	const StackString48& key() const noexcept { return mKey; }
+	const str32& section() const noexcept { return mSection; }
+	const str48& key() const noexcept { return mKey; }
 	const SettingValue& value() const noexcept { return mValue; }
 	ValueType type() const noexcept { return mValue.type; }
 
@@ -249,8 +210,8 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	SettingValue mValue;
-	StackString32 mSection;
-	StackString48 mKey;
+	str32 mSection;
+	str48 mKey;
 };
 
 } // namespace ph
