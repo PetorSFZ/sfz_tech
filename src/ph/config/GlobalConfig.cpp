@@ -24,6 +24,8 @@
 #include <sfz/memory/SmartPointers.hpp>
 #include <sfz/util/IniParser.hpp>
 
+#include "ph/Context.hpp"
+
 namespace ph {
 
 using namespace sfz;
@@ -46,33 +48,27 @@ struct GlobalConfigImpl final {
 // GlobalConfig: Singleton instance
 // ------------------------------------------------------------------------------------------------
 
-GlobalConfig& GlobalConfig::instance() noexcept
-{
-	static GlobalConfig config;
-	return config;
-}
-
 phConfig GlobalConfig::cInstance() noexcept
 {
 	phConfig config;
 
 	config.getSetting = [](const char* section, const char* key) -> const phSettingValue* {
 		return reinterpret_cast<const phSettingValue*>(
-			&instance().getSetting(section, key)->value());
+			&getGlobalConfig().getSetting(section, key)->value());
 	};
 
 	config.setInt = [](const char* section, const char* key, int32_t value) -> phBool32 {
-		Setting* setting = instance().getSetting(section, key);
+		Setting* setting = getGlobalConfig().getSetting(section, key);
 		if (setting == nullptr) return 0;
 		return Bool32(setting->setInt(value));
 	};
 	config.setFloat = [](const char* section, const char* key, float value) -> phBool32 {
-		Setting* setting = instance().getSetting(section, key);
+		Setting* setting = getGlobalConfig().getSetting(section, key);
 		if (setting == nullptr) return 0;
 		return Bool32(setting->setFloat(value));
 	};
 	config.setBool = [](const char* section, const char* key, phBool32 value) -> phBool32 {
-		Setting* setting = instance().getSetting(section, key);
+		Setting* setting = getGlobalConfig().getSetting(section, key);
 		if (setting == nullptr) return 0;
 		return Bool32(setting->setBool(Bool32(value)));
 	};
@@ -82,7 +78,7 @@ phConfig GlobalConfig::cInstance() noexcept
 		phBool32 writeToFile,
 		const phIntBounds* bounds) -> const phSettingValue* {
 
-		Setting* setting = instance().sanitizeInt(section, key, Bool32(writeToFile),
+		Setting* setting = getGlobalConfig().sanitizeInt(section, key, Bool32(writeToFile),
 			*reinterpret_cast<const IntBounds*>(bounds));
 		return reinterpret_cast<const phSettingValue*>(&setting->value());
 	};
@@ -92,7 +88,7 @@ phConfig GlobalConfig::cInstance() noexcept
 		phBool32 writeToFile,
 		const phFloatBounds* bounds) -> const phSettingValue* {
 
-		Setting* setting = instance().sanitizeFloat(section, key, Bool32(writeToFile),
+		Setting* setting = getGlobalConfig().sanitizeFloat(section, key, Bool32(writeToFile),
 			*reinterpret_cast<const FloatBounds*>(bounds));
 		return reinterpret_cast<const phSettingValue*>(&setting->value());
 	};
@@ -102,7 +98,7 @@ phConfig GlobalConfig::cInstance() noexcept
 		phBool32 writeToFile,
 		const phBoolBounds* bounds) -> const phSettingValue* {
 
-		Setting* setting = instance().sanitizeBool(section, key, Bool32(writeToFile),
+		Setting* setting = getGlobalConfig().sanitizeBool(section, key, Bool32(writeToFile),
 			*reinterpret_cast<const BoolBounds*>(bounds));
 		return reinterpret_cast<const phSettingValue*>(&setting->value());
 	};
@@ -504,6 +500,15 @@ Setting* GlobalConfig::sanitizeBool(
 GlobalConfig::~GlobalConfig() noexcept
 {
 	this->destroy();
+}
+
+// Statically owned global config
+// ------------------------------------------------------------------------------------------------
+
+GlobalConfig* getStaticGlobalConfigBoot() noexcept
+{
+	static GlobalConfig config;
+	return &config;
 }
 
 } // namespace ph

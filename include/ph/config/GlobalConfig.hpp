@@ -35,7 +35,9 @@ using sfz::DynArray;
 
 struct GlobalConfigImpl; // Pimpl pattern
 
-/// The global config singleton
+/// A global configuration class
+///
+/// The singleton instance should be acquired from the Phantasy Engine global context
 ///
 /// Setting invariants:
 /// 1, All settings are owned by the singleton instance, no one else may delete the memory.
@@ -51,12 +53,21 @@ struct GlobalConfigImpl; // Pimpl pattern
 /// Settings are expected to stay relatively static during the runtime of a program. They are not
 /// meant for communication and should not be changed unless the user specifically requests for
 /// them to be changed.
-class GlobalConfig final {
+class GlobalConfig {
 public:
-	// Singleton instance
+	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	static GlobalConfig& instance() noexcept;
+	inline GlobalConfig() noexcept : mImpl(nullptr) {} // Compile fix for Emscripten
+	GlobalConfig(const GlobalConfig&) = delete;
+	GlobalConfig& operator= (const GlobalConfig&) = delete;
+	GlobalConfig(GlobalConfig&&) = delete;
+	GlobalConfig& operator= (GlobalConfig&&) = delete;
+
+	~GlobalConfig() noexcept;
+
+	// Singleton instance
+	// --------------------------------------------------------------------------------------------
 
 	/// Returns a phConfig struct representation of the global config.
 	static phConfig cInstance() noexcept;
@@ -134,21 +145,17 @@ public:
 		bool defaultValue = false) noexcept;
 
 private:
-	// Private constructors & destructors
-	// --------------------------------------------------------------------------------------------
-
-	inline GlobalConfig() noexcept : mImpl(nullptr) {} // Compile fix for Emscripten
-	GlobalConfig(const GlobalConfig&) = delete;
-	GlobalConfig& operator= (const GlobalConfig&) = delete;
-	GlobalConfig(GlobalConfig&&) = delete;
-	GlobalConfig& operator= (GlobalConfig&&) = delete;
-
-	~GlobalConfig() noexcept;
-
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
 	GlobalConfigImpl* mImpl;
 };
+
+// Statically owned global config
+// ------------------------------------------------------------------------------------------------
+
+/// Statically owned global config. Default constructed. Only to be used for setContext() in
+/// PhantasyEngineMain.cpp during boot.
+GlobalConfig* getStaticGlobalConfigBoot() noexcept;
 
 } // namespace ph

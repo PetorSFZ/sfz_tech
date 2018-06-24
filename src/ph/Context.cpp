@@ -24,14 +24,14 @@ namespace ph {
 // Context getters/setters
 // ------------------------------------------------------------------------------------------------
 
-static Context* globalContextPtr = nullptr;
+static phContext* globalContextPtr = nullptr;
 
-Context* getContext() noexcept
+phContext* getContext() noexcept
 {
 	return globalContextPtr;
 }
 
-bool setContext(Context* context) noexcept
+bool setContext(phContext* context) noexcept
 {
 	if (globalContextPtr != nullptr) return false;
 	globalContextPtr = context;
@@ -41,9 +41,9 @@ bool setContext(Context* context) noexcept
 // Statically owned context
 // ------------------------------------------------------------------------------------------------
 
-Context* getStaticContext() noexcept
+phContext* getStaticContextBoot() noexcept
 {
-	static Context context;
+	static phContext context;
 	return &context;
 }
 

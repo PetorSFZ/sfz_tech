@@ -21,30 +21,41 @@
 
 #include "sfz/Context.hpp"
 
+// Forward declared member types
+// ------------------------------------------------------------------------------------------------
+
 namespace ph {
 
-class TerminalLogger; // Forward declaration
+class TerminalLogger;
+class GlobalConfig;
+
+} // namespace ph
 
 // PhantasyEngine Context struct
 // ------------------------------------------------------------------------------------------------
 
-struct Context final {
+struct phContext {
 	sfz::Context sfzContext;
-	TerminalLogger* logger = nullptr;
+	ph::TerminalLogger* logger = nullptr;
+	ph::GlobalConfig* config = nullptr;
 };
+
+namespace ph {
 
 // Context getters/setters
 // ------------------------------------------------------------------------------------------------
 
-Context* getContext() noexcept;
+phContext* getContext() noexcept;
 
-bool setContext(Context* context) noexcept;
+inline GlobalConfig& getGlobalConfig() noexcept { return *getContext()->config; }
+
+bool setContext(phContext* context) noexcept;
 
 // Statically owned context
 // ------------------------------------------------------------------------------------------------
 
 /// Statically owned context struct. Default constructed, members need to be set manually. Only to
 /// be used for setContext() in PhantasyEngineMain.cpp.
-Context* getStaticContext() noexcept;
+phContext* getStaticContextBoot() noexcept;
 
 } // namespace ph
