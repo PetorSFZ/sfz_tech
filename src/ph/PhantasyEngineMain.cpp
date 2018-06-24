@@ -67,10 +67,11 @@ static void setupContexts() noexcept
 	logger.init(256, allocator);
 
 	// Setup context
-	ph::Context* context = ph::getStaticContext();
+	phContext* context = ph::getStaticContextBoot();
 	context->sfzContext.defaultAllocator = allocator;
 	context->sfzContext.logger = &logger;
 	context->logger = &logger;
+	context->config = ph::getStaticGlobalConfigBoot();
 
 	// Set Phantasy Engine context
 	ph::setContext(context);
@@ -146,7 +147,7 @@ int mainImpl(int, char*[], InitOptions&& options)
 #endif
 
 	// Load global settings
-	GlobalConfig& cfg = GlobalConfig::instance();
+	GlobalConfig& cfg = ph::getGlobalConfig();
 	{
 		// Init config with ini location
 		if (options.iniLocation == IniLocation::NEXT_TO_EXECUTABLE) {
@@ -240,7 +241,7 @@ int mainImpl(int, char*[], InitOptions&& options)
 		[]() {
 			// Store global settings
 			SFZ_INFO("PhantasyEngine", "Saving global config to file");
-			GlobalConfig& cfg = GlobalConfig::instance();
+			GlobalConfig& cfg = ph::getGlobalConfig();
 			if (!cfg.save()) {
 				SFZ_WARNING("PhantasyEngine", "Failed to write ini file");
 			}

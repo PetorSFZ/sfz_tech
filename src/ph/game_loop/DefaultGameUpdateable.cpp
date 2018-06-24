@@ -188,7 +188,7 @@ public:
 		mInitialized = true;
 
 		// Pick out console settings
-		GlobalConfig& cfg = GlobalConfig::instance();
+		GlobalConfig& cfg = getGlobalConfig();
 		mConsoleActiveSetting = cfg.sanitizeBool("Console", "active", false, BoolBounds(false));
 		mConsoleActive = mConsoleActiveSetting->boolValue();
 		mConsoleAlwaysShowPerformance =
@@ -352,7 +352,7 @@ private:
 		str256 tmpStr;
 
 		// Get Global Config sections
-		GlobalConfig& cfg = GlobalConfig::instance();
+		GlobalConfig& cfg = getGlobalConfig();
 		mCfgSections.clear();
 		cfg.getSections(mCfgSections);
 

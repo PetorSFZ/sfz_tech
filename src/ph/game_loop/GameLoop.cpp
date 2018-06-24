@@ -31,6 +31,7 @@
 #include <sfz/Logging.hpp>
 #include <sfz/containers/DynArray.hpp>
 
+#include "ph/Context.hpp"
 #include "ph/config/GlobalConfig.hpp"
 
 namespace ph {
@@ -343,7 +344,7 @@ void runGameLoop(
 	gameLoopState.updateable->initialize(*gameLoopState.renderer);
 
 	// Get settings
-	GlobalConfig& cfg = GlobalConfig::instance();
+	GlobalConfig& cfg = getGlobalConfig();
 	gameLoopState.windowWidth = cfg.getSetting("Window", "width");
 	sfz_assert_debug(gameLoopState.windowWidth != nullptr);
 	gameLoopState.windowHeight = cfg.getSetting("Window", "height");
