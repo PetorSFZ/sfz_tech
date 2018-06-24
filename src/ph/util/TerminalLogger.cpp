@@ -25,15 +25,6 @@
 
 namespace ph {
 
-// Singleton instance
-// ------------------------------------------------------------------------------------------------
-
-TerminalLogger& TerminalLogger::instance() noexcept
-{
-	static TerminalLogger logger;
-	return logger;
-}
-
 // TerminalLogger: Methods
 // ------------------------------------------------------------------------------------------------
 
@@ -92,5 +83,14 @@ void TerminalLogger::log(
 	vsnprintf(item.message.str, item.message.maxSize(), format, args);
 	va_end(args);
 };
+
+// Statically owned logger
+// ------------------------------------------------------------------------------------------------
+
+TerminalLogger* getStaticTerminalLoggerForBoot() noexcept
+{
+	static TerminalLogger logger;
+	return &logger;
+}
 
 } // namespace ph

@@ -63,7 +63,7 @@ static void setupContexts() noexcept
 	sfz::Allocator* allocator = sfz::getStandardAllocator();
 
 	// Create terminal logger
-	ph::TerminalLogger& logger = ph::TerminalLogger::instance();
+	ph::TerminalLogger& logger = *ph::getStaticTerminalLoggerForBoot();
 	logger.init(256, allocator);
 
 	// Setup context

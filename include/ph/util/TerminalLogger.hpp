@@ -54,10 +54,14 @@ struct TerminalMessageItem final {
 
 class TerminalLogger final : public sfz::LoggingInterface {
 public:
-	// Singleton instance
+	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	static TerminalLogger& instance() noexcept;
+	TerminalLogger() noexcept = default;
+	TerminalLogger(const TerminalLogger&) = delete;
+	TerminalLogger& operator= (const TerminalLogger&) = delete;
+	TerminalLogger(TerminalLogger&&) = delete;
+	TerminalLogger& operator= (TerminalLogger&&) = delete;
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
@@ -84,19 +88,17 @@ public:
 		...) noexcept override final;
 
 private:
-	// Private constructors & destructors
-	// --------------------------------------------------------------------------------------------
-
-	TerminalLogger() noexcept = default;
-	TerminalLogger(const TerminalLogger&) = delete;
-	TerminalLogger& operator= (const TerminalLogger&) = delete;
-	TerminalLogger(TerminalLogger&&) = delete;
-	TerminalLogger& operator= (TerminalLogger&&) = delete;
-
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
 	RingBuffer<TerminalMessageItem> mMessages;
 };
+
+// Statically owned logger
+// ------------------------------------------------------------------------------------------------
+
+/// Statically owned TerminalLogger. Default constructed. Only to be used when creating the
+/// Phantasy Engine context at boot in PhantasyEngineMain.cpp.
+TerminalLogger* getStaticTerminalLoggerForBoot() noexcept;
 
 } // namespace ph
