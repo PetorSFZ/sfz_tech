@@ -41,6 +41,7 @@
 #include <sfz/memory/New.hpp>
 #include <sfz/strings/StackString.hpp>
 
+#include "ph/Context.hpp"
 #include "ph/config/GlobalConfig.hpp"
 
 #include "ph/RendererInterface.h"
@@ -328,9 +329,8 @@ bool Renderer::initRenderer(SDL_Window* window) noexcept
 		return true;
 	}
 
-	phConfig tmpConfig = GlobalConfig::cInstance();
 	uint32_t initSuccess = CALL_RENDERER_FUNCTION(mFunctionTable, phInitRenderer,
-		sfz::getContext(), window, mAllocator, &tmpConfig);
+		ph::getContext(), window, mAllocator);
 	if (initSuccess == 0) {
 		SFZ_ERROR("PhantasyEngine", "Renderer failed to initialize.");
 		return false;
