@@ -180,7 +180,7 @@ static void stupidSetMaterialUniform(
 extern "C" PH_DLL_EXPORT
 uint32_t phRendererInterfaceVersion(void)
 {
-	return 9;
+	return 10;
 }
 
 extern "C" PH_DLL_EXPORT
@@ -190,7 +190,7 @@ uint32_t phRequiredSDL2WindowFlags(void)
 }
 
 extern "C" PH_DLL_EXPORT
-uint32_t phInitRenderer(
+phBool32 phInitRenderer(
 	phContext* context,
 	SDL_Window* window,
 	void* allocator)
@@ -198,7 +198,7 @@ uint32_t phInitRenderer(
 	// Return if already initialized
 	if (statePtr != nullptr) {
 		SFZ_WARNING("Renderer-CompatibleGL", "Renderer already initialized, returning.");
-		return 1;
+		return Bool32(true);
 	}
 
 	// Set sfzCore context
@@ -219,34 +219,34 @@ uint32_t phInitRenderer(
 	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2) < 0) {
 		SFZ_ERROR("Renderer-CompatibleGL", "Failed to set GL context major version: %s",
 			SDL_GetError());
-		return 0;
+		return Bool32(false);
 	}
 	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES) < 0) {
 		SFZ_ERROR("Renderer-CompatibleGL", "Failed to set GL context profile: %s", SDL_GetError());
-		return 0;
+		return Bool32(false);
 	}
 #else
 	// Create OpenGL Context (OpenGL 3.3)
 	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3) < 0) {
 		SFZ_ERROR("Renderer-CompatibleGL", "Failed to set GL context major version: %s",
 			SDL_GetError());
-		return 0;
+		return Bool32(false);
 	}
 	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3) < 0) {
 		SFZ_ERROR("Renderer-CompatibleGL", "Failed to set GL context minor version: %s",
 			SDL_GetError());
-		return 0;
+		return Bool32(false);
 	}
 	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE) < 0) {
 		SFZ_ERROR("Renderer-CompatibleGL", "Failed to set GL context profile: %s", SDL_GetError());
-		return 0;
+		return Bool32(false);
 	}
 #endif
 
 	SDL_GLContext tmpContext = SDL_GL_CreateContext(window);
 	if (tmpContext == nullptr) {
 		SFZ_ERROR("Renderer-CompatibleGL", "Failed to create GL context: %s", SDL_GetError());
-		return 0;
+		return Bool32(false);
 	}
 
 	// Load GLEW on not emscripten
@@ -265,7 +265,7 @@ uint32_t phInitRenderer(
 		if (statePtr == nullptr) {
 			SFZ_ERROR("Renderer-CompatibleGL", "Failed to allocate memory for internal state.");
 			SDL_GL_DeleteContext(tmpContext);
-			return 0;
+			return Bool32(false);
 		}
 		statePtr->allocator = tmp;
 	}
@@ -321,7 +321,7 @@ uint32_t phInitRenderer(
 
 	CHECK_GL_ERROR();
 	SFZ_INFO("Renderer-CompatibleGL", "Finished initializing renderer");
-	return 1;
+	return Bool32(true);
 }
 
 extern "C" PH_DLL_EXPORT
@@ -433,15 +433,15 @@ uint32_t phAddTexture(const phConstImageView* texture)
 }
 
 extern "C" PH_DLL_EXPORT
-uint32_t phUpdateTexture(const phConstImageView* texture, uint32_t index)
+phBool32 phUpdateTexture(const phConstImageView* texture, uint32_t index)
 {
 	RendererState& state = *statePtr;
 
 	// Check if texture exists
-	if (state.textures.size() <= index) return 0;
+	if (state.textures.size() <= index) return Bool32(false);
 
 	state.textures[index] = Texture(*texture);
-	return 1;
+	return Bool32(true);
 }
 
 // Resource management (materials)
@@ -470,15 +470,15 @@ uint32_t phAddMaterial(const phMaterial* material)
 }
 
 extern "C" PH_DLL_EXPORT
-uint32_t phUpdateMaterial(const phMaterial* material, uint32_t index)
+phBool32 phUpdateMaterial(const phMaterial* material, uint32_t index)
 {
 	RendererState& state = *statePtr;
 
 	// Check if material exists
-	if (state.materials.size() <= index) return 0;
+	if (state.materials.size() <= index) return Bool32(false);
 
 	state.materials[index] = *material;
-	return 1;
+	return Bool32(true);
 }
 
 // Interface: Resource management (meshes)
@@ -509,15 +509,15 @@ uint32_t phAddDynamicMesh(const phConstMeshView* mesh)
 }
 
 extern "C" PH_DLL_EXPORT
-uint32_t phUpdateDynamicMesh(const phConstMeshView* mesh, uint32_t index)
+phBool32 phUpdateDynamicMesh(const phConstMeshView* mesh, uint32_t index)
 {
 	RendererState& state = *statePtr;
 
 	// Check if model exists
-	if (state.dynamicModels.size() <= index) return 0;
+	if (state.dynamicModels.size() <= index) return Bool32(false);
 
 	state.dynamicModels[index] = Model(*mesh, state.allocator);
-	return 1;
+	return Bool32(true);
 }
 
 // Interface: Render commands
