@@ -329,9 +329,9 @@ bool Renderer::initRenderer(SDL_Window* window) noexcept
 		return true;
 	}
 
-	uint32_t initSuccess = CALL_RENDERER_FUNCTION(mFunctionTable, phInitRenderer,
+	Bool32 initSuccess = CALL_RENDERER_FUNCTION(mFunctionTable, phInitRenderer,
 		ph::getContext(), window, mAllocator);
-	if (initSuccess == 0) {
+	if (!initSuccess) {
 		SFZ_ERROR("PhantasyEngine", "Renderer failed to initialize.");
 		return false;
 	}
@@ -382,7 +382,7 @@ uint32_t Renderer::addTexture(phConstImageView texture) noexcept
 
 bool Renderer::updateTexture(phConstImageView texture, uint32_t index) noexcept
 {
-	return CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateTexture, &texture, index) != 0;
+	return Bool32(CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateTexture, &texture, index));
 }
 
 // Renderer:: Resource management (materials)
@@ -400,7 +400,7 @@ uint32_t Renderer::addMaterial(const phMaterial& material) noexcept
 
 bool Renderer::updateMaterial(const phMaterial& material, uint32_t index) noexcept
 {
-	return CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateMaterial, &material, index) != 0;
+	return Bool32(CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateMaterial, &material, index));
 }
 
 // Renderer: Resource management (meshes)
@@ -425,7 +425,7 @@ uint32_t Renderer::addDynamicMesh(const phConstMeshView& mesh) noexcept
 
 bool Renderer::updateDynamicMesh(const phConstMeshView& mesh, uint32_t index) noexcept
 {
-	return CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateDynamicMesh, &mesh, index) != 0;
+	return Bool32(CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateDynamicMesh, &mesh, index));
 }
 
 // Renderer: Render commands
