@@ -45,8 +45,12 @@ set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(PH_SHARED_INTERFACE_HEADER_FILES
 	${INCLUDE_DIR}/ph/Bool32.h
 	${INCLUDE_DIR}/ph/ConfigInterface.h
+	${INCLUDE_DIR}/ph/Context.hpp
 	${INCLUDE_DIR}/ph/ExternC.h
 	${INCLUDE_DIR}/ph/RendererInterface.h
+
+	${INCLUDE_DIR}/ph/config/GlobalConfig.hpp
+	${INCLUDE_DIR}/ph/config/Setting.hpp
 
 	${INCLUDE_DIR}/ph/rendering/CameraData.hpp
 	${INCLUDE_DIR}/ph/rendering/ImageView.hpp
@@ -61,6 +65,9 @@ source_group(TREE ${INCLUDE_DIR} FILES ${PH_SHARED_INTERFACE_HEADER_FILES})
 
 set(PH_SHARED_INTERFACE_SOURCE_FILES
 	${SRC_DIR}/ph/Context.cpp
+
+	${SRC_DIR}/ph/config/GlobalConfig.cpp
+	${SRC_DIR}/ph/config/Setting.cpp
 )
 source_group(TREE ${SRC_DIR} FILES ${PH_SHARED_INTERFACE_SOURCE_FILES})
 
