@@ -21,12 +21,11 @@
 
 #include <cstdint>
 
-#include "ph/ConfigInterface.h"
-
 // Forward declarations
 // ------------------------------------------------------------------------------------------------
 
 struct SDL_Window;
+struct phContext;
 struct phCameraData;
 struct phImageView;
 struct phConstImageView;
@@ -53,7 +52,7 @@ struct phSphereLight;
 // Interface version
 // ------------------------------------------------------------------------------------------------
 
-const uint32_t PH_RENDERER_INTERFACE_VERSION = 8;
+const uint32_t PH_RENDERER_INTERFACE_VERSION = 9;
 
 // Init functions
 // ------------------------------------------------------------------------------------------------
@@ -80,18 +79,15 @@ uint32_t phRequiredSDL2WindowFlags(void);
 /// previously been deinitialized it should be initialized to the same state as if it had not been
 /// initialized earlier.
 /// \param window the SDL_Window to render to
-/// \param sfzCoreContext the sfzCore context, see "sfz/Context.hpp"
+/// \param context the PhantasyEngine context, see "ph/Context.hpp"
 /// \param allocator the sfz::Allocator used to allocate all cpu memory used
-/// \param config the phConfig used for configuring the renderer. Temporary pointer, make a copy.
-/// \param logger the phLogger used to print debug information. Temporary pointer, make a copy.
 /// \return 0 if renderer is NOT initialized, i.e. if something went very wrong. If the renderer
 ///           has been previously initialized this value will still be a non-zero value.
 extern "C" PH_DLL_EXPORT
 uint32_t phInitRenderer(
-	void* sfzCoreContext,
+	phContext* context,
 	SDL_Window* window,
-	void* allocator,
-	phConfig* config);
+	void* allocator);
 
 /// Deinitializes this renderer. This function should by design be completely safe to call multiple
 /// times in a row, including before the renderer has been initialized at all. Should also be safe

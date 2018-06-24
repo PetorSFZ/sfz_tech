@@ -45,67 +45,6 @@ struct GlobalConfigImpl final {
 	bool loaded = false; // Can only be loaded once... for now
 };
 
-// GlobalConfig: Singleton instance
-// ------------------------------------------------------------------------------------------------
-
-phConfig GlobalConfig::cInstance() noexcept
-{
-	phConfig config;
-
-	config.getSetting = [](const char* section, const char* key) -> const phSettingValue* {
-		return reinterpret_cast<const phSettingValue*>(
-			&getGlobalConfig().getSetting(section, key)->value());
-	};
-
-	config.setInt = [](const char* section, const char* key, int32_t value) -> phBool32 {
-		Setting* setting = getGlobalConfig().getSetting(section, key);
-		if (setting == nullptr) return 0;
-		return Bool32(setting->setInt(value));
-	};
-	config.setFloat = [](const char* section, const char* key, float value) -> phBool32 {
-		Setting* setting = getGlobalConfig().getSetting(section, key);
-		if (setting == nullptr) return 0;
-		return Bool32(setting->setFloat(value));
-	};
-	config.setBool = [](const char* section, const char* key, phBool32 value) -> phBool32 {
-		Setting* setting = getGlobalConfig().getSetting(section, key);
-		if (setting == nullptr) return 0;
-		return Bool32(setting->setBool(Bool32(value)));
-	};
-
-	config.sanitizeInt = [](
-		const char* section, const char* key,
-		phBool32 writeToFile,
-		const phIntBounds* bounds) -> const phSettingValue* {
-
-		Setting* setting = getGlobalConfig().sanitizeInt(section, key, Bool32(writeToFile),
-			*reinterpret_cast<const IntBounds*>(bounds));
-		return reinterpret_cast<const phSettingValue*>(&setting->value());
-	};
-
-	config.sanitizeFloat = [](
-		const char* section, const char* key,
-		phBool32 writeToFile,
-		const phFloatBounds* bounds) -> const phSettingValue* {
-
-		Setting* setting = getGlobalConfig().sanitizeFloat(section, key, Bool32(writeToFile),
-			*reinterpret_cast<const FloatBounds*>(bounds));
-		return reinterpret_cast<const phSettingValue*>(&setting->value());
-	};
-
-	config.sanitizeBool = [](
-		const char* section, const char* key,
-		phBool32 writeToFile,
-		const phBoolBounds* bounds) -> const phSettingValue* {
-
-		Setting* setting = getGlobalConfig().sanitizeBool(section, key, Bool32(writeToFile),
-			*reinterpret_cast<const BoolBounds*>(bounds));
-		return reinterpret_cast<const phSettingValue*>(&setting->value());
-	};
-
-	return config;
-}
-
 // GlobalConfig: Methods
 // ------------------------------------------------------------------------------------------------
 

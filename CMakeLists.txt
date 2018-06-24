@@ -44,7 +44,6 @@ set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set(PH_SHARED_INTERFACE_HEADER_FILES
 	${INCLUDE_DIR}/ph/Bool32.h
-	${INCLUDE_DIR}/ph/ConfigInterface.h
 	${INCLUDE_DIR}/ph/Context.hpp
 	${INCLUDE_DIR}/ph/ExternC.h
 	${INCLUDE_DIR}/ph/RendererInterface.h

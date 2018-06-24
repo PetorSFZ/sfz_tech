@@ -20,15 +20,180 @@
 #pragma once
 
 #include <cstdint>
+#include <cfloat>
 
 #include <sfz/strings/StackString.hpp>
-
-#include "ph/ConfigInterface.h"
 
 namespace ph {
 
 using sfz::StackString32;
 using sfz::StackString48;
+
+// Value type enum
+// ------------------------------------------------------------------------------------------------
+
+enum class ValueType : uint32_t {
+	INT = 0,
+	FLOAT = 1,
+	BOOL = 2,
+};
+
+// Bounds structs
+// ------------------------------------------------------------------------------------------------
+
+struct IntBounds final {
+	int32_t defaultValue;
+	int32_t minValue;
+	int32_t maxValue;
+	int32_t step;
+
+	IntBounds() noexcept = default;
+	explicit IntBounds(
+		int32_t defaultValue,
+		int32_t minValue = INT32_MIN,
+		int32_t maxValue = INT32_MAX,
+		int32_t step = 1) noexcept
+	:
+		defaultValue(defaultValue),
+		minValue(minValue),
+		maxValue(maxValue),
+		step(step)
+	{ }
+};
+
+struct FloatBounds final {
+	float defaultValue;
+	float minValue;
+	float maxValue;
+
+	FloatBounds() noexcept = default;
+	explicit FloatBounds(
+		float defaultValue,
+		float minValue = -FLT_MAX,
+		float maxValue = FLT_MAX) noexcept
+	:
+		defaultValue(defaultValue),
+		minValue(minValue),
+		maxValue(maxValue)
+	{ }
+};
+
+struct BoolBounds final {
+	bool defaultValue;
+
+	BoolBounds() noexcept = default;
+	explicit BoolBounds(bool defaultValue) noexcept : defaultValue(defaultValue) { }
+};
+
+// C++ Value structs
+// ------------------------------------------------------------------------------------------------
+
+struct IntValue final {
+	int32_t value;
+	IntBounds bounds;
+
+	IntValue() noexcept = default;
+	explicit IntValue(int32_t value, const IntBounds& bounds = IntBounds(0)) noexcept
+	:
+		value(value),
+		bounds(bounds)
+	{ }
+};
+
+struct FloatValue final {
+	float value;
+	FloatBounds bounds;
+
+	FloatValue() noexcept = default;
+	explicit FloatValue(float value, const FloatBounds& bounds = FloatBounds(0.0f)) noexcept
+	:
+		value(value),
+		bounds(bounds)
+	{ }
+};
+
+struct BoolValue final {
+	bool value;
+	BoolBounds bounds;
+
+	BoolValue() noexcept = default;
+	explicit BoolValue(bool value, const BoolBounds& bounds = BoolBounds(false)) noexcept
+	:
+		value(value),
+		bounds(bounds)
+	{ }
+};
+
+// Setting value struct
+// ------------------------------------------------------------------------------------------------
+
+struct SettingValue final {
+	ValueType type;
+	bool writeToFile;
+	union {
+		IntValue i;
+		FloatValue f;
+		BoolValue b;
+	};
+
+	SettingValue() noexcept = default;
+	SettingValue(const SettingValue&) noexcept = default;
+	SettingValue& operator= (const SettingValue&) noexcept = default;
+
+	static SettingValue createInt(
+		int32_t value = 0,
+		bool writeToFile = true,
+		const IntBounds& bounds = IntBounds(0));
+
+	static SettingValue createFloat(
+		float value = 0.0f,
+		bool writeToFile = true,
+		const FloatBounds& bounds = FloatBounds(0.0f));
+
+	static SettingValue createBool(
+		bool value = false,
+		bool writeToFile = true,
+		const BoolBounds& bounds = BoolBounds(false));
+};
+
+inline SettingValue SettingValue::createInt(
+	int32_t value,
+	bool writeToFile,
+	const IntBounds& bounds)
+{
+	SettingValue setting;
+	setting.type = ValueType::INT;
+	setting.writeToFile = writeToFile;
+	setting.i.value = value;
+	setting.i.bounds = bounds;
+	return setting;
+}
+
+inline SettingValue SettingValue::createFloat(
+	float value,
+	bool writeToFile,
+	const FloatBounds& bounds)
+{
+	SettingValue setting;
+	setting.type = ValueType::FLOAT;
+	setting.writeToFile = writeToFile;
+	setting.f.value = value;
+	setting.f.bounds = bounds;
+	return setting;
+}
+
+inline SettingValue SettingValue::createBool(
+	bool value,
+	bool writeToFile,
+	const BoolBounds& bounds)
+{
+	SettingValue setting;
+	setting.type = ValueType::BOOL;
+	setting.writeToFile = writeToFile;
+	setting.b.value = value;
+	setting.b.bounds = bounds;
+	return setting;
+}
 
 // Setting class
 // ------------------------------------------------------------------------------------------------

@@ -22,7 +22,6 @@
 #include <sfz/containers/DynArray.hpp>
 #include <sfz/memory/Allocator.hpp>
 
-#include "ph/ConfigInterface.h"
 #include "ph/config/Setting.hpp"
 
 namespace ph {
@@ -65,12 +64,6 @@ public:
 	GlobalConfig& operator= (GlobalConfig&&) = delete;
 
 	~GlobalConfig() noexcept;
-
-	// Singleton instance
-	// --------------------------------------------------------------------------------------------
-
-	/// Returns a phConfig struct representation of the global config.
-	static phConfig cInstance() noexcept;
 
 	// Methods
 	// --------------------------------------------------------------------------------------------

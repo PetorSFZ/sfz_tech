@@ -112,7 +112,7 @@ bool Setting::setBool(bool value) noexcept
 
 void Setting::setWriteToFile(bool writeToFile) noexcept
 {
-	mValue.writeToFile = Bool32(writeToFile);
+	mValue.writeToFile = writeToFile;
 }
 
 bool Setting::create(const SettingValue& value) noexcept
