@@ -45,6 +45,7 @@
 #include "ph/config/GlobalConfig.hpp"
 
 #include "ph/RendererInterface.h"
+#include "ph/rendering/StaticSceneView.hpp"
 
 namespace ph {
 
@@ -84,8 +85,13 @@ extern "C" {
 		decltype(phAddDynamicMesh)* phAddDynamicMesh;
 		decltype(phUpdateDynamicMesh)* phUpdateDynamicMesh;
 
+		// Resource management (static scene)
+		decltype(phSetStaticScene)* phSetStaticScene;
+		decltype(phRemoveStaticScene)* phRemoveStaticScene;
+
 		// Render commands
 		decltype(phBeginFrame)* phBeginFrame;
+		decltype(phRenderStaticScene)* phRenderStaticScene;
 		decltype(phRender)* phRender;
 		decltype(phRenderImgui)* phRenderImgui;
 		decltype(phFinishFrame)* phFinishFrame;
@@ -258,8 +264,13 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phAddDynamicMesh);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phUpdateDynamicMesh);
 
+	// Resource management (static scene)
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phSetStaticScene);
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRemoveStaticScene);
+
 	// Render commands
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phBeginFrame);
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRenderStaticScene);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRender);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phRenderImgui);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phFinishFrame);
@@ -428,6 +439,40 @@ bool Renderer::updateDynamicMesh(const phConstMeshView& mesh, uint32_t index) no
 	return Bool32(CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateDynamicMesh, &mesh, index));
 }
 
+// Renderer: Resource management (static scene)
+// ------------------------------------------------------------------------------------------------
+
+void Renderer::setStaticScene(const StaticScene& scene)
+{
+	// Create array of image views into static scene
+	DynArray<phConstImageView> imageViews(scene.textures.size(), mAllocator);
+	for (const Image& image : scene.textures) imageViews.add(image);
+
+	// Create array of mesh views into static scene
+	DynArray<phConstMeshView> meshViews(scene.meshes.size(), mAllocator);
+	for (const Mesh& mesh : scene.meshes) meshViews.add(mesh);
+
+	// Create static scene view
+	phStaticSceneView view;
+	view.textures = imageViews.data();
+	view.numTextures = imageViews.size();
+	view.materials = scene.materials.data();
+	view.numMaterials = scene.materials.size();
+	view.meshes = meshViews.data();
+	view.numMeshes = meshViews.size();
+	view.renderEntities = scene.renderEntities.data();
+	view.numRenderEntities = scene.renderEntities.size();
+	view.sphereLights = scene.sphereLights.data();
+	view.numSphereLights = scene.sphereLights.size();
+	
+	CALL_RENDERER_FUNCTION(mFunctionTable, phSetStaticScene, &view);
+}
+
+void Renderer::removeStaticScene()
+{
+	CALL_RENDERER_FUNCTION(mFunctionTable, phRemoveStaticScene);
+}
+
 // Renderer: Render commands
 // ------------------------------------------------------------------------------------------------
 
@@ -446,6 +491,11 @@ void Renderer::beginFrame(
 {
 	CALL_RENDERER_FUNCTION(mFunctionTable, phBeginFrame,
 		&camera, dynamicSphereLights.data(), dynamicSphereLights.size());
+}
+
+void Renderer::renderStaticScene() noexcept
+{
+	CALL_RENDERER_FUNCTION(mFunctionTable, phRenderStaticScene);
 }
 
 void Renderer::render(const phRenderEntity* entities, uint32_t numEntities) noexcept

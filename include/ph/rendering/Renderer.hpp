@@ -32,6 +32,9 @@
 #include <ph/rendering/MeshView.hpp>
 #include <ph/rendering/RenderEntity.hpp>
 #include <ph/rendering/SphereLight.hpp>
+#include <ph/rendering/StaticSceneView.hpp>
+
+#include "ph/rendering/StaticScene.hpp"
 
 extern "C" struct SDL_Window; // Forward declare SDL_Window
 
@@ -54,7 +57,7 @@ public:
 
 	/// The interface version supported by this wrapper. Only renderers which return the same
 	/// version with "phRendererInterfaceVersion()" are compatible.
-	static constexpr uint32_t INTERFACE_VERSION = 10;
+	static constexpr uint32_t INTERFACE_VERSION = 11;
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -143,6 +146,15 @@ public:
 	/// See phUpdateDynamicMesh()
 	bool updateDynamicMesh(const phConstMeshView& mesh, uint32_t index) noexcept;
 
+	// Renderer: Resource management (static scene)
+	// --------------------------------------------------------------------------------------------
+
+	// See phSetStaticScene()
+	void setStaticScene(const StaticScene& scene);
+
+	// See phRemoveStaticScene()
+	void removeStaticScene();
+
 	// Renderer: Render commands
 	// --------------------------------------------------------------------------------------------
 
@@ -156,6 +168,9 @@ public:
 	void beginFrame(
 		const phCameraData& camera,
 		const DynArray<phSphereLight>& dynamicSphereLights) noexcept;
+
+	// See phRenderStaticScene()
+	void renderStaticScene() noexcept;
 
 	/// See phRender()
 	void render(const phRenderEntity* entities, uint32_t numEntities) noexcept;
