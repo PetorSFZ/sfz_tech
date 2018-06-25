@@ -37,6 +37,7 @@ struct phMaterial;
 struct phConstMeshView;
 struct phRenderEntity;
 struct phSphereLight;
+struct phStaticSceneView;
 
 // Macros
 // ------------------------------------------------------------------------------------------------
@@ -54,7 +55,7 @@ struct phSphereLight;
 // Interface version
 // ------------------------------------------------------------------------------------------------
 
-const uint32_t PH_RENDERER_INTERFACE_VERSION = 10;
+const uint32_t PH_RENDERER_INTERFACE_VERSION = 11;
 
 // Init functions
 // ------------------------------------------------------------------------------------------------
@@ -207,6 +208,30 @@ uint32_t phAddDynamicMesh(const phConstMeshView* mesh);
 extern "C" PH_DLL_EXPORT
 phBool32 phUpdateDynamicMesh(const phConstMeshView* mesh, uint32_t index);
 
+// Resource management (static scene)
+// ------------------------------------------------------------------------------------------------
+
+/// A PhantasyEngine renderer may have a single static scene set. A static scene is a
+/// self-contained set of textures, meshes, materials and lights with no references to the dynamic
+/// resources. The renderer may perform all sorts of optimizations and pre-processing on the
+/// static scene, which may allow it to render it faster or in higher quality than the dynamic
+/// objects.
+///
+/// A slight word of warning, all indices (i.e. material indices, texture indices) refer to the
+/// arrays in the static scene, not the dynamic arrays. Therefore some care has to be taken to
+/// not confuse them.
+
+/// Sets the static scene in this renderer. Will remove any old static scenes previously set.
+/// This call may take a long as the renderer may process the data in various ways. As always,
+/// the renderer is required to copy any data it intends to use after the call is over.
+/// \param scene the static scene to add
+extern "C" PH_DLL_EXPORT
+void phSetStaticScene(const phStaticSceneView* scene);
+
+/// Removes any previous static scene set.
+extern "C" PH_DLL_EXPORT
+void phRemoveStaticScene(void);
+
 // Render commands
 // ------------------------------------------------------------------------------------------------
 
@@ -219,6 +244,10 @@ void phBeginFrame(
 	const phCameraData* camera,
 	const phSphereLight* dynamicSphereLights,
 	uint32_t numDynamicSphereLights);
+
+/// Renders the static scene.
+extern "C" PH_DLL_EXPORT
+void phRenderStaticScene(void);
 
 /// Renders numEntities entities. Can be called multiple times before the beginFrame() and
 /// finishFrame() calls.

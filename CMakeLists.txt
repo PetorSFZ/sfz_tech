@@ -57,6 +57,7 @@ set(PH_SHARED_INTERFACE_HEADER_FILES
 	${INCLUDE_DIR}/ph/rendering/MeshView.hpp
 	${INCLUDE_DIR}/ph/rendering/RenderEntity.hpp
 	${INCLUDE_DIR}/ph/rendering/SphereLight.hpp
+	${INCLUDE_DIR}/ph/rendering/StaticSceneView.hpp
 	${INCLUDE_DIR}/ph/rendering/Vertex.hpp
 )
 source_group(TREE ${INCLUDE_DIR} FILES ${PH_SHARED_INTERFACE_HEADER_FILES})
