@@ -47,6 +47,7 @@
 #include <ph/rendering/MeshView.hpp>
 #include <ph/rendering/RenderEntity.hpp>
 #include <ph/rendering/SphereLight.hpp>
+#include <ph/rendering/StaticSceneView.hpp>
 
 #include "ph/ImguiRendering.hpp"
 #include "ph/Model.hpp"
@@ -75,8 +76,8 @@ struct RendererState final {
 
 	// Resources
 	gl::FullscreenGeometry fullscreenGeom;
-	DynArray<Texture> textures;
-	DynArray<phMaterial> materials;
+	DynArray<Texture> dynamicTextures;
+	DynArray<phMaterial> dynamicMaterials;
 	DynArray<Model> dynamicModels;
 
 	// Window information
@@ -94,7 +95,7 @@ struct RendererState final {
 	mat4 viewMatrix = mat4::identity();
 	mat4 projMatrix = mat4::identity();
 
-	// Scene
+	// Dynamic Scene
 	DynArray<phSphereLight> dynamicSphereLights;
 
 	// Imgui
@@ -180,7 +181,7 @@ static void stupidSetMaterialUniform(
 extern "C" PH_DLL_EXPORT
 uint32_t phRendererInterfaceVersion(void)
 {
-	return 10;
+	return 11;
 }
 
 extern "C" PH_DLL_EXPORT
@@ -283,8 +284,8 @@ phBool32 phInitRenderer(
 	state.fullscreenGeom.create(gl::FullscreenGeometryType::OGL_CLIP_SPACE_RIGHT_HANDED_FRONT_FACE);
 
 	// Init resources arrays
-	state.textures.create(256, state.allocator);
-	state.materials.create(256, state.allocator);
+	state.dynamicTextures.create(256, state.allocator);
+	state.dynamicMaterials.create(256, state.allocator);
 	state.dynamicModels.create(128, state.allocator);
 
 	// Create Framebuffers
@@ -414,11 +415,11 @@ void phSetTextures(const phConstImageView* textures, uint32_t numTextures)
 	RendererState& state = *statePtr;
 
 	// Remove any previous textures
-	state.textures.clear();
+	state.dynamicTextures.clear();
 
 	// Create textures from all images and add them to state
 	for (uint32_t i = 0; i < numTextures; i++) {
-		state.textures.add(Texture(textures[i]));
+		state.dynamicTextures.add(Texture(textures[i]));
 	}
 }
 
@@ -427,8 +428,8 @@ uint32_t phAddTexture(const phConstImageView* texture)
 {
 	RendererState& state = *statePtr;
 
-	uint32_t index = state.textures.size();
-	state.textures.add(Texture(*texture));
+	uint32_t index = state.dynamicTextures.size();
+	state.dynamicTextures.add(Texture(*texture));
 	return index;
 }
 
@@ -438,9 +439,9 @@ phBool32 phUpdateTexture(const phConstImageView* texture, uint32_t index)
 	RendererState& state = *statePtr;
 
 	// Check if texture exists
-	if (state.textures.size() <= index) return Bool32(false);
+	if (state.dynamicTextures.size() <= index) return Bool32(false);
 
-	state.textures[index] = Texture(*texture);
+	state.dynamicTextures[index] = Texture(*texture);
 	return Bool32(true);
 }
 
@@ -453,10 +454,10 @@ void phSetMaterials(const phMaterial* materials, uint32_t numMaterials)
 	RendererState& state = *statePtr;
 
 	// Remove any previous materials
-	state.materials.clear();
+	state.dynamicMaterials.clear();
 
 	// Add materials to state
-	state.materials.add(materials, numMaterials);
+	state.dynamicMaterials.add(materials, numMaterials);
 }
 
 extern "C" PH_DLL_EXPORT
@@ -464,8 +465,8 @@ uint32_t phAddMaterial(const phMaterial* material)
 {
 	RendererState& state = *statePtr;
 
-	uint32_t index = state.materials.size();
-	state.materials.add(*material);
+	uint32_t index = state.dynamicMaterials.size();
+	state.dynamicMaterials.add(*material);
 	return index;
 }
 
@@ -475,9 +476,9 @@ phBool32 phUpdateMaterial(const phMaterial* material, uint32_t index)
 	RendererState& state = *statePtr;
 
 	// Check if material exists
-	if (state.materials.size() <= index) return Bool32(false);
+	if (state.dynamicMaterials.size() <= index) return Bool32(false);
 
-	state.materials[index] = *material;
+	state.dynamicMaterials[index] = *material;
 	return Bool32(true);
 }
 
@@ -518,6 +519,21 @@ phBool32 phUpdateDynamicMesh(const phConstMeshView* mesh, uint32_t index)
 
 	state.dynamicModels[index] = Model(*mesh, state.allocator);
 	return Bool32(true);
+}
+
+// Interface: Resource management (static scene)
+// ------------------------------------------------------------------------------------------------
+
+extern "C" PH_DLL_EXPORT
+void phSetStaticScene(const phStaticSceneView* scene)
+{
+
+}
+
+extern "C" PH_DLL_EXPORT
+void phRemoveStaticScene(void)
+{
+
 }
 
 // Interface: Render commands
@@ -573,22 +589,9 @@ void phBeginFrame(
 }
 
 extern "C" PH_DLL_EXPORT
-void phRenderImgui(
-	const phImguiVertex* vertices,
-	uint32_t numVertices,
-	const uint32_t* indices,
-	uint32_t numIndices,
-	const phImguiCommand* commands,
-	uint32_t numCommands)
+void phRenderStaticScene(void)
 {
-	RendererState& state = *statePtr;
 
-	// Clear and copy commands
-	state.imguiCommands.clear();
-	state.imguiCommands.add(commands, numCommands);
-
-	// Upload vertices and indices to GPU
-	state.imguiGlCmdList.upload(vertices, numVertices, indices, numIndices);
 }
 
 extern "C" PH_DLL_EXPORT
@@ -627,36 +630,55 @@ void phRender(const phRenderEntity* entities, uint32_t numEntities)
 
 			// Upload component's material to shader
 			uint32_t materialIndex = component.materialIndex();
-			const auto& material = state.materials[materialIndex];
+			const auto& material = state.dynamicMaterials[materialIndex];
 			stupidSetMaterialUniform(state.modelShader, "uMaterial", material);
 
 			// Bind materials textures
 			if (material.albedoTexIndex != uint16_t(~0)) {
 				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, state.textures[material.albedoTexIndex].handle());
+				glBindTexture(GL_TEXTURE_2D, state.dynamicTextures[material.albedoTexIndex].handle());
 			}
 			if (material.metallicRoughnessTexIndex != uint16_t(~0)) {
 				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D,
-					state.textures[material.metallicRoughnessTexIndex].handle());
+					state.dynamicTextures[material.metallicRoughnessTexIndex].handle());
 			}
 			if (material.normalTexIndex != uint16_t(~0)) {
 				glActiveTexture(GL_TEXTURE2);
-				glBindTexture(GL_TEXTURE_2D, state.textures[material.normalTexIndex].handle());
+				glBindTexture(GL_TEXTURE_2D, state.dynamicTextures[material.normalTexIndex].handle());
 			}
 			if (material.occlusionTexIndex != uint16_t(~0)) {
 				glActiveTexture(GL_TEXTURE3);
-				glBindTexture(GL_TEXTURE_2D, state.textures[material.occlusionTexIndex].handle());
+				glBindTexture(GL_TEXTURE_2D, state.dynamicTextures[material.occlusionTexIndex].handle());
 			}
 			if (material.emissiveTexIndex != uint16_t(~0)) {
 				glActiveTexture(GL_TEXTURE4);
-				glBindTexture(GL_TEXTURE_2D, state.textures[material.emissiveTexIndex].handle());
+				glBindTexture(GL_TEXTURE_2D, state.dynamicTextures[material.emissiveTexIndex].handle());
 			}
 
 			// Render component of mesh
 			component.render();
 		}
 	}
+}
+
+extern "C" PH_DLL_EXPORT
+void phRenderImgui(
+	const phImguiVertex* vertices,
+	uint32_t numVertices,
+	const uint32_t* indices,
+	uint32_t numIndices,
+	const phImguiCommand* commands,
+	uint32_t numCommands)
+{
+	RendererState& state = *statePtr;
+
+	// Clear and copy commands
+	state.imguiCommands.clear();
+	state.imguiCommands.add(commands, numCommands);
+
+	// Upload vertices and indices to GPU
+	state.imguiGlCmdList.upload(vertices, numVertices, indices, numIndices);
 }
 
 extern "C" PH_DLL_EXPORT
