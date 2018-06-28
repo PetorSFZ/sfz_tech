@@ -26,6 +26,7 @@ namespace ph {
 // Shaders constants
 // ------------------------------------------------------------------------------------------------
 
+const uint32_t MAX_NUM_STATIC_SPHERE_LIGHTS = 32;
 const uint32_t MAX_NUM_DYNAMIC_SPHERE_LIGHTS = 32;
 
 // Header

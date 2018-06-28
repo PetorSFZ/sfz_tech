@@ -74,11 +74,18 @@ struct RendererState final {
 	SDL_Window* window = nullptr;
 	SDL_GLContext glContext = nullptr;
 
-	// Resources
+	// Dynamic resources
 	gl::FullscreenGeometry fullscreenGeom;
 	DynArray<Texture> dynamicTextures;
 	DynArray<phMaterial> dynamicMaterials;
 	DynArray<Model> dynamicModels;
+
+	// Static resources
+	DynArray<Texture> staticTextures;
+	DynArray<phMaterial> staticMaterials;
+	DynArray<Model> staticModels;
+	DynArray<phRenderEntity> staticRenderEntities;
+	DynArray<phSphereLight> staticSphereLights;
 
 	// Window information
 	int32_t windowWidth, windowHeight;
@@ -283,10 +290,17 @@ phBool32 phInitRenderer(
 	// Create FullscreenGeometry
 	state.fullscreenGeom.create(gl::FullscreenGeometryType::OGL_CLIP_SPACE_RIGHT_HANDED_FRONT_FACE);
 
-	// Init resources arrays
+	// Init dynamic resource arrays
 	state.dynamicTextures.create(256, state.allocator);
 	state.dynamicMaterials.create(256, state.allocator);
 	state.dynamicModels.create(128, state.allocator);
+
+	// Init static resource arrays
+	state.staticTextures.create(256, state.allocator);
+	state.staticMaterials.create(256, state.allocator);
+	state.staticModels.create(512, state.allocator);
+	state.staticRenderEntities.create(1024, state.allocator);
+	state.staticSphereLights.create(128, state.allocator);
 
 	// Create Framebuffers
 	int w, h;
@@ -527,13 +541,41 @@ phBool32 phUpdateDynamicMesh(const phConstMeshView* mesh, uint32_t index)
 extern "C" PH_DLL_EXPORT
 void phSetStaticScene(const phStaticSceneView* scene)
 {
+	RendererState& state = *statePtr;
 
+	// Remove previous static scene
+	phRemoveStaticScene();
+
+	// Textures
+	for (uint32_t i = 0; i < scene->numTextures; i++) {
+		state.staticTextures.add(Texture(scene->textures[i]));
+	}
+
+	// Materials
+	state.staticMaterials.add(scene->materials, scene->numMaterials);
+
+	// Meshes
+	for (uint32_t i = 0; i < scene->numMeshes; i++) {
+		state.staticModels.add(Model(scene->meshes[i], state.allocator));
+	}
+	
+	// Render entities
+	state.staticRenderEntities.add(scene->renderEntities, scene->numRenderEntities);
+
+	// Sphere lights
+	state.staticSphereLights.add(scene->sphereLights,
+		min(scene->numSphereLights, MAX_NUM_STATIC_SPHERE_LIGHTS));
 }
 
 extern "C" PH_DLL_EXPORT
 void phRemoveStaticScene(void)
 {
-
+	RendererState& state = *statePtr;
+	state.staticTextures.clear();
+	state.staticMaterials.clear();
+	state.staticModels.clear();
+	state.staticRenderEntities.clear();
+	state.staticSphereLights.clear();
 }
 
 // Interface: Render commands
@@ -574,6 +616,14 @@ void phBeginFrame(
 
 	glDisable(GL_SCISSOR_TEST);
 
+	// Upload static sphere lights to shader
+	state.modelShader.useProgram();
+	gl::setUniform(state.modelShader, "uNumStaticSphereLights", int(state.staticSphereLights.size()));
+	for (uint32_t i = 0; i < state.staticSphereLights.size(); i++) {
+		stupidSetSphereLightUniform(state.modelShader, "uStaticSphereLights", i,
+			state.staticSphereLights[i], state.viewMatrix);
+	}
+
 	// Upload dynamic sphere lights to shader
 	state.modelShader.useProgram();
 	gl::setUniform(state.modelShader, "uNumDynamicSphereLights", int(state.dynamicSphereLights.size()));
@@ -591,7 +641,67 @@ void phBeginFrame(
 extern "C" PH_DLL_EXPORT
 void phRenderStaticScene(void)
 {
+	RendererState& state = *statePtr;
 
+	state.modelShader.useProgram();
+
+	const mat4& viewMatrix = state.viewMatrix;
+
+	gl::setUniform(state.modelShader, "uProjMatrix", state.projMatrix);
+	gl::setUniform(state.modelShader, "uViewMatrix", viewMatrix);
+	int modelMatrixLoc = glGetUniformLocation(state.modelShader.handle(), "uModelMatrix");
+	int normalMatrixLoc = glGetUniformLocation(state.modelShader.handle(), "uNormalMatrix");
+
+	gl::setUniform(state.modelShader, "uAlbedoTexture", 0);
+	gl::setUniform(state.modelShader, "uMetallicRoughnessTexture", 1);
+	gl::setUniform(state.modelShader, "uNormalTexture", 2);
+	gl::setUniform(state.modelShader, "uOcclusionTexture", 3);
+	gl::setUniform(state.modelShader, "uEmissiveTexture", 4);
+
+	for (const phRenderEntity& entity : state.staticRenderEntities) {
+		auto& model = state.staticModels[entity.meshIndex];
+
+		// Set model and normal matrices
+		gl::setUniform(modelMatrixLoc, mat4(entity.transform));
+		mat4 normalMatrix = inverse(transpose(viewMatrix * mat4(entity.transform)));
+		gl::setUniform(normalMatrixLoc, normalMatrix);
+
+		model.bindVAO();
+		auto& modelComponents = model.components();
+		for (auto& component : modelComponents) {
+
+			// Upload component's material to shader
+			uint32_t materialIndex = component.materialIndex();
+			const auto& material = state.staticMaterials[materialIndex];
+			stupidSetMaterialUniform(state.modelShader, "uMaterial", material);
+
+			// Bind materials textures
+			if (material.albedoTexIndex != uint16_t(~0)) {
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, state.staticTextures[material.albedoTexIndex].handle());
+			}
+			if (material.metallicRoughnessTexIndex != uint16_t(~0)) {
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D,
+					state.staticTextures[material.metallicRoughnessTexIndex].handle());
+			}
+			if (material.normalTexIndex != uint16_t(~0)) {
+				glActiveTexture(GL_TEXTURE2);
+				glBindTexture(GL_TEXTURE_2D, state.staticTextures[material.normalTexIndex].handle());
+			}
+			if (material.occlusionTexIndex != uint16_t(~0)) {
+				glActiveTexture(GL_TEXTURE3);
+				glBindTexture(GL_TEXTURE_2D, state.staticTextures[material.occlusionTexIndex].handle());
+			}
+			if (material.emissiveTexIndex != uint16_t(~0)) {
+				glActiveTexture(GL_TEXTURE4);
+				glBindTexture(GL_TEXTURE_2D, state.staticTextures[material.emissiveTexIndex].handle());
+			}
+
+			// Render component of mesh
+			component.render();
+		}
+	}
 }
 
 extern "C" PH_DLL_EXPORT
@@ -601,10 +711,9 @@ void phRender(const phRenderEntity* entities, uint32_t numEntities)
 
 	state.modelShader.useProgram();
 
-	const mat4& projMatrix = state.projMatrix;
 	const mat4& viewMatrix = state.viewMatrix;
 
-	gl::setUniform(state.modelShader, "uProjMatrix", projMatrix);
+	gl::setUniform(state.modelShader, "uProjMatrix", state.projMatrix);
 	gl::setUniform(state.modelShader, "uViewMatrix", viewMatrix);
 	int modelMatrixLoc = glGetUniformLocation(state.modelShader.handle(), "uModelMatrix");
 	int normalMatrixLoc = glGetUniformLocation(state.modelShader.handle(), "uNormalMatrix");

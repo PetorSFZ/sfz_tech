@@ -138,6 +138,11 @@ uniform sampler2D uNormalTexture;
 uniform sampler2D uOcclusionTexture;
 uniform sampler2D uEmissiveTexture;
 
+// Uniforms (static spherelights)
+const int MAX_NUM_STATIC_SPHERE_LIGHTS = 32;
+uniform SphereLight uStaticSphereLights[MAX_NUM_STATIC_SPHERE_LIGHTS];
+uniform int uNumStaticSphereLights;
+
 // Uniforms (dynamic spherelights)
 const int MAX_NUM_DYNAMIC_SPHERE_LIGHTS = 32;
 uniform SphereLight uDynamicSphereLights[MAX_NUM_DYNAMIC_SPHERE_LIGHTS];
@@ -256,13 +261,18 @@ void main()
 
 	vec3 totalOutput = emissive;
 
-	for (int i = 0; i < MAX_NUM_DYNAMIC_SPHERE_LIGHTS; i++) {
-
-		// Skip if we are out of light sources
-		if (i >= uNumDynamicSphereLights) break;
-
-		// Retrieve light source
-		SphereLight light = uDynamicSphereLights[i];
+	for (int i = 0; i < (MAX_NUM_STATIC_SPHERE_LIGHTS + MAX_NUM_DYNAMIC_SPHERE_LIGHTS); i++) {
+		
+		// Retrieve light source and potentially exit loop early
+		SphereLight light;
+		if (i < MAX_NUM_STATIC_SPHERE_LIGHTS) {
+			if (i >= uNumStaticSphereLights) continue;
+			light = uStaticSphereLights[i];
+		}
+		else {
+			if (i >= uNumDynamicSphereLights) break;
+			light = uDynamicSphereLights[i];
+		}
 
 		// Shading parameters
 		vec3 toLight = light.vsPos - p;
