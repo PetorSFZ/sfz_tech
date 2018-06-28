@@ -21,21 +21,17 @@
 
 #include <sfz/containers/DynArray.hpp>
 
-#include <ph/rendering/Material.hpp>
 #include <ph/rendering/RenderEntity.hpp>
 #include <ph/rendering/SphereLight.hpp>
 
-#include "ph/rendering/Image.hpp"
-#include "ph/rendering/Mesh.hpp"
+#include "ph/rendering/LevelAssets.hpp"
 
 namespace ph {
 
 using sfz::DynArray;
 
 struct StaticScene final {
-	DynArray<Image> textures;
-	DynArray<phMaterial> materials;
-	DynArray<Mesh> meshes;
+	LevelAssets assets;
 	DynArray<phRenderEntity> renderEntities;
 	DynArray<phSphereLight> sphereLights;
 };
