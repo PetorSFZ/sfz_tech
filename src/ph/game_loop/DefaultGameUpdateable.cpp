@@ -271,6 +271,8 @@ public:
 
 		renderer.beginFrame(mState.cam, mState.dynamicSphereLights);
 
+		renderer.renderStaticScene();
+
 		renderer.render(mState.renderEntities.data(), mState.renderEntities.size());
 
 		// Render Imgui
