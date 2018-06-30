@@ -262,7 +262,7 @@ void main()
 	vec3 totalOutput = emissive;
 
 	for (int i = 0; i < (MAX_NUM_STATIC_SPHERE_LIGHTS + MAX_NUM_DYNAMIC_SPHERE_LIGHTS); i++) {
-		
+
 		// Retrieve light source and potentially exit loop early
 		SphereLight light;
 		if (i < MAX_NUM_STATIC_SPHERE_LIGHTS) {
@@ -270,8 +270,9 @@ void main()
 			light = uStaticSphereLights[i];
 		}
 		else {
-			if (i >= uNumDynamicSphereLights) break;
-			light = uDynamicSphereLights[i];
+			int index = i - MAX_NUM_STATIC_SPHERE_LIGHTS;
+			if (index >= uNumDynamicSphereLights) break;
+			light = uDynamicSphereLights[index];
 		}
 
 		// Shading parameters
