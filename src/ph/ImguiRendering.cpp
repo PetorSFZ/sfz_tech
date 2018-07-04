@@ -25,70 +25,27 @@
 
 namespace ph {
 
-// Shader sources
+// Imgui rendering shader
 // ------------------------------------------------------------------------------------------------
 
-const char* IMGUI_VERTEX_SHADER_SRC = R"(
-
-// Input, output and uniforms
-// ------------------------------------------------------------------------------------------------
-
-// Input
-PH_VERTEX_IN vec2 inPos;
-PH_VERTEX_IN vec2 inTexcoord;
-PH_VERTEX_IN vec4 inColor;
-
-// Output
-PH_VERTEX_OUT vec2 texcoord;
-PH_VERTEX_OUT vec4 color;
-
-// Uniforms
-uniform mat4 uProjMatrix;
-
-// Main
-// ------------------------------------------------------------------------------------------------
-
-void main()
+Program compileImguiShader(Allocator* allocator) noexcept
 {
-	texcoord = inTexcoord;
-	color = inColor;
-	gl_Position = uProjMatrix * vec4(inPos, 0.0, 1.0);
-}
-
-)";
-
-const char* IMGUI_FRAGMENT_SHADER_SRC = R"(
-
-// Input, output and uniforms
-// ------------------------------------------------------------------------------------------------
-
-// Input
-PH_FRAGMENT_IN vec2 texcoord;
-PH_FRAGMENT_IN vec4 color;
-
-// Output
-#ifdef PH_DESKTOP_GL
-out vec4 fragOut;
-#endif
-
-// Uniforms
-uniform sampler2D uTexture;
-
-// Main
-// ------------------------------------------------------------------------------------------------
-
-void main()
-{
-	vec4 outTmp = color * PH_TEXREAD(uTexture, texcoord).x;
-
-#ifdef PH_WEB_GL
-	gl_FragColor = outTmp;
+	return Program::fromFile(
+		"res_compgl/shaders/",
+#ifdef __EMSCRIPTEN__
+		"header_emscripten.glsl",
 #else
-	fragOut = outTmp;
+		"header_desktop.glsl",
 #endif
+		"imgui.vert",
+		"imgui.frag",
+		[](uint32_t shaderProgram) {
+			glBindAttribLocation(shaderProgram, 0, "inPos");
+			glBindAttribLocation(shaderProgram, 1, "inTexcoord");
+			glBindAttribLocation(shaderProgram, 2, "inColor");
+		},
+		allocator);
 }
-
-)";
 
 // ImguiVertexData class
 // ------------------------------------------------------------------------------------------------

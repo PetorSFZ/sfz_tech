@@ -315,21 +315,8 @@ phBool32 phInitRenderer(
 		.build();
 
 	// Compile shaders
-	state.modelShader = gl::Program::fromSource(
-		SHADER_HEADER_SRC,
-		VERTEX_SHADER_SRC,
-		FRAGMENT_SHADER_SRC,
-		[](uint32_t shaderProgram) {
-			glBindAttribLocation(shaderProgram, 0, "inPos");
-			glBindAttribLocation(shaderProgram, 1, "inNormal");
-			glBindAttribLocation(shaderProgram, 2, "inTexcoord");
-		},
-		state.allocator);
-
-	state.copyOutShader = gl::Program::postProcessFromSource(
-		SHADER_HEADER_SRC,
-		COPY_OUT_SHADER_SRC,
-		state.allocator);
+	state.modelShader = compileForwardShadingShader(state.allocator);
+	state.copyOutShader = compileCopyOutShader(state.allocator);
 
 	// Initialize array to hold dynamic sphere lights
 	state.dynamicSphereLights.create(MAX_NUM_DYNAMIC_SPHERE_LIGHTS, state.allocator);
@@ -386,16 +373,7 @@ void phInitImgui(const phConstImageView* fontTexture)
 	state.imguiGlCmdList.create(4096, 4096);
 
 	// Compile Imgui shader
-	state.imguiShader = gl::Program::fromSource(
-		SHADER_HEADER_SRC,
-		IMGUI_VERTEX_SHADER_SRC,
-		IMGUI_FRAGMENT_SHADER_SRC,
-		[](uint32_t shaderProgram) {
-			glBindAttribLocation(shaderProgram, 0, "inPos");
-			glBindAttribLocation(shaderProgram, 1, "inTexcoord");
-			glBindAttribLocation(shaderProgram, 2, "inColor");
-		},
-		state.allocator);
+	state.imguiShader = compileImguiShader(state.allocator);
 
 	// Always read font texture from location 0
 	state.imguiShader.useProgram();
@@ -558,7 +536,7 @@ void phSetStaticScene(const phStaticSceneView* scene)
 	for (uint32_t i = 0; i < scene->numMeshes; i++) {
 		state.staticModels.add(Model(scene->meshes[i], state.allocator));
 	}
-	
+
 	// Render entities
 	state.staticRenderEntities.add(scene->renderEntities, scene->numRenderEntities);
 

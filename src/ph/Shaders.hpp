@@ -21,7 +21,12 @@
 
 #include <cstdint>
 
+#include <sfz/gl/Program.hpp>
+
 namespace ph {
+
+using sfz::Allocator;
+using sfz::gl::Program;
 
 // Shaders constants
 // ------------------------------------------------------------------------------------------------
@@ -29,21 +34,14 @@ namespace ph {
 const uint32_t MAX_NUM_STATIC_SPHERE_LIGHTS = 32;
 const uint32_t MAX_NUM_DYNAMIC_SPHERE_LIGHTS = 32;
 
-// Header
-// ------------------------------------------------------------------------------------------------
-
-extern const char* SHADER_HEADER_SRC;
-
 // Forward shading
 // ------------------------------------------------------------------------------------------------
 
-extern const char* VERTEX_SHADER_SRC;
-
-extern const char* FRAGMENT_SHADER_SRC;
+Program compileForwardShadingShader(Allocator* allocator) noexcept;
 
 // Copy out shader
 // ------------------------------------------------------------------------------------------------
 
-extern const char* COPY_OUT_SHADER_SRC;
+Program compileCopyOutShader(Allocator* allocator) noexcept;
 
 } // namespace ph

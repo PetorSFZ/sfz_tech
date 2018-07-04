@@ -21,16 +21,19 @@
 
 #include <cstdint>
 
+#include <sfz/gl/Program.hpp>
+
 #include <ph/rendering/ImguiRenderingData.hpp>
 
 namespace ph {
 
-// Shader sources
+using sfz::Allocator;
+using sfz::gl::Program;
+
+// Imgui rendering shader
 // ------------------------------------------------------------------------------------------------
 
-extern const char* IMGUI_VERTEX_SHADER_SRC;
-
-extern const char* IMGUI_FRAGMENT_SHADER_SRC;
+Program compileImguiShader(Allocator* allocator) noexcept;
 
 // ImguiVertexData class
 // ------------------------------------------------------------------------------------------------
