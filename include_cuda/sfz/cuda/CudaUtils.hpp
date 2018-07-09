@@ -18,33 +18,39 @@
 
 #pragma once
 
+#include <cuda.h>
 #include <cuda_runtime.h>
+#include <device_launch_parameters.h>
 
 #include "sfz/Assert.hpp"
 #include "sfz/Logging.hpp"
 #include "sfz/CudaCompatibility.hpp"
 
-// Macros
-// ------------------------------------------------------------------------------------------------
-
-/// Checks the error code of a CUDA API call, prints an error message using sfz::printErrorMessage()
-/// if not cudaSuccess.
-#define CHECK_CUDA_ERROR(error) (sfz::cuda::checkCudaError(__FILE__, __LINE__, error))
-
 namespace sfz {
 
 namespace cuda {
 
-// Error checking
+// Check CUDA Macro
 // ------------------------------------------------------------------------------------------------
 
-inline cudaError_t checkCudaError(const char* file, int line, cudaError_t error) noexcept
+#define CHECK_CUDA (sfz::cuda::CudaErrorChecker(__FILE__, __LINE__)) %
+
+struct CudaErrorChecker
 {
-	if (error == cudaSuccess) return error;
-	getLogger()->log(file, line, LogLevel::ERROR, "sfzCore", "CUDA error: %s\n",
-		cudaGetErrorString(error));
-	return error;
-}
+	const char* file;
+	int line;
+
+	CudaErrorChecker() = delete;
+	CudaErrorChecker(const char* file, int line) : file(file), line(line) {}
+
+	cudaError_t operator% (cudaError_t error)
+	{
+		if (error == cudaSuccess) return error;
+		getLogger()->log(file, line, LogLevel::ERROR_LVL, "sfzCore", "CUDA error: %s\n",
+			cudaGetErrorString(error));
+		return error;
+	}
+};
 
 } // namespace cuda
 } // namespace phe
