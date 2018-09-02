@@ -192,14 +192,14 @@ void Buffer<T>::create(uint32_t capacity) noexcept
 {
 	if (mCapacity != 0u) this->destroy();
 	uint64_t numBytes = capacity * sizeof(T);
-	CHECK_CUDA_ERROR(cudaMalloc(&mDataPtr, numBytes));
+	CHECK_CUDA cudaMalloc(&mDataPtr, numBytes);
 	mCapacity = capacity;
 }
 
 template<typename T>
 void Buffer<T>::destroy() noexcept
 {
-	CHECK_CUDA_ERROR(cudaFree(mDataPtr));
+	CHECK_CUDA cudaFree(mDataPtr);
 	mDataPtr = nullptr;
 	mCapacity = 0u;
 }
@@ -274,8 +274,8 @@ void Buffer<T>::copyTo(Buffer& dstBuffer, uint32_t dstLocation, uint32_t srcLoca
 {
 	sfz_assert_debug(dstBuffer.capacity() >= (dstLocation + numElements));
 	uint64_t numBytes = numElements * sizeof(T);
-	CHECK_CUDA_ERROR(cudaMemcpy(dstBuffer.mDataPtr + dstLocation, this->mDataPtr + srcLocation,
-	                 numBytes, cudaMemcpyDeviceToDevice));
+	CHECK_CUDA cudaMemcpy(dstBuffer.mDataPtr + dstLocation, this->mDataPtr + srcLocation,
+	                 numBytes, cudaMemcpyDeviceToDevice);
 }
 
 template<typename T>
