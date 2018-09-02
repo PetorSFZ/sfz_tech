@@ -216,7 +216,7 @@ void Buffer<T>::upload(const T* dataPtr, uint32_t dstLocation, uint32_t numEleme
 {
 	sfz_assert_debug((dstLocation + numElements) <= mCapacity);
 	uint64_t numBytes = numElements * sizeof(T);
-	CHECK_CUDA_ERROR(cudaMemcpy(mDataPtr + dstLocation, dataPtr, numBytes, cudaMemcpyHostToDevice));
+	CHECK_CUDA cudaMemcpy(mDataPtr + dstLocation, dataPtr, numBytes, cudaMemcpyHostToDevice);
 }
 
 template<typename T>
@@ -230,7 +230,7 @@ void Buffer<T>::download(T* dstPtr, uint32_t srcLocation, uint32_t numElements) 
 {
 	sfz_assert_debug((srcLocation + numElements) <= mCapacity);
 	uint64_t numBytes = numElements * sizeof(T);
-	CHECK_CUDA_ERROR(cudaMemcpy(dstPtr, mDataPtr + srcLocation, numBytes, cudaMemcpyDeviceToHost));
+	CHECK_CUDA cudaMemcpy(dstPtr, mDataPtr + srcLocation, numBytes, cudaMemcpyDeviceToHost);
 }
 
 template<typename T>
