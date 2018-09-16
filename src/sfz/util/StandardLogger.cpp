@@ -54,7 +54,7 @@ public:
 		const char* strippedFile = stripFilePath(file);
 
 		// Print log level, tag, file and line number.
-		printf("[%s] -- [%s] -- [%s:%i]: ", toString(level), tag, strippedFile, line);
+		printf("[%s] -- [%s] -- [%s:%i]:\n", toString(level), tag, strippedFile, line);
 
 		// Print message
 		va_list args;
