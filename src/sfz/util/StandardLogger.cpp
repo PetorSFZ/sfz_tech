@@ -63,7 +63,7 @@ public:
 		va_end(args);
 
 		// Print newline
-		printf("\n");
+		printf("\n\n");
 
 		// Flush stdout
 		fflush(stdout);
