@@ -131,7 +131,7 @@ bool IniParser::load() noexcept
 			}
 			Item comment;
 			comment.type = ItemType::COMMENT_OWN_ROW;
-			comment.str.insertChars(startPtr + 1, (size_t)std::min(uint32_t(191), line.length - 1));
+			comment.str.insertChars(startPtr + 1, std::min(uint32_t(191), line.length - 1));
 			newSections.last().items.add(comment);
 			continue;
 		}

@@ -46,11 +46,21 @@ In order to run locally in a browser you need to host the files. Recommend using
 
 ### macOS
 
-#### Xcode
+#### Xcode (macOS)
 
 As a pre-requisite __Xcode__ and __CMake__ need to be installed. CMake can easily be installed using __Homebrew__. Only the latest Xcode version available is actively tested, older versions are not guaranteed to work.
 
 In order to generate the Xcode project you only have to run `gen_xcode.sh` in the `gen_scripts` directory from a terminal.
+
+#### Xcode (iOS)
+
+The same pre-requisites as for a macOS build, but in addition [Polly](https://github.com/ruslo/polly) need to be installed. The following environment variables need to be set:
+
+~~~sh
+export POLLY_ROOT="<path to polly install>"
+export POLLY_IOS_DEVELOPMENT_TEAM="<Your Apple Developer Team ID>"
+export POLLY_IOS_BUNDLE_IDENTIFIER="<Your Apple Developer App ID>"
+~~~
 
 #### Emscripten (Web)
 
@@ -105,6 +115,10 @@ You can the simply link the library using the normal:
 target_include_directories(some_executable ${SFZ_CORE_INCLUDE_DIRS})
 target_link_libraries(some_executable ${SFZ_CORE_LIBRARIES})
 ~~~
+
+### iOS
+
+When compiling for iOS `SFZ_IOS` must be defined, otherwise you will get compile errors.
 
 ## Usage
 

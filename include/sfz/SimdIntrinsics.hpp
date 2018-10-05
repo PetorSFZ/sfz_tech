@@ -18,7 +18,7 @@
 
 #pragma once
 
-#ifndef __EMSCRIPTEN__
+#if !defined(__EMSCRIPTEN__) && !defined(SFZ_IOS)
 
 #include <immintrin.h> // Intel AVX intrinsics
 

@@ -32,6 +32,17 @@ if(NOT hasParent)
 		# /Od = "disables optimization, speeding compilation and simplifying debugging"
 		set(CMAKE_CXX_FLAGS_DEBUG "/Od /DEBUG")
 
+	elseif(IOS)
+		# iOS flags
+		# -Wall -Wextra = Enable most warnings
+		# -std=c++14 = Enable C++14 support
+		# -fno-strict-aliasing = Disable strict aliasing optimizations
+		# -DSFZ_IOS = Defines the "SFZ_IOS" macro
+		set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -fno-strict-aliasing -DSFZ_IOS")
+		set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
+		set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
+		set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+
 	elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
 		# macOS flags
 		# -Wall -Wextra = Enable most warnings
