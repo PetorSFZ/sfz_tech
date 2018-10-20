@@ -95,6 +95,27 @@ void TerminalLogger::log(
 	va_start(args, format);
 	vsnprintf(item.message.str, item.message.maxSize(), format, args);
 	va_end(args);
+
+	// Also log to terminal
+	// TODO: Make this into an option
+	bool printToTerminal = true;
+	if (printToTerminal) {
+
+		// Skip noise messages for now
+		// TODO: Setting for this as well
+		if (level == LogLevel::INFO_NOISY) return;
+
+		// Print log level, tag, file and line number.
+		printf("[%s] -- [%s] -- [%s:%i]:\n", toString(level), tag, strippedFile, line);
+
+		// Print message
+		printf("%s", item.message.str);
+		// Print newline
+		printf("\n\n");
+
+		// Flush stdout
+		fflush(stdout);
+	}
 };
 
 // Statically owned logger
