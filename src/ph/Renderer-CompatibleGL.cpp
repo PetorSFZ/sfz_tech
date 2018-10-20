@@ -257,6 +257,18 @@ phBool32 phInitRenderer(
 		return Bool32(false);
 	}
 
+	// SDL2 2.0.8 macOS Mojave hack
+#if defined(__APPLE__)
+	{
+		SFZ_INFO("Renderer-CompatibleGL", "Applying macOS Mojave SDL2 2.0.8 hack fix");
+		int windowWidth, windowHeight;
+		SDL_GetWindowSize(window, &windowWidth, &windowHeight);
+		SDL_PumpEvents();
+		SDL_SetWindowSize(window, windowWidth, windowHeight);
+	}
+#endif
+
+
 	// Load GLEW on not emscripten
 #ifndef __EMSCRIPTEN__
 	GLenum glewError = glewInit();
