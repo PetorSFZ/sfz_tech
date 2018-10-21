@@ -24,6 +24,7 @@
 #include <cstddef> // offsetof()
 
 #include <SDL.h>
+#include <SDL_syswm.h>
 
 #include <sfz/Context.hpp>
 #include <sfz/Logging.hpp>
@@ -73,6 +74,7 @@ struct RendererState final {
 	sfz::Allocator* allocator;
 	SDL_Window* window = nullptr;
 	SDL_GLContext glContext = nullptr;
+	SDL_SysWMinfo wmInfo = {};
 
 	// Dynamic resources
 	gl::FullscreenGeometry fullscreenGeom;
@@ -144,6 +146,17 @@ static void checkGLError(const char* file, int line) noexcept
 			SFZ_ERROR("Renderer-CompatibleGL", "%s:%i: GL_INVALID_FRAMEBUFFER_OPERATION", file, line);
 		}
 	}
+}
+
+static void bindDefaultFramebuffer() noexcept
+{
+#if defined(SFZ_IOS)
+	RendererState& state = *statePtr;
+	glBindFramebuffer(GL_FRAMEBUFFER, state.wmInfo.info.uikit.framebuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, state.wmInfo.info.uikit.colorbuffer);
+#else
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
 }
 
 static void stupidSetSphereLightUniform(
@@ -293,6 +306,12 @@ phBool32 phInitRenderer(
 	// Store input parameters to state
 	state.window = window;
 	state.glContext = tmpContext;
+
+	// Get window information
+	SDL_VERSION(&state.wmInfo.version);
+	if (!SDL_GetWindowWMInfo(state.window, &state.wmInfo)) {
+		SFZ_ERROR("Renderer-CompatibleGL", "Failed to SDL_GetWindowWMInfo()");
+	}
 
 	// Print information
 	SFZ_INFO("Renderer-CompatibleGL", "Vendor: %s\nVersion: %s\nRenderer: %s",
@@ -785,7 +804,7 @@ void phFinishFrame(void)
 	RendererState& state = *statePtr;
 
 	// Bind and clear output framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	bindDefaultFramebuffer();
 	glViewport(0, 0, state.fbWidth, state.fbHeight);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClearDepthf(1.0f);
