@@ -131,15 +131,18 @@ bool setSDLAllocator(sfz::Allocator* allocator) noexcept
 
 #else
 
-	// Allow 2 previous allocations on Windows, probably a bug
-#ifdef _WIN32
+	// Allow 2 previous allocations on Windows, 3 previous on iOS, probably a bug?
+#if defined(_WIN32)
 	const int MAX_NUM_SDL_ALLOCATIONS = 2;
+#elif defined(SFZ_IOS)
+	const int MAX_NUM_SDL_ALLOCATIONS = 3;
 #else
 	const int MAX_NUM_SDL_ALLOCATIONS = 0;
 #endif
 
 	// Don't switch allocators if SDL has already allocated memory.
-	if (SDL_GetNumAllocations() != MAX_NUM_SDL_ALLOCATIONS) {
+	int numPreviousAllocations = SDL_GetNumAllocations();
+	if (numPreviousAllocations != MAX_NUM_SDL_ALLOCATIONS) {
 		SFZ_ERROR("PhantasyEngine", "SDL has already allocated memory, exiting.");
 		return false;
 	}
