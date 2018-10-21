@@ -18,7 +18,7 @@ uniform sampler2D uTexture;
 
 void main()
 {
-	vec4 outTmp = color * PH_TEXREAD(uTexture, texcoord).x;
+	vec4 outTmp = vec4(color.rgb, color.a * PH_TEXREAD(uTexture, texcoord).x);
 
 #ifdef PH_WEB_GL
 	gl_FragColor = outTmp;
