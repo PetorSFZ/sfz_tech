@@ -32,7 +32,7 @@ Program compileImguiShader(Allocator* allocator) noexcept
 {
 	return Program::fromFile(
 		"res_compgl/shaders/",
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
 		"header_emscripten.glsl",
 #else
 		"header_desktop.glsl",

@@ -222,7 +222,7 @@ phBool32 phInitRenderer(
 	}
 
 	SFZ_INFO("Renderer-CompatibleGL", "Creating OpenGL context");
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
 	// Create OpenGL Context (OpenGL ES 2.0 == WebGL 1.0)
 	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2) < 0) {
 		SFZ_ERROR("Renderer-CompatibleGL", "Failed to set GL context major version: %s",
@@ -267,7 +267,6 @@ phBool32 phInitRenderer(
 		SDL_SetWindowSize(window, windowWidth, windowHeight);
 	}
 #endif
-
 
 	// Load GLEW on not emscripten
 #if !defined(__EMSCRIPTEN__) && !defined(SFZ_IOS)
@@ -319,7 +318,7 @@ phBool32 phInitRenderer(
 	SDL_GL_GetDrawableSize(window, &w, &h);
 	state.internalFB = gl::FramebufferBuilder(w, h)
 		.addTexture(0, gl::FBTextureFormat::RGBA_U8, gl::FBTextureFiltering::LINEAR)
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
 		.addDepthBuffer(gl::FBDepthFormat::F16)
 #else
 		.addDepthBuffer(gl::FBDepthFormat::F32)
@@ -798,6 +797,7 @@ void phFinishFrame(void)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, state.internalFB.textures[0]);
 	state.fullscreenGeom.render();
+	CHECK_GL_ERROR();
 
 
 	// Imgui Rendering
@@ -860,7 +860,17 @@ void phFinishFrame(void)
 	glDisable(GL_SCISSOR_TEST);
 
 
+
+	// Bind and clear output framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, state.fbWidth, state.fbHeight);
+	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+	glClearDepthf(1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
 	// Swap back and front buffers
+	CHECK_GL_ERROR();
 	SDL_GL_SwapWindow(state.window);
 	CHECK_GL_ERROR();
 }

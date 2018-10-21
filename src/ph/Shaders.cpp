@@ -30,7 +30,7 @@ namespace ph {
 
 Program compileForwardShadingShader(Allocator* allocator) noexcept
 {
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
 	sfz::DynString headerSource =
 		sfz::readTextFile("res_compgl/shaders/header_emscripten.glsl", allocator);
 #else
@@ -57,7 +57,7 @@ Program compileForwardShadingShader(Allocator* allocator) noexcept
 
 Program compileCopyOutShader(Allocator* allocator) noexcept
 {
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
 	sfz::DynString headerSource =
 		sfz::readTextFile("res_compgl/shaders/header_emscripten.glsl", allocator);
 #else
