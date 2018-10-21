@@ -56,7 +56,7 @@ void ImguiVertexData::create(uint32_t maxNumVertices, uint32_t maxNumIndices) no
 	mMaxNumIndices = maxNumIndices;
 
 	// Create vertex array object
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
 	glGenVertexArraysOES(1, &mVAO);
 	glBindVertexArrayOES(mVAO);
 #else
@@ -89,7 +89,7 @@ void ImguiVertexData::create(uint32_t maxNumVertices, uint32_t maxNumIndices) no
 
 	// Cleanup
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
 	glBindVertexArrayOES(0);
 #else
 	glBindVertexArray(0);
@@ -111,7 +111,7 @@ void ImguiVertexData::destroy() noexcept
 {
 	glDeleteBuffers(1, &mVertexBuffer);
 	glDeleteBuffers(1, &mIndexBuffer);
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
 	glDeleteVertexArraysOES(1, &mVAO);
 #else
 	glDeleteVertexArrays(1, &mVAO);
@@ -160,7 +160,7 @@ void ImguiVertexData::upload(
 
 void ImguiVertexData::bindVAO() noexcept
 {
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
 	glBindVertexArrayOES(mVAO);
 #else
 	glBindVertexArray(mVAO);

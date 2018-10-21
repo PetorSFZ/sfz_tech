@@ -75,7 +75,7 @@ void Model::create(const phConstMeshView& mesh, Allocator* allocator) noexcept
 	this->destroy();
 
 	// Vertex array object
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
 	glGenVertexArraysOES(1, &mVAO);
 	glBindVertexArrayOES(mVAO);
 #else
@@ -153,7 +153,7 @@ void Model::create(const phConstMeshView& mesh, Allocator* allocator) noexcept
 
 	// Cleanup
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
 	glBindVertexArrayOES(0);
 #else
 	glBindVertexArray(0);
@@ -172,7 +172,7 @@ void Model::destroy() noexcept
 	// Delete buffers
 	mComponents.destroy();
 	glDeleteBuffers(1, &mVertexBuffer);
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
 	glDeleteVertexArraysOES(1, &mVAO);
 #else
 	glDeleteVertexArrays(1, &mVAO);
@@ -188,7 +188,7 @@ void Model::destroy() noexcept
 
 void Model::bindVAO() noexcept
 {
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
 	glBindVertexArrayOES(mVAO);
 #else
 	glBindVertexArray(mVAO);

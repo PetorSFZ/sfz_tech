@@ -270,7 +270,7 @@ phBool32 phInitRenderer(
 
 
 	// Load GLEW on not emscripten
-#ifndef __EMSCRIPTEN__
+#if !defined(__EMSCRIPTEN__) && !defined(SFZ_IOS)
 	GLenum glewError = glewInit();
 	if (glewError != GLEW_OK) {
 		SFZ_ERROR("Renderer-CompatibleGL", "GLEW init failure: %s", glewGetErrorString(glewError));

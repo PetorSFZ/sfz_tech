@@ -83,6 +83,22 @@ target_link_libraries(Renderer-CompatibleGL
 	${PH_SHARED_INTERFACE_LIBRARIES}
 )
 
+# iOS specific stuff
+# ------------------------------------------------------------------------------------------------
+
+if (IOS)
+	target_link_libraries(Renderer-CompatibleGL "-framework AudioToolbox")
+	target_link_libraries(Renderer-CompatibleGL "-framework AVFoundation")
+	target_link_libraries(Renderer-CompatibleGL "-framework CoreGraphics")
+	target_link_libraries(Renderer-CompatibleGL "-framework CoreMotion")
+	target_link_libraries(Renderer-CompatibleGL "-framework Foundation")
+	target_link_libraries(Renderer-CompatibleGL "-framework GameController")
+	target_link_libraries(Renderer-CompatibleGL "-framework OpenGLES")
+	target_link_libraries(Renderer-CompatibleGL "-framework QuartzCore")
+	target_link_libraries(Renderer-CompatibleGL "-framework UIKit")
+	target_link_libraries(Renderer-CompatibleGL "-framework Metal")
+endif()
+
 # Output variables
 # ------------------------------------------------------------------------------------------------
 

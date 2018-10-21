@@ -39,7 +39,7 @@ void Texture::create(const phConstImageView& imageView, TextureFiltering filteri
 	glBindTexture(GL_TEXTURE_2D, mTextureHandle);
 
 	// Transfer data from raw image
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
 	switch (imageView.type) {
 	case ImageType::R_U8:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, imageView.width, imageView.height, 0,
