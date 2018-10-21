@@ -388,7 +388,7 @@ void phInitImgui(const phConstImageView* fontTexture)
 	state.imguiScaleSetting =  cfg.sanitizeFloat("Imgui", "scale",
 		true, FloatBounds(2.0f, 1.0f, 3.0f));
 	state.imguiFontLinearSetting = cfg.sanitizeBool("Imgui", "bilinearFontSampling",
-		true, BoolBounds(false));
+		true, BoolBounds(true));
 
 	TextureFiltering fontFiltering = state.imguiFontLinearSetting->boolValue() ?
 		TextureFiltering::BILINEAR : TextureFiltering::NEAREST;
