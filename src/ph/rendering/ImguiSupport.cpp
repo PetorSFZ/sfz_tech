@@ -85,6 +85,14 @@ phImageView initializeImgui(Allocator* allocator) noexcept
 	io.KeyMap[ImGuiKey_Y] = SDLK_y;
 	io.KeyMap[ImGuiKey_Z] = SDLK_z;
 
+	// Enable oversampling for the default font
+	ImFontConfig fontConfig;
+	fontConfig.OversampleH = 4;
+	fontConfig.OversampleV = 4;
+	fontConfig.GlyphExtraSpacing = vec2(1.0f);
+	io.Fonts->AddFontDefault(&fontConfig);
+
+	// Rasterize default font and return view
 	phImageView fontTexView;
 	io.Fonts->GetTexDataAsAlpha8(&fontTexView.rawData, &fontTexView.width, &fontTexView.height);
 	fontTexView.type = ImageType::R_U8;
