@@ -859,16 +859,6 @@ void phFinishFrame(void)
 	glScissor(lastScissorBox[0], lastScissorBox[1], lastScissorBox[2], lastScissorBox[3]);
 	glDisable(GL_SCISSOR_TEST);
 
-
-
-	// Bind and clear output framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(0, 0, state.fbWidth, state.fbHeight);
-	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-	glClearDepthf(1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
 	// Swap back and front buffers
 	CHECK_GL_ERROR();
 	SDL_GL_SwapWindow(state.window);
