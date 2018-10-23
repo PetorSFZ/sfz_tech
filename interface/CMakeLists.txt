@@ -17,22 +17,22 @@
 #    misrepresented as being the original software.
 # 3. This notice may not be removed or altered from any source distribution.
 
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
-project("PhantasyEngine-SharedInterface")
+cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
+project("PhantasyEngine-Interface")
 
 # Dependencies
 # ------------------------------------------------------------------------------------------------
 
 if (NOT SDL2_FOUND)
-	message(FATAL_ERROR "PhantasyEngine-SharedInterface requires SDL2. Add Dependency-SDL2.")
+	message(FATAL_ERROR "PhantasyEngine-Interface requires SDL2. Add Dependency-SDL2.")
 endif()
 
 if (NOT IMGUI_FOUND)
-	message(FATAL_ERROR "PhantasyEngine-SharedInterface requires dear imgui. Add Dependency-imgui.")
+	message(FATAL_ERROR "PhantasyEngine-Interface requires dear imgui. Add Dependency-imgui.")
 endif()
 
 if (NOT SFZ_CORE_FOUND)
-	message(FATAL_ERROR "PhantasyEngine-SharedInterface requires sfzCore.")
+	message(FATAL_ERROR "PhantasyEngine-Interface requires sfzCore.")
 endif()
 
 # PhantasyEngine-SharedInterface
@@ -42,7 +42,7 @@ endif()
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-set(PH_SHARED_INTERFACE_HEADER_FILES
+set(PH_INTERFACE_HEADER_FILES
 	${INCLUDE_DIR}/ph/Bool32.h
 	${INCLUDE_DIR}/ph/Context.hpp
 	${INCLUDE_DIR}/ph/RendererInterface.h
@@ -60,38 +60,38 @@ set(PH_SHARED_INTERFACE_HEADER_FILES
 	${INCLUDE_DIR}/ph/rendering/StaticSceneView.hpp
 	${INCLUDE_DIR}/ph/rendering/Vertex.hpp
 )
-source_group(TREE ${INCLUDE_DIR} FILES ${PH_SHARED_INTERFACE_HEADER_FILES})
+source_group(TREE ${INCLUDE_DIR} FILES ${PH_INTERFACE_HEADER_FILES})
 
-set(PH_SHARED_INTERFACE_SOURCE_FILES
+set(PH_INTERFACE_SOURCE_FILES
 	${SRC_DIR}/ph/Context.cpp
 
 	${SRC_DIR}/ph/config/GlobalConfig.cpp
 	${SRC_DIR}/ph/config/Setting.cpp
 )
-source_group(TREE ${SRC_DIR} FILES ${PH_SHARED_INTERFACE_SOURCE_FILES})
+source_group(TREE ${SRC_DIR} FILES ${PH_INTERFACE_SOURCE_FILES})
 
 add_library(
-	PhantasyEngine-SharedInterface
+	PhantasyEngine-Interface
 
-	${PH_SHARED_INTERFACE_HEADER_FILES}
-	${PH_SHARED_INTERFACE_SOURCE_FILES}
+	${PH_INTERFACE_HEADER_FILES}
+	${PH_INTERFACE_SOURCE_FILES}
 )
 
 target_include_directories(
-	PhantasyEngine-SharedInterface
+	PhantasyEngine-Interface
 	PUBLIC
 	${INCLUDE_DIR}
 	${SFZ_CORE_INCLUDE_DIRS}
 )
 
 target_link_libraries(
-	PhantasyEngine-SharedInterface
+	PhantasyEngine-Interface
 	${SFZ_CORE_LIBRARIES}
 )
 
 # Output variables
 # ------------------------------------------------------------------------------------------------
 
-set(PH_SHARED_INTERFACE_FOUND true PARENT_SCOPE)
-set(PH_SHARED_INTERFACE_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
-set(PH_SHARED_INTERFACE_LIBRARIES PhantasyEngine-SharedInterface PARENT_SCOPE)
+set(PH_INTERFACE_FOUND true PARENT_SCOPE)
+set(PH_INTERFACE_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
+set(PH_INTERFACE_LIBRARIES PhantasyEngine-Interface PARENT_SCOPE)

@@ -22,6 +22,12 @@
 
 # PH_CUDA_SUPPORT: Will build with CUDA support if defined
 
+# Variables
+# ------------------------------------------------------------------------------------------------
+
+# The root of the PhantasyEngine used
+set(PH_ROOT ${CMAKE_CURRENT_LIST_DIR})
+
 # Compiler flag functions
 # ------------------------------------------------------------------------------------------------
 
@@ -145,4 +151,33 @@ function(phPrintCompilerFlags)
 		message("  -- CMAKE_CUDA_FLAGS_RELWITHDEBINFO: " ${CMAKE_CUDA_FLAGS_RELWITHDEBINFO})
 		message("  -- CMAKE_CUDA_FLAGS_RELEASE: " ${CMAKE_CUDA_FLAGS_RELEASE})
 	endif()
+endfunction()
+
+# 3rd-party dependencies
+# ------------------------------------------------------------------------------------------------
+
+# PhantasyEngine targets
+# ------------------------------------------------------------------------------------------------
+
+function(phAddPhantasyEngineTargets)
+	message("-- [PhantasyEngine]: Adding PhantasyEngine targets (engine and interface)")
+
+	# Adding interface
+	add_subdirectory(
+		${PH_ROOT}/interface
+		${CMAKE_BINARY_DIR}/PhantasyEngine-interface
+	)
+	set(PHANTASY_ENGINE_FOUND ${PHANTASY_ENGINE_FOUND} PARENT_SCOPE)
+	set(PHANTASY_ENGINE_INCLUDE_DIRS ${PHANTASY_ENGINE_INCLUDE_DIRS} PARENT_SCOPE)
+	set(PHANTASY_ENGINE_LIBRARIES ${PHANTASY_ENGINE_LIBRARIES} PARENT_SCOPE)
+
+	# Adding engine
+	add_subdirectory(
+		${PH_ROOT}/engine
+		${CMAKE_BINARY_DIR}/PhantasyEngine-engine
+	)
+	set(PH_INTERFACE_FOUND ${PH_INTERFACE_FOUND} PARENT_SCOPE)
+	set(PH_INTERFACE_INCLUDE_DIRS ${PH_INTERFACE_INCLUDE_DIRS} PARENT_SCOPE)
+	set(PH_INTERFACE_LIBRARIES ${PH_INTERFACE_LIBRARIES} PARENT_SCOPE)
+
 endfunction()

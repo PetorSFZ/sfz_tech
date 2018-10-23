@@ -17,7 +17,7 @@
 #    misrepresented as being the original software.
 # 3. This notice may not be removed or altered from any source distribution.
 
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 project("PhantasyEngine")
 
 # Dependencies
@@ -39,8 +39,8 @@ if (NOT SFZ_CORE_FOUND)
 	message(FATAL_ERROR "PhantasyEngine requires sfzCore.")
 endif()
 
-if (NOT PH_SHARED_INTERFACE_FOUND)
-	message(FATAL_ERROR "PhantasyEngine requires PhantasyEngine-SharedInterface.")
+if (NOT PH_INTERFACE_FOUND)
+	message(FATAL_ERROR "PhantasyEngine requires PhantasyEngine-Interface.")
 endif()
 
 # PhantasyEngine
