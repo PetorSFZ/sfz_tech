@@ -25,6 +25,9 @@
 # PH_SDL2_ROOT: Optional path to the root of the Dependency-SDL2 directory, if you don't want to
 #               download from GitHub.
 
+# PH_SFZ_CORE_ROOT: Optional path to the root of the sfzCore directory, if you don't want to
+#                   download from GitHub.
+
 # Miscallenous initialization operations
 # ------------------------------------------------------------------------------------------------
 
@@ -190,6 +193,36 @@ function(phAddSDL2)
 	set(SDL2_INCLUDE_DIRS ${SDL2_INCLUDE_DIRS} PARENT_SCOPE)
 	set(SDL2_LIBRARIES ${SDL2_LIBRARIES} PARENT_SCOPE)
 	set(SDL2_RUNTIME_FILES ${SDL2_RUNTIME_FILES} PARENT_SCOPE)
+
+endfunction()
+
+# Adds sfzCore. By default downloads from GitHub, but if PH_SFZ_CORE_ROOT is set that version will
+# be used instead. The following variables will be set:
+# ${SFZ_CORE_FOUND}, ${SFZ_CORE_INCLUDE_DIRS}, ${SFZ_CORE_LIBRARIES}
+function(phAddSfzCore)
+
+	if (PH_SFZ_CORE_ROOT)
+		message("-- [PhantasyEngine]: Adding sfzCore from: \"${PH_SFZ_CORE_ROOT}\"")
+		add_subdirectory(${PH_SFZ_CORE_ROOT} ${CMAKE_BINARY_DIR}/sfzCore)
+
+	else()
+		message("-- [PhantasyEngine]: Downloading sfzCore from GitHub")
+
+		FetchContent_Declare(
+			sfzCore
+			GIT_REPOSITORY https://github.com/PetorSFZ/sfzCore.git
+			GIT_TAG fc284d8816e1f7630e5ce0dbc722f47ed1c90c29
+		)
+		FetchContent_GetProperties(sfzCore)
+		if(NOT sfzCore_POPULATED)
+			FetchContent_Populate(sfzCore)
+			add_subdirectory(${sfzcore_SOURCE_DIR} ${CMAKE_BINARY_DIR}/sfzCore)
+		endif()
+	endif()
+
+	set(SFZ_CORE_FOUND ${SFZ_CORE_FOUND} PARENT_SCOPE)
+	set(SFZ_CORE_INCLUDE_DIRS ${SFZ_CORE_INCLUDE_DIRS} PARENT_SCOPE)
+	set(SFZ_CORE_LIBRARIES ${SFZ_CORE_LIBRARIES} PARENT_SCOPE)
 
 endfunction()
 
