@@ -22,11 +22,17 @@
 
 # PH_CUDA_SUPPORT: Will build with CUDA support if defined
 
-# Variables
+# PH_SDL2_ROOT: Optional path to the root of the Dependency-SDL2 directory, if you don't want to
+#               download from GitHub.
+
+# Miscallenous initialization operations
 # ------------------------------------------------------------------------------------------------
 
-# The root of the PhantasyEngine used
+# Set the root of PhantasyEngine
 set(PH_ROOT ${CMAKE_CURRENT_LIST_DIR})
+
+# Add the FetchContent module
+include(FetchContent)
 
 # Compiler flag functions
 # ------------------------------------------------------------------------------------------------
@@ -155,6 +161,37 @@ endfunction()
 
 # 3rd-party dependencies
 # ------------------------------------------------------------------------------------------------
+
+# Adds the Dependency-SDL2 dependency. By default downloads from Github, but if PH_SDL2_ROOT is
+# set that version will be used instead. The following variables will be set:
+# ${SDL2_FOUND}, ${SDL2_INCLUDE_DIRS}, ${SDL2_LIBRARIES} and ${SDL2_RUNTIME_FILES}
+function(phAddSDL2)
+
+	if (PH_SDL2_ROOT)
+		message("-- [PhantasyEngine]: Adding Dependency-SDL2 from: \"${PH_SDL2_ROOT}\"")
+		add_subdirectory(${PH_SDL2_ROOT} ${CMAKE_BINARY_DIR}/sdl2)
+
+	else()
+		message("-- [PhantasyEngine]: Downloading Dependency-SDL2 from GitHub")
+
+		FetchContent_Declare(
+			sdl2
+			GIT_REPOSITORY https://github.com/PhantasyEngine/Dependency-SDL2.git
+			GIT_TAG 1a44fa61353e86f48efc17e31d575a11382c59d6
+		)
+		FetchContent_GetProperties(sdl2)
+		if(NOT sdl2_POPULATED)
+			FetchContent_Populate(sdl2)
+			add_subdirectory(${sdl2_SOURCE_DIR} ${CMAKE_BINARY_DIR}/sdl2)
+		endif()
+	endif()
+
+	set(SDL2_FOUND ${SDL2_FOUND} PARENT_SCOPE)
+	set(SDL2_INCLUDE_DIRS ${SDL2_INCLUDE_DIRS} PARENT_SCOPE)
+	set(SDL2_LIBRARIES ${SDL2_LIBRARIES} PARENT_SCOPE)
+	set(SDL2_RUNTIME_FILES ${SDL2_RUNTIME_FILES} PARENT_SCOPE)
+
+endfunction()
 
 # PhantasyEngine targets
 # ------------------------------------------------------------------------------------------------
