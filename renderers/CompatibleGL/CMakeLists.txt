@@ -17,8 +17,13 @@
 #    misrepresented as being the original software.
 # 3. This notice may not be removed or altered from any source distribution.
 
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 project("Renderer-CompatibleGL")
+
+# Input options
+# ------------------------------------------------------------------------------------------------
+
+# PH_RENDERER_COMPATIBLE_GL_STATIC: Creates static library if defined
 
 # Dependencies
 # ------------------------------------------------------------------------------------------------
@@ -35,8 +40,8 @@ if (NOT SFZ_GL_FOUND)
 	message(FATAL_ERROR "Renderer-CompatibleGL requires sfzGL.")
 endif()
 
-if (NOT PH_SHARED_INTERFACE_FOUND)
-	message(FATAL_ERROR "Renderer-CompatibleGL requires PhantasyEngine-SharedInterface.")
+if (NOT PH_INTERFACE_FOUND)
+	message(FATAL_ERROR "Renderer-CompatibleGL requires PhantasyEngine-Interface.")
 endif()
 
 # Renderer-CompatibleGL
@@ -73,14 +78,14 @@ target_include_directories(Renderer-CompatibleGL PUBLIC
 	${SDL2_INCLUDE_DIRS}
 	${SFZ_CORE_INCLUDE_DIRS}
 	${SFZ_GL_INCLUDE_DIRS}
-	${PH_SHARED_INTERFACE_INCLUDE_DIRS}
+	${PH_INTERFACE_INCLUDE_DIRS}
 )
 
 target_link_libraries(Renderer-CompatibleGL
 	${SDL2_LIBRARIES}
 	${SFZ_CORE_LIBRARIES}
 	${SFZ_GL_LIBRARIES}
-	${PH_SHARED_INTERFACE_LIBRARIES}
+	${PH_INTERFACE_LIBRARIES}
 )
 
 # iOS specific stuff
@@ -104,4 +109,4 @@ endif()
 
 set(PH_RENDERER_COMPATIBLE_GL_FOUND true PARENT_SCOPE)
 set(PH_RENDERER_COMPATIBLE_GL_LIBRARIES Renderer-CompatibleGL PARENT_SCOPE)
-set(PH_RENDERER_COMPATIBLE_GL_RUNTIME_SYMLINK_DIR ${RESOURCES_DIR} PARENT_SCOPE)
+set(PH_RENDERER_COMPATIBLE_GL_RUNTIME_DIR ${RESOURCES_DIR} PARENT_SCOPE)

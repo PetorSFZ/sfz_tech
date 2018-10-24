@@ -17,7 +17,7 @@
 #    misrepresented as being the original software.
 # 3. This notice may not be removed or altered from any source distribution.
 
-# Options
+# Input options
 # ------------------------------------------------------------------------------------------------
 
 # PH_CUDA_SUPPORT: Will build with CUDA support if defined
@@ -159,6 +159,7 @@ endfunction()
 # PhantasyEngine targets
 # ------------------------------------------------------------------------------------------------
 
+# Adds the interface and engine targets
 function(phAddPhantasyEngineTargets)
 	message("-- [PhantasyEngine]: Adding PhantasyEngine targets (engine and interface)")
 
@@ -167,17 +168,59 @@ function(phAddPhantasyEngineTargets)
 		${PH_ROOT}/interface
 		${CMAKE_BINARY_DIR}/PhantasyEngine-interface
 	)
-	set(PHANTASY_ENGINE_FOUND ${PHANTASY_ENGINE_FOUND} PARENT_SCOPE)
-	set(PHANTASY_ENGINE_INCLUDE_DIRS ${PHANTASY_ENGINE_INCLUDE_DIRS} PARENT_SCOPE)
-	set(PHANTASY_ENGINE_LIBRARIES ${PHANTASY_ENGINE_LIBRARIES} PARENT_SCOPE)
+	set(PH_INTERFACE_FOUND ${PH_INTERFACE_FOUND} PARENT_SCOPE)
+	set(PH_INTERFACE_INCLUDE_DIRS ${PH_INTERFACE_INCLUDE_DIRS} PARENT_SCOPE)
+	set(PH_INTERFACE_LIBRARIES ${PH_INTERFACE_LIBRARIES} PARENT_SCOPE)
 
 	# Adding engine
 	add_subdirectory(
 		${PH_ROOT}/engine
 		${CMAKE_BINARY_DIR}/PhantasyEngine-engine
 	)
-	set(PH_INTERFACE_FOUND ${PH_INTERFACE_FOUND} PARENT_SCOPE)
-	set(PH_INTERFACE_INCLUDE_DIRS ${PH_INTERFACE_INCLUDE_DIRS} PARENT_SCOPE)
-	set(PH_INTERFACE_LIBRARIES ${PH_INTERFACE_LIBRARIES} PARENT_SCOPE)
+	set(PHANTASY_ENGINE_FOUND ${PHANTASY_ENGINE_FOUND} PARENT_SCOPE)
+	set(PHANTASY_ENGINE_INCLUDE_DIRS ${PHANTASY_ENGINE_INCLUDE_DIRS} PARENT_SCOPE)
+	set(PHANTASY_ENGINE_LIBRARIES ${PHANTASY_ENGINE_LIBRARIES} PARENT_SCOPE)
 
+endfunction()
+
+# Renderers
+# ------------------------------------------------------------------------------------------------
+
+# Adds the Renderer-CompatibleGL target, static for iOS and Emscripten, dynamic for everything else
+function(phAddRendererCompatibleGL)
+	message("-- [PhantasyEngine]: Adding Renderer-CompatibleGL target")
+
+	# Emscripten and iOS needs statically linked renderer
+	if(EMSCRIPTEN OR IOS)
+		message("  -- Static renderer")
+		set(PH_RENDERER_COMPATIBLE_GL_STATIC true)
+		set(PH_RENDERER_COMPATIBLE_GL_STATIC ${PH_RENDERER_COMPATIBLE_GL_STATIC} PARENT_SCOPE)
+	else()
+		message("  -- Dynamic renderer")
+	endif()
+
+	# Adding renderer
+	add_subdirectory(
+		${PH_ROOT}/renderers/CompatibleGL
+		${CMAKE_BINARY_DIR}/Renderer-CompatibleGL
+	)
+	set(PH_RENDERER_COMPATIBLE_GL_FOUND ${PH_RENDERER_COMPATIBLE_GL_FOUND} PARENT_SCOPE)
+	set(PH_RENDERER_COMPATIBLE_GL_LIBRARIES ${PH_RENDERER_COMPATIBLE_GL_LIBRARIES} PARENT_SCOPE)
+	set(PH_RENDERER_COMPATIBLE_GL_RUNTIME_DIR ${PH_RENDERER_COMPATIBLE_GL_RUNTIME_DIR} PARENT_SCOPE)
+
+endfunction()
+
+# Linking
+# ------------------------------------------------------------------------------------------------
+
+# Links the Renderer-CompatibleGL to the specified target, static or dynamic depending on the value
+# of PH_RENDERER_COMPATIBLE_GL_STATIC (set automatically by phAddRendererCompatibleGL()).
+function(phLinkRendererCompatibleGL linkTarget)
+	if(PH_RENDERER_COMPATIBLE_GL_STATIC)
+		message("-- [PhantasyEngine]: Statically linking Renderer-CompatibleGL")
+		target_link_libraries(${linkTarget} ${PH_RENDERER_COMPATIBLE_GL_LIBRARIES})
+	else()
+		message("-- [PhantasyEngine]: Dynamically linking Renderer-CompatibleGL")
+		add_dependencies(${linkTarget} ${PH_RENDERER_COMPATIBLE_GL_LIBRARIES})
+	endif()
 endfunction()
