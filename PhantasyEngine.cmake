@@ -193,6 +193,24 @@ function(phAddSDL2)
 
 endfunction()
 
+# Adds the bundled externals, this is currently stb and dear-imgui.
+# stb: ${STB_FOUND}, ${STB_INCLUDE_DIRS}
+# dear-imgui: ${IMGUI_FOUND}, ${IMGUI_INCLUDE_DIRS}, ${IMGUI_LIBRARIES}
+function(phAddBundledExternals)
+
+	message("-- [PhantasyEngine]: Adding stb target")
+	add_subdirectory(${PH_ROOT}/externals/stb ${CMAKE_BINARY_DIR}/stb)
+	set(STB_FOUND ${STB_FOUND} PARENT_SCOPE)
+	set(STB_INCLUDE_DIRS ${STB_INCLUDE_DIRS} PARENT_SCOPE)
+
+	message("-- [PhantasyEngine]: Adding dear-imgui target")
+	add_subdirectory(${PH_ROOT}/externals/dear-imgui ${CMAKE_BINARY_DIR}/dear-imgui)
+	set(IMGUI_FOUND ${IMGUI_FOUND} PARENT_SCOPE)
+	set(IMGUI_INCLUDE_DIRS ${IMGUI_INCLUDE_DIRS} PARENT_SCOPE)
+	set(IMGUI_LIBRARIES ${IMGUI_LIBRARIES} PARENT_SCOPE)
+
+endfunction()
+
 # PhantasyEngine targets
 # ------------------------------------------------------------------------------------------------
 
