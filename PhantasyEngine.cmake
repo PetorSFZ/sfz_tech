@@ -31,11 +31,15 @@
 # Miscallenous initialization operations
 # ------------------------------------------------------------------------------------------------
 
+# Add the FetchContent module
+include(FetchContent)
+
 # Set the root of PhantasyEngine
 set(PH_ROOT ${CMAKE_CURRENT_LIST_DIR})
 
-# Add the FetchContent module
-include(FetchContent)
+# Make all projects compile to the same directory
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # Compiler flag functions
 # ------------------------------------------------------------------------------------------------
@@ -109,11 +113,19 @@ function(phSetCompilerFlags)
 		set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
 		set(PH_CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
 
+		if(PH_CUDA_SUPPORT)
+			message(FATAL_ERROR "[PhantasyEngine]: CUDA not supported on this platform")
+		endif()
+
 	elseif(IOS)
 		set(PH_CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -fno-rtti -fno-strict-aliasing -DSFZ_IOS -DPH_STATIC_LINK_RENDERER")
 		set(PH_CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 		set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
 		set(PH_CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
+
+		if(PH_CUDA_SUPPORT)
+			message(FATAL_ERROR "[PhantasyEngine]: CUDA not supported on this platform")
+		endif()
 
 	elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
 		# macOS flags
@@ -127,6 +139,10 @@ function(phSetCompilerFlags)
 		set(PH_CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 		set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
 		set(PH_CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
+
+		if(PH_CUDA_SUPPORT)
+			message(FATAL_ERROR "[PhantasyEngine]: CUDA not supported on this platform")
+		endif()
 
 	else()
 		message(FATAL_ERROR "[PhantasyEngine]: Compiler flags not set for this platform, exiting.")
@@ -311,4 +327,81 @@ function(phLinkRendererCompatibleGL linkTarget)
 		message("-- [PhantasyEngine]: Dynamically linking Renderer-CompatibleGL")
 		add_dependencies(${linkTarget} ${PH_RENDERER_COMPATIBLE_GL_LIBRARIES})
 	endif()
+endfunction()
+
+# Symlink script generation
+# ------------------------------------------------------------------------------------------------
+
+# Creates a shell script in the output binary directory (${CMAKE_BINARY_DIR}) which creates symlinks
+# to the specified directories. This is useful in order to symlink in runtime directories,
+# containing things such as assets and shaders, into the build directory.
+#
+# This function takes a variable number of parameters (i.e. vararg), each parameter is a path to
+# a directory to be symlinked in to your build directory.
+#
+# For PhantasyEngine you are normally expected to have a "res" directory where you keep all your
+# runtime assets, this directory can then be symlinked in using this function.
+function(phCreateSymlinkScript)
+
+	if(MSVC)
+		message("-- [PhantasyEngine]: Creating \"create_symlinks.bat\" for the following directories:")
+		foreach(symlinkPath ${ARGV})
+			message("  -- ${symlinkPath}")
+		endforeach()
+
+		# Directories
+		set(SYMLINK_FILE "${CMAKE_BINARY_DIR}/create_symlinks.bat")
+		set(DEBUG_DIR "${CMAKE_BINARY_DIR}/Debug")
+		set(RELWITHDEBINFO_DIR "${CMAKE_BINARY_DIR}/RelWithDebInfo")
+		set(RELEASE_DIR "${CMAKE_BINARY_DIR}/Release")
+
+		foreach(symlinkPath ${ARGV})
+
+			# Get name of directory to symlink
+			get_filename_component(SYMLINK_DIR_NAME ${symlinkPath} NAME)
+
+			# Append symlink commands to file
+			file(APPEND ${SYMLINK_FILE} ": Create symlinks for \"${SYMLINK_DIR_NAME}\"\n")
+			file(APPEND ${SYMLINK_FILE} "mklink /D \"${CMAKE_BINARY_DIR}/${SYMLINK_DIR_NAME}\" \"${symlinkPath}\"\n")
+			file(APPEND ${SYMLINK_FILE} "mklink /D \"${DEBUG_DIR}/${SYMLINK_DIR_NAME}\" \"${symlinkPath}\"\n")
+			file(APPEND ${SYMLINK_FILE} "mklink /D \"${RELWITHDEBINFO_DIR}/${SYMLINK_DIR_NAME}\" \"${symlinkPath}\"\n")
+			file(APPEND ${SYMLINK_FILE} "mklink /D \"${RELEASE_DIR}/${SYMLINK_DIR_NAME}\" \"${symlinkPath}\"\n")
+			file(APPEND ${SYMLINK_FILE} "\n")
+		endforeach()
+
+	else()
+		message("-- [PhantasyEngine]: Creating \"create_symlinks.sh\" for the following directories:")
+		foreach(symlinkPath ${ARGV})
+			message("  -- ${symlinkPath}")
+		endforeach()
+
+		# Directories
+		set(SYMLINK_FILE "${CMAKE_BINARY_DIR}/create_symlinks.sh")
+		set(DEBUG_DIR "${CMAKE_BINARY_DIR}/Debug")
+		set(RELWITHDEBINFO_DIR "${CMAKE_BINARY_DIR}/RelWithDebInfo")
+		set(RELEASE_DIR "${CMAKE_BINARY_DIR}/Release")
+
+		# Append create directories commands to file
+		file(APPEND ${SYMLINK_FILE} "# Create Debug, Release and RelWithDebInfo directories\n")
+		file(APPEND ${SYMLINK_FILE} "# (These are used for some IDE's, such as Xcode. Not for makefiles.)\n")
+		file(APPEND ${SYMLINK_FILE} "mkdir ${DEBUG_DIR}\n")
+		file(APPEND ${SYMLINK_FILE} "mkdir ${RELWITHDEBINFO_DIR}\n")
+		file(APPEND ${SYMLINK_FILE} "mkdir ${RELEASE_DIR}\n")
+		file(APPEND ${SYMLINK_FILE} "\n")
+
+		foreach(symlinkPath ${ARGV})
+
+			# Get name of directory to symlink
+			get_filename_component(SYMLINK_DIR_NAME ${symlinkPath} NAME)
+
+			# Append symlink commands to file
+			file(APPEND ${SYMLINK_FILE} "# Create symlinks for \"${SYMLINK_DIR_NAME}\"\n")
+			file(APPEND ${SYMLINK_FILE} "ln -s ${symlinkPath} ${CMAKE_BINARY_DIR}/${SYMLINK_DIR_NAME}\n")
+			file(APPEND ${SYMLINK_FILE} "ln -s ${symlinkPath} ${DEBUG_DIR}/${SYMLINK_DIR_NAME}\n")
+			file(APPEND ${SYMLINK_FILE} "ln -s ${symlinkPath} ${RELWITHDEBINFO_DIR}/${SYMLINK_DIR_NAME}\n")
+			file(APPEND ${SYMLINK_FILE} "ln -s ${symlinkPath} ${RELEASE_DIR}/${SYMLINK_DIR_NAME}\n")
+			file(APPEND ${SYMLINK_FILE} "\n")
+		endforeach()
+	endif()
+
 endfunction()
