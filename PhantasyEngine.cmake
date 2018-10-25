@@ -31,6 +31,11 @@
 # Miscallenous initialization operations
 # ------------------------------------------------------------------------------------------------
 
+# Sets build type to release if no build type is specified in a single-configuration generator.
+if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+	set(CMAKE_BUILD_TYPE Release)
+endif()
+
 # Add the FetchContent module
 include(FetchContent)
 
@@ -316,6 +321,41 @@ endfunction()
 
 # Linking
 # ------------------------------------------------------------------------------------------------
+
+# Links SDL2 to the specified target
+function(phLinkSDL2 linkTarget)
+	target_include_directories(${linkTarget} PUBLIC ${SDL2_INCLUDE_DIRS})
+	target_link_libraries(${linkTarget} ${SDL2_LIBRARIES})
+endfunction()
+
+# Links sfzCore to the specified target
+function(phLinkSfzCore linkTarget)
+	target_include_directories(${linkTarget} PUBLIC ${SFZ_CORE_INCLUDE_DIRS})
+	target_link_libraries(${linkTarget} ${SFZ_CORE_LIBRARIES})
+endfunction()
+
+# Links the bundled externals to the specified target
+function(phLinkBundledExternals linkTarget)
+	target_include_directories(${linkTarget} PUBLIC
+		${STB_INCLUDE_DIRS}
+		${IMGUI_INCLUDE_DIRS}
+	)
+	target_link_libraries(${linkTarget}
+		${IMGUI_LIBRARIES}
+	)
+endfunction()
+
+# Links PhantasyEngine "engine" and "interface" to the specified target
+function(phLinkPhantasyEngine linkTarget)
+	target_include_directories(${linkTarget} PUBLIC
+		${PH_INTERFACE_INCLUDE_DIRS}
+		${PHANTASY_ENGINE_INCLUDE_DIRS}
+	)
+	target_link_libraries(${linkTarget}
+		${PH_INTERFACE_LIBRARIES}
+		${PHANTASY_ENGINE_LIBRARIES}
+	)
+endfunction()
 
 # Links the Renderer-CompatibleGL to the specified target, static or dynamic depending on the value
 # of PH_RENDERER_COMPATIBLE_GL_STATIC (set automatically by phAddRendererCompatibleGL()).
