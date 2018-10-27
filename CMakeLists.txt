@@ -1,8 +1,5 @@
-# Compiler flags and directories
-# ------------------------------------------------------------------------------------------------
-
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
-project("sfzCore" CXX)
+cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
+project("sfzCore" LANGUAGES CXX C)
 
 # Sets build type to release if no build type is specified in a single-configuration generator.
 if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
@@ -11,6 +8,9 @@ endif()
 
 # Check if sfzCore is built individually or part of a project
 get_directory_property(hasParent PARENT_DIRECTORY)
+
+# Compiler flags
+# ------------------------------------------------------------------------------------------------
 
 # Set compiler flags only if building sfzCore individually
 if(NOT hasParent)
@@ -75,15 +75,53 @@ if(NOT hasParent)
 	endif()
 endif()
 
+# Dependencies
+# ------------------------------------------------------------------------------------------------
+
+# Externals directory
+set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
+
+# Catch (if building tests, i.e. if no parent)
+# ${CATCH_INCLUDE_DIRS}
+if(NOT hasParent)
+	add_subdirectory(${EXTERNALS_DIR}/catch)
+endif()
+
+# Dependencies for lib-opengl
+if(SFZ_CORE_OPENGL)
+
+	# SDL2
+	# ${SDL2_FOUND}, ${SDL2_INCLUDE_DIRS}, ${SDL2_LIBRARIES} and ${SDL2_RUNTIME_FILES}
+	if (NOT SDL2_FOUND)
+		message(FATAL_ERROR "sfzCore lib-opengl requires SDL2. Add Dependency-SDL2.")
+	endif()
+
+	# OpenGL
+	# ${OPENGL_INCLUDE_DIR}, ${OPENGL_LIBRARIES}
+	if(NOT IOS)
+		find_package(OpenGL REQUIRED)
+	endif()
+
+	# GLEW
+	# ${GLEW_INCLUDE_DIRS}, ${GLEW_LIBRARIES} and ${GLEW_DLLS}
+	if(NOT EMSCRIPTEN AND NOT IOS)
+		add_subdirectory(${EXTERNALS_DIR}/glew)
+	else()
+		set(GLEW_INCLUDE_DIRS "")
+		set(GLEW_LIBRARIES "")
+		set(GLEW_DLLS "")
+	endif()
+
+endif()
+
+# sfzCore lib-core library
+# ------------------------------------------------------------------------------------------------
+
 # Directories
 set(CORE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib-core/src)
 set(CORE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib-core/include)
 set(CORE_INCLUDE_CUDA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib-core/include_cuda)
 set(CORE_TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib-core/tests)
-set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
-
-# sfzCore library
-# ------------------------------------------------------------------------------------------------
 
 set(SFZ_CORE_INCLUDE_FILES
 	${CORE_INCLUDE_DIR}/sfz/Assert.hpp
@@ -185,39 +223,22 @@ set(SFZ_CORE_FILES
 )
 
 # Library compile target
-add_library(
-	sfzCore
-
+add_library(sfzCore
 	${SFZ_CORE_INCLUDE_FILES}
 	${SFZ_CORE_SOURCE_FILES}
 	${SFZ_CORE_INCLUDE_CUDA_FILES}
 )
 
 # Include directories
-target_include_directories(
-	sfzCore
-	PRIVATE
+target_include_directories(sfzCore PRIVATE
 	${CORE_INCLUDE_DIR}
 	${CORE_INCLUDE_CUDA_DIR}
 )
 
-# Output variables
-# ------------------------------------------------------------------------------------------------
-
-if(hasParent)
-	set(SFZ_CORE_FOUND true PARENT_SCOPE)
-	set(SFZ_CORE_INCLUDE_DIRS ${CORE_INCLUDE_DIR} ${CORE_INCLUDE_CUDA_DIR} PARENT_SCOPE)
-	set(SFZ_CORE_LIBRARIES sfzCore PARENT_SCOPE)
-	set(SFZ_CORE_RUNTIME_FILES "" PARENT_SCOPE)
-endif()
-
-# Tests
+# sfzCore lib-core tests
 # ------------------------------------------------------------------------------------------------
 
 if(NOT hasParent)
-
-	# Catch
-	add_subdirectory(${EXTERNALS_DIR}/catch)
 
 	set(SFZ_CORE_TEST_FILES
 		${CORE_TESTS_DIR}/sfz/Main_Tests.cpp
@@ -248,20 +269,81 @@ if(NOT hasParent)
 	)
 	source_group(TREE ${CORE_TESTS_DIR} FILES ${SFZ_CORE_TEST_FILES})
 
-	enable_testing(true)
 	add_executable(sfzCoreTests ${SFZ_CORE_TEST_FILES})
-	target_include_directories(
-		sfzCoreTests
-		PRIVATE
+	target_include_directories(sfzCoreTests PRIVATE
 		${CORE_INCLUDE_DIR}
 		${CORE_INCLUDE_CUDA_DIR}
 		${CATCH_INCLUDE_DIRS}
 	)
-	target_link_libraries(
-		sfzCoreTests
+	target_link_libraries(sfzCoreTests sfzCore)
 
-		sfzCore
+endif()
+
+# lib-opengl library
+# ------------------------------------------------------------------------------------------------
+
+if(SFZ_CORE_OPENGL)
+
+	# Directories
+	set(LIBOPENGL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib-opengl/include)
+	set(LIBOPENGL_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib-opengl/src)
+
+	# Source files
+	set(LIBOPENGL_INCLUDE_FILES
+		${LIBOPENGL_INCLUDE_DIR}/sfz/gl/Framebuffer.hpp
+		${LIBOPENGL_INCLUDE_DIR}/sfz/gl/FullscreenGeometry.hpp
+		${LIBOPENGL_INCLUDE_DIR}/sfz/gl/GLUtils.hpp
+		${LIBOPENGL_INCLUDE_DIR}/sfz/gl/IncludeOpenGL.hpp
+		${LIBOPENGL_INCLUDE_DIR}/sfz/gl/Program.hpp
+		${LIBOPENGL_INCLUDE_DIR}/sfz/gl/UniformSetters.hpp
 	)
-	add_test(sfzCoreTestsName sfzCoreTests)
+	source_group(TREE ${LIBOPENGL_INCLUDE_DIR} FILES ${LIBOPENGL_INCLUDE_FILES})
 
+	set(LIBOPENGL_SOURCE_FILES
+		${LIBOPENGL_SOURCE_DIR}/sfz/gl/Framebuffer.cpp
+		${LIBOPENGL_SOURCE_DIR}/sfz/gl/FullscreenGeometry.cpp
+		${LIBOPENGL_SOURCE_DIR}/sfz/gl/GLUtils.cpp
+		${LIBOPENGL_SOURCE_DIR}/sfz/gl/Program.cpp
+		${LIBOPENGL_SOURCE_DIR}/sfz/gl/UniformSetters.cpp
+	)
+	source_group(TREE ${LIBOPENGL_SOURCE_DIR} FILES ${LIBOPENGL_SOURCE_FILES})
+
+	# Library compile target
+	add_library(sfzCoreLibOpenGL ${LIBOPENGL_INCLUDE_FILES} ${LIBOPENGL_SOURCE_FILES})
+
+	# Include directories
+	target_include_directories(sfzCoreLibOpenGL PRIVATE
+		${CORE_INCLUDE_DIR}
+		${LIBOPENGL_INCLUDE_DIR}
+		${SDL2_INCLUDE_DIRS}
+		${OPENGL_INCLUDE_DIR}
+		${GLEW_INCLUDE_DIRS}
+	)
+
+	# Linking libraries
+	target_link_libraries(sfzCoreLibOpenGL
+		sfzCore
+		${SDL2_LIBRARIES}
+		${OPENGL_LIBRARIES}
+		${GLEW_LIBRARIES}
+	)
+
+endif()
+
+# Output variables
+# ------------------------------------------------------------------------------------------------
+
+if(hasParent)
+	set(SFZ_CORE_FOUND true PARENT_SCOPE)
+	set(SFZ_CORE_INCLUDE_DIRS ${CORE_INCLUDE_DIR} ${CORE_INCLUDE_CUDA_DIR} PARENT_SCOPE)
+	set(SFZ_CORE_LIBRARIES sfzCore PARENT_SCOPE)
+
+	if(SFZ_CORE_OPENGL)
+		set(SFZ_CORE_OPENGL_FOUND true PARENT_SCOPE)
+		set(SFZ_CORE_OPENGL_INCLUDE_DIRS
+			${LIBOPENGL_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} PARENT_SCOPE)
+		set(SFZ_CORE_OPENGL_LIBRARIES
+			sfzCoreLibOpenGL ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} PARENT_SCOPE)
+		set(SFZ_CORE_OPENGL_RUNTIME_FILES ${GLEW_DLLS} PARENT_SCOPE)
+	endif()
 endif()

@@ -11,7 +11,12 @@ sfzCore is a base library for most Skipifzero applications, replacing the now de
 * Cross-platform IO functions
 * (Optionally) Header-only CUDA wrappers and utilities
 
-sfzCore uses no dependencies and compiles cleanly on most compilers, including MSVC, Clang and Emscripten.
+The core part of sfzCore uses no dependencies (but some of the extra libraries does) and compiles cleanly on most compilers, including MSVC, Clang and Emscripten.
+
+In addition to the core part of `sfzCore` there are are also optional, experimental helper libraries for various rendering API's. These libraries should not be considered stable, and change often. Use at your own risk. In order to use them specific variables need to be defined before including the sfzCore project. These libraries are:
+
+* `lib-core`: The core sfzCore library, no dependencies, always included
+* `lib-opengl`: OpenGL helper library, provides and uses included `GLEW`, define `SFZ_CORE_OPENGL` before including sfzCore.
 
 ## Building
 
@@ -79,26 +84,29 @@ The emscripten makefiles can then be generated using either `gen_emscripten_debu
 
 ## Linking sfzCore
 
-There are two recommended ways of including sfzCore in your project, including it directly or downloading it using `DownloadProject`. The latter is recommended if you don't intend to modify sfzCore, as it will be more convenient to update to newer versions.
+There are two recommended ways of including sfzCore in your project, including it directly or downloading it using [`FetchContent`](https://cmake.org/cmake/help/latest/module/FetchContent.html).
 
 To include sfzCore directly just copy the whole project into your project's directory. Then add the following line to your `CMakeLists.txt`:
 
 ~~~cmake
+#set(SFZ_CORE_OPENGL true) # Define SFZ_CORE_OPENGL if you want lib-opengl
 add_subdirectory(path_to_sfzCore_dir)
 ~~~
 
-To use `DownloadProject` you first have to include it into your project, it is available [here](https://github.com/Crascit/DownloadProject). Then sfzCore can be added with the following CMake commands:
+Using `FetchContent` sfzCore can be added with the following CMake commands:
 
 ~~~cmake
-download_project(
-	PROJ                sfzCore
-	PREFIX              externals
-	GIT_REPOSITORY      https://github.com/PetorSFZ/sfzCore.git
-	GIT_TAG             <GIT_HASH_FOR_VERSION_YOU_WANT>
-	UPDATE_DISCONNECTED 1
-	QUIET
+#set(SFZ_CORE_OPENGL true) # Define SFZ_CORE_OPENGL if you want lib-opengl
+FetchContent_Declare(
+	sfzCore
+	GIT_REPOSITORY https://github.com/PetorSFZ/sfzCore.git
+	GIT_TAG <commit tag for version you want>
 )
-add_subdirectory(${sfzCore_SOURCE_DIR})
+FetchContent_GetProperties(sfzCore)
+if(NOT sfzCore_POPULATED)
+    FetchContent_Populate(sfzCore)
+    add_subdirectory(${sfzcore_SOURCE_DIR} ${CMAKE_BINARY_DIR}/sfzCore)
+endif()
 ~~~
 
 Regardless of how you included it the following CMake variables will be available afterwards:
@@ -115,6 +123,13 @@ You can the simply link the library using the normal:
 target_include_directories(some_executable ${SFZ_CORE_INCLUDE_DIRS})
 target_link_libraries(some_executable ${SFZ_CORE_LIBRARIES})
 ~~~
+
+If including `lib-opengl` by defining `SFZ_CORE_OPENGL` the following variables will also be available:
+
+- `${SFZ_CORE_OPENGL_FOUND}`: True, used to check if lib-opengl is available
+- `${SFZ_CORE_OPENGL_INCLUDE_DIRS}`: The include directories
+- `${SFZ_CORE_OPENGL_LIBRARIES}`: The libraries
+- `${SFZ_CORE_OPENGL_RUNTIME_FILES}`: Runtime libraries (i.e. `.dll`'s) that need to be copied into build directory
 
 ### iOS
 
