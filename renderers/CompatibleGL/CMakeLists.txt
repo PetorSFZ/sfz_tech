@@ -36,8 +36,8 @@ if (NOT SFZ_CORE_FOUND)
 	message(FATAL_ERROR "Renderer-CompatibleGL requires sfzCore.")
 endif()
 
-if (NOT SFZ_GL_FOUND)
-	message(FATAL_ERROR "Renderer-CompatibleGL requires sfzGL.")
+if (NOT SFZ_CORE_OPENGL_FOUND)
+	message(FATAL_ERROR "Renderer-CompatibleGL requires lib-opengl from sfzCore, define SFZ_CORE_OPENGL before including sfzCore.")
 endif()
 
 if (NOT PH_INTERFACE_FOUND)
@@ -77,14 +77,14 @@ target_include_directories(Renderer-CompatibleGL PUBLIC
 	${INCLUDE_DIR}
 	${SDL2_INCLUDE_DIRS}
 	${SFZ_CORE_INCLUDE_DIRS}
-	${SFZ_GL_INCLUDE_DIRS}
+	${SFZ_CORE_OPENGL_INCLUDE_DIRS}
 	${PH_INTERFACE_INCLUDE_DIRS}
 )
 
 target_link_libraries(Renderer-CompatibleGL
 	${SDL2_LIBRARIES}
 	${SFZ_CORE_LIBRARIES}
-	${SFZ_GL_LIBRARIES}
+	${SFZ_CORE_OPENGL_LIBRARIES}
 	${PH_INTERFACE_LIBRARIES}
 )
 
