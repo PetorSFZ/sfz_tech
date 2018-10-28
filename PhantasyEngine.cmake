@@ -408,6 +408,31 @@ function(phMsvcCopyRuntimeDLLs)
 	endif()
 endfunction()
 
+# iOS only, copies resources directories to .app after a build of specified target is completed.
+#
+# This function should be seen as a iOS specific replacement for phCreateSymlinkScript() rather than
+# phMsvcCopyRuntimeDLLs(). See phCreateSymlinkScript() for more information.
+function(phIosCopyRuntimeDirectories copyTarget)
+	if(IOS)
+		message("-- [PhantasyEngine]: Copying following directories to iOS .app:")
+		foreach(dirPath ${ARGV})
+			if(${dirPath} STREQUAL ${copyTarget})
+				continue()
+			endif()
+			message("  -- ${dirPath}")
+			set(DIRS_TO_COPY ${DIRS_TO_COPY} ${dirPath})
+		endforeach()
+
+		foreach(dirPath ${DIRS_TO_COPY})
+			get_filename_component(dirName ${dirPath} NAME)
+			add_custom_command(TARGET ${copyTarget} POST_BUILD
+				COMMAND ${CMAKE_COMMAND} -E copy_directory
+				${dirPath} $<TARGET_FILE_DIR:${copyTarget}>/${dirName}
+			)
+		endforeach()
+	endif()
+endfunction()
+
 # Symlink script generation
 # ------------------------------------------------------------------------------------------------
 
