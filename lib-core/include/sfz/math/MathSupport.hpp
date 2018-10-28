@@ -29,6 +29,10 @@
 #include "sfz/math/Vector.hpp"
 #include "sfz/math/Quaternion.hpp"
 
+// Stop defining min and max, stupid Windows.h.
+#undef min
+#undef max
+
 namespace sfz {
 
 using std::int32_t;
