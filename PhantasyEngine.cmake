@@ -256,6 +256,7 @@ endfunction()
 # Adds the bundled externals, this is currently stb and dear-imgui.
 # stb: ${STB_FOUND}, ${STB_INCLUDE_DIRS}
 # dear-imgui: ${IMGUI_FOUND}, ${IMGUI_INCLUDE_DIRS}, ${IMGUI_LIBRARIES}
+# tinygltf: ${TINYGLTF_FOUND}, ${TINYGLTF_INCLUDE_DIRS}
 function(phAddBundledExternals)
 
 	message("-- [PhantasyEngine]: Adding stb target")
@@ -268,6 +269,11 @@ function(phAddBundledExternals)
 	set(IMGUI_FOUND ${IMGUI_FOUND} PARENT_SCOPE)
 	set(IMGUI_INCLUDE_DIRS ${IMGUI_INCLUDE_DIRS} PARENT_SCOPE)
 	set(IMGUI_LIBRARIES ${IMGUI_LIBRARIES} PARENT_SCOPE)
+
+	message("-- [PhantasyEngine]: Adding tinygltf target")
+	add_subdirectory(${PH_ROOT}/externals/tinygltf ${CMAKE_BINARY_DIR}/tinygltf)
+	set(TINYGLTF_FOUND ${TINYGLTF_FOUND} PARENT_SCOPE)
+	set(TINYGLTF_INCLUDE_DIRS ${TINYGLTF_INCLUDE_DIRS} PARENT_SCOPE)
 
 endfunction()
 
@@ -345,6 +351,7 @@ function(phLinkBundledExternals linkTarget)
 	target_include_directories(${linkTarget} PUBLIC
 		${STB_INCLUDE_DIRS}
 		${IMGUI_INCLUDE_DIRS}
+		${TINYGLTF_INCLUDE_DIRS}
 	)
 	target_link_libraries(${linkTarget}
 		${IMGUI_LIBRARIES}

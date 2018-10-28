@@ -35,6 +35,10 @@ if (NOT IMGUI_FOUND)
 	message(FATAL_ERROR "PhantasyEngine requires dear imgui. Add Dependency-imgui.")
 endif()
 
+if (NOT TINYGLTF_FOUND)
+	message(FATAL_ERROR "PhantasyEngine requires dear tinygltf.")
+endif()
+
 if (NOT SFZ_CORE_FOUND)
 	message(FATAL_ERROR "PhantasyEngine requires sfzCore.")
 endif()
@@ -69,6 +73,8 @@ set(PHANTASY_ENGINE_HEADER_FILES
 	${INCLUDE_DIR}/ph/sdl/Mouse.hpp
 	${INCLUDE_DIR}/ph/sdl/SDLAllocator.hpp
 
+	${INCLUDE_DIR}/ph/util//GltfLoader.hpp
+	${INCLUDE_DIR}/ph/util//GltfWriter.hpp
 	${INCLUDE_DIR}/ph/util/TerminalLogger.hpp
 )
 source_group(TREE ${INCLUDE_DIR} FILES ${PHANTASY_ENGINE_HEADER_FILES})
@@ -87,6 +93,8 @@ set(PHANTASY_ENGINE_SOURCE_FILES
 	${SOURCE_DIR}/ph/sdl/Mouse.cpp
 	${SOURCE_DIR}/ph/sdl/SDLAllocator.cpp
 
+	${SOURCE_DIR}/ph/util/GltfLoader.cpp
+	${SOURCE_DIR}/ph/util/GltfWriter.cpp
 	${SOURCE_DIR}/ph/util/TerminalLogger.cpp
 )
 source_group(TREE ${SOURCE_DIR} FILES ${PHANTASY_ENGINE_SOURCE_FILES})
@@ -100,6 +108,7 @@ target_include_directories(PhantasyEngineCore PUBLIC
 	${PH_INTERFACE_INCLUDE_DIRS}
 	${STB_INCLUDE_DIRS}
 	${IMGUI_INCLUDE_DIRS}
+	${TINYGLTF_INCLUDE_DIRS}
 )
 
 target_link_libraries(PhantasyEngineCore
