@@ -382,6 +382,24 @@ function(phLinkRendererCompatibleGL linkTarget)
 	endif()
 endfunction()
 
+# iOS only, links standard frameworks.
+function(phIosLinkStandardFrameworks linkTarget)
+	if(IOS)
+		target_link_libraries(${linkTarget}
+			"-framework AudioToolbox"
+			"-framework AVFoundation"
+			"-framework CoreGraphics"
+			"-framework CoreMotion"
+			"-framework Foundation"
+			"-framework GameController"
+			"-framework OpenGLES"
+			"-framework QuartzCore"
+			"-framework UIKit"
+			"-framework Metal"
+		)
+	endif()
+endfunction()
+
 # Copy files functions
 # ------------------------------------------------------------------------------------------------
 
