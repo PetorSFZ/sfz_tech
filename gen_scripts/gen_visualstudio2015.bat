@@ -1,5 +1,8 @@
+: Run script in its own context
+setlocal
+
 : Set working directory to location of this file
-cd %dp0
+pushd %~dp0
 
 : Set working directory to root of project
 cd ..
