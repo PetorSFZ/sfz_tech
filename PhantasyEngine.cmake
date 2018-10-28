@@ -375,6 +375,32 @@ function(phLinkRendererCompatibleGL linkTarget)
 	endif()
 endfunction()
 
+# Copy files functions
+# ------------------------------------------------------------------------------------------------
+
+# Windows only, copies runtime DLLs to the output binary directory (${CMAKE_BINARY_DIR}).
+#
+# This function takes a variable number of parameters (i.e. vararg), each parameter is a path to
+# a DLL to be copied in to your binary directory.
+#
+# Commonly you should call this with ${SDL2_RUNTIME_FILES} and ${SFZ_CORE_OPENGL_RUNTIME_FILES}
+# (if you are using OpenGL).
+function(phMsvcCopyRuntimeDLLs)
+	if(MSVC)
+		message("-- [PhantasyEngine]: Copying following DLLs to binary directory:")
+		foreach(dllPath ${ARGV})
+			message("  -- ${dllPath}")
+		endforeach()
+
+		foreach(dllPath ${ARGV})
+			file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+			file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR}/RelWithDebInfo)
+			file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR}/Release)
+		endforeach()
+
+	endif()
+endfunction()
+
 # Symlink script generation
 # ------------------------------------------------------------------------------------------------
 
