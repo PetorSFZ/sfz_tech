@@ -200,8 +200,8 @@ function(phAddSDL2)
 
 		FetchContent_Declare(
 			sdl2
-			GIT_REPOSITORY https://github.com/PhantasyEngine/Dependency-SDL2.git
-			GIT_TAG 1a44fa61353e86f48efc17e31d575a11382c59d6
+			GIT_REPOSITORY https://github.com/PetorSFZ/Dependency-SDL2.git
+			GIT_TAG 9667334164b7fcaca6a7ec52f38bd79f9839a5dd
 		)
 		FetchContent_GetProperties(sdl2)
 		if(NOT sdl2_POPULATED)
