@@ -232,7 +232,7 @@ function(phAddSfzCore)
 		FetchContent_Declare(
 			sfzCore
 			GIT_REPOSITORY https://github.com/PetorSFZ/sfzCore.git
-			GIT_TAG fc284d8816e1f7630e5ce0dbc722f47ed1c90c29
+			GIT_TAG 72c4b0e86fff6d5bbdfc5ab8d56caeec6f9055e6
 		)
 		FetchContent_GetProperties(sfzCore)
 		if(NOT sfzCore_POPULATED)
