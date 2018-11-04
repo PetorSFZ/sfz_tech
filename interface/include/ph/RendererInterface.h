@@ -55,7 +55,7 @@ struct phStaticSceneView;
 // Interface version
 // ------------------------------------------------------------------------------------------------
 
-const uint32_t PH_RENDERER_INTERFACE_VERSION = 11;
+const uint32_t PH_RENDERER_INTERFACE_VERSION = 12;
 
 // Init functions
 // ------------------------------------------------------------------------------------------------

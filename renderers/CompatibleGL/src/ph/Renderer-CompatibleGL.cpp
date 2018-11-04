@@ -670,8 +670,9 @@ void phRenderStaticScene(void)
 		auto& model = state.staticModels[entity.meshIndex];
 
 		// Set model and normal matrices
-		gl::setUniform(modelMatrixLoc, mat4(entity.transform));
-		mat4 normalMatrix = inverse(transpose(viewMatrix * mat4(entity.transform)));
+		mat44 transform = mat44(entity.transform());
+		gl::setUniform(modelMatrixLoc, transform);
+		mat4 normalMatrix = inverse(transpose(viewMatrix * transform));
 		gl::setUniform(normalMatrixLoc, normalMatrix);
 
 		model.bindVAO();
@@ -737,8 +738,9 @@ void phRender(const phRenderEntity* entities, uint32_t numEntities)
 		auto& model = state.dynamicModels[entity.meshIndex];
 
 		// Set model and normal matrices
-		gl::setUniform(modelMatrixLoc, mat4(entity.transform));
-		mat4 normalMatrix = inverse(transpose(viewMatrix * mat4(entity.transform)));
+		mat44 transform = mat44(entity.transform());
+		gl::setUniform(modelMatrixLoc, transform);
+		mat4 normalMatrix = inverse(transpose(viewMatrix * transform));
 		gl::setUniform(normalMatrixLoc, normalMatrix);
 
 		model.bindVAO();

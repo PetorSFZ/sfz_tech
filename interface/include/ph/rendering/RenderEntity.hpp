@@ -20,14 +20,34 @@
 #pragma once
 
 #include <cstdint>
-#include <sfz/math/Matrix.hpp>
+#include <sfz/math/Quaternion.hpp>
+#include <sfz/math/Vector.hpp>
 
 // RenderEntity struct
 // ------------------------------------------------------------------------------------------------
 
 struct phRenderEntity final {
-	sfz::mat34 transform = sfz::mat34::identity();
+	sfz::Quaternion rotation = sfz::Quaternion::identity();
+	sfz::vec3 scale = sfz::vec3(1.0f);
 	uint32_t meshIndex = ~0u;
-	uint32_t padding[3];
+	sfz::vec3 translation = sfz::vec3(0.0f);
+	uint32_t ___PADDING__ = ~0u; // TODO: material override for whole mesh
+
+	sfz::mat34 transform() const
+	{
+		// Apply rotation first
+		sfz::mat34 tmp = rotation.toMat34();
+
+		// Matrix multiply in scale (order does not matter)
+		sfz::vec4 scaleVec = sfz::vec4(scale, 1.0f);
+		tmp.row0 *= scaleVec;
+		tmp.row1 *= scaleVec;
+		tmp.row2 *= scaleVec;
+
+		// Add translation (last)
+		tmp.setColumn(3, translation);
+
+		return tmp;
+	}
 };
-static_assert(sizeof(phRenderEntity) == sizeof(uint32_t) * 16, "phRenderEntity is padded");
+static_assert(sizeof(phRenderEntity) == sizeof(uint32_t) * 12, "phRenderEntity is padded");
