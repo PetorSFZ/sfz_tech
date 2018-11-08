@@ -317,6 +317,11 @@ private:
 		if (mConsoleActive) {
 			this->renderMaterialEditorWindow(renderer);
 		}
+
+		// Render custom-injected windows
+		if (mConsoleActive) {
+			mLogic->injectConsoleMenu();
+		}
 	}
 
 	void renderPerformanceWindow() noexcept

@@ -72,11 +72,16 @@ public:
 
 	// Renders custom Imgui commands.
 	//
-	// This is the only function where Imgui commands can safely be called. BeginFrame() and
-	// EndFrame() are called before and after this function. Other Imgui commands from the
-	// DefaultGameUpdateable console itself may be sent within this same frame if they are set to
-	// be always shown. This function will not be called if the console is currently active.
+	// This function and injectConsoleMenu() are the only places where Imgui commands can safely
+	// be called. BeginFrame() and EndFrame() are called before and after this function. Other
+	// Imgui commands from the DefaultGameUpdateable console itself may be sent within this same
+	// frame if they are set to be always shown. This function will not be called if the console
+	// is currently active.
 	virtual void renderCustomImgui() {}
+
+	// Call when console is active after all the built-in menus have been drawn. Can be used to
+	// inject game-specific custom menus into the console.
+	virtual void injectConsoleMenu() {}
 
 	// Called when console is activated. The logic instance will not receive any additional calls
 	// until the console is closed, at which point onConsoleDeactivated() will be called. onQuit()
