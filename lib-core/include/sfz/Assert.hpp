@@ -18,10 +18,10 @@
 
 #pragma once
 
+#include <cassert>
+
 #ifdef _WIN32
 #include <intrin.h>
-#else
-#include <cassert>
 #endif
 
 // Debug assert

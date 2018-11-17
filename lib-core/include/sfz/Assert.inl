@@ -22,7 +22,13 @@
 #if !defined(SFZ_NO_DEBUG) && !defined(SFZ_NO_ASSERTIONS)
 
 #ifdef _WIN32
-#define sfz_assert_debug_impl(condition) { if (!(condition)) __debugbreak(); }
+#define sfz_assert_debug_impl(condition) \
+{ \
+	if (!(condition)) { \
+		__debugbreak(); \
+		assert((condition)); \
+	} \
+}
 #else
 // Just use standard assert on unknown platforms and hope it is not disabled
 #define sfz_assert_debug_impl(condition) assert(condition)
@@ -42,6 +48,7 @@
 { \
 	if (!(condition)) { \
 		__debugbreak(); \
+		assert((condition)); \
 		sfz::terminateProgram(); \
 	} \
 }
