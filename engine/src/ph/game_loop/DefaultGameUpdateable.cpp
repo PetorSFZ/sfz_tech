@@ -329,6 +329,7 @@ private:
 		// Calculate and set size of window
 		vec2 histogramDims = vec2(mStats.maxNumSamples() * 1.25f, 80.0f);
 		ImGui::SetNextWindowSize(histogramDims + vec2(17.0f, 50.0f));
+		ImGui::SetNextWindowPos(vec2(0.0f), ImGuiCond_Appearing);
 
 		// Set window flags
 		ImGuiWindowFlags performanceWindowFlags = 0;
@@ -364,6 +365,7 @@ private:
 		cfg.getSections(mCfgSections);
 
 		// Set window size
+		ImGui::SetNextWindowPos(vec2(mStats.maxNumSamples() * 1.25f + 17.0f, 0.0f), ImGuiCond_Appearing);
 		ImGui::SetNextWindowSize(vec2(400.0f, 0.0f));
 
 		// Set window flags
@@ -507,6 +509,9 @@ private:
 		TerminalLogger& logger = *getContext()->logger;
 		str96 timeStr;
 
+		ImGui::SetNextWindowPos(vec2(0.0f, 130.0f), ImGuiCond_Appearing);
+		ImGui::SetNextWindowContentSize(vec2(mStats.maxNumSamples() * 1.25f + 17.0f, 600.0f));
+
 		// Set window flags
 		ImGuiWindowFlags logWindowFlags = 0;
 		//logWindowFlags |= ImGuiWindowFlags_NoMove;
@@ -615,6 +620,9 @@ private:
 		//materialEditorWindowFlags |= ImGuiWindowFlags_NoMove;
 		//materialEditorWindowFlags |= ImGuiWindowFlags_NoResize;
 		//materialEditorWindowFlags |= ImGuiWindowFlags_NoCollapse;
+
+		ImGui::SetNextWindowPos(vec2(mStats.maxNumSamples() * 1.25f + 17.0f + 400, 0.0f), ImGuiCond_Appearing);
+		ImGui::SetNextWindowContentSize(vec2(630.0f, 0.0f));
 
 		// Begin window
 		ImGui::Begin("Dynamic Material Editor", nullptr, materialEditorWindowFlags);
