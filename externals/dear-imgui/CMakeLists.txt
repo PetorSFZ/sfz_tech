@@ -20,10 +20,14 @@ set(INCLUDE_FILES
 source_group(TREE ${INCLUDE_DIR} FILES ${INCLUDE_FILES})
 
 set(SRC_FILES
-	${SRC_DIR}/imgui_internal.h
-	${SRC_DIR}/imgui.cpp
 	${SRC_DIR}/imgui_demo.cpp
 	${SRC_DIR}/imgui_draw.cpp
+	${SRC_DIR}/imgui_internal.h
+	${SRC_DIR}/imgui_widgets.cpp
+	${SRC_DIR}/imgui.cpp
+	${SRC_DIR}/imstb_rectpack.h
+	${SRC_DIR}/imstb_textedit.h
+	${SRC_DIR}/imstb_truetype.h
 )
 source_group(TREE ${SRC_DIR} FILES ${SRC_FILES})
 
