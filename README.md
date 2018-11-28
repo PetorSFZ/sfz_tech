@@ -23,6 +23,10 @@ A Phantasy Engine renderer that aims to be compatible with as many platforms and
 
 This renderer can be seen as the lowest common denominator renderer for Phantasy Engine, if your project can run and render fine on this renderer other more complex renders should not have any problems with it.
 
+## Usage/testing
+
+If you want to try out Phantasy Engine for yourself, the best starting position is the [PhantasyTestbed](https://github.com/PetorSFZ/PhantasyTestbed). PhantasyTestbed is a small testbed application which loads and renders the classic Sponza testscene.
+
 ## License
 
 Licensed under zlib, this means that you can basically use the code however you want as long as you give credit and don't claim you wrote it yourself. See LICENSE file for more info.
