@@ -192,7 +192,7 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 	if (INTERFACE_VERSION != phRendererInterfaceVersion()) {
 		SFZ_ERROR("PhantasyEngine",
 			"Statically linked renderer has wrong interface version (%u), expected (%u).",
-			 mFunctionTable->phRendererInterfaceVersion(), INTERFACE_VERSION);
+			 phRendererInterfaceVersion(), INTERFACE_VERSION);
 	}
 
 	// If dynamically loading renderer we do this other stuff
