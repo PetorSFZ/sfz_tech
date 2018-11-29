@@ -179,6 +179,7 @@ set(SFZ_CORE_INCLUDE_FILES
 	${CORE_INCLUDE_DIR}/sfz/strings/StringHashers.hpp
 	${CORE_INCLUDE_DIR}/sfz/strings/StringID.hpp
 
+	${CORE_INCLUDE_DIR}/sfz/util/Enumerate.hpp
 	${CORE_INCLUDE_DIR}/sfz/util/FrametimeStats.hpp
 	${CORE_INCLUDE_DIR}/sfz/util/IniParser.hpp
 	${CORE_INCLUDE_DIR}/sfz/util/IO.hpp
@@ -264,6 +265,7 @@ if(NOT hasParent)
 		${CORE_TESTS_DIR}/sfz/strings/StringHashers_Tests.cpp
 		${CORE_TESTS_DIR}/sfz/strings/StringID_Tests.cpp
 
+		${CORE_TESTS_DIR}/sfz/util/Enumerate_Tests.cpp
 		${CORE_TESTS_DIR}/sfz/util/IniParser_Tests.cpp
 		${CORE_TESTS_DIR}/sfz/util/IO_Tests.cpp
 	)
