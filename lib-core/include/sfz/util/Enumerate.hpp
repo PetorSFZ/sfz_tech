@@ -28,7 +28,7 @@ namespace sfz {
 
 template<typename T>
 struct IndexedElement final {
-	uint32_t idx;
+	uint64_t idx;
 	T element;
 };
 
@@ -36,7 +36,7 @@ template<typename IteratorT>
 struct EnumerateIterator final {
 	using T = decltype(*std::declval<IteratorT>());
 
-	uint32_t idx;
+	uint64_t idx;
 	IteratorT iterator;
 
 	bool operator!= (const EnumerateIterator& other) const { return iterator != other.iterator; }
