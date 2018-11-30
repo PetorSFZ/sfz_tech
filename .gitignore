@@ -35,5 +35,6 @@ build_make_debug/
 build_make_release/
 build_msvc2015/
 build_msvc2017/
+build_msvc2017_v140/
 build_xcode_macos/
 build_xcode_ios/

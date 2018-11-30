@@ -29,7 +29,7 @@ using namespace sfz;
 
 struct Counting {
 
-	uint32_t payload = ~0;
+	uint32_t payload = ~0u;
 	uint32_t copyCounter = 0;
 	uint32_t moveCounter = 0;
 

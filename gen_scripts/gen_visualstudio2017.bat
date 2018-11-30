@@ -13,4 +13,5 @@ mkdir build_msvc2017
 cd build_msvc2017
 
 : Generate Visual Studio solution
-cmake .. -G "Visual Studio 15 2017 Win64" -T v140
+cmake .. -G "Visual Studio 15 2017 Win64"
+
