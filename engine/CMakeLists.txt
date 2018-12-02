@@ -55,7 +55,13 @@ set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set(PHANTASY_ENGINE_HEADER_FILES
-	${INCLUDE_DIR}/ph/PhantasyEngineMain.hpp
+	${INCLUDE_DIR}/ph/ecs/naive/NaiveECS.hpp
+	${INCLUDE_DIR}/ph/ecs/naive/NaiveEcsEditor.hpp
+
+	${INCLUDE_DIR}/ph/ecs/ArrayHeader.hpp
+	${INCLUDE_DIR}/ph/ecs/ComponentMask.hpp
+	${INCLUDE_DIR}/ph/ecs/EcsContainer.hpp
+	${INCLUDE_DIR}/ph/ecs/EcsEnums.hpp
 
 	${INCLUDE_DIR}/ph/game_loop/DefaultGameUpdateable.hpp
 	${INCLUDE_DIR}/ph/game_loop/GameLoop.hpp
@@ -76,11 +82,17 @@ set(PHANTASY_ENGINE_HEADER_FILES
 	${INCLUDE_DIR}/ph/util//GltfLoader.hpp
 	${INCLUDE_DIR}/ph/util//GltfWriter.hpp
 	${INCLUDE_DIR}/ph/util/TerminalLogger.hpp
+
+	${INCLUDE_DIR}/ph/PhantasyEngineMain.hpp
 )
 source_group(TREE ${INCLUDE_DIR} FILES ${PHANTASY_ENGINE_HEADER_FILES})
 
 set(PHANTASY_ENGINE_SOURCE_FILES
-	${SOURCE_DIR}/ph/PhantasyEngineMain.cpp
+	${SOURCE_DIR}/ph/ecs/naive/NaiveECS.cpp
+	${SOURCE_DIR}/ph/ecs/naive/NaiveEcsEditor.cpp
+
+	${SOURCE_DIR}/ph/ecs/ArrayHeader.cpp
+	${SOURCE_DIR}/ph/ecs/EcsContainer.cpp
 
 	${SOURCE_DIR}/ph/game_loop/DefaultGameUpdateable.cpp
 	${SOURCE_DIR}/ph/game_loop/GameLoop.cpp
@@ -96,6 +108,8 @@ set(PHANTASY_ENGINE_SOURCE_FILES
 	${SOURCE_DIR}/ph/util/GltfLoader.cpp
 	${SOURCE_DIR}/ph/util/GltfWriter.cpp
 	${SOURCE_DIR}/ph/util/TerminalLogger.cpp
+
+	${SOURCE_DIR}/ph/PhantasyEngineMain.cpp
 )
 source_group(TREE ${SOURCE_DIR} FILES ${PHANTASY_ENGINE_SOURCE_FILES})
 
