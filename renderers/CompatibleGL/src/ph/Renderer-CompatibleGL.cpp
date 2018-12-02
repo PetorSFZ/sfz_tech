@@ -170,7 +170,8 @@ static void stupidSetSphereLightUniform(
 		transformPoint(viewMatrix, sphereLight.pos));
 	gl::setUniform(program, str80("%s[%u].%s", name, index, "radius"), sphereLight.radius);
 	gl::setUniform(program, str80("%s[%u].%s", name, index, "range"), sphereLight.range);
-	gl::setUniform(program, str80("%s[%u].%s", name, index, "strength"), sphereLight.strength);
+	vec3 strength = vec3(sphereLight.color) * (1/255.0f) * sphereLight.strength;
+	gl::setUniform(program, str80("%s[%u].%s", name, index, "strength"), strength);
 }
 
 static void stupidSetMaterialUniform(
@@ -201,7 +202,7 @@ static void stupidSetMaterialUniform(
 extern "C" PH_DLL_EXPORT
 uint32_t phRendererInterfaceVersion(void)
 {
-	return 12;
+	return 13;
 }
 
 extern "C" PH_DLL_EXPORT

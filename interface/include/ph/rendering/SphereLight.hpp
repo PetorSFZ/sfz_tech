@@ -35,8 +35,8 @@ struct phSphereLight {
 	sfz::vec3 pos = sfz::vec3(0.0f);
 	float radius = 0.0f; // Size of the light emitter, 0 makes it a point light
 	float range; // Range of the emitted light
-	sfz::vec3 strength; // Strength (and color) of light source
+	float strength; // The strength of the emitted light
+	sfz::vec3_u8 color; uint8_t ___padding_unused___; // The color of the emitted light
 	uint32_t bitmaskFlags;
-	uint32_t padding[3];
 };
-static_assert(sizeof(phSphereLight) == sizeof(uint32_t) * 12, "phSphereLight is padded");
+static_assert(sizeof(phSphereLight) == sizeof(uint32_t) * 8, "phSphereLight is padded");
