@@ -65,14 +65,14 @@ bool NaiveEcsHeader::deleteEntity(uint32_t entity) noexcept
 
 	// Remove all associated components
 	for (uint32_t i = 0; i < this->numComponentTypes; i++) {
-		
+
 		// Get components array for type i, skip if does not exist
 		uint32_t componentSize = 0;
 		uint8_t* components = componentsUntyped(i, componentSize);
 		if (components == nullptr) continue;
 
 		// Clear component
-		memset(components + entity, 0, componentSize);
+		memset(components + entity * componentSize, 0, componentSize);
 	}
 
 	// Clear mask
@@ -107,7 +107,7 @@ uint32_t NaiveEcsHeader::cloneEntity(uint32_t entity) noexcept
 
 		// Get components array
 		uint32_t componentSize = 0;
-		uint8_t* components = this->componentsUntyped(i, componentSize); 
+		uint8_t* components = this->componentsUntyped(i, componentSize);
 
 		// Skip if component type does not have data
 		if (components == nullptr) continue;
@@ -137,7 +137,7 @@ uint8_t* NaiveEcsHeader::componentsUntyped(
 	// Get registry, return nullptr if component type is not in registry
 	ArrayHeader* registry = this->componentRegistryArray();
 	if (registry->size <= componentType) return nullptr;
-	
+
 	// Get registry entry, return nullptr if component type has no data
 	ComponentRegistryEntry entry = registry->at<ComponentRegistryEntry>(componentType);
 	if (!entry.componentTypeHasData()) return nullptr;
@@ -183,7 +183,7 @@ bool NaiveEcsHeader::addComponentUntyped(
 	if (dataSize != componentSize) return false;
 
 	// Copy component into ECS system
-	memcpy(components + entity, data, dataSize);
+	memcpy(components + entity * componentSize, data, dataSize);
 
 	// Ensure bit is set in mask
 	mask.setComponentType(componentType, true);
@@ -205,7 +205,7 @@ bool NaiveEcsHeader::deleteComponent(uint32_t entity, uint32_t componentType) no
 	if (components == nullptr) return false;
 
 	// Clear component
-	memset(components + entity, 0, componentSize);
+	memset(components + entity * componentSize, 0, componentSize);
 
 	// Clear bit in mask
 	mask.setComponentType(componentType, false);
@@ -247,10 +247,10 @@ EcsContainer createEcs(
 	ArrayHeader componentsArrayHeaders[64];
 	for (auto& entry : componentRegistryEntries) entry = ComponentRegistryEntry::createUnsized();
 	for (uint32_t i = 0; i < numComponentTypes; i++) {
-		
+
 		// If the component size is 0, don't create ArrayHeader and don't increment total size
 		if (componentSizes[i] == 0) continue;
-		
+
 		// Create ArrayHeader
 		ArrayHeader& componentsHeader = componentsArrayHeaders[i + 1];
 		componentsHeader = ArrayHeader::createUntyped(maxNumEntities, componentSizes[i]);
