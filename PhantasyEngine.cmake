@@ -256,6 +256,7 @@ endfunction()
 # Adds the bundled externals, this is currently stb and dear-imgui.
 # stb: ${STB_FOUND}, ${STB_INCLUDE_DIRS}
 # dear-imgui: ${IMGUI_FOUND}, ${IMGUI_INCLUDE_DIRS}, ${IMGUI_LIBRARIES}
+# nativefiledialog: ${NATIVEFILEDIALOG_FOUND}, ${NATIVEFILEDIALOG_INCLUDE_DIRS}, ${NATIVEFILEDIALOG_LIBRARIES}
 # tinygltf: ${TINYGLTF_FOUND}, ${TINYGLTF_INCLUDE_DIRS}
 function(phAddBundledExternals)
 
@@ -269,6 +270,12 @@ function(phAddBundledExternals)
 	set(IMGUI_FOUND ${IMGUI_FOUND} PARENT_SCOPE)
 	set(IMGUI_INCLUDE_DIRS ${IMGUI_INCLUDE_DIRS} PARENT_SCOPE)
 	set(IMGUI_LIBRARIES ${IMGUI_LIBRARIES} PARENT_SCOPE)
+
+	message("-- [PhantasyEngine]: Adding nativefiledialog target")
+	add_subdirectory(${PH_ROOT}/externals/nativefiledialog ${CMAKE_BINARY_DIR}/nativefiledialog)
+	set(NATIVEFILEDIALOG_FOUND ${NATIVEFILEDIALOG_FOUND} PARENT_SCOPE)
+	set(NATIVEFILEDIALOG_INCLUDE_DIRS ${NATIVEFILEDIALOG_INCLUDE_DIRS} PARENT_SCOPE)
+	set(NATIVEFILEDIALOG_LIBRARIES ${NATIVEFILEDIALOG_LIBRARIES} PARENT_SCOPE)
 
 	message("-- [PhantasyEngine]: Adding tinygltf target")
 	add_subdirectory(${PH_ROOT}/externals/tinygltf ${CMAKE_BINARY_DIR}/tinygltf)
@@ -351,10 +358,12 @@ function(phLinkBundledExternals linkTarget)
 	target_include_directories(${linkTarget} PUBLIC
 		${STB_INCLUDE_DIRS}
 		${IMGUI_INCLUDE_DIRS}
+		${NATIVEFILEDIALOG_INCLUDE_DIRS}
 		${TINYGLTF_INCLUDE_DIRS}
 	)
 	target_link_libraries(${linkTarget}
 		${IMGUI_LIBRARIES}
+		${NATIVEFILEDIALOG_LIBRARIES}
 	)
 endfunction()
 
