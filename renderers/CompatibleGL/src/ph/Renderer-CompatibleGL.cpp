@@ -609,8 +609,7 @@ void phBeginFrame(
 
 	// Set dynamic sphere lights
 	state.dynamicSphereLights.clear();
-	state.dynamicSphereLights.insert(0, dynamicSphereLights,
-		min(numDynamicSphereLights, MAX_NUM_DYNAMIC_SPHERE_LIGHTS));
+	state.dynamicSphereLights.add(dynamicSphereLights, min(numDynamicSphereLights, MAX_NUM_DYNAMIC_SPHERE_LIGHTS));
 
 	// Set some GL settings
 	glEnable(GL_CULL_FACE);
