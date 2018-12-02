@@ -70,6 +70,12 @@ public:
 
 	virtual UpdateOp updateTick(UpdateableState& state, const UpdateInfo& updateInfo) = 0;
 
+	// A hook called in DefaultGameUpdateable's render() function before rendering starts. Good
+	// place to fill the list of phRenderEntity's to render (state.renderEntities). Called even
+	// when console is active (in contrast to updateTick()).
+	virtual void preRenderHook(
+		UpdateableState& state, const UpdateInfo& updateInfo, Renderer& renderer) = 0;
+
 	// Renders custom Imgui commands.
 	//
 	// This function and injectConsoleMenu() are the only places where Imgui commands can safely

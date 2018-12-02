@@ -261,6 +261,9 @@ public:
 
 	void render(const UpdateInfo& updateInfo, Renderer& renderer) override final
 	{
+		// Call the pre-render hook
+		mLogic->preRenderHook(mState, updateInfo, renderer);
+
 		// Some assets sanity checks
 		sfz_assert_debug(mState.dynamicAssets.textures.size() ==
 			mState.dynamicAssets.textureFileMappings.size());
