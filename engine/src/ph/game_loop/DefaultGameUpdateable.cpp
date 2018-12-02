@@ -351,7 +351,7 @@ private:
 
 		// Render performance histogram
 		ImGui::PlotLines("Frametimes", mStats.samples().data(), mStats.samples().size(), 0, nullptr,
-			sfz::min(mStats.min(), 0.012f), sfz::max(mStats.max(), 0.020f), histogramDims);
+			0.0f, sfz::max(mStats.max(), 0.020f), histogramDims);
 
 		// End window
 		ImGui::End();
