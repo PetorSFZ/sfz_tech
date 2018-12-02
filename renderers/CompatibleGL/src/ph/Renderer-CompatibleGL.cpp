@@ -735,6 +735,11 @@ void phRender(const phRenderEntity* entities, uint32_t numEntities)
 
 	for (uint32_t i = 0; i < numEntities; i++) {
 		const phRenderEntity& entity = entities[i];
+		if (entity.meshIndex >= state.dynamicModels.size()) {
+				SFZ_WARNING("Renderer-CompatibleGL",
+				"phRender(): Invalid meshIndex for dynamic entity (phRenderEntity)");
+			continue;
+		}
 		auto& model = state.dynamicModels[entity.meshIndex];
 
 		// Set model and normal matrices
