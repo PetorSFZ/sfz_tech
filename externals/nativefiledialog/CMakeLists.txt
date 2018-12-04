@@ -17,7 +17,7 @@ set(SRC_FILES
 
 # Windows
 if(MSVC)
-	set(SRC_FILES ${SRC_FILES} ${SRC_DIR}/nfd_win.m)
+	set(SRC_FILES ${SRC_FILES} ${SRC_DIR}/nfd_win.cpp)
 	add_library(nativefiledialog
 		${INCLUDE_FILES}
 		${SRC_FILES}
@@ -46,7 +46,7 @@ elseif(EMSCRIPTEN)
 # Everything else
 else()
 	message(FATAL_ERROR "[nativefiledialog]: Not yet setup for this platform, exiting")
-	# set(SRC_FILES ${SRC_FILES} ${SRC_DIR}/nfd_gtk.m)
+	# set(SRC_FILES ${SRC_FILES} ${SRC_DIR}/nfd_gtk.c)
 endif()
 
 # Add src files to IDE
