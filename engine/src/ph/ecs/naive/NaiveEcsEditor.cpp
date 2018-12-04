@@ -23,7 +23,9 @@
 
 #include <imgui.h>
 
+#if !defined(__EMSCRIPTEN__) && !defined(SFZ_IOS)
 #include <nfd.h>
+#endif
 
 #include <sfz/Logging.hpp>
 #include <sfz/strings/StackString.hpp>
@@ -169,13 +171,14 @@ void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 	ImGui::Text(" --  %u / %u entities", numEntities, ecs->maxNumEntities);
 
 	// Save to file button
+#if !defined(__EMSCRIPTEN__) && !defined(SFZ_IOS)
 	ImGui::SameLine(ImGui::GetWindowWidth() - 140.0f);
 	if (ImGui::Button("Save", sfz::vec2(60, 0))) {
-		
+
 		// Open file dialog
 		nfdchar_t* path = nullptr;
 		nfdresult_t result = NFD_SaveDialog("phnecs", nullptr, &path);
-		
+
 		// Write ECS to file if file dialog was succesful
 		if (result == NFD_OKAY) {
 			bool success =  sfz::writeBinaryFile(path, (const uint8_t*)ecs, ecs->ecsSizeBytes);
@@ -222,6 +225,7 @@ void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 				NFD_GetError());
 		}
 	}
+#endif
 
 	ImGui::Spacing();
 	ImGui::Separator();
