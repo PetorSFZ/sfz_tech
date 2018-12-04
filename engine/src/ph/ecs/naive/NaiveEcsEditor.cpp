@@ -23,7 +23,11 @@
 
 #include <imgui.h>
 
+#include <nfd.h>
+
+#include <sfz/Logging.hpp>
 #include <sfz/strings/StackString.hpp>
+#include <sfz/util/IO.hpp>
 
 #include "ph/ecs/EcsEnums.hpp"
 
@@ -128,7 +132,7 @@ void NaiveEcsEditor::destroy() noexcept
 void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 {
 	// Begin window
-	ImGui::SetNextWindowContentSize(sfz::vec2(550.0f, 480.0f));
+	ImGui::SetNextWindowContentSize(sfz::vec2(550.0f, 500.0f));
 	ImGuiWindowFlags windowFlags = 0;
 	//windowFlags |= ImGuiWindowFlags_NoResize;
 	windowFlags |= ImGuiWindowFlags_NoScrollbar;
@@ -163,6 +167,65 @@ void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 	ImGui::SameLine();
 	uint32_t numEntities = ecs->currentNumEntities;
 	ImGui::Text(" --  %u / %u entities", numEntities, ecs->maxNumEntities);
+
+	// Save to file button
+	ImGui::SameLine(ImGui::GetWindowWidth() - 140.0f);
+	if (ImGui::Button("Save", sfz::vec2(60, 0))) {
+		
+		// Open file dialog
+		nfdchar_t* path = nullptr;
+		nfdresult_t result = NFD_SaveDialog("phnecs", nullptr, &path);
+		
+		// Write ECS to file if file dialog was succesful
+		if (result == NFD_OKAY) {
+			bool success =  sfz::writeBinaryFile(path, (const uint8_t*)ecs, ecs->ecsSizeBytes);
+			if (success) {
+				SFZ_INFO("PhantasyEngine", "Wrote ECS to \"%s\"", path);
+			}
+			else {
+				SFZ_ERROR("PhantasyEngine", "Failed to write ECS to \"%s\"", path);
+			}
+			free(path);
+		}
+		else if (result == NFD_ERROR) {
+			SFZ_ERROR("PhantasyEngine", "nativefiledialog: NFD_SaveDialog() error: %s",
+				NFD_GetError());
+		}
+	}
+
+	// Load from file button
+	ImGui::SameLine();
+	if (ImGui::Button("Load", sfz::vec2(60, 0))) {
+
+		// Open file dialog
+		nfdchar_t* path = nullptr;
+		nfdresult_t result = NFD_OpenDialog("phnecs", nullptr, &path);
+
+		// Load ECS from file if file dialog was succesful
+		if (result == NFD_OKAY) {
+			sfz::DynArray<uint8_t> binary = sfz::readBinaryFile(path);
+			if (binary.size() == 0) {
+				SFZ_ERROR("PhantasyEngine", "Could not read ECS from \"%s\"", path);
+			}
+			else if (binary.size() != ecs->ecsSizeBytes) {
+				SFZ_ERROR("PhantasyEngine", "ECS from \"%s\" is wrong size", path);
+			}
+			else {
+				// TODO: Check if header matches
+				std::memcpy(ecs, binary.data(), ecs->ecsSizeBytes);
+				SFZ_INFO("PhantasyEngine", "Loaded ECS from \"%s\"", path);
+			}
+			free(path);
+		}
+		else if (result == NFD_ERROR) {
+			SFZ_ERROR("PhantasyEngine", "nativefiledialog: NFD_OpenDialog() error: %s",
+				NFD_GetError());
+		}
+	}
+
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
 
 	// Currently selected entities component mask
 	if (ImGui::CollapsingHeader("Component mask filter")) {

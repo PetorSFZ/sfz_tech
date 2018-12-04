@@ -35,6 +35,10 @@ if (NOT IMGUI_FOUND)
 	message(FATAL_ERROR "PhantasyEngine requires dear imgui. Add Dependency-imgui.")
 endif()
 
+if (NOT NATIVEFILEDIALOG_FOUND)
+	message(FATAL_ERROR "PhantasyEngine requires nativefiledialog. Add nativefiledialog.")
+endif()
+
 if (NOT TINYGLTF_FOUND)
 	message(FATAL_ERROR "PhantasyEngine requires dear tinygltf.")
 endif()
@@ -122,6 +126,7 @@ target_include_directories(PhantasyEngineCore PUBLIC
 	${PH_INTERFACE_INCLUDE_DIRS}
 	${STB_INCLUDE_DIRS}
 	${IMGUI_INCLUDE_DIRS}
+	${NATIVEFILEDIALOG_INCLUDE_DIRS}
 	${TINYGLTF_INCLUDE_DIRS}
 )
 
@@ -130,6 +135,7 @@ target_link_libraries(PhantasyEngineCore
 	${SFZ_CORE_LIBRARIES}
 	${PH_INTERFACE_LIBRARIES}
 	${IMGUI_LIBRARIES}
+	${NATIVEFILEDIALOG_LIBRARIES}
 )
 
 # Output variables
