@@ -26,3 +26,6 @@ CMakeFiles
 Makefile
 cmake_install.cmake
 install_manifest.txt
+
+# Build directories
+Samples/build_msvc2017/
