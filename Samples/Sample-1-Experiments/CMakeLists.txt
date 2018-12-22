@@ -25,3 +25,11 @@ set(SRC_FILES
 )
 
 add_executable(ZeroG-Sample1 ${SRC_FILES})
+
+target_include_directories(ZeroG-Sample1 PRIVATE
+	${SRC_DIR}
+	${SDL2_INCLUDE_DIRS}
+	${ZEROG_INCLUDE_DIRS}
+)
+
+target_link_libraries(ZeroG-Sample1 ${SDL2_LIBRARIES} ${ZEROG_CPP_LIBRARIES})

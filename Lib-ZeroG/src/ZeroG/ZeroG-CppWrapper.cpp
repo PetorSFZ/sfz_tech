@@ -16,16 +16,22 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include <cstdio>
+#include "ZeroG/ZeroG.hpp"
+#include "ZeroG/ZeroG-CApi.h"
 
-#include <SDL.h>
-#include <ZeroG/ZeroG.hpp>
+namespace zg {
 
-int main(int argc, char* argv[])
+// Version information
+// ------------------------------------------------------------------------------------------------
+
+uint32_t apiVersionCompiled() noexcept
 {
-	(void)argc;
-	(void)argv;
-
-	printf("%s\n", "Hello World!");
-	return 0;
+	return ZG_COMPILED_API_VERSION;
 }
+
+uint32_t apiVersionLinked() noexcept
+{
+	return zgApiVersion();
+}
+
+} // namespace zg

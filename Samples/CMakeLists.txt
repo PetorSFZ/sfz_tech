@@ -28,6 +28,10 @@ include(FetchContent)
 # The root directory of the ZeroG repository
 set(ZEROG_REPO_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
+# Place results in the standard output directory
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
 # SDL2
 # ------------------------------------------------------------------------------------------------
 
@@ -53,6 +57,50 @@ else()
 		add_subdirectory(${sdl2_SOURCE_DIR} ${CMAKE_BINARY_DIR}/sdl2)
 	endif()
 endif()
+
+# Copy SDL2.dll on Windows
+if (MSVC)
+	file(COPY ${SDL2_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+	file(COPY ${SDL2_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR}/RelWithDebInfo)
+	file(COPY ${SDL2_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR}/Release)
+endif()
+
+# ZeroG
+# ------------------------------------------------------------------------------------------------
+
+# Adding ZeroG
+# ${ZEROG_FOUND}, ${ZEROG_INCLUDE_DIRS}, ${ZEROG_LIBRARIES} and ${ZEROG_CPP_LIBRARIES}
+add_subdirectory(${ZEROG_REPO_ROOT_DIR}/Lib-ZeroG ${CMAKE_BINARY_DIR}/ZeroG)
+
+# Compiler flags
+# ------------------------------------------------------------------------------------------------
+
+if(MSVC)
+	# MSVC flags
+	# /W4 = Warning level 4 (/Wall is too picky and has annoying warnings in standard headers)
+	# /wd4201 = Disable warning 4201 (nonstandard extension used : nameless struct/union)
+	# /Zi = Produce .pdb debug information. Does not affect optimizations, but does imply /debug.
+	# /arch:AVX = Enable (require) Intel AVX instructions for code generation
+	# /D_CRT_SECURE_NO_WARNINGS = Removes annyoing warning when using c standard library
+	# /utf-8 = Specifies that both the source and execution character sets are encoded using UTF-8.
+	# /Od = "disables optimization, speeding compilation and simplifying debugging"
+	# /DEBUG = "creates debugging information for the .exe file or DLL"
+	# /O2 = Optimize code for fastest speed
+	# /fp:fast = "optimize floating-point code for speed at the expense of accuracy and correctness"
+	set(CMAKE_CXX_FLAGS "/W4 /wd4201 /Zi /EHsc /arch:AVX /D_CRT_SECURE_NO_WARNINGS /utf-8")
+	set(CMAKE_CXX_FLAGS_DEBUG "/Od /DEBUG")
+	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/O2 /fp:fast /DEBUG")
+	set(CMAKE_CXX_FLAGS_RELEASE "/O2 /fp:fast")
+
+else()
+	message(FATAL_ERROR "Not implemented!")
+endif()
+
+message("-- [ZeroG Samples]: Compiling with the following compiler flags:")
+message("  -- CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS})
+message("  -- CMAKE_CXX_FLAGS_DEBUG: " ${CMAKE_CXX_FLAGS_DEBUG})
+message("  -- CMAKE_CXX_FLAGS_RELWITHDEBINFO: " ${CMAKE_CXX_FLAGS_RELWITHDEBINFO})
+message("  -- CMAKE_CXX_FLAGS_RELEASE: " ${CMAKE_CXX_FLAGS_RELEASE})
 
 # Add samples
 # ------------------------------------------------------------------------------------------------

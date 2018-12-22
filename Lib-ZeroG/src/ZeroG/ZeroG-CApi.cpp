@@ -16,16 +16,16 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include <cstdio>
+#define ZG_DLL_EXPORT
+#include "ZeroG/ZeroG-CApi.h"
 
-#include <SDL.h>
-#include <ZeroG/ZeroG.hpp>
+// Version information
+// ------------------------------------------------------------------------------------------------
 
-int main(int argc, char* argv[])
+ZG_DLL_API uint32_t zgApiVersion(void)
 {
-	(void)argc;
-	(void)argv;
-
-	printf("%s\n", "Hello World!");
-	return 0;
+	return ZG_COMPILED_API_VERSION;
 }
+
+// Context creation
+// ------------------------------------------------------------------------------------------------

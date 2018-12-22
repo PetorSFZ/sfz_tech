@@ -16,16 +16,21 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include <cstdio>
+#pragma once
 
-#include <SDL.h>
-#include <ZeroG/ZeroG.hpp>
+#include <cstdint>
 
-int main(int argc, char* argv[])
-{
-	(void)argc;
-	(void)argv;
+namespace zg {
 
-	printf("%s\n", "Hello World!");
-	return 0;
-}
+// Version information
+// ------------------------------------------------------------------------------------------------
+
+// Returns the API version that was used when compiling. If this version needs to match the version
+// in the linked DLL.
+uint32_t apiVersionCompiled() noexcept;
+
+// Returns the API version of the linked DLL. This needs to match the version that was used when
+// compiling.
+uint32_t apiVersionLinked() noexcept;
+
+} // namespace zg
