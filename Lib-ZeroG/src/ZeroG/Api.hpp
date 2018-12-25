@@ -16,49 +16,19 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#define ZG_DLL_EXPORT
-#include "ZeroG/ZeroG-CApi.h"
+#pragma once
 
-#include "ZeroG/Api.hpp"
+namespace zg {
 
-#ifdef _WIN32
-#include "ZeroG/d3d12/D3D12Api.hpp"
-#endif
-
-// Version information
+// ApiInterface
 // ------------------------------------------------------------------------------------------------
 
-ZG_DLL_API uint32_t zgApiVersion(void)
-{
-	return ZG_COMPILED_API_VERSION;
-}
+// The common interface for all implementations of ZeroG.
+class Api {
+public:
+	virtual ~Api() noexcept {}
 
-// Backends enums and queries
-// ------------------------------------------------------------------------------------------------
-
-ZG_DLL_API ZG_BOOL zgBackendCompiled(ZgBackendType backendType)
-{
-	return ZG_TRUE;
-}
-
-// Context
-// ------------------------------------------------------------------------------------------------
-
-struct ZgContext {
 
 };
 
-ZG_DLL_API ZgErrorCode zgCreateContext(
-	ZgContext** contextOut, const ZgContextInitSettings* settings)
-{
-	return ZG_SUCCESS;
-}
-
-ZG_DLL_API ZgErrorCode zgDestroyContext(ZgContext* context)
-{
-	if (context == nullptr) return ZG_SUCCESS;
-
-
-
-	return ZG_SUCCESS;
-}
+} // namespace zg

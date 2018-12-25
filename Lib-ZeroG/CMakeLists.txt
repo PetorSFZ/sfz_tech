@@ -73,6 +73,9 @@ set(ZEROG_CAPI_INCLUDE_FILES
 source_group(TREE ${INCLUDE_DIR} FILES ${ZEROG_CAPI_INCLUDE_FILES})
 
 set(ZEROG_CAPI_SRC_FILES
+	${SRC_DIR}/ZeroG/d3d12/D3D12Api.hpp
+	${SRC_DIR}/ZeroG/d3d12/D3D12Api.cpp
+	${SRC_DIR}/ZeroG/Api.hpp
 	${SRC_DIR}/ZeroG/ZeroG-CApi.cpp
 )
 source_group(TREE ${SRC_DIR} FILES ${ZEROG_CAPI_SRC_FILES})

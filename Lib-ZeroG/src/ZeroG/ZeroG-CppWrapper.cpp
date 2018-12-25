@@ -17,21 +17,27 @@
 // 3. This notice may not be removed or altered from any source distribution.
 
 #include "ZeroG/ZeroG.hpp"
-#include "ZeroG/ZeroG-CApi.h"
+
+#include <algorithm>
 
 namespace zg {
 
-// Version information
+// Context
 // ------------------------------------------------------------------------------------------------
 
-uint32_t apiVersionCompiled() noexcept
+ErrorCode Context::init(const ZgContextInitSettings& settings)
 {
-	return ZG_COMPILED_API_VERSION;
+	return ErrorCode(zgCreateContext(&mContext, &settings));
 }
 
-uint32_t apiVersionLinked() noexcept
+void Context::swap(Context& other) noexcept
 {
-	return zgApiVersion();
+	std::swap(this->mContext, other.mContext);
+}
+
+void Context::destroy() noexcept
+{
+	zgDestroyContext(mContext);
 }
 
 } // namespace zg

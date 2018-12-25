@@ -20,17 +20,50 @@
 
 #include <cstdint>
 
+#include "ZeroG-CApi.h"
+
 namespace zg {
 
-// Version information
+// Error codes
 // ------------------------------------------------------------------------------------------------
 
-// Returns the API version that was used when compiling. If this version needs to match the version
-// in the linked DLL.
-uint32_t apiVersionCompiled() noexcept;
+enum class ErrorCode : uint32_t {
+	SUCCESS = ZG_SUCCESS,
+	ERROR_GENERIC = ZG_ERROR_GENERIC,
 
-// Returns the API version of the linked DLL. This needs to match the version that was used when
-// compiling.
-uint32_t apiVersionLinked() noexcept;
+	VERSION_MISMATCH = ZG_ERROR_INIT_VERSION_MISMATCH,
+};
+
+// Context
+// ------------------------------------------------------------------------------------------------
+
+class Context final {
+public:
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	Context() noexcept = default;
+	Context(const Context&) = delete;
+	Context& operator= (const Context&) = delete;
+	Context(Context&& other) noexcept { this->swap(other); }
+	Context& operator= (Context&& other) noexcept { this->swap(other); return *this; }
+	~Context() noexcept { this->destroy(); }
+
+	// State methods
+	// --------------------------------------------------------------------------------------------
+
+	// Creates and initializes a context, see zgCreateContext().
+	ErrorCode init(const ZgContextInitSettings& settings);
+
+	void swap(Context& other) noexcept;
+	void destroy() noexcept;
+
+	// Methods
+	// --------------------------------------------------------------------------------------------
+
+
+private:
+	ZgContext* mContext = nullptr;
+};
 
 } // namespace zg
