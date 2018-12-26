@@ -16,50 +16,49 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#define ZG_DLL_EXPORT
-#include "ZeroG/ZeroG-CApi.h"
-
-#include "ZeroG/Api.hpp"
 #include "ZeroG/CpuAllocation.hpp"
 
 #ifdef _WIN32
-#include "ZeroG/d3d12/D3D12Api.hpp"
+#include <malloc.h>
+#else
+#include <stdlib.h>
 #endif
 
-// Version information
+namespace zg {
+
+// Default allocator
 // ------------------------------------------------------------------------------------------------
 
-ZG_DLL_API uint32_t zgApiVersion(void)
+static uint8_t* defaultAllocate(void* userPtr, uint32_t size, const char* name)
 {
-	return ZG_COMPILED_API_VERSION;
+	(void)userPtr;
+	(void)name;
+#ifdef _WIN32
+	return reinterpret_cast<uint8_t*>(_aligned_malloc(size, 32));
+#else
+	void* ptr = nullptr;
+	posix_memalign(&ptr, 32, size);
+	return reinterpret_cast<uint8_t*>(ptr);
+#endif
 }
 
-// Backends enums and queries
-// ------------------------------------------------------------------------------------------------
-
-ZG_DLL_API ZG_BOOL zgBackendCompiled(ZgBackendType backendType)
+static void defaultFree(void* userPtr, uint8_t* allocation)
 {
-	return ZG_TRUE;
+	(void)userPtr;
+	if (allocation == nullptr) return;
+#ifdef _WIN32
+	_aligned_free(allocation);
+#else
+	free(allocation);
+#endif
 }
 
-// Context
-// ------------------------------------------------------------------------------------------------
-
-struct ZgContext {
-
-};
-
-ZG_DLL_API ZgErrorCode zgCreateContext(
-	ZgContext** contextOut, const ZgContextInitSettings* settings)
+ZgAllocator getDefaultAllocator() noexcept
 {
-	return ZG_SUCCESS;
+	ZgAllocator allocator = {};
+	allocator.allocate = defaultAllocate;
+	allocator.free = defaultFree;
+	return allocator;
 }
 
-ZG_DLL_API ZgErrorCode zgDestroyContext(ZgContext* context)
-{
-	if (context == nullptr) return ZG_SUCCESS;
-
-
-
-	return ZG_SUCCESS;
-}
+} // namespace zg

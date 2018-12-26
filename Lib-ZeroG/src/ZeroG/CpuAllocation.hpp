@@ -16,50 +16,39 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#define ZG_DLL_EXPORT
+#pragma once
+
+#include <utility> // std::forward
+
 #include "ZeroG/ZeroG-CApi.h"
 
-#include "ZeroG/Api.hpp"
-#include "ZeroG/CpuAllocation.hpp"
+namespace zg {
 
-#ifdef _WIN32
-#include "ZeroG/d3d12/D3D12Api.hpp"
-#endif
-
-// Version information
+// New/Delete helpers
 // ------------------------------------------------------------------------------------------------
 
-ZG_DLL_API uint32_t zgApiVersion(void)
+template<typename T, typename... Args>
+T* zgNew(ZgAllocator* allocator, const char* name, Args&&... args) noexcept
 {
-	return ZG_COMPILED_API_VERSION;
+	uint8_t* memPtr = allocator->allocate(allocator->userPtr, sizeof(T), name);
+	T* objPtr = nullptr;
+	objPtr = new(memPtr) T(std::forward<Args>(args)...);
+	// If constructor throws exception std::terminate() will be called since function is noexcept
+	return objPtr;
 }
 
-// Backends enums and queries
+template<typename T>
+void zgDelete(ZgAllocator* allocator, T* pointer) noexcept
+{
+	if (pointer == nullptr) return;
+	pointer->~T();
+	// If destructor throws exception std::terminate() will be called since function is noexcept
+	allocator->deallocate(allocator->userPtr, static_cast<void*>(pointer));
+}
+
+// Default allocator
 // ------------------------------------------------------------------------------------------------
 
-ZG_DLL_API ZG_BOOL zgBackendCompiled(ZgBackendType backendType)
-{
-	return ZG_TRUE;
-}
+ZgAllocator getDefaultAllocator() noexcept;
 
-// Context
-// ------------------------------------------------------------------------------------------------
-
-struct ZgContext {
-
-};
-
-ZG_DLL_API ZgErrorCode zgCreateContext(
-	ZgContext** contextOut, const ZgContextInitSettings* settings)
-{
-	return ZG_SUCCESS;
-}
-
-ZG_DLL_API ZgErrorCode zgDestroyContext(ZgContext* context)
-{
-	if (context == nullptr) return ZG_SUCCESS;
-
-
-
-	return ZG_SUCCESS;
-}
+} // namespace zg
