@@ -19,29 +19,17 @@
 #pragma once
 
 #include "ZeroG/Api.hpp"
+#include "ZeroG/ZeroG-CApi.h"
 
 namespace zg {
 
-// D3D12 API implementation
+// D3D12 API
 // ------------------------------------------------------------------------------------------------
 
-class D3D12Api : public Api {
-public:
-
-	// Constructors & destructors
-	// --------------------------------------------------------------------------------------------
-
-	D3D12Api() noexcept = default;
-	D3D12Api(const D3D12Api&) = delete;
-	D3D12Api& operator= (const D3D12Api&) = delete;
-	D3D12Api(D3D12Api&&) = delete;
-	D3D12Api& operator= (D3D12Api&&) = delete;
-	virtual ~D3D12Api() noexcept;
-
-	// 
-	// --------------------------------------------------------------------------------------------
-
-
-};
+ZgErrorCode createD3D12Backend(
+	Api** apiOut,
+	void* windowHandle,
+	ZgAllocator& allocator,
+	bool debugMode) noexcept;
 
 } // namespace zg

@@ -20,6 +20,8 @@
 #include <cstdio>
 
 #include <SDL.h>
+#include <SDL_syswm.h>
+
 #include <ZeroG/ZeroG.hpp>
 
 #ifdef _WIN32
@@ -27,6 +29,25 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
+
+// Settings
+// ------------------------------------------------------------------------------------------------
+
+constexpr bool DEBUG_MODE = true;
+
+// Statics
+// ------------------------------------------------------------------------------------------------
+
+static HWND getWin32WindowHandle(SDL_Window* window) noexcept
+{
+	SDL_SysWMinfo info = {};
+	SDL_VERSION(&info.version);
+	if (!SDL_GetWindowWMInfo(window, &info)) return nullptr;
+	return info.info.win.window;
+}
+
+// Main
+// ------------------------------------------------------------------------------------------------
 
 int main(int argc, char* argv[])
 {
@@ -59,6 +80,8 @@ int main(int argc, char* argv[])
 	// Create ZeroG context
 	ZgContextInitSettings initSettings = {};
 	initSettings.backend = ZG_BACKEND_D3D12;
+	initSettings.debugMode = DEBUG_MODE ? ZG_TRUE : ZG_FALSE;
+	initSettings.nativeWindowHandle = getWin32WindowHandle(window);
 	zg::Context ctx;
 	ctx.init(initSettings);
 

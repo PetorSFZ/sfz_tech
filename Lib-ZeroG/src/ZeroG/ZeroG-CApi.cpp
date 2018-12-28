@@ -69,18 +69,28 @@ ZG_DLL_API ZgErrorCode zgCreateContext(
 
 	// Create and allocate requested backend api
 	switch (initSettings->backend) {
-	
+
 	case ZG_BACKEND_NONE:
 		// TODO: Implement null backend
-		zg::zgDelete(context->allocator, context);
+		zg::zgDelete(settings.allocator, context);
 		return ZG_ERROR_UNIMPLEMENTED;
-	
+
 	case ZG_BACKEND_D3D12:
-		context->api = zg::zgNew<zg::D3D12Api>(context->allocator, "D3D12 backend");
+		{
+			ZgErrorCode res = zg::createD3D12Backend(
+				&context->api,
+				settings.nativeWindowHandle,
+				context->allocator,
+				(initSettings->debugMode));
+			if (res != ZG_SUCCESS) {
+				zg::zgDelete(settings.allocator, context);
+				return res;
+			}
+		}
 		break;
-	
+
 	default:
-		zg::zgDelete(context->allocator, context);
+		zg::zgDelete(settings.allocator, context);
 		return ZG_ERROR_GENERIC;
 	}
 

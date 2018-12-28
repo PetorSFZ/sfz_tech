@@ -91,7 +91,7 @@ typedef uint32_t ZgBackendType;
 // Feature bits representing different features that can be compiled into ZeroG.
 //
 // If you depend on a specific feature (such as the D3D12 backend) it is a good idea to query and
-// check if it is available 
+// check if it is available
 enum ZgFeatureBitsEnum {
 	ZG_FEATURE_BIT_NONE = 0,
 	ZG_FEATURE_BIT_BACKEND_D3D12 = 1 << 1,
@@ -114,6 +114,7 @@ enum ZgErrorCodeEnum {
 	ZG_ERROR_GENERIC,
 	ZG_ERROR_UNIMPLEMENTED,
 	ZG_ERROR_CPU_OUT_OF_MEMORY,
+	ZG_ERROR_NO_SUITABLE_DEVICE,
 };
 typedef uint32_t ZgErrorCode;
 
@@ -132,10 +133,10 @@ typedef struct {
 	// name is a short string (< ~32 chars) explaining what the allocation is used for, useful
 	// for debug or visualization purposes.
 	uint8_t* (*allocate)(void* userPtr, uint32_t size, const char* name);
-	
+
 	// Function pointer to deallocate function.
 	void (*deallocate)(void* userPtr, uint8_t* allocation);
-	
+
 	// User specified pointer that is provided to each allocate/free call.
 	void* userPtr;
 } ZgAllocator;
@@ -147,14 +148,23 @@ typedef struct {
 struct ZgContext;
 typedef struct ZgContext ZgContext;
 
-// The settings used to create
+// The settings used to create a context and initialize ZeroG
 typedef struct {
-	
+
 	// [Mandatory] The wanted ZeroG backend
 	ZgBackendType backend;
 
+	// [Optional] Used to enable debug mode. This means enabling various debug layers and such
+	//            in the underlaying APIs.
+	ZgBool debugMode;
+
 	// [Optional] The allocator used to allocate CPU memory
 	ZgAllocator allocator;
+
+	// [Mandatory] The native window handle, e.g. HWND on Windows
+	// TODO: Might want to change this in the future, possibly want different things depending on
+	//       backend and OS.
+	void* nativeWindowHandle;
 
 } ZgContextInitSettings;
 
@@ -164,7 +174,7 @@ ZG_DLL_API ZgErrorCode zgCreateContext(
 ZG_DLL_API ZgErrorCode zgDestroyContext(ZgContext* context);
 
 
-// Everything in this file is pure C
+// This entire header is pure C
 #ifdef __cplusplus
 } // extern "C"
 #endif

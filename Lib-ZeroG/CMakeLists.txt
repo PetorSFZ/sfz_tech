@@ -87,10 +87,7 @@ add_library(ZeroG SHARED ${ZEROG_CAPI_INCLUDE_FILES} ${ZEROG_CAPI_SRC_FILES})
 target_include_directories(ZeroG PRIVATE
 	${INCLUDE_DIR}
 	${SRC_DIR}
-	${SDL2_INCLUDE_DIRS}
 )
-
-target_link_libraries(ZeroG ${SDL2_LIBRARIES})
 
 # ZeroG C++ Wrapper
 # ------------------------------------------------------------------------------------------------
@@ -110,10 +107,7 @@ add_library(ZeroG-cpp ${ZEROG_CPP_INCLUDE_FILES} ${ZEROG_CPP_SRC_FILES})
 target_include_directories(ZeroG-cpp PRIVATE
 	${INCLUDE_DIR}
 	${SRC_DIR}
-	${SDL2_INCLUDE_DIRS}
 )
-
-target_link_libraries(ZeroG-cpp ZeroG ${SDL2_LIBRARIES})
 
 # Output variables (Parent scope)
 # ------------------------------------------------------------------------------------------------
