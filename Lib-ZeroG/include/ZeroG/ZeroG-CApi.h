@@ -28,34 +28,32 @@
 
 #pragma once
 
+// This entire header is pure C
 #ifdef __cplusplus
-#include <cstdint>
-#else
-#include <stdint.h>
+extern "C" {
 #endif
+
+#include <stdint.h>
 
 // Macros
 // ------------------------------------------------------------------------------------------------
 
-#ifdef __cplusplus
-#define ZG_EXTERN_C extern "C"
-#else
-#define ZG_EXTERN_C
-#endif
-
 #if defined(_WIN32)
 #if defined(ZG_DLL_EXPORT)
-#define ZG_DLL_API ZG_EXTERN_C __declspec(dllexport)
+#define ZG_DLL_API __declspec(dllexport)
 #else
-#define ZG_DLL_API ZG_EXTERN_C __declspec(dllimport)
+#define ZG_DLL_API __declspec(dllimport)
 #endif
 #else
-#define ZG_DLL_API ZG_EXTERN_C
+#define ZG_DLL_API
 #endif
 
-typedef uint32_t ZG_BOOL;
-static const uint32_t ZG_FALSE = 0;
-static const uint32_t ZG_TRUE = 1;
+// Bool
+// ------------------------------------------------------------------------------------------------
+
+typedef uint32_t ZgBool;
+static const ZgBool ZG_FALSE = 0;
+static const ZgBool ZG_TRUE = 1;
 
 // Version information
 // ------------------------------------------------------------------------------------------------
@@ -69,24 +67,43 @@ static const uint32_t ZG_COMPILED_API_VERSION = 0;
 // compatible.
 ZG_DLL_API uint32_t zgApiVersion(void);
 
-// Backends enums and queries
+// Backends enums
 // ------------------------------------------------------------------------------------------------
 
 // The various backends supported by ZeroG
 enum ZgBackendTypeEnum {
 	// The null backend, simply turn every ZeroG call into a no-op.
-	ZG_BACKEND_NULL = 0,
+	ZG_BACKEND_NONE = 0,
 
 	// The D3D12 backend, only available on Windows 10.
-	ZG_BACKEND_D3D12 = 1
+	ZG_BACKEND_D3D12,
+
+	//ZG_BACKEND_VULKAN,
+	//ZG_BACKEND_METAL,
+	//ZG_BACKEND_WEB_GPU,
+	//ZG_BACKEND_D3D11
 };
 typedef uint32_t ZgBackendType;
 
-// Queries whether the current DLL is compiled with support for the specified backend.
+// Compiled features
+// ------------------------------------------------------------------------------------------------
+
+// Feature bits representing different features that can be compiled into ZeroG.
 //
-// Note that compiled support does not necessarily mean that the backend is supported on the
-// current computer.
-ZG_DLL_API ZG_BOOL zgBackendCompiled(ZgBackendType backendType);
+// If you depend on a specific feature (such as the D3D12 backend) it is a good idea to query and
+// check if it is available 
+enum ZgFeatureBitsEnum {
+	ZG_FEATURE_BIT_NONE = 0,
+	ZG_FEATURE_BIT_BACKEND_D3D12 = 1 << 1,
+	//ZG_FEATURE_BIT_BACKEND_VULKAN = 1 << 2
+	//ZG_FEATURE_BIT_BACKEND_METAL = 1 << 3
+	//ZG_FEATURE_BIT_BACKEND_WEB_GPU = 1 << 4
+	//ZG_FEATURE_BIT_BACKEND_D3D11 = 1 << 5
+};
+typedef uint64_t ZgFeatureBits;
+
+// Returns a bitmask containing the features compiled into this ZeroG dll.
+ZG_DLL_API ZgFeatureBits zgCompiledFeatures(void);
 
 // Error codes
 // ------------------------------------------------------------------------------------------------
@@ -94,10 +111,9 @@ ZG_DLL_API ZG_BOOL zgBackendCompiled(ZgBackendType backendType);
 // The error codes
 enum ZgErrorCodeEnum {
 	ZG_SUCCESS = 0,
-	ZG_ERROR_GENERIC = 1,
-
-	ZG_ERROR_INIT_VERSION_MISMATCH,
-
+	ZG_ERROR_GENERIC,
+	ZG_ERROR_UNIMPLEMENTED,
+	ZG_ERROR_CPU_OUT_OF_MEMORY,
 };
 typedef uint32_t ZgErrorCode;
 
@@ -117,8 +133,8 @@ typedef struct {
 	// for debug or visualization purposes.
 	uint8_t* (*allocate)(void* userPtr, uint32_t size, const char* name);
 	
-	// Function pointer to free function.
-	void (*free)(void* userPtr, uint8_t* allocation);
+	// Function pointer to deallocate function.
+	void (*deallocate)(void* userPtr, uint8_t* allocation);
 	
 	// User specified pointer that is provided to each allocate/free call.
 	void* userPtr;
@@ -143,6 +159,12 @@ typedef struct {
 } ZgContextInitSettings;
 
 ZG_DLL_API ZgErrorCode zgCreateContext(
-	ZgContext** contextOut, const ZgContextInitSettings* settings);
+	ZgContext** contextOut, const ZgContextInitSettings* initSettings);
 
 ZG_DLL_API ZgErrorCode zgDestroyContext(ZgContext* context);
+
+
+// Everything in this file is pure C
+#ifdef __cplusplus
+} // extern "C"
+#endif

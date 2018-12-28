@@ -34,24 +34,58 @@ ZG_DLL_API uint32_t zgApiVersion(void)
 	return ZG_COMPILED_API_VERSION;
 }
 
-// Backends enums and queries
+// Compiled features
 // ------------------------------------------------------------------------------------------------
 
-ZG_DLL_API ZG_BOOL zgBackendCompiled(ZgBackendType backendType)
+ZG_DLL_API ZgFeatureBits zgCompiledFeatures(void)
 {
-	return ZG_TRUE;
+	return
+		uint64_t(ZG_FEATURE_BIT_BACKEND_D3D12);
 }
 
 // Context
 // ------------------------------------------------------------------------------------------------
 
-struct ZgContext {
-
+struct ZgContext final {
+	ZgAllocator allocator;
+	zg::Api* api = nullptr;
 };
 
 ZG_DLL_API ZgErrorCode zgCreateContext(
-	ZgContext** contextOut, const ZgContextInitSettings* settings)
+	ZgContext** contextOut, const ZgContextInitSettings* initSettings)
 {
+	// Set default allocator if none is specified
+	ZgContextInitSettings settings = *initSettings;
+	if (settings.allocator.allocate == nullptr || settings.allocator.deallocate == nullptr) {
+		settings.allocator = zg::getDefaultAllocator();
+	}
+
+	// Allocate context
+	ZgContext* context = zg::zgNew<ZgContext>(settings.allocator, "ZeroG Context");
+	if (context == nullptr) return ZG_ERROR_CPU_OUT_OF_MEMORY;
+
+	// Set context's allocator
+	context->allocator = settings.allocator;
+
+	// Create and allocate requested backend api
+	switch (initSettings->backend) {
+	
+	case ZG_BACKEND_NONE:
+		// TODO: Implement null backend
+		zg::zgDelete(context->allocator, context);
+		return ZG_ERROR_UNIMPLEMENTED;
+	
+	case ZG_BACKEND_D3D12:
+		context->api = zg::zgNew<zg::D3D12Api>(context->allocator, "D3D12 backend");
+		break;
+	
+	default:
+		zg::zgDelete(context->allocator, context);
+		return ZG_ERROR_GENERIC;
+	}
+
+	// Return context
+	*contextOut = context;
 	return ZG_SUCCESS;
 }
 
@@ -59,7 +93,12 @@ ZG_DLL_API ZgErrorCode zgDestroyContext(ZgContext* context)
 {
 	if (context == nullptr) return ZG_SUCCESS;
 
+	// Delete API
+	zg::zgDelete<zg::Api>(context->allocator, context->api);
 
+	// Delete context
+	ZgAllocator allocator = context->allocator;
+	zg::zgDelete<ZgContext>(allocator, context);
 
 	return ZG_SUCCESS;
 }

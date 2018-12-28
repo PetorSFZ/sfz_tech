@@ -25,9 +25,10 @@ namespace zg {
 // Context
 // ------------------------------------------------------------------------------------------------
 
-ErrorCode Context::init(const ZgContextInitSettings& settings)
+ZgErrorCode Context::init(const ZgContextInitSettings& settings)
 {
-	return ErrorCode(zgCreateContext(&mContext, &settings));
+	this->destroy();
+	return zgCreateContext(&mContext, &settings);
 }
 
 void Context::swap(Context& other) noexcept
@@ -38,6 +39,7 @@ void Context::swap(Context& other) noexcept
 void Context::destroy() noexcept
 {
 	zgDestroyContext(mContext);
+	mContext = nullptr;
 }
 
 } // namespace zg

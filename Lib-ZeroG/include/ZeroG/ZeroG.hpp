@@ -24,16 +24,6 @@
 
 namespace zg {
 
-// Error codes
-// ------------------------------------------------------------------------------------------------
-
-enum class ErrorCode : uint32_t {
-	SUCCESS = ZG_SUCCESS,
-	ERROR_GENERIC = ZG_ERROR_GENERIC,
-
-	VERSION_MISMATCH = ZG_ERROR_INIT_VERSION_MISMATCH,
-};
-
 // Context
 // ------------------------------------------------------------------------------------------------
 
@@ -53,7 +43,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	// Creates and initializes a context, see zgCreateContext().
-	ErrorCode init(const ZgContextInitSettings& settings);
+	ZgErrorCode init(const ZgContextInitSettings& settings);
 
 	void swap(Context& other) noexcept;
 	void destroy() noexcept;

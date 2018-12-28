@@ -56,6 +56,12 @@ int main(int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 
+	// Create ZeroG context
+	ZgContextInitSettings initSettings = {};
+	initSettings.backend = ZG_BACKEND_D3D12;
+	zg::Context ctx;
+	ctx.init(initSettings);
+
 	// Run our main loop
 	bool running = true;
 	while (running) {
@@ -84,6 +90,9 @@ int main(int argc, char* argv[])
 
 		// TODO: Rendering here
 	}
+
+	// Destroy ZeroG context
+	ctx.destroy();
 
 	// Cleanup
 	SDL_DestroyWindow(window);

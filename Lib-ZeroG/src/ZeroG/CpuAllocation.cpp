@@ -42,7 +42,7 @@ static uint8_t* defaultAllocate(void* userPtr, uint32_t size, const char* name)
 #endif
 }
 
-static void defaultFree(void* userPtr, uint8_t* allocation)
+static void defaultDeallocate(void* userPtr, uint8_t* allocation)
 {
 	(void)userPtr;
 	if (allocation == nullptr) return;
@@ -57,7 +57,7 @@ ZgAllocator getDefaultAllocator() noexcept
 {
 	ZgAllocator allocator = {};
 	allocator.allocate = defaultAllocate;
-	allocator.free = defaultFree;
+	allocator.deallocate = defaultDeallocate;
 	return allocator;
 }
 

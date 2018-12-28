@@ -28,9 +28,9 @@ namespace zg {
 // ------------------------------------------------------------------------------------------------
 
 template<typename T, typename... Args>
-T* zgNew(ZgAllocator* allocator, const char* name, Args&&... args) noexcept
+T* zgNew(ZgAllocator& allocator, const char* name, Args&&... args) noexcept
 {
-	uint8_t* memPtr = allocator->allocate(allocator->userPtr, sizeof(T), name);
+	uint8_t* memPtr = allocator.allocate(allocator.userPtr, sizeof(T), name);
 	T* objPtr = nullptr;
 	objPtr = new(memPtr) T(std::forward<Args>(args)...);
 	// If constructor throws exception std::terminate() will be called since function is noexcept
@@ -38,12 +38,12 @@ T* zgNew(ZgAllocator* allocator, const char* name, Args&&... args) noexcept
 }
 
 template<typename T>
-void zgDelete(ZgAllocator* allocator, T* pointer) noexcept
+void zgDelete(ZgAllocator& allocator, T* pointer) noexcept
 {
 	if (pointer == nullptr) return;
 	pointer->~T();
 	// If destructor throws exception std::terminate() will be called since function is noexcept
-	allocator->deallocate(allocator->userPtr, static_cast<void*>(pointer));
+	allocator.deallocate(allocator.userPtr, reinterpret_cast<uint8_t*>(pointer));
 }
 
 // Default allocator
