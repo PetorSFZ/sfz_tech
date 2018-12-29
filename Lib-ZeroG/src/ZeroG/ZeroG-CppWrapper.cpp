@@ -19,8 +19,50 @@
 #include "ZeroG/ZeroG.hpp"
 
 #include <algorithm>
+#include <cstdio>
+#include <cstring>
 
 namespace zg {
+
+// Statics
+// ------------------------------------------------------------------------------------------------
+
+static const char* stripFilePath(const char* file) noexcept
+{
+	const char* strippedFile1 = std::strrchr(file, '\\');
+	const char* strippedFile2 = std::strrchr(file, '/');
+	if (strippedFile1 == nullptr && strippedFile2 == nullptr) {
+		return file;
+	}
+	else if (strippedFile2 == nullptr) {
+		return strippedFile1 + 1;
+	}
+	else {
+		return strippedFile2 + 1;
+	}
+}
+
+// Error handling helpers
+// ------------------------------------------------------------------------------------------------
+
+const char* errorCodeToString(ZgErrorCode errorCode) noexcept
+{
+	switch (errorCode) {
+	case ZG_SUCCESS: return "ZG_SUCCESS";
+	case ZG_ERROR_GENERIC: return "ZG_ERROR_GENERIC";
+	case ZG_ERROR_UNIMPLEMENTED: return "ZG_ERROR_UNIMPLEMENTED";
+	case ZG_ERROR_CPU_OUT_OF_MEMORY: return "ZG_ERROR_CPU_OUT_OF_MEMORY";
+	case ZG_ERROR_NO_SUITABLE_DEVICE: return "ZG_ERROR_NO_SUITABLE_DEVICE";
+	}
+	return "UNKNOWN";
+}
+
+ZgErrorCode CheckZgImpl::operator% (ZgErrorCode result) noexcept
+{
+	if (result == ZG_SUCCESS) return ZG_SUCCESS;
+	printf("%s:%i: ZeroG error: %s\n", stripFilePath(file), line, errorCodeToString(result));
+	return result;
+}
 
 // Context
 // ------------------------------------------------------------------------------------------------

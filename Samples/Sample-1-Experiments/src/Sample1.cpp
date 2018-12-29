@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
 	initSettings.debugMode = DEBUG_MODE ? ZG_TRUE : ZG_FALSE;
 	initSettings.nativeWindowHandle = getWin32WindowHandle(window);
 	zg::Context ctx;
-	ctx.init(initSettings);
+	CHECK_ZG ctx.init(initSettings);
 
 	// Run our main loop
 	bool running = true;

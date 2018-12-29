@@ -24,6 +24,28 @@
 
 namespace zg {
 
+// Error handling helpers
+// ------------------------------------------------------------------------------------------------
+
+// Converts a ZeroG error code to null-terminated string.
+//
+// The returned string is a compile-time constant, not necessary or allowed to free/delete it.
+const char* errorCodeToString(ZgErrorCode errorCode) noexcept;
+
+// Checks result (ZgErrorCode) from ZeroG call and log if not success, returns result unmodified
+#define CHECK_ZG (zg::CheckZgImpl(__FILE__, __LINE__)) %
+
+// Implementation of CHECK_ZG
+struct CheckZgImpl final {
+	const char* file;
+	int line;
+
+	CheckZgImpl() = delete;
+	CheckZgImpl(const char* file, int line) noexcept : file(file), line(line) {}
+
+	ZgErrorCode operator% (ZgErrorCode result) noexcept;
+};
+
 // Context
 // ------------------------------------------------------------------------------------------------
 
