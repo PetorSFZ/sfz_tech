@@ -112,3 +112,10 @@ ZG_DLL_API ZgErrorCode zgDestroyContext(ZgContext* context)
 
 	return ZG_SUCCESS;
 }
+
+
+
+ZG_DLL_API ZgErrorCode zgRenderExperiment(ZgContext* context)
+{
+	return context->api->renderExperiment();
+}

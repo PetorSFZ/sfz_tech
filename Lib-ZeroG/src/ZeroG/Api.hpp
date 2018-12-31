@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <ZeroG/ZeroG-CApi.h>
+
 namespace zg {
 
 // ApiInterface
@@ -28,7 +30,7 @@ class Api {
 public:
 	virtual ~Api() noexcept {}
 
-
+	virtual ZgErrorCode renderExperiment() noexcept = 0;
 };
 
 } // namespace zg

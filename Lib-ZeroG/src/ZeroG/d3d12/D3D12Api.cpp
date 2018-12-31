@@ -42,6 +42,8 @@ using Microsoft::WRL::ComPtr;
 // Statics
 // ------------------------------------------------------------------------------------------------
 
+constexpr auto NUM_SWAP_CHAIN_BUFFERS = 3;
+
 static const char* stripFilePath(const char* file) noexcept
 {
 	const char* strippedFile1 = std::strrchr(file, '\\');
@@ -55,6 +57,23 @@ static const char* stripFilePath(const char* file) noexcept
 	else {
 		return strippedFile2 + 1;
 	}
+}
+
+static D3D12_RESOURCE_BARRIER createBarrierTransition(
+	ID3D12Resource& resource,
+	D3D12_RESOURCE_STATES stateBefore,
+	D3D12_RESOURCE_STATES stateAfter,
+	uint32_t subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
+	D3D12_RESOURCE_BARRIER_FLAGS flags = D3D12_RESOURCE_BARRIER_FLAG_NONE) noexcept
+{
+	D3D12_RESOURCE_BARRIER barrier = {};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = flags;
+	barrier.Transition.pResource = &resource;
+	barrier.Transition.StateBefore = stateBefore;
+	barrier.Transition.StateAfter = stateAfter;
+	barrier.Transition.Subresource = subresource;
+	return barrier;
 }
 
 // CHECK_D3D12 macro
@@ -146,7 +165,10 @@ public:
 
 	virtual ~D3D12Api() noexcept
 	{
+		flushCommandQueue();
 
+		// Destroy Command Queue Fence Event
+		CloseHandle(mCommandQueueFenceEvent);
 	}
 
 	// State methods
@@ -257,12 +279,11 @@ public:
 		}
 
 		// Check if screen-tearing is allowed
-		bool allowTearing = false;
 		{
 			BOOL tearingAllowed = FALSE;
 			CHECK_D3D12 dxgiFactory->CheckFeatureSupport(
 				DXGI_FEATURE_PRESENT_ALLOW_TEARING, &tearingAllowed, sizeof(tearingAllowed));
-			allowTearing = tearingAllowed != FALSE;
+			mAllowTearing = tearingAllowed != FALSE;
 		}
 
 		// Create swap chain
@@ -274,11 +295,11 @@ public:
 			desc.Stereo = FALSE;
 			desc.SampleDesc = { 1, 0 }; // No MSAA
 			desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-			desc.BufferCount = 3; // 3 buffers, TODO: 1-2 buffers for no-vsync?
+			desc.BufferCount = NUM_SWAP_CHAIN_BUFFERS; // 3 buffers, TODO: 1-2 buffers for no-vsync?
 			desc.Scaling = DXGI_SCALING_STRETCH;
 			desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL; // Vsync? TODO: DXGI_SWAP_EFFECT_FLIP_DISCARD
 			desc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-			desc.Flags = (allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
+			desc.Flags = (mAllowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
 		
 			ComPtr<IDXGISwapChain1> tmpSwapChain;
 			if (!CHECK_D3D12_SUCCEEDED(dxgiFactory->CreateSwapChainForHwnd(
@@ -294,10 +315,166 @@ public:
 		// Disable Alt+Enter fullscreen toogle
 		CHECK_D3D12 dxgiFactory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);
 
+		// Create swap chain descriptor heap
+		{
+			D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+			desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+			desc.NumDescriptors = NUM_SWAP_CHAIN_BUFFERS; // Same as number of swap chain buffers, TODO: how decide
+			desc.NodeMask = 0;
 
+			if (!CHECK_D3D12_SUCCEEDED(mDevice->CreateDescriptorHeap(
+				&desc, IID_PPV_ARGS(&mSwapChainDescriptorHeap)))) {
+				return ZG_ERROR_NO_SUITABLE_DEVICE;
+			}
+		}
 
+		// Create render target views (RTVs) for swap chain
+		{
+			// The size of an RTV descriptor
+			mDescriptorSizeRTV = mDevice->GetDescriptorHandleIncrementSize(
+				D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+			// The first descriptor of the swap chain descriptor heap
+			D3D12_CPU_DESCRIPTOR_HANDLE startOfDescriptorHeap =
+				mSwapChainDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+
+			for (UINT i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
+
+				// Get i:th back buffer from swap chain
+				ComPtr<ID3D12Resource> backBuffer;
+				if (!CHECK_D3D12_SUCCEEDED(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)))) {
+					return ZG_ERROR_NO_SUITABLE_DEVICE;
+				}
+
+				// Get the i:th descriptor from the swap chain descriptor heap
+				D3D12_CPU_DESCRIPTOR_HANDLE descriptor = {};
+				descriptor.ptr = startOfDescriptorHeap.ptr + mDescriptorSizeRTV * i;
+
+				// Create render target view for i:th backbuffer
+				mDevice->CreateRenderTargetView(backBuffer.Get(), nullptr, descriptor);
+				mBackBuffers[i] = backBuffer;
+			}
+		}
+
+		// Create command allocators
+		for (UINT i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
+			// TODO: This is tied to the type of queue (e.g. direct queue, copy queue).
+			//       Figure out where to place this later.
+			if (!CHECK_D3D12_SUCCEEDED(mDevice->CreateCommandAllocator(
+				D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&mCommandAllocator[i])))) {
+				return ZG_ERROR_GENERIC;
+			}
+		}
+
+		
+
+		// Create command list
+		// TODO: Think about this
+		{
+			if (!CHECK_D3D12_SUCCEEDED(mDevice->CreateCommandList(
+				0,
+				D3D12_COMMAND_LIST_TYPE_DIRECT,
+				mCommandAllocator[0].Get(),
+				nullptr,
+				IID_PPV_ARGS(&mCommandList)))) {
+				return ZG_ERROR_GENERIC;
+			}
+
+			// TODO: Why?
+			CHECK_D3D12 mCommandList->Close();
+		}
+		
+		// Create command queue fence
+		if (!CHECK_D3D12_SUCCEEDED(mDevice->CreateFence(
+			mCommandQueueFenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mCommandQueueFence)))) {
+			return ZG_ERROR_GENERIC;
+		}
+
+		// Create command queue fence event
+		mCommandQueueFenceEvent = ::CreateEvent(NULL, false, false, NULL);
 
 		return ZG_SUCCESS;
+	}
+
+	// API methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgErrorCode renderExperiment() noexcept override final
+	{
+		// Get resources for current target back buffer
+		ID3D12Resource& backBuffer = *mBackBuffers[mCurrentBackBufferIdx].Get();
+		ID3D12CommandAllocator& commandAllocator = *mCommandAllocator[mCurrentBackBufferIdx].Get();
+		D3D12_CPU_DESCRIPTOR_HANDLE backBufferDescriptor;
+		backBufferDescriptor.ptr =
+			mSwapChainDescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr +
+			mDescriptorSizeRTV * mCurrentBackBufferIdx;
+
+		// Reset command allocator and command list
+		CHECK_D3D12 commandAllocator.Reset();
+		CHECK_D3D12 mCommandList->Reset(&commandAllocator, nullptr);
+
+		// Create barrier to transition back buffer into render target state
+		D3D12_RESOURCE_BARRIER barrier = createBarrierTransition(
+			backBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+		mCommandList->ResourceBarrier(1, &barrier);
+
+		// Clear screen
+		float clearColor[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
+		mCommandList->ClearRenderTargetView(backBufferDescriptor, clearColor, 0, nullptr);
+
+		// Create barrier to transition back buffer into present state
+		barrier = createBarrierTransition(
+			backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+		mCommandList->ResourceBarrier(1, &barrier);
+
+		// Finish command list
+		CHECK_D3D12 mCommandList->Close();
+
+		// Execute command list
+		ID3D12CommandList* cmdListPtr = mCommandList.Get();
+		mCommandQueue->ExecuteCommandLists(1, &cmdListPtr);
+
+		// Signal the command queue
+		mSwapChainFenceValues[mCurrentBackBufferIdx] = signalCommandQueueGpu();
+
+		// Present back buffer
+		UINT vsync = 0; // TODO (MUST be 0 if DXGI_PRESENT_ALLOW_TEARING)
+		CHECK_D3D12 mSwapChain->Present(vsync, mAllowTearing ? DXGI_PRESENT_ALLOW_TEARING : 0);
+
+		// Get next back buffer index
+		mCurrentBackBufferIdx = mSwapChain->GetCurrentBackBufferIndex();
+
+		// Wait for the next back buffer to finish rendering
+		uint64_t nextBackBufferFenceValue = mSwapChainFenceValues[mCurrentBackBufferIdx];
+		waitCommandQueueCpu(nextBackBufferFenceValue);
+
+		return ZG_SUCCESS;
+	}
+
+	// Methods
+	// --------------------------------------------------------------------------------------------
+
+	uint64_t signalCommandQueueGpu() noexcept
+	{
+		CHECK_D3D12 mCommandQueue->Signal(mCommandQueueFence.Get(), mCommandQueueFenceValue);
+		return mCommandQueueFenceValue++;
+	}
+
+	void waitCommandQueueCpu(uint64_t fenceValue) noexcept
+	{
+		if (mCommandQueueFence->GetCompletedValue() < fenceValue) {
+			CHECK_D3D12 mCommandQueueFence->SetEventOnCompletion(
+				fenceValue, mCommandQueueFenceEvent);
+			// TODO: Don't wait forever
+			::WaitForSingleObject(mCommandQueueFenceEvent, INFINITE);
+		}
+	}
+
+	void flushCommandQueue() noexcept
+	{
+		uint64_t fenceValue = mCommandQueueFenceValue;
+		signalCommandQueueGpu();
+		waitCommandQueueCpu(fenceValue);
 	}
 
 	// Private members
@@ -310,6 +487,22 @@ private:
 	ComPtr<ID3D12CommandQueue> mCommandQueue;
 	//ComPtr<ID3D12CommandQueue> mCopyQueue;
 	ComPtr<IDXGISwapChain4> mSwapChain;
+
+	ComPtr<ID3D12DescriptorHeap> mSwapChainDescriptorHeap;
+	ComPtr<ID3D12Resource> mBackBuffers[NUM_SWAP_CHAIN_BUFFERS];
+	ComPtr<ID3D12CommandAllocator> mCommandAllocator[NUM_SWAP_CHAIN_BUFFERS];
+	uint64_t mSwapChainFenceValues[NUM_SWAP_CHAIN_BUFFERS] = {};
+
+	ComPtr<ID3D12GraphicsCommandList> mCommandList;
+
+	ComPtr<ID3D12Fence> mCommandQueueFence;
+	uint64_t mCommandQueueFenceValue = 0;
+	HANDLE mCommandQueueFenceEvent = nullptr;
+
+	int mCurrentBackBufferIdx = 0;
+
+	uint32_t mDescriptorSizeRTV = 0;
+	bool mAllowTearing = false;
 };
 
 // D3D12 API

@@ -174,6 +174,11 @@ ZG_DLL_API ZgErrorCode zgCreateContext(
 ZG_DLL_API ZgErrorCode zgDestroyContext(ZgContext* context);
 
 
+
+ZG_DLL_API ZgErrorCode zgRenderExperiment(ZgContext* context);
+
+
+
 // This entire header is pure C
 #ifdef __cplusplus
 } // extern "C"

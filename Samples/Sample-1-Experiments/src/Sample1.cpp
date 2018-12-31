@@ -112,6 +112,7 @@ int main(int argc, char* argv[])
 		}()) continue;
 
 		// TODO: Rendering here
+		CHECK_ZG zgRenderExperiment(ctx.mContext);
 	}
 
 	// Destroy ZeroG context
