@@ -51,7 +51,7 @@ struct ZgContext final {
 	zg::Api* api = nullptr;
 };
 
-ZG_DLL_API ZgErrorCode zgCreateContext(
+ZG_DLL_API ZgErrorCode zgContextCreate(
 	ZgContext** contextOut, const ZgContextInitSettings* initSettings)
 {
 	// Set default allocator if none is specified
@@ -77,11 +77,7 @@ ZG_DLL_API ZgErrorCode zgCreateContext(
 
 	case ZG_BACKEND_D3D12:
 		{
-			ZgErrorCode res = zg::createD3D12Backend(
-				&context->api,
-				settings.nativeWindowHandle,
-				context->allocator,
-				(initSettings->debugMode));
+		ZgErrorCode res = zg::createD3D12Backend(&context->api, settings);
 			if (res != ZG_SUCCESS) {
 				zg::zgDelete(settings.allocator, context);
 				return res;
@@ -99,7 +95,7 @@ ZG_DLL_API ZgErrorCode zgCreateContext(
 	return ZG_SUCCESS;
 }
 
-ZG_DLL_API ZgErrorCode zgDestroyContext(ZgContext* context)
+ZG_DLL_API ZgErrorCode zgContextDestroy(ZgContext* context)
 {
 	if (context == nullptr) return ZG_SUCCESS;
 
@@ -111,6 +107,11 @@ ZG_DLL_API ZgErrorCode zgDestroyContext(ZgContext* context)
 	zg::zgDelete<ZgContext>(allocator, context);
 
 	return ZG_SUCCESS;
+}
+
+ZG_DLL_API ZgErrorCode zgContextResize(ZgContext* context, uint32_t width, uint32_t height)
+{
+	return context->api->resize(width, height);
 }
 
 

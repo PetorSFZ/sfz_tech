@@ -53,6 +53,7 @@ const char* errorCodeToString(ZgErrorCode errorCode) noexcept
 	case ZG_ERROR_UNIMPLEMENTED: return "ZG_ERROR_UNIMPLEMENTED";
 	case ZG_ERROR_CPU_OUT_OF_MEMORY: return "ZG_ERROR_CPU_OUT_OF_MEMORY";
 	case ZG_ERROR_NO_SUITABLE_DEVICE: return "ZG_ERROR_NO_SUITABLE_DEVICE";
+	case ZG_ERROR_INVALID_PARAMS: return "ZG_ERROR_INVALID_PARAMS";
 	}
 	return "UNKNOWN";
 }
@@ -70,7 +71,7 @@ ZgErrorCode CheckZgImpl::operator% (ZgErrorCode result) noexcept
 ZgErrorCode Context::init(const ZgContextInitSettings& settings)
 {
 	this->destroy();
-	return zgCreateContext(&mContext, &settings);
+	return zgContextCreate(&mContext, &settings);
 }
 
 void Context::swap(Context& other) noexcept
@@ -80,7 +81,7 @@ void Context::swap(Context& other) noexcept
 
 void Context::destroy() noexcept
 {
-	zgDestroyContext(mContext);
+	zgContextDestroy(mContext);
 	mContext = nullptr;
 }
 

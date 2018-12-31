@@ -80,6 +80,8 @@ int main(int argc, char* argv[])
 	// Create ZeroG context
 	ZgContextInitSettings initSettings = {};
 	initSettings.backend = ZG_BACKEND_D3D12;
+	initSettings.width = 512;
+	initSettings.height = 512;
 	initSettings.debugMode = DEBUG_MODE ? ZG_TRUE : ZG_FALSE;
 	initSettings.nativeWindowHandle = getWin32WindowHandle(window);
 	zg::Context ctx;
@@ -110,6 +112,12 @@ int main(int argc, char* argv[])
 			}
 			return true;
 		}()) continue;
+
+		// Query drawable width and height and update ZeroG context
+		int width = 0;
+		int height = 0;
+		SDL_GL_GetDrawableSize(window, &width, &height);
+		CHECK_ZG zgContextResize(ctx.mContext, uint32_t(width), uint32_t(height));
 
 		// TODO: Rendering here
 		CHECK_ZG zgRenderExperiment(ctx.mContext);

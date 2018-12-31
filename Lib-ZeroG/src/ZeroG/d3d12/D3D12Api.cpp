@@ -174,13 +174,17 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode init(HWND hwnd, ZgAllocator& allocator, bool debugMode) noexcept
+	ZgErrorCode init(ZgContextInitSettings& settings) noexcept
 	{
-		mAllocator = allocator;
-		mDebugMode = debugMode;
+		mAllocator = settings.allocator;
+		mDebugMode = settings.debugMode;
+		mWidth = uint32_t(settings.width);
+		mHeight = uint32_t(settings.height);
+		HWND hwnd = (HWND)settings.nativeWindowHandle;
+		if (mWidth == 0 || mHeight == 0) return ZG_ERROR_INVALID_PARAMS;
 
 		// Enable debug layers in debug mode
-		if (debugMode) {
+		if (settings.debugMode) {
 			ComPtr<ID3D12Debug> debugInterface;
 			if (CHECK_D3D12_SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface)))) {
 				debugInterface->EnableDebugLayer();
@@ -194,7 +198,7 @@ public:
 		ComPtr<IDXGIFactory7> dxgiFactory;
 		{
 			UINT flags = 0;
-			if (debugMode) flags |= DXGI_CREATE_FACTORY_DEBUG;
+			if (settings.debugMode) flags |= DXGI_CREATE_FACTORY_DEBUG;
 			if (!CHECK_D3D12_SUCCEEDED(CreateDXGIFactory2(flags, IID_PPV_ARGS(&dxgiFactory)))) {
 				return ZG_ERROR_GENERIC;
 			}
@@ -289,8 +293,8 @@ public:
 		// Create swap chain
 		{
 			DXGI_SWAP_CHAIN_DESC1 desc = {};
-			desc.Width = 0;
-			desc.Height = 0;
+			desc.Width = mWidth;
+			desc.Height = mHeight;
 			desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 			desc.Stereo = FALSE;
 			desc.SampleDesc = { 1, 0 }; // No MSAA
@@ -399,6 +403,53 @@ public:
 	// API methods
 	// --------------------------------------------------------------------------------------------
 
+	ZgErrorCode resize(uint32_t width, uint32_t height) noexcept override final
+	{
+		if (mWidth == width && mHeight == height) return ZG_SUCCESS;
+
+		mWidth = width;
+		mHeight = height;
+
+		// Flush command queue so its safe to resize back buffers
+		flushCommandQueue();
+
+		// Release previous back buffers
+		for (int i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
+			mBackBuffers[i].Reset();
+		}
+
+		// Resize swap chain's back buffers
+		DXGI_SWAP_CHAIN_DESC desc = {};
+		CHECK_D3D12 mSwapChain->GetDesc(&desc);
+		CHECK_D3D12 mSwapChain->ResizeBuffers(
+			NUM_SWAP_CHAIN_BUFFERS, width, height, desc.BufferDesc.Format, desc.Flags);
+
+		// Update current back buffer index
+		mCurrentBackBufferIdx = mSwapChain->GetCurrentBackBufferIndex();
+
+		// The first descriptor of the swap chain descriptor heap
+		D3D12_CPU_DESCRIPTOR_HANDLE startOfDescriptorHeap =
+			mSwapChainDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+
+		// Create render target views (RTVs) for swap chain
+		for (UINT i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
+
+			// Get i:th back buffer from swap chain
+			ComPtr<ID3D12Resource> backBuffer;
+			CHECK_D3D12 mSwapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer));
+			
+			// Get the i:th descriptor from the swap chain descriptor heap
+			D3D12_CPU_DESCRIPTOR_HANDLE descriptor = {};
+			descriptor.ptr = startOfDescriptorHeap.ptr + mDescriptorSizeRTV * i;
+
+			// Create render target view for i:th backbuffer
+			mDevice->CreateRenderTargetView(backBuffer.Get(), nullptr, descriptor);
+			mBackBuffers[i] = backBuffer;
+		}
+
+		return ZG_SUCCESS;
+	}
+
 	ZgErrorCode renderExperiment() noexcept override final
 	{
 		// Get resources for current target back buffer
@@ -488,6 +539,9 @@ private:
 	//ComPtr<ID3D12CommandQueue> mCopyQueue;
 	ComPtr<IDXGISwapChain4> mSwapChain;
 
+	uint32_t mWidth = 0;
+	uint32_t mHeight = 0;
+
 	ComPtr<ID3D12DescriptorHeap> mSwapChainDescriptorHeap;
 	ComPtr<ID3D12Resource> mBackBuffers[NUM_SWAP_CHAIN_BUFFERS];
 	ComPtr<ID3D12CommandAllocator> mCommandAllocator[NUM_SWAP_CHAIN_BUFFERS];
@@ -508,20 +562,16 @@ private:
 // D3D12 API
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode createD3D12Backend(
-	Api** apiOut,
-	void* windowHandle,
-	ZgAllocator& allocator,
-	bool debugMode) noexcept
+ZgErrorCode createD3D12Backend(Api** apiOut, ZgContextInitSettings& settings) noexcept
 {
 	// Allocate and create D3D12 backend
-	D3D12Api* api = zgNew<D3D12Api>(allocator, "D3D12 backend");
+	D3D12Api* api = zgNew<D3D12Api>(settings.allocator, "D3D12 backend");
 
 	// Initialize backend, return nullptr if init failed
-	ZgErrorCode initRes = api->init((HWND)windowHandle, allocator, debugMode);
+	ZgErrorCode initRes = api->init(settings);
 	if (initRes != ZG_SUCCESS)
 	{
-		zgDelete(allocator, api);
+		zgDelete(settings.allocator, api);
 		return initRes;
 	}
 

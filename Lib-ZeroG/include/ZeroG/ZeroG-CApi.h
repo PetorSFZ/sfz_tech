@@ -115,6 +115,7 @@ enum ZgErrorCodeEnum {
 	ZG_ERROR_UNIMPLEMENTED,
 	ZG_ERROR_CPU_OUT_OF_MEMORY,
 	ZG_ERROR_NO_SUITABLE_DEVICE,
+	ZG_ERROR_INVALID_PARAMS,
 };
 typedef uint32_t ZgErrorCode;
 
@@ -154,6 +155,10 @@ typedef struct {
 	// [Mandatory] The wanted ZeroG backend
 	ZgBackendType backend;
 
+	// [Mandatory] The dimensions (in pixels) of the window being rendered to
+	uint32_t width;
+	uint32_t height;
+
 	// [Optional] Used to enable debug mode. This means enabling various debug layers and such
 	//            in the underlaying APIs.
 	ZgBool debugMode;
@@ -168,10 +173,17 @@ typedef struct {
 
 } ZgContextInitSettings;
 
-ZG_DLL_API ZgErrorCode zgCreateContext(
+ZG_DLL_API ZgErrorCode zgContextCreate(
 	ZgContext** contextOut, const ZgContextInitSettings* initSettings);
 
-ZG_DLL_API ZgErrorCode zgDestroyContext(ZgContext* context);
+ZG_DLL_API ZgErrorCode zgContextDestroy(ZgContext* context);
+
+// Resize the back buffers in the swap chain to the new size.
+//
+// This should be called every time the size of the window or the resolution is changed. This
+// function is guaranteed to not do anything if the specified width or height is the same as last
+// time, so it is completely safe to call this at the beginning of each frame.
+ZG_DLL_API ZgErrorCode zgContextResize(ZgContext* context, uint32_t width, uint32_t height);
 
 
 

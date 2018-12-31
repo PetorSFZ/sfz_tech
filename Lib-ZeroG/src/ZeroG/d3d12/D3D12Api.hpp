@@ -26,10 +26,6 @@ namespace zg {
 // D3D12 API
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode createD3D12Backend(
-	Api** apiOut,
-	void* windowHandle,
-	ZgAllocator& allocator,
-	bool debugMode) noexcept;
+ZgErrorCode createD3D12Backend(Api** apiOut, ZgContextInitSettings& settings) noexcept;
 
 } // namespace zg

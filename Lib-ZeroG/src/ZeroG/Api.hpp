@@ -30,6 +30,8 @@ class Api {
 public:
 	virtual ~Api() noexcept {}
 
+	virtual ZgErrorCode resize(uint32_t width, uint32_t height) noexcept = 0;
+
 	virtual ZgErrorCode renderExperiment() noexcept = 0;
 };
 
