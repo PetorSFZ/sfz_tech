@@ -33,9 +33,8 @@
 //#pragma comment (lib, "dxguid.lib")
 
 // DXC compiler
-//#define DXC_API_IMPORT
-//#include <dxcapi.h>
-
+#include <dxcapi.h>
+#pragma comment (lib, "dxcompiler.lib")
 
 // ZeroG headers
 #include "ZeroG/CpuAllocation.hpp"
@@ -43,43 +42,6 @@
 namespace zg {
 
 using Microsoft::WRL::ComPtr;
-
-// Statics
-// ------------------------------------------------------------------------------------------------
-
-constexpr auto NUM_SWAP_CHAIN_BUFFERS = 3;
-
-static const char* stripFilePath(const char* file) noexcept
-{
-	const char* strippedFile1 = std::strrchr(file, '\\');
-	const char* strippedFile2 = std::strrchr(file, '/');
-	if (strippedFile1 == nullptr && strippedFile2 == nullptr) {
-		return file;
-	}
-	else if (strippedFile2 == nullptr) {
-		return strippedFile1 + 1;
-	}
-	else {
-		return strippedFile2 + 1;
-	}
-}
-
-static D3D12_RESOURCE_BARRIER createBarrierTransition(
-	ID3D12Resource& resource,
-	D3D12_RESOURCE_STATES stateBefore,
-	D3D12_RESOURCE_STATES stateAfter,
-	uint32_t subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
-	D3D12_RESOURCE_BARRIER_FLAGS flags = D3D12_RESOURCE_BARRIER_FLAG_NONE) noexcept
-{
-	D3D12_RESOURCE_BARRIER barrier = {};
-	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier.Flags = flags;
-	barrier.Transition.pResource = &resource;
-	barrier.Transition.StateBefore = stateBefore;
-	barrier.Transition.StateAfter = stateAfter;
-	barrier.Transition.Subresource = subresource;
-	return barrier;
-}
 
 // CHECK_D3D12 macro
 // ------------------------------------------------------------------------------------------------
@@ -132,6 +94,21 @@ static const char* resultToString(HRESULT result) noexcept
 	return "UNKNOWN";
 }
 
+static const char* stripFilePath(const char* file) noexcept
+{
+	const char* strippedFile1 = std::strrchr(file, '\\');
+	const char* strippedFile2 = std::strrchr(file, '/');
+	if (strippedFile1 == nullptr && strippedFile2 == nullptr) {
+		return file;
+	}
+	else if (strippedFile2 == nullptr) {
+		return strippedFile1 + 1;
+	}
+	else {
+		return strippedFile2 + 1;
+	}
+}
+
 struct CheckD3D12Impl final {
 	const char* file;
 	int line;
@@ -153,6 +130,178 @@ struct CheckD3D12Impl final {
 		return false;
 	}
 };
+
+// Statics
+// ------------------------------------------------------------------------------------------------
+
+constexpr auto NUM_SWAP_CHAIN_BUFFERS = 3;
+
+static D3D12_RESOURCE_BARRIER createBarrierTransition(
+	ID3D12Resource& resource,
+	D3D12_RESOURCE_STATES stateBefore,
+	D3D12_RESOURCE_STATES stateAfter,
+	uint32_t subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
+	D3D12_RESOURCE_BARRIER_FLAGS flags = D3D12_RESOURCE_BARRIER_FLAG_NONE) noexcept
+{
+	D3D12_RESOURCE_BARRIER barrier = {};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = flags;
+	barrier.Transition.pResource = &resource;
+	barrier.Transition.StateBefore = stateBefore;
+	barrier.Transition.StateAfter = stateAfter;
+	barrier.Transition.Subresource = subresource;
+	return barrier;
+}
+
+static  bool relativeToAbsolute(char* pathOut, uint32_t pathOutSize, const char* pathIn) noexcept
+{
+	DWORD res = GetFullPathNameA(pathIn, pathOutSize, pathOut, NULL);
+	return res > 0;
+}
+
+static bool utf8ToWide(WCHAR* wideOut, uint32_t wideSizeBytes, const char* utf8In) noexcept
+{
+	int res = MultiByteToWideChar(CP_UTF8, 0, utf8In, -1, wideOut, wideSizeBytes);
+	return res != 0;
+}
+
+static bool fixPath(WCHAR* pathOut, uint32_t pathOutSizeBytes, const char* utf8In) noexcept
+{
+	char absolutePath[MAX_PATH] = { 0 };
+	if (!relativeToAbsolute(absolutePath, MAX_PATH, utf8In)) return false;
+	if (!utf8ToWide(pathOut, pathOutSizeBytes, absolutePath)) return false;
+	return true;
+}
+
+enum class HlslShaderType {
+	VERTEX_SHADER_5_1,
+	VERTEX_SHADER_6_0,
+	VERTEX_SHADER_6_1,
+	VERTEX_SHADER_6_2,
+	VERTEX_SHADER_6_3,
+
+	PIXEL_SHADER_5_1,
+	PIXEL_SHADER_6_0,
+	PIXEL_SHADER_6_1,
+	PIXEL_SHADER_6_2,
+	PIXEL_SHADER_6_3,
+};
+
+static ZgErrorCode compileHlslShader(
+	ComPtr<IDxcLibrary>& mDxcLibrary,
+	ComPtr<IDxcCompiler>& mDxcCompiler,
+	ComPtr<IDxcBlob>& blobOut,
+	const char* path,
+	const char* entryName,
+	const char* const * compilerFlags,
+	HlslShaderType shaderType) noexcept
+{
+	// Initialize DXC compiler if necessary
+	// TODO: Provide our own allocator
+	if (mDxcLibrary == nullptr) {
+		
+		// Initialize DXC library
+		HRESULT res = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&mDxcLibrary));
+		if (!SUCCEEDED(res)) return ZG_ERROR_GENERIC;
+
+		// Initialize DXC compiler
+		res = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&mDxcCompiler));
+		if (!SUCCEEDED(res)) {
+			mDxcLibrary = nullptr;
+			return ZG_ERROR_GENERIC;
+		}
+	}
+
+	// Convert paths to absolute wide strings
+	WCHAR shaderFilePathWide[MAX_PATH] = { 0 };
+	const uint32_t shaderFilePathWideSizeBytes = sizeof(shaderFilePathWide);
+	if (!fixPath(shaderFilePathWide, shaderFilePathWideSizeBytes, path)) {
+		return ZG_ERROR_GENERIC;
+	}
+
+	// Convert entry point to wide string
+	WCHAR shaderEntryWide[256] = { 0 };
+	const uint32_t shaderEntryWideSizeBytes = sizeof(shaderEntryWide);
+	if (!utf8ToWide(shaderEntryWide, shaderEntryWideSizeBytes, entryName)) {
+		return ZG_ERROR_GENERIC;
+	}
+
+	// Select shader type target profile string
+	LPCWSTR targetProfile = [&]() {
+		switch (shaderType) {
+		case HlslShaderType::VERTEX_SHADER_5_1: return L"vs_5_1";
+		case HlslShaderType::VERTEX_SHADER_6_0: return L"vs_6_0";
+		case HlslShaderType::VERTEX_SHADER_6_1: return L"vs_6_1";
+		case HlslShaderType::VERTEX_SHADER_6_2: return L"vs_6_2";
+		case HlslShaderType::VERTEX_SHADER_6_3: return L"vs_6_3";
+
+		case HlslShaderType::PIXEL_SHADER_5_1: return L"ps_5_1";
+		case HlslShaderType::PIXEL_SHADER_6_0: return L"ps_6_0";
+		case HlslShaderType::PIXEL_SHADER_6_1: return L"ps_6_1";
+		case HlslShaderType::PIXEL_SHADER_6_2: return L"ps_6_2";
+		case HlslShaderType::PIXEL_SHADER_6_3: return L"ps_6_3";
+		}
+		return L"UNKNOWN";
+	}();
+
+	// Create an encoding blob from file
+	ComPtr<IDxcBlobEncoding> blob;
+	uint32_t CODE_PAGE = CP_UTF8;
+	if (!CHECK_D3D12_SUCCEEDED(mDxcLibrary->CreateBlobFromFile(
+		shaderFilePathWide, &CODE_PAGE, &blob))) {
+		return ZG_ERROR_SHADER_COMPILE_ERROR;
+	}
+
+	// Split and convert args to wide strings :(
+	WCHAR argsContainer[ZG_MAX_NUM_DXC_COMPILER_FLAGS][32];
+	LPCWSTR args[ZG_MAX_NUM_DXC_COMPILER_FLAGS];
+	
+	uint32_t numArgs = 0;
+	for (uint32_t i = 0; i < ZG_MAX_NUM_DXC_COMPILER_FLAGS; i++) {
+		if (compilerFlags[i] == nullptr) continue;
+		utf8ToWide(argsContainer[numArgs], 32 * sizeof(WCHAR), compilerFlags[i]);
+		args[numArgs] = argsContainer[numArgs];
+		numArgs++;
+	}
+
+	// Compile shader
+	ComPtr<IDxcOperationResult> result;
+	if (!CHECK_D3D12_SUCCEEDED(mDxcCompiler->Compile(
+		blob.Get(),
+		nullptr, // TODO: Filename
+		shaderEntryWide,
+		targetProfile,
+		args,
+		numArgs,
+		nullptr,
+		0,
+		nullptr, // TODO: include handler
+		&result))) {
+		return ZG_ERROR_SHADER_COMPILE_ERROR;
+	}
+
+	// Log compile errors/warnings
+	ComPtr<IDxcBlobEncoding> errors;
+	if (!CHECK_D3D12_SUCCEEDED(result->GetErrorBuffer(&errors))) {
+		return ZG_ERROR_GENERIC;
+	}
+	if (errors->GetBufferSize() > 0) {
+		printf("Shader \"%s\" compilation errors:\n%s\n",
+			path, errors->GetBufferPointer());
+	}
+	
+	// Check if compilation succeeded
+	HRESULT compileResult = S_OK;
+	result->GetStatus(&compileResult);
+	if (!CHECK_D3D12_SUCCEEDED(compileResult)) return ZG_ERROR_SHADER_COMPILE_ERROR;
+
+	// Pick out the compiled binary
+	if (!SUCCEEDED(result->GetResult(&blobOut))) {
+		return ZG_ERROR_SHADER_COMPILE_ERROR;
+	}
+
+	return ZG_SUCCESS;
+}
 
 // D3D12 PipelineRendering implementation
 // ------------------------------------------------------------------------------------------------
@@ -195,7 +344,7 @@ public:
 		mWidth = uint32_t(settings.width);
 		mHeight = uint32_t(settings.height);
 		HWND hwnd = (HWND)settings.nativeWindowHandle;
-		if (mWidth == 0 || mHeight == 0) return ZG_ERROR_INVALID_PARAMS;
+		if (mWidth == 0 || mHeight == 0) return ZG_ERROR_INVALID_ARGUMENT;
 
 		// Enable debug layers in debug mode
 		if (settings.debugMode) {
@@ -471,11 +620,55 @@ public:
 		IPipelineRendering** pipelineOut,
 		const ZgPipelineRenderingCreateInfo& createInfo) noexcept override final
 	{
-		/*// Initialize DXC compiler if necessary
-		if (mDxcLibrary == nullptr) {
-			HRESULT res = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&mDxcLibrary));
-			if (!SUCCEEDED(res)) return ZG_ERROR_GENERIC;
-		}*/
+		// Pick out which vertex and pixel shader type to compile with
+		HlslShaderType vertexShaderType;
+		HlslShaderType pixelShaderType;
+		switch (createInfo.shaderVersion) {
+		case ZG_SHADER_MODEL_5_1:
+			vertexShaderType = HlslShaderType::VERTEX_SHADER_5_1;
+			pixelShaderType = HlslShaderType::PIXEL_SHADER_5_1;
+			break;
+		case ZG_SHADER_MODEL_6_0:
+			vertexShaderType = HlslShaderType::VERTEX_SHADER_6_0;
+			pixelShaderType = HlslShaderType::PIXEL_SHADER_6_0;
+			break;
+		case ZG_SHADER_MODEL_6_1:
+			vertexShaderType = HlslShaderType::VERTEX_SHADER_6_1;
+			pixelShaderType = HlslShaderType::PIXEL_SHADER_6_1;
+			break;
+		case ZG_SHADER_MODEL_6_2:
+			vertexShaderType = HlslShaderType::VERTEX_SHADER_6_2;
+			pixelShaderType = HlslShaderType::PIXEL_SHADER_6_2;
+			break;
+		case ZG_SHADER_MODEL_6_3:
+			vertexShaderType = HlslShaderType::VERTEX_SHADER_6_3;
+			pixelShaderType = HlslShaderType::PIXEL_SHADER_6_3;
+			break;
+		}
+
+		// Compile vertex shader
+		ComPtr<IDxcBlob> vertexShaderBlob;
+		ZgErrorCode vertexShaderRes = compileHlslShader(
+			mDxcLibrary,
+			mDxcCompiler,
+			vertexShaderBlob,
+			createInfo.vertexShaderPath,
+			createInfo.vertexShaderEntry,
+			createInfo.dxcCompilerFlags,
+			vertexShaderType);
+		if (vertexShaderRes != ZG_SUCCESS) return vertexShaderRes;
+		
+		// Compile pixel shader
+		ComPtr<IDxcBlob> pixelShaderBlob;
+		ZgErrorCode pixelShaderRes = compileHlslShader(
+			mDxcLibrary,
+			mDxcCompiler,
+			pixelShaderBlob,
+			createInfo.pixelShaderPath,
+			createInfo.pixelShaderEntry,
+			createInfo.dxcCompilerFlags,
+			pixelShaderType);
+		if (pixelShaderRes != ZG_SUCCESS) return pixelShaderRes;
 
 		// Allocate pipeline
 		D3D12PipelineRendering* pipeline =
@@ -604,7 +797,8 @@ private:
 	bool mAllowTearing = false;
 
 
-	//ComPtr<IDxcLibrary> mDxcLibrary;
+	ComPtr<IDxcLibrary> mDxcLibrary;
+	ComPtr<IDxcCompiler> mDxcCompiler;
 };
 
 // D3D12 API

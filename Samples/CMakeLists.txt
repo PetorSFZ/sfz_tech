@@ -72,6 +72,12 @@ endif()
 # ${ZEROG_FOUND}, ${ZEROG_INCLUDE_DIRS}, ${ZEROG_LIBRARIES} and ${ZEROG_CPP_LIBRARIES}
 add_subdirectory(${ZEROG_REPO_ROOT_DIR}/Lib-ZeroG ${CMAKE_BINARY_DIR}/ZeroG)
 
+# Copy ZeroG runtime files
+file(COPY ${ZEROG_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${ZEROG_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+file(COPY ${ZEROG_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR}/RelWithDebInfo)
+file(COPY ${ZEROG_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR}/Release)
+
 # Compiler flags
 # ------------------------------------------------------------------------------------------------
 

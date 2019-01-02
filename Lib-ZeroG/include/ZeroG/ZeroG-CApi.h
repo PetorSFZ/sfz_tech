@@ -119,7 +119,8 @@ enum ZgErrorCodeEnum {
 	ZG_ERROR_UNIMPLEMENTED,
 	ZG_ERROR_CPU_OUT_OF_MEMORY,
 	ZG_ERROR_NO_SUITABLE_DEVICE,
-	ZG_ERROR_INVALID_PARAMS,
+	ZG_ERROR_INVALID_ARGUMENT,
+	ZG_ERROR_SHADER_COMPILE_ERROR,
 };
 typedef uint32_t ZgErrorCode;
 
@@ -194,9 +195,28 @@ ZG_DLL_API ZgErrorCode zgContextResize(ZgContext* context, uint32_t width, uint3
 // ZeroG rendering pipeline handle
 ZG_HANDLE(ZgPipelineRendering);
 
+// Enum representing various shader model versions
+enum ZgShaderModelEnum {
+	ZG_SHADER_MODEL_UNDEFINED = 0,
+	ZG_SHADER_MODEL_5_1,
+	ZG_SHADER_MODEL_6_0,
+	ZG_SHADER_MODEL_6_1,
+	ZG_SHADER_MODEL_6_2,
+	ZG_SHADER_MODEL_6_3
+};
+typedef uint32_t ZgShaderModel;
+
+// The maximum number of compiler flags allowed to the DXC shader compiler
+static const uint32_t ZG_MAX_NUM_DXC_COMPILER_FLAGS = 8;
+
 // The information required to create a rendering pipeline
 typedef struct {
-
+	const char* vertexShaderPath;
+	const char* vertexShaderEntry;
+	const char* pixelShaderPath;
+	const char* pixelShaderEntry;
+	ZgShaderModel shaderVersion;
+	const char* dxcCompilerFlags[ZG_MAX_NUM_DXC_COMPILER_FLAGS];
 } ZgPipelineRenderingCreateInfo;
 
 ZG_DLL_API ZgErrorCode zgPipelineRenderingCreate(

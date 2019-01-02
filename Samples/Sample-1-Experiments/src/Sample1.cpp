@@ -28,6 +28,7 @@
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <direct.h>
 #endif
 
 // Settings
@@ -57,6 +58,11 @@ int main(int argc, char* argv[])
 	// Enable hi-dpi awareness on Windows
 #ifdef _WIN32
 	SetProcessDPIAware();
+
+	// Set current working directory to SDL_GetBasePath()
+	char* basePath = SDL_GetBasePath();
+	_chdir(basePath);
+	SDL_free(basePath);
 #endif
 
 	// Init SDL2
@@ -89,6 +95,13 @@ int main(int argc, char* argv[])
 
 	// Create a rendering pipeline
 	ZgPipelineRenderingCreateInfo pipelineInfo = {};
+	pipelineInfo.vertexShaderPath = "res/Sample-1/test.hlsl";
+	pipelineInfo.vertexShaderEntry = "VSMain";
+	pipelineInfo.pixelShaderPath = "res/Sample-1/test.hlsl";
+	pipelineInfo.pixelShaderEntry = "PSMain";
+	pipelineInfo.shaderVersion = ZG_SHADER_MODEL_6_2;
+	pipelineInfo.dxcCompilerFlags[0] = "-Zi";
+	pipelineInfo.dxcCompilerFlags[1] = "-O4";
 	ZgPipelineRendering* pipeline = nullptr;
 	CHECK_ZG zgPipelineRenderingCreate(ctx.mContext, &pipeline, &pipelineInfo);
 

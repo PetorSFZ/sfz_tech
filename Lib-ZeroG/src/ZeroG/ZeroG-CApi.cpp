@@ -125,6 +125,14 @@ ZG_DLL_API ZgErrorCode zgPipelineRenderingCreate(
 	ZgPipelineRendering** pipelineOut,
 	const ZgPipelineRenderingCreateInfo* createInfo)
 {
+	// Check arguments
+	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->vertexShaderPath == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->vertexShaderEntry == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->pixelShaderPath == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->pixelShaderEntry == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->shaderVersion == ZG_SHADER_MODEL_UNDEFINED) return ZG_ERROR_INVALID_ARGUMENT;
+
 	zg::IPipelineRendering* pipeline;
 	ZgErrorCode res = context->context->pipelineCreate(&pipeline, *createInfo);
 	if (res != ZG_SUCCESS) return res;

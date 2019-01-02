@@ -56,14 +56,6 @@ message("  -- CMAKE_CXX_FLAGS_DEBUG: " ${CMAKE_CXX_FLAGS_DEBUG})
 message("  -- CMAKE_CXX_FLAGS_RELWITHDEBINFO: " ${CMAKE_CXX_FLAGS_RELWITHDEBINFO})
 message("  -- CMAKE_CXX_FLAGS_RELEASE: " ${CMAKE_CXX_FLAGS_RELEASE})
 
-# Dependencies
-# ------------------------------------------------------------------------------------------------
-
-# TODO: ZeroG should not depend on SDL2
-if (NOT SDL2_FOUND)
-	message(FATAL_ERROR "ZeroG currently requires SDL2. Add Dependency-SDL2.")
-endif()
-
 # ZeroG C-API
 # ------------------------------------------------------------------------------------------------
 
@@ -109,6 +101,15 @@ target_include_directories(ZeroG-cpp PRIVATE
 	${SRC_DIR}
 )
 
+# Runtime files (DLLs)
+# ------------------------------------------------------------------------------------------------
+
+if (MSVC)
+	set(RUNTIME_FILES
+		"C:\\Program\ Files\ (x86)\\Windows\ Kits\\10\\Redist\\D3D\\x64\\dxcompiler.dll"
+		"C:\\Program\ Files\ (x86)\\Windows\ Kits\\10\\Redist\\D3D\\x64\\dxil.dll")
+endif()
+
 # Output variables (Parent scope)
 # ------------------------------------------------------------------------------------------------
 
@@ -120,4 +121,5 @@ if(hasParent)
 	set(ZEROG_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
 	set(ZEROG_LIBRARIES ZeroG PARENT_SCOPE)
 	set(ZEROG_CPP_LIBRARIES ZeroG-cpp ZeroG PARENT_SCOPE)
+	set(ZEROG_RUNTIME_FILES ${RUNTIME_FILES} PARENT_SCOPE)
 endif()
