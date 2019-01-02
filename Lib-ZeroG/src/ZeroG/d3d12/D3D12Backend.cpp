@@ -253,8 +253,8 @@ static ZgErrorCode compileHlslShader(
 	}
 
 	// Split and convert args to wide strings :(
-	WCHAR argsContainer[ZG_MAX_NUM_DXC_COMPILER_FLAGS][32];
-	LPCWSTR args[ZG_MAX_NUM_DXC_COMPILER_FLAGS];
+	WCHAR argsContainer[ZG_MAX_NUM_DXC_COMPILER_FLAGS][32] = {};
+	LPCWSTR args[ZG_MAX_NUM_DXC_COMPILER_FLAGS] = {};
 	
 	uint32_t numArgs = 0;
 	for (uint32_t i = 0; i < ZG_MAX_NUM_DXC_COMPILER_FLAGS; i++) {
