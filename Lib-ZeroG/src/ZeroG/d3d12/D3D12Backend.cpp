@@ -303,6 +303,36 @@ static ZgErrorCode compileHlslShader(
 	return ZG_SUCCESS;
 }
 
+static DXGI_FORMAT vertexAttributeTypeToFormat(ZgVertexAttributeType type) noexcept
+{
+	switch (type) {
+	case ZG_VERTEX_ATTRIBUTE_FLOAT: return DXGI_FORMAT_R32_FLOAT;
+	case ZG_VERTEX_ATTRIBUTE_FLOAT2: return DXGI_FORMAT_R32G32_FLOAT;
+	case ZG_VERTEX_ATTRIBUTE_FLOAT3: return DXGI_FORMAT_R32G32B32_FLOAT;
+	case ZG_VERTEX_ATTRIBUTE_FLOAT4: return DXGI_FORMAT_R32G32B32A32_FLOAT;
+	default: break;
+	}
+	return DXGI_FORMAT_UNKNOWN;
+}
+
+static D3D12_INPUT_ELEMENT_DESC vertexAttributeToDesc(
+	char* semanticNameStorage,
+	uint32_t semanticNameStorageSize,
+	const ZgVertexAttribute& attribute) noexcept
+{
+	D3D12_INPUT_ELEMENT_DESC desc = {};
+	snprintf(semanticNameStorage, semanticNameStorageSize,
+		"ATTRIBUTE_LOCATION_%u", attribute.attributeLocation);
+	desc.SemanticName = semanticNameStorage;
+	desc.SemanticIndex = 0; // Don't allow more than 4 floats per element
+	desc.Format = vertexAttributeTypeToFormat(attribute.type);
+	desc.InputSlot = 0; // TODO: Expose this?
+	desc.AlignedByteOffset = attribute.strideBytes;
+	desc.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+	desc.InstanceDataStepRate = 0;
+	return desc;
+}
+
 // D3D12 PipelineRendering implementation
 // ------------------------------------------------------------------------------------------------
 
@@ -669,6 +699,16 @@ public:
 			createInfo.dxcCompilerFlags,
 			pixelShaderType);
 		if (pixelShaderRes != ZG_SUCCESS) return pixelShaderRes;
+
+		// Convert ZgVertexAttribut's to D3D12_INPUT_ELEMENT_DESC
+		D3D12_INPUT_ELEMENT_DESC attributes[ZG_MAX_NUM_VERTEX_ATTRIBUTES] = {};
+		char attributesNameStorage[ZG_MAX_NUM_VERTEX_ATTRIBUTES][32] = {};
+		for (uint32_t i = 0; i < createInfo.numVertexAttributes; i++) {
+			attributes[i] = vertexAttributeToDesc(
+				attributesNameStorage[i], 32,createInfo.vertexAttributes[i]);
+		}
+
+
 
 		// Allocate pipeline
 		D3D12PipelineRendering* pipeline =

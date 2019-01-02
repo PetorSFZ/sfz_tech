@@ -209,14 +209,58 @@ typedef uint32_t ZgShaderModel;
 // The maximum number of compiler flags allowed to the DXC shader compiler
 static const uint32_t ZG_MAX_NUM_DXC_COMPILER_FLAGS = 8;
 
+// The type of data contained in a vertex
+enum ZgVertexAttributeTypeEnum {
+	ZG_VERTEX_ATTRIBUTE_UNDEFINED = 0,
+
+	ZG_VERTEX_ATTRIBUTE_FLOAT,
+	ZG_VERTEX_ATTRIBUTE_FLOAT2,
+	ZG_VERTEX_ATTRIBUTE_FLOAT3,
+	ZG_VERTEX_ATTRIBUTE_FLOAT4,
+};
+typedef uint32_t ZgVertexAttributeType;
+
+// A struct defining a vertex attribute
+typedef struct {
+	// The location of the attribute in the vertex input.
+	//
+	// For HLSL the semantic name need to be "ATTRIBUTE_LOCATION_<attributeLocation>"
+	// E.g.:
+	// struct VSInput {
+	//     float3 position : ATTRIBUTE_LOCATION_0;
+	// }
+	uint32_t attributeLocation;
+
+	// The data type
+	ZgVertexAttributeType type;
+
+	// Distance (in bytes) between each element in the buffer
+	uint32_t strideBytes;
+
+} ZgVertexAttribute;
+
+// The maximum number of vertex attributes allowed as input to a vertex shader
+static const uint32_t ZG_MAX_NUM_VERTEX_ATTRIBUTES = 8;
+
 // The information required to create a rendering pipeline
 typedef struct {
+
+	// Vertex shader information
 	const char* vertexShaderPath;
 	const char* vertexShaderEntry;
+
+	// Pixel shader information
 	const char* pixelShaderPath;
 	const char* pixelShaderEntry;
+
+	// Information to the DXC compiler
 	ZgShaderModel shaderVersion;
 	const char* dxcCompilerFlags[ZG_MAX_NUM_DXC_COMPILER_FLAGS];
+
+	// The vertex attributes to the vertex shader
+	uint32_t numVertexAttributes;
+	ZgVertexAttribute vertexAttributes[ZG_MAX_NUM_VERTEX_ATTRIBUTES];
+
 } ZgPipelineRenderingCreateInfo;
 
 ZG_DLL_API ZgErrorCode zgPipelineRenderingCreate(

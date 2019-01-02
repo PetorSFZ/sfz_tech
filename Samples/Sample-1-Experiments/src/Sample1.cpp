@@ -97,11 +97,24 @@ int main(int argc, char* argv[])
 	ZgPipelineRenderingCreateInfo pipelineInfo = {};
 	pipelineInfo.vertexShaderPath = "res/Sample-1/test.hlsl";
 	pipelineInfo.vertexShaderEntry = "VSMain";
+
 	pipelineInfo.pixelShaderPath = "res/Sample-1/test.hlsl";
 	pipelineInfo.pixelShaderEntry = "PSMain";
+	
 	pipelineInfo.shaderVersion = ZG_SHADER_MODEL_6_2;
 	pipelineInfo.dxcCompilerFlags[0] = "-Zi";
 	pipelineInfo.dxcCompilerFlags[1] = "-O4";
+	
+	pipelineInfo.numVertexAttributes = 2;
+
+	pipelineInfo.vertexAttributes[0].attributeLocation = 0;
+	pipelineInfo.vertexAttributes[0].strideBytes = sizeof(float) * 3; // TODO:
+	pipelineInfo.vertexAttributes[0].type = ZG_VERTEX_ATTRIBUTE_FLOAT3;
+
+	pipelineInfo.vertexAttributes[1].attributeLocation = 1;
+	pipelineInfo.vertexAttributes[1].strideBytes = sizeof(float) * 3; // TODO:
+	pipelineInfo.vertexAttributes[1].type = ZG_VERTEX_ATTRIBUTE_FLOAT3;
+
 	ZgPipelineRendering* pipeline = nullptr;
 	CHECK_ZG zgPipelineRenderingCreate(ctx.mContext, &pipeline, &pipelineInfo);
 
