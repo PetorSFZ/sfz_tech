@@ -48,6 +48,10 @@ extern "C" {
 #define ZG_DLL_API
 #endif
 
+#define ZG_HANDLE(name) \
+	struct name; \
+	typedef struct name name;
+
 // Bool
 // ------------------------------------------------------------------------------------------------
 
@@ -145,9 +149,8 @@ typedef struct {
 // Context
 // ------------------------------------------------------------------------------------------------
 
-// Forward declare ZgContext struct
-struct ZgContext;
-typedef struct ZgContext ZgContext;
+// ZeroG context handle
+ZG_HANDLE(ZgContext);
 
 // The settings used to create a context and initialize ZeroG
 typedef struct {
@@ -185,9 +188,32 @@ ZG_DLL_API ZgErrorCode zgContextDestroy(ZgContext* context);
 // time, so it is completely safe to call this at the beginning of each frame.
 ZG_DLL_API ZgErrorCode zgContextResize(ZgContext* context, uint32_t width, uint32_t height);
 
+// Pipeline
+// ------------------------------------------------------------------------------------------------
 
+// ZeroG rendering pipeline handle
+ZG_HANDLE(ZgPipelineRendering);
+
+// The information required to create a rendering pipeline
+typedef struct {
+
+} ZgPipelineRenderingCreateInfo;
+
+ZG_DLL_API ZgErrorCode zgPipelineRenderingCreate(
+	ZgContext* context,
+	ZgPipelineRendering** pipelineOut,
+	const ZgPipelineRenderingCreateInfo* createInfo);
+
+ZG_DLL_API ZgErrorCode zgPipelineRenderingRelease(
+	ZgContext* context,
+	ZgPipelineRendering* pipeline);
+
+// Experimental
+// ------------------------------------------------------------------------------------------------
 
 ZG_DLL_API ZgErrorCode zgRenderExperiment(ZgContext* context);
+
+
 
 
 

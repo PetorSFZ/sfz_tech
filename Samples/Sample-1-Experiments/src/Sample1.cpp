@@ -87,6 +87,11 @@ int main(int argc, char* argv[])
 	zg::Context ctx;
 	CHECK_ZG ctx.init(initSettings);
 
+	// Create a rendering pipeline
+	ZgPipelineRenderingCreateInfo pipelineInfo = {};
+	ZgPipelineRendering* pipeline = nullptr;
+	CHECK_ZG zgPipelineRenderingCreate(ctx.mContext, &pipeline, &pipelineInfo);
+
 	// Run our main loop
 	bool running = true;
 	while (running) {
@@ -117,11 +122,13 @@ int main(int argc, char* argv[])
 		int width = 0;
 		int height = 0;
 		SDL_GL_GetDrawableSize(window, &width, &height);
-		CHECK_ZG zgContextResize(ctx.mContext, uint32_t(width), uint32_t(height));
+		//CHECK_ZG zgContextResize(ctx.mContext, uint32_t(width), uint32_t(height));
 
 		// TODO: Rendering here
 		CHECK_ZG zgRenderExperiment(ctx.mContext);
 	}
+
+	CHECK_ZG zgPipelineRenderingRelease(ctx.mContext, pipeline);
 
 	// Destroy ZeroG context
 	ctx.destroy();

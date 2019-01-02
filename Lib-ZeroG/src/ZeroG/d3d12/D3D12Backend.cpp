@@ -16,7 +16,7 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "ZeroG/d3d12/D3D12Api.hpp"
+#include "ZeroG/d3d12/D3D12Backend.hpp"
 
 // Windows.h
 #define NOMINMAX
@@ -31,6 +31,11 @@
 #include <dxgi1_6.h>
 #pragma comment (lib, "dxgi.lib")
 //#pragma comment (lib, "dxguid.lib")
+
+// DXC compiler
+//#define DXC_API_IMPORT
+//#include <dxcapi.h>
+
 
 // ZeroG headers
 #include "ZeroG/CpuAllocation.hpp"
@@ -149,21 +154,30 @@ struct CheckD3D12Impl final {
 	}
 };
 
-// D3D12 API implementation
+// D3D12 PipelineRendering implementation
 // ------------------------------------------------------------------------------------------------
 
-class D3D12Api : public Api {
+class D3D12PipelineRendering final : public IPipelineRendering {
+public:
+
+
+};
+
+// D3D12 Context implementation
+// ------------------------------------------------------------------------------------------------
+
+class D3D12Context final : public IContext {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	D3D12Api() noexcept = default;
-	D3D12Api(const D3D12Api&) = delete;
-	D3D12Api& operator= (const D3D12Api&) = delete;
-	D3D12Api(D3D12Api&&) = delete;
-	D3D12Api& operator= (D3D12Api&&) = delete;
+	D3D12Context() noexcept = default;
+	D3D12Context(const D3D12Context&) = delete;
+	D3D12Context& operator= (const D3D12Context&) = delete;
+	D3D12Context(D3D12Context&&) = delete;
+	D3D12Context& operator= (D3D12Context&&) = delete;
 
-	virtual ~D3D12Api() noexcept
+	virtual ~D3D12Context() noexcept
 	{
 		flushCommandQueue();
 
@@ -400,7 +414,7 @@ public:
 		return ZG_SUCCESS;
 	}
 
-	// API methods
+	// Context methods
 	// --------------------------------------------------------------------------------------------
 
 	ZgErrorCode resize(uint32_t width, uint32_t height) noexcept override final
@@ -449,6 +463,37 @@ public:
 
 		return ZG_SUCCESS;
 	}
+
+	// Pipeline methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgErrorCode pipelineCreate(
+		IPipelineRendering** pipelineOut,
+		const ZgPipelineRenderingCreateInfo& createInfo) noexcept override final
+	{
+		/*// Initialize DXC compiler if necessary
+		if (mDxcLibrary == nullptr) {
+			HRESULT res = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&mDxcLibrary));
+			if (!SUCCEEDED(res)) return ZG_ERROR_GENERIC;
+		}*/
+
+		// Allocate pipeline
+		D3D12PipelineRendering* pipeline =
+			zgNew<D3D12PipelineRendering>(mAllocator, "ZeroG - D3D12PipelineRendering");
+
+		// Return pipeline
+		*pipelineOut = pipeline;
+		return ZG_SUCCESS;
+	}
+
+	ZgErrorCode pipelineRelease(IPipelineRendering* pipeline) noexcept override final
+	{
+		zgDelete<IPipelineRendering>(mAllocator, pipeline);
+		return ZG_SUCCESS;
+	}
+
+	// Experiments
+	// --------------------------------------------------------------------------------------------
 
 	ZgErrorCode renderExperiment() noexcept override final
 	{
@@ -557,25 +602,28 @@ private:
 
 	uint32_t mDescriptorSizeRTV = 0;
 	bool mAllowTearing = false;
+
+
+	//ComPtr<IDxcLibrary> mDxcLibrary;
 };
 
 // D3D12 API
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode createD3D12Backend(Api** apiOut, ZgContextInitSettings& settings) noexcept
+ZgErrorCode createD3D12Backend(IContext** contextOut, ZgContextInitSettings& settings) noexcept
 {
 	// Allocate and create D3D12 backend
-	D3D12Api* api = zgNew<D3D12Api>(settings.allocator, "D3D12 backend");
+	D3D12Context* context = zgNew<D3D12Context>(settings.allocator, "D3D12 Context");
 
 	// Initialize backend, return nullptr if init failed
-	ZgErrorCode initRes = api->init(settings);
+	ZgErrorCode initRes = context->init(settings);
 	if (initRes != ZG_SUCCESS)
 	{
-		zgDelete(settings.allocator, api);
+		zgDelete(settings.allocator, context);
 		return initRes;
 	}
 
-	*apiOut = api;
+	*contextOut = context;
 	return ZG_SUCCESS;
 }
 

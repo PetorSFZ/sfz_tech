@@ -19,11 +19,11 @@
 #define ZG_DLL_EXPORT
 #include "ZeroG/ZeroG-CApi.h"
 
-#include "ZeroG/Api.hpp"
+#include "ZeroG/BackendInterface.hpp"
 #include "ZeroG/CpuAllocation.hpp"
 
 #ifdef _WIN32
-#include "ZeroG/d3d12/D3D12Api.hpp"
+#include "ZeroG/d3d12/D3D12Backend.hpp"
 #endif
 
 // Version information
@@ -47,8 +47,8 @@ ZG_DLL_API ZgFeatureBits zgCompiledFeatures(void)
 // ------------------------------------------------------------------------------------------------
 
 struct ZgContext final {
-	ZgAllocator allocator;
-	zg::Api* api = nullptr;
+	ZgAllocator allocator = {};
+	zg::IContext* context = nullptr;
 };
 
 ZG_DLL_API ZgErrorCode zgContextCreate(
@@ -77,7 +77,7 @@ ZG_DLL_API ZgErrorCode zgContextCreate(
 
 	case ZG_BACKEND_D3D12:
 		{
-		ZgErrorCode res = zg::createD3D12Backend(&context->api, settings);
+		ZgErrorCode res = zg::createD3D12Backend(&context->context, settings);
 			if (res != ZG_SUCCESS) {
 				zg::zgDelete(settings.allocator, context);
 				return res;
@@ -100,7 +100,7 @@ ZG_DLL_API ZgErrorCode zgContextDestroy(ZgContext* context)
 	if (context == nullptr) return ZG_SUCCESS;
 
 	// Delete API
-	zg::zgDelete<zg::Api>(context->allocator, context->api);
+	zg::zgDelete<zg::IContext>(context->allocator, context->context);
 
 	// Delete context
 	ZgAllocator allocator = context->allocator;
@@ -111,12 +111,38 @@ ZG_DLL_API ZgErrorCode zgContextDestroy(ZgContext* context)
 
 ZG_DLL_API ZgErrorCode zgContextResize(ZgContext* context, uint32_t width, uint32_t height)
 {
-	return context->api->resize(width, height);
+	return context->context->resize(width, height);
 }
 
+// Pipeline
+// ------------------------------------------------------------------------------------------------
 
+// Note: A ZgPipeline struct does not really exist. It's just an alias for the internal
+// zg::IPipeline currently. This may (or may not) change in the future.
+
+ZG_DLL_API ZgErrorCode zgPipelineRenderingCreate(
+	ZgContext* context,
+	ZgPipelineRendering** pipelineOut,
+	const ZgPipelineRenderingCreateInfo* createInfo)
+{
+	zg::IPipelineRendering* pipeline;
+	ZgErrorCode res = context->context->pipelineCreate(&pipeline, *createInfo);
+	if (res != ZG_SUCCESS) return res;
+	*pipelineOut = reinterpret_cast<ZgPipelineRendering*>(pipeline);
+	return ZG_SUCCESS;
+}
+
+ZG_DLL_API ZgErrorCode zgPipelineRenderingRelease(
+	ZgContext* context,
+	ZgPipelineRendering* pipeline)
+{
+	return context->context->pipelineRelease(reinterpret_cast<zg::IPipelineRendering*>(pipeline));
+}
+
+// Experimental
+// ------------------------------------------------------------------------------------------------
 
 ZG_DLL_API ZgErrorCode zgRenderExperiment(ZgContext* context)
 {
-	return context->api->renderExperiment();
+	return context->context->renderExperiment();
 }

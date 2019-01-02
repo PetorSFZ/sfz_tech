@@ -18,14 +18,43 @@
 
 #pragma once
 
-#include "ZeroG/Api.hpp"
-#include "ZeroG/ZeroG-CApi.h"
+#include <ZeroG/ZeroG-CApi.h>
 
 namespace zg {
 
-// D3D12 API
+// PipelineRendering interface
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode createD3D12Backend(Api** apiOut, ZgContextInitSettings& settings) noexcept;
+class IPipelineRendering {
+public:
+	virtual ~IPipelineRendering() noexcept {}
+};
+
+// Context interface
+// ------------------------------------------------------------------------------------------------
+
+class IContext {
+public:
+	virtual ~IContext() noexcept {}
+
+	// Context methods
+	// --------------------------------------------------------------------------------------------
+
+	virtual ZgErrorCode resize(uint32_t width, uint32_t height) noexcept = 0;
+
+	// Pipeline methods
+	// --------------------------------------------------------------------------------------------
+
+	virtual ZgErrorCode pipelineCreate(
+		IPipelineRendering** pipelineOut,
+		const ZgPipelineRenderingCreateInfo& createInfo) noexcept = 0;
+	
+	virtual ZgErrorCode pipelineRelease(IPipelineRendering* pipeline) noexcept = 0;
+
+	// Experiments
+	// --------------------------------------------------------------------------------------------
+
+	virtual ZgErrorCode renderExperiment() noexcept = 0;
+};
 
 } // namespace zg

@@ -18,21 +18,14 @@
 
 #pragma once
 
-#include <ZeroG/ZeroG-CApi.h>
+#include "ZeroG/BackendInterface.hpp"
+#include "ZeroG/ZeroG-CApi.h"
 
 namespace zg {
 
-// ApiInterface
+// D3D12 Context
 // ------------------------------------------------------------------------------------------------
 
-// The common interface for all implementations of ZeroG.
-class Api {
-public:
-	virtual ~Api() noexcept {}
-
-	virtual ZgErrorCode resize(uint32_t width, uint32_t height) noexcept = 0;
-
-	virtual ZgErrorCode renderExperiment() noexcept = 0;
-};
+ZgErrorCode createD3D12Backend(IContext** contexOut, ZgContextInitSettings& settings) noexcept;
 
 } // namespace zg
