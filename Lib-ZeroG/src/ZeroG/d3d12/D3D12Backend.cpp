@@ -36,6 +36,9 @@
 #include <dxcapi.h>
 #pragma comment (lib, "dxcompiler.lib")
 
+// D3DX12 library
+#include "d3dx12.h"
+
 // ZeroG headers
 #include "ZeroG/CpuAllocation.hpp"
 
@@ -313,24 +316,6 @@ static DXGI_FORMAT vertexAttributeTypeToFormat(ZgVertexAttributeType type) noexc
 	default: break;
 	}
 	return DXGI_FORMAT_UNKNOWN;
-}
-
-static D3D12_INPUT_ELEMENT_DESC vertexAttributeToDesc(
-	char* semanticNameStorage,
-	uint32_t semanticNameStorageSize,
-	const ZgVertexAttribute& attribute) noexcept
-{
-	D3D12_INPUT_ELEMENT_DESC desc = {};
-	snprintf(semanticNameStorage, semanticNameStorageSize,
-		"ATTRIBUTE_LOCATION_%u", attribute.attributeLocation);
-	desc.SemanticName = semanticNameStorage;
-	desc.SemanticIndex = 0; // Don't allow more than 4 floats per element
-	desc.Format = vertexAttributeTypeToFormat(attribute.type);
-	desc.InputSlot = 0; // TODO: Expose this?
-	desc.AlignedByteOffset = attribute.strideBytes;
-	desc.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-	desc.InstanceDataStepRate = 0;
-	return desc;
 }
 
 // D3D12 PipelineRendering implementation
@@ -700,14 +685,110 @@ public:
 			pixelShaderType);
 		if (pixelShaderRes != ZG_SUCCESS) return pixelShaderRes;
 
-		// Convert ZgVertexAttribut's to D3D12_INPUT_ELEMENT_DESC
+		// Convert ZgVertexAttribute's to D3D12_INPUT_ELEMENT_DESC
+		// This is the "input layout"
 		D3D12_INPUT_ELEMENT_DESC attributes[ZG_MAX_NUM_VERTEX_ATTRIBUTES] = {};
-		char attributesNameStorage[ZG_MAX_NUM_VERTEX_ATTRIBUTES][32] = {};
 		for (uint32_t i = 0; i < createInfo.numVertexAttributes; i++) {
-			attributes[i] = vertexAttributeToDesc(
-				attributesNameStorage[i], 32,createInfo.vertexAttributes[i]);
+
+			const ZgVertexAttribute& attribute = createInfo.vertexAttributes[i];
+			D3D12_INPUT_ELEMENT_DESC desc = {};
+			desc.SemanticName = "ATTRIBUTE_LOCATION_";
+			desc.SemanticIndex = attribute.attributeLocation;
+			desc.Format = vertexAttributeTypeToFormat(attribute.type);
+			desc.InputSlot = 0; // TODO: Expose this?
+			desc.AlignedByteOffset = attribute.strideBytes;
+			desc.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+			desc.InstanceDataStepRate = 0;
+			attributes[i] = desc;
 		}
 
+		// Create root signature
+		ComPtr<ID3D12RootSignature> rootSignature;
+		{
+			// Allow root signature access from all shader stages, opt in to using an input layout
+			D3D12_ROOT_SIGNATURE_FLAGS flags =
+				D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+			// Root signature parameters
+			// TODO: Currently using temporary hardcoded parameters
+			// TODO: Set dynamically with user provided settings
+			const uint32_t NUM_PARAMS = 1;
+			CD3DX12_ROOT_PARAMETER1 parameters[NUM_PARAMS];
+			parameters[0].InitAsConstants(4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+			CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC desc;
+			desc.Init_1_1(NUM_PARAMS, parameters, 0, nullptr, flags);
+
+			// Serialize the root signature.
+			ComPtr<ID3DBlob> blob;
+			ComPtr<ID3DBlob> errorBlob;
+			if (!CHECK_D3D12_SUCCEEDED(D3DX12SerializeVersionedRootSignature(
+				&desc, D3D_ROOT_SIGNATURE_VERSION_1_1, &blob, &errorBlob))) {
+				
+				printf("D3DX12SerializeVersionedRootSignature() failed: %s\n",
+					errorBlob->GetBufferPointer());
+				return ZG_ERROR_GENERIC;
+			}
+
+			// Create root signature
+			if (!CHECK_D3D12_SUCCEEDED(mDevice->CreateRootSignature(
+				0, blob->GetBufferPointer(), blob->GetBufferSize(), IID_PPV_ARGS(&rootSignature)))) {
+				return ZG_ERROR_GENERIC;
+			}
+		}
+		
+		// Create Pipeline State Object (PSO)
+		ComPtr<ID3D12PipelineState> pipelineState;
+		{
+			// Essentially tokens are sent to Device->CreatePipelineState(), it does not matter
+			// what order the tokens are sent in. For this reason we create our own struct with
+			// the tokens we care about.
+			struct PipelineStateStream {
+				CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE rootSignature;
+				CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT inputLayout;
+				CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY primitiveTopology;
+				CD3DX12_PIPELINE_STATE_STREAM_VS vertexShader;
+				CD3DX12_PIPELINE_STATE_STREAM_PS pixelShader;
+				//CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT dsvFormat;
+				CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS rtvFormats;
+			};
+
+			// Create our token stream and set root signature
+			PipelineStateStream stream = {};
+			stream.rootSignature = rootSignature.Get();
+			
+			// Set input layout
+			D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = {};
+			inputLayoutDesc.pInputElementDescs = attributes;
+			inputLayoutDesc.NumElements = createInfo.numVertexAttributes;
+			stream.inputLayout = inputLayoutDesc;
+			
+			// Set primitive topology
+			// We only allow triangles for now
+			stream.primitiveTopology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+
+			// Set vertex shader
+			stream.vertexShader = CD3DX12_SHADER_BYTECODE(
+				vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize());
+
+			// Set pixel shader
+			stream.pixelShader = CD3DX12_SHADER_BYTECODE(
+				pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize());
+
+			// Set render target formats
+			// TODO: Probably here Multiple Render Targets (MRT) is specified?
+			D3D12_RT_FORMAT_ARRAY rtvFormats = {};
+			rtvFormats.NumRenderTargets = 1;
+			rtvFormats.RTFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM; // Same as in our swapchain
+			stream.rtvFormats = rtvFormats;
+			
+			D3D12_PIPELINE_STATE_STREAM_DESC streamDesc = {};
+			streamDesc.pPipelineStateSubobjectStream = &stream;
+			streamDesc.SizeInBytes = sizeof(PipelineStateStream);
+			if (!CHECK_D3D12_SUCCEEDED(
+				mDevice->CreatePipelineState(&streamDesc, IID_PPV_ARGS(&pipelineState)))) {
+				return ZG_ERROR_GENERIC;
+			}
+		}
 
 
 		// Allocate pipeline
