@@ -56,6 +56,15 @@ message("  -- CMAKE_CXX_FLAGS_DEBUG: " ${CMAKE_CXX_FLAGS_DEBUG})
 message("  -- CMAKE_CXX_FLAGS_RELWITHDEBINFO: " ${CMAKE_CXX_FLAGS_RELWITHDEBINFO})
 message("  -- CMAKE_CXX_FLAGS_RELEASE: " ${CMAKE_CXX_FLAGS_RELEASE})
 
+# Bundled externals
+# ------------------------------------------------------------------------------------------------
+
+set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
+
+# D3DX12
+# ${D3DX12_FOUND}, ${D3DX12_INCLUDE_DIRS}
+add_subdirectory(${EXTERNALS_DIR}/D3DX12)
+
 # ZeroG C-API
 # ------------------------------------------------------------------------------------------------
 
@@ -79,6 +88,7 @@ add_library(ZeroG SHARED ${ZEROG_CAPI_INCLUDE_FILES} ${ZEROG_CAPI_SRC_FILES})
 target_include_directories(ZeroG PRIVATE
 	${INCLUDE_DIR}
 	${SRC_DIR}
+	${D3DX12_INCLUDE_DIRS}
 )
 
 # ZeroG C++ Wrapper
