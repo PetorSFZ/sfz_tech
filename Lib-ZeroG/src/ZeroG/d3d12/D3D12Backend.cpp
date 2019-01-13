@@ -18,121 +18,13 @@
 
 #include "ZeroG/d3d12/D3D12Backend.hpp"
 
-// Windows.h
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#include <wrl.h> // ComPtr
-//#include <Winerror.h>
+#include <mutex>
 
-// D3D12 headers
-#include <d3d12.h>
-#pragma comment (lib, "d3d12.lib")
-#include <dxgi1_6.h>
-#pragma comment (lib, "dxgi.lib")
-//#pragma comment (lib, "dxguid.lib")
-
-// DXC compiler
-#include <dxcapi.h>
-#pragma comment (lib, "dxcompiler.lib")
-
-// D3DX12 library
-#include "d3dx12.h"
-
-// ZeroG headers
+#include "ZeroG/d3d12/D3D12Common.hpp"
+#include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
 #include "ZeroG/CpuAllocation.hpp"
 
 namespace zg {
-
-using Microsoft::WRL::ComPtr;
-
-// CHECK_D3D12 macro
-// ------------------------------------------------------------------------------------------------
-
-// Checks result (HRESULT) from D3D call and log if not success, returns result unmodified
-#define CHECK_D3D12 (CheckD3D12Impl(__FILE__, __LINE__)) %
-
-// Checks result (HRESULT) from D3D call and log if not success, converts result to bool
-#define CHECK_D3D12_SUCCEEDED(result) (CheckD3D12Impl(__FILE__, __LINE__).succeeded((result)))
-
-static const char* resultToString(HRESULT result) noexcept
-{
-	switch (result) {
-	case DXGI_ERROR_ACCESS_DENIED: return "DXGI_ERROR_ACCESS_DENIED";
-	case DXGI_ERROR_ACCESS_LOST: return "DXGI_ERROR_ACCESS_LOST";
-	case DXGI_ERROR_ALREADY_EXISTS: return "DXGI_ERROR_ALREADY_EXISTS";
-	case DXGI_ERROR_CANNOT_PROTECT_CONTENT: return "DXGI_ERROR_CANNOT_PROTECT_CONTENT";
-	case DXGI_ERROR_DEVICE_HUNG: return "DXGI_ERROR_DEVICE_HUNG";
-	case DXGI_ERROR_DEVICE_REMOVED: return "DXGI_ERROR_DEVICE_REMOVED";
-	case DXGI_ERROR_DEVICE_RESET: return "DXGI_ERROR_DEVICE_RESET";
-	case DXGI_ERROR_DRIVER_INTERNAL_ERROR: return "DXGI_ERROR_DRIVER_INTERNAL_ERROR";
-	case DXGI_ERROR_FRAME_STATISTICS_DISJOINT: return "DXGI_ERROR_FRAME_STATISTICS_DISJOINT";
-	case DXGI_ERROR_GRAPHICS_VIDPN_SOURCE_IN_USE: return "DXGI_ERROR_GRAPHICS_VIDPN_SOURCE_IN_USE";
-	case DXGI_ERROR_INVALID_CALL: return "DXGI_ERROR_INVALID_CALL";
-	case DXGI_ERROR_MORE_DATA: return "DXGI_ERROR_MORE_DATA";
-	case DXGI_ERROR_NAME_ALREADY_EXISTS: return "DXGI_ERROR_NAME_ALREADY_EXISTS";
-	case DXGI_ERROR_NONEXCLUSIVE: return "DXGI_ERROR_NONEXCLUSIVE";
-	case DXGI_ERROR_NOT_CURRENTLY_AVAILABLE: return "DXGI_ERROR_NOT_CURRENTLY_AVAILABLE";
-	case DXGI_ERROR_NOT_FOUND: return "DXGI_ERROR_NOT_FOUND";
-	case DXGI_ERROR_REMOTE_CLIENT_DISCONNECTED: return "DXGI_ERROR_REMOTE_CLIENT_DISCONNECTED";
-	case DXGI_ERROR_REMOTE_OUTOFMEMORY: return "DXGI_ERROR_REMOTE_OUTOFMEMORY";
-	case DXGI_ERROR_RESTRICT_TO_OUTPUT_STALE: return "DXGI_ERROR_RESTRICT_TO_OUTPUT_STALE";
-	case DXGI_ERROR_SDK_COMPONENT_MISSING: return "DXGI_ERROR_SDK_COMPONENT_MISSING";
-	case DXGI_ERROR_SESSION_DISCONNECTED: return "DXGI_ERROR_SESSION_DISCONNECTED";
-	case DXGI_ERROR_UNSUPPORTED: return "DXGI_ERROR_UNSUPPORTED";
-	case DXGI_ERROR_WAIT_TIMEOUT: return "DXGI_ERROR_WAIT_TIMEOUT";
-	case DXGI_ERROR_WAS_STILL_DRAWING: return "DXGI_ERROR_WAS_STILL_DRAWING";
-
-	//case D3D12_ERROR_FILE_NOT_FOUND: return "D3D12_ERROR_FILE_NOT_FOUND";
-	//case D3D12_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS: return "D3D12_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS";
-	//case D3D12_ERROR_TOO_MANY_UNIQUE_VIEW_OBJECTS: return "D3D12_ERROR_TOO_MANY_UNIQUE_VIEW_OBJECTS";
-	
-	case E_FAIL: return "E_FAIL";
-	case E_INVALIDARG: return "E_INVALIDARG";
-	case E_OUTOFMEMORY: return "E_OUTOFMEMORY";
-	case E_NOTIMPL: return "E_NOTIMPL";
-	case S_FALSE: return "S_FALSE";
-	case S_OK: return "S_OK";
-	}
-	return "UNKNOWN";
-}
-
-static const char* stripFilePath(const char* file) noexcept
-{
-	const char* strippedFile1 = std::strrchr(file, '\\');
-	const char* strippedFile2 = std::strrchr(file, '/');
-	if (strippedFile1 == nullptr && strippedFile2 == nullptr) {
-		return file;
-	}
-	else if (strippedFile2 == nullptr) {
-		return strippedFile1 + 1;
-	}
-	else {
-		return strippedFile2 + 1;
-	}
-}
-
-struct CheckD3D12Impl final {
-	const char* file;
-	int line;
-
-	CheckD3D12Impl() = delete;
-	CheckD3D12Impl(const char* file, int line) noexcept : file(file), line(line) {}
-
-	HRESULT operator% (HRESULT result) noexcept
-	{
-		if (SUCCEEDED(result)) return result;
-		printf("%s:%i: D3D12 error: %s\n", stripFilePath(file), line, resultToString(result));
-		return result;
-	}
-
-	bool succeeded(HRESULT result) noexcept
-	{
-		if (SUCCEEDED(result)) return true;
-		printf("%s:%i: D3D12 error: %s\n", stripFilePath(file), line, resultToString(result));
-		return false;
-	}
-};
 
 // Statics
 // ------------------------------------------------------------------------------------------------
@@ -155,177 +47,6 @@ static D3D12_RESOURCE_BARRIER createBarrierTransition(
 	barrier.Transition.Subresource = subresource;
 	return barrier;
 }
-
-static  bool relativeToAbsolute(char* pathOut, uint32_t pathOutSize, const char* pathIn) noexcept
-{
-	DWORD res = GetFullPathNameA(pathIn, pathOutSize, pathOut, NULL);
-	return res > 0;
-}
-
-static bool utf8ToWide(WCHAR* wideOut, uint32_t wideSizeBytes, const char* utf8In) noexcept
-{
-	int res = MultiByteToWideChar(CP_UTF8, 0, utf8In, -1, wideOut, wideSizeBytes);
-	return res != 0;
-}
-
-static bool fixPath(WCHAR* pathOut, uint32_t pathOutSizeBytes, const char* utf8In) noexcept
-{
-	char absolutePath[MAX_PATH] = { 0 };
-	if (!relativeToAbsolute(absolutePath, MAX_PATH, utf8In)) return false;
-	if (!utf8ToWide(pathOut, pathOutSizeBytes, absolutePath)) return false;
-	return true;
-}
-
-enum class HlslShaderType {
-	VERTEX_SHADER_5_1,
-	VERTEX_SHADER_6_0,
-	VERTEX_SHADER_6_1,
-	VERTEX_SHADER_6_2,
-	VERTEX_SHADER_6_3,
-
-	PIXEL_SHADER_5_1,
-	PIXEL_SHADER_6_0,
-	PIXEL_SHADER_6_1,
-	PIXEL_SHADER_6_2,
-	PIXEL_SHADER_6_3,
-};
-
-static ZgErrorCode compileHlslShader(
-	ComPtr<IDxcLibrary>& mDxcLibrary,
-	ComPtr<IDxcCompiler>& mDxcCompiler,
-	ComPtr<IDxcBlob>& blobOut,
-	const char* path,
-	const char* entryName,
-	const char* const * compilerFlags,
-	HlslShaderType shaderType) noexcept
-{
-	// Initialize DXC compiler if necessary
-	// TODO: Provide our own allocator
-	if (mDxcLibrary == nullptr) {
-		
-		// Initialize DXC library
-		HRESULT res = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&mDxcLibrary));
-		if (!SUCCEEDED(res)) return ZG_ERROR_GENERIC;
-
-		// Initialize DXC compiler
-		res = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&mDxcCompiler));
-		if (!SUCCEEDED(res)) {
-			mDxcLibrary = nullptr;
-			return ZG_ERROR_GENERIC;
-		}
-	}
-
-	// Convert paths to absolute wide strings
-	WCHAR shaderFilePathWide[MAX_PATH] = { 0 };
-	const uint32_t shaderFilePathWideSizeBytes = sizeof(shaderFilePathWide);
-	if (!fixPath(shaderFilePathWide, shaderFilePathWideSizeBytes, path)) {
-		return ZG_ERROR_GENERIC;
-	}
-
-	// Convert entry point to wide string
-	WCHAR shaderEntryWide[256] = { 0 };
-	const uint32_t shaderEntryWideSizeBytes = sizeof(shaderEntryWide);
-	if (!utf8ToWide(shaderEntryWide, shaderEntryWideSizeBytes, entryName)) {
-		return ZG_ERROR_GENERIC;
-	}
-
-	// Select shader type target profile string
-	LPCWSTR targetProfile = [&]() {
-		switch (shaderType) {
-		case HlslShaderType::VERTEX_SHADER_5_1: return L"vs_5_1";
-		case HlslShaderType::VERTEX_SHADER_6_0: return L"vs_6_0";
-		case HlslShaderType::VERTEX_SHADER_6_1: return L"vs_6_1";
-		case HlslShaderType::VERTEX_SHADER_6_2: return L"vs_6_2";
-		case HlslShaderType::VERTEX_SHADER_6_3: return L"vs_6_3";
-
-		case HlslShaderType::PIXEL_SHADER_5_1: return L"ps_5_1";
-		case HlslShaderType::PIXEL_SHADER_6_0: return L"ps_6_0";
-		case HlslShaderType::PIXEL_SHADER_6_1: return L"ps_6_1";
-		case HlslShaderType::PIXEL_SHADER_6_2: return L"ps_6_2";
-		case HlslShaderType::PIXEL_SHADER_6_3: return L"ps_6_3";
-		}
-		return L"UNKNOWN";
-	}();
-
-	// Create an encoding blob from file
-	ComPtr<IDxcBlobEncoding> blob;
-	uint32_t CODE_PAGE = CP_UTF8;
-	if (!CHECK_D3D12_SUCCEEDED(mDxcLibrary->CreateBlobFromFile(
-		shaderFilePathWide, &CODE_PAGE, &blob))) {
-		return ZG_ERROR_SHADER_COMPILE_ERROR;
-	}
-
-	// Split and convert args to wide strings :(
-	WCHAR argsContainer[ZG_MAX_NUM_DXC_COMPILER_FLAGS][32] = {};
-	LPCWSTR args[ZG_MAX_NUM_DXC_COMPILER_FLAGS] = {};
-	
-	uint32_t numArgs = 0;
-	for (uint32_t i = 0; i < ZG_MAX_NUM_DXC_COMPILER_FLAGS; i++) {
-		if (compilerFlags[i] == nullptr) continue;
-		utf8ToWide(argsContainer[numArgs], 32 * sizeof(WCHAR), compilerFlags[i]);
-		args[numArgs] = argsContainer[numArgs];
-		numArgs++;
-	}
-
-	// Compile shader
-	ComPtr<IDxcOperationResult> result;
-	if (!CHECK_D3D12_SUCCEEDED(mDxcCompiler->Compile(
-		blob.Get(),
-		nullptr, // TODO: Filename
-		shaderEntryWide,
-		targetProfile,
-		args,
-		numArgs,
-		nullptr,
-		0,
-		nullptr, // TODO: include handler
-		&result))) {
-		return ZG_ERROR_SHADER_COMPILE_ERROR;
-	}
-
-	// Log compile errors/warnings
-	ComPtr<IDxcBlobEncoding> errors;
-	if (!CHECK_D3D12_SUCCEEDED(result->GetErrorBuffer(&errors))) {
-		return ZG_ERROR_GENERIC;
-	}
-	if (errors->GetBufferSize() > 0) {
-		printf("Shader \"%s\" compilation errors:\n%s\n",
-			path, errors->GetBufferPointer());
-	}
-	
-	// Check if compilation succeeded
-	HRESULT compileResult = S_OK;
-	result->GetStatus(&compileResult);
-	if (!CHECK_D3D12_SUCCEEDED(compileResult)) return ZG_ERROR_SHADER_COMPILE_ERROR;
-
-	// Pick out the compiled binary
-	if (!SUCCEEDED(result->GetResult(&blobOut))) {
-		return ZG_ERROR_SHADER_COMPILE_ERROR;
-	}
-
-	return ZG_SUCCESS;
-}
-
-static DXGI_FORMAT vertexAttributeTypeToFormat(ZgVertexAttributeType type) noexcept
-{
-	switch (type) {
-	case ZG_VERTEX_ATTRIBUTE_FLOAT: return DXGI_FORMAT_R32_FLOAT;
-	case ZG_VERTEX_ATTRIBUTE_FLOAT2: return DXGI_FORMAT_R32G32_FLOAT;
-	case ZG_VERTEX_ATTRIBUTE_FLOAT3: return DXGI_FORMAT_R32G32B32_FLOAT;
-	case ZG_VERTEX_ATTRIBUTE_FLOAT4: return DXGI_FORMAT_R32G32B32A32_FLOAT;
-	default: break;
-	}
-	return DXGI_FORMAT_UNKNOWN;
-}
-
-// D3D12 PipelineRendering implementation
-// ------------------------------------------------------------------------------------------------
-
-class D3D12PipelineRendering final : public IPipelineRendering {
-public:
-
-
-};
 
 // D3D12 Context implementation
 // ------------------------------------------------------------------------------------------------
@@ -482,13 +203,13 @@ public:
 			desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL; // Vsync? TODO: DXGI_SWAP_EFFECT_FLIP_DISCARD
 			desc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
 			desc.Flags = (mAllowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
-		
+
 			ComPtr<IDXGISwapChain1> tmpSwapChain;
 			if (!CHECK_D3D12_SUCCEEDED(dxgiFactory->CreateSwapChainForHwnd(
 				mCommandQueue.Get(), hwnd, &desc, nullptr, nullptr, &tmpSwapChain))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
-			
+
 			if (!CHECK_D3D12_SUCCEEDED(tmpSwapChain.As(&mSwapChain))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
@@ -548,7 +269,7 @@ public:
 			}
 		}
 
-		
+
 
 		// Create command list
 		// TODO: Think about this
@@ -565,7 +286,7 @@ public:
 			// TODO: Why?
 			CHECK_D3D12 mCommandList->Close();
 		}
-		
+
 		// Create command queue fence
 		if (!CHECK_D3D12_SUCCEEDED(mDevice->CreateFence(
 			mCommandQueueFenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mCommandQueueFence)))) {
@@ -584,6 +305,7 @@ public:
 	ZgErrorCode resize(uint32_t width, uint32_t height) noexcept override final
 	{
 		if (mWidth == width && mHeight == height) return ZG_SUCCESS;
+		std::lock_guard<std::mutex> lock(mContextMutex);
 
 		mWidth = width;
 		mHeight = height;
@@ -615,7 +337,7 @@ public:
 			// Get i:th back buffer from swap chain
 			ComPtr<ID3D12Resource> backBuffer;
 			CHECK_D3D12 mSwapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer));
-			
+
 			// Get the i:th descriptor from the swap chain descriptor heap
 			D3D12_CPU_DESCRIPTOR_HANDLE descriptor = {};
 			descriptor.ptr = startOfDescriptorHeap.ptr + mDescriptorSizeRTV * i;
@@ -635,173 +357,44 @@ public:
 		IPipelineRendering** pipelineOut,
 		const ZgPipelineRenderingCreateInfo& createInfo) noexcept override final
 	{
-		// Pick out which vertex and pixel shader type to compile with
-		HlslShaderType vertexShaderType;
-		HlslShaderType pixelShaderType;
-		switch (createInfo.shaderVersion) {
-		case ZG_SHADER_MODEL_5_1:
-			vertexShaderType = HlslShaderType::VERTEX_SHADER_5_1;
-			pixelShaderType = HlslShaderType::PIXEL_SHADER_5_1;
-			break;
-		case ZG_SHADER_MODEL_6_0:
-			vertexShaderType = HlslShaderType::VERTEX_SHADER_6_0;
-			pixelShaderType = HlslShaderType::PIXEL_SHADER_6_0;
-			break;
-		case ZG_SHADER_MODEL_6_1:
-			vertexShaderType = HlslShaderType::VERTEX_SHADER_6_1;
-			pixelShaderType = HlslShaderType::PIXEL_SHADER_6_1;
-			break;
-		case ZG_SHADER_MODEL_6_2:
-			vertexShaderType = HlslShaderType::VERTEX_SHADER_6_2;
-			pixelShaderType = HlslShaderType::PIXEL_SHADER_6_2;
-			break;
-		case ZG_SHADER_MODEL_6_3:
-			vertexShaderType = HlslShaderType::VERTEX_SHADER_6_3;
-			pixelShaderType = HlslShaderType::PIXEL_SHADER_6_3;
-			break;
-		}
-
-		// Compile vertex shader
-		ComPtr<IDxcBlob> vertexShaderBlob;
-		ZgErrorCode vertexShaderRes = compileHlslShader(
-			mDxcLibrary,
-			mDxcCompiler,
-			vertexShaderBlob,
-			createInfo.vertexShaderPath,
-			createInfo.vertexShaderEntry,
-			createInfo.dxcCompilerFlags,
-			vertexShaderType);
-		if (vertexShaderRes != ZG_SUCCESS) return vertexShaderRes;
-		
-		// Compile pixel shader
-		ComPtr<IDxcBlob> pixelShaderBlob;
-		ZgErrorCode pixelShaderRes = compileHlslShader(
-			mDxcLibrary,
-			mDxcCompiler,
-			pixelShaderBlob,
-			createInfo.pixelShaderPath,
-			createInfo.pixelShaderEntry,
-			createInfo.dxcCompilerFlags,
-			pixelShaderType);
-		if (pixelShaderRes != ZG_SUCCESS) return pixelShaderRes;
-
-		// Convert ZgVertexAttribute's to D3D12_INPUT_ELEMENT_DESC
-		// This is the "input layout"
-		D3D12_INPUT_ELEMENT_DESC attributes[ZG_MAX_NUM_VERTEX_ATTRIBUTES] = {};
-		for (uint32_t i = 0; i < createInfo.numVertexAttributes; i++) {
-
-			const ZgVertexAttribute& attribute = createInfo.vertexAttributes[i];
-			D3D12_INPUT_ELEMENT_DESC desc = {};
-			desc.SemanticName = "ATTRIBUTE_LOCATION_";
-			desc.SemanticIndex = attribute.attributeLocation;
-			desc.Format = vertexAttributeTypeToFormat(attribute.type);
-			desc.InputSlot = 0; // TODO: Expose this?
-			desc.AlignedByteOffset = attribute.strideBytes;
-			desc.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-			desc.InstanceDataStepRate = 0;
-			attributes[i] = desc;
-		}
-
-		// Create root signature
-		ComPtr<ID3D12RootSignature> rootSignature;
+		// Initialize DXC compiler if necessary
+		// TODO: Provide our own allocator
 		{
-			// Allow root signature access from all shader stages, opt in to using an input layout
-			D3D12_ROOT_SIGNATURE_FLAGS flags =
-				D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+			std::lock_guard<std::mutex> lock(mContextMutex);
+			if (mDxcLibrary == nullptr) {
 
-			// Root signature parameters
-			// TODO: Currently using temporary hardcoded parameters
-			// TODO: Set dynamically with user provided settings
-			const uint32_t NUM_PARAMS = 1;
-			CD3DX12_ROOT_PARAMETER1 parameters[NUM_PARAMS];
-			parameters[0].InitAsConstants(4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
-			CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC desc;
-			desc.Init_1_1(NUM_PARAMS, parameters, 0, nullptr, flags);
+				// Initialize DXC library
+				HRESULT res = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&mDxcLibrary));
+				if (!SUCCEEDED(res)) return ZG_ERROR_GENERIC;
 
-			// Serialize the root signature.
-			ComPtr<ID3DBlob> blob;
-			ComPtr<ID3DBlob> errorBlob;
-			if (!CHECK_D3D12_SUCCEEDED(D3DX12SerializeVersionedRootSignature(
-				&desc, D3D_ROOT_SIGNATURE_VERSION_1_1, &blob, &errorBlob))) {
-				
-				printf("D3DX12SerializeVersionedRootSignature() failed: %s\n",
-					errorBlob->GetBufferPointer());
-				return ZG_ERROR_GENERIC;
-			}
-
-			// Create root signature
-			if (!CHECK_D3D12_SUCCEEDED(mDevice->CreateRootSignature(
-				0, blob->GetBufferPointer(), blob->GetBufferSize(), IID_PPV_ARGS(&rootSignature)))) {
-				return ZG_ERROR_GENERIC;
+				// Initialize DXC compiler
+				res = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&mDxcCompiler));
+				if (!SUCCEEDED(res)) {
+					mDxcLibrary = nullptr;
+					return ZG_ERROR_GENERIC;
+				}
 			}
 		}
 		
-		// Create Pipeline State Object (PSO)
-		ComPtr<ID3D12PipelineState> pipelineState;
-		{
-			// Essentially tokens are sent to Device->CreatePipelineState(), it does not matter
-			// what order the tokens are sent in. For this reason we create our own struct with
-			// the tokens we care about.
-			struct PipelineStateStream {
-				CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE rootSignature;
-				CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT inputLayout;
-				CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY primitiveTopology;
-				CD3DX12_PIPELINE_STATE_STREAM_VS vertexShader;
-				CD3DX12_PIPELINE_STATE_STREAM_PS pixelShader;
-				//CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT dsvFormat;
-				CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS rtvFormats;
-			};
-
-			// Create our token stream and set root signature
-			PipelineStateStream stream = {};
-			stream.rootSignature = rootSignature.Get();
-			
-			// Set input layout
-			D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = {};
-			inputLayoutDesc.pInputElementDescs = attributes;
-			inputLayoutDesc.NumElements = createInfo.numVertexAttributes;
-			stream.inputLayout = inputLayoutDesc;
-			
-			// Set primitive topology
-			// We only allow triangles for now
-			stream.primitiveTopology = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-
-			// Set vertex shader
-			stream.vertexShader = CD3DX12_SHADER_BYTECODE(
-				vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize());
-
-			// Set pixel shader
-			stream.pixelShader = CD3DX12_SHADER_BYTECODE(
-				pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize());
-
-			// Set render target formats
-			// TODO: Probably here Multiple Render Targets (MRT) is specified?
-			D3D12_RT_FORMAT_ARRAY rtvFormats = {};
-			rtvFormats.NumRenderTargets = 1;
-			rtvFormats.RTFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM; // Same as in our swapchain
-			stream.rtvFormats = rtvFormats;
-			
-			D3D12_PIPELINE_STATE_STREAM_DESC streamDesc = {};
-			streamDesc.pPipelineStateSubobjectStream = &stream;
-			streamDesc.SizeInBytes = sizeof(PipelineStateStream);
-			if (!CHECK_D3D12_SUCCEEDED(
-				mDevice->CreatePipelineState(&streamDesc, IID_PPV_ARGS(&pipelineState)))) {
-				return ZG_ERROR_GENERIC;
-			}
-		}
-
-
-		// Allocate pipeline
-		D3D12PipelineRendering* pipeline =
-			zgNew<D3D12PipelineRendering>(mAllocator, "ZeroG - D3D12PipelineRendering");
-
-		// Return pipeline
-		*pipelineOut = pipeline;
-		return ZG_SUCCESS;
+		// Create pipeline
+		D3D12PipelineRendering* d3d12pipeline = nullptr;
+		ZgErrorCode res = createPipelineRendering(
+			&d3d12pipeline,
+			createInfo,
+			*mDxcLibrary.Get(),
+			*mDxcCompiler.Get(),
+			mAllocator,
+			*mDevice.Get(),
+			mContextMutex);
+		if (!CHECK_D3D12_SUCCEEDED(res)) return res;
+		
+		*pipelineOut = d3d12pipeline;
+		return res;
 	}
 
 	ZgErrorCode pipelineRelease(IPipelineRendering* pipeline) noexcept override final
 	{
+		// TODO: Check if pipeline is currently in use? Lock?
 		zgDelete<IPipelineRendering>(mAllocator, pipeline);
 		return ZG_SUCCESS;
 	}
@@ -811,6 +404,8 @@ public:
 
 	ZgErrorCode renderExperiment() noexcept override final
 	{
+		std::lock_guard<std::mutex> lock(mContextMutex);
+
 		// Get resources for current target back buffer
 		ID3D12Resource& backBuffer = *mBackBuffers[mCurrentBackBufferIdx].Get();
 		ID3D12CommandAllocator& commandAllocator = *mCommandAllocator[mCurrentBackBufferIdx].Get();
@@ -890,8 +485,13 @@ public:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 private:
+	std::mutex mContextMutex; // Access to the context is synchronized
 	ZgAllocator mAllocator = {};
 	bool mDebugMode = false;
+
+	// DXC compiler DLLs, lazily loaded if needed
+	ComPtr<IDxcLibrary> mDxcLibrary;
+	ComPtr<IDxcCompiler> mDxcCompiler;
 
 	ComPtr<ID3D12Device5> mDevice;
 	ComPtr<ID3D12CommandQueue> mCommandQueue;
@@ -916,10 +516,6 @@ private:
 
 	uint32_t mDescriptorSizeRTV = 0;
 	bool mAllowTearing = false;
-
-
-	ComPtr<IDxcLibrary> mDxcLibrary;
-	ComPtr<IDxcCompiler> mDxcCompiler;
 };
 
 // D3D12 API
