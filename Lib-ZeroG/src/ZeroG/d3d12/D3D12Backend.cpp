@@ -21,6 +21,7 @@
 #include <mutex>
 
 #include "ZeroG/d3d12/D3D12Common.hpp"
+#include "ZeroG/d3d12/D3D12Memory.hpp"
 #include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
 #include "ZeroG/CpuAllocation.hpp"
 
@@ -379,6 +380,50 @@ public:
 	{
 		// TODO: Check if pipeline is currently in use? Lock?
 		zgDelete<IPipelineRendering>(mAllocator, pipeline);
+		return ZG_SUCCESS;
+	}
+
+	// Memory methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgErrorCode memoryHeapCreate(
+		IMemoryHeap** memoryHeapOut,
+		const ZgMemoryHeapCreateInfo& createInfo) noexcept override final
+	{
+		std::lock_guard<std::mutex> lock(mContextMutex);
+
+		D3D12_HEAP_DESC desc = {};
+		desc.SizeInBytes = createInfo.sizeInBytes;
+		desc.Properties.Type = D3D12_HEAP_TYPE_DEFAULT;
+		desc.Properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+		desc.Properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+		desc.Properties.CreationNodeMask = 0; // No multi-GPU support
+		desc.Properties.VisibleNodeMask = 0; // No multi-GPU support
+		desc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+		desc.Flags = D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS | D3D12_HEAP_FLAG_ALLOW_SHADER_ATOMICS;
+
+		// Create heap
+		ComPtr<ID3D12Heap> heap;
+		if (!CHECK_D3D12_SUCCEEDED(mDevice->CreateHeap(&desc, IID_PPV_ARGS(&heap)))) {
+			return ZG_ERROR_GPU_OUT_OF_MEMORY;
+		}
+
+		// Allocate memory heap
+		D3D12MemoryHeap* memoryHeap =
+			zgNew<D3D12MemoryHeap>(mAllocator, "ZeroG - D3D12MemoryHeap");
+
+		// Store state
+		memoryHeap->heap = heap;
+
+		// Return memory heap
+		*memoryHeapOut = memoryHeap;
+		return ZG_SUCCESS;
+	}
+
+	ZgErrorCode memoryHeapRelease(IMemoryHeap* memoryHeap) noexcept override final
+	{
+		// TODO: Check if memory heap is currently in use? Lock?
+		zgDelete<IMemoryHeap>(mAllocator, memoryHeap);
 		return ZG_SUCCESS;
 	}
 

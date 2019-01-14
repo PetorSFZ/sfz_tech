@@ -93,6 +93,7 @@ int main(int argc, char* argv[])
 	zg::Context ctx;
 	CHECK_ZG ctx.init(initSettings);
 
+
 	// Create a rendering pipeline
 	ZgPipelineRenderingCreateInfo pipelineInfo = {};
 	pipelineInfo.vertexShaderPath = "res/Sample-1/test.hlsl";
@@ -117,6 +118,15 @@ int main(int argc, char* argv[])
 
 	ZgPipelineRendering* pipeline = nullptr;
 	CHECK_ZG zgPipelineRenderingCreate(ctx.mContext, &pipeline, &pipelineInfo);
+
+
+	// Create a memory heap
+	ZgMemoryHeapCreateInfo memoryHeapInfo = {};
+	memoryHeapInfo.sizeInBytes = 64ull * 1024ull;
+
+	ZgMemoryHeap* memoryHeap = nullptr;
+	CHECK_ZG zgMemoryHeapCreate(ctx.mContext, &memoryHeap, &memoryHeapInfo);
+
 
 	// Run our main loop
 	bool running = true;
@@ -153,6 +163,8 @@ int main(int argc, char* argv[])
 		// TODO: Rendering here
 		CHECK_ZG zgRenderExperiment(ctx.mContext);
 	}
+
+	CHECK_ZG zgMemoryHeapRelease(ctx.mContext, memoryHeap);
 
 	CHECK_ZG zgPipelineRenderingRelease(ctx.mContext, pipeline);
 

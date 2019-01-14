@@ -30,6 +30,19 @@ public:
 	virtual ~IPipelineRendering() noexcept {}
 };
 
+// Memory interface
+// ------------------------------------------------------------------------------------------------
+
+class IMemoryHeap {
+public:
+	virtual ~IMemoryHeap() noexcept {}
+};
+
+class IBuffer {
+public:
+	virtual ~IBuffer() noexcept {}
+};
+
 // Context interface
 // ------------------------------------------------------------------------------------------------
 
@@ -50,6 +63,15 @@ public:
 		const ZgPipelineRenderingCreateInfo& createInfo) noexcept = 0;
 	
 	virtual ZgErrorCode pipelineRelease(IPipelineRendering* pipeline) noexcept = 0;
+
+	// Memory methods
+	// --------------------------------------------------------------------------------------------
+
+	virtual ZgErrorCode memoryHeapCreate(
+		IMemoryHeap** memoryHeapOut,
+		const ZgMemoryHeapCreateInfo& createInfo) noexcept = 0;
+
+	virtual ZgErrorCode memoryHeapRelease(IMemoryHeap* memoryHeap) noexcept = 0;
 
 	// Experiments
 	// --------------------------------------------------------------------------------------------

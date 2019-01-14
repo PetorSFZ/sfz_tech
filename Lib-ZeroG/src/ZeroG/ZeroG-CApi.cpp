@@ -133,7 +133,7 @@ ZG_DLL_API ZgErrorCode zgPipelineRenderingCreate(
 	if (createInfo->pixelShaderEntry == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
 	if (createInfo->shaderVersion == ZG_SHADER_MODEL_UNDEFINED) return ZG_ERROR_INVALID_ARGUMENT;
 
-	zg::IPipelineRendering* pipeline;
+	zg::IPipelineRendering* pipeline = nullptr;
 	ZgErrorCode res = context->context->pipelineCreate(&pipeline, *createInfo);
 	if (res != ZG_SUCCESS) return res;
 	*pipelineOut = reinterpret_cast<ZgPipelineRendering*>(pipeline);
@@ -145,6 +145,50 @@ ZG_DLL_API ZgErrorCode zgPipelineRenderingRelease(
 	ZgPipelineRendering* pipeline)
 {
 	return context->context->pipelineRelease(reinterpret_cast<zg::IPipelineRendering*>(pipeline));
+}
+
+// Memory
+// ------------------------------------------------------------------------------------------------
+
+ZG_DLL_API ZgErrorCode zgMemoryHeapCreate(
+	ZgContext* context,
+	ZgMemoryHeap** memoryHeapOut,
+	const ZgMemoryHeapCreateInfo* createInfo)
+{
+	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->sizeInBytes == 0) return ZG_ERROR_INVALID_ARGUMENT;
+
+	zg::IMemoryHeap* memoryHeap = nullptr;
+	ZgErrorCode res = context->context->memoryHeapCreate(&memoryHeap, *createInfo);
+	if (res != ZG_SUCCESS) return res;
+	*memoryHeapOut = reinterpret_cast<ZgMemoryHeap*>(memoryHeap);
+	return ZG_SUCCESS;
+}
+
+ZG_DLL_API ZgErrorCode zgMemoryHeapRelease(
+	ZgContext* context,
+	ZgMemoryHeap* memoryHeap)
+{
+	return context->context->memoryHeapRelease(reinterpret_cast<zg::IMemoryHeap*>(memoryHeap));
+}
+
+ZG_DLL_API ZgErrorCode zgBufferCreate(
+	ZgContext* context,
+	ZgMemoryHeap* memoryHeap,
+	ZgBuffer** bufferOut,
+	const ZgBufferCreateInfo* createInfo)
+{
+	// TODO: Implement
+	return ZG_ERROR_UNIMPLEMENTED;
+}
+
+ZG_DLL_API ZgErrorCode zgBufferRelease(
+	ZgContext* context,
+	ZgMemoryHeap* memoryHeap,
+	ZgBuffer* bufferOut)
+{
+	// TODO: Implement
+	return ZG_ERROR_UNIMPLEMENTED;
 }
 
 // Experimental

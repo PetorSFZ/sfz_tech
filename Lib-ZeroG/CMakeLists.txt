@@ -77,6 +77,8 @@ set(ZEROG_CAPI_SRC_FILES
 	${SRC_DIR}/ZeroG/d3d12/D3D12Backend.hpp
 	${SRC_DIR}/ZeroG/d3d12/D3D12Backend.cpp
 	${SRC_DIR}/ZeroG/d3d12/D3D12Common.hpp
+	${SRC_DIR}/ZeroG/d3d12/D3D12Memory.hpp
+	${SRC_DIR}/ZeroG/d3d12/D3D12Memory.cpp
 	${SRC_DIR}/ZeroG/d3d12/D3D12PipelineRendering.hpp
 	${SRC_DIR}/ZeroG/d3d12/D3D12PipelineRendering.cpp
 	${SRC_DIR}/ZeroG/BackendInterface.hpp
