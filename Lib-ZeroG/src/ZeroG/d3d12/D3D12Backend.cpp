@@ -31,23 +31,6 @@ namespace zg {
 
 constexpr auto NUM_SWAP_CHAIN_BUFFERS = 3;
 
-static D3D12_RESOURCE_BARRIER createBarrierTransition(
-	ID3D12Resource& resource,
-	D3D12_RESOURCE_STATES stateBefore,
-	D3D12_RESOURCE_STATES stateAfter,
-	uint32_t subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
-	D3D12_RESOURCE_BARRIER_FLAGS flags = D3D12_RESOURCE_BARRIER_FLAG_NONE) noexcept
-{
-	D3D12_RESOURCE_BARRIER barrier = {};
-	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier.Flags = flags;
-	barrier.Transition.pResource = &resource;
-	barrier.Transition.StateBefore = stateBefore;
-	barrier.Transition.StateAfter = stateAfter;
-	barrier.Transition.Subresource = subresource;
-	return barrier;
-}
-
 // D3D12 Context implementation
 // ------------------------------------------------------------------------------------------------
 
@@ -419,8 +402,8 @@ public:
 		CHECK_D3D12 mCommandList->Reset(&commandAllocator, nullptr);
 
 		// Create barrier to transition back buffer into render target state
-		D3D12_RESOURCE_BARRIER barrier = createBarrierTransition(
-			backBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			&backBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 		mCommandList->ResourceBarrier(1, &barrier);
 
 		// Clear screen
@@ -428,8 +411,8 @@ public:
 		mCommandList->ClearRenderTargetView(backBufferDescriptor, clearColor, 0, nullptr);
 
 		// Create barrier to transition back buffer into present state
-		barrier = createBarrierTransition(
-			backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+		barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			&backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 		mCommandList->ResourceBarrier(1, &barrier);
 
 		// Finish command list
