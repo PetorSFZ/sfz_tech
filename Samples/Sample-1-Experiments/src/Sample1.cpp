@@ -120,12 +120,12 @@ int main(int argc, char* argv[])
 	CHECK_ZG zgPipelineRenderingCreate(ctx.mContext, &pipeline, &pipelineInfo);
 
 
-	// Create a memory heap
-	ZgMemoryHeapCreateInfo memoryHeapInfo = {};
-	memoryHeapInfo.sizeInBytes = 64ull * 1024ull;
+	// Create a buffer
+	ZgBufferCreateInfo bufferInfo = {};
+	bufferInfo.sizeInBytes = 64ull * 1024ull;
 
-	ZgMemoryHeap* memoryHeap = nullptr;
-	CHECK_ZG zgMemoryHeapCreate(ctx.mContext, &memoryHeap, &memoryHeapInfo);
+	ZgBuffer* buffer = nullptr;
+	CHECK_ZG zgBufferCreate(ctx.mContext, &buffer, &bufferInfo);
 
 
 	// Run our main loop
@@ -164,7 +164,7 @@ int main(int argc, char* argv[])
 		CHECK_ZG zgRenderExperiment(ctx.mContext);
 	}
 
-	CHECK_ZG zgMemoryHeapRelease(ctx.mContext, memoryHeap);
+	CHECK_ZG zgBufferRelease(ctx.mContext, buffer);
 
 	CHECK_ZG zgPipelineRenderingRelease(ctx.mContext, pipeline);
 

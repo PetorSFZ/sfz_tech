@@ -20,10 +20,10 @@
 
 namespace zg {
 
-// D3D12 MemoryHeap
+// D3D12 Buffer
 // ------------------------------------------------------------------------------------------------
 
-D3D12MemoryHeap::~D3D12MemoryHeap() noexcept
+D3D12Buffer::~D3D12Buffer() noexcept
 {
 
 }

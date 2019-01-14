@@ -276,45 +276,24 @@ ZG_DLL_API ZgErrorCode zgPipelineRenderingRelease(
 // Memory
 // ------------------------------------------------------------------------------------------------
 
-// ZeroG memory heap
-//
-// A heap of memory on the GPU. Can be used to allocate buffers.
-ZG_HANDLE(ZgMemoryHeap);
-
-// The information required to create a memory heap
-typedef struct {
-
-	// The size of the memory heap in bytes, recommended to be a multiple of 64KiB.
-	uint64_t sizeInBytes;
-
-} ZgMemoryHeapCreateInfo;
-
-ZG_DLL_API ZgErrorCode zgMemoryHeapCreate(
-	ZgContext* context,
-	ZgMemoryHeap** memoryHeapOut,
-	const ZgMemoryHeapCreateInfo* createInfo);
-
-ZG_DLL_API ZgErrorCode zgMemoryHeapRelease(
-	ZgContext* context,
-	ZgMemoryHeap* memoryHeap);
-
 // ZeroG buffer
 ZG_HANDLE(ZgBuffer);
 
 typedef struct {
 
+	// The size in bytes of the buffer
+	uint64_t sizeInBytes;
+
 } ZgBufferCreateInfo;
 
 ZG_DLL_API ZgErrorCode zgBufferCreate(
 	ZgContext* context,
-	ZgMemoryHeap* memoryHeap,
 	ZgBuffer** bufferOut,
 	const ZgBufferCreateInfo* createInfo);
 
 ZG_DLL_API ZgErrorCode zgBufferRelease(
 	ZgContext* context,
-	ZgMemoryHeap* memoryHeap,
-	ZgBuffer* bufferOut);
+	ZgBuffer* buffer);
 
 // Experimental
 // ------------------------------------------------------------------------------------------------

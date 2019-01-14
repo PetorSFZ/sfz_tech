@@ -386,44 +386,76 @@ public:
 	// Memory methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode memoryHeapCreate(
-		IMemoryHeap** memoryHeapOut,
-		const ZgMemoryHeapCreateInfo& createInfo) noexcept override final
+	ZgErrorCode bufferCreate(
+		IBuffer** bufferOut,
+		const ZgBufferCreateInfo& createInfo) noexcept override final
 	{
 		std::lock_guard<std::mutex> lock(mContextMutex);
 
-		D3D12_HEAP_DESC desc = {};
-		desc.SizeInBytes = createInfo.sizeInBytes;
-		desc.Properties.Type = D3D12_HEAP_TYPE_DEFAULT;
-		desc.Properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-		desc.Properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-		desc.Properties.CreationNodeMask = 0; // No multi-GPU support
-		desc.Properties.VisibleNodeMask = 0; // No multi-GPU support
-		desc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-		desc.Flags = D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS | D3D12_HEAP_FLAG_ALLOW_SHADER_ATOMICS;
-
 		// Create heap
 		ComPtr<ID3D12Heap> heap;
-		if (!CHECK_D3D12_SUCCEEDED(mDevice->CreateHeap(&desc, IID_PPV_ARGS(&heap)))) {
-			return ZG_ERROR_GPU_OUT_OF_MEMORY;
+		{
+			D3D12_HEAP_DESC desc = {};
+			desc.SizeInBytes = createInfo.sizeInBytes;
+			desc.Properties.Type = D3D12_HEAP_TYPE_DEFAULT;
+			desc.Properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+			desc.Properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+			desc.Properties.CreationNodeMask = 0; // No multi-GPU support
+			desc.Properties.VisibleNodeMask = 0; // No multi-GPU support
+			desc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+			desc.Flags = D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS | D3D12_HEAP_FLAG_ALLOW_SHADER_ATOMICS;
+
+			// Create heap
+			if (!CHECK_D3D12_SUCCEEDED(mDevice->CreateHeap(&desc, IID_PPV_ARGS(&heap)))) {
+				return ZG_ERROR_GPU_OUT_OF_MEMORY;
+			}
+		}
+		
+		// Create placed resource
+		ComPtr<ID3D12Resource> resource;
+		{
+			D3D12_RESOURCE_DESC desc = {};
+			desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+			desc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+			desc.Width = createInfo.sizeInBytes;
+			desc.Height = 1;
+			desc.DepthOrArraySize = 1;
+			desc.MipLevels = 1;
+			desc.Format = DXGI_FORMAT_UNKNOWN;
+			desc.SampleDesc.Count = 1;
+			desc.SampleDesc.Quality = 0;
+			desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+			desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+			// Create placed resource
+			if (!CHECK_D3D12_SUCCEEDED(mDevice->CreatePlacedResource(
+				heap.Get(),
+				0,
+				&desc,
+				D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+				nullptr,
+				IID_PPV_ARGS(&resource)))) {
+				return ZG_ERROR_GPU_OUT_OF_MEMORY;
+			}
 		}
 
-		// Allocate memory heap
-		D3D12MemoryHeap* memoryHeap =
-			zgNew<D3D12MemoryHeap>(mAllocator, "ZeroG - D3D12MemoryHeap");
+		// Allocate buffer
+		D3D12Buffer* buffer =
+			zgNew<D3D12Buffer>(mAllocator, "ZeroG - D3D12Buffer");
 
-		// Store state
-		memoryHeap->heap = heap;
+		// Copy stuff
+		buffer->heap = heap;
+		buffer->resource = resource;
 
-		// Return memory heap
-		*memoryHeapOut = memoryHeap;
+		// Return buffer
+		*bufferOut = buffer;
 		return ZG_SUCCESS;
 	}
 
-	ZgErrorCode memoryHeapRelease(IMemoryHeap* memoryHeap) noexcept override final
+	ZgErrorCode bufferRelease(IBuffer* buffer) noexcept override final
 	{
-		// TODO: Check if memory heap is currently in use? Lock?
-		zgDelete<IMemoryHeap>(mAllocator, memoryHeap);
+		// TODO: Check if buffer is currently in use? Lock?
+		zgDelete<IBuffer>(mAllocator, buffer);
 		return ZG_SUCCESS;
 	}
 

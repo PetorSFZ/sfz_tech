@@ -150,45 +150,26 @@ ZG_DLL_API ZgErrorCode zgPipelineRenderingRelease(
 // Memory
 // ------------------------------------------------------------------------------------------------
 
-ZG_DLL_API ZgErrorCode zgMemoryHeapCreate(
+ZG_DLL_API ZgErrorCode zgBufferCreate(
 	ZgContext* context,
-	ZgMemoryHeap** memoryHeapOut,
-	const ZgMemoryHeapCreateInfo* createInfo)
+	ZgBuffer** bufferOut,
+	const ZgBufferCreateInfo* createInfo)
 {
 	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
 	if (createInfo->sizeInBytes == 0) return ZG_ERROR_INVALID_ARGUMENT;
 
-	zg::IMemoryHeap* memoryHeap = nullptr;
-	ZgErrorCode res = context->context->memoryHeapCreate(&memoryHeap, *createInfo);
+	zg::IBuffer* buffer = nullptr;
+	ZgErrorCode res = context->context->bufferCreate(&buffer, *createInfo);
 	if (res != ZG_SUCCESS) return res;
-	*memoryHeapOut = reinterpret_cast<ZgMemoryHeap*>(memoryHeap);
+	*bufferOut = reinterpret_cast<ZgBuffer*>(buffer);
 	return ZG_SUCCESS;
-}
-
-ZG_DLL_API ZgErrorCode zgMemoryHeapRelease(
-	ZgContext* context,
-	ZgMemoryHeap* memoryHeap)
-{
-	return context->context->memoryHeapRelease(reinterpret_cast<zg::IMemoryHeap*>(memoryHeap));
-}
-
-ZG_DLL_API ZgErrorCode zgBufferCreate(
-	ZgContext* context,
-	ZgMemoryHeap* memoryHeap,
-	ZgBuffer** bufferOut,
-	const ZgBufferCreateInfo* createInfo)
-{
-	// TODO: Implement
-	return ZG_ERROR_UNIMPLEMENTED;
 }
 
 ZG_DLL_API ZgErrorCode zgBufferRelease(
 	ZgContext* context,
-	ZgMemoryHeap* memoryHeap,
-	ZgBuffer* bufferOut)
+	ZgBuffer* buffer)
 {
-	// TODO: Implement
-	return ZG_ERROR_UNIMPLEMENTED;
+	return context->context->bufferRelease(reinterpret_cast<zg::IBuffer*>(buffer));
 }
 
 // Experimental

@@ -24,20 +24,20 @@
 
 namespace zg {
 
-// D3D12 MemoryHeap
+// D3D12 Buffer
 // ------------------------------------------------------------------------------------------------
 
-class D3D12MemoryHeap final : public IMemoryHeap {
+class D3D12Buffer final : public IBuffer {
 public:
-
-	D3D12MemoryHeap() noexcept = default;
-	D3D12MemoryHeap(const D3D12MemoryHeap&) = delete;
-	D3D12MemoryHeap& operator= (const D3D12MemoryHeap&) = delete;
-	D3D12MemoryHeap(D3D12MemoryHeap&&) = delete;
-	D3D12MemoryHeap& operator= (D3D12MemoryHeap&&) = delete;
-	~D3D12MemoryHeap() noexcept;
+	D3D12Buffer() noexcept = default;
+	D3D12Buffer(const D3D12Buffer&) = delete;
+	D3D12Buffer& operator= (const D3D12Buffer&) = delete;
+	D3D12Buffer(D3D12Buffer&&) = delete;
+	D3D12Buffer& operator= (D3D12Buffer&&) = delete;
+	~D3D12Buffer() noexcept;
 
 	ComPtr<ID3D12Heap> heap;
+	ComPtr<ID3D12Resource> resource;
 };
 
 } // namespace zg

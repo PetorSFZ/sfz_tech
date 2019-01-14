@@ -33,11 +33,6 @@ public:
 // Memory interface
 // ------------------------------------------------------------------------------------------------
 
-class IMemoryHeap {
-public:
-	virtual ~IMemoryHeap() noexcept {}
-};
-
 class IBuffer {
 public:
 	virtual ~IBuffer() noexcept {}
@@ -67,11 +62,11 @@ public:
 	// Memory methods
 	// --------------------------------------------------------------------------------------------
 
-	virtual ZgErrorCode memoryHeapCreate(
-		IMemoryHeap** memoryHeapOut,
-		const ZgMemoryHeapCreateInfo& createInfo) noexcept = 0;
+	virtual ZgErrorCode bufferCreate(
+		IBuffer** bufferOut,
+		const ZgBufferCreateInfo& createInfo) noexcept = 0;
 
-	virtual ZgErrorCode memoryHeapRelease(IMemoryHeap* memoryHeap) noexcept = 0;
+	virtual ZgErrorCode bufferRelease(IBuffer* buffer) noexcept = 0;
 
 	// Experiments
 	// --------------------------------------------------------------------------------------------
