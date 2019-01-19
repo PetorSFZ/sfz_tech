@@ -123,6 +123,7 @@ int main(int argc, char* argv[])
 	// Create a buffer
 	ZgBufferCreateInfo bufferInfo = {};
 	bufferInfo.sizeInBytes = 64ull * 1024ull;
+	bufferInfo.bufferMemoryType = ZG_BUFFER_MEMORY_TYPE_UPLOAD;
 
 	ZgBuffer* buffer = nullptr;
 	CHECK_ZG zgBufferCreate(ctx.mContext, &buffer, &bufferInfo);

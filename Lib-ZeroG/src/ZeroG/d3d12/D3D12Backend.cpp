@@ -32,6 +32,17 @@ namespace zg {
 
 constexpr auto NUM_SWAP_CHAIN_BUFFERS = 3;
 
+static D3D12_HEAP_TYPE bufferMemoryTypeToD3D12HeapType(ZgBufferMemoryType type) noexcept
+{
+	switch (type) {
+	case ZG_BUFFER_MEMORY_TYPE_UPLOAD: return D3D12_HEAP_TYPE_UPLOAD;
+	case ZG_BUFFER_MEMORY_TYPE_DOWNLOAD: return D3D12_HEAP_TYPE_READBACK;
+	case ZG_BUFFER_MEMORY_TYPE_DEVICE: return D3D12_HEAP_TYPE_DEFAULT;
+	}
+	// TODO: Handle error (undefined)
+	return D3D12_HEAP_TYPE_DEFAULT;
+}
+
 // D3D12 Context implementation
 // ------------------------------------------------------------------------------------------------
 
@@ -395,15 +406,18 @@ public:
 		// Create heap
 		ComPtr<ID3D12Heap> heap;
 		{
+			bool allowAtomics = createInfo.bufferMemoryType == ZG_BUFFER_MEMORY_TYPE_DEVICE;
+
 			D3D12_HEAP_DESC desc = {};
 			desc.SizeInBytes = createInfo.sizeInBytes;
-			desc.Properties.Type = D3D12_HEAP_TYPE_DEFAULT;
+			desc.Properties.Type = bufferMemoryTypeToD3D12HeapType(createInfo.bufferMemoryType);
 			desc.Properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
 			desc.Properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 			desc.Properties.CreationNodeMask = 0; // No multi-GPU support
 			desc.Properties.VisibleNodeMask = 0; // No multi-GPU support
 			desc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-			desc.Flags = D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS | D3D12_HEAP_FLAG_ALLOW_SHADER_ATOMICS;
+			desc.Flags = D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS |
+				(allowAtomics ? D3D12_HEAP_FLAG_ALLOW_SHADER_ATOMICS : D3D12_HEAP_FLAGS(0));
 
 			// Create heap
 			if (!CHECK_D3D12_SUCCEEDED(mDevice->CreateHeap(&desc, IID_PPV_ARGS(&heap)))) {
@@ -414,6 +428,8 @@ public:
 		// Create placed resource
 		ComPtr<ID3D12Resource> resource;
 		{
+			bool allowUav = createInfo.bufferMemoryType == ZG_BUFFER_MEMORY_TYPE_DEVICE;
+
 			D3D12_RESOURCE_DESC desc = {};
 			desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 			desc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
@@ -425,14 +441,15 @@ public:
 			desc.SampleDesc.Count = 1;
 			desc.SampleDesc.Quality = 0;
 			desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-			desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+			desc.Flags =
+				allowUav ? D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS : D3D12_RESOURCE_FLAGS(0);
 
 			// Create placed resource
 			if (!CHECK_D3D12_SUCCEEDED(mDevice->CreatePlacedResource(
 				heap.Get(),
 				0,
 				&desc,
-				D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+				D3D12_RESOURCE_STATE_GENERIC_READ,
 				nullptr,
 				IID_PPV_ARGS(&resource)))) {
 				return ZG_ERROR_GPU_OUT_OF_MEMORY;

@@ -279,10 +279,30 @@ ZG_DLL_API ZgErrorCode zgPipelineRenderingRelease(
 // ZeroG buffer
 ZG_HANDLE(ZgBuffer);
 
+enum ZgBufferMemoryTypeEnum {
+	ZG_BUFFER_MEMORY_TYPE_UNDEFINED = 0,
+
+	// Memory suitable for uploading data to GPU.
+	// Can not be used as a shader UAV, only as vertex shader input.
+	ZG_BUFFER_MEMORY_TYPE_UPLOAD,
+
+	// Memory suitable for downloading data from GPU.
+	ZG_BUFFER_MEMORY_TYPE_DOWNLOAD,
+
+	// Fastest memory available on GPU.
+	// Can't upload or download directly to this memory from CPU, need to use UPLOAD and DOWNLOAD
+	// as intermediary.
+	ZG_BUFFER_MEMORY_TYPE_DEVICE
+};
+typedef uint32_t ZgBufferMemoryType;
+
 typedef struct {
 
 	// The size in bytes of the buffer
 	uint64_t sizeInBytes;
+
+	// The type of memory
+	ZgBufferMemoryType bufferMemoryType;
 
 } ZgBufferCreateInfo;
 
