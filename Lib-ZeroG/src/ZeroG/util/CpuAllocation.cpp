@@ -16,7 +16,7 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "ZeroG/CpuAllocation.hpp"
+#include "ZeroG/util/CpuAllocation.hpp"
 
 #ifdef _WIN32
 #include <malloc.h>
