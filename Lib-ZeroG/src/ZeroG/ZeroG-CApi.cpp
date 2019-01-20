@@ -20,7 +20,7 @@
 #include "ZeroG/ZeroG-CApi.h"
 
 #include "ZeroG/BackendInterface.hpp"
-#include "ZeroG/CpuAllocation.hpp"
+#include "ZeroG/util/CpuAllocation.hpp"
 
 #ifdef _WIN32
 #include "ZeroG/d3d12/D3D12Backend.hpp"
@@ -114,6 +114,17 @@ ZG_DLL_API ZgErrorCode zgContextResize(ZgContext* context, uint32_t width, uint3
 	return context->context->resize(width, height);
 }
 
+ZG_DLL_API ZgErrorCode zgContextGetCommandQueue(
+	ZgContext* context,
+	ZgCommandQueue** commandQueueOut)
+{
+	zg::ICommandQueue* commandQueue = nullptr;
+	ZgErrorCode res = context->context->getCommandQueue(&commandQueue);
+	if (res != ZG_SUCCESS) return res;
+	*commandQueueOut = reinterpret_cast<ZgCommandQueue*>(commandQueue);
+	return ZG_SUCCESS;
+}
+
 // Pipeline
 // ------------------------------------------------------------------------------------------------
 
@@ -186,13 +197,65 @@ ZG_DLL_API ZgErrorCode zgBufferMemcpyTo(
 		numBytes);
 }
 
+// Command list
+// ------------------------------------------------------------------------------------------------
+
+ZG_DLL_API ZgErrorCode zgCommandListBeginRecording(
+	ZgCommandList* commandListIn)
+{
+	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
+	return commandList->beginRecording();
+}
+
+ZG_DLL_API ZgErrorCode zgCommandListFinishRecording(
+	ZgCommandList* commandListIn)
+{
+	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
+	return commandList->finishRecording();
+}
+
+// Command queue
+// ------------------------------------------------------------------------------------------------
+
+ZG_DLL_API ZgErrorCode zgCommandQueueFlush(
+	ZgCommandQueue* commandQueueIn)
+{
+	zg::ICommandQueue* commandQueue = reinterpret_cast<zg::ICommandQueue*>(commandQueueIn);
+	return commandQueue->flush();
+}
+
+ZG_DLL_API ZgErrorCode zgCommandQueueGetCommandList(
+	ZgCommandQueue* commandQueueIn,
+	ZgCommandList** commandListOut)
+{
+	zg::ICommandQueue* commandQueue = reinterpret_cast<zg::ICommandQueue*>(commandQueueIn);
+	zg::ICommandList* commandList = nullptr;
+	ZgErrorCode res = commandQueue->getCommandList(&commandList);
+	if (res != ZG_SUCCESS) return res;
+	*commandListOut = reinterpret_cast<ZgCommandList*>(commandList);
+	return ZG_SUCCESS;
+}
+
+ZG_DLL_API ZgErrorCode zgCommandQueueExecuteCommandList(
+	ZgCommandQueue* commandQueueIn,
+	ZgCommandList* commandListIn)
+{
+	zg::ICommandQueue* commandQueue = reinterpret_cast<zg::ICommandQueue*>(commandQueueIn);
+	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
+	return commandQueue->executeCommandList(commandList);
+}
+
 // Experimental
 // ------------------------------------------------------------------------------------------------
 
 ZG_DLL_API ZgErrorCode zgRenderExperiment(
-	ZgContext* context, ZgBuffer* vertexBuffer, ZgPipelineRendering* pipeline)
+	ZgContext* context,
+	ZgBuffer* vertexBuffer,
+	ZgPipelineRendering* pipeline,
+	ZgCommandList* commandList)
 {
 	return context->context->renderExperiment(
 		reinterpret_cast<zg::IBuffer*>(vertexBuffer),
-		reinterpret_cast<zg::IPipelineRendering*>(pipeline));
+		reinterpret_cast<zg::IPipelineRendering*>(pipeline),
+		reinterpret_cast<zg::ICommandList*>(commandList));
 }

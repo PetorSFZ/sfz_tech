@@ -18,7 +18,7 @@
 
 #include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
 
-#include "ZeroG/CpuAllocation.hpp"
+#include "ZeroG/util/CpuAllocation.hpp"
 
 namespace zg {
 

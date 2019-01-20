@@ -143,6 +143,9 @@ int main(int argc, char* argv[])
 		ctx.mContext, buffer, 0, (const uint8_t*)triangleVertices, sizeof(triangleVertices));
 
 
+	// Get the command queue
+	ZgCommandQueue* commandQueue = nullptr;
+	CHECK_ZG zgContextGetCommandQueue(ctx.mContext, &commandQueue);
 
 	// Run our main loop
 	bool running = true;
@@ -176,12 +179,30 @@ int main(int argc, char* argv[])
 		SDL_GL_GetDrawableSize(window, &width, &height);
 		CHECK_ZG zgContextResize(ctx.mContext, uint32_t(width), uint32_t(height));
 
+		// Get a command list
+		ZgCommandList* commandList = nullptr;
+		/*CHECK_ZG zgCommandQueueGetCommandList(commandQueue, &commandList);
+
+		// Begin recording commands
+		CHECK_ZG zgCommandListBeginRecording(commandList);
+
+		// TODO: Record some commands
+
+		// Finish recording commands
+		CHECK_ZG zgCommandListFinishRecording(commandList);
+
+		// Execute command list
+		CHECK_ZG zgCommandQueueExecuteCommandList(commandQueue, commandList);
+		*/
 		// TODO: Rendering here
-		CHECK_ZG zgRenderExperiment(ctx.mContext, buffer, pipeline);
+		CHECK_ZG zgRenderExperiment(ctx.mContext, buffer, pipeline, commandList);
 	}
 
-	CHECK_ZG zgBufferRelease(ctx.mContext, buffer);
+	// Flush command queue so nothing is running when we start releasing resources
+	CHECK_ZG zgCommandQueueFlush(commandQueue);
 
+	// Release ZeroG resources
+	CHECK_ZG zgBufferRelease(ctx.mContext, buffer);
 	CHECK_ZG zgPipelineRenderingRelease(ctx.mContext, pipeline);
 
 	// Destroy ZeroG context

@@ -48,9 +48,27 @@ extern "C" {
 #define ZG_DLL_API
 #endif
 
+// ZeroG handles
+// ------------------------------------------------------------------------------------------------
+
 #define ZG_HANDLE(name) \
 	struct name; \
 	typedef struct name name;
+
+// The main ZeroG context handle
+ZG_HANDLE(ZgContext);
+
+// A handle representing a rendering pipeline
+ZG_HANDLE(ZgPipelineRendering);
+
+// A handle representing a buffer
+ZG_HANDLE(ZgBuffer);
+
+// A handle representing a command list
+ZG_HANDLE(ZgCommandList);
+
+// A handle representing a command queue
+ZG_HANDLE(ZgCommandQueue);
 
 // Bool
 // ------------------------------------------------------------------------------------------------
@@ -151,9 +169,6 @@ typedef struct {
 // Context
 // ------------------------------------------------------------------------------------------------
 
-// ZeroG context handle
-ZG_HANDLE(ZgContext);
-
 // The settings used to create a context and initialize ZeroG
 typedef struct {
 
@@ -179,22 +194,30 @@ typedef struct {
 } ZgContextInitSettings;
 
 ZG_DLL_API ZgErrorCode zgContextCreate(
-	ZgContext** contextOut, const ZgContextInitSettings* initSettings);
+	ZgContext** contextOut,
+	const ZgContextInitSettings* initSettings);
 
-ZG_DLL_API ZgErrorCode zgContextDestroy(ZgContext* context);
+ZG_DLL_API ZgErrorCode zgContextDestroy(
+	ZgContext* context);
 
 // Resize the back buffers in the swap chain to the new size.
 //
 // This should be called every time the size of the window or the resolution is changed. This
 // function is guaranteed to not do anything if the specified width or height is the same as last
 // time, so it is completely safe to call this at the beginning of each frame.
-ZG_DLL_API ZgErrorCode zgContextResize(ZgContext* context, uint32_t width, uint32_t height);
+ZG_DLL_API ZgErrorCode zgContextResize(
+	ZgContext* context,
+	uint32_t width,
+	uint32_t height);
+
+ZG_DLL_API ZgErrorCode zgContextGetCommandQueue(
+	ZgContext* context,
+	ZgCommandQueue** commandQueueOut);
+
+// TODO: zgContextGetCopyQueue(), zgContextGetComputeQueue
 
 // Pipeline
 // ------------------------------------------------------------------------------------------------
-
-// ZeroG rendering pipeline handle
-ZG_HANDLE(ZgPipelineRendering);
 
 // Enum representing various shader model versions
 enum ZgShaderModelEnum {
@@ -276,9 +299,6 @@ ZG_DLL_API ZgErrorCode zgPipelineRenderingRelease(
 // Memory
 // ------------------------------------------------------------------------------------------------
 
-// ZeroG buffer
-ZG_HANDLE(ZgBuffer);
-
 enum ZgBufferMemoryTypeEnum {
 	ZG_BUFFER_MEMORY_TYPE_UNDEFINED = 0,
 
@@ -322,11 +342,37 @@ ZG_DLL_API ZgErrorCode zgBufferMemcpyTo(
 	const uint8_t* srcMemory,
 	uint64_t numBytes);
 
+// Command list
+// ------------------------------------------------------------------------------------------------
+
+ZG_DLL_API ZgErrorCode zgCommandListBeginRecording(
+	ZgCommandList* commandList);
+
+ZG_DLL_API ZgErrorCode zgCommandListFinishRecording(
+	ZgCommandList* commandList);
+
+// Command queue
+// ------------------------------------------------------------------------------------------------
+
+ZG_DLL_API ZgErrorCode zgCommandQueueFlush(
+	ZgCommandQueue* commandQueue);
+
+ZG_DLL_API ZgErrorCode zgCommandQueueGetCommandList(
+	ZgCommandQueue* commandQueue,
+	ZgCommandList** commandListOut);
+
+ZG_DLL_API ZgErrorCode zgCommandQueueExecuteCommandList(
+	ZgCommandQueue* commandQueue,
+	ZgCommandList* commandList);
+
 // Experimental
 // ------------------------------------------------------------------------------------------------
 
 ZG_DLL_API ZgErrorCode zgRenderExperiment(
-	ZgContext* context, ZgBuffer* vertexBuffer, ZgPipelineRendering* pipeline);
+	ZgContext* context,
+	ZgBuffer* vertexBuffer,
+	ZgPipelineRendering* pipeline,
+	ZgCommandList* commandList);
 
 
 

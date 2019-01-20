@@ -20,10 +20,12 @@
 
 #include <mutex>
 
+#include "ZeroG/d3d12/D3D12CommandList.hpp"
+#include "ZeroG/d3d12/D3D12CommandQueue.hpp"
 #include "ZeroG/d3d12/D3D12Common.hpp"
 #include "ZeroG/d3d12/D3D12Memory.hpp"
 #include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
-#include "ZeroG/CpuAllocation.hpp"
+#include "ZeroG/util/CpuAllocation.hpp"
 
 namespace zg {
 
@@ -59,10 +61,7 @@ public:
 
 	virtual ~D3D12Context() noexcept
 	{
-		flushCommandQueue();
-
-		// Destroy Command Queue Fence Event
-		CloseHandle(mCommandQueueFenceEvent);
+		mCommandQueue.flush();
 	}
 
 	// State methods
@@ -163,18 +162,9 @@ public:
 		}
 
 		// Create command queue
-		{
-			D3D12_COMMAND_QUEUE_DESC desc = {};
-			desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-			desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_HIGH;
-			desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE; // TODO: D3D12_COMMAND_QUEUE_FLAG_DISABLE_GPU_TIMEOUT
-			desc.NodeMask = 0;
-
-			if (!CHECK_D3D12_SUCCEEDED(
-				mDevice->CreateCommandQueue(&desc, IID_PPV_ARGS(&mCommandQueue)))) {
-				return ZG_ERROR_NO_SUITABLE_DEVICE;
-			}
-		}
+		const uint32_t MAX_NUM_COMMAND_LISTS = 128;
+		ZgErrorCode res = mCommandQueue.init(mDevice, MAX_NUM_COMMAND_LISTS);
+		if (res != ZG_SUCCESS) return res;
 
 		// Check if screen-tearing is allowed
 		{
@@ -201,7 +191,7 @@ public:
 
 			ComPtr<IDXGISwapChain1> tmpSwapChain;
 			if (!CHECK_D3D12_SUCCEEDED(dxgiFactory->CreateSwapChainForHwnd(
-				mCommandQueue.Get(), hwnd, &desc, nullptr, nullptr, &tmpSwapChain))) {
+				mCommandQueue.commandQueue(), hwnd, &desc, nullptr, nullptr, &tmpSwapChain))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
 
@@ -282,14 +272,7 @@ public:
 			CHECK_D3D12 mCommandList->Close();
 		}
 
-		// Create command queue fence
-		if (!CHECK_D3D12_SUCCEEDED(mDevice->CreateFence(
-			mCommandQueueFenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mCommandQueueFence)))) {
-			return ZG_ERROR_GENERIC;
-		}
-
-		// Create command queue fence event
-		mCommandQueueFenceEvent = ::CreateEvent(NULL, false, false, NULL);
+		
 
 		return ZG_SUCCESS;
 	}
@@ -306,7 +289,7 @@ public:
 		mHeight = height;
 
 		// Flush command queue so its safe to resize back buffers
-		flushCommandQueue();
+		mCommandQueue.flush();
 
 		// Release previous back buffers
 		for (int i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
@@ -473,7 +456,6 @@ public:
 	ZgErrorCode bufferRelease(IBuffer* buffer) noexcept override final
 	{
 		// TODO: Check if buffer is currently in use? Lock?
-		flushCommandQueue(); // TODO: REMOVE
 		zgDelete<IBuffer>(mAllocator, buffer);
 		return ZG_SUCCESS;
 	}
@@ -512,16 +494,29 @@ public:
 		return ZG_SUCCESS;
 	}
 
+	// Command queue
+	// --------------------------------------------------------------------------------------------
+
+	ZgErrorCode getCommandQueue(ICommandQueue** commandQueueOut) noexcept override final
+	{
+		*commandQueueOut = &mCommandQueue;
+		return ZG_SUCCESS;
+	}
+
 	// Experiments
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode renderExperiment(IBuffer* bufferIn, IPipelineRendering* pipelineIn) noexcept override final
+	ZgErrorCode renderExperiment(
+		IBuffer* bufferIn,
+		IPipelineRendering* pipelineIn,
+		ICommandList* commandListIn) noexcept override final
 	{
 		std::lock_guard<std::mutex> lock(mContextMutex);
 		
 		// Cast input to D3D12
 		D3D12Buffer& vertexBuffer = *reinterpret_cast<D3D12Buffer*>(bufferIn);
 		D3D12PipelineRendering& pipeline = *reinterpret_cast<D3D12PipelineRendering*>(pipelineIn);
+		D3D12CommandList& commandList = *reinterpret_cast<D3D12CommandList*>(commandListIn);
 
 		// Get resources for current target back buffer
 		ID3D12Resource& backBuffer = *mBackBuffers[mCurrentBackBufferIdx].Get();
@@ -599,10 +594,10 @@ public:
 
 		// Execute command list
 		ID3D12CommandList* cmdListPtr = mCommandList.Get();
-		mCommandQueue->ExecuteCommandLists(1, &cmdListPtr);
+		mCommandQueue.commandQueue()->ExecuteCommandLists(1, &cmdListPtr);
 
 		// Signal the command queue
-		mSwapChainFenceValues[mCurrentBackBufferIdx] = signalCommandQueueGpu();
+		mSwapChainFenceValues[mCurrentBackBufferIdx] = mCommandQueue.signalOnGpu();
 
 		// Present back buffer
 		UINT vsync = 0; // TODO (MUST be 0 if DXGI_PRESENT_ALLOW_TEARING)
@@ -613,35 +608,9 @@ public:
 
 		// Wait for the next back buffer to finish rendering
 		uint64_t nextBackBufferFenceValue = mSwapChainFenceValues[mCurrentBackBufferIdx];
-		waitCommandQueueCpu(nextBackBufferFenceValue);
+		mCommandQueue.waitOnCpu(nextBackBufferFenceValue);
 
 		return ZG_SUCCESS;
-	}
-
-	// Methods
-	// --------------------------------------------------------------------------------------------
-
-	uint64_t signalCommandQueueGpu() noexcept
-	{
-		CHECK_D3D12 mCommandQueue->Signal(mCommandQueueFence.Get(), mCommandQueueFenceValue);
-		return mCommandQueueFenceValue++;
-	}
-
-	void waitCommandQueueCpu(uint64_t fenceValue) noexcept
-	{
-		if (mCommandQueueFence->GetCompletedValue() < fenceValue) {
-			CHECK_D3D12 mCommandQueueFence->SetEventOnCompletion(
-				fenceValue, mCommandQueueFenceEvent);
-			// TODO: Don't wait forever
-			::WaitForSingleObject(mCommandQueueFenceEvent, INFINITE);
-		}
-	}
-
-	void flushCommandQueue() noexcept
-	{
-		uint64_t fenceValue = mCommandQueueFenceValue;
-		signalCommandQueueGpu();
-		waitCommandQueueCpu(fenceValue);
 	}
 
 	// Private members
@@ -656,7 +625,8 @@ private:
 	ComPtr<IDxcCompiler> mDxcCompiler;
 
 	ComPtr<ID3D12Device3> mDevice;
-	ComPtr<ID3D12CommandQueue> mCommandQueue;
+	D3D12CommandQueue mCommandQueue;
+	
 	//ComPtr<ID3D12CommandQueue> mCopyQueue;
 	ComPtr<IDXGISwapChain4> mSwapChain;
 
@@ -669,10 +639,6 @@ private:
 	uint64_t mSwapChainFenceValues[NUM_SWAP_CHAIN_BUFFERS] = {};
 
 	ComPtr<ID3D12GraphicsCommandList> mCommandList;
-
-	ComPtr<ID3D12Fence> mCommandQueueFence;
-	uint64_t mCommandQueueFenceValue = 0;
-	HANDLE mCommandQueueFenceEvent = nullptr;
 
 	int mCurrentBackBufferIdx = 0;
 

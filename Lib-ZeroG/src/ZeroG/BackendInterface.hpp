@@ -38,6 +38,29 @@ public:
 	virtual ~IBuffer() noexcept {}
 };
 
+// Command lists
+// ------------------------------------------------------------------------------------------------
+
+class ICommandList {
+public:
+	virtual ~ICommandList() noexcept {};
+
+	virtual ZgErrorCode beginRecording() noexcept = 0;
+	virtual ZgErrorCode finishRecording() noexcept = 0;
+};
+
+// Command queue
+// ------------------------------------------------------------------------------------------------
+
+class ICommandQueue {
+public:
+	virtual ~ICommandQueue() noexcept {}
+
+	virtual ZgErrorCode flush() noexcept = 0;
+	virtual ZgErrorCode getCommandList(ICommandList** commandListOut) noexcept = 0;
+	virtual ZgErrorCode executeCommandList(ICommandList* commandList) noexcept = 0;
+};
+
 // Context interface
 // ------------------------------------------------------------------------------------------------
 
@@ -48,7 +71,9 @@ public:
 	// Context methods
 	// --------------------------------------------------------------------------------------------
 
-	virtual ZgErrorCode resize(uint32_t width, uint32_t height) noexcept = 0;
+	virtual ZgErrorCode resize(
+		uint32_t width,
+		uint32_t height) noexcept = 0;
 
 	// Pipeline methods
 	// --------------------------------------------------------------------------------------------
@@ -56,8 +81,9 @@ public:
 	virtual ZgErrorCode pipelineCreate(
 		IPipelineRendering** pipelineOut,
 		const ZgPipelineRenderingCreateInfo& createInfo) noexcept = 0;
-	
-	virtual ZgErrorCode pipelineRelease(IPipelineRendering* pipeline) noexcept = 0;
+
+	virtual ZgErrorCode pipelineRelease(
+		IPipelineRendering* pipeline) noexcept = 0;
 
 	// Memory methods
 	// --------------------------------------------------------------------------------------------
@@ -74,10 +100,18 @@ public:
 		const uint8_t* srcMemory,
 		uint64_t numBytes) noexcept = 0;
 
+	// Command queue
+	// --------------------------------------------------------------------------------------------
+
+	virtual ZgErrorCode getCommandQueue(ICommandQueue** commandQueueOut) noexcept = 0;
+
 	// Experiments
 	// --------------------------------------------------------------------------------------------
 
-	virtual ZgErrorCode renderExperiment(IBuffer* buffer, IPipelineRendering* pipeline) noexcept = 0;
+	virtual ZgErrorCode renderExperiment(
+		IBuffer* buffer,
+		IPipelineRendering* pipeline,
+		ICommandList* commandList) noexcept = 0;
 };
 
 } // namespace zg

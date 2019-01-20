@@ -76,6 +76,10 @@ source_group(TREE ${INCLUDE_DIR} FILES ${ZEROG_CAPI_INCLUDE_FILES})
 set(ZEROG_CAPI_SRC_FILES
 	${SRC_DIR}/ZeroG/d3d12/D3D12Backend.hpp
 	${SRC_DIR}/ZeroG/d3d12/D3D12Backend.cpp
+	${SRC_DIR}/ZeroG/d3d12/D3D12CommandList.hpp
+	${SRC_DIR}/ZeroG/d3d12/D3D12CommandList.cpp
+	${SRC_DIR}/ZeroG/d3d12/D3D12CommandQueue.hpp
+	${SRC_DIR}/ZeroG/d3d12/D3D12CommandQueue.cpp
 	${SRC_DIR}/ZeroG/d3d12/D3D12Common.hpp
 	${SRC_DIR}/ZeroG/d3d12/D3D12Memory.hpp
 	${SRC_DIR}/ZeroG/d3d12/D3D12Memory.cpp
