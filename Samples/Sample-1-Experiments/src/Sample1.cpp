@@ -109,16 +109,15 @@ int main(int argc, char* argv[])
 	pipelineInfo.numVertexAttributes = 2;
 
 	pipelineInfo.vertexAttributes[0].attributeLocation = 0;
-	pipelineInfo.vertexAttributes[0].strideBytes = sizeof(float) * 3; // TODO:
+	pipelineInfo.vertexAttributes[0].offsetToFirstElementInBytes = 0;
 	pipelineInfo.vertexAttributes[0].type = ZG_VERTEX_ATTRIBUTE_FLOAT3;
 
 	pipelineInfo.vertexAttributes[1].attributeLocation = 1;
-	pipelineInfo.vertexAttributes[1].strideBytes = sizeof(float) * 3; // TODO:
+	pipelineInfo.vertexAttributes[1].offsetToFirstElementInBytes = sizeof(float) * 3;
 	pipelineInfo.vertexAttributes[1].type = ZG_VERTEX_ATTRIBUTE_FLOAT3;
 
 	ZgPipelineRendering* pipeline = nullptr;
 	CHECK_ZG zgPipelineRenderingCreate(ctx.mContext, &pipeline, &pipelineInfo);
-
 
 	// Create a buffer
 	ZgBufferCreateInfo bufferInfo = {};
@@ -127,6 +126,22 @@ int main(int argc, char* argv[])
 
 	ZgBuffer* buffer = nullptr;
 	CHECK_ZG zgBufferCreate(ctx.mContext, &buffer, &bufferInfo);
+
+	struct Vertex {
+		float position[3];
+		float color[3];
+	};
+	static_assert(sizeof(Vertex) == sizeof(float) * 6, "Vertex is padded");
+
+	Vertex triangleVertices[3] = {
+		{ { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ { 1.0f, -1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+		{ { -1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }	
+	};
+
+	CHECK_ZG zgBufferMemcpyTo(
+		ctx.mContext, buffer, 0, (const uint8_t*)triangleVertices, sizeof(triangleVertices));
+
 
 
 	// Run our main loop
@@ -159,10 +174,10 @@ int main(int argc, char* argv[])
 		int width = 0;
 		int height = 0;
 		SDL_GL_GetDrawableSize(window, &width, &height);
-		//CHECK_ZG zgContextResize(ctx.mContext, uint32_t(width), uint32_t(height));
+		CHECK_ZG zgContextResize(ctx.mContext, uint32_t(width), uint32_t(height));
 
 		// TODO: Rendering here
-		CHECK_ZG zgRenderExperiment(ctx.mContext);
+		CHECK_ZG zgRenderExperiment(ctx.mContext, buffer, pipeline);
 	}
 
 	CHECK_ZG zgBufferRelease(ctx.mContext, buffer);

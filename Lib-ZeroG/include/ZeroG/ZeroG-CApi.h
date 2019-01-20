@@ -235,8 +235,8 @@ typedef struct {
 	// The data type
 	ZgVertexAttributeType type;
 
-	// Distance (in bytes) between each element in the buffer
-	uint32_t strideBytes;
+	// Offset in bytes from start of buffer to the first element of this type.
+	uint32_t offsetToFirstElementInBytes;
 
 } ZgVertexAttribute;
 
@@ -315,11 +315,18 @@ ZG_DLL_API ZgErrorCode zgBufferRelease(
 	ZgContext* context,
 	ZgBuffer* buffer);
 
+ZG_DLL_API ZgErrorCode zgBufferMemcpyTo(
+	ZgContext* context,
+	ZgBuffer* dstBuffer,
+	uint64_t bufferOffsetBytes,
+	const uint8_t* srcMemory,
+	uint64_t numBytes);
+
 // Experimental
 // ------------------------------------------------------------------------------------------------
 
-ZG_DLL_API ZgErrorCode zgRenderExperiment(ZgContext* context);
-
+ZG_DLL_API ZgErrorCode zgRenderExperiment(
+	ZgContext* context, ZgBuffer* vertexBuffer, ZgPipelineRendering* pipeline);
 
 
 

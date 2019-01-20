@@ -172,10 +172,27 @@ ZG_DLL_API ZgErrorCode zgBufferRelease(
 	return context->context->bufferRelease(reinterpret_cast<zg::IBuffer*>(buffer));
 }
 
+ZG_DLL_API ZgErrorCode zgBufferMemcpyTo(
+	ZgContext* context,
+	ZgBuffer* dstBuffer,
+	uint64_t bufferOffsetBytes,
+	const uint8_t* srcMemory,
+	uint64_t numBytes)
+{
+	return context->context->bufferMemcpyTo(
+		reinterpret_cast<zg::IBuffer*>(dstBuffer),
+		bufferOffsetBytes,
+		srcMemory,
+		numBytes);
+}
+
 // Experimental
 // ------------------------------------------------------------------------------------------------
 
-ZG_DLL_API ZgErrorCode zgRenderExperiment(ZgContext* context)
+ZG_DLL_API ZgErrorCode zgRenderExperiment(
+	ZgContext* context, ZgBuffer* vertexBuffer, ZgPipelineRendering* pipeline)
 {
-	return context->context->renderExperiment();
+	return context->context->renderExperiment(
+		reinterpret_cast<zg::IBuffer*>(vertexBuffer),
+		reinterpret_cast<zg::IPipelineRendering*>(pipeline));
 }

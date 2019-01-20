@@ -87,12 +87,18 @@ inline const char* resultToString(HRESULT result) noexcept
 	//case D3D12_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS: return "D3D12_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS";
 	//case D3D12_ERROR_TOO_MANY_UNIQUE_VIEW_OBJECTS: return "D3D12_ERROR_TOO_MANY_UNIQUE_VIEW_OBJECTS";
 
-	case E_FAIL: return "E_FAIL";
-	case E_INVALIDARG: return "E_INVALIDARG";
-	case E_OUTOFMEMORY: return "E_OUTOFMEMORY";
-	case E_NOTIMPL: return "E_NOTIMPL";
-	case S_FALSE: return "S_FALSE";
 	case S_OK: return "S_OK";
+	case E_NOTIMPL: return "E_NOTIMPL";
+	case E_NOINTERFACE: return "E_NOINTERFACE";
+	case E_POINTER: return "E_POINTER";
+	case E_ABORT: return "E_ABORT";
+	case E_FAIL: return "E_FAIL";
+	case E_UNEXPECTED: return "E_UNEXPECTED";
+	case E_ACCESSDENIED: return "E_ACCESSDENIED";
+	case E_HANDLE: return "E_HANDLE";
+	case E_OUTOFMEMORY: return "E_OUTOFMEMORY";
+	case E_INVALIDARG: return "E_INVALIDARG";
+	case S_FALSE: return "S_FALSE";	
 	}
 	return "UNKNOWN";
 }

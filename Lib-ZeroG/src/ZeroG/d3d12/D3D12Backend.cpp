@@ -461,6 +461,7 @@ public:
 			zgNew<D3D12Buffer>(mAllocator, "ZeroG - D3D12Buffer");
 
 		// Copy stuff
+		buffer->memoryType = createInfo.bufferMemoryType;
 		buffer->heap = heap;
 		buffer->resource = resource;
 
@@ -472,16 +473,55 @@ public:
 	ZgErrorCode bufferRelease(IBuffer* buffer) noexcept override final
 	{
 		// TODO: Check if buffer is currently in use? Lock?
+		flushCommandQueue(); // TODO: REMOVE
 		zgDelete<IBuffer>(mAllocator, buffer);
+		return ZG_SUCCESS;
+	}
+
+	ZgErrorCode bufferMemcpyTo(
+		IBuffer* dstBufferInterface,
+		uint64_t bufferOffsetBytes,
+		const uint8_t* srcMemory,
+		uint64_t numBytes) noexcept override final
+	{
+		D3D12Buffer& dstBuffer = *reinterpret_cast<D3D12Buffer*>(dstBufferInterface);
+		if (dstBuffer.memoryType != ZG_BUFFER_MEMORY_TYPE_UPLOAD) return ZG_ERROR_INVALID_ARGUMENT;
+
+		// Not gonna read from buffer
+		D3D12_RANGE readRange = {};
+		readRange.Begin = 0;
+		readRange.End = 0;
+		
+		// Map buffer
+		void* mappedPtr = nullptr;
+		if (!CHECK_D3D12_SUCCEEDED(dstBuffer.resource->Map(0, &readRange, &mappedPtr))) {
+			return ZG_ERROR_GENERIC;
+		}
+
+		// Memcpy to buffer
+		memcpy(reinterpret_cast<uint8_t*>(mappedPtr) + bufferOffsetBytes, srcMemory, numBytes);
+
+		// The range we memcpy'd to
+		D3D12_RANGE writeRange = {};
+		writeRange.Begin = bufferOffsetBytes;
+		writeRange.End = writeRange.Begin + numBytes;
+
+		// Unmap buffer
+		dstBuffer.resource->Unmap(0, nullptr);// &writeRange);
+
 		return ZG_SUCCESS;
 	}
 
 	// Experiments
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode renderExperiment() noexcept override final
+	ZgErrorCode renderExperiment(IBuffer* bufferIn, IPipelineRendering* pipelineIn) noexcept override final
 	{
 		std::lock_guard<std::mutex> lock(mContextMutex);
+		
+		// Cast input to D3D12
+		D3D12Buffer& vertexBuffer = *reinterpret_cast<D3D12Buffer*>(bufferIn);
+		D3D12PipelineRendering& pipeline = *reinterpret_cast<D3D12PipelineRendering*>(pipelineIn);
 
 		// Get resources for current target back buffer
 		ID3D12Resource& backBuffer = *mBackBuffers[mCurrentBackBufferIdx].Get();
@@ -501,8 +541,53 @@ public:
 		mCommandList->ResourceBarrier(1, &barrier);
 
 		// Clear screen
-		float clearColor[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
+		float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 		mCommandList->ClearRenderTargetView(backBufferDescriptor, clearColor, 0, nullptr);
+
+	
+
+
+		D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
+		vertexBufferView.BufferLocation = vertexBuffer.resource->GetGPUVirtualAddress();
+		vertexBufferView.StrideInBytes = sizeof(float) * 6; // TODO: Don't hardcode
+		vertexBufferView.SizeInBytes = vertexBufferView.StrideInBytes * 3; // TODO: Don't hardcode
+
+
+		// Set viewport
+		D3D12_VIEWPORT viewport = {};
+		viewport.TopLeftX = 0;
+		viewport.TopLeftY = 0;
+		viewport.Width = float(mWidth);
+		viewport.Height = float(mHeight);
+		viewport.MinDepth = 0.0f;
+		viewport.MaxDepth = 1.0f;
+		mCommandList->RSSetViewports(1, &viewport);
+
+		// Set scissor rects
+		D3D12_RECT scissorRect = {};
+		scissorRect.left = 0;
+		scissorRect.top = 0;
+		scissorRect.right = LONG_MAX;
+		scissorRect.bottom = LONG_MAX;
+		mCommandList->RSSetScissorRects(1, &scissorRect);
+
+		// Set render target descriptor
+		mCommandList->OMSetRenderTargets(1, &backBufferDescriptor, FALSE, nullptr);
+
+		// Set pipeline
+		mCommandList->SetPipelineState(pipeline.pipelineState.Get());
+		mCommandList->SetGraphicsRootSignature(pipeline.rootSignature.Get());
+
+		// Set vertex buffer
+		mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		mCommandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+
+		// Draw
+		mCommandList->DrawInstanced(3, 1, 0, 0);
+
+		
+
+
 
 		// Create barrier to transition back buffer into present state
 		barrier = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -570,7 +655,7 @@ private:
 	ComPtr<IDxcLibrary> mDxcLibrary;
 	ComPtr<IDxcCompiler> mDxcCompiler;
 
-	ComPtr<ID3D12Device5> mDevice;
+	ComPtr<ID3D12Device3> mDevice;
 	ComPtr<ID3D12CommandQueue> mCommandQueue;
 	//ComPtr<ID3D12CommandQueue> mCopyQueue;
 	ComPtr<IDXGISwapChain4> mSwapChain;

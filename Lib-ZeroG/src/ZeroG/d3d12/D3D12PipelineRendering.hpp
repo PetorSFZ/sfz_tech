@@ -52,7 +52,7 @@ ZgErrorCode createPipelineRendering(
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	ZgAllocator& allocator,
-	ID3D12Device5& device,
+	ID3D12Device3& device,
 	std::mutex& contextMutex) noexcept;
 
 } // namespace zg

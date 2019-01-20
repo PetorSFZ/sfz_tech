@@ -68,10 +68,16 @@ public:
 
 	virtual ZgErrorCode bufferRelease(IBuffer* buffer) noexcept = 0;
 
+	virtual ZgErrorCode bufferMemcpyTo(
+		IBuffer* dstBufferInterface,
+		uint64_t bufferOffsetBytes,
+		const uint8_t* srcMemory,
+		uint64_t numBytes) noexcept = 0;
+
 	// Experiments
 	// --------------------------------------------------------------------------------------------
 
-	virtual ZgErrorCode renderExperiment() noexcept = 0;
+	virtual ZgErrorCode renderExperiment(IBuffer* buffer, IPipelineRendering* pipeline) noexcept = 0;
 };
 
 } // namespace zg

@@ -188,12 +188,12 @@ ZgErrorCode createPipelineRendering(
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	ZgAllocator& allocator,
-	ID3D12Device5& device,
+	ID3D12Device3& device,
 	std::mutex& contextMutex) noexcept
 {
 	// Pick out which vertex and pixel shader type to compile with
-	HlslShaderType vertexShaderType;
-	HlslShaderType pixelShaderType;
+	HlslShaderType vertexShaderType = HlslShaderType::VERTEX_SHADER_5_1;
+	HlslShaderType pixelShaderType = HlslShaderType::PIXEL_SHADER_5_1;
 	switch (createInfo.shaderVersion) {
 	case ZG_SHADER_MODEL_5_1:
 		vertexShaderType = HlslShaderType::VERTEX_SHADER_5_1;
@@ -252,7 +252,7 @@ ZgErrorCode createPipelineRendering(
 		desc.SemanticIndex = attribute.attributeLocation;
 		desc.Format = vertexAttributeTypeToFormat(attribute.type);
 		desc.InputSlot = 0; // TODO: Expose this?
-		desc.AlignedByteOffset = attribute.strideBytes;
+		desc.AlignedByteOffset = attribute.offsetToFirstElementInBytes;
 		desc.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
 		desc.InstanceDataStepRate = 0;
 		attributes[i] = desc;

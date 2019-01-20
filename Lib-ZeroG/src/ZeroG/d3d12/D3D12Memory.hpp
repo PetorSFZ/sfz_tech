@@ -36,6 +36,7 @@ public:
 	D3D12Buffer& operator= (D3D12Buffer&&) = delete;
 	~D3D12Buffer() noexcept;
 
+	ZgBufferMemoryType memoryType = ZG_BUFFER_MEMORY_TYPE_UNDEFINED;
 	ComPtr<ID3D12Heap> heap;
 	ComPtr<ID3D12Resource> resource;
 };
