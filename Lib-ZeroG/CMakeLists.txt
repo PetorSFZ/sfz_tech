@@ -87,6 +87,7 @@ set(ZEROG_CAPI_SRC_FILES
 	${SRC_DIR}/ZeroG/d3d12/D3D12PipelineRendering.cpp
 	${SRC_DIR}/ZeroG/util/CpuAllocation.hpp
 	${SRC_DIR}/ZeroG/util/CpuAllocation.cpp
+	${SRC_DIR}/ZeroG/util/RingBuffer.hpp
 	${SRC_DIR}/ZeroG/util/Vector.hpp
 	${SRC_DIR}/ZeroG/BackendInterface.hpp
 
