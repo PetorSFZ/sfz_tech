@@ -22,19 +22,12 @@
 
 #include "ZeroG/d3d12/D3D12Common.hpp"
 #include "ZeroG/d3d12/D3D12CommandList.hpp"
+#include "ZeroG/util/RingBuffer.hpp"
 #include "ZeroG/util/Vector.hpp"
 #include "ZeroG/BackendInterface.hpp"
 #include "ZeroG/ZeroG-CApi.h"
 
 namespace zg {
-
-// Helper structs
-// ------------------------------------------------------------------------------------------------
-
-struct CommandListInFlight {
-	uint32_t index = ~0u;
-	uint64_t fenceValue = ~0u;
-};
 
 // D3D12CommandQueue
 // ------------------------------------------------------------------------------------------------
@@ -57,7 +50,8 @@ public:
 
 	ZgErrorCode init(
 		ComPtr<ID3D12Device3>& device,
-		uint32_t maxNumCommandLists) noexcept;
+		uint32_t maxNumCommandLists,
+		ZgAllocator allocator) noexcept;
 
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
@@ -71,6 +65,7 @@ public:
 
 	uint64_t signalOnGpu();
 	void waitOnCpu(uint64_t fenceValue);
+	bool isFenceValueDone(uint64_t fenceValue);
 
 	// Getters
 	// --------------------------------------------------------------------------------------------
@@ -78,18 +73,25 @@ public:
 	ID3D12CommandQueue* commandQueue() noexcept { return mCommandQueue.Get(); }
 
 private:
+	// Private  methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgErrorCode createCommandList(D3D12CommandList*& commandListOut) noexcept;
+
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
 	std::mutex mQueueMutex;
+	ComPtr<ID3D12Device3> mDevice;
+	
 	ComPtr<ID3D12CommandQueue> mCommandQueue;
+	
 	ComPtr<ID3D12Fence> mCommandQueueFence;
 	uint64_t mCommandQueueFenceValue = 0;
 	HANDLE mCommandQueueFenceEvent = nullptr;
-	
-	//Vector<D3D12CommandList> commandLists;
-	//Vector<uint32_t> commandListsFree;
-	//Vector<CommandListInFlight> commandListsInFlight;
+
+	Vector<D3D12CommandList> mCommandListStorage;
+	RingBuffer<D3D12CommandList*> mCommandListQueue;
 };
 
 } // namespace zg

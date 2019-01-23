@@ -18,6 +18,8 @@
 
 #include "ZeroG/d3d12/D3D12CommandList.hpp"
 
+#include <algorithm>
+
 namespace zg {
 
 // D3D12CommandList: Constructors & destructors
@@ -26,6 +28,16 @@ namespace zg {
 D3D12CommandList::~D3D12CommandList() noexcept
 {
 
+}
+
+// State methods
+// ------------------------------------------------------------------------------------------------
+
+void D3D12CommandList::swap(D3D12CommandList& other) noexcept
+{
+	std::swap(commandAllocator, other.commandAllocator);
+	std::swap(commandList, other.commandList);
+	std::swap(fenceValue, other.fenceValue);
 }
 
 // D3D12CommandList: Virtual methods

@@ -44,7 +44,7 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	bool init(uint32_t capacity, ZgAllocator allocator, const char* allocationName)
+	bool create(uint32_t capacity, ZgAllocator allocator, const char* allocationName)
 	{
 		// Allocate memory
 		uint8_t* allocation = allocator.allocate(
@@ -153,6 +153,8 @@ public:
 	uint32_t capacity() const noexcept { return mCapacity; }
 	T* data() noexcept { return mDataPtr; }
 	const T* data() const noexcept { return mDataPtr; }
+	T& last() noexcept { return mDataPtr[mSize - 1]; }
+	const T& last() const noexcept { return mDataPtr[mSize - 1]; }
 
 private:
 	// Private members

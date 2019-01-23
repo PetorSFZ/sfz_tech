@@ -163,7 +163,7 @@ public:
 
 		// Create command queue
 		const uint32_t MAX_NUM_COMMAND_LISTS = 128;
-		ZgErrorCode res = mCommandQueue.init(mDevice, MAX_NUM_COMMAND_LISTS);
+		ZgErrorCode res = mCommandQueue.init(mDevice, MAX_NUM_COMMAND_LISTS, mAllocator);
 		if (res != ZG_SUCCESS) return res;
 
 		// Check if screen-tearing is allowed
@@ -377,6 +377,12 @@ public:
 		return ZG_SUCCESS;
 	}
 
+	ZgErrorCode getCommandQueue(ICommandQueue** commandQueueOut) noexcept override final
+	{
+		*commandQueueOut = &mCommandQueue;
+		return ZG_SUCCESS;
+	}
+
 	// Memory methods
 	// --------------------------------------------------------------------------------------------
 
@@ -491,15 +497,6 @@ public:
 		// Unmap buffer
 		dstBuffer.resource->Unmap(0, nullptr);// &writeRange);
 
-		return ZG_SUCCESS;
-	}
-
-	// Command queue
-	// --------------------------------------------------------------------------------------------
-
-	ZgErrorCode getCommandQueue(ICommandQueue** commandQueueOut) noexcept override final
-	{
-		*commandQueueOut = &mCommandQueue;
 		return ZG_SUCCESS;
 	}
 

@@ -181,10 +181,10 @@ int main(int argc, char* argv[])
 
 		// Get a command list
 		ZgCommandList* commandList = nullptr;
-		/*CHECK_ZG zgCommandQueueGetCommandList(commandQueue, &commandList);
+		CHECK_ZG zgCommandQueueGetCommandList(commandQueue, &commandList);
 
 		// Begin recording commands
-		CHECK_ZG zgCommandListBeginRecording(commandList);
+		/*CHECK_ZG zgCommandListBeginRecording(commandList);
 
 		// TODO: Record some commands
 

@@ -35,15 +35,27 @@ public:
 	D3D12CommandList() noexcept = default;
 	D3D12CommandList(const D3D12CommandList&) = delete;
 	D3D12CommandList& operator= (const D3D12CommandList&) = delete;
-	D3D12CommandList(D3D12CommandList&&) = delete;
-	D3D12CommandList& operator= (D3D12CommandList&&) = delete;
+	D3D12CommandList(D3D12CommandList&& other) noexcept { swap(other); }
+	D3D12CommandList& operator= (D3D12CommandList&& other) noexcept { swap(other); return *this; }
 	~D3D12CommandList() noexcept;
+
+	// State methods
+	// --------------------------------------------------------------------------------------------
+
+	void swap(D3D12CommandList& other) noexcept;
 
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
 
 	ZgErrorCode beginRecording() noexcept override final;
 	ZgErrorCode finishRecording() noexcept override final;
+
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	ComPtr<ID3D12CommandAllocator> commandAllocator;
+	ComPtr<ID3D12GraphicsCommandList> commandList;
+	uint64_t fenceValue = 0;
 };
 
 } // namespace zg

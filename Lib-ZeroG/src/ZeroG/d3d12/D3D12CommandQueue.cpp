@@ -34,8 +34,11 @@ D3D12CommandQueue::~D3D12CommandQueue() noexcept
 
 ZgErrorCode D3D12CommandQueue::init(
 	ComPtr<ID3D12Device3>& device,
-	uint32_t maxNumCommandLists) noexcept
+	uint32_t maxNumCommandLists,
+	ZgAllocator allocator) noexcept
 {
+	mDevice = device;
+
 	// Create command queue
 	D3D12_COMMAND_QUEUE_DESC desc = {};
 	desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -57,6 +60,12 @@ ZgErrorCode D3D12CommandQueue::init(
 	// Create command queue fence event
 	mCommandQueueFenceEvent = ::CreateEvent(NULL, false, false, NULL);
 
+	// Allocate memory for command lists
+	mCommandListStorage.create(
+		maxNumCommandLists, allocator, "ZeroG - D3D12CommandQueue - CommandListStorage");
+	mCommandListQueue.create(
+		maxNumCommandLists, allocator, "ZeroG - D3D12CommandQueue - CommandListQueue");
+
 	return ZG_SUCCESS;
 }
 
@@ -74,7 +83,28 @@ ZgErrorCode D3D12CommandQueue::getCommandList(ICommandList** commandListOut) noe
 {
 	std::lock_guard<std::mutex> lock(mQueueMutex);
 
-	return ZG_ERROR_UNIMPLEMENTED;
+	D3D12CommandList* commandList;
+	bool commandListFound = false;
+
+	// If command lists available in queue, attempt to get one of them
+	uint64_t queueSize = mCommandListQueue.size();
+	if (queueSize != 0) {
+		if (isFenceValueDone(mCommandListQueue.first()->fenceValue)) {
+			mCommandListQueue.pop(commandList);
+			commandListFound = true;
+		}
+	}
+
+	// If no command list found, create new one
+	if (!commandListFound) {
+		ZgErrorCode res = createCommandList(commandList);
+		if (res != ZG_SUCCESS) return res;
+		commandListFound = true;
+	}
+
+	// Return command list
+	*commandListOut = commandList;
+	return ZG_SUCCESS;
 }
 
 ZgErrorCode D3D12CommandQueue::executeCommandList(ICommandList* commandList) noexcept
@@ -99,12 +129,52 @@ void D3D12CommandQueue::waitOnCpu(uint64_t fenceValue)
 	// TODO: Kind of bad to only have one event, must have mutex here because of that.
 	std::lock_guard<std::mutex> lock(mQueueMutex);
 
-	if (mCommandQueueFence->GetCompletedValue() < fenceValue) {
+	if (!isFenceValueDone(fenceValue)) {
 		CHECK_D3D12 mCommandQueueFence->SetEventOnCompletion(
 			fenceValue, mCommandQueueFenceEvent);
 		// TODO: Don't wait forever
 		::WaitForSingleObject(mCommandQueueFenceEvent, INFINITE);
 	}
+}
+
+bool D3D12CommandQueue::isFenceValueDone(uint64_t fenceValue)
+{
+	return mCommandQueueFence->GetCompletedValue() >= fenceValue;
+}
+
+// D3D12CommandQueue: Private  methods
+// ------------------------------------------------------------------------------------------------
+
+ZgErrorCode D3D12CommandQueue::createCommandList(D3D12CommandList*& commandListOut) noexcept
+{
+	// Create a new command list in storage, return error if full
+	bool wasFull = mCommandListStorage.add(D3D12CommandList());
+	if (wasFull) return ZG_ERROR_OUT_OF_COMMAND_LISTS;
+
+	D3D12CommandList& commandList = mCommandListStorage.last();
+
+	// Create command allocator
+	// TODO: Type
+	if (!CHECK_D3D12_SUCCEEDED(mDevice->CreateCommandAllocator(
+		D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandList.commandAllocator)))) {
+		mCommandListStorage.pop();
+		return ZG_ERROR_GENERIC;
+	}
+
+	// Create command list
+	// TODO: Type
+	if (!CHECK_D3D12_SUCCEEDED(mDevice->CreateCommandList(
+		0,
+		D3D12_COMMAND_LIST_TYPE_DIRECT,
+		commandList.commandAllocator.Get(),
+		nullptr,
+		IID_PPV_ARGS(&commandList.commandList)))) {
+		mCommandListStorage.pop();
+		return ZG_ERROR_GENERIC;
+	}
+
+	commandListOut = &commandList;
+	return ZG_SUCCESS;
 }
 
 } // namespace zg
