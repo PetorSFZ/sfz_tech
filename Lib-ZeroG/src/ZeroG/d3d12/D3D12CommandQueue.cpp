@@ -18,6 +18,8 @@
 
 #include "ZeroG/d3d12/D3D12CommandQueue.hpp"
 
+#include <cassert>
+
 namespace zg {
 
 // D3D12CommandQueue: Constructors & destructors
@@ -25,6 +27,12 @@ namespace zg {
 
 D3D12CommandQueue::~D3D12CommandQueue() noexcept
 {
+	// Flush queue
+	this->flush();
+
+	// Check that all command lists have been returned
+	assert(mCommandListStorage.size() == mCommandListQueue.size());
+
 	// Destroy fence event
 	CloseHandle(mCommandQueueFenceEvent);
 }
@@ -111,6 +119,8 @@ ZgErrorCode D3D12CommandQueue::executeCommandList(ICommandList* commandList) noe
 {
 	std::lock_guard<std::mutex> lock(mQueueMutex);
 
+	mCommandListQueue.add(reinterpret_cast<D3D12CommandList*>(commandList));
+
 	return ZG_ERROR_UNIMPLEMENTED;
 }
 
@@ -148,8 +158,8 @@ bool D3D12CommandQueue::isFenceValueDone(uint64_t fenceValue)
 ZgErrorCode D3D12CommandQueue::createCommandList(D3D12CommandList*& commandListOut) noexcept
 {
 	// Create a new command list in storage, return error if full
-	bool wasFull = mCommandListStorage.add(D3D12CommandList());
-	if (wasFull) return ZG_ERROR_OUT_OF_COMMAND_LISTS;
+	bool addSuccesful = mCommandListStorage.add(D3D12CommandList());
+	if (!addSuccesful) return ZG_ERROR_OUT_OF_COMMAND_LISTS;
 
 	D3D12CommandList& commandList = mCommandListStorage.last();
 

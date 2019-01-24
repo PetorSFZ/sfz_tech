@@ -96,7 +96,7 @@ public:
 
 	bool add(const T& value) noexcept
 	{
-		if (mSize > mCapacity) return false;
+		if (mSize >= mCapacity) return false;
 		new (mDataPtr + mSize) T(value);
 		mSize += 1;
 		return true;
@@ -104,7 +104,7 @@ public:
 
 	bool add(T&& value) noexcept
 	{
-		if (mSize > mCapacity) return false;
+		if (mSize >= mCapacity) return false;
 		new (mDataPtr + mSize) T(std::move(value));
 		mSize += 1;
 		return true;

@@ -190,10 +190,10 @@ int main(int argc, char* argv[])
 
 		// Finish recording commands
 		CHECK_ZG zgCommandListFinishRecording(commandList);
-
+		*/
 		// Execute command list
 		CHECK_ZG zgCommandQueueExecuteCommandList(commandQueue, commandList);
-		*/
+		
 		// TODO: Rendering here
 		CHECK_ZG zgRenderExperiment(ctx.mContext, buffer, pipeline, commandList);
 	}
