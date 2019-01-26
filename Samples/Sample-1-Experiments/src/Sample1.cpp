@@ -189,6 +189,10 @@ int main(int argc, char* argv[])
 
 		// Record some commands
 		CHECK_ZG zgCommandListSetPipelineRendering(commandList, pipeline);
+		ZgCommandListSetFramebufferInfo framebufferInfo = {};
+		framebufferInfo.framebuffer = framebuffer;
+		CHECK_ZG zgCommandListSetFramebuffer(commandList, &framebufferInfo);
+
 		CHECK_ZG zgCommandListExperimentalCommands(commandList, framebuffer, buffer, pipeline);
 
 		// Execute command list

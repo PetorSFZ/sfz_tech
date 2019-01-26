@@ -50,6 +50,9 @@ public:
 	ZgErrorCode setPipelineRendering(
 		IPipelineRendering* pipeline) noexcept override final;
 
+	ZgErrorCode setFramebuffer(
+		const ZgCommandListSetFramebufferInfo& info) noexcept override final;
+
 	ZgErrorCode experimentalCommands(
 		IFramebuffer* framebuffer,
 		IBuffer* buffer,
@@ -72,6 +75,7 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	bool mPipelineSet = false; // Only allow a single pipeline per command list
+	bool mFramebufferSet = false; // Only allow a single framebuffer to be set.
 };
 
 } // namespace zg

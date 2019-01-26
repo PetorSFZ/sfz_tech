@@ -56,6 +56,9 @@ public:
 	virtual ZgErrorCode setPipelineRendering(
 		IPipelineRendering* pipeline) noexcept = 0;
 
+	virtual ZgErrorCode setFramebuffer(
+		const ZgCommandListSetFramebufferInfo& info) noexcept = 0;
+
 	virtual ZgErrorCode experimentalCommands(
 		IFramebuffer* framebuffer,
 		IBuffer* buffer,

@@ -64,15 +64,82 @@ ZgErrorCode D3D12CommandList::setPipelineRendering(
 	return ZG_SUCCESS;
 }
 
+ZgErrorCode D3D12CommandList::setFramebuffer(
+	const ZgCommandListSetFramebufferInfo& info) noexcept
+{
+	// Cast input to D3D12
+	D3D12Framebuffer& framebuffer = *reinterpret_cast<D3D12Framebuffer*>(info.framebuffer);
+
+	// If a framebuffer is already set for this command list, return error. We currently only allow
+	// a single framebuffer per command list.
+	if (mFramebufferSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+	mFramebufferSet = true;
+
+	// If input viewport is zero, set one that covers entire screen
+	D3D12_VIEWPORT viewport = {};
+	if (info.viewport.topLeftX == 0 &&
+		info.viewport.topLeftY == 0 &&
+		info.viewport.width == 0 &&
+		info.viewport.height == 0) {
+
+		viewport.TopLeftX = 0;
+		viewport.TopLeftY = 0;
+		viewport.Width = float(framebuffer.width);
+		viewport.Height = float(framebuffer.height);
+		viewport.MinDepth = 0.0f;
+		viewport.MaxDepth = 1.0f;
+	}
+
+	// Otherwise do what the user explicitly requested
+	else {
+		viewport.TopLeftX = float(info.viewport.topLeftX);
+		viewport.TopLeftY = float(info.viewport.topLeftY);
+		viewport.Width = float(info.viewport.width);
+		viewport.Height = float(info.viewport.height);
+		viewport.MinDepth = 0.0f;
+		viewport.MaxDepth = 1.0f;
+	}
+
+	// Set viewport
+	commandList->RSSetViewports(1, &viewport);
+	
+	// If scissor is zero, set on that covers entire screen
+	D3D12_RECT scissorRect = {};
+	if (info.scissor.topLeftX == 0 &&
+		info.scissor.topLeftY == 0 &&
+		info.scissor.width == 0 &&
+		info.scissor.height == 0) {
+
+		scissorRect.left = 0;
+		scissorRect.top = 0;
+		scissorRect.right = LONG_MAX;
+		scissorRect.bottom = LONG_MAX;
+	}
+
+	// Otherwise do what user explicitly requested
+	else {
+		scissorRect.left = info.scissor.topLeftX;
+		scissorRect.top = info.scissor.topLeftY;
+		scissorRect.right = info.scissor.topLeftX + info.scissor.width;
+		scissorRect.bottom = info.scissor.topLeftY + info.scissor.height;
+	}
+
+	// Set scissor rect
+	commandList->RSSetScissorRects(1, &scissorRect);
+
+	// Set render target descriptor
+	commandList->OMSetRenderTargets(1, &framebuffer.descriptor, FALSE, nullptr);
+
+	return ZG_SUCCESS;
+}
+
 ZgErrorCode D3D12CommandList::experimentalCommands(
 	IFramebuffer* framebufferIn,
 	IBuffer* bufferIn,
 	IPipelineRendering* pipelineIn) noexcept
 {
 	// Cast input to D3D12
-	D3D12Framebuffer& framebuffer = *reinterpret_cast<D3D12Framebuffer*>(framebufferIn);
 	D3D12Buffer& vertexBuffer = *reinterpret_cast<D3D12Buffer*>(bufferIn);
-	D3D12PipelineRendering& pipeline = *reinterpret_cast<D3D12PipelineRendering*>(pipelineIn);
 
 
 	// TODO: Bad hardcoded vertex buffer information
@@ -82,27 +149,6 @@ ZgErrorCode D3D12CommandList::experimentalCommands(
 	vertexBufferView.SizeInBytes = vertexBufferView.StrideInBytes * 3; // TODO: Don't hardcode
 
 
-	// Set viewport
-	D3D12_VIEWPORT viewport = {};
-	viewport.TopLeftX = 0;
-	viewport.TopLeftY = 0;
-	viewport.Width = float(framebuffer.width);
-	viewport.Height = float(framebuffer.height);
-	viewport.MinDepth = 0.0f;
-	viewport.MaxDepth = 1.0f;
-	commandList->RSSetViewports(1, &viewport);
-
-	// Set scissor rects
-	D3D12_RECT scissorRect = {};
-	scissorRect.left = 0;
-	scissorRect.top = 0;
-	scissorRect.right = LONG_MAX;
-	scissorRect.bottom = LONG_MAX;
-	commandList->RSSetScissorRects(1, &scissorRect);
-
-
-	// Set render target descriptor
-	commandList->OMSetRenderTargets(1, &framebuffer.descriptor, FALSE, nullptr);
 
 	// Set vertex buffer
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -128,6 +174,7 @@ ZgErrorCode D3D12CommandList::reset() noexcept
 	}
 
 	mPipelineSet = false;
+	mFramebufferSet = false;
 	return ZG_SUCCESS;
 }
 

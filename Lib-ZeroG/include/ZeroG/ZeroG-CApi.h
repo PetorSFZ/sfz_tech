@@ -80,6 +80,13 @@ typedef uint32_t ZgBool;
 static const ZgBool ZG_FALSE = 0;
 static const ZgBool ZG_TRUE = 1;
 
+// Framebuffer rectangle
+// ------------------------------------------------------------------------------------------------
+
+typedef struct {
+	uint32_t topLeftX, topLeftY, width, height;
+} ZgFramebufferRect;
+
 // Version information
 // ------------------------------------------------------------------------------------------------
 
@@ -371,9 +378,19 @@ ZG_DLL_API ZgErrorCode zgCommandQueueExecuteCommandList(
 // Command list
 // ------------------------------------------------------------------------------------------------
 
+typedef struct {
+	ZgFramebuffer* framebuffer;
+	ZgFramebufferRect viewport; // If all zero, the viewport will cover the entire framebuffer
+	ZgFramebufferRect scissor; // If all zero, the scissor will cover the entire framebuffer
+} ZgCommandListSetFramebufferInfo;
+
 ZG_DLL_API ZgErrorCode zgCommandListSetPipelineRendering(
 	ZgCommandList* commandList,
 	ZgPipelineRendering* pipeline);
+
+ZG_DLL_API ZgErrorCode zgCommandListSetFramebuffer(
+	ZgCommandList* commandList,
+	const ZgCommandListSetFramebufferInfo* info);
 
 ZG_DLL_API ZgErrorCode zgCommandListExperimentalCommands(
 	ZgCommandList* commandList,
