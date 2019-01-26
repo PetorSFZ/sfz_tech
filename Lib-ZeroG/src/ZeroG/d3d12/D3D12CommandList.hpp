@@ -53,6 +53,12 @@ public:
 	ZgErrorCode setFramebuffer(
 		const ZgCommandListSetFramebufferInfo& info) noexcept override final;
 
+	ZgErrorCode clearFramebuffer(
+		float red,
+		float green,
+		float blue,
+		float alpha) noexcept override final;
+
 	ZgErrorCode experimentalCommands(
 		IFramebuffer* framebuffer,
 		IBuffer* buffer,
@@ -76,6 +82,7 @@ private:
 
 	bool mPipelineSet = false; // Only allow a single pipeline per command list
 	bool mFramebufferSet = false; // Only allow a single framebuffer to be set.
+	D3D12_CPU_DESCRIPTOR_HANDLE mFramebufferDescriptor = {}; // The descriptor for the set framebuffer
 };
 
 } // namespace zg

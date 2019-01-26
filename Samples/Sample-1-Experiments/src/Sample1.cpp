@@ -192,6 +192,7 @@ int main(int argc, char* argv[])
 		ZgCommandListSetFramebufferInfo framebufferInfo = {};
 		framebufferInfo.framebuffer = framebuffer;
 		CHECK_ZG zgCommandListSetFramebuffer(commandList, &framebufferInfo);
+		CHECK_ZG zgCommandListClearFramebuffer(commandList, 0.2f, 0.2f, 0.3f, 1.0f);
 
 		CHECK_ZG zgCommandListExperimentalCommands(commandList, framebuffer, buffer, pipeline);
 

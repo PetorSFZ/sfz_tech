@@ -74,6 +74,7 @@ ZgErrorCode D3D12CommandList::setFramebuffer(
 	// a single framebuffer per command list.
 	if (mFramebufferSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 	mFramebufferSet = true;
+	mFramebufferDescriptor = framebuffer.descriptor;
 
 	// If input viewport is zero, set one that covers entire screen
 	D3D12_VIEWPORT viewport = {};
@@ -127,10 +128,24 @@ ZgErrorCode D3D12CommandList::setFramebuffer(
 	// Set scissor rect
 	commandList->RSSetScissorRects(1, &scissorRect);
 
-	// Set render target descriptor
+	// Set framebuffer
 	commandList->OMSetRenderTargets(1, &framebuffer.descriptor, FALSE, nullptr);
 
 	return ZG_SUCCESS;
+}
+
+ZgErrorCode D3D12CommandList::clearFramebuffer(
+	float red,
+	float green,
+	float blue,
+	float alpha) noexcept
+{
+	// Return error if no framebuffer is set
+	if (!mFramebufferSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+
+	// Clear framebuffer
+	float clearColor[4] = { red, green, blue, alpha };
+	commandList->ClearRenderTargetView(mFramebufferDescriptor, clearColor, 0, nullptr);
 }
 
 ZgErrorCode D3D12CommandList::experimentalCommands(
@@ -175,6 +190,7 @@ ZgErrorCode D3D12CommandList::reset() noexcept
 
 	mPipelineSet = false;
 	mFramebufferSet = false;
+	mFramebufferDescriptor = {};
 	return ZG_SUCCESS;
 }
 

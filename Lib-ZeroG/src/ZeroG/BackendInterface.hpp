@@ -59,6 +59,12 @@ public:
 	virtual ZgErrorCode setFramebuffer(
 		const ZgCommandListSetFramebufferInfo& info) noexcept = 0;
 
+	virtual ZgErrorCode clearFramebuffer(
+		float red,
+		float green,
+		float blue,
+		float alpha) noexcept = 0;
+
 	virtual ZgErrorCode experimentalCommands(
 		IFramebuffer* framebuffer,
 		IBuffer* buffer,

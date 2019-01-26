@@ -392,6 +392,13 @@ ZG_DLL_API ZgErrorCode zgCommandListSetFramebuffer(
 	ZgCommandList* commandList,
 	const ZgCommandListSetFramebufferInfo* info);
 
+ZG_DLL_API ZgErrorCode zgCommandListClearFramebuffer(
+	ZgCommandList* commandList,
+	float red,
+	float green,
+	float blue,
+	float alpha);
+
 ZG_DLL_API ZgErrorCode zgCommandListExperimentalCommands(
 	ZgCommandList* commandList,
 	ZgFramebuffer* framebuffer,
