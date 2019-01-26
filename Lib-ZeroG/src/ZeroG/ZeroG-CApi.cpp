@@ -224,13 +224,13 @@ ZG_DLL_API ZgErrorCode zgCommandQueueFlush(
 	return commandQueue->flush();
 }
 
-ZG_DLL_API ZgErrorCode zgCommandQueueGetCommandList(
+ZG_DLL_API ZgErrorCode zgCommandQueueBeginCommandListRecording(
 	ZgCommandQueue* commandQueueIn,
 	ZgCommandList** commandListOut)
 {
 	zg::ICommandQueue* commandQueue = reinterpret_cast<zg::ICommandQueue*>(commandQueueIn);
 	zg::ICommandList* commandList = nullptr;
-	ZgErrorCode res = commandQueue->getCommandList(&commandList);
+	ZgErrorCode res = commandQueue->beginCommandListRecording(&commandList);
 	if (res != ZG_SUCCESS) return res;
 	*commandListOut = reinterpret_cast<ZgCommandList*>(commandList);
 	return ZG_SUCCESS;

@@ -57,7 +57,7 @@ public:
 	virtual ~ICommandQueue() noexcept {}
 
 	virtual ZgErrorCode flush() noexcept = 0;
-	virtual ZgErrorCode getCommandList(ICommandList** commandListOut) noexcept = 0;
+	virtual ZgErrorCode beginCommandListRecording(ICommandList** commandListOut) noexcept = 0;
 	virtual ZgErrorCode executeCommandList(ICommandList* commandList) noexcept = 0;
 };
 

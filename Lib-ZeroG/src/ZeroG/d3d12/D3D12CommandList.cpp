@@ -35,9 +35,9 @@ D3D12CommandList::~D3D12CommandList() noexcept
 
 void D3D12CommandList::swap(D3D12CommandList& other) noexcept
 {
-	std::swap(commandAllocator, other.commandAllocator);
-	std::swap(commandList, other.commandList);
-	std::swap(fenceValue, other.fenceValue);
+	std::swap(this->commandAllocator, other.commandAllocator);
+	std::swap(this->commandList, other.commandList);
+	std::swap(this->fenceValue, other.fenceValue);
 }
 
 // D3D12CommandList: Virtual methods

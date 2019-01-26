@@ -358,7 +358,7 @@ ZG_DLL_API ZgErrorCode zgCommandListFinishRecording(
 ZG_DLL_API ZgErrorCode zgCommandQueueFlush(
 	ZgCommandQueue* commandQueue);
 
-ZG_DLL_API ZgErrorCode zgCommandQueueGetCommandList(
+ZG_DLL_API ZgErrorCode zgCommandQueueBeginCommandListRecording(
 	ZgCommandQueue* commandQueue,
 	ZgCommandList** commandListOut);
 

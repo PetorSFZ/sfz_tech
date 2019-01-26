@@ -57,15 +57,15 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	ZgErrorCode flush() noexcept override final;
-	ZgErrorCode getCommandList(ICommandList** commandListOut) noexcept override final;
+	ZgErrorCode beginCommandListRecording(ICommandList** commandListOut) noexcept override final;
 	ZgErrorCode executeCommandList(ICommandList* commandList) noexcept override final;
 
 	// Synchronization methods
 	// --------------------------------------------------------------------------------------------
 
-	uint64_t signalOnGpu();
-	void waitOnCpu(uint64_t fenceValue);
-	bool isFenceValueDone(uint64_t fenceValue);
+	uint64_t signalOnGpu() noexcept;
+	void waitOnCpu(uint64_t fenceValue) noexcept;
+	bool isFenceValueDone(uint64_t fenceValue) noexcept;
 
 	// Getters
 	// --------------------------------------------------------------------------------------------
@@ -75,6 +75,8 @@ public:
 private:
 	// Private  methods
 	// --------------------------------------------------------------------------------------------
+
+	uint64_t signalOnGpuUnmutexed() noexcept;
 
 	ZgErrorCode createCommandList(D3D12CommandList*& commandListOut) noexcept;
 

@@ -87,7 +87,7 @@ ZgErrorCode D3D12CommandQueue::flush() noexcept
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandQueue::getCommandList(ICommandList** commandListOut) noexcept
+ZgErrorCode D3D12CommandQueue::beginCommandListRecording(ICommandList** commandListOut) noexcept
 {
 	std::lock_guard<std::mutex> lock(mQueueMutex);
 
@@ -110,31 +110,52 @@ ZgErrorCode D3D12CommandQueue::getCommandList(ICommandList** commandListOut) noe
 		commandListFound = true;
 	}
 
+	// Reset command list and allocator
+	if (!CHECK_D3D12_SUCCEEDED(commandList->commandAllocator->Reset())) {
+		return ZG_ERROR_GENERIC;
+	}
+	if (!CHECK_D3D12_SUCCEEDED(
+		commandList->commandList->Reset(commandList->commandAllocator.Get(), nullptr))) {
+		return ZG_ERROR_GENERIC;
+	}
+
 	// Return command list
 	*commandListOut = commandList;
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandQueue::executeCommandList(ICommandList* commandList) noexcept
+ZgErrorCode D3D12CommandQueue::executeCommandList(ICommandList* commandListIn) noexcept
 {
 	std::lock_guard<std::mutex> lock(mQueueMutex);
+	D3D12CommandList& commandList = *reinterpret_cast<D3D12CommandList*>(commandListIn);
 
-	mCommandListQueue.add(reinterpret_cast<D3D12CommandList*>(commandList));
+	// Close command list
+	if (!CHECK_D3D12_SUCCEEDED(commandList.commandList->Close())) {
+		return ZG_ERROR_GENERIC;
+	}
 
-	return ZG_ERROR_UNIMPLEMENTED;
+	// Execute command list
+	ID3D12CommandList* commandListPtr = commandList.commandList.Get();
+	mCommandQueue->ExecuteCommandLists(1, &commandListPtr);
+
+	// Signal
+	commandList.fenceValue = this->signalOnGpuUnmutexed();
+
+	// Add command list to queue
+	mCommandListQueue.add(&commandList);
+	return ZG_SUCCESS;
 }
 
 // D3D12CommandQueue: Synchronization methods
 // ------------------------------------------------------------------------------------------------
 
-uint64_t D3D12CommandQueue::signalOnGpu()
+uint64_t D3D12CommandQueue::signalOnGpu() noexcept
 {
 	std::lock_guard<std::mutex> lock(mQueueMutex);
-	CHECK_D3D12 mCommandQueue->Signal(mCommandQueueFence.Get(), mCommandQueueFenceValue);
-	return mCommandQueueFenceValue++;
+	return signalOnGpuUnmutexed();
 }
 
-void D3D12CommandQueue::waitOnCpu(uint64_t fenceValue)
+void D3D12CommandQueue::waitOnCpu(uint64_t fenceValue) noexcept
 {
 	// TODO: Kind of bad to only have one event, must have mutex here because of that.
 	std::lock_guard<std::mutex> lock(mQueueMutex);
@@ -147,13 +168,19 @@ void D3D12CommandQueue::waitOnCpu(uint64_t fenceValue)
 	}
 }
 
-bool D3D12CommandQueue::isFenceValueDone(uint64_t fenceValue)
+bool D3D12CommandQueue::isFenceValueDone(uint64_t fenceValue) noexcept
 {
 	return mCommandQueueFence->GetCompletedValue() >= fenceValue;
 }
 
 // D3D12CommandQueue: Private  methods
 // ------------------------------------------------------------------------------------------------
+
+uint64_t D3D12CommandQueue::signalOnGpuUnmutexed() noexcept
+{
+	CHECK_D3D12 mCommandQueue->Signal(mCommandQueueFence.Get(), mCommandQueueFenceValue);
+	return mCommandQueueFenceValue++;
+}
 
 ZgErrorCode D3D12CommandQueue::createCommandList(D3D12CommandList*& commandListOut) noexcept
 {
@@ -180,6 +207,11 @@ ZgErrorCode D3D12CommandQueue::createCommandList(D3D12CommandList*& commandListO
 		nullptr,
 		IID_PPV_ARGS(&commandList.commandList)))) {
 		mCommandListStorage.pop();
+		return ZG_ERROR_GENERIC;
+	}
+
+	// Ensure command list is in closed state
+	if (!CHECK_D3D12_SUCCEEDED(commandList.commandList->Close())) {
 		return ZG_ERROR_GENERIC;
 	}
 
