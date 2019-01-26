@@ -64,6 +64,9 @@ ZG_HANDLE(ZgPipelineRendering);
 // A handle representing a buffer
 ZG_HANDLE(ZgBuffer);
 
+// A handle representing a framebuffer
+ZG_HANDLE(ZgFramebuffer);
+
 // A handle representing a command list
 ZG_HANDLE(ZgCommandList);
 
@@ -211,11 +214,18 @@ ZG_DLL_API ZgErrorCode zgContextResize(
 	uint32_t width,
 	uint32_t height);
 
-ZG_DLL_API ZgErrorCode zgContextGetCommandQueue(
+ZG_DLL_API ZgErrorCode zgContextGeCommandQueueGraphicsPresent(
 	ZgContext* context,
 	ZgCommandQueue** commandQueueOut);
 
 // TODO: zgContextGetCopyQueue(), zgContextGetComputeQueue
+
+ZG_DLL_API ZgErrorCode zgContextBeginFrame(
+	ZgContext* context,
+	ZgFramebuffer** framebufferOut);
+
+ZG_DLL_API ZgErrorCode zgContextFinishFrame(
+	ZgContext* context);
 
 // Pipeline
 // ------------------------------------------------------------------------------------------------
@@ -343,15 +353,6 @@ ZG_DLL_API ZgErrorCode zgBufferMemcpyTo(
 	const uint8_t* srcMemory,
 	uint64_t numBytes);
 
-// Command list
-// ------------------------------------------------------------------------------------------------
-
-ZG_DLL_API ZgErrorCode zgCommandListBeginRecording(
-	ZgCommandList* commandList);
-
-ZG_DLL_API ZgErrorCode zgCommandListFinishRecording(
-	ZgCommandList* commandList);
-
 // Command queue
 // ------------------------------------------------------------------------------------------------
 
@@ -366,16 +367,14 @@ ZG_DLL_API ZgErrorCode zgCommandQueueExecuteCommandList(
 	ZgCommandQueue* commandQueue,
 	ZgCommandList* commandList);
 
-// Experimental
+// Command list
 // ------------------------------------------------------------------------------------------------
 
-ZG_DLL_API ZgErrorCode zgRenderExperiment(
-	ZgContext* context,
+ZG_DLL_API ZgErrorCode zgCommandListExperimentalCommands(
+	ZgCommandList* commandList,
+	ZgFramebuffer* framebuffer,
 	ZgBuffer* vertexBuffer,
-	ZgPipelineRendering* pipeline,
-	ZgCommandList* commandList);
-
-
+	ZgPipelineRendering* pipeline);
 
 
 // This entire header is pure C

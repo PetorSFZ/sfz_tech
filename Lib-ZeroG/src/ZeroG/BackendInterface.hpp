@@ -38,6 +38,14 @@ public:
 	virtual ~IBuffer() noexcept {}
 };
 
+// Framebuffer
+// ------------------------------------------------------------------------------------------------
+
+class IFramebuffer {
+public:
+	virtual ~IFramebuffer() noexcept {}
+};
+
 // Command lists
 // ------------------------------------------------------------------------------------------------
 
@@ -45,8 +53,10 @@ class ICommandList {
 public:
 	virtual ~ICommandList() noexcept {};
 
-	virtual ZgErrorCode beginRecording() noexcept = 0;
-	virtual ZgErrorCode finishRecording() noexcept = 0;
+	virtual ZgErrorCode experimentalCommands(
+		IFramebuffer* framebuffer,
+		IBuffer* buffer,
+		IPipelineRendering* pipeline) noexcept = 0;
 };
 
 // Command queue
@@ -75,7 +85,13 @@ public:
 		uint32_t width,
 		uint32_t height) noexcept = 0;
 
-	virtual ZgErrorCode getCommandQueue(ICommandQueue** commandQueueOut) noexcept = 0;
+	virtual ZgErrorCode getCommandQueueGraphicsPresent(
+		ICommandQueue** commandQueueOut) noexcept = 0;
+
+	virtual ZgErrorCode beginFrame(
+		zg::IFramebuffer** framebufferOut) noexcept = 0;
+
+	virtual ZgErrorCode finishFrame() noexcept = 0;
 
 	// Pipeline methods
 	// --------------------------------------------------------------------------------------------
@@ -101,14 +117,6 @@ public:
 		uint64_t bufferOffsetBytes,
 		const uint8_t* srcMemory,
 		uint64_t numBytes) noexcept = 0;
-
-	// Experiments
-	// --------------------------------------------------------------------------------------------
-
-	virtual ZgErrorCode renderExperiment(
-		IBuffer* buffer,
-		IPipelineRendering* pipeline,
-		ICommandList* commandList) noexcept = 0;
 };
 
 } // namespace zg

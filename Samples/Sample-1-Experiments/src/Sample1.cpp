@@ -145,7 +145,7 @@ int main(int argc, char* argv[])
 
 	// Get the command queue
 	ZgCommandQueue* commandQueue = nullptr;
-	CHECK_ZG zgContextGetCommandQueue(ctx.mContext, &commandQueue);
+	CHECK_ZG zgContextGeCommandQueueGraphicsPresent(ctx.mContext, &commandQueue);
 
 	// Run our main loop
 	bool running = true;
@@ -179,15 +179,22 @@ int main(int argc, char* argv[])
 		SDL_GL_GetDrawableSize(window, &width, &height);
 		CHECK_ZG zgContextResize(ctx.mContext, uint32_t(width), uint32_t(height));
 
+		// Begin frame
+		ZgFramebuffer* framebuffer = nullptr;
+		CHECK_ZG zgContextBeginFrame(ctx.mContext, &framebuffer);
+
 		// Get a command list
 		ZgCommandList* commandList = nullptr;
 		CHECK_ZG zgCommandQueueBeginCommandListRecording(commandQueue, &commandList);
-		
+
+		// Record some commands
+		CHECK_ZG zgCommandListExperimentalCommands(commandList, framebuffer, buffer, pipeline);
+
 		// Execute command list
 		CHECK_ZG zgCommandQueueExecuteCommandList(commandQueue, commandList);
 		
-		// TODO: Rendering here
-		CHECK_ZG zgRenderExperiment(ctx.mContext, buffer, pipeline, commandList);
+		// Finish frame
+		CHECK_ZG zgContextFinishFrame(ctx.mContext);
 	}
 
 	// Flush command queue so nothing is running when we start releasing resources

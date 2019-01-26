@@ -24,40 +24,28 @@
 
 namespace zg {
 
-// D3D12CommandList
+// D3D12Framebuffer
 // ------------------------------------------------------------------------------------------------
 
-class D3D12CommandList final : public ICommandList {
+class D3D12Framebuffer final : public IFramebuffer {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	D3D12CommandList() noexcept = default;
-	D3D12CommandList(const D3D12CommandList&) = delete;
-	D3D12CommandList& operator= (const D3D12CommandList&) = delete;
-	D3D12CommandList(D3D12CommandList&& other) noexcept { swap(other); }
-	D3D12CommandList& operator= (D3D12CommandList&& other) noexcept { swap(other); return *this; }
-	~D3D12CommandList() noexcept;
-
-	// State methods
-	// --------------------------------------------------------------------------------------------
-
-	void swap(D3D12CommandList& other) noexcept;
-
-	// Virtual methods
-	// --------------------------------------------------------------------------------------------
-
-	ZgErrorCode experimentalCommands(
-		IFramebuffer* framebuffer,
-		IBuffer* buffer,
-		IPipelineRendering* pipeline) noexcept override final;
+	D3D12Framebuffer() noexcept = default;
+	D3D12Framebuffer(const D3D12Framebuffer&) = delete;
+	D3D12Framebuffer& operator= (const D3D12Framebuffer&) = delete;
+	D3D12Framebuffer(D3D12Framebuffer&&) = delete;
+	D3D12Framebuffer& operator= (D3D12Framebuffer&&) = delete;
+	~D3D12Framebuffer() noexcept;
 
 	// Members
 	// --------------------------------------------------------------------------------------------
 
-	ComPtr<ID3D12CommandAllocator> commandAllocator;
-	ComPtr<ID3D12GraphicsCommandList> commandList;
-	uint64_t fenceValue = 0;
+	uint32_t width = 0;
+	uint32_t height = 0;
+	ComPtr<ID3D12Resource> resource;
+	D3D12_CPU_DESCRIPTOR_HANDLE descriptor = {};
 };
 
 } // namespace zg

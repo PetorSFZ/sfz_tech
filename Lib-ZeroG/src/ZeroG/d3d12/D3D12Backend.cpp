@@ -23,6 +23,7 @@
 #include "ZeroG/d3d12/D3D12CommandList.hpp"
 #include "ZeroG/d3d12/D3D12CommandQueue.hpp"
 #include "ZeroG/d3d12/D3D12Common.hpp"
+#include "ZeroG/d3d12/D3D12Framebuffer.hpp"
 #include "ZeroG/d3d12/D3D12Memory.hpp"
 #include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
 #include "ZeroG/util/CpuAllocation.hpp"
@@ -61,7 +62,7 @@ public:
 
 	virtual ~D3D12Context() noexcept
 	{
-		mCommandQueue.flush();
+		mCommandQueueGraphicsPresent.flush();
 	}
 
 	// State methods
@@ -163,7 +164,8 @@ public:
 
 		// Create command queue
 		const uint32_t MAX_NUM_COMMAND_LISTS = 128;
-		ZgErrorCode res = mCommandQueue.init(mDevice, MAX_NUM_COMMAND_LISTS, mAllocator);
+		ZgErrorCode res = mCommandQueueGraphicsPresent.init(
+			mDevice, MAX_NUM_COMMAND_LISTS, mAllocator);
 		if (res != ZG_SUCCESS) return res;
 
 		// Check if screen-tearing is allowed
@@ -191,7 +193,7 @@ public:
 
 			ComPtr<IDXGISwapChain1> tmpSwapChain;
 			if (!CHECK_D3D12_SUCCEEDED(dxgiFactory->CreateSwapChainForHwnd(
-				mCommandQueue.commandQueue(), hwnd, &desc, nullptr, nullptr, &tmpSwapChain))) {
+				mCommandQueueGraphicsPresent.commandQueue(), hwnd, &desc, nullptr, nullptr, &tmpSwapChain))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
 
@@ -234,45 +236,20 @@ public:
 					return ZG_ERROR_NO_SUITABLE_DEVICE;
 				}
 
+				// Set width and height
+				mBackBuffers[i].width = mWidth;
+				mBackBuffers[i].height = mHeight;
+
 				// Get the i:th descriptor from the swap chain descriptor heap
 				D3D12_CPU_DESCRIPTOR_HANDLE descriptor = {};
 				descriptor.ptr = startOfDescriptorHeap.ptr + mDescriptorSizeRTV * i;
+				mBackBuffers[i].descriptor = descriptor;
 
 				// Create render target view for i:th backbuffer
 				mDevice->CreateRenderTargetView(backBuffer.Get(), nullptr, descriptor);
-				mBackBuffers[i] = backBuffer;
+				mBackBuffers[i].resource = backBuffer;
 			}
 		}
-
-		// Create command allocators
-		for (UINT i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
-			// TODO: This is tied to the type of queue (e.g. direct queue, copy queue).
-			//       Figure out where to place this later.
-			if (!CHECK_D3D12_SUCCEEDED(mDevice->CreateCommandAllocator(
-				D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&mCommandAllocator[i])))) {
-				return ZG_ERROR_GENERIC;
-			}
-		}
-
-
-
-		// Create command list
-		// TODO: Think about this
-		{
-			if (!CHECK_D3D12_SUCCEEDED(mDevice->CreateCommandList(
-				0,
-				D3D12_COMMAND_LIST_TYPE_DIRECT,
-				mCommandAllocator[0].Get(),
-				nullptr,
-				IID_PPV_ARGS(&mCommandList)))) {
-				return ZG_ERROR_GENERIC;
-			}
-
-			// TODO: Why?
-			CHECK_D3D12 mCommandList->Close();
-		}
-
-		
 
 		return ZG_SUCCESS;
 	}
@@ -289,11 +266,11 @@ public:
 		mHeight = height;
 
 		// Flush command queue so its safe to resize back buffers
-		mCommandQueue.flush();
+		mCommandQueueGraphicsPresent.flush();
 
 		// Release previous back buffers
 		for (int i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
-			mBackBuffers[i].Reset();
+			mBackBuffers[i].resource.Reset();
 		}
 
 		// Resize swap chain's back buffers
@@ -316,14 +293,87 @@ public:
 			ComPtr<ID3D12Resource> backBuffer;
 			CHECK_D3D12 mSwapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer));
 
+			// Set width and height
+			mBackBuffers[i].width = width;
+			mBackBuffers[i].height = height;
+
 			// Get the i:th descriptor from the swap chain descriptor heap
 			D3D12_CPU_DESCRIPTOR_HANDLE descriptor = {};
 			descriptor.ptr = startOfDescriptorHeap.ptr + mDescriptorSizeRTV * i;
+			mBackBuffers[i].descriptor = descriptor;
 
 			// Create render target view for i:th backbuffer
 			mDevice->CreateRenderTargetView(backBuffer.Get(), nullptr, descriptor);
-			mBackBuffers[i] = backBuffer;
+			mBackBuffers[i].resource = backBuffer;
 		}
+
+		return ZG_SUCCESS;
+	}
+
+	ZgErrorCode beginFrame(
+		zg::IFramebuffer** framebufferOut) noexcept override final
+	{
+		std::lock_guard<std::mutex> lock(mContextMutex);
+
+		// Retrieve current back buffer to be rendered to
+		D3D12Framebuffer& backBuffer = mBackBuffers[mCurrentBackBufferIdx];
+
+		// Create a small command list to insert the transition barrier for the back buffer
+		ICommandList* barrierCommandList = nullptr;
+		ZgErrorCode zgRes =
+			mCommandQueueGraphicsPresent.beginCommandListRecording(&barrierCommandList);
+		if (zgRes != ZG_SUCCESS) return zgRes;
+
+		// Create barrier to transition back buffer into render target state
+		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			backBuffer.resource.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+		reinterpret_cast<D3D12CommandList*>(barrierCommandList)->
+			commandList->ResourceBarrier(1, &barrier);
+
+		// Execute command list containing the barrier transition
+		mCommandQueueGraphicsPresent.executeCommandList(barrierCommandList);
+
+		// Return backbuffer
+		*framebufferOut = &backBuffer;
+
+		return ZG_SUCCESS;
+	}
+
+	ZgErrorCode finishFrame() noexcept override final
+	{
+		std::lock_guard<std::mutex> lock(mContextMutex);
+
+		// Retrieve current back buffer that has been rendered to
+		D3D12Framebuffer& backBuffer = mBackBuffers[mCurrentBackBufferIdx];
+
+		// Create a small command list to insert the transition barrier for the back buffer
+		ICommandList* barrierCommandList = nullptr;
+		ZgErrorCode zgRes =
+			mCommandQueueGraphicsPresent.beginCommandListRecording(&barrierCommandList);
+		if (zgRes != ZG_SUCCESS) return zgRes;
+
+		// Create barrier to transition back buffer into present state
+		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			backBuffer.resource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+		reinterpret_cast<D3D12CommandList*>(barrierCommandList)->
+			commandList->ResourceBarrier(1, &barrier);
+
+		// Execute command list containing the barrier transition
+		mCommandQueueGraphicsPresent.executeCommandList(barrierCommandList);
+
+		// Signal the graphics present queue
+		mSwapChainFenceValues[mCurrentBackBufferIdx] = mCommandQueueGraphicsPresent.signalOnGpu();
+
+		// Present back buffer
+		UINT vsync = 0; // TODO (MUST be 0 if DXGI_PRESENT_ALLOW_TEARING)
+		CHECK_D3D12 mSwapChain->Present(vsync, mAllowTearing ? DXGI_PRESENT_ALLOW_TEARING : 0);
+
+		// Get next back buffer index
+		mCurrentBackBufferIdx = mSwapChain->GetCurrentBackBufferIndex();
+
+		// Wait for the next back buffer to finish rendering so it's safe to use
+		uint64_t nextBackBufferFenceValue = mSwapChainFenceValues[mCurrentBackBufferIdx];
+		mCommandQueueGraphicsPresent.waitOnCpu(nextBackBufferFenceValue);
 
 		return ZG_SUCCESS;
 	}
@@ -370,16 +420,18 @@ public:
 		return res;
 	}
 
-	ZgErrorCode pipelineRelease(IPipelineRendering* pipeline) noexcept override final
+	ZgErrorCode pipelineRelease(
+		IPipelineRendering* pipeline) noexcept override final
 	{
 		// TODO: Check if pipeline is currently in use? Lock?
 		zgDelete<IPipelineRendering>(mAllocator, pipeline);
 		return ZG_SUCCESS;
 	}
 
-	ZgErrorCode getCommandQueue(ICommandQueue** commandQueueOut) noexcept override final
+	ZgErrorCode getCommandQueueGraphicsPresent(
+		ICommandQueue** commandQueueOut) noexcept override final
 	{
-		*commandQueueOut = &mCommandQueue;
+		*commandQueueOut = &mCommandQueueGraphicsPresent;
 		return ZG_SUCCESS;
 	}
 
@@ -500,116 +552,6 @@ public:
 		return ZG_SUCCESS;
 	}
 
-	// Experiments
-	// --------------------------------------------------------------------------------------------
-
-	ZgErrorCode renderExperiment(
-		IBuffer* bufferIn,
-		IPipelineRendering* pipelineIn,
-		ICommandList* commandListIn) noexcept override final
-	{
-		std::lock_guard<std::mutex> lock(mContextMutex);
-		
-		// Cast input to D3D12
-		D3D12Buffer& vertexBuffer = *reinterpret_cast<D3D12Buffer*>(bufferIn);
-		D3D12PipelineRendering& pipeline = *reinterpret_cast<D3D12PipelineRendering*>(pipelineIn);
-		D3D12CommandList& commandList = *reinterpret_cast<D3D12CommandList*>(commandListIn);
-
-		// Get resources for current target back buffer
-		ID3D12Resource& backBuffer = *mBackBuffers[mCurrentBackBufferIdx].Get();
-		ID3D12CommandAllocator& commandAllocator = *mCommandAllocator[mCurrentBackBufferIdx].Get();
-		D3D12_CPU_DESCRIPTOR_HANDLE backBufferDescriptor;
-		backBufferDescriptor.ptr =
-			mSwapChainDescriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr +
-			mDescriptorSizeRTV * mCurrentBackBufferIdx;
-
-		// Reset command allocator and command list
-		CHECK_D3D12 commandAllocator.Reset();
-		CHECK_D3D12 mCommandList->Reset(&commandAllocator, nullptr);
-
-		// Create barrier to transition back buffer into render target state
-		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			&backBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-		mCommandList->ResourceBarrier(1, &barrier);
-
-		// Clear screen
-		float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-		mCommandList->ClearRenderTargetView(backBufferDescriptor, clearColor, 0, nullptr);
-
-	
-
-
-		D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
-		vertexBufferView.BufferLocation = vertexBuffer.resource->GetGPUVirtualAddress();
-		vertexBufferView.StrideInBytes = sizeof(float) * 6; // TODO: Don't hardcode
-		vertexBufferView.SizeInBytes = vertexBufferView.StrideInBytes * 3; // TODO: Don't hardcode
-
-
-		// Set viewport
-		D3D12_VIEWPORT viewport = {};
-		viewport.TopLeftX = 0;
-		viewport.TopLeftY = 0;
-		viewport.Width = float(mWidth);
-		viewport.Height = float(mHeight);
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		mCommandList->RSSetViewports(1, &viewport);
-
-		// Set scissor rects
-		D3D12_RECT scissorRect = {};
-		scissorRect.left = 0;
-		scissorRect.top = 0;
-		scissorRect.right = LONG_MAX;
-		scissorRect.bottom = LONG_MAX;
-		mCommandList->RSSetScissorRects(1, &scissorRect);
-
-		// Set render target descriptor
-		mCommandList->OMSetRenderTargets(1, &backBufferDescriptor, FALSE, nullptr);
-
-		// Set pipeline
-		mCommandList->SetPipelineState(pipeline.pipelineState.Get());
-		mCommandList->SetGraphicsRootSignature(pipeline.rootSignature.Get());
-
-		// Set vertex buffer
-		mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		mCommandList->IASetVertexBuffers(0, 1, &vertexBufferView);
-
-		// Draw
-		mCommandList->DrawInstanced(3, 1, 0, 0);
-
-		
-
-
-
-		// Create barrier to transition back buffer into present state
-		barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			&backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-		mCommandList->ResourceBarrier(1, &barrier);
-
-		// Finish command list
-		CHECK_D3D12 mCommandList->Close();
-
-		// Execute command list
-		ID3D12CommandList* cmdListPtr = mCommandList.Get();
-		mCommandQueue.commandQueue()->ExecuteCommandLists(1, &cmdListPtr);
-
-		// Signal the command queue
-		mSwapChainFenceValues[mCurrentBackBufferIdx] = mCommandQueue.signalOnGpu();
-
-		// Present back buffer
-		UINT vsync = 0; // TODO (MUST be 0 if DXGI_PRESENT_ALLOW_TEARING)
-		CHECK_D3D12 mSwapChain->Present(vsync, mAllowTearing ? DXGI_PRESENT_ALLOW_TEARING : 0);
-
-		// Get next back buffer index
-		mCurrentBackBufferIdx = mSwapChain->GetCurrentBackBufferIndex();
-
-		// Wait for the next back buffer to finish rendering
-		uint64_t nextBackBufferFenceValue = mSwapChainFenceValues[mCurrentBackBufferIdx];
-		mCommandQueue.waitOnCpu(nextBackBufferFenceValue);
-
-		return ZG_SUCCESS;
-	}
-
 	// Private members
 	// --------------------------------------------------------------------------------------------
 private:
@@ -622,20 +564,17 @@ private:
 	ComPtr<IDxcCompiler> mDxcCompiler;
 
 	ComPtr<ID3D12Device3> mDevice;
-	D3D12CommandQueue mCommandQueue;
+	D3D12CommandQueue mCommandQueueGraphicsPresent;
+	//D3D12CommandQueue mCommandQueueAsyncCompute;
+	//D3D12CommandQueue mCommandQueueCopy;
 	
-	//ComPtr<ID3D12CommandQueue> mCopyQueue;
-	ComPtr<IDXGISwapChain4> mSwapChain;
-
+	// Swapchain
 	uint32_t mWidth = 0;
 	uint32_t mHeight = 0;
-
+	ComPtr<IDXGISwapChain4> mSwapChain;
 	ComPtr<ID3D12DescriptorHeap> mSwapChainDescriptorHeap;
-	ComPtr<ID3D12Resource> mBackBuffers[NUM_SWAP_CHAIN_BUFFERS];
-	ComPtr<ID3D12CommandAllocator> mCommandAllocator[NUM_SWAP_CHAIN_BUFFERS];
+	D3D12Framebuffer mBackBuffers[NUM_SWAP_CHAIN_BUFFERS];
 	uint64_t mSwapChainFenceValues[NUM_SWAP_CHAIN_BUFFERS] = {};
-
-	ComPtr<ID3D12GraphicsCommandList> mCommandList;
 
 	int mCurrentBackBufferIdx = 0;
 

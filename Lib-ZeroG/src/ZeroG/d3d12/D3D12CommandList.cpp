@@ -20,6 +20,10 @@
 
 #include <algorithm>
 
+#include "ZeroG/d3d12/D3D12Framebuffer.hpp"
+#include "ZeroG/d3d12/D3D12Memory.hpp"
+#include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
+
 namespace zg {
 
 // D3D12CommandList: Constructors & destructors
@@ -43,14 +47,58 @@ void D3D12CommandList::swap(D3D12CommandList& other) noexcept
 // D3D12CommandList: Virtual methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode D3D12CommandList::beginRecording() noexcept
+ZgErrorCode D3D12CommandList::experimentalCommands(
+	IFramebuffer* framebufferIn,
+	IBuffer* bufferIn,
+	IPipelineRendering* pipelineIn) noexcept
 {
-	return ZG_ERROR_UNIMPLEMENTED;
-}
+	// Cast input to D3D12
+	D3D12Framebuffer& framebuffer = *reinterpret_cast<D3D12Framebuffer*>(framebufferIn);
+	D3D12Buffer& vertexBuffer = *reinterpret_cast<D3D12Buffer*>(bufferIn);
+	D3D12PipelineRendering& pipeline = *reinterpret_cast<D3D12PipelineRendering*>(pipelineIn);
 
-ZgErrorCode D3D12CommandList::finishRecording() noexcept
-{
-	return ZG_ERROR_UNIMPLEMENTED;
+
+	// TODO: Bad hardcoded vertex buffer information
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
+	vertexBufferView.BufferLocation = vertexBuffer.resource->GetGPUVirtualAddress();
+	vertexBufferView.StrideInBytes = sizeof(float) * 6; // TODO: Don't hardcode
+	vertexBufferView.SizeInBytes = vertexBufferView.StrideInBytes * 3; // TODO: Don't hardcode
+
+
+	// Set viewport
+	D3D12_VIEWPORT viewport = {};
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.Width = float(framebuffer.width);
+	viewport.Height = float(framebuffer.height);
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	commandList->RSSetViewports(1, &viewport);
+
+	// Set scissor rects
+	D3D12_RECT scissorRect = {};
+	scissorRect.left = 0;
+	scissorRect.top = 0;
+	scissorRect.right = LONG_MAX;
+	scissorRect.bottom = LONG_MAX;
+	commandList->RSSetScissorRects(1, &scissorRect);
+
+
+	// Set render target descriptor
+	commandList->OMSetRenderTargets(1, &framebuffer.descriptor, FALSE, nullptr);
+
+	// Set pipeline
+	commandList->SetPipelineState(pipeline.pipelineState.Get());
+	commandList->SetGraphicsRootSignature(pipeline.rootSignature.Get());
+
+	// Set vertex buffer
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+
+	// Draw
+	commandList->DrawInstanced(3, 1, 0, 0);
+
+	return ZG_SUCCESS;
 }
 
 } // namespace zg

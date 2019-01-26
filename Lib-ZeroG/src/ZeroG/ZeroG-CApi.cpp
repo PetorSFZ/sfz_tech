@@ -114,15 +114,32 @@ ZG_DLL_API ZgErrorCode zgContextResize(ZgContext* context, uint32_t width, uint3
 	return context->context->resize(width, height);
 }
 
-ZG_DLL_API ZgErrorCode zgContextGetCommandQueue(
+ZG_DLL_API ZgErrorCode zgContextGeCommandQueueGraphicsPresent(
 	ZgContext* context,
 	ZgCommandQueue** commandQueueOut)
 {
 	zg::ICommandQueue* commandQueue = nullptr;
-	ZgErrorCode res = context->context->getCommandQueue(&commandQueue);
+	ZgErrorCode res = context->context->getCommandQueueGraphicsPresent(&commandQueue);
 	if (res != ZG_SUCCESS) return res;
 	*commandQueueOut = reinterpret_cast<ZgCommandQueue*>(commandQueue);
 	return ZG_SUCCESS;
+}
+
+ZG_DLL_API ZgErrorCode zgContextBeginFrame(
+	ZgContext* context,
+	ZgFramebuffer** framebufferOut)
+{
+	zg::IFramebuffer* framebuffer = nullptr;
+	ZgErrorCode res = context->context->beginFrame(&framebuffer);
+	if (res != ZG_SUCCESS) return res;
+	*framebufferOut = reinterpret_cast<ZgFramebuffer*>(framebuffer);
+	return ZG_SUCCESS;
+}
+
+ZG_DLL_API ZgErrorCode zgContextFinishFrame(
+	ZgContext* context)
+{
+	return context->context->finishFrame();
 }
 
 // Pipeline
@@ -197,23 +214,6 @@ ZG_DLL_API ZgErrorCode zgBufferMemcpyTo(
 		numBytes);
 }
 
-// Command list
-// ------------------------------------------------------------------------------------------------
-
-ZG_DLL_API ZgErrorCode zgCommandListBeginRecording(
-	ZgCommandList* commandListIn)
-{
-	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
-	return commandList->beginRecording();
-}
-
-ZG_DLL_API ZgErrorCode zgCommandListFinishRecording(
-	ZgCommandList* commandListIn)
-{
-	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
-	return commandList->finishRecording();
-}
-
 // Command queue
 // ------------------------------------------------------------------------------------------------
 
@@ -245,17 +245,18 @@ ZG_DLL_API ZgErrorCode zgCommandQueueExecuteCommandList(
 	return commandQueue->executeCommandList(commandList);
 }
 
-// Experimental
+// Command list
 // ------------------------------------------------------------------------------------------------
 
-ZG_DLL_API ZgErrorCode zgRenderExperiment(
-	ZgContext* context,
+ZG_DLL_API ZgErrorCode zgCommandListExperimentalCommands(
+	ZgCommandList* commandListIn,
+	ZgFramebuffer* framebuffer,
 	ZgBuffer* vertexBuffer,
-	ZgPipelineRendering* pipeline,
-	ZgCommandList* commandList)
+	ZgPipelineRendering* pipeline)
 {
-	return context->context->renderExperiment(
+	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
+	return commandList->experimentalCommands(
+		reinterpret_cast<zg::IFramebuffer*>(framebuffer),
 		reinterpret_cast<zg::IBuffer*>(vertexBuffer),
-		reinterpret_cast<zg::IPipelineRendering*>(pipeline),
-		reinterpret_cast<zg::ICommandList*>(commandList));
+		reinterpret_cast<zg::IPipelineRendering*>(pipeline));
 }
