@@ -111,13 +111,8 @@ ZgErrorCode D3D12CommandQueue::beginCommandListRecording(ICommandList** commandL
 	}
 
 	// Reset command list and allocator
-	if (!CHECK_D3D12_SUCCEEDED(commandList->commandAllocator->Reset())) {
-		return ZG_ERROR_GENERIC;
-	}
-	if (!CHECK_D3D12_SUCCEEDED(
-		commandList->commandList->Reset(commandList->commandAllocator.Get(), nullptr))) {
-		return ZG_ERROR_GENERIC;
-	}
+	ZgErrorCode res = commandList->reset();
+	if (res != ZG_SUCCESS) return res;
 
 	// Return command list
 	*commandListOut = commandList;

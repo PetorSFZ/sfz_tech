@@ -53,6 +53,9 @@ class ICommandList {
 public:
 	virtual ~ICommandList() noexcept {};
 
+	virtual ZgErrorCode setPipelineRendering(
+		IPipelineRendering* pipeline) noexcept = 0;
+
 	virtual ZgErrorCode experimentalCommands(
 		IFramebuffer* framebuffer,
 		IBuffer* buffer,

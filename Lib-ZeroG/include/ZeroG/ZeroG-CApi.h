@@ -143,7 +143,8 @@ enum ZgErrorCodeEnum {
 	ZG_ERROR_NO_SUITABLE_DEVICE,
 	ZG_ERROR_INVALID_ARGUMENT,
 	ZG_ERROR_SHADER_COMPILE_ERROR,
-	ZG_ERROR_OUT_OF_COMMAND_LISTS
+	ZG_ERROR_OUT_OF_COMMAND_LISTS,
+	ZG_ERROR_INVALID_COMMAND_LIST_STATE
 };
 typedef uint32_t ZgErrorCode;
 
@@ -369,6 +370,10 @@ ZG_DLL_API ZgErrorCode zgCommandQueueExecuteCommandList(
 
 // Command list
 // ------------------------------------------------------------------------------------------------
+
+ZG_DLL_API ZgErrorCode zgCommandListSetPipelineRendering(
+	ZgCommandList* commandList,
+	ZgPipelineRendering* pipeline);
 
 ZG_DLL_API ZgErrorCode zgCommandListExperimentalCommands(
 	ZgCommandList* commandList,

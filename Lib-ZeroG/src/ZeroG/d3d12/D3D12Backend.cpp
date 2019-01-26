@@ -563,19 +563,19 @@ private:
 	ComPtr<IDxcLibrary> mDxcLibrary;
 	ComPtr<IDxcCompiler> mDxcCompiler;
 
+	// Device and command queues
 	ComPtr<ID3D12Device3> mDevice;
 	D3D12CommandQueue mCommandQueueGraphicsPresent;
 	//D3D12CommandQueue mCommandQueueAsyncCompute;
 	//D3D12CommandQueue mCommandQueueCopy;
 	
-	// Swapchain
+	// Swapchain and backbuffers
 	uint32_t mWidth = 0;
 	uint32_t mHeight = 0;
 	ComPtr<IDXGISwapChain4> mSwapChain;
 	ComPtr<ID3D12DescriptorHeap> mSwapChainDescriptorHeap;
 	D3D12Framebuffer mBackBuffers[NUM_SWAP_CHAIN_BUFFERS];
 	uint64_t mSwapChainFenceValues[NUM_SWAP_CHAIN_BUFFERS] = {};
-
 	int mCurrentBackBufferIdx = 0;
 
 	uint32_t mDescriptorSizeRTV = 0;

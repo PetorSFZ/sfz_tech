@@ -34,7 +34,7 @@ D3D12CommandList::~D3D12CommandList() noexcept
 
 }
 
-// State methods
+// D3D12CommandList: State methods
 // ------------------------------------------------------------------------------------------------
 
 void D3D12CommandList::swap(D3D12CommandList& other) noexcept
@@ -46,6 +46,23 @@ void D3D12CommandList::swap(D3D12CommandList& other) noexcept
 
 // D3D12CommandList: Virtual methods
 // ------------------------------------------------------------------------------------------------
+
+ZgErrorCode D3D12CommandList::setPipelineRendering(
+	IPipelineRendering* pipelineIn) noexcept
+{
+	D3D12PipelineRendering& pipeline = *reinterpret_cast<D3D12PipelineRendering*>(pipelineIn);
+	
+	// If a pipeline is already set for this command list, return error. We currently only allow a
+	// single pipeline per command list.
+	if (mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+	mPipelineSet = true;
+
+	// Set pipeline
+	commandList->SetPipelineState(pipeline.pipelineState.Get());
+	commandList->SetGraphicsRootSignature(pipeline.rootSignature.Get());
+
+	return ZG_SUCCESS;
+}
 
 ZgErrorCode D3D12CommandList::experimentalCommands(
 	IFramebuffer* framebufferIn,
@@ -87,10 +104,6 @@ ZgErrorCode D3D12CommandList::experimentalCommands(
 	// Set render target descriptor
 	commandList->OMSetRenderTargets(1, &framebuffer.descriptor, FALSE, nullptr);
 
-	// Set pipeline
-	commandList->SetPipelineState(pipeline.pipelineState.Get());
-	commandList->SetGraphicsRootSignature(pipeline.rootSignature.Get());
-
 	// Set vertex buffer
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
@@ -98,6 +111,23 @@ ZgErrorCode D3D12CommandList::experimentalCommands(
 	// Draw
 	commandList->DrawInstanced(3, 1, 0, 0);
 
+	return ZG_SUCCESS;
+}
+
+// D3D12CommandList: Helper methods
+// ------------------------------------------------------------------------------------------------
+
+ZgErrorCode D3D12CommandList::reset() noexcept
+{
+	if (!CHECK_D3D12_SUCCEEDED(commandAllocator->Reset())) {
+		return ZG_ERROR_GENERIC;
+	}
+	if (!CHECK_D3D12_SUCCEEDED(
+		commandList->Reset(commandAllocator.Get(), nullptr))) {
+		return ZG_ERROR_GENERIC;
+	}
+
+	mPipelineSet = false;
 	return ZG_SUCCESS;
 }
 

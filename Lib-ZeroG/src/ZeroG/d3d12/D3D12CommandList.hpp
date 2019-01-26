@@ -47,10 +47,18 @@ public:
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
 
+	ZgErrorCode setPipelineRendering(
+		IPipelineRendering* pipeline) noexcept override final;
+
 	ZgErrorCode experimentalCommands(
 		IFramebuffer* framebuffer,
 		IBuffer* buffer,
 		IPipelineRendering* pipeline) noexcept override final;
+
+	// Helper methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgErrorCode reset() noexcept;
 
 	// Members
 	// --------------------------------------------------------------------------------------------
@@ -58,6 +66,12 @@ public:
 	ComPtr<ID3D12CommandAllocator> commandAllocator;
 	ComPtr<ID3D12GraphicsCommandList> commandList;
 	uint64_t fenceValue = 0;
+
+private:
+	// Private members
+	// --------------------------------------------------------------------------------------------
+
+	bool mPipelineSet = false; // Only allow a single pipeline per command list
 };
 
 } // namespace zg

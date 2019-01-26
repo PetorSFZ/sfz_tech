@@ -248,6 +248,14 @@ ZG_DLL_API ZgErrorCode zgCommandQueueExecuteCommandList(
 // Command list
 // ------------------------------------------------------------------------------------------------
 
+ZG_DLL_API ZgErrorCode zgCommandListSetPipelineRendering(
+	ZgCommandList* commandListIn,
+	ZgPipelineRendering* pipeline)
+{
+	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
+	return commandList->setPipelineRendering(reinterpret_cast<zg::IPipelineRendering*>(pipeline));
+}
+
 ZG_DLL_API ZgErrorCode zgCommandListExperimentalCommands(
 	ZgCommandList* commandListIn,
 	ZgFramebuffer* framebuffer,

@@ -188,6 +188,7 @@ int main(int argc, char* argv[])
 		CHECK_ZG zgCommandQueueBeginCommandListRecording(commandQueue, &commandList);
 
 		// Record some commands
+		CHECK_ZG zgCommandListSetPipelineRendering(commandList, pipeline);
 		CHECK_ZG zgCommandListExperimentalCommands(commandList, framebuffer, buffer, pipeline);
 
 		// Execute command list
