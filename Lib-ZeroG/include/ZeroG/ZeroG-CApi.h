@@ -274,6 +274,14 @@ typedef struct {
 	// }
 	uint32_t attributeLocation;
 
+	// Which vertex buffer slot the attribute should be read from.
+	//
+	// If you are storing all vertex attributes in the same buffer (e.g. your buffer is an array
+	// of a vertex struct of some kind), this parameter should typically be 0.
+	//
+	// This corresponds to the "vertexBufferSlot" parameter in zgCommandListSetVertexBuffer().
+	uint32_t vertexBufferSlot;
+
 	// The data type
 	ZgVertexAttributeType type;
 
@@ -303,6 +311,13 @@ typedef struct {
 	// The vertex attributes to the vertex shader
 	uint32_t numVertexAttributes;
 	ZgVertexAttribute vertexAttributes[ZG_MAX_NUM_VERTEX_ATTRIBUTES];
+
+	// The number of vertex buffer slots used by the vertex attributes
+	//
+	// If only one buffer is used (i.e. array of vertex struct) then numVertexBufferSlots should be
+	// 1 and vertexBufferStrides[0] should be sizeof(Vertex) stored in your buffer.
+	uint32_t numVertexBufferSlots;
+	uint32_t vertexBufferStridesBytes[ZG_MAX_NUM_VERTEX_ATTRIBUTES];
 
 } ZgPipelineRenderingCreateInfo;
 
@@ -398,6 +413,11 @@ ZG_DLL_API ZgErrorCode zgCommandListClearFramebuffer(
 	float green,
 	float blue,
 	float alpha);
+
+ZG_DLL_API ZgErrorCode zgCommandListSetVertexBuffer(
+	ZgCommandList* commandList,
+	uint32_t vertexBufferSlot,
+	ZgBuffer* vertexBuffer);
 
 ZG_DLL_API ZgErrorCode zgCommandListExperimentalCommands(
 	ZgCommandList* commandList,

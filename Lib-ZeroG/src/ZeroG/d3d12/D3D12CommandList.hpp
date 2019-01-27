@@ -19,6 +19,7 @@
 #pragma once
 
 #include "ZeroG/d3d12/D3D12Common.hpp"
+#include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
 #include "ZeroG/BackendInterface.hpp"
 #include "ZeroG/ZeroG-CApi.h"
 
@@ -59,6 +60,10 @@ public:
 		float blue,
 		float alpha) noexcept override final;
 
+	ZgErrorCode setVertexBuffer(
+		uint32_t vertexBufferSlot,
+		IBuffer* vertexBuffer) noexcept override final;
+
 	ZgErrorCode experimentalCommands(
 		IFramebuffer* framebuffer,
 		IBuffer* buffer,
@@ -81,6 +86,7 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	bool mPipelineSet = false; // Only allow a single pipeline per command list
+	D3D12PipelineRendering* mBoundPipeline = nullptr;
 	bool mFramebufferSet = false; // Only allow a single framebuffer to be set.
 	D3D12_CPU_DESCRIPTOR_HANDLE mFramebufferDescriptor = {}; // The descriptor for the set framebuffer
 };

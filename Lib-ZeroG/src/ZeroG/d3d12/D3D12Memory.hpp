@@ -37,6 +37,7 @@ public:
 	~D3D12Buffer() noexcept;
 
 	ZgBufferMemoryType memoryType = ZG_BUFFER_MEMORY_TYPE_UNDEFINED;
+	uint64_t sizeBytes = 0;
 	ComPtr<ID3D12Heap> heap;
 	ComPtr<ID3D12Resource> resource;
 };

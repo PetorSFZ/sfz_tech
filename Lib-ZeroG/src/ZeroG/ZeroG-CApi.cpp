@@ -160,6 +160,8 @@ ZG_DLL_API ZgErrorCode zgPipelineRenderingCreate(
 	if (createInfo->pixelShaderPath == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
 	if (createInfo->pixelShaderEntry == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
 	if (createInfo->shaderVersion == ZG_SHADER_MODEL_UNDEFINED) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->numVertexAttributes == 0) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->numVertexBufferSlots == 0) return ZG_ERROR_INVALID_ARGUMENT;
 
 	zg::IPipelineRendering* pipeline = nullptr;
 	ZgErrorCode res = context->context->pipelineCreate(&pipeline, *createInfo);
@@ -273,6 +275,16 @@ ZG_DLL_API ZgErrorCode zgCommandListClearFramebuffer(
 {
 	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
 	return commandList->clearFramebuffer(red, green, blue, alpha);
+}
+
+ZG_DLL_API ZgErrorCode zgCommandListSetVertexBuffer(
+	ZgCommandList* commandListIn,
+	uint32_t vertexBufferSlot,
+	ZgBuffer* vertexBuffer)
+{
+	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
+	return commandList->setVertexBuffer(
+		vertexBufferSlot, reinterpret_cast<zg::IBuffer*>(vertexBuffer));
 }
 
 ZG_DLL_API ZgErrorCode zgCommandListExperimentalCommands(

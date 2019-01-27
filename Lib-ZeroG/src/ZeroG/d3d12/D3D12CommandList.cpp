@@ -22,7 +22,6 @@
 
 #include "ZeroG/d3d12/D3D12Framebuffer.hpp"
 #include "ZeroG/d3d12/D3D12Memory.hpp"
-#include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
 
 namespace zg {
 
@@ -56,6 +55,7 @@ ZgErrorCode D3D12CommandList::setPipelineRendering(
 	// single pipeline per command list.
 	if (mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 	mPipelineSet = true;
+	mBoundPipeline = &pipeline;
 
 	// Set pipeline
 	commandList->SetPipelineState(pipeline.pipelineState.Get());
@@ -148,6 +148,34 @@ ZgErrorCode D3D12CommandList::clearFramebuffer(
 	commandList->ClearRenderTargetView(mFramebufferDescriptor, clearColor, 0, nullptr);
 }
 
+ZgErrorCode D3D12CommandList::setVertexBuffer(
+	uint32_t vertexBufferSlot,
+	IBuffer* vertexBufferIn) noexcept
+{
+	// Cast input to D3D12
+	D3D12Buffer& vertexBuffer = *reinterpret_cast<D3D12Buffer*>(vertexBufferIn);
+
+	// Need to have a command list set to verify vertex buffer binding
+	if (!mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+
+	// Check that the vertex buffer slot is not out of bounds for the bound pipeline
+	const ZgPipelineRenderingCreateInfo& pipelineInfo = mBoundPipeline->createInfo;
+	if (pipelineInfo.numVertexBufferSlots <= vertexBufferSlot) {
+		return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+	}
+
+	// Create vertex buffer view
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
+	vertexBufferView.BufferLocation = vertexBuffer.resource->GetGPUVirtualAddress();
+	vertexBufferView.StrideInBytes = pipelineInfo.vertexBufferStridesBytes[vertexBufferSlot];
+	vertexBufferView.SizeInBytes = uint32_t(vertexBuffer.sizeBytes);
+
+	// Set vertex buffer
+	commandList->IASetVertexBuffers(vertexBufferSlot, 1, &vertexBufferView);
+
+	return ZG_SUCCESS;
+}
+
 ZgErrorCode D3D12CommandList::experimentalCommands(
 	IFramebuffer* framebufferIn,
 	IBuffer* bufferIn,
@@ -157,17 +185,12 @@ ZgErrorCode D3D12CommandList::experimentalCommands(
 	D3D12Buffer& vertexBuffer = *reinterpret_cast<D3D12Buffer*>(bufferIn);
 
 
-	// TODO: Bad hardcoded vertex buffer information
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
-	vertexBufferView.BufferLocation = vertexBuffer.resource->GetGPUVirtualAddress();
-	vertexBufferView.StrideInBytes = sizeof(float) * 6; // TODO: Don't hardcode
-	vertexBufferView.SizeInBytes = vertexBufferView.StrideInBytes * 3; // TODO: Don't hardcode
+	
 
 
 
 	// Set vertex buffer
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 
 	// Draw
 	commandList->DrawInstanced(3, 1, 0, 0);
@@ -189,6 +212,7 @@ ZgErrorCode D3D12CommandList::reset() noexcept
 	}
 
 	mPipelineSet = false;
+	mBoundPipeline = nullptr;
 	mFramebufferSet = false;
 	mFramebufferDescriptor = {};
 	return ZG_SUCCESS;

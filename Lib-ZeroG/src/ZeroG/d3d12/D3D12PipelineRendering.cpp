@@ -251,7 +251,7 @@ ZgErrorCode createPipelineRendering(
 		desc.SemanticName = "ATTRIBUTE_LOCATION_";
 		desc.SemanticIndex = attribute.attributeLocation;
 		desc.Format = vertexAttributeTypeToFormat(attribute.type);
-		desc.InputSlot = 0; // TODO: Expose this?
+		desc.InputSlot = attribute.vertexBufferSlot;
 		desc.AlignedByteOffset = attribute.offsetToFirstElementInBytes;
 		desc.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
 		desc.InstanceDataStepRate = 0;
@@ -360,6 +360,7 @@ ZgErrorCode createPipelineRendering(
 	// Store pipeline state
 	pipeline->pipelineState = pipelineState;
 	pipeline->rootSignature = rootSignature;
+	pipeline->createInfo = createInfo;
 
 	// Return pipeline
 	*pipelineOut = pipeline;

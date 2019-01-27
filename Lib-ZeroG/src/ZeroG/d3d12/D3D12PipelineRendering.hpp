@@ -41,6 +41,7 @@ public:
 
 	ComPtr<ID3D12PipelineState> pipelineState;
 	ComPtr<ID3D12RootSignature> rootSignature;
+	ZgPipelineRenderingCreateInfo createInfo = {}; // The info used to create the pipeline
 };
 
 // D3D12 PipelineRendering functions

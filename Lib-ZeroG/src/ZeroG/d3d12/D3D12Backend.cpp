@@ -503,6 +503,7 @@ public:
 
 		// Copy stuff
 		buffer->memoryType = createInfo.bufferMemoryType;
+		buffer->sizeBytes = createInfo.sizeInBytes;
 		buffer->heap = heap;
 		buffer->resource = resource;
 

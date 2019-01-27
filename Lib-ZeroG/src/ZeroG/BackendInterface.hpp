@@ -65,6 +65,10 @@ public:
 		float blue,
 		float alpha) noexcept = 0;
 
+	virtual ZgErrorCode setVertexBuffer(
+		uint32_t vertexBufferSlot,
+		IBuffer* vertexBuffer) noexcept = 0;
+
 	virtual ZgErrorCode experimentalCommands(
 		IFramebuffer* framebuffer,
 		IBuffer* buffer,

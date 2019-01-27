@@ -93,6 +93,17 @@ int main(int argc, char* argv[])
 	zg::Context ctx;
 	CHECK_ZG ctx.init(initSettings);
 
+	struct Vertex {
+		float position[3];
+		float color[3];
+	};
+	static_assert(sizeof(Vertex) == sizeof(float) * 6, "Vertex is padded");
+
+	Vertex triangleVertices[3] = {
+		{ { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ { 1.0f, -1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+		{ { -1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }	
+	};
 
 	// Create a rendering pipeline
 	ZgPipelineRenderingCreateInfo pipelineInfo = {};
@@ -109,12 +120,17 @@ int main(int argc, char* argv[])
 	pipelineInfo.numVertexAttributes = 2;
 
 	pipelineInfo.vertexAttributes[0].attributeLocation = 0;
+	pipelineInfo.vertexAttributes[0].vertexBufferSlot = 0;
 	pipelineInfo.vertexAttributes[0].offsetToFirstElementInBytes = 0;
 	pipelineInfo.vertexAttributes[0].type = ZG_VERTEX_ATTRIBUTE_FLOAT3;
 
 	pipelineInfo.vertexAttributes[1].attributeLocation = 1;
+	pipelineInfo.vertexAttributes[1].vertexBufferSlot = 0;
 	pipelineInfo.vertexAttributes[1].offsetToFirstElementInBytes = sizeof(float) * 3;
 	pipelineInfo.vertexAttributes[1].type = ZG_VERTEX_ATTRIBUTE_FLOAT3;
+
+	pipelineInfo.numVertexBufferSlots = 1;
+	pipelineInfo.vertexBufferStridesBytes[0] = sizeof(Vertex);
 
 	ZgPipelineRendering* pipeline = nullptr;
 	CHECK_ZG zgPipelineRenderingCreate(ctx.mContext, &pipeline, &pipelineInfo);
@@ -124,23 +140,11 @@ int main(int argc, char* argv[])
 	bufferInfo.sizeInBytes = 64ull * 1024ull;
 	bufferInfo.bufferMemoryType = ZG_BUFFER_MEMORY_TYPE_UPLOAD;
 
-	ZgBuffer* buffer = nullptr;
-	CHECK_ZG zgBufferCreate(ctx.mContext, &buffer, &bufferInfo);
-
-	struct Vertex {
-		float position[3];
-		float color[3];
-	};
-	static_assert(sizeof(Vertex) == sizeof(float) * 6, "Vertex is padded");
-
-	Vertex triangleVertices[3] = {
-		{ { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-		{ { 1.0f, -1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-		{ { -1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }	
-	};
+	ZgBuffer* vertexBuffer = nullptr;
+	CHECK_ZG zgBufferCreate(ctx.mContext, &vertexBuffer, &bufferInfo);
 
 	CHECK_ZG zgBufferMemcpyTo(
-		ctx.mContext, buffer, 0, (const uint8_t*)triangleVertices, sizeof(triangleVertices));
+		ctx.mContext, vertexBuffer, 0, (const uint8_t*)triangleVertices, sizeof(triangleVertices));
 
 
 	// Get the command queue
@@ -193,8 +197,9 @@ int main(int argc, char* argv[])
 		framebufferInfo.framebuffer = framebuffer;
 		CHECK_ZG zgCommandListSetFramebuffer(commandList, &framebufferInfo);
 		CHECK_ZG zgCommandListClearFramebuffer(commandList, 0.2f, 0.2f, 0.3f, 1.0f);
+		CHECK_ZG zgCommandListSetVertexBuffer(commandList, 0, vertexBuffer);
 
-		CHECK_ZG zgCommandListExperimentalCommands(commandList, framebuffer, buffer, pipeline);
+		CHECK_ZG zgCommandListExperimentalCommands(commandList, framebuffer, vertexBuffer, pipeline);
 
 		// Execute command list
 		CHECK_ZG zgCommandQueueExecuteCommandList(commandQueue, commandList);
@@ -207,7 +212,7 @@ int main(int argc, char* argv[])
 	CHECK_ZG zgCommandQueueFlush(commandQueue);
 
 	// Release ZeroG resources
-	CHECK_ZG zgBufferRelease(ctx.mContext, buffer);
+	CHECK_ZG zgBufferRelease(ctx.mContext, vertexBuffer);
 	CHECK_ZG zgPipelineRenderingRelease(ctx.mContext, pipeline);
 
 	// Destroy ZeroG context
