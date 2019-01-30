@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
 	Vertex triangleVertices[3] = {
 		{ { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
 		{ { 1.0f, -1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-		{ { -1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }	
+		{ { -1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
 	};
 
 	// Create a rendering pipeline
@@ -198,8 +198,7 @@ int main(int argc, char* argv[])
 		CHECK_ZG zgCommandListSetFramebuffer(commandList, &framebufferInfo);
 		CHECK_ZG zgCommandListClearFramebuffer(commandList, 0.2f, 0.2f, 0.3f, 1.0f);
 		CHECK_ZG zgCommandListSetVertexBuffer(commandList, 0, vertexBuffer);
-
-		CHECK_ZG zgCommandListExperimentalCommands(commandList, framebuffer, vertexBuffer, pipeline);
+		CHECK_ZG zgCommandListDrawTriangles(commandList, 0, 3);
 
 		// Execute command list
 		CHECK_ZG zgCommandQueueExecuteCommandList(commandQueue, commandList);

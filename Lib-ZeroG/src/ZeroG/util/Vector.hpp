@@ -58,6 +58,8 @@ public:
 		mAllocator = allocator;
 		mCapacity = capacity;
 		mDataPtr = reinterpret_cast<T*>(allocation);
+
+		return true;
 	}
 	
 	void destroy()

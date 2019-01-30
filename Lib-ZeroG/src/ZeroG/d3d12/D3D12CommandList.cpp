@@ -146,6 +146,8 @@ ZgErrorCode D3D12CommandList::clearFramebuffer(
 	// Clear framebuffer
 	float clearColor[4] = { red, green, blue, alpha };
 	commandList->ClearRenderTargetView(mFramebufferDescriptor, clearColor, 0, nullptr);
+
+	return ZG_SUCCESS;
 }
 
 ZgErrorCode D3D12CommandList::setVertexBuffer(
@@ -176,25 +178,13 @@ ZgErrorCode D3D12CommandList::setVertexBuffer(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::experimentalCommands(
-	IFramebuffer* framebufferIn,
-	IBuffer* bufferIn,
-	IPipelineRendering* pipelineIn) noexcept
-{
-	// Cast input to D3D12
-	D3D12Buffer& vertexBuffer = *reinterpret_cast<D3D12Buffer*>(bufferIn);
-
-
-	
-
-
-
-	// Set vertex buffer
+ZgErrorCode D3D12CommandList::drawTriangles(
+	uint32_t startVertexIndex,
+	uint32_t numVertices) noexcept
+{	
+	// Draw triangles
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	// Draw
-	commandList->DrawInstanced(3, 1, 0, 0);
-
+	commandList->DrawInstanced(numVertices, 1, startVertexIndex, 0);
 	return ZG_SUCCESS;
 }
 

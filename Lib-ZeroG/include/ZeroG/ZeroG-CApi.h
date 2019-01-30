@@ -419,11 +419,10 @@ ZG_DLL_API ZgErrorCode zgCommandListSetVertexBuffer(
 	uint32_t vertexBufferSlot,
 	ZgBuffer* vertexBuffer);
 
-ZG_DLL_API ZgErrorCode zgCommandListExperimentalCommands(
+ZG_DLL_API ZgErrorCode zgCommandListDrawTriangles(
 	ZgCommandList* commandList,
-	ZgFramebuffer* framebuffer,
-	ZgBuffer* vertexBuffer,
-	ZgPipelineRendering* pipeline);
+	uint32_t startVertexIndex,
+	uint32_t numVertices);
 
 
 // This entire header is pure C

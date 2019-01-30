@@ -69,10 +69,9 @@ public:
 		uint32_t vertexBufferSlot,
 		IBuffer* vertexBuffer) noexcept = 0;
 
-	virtual ZgErrorCode experimentalCommands(
-		IFramebuffer* framebuffer,
-		IBuffer* buffer,
-		IPipelineRendering* pipeline) noexcept = 0;
+	virtual ZgErrorCode drawTriangles(
+		uint32_t startVertexIndex,
+		uint32_t numVertices) noexcept = 0;
 };
 
 // Command queue

@@ -64,10 +64,9 @@ public:
 		uint32_t vertexBufferSlot,
 		IBuffer* vertexBuffer) noexcept override final;
 
-	ZgErrorCode experimentalCommands(
-		IFramebuffer* framebuffer,
-		IBuffer* buffer,
-		IPipelineRendering* pipeline) noexcept override final;
+	ZgErrorCode drawTriangles(
+		uint32_t startVertexIndex,
+		uint32_t numVertices) noexcept override final;
 
 	// Helper methods
 	// --------------------------------------------------------------------------------------------

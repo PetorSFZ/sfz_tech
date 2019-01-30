@@ -91,7 +91,7 @@ ZgErrorCode D3D12CommandQueue::beginCommandListRecording(ICommandList** commandL
 {
 	std::lock_guard<std::mutex> lock(mQueueMutex);
 
-	D3D12CommandList* commandList;
+	D3D12CommandList* commandList = nullptr;
 	bool commandListFound = false;
 
 	// If command lists available in queue, attempt to get one of them

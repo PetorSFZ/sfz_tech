@@ -287,15 +287,12 @@ ZG_DLL_API ZgErrorCode zgCommandListSetVertexBuffer(
 		vertexBufferSlot, reinterpret_cast<zg::IBuffer*>(vertexBuffer));
 }
 
-ZG_DLL_API ZgErrorCode zgCommandListExperimentalCommands(
+ZG_DLL_API ZgErrorCode zgCommandListDrawTriangles(
 	ZgCommandList* commandListIn,
-	ZgFramebuffer* framebuffer,
-	ZgBuffer* vertexBuffer,
-	ZgPipelineRendering* pipeline)
+	uint32_t startVertexIndex,
+	uint32_t numVertices)
 {
+	if ((numVertices % 3) != 0) return ZG_ERROR_INVALID_ARGUMENT;
 	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
-	return commandList->experimentalCommands(
-		reinterpret_cast<zg::IFramebuffer*>(framebuffer),
-		reinterpret_cast<zg::IBuffer*>(vertexBuffer),
-		reinterpret_cast<zg::IPipelineRendering*>(pipeline));
+	return commandList->drawTriangles(startVertexIndex, numVertices);
 }
