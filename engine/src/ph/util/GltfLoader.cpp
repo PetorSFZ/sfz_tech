@@ -50,7 +50,7 @@ using sfz::vec4_u8;
 // ------------------------------------------------------------------------------------------------
 
 static bool dummyLoadImageDataFunction(
-	tinygltf::Image *, std::string *, int, int, const unsigned char *, int, void *)
+	tinygltf::Image*, const int, std::string*, std::string*, int, int, const unsigned char*, int, void*)
 {
 	return true;
 }
@@ -480,9 +480,13 @@ bool loadAssetsFromGltf(
 	// Read model from file
 	tinygltf::Model model;
 	std::string error;
-	bool result = loader.LoadASCIIFromFile(&model, &error, gltfPath);
+	std::string warnings;
+	bool result = loader.LoadASCIIFromFile(&model, &error, &warnings, gltfPath);
 
 	// Check error string
+	if (!warnings.empty()) {
+		SFZ_WARNING("tinygltf", "Warnings loading \"%s\": %s", gltfPath, warnings.c_str());
+	}
 	if (!error.empty()) {
 		SFZ_ERROR("tinygltf", "Error loading \"%s\": %s", gltfPath, error.c_str());
 		return false;
