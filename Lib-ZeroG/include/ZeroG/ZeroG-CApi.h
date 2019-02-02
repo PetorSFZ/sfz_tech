@@ -113,7 +113,6 @@ enum ZgBackendTypeEnum {
 	//ZG_BACKEND_VULKAN,
 	//ZG_BACKEND_METAL,
 	//ZG_BACKEND_WEB_GPU,
-	//ZG_BACKEND_D3D11
 };
 typedef uint32_t ZgBackendType;
 
@@ -130,7 +129,6 @@ enum ZgFeatureBitsEnum {
 	//ZG_FEATURE_BIT_BACKEND_VULKAN = 1 << 2
 	//ZG_FEATURE_BIT_BACKEND_METAL = 1 << 3
 	//ZG_FEATURE_BIT_BACKEND_WEB_GPU = 1 << 4
-	//ZG_FEATURE_BIT_BACKEND_D3D11 = 1 << 5
 };
 typedef uint64_t ZgFeatureBits;
 
@@ -392,6 +390,14 @@ ZG_DLL_API ZgErrorCode zgCommandQueueExecuteCommandList(
 
 // Command list
 // ------------------------------------------------------------------------------------------------
+
+ZG_DLL_API ZgErrorCode zgCommandListMemcpyBufferToBuffer(
+	ZgCommandList* commandList,
+	ZgBuffer* dstBuffer,
+	uint64_t dstBufferOffsetBytes,
+	ZgBuffer* srcBuffer,
+	uint64_t srcBufferOffsetBytes,
+	uint64_t numBytes);
 
 typedef struct {
 	ZgFramebuffer* framebuffer;

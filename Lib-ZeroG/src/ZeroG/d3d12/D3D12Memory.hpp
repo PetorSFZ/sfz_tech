@@ -36,10 +36,19 @@ public:
 	D3D12Buffer& operator= (D3D12Buffer&&) = delete;
 	~D3D12Buffer() noexcept;
 
+	// A unique identifier for this buffer
+	uint64_t identifier = 0;
+
 	ZgBufferMemoryType memoryType = ZG_BUFFER_MEMORY_TYPE_UNDEFINED;
 	uint64_t sizeBytes = 0;
 	ComPtr<ID3D12Heap> heap;
 	ComPtr<ID3D12Resource> resource;
+
+	// The current resource state of the buffer. Committed because the state has been committed
+	// in a command list which has been executed on a queue. There may be pending state changes
+	// in command lists not yet executed.
+	// TODO: Mutex protecting this? How handle changes submitted on different queues simulatenously?
+	D3D12_RESOURCE_STATES lastCommittedState = D3D12_RESOURCE_STATE_COMMON;
 };
 
 } // namespace zg

@@ -48,9 +48,10 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode init(
+	ZgErrorCode create(
 		ComPtr<ID3D12Device3>& device,
 		uint32_t maxNumCommandLists,
+		uint32_t maxNumBuffersPerCommandList,
 		ZgAllocator allocator) noexcept;
 
 	// Virtual methods
@@ -76,12 +77,19 @@ private:
 	// Private  methods
 	// --------------------------------------------------------------------------------------------
 
+	ZgErrorCode beginCommandListRecordingUnmutexed(ICommandList** commandListOut) noexcept;
+	ZgErrorCode executeCommandListUnmutexed(ICommandList* commandList) noexcept;
 	uint64_t signalOnGpuUnmutexed() noexcept;
 
 	ZgErrorCode createCommandList(D3D12CommandList*& commandListOut) noexcept;
 
+	ZgErrorCode executePreCommandListBufferStateChanges(
+		Vector<PendingState>& pendingStates) noexcept;
+
 	// Private members
 	// --------------------------------------------------------------------------------------------
+
+	ZgAllocator mAllocator = {};
 
 	std::mutex mQueueMutex;
 	ComPtr<ID3D12Device3> mDevice;
@@ -92,6 +100,7 @@ private:
 	uint64_t mCommandQueueFenceValue = 0;
 	HANDLE mCommandQueueFenceEvent = nullptr;
 
+	uint32_t mMaxNumBuffersPerCommandList = 0;
 	Vector<D3D12CommandList> mCommandListStorage;
 	RingBuffer<D3D12CommandList*> mCommandListQueue;
 };

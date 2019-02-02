@@ -37,14 +37,14 @@ public:
 	Vector() noexcept = default;
 	Vector(const Vector&) = delete;
 	Vector& operator= (const Vector&) = delete;
-	Vector(Vector&&) = delete;
-	Vector& operator= (Vector&&) = delete;
+	Vector(Vector&& other) noexcept { this->swap(other); }
+	Vector& operator= (Vector&& other) noexcept { this->swap(other); return *this; }
 	~Vector() { this->destroy(); }
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	bool create(uint32_t capacity, ZgAllocator allocator, const char* allocationName)
+	bool create(uint32_t capacity, ZgAllocator allocator, const char* allocationName) noexcept
 	{
 		// Allocate memory
 		uint8_t* allocation = allocator.allocate(
@@ -62,7 +62,15 @@ public:
 		return true;
 	}
 	
-	void destroy()
+	void swap(Vector& other) noexcept
+	{
+		std::swap(this->mSize, other.mSize);
+		std::swap(this->mCapacity, other.mCapacity);
+		std::swap(this->mDataPtr, other.mDataPtr);
+		std::swap(this->mAllocator, other.mAllocator);
+	}
+
+	void destroy() noexcept
 	{
 		// Do nothing if empty
 		if (mDataPtr == nullptr) return;
@@ -143,6 +151,17 @@ public:
 		}
 
 		mSize -= 1;
+	}
+
+	void clear() noexcept
+	{
+		// Call destructor for each element if not trivially destructible
+		if (!std::is_trivially_destructible<T>::value) {
+			for (uint64_t i = 0; i < mSize; ++i) {
+				mDataPtr[i].~T();
+			}
+		}
+		mSize = 0;
 	}
 
 	T& operator[] (uint32_t index) noexcept { return mDataPtr[index]; }

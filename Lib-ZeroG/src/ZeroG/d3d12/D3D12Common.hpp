@@ -44,10 +44,28 @@
 
 namespace zg { using Microsoft::WRL::ComPtr; }
 
-// Helper functions
+namespace zg {
+
+// PendingState struct
 // ------------------------------------------------------------------------------------------------
 
-namespace zg {
+class D3D12Buffer; // Forward declare
+
+// Struct representing the pending state for a buffer in a command list
+struct PendingState final {
+
+	// The associated D3D12Buffer
+	D3D12Buffer* buffer = nullptr;
+
+	// The state the resource need to be in before the command list is executed
+	D3D12_RESOURCE_STATES neededInitialState = D3D12_RESOURCE_STATE_COMMON;
+
+	// The state the resource is in after the command list is executed
+	D3D12_RESOURCE_STATES currentState = D3D12_RESOURCE_STATE_COMMON;
+};
+
+// Helper functions
+// ------------------------------------------------------------------------------------------------
 
 // Checks result (HRESULT) from D3D call and log if not success, returns result unmodified
 #define CHECK_D3D12 (CheckD3D12Impl(__FILE__, __LINE__)) %

@@ -53,6 +53,13 @@ class ICommandList {
 public:
 	virtual ~ICommandList() noexcept {};
 
+	virtual ZgErrorCode memcpyBufferToBuffer(
+		IBuffer* dstBuffer,
+		uint64_t dstBufferOffsetBytes,
+		IBuffer* srcBuffer,
+		uint64_t srcBufferOffsetBytes,
+		uint64_t numBytes) noexcept = 0;
+
 	virtual ZgErrorCode setPipelineRendering(
 		IPipelineRendering* pipeline) noexcept = 0;
 

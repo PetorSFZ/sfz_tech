@@ -19,8 +19,10 @@
 #pragma once
 
 #include "ZeroG/d3d12/D3D12Common.hpp"
+#include "ZeroG/d3d12/D3D12Memory.hpp"
 #include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
 #include "ZeroG/BackendInterface.hpp"
+#include "ZeroG/util/Vector.hpp"
 #include "ZeroG/ZeroG-CApi.h"
 
 namespace zg {
@@ -38,15 +40,24 @@ public:
 	D3D12CommandList& operator= (const D3D12CommandList&) = delete;
 	D3D12CommandList(D3D12CommandList&& other) noexcept { swap(other); }
 	D3D12CommandList& operator= (D3D12CommandList&& other) noexcept { swap(other); return *this; }
-	~D3D12CommandList() noexcept;
+	~D3D12CommandList() noexcept { this->destroy(); }
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
+	void create(uint32_t maxNumBuffers, ZgAllocator allocator) noexcept;
 	void swap(D3D12CommandList& other) noexcept;
+	void destroy() noexcept;
 
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
+
+	ZgErrorCode memcpyBufferToBuffer(
+		IBuffer* dstBuffer,
+		uint64_t dstBufferOffsetBytes,
+		IBuffer* srcBuffer,
+		uint64_t srcBufferOffsetBytes,
+		uint64_t numBytes) noexcept override final;
 
 	ZgErrorCode setPipelineRendering(
 		IPipelineRendering* pipeline) noexcept override final;
@@ -80,7 +91,18 @@ public:
 	ComPtr<ID3D12GraphicsCommandList> commandList;
 	uint64_t fenceValue = 0;
 
+	Vector<uint64_t> pendingBufferIdentifiers;
+	Vector<PendingState> pendingBufferStates;
+
 private:
+	// Private methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgErrorCode getPendingBufferStates(
+		D3D12Buffer& buffer,
+		D3D12_RESOURCE_STATES neededState,
+		PendingState& pendingStatesOut) noexcept;
+	
 	// Private members
 	// --------------------------------------------------------------------------------------------
 

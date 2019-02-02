@@ -250,6 +250,24 @@ ZG_DLL_API ZgErrorCode zgCommandQueueExecuteCommandList(
 // Command list
 // ------------------------------------------------------------------------------------------------
 
+ZG_DLL_API ZgErrorCode zgCommandListMemcpyBufferToBuffer(
+	ZgCommandList* commandListIn,
+	ZgBuffer* dstBuffer,
+	uint64_t dstBufferOffsetBytes,
+	ZgBuffer* srcBuffer,
+	uint64_t srcBufferOffsetBytes,
+	uint64_t numBytes)
+{
+	if (numBytes == 0) return ZG_ERROR_INVALID_ARGUMENT;
+	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
+	return commandList->memcpyBufferToBuffer(
+		reinterpret_cast<zg::IBuffer*>(dstBuffer),
+		dstBufferOffsetBytes,
+		reinterpret_cast<zg::IBuffer*>(srcBuffer),
+		srcBufferOffsetBytes,
+		numBytes);
+}
+
 ZG_DLL_API ZgErrorCode zgCommandListSetPipelineRendering(
 	ZgCommandList* commandListIn,
 	ZgPipelineRendering* pipeline)

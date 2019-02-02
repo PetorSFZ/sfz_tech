@@ -21,30 +21,125 @@
 #include <algorithm>
 
 #include "ZeroG/d3d12/D3D12Framebuffer.hpp"
-#include "ZeroG/d3d12/D3D12Memory.hpp"
 
 namespace zg {
 
-// D3D12CommandList: Constructors & destructors
-// ------------------------------------------------------------------------------------------------
-
-D3D12CommandList::~D3D12CommandList() noexcept
-{
-
-}
-
 // D3D12CommandList: State methods
 // ------------------------------------------------------------------------------------------------
+
+void D3D12CommandList::create(uint32_t maxNumBuffers, ZgAllocator allocator) noexcept
+{
+	pendingBufferIdentifiers.create(maxNumBuffers, allocator, "ZeroG - D3D12CommandList - Internal");
+	pendingBufferStates.create(maxNumBuffers, allocator, "ZeroG - D3D12CommandList - Internal");
+}
 
 void D3D12CommandList::swap(D3D12CommandList& other) noexcept
 {
 	std::swap(this->commandAllocator, other.commandAllocator);
 	std::swap(this->commandList, other.commandList);
 	std::swap(this->fenceValue, other.fenceValue);
+
+	this->pendingBufferIdentifiers.swap(other.pendingBufferIdentifiers);
+	this->pendingBufferStates.swap(other.pendingBufferStates);
+
+	std::swap(this->mPipelineSet, other.mPipelineSet);
+	std::swap(this->mBoundPipeline, other.mBoundPipeline);
+	std::swap(this->mFramebufferSet, other.mFramebufferSet);
+	std::swap(this->mFramebufferDescriptor, other.mFramebufferDescriptor);
+}
+
+void D3D12CommandList::destroy() noexcept
+{
+	commandAllocator = nullptr;
+	commandList = nullptr;
+	fenceValue = 0;
+
+	pendingBufferIdentifiers.destroy();
+	pendingBufferStates.destroy();
+
+	mPipelineSet = false;
+	mBoundPipeline = nullptr;
+	mFramebufferSet = false;
+	mFramebufferDescriptor = {};
 }
 
 // D3D12CommandList: Virtual methods
 // ------------------------------------------------------------------------------------------------
+
+ZgErrorCode D3D12CommandList::memcpyBufferToBuffer(
+	IBuffer* dstBufferIn,
+	uint64_t dstBufferOffsetBytes,
+	IBuffer* srcBufferIn,
+	uint64_t srcBufferOffsetBytes,
+	uint64_t numBytes) noexcept
+{
+	// Cast input to D3D12
+	D3D12Buffer& dstBuffer = *reinterpret_cast<D3D12Buffer*>(dstBufferIn);
+	D3D12Buffer& srcBuffer = *reinterpret_cast<D3D12Buffer*>(srcBufferIn);
+
+	// Current don't allow memcpy:ing to the same buffer.
+	if (dstBuffer.identifier == srcBuffer.identifier) return ZG_ERROR_INVALID_ARGUMENT;
+
+	// Wanted resource states
+	D3D12_RESOURCE_STATES dstTargetState = D3D12_RESOURCE_STATE_COPY_DEST;
+	D3D12_RESOURCE_STATES srcTargetState = D3D12_RESOURCE_STATE_COPY_SOURCE;
+	if (srcBuffer.memoryType == ZG_BUFFER_MEMORY_TYPE_UPLOAD) {
+		srcTargetState = D3D12_RESOURCE_STATE_GENERIC_READ;
+	}
+
+	// Get pending states
+	PendingState dstPendingState;
+	ZgErrorCode dstPendingStateRes =
+		getPendingBufferStates(dstBuffer, dstTargetState, dstPendingState);
+	if (dstPendingStateRes != ZG_SUCCESS) return dstPendingStateRes;
+
+	PendingState srcPendingState;
+	ZgErrorCode srcPendingStateRes =
+		getPendingBufferStates(srcBuffer, srcTargetState, srcPendingState);
+	if (srcPendingStateRes != ZG_SUCCESS) return srcPendingStateRes;
+
+	// Change state of destination buffer to COPY_DEST if necessary
+	if (dstPendingState.currentState != dstTargetState) {
+		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			dstBuffer.resource.Get(),
+			dstPendingState.currentState,
+			dstTargetState);
+		commandList->ResourceBarrier(1, &barrier);
+	}
+
+	// Change state of source buffer to COPY_SOURCE if necessary
+	if (srcPendingState.currentState != srcTargetState) {
+		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			srcBuffer.resource.Get(),
+			srcPendingState.currentState,
+			srcTargetState);
+		commandList->ResourceBarrier(1, &barrier);
+	}
+
+	// Check if we should copy entire buffer or just a region of it
+	bool copyEntireBuffer =
+		dstBuffer.sizeBytes == srcBuffer.sizeBytes &&
+		dstBuffer.sizeBytes == numBytes &&
+		dstBufferOffsetBytes == 0 &&
+		srcBufferOffsetBytes == 0;
+
+	// Copy entire buffer
+	if (copyEntireBuffer) {
+		commandList->CopyResource(dstBuffer.resource.Get(), srcBuffer.resource.Get());
+	}
+
+	// Copy region of buffer
+	else {
+		commandList->CopyBufferRegion(
+			dstBuffer.resource.Get(),
+			dstBufferOffsetBytes,
+			srcBuffer.resource.Get(),
+			srcBufferOffsetBytes,
+			numBytes);
+	}
+
+	return ZG_SUCCESS;
+}
 
 ZgErrorCode D3D12CommandList::setPipelineRendering(
 	IPipelineRendering* pipelineIn) noexcept
@@ -201,10 +296,54 @@ ZgErrorCode D3D12CommandList::reset() noexcept
 		return ZG_ERROR_GENERIC;
 	}
 
+	pendingBufferIdentifiers.clear();
+	pendingBufferStates.clear();
+
 	mPipelineSet = false;
 	mBoundPipeline = nullptr;
 	mFramebufferSet = false;
 	mFramebufferDescriptor = {};
+	return ZG_SUCCESS;
+}
+
+// D3D12CommandList: Private methods
+// ------------------------------------------------------------------------------------------------
+
+ZgErrorCode D3D12CommandList::getPendingBufferStates(
+	D3D12Buffer& buffer,
+	D3D12_RESOURCE_STATES neededState,
+	PendingState& pendingStatesOut) noexcept
+{
+	// Try to find index of pending buffer states
+	uint32_t bufferStateIdx = ~0u;
+	for (uint32_t i = 0; i < pendingBufferIdentifiers.size(); i++) {
+		uint64_t identifier = pendingBufferIdentifiers[i];
+		if (identifier == buffer.identifier) {
+			bufferStateIdx = i;
+			break;
+		}
+	}
+
+	// If buffer does not have a pending state, create one
+	if (bufferStateIdx == ~0u) {
+
+		// Check if we have enough space for another pending state
+		if (pendingBufferStates.size() == pendingBufferStates.capacity()) {
+			return ZG_ERROR_GENERIC;
+		}
+
+		// Create pending buffer state
+		bufferStateIdx = pendingBufferStates.size();
+		pendingBufferIdentifiers.add(buffer.identifier);
+		pendingBufferStates.add(PendingState());
+
+		// Set initial pending buffer state
+		pendingBufferStates.last().buffer = &buffer;
+		pendingBufferStates.last().neededInitialState = neededState;
+		pendingBufferStates.last().currentState = neededState;
+	}
+
+	pendingStatesOut = pendingBufferStates[bufferStateIdx];
 	return ZG_SUCCESS;
 }
 

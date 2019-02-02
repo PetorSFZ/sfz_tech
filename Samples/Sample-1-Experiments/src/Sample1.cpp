@@ -140,16 +140,32 @@ int main(int argc, char* argv[])
 	bufferInfo.sizeInBytes = 64ull * 1024ull;
 	bufferInfo.bufferMemoryType = ZG_BUFFER_MEMORY_TYPE_UPLOAD;
 
-	ZgBuffer* vertexBuffer = nullptr;
-	CHECK_ZG zgBufferCreate(ctx.mContext, &vertexBuffer, &bufferInfo);
+	ZgBuffer* vertexUploadBuffer = nullptr;
+	CHECK_ZG zgBufferCreate(ctx.mContext, &vertexUploadBuffer, &bufferInfo);
+
+	ZgBuffer* vertexDeviceBuffer = nullptr;
+	bufferInfo.bufferMemoryType = ZG_BUFFER_MEMORY_TYPE_DEVICE;
+	CHECK_ZG zgBufferCreate(ctx.mContext, &vertexDeviceBuffer, &bufferInfo);
 
 	CHECK_ZG zgBufferMemcpyTo(
-		ctx.mContext, vertexBuffer, 0, (const uint8_t*)triangleVertices, sizeof(triangleVertices));
-
+		ctx.mContext, vertexUploadBuffer, 0, (const uint8_t*)triangleVertices, sizeof(triangleVertices));
 
 	// Get the command queue
 	ZgCommandQueue* commandQueue = nullptr;
 	CHECK_ZG zgContextGeCommandQueueGraphicsPresent(ctx.mContext, &commandQueue);
+
+	// Copy to the device buffer
+	{
+		ZgCommandList* commandList = nullptr;
+		CHECK_ZG zgCommandQueueBeginCommandListRecording(commandQueue, &commandList);
+		CHECK_ZG zgCommandListMemcpyBufferToBuffer(
+			commandList, vertexDeviceBuffer, 0, vertexUploadBuffer, 0, sizeof(triangleVertices));
+		CHECK_ZG zgCommandQueueExecuteCommandList(commandQueue, commandList);
+		CHECK_ZG zgCommandQueueFlush(commandQueue);
+	}
+	
+	// Destroy upload buffer
+	CHECK_ZG zgBufferRelease(ctx.mContext, vertexUploadBuffer);
 
 	// Run our main loop
 	bool running = true;
@@ -197,7 +213,7 @@ int main(int argc, char* argv[])
 		framebufferInfo.framebuffer = framebuffer;
 		CHECK_ZG zgCommandListSetFramebuffer(commandList, &framebufferInfo);
 		CHECK_ZG zgCommandListClearFramebuffer(commandList, 0.2f, 0.2f, 0.3f, 1.0f);
-		CHECK_ZG zgCommandListSetVertexBuffer(commandList, 0, vertexBuffer);
+		CHECK_ZG zgCommandListSetVertexBuffer(commandList, 0, vertexDeviceBuffer);
 		CHECK_ZG zgCommandListDrawTriangles(commandList, 0, 3);
 
 		// Execute command list
@@ -211,7 +227,7 @@ int main(int argc, char* argv[])
 	CHECK_ZG zgCommandQueueFlush(commandQueue);
 
 	// Release ZeroG resources
-	CHECK_ZG zgBufferRelease(ctx.mContext, vertexBuffer);
+	CHECK_ZG zgBufferRelease(ctx.mContext, vertexDeviceBuffer);
 	CHECK_ZG zgPipelineRenderingRelease(ctx.mContext, pipeline);
 
 	// Destroy ZeroG context

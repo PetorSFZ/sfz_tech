@@ -40,12 +40,14 @@ D3D12CommandQueue::~D3D12CommandQueue() noexcept
 // D3D12CommandQueue: State methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode D3D12CommandQueue::init(
+ZgErrorCode D3D12CommandQueue::create(
 	ComPtr<ID3D12Device3>& device,
 	uint32_t maxNumCommandLists,
+	uint32_t maxNumBuffersPerCommandList,
 	ZgAllocator allocator) noexcept
 {
 	mDevice = device;
+	mAllocator = allocator;
 
 	// Create command queue
 	D3D12_COMMAND_QUEUE_DESC desc = {};
@@ -69,6 +71,7 @@ ZgErrorCode D3D12CommandQueue::init(
 	mCommandQueueFenceEvent = ::CreateEvent(NULL, false, false, NULL);
 
 	// Allocate memory for command lists
+	mMaxNumBuffersPerCommandList = maxNumBuffersPerCommandList;
 	mCommandListStorage.create(
 		maxNumCommandLists, allocator, "ZeroG - D3D12CommandQueue - CommandListStorage");
 	mCommandListQueue.create(
@@ -90,55 +93,13 @@ ZgErrorCode D3D12CommandQueue::flush() noexcept
 ZgErrorCode D3D12CommandQueue::beginCommandListRecording(ICommandList** commandListOut) noexcept
 {
 	std::lock_guard<std::mutex> lock(mQueueMutex);
-
-	D3D12CommandList* commandList = nullptr;
-	bool commandListFound = false;
-
-	// If command lists available in queue, attempt to get one of them
-	uint64_t queueSize = mCommandListQueue.size();
-	if (queueSize != 0) {
-		if (isFenceValueDone(mCommandListQueue.first()->fenceValue)) {
-			mCommandListQueue.pop(commandList);
-			commandListFound = true;
-		}
-	}
-
-	// If no command list found, create new one
-	if (!commandListFound) {
-		ZgErrorCode res = createCommandList(commandList);
-		if (res != ZG_SUCCESS) return res;
-		commandListFound = true;
-	}
-
-	// Reset command list and allocator
-	ZgErrorCode res = commandList->reset();
-	if (res != ZG_SUCCESS) return res;
-
-	// Return command list
-	*commandListOut = commandList;
-	return ZG_SUCCESS;
+	return this->beginCommandListRecordingUnmutexed(commandListOut);
 }
 
 ZgErrorCode D3D12CommandQueue::executeCommandList(ICommandList* commandListIn) noexcept
 {
 	std::lock_guard<std::mutex> lock(mQueueMutex);
-	D3D12CommandList& commandList = *reinterpret_cast<D3D12CommandList*>(commandListIn);
-
-	// Close command list
-	if (!CHECK_D3D12_SUCCEEDED(commandList.commandList->Close())) {
-		return ZG_ERROR_GENERIC;
-	}
-
-	// Execute command list
-	ID3D12CommandList* commandListPtr = commandList.commandList.Get();
-	mCommandQueue->ExecuteCommandLists(1, &commandListPtr);
-
-	// Signal
-	commandList.fenceValue = this->signalOnGpuUnmutexed();
-
-	// Add command list to queue
-	mCommandListQueue.add(&commandList);
-	return ZG_SUCCESS;
+	return this->executeCommandListUnmutexed(commandListIn);
 }
 
 // D3D12CommandQueue: Synchronization methods
@@ -170,6 +131,64 @@ bool D3D12CommandQueue::isFenceValueDone(uint64_t fenceValue) noexcept
 
 // D3D12CommandQueue: Private  methods
 // ------------------------------------------------------------------------------------------------
+
+ZgErrorCode D3D12CommandQueue::beginCommandListRecordingUnmutexed(
+	ICommandList** commandListOut) noexcept
+{
+	D3D12CommandList* commandList = nullptr;
+	bool commandListFound = false;
+
+	// If command lists available in queue, attempt to get one of them
+	uint64_t queueSize = mCommandListQueue.size();
+	if (queueSize != 0) {
+		if (isFenceValueDone(mCommandListQueue.first()->fenceValue)) {
+			mCommandListQueue.pop(commandList);
+			commandListFound = true;
+		}
+	}
+
+	// If no command list found, create new one
+	if (!commandListFound) {
+		ZgErrorCode res = createCommandList(commandList);
+		if (res != ZG_SUCCESS) return res;
+		commandListFound = true;
+	}
+
+	// Reset command list and allocator
+	ZgErrorCode res = commandList->reset();
+	if (res != ZG_SUCCESS) return res;
+
+	// Return command list
+	*commandListOut = commandList;
+	return ZG_SUCCESS;
+}
+
+ZgErrorCode D3D12CommandQueue::executeCommandListUnmutexed(ICommandList* commandListIn) noexcept
+{
+	// Cast to D3D12
+	D3D12CommandList& commandList = *reinterpret_cast<D3D12CommandList*>(commandListIn);
+
+	// Close command list
+	if (!CHECK_D3D12_SUCCEEDED(commandList.commandList->Close())) {
+		return ZG_ERROR_GENERIC;
+	}
+
+	// Create and execute a quick command list to insert barriers and commit pending states
+	ZgErrorCode res =
+		this->executePreCommandListBufferStateChanges(commandList.pendingBufferStates);
+	if (res != ZG_SUCCESS) return res;
+
+	// Execute command list
+	ID3D12CommandList* commandListPtr = commandList.commandList.Get();
+	mCommandQueue->ExecuteCommandLists(1, &commandListPtr);
+
+	// Signal
+	commandList.fenceValue = this->signalOnGpuUnmutexed();
+
+	// Add command list to queue
+	mCommandListQueue.add(&commandList);
+	return ZG_SUCCESS;
+}
 
 uint64_t D3D12CommandQueue::signalOnGpuUnmutexed() noexcept
 {
@@ -210,7 +229,62 @@ ZgErrorCode D3D12CommandQueue::createCommandList(D3D12CommandList*& commandListO
 		return ZG_ERROR_GENERIC;
 	}
 
+	// Initialize command list
+	commandList.create(mMaxNumBuffersPerCommandList, mAllocator);
+
 	commandListOut = &commandList;
+	return ZG_SUCCESS;
+}
+
+ZgErrorCode D3D12CommandQueue::executePreCommandListBufferStateChanges(
+	Vector<PendingState>& pendingStates) noexcept
+{
+	// Check if we actually need to insert barrier or not
+	bool needToInsertBarriers = false;
+	for (uint32_t i = 0; i < pendingStates.size(); i++) {
+		const PendingState& state = pendingStates[i];
+		if (state.buffer->lastCommittedState != state.neededInitialState) {
+			needToInsertBarriers = true;
+			break;
+		}
+	}
+
+	// Exit if we do not need to insert barriers
+	if (!needToInsertBarriers) return ZG_SUCCESS;
+
+	// Get command list to execute barriers in
+	D3D12CommandList* commandList = nullptr;
+	ZgErrorCode res =
+		this->beginCommandListRecordingUnmutexed(reinterpret_cast<ICommandList**>(&commandList));
+	if (res != ZG_SUCCESS) return res;
+
+	// Insert barriers
+	for (uint32_t i = 0; i < pendingStates.size(); i++) {
+		const PendingState& state = pendingStates[i];
+		
+		// Don't insert barrier if resource already is in correct state
+		if (state.buffer->lastCommittedState == state.neededInitialState) {
+			continue;
+		}
+
+		// Record barrier
+		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			state.buffer->resource.Get(),
+			state.buffer->lastCommittedState,
+			state.neededInitialState);
+		commandList->commandList->ResourceBarrier(1, &barrier);
+	}
+
+	// Execute barriers
+	res = this->executeCommandListUnmutexed(commandList);
+	if (res != ZG_SUCCESS) return res;
+
+	// Commit state changes
+	for (uint32_t i = 0; i < pendingStates.size(); i++) {
+		const PendingState& state = pendingStates[i];
+		state.buffer->lastCommittedState = state.currentState;
+	}
+
 	return ZG_SUCCESS;
 }
 

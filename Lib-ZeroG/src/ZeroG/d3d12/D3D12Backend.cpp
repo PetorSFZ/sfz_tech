@@ -163,9 +163,10 @@ public:
 		}
 
 		// Create command queue
-		const uint32_t MAX_NUM_COMMAND_LISTS = 128;
-		ZgErrorCode res = mCommandQueueGraphicsPresent.init(
-			mDevice, MAX_NUM_COMMAND_LISTS, mAllocator);
+		const uint32_t MAX_NUM_COMMAND_LISTS = 256;
+		const uint32_t MAX_NUM_BUFFERS_PER_COMMAND_LIST = 256;
+		ZgErrorCode res = mCommandQueueGraphicsPresent.create(
+			mDevice, MAX_NUM_COMMAND_LISTS, MAX_NUM_BUFFERS_PER_COMMAND_LIST, mAllocator);
 		if (res != ZG_SUCCESS) return res;
 
 		// Check if screen-tearing is allowed
@@ -468,6 +469,7 @@ public:
 		
 		// Create placed resource
 		ComPtr<ID3D12Resource> resource;
+		const D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_GENERIC_READ;
 		{
 			bool allowUav = createInfo.bufferMemoryType == ZG_BUFFER_MEMORY_TYPE_DEVICE;
 
@@ -490,7 +492,7 @@ public:
 				heap.Get(),
 				0,
 				&desc,
-				D3D12_RESOURCE_STATE_GENERIC_READ,
+				initialResourceState,
 				nullptr,
 				IID_PPV_ARGS(&resource)))) {
 				return ZG_ERROR_GPU_OUT_OF_MEMORY;
@@ -502,10 +504,12 @@ public:
 			zgNew<D3D12Buffer>(mAllocator, "ZeroG - D3D12Buffer");
 
 		// Copy stuff
+		buffer->identifier = std::atomic_fetch_add(&mBufferUniqueIdentifierCounter, 1);
 		buffer->memoryType = createInfo.bufferMemoryType;
 		buffer->sizeBytes = createInfo.sizeInBytes;
 		buffer->heap = heap;
 		buffer->resource = resource;
+		buffer->lastCommittedState = initialResourceState;
 
 		// Return buffer
 		*bufferOut = buffer;
@@ -581,6 +585,9 @@ private:
 
 	uint32_t mDescriptorSizeRTV = 0;
 	bool mAllowTearing = false;
+
+	// Memory
+	std::atomic_uint64_t mBufferUniqueIdentifierCounter = 1;
 };
 
 // D3D12 API
