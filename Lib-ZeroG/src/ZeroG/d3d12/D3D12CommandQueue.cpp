@@ -239,26 +239,9 @@ ZgErrorCode D3D12CommandQueue::createCommandList(D3D12CommandList*& commandListO
 ZgErrorCode D3D12CommandQueue::executePreCommandListBufferStateChanges(
 	Vector<PendingState>& pendingStates) noexcept
 {
-	// Check if we actually need to insert barrier or not
-	bool needToInsertBarriers = false;
-	for (uint32_t i = 0; i < pendingStates.size(); i++) {
-		const PendingState& state = pendingStates[i];
-		if (state.buffer->lastCommittedState != state.neededInitialState) {
-			needToInsertBarriers = true;
-			break;
-		}
-	}
-
-	// Exit if we do not need to insert barriers
-	if (!needToInsertBarriers) return ZG_SUCCESS;
-
-	// Get command list to execute barriers in
-	D3D12CommandList* commandList = nullptr;
-	ZgErrorCode res =
-		this->beginCommandListRecordingUnmutexed(reinterpret_cast<ICommandList**>(&commandList));
-	if (res != ZG_SUCCESS) return res;
-
-	// Insert barriers
+	// Gather barriers to insert
+	uint32_t numBarriers = 0;
+	CD3DX12_RESOURCE_BARRIER barriers[256] = {};
 	for (uint32_t i = 0; i < pendingStates.size(); i++) {
 		const PendingState& state = pendingStates[i];
 		
@@ -266,14 +249,29 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListBufferStateChanges(
 		if (state.buffer->lastCommittedState == state.neededInitialState) {
 			continue;
 		}
+		
+		// Error out if we don't have enough space in our temp array
+		if (numBarriers >= 256) return ZG_ERROR_GENERIC;
 
-		// Record barrier
-		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+		// Create barrier
+		barriers[numBarriers] = CD3DX12_RESOURCE_BARRIER::Transition(
 			state.buffer->resource.Get(),
 			state.buffer->lastCommittedState,
 			state.neededInitialState);
-		commandList->commandList->ResourceBarrier(1, &barrier);
+		numBarriers += 1;
 	}
+
+	// Exit if we do not need to insert any barriers
+	if (numBarriers == 0) return ZG_SUCCESS;
+
+	// Get command list to execute barriers in
+	D3D12CommandList* commandList = nullptr;
+	ZgErrorCode res =
+		this->beginCommandListRecordingUnmutexed(reinterpret_cast<ICommandList**>(&commandList));
+	if (res != ZG_SUCCESS) return res;
+
+	// Insert barrier call
+	commandList->commandList->ResourceBarrier(numBarriers, barriers);
 
 	// Execute barriers
 	res = this->executeCommandListUnmutexed(commandList);
