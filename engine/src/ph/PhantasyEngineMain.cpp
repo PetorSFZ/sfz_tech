@@ -177,7 +177,13 @@ int mainImpl(int, char*[], InitOptions&& options)
 	}
 
 	// Init SDL2
-	if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) {
+	uint32_t sdlInitFlags =
+#ifdef __EMSCRIPTEN__
+	SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO;
+#else
+	SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER;
+#endif
+	if (SDL_Init(sdlInitFlags) < 0) {
 		SFZ_ERROR("PhantasyEngine", "SDL_Init() failed: %s", SDL_GetError());
 		return EXIT_FAILURE;
 	}

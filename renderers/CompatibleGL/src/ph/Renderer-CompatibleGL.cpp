@@ -309,10 +309,12 @@ phBool32 phInitRenderer(
 	state.glContext = tmpContext;
 
 	// Get window information
+#ifndef __EMSCRIPTEN__
 	SDL_VERSION(&state.wmInfo.version);
 	if (!SDL_GetWindowWMInfo(state.window, &state.wmInfo)) {
 		SFZ_ERROR("Renderer-CompatibleGL", "Failed to SDL_GetWindowWMInfo()");
 	}
+#endif
 
 	// Print information
 	SFZ_INFO("Renderer-CompatibleGL", "Vendor: %s\nVersion: %s\nRenderer: %s",
