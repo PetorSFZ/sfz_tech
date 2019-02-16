@@ -1,2 +1,2 @@
-master branch stable v1.66
-Nov 28, 2018
+docking branch, commit 09c9bf2edb1742941aeb2676a8198210b529059b
+2019-02-16
