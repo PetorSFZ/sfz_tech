@@ -58,6 +58,13 @@ phImageView initializeImgui(Allocator* allocator) noexcept
 	// Enable keyboard navigation
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
+	// Enable docking
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	io.ConfigDockingWithShift = false; // No need to hold shift to dock windows
+
+	// Enable mouse cursors (i.e., mouse cursor is changed depending on what is hovered over)
+	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+
 	// Disable draw function and set all window sizes to 1 (will be set proper in update)
 	io.DisplaySize = vec2(1.0f);
 	io.DisplayFramebufferScale = vec2(1.0f);
@@ -110,6 +117,21 @@ void updateImgui(
 	const DynArray<SDL_Event>* keyboardEvents,
 	const sdl::GameControllerState* controller) noexcept
 {
+	// Note, these should actually be freed using SDL_FreeCursor(). But I don't think it matters
+	// that much.
+	static SDL_Cursor* MOUSE_CURSORS[ImGuiMouseCursor_COUNT] = {};
+	static bool sdlCursorsInitialized = [&]() {
+		MOUSE_CURSORS[ImGuiMouseCursor_Arrow] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
+		MOUSE_CURSORS[ImGuiMouseCursor_TextInput] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_IBEAM);
+		MOUSE_CURSORS[ImGuiMouseCursor_ResizeAll] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEALL);
+		MOUSE_CURSORS[ImGuiMouseCursor_ResizeNS] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENS);
+		MOUSE_CURSORS[ImGuiMouseCursor_ResizeEW] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZEWE);
+		MOUSE_CURSORS[ImGuiMouseCursor_ResizeNESW] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENESW);
+		MOUSE_CURSORS[ImGuiMouseCursor_ResizeNWSE] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENWSE);
+		MOUSE_CURSORS[ImGuiMouseCursor_Hand] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
+		return true;
+	}();
+
 	ImGuiIO& io = ImGui::GetIO();
 
 	// Set display dimensions
@@ -135,6 +157,24 @@ void updateImgui(
 		io.MouseDown[1] = false;
 		io.MouseDown[2] = false;
 		io.MouseWheel = 0.0f;
+	}
+
+	// Update mouse cursor
+	if (sdlCursorsInitialized) {
+		ImGuiMouseCursor cursor = ImGui::GetMouseCursor();
+
+		// Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
+		if (io.MouseDrawCursor || cursor == ImGuiMouseCursor_None) {
+			SDL_ShowCursor(SDL_FALSE);
+		}
+
+		// Show OS mouse cursor
+		else{
+			SDL_Cursor* sdlCursor = MOUSE_CURSORS[cursor] ?
+				MOUSE_CURSORS[cursor] : MOUSE_CURSORS[ImGuiMouseCursor_Arrow];
+			SDL_SetCursor(sdlCursor);
+			SDL_ShowCursor(SDL_TRUE);
+		}
 	}
 
 	// Keyboard events
