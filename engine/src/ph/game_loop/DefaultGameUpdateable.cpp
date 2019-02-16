@@ -301,6 +301,11 @@ private:
 
 	void renderConsole(Renderer& renderer) noexcept
 	{
+		// Console dock space
+		if (mConsoleActive) {
+			this->renderConsoleDockSpace();
+		}
+
 		// Render performance window
 		if (mConsoleActive || mConsoleAlwaysShowPerformance->boolValue()) {
 			this->renderPerformanceWindow();
@@ -327,6 +332,14 @@ private:
 		}
 	}
 
+	void renderConsoleDockSpace() noexcept
+	{
+		ImGuiViewport* viewport = ImGui::GetMainViewport();
+		ImGuiDockNodeFlags dockSpaceFlags = 0;
+		dockSpaceFlags |= ImGuiDockNodeFlags_PassthruDockspace;
+		ImGuiID dockSpaceId = ImGui::DockSpaceOverViewport(viewport, dockSpaceFlags);
+	}
+
 	void renderPerformanceWindow() noexcept
 	{
 		// Calculate and set size of window
@@ -341,6 +354,7 @@ private:
 		//performanceWindowFlags |= ImGuiWindowFlags_NoMove;
 		performanceWindowFlags |= ImGuiWindowFlags_NoResize;
 		performanceWindowFlags |= ImGuiWindowFlags_NoCollapse;
+		performanceWindowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
 		performanceWindowFlags |= ImGuiWindowFlags_NoNav;
 
 		// Begin window
@@ -376,6 +390,7 @@ private:
 		//configWindowFlags |= ImGuiWindowFlags_NoMove;
 		//configWindowFlags |= ImGuiWindowFlags_NoResize;
 		//configWindowFlags |= ImGuiWindowFlags_NoCollapse;
+		configWindowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
 
 		// Begin window
 		ImGui::Begin("Config", nullptr, configWindowFlags);
@@ -520,6 +535,7 @@ private:
 		//logWindowFlags |= ImGuiWindowFlags_NoMove;
 		//logWindowFlags |= ImGuiWindowFlags_NoResize;
 		//logWindowFlags |= ImGuiWindowFlags_NoCollapse;
+		logWindowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
 
 		// Begin window
 		ImGui::Begin("Log", nullptr, logWindowFlags);
@@ -623,6 +639,7 @@ private:
 		//materialEditorWindowFlags |= ImGuiWindowFlags_NoMove;
 		//materialEditorWindowFlags |= ImGuiWindowFlags_NoResize;
 		//materialEditorWindowFlags |= ImGuiWindowFlags_NoCollapse;
+		materialEditorWindowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
 
 		ImGui::SetNextWindowPos(vec2(mStats.maxNumSamples() * 1.25f + 17.0f + 400, 0.0f), ImGuiCond_FirstUseEver);
 		ImGui::SetNextWindowContentSize(vec2(630.0f, 0.0f));

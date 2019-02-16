@@ -138,6 +138,7 @@ void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 	ImGuiWindowFlags windowFlags = 0;
 	//windowFlags |= ImGuiWindowFlags_NoResize;
 	windowFlags |= ImGuiWindowFlags_NoScrollbar;
+	windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
 	ImGui::Begin("Naive ECS Editor", nullptr, windowFlags);
 
 	// End window and return if no ECS system
