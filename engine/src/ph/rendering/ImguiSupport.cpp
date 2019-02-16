@@ -62,6 +62,9 @@ phImageView initializeImgui(Allocator* allocator) noexcept
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	io.ConfigDockingWithShift = false; // No need to hold shift to dock windows
 
+	// Allow resizing windows from edges
+	io.ConfigWindowsResizeFromEdges = true;
+
 	// Enable mouse cursors (i.e., mouse cursor is changed depending on what is hovered over)
 	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 
