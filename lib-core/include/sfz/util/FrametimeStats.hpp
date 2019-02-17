@@ -28,7 +28,7 @@ namespace sfz {
 using std::uint32_t;
 
 /// Class used to calculate useful frametime statistics. All frametimes entered and received are
-/// in seconds, except for the string representation which will be in milliseconds.
+/// in milliseconds.
 class FrametimeStats final {
 public:
 	// Constructors & destructors
@@ -47,7 +47,7 @@ public:
 
 	const DynArray<float>& samples() const noexcept { return mSamples; }
 
-	void addSample(float sampleInSeconds) noexcept;
+	void addSample(float sampleInMs) noexcept;
 	void reset() noexcept;
 
 	inline uint32_t maxNumSamples() const noexcept { return mSamples.capacity(); }

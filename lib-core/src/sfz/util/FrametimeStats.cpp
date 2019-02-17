@@ -37,12 +37,12 @@ FrametimeStats::FrametimeStats(uint32_t maxNumSamples) noexcept
 // FrametimeStats: Public methods
 // ------------------------------------------------------------------------------------------------
 
-void FrametimeStats::addSample(float sampleInSeconds) noexcept
+void FrametimeStats::addSample(float sampleInMs) noexcept
 {
 	sfz_assert_debug(mSamples.capacity() > 0);
 
 	if (mSamples.size() == mSamples.capacity()) mSamples.remove(0);
-	mSamples.add(sampleInSeconds);
+	mSamples.add(sampleInMs);
 
 	mTotalTime = 0.0f;
 	mMin = 1000000000.0f;
@@ -61,8 +61,8 @@ void FrametimeStats::addSample(float sampleInSeconds) noexcept
 	}
 	mSD = std::sqrtf(varianceSum / float(mSamples.size()));
 
-	mString.printf("%u samples (%.1fs) -- Avg: %.1fms -- SD: %.1fms -- Min: %.1fms -- Max: %.1fms",
-		mSamples.size(), mTotalTime, mAvg * 1000.0f, mSD * 1000.0f, mMin * 1000.0f, mMax * 1000.0f);
+	mString.printf("%u samples (%.1fms) -- Avg: %.1fms -- SD: %.1fms -- Min: %.1fms -- Max: %.1fms",
+		mSamples.size(), mTotalTime, mAvg, mSD, mMin, mMax);
 }
 
 void FrametimeStats::reset() noexcept
