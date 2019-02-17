@@ -113,7 +113,7 @@ function(phSetCompilerFlags)
 		# -DPH_STATIC_LINK_RENDERER = Link renderer statically instead of dynamically
 		# --preload-file resources = Load "resources" directory into generated javascript
 		# -DSFZ_NO_DEBUG = Used by sfzCore to disable assertions and such on release builds
-		set(PH_CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -fno-rtti -fno-strict-aliasing -s USE_SDL=2 -s TOTAL_MEMORY=1073741824 -s WASM=0 -s DEMANGLE_SUPPORT=1 -DPH_STATIC_LINK_RENDERER --preload-file res --preload-file res_compgl")
+		set(PH_CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -fno-rtti -fno-strict-aliasing -s USE_SDL=2 -s TOTAL_MEMORY=1073741824 -s WASM=0 -s DEMANGLE_SUPPORT=1 -DPH_STATIC_LINK_RENDERER --preload-file res --preload-file res_ph --preload-file res_compgl")
 		set(PH_CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 		set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
 		set(PH_CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
@@ -187,13 +187,21 @@ endfunction()
 # ------------------------------------------------------------------------------------------------
 
 # Adds the Dependency-SDL2 dependency. By default downloads from Github, but if PH_SDL2_ROOT is
-# set that version will be used instead. The following variables will be set:
+# set that version will be used instead. In addition, if Dependency-SDL2 is available on directory
+# up from the directory containing the CMakeLists.txt it will be used instead.
+# The following variables will be set:
 # ${SDL2_FOUND}, ${SDL2_INCLUDE_DIRS}, ${SDL2_LIBRARIES} and ${SDL2_RUNTIME_FILES}
 function(phAddSDL2)
+
+	set(PH_SDL2_DEFAULT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../Dependency-SDL2)
 
 	if (PH_SDL2_ROOT)
 		message("-- [PhantasyEngine]: Adding Dependency-SDL2 from: \"${PH_SDL2_ROOT}\"")
 		add_subdirectory(${PH_SDL2_ROOT} ${CMAKE_BINARY_DIR}/sdl2)
+
+	elseif(EXISTS ${PH_SDL2_DEFAULT_PATH})
+		message("-- [PhantasyEngine]: Adding Dependency-SDL2 found at \"${PH_SDL2_DEFAULT_PATH}\"")
+		add_subdirectory(${PH_SDL2_DEFAULT_PATH} ${CMAKE_BINARY_DIR}/sdl2)
 
 	else()
 		message("-- [PhantasyEngine]: Downloading Dependency-SDL2 from GitHub")
@@ -218,13 +226,21 @@ function(phAddSDL2)
 endfunction()
 
 # Adds sfzCore. By default downloads from GitHub, but if PH_SFZ_CORE_ROOT is set that version will
-# be used instead. The following variables will be set:
+# be used instead. In addition, if sfzCore is available on directory up from the directory
+# containing the CMakeLists.txt it will be used instead.
+# The following variables will be set:
 # ${SFZ_CORE_FOUND}, ${SFZ_CORE_INCLUDE_DIRS}, ${SFZ_CORE_LIBRARIES}
 function(phAddSfzCore)
+
+	set(PH_SFZ_CORE_DEFAULT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../sfzCore)
 
 	if (PH_SFZ_CORE_ROOT)
 		message("-- [PhantasyEngine]: Adding sfzCore from: \"${PH_SFZ_CORE_ROOT}\"")
 		add_subdirectory(${PH_SFZ_CORE_ROOT} ${CMAKE_BINARY_DIR}/sfzCore)
+
+	elseif(EXISTS ${PH_SFZ_CORE_DEFAULT_PATH})
+		message("-- [PhantasyEngine]: Adding sfzCore found at \"${PH_SFZ_CORE_DEFAULT_PATH}\"")
+		add_subdirectory(${PH_SFZ_CORE_DEFAULT_PATH} ${CMAKE_BINARY_DIR}/sfzCore)
 
 	else()
 		message("-- [PhantasyEngine]: Downloading sfzCore from GitHub")
@@ -308,6 +324,7 @@ function(phAddPhantasyEngineTargets)
 	set(PHANTASY_ENGINE_FOUND ${PHANTASY_ENGINE_FOUND} PARENT_SCOPE)
 	set(PHANTASY_ENGINE_INCLUDE_DIRS ${PHANTASY_ENGINE_INCLUDE_DIRS} PARENT_SCOPE)
 	set(PHANTASY_ENGINE_LIBRARIES ${PHANTASY_ENGINE_LIBRARIES} PARENT_SCOPE)
+	set(PHANTASY_ENGINE_RUNTIME_DIR ${PHANTASY_ENGINE_RUNTIME_DIR} PARENT_SCOPE)
 
 endfunction()
 
