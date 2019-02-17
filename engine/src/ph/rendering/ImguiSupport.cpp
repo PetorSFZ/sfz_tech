@@ -21,9 +21,8 @@
 
 #include <SDL.h>
 
-#include <imgui.h>
-
 #include <sfz/math/MathSupport.hpp>
+#include <sfz/memory/New.hpp>
 
 namespace ph {
 
@@ -39,10 +38,22 @@ static void imguiFreeFunc(void* ptr, void* userData) noexcept
 	allocator->deallocate(ptr);
 }
 
+struct ImGuiState final {
+	Allocator* allocator = nullptr;
+	ImFont* defaultFont = nullptr;
+	ImFont* monospaceFont = nullptr;
+};
+
+static ImGuiState* imguiState = nullptr;
+
 phImageView initializeImgui(Allocator* allocator) noexcept
 {
 	// Replace Imgui allocators with sfz::Allocator
 	ImGui::SetAllocatorFunctions(imguiAllocFunc, imguiFreeFunc, allocator);
+
+	// Allocate imgui state
+	imguiState = sfz::sfzNew<ImGuiState>(allocator);
+	imguiState->allocator = allocator;
 
 	// Create Imgui context
 	ImGui::CreateContext();
@@ -95,12 +106,19 @@ phImageView initializeImgui(Allocator* allocator) noexcept
 	io.KeyMap[ImGuiKey_Y] = SDLK_y;
 	io.KeyMap[ImGuiKey_Z] = SDLK_z;
 
-	// Enable oversampling for the default font
+	// Add font
+	const float FONT_SIZE_PIXELS = 16.0f;
+	//const char* DEFAULT_FONT_PATH = "res_ph/fonts/source_sans_pro/SourceSansPro-Regular.ttf";
+	const char* DEFAULT_FONT_PATH = "res_ph/fonts/source_code_pro/SourceCodePro-Regular.ttf";
+	const char* SECONDARY_FONT_PATH = "res_ph/fonts/source_code_pro/SourceCodePro-Regular.ttf";
 	ImFontConfig fontConfig;
 	fontConfig.OversampleH = 4;
 	fontConfig.OversampleV = 4;
 	fontConfig.GlyphExtraSpacing = vec2(1.0f);
-	io.Fonts->AddFontDefault(&fontConfig);
+	imguiState->defaultFont =
+		io.Fonts->AddFontFromFileTTF(DEFAULT_FONT_PATH, FONT_SIZE_PIXELS, &fontConfig);
+	imguiState->monospaceFont =
+		io.Fonts->AddFontFromFileTTF(SECONDARY_FONT_PATH, FONT_SIZE_PIXELS, &fontConfig);
 
 	// Rasterize default font and return view
 	phImageView fontTexView;
@@ -112,6 +130,8 @@ phImageView initializeImgui(Allocator* allocator) noexcept
 void deinitializeImgui() noexcept
 {
 	ImGui::DestroyContext();
+	Allocator* allocator = imguiState->allocator;
+	sfz::sfzDelete(imguiState, allocator);
 }
 
 void updateImgui(
@@ -302,6 +322,16 @@ void convertImguiDrawData(
 			commands.add(cmd);
 		}
 	}
+}
+
+ImFont* imguiFontDefault() noexcept
+{
+	return imguiState->defaultFont;
+}
+
+ImFont* imguiFontMonospace() noexcept
+{
+	return imguiState->monospaceFont;
 }
 
 } // namespace ph

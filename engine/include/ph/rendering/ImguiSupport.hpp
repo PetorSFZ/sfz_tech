@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <imgui.h>
+
 #include <sfz/containers/DynArray.hpp>
 #include <ph/rendering/ImguiRenderingData.hpp>
 
@@ -46,5 +48,9 @@ void convertImguiDrawData(
 	DynArray<phImguiVertex>& vertices,
 	DynArray<uint32_t>& indices,
 	DynArray<phImguiCommand>& commands) noexcept;
+
+// The fonts initialized with Imgui
+ImFont* imguiFontDefault() noexcept;
+ImFont* imguiFontMonospace() noexcept;
 
 } // namespace ph
