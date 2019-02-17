@@ -266,7 +266,7 @@ public:
 			mState.dynamicAssets.textureFileMappings.size());
 
 		// Update performance stats
-		if (mStatsWarmup >= 8) mStats.addSample(updateInfo.iterationDeltaSeconds);
+		if (mStatsWarmup >= 8) mStats.addSample(updateInfo.iterationDeltaSeconds * 1000.0f);
 		mStatsWarmup++;
 
 		renderer.beginFrame(mState.cam, mState.dynamicSphereLights);
@@ -321,8 +321,7 @@ private:
 	void renderConsoleInGamePreview() noexcept
 	{
 		// Calculate and set size of window
-		vec2 histogramDims = vec2(mStats.maxNumSamples() * 1.25f, 80.0f);
-		ImGui::SetNextWindowSize(histogramDims + vec2(50.0f, 100.0f), ImGuiCond_Always);
+		ImGui::SetNextWindowSize(vec2(800, 115), ImGuiCond_Always);
 		ImGui::SetNextWindowPos(vec2(0.0f), ImGuiCond_Always);
 
 		// Set window flags
@@ -332,7 +331,7 @@ private:
 		windowFlags |= ImGuiWindowFlags_NoMove;
 		windowFlags |= ImGuiWindowFlags_NoScrollbar;
 		windowFlags |= ImGuiWindowFlags_NoCollapse;
-		windowFlags |= ImGuiWindowFlags_NoBackground;
+		//windowFlags |= ImGuiWindowFlags_NoBackground;
 		windowFlags |= ImGuiWindowFlags_NoMouseInputs;
 		windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
 		windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
@@ -340,17 +339,29 @@ private:
 		windowFlags |= ImGuiWindowFlags_NoInputs;
 
 		// Begin window
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, vec4(0.05f, 0.05f, 0.05f, 0.3f));
+		ImGui::PushStyleColor(ImGuiCol_Border, vec4(0.0f, 0.0f, 0.0f, 0.0f));
 		ImGui::Begin("Console Preview", nullptr, windowFlags);
 
-		// Render performance stats string
-		ImGui::Text("%s", mStats.toString());
+		// Render performance numbers
+		ImGui::BeginGroup();
+		ImGui::Text("Avg: %.1f ms", mStats.avg());
+		ImGui::Text("Std: %.1f ms", mStats.sd());
+		ImGui::Text("Min: %.1f ms", mStats.min());
+		ImGui::Text("Max: %.1f ms", mStats.max());
+		//ImGui::Text("%u samples, %.1f s", mStats.currentNumSamples(), mStats.time());
+		ImGui::EndGroup();
 
 		// Render performance histogram
+		ImGui::SameLine();
+		vec2 histogramDims = vec2(ImGui::GetWindowSize()) - vec2(145.0f, 25.0f);
 		ImGui::PlotLines("##Frametimes", mStats.samples().data(), mStats.samples().size(), 0, nullptr,
 			0.0f, sfz::max(mStats.max(), 0.020f), histogramDims);
 
 		// End window
 		ImGui::End();
+		ImGui::PopStyleColor();
+		ImGui::PopStyleColor();
 	}
 
 	void renderConsoleDockSpace() noexcept
@@ -364,8 +375,7 @@ private:
 	void renderPerformanceWindow() noexcept
 	{
 		// Calculate and set size of window
-		vec2 histogramDims = vec2(mStats.maxNumSamples() * 1.25f, 80.0f);
-		ImGui::SetNextWindowSize(histogramDims + vec2(17.0f, 50.0f));
+		ImGui::SetNextWindowSize(vec2(800, 135), ImGuiCond_FirstUseEver);
 		ImGui::SetNextWindowPos(vec2(0.0f), ImGuiCond_FirstUseEver);
 
 		// Set window flags
@@ -373,19 +383,27 @@ private:
 		//performanceWindowFlags |= ImGuiWindowFlags_NoTitleBar;
 		performanceWindowFlags |= ImGuiWindowFlags_NoScrollbar;
 		//performanceWindowFlags |= ImGuiWindowFlags_NoMove;
-		performanceWindowFlags |= ImGuiWindowFlags_NoResize;
-		performanceWindowFlags |= ImGuiWindowFlags_NoCollapse;
+		//performanceWindowFlags |= ImGuiWindowFlags_NoResize;
+		//performanceWindowFlags |= ImGuiWindowFlags_NoCollapse;
 		performanceWindowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
 		performanceWindowFlags |= ImGuiWindowFlags_NoNav;
 
 		// Begin window
 		ImGui::Begin("Performance", nullptr, performanceWindowFlags);
 
-		// Render performance stats string
-		ImGui::Text("%s", mStats.toString());
+		// Render performance numbers
+		ImGui::BeginGroup();
+		ImGui::Text("Avg: %.1f ms", mStats.avg());
+		ImGui::Text("Std: %.1f ms", mStats.sd());
+		ImGui::Text("Min: %.1f ms", mStats.min());
+		ImGui::Text("Max: %.1f ms", mStats.max());
+		//ImGui::Text("%u samples, %.1f s", mStats.currentNumSamples(), mStats.time());
+		ImGui::EndGroup();
 
 		// Render performance histogram
-		ImGui::PlotLines("Frametimes", mStats.samples().data(), mStats.samples().size(), 0, nullptr,
+		ImGui::SameLine();
+		vec2 histogramDims = vec2(ImGui::GetWindowSize()) - vec2(140.0f, 50.0f);
+		ImGui::PlotLines("##Frametimes", mStats.samples().data(), mStats.samples().size(), 0, nullptr,
 			0.0f, sfz::max(mStats.max(), 0.020f), histogramDims);
 
 		// End window
