@@ -358,7 +358,7 @@ private:
 		ImGuiViewport* viewport = ImGui::GetMainViewport();
 		ImGuiDockNodeFlags dockSpaceFlags = 0;
 		dockSpaceFlags |= ImGuiDockNodeFlags_PassthruDockspace;
-		ImGuiID dockSpaceId = ImGui::DockSpaceOverViewport(viewport, dockSpaceFlags);
+		/*ImGuiID dockSpaceId = */ImGui::DockSpaceOverViewport(viewport, dockSpaceFlags);
 	}
 
 	void renderPerformanceWindow() noexcept

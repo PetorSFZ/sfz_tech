@@ -28,7 +28,9 @@
 #define TINYGLTF_NO_STB_IMAGE
 #define TINYGLTF_NO_STB_IMAGE_WRITE
 
+#include <sfz/PushWarnings.hpp>
 #include "tiny_gltf.h"
+#include <sfz/PopWarnings.hpp>
 
 #include <sfz/Assert.hpp>
 
