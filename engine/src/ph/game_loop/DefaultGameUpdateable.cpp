@@ -547,7 +547,7 @@ private:
 		str96 timeStr;
 
 		ImGui::SetNextWindowPos(vec2(0.0f, 130.0f), ImGuiCond_FirstUseEver);
-		ImGui::SetNextWindowContentSize(vec2(mStats.maxNumSamples() * 1.25f + 17.0f, 600.0f));
+		ImGui::SetNextWindowSize(vec2(800, 800), ImGuiCond_FirstUseEver);
 
 		// Set window flags
 		ImGuiWindowFlags logWindowFlags = 0;
@@ -559,38 +559,36 @@ private:
 		// Begin window
 		ImGui::Begin("Log", nullptr, logWindowFlags);
 
-		// Filtering options
+		// Options
 		ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
-		int logMinLevelVal = mLogMinLevelSetting->intValue();
-		ImGui::Combo("Minimum log level", &logMinLevelVal, sfz::LOG_LEVEL_STRINGS,
-			IM_ARRAYSIZE(sfz::LOG_LEVEL_STRINGS));
-		mLogMinLevelSetting->setInt(logMinLevelVal);
-		ImGui::InputText("Tag filter", mLogTagFilter.str, mLogTagFilter.maxSize());
+
+		ImGui::PushItemWidth(ImGui::GetWindowWidth() - 160.0f - 160.0f - 40.0f);
+		ImGui::InputText("##Tag filter", mLogTagFilter.str, mLogTagFilter.maxSize());
+		ImGui::PopItemWidth();
+		ImGui::SameLine();
 		strToLower(mLogTagFilter.str, mLogTagFilter.str);
 		bool tagFilterMode = mLogTagFilter != "";
+
+		int logMinLevelVal = mLogMinLevelSetting->intValue();
+		ImGui::PushItemWidth(160.0f);
+		ImGui::Combo("##Minimum log level", &logMinLevelVal, sfz::LOG_LEVEL_STRINGS,
+			IM_ARRAYSIZE(sfz::LOG_LEVEL_STRINGS));
+		ImGui::PopItemWidth();
+		mLogMinLevelSetting->setInt(logMinLevelVal);
+
 		ImGui::PopStyleColor();
 
-		// Button clear messages
+		ImGui::SameLine(ImGui::GetWindowWidth() - 160.0f);
 		if (ImGui::Button("Clear messages")) {
 			logger.clearMessages();
 		}
-		ImGui::Separator();
-
-		// Headings
-		ImGui::Columns(2);
-		ImGui::SetColumnWidth(0, 175.0f);
-		ImGui::TextUnformatted("Tag"); ImGui::NextColumn();
-		ImGui::TextUnformatted("Message"); ImGui::NextColumn();
-		ImGui::Columns(1);
-		ImGui::Separator();
-		ImGui::Spacing();
-		ImGui::Spacing();
 
 		// Print all messages
 		ImGui::BeginChild("LogItems");
 		uint32_t numLogMessages = logger.numMessages();
 		for (uint32_t i = 0; i < numLogMessages; i++) {
-			const TerminalMessageItem& message = logger.getMessage(i);
+			// Reverse order, newest first
+			const TerminalMessageItem& message = logger.getMessage(numLogMessages - i - 1);
 
 			// Skip if log level is too low
 			if (int32_t(message.level) < mLogMinLevelSetting->intValue()) continue;
@@ -614,10 +612,10 @@ private:
 
 			// Create columns
 			ImGui::Columns(2);
-			ImGui::SetColumnWidth(0, 175.0f);
+			ImGui::SetColumnWidth(0, 220.0f);
 
 			// Print tag and messagess
-			if (i != 0) ImGui::Separator();
+			ImGui::Separator();
 			renderFilteredText(message.tag.str, mLogTagFilter.str, messageColor, filterTextColor);
 			ImGui::NextColumn();
 			ImGui::PushStyleColor(ImGuiCol_Text, messageColor);
