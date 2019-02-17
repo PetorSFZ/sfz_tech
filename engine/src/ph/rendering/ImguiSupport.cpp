@@ -26,6 +26,9 @@
 
 namespace ph {
 
+using sfz::vec2;
+using sfz::vec4;
+
 static void* imguiAllocFunc(size_t size, void* userData) noexcept
 {
 	Allocator* allocator = reinterpret_cast<Allocator*>(userData);
@@ -58,8 +61,74 @@ phImageView initializeImgui(Allocator* allocator) noexcept
 	// Create Imgui context
 	ImGui::CreateContext();
 
-	// Request dark style by default
-	ImGui::StyleColorsDark();
+	// Request modified dark style
+	ImGuiStyle style;
+	ImGui::StyleColorsDark(&style);
+
+	style.Alpha = 1.0f;
+	style.WindowPadding = vec2(12.0f);
+	style.WindowRounding = 4.0f;
+	style.FramePadding = vec2(8.0f, 5.0f);
+	style.ItemSpacing = vec2(12.0f, 8.0f);
+	style.ItemInnerSpacing = vec2(6.0f);
+	style.IndentSpacing = 30.0f;
+	style.ScrollbarSize = 12.0f;
+	style.ScrollbarRounding = 5.0f;
+	style.AntiAliasedLines = true;
+	style.AntiAliasedFill = true;
+
+	//style.Colors[ImGuiCol_Text];
+	//style.Colors[ImGuiCol_TextDisabled];
+	style.Colors[ImGuiCol_WindowBg] = vec4(0.05f, 0.05f, 0.05f, 0.75f);
+	//style.Colors[ImGuiCol_ChildBg];               // Background of child windows
+	//style.Colors[ImGuiCol_PopupBg];               // Background of popups, menus, tooltips windows
+	//style.Colors[ImGuiCol_Border];
+	//style.Colors[ImGuiCol_BorderShadow];
+	//style.Colors[ImGuiCol_FrameBg];               // Background of checkbox, radio button, plot, slider, text input
+	//style.Colors[ImGuiCol_FrameBgHovered];
+	//style.Colors[ImGuiCol_FrameBgActive];
+	//style.Colors[ImGuiCol_TitleBg];
+	//style.Colors[ImGuiCol_TitleBgActive];
+	//style.Colors[ImGuiCol_TitleBgCollapsed];
+	//style.Colors[ImGuiCol_MenuBarBg];
+	//style.Colors[ImGuiCol_ScrollbarBg];
+	//style.Colors[ImGuiCol_ScrollbarGrab];
+	//style.Colors[ImGuiCol_ScrollbarGrabHovered];
+	//style.Colors[ImGuiCol_ScrollbarGrabActive];
+	//style.Colors[ImGuiCol_CheckMark];
+	//style.Colors[ImGuiCol_SliderGrab];
+	//style.Colors[ImGuiCol_SliderGrabActive];
+	//style.Colors[ImGuiCol_Button];
+	//style.Colors[ImGuiCol_ButtonHovered];
+	//style.Colors[ImGuiCol_ButtonActive];
+	//style.Colors[ImGuiCol_Header];
+	//style.Colors[ImGuiCol_HeaderHovered];
+	//style.Colors[ImGuiCol_HeaderActive];
+	//style.Colors[ImGuiCol_Separator];
+	//style.Colors[ImGuiCol_SeparatorHovered];
+	//style.Colors[ImGuiCol_SeparatorActive];
+	//style.Colors[ImGuiCol_ResizeGrip];
+	//style.Colors[ImGuiCol_ResizeGripHovered];
+	//style.Colors[ImGuiCol_ResizeGripActive];
+	//style.Colors[ImGuiCol_Tab];
+	//style.Colors[ImGuiCol_TabHovered];
+	//style.Colors[ImGuiCol_TabActive];
+	//style.Colors[ImGuiCol_TabUnfocused];
+	//style.Colors[ImGuiCol_TabUnfocusedActive];
+	//style.Colors[ImGuiCol_DockingPreview];
+	//style.Colors[ImGuiCol_DockingEmptyBg];        // Background color for empty node (e.g. CentralNode with no window docked into it)
+	//style.Colors[ImGuiCol_PlotLines];
+	//style.Colors[ImGuiCol_PlotLinesHovered];
+	//style.Colors[ImGuiCol_PlotHistogram];
+	//style.Colors[ImGuiCol_PlotHistogramHovered];
+	//style.Colors[ImGuiCol_TextSelectedBg];
+	//style.Colors[ImGuiCol_DragDropTarget];
+	//style.Colors[ImGuiCol_NavHighlight];          // Gamepad/keyboard: current highlighted item
+	//style.Colors[ImGuiCol_NavWindowingHighlight]; // Highlight window when using CTRL+TAB
+	//style.Colors[ImGuiCol_NavWindowingDimBg];     // Darken/colorize entire screen behind the CTRL+TAB window list, when active
+	//style.Colors[ImGuiCol_ModalWindowDimBg];      // Darken/colorize entire screen behind a modal window, when one is active
+
+	ImGui::GetStyle() = style;
 
 	ImGuiIO& io = ImGui::GetIO();
 
