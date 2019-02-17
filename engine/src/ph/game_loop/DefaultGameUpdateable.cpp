@@ -172,8 +172,7 @@ public:
 	// Console settings
 	Setting* mConsoleActiveSetting = nullptr;
 	bool mConsoleActive = false;
-	Setting* mConsoleAlwaysShowPerformance = nullptr;
-	Setting* mConsoleAlwaysShowLog = nullptr;
+	Setting* mConsoleShowInGamePreview = nullptr;
 
 	// Dynamic material editor
 	uint32_t mMaterialEditorCurrentIdx = 0;
@@ -191,10 +190,8 @@ public:
 		GlobalConfig& cfg = getGlobalConfig();
 		mConsoleActiveSetting = cfg.sanitizeBool("Console", "active", false, BoolBounds(false));
 		mConsoleActive = mConsoleActiveSetting->boolValue();
-		mConsoleAlwaysShowPerformance =
-			cfg.sanitizeBool("Console", "alwaysShowPerformance", true, BoolBounds(false));
-		mConsoleAlwaysShowLog =
-			cfg.sanitizeBool("Console", "alwaysShowLog", true, BoolBounds(false));
+		mConsoleShowInGamePreview =
+			cfg.sanitizeBool("Console", "showInGamePreview", true, BoolBounds(false));
 		mLogMinLevelSetting = cfg.sanitizeInt("Console", "logMinLevel", false, IntBounds(0, 0, 3));
 
 		// Initialize logic
@@ -301,35 +298,59 @@ private:
 
 	void renderConsole(Renderer& renderer) noexcept
 	{
+		// Render in-game console preview
+		if(!mConsoleActive && mConsoleShowInGamePreview->boolValue()) {
+			this->renderConsoleInGamePreview();
+		}
+
+		if (!mConsoleActive) return;
+
 		// Console dock space
-		if (mConsoleActive) {
-			this->renderConsoleDockSpace();
-		}
+		this->renderConsoleDockSpace();
 
-		// Render performance window
-		if (mConsoleActive || mConsoleAlwaysShowPerformance->boolValue()) {
-			this->renderPerformanceWindow();
-		}
-
-		// Render global config window
-		if (mConsoleActive) {
-			this->renderConfigWindow();
-		}
-
-		// Render log window
-		if (mConsoleActive || mConsoleAlwaysShowLog->boolValue()) {
-			this->renderLogWindow();
-		}
-
-		// Render material editor window
-		if (mConsoleActive) {
-			this->renderMaterialEditorWindow(renderer);
-		}
+		// Render console windows
+		this->renderPerformanceWindow();
+		this->renderConfigWindow();
+		this->renderLogWindow();
+		this->renderMaterialEditorWindow(renderer);
 
 		// Render custom-injected windows
-		if (mConsoleActive) {
-			mLogic->injectConsoleMenu();
-		}
+		mLogic->injectConsoleMenu();
+	}
+
+	void renderConsoleInGamePreview() noexcept
+	{
+		// Calculate and set size of window
+		vec2 histogramDims = vec2(mStats.maxNumSamples() * 1.25f, 80.0f);
+		ImGui::SetNextWindowSize(histogramDims + vec2(50.0f, 100.0f), ImGuiCond_Always);
+		ImGui::SetNextWindowPos(vec2(0.0f), ImGuiCond_Always);
+
+		// Set window flags
+		ImGuiWindowFlags windowFlags = 0;
+		windowFlags |= ImGuiWindowFlags_NoTitleBar;
+		windowFlags |= ImGuiWindowFlags_NoResize;
+		windowFlags |= ImGuiWindowFlags_NoMove;
+		windowFlags |= ImGuiWindowFlags_NoScrollbar;
+		windowFlags |= ImGuiWindowFlags_NoCollapse;
+		windowFlags |= ImGuiWindowFlags_NoBackground;
+		windowFlags |= ImGuiWindowFlags_NoMouseInputs;
+		windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
+		windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+		windowFlags |= ImGuiWindowFlags_NoNav;
+		windowFlags |= ImGuiWindowFlags_NoInputs;
+
+		// Begin window
+		ImGui::Begin("Console Preview", nullptr, windowFlags);
+
+		// Render performance stats string
+		ImGui::Text("%s", mStats.toString());
+
+		// Render performance histogram
+		ImGui::PlotLines("##Frametimes", mStats.samples().data(), mStats.samples().size(), 0, nullptr,
+			0.0f, sfz::max(mStats.max(), 0.020f), histogramDims);
+
+		// End window
+		ImGui::End();
 	}
 
 	void renderConsoleDockSpace() noexcept
