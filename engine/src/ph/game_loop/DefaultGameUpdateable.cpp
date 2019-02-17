@@ -404,7 +404,7 @@ private:
 
 		// Set window size
 		ImGui::SetNextWindowPos(vec2(mStats.maxNumSamples() * 1.25f + 17.0f, 0.0f), ImGuiCond_FirstUseEver);
-		ImGui::SetNextWindowSize(vec2(400.0f, 0.0f));
+		ImGui::SetNextWindowSize(vec2(400.0f, 0.0f), ImGuiCond_FirstUseEver);
 
 		// Set window flags
 		ImGuiWindowFlags configWindowFlags = 0;
@@ -426,13 +426,13 @@ private:
 
 		// Add spacing and separator between filter and configs
 		ImGui::Spacing();
-		ImGui::Separator();
 
 		// Start columns
 		ImGui::Columns(3);
-		ImGui::SetColumnWidth(0, 40.0f);
-		ImGui::SetColumnWidth(1, 200.0f);
-		ImGui::SetColumnWidth(2, 160.0f);
+		float windowWidth = ImGui::GetWindowSize().x;
+		ImGui::SetColumnWidth(0, 55.0f);
+		ImGui::SetColumnWidth(1, windowWidth - 275.0f);
+		ImGui::SetColumnWidth(2, 200.0f);
 
 		// Column headers
 		ImGui::Text("Save"); ImGui::NextColumn();
@@ -465,9 +465,9 @@ private:
 				if (ImGui::CollapsingHeader(sectionKey.str)) continue;
 			}
 			ImGui::Columns(3);
-			ImGui::SetColumnWidth(0, 40.0f);
-			ImGui::SetColumnWidth(1, 200.0f);
-			ImGui::SetColumnWidth(2, 160.0f);
+			ImGui::SetColumnWidth(0, 55.0f);
+			ImGui::SetColumnWidth(1, windowWidth - 275.0f);
+			ImGui::SetColumnWidth(2, 200.0f);
 
 			for (Setting* setting : mCfgSectionSettings) {
 
@@ -481,8 +481,6 @@ private:
 				bool containsFilter = strstr(combinedKeyLowerStr.str, mConfigFilterString.str) != nullptr;
 				if (!containsFilter) continue;
 
-				ImGui::Separator();
-
 				// Write to file checkbox
 				tmpStr.printf("##%s___writeToFile___", setting->key().str);
 				bool writeToFile = setting->value().writeToFile;
@@ -490,7 +488,6 @@ private:
 					setting->setWriteToFile(writeToFile);
 				}
 				ImGui::NextColumn();
-				ImGui::PushItemWidth(-1.0f);
 
 				// Render setting key
 				if (filterMode) {
@@ -501,9 +498,9 @@ private:
 					ImGui::TextUnformatted(setting->key().str);
 				}
 				ImGui::NextColumn();
-				ImGui::PushItemWidth(-1.0f);
 
 				// Value input field
+				ImGui::PushItemWidth(-1.0f);
 				tmpStr.printf("##%s___valueInput___", setting->key().str);
 				switch (setting->type()) {
 				case ValueType::INT:
@@ -531,6 +528,7 @@ private:
 					}
 					break;
 				}
+				ImGui::PopItemWidth();
 				ImGui::NextColumn();
 			}
 		}
