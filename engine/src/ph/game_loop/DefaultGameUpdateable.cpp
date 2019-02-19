@@ -23,11 +23,13 @@
 #include <ctime>
 
 #include <imgui.h>
+#include <imgui_internal.h>
 
 #include <sfz/Logging.hpp>
 #include <sfz/math/MathSupport.hpp>
 #include <sfz/strings/StackString.hpp>
 #include <sfz/util/FrametimeStats.hpp>
+#include <sfz/util/IO.hpp>
 
 #include "ph/Context.hpp"
 #include "ph/config/GlobalConfig.hpp"
@@ -170,6 +172,8 @@ public:
 	str96 mLogTagFilter;
 
 	// Console settings
+	bool mImguiFirstRun = false;
+	ImGuiID mConsoleDockSpaceId = 0;
 	Setting* mConsoleActiveSetting = nullptr;
 	bool mConsoleActive = false;
 	Setting* mConsoleShowInGamePreview = nullptr;
@@ -185,6 +189,9 @@ public:
 		// Only initialize once
 		if (mInitialized) return;
 		mInitialized = true;
+
+		// Check if this is first run of imgui or not. I.e., whether imgui.ini existed or not.
+		mImguiFirstRun = !sfz::fileExists("imgui.ini");
 
 		// Pick out console settings
 		GlobalConfig& cfg = getGlobalConfig();
@@ -303,6 +310,7 @@ private:
 			this->renderConsoleInGamePreview();
 		}
 
+		// Return if console should not be rendered
 		if (!mConsoleActive) return;
 
 		// Console dock space
@@ -310,9 +318,13 @@ private:
 
 		// Render console windows
 		this->renderPerformanceWindow();
-		this->renderConfigWindow();
 		this->renderLogWindow();
+		this->renderConfigWindow();
 		this->renderMaterialEditorWindow(renderer);
+
+		// Initialize dockspace with default docked layout if first run
+		if (mImguiFirstRun) this->renderConsoleDockSpaceInitialize();
+		mImguiFirstRun = false;
 
 		// Render custom-injected windows
 		mLogic->injectConsoleMenu();
@@ -369,9 +381,35 @@ private:
 		ImGuiViewport* viewport = ImGui::GetMainViewport();
 		ImGuiDockNodeFlags dockSpaceFlags = 0;
 		dockSpaceFlags |= ImGuiDockNodeFlags_PassthruDockspace;
-		/*ImGuiID dockSpaceId = */ImGui::DockSpaceOverViewport(viewport, dockSpaceFlags);
+		mConsoleDockSpaceId = ImGui::DockSpaceOverViewport(viewport, dockSpaceFlags);
 	}
 
+	void renderConsoleDockSpaceInitialize() noexcept
+	{
+		ImGui::DockBuilderRemoveNode(mConsoleDockSpaceId);
+
+		ImGuiDockNodeFlags dockSpaceFlags = 0;
+		dockSpaceFlags |= ImGuiDockNodeFlags_PassthruDockspace;
+		dockSpaceFlags |= ImGuiDockNodeFlags_Dockspace;
+		ImGui::DockBuilderAddNode(mConsoleDockSpaceId, dockSpaceFlags);
+
+		ImGuiViewport* viewport = ImGui::GetMainViewport();
+		ImGui::DockBuilderSetNodeSize(mConsoleDockSpaceId, viewport->Size);
+
+		ImGuiID dockMain = mConsoleDockSpaceId;
+		ImGuiID dockLeft = ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Left, 0.45f, NULL, &dockMain);
+		ImGuiID dockUpperLeft = ImGui::DockBuilderSplitNode(dockLeft, ImGuiDir_Up, 0.20f, NULL, &dockLeft);
+		ImGuiID dockBottom = ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Down, 0.5f, NULL, &dockMain);
+
+		ImGui::DockBuilderDockWindow("Performance", dockUpperLeft);
+		ImGui::DockBuilderDockWindow("Log", dockBottom);
+		ImGui::DockBuilderDockWindow("Config", dockLeft);
+		ImGui::DockBuilderDockWindow("Dynamic Material Editor", dockLeft);
+
+		ImGui::DockBuilderFinish(mConsoleDockSpaceId);
+	}
+
+	// Returns whether window is docked or not, small hack to create initial docked layout
 	void renderPerformanceWindow() noexcept
 	{
 		// Calculate and set size of window
@@ -405,6 +443,115 @@ private:
 		vec2 histogramDims = vec2(ImGui::GetWindowSize()) - vec2(140.0f, 50.0f);
 		ImGui::PlotLines("##Frametimes", mStats.samples().data(), mStats.samples().size(), 0, nullptr,
 			0.0f, sfz::max(mStats.max(), 0.020f), histogramDims);
+
+		// End window
+		ImGui::End();
+	}
+
+	void renderLogWindow() noexcept
+	{
+		const vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		TerminalLogger& logger = *getContext()->logger;
+		str96 timeStr;
+
+		ImGui::SetNextWindowPos(vec2(0.0f, 130.0f), ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowSize(vec2(800, 800), ImGuiCond_FirstUseEver);
+
+		// Set window flags
+		ImGuiWindowFlags logWindowFlags = 0;
+		//logWindowFlags |= ImGuiWindowFlags_NoMove;
+		//logWindowFlags |= ImGuiWindowFlags_NoResize;
+		//logWindowFlags |= ImGuiWindowFlags_NoCollapse;
+		logWindowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
+
+		// Begin window
+		ImGui::Begin("Log", nullptr, logWindowFlags);
+
+		// Options
+		ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
+
+		ImGui::PushItemWidth(ImGui::GetWindowWidth() - 160.0f - 160.0f - 40.0f);
+		ImGui::InputText("##Tag filter", mLogTagFilter.str, mLogTagFilter.maxSize());
+		ImGui::PopItemWidth();
+		ImGui::SameLine();
+		strToLower(mLogTagFilter.str, mLogTagFilter.str);
+		bool tagFilterMode = mLogTagFilter != "";
+
+		int logMinLevelVal = mLogMinLevelSetting->intValue();
+		ImGui::PushItemWidth(160.0f);
+		ImGui::Combo("##Minimum log level", &logMinLevelVal, sfz::LOG_LEVEL_STRINGS,
+			IM_ARRAYSIZE(sfz::LOG_LEVEL_STRINGS));
+		ImGui::PopItemWidth();
+		mLogMinLevelSetting->setInt(logMinLevelVal);
+
+		ImGui::PopStyleColor();
+
+		ImGui::SameLine(ImGui::GetWindowWidth() - 160.0f);
+		if (ImGui::Button("Clear messages")) {
+			logger.clearMessages();
+		}
+
+		// Print all messages
+		ImGui::BeginChild("LogItems");
+		uint32_t numLogMessages = logger.numMessages();
+		for (uint32_t i = 0; i < numLogMessages; i++) {
+			// Reverse order, newest first
+			const TerminalMessageItem& message = logger.getMessage(numLogMessages - i - 1);
+
+			// Skip if log level is too low
+			if (int32_t(message.level) < mLogMinLevelSetting->intValue()) continue;
+
+			// Skip section if nothing matches when filtering
+			if (tagFilterMode) {
+				str32 tagLowerStr;
+				strToLower(tagLowerStr.str, message.tag.str);
+				bool tagFilter = strstr(tagLowerStr.str, mLogTagFilter.str) != nullptr;
+				if (!tagFilter) continue;
+			}
+
+			// Get color of message
+			vec4 messageColor = vec4(0.0f);
+			switch (message.level) {
+			case LogLevel::INFO_NOISY: messageColor = vec4(0.6f, 0.6f, 0.8f, 1.0f); break;
+			case LogLevel::INFO: messageColor = vec4(0.8f, 0.8f, 0.8f, 1.0f); break;
+			case LogLevel::WARNING: messageColor = vec4(1.0f, 1.0f, 0.0f, 1.0f); break;
+			case LogLevel::ERROR_LVL: messageColor = vec4(1.0f, 0.0f, 0.0f, 1.0f); break;
+			}
+
+			// Create columns
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, 220.0f);
+
+			// Print tag and messagess
+			ImGui::Separator();
+			renderFilteredText(message.tag.str, mLogTagFilter.str, messageColor, filterTextColor);
+			ImGui::NextColumn();
+			ImGui::PushStyleColor(ImGuiCol_Text, messageColor);
+			ImGui::TextWrapped("%s", message.message.str); ImGui::NextColumn();
+			ImGui::PopStyleColor();
+
+			// Restore to 1 column
+			ImGui::Columns(1);
+
+			// Tooltip with timestamp, file and explicit warning level
+			if (ImGui::IsItemHovered()) {
+
+				// Get time string
+				timeToString(timeStr, message.timestamp);
+
+				// Print tooltip
+				ImGui::BeginTooltip();
+				ImGui::Text("%s -- %s -- %s:%i",
+					toString(message.level), timeStr.str, message.file.str, message.lineNumber);
+				ImGui::EndTooltip();
+			}
+		}
+
+		// Show last message by default
+		ImGui::EndChild();
+
+		// Return to 1 column
+		ImGui::Columns(1);
 
 		// End window
 		ImGui::End();
@@ -550,115 +697,6 @@ private:
 				ImGui::NextColumn();
 			}
 		}
-
-		// Return to 1 column
-		ImGui::Columns(1);
-
-		// End window
-		ImGui::End();
-	}
-
-	void renderLogWindow() noexcept
-	{
-		const vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
-		TerminalLogger& logger = *getContext()->logger;
-		str96 timeStr;
-
-		ImGui::SetNextWindowPos(vec2(0.0f, 130.0f), ImGuiCond_FirstUseEver);
-		ImGui::SetNextWindowSize(vec2(800, 800), ImGuiCond_FirstUseEver);
-
-		// Set window flags
-		ImGuiWindowFlags logWindowFlags = 0;
-		//logWindowFlags |= ImGuiWindowFlags_NoMove;
-		//logWindowFlags |= ImGuiWindowFlags_NoResize;
-		//logWindowFlags |= ImGuiWindowFlags_NoCollapse;
-		logWindowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
-
-		// Begin window
-		ImGui::Begin("Log", nullptr, logWindowFlags);
-
-		// Options
-		ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
-
-		ImGui::PushItemWidth(ImGui::GetWindowWidth() - 160.0f - 160.0f - 40.0f);
-		ImGui::InputText("##Tag filter", mLogTagFilter.str, mLogTagFilter.maxSize());
-		ImGui::PopItemWidth();
-		ImGui::SameLine();
-		strToLower(mLogTagFilter.str, mLogTagFilter.str);
-		bool tagFilterMode = mLogTagFilter != "";
-
-		int logMinLevelVal = mLogMinLevelSetting->intValue();
-		ImGui::PushItemWidth(160.0f);
-		ImGui::Combo("##Minimum log level", &logMinLevelVal, sfz::LOG_LEVEL_STRINGS,
-			IM_ARRAYSIZE(sfz::LOG_LEVEL_STRINGS));
-		ImGui::PopItemWidth();
-		mLogMinLevelSetting->setInt(logMinLevelVal);
-
-		ImGui::PopStyleColor();
-
-		ImGui::SameLine(ImGui::GetWindowWidth() - 160.0f);
-		if (ImGui::Button("Clear messages")) {
-			logger.clearMessages();
-		}
-
-		// Print all messages
-		ImGui::BeginChild("LogItems");
-		uint32_t numLogMessages = logger.numMessages();
-		for (uint32_t i = 0; i < numLogMessages; i++) {
-			// Reverse order, newest first
-			const TerminalMessageItem& message = logger.getMessage(numLogMessages - i - 1);
-
-			// Skip if log level is too low
-			if (int32_t(message.level) < mLogMinLevelSetting->intValue()) continue;
-
-			// Skip section if nothing matches when filtering
-			if (tagFilterMode) {
-				str32 tagLowerStr;
-				strToLower(tagLowerStr.str, message.tag.str);
-				bool tagFilter = strstr(tagLowerStr.str, mLogTagFilter.str) != nullptr;
-				if (!tagFilter) continue;
-			}
-
-			// Get color of message
-			vec4 messageColor = vec4(0.0f);
-			switch (message.level) {
-			case LogLevel::INFO_NOISY: messageColor = vec4(0.6f, 0.6f, 0.8f, 1.0f); break;
-			case LogLevel::INFO: messageColor = vec4(0.8f, 0.8f, 0.8f, 1.0f); break;
-			case LogLevel::WARNING: messageColor = vec4(1.0f, 1.0f, 0.0f, 1.0f); break;
-			case LogLevel::ERROR_LVL: messageColor = vec4(1.0f, 0.0f, 0.0f, 1.0f); break;
-			}
-
-			// Create columns
-			ImGui::Columns(2);
-			ImGui::SetColumnWidth(0, 220.0f);
-
-			// Print tag and messagess
-			ImGui::Separator();
-			renderFilteredText(message.tag.str, mLogTagFilter.str, messageColor, filterTextColor);
-			ImGui::NextColumn();
-			ImGui::PushStyleColor(ImGuiCol_Text, messageColor);
-			ImGui::TextWrapped("%s", message.message.str); ImGui::NextColumn();
-			ImGui::PopStyleColor();
-
-			// Restore to 1 column
-			ImGui::Columns(1);
-
-			// Tooltip with timestamp, file and explicit warning level
-			if (ImGui::IsItemHovered()) {
-
-				// Get time string
-				timeToString(timeStr, message.timestamp);
-
-				// Print tooltip
-				ImGui::BeginTooltip();
-				ImGui::Text("%s -- %s -- %s:%i",
-					toString(message.level), timeStr.str, message.file.str, message.lineNumber);
-				ImGui::EndTooltip();
-			}
-		}
-
-		// Show last message by default
-		ImGui::EndChild();
 
 		// Return to 1 column
 		ImGui::Columns(1);
