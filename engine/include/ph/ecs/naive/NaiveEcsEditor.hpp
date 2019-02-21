@@ -26,6 +26,7 @@
 
 namespace ph {
 
+using sfz::str32;
 using sfz::str80;
 
 // Helper struct
@@ -59,7 +60,11 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void init(ComponentInfo* componentInfos, uint32_t numComponentInfos);
+	void init(
+		const char* windowName,
+		ComponentInfo* componentInfos,
+		uint32_t numComponentInfos,
+		sfz::Allocator* allocator = sfz::getDefaultAllocator());
 	void swap(NaiveEcsEditor& other) noexcept;
 	void destroy() noexcept;
 
@@ -79,9 +84,12 @@ private:
 		sfz::UniquePtr<uint8_t> editorState;
 	};
 
+	str80 mWindowName;
 	ReducedComponentInfo mComponentInfos[64];
 	ComponentMask mFilterMask = ComponentMask::activeMask();
-	uint32_t mCurrentSelectedEntity = 0;
+	str32 mFilterMaskEditBuffers[8];
+	str32 mEntityMaskEditBuffers[8];
+	uint32_t mCurrentSelectedEntity = ~0u;
 };
 
 } // namespace ph
