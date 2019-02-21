@@ -1,7 +1,7 @@
 Stripped down version of [nativefiledialog](https://github.com/mlabbe/nativefiledialog) by Michael Labbe at Frogtoss Games.
 
-Version: 1.1.2
-Commit: 5cfe5002eb0fac1e49777a17dec70134147931e2
+Version: 1.1.4
+Commit: b1e375095b18405bf56bbb37245545833142b93f
 
 Changes:
 * Uses CMake for building and linking
