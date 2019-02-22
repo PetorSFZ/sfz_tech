@@ -22,6 +22,7 @@
 #include <algorithm>
 
 #include <imgui.h>
+#include <imgui_internal.h>
 
 #if !defined(__EMSCRIPTEN__) && !defined(SFZ_IOS)
 #include <nfd.h>
@@ -466,35 +467,35 @@ void NaiveEcsEditor::init(
 	mWindowName.printf("%s", windowName);
 	initializeComponentMaskEditor(mFilterMaskEditBuffers, mFilterMask);
 
+	// Temp variable to ensure all necessary component infos are set
+	bool infoSet[64] = {};
+
 	// Set active bit component info
+	infoSet[0] = true;
 	mComponentInfos[0].componentName.printf("00 - Active bit");
 
 	// Set rest of component infos
-	for (uint32_t compType = 1; compType < 64; compType++) {
+	for (uint32_t i = 0; i < numComponentInfos; i++) {
+		ComponentInfo& info = componentInfos[i];
+		sfz_assert_debug(info.componentType != 0);
+		sfz_assert_debug(info.componentType < 64);
 
-		// See if the current component type is specified in the input list of component infos
-		uint32_t componentInfoIndex = ~0u;
-		for (uint32_t i = 0; i < numComponentInfos; i++) {
-			if (componentInfos[i].componentType == compType) {
-				componentInfoIndex = i;
-				break;
-			}
-		}
+		ReducedComponentInfo& target = mComponentInfos[info.componentType];
+		bool& set = infoSet[info.componentType];
+		sfz_assert_debug(!set);
 
-		// If available, steal it!
-		if (componentInfoIndex != ~0u) {
-			ComponentInfo& info = componentInfos[componentInfoIndex];
-			ReducedComponentInfo& target = mComponentInfos[compType];
+		set = true;
+		target.componentName.printf("%02u - %s", info.componentType, info.componentName.str);
+		target.componentEditor = info.componentEditor;
+		target.editorState = std::move(info.editorState); // Steal it!
+	}
 
-			target.componentName.printf("%02u -- %s", compType, info.componentName.str);
-			target.componentEditor = info.componentEditor;
-			target.editorState = std::move(info.editorState);
-		}
+	// Number of component types should be equal to numComponentInfos + 1
+	mNumComponentInfos = numComponentInfos + 1;
 
-		// Otherwise, create default
-		else {
-			mComponentInfos[compType].componentName.printf("%02u -- <unnamed>", compType);
-		}
+	// Ensure that they are all set
+	for (uint32_t i = 0; i < mNumComponentInfos; i++) {
+		sfz_assert_debug(infoSet[i]);
 	}
 }
 
@@ -504,11 +505,14 @@ void NaiveEcsEditor::swap(NaiveEcsEditor& other) noexcept
 	for (uint32_t i = 0; i < 64; i++) {
 		std::swap(this->mComponentInfos[i], other.mComponentInfos[i]);
 	}
+	std::swap(this->mNumComponentInfos, other.mNumComponentInfos);
 	std::swap(this->mFilterMask, other.mFilterMask);
 	for (uint32_t i = 0; i < 8; i++) {
 		std::swap(this->mFilterMaskEditBuffers[i], other.mFilterMaskEditBuffers[i]);
 		std::swap(this->mEntityMaskEditBuffers[i], other.mEntityMaskEditBuffers[i]);
 	}
+	std::swap(this->mEntityMaskEditBuffersInitialized, other.mEntityMaskEditBuffersInitialized);
+	std::swap(this->mCompactEntityList, other.mCompactEntityList);
 	std::swap(this->mCurrentSelectedEntity, other.mCurrentSelectedEntity);
 }
 
@@ -518,12 +522,15 @@ void NaiveEcsEditor::destroy() noexcept
 	for (uint32_t i = 0; i < 64; i++) {
 		this->mComponentInfos[i] = ReducedComponentInfo();
 	}
+	mNumComponentInfos = 0;
 	mFilterMask = ComponentMask::activeMask();
 	for (uint32_t i = 0; i < 8; i++) {
 		mFilterMaskEditBuffers[i].printf("");
 		mEntityMaskEditBuffers[i].printf("");
 	}
-	mCurrentSelectedEntity = ~0u;
+	mEntityMaskEditBuffersInitialized = false;
+	mCompactEntityList = false;
+	mCurrentSelectedEntity = 0;
 }
 
 // NaiveEcsEditor: Methods
@@ -531,6 +538,8 @@ void NaiveEcsEditor::destroy() noexcept
 
 void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 {
+	const sfz::vec4 INACTIVE_TEXT_COLOR = sfz::vec4(0.35f, 0.35f, 0.35f, 1.0f);
+
 	// Begin window
 	ImGui::SetNextWindowSize(sfz::vec2(720.0f, 750.0f), ImGuiCond_FirstUseEver);
 	ImGuiWindowFlags windowFlags = 0;
@@ -552,6 +561,9 @@ void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 		ImGui::End();
 		return;
 	}
+
+	// We need component info for each component type in ECS
+	sfz_assert_debug(ecs->numComponentTypes == mNumComponentInfos);
 
 	// Get some stuff from the ECS system
 	ComponentMask* masks = ecs->componentMasks();
@@ -604,23 +616,28 @@ void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 	if (ImGui::ListBoxHeader("##Entities", vec2(100.0f, ImGui::GetWindowHeight() - 280.0f))) {
 		for (uint32_t entity = 0; entity < ecs->maxNumEntities; entity++) {
 
-			// Only show entitites that fulfill filter mask
-			if (!masks[entity].fulfills(mFilterMask)) continue;
+			// Check if entity fulfills filter mask
+			bool fulfillsFilter = masks[entity].fulfills(mFilterMask);
 
-			// Non-active entites are greyed out
+			// If compact list and does not fulfill filter mask, don't show entity
+			if (!fulfillsFilter && mCompactEntityList) continue;
+
+			// Non-fulfilling or non-active entities are greyed out
 			bool active = masks[entity].active();
-			if (!active) ImGui::PushStyleColor(ImGuiCol_Text, sfz::vec4(0.35f, 0.35f, 0.35f, 1.0f));
+			if (!fulfillsFilter || !active) {
+				ImGui::PushStyleColor(ImGuiCol_Text, INACTIVE_TEXT_COLOR);
+			}
 
 			str32 entityStr("%08u", entity);
 			bool selected = mCurrentSelectedEntity == entity;
 			bool activated = ImGui::Selectable(entityStr, selected);
 			if (activated) {
 				mCurrentSelectedEntity = entity;
-				initializeComponentMaskEditor(mEntityMaskEditBuffers, masks[entity]);
+				mEntityMaskEditBuffersInitialized = false;
 			}
 
-			// Non-active entites are greyed out
-			if (!active) ImGui::PopStyleColor();
+			// Non-fulfilling or non-active entities are greyed out
+			if (!fulfillsFilter || !active) ImGui::PopStyleColor();
 
 		}
 		ImGui::ListBoxFooter();
@@ -650,12 +667,15 @@ void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 	ImGui::SameLine();
 	ImGui::BeginGroup();
 
-	// Only show entity edit menu if an active entity is selected
-	bool selectedEntityIsActive =
-		mCurrentSelectedEntity < ecs->maxNumEntities && masks[mCurrentSelectedEntity].active();
-	if (selectedEntityIsActive) {
+	// Only show entity edit menu if an active entity exists
+	bool selectedEntityExists = mCurrentSelectedEntity < ecs->maxNumEntities;
+	if (selectedEntityExists) {
 
 		// Currently selected entities component mask
+		if (!mEntityMaskEditBuffersInitialized) {
+			initializeComponentMaskEditor(mEntityMaskEditBuffers, masks[mCurrentSelectedEntity]);
+			mEntityMaskEditBuffersInitialized = true;
+		}
 		componentMaskEditor("MaskEditor", mEntityMaskEditBuffers, masks[mCurrentSelectedEntity]);
 
 		ImGui::Spacing();
@@ -669,38 +689,60 @@ void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 			false,
 			ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
-		for (uint32_t i = 0; i < 64; i++) {
+		for (uint32_t i = 0; i < mNumComponentInfos; i++) {
+			const ReducedComponentInfo& info = mComponentInfos[i];
 
-			// Skip component type if it does not have data
+			// Get component size and components array
 			uint32_t componentSize = 0;
 			uint8_t* components = ecs->componentsUntyped(i, componentSize);
-			if (components == nullptr) continue;
+			bool unsizedComponent = componentSize == 0;
 
-			// Skip component type if entity does not have it
-			ComponentMask mask = masks[mCurrentSelectedEntity];
-			const ReducedComponentInfo& info = mComponentInfos[i];
-			if (!mask.hasComponentType(i)) continue;
+			// Check if entity has this component
+			ComponentMask& mask = masks[mCurrentSelectedEntity];
+			bool entityHasComponent = mask.hasComponentType(i);
 
-			// Component editor
-			if (ImGui::CollapsingHeader(info.componentName, ImGuiTreeNodeFlags_DefaultOpen)) {
-				ImGui::Indent(12.0f);
-				if(info.componentEditor == nullptr) {
-					ImGui::Text("<No editor specified>");
+			// Specialize for unsized component (i.e.) flag
+			if (unsizedComponent) {
+				bool checkboxBool = entityHasComponent;
+				if (ImGui::Checkbox(info.componentName, &checkboxBool)) {
+					mask.setComponentType(i, checkboxBool);
 				}
-				else {
-					info.componentEditor(
-						info.editorState.get(),
-						components + mCurrentSelectedEntity * componentSize,
-						ecs,
-						mCurrentSelectedEntity);
+			}
+
+			// Sized component
+			else {
+				if (ImGui::CollapsingHeader(info.componentName, ImGuiTreeNodeFlags_DefaultOpen)) {
+
+					// Disable editor if entity does not have component
+					if (!entityHasComponent) {
+						ImGui::PushStyleColor(ImGuiCol_Text, INACTIVE_TEXT_COLOR);
+						ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+					}
+
+					// Run editor
+					ImGui::Indent(12.0f);
+					if(info.componentEditor == nullptr) {
+						ImGui::Text("<No editor specified>");
+					}
+					else {
+						info.componentEditor(
+							info.editorState.get(),
+							components + mCurrentSelectedEntity * componentSize,
+							ecs,
+							mCurrentSelectedEntity);
+					}
+					ImGui::Unindent(12.0f);
+
+					// Disable editor if entity does not have component
+					if (!entityHasComponent) {
+						ImGui::PopStyleColor();
+						ImGui::PopItemFlag();
+					}
 				}
-				ImGui::Unindent(12.0f);
 			}
 		}
 
 		ImGui::EndChild();
-
-		// Component edit menu
 	}
 
 	ImGui::EndGroup();
