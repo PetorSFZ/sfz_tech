@@ -37,6 +37,8 @@
 
 namespace ph {
 
+using sfz::vec2;
+
 // Static functions
 // ------------------------------------------------------------------------------------------------
 
@@ -390,6 +392,57 @@ static bool componentMaskEditor(
 	return bitsModified;
 }
 
+static void saveDialog(const NaiveEcsHeader* ecs) noexcept
+{
+	// Open file dialog
+	nfdchar_t* path = nullptr;
+	nfdresult_t result = NFD_SaveDialog("phecs", nullptr, &path);
+
+	// Write ECS to file if file dialog was succesful
+	if (result == NFD_OKAY) {
+		bool success =  sfz::writeBinaryFile(path, (const uint8_t*)ecs, ecs->ecsSizeBytes);
+		if (success) {
+			SFZ_INFO("PhantasyEngine", "Wrote ECS to \"%s\"", path);
+		}
+		else {
+			SFZ_ERROR("PhantasyEngine", "Failed to write ECS to \"%s\"", path);
+		}
+		free(path);
+	}
+	else if (result == NFD_ERROR) {
+		SFZ_ERROR("PhantasyEngine", "nativefiledialog: NFD_SaveDialog() error: %s",
+			NFD_GetError());
+	}
+}
+
+static void loadDialog(NaiveEcsHeader* ecs) noexcept
+{
+	// Open file dialog
+	nfdchar_t* path = nullptr;
+	nfdresult_t result = NFD_OpenDialog("phecs", nullptr, &path);
+
+	// Load ECS from file if file dialog was succesful
+	if (result == NFD_OKAY) {
+		sfz::DynArray<uint8_t> binary = sfz::readBinaryFile(path);
+		if (binary.size() == 0) {
+			SFZ_ERROR("PhantasyEngine", "Could not read ECS from \"%s\"", path);
+		}
+		else if (binary.size() != ecs->ecsSizeBytes) {
+			SFZ_ERROR("PhantasyEngine", "ECS from \"%s\" is wrong size", path);
+		}
+		else {
+			// TODO: Check if header matches
+			std::memcpy(ecs, binary.data(), ecs->ecsSizeBytes);
+			SFZ_INFO("PhantasyEngine", "Loaded ECS from \"%s\"", path);
+		}
+		free(path);
+	}
+	else if (result == NFD_ERROR) {
+		SFZ_ERROR("PhantasyEngine", "nativefiledialog: NFD_OpenDialog() error: %s",
+			NFD_GetError());
+	}
+}
+
 // NaiveEcsEditor: State methods
 // ------------------------------------------------------------------------------------------------
 
@@ -479,7 +532,7 @@ void NaiveEcsEditor::destroy() noexcept
 void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 {
 	// Begin window
-	ImGui::SetNextWindowContentSize(sfz::vec2(600.0f, 750.0f));
+	ImGui::SetNextWindowSize(sfz::vec2(720.0f, 750.0f), ImGuiCond_FirstUseEver);
 	ImGuiWindowFlags windowFlags = 0;
 	//windowFlags |= ImGuiWindowFlags_NoResize;
 	//windowFlags |= ImGuiWindowFlags_NoScrollbar;
@@ -503,6 +556,16 @@ void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 	// Get some stuff from the ECS system
 	ComponentMask* masks = ecs->componentMasks();
 
+	// Currently selected entities component mask
+	ImGui::BeginGroup();
+	componentMaskEditor("FilterMaskBit", mFilterMaskEditBuffers, mFilterMask);
+	ImGui::Checkbox("Compact entity list", &mCompactEntityList);
+	ImGui::EndGroup();
+
+	// Group to the right of component mask filter
+	ImGui::SameLine(ImGui::GetWindowWidth() - 175.0f);
+	ImGui::BeginGroup();
+
 	// Print size of ECS system in bytes
 	if (ecs->ecsSizeBytes < 1048576) {
 		ImGui::Text("Size: %.2f KiB", float(ecs->ecsSizeBytes) / 1024.0f);
@@ -512,85 +575,33 @@ void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 	}
 
 	// Print current number and max number of entities
-	ImGui::SameLine();
-	uint32_t numEntities = ecs->currentNumEntities;
-	ImGui::Text(" --  %u / %u entities", numEntities, ecs->maxNumEntities);
+	ImGui::Text("%u / %u entities", ecs->currentNumEntities, ecs->maxNumEntities);
 
 	// Save to file button
 #if !defined(__EMSCRIPTEN__) && !defined(SFZ_IOS)
-	ImGui::SameLine(ImGui::GetWindowWidth() - 140.0f);
-	if (ImGui::Button("Save", sfz::vec2(60, 0))) {
-
-		// Open file dialog
-		nfdchar_t* path = nullptr;
-		nfdresult_t result = NFD_SaveDialog("phnecs", nullptr, &path);
-
-		// Write ECS to file if file dialog was succesful
-		if (result == NFD_OKAY) {
-			bool success =  sfz::writeBinaryFile(path, (const uint8_t*)ecs, ecs->ecsSizeBytes);
-			if (success) {
-				SFZ_INFO("PhantasyEngine", "Wrote ECS to \"%s\"", path);
-			}
-			else {
-				SFZ_ERROR("PhantasyEngine", "Failed to write ECS to \"%s\"", path);
-			}
-			free(path);
-		}
-		else if (result == NFD_ERROR) {
-			SFZ_ERROR("PhantasyEngine", "nativefiledialog: NFD_SaveDialog() error: %s",
-				NFD_GetError());
-		}
+	if (ImGui::Button("Save", sfz::vec2(70, 0))) {
+		saveDialog(ecs);
 	}
 
 	// Load from file button
 	ImGui::SameLine();
-	if (ImGui::Button("Load", sfz::vec2(60, 0))) {
-
-		// Open file dialog
-		nfdchar_t* path = nullptr;
-		nfdresult_t result = NFD_OpenDialog("phnecs", nullptr, &path);
-
-		// Load ECS from file if file dialog was succesful
-		if (result == NFD_OKAY) {
-			sfz::DynArray<uint8_t> binary = sfz::readBinaryFile(path);
-			if (binary.size() == 0) {
-				SFZ_ERROR("PhantasyEngine", "Could not read ECS from \"%s\"", path);
-			}
-			else if (binary.size() != ecs->ecsSizeBytes) {
-				SFZ_ERROR("PhantasyEngine", "ECS from \"%s\" is wrong size", path);
-			}
-			else {
-				// TODO: Check if header matches
-				std::memcpy(ecs, binary.data(), ecs->ecsSizeBytes);
-				SFZ_INFO("PhantasyEngine", "Loaded ECS from \"%s\"", path);
-			}
-			free(path);
-		}
-		else if (result == NFD_ERROR) {
-			SFZ_ERROR("PhantasyEngine", "nativefiledialog: NFD_OpenDialog() error: %s",
-				NFD_GetError());
-		}
+	if (ImGui::Button("Load", sfz::vec2(70, 0))) {
+		loadDialog(ecs);
 	}
 #endif
 
-	ImGui::Spacing();
-	ImGui::Separator();
-	ImGui::Spacing();
+	ImGui::EndGroup();
 
-	// Currently selected entities component mask
-	componentMaskEditor("FilterMaskBit", mFilterMaskEditBuffers, mFilterMask);
-
-	// Spacing and separator between the different type of views
+	// Separator between the different type of views
 	ImGui::Spacing();
 	ImGui::Separator();
 	ImGui::Spacing();
 
 	// Entities column
-	ImGui::PushItemWidth(100);
 	ImGui::BeginGroup();
 
 	// Entities list
-	if (ImGui::ListBoxHeader("##Entities", ecs->maxNumEntities, 20)) {
+	if (ImGui::ListBoxHeader("##Entities", vec2(100.0f, ImGui::GetWindowHeight() - 280.0f))) {
 		for (uint32_t entity = 0; entity < ecs->maxNumEntities; entity++) {
 
 			// Only show entitites that fulfill filter mask
@@ -632,7 +643,9 @@ void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 
 	// End entities column
 	ImGui::EndGroup();
-	ImGui::PopItemWidth();
+
+	// Calculate width of content to the right of entities column
+	const float rhsContentWidth = ImGui::GetWindowWidth() - 135;
 
 	ImGui::SameLine();
 	ImGui::BeginGroup();
@@ -649,39 +662,45 @@ void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 		ImGui::Separator();
 		ImGui::Spacing();
 
-		// Component edit menu
-		if (ImGui::CollapsingHeader("Components", ImGuiTreeNodeFlags_DefaultOpen)) {
-			ImGui::BeginChild("ComponentsChild");
+		// Create child window stretching the remaining content area
+		ImGui::BeginChild(
+			"ComponentsChild",
+			vec2(rhsContentWidth, ImGui::GetWindowHeight() - 270.0f),
+			false,
+			ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
-			for (uint32_t i = 0; i < 64; i++) {
+		for (uint32_t i = 0; i < 64; i++) {
 
-				// Skip component type if it does not have data
-				uint32_t componentSize = 0;
-				uint8_t* components = ecs->componentsUntyped(i, componentSize);
-				if (components == nullptr) continue;
+			// Skip component type if it does not have data
+			uint32_t componentSize = 0;
+			uint8_t* components = ecs->componentsUntyped(i, componentSize);
+			if (components == nullptr) continue;
 
-				// Skip component type if entity does not have it
-				ComponentMask mask = masks[mCurrentSelectedEntity];
-				const ReducedComponentInfo& info = mComponentInfos[i];
-				if (!mask.hasComponentType(i)) continue;
+			// Skip component type if entity does not have it
+			ComponentMask mask = masks[mCurrentSelectedEntity];
+			const ReducedComponentInfo& info = mComponentInfos[i];
+			if (!mask.hasComponentType(i)) continue;
 
-				// Component editor
-				if (ImGui::CollapsingHeader(info.componentName)) {
-					if(info.componentEditor == nullptr) {
-						ImGui::Text("<No editor specified>");
-					}
-					else {
-						info.componentEditor(
-							info.editorState.get(),
-							components + mCurrentSelectedEntity * componentSize,
-							ecs,
-							mCurrentSelectedEntity);
-					}
+			// Component editor
+			if (ImGui::CollapsingHeader(info.componentName, ImGuiTreeNodeFlags_DefaultOpen)) {
+				ImGui::Indent(12.0f);
+				if(info.componentEditor == nullptr) {
+					ImGui::Text("<No editor specified>");
 				}
+				else {
+					info.componentEditor(
+						info.editorState.get(),
+						components + mCurrentSelectedEntity * componentSize,
+						ecs,
+						mCurrentSelectedEntity);
+				}
+				ImGui::Unindent(12.0f);
 			}
-
-			ImGui::EndChild();
 		}
+
+		ImGui::EndChild();
+
+		// Component edit menu
 	}
 
 	ImGui::EndGroup();

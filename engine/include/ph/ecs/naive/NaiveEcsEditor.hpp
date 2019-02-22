@@ -89,6 +89,7 @@ private:
 	ComponentMask mFilterMask = ComponentMask::activeMask();
 	str32 mFilterMaskEditBuffers[8];
 	str32 mEntityMaskEditBuffers[8];
+	bool mCompactEntityList = false;
 	uint32_t mCurrentSelectedEntity = ~0u;
 };
 
