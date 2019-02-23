@@ -319,7 +319,7 @@ static uint8_t binaryStringToByte(const char* binaryStr) noexcept
 static void initializeComponentMaskEditor(str32 buffers[8], ComponentMask initialMask) noexcept
 {
 	for (uint64_t i = 0; i < 8; i++) {
-		int8_t byte = uint8_t((initialMask.rawMask >> (i * 8)) & uint64_t(0xFF));
+		uint8_t byte = uint8_t((initialMask.rawMask >> (i * 8)) & uint64_t(0xFF));
 		const char* byteBinaryStr = byteToBinaryString(byte);
 		buffers[i].printf("%s", byteBinaryStr);
 	}
@@ -329,6 +329,41 @@ static int imguiOnlyBinaryFilter(ImGuiInputTextCallbackData* data) noexcept
 {
 	bool isBinaryChar = data->EventChar == '0' || data->EventChar == '1';
 	return isBinaryChar ? 0 : 1;
+}
+
+static void componentMaskVisualizer(ComponentMask mask) noexcept
+{
+	const int32_t NUM_BITS_PER_FIELD = 8;
+	const int32_t NUM_FIELDS = 4;
+	const int32_t NUM_ROWS = 2;
+	static_assert(NUM_BITS_PER_FIELD * NUM_FIELDS * NUM_ROWS == 64, "Think again");
+
+	for (int32_t rowIdx = 0; rowIdx < NUM_ROWS; rowIdx++) {
+		for (int32_t fieldIdx = NUM_FIELDS - 1; fieldIdx >= 0; fieldIdx--) {
+
+			int32_t byteIdx = rowIdx * NUM_FIELDS + fieldIdx;
+			uint8_t byte = uint8_t((mask.rawMask >> (byteIdx * 8)) & uint64_t(0xFF));
+			const char* byteBinaryStr = byteToBinaryString(byte);
+
+			ImGui::Text("%s", byteBinaryStr);
+			ImGui::SameLine();
+		}
+
+		if(rowIdx == 0) {
+			uint32_t byte0 = uint32_t(mask.rawMask & 0xFF);
+			uint32_t byte1 = uint32_t((mask.rawMask >> 8) & 0xFF);
+			uint32_t byte2 = uint32_t((mask.rawMask >> 16) & 0xFF);
+			uint32_t byte3 = uint32_t((mask.rawMask >> 24) & 0xFF);
+			ImGui::Text("[%02X %02X %02X %02X]", byte3, byte2, byte1, byte0);
+		}
+		else {
+			uint32_t byte4 = uint32_t((mask.rawMask >> 32) & 0xFF);
+			uint32_t byte5 = uint32_t((mask.rawMask >> 40) & 0xFF);
+			uint32_t byte6 = uint32_t((mask.rawMask >> 48) & 0xFF);
+			uint32_t byte7 = uint32_t((mask.rawMask >> 56) & 0xFF);
+			ImGui::Text("[%02X %02X %02X %02X]", byte7, byte6, byte5, byte4);
+		}
+	}
 }
 
 static bool componentMaskEditor(
@@ -509,9 +544,7 @@ void NaiveEcsEditor::swap(NaiveEcsEditor& other) noexcept
 	std::swap(this->mFilterMask, other.mFilterMask);
 	for (uint32_t i = 0; i < 8; i++) {
 		std::swap(this->mFilterMaskEditBuffers[i], other.mFilterMaskEditBuffers[i]);
-		std::swap(this->mEntityMaskEditBuffers[i], other.mEntityMaskEditBuffers[i]);
 	}
-	std::swap(this->mEntityMaskEditBuffersInitialized, other.mEntityMaskEditBuffersInitialized);
 	std::swap(this->mCompactEntityList, other.mCompactEntityList);
 	std::swap(this->mCurrentSelectedEntity, other.mCurrentSelectedEntity);
 }
@@ -526,9 +559,7 @@ void NaiveEcsEditor::destroy() noexcept
 	mFilterMask = ComponentMask::activeMask();
 	for (uint32_t i = 0; i < 8; i++) {
 		mFilterMaskEditBuffers[i].printf("");
-		mEntityMaskEditBuffers[i].printf("");
 	}
-	mEntityMaskEditBuffersInitialized = false;
 	mCompactEntityList = false;
 	mCurrentSelectedEntity = 0;
 }
@@ -631,10 +662,7 @@ void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 			str32 entityStr("%08u", entity);
 			bool selected = mCurrentSelectedEntity == entity;
 			bool activated = ImGui::Selectable(entityStr, selected);
-			if (activated) {
-				mCurrentSelectedEntity = entity;
-				mEntityMaskEditBuffersInitialized = false;
-			}
+			if (activated) mCurrentSelectedEntity = entity;
 
 			// Non-fulfilling or non-active entities are greyed out
 			if (!fulfillsFilter || !active) ImGui::PopStyleColor();
@@ -645,12 +673,14 @@ void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 
 	// New entity button
 	if (ImGui::Button("New", sfz::vec2(100, 0))) {
-		ecs->createEntity();
+		uint32_t entity = ecs->createEntity();
+		if (entity != ~0u) mCurrentSelectedEntity = entity;
 	}
 
 	// Clone entity button
 	if (ImGui::Button("Clone", sfz::vec2(100, 0))) {
-		ecs->cloneEntity(mCurrentSelectedEntity);
+		uint32_t entity = ecs->cloneEntity(mCurrentSelectedEntity);
+		if (entity != ~0u) mCurrentSelectedEntity = entity;
 	}
 
 	// Delete entity button
@@ -672,11 +702,8 @@ void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 	if (selectedEntityExists) {
 
 		// Currently selected entities component mask
-		if (!mEntityMaskEditBuffersInitialized) {
-			initializeComponentMaskEditor(mEntityMaskEditBuffers, masks[mCurrentSelectedEntity]);
-			mEntityMaskEditBuffersInitialized = true;
-		}
-		componentMaskEditor("MaskEditor", mEntityMaskEditBuffers, masks[mCurrentSelectedEntity]);
+		ComponentMask& mask = masks[mCurrentSelectedEntity];
+		componentMaskVisualizer(mask);
 
 		ImGui::Spacing();
 		ImGui::Separator();
@@ -698,29 +725,44 @@ void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 			bool unsizedComponent = componentSize == 0;
 
 			// Check if entity has this component
-			ComponentMask& mask = masks[mCurrentSelectedEntity];
 			bool entityHasComponent = mask.hasComponentType(i);
 
 			// Specialize for unsized component (i.e.) flag
 			if (unsizedComponent) {
+				if (!entityHasComponent) ImGui::PushStyleColor(ImGuiCol_Text, INACTIVE_TEXT_COLOR);
 				bool checkboxBool = entityHasComponent;
-				if (ImGui::Checkbox(info.componentName, &checkboxBool)) {
-					mask.setComponentType(i, checkboxBool);
+				if (ImGui::Checkbox(sfz::str96("##%s", info.componentName.str), &checkboxBool)) {
+					if (i != 0) ecs->setComponentUnsized(mCurrentSelectedEntity, i, checkboxBool);
 				}
+				ImGui::SameLine();
+				ImGui::Indent(79.0f);
+				ImGui::Text("%s", info.componentName.str);
+				ImGui::Unindent(79.0f);
+				if (!entityHasComponent) ImGui::PopStyleColor();
 			}
 
 			// Sized component
 			else {
-				if (ImGui::CollapsingHeader(info.componentName, ImGuiTreeNodeFlags_DefaultOpen)) {
+
+				bool checkboxBool = entityHasComponent;
+
+				if (ImGui::Checkbox(
+					sfz::str96("##%s_checkbox", info.componentName.str), &checkboxBool)) {
+					if (checkboxBool) mask.setComponentType(i, checkboxBool);
+					else ecs->deleteComponent(mCurrentSelectedEntity, i);
+				}
+
+				ImGui::SameLine();
+
+				if (!entityHasComponent) ImGui::PushStyleColor(ImGuiCol_Text, INACTIVE_TEXT_COLOR);
+				if (ImGui::CollapsingHeader(sfz::str96("%s", info.componentName.str),
+					ImGuiTreeNodeFlags_DefaultOpen)) {
 
 					// Disable editor if entity does not have component
-					if (!entityHasComponent) {
-						ImGui::PushStyleColor(ImGuiCol_Text, INACTIVE_TEXT_COLOR);
-						ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-					}
+					if (!entityHasComponent) ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
 
 					// Run editor
-					ImGui::Indent(12.0f);
+					ImGui::Indent(39.0f);
 					if(info.componentEditor == nullptr) {
 						ImGui::Text("<No editor specified>");
 					}
@@ -731,14 +773,12 @@ void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 							ecs,
 							mCurrentSelectedEntity);
 					}
-					ImGui::Unindent(12.0f);
+					ImGui::Unindent(39.0f);
 
 					// Disable editor if entity does not have component
-					if (!entityHasComponent) {
-						ImGui::PopStyleColor();
-						ImGui::PopItemFlag();
-					}
+					if (!entityHasComponent) ImGui::PopItemFlag();
 				}
+				if (!entityHasComponent) ImGui::PopStyleColor();
 			}
 		}
 

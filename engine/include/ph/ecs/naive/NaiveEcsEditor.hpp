@@ -89,8 +89,6 @@ private:
 	uint32_t mNumComponentInfos = 0;
 	ComponentMask mFilterMask = ComponentMask::activeMask();
 	str32 mFilterMaskEditBuffers[8];
-	str32 mEntityMaskEditBuffers[8];
-	bool mEntityMaskEditBuffersInitialized = false;
 	bool mCompactEntityList = false;
 	uint32_t mCurrentSelectedEntity = 0;
 };

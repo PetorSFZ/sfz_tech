@@ -169,6 +169,7 @@ bool NaiveEcsHeader::addComponentUntyped(
 	uint32_t entity, uint32_t componentType, const uint8_t* data, uint32_t dataSize) noexcept
 {
 	if (entity >= this->maxNumEntities) return false;
+	if (componentType >= this->numComponentTypes) return false;
 
 	// Return false if mask is not active
 	ComponentMask& mask = this->componentMasks()[entity];
@@ -191,6 +192,27 @@ bool NaiveEcsHeader::addComponentUntyped(
 	return true;
 }
 
+bool NaiveEcsHeader::setComponentUnsized(
+	uint32_t entity, uint32_t componentType, bool value) noexcept
+{
+	if (entity >= this->maxNumEntities) return false;
+	if (componentType >= this->numComponentTypes) return false;
+
+	// Return false if mask is not active
+	ComponentMask& mask = this->componentMasks()[entity];
+	if (!mask.active()) return false;
+
+	// Get components array, return false if component type have data
+	uint32_t componentSize = 0;
+	uint8_t* components = componentsUntyped(componentType, componentSize);
+	if (components != nullptr) return false;
+
+	// Set bit in mask
+	mask.setComponentType(componentType, value);
+
+	return true;
+}
+
 bool NaiveEcsHeader::deleteComponent(uint32_t entity, uint32_t componentType) noexcept
 {
 	if (entity >= this->maxNumEntities) return false;
@@ -199,10 +221,10 @@ bool NaiveEcsHeader::deleteComponent(uint32_t entity, uint32_t componentType) no
 	ComponentMask& mask = this->componentMasks()[entity];
 	if (!mask.active()) return false;
 
-	// Get components array, return false if component type does not have data
+	// Get components array, forward to setComponentUnsized() if component type does not have data
 	uint32_t componentSize = 0;
 	uint8_t* components = componentsUntyped(componentType, componentSize);
-	if (components == nullptr) return false;
+	if (components == nullptr) return this->setComponentUnsized(entity, componentType, false);
 
 	// Clear component
 	memset(components + entity * componentSize, 0, componentSize);

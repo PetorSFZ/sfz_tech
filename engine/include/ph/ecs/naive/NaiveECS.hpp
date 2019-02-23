@@ -196,6 +196,10 @@ struct NaiveEcsHeader final {
 		return addComponentUntyped(entity, componentType, (const uint8_t*)&component, sizeof(T));
 	}
 
+	// Sets the value (i.e. flag) of an unsized component. Returns whether succesful or not.
+	// Complexity: O(1)
+	bool setComponentUnsized(uint32_t entity, uint32_t componentType, bool value) noexcept;
+
 	// Delets a component from an entity. Returns whether succesful or not.
 	// Complexity: O(1)
 	bool deleteComponent(uint32_t entity, uint32_t componentType) noexcept;
