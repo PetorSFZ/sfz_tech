@@ -18,7 +18,7 @@
 
 #include "ZeroG/d3d12/D3D12CommandQueue.hpp"
 
-#include <cassert>
+#include "ZeroG/util/Assert.hpp"
 
 namespace zg {
 
@@ -31,7 +31,7 @@ D3D12CommandQueue::~D3D12CommandQueue() noexcept
 	this->flush();
 
 	// Check that all command lists have been returned
-	assert(mCommandListStorage.size() == mCommandListQueue.size());
+	ZG_ASSERT(mCommandListStorage.size() == mCommandListQueue.size());
 
 	// Destroy fence event
 	CloseHandle(mCommandQueueFenceEvent);
@@ -244,12 +244,12 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListBufferStateChanges(
 	CD3DX12_RESOURCE_BARRIER barriers[256] = {};
 	for (uint32_t i = 0; i < pendingStates.size(); i++) {
 		const PendingState& state = pendingStates[i];
-		
+
 		// Don't insert barrier if resource already is in correct state
 		if (state.buffer->lastCommittedState == state.neededInitialState) {
 			continue;
 		}
-		
+
 		// Error out if we don't have enough space in our temp array
 		if (numBarriers >= 256) return ZG_ERROR_GENERIC;
 
