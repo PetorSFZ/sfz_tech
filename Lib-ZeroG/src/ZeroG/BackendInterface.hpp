@@ -60,6 +60,10 @@ public:
 		uint64_t srcBufferOffsetBytes,
 		uint64_t numBytes) noexcept = 0;
 
+	virtual ZgErrorCode setPushConstant(
+		uint32_t parameterIndex,
+		const void* data) noexcept = 0;
+
 	virtual ZgErrorCode setPipelineRendering(
 		IPipelineRendering* pipeline) noexcept = 0;
 

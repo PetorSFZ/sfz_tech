@@ -291,6 +291,63 @@ typedef struct {
 // The maximum number of vertex attributes allowed as input to a vertex shader
 static const uint32_t ZG_MAX_NUM_VERTEX_ATTRIBUTES = 8;
 
+// The binding type of a pipeline parameter
+//
+// In D3D12, this corresponds to how the parameter is accessed in the root signature.
+// E.g., a PUSH_CONSTANT is stored directly in the root signature. No indirection is needed when
+// loading it in the shader.
+enum ZgPipelineParameterBindingTypeEnum {
+	// In D3D12, corresponds to 32-bit constants in the root signature
+	ZG_PIPELINE_PARAMETER_BINDING_TYPE_PUSH_CONSTANT,
+
+	// In D3D12, corrsponds to inline descriptors in the root signature
+	// TODO: Apparently not available in Vulkan, maybe don't expose here
+	//ZG_PIPELINE_PARAMETER_BINDING_TYPE_INLINE_BINDING,
+
+	// In D3D12, corresponds to descriptor table in the root signature
+	//ZG_PIPELINE_PARAMETER_BINDING_TYPE_DYNAMIC_BINDING
+};
+typedef uint32_t ZgPipelineParameterBindingType;
+
+typedef struct {
+
+	// Which register this parameter corresponds to in the shader. In D3D12 this corresponds to the
+	// "register" keyword, i.e. a value of 0 would correspond to "register(b0)". In GLSL this
+	// corresponds to the "binding" keyword, i.e. "layout(binding = 0)".
+	uint32_t shaderRegister;
+
+	// The size of the push constant in terms of 4-byte (32-bit) words. I.e., the size of the
+	// constant must be a multiple of 4, assert((sizeof(T) % 4) == 0).
+	//
+	// Do note that the maximum size of a root signature in D3D12 is 64 32-bit words. Meaning if
+	// you only have a single push constant (and no other parameters) it may not be larger than
+	// 64 words == 256 bytes. In addition, Microsoft recommends keeping the root signature smaller
+	// than 16 words to maximize performance on some hardware.
+	uint32_t sizeInWords;
+
+} ZgPipeplineParameterPushConstant;
+
+// A parameter to a pipeline.
+//
+// A parameter can be bound in different ways, and different data need to be provided depending on
+// how it should be bound. The bindingType member tells how the parameter is bound and specific
+// data is provided in the different members inside the union.
+typedef struct {
+
+	// The binding type of the parameter
+	ZgPipelineParameterBindingType bindingType;
+
+	// Union corresponding to the different binding types
+	union {
+		ZgPipeplineParameterPushConstant pushConstant;
+	};
+
+} ZgPipelineParameter;
+
+
+// The maximum number of pipeline parameters allowed on a single Pipeline.
+static const uint32_t ZG_MAX_NUM_PIPELINE_PARAMETERS = 16;
+
 // The information required to create a rendering pipeline
 typedef struct {
 
@@ -316,6 +373,10 @@ typedef struct {
 	// 1 and vertexBufferStrides[0] should be sizeof(Vertex) stored in your buffer.
 	uint32_t numVertexBufferSlots;
 	uint32_t vertexBufferStridesBytes[ZG_MAX_NUM_VERTEX_ATTRIBUTES];
+
+	// The parameters to the pipeline
+	uint32_t numParameters;
+	ZgPipelineParameter parameters[ZG_MAX_NUM_PIPELINE_PARAMETERS];
 
 } ZgPipelineRenderingCreateInfo;
 
@@ -399,15 +460,22 @@ ZG_DLL_API ZgErrorCode zgCommandListMemcpyBufferToBuffer(
 	uint64_t srcBufferOffsetBytes,
 	uint64_t numBytes);
 
+// Note: ParameterIndex is the index of the push constant in the
+// ZgPipelineRenderingCreateInfo.parameters[] array.
+ZG_DLL_API ZgErrorCode zgCommandListSetPushConstant(
+	ZgCommandList* commandList,
+	uint32_t parameterIndex,
+	const void* data);
+
+ZG_DLL_API ZgErrorCode zgCommandListSetPipelineRendering(
+	ZgCommandList* commandList,
+	ZgPipelineRendering* pipeline);
+
 typedef struct {
 	ZgFramebuffer* framebuffer;
 	ZgFramebufferRect viewport; // If all zero, the viewport will cover the entire framebuffer
 	ZgFramebufferRect scissor; // If all zero, the scissor will cover the entire framebuffer
 } ZgCommandListSetFramebufferInfo;
-
-ZG_DLL_API ZgErrorCode zgCommandListSetPipelineRendering(
-	ZgCommandList* commandList,
-	ZgPipelineRendering* pipeline);
 
 ZG_DLL_API ZgErrorCode zgCommandListSetFramebuffer(
 	ZgCommandList* commandList,

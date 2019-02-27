@@ -32,3 +32,6 @@ mkdir Release
 cd Release
 mklink /D res\ ..\..\res
 cd ..
+
+: Pause if started from Windows GUI
+if %0 == "%~0" pause

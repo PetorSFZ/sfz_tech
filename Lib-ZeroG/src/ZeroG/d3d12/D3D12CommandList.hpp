@@ -59,6 +59,10 @@ public:
 		uint64_t srcBufferOffsetBytes,
 		uint64_t numBytes) noexcept override final;
 
+	ZgErrorCode setPushConstant(
+		uint32_t parameterIndex,
+		const void* data) noexcept override final;
+
 	ZgErrorCode setPipelineRendering(
 		IPipelineRendering* pipeline) noexcept override final;
 

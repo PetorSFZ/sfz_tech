@@ -141,6 +141,30 @@ ZgErrorCode D3D12CommandList::memcpyBufferToBuffer(
 	return ZG_SUCCESS;
 }
 
+ZgErrorCode D3D12CommandList::setPushConstant(
+	uint32_t parameterIndex,
+	const void* dataPtr) noexcept
+{
+	// Require that a pipeline has been set so we can query its parameters
+	if (!mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+
+	// Return invalid argument if parameter index is out of bounds
+	const ZgPipelineRenderingCreateInfo& pipelineInfo = mBoundPipeline->createInfo;
+	if (parameterIndex >= pipelineInfo.numParameters) return ZG_ERROR_INVALID_ARGUMENT;
+
+	const ZgPipeplineParameterPushConstant& constInfo =
+		pipelineInfo.parameters[parameterIndex].pushConstant;
+	if (constInfo.sizeInWords == 1) {
+		uint32_t data = *reinterpret_cast<const uint32_t*>(dataPtr);
+		commandList->SetGraphicsRoot32BitConstant(parameterIndex, data, 0);
+	}
+	else {
+		commandList->SetGraphicsRoot32BitConstants(parameterIndex, constInfo.sizeInWords, dataPtr, 0);
+	}
+
+	return ZG_SUCCESS;
+}
+
 ZgErrorCode D3D12CommandList::setPipelineRendering(
 	IPipelineRendering* pipelineIn) noexcept
 {

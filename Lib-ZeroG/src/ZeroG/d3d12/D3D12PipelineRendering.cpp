@@ -18,6 +18,7 @@
 
 #include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
 
+#include "ZeroG/util/Assert.hpp"
 #include "ZeroG/util/CpuAllocation.hpp"
 
 namespace zg {
@@ -268,11 +269,20 @@ ZgErrorCode createPipelineRendering(
 		// Root signature parameters
 		// TODO: Currently using temporary hardcoded parameters
 		// TODO: Set dynamically with user provided settings
-		const uint32_t NUM_PARAMS = 1;
-		CD3DX12_ROOT_PARAMETER1 parameters[NUM_PARAMS];
-		parameters[0].InitAsConstants(4, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+		CD3DX12_ROOT_PARAMETER1 parameters[ZG_MAX_NUM_PIPELINE_PARAMETERS];
+		for (uint32_t i = 0; i < createInfo.numParameters; i++) {
+			const ZgPipelineParameter& paramInfo = createInfo.parameters[i];
+			if (paramInfo.bindingType == ZG_PIPELINE_PARAMETER_BINDING_TYPE_PUSH_CONSTANT) {
+				const ZgPipeplineParameterPushConstant& constInfo = paramInfo.pushConstant;
+				parameters[i].InitAsConstants(
+					constInfo.sizeInWords, constInfo.shaderRegister, 0, D3D12_SHADER_VISIBILITY_ALL);
+			}
+			else {
+				ZG_ASSERT(false);
+			}
+		}
 		CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC desc;
-		desc.Init_1_1(NUM_PARAMS, parameters, 0, nullptr, flags);
+		desc.Init_1_1(createInfo.numParameters, parameters, 0, nullptr, flags);
 
 		// Serialize the root signature.
 		ComPtr<ID3DBlob> blob;

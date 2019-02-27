@@ -112,11 +112,11 @@ int main(int argc, char* argv[])
 
 	pipelineInfo.pixelShaderPath = "res/Sample-1/test.hlsl";
 	pipelineInfo.pixelShaderEntry = "PSMain";
-	
+
 	pipelineInfo.shaderVersion = ZG_SHADER_MODEL_6_2;
 	pipelineInfo.dxcCompilerFlags[0] = "-Zi";
 	pipelineInfo.dxcCompilerFlags[1] = "-O4";
-	
+
 	pipelineInfo.numVertexAttributes = 2;
 
 	pipelineInfo.vertexAttributes[0].attributeLocation = 0;
@@ -132,6 +132,15 @@ int main(int argc, char* argv[])
 	pipelineInfo.numVertexBufferSlots = 1;
 	pipelineInfo.vertexBufferStridesBytes[0] = sizeof(Vertex);
 
+	pipelineInfo.numParameters = 2;
+	pipelineInfo.parameters[0].bindingType = ZG_PIPELINE_PARAMETER_BINDING_TYPE_PUSH_CONSTANT;
+	pipelineInfo.parameters[0].pushConstant.shaderRegister = 0;
+	pipelineInfo.parameters[0].pushConstant.sizeInWords = 4; // sizeof(vec4) / 4 == 4
+
+	pipelineInfo.parameters[1].bindingType = ZG_PIPELINE_PARAMETER_BINDING_TYPE_PUSH_CONSTANT;
+	pipelineInfo.parameters[1].pushConstant.shaderRegister = 1;
+	pipelineInfo.parameters[1].pushConstant.sizeInWords = 1;
+	
 	ZgPipelineRendering* pipeline = nullptr;
 	CHECK_ZG zgPipelineRenderingCreate(ctx.mContext, &pipeline, &pipelineInfo);
 
@@ -163,7 +172,7 @@ int main(int argc, char* argv[])
 		CHECK_ZG zgCommandQueueExecuteCommandList(commandQueue, commandList);
 		CHECK_ZG zgCommandQueueFlush(commandQueue);
 	}
-	
+
 	// Destroy upload buffer
 	CHECK_ZG zgBufferRelease(ctx.mContext, vertexUploadBuffer);
 
@@ -211,14 +220,18 @@ int main(int argc, char* argv[])
 		CHECK_ZG zgCommandListSetPipelineRendering(commandList, pipeline);
 		ZgCommandListSetFramebufferInfo framebufferInfo = {};
 		framebufferInfo.framebuffer = framebuffer;
+		float color[4] = { 0.0f, 0.5f, 0.0f, 0.0f };
+		CHECK_ZG zgCommandListSetPushConstant(commandList, 0, color);
+		float offset = 0.2f;
 		CHECK_ZG zgCommandListSetFramebuffer(commandList, &framebufferInfo);
+		CHECK_ZG zgCommandListSetPushConstant(commandList, 1, &offset);
 		CHECK_ZG zgCommandListClearFramebuffer(commandList, 0.2f, 0.2f, 0.3f, 1.0f);
 		CHECK_ZG zgCommandListSetVertexBuffer(commandList, 0, vertexDeviceBuffer);
 		CHECK_ZG zgCommandListDrawTriangles(commandList, 0, 3);
 
 		// Execute command list
 		CHECK_ZG zgCommandQueueExecuteCommandList(commandQueue, commandList);
-		
+
 		// Finish frame
 		CHECK_ZG zgContextFinishFrame(ctx.mContext);
 	}

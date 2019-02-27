@@ -268,6 +268,17 @@ ZG_DLL_API ZgErrorCode zgCommandListMemcpyBufferToBuffer(
 		numBytes);
 }
 
+ZG_DLL_API ZgErrorCode zgCommandListSetPushConstant(
+	ZgCommandList* commandListIn,
+	uint32_t parameterIndex,
+	const void* data)
+{
+	if (parameterIndex >= ZG_MAX_NUM_PIPELINE_PARAMETERS) return ZG_ERROR_INVALID_ARGUMENT;
+	if (data == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
+	return commandList->setPushConstant(parameterIndex, data);
+}
+
 ZG_DLL_API ZgErrorCode zgCommandListSetPipelineRendering(
 	ZgCommandList* commandListIn,
 	ZgPipelineRendering* pipeline)
