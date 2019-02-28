@@ -16,7 +16,7 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "ZeroG/ZeroG.hpp"
+#include "ZeroG-cpp.hpp"
 
 #include <algorithm>
 #include <cstdio>

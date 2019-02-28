@@ -18,8 +18,8 @@
 
 #pragma once
 
+#include "ZeroG.h"
 #include "ZeroG/BackendInterface.hpp"
-#include "ZeroG/ZeroG-CApi.h"
 
 namespace zg {
 

@@ -21,7 +21,7 @@
 
 // This header file contains the ZeroG C-API. If you are using C++ you might also want to link with
 // and use the C++ wrapper static library where appropriate. The C++ wrapper header is
-// "ZeroG/ZeroG.hpp".
+// "ZeroGpp.hpp".
 
 // Includes
 // ------------------------------------------------------------------------------------------------

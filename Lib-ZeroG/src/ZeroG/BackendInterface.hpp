@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <ZeroG/ZeroG-CApi.h>
+#include "ZeroG.h"
 
 namespace zg {
 

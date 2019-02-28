@@ -20,7 +20,7 @@
 
 #include <cstdint>
 
-#include "ZeroG-CApi.h"
+#include "ZeroG.h"
 
 namespace zg {
 

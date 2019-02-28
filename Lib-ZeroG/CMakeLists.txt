@@ -69,9 +69,9 @@ add_subdirectory(${EXTERNALS_DIR}/D3DX12)
 # ------------------------------------------------------------------------------------------------
 
 set(ZEROG_CAPI_INCLUDE_FILES
-	${INCLUDE_DIR}/ZeroG/ZeroG-CApi.h
+	${INCLUDE_DIR}/ZeroG.h
 )
-source_group(TREE ${INCLUDE_DIR} FILES ${ZEROG_CAPI_INCLUDE_FILES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ZEROG_CAPI_INCLUDE_FILES})
 
 set(ZEROG_CAPI_SRC_FILES
 	${SRC_DIR}/ZeroG/d3d12/D3D12Backend.hpp
@@ -94,7 +94,7 @@ set(ZEROG_CAPI_SRC_FILES
 	${SRC_DIR}/ZeroG/util/Vector.hpp
 	${SRC_DIR}/ZeroG/BackendInterface.hpp
 
-	${SRC_DIR}/ZeroG/ZeroG-CApi.cpp
+	${SRC_DIR}/ZeroG/ZeroG.cpp
 )
 source_group(TREE ${SRC_DIR} FILES ${ZEROG_CAPI_SRC_FILES})
 
@@ -110,12 +110,12 @@ target_include_directories(ZeroG PRIVATE
 # ------------------------------------------------------------------------------------------------
 
 set(ZEROG_CPP_INCLUDE_FILES
-	${INCLUDE_DIR}/ZeroG/ZeroG.hpp
+	${INCLUDE_DIR}/ZeroG-cpp.hpp
 )
-source_group(TREE ${INCLUDE_DIR} FILES ${ZEROG_CPP_INCLUDE_FILES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ZEROG_CPP_INCLUDE_FILES})
 
 set(ZEROG_CPP_SRC_FILES
-	${SRC_DIR}/ZeroG/ZeroG-CppWrapper.cpp
+	${SRC_DIR}/ZeroG/ZeroG-cpp.cpp
 )
 source_group(TREE ${SRC_DIR} FILES ${ZEROG_CPP_SRC_FILES})
 

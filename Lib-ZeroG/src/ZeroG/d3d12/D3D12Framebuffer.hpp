@@ -18,9 +18,9 @@
 
 #pragma once
 
+#include "ZeroG.h"
 #include "ZeroG/d3d12/D3D12Common.hpp"
 #include "ZeroG/BackendInterface.hpp"
-#include "ZeroG/ZeroG-CApi.h"
 
 namespace zg {
 

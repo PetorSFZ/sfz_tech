@@ -22,7 +22,7 @@
 #include <SDL.h>
 #include <SDL_syswm.h>
 
-#include <ZeroG/ZeroG.hpp>
+#include "ZeroG-cpp.hpp"
 
 #ifdef _WIN32
 #define NOMINMAX

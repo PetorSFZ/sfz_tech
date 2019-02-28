@@ -20,12 +20,12 @@
 
 #include <mutex>
 
+#include "ZeroG.h"
 #include "ZeroG/d3d12/D3D12Common.hpp"
 #include "ZeroG/d3d12/D3D12CommandList.hpp"
 #include "ZeroG/util/RingBuffer.hpp"
 #include "ZeroG/util/Vector.hpp"
 #include "ZeroG/BackendInterface.hpp"
-#include "ZeroG/ZeroG-CApi.h"
 
 namespace zg {
 

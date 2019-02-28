@@ -18,12 +18,12 @@
 
 #pragma once
 
+#include "ZeroG.h"
 #include "ZeroG/d3d12/D3D12Common.hpp"
 #include "ZeroG/d3d12/D3D12Memory.hpp"
 #include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
 #include "ZeroG/BackendInterface.hpp"
 #include "ZeroG/util/Vector.hpp"
-#include "ZeroG/ZeroG-CApi.h"
 
 namespace zg {
 

@@ -17,7 +17,7 @@
 // 3. This notice may not be removed or altered from any source distribution.
 
 #define ZG_DLL_EXPORT
-#include "ZeroG/ZeroG-CApi.h"
+#include "ZeroG.h"
 
 #include "ZeroG/BackendInterface.hpp"
 #include "ZeroG/util/CpuAllocation.hpp"

@@ -20,7 +20,7 @@
 
 #include <utility> // std::forward
 
-#include "ZeroG/ZeroG-CApi.h"
+#include "ZeroG.h"
 
 namespace zg {
 
