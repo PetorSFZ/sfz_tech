@@ -21,7 +21,7 @@
 
 // This header file contains the ZeroG C-API. If you are using C++ you might also want to link with
 // and use the C++ wrapper static library where appropriate. The C++ wrapper header is
-// "ZeroGpp.hpp".
+// "ZeroG-cpp.hpp".
 
 // Includes
 // ------------------------------------------------------------------------------------------------
@@ -51,6 +51,8 @@ extern "C" {
 // ZeroG handles
 // ------------------------------------------------------------------------------------------------
 
+// Macro to declare a ZeroG handle. As a user you can never dereference or inspect a ZeroG handle,
+// you can only store pointers to them.
 #define ZG_HANDLE(name) \
 	struct name; \
 	typedef struct name name;
@@ -76,6 +78,7 @@ ZG_HANDLE(ZgCommandQueue);
 // Bool
 // ------------------------------------------------------------------------------------------------
 
+// The ZeroG bool type.
 typedef uint32_t ZgBool;
 static const ZgBool ZG_FALSE = 0;
 static const ZgBool ZG_TRUE = 1;
@@ -83,9 +86,10 @@ static const ZgBool ZG_TRUE = 1;
 // Framebuffer rectangle
 // ------------------------------------------------------------------------------------------------
 
-typedef struct {
+struct ZgFramebufferRect {
 	uint32_t topLeftX, topLeftY, width, height;
-} ZgFramebufferRect;
+};
+typedef struct ZgFramebufferRect ZgFramebufferRect;
 
 // Version information
 // ------------------------------------------------------------------------------------------------
@@ -112,7 +116,6 @@ enum ZgBackendTypeEnum {
 
 	//ZG_BACKEND_VULKAN,
 	//ZG_BACKEND_METAL,
-	//ZG_BACKEND_WEB_GPU,
 };
 typedef uint32_t ZgBackendType;
 
@@ -163,7 +166,7 @@ typedef uint32_t ZgErrorCode;
 // * All allocations must be at least 32-byte aligned.
 //
 // If no custom allocator is required, just leave all fields zero in this struct.
-typedef struct {
+struct ZgAllocator {
 	// Function pointer to allocate function. The allocation created must be 32-byte aligned. The
 	// name is a short string (< ~32 chars) explaining what the allocation is used for, useful
 	// for debug or visualization purposes.
@@ -174,13 +177,14 @@ typedef struct {
 
 	// User specified pointer that is provided to each allocate/free call.
 	void* userPtr;
-} ZgAllocator;
+};
+typedef struct ZgAllocator ZgAllocator;
 
 // Context
 // ------------------------------------------------------------------------------------------------
 
 // The settings used to create a context and initialize ZeroG
-typedef struct {
+struct ZgContextInitSettings {
 
 	// [Mandatory] The wanted ZeroG backend
 	ZgBackendType backend;
@@ -201,7 +205,8 @@ typedef struct {
 	//       backend and OS.
 	void* nativeWindowHandle;
 
-} ZgContextInitSettings;
+};
+typedef struct ZgContextInitSettings ZgContextInitSettings;
 
 ZG_DLL_API ZgErrorCode zgContextCreate(
 	ZgContext** contextOut,
@@ -262,7 +267,7 @@ enum ZgVertexAttributeTypeEnum {
 typedef uint32_t ZgVertexAttributeType;
 
 // A struct defining a vertex attribute
-typedef struct {
+struct ZgVertexAttribute {
 	// The location of the attribute in the vertex input.
 	//
 	// For HLSL the semantic name need to be "ATTRIBUTE_LOCATION_<attributeLocation>"
@@ -286,7 +291,8 @@ typedef struct {
 	// Offset in bytes from start of buffer to the first element of this type.
 	uint32_t offsetToFirstElementInBytes;
 
-} ZgVertexAttribute;
+};
+typedef struct ZgVertexAttribute ZgVertexAttribute;
 
 // The maximum number of vertex attributes allowed as input to a vertex shader
 static const uint32_t ZG_MAX_NUM_VERTEX_ATTRIBUTES = 8;
@@ -309,7 +315,7 @@ enum ZgPipelineParameterBindingTypeEnum {
 };
 typedef uint32_t ZgPipelineParameterBindingType;
 
-typedef struct {
+struct ZgPipeplineParameterPushConstant {
 
 	// Which register this parameter corresponds to in the shader. In D3D12 this corresponds to the
 	// "register" keyword, i.e. a value of 0 would correspond to "register(b0)". In GLSL this
@@ -325,14 +331,15 @@ typedef struct {
 	// than 16 words to maximize performance on some hardware.
 	uint32_t sizeInWords;
 
-} ZgPipeplineParameterPushConstant;
+};
+typedef struct ZgPipeplineParameterPushConstant ZgPipeplineParameterPushConstant;
 
 // A parameter to a pipeline.
 //
 // A parameter can be bound in different ways, and different data need to be provided depending on
 // how it should be bound. The bindingType member tells how the parameter is bound and specific
 // data is provided in the different members inside the union.
-typedef struct {
+struct ZgPipelineParameter {
 
 	// The binding type of the parameter
 	ZgPipelineParameterBindingType bindingType;
@@ -342,14 +349,14 @@ typedef struct {
 		ZgPipeplineParameterPushConstant pushConstant;
 	};
 
-} ZgPipelineParameter;
-
+};
+typedef struct ZgPipelineParameter ZgPipelineParameter;
 
 // The maximum number of pipeline parameters allowed on a single Pipeline.
 static const uint32_t ZG_MAX_NUM_PIPELINE_PARAMETERS = 16;
 
 // The information required to create a rendering pipeline
-typedef struct {
+struct ZgPipelineRenderingCreateInfo {
 
 	// Vertex shader information
 	const char* vertexShaderPath;
@@ -378,7 +385,8 @@ typedef struct {
 	uint32_t numParameters;
 	ZgPipelineParameter parameters[ZG_MAX_NUM_PIPELINE_PARAMETERS];
 
-} ZgPipelineRenderingCreateInfo;
+};
+typedef struct ZgPipelineRenderingCreateInfo ZgPipelineRenderingCreateInfo;
 
 ZG_DLL_API ZgErrorCode zgPipelineRenderingCreate(
 	ZgContext* context,
@@ -409,7 +417,7 @@ enum ZgBufferMemoryTypeEnum {
 };
 typedef uint32_t ZgBufferMemoryType;
 
-typedef struct {
+struct ZgBufferCreateInfo {
 
 	// The size in bytes of the buffer
 	uint64_t sizeInBytes;
@@ -417,7 +425,8 @@ typedef struct {
 	// The type of memory
 	ZgBufferMemoryType bufferMemoryType;
 
-} ZgBufferCreateInfo;
+};
+typedef struct ZgBufferCreateInfo ZgBufferCreateInfo;
 
 ZG_DLL_API ZgErrorCode zgBufferCreate(
 	ZgContext* context,
@@ -471,11 +480,12 @@ ZG_DLL_API ZgErrorCode zgCommandListSetPipelineRendering(
 	ZgCommandList* commandList,
 	ZgPipelineRendering* pipeline);
 
-typedef struct {
+struct ZgCommandListSetFramebufferInfo {
 	ZgFramebuffer* framebuffer;
 	ZgFramebufferRect viewport; // If all zero, the viewport will cover the entire framebuffer
 	ZgFramebufferRect scissor; // If all zero, the scissor will cover the entire framebuffer
-} ZgCommandListSetFramebufferInfo;
+};
+typedef struct ZgCommandListSetFramebufferInfo ZgCommandListSetFramebufferInfo;
 
 ZG_DLL_API ZgErrorCode zgCommandListSetFramebuffer(
 	ZgCommandList* commandList,
