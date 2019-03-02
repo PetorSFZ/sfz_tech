@@ -20,7 +20,9 @@
 #include "ZeroG.h"
 
 #include "ZeroG/BackendInterface.hpp"
+#include "ZeroG/Context.hpp"
 #include "ZeroG/util/CpuAllocation.hpp"
+#include "ZeroG/util/Logging.hpp"
 
 #ifdef _WIN32
 #include "ZeroG/d3d12/D3D12Backend.hpp"
@@ -46,18 +48,31 @@ ZG_DLL_API ZgFeatureBits zgCompiledFeatures(void)
 // Context
 // ------------------------------------------------------------------------------------------------
 
-struct ZgContext final {
-	ZgAllocator allocator = {};
-	zg::IContext* context = nullptr;
-};
-
 ZG_DLL_API ZgErrorCode zgContextCreate(
 	ZgContext** contextOut, const ZgContextInitSettings* initSettings)
 {
-	// Set default allocator if none is specified
 	ZgContextInitSettings settings = *initSettings;
+
+	// Set default logger if none is specified
+	bool usingDefaultLogger = settings.logger.log == nullptr;
+	if (usingDefaultLogger) {
+		settings.logger = zg::getDefaultLogger();
+	}
+	ZgLogger logger = settings.logger;
+	if (usingDefaultLogger) {
+		ZG_INFO(logger, "zgContextCreate(): Using default logger (printf)");
+	}
+	else {
+		ZG_INFO(logger, "zgContextCreate(): Using user-provided logger");
+	}
+
+	// Set default allocator if none is specified
 	if (settings.allocator.allocate == nullptr || settings.allocator.deallocate == nullptr) {
 		settings.allocator = zg::getDefaultAllocator();
+		ZG_INFO(logger, "zgContextCreate(): Using default allocator");
+	}
+	else {
+		ZG_INFO(logger, "zgContextCreate(): Using user-provided allocator");
 	}
 
 	// Allocate context
@@ -66,6 +81,7 @@ ZG_DLL_API ZgErrorCode zgContextCreate(
 
 	// Set context's allocator
 	context->allocator = settings.allocator;
+	context->logger = settings.logger;
 
 	// Create and allocate requested backend api
 	switch (initSettings->backend) {
@@ -73,15 +89,18 @@ ZG_DLL_API ZgErrorCode zgContextCreate(
 	case ZG_BACKEND_NONE:
 		// TODO: Implement null backend
 		zg::zgDelete(settings.allocator, context);
+		ZG_ERROR(logger, "zgContextCreate(): Null backend not implemented, exiting.");
 		return ZG_ERROR_UNIMPLEMENTED;
 
 	case ZG_BACKEND_D3D12:
 		{
-		ZgErrorCode res = zg::createD3D12Backend(&context->context, settings);
+			ZgErrorCode res = zg::createD3D12Backend(&context->context, settings);
 			if (res != ZG_SUCCESS) {
 				zg::zgDelete(settings.allocator, context);
+				ZG_ERROR(logger, "zgContextCreate(): Could not create D3D12 backend, exiting.");
 				return res;
 			}
+			ZG_INFO(logger, "zgContextCreate(): Created D3D12 backend");
 		}
 		break;
 

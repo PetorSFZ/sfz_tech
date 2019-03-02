@@ -90,9 +90,12 @@ set(ZEROG_CAPI_SRC_FILES
 	${SRC_DIR}/ZeroG/util/Assert.hpp
 	${SRC_DIR}/ZeroG/util/CpuAllocation.hpp
 	${SRC_DIR}/ZeroG/util/CpuAllocation.cpp
+	${SRC_DIR}/ZeroG/util/Logging.hpp
+	${SRC_DIR}/ZeroG/util/Logging.cpp
 	${SRC_DIR}/ZeroG/util/RingBuffer.hpp
 	${SRC_DIR}/ZeroG/util/Vector.hpp
 	${SRC_DIR}/ZeroG/BackendInterface.hpp
+	${SRC_DIR}/ZeroG/Context.hpp
 
 	${SRC_DIR}/ZeroG/ZeroG.cpp
 )

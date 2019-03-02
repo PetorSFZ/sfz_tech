@@ -156,6 +156,33 @@ enum ZgErrorCodeEnum {
 };
 typedef uint32_t ZgErrorCode;
 
+// Logging interface
+// ------------------------------------------------------------------------------------------------
+
+enum ZgLogLevelEnum {
+	ZG_LOG_LEVEL_INFO = 0,
+	ZG_LOG_LEVEL_WARNING,
+	ZG_LOG_LEVEL_ERROR
+};
+typedef uint32_t ZgLogLevel;
+
+// Logger used for logging inside ZeroG.
+//
+// The logger must be thread-safe. I.e. it must be okay to call it simulatenously from multiple
+// threads.
+//
+// If no custom logger is wanted leave all fields zero in this struct. Normal printf() will then be
+// used for logging instead.
+struct ZgLogger {
+
+	// Function pointer to user-specified log function.
+	void(*log)(void* userPtr, const char* file, int line, ZgLogLevel level, const char* message);
+
+	// User specified pointer that is provied to each log() call.
+	void* userPtr;
+};
+typedef struct ZgLogger ZgLogger;
+
 // Memory allocator interface
 // ------------------------------------------------------------------------------------------------
 
@@ -167,6 +194,7 @@ typedef uint32_t ZgErrorCode;
 //
 // If no custom allocator is required, just leave all fields zero in this struct.
 struct ZgAllocator {
+
 	// Function pointer to allocate function. The allocation created must be 32-byte aligned. The
 	// name is a short string (< ~32 chars) explaining what the allocation is used for, useful
 	// for debug or visualization purposes.
@@ -196,6 +224,9 @@ struct ZgContextInitSettings {
 	// [Optional] Used to enable debug mode. This means enabling various debug layers and such
 	//            in the underlaying APIs.
 	ZgBool debugMode;
+
+	// [Optional] The logger used for logging
+	ZgLogger logger;
 
 	// [Optional] The allocator used to allocate CPU memory
 	ZgAllocator allocator;
