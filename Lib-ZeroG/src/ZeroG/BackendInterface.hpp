@@ -122,11 +122,12 @@ public:
 	// Pipeline methods
 	// --------------------------------------------------------------------------------------------
 
-	virtual ZgErrorCode pipelineCreate(
+	virtual ZgErrorCode pipelineRenderingCreate(
 		IPipelineRendering** pipelineOut,
+		ZgPipelineRenderingSignature* signatureOut,
 		const ZgPipelineRenderingCreateInfo& createInfo) noexcept = 0;
 
-	virtual ZgErrorCode pipelineRelease(
+	virtual ZgErrorCode pipelineRenderingRelease(
 		IPipelineRendering* pipeline) noexcept = 0;
 
 	// Memory methods

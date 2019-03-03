@@ -400,8 +400,9 @@ public:
 	// Pipeline methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode pipelineCreate(
+	ZgErrorCode pipelineRenderingCreate(
 		IPipelineRendering** pipelineOut,
+		ZgPipelineRenderingSignature* signatureOut,
 		const ZgPipelineRenderingCreateInfo& createInfo) noexcept override final
 	{
 		// Initialize DXC compiler if necessary
@@ -427,6 +428,7 @@ public:
 		D3D12PipelineRendering* d3d12pipeline = nullptr;
 		ZgErrorCode res = createPipelineRendering(
 			&d3d12pipeline,
+			signatureOut,
 			createInfo,
 			*mDxcLibrary.Get(),
 			*mDxcCompiler.Get(),
@@ -440,7 +442,7 @@ public:
 		return res;
 	}
 
-	ZgErrorCode pipelineRelease(
+	ZgErrorCode pipelineRenderingRelease(
 		IPipelineRendering* pipeline) noexcept override final
 	{
 		// TODO: Check if pipeline is currently in use? Lock?

@@ -122,12 +122,12 @@ int main(int argc, char* argv[])
 	pipelineInfo.vertexAttributes[0].attributeLocation = 0;
 	pipelineInfo.vertexAttributes[0].vertexBufferSlot = 0;
 	pipelineInfo.vertexAttributes[0].offsetToFirstElementInBytes = 0;
-	pipelineInfo.vertexAttributes[0].type = ZG_VERTEX_ATTRIBUTE_FLOAT3;
+	pipelineInfo.vertexAttributes[0].type = ZG_VERTEX_ATTRIBUTE_F32_3;
 
 	pipelineInfo.vertexAttributes[1].attributeLocation = 1;
 	pipelineInfo.vertexAttributes[1].vertexBufferSlot = 0;
 	pipelineInfo.vertexAttributes[1].offsetToFirstElementInBytes = sizeof(float) * 3;
-	pipelineInfo.vertexAttributes[1].type = ZG_VERTEX_ATTRIBUTE_FLOAT3;
+	pipelineInfo.vertexAttributes[1].type = ZG_VERTEX_ATTRIBUTE_F32_3;
 
 	pipelineInfo.numVertexBufferSlots = 1;
 	pipelineInfo.vertexBufferStridesBytes[0] = sizeof(Vertex);
@@ -142,7 +142,8 @@ int main(int argc, char* argv[])
 	pipelineInfo.parameters[1].pushConstant.sizeInWords = 1;
 	
 	ZgPipelineRendering* pipeline = nullptr;
-	CHECK_ZG zgPipelineRenderingCreate(ctx.mContext, &pipeline, &pipelineInfo);
+	ZgPipelineRenderingSignature signature = {};
+	CHECK_ZG zgPipelineRenderingCreate(ctx.mContext, &pipeline, &signature, &pipelineInfo);
 
 	// Create a buffer
 	ZgBufferCreateInfo bufferInfo = {};

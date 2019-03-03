@@ -49,6 +49,7 @@ public:
 
 ZgErrorCode createPipelineRendering(
 	D3D12PipelineRendering** pipelineOut,
+	ZgPipelineRenderingSignature* signatureOut,
 	const ZgPipelineRenderingCreateInfo& createInfo,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,

@@ -170,10 +170,13 @@ ZG_DLL_API ZgErrorCode zgContextFinishFrame(
 ZG_DLL_API ZgErrorCode zgPipelineRenderingCreate(
 	ZgContext* context,
 	ZgPipelineRendering** pipelineOut,
+	ZgPipelineRenderingSignature* signatureOut,
 	const ZgPipelineRenderingCreateInfo* createInfo)
 {
 	// Check arguments
 	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (pipelineOut == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (signatureOut == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
 	if (createInfo->vertexShaderPath == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
 	if (createInfo->vertexShaderEntry == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
 	if (createInfo->pixelShaderPath == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
@@ -183,7 +186,8 @@ ZG_DLL_API ZgErrorCode zgPipelineRenderingCreate(
 	if (createInfo->numVertexBufferSlots == 0) return ZG_ERROR_INVALID_ARGUMENT;
 
 	zg::IPipelineRendering* pipeline = nullptr;
-	ZgErrorCode res = context->context->pipelineCreate(&pipeline, *createInfo);
+	ZgErrorCode res = context->context->pipelineRenderingCreate(
+		&pipeline, signatureOut, *createInfo);
 	if (res != ZG_SUCCESS) return res;
 	*pipelineOut = reinterpret_cast<ZgPipelineRendering*>(pipeline);
 	return ZG_SUCCESS;
@@ -193,7 +197,8 @@ ZG_DLL_API ZgErrorCode zgPipelineRenderingRelease(
 	ZgContext* context,
 	ZgPipelineRendering* pipeline)
 {
-	return context->context->pipelineRelease(reinterpret_cast<zg::IPipelineRendering*>(pipeline));
+	return context->context->pipelineRenderingRelease(
+		reinterpret_cast<zg::IPipelineRendering*>(pipeline));
 }
 
 // Memory

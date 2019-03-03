@@ -290,10 +290,20 @@ static const uint32_t ZG_MAX_NUM_DXC_COMPILER_FLAGS = 8;
 enum ZgVertexAttributeTypeEnum {
 	ZG_VERTEX_ATTRIBUTE_UNDEFINED = 0,
 
-	ZG_VERTEX_ATTRIBUTE_FLOAT,
-	ZG_VERTEX_ATTRIBUTE_FLOAT2,
-	ZG_VERTEX_ATTRIBUTE_FLOAT3,
-	ZG_VERTEX_ATTRIBUTE_FLOAT4,
+	ZG_VERTEX_ATTRIBUTE_F32,
+	ZG_VERTEX_ATTRIBUTE_F32_2,
+	ZG_VERTEX_ATTRIBUTE_F32_3,
+	ZG_VERTEX_ATTRIBUTE_F32_4,
+
+	ZG_VERTEX_ATTRIBUTE_S32,
+	ZG_VERTEX_ATTRIBUTE_S32_2,
+	ZG_VERTEX_ATTRIBUTE_S32_3,
+	ZG_VERTEX_ATTRIBUTE_S32_4,
+
+	ZG_VERTEX_ATTRIBUTE_U32,
+	ZG_VERTEX_ATTRIBUTE_U32_2,
+	ZG_VERTEX_ATTRIBUTE_U32_3,
+	ZG_VERTEX_ATTRIBUTE_U32_4,
 };
 typedef uint32_t ZgVertexAttributeType;
 
@@ -419,9 +429,30 @@ struct ZgPipelineRenderingCreateInfo {
 };
 typedef struct ZgPipelineRenderingCreateInfo ZgPipelineRenderingCreateInfo;
 
+// A struct representing the signature of a rendering pipeline
+//
+// The signature contains all information necessary to know how to bind input and output to a
+// pipeline. Of course, in practice this is something the programmer should already be aware of as
+// they have access to (or even wrote) the shaders in the first place.
+//
+// The signature is inferred by performing reflection on the shaders being compiled. Some
+// information that can not be automatically inferred is created by additional data supplied
+// through the ZgPipelineRenderingCreateInfo struct.
+struct ZgPipelineRenderingSignature {
+
+	// The vertex attributes to the vertex shader
+	uint32_t numVertexAttributes;
+	ZgVertexAttribute vertexAttributes[ZG_MAX_NUM_VERTEX_ATTRIBUTES];
+
+
+
+};
+typedef struct ZgPipelineRenderingSignature ZgPipelineRenderingSignature;
+
 ZG_DLL_API ZgErrorCode zgPipelineRenderingCreate(
 	ZgContext* context,
 	ZgPipelineRendering** pipelineOut,
+	ZgPipelineRenderingSignature* signatureOut,
 	const ZgPipelineRenderingCreateInfo* createInfo);
 
 ZG_DLL_API ZgErrorCode zgPipelineRenderingRelease(

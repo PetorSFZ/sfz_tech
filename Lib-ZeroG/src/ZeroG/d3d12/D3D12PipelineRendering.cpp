@@ -199,13 +199,80 @@ static ZgErrorCode compileHlslShader(
 static DXGI_FORMAT vertexAttributeTypeToFormat(ZgVertexAttributeType type) noexcept
 {
 	switch (type) {
-	case ZG_VERTEX_ATTRIBUTE_FLOAT: return DXGI_FORMAT_R32_FLOAT;
-	case ZG_VERTEX_ATTRIBUTE_FLOAT2: return DXGI_FORMAT_R32G32_FLOAT;
-	case ZG_VERTEX_ATTRIBUTE_FLOAT3: return DXGI_FORMAT_R32G32B32_FLOAT;
-	case ZG_VERTEX_ATTRIBUTE_FLOAT4: return DXGI_FORMAT_R32G32B32A32_FLOAT;
+	case ZG_VERTEX_ATTRIBUTE_F32: return DXGI_FORMAT_R32_FLOAT;
+	case ZG_VERTEX_ATTRIBUTE_F32_2: return DXGI_FORMAT_R32G32_FLOAT;
+	case ZG_VERTEX_ATTRIBUTE_F32_3: return DXGI_FORMAT_R32G32B32_FLOAT;
+	case ZG_VERTEX_ATTRIBUTE_F32_4: return DXGI_FORMAT_R32G32B32A32_FLOAT;
+
+	case ZG_VERTEX_ATTRIBUTE_S32: return DXGI_FORMAT_R32_SINT;
+	case ZG_VERTEX_ATTRIBUTE_S32_2: return DXGI_FORMAT_R32G32_SINT;
+	case ZG_VERTEX_ATTRIBUTE_S32_3: return DXGI_FORMAT_R32G32B32_SINT;
+	case ZG_VERTEX_ATTRIBUTE_S32_4: return DXGI_FORMAT_R32G32B32A32_SINT;
+
+	case ZG_VERTEX_ATTRIBUTE_U32: return DXGI_FORMAT_R32_UINT;
+	case ZG_VERTEX_ATTRIBUTE_U32_2: return DXGI_FORMAT_R32G32_UINT;
+	case ZG_VERTEX_ATTRIBUTE_U32_3: return DXGI_FORMAT_R32G32B32_UINT;
+	case ZG_VERTEX_ATTRIBUTE_U32_4: return DXGI_FORMAT_R32G32B32A32_UINT;
+	
 	default: break;
 	}
+	ZG_ASSERT(false);
 	return DXGI_FORMAT_UNKNOWN;
+}
+
+static const char* vertexAttributeTypeToString(ZgVertexAttributeType type) noexcept
+{
+	switch (type) {
+	case ZG_VERTEX_ATTRIBUTE_F32: return "ZG_VERTEX_ATTRIBUTE_F32";
+	case ZG_VERTEX_ATTRIBUTE_F32_2: return "ZG_VERTEX_ATTRIBUTE_F32_2";
+	case ZG_VERTEX_ATTRIBUTE_F32_3: return "ZG_VERTEX_ATTRIBUTE_F32_3";
+	case ZG_VERTEX_ATTRIBUTE_F32_4: return "ZG_VERTEX_ATTRIBUTE_F32_4";
+
+	case ZG_VERTEX_ATTRIBUTE_S32: return "ZG_VERTEX_ATTRIBUTE_S32";
+	case ZG_VERTEX_ATTRIBUTE_S32_2: return "ZG_VERTEX_ATTRIBUTE_S32_2";
+	case ZG_VERTEX_ATTRIBUTE_S32_3: return "ZG_VERTEX_ATTRIBUTE_S32_3";
+	case ZG_VERTEX_ATTRIBUTE_S32_4: return "ZG_VERTEX_ATTRIBUTE_S32_4";
+
+	case ZG_VERTEX_ATTRIBUTE_U32: return "ZG_VERTEX_ATTRIBUTE_U32";
+	case ZG_VERTEX_ATTRIBUTE_U32_2: return "ZG_VERTEX_ATTRIBUTE_U32_2";
+	case ZG_VERTEX_ATTRIBUTE_U32_3: return "ZG_VERTEX_ATTRIBUTE_U32_3";
+	case ZG_VERTEX_ATTRIBUTE_U32_4: return "ZG_VERTEX_ATTRIBUTE_U32_4";
+
+	default: break;
+	}
+	ZG_ASSERT(false);
+	return "";
+}
+
+static ZgVertexAttributeType vertexReflectionToAttribute(
+	D3D_REGISTER_COMPONENT_TYPE compType, BYTE mask) noexcept
+{
+	ZG_ASSERT(compType == D3D_REGISTER_COMPONENT_FLOAT32
+		|| compType == D3D_REGISTER_COMPONENT_SINT32
+		|| compType == D3D_REGISTER_COMPONENT_UINT32);
+	ZG_ASSERT(mask == 1 || mask == 3 || mask == 7 || mask == 15);
+
+	if (compType == D3D_REGISTER_COMPONENT_FLOAT32) {
+		if (mask == 1) return ZG_VERTEX_ATTRIBUTE_F32;
+		if (mask == 3) return ZG_VERTEX_ATTRIBUTE_F32_2;
+		if (mask == 7) return ZG_VERTEX_ATTRIBUTE_F32_3;
+		if (mask == 15)return ZG_VERTEX_ATTRIBUTE_F32_4;
+	}
+	else if (compType == D3D_REGISTER_COMPONENT_SINT32) {
+		if (mask == 1) return ZG_VERTEX_ATTRIBUTE_S32;
+		if (mask == 3) return ZG_VERTEX_ATTRIBUTE_S32_2;
+		if (mask == 7) return ZG_VERTEX_ATTRIBUTE_S32_3;
+		if (mask == 15)return ZG_VERTEX_ATTRIBUTE_S32_4;
+	}
+	else if (compType == D3D_REGISTER_COMPONENT_UINT32) {
+		if (mask == 1) return ZG_VERTEX_ATTRIBUTE_U32;
+		if (mask == 3) return ZG_VERTEX_ATTRIBUTE_U32_2;
+		if (mask == 7) return ZG_VERTEX_ATTRIBUTE_U32_3;
+		if (mask == 15)return ZG_VERTEX_ATTRIBUTE_U32_4;
+	}
+
+	ZG_ASSERT(false);
+	return ZG_VERTEX_ATTRIBUTE_UNDEFINED;
 }
 
 static constexpr char SHADER_REFLECTION_LOG_FORMAT[] =
@@ -274,6 +341,7 @@ D3D12PipelineRendering::~D3D12PipelineRendering() noexcept
 
 ZgErrorCode createPipelineRendering(
 	D3D12PipelineRendering** pipelineOut,
+	ZgPipelineRenderingSignature* signatureOut,
 	const ZgPipelineRenderingCreateInfo& createInfo,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
@@ -309,14 +377,14 @@ ZgErrorCode createPipelineRendering(
 	}
 
 	// Compile vertex shader
-	ComPtr<IDxcBlob> vertexShaderBlob;
-	ComPtr<ID3D12ShaderReflection> vertexShaderReflection;
+	ComPtr<IDxcBlob> vertexBlob;
+	ComPtr<ID3D12ShaderReflection> vertexReflection;
 	ZgErrorCode vertexShaderRes = compileHlslShader(
 		dxcLibrary,
 		dxcCompiler,
 		logger,
-		vertexShaderBlob,
-		vertexShaderReflection,
+		vertexBlob,
+		vertexReflection,
 		createInfo.vertexShaderPath,
 		createInfo.vertexShaderEntry,
 		createInfo.dxcCompilerFlags,
@@ -324,14 +392,14 @@ ZgErrorCode createPipelineRendering(
 	if (vertexShaderRes != ZG_SUCCESS) return vertexShaderRes;
 
 	// Compile pixel shader
-	ComPtr<IDxcBlob> pixelShaderBlob;
-	ComPtr<ID3D12ShaderReflection> pixelShaderReflection;
+	ComPtr<IDxcBlob> pixelBlob;
+	ComPtr<ID3D12ShaderReflection> pixelReflection;
 	ZgErrorCode pixelShaderRes = compileHlslShader(
 		dxcLibrary,
 		dxcCompiler,
 		logger,
-		pixelShaderBlob,
-		pixelShaderReflection,
+		pixelBlob,
+		pixelReflection,
 		createInfo.pixelShaderPath,
 		createInfo.pixelShaderEntry,
 		createInfo.dxcCompilerFlags,
@@ -340,9 +408,55 @@ ZgErrorCode createPipelineRendering(
 
 	// Get shader description froms reflection data
 	D3D12_SHADER_DESC vertexDesc = {};
-	CHECK_D3D12(logger) vertexShaderReflection->GetDesc(&vertexDesc);
+	CHECK_D3D12(logger) vertexReflection->GetDesc(&vertexDesc);
 	D3D12_SHADER_DESC pixelDesc = {};
-	CHECK_D3D12(logger) pixelShaderReflection->GetDesc(&pixelDesc);
+	CHECK_D3D12(logger) pixelReflection->GetDesc(&pixelDesc);
+
+	// Validate that the user has specified correct number of vertex attributes
+	if (createInfo.numVertexAttributes != vertexDesc.InputParameters) {
+		ZG_ERROR(logger, "Invalid ZgPipelineRenderingCreateInfo. It specifies %u vertex"
+			" attributes, shader reflection finds %u",
+			createInfo.numVertexAttributes, vertexDesc.InputParameters);
+		return ZG_ERROR_INVALID_ARGUMENT;
+	}
+	signatureOut->numVertexAttributes = createInfo.numVertexAttributes;
+
+	// Validate vertex attributes
+	for (uint32_t i = 0; i < createInfo.numVertexAttributes; i++) {
+		
+		const ZgVertexAttribute& attrib = createInfo.vertexAttributes[i];
+
+		// Get signature for the i:th vertex attribute
+		D3D12_SIGNATURE_PARAMETER_DESC sign = {};
+		CHECK_D3D12(logger) vertexReflection->GetInputParameterDesc(i, &sign);
+
+		// Get the type found in the shader
+		ZgVertexAttributeType reflectedType =
+			vertexReflectionToAttribute(sign.ComponentType, sign.Mask);
+
+		// Check that the reflected type is the same as the specified type
+		if (reflectedType != attrib.type) {
+			ZG_ERROR(logger, "Invalid ZgPipelineRenderingCreateInfo. It specifies that the %u:th"
+				" vertex attribute is of type %s, shader reflection finds %s",
+				i,
+				vertexAttributeTypeToString(attrib.type),
+				vertexAttributeTypeToString(reflectedType));
+			return ZG_ERROR_INVALID_ARGUMENT;
+		}
+
+		// Check that the attribute location (semantic index) is the same
+		if (sign.SemanticIndex != createInfo.vertexAttributes[i].attributeLocation) {
+			ZG_ERROR(logger, "Invalid ZgPipelineRenderingCreateInfo. It specifies that the %u:th"
+				" vertex attribute has attribute location %u, shader reflection finds %u",
+				i,
+				attrib.attributeLocation,
+				sign.SemanticIndex);
+			return ZG_ERROR_INVALID_ARGUMENT;
+		}
+
+		// Set vertex attribute in signature
+		signatureOut->vertexAttributes[i] = attrib;
+	}
 
 	// Log some info!
 	logReflection(
@@ -445,11 +559,11 @@ ZgErrorCode createPipelineRendering(
 
 		// Set vertex shader
 		stream.vertexShader = CD3DX12_SHADER_BYTECODE(
-			vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize());
+			vertexBlob->GetBufferPointer(), vertexBlob->GetBufferSize());
 
 		// Set pixel shader
 		stream.pixelShader = CD3DX12_SHADER_BYTECODE(
-			pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize());
+			pixelBlob->GetBufferPointer(), pixelBlob->GetBufferSize());
 
 		// Set render target formats
 		// TODO: Probably here Multiple Render Targets (MRT) is specified?
@@ -463,26 +577,3 @@ ZgErrorCode createPipelineRendering(
 		streamDesc.pPipelineStateSubobjectStream = &stream;
 		streamDesc.SizeInBytes = sizeof(PipelineStateStream);
 		{
-			std::lock_guard<std::mutex> lock(contextMutex);
-			if (D3D12_FAIL(logger,
-				device.CreatePipelineState(&streamDesc, IID_PPV_ARGS(&pipelineState)))) {
-				return ZG_ERROR_GENERIC;
-			}
-		}
-	}
-
-	// Allocate pipeline
-	D3D12PipelineRendering* pipeline =
-		zgNew<D3D12PipelineRendering>(allocator, "ZeroG - D3D12PipelineRendering");
-
-	// Store pipeline state
-	pipeline->pipelineState = pipelineState;
-	pipeline->rootSignature = rootSignature;
-	pipeline->createInfo = createInfo;
-
-	// Return pipeline
-	*pipelineOut = pipeline;
-	return ZG_SUCCESS;
-}
-
-} // namespace zg
