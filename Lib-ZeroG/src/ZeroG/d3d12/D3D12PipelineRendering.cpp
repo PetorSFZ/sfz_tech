@@ -46,6 +46,35 @@ static bool fixPath(WCHAR* pathOut, uint32_t pathOutSizeBytes, const char* utf8I
 	return true;
 }
 
+// DFCC_DXIL enum constant from DxilContainer/DxilContainer.h in DirectXShaderCompiler
+#define DXIL_FOURCC(ch0, ch1, ch2, ch3) ( \
+	(uint32_t)(uint8_t)(ch0)        | (uint32_t)(uint8_t)(ch1) << 8  | \
+	(uint32_t)(uint8_t)(ch2) << 16  | (uint32_t)(uint8_t)(ch3) << 24   \
+)
+static constexpr uint32_t DFCC_DXIL = DXIL_FOURCC('D', 'X', 'I', 'L');
+
+static HRESULT getShaderReflection(
+	ComPtr<IDxcBlob>& blob, ComPtr<ID3D12ShaderReflection>& reflectionOut) noexcept
+{
+	// Get and load the DxcContainerReflection
+	ComPtr<IDxcContainerReflection> dxcReflection;
+	HRESULT res = DxcCreateInstance(
+		CLSID_DxcContainerReflection, IID_PPV_ARGS(&dxcReflection));
+	if (!SUCCEEDED(res)) return res;
+	res = dxcReflection->Load(blob.Get());
+	if (!SUCCEEDED(res)) return res;
+
+	// Attempt to wrangle out the ID3D12ShaderReflection from it
+	uint32_t shaderIdx = 0;
+	res = dxcReflection->FindFirstPartKind(DFCC_DXIL, &shaderIdx);
+	if (!SUCCEEDED(res)) return res;
+	res = dxcReflection->GetPartReflection(shaderIdx, IID_PPV_ARGS(&reflectionOut));
+	if (!SUCCEEDED(res)) return res;
+
+	// We succeded probably
+	return S_OK;
+}
+
 enum class HlslShaderType {
 	VERTEX_SHADER_5_1,
 	VERTEX_SHADER_6_0,
@@ -65,6 +94,7 @@ static ZgErrorCode compileHlslShader(
 	IDxcCompiler& dxcCompiler,
 	ZgLogger& logger,
 	ComPtr<IDxcBlob>& blobOut,
+	ComPtr<ID3D12ShaderReflection>& reflectionOut,
 	const char* path,
 	const char* entryName,
 	const char* const * compilerFlags,
@@ -157,6 +187,11 @@ static ZgErrorCode compileHlslShader(
 	if (!SUCCEEDED(result->GetResult(&blobOut))) {
 		return ZG_ERROR_SHADER_COMPILE_ERROR;
 	}
+	
+	// Attempt to get reflection data
+	if (D3D12_FAIL(logger, getShaderReflection(blobOut, reflectionOut))) {
+		return ZG_ERROR_SHADER_COMPILE_ERROR;
+	}
 
 	return ZG_SUCCESS;
 }
@@ -171,6 +206,59 @@ static DXGI_FORMAT vertexAttributeTypeToFormat(ZgVertexAttributeType type) noexc
 	default: break;
 	}
 	return DXGI_FORMAT_UNKNOWN;
+}
+
+static constexpr char SHADER_REFLECTION_LOG_FORMAT[] =
+R"(Compiled %s shader from file: "%s"
+Entry: %s()
+ConstantBuffers: %u
+BoundResources: %u
+InputParameters: %u
+OutputParameters: %u
+InstructionCount: %u
+TempRegisterCount: %u
+TempArrayCount: %u
+TextureNormalInstructions: %u
+TextureLoadInstructions: %u
+FloatInstructionCount: %u
+IntInstructionCount: %u
+UintInstructionCount: %u
+StaticFlowControlCount: %u
+DynamicFlowControlCount: %u
+ArrayInstructionCount: %u
+cBarrierInstructions: %u
+cInterlockedInstructions: %u
+cTextureStoreInstructions: %u)";
+
+static void logReflection(
+	ZgLogger& logger,
+	const char* shaderType,
+	const char* shaderPath,
+	const char* shaderEntry,
+	const D3D12_SHADER_DESC& desc) noexcept
+{
+	ZG_INFO(logger, SHADER_REFLECTION_LOG_FORMAT,
+		shaderType,
+		shaderPath,
+		shaderEntry,
+		desc.ConstantBuffers,
+		desc.BoundResources,
+		desc.InputParameters,
+		desc.OutputParameters,
+		desc.InstructionCount,
+		desc.TempRegisterCount,
+		desc.TempArrayCount,
+		desc.TextureNormalInstructions,
+		desc.TextureLoadInstructions,
+		desc.FloatInstructionCount,
+		desc.IntInstructionCount,
+		desc.UintInstructionCount,
+		desc.StaticFlowControlCount,
+		desc.DynamicFlowControlCount,
+		desc.ArrayInstructionCount,
+		desc.cBarrierInstructions,
+		desc.cInterlockedInstructions,
+		desc.cTextureStoreInstructions);
 }
 
 // D3D12 PipelineRendering
@@ -222,11 +310,13 @@ ZgErrorCode createPipelineRendering(
 
 	// Compile vertex shader
 	ComPtr<IDxcBlob> vertexShaderBlob;
+	ComPtr<ID3D12ShaderReflection> vertexShaderReflection;
 	ZgErrorCode vertexShaderRes = compileHlslShader(
 		dxcLibrary,
 		dxcCompiler,
 		logger,
 		vertexShaderBlob,
+		vertexShaderReflection,
 		createInfo.vertexShaderPath,
 		createInfo.vertexShaderEntry,
 		createInfo.dxcCompilerFlags,
@@ -235,16 +325,30 @@ ZgErrorCode createPipelineRendering(
 
 	// Compile pixel shader
 	ComPtr<IDxcBlob> pixelShaderBlob;
+	ComPtr<ID3D12ShaderReflection> pixelShaderReflection;
 	ZgErrorCode pixelShaderRes = compileHlslShader(
 		dxcLibrary,
 		dxcCompiler,
 		logger,
 		pixelShaderBlob,
+		pixelShaderReflection,
 		createInfo.pixelShaderPath,
 		createInfo.pixelShaderEntry,
 		createInfo.dxcCompilerFlags,
 		pixelShaderType);
 	if (pixelShaderRes != ZG_SUCCESS) return pixelShaderRes;
+
+	// Get shader description froms reflection data
+	D3D12_SHADER_DESC vertexDesc = {};
+	CHECK_D3D12(logger) vertexShaderReflection->GetDesc(&vertexDesc);
+	D3D12_SHADER_DESC pixelDesc = {};
+	CHECK_D3D12(logger) pixelShaderReflection->GetDesc(&pixelDesc);
+
+	// Log some info!
+	logReflection(
+		logger, "vertex", createInfo.vertexShaderPath, createInfo.vertexShaderEntry, vertexDesc);
+	logReflection(
+		logger, "pixel", createInfo.pixelShaderPath, createInfo.pixelShaderEntry, pixelDesc);
 
 	// Convert ZgVertexAttribute's to D3D12_INPUT_ELEMENT_DESC
 	// This is the "input layout"

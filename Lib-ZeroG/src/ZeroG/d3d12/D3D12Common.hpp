@@ -34,6 +34,7 @@
 #include <dxgi1_6.h>
 #pragma comment (lib, "dxgi.lib")
 //#pragma comment (lib, "dxguid.lib")
+#include <d3d12shader.h>
 
 // DXC compiler
 #include <dxcapi.h>
