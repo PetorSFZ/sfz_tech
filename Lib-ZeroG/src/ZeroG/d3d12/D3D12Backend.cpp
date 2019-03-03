@@ -87,6 +87,7 @@ public:
 			else {
 				return ZG_ERROR_GENERIC;
 			}
+			ZG_INFO(mLog, "D3D12 debug mode enabled");
 		}
 
 		// Create DXGI factory
@@ -141,6 +142,20 @@ public:
 			if (D3D12_FAIL(mLog, bestAdapter.As(&dxgiAdapter))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
+
+			// Log some information about the choosen adapter
+			DXGI_ADAPTER_DESC1 bestDesc;
+			CHECK_D3D12(mLog) bestAdapter->GetDesc1(&bestDesc);
+			ZG_INFO(mLog, "Description: %S\nVendor ID: %#x\nDevice ID: %u\nRevision: %u\n"
+				"Dedicated video memory: %.2f GiB\nDedicated system memory: %.2f GiB\n"
+				"Shared system memory: %.2f GiB",
+				bestDesc.Description,
+				uint32_t(bestDesc.VendorId),
+				uint32_t(bestDesc.DeviceId),
+				uint32_t(bestDesc.Revision),
+				double(bestDesc.DedicatedVideoMemory) / (1024.0 * 1024.0 * 1024.0),
+				double(bestDesc.DedicatedSystemMemory) / (1024.0 * 1024.0 * 1024.0),
+				double(bestDesc.SharedSystemMemory) / (1024.0 * 1024.0 * 1024.0));
 		}
 
 		// Create device
@@ -264,6 +279,8 @@ public:
 		if (mWidth == width && mHeight == height) return ZG_SUCCESS;
 		std::lock_guard<std::mutex> lock(mContextMutex);
 
+		// Log that we are resizing the swap chain and then change the stored size
+		ZG_INFO(mLog, "Resizing swap chain from %ux%u to %ux%u", mWidth, mHeight, width, height);
 		mWidth = width;
 		mHeight = height;
 
