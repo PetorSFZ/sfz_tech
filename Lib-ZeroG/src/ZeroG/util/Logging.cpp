@@ -59,6 +59,8 @@ static const char* stripFilePath(const char* file) noexcept
 static void defaultLog(
 	void* userPtr, const char* file, int line, ZgLogLevel level, const char* message) noexcept
 {
+	(void)userPtr;
+
 	// Strip path from file
 	const char* strippedFile = stripFilePath(file);
 

@@ -45,7 +45,7 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void create(uint32_t maxNumBuffers, ZgAllocator allocator) noexcept;
+	void create(uint32_t maxNumBuffers, ZgLogger logger, ZgAllocator allocator) noexcept;
 	void swap(D3D12CommandList& other) noexcept;
 	void destroy() noexcept;
 
@@ -110,6 +110,7 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
+	ZgLogger mLog = {};
 	bool mPipelineSet = false; // Only allow a single pipeline per command list
 	D3D12PipelineRendering* mBoundPipeline = nullptr;
 	bool mFramebufferSet = false; // Only allow a single framebuffer to be set.

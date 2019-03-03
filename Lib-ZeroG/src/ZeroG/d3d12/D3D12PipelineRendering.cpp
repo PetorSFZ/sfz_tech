@@ -63,6 +63,7 @@ enum class HlslShaderType {
 static ZgErrorCode compileHlslShader(
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
+	ZgLogger& logger,
 	ComPtr<IDxcBlob>& blobOut,
 	const char* path,
 	const char* entryName,
@@ -104,7 +105,7 @@ static ZgErrorCode compileHlslShader(
 	// Create an encoding blob from file
 	ComPtr<IDxcBlobEncoding> blob;
 	uint32_t CODE_PAGE = CP_UTF8;
-	if (!CHECK_D3D12_SUCCEEDED(dxcLibrary.CreateBlobFromFile(
+	if (D3D12_FAIL(logger, dxcLibrary.CreateBlobFromFile(
 		shaderFilePathWide, &CODE_PAGE, &blob))) {
 		return ZG_ERROR_SHADER_COMPILE_ERROR;
 	}
@@ -123,7 +124,7 @@ static ZgErrorCode compileHlslShader(
 
 	// Compile shader
 	ComPtr<IDxcOperationResult> result;
-	if (!CHECK_D3D12_SUCCEEDED(dxcCompiler.Compile(
+	if (D3D12_FAIL(logger, dxcCompiler.Compile(
 		blob.Get(),
 		nullptr, // TODO: Filename
 		shaderEntryWide,
@@ -139,18 +140,18 @@ static ZgErrorCode compileHlslShader(
 
 	// Log compile errors/warnings
 	ComPtr<IDxcBlobEncoding> errors;
-	if (!CHECK_D3D12_SUCCEEDED(result->GetErrorBuffer(&errors))) {
+	if (D3D12_FAIL(logger, result->GetErrorBuffer(&errors))) {
 		return ZG_ERROR_GENERIC;
 	}
 	if (errors->GetBufferSize() > 0) {
-		printf("Shader \"%s\" compilation errors:\n%s\n",
+		ZG_ERROR(logger, "Shader \"%s\" compilation errors:\n%s\n",
 			path, (const char*)errors->GetBufferPointer());
 	}
 
 	// Check if compilation succeeded
 	HRESULT compileResult = S_OK;
 	result->GetStatus(&compileResult);
-	if (!CHECK_D3D12_SUCCEEDED(compileResult)) return ZG_ERROR_SHADER_COMPILE_ERROR;
+	if (D3D12_FAIL(logger, compileResult)) return ZG_ERROR_SHADER_COMPILE_ERROR;
 
 	// Pick out the compiled binary
 	if (!SUCCEEDED(result->GetResult(&blobOut))) {
@@ -188,6 +189,7 @@ ZgErrorCode createPipelineRendering(
 	const ZgPipelineRenderingCreateInfo& createInfo,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
+	ZgLogger& logger,
 	ZgAllocator& allocator,
 	ID3D12Device3& device,
 	std::mutex& contextMutex) noexcept
@@ -223,6 +225,7 @@ ZgErrorCode createPipelineRendering(
 	ZgErrorCode vertexShaderRes = compileHlslShader(
 		dxcLibrary,
 		dxcCompiler,
+		logger,
 		vertexShaderBlob,
 		createInfo.vertexShaderPath,
 		createInfo.vertexShaderEntry,
@@ -235,6 +238,7 @@ ZgErrorCode createPipelineRendering(
 	ZgErrorCode pixelShaderRes = compileHlslShader(
 		dxcLibrary,
 		dxcCompiler,
+		logger,
 		pixelShaderBlob,
 		createInfo.pixelShaderPath,
 		createInfo.pixelShaderEntry,
@@ -287,10 +291,10 @@ ZgErrorCode createPipelineRendering(
 		// Serialize the root signature.
 		ComPtr<ID3DBlob> blob;
 		ComPtr<ID3DBlob> errorBlob;
-		if (!CHECK_D3D12_SUCCEEDED(D3DX12SerializeVersionedRootSignature(
+		if (D3D12_FAIL(logger, D3DX12SerializeVersionedRootSignature(
 			&desc, D3D_ROOT_SIGNATURE_VERSION_1_1, &blob, &errorBlob))) {
 
-			printf("D3DX12SerializeVersionedRootSignature() failed: %s\n",
+			ZG_ERROR(logger, "D3DX12SerializeVersionedRootSignature() failed: %s\n",
 				(const char*)errorBlob->GetBufferPointer());
 			return ZG_ERROR_GENERIC;
 		}
@@ -298,7 +302,7 @@ ZgErrorCode createPipelineRendering(
 		// Create root signature
 		{
 			std::lock_guard<std::mutex> lock(contextMutex);
-			if (!CHECK_D3D12_SUCCEEDED(device.CreateRootSignature(
+			if (D3D12_FAIL(logger, device.CreateRootSignature(
 				0, blob->GetBufferPointer(), blob->GetBufferSize(), IID_PPV_ARGS(&rootSignature)))) {
 				return ZG_ERROR_GENERIC;
 			}
@@ -356,7 +360,7 @@ ZgErrorCode createPipelineRendering(
 		streamDesc.SizeInBytes = sizeof(PipelineStateStream);
 		{
 			std::lock_guard<std::mutex> lock(contextMutex);
-			if (!CHECK_D3D12_SUCCEEDED(
+			if (D3D12_FAIL(logger,
 				device.CreatePipelineState(&streamDesc, IID_PPV_ARGS(&pipelineState)))) {
 				return ZG_ERROR_GENERIC;
 			}

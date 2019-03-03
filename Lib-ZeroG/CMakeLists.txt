@@ -81,6 +81,7 @@ set(ZEROG_CAPI_SRC_FILES
 	${SRC_DIR}/ZeroG/d3d12/D3D12CommandQueue.hpp
 	${SRC_DIR}/ZeroG/d3d12/D3D12CommandQueue.cpp
 	${SRC_DIR}/ZeroG/d3d12/D3D12Common.hpp
+	${SRC_DIR}/ZeroG/d3d12/D3D12Common.cpp
 	${SRC_DIR}/ZeroG/d3d12/D3D12Framebuffer.hpp
 	${SRC_DIR}/ZeroG/d3d12/D3D12Framebuffer.cpp
 	${SRC_DIR}/ZeroG/d3d12/D3D12Memory.hpp

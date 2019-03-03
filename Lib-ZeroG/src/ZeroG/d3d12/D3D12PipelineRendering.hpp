@@ -52,6 +52,7 @@ ZgErrorCode createPipelineRendering(
 	const ZgPipelineRenderingCreateInfo& createInfo,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
+	ZgLogger& logger,
 	ZgAllocator& allocator,
 	ID3D12Device3& device,
 	std::mutex& contextMutex) noexcept;

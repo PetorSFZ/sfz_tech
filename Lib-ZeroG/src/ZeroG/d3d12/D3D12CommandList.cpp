@@ -27,8 +27,10 @@ namespace zg {
 // D3D12CommandList: State methods
 // ------------------------------------------------------------------------------------------------
 
-void D3D12CommandList::create(uint32_t maxNumBuffers, ZgAllocator allocator) noexcept
+void D3D12CommandList::create(
+	uint32_t maxNumBuffers, ZgLogger logger, ZgAllocator allocator) noexcept
 {
+	mLog = logger;
 	pendingBufferIdentifiers.create(maxNumBuffers, allocator, "ZeroG - D3D12CommandList - Internal");
 	pendingBufferStates.create(maxNumBuffers, allocator, "ZeroG - D3D12CommandList - Internal");
 }
@@ -42,6 +44,7 @@ void D3D12CommandList::swap(D3D12CommandList& other) noexcept
 	this->pendingBufferIdentifiers.swap(other.pendingBufferIdentifiers);
 	this->pendingBufferStates.swap(other.pendingBufferStates);
 
+	std::swap(this->mLog, other.mLog);
 	std::swap(this->mPipelineSet, other.mPipelineSet);
 	std::swap(this->mBoundPipeline, other.mBoundPipeline);
 	std::swap(this->mFramebufferSet, other.mFramebufferSet);
@@ -57,6 +60,7 @@ void D3D12CommandList::destroy() noexcept
 	pendingBufferIdentifiers.destroy();
 	pendingBufferStates.destroy();
 
+	mLog = {};
 	mPipelineSet = false;
 	mBoundPipeline = nullptr;
 	mFramebufferSet = false;
@@ -312,11 +316,10 @@ ZgErrorCode D3D12CommandList::drawTriangles(
 
 ZgErrorCode D3D12CommandList::reset() noexcept
 {
-	if (!CHECK_D3D12_SUCCEEDED(commandAllocator->Reset())) {
+	if (D3D12_FAIL(mLog, commandAllocator->Reset())) {
 		return ZG_ERROR_GENERIC;
 	}
-	if (!CHECK_D3D12_SUCCEEDED(
-		commandList->Reset(commandAllocator.Get(), nullptr))) {
+	if (D3D12_FAIL(mLog, commandList->Reset(commandAllocator.Get(), nullptr))) {
 		return ZG_ERROR_GENERIC;
 	}
 

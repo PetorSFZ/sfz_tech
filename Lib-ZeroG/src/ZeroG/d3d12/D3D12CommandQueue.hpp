@@ -52,6 +52,7 @@ public:
 		ComPtr<ID3D12Device3>& device,
 		uint32_t maxNumCommandLists,
 		uint32_t maxNumBuffersPerCommandList,
+		ZgLogger logger,
 		ZgAllocator allocator) noexcept;
 
 	// Virtual methods
@@ -89,6 +90,7 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
+	ZgLogger mLog = {};
 	ZgAllocator mAllocator = {};
 
 	std::mutex mQueueMutex;
