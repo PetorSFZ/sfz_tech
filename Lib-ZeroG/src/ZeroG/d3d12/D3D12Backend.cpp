@@ -458,16 +458,14 @@ public:
 	}
 
 	ZgErrorCode pipelineRenderingGetSignature(
-		IPipelineRendering* pipelineIn,
-		ZgPipelineRenderingSignature* signatureOut) noexcept override final
+		const IPipelineRendering* pipelineIn,
+		ZgPipelineRenderingSignature* signatureOut) const noexcept override final
 	{
-		D3D12PipelineRendering* pipeline = reinterpret_cast<D3D12PipelineRendering*>(pipelineIn);
+		const D3D12PipelineRendering* pipeline =
+			reinterpret_cast<const D3D12PipelineRendering*>(pipelineIn);
 		*signatureOut = pipeline->signature;
 		return ZG_SUCCESS;
 	}
-
-
-
 
 	// Memory methods
 	// --------------------------------------------------------------------------------------------

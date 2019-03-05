@@ -132,8 +132,8 @@ public:
 		IPipelineRendering* pipeline) noexcept = 0;
 
 	virtual ZgErrorCode pipelineRenderingGetSignature(
-		IPipelineRendering* pipeline,
-		ZgPipelineRenderingSignature* signatureOut) noexcept = 0;
+		const IPipelineRendering* pipeline,
+		ZgPipelineRenderingSignature* signatureOut) const noexcept = 0;
 
 	// Memory methods
 	// --------------------------------------------------------------------------------------------

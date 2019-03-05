@@ -206,11 +206,11 @@ ZG_DLL_API ZgErrorCode zgPipelineRenderingRelease(
 
 ZG_DLL_API ZgErrorCode zgPipelineRenderingGetSignature(
 	ZgContext* context,
-	ZgPipelineRendering* pipeline,
+	const ZgPipelineRendering* pipeline,
 	ZgPipelineRenderingSignature* signatureOut)
 {
 	return context->context->pipelineRenderingGetSignature(
-		reinterpret_cast<zg::IPipelineRendering*>(pipeline), signatureOut);
+		reinterpret_cast<const zg::IPipelineRendering*>(pipeline), signatureOut);
 }
 
 // Memory
