@@ -436,6 +436,11 @@ ZG_DLL_API ZgErrorCode zgPipelineRenderingRelease(
 	ZgContext* context,
 	ZgPipelineRendering* pipeline);
 
+ZG_DLL_API ZgErrorCode zgPipelineRenderingGetSignature(
+	ZgContext* context,
+	ZgPipelineRendering* pipeline,
+	ZgPipelineRenderingSignature* signatureOut);
+
 // Memory
 // ------------------------------------------------------------------------------------------------
 

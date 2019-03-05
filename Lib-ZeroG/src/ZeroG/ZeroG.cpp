@@ -204,6 +204,15 @@ ZG_DLL_API ZgErrorCode zgPipelineRenderingRelease(
 		reinterpret_cast<zg::IPipelineRendering*>(pipeline));
 }
 
+ZG_DLL_API ZgErrorCode zgPipelineRenderingGetSignature(
+	ZgContext* context,
+	ZgPipelineRendering* pipeline,
+	ZgPipelineRenderingSignature* signatureOut)
+{
+	return context->context->pipelineRenderingGetSignature(
+		reinterpret_cast<zg::IPipelineRendering*>(pipeline), signatureOut);
+}
+
 // Memory
 // ------------------------------------------------------------------------------------------------
 

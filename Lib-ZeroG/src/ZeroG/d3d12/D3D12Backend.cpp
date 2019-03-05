@@ -329,6 +329,13 @@ public:
 		return ZG_SUCCESS;
 	}
 
+	ZgErrorCode getCommandQueueGraphicsPresent(
+		ICommandQueue** commandQueueOut) noexcept override final
+	{
+		*commandQueueOut = &mCommandQueueGraphicsPresent;
+		return ZG_SUCCESS;
+	}
+
 	ZgErrorCode beginFrame(
 		zg::IFramebuffer** framebufferOut) noexcept override final
 	{
@@ -450,12 +457,17 @@ public:
 		return ZG_SUCCESS;
 	}
 
-	ZgErrorCode getCommandQueueGraphicsPresent(
-		ICommandQueue** commandQueueOut) noexcept override final
+	ZgErrorCode pipelineRenderingGetSignature(
+		IPipelineRendering* pipelineIn,
+		ZgPipelineRenderingSignature* signatureOut) noexcept override final
 	{
-		*commandQueueOut = &mCommandQueueGraphicsPresent;
+		D3D12PipelineRendering* pipeline = reinterpret_cast<D3D12PipelineRendering*>(pipelineIn);
+		*signatureOut = pipeline->signature;
 		return ZG_SUCCESS;
 	}
+
+
+
 
 	// Memory methods
 	// --------------------------------------------------------------------------------------------
