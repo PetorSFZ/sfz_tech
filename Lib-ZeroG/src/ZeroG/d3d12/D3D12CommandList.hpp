@@ -60,8 +60,9 @@ public:
 		uint64_t numBytes) noexcept override final;
 
 	ZgErrorCode setPushConstant(
-		uint32_t parameterIndex,
-		const void* data) noexcept override final;
+		uint32_t shaderRegister,
+		const void* data,
+		uint32_t dataSizeInBytes) noexcept override final;
 
 	ZgErrorCode setPipelineRendering(
 		IPipelineRendering* pipeline) noexcept override final;

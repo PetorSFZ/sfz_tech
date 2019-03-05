@@ -338,63 +338,8 @@ typedef struct ZgVertexAttribute ZgVertexAttribute;
 // The maximum number of vertex attributes allowed as input to a vertex shader
 static const uint32_t ZG_MAX_NUM_VERTEX_ATTRIBUTES = 8;
 
-// The binding type of a pipeline parameter
-//
-// In D3D12, this corresponds to how the parameter is accessed in the root signature.
-// E.g., a PUSH_CONSTANT is stored directly in the root signature. No indirection is needed when
-// loading it in the shader.
-enum ZgPipelineParameterBindingTypeEnum {
-	// In D3D12, corresponds to 32-bit constants in the root signature
-	ZG_PIPELINE_PARAMETER_BINDING_TYPE_PUSH_CONSTANT,
-
-	// In D3D12, corrsponds to inline descriptors in the root signature
-	// TODO: Apparently not available in Vulkan, maybe don't expose here
-	//ZG_PIPELINE_PARAMETER_BINDING_TYPE_INLINE_BINDING,
-
-	// In D3D12, corresponds to descriptor table in the root signature
-	//ZG_PIPELINE_PARAMETER_BINDING_TYPE_DYNAMIC_BINDING
-};
-typedef uint32_t ZgPipelineParameterBindingType;
-
-struct ZgPipeplineParameterPushConstant {
-
-	// Which register this parameter corresponds to in the shader. In D3D12 this corresponds to the
-	// "register" keyword, i.e. a value of 0 would correspond to "register(b0)". In GLSL this
-	// corresponds to the "binding" keyword, i.e. "layout(binding = 0)".
-	uint32_t shaderRegister;
-
-	// The size of the push constant in terms of 4-byte (32-bit) words. I.e., the size of the
-	// constant must be a multiple of 4, assert((sizeof(T) % 4) == 0).
-	//
-	// Do note that the maximum size of a root signature in D3D12 is 64 32-bit words. Meaning if
-	// you only have a single push constant (and no other parameters) it may not be larger than
-	// 64 words == 256 bytes. In addition, Microsoft recommends keeping the root signature smaller
-	// than 16 words to maximize performance on some hardware.
-	uint32_t sizeInWords;
-
-};
-typedef struct ZgPipeplineParameterPushConstant ZgPipeplineParameterPushConstant;
-
-// A parameter to a pipeline.
-//
-// A parameter can be bound in different ways, and different data need to be provided depending on
-// how it should be bound. The bindingType member tells how the parameter is bound and specific
-// data is provided in the different members inside the union.
-struct ZgPipelineParameter {
-
-	// The binding type of the parameter
-	ZgPipelineParameterBindingType bindingType;
-
-	// Union corresponding to the different binding types
-	union {
-		ZgPipeplineParameterPushConstant pushConstant;
-	};
-
-};
-typedef struct ZgPipelineParameter ZgPipelineParameter;
-
-// The maximum number of pipeline parameters allowed on a single pipeline.
-static const uint32_t ZG_MAX_NUM_PIPELINE_PARAMETERS = 16;
+// The maximum number of constant buffers allowed on a single pipeline.
+static const uint32_t ZG_MAX_NUM_CONSTANT_BUFFERS = 16;
 
 // The information required to create a rendering pipeline
 struct ZgPipelineRenderingCreateInfo {
@@ -422,15 +367,13 @@ struct ZgPipelineRenderingCreateInfo {
 	uint32_t numVertexBufferSlots;
 	uint32_t vertexBufferStridesBytes[ZG_MAX_NUM_VERTEX_ATTRIBUTES];
 
-	// The parameters to the pipeline
-	uint32_t numParameters;
-	ZgPipelineParameter parameters[ZG_MAX_NUM_PIPELINE_PARAMETERS];
-
+	// A list of constant buffer registers which should be declared as push constants. This is an
+	// optimization, however it can lead to worse performance if used improperly. Can be left empty
+	// if unsure.
+	uint32_t numPushConstants;
+	uint32_t pushConstantRegisters[ZG_MAX_NUM_CONSTANT_BUFFERS];
 };
 typedef struct ZgPipelineRenderingCreateInfo ZgPipelineRenderingCreateInfo;
-
-// The maximum number of constant buffers allowed on a single pipeline.
-constexpr const uint32_t ZG_MAX_NUM_CONSTANT_BUFFERS = 16;
 
 struct ZgConstantBuffer {
 
@@ -441,6 +384,18 @@ struct ZgConstantBuffer {
 
 	// Size of the buffer in bytes
 	uint32_t sizeInBytes;
+
+	// Whether the buffer is a push constant or not
+	//
+	// The size of a push constant must be a multiple of 4 bytes, i.e. an even (32-bit) word.
+	//
+	// In D3D12, as push constant is stored directly in the root signature. No indirection needed
+	// when loading it in the shader. Do note that the maximum size of a root signature in D3D12
+	// is 64 32-bit words. This is for ALL push constants and other types of parameters combined.
+	// Therefore ZeroG imposes an limit of a maximum size of 32 32-bit words (128 bytes) per push
+	// constant. In addition, Microsoft recommends keeping the root signature smaller than 16
+	// words to maximize performance on some hardware.
+	ZgBool pushConstant;
 
 	// Whether the buffer is accessed by the vertex shader or not
 	ZgBool vertexAccess;
@@ -553,12 +508,11 @@ ZG_DLL_API ZgErrorCode zgCommandListMemcpyBufferToBuffer(
 	uint64_t srcBufferOffsetBytes,
 	uint64_t numBytes);
 
-// Note: ParameterIndex is the index of the push constant in the
-// ZgPipelineRenderingCreateInfo.parameters[] array.
 ZG_DLL_API ZgErrorCode zgCommandListSetPushConstant(
 	ZgCommandList* commandList,
-	uint32_t parameterIndex,
-	const void* data);
+	uint32_t shaderRegister,
+	const void* data,
+	uint32_t dataSizeInBytes);
 
 ZG_DLL_API ZgErrorCode zgCommandListSetPipelineRendering(
 	ZgCommandList* commandList,

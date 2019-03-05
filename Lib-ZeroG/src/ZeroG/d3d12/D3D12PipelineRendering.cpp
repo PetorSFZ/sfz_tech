@@ -380,9 +380,10 @@ static void logPipelineInfo(
 	for (uint32_t i = 0; i < signature.numConstantBuffers; i++) {
 		const ZgConstantBuffer& cbuffer = signature.constantBuffers[i];
 		printfAppend(tmpStr, bytesLeft,
-			" - Register: %u -- Size: %u bytes -- Vertex shader: %s -- Pixel shader: %s\n",
+			" - Register: %u -- Size: %u bytes -- Push constant: %s -- Vertex shader: %s -- Pixel shader: %s\n",
 			cbuffer.shaderRegister,
 			cbuffer.sizeInBytes,
+			cbuffer.pushConstant ? "YES" : "NO",
 			cbuffer.vertexAccess ? "YES" : "NO",
 			cbuffer.pixelAccess ? "YES" : "NO");
 	}
@@ -665,6 +666,31 @@ ZgErrorCode createPipelineRendering(
 		return lhs.shaderRegister < rhs.shaderRegister;
 	});
 
+	// Go through buffers and check if any of them are marked as push constants
+	bool pushConstantRegisterUsed[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
+	for (uint32_t i = 0; i < numConstBuffers; i++) {
+		ZgConstantBuffer& cbuffer = constBuffers[i];
+		for (uint32_t j = 0; j < createInfo.numPushConstants; j++) {
+			if (cbuffer.shaderRegister == createInfo.pushConstantRegisters[j]) {
+				if (pushConstantRegisterUsed[j]) {
+					ZG_ASSERT(pushConstantRegisterUsed[j]);
+					return ZG_ERROR_INVALID_ARGUMENT;
+				}
+				cbuffer.pushConstant = ZG_TRUE;
+				pushConstantRegisterUsed[j] = true;
+				break;
+			}
+		}
+	}
+
+	// Check that all push constant registers specified was actually used
+	for (uint32_t i = 0; i < createInfo.numPushConstants; i++) {
+		if (!pushConstantRegisterUsed[i]) {
+			ZG_ASSERT(!pushConstantRegisterUsed[i]);
+			return ZG_ERROR_INVALID_ARGUMENT;
+		}
+	}
+
 	// Copy constant buffer information to signature
 	signatureOut->numConstantBuffers = numConstBuffers;
 	for (uint32_t i = 0; i < numConstBuffers; i++) {
@@ -688,6 +714,10 @@ ZgErrorCode createPipelineRendering(
 		attributes[i] = desc;
 	}
 
+	// List of push constant mappings to be filled in when creating root signature
+	D3D12PushConstantMapping pushConstantMappings[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
+	uint32_t numPushConstantsMappings = 0;
+
 	// Create root signature
 	ComPtr<ID3D12RootSignature> rootSignature;
 	{
@@ -696,22 +726,43 @@ ZgErrorCode createPipelineRendering(
 			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 		// Root signature parameters
-		// TODO: Currently using temporary hardcoded parameters
-		// TODO: Set dynamically with user provided settings
-		CD3DX12_ROOT_PARAMETER1 parameters[ZG_MAX_NUM_PIPELINE_PARAMETERS];
-		for (uint32_t i = 0; i < createInfo.numParameters; i++) {
-			const ZgPipelineParameter& paramInfo = createInfo.parameters[i];
-			if (paramInfo.bindingType == ZG_PIPELINE_PARAMETER_BINDING_TYPE_PUSH_CONSTANT) {
-				const ZgPipeplineParameterPushConstant& constInfo = paramInfo.pushConstant;
-				parameters[i].InitAsConstants(
-					constInfo.sizeInWords, constInfo.shaderRegister, 0, D3D12_SHADER_VISIBILITY_ALL);
+		// TODO: Currently assume we can't have more than max number of constant buffers
+		CD3DX12_ROOT_PARAMETER1 parameters[ZG_MAX_NUM_CONSTANT_BUFFERS];
+		uint32_t numParameters = 0;
+
+		// Add push constants
+		for (uint32_t i = 0; i < signatureOut->numConstantBuffers; i++) {
+			const ZgConstantBuffer& cbuffer = signatureOut->constantBuffers[i];
+			ZG_ASSERT(cbuffer.pushConstant == ZG_TRUE); // TODO: Remove
+			if (cbuffer.pushConstant == ZG_FALSE) continue;
+
+			// Get parameter index for the push constant
+			uint32_t parameterIndex = numParameters;
+			numParameters += 1;
+
+			// Calculate the correct shader visibility for the constant
+			D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL;
+			if (cbuffer.vertexAccess == ZG_TRUE && cbuffer.pixelAccess == ZG_FALSE) {
+				visibility = D3D12_SHADER_VISIBILITY_VERTEX;
 			}
-			else {
-				ZG_ASSERT(false);
+			else if (cbuffer.vertexAccess == ZG_FALSE && cbuffer.pixelAccess == ZG_TRUE) {
+				visibility = D3D12_SHADER_VISIBILITY_PIXEL;
 			}
+
+			ZG_ASSERT((cbuffer.sizeInBytes % 4) == 0);
+			ZG_ASSERT(cbuffer.sizeInBytes <= 1024);
+			parameters[parameterIndex].InitAsConstants(
+				cbuffer.sizeInBytes / 4, cbuffer.shaderRegister, 0, visibility);
+
+			// Add to push constants mappings
+			pushConstantMappings[numPushConstantsMappings].shaderRegister = cbuffer.shaderRegister;
+			pushConstantMappings[numPushConstantsMappings].parameterIndex = parameterIndex;
+			pushConstantMappings[numPushConstantsMappings].sizeInBytes = cbuffer.sizeInBytes;
+			numPushConstantsMappings += 1;
 		}
+
 		CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC desc;
-		desc.Init_1_1(createInfo.numParameters, parameters, 0, nullptr, flags);
+		desc.Init_1_1(numParameters, parameters, 0, nullptr, flags);
 
 		// Serialize the root signature.
 		ComPtr<ID3DBlob> blob;
@@ -803,6 +854,11 @@ ZgErrorCode createPipelineRendering(
 	// Store pipeline state
 	pipeline->pipelineState = pipelineState;
 	pipeline->rootSignature = rootSignature;
+	pipeline->signature = *signatureOut;
+	pipeline->numPushConstants = numPushConstantsMappings;
+	for (uint32_t i = 0; i < numPushConstantsMappings; i++) {
+		pipeline->pushConstants[i] = pushConstantMappings[i];
+	}
 	pipeline->createInfo = createInfo;
 
 	// Return pipeline

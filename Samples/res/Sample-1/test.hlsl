@@ -14,7 +14,10 @@ ConstantBuffer<PushColor> pushColor : register(b0);
 	float4 pushColor;
 };*/
 cbuffer AnotherCB : register(b1) {
-	float offset;
+	float offsets;
+	float __padding0;
+	float __padding1;
+	float __padding2;
 };
 
 struct VSInput {
@@ -35,7 +38,7 @@ VSOutput VSMain(VSInput input)
 {
 	VSOutput output;
 
-	output.position = float4(input.position.x + offset, input.position.yz, 1.0f);
+	output.position = float4(input.position.x + offsets, input.position.yz, 1.0f);
 	output.color = float4(input.color, 1.0);
 	//output.color = float4(input.color.xy, AConstantBuffer.someMatrix._m00, 1.0f);
 

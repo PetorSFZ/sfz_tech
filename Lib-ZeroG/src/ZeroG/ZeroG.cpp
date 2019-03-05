@@ -183,7 +183,10 @@ ZG_DLL_API ZgErrorCode zgPipelineRenderingCreate(
 	if (createInfo->pixelShaderEntry == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
 	if (createInfo->shaderVersion == ZG_SHADER_MODEL_UNDEFINED) return ZG_ERROR_INVALID_ARGUMENT;
 	if (createInfo->numVertexAttributes == 0) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES) return ZG_ERROR_INVALID_ARGUMENT;
 	if (createInfo->numVertexBufferSlots == 0) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS) return ZG_ERROR_INVALID_ARGUMENT;
 
 	zg::IPipelineRendering* pipeline = nullptr;
 	ZgErrorCode res = context->context->pipelineRenderingCreate(
@@ -294,13 +297,13 @@ ZG_DLL_API ZgErrorCode zgCommandListMemcpyBufferToBuffer(
 
 ZG_DLL_API ZgErrorCode zgCommandListSetPushConstant(
 	ZgCommandList* commandListIn,
-	uint32_t parameterIndex,
-	const void* data)
+	uint32_t shaderRegister,
+	const void* data,
+	uint32_t dataSizeInBytes)
 {
-	if (parameterIndex >= ZG_MAX_NUM_PIPELINE_PARAMETERS) return ZG_ERROR_INVALID_ARGUMENT;
 	if (data == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
 	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
-	return commandList->setPushConstant(parameterIndex, data);
+	return commandList->setPushConstant(shaderRegister, data, dataSizeInBytes);
 }
 
 ZG_DLL_API ZgErrorCode zgCommandListSetPipelineRendering(

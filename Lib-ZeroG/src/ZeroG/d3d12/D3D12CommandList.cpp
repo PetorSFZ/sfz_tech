@@ -146,26 +146,39 @@ ZgErrorCode D3D12CommandList::memcpyBufferToBuffer(
 }
 
 ZgErrorCode D3D12CommandList::setPushConstant(
-	uint32_t parameterIndex,
-	const void* dataPtr) noexcept
+	uint32_t shaderRegister,
+	const void* dataPtr,
+	uint32_t dataSizeInBytes) noexcept
 {
 	// Require that a pipeline has been set so we can query its parameters
 	if (!mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 
-	// Return invalid argument if parameter index is out of bounds
-	const ZgPipelineRenderingCreateInfo& pipelineInfo = mBoundPipeline->createInfo;
-	if (parameterIndex >= pipelineInfo.numParameters) return ZG_ERROR_INVALID_ARGUMENT;
+	// Linear search to find push constant mapping
+	uint32_t mappingIdx = ~0u;
+	for (uint32_t i = 0; i < mBoundPipeline->numPushConstants; i++) {
+		if (mBoundPipeline->pushConstants[i].shaderRegister == shaderRegister) {
+			mappingIdx = i;
+			break;
+		}
+	}
 
-	const ZgPipeplineParameterPushConstant& constInfo =
-		pipelineInfo.parameters[parameterIndex].pushConstant;
-	if (constInfo.sizeInWords == 1) {
+	// Return invalid argument if there is no push constant associated with the given register
+	if (mappingIdx == ~0u) return ZG_ERROR_INVALID_ARGUMENT;
+	const D3D12PushConstantMapping& mapping = mBoundPipeline->pushConstants[mappingIdx];
+
+	// Sanity check to attempt to see if user provided enough bytes to read
+	if (mapping.sizeInBytes != dataSizeInBytes) return ZG_ERROR_INVALID_ARGUMENT;
+
+	// Set push constant
+	if (mapping.sizeInBytes == 4) {
 		uint32_t data = *reinterpret_cast<const uint32_t*>(dataPtr);
-		commandList->SetGraphicsRoot32BitConstant(parameterIndex, data, 0);
+		commandList->SetGraphicsRoot32BitConstant(mapping.parameterIndex, data, 0);
 	}
 	else {
-		commandList->SetGraphicsRoot32BitConstants(parameterIndex, constInfo.sizeInWords, dataPtr, 0);
+		commandList->SetGraphicsRoot32BitConstants(
+			mapping.parameterIndex, mapping.sizeInBytes / 4, dataPtr, 0);
 	}
-
+	
 	return ZG_SUCCESS;
 }
 

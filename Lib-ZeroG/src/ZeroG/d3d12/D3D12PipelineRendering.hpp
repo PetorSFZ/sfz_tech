@@ -41,7 +41,10 @@ public:
 
 	ComPtr<ID3D12PipelineState> pipelineState;
 	ComPtr<ID3D12RootSignature> rootSignature;
-	ZgPipelineRenderingCreateInfo createInfo = {}; // The info used to create the pipeline
+	ZgPipelineRenderingSignature signature = {};
+	uint32_t numPushConstants = 0;
+	D3D12PushConstantMapping pushConstants[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
+	ZgPipelineRenderingCreateInfo createInfo = {}; // The info used to create the pipeline 
 };
 
 // D3D12 PipelineRendering functions

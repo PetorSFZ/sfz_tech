@@ -132,14 +132,9 @@ int main(int argc, char* argv[])
 	pipelineInfo.numVertexBufferSlots = 1;
 	pipelineInfo.vertexBufferStridesBytes[0] = sizeof(Vertex);
 
-	pipelineInfo.numParameters = 2;
-	pipelineInfo.parameters[0].bindingType = ZG_PIPELINE_PARAMETER_BINDING_TYPE_PUSH_CONSTANT;
-	pipelineInfo.parameters[0].pushConstant.shaderRegister = 0;
-	pipelineInfo.parameters[0].pushConstant.sizeInWords = 4; // sizeof(vec4) / 4 == 4
-
-	pipelineInfo.parameters[1].bindingType = ZG_PIPELINE_PARAMETER_BINDING_TYPE_PUSH_CONSTANT;
-	pipelineInfo.parameters[1].pushConstant.shaderRegister = 1;
-	pipelineInfo.parameters[1].pushConstant.sizeInWords = 1;
+	pipelineInfo.numPushConstants = 2;
+	pipelineInfo.pushConstantRegisters[0] = 0;
+	pipelineInfo.pushConstantRegisters[1] = 1;
 	
 	ZgPipelineRendering* pipeline = nullptr;
 	ZgPipelineRenderingSignature signature = {};
@@ -222,10 +217,10 @@ int main(int argc, char* argv[])
 		ZgCommandListSetFramebufferInfo framebufferInfo = {};
 		framebufferInfo.framebuffer = framebuffer;
 		float color[4] = { 0.0f, 0.5f, 0.0f, 0.0f };
-		CHECK_ZG zgCommandListSetPushConstant(commandList, 0, color);
-		float offset = 0.2f;
+		CHECK_ZG zgCommandListSetPushConstant(commandList, 0, color, sizeof(color));
+		float offset[4] = { 0.2f, 0.0f, 0.0f, 0.0f };
 		CHECK_ZG zgCommandListSetFramebuffer(commandList, &framebufferInfo);
-		CHECK_ZG zgCommandListSetPushConstant(commandList, 1, &offset);
+		CHECK_ZG zgCommandListSetPushConstant(commandList, 1, &offset, sizeof(offset));
 		CHECK_ZG zgCommandListClearFramebuffer(commandList, 0.2f, 0.2f, 0.3f, 1.0f);
 		CHECK_ZG zgCommandListSetVertexBuffer(commandList, 0, vertexDeviceBuffer);
 		CHECK_ZG zgCommandListDrawTriangles(commandList, 0, 3);

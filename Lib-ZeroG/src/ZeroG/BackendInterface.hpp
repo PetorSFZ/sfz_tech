@@ -61,8 +61,9 @@ public:
 		uint64_t numBytes) noexcept = 0;
 
 	virtual ZgErrorCode setPushConstant(
-		uint32_t parameterIndex,
-		const void* data) noexcept = 0;
+		uint32_t shaderRegister,
+		const void* data,
+		uint32_t dataSizeInBytes) noexcept = 0;
 
 	virtual ZgErrorCode setPipelineRendering(
 		IPipelineRendering* pipeline) noexcept = 0;
