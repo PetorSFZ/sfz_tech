@@ -4,10 +4,15 @@
 
 //ConstantBuffer<TmpConstantBuffer> AConstantBuffer : register(b0);
 
-cbuffer PushConstantCB : register(b0) {
-	float4 pushColor;
+struct PushColor {
+	float4 color;
 };
 
+ConstantBuffer<PushColor> pushColor : register(b0);
+
+/*cbuffer PushConstantCB : register(b0) {
+	float4 pushColor;
+};*/
 cbuffer AnotherCB : register(b1) {
 	float offset;
 };
@@ -40,5 +45,5 @@ VSOutput VSMain(VSInput input)
 float4 PSMain(PSInput input) : SV_TARGET
 {
 	//return float4(0.0, 0.0, 1.0, 1.0);
-	return input.color + pushColor;
+	return input.color + pushColor.color;
 }

@@ -201,7 +201,7 @@ struct ZgAllocator {
 	uint8_t* (*allocate)(void* userPtr, uint32_t size, const char* name);
 
 	// Function pointer to deallocate function.
-	void (*deallocate)(void* userPtr, uint8_t* allocation);
+	void (*deallocate)(void* userPtr, void* allocation);
 
 	// User specified pointer that is provided to each allocate/free call.
 	void* userPtr;
@@ -316,7 +316,7 @@ struct ZgVertexAttribute {
 	// struct VSInput {
 	//     float3 position : ATTRIBUTE_LOCATION_0;
 	// }
-	uint32_t attributeLocation;
+	uint32_t location;
 
 	// Which vertex buffer slot the attribute should be read from.
 	//
@@ -393,7 +393,7 @@ struct ZgPipelineParameter {
 };
 typedef struct ZgPipelineParameter ZgPipelineParameter;
 
-// The maximum number of pipeline parameters allowed on a single Pipeline.
+// The maximum number of pipeline parameters allowed on a single pipeline.
 static const uint32_t ZG_MAX_NUM_PIPELINE_PARAMETERS = 16;
 
 // The information required to create a rendering pipeline
@@ -429,6 +429,27 @@ struct ZgPipelineRenderingCreateInfo {
 };
 typedef struct ZgPipelineRenderingCreateInfo ZgPipelineRenderingCreateInfo;
 
+// The maximum number of constant buffers allowed on a single pipeline.
+constexpr const uint32_t ZG_MAX_NUM_CONSTANT_BUFFERS = 16;
+
+struct ZgConstantBuffer {
+
+	// Which register this buffer corresponds to in the shader. In D3D12 this is the "register"
+	// keyword, i.e. a value of 0 would mean "register(b0)". In GLSL this corresponds to the
+	// "binding" keyword, i.e. "layout(binding = 0)".
+	uint32_t shaderRegister;
+
+	// Size of the buffer in bytes
+	uint32_t sizeInBytes;
+
+	// Whether the buffer is accessed by the vertex shader or not
+	ZgBool vertexAccess;
+
+	// Whether the buffer is accessed by the pixel shader or not
+	ZgBool pixelAccess;
+};
+typedef struct ZgConstantBuffer ZgConstantBuffer;
+
 // A struct representing the signature of a rendering pipeline
 //
 // The signature contains all information necessary to know how to bind input and output to a
@@ -444,8 +465,9 @@ struct ZgPipelineRenderingSignature {
 	uint32_t numVertexAttributes;
 	ZgVertexAttribute vertexAttributes[ZG_MAX_NUM_VERTEX_ATTRIBUTES];
 
-
-
+	// The constant buffers
+	uint32_t numConstantBuffers;
+	ZgConstantBuffer constantBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
 };
 typedef struct ZgPipelineRenderingSignature ZgPipelineRenderingSignature;
 

@@ -18,6 +18,8 @@
 
 #include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
 
+#include <algorithm>
+
 #include "ZeroG/util/Assert.hpp"
 #include "ZeroG/util/CpuAllocation.hpp"
 
@@ -328,6 +330,83 @@ static void logReflection(
 		desc.cTextureStoreInstructions);
 }
 
+static void printfAppend(char*& str, uint32_t& bytesLeft, const char* format, ...) noexcept
+{
+	va_list args;
+	va_start(args, format);
+	int res = std::vsnprintf(str, bytesLeft, format, args);
+	va_end(args);
+
+	ZG_ASSERT(res >= 0);
+	ZG_ASSERT(res < int(bytesLeft));
+	bytesLeft -= res;
+	str += res;
+}
+
+static void logPipelineInfo(
+	ZgAllocator& allocator,
+	ZgLogger& logger,
+	const ZgPipelineRenderingCreateInfo& createInfo,
+	const ZgPipelineRenderingSignature& signature,
+	const ComPtr<ID3D12ShaderReflection>& vertexReflection,
+	const ComPtr<ID3D12ShaderReflection>& pixelReflection) noexcept
+{
+	// Allocate temp string to log
+	const uint32_t STRING_MAX_SIZE = 4096;
+	char* const tmpStrOriginal = reinterpret_cast<char*>(allocator.allocate(
+		allocator.userPtr, STRING_MAX_SIZE, "Pipeline log temp string"));
+	char* tmpStr = tmpStrOriginal;
+	tmpStr[0] = '\0';
+	uint32_t bytesLeft = STRING_MAX_SIZE;
+
+	// Print header
+	printfAppend(tmpStr, bytesLeft, "Compiled ZgPipelineRendering with:\n");
+	printfAppend(tmpStr, bytesLeft, " - Vertex shader: \"%s\" -- %s()\n",
+		createInfo.vertexShaderPath, createInfo.vertexShaderEntry);
+	printfAppend(tmpStr, bytesLeft, " - Pixel shader: \"%s\" -- %s()\n\n",
+		createInfo.pixelShaderPath, createInfo.pixelShaderEntry);
+
+	// Print vertex attributes
+	printfAppend(tmpStr, bytesLeft, "Vertex attributes (%u):\n", signature.numVertexAttributes);
+	for (uint32_t i = 0; i < signature.numVertexAttributes; i++) {
+		const ZgVertexAttribute& attrib = signature.vertexAttributes[i];
+		printfAppend(tmpStr, bytesLeft, " - Location: %u -- Type: %s\n",
+			attrib.location,
+			vertexAttributeTypeToString(attrib.type));
+	}
+
+	// Print constant buffers
+	printfAppend(tmpStr, bytesLeft, "\nConstant buffers (%u):\n", signature.numConstantBuffers);
+	for (uint32_t i = 0; i < signature.numConstantBuffers; i++) {
+		const ZgConstantBuffer& cbuffer = signature.constantBuffers[i];
+		printfAppend(tmpStr, bytesLeft,
+			" - Register: %u -- Size: %u bytes -- Vertex shader: %s -- Pixel shader: %s\n",
+			cbuffer.shaderRegister,
+			cbuffer.sizeInBytes,
+			cbuffer.vertexAccess ? "YES" : "NO",
+			cbuffer.pixelAccess ? "YES" : "NO");
+	}
+
+
+	// Get shader description froms reflection data
+	D3D12_SHADER_DESC vertexDesc = {};
+	CHECK_D3D12(logger) vertexReflection->GetDesc(&vertexDesc);
+	D3D12_SHADER_DESC pixelDesc = {};
+	CHECK_D3D12(logger) pixelReflection->GetDesc(&pixelDesc);
+
+	// Log some info!
+	logReflection(
+		logger, "vertex", createInfo.vertexShaderPath, createInfo.vertexShaderEntry, vertexDesc);
+	logReflection(
+		logger, "pixel", createInfo.pixelShaderPath, createInfo.pixelShaderEntry, pixelDesc);
+
+	// Log
+	ZG_INFO(logger, "%s", tmpStrOriginal);
+
+	// Deallocate temp string
+	allocator.deallocate(allocator.userPtr, tmpStrOriginal);
+}
+
 // D3D12 PipelineRendering
 // ------------------------------------------------------------------------------------------------
 
@@ -445,11 +524,11 @@ ZgErrorCode createPipelineRendering(
 		}
 
 		// Check that the attribute location (semantic index) is the same
-		if (sign.SemanticIndex != createInfo.vertexAttributes[i].attributeLocation) {
+		if (sign.SemanticIndex != createInfo.vertexAttributes[i].location) {
 			ZG_ERROR(logger, "Invalid ZgPipelineRenderingCreateInfo. It specifies that the %u:th"
-				" vertex attribute has attribute location %u, shader reflection finds %u",
+				" vertex attribute has location %u, shader reflection finds %u",
 				i,
-				attrib.attributeLocation,
+				attrib.location,
 				sign.SemanticIndex);
 			return ZG_ERROR_INVALID_ARGUMENT;
 		}
@@ -458,12 +537,140 @@ ZgErrorCode createPipelineRendering(
 		signatureOut->vertexAttributes[i] = attrib;
 	}
 
-	// Log some info!
-	logReflection(
-		logger, "vertex", createInfo.vertexShaderPath, createInfo.vertexShaderEntry, vertexDesc);
-	logReflection(
-		logger, "pixel", createInfo.pixelShaderPath, createInfo.pixelShaderEntry, pixelDesc);
+	// Build up list of all constant buffers
+	ZgConstantBuffer constBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
+	uint32_t numConstBuffers = 0;
 
+	// First add all constant buffers from vertex shader
+	for (uint32_t i = 0; i < vertexDesc.BoundResources; i++) {
+		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
+		CHECK_D3D12(logger) vertexReflection->GetResourceBindingDesc(i, &resDesc);
+
+		// Error out if not a constant buffer
+		// TODO: Change to "continue" once other types of resources are implemented
+		if (resDesc.Type != D3D_SIT_CBUFFER) {
+			ZG_ERROR(logger, "Vertex shader resource %s (register = %u) is not a constant buffer",
+				resDesc.Name, resDesc.BindPoint);
+			return ZG_ERROR_UNIMPLEMENTED;
+		}
+
+		// Error out if buffers uses more than one register
+		// TODO: This should probably be relaxed
+		if (resDesc.BindCount != 1) {
+			ZG_ERROR(logger, "Multiple registers for a single resource not allowed");
+			return ZG_ERROR_UNIMPLEMENTED;
+		}
+
+		// Error out if we have too many constant buffers
+		if (numConstBuffers >= ZG_MAX_NUM_CONSTANT_BUFFERS) {
+			ZG_ERROR(logger, "Too many constant buffers, only %u allowed",
+				ZG_MAX_NUM_CONSTANT_BUFFERS);
+			return ZG_ERROR_SHADER_COMPILE_ERROR;
+		}
+
+		// Error out if another register space than 0 is used
+		if (resDesc.Space != 0) {
+			ZG_ERROR(logger,
+				"Vertex shader resource %s (register = %u) uses register space %u, only 0 is allowed",
+				resDesc.Name, resDesc.BindPoint, resDesc.Space);
+			return ZG_ERROR_SHADER_COMPILE_ERROR;
+		}
+
+		// Get constant buffer reflection
+		ID3D12ShaderReflectionConstantBuffer* cbufferReflection =
+			vertexReflection->GetConstantBufferByName(resDesc.Name);
+		D3D12_SHADER_BUFFER_DESC cbufferDesc = {};
+		CHECK_D3D12(logger) cbufferReflection->GetDesc(&cbufferDesc);
+
+		// Add slot for buffer in array
+		ZgConstantBuffer& cbuffer = constBuffers[numConstBuffers];
+		numConstBuffers += 1;
+
+		// Set constant buffer members
+		cbuffer.shaderRegister = resDesc.BindPoint;
+		cbuffer.sizeInBytes = cbufferDesc.Size;
+		cbuffer.vertexAccess = ZG_TRUE;
+	}
+
+	// Then add constant buffers from pixel shader
+	for (uint32_t i = 0; i < pixelDesc.BoundResources; i++) {
+		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
+		CHECK_D3D12(logger) pixelReflection->GetResourceBindingDesc(i, &resDesc);
+
+		// Error out if not a constant buffer
+		// TODO: Change to "continue" once other types of resources are implemented
+		if (resDesc.Type != D3D_SIT_CBUFFER) {
+			ZG_ERROR(logger, "Pixel shader resource %s (register = %u) is not a constant buffer",
+				resDesc.Name, resDesc.BindPoint);
+			return ZG_ERROR_UNIMPLEMENTED;
+		}
+
+		// See if buffer was already found/used by vertex shader
+		uint32_t vertexCBufferIdx = ~0u;
+		for (uint32_t j = 0; j < numConstBuffers; j++) {
+			if (constBuffers[j].shaderRegister == resDesc.BindPoint) {
+				vertexCBufferIdx = j;
+				break;
+			}
+		}
+
+		// If buffer was already found, mark it as accessed by pixel shader and continue to next
+		// iteration
+		if (vertexCBufferIdx != ~0u) {
+			constBuffers[vertexCBufferIdx].pixelAccess = ZG_TRUE;
+			continue;
+		}
+
+		// Error out if buffers uses more than one register
+		// TODO: This should probably be relaxed
+		if (resDesc.BindCount != 1) {
+			ZG_ERROR(logger, "Multiple registers for a single resource not allowed");
+			return ZG_ERROR_UNIMPLEMENTED;
+		}
+
+		// Error out if we have too many constant buffers
+		if (numConstBuffers >= ZG_MAX_NUM_CONSTANT_BUFFERS) {
+			ZG_ERROR(logger, "Too many constant buffers, only %u allowed",
+				ZG_MAX_NUM_CONSTANT_BUFFERS);
+			return ZG_ERROR_SHADER_COMPILE_ERROR;
+		}
+
+		// Error out if another register space than 0 is used
+		if (resDesc.Space != 0) {
+			ZG_ERROR(logger,
+				"Pixel shader resource %s (register = %u) uses register space %u, only 0 is allowed",
+				resDesc.Name, resDesc.BindPoint, resDesc.Space);
+			return ZG_ERROR_SHADER_COMPILE_ERROR;
+		}
+
+		// Get constant buffer reflection
+		ID3D12ShaderReflectionConstantBuffer* cbufferReflection =
+			pixelReflection->GetConstantBufferByName(resDesc.Name);
+		D3D12_SHADER_BUFFER_DESC cbufferDesc = {};
+		CHECK_D3D12(logger) cbufferReflection->GetDesc(&cbufferDesc);
+
+		// Add slot for buffer in array
+		ZgConstantBuffer& cbuffer = constBuffers[numConstBuffers];
+		numConstBuffers += 1;
+
+		// Set constant buffer members
+		cbuffer.shaderRegister = resDesc.BindPoint;
+		cbuffer.sizeInBytes = cbufferDesc.Size;
+		cbuffer.pixelAccess = ZG_TRUE;
+	}
+
+	// Sort buffers by register
+	std::sort(constBuffers, constBuffers + numConstBuffers,
+		[](const ZgConstantBuffer& lhs, const ZgConstantBuffer& rhs) {
+		return lhs.shaderRegister < rhs.shaderRegister;
+	});
+
+	// Copy constant buffer information to signature
+	signatureOut->numConstantBuffers = numConstBuffers;
+	for (uint32_t i = 0; i < numConstBuffers; i++) {
+		signatureOut->constantBuffers[i] = constBuffers[i];
+	}
+	
 	// Convert ZgVertexAttribute's to D3D12_INPUT_ELEMENT_DESC
 	// This is the "input layout"
 	D3D12_INPUT_ELEMENT_DESC attributes[ZG_MAX_NUM_VERTEX_ATTRIBUTES] = {};
@@ -472,7 +679,7 @@ ZgErrorCode createPipelineRendering(
 		const ZgVertexAttribute& attribute = createInfo.vertexAttributes[i];
 		D3D12_INPUT_ELEMENT_DESC desc = {};
 		desc.SemanticName = "ATTRIBUTE_LOCATION_";
-		desc.SemanticIndex = attribute.attributeLocation;
+		desc.SemanticIndex = attribute.location;
 		desc.Format = vertexAttributeTypeToFormat(attribute.type);
 		desc.InputSlot = attribute.vertexBufferSlot;
 		desc.AlignedByteOffset = attribute.offsetToFirstElementInBytes;
@@ -577,3 +784,30 @@ ZgErrorCode createPipelineRendering(
 		streamDesc.pPipelineStateSubobjectStream = &stream;
 		streamDesc.SizeInBytes = sizeof(PipelineStateStream);
 		{
+			std::lock_guard<std::mutex> lock(contextMutex);
+			if (D3D12_FAIL(logger,
+				device.CreatePipelineState(&streamDesc, IID_PPV_ARGS(&pipelineState)))) {
+				return ZG_ERROR_GENERIC;
+			}
+		}
+	}
+
+	// Log information about the pipeline
+	logPipelineInfo(
+		allocator, logger, createInfo, *signatureOut, vertexReflection, pixelReflection);
+
+	// Allocate pipeline
+	D3D12PipelineRendering* pipeline =
+		zgNew<D3D12PipelineRendering>(allocator, "ZeroG - D3D12PipelineRendering");
+
+	// Store pipeline state
+	pipeline->pipelineState = pipelineState;
+	pipeline->rootSignature = rootSignature;
+	pipeline->createInfo = createInfo;
+
+	// Return pipeline
+	*pipelineOut = pipeline;
+	return ZG_SUCCESS;
+}
+
+} // namespace zg

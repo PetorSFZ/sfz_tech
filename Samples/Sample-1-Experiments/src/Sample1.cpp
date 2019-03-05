@@ -119,12 +119,12 @@ int main(int argc, char* argv[])
 
 	pipelineInfo.numVertexAttributes = 2;
 
-	pipelineInfo.vertexAttributes[0].attributeLocation = 0;
+	pipelineInfo.vertexAttributes[0].location = 0;
 	pipelineInfo.vertexAttributes[0].vertexBufferSlot = 0;
 	pipelineInfo.vertexAttributes[0].offsetToFirstElementInBytes = 0;
 	pipelineInfo.vertexAttributes[0].type = ZG_VERTEX_ATTRIBUTE_F32_3;
 
-	pipelineInfo.vertexAttributes[1].attributeLocation = 1;
+	pipelineInfo.vertexAttributes[1].location = 1;
 	pipelineInfo.vertexAttributes[1].vertexBufferSlot = 0;
 	pipelineInfo.vertexAttributes[1].offsetToFirstElementInBytes = sizeof(float) * 3;
 	pipelineInfo.vertexAttributes[1].type = ZG_VERTEX_ATTRIBUTE_F32_3;

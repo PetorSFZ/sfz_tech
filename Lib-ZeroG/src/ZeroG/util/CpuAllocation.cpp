@@ -42,7 +42,7 @@ static uint8_t* defaultAllocate(void* userPtr, uint32_t size, const char* name)
 #endif
 }
 
-static void defaultDeallocate(void* userPtr, uint8_t* allocation)
+static void defaultDeallocate(void* userPtr, void* allocation)
 {
 	(void)userPtr;
 	if (allocation == nullptr) return;
