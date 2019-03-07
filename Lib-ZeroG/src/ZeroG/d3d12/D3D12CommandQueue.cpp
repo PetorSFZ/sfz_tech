@@ -42,12 +42,14 @@ D3D12CommandQueue::~D3D12CommandQueue() noexcept
 
 ZgErrorCode D3D12CommandQueue::create(
 	ComPtr<ID3D12Device3>& device,
+	D3D12DescriptorRingBuffer* descriptorBuffer,
 	uint32_t maxNumCommandLists,
 	uint32_t maxNumBuffersPerCommandList,
 	ZgLogger logger,
 	ZgAllocator allocator) noexcept
 {
 	mDevice = device;
+	mDescriptorBuffer = descriptorBuffer;
 	mLog = logger;
 	mAllocator = allocator;
 
@@ -231,7 +233,7 @@ ZgErrorCode D3D12CommandQueue::createCommandList(D3D12CommandList*& commandListO
 	}
 
 	// Initialize command list
-	commandList.create(mMaxNumBuffersPerCommandList, mLog, mAllocator);
+	commandList.create(mMaxNumBuffersPerCommandList, mLog, mAllocator, mDevice, mDescriptorBuffer);
 
 	commandListOut = &commandList;
 	return ZG_SUCCESS;

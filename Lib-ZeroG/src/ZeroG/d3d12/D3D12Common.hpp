@@ -67,15 +67,6 @@ struct PendingState final {
 	D3D12_RESOURCE_STATES currentState = D3D12_RESOURCE_STATE_COMMON;
 };
 
-// Shader register mappings
-// ------------------------------------------------------------------------------------------------
-
-struct D3D12PushConstantMapping {
-	uint32_t shaderRegister = ~0u;
-	uint32_t parameterIndex = ~0u;
-	uint32_t sizeInBytes = ~0u;
-};
-
 // Helper functions
 // ------------------------------------------------------------------------------------------------
 

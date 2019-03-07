@@ -20,6 +20,7 @@
 
 #include "ZeroG.h"
 #include "ZeroG/d3d12/D3D12Common.hpp"
+#include "ZeroG/d3d12/D3D12DescriptorRingBuffer.hpp"
 #include "ZeroG/d3d12/D3D12Memory.hpp"
 #include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
 #include "ZeroG/BackendInterface.hpp"
@@ -45,7 +46,12 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void create(uint32_t maxNumBuffers, ZgLogger logger, ZgAllocator allocator) noexcept;
+	void create(
+		uint32_t maxNumBuffers,
+		ZgLogger logger,
+		ZgAllocator allocator,
+		ComPtr<ID3D12Device3> device,
+		D3D12DescriptorRingBuffer* descriptorBuffer) noexcept;
 	void swap(D3D12CommandList& other) noexcept;
 	void destroy() noexcept;
 
@@ -63,6 +69,9 @@ public:
 		uint32_t shaderRegister,
 		const void* data,
 		uint32_t dataSizeInBytes) noexcept override final;
+
+	ZgErrorCode bindConstantBuffers(
+		const ZgConstantBufferBindings& bindings) noexcept override final;
 
 	ZgErrorCode setPipelineRendering(
 		IPipelineRendering* pipeline) noexcept override final;
@@ -112,6 +121,8 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	ZgLogger mLog = {};
+	ComPtr<ID3D12Device3> mDevice;
+	D3D12DescriptorRingBuffer* mDescriptorBuffer = nullptr;
 	bool mPipelineSet = false; // Only allow a single pipeline per command list
 	D3D12PipelineRendering* mBoundPipeline = nullptr;
 	bool mFramebufferSet = false; // Only allow a single framebuffer to be set.

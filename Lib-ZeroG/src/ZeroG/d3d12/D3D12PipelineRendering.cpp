@@ -277,59 +277,6 @@ static ZgVertexAttributeType vertexReflectionToAttribute(
 	return ZG_VERTEX_ATTRIBUTE_UNDEFINED;
 }
 
-static constexpr char SHADER_REFLECTION_LOG_FORMAT[] =
-R"(Compiled %s shader from file: "%s"
-Entry: %s()
-ConstantBuffers: %u
-BoundResources: %u
-InputParameters: %u
-OutputParameters: %u
-InstructionCount: %u
-TempRegisterCount: %u
-TempArrayCount: %u
-TextureNormalInstructions: %u
-TextureLoadInstructions: %u
-FloatInstructionCount: %u
-IntInstructionCount: %u
-UintInstructionCount: %u
-StaticFlowControlCount: %u
-DynamicFlowControlCount: %u
-ArrayInstructionCount: %u
-cBarrierInstructions: %u
-cInterlockedInstructions: %u
-cTextureStoreInstructions: %u)";
-
-static void logReflection(
-	ZgLogger& logger,
-	const char* shaderType,
-	const char* shaderPath,
-	const char* shaderEntry,
-	const D3D12_SHADER_DESC& desc) noexcept
-{
-	ZG_INFO(logger, SHADER_REFLECTION_LOG_FORMAT,
-		shaderType,
-		shaderPath,
-		shaderEntry,
-		desc.ConstantBuffers,
-		desc.BoundResources,
-		desc.InputParameters,
-		desc.OutputParameters,
-		desc.InstructionCount,
-		desc.TempRegisterCount,
-		desc.TempArrayCount,
-		desc.TextureNormalInstructions,
-		desc.TextureLoadInstructions,
-		desc.FloatInstructionCount,
-		desc.IntInstructionCount,
-		desc.UintInstructionCount,
-		desc.StaticFlowControlCount,
-		desc.DynamicFlowControlCount,
-		desc.ArrayInstructionCount,
-		desc.cBarrierInstructions,
-		desc.cInterlockedInstructions,
-		desc.cTextureStoreInstructions);
-}
-
 static void printfAppend(char*& str, uint32_t& bytesLeft, const char* format, ...) noexcept
 {
 	va_list args;
@@ -387,19 +334,6 @@ static void logPipelineInfo(
 			cbuffer.vertexAccess ? "YES" : "NO",
 			cbuffer.pixelAccess ? "YES" : "NO");
 	}
-
-
-	// Get shader description froms reflection data
-	D3D12_SHADER_DESC vertexDesc = {};
-	CHECK_D3D12(logger) vertexReflection->GetDesc(&vertexDesc);
-	D3D12_SHADER_DESC pixelDesc = {};
-	CHECK_D3D12(logger) pixelReflection->GetDesc(&pixelDesc);
-
-	// Log some info!
-	logReflection(
-		logger, "vertex", createInfo.vertexShaderPath, createInfo.vertexShaderEntry, vertexDesc);
-	logReflection(
-		logger, "pixel", createInfo.pixelShaderPath, createInfo.pixelShaderEntry, pixelDesc);
 
 	// Log
 	ZG_INFO(logger, "%s", tmpStrOriginal);
@@ -718,6 +652,11 @@ ZgErrorCode createPipelineRendering(
 	D3D12PushConstantMapping pushConstantMappings[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
 	uint32_t numPushConstantsMappings = 0;
 
+	// List of constant buffer mappings to be filled in when creating root signature
+	D3D12ConstantBufferMapping constBufferMappings[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
+	uint32_t numConstBufferMappings = 0;
+	uint32_t constBuffersParameterIndex = ~0u;
+
 	// Create root signature
 	ComPtr<ID3D12RootSignature> rootSignature;
 	{
@@ -726,19 +665,20 @@ ZgErrorCode createPipelineRendering(
 			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 		// Root signature parameters
-		// TODO: Currently assume we can't have more than max number of constant buffers
-		CD3DX12_ROOT_PARAMETER1 parameters[ZG_MAX_NUM_CONSTANT_BUFFERS];
+		// We know that we can't have more than 64 root parameters as maximum (i.e. 64 words)
+		constexpr uint32_t MAX_NUM_ROOT_PARAMETERS = 64;
+		CD3DX12_ROOT_PARAMETER1 parameters[MAX_NUM_ROOT_PARAMETERS];
 		uint32_t numParameters = 0;
 
 		// Add push constants
 		for (uint32_t i = 0; i < signatureOut->numConstantBuffers; i++) {
 			const ZgConstantBuffer& cbuffer = signatureOut->constantBuffers[i];
-			ZG_ASSERT(cbuffer.pushConstant == ZG_TRUE); // TODO: Remove
 			if (cbuffer.pushConstant == ZG_FALSE) continue;
 
 			// Get parameter index for the push constant
 			uint32_t parameterIndex = numParameters;
 			numParameters += 1;
+			ZG_ASSERT(numParameters <= MAX_NUM_ROOT_PARAMETERS);
 
 			// Calculate the correct shader visibility for the constant
 			D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL;
@@ -760,6 +700,36 @@ ZgErrorCode createPipelineRendering(
 			pushConstantMappings[numPushConstantsMappings].sizeInBytes = cbuffer.sizeInBytes;
 			numPushConstantsMappings += 1;
 		}
+
+
+		// Add dynamic constant buffers (non-push constants)
+		uint32_t dynamicConstBuffersFirstRegister = ~0u; // TODO: THIS IS PROBABLY BAD
+		for (uint32_t i = 0; i < signatureOut->numConstantBuffers; i++) {
+			const ZgConstantBuffer& cbuffer = signatureOut->constantBuffers[i];
+			if (cbuffer.pushConstant == ZG_TRUE) continue;
+
+			if (dynamicConstBuffersFirstRegister == ~0u) {
+				dynamicConstBuffersFirstRegister = cbuffer.shaderRegister;
+			}
+			
+			// Add to constant buffer mappings
+			uint32_t mappingIdx = numConstBufferMappings;
+			numConstBufferMappings += 1;
+			constBufferMappings[mappingIdx].shaderRegister = cbuffer.shaderRegister;
+			constBufferMappings[mappingIdx].tableOffset = mappingIdx;
+			constBufferMappings[mappingIdx].sizeInBytes = cbuffer.sizeInBytes;
+		}
+		constBuffersParameterIndex = numParameters;
+		numParameters += 1;
+		ZG_ASSERT(numParameters <= MAX_NUM_ROOT_PARAMETERS);
+
+		// TODO: Currently using the assumption that the shader register range is continuous,
+		//       which is probably not at all reasonable in practice
+		CD3DX12_DESCRIPTOR_RANGE1 constBufferRange;
+		constBufferRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, numConstBufferMappings,
+			dynamicConstBuffersFirstRegister);
+		parameters[constBuffersParameterIndex].InitAsDescriptorTable(1, &constBufferRange);
+
 
 		CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC desc;
 		desc.Init_1_1(numParameters, parameters, 0, nullptr, flags);
@@ -856,9 +826,12 @@ ZgErrorCode createPipelineRendering(
 	pipeline->rootSignature = rootSignature;
 	pipeline->signature = *signatureOut;
 	pipeline->numPushConstants = numPushConstantsMappings;
-	for (uint32_t i = 0; i < numPushConstantsMappings; i++) {
+	pipeline->numConstantBuffers = numConstBufferMappings;
+	for (uint32_t i = 0; i < ZG_MAX_NUM_CONSTANT_BUFFERS; i++) {
 		pipeline->pushConstants[i] = pushConstantMappings[i];
+		pipeline->constBuffers[i] = constBufferMappings[i];
 	}
+	pipeline->constBuffersParameterIndex = constBuffersParameterIndex;
 	pipeline->createInfo = createInfo;
 
 	// Return pipeline

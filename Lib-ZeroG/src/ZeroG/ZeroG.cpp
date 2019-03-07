@@ -315,6 +315,14 @@ ZG_DLL_API ZgErrorCode zgCommandListSetPushConstant(
 	return commandList->setPushConstant(shaderRegister, data, dataSizeInBytes);
 }
 
+ZG_DLL_API ZgErrorCode zgCommandListBindConstantBuffers(
+	ZgCommandList* commandListIn,
+	const ZgConstantBufferBindings* bindings)
+{
+	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
+	return commandList->bindConstantBuffers(*bindings);
+}
+
 ZG_DLL_API ZgErrorCode zgCommandListSetPipelineRendering(
 	ZgCommandList* commandListIn,
 	ZgPipelineRendering* pipeline)

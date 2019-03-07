@@ -26,6 +26,21 @@
 
 namespace zg {
 
+// Shader register mappings
+// ------------------------------------------------------------------------------------------------
+
+struct D3D12PushConstantMapping {
+	uint32_t shaderRegister = ~0u;
+	uint32_t parameterIndex = ~0u;
+	uint32_t sizeInBytes = ~0u;
+};
+
+struct D3D12ConstantBufferMapping {
+	uint32_t shaderRegister = ~0u;
+	uint32_t tableOffset = ~0u;
+	uint32_t sizeInBytes = ~0u;
+};
+
 // D3D12 PipelineRendering
 // ------------------------------------------------------------------------------------------------
 
@@ -44,6 +59,9 @@ public:
 	ZgPipelineRenderingSignature signature = {};
 	uint32_t numPushConstants = 0;
 	D3D12PushConstantMapping pushConstants[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
+	uint32_t numConstantBuffers = 0;
+	D3D12ConstantBufferMapping constBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
+	uint32_t constBuffersParameterIndex = ~0u;
 	ZgPipelineRenderingCreateInfo createInfo = {}; // The info used to create the pipeline 
 };
 

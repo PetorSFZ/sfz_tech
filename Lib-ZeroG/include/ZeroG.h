@@ -468,7 +468,6 @@ struct ZgBufferCreateInfo {
 
 	// The type of memory
 	ZgBufferMemoryType bufferMemoryType;
-
 };
 typedef struct ZgBufferCreateInfo ZgBufferCreateInfo;
 
@@ -518,6 +517,23 @@ ZG_DLL_API ZgErrorCode zgCommandListSetPushConstant(
 	uint32_t shaderRegister,
 	const void* data,
 	uint32_t dataSizeInBytes);
+
+struct ZgConstantBufferBinding {
+	uint32_t shaderRegister;
+	ZgBuffer* buffer;
+};
+typedef struct ZgConstantBufferBinding ZgConstantBufferBinding;
+
+struct ZgConstantBufferBindings {
+	
+	uint32_t numBindings;
+	ZgConstantBufferBinding bindings[ZG_MAX_NUM_CONSTANT_BUFFERS];
+};
+typedef struct ZgConstantBufferBindings ZgConstantBufferBindings;
+
+ZG_DLL_API ZgErrorCode zgCommandListBindConstantBuffers(
+	ZgCommandList* commandList,
+	const ZgConstantBufferBindings* bindings);
 
 ZG_DLL_API ZgErrorCode zgCommandListSetPipelineRendering(
 	ZgCommandList* commandList,

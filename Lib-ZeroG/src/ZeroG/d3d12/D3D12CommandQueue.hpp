@@ -23,6 +23,7 @@
 #include "ZeroG.h"
 #include "ZeroG/d3d12/D3D12Common.hpp"
 #include "ZeroG/d3d12/D3D12CommandList.hpp"
+#include "ZeroG/d3d12/D3D12DescriptorRingBuffer.hpp"
 #include "ZeroG/util/RingBuffer.hpp"
 #include "ZeroG/util/Vector.hpp"
 #include "ZeroG/BackendInterface.hpp"
@@ -50,6 +51,7 @@ public:
 
 	ZgErrorCode create(
 		ComPtr<ID3D12Device3>& device,
+		D3D12DescriptorRingBuffer* descriptorBuffer,
 		uint32_t maxNumCommandLists,
 		uint32_t maxNumBuffersPerCommandList,
 		ZgLogger logger,
@@ -95,6 +97,7 @@ private:
 
 	std::mutex mQueueMutex;
 	ComPtr<ID3D12Device3> mDevice;
+	D3D12DescriptorRingBuffer* mDescriptorBuffer = nullptr;
 	
 	ComPtr<ID3D12CommandQueue> mCommandQueue;
 	

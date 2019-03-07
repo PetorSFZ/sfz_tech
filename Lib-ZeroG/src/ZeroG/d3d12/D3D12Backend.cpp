@@ -196,7 +196,12 @@ public:
 		const uint32_t MAX_NUM_COMMAND_LISTS = 256;
 		const uint32_t MAX_NUM_BUFFERS_PER_COMMAND_LIST = 256;
 		ZgErrorCode res = mCommandQueueGraphicsPresent.create(
-			mDevice, MAX_NUM_COMMAND_LISTS, MAX_NUM_BUFFERS_PER_COMMAND_LIST, mLog, mAllocator);
+			mDevice,
+			&mGlobalDescriptorRingBuffer,
+			MAX_NUM_COMMAND_LISTS,
+			MAX_NUM_BUFFERS_PER_COMMAND_LIST,
+			mLog,
+			mAllocator);
 		if (res != ZG_SUCCESS) return res;
 
 		// Check if screen-tearing is allowed

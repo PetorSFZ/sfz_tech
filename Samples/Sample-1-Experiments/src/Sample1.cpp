@@ -132,9 +132,8 @@ int main(int argc, char* argv[])
 	pipelineInfo.numVertexBufferSlots = 1;
 	pipelineInfo.vertexBufferStridesBytes[0] = sizeof(Vertex);
 
-	pipelineInfo.numPushConstants = 2;
+	pipelineInfo.numPushConstants = 1;
 	pipelineInfo.pushConstantRegisters[0] = 0;
-	pipelineInfo.pushConstantRegisters[1] = 1;
 	
 	ZgPipelineRendering* pipeline = nullptr;
 	ZgPipelineRenderingSignature signature = {};
@@ -155,6 +154,24 @@ int main(int argc, char* argv[])
 	CHECK_ZG zgBufferMemcpyTo(
 		ctx.mContext, vertexUploadBuffer, 0, (const uint8_t*)triangleVertices, sizeof(triangleVertices));
 
+
+	// Create constant buffer
+	ZgBufferCreateInfo constBufferInfo = {};
+	constBufferInfo.sizeInBytes = 256; // 256-bytes
+	constBufferInfo.bufferMemoryType = ZG_BUFFER_MEMORY_TYPE_UPLOAD;
+
+	ZgBuffer* constBufferUpload = nullptr;
+	CHECK_ZG zgBufferCreate(ctx.mContext, &constBufferUpload, &constBufferInfo);
+
+	ZgBuffer* constBufferDevice = nullptr;
+	constBufferInfo.bufferMemoryType = ZG_BUFFER_MEMORY_TYPE_DEVICE;
+	CHECK_ZG zgBufferCreate(ctx.mContext, &constBufferDevice, &constBufferInfo);
+
+	float offset[4] = { 0.2f, 0.0f, 0.0f, 0.0f };
+	CHECK_ZG zgBufferMemcpyTo(
+		ctx.mContext, constBufferUpload, 0, (const uint8_t*)offset, sizeof(offset));
+
+
 	// Get the command queue
 	ZgCommandQueue* commandQueue = nullptr;
 	CHECK_ZG zgContextGeCommandQueueGraphicsPresent(ctx.mContext, &commandQueue);
@@ -165,6 +182,8 @@ int main(int argc, char* argv[])
 		CHECK_ZG zgCommandQueueBeginCommandListRecording(commandQueue, &commandList);
 		CHECK_ZG zgCommandListMemcpyBufferToBuffer(
 			commandList, vertexDeviceBuffer, 0, vertexUploadBuffer, 0, sizeof(triangleVertices));
+		CHECK_ZG zgCommandListMemcpyBufferToBuffer(
+			commandList, constBufferDevice, 0, constBufferUpload, 0, sizeof(offset));
 		CHECK_ZG zgCommandQueueExecuteCommandList(commandQueue, commandList);
 		CHECK_ZG zgCommandQueueFlush(commandQueue);
 	}
@@ -218,9 +237,14 @@ int main(int argc, char* argv[])
 		framebufferInfo.framebuffer = framebuffer;
 		float color[4] = { 0.0f, 0.5f, 0.0f, 0.0f };
 		CHECK_ZG zgCommandListSetPushConstant(commandList, 0, color, sizeof(color));
-		float offset[4] = { 0.2f, 0.0f, 0.0f, 0.0f };
+		//float offset[4] = { 0.2f, 0.0f, 0.0f, 0.0f };
+		//CHECK_ZG zgCommandListSetPushConstant(commandList, 1, &offset, sizeof(offset));
+		ZgConstantBufferBindings constBufferBindings = {};
+		constBufferBindings.numBindings = 1;
+		constBufferBindings.bindings[0].shaderRegister = 1;
+		constBufferBindings.bindings[0].buffer = constBufferDevice;
+		CHECK_ZG zgCommandListBindConstantBuffers(commandList, &constBufferBindings);
 		CHECK_ZG zgCommandListSetFramebuffer(commandList, &framebufferInfo);
-		CHECK_ZG zgCommandListSetPushConstant(commandList, 1, &offset, sizeof(offset));
 		CHECK_ZG zgCommandListClearFramebuffer(commandList, 0.2f, 0.2f, 0.3f, 1.0f);
 		CHECK_ZG zgCommandListSetVertexBuffer(commandList, 0, vertexDeviceBuffer);
 		CHECK_ZG zgCommandListDrawTriangles(commandList, 0, 3);

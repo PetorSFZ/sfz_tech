@@ -21,6 +21,7 @@
 #include <algorithm>
 
 #include "ZeroG/d3d12/D3D12Framebuffer.hpp"
+#include "ZeroG/util/Assert.hpp"
 
 namespace zg {
 
@@ -28,9 +29,15 @@ namespace zg {
 // ------------------------------------------------------------------------------------------------
 
 void D3D12CommandList::create(
-	uint32_t maxNumBuffers, ZgLogger logger, ZgAllocator allocator) noexcept
+	uint32_t maxNumBuffers,
+	ZgLogger logger,
+	ZgAllocator allocator,
+	ComPtr<ID3D12Device3> device,
+	D3D12DescriptorRingBuffer* descriptorBuffer) noexcept
 {
 	mLog = logger;
+	mDevice = device;
+	mDescriptorBuffer = descriptorBuffer;
 	pendingBufferIdentifiers.create(maxNumBuffers, allocator, "ZeroG - D3D12CommandList - Internal");
 	pendingBufferStates.create(maxNumBuffers, allocator, "ZeroG - D3D12CommandList - Internal");
 }
@@ -45,6 +52,8 @@ void D3D12CommandList::swap(D3D12CommandList& other) noexcept
 	this->pendingBufferStates.swap(other.pendingBufferStates);
 
 	std::swap(this->mLog, other.mLog);
+	std::swap(this->mDevice, other.mDevice);
+	std::swap(this->mDescriptorBuffer, other.mDescriptorBuffer);
 	std::swap(this->mPipelineSet, other.mPipelineSet);
 	std::swap(this->mBoundPipeline, other.mBoundPipeline);
 	std::swap(this->mFramebufferSet, other.mFramebufferSet);
@@ -61,6 +70,8 @@ void D3D12CommandList::destroy() noexcept
 	pendingBufferStates.destroy();
 
 	mLog = {};
+	mDevice = nullptr;
+	mDescriptorBuffer = nullptr;
 	mPipelineSet = false;
 	mBoundPipeline = nullptr;
 	mFramebufferSet = false;
@@ -182,6 +193,87 @@ ZgErrorCode D3D12CommandList::setPushConstant(
 	return ZG_SUCCESS;
 }
 
+ZgErrorCode D3D12CommandList::bindConstantBuffers(
+	const ZgConstantBufferBindings& bindings) noexcept
+{
+
+	// TODO ==================================================================================================================
+	// There are two big things missing here.
+	// 1. MakeResident() - We must make sure that the buffer we are setting is resident by calling MakeResident().
+	//                     Some sort of system to keep track of which resources are resident is needed
+	// 2. Barriers. Must transition the buffers into the correct state here.
+
+
+
+	// Require that a pipeline has been set so we can query its parameters
+	if (!mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+
+	// Require that all constant buffers be specified
+	if (bindings.numBindings != mBoundPipeline->numConstantBuffers) {
+		return ZG_ERROR_INVALID_ARGUMENT;
+	}
+
+	// Allocate descriptors
+	D3D12_CPU_DESCRIPTOR_HANDLE rangeStartCpu = {};
+	D3D12_GPU_DESCRIPTOR_HANDLE rangeStartGpu = {};
+	ZgErrorCode allocRes = mDescriptorBuffer->allocateDescriptorRange(
+		bindings.numBindings, rangeStartCpu, rangeStartGpu);
+	if (allocRes != ZG_SUCCESS) return allocRes;
+
+	// Create constant buffer views and fill (CPU) descriptors
+	for (uint32_t i = 0; i < bindings.numBindings; i++) {
+		const ZgConstantBufferBinding& binding = bindings.bindings[i];
+		
+		// Linear search to find mapping
+		uint32_t mappingIdx = ~0u;
+		for (uint32_t j = 0; j < mBoundPipeline->numConstantBuffers; j++) {
+			const D3D12ConstantBufferMapping& mapping = mBoundPipeline->constBuffers[j];
+			if (binding.shaderRegister == mapping.shaderRegister) {
+				mappingIdx = j;
+				break;
+			}
+		}
+
+		// Return invalid argument if there is no constant buffer associated with the given register
+		if (mappingIdx == ~0u) return ZG_ERROR_INVALID_ARGUMENT;
+		const D3D12ConstantBufferMapping& mapping = mBoundPipeline->constBuffers[mappingIdx];
+
+		// Cast buffer to D3D12Buffer
+		D3D12Buffer* buffer = reinterpret_cast<D3D12Buffer*>(binding.buffer);
+
+		// D3D12 requires that a Constant Buffer View is at least 256 bytes, and a multiple of 256.
+		// Round up constant buffer size to nearest 256 alignment
+		ZG_ASSERT(mapping.sizeInBytes != 0);
+		uint32_t bufferSize256Aligned = (mapping.sizeInBytes + 255) & 0xFFFFFF00u;
+
+		// Check that buffer is large enough
+		if (buffer->sizeBytes < bufferSize256Aligned) {
+			ZG_ERROR(mLog, "Constant buffer at shader register %u requires a buffer that is at"
+				" least %u bytes, specified buffer is %u bytes.",
+				mapping.shaderRegister, bufferSize256Aligned, buffer->sizeBytes);
+			return ZG_ERROR_INVALID_ARGUMENT;
+		}
+
+		/// Get the CPU descriptor
+		ZG_ASSERT(mapping.tableOffset < bindings.numBindings);
+		D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor;
+		cpuDescriptor.ptr =
+			rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
+
+		// Create constant buffer view
+		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+		cbvDesc.BufferLocation = buffer->resource->GetGPUVirtualAddress();
+		cbvDesc.SizeInBytes = bufferSize256Aligned;
+		mDevice->CreateConstantBufferView(&cbvDesc, cpuDescriptor);
+	}
+
+	// Set descriptor table to root signature
+	commandList->SetGraphicsRootDescriptorTable(
+		mBoundPipeline->constBuffersParameterIndex, rangeStartGpu);
+
+	return ZG_SUCCESS;
+}
+
 ZgErrorCode D3D12CommandList::setPipelineRendering(
 	IPipelineRendering* pipelineIn) noexcept
 {
@@ -196,6 +288,10 @@ ZgErrorCode D3D12CommandList::setPipelineRendering(
 	// Set pipeline
 	commandList->SetPipelineState(pipeline.pipelineState.Get());
 	commandList->SetGraphicsRootSignature(pipeline.rootSignature.Get());
+
+	// Set descriptor heap
+	ID3D12DescriptorHeap* heaps[] = { mDescriptorBuffer->descriptorHeap.Get() };
+	commandList->SetDescriptorHeaps(1, heaps);
 
 	return ZG_SUCCESS;
 }
