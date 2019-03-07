@@ -23,6 +23,7 @@
 #include "ZeroG/d3d12/D3D12CommandList.hpp"
 #include "ZeroG/d3d12/D3D12CommandQueue.hpp"
 #include "ZeroG/d3d12/D3D12Common.hpp"
+#include "ZeroG/d3d12/D3D12DescriptorRingBuffer.hpp"
 #include "ZeroG/d3d12/D3D12Framebuffer.hpp"
 #include "ZeroG/d3d12/D3D12Memory.hpp"
 #include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
@@ -176,6 +177,19 @@ public:
 			infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
 			infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
 			infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, TRUE);
+		}
+
+		// Allocate descriptors
+		const uint32_t NUM_DESCRIPTORS = 1000000;
+		ZG_INFO(mLog, "Attempting to allocate %u descriptors for the global ring buffer",
+			NUM_DESCRIPTORS);
+		{
+			ZgErrorCode res = mGlobalDescriptorRingBuffer.create(
+				*mDevice.Get(), mLog, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, NUM_DESCRIPTORS);
+			if (res != ZG_SUCCESS) {
+				ZG_ERROR(mLog, "Failed to allocate descriptors");
+				return ZG_ERROR_GPU_OUT_OF_MEMORY;
+			}
 		}
 
 		// Create command queue
@@ -606,6 +620,9 @@ private:
 	//D3D12CommandQueue mCommandQueueAsyncCompute;
 	//D3D12CommandQueue mCommandQueueCopy;
 	
+	// Global descriptor ring buffers
+	D3D12DescriptorRingBuffer mGlobalDescriptorRingBuffer;
+
 	// Swapchain and backbuffers
 	uint32_t mWidth = 0;
 	uint32_t mHeight = 0;
