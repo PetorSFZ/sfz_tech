@@ -43,6 +43,9 @@
 // D3DX12 library
 #include "d3dx12.h"
 
+// D3DX12Residency library
+#include "d3dx12Residency.h"
+
 #include "ZeroG/util/Logging.hpp"
 
 namespace zg { using Microsoft::WRL::ComPtr; }

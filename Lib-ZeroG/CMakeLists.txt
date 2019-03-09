@@ -65,6 +65,10 @@ set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
 # ${D3DX12_FOUND}, ${D3DX12_INCLUDE_DIRS}
 add_subdirectory(${EXTERNALS_DIR}/D3DX12)
 
+# D3DX12Residency
+# ${D3DX12_RESIDENCY_FOUND}, ${D3DX12_RESIDENCY_INCLUDE_DIRS}
+add_subdirectory(${EXTERNALS_DIR}/D3DX12Residency)
+
 # ZeroG C-API
 # ------------------------------------------------------------------------------------------------
 
@@ -110,6 +114,7 @@ target_include_directories(ZeroG PRIVATE
 	${INCLUDE_DIR}
 	${SRC_DIR}
 	${D3DX12_INCLUDE_DIRS}
+	${D3DX12_RESIDENCY_INCLUDE_DIRS}
 )
 
 # ZeroG C++ Wrapper
