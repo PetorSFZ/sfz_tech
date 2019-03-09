@@ -20,6 +20,14 @@
 
 namespace zg {
 
+D3D12DescriptorRingBuffer::~D3D12DescriptorRingBuffer() noexcept
+{
+	if (descriptorHeap != nullptr) {
+		ID3D12Pageable* heapPagable[1] = { descriptorHeap.Get() };
+		CHECK_D3D12(mLog) mDevice->Evict(1, heapPagable);
+	}
+}
+
 // D3D12DescriptorRingBuffer: State methods
 // ------------------------------------------------------------------------------------------------
 
@@ -29,6 +37,7 @@ ZgErrorCode D3D12DescriptorRingBuffer::create(
 	D3D12_DESCRIPTOR_HEAP_TYPE type,
 	uint32_t numDescriptors) noexcept
 {
+	mDevice = &device;
 	mLog = logger;
 	mNumDescriptors = numDescriptors;
 

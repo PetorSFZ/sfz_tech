@@ -44,7 +44,7 @@ public:
 	D3D12DescriptorRingBuffer& operator= (const D3D12DescriptorRingBuffer&) = delete;
 	D3D12DescriptorRingBuffer(D3D12DescriptorRingBuffer&&) = delete;
 	D3D12DescriptorRingBuffer& operator= (D3D12DescriptorRingBuffer&&) = delete;
-	~D3D12DescriptorRingBuffer() noexcept = default;
+	~D3D12DescriptorRingBuffer() noexcept;
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
@@ -73,6 +73,7 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
+	ID3D12Device3* mDevice = nullptr;
 	ZgLogger mLog = {};
 	std::atomic_uint64_t mHeadPointer = 0;
 	uint32_t mNumDescriptors = 0;
