@@ -52,7 +52,9 @@
 #else
 #define RESIDENCY_SINGLE_THREADED 0
 #endif
+#pragma warning(push, 0)
 #include "d3dx12Residency.h"
+#pragma warning(pop)
 
 #include "ZeroG/util/Logging.hpp"
 
