@@ -701,7 +701,6 @@ ZgErrorCode createPipelineRendering(
 			numPushConstantsMappings += 1;
 		}
 
-
 		// Add dynamic constant buffers (non-push constants)
 		uint32_t dynamicConstBuffersFirstRegister = ~0u; // TODO: THIS IS PROBABLY BAD
 		for (uint32_t i = 0; i < signatureOut->numConstantBuffers; i++) {

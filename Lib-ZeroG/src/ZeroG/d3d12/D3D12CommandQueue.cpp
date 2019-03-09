@@ -42,6 +42,7 @@ D3D12CommandQueue::~D3D12CommandQueue() noexcept
 
 ZgErrorCode D3D12CommandQueue::create(
 	ComPtr<ID3D12Device3>& device,
+	D3DX12Residency::ResidencyManager* residencyManager,
 	D3D12DescriptorRingBuffer* descriptorBuffer,
 	uint32_t maxNumCommandLists,
 	uint32_t maxNumBuffersPerCommandList,
@@ -49,6 +50,7 @@ ZgErrorCode D3D12CommandQueue::create(
 	ZgAllocator allocator) noexcept
 {
 	mDevice = device;
+	mResidencyManager = residencyManager;
 	mDescriptorBuffer = descriptorBuffer;
 	mLog = logger;
 	mAllocator = allocator;
@@ -161,6 +163,9 @@ ZgErrorCode D3D12CommandQueue::beginCommandListRecordingUnmutexed(
 	ZgErrorCode res = commandList->reset();
 	if (res != ZG_SUCCESS) return res;
 
+	// Open command lists residency set
+	CHECK_D3D12(mLog) commandList->residencySet->Open();
+
 	// Return command list
 	*commandListOut = commandList;
 	return ZG_SUCCESS;
@@ -176,6 +181,11 @@ ZgErrorCode D3D12CommandQueue::executeCommandListUnmutexed(ICommandList* command
 		return ZG_ERROR_GENERIC;
 	}
 
+	// Close residency set
+	if (D3D12_FAIL(mLog, commandList.residencySet->Close())) {
+		return ZG_ERROR_GENERIC;
+	}
+
 	// Create and execute a quick command list to insert barriers and commit pending states
 	ZgErrorCode res =
 		this->executePreCommandListBufferStateChanges(commandList.pendingBufferStates);
@@ -183,13 +193,16 @@ ZgErrorCode D3D12CommandQueue::executeCommandListUnmutexed(ICommandList* command
 
 	// Execute command list
 	ID3D12CommandList* commandListPtr = commandList.commandList.Get();
-	mCommandQueue->ExecuteCommandLists(1, &commandListPtr);
+	HRESULT executeCommandListRes = mResidencyManager->ExecuteCommandLists(
+		mCommandQueue.Get(), &commandListPtr, &commandList.residencySet, 1);
 
 	// Signal
 	commandList.fenceValue = this->signalOnGpuUnmutexed();
 
 	// Add command list to queue
 	mCommandListQueue.add(&commandList);
+
+	if (D3D12_FAIL(mLog, executeCommandListRes)) return ZG_ERROR_GENERIC;
 	return ZG_SUCCESS;
 }
 
@@ -233,7 +246,8 @@ ZgErrorCode D3D12CommandQueue::createCommandList(D3D12CommandList*& commandListO
 	}
 
 	// Initialize command list
-	commandList.create(mMaxNumBuffersPerCommandList, mLog, mAllocator, mDevice, mDescriptorBuffer);
+	commandList.create(mMaxNumBuffersPerCommandList, mLog, mAllocator, mDevice, mResidencyManager,
+		mDescriptorBuffer);
 
 	commandListOut = &commandList;
 	return ZG_SUCCESS;
@@ -245,6 +259,7 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListBufferStateChanges(
 	// Gather barriers to insert
 	uint32_t numBarriers = 0;
 	CD3DX12_RESOURCE_BARRIER barriers[256] = {};
+	D3DX12Residency::ManagedObject* residencyObjects[256] = {};
 	for (uint32_t i = 0; i < pendingStates.size(); i++) {
 		const PendingState& state = pendingStates[i];
 
@@ -261,6 +276,10 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListBufferStateChanges(
 			state.buffer->resource.Get(),
 			state.buffer->lastCommittedState,
 			state.neededInitialState);
+
+		// Store residency set
+		residencyObjects[numBarriers] = &state.buffer->heapManagedObject;
+
 		numBarriers += 1;
 	}
 
@@ -275,6 +294,11 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListBufferStateChanges(
 
 	// Insert barrier call
 	commandList->commandList->ResourceBarrier(numBarriers, barriers);
+
+	// Add all managed objects to residency set
+	for (uint32_t i = 0; i < numBarriers; i++) {
+		commandList->residencySet->Insert(residencyObjects[i]);
+	}
 
 	// Execute barriers
 	res = this->executeCommandListUnmutexed(commandList);

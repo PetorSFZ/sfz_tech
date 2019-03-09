@@ -33,6 +33,7 @@ void D3D12CommandList::create(
 	ZgLogger logger,
 	ZgAllocator allocator,
 	ComPtr<ID3D12Device3> device,
+	D3DX12Residency::ResidencyManager* residencyManager,
 	D3D12DescriptorRingBuffer* descriptorBuffer) noexcept
 {
 	mLog = logger;
@@ -40,6 +41,8 @@ void D3D12CommandList::create(
 	mDescriptorBuffer = descriptorBuffer;
 	pendingBufferIdentifiers.create(maxNumBuffers, allocator, "ZeroG - D3D12CommandList - Internal");
 	pendingBufferStates.create(maxNumBuffers, allocator, "ZeroG - D3D12CommandList - Internal");
+
+	residencySet = residencyManager->CreateResidencySet();
 }
 
 void D3D12CommandList::swap(D3D12CommandList& other) noexcept
@@ -48,11 +51,14 @@ void D3D12CommandList::swap(D3D12CommandList& other) noexcept
 	std::swap(this->commandList, other.commandList);
 	std::swap(this->fenceValue, other.fenceValue);
 
+	std::swap(this->residencySet, other.residencySet);
+
 	this->pendingBufferIdentifiers.swap(other.pendingBufferIdentifiers);
 	this->pendingBufferStates.swap(other.pendingBufferStates);
 
 	std::swap(this->mLog, other.mLog);
 	std::swap(this->mDevice, other.mDevice);
+	std::swap(this->mResidencyManager, other.mResidencyManager);
 	std::swap(this->mDescriptorBuffer, other.mDescriptorBuffer);
 	std::swap(this->mPipelineSet, other.mPipelineSet);
 	std::swap(this->mBoundPipeline, other.mBoundPipeline);
@@ -66,11 +72,17 @@ void D3D12CommandList::destroy() noexcept
 	commandList = nullptr;
 	fenceValue = 0;
 
+	if (residencySet != nullptr) {
+		mResidencyManager->DestroyResidencySet(residencySet);
+	}
+	residencySet = nullptr;
+
 	pendingBufferIdentifiers.destroy();
 	pendingBufferStates.destroy();
 
 	mLog = {};
 	mDevice = nullptr;
+	mResidencyManager = nullptr;
 	mDescriptorBuffer = nullptr;
 	mPipelineSet = false;
 	mBoundPipeline = nullptr;
@@ -138,6 +150,10 @@ ZgErrorCode D3D12CommandList::memcpyBufferToBuffer(
 		dstBufferOffsetBytes == 0 &&
 		srcBufferOffsetBytes == 0;
 
+	// Add buffers to residency set
+	residencySet->Insert(&srcBuffer.heapManagedObject);
+	residencySet->Insert(&dstBuffer.heapManagedObject);
+
 	// Copy entire buffer
 	if (copyEntireBuffer) {
 		commandList->CopyResource(dstBuffer.resource.Get(), srcBuffer.resource.Get());
@@ -198,11 +214,7 @@ ZgErrorCode D3D12CommandList::bindConstantBuffers(
 {
 
 	// TODO ==================================================================================================================
-	// There are two big things missing here.
-	// 1. MakeResident() - We must make sure that the buffer we are setting is resident by calling MakeResident().
-	//                     Some sort of system to keep track of which resources are resident is needed
 	// 2. Barriers. Must transition the buffers into the correct state here.
-
 
 
 	// Require that a pipeline has been set so we can query its parameters
@@ -265,6 +277,9 @@ ZgErrorCode D3D12CommandList::bindConstantBuffers(
 		cbvDesc.BufferLocation = buffer->resource->GetGPUVirtualAddress();
 		cbvDesc.SizeInBytes = bufferSize256Aligned;
 		mDevice->CreateConstantBufferView(&cbvDesc, cpuDescriptor);
+
+		// Insert into residency set
+		residencySet->Insert(&buffer->heapManagedObject);
 	}
 
 	// Set descriptor table to root signature
@@ -389,7 +404,7 @@ ZgErrorCode D3D12CommandList::setVertexBuffer(
 	// Cast input to D3D12
 	D3D12Buffer& vertexBuffer = *reinterpret_cast<D3D12Buffer*>(vertexBufferIn);
 
-	// Need to have a command list set to verify vertex buffer binding
+	// Need to have a pipeline set to verify vertex buffer binding
 	if (!mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 
 	// Check that the vertex buffer slot is not out of bounds for the bound pipeline
@@ -406,6 +421,9 @@ ZgErrorCode D3D12CommandList::setVertexBuffer(
 
 	// Set vertex buffer
 	commandList->IASetVertexBuffers(vertexBufferSlot, 1, &vertexBufferView);
+
+	// Insert into residency set
+	residencySet->Insert(&vertexBuffer.heapManagedObject);
 
 	return ZG_SUCCESS;
 }

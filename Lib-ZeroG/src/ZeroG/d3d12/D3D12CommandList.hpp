@@ -36,7 +36,7 @@ public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	D3D12CommandList() noexcept = default;
+	D3D12CommandList() = default;
 	D3D12CommandList(const D3D12CommandList&) = delete;
 	D3D12CommandList& operator= (const D3D12CommandList&) = delete;
 	D3D12CommandList(D3D12CommandList&& other) noexcept { swap(other); }
@@ -51,6 +51,7 @@ public:
 		ZgLogger logger,
 		ZgAllocator allocator,
 		ComPtr<ID3D12Device3> device,
+		D3DX12Residency::ResidencyManager* residencyManager,
 		D3D12DescriptorRingBuffer* descriptorBuffer) noexcept;
 	void swap(D3D12CommandList& other) noexcept;
 	void destroy() noexcept;
@@ -105,6 +106,8 @@ public:
 	ComPtr<ID3D12GraphicsCommandList> commandList;
 	uint64_t fenceValue = 0;
 
+	D3DX12Residency::ResidencySet* residencySet = nullptr;
+
 	Vector<uint64_t> pendingBufferIdentifiers;
 	Vector<PendingState> pendingBufferStates;
 
@@ -122,6 +125,7 @@ private:
 
 	ZgLogger mLog = {};
 	ComPtr<ID3D12Device3> mDevice;
+	D3DX12Residency::ResidencyManager* mResidencyManager = nullptr;
 	D3D12DescriptorRingBuffer* mDescriptorBuffer = nullptr;
 	bool mPipelineSet = false; // Only allow a single pipeline per command list
 	D3D12PipelineRendering* mBoundPipeline = nullptr;

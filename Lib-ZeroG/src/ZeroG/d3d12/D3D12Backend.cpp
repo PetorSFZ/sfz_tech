@@ -55,7 +55,7 @@ public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	D3D12Context() noexcept = default;
+	D3D12Context() = default;
 	D3D12Context(const D3D12Context&) = delete;
 	D3D12Context& operator= (const D3D12Context&) = delete;
 	D3D12Context(D3D12Context&&) = delete;
@@ -102,7 +102,6 @@ public:
 		}
 
 		// Create DXGI adapter
-		ComPtr<IDXGIAdapter4> dxgiAdapter;
 		{
 			// Iterate over all adapters and attempt to select the best one, current assumption
 			// is that the device with the most amount of video memory is the best device
@@ -140,7 +139,7 @@ public:
 			if (bestAdapterVideoMemory == 0) return ZG_ERROR_NO_SUITABLE_DEVICE;
 
 			// Convert device to DXGIAdapter4
-			if (D3D12_FAIL(mLog, bestAdapter.As(&dxgiAdapter))) {
+			if (D3D12_FAIL(mLog, bestAdapter.As(&mDxgiAdapter))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
 
@@ -161,7 +160,7 @@ public:
 
 		// Create device
 		if (D3D12_FAIL(mLog, D3D12CreateDevice(
-			dxgiAdapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&mDevice)))) {
+			mDxgiAdapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&mDevice)))) {
 			return ZG_ERROR_NO_SUITABLE_DEVICE;
 		}
 
@@ -177,6 +176,16 @@ public:
 			infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
 			infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
 			infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, TRUE);
+		}
+
+		// Create residency manager
+		// Latency: "NumberOfBufferedFrames * NumberOfCommandListSubmissionsPerFrame throughout
+		// the execution of your app."
+		// Hmm. Lets try 6 or something, seems to be default value.
+		const uint32_t residencyManagerMaxLatency = 6;
+		if (D3D12_FAIL(mLog, mResidencyManager.Initialize(
+			mDevice.Get(), 0, mDxgiAdapter.Get(), residencyManagerMaxLatency))) {
+			return ZG_ERROR_GENERIC;
 		}
 
 		// Allocate descriptors
@@ -197,6 +206,7 @@ public:
 		const uint32_t MAX_NUM_BUFFERS_PER_COMMAND_LIST = 256;
 		ZgErrorCode res = mCommandQueueGraphicsPresent.create(
 			mDevice,
+			&mResidencyManager,
 			&mGlobalDescriptorRingBuffer,
 			MAX_NUM_COMMAND_LISTS,
 			MAX_NUM_BUFFERS_PER_COMMAND_LIST,
@@ -553,6 +563,10 @@ public:
 		D3D12Buffer* buffer =
 			zgNew<D3D12Buffer>(mAllocator, "ZeroG - D3D12Buffer");
 
+		// Create residency manager object and begin tracking
+		buffer->heapManagedObject.Initialize(heap.Get(), createInfo.sizeInBytes);
+		mResidencyManager.BeginTrackingObject(&buffer->heapManagedObject);
+
 		// Copy stuff
 		buffer->identifier = std::atomic_fetch_add(&mBufferUniqueIdentifierCounter, 1);
 		buffer->memoryType = createInfo.bufferMemoryType;
@@ -566,9 +580,14 @@ public:
 		return ZG_SUCCESS;
 	}
 
-	ZgErrorCode bufferRelease(IBuffer* buffer) noexcept override final
+	ZgErrorCode bufferRelease(IBuffer* bufferIn) noexcept override final
 	{
 		// TODO: Check if buffer is currently in use? Lock?
+		
+		// Stop tracking object
+		D3D12Buffer* buffer = reinterpret_cast<D3D12Buffer*>(bufferIn);
+		mResidencyManager.EndTrackingObject(&buffer->heapManagedObject);
+
 		zgDelete<IBuffer>(mAllocator, buffer);
 		return ZG_SUCCESS;
 	}
@@ -619,15 +638,21 @@ private:
 	ComPtr<IDxcLibrary> mDxcLibrary;
 	ComPtr<IDxcCompiler> mDxcCompiler;
 
-	// Device and command queues
+	// Device
+	ComPtr<IDXGIAdapter4> mDxgiAdapter;
 	ComPtr<ID3D12Device3> mDevice;
+	
+	// Residency manager
+	D3DX12Residency::ResidencyManager mResidencyManager;
+
+	// Global descriptor ring buffers
+	D3D12DescriptorRingBuffer mGlobalDescriptorRingBuffer;
+
+	// Command queues
 	D3D12CommandQueue mCommandQueueGraphicsPresent;
 	//D3D12CommandQueue mCommandQueueAsyncCompute;
 	//D3D12CommandQueue mCommandQueueCopy;
 	
-	// Global descriptor ring buffers
-	D3D12DescriptorRingBuffer mGlobalDescriptorRingBuffer;
-
 	// Swapchain and backbuffers
 	uint32_t mWidth = 0;
 	uint32_t mHeight = 0;

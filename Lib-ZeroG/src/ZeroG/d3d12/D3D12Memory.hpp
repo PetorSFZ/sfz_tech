@@ -29,7 +29,7 @@ namespace zg {
 
 class D3D12Buffer final : public IBuffer {
 public:
-	D3D12Buffer() noexcept = default;
+	D3D12Buffer() = default;
 	D3D12Buffer(const D3D12Buffer&) = delete;
 	D3D12Buffer& operator= (const D3D12Buffer&) = delete;
 	D3D12Buffer(D3D12Buffer&&) = delete;
@@ -42,6 +42,7 @@ public:
 	ZgBufferMemoryType memoryType = ZG_BUFFER_MEMORY_TYPE_UNDEFINED;
 	uint64_t sizeBytes = 0;
 	ComPtr<ID3D12Heap> heap;
+	D3DX12Residency::ManagedObject heapManagedObject;
 	ComPtr<ID3D12Resource> resource;
 
 	// The current resource state of the buffer. Committed because the state has been committed
