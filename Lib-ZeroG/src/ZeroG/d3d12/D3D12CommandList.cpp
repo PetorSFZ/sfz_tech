@@ -114,34 +114,11 @@ ZgErrorCode D3D12CommandList::memcpyBufferToBuffer(
 		srcTargetState = D3D12_RESOURCE_STATE_GENERIC_READ;
 	}
 
-	// Get pending states
-	PendingState dstPendingState;
-	ZgErrorCode dstPendingStateRes =
-		getPendingBufferStates(dstBuffer, dstTargetState, dstPendingState);
-	if (dstPendingStateRes != ZG_SUCCESS) return dstPendingStateRes;
-
-	PendingState srcPendingState;
-	ZgErrorCode srcPendingStateRes =
-		getPendingBufferStates(srcBuffer, srcTargetState, srcPendingState);
-	if (srcPendingStateRes != ZG_SUCCESS) return srcPendingStateRes;
-
-	// Change state of destination buffer to COPY_DEST if necessary
-	if (dstPendingState.currentState != dstTargetState) {
-		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			dstBuffer.resource.Get(),
-			dstPendingState.currentState,
-			dstTargetState);
-		commandList->ResourceBarrier(1, &barrier);
-	}
-
-	// Change state of source buffer to COPY_SOURCE if necessary
-	if (srcPendingState.currentState != srcTargetState) {
-		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			srcBuffer.resource.Get(),
-			srcPendingState.currentState,
-			srcTargetState);
-		commandList->ResourceBarrier(1, &barrier);
-	}
+	// Set buffer resource states
+	ZgErrorCode res = setBufferState(dstBuffer, dstTargetState);
+	if (res != ZG_SUCCESS) return res;
+	 res = setBufferState(srcBuffer, srcTargetState);
+	if (res != ZG_SUCCESS) return res;
 
 	// Check if we should copy entire buffer or just a region of it
 	bool copyEntireBuffer =
@@ -212,11 +189,6 @@ ZgErrorCode D3D12CommandList::setPushConstant(
 ZgErrorCode D3D12CommandList::bindConstantBuffers(
 	const ZgConstantBufferBindings& bindings) noexcept
 {
-
-	// TODO ==================================================================================================================
-	// 2. Barriers. Must transition the buffers into the correct state here.
-
-
 	// Require that a pipeline has been set so we can query its parameters
 	if (!mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 
@@ -277,6 +249,9 @@ ZgErrorCode D3D12CommandList::bindConstantBuffers(
 		cbvDesc.BufferLocation = buffer->resource->GetGPUVirtualAddress();
 		cbvDesc.SizeInBytes = bufferSize256Aligned;
 		mDevice->CreateConstantBufferView(&cbvDesc, cpuDescriptor);
+
+		// Set buffer resource state
+		setBufferState(*buffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
 		// Insert into residency set
 		residencySet->Insert(&buffer->heapManagedObject);
@@ -413,6 +388,10 @@ ZgErrorCode D3D12CommandList::setVertexBuffer(
 		return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 	}
 
+	// Set buffer resource state
+	ZgErrorCode res = setBufferState(vertexBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+	if (res != ZG_SUCCESS) return res;
+
 	// Create vertex buffer view
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
 	vertexBufferView.BufferLocation = vertexBuffer.resource->GetGPUVirtualAddress();
@@ -466,7 +445,7 @@ ZgErrorCode D3D12CommandList::reset() noexcept
 ZgErrorCode D3D12CommandList::getPendingBufferStates(
 	D3D12Buffer& buffer,
 	D3D12_RESOURCE_STATES neededState,
-	PendingState& pendingStatesOut) noexcept
+	PendingState*& pendingStatesOut) noexcept
 {
 	// Try to find index of pending buffer states
 	uint32_t bufferStateIdx = ~0u;
@@ -497,7 +476,29 @@ ZgErrorCode D3D12CommandList::getPendingBufferStates(
 		pendingBufferStates.last().currentState = neededState;
 	}
 
-	pendingStatesOut = pendingBufferStates[bufferStateIdx];
+	pendingStatesOut = &pendingBufferStates[bufferStateIdx];
+	return ZG_SUCCESS;
+}
+
+ZgErrorCode D3D12CommandList::setBufferState(
+	D3D12Buffer& buffer, D3D12_RESOURCE_STATES targetState) noexcept
+{
+	// Get pending states
+	PendingState* pendingState = nullptr;
+	ZgErrorCode pendingStateRes = getPendingBufferStates(
+		buffer, targetState, pendingState);
+	if (pendingStateRes != ZG_SUCCESS) return pendingStateRes;
+
+	// Change state of buffer if necessary
+	if (pendingState->currentState != targetState) {
+		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			buffer.resource.Get(),
+			pendingState->currentState,
+			targetState);
+		commandList->ResourceBarrier(1, &barrier);
+		pendingState->currentState = targetState;
+	}
+
 	return ZG_SUCCESS;
 }
 

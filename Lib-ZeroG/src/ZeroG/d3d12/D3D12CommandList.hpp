@@ -118,8 +118,10 @@ private:
 	ZgErrorCode getPendingBufferStates(
 		D3D12Buffer& buffer,
 		D3D12_RESOURCE_STATES neededState,
-		PendingState& pendingStatesOut) noexcept;
+		PendingState*& pendingStatesOut) noexcept;
 	
+	ZgErrorCode setBufferState(D3D12Buffer& buffer, D3D12_RESOURCE_STATES targetState) noexcept;
+
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
