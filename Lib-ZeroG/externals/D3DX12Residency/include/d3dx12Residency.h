@@ -14,7 +14,7 @@ namespace D3DX12Residency
 {
     __declspec(selectany) INT64 g_ResidencyManagerUniqueID = 0;
 
-#if 0
+#if !defined(NDEBUG)
 #define RESIDENCY_CHECK(x) \
     if((x) == false) { DebugBreak(); }
 
