@@ -44,7 +44,7 @@ if(MSVC)
 	set(CMAKE_CXX_FLAGS "/W4 /wd4201 /Zi /EHsc /arch:AVX /D_CRT_SECURE_NO_WARNINGS /utf-8")
 	set(CMAKE_CXX_FLAGS_DEBUG "/Od /DEBUG")
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/O2 /fp:fast /DEBUG")
-	set(CMAKE_CXX_FLAGS_RELEASE "/O2 /fp:fast")
+	set(CMAKE_CXX_FLAGS_RELEASE "/O2 /fp:fast /DNDEBUG ")
 
 else()
 	message(FATAL_ERROR "Not implemented!")

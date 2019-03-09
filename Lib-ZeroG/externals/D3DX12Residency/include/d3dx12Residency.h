@@ -25,8 +25,6 @@ namespace D3DX12Residency
 #define RESIDENCY_CHECK_RESULT(x) x
 #endif
 
-#define RESIDENCY_SINGLE_THREADED 0
-
 #define RESIDENCY_MIN(x,y) ((x) < (y) ? (x) : (y))
 #define RESIDENCY_MAX(x,y) ((x) > (y) ? (x) : (y))
 
