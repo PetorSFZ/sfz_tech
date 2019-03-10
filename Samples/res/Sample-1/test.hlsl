@@ -35,7 +35,7 @@ VSOutput VSMain(VSInput input)
 	float4 offsetPos = float4(input.position.x + offsets, input.position.yz, 1.0f);
 	output.position = mul(transforms.modelViewProjMatrix, offsetPos);
 
-	output.normal = normalize(mul(transforms.normalMatrix, float4(input.normal, 0.0f)));
+	output.normal = normalize(mul(transforms.normalMatrix, float4(input.normal, 0.0f))).xyz;
 	output.texcoord = input.texcoord;
 
 	//output.position = float4(input.position.x + offsets, input.position.yz, 1.0f);

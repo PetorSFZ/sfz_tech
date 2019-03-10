@@ -26,40 +26,40 @@
 constexpr float CUBE_POSITIONS[] = {
 	// x, y, z
 	// Left
-	0.0f, 0.0f, 0.0f, // 0, left-bottom-back
-	0.0f, 0.0f, 1.0f, // 1, left-bottom-front
-	0.0f, 1.0f, 0.0f, // 2, left-top-back
-	0.0f, 1.0f, 1.0f, // 3, left-top-front
+	-0.5f, -0.5f, -0.5f, // 0, left-bottom-back
+	-0.5f, -0.5f, 0.5f, // 1, left-bottom-front
+	-0.5f, 0.5f, -0.5f, // 2, left-top-back
+	-0.5f, 0.5f, 0.5f, // 3, left-top-front
 
 	// Right
-	1.0f, 0.0f, 0.0f, // 4, right-bottom-back
-	1.0f, 0.0f, 1.0f, // 5, right-bottom-front
-	1.0f, 1.0f, 0.0f, // 6, right-top-back
-	1.0f, 1.0f, 1.0f, // 7, right-top-front
+	0.5f, -0.5f, -0.5f, // 4, right-bottom-back
+	0.5f, -0.5f, 0.5f, // 5, right-bottom-front
+	0.5f, 0.5f, -0.5f, // 6, right-top-back
+	0.5f, 0.5f, 0.5f, // 7, right-top-front
 
 	// Bottom
-	0.0f, 0.0f, 0.0f, // 8, left-bottom-back
-	0.0f, 0.0f, 1.0f, // 9, left-bottom-front
-	1.0f, 0.0f, 0.0f, // 10, right-bottom-back
-	1.0f, 0.0f, 1.0f, // 11, right-bottom-front
+	-0.5f, -0.5f, -0.5f, // 8, left-bottom-back
+	-0.5f, -0.5f, 0.5f, // 9, left-bottom-front
+	0.5f, -0.5f, -0.5f, // 10, right-bottom-back
+	0.5f, -0.5f, 0.5f, // 11, right-bottom-front
 
 	// Top
-	0.0f, 1.0f, 0.0f, // 12, left-top-back
-	0.0f, 1.0f, 1.0f, // 13, left-top-front
-	1.0f, 1.0f, 0.0f, // 14, right-top-back
-	1.0f, 1.0f, 1.0f, // 15, right-top-front
+	-0.5f, 0.5f, -0.5f, // 12, left-top-back
+	-0.5f, 0.5f, 0.5f, // 13, left-top-front
+	0.5f, 0.5f, -0.5f, // 14, right-top-back
+	0.5f, 0.5f, 0.5f, // 15, right-top-front
 
 	// Back
-	0.0f, 0.0f, 0.0f, // 16, left-bottom-back
-	0.0f, 1.0f, 0.0f, // 17, left-top-back
-	1.0f, 0.0f, 0.0f, // 18, right-bottom-back
-	1.0f, 1.0f, 0.0f, // 19, right-top-back
+	-0.5f, -0.5f, -0.5f, // 16, left-bottom-back
+	-0.5f, 0.5f, -0.5f, // 17, left-top-back
+	0.5f, -0.5f, -0.5f, // 18, right-bottom-back
+	0.5f, 0.5f, -0.5f, // 19, right-top-back
 
 	// Front
-	0.0f, 0.0f, 1.0f, // 20, left-bottom-front
-	0.0f, 1.0f, 1.0f, // 21, left-top-front
-	1.0f, 0.0f, 1.0f, // 22, right-bottom-front
-	1.0f, 1.0f, 1.0f  // 23, right-top-front
+	-0.5f, -0.5f, 0.5f, // 20, left-bottom-front
+	-0.5f, 0.5f, 0.5f, // 21, left-top-front
+	0.5f, -0.5f, 0.5f, // 22, right-bottom-front
+	0.5f, 0.5f, 0.5f  // 23, right-top-front
 };
 
 constexpr float CUBE_NORMALS[] = {
