@@ -24,6 +24,8 @@
 
 #include "ZeroG-cpp.hpp"
 
+#include "SampleCommon.hpp"
+
 #ifdef _WIN32
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
@@ -35,17 +37,6 @@
 // ------------------------------------------------------------------------------------------------
 
 constexpr bool DEBUG_MODE = true;
-
-// Statics
-// ------------------------------------------------------------------------------------------------
-
-static HWND getWin32WindowHandle(SDL_Window* window) noexcept
-{
-	SDL_SysWMinfo info = {};
-	SDL_VERSION(&info.version);
-	if (!SDL_GetWindowWMInfo(window, &info)) return nullptr;
-	return info.info.win.window;
-}
 
 // Main
 // ------------------------------------------------------------------------------------------------
@@ -65,23 +56,8 @@ int main(int argc, char* argv[])
 	SDL_free(basePath);
 #endif
 
-	// Init SDL2
-	if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) {
-		printf("SDL_Init() failed: %s", SDL_GetError());
-		return EXIT_FAILURE;
-	}
-
-	// Window
-	SDL_Window* window = SDL_CreateWindow(
-		"ZeroG-Sample1",
-		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		800, 800,
-		SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
-	if (window == NULL) {
-		printf("SDL_CreateWindow() failed: %s\n", SDL_GetError());
-		SDL_Quit();
-		return EXIT_FAILURE;
-	}
+	// Initialize SDL2 and create a window
+	SDL_Window* window = initializeSdl2CreateWindow("ZeroG - Sample1");
 
 	// Create ZeroG context
 	ZgContextInitSettings initSettings = {};
@@ -89,7 +65,7 @@ int main(int argc, char* argv[])
 	initSettings.width = 512;
 	initSettings.height = 512;
 	initSettings.debugMode = DEBUG_MODE ? ZG_TRUE : ZG_FALSE;
-	initSettings.nativeWindowHandle = getWin32WindowHandle(window);
+	initSettings.nativeWindowHandle = getNativeWindowHandle(window);
 	zg::Context ctx;
 	CHECK_ZG ctx.init(initSettings);
 
@@ -266,9 +242,8 @@ int main(int argc, char* argv[])
 	// Destroy ZeroG context
 	ctx.destroy();
 
-	// Cleanup
-	SDL_DestroyWindow(window);
-	SDL_Quit();
+	// Cleanup SDL2
+	cleanupSdl2(window);
 
 	return EXIT_SUCCESS;
 }

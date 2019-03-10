@@ -108,6 +108,13 @@ message("  -- CMAKE_CXX_FLAGS_DEBUG: " ${CMAKE_CXX_FLAGS_DEBUG})
 message("  -- CMAKE_CXX_FLAGS_RELWITHDEBINFO: " ${CMAKE_CXX_FLAGS_RELWITHDEBINFO})
 message("  -- CMAKE_CXX_FLAGS_RELEASE: " ${CMAKE_CXX_FLAGS_RELEASE})
 
+# Add SampleCommon
+# ------------------------------------------------------------------------------------------------
+
+# Helper library with common functions used by multiple samples
+# ${ZEROG_SAMPLE_COMMON_INCLUDE_DIRS}, ${ZEROG_SAMPLE_COMMON_LIBRARIES}
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/SampleCommon)
+
 # Add samples
 # ------------------------------------------------------------------------------------------------
 

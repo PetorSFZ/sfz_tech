@@ -17,20 +17,31 @@
 # 3. This notice may not be removed or altered from any source distribution.
 
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
-project("ZeroG Sample 1 - Experiments" LANGUAGES CXX)
+project("ZeroG SampleCommon" LANGUAGES CXX)
 
+# Directories
+set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
-set(SRC_FILES
-	${SRC_DIR}/Sample1.cpp
+
+set(INCLUDE_FILES
+	${INCLUDE_DIR}/SampleCommon.hpp
 )
 
-add_executable(ZeroG-Sample1 ${SRC_FILES})
+set(SRC_FILES
+	${SRC_DIR}/SampleCommon.cpp
+)
 
-target_include_directories(ZeroG-Sample1 PRIVATE
+add_library(ZeroG-SampleCommon ${INCLUDE_FILES} ${SRC_FILES})
+
+target_include_directories(ZeroG-SampleCommon PRIVATE
+	${INCLUDE_DIR}
 	${SRC_DIR}
 	${SDL2_INCLUDE_DIRS}
 	${ZEROG_INCLUDE_DIRS}
-	${ZEROG_SAMPLE_COMMON_INCLUDE_DIRS}
 )
 
-target_link_libraries(ZeroG-Sample1 ${SDL2_LIBRARIES} ${ZEROG_CPP_LIBRARIES} ${ZEROG_SAMPLE_COMMON_LIBRARIES})
+target_link_libraries(ZeroG-SampleCommon ${SDL2_LIBRARIES} ${ZEROG_CPP_LIBRARIES})
+
+# Return variables to parent
+set(ZEROG_SAMPLE_COMMON_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
+set(ZEROG_SAMPLE_COMMON_LIBRARIES ZeroG-SampleCommon PARENT_SCOPE)
