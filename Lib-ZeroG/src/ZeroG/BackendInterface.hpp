@@ -80,6 +80,9 @@ public:
 		float blue,
 		float alpha) noexcept = 0;
 
+	virtual ZgErrorCode clearDepthBuffer(
+		float depth) noexcept = 0;
+
 	virtual ZgErrorCode setIndexBuffer(
 		IBuffer* indexBuffer,
 		ZgIndexBufferType type) noexcept = 0;

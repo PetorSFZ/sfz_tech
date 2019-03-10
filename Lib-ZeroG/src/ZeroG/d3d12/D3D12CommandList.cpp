@@ -20,7 +20,6 @@
 
 #include <algorithm>
 
-#include "ZeroG/d3d12/D3D12Framebuffer.hpp"
 #include "ZeroG/util/Assert.hpp"
 
 namespace zg {
@@ -63,7 +62,7 @@ void D3D12CommandList::swap(D3D12CommandList& other) noexcept
 	std::swap(this->mPipelineSet, other.mPipelineSet);
 	std::swap(this->mBoundPipeline, other.mBoundPipeline);
 	std::swap(this->mFramebufferSet, other.mFramebufferSet);
-	std::swap(this->mFramebufferDescriptor, other.mFramebufferDescriptor);
+	std::swap(this->mFramebuffer, other.mFramebuffer);
 }
 
 void D3D12CommandList::destroy() noexcept
@@ -87,7 +86,7 @@ void D3D12CommandList::destroy() noexcept
 	mPipelineSet = false;
 	mBoundPipeline = nullptr;
 	mFramebufferSet = false;
-	mFramebufferDescriptor = {};
+	mFramebuffer = nullptr;
 }
 
 // D3D12CommandList: Virtual methods
@@ -301,7 +300,7 @@ ZgErrorCode D3D12CommandList::setFramebuffer(
 	// a single framebuffer per command list.
 	if (mFramebufferSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 	mFramebufferSet = true;
-	mFramebufferDescriptor = framebuffer.descriptor;
+	mFramebuffer = &framebuffer;
 
 	// If input viewport is zero, set one that covers entire screen
 	D3D12_VIEWPORT viewport = {};
@@ -356,7 +355,8 @@ ZgErrorCode D3D12CommandList::setFramebuffer(
 	commandList->RSSetScissorRects(1, &scissorRect);
 
 	// Set framebuffer
-	commandList->OMSetRenderTargets(1, &framebuffer.descriptor, FALSE, nullptr);
+	commandList->OMSetRenderTargets(
+		1, &framebuffer.rtvDescriptor, FALSE, &framebuffer.dsvDescriptor);
 
 	return ZG_SUCCESS;
 }
@@ -372,7 +372,20 @@ ZgErrorCode D3D12CommandList::clearFramebuffer(
 
 	// Clear framebuffer
 	float clearColor[4] = { red, green, blue, alpha };
-	commandList->ClearRenderTargetView(mFramebufferDescriptor, clearColor, 0, nullptr);
+	commandList->ClearRenderTargetView(mFramebuffer->rtvDescriptor, clearColor, 0, nullptr);
+
+	return ZG_SUCCESS;
+}
+
+ZgErrorCode D3D12CommandList::clearDepthBuffer(
+	float depth) noexcept
+{
+	// Return error if no framebuffer is set
+	if (!mFramebufferSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+
+	// Clear depth buffer
+	commandList->ClearDepthStencilView(
+		mFramebuffer->dsvDescriptor, D3D12_CLEAR_FLAG_DEPTH, depth, 0, 0, nullptr);
 
 	return ZG_SUCCESS;
 }
@@ -478,7 +491,7 @@ ZgErrorCode D3D12CommandList::reset() noexcept
 	mPipelineSet = false;
 	mBoundPipeline = nullptr;
 	mFramebufferSet = false;
-	mFramebufferDescriptor = {};
+	mFramebuffer = nullptr;
 	return ZG_SUCCESS;
 }
 

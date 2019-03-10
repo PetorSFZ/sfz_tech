@@ -74,8 +74,8 @@ public:
 		mLog = settings.logger;
 		mAllocator = settings.allocator;
 		mDebugMode = settings.debugMode;
-		mWidth = uint32_t(settings.width);
-		mHeight = uint32_t(settings.height);
+		mWidth = settings.width;
+		mHeight = settings.height;
 		HWND hwnd = (HWND)settings.nativeWindowHandle;
 		if (mWidth == 0 || mHeight == 0) return ZG_ERROR_INVALID_ARGUMENT;
 
@@ -251,51 +251,41 @@ public:
 		// Disable Alt+Enter fullscreen toogle
 		CHECK_D3D12(mLog) dxgiFactory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);
 
-		// Create swap chain descriptor heap
+		// Create swap chain descriptor heaps
 		{
-			D3D12_DESCRIPTOR_HEAP_DESC desc = {};
-			desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-			desc.NumDescriptors = NUM_SWAP_CHAIN_BUFFERS; // Same as number of swap chain buffers, TODO: how decide
-			desc.NodeMask = 0;
-
+			// RTV descriptor heap
+			D3D12_DESCRIPTOR_HEAP_DESC rtvDesc = {};
+			rtvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+			rtvDesc.NumDescriptors = NUM_SWAP_CHAIN_BUFFERS;
+			rtvDesc.NodeMask = 0;
 			if (D3D12_FAIL(mLog, mDevice->CreateDescriptorHeap(
-				&desc, IID_PPV_ARGS(&mSwapChainDescriptorHeap)))) {
+				&rtvDesc, IID_PPV_ARGS(&mSwapChainRtvDescriptorHeap)))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
-		}
 
-		// Create render target views (RTVs) for swap chain
-		{
-			// The size of an RTV descriptor
+			// The size of a RTV descriptor
 			mDescriptorSizeRTV = mDevice->GetDescriptorHandleIncrementSize(
 				D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-			// The first descriptor of the swap chain descriptor heap
-			D3D12_CPU_DESCRIPTOR_HANDLE startOfDescriptorHeap =
-				mSwapChainDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-
-			for (UINT i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
-
-				// Get i:th back buffer from swap chain
-				ComPtr<ID3D12Resource> backBuffer;
-				if (D3D12_FAIL(mLog, mSwapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)))) {
-					return ZG_ERROR_NO_SUITABLE_DEVICE;
-				}
-
-				// Set width and height
-				mBackBuffers[i].width = mWidth;
-				mBackBuffers[i].height = mHeight;
-
-				// Get the i:th descriptor from the swap chain descriptor heap
-				D3D12_CPU_DESCRIPTOR_HANDLE descriptor = {};
-				descriptor.ptr = startOfDescriptorHeap.ptr + mDescriptorSizeRTV * i;
-				mBackBuffers[i].descriptor = descriptor;
-
-				// Create render target view for i:th backbuffer
-				mDevice->CreateRenderTargetView(backBuffer.Get(), nullptr, descriptor);
-				mBackBuffers[i].resource = backBuffer;
+			// DSV descriptor heap
+			D3D12_DESCRIPTOR_HEAP_DESC dsvDesc = {};
+			dsvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+			dsvDesc.NumDescriptors = NUM_SWAP_CHAIN_BUFFERS;
+			dsvDesc.NodeMask = 0;
+			if (D3D12_FAIL(mLog, mDevice->CreateDescriptorHeap(
+				&dsvDesc, IID_PPV_ARGS(&mSwapChainDsvDescriptorHeap)))) {
+				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
+
+			// The size of a DSV descriptor
+			mDescriptorSizeDSV = mDevice->GetDescriptorHandleIncrementSize(
+				D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 		}
+
+		// Create swap chain framebuffers (RTVs and DSVs)
+		mWidth = 0;
+		mHeight = 0;
+		this->resize(settings.width, settings.height);
 
 		return ZG_SUCCESS;
 	}
@@ -309,50 +299,111 @@ public:
 		std::lock_guard<std::mutex> lock(mContextMutex);
 
 		// Log that we are resizing the swap chain and then change the stored size
-		ZG_INFO(mLog, "Resizing swap chain from %ux%u to %ux%u", mWidth, mHeight, width, height);
+		bool initialCreation = false;
+		if (mWidth == 0 && mHeight == 0) {
+			ZG_INFO(mLog, "Creating swap chain framebuffers, size: %ux%u", width, height);
+			initialCreation = true;
+		}
+		else {
+			ZG_INFO(mLog, "Resizing swap chain framebuffers from %ux%u to %ux%u",
+				mWidth, mHeight, width, height);
+		}
 		mWidth = width;
 		mHeight = height;
 
 		// Flush command queue so its safe to resize back buffers
 		mCommandQueueGraphicsPresent.flush();
 
-		// Release previous back buffers
-		for (int i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
-			mBackBuffers[i].resource.Reset();
-		}
+		if (!initialCreation) {
+			// Release previous back buffers
+			for (int i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
+				mBackBuffers[i].rtvResource.Reset();
+			}
 
-		// Resize swap chain's back buffers
-		DXGI_SWAP_CHAIN_DESC desc = {};
-		CHECK_D3D12(mLog) mSwapChain->GetDesc(&desc);
-		CHECK_D3D12(mLog) mSwapChain->ResizeBuffers(
-			NUM_SWAP_CHAIN_BUFFERS, width, height, desc.BufferDesc.Format, desc.Flags);
+			// Resize swap chain's back buffers
+			DXGI_SWAP_CHAIN_DESC desc = {};
+			CHECK_D3D12(mLog) mSwapChain->GetDesc(&desc);
+			CHECK_D3D12(mLog) mSwapChain->ResizeBuffers(
+				NUM_SWAP_CHAIN_BUFFERS, width, height, desc.BufferDesc.Format, desc.Flags);
+		}
 
 		// Update current back buffer index
 		mCurrentBackBufferIdx = mSwapChain->GetCurrentBackBufferIndex();
 
-		// The first descriptor of the swap chain descriptor heap
-		D3D12_CPU_DESCRIPTOR_HANDLE startOfDescriptorHeap =
-			mSwapChainDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+		// The first descriptor of the swap chain's descriptor heaps
+		D3D12_CPU_DESCRIPTOR_HANDLE startOfRtvDescriptorHeap =
+			mSwapChainRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+		D3D12_CPU_DESCRIPTOR_HANDLE startOfDsvDescriptorHeap =
+			mSwapChainDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
 		// Create render target views (RTVs) for swap chain
 		for (UINT i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
 
 			// Get i:th back buffer from swap chain
-			ComPtr<ID3D12Resource> backBuffer;
-			CHECK_D3D12(mLog) mSwapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer));
+			ComPtr<ID3D12Resource> backBufferRtv;
+			CHECK_D3D12(mLog) mSwapChain->GetBuffer(i, IID_PPV_ARGS(&backBufferRtv));
 
 			// Set width and height
 			mBackBuffers[i].width = width;
 			mBackBuffers[i].height = height;
 
-			// Get the i:th descriptor from the swap chain descriptor heap
-			D3D12_CPU_DESCRIPTOR_HANDLE descriptor = {};
-			descriptor.ptr = startOfDescriptorHeap.ptr + mDescriptorSizeRTV * i;
-			mBackBuffers[i].descriptor = descriptor;
+			// Get the i:th RTV descriptor from the swap chain descriptor heap
+			D3D12_CPU_DESCRIPTOR_HANDLE rtvDescriptor = {};
+			rtvDescriptor.ptr = startOfRtvDescriptorHeap.ptr + mDescriptorSizeRTV * i;
+			mBackBuffers[i].rtvDescriptor = rtvDescriptor;
 
 			// Create render target view for i:th backbuffer
-			mDevice->CreateRenderTargetView(backBuffer.Get(), nullptr, descriptor);
-			mBackBuffers[i].resource = backBuffer;
+			mDevice->CreateRenderTargetView(backBufferRtv.Get(), nullptr, rtvDescriptor);
+			mBackBuffers[i].rtvResource = backBufferRtv;
+
+
+			// Create the depth buffer
+			D3D12_HEAP_PROPERTIES dsvHeapProperties = {};
+			dsvHeapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+			dsvHeapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+			dsvHeapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+
+			D3D12_RESOURCE_DESC dsvResourceDesc = {};
+			dsvResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+			dsvResourceDesc.Alignment = 0;
+			dsvResourceDesc.Width = width;
+			dsvResourceDesc.Height = height;
+			dsvResourceDesc.DepthOrArraySize = 1;
+			dsvResourceDesc.MipLevels = 0;
+			dsvResourceDesc.Format = DXGI_FORMAT_D32_FLOAT;
+			dsvResourceDesc.SampleDesc.Count = 1;
+			dsvResourceDesc.SampleDesc.Quality = 0;
+			dsvResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+			dsvResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+			D3D12_CLEAR_VALUE optimizedClearValue = {};
+			optimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+			optimizedClearValue.DepthStencil.Depth = 1.0f;
+			optimizedClearValue.DepthStencil.Stencil = 0;
+
+			ComPtr<ID3D12Resource> backBufferDsv;
+			CHECK_D3D12(mLog) mDevice->CreateCommittedResource(
+				&dsvHeapProperties,
+				D3D12_HEAP_FLAG_NONE,
+				&dsvResourceDesc,
+				D3D12_RESOURCE_STATE_DEPTH_WRITE,
+				&optimizedClearValue,
+				IID_PPV_ARGS(&backBufferDsv));
+			
+			// Get the i:th DSV descriptor from the swap chain descriptor heap
+			D3D12_CPU_DESCRIPTOR_HANDLE dsvDescriptor = {};
+			dsvDescriptor.ptr = startOfDsvDescriptorHeap.ptr + mDescriptorSizeDSV * i;
+			mBackBuffers[i].dsvDescriptor = dsvDescriptor;
+
+			// Create depth buffer view
+			D3D12_DEPTH_STENCIL_VIEW_DESC dsvViewDesc = {};
+			dsvViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
+			dsvViewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+			dsvViewDesc.Flags = D3D12_DSV_FLAG_NONE;
+			dsvViewDesc.Texture2D.MipSlice = 0;
+
+			mDevice->CreateDepthStencilView(backBufferDsv.Get(), &dsvViewDesc, dsvDescriptor);
+			mBackBuffers[i].dsvResource = backBufferDsv;
 		}
 
 		return ZG_SUCCESS;
@@ -381,7 +432,7 @@ public:
 
 		// Create barrier to transition back buffer into render target state
 		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			backBuffer.resource.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+			backBuffer.rtvResource.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 		reinterpret_cast<D3D12CommandList*>(barrierCommandList)->
 			commandList->ResourceBarrier(1, &barrier);
 
@@ -409,7 +460,7 @@ public:
 
 		// Create barrier to transition back buffer into present state
 		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			backBuffer.resource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+			backBuffer.rtvResource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 		reinterpret_cast<D3D12CommandList*>(barrierCommandList)->
 			commandList->ResourceBarrier(1, &barrier);
 
@@ -657,12 +708,14 @@ private:
 	uint32_t mWidth = 0;
 	uint32_t mHeight = 0;
 	ComPtr<IDXGISwapChain4> mSwapChain;
-	ComPtr<ID3D12DescriptorHeap> mSwapChainDescriptorHeap;
+	ComPtr<ID3D12DescriptorHeap> mSwapChainRtvDescriptorHeap;
+	uint32_t mDescriptorSizeRTV = 0;
+	ComPtr<ID3D12DescriptorHeap> mSwapChainDsvDescriptorHeap;
+	uint32_t mDescriptorSizeDSV = 0;
 	D3D12Framebuffer mBackBuffers[NUM_SWAP_CHAIN_BUFFERS];
 	uint64_t mSwapChainFenceValues[NUM_SWAP_CHAIN_BUFFERS] = {};
 	int mCurrentBackBufferIdx = 0;
 
-	uint32_t mDescriptorSizeRTV = 0;
 	bool mAllowTearing = false;
 
 	// Memory

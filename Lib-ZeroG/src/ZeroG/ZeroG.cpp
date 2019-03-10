@@ -350,6 +350,14 @@ ZG_DLL_API ZgErrorCode zgCommandListClearFramebuffer(
 	return commandList->clearFramebuffer(red, green, blue, alpha);
 }
 
+ZG_DLL_API ZgErrorCode zgCommandListClearDepthBuffer(
+	ZgCommandList* commandListIn,
+	float depth)
+{
+	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
+	return commandList->clearDepthBuffer(depth);
+}
+
 ZG_DLL_API ZgErrorCode zgCommandListSetIndexBuffer(
 	ZgCommandList* commandListIn,
 	ZgBuffer* indexBuffer,

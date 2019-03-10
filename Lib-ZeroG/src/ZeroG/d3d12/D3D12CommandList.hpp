@@ -21,6 +21,7 @@
 #include "ZeroG.h"
 #include "ZeroG/d3d12/D3D12Common.hpp"
 #include "ZeroG/d3d12/D3D12DescriptorRingBuffer.hpp"
+#include "ZeroG/d3d12/D3D12Framebuffer.hpp"
 #include "ZeroG/d3d12/D3D12Memory.hpp"
 #include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
 #include "ZeroG/BackendInterface.hpp"
@@ -86,6 +87,9 @@ public:
 		float blue,
 		float alpha) noexcept override final;
 
+	ZgErrorCode clearDepthBuffer(
+		float depth) noexcept override final;
+
 	ZgErrorCode setIndexBuffer(
 		IBuffer* indexBuffer,
 		ZgIndexBufferType type) noexcept override final;
@@ -140,7 +144,7 @@ private:
 	bool mPipelineSet = false; // Only allow a single pipeline per command list
 	D3D12PipelineRendering* mBoundPipeline = nullptr;
 	bool mFramebufferSet = false; // Only allow a single framebuffer to be set.
-	D3D12_CPU_DESCRIPTOR_HANDLE mFramebufferDescriptor = {}; // The descriptor for the set framebuffer
+	D3D12Framebuffer* mFramebuffer = nullptr;
 };
 
 } // namespace zg

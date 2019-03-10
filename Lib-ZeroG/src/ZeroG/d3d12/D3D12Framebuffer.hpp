@@ -44,8 +44,10 @@ public:
 
 	uint32_t width = 0;
 	uint32_t height = 0;
-	ComPtr<ID3D12Resource> resource;
-	D3D12_CPU_DESCRIPTOR_HANDLE descriptor = {};
+	ComPtr<ID3D12Resource> rtvResource;
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvDescriptor = {};
+	ComPtr<ID3D12Resource> dsvResource;
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvDescriptor = {};
 };
 
 } // namespace zg

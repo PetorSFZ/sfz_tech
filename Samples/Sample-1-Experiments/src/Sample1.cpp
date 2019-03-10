@@ -16,6 +16,7 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
+#include <chrono>
 #include <cstdlib>
 #include <cstdio>
 
@@ -87,6 +88,20 @@ static ZgBuffer* createDeviceBufferSimpleBlocking(
 	CHECK_ZG zgBufferRelease(context, uploadBuffer);
 
 	return deviceBuffer;
+}
+
+using time_point = std::chrono::high_resolution_clock::time_point;
+
+// Helper functions that calculates the time in seconds since the last call
+static float calculateDelta(time_point& previousTime) noexcept
+{
+	time_point currentTime = std::chrono::high_resolution_clock::now();
+
+	using FloatSecond = std::chrono::duration<float>;
+	float delta = std::chrono::duration_cast<FloatSecond>(currentTime - previousTime).count();
+
+	previousTime = currentTime;
+	return delta;
 }
 
 // Main
@@ -193,12 +208,15 @@ int main(int argc, char* argv[])
 	
 	// Create a constant buffer
 	Vector offsets;
-	offsets.x = 0.2f;
+	offsets.x = 0.0f;
 	ZgBuffer* constBufferDevice = createDeviceBufferSimpleBlocking(
 		ctx.mContext, commandQueue, &offsets, sizeof(Vector), 256);
 
 
 	// Run our main loop
+	time_point previousTimePoint;
+	calculateDelta(previousTimePoint);
+	float timeSinceStart = 0.0f;
 	bool running = true;
 	while (running) {
 
@@ -224,28 +242,25 @@ int main(int argc, char* argv[])
 			return true;
 		}()) continue;
 
+		// Update time since start
+		timeSinceStart += calculateDelta(previousTimePoint);
+
 		// Query drawable width and height and update ZeroG context
 		int width = 0;
 		int height = 0;
 		SDL_GL_GetDrawableSize(window, &width, &height);
 		CHECK_ZG zgContextResize(ctx.mContext, uint32_t(width), uint32_t(height));
 
+		// Create view and projection matrices
 		float vertFovDeg = 40.0f;
 		float aspectRatio = float(width) / float(height);
-
-		// Calculate model-view-projection matrix for this frame
-		Vector origin = Vector(-3.0f, 3.0f, -3.0f);
-
-		Matrix modelMatrix = createIdentityMatrix();
+		Vector origin = Vector(
+			std::cos(timeSinceStart) * 5.0f,
+			std::sin(timeSinceStart * 0.75f) + 1.5f,
+			std::sin(timeSinceStart) * 5.0f);
 		Matrix viewMatrix = createViewMatrix(
 			origin, -origin, Vector(0.0f, 1.0f, 0.0f));
 		Matrix projMatrix = createProjectionMatrix(vertFovDeg, aspectRatio, 0.01f, 10.0f);
-		struct Transforms {
-			Matrix mvpMatrix;
-			Matrix normalMatrix;
-		} transforms;
-		transforms.mvpMatrix = projMatrix * viewMatrix * modelMatrix;
-		transforms.normalMatrix = inverse(transpose(viewMatrix * modelMatrix));
 
 		// Begin frame
 		ZgFramebuffer* framebuffer = nullptr;
@@ -255,28 +270,65 @@ int main(int argc, char* argv[])
 		ZgCommandList* commandList = nullptr;
 		CHECK_ZG zgCommandQueueBeginCommandListRecording(commandQueue, &commandList);
 
-		// Record some commands
+		// Set framebuffer and clear it
+		ZgCommandListSetFramebufferInfo framebufferInfo = {};
+		framebufferInfo.framebuffer = framebuffer;
+		CHECK_ZG zgCommandListSetFramebuffer(commandList, &framebufferInfo);
+		CHECK_ZG zgCommandListClearFramebuffer(commandList, 0.2f, 0.2f, 0.3f, 1.0f);
+		CHECK_ZG zgCommandListClearDepthBuffer(commandList, 1.0f);
+
+		// Set pipeline
 		CHECK_ZG zgCommandListSetPipelineRendering(commandList, pipeline);
 
-		CHECK_ZG zgCommandListSetPushConstant(commandList, 0, &transforms, sizeof(Transforms));
-
+		// Set pipeline bindings
 		ZgConstantBufferBindings constBufferBindings = {};
 		constBufferBindings.numBindings = 1;
 		constBufferBindings.bindings[0].shaderRegister = 1;
 		constBufferBindings.bindings[0].buffer = constBufferDevice;
 		CHECK_ZG zgCommandListBindConstantBuffers(commandList, &constBufferBindings);
 
-		ZgCommandListSetFramebufferInfo framebufferInfo = {};
-		framebufferInfo.framebuffer = framebuffer;
-		CHECK_ZG zgCommandListSetFramebuffer(commandList, &framebufferInfo);
-		CHECK_ZG zgCommandListClearFramebuffer(commandList, 0.2f, 0.2f, 0.3f, 1.0f);
+		// Lambda to batch a call to render a cube with a specific transform
+		auto batchCubeRender = [&](Vector offset) {
 
+			// Calculate transforms to send to shader
+			Matrix modelMatrix = createIdentityMatrix();
+			modelMatrix.m[3] = offset.x;
+			modelMatrix.m[7] = offset.y;
+			modelMatrix.m[11] = offset.z;
+			struct Transforms {
+				Matrix mvpMatrix;
+				Matrix normalMatrix;
+			} transforms;
+			transforms.mvpMatrix = projMatrix * viewMatrix * modelMatrix;
+			transforms.normalMatrix = inverse(transpose(viewMatrix * modelMatrix));
+
+			// Send transforms to shader
+			CHECK_ZG zgCommandListSetPushConstant(commandList, 0, &transforms, sizeof(Transforms));
+
+			// Draw cube
+			CHECK_ZG zgCommandListDrawTrianglesIndexed(commandList, 0, CUBE_NUM_INDICES / 3);
+		};
+
+		// Set Cube's vertex and index buffer
 		CHECK_ZG zgCommandListSetIndexBuffer(
 			commandList, cubeIndexBufferDevice, ZG_INDEX_BUFFER_TYPE_UINT32);
 		CHECK_ZG zgCommandListSetVertexBuffer(commandList, 0, cubeVertexBufferDevice);
+		
+		// Batch some cubes
+		batchCubeRender(Vector(0.0f, 0.0f, 0.0f));
 
-		CHECK_ZG zgCommandListDrawTrianglesIndexed(commandList, 0, CUBE_NUM_INDICES / 3);
+		batchCubeRender(Vector(-1.5f, -1.5f, -1.5f));
+		batchCubeRender(Vector(-1.5f, -1.5f, 0.0f));
+		batchCubeRender(Vector(-1.5f, -1.5f, 1.5f));
 
+		batchCubeRender(Vector(0.0f, -1.5f, -1.5f));
+		batchCubeRender(Vector(0.0f, -1.5f, 0.0f));
+		batchCubeRender(Vector(0.0f, -1.5f, 1.5f));
+
+		batchCubeRender(Vector(1.5f, -1.5f, -1.5f));
+		batchCubeRender(Vector(1.5f, -1.5f, 0.0f));
+		batchCubeRender(Vector(1.5f, -1.5f, 1.5f));
+		
 		// Execute command list
 		CHECK_ZG zgCommandQueueExecuteCommandList(commandQueue, commandList);
 

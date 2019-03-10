@@ -768,8 +768,8 @@ ZgErrorCode createPipelineRendering(
 			CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY primitiveTopology;
 			CD3DX12_PIPELINE_STATE_STREAM_VS vertexShader;
 			CD3DX12_PIPELINE_STATE_STREAM_PS pixelShader;
-			//CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT dsvFormat;
 			CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS rtvFormats;
+			CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT dsvFormat;
 		};
 
 		// Create our token stream and set root signature
@@ -800,6 +800,10 @@ ZgErrorCode createPipelineRendering(
 		rtvFormats.NumRenderTargets = 1;
 		rtvFormats.RTFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM; // Same as in our swapchain
 		stream.rtvFormats = rtvFormats;
+
+		// Set depth buffer formats
+		// TODO: Allow other depth formats? Stencil buffers?
+		stream.dsvFormat = DXGI_FORMAT_D32_FLOAT;
 
 		// Create pipeline state
 		D3D12_PIPELINE_STATE_STREAM_DESC streamDesc = {};

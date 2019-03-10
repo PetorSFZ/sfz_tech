@@ -557,6 +557,10 @@ ZG_DLL_API ZgErrorCode zgCommandListClearFramebuffer(
 	float blue,
 	float alpha);
 
+ZG_DLL_API ZgErrorCode zgCommandListClearDepthBuffer(
+	ZgCommandList* commandList,
+	float depth);
+
 enum ZgIndexBufferTypeEnum {
 	ZG_INDEX_BUFFER_TYPE_UINT32 = 0,
 	ZG_INDEX_BUFFER_TYPE_UINT16
