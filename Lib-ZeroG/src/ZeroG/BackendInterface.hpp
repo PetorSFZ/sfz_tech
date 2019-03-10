@@ -80,6 +80,10 @@ public:
 		float blue,
 		float alpha) noexcept = 0;
 
+	virtual ZgErrorCode setIndexBuffer(
+		IBuffer* indexBuffer,
+		ZgIndexBufferType type) noexcept = 0;
+
 	virtual ZgErrorCode setVertexBuffer(
 		uint32_t vertexBufferSlot,
 		IBuffer* vertexBuffer) noexcept = 0;
@@ -87,6 +91,10 @@ public:
 	virtual ZgErrorCode drawTriangles(
 		uint32_t startVertexIndex,
 		uint32_t numVertices) noexcept = 0;
+
+	virtual ZgErrorCode drawTrianglesIndexed(
+		uint32_t startIndex,
+		uint32_t numTriangles) noexcept = 0;
 };
 
 // Command queue

@@ -1,18 +1,9 @@
-/*struct TmpConstantBuffer {
-	matrix someMatrix;
-};*/
-
-//ConstantBuffer<TmpConstantBuffer> AConstantBuffer : register(b0);
-
-struct PushColor {
-	float4 color;
+struct Transforms {
+	row_major float4x4 modelViewProjMatrix;
+	row_major float4x4 normalMatrix;
 };
+ConstantBuffer<Transforms> transforms : register(b0);
 
-ConstantBuffer<PushColor> pushColor : register(b0);
-
-/*cbuffer PushConstantCB : register(b0) {
-	float4 pushColor;
-};*/
 cbuffer AnotherCB : register(b1) {
 	float offsets;
 	float __padding0;
@@ -22,24 +13,33 @@ cbuffer AnotherCB : register(b1) {
 
 struct VSInput {
 	float3 position : ATTRIBUTE_LOCATION_0;
-	float3 color : ATTRIBUTE_LOCATION_1;
+	float3 normal : ATTRIBUTE_LOCATION_1;
+	float2 texcoord : ATTRIBUTE_LOCATION_2;
 };
 
 struct VSOutput {
-	float4 color : COLOR;
+	float3 normal : PARAM_0;
+	float2 texcoord : PARAM_1;
 	float4 position : SV_Position;
 };
 
 struct PSInput {
-	float4 color : COLOR;
+	float3 normal : PARAM_0;
+	float2 texcoord : PARAM_1;
 };
 
 VSOutput VSMain(VSInput input)
 {
 	VSOutput output;
 
-	output.position = float4(input.position.x + offsets, input.position.yz, 1.0f);
-	output.color = float4(input.color, 1.0);
+	float4 offsetPos = float4(input.position.x + offsets, input.position.yz, 1.0f);
+	output.position = mul(transforms.modelViewProjMatrix, offsetPos);
+
+	output.normal = normalize(mul(transforms.normalMatrix, float4(input.normal, 0.0f)));
+	output.texcoord = input.texcoord;
+
+	//output.position = float4(input.position.x + offsets, input.position.yz, 1.0f);
+	//output.color = float4(input.color, 1.0);
 	//output.color = float4(input.color.xy, AConstantBuffer.someMatrix._m00, 1.0f);
 
 	return output;
@@ -47,6 +47,6 @@ VSOutput VSMain(VSInput input)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-	//return float4(0.0, 0.0, 1.0, 1.0);
-	return input.color + pushColor.color;
+	//return float4(1.0, 1.0, 1.0, 1.0);
+	return float4(input.normal, 1.0);
 }

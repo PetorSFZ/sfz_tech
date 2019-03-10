@@ -171,7 +171,12 @@ ZgErrorCode D3D12CommandList::setPushConstant(
 	const D3D12PushConstantMapping& mapping = mBoundPipeline->pushConstants[mappingIdx];
 
 	// Sanity check to attempt to see if user provided enough bytes to read
-	if (mapping.sizeInBytes != dataSizeInBytes) return ZG_ERROR_INVALID_ARGUMENT;
+	if (mapping.sizeInBytes != dataSizeInBytes) {
+		ZG_ERROR(mLog,
+			"Push constant at shader register %u is %u bytes, provided data is %u bytes",
+			shaderRegister, mapping.sizeInBytes, dataSizeInBytes);
+		return ZG_ERROR_INVALID_ARGUMENT;
+	}
 
 	// Set push constant
 	if (mapping.sizeInBytes == 4) {
@@ -372,6 +377,34 @@ ZgErrorCode D3D12CommandList::clearFramebuffer(
 	return ZG_SUCCESS;
 }
 
+ZgErrorCode D3D12CommandList::setIndexBuffer(
+	IBuffer* indexBufferIn,
+	ZgIndexBufferType type) noexcept
+{
+	// Cast input to D3D12
+	D3D12Buffer& indexBuffer = *reinterpret_cast<D3D12Buffer*>(indexBufferIn);
+
+	// Set buffer resource state
+	ZgErrorCode res = setBufferState(indexBuffer, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+	if (res != ZG_SUCCESS) return res;
+
+	// Create index buffer view
+	D3D12_INDEX_BUFFER_VIEW indexBufferView = {};
+	indexBufferView.BufferLocation = indexBuffer.resource->GetGPUVirtualAddress();
+	ZG_ASSERT(indexBuffer.sizeBytes <= uint64_t(UINT32_MAX));
+	indexBufferView.SizeInBytes = uint32_t(indexBuffer.sizeBytes);
+	indexBufferView.Format = type == ZG_INDEX_BUFFER_TYPE_UINT32 ?
+		DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
+
+	// Set index buffer
+	commandList->IASetIndexBuffer(&indexBufferView);
+
+	// Insert into residency set
+	residencySet->Insert(&indexBuffer.heapManagedObject);
+
+	return ZG_SUCCESS;
+}
+
 ZgErrorCode D3D12CommandList::setVertexBuffer(
 	uint32_t vertexBufferSlot,
 	IBuffer* vertexBufferIn) noexcept
@@ -414,6 +447,16 @@ ZgErrorCode D3D12CommandList::drawTriangles(
 	// Draw triangles
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	commandList->DrawInstanced(numVertices, 1, startVertexIndex, 0);
+	return ZG_SUCCESS;
+}
+
+ZgErrorCode D3D12CommandList::drawTrianglesIndexed(
+	uint32_t startIndex,
+	uint32_t numTriangles) noexcept
+{
+	// Draw triangles indexed
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList->DrawIndexedInstanced(numTriangles * 3, 1, startIndex, 0, 0);
 	return ZG_SUCCESS;
 }
 

@@ -24,6 +24,7 @@ set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set(INCLUDE_FILES
+	${INCLUDE_DIR}/Cube.hpp
 	${INCLUDE_DIR}/SampleCommon.hpp
 )
 

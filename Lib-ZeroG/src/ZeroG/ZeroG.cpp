@@ -242,13 +242,13 @@ ZG_DLL_API ZgErrorCode zgBufferMemcpyTo(
 	ZgContext* context,
 	ZgBuffer* dstBuffer,
 	uint64_t bufferOffsetBytes,
-	const uint8_t* srcMemory,
+	const void* srcMemory,
 	uint64_t numBytes)
 {
 	return context->context->bufferMemcpyTo(
 		reinterpret_cast<zg::IBuffer*>(dstBuffer),
 		bufferOffsetBytes,
-		srcMemory,
+		reinterpret_cast<const uint8_t*>(srcMemory),
 		numBytes);
 }
 
@@ -350,6 +350,15 @@ ZG_DLL_API ZgErrorCode zgCommandListClearFramebuffer(
 	return commandList->clearFramebuffer(red, green, blue, alpha);
 }
 
+ZG_DLL_API ZgErrorCode zgCommandListSetIndexBuffer(
+	ZgCommandList* commandListIn,
+	ZgBuffer* indexBuffer,
+	ZgIndexBufferType type)
+{
+	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
+	return commandList->setIndexBuffer(reinterpret_cast<zg::IBuffer*>(indexBuffer), type);
+}
+
 ZG_DLL_API ZgErrorCode zgCommandListSetVertexBuffer(
 	ZgCommandList* commandListIn,
 	uint32_t vertexBufferSlot,
@@ -368,4 +377,13 @@ ZG_DLL_API ZgErrorCode zgCommandListDrawTriangles(
 	if ((numVertices % 3) != 0) return ZG_ERROR_INVALID_ARGUMENT;
 	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
 	return commandList->drawTriangles(startVertexIndex, numVertices);
+}
+
+ZG_DLL_API ZgErrorCode zgCommandListDrawTrianglesIndexed(
+	ZgCommandList* commandListIn,
+	uint32_t startIndex,
+	uint32_t numTriangles)
+{
+	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
+	return commandList->drawTrianglesIndexed(startIndex, numTriangles);
 }

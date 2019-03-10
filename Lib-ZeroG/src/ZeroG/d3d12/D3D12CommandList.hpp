@@ -86,6 +86,10 @@ public:
 		float blue,
 		float alpha) noexcept override final;
 
+	ZgErrorCode setIndexBuffer(
+		IBuffer* indexBuffer,
+		ZgIndexBufferType type) noexcept override final;
+
 	ZgErrorCode setVertexBuffer(
 		uint32_t vertexBufferSlot,
 		IBuffer* vertexBuffer) noexcept override final;
@@ -93,6 +97,10 @@ public:
 	ZgErrorCode drawTriangles(
 		uint32_t startVertexIndex,
 		uint32_t numVertices) noexcept override final;
+
+	ZgErrorCode drawTrianglesIndexed(
+		uint32_t startIndex,
+		uint32_t numTriangles) noexcept override final;
 
 	// Helper methods
 	// --------------------------------------------------------------------------------------------

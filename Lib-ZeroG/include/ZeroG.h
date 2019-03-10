@@ -484,7 +484,7 @@ ZG_DLL_API ZgErrorCode zgBufferMemcpyTo(
 	ZgContext* context,
 	ZgBuffer* dstBuffer,
 	uint64_t bufferOffsetBytes,
-	const uint8_t* srcMemory,
+	const void* srcMemory,
 	uint64_t numBytes);
 
 // Command queue
@@ -557,6 +557,17 @@ ZG_DLL_API ZgErrorCode zgCommandListClearFramebuffer(
 	float blue,
 	float alpha);
 
+enum ZgIndexBufferTypeEnum {
+	ZG_INDEX_BUFFER_TYPE_UINT32 = 0,
+	ZG_INDEX_BUFFER_TYPE_UINT16
+};
+typedef uint32_t ZgIndexBufferType;
+
+ZG_DLL_API ZgErrorCode zgCommandListSetIndexBuffer(
+	ZgCommandList* commandList,
+	ZgBuffer* indexBuffer,
+	ZgIndexBufferType type);
+
 ZG_DLL_API ZgErrorCode zgCommandListSetVertexBuffer(
 	ZgCommandList* commandList,
 	uint32_t vertexBufferSlot,
@@ -567,6 +578,10 @@ ZG_DLL_API ZgErrorCode zgCommandListDrawTriangles(
 	uint32_t startVertexIndex,
 	uint32_t numVertices);
 
+ZG_DLL_API ZgErrorCode zgCommandListDrawTrianglesIndexed(
+	ZgCommandList* commandList,
+	uint32_t startIndex,
+	uint32_t numTriangles);
 
 // This entire header is pure C
 #ifdef __cplusplus

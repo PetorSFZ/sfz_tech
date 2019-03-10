@@ -32,4 +32,74 @@ void cleanupSdl2(SDL_Window* window) noexcept;
 // the form of a void pointer which can be passed to ZeroG.
 void* getNativeWindowHandle(SDL_Window* window) noexcept;
 
+// Math
+// ------------------------------------------------------------------------------------------------
 
+constexpr float PI = 3.14159265358979323846f;
+constexpr float DEG_TO_RAD = PI / 180.0f;
+
+// A vector of size 4
+struct Vector {
+	float x = 0.0f;
+	float y = 0.0f;
+	float z = 0.0f;
+	float w = 0.0f;
+
+	Vector() noexcept = default;
+	Vector(float x, float y, float z) : x(x), y(y), z(z), w(0.0f) {}
+};
+
+// Negation operator
+Vector operator- (Vector v) noexcept;
+
+// Normalize a vector
+Vector normalize(Vector v) noexcept;
+
+// Dot product of two vectors
+float dot(Vector lhs, Vector rhs) noexcept;
+
+// Cross product of two vectors, sets 4th component to 0
+Vector cross(Vector lhs, Vector rhs) noexcept;
+
+// A 4x4 matrix class.
+//
+// Coordinate-system: Right-handed
+// Order: Column-major (matrix is multiplied "from the left" to column-major vectors. "M * v")
+// Memory-order: Row-major (first row of matrices is m[0], m[1], m[2], m[3])
+struct Matrix {
+	float m[16] = {};
+
+	Vector rowAt(uint32_t i) const noexcept;
+	Vector columnAt(uint32_t i) const noexcept;
+};
+static_assert(sizeof(Matrix) == sizeof(float) * 16, "Matrix is padded");
+
+// Matrix multiplication operator
+Matrix operator*(const Matrix& lhs, const Matrix& rhs) noexcept;
+
+// Matrix multiplication operator (scalar)
+Matrix operator*(const Matrix& lhs, float rhs) noexcept;
+Matrix operator*(float lhs, const Matrix& rhs) noexcept;
+
+// Transposes a matrix
+Matrix transpose(const Matrix& m) noexcept;
+
+// Calculates the determinant of a matrix
+float determinant(const Matrix& m) noexcept;
+
+// Inverts a matrix
+Matrix inverse(const Matrix& m) noexcept;
+
+// Creates an identity matrix
+Matrix createIdentityMatrix() noexcept;
+
+// Creates a view matrix
+//
+// Right-handed, negative-z into the screen, positive-x to the right
+Matrix createViewMatrix(Vector origin, Vector dir, Vector up) noexcept;
+
+// Creates a projection matrix
+//
+// Right-handed view space, left-handed clip space (with origin in upper left corner), depth 0 to 1
+// where 0 is closest.
+Matrix createProjectionMatrix(float yFovDeg, float aspectRatio, float zNear, float zFar) noexcept;

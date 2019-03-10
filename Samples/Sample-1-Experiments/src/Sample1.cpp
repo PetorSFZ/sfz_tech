@@ -24,6 +24,7 @@
 
 #include "ZeroG-cpp.hpp"
 
+#include "Cube.hpp"
 #include "SampleCommon.hpp"
 
 #ifdef _WIN32
@@ -37,6 +38,56 @@
 // ------------------------------------------------------------------------------------------------
 
 constexpr bool DEBUG_MODE = true;
+
+// Helpers
+// ------------------------------------------------------------------------------------------------
+
+struct Vertex {
+	float position[3];
+	float normal[3];
+	float texcoord[2];
+};
+static_assert(sizeof(Vertex) == sizeof(float) * 8, "Vertex is padded");
+
+// A simple helper function that allocates and copies data to a device buffer In practice you will
+// likely want to do something smarter.
+static ZgBuffer* createDeviceBufferSimpleBlocking(
+	ZgContext* context,
+	ZgCommandQueue* queue,
+	const void* data,
+	uint64_t numBytes,
+	uint64_t bufferSizeBytes = 0) noexcept
+{
+	ZgBuffer* deviceBuffer = nullptr;
+
+	// Create temporary upload buffer (accessible from CPU)
+	ZgBufferCreateInfo bufferInfo = {};
+	bufferInfo.sizeInBytes = bufferSizeBytes != 0 ? bufferSizeBytes : numBytes;
+	bufferInfo.bufferMemoryType = ZG_BUFFER_MEMORY_TYPE_UPLOAD;
+
+	ZgBuffer* uploadBuffer = nullptr;
+	CHECK_ZG zgBufferCreate(context, &uploadBuffer, &bufferInfo);
+
+	// Copy cube vertices to upload buffer
+	CHECK_ZG zgBufferMemcpyTo(context, uploadBuffer, 0, data, numBytes);
+
+	// Create device buffer
+	bufferInfo.bufferMemoryType = ZG_BUFFER_MEMORY_TYPE_DEVICE;
+	CHECK_ZG zgBufferCreate(context, &deviceBuffer, &bufferInfo);
+
+	// Copy to the device buffer
+	ZgCommandList* commandList = nullptr;
+	CHECK_ZG zgCommandQueueBeginCommandListRecording(queue, &commandList);
+	CHECK_ZG zgCommandListMemcpyBufferToBuffer(
+		commandList, deviceBuffer, 0, uploadBuffer, 0, numBytes);
+	CHECK_ZG zgCommandQueueExecuteCommandList(queue, commandList);
+	CHECK_ZG zgCommandQueueFlush(queue);
+
+	// Release upload buffer
+	CHECK_ZG zgBufferRelease(context, uploadBuffer);
+
+	return deviceBuffer;
+}
 
 // Main
 // ------------------------------------------------------------------------------------------------
@@ -59,6 +110,7 @@ int main(int argc, char* argv[])
 	// Initialize SDL2 and create a window
 	SDL_Window* window = initializeSdl2CreateWindow("ZeroG - Sample1");
 
+
 	// Create ZeroG context
 	ZgContextInitSettings initSettings = {};
 	initSettings.backend = ZG_BACKEND_D3D12;
@@ -69,17 +121,11 @@ int main(int argc, char* argv[])
 	zg::Context ctx;
 	CHECK_ZG ctx.init(initSettings);
 
-	struct Vertex {
-		float position[3];
-		float color[3];
-	};
-	static_assert(sizeof(Vertex) == sizeof(float) * 6, "Vertex is padded");
 
-	Vertex triangleVertices[3] = {
-		{ { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-		{ { 1.0f, -1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-		{ { -1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
-	};
+	// Get the command queue
+	ZgCommandQueue* commandQueue = nullptr;
+	CHECK_ZG zgContextGeCommandQueueGraphicsPresent(ctx.mContext, &commandQueue);
+
 
 	// Create a rendering pipeline
 	ZgPipelineRenderingCreateInfo pipelineInfo = {};
@@ -93,79 +139,64 @@ int main(int argc, char* argv[])
 	pipelineInfo.dxcCompilerFlags[0] = "-Zi";
 	pipelineInfo.dxcCompilerFlags[1] = "-O4";
 
-	pipelineInfo.numVertexAttributes = 2;
+	pipelineInfo.numVertexAttributes = 3;
 
+	// "position"
 	pipelineInfo.vertexAttributes[0].location = 0;
 	pipelineInfo.vertexAttributes[0].vertexBufferSlot = 0;
-	pipelineInfo.vertexAttributes[0].offsetToFirstElementInBytes = 0;
+	pipelineInfo.vertexAttributes[0].offsetToFirstElementInBytes = offsetof(Vertex, position);
 	pipelineInfo.vertexAttributes[0].type = ZG_VERTEX_ATTRIBUTE_F32_3;
 
+	// "normal"
 	pipelineInfo.vertexAttributes[1].location = 1;
 	pipelineInfo.vertexAttributes[1].vertexBufferSlot = 0;
-	pipelineInfo.vertexAttributes[1].offsetToFirstElementInBytes = sizeof(float) * 3;
+	pipelineInfo.vertexAttributes[1].offsetToFirstElementInBytes = offsetof(Vertex, normal);
 	pipelineInfo.vertexAttributes[1].type = ZG_VERTEX_ATTRIBUTE_F32_3;
+
+	// "texcoord"
+	pipelineInfo.vertexAttributes[2].location = 2;
+	pipelineInfo.vertexAttributes[2].vertexBufferSlot = 0;
+	pipelineInfo.vertexAttributes[2].offsetToFirstElementInBytes = offsetof(Vertex, texcoord);
+	pipelineInfo.vertexAttributes[2].type = ZG_VERTEX_ATTRIBUTE_F32_2;
 
 	pipelineInfo.numVertexBufferSlots = 1;
 	pipelineInfo.vertexBufferStridesBytes[0] = sizeof(Vertex);
 
 	pipelineInfo.numPushConstants = 1;
 	pipelineInfo.pushConstantRegisters[0] = 0;
-	
+
 	ZgPipelineRendering* pipeline = nullptr;
 	ZgPipelineRenderingSignature signature = {};
 	CHECK_ZG zgPipelineRenderingCreate(ctx.mContext, &pipeline, &signature, &pipelineInfo);
 
-	// Create a buffer
-	ZgBufferCreateInfo bufferInfo = {};
-	bufferInfo.sizeInBytes = 64ull * 1024ull;
-	bufferInfo.bufferMemoryType = ZG_BUFFER_MEMORY_TYPE_UPLOAD;
 
-	ZgBuffer* vertexUploadBuffer = nullptr;
-	CHECK_ZG zgBufferCreate(ctx.mContext, &vertexUploadBuffer, &bufferInfo);
-
-	ZgBuffer* vertexDeviceBuffer = nullptr;
-	bufferInfo.bufferMemoryType = ZG_BUFFER_MEMORY_TYPE_DEVICE;
-	CHECK_ZG zgBufferCreate(ctx.mContext, &vertexDeviceBuffer, &bufferInfo);
-
-	CHECK_ZG zgBufferMemcpyTo(
-		ctx.mContext, vertexUploadBuffer, 0, (const uint8_t*)triangleVertices, sizeof(triangleVertices));
-
-
-	// Create constant buffer
-	ZgBufferCreateInfo constBufferInfo = {};
-	constBufferInfo.sizeInBytes = 256; // 256-bytes
-	constBufferInfo.bufferMemoryType = ZG_BUFFER_MEMORY_TYPE_UPLOAD;
-
-	ZgBuffer* constBufferUpload = nullptr;
-	CHECK_ZG zgBufferCreate(ctx.mContext, &constBufferUpload, &constBufferInfo);
-
-	ZgBuffer* constBufferDevice = nullptr;
-	constBufferInfo.bufferMemoryType = ZG_BUFFER_MEMORY_TYPE_DEVICE;
-	CHECK_ZG zgBufferCreate(ctx.mContext, &constBufferDevice, &constBufferInfo);
-
-	float offset[4] = { 0.2f, 0.0f, 0.0f, 0.0f };
-	CHECK_ZG zgBufferMemcpyTo(
-		ctx.mContext, constBufferUpload, 0, (const uint8_t*)offset, sizeof(offset));
-
-
-	// Get the command queue
-	ZgCommandQueue* commandQueue = nullptr;
-	CHECK_ZG zgContextGeCommandQueueGraphicsPresent(ctx.mContext, &commandQueue);
-
-	// Copy to the device buffer
-	{
-		ZgCommandList* commandList = nullptr;
-		CHECK_ZG zgCommandQueueBeginCommandListRecording(commandQueue, &commandList);
-		CHECK_ZG zgCommandListMemcpyBufferToBuffer(
-			commandList, vertexDeviceBuffer, 0, vertexUploadBuffer, 0, sizeof(triangleVertices));
-		CHECK_ZG zgCommandListMemcpyBufferToBuffer(
-			commandList, constBufferDevice, 0, constBufferUpload, 0, sizeof(offset));
-		CHECK_ZG zgCommandQueueExecuteCommandList(commandQueue, commandList);
-		CHECK_ZG zgCommandQueueFlush(commandQueue);
+	// Create a vertex buffer containing a Cube
+	Vertex cubeVertices[CUBE_NUM_VERTICES] = {};
+	for (uint32_t i = 0; i < CUBE_NUM_VERTICES; i++) {
+		Vertex& v = cubeVertices[i];
+		v.position[0] = CUBE_POSITIONS[i * 3 + 0];
+		v.position[1] = CUBE_POSITIONS[i * 3 + 1];
+		v.position[2] = CUBE_POSITIONS[i * 3 + 2];
+		v.normal[0] = CUBE_NORMALS[i * 3 + 0];
+		v.normal[1] = CUBE_NORMALS[i * 3 + 1];
+		v.normal[2] = CUBE_NORMALS[i * 3 + 2];
+		v.texcoord[0] = CUBE_TEXCOORDS[i * 2 + 0];
+		v.texcoord[1] = CUBE_TEXCOORDS[i * 2 + 1];
 	}
+	ZgBuffer* cubeVertexBufferDevice = createDeviceBufferSimpleBlocking(
+		ctx.mContext, commandQueue, cubeVertices, sizeof(Vertex) * CUBE_NUM_VERTICES);
 
-	// Destroy upload buffer
-	CHECK_ZG zgBufferRelease(ctx.mContext, vertexUploadBuffer);
+	// Create a index buffer for the cube's vertices
+	ZgBuffer* cubeIndexBufferDevice = createDeviceBufferSimpleBlocking(
+		ctx.mContext, commandQueue, CUBE_INDICES, sizeof(uint32_t) * CUBE_NUM_INDICES);
+
+	
+	// Create a constant buffer
+	Vector offsets;
+	offsets.x = 0.2f;
+	ZgBuffer* constBufferDevice = createDeviceBufferSimpleBlocking(
+		ctx.mContext, commandQueue, &offsets, sizeof(Vector), 256);
+
 
 	// Run our main loop
 	bool running = true;
@@ -199,6 +230,23 @@ int main(int argc, char* argv[])
 		SDL_GL_GetDrawableSize(window, &width, &height);
 		CHECK_ZG zgContextResize(ctx.mContext, uint32_t(width), uint32_t(height));
 
+		float vertFovDeg = 40.0f;
+		float aspectRatio = float(width) / float(height);
+
+		// Calculate model-view-projection matrix for this frame
+		Vector origin = Vector(-3.0f, 3.0f, -3.0f);
+
+		Matrix modelMatrix = createIdentityMatrix();
+		Matrix viewMatrix = createViewMatrix(
+			origin, -origin, Vector(0.0f, 1.0f, 0.0f));
+		Matrix projMatrix = createProjectionMatrix(vertFovDeg, aspectRatio, 0.01f, 10.0f);
+		struct Transforms {
+			Matrix mvpMatrix;
+			Matrix normalMatrix;
+		} transforms;
+		transforms.mvpMatrix = projMatrix * viewMatrix * modelMatrix;
+		transforms.normalMatrix = inverse(transpose(viewMatrix * modelMatrix));
+
 		// Begin frame
 		ZgFramebuffer* framebuffer = nullptr;
 		CHECK_ZG zgContextBeginFrame(ctx.mContext, &framebuffer);
@@ -209,21 +257,25 @@ int main(int argc, char* argv[])
 
 		// Record some commands
 		CHECK_ZG zgCommandListSetPipelineRendering(commandList, pipeline);
-		ZgCommandListSetFramebufferInfo framebufferInfo = {};
-		framebufferInfo.framebuffer = framebuffer;
-		float color[4] = { 0.0f, 0.5f, 0.0f, 0.0f };
-		CHECK_ZG zgCommandListSetPushConstant(commandList, 0, color, sizeof(color));
-		//float offset[4] = { 0.2f, 0.0f, 0.0f, 0.0f };
-		//CHECK_ZG zgCommandListSetPushConstant(commandList, 1, &offset, sizeof(offset));
+
+		CHECK_ZG zgCommandListSetPushConstant(commandList, 0, &transforms, sizeof(Transforms));
+
 		ZgConstantBufferBindings constBufferBindings = {};
 		constBufferBindings.numBindings = 1;
 		constBufferBindings.bindings[0].shaderRegister = 1;
 		constBufferBindings.bindings[0].buffer = constBufferDevice;
 		CHECK_ZG zgCommandListBindConstantBuffers(commandList, &constBufferBindings);
+
+		ZgCommandListSetFramebufferInfo framebufferInfo = {};
+		framebufferInfo.framebuffer = framebuffer;
 		CHECK_ZG zgCommandListSetFramebuffer(commandList, &framebufferInfo);
 		CHECK_ZG zgCommandListClearFramebuffer(commandList, 0.2f, 0.2f, 0.3f, 1.0f);
-		CHECK_ZG zgCommandListSetVertexBuffer(commandList, 0, vertexDeviceBuffer);
-		CHECK_ZG zgCommandListDrawTriangles(commandList, 0, 3);
+
+		CHECK_ZG zgCommandListSetIndexBuffer(
+			commandList, cubeIndexBufferDevice, ZG_INDEX_BUFFER_TYPE_UINT32);
+		CHECK_ZG zgCommandListSetVertexBuffer(commandList, 0, cubeVertexBufferDevice);
+
+		CHECK_ZG zgCommandListDrawTrianglesIndexed(commandList, 0, CUBE_NUM_INDICES / 3);
 
 		// Execute command list
 		CHECK_ZG zgCommandQueueExecuteCommandList(commandQueue, commandList);
@@ -236,7 +288,9 @@ int main(int argc, char* argv[])
 	CHECK_ZG zgCommandQueueFlush(commandQueue);
 
 	// Release ZeroG resources
-	CHECK_ZG zgBufferRelease(ctx.mContext, vertexDeviceBuffer);
+	CHECK_ZG zgBufferRelease(ctx.mContext, cubeVertexBufferDevice);
+	CHECK_ZG zgBufferRelease(ctx.mContext, cubeIndexBufferDevice);
+	CHECK_ZG zgBufferRelease(ctx.mContext, constBufferDevice);
 	CHECK_ZG zgPipelineRenderingRelease(ctx.mContext, pipeline);
 
 	// Destroy ZeroG context

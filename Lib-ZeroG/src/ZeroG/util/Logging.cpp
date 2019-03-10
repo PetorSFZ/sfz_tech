@@ -78,7 +78,7 @@ void logWrapper(
 	ZgContext& ctx, const char* file, int line, ZgLogLevel level, const char* fmt, ...) noexcept
 {
 	// Create message
-	char messageBuffer[512];
+	char messageBuffer[2048];
 	va_list args;
 	va_start(args, fmt);
 	vsnprintf(messageBuffer, sizeof(messageBuffer), fmt, args);
@@ -92,7 +92,7 @@ void logWrapper(
 	ZgLogger& logger, const char* file, int line, ZgLogLevel level, const char* fmt, ...) noexcept
 {
 	// Create message
-	char messageBuffer[512];
+	char messageBuffer[2048];
 	va_list args;
 	va_start(args, fmt);
 	vsnprintf(messageBuffer, sizeof(messageBuffer), fmt, args);

@@ -620,7 +620,9 @@ ZgErrorCode createPipelineRendering(
 	// Check that all push constant registers specified was actually used
 	for (uint32_t i = 0; i < createInfo.numPushConstants; i++) {
 		if (!pushConstantRegisterUsed[i]) {
-			ZG_ASSERT(!pushConstantRegisterUsed[i]);
+			ZG_ERROR(logger,
+				"Shader register %u was registered as a push constant, but never used in the shader",
+				createInfo.pushConstantRegisters[i]);
 			return ZG_ERROR_INVALID_ARGUMENT;
 		}
 	}
