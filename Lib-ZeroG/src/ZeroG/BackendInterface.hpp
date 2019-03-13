@@ -38,6 +38,18 @@ public:
 	virtual ~IBuffer() noexcept {}
 };
 
+class IMemoryHeap {
+public:
+	virtual ~IMemoryHeap() noexcept {}
+
+	virtual ZgErrorCode bufferCreate(
+		IBuffer** bufferOut,
+		const ZgBufferCreateInfo& createInfo) noexcept = 0;
+
+	virtual ZgErrorCode bufferRelease(
+		IBuffer* buffer) noexcept = 0;
+};
+
 // Framebuffer
 // ------------------------------------------------------------------------------------------------
 
@@ -152,11 +164,12 @@ public:
 	// Memory methods
 	// --------------------------------------------------------------------------------------------
 
-	virtual ZgErrorCode bufferCreate(
-		IBuffer** bufferOut,
-		const ZgBufferCreateInfo& createInfo) noexcept = 0;
+	virtual ZgErrorCode memoryHeapCreate(
+		IMemoryHeap** memoryHeapOut,
+		const ZgMemoryHeapCreateInfo& createInfo) noexcept = 0;
 
-	virtual ZgErrorCode bufferRelease(IBuffer* buffer) noexcept = 0;
+	virtual ZgErrorCode memoryHeapRelease(
+		IMemoryHeap* memoryHeap) noexcept = 0;
 
 	virtual ZgErrorCode bufferMemcpyTo(
 		IBuffer* dstBufferInterface,

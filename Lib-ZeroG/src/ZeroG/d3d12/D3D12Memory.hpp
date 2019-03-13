@@ -18,11 +18,64 @@
 
 #pragma once
 
+#include <atomic>
+
 #include "ZeroG.h"
 #include "ZeroG/d3d12/D3D12Common.hpp"
 #include "ZeroG/BackendInterface.hpp"
 
 namespace zg {
+
+// D3D12 Memory Heap
+// ------------------------------------------------------------------------------------------------
+
+class D3D12MemoryHeap final : public IMemoryHeap {
+public:
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	D3D12MemoryHeap() = default;
+	D3D12MemoryHeap(const D3D12MemoryHeap&) = delete;
+	D3D12MemoryHeap& operator= (const D3D12MemoryHeap&) = delete;
+	D3D12MemoryHeap(D3D12MemoryHeap&&) = delete;
+	D3D12MemoryHeap& operator= (D3D12MemoryHeap&&) = delete;
+	~D3D12MemoryHeap() noexcept;
+
+	// Virtual methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgErrorCode bufferCreate(
+		IBuffer** bufferOut,
+		const ZgBufferCreateInfo& createInfo) noexcept override final;
+
+	ZgErrorCode bufferRelease(
+		IBuffer* buffer) noexcept override final;
+
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	ZgLogger logger = {};
+	ZgAllocator allocator = {};
+	ID3D12Device3* device = nullptr;
+	std::atomic_uint64_t* bufferUniqueIdentifierCounter = nullptr;
+
+	ZgMemoryType memoryType = ZG_MEMORY_TYPE_UNDEFINED;
+	uint64_t sizeBytes = 0;
+	ComPtr<ID3D12Heap> heap;
+	D3DX12Residency::ManagedObject managedObject;
+};
+
+// D3D12 Memory Heap functions
+// ------------------------------------------------------------------------------------------------
+
+ZgErrorCode createMemoryHeap(
+	ZgLogger& logger,
+	ZgAllocator& allocator,
+	ID3D12Device3& device,
+	std::atomic_uint64_t* bufferUniqueIdentifierCounter,
+	D3DX12Residency::ResidencyManager& residencyManager,
+	D3D12MemoryHeap** heapOut,
+	const ZgMemoryHeapCreateInfo& createInfo) noexcept;
 
 // D3D12 Buffer
 // ------------------------------------------------------------------------------------------------
@@ -39,10 +92,8 @@ public:
 	// A unique identifier for this buffer
 	uint64_t identifier = 0;
 
-	ZgBufferMemoryType memoryType = ZG_BUFFER_MEMORY_TYPE_UNDEFINED;
+	D3D12MemoryHeap* memoryHeap = nullptr;
 	uint64_t sizeBytes = 0;
-	ComPtr<ID3D12Heap> heap;
-	D3DX12Residency::ManagedObject heapManagedObject;
 	ComPtr<ID3D12Resource> resource;
 
 	// The current resource state of the buffer. Committed because the state has been committed

@@ -63,6 +63,9 @@ ZG_HANDLE(ZgContext);
 // A handle representing a rendering pipeline
 ZG_HANDLE(ZgPipelineRendering);
 
+// A handle representing a memory heap (to allocate ZgBuffers from)
+ZG_HANDLE(ZgMemoryHeap);
+
 // A handle representing a buffer
 ZG_HANDLE(ZgBuffer);
 
@@ -444,40 +447,60 @@ ZG_DLL_API ZgErrorCode zgPipelineRenderingGetSignature(
 // Memory
 // ------------------------------------------------------------------------------------------------
 
-enum ZgBufferMemoryTypeEnum {
-	ZG_BUFFER_MEMORY_TYPE_UNDEFINED = 0,
+enum ZgMemoryTypeEnum {
+	ZG_MEMORY_TYPE_UNDEFINED = 0,
 
 	// Memory suitable for uploading data to GPU.
 	// Can not be used as a shader UAV, only as vertex shader input.
-	ZG_BUFFER_MEMORY_TYPE_UPLOAD,
+	ZG_MEMORY_TYPE_UPLOAD,
 
 	// Memory suitable for downloading data from GPU.
-	ZG_BUFFER_MEMORY_TYPE_DOWNLOAD,
+	ZG_MEMORY_TYPE_DOWNLOAD,
 
 	// Fastest memory available on GPU.
 	// Can't upload or download directly to this memory from CPU, need to use UPLOAD and DOWNLOAD
 	// as intermediary.
-	ZG_BUFFER_MEMORY_TYPE_DEVICE
+	ZG_MEMORY_TYPE_DEVICE
 };
-typedef uint32_t ZgBufferMemoryType;
+typedef uint32_t ZgMemoryType;
 
-struct ZgBufferCreateInfo {
+struct ZgMemoryHeapCreateInfo {
 
-	// The size in bytes of the buffer
+	// The size in bytes of the heap
 	uint64_t sizeInBytes;
 
 	// The type of memory
-	ZgBufferMemoryType bufferMemoryType;
+	ZgMemoryType memoryType;
+};
+typedef struct ZgMemoryHeapCreateInfo ZgMemoryHeapCreateInfo;
+
+ZG_DLL_API ZgErrorCode zgMemoryHeapCreate(
+	ZgContext* context,
+	ZgMemoryHeap** memoryHeapOut,
+	const ZgMemoryHeapCreateInfo* createInfo);
+
+ZG_DLL_API ZgErrorCode zgMemoryHeapRelease(
+	ZgContext* context,
+	ZgMemoryHeap* memoryHeap);
+
+struct ZgBufferCreateInfo {
+	
+	// The offset from the start of the memory heap to create the buffer at.
+	// Note that the offset must be a multiple of 64KiB (= 2^16 bytes = 65 536 bytes), or 0.
+	uint64_t offsetInBytes;
+
+	// The size in bytes of the buffer
+	uint64_t sizeInBytes;
 };
 typedef struct ZgBufferCreateInfo ZgBufferCreateInfo;
 
-ZG_DLL_API ZgErrorCode zgBufferCreate(
-	ZgContext* context,
+ZG_DLL_API ZgErrorCode zgMemoryHeapBufferCreate(
+	ZgMemoryHeap* memoryHeap,
 	ZgBuffer** bufferOut,
 	const ZgBufferCreateInfo* createInfo);
 
-ZG_DLL_API ZgErrorCode zgBufferRelease(
-	ZgContext* context,
+ZG_DLL_API ZgErrorCode zgMemoryHeapBufferRelease(
+	ZgMemoryHeap* memoryHeap,
 	ZgBuffer* buffer);
 
 ZG_DLL_API ZgErrorCode zgBufferMemcpyTo(

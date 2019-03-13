@@ -109,7 +109,7 @@ ZgErrorCode D3D12CommandList::memcpyBufferToBuffer(
 	// Wanted resource states
 	D3D12_RESOURCE_STATES dstTargetState = D3D12_RESOURCE_STATE_COPY_DEST;
 	D3D12_RESOURCE_STATES srcTargetState = D3D12_RESOURCE_STATE_COPY_SOURCE;
-	if (srcBuffer.memoryType == ZG_BUFFER_MEMORY_TYPE_UPLOAD) {
+	if (srcBuffer.memoryHeap->memoryType == ZG_MEMORY_TYPE_UPLOAD) {
 		srcTargetState = D3D12_RESOURCE_STATE_GENERIC_READ;
 	}
 
@@ -127,8 +127,8 @@ ZgErrorCode D3D12CommandList::memcpyBufferToBuffer(
 		srcBufferOffsetBytes == 0;
 
 	// Add buffers to residency set
-	residencySet->Insert(&srcBuffer.heapManagedObject);
-	residencySet->Insert(&dstBuffer.heapManagedObject);
+	residencySet->Insert(&srcBuffer.memoryHeap->managedObject);
+	residencySet->Insert(&dstBuffer.memoryHeap->managedObject);
 
 	// Copy entire buffer
 	if (copyEntireBuffer) {
@@ -258,7 +258,7 @@ ZgErrorCode D3D12CommandList::bindConstantBuffers(
 		setBufferState(*buffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
 		// Insert into residency set
-		residencySet->Insert(&buffer->heapManagedObject);
+		residencySet->Insert(&buffer->memoryHeap->managedObject);
 	}
 
 	// Set descriptor table to root signature
@@ -413,7 +413,7 @@ ZgErrorCode D3D12CommandList::setIndexBuffer(
 	commandList->IASetIndexBuffer(&indexBufferView);
 
 	// Insert into residency set
-	residencySet->Insert(&indexBuffer.heapManagedObject);
+	residencySet->Insert(&indexBuffer.memoryHeap->managedObject);
 
 	return ZG_SUCCESS;
 }
@@ -448,7 +448,7 @@ ZgErrorCode D3D12CommandList::setVertexBuffer(
 	commandList->IASetVertexBuffers(vertexBufferSlot, 1, &vertexBufferView);
 
 	// Insert into residency set
-	residencySet->Insert(&vertexBuffer.heapManagedObject);
+	residencySet->Insert(&vertexBuffer.memoryHeap->managedObject);
 
 	return ZG_SUCCESS;
 }

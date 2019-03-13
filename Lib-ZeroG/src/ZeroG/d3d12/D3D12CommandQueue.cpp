@@ -278,7 +278,7 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListBufferStateChanges(
 			state.neededInitialState);
 
 		// Store residency set
-		residencyObjects[numBarriers] = &state.buffer->heapManagedObject;
+		residencyObjects[numBarriers] = &state.buffer->memoryHeap->managedObject;
 
 		numBarriers += 1;
 	}

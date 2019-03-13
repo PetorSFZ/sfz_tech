@@ -50,31 +50,61 @@ struct Vertex {
 };
 static_assert(sizeof(Vertex) == sizeof(float) * 8, "Vertex is padded");
 
+// A simple helper function that allocates a heap and a buffer that covers the entirety of it.
+// In practice you want to have multiple buffers per heap and use some sort of allocation scheme,
+// but this is good enough for this sample.
+static void allocateMemoryHeapAndBuffer(
+	ZgContext* context,
+	ZgMemoryHeap*& heapOut,
+	ZgBuffer*& bufferOut,
+	ZgMemoryType memoryType,
+	uint64_t numBytes) noexcept
+{
+	// Create heap
+	ZgMemoryHeapCreateInfo heapInfo = {};
+	heapInfo.memoryType = memoryType;
+	heapInfo.sizeInBytes = numBytes;
+
+	ZgMemoryHeap* heap = nullptr;
+	CHECK_ZG zgMemoryHeapCreate(context, &heap, &heapInfo);
+
+	// Create buffer
+	ZgBufferCreateInfo bufferInfo = {};
+	bufferInfo.offsetInBytes = 0;
+	bufferInfo.sizeInBytes = numBytes;
+	
+	ZgBuffer* buffer = nullptr;
+	CHECK_ZG zgMemoryHeapBufferCreate(heap, &buffer, &bufferInfo);
+
+	heapOut = heap;
+	bufferOut = buffer;
+}
+
 // A simple helper function that allocates and copies data to a device buffer In practice you will
 // likely want to do something smarter.
-static ZgBuffer* createDeviceBufferSimpleBlocking(
+static void createDeviceBufferSimpleBlocking(
 	ZgContext* context,
 	ZgCommandQueue* queue,
+	ZgBuffer*& bufferOut,
+	ZgMemoryHeap*& memoryHeapOut,
 	const void* data,
 	uint64_t numBytes,
 	uint64_t bufferSizeBytes = 0) noexcept
 {
-	ZgBuffer* deviceBuffer = nullptr;
-
 	// Create temporary upload buffer (accessible from CPU)
-	ZgBufferCreateInfo bufferInfo = {};
-	bufferInfo.sizeInBytes = bufferSizeBytes != 0 ? bufferSizeBytes : numBytes;
-	bufferInfo.bufferMemoryType = ZG_BUFFER_MEMORY_TYPE_UPLOAD;
-
+	ZgMemoryHeap* uploadHeap = nullptr;
 	ZgBuffer* uploadBuffer = nullptr;
-	CHECK_ZG zgBufferCreate(context, &uploadBuffer, &bufferInfo);
+	allocateMemoryHeapAndBuffer(context, uploadHeap, uploadBuffer,
+		ZG_MEMORY_TYPE_UPLOAD, bufferSizeBytes != 0 ? bufferSizeBytes : numBytes);
 
 	// Copy cube vertices to upload buffer
 	CHECK_ZG zgBufferMemcpyTo(context, uploadBuffer, 0, data, numBytes);
 
 	// Create device buffer
-	bufferInfo.bufferMemoryType = ZG_BUFFER_MEMORY_TYPE_DEVICE;
-	CHECK_ZG zgBufferCreate(context, &deviceBuffer, &bufferInfo);
+	ZgMemoryHeap* deviceHeap = nullptr;
+	ZgBuffer* deviceBuffer = nullptr;
+	allocateMemoryHeapAndBuffer(context, deviceHeap, deviceBuffer,
+		ZG_MEMORY_TYPE_DEVICE, bufferSizeBytes != 0 ? bufferSizeBytes : numBytes);
 
 	// Copy to the device buffer
 	ZgCommandList* commandList = nullptr;
@@ -84,10 +114,12 @@ static ZgBuffer* createDeviceBufferSimpleBlocking(
 	CHECK_ZG zgCommandQueueExecuteCommandList(queue, commandList);
 	CHECK_ZG zgCommandQueueFlush(queue);
 
-	// Release upload buffer
-	CHECK_ZG zgBufferRelease(context, uploadBuffer);
+	// Release upload heap and buffer
+	CHECK_ZG zgMemoryHeapBufferRelease(uploadHeap, uploadBuffer);
+	CHECK_ZG zgMemoryHeapRelease(context, uploadHeap);
 
-	return deviceBuffer;
+	bufferOut = deviceBuffer;
+	memoryHeapOut = deviceHeap;
 }
 
 using time_point = std::chrono::high_resolution_clock::time_point;
@@ -198,19 +230,26 @@ int main(int argc, char* argv[])
 		v.texcoord[0] = CUBE_TEXCOORDS[i * 2 + 0];
 		v.texcoord[1] = CUBE_TEXCOORDS[i * 2 + 1];
 	}
-	ZgBuffer* cubeVertexBufferDevice = createDeviceBufferSimpleBlocking(
-		ctx.mContext, commandQueue, cubeVertices, sizeof(Vertex) * CUBE_NUM_VERTICES);
+
+	ZgBuffer* cubeVertexBufferDevice = nullptr;
+	ZgMemoryHeap* cubeVertexMemoryHeapDevice = nullptr;
+	createDeviceBufferSimpleBlocking(ctx.mContext, commandQueue, cubeVertexBufferDevice,
+		cubeVertexMemoryHeapDevice, cubeVertices, sizeof(Vertex) * CUBE_NUM_VERTICES);
 
 	// Create a index buffer for the cube's vertices
-	ZgBuffer* cubeIndexBufferDevice = createDeviceBufferSimpleBlocking(
-		ctx.mContext, commandQueue, CUBE_INDICES, sizeof(uint32_t) * CUBE_NUM_INDICES);
+	ZgBuffer* cubeIndexBufferDevice = nullptr;
+	ZgMemoryHeap* cubeIndexMemoryHeapDevice = nullptr;
+	createDeviceBufferSimpleBlocking(ctx.mContext, commandQueue, cubeIndexBufferDevice,
+		cubeIndexMemoryHeapDevice, CUBE_INDICES, sizeof(uint32_t) * CUBE_NUM_INDICES);
 
 	
 	// Create a constant buffer
 	Vector offsets;
 	offsets.x = 0.0f;
-	ZgBuffer* constBufferDevice = createDeviceBufferSimpleBlocking(
-		ctx.mContext, commandQueue, &offsets, sizeof(Vector), 256);
+	ZgBuffer* constBufferDevice = nullptr;
+	ZgMemoryHeap* constBufferMemoryHeapDevice = nullptr;
+	createDeviceBufferSimpleBlocking(ctx.mContext, commandQueue, constBufferDevice,
+		constBufferMemoryHeapDevice, &offsets, sizeof(Vector), 256);
 
 
 	// Run our main loop
@@ -340,9 +379,15 @@ int main(int argc, char* argv[])
 	CHECK_ZG zgCommandQueueFlush(commandQueue);
 
 	// Release ZeroG resources
-	CHECK_ZG zgBufferRelease(ctx.mContext, cubeVertexBufferDevice);
-	CHECK_ZG zgBufferRelease(ctx.mContext, cubeIndexBufferDevice);
-	CHECK_ZG zgBufferRelease(ctx.mContext, constBufferDevice);
+	CHECK_ZG zgMemoryHeapBufferRelease(cubeVertexMemoryHeapDevice, cubeVertexBufferDevice);
+	CHECK_ZG zgMemoryHeapRelease(ctx.mContext, cubeVertexMemoryHeapDevice);
+
+	CHECK_ZG zgMemoryHeapBufferRelease(cubeIndexMemoryHeapDevice, cubeIndexBufferDevice);
+	CHECK_ZG zgMemoryHeapRelease(ctx.mContext, cubeIndexMemoryHeapDevice);
+
+	CHECK_ZG zgMemoryHeapBufferRelease(constBufferMemoryHeapDevice, constBufferDevice);
+	CHECK_ZG zgMemoryHeapRelease(ctx.mContext, constBufferMemoryHeapDevice);
+
 	CHECK_ZG zgPipelineRenderingRelease(ctx.mContext, pipeline);
 
 	// Destroy ZeroG context

@@ -36,12 +36,12 @@ namespace zg {
 
 constexpr auto NUM_SWAP_CHAIN_BUFFERS = 3;
 
-static D3D12_HEAP_TYPE bufferMemoryTypeToD3D12HeapType(ZgBufferMemoryType type) noexcept
+static D3D12_HEAP_TYPE bufferMemoryTypeToD3D12HeapType(ZgMemoryType type) noexcept
 {
 	switch (type) {
-	case ZG_BUFFER_MEMORY_TYPE_UPLOAD: return D3D12_HEAP_TYPE_UPLOAD;
-	case ZG_BUFFER_MEMORY_TYPE_DOWNLOAD: return D3D12_HEAP_TYPE_READBACK;
-	case ZG_BUFFER_MEMORY_TYPE_DEVICE: return D3D12_HEAP_TYPE_DEFAULT;
+	case ZG_MEMORY_TYPE_UPLOAD: return D3D12_HEAP_TYPE_UPLOAD;
+	case ZG_MEMORY_TYPE_DOWNLOAD: return D3D12_HEAP_TYPE_READBACK;
+	case ZG_MEMORY_TYPE_DEVICE: return D3D12_HEAP_TYPE_DEFAULT;
 	}
 	// TODO: Handle error (undefined)
 	return D3D12_HEAP_TYPE_DEFAULT;
@@ -550,96 +550,31 @@ public:
 	// Memory methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode bufferCreate(
-		IBuffer** bufferOut,
-		const ZgBufferCreateInfo& createInfo) noexcept override final
+	ZgErrorCode memoryHeapCreate(
+		IMemoryHeap** memoryHeapOut,
+		const ZgMemoryHeapCreateInfo& createInfo) noexcept override final
 	{
 		std::lock_guard<std::mutex> lock(mContextMutex);
-
-		// Create heap
-		ComPtr<ID3D12Heap> heap;
-		{
-			bool allowAtomics = createInfo.bufferMemoryType == ZG_BUFFER_MEMORY_TYPE_DEVICE;
-
-			D3D12_HEAP_DESC desc = {};
-			desc.SizeInBytes = createInfo.sizeInBytes;
-			desc.Properties.Type = bufferMemoryTypeToD3D12HeapType(createInfo.bufferMemoryType);
-			desc.Properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-			desc.Properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-			desc.Properties.CreationNodeMask = 0; // No multi-GPU support
-			desc.Properties.VisibleNodeMask = 0; // No multi-GPU support
-			desc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-			desc.Flags = D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS |
-				(allowAtomics ? D3D12_HEAP_FLAG_ALLOW_SHADER_ATOMICS : D3D12_HEAP_FLAGS(0));
-
-			// Create heap
-			if (D3D12_FAIL(mLog, mDevice->CreateHeap(&desc, IID_PPV_ARGS(&heap)))) {
-				return ZG_ERROR_GPU_OUT_OF_MEMORY;
-			}
-		}
-		
-		// Create placed resource
-		ComPtr<ID3D12Resource> resource;
-		const D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_GENERIC_READ;
-		{
-			bool allowUav = createInfo.bufferMemoryType == ZG_BUFFER_MEMORY_TYPE_DEVICE;
-
-			D3D12_RESOURCE_DESC desc = {};
-			desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-			desc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-			desc.Width = createInfo.sizeInBytes;
-			desc.Height = 1;
-			desc.DepthOrArraySize = 1;
-			desc.MipLevels = 1;
-			desc.Format = DXGI_FORMAT_UNKNOWN;
-			desc.SampleDesc.Count = 1;
-			desc.SampleDesc.Quality = 0;
-			desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-			desc.Flags =
-				allowUav ? D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS : D3D12_RESOURCE_FLAGS(0);
-
-			// Create placed resource
-			if (D3D12_FAIL(mLog, mDevice->CreatePlacedResource(
-				heap.Get(),
-				0,
-				&desc,
-				initialResourceState,
-				nullptr,
-				IID_PPV_ARGS(&resource)))) {
-				return ZG_ERROR_GPU_OUT_OF_MEMORY;
-			}
-		}
-
-		// Allocate buffer
-		D3D12Buffer* buffer =
-			zgNew<D3D12Buffer>(mAllocator, "ZeroG - D3D12Buffer");
-
-		// Create residency manager object and begin tracking
-		buffer->heapManagedObject.Initialize(heap.Get(), createInfo.sizeInBytes);
-		mResidencyManager.BeginTrackingObject(&buffer->heapManagedObject);
-
-		// Copy stuff
-		buffer->identifier = std::atomic_fetch_add(&mBufferUniqueIdentifierCounter, 1);
-		buffer->memoryType = createInfo.bufferMemoryType;
-		buffer->sizeBytes = createInfo.sizeInBytes;
-		buffer->heap = heap;
-		buffer->resource = resource;
-		buffer->lastCommittedState = initialResourceState;
-
-		// Return buffer
-		*bufferOut = buffer;
-		return ZG_SUCCESS;
+		return createMemoryHeap(
+			mLog,
+			mAllocator,
+			*mDevice.Get(),
+			&mBufferUniqueIdentifierCounter,
+			mResidencyManager,
+			reinterpret_cast<D3D12MemoryHeap**>(memoryHeapOut),
+			createInfo);
 	}
 
-	ZgErrorCode bufferRelease(IBuffer* bufferIn) noexcept override final
+	ZgErrorCode memoryHeapRelease(
+		IMemoryHeap* memoryHeapIn) noexcept override final
 	{
-		// TODO: Check if buffer is currently in use? Lock?
-		
-		// Stop tracking object
-		D3D12Buffer* buffer = reinterpret_cast<D3D12Buffer*>(bufferIn);
-		mResidencyManager.EndTrackingObject(&buffer->heapManagedObject);
+		// TODO: Check if any buffers still exist? Lock?
 
-		zgDelete<IBuffer>(mAllocator, buffer);
+		// Stop tracking
+		D3D12MemoryHeap* heap = reinterpret_cast<D3D12MemoryHeap*>(memoryHeapIn);
+		mResidencyManager.EndTrackingObject(&heap->managedObject);
+
+		zgDelete<IMemoryHeap>(mAllocator, heap);
 		return ZG_SUCCESS;
 	}
 
@@ -650,7 +585,7 @@ public:
 		uint64_t numBytes) noexcept override final
 	{
 		D3D12Buffer& dstBuffer = *reinterpret_cast<D3D12Buffer*>(dstBufferInterface);
-		if (dstBuffer.memoryType != ZG_BUFFER_MEMORY_TYPE_UPLOAD) return ZG_ERROR_INVALID_ARGUMENT;
+		if (dstBuffer.memoryHeap->memoryType != ZG_MEMORY_TYPE_UPLOAD) return ZG_ERROR_INVALID_ARGUMENT;
 
 		// Not gonna read from buffer
 		D3D12_RANGE readRange = {};

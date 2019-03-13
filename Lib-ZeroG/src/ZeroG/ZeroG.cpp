@@ -216,26 +216,50 @@ ZG_DLL_API ZgErrorCode zgPipelineRenderingGetSignature(
 // Memory
 // ------------------------------------------------------------------------------------------------
 
-ZG_DLL_API ZgErrorCode zgBufferCreate(
+ZG_DLL_API ZgErrorCode zgMemoryHeapCreate(
 	ZgContext* context,
-	ZgBuffer** bufferOut,
-	const ZgBufferCreateInfo* createInfo)
+	ZgMemoryHeap** memoryHeapOut,
+	const ZgMemoryHeapCreateInfo* createInfo)
 {
 	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
 	if (createInfo->sizeInBytes == 0) return ZG_ERROR_INVALID_ARGUMENT;
 
+	zg::IMemoryHeap* memoryHeap = nullptr;
+	ZgErrorCode res = context->context->memoryHeapCreate(&memoryHeap, *createInfo);
+	if (res != ZG_SUCCESS) return res;
+	*memoryHeapOut = reinterpret_cast<ZgMemoryHeap*>(memoryHeap);
+	return ZG_SUCCESS;
+}
+
+ZG_DLL_API ZgErrorCode zgMemoryHeapRelease(
+	ZgContext* context,
+	ZgMemoryHeap* memoryHeap)
+{
+	return context->context->memoryHeapRelease(reinterpret_cast<zg::IMemoryHeap*>(memoryHeap));
+}
+
+ZG_DLL_API ZgErrorCode zgMemoryHeapBufferCreate(
+	ZgMemoryHeap* memoryHeapIn,
+	ZgBuffer** bufferOut,
+	const ZgBufferCreateInfo* createInfo)
+{
+	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if ((createInfo->offsetInBytes % 65536) != 0) return ZG_ERROR_INVALID_ARGUMENT; // 64KiB alignment
+
+	zg::IMemoryHeap* memoryHeap = reinterpret_cast<zg::IMemoryHeap*>(memoryHeapIn);
 	zg::IBuffer* buffer = nullptr;
-	ZgErrorCode res = context->context->bufferCreate(&buffer, *createInfo);
+	ZgErrorCode res = memoryHeap->bufferCreate(&buffer, *createInfo);
 	if (res != ZG_SUCCESS) return res;
 	*bufferOut = reinterpret_cast<ZgBuffer*>(buffer);
 	return ZG_SUCCESS;
 }
 
-ZG_DLL_API ZgErrorCode zgBufferRelease(
-	ZgContext* context,
+ZG_DLL_API ZgErrorCode zgMemoryHeapBufferRelease(
+	ZgMemoryHeap* memoryHeapIn,
 	ZgBuffer* buffer)
 {
-	return context->context->bufferRelease(reinterpret_cast<zg::IBuffer*>(buffer));
+	zg::IMemoryHeap* memoryHeap = reinterpret_cast<zg::IMemoryHeap*>(memoryHeapIn);
+	return memoryHeap->bufferRelease(reinterpret_cast<zg::IBuffer*>(buffer));
 }
 
 ZG_DLL_API ZgErrorCode zgBufferMemcpyTo(
