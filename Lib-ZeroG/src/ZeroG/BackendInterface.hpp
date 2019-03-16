@@ -30,7 +30,7 @@ public:
 	virtual ~IPipelineRendering() noexcept {}
 };
 
-// Memory interface
+// Memory
 // ------------------------------------------------------------------------------------------------
 
 class IBuffer {
@@ -48,6 +48,30 @@ public:
 
 	virtual ZgErrorCode bufferRelease(
 		IBuffer* buffer) noexcept = 0;
+};
+
+// Textures
+// ------------------------------------------------------------------------------------------------
+
+class ITexture2D {
+public:
+	virtual ~ITexture2D() noexcept {}
+};
+
+class ITextureHeap {
+public:
+	virtual ~ITextureHeap() noexcept {}
+
+	virtual ZgErrorCode texture2DGetAllocationInfo(
+		ZgTexture2DAllocationInfo& allocationInfoOut,
+		const ZgTexture2DCreateInfo& createInfo) noexcept = 0;
+
+	virtual ZgErrorCode texture2DCreate(
+		ITexture2D** textureOut,
+		const ZgTexture2DCreateInfo& createInfo) noexcept = 0;
+
+	virtual ZgErrorCode texture2DRelease(
+		ITexture2D* texture) noexcept = 0;
 };
 
 // Framebuffer
@@ -176,6 +200,16 @@ public:
 		uint64_t bufferOffsetBytes,
 		const uint8_t* srcMemory,
 		uint64_t numBytes) noexcept = 0;
+
+	// Texture methods
+	// --------------------------------------------------------------------------------------------
+
+	virtual ZgErrorCode textureHeapCreate(
+		ITextureHeap** textureHeapOut,
+		const ZgTextureHeapCreateInfo& createInfo) noexcept = 0;
+
+	virtual ZgErrorCode textureHeapRelease(
+		ITextureHeap* textureHeap) noexcept = 0;
 };
 
 } // namespace zg

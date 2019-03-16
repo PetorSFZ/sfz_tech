@@ -27,6 +27,7 @@
 #include "ZeroG/d3d12/D3D12Framebuffer.hpp"
 #include "ZeroG/d3d12/D3D12Memory.hpp"
 #include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
+#include "ZeroG/d3d12/D3D12Textures.hpp"
 #include "ZeroG/util/CpuAllocation.hpp"
 
 namespace zg {
@@ -35,17 +36,6 @@ namespace zg {
 // ------------------------------------------------------------------------------------------------
 
 constexpr auto NUM_SWAP_CHAIN_BUFFERS = 3;
-
-static D3D12_HEAP_TYPE bufferMemoryTypeToD3D12HeapType(ZgMemoryType type) noexcept
-{
-	switch (type) {
-	case ZG_MEMORY_TYPE_UPLOAD: return D3D12_HEAP_TYPE_UPLOAD;
-	case ZG_MEMORY_TYPE_DOWNLOAD: return D3D12_HEAP_TYPE_READBACK;
-	case ZG_MEMORY_TYPE_DEVICE: return D3D12_HEAP_TYPE_DEFAULT;
-	}
-	// TODO: Handle error (undefined)
-	return D3D12_HEAP_TYPE_DEFAULT;
-}
 
 // D3D12 Context implementation
 // ------------------------------------------------------------------------------------------------
@@ -609,6 +599,36 @@ public:
 		// Unmap buffer
 		dstBuffer.resource->Unmap(0, nullptr);// &writeRange);
 
+		return ZG_SUCCESS;
+	}
+
+	// Texture methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgErrorCode textureHeapCreate(
+		ITextureHeap** textureHeapOut,
+		const ZgTextureHeapCreateInfo& createInfo) noexcept override final
+	{
+		std::lock_guard<std::mutex> lock(mContextMutex);
+		return createTextureHeap(
+			mLog,
+			mAllocator,
+			*mDevice.Get(),
+			mResidencyManager,
+			reinterpret_cast<D3D12TextureHeap**>(textureHeapOut),
+			createInfo);
+	}
+
+	ZgErrorCode textureHeapRelease(
+		ITextureHeap* textureHeapIn) noexcept override final
+	{
+		// TODO: Check if any textures still exist? Lock?
+
+		// Stop tracking
+		D3D12TextureHeap* heap = reinterpret_cast<D3D12TextureHeap*>(textureHeapIn);
+		mResidencyManager.EndTrackingObject(&heap->managedObject);
+
+		zgDelete<ITextureHeap>(mAllocator, heap);
 		return ZG_SUCCESS;
 	}
 

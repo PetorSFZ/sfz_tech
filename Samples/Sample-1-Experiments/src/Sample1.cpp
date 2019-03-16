@@ -252,6 +252,31 @@ int main(int argc, char* argv[])
 		constBufferMemoryHeapDevice, &offsets, sizeof(Vector), 256);
 
 
+	// Create texture heap
+	ZgTextureHeapCreateInfo textureHeapInfo = {};
+	textureHeapInfo.sizeInBytes = 64 * 1024 * 1024; // 64 MiB should be enough for anyone
+
+	ZgTextureHeap* textureHeap = nullptr;
+	CHECK_ZG zgTextureHeapCreate(ctx.mContext, &textureHeap, &textureHeapInfo);
+
+	// Create a texture
+	ZgTexture2DCreateInfo textureCreateInfo = {};
+	textureCreateInfo.format = ZG_TEXTURE_2D_FORMAT_RGBA_U8;
+	textureCreateInfo.normalized = ZG_FALSE;
+	textureCreateInfo.width = 1024;
+	textureCreateInfo.height = 1024;
+
+	ZgTexture2DAllocationInfo textureAllocInfo = {};
+	CHECK_ZG zgTextureHeapTexture2DGetAllocationInfo(
+		textureHeap, &textureAllocInfo, &textureCreateInfo);
+	
+	textureCreateInfo.offsetInBytes = 0;
+	textureCreateInfo.sizeInBytes = textureAllocInfo.sizeInBytes;
+
+	ZgTexture2D* texture = nullptr;
+	CHECK_ZG zgTextureHeapTexture2DCreate(textureHeap, &texture, &textureCreateInfo);
+
+
 	// Run our main loop
 	time_point previousTimePoint;
 	calculateDelta(previousTimePoint);
@@ -379,6 +404,9 @@ int main(int argc, char* argv[])
 	CHECK_ZG zgCommandQueueFlush(commandQueue);
 
 	// Release ZeroG resources
+	CHECK_ZG zgMemoryHeapTexture2DRelease(textureHeap, texture);
+	CHECK_ZG zgTextureHeapRelease(ctx.mContext, textureHeap);
+
 	CHECK_ZG zgMemoryHeapBufferRelease(cubeVertexMemoryHeapDevice, cubeVertexBufferDevice);
 	CHECK_ZG zgMemoryHeapRelease(ctx.mContext, cubeVertexMemoryHeapDevice);
 

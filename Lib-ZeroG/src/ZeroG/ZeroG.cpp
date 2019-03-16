@@ -276,6 +276,64 @@ ZG_DLL_API ZgErrorCode zgBufferMemcpyTo(
 		numBytes);
 }
 
+// Textures
+// ------------------------------------------------------------------------------------------------
+
+ZG_DLL_API ZgErrorCode zgTextureHeapCreate(
+	ZgContext* context,
+	ZgTextureHeap** textureHeapOut,
+	const ZgTextureHeapCreateInfo* createInfo)
+{
+	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->sizeInBytes == 0) return ZG_ERROR_INVALID_ARGUMENT;
+
+	zg::ITextureHeap* textureHeap = nullptr;
+	ZgErrorCode res = context->context->textureHeapCreate(&textureHeap, *createInfo);
+	if (res != ZG_SUCCESS) return res;
+	*textureHeapOut = reinterpret_cast<ZgTextureHeap*>(textureHeap);
+	return ZG_SUCCESS;
+}
+
+ZG_DLL_API ZgErrorCode zgTextureHeapRelease(
+	ZgContext* context,
+	ZgTextureHeap* textureHeap)
+{
+	return context->context->textureHeapRelease(reinterpret_cast<zg::ITextureHeap*>(textureHeap));
+}
+
+ZG_DLL_API ZgErrorCode zgTextureHeapTexture2DGetAllocationInfo(
+	ZgTextureHeap* textureHeapIn,
+	ZgTexture2DAllocationInfo* allocationInfoOut,
+	const ZgTexture2DCreateInfo* createInfo)
+{
+	zg::ITextureHeap* textureHeap = reinterpret_cast<zg::ITextureHeap*>(textureHeapIn);
+	return textureHeap->texture2DGetAllocationInfo(*allocationInfoOut, *createInfo);
+}
+
+ZG_DLL_API ZgErrorCode zgTextureHeapTexture2DCreate(
+	ZgTextureHeap* textureHeapIn,
+	ZgTexture2D** textureOut,
+	const ZgTexture2DCreateInfo* createInfo)
+{
+	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	//if ((createInfo->offsetInBytes % 65536) != 0) return ZG_ERROR_INVALID_ARGUMENT; // 64KiB alignment
+
+	zg::ITextureHeap* textureHeap = reinterpret_cast<zg::ITextureHeap*>(textureHeapIn);
+	zg::ITexture2D* texture = nullptr;
+	ZgErrorCode res = textureHeap->texture2DCreate(&texture, *createInfo);
+	if (res != ZG_SUCCESS) return res;
+	*textureOut = reinterpret_cast<ZgTexture2D*>(texture);
+	return ZG_SUCCESS;
+}
+
+ZG_DLL_API ZgErrorCode zgMemoryHeapTexture2DRelease(
+	ZgTextureHeap* textureHeapIn,
+	ZgTexture2D* texture)
+{
+	zg::ITextureHeap* textureHeap = reinterpret_cast<zg::ITextureHeap*>(textureHeapIn);
+	return textureHeap->texture2DRelease(reinterpret_cast<zg::ITexture2D*>(texture));
+}
+
 // Command queue
 // ------------------------------------------------------------------------------------------------
 

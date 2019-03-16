@@ -69,6 +69,12 @@ ZG_HANDLE(ZgMemoryHeap);
 // A handle representing a buffer
 ZG_HANDLE(ZgBuffer);
 
+// A handle representing a memory heap for textures
+ZG_HANDLE(ZgTextureHeap);
+
+// A handle representing a 2-dimensional texture
+ZG_HANDLE(ZgTexture2D);
+
 // A handle representing a framebuffer
 ZG_HANDLE(ZgFramebuffer);
 
@@ -509,6 +515,85 @@ ZG_DLL_API ZgErrorCode zgBufferMemcpyTo(
 	uint64_t bufferOffsetBytes,
 	const void* srcMemory,
 	uint64_t numBytes);
+
+// Textures
+// ------------------------------------------------------------------------------------------------
+
+struct ZgTextureHeapCreateInfo {
+
+	// The size in bytes of the heap
+	uint64_t sizeInBytes;
+};
+typedef struct ZgTextureHeapCreateInfo ZgTextureHeapCreateInfo;
+
+ZG_DLL_API ZgErrorCode zgTextureHeapCreate(
+	ZgContext* context,
+	ZgTextureHeap** textureHeapOut,
+	const ZgTextureHeapCreateInfo* createInfo);
+
+ZG_DLL_API ZgErrorCode zgTextureHeapRelease(
+	ZgContext* context,
+	ZgTextureHeap* textureHeap);
+
+enum ZgTexture2DFormatEnum {
+	ZG_TEXTURE_2D_FORMAT_UNDEFINED = 0,
+
+	ZG_TEXTURE_2D_FORMAT_R_U8,
+	ZG_TEXTURE_2D_FORMAT_RG_U8,
+	ZG_TEXTURE_2D_FORMAT_RGBA_U8
+};
+typedef uint32_t ZgTexture2DFormat;
+
+struct ZgTexture2DCreateInfo {
+
+	// The format of the texture
+	ZgTexture2DFormat format;
+
+	// Whether the texture is normalized or not.
+	//
+	// A normalized texture will normalize the contained value to a range of [0.0, 1.0] when read
+	// in the shader.
+	ZgBool normalized;
+
+	// The dimensions of the texture
+	uint32_t width;
+	uint32_t height;
+	
+	// The offset from the start of the texture heap to create the buffer at.
+	// Note that the offset must be a multiple of the alignment of the texture, which can be
+	// acquired by zgTextureHeapTexture2DGetAllocationInfo(). Do not need to be set before calling
+	// this function.
+	uint64_t offsetInBytes;
+
+	// The size in bytes of the texture
+	// Note that this can only be learned by calling zgTextureHeapTexture2DGetAllocationInfo(). Do
+	// not need to be set before calling this function.
+	uint64_t sizeInBytes;
+};
+
+struct ZgTexture2DAllocationInfo {
+	
+	// The size of the texture in bytes
+	uint32_t sizeInBytes;
+	
+	// The alignment of the texture in bytes
+	uint32_t alignmentInBytes;
+};
+
+// Gets the allocation info of a Texture2D specified by a ZgTexture2DCreateInfo.
+ZG_DLL_API ZgErrorCode zgTextureHeapTexture2DGetAllocationInfo(
+	ZgTextureHeap* textureHeap,
+	ZgTexture2DAllocationInfo* allocationInfoOut,
+	const ZgTexture2DCreateInfo* createInfo);
+
+ZG_DLL_API ZgErrorCode zgTextureHeapTexture2DCreate(
+	ZgTextureHeap* textureHeap,
+	ZgTexture2D** textureOut,
+	const ZgTexture2DCreateInfo* createInfo);
+
+ZG_DLL_API ZgErrorCode zgMemoryHeapTexture2DRelease(
+	ZgTextureHeap* textureHeap,
+	ZgTexture2D* texture);
 
 // Command queue
 // ------------------------------------------------------------------------------------------------
