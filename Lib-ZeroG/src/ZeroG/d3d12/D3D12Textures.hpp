@@ -90,6 +90,7 @@ public:
 
 	D3D12TextureHeap* textureHeap = nullptr;
 	ComPtr<ID3D12Resource> resource;
+	DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
 };
 
 

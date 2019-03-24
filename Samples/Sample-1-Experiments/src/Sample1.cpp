@@ -212,6 +212,12 @@ int main(int argc, char* argv[])
 	pipelineInfo.numPushConstants = 1;
 	pipelineInfo.pushConstantRegisters[0] = 0;
 
+	pipelineInfo.numSamplers = 1;
+	pipelineInfo.samplers[0].samplingMode = ZG_SAMPLING_MODE_NEAREST;
+	pipelineInfo.samplers[0].wrappingModeU = ZG_WRAPPING_MODE_CLAMP;
+	pipelineInfo.samplers[0].wrappingModeV = ZG_WRAPPING_MODE_CLAMP;
+	pipelineInfo.samplers[0].mipLodBias = 0.0f;
+
 	ZgPipelineRendering* pipeline = nullptr;
 	ZgPipelineRenderingSignature signature = {};
 	CHECK_ZG zgPipelineRenderingCreate(ctx.mContext, &pipeline, &signature, &pipelineInfo);
@@ -345,11 +351,14 @@ int main(int argc, char* argv[])
 		CHECK_ZG zgCommandListSetPipelineRendering(commandList, pipeline);
 
 		// Set pipeline bindings
-		ZgConstantBufferBindings constBufferBindings = {};
-		constBufferBindings.numBindings = 1;
-		constBufferBindings.bindings[0].shaderRegister = 1;
-		constBufferBindings.bindings[0].buffer = constBufferDevice;
-		CHECK_ZG zgCommandListBindConstantBuffers(commandList, &constBufferBindings);
+		ZgPipelineBindings bindings = {};
+		bindings.numConstantBuffers = 1;
+		bindings.constantBuffers[0].shaderRegister = 1;
+		bindings.constantBuffers[0].buffer = constBufferDevice;
+		bindings.numTextures = 1;
+		bindings.textures[0].textureRegister = 0;
+		bindings.textures[0].texture = texture;
+		CHECK_ZG zgCommandListSetPipelineBindings(commandList, &bindings);
 
 		// Lambda to batch a call to render a cube with a specific transform
 		auto batchCubeRender = [&](Vector offset) {

@@ -344,11 +344,52 @@ struct ZgVertexAttribute {
 };
 typedef struct ZgVertexAttribute ZgVertexAttribute;
 
+// Sample mode of a sampler
+enum ZgSamplingModeEnum {
+	ZG_SAMPLING_MODE_UNDEFINED = 0,
+
+	ZG_SAMPLING_MODE_NEAREST, // D3D12_FILTER_MIN_MAG_MIP_POINT
+	ZG_SAMPLING_MODE_TRILINEAR, // D3D12_FILTER_MIN_MAG_MIP_LINEAR
+	ZG_SAMPLING_MODE_ANISOTROPIC, // D3D12_FILTER_ANISOTROPIC
+};
+typedef uint32_t ZgSamplingMode;
+
+// Wrapping mode of a sampler
+enum ZgWrappingModeEnum {
+	ZG_WRAPPING_MODE_UNDEFINED = 0,
+
+	ZG_WRAPPING_MODE_CLAMP, // D3D12_TEXTURE_ADDRESS_MODE_CLAMP
+	ZG_WRAPPING_MODE_REPEAT, // D3D12_TEXTURE_ADDRESS_MODE_WRAP
+};
+typedef uint32_t ZgWrappingMode;
+
+// A struct defining a texture sampler
+struct ZgSampler {
+
+	// The sampling mode of the sampler
+	ZgSamplingMode samplingMode;
+
+	// The wrapping mode of the sampler (u == x, v == y)
+	ZgWrappingMode wrappingModeU;
+	ZgWrappingMode wrappingModeV;
+
+	// Offset from the calculated mipmap level. E.g., if mipmap level 2 is calculated in the shader
+	// and the lod bias is -1, then level 1 will be used instead. Level 0 is the highest resolution
+	// texture.
+	float mipLodBias;
+};
+typedef struct ZgSampler ZgSampler;
+
 // The maximum number of vertex attributes allowed as input to a vertex shader
 static const uint32_t ZG_MAX_NUM_VERTEX_ATTRIBUTES = 8;
 
 // The maximum number of constant buffers allowed on a single pipeline.
 static const uint32_t ZG_MAX_NUM_CONSTANT_BUFFERS = 16;
+
+static const uint32_t ZG_MAX_NUM_TEXTURES = 16;
+
+// The maximum number of samplers allowed on a single pipeline
+static const uint32_t ZG_MAX_NUM_SAMPLERS = 8;
 
 // The information required to create a rendering pipeline
 struct ZgPipelineRenderingCreateInfo {
@@ -381,10 +422,18 @@ struct ZgPipelineRenderingCreateInfo {
 	// if unsure.
 	uint32_t numPushConstants;
 	uint32_t pushConstantRegisters[ZG_MAX_NUM_CONSTANT_BUFFERS];
+
+	// A list of samplers used by the pipeline
+	//
+	// Note: For D3D12 the first sampler in the array (0th) corresponds with the 0th sampler
+	//       register, etc. E.g. meaning if you have three samplers, they need to have the
+	//       registers 0, 1, 2.
+	uint32_t numSamplers;
+	ZgSampler samplers[ZG_MAX_NUM_SAMPLERS];
 };
 typedef struct ZgPipelineRenderingCreateInfo ZgPipelineRenderingCreateInfo;
 
-struct ZgConstantBuffer {
+struct ZgConstantBufferDesc {
 
 	// Which register this buffer corresponds to in the shader. In D3D12 this is the "register"
 	// keyword, i.e. a value of 0 would mean "register(b0)". In GLSL this corresponds to the
@@ -412,7 +461,20 @@ struct ZgConstantBuffer {
 	// Whether the buffer is accessed by the pixel shader or not
 	ZgBool pixelAccess;
 };
-typedef struct ZgConstantBuffer ZgConstantBuffer;
+typedef struct ZgConstantBufferDesc ZgConstantBufferDesc;
+
+struct ZgTextureDesc {
+
+	// Which register this texture corresponds to in the shader.
+	uint32_t textureRegister;
+
+	// Whether the texture is accessed by the vertex shader or not
+	ZgBool vertexAccess;
+
+	// Whether the texture is accessed by the pixel shader or not
+	ZgBool pixelAccess;
+};
+typedef struct ZgTextureDesc ZgTextureDesc;
 
 // A struct representing the signature of a rendering pipeline
 //
@@ -431,7 +493,11 @@ struct ZgPipelineRenderingSignature {
 
 	// The constant buffers
 	uint32_t numConstantBuffers;
-	ZgConstantBuffer constantBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
+	ZgConstantBufferDesc constantBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
+
+	// The textures
+	uint32_t numTextures;
+	ZgTextureDesc textures[ZG_MAX_NUM_TEXTURES];
 };
 typedef struct ZgPipelineRenderingSignature ZgPipelineRenderingSignature;
 
@@ -632,16 +698,26 @@ struct ZgConstantBufferBinding {
 };
 typedef struct ZgConstantBufferBinding ZgConstantBufferBinding;
 
-struct ZgConstantBufferBindings {
-	
-	uint32_t numBindings;
-	ZgConstantBufferBinding bindings[ZG_MAX_NUM_CONSTANT_BUFFERS];
+struct ZgTextureBinding {
+	uint32_t textureRegister;
+	ZgTexture2D* texture;
 };
-typedef struct ZgConstantBufferBindings ZgConstantBufferBindings;
 
-ZG_DLL_API ZgErrorCode zgCommandListBindConstantBuffers(
+struct ZgPipelineBindings {
+
+	// The constant buffers to bind
+	uint32_t numConstantBuffers;
+	ZgConstantBufferBinding constantBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
+
+	// The textures to bind
+	uint32_t numTextures;
+	ZgTextureBinding textures[ZG_MAX_NUM_TEXTURES];
+};
+typedef struct ZgPipelineBindings ZgPipelineBindings;
+
+ZG_DLL_API ZgErrorCode zgCommandListSetPipelineBindings(
 	ZgCommandList* commandList,
-	const ZgConstantBufferBindings* bindings);
+	const ZgPipelineBindings* bindings);
 
 ZG_DLL_API ZgErrorCode zgCommandListSetPipelineRendering(
 	ZgCommandList* commandList,

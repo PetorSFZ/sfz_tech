@@ -101,8 +101,8 @@ public:
 		const void* data,
 		uint32_t dataSizeInBytes) noexcept = 0;
 
-	virtual ZgErrorCode bindConstantBuffers(
-		const ZgConstantBufferBindings& bindings) noexcept = 0;
+	virtual ZgErrorCode setPipelineBindings(
+		const ZgPipelineBindings& bindings) noexcept = 0;
 
 	virtual ZgErrorCode setPipelineRendering(
 		IPipelineRendering* pipeline) noexcept = 0;

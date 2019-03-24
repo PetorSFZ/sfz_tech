@@ -277,6 +277,27 @@ static ZgVertexAttributeType vertexReflectionToAttribute(
 	return ZG_VERTEX_ATTRIBUTE_UNDEFINED;
 }
 
+static D3D12_FILTER samplingModeToD3D12(ZgSamplingMode samplingMode) noexcept
+{
+	switch (samplingMode) {
+	case ZG_SAMPLING_MODE_NEAREST: return D3D12_FILTER_MIN_MAG_MIP_POINT;
+	case ZG_SAMPLING_MODE_TRILINEAR: return D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	case ZG_SAMPLING_MODE_ANISOTROPIC: return D3D12_FILTER_ANISOTROPIC;
+	}
+	ZG_ASSERT(false);
+	return D3D12_FILTER_MIN_MAG_MIP_POINT;
+}
+
+static D3D12_TEXTURE_ADDRESS_MODE wrappingModeToD3D12(ZgWrappingMode wrappingMode) noexcept
+{
+	switch (wrappingMode) {
+	case ZG_WRAPPING_MODE_CLAMP: return D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	case ZG_WRAPPING_MODE_REPEAT: return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	}
+	ZG_ASSERT(false);
+	return D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+}
+
 static void printfAppend(char*& str, uint32_t& bytesLeft, const char* format, ...) noexcept
 {
 	va_list args;
@@ -325,15 +346,27 @@ static void logPipelineInfo(
 	// Print constant buffers
 	printfAppend(tmpStr, bytesLeft, "\nConstant buffers (%u):\n", signature.numConstantBuffers);
 	for (uint32_t i = 0; i < signature.numConstantBuffers; i++) {
-		const ZgConstantBuffer& cbuffer = signature.constantBuffers[i];
+		const ZgConstantBufferDesc& cbuffer = signature.constantBuffers[i];
 		printfAppend(tmpStr, bytesLeft,
 			" - Register: %u -- Size: %u bytes -- Push constant: %s -- Vertex shader: %s -- Pixel shader: %s\n",
 			cbuffer.shaderRegister,
 			cbuffer.sizeInBytes,
 			cbuffer.pushConstant ? "YES" : "NO",
-			cbuffer.vertexAccess ? "YES" : "NO",
-			cbuffer.pixelAccess ? "YES" : "NO");
+			cbuffer.vertexAccess == ZG_TRUE ? "YES" : "NO",
+			cbuffer.pixelAccess == ZG_TRUE ? "YES" : "NO");
 	}
+
+	// Print textures
+	printfAppend(tmpStr, bytesLeft, "\nTextures (%u):\n", signature.numTextures);
+	for (uint32_t i = 0; i < signature.numTextures; i++) {
+		const ZgTextureDesc& texture = signature.textures[i];
+		printfAppend(tmpStr, bytesLeft,
+			" - Register: %u -- Vertex shader: %s -- Pixel shader: %s\n",
+			texture.textureRegister,
+			texture.vertexAccess == ZG_TRUE ? "YES" : "NO",
+			texture.pixelAccess == ZG_TRUE ? "YES" : "NO");
+	}
+
 
 	// Log
 	ZG_INFO(logger, "%s", tmpStrOriginal);
@@ -473,7 +506,7 @@ ZgErrorCode createPipelineRendering(
 	}
 
 	// Build up list of all constant buffers
-	ZgConstantBuffer constBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
+	ZgConstantBufferDesc constBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
 	uint32_t numConstBuffers = 0;
 
 	// First add all constant buffers from vertex shader
@@ -481,13 +514,8 @@ ZgErrorCode createPipelineRendering(
 		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
 		CHECK_D3D12(logger) vertexReflection->GetResourceBindingDesc(i, &resDesc);
 
-		// Error out if not a constant buffer
-		// TODO: Change to "continue" once other types of resources are implemented
-		if (resDesc.Type != D3D_SIT_CBUFFER) {
-			ZG_ERROR(logger, "Vertex shader resource %s (register = %u) is not a constant buffer",
-				resDesc.Name, resDesc.BindPoint);
-			return ZG_ERROR_UNIMPLEMENTED;
-		}
+		// Continue if not a constant buffer
+		if (resDesc.Type != D3D_SIT_CBUFFER) continue;
 
 		// Error out if buffers uses more than one register
 		// TODO: This should probably be relaxed
@@ -518,7 +546,7 @@ ZgErrorCode createPipelineRendering(
 		CHECK_D3D12(logger) cbufferReflection->GetDesc(&cbufferDesc);
 
 		// Add slot for buffer in array
-		ZgConstantBuffer& cbuffer = constBuffers[numConstBuffers];
+		ZgConstantBufferDesc& cbuffer = constBuffers[numConstBuffers];
 		numConstBuffers += 1;
 
 		// Set constant buffer members
@@ -532,13 +560,8 @@ ZgErrorCode createPipelineRendering(
 		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
 		CHECK_D3D12(logger) pixelReflection->GetResourceBindingDesc(i, &resDesc);
 
-		// Error out if not a constant buffer
-		// TODO: Change to "continue" once other types of resources are implemented
-		if (resDesc.Type != D3D_SIT_CBUFFER) {
-			ZG_ERROR(logger, "Pixel shader resource %s (register = %u) is not a constant buffer",
-				resDesc.Name, resDesc.BindPoint);
-			return ZG_ERROR_UNIMPLEMENTED;
-		}
+		// Continue if not a constant buffer
+		if (resDesc.Type != D3D_SIT_CBUFFER) continue;
 
 		// See if buffer was already found/used by vertex shader
 		uint32_t vertexCBufferIdx = ~0u;
@@ -585,7 +608,7 @@ ZgErrorCode createPipelineRendering(
 		CHECK_D3D12(logger) cbufferReflection->GetDesc(&cbufferDesc);
 
 		// Add slot for buffer in array
-		ZgConstantBuffer& cbuffer = constBuffers[numConstBuffers];
+		ZgConstantBufferDesc& cbuffer = constBuffers[numConstBuffers];
 		numConstBuffers += 1;
 
 		// Set constant buffer members
@@ -596,14 +619,14 @@ ZgErrorCode createPipelineRendering(
 
 	// Sort buffers by register
 	std::sort(constBuffers, constBuffers + numConstBuffers,
-		[](const ZgConstantBuffer& lhs, const ZgConstantBuffer& rhs) {
+		[](const ZgConstantBufferDesc& lhs, const ZgConstantBufferDesc& rhs) {
 		return lhs.shaderRegister < rhs.shaderRegister;
 	});
 
 	// Go through buffers and check if any of them are marked as push constants
 	bool pushConstantRegisterUsed[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
 	for (uint32_t i = 0; i < numConstBuffers; i++) {
-		ZgConstantBuffer& cbuffer = constBuffers[i];
+		ZgConstantBufferDesc& cbuffer = constBuffers[i];
 		for (uint32_t j = 0; j < createInfo.numPushConstants; j++) {
 			if (cbuffer.shaderRegister == createInfo.pushConstantRegisters[j]) {
 				if (pushConstantRegisterUsed[j]) {
@@ -632,7 +655,167 @@ ZgErrorCode createPipelineRendering(
 	for (uint32_t i = 0; i < numConstBuffers; i++) {
 		signatureOut->constantBuffers[i] = constBuffers[i];
 	}
-	
+
+
+	// Gather all textures
+	ZgTextureDesc textureDescs[ZG_MAX_NUM_TEXTURES] = {};
+	uint32_t numTextures = 0;
+
+	// First add all textures from vertex shader
+	for (uint32_t i = 0; i < vertexDesc.BoundResources; i++) {
+		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
+		CHECK_D3D12(logger) vertexReflection->GetResourceBindingDesc(i, &resDesc);
+
+		// Continue if not a texture
+		if (resDesc.Type != D3D_SIT_TEXTURE) continue;
+
+		// Error out if texture uses more than one register
+		// TODO: This should probably be relaxed
+		if (resDesc.BindCount != 1) {
+			ZG_ERROR(logger, "Multiple registers for a single resource not allowed");
+			return ZG_ERROR_UNIMPLEMENTED;
+		}
+
+		// Error out if we have too many textures
+		if (numTextures >= ZG_MAX_NUM_TEXTURES) {
+			ZG_ERROR(logger, "Too many textures, only %u allowed", ZG_MAX_NUM_TEXTURES);
+			return ZG_ERROR_SHADER_COMPILE_ERROR;
+		}
+
+		// Error out if another register space than 0 is used
+		if (resDesc.Space != 0) {
+			ZG_ERROR(logger,
+				"Vertex shader resource %s (register = %u) uses register space %u, only 0 is allowed",
+				resDesc.Name, resDesc.BindPoint, resDesc.Space);
+			return ZG_ERROR_SHADER_COMPILE_ERROR;
+		}
+
+		// Add slot for texture in array
+		ZgTextureDesc& texDesc = textureDescs[numTextures];
+		numTextures += 1;
+
+		// Set texture desc members
+		texDesc.textureRegister = resDesc.BindPoint;
+		texDesc.vertexAccess = ZG_TRUE;
+	}
+
+	// Then add textures from pixel shader
+	for (uint32_t i = 0; i < pixelDesc.BoundResources; i++) {
+		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
+		CHECK_D3D12(logger) pixelReflection->GetResourceBindingDesc(i, &resDesc);
+
+		// Continue if not a texture
+		if (resDesc.Type != D3D_SIT_TEXTURE) continue;
+
+		// See if texture was already found/used by vertex shader
+		uint32_t vertexTextureIdx = ~0u;
+		for (uint32_t j = 0; j < numTextures; j++) {
+			if (textureDescs[j].textureRegister == resDesc.BindPoint) {
+				vertexTextureIdx = j;
+				break;
+			}
+		}
+
+		// If texture was already found, mark it as accessed by pixel shader and continue to next
+		// iteration
+		if (vertexTextureIdx != ~0u) {
+			textureDescs[vertexTextureIdx].pixelAccess = ZG_TRUE;
+			continue;
+		}
+
+		// Error out if texture uses more than one register
+		// TODO: This should probably be relaxed
+		if (resDesc.BindCount != 1) {
+			ZG_ERROR(logger, "Multiple registers for a single resource not allowed");
+			return ZG_ERROR_UNIMPLEMENTED;
+		}
+
+		// Error out if we have too many textures
+		if (numTextures >= ZG_MAX_NUM_TEXTURES) {
+			ZG_ERROR(logger, "Too many textures, only %u allowed", ZG_MAX_NUM_TEXTURES);
+			return ZG_ERROR_SHADER_COMPILE_ERROR;
+		}
+
+		// Error out if another register space than 0 is used
+		if (resDesc.Space != 0) {
+			ZG_ERROR(logger,
+				"Vertex shader resource %s (register = %u) uses register space %u, only 0 is allowed",
+				resDesc.Name, resDesc.BindPoint, resDesc.Space);
+			return ZG_ERROR_SHADER_COMPILE_ERROR;
+		}
+
+		// Add slot for texture in array
+		ZgTextureDesc& texDesc = textureDescs[numTextures];
+		numTextures += 1;
+
+		// Set texture desc members
+		texDesc.textureRegister = resDesc.BindPoint;
+		texDesc.pixelAccess = ZG_TRUE;
+	}
+
+	// Sort texture descs by register
+	std::sort(textureDescs, textureDescs + numTextures,
+		[](const ZgTextureDesc& lhs, const ZgTextureDesc& rhs) {
+		return lhs.textureRegister < rhs.textureRegister;
+	});
+
+	// Copy texture information to signature
+	signatureOut->numTextures = numTextures;
+	for (uint32_t i = 0; i < numTextures; i++) {
+		signatureOut->textures[i] = textureDescs[i];
+	}
+
+
+	// Check that all necessary sampler data is available
+	bool samplerSet[ZG_MAX_NUM_SAMPLERS] = {};
+	for (uint32_t i = 0; i < vertexDesc.BoundResources; i++) {
+		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
+		CHECK_D3D12(logger) vertexReflection->GetResourceBindingDesc(i, &resDesc);
+
+		// Continue if not a sampler
+		if (resDesc.Type != D3D_SIT_SAMPLER) continue;
+
+		// Error out if sampler has invalid register
+		if (resDesc.BindPoint >= createInfo.numSamplers) {
+			ZG_ERROR(logger, "Sampler %s is bound to register %u, num specified samplers is %u",
+				resDesc.Name, resDesc.BindPoint, createInfo.numSamplers);
+			return ZG_ERROR_INVALID_ARGUMENT;
+		
+		}
+		ZG_ASSERT(resDesc.BindCount == 1);
+
+		// Mark sampler as found
+		samplerSet[resDesc.BindPoint] = true;
+	}
+	for (uint32_t i = 0; i < pixelDesc.BoundResources; i++) {
+		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
+		CHECK_D3D12(logger) pixelReflection->GetResourceBindingDesc(i, &resDesc);
+
+		// Continue if not a sampler
+		if (resDesc.Type != D3D_SIT_SAMPLER) continue;
+
+		// Error out if sampler has invalid register
+		if (resDesc.BindPoint >= createInfo.numSamplers) {
+			ZG_ERROR(logger, "Sampler %s is bound to register %u, num specified samplers is %u",
+				resDesc.Name, resDesc.BindPoint, createInfo.numSamplers);
+			return ZG_ERROR_INVALID_ARGUMENT;
+
+		}
+		ZG_ASSERT(resDesc.BindCount == 1);
+
+		// Mark sampler as found
+		samplerSet[resDesc.BindPoint] = true;
+	}
+	for (uint32_t i = 0; i < createInfo.numSamplers; i++) {
+		if (!samplerSet[i]) {
+			ZG_ERROR(logger,
+				"%u samplers were specified, however sampler %u is not used by the pipeline",
+				createInfo.numSamplers, i);
+			return ZG_ERROR_INVALID_ARGUMENT;
+		}
+	}
+
+
 	// Convert ZgVertexAttribute's to D3D12_INPUT_ELEMENT_DESC
 	// This is the "input layout"
 	D3D12_INPUT_ELEMENT_DESC attributes[ZG_MAX_NUM_VERTEX_ATTRIBUTES] = {};
@@ -657,7 +840,12 @@ ZgErrorCode createPipelineRendering(
 	// List of constant buffer mappings to be filled in when creating root signature
 	D3D12ConstantBufferMapping constBufferMappings[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
 	uint32_t numConstBufferMappings = 0;
-	uint32_t constBuffersParameterIndex = ~0u;
+	
+	// List of texture mappings to be filled in when creating root signature
+	D3D12TextureMapping texMappings[ZG_MAX_NUM_TEXTURES] = {};
+	uint32_t numTexMappings = 0;
+	
+	uint32_t dynamicBuffersParameterIndex = ~0u;
 
 	// Create root signature
 	ComPtr<ID3D12RootSignature> rootSignature;
@@ -674,7 +862,7 @@ ZgErrorCode createPipelineRendering(
 
 		// Add push constants
 		for (uint32_t i = 0; i < signatureOut->numConstantBuffers; i++) {
-			const ZgConstantBuffer& cbuffer = signatureOut->constantBuffers[i];
+			const ZgConstantBufferDesc& cbuffer = signatureOut->constantBuffers[i];
 			if (cbuffer.pushConstant == ZG_FALSE) continue;
 
 			// Get parameter index for the push constant
@@ -706,7 +894,7 @@ ZgErrorCode createPipelineRendering(
 		// Add dynamic constant buffers (non-push constants)
 		uint32_t dynamicConstBuffersFirstRegister = ~0u; // TODO: THIS IS PROBABLY BAD
 		for (uint32_t i = 0; i < signatureOut->numConstantBuffers; i++) {
-			const ZgConstantBuffer& cbuffer = signatureOut->constantBuffers[i];
+			const ZgConstantBufferDesc& cbuffer = signatureOut->constantBuffers[i];
 			if (cbuffer.pushConstant == ZG_TRUE) continue;
 
 			if (dynamicConstBuffersFirstRegister == ~0u) {
@@ -720,20 +908,59 @@ ZgErrorCode createPipelineRendering(
 			constBufferMappings[mappingIdx].tableOffset = mappingIdx;
 			constBufferMappings[mappingIdx].sizeInBytes = cbuffer.sizeInBytes;
 		}
-		constBuffersParameterIndex = numParameters;
-		numParameters += 1;
-		ZG_ASSERT(numParameters <= MAX_NUM_ROOT_PARAMETERS);
 
+		// Add texture mappings
+		uint32_t dynamicTexturesFirstRegister = ~0u; // TODO: THIS IS PROBABLY BAD
+		for (uint32_t i = 0; i < signatureOut->numTextures; i++) {
+			const ZgTextureDesc& texDesc = signatureOut->textures[i];
+			
+			if (dynamicTexturesFirstRegister == ~0u) {
+				dynamicTexturesFirstRegister = texDesc.textureRegister;
+			}
+
+			// Add to texture mappings
+			uint32_t mappingIdx = numTexMappings;
+			numTexMappings += 1;
+			texMappings[mappingIdx].textureRegister = texDesc.textureRegister;
+			texMappings[mappingIdx].tableOffset = mappingIdx + numConstBufferMappings;
+		}
+
+		// Index of the parameter containing the dynamic table
+		dynamicBuffersParameterIndex = numParameters;
+		ZG_ASSERT(numParameters < MAX_NUM_ROOT_PARAMETERS);
+		numParameters += 1;
+		
 		// TODO: Currently using the assumption that the shader register range is continuous,
 		//       which is probably not at all reasonable in practice
-		CD3DX12_DESCRIPTOR_RANGE1 constBufferRange;
-		constBufferRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, numConstBufferMappings,
+		CD3DX12_DESCRIPTOR_RANGE1 ranges[2] = {};
+		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, numConstBufferMappings,
 			dynamicConstBuffersFirstRegister);
-		parameters[constBuffersParameterIndex].InitAsDescriptorTable(1, &constBufferRange);
+		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, numTexMappings,
+			dynamicTexturesFirstRegister);
+		parameters[dynamicBuffersParameterIndex].InitAsDescriptorTable(2, ranges);
 
+		// Add static samplers
+		D3D12_STATIC_SAMPLER_DESC samplers[ZG_MAX_NUM_SAMPLERS] = {};
+		for (uint32_t i = 0; i < createInfo.numSamplers; i++) {
+
+			const ZgSampler& zgSampler = createInfo.samplers[i];
+			samplers[i].Filter = samplingModeToD3D12(zgSampler.samplingMode);
+			samplers[i].AddressU = wrappingModeToD3D12(zgSampler.wrappingModeU);
+			samplers[i].AddressV = wrappingModeToD3D12(zgSampler.wrappingModeV);
+			samplers[i].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+			samplers[i].MipLODBias = zgSampler.mipLodBias;
+			samplers[i].MaxAnisotropy = 16;
+			//samplers[i].ComparisonFunc;
+			samplers[i].BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+			samplers[i].MinLOD = 0.0f;
+			samplers[i].MaxLOD = D3D12_FLOAT32_MAX;
+			samplers[i].ShaderRegister = i;
+			samplers[i].RegisterSpace = 0;
+			samplers[i].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // TODO: Check this from reflection
+		}
 
 		CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC desc;
-		desc.Init_1_1(numParameters, parameters, 0, nullptr, flags);
+		desc.Init_1_1(numParameters, parameters, createInfo.numSamplers, samplers, flags);
 
 		// Serialize the root signature.
 		ComPtr<ID3DBlob> blob;
@@ -836,7 +1063,11 @@ ZgErrorCode createPipelineRendering(
 		pipeline->pushConstants[i] = pushConstantMappings[i];
 		pipeline->constBuffers[i] = constBufferMappings[i];
 	}
-	pipeline->constBuffersParameterIndex = constBuffersParameterIndex;
+	pipeline->numTextures = numTexMappings;
+	for (uint32_t i = 0; i < ZG_MAX_NUM_TEXTURES; i++) {
+		pipeline->textures[i] = texMappings[i];
+	}
+	pipeline->dynamicBuffersParameterIndex = dynamicBuffersParameterIndex;
 	pipeline->createInfo = createInfo;
 
 	// Return pipeline

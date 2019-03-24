@@ -72,8 +72,8 @@ public:
 		const void* data,
 		uint32_t dataSizeInBytes) noexcept override final;
 
-	ZgErrorCode bindConstantBuffers(
-		const ZgConstantBufferBindings& bindings) noexcept override final;
+	ZgErrorCode setPipelineBindings(
+		const ZgPipelineBindings& bindings) noexcept override final;
 
 	ZgErrorCode setPipelineRendering(
 		IPipelineRendering* pipeline) noexcept override final;

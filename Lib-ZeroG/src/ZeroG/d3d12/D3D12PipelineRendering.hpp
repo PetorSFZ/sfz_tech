@@ -41,6 +41,11 @@ struct D3D12ConstantBufferMapping {
 	uint32_t sizeInBytes = ~0u;
 };
 
+struct D3D12TextureMapping {
+	uint32_t textureRegister = ~0u;
+	uint32_t tableOffset = ~0u;
+};
+
 // D3D12 PipelineRendering
 // ------------------------------------------------------------------------------------------------
 
@@ -61,7 +66,9 @@ public:
 	D3D12PushConstantMapping pushConstants[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
 	uint32_t numConstantBuffers = 0;
 	D3D12ConstantBufferMapping constBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
-	uint32_t constBuffersParameterIndex = ~0u;
+	uint32_t numTextures = 0;
+	D3D12TextureMapping textures[ZG_MAX_NUM_TEXTURES] = {};
+	uint32_t dynamicBuffersParameterIndex = ~0u;
 	ZgPipelineRenderingCreateInfo createInfo = {}; // The info used to create the pipeline 
 };
 

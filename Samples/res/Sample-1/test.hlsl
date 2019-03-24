@@ -11,6 +11,10 @@ cbuffer AnotherCB : register(b1) {
 	float __padding2;
 };
 
+Texture2D texture : register(t0);
+
+SamplerState textureSampler : register(s0);
+
 struct VSInput {
 	float3 position : ATTRIBUTE_LOCATION_0;
 	float3 normal : ATTRIBUTE_LOCATION_1;
@@ -48,5 +52,6 @@ VSOutput VSMain(VSInput input)
 float4 PSMain(PSInput input) : SV_TARGET
 {
 	//return float4(1.0, 1.0, 1.0, 1.0);
-	return float4(input.normal, 1.0);
+	return float4(texture.Sample(textureSampler, input.texcoord).xyz, 1.0);
+	//return float4(input.normal, 1.0);
 }

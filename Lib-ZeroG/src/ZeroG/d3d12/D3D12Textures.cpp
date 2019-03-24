@@ -131,6 +131,7 @@ ZgErrorCode D3D12TextureHeap::texture2DCreate(
 	// Copy stuff
 	texture->textureHeap = this;
 	texture->resource = resource;
+	texture->format = desc.Format;
 
 	// Return texture
 	*textureOut = texture;
