@@ -41,7 +41,7 @@ using sfz::UniquePtr;
 struct UpdateableState final {
 	phCameraData cam;
 	LevelAssets dynamicAssets;
-	
+
 	DynArray<phRenderEntity> renderEntities;
 	DynArray<phSphereLight> dynamicSphereLights;
 };
@@ -50,6 +50,10 @@ struct ImguiControllers final {
 	bool useMouse = true;
 	bool useKeyboard = true;
 	int32_t controllerIndex = -1;
+};
+
+struct RenderSettings final {
+	vec4 clearColor = vec4(0.0f);
 };
 
 class GameLogic {
@@ -73,7 +77,7 @@ public:
 	// A hook called in DefaultGameUpdateable's render() function before rendering starts. Good
 	// place to fill the list of phRenderEntity's to render (state.renderEntities). Called even
 	// when console is active (in contrast to updateTick()).
-	virtual void preRenderHook(
+	virtual RenderSettings preRenderHook(
 		UpdateableState& state, const UpdateInfo& updateInfo, Renderer& renderer) = 0;
 
 	// Renders custom Imgui commands.

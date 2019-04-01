@@ -594,6 +594,7 @@ void phRemoveStaticScene(void)
 
 extern "C" PH_DLL_EXPORT
 void phBeginFrame(
+	const float* clearColor,
 	const phCameraData* camera,
 	const phSphereLight* dynamicSphereLights,
 	uint32_t numDynamicSphereLights)
@@ -643,7 +644,7 @@ void phBeginFrame(
 	}
 
 	// Prepare internal framebuffer for rendering
-	state.internalFB.bindViewportClearColorDepth(vec4(0.0f));
+	state.internalFB.bindViewportClearColorDepth(vec4(clearColor));
 
 	CHECK_GL_ERROR();
 }

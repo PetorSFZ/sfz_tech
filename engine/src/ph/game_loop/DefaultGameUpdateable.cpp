@@ -144,7 +144,7 @@ public:
 	DefaultGameUpdateable(const DefaultGameUpdateable&) = delete;
 	DefaultGameUpdateable& operator= (const DefaultGameUpdateable&) = delete;
 
-	// Members
+	// Public members
 	// --------------------------------------------------------------------------------------------
 
 	bool mInitialized = false;
@@ -168,7 +168,6 @@ public:
 
 	// Log
 	Setting* mLogMinLevelSetting = nullptr;
-	int mLogMinLevel = int(LogLevel::INFO_NOISY);
 	str96 mLogTagFilter;
 
 	// Console settings
@@ -183,6 +182,7 @@ public:
 
 	// Overloaded methods from GameLoopUpdateable
 	// --------------------------------------------------------------------------------------------
+public:
 
 	void initialize(Renderer& renderer) override final
 	{
@@ -266,7 +266,7 @@ public:
 	void render(const UpdateInfo& updateInfo, Renderer& renderer) override final
 	{
 		// Call the pre-render hook
-		mLogic->preRenderHook(mState, updateInfo, renderer);
+		RenderSettings settings = mLogic->preRenderHook(mState, updateInfo, renderer);
 
 		// Some assets sanity checks
 		sfz_assert_debug(mState.dynamicAssets.textures.size() ==
@@ -276,7 +276,7 @@ public:
 		if (mStatsWarmup >= 8) mStats.addSample(updateInfo.iterationDeltaSeconds * 1000.0f);
 		mStatsWarmup++;
 
-		renderer.beginFrame(mState.cam, mState.dynamicSphereLights);
+		renderer.beginFrame(settings.clearColor, mState.cam, mState.dynamicSphereLights);
 
 		renderer.renderStaticScene();
 

@@ -464,7 +464,7 @@ void Renderer::setStaticScene(const StaticScene& scene)
 	view.numRenderEntities = scene.renderEntities.size();
 	view.sphereLights = scene.sphereLights.data();
 	view.numSphereLights = scene.sphereLights.size();
-	
+
 	CALL_RENDERER_FUNCTION(mFunctionTable, phSetStaticScene, &view);
 }
 
@@ -477,20 +477,22 @@ void Renderer::removeStaticScene()
 // ------------------------------------------------------------------------------------------------
 
 void Renderer::beginFrame(
+	const vec4& clearColor,
 	const phCameraData& camera,
 	const phSphereLight* dynamicSphereLights,
 	uint32_t numDynamicSphereLights) noexcept
 {
 	CALL_RENDERER_FUNCTION(mFunctionTable, phBeginFrame,
-		&camera, dynamicSphereLights, numDynamicSphereLights);
+		clearColor.data(), &camera, dynamicSphereLights, numDynamicSphereLights);
 }
 
 void Renderer::beginFrame(
+	const vec4& clearColor,
 	const phCameraData& camera,
 	const DynArray<phSphereLight>& dynamicSphereLights) noexcept
 {
 	CALL_RENDERER_FUNCTION(mFunctionTable, phBeginFrame,
-		&camera, dynamicSphereLights.data(), dynamicSphereLights.size());
+		clearColor.data(), &camera, dynamicSphereLights.data(), dynamicSphereLights.size());
 }
 
 void Renderer::renderStaticScene() noexcept

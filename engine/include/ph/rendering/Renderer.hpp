@@ -43,6 +43,7 @@ namespace ph {
 using sfz::Allocator;
 using sfz::DynArray;
 using sfz::vec2;
+using sfz::vec4;
 using std::uint32_t;
 
 // Renderer class
@@ -57,7 +58,7 @@ public:
 
 	/// The interface version supported by this wrapper. Only renderers which return the same
 	/// version with "phRendererInterfaceVersion()" are compatible.
-	static constexpr uint32_t INTERFACE_VERSION = 13;
+	static constexpr uint32_t INTERFACE_VERSION = 14;
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -160,12 +161,14 @@ public:
 
 	/// See phBeginFrame()
 	void beginFrame(
+		const vec4& clearColor,
 		const phCameraData& camera,
 		const phSphereLight* dynamicSphereLights,
 		uint32_t numDynamicSphereLights) noexcept;
 
 	/// See phBeginFrame()
 	void beginFrame(
+		const vec4& clearColor,
 		const phCameraData& camera,
 		const DynArray<phSphereLight>& dynamicSphereLights) noexcept;
 

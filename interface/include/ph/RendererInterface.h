@@ -55,7 +55,7 @@ struct phStaticSceneView;
 // Interface version
 // ------------------------------------------------------------------------------------------------
 
-const uint32_t PH_RENDERER_INTERFACE_VERSION = 13;
+const uint32_t PH_RENDERER_INTERFACE_VERSION = 14;
 
 // Init functions
 // ------------------------------------------------------------------------------------------------
@@ -236,11 +236,13 @@ void phRemoveStaticScene(void);
 // ------------------------------------------------------------------------------------------------
 
 /// Called first in a frame before issuing render commands.
+/// \param clearColor the vec4 containing the clear color for the screen
 /// \param camera the camera to render from. Temporary pointer, make a copy.
 /// \param dynamicSphereLights pointer to array of phSphereLights
 /// \param numDynamicSphereLights number of elements in dynamicSphereLights array
 extern "C" PH_DLL_EXPORT
 void phBeginFrame(
+	const float* clearColor,
 	const phCameraData* camera,
 	const phSphereLight* dynamicSphereLights,
 	uint32_t numDynamicSphereLights);
