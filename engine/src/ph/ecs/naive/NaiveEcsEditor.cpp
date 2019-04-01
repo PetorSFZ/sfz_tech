@@ -428,6 +428,7 @@ static bool componentMaskEditor(
 	return bitsModified;
 }
 
+#ifndef __EMSCRIPTEN__
 static void saveDialog(const NaiveEcsHeader* ecs) noexcept
 {
 	// Open file dialog
@@ -478,6 +479,7 @@ static void loadDialog(NaiveEcsHeader* ecs) noexcept
 			NFD_GetError());
 	}
 }
+#endif
 
 // NaiveEcsEditor: State methods
 // ------------------------------------------------------------------------------------------------
