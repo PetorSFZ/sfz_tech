@@ -22,15 +22,13 @@ In addition to the core part of `sfzCore` there are are also optional, experimen
 
 ### Windows
 
-#### Visual Studio 2015
+#### Visual Studio 2019
 
-As a pre-requisite __Visual Studio 2015__ and __CMake__ need to be installed. CMake need to be available in the path. Later versions of Visual Studio will likely work, but are not actively tested.
-
-In order to generate the Visual Studio solution you only have to run `gen_visualstudio2015.bat` in the `gen_scripts` directory (double clicking is enough, no need to open a command prompt).
+Simply open this directory as a folder.
 
 #### Visual Studio 2017
 
-Same as for Visual Studio 2015, except `gen_visualstudio2017.bat` should be used instead. Builds using the `v140` (Visual Studio 2015) platform toolset by default, so that also needs to be installed (available through the `Tools/Get Tools and Features` menu). Should probably build fine using newer toolset, but this is not regularly tested.
+As a pre-requisite __CMake__ need to be installed and available in the path. In order to generate the Visual Studio solution you only have to run `gen_visualstudio2017.bat` in the `gen_scripts` directory (double clicking is enough, no need to open a command prompt).
 
 #### Emscripten (Web)
 
