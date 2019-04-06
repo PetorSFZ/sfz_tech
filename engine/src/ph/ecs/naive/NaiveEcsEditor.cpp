@@ -29,6 +29,7 @@
 #endif
 
 #include <sfz/containers/HashMap.hpp>
+#include <sfz/memory/New.hpp>
 #include <sfz/strings/StringHashers.hpp>
 #include <sfz/Logging.hpp>
 #include <sfz/strings/StackString.hpp>
@@ -302,7 +303,7 @@ static const char* byteToBinaryStringLookupTable[256] = {
 	"11111111",
 };
 
-static sfz::HashMap<str32, uint8_t> binaryStringToByteLookupMap;
+static sfz::HashMap<str32, uint8_t>* binaryStringToByteLookupMap = nullptr;
 
 static const char* byteToBinaryString(uint8_t byte) noexcept
 {
@@ -311,7 +312,7 @@ static const char* byteToBinaryString(uint8_t byte) noexcept
 
 static uint8_t binaryStringToByte(const char* binaryStr) noexcept
 {
-	const uint8_t* bytePtr = binaryStringToByteLookupMap.get(binaryStr);
+	const uint8_t* bytePtr = binaryStringToByteLookupMap->get(binaryStr);
 	if (bytePtr == nullptr) return 0;
 	return *bytePtr;
 }
@@ -493,10 +494,12 @@ void NaiveEcsEditor::init(
 	this->destroy();
 
 	// Initialize binary string to byte lookup map
-	if (binaryStringToByteLookupMap.size() == 0) {
-		binaryStringToByteLookupMap.create(512, allocator);
+	if (binaryStringToByteLookupMap == nullptr) 
+	{
+		binaryStringToByteLookupMap = sfz::sfzNew<sfz::HashMap<str32, uint8_t>>(allocator);
+		binaryStringToByteLookupMap->create(512, allocator);
 		for (uint32_t i = 0; i < 256; i++) {
-			binaryStringToByteLookupMap[byteToBinaryStringLookupTable[i]] = uint8_t(i);
+			(*binaryStringToByteLookupMap)[byteToBinaryStringLookupTable[i]] = uint8_t(i);
 		}
 	}
 
@@ -564,6 +567,12 @@ void NaiveEcsEditor::destroy() noexcept
 	}
 	mCompactEntityList = false;
 	mCurrentSelectedEntity = 0;
+
+	// TODO: Not perfect, potential race condition if multiple ECS viewers.
+	if (binaryStringToByteLookupMap != nullptr) {
+		sfz::sfzDelete(binaryStringToByteLookupMap, binaryStringToByteLookupMap->allocator());
+		binaryStringToByteLookupMap = nullptr;
+	}
 }
 
 // NaiveEcsEditor: Methods
