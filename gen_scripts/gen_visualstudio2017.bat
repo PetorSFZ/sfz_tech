@@ -7,11 +7,13 @@ pushd %~dp0
 : Set working directory to root of project
 cd ..
 
-: Create build_msvc2017 directory (and delete old one if it exists)
-rmdir /S /Q build_msvc2017
-mkdir build_msvc2017
-cd build_msvc2017
+: Create build_vs2017 directory (and delete old one if it exists)
+rmdir /S /Q build_vs2017
+mkdir build_vs2017
+cd build_vs2017
 
 : Generate Visual Studio solution
 cmake .. -G "Visual Studio 15 2017 Win64"
 
+: Pause if started from Windows GUI
+if %0 == "%~0" pause
