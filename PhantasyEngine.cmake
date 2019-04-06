@@ -444,9 +444,16 @@ function(phMsvcCopyRuntimeDLLs)
 		endforeach()
 
 		foreach(dllPath ${ARGV})
-			file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR}/Debug)
-			file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR}/RelWithDebInfo)
-			file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR}/Release)
+
+			# Do different things depending on if we are generating .sln or using built-in VS CMake
+			if(CMAKE_CONFIGURATION_TYPES)
+				file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+				file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR}/RelWithDebInfo)
+				file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR}/Release)
+			else()
+				file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR})
+			endif()
+
 		endforeach()
 
 	endif()
@@ -497,6 +504,11 @@ function(phCreateSymlinkScript)
 			message("  -- ${symlinkPath}")
 		endforeach()
 
+		# Check if we are generating an .sln or if we are using built-in CMake of newer VS
+		if(CMAKE_CONFIGURATION_TYPES)
+			set(linkToSubdirs true)
+		endif()
+
 		# Directories
 		set(SYMLINK_FILE "${CMAKE_BINARY_DIR}/create_symlinks.bat")
 		set(DEBUG_DIR "${CMAKE_BINARY_DIR}/Debug")
@@ -511,9 +523,11 @@ function(phCreateSymlinkScript)
 			# Append symlink commands to file
 			file(APPEND ${SYMLINK_FILE} ": Create symlinks for \"${SYMLINK_DIR_NAME}\"\n")
 			file(APPEND ${SYMLINK_FILE} "mklink /D \"${CMAKE_BINARY_DIR}/${SYMLINK_DIR_NAME}\" \"${symlinkPath}\"\n")
-			file(APPEND ${SYMLINK_FILE} "mklink /D \"${DEBUG_DIR}/${SYMLINK_DIR_NAME}\" \"${symlinkPath}\"\n")
-			file(APPEND ${SYMLINK_FILE} "mklink /D \"${RELWITHDEBINFO_DIR}/${SYMLINK_DIR_NAME}\" \"${symlinkPath}\"\n")
-			file(APPEND ${SYMLINK_FILE} "mklink /D \"${RELEASE_DIR}/${SYMLINK_DIR_NAME}\" \"${symlinkPath}\"\n")
+			if(linkToSubdirs)
+				file(APPEND ${SYMLINK_FILE} "mklink /D \"${DEBUG_DIR}/${SYMLINK_DIR_NAME}\" \"${symlinkPath}\"\n")
+				file(APPEND ${SYMLINK_FILE} "mklink /D \"${RELWITHDEBINFO_DIR}/${SYMLINK_DIR_NAME}\" \"${symlinkPath}\"\n")
+				file(APPEND ${SYMLINK_FILE} "mklink /D \"${RELEASE_DIR}/${SYMLINK_DIR_NAME}\" \"${symlinkPath}\"\n")
+			endif()
 			file(APPEND ${SYMLINK_FILE} "\n")
 		endforeach()
 
@@ -551,5 +565,18 @@ function(phCreateSymlinkScript)
 			file(APPEND ${SYMLINK_FILE} "\n")
 		endforeach()
 	endif()
+
+endfunction()
+
+# Executes the symlink script created by phCreateSymlinkScript()
+function(phExecuteSymlinkScript)
+	if(MSVC)
+		set(SYMLINK_FILE "${CMAKE_BINARY_DIR}/create_symlinks.bat")
+	else()
+		set(SYMLINK_FILE "${CMAKE_BINARY_DIR}/create_symlinks.sh")
+	endif()
+
+	message("-- [PhantasyEngine]: Executing create symlink script \"${SYMLINK_FILE}\"")
+	execute_process(COMMAND ${SYMLINK_FILE} OUTPUT_QUIET)
 
 endfunction()
