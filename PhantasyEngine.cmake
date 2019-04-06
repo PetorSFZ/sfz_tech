@@ -54,25 +54,54 @@ function(phSetCompilerFlags)
 	message("-- [PhantasyEngine]: Setting compiler flags")
 
 	if(MSVC)
+	
 		# Visual Studio flags
 		# /W4 = Warning level 4 (/Wall is too picky and has annoying warnings in standard headers)
 		# /wd4201 = Disable warning 4201 (nonstandard extension used : nameless struct/union)
+		# /std:c++17 = Enables C++17 support (and disables newer stuff)
+		# /permissive- = This option disables permissive behaviors, and sets the /Zc compiler options for strict conformance
+		# /Zc:twoPhase- = Disables two-phase name lookup. Needed because it is not compatible with OpenMP
 		# /Zi = Produce .pdb debug information. Does not affect optimizations, but does imply /debug.
+		# /Zf = Faster pdb generation
 		# /EHsc = TODO: Add explanation
 		# /GR- = Disable RTTI
+		# /MD(d) = Uses multi-threaded dynamic run-time library 
 		# /arch:AVX = Enable (require) Intel AVX instructions for code generation
 		# /D_CRT_SECURE_NO_WARNINGS = Removes annyoing warning when using c standard library
 		# /utf-8 = Specifies that both the source and execution character sets are encoded using UTF-8.
-		set(PH_CMAKE_CXX_FLAGS "/W4 /wd4201 /Zi /EHsc /GR- /arch:AVX /D_CRT_SECURE_NO_WARNINGS /utf-8")
+		# /DWIN32, /D_WINDOWS = Define WIN32 and _WINDOWS
+		# /JMC = "Just my code" debugging, skip framework calls in callstack
 		# /Od = "disables optimization, speeding compilation and simplifying debugging"
-		set(PH_CMAKE_CXX_FLAGS_DEBUG "/Od /DEBUG")
-		# /DEBUG = "creates debugging information for the .exe file or DLL"
-		set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "/O2 /fp:fast /DEBUG /DSFZ_NO_DEBUG")
+		# /DEBUG:FASTLINK = "creates debugging information for the .exe file or DLL"
 		# /O2 = Optimize code for fastest speed
 		# /fp:fast = "optimize floating-point code for speed at the expense of accuracy and correctness"
 		# /DSFZ_NO_DEBUG = defines the "SFZ_NO_DEBUG" macro, which disables sfz_assert_debug()
-		set(PH_CMAKE_CXX_FLAGS_RELEASE "/O2 /fp:fast /DSFZ_NO_DEBUG")
+		
+		# Visual Studio 2019+ exclusive
+		# /Ob3 = "which is a more aggressive version of -Ob2"
+		# /openmp:experimental = "This allows loops annotated with “#pragma omp simd” to potentially be vectorized."
 
+		# More cooler flags for Visual Studio 2019+
+		# Visual Studio Pre 2019
+		if(MSVC_VERSION LESS_EQUAL 1919)
+			set(PH_CMAKE_CXX_FLAGS "/W4 /wd4201 /std:c++17 /permissive- /Zc:twoPhase- /Zi /Zf /EHsc /GR- /arch:AVX /D_CRT_SECURE_NO_WARNINGS /DWIN32 /D_WINDOWS /JMC /utf-8")
+			set(PH_CMAKE_CXX_FLAGS_DEBUG "/MDd /Od /DEBUG:FASTLINK")
+			set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /fp:fast /DEBUG:FASTLINK /DSFZ_NO_DEBUG")
+			set(PH_CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /fp:fast /DEBUG:FULL /DNDEBUG /DSFZ_NO_DEBUG")
+
+		# Visual Studio 2019+
+		else()
+			set(PH_CMAKE_CXX_FLAGS "/W4 /wd4201 /std:c++17 /permissive- /Zc:twoPhase- /Zi /Zf /EHsc /GR- /arch:AVX /D_CRT_SECURE_NO_WARNINGS /DWIN32 /D_WINDOWS /JMC /utf-8 /openmp:experimental")
+			set(PH_CMAKE_CXX_FLAGS_DEBUG "/MDd /Od /DEBUG:FASTLINK")
+			set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /Ob3 /fp:fast /DEBUG:FASTLINK /DSFZ_NO_DEBUG")
+			set(PH_CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob3 /fp:fast /DEBUG:FULL /DNDEBUG /DSFZ_NO_DEBUG")
+		endif()
+
+		set(PH_CMAKE_C_FLAGS ${PH_CMAKE_CXX_FLAGS})
+		set(PH_CMAKE_C_FLAGS_DEBUG ${PH_CMAKE_CXX_FLAGS_DEBUG})
+		set(PH_CMAKE_C_FLAGS_RELWITHDEBINFO ${PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO})
+		set(PH_CMAKE_C_FLAGS_RELEASE ${PH_CMAKE_CXX_FLAGS_RELEASE})
+		
 		if(PH_CUDA_SUPPORT)
 			# Define SFZ_CUDA
 			set(PH_CMAKE_CXX_FLAGS "${PH_CMAKE_CXX_FLAGS} /DSFZ_CUDA")
@@ -118,6 +147,11 @@ function(phSetCompilerFlags)
 		set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
 		set(PH_CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
 
+		set(PH_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+		set(PH_CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
+		set(PH_CMAKE_C_FLAGS_RELWITHDEBINFO ${CMAKE_C_FLAGS_RELWITHDEBINFO})
+		set(PH_CMAKE_C_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
+
 		if(PH_CUDA_SUPPORT)
 			message(FATAL_ERROR "[PhantasyEngine]: CUDA not supported on this platform")
 		endif()
@@ -127,6 +161,11 @@ function(phSetCompilerFlags)
 		set(PH_CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 		set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
 		set(PH_CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
+
+		set(PH_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+		set(PH_CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
+		set(PH_CMAKE_C_FLAGS_RELWITHDEBINFO ${CMAKE_C_FLAGS_RELWITHDEBINFO})
+		set(PH_CMAKE_C_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
 
 		if(PH_CUDA_SUPPORT)
 			message(FATAL_ERROR "[PhantasyEngine]: CUDA not supported on this platform")
@@ -145,6 +184,11 @@ function(phSetCompilerFlags)
 		set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
 		set(PH_CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
 
+		set(PH_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+		set(PH_CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
+		set(PH_CMAKE_C_FLAGS_RELWITHDEBINFO ${CMAKE_C_FLAGS_RELWITHDEBINFO})
+		set(PH_CMAKE_C_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
+
 		if(PH_CUDA_SUPPORT)
 			message(FATAL_ERROR "[PhantasyEngine]: CUDA not supported on this platform")
 		endif()
@@ -158,6 +202,12 @@ function(phSetCompilerFlags)
 	set(CMAKE_CXX_FLAGS_DEBUG ${PH_CMAKE_CXX_FLAGS_DEBUG} PARENT_SCOPE)
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO ${PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO} PARENT_SCOPE)
 	set(CMAKE_CXX_FLAGS_RELEASE ${PH_CMAKE_CXX_FLAGS_RELEASE} PARENT_SCOPE)
+
+	set(CMAKE_C_FLAGS ${PH_CMAKE_C_FLAGS} PARENT_SCOPE)
+	set(CMAKE_C_FLAGS_DEBUG ${PH_CMAKE_C_FLAGS_DEBUG} PARENT_SCOPE)
+	set(CMAKE_C_FLAGS_RELWITHDEBINFO ${PH_CMAKE_C_FLAGS_RELWITHDEBINFO} PARENT_SCOPE)
+	set(CMAKE_C_FLAGS_RELEASE ${PH_CMAKE_C_FLAGS_RELEASE} PARENT_SCOPE)
+	
 	if (PH_CUDA_SUPPORT)
 		set(CMAKE_CUDA_FLAGS ${PH_CMAKE_CUDA_FLAGS} PARENT_SCOPE)
 		set(CMAKE_CUDA_FLAGS_DEBUG ${PH_CMAKE_CUDA_FLAGS_DEBUG} PARENT_SCOPE)
@@ -170,6 +220,10 @@ endfunction()
 # Prints the currently set compiler flags
 function(phPrintCompilerFlags)
 	message("-- [PhantasyEngine]: Printing compiler flags:")
+	message("  -- CMAKE_C_FLAGS: " ${CMAKE_C_FLAGS})
+	message("  -- CMAKE_C_FLAGS_DEBUG: " ${CMAKE_C_FLAGS_DEBUG})
+	message("  -- CMAKE_C_FLAGS_RELWITHDEBINFO: " ${CMAKE_C_FLAGS_RELWITHDEBINFO})
+	message("  -- CMAKE_C_FLAGS_RELEASE: " ${CMAKE_C_FLAGS_RELEASE})
 	message("  -- CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS})
 	message("  -- CMAKE_CXX_FLAGS_DEBUG: " ${CMAKE_CXX_FLAGS_DEBUG})
 	message("  -- CMAKE_CXX_FLAGS_RELWITHDEBINFO: " ${CMAKE_CXX_FLAGS_RELWITHDEBINFO})
@@ -577,6 +631,6 @@ function(phExecuteSymlinkScript)
 	endif()
 
 	message("-- [PhantasyEngine]: Executing create symlink script \"${SYMLINK_FILE}\"")
-	execute_process(COMMAND ${SYMLINK_FILE} OUTPUT_QUIET)
+	execute_process(COMMAND ${SYMLINK_FILE} OUTPUT_QUIET ERROR_QUIET)
 
 endfunction()
