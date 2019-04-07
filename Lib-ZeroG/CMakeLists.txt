@@ -42,9 +42,9 @@ if(MSVC)
 	# /O2 = Optimize code for fastest speed
 	# /fp:fast = "optimize floating-point code for speed at the expense of accuracy and correctness"
 	set(CMAKE_CXX_FLAGS "/W4 /wd4201 /std:c++17 /permissive- /Zc:twoPhase- /Zi /Zf /EHsc /GR- /arch:AVX /D_CRT_SECURE_NO_WARNINGS /DWIN32 /D_WINDOWS /JMC /utf-8 /openmp:experimental")
-	set(CMAKE_CXX_FLAGS_DEBUG "/MDd /Od /DEBUG:FASTLINK")
-	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /Ob3 /fp:fast /DEBUG:FASTLINK")
-	set(CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob3 /fp:fast /DEBUG:FULL /DNDEBUG")
+	set(CMAKE_CXX_FLAGS_DEBUG "/MDd /Od /DEBUG")
+	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /Ob3 /fp:fast /DEBUG")
+	set(CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob3 /fp:fast /DNDEBUG")
 
 else()
 	message(FATAL_ERROR "Not implemented!")
