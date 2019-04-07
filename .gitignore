@@ -29,4 +29,7 @@ install_manifest.txt
 
 # Build directories
 .vscode/
-Samples/build_msvc2017/
+.vs/
+Samples/.vs/
+Samples/build_vs2017/
+Samples/build_visualstudio/

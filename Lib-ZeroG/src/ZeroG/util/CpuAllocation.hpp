@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <new>
 #include <utility> // std::forward
 
 #include "ZeroG.h"
