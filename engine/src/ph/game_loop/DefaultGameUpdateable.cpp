@@ -214,7 +214,8 @@ public:
 		for (const SDL_Event& event : input.events) {
 			if (event.type != SDL_KEYUP) continue;
 			if (event.key.keysym.sym == '`' ||
-				event.key.keysym.sym == '~') {
+				event.key.keysym.sym == '~' ||
+				event.key.keysym.sym == SDLK_F1) {
 
 				mConsoleActive = mConsoleActiveSetting->boolValue();
 				mConsoleActiveSetting->setBool(!mConsoleActive);
