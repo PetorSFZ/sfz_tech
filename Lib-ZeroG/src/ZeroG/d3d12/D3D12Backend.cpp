@@ -549,7 +549,7 @@ public:
 			mLog,
 			mAllocator,
 			*mDevice.Get(),
-			&mBufferUniqueIdentifierCounter,
+			&mResourceUniqueIdentifierCounter,
 			mResidencyManager,
 			reinterpret_cast<D3D12MemoryHeap**>(memoryHeapOut),
 			createInfo);
@@ -614,6 +614,7 @@ public:
 			mLog,
 			mAllocator,
 			*mDevice.Get(),
+			&mResourceUniqueIdentifierCounter,
 			mResidencyManager,
 			reinterpret_cast<D3D12TextureHeap**>(textureHeapOut),
 			createInfo);
@@ -674,7 +675,7 @@ private:
 	bool mAllowTearing = false;
 
 	// Memory
-	std::atomic_uint64_t mBufferUniqueIdentifierCounter = 1;
+	std::atomic_uint64_t mResourceUniqueIdentifierCounter = 1;
 };
 
 // D3D12 API

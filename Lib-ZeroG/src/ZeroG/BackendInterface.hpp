@@ -96,6 +96,11 @@ public:
 		uint64_t srcBufferOffsetBytes,
 		uint64_t numBytes) noexcept = 0;
 
+	virtual ZgErrorCode memcpyToTexture(
+		ITexture2D* dstTexture,
+		const ZgImageViewConstCpu& srcImageCpu,
+		IBuffer* tempUploadBuffer) noexcept = 0;
+
 	virtual ZgErrorCode setPushConstant(
 		uint32_t shaderRegister,
 		const void* data,

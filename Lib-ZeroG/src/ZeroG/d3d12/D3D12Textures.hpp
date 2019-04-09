@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <atomic>
+
 #include "ZeroG.h"
 #include "ZeroG/d3d12/D3D12Common.hpp"
 #include "ZeroG/BackendInterface.hpp"
@@ -59,6 +61,7 @@ public:
 	ZgLogger logger = {};
 	ZgAllocator allocator = {};
 	ID3D12Device3* device = nullptr;
+	std::atomic_uint64_t* resourceUniqueIdentifierCounter = nullptr;
 
 	uint64_t sizeBytes = 0;
 	ComPtr<ID3D12Heap> heap;
@@ -72,6 +75,7 @@ ZgErrorCode createTextureHeap(
 	ZgLogger& logger,
 	ZgAllocator& allocator,
 	ID3D12Device3& device,
+	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
 	D3DX12Residency::ResidencyManager& residencyManager,
 	D3D12TextureHeap** heapOut,
 	const ZgTextureHeapCreateInfo& createInfo) noexcept;
@@ -88,10 +92,28 @@ public:
 	D3D12Texture2D& operator= (D3D12Texture2D&&) = delete;
 	~D3D12Texture2D() noexcept;
 
+	// A unique identifier for this texture
+	uint64_t identifier = 0;
+
 	D3D12TextureHeap* textureHeap = nullptr;
 	ComPtr<ID3D12Resource> resource;
+	ZgTexture2DFormat zgFormat = ZG_TEXTURE_2D_FORMAT_UNDEFINED;
 	DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
-};
+	uint32_t width = 0;
+	uint32_t height = 0;
 
+	// Information from ID3D12Device::GetCopyableFootprints()
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT subresourceFootprint = {};
+	uint32_t numRows = 0;
+	uint64_t rowSizeInBytes = 0;
+	uint64_t totalSizeInBytes = 0;
+
+	// The current resource state of the texture. Committed because the state has been committed
+	// in a command list which has been executed on a queue. There may be pending state changes
+	// in command lists not yet executed.
+	// TODO: Mutex protecting this? How handle changes submitted on different queues simulatenously?
+	// TODO: One for each mip level?
+	D3D12_RESOURCE_STATES lastCommittedState = D3D12_RESOURCE_STATE_GENERIC_READ;
+};
 
 } // namespace zg

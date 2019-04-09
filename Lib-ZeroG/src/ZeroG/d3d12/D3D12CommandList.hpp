@@ -67,6 +67,11 @@ public:
 		uint64_t srcBufferOffsetBytes,
 		uint64_t numBytes) noexcept override final;
 
+	ZgErrorCode memcpyToTexture(
+		ITexture2D* dstTexture,
+		const ZgImageViewConstCpu& srcImageCpu,
+		IBuffer* tempUploadBuffer) noexcept override final;
+
 	ZgErrorCode setPushConstant(
 		uint32_t shaderRegister,
 		const void* data,
@@ -121,7 +126,10 @@ public:
 	D3DX12Residency::ResidencySet* residencySet = nullptr;
 
 	Vector<uint64_t> pendingBufferIdentifiers;
-	Vector<PendingState> pendingBufferStates;
+	Vector<PendingBufferState> pendingBufferStates;
+
+	Vector<uint64_t> pendingTextureIdentifiers;
+	Vector<PendingTextureState> pendingTextureStates;
 
 private:
 	// Private methods
@@ -130,9 +138,16 @@ private:
 	ZgErrorCode getPendingBufferStates(
 		D3D12Buffer& buffer,
 		D3D12_RESOURCE_STATES neededState,
-		PendingState*& pendingStatesOut) noexcept;
+		PendingBufferState*& pendingStatesOut) noexcept;
 	
 	ZgErrorCode setBufferState(D3D12Buffer& buffer, D3D12_RESOURCE_STATES targetState) noexcept;
+
+	ZgErrorCode getPendingTextureStates(
+		D3D12Texture2D& texture,
+		D3D12_RESOURCE_STATES neededState,
+		PendingTextureState*& pendingStatesOut) noexcept;
+
+	ZgErrorCode setTextureState(D3D12Texture2D& texture, D3D12_RESOURCE_STATES targetState) noexcept;
 
 	// Private members
 	// --------------------------------------------------------------------------------------------

@@ -89,7 +89,7 @@ ZgErrorCode D3D12MemoryHeap::bufferCreate(
 		zgNew<D3D12Buffer>(allocator, "ZeroG - D3D12Buffer");
 
 	// Copy stuff
-	buffer->identifier = std::atomic_fetch_add(bufferUniqueIdentifierCounter, 1);
+	buffer->identifier = std::atomic_fetch_add(resourceUniqueIdentifierCounter, 1);
 	buffer->memoryHeap = this;
 	buffer->sizeBytes = createInfo.sizeInBytes;
 	buffer->resource = resource;
@@ -114,7 +114,7 @@ ZgErrorCode createMemoryHeap(
 	ZgLogger& logger,
 	ZgAllocator& allocator,
 	ID3D12Device3& device,
-	std::atomic_uint64_t* bufferUniqueIdentifierCounter,
+	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
 	D3DX12Residency::ResidencyManager& residencyManager,
 	D3D12MemoryHeap** heapOut,
 	const ZgMemoryHeapCreateInfo& createInfo) noexcept
@@ -153,7 +153,7 @@ ZgErrorCode createMemoryHeap(
 	memoryHeap->logger = logger;
 	memoryHeap->allocator = allocator;
 	memoryHeap->device = &device;
-	memoryHeap->bufferUniqueIdentifierCounter = bufferUniqueIdentifierCounter;
+	memoryHeap->resourceUniqueIdentifierCounter = resourceUniqueIdentifierCounter;
 	memoryHeap->memoryType = createInfo.memoryType;
 	memoryHeap->sizeBytes = createInfo.sizeInBytes;
 	memoryHeap->heap = heap;

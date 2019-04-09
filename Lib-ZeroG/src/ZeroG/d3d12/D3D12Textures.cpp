@@ -124,14 +124,36 @@ ZgErrorCode D3D12TextureHeap::texture2DCreate(
 		return ZG_ERROR_GPU_OUT_OF_MEMORY;
 	}
 
+	// Get the subresource footprint for the texture
+	// TODO: One for each mipmap level?
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT subresourceFootprint = {};
+	uint32_t numRows = 0;
+	uint64_t rowSizeInBytes = 0;
+	uint64_t totalSizeInBytes = 0;
+
+	device->GetCopyableFootprints(&desc, 0, 1, createInfo.offsetInBytes,
+		&subresourceFootprint, &numRows, &rowSizeInBytes, &totalSizeInBytes);
+
 	// Allocate texture
 	D3D12Texture2D* texture =
 		zgNew<D3D12Texture2D>(allocator, "ZeroG - D3D12Texture");
 
 	// Copy stuff
+	texture->identifier = std::atomic_fetch_add(resourceUniqueIdentifierCounter, 1);
+
 	texture->textureHeap = this;
 	texture->resource = resource;
+	texture->zgFormat = createInfo.format;
 	texture->format = desc.Format;
+	texture->width = createInfo.width;
+	texture->height = createInfo.height;
+
+	texture->subresourceFootprint = subresourceFootprint;
+	texture->numRows = numRows;
+	texture->rowSizeInBytes = rowSizeInBytes;
+	texture->totalSizeInBytes = totalSizeInBytes;
+
+	texture->lastCommittedState = initialResourceState;
 
 	// Return texture
 	*textureOut = texture;
@@ -152,6 +174,7 @@ ZgErrorCode createTextureHeap(
 	ZgLogger& logger,
 	ZgAllocator& allocator,
 	ID3D12Device3& device,
+	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
 	D3DX12Residency::ResidencyManager& residencyManager,
 	D3D12TextureHeap** heapOut,
 	const ZgTextureHeapCreateInfo& createInfo) noexcept
@@ -187,6 +210,7 @@ ZgErrorCode createTextureHeap(
 	textureHeap->logger = logger;
 	textureHeap->allocator = allocator;
 	textureHeap->device = &device;
+	textureHeap->resourceUniqueIdentifierCounter = resourceUniqueIdentifierCounter;
 	textureHeap->sizeBytes = createInfo.sizeInBytes;
 	textureHeap->heap = heap;
 

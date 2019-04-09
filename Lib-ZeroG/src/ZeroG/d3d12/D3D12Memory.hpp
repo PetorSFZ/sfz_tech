@@ -57,7 +57,7 @@ public:
 	ZgLogger logger = {};
 	ZgAllocator allocator = {};
 	ID3D12Device3* device = nullptr;
-	std::atomic_uint64_t* bufferUniqueIdentifierCounter = nullptr;
+	std::atomic_uint64_t* resourceUniqueIdentifierCounter = nullptr;
 
 	ZgMemoryType memoryType = ZG_MEMORY_TYPE_UNDEFINED;
 	uint64_t sizeBytes = 0;
@@ -72,7 +72,7 @@ ZgErrorCode createMemoryHeap(
 	ZgLogger& logger,
 	ZgAllocator& allocator,
 	ID3D12Device3& device,
-	std::atomic_uint64_t* bufferUniqueIdentifierCounter,
+	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
 	D3DX12Residency::ResidencyManager& residencyManager,
 	D3D12MemoryHeap** heapOut,
 	const ZgMemoryHeapCreateInfo& createInfo) noexcept;

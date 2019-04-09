@@ -386,6 +386,23 @@ ZG_DLL_API ZgErrorCode zgCommandListMemcpyBufferToBuffer(
 		numBytes);
 }
 
+ZG_DLL_API ZgErrorCode zgCommandListMemcpyToTexture(
+	ZgCommandList* commandListIn,
+	ZgTexture2D* dstTexture,
+	const ZgImageViewConstCpu* srcImageCpu,
+	ZgBuffer* tempUploadBuffer)
+{
+	if (srcImageCpu->data == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (srcImageCpu->width == 0) return ZG_ERROR_INVALID_ARGUMENT;
+	if (srcImageCpu->height == 0) return ZG_ERROR_INVALID_ARGUMENT;
+	if (srcImageCpu->pitchInBytes < srcImageCpu->width) return ZG_ERROR_INVALID_ARGUMENT;
+	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
+	return commandList->memcpyToTexture(
+		reinterpret_cast<zg::ITexture2D*>(dstTexture),
+		*srcImageCpu,
+		reinterpret_cast<zg::IBuffer*>(tempUploadBuffer));
+}
+
 ZG_DLL_API ZgErrorCode zgCommandListSetPushConstant(
 	ZgCommandList* commandListIn,
 	uint32_t shaderRegister,

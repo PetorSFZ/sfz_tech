@@ -24,6 +24,7 @@
 #include "ZeroG/d3d12/D3D12Common.hpp"
 #include "ZeroG/d3d12/D3D12CommandList.hpp"
 #include "ZeroG/d3d12/D3D12DescriptorRingBuffer.hpp"
+#include "ZeroG/d3d12/D3D12Textures.hpp"
 #include "ZeroG/util/RingBuffer.hpp"
 #include "ZeroG/util/Vector.hpp"
 #include "ZeroG/BackendInterface.hpp"
@@ -87,8 +88,9 @@ private:
 
 	ZgErrorCode createCommandList(D3D12CommandList*& commandListOut) noexcept;
 
-	ZgErrorCode executePreCommandListBufferStateChanges(
-		Vector<PendingState>& pendingStates) noexcept;
+	ZgErrorCode executePreCommandListStateChanges(
+		Vector<PendingBufferState>& pendingBufferStates,
+		Vector<PendingTextureState>& pendingTextureStates) noexcept;
 
 	// Private members
 	// --------------------------------------------------------------------------------------------

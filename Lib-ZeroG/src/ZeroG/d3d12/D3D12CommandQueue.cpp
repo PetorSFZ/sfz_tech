@@ -187,8 +187,9 @@ ZgErrorCode D3D12CommandQueue::executeCommandListUnmutexed(ICommandList* command
 	}
 
 	// Create and execute a quick command list to insert barriers and commit pending states
-	ZgErrorCode res =
-		this->executePreCommandListBufferStateChanges(commandList.pendingBufferStates);
+	ZgErrorCode res = this->executePreCommandListStateChanges(
+		commandList.pendingBufferStates,
+		commandList.pendingTextureStates);
 	if (res != ZG_SUCCESS) return res;
 
 	// Execute command list
@@ -253,15 +254,18 @@ ZgErrorCode D3D12CommandQueue::createCommandList(D3D12CommandList*& commandListO
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandQueue::executePreCommandListBufferStateChanges(
-	Vector<PendingState>& pendingStates) noexcept
+ZgErrorCode D3D12CommandQueue::executePreCommandListStateChanges(
+	Vector<PendingBufferState>& pendingBufferStates,
+	Vector<PendingTextureState>& pendingTextureStates) noexcept
 {
-	// Gather barriers to insert
+	// Temporary storage array for the barriers to insert
 	uint32_t numBarriers = 0;
 	CD3DX12_RESOURCE_BARRIER barriers[256] = {};
-	D3DX12Residency::ManagedObject* residencyObjects[256] = {};
-	for (uint32_t i = 0; i < pendingStates.size(); i++) {
-		const PendingState& state = pendingStates[i];
+	D3DX12Residency::ManagedObject* residencyObjects[512] = {};
+
+	// Gather buffer barriers
+	for (uint32_t i = 0; i < pendingBufferStates.size(); i++) {
+		const PendingBufferState& state = pendingBufferStates[i];
 
 		// Don't insert barrier if resource already is in correct state
 		if (state.buffer->lastCommittedState == state.neededInitialState) {
@@ -269,7 +273,10 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListBufferStateChanges(
 		}
 
 		// Error out if we don't have enough space in our temp array
-		if (numBarriers >= 256) return ZG_ERROR_GENERIC;
+		if (numBarriers >= 256) {
+			ZG_ERROR(mLog, "Internal error, need to insert too many barriers. Fixable, please contact ZeroG devs.");
+			return ZG_ERROR_GENERIC;
+		}
 
 		// Create barrier
 		barriers[numBarriers] = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -279,6 +286,34 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListBufferStateChanges(
 
 		// Store residency set
 		residencyObjects[numBarriers] = &state.buffer->memoryHeap->managedObject;
+
+		numBarriers += 1;
+	}
+
+	// Gather texture barriers
+	for (uint32_t i = 0; i < pendingTextureStates.size(); i++) {
+		const PendingTextureState& state = pendingTextureStates[i];
+
+		// Don't insert barrier if resource already is in correct state
+		if (state.texture->lastCommittedState == state.neededInitialState) {
+			continue;
+		}
+
+		// Error out if we don't have enough space in our temp array
+		if (numBarriers >= 256) {
+			ZG_ERROR(mLog, "Internal error, need to insert too many barriers. Fixable, please contact ZeroG devs.");
+			return ZG_ERROR_GENERIC;
+		}
+
+		// Create barrier
+		barriers[numBarriers] = CD3DX12_RESOURCE_BARRIER::Transition(
+			state.texture->resource.Get(),
+			state.texture->lastCommittedState,
+			state.neededInitialState,
+			0); // TODO: Mip levels
+
+		// Store residency set
+		residencyObjects[numBarriers] = &state.texture->textureHeap->managedObject;
 
 		numBarriers += 1;
 	}
@@ -305,9 +340,13 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListBufferStateChanges(
 	if (res != ZG_SUCCESS) return res;
 
 	// Commit state changes
-	for (uint32_t i = 0; i < pendingStates.size(); i++) {
-		const PendingState& state = pendingStates[i];
+	for (uint32_t i = 0; i < pendingBufferStates.size(); i++) {
+		const PendingBufferState& state = pendingBufferStates[i];
 		state.buffer->lastCommittedState = state.currentState;
+	}
+	for (uint32_t i = 0; i < pendingTextureStates.size(); i++) {
+		const PendingTextureState& state = pendingTextureStates[i];
+		state.texture->lastCommittedState = state.currentState;
 	}
 
 	return ZG_SUCCESS;

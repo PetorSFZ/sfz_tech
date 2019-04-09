@@ -137,6 +137,29 @@ static float calculateDelta(time_point& previousTime) noexcept
 	return delta;
 }
 
+static uint8_t* allocateRgbaTex(uint32_t width, uint32_t height) noexcept
+{
+	uint8_t* data = new uint8_t[width * height * 4];
+	for (uint32_t y = 0; y < height; y++) {
+		for (uint32_t x = 0; x < width; x++) {
+			uint8_t* pixelPtr = data + y * width * 4 + x * 4;
+			if ((y % 16) < 8) {
+				pixelPtr[0] = 255;
+				pixelPtr[1] = 0;
+				pixelPtr[2] = 0;
+				pixelPtr[3] = 255;
+			}
+			else {
+				pixelPtr[0] = 255;
+				pixelPtr[1] = 255;
+				pixelPtr[2] = 255;
+				pixelPtr[3] = 255;
+			}
+		}
+	}
+	return data;
+}
+
 // Main
 // ------------------------------------------------------------------------------------------------
 
@@ -270,8 +293,8 @@ int main(int argc, char* argv[])
 	ZgTexture2DCreateInfo textureCreateInfo = {};
 	textureCreateInfo.format = ZG_TEXTURE_2D_FORMAT_RGBA_U8;
 	textureCreateInfo.normalized = ZG_FALSE;
-	textureCreateInfo.width = 1024;
-	textureCreateInfo.height = 1024;
+	textureCreateInfo.width = 256;
+	textureCreateInfo.height = 256;
 
 	ZgTexture2DAllocationInfo textureAllocInfo = {};
 	CHECK_ZG zgTextureHeapTexture2DGetAllocationInfo(
@@ -282,6 +305,48 @@ int main(int argc, char* argv[])
 
 	ZgTexture2D* texture = nullptr;
 	CHECK_ZG zgTextureHeapTexture2DCreate(textureHeap, &texture, &textureCreateInfo);
+
+	
+	// Fill texture with some random data
+	{
+		// Allocate and fill image on CPU
+		uint8_t* imageData = allocateRgbaTex(256, 256);
+		const uint32_t imageDataSize = 256 * 256 * 4;
+
+		// Create an image view of the image data
+		ZgImageViewConstCpu imageView = {};
+		imageView.format = ZG_TEXTURE_2D_FORMAT_RGBA_U8;
+		imageView.data = imageData;
+		imageView.width = 256;
+		imageView.height = 256;
+		imageView.pitchInBytes = 256 * 4;
+
+		// Create temporary upload buffer (accessible from CPU)
+		ZgMemoryHeap* uploadHeap = nullptr;
+		ZgBuffer* uploadBuffer = nullptr;
+		allocateMemoryHeapAndBuffer(ctx.mContext, uploadHeap, uploadBuffer,
+			ZG_MEMORY_TYPE_UPLOAD, textureAllocInfo.sizeInBytes);
+
+		// Copy image to CPU
+		//CHECK_ZG zgBufferMemcpyTo(ctx.mContext, uploadBuffer, 0, imageData, imageDataSize);
+
+		// Copy to the texture
+		ZgCommandList* commandList = nullptr;
+		CHECK_ZG zgCommandQueueBeginCommandListRecording(commandQueue, &commandList);
+		CHECK_ZG zgCommandListMemcpyToTexture(commandList, texture, &imageView, uploadBuffer);
+		//CHECK_ZG zgCommandListMemcpyBufferToBuffer(
+		//	commandList, deviceBuffer, 0, uploadBuffer, 0, numBytes);
+		CHECK_ZG zgCommandQueueExecuteCommandList(commandQueue, commandList);
+		CHECK_ZG zgCommandQueueFlush(commandQueue);
+
+		// Release upload heap and buffer
+		CHECK_ZG zgMemoryHeapBufferRelease(uploadHeap, uploadBuffer);
+		CHECK_ZG zgMemoryHeapRelease(ctx.mContext, uploadHeap);
+
+		// Free image
+		delete[] imageData;
+	}
+	
 
 
 	// Run our main loop

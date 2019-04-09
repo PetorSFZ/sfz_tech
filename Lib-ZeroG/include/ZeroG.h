@@ -686,6 +686,28 @@ ZG_DLL_API ZgErrorCode zgCommandListMemcpyBufferToBuffer(
 	uint64_t srcBufferOffsetBytes,
 	uint64_t numBytes);
 
+struct ZgImageViewConstCpu {
+
+	ZgTexture2DFormat format;
+	const uint8_t* data;
+	uint32_t width;
+	uint32_t height;
+	uint32_t pitchInBytes;
+};
+
+// Copies an image from the CPU to a texture on the GPU.
+//
+// The CPU image (srcImageCpu) is first (synchronously) copied to a temporary upload buffer
+// (tempUploadBuffer), and then asynchronously copied from this upload buffer to the specified
+// texture (dstTexture). In other words, the CPU memory containing the image can freely be removed
+// after this call. The temporary upload buffer will not be touched until this command list has
+// finished executing.
+ZG_DLL_API ZgErrorCode zgCommandListMemcpyToTexture(
+	ZgCommandList* commandList,
+	ZgTexture2D* dstTexture,
+	const ZgImageViewConstCpu* srcImageCpu,
+	ZgBuffer* tempUploadBuffer);
+
 ZG_DLL_API ZgErrorCode zgCommandListSetPushConstant(
 	ZgCommandList* commandList,
 	uint32_t shaderRegister,
