@@ -15,23 +15,5 @@ cd build_vs2017
 : Generate Visual Studio solution
 cmake .. -G "Visual Studio 15 2017 Win64" -T host=x64
 
-: Create resources symlinks
-mklink /D res\ ..\res
-
-mkdir Debug
-cd Debug
-mklink /D res\ ..\..\res
-cd ..
-
-mkdir RelWithDebInfo
-cd RelWithDebInfo
-mklink /D res\ ..\..\res
-cd ..
-
-mkdir Release
-cd Release
-mklink /D res\ ..\..\res
-cd ..
-
 : Pause if started from Windows GUI
 if %0 == "%~0" pause

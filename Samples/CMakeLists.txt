@@ -126,3 +126,34 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/SampleCommon)
 # ------------------------------------------------------------------------------------------------
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Sample-1-Experiments)
+
+# Symlink resource ("res") directory into build directory
+# ------------------------------------------------------------------------------------------------
+
+if(MSVC)
+
+	set(SYMLINK_FILE "${CMAKE_BINARY_DIR}/create_symlinks.bat")
+	set(DEBUG_DIR "${CMAKE_BINARY_DIR}/Debug")
+	set(RELWITHDEBINFO_DIR "${CMAKE_BINARY_DIR}/RelWithDebInfo")
+	set(RELEASE_DIR "${CMAKE_BINARY_DIR}/Release")
+
+	set(symlinkDirName "res")
+	set(symlinkPath "${CMAKE_CURRENT_SOURCE_DIR}/${symlinkDirName}")
+
+	# Append symlink commands to file
+	file(APPEND ${SYMLINK_FILE} ": Create symlinks for \"${symlinkDirName}\"\n")
+	file(APPEND ${SYMLINK_FILE} "mklink /D \"${CMAKE_BINARY_DIR}/${symlinkDirName}\" \"${symlinkPath}\"\n")
+	if(CMAKE_CONFIGURATION_TYPES)
+		file(APPEND ${SYMLINK_FILE} "mklink /D \"${DEBUG_DIR}/${symlinkDirName}\" \"${symlinkPath}\"\n")
+		file(APPEND ${SYMLINK_FILE} "mklink /D \"${RELWITHDEBINFO_DIR}/${symlinkDirName}\" \"${symlinkPath}\"\n")
+		file(APPEND ${SYMLINK_FILE} "mklink /D \"${RELEASE_DIR}/${symlinkDirName}\" \"${symlinkPath}\"\n")
+	endif()
+	file(APPEND ${SYMLINK_FILE} "\n")
+
+	# Execute file
+	message("-- [ZeroG Samples]: Executing create symlink script \"${SYMLINK_FILE}\"")
+	execute_process(COMMAND ${SYMLINK_FILE} OUTPUT_QUIET ERROR_QUIET)
+
+else()
+	message(FATAL_ERROR "Not implemented")
+endif()
