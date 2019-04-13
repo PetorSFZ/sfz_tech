@@ -91,6 +91,7 @@ if(MSVC)
 	# /W4 = Warning level 4 (/Wall is too picky and has annoying warnings in standard headers)
 	# /wd4201 = Disable warning 4201 (nonstandard extension used : nameless struct/union)
 	# /wd26495 = Disable warning 26495 ("always initialize a member variable")
+	# /wd26451 = Disable warning C26451 ("arithmetic overflow")
 	# /Zi = Produce .pdb debug information. Does not affect optimizations, but does imply /debug.
 	# /arch:AVX = Enable (require) Intel AVX instructions for code generation
 	# /D_CRT_SECURE_NO_WARNINGS = Removes annyoing warning when using c standard library
@@ -99,7 +100,7 @@ if(MSVC)
 	# /DEBUG = "creates debugging information for the .exe file or DLL"
 	# /O2 = Optimize code for fastest speed
 	# /fp:fast = "optimize floating-point code for speed at the expense of accuracy and correctness"
-	set(CMAKE_CXX_FLAGS "/W4 /wd4201 /wd26495 /std:c++17 /permissive- /Zc:twoPhase- /Zi /Zf /EHsc /GR- /arch:AVX /D_CRT_SECURE_NO_WARNINGS /DWIN32 /D_WINDOWS /JMC /utf-8 /openmp:experimental")
+	set(CMAKE_CXX_FLAGS "/W4 /wd4201 /wd26495 /wd26451 /std:c++17 /permissive- /Zc:twoPhase- /Zi /Zf /EHsc /GR- /arch:AVX /D_CRT_SECURE_NO_WARNINGS /DWIN32 /D_WINDOWS /JMC /utf-8 /openmp:experimental")
 	set(CMAKE_CXX_FLAGS_DEBUG "/MDd /Od /DEBUG")
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /Ob3 /fp:fast /DEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob3 /fp:fast /DNDEBUG")

@@ -95,8 +95,8 @@ ZgErrorCode D3D12TextureHeap::texture2DGetAllocationInfo(
 	D3D12_RESOURCE_ALLOCATION_INFO allocInfo = device->GetResourceAllocationInfo(0, 1, &desc);
 
 	// Return allocation info
-	allocationInfoOut.sizeInBytes = allocInfo.SizeInBytes;
-	allocationInfoOut.alignmentInBytes = allocInfo.Alignment;
+	allocationInfoOut.sizeInBytes = (uint32_t)allocInfo.SizeInBytes;
+	allocationInfoOut.alignmentInBytes = (uint32_t)allocInfo.Alignment;
 	return ZG_SUCCESS;
 }
 
