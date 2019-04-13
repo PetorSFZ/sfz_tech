@@ -32,4 +32,5 @@ install_manifest.txt
 .vs/
 Samples/.vs/
 Samples/build_vs2017/
+Samples/build_vs2019/
 Samples/build_visualstudio/
