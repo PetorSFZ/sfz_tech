@@ -54,7 +54,7 @@ function(phSetCompilerFlags)
 	message("-- [PhantasyEngine]: Setting compiler flags")
 
 	if(MSVC)
-	
+
 		# Visual Studio flags
 		# /W4 = Warning level 4 (/Wall is too picky and has annoying warnings in standard headers)
 		# /wd4201 = Disable warning 4201 (nonstandard extension used : nameless struct/union)
@@ -65,7 +65,7 @@ function(phSetCompilerFlags)
 		# /Zf = Faster pdb generation
 		# /EHsc = TODO: Add explanation
 		# /GR- = Disable RTTI
-		# /MD(d) = Uses multi-threaded dynamic run-time library 
+		# /MD(d) = Uses multi-threaded dynamic run-time library
 		# /arch:AVX = Enable (require) Intel AVX instructions for code generation
 		# /D_CRT_SECURE_NO_WARNINGS = Removes annyoing warning when using c standard library
 		# /utf-8 = Specifies that both the source and execution character sets are encoded using UTF-8.
@@ -76,10 +76,11 @@ function(phSetCompilerFlags)
 		# /O2 = Optimize code for fastest speed
 		# /fp:fast = "optimize floating-point code for speed at the expense of accuracy and correctness"
 		# /DSFZ_NO_DEBUG = defines the "SFZ_NO_DEBUG" macro, which disables sfz_assert_debug()
-		
+
 		# Visual Studio 2019+ exclusive
 		# /Ob3 = "which is a more aggressive version of -Ob2"
 		# /openmp:experimental = "This allows loops annotated with “#pragma omp simd” to potentially be vectorized."
+		# /wd26451 = Disable warning C26451 ("arithmetic overflow")
 
 		# More cooler flags for Visual Studio 2019+
 		# Visual Studio Pre 2019
@@ -91,7 +92,7 @@ function(phSetCompilerFlags)
 
 		# Visual Studio 2019+
 		else()
-			set(PH_CMAKE_CXX_FLAGS "/W4 /wd4201 /std:c++17 /permissive- /Zc:twoPhase- /Zi /Zf /EHsc /GR- /arch:AVX /D_CRT_SECURE_NO_WARNINGS /DWIN32 /D_WINDOWS /JMC /utf-8 /openmp:experimental")
+			set(PH_CMAKE_CXX_FLAGS "/W4 /wd4201 /wd26451 /std:c++17 /permissive- /Zc:twoPhase- /Zi /Zf /EHsc /GR- /arch:AVX /D_CRT_SECURE_NO_WARNINGS /DWIN32 /D_WINDOWS /JMC /utf-8 /openmp:experimental")
 			set(PH_CMAKE_CXX_FLAGS_DEBUG "/MDd /Od /DEBUG")
 			set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /Ob3 /fp:fast /DEBUG /DSFZ_NO_DEBUG")
 			set(PH_CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob3 /fp:fast /DNDEBUG /DSFZ_NO_DEBUG")
@@ -101,7 +102,7 @@ function(phSetCompilerFlags)
 		set(PH_CMAKE_C_FLAGS_DEBUG ${PH_CMAKE_CXX_FLAGS_DEBUG})
 		set(PH_CMAKE_C_FLAGS_RELWITHDEBINFO ${PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO})
 		set(PH_CMAKE_C_FLAGS_RELEASE ${PH_CMAKE_CXX_FLAGS_RELEASE})
-		
+
 		if(PH_CUDA_SUPPORT)
 			# Define SFZ_CUDA
 			set(PH_CMAKE_CXX_FLAGS "${PH_CMAKE_CXX_FLAGS} /DSFZ_CUDA")
@@ -207,7 +208,7 @@ function(phSetCompilerFlags)
 	set(CMAKE_C_FLAGS_DEBUG ${PH_CMAKE_C_FLAGS_DEBUG} PARENT_SCOPE)
 	set(CMAKE_C_FLAGS_RELWITHDEBINFO ${PH_CMAKE_C_FLAGS_RELWITHDEBINFO} PARENT_SCOPE)
 	set(CMAKE_C_FLAGS_RELEASE ${PH_CMAKE_C_FLAGS_RELEASE} PARENT_SCOPE)
-	
+
 	if (PH_CUDA_SUPPORT)
 		set(CMAKE_CUDA_FLAGS ${PH_CMAKE_CUDA_FLAGS} PARENT_SCOPE)
 		set(CMAKE_CUDA_FLAGS_DEBUG ${PH_CMAKE_CUDA_FLAGS_DEBUG} PARENT_SCOPE)
