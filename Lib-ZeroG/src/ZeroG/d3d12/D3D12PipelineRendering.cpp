@@ -928,7 +928,9 @@ ZgErrorCode createPipelineRendering(
 		// Index of the parameter containing the dynamic table
 		dynamicBuffersParameterIndex = numParameters;
 		ZG_ASSERT(numParameters < MAX_NUM_ROOT_PARAMETERS);
-		numParameters += 1;
+		if ((numConstBufferMappings + numTexMappings) != 0) {
+			numParameters += 1; // No dynamic table if no dynamic parameters
+		}
 		
 		// TODO: Currently using the assumption that the shader register range is continuous,
 		//       which is probably not at all reasonable in practice
