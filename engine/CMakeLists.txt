@@ -39,6 +39,10 @@ if (NOT NATIVEFILEDIALOG_FOUND)
 	message(FATAL_ERROR "PhantasyEngine requires nativefiledialog. Add nativefiledialog.")
 endif()
 
+if (NOT SAJSON_FOUND)
+	message(FATAL_ERROR "PhantasyEngine requires sajson. Add sajson.")
+endif()
+
 if (NOT TINYGLTF_FOUND)
 	message(FATAL_ERROR "PhantasyEngine requires dear tinygltf.")
 endif()
@@ -128,6 +132,7 @@ target_include_directories(PhantasyEngineCore PUBLIC
 	${STB_INCLUDE_DIRS}
 	${IMGUI_INCLUDE_DIRS}
 	${NATIVEFILEDIALOG_INCLUDE_DIRS}
+	${SAJSON_INCLUDE_DIRS}
 	${TINYGLTF_INCLUDE_DIRS}
 )
 

@@ -348,6 +348,11 @@ function(phAddBundledExternals)
 	set(NATIVEFILEDIALOG_INCLUDE_DIRS ${NATIVEFILEDIALOG_INCLUDE_DIRS} PARENT_SCOPE)
 	set(NATIVEFILEDIALOG_LIBRARIES ${NATIVEFILEDIALOG_LIBRARIES} PARENT_SCOPE)
 
+	message("-- [PhantasyEngine]: Adding sajson target")
+	add_subdirectory(${PH_ROOT}/externals/sajson ${CMAKE_BINARY_DIR}/sajson)
+	set(SAJSON_FOUND ${SAJSON_FOUND} PARENT_SCOPE)
+	set(SAJSON_INCLUDE_DIRS ${SAJSON_INCLUDE_DIRS} PARENT_SCOPE)
+
 	message("-- [PhantasyEngine]: Adding tinygltf target")
 	add_subdirectory(${PH_ROOT}/externals/tinygltf ${CMAKE_BINARY_DIR}/tinygltf)
 	set(TINYGLTF_FOUND ${TINYGLTF_FOUND} PARENT_SCOPE)
