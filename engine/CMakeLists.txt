@@ -88,8 +88,9 @@ set(PHANTASY_ENGINE_HEADER_FILES
 	${INCLUDE_DIR}/ph/sdl/Mouse.hpp
 	${INCLUDE_DIR}/ph/sdl/SDLAllocator.hpp
 
-	${INCLUDE_DIR}/ph/util//GltfLoader.hpp
-	${INCLUDE_DIR}/ph/util//GltfWriter.hpp
+	${INCLUDE_DIR}/ph/util/GltfLoader.hpp
+	${INCLUDE_DIR}/ph/util/GltfWriter.hpp
+	${INCLUDE_DIR}/ph/util/JsonParser.hpp
 	${INCLUDE_DIR}/ph/util/TerminalLogger.hpp
 
 	${INCLUDE_DIR}/ph/PhantasyEngineMain.hpp
@@ -116,6 +117,7 @@ set(PHANTASY_ENGINE_SOURCE_FILES
 
 	${SOURCE_DIR}/ph/util/GltfLoader.cpp
 	${SOURCE_DIR}/ph/util/GltfWriter.cpp
+	${SOURCE_DIR}/ph/util/JsonParser.cpp
 	${SOURCE_DIR}/ph/util/TerminalLogger.cpp
 
 	${SOURCE_DIR}/ph/PhantasyEngineMain.cpp
