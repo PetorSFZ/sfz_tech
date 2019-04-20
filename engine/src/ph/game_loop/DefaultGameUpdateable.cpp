@@ -721,6 +721,12 @@ private:
 		// Begin window
 		ImGui::Begin("Dynamic Material Editor", nullptr, materialEditorWindowFlags);
 
+		// Early exit if no materials
+		if (mState.dynamicAssets.materials.size() == 0) {
+			ImGui::End();
+			return;
+		}
+
 		// Ensure material index is in range
 		if (mMaterialEditorCurrentIdx > mState.dynamicAssets.materials.size()) {
 			mMaterialEditorCurrentIdx = 0;
