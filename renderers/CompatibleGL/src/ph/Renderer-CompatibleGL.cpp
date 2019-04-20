@@ -202,7 +202,7 @@ static void stupidSetMaterialUniform(
 extern "C" PH_DLL_EXPORT
 uint32_t phRendererInterfaceVersion(void)
 {
-	return 13;
+	return PH_RENDERER_INTERFACE_VERSION;
 }
 
 extern "C" PH_DLL_EXPORT
