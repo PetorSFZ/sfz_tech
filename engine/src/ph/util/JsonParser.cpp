@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <type_traits>
 
 #include <sfz/PushWarnings.hpp>
 #define SAJSON_NO_STD_STRING
@@ -37,6 +38,7 @@ namespace ph {
 // ------------------------------------------------------------------------------------------------
 
 static_assert(PARSED_JSON_NODE_IMPL_SIZE >= sizeof(sajson::value), "ParsedJsonNode is too small");
+static_assert(std::is_trivially_copyable<sajson::value>::value, "sajson::value is not memcpy:able");
 
 static const sajson::value& castToSajsonValue(const uint8_t* memory) noexcept
 {
@@ -98,6 +100,18 @@ ParsedJsonNodeType ParsedJsonNode::type() const noexcept
 
 // ParsedJsonNode: Methods (non-leaf nodes)
 // ------------------------------------------------------------------------------------------------
+
+uint32_t ParsedJsonNode::mapNumObjects() const noexcept
+{
+	sfz_assert_debug(this->mActive);
+	const sajson::value& value = castToSajsonValue(mImpl);
+
+	// Return NONE if wrong type
+	if (this->type() != ParsedJsonNodeType::MAP) return 0;
+
+	// Return number of objects
+	return (uint32_t)value.get_length();
+}
 
 ParsedJsonNode ParsedJsonNode::accessMap(const char* nodeName) const noexcept
 {

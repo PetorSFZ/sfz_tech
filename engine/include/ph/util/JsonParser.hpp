@@ -86,6 +86,9 @@ public:
 	// Methods (non-leaf nodes)
 	// --------------------------------------------------------------------------------------------
 
+	// Returns the number of objects in a map, returns 0 if not a map node
+	uint32_t mapNumObjects() const noexcept;
+
 	// Accesses a node in a map, returns NONE on invalid access or if not map
 	ParsedJsonNode accessMap(const char* nodeName) const noexcept;
 
