@@ -22,8 +22,11 @@
 #include <cstdint>
 
 #include <sfz/memory/Allocator.hpp>
+#include <sfz/strings/StackString.hpp>
 
 namespace ph {
+
+using sfz::str256;
 
 // ParsedJsonNodeType enum
 // ------------------------------------------------------------------------------------------------
@@ -49,6 +52,15 @@ enum class ParsedJsonNodeType : uint32_t {
 
 // Size of the implementation of ParsedJsonNode in bytes
 constexpr uint32_t PARSED_JSON_NODE_IMPL_SIZE = 32;
+
+// Minimal helper struct that contains a value and whether the value existed or not
+//
+// Used as alternative getter for retrieving values from a ParsedJsonNode.
+template<typename T>
+struct ParsedJsonNodeValue {
+	T value;
+	bool exists = false;
+};
 
 // Represents a node in a ParsedJson instance
 //
@@ -108,6 +120,12 @@ public:
 	bool value(char* strOut, uint32_t strCapacity) const noexcept;
 	uint32_t stringLength() const noexcept; // Returns 0 if not a string
 
+	ParsedJsonNodeValue<bool> valueBool() const noexcept;
+	ParsedJsonNodeValue<int32_t> valueInt() const noexcept;
+	ParsedJsonNodeValue<float> valueFloat() const noexcept;
+	ParsedJsonNodeValue<double> valueDouble() const noexcept;
+	ParsedJsonNodeValue<str256> valueStr256() const noexcept;
+
 private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
@@ -149,6 +167,7 @@ public:
 	// Methods
 	// ---------------------------------------------------------------------------------------------
 
+	bool isValid() const noexcept { return mImpl != nullptr; }
 	ParsedJsonNode root() const noexcept;
 
 private:

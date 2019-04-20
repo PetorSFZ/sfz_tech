@@ -138,7 +138,7 @@ uint32_t ParsedJsonNode::arrayLength() const noexcept
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return 0 if node is of wrong type
-	if (this->type() != ParsedJsonNodeType::INTEGER) return 0;
+	if (this->type() != ParsedJsonNodeType::ARRAY) return 0;
 
 	return (uint32_t)value.get_length();
 }
@@ -255,6 +255,46 @@ uint32_t ParsedJsonNode::stringLength() const noexcept
 	// Return string length
 	uint32_t strLen = (uint32_t)value.get_string_length();
 	return strLen;
+}
+
+ParsedJsonNodeValue<bool> ParsedJsonNode::valueBool() const noexcept
+{
+	ParsedJsonNodeValue<bool> tmp;
+	tmp.value = false; // Default-value
+	tmp.exists = this->value(tmp.value);
+	return tmp;
+}
+
+ParsedJsonNodeValue<int32_t> ParsedJsonNode::valueInt() const noexcept
+{
+	ParsedJsonNodeValue<int32_t> tmp;
+	tmp.value = 0; // Default-value
+	tmp.exists = this->value(tmp.value);
+	return tmp;
+}
+
+ParsedJsonNodeValue<float> ParsedJsonNode::valueFloat() const noexcept
+{
+	ParsedJsonNodeValue<float> tmp;
+	tmp.value = 0.0f; // Default-value
+	tmp.exists = this->value(tmp.value);
+	return tmp;
+}
+
+ParsedJsonNodeValue<double> ParsedJsonNode::valueDouble() const noexcept
+{
+	ParsedJsonNodeValue<double> tmp;
+	tmp.value = 0.0; // Default-value
+	tmp.exists = this->value(tmp.value);
+	return tmp;
+}
+
+ParsedJsonNodeValue<str256> ParsedJsonNode::valueStr256() const noexcept
+{
+	ParsedJsonNodeValue<str256> tmp;
+	tmp.value.printf(""); // Default-value
+	tmp.exists = this->value(tmp.value.str, tmp.value.maxSize());
+	return tmp;
 }
 
 // ParsedJson: Implementation
