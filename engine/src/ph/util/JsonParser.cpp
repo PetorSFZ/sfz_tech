@@ -38,7 +38,7 @@ namespace ph {
 // ------------------------------------------------------------------------------------------------
 
 static_assert(PARSED_JSON_NODE_IMPL_SIZE >= sizeof(sajson::value), "ParsedJsonNode is too small");
-static_assert(std::is_trivially_copyable<sajson::value>::value, "sajson::value is not memcpy:able");
+//static_assert(std::is_trivially_copyable<sajson::value>::value, "sajson::value is not memcpy:able");
 
 static const sajson::value& castToSajsonValue(const uint8_t* memory) noexcept
 {
