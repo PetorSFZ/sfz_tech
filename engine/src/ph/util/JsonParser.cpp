@@ -347,7 +347,7 @@ ParsedJson ParsedJson::parseString(const char* jsonString, sfz::Allocator* alloc
 	uint64_t allocationSize = SIZE_FACTOR * jsonStringLen;
 	impl.astMemory =
 		reinterpret_cast<size_t*>(allocator->allocate(allocationSize, 32, "sajson ast"));
-	impl.astAllocation = sajson::bounded_allocation(impl.astMemory, allocationSize);
+	impl.astAllocation = sajson::bounded_allocation(impl.astMemory, allocationSize / sizeof(size_t));
 
 	// Parse json string
 	impl.doc = sfz::sfzNew<sajson::document>(allocator, sajson::parse(impl.astAllocation, impl.jsongStringView));
