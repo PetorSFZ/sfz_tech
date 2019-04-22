@@ -139,7 +139,7 @@ struct GameStateHeader final {
 	uint32_t stateSizeBytes;
 
 	// The number of singleton structs in the game state.
-	uint32_t numSingletonStructs;
+	uint32_t numSingletons;
 
 	// The number of component types in the ECS system. This includes data-less flags, such as the
 	// first (0th) ComponentMask bit which is reserved for whether an entity is active or not.

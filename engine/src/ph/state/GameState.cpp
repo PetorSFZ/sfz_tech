@@ -352,7 +352,7 @@ GameStateContainer createGameState(
 	state->magicNumber = GAME_STATE_MAGIC_NUMBER;
 	state->gameStateVersion = GAME_STATE_VERSION;
 	state->stateSizeBytes = totalSizeBytes;
-	state->numSingletonStructs = numSingletonStructs;
+	state->numSingletons = numSingletonStructs;
 	state->numComponentTypes = numComponentTypes + 1; // + 1 for active bit
 	state->maxNumEntities = maxNumEntities;
 	state->currentNumEntities = 0;
@@ -368,7 +368,7 @@ GameStateContainer createGameState(
 	// Fill singleton registry
 	SingletonRegistryEntry* singletonRegistry =
 		state->singletonRegistryArray()->data<SingletonRegistryEntry>();
-	for (uint32_t i = 0; i < state->numSingletonStructs; i++) {
+	for (uint32_t i = 0; i < state->numSingletons; i++) {
 		singletonRegistry[i] = singleRegistryEntries[i];
 	}
 

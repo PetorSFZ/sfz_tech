@@ -578,8 +578,6 @@ void GameStateEditor::destroy() noexcept
 
 void GameStateEditor::render(GameStateHeader* state) noexcept
 {
-	const sfz::vec4 INACTIVE_TEXT_COLOR = sfz::vec4(0.35f, 0.35f, 0.35f, 1.0f);
-
 	// Begin window
 	ImGui::SetNextWindowSize(sfz::vec2(720.0f, 750.0f), ImGuiCond_FirstUseEver);
 	ImGuiWindowFlags windowFlags = 0;
@@ -609,6 +607,37 @@ void GameStateEditor::render(GameStateHeader* state) noexcept
 		return;
 	}
 
+	// Tabs
+	ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_None;
+	if (ImGui::BeginTabBar("GameStateEditorTabBar", tabBarFlags)) {
+		if (ImGui::BeginTabItem("Singletons")) {
+			ImGui::Spacing();
+			ImGui::EndTabItem();
+		}
+		if (ImGui::BeginTabItem("ECS")) {
+			ImGui::Spacing();
+			this->renderEcsEditor(state);
+			ImGui::EndTabItem();
+		}
+		if (ImGui::BeginTabItem("Info")) {
+			ImGui::Spacing();
+			this->renderInfoViewer(state);
+			ImGui::EndTabItem();
+		}
+		ImGui::EndTabBar();
+	}
+
+	// End window
+	ImGui::End();
+}
+
+// GameStateEditor: Private methods
+// ------------------------------------------------------------------------------------------------
+
+void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
+{
+	const sfz::vec4 INACTIVE_TEXT_COLOR = sfz::vec4(0.35f, 0.35f, 0.35f, 1.0f);
+
 	// We need component info for each component type in ECS
 	sfz_assert_debug(state->numComponentTypes == mNumComponentInfos);
 
@@ -621,35 +650,7 @@ void GameStateEditor::render(GameStateHeader* state) noexcept
 	ImGui::Checkbox("Compact entity list", &mCompactEntityList);
 	ImGui::EndGroup();
 
-	// Group to the right of component mask filter
-	ImGui::SameLine(ImGui::GetWindowWidth() - 175.0f);
-	ImGui::BeginGroup();
 
-	// Print size of game state in bytes
-	if (state->stateSizeBytes < 1048576) {
-		ImGui::Text("Size: %.2f KiB", float(state->stateSizeBytes) / 1024.0f);
-	}
-	else {
-		ImGui::Text("Size: %.2f MiB", float(state->stateSizeBytes) / (1024.0f * 1024.0f));
-	}
-
-	// Print current number and max number of entities
-	ImGui::Text("%u / %u entities", state->currentNumEntities, state->maxNumEntities);
-
-	// Save to file button
-#if !defined(__EMSCRIPTEN__) && !defined(SFZ_IOS)
-	if (ImGui::Button("Save", sfz::vec2(70, 0))) {
-		saveDialog(state);
-	}
-
-	// Load from file button
-	ImGui::SameLine();
-	if (ImGui::Button("Load", sfz::vec2(70, 0))) {
-		loadDialog(state);
-	}
-#endif
-
-	ImGui::EndGroup();
 
 	// Separator between the different type of views
 	ImGui::Spacing();
@@ -660,7 +661,7 @@ void GameStateEditor::render(GameStateHeader* state) noexcept
 	ImGui::BeginGroup();
 
 	// Entities list
-	if (ImGui::ListBoxHeader("##Entities", vec2(100.0f, ImGui::GetWindowHeight() - 280.0f))) {
+	if (ImGui::ListBoxHeader("##Entities", vec2(100.0f, ImGui::GetWindowHeight() - 320.0f))) {
 		for (uint32_t entity = 0; entity < state->maxNumEntities; entity++) {
 
 			// Check if entity fulfills filter mask
@@ -728,7 +729,7 @@ void GameStateEditor::render(GameStateHeader* state) noexcept
 		// Create child window stretching the remaining content area
 		ImGui::BeginChild(
 			"ComponentsChild",
-			vec2(rhsContentWidth, ImGui::GetWindowHeight() - 270.0f),
+			vec2(rhsContentWidth, ImGui::GetWindowHeight() - 290.0f),
 			false,
 			ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
@@ -802,7 +803,57 @@ void GameStateEditor::render(GameStateHeader* state) noexcept
 	}
 
 	ImGui::EndGroup();
-	ImGui::End();
+}
+
+void GameStateEditor::renderInfoViewer(GameStateHeader* state) noexcept
+{
+	// GameStateHeader viewer
+	ImGui::Separator();
+	ImGui::Text("GameStateHeader");
+	ImGui::Spacing();
+
+	const float valueXOffset = 200;
+
+	uint64_t magicNumberString[2];
+	magicNumberString[0] = state->magicNumber;
+	magicNumberString[1] = 0;
+	uint64_t realMagicNumberString[2];
+	realMagicNumberString[0] = GAME_STATE_MAGIC_NUMBER;
+	realMagicNumberString[1] = 0;
+	ImGui::Text("magicNumber:"); ImGui::SameLine(valueXOffset); ImGui::Text("\"%s\" (expected: \"%s\")", magicNumberString, realMagicNumberString);
+	ImGui::Text("gameStateVersion:"); ImGui::SameLine(valueXOffset); ImGui::Text("%u (compiled version: %u)", state->gameStateVersion, GAME_STATE_VERSION);
+	ImGui::Text("stateSize:"); ImGui::SameLine(valueXOffset);
+	if (state->stateSizeBytes < 1048576) {
+		ImGui::Text("%.2f KiB", float(state->stateSizeBytes) / 1024.0f);
+	}
+	else {
+		ImGui::Text("%.2f MiB", float(state->stateSizeBytes) / (1024.0f * 1024.0f));
+	}
+	ImGui::Text("numSingletons:"); ImGui::SameLine(valueXOffset); ImGui::Text("%u", state->numSingletons);
+	ImGui::Text("numComponentTypes:"); ImGui::SameLine(valueXOffset); ImGui::Text("%u", state->numComponentTypes);
+	ImGui::Text("maxNumEntities:"); ImGui::SameLine(valueXOffset); ImGui::Text("%u", state->maxNumEntities);
+	ImGui::Text("currentNumEntities:"); ImGui::SameLine(valueXOffset); ImGui::Text("%u", state->currentNumEntities);
+	ImGui::Spacing();
+
+
+#if !defined(__EMSCRIPTEN__) && !defined(SFZ_IOS)
+	// Saving/loading to file options
+	ImGui::Separator();
+	ImGui::Text("File options");
+	ImGui::Spacing();
+
+	// Save to file button
+	if (ImGui::Button("Save to file (.phstate)", sfz::vec2(280, 0))) {
+		saveDialog(state);
+	}
+
+	ImGui::Spacing();
+
+	// Load from file button
+	if (ImGui::Button("Load from file (.phstate)", sfz::vec2(280, 0))) {
+		loadDialog(state);
+	}
+#endif
 }
 
 } // namespace ph

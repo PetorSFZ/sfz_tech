@@ -74,6 +74,13 @@ public:
 	void render(GameStateHeader* state) noexcept;
 
 private:
+	// Private methods
+	// --------------------------------------------------------------------------------------------
+
+	void renderEcsEditor(GameStateHeader* state) noexcept;
+
+	void renderInfoViewer(GameStateHeader* state) noexcept;
+
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
