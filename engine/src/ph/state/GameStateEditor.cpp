@@ -596,8 +596,15 @@ void GameStateEditor::render(GameStateHeader* state) noexcept
 	}
 
 	// End window and return if not a game state
-	if (state->MAGIC_NUMBER != GAME_STATE_MAGIC_NUMBER) {
+	if (state->magicNumber != GAME_STATE_MAGIC_NUMBER) {
 		ImGui::Text("<none> (Magic number is wrong, corrupt data?)");
+		ImGui::End();
+		return;
+	}
+
+	// End window and return if wrong version
+	if (state->gameStateVersion != GAME_STATE_VERSION) {
+		ImGui::Text("<none> (Version is wrong, corrupt data?)");
 		ImGui::End();
 		return;
 	}

@@ -20,6 +20,7 @@
 #pragma once
 
 #include <cstdint>
+#include <type_traits>
 
 #include <sfz/Assert.hpp>
 #include <sfz/Context.hpp>
@@ -47,7 +48,19 @@ constexpr uint64_t GAME_STATE_MAGIC_NUMBER =
 	uint64_t('T') << 48 |
 	uint64_t('E') << 56;
 
-constexpr uint32_t GAME_STATE_VERSION = 2;
+constexpr uint32_t GAME_STATE_VERSION = 3;
+
+// SingletonRegistryEntry struct
+// ------------------------------------------------------------------------------------------------
+
+struct SingletonRegistryEntry final {
+
+	// The offset in bytes to the singleton struct
+	uint32_t offset;
+
+	// The size in bytes of the singleton struct
+	uint32_t sizeInBytes;
+};
 
 // ComponentRegistryEntry struct
 // ------------------------------------------------------------------------------------------------
@@ -69,18 +82,23 @@ static_assert(sizeof(ComponentRegistryEntry) == 4, "ComponentRegistryEntry is pa
 // GameState
 // ------------------------------------------------------------------------------------------------
 
-// The header for a GameState
+// The header for a GameState. A GameState is a combination of singleton state and an ECS system.
 //
 // The entire game state is contained in a single chunk of allocated memory, without any pointers
 // of any kind. This means that it is possible to memcpy (including writing and reading from file)
 // the entire state.
 //
 // Given:
+// S = number of singletons
 // N = max number of entities
 // K = number of component systems
 // The game state has the following representation in memory:
 //
 // | GameState header |
+// | Singleton registry array header|
+// | Singleton struct 0 |
+// | ... |
+// | Singleton struct S-1 |
 // | Component registry array header |
 // | ComponentRegistryEntry 0 |
 // | ... |
@@ -110,15 +128,18 @@ struct GameStateHeader final {
 	// Magic number in beginning of the game state. Should spell out "PHESTATE" if viewed in a hex
 	// editor. Can be used to check if a binary file seems to be a game state dumped to file.
 	// See: https://en.wikipedia.org/wiki/File_format#Magic_number
-	uint64_t MAGIC_NUMBER;
+	uint64_t magicNumber;
 
 	// The version of the game state, this number should increment each time a change is made to
 	// the data layout of the system.
-	uint32_t GAME_STATE_VERSION;
+	uint32_t gameStateVersion;
 
 	// The size of the game state in bytes. This is the number of bytes to copy if you want to copy
 	// the entire state using memcpy(). E.g. "memcpy(dst, stateHeader, stateHeader->stateSizeBytes)".
 	uint32_t stateSizeBytes;
+
+	// The number of singleton structs in the game state.
+	uint32_t numSingletonStructs;
 
 	// The number of component types in the ECS system. This includes data-less flags, such as the
 	// first (0th) ComponentMask bit which is reserved for whether an entity is active or not.
@@ -132,6 +153,10 @@ struct GameStateHeader final {
 	// to be contiguously packed.
 	uint32_t currentNumEntities;
 
+	// Offset in bytes to the ArrayHeader of SingletonRegistryEntry which in turn contains the
+	// offsets to the singleton structs, and the sizes of them.
+	uint32_t offsetSingletonRegistry;
+
 	// Offset in bytes to the ArrayHeader of ComponentRegistryEntry which in turn contains the
 	// offsets to the ArrayHeaders for the various component types
 	uint32_t offsetComponentRegistry;
@@ -144,9 +169,40 @@ struct GameStateHeader final {
 	uint32_t offsetComponentMasks;
 
 	// Unused padding to ensure header is 32-byte aligned.
-	uint32_t ___PADDING_UNUSED___[6];
+	uint32_t ___PADDING_UNUSED___[4];
 
-	// API
+	// Singleton state API
+	// --------------------------------------------------------------------------------------------
+
+	// Returns a pointer to the singleton at the given index. Returns nullptr if the singleton
+	// does not exist. The second parameter returns the size of the singleton in bytes.
+	uint8_t* singletonUntyped(uint32_t singletonIndex, uint32_t& singletonSizeBytesOut) noexcept;
+	const uint8_t* singletonUntyped(uint32_t singletonIndex, uint32_t& singletonSizeBytesOut) const noexcept;
+
+	// Returns typed reference to the singleton at the given index. Undefined behavior (likely
+	// segfault) if singleton does not exist. The requested type T must be of the correct size.
+	template<typename T>
+	T& singleton(uint32_t singletonIndex) noexcept
+	{
+		static_assert(std::is_trivially_copyable<T>::value, "Game state singletons must be trivially copyable");
+		static_assert(std::is_trivially_destructible<T>::value, "Game state singletons must be trivially destructible");
+		uint32_t singletonSize = 0;
+		T* singleton = (T*)singletonUntyped(singletonIndex, singletonSize);
+		sfz_assert_debug(sizeof(T) == singletonSize);
+		return *singleton;
+	}
+	template<typename T>
+	const T& singleton(uint32_t singletonIndex) noexcept
+	{
+		static_assert(std::is_trivially_copyable<T>::value, "Game state singletons must be trivially copyable");
+		static_assert(std::is_trivially_destructible<T>::value, "Game state singletons must be trivially destructible");
+		uint32_t singletonSize = 0;
+		const T* singleton = (const T*)singletonUntyped(singletonIndex, singletonSize);
+		sfz_assert_debug(sizeof(T) == singletonSize);
+		return *singleton;
+	}
+
+	// ECS API
 	// --------------------------------------------------------------------------------------------
 
 	// Creates a new entity with no associated components. Index is guaranteed to be smaller than
@@ -182,6 +238,8 @@ struct GameStateHeader final {
 	template<typename T>
 	T* components(uint32_t componentType) noexcept
 	{
+		static_assert(std::is_trivially_copyable<T>::value, "ECS components must be trivially copyable");
+		static_assert(std::is_trivially_destructible<T>::value, "ECS components must be trivially destructible");
 		uint32_t componentSize = 0;
 		T* components = (T*)componentsUntyped(componentType, componentSize);
 		sfz_assert_debug(sizeof(T) == componentSize);
@@ -190,6 +248,8 @@ struct GameStateHeader final {
 	template<typename T>
 	const T* components(uint32_t componentType) const noexcept
 	{
+		static_assert(std::is_trivially_copyable<T>::value, "ECS components must be trivially copyable");
+		static_assert(std::is_trivially_destructible<T>::value, "ECS components must be trivially destructible");
 		uint32_t componentSize = 0;
 		const T* components = (const T*)componentsUntyped(componentType, componentSize);
 		sfz_assert_debug(sizeof(T) == componentSize);
@@ -206,6 +266,8 @@ struct GameStateHeader final {
 	template<typename T>
 	bool addComponent(uint32_t entity, uint32_t componentType, const T& component) noexcept
 	{
+		static_assert(std::is_trivially_copyable<T>::value, "ECS components must be trivially copyable");
+		static_assert(std::is_trivially_destructible<T>::value, "ECS components must be trivially destructible");
 		return addComponentUntyped(entity, componentType, (const uint8_t*)&component, sizeof(T));
 	}
 
@@ -219,6 +281,9 @@ struct GameStateHeader final {
 
 	// Accessing arrays
 	// --------------------------------------------------------------------------------------------
+
+	ArrayHeader* singletonRegistryArray() noexcept { return arrayAt(offsetSingletonRegistry); }
+	const ArrayHeader* singletonRegistryArray() const noexcept { return arrayAt(offsetSingletonRegistry); }
 
 	ArrayHeader* componentRegistryArray() noexcept { return arrayAt(offsetComponentRegistry); }
 	const ArrayHeader* componentRegistryArray() const noexcept { return arrayAt(offsetComponentRegistry); }
@@ -252,6 +317,8 @@ static_assert(sizeof(GameStateHeader) == 64, "GameStateHeader is padded");
 // is reserved to signify whether and entity is active or not. If you want data-less component
 // types, i.e. flags, you should specify 0 as the size in the "componentSizes" array.
 GameStateContainer createGameState(
+	uint32_t numSingletonStructs,
+	const uint32_t* singletonStructSizes,
 	uint32_t maxNumEntities,
 	const uint32_t* componentSizes,
 	uint32_t numComponentTypes,

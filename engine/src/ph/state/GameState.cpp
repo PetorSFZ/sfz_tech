@@ -23,7 +23,40 @@
 
 namespace ph {
 
-// GameState: API
+// GameState: Singleton state API
+// ------------------------------------------------------------------------------------------------
+
+uint8_t* GameStateHeader::singletonUntyped(uint32_t singletonIndex, uint32_t& singletonSizeBytesOut) noexcept
+{
+	// Get registry, return nullptr if component type is not in registry
+	ArrayHeader* registry = this->singletonRegistryArray();
+	sfz_assert_debug(singletonIndex < registry->size);
+	if (registry->size <= singletonIndex) return nullptr;
+
+	// Get registry entry, return nullptr if component type has no data
+	SingletonRegistryEntry entry = registry->at<SingletonRegistryEntry>(singletonIndex);
+
+	// Return singleton size and pointer
+	singletonSizeBytesOut = entry.sizeInBytes;
+	return reinterpret_cast<uint8_t*>(this + entry.offset);
+}
+
+const uint8_t* GameStateHeader::singletonUntyped(uint32_t singletonIndex, uint32_t& singletonSizeBytesOut) const noexcept
+{
+	// Get registry, return nullptr if component type is not in registry
+	const ArrayHeader* registry = this->singletonRegistryArray();
+	sfz_assert_debug(singletonIndex < registry->size);
+	if (registry->size <= singletonIndex) return nullptr;
+
+	// Get registry entry, return nullptr if component type has no data
+	SingletonRegistryEntry entry = registry->at<SingletonRegistryEntry>(singletonIndex);
+
+	// Return singleton size and pointer
+	singletonSizeBytesOut = entry.sizeInBytes;
+	return reinterpret_cast<const uint8_t*>(this + entry.offset);
+}
+
+// GameState: ECS API
 // ------------------------------------------------------------------------------------------------
 
 uint32_t GameStateHeader::createEntity() noexcept
@@ -237,20 +270,47 @@ bool GameStateHeader::deleteComponent(uint32_t entity, uint32_t componentType) n
 // ------------------------------------------------------------------------------------------------
 
 GameStateContainer createGameState(
+	uint32_t numSingletonStructs,
+	const uint32_t* singletonStructSizes,
 	uint32_t maxNumEntities,
 	const uint32_t* componentSizes,
 	uint32_t numComponentTypes,
 	Allocator* allocator) noexcept
 {
+	sfz_assert_debug(numSingletonStructs <= 64);
+
 	uint32_t totalSizeBytes = 0;
 
 	// GameState Header
 	totalSizeBytes += sizeof(GameStateHeader);
 
-	// Registry (+ 1 for active bit)
-	ArrayHeader registryHeader = ArrayHeader::create<ComponentRegistryEntry>(numComponentTypes + 1);
-	uint32_t registrySizeBytes = registryHeader.numBytesNeededForArrayPlusHeader32Byte();
-	totalSizeBytes += registrySizeBytes;
+	// Singleton registry
+	ArrayHeader singletonRegistryHeader = ArrayHeader::create<SingletonRegistryEntry>(numSingletonStructs);
+	uint32_t singletonRegistrySizeBytes = singletonRegistryHeader.numBytesNeededForArrayPlusHeader32Byte();
+	totalSizeBytes += singletonRegistrySizeBytes;
+
+	// Singleton structs
+	SingletonRegistryEntry singleRegistryEntries[64] = {};
+	for (uint32_t i = 0; i < numSingletonStructs; i++) {
+		sfz_assert_debug(singletonStructSizes[i] != 0);
+
+		// Fill singleton registry
+		singleRegistryEntries[i].offset = totalSizeBytes;
+		singleRegistryEntries[i].sizeInBytes = singletonStructSizes[i];
+
+		// Calculate next 32-byte aligned offset and update totalSizeBytes
+		uint32_t bytesBeforePadding = singletonStructSizes[i];
+		uint32_t padding = 32 - (bytesBeforePadding & 0x1F); // bytesBeforePadding % 32
+		if (padding == 32) padding = 0;
+		uint32_t bytesIncludingPadding = bytesBeforePadding + padding;
+		totalSizeBytes += bytesIncludingPadding;
+	}
+	
+	// Components registry (+ 1 for active bit)
+	uint32_t offsetComponentRegistryHeader = totalSizeBytes;
+	ArrayHeader componentRegistryHeader = ArrayHeader::create<ComponentRegistryEntry>(numComponentTypes + 1);
+	uint32_t componentRegistrySizeBytes = componentRegistryHeader.numBytesNeededForArrayPlusHeader32Byte();
+	totalSizeBytes += componentRegistrySizeBytes;
 
 	// Free entities list
 	ArrayHeader freeEntitiesHeader = ArrayHeader::create<uint32_t>(maxNumEntities);
@@ -288,26 +348,39 @@ GameStateContainer createGameState(
 	GameStateContainer container = GameStateContainer::createRaw(totalSizeBytes, allocator);
 	GameStateHeader* state = container.getHeader();
 
-	// Set ECS header
-	state->MAGIC_NUMBER = GAME_STATE_MAGIC_NUMBER;
-	state->GAME_STATE_VERSION = GAME_STATE_VERSION;
+	// Set game state header
+	state->magicNumber = GAME_STATE_MAGIC_NUMBER;
+	state->gameStateVersion = GAME_STATE_VERSION;
 	state->stateSizeBytes = totalSizeBytes;
+	state->numSingletonStructs = numSingletonStructs;
 	state->numComponentTypes = numComponentTypes + 1; // + 1 for active bit
 	state->maxNumEntities = maxNumEntities;
 	state->currentNumEntities = 0;
-	state->offsetComponentRegistry = sizeof(GameStateHeader);
-	state->offsetFreeEntitiesList = state->offsetComponentRegistry + registrySizeBytes;
+	state->offsetSingletonRegistry = sizeof(GameStateHeader);
+	state->offsetComponentRegistry = offsetComponentRegistryHeader;
+	state->offsetFreeEntitiesList = state->offsetComponentRegistry + componentRegistrySizeBytes;
 	state->offsetComponentMasks = state->offsetFreeEntitiesList + freeEntitiesSizeBytes;
 
-	// Set registry array header
-	*state->componentRegistryArray() = registryHeader;
-	state->componentRegistryArray()->size = registryHeader.capacity;
+	// Set singleton registry array header
+	*state->singletonRegistryArray() = singletonRegistryHeader;
+	state->singletonRegistryArray()->size = singletonRegistryHeader.capacity;
 
-	// Fill registry
-	ComponentRegistryEntry* registry =
+	// Fill singleton registry
+	SingletonRegistryEntry* singletonRegistry =
+		state->singletonRegistryArray()->data<SingletonRegistryEntry>();
+	for (uint32_t i = 0; i < state->numSingletonStructs; i++) {
+		singletonRegistry[i] = singleRegistryEntries[i];
+	}
+
+	// Set component registry array header
+	*state->componentRegistryArray() = componentRegistryHeader;
+	state->componentRegistryArray()->size = componentRegistryHeader.capacity;
+
+	// Fill component registry
+	ComponentRegistryEntry* componentsRegistry =
 		state->componentRegistryArray()->data<ComponentRegistryEntry>();
 	for (uint32_t i = 0; i < state->numComponentTypes; i++) {
-		registry[i] = componentRegistryEntries[i];
+		componentsRegistry[i] = componentRegistryEntries[i];
 	}
 
 	// Set free entities header and fill list with free entity indices
@@ -323,8 +396,8 @@ GameStateContainer createGameState(
 
 	// Set component types array headers (i = 1 because first is active bit, which has no data)
 	for (uint32_t i = 1; i < state->numComponentTypes; i++) {
-		if (!registry[i].componentTypeHasData()) continue;
-		ArrayHeader* header = state->arrayAt(registry[i].offset);
+		if (!componentsRegistry[i].componentTypeHasData()) continue;
+		ArrayHeader* header = state->arrayAt(componentsRegistry[i].offset);
 		*header = componentsArrayHeaders[i];
 	}
 
