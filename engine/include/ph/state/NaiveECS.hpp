@@ -25,9 +25,9 @@
 #include <sfz/Context.hpp>
 #include <sfz/memory/Allocator.hpp>
 
-#include "ph/ecs/ArrayHeader.hpp"
-#include "ph/ecs/ComponentMask.hpp"
-#include "ph/ecs/EcsContainer.hpp"
+#include "ph/state/ArrayHeader.hpp"
+#include "ph/state/ComponentMask.hpp"
+#include "ph/state/EcsContainer.hpp"
 
 namespace ph {
 

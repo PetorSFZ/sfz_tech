@@ -64,14 +64,6 @@ set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/res_ph)
 
 set(PHANTASY_ENGINE_HEADER_FILES
-	${INCLUDE_DIR}/ph/ecs/naive/NaiveECS.hpp
-	${INCLUDE_DIR}/ph/ecs/naive/NaiveEcsEditor.hpp
-
-	${INCLUDE_DIR}/ph/ecs/ArrayHeader.hpp
-	${INCLUDE_DIR}/ph/ecs/ComponentMask.hpp
-	${INCLUDE_DIR}/ph/ecs/EcsContainer.hpp
-	${INCLUDE_DIR}/ph/ecs/EcsEnums.hpp
-
 	${INCLUDE_DIR}/ph/game_loop/DefaultGameUpdateable.hpp
 	${INCLUDE_DIR}/ph/game_loop/GameLoop.hpp
 	${INCLUDE_DIR}/ph/game_loop/GameLoopUpdateable.hpp
@@ -88,6 +80,13 @@ set(PHANTASY_ENGINE_HEADER_FILES
 	${INCLUDE_DIR}/ph/sdl/Mouse.hpp
 	${INCLUDE_DIR}/ph/sdl/SDLAllocator.hpp
 
+	${INCLUDE_DIR}/ph/state/ArrayHeader.hpp
+	${INCLUDE_DIR}/ph/state/ComponentMask.hpp
+	${INCLUDE_DIR}/ph/state/EcsContainer.hpp
+	${INCLUDE_DIR}/ph/state/EcsEnums.hpp
+	${INCLUDE_DIR}/ph/state/NaiveECS.hpp
+	${INCLUDE_DIR}/ph/state/NaiveEcsEditor.hpp
+
 	${INCLUDE_DIR}/ph/util/GltfLoader.hpp
 	${INCLUDE_DIR}/ph/util/GltfWriter.hpp
 	${INCLUDE_DIR}/ph/util/JsonParser.hpp
@@ -98,12 +97,6 @@ set(PHANTASY_ENGINE_HEADER_FILES
 source_group(TREE ${INCLUDE_DIR} FILES ${PHANTASY_ENGINE_HEADER_FILES})
 
 set(PHANTASY_ENGINE_SOURCE_FILES
-	${SOURCE_DIR}/ph/ecs/naive/NaiveECS.cpp
-	${SOURCE_DIR}/ph/ecs/naive/NaiveEcsEditor.cpp
-
-	${SOURCE_DIR}/ph/ecs/ArrayHeader.cpp
-	${SOURCE_DIR}/ph/ecs/EcsContainer.cpp
-
 	${SOURCE_DIR}/ph/game_loop/DefaultGameUpdateable.cpp
 	${SOURCE_DIR}/ph/game_loop/GameLoop.cpp
 
@@ -114,6 +107,11 @@ set(PHANTASY_ENGINE_SOURCE_FILES
 	${SOURCE_DIR}/ph/sdl/GameController.cpp
 	${SOURCE_DIR}/ph/sdl/Mouse.cpp
 	${SOURCE_DIR}/ph/sdl/SDLAllocator.cpp
+
+	${SOURCE_DIR}/ph/state/ArrayHeader.cpp
+	${SOURCE_DIR}/ph/state/EcsContainer.cpp
+	${SOURCE_DIR}/ph/state/NaiveECS.cpp
+	${SOURCE_DIR}/ph/state/NaiveEcsEditor.cpp
 
 	${SOURCE_DIR}/ph/util/GltfLoader.cpp
 	${SOURCE_DIR}/ph/util/GltfWriter.cpp

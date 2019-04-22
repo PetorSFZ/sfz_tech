@@ -17,11 +17,11 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "ph/ecs/naive/NaiveECS.hpp"
+#include "ph/state/NaiveECS.hpp"
 
 #include <cstring>
 
-#include "ph/ecs/EcsEnums.hpp"
+#include "ph/state/EcsEnums.hpp"
 
 namespace ph {
 
