@@ -236,7 +236,7 @@ bool GameStateHeader::deleteComponent(uint32_t entity, uint32_t componentType) n
 // Game state functions
 // ------------------------------------------------------------------------------------------------
 
-GameStateContainer createEcs(
+GameStateContainer createGameState(
 	uint32_t maxNumEntities,
 	const uint32_t* componentSizes,
 	uint32_t numComponentTypes,
@@ -244,7 +244,7 @@ GameStateContainer createEcs(
 {
 	uint32_t totalSizeBytes = 0;
 
-	// Ecs Header
+	// GameState Header
 	totalSizeBytes += sizeof(GameStateHeader);
 
 	// Registry (+ 1 for active bit)
@@ -290,8 +290,8 @@ GameStateContainer createEcs(
 
 	// Set ECS header
 	state->MAGIC_NUMBER = GAME_STATE_MAGIC_NUMBER;
-	state->ECS_VERSION = NAIVE_ECS_VERSION;
-	state->ecsSizeBytes = totalSizeBytes;
+	state->GAME_STATE_VERSION = GAME_STATE_VERSION;
+	state->stateSizeBytes = totalSizeBytes;
 	state->numComponentTypes = numComponentTypes + 1; // + 1 for active bit
 	state->maxNumEntities = maxNumEntities;
 	state->currentNumEntities = 0;

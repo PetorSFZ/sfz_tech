@@ -46,12 +46,12 @@ namespace ph {
 // GameStateContainer: State methods
 // ------------------------------------------------------------------------------------------------
 
-void GameStateContainer::cloneTo(GameStateContainer& ecs) noexcept
+void GameStateContainer::cloneTo(GameStateContainer& state) noexcept
 {
-	sfz_assert_debug(ecs.mGameStateMemoryChunk != nullptr);
-	sfz_assert_debug(this->mNumBytes == ecs.mNumBytes);
+	sfz_assert_debug(state.mGameStateMemoryChunk != nullptr);
+	sfz_assert_debug(this->mNumBytes == state.mNumBytes);
 
-	std::memcpy(ecs.mGameStateMemoryChunk, this->mGameStateMemoryChunk, this->mNumBytes);
+	std::memcpy(state.mGameStateMemoryChunk, this->mGameStateMemoryChunk, this->mNumBytes);
 }
 
 GameStateContainer GameStateContainer::clone(Allocator* allocator) noexcept

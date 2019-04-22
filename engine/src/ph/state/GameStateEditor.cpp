@@ -434,14 +434,14 @@ static void saveDialog(const GameStateHeader* state) noexcept
 	nfdchar_t* path = nullptr;
 	nfdresult_t result = NFD_SaveDialog("phstate", nullptr, &path);
 
-	// Write ECS to file if file dialog was succesful
+	// Write game state to file if file dialog was succesful
 	if (result == NFD_OKAY) {
-		bool success =  sfz::writeBinaryFile(path, (const uint8_t*)state, state->ecsSizeBytes);
+		bool success =  sfz::writeBinaryFile(path, (const uint8_t*)state, state->stateSizeBytes);
 		if (success) {
-			SFZ_INFO("PhantasyEngine", "Wrote ECS to \"%s\"", path);
+			SFZ_INFO("PhantasyEngine", "Wrote game state to \"%s\"", path);
 		}
 		else {
-			SFZ_ERROR("PhantasyEngine", "Failed to write ECS to \"%s\"", path);
+			SFZ_ERROR("PhantasyEngine", "Failed to write game state to \"%s\"", path);
 		}
 		free(path);
 	}
@@ -457,19 +457,19 @@ static void loadDialog(GameStateHeader* state) noexcept
 	nfdchar_t* path = nullptr;
 	nfdresult_t result = NFD_OpenDialog("phstate", nullptr, &path);
 
-	// Load ECS from file if file dialog was succesful
+	// Load game state from file if file dialog was succesful
 	if (result == NFD_OKAY) {
 		sfz::DynArray<uint8_t> binary = sfz::readBinaryFile(path);
 		if (binary.size() == 0) {
-			SFZ_ERROR("PhantasyEngine", "Could not read ECS from \"%s\"", path);
+			SFZ_ERROR("PhantasyEngine", "Could not read game state from \"%s\"", path);
 		}
-		else if (binary.size() != state->ecsSizeBytes) {
-			SFZ_ERROR("PhantasyEngine", "ECS from \"%s\" is wrong size", path);
+		else if (binary.size() != state->stateSizeBytes) {
+			SFZ_ERROR("PhantasyEngine", "Game state from \"%s\" is wrong size", path);
 		}
 		else {
 			// TODO: Check if header matches
-			std::memcpy(state, binary.data(), state->ecsSizeBytes);
-			SFZ_INFO("PhantasyEngine", "Loaded ECS from \"%s\"", path);
+			std::memcpy(state, binary.data(), state->stateSizeBytes);
+			SFZ_INFO("PhantasyEngine", "Loaded game state from \"%s\"", path);
 		}
 		free(path);
 	}
@@ -566,7 +566,7 @@ void GameStateEditor::destroy() noexcept
 	mCompactEntityList = false;
 	mCurrentSelectedEntity = 0;
 
-	// TODO: Not perfect, potential race condition if multiple ECS viewers.
+	// TODO: Not perfect, potential race condition if multiple game state viewers.
 	if (binaryStringToByteLookupMap != nullptr) {
 		sfz::sfzDelete(binaryStringToByteLookupMap, binaryStringToByteLookupMap->allocator());
 		binaryStringToByteLookupMap = nullptr;
@@ -576,7 +576,7 @@ void GameStateEditor::destroy() noexcept
 // GameStateEditor: Methods
 // ------------------------------------------------------------------------------------------------
 
-void GameStateEditor::render(GameStateHeader* ecs) noexcept
+void GameStateEditor::render(GameStateHeader* state) noexcept
 {
 	const sfz::vec4 INACTIVE_TEXT_COLOR = sfz::vec4(0.35f, 0.35f, 0.35f, 1.0f);
 
@@ -588,25 +588,25 @@ void GameStateEditor::render(GameStateHeader* ecs) noexcept
 	windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
 	ImGui::Begin(mWindowName.str, nullptr, windowFlags);
 
-	// End window and return if no ECS system
-	if (ecs == nullptr) {
+	// End window and return if no game state
+	if (state == nullptr) {
 		ImGui::Text("<none>");
 		ImGui::End();
 		return;
 	}
 
-	// End window and return if not a naive ECS system
-	if (ecs->MAGIC_NUMBER != GAME_STATE_MAGIC_NUMBER) {
+	// End window and return if not a game state
+	if (state->MAGIC_NUMBER != GAME_STATE_MAGIC_NUMBER) {
 		ImGui::Text("<none> (Magic number is wrong, corrupt data?)");
 		ImGui::End();
 		return;
 	}
 
 	// We need component info for each component type in ECS
-	sfz_assert_debug(ecs->numComponentTypes == mNumComponentInfos);
+	sfz_assert_debug(state->numComponentTypes == mNumComponentInfos);
 
-	// Get some stuff from the ECS system
-	ComponentMask* masks = ecs->componentMasks();
+	// Get some stuff from the game state
+	ComponentMask* masks = state->componentMasks();
 
 	// Currently selected entities component mask
 	ImGui::BeginGroup();
@@ -618,27 +618,27 @@ void GameStateEditor::render(GameStateHeader* ecs) noexcept
 	ImGui::SameLine(ImGui::GetWindowWidth() - 175.0f);
 	ImGui::BeginGroup();
 
-	// Print size of ECS system in bytes
-	if (ecs->ecsSizeBytes < 1048576) {
-		ImGui::Text("Size: %.2f KiB", float(ecs->ecsSizeBytes) / 1024.0f);
+	// Print size of game state in bytes
+	if (state->stateSizeBytes < 1048576) {
+		ImGui::Text("Size: %.2f KiB", float(state->stateSizeBytes) / 1024.0f);
 	}
 	else {
-		ImGui::Text("Size: %.2f MiB", float(ecs->ecsSizeBytes) / (1024.0f * 1024.0f));
+		ImGui::Text("Size: %.2f MiB", float(state->stateSizeBytes) / (1024.0f * 1024.0f));
 	}
 
 	// Print current number and max number of entities
-	ImGui::Text("%u / %u entities", ecs->currentNumEntities, ecs->maxNumEntities);
+	ImGui::Text("%u / %u entities", state->currentNumEntities, state->maxNumEntities);
 
 	// Save to file button
 #if !defined(__EMSCRIPTEN__) && !defined(SFZ_IOS)
 	if (ImGui::Button("Save", sfz::vec2(70, 0))) {
-		saveDialog(ecs);
+		saveDialog(state);
 	}
 
 	// Load from file button
 	ImGui::SameLine();
 	if (ImGui::Button("Load", sfz::vec2(70, 0))) {
-		loadDialog(ecs);
+		loadDialog(state);
 	}
 #endif
 
@@ -654,7 +654,7 @@ void GameStateEditor::render(GameStateHeader* ecs) noexcept
 
 	// Entities list
 	if (ImGui::ListBoxHeader("##Entities", vec2(100.0f, ImGui::GetWindowHeight() - 280.0f))) {
-		for (uint32_t entity = 0; entity < ecs->maxNumEntities; entity++) {
+		for (uint32_t entity = 0; entity < state->maxNumEntities; entity++) {
 
 			// Check if entity fulfills filter mask
 			bool fulfillsFilter = masks[entity].fulfills(mFilterMask);
@@ -682,19 +682,19 @@ void GameStateEditor::render(GameStateHeader* ecs) noexcept
 
 	// New entity button
 	if (ImGui::Button("New", sfz::vec2(100, 0))) {
-		uint32_t entity = ecs->createEntity();
+		uint32_t entity = state->createEntity();
 		if (entity != ~0u) mCurrentSelectedEntity = entity;
 	}
 
 	// Clone entity button
 	if (ImGui::Button("Clone", sfz::vec2(100, 0))) {
-		uint32_t entity = ecs->cloneEntity(mCurrentSelectedEntity);
+		uint32_t entity = state->cloneEntity(mCurrentSelectedEntity);
 		if (entity != ~0u) mCurrentSelectedEntity = entity;
 	}
 
 	// Delete entity button
 	if (ImGui::Button("Delete", sfz::vec2(100, 0))) {
-		ecs->deleteEntity(mCurrentSelectedEntity);
+		state->deleteEntity(mCurrentSelectedEntity);
 	}
 
 	// End entities column
@@ -707,7 +707,7 @@ void GameStateEditor::render(GameStateHeader* ecs) noexcept
 	ImGui::BeginGroup();
 
 	// Only show entity edit menu if an active entity exists
-	bool selectedEntityExists = mCurrentSelectedEntity < ecs->maxNumEntities;
+	bool selectedEntityExists = mCurrentSelectedEntity < state->maxNumEntities;
 	if (selectedEntityExists) {
 
 		// Currently selected entities component mask
@@ -730,7 +730,7 @@ void GameStateEditor::render(GameStateHeader* ecs) noexcept
 
 			// Get component size and components array
 			uint32_t componentSize = 0;
-			uint8_t* components = ecs->componentsUntyped(i, componentSize);
+			uint8_t* components = state->componentsUntyped(i, componentSize);
 			bool unsizedComponent = componentSize == 0;
 
 			// Check if entity has this component
@@ -741,7 +741,7 @@ void GameStateEditor::render(GameStateHeader* ecs) noexcept
 				if (!entityHasComponent) ImGui::PushStyleColor(ImGuiCol_Text, INACTIVE_TEXT_COLOR);
 				bool checkboxBool = entityHasComponent;
 				if (ImGui::Checkbox(sfz::str96("##%s", info.componentName.str), &checkboxBool)) {
-					if (i != 0) ecs->setComponentUnsized(mCurrentSelectedEntity, i, checkboxBool);
+					if (i != 0) state->setComponentUnsized(mCurrentSelectedEntity, i, checkboxBool);
 				}
 				ImGui::SameLine();
 				ImGui::Indent(79.0f);
@@ -758,7 +758,7 @@ void GameStateEditor::render(GameStateHeader* ecs) noexcept
 				if (ImGui::Checkbox(
 					sfz::str96("##%s_checkbox", info.componentName.str), &checkboxBool)) {
 					if (checkboxBool) mask.setComponentType(i, checkboxBool);
-					else ecs->deleteComponent(mCurrentSelectedEntity, i);
+					else state->deleteComponent(mCurrentSelectedEntity, i);
 				}
 
 				ImGui::SameLine();
@@ -779,7 +779,7 @@ void GameStateEditor::render(GameStateHeader* ecs) noexcept
 						info.componentEditor(
 							info.editorState.get(),
 							components + mCurrentSelectedEntity * componentSize,
-							ecs,
+							state,
 							mCurrentSelectedEntity);
 					}
 					ImGui::Unindent(39.0f);

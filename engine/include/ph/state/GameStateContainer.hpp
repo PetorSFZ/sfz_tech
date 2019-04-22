@@ -55,7 +55,7 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void cloneTo(GameStateContainer& ecs) noexcept;
+	void cloneTo(GameStateContainer& state) noexcept;
 	GameStateContainer clone(Allocator* allocator = sfz::getDefaultAllocator()) noexcept;
 	void swap(GameStateContainer& other) noexcept;
 	void destroy() noexcept;

@@ -36,7 +36,7 @@ struct ComponentInfo final {
 	uint32_t componentType = ~0u;
 	str80 componentName;
 	void(*componentEditor)(
-		uint8_t* state, uint8_t* componentData, GameStateHeader* ecs, uint32_t entity) = nullptr;
+		uint8_t* editorState, uint8_t* componentData, GameStateHeader* state, uint32_t entity) = nullptr;
 	sfz::UniquePtr<uint8_t> editorState;
 	// ^^^ Above is a bit of a hack. Editor state may NOT have a non-trival destructor (i.e. state
 	// must be POD) because the destructor will never be called.
@@ -71,7 +71,7 @@ public:
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	void render(GameStateHeader* ecs) noexcept;
+	void render(GameStateHeader* state) noexcept;
 
 private:
 	// Private members
@@ -80,7 +80,7 @@ private:
 	struct ReducedComponentInfo {
 		str80 componentName;
 		void(*componentEditor)(
-			uint8_t* state, uint8_t* componentData, GameStateHeader* ecs, uint32_t entity) = nullptr;
+			uint8_t* editorState, uint8_t* componentData, GameStateHeader* state, uint32_t entity) = nullptr;
 		sfz::UniquePtr<uint8_t> editorState;
 	};
 

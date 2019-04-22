@@ -47,7 +47,7 @@ constexpr uint64_t GAME_STATE_MAGIC_NUMBER =
 	uint64_t('T') << 48 |
 	uint64_t('E') << 56;
 
-constexpr uint32_t NAIVE_ECS_VERSION = 1;
+constexpr uint32_t GAME_STATE_VERSION = 2;
 
 // ComponentRegistryEntry struct
 // ------------------------------------------------------------------------------------------------
@@ -69,18 +69,18 @@ static_assert(sizeof(ComponentRegistryEntry) == 4, "ComponentRegistryEntry is pa
 // GameState
 // ------------------------------------------------------------------------------------------------
 
-// The header for the ECS system
+// The header for a GameState
 //
-// The entire ECS system is contained in a single chunk of allocated memory, without any pointers
+// The entire game state is contained in a single chunk of allocated memory, without any pointers
 // of any kind. This means that it is possible to memcpy (including writing and reading from file)
-// the entire system.
+// the entire state.
 //
 // Given:
 // N = max number of entities
 // K = number of component systems
-// The ECS system has the following representation in memory:
+// The game state has the following representation in memory:
 //
-// | ECS header |
+// | GameState header |
 // | Component registry array header |
 // | ComponentRegistryEntry 0 |
 // | ... |
@@ -112,24 +112,24 @@ struct GameStateHeader final {
 	// See: https://en.wikipedia.org/wiki/File_format#Magic_number
 	uint64_t MAGIC_NUMBER;
 
-	// The version of the ECS system, this number should increment each time a change is made to
+	// The version of the game state, this number should increment each time a change is made to
 	// the data layout of the system.
-	uint32_t ECS_VERSION;
+	uint32_t GAME_STATE_VERSION;
 
-	// The size of the ECS system in bytes. This is the number of bytes to copy if you want to copy
-	// the entire system using memcpy(). E.g. "memcpy(dst, ecsHeader, ecsHeader->ecsSizeBytes)".
-	uint32_t ecsSizeBytes;
+	// The size of the game state in bytes. This is the number of bytes to copy if you want to copy
+	// the entire state using memcpy(). E.g. "memcpy(dst, stateHeader, stateHeader->stateSizeBytes)".
+	uint32_t stateSizeBytes;
 
-	// The number of component types in this system. This includes data-less flags, such as the
+	// The number of component types in the ECS system. This includes data-less flags, such as the
 	// first (0th) ComponentMask bit which is reserved for whether an entity is active or not.
 	uint32_t numComponentTypes;
 
-	// The maximum number of entities allowed in this ECS system.
+	// The maximum number of entities allowed in the ECS system.
 	uint32_t maxNumEntities;
 
-	// The current number of entities in this system. It is NOT safe to use this as the upper bound
-	// when iterating over all entities as the currently existing entities are not guaranteed to
-	// be contiguously packed.
+	// The current number of entities in this ECS system. It is NOT safe to use this as the upper
+	// bound when iterating over all entities as the currently existing entities are not guaranteed
+	// to be contiguously packed.
 	uint32_t currentNumEntities;
 
 	// Offset in bytes to the ArrayHeader of ComponentRegistryEntry which in turn contains the
@@ -150,7 +150,7 @@ struct GameStateHeader final {
 	// --------------------------------------------------------------------------------------------
 
 	// Creates a new entity with no associated components. Index is guaranteed to be smaller than
-	// the systems maximum number of entities. Indices used for removed entities will be used.
+	// the ECS system's maximum number of entities. Indices used for removed entities will be used.
 	// Returns ~0 (UINT32_MAX) if no more free entities are available.
 	// Complexity: O(1)
 	uint32_t createEntity() noexcept;
@@ -251,7 +251,7 @@ static_assert(sizeof(GameStateHeader) == 64, "GameStateHeader is padded");
 // The resulting state will contain numComponentTypes + 1 types of components. The first type (0)
 // is reserved to signify whether and entity is active or not. If you want data-less component
 // types, i.e. flags, you should specify 0 as the size in the "componentSizes" array.
-GameStateContainer createEcs(
+GameStateContainer createGameState(
 	uint32_t maxNumEntities,
 	const uint32_t* componentSizes,
 	uint32_t numComponentTypes,
