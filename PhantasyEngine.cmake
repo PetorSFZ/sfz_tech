@@ -598,18 +598,23 @@ function(phCreateSymlinkScript)
 		endforeach()
 
 		# Directories
-		set(SYMLINK_FILE "${CMAKE_BINARY_DIR}/create_symlinks.sh")
+		set(DUMMY_DIR "${CMAKE_BINARY_DIR}/dummy")
+		set(DUMMY_SYMLINK_FILE "${CMAKE_BINARY_DIR}/dummy/create_symlinks.sh")
+		#set(SYMLINK_FILE "${CMAKE_BINARY_DIR}/create_symlinks.sh")
 		set(DEBUG_DIR "${CMAKE_BINARY_DIR}/Debug")
 		set(RELWITHDEBINFO_DIR "${CMAKE_BINARY_DIR}/RelWithDebInfo")
 		set(RELEASE_DIR "${CMAKE_BINARY_DIR}/Release")
 
+		# Create the dummy directory
+		file(MAKE_DIRECTORY ${DUMMY_DIR})
+
 		# Append create directories commands to file
-		file(APPEND ${SYMLINK_FILE} "# Create Debug, Release and RelWithDebInfo directories\n")
-		file(APPEND ${SYMLINK_FILE} "# (These are used for some IDE's, such as Xcode. Not for makefiles.)\n")
-		file(APPEND ${SYMLINK_FILE} "mkdir ${DEBUG_DIR}\n")
-		file(APPEND ${SYMLINK_FILE} "mkdir ${RELWITHDEBINFO_DIR}\n")
-		file(APPEND ${SYMLINK_FILE} "mkdir ${RELEASE_DIR}\n")
-		file(APPEND ${SYMLINK_FILE} "\n")
+		file(APPEND ${DUMMY_SYMLINK_FILE} "# Create Debug, Release and RelWithDebInfo directories\n")
+		file(APPEND ${DUMMY_SYMLINK_FILE} "# (These are used for some IDE's, such as Xcode. Not for makefiles.)\n")
+		file(APPEND ${DUMMY_SYMLINK_FILE} "mkdir ${DEBUG_DIR}\n")
+		file(APPEND ${DUMMY_SYMLINK_FILE} "mkdir ${RELWITHDEBINFO_DIR}\n")
+		file(APPEND ${DUMMY_SYMLINK_FILE} "mkdir ${RELEASE_DIR}\n")
+		file(APPEND ${DUMMY_SYMLINK_FILE} "\n")
 
 		foreach(symlinkPath ${ARGV})
 
@@ -617,13 +622,19 @@ function(phCreateSymlinkScript)
 			get_filename_component(SYMLINK_DIR_NAME ${symlinkPath} NAME)
 
 			# Append symlink commands to file
-			file(APPEND ${SYMLINK_FILE} "# Create symlinks for \"${SYMLINK_DIR_NAME}\"\n")
-			file(APPEND ${SYMLINK_FILE} "ln -s ${symlinkPath} ${CMAKE_BINARY_DIR}/${SYMLINK_DIR_NAME}\n")
-			file(APPEND ${SYMLINK_FILE} "ln -s ${symlinkPath} ${DEBUG_DIR}/${SYMLINK_DIR_NAME}\n")
-			file(APPEND ${SYMLINK_FILE} "ln -s ${symlinkPath} ${RELWITHDEBINFO_DIR}/${SYMLINK_DIR_NAME}\n")
-			file(APPEND ${SYMLINK_FILE} "ln -s ${symlinkPath} ${RELEASE_DIR}/${SYMLINK_DIR_NAME}\n")
-			file(APPEND ${SYMLINK_FILE} "\n")
+			file(APPEND ${DUMMY_SYMLINK_FILE} "# Create symlinks for \"${SYMLINK_DIR_NAME}\"\n")
+			file(APPEND ${DUMMY_SYMLINK_FILE} "ln -s ${symlinkPath} ${CMAKE_BINARY_DIR}/${SYMLINK_DIR_NAME}\n")
+			file(APPEND ${DUMMY_SYMLINK_FILE} "ln -s ${symlinkPath} ${DEBUG_DIR}/${SYMLINK_DIR_NAME}\n")
+			file(APPEND ${DUMMY_SYMLINK_FILE} "ln -s ${symlinkPath} ${RELWITHDEBINFO_DIR}/${SYMLINK_DIR_NAME}\n")
+			file(APPEND ${DUMMY_SYMLINK_FILE} "ln -s ${symlinkPath} ${RELEASE_DIR}/${SYMLINK_DIR_NAME}\n")
+			file(APPEND ${DUMMY_SYMLINK_FILE} "\n")
 		endforeach()
+
+		# Copy script from dummy folder to binary directory
+		# Small hack, needed because we need the script to be executable. The only way I could find
+		# to accomplish this in CMake was to copy the file
+		file(COPY ${DUMMY_SYMLINK_FILE} DESTINATION ${CMAKE_BINARY_DIR} FILE_PERMISSIONS
+			OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 	endif()
 
 endfunction()
