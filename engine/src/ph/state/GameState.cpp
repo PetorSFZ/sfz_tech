@@ -286,7 +286,7 @@ GameStateContainer createGameState(
 
 	// Allocate memory
 	GameStateContainer container = GameStateContainer::createRaw(totalSizeBytes, allocator);
-	GameStateHeader* state = container.getNaive();
+	GameStateHeader* state = container.getHeader();
 
 	// Set ECS header
 	state->MAGIC_NUMBER = GAME_STATE_MAGIC_NUMBER;

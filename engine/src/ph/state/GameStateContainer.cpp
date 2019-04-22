@@ -88,12 +88,12 @@ void GameStateContainer::destroy() noexcept
 // GameStateContainer: Methods
 // --------------------------------------------------------------------------------------------
 
-GameStateHeader* GameStateContainer::getNaive() noexcept
+GameStateHeader* GameStateContainer::getHeader() noexcept
 {
 	return reinterpret_cast<GameStateHeader*>(mGameStateMemoryChunk);
 }
 
-const GameStateHeader* GameStateContainer::getNaive() const noexcept
+const GameStateHeader* GameStateContainer::getHeader() const noexcept
 {
 	return reinterpret_cast<const GameStateHeader*>(mGameStateMemoryChunk);
 }

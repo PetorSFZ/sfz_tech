@@ -63,8 +63,8 @@ public:
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	GameStateHeader* getNaive() noexcept;
-	const GameStateHeader* getNaive() const noexcept;
+	GameStateHeader* getHeader() noexcept;
+	const GameStateHeader* getHeader() const noexcept;
 
 	// Private members
 	// --------------------------------------------------------------------------------------------
