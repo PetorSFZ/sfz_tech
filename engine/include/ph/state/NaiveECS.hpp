@@ -36,6 +36,17 @@ using sfz::Allocator;
 // Naive ECS versions
 // ------------------------------------------------------------------------------------------------
 
+// Magic number in beginning of all Phantasy Engine game states.
+constexpr uint64_t GAME_STATE_MAGIC_NUMBER = 
+	uint64_t('P') << 0 | 
+	uint64_t('H') << 8 |
+	uint64_t('E') << 16 |
+	uint64_t('S') << 24 |
+	uint64_t('T') << 32 |
+	uint64_t('A') << 40 |
+	uint64_t('T') << 48 |
+	uint64_t('E') << 56;
+
 constexpr uint32_t NAIVE_ECS_VERSION = 1;
 
 // ComponentRegistryEntry struct
@@ -96,8 +107,10 @@ struct NaiveEcsHeader final {
 	// Members
 	// --------------------------------------------------------------------------------------------
 
-	// Type of ECS system, see EcsEnums.hpp.
-	uint32_t ECS_TYPE;
+	// Magic number in beginning of the game state. Should spell out "PHESTATE" if viewed in a hex
+	// editor. Can be used to check if a binary file seems to be a game state dumped to file.
+	// See: https://en.wikipedia.org/wiki/File_format#Magic_number
+	uint64_t MAGIC_NUMBER;
 
 	// The version of the ECS system, this number should increment each time a change is made to
 	// the data layout of the system.
@@ -131,7 +144,7 @@ struct NaiveEcsHeader final {
 	uint32_t offsetComponentMasks;
 
 	// Unused padding to ensure header is 32-byte aligned.
-	uint32_t ___PADDING_UNUSED___[7];
+	uint32_t ___PADDING_UNUSED___[6];
 
 	// API
 	// --------------------------------------------------------------------------------------------

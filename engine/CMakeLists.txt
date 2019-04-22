@@ -83,7 +83,6 @@ set(PHANTASY_ENGINE_HEADER_FILES
 	${INCLUDE_DIR}/ph/state/ArrayHeader.hpp
 	${INCLUDE_DIR}/ph/state/ComponentMask.hpp
 	${INCLUDE_DIR}/ph/state/EcsContainer.hpp
-	${INCLUDE_DIR}/ph/state/EcsEnums.hpp
 	${INCLUDE_DIR}/ph/state/NaiveECS.hpp
 	${INCLUDE_DIR}/ph/state/NaiveEcsEditor.hpp
 

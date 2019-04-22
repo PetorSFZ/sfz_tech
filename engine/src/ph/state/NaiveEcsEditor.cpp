@@ -35,8 +35,6 @@
 #include <sfz/strings/StackString.hpp>
 #include <sfz/util/IO.hpp>
 
-#include "ph/state/EcsEnums.hpp"
-
 namespace ph {
 
 using sfz::vec2;
@@ -434,7 +432,7 @@ static void saveDialog(const NaiveEcsHeader* ecs) noexcept
 {
 	// Open file dialog
 	nfdchar_t* path = nullptr;
-	nfdresult_t result = NFD_SaveDialog("phecs", nullptr, &path);
+	nfdresult_t result = NFD_SaveDialog("phstate", nullptr, &path);
 
 	// Write ECS to file if file dialog was succesful
 	if (result == NFD_OKAY) {
@@ -457,7 +455,7 @@ static void loadDialog(NaiveEcsHeader* ecs) noexcept
 {
 	// Open file dialog
 	nfdchar_t* path = nullptr;
-	nfdresult_t result = NFD_OpenDialog("phecs", nullptr, &path);
+	nfdresult_t result = NFD_OpenDialog("phstate", nullptr, &path);
 
 	// Load ECS from file if file dialog was succesful
 	if (result == NFD_OKAY) {
@@ -598,8 +596,8 @@ void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
 	}
 
 	// End window and return if not a naive ECS system
-	if (ecs->ECS_TYPE != ECS_TYPE_NAIVE) {
-		ImGui::Text("<none> (Not a naive ECS system)");
+	if (ecs->MAGIC_NUMBER != GAME_STATE_MAGIC_NUMBER) {
+		ImGui::Text("<none> (Magic number is wrong, corrupt data?)");
 		ImGui::End();
 		return;
 	}

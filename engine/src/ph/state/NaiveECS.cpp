@@ -21,8 +21,6 @@
 
 #include <cstring>
 
-#include "ph/state/EcsEnums.hpp"
-
 namespace ph {
 
 // ECS: API
@@ -291,7 +289,7 @@ EcsContainer createEcs(
 	NaiveEcsHeader* ecs = container.getNaive();
 
 	// Set ECS header
-	ecs->ECS_TYPE = ECS_TYPE_NAIVE;
+	ecs->MAGIC_NUMBER = GAME_STATE_MAGIC_NUMBER;
 	ecs->ECS_VERSION = NAIVE_ECS_VERSION;
 	ecs->ecsSizeBytes = totalSizeBytes;
 	ecs->numComponentTypes = numComponentTypes + 1; // + 1 for active bit
