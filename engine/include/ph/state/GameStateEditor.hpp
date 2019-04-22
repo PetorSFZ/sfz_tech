@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "ph/state/NaiveECS.hpp"
+#include "ph/state/GameState.hpp"
 
 #include <sfz/memory/SmartPointers.hpp>
 #include <sfz/strings/StackString.hpp>

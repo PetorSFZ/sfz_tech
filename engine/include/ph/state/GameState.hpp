@@ -27,7 +27,7 @@
 
 #include "ph/state/ArrayHeader.hpp"
 #include "ph/state/ComponentMask.hpp"
-#include "ph/state/EcsContainer.hpp"
+#include "ph/state/GameStateContainer.hpp"
 
 namespace ph {
 

@@ -82,9 +82,9 @@ set(PHANTASY_ENGINE_HEADER_FILES
 
 	${INCLUDE_DIR}/ph/state/ArrayHeader.hpp
 	${INCLUDE_DIR}/ph/state/ComponentMask.hpp
-	${INCLUDE_DIR}/ph/state/EcsContainer.hpp
-	${INCLUDE_DIR}/ph/state/NaiveECS.hpp
-	${INCLUDE_DIR}/ph/state/NaiveEcsEditor.hpp
+	${INCLUDE_DIR}/ph/state/GameState.hpp
+	${INCLUDE_DIR}/ph/state/GameStateContainer.hpp
+	${INCLUDE_DIR}/ph/state/GameStateEditor.hpp
 
 	${INCLUDE_DIR}/ph/util/GltfLoader.hpp
 	${INCLUDE_DIR}/ph/util/GltfWriter.hpp
@@ -108,9 +108,9 @@ set(PHANTASY_ENGINE_SOURCE_FILES
 	${SOURCE_DIR}/ph/sdl/SDLAllocator.cpp
 
 	${SOURCE_DIR}/ph/state/ArrayHeader.cpp
-	${SOURCE_DIR}/ph/state/EcsContainer.cpp
-	${SOURCE_DIR}/ph/state/NaiveECS.cpp
-	${SOURCE_DIR}/ph/state/NaiveEcsEditor.cpp
+	${SOURCE_DIR}/ph/state/GameState.cpp
+	${SOURCE_DIR}/ph/state/GameStateContainer.cpp
+	${SOURCE_DIR}/ph/state/GameStateEditor.cpp
 
 	${SOURCE_DIR}/ph/util/GltfLoader.cpp
 	${SOURCE_DIR}/ph/util/GltfWriter.cpp
