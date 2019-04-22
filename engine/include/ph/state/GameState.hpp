@@ -66,7 +66,7 @@ struct ComponentRegistryEntry final {
 };
 static_assert(sizeof(ComponentRegistryEntry) == 4, "ComponentRegistryEntry is padded");
 
-// ECS
+// GameState
 // ------------------------------------------------------------------------------------------------
 
 // The header for the ECS system
@@ -102,7 +102,7 @@ static_assert(sizeof(ComponentRegistryEntry) == 4, "ComponentRegistryEntry is pa
 // | Component type K-1, entity 0 |
 // | ... |
 // | Component type K-1, entity N-1 |
-struct NaiveEcsHeader final {
+struct GameStateHeader final {
 
 	// Members
 	// --------------------------------------------------------------------------------------------
@@ -241,17 +241,17 @@ struct NaiveEcsHeader final {
 		return reinterpret_cast<const ArrayHeader*>(reinterpret_cast<const uint8_t*>(this) + offset);
 	}
 };
-static_assert(sizeof(NaiveEcsHeader) == 64, "EcsHeader is padded");
+static_assert(sizeof(GameStateHeader) == 64, "GameStateHeader is padded");
 
-// ECS functions
+// Game state functions
 // ------------------------------------------------------------------------------------------------
 
-// Creates a naive ECS system.
+// Creates a game state
 //
-// The resulting system will contain numComponentTypes + 1 types of components. The first type (0)
+// The resulting state will contain numComponentTypes + 1 types of components. The first type (0)
 // is reserved to signify whether and entity is active or not. If you want data-less component
 // types, i.e. flags, you should specify 0 as the size in the "componentSizes" array.
-EcsContainer createEcs(
+GameStateContainer createEcs(
 	uint32_t maxNumEntities,
 	const uint32_t* componentSizes,
 	uint32_t numComponentTypes,

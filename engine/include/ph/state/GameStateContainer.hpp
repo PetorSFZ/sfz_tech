@@ -31,46 +31,46 @@ using sfz::Allocator;
 // Forward declarations
 // ------------------------------------------------------------------------------------------------
 
-struct NaiveEcsHeader;
+struct GameStateHeader;
 
-// EcsContainer class
+// GameStateContainer class
 // ------------------------------------------------------------------------------------------------
 
-// Smart-pointer-ish class owning the memory blob for a single snap-shot of the ECS system
-class EcsContainer final {
+// Smart-pointer-ish class owning the memory blob for a single snap-shot of the game state
+class GameStateContainer final {
 public:
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	EcsContainer() noexcept = default;
-	EcsContainer(const EcsContainer&) = delete;
-	EcsContainer& operator= (const EcsContainer&) = delete;
-	EcsContainer(EcsContainer&& other) noexcept { this->swap(other); }
-	EcsContainer& operator= (EcsContainer&& other) noexcept { this->swap(other); return *this; }
-	~EcsContainer() noexcept { this->destroy(); }
+	GameStateContainer() noexcept = default;
+	GameStateContainer(const GameStateContainer&) = delete;
+	GameStateContainer& operator= (const GameStateContainer&) = delete;
+	GameStateContainer(GameStateContainer&& other) noexcept { this->swap(other); }
+	GameStateContainer& operator= (GameStateContainer&& other) noexcept { this->swap(other); return *this; }
+	~GameStateContainer() noexcept { this->destroy(); }
 
-	static EcsContainer createRaw(uint64_t numBytes, sfz::Allocator* allocator) noexcept;
+	static GameStateContainer createRaw(uint64_t numBytes, sfz::Allocator* allocator) noexcept;
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void cloneTo(EcsContainer& ecs) noexcept;
-	EcsContainer clone(Allocator* allocator = sfz::getDefaultAllocator()) noexcept;
-	void swap(EcsContainer& other) noexcept;
+	void cloneTo(GameStateContainer& ecs) noexcept;
+	GameStateContainer clone(Allocator* allocator = sfz::getDefaultAllocator()) noexcept;
+	void swap(GameStateContainer& other) noexcept;
 	void destroy() noexcept;
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	NaiveEcsHeader* getNaive() noexcept;
-	const NaiveEcsHeader* getNaive() const noexcept;
+	GameStateHeader* getNaive() noexcept;
+	const GameStateHeader* getNaive() const noexcept;
 
 	// Private members
 	// --------------------------------------------------------------------------------------------
 private:
 	Allocator* mAllocator = nullptr;
-	uint8_t* mEcsMemoryChunk = nullptr;
+	uint8_t* mGameStateMemoryChunk = nullptr;
 	uint64_t mNumBytes = 0;
 };
 

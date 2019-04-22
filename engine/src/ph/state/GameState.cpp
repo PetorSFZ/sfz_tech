@@ -23,10 +23,10 @@
 
 namespace ph {
 
-// ECS: API
+// GameState: API
 // ------------------------------------------------------------------------------------------------
 
-uint32_t NaiveEcsHeader::createEntity() noexcept
+uint32_t GameStateHeader::createEntity() noexcept
 {
 	// Get free entity from free entities list
 	ArrayHeader* freeEntitiesList = this->freeEntitiesListArray();
@@ -47,7 +47,7 @@ uint32_t NaiveEcsHeader::createEntity() noexcept
 	return freeEntity;
 }
 
-bool NaiveEcsHeader::deleteEntity(uint32_t entity) noexcept
+bool GameStateHeader::deleteEntity(uint32_t entity) noexcept
 {
 	if (entity >= this->maxNumEntities) return false;
 
@@ -83,7 +83,7 @@ bool NaiveEcsHeader::deleteEntity(uint32_t entity) noexcept
 	return true;
 }
 
-uint32_t NaiveEcsHeader::cloneEntity(uint32_t entity) noexcept
+uint32_t GameStateHeader::cloneEntity(uint32_t entity) noexcept
 {
 	if (entity >= this->maxNumEntities) return ~0u;
 
@@ -119,17 +119,17 @@ uint32_t NaiveEcsHeader::cloneEntity(uint32_t entity) noexcept
 	return newEntity;
 }
 
-ComponentMask* NaiveEcsHeader::componentMasks() noexcept
+ComponentMask* GameStateHeader::componentMasks() noexcept
 {
 	return componentMasksArray()->data<ComponentMask>();
 }
 
-const ComponentMask* NaiveEcsHeader::componentMasks() const noexcept
+const ComponentMask* GameStateHeader::componentMasks() const noexcept
 {
 	return componentMasksArray()->data<ComponentMask>();
 }
 
-uint8_t* NaiveEcsHeader::componentsUntyped(
+uint8_t* GameStateHeader::componentsUntyped(
 	uint32_t componentType, uint32_t& componentSizeBytesOut) noexcept
 {
 	// Get registry, return nullptr if component type is not in registry
@@ -146,7 +146,7 @@ uint8_t* NaiveEcsHeader::componentsUntyped(
 	return components->dataUntyped();
 }
 
-const uint8_t* NaiveEcsHeader::componentsUntyped(
+const uint8_t* GameStateHeader::componentsUntyped(
 	uint32_t componentType, uint32_t& componentSizeBytesOut) const noexcept
 {
 	// Get registry, return nullptr if component type is not in registry
@@ -163,7 +163,7 @@ const uint8_t* NaiveEcsHeader::componentsUntyped(
 	return components->dataUntyped();
 }
 
-bool NaiveEcsHeader::addComponentUntyped(
+bool GameStateHeader::addComponentUntyped(
 	uint32_t entity, uint32_t componentType, const uint8_t* data, uint32_t dataSize) noexcept
 {
 	if (entity >= this->maxNumEntities) return false;
@@ -190,7 +190,7 @@ bool NaiveEcsHeader::addComponentUntyped(
 	return true;
 }
 
-bool NaiveEcsHeader::setComponentUnsized(
+bool GameStateHeader::setComponentUnsized(
 	uint32_t entity, uint32_t componentType, bool value) noexcept
 {
 	if (entity >= this->maxNumEntities) return false;
@@ -211,7 +211,7 @@ bool NaiveEcsHeader::setComponentUnsized(
 	return true;
 }
 
-bool NaiveEcsHeader::deleteComponent(uint32_t entity, uint32_t componentType) noexcept
+bool GameStateHeader::deleteComponent(uint32_t entity, uint32_t componentType) noexcept
 {
 	if (entity >= this->maxNumEntities) return false;
 
@@ -233,10 +233,10 @@ bool NaiveEcsHeader::deleteComponent(uint32_t entity, uint32_t componentType) no
 	return true;
 }
 
-// ECS functions
+// Game state functions
 // ------------------------------------------------------------------------------------------------
 
-EcsContainer createEcs(
+GameStateContainer createEcs(
 	uint32_t maxNumEntities,
 	const uint32_t* componentSizes,
 	uint32_t numComponentTypes,
@@ -245,7 +245,7 @@ EcsContainer createEcs(
 	uint32_t totalSizeBytes = 0;
 
 	// Ecs Header
-	totalSizeBytes += sizeof(NaiveEcsHeader);
+	totalSizeBytes += sizeof(GameStateHeader);
 
 	// Registry (+ 1 for active bit)
 	ArrayHeader registryHeader = ArrayHeader::create<ComponentRegistryEntry>(numComponentTypes + 1);
@@ -285,46 +285,46 @@ EcsContainer createEcs(
 	}
 
 	// Allocate memory
-	EcsContainer container = EcsContainer::createRaw(totalSizeBytes, allocator);
-	NaiveEcsHeader* ecs = container.getNaive();
+	GameStateContainer container = GameStateContainer::createRaw(totalSizeBytes, allocator);
+	GameStateHeader* state = container.getNaive();
 
 	// Set ECS header
-	ecs->MAGIC_NUMBER = GAME_STATE_MAGIC_NUMBER;
-	ecs->ECS_VERSION = NAIVE_ECS_VERSION;
-	ecs->ecsSizeBytes = totalSizeBytes;
-	ecs->numComponentTypes = numComponentTypes + 1; // + 1 for active bit
-	ecs->maxNumEntities = maxNumEntities;
-	ecs->currentNumEntities = 0;
-	ecs->offsetComponentRegistry = sizeof(NaiveEcsHeader);
-	ecs->offsetFreeEntitiesList = ecs->offsetComponentRegistry + registrySizeBytes;
-	ecs->offsetComponentMasks = ecs->offsetFreeEntitiesList + freeEntitiesSizeBytes;
+	state->MAGIC_NUMBER = GAME_STATE_MAGIC_NUMBER;
+	state->ECS_VERSION = NAIVE_ECS_VERSION;
+	state->ecsSizeBytes = totalSizeBytes;
+	state->numComponentTypes = numComponentTypes + 1; // + 1 for active bit
+	state->maxNumEntities = maxNumEntities;
+	state->currentNumEntities = 0;
+	state->offsetComponentRegistry = sizeof(GameStateHeader);
+	state->offsetFreeEntitiesList = state->offsetComponentRegistry + registrySizeBytes;
+	state->offsetComponentMasks = state->offsetFreeEntitiesList + freeEntitiesSizeBytes;
 
 	// Set registry array header
-	*ecs->componentRegistryArray() = registryHeader;
-	ecs->componentRegistryArray()->size = registryHeader.capacity;
+	*state->componentRegistryArray() = registryHeader;
+	state->componentRegistryArray()->size = registryHeader.capacity;
 
 	// Fill registry
 	ComponentRegistryEntry* registry =
-		ecs->componentRegistryArray()->data<ComponentRegistryEntry>();
-	for (uint32_t i = 0; i < ecs->numComponentTypes; i++) {
+		state->componentRegistryArray()->data<ComponentRegistryEntry>();
+	for (uint32_t i = 0; i < state->numComponentTypes; i++) {
 		registry[i] = componentRegistryEntries[i];
 	}
 
 	// Set free entities header and fill list with free entity indices
-	ArrayHeader* freeEntities = ecs->freeEntitiesListArray();
+	ArrayHeader* freeEntities = state->freeEntitiesListArray();
 	*freeEntities = freeEntitiesHeader;
 	for (int64_t entityIdx = int64_t(maxNumEntities - 1); entityIdx >= 0; entityIdx--) {
 		freeEntities->add<uint32_t>(uint32_t(entityIdx));
 	}
 
 	// Set component masks header
-	*ecs->componentMasksArray() = masksHeader;
-	ecs->componentMasksArray()->size = masksHeader.capacity;
+	*state->componentMasksArray() = masksHeader;
+	state->componentMasksArray()->size = masksHeader.capacity;
 
 	// Set component types array headers (i = 1 because first is active bit, which has no data)
-	for (uint32_t i = 1; i < ecs->numComponentTypes; i++) {
+	for (uint32_t i = 1; i < state->numComponentTypes; i++) {
 		if (!registry[i].componentTypeHasData()) continue;
-		ArrayHeader* header = ecs->arrayAt(registry[i].offset);
+		ArrayHeader* header = state->arrayAt(registry[i].offset);
 		*header = componentsArrayHeaders[i];
 	}
 

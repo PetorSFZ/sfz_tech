@@ -428,7 +428,7 @@ static bool componentMaskEditor(
 }
 
 #ifndef __EMSCRIPTEN__
-static void saveDialog(const NaiveEcsHeader* ecs) noexcept
+static void saveDialog(const GameStateHeader* state) noexcept
 {
 	// Open file dialog
 	nfdchar_t* path = nullptr;
@@ -436,7 +436,7 @@ static void saveDialog(const NaiveEcsHeader* ecs) noexcept
 
 	// Write ECS to file if file dialog was succesful
 	if (result == NFD_OKAY) {
-		bool success =  sfz::writeBinaryFile(path, (const uint8_t*)ecs, ecs->ecsSizeBytes);
+		bool success =  sfz::writeBinaryFile(path, (const uint8_t*)state, state->ecsSizeBytes);
 		if (success) {
 			SFZ_INFO("PhantasyEngine", "Wrote ECS to \"%s\"", path);
 		}
@@ -451,7 +451,7 @@ static void saveDialog(const NaiveEcsHeader* ecs) noexcept
 	}
 }
 
-static void loadDialog(NaiveEcsHeader* ecs) noexcept
+static void loadDialog(GameStateHeader* state) noexcept
 {
 	// Open file dialog
 	nfdchar_t* path = nullptr;
@@ -463,12 +463,12 @@ static void loadDialog(NaiveEcsHeader* ecs) noexcept
 		if (binary.size() == 0) {
 			SFZ_ERROR("PhantasyEngine", "Could not read ECS from \"%s\"", path);
 		}
-		else if (binary.size() != ecs->ecsSizeBytes) {
+		else if (binary.size() != state->ecsSizeBytes) {
 			SFZ_ERROR("PhantasyEngine", "ECS from \"%s\" is wrong size", path);
 		}
 		else {
 			// TODO: Check if header matches
-			std::memcpy(ecs, binary.data(), ecs->ecsSizeBytes);
+			std::memcpy(state, binary.data(), state->ecsSizeBytes);
 			SFZ_INFO("PhantasyEngine", "Loaded ECS from \"%s\"", path);
 		}
 		free(path);
@@ -480,10 +480,10 @@ static void loadDialog(NaiveEcsHeader* ecs) noexcept
 }
 #endif
 
-// NaiveEcsEditor: State methods
+// GameStateEditor: State methods
 // ------------------------------------------------------------------------------------------------
 
-void NaiveEcsEditor::init(
+void GameStateEditor::init(
 	const char* windowName,
 	ComponentInfo* componentInfos,
 	uint32_t numComponentInfos,
@@ -537,7 +537,7 @@ void NaiveEcsEditor::init(
 	}
 }
 
-void NaiveEcsEditor::swap(NaiveEcsEditor& other) noexcept
+void GameStateEditor::swap(GameStateEditor& other) noexcept
 {
 	std::swap(this->mWindowName, other.mWindowName);
 	for (uint32_t i = 0; i < 64; i++) {
@@ -552,7 +552,7 @@ void NaiveEcsEditor::swap(NaiveEcsEditor& other) noexcept
 	std::swap(this->mCurrentSelectedEntity, other.mCurrentSelectedEntity);
 }
 
-void NaiveEcsEditor::destroy() noexcept
+void GameStateEditor::destroy() noexcept
 {
 	mWindowName.printf("");
 	for (uint32_t i = 0; i < 64; i++) {
@@ -573,10 +573,10 @@ void NaiveEcsEditor::destroy() noexcept
 	}
 }
 
-// NaiveEcsEditor: Methods
+// GameStateEditor: Methods
 // ------------------------------------------------------------------------------------------------
 
-void NaiveEcsEditor::render(NaiveEcsHeader* ecs) noexcept
+void GameStateEditor::render(GameStateHeader* ecs) noexcept
 {
 	const sfz::vec4 INACTIVE_TEXT_COLOR = sfz::vec4(0.35f, 0.35f, 0.35f, 1.0f);
 

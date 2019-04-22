@@ -36,26 +36,26 @@ struct ComponentInfo final {
 	uint32_t componentType = ~0u;
 	str80 componentName;
 	void(*componentEditor)(
-		uint8_t* state, uint8_t* componentData, NaiveEcsHeader* ecs, uint32_t entity) = nullptr;
+		uint8_t* state, uint8_t* componentData, GameStateHeader* ecs, uint32_t entity) = nullptr;
 	sfz::UniquePtr<uint8_t> editorState;
 	// ^^^ Above is a bit of a hack. Editor state may NOT have a non-trival destructor (i.e. state
 	// must be POD) because the destructor will never be called.
 };
 
-// NaiveEcsEditor class
+// GameStateEditor class
 // ------------------------------------------------------------------------------------------------
 
-class NaiveEcsEditor final {
+class GameStateEditor final {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	NaiveEcsEditor() noexcept {}
-	NaiveEcsEditor(const NaiveEcsEditor&) = delete;
-	NaiveEcsEditor& operator= (const NaiveEcsEditor&) = delete;
-	NaiveEcsEditor(NaiveEcsEditor&& other) noexcept { swap(other); }
-	NaiveEcsEditor& operator= (NaiveEcsEditor&& other) noexcept { swap(other); return *this; }
-	~NaiveEcsEditor() noexcept { this->destroy(); }
+	GameStateEditor() noexcept {}
+	GameStateEditor(const GameStateEditor&) = delete;
+	GameStateEditor& operator= (const GameStateEditor&) = delete;
+	GameStateEditor(GameStateEditor&& other) noexcept { swap(other); }
+	GameStateEditor& operator= (GameStateEditor&& other) noexcept { swap(other); return *this; }
+	~GameStateEditor() noexcept { this->destroy(); }
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
@@ -65,13 +65,13 @@ public:
 		ComponentInfo* componentInfos,
 		uint32_t numComponentInfos,
 		sfz::Allocator* allocator = sfz::getDefaultAllocator());
-	void swap(NaiveEcsEditor& other) noexcept;
+	void swap(GameStateEditor& other) noexcept;
 	void destroy() noexcept;
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	void render(NaiveEcsHeader* ecs) noexcept;
+	void render(GameStateHeader* ecs) noexcept;
 
 private:
 	// Private members
@@ -80,7 +80,7 @@ private:
 	struct ReducedComponentInfo {
 		str80 componentName;
 		void(*componentEditor)(
-			uint8_t* state, uint8_t* componentData, NaiveEcsHeader* ecs, uint32_t entity) = nullptr;
+			uint8_t* state, uint8_t* componentData, GameStateHeader* ecs, uint32_t entity) = nullptr;
 		sfz::UniquePtr<uint8_t> editorState;
 	};
 

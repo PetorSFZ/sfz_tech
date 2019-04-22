@@ -26,75 +26,76 @@
 
 namespace ph {
 
-// EcsContainer: Constructors & destructors
+// GameStateContainer: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-EcsContainer EcsContainer::createRaw(uint64_t numBytes, sfz::Allocator* allocator) noexcept
+	GameStateContainer GameStateContainer::createRaw(
+		uint64_t numBytes, sfz::Allocator* allocator) noexcept
 {
 	sfz_assert_debug(allocator != nullptr);
 	sfz_assert_debug(0 < numBytes);
 
-	EcsContainer container;
+	GameStateContainer container;
 	container.mAllocator = allocator;
 	container.mNumBytes = numBytes;
-	container.mEcsMemoryChunk = static_cast<uint8_t*>(allocator->allocate(numBytes, 16, "ECS"));
-	memset(container.mEcsMemoryChunk, 0, numBytes);
+	container.mGameStateMemoryChunk = static_cast<uint8_t*>(allocator->allocate(numBytes, 16, "ECS"));
+	memset(container.mGameStateMemoryChunk, 0, numBytes);
 	return container;
 }
 
-// EcsContainer: State methods
+// GameStateContainer: State methods
 // ------------------------------------------------------------------------------------------------
 
-void EcsContainer::cloneTo(EcsContainer& ecs) noexcept
+void GameStateContainer::cloneTo(GameStateContainer& ecs) noexcept
 {
-	sfz_assert_debug(ecs.mEcsMemoryChunk != nullptr);
+	sfz_assert_debug(ecs.mGameStateMemoryChunk != nullptr);
 	sfz_assert_debug(this->mNumBytes == ecs.mNumBytes);
 
-	std::memcpy(ecs.mEcsMemoryChunk, this->mEcsMemoryChunk, this->mNumBytes);
+	std::memcpy(ecs.mGameStateMemoryChunk, this->mGameStateMemoryChunk, this->mNumBytes);
 }
 
-EcsContainer EcsContainer::clone(Allocator* allocator) noexcept
+GameStateContainer GameStateContainer::clone(Allocator* allocator) noexcept
 {
-	sfz_assert_debug(this->mEcsMemoryChunk != nullptr);
+	sfz_assert_debug(this->mGameStateMemoryChunk != nullptr);
 	sfz_assert_debug(this->mNumBytes != 0);
 	sfz_assert_debug(allocator != nullptr);
 
-	EcsContainer container;
+	GameStateContainer container;
 	container.mAllocator = allocator;
 	container.mNumBytes = this->mNumBytes;
-	container.mEcsMemoryChunk = static_cast<uint8_t*>(allocator->allocate(mNumBytes, 32, "ECS"));
+	container.mGameStateMemoryChunk = static_cast<uint8_t*>(allocator->allocate(mNumBytes, 32, "ECS"));
 	this->cloneTo(container);
 	return container;
 }
 
-void EcsContainer::swap(EcsContainer& other) noexcept
+void GameStateContainer::swap(GameStateContainer& other) noexcept
 {
 	std::swap(this->mAllocator, other.mAllocator);
-	std::swap(this->mEcsMemoryChunk, other.mEcsMemoryChunk);
+	std::swap(this->mGameStateMemoryChunk, other.mGameStateMemoryChunk);
 	std::swap(this->mNumBytes, other.mNumBytes);
 }
 
-void EcsContainer::destroy() noexcept
+void GameStateContainer::destroy() noexcept
 {
-	if (this->mEcsMemoryChunk != nullptr) {
-		this->mAllocator->deallocate(this->mEcsMemoryChunk);
+	if (this->mGameStateMemoryChunk != nullptr) {
+		this->mAllocator->deallocate(this->mGameStateMemoryChunk);
 	}
 	this->mAllocator = nullptr;
-	this->mEcsMemoryChunk = nullptr;
+	this->mGameStateMemoryChunk = nullptr;
 	this->mNumBytes = 0;
 }
 
-// EcsContainer: Methods
+// GameStateContainer: Methods
 // --------------------------------------------------------------------------------------------
 
-NaiveEcsHeader* EcsContainer::getNaive() noexcept
+GameStateHeader* GameStateContainer::getNaive() noexcept
 {
-	return reinterpret_cast<NaiveEcsHeader*>(mEcsMemoryChunk);
+	return reinterpret_cast<GameStateHeader*>(mGameStateMemoryChunk);
 }
 
-const NaiveEcsHeader* EcsContainer::getNaive() const noexcept
+const GameStateHeader* GameStateContainer::getNaive() const noexcept
 {
-	return reinterpret_cast<const NaiveEcsHeader*>(mEcsMemoryChunk);
+	return reinterpret_cast<const GameStateHeader*>(mGameStateMemoryChunk);
 }
 
 } // namespace ph
