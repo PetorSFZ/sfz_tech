@@ -485,6 +485,8 @@ static void loadDialog(GameStateHeader* state) noexcept
 
 void GameStateEditor::init(
 	const char* windowName,
+	SingletonInfo* singletonInfos,
+	uint32_t numSingletonInfos,
 	ComponentInfo* componentInfos,
 	uint32_t numComponentInfos,
 	sfz::Allocator* allocator)
@@ -505,11 +507,36 @@ void GameStateEditor::init(
 	mWindowName.printf("%s", windowName);
 	initializeComponentMaskEditor(mFilterMaskEditBuffers, mFilterMask);
 
+	// Temp variable to ensure all necesary singleton infos are set
+	bool singletonInfoSet[64] = {};
+
+	// Set rest of singleton infos
+	for (uint32_t i = 0; i < numSingletonInfos; i++) {
+		SingletonInfo& info = singletonInfos[i];
+		sfz_assert_debug(info.singletonIndex < 64);
+
+		ReducedSingletonInfo& target = mSingletonInfos[info.singletonIndex];
+		bool& set = singletonInfoSet[info.singletonIndex];
+		sfz_assert_debug(!set);
+
+		set = true;
+		target.singletonName.printf("%02u - %s", info.singletonIndex, info.singletonName.str);
+		target.singletonEditor = info.singletonEditor;
+		target.userPtr = std::move(info.userPtr); // Steal it!
+	}
+
+	mNumSingletonInfos = numSingletonInfos;
+
+	// Ensure that they are all set
+	for (uint32_t i = 0; i < mNumSingletonInfos; i++) {
+		sfz_assert_debug(singletonInfoSet[i]);
+	}
+
 	// Temp variable to ensure all necessary component infos are set
-	bool infoSet[64] = {};
+	bool componentInfoSet[64] = {};
 
 	// Set active bit component info
-	infoSet[0] = true;
+	componentInfoSet[0] = true;
 	mComponentInfos[0].componentName.printf("00 - Active bit");
 
 	// Set rest of component infos
@@ -519,13 +546,13 @@ void GameStateEditor::init(
 		sfz_assert_debug(info.componentType < 64);
 
 		ReducedComponentInfo& target = mComponentInfos[info.componentType];
-		bool& set = infoSet[info.componentType];
+		bool& set = componentInfoSet[info.componentType];
 		sfz_assert_debug(!set);
 
 		set = true;
 		target.componentName.printf("%02u - %s", info.componentType, info.componentName.str);
 		target.componentEditor = info.componentEditor;
-		target.editorState = std::move(info.editorState); // Steal it!
+		target.userPtr = std::move(info.userPtr); // Steal it!
 	}
 
 	// Number of component types should be equal to numComponentInfos + 1
@@ -533,7 +560,7 @@ void GameStateEditor::init(
 
 	// Ensure that they are all set
 	for (uint32_t i = 0; i < mNumComponentInfos; i++) {
-		sfz_assert_debug(infoSet[i]);
+		sfz_assert_debug(componentInfoSet[i]);
 	}
 }
 
@@ -541,8 +568,10 @@ void GameStateEditor::swap(GameStateEditor& other) noexcept
 {
 	std::swap(this->mWindowName, other.mWindowName);
 	for (uint32_t i = 0; i < 64; i++) {
+		std::swap(this->mSingletonInfos[i], other.mSingletonInfos[i]);
 		std::swap(this->mComponentInfos[i], other.mComponentInfos[i]);
 	}
+	std::swap(this->mNumSingletonInfos, other.mNumSingletonInfos);
 	std::swap(this->mNumComponentInfos, other.mNumComponentInfos);
 	std::swap(this->mFilterMask, other.mFilterMask);
 	for (uint32_t i = 0; i < 8; i++) {
@@ -556,8 +585,10 @@ void GameStateEditor::destroy() noexcept
 {
 	mWindowName.printf("");
 	for (uint32_t i = 0; i < 64; i++) {
+		this->mSingletonInfos[i] = ReducedSingletonInfo();
 		this->mComponentInfos[i] = ReducedComponentInfo();
 	}
+	mNumSingletonInfos = 0;
 	mNumComponentInfos = 0;
 	mFilterMask = ComponentMask::activeMask();
 	for (uint32_t i = 0; i < 8; i++) {
@@ -607,11 +638,26 @@ void GameStateEditor::render(GameStateHeader* state) noexcept
 		return;
 	}
 
+	// End window and return if wrong number of singleton editors
+	if (state->numSingletons != mNumSingletonInfos) {
+		ImGui::Text("<none> (Wrong number of singleton editors)");
+		ImGui::End();
+		return;
+	}
+
+	// End window and return if wrong number of component editors
+	if (state->numComponentTypes != mNumComponentInfos) {
+		ImGui::Text("<none> (Wrong number of component editors)");
+		ImGui::End();
+		return;
+	}
+
 	// Tabs
 	ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_None;
 	if (ImGui::BeginTabBar("GameStateEditorTabBar", tabBarFlags)) {
 		if (ImGui::BeginTabItem("Singletons")) {
 			ImGui::Spacing();
+			this->renderSingletonEditor(state);
 			ImGui::EndTabItem();
 		}
 		if (ImGui::BeginTabItem("ECS")) {
@@ -634,6 +680,31 @@ void GameStateEditor::render(GameStateHeader* state) noexcept
 // GameStateEditor: Private methods
 // ------------------------------------------------------------------------------------------------
 
+void GameStateEditor::renderSingletonEditor(GameStateHeader* state) noexcept
+{
+	// Render singleton editors
+	for (uint32_t i = 0; i < mNumSingletonInfos; i++) {
+		const ReducedSingletonInfo& info = mSingletonInfos[i];
+
+		if (ImGui::CollapsingHeader(info.singletonName.str, ImGuiTreeNodeFlags_DefaultOpen)) {
+
+			// Run editor
+			ImGui::Indent(28.0f);
+			if (info.singletonEditor == nullptr) {
+				ImGui::Text("<No editor specified>");
+			}
+			else {
+				uint32_t singletonSizeOut = 0;
+				info.singletonEditor(
+					info.userPtr.get(),
+					state->singletonUntyped(i, singletonSizeOut),
+					state);
+			}
+			ImGui::Unindent(28.0f);
+		}
+	}
+}
+
 void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 {
 	const sfz::vec4 INACTIVE_TEXT_COLOR = sfz::vec4(0.35f, 0.35f, 0.35f, 1.0f);
@@ -649,8 +720,6 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 	componentMaskEditor("FilterMaskBit", mFilterMaskEditBuffers, mFilterMask);
 	ImGui::Checkbox("Compact entity list", &mCompactEntityList);
 	ImGui::EndGroup();
-
-
 
 	// Separator between the different type of views
 	ImGui::Spacing();
@@ -772,8 +841,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 				ImGui::SameLine();
 
 				if (!entityHasComponent) ImGui::PushStyleColor(ImGuiCol_Text, INACTIVE_TEXT_COLOR);
-				if (ImGui::CollapsingHeader(sfz::str96("%s", info.componentName.str),
-					ImGuiTreeNodeFlags_DefaultOpen)) {
+				if (ImGui::CollapsingHeader(info.componentName.str, ImGuiTreeNodeFlags_DefaultOpen)) {
 
 					// Disable editor if entity does not have component
 					if (!entityHasComponent) ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
@@ -785,7 +853,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 					}
 					else {
 						info.componentEditor(
-							info.editorState.get(),
+							info.userPtr.get(),
 							components + mCurrentSelectedEntity * componentSize,
 							state,
 							mCurrentSelectedEntity);

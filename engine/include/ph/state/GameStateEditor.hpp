@@ -29,17 +29,27 @@ namespace ph {
 using sfz::str32;
 using sfz::str80;
 
-// Helper struct
+// Helper structs
 // ------------------------------------------------------------------------------------------------
+
+struct SingletonInfo final {
+	uint32_t singletonIndex = ~0u;
+	str80 singletonName;
+	void(*singletonEditor)(
+		uint8_t* userPtr, uint8_t* singletonData, GameStateHeader* state) = nullptr;
+	sfz::UniquePtr<uint8_t> userPtr;
+	// ^^^ Above is a bit of a hack. User ptr  may NOT have a non-trival destructor (i.e. must
+	// be POD) because the destructor will never be called.
+};
 
 struct ComponentInfo final {
 	uint32_t componentType = ~0u;
 	str80 componentName;
 	void(*componentEditor)(
-		uint8_t* editorState, uint8_t* componentData, GameStateHeader* state, uint32_t entity) = nullptr;
-	sfz::UniquePtr<uint8_t> editorState;
-	// ^^^ Above is a bit of a hack. Editor state may NOT have a non-trival destructor (i.e. state
-	// must be POD) because the destructor will never be called.
+		uint8_t* userPtr, uint8_t* componentData, GameStateHeader* state, uint32_t entity) = nullptr;
+	sfz::UniquePtr<uint8_t> userPtr;
+	// ^^^ Above is a bit of a hack. User ptr  may NOT have a non-trival destructor (i.e. must
+	// be POD) because the destructor will never be called.
 };
 
 // GameStateEditor class
@@ -62,6 +72,8 @@ public:
 
 	void init(
 		const char* windowName,
+		SingletonInfo* singletonInfos,
+		uint32_t numSingletonInfos,
 		ComponentInfo* componentInfos,
 		uint32_t numComponentInfos,
 		sfz::Allocator* allocator = sfz::getDefaultAllocator());
@@ -77,6 +89,8 @@ private:
 	// Private methods
 	// --------------------------------------------------------------------------------------------
 
+	void renderSingletonEditor(GameStateHeader* state) noexcept;
+
 	void renderEcsEditor(GameStateHeader* state) noexcept;
 
 	void renderInfoViewer(GameStateHeader* state) noexcept;
@@ -84,15 +98,24 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
+	struct ReducedSingletonInfo final {
+		str80 singletonName;
+		void(*singletonEditor)(
+			uint8_t* userPtr, uint8_t* singletonData, GameStateHeader* state) = nullptr;
+		sfz::UniquePtr<uint8_t> userPtr;
+	};
+
 	struct ReducedComponentInfo {
 		str80 componentName;
 		void(*componentEditor)(
-			uint8_t* editorState, uint8_t* componentData, GameStateHeader* state, uint32_t entity) = nullptr;
-		sfz::UniquePtr<uint8_t> editorState;
+			uint8_t* userPtr, uint8_t* componentData, GameStateHeader* state, uint32_t entity) = nullptr;
+		sfz::UniquePtr<uint8_t> userPtr;
 	};
 
 	str80 mWindowName;
-	ReducedComponentInfo mComponentInfos[64];
+	ReducedSingletonInfo mSingletonInfos[64] = {};
+	ReducedComponentInfo mComponentInfos[64] = {};
+	uint32_t mNumSingletonInfos = 0;
 	uint32_t mNumComponentInfos = 0;
 	ComponentMask mFilterMask = ComponentMask::activeMask();
 	str32 mFilterMaskEditBuffers[8];
