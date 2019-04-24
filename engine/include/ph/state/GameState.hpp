@@ -28,18 +28,19 @@
 
 #include "ph/state/ArrayHeader.hpp"
 #include "ph/state/ComponentMask.hpp"
+#include "ph/state/Entity.hpp"
 #include "ph/state/GameStateContainer.hpp"
 
 namespace ph {
 
 using sfz::Allocator;
 
-// Naive ECS versions
+// Constants
 // ------------------------------------------------------------------------------------------------
 
 // Magic number in beginning of all Phantasy Engine game states.
-constexpr uint64_t GAME_STATE_MAGIC_NUMBER = 
-	uint64_t('P') << 0 | 
+constexpr uint64_t GAME_STATE_MAGIC_NUMBER =
+	uint64_t('P') << 0 |
 	uint64_t('H') << 8 |
 	uint64_t('E') << 16 |
 	uint64_t('S') << 24 |
@@ -48,7 +49,14 @@ constexpr uint64_t GAME_STATE_MAGIC_NUMBER =
 	uint64_t('T') << 48 |
 	uint64_t('E') << 56;
 
-constexpr uint32_t GAME_STATE_VERSION = 3;
+// The current data layout version of the game state
+constexpr uint64_t GAME_STATE_VERSION = 4;
+
+// The maximum number of entities a game state can hold
+//
+// One less than the maximum id of an entity (ENTITY_ID_MAX), we reserve all bits set to 1 (~0,
+// the default-value when constructing an Entity) as an error code.
+constexpr uint32_t GAME_STATE_ECS_MAX_NUM_ENTITIES = ENTITY_ID_MAX - 1;
 
 // SingletonRegistryEntry struct
 // ------------------------------------------------------------------------------------------------
@@ -96,6 +104,9 @@ static_assert(sizeof(ComponentRegistryEntry) == 4, "ComponentRegistryEntry is pa
 //
 // | GameState header |
 // | Singleton registry array header|
+// | SingletonRegistryEntry 0 |
+// | ... |
+// | SingletonRegistryEntry S-1 |
 // | Singleton struct 0 |
 // | ... |
 // | Singleton struct S-1 |
@@ -103,14 +114,18 @@ static_assert(sizeof(ComponentRegistryEntry) == 4, "ComponentRegistryEntry is pa
 // | ComponentRegistryEntry 0 |
 // | ... |
 // | ComponentRegistryEntry K-1 |
-// | Free entities list array header |
-// | Free entity index 0 (N-1 at first) |
+// | Free entity ids list array header |
+// | Free entity id index 0 (value N-1 at first) |
 // | ... |
-// | Free entity index N-1 (0 at first) |
+// | Free entity id index N-1 (value 0 at first) |
 // | Entity masks array header |
 // | Entity mask 0 |
 // | .. |
 // | Entity mask N-1 |
+// | Entity generations list array header |
+// | Entity generation 0 |
+// | .. |
+// | Entity generation N-1 |
 // | Component type 0 array header |
 // | Component type 0, entity 0 |
 // | ... |
@@ -132,11 +147,11 @@ struct GameStateHeader final {
 
 	// The version of the game state, this number should increment each time a change is made to
 	// the data layout of the system.
-	uint32_t gameStateVersion;
+	uint64_t gameStateVersion;
 
 	// The size of the game state in bytes. This is the number of bytes to copy if you want to copy
 	// the entire state using memcpy(). E.g. "memcpy(dst, stateHeader, stateHeader->stateSizeBytes)".
-	uint32_t stateSizeBytes;
+	uint64_t stateSizeBytes;
 
 	// The number of singleton structs in the game state.
 	uint32_t numSingletons;
@@ -161,15 +176,18 @@ struct GameStateHeader final {
 	// offsets to the ArrayHeaders for the various component types
 	uint32_t offsetComponentRegistry;
 
-	// Offset in bytes to the ArrayHeader of free entities (uint32_t)
-	uint32_t offsetFreeEntitiesList;
+	// Offset in bytes to the ArrayHeader of free entity ids (uint32_t)
+	uint32_t offsetFreeEntityIdsList;
 
 	// Offset in bytes to the ArrayHeader of ComponentMask, each entity is its own index into this
 	// array of masks.
 	uint32_t offsetComponentMasks;
 
+	// Offset in bytes to the ArrayHeader of entity generations (uint8_t)
+	uint32_t offsetEntityGenerationsList;
+
 	// Unused padding to ensure header is 32-byte aligned.
-	uint32_t ___PADDING_UNUSED___[4];
+	uint32_t ___PADDING_UNUSED___[1];
 
 	// Singleton state API
 	// --------------------------------------------------------------------------------------------
@@ -207,23 +225,30 @@ struct GameStateHeader final {
 
 	// Creates a new entity with no associated components. Index is guaranteed to be smaller than
 	// the ECS system's maximum number of entities. Indices used for removed entities will be used.
-	// Returns ~0 (UINT32_MAX) if no more free entities are available.
+	// Returns Entity::invalid() if no more free entities are available.
 	// Complexity: O(1)
-	uint32_t createEntity() noexcept;
+	Entity createEntity() noexcept;
 
 	// Deletes the given entity and deletes (clears) all associated components. Returns whether
 	// successful or not.
 	// Complexity: O(K) where K is number of component types
-	bool deleteEntity(uint32_t entity) noexcept;
+	bool deleteEntity(uint32_t entityId) noexcept;
 
-	// Clones a given entity and all its components. Returns ~0 (UINT32_MAX) on failure.
+	// Clones a given entity and all its components. Returns Entity::invalid() on failure.
 	// Complexity: O(K) where K is number of component types
-	uint32_t cloneEntity(uint32_t entity) noexcept;
+	Entity cloneEntity(Entity entity) noexcept;
 
 	// Returns pointer to the contiguous array of ComponentMask.
 	// Complexity: O(1)
 	ComponentMask* componentMasks() noexcept;
 	const ComponentMask* componentMasks() const noexcept;
+
+	// Returns pointer to the contiguous array of entity generations (uint8_t). If the generation()
+	// of an entity does not match the generation at index id() in this list then the entity is
+	// invalid (i.e. a "dangling pointer entity").
+	// Complexity: O(1)
+	uint8_t* entityGenerations() noexcept;
+	const uint8_t* entityGenerations() const noexcept;
 
 	// Returns pointer to the contiguous array of components of a given component type. Returns
 	// nullptr if the component type does not have associated data or does not exist. The second
@@ -288,11 +313,14 @@ struct GameStateHeader final {
 	ArrayHeader* componentRegistryArray() noexcept { return arrayAt(offsetComponentRegistry); }
 	const ArrayHeader* componentRegistryArray() const noexcept { return arrayAt(offsetComponentRegistry); }
 
-	ArrayHeader* freeEntitiesListArray() noexcept { return arrayAt(offsetFreeEntitiesList); }
-	const ArrayHeader* freeEntitiesListArray() const noexcept { return arrayAt(offsetFreeEntitiesList); }
+	ArrayHeader* freeEntityIdsListArray() noexcept { return arrayAt(offsetFreeEntityIdsList); }
+	const ArrayHeader* freeEntityIdsListArray() const noexcept { return arrayAt(offsetFreeEntityIdsList); }
 
 	ArrayHeader* componentMasksArray() noexcept { return arrayAt(offsetComponentMasks); }
 	const ArrayHeader* componentMasksArray() const noexcept { return arrayAt(offsetComponentMasks); }
+
+	ArrayHeader* entityGenerationsListArray() noexcept { return arrayAt(offsetEntityGenerationsList); }
+	const ArrayHeader* entityGenerationsListArray() const noexcept { return arrayAt(offsetEntityGenerationsList); }
 
 	// Helper methods
 	// --------------------------------------------------------------------------------------------

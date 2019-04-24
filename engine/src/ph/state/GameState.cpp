@@ -59,34 +59,43 @@ const uint8_t* GameStateHeader::singletonUntyped(uint32_t singletonIndex, uint32
 // GameState: ECS API
 // ------------------------------------------------------------------------------------------------
 
-uint32_t GameStateHeader::createEntity() noexcept
+Entity GameStateHeader::createEntity() noexcept
 {
 	// Get free entity from free entities list
-	ArrayHeader* freeEntitiesList = this->freeEntitiesListArray();
-	uint32_t freeEntity = ~0u;
-	bool freeEntityAvailable = freeEntitiesList->popGet(freeEntity);
+	ArrayHeader* freeEntitiesList = this->freeEntityIdsListArray();
+	uint32_t freeEntityId = ~0u;
+	bool freeEntityAvailable = freeEntitiesList->popGet(freeEntityId);
 
-	// Return ~0 if no free entity is available
-	if (!freeEntityAvailable) return ~0u;
+	// Return Entity::invalid() if no free entity id is available
+	if (!freeEntityAvailable) return Entity::invalid();
 
 	// Increment number of entities
 	currentNumEntities += 1;
 
 	// Set component mask
 	ArrayHeader* componentMasks = this->componentMasksArray();
-	ComponentMask& mask = componentMasks->at<ComponentMask>(freeEntity);
+	ComponentMask& mask = componentMasks->at<ComponentMask>(freeEntityId);
 	mask = ComponentMask::activeMask();
 
-	return freeEntity;
+	// Get generation
+	uint8_t* generations = this->entityGenerations();
+	uint8_t generation = generations[freeEntityId];
+
+	// Return entity
+	return Entity::create(freeEntityId, generation);
 }
 
-bool GameStateHeader::deleteEntity(uint32_t entity) noexcept
+bool GameStateHeader::deleteEntity(uint32_t entityId) noexcept
 {
-	if (entity >= this->maxNumEntities) return false;
+	if (entityId >= this->maxNumEntities) return false;
 
 	// Get mask
 	ArrayHeader* componentMasks = this->componentMasksArray();
-	ComponentMask& mask = componentMasks->at<ComponentMask>(entity);
+	ComponentMask& mask = componentMasks->at<ComponentMask>(entityId);
+
+	// Get generations
+	uint8_t* generations = this->entityGenerations();
+	uint8_t& generation = generations[entityId];
 
 	// Return false if entity is not active
 	if (!mask.active()) return false;
@@ -103,34 +112,48 @@ bool GameStateHeader::deleteEntity(uint32_t entity) noexcept
 		if (components == nullptr) continue;
 
 		// Clear component
-		memset(components + entity * componentSize, 0, componentSize);
+		memset(components + entityId * componentSize, 0, componentSize);
 	}
 
 	// Clear mask
 	mask = ComponentMask::empty();
 
-	// Add entity back to free entities list
-	ArrayHeader* freeEntitiesList = this->freeEntitiesListArray();
-	freeEntitiesList->add<uint32_t>(entity);
+	// Increment generation
+	generation += 1;
+
+	// Add entity id back to free entities list
+	ArrayHeader* freeEntityIdsList = this->freeEntityIdsListArray();
+	freeEntityIdsList->add<uint32_t>(entityId);
 
 	return true;
 }
 
-uint32_t GameStateHeader::cloneEntity(uint32_t entity) noexcept
+Entity GameStateHeader::cloneEntity(Entity entity) noexcept
 {
-	if (entity >= this->maxNumEntities) return ~0u;
+	// Grab id and generation
+	uint32_t entityId = entity.id();
+	uint8_t entityGeneration = entity.generation();
+
+	// If id is out of range, return invalid entity
+	if (entityId >= this->maxNumEntities) return Entity::invalid();
 
 	// Get mask, exit if entity does not exist
 	ComponentMask* masks = this->componentMasks();
-	ComponentMask mask = masks[entity];
-	if (!mask.active()) return ~0u;
+	ComponentMask mask = masks[entityId];
+	if (!mask.active()) return Entity::invalid();
+
+	// Get generation, exit if entity has wrong generation
+	uint8_t* generations = this->entityGenerations();
+	uint8_t expectedGeneration = generations[entityId];
+	if (entityGeneration != expectedGeneration) return Entity::invalid();
 
 	// Create entity, exit out on failure
-	uint32_t newEntity = this->createEntity();
-	if (newEntity == ~0u) return ~0u;
+	Entity newEntity = this->createEntity();
+	if (newEntity == Entity::invalid()) return Entity::invalid();
 
 	// Copy mask
-	masks[newEntity] = mask;
+	uint32_t newEntityId = newEntity.id();
+	masks[newEntityId] = mask;
 
 	// Copy components
 	for (uint32_t i = 1; i < this->numComponentTypes; i++) {
@@ -144,8 +167,8 @@ uint32_t GameStateHeader::cloneEntity(uint32_t entity) noexcept
 		if (components == nullptr) continue;
 
 		// Copy component
-		uint8_t* dst = components + newEntity * componentSize;
-		const uint8_t* src = components + entity * componentSize;
+		uint8_t* dst = components + newEntityId * componentSize;
+		const uint8_t* src = components + entityId * componentSize;
 		memcpy(dst, src, componentSize);
 	}
 
@@ -160,6 +183,16 @@ ComponentMask* GameStateHeader::componentMasks() noexcept
 const ComponentMask* GameStateHeader::componentMasks() const noexcept
 {
 	return componentMasksArray()->data<ComponentMask>();
+}
+
+uint8_t* GameStateHeader::entityGenerations() noexcept
+{
+	return entityGenerationsListArray()->data<uint8_t>();
+}
+
+const uint8_t* GameStateHeader::entityGenerations() const noexcept
+{
+	return entityGenerationsListArray()->data<uint8_t>();
 }
 
 uint8_t* GameStateHeader::componentsUntyped(
@@ -278,6 +311,8 @@ GameStateContainer createGameState(
 	Allocator* allocator) noexcept
 {
 	sfz_assert_debug(numSingletonStructs <= 64);
+	sfz_assert_debug(maxNumEntities <= GAME_STATE_ECS_MAX_NUM_ENTITIES);
+	sfz_assert_debug(numComponentTypes <= 63); // Not 64 because one is reserved for active bit
 
 	uint32_t totalSizeBytes = 0;
 
@@ -305,22 +340,27 @@ GameStateContainer createGameState(
 		uint32_t bytesIncludingPadding = bytesBeforePadding + padding;
 		totalSizeBytes += bytesIncludingPadding;
 	}
-	
+
 	// Components registry (+ 1 for active bit)
 	uint32_t offsetComponentRegistryHeader = totalSizeBytes;
 	ArrayHeader componentRegistryHeader = ArrayHeader::create<ComponentRegistryEntry>(numComponentTypes + 1);
 	uint32_t componentRegistrySizeBytes = componentRegistryHeader.numBytesNeededForArrayPlusHeader32Byte();
 	totalSizeBytes += componentRegistrySizeBytes;
 
-	// Free entities list
-	ArrayHeader freeEntitiesHeader = ArrayHeader::create<uint32_t>(maxNumEntities);
-	uint32_t freeEntitiesSizeBytes = freeEntitiesHeader.numBytesNeededForArrayPlusHeader32Byte();
-	totalSizeBytes += freeEntitiesSizeBytes;
+	// Free entity ids list
+	ArrayHeader freeEntityIdsHeader = ArrayHeader::create<uint32_t>(maxNumEntities);
+	uint32_t freeEntityIdsSizeBytes = freeEntityIdsHeader.numBytesNeededForArrayPlusHeader32Byte();
+	totalSizeBytes += freeEntityIdsSizeBytes;
 
 	// Entity masks
 	ArrayHeader masksHeader = ArrayHeader::create<ComponentMask>(maxNumEntities);
 	uint32_t masksSizeBytes = masksHeader.numBytesNeededForArrayPlusHeader32Byte();
 	totalSizeBytes += masksSizeBytes;
+
+	// Entity generations list
+	ArrayHeader generationsHeader = ArrayHeader::create<uint8_t>(maxNumEntities);
+	uint32_t generationsSizeBytes = generationsHeader.numBytesNeededForArrayPlusHeader32Byte();
+	totalSizeBytes += generationsSizeBytes;
 
 	// Component arrays
 	ComponentRegistryEntry componentRegistryEntries[64];
@@ -358,8 +398,9 @@ GameStateContainer createGameState(
 	state->currentNumEntities = 0;
 	state->offsetSingletonRegistry = sizeof(GameStateHeader);
 	state->offsetComponentRegistry = offsetComponentRegistryHeader;
-	state->offsetFreeEntitiesList = state->offsetComponentRegistry + componentRegistrySizeBytes;
-	state->offsetComponentMasks = state->offsetFreeEntitiesList + freeEntitiesSizeBytes;
+	state->offsetFreeEntityIdsList = state->offsetComponentRegistry + componentRegistrySizeBytes;
+	state->offsetComponentMasks = state->offsetFreeEntityIdsList + freeEntityIdsSizeBytes;
+	state->offsetEntityGenerationsList = state->offsetComponentMasks + generationsSizeBytes;
 
 	// Set singleton registry array header
 	*state->singletonRegistryArray() = singletonRegistryHeader;
@@ -383,16 +424,20 @@ GameStateContainer createGameState(
 		componentsRegistry[i] = componentRegistryEntries[i];
 	}
 
-	// Set free entities header and fill list with free entity indices
-	ArrayHeader* freeEntities = state->freeEntitiesListArray();
-	*freeEntities = freeEntitiesHeader;
-	for (int64_t entityIdx = int64_t(maxNumEntities - 1); entityIdx >= 0; entityIdx--) {
-		freeEntities->add<uint32_t>(uint32_t(entityIdx));
+	// Set free entity ids header and fill list with free entity ids
+	ArrayHeader* freeEntityIds = state->freeEntityIdsListArray();
+	*freeEntityIds = freeEntityIdsHeader;
+	for (int64_t entityId = int64_t(maxNumEntities - 1); entityId >= 0; entityId--) {
+		freeEntityIds->add<uint32_t>(uint32_t(entityId));
 	}
 
 	// Set component masks header
 	*state->componentMasksArray() = masksHeader;
 	state->componentMasksArray()->size = masksHeader.capacity;
+
+	// Set entity generations header and fill with zeroes
+	ArrayHeader* generations = state->entityGenerationsListArray();
+	*generations = generationsHeader;
 
 	// Set component types array headers (i = 1 because first is active bit, which has no data)
 	for (uint32_t i = 1; i < state->numComponentTypes; i++) {

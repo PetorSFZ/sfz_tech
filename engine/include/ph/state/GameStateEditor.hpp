@@ -120,7 +120,7 @@ private:
 	ComponentMask mFilterMask = ComponentMask::activeMask();
 	str32 mFilterMaskEditBuffers[8];
 	bool mCompactEntityList = false;
-	uint32_t mCurrentSelectedEntity = 0;
+	uint32_t mCurrentSelectedEntityId = 0;
 };
 
 } // namespace ph

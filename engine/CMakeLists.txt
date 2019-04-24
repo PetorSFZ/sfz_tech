@@ -82,6 +82,7 @@ set(PHANTASY_ENGINE_HEADER_FILES
 
 	${INCLUDE_DIR}/ph/state/ArrayHeader.hpp
 	${INCLUDE_DIR}/ph/state/ComponentMask.hpp
+	${INCLUDE_DIR}/ph/state/Entity.hpp
 	${INCLUDE_DIR}/ph/state/GameState.hpp
 	${INCLUDE_DIR}/ph/state/GameStateContainer.hpp
 	${INCLUDE_DIR}/ph/state/GameStateEditor.hpp

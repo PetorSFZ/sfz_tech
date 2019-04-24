@@ -494,7 +494,7 @@ void GameStateEditor::init(
 	this->destroy();
 
 	// Initialize binary string to byte lookup map
-	if (binaryStringToByteLookupMap == nullptr) 
+	if (binaryStringToByteLookupMap == nullptr)
 	{
 		binaryStringToByteLookupMap = sfz::sfzNew<sfz::HashMap<str32, uint8_t>>(allocator);
 		binaryStringToByteLookupMap->create(512, allocator);
@@ -578,7 +578,7 @@ void GameStateEditor::swap(GameStateEditor& other) noexcept
 		std::swap(this->mFilterMaskEditBuffers[i], other.mFilterMaskEditBuffers[i]);
 	}
 	std::swap(this->mCompactEntityList, other.mCompactEntityList);
-	std::swap(this->mCurrentSelectedEntity, other.mCurrentSelectedEntity);
+	std::swap(this->mCurrentSelectedEntityId, other.mCurrentSelectedEntityId);
 }
 
 void GameStateEditor::destroy() noexcept
@@ -595,9 +595,9 @@ void GameStateEditor::destroy() noexcept
 		mFilterMaskEditBuffers[i].printf("");
 	}
 	mCompactEntityList = false;
-	mCurrentSelectedEntity = 0;
+	mCurrentSelectedEntityId = 0;
 
-	// TODO: Not perfect, potential race condition if multiple game state viewers.
+	// TODO: Not perfect, probable race condition if multiple game state viewers.
 	if (binaryStringToByteLookupMap != nullptr) {
 		sfz::sfzDelete(binaryStringToByteLookupMap, binaryStringToByteLookupMap->allocator());
 		binaryStringToByteLookupMap = nullptr;
@@ -731,47 +731,47 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 
 	// Entities list
 	if (ImGui::ListBoxHeader("##Entities", vec2(100.0f, ImGui::GetWindowHeight() - 320.0f))) {
-		for (uint32_t entity = 0; entity < state->maxNumEntities; entity++) {
+		for (uint32_t entityId = 0; entityId < state->maxNumEntities; entityId++) {
 
 			// Check if entity fulfills filter mask
-			bool fulfillsFilter = masks[entity].fulfills(mFilterMask);
+			bool fulfillsFilter = masks[entityId].fulfills(mFilterMask);
 
 			// If compact list and does not fulfill filter mask, don't show entity
 			if (!fulfillsFilter && mCompactEntityList) continue;
 
 			// Non-fulfilling or non-active entities are greyed out
-			bool active = masks[entity].active();
+			bool active = masks[entityId].active();
 			if (!fulfillsFilter || !active) {
 				ImGui::PushStyleColor(ImGuiCol_Text, INACTIVE_TEXT_COLOR);
 			}
 
-			str32 entityStr("%08u", entity);
-			bool selected = mCurrentSelectedEntity == entity;
+			str32 entityStr("%08u", entityId);
+			bool selected = mCurrentSelectedEntityId == entityId;
 			bool activated = ImGui::Selectable(entityStr, selected);
-			if (activated) mCurrentSelectedEntity = entity;
+			if (activated) mCurrentSelectedEntityId = entityId;
 
 			// Non-fulfilling or non-active entities are greyed out
 			if (!fulfillsFilter || !active) ImGui::PopStyleColor();
-
 		}
 		ImGui::ListBoxFooter();
 	}
 
 	// New entity button
 	if (ImGui::Button("New", sfz::vec2(100, 0))) {
-		uint32_t entity = state->createEntity();
-		if (entity != ~0u) mCurrentSelectedEntity = entity;
+		Entity entity = state->createEntity();
+		if (entity != Entity::invalid()) mCurrentSelectedEntityId = entity.id();
 	}
 
 	// Clone entity button
 	if (ImGui::Button("Clone", sfz::vec2(100, 0))) {
-		uint32_t entity = state->cloneEntity(mCurrentSelectedEntity);
-		if (entity != ~0u) mCurrentSelectedEntity = entity;
+		uint8_t gen = state->entityGenerations()[mCurrentSelectedEntityId];
+		Entity entity = state->cloneEntity(Entity::create(mCurrentSelectedEntityId, gen));
+		if (entity != Entity::invalid()) mCurrentSelectedEntityId = entity.id();
 	}
 
 	// Delete entity button
 	if (ImGui::Button("Delete", sfz::vec2(100, 0))) {
-		state->deleteEntity(mCurrentSelectedEntity);
+		state->deleteEntity(mCurrentSelectedEntityId);
 	}
 
 	// End entities column
@@ -784,11 +784,11 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 	ImGui::BeginGroup();
 
 	// Only show entity edit menu if an active entity exists
-	bool selectedEntityExists = mCurrentSelectedEntity < state->maxNumEntities;
+	bool selectedEntityExists = mCurrentSelectedEntityId < state->maxNumEntities;
 	if (selectedEntityExists) {
 
 		// Currently selected entities component mask
-		ComponentMask& mask = masks[mCurrentSelectedEntity];
+		ComponentMask& mask = masks[mCurrentSelectedEntityId];
 		componentMaskVisualizer(mask);
 
 		ImGui::Spacing();
@@ -818,7 +818,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 				if (!entityHasComponent) ImGui::PushStyleColor(ImGuiCol_Text, INACTIVE_TEXT_COLOR);
 				bool checkboxBool = entityHasComponent;
 				if (ImGui::Checkbox(sfz::str96("##%s", info.componentName.str), &checkboxBool)) {
-					if (i != 0) state->setComponentUnsized(mCurrentSelectedEntity, i, checkboxBool);
+					if (i != 0) state->setComponentUnsized(mCurrentSelectedEntityId, i, checkboxBool);
 				}
 				ImGui::SameLine();
 				ImGui::Indent(79.0f);
@@ -835,7 +835,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 				if (ImGui::Checkbox(
 					sfz::str96("##%s_checkbox", info.componentName.str), &checkboxBool)) {
 					if (checkboxBool) mask.setComponentType(i, checkboxBool);
-					else state->deleteComponent(mCurrentSelectedEntity, i);
+					else state->deleteComponent(mCurrentSelectedEntityId, i);
 				}
 
 				ImGui::SameLine();
@@ -854,9 +854,9 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 					else {
 						info.componentEditor(
 							info.userPtr.get(),
-							components + mCurrentSelectedEntity * componentSize,
+							components + mCurrentSelectedEntityId * componentSize,
 							state,
-							mCurrentSelectedEntity);
+							mCurrentSelectedEntityId);
 					}
 					ImGui::Unindent(39.0f);
 
