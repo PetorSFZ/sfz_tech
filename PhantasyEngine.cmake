@@ -600,13 +600,16 @@ function(phCreateSymlinkScript)
 		# Directories
 		set(DUMMY_DIR "${CMAKE_BINARY_DIR}/dummy")
 		set(DUMMY_SYMLINK_FILE "${CMAKE_BINARY_DIR}/dummy/create_symlinks.sh")
-		#set(SYMLINK_FILE "${CMAKE_BINARY_DIR}/create_symlinks.sh")
+		set(SYMLINK_FILE "${CMAKE_BINARY_DIR}/create_symlinks.sh")
 		set(DEBUG_DIR "${CMAKE_BINARY_DIR}/Debug")
 		set(RELWITHDEBINFO_DIR "${CMAKE_BINARY_DIR}/RelWithDebInfo")
 		set(RELEASE_DIR "${CMAKE_BINARY_DIR}/Release")
 
 		# Create the dummy directory
 		file(MAKE_DIRECTORY ${DUMMY_DIR})
+
+		# Remove old files (if they existed)
+		file(REMOVE ${DUMMY_SYMLINK_FILE} ${SYMLINK_FILE})
 
 		# Append create directories commands to file
 		file(APPEND ${DUMMY_SYMLINK_FILE} "# Create Debug, Release and RelWithDebInfo directories\n")
@@ -623,10 +626,10 @@ function(phCreateSymlinkScript)
 
 			# Append symlink commands to file
 			file(APPEND ${DUMMY_SYMLINK_FILE} "# Create symlinks for \"${SYMLINK_DIR_NAME}\"\n")
-			file(APPEND ${DUMMY_SYMLINK_FILE} "ln -s ${symlinkPath} ${CMAKE_BINARY_DIR}/${SYMLINK_DIR_NAME}\n")
-			file(APPEND ${DUMMY_SYMLINK_FILE} "ln -s ${symlinkPath} ${DEBUG_DIR}/${SYMLINK_DIR_NAME}\n")
-			file(APPEND ${DUMMY_SYMLINK_FILE} "ln -s ${symlinkPath} ${RELWITHDEBINFO_DIR}/${SYMLINK_DIR_NAME}\n")
-			file(APPEND ${DUMMY_SYMLINK_FILE} "ln -s ${symlinkPath} ${RELEASE_DIR}/${SYMLINK_DIR_NAME}\n")
+			file(APPEND ${DUMMY_SYMLINK_FILE} "ln -sfn ${symlinkPath} ${CMAKE_BINARY_DIR}/${SYMLINK_DIR_NAME}\n")
+			file(APPEND ${DUMMY_SYMLINK_FILE} "ln -sfn ${symlinkPath} ${DEBUG_DIR}/${SYMLINK_DIR_NAME}\n")
+			file(APPEND ${DUMMY_SYMLINK_FILE} "ln -sfn ${symlinkPath} ${RELWITHDEBINFO_DIR}/${SYMLINK_DIR_NAME}\n")
+			file(APPEND ${DUMMY_SYMLINK_FILE} "ln -sfn ${symlinkPath} ${RELEASE_DIR}/${SYMLINK_DIR_NAME}\n")
 			file(APPEND ${DUMMY_SYMLINK_FILE} "\n")
 		endforeach()
 
