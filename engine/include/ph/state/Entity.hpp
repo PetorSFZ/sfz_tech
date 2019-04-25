@@ -71,7 +71,7 @@ struct Entity final {
 	{
 		sfz_assert_debug(id == (id & ENTITY_ID_PART_MASK));
 		Entity tmp;
-		tmp.rawBits = (uint32_t(generation) << ENTITY_ID_NUM_BITS) & (id & ENTITY_ID_PART_MASK);
+		tmp.rawBits = (uint32_t(generation) << ENTITY_ID_NUM_BITS) | (id & ENTITY_ID_PART_MASK);
 		return tmp;
 	}
 
