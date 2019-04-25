@@ -714,6 +714,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 
 	// Get some stuff from the game state
 	ComponentMask* masks = state->componentMasks();
+	const uint8_t* generations = state->entityGenerations();
 
 	// Currently selected entities component mask
 	ImGui::BeginGroup();
@@ -730,7 +731,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 	ImGui::BeginGroup();
 
 	// Entities list
-	if (ImGui::ListBoxHeader("##Entities", vec2(100.0f, ImGui::GetWindowHeight() - 320.0f))) {
+	if (ImGui::ListBoxHeader("##Entities", vec2(136.0f, ImGui::GetWindowHeight() - 320.0f))) {
 		for (uint32_t entityId = 0; entityId < state->maxNumEntities; entityId++) {
 
 			// Check if entity fulfills filter mask
@@ -745,7 +746,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 				ImGui::PushStyleColor(ImGuiCol_Text, INACTIVE_TEXT_COLOR);
 			}
 
-			str32 entityStr("%08u", entityId);
+			str32 entityStr("%08u [%02X]", entityId, generations[entityId]);
 			bool selected = mCurrentSelectedEntityId == entityId;
 			bool activated = ImGui::Selectable(entityStr, selected);
 			if (activated) mCurrentSelectedEntityId = entityId;
@@ -757,20 +758,20 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 	}
 
 	// New entity button
-	if (ImGui::Button("New", sfz::vec2(100, 0))) {
+	if (ImGui::Button("New", sfz::vec2(136.0f, 0))) {
 		Entity entity = state->createEntity();
 		if (entity != Entity::invalid()) mCurrentSelectedEntityId = entity.id();
 	}
 
 	// Clone entity button
-	if (ImGui::Button("Clone", sfz::vec2(100, 0))) {
+	if (ImGui::Button("Clone", sfz::vec2(136.0f, 0))) {
 		uint8_t gen = state->entityGenerations()[mCurrentSelectedEntityId];
 		Entity entity = state->cloneEntity(Entity::create(mCurrentSelectedEntityId, gen));
 		if (entity != Entity::invalid()) mCurrentSelectedEntityId = entity.id();
 	}
 
 	// Delete entity button
-	if (ImGui::Button("Delete", sfz::vec2(100, 0))) {
+	if (ImGui::Button("Delete", sfz::vec2(136.0f, 0))) {
 		state->deleteEntity(mCurrentSelectedEntityId);
 	}
 
@@ -778,7 +779,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 	ImGui::EndGroup();
 
 	// Calculate width of content to the right of entities column
-	const float rhsContentWidth = ImGui::GetWindowWidth() - 135;
+	const float rhsContentWidth = ImGui::GetWindowWidth() - 171;
 
 	ImGui::SameLine();
 	ImGui::BeginGroup();
