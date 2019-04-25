@@ -85,6 +85,12 @@ Entity GameStateHeader::createEntity() noexcept
 	return Entity::create(freeEntityId, generation);
 }
 
+bool GameStateHeader::deleteEntity(Entity entity) noexcept
+{
+	if (!this->checkGeneration(entity)) return false;
+	return this->deleteEntity(entity.id());
+}
+
 bool GameStateHeader::deleteEntity(uint32_t entityId) noexcept
 {
 	if (entityId >= this->maxNumEntities) return false;
@@ -193,6 +199,15 @@ uint8_t* GameStateHeader::entityGenerations() noexcept
 const uint8_t* GameStateHeader::entityGenerations() const noexcept
 {
 	return entityGenerationsListArray()->data<uint8_t>();
+}
+
+bool GameStateHeader::checkGeneration(Entity entity) const noexcept
+{
+	uint32_t entityId = entity.id();
+	uint8_t entityGen = entity.generation();
+	sfz_assert_debug(entityId < this->maxNumEntities);
+	const uint8_t* generations = this->entityGenerations();
+	return generations[entityId] == entityGen;
 }
 
 uint8_t* GameStateHeader::componentsUntyped(

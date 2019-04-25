@@ -232,6 +232,7 @@ struct GameStateHeader final {
 	// Deletes the given entity and deletes (clears) all associated components. Returns whether
 	// successful or not.
 	// Complexity: O(K) where K is number of component types
+	bool deleteEntity(Entity entity) noexcept;
 	bool deleteEntity(uint32_t entityId) noexcept;
 
 	// Clones a given entity and all its components. Returns Entity::invalid() on failure.
@@ -249,6 +250,11 @@ struct GameStateHeader final {
 	// Complexity: O(1)
 	uint8_t* entityGenerations() noexcept;
 	const uint8_t* entityGenerations() const noexcept;
+
+	// Checks whether a given entity is valid or not by comparing its generation with the internal
+	// one stored in the ECS system.
+	// Complexity: O(1)
+	bool checkGeneration(Entity entity) const noexcept;
 
 	// Returns pointer to the contiguous array of components of a given component type. Returns
 	// nullptr if the component type does not have associated data or does not exist. The second
