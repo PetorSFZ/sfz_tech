@@ -251,6 +251,12 @@ struct GameStateHeader final {
 	uint8_t* entityGenerations() noexcept;
 	const uint8_t* entityGenerations() const noexcept;
 
+	// Returns the current generation for the specified entity id. Convenience function around
+	// entityGenerations(), which should be preferred if multiple entities ids generations are to be
+	// looked up.
+	// Complexity: O(1)
+	uint8_t getGeneration(uint32_t entityId) const noexcept;
+
 	// Checks whether a given entity is valid or not by comparing its generation with the internal
 	// one stored in the ECS system.
 	// Complexity: O(1)
@@ -290,12 +296,12 @@ struct GameStateHeader final {
 	// Adds a component to an entity. Returns whether succesful or not.
 	// Complexity: O(1)
 	bool addComponentUntyped(
-		uint32_t entity, uint32_t componentType, const uint8_t* data, uint32_t dataSize) noexcept;
+		Entity entity, uint32_t componentType, const uint8_t* data, uint32_t dataSize) noexcept;
 
 	// Adds a (typed) component to an entity. Returns whether succesful or not.
 	// Complexity: O(1)
 	template<typename T>
-	bool addComponent(uint32_t entity, uint32_t componentType, const T& component) noexcept
+	bool addComponent(Entity entity, uint32_t componentType, const T& component) noexcept
 	{
 		static_assert(std::is_trivially_copyable<T>::value, "ECS components must be trivially copyable");
 		static_assert(std::is_trivially_destructible<T>::value, "ECS components must be trivially destructible");
@@ -304,11 +310,11 @@ struct GameStateHeader final {
 
 	// Sets the value (i.e. flag) of an unsized component. Returns whether succesful or not.
 	// Complexity: O(1)
-	bool setComponentUnsized(uint32_t entity, uint32_t componentType, bool value) noexcept;
+	bool setComponentUnsized(Entity entity, uint32_t componentType, bool value) noexcept;
 
 	// Delets a component from an entity. Returns whether succesful or not.
 	// Complexity: O(1)
-	bool deleteComponent(uint32_t entity, uint32_t componentType) noexcept;
+	bool deleteComponent(Entity entity, uint32_t componentType) noexcept;
 
 	// Accessing arrays
 	// --------------------------------------------------------------------------------------------

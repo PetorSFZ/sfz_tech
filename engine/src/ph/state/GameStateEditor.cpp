@@ -818,7 +818,11 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 				if (!entityHasComponent) ImGui::PushStyleColor(ImGuiCol_Text, INACTIVE_TEXT_COLOR);
 				bool checkboxBool = entityHasComponent;
 				if (ImGui::Checkbox(sfz::str96("##%s", info.componentName.str), &checkboxBool)) {
-					if (i != 0) state->setComponentUnsized(mCurrentSelectedEntityId, i, checkboxBool);
+					if (i != 0) {
+						uint8_t entityGen = state->getGeneration(mCurrentSelectedEntityId);
+						Entity entity = Entity::create(mCurrentSelectedEntityId, entityGen);
+						state->setComponentUnsized(entity, i, checkboxBool);
+					}
 				}
 				ImGui::SameLine();
 				ImGui::Indent(79.0f);
@@ -834,8 +838,14 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 
 				if (ImGui::Checkbox(
 					sfz::str96("##%s_checkbox", info.componentName.str), &checkboxBool)) {
-					if (checkboxBool) mask.setComponentType(i, checkboxBool);
-					else state->deleteComponent(mCurrentSelectedEntityId, i);
+					if (checkboxBool) {
+						mask.setComponentType(i, checkboxBool);
+					}
+					else {
+						uint8_t entityGen = state->getGeneration(mCurrentSelectedEntityId);
+						Entity entity = Entity::create(mCurrentSelectedEntityId, entityGen);
+						state->deleteComponent(entity, i);
+					}
 				}
 
 				ImGui::SameLine();

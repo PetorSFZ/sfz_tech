@@ -201,13 +201,17 @@ const uint8_t* GameStateHeader::entityGenerations() const noexcept
 	return entityGenerationsListArray()->data<uint8_t>();
 }
 
-bool GameStateHeader::checkGeneration(Entity entity) const noexcept
+uint8_t GameStateHeader::getGeneration(uint32_t entityId) const noexcept
 {
-	uint32_t entityId = entity.id();
-	uint8_t entityGen = entity.generation();
 	sfz_assert_debug(entityId < this->maxNumEntities);
 	const uint8_t* generations = this->entityGenerations();
-	return generations[entityId] == entityGen;
+	return generations[entityId];
+}
+
+bool GameStateHeader::checkGeneration(Entity entity) const noexcept
+{
+	uint8_t expectedGeneration = this->getGeneration(entity.id());
+	return expectedGeneration == entity.generation();
 }
 
 uint8_t* GameStateHeader::componentsUntyped(
@@ -245,13 +249,15 @@ const uint8_t* GameStateHeader::componentsUntyped(
 }
 
 bool GameStateHeader::addComponentUntyped(
-	uint32_t entity, uint32_t componentType, const uint8_t* data, uint32_t dataSize) noexcept
+	Entity entity, uint32_t componentType, const uint8_t* data, uint32_t dataSize) noexcept
 {
-	if (entity >= this->maxNumEntities) return false;
+	uint32_t entityId = entity.id();
+	if (entityId >= this->maxNumEntities) return false;
+	if (!checkGeneration(entity)) return false;
 	if (componentType >= this->numComponentTypes) return false;
 
 	// Return false if mask is not active
-	ComponentMask& mask = this->componentMasks()[entity];
+	ComponentMask& mask = this->componentMasks()[entityId];
 	if (!mask.active()) return false;
 
 	// Get components array, return false if component type does not have data
@@ -263,7 +269,7 @@ bool GameStateHeader::addComponentUntyped(
 	if (dataSize != componentSize) return false;
 
 	// Copy component into ECS system
-	memcpy(components + entity * componentSize, data, dataSize);
+	memcpy(components + entityId * componentSize, data, dataSize);
 
 	// Ensure bit is set in mask
 	mask.setComponentType(componentType, true);
@@ -272,13 +278,15 @@ bool GameStateHeader::addComponentUntyped(
 }
 
 bool GameStateHeader::setComponentUnsized(
-	uint32_t entity, uint32_t componentType, bool value) noexcept
+	Entity entity, uint32_t componentType, bool value) noexcept
 {
-	if (entity >= this->maxNumEntities) return false;
+	uint32_t entityId = entity.id();
+	if (entityId >= this->maxNumEntities) return false;
+	if (!checkGeneration(entity)) return false;
 	if (componentType >= this->numComponentTypes) return false;
 
 	// Return false if mask is not active
-	ComponentMask& mask = this->componentMasks()[entity];
+	ComponentMask& mask = this->componentMasks()[entityId];
 	if (!mask.active()) return false;
 
 	// Get components array, return false if component type have data
@@ -292,12 +300,14 @@ bool GameStateHeader::setComponentUnsized(
 	return true;
 }
 
-bool GameStateHeader::deleteComponent(uint32_t entity, uint32_t componentType) noexcept
+bool GameStateHeader::deleteComponent(Entity entity, uint32_t componentType) noexcept
 {
-	if (entity >= this->maxNumEntities) return false;
+	uint32_t entityId = entity.id();
+	if (entityId >= this->maxNumEntities) return false;
+	if (!checkGeneration(entity)) return false;
 
 	// Return false if mask is not active
-	ComponentMask& mask = this->componentMasks()[entity];
+	ComponentMask& mask = this->componentMasks()[entityId];
 	if (!mask.active()) return false;
 
 	// Get components array, forward to setComponentUnsized() if component type does not have data
@@ -306,7 +316,7 @@ bool GameStateHeader::deleteComponent(uint32_t entity, uint32_t componentType) n
 	if (components == nullptr) return this->setComponentUnsized(entity, componentType, false);
 
 	// Clear component
-	memset(components + entity * componentSize, 0, componentSize);
+	memset(components + entityId * componentSize, 0, componentSize);
 
 	// Clear bit in mask
 	mask.setComponentType(componentType, false);
