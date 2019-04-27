@@ -210,7 +210,7 @@ struct GameStateHeader final {
 		return *singleton;
 	}
 	template<typename T>
-	const T& singleton(uint32_t singletonIndex) noexcept
+	const T& singleton(uint32_t singletonIndex) const noexcept
 	{
 		static_assert(std::is_trivially_copyable<T>::value, "Game state singletons must be trivially copyable");
 		static_assert(std::is_trivially_destructible<T>::value, "Game state singletons must be trivially destructible");
