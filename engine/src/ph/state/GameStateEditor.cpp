@@ -773,6 +773,14 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 	// Delete entity button
 	if (ImGui::Button("Delete", sfz::vec2(136.0f, 0))) {
 		state->deleteEntity(mCurrentSelectedEntityId);
+
+		// Select previous active entity
+		for (int64_t i = int64_t(mCurrentSelectedEntityId) - 1; i >= 0; i--) {
+			if (masks[i].active()) {
+				mCurrentSelectedEntityId = uint32_t(i);
+				break;
+			}
+		}
 	}
 
 	// End entities column
