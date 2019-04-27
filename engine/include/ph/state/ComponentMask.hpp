@@ -42,13 +42,13 @@ struct ComponentMask final {
 	// Constructor methods
 	// --------------------------------------------------------------------------------------------
 
-	static ComponentMask fromRawValue(uint64_t bits) noexcept { return { bits }; }
-	static ComponentMask empty() noexcept { return ComponentMask::fromRawValue(0); }
-	static ComponentMask fromType(uint32_t componentType) noexcept
+	static constexpr ComponentMask fromRawValue(uint64_t bits) noexcept { return { bits }; }
+	static constexpr ComponentMask empty() noexcept { return ComponentMask::fromRawValue(0); }
+	static constexpr ComponentMask fromType(uint32_t componentType) noexcept
 	{
 		return ComponentMask::fromRawValue(uint64_t(1) << uint64_t(componentType));
 	}
-	static ComponentMask activeMask() noexcept
+	static constexpr ComponentMask activeMask() noexcept
 	{
 		return ComponentMask::fromRawValue(1);
 	}
@@ -56,38 +56,38 @@ struct ComponentMask final {
 	// Operators
 	// --------------------------------------------------------------------------------------------
 
-	bool operator== (const ComponentMask& o) const noexcept { return rawMask == o.rawMask; }
-	bool operator!= (const ComponentMask& o) const noexcept { return rawMask != o.rawMask; }
-	ComponentMask operator& (const ComponentMask& o) const noexcept { return { rawMask & o.rawMask }; }
-	ComponentMask operator| (const ComponentMask& o) const noexcept { return { rawMask | o.rawMask }; }
-	ComponentMask operator~ () const noexcept { return { ~rawMask }; }
+	constexpr bool operator== (const ComponentMask& o) const noexcept { return rawMask == o.rawMask; }
+	constexpr bool operator!= (const ComponentMask& o) const noexcept { return rawMask != o.rawMask; }
+	constexpr ComponentMask operator& (const ComponentMask& o) const noexcept { return { rawMask & o.rawMask }; }
+	constexpr ComponentMask operator| (const ComponentMask& o) const noexcept { return { rawMask | o.rawMask }; }
+	constexpr ComponentMask operator~ () const noexcept { return { ~rawMask }; }
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
 	// Checks whether this mask contains the specified component type or not, somewhat slow.
 	// Prefer to build a mask with all bits you want to check, then you fulfills() with it instead.
-	bool hasComponentType(uint32_t componentType) const noexcept
+	constexpr bool hasComponentType(uint32_t componentType) const noexcept
 	{
 		return this->fulfills(ComponentMask::fromType(componentType));
 	}
 
 	// Sets the specified bit of this mask to the specified value.
-	void setComponentType(uint32_t componentType, bool value) noexcept
+	constexpr void setComponentType(uint32_t componentType, bool value) noexcept
 	{
 		if (value) this->rawMask |= ComponentMask::fromType(componentType).rawMask;
 		else this->rawMask &= ~ComponentMask::fromType(componentType).rawMask;
 	}
 
 	// Checks whether this mask has all the components in the specified parameter mask
-	bool fulfills(const ComponentMask& constraints) const noexcept
+	constexpr bool fulfills(const ComponentMask& constraints) const noexcept
 	{
 		return (this->rawMask & constraints.rawMask) == constraints.rawMask;
 	}
 
 	// Checks whether the entity associated with this mask is active or not (i.e. whether the 0:th
 	// bit is set or not)
-	bool active() const noexcept { return this->fulfills(ComponentMask::activeMask()); }
+	constexpr bool active() const noexcept { return this->fulfills(ComponentMask::activeMask()); }
 };
 static_assert(sizeof(ComponentMask) == 8, "ComponentMask is padded");
 
