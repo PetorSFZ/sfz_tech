@@ -345,6 +345,27 @@ struct GameStateHeader final {
 	{
 		return reinterpret_cast<const ArrayHeader*>(reinterpret_cast<const uint8_t*>(this) + offset);
 	}
+
+	// Constructors & destructors tricks
+	// --------------------------------------------------------------------------------------------
+
+	// Copying and moving of the GameStateHeader struct is forbidden. This is a bit of a hack to
+	// avoid a certain class of bugs. Essentially, the GameStateHeader assumes it is at the top of
+	// a chunk of memory containing the entire game state. If it is not, it will read/write invalid
+	// memory for some of its operations. E.g. this could happen if you attempted to do this:
+	//
+	// GameStateHeader* statePtr = ... // (Pointer to game state memory chunk)
+	// GameStateHeader header = *statePtr; // Copies header to header, but not entire state
+	// header.someOperation(); // Invalid memory access because there is no state here
+	//
+	// By disabling the copy constructors the above code would give compile error. Do note that
+	// GameStateHeader is still POD (i.e. trivially copyable), even though the C++ compiler does not
+	// consider it to be. It is still completely fine to memcpy() and such as long as you know what
+	// you are doing.
+	GameStateHeader(const GameStateHeader&) = delete;
+	GameStateHeader& operator=(const GameStateHeader&) = delete;
+	GameStateHeader(GameStateHeader&&) = delete;
+	GameStateHeader& operator=(GameStateHeader&&) = delete;
 };
 static_assert(sizeof(GameStateHeader) == 64, "GameStateHeader is padded");
 
