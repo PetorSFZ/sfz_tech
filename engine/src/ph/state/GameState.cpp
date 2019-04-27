@@ -425,7 +425,7 @@ GameStateContainer createGameState(
 	state->offsetComponentRegistry = offsetComponentRegistryHeader;
 	state->offsetFreeEntityIdsList = state->offsetComponentRegistry + componentRegistrySizeBytes;
 	state->offsetComponentMasks = state->offsetFreeEntityIdsList + freeEntityIdsSizeBytes;
-	state->offsetEntityGenerationsList = state->offsetComponentMasks + generationsSizeBytes;
+	state->offsetEntityGenerationsList = state->offsetComponentMasks + masksSizeBytes;
 
 	// Set singleton registry array header
 	*state->singletonRegistryArray() = singletonRegistryHeader;
