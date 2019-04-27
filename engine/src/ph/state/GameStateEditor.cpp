@@ -20,6 +20,7 @@
 #include "ph/state/GameStateEditor.hpp"
 
 #include <algorithm>
+#include <cinttypes>
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -907,8 +908,11 @@ void GameStateEditor::renderInfoViewer(GameStateHeader* state) noexcept
 	uint64_t realMagicNumberString[2];
 	realMagicNumberString[0] = GAME_STATE_MAGIC_NUMBER;
 	realMagicNumberString[1] = 0;
-	ImGui::Text("magicNumber:"); ImGui::SameLine(valueXOffset); ImGui::Text("\"%s\" (expected: \"%s\")", magicNumberString, realMagicNumberString);
-	ImGui::Text("gameStateVersion:"); ImGui::SameLine(valueXOffset); ImGui::Text("%u (compiled version: %u)", state->gameStateVersion, GAME_STATE_VERSION);
+	ImGui::Text("magicNumber:"); ImGui::SameLine(valueXOffset);
+	ImGui::Text("\"%s\" (expected: \"%s\")",
+		(const char*)magicNumberString, (const char*)realMagicNumberString);
+	ImGui::Text("gameStateVersion:"); ImGui::SameLine(valueXOffset);
+	ImGui::Text("%" PRIu64 " (compiled version: %" PRIu64 ")", state->gameStateVersion, GAME_STATE_VERSION);
 	ImGui::Text("stateSize:"); ImGui::SameLine(valueXOffset);
 	if (state->stateSizeBytes < 1048576) {
 		ImGui::Text("%.2f KiB", float(state->stateSizeBytes) / 1024.0f);
