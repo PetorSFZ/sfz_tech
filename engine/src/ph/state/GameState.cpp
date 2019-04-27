@@ -331,8 +331,8 @@ GameStateContainer createGameState(
 	uint32_t numSingletonStructs,
 	const uint32_t* singletonStructSizes,
 	uint32_t maxNumEntities,
-	const uint32_t* componentSizes,
 	uint32_t numComponentTypes,
+	const uint32_t* componentSizes,
 	Allocator* allocator) noexcept
 {
 	sfz_assert_debug(numSingletonStructs <= 64);
