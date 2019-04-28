@@ -20,6 +20,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring>
 
 namespace ph {
 
@@ -52,32 +53,49 @@ struct ArrayHeader final {
 	// Contructor functions
 	// --------------------------------------------------------------------------------------------
 
-	// POD, so everything is default
+	// POD, default constructible and destructible
 	ArrayHeader() noexcept = default;
-	ArrayHeader(const ArrayHeader&) noexcept = default;
-	ArrayHeader& operator= (const ArrayHeader&) noexcept = default;
 	~ArrayHeader() noexcept = default;
 
-	static ArrayHeader createUntyped(uint32_t capacity, uint32_t elementSize) noexcept
+	// Copying and moving of the ArrayHeader struct is forbidden. This is a bit of a hack to
+	// avoid a certain class of bugs. Essentially, the ArrayHeader assumes it is at the top of
+	// a chunk of memory containing the entire array. If it is not, it will read/write invalid
+	// memory for some of its operations. E.g. this could happen if you attempted to do this:
+	//
+	// ArrayHeader* arrayPtr = ... // (Pointer to memory chunk containing header and array)
+	// ArrayHeader header = *arrayPtr; // Copies header to header, but not the array
+	// header.someOperation(); // Invalid memory access because there is no array here
+	//
+	// By disabling the copy constructors the above code would give compile error. Do note that
+	// ArrayHeader is still POD (i.e. trivially copyable), even though the C++ compiler does not
+	// consider it to be. It is still completely fine to memcpy() and such as long as you know what
+	// you are doing.
+	ArrayHeader(const ArrayHeader&) = delete;
+	ArrayHeader& operator=(const ArrayHeader&) = delete;
+	ArrayHeader(ArrayHeader&&) = delete;
+	ArrayHeader& operator=(ArrayHeader&&) = delete;
+
+	void createUntyped(uint32_t capacityIn, uint32_t elementSizeIn) noexcept
 	{
-		ArrayHeader header = {};
-		header.size = 0;
-		header.elementSize = elementSize;
-		header.capacity = capacity;
-		return header;
+		memset(this, 0, sizeof(ArrayHeader));
+		this->size = 0;
+		this->elementSize = elementSizeIn;
+		this->capacity = capacityIn;
+	}
+
+	void createCopy(ArrayHeader& other) noexcept
+	{
+		this->createUntyped(other.capacity, other.elementSize);
 	}
 
 	template<typename T>
-	static ArrayHeader create(uint32_t capacity) noexcept
-	{
-		return ArrayHeader::createUntyped(capacity, sizeof(T));
-	}
+	void create(uint32_t capacity) noexcept { return this->createUntyped(capacity, sizeof(T)); }
 
 	// Untyped accessors
 	// --------------------------------------------------------------------------------------------
 
-	uint8_t* dataUntyped() noexcept { return (uint8_t*)this + sizeof(ArrayHeader); }
-	const uint8_t* dataUntyped() const noexcept { return (const uint8_t*)this + sizeof(ArrayHeader); }
+	uint8_t* dataUntyped() noexcept { return ((uint8_t*)this) + sizeof(ArrayHeader); }
+	const uint8_t* dataUntyped() const noexcept { return ((const uint8_t*)this) + sizeof(ArrayHeader); }
 
 	uint8_t* atUntyped(uint32_t index) noexcept { return dataUntyped() + index * elementSize; }
 	const uint8_t* atUntyped(uint32_t index) const noexcept { return dataUntyped() + index * elementSize; }
