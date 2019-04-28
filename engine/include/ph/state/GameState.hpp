@@ -135,7 +135,7 @@ static_assert(sizeof(ComponentRegistryEntry) == 4, "ComponentRegistryEntry is pa
 // | Component type K-1, entity 0 |
 // | ... |
 // | Component type K-1, entity N-1 |
-struct GameStateHeader final {
+struct GameStateHeader {
 
 	// Members
 	// --------------------------------------------------------------------------------------------
