@@ -214,6 +214,23 @@ bool GameStateHeader::checkGeneration(Entity entity) const noexcept
 	return expectedGeneration == entity.generation();
 }
 
+bool GameStateHeader::checkEntityValid(Entity entity) const noexcept
+{
+	// Check if in bounds
+	uint32_t entityId = entity.id();
+	if (entityId >= this->maxNumEntities) return false;
+
+	// Check if active
+	const ComponentMask* masks = componentMasks();
+	ComponentMask mask = masks[entityId];
+	if (!mask.active()) return false;
+
+	// Check if correct generation
+	if (!checkGeneration(entity)) return false;
+
+	return true;
+}
+
 uint8_t* GameStateHeader::componentsUntyped(
 	uint32_t componentType, uint32_t& componentSizeBytesOut) noexcept
 {

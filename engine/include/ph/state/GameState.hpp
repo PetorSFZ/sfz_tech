@@ -262,6 +262,13 @@ struct GameStateHeader {
 	// Complexity: O(1)
 	bool checkGeneration(Entity entity) const noexcept;
 
+	// Returns whether the given entity is valid or not by checking if it is in bounds, if it is
+	// active and if it has the correct generation. This is a convenience function that should only
+	// be used if a few entities need to be checked. Otherwise this should be done manually by
+	// grabbing the component masks and generations arrays directly.
+	// Complexity: O(1)
+	bool checkEntityValid(Entity entity) const noexcept;
+
 	// Returns pointer to the contiguous array of components of a given component type. Returns
 	// nullptr if the component type does not have associated data or does not exist. The second
 	// parameter returns the size of each component in bytes.
