@@ -34,6 +34,7 @@
 #include <sfz/Logging.hpp>
 #include <sfz/memory/StandardAllocator.hpp>
 #include <sfz/strings/StackString.hpp>
+#include <sfz/strings/StringID.hpp>
 #include <sfz/util/IO.hpp>
 
 #include "ph/Context.hpp"
@@ -72,6 +73,7 @@ static void setupContexts() noexcept
 	context->sfzContext.logger = &logger;
 	context->logger = &logger;
 	context->config = ph::getStaticGlobalConfigBoot();
+	context->resourceStrings = sfz::sfzNew<StringCollection>(allocator, 4096, allocator);
 
 	// Set Phantasy Engine context
 	ph::setContext(context);

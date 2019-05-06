@@ -24,10 +24,17 @@
 // Forward declared member types
 // ------------------------------------------------------------------------------------------------
 
+namespace sfz {
+
+class StringCollection;
+
+} // namespace sfz
+
 namespace ph {
 
 class TerminalLogger;
 class GlobalConfig;
+using sfz::StringCollection;
 
 } // namespace ph
 
@@ -38,6 +45,17 @@ struct phContext {
 	sfz::Context sfzContext;
 	ph::TerminalLogger* logger = nullptr;
 	ph::GlobalConfig* config = nullptr;
+
+	// The resource strings registered with PhantasyEngine.
+	//
+	// Comparing and storing strings when refering to specific assets (meshes, textures, etc)
+	// becomes expensive in the long run. A solution is to hash each string and use the hash
+	// instead. This works under the assumption that we have no hash collisions. See sfz::StringID
+	// for more information.
+	//
+	// Because we don't want any collisions globally in the game we store the datastructure keeping
+	// track of the strings and their hash in the global context.
+	sfz::StringCollection* resourceStrings = nullptr;
 };
 
 namespace ph {
@@ -48,6 +66,8 @@ namespace ph {
 phContext* getContext() noexcept;
 
 inline GlobalConfig& getGlobalConfig() noexcept { return *getContext()->config; }
+
+inline StringCollection& getResourceStrings() noexcept { return *getContext()->resourceStrings; }
 
 bool setContext(phContext* context) noexcept;
 
