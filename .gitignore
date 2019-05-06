@@ -37,6 +37,7 @@ build_emscripten_release/
 build_make_debug/
 build_make_release/
 build_vs2017/
+build_vs2019/
 build_visualstudio/
 build_xcode_macos/
 build_xcode_ios/
