@@ -350,6 +350,7 @@ TEST_CASE("RingBuffer: State methods", "[sfz::RingBuffer]")
 	}
 }
 
+#ifndef __EMSCRIPTEN__
 TEST_CASE("RingBuffer: Multi-threading", "[sfz::RingBuffer]")
 {
 	sfz::setContext(sfz::getStandardContext());
@@ -540,4 +541,4 @@ TEST_CASE("RingBuffer: Multi-threading", "[sfz::RingBuffer]")
 		}
 	}
 }
-
+#endif
