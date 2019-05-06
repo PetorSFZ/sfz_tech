@@ -50,3 +50,18 @@ TEST_CASE("Testing StringCollection", "[sfz::StringID]")
 	REQUIRE(collection.getString(badId) == nullptr);
 	REQUIRE(collection.numStringsHeld() == 2);
 }
+
+TEST_CASE("Ensuring we always get same hash for same string", "[sfz::StringID]")
+{
+	StringCollection collection(32, getDefaultAllocator());
+	REQUIRE(collection.numStringsHeld() == 0);
+
+	StringID helloWorldId = collection.getStringID("Hello World!");
+	constexpr uint64_t HELLO_WORLD_HASH = uint64_t(10092224619179044402);
+	REQUIRE(helloWorldId.id == HELLO_WORLD_HASH);
+
+	// Ensure we get same string id both times
+	StringID helloWorldId2 = collection.getStringID("Hello World!");
+	REQUIRE(helloWorldId == helloWorldId2);
+	REQUIRE(collection.numStringsHeld() == 1);
+}
