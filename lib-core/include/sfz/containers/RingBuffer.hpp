@@ -19,6 +19,7 @@
 #pragma once
 
 #include <algorithm>
+#include <atomic>
 #include <cstdint>
 
 #include "sfz/Context.hpp"
@@ -168,8 +169,8 @@ private:
 	Allocator* mAllocator = nullptr;
 	T* mDataPtr = nullptr;
 	uint64_t mCapacity = 0;
-	volatile uint64_t mFirstIndex = RINGBUFFER_BASE_IDX;
-	volatile uint64_t mLastIndex = RINGBUFFER_BASE_IDX;
+	std::atomic_uint64_t mFirstIndex = RINGBUFFER_BASE_IDX;
+	std::atomic_uint64_t mLastIndex = RINGBUFFER_BASE_IDX;
 };
 
 } // namespace sfz

@@ -53,8 +53,16 @@ void RingBuffer<T>::swap(RingBuffer& other) noexcept
 {
 	std::swap(this->mAllocator, other.mAllocator);
 	std::swap(this->mDataPtr, other.mDataPtr);
-	std::swap(this->mFirstIndex, other.mFirstIndex);
-	std::swap(this->mLastIndex, other.mLastIndex);
+
+	//std::swap(this->mFirstIndex, other.mFirstIndex);
+	//std::swap(this->mLastIndex, other.mLastIndex);
+	uint64_t thisFirstIndexCopy = this->mFirstIndex;
+	uint64_t thisLastIndexCopy = this->mLastIndex;
+	this->mFirstIndex.exchange(other.mFirstIndex);
+	this->mLastIndex.exchange(other.mLastIndex);
+	other.mFirstIndex.exchange(thisFirstIndexCopy);
+	other.mLastIndex.exchange(thisLastIndexCopy);
+
 	std::swap(this->mCapacity, other.mCapacity);
 }
 
