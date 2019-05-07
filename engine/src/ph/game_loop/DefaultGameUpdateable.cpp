@@ -321,14 +321,15 @@ private:
 		this->renderPerformanceWindow();
 		this->renderLogWindow();
 		this->renderConfigWindow();
+		this->renderResourceEditorWindow();
 		this->renderMaterialEditorWindow(renderer);
+
+		// Render custom-injected windows
+		mLogic->injectConsoleMenu();
 
 		// Initialize dockspace with default docked layout if first run
 		if (mImguiFirstRun) this->renderConsoleDockSpaceInitialize();
 		mImguiFirstRun = false;
-
-		// Render custom-injected windows
-		mLogic->injectConsoleMenu();
 	}
 
 	void renderConsoleInGamePreview() noexcept
@@ -405,7 +406,14 @@ private:
 		ImGui::DockBuilderDockWindow("Performance", dockUpperLeft);
 		ImGui::DockBuilderDockWindow("Log", dockBottom);
 		ImGui::DockBuilderDockWindow("Config", dockLeft);
-		ImGui::DockBuilderDockWindow("Dynamic Material Editor", dockLeft);
+		ImGui::DockBuilderDockWindow("Resources", dockLeft);
+		ImGui::DockBuilderDockWindow("Dynamic Materials", dockLeft);
+
+		uint32_t numInjectedWindowsToDock = mLogic->injectConsoleMenuNumWindowsToDockInitially();
+		for (uint32_t i = 0; i < numInjectedWindowsToDock; i++) {
+			const char* windowName = mLogic->injectConsoleMenuNameOfWindowToDockInitially(i);
+			ImGui::DockBuilderDockWindow(windowName, dockLeft);
+		}
 
 		ImGui::DockBuilderFinish(mConsoleDockSpaceId);
 	}
@@ -706,6 +714,19 @@ private:
 		ImGui::End();
 	}
 
+	void renderResourceEditorWindow() noexcept
+	{
+		// Set window flags
+		ImGuiWindowFlags windowFlags = 0;
+		windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
+
+		ImGui::SetNextWindowPos(vec2(500.0f, 500.0f), ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowContentSize(vec2(630.0f, 0.0f));
+		ImGui::Begin("Resources", nullptr, windowFlags);
+
+		ImGui::End();
+	}
+
 	void renderMaterialEditorWindow(Renderer& renderer) noexcept
 	{
 		// Set window flags
@@ -719,7 +740,7 @@ private:
 		ImGui::SetNextWindowContentSize(vec2(630.0f, 0.0f));
 
 		// Begin window
-		ImGui::Begin("Dynamic Material Editor", nullptr, materialEditorWindowFlags);
+		ImGui::Begin("Dynamic Materials", nullptr, materialEditorWindowFlags);
 
 		// Early exit if no materials
 		if (mState.dynamicAssets.materials.size() == 0) {

@@ -93,6 +93,14 @@ public:
 	// inject game-specific custom menus into the console.
 	virtual void injectConsoleMenu() {}
 
+	// These two functions are used to dock injected console windows. The first one should return
+	// the number of windows you want to dock, the second one the name of each window given the
+	// index in the range you provided with the first function. These are typically only called
+	// during the first boot of the engine/game. You don't need to provide them even if you are
+	// injecting console windows;
+	virtual uint32_t injectConsoleMenuNumWindowsToDockInitially() { return 0; }
+	virtual const char* injectConsoleMenuNameOfWindowToDockInitially(uint32_t idx) { (void)idx; return nullptr; }
+
 	// Called when console is activated. The logic instance will not receive any additional calls
 	// until the console is closed, at which point onConsoleDeactivated() will be called. onQuit()
 	// may be called before the console is deactivated.
