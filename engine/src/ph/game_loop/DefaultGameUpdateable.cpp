@@ -273,8 +273,7 @@ public:
 		RenderSettings settings = mLogic->preRenderHook(mState, updateInfo, renderer);
 
 		// Some assets sanity checks
-		sfz_assert_debug(mState.dynamicAssets.textures.size() ==
-			mState.dynamicAssets.textureFileMappings.size());
+		sfz_assert_debug(mState.resourceManager.textures().size() == renderer.numTextures());
 
 		// Update performance stats
 		if (mStatsWarmup >= 8) mStats.addSample(updateInfo.iterationDeltaSeconds * 1000.0f);
@@ -827,14 +826,8 @@ private:
 
 		// Lambda for converting texture index to combo string label
 		auto textureToComboStr = [&](uint16_t idx) {
-			if (idx == uint16_t(~0)) return str128("~0 - NO TEXTURE");
-			const FileMapping& fileMapping = mState.dynamicAssets.textureFileMappings[idx];
-			if (fileMapping.hasFileMapping) {
-				return str128("%u - %s", uint32_t(idx), fileMapping.fileName.str);
-			}
-			else {
-				return str128("%u - NO FILE", uint32_t(idx));
-			}
+			const char* globalPathStr = mState.resourceManager.debugTextureIndexToGlobalPath(idx);
+			return str128("%u - %s", uint32_t(idx), globalPathStr);
 		};
 
 		// Lambda for creating a combo box to select texture
@@ -852,7 +845,8 @@ private:
 				}
 
 				// Existing textures
-				for (uint32_t i = 0; i < mState.dynamicAssets.textures.size(); i++) {
+				uint32_t numTextures = renderer.numTextures();
+				for (uint32_t i = 0; i < numTextures; i++) {
 
 					// Convert index to string and check if it is selected
 					str128 materialStr = textureToComboStr(uint16_t(i));

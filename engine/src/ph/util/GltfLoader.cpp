@@ -34,16 +34,10 @@
 
 #include <sfz/Assert.hpp>
 
-#include <sfz/strings/StringHashers.hpp>
-#include <sfz/containers/HashMap.hpp>
-#include <sfz/strings/StackString.hpp>
-#include <sfz/strings/StringID.hpp>
-
 #include <ph/Context.hpp>
 
 namespace ph {
 
-using sfz::HashMap;
 using sfz::str320;
 using sfz::vec2;
 using sfz::vec3;
@@ -196,37 +190,6 @@ static vec4_u8 toSfz(const tinygltf::ColorValue& val) noexcept
 	return tmp;
 }
 
-static void getBasePathAndFileName(const str320& path, str256& dirPath, str96& fileName) noexcept
-{
-	dirPath.printf("%s", path.str);
-
-	// Go through path until the path separator is found
-	bool success = false;
-	for (uint32_t i = path.size() - 1; i > 0; i--) {
-		const char c = path.str[i - 1];
-		if (c == '\\' || c == '/') {
-			dirPath.str[i] = '\0';
-			fileName.printf("%s", path.str + i);
-			success = true;
-			break;
-		}
-	}
-
-	// If no path separator is found, assume we have no base path
-	if (!success) {
-		dirPath.printf("");
-		fileName.printf("%s", path.str);
-	}
-}
-
-static FileMapping createFileMapping(const char* path) noexcept
-{
-	FileMapping mapping;
-	mapping.hasFileMapping = true;
-	getBasePathAndFileName(str320("%s", path), mapping.dirPath, mapping.fileName);
-	return mapping;
-}
-
 static bool extractAssets(
 	const char* basePath,
 	const tinygltf::Model& model,
@@ -234,54 +197,28 @@ static bool extractAssets(
 	ResourceManager& resourceManager) noexcept
 {
 	// Load textures
-	HashMap<str320, uint16_t> texMapping;
 	DynArray<uint16_t> localToGlobalTexIndex(uint32_t(model.textures.size()));
 	for (uint32_t i = 0; i < model.textures.size(); i++) {
 		const tinygltf::Texture& tex = model.textures[i];
 		if (tex.source < 0 || int(model.images.size()) <= tex.source) {
 			SFZ_ERROR("tinygltf", "Bad texture source: %i", tex.source);
-			continue;
+			return false;
 		}
 		const tinygltf::Image& img = model.images[tex.source];
 
 		// Create global path (path relative to game executable)
 		const str320 globalPath("%s%s", basePath, img.uri.c_str());
 
+		// Register texture and record its global index
 		uint16_t globalIdx = resourceManager.registerTexture(globalPath.str);
-
-	
-		// Check if texture has already been read
-		const uint16_t* texMappingIndexPtr = texMapping.get(img.uri.c_str());
-		if (texMappingIndexPtr != nullptr) {
-			localToGlobalTexIndex.add(*texMappingIndexPtr);
-			continue;
-		}
-
-		// Create image from path
-		ph::Image phImage = loadImage(basePath, img.uri.c_str());
-		if (phImage.rawData.data() == nullptr) {
-			SFZ_ERROR("tinygltf", "Could not load texture: %s", img.uri.c_str());
-			continue;
-		}
-		else {
-			SFZ_INFO_NOISY("tinygltf", "Loaded texture: %s", img.uri.c_str());
-		}
-
-		// Add texture to assets and record its global index in texMapping
-		uint16_t globalTexIndex = uint16_t(assets.textures.size());
-		assets.textures.add(std::move(phImage));
-		texMapping[img.uri.c_str()] = globalTexIndex;
-		localToGlobalTexIndex.add(globalTexIndex);
-
-		// Add file mapping
-		assets.textureFileMappings.add(createFileMapping(img.uri.c_str()));
+		if (globalIdx == uint16_t(~0)) return false;
+		localToGlobalTexIndex.add(globalIdx);
 
 		// TODO: We need to store these two values somewhere. Likely in material (because it does
 		//       not make perfect sense that everything should access the texture the same way)
 		//const tinygltf::Sampler& sampler = model.samplers[tex.sampler];
 		//int wrapS = sampler.wrapS; // ["CLAMP_TO_EDGE", "MIRRORED_REPEAT", "REPEAT"], default "REPEAT"
 		//int wrapT = sampler.wrapT; // ["CLAMP_TO_EDGE", "MIRRORED_REPEAT", "REPEAT"], default "REPEAT"
-
 	}
 
 	// Load materials

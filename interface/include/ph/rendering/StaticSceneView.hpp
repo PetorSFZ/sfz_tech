@@ -21,15 +21,12 @@
 
 #include <cstdint>
 
-#include "ph/rendering/ImageView.hpp"
 #include "ph/rendering/Material.hpp"
 #include "ph/rendering/MeshView.hpp"
 #include "ph/rendering/RenderEntity.hpp"
 #include "ph/rendering/SphereLight.hpp"
 
 struct phStaticSceneView {
-	const phConstImageView* textures = nullptr;
-	uint32_t numTextures = 0;
 	const phMaterial* materials = nullptr;
 	uint32_t numMaterials = 0;
 	const phConstMeshView* meshes = nullptr;

@@ -76,14 +76,15 @@ struct RendererState final {
 	SDL_GLContext glContext = nullptr;
 	SDL_SysWMinfo wmInfo = {};
 
-	// Dynamic resources
+	// Resources
 	gl::FullscreenGeometry fullscreenGeom;
-	DynArray<Texture> dynamicTextures;
+	DynArray<Texture> textures;
+
+	// Dynamic resources
 	DynArray<phMaterial> dynamicMaterials;
 	DynArray<Model> dynamicModels;
 
 	// Static resources
-	DynArray<Texture> staticTextures;
 	DynArray<phMaterial> staticMaterials;
 	DynArray<Model> staticModels;
 	DynArray<phRenderEntity> staticRenderEntities;
@@ -323,13 +324,14 @@ phBool32 phInitRenderer(
 	// Create FullscreenGeometry
 	state.fullscreenGeom.create(gl::FullscreenGeometryType::OGL_CLIP_SPACE_RIGHT_HANDED_FRONT_FACE);
 
+	// Init resource arrays
+	state.textures.create(256, state.allocator);
+
 	// Init dynamic resource arrays
-	state.dynamicTextures.create(256, state.allocator);
 	state.dynamicMaterials.create(256, state.allocator);
 	state.dynamicModels.create(128, state.allocator);
 
 	// Init static resource arrays
-	state.staticTextures.create(256, state.allocator);
 	state.staticMaterials.create(256, state.allocator);
 	state.staticModels.create(512, state.allocator);
 	state.staticRenderEntities.create(1024, state.allocator);
@@ -440,11 +442,11 @@ void phSetTextures(const phConstImageView* textures, uint32_t numTextures)
 	RendererState& state = *statePtr;
 
 	// Remove any previous textures
-	state.dynamicTextures.clear();
+	state.textures.clear();
 
 	// Create textures from all images and add them to state
 	for (uint32_t i = 0; i < numTextures; i++) {
-		state.dynamicTextures.add(Texture(textures[i]));
+		state.textures.add(Texture(textures[i]));
 	}
 }
 
@@ -453,8 +455,8 @@ uint16_t phAddTexture(const phConstImageView* texture)
 {
 	RendererState& state = *statePtr;
 
-	uint32_t index = state.dynamicTextures.size();
-	state.dynamicTextures.add(Texture(*texture));
+	uint32_t index = state.textures.size();
+	state.textures.add(Texture(*texture));
 
 	sfz_assert_debug(index < UINT16_MAX);
 
@@ -467,9 +469,9 @@ phBool32 phUpdateTexture(const phConstImageView* texture, uint16_t index)
 	RendererState& state = *statePtr;
 
 	// Check if texture exists
-	if (state.dynamicTextures.size() <= index) return Bool32(false);
+	if (state.textures.size() <= index) return Bool32(false);
 
-	state.dynamicTextures[index] = Texture(*texture);
+	state.textures[index] = Texture(*texture);
 	return Bool32(true);
 }
 
@@ -477,7 +479,7 @@ extern "C" PH_DLL_EXPORT
 uint32_t phNumTextures(void)
 {
 	RendererState& state = *statePtr;
-	return state.dynamicTextures.size();
+	return state.textures.size();
 }
 
 // Resource management (materials)
@@ -567,11 +569,6 @@ void phSetStaticScene(const phStaticSceneView* scene)
 	// Remove previous static scene
 	phRemoveStaticScene();
 
-	// Textures
-	for (uint32_t i = 0; i < scene->numTextures; i++) {
-		state.staticTextures.add(Texture(scene->textures[i]));
-	}
-
 	// Materials
 	state.staticMaterials.add(scene->materials, scene->numMaterials);
 
@@ -592,7 +589,6 @@ extern "C" PH_DLL_EXPORT
 void phRemoveStaticScene(void)
 {
 	RendererState& state = *statePtr;
-	state.staticTextures.clear();
 	state.staticMaterials.clear();
 	state.staticModels.clear();
 	state.staticRenderEntities.clear();
@@ -700,24 +696,24 @@ void phRenderStaticScene(void)
 			// Bind materials textures
 			if (material.albedoTexIndex != uint16_t(~0)) {
 				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, state.staticTextures[material.albedoTexIndex].handle());
+				glBindTexture(GL_TEXTURE_2D, state.textures[material.albedoTexIndex].handle());
 			}
 			if (material.metallicRoughnessTexIndex != uint16_t(~0)) {
 				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D,
-					state.staticTextures[material.metallicRoughnessTexIndex].handle());
+					state.textures[material.metallicRoughnessTexIndex].handle());
 			}
 			if (material.normalTexIndex != uint16_t(~0)) {
 				glActiveTexture(GL_TEXTURE2);
-				glBindTexture(GL_TEXTURE_2D, state.staticTextures[material.normalTexIndex].handle());
+				glBindTexture(GL_TEXTURE_2D, state.textures[material.normalTexIndex].handle());
 			}
 			if (material.occlusionTexIndex != uint16_t(~0)) {
 				glActiveTexture(GL_TEXTURE3);
-				glBindTexture(GL_TEXTURE_2D, state.staticTextures[material.occlusionTexIndex].handle());
+				glBindTexture(GL_TEXTURE_2D, state.textures[material.occlusionTexIndex].handle());
 			}
 			if (material.emissiveTexIndex != uint16_t(~0)) {
 				glActiveTexture(GL_TEXTURE4);
-				glBindTexture(GL_TEXTURE_2D, state.staticTextures[material.emissiveTexIndex].handle());
+				glBindTexture(GL_TEXTURE_2D, state.textures[material.emissiveTexIndex].handle());
 			}
 
 			// Render component of mesh
@@ -773,24 +769,24 @@ void phRender(const phRenderEntity* entities, uint32_t numEntities)
 			// Bind materials textures
 			if (material.albedoTexIndex != uint16_t(~0)) {
 				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, state.dynamicTextures[material.albedoTexIndex].handle());
+				glBindTexture(GL_TEXTURE_2D, state.textures[material.albedoTexIndex].handle());
 			}
 			if (material.metallicRoughnessTexIndex != uint16_t(~0)) {
 				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D,
-					state.dynamicTextures[material.metallicRoughnessTexIndex].handle());
+					state.textures[material.metallicRoughnessTexIndex].handle());
 			}
 			if (material.normalTexIndex != uint16_t(~0)) {
 				glActiveTexture(GL_TEXTURE2);
-				glBindTexture(GL_TEXTURE_2D, state.dynamicTextures[material.normalTexIndex].handle());
+				glBindTexture(GL_TEXTURE_2D, state.textures[material.normalTexIndex].handle());
 			}
 			if (material.occlusionTexIndex != uint16_t(~0)) {
 				glActiveTexture(GL_TEXTURE3);
-				glBindTexture(GL_TEXTURE_2D, state.dynamicTextures[material.occlusionTexIndex].handle());
+				glBindTexture(GL_TEXTURE_2D, state.textures[material.occlusionTexIndex].handle());
 			}
 			if (material.emissiveTexIndex != uint16_t(~0)) {
 				glActiveTexture(GL_TEXTURE4);
-				glBindTexture(GL_TEXTURE_2D, state.dynamicTextures[material.emissiveTexIndex].handle());
+				glBindTexture(GL_TEXTURE_2D, state.textures[material.emissiveTexIndex].handle());
 			}
 
 			// Render component of mesh

@@ -27,7 +27,10 @@
 
 namespace ph {
 
+#if 0
+
 using sfz::DynString;
+using sfz::str96;
 using sfz::str320;
 using sfz::vec2;
 using sfz::vec3;
@@ -802,4 +805,7 @@ bool writeAssetsToGltf(
 	return true;
 }
 
+#endif // if 0
+
 } // namespace ph
+

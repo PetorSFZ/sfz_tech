@@ -25,6 +25,8 @@
 
 #include <ph/Context.hpp>
 
+#include "ph/rendering/Image.hpp"
+
 namespace ph {
 
 // ResourceManager: Constructors & destructors
@@ -98,5 +100,13 @@ bool ResourceManager::hasTexture(StringID globalPathId) const noexcept
 	return mTextureMap.get(globalPathId) != nullptr;
 }
 
+const char* ResourceManager::debugTextureIndexToGlobalPath(uint16_t index) const noexcept
+{
+	const StringCollection& resourceStrings = getResourceStrings();
+	for (const TextureMapping& mapping : mTextures) {
+		if (mapping.globalIdx == index) return resourceStrings.getString(mapping.globalPathId);
+	}
+	return "NO TEXTURE";
+}
 
 } // namespace ph

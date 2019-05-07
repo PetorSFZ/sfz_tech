@@ -96,6 +96,9 @@ public:
 
 	const sfz::DynArray<TextureMapping>& textures() const noexcept { return mTextures; }
 
+	// Debug function that returns a string containing the global path for a specific index
+	const char* debugTextureIndexToGlobalPath(uint16_t index) const noexcept;
+
 private:
 	// Private members
 	// --------------------------------------------------------------------------------------------

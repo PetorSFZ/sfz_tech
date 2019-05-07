@@ -22,10 +22,18 @@
 
 namespace ph {
 
+/*
+The glTF writer is temporarily broken as the way resources are handled by Phantasy Engine has
+changed. It should not be too much trouble to fix, but it was not high priority as these changes
+were made.
+
+
 // Writes all the assets corresponding to the meshes specified to glTF.
 bool writeAssetsToGltf(
 	const char* writePath,
 	const LevelAssets& assets,
 	const DynArray<uint32_t>& meshIndices) noexcept;
+
+*/
 
 } // namespace ph

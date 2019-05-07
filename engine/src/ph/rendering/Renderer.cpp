@@ -452,18 +452,12 @@ bool Renderer::updateDynamicMesh(const phConstMeshView& mesh, uint32_t index) no
 
 void Renderer::setStaticScene(const StaticScene& scene)
 {
-	// Create array of image views into static scene
-	DynArray<phConstImageView> imageViews(scene.assets.textures.size(), mAllocator);
-	for (const Image& image : scene.assets.textures) imageViews.add(image);
-
 	// Create array of mesh views into static scene
 	DynArray<phConstMeshView> meshViews(scene.assets.meshes.size(), mAllocator);
 	for (const Mesh& mesh : scene.assets.meshes) meshViews.add(mesh);
 
 	// Create static scene view
 	phStaticSceneView view;
-	view.textures = imageViews.data();
-	view.numTextures = imageViews.size();
 	view.materials = scene.assets.materials.data();
 	view.numMaterials = scene.assets.materials.size();
 	view.meshes = meshViews.data();
