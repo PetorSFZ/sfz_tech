@@ -37,7 +37,16 @@ using std::size_t;
 /// always be created by a StringCollection.
 struct StringID final {
 	uint64_t id;
+
+	// Implicit conversion to and from uint64_t
+	StringID(uint64_t hashId) noexcept : id{hashId} {}
+	operator uint64_t() const noexcept { return id; }
+
+	StringID() noexcept = default;
+	StringID(const StringID&) noexcept = default;
+	StringID& operator= (const StringID&) noexcept = default;
 };
+static_assert(sizeof(StringID) == sizeof(uint64_t), "StringID is padded");
 
 inline bool operator== (const StringID& lhs, const StringID& rhs) noexcept
 {
