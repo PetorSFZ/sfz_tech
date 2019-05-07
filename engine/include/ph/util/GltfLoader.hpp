@@ -19,13 +19,18 @@
 #pragma once
 
 #include "ph/rendering/LevelAssets.hpp"
+#include "ph/rendering/ResourceManager.hpp"
 
 namespace ph {
+
+// Function for loading from gltf
+// ------------------------------------------------------------------------------------------------
 
 /// Loads all meshes, textures and materials from a .gltf file into the level assets.
 /// All scene graph information, relative positions and transformations are ignored.
 bool loadAssetsFromGltf(
 	const char* gltfPath,
-	LevelAssets& assets) noexcept;
+	LevelAssets& assets,
+	ResourceManager& resourceManager) noexcept;
 
 } // namespace ph

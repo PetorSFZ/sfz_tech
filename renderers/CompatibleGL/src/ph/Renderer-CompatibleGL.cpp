@@ -449,17 +449,20 @@ void phSetTextures(const phConstImageView* textures, uint32_t numTextures)
 }
 
 extern "C" PH_DLL_EXPORT
-uint32_t phAddTexture(const phConstImageView* texture)
+uint16_t phAddTexture(const phConstImageView* texture)
 {
 	RendererState& state = *statePtr;
 
 	uint32_t index = state.dynamicTextures.size();
 	state.dynamicTextures.add(Texture(*texture));
-	return index;
+
+	sfz_assert_debug(index < UINT16_MAX);
+
+	return uint16_t(index);
 }
 
 extern "C" PH_DLL_EXPORT
-phBool32 phUpdateTexture(const phConstImageView* texture, uint32_t index)
+phBool32 phUpdateTexture(const phConstImageView* texture, uint16_t index)
 {
 	RendererState& state = *statePtr;
 
@@ -468,6 +471,13 @@ phBool32 phUpdateTexture(const phConstImageView* texture, uint32_t index)
 
 	state.dynamicTextures[index] = Texture(*texture);
 	return Bool32(true);
+}
+
+extern "C" PH_DLL_EXPORT
+uint32_t phNumTextures(void)
+{
+	RendererState& state = *statePtr;
+	return state.dynamicTextures.size();
 }
 
 // Resource management (materials)

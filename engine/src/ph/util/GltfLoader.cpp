@@ -37,6 +37,9 @@
 #include <sfz/strings/StringHashers.hpp>
 #include <sfz/containers/HashMap.hpp>
 #include <sfz/strings/StackString.hpp>
+#include <sfz/strings/StringID.hpp>
+
+#include <ph/Context.hpp>
 
 namespace ph {
 
@@ -225,7 +228,10 @@ static FileMapping createFileMapping(const char* path) noexcept
 }
 
 static bool extractAssets(
-	const char* basePath, const tinygltf::Model& model, LevelAssets& assets) noexcept
+	const char* basePath,
+	const tinygltf::Model& model,
+	LevelAssets& assets,
+	ResourceManager& resourceManager) noexcept
 {
 	// Load textures
 	HashMap<str320, uint16_t> texMapping;
@@ -238,12 +244,12 @@ static bool extractAssets(
 		}
 		const tinygltf::Image& img = model.images[tex.source];
 
-		// TODO: We need to store these two values somewhere. Likely in material (because it does
-		//       not make perfect sense that everything should access the texture the same way)
-		//const tinygltf::Sampler& sampler = model.samplers[tex.sampler];
-		//int wrapS = sampler.wrapS; // ["CLAMP_TO_EDGE", "MIRRORED_REPEAT", "REPEAT"], default "REPEAT"
-		//int wrapT = sampler.wrapT; // ["CLAMP_TO_EDGE", "MIRRORED_REPEAT", "REPEAT"], default "REPEAT"
+		// Create global path (path relative to game executable)
+		const str320 globalPath("%s%s", basePath, img.uri.c_str());
 
+		uint16_t globalIdx = resourceManager.registerTexture(globalPath.str);
+
+	
 		// Check if texture has already been read
 		const uint16_t* texMappingIndexPtr = texMapping.get(img.uri.c_str());
 		if (texMappingIndexPtr != nullptr) {
@@ -269,6 +275,13 @@ static bool extractAssets(
 
 		// Add file mapping
 		assets.textureFileMappings.add(createFileMapping(img.uri.c_str()));
+
+		// TODO: We need to store these two values somewhere. Likely in material (because it does
+		//       not make perfect sense that everything should access the texture the same way)
+		//const tinygltf::Sampler& sampler = model.samplers[tex.sampler];
+		//int wrapS = sampler.wrapS; // ["CLAMP_TO_EDGE", "MIRRORED_REPEAT", "REPEAT"], default "REPEAT"
+		//int wrapT = sampler.wrapT; // ["CLAMP_TO_EDGE", "MIRRORED_REPEAT", "REPEAT"], default "REPEAT"
+
 	}
 
 	// Load materials
@@ -466,12 +479,13 @@ static bool extractAssets(
 	return true;
 }
 
-// Entry function
+// Function for loading from gltf
 // ------------------------------------------------------------------------------------------------
 
 bool loadAssetsFromGltf(
 	const char* gltfPath,
-	LevelAssets& assets) noexcept
+	LevelAssets& assets,
+	ResourceManager& resourceManager) noexcept
 {
 	str320 basePath = calculateBasePath(gltfPath);
 
@@ -504,7 +518,7 @@ bool loadAssetsFromGltf(
 	SFZ_INFO_NOISY("tinygltf", "Model \"%s\" loaded succesfully", gltfPath);
 
 	// Extract assets from results
-	return extractAssets(basePath.str, model, assets);
+	return extractAssets(basePath.str, model, assets, resourceManager);
 }
 
 } // namespace ph

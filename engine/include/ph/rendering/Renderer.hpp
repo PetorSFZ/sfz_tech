@@ -58,7 +58,7 @@ public:
 
 	/// The interface version supported by this wrapper. Only renderers which return the same
 	/// version with "phRendererInterfaceVersion()" are compatible.
-	static constexpr uint32_t INTERFACE_VERSION = 14;
+	static constexpr uint32_t INTERFACE_VERSION = 15;
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -118,10 +118,13 @@ public:
 	void setTextures(const DynArray<phConstImageView>& textures) noexcept;
 
 	/// See phAddTexture()
-	uint32_t addTexture(phConstImageView texture) noexcept;
+	uint16_t addTexture(phConstImageView texture) noexcept;
 
 	/// See phUpdateTexture()
-	bool updateTexture(phConstImageView texture, uint32_t index) noexcept;
+	bool updateTexture(phConstImageView texture, uint16_t index) noexcept;
+
+	// See phNumTextures()
+	uint32_t numTextures() const noexcept;
 
 	// Resource management (materials)
 	// --------------------------------------------------------------------------------------------
@@ -188,6 +191,9 @@ public:
 	void finishFrame() noexcept;
 
 private:
+	// Private members
+	// --------------------------------------------------------------------------------------------
+
 	void* mModuleHandle = nullptr; // Holds a HMODULE on Windows
 	Allocator* mAllocator = nullptr;
 	struct FunctionTable* mFunctionTable = nullptr;

@@ -74,6 +74,7 @@ extern "C" {
 		decltype(phSetTextures)* phSetTextures;
 		decltype(phAddTexture)* phAddTexture;
 		decltype(phUpdateTexture)* phUpdateTexture;
+		decltype(phNumTextures)* phNumTextures;
 
 		// Resource management (materials)
 		decltype(phSetMaterials)* phSetMaterials;
@@ -253,6 +254,7 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phSetTextures);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phAddTexture);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phUpdateTexture);
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phNumTextures);
 
 	// Resource management (materials)
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phSetMaterials);
@@ -283,6 +285,7 @@ void Renderer::swap(Renderer& other) noexcept
 	std::swap(this->mModuleHandle, other.mModuleHandle);
 	std::swap(this->mAllocator, other.mAllocator);
 	std::swap(this->mFunctionTable, other.mFunctionTable);
+	std::swap(this->mInited, other.mInited);
 }
 
 void Renderer::destroy() noexcept
@@ -386,14 +389,19 @@ void Renderer::setTextures(const DynArray<phConstImageView>& textures) noexcept
 	CALL_RENDERER_FUNCTION(mFunctionTable, phSetTextures, textures.data(), textures.size());
 }
 
-uint32_t Renderer::addTexture(phConstImageView texture) noexcept
+uint16_t Renderer::addTexture(phConstImageView texture) noexcept
 {
 	return CALL_RENDERER_FUNCTION(mFunctionTable, phAddTexture, &texture);
 }
 
-bool Renderer::updateTexture(phConstImageView texture, uint32_t index) noexcept
+bool Renderer::updateTexture(phConstImageView texture, uint16_t index) noexcept
 {
 	return Bool32(CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateTexture, &texture, index));
+}
+
+uint32_t Renderer::numTextures() const noexcept
+{
+	return CALL_RENDERER_FUNCTION(mFunctionTable, phNumTextures);
 }
 
 // Renderer:: Resource management (materials)

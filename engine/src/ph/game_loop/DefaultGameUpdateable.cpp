@@ -201,6 +201,9 @@ public:
 			cfg.sanitizeBool("Console", "showInGamePreview", true, BoolBounds(false));
 		mLogMinLevelSetting = cfg.sanitizeInt("Console", "logMinLevel", false, IntBounds(0, 0, 3));
 
+		// Initialize resource manager
+		mState.resourceManager = ResourceManager::create(&renderer, sfz::getDefaultAllocator());
+
 		// Initialize logic
 		mLogic->initialize(mState, renderer);
 	}
@@ -321,7 +324,7 @@ private:
 		this->renderPerformanceWindow();
 		this->renderLogWindow();
 		this->renderConfigWindow();
-		this->renderResourceEditorWindow();
+		this->renderResourceEditorWindow(renderer);
 		this->renderMaterialEditorWindow(renderer);
 
 		// Render custom-injected windows
@@ -714,8 +717,11 @@ private:
 		ImGui::End();
 	}
 
-	void renderResourceEditorWindow() noexcept
+	void renderResourceEditorWindow(Renderer& renderer) noexcept
 	{
+		// Get resource manager and resource strings
+		const StringCollection& resStrings = getResourceStrings();
+
 		// Set window flags
 		ImGuiWindowFlags windowFlags = 0;
 		windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
@@ -723,6 +729,47 @@ private:
 		ImGui::SetNextWindowPos(vec2(500.0f, 500.0f), ImGuiCond_FirstUseEver);
 		ImGui::SetNextWindowContentSize(vec2(630.0f, 0.0f));
 		ImGui::Begin("Resources", nullptr, windowFlags);
+
+		// Tabs
+		ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_None;
+		if (ImGui::BeginTabBar("ResourcesTabBar", tabBarFlags)) {
+			
+			// Textures
+			if (ImGui::BeginTabItem("Textures")) {
+				ImGui::Spacing();
+
+				for (const TextureMapping& texMapping : mState.resourceManager.textures()) {
+					const char* globalPath = resStrings.getString(texMapping.globalPathId);
+					uint16_t globalIdx = texMapping.globalIdx;
+
+					ImGui::Text("%u -- \"%s\"", uint32_t(globalIdx), globalPath);
+				}
+				
+				ImGui::EndTabItem();
+			}
+
+			// Materials
+			if (ImGui::BeginTabItem("Materials")) {
+				ImGui::Spacing();
+
+
+
+
+				ImGui::EndTabItem();
+			}
+
+			// Meshes
+			if (ImGui::BeginTabItem("Meshes")) {
+				ImGui::Spacing();
+
+
+
+
+				ImGui::EndTabItem();
+			}
+
+			ImGui::EndTabBar();
+		}
 
 		ImGui::End();
 	}

@@ -73,6 +73,7 @@ set(PHANTASY_ENGINE_HEADER_FILES
 	${INCLUDE_DIR}/ph/rendering/LevelAssets.hpp
 	${INCLUDE_DIR}/ph/rendering/Mesh.hpp
 	${INCLUDE_DIR}/ph/rendering/Renderer.hpp
+	${INCLUDE_DIR}/ph/rendering/ResourceManager.hpp
 	${INCLUDE_DIR}/ph/rendering/StaticScene.hpp
 
 	${INCLUDE_DIR}/ph/sdl/ButtonState.hpp
@@ -103,6 +104,7 @@ set(PHANTASY_ENGINE_SOURCE_FILES
 	${SOURCE_DIR}/ph/rendering/Image.cpp
 	${SOURCE_DIR}/ph/rendering/ImguiSupport.cpp
 	${SOURCE_DIR}/ph/rendering/Renderer.cpp
+	${SOURCE_DIR}/ph/rendering/ResourceManager.cpp
 
 	${SOURCE_DIR}/ph/sdl/GameController.cpp
 	${SOURCE_DIR}/ph/sdl/Mouse.cpp

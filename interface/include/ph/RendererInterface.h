@@ -55,7 +55,7 @@ struct phStaticSceneView;
 // Interface version
 // ------------------------------------------------------------------------------------------------
 
-const uint32_t PH_RENDERER_INTERFACE_VERSION = 14;
+const uint32_t PH_RENDERER_INTERFACE_VERSION = 15;
 
 // Init functions
 // ------------------------------------------------------------------------------------------------
@@ -132,7 +132,7 @@ void phSetTextures(const phConstImageView* textures, uint32_t numTextures);
 /// \param texture the texture to add
 /// \return the index assigned to the texture
 extern "C" PH_DLL_EXPORT
-uint32_t phAddTexture(const phConstImageView* texture);
+uint16_t phAddTexture(const phConstImageView* texture);
 
 /// Updates (replaces) a texture already registered to this renderer. Will return 0 and not do
 /// anything if no texture is registered to the specified index.
@@ -140,7 +140,12 @@ uint32_t phAddTexture(const phConstImageView* texture);
 /// \param index the index to the registered texture
 /// \return true on success, false on failure
 extern "C" PH_DLL_EXPORT
-phBool32 phUpdateTexture(const phConstImageView* texture, uint32_t index);
+phBool32 phUpdateTexture(const phConstImageView* texture, uint16_t index);
+
+/// Returns the number of textures registered in this renderer.
+/// \return number of textures in renderer
+extern "C" PH_DLL_EXPORT
+uint32_t phNumTextures(void);
 
 // Resource management (materials)
 // ------------------------------------------------------------------------------------------------
