@@ -61,17 +61,17 @@ void ResourceManager::destroy() noexcept
 	mTextureMap.destroy();
 }
 
-// ResourceManager: Methods
+// ResourceManager: Texture methods
 // ------------------------------------------------------------------------------------------------
 
-uint16_t ResourceManager::registerTexture(const char* globalPath) noexcept
+uint32_t ResourceManager::registerTexture(const char* globalPath) noexcept
 {
 	// Convert global path to StringID
 	StringCollection& resourceStrings = getResourceStrings();
 	const StringID globalPathId = resourceStrings.getStringID(globalPath);
 
 	// Check if texture is available in renderer, return index if it is
-	uint16_t* globalIdxPtr = mTextureMap.get(globalPathId);
+	uint32_t* globalIdxPtr = mTextureMap.get(globalPathId);
 	if (globalIdxPtr != nullptr) return *globalIdxPtr;
 
 	// Create image from path
@@ -86,11 +86,11 @@ uint16_t ResourceManager::registerTexture(const char* globalPath) noexcept
 	uint16_t globalIdx = mRenderer->addTexture(imageView);
 
 	// Record entry
-	mTextures.add(TextureMapping::create(globalPathId, globalIdx));
+	mTextures.add(ResourceMapping::create(globalPathId, globalIdx));
 	mTextureMap.put(globalPathId, globalIdx);
 
 	SFZ_INFO_NOISY("ResourceManager", "Loaded texture: \"%s\", global index -> %u",
-		globalPath, uint32_t(globalIdx));
+		globalPath, globalIdx);
 
 	return globalIdx;
 }
@@ -100,13 +100,45 @@ bool ResourceManager::hasTexture(StringID globalPathId) const noexcept
 	return mTextureMap.get(globalPathId) != nullptr;
 }
 
-const char* ResourceManager::debugTextureIndexToGlobalPath(uint16_t index) const noexcept
+const char* ResourceManager::debugTextureIndexToGlobalPath(uint32_t index) const noexcept
 {
 	const StringCollection& resourceStrings = getResourceStrings();
-	for (const TextureMapping& mapping : mTextures) {
+	for (const ResourceMapping& mapping : mTextures) {
 		if (mapping.globalIdx == index) return resourceStrings.getString(mapping.globalPathId);
 	}
 	return "NO TEXTURE";
+}
+
+// ResourceManager: Mesh methods
+// ------------------------------------------------------------------------------------------------
+
+uint32_t ResourceManager::registerMesh(const char* globalPath, const Mesh& mesh) noexcept
+{
+	// Convert global path to StringID
+	StringCollection& resourceStrings = getResourceStrings();
+	const StringID globalPathId = resourceStrings.getStringID(globalPath);
+
+	// Check if mesh is available in renderer, return index if it is
+	uint32_t* globalIdxPtr = mMeshMap.get(globalPathId);
+	if (globalIdxPtr != nullptr) return *globalIdxPtr;
+
+	// Upload mesh to renderer
+	phConstMeshView imageView = mesh;
+	uint32_t globalIdx = mRenderer->addMesh(mesh);
+
+	// Record entry
+	mMeshes.add(ResourceMapping::create(globalPathId, globalIdx));
+	mMeshMap.put(globalPathId, globalIdx);
+
+	SFZ_INFO_NOISY("ResourceManager", "Loaded mesh: \"%s\", global index -> %u",
+		globalPath, globalIdx);
+
+	return globalIdx;
+}
+
+bool ResourceManager::hasMesh(StringID globalPathId) const noexcept
+{
+	return mMeshMap.get(globalPathId) != nullptr;
 }
 
 } // namespace ph

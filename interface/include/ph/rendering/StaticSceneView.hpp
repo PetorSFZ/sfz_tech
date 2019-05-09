@@ -29,8 +29,6 @@
 struct phStaticSceneView {
 	const phMaterial* materials = nullptr;
 	uint32_t numMaterials = 0;
-	const phConstMeshView* meshes = nullptr;
-	uint32_t numMeshes = 0;
 	const phRenderEntity* renderEntities = nullptr;
 	uint32_t numRenderEntities = 0;
 	const phSphereLight* sphereLights = nullptr;

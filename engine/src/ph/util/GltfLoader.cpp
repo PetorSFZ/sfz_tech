@@ -191,6 +191,7 @@ static vec4_u8 toSfz(const tinygltf::ColorValue& val) noexcept
 }
 
 static bool extractAssets(
+	const char* gltfPath,
 	const char* basePath,
 	const tinygltf::Model& model,
 	LevelAssets& assets,
@@ -210,7 +211,7 @@ static bool extractAssets(
 		const str320 globalPath("%s%s", basePath, img.uri.c_str());
 
 		// Register texture and record its global index
-		uint16_t globalIdx = resourceManager.registerTexture(globalPath.str);
+		uint16_t globalIdx = (uint16_t)resourceManager.registerTexture(globalPath.str);
 		if (globalIdx == uint16_t(~0)) return false;
 		localToGlobalTexIndex.add(globalIdx);
 
@@ -409,8 +410,8 @@ static bool extractAssets(
 		phMesh.materialIndices.addMany(phMesh.vertices.size(),
 			materialBaseIndex + primitive.material);
 
-		// Add mesh to assets
-		assets.meshes.add(std::move(phMesh));
+		// Register mesh
+		resourceManager.registerMesh(str320("%s__component_%u", gltfPath, i).str, phMesh);
 	}
 
 	return true;
@@ -455,7 +456,7 @@ bool loadAssetsFromGltf(
 	SFZ_INFO_NOISY("tinygltf", "Model \"%s\" loaded succesfully", gltfPath);
 
 	// Extract assets from results
-	return extractAssets(basePath.str, model, assets, resourceManager);
+	return extractAssets(gltfPath, basePath.str, model, assets, resourceManager);
 }
 
 } // namespace ph

@@ -22,7 +22,6 @@
 #include <sfz/containers/DynArray.hpp>
 
 #include "ph/rendering/Material.hpp"
-#include "ph/rendering/Mesh.hpp"
 
 namespace ph {
 
@@ -36,7 +35,6 @@ struct LevelAssets final {
 	// Members
 	// --------------------------------------------------------------------------------------------
 
-	DynArray<Mesh> meshes;
 	DynArray<phMaterial> materials;
 };
 

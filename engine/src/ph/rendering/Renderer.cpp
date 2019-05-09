@@ -82,9 +82,9 @@ extern "C" {
 		decltype(phUpdateMaterial)* phUpdateMaterial;
 
 		// Resource management (meshes)
-		decltype(phSetDynamicMeshes)* phSetDynamicMeshes;
-		decltype(phAddDynamicMesh)* phAddDynamicMesh;
-		decltype(phUpdateDynamicMesh)* phUpdateDynamicMesh;
+		decltype(phSetMeshes)* phSetMeshes;
+		decltype(phAddMesh)* phAddMesh;
+		decltype(phUpdateMesh)* phUpdateMesh;
 
 		// Resource management (static scene)
 		decltype(phSetStaticScene)* phSetStaticScene;
@@ -262,9 +262,9 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phUpdateMaterial);
 
 	// Resource management (meshes)
-	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phSetDynamicMeshes);
-	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phAddDynamicMesh);
-	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phUpdateDynamicMesh);
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phSetMeshes);
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phAddMesh);
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phUpdateMesh);
 
 	// Resource management (static scene)
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phSetStaticScene);
@@ -425,7 +425,7 @@ bool Renderer::updateMaterial(const phMaterial& material, uint32_t index) noexce
 // Renderer: Resource management (meshes)
 // ------------------------------------------------------------------------------------------------
 
-void Renderer::setDynamicMeshes(const DynArray<phConstMeshView>& meshes) noexcept
+void Renderer::setMeshes(const DynArray<phConstMeshView>& meshes) noexcept
 {
 	// Convert from ph::Mesh to phMeshView
 	DynArray<phConstMeshView> tmpMeshes;
@@ -434,17 +434,17 @@ void Renderer::setDynamicMeshes(const DynArray<phConstMeshView>& meshes) noexcep
 		tmpMeshes.add(mesh);
 	}
 
-	CALL_RENDERER_FUNCTION(mFunctionTable, phSetDynamicMeshes, tmpMeshes.data(), tmpMeshes.size());
+	CALL_RENDERER_FUNCTION(mFunctionTable, phSetMeshes, tmpMeshes.data(), tmpMeshes.size());
 }
 
-uint32_t Renderer::addDynamicMesh(const phConstMeshView& mesh) noexcept
+uint32_t Renderer::addMesh(const phConstMeshView& mesh) noexcept
 {
-	return CALL_RENDERER_FUNCTION(mFunctionTable, phAddDynamicMesh, &mesh);
+	return CALL_RENDERER_FUNCTION(mFunctionTable, phAddMesh, &mesh);
 }
 
-bool Renderer::updateDynamicMesh(const phConstMeshView& mesh, uint32_t index) noexcept
+bool Renderer::updateMesh(const phConstMeshView& mesh, uint32_t index) noexcept
 {
-	return Bool32(CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateDynamicMesh, &mesh, index));
+	return Bool32(CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateMesh, &mesh, index));
 }
 
 // Renderer: Resource management (static scene)
@@ -452,16 +452,10 @@ bool Renderer::updateDynamicMesh(const phConstMeshView& mesh, uint32_t index) no
 
 void Renderer::setStaticScene(const StaticScene& scene)
 {
-	// Create array of mesh views into static scene
-	DynArray<phConstMeshView> meshViews(scene.assets.meshes.size(), mAllocator);
-	for (const Mesh& mesh : scene.assets.meshes) meshViews.add(mesh);
-
 	// Create static scene view
 	phStaticSceneView view;
 	view.materials = scene.assets.materials.data();
 	view.numMaterials = scene.assets.materials.size();
-	view.meshes = meshViews.data();
-	view.numMeshes = meshViews.size();
 	view.renderEntities = scene.renderEntities.data();
 	view.numRenderEntities = scene.renderEntities.size();
 	view.sphereLights = scene.sphereLights.data();

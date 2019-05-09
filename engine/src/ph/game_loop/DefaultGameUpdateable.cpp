@@ -323,7 +323,7 @@ private:
 		this->renderPerformanceWindow();
 		this->renderLogWindow();
 		this->renderConfigWindow();
-		this->renderResourceEditorWindow(renderer);
+		this->renderResourceEditorWindow();
 		this->renderMaterialEditorWindow(renderer);
 
 		// Render custom-injected windows
@@ -716,7 +716,7 @@ private:
 		ImGui::End();
 	}
 
-	void renderResourceEditorWindow(Renderer& renderer) noexcept
+	void renderResourceEditorWindow() noexcept
 	{
 		// Get resource manager and resource strings
 		const StringCollection& resStrings = getResourceStrings();
@@ -737,23 +737,13 @@ private:
 			if (ImGui::BeginTabItem("Textures")) {
 				ImGui::Spacing();
 
-				for (const TextureMapping& texMapping : mState.resourceManager.textures()) {
+				for (const ResourceMapping& texMapping : mState.resourceManager.textures()) {
 					const char* globalPath = resStrings.getString(texMapping.globalPathId);
-					uint16_t globalIdx = texMapping.globalIdx;
+					uint32_t globalIdx = texMapping.globalIdx;
 
-					ImGui::Text("%u -- \"%s\"", uint32_t(globalIdx), globalPath);
+					ImGui::Text("%u -- \"%s\"", globalIdx, globalPath);
 				}
 				
-				ImGui::EndTabItem();
-			}
-
-			// Materials
-			if (ImGui::BeginTabItem("Materials")) {
-				ImGui::Spacing();
-
-
-
-
 				ImGui::EndTabItem();
 			}
 
@@ -761,8 +751,12 @@ private:
 			if (ImGui::BeginTabItem("Meshes")) {
 				ImGui::Spacing();
 
+				for (const ResourceMapping& meshMapping : mState.resourceManager.meshes()) {
+					const char* globalPath = resStrings.getString(meshMapping.globalPathId);
+					uint32_t globalIdx = meshMapping.globalIdx;
 
-
+					ImGui::Text("%u -- \"%s\"", globalIdx, globalPath);
+				}
 
 				ImGui::EndTabItem();
 			}

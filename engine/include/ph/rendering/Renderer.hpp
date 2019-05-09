@@ -58,7 +58,7 @@ public:
 
 	/// The interface version supported by this wrapper. Only renderers which return the same
 	/// version with "phRendererInterfaceVersion()" are compatible.
-	static constexpr uint32_t INTERFACE_VERSION = 15;
+	static constexpr uint32_t INTERFACE_VERSION = 16;
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -141,14 +141,14 @@ public:
 	// Renderer: Resource management (meshes)
 	// --------------------------------------------------------------------------------------------
 
-	/// See phSetDynamicMeshes()
-	void setDynamicMeshes(const DynArray<phConstMeshView>& meshes) noexcept;
+	/// See phSetMeshes()
+	void setMeshes(const DynArray<phConstMeshView>& meshes) noexcept;
 
-	/// See phAddDynamicMesh()
-	uint32_t addDynamicMesh(const phConstMeshView& mesh) noexcept;
+	/// See phAddMesh()
+	uint32_t addMesh(const phConstMeshView& mesh) noexcept;
 
-	/// See phUpdateDynamicMesh()
-	bool updateDynamicMesh(const phConstMeshView& mesh, uint32_t index) noexcept;
+	/// See phUpdateMesh()
+	bool updateMesh(const phConstMeshView& mesh, uint32_t index) noexcept;
 
 	// Renderer: Resource management (static scene)
 	// --------------------------------------------------------------------------------------------

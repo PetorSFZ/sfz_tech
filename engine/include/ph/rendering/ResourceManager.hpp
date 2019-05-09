@@ -23,6 +23,7 @@
 #include <sfz/containers/HashMap.hpp>
 #include <sfz/strings/StringID.hpp>
 
+#include "ph/rendering/Mesh.hpp"
 #include "ph/rendering/Renderer.hpp"
 
 namespace ph {
@@ -32,13 +33,13 @@ using sfz::StringID;
 // Helper structs
 // ------------------------------------------------------------------------------------------------
 
-struct TextureMapping final {
+struct ResourceMapping final {
 	StringID globalPathId;
-	uint16_t globalIdx = uint16_t(~0);
+	uint32_t globalIdx = uint32_t(~0);
 
-	static TextureMapping create(StringID globalPathId, uint16_t globalIdx) noexcept
+	static ResourceMapping create(StringID globalPathId, uint32_t globalIdx) noexcept
 	{
-		TextureMapping mapping;
+		ResourceMapping mapping;
 		mapping.globalPathId = globalPathId;
 		mapping.globalIdx = globalIdx;
 		return mapping;
@@ -73,7 +74,7 @@ public:
 	void swap(ResourceManager& other) noexcept;
 	void destroy() noexcept;
 
-	// Methods
+	// Texture methods
 	// --------------------------------------------------------------------------------------------
 
 	// Registers a texture and returns its texture ID in the renderer
@@ -87,17 +88,26 @@ public:
 	// game executable. I.e. normally on the form "res/path/to/texture.jpg" if the texture is in
 	// the "res" directory in the same directory as the executable.
 	//
-	// Returns ~0 (UINT16_MAX) if texture is not available in renderer and can't be loaded
-	uint16_t registerTexture(const char* globalPath) noexcept;
+	// Returns ~0 (UINT32_MAX) if texture is not available in renderer and can't be loaded
+	uint32_t registerTexture(const char* globalPath) noexcept;
 
 	// Checks if a given texture is available in the renderer or not without modifying global
 	// any state.
 	bool hasTexture(StringID globalPathId) const noexcept;
 
-	const sfz::DynArray<TextureMapping>& textures() const noexcept { return mTextures; }
+	const sfz::DynArray<ResourceMapping>& textures() const noexcept { return mTextures; }
 
 	// Debug function that returns a string containing the global path for a specific index
-	const char* debugTextureIndexToGlobalPath(uint16_t index) const noexcept;
+	const char* debugTextureIndexToGlobalPath(uint32_t index) const noexcept;
+
+	// Mesh methods
+	// --------------------------------------------------------------------------------------------
+
+	uint32_t registerMesh(const char* globalPath, const Mesh& mesh) noexcept;
+
+	bool hasMesh(StringID globalPathId) const noexcept;
+
+	const sfz::DynArray<ResourceMapping>& meshes() const noexcept { return mMeshes; }
 
 private:
 	// Private members
@@ -106,8 +116,11 @@ private:
 	Allocator* mAllocator = nullptr;
 	Renderer* mRenderer = nullptr;
 
-	sfz::DynArray<TextureMapping> mTextures;
-	sfz::HashMap<StringID, uint16_t> mTextureMap;
+	sfz::DynArray<ResourceMapping> mTextures;
+	sfz::HashMap<StringID, uint32_t> mTextureMap;
+
+	sfz::DynArray<ResourceMapping> mMeshes;
+	sfz::HashMap<StringID, uint32_t> mMeshMap;
 };
 
 

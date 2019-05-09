@@ -55,7 +55,7 @@ struct phStaticSceneView;
 // Interface version
 // ------------------------------------------------------------------------------------------------
 
-const uint32_t PH_RENDERER_INTERFACE_VERSION = 15;
+const uint32_t PH_RENDERER_INTERFACE_VERSION = 16;
 
 // Init functions
 // ------------------------------------------------------------------------------------------------
@@ -187,23 +187,19 @@ phBool32 phUpdateMaterial(const phMaterial* material, uint32_t index);
 // Resource management (meshes)
 // ------------------------------------------------------------------------------------------------
 
-/// A PhantasyEngine renderer sorts geometry into two types, static and dynamic. Dynamic geometry
-/// can be rendered in any way desired each frame, while static geometry may not change in any way
-/// until it is replaced.
-
-/// Sets the dynamic meshes in this renderer. Will remove any old meshes already registered. Meshes
+/// Sets the meshes in this renderer. Will remove any old meshes already registered. Meshes
 /// are likely copied to GPU memory, but even CPU renderers are required to copy the meshes to
 /// their own memory space. Mesh at index 0 in array will be assigned index 0, etc.
 /// \param meshes the array of meshes
 /// \param numMeshes the number of meshes in the array
 extern "C" PH_DLL_EXPORT
-void phSetDynamicMeshes(const phConstMeshView* meshes, uint32_t numMeshes);
+void phSetMeshes(const phConstMeshView* meshes, uint32_t numMeshes);
 
-/// Adds a dynamic mesh and returns its assigned index
+/// Adds a mesh and returns its assigned index
 /// \param mesh the mesh to add
 /// \return the index assigned to the mesh
 extern "C" PH_DLL_EXPORT
-uint32_t phAddDynamicMesh(const phConstMeshView* mesh);
+uint32_t phAddMesh(const phConstMeshView* mesh);
 
 /// Updates (replaces) a mesh already registered to this renderer. Will return 0 and not do
 /// anything if the index does not have any mesh registered to it.
@@ -211,7 +207,7 @@ uint32_t phAddDynamicMesh(const phConstMeshView* mesh);
 /// \param index the index to the registered mesh
 /// \return true on success, false on failure
 extern "C" PH_DLL_EXPORT
-phBool32 phUpdateDynamicMesh(const phConstMeshView* mesh, uint32_t index);
+phBool32 phUpdateMesh(const phConstMeshView* mesh, uint32_t index);
 
 // Resource management (static scene)
 // ------------------------------------------------------------------------------------------------

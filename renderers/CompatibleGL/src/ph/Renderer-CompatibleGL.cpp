@@ -79,14 +79,13 @@ struct RendererState final {
 	// Resources
 	gl::FullscreenGeometry fullscreenGeom;
 	DynArray<Texture> textures;
+	DynArray<Model> models;
 
 	// Dynamic resources
 	DynArray<phMaterial> dynamicMaterials;
-	DynArray<Model> dynamicModels;
-
+	
 	// Static resources
 	DynArray<phMaterial> staticMaterials;
-	DynArray<Model> staticModels;
 	DynArray<phRenderEntity> staticRenderEntities;
 	DynArray<phSphereLight> staticSphereLights;
 
@@ -326,14 +325,13 @@ phBool32 phInitRenderer(
 
 	// Init resource arrays
 	state.textures.create(256, state.allocator);
+	state.models.create(256, state.allocator);
 
 	// Init dynamic resource arrays
 	state.dynamicMaterials.create(256, state.allocator);
-	state.dynamicModels.create(128, state.allocator);
 
 	// Init static resource arrays
 	state.staticMaterials.create(256, state.allocator);
-	state.staticModels.create(512, state.allocator);
 	state.staticRenderEntities.create(1024, state.allocator);
 	state.staticSphereLights.create(128, state.allocator);
 
@@ -523,38 +521,38 @@ phBool32 phUpdateMaterial(const phMaterial* material, uint32_t index)
 // ------------------------------------------------------------------------------------------------
 
 extern "C" PH_DLL_EXPORT
-void phSetDynamicMeshes(const phConstMeshView* meshes, uint32_t numMeshes)
+void phSetMeshes(const phConstMeshView* meshes, uint32_t numMeshes)
 {
 	RendererState& state = *statePtr;
 
 	// Remove any previous models
-	state.dynamicModels.clear();
+	state.models.clear();
 
 	// Create models from all meshes and add them to state
 	for (uint32_t i = 0; i < numMeshes; i++) {
-		state.dynamicModels.add(Model(meshes[i], state.allocator));
+		state.models.add(Model(meshes[i], state.allocator));
 	}
 }
 
 extern "C" PH_DLL_EXPORT
-uint32_t phAddDynamicMesh(const phConstMeshView* mesh)
+uint32_t phAddMesh(const phConstMeshView* mesh)
 {
 	RendererState& state = *statePtr;
 
-	uint32_t index = state.dynamicModels.size();
-	state.dynamicModels.add(Model(*mesh, state.allocator));
+	uint32_t index = state.models.size();
+	state.models.add(Model(*mesh, state.allocator));
 	return index;
 }
 
 extern "C" PH_DLL_EXPORT
-phBool32 phUpdateDynamicMesh(const phConstMeshView* mesh, uint32_t index)
+phBool32 phUpdateMesh(const phConstMeshView* mesh, uint32_t index)
 {
 	RendererState& state = *statePtr;
 
 	// Check if model exists
-	if (state.dynamicModels.size() <= index) return Bool32(false);
+	if (state.models.size() <= index) return Bool32(false);
 
-	state.dynamicModels[index] = Model(*mesh, state.allocator);
+	state.models[index] = Model(*mesh, state.allocator);
 	return Bool32(true);
 }
 
@@ -572,11 +570,6 @@ void phSetStaticScene(const phStaticSceneView* scene)
 	// Materials
 	state.staticMaterials.add(scene->materials, scene->numMaterials);
 
-	// Meshes
-	for (uint32_t i = 0; i < scene->numMeshes; i++) {
-		state.staticModels.add(Model(scene->meshes[i], state.allocator));
-	}
-
 	// Render entities
 	state.staticRenderEntities.add(scene->renderEntities, scene->numRenderEntities);
 
@@ -590,7 +583,6 @@ void phRemoveStaticScene(void)
 {
 	RendererState& state = *statePtr;
 	state.staticMaterials.clear();
-	state.staticModels.clear();
 	state.staticRenderEntities.clear();
 	state.staticSphereLights.clear();
 }
@@ -676,7 +668,7 @@ void phRenderStaticScene(void)
 	gl::setUniform(state.modelShader, "uEmissiveTexture", 4);
 
 	for (const phRenderEntity& entity : state.staticRenderEntities) {
-		auto& model = state.staticModels[entity.meshIndex];
+		auto& model = state.models[entity.meshIndex];
 
 		// Set model and normal matrices
 		mat44 transform = mat44(entity.transform());
@@ -744,12 +736,12 @@ void phRender(const phRenderEntity* entities, uint32_t numEntities)
 
 	for (uint32_t i = 0; i < numEntities; i++) {
 		const phRenderEntity& entity = entities[i];
-		if (entity.meshIndex >= state.dynamicModels.size()) {
+		if (entity.meshIndex >= state.models.size()) {
 				SFZ_WARNING("Renderer-CompatibleGL",
 				"phRender(): Invalid meshIndex for dynamic entity (phRenderEntity)");
 			continue;
 		}
-		auto& model = state.dynamicModels[entity.meshIndex];
+		auto& model = state.models[entity.meshIndex];
 
 		// Set model and normal matrices
 		mat44 transform = mat44(entity.transform());
