@@ -143,7 +143,7 @@ function(phSetCompilerFlags)
 		# -DPH_STATIC_LINK_RENDERER = Link renderer statically instead of dynamically
 		# --preload-file resources = Load "resources" directory into generated javascript
 		# -DSFZ_NO_DEBUG = Used by sfzCore to disable assertions and such on release builds
-		set(PH_CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -fno-rtti -fno-strict-aliasing -s USE_SDL=2 -s TOTAL_MEMORY=1073741824 -s DEMANGLE_SUPPORT=1 -DPH_STATIC_LINK_RENDERER --preload-file res --preload-file res_ph --preload-file res_compgl")
+		set(PH_CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -fno-rtti -fno-strict-aliasing -s USE_SDL=2 -s TOTAL_MEMORY=1073741824 -s DEMANGLE_SUPPORT=1 -s ERROR_ON_MISSING_LIBRARIES=0 -DPH_STATIC_LINK_RENDERER --preload-file res --preload-file res_ph --preload-file res_compgl")
 		set(PH_CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 		set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
 		set(PH_CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
