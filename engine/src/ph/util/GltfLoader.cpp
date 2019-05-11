@@ -191,11 +191,11 @@ static vec4_u8 toSfz(const tinygltf::ColorValue& val) noexcept
 }
 
 static bool extractAssets(
-	const char* gltfPath,
 	const char* basePath,
 	const tinygltf::Model& model,
-	LevelAssets& assets,
-	ResourceManager& resourceManager) noexcept
+	Mesh& meshOut,
+	ResourceManager& resourceManager,
+	sfz::Allocator* allocator) noexcept
 {
 	// Load textures
 	DynArray<uint16_t> localToGlobalTexIndex(uint32_t(model.textures.size()));
@@ -223,7 +223,7 @@ static bool extractAssets(
 	}
 
 	// Load materials
-	const uint32_t materialBaseIndex = assets.materials.size();
+	meshOut.materials.create(uint32_t(model.materials.size()), allocator);
 	for (uint32_t i = 0; i < model.materials.size(); i++) {
 		const tinygltf::Material& material = model.materials[i];
 		phMaterial phMat;
@@ -327,13 +327,16 @@ static bool extractAssets(
 		}
 
 		// Add material to assets
-		assets.materials.add(phMat);
+		meshOut.materials.add(phMat);
 	}
 
 	// Add meshes
+	uint32_t numVertexGuess = uint32_t(model.meshes.size()) * 256;
+	meshOut.vertices.create(numVertexGuess, allocator);
+	meshOut.components.create(uint32_t(model.meshes.size()), allocator);
 	for (uint32_t i = 0; i < uint32_t(model.meshes.size()); i++) {
 		const tinygltf::Mesh& mesh = model.meshes[i];
-		Mesh phMesh;
+		MeshComponent phMeshComp;
 
 		// TODO: For now, stupidly assume each mesh only have one primitive
 		const tinygltf::Primitive& primitive = mesh.primitives[0];
@@ -378,40 +381,39 @@ static bool extractAssets(
 		// Create vertices from positions and normals
 		// TODO: Texcoords
 		sfz_assert_release(posAccess.numElements == normalAccess.numElements);
-		phMesh.vertices.create(posAccess.numElements);
+		uint32_t compVertexOffset = meshOut.vertices.size();
 		for (uint32_t j = 0; j < posAccess.numElements; j++) {
 			phVertex vertex;
 			vertex.pos = posAccess.at<vec3>(j);
 			vertex.normal = normalAccess.at<vec3>(j);
 			vertex.texcoord = texcoord0Access.at<vec2>(j);
-			phMesh.vertices.add(vertex);
+			meshOut.vertices.add(vertex);
 		}
 
 		// Create indices
 		DataAccess idxAccess = accessData(model, primitive.indices);
 		sfz_assert_release(idxAccess.rawPtr != nullptr);
 		sfz_assert_release(idxAccess.compDims == ComponentDimensions::SCALAR);
+		phMeshComp.indices.create(idxAccess.numElements, allocator);
 		if (idxAccess.compType == ComponentType::UINT32) {
-			phMesh.indices.create(idxAccess.numElements);
-			phMesh.indices.add(&idxAccess.at<uint32_t>(0), idxAccess.numElements);
+			for (uint32_t j = 0; j < idxAccess.numElements; j++) {
+				phMeshComp.indices.add(compVertexOffset + idxAccess.at<uint32_t>(j));
+			}
 		}
 		else if (idxAccess.compType == ComponentType::UINT16) {
-			phMesh.indices.create(idxAccess.numElements);
 			for (uint32_t j = 0; j < idxAccess.numElements; j++) {
-				phMesh.indices.add(uint32_t(idxAccess.at<uint16_t>(j)));
+				phMeshComp.indices.add(compVertexOffset + uint32_t(idxAccess.at<uint16_t>(j)));
 			}
 		}
 		else {
 			sfz_assert_release(false);
 		}
 
-		// Create materialIndices
-		phMesh.materialIndices.create(phMesh.vertices.size());
-		phMesh.materialIndices.addMany(phMesh.vertices.size(),
-			materialBaseIndex + primitive.material);
+		// Material
+		phMeshComp.materialIdx = uint32_t(primitive.material);
 
-		// Register mesh
-		resourceManager.registerMesh(str320("%s__component_%u", gltfPath, i).str, phMesh);
+		// Add component to mesh
+		meshOut.components.add(phMeshComp);
 	}
 
 	return true;
@@ -420,10 +422,8 @@ static bool extractAssets(
 // Function for loading from gltf
 // ------------------------------------------------------------------------------------------------
 
-bool loadAssetsFromGltf(
-	const char* gltfPath,
-	LevelAssets& assets,
-	ResourceManager& resourceManager) noexcept
+Mesh loadAssetsFromGltf(
+	const char* gltfPath, ResourceManager& resourceManager, sfz::Allocator* allocator) noexcept
 {
 	str320 basePath = calculateBasePath(gltfPath);
 
@@ -443,20 +443,30 @@ bool loadAssetsFromGltf(
 	}
 	if (!error.empty()) {
 		SFZ_ERROR("tinygltf", "Error loading \"%s\": %s", gltfPath, error.c_str());
-		return false;
+		return Mesh();
 	}
 
 	// Check return code
 	if (!result) {
 		SFZ_ERROR("tinygltf", "Error loading \"%s\"", gltfPath);
-		return false;
+		return Mesh();
 	}
 
 	// Log that model was succesfully loaded
 	SFZ_INFO_NOISY("tinygltf", "Model \"%s\" loaded succesfully", gltfPath);
 
 	// Extract assets from results
-	return extractAssets(gltfPath, basePath.str, model, assets, resourceManager);
+	Mesh mesh;
+	bool extractSuccess =
+		extractAssets(basePath.str, model, mesh, resourceManager, allocator);
+	if (!extractSuccess) {
+		SFZ_ERROR("tinygltf", "Failed to create ph::Mesh from gltf: \"%s\"", gltfPath);
+		return Mesh();
+	}
+
+	// Register mesh
+	resourceManager.registerMesh(gltfPath, mesh);
+	return mesh;
 }
 
 } // namespace ph

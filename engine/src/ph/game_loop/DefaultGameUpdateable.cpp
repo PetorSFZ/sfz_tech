@@ -732,7 +732,7 @@ private:
 		// Tabs
 		ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_None;
 		if (ImGui::BeginTabBar("ResourcesTabBar", tabBarFlags)) {
-			
+
 			// Textures
 			if (ImGui::BeginTabItem("Textures")) {
 				ImGui::Spacing();
@@ -743,7 +743,7 @@ private:
 
 					ImGui::Text("%u -- \"%s\"", globalIdx, globalPath);
 				}
-				
+
 				ImGui::EndTabItem();
 			}
 
@@ -782,7 +782,7 @@ private:
 		// Begin window
 		ImGui::Begin("Dynamic Materials", nullptr, materialEditorWindowFlags);
 
-		// Early exit if no materials
+		/*// Early exit if no materials
 		if (mState.dynamicAssets.materials.size() == 0) {
 			ImGui::End();
 			return;
@@ -886,15 +886,15 @@ private:
 
 		// Normal and Occlusion textures
 		textureComboBox("Normal Texture", material.normalTexIndex);
-		textureComboBox("Occlusion Texture", material.occlusionTexIndex);
+		textureComboBox("Occlusion Texture", material.occlusionTexIndex);*/
 
 		// End window
 		ImGui::End();
 
 		// Send updated material to renderer
-		if (sendUpdatedMaterialToRenderer) {
+		/*if (sendUpdatedMaterialToRenderer) {
 			renderer.updateMaterial(material, mMaterialEditorCurrentIdx);
-		}
+		}*/
 	}
 };
 

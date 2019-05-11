@@ -26,7 +26,6 @@
 #include "ph/game_loop/GameLoopUpdateable.hpp"
 #include "ph/rendering/CameraData.hpp"
 #include "ph/rendering/Image.hpp"
-#include "ph/rendering/LevelAssets.hpp"
 #include "ph/rendering/Mesh.hpp"
 #include "ph/rendering/ResourceManager.hpp"
 
@@ -41,7 +40,6 @@ using sfz::UniquePtr;
 
 struct UpdateableState final {
 	phCameraData cam;
-	LevelAssets dynamicAssets;
 	ResourceManager resourceManager;
 
 	DynArray<phRenderEntity> renderEntities;

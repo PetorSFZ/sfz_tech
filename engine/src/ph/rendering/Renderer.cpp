@@ -76,11 +76,6 @@ extern "C" {
 		decltype(phUpdateTexture)* phUpdateTexture;
 		decltype(phNumTextures)* phNumTextures;
 
-		// Resource management (materials)
-		decltype(phSetMaterials)* phSetMaterials;
-		decltype(phAddMaterial)* phAddMaterial;
-		decltype(phUpdateMaterial)* phUpdateMaterial;
-
 		// Resource management (meshes)
 		decltype(phSetMeshes)* phSetMeshes;
 		decltype(phAddMesh)* phAddMesh;
@@ -256,11 +251,6 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phUpdateTexture);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phNumTextures);
 
-	// Resource management (materials)
-	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phSetMaterials);
-	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phAddMaterial);
-	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phUpdateMaterial);
-
 	// Resource management (meshes)
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phSetMeshes);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phAddMesh);
@@ -404,24 +394,6 @@ uint32_t Renderer::numTextures() const noexcept
 	return CALL_RENDERER_FUNCTION(mFunctionTable, phNumTextures);
 }
 
-// Renderer:: Resource management (materials)
-// ------------------------------------------------------------------------------------------------
-
-void Renderer::setMaterials(const DynArray<phMaterial>& materials) noexcept
-{
-	CALL_RENDERER_FUNCTION(mFunctionTable, phSetMaterials, materials.data(), materials.size());
-}
-
-uint32_t Renderer::addMaterial(const phMaterial& material) noexcept
-{
-	return CALL_RENDERER_FUNCTION(mFunctionTable, phAddMaterial, &material);
-}
-
-bool Renderer::updateMaterial(const phMaterial& material, uint32_t index) noexcept
-{
-	return Bool32(CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateMaterial, &material, index));
-}
-
 // Renderer: Resource management (meshes)
 // ------------------------------------------------------------------------------------------------
 
@@ -454,8 +426,6 @@ void Renderer::setStaticScene(const StaticScene& scene)
 {
 	// Create static scene view
 	phStaticSceneView view;
-	view.materials = scene.assets.materials.data();
-	view.numMaterials = scene.assets.materials.size();
 	view.renderEntities = scene.renderEntities.data();
 	view.numRenderEntities = scene.renderEntities.size();
 	view.sphereLights = scene.sphereLights.data();

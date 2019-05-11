@@ -123,8 +123,8 @@ uint32_t ResourceManager::registerMesh(const char* globalPath, const Mesh& mesh)
 	if (globalIdxPtr != nullptr) return *globalIdxPtr;
 
 	// Upload mesh to renderer
-	phConstMeshView imageView = mesh;
-	uint32_t globalIdx = mRenderer->addMesh(mesh);
+	MeshViewContainer meshViewContainer = mesh.toMeshView(mAllocator);
+	uint32_t globalIdx = mRenderer->addMesh(meshViewContainer.view);
 
 	// Record entry
 	mMeshes.add(ResourceMapping::create(globalPathId, globalIdx));
@@ -139,6 +139,12 @@ uint32_t ResourceManager::registerMesh(const char* globalPath, const Mesh& mesh)
 bool ResourceManager::hasMesh(StringID globalPathId) const noexcept
 {
 	return mMeshMap.get(globalPathId) != nullptr;
+}
+
+bool ResourceManager::hasMeshDependencies(StringID globalPathId) const noexcept
+{
+	// TODO: Implement
+	return false;
 }
 
 } // namespace ph

@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include <sfz/containers/DynArray.hpp>
 
 #include <ph/rendering/MeshView.hpp>
@@ -27,37 +29,60 @@ namespace ph {
 
 using sfz::DynArray;
 
-struct Mesh final {
-	DynArray<phVertex> vertices;
-	DynArray<uint32_t> materialIndices;
-	DynArray<uint32_t> indices;
+// Mesh component
+// ------------------------------------------------------------------------------------------------
 
-	inline phMeshView toMeshView() noexcept;
-	inline phConstMeshView toMeshView() const noexcept;
-	operator phMeshView() noexcept { return this->toMeshView(); }
-	operator phConstMeshView() const noexcept { return this->toMeshView(); }
+struct MeshComponent final {
+	DynArray<uint32_t> indices;
+	uint32_t materialIdx = ~0u;
+
+	phConstMeshComponentView toMeshComponentView() const noexcept;
 };
 
-inline phMeshView Mesh::toMeshView() noexcept
+inline phConstMeshComponentView MeshComponent::toMeshComponentView() const noexcept
 {
-	phMeshView tmp;
-	tmp.vertices = this->vertices.data();
-	tmp.materialIndices = this->materialIndices.data();
-	tmp.numVertices = this->vertices.size();
-	tmp.indices = this->indices.data();
-	tmp.numIndices = this->indices.size();
-	return tmp;
+	phConstMeshComponentView view;
+	view.indices = this->indices.data();
+	view.numIndices = this->indices.size();
+	view.materialIdx = this->materialIdx;
+	return view;
 }
 
-inline phConstMeshView Mesh::toMeshView() const noexcept
+// Mesh
+// ------------------------------------------------------------------------------------------------
+
+struct MeshViewContainer final {
+	DynArray<phConstMeshComponentView> componentViews;
+	phConstMeshView view;
+};
+
+struct Mesh final {
+	DynArray<phVertex> vertices;
+	DynArray<MeshComponent> components;
+	DynArray<phMaterial> materials;
+
+	MeshViewContainer toMeshView(sfz::Allocator* allocator) const noexcept;
+};
+
+inline MeshViewContainer Mesh::toMeshView(sfz::Allocator* allocator) const noexcept
 {
-	phConstMeshView tmp;
-	tmp.vertices = this->vertices.data();
-	tmp.materialIndices = this->materialIndices.data();
-	tmp.numVertices = this->vertices.size();
-	tmp.indices = this->indices.data();
-	tmp.numIndices = this->indices.size();
-	return tmp;
+	MeshViewContainer viewCon;
+
+	// Create mesh component views
+	viewCon.componentViews.create(this->components.size(), allocator);
+	for (const MeshComponent& component : components) {
+		viewCon.componentViews.add(component.toMeshComponentView());
+	}
+
+	// Fill in rest of mesh view
+	viewCon.view.vertices = this->vertices.data();
+	viewCon.view.numVertices = this->vertices.size();
+	viewCon.view.components = viewCon.componentViews.data();
+	viewCon.view.materials = this->materials.data();
+	viewCon.view.numComponents = this->components.size();
+	viewCon.view.numMaterials = this->materials.size();
+
+	return viewCon;
 }
 
 } // namespace ph

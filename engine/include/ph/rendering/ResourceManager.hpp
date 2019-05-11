@@ -107,6 +107,8 @@ public:
 
 	bool hasMesh(StringID globalPathId) const noexcept;
 
+	bool hasMeshDependencies(StringID globalPathId) const noexcept;
+
 	const sfz::DynArray<ResourceMapping>& meshes() const noexcept { return mMeshes; }
 
 private:

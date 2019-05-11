@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "ph/rendering/LevelAssets.hpp"
+#include "ph/rendering/Mesh.hpp"
 #include "ph/rendering/ResourceManager.hpp"
 
 namespace ph {
@@ -26,11 +26,9 @@ namespace ph {
 // Function for loading from gltf
 // ------------------------------------------------------------------------------------------------
 
-/// Loads all meshes, textures and materials from a .gltf file into the level assets.
+/// Loads all meshes, textures and materials from a .gltf file and creates a ph::Mesh.
 /// All scene graph information, relative positions and transformations are ignored.
-bool loadAssetsFromGltf(
-	const char* gltfPath,
-	LevelAssets& assets,
-	ResourceManager& resourceManager) noexcept;
+Mesh loadAssetsFromGltf(
+	const char* gltfPath, ResourceManager& resourceManager, sfz::Allocator* allocator) noexcept;
 
 } // namespace ph

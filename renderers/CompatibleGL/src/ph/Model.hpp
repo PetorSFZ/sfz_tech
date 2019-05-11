@@ -44,9 +44,9 @@ public:
 	ModelComponent(const ModelComponent&) = delete;
 	ModelComponent& operator= (const ModelComponent&) = delete;
 
-	ModelComponent(const uint32_t* indices, uint32_t numIndices, uint32_t materialIndex) noexcept
+	ModelComponent(const phConstMeshComponentView& view, uint32_t numMaterials) noexcept
 	{
-		this->create(indices, numIndices, materialIndex);
+		this->create(view, numMaterials);
 	}
 	ModelComponent(ModelComponent&& other) noexcept { this->swap(other); }
 	ModelComponent& operator= (ModelComponent&& other) noexcept { this->swap(other); return *this; }
@@ -55,7 +55,7 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void create(const uint32_t* indices, uint32_t numIndices, uint32_t materialIndex) noexcept;
+	void create(const phConstMeshComponentView& view, uint32_t numMaterials) noexcept;
 	void swap(ModelComponent& other) noexcept;
 	void destroy() noexcept;
 
@@ -107,12 +107,16 @@ public:
 	DynArray<ModelComponent>& components() noexcept { return mComponents; }
 	const DynArray<ModelComponent>& components() const noexcept { return mComponents; }
 
+	DynArray<phMaterial>& materials() noexcept { return mMaterials; }
+	const DynArray<phMaterial>& materials() const noexcept { return mMaterials; }
+
 	// Private members
 	// --------------------------------------------------------------------------------------------
 private:
 	uint32_t mVAO = 0;
 	uint32_t mVertexBuffer = 0;
 	DynArray<ModelComponent> mComponents;
+	DynArray<phMaterial> mMaterials;
 };
 
 } // namespace ph

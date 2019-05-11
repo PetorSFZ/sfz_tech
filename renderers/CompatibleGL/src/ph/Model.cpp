@@ -29,16 +29,20 @@ namespace ph {
 // ModelComponent: State methods
 // ------------------------------------------------------------------------------------------------
 
-void ModelComponent::create(const uint32_t* indices, uint32_t numIndices, uint32_t materialIndex) noexcept
+void ModelComponent::create(const phConstMeshComponentView& view, uint32_t numMaterials) noexcept
 {
+	if (view.materialIdx != ~0u) sfz_assert_debug(view.materialIdx < numMaterials);
+	this->destroy();
+
 	// Index buffer
 	glGenBuffers(1, &mIndexBuffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * numIndices, indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+		sizeof(uint32_t) * view.numIndices, view.indices, GL_STATIC_DRAW);
 
 	// Set members
-	mNumIndices = numIndices;
-	mMaterialIndex = materialIndex;
+	mNumIndices = view.numIndices;
+	mMaterialIndex = view.materialIdx;
 }
 
 void ModelComponent::swap(ModelComponent& other) noexcept
@@ -101,55 +105,14 @@ void Model::create(const phConstMeshView& mesh, Allocator* allocator) noexcept
 		(void*)offsetof(phVertex, texcoord));
 
 	// Create components
-	struct MaterialIndices {
-		DynArray<uint32_t> indices;
-		uint32_t materialIndex;
-	};
-	DynArray<MaterialIndices> tmpIndices;
-	tmpIndices.create(10, allocator);
-	sfz_assert_debug((mesh.numIndices % 3) == 0);
-
-	// Sort triangles into different components with same material index
-	for (uint32_t i = 0; i < mesh.numIndices; i += 3) {
-		uint32_t idx0 = mesh.indices[i + 0];
-		uint32_t idx1 = mesh.indices[i + 1];
-		uint32_t idx2 = mesh.indices[i + 2];
-
-		// Require material to be same for entire triangle
-		uint32_t m0 = mesh.materialIndices[idx0];
-		uint32_t m1 = mesh.materialIndices[idx1];
-		uint32_t m2 = mesh.materialIndices[idx2];
-		sfz_assert_debug(m0 == m1);
-		sfz_assert_debug(m1 == m2);
-
-		// Try to find existing component with same material index
-		DynArray<uint32_t>* indicesDynArray = nullptr;
-		for (auto& tmpIdxs : tmpIndices) {
-			if (tmpIdxs.materialIndex == m0) {
-				indicesDynArray = &tmpIdxs.indices;
-			}
-		}
-
-		// If component did not exist, create it
-		if (indicesDynArray == nullptr) {
-			tmpIndices.add(MaterialIndices());
-			tmpIndices.last().materialIndex = m0;
-			indicesDynArray = &tmpIndices.last().indices;
-			// Guess that we have ~8 materials per mesh
-			indicesDynArray->create(mesh.numIndices / 4, allocator);
-		}
-
-		// Add indicies to component
-		indicesDynArray->add(idx0);
-		indicesDynArray->add(idx1);
-		indicesDynArray->add(idx2);
+	mComponents.create(mesh.numComponents, allocator);
+	for (uint32_t compIdx = 0; compIdx < mesh.numComponents; compIdx++) {
+		mComponents.add(ModelComponent(mesh.components[compIdx], mesh.numMaterials));
 	}
 
-	// Create components
-	mComponents.create(tmpIndices.size(), allocator);
-	for (auto& tmpIdxs : tmpIndices) {
-		mComponents.add(ModelComponent(tmpIdxs.indices.data(), tmpIdxs.indices.size(), tmpIdxs.materialIndex));
-	}
+	// Materials
+	mMaterials.create(mesh.numMaterials, allocator);
+	mMaterials.add(mesh.materials, mesh.numMaterials);
 
 	// Cleanup
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
@@ -165,12 +128,12 @@ void Model::swap(Model& other) noexcept
 	std::swap(this->mVAO, other.mVAO);
 	std::swap(this->mVertexBuffer, other.mVertexBuffer);
 	this->mComponents.swap(other.mComponents);
+	this->mMaterials.swap(other.mMaterials);
 }
 
 void Model::destroy() noexcept
 {
 	// Delete buffers
-	mComponents.destroy();
 	glDeleteBuffers(1, &mVertexBuffer);
 #if defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
 	glDeleteVertexArraysOES(1, &mVAO);
@@ -181,6 +144,8 @@ void Model::destroy() noexcept
 	// Reset members
 	mVAO = 0;
 	mVertexBuffer = 0;
+	mComponents.destroy();
+	mMaterials.destroy();
 }
 
 // Model: Methods

@@ -21,34 +21,26 @@
 
 #include <cstdint>
 
+#include "ph/rendering/Material.hpp"
 #include "ph/rendering/Vertex.hpp"
+
+// MeshComponentView structs
+// ------------------------------------------------------------------------------------------------
+
+struct phConstMeshComponentView {
+	const uint32_t* indices = nullptr;
+	uint32_t numIndices = 0;
+	uint32_t materialIdx = ~0u;
+};
 
 // MeshView structs
 // ------------------------------------------------------------------------------------------------
 
-struct phMeshView {
-	phVertex* vertices = nullptr;
-	uint32_t* materialIndices = nullptr;
-	uint32_t numVertices = 0;
-	uint32_t* indices = nullptr;
-	uint32_t numIndices = 0;
-};
-
 struct phConstMeshView {
 	const phVertex* vertices = nullptr;
-	const uint32_t* materialIndices = nullptr;
+	const phConstMeshComponentView* components = nullptr;
+	const phMaterial* materials = nullptr;
 	uint32_t numVertices = 0;
-	const uint32_t* indices = nullptr;
-	uint32_t numIndices = 0;
-
-	// Implicit conversions
-	phConstMeshView() noexcept = default;
-	phConstMeshView(const phMeshView& view) noexcept
-	{
-		this->vertices = view.vertices;
-		this->materialIndices = view.materialIndices;
-		this->numVertices = view.numVertices;
-		this->indices = view.indices;
-		this->numIndices = view.numIndices;
-	}
+	uint32_t numComponents = 0;
+	uint32_t numMaterials = 0;
 };

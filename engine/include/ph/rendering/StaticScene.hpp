@@ -24,14 +24,11 @@
 #include <ph/rendering/RenderEntity.hpp>
 #include <ph/rendering/SphereLight.hpp>
 
-#include "ph/rendering/LevelAssets.hpp"
-
 namespace ph {
 
 using sfz::DynArray;
 
 struct StaticScene final {
-	LevelAssets assets;
 	DynArray<phRenderEntity> renderEntities;
 	DynArray<phSphereLight> sphereLights;
 };

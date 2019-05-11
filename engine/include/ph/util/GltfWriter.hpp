@@ -18,8 +18,6 @@
 
 #pragma once
 
-#include "ph/rendering/LevelAssets.hpp"
-
 namespace ph {
 
 /*

@@ -71,7 +71,7 @@ struct RendererState final {
 	RendererState& operator= (RendererState&&) = delete;
 
 	// Utilities
-	sfz::Allocator* allocator;
+	sfz::Allocator* allocator = nullptr;
 	SDL_Window* window = nullptr;
 	SDL_GLContext glContext = nullptr;
 	SDL_SysWMinfo wmInfo = {};
@@ -81,11 +81,7 @@ struct RendererState final {
 	DynArray<Texture> textures;
 	DynArray<Model> models;
 
-	// Dynamic resources
-	DynArray<phMaterial> dynamicMaterials;
-	
 	// Static resources
-	DynArray<phMaterial> staticMaterials;
 	DynArray<phRenderEntity> staticRenderEntities;
 	DynArray<phSphereLight> staticSphereLights;
 
@@ -327,11 +323,7 @@ phBool32 phInitRenderer(
 	state.textures.create(256, state.allocator);
 	state.models.create(256, state.allocator);
 
-	// Init dynamic resource arrays
-	state.dynamicMaterials.create(256, state.allocator);
-
 	// Init static resource arrays
-	state.staticMaterials.create(256, state.allocator);
 	state.staticRenderEntities.create(1024, state.allocator);
 	state.staticSphereLights.create(128, state.allocator);
 
@@ -480,43 +472,6 @@ uint32_t phNumTextures(void)
 	return state.textures.size();
 }
 
-// Resource management (materials)
-// ------------------------------------------------------------------------------------------------
-
-extern "C" PH_DLL_EXPORT
-void phSetMaterials(const phMaterial* materials, uint32_t numMaterials)
-{
-	RendererState& state = *statePtr;
-
-	// Remove any previous materials
-	state.dynamicMaterials.clear();
-
-	// Add materials to state
-	state.dynamicMaterials.add(materials, numMaterials);
-}
-
-extern "C" PH_DLL_EXPORT
-uint32_t phAddMaterial(const phMaterial* material)
-{
-	RendererState& state = *statePtr;
-
-	uint32_t index = state.dynamicMaterials.size();
-	state.dynamicMaterials.add(*material);
-	return index;
-}
-
-extern "C" PH_DLL_EXPORT
-phBool32 phUpdateMaterial(const phMaterial* material, uint32_t index)
-{
-	RendererState& state = *statePtr;
-
-	// Check if material exists
-	if (state.dynamicMaterials.size() <= index) return Bool32(false);
-
-	state.dynamicMaterials[index] = *material;
-	return Bool32(true);
-}
-
 // Interface: Resource management (meshes)
 // ------------------------------------------------------------------------------------------------
 
@@ -567,9 +522,6 @@ void phSetStaticScene(const phStaticSceneView* scene)
 	// Remove previous static scene
 	phRemoveStaticScene();
 
-	// Materials
-	state.staticMaterials.add(scene->materials, scene->numMaterials);
-
 	// Render entities
 	state.staticRenderEntities.add(scene->renderEntities, scene->numRenderEntities);
 
@@ -582,7 +534,6 @@ extern "C" PH_DLL_EXPORT
 void phRemoveStaticScene(void)
 {
 	RendererState& state = *statePtr;
-	state.staticMaterials.clear();
 	state.staticRenderEntities.clear();
 	state.staticSphereLights.clear();
 }
@@ -669,6 +620,7 @@ void phRenderStaticScene(void)
 
 	for (const phRenderEntity& entity : state.staticRenderEntities) {
 		auto& model = state.models[entity.meshIndex];
+		sfz_assert_debug(model.materials().size() != 0);
 
 		// Set model and normal matrices
 		mat44 transform = mat44(entity.transform());
@@ -682,7 +634,12 @@ void phRenderStaticScene(void)
 
 			// Upload component's material to shader
 			uint32_t materialIndex = component.materialIndex();
-			const auto& material = state.staticMaterials[materialIndex];
+			if (materialIndex == ~0u) {
+				SFZ_ERROR("Renderer-CompatibleGL",
+					"phRenderStaticScene(): material ~0u specified, skipping mesh component");
+				continue;
+			}
+			const auto& material = model.materials()[materialIndex];
 			stupidSetMaterialUniform(state.modelShader, "uMaterial", material);
 
 			// Bind materials textures
@@ -755,7 +712,12 @@ void phRender(const phRenderEntity* entities, uint32_t numEntities)
 
 			// Upload component's material to shader
 			uint32_t materialIndex = component.materialIndex();
-			const auto& material = state.dynamicMaterials[materialIndex];
+			if (materialIndex == ~0u) {
+				SFZ_ERROR("Renderer-CompatibleGL",
+					"phRender(): material ~0u specified, skipping mesh component");
+				continue;
+			}
+			const auto& material = model.materials()[materialIndex];
 			stupidSetMaterialUniform(state.modelShader, "uMaterial", material);
 
 			// Bind materials textures

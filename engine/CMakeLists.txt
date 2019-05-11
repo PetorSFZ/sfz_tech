@@ -70,7 +70,6 @@ set(PHANTASY_ENGINE_HEADER_FILES
 
 	${INCLUDE_DIR}/ph/rendering/Image.hpp
 	${INCLUDE_DIR}/ph/rendering/ImguiSupport.hpp
-	${INCLUDE_DIR}/ph/rendering/LevelAssets.hpp
 	${INCLUDE_DIR}/ph/rendering/Mesh.hpp
 	${INCLUDE_DIR}/ph/rendering/Renderer.hpp
 	${INCLUDE_DIR}/ph/rendering/ResourceManager.hpp

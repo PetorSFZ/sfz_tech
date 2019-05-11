@@ -58,7 +58,7 @@ public:
 
 	/// The interface version supported by this wrapper. Only renderers which return the same
 	/// version with "phRendererInterfaceVersion()" are compatible.
-	static constexpr uint32_t INTERFACE_VERSION = 16;
+	static constexpr uint32_t INTERFACE_VERSION = 17;
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -125,18 +125,6 @@ public:
 
 	// See phNumTextures()
 	uint32_t numTextures() const noexcept;
-
-	// Resource management (materials)
-	// --------------------------------------------------------------------------------------------
-
-	// See phSetMaterials()
-	void setMaterials(const DynArray<phMaterial>& materials) noexcept;
-
-	/// See phAddMaterial()
-	uint32_t addMaterial(const phMaterial& material) noexcept;
-
-	/// See phUpdateMaterial()
-	bool updateMaterial(const phMaterial& material, uint32_t index) noexcept;
 
 	// Renderer: Resource management (meshes)
 	// --------------------------------------------------------------------------------------------
