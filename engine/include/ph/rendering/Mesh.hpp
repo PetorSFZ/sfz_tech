@@ -22,12 +22,31 @@
 #include <cstdint>
 
 #include <sfz/containers/DynArray.hpp>
+#include <sfz/strings/StringID.hpp>
 
 #include <ph/rendering/MeshView.hpp>
 
 namespace ph {
 
 using sfz::DynArray;
+using sfz::StringID;
+
+// Material unbound
+// ------------------------------------------------------------------------------------------------
+
+// An unbound version of phMaterial that uses StringID instead of indices to textures.
+struct MaterialUnbound final {
+	sfz::vec4_u8 albedo = sfz::vec4_u8(255, 255, 255, 255);
+	sfz::vec3_u8 emissive = sfz::vec3_u8(255, 255, 255);
+	uint8_t roughness = 255;
+	uint8_t metallic = 255;
+
+	StringID albedoTex = StringID::invalid();
+	StringID metallicRoughnessTex = StringID::invalid();
+	StringID normalTex = StringID::invalid();
+	StringID occlusionTex = StringID::invalid();
+	StringID emissiveTex = StringID::invalid();
+};
 
 // Mesh component
 // ------------------------------------------------------------------------------------------------
@@ -35,54 +54,15 @@ using sfz::DynArray;
 struct MeshComponent final {
 	DynArray<uint32_t> indices;
 	uint32_t materialIdx = ~0u;
-
-	phConstMeshComponentView toMeshComponentView() const noexcept;
 };
-
-inline phConstMeshComponentView MeshComponent::toMeshComponentView() const noexcept
-{
-	phConstMeshComponentView view;
-	view.indices = this->indices.data();
-	view.numIndices = this->indices.size();
-	view.materialIdx = this->materialIdx;
-	return view;
-}
 
 // Mesh
 // ------------------------------------------------------------------------------------------------
 
-struct MeshViewContainer final {
-	DynArray<phConstMeshComponentView> componentViews;
-	phConstMeshView view;
-};
-
 struct Mesh final {
 	DynArray<phVertex> vertices;
 	DynArray<MeshComponent> components;
-	DynArray<phMaterial> materials;
-
-	MeshViewContainer toMeshView(sfz::Allocator* allocator) const noexcept;
+	DynArray<MaterialUnbound> materials;
 };
-
-inline MeshViewContainer Mesh::toMeshView(sfz::Allocator* allocator) const noexcept
-{
-	MeshViewContainer viewCon;
-
-	// Create mesh component views
-	viewCon.componentViews.create(this->components.size(), allocator);
-	for (const MeshComponent& component : components) {
-		viewCon.componentViews.add(component.toMeshComponentView());
-	}
-
-	// Fill in rest of mesh view
-	viewCon.view.vertices = this->vertices.data();
-	viewCon.view.numVertices = this->vertices.size();
-	viewCon.view.components = viewCon.componentViews.data();
-	viewCon.view.materials = this->materials.data();
-	viewCon.view.numComponents = this->components.size();
-	viewCon.view.numMaterials = this->materials.size();
-
-	return viewCon;
-}
 
 } // namespace ph

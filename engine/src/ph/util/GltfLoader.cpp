@@ -194,11 +194,14 @@ static bool extractAssets(
 	const char* basePath,
 	const tinygltf::Model& model,
 	Mesh& meshOut,
-	ResourceManager& resourceManager,
+	DynArray<ImageAndPath>& texturesOut,
+	const ResourceManager* resourceManager,
 	sfz::Allocator* allocator) noexcept
 {
+	StringCollection& resStrings = getResourceStrings();
+
 	// Load textures
-	DynArray<uint16_t> localToGlobalTexIndex(uint32_t(model.textures.size()));
+	texturesOut.create(model.textures.size(), allocator);
 	for (uint32_t i = 0; i < model.textures.size(); i++) {
 		const tinygltf::Texture& tex = model.textures[i];
 		if (tex.source < 0 || int(model.images.size()) <= tex.source) {
@@ -209,11 +212,22 @@ static bool extractAssets(
 
 		// Create global path (path relative to game executable)
 		const str320 globalPath("%s%s", basePath, img.uri.c_str());
+		StringID globalPathId = resStrings.getStringID(globalPath.str);
 
-		// Register texture and record its global index
-		uint16_t globalIdx = (uint16_t)resourceManager.registerTexture(globalPath.str);
-		if (globalIdx == uint16_t(~0)) return false;
-		localToGlobalTexIndex.add(globalIdx);
+		// Check if texture is already loaded, skip it if it is
+		if (resourceManager != nullptr) {
+			if (resourceManager->hasTexture(globalPathId)) continue;
+		}
+
+		// Load and store image
+		ImageAndPath pack;
+		pack.globalPathId = globalPathId;
+		pack.image = loadImage("", globalPath);
+		if (pack.image.rawData.data() == nullptr) {
+			SFZ_ERROR("tinygltf", "Could not load texture: \"%s\"", globalPath.str);
+			return false;
+		}
+		texturesOut.add(std::move(pack));
 
 		// TODO: We need to store these two values somewhere. Likely in material (because it does
 		//       not make perfect sense that everything should access the texture the same way)
@@ -222,11 +236,20 @@ static bool extractAssets(
 		//int wrapT = sampler.wrapT; // ["CLAMP_TO_EDGE", "MIRRORED_REPEAT", "REPEAT"], default "REPEAT"
 	}
 
+	// Lambda for getting the StringID from a material
+	auto getStringID = [&](int texIndex) -> StringID {
+		const tinygltf::Texture& tex = model.textures[texIndex];
+		const tinygltf::Image& img = model.images[tex.source];
+		str320 globalPath("%s%s", basePath, img.uri.c_str());
+		StringID globalPathId = resStrings.getStringID(globalPath.str);
+		return globalPathId;
+	};
+
 	// Load materials
 	meshOut.materials.create(uint32_t(model.materials.size()), allocator);
 	for (uint32_t i = 0; i < model.materials.size(); i++) {
 		const tinygltf::Material& material = model.materials[i];
-		phMaterial phMat;
+		MaterialUnbound phMat;
 
 		// Lambda for checking if parameter exists
 		auto hasParamValues = [&](const char* key) {
@@ -251,7 +274,7 @@ static bool extractAssets(
 				SFZ_ERROR("tinygltf", "Bad texture index for material %u", i);
 				continue;
 			}
-			phMat.albedoTexIndex = localToGlobalTexIndex[texIndex];
+			phMat.albedoTex = getStringID(texIndex);
 			// TODO: Store which texcoords to use
 		}
 
@@ -281,7 +304,7 @@ static bool extractAssets(
 				SFZ_ERROR("tinygltf", "Bad texture index for material %u", i);
 				continue;
 			}
-			phMat.metallicRoughnessTexIndex = localToGlobalTexIndex[texIndex];
+			phMat.metallicRoughnessTex = getStringID(texIndex);
 			// TODO: Store which texcoords to use
 		}
 
@@ -293,7 +316,7 @@ static bool extractAssets(
 				SFZ_ERROR("tinygltf", "Bad texture index for material %u", i);
 				continue;
 			}
-			phMat.normalTexIndex = localToGlobalTexIndex[texIndex];
+			phMat.normalTex = getStringID(texIndex);
 			// TODO: Store which texcoords to use
 		}
 
@@ -305,7 +328,7 @@ static bool extractAssets(
 				SFZ_ERROR("tinygltf", "Bad texture index for material %u", i);
 				continue;
 			}
-			phMat.occlusionTexIndex = localToGlobalTexIndex[texIndex];
+			phMat.occlusionTex = getStringID(texIndex);
 			// TODO: Store which texcoords to use
 		}
 
@@ -317,12 +340,12 @@ static bool extractAssets(
 				SFZ_ERROR("tinygltf", "Bad texture index for material %u", i);
 				continue;
 			}
-			phMat.emissiveTexIndex = localToGlobalTexIndex[texIndex];
+			phMat.emissiveTex = getStringID(texIndex);
 			// TODO: Store which texcoords to use
 		}
 
 		// Remove default emissive factor if no emissive is specified
-		if (phMat.emissiveTexIndex == uint16_t(~0) && !hasParamAdditionalValues("emissiveFactor")) {
+		if (phMat.emissiveTex == uint16_t(~0) && !hasParamAdditionalValues("emissiveFactor")) {
 			phMat.emissive = vec3_u8(uint8_t(0));
 		}
 
@@ -422,8 +445,12 @@ static bool extractAssets(
 // Function for loading from gltf
 // ------------------------------------------------------------------------------------------------
 
-Mesh loadAssetsFromGltf(
-	const char* gltfPath, ResourceManager& resourceManager, sfz::Allocator* allocator) noexcept
+bool loadAssetsFromGltf(
+	const char* gltfPath,
+	Mesh& meshOut,
+	DynArray<ImageAndPath>& texturesOut,
+	sfz::Allocator* allocator,
+	const ResourceManager* resourceManager) noexcept
 {
 	str320 basePath = calculateBasePath(gltfPath);
 
@@ -443,30 +470,27 @@ Mesh loadAssetsFromGltf(
 	}
 	if (!error.empty()) {
 		SFZ_ERROR("tinygltf", "Error loading \"%s\": %s", gltfPath, error.c_str());
-		return Mesh();
+		return false;
 	}
 
 	// Check return code
 	if (!result) {
 		SFZ_ERROR("tinygltf", "Error loading \"%s\"", gltfPath);
-		return Mesh();
+		return false;
 	}
 
 	// Log that model was succesfully loaded
 	SFZ_INFO_NOISY("tinygltf", "Model \"%s\" loaded succesfully", gltfPath);
 
 	// Extract assets from results
-	Mesh mesh;
 	bool extractSuccess =
-		extractAssets(basePath.str, model, mesh, resourceManager, allocator);
+		extractAssets(basePath.str, model, meshOut, texturesOut, resourceManager, allocator);
 	if (!extractSuccess) {
 		SFZ_ERROR("tinygltf", "Failed to create ph::Mesh from gltf: \"%s\"", gltfPath);
-		return Mesh();
+		return false;
 	}
 
-	// Register mesh
-	resourceManager.registerMesh(gltfPath, mesh);
-	return mesh;
+	return true;
 }
 
 } // namespace ph

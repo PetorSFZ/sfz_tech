@@ -23,6 +23,7 @@
 #include <sfz/containers/HashMap.hpp>
 #include <sfz/strings/StringID.hpp>
 
+#include "ph/rendering/Image.hpp"
 #include "ph/rendering/Mesh.hpp"
 #include "ph/rendering/Renderer.hpp"
 
@@ -55,6 +56,11 @@ struct MeshDescriptor final {
 	uint32_t globalIdx = ~0u;
 	DynArray<MeshComponentDescriptor> componentDescriptors;
 	DynArray<phMaterial> materials;
+};
+
+struct ImageAndPath final {
+	Image image;
+	StringID globalPathId;
 };
 
 // ResourceManager class
@@ -101,6 +107,10 @@ public:
 	//
 	// Returns ~0 (UINT32_MAX) if texture is not available in renderer and can't be loaded
 	uint32_t registerTexture(const char* globalPath) noexcept;
+	uint32_t registerTexture(const char* globalPath, const Image& texture) noexcept;
+
+	// Returns ~0 (UINT32_MAX) if texture is not available
+	uint32_t getTextureIndex(StringID globalPathId) const noexcept;
 
 	// Checks if a given texture is available in the renderer or not without modifying any global
 	// state.
@@ -116,15 +126,15 @@ public:
 
 	// Registers a mesh and returns its mesh ID in the renderer
 	//
-	// If a mesh with the same global path is already available in the renderer it is replaced by
-	// the new one.
+	// If the mesh is already available in the renderer its ID is returned.
 	//
 	// The "global path" is the path to the mesh relative to the game executable. I.e. normally on
 	// the form "res/path/to/model.gltf" if the mesh is in the "res" directory in the same directory
 	// as the executable.
 	//
 	// Returns ~0 (UINT32_MAX) on error
-	uint32_t registerMesh(const char* globalPath, const Mesh& mesh) noexcept;
+	uint32_t registerMesh(
+		const char* globalPath, const Mesh& mesh, const DynArray<ImageAndPath>& textures) noexcept;
 
 	// Checks if a given mesh is available or not without modifying any global state.
 	bool hasMesh(StringID globalPathId) const noexcept;

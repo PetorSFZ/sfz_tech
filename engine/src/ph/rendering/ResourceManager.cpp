@@ -29,6 +29,47 @@
 
 namespace ph {
 
+// Statics
+// ------------------------------------------------------------------------------------------------
+
+static phConstMeshComponentView toMeshComponentView(const MeshComponent& component) noexcept
+{
+	phConstMeshComponentView view;
+	view.indices = component.indices.data();
+	view.numIndices = component.indices.size();
+	view.materialIdx = component.materialIdx;
+	return view;
+}
+
+struct MeshViewContainer final {
+	DynArray<phConstMeshComponentView> componentViews;
+	phConstMeshView view;
+};
+
+static MeshViewContainer toMeshView(
+	const Mesh& mesh,
+	const sfz::DynArray<phMaterial>& boundMaterials,
+	sfz::Allocator* allocator) noexcept
+{
+	MeshViewContainer viewCon;
+
+	// Create mesh component views
+	viewCon.componentViews.create(mesh.components.size(), allocator);
+	for (const MeshComponent& component : mesh.components) {
+		viewCon.componentViews.add(toMeshComponentView(component));
+	}
+
+	// Fill in rest of mesh view
+	viewCon.view.vertices = mesh.vertices.data();
+	viewCon.view.numVertices = mesh.vertices.size();
+	viewCon.view.components = viewCon.componentViews.data();
+	viewCon.view.materials = boundMaterials.data();
+	viewCon.view.numComponents = mesh.components.size();
+	viewCon.view.numMaterials = boundMaterials.size();
+
+	return viewCon;
+}
+
 // ResourceManager: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
@@ -95,6 +136,43 @@ uint32_t ResourceManager::registerTexture(const char* globalPath) noexcept
 	return globalIdx;
 }
 
+uint32_t ResourceManager::registerTexture(const char* globalPath, const Image& texture) noexcept
+{
+	// Convert global path to StringID
+	StringCollection& resourceStrings = getResourceStrings();
+	const StringID globalPathId = resourceStrings.getStringID(globalPath);
+
+	// Check if texture is available in renderer, return index if it is
+	uint32_t* globalIdxPtr = mTextureMap.get(globalPathId);
+	if (globalIdxPtr != nullptr) return *globalIdxPtr;
+
+	// Check if image is empty
+	if (texture.rawData.data() == nullptr) {
+		SFZ_ERROR("ResourceManager", "Image is empty: \"%s\"", globalPath);
+		return uint16_t(~0);
+	}
+
+	// Upload image to renderer
+	phConstImageView imageView = texture;
+	uint16_t globalIdx = mRenderer->addTexture(imageView);
+
+	// Record entry
+	mTextures.add(ResourceMapping::create(globalPathId, globalIdx));
+	mTextureMap.put(globalPathId, globalIdx);
+
+	SFZ_INFO_NOISY("ResourceManager", "Loaded texture: \"%s\", global index -> %u",
+		globalPath, globalIdx);
+
+	return globalIdx;
+}
+
+uint32_t ResourceManager::getTextureIndex(StringID globalPathId) const noexcept
+{
+	const uint32_t* idxPtr = mTextureMap.get(globalPathId);
+	if (idxPtr == nullptr) return ~0u;
+	return *idxPtr;
+}
+
 bool ResourceManager::hasTexture(StringID globalPathId) const noexcept
 {
 	return mTextureMap.get(globalPathId) != nullptr;
@@ -112,7 +190,8 @@ const char* ResourceManager::debugTextureIndexToGlobalPath(uint32_t index) const
 // ResourceManager: Mesh methods
 // ------------------------------------------------------------------------------------------------
 
-uint32_t ResourceManager::registerMesh(const char* globalPath, const Mesh& mesh) noexcept
+uint32_t ResourceManager::registerMesh(
+	const char* globalPath, const Mesh& mesh, const DynArray<ImageAndPath>& textures) noexcept
 {
 	// Convert global path to StringID
 	StringCollection& resourceStrings = getResourceStrings();
@@ -122,8 +201,47 @@ uint32_t ResourceManager::registerMesh(const char* globalPath, const Mesh& mesh)
 	uint32_t* globalIdxPtr = mMeshMap.get(globalPathId);
 	if (globalIdxPtr != nullptr) return *globalIdxPtr;
 
+	// Upload textures to renderer
+	for (const ImageAndPath& texture : textures) {
+		this->registerTexture(resourceStrings.getString(texture.globalPathId), texture.image);
+	}
+
+	// Bind materials
+	sfz::DynArray<phMaterial> boundMaterials(mesh.materials.size(), mAllocator);
+	for (const MaterialUnbound& unbound : mesh.materials) {
+		phMaterial bound;
+		bound.albedo = unbound.albedo;
+		bound.emissive = unbound.emissive;
+		bound.roughness = unbound.roughness;
+		bound.metallic = unbound.metallic;
+
+		auto getIdx = [&](StringID globalPathId) {
+			
+			if (globalPathId == StringID::invalid()) return uint16_t(~0);
+			
+			uint32_t texIndex = this->getTextureIndex(globalPathId);
+			if (texIndex == ~0u) {
+				const char* texPath = resourceStrings.getString(globalPathId);
+				SFZ_ERROR("ResourceManager",
+					"Attempted to bind texture \"%s\", but it was not available in Renderer",
+					texPath);
+				return uint16_t(~0);
+			}
+
+			return uint16_t(texIndex);
+		};
+
+		bound.albedoTexIndex = getIdx(unbound.albedoTex);
+		bound.metallicRoughnessTexIndex = getIdx(unbound.metallicRoughnessTex);
+		bound.normalTexIndex = getIdx(unbound.normalTex);
+		bound.occlusionTexIndex = getIdx(unbound.occlusionTex);
+		bound.emissiveTexIndex = getIdx(unbound.emissiveTex);
+
+		boundMaterials.add(bound);
+	}
+
 	// Upload mesh to renderer
-	MeshViewContainer meshViewContainer = mesh.toMeshView(mAllocator);
+	MeshViewContainer meshViewContainer = toMeshView(mesh, boundMaterials, mAllocator);
 	uint32_t globalIdx = mRenderer->addMesh(meshViewContainer.view);
 
 	// Record entry
@@ -134,7 +252,7 @@ uint32_t ResourceManager::registerMesh(const char* globalPath, const Mesh& mesh)
 	for (const MeshComponent& comp : mesh.components) {
 		descriptor.componentDescriptors.add({ comp.materialIdx });
 	}
-	descriptor.materials = sfz::DynArray<phMaterial>(mesh.materials, mAllocator);
+	descriptor.materials = std::move(boundMaterials);
 	mMeshDescriptors.add(std::move(descriptor));
 	mMeshMap.put(globalPathId, globalIdx);
 
