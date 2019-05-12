@@ -55,7 +55,7 @@ struct phStaticSceneView;
 // Interface version
 // ------------------------------------------------------------------------------------------------
 
-const uint32_t PH_RENDERER_INTERFACE_VERSION = 17;
+const uint32_t PH_RENDERER_INTERFACE_VERSION = 18;
 
 // Init functions
 // ------------------------------------------------------------------------------------------------
@@ -171,6 +171,14 @@ uint32_t phAddMesh(const phConstMeshView* mesh);
 /// \return true on success, false on failure
 extern "C" PH_DLL_EXPORT
 phBool32 phUpdateMesh(const phConstMeshView* mesh, uint32_t index);
+
+/// Updates a mesh's materials already registered to this renderer. Returns true on success
+/// \param meshIdx the index of the mesh whichs materials should be updated
+/// \param materials the new materials
+/// \param numMaterials the number of materials
+/// \return true on success, false on failure
+extern "C" PH_DLL_EXPORT
+phBool32 phUpdateMeshMaterials(uint32_t meshIdx, const phMaterial* materials, uint32_t numMaterials);
 
 // Resource management (static scene)
 // ------------------------------------------------------------------------------------------------

@@ -80,6 +80,7 @@ extern "C" {
 		decltype(phSetMeshes)* phSetMeshes;
 		decltype(phAddMesh)* phAddMesh;
 		decltype(phUpdateMesh)* phUpdateMesh;
+		decltype(phUpdateMeshMaterials)* phUpdateMeshMaterials;
 
 		// Resource management (static scene)
 		decltype(phSetStaticScene)* phSetStaticScene;
@@ -255,6 +256,7 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phSetMeshes);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phAddMesh);
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phUpdateMesh);
+	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phUpdateMeshMaterials);
 
 	// Resource management (static scene)
 	LOAD_FUNCTION(mModuleHandle, mFunctionTable, phSetStaticScene);
@@ -417,6 +419,12 @@ uint32_t Renderer::addMesh(const phConstMeshView& mesh) noexcept
 bool Renderer::updateMesh(const phConstMeshView& mesh, uint32_t index) noexcept
 {
 	return Bool32(CALL_RENDERER_FUNCTION(mFunctionTable, phUpdateMesh, &mesh, index));
+}
+
+bool Renderer::updateMeshMaterials(uint32_t meshIdx, const DynArray<phMaterial>& materials) noexcept
+{
+	return Bool32(CALL_RENDERER_FUNCTION(
+		mFunctionTable, phUpdateMeshMaterials, meshIdx, materials.data(), materials.size()));
 }
 
 // Renderer: Resource management (static scene)

@@ -511,6 +511,28 @@ phBool32 phUpdateMesh(const phConstMeshView* mesh, uint32_t index)
 	return Bool32(true);
 }
 
+extern "C" PH_DLL_EXPORT
+phBool32 phUpdateMeshMaterials(uint32_t meshIdx, const phMaterial* materials, uint32_t numMaterials)
+{
+	RendererState& state = *statePtr;
+
+	// Check if model exists
+	if (state.models.size() <= meshIdx) return Bool32(false);
+
+	// Check if correct number of materials
+	if (state.models[meshIdx].materials().size() != numMaterials) {
+		SFZ_ERROR("Renderer-CompatibleGL", "phUpdateMeshMaterials(): Wrong amount of materials");
+		return Bool32(false);
+	}
+
+	// Copy materials
+	for (uint32_t i = 0; i < numMaterials; i++) {
+		state.models[meshIdx].materials()[i] = materials[i];
+	}
+
+	return Bool32(true);
+}
+
 // Interface: Resource management (static scene)
 // ------------------------------------------------------------------------------------------------
 

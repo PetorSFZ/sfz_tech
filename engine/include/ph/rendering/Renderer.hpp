@@ -58,7 +58,7 @@ public:
 
 	/// The interface version supported by this wrapper. Only renderers which return the same
 	/// version with "phRendererInterfaceVersion()" are compatible.
-	static constexpr uint32_t INTERFACE_VERSION = 17;
+	static constexpr uint32_t INTERFACE_VERSION = 18;
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -137,6 +137,9 @@ public:
 
 	/// See phUpdateMesh()
 	bool updateMesh(const phConstMeshView& mesh, uint32_t index) noexcept;
+
+	/// See phUpdateMeshMaterials()
+	bool updateMeshMaterials(uint32_t meshIdx, const DynArray<phMaterial>& materials) noexcept;
 
 	// Renderer: Resource management (static scene)
 	// --------------------------------------------------------------------------------------------

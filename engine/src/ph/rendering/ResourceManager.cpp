@@ -127,7 +127,15 @@ uint32_t ResourceManager::registerMesh(const char* globalPath, const Mesh& mesh)
 	uint32_t globalIdx = mRenderer->addMesh(meshViewContainer.view);
 
 	// Record entry
-	mMeshes.add(ResourceMapping::create(globalPathId, globalIdx));
+	MeshDescriptor descriptor;
+	descriptor.globalPathId = globalPathId;
+	descriptor.globalIdx = globalIdx;
+	descriptor.componentDescriptors.create(mesh.components.size(), mAllocator);
+	for (const MeshComponent& comp : mesh.components) {
+		descriptor.componentDescriptors.add({ comp.materialIdx });
+	}
+	descriptor.materials = sfz::DynArray<phMaterial>(mesh.materials, mAllocator);
+	mMeshDescriptors.add(std::move(descriptor));
 	mMeshMap.put(globalPathId, globalIdx);
 
 	SFZ_INFO_NOISY("ResourceManager", "Loaded mesh: \"%s\", global index -> %u",
@@ -139,12 +147,6 @@ uint32_t ResourceManager::registerMesh(const char* globalPath, const Mesh& mesh)
 bool ResourceManager::hasMesh(StringID globalPathId) const noexcept
 {
 	return mMeshMap.get(globalPathId) != nullptr;
-}
-
-bool ResourceManager::hasMeshDependencies(StringID globalPathId) const noexcept
-{
-	// TODO: Implement
-	return false;
 }
 
 } // namespace ph

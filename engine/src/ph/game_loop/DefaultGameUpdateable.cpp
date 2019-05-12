@@ -178,7 +178,8 @@ public:
 	Setting* mConsoleShowInGamePreview = nullptr;
 
 	// Dynamic material editor
-	uint32_t mMaterialEditorCurrentIdx = 0;
+	uint32_t mMaterialEditorCurrentMeshIdx = 0;
+	uint32_t mMaterialEditorCurrentMaterialIdx = 0;
 
 	// Overloaded methods from GameLoopUpdateable
 	// --------------------------------------------------------------------------------------------
@@ -323,8 +324,7 @@ private:
 		this->renderPerformanceWindow();
 		this->renderLogWindow();
 		this->renderConfigWindow();
-		this->renderResourceEditorWindow();
-		this->renderMaterialEditorWindow(renderer);
+		this->renderResourceEditorWindow(renderer);
 
 		// Render custom-injected windows
 		mLogic->injectConsoleMenu();
@@ -716,7 +716,7 @@ private:
 		ImGui::End();
 	}
 
-	void renderResourceEditorWindow() noexcept
+	void renderResourceEditorWindow(Renderer& renderer) noexcept
 	{
 		// Get resource manager and resource strings
 		const StringCollection& resStrings = getResourceStrings();
@@ -733,6 +733,29 @@ private:
 		ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_None;
 		if (ImGui::BeginTabBar("ResourcesTabBar", tabBarFlags)) {
 
+			// Meshes
+			if (ImGui::BeginTabItem("Meshes")) {
+				ImGui::Spacing();
+
+				for (const MeshDescriptor& descr : mState.resourceManager.meshDescriptors()) {
+					const char* globalPath = resStrings.getString(descr.globalPathId);
+					uint32_t globalIdx = descr.globalIdx;
+
+					str256 meshName("%u -- \"%s\" -- %u components",
+						globalIdx, globalPath, descr.componentDescriptors.size());
+					if (ImGui::CollapsingHeader(meshName.str)) {
+						ImGui::Indent(30.0f);
+						for (uint32_t i = 0; i < descr.componentDescriptors.size(); i++) {
+							const auto& compDescr = descr.componentDescriptors[i];
+							ImGui::Text("Component %u -- Material: %u", i, compDescr.materialIdx);
+						}
+						ImGui::Unindent(30.0f);
+					}
+				}
+
+				ImGui::EndTabItem();
+			}
+
 			// Textures
 			if (ImGui::BeginTabItem("Textures")) {
 				ImGui::Spacing();
@@ -747,15 +770,148 @@ private:
 				ImGui::EndTabItem();
 			}
 
-			// Meshes
-			if (ImGui::BeginTabItem("Meshes")) {
+			// Materials
+			if (ImGui::BeginTabItem("Materials")) {
 				ImGui::Spacing();
 
-				for (const ResourceMapping& meshMapping : mState.resourceManager.meshes()) {
-					const char* globalPath = resStrings.getString(meshMapping.globalPathId);
-					uint32_t globalIdx = meshMapping.globalIdx;
+				// Check that mesh index is in range
+				DynArray<MeshDescriptor>& meshes = mState.resourceManager.meshDescriptors();
+				if (mMaterialEditorCurrentMeshIdx >= meshes.size()) {
+					mMaterialEditorCurrentMeshIdx = 0;
+				}
+				sfz_assert_debug(meshes.size() != 0);
 
-					ImGui::Text("%u -- \"%s\"", globalIdx, globalPath);
+				// Mesh index selection combo box
+				MeshDescriptor* currentMesh = &meshes[mMaterialEditorCurrentMeshIdx];
+				str256 meshStr("%u -- \"%s\"",
+					mMaterialEditorCurrentMeshIdx, resStrings.getString(currentMesh->globalPathId));
+				if (ImGui::BeginCombo("Mesh", meshStr.str)) {
+					for (uint32_t i = 0; i < meshes.size(); i++) {
+
+						// Convert index to string and check if it is selected
+						meshStr = str256("%u -- \"%s\"",
+							i, resStrings.getString(meshes[i].globalPathId));
+						bool isSelected = mMaterialEditorCurrentMeshIdx == i;
+
+						// Report index to ImGui combo button and update current if it has changed
+						if (ImGui::Selectable(meshStr.str, isSelected)) {
+							mMaterialEditorCurrentMeshIdx = i;
+							mMaterialEditorCurrentMaterialIdx = 0;
+							currentMesh = &meshes[i];
+						}
+					}
+					ImGui::EndCombo();
+				}
+
+				// Check that material is in range
+				DynArray<phMaterial>& materials = currentMesh->materials;
+				if (mMaterialEditorCurrentMaterialIdx >= materials.size()) {
+					mMaterialEditorCurrentMaterialIdx = 0;
+				}
+				sfz_assert_debug(materials.size() != 0);
+
+				// Material index selection combo box
+				phMaterial* material = &materials[mMaterialEditorCurrentMaterialIdx];
+				if (ImGui::BeginCombo(
+					"Material", str32("Material %u", mMaterialEditorCurrentMaterialIdx).str)) {
+					for (uint32_t i = 0; i < materials.size(); i++) {
+
+						// Convert index to string and check if it is selected
+						str32 materialStr("Material %u", i);
+						bool isSelected = mMaterialEditorCurrentMaterialIdx == i;
+
+						// Report index to ImGui combo button and update current if it has changed
+						if (ImGui::Selectable(materialStr.str, isSelected)) {
+							mMaterialEditorCurrentMaterialIdx = i;
+							material = &materials[i];
+						}
+					}
+					ImGui::EndCombo();
+				}
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+
+				bool sendUpdatedMaterialToRenderer = false;
+
+				// Lambdas for converting vec4_u8 to vec4_f32 and back
+				auto u8ToF32 = [](vec4_u8 v) { return vec4(v) * (1.0f / 255.0f); };
+				auto f32ToU8 = [](vec4 v) { return vec4_u8(v * 255.0f); };
+
+				// Lambda for converting texture index to combo string label
+				auto textureToComboStr = [&](uint16_t idx) {
+					const char* globalPathStr = mState.resourceManager.debugTextureIndexToGlobalPath(idx);
+					return str128("%u - %s", uint32_t(idx), globalPathStr);
+				};
+
+				// Lambda for creating a combo box to select texture
+				auto textureComboBox = [&](const char* comboName, uint16_t& texIndex) {
+					str128 selectedMaterialStr = textureToComboStr(texIndex);
+					if (ImGui::BeginCombo(comboName, selectedMaterialStr.str)) {
+
+						// Special case for no texture (~0)
+						{
+							bool isSelected = texIndex == uint16_t(~0);
+							if (ImGui::Selectable("~0 - NO TEXTURE", isSelected)) {
+								texIndex = uint16_t(~0);;
+								sendUpdatedMaterialToRenderer = true;
+							}
+						}
+
+						// Existing textures
+						uint32_t numTextures = mState.resourceManager.textures().size();
+						for (uint32_t i = 0; i < numTextures; i++) {
+
+							// Convert index to string and check if it is selected
+							str128 materialStr = textureToComboStr(uint16_t(i));
+							bool isSelected = texIndex == i;
+
+							// Report index to ImGui combo button and update current if it has changed
+							if (ImGui::Selectable(materialStr.str, isSelected)) {
+								texIndex = uint16_t(i);
+								sendUpdatedMaterialToRenderer = true;
+							}
+						}
+						ImGui::EndCombo();
+					}
+				};
+
+				// Albedo
+				vec4 colorFloat = u8ToF32(material->albedo);
+				if (ImGui::ColorEdit4("Albedo Factor", colorFloat.data(),
+					ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_Float)) {
+					material->albedo = f32ToU8(colorFloat);
+					sendUpdatedMaterialToRenderer = true;
+				}
+				textureComboBox("Albedo Texture", material->albedoTexIndex);
+
+				// Emissive
+				colorFloat = u8ToF32(vec4_u8(material->emissive, 0));
+				if (ImGui::ColorEdit3("Emissive Factor", colorFloat.data(), ImGuiColorEditFlags_Float)) {
+					material->emissive = f32ToU8(colorFloat).xyz;
+					sendUpdatedMaterialToRenderer = true;
+				}
+				textureComboBox("Emissive Texture", material->emissiveTexIndex);
+
+				// Metallic & roughness
+				vec4_u8 metallicRoughnessU8(material->metallic, material->roughness, 0, 0);
+				vec4 metallicRoughness = u8ToF32(metallicRoughnessU8);
+				if (ImGui::SliderFloat2("Metallic Roughness Factors", metallicRoughness.data(), 0.f, 1.f)) {
+					metallicRoughnessU8 = f32ToU8(metallicRoughness);
+					material->metallic = metallicRoughnessU8.x;
+					material->roughness = metallicRoughnessU8.y;
+					sendUpdatedMaterialToRenderer = true;
+				}
+				textureComboBox("Metallic Roughness Texture", material->metallicRoughnessTexIndex);
+
+				// Normal and Occlusion textures
+				textureComboBox("Normal Texture", material->normalTexIndex);
+				textureComboBox("Occlusion Texture", material->occlusionTexIndex);
+
+				// Send updated material to renderer
+				if (sendUpdatedMaterialToRenderer) {
+					renderer.updateMeshMaterials(mMaterialEditorCurrentMeshIdx, currentMesh->materials);
 				}
 
 				ImGui::EndTabItem();
@@ -765,136 +921,6 @@ private:
 		}
 
 		ImGui::End();
-	}
-
-	void renderMaterialEditorWindow(Renderer& renderer) noexcept
-	{
-		// Set window flags
-		ImGuiWindowFlags materialEditorWindowFlags = 0;
-		//materialEditorWindowFlags |= ImGuiWindowFlags_NoMove;
-		//materialEditorWindowFlags |= ImGuiWindowFlags_NoResize;
-		//materialEditorWindowFlags |= ImGuiWindowFlags_NoCollapse;
-		materialEditorWindowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
-
-		ImGui::SetNextWindowPos(vec2(mStats.maxNumSamples() * 1.25f + 17.0f + 400, 0.0f), ImGuiCond_FirstUseEver);
-		ImGui::SetNextWindowContentSize(vec2(630.0f, 0.0f));
-
-		// Begin window
-		ImGui::Begin("Dynamic Materials", nullptr, materialEditorWindowFlags);
-
-		/*// Early exit if no materials
-		if (mState.dynamicAssets.materials.size() == 0) {
-			ImGui::End();
-			return;
-		}
-
-		// Ensure material index is in range
-		if (mMaterialEditorCurrentIdx > mState.dynamicAssets.materials.size()) {
-			mMaterialEditorCurrentIdx = 0;
-		}
-
-		// Material index selection combo box
-		if (ImGui::BeginCombo("Material", str32("%u", mMaterialEditorCurrentIdx).str)) {
-			for (uint32_t i = 0; i < mState.dynamicAssets.materials.size(); i++) {
-
-				// Convert index to string and check if it is selected
-				str32 materialStr = str32("%u", i);
-				bool isSelected = mMaterialEditorCurrentIdx == i;
-
-				// Report index to ImGui combo button and update current if it has changed
-				if (ImGui::Selectable(materialStr.str, isSelected)) {
-					mMaterialEditorCurrentIdx = i;
-				}
-			}
-			ImGui::EndCombo();
-		}
-
-		ImGui::Separator();
-
-		phMaterial& material = mState.dynamicAssets.materials[mMaterialEditorCurrentIdx];
-		bool sendUpdatedMaterialToRenderer = false;
-
-		// Lambdas for converting vec4_u8 to vec4_f32 and back
-		auto u8ToF32 = [](vec4_u8 v) { return vec4(v) * (1.0f / 255.0f); };
-		auto f32ToU8 = [](vec4 v) { return vec4_u8(v * 255.0f); };
-
-		// Lambda for converting texture index to combo string label
-		auto textureToComboStr = [&](uint16_t idx) {
-			const char* globalPathStr = mState.resourceManager.debugTextureIndexToGlobalPath(idx);
-			return str128("%u - %s", uint32_t(idx), globalPathStr);
-		};
-
-		// Lambda for creating a combo box to select texture
-		auto textureComboBox = [&](const char* comboName, uint16_t& texIndex) {
-			str128 selectedMaterialStr = textureToComboStr(texIndex);
-			if (ImGui::BeginCombo(comboName, selectedMaterialStr.str)) {
-
-				// Special case for no texture (~0)
-				{
-					bool isSelected = texIndex == uint16_t(~0);
-					if (ImGui::Selectable("~0 - NO TEXTURE", isSelected)) {
-						texIndex = uint16_t(~0);;
-						sendUpdatedMaterialToRenderer = true;
-					}
-				}
-
-				// Existing textures
-				uint32_t numTextures = renderer.numTextures();
-				for (uint32_t i = 0; i < numTextures; i++) {
-
-					// Convert index to string and check if it is selected
-					str128 materialStr = textureToComboStr(uint16_t(i));
-					bool isSelected = texIndex == i;
-
-					// Report index to ImGui combo button and update current if it has changed
-					if (ImGui::Selectable(materialStr.str, isSelected)) {
-						texIndex = uint16_t(i);
-						sendUpdatedMaterialToRenderer = true;
-					}
-				}
-				ImGui::EndCombo();
-			}
-		};
-
-		// Albedo
-		vec4 colorFloat = u8ToF32(material.albedo);
-		if (ImGui::ColorEdit4("Albedo Factor", colorFloat.data(),
-			ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_Float)) {
-			material.albedo = f32ToU8(colorFloat);
-			sendUpdatedMaterialToRenderer = true;
-		}
-		textureComboBox("Albedo Texture", material.albedoTexIndex);
-
-		// Emissive
-		colorFloat = u8ToF32(vec4_u8(material.emissive, 0));
-		if (ImGui::ColorEdit3("Emissive Factor", colorFloat.data(), ImGuiColorEditFlags_Float)) {
-			material.emissive = f32ToU8(colorFloat).xyz;
-			sendUpdatedMaterialToRenderer = true;
-		}
-		textureComboBox("Emissive Texture", material.emissiveTexIndex);
-
-		// Metallic & roughness
-		vec4_u8 metallicRoughnessU8(material.metallic, material.roughness, 0, 0);
-		vec4 metallicRoughness = u8ToF32(metallicRoughnessU8);
-		if (ImGui::SliderFloat2("Metallic Roughness Factors", metallicRoughness.data(), 0.f, 1.f)) {
-			metallicRoughnessU8 = f32ToU8(metallicRoughness);
-			material.metallic = metallicRoughnessU8.x;
-			material.roughness = metallicRoughnessU8.y;
-			sendUpdatedMaterialToRenderer = true;
-		}
-		textureComboBox("Metallic Roughness Texture", material.metallicRoughnessTexIndex);
-
-		// Normal and Occlusion textures
-		textureComboBox("Normal Texture", material.normalTexIndex);
-		textureComboBox("Occlusion Texture", material.occlusionTexIndex);*/
-
-		// End window
-		ImGui::End();
-
-		// Send updated material to renderer
-		/*if (sendUpdatedMaterialToRenderer) {
-			renderer.updateMaterial(material, mMaterialEditorCurrentIdx);
-		}*/
 	}
 };
 

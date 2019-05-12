@@ -35,7 +35,7 @@ using sfz::StringID;
 
 struct ResourceMapping final {
 	StringID globalPathId;
-	uint32_t globalIdx = uint32_t(~0);
+	uint32_t globalIdx = ~0u;
 
 	static ResourceMapping create(StringID globalPathId, uint32_t globalIdx) noexcept
 	{
@@ -44,6 +44,17 @@ struct ResourceMapping final {
 		mapping.globalIdx = globalIdx;
 		return mapping;
 	}
+};
+
+struct MeshComponentDescriptor final {
+	uint32_t materialIdx = ~0u;
+};
+
+struct MeshDescriptor final {
+	StringID globalPathId;
+	uint32_t globalIdx = ~0u;
+	DynArray<MeshComponentDescriptor> componentDescriptors;
+	DynArray<phMaterial> materials;
 };
 
 // ResourceManager class
@@ -91,8 +102,8 @@ public:
 	// Returns ~0 (UINT32_MAX) if texture is not available in renderer and can't be loaded
 	uint32_t registerTexture(const char* globalPath) noexcept;
 
-	// Checks if a given texture is available in the renderer or not without modifying global
-	// any state.
+	// Checks if a given texture is available in the renderer or not without modifying any global
+	// state.
 	bool hasTexture(StringID globalPathId) const noexcept;
 
 	const sfz::DynArray<ResourceMapping>& textures() const noexcept { return mTextures; }
@@ -103,13 +114,23 @@ public:
 	// Mesh methods
 	// --------------------------------------------------------------------------------------------
 
+	// Registers a mesh and returns its mesh ID in the renderer
+	//
+	// If a mesh with the same global path is already available in the renderer it is replaced by
+	// the new one.
+	//
+	// The "global path" is the path to the mesh relative to the game executable. I.e. normally on
+	// the form "res/path/to/model.gltf" if the mesh is in the "res" directory in the same directory
+	// as the executable.
+	//
+	// Returns ~0 (UINT32_MAX) on error
 	uint32_t registerMesh(const char* globalPath, const Mesh& mesh) noexcept;
 
+	// Checks if a given mesh is available or not without modifying any global state.
 	bool hasMesh(StringID globalPathId) const noexcept;
 
-	bool hasMeshDependencies(StringID globalPathId) const noexcept;
-
-	const sfz::DynArray<ResourceMapping>& meshes() const noexcept { return mMeshes; }
+	sfz::DynArray<MeshDescriptor>& meshDescriptors() noexcept { return mMeshDescriptors; }
+	const sfz::DynArray<MeshDescriptor>& meshDescriptors() const noexcept { return mMeshDescriptors; }
 
 private:
 	// Private members
@@ -121,7 +142,7 @@ private:
 	sfz::DynArray<ResourceMapping> mTextures;
 	sfz::HashMap<StringID, uint32_t> mTextureMap;
 
-	sfz::DynArray<ResourceMapping> mMeshes;
+	sfz::DynArray<MeshDescriptor> mMeshDescriptors;
 	sfz::HashMap<StringID, uint32_t> mMeshMap;
 };
 
