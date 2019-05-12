@@ -100,6 +100,9 @@ StringID StringCollection::getStringID(const char* string) noexcept
 	StringID strId;
 	strId.id = sfz::hash(string);
 
+	// Fix special case where the real hash is equal to STRING_ID_INVALID_HASH by incrementing it.
+	if (strId.id == STRING_ID_INVALID_HASH) strId.id++;
+
 	// Add string to HashMap if it does not exist
 	DynString* strPtr = mImpl->strings.get(strId);
 	if (strPtr == nullptr) {

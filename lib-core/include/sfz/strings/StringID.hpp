@@ -32,14 +32,23 @@ using std::size_t;
 // StringID struct
 // ------------------------------------------------------------------------------------------------
 
+// Hash value reserved for invalid StringID's.
+//
+// Since sfz::hash(string) can actually return this value normally, those hashes are mapped to
+// "STRING_ID_INVALID_HASH + 1".
+constexpr uint64_t STRING_ID_INVALID_HASH = 0;
+
 /// Struct representing the hash of a string. Used to be able to use strings equality comparisons
 /// in contexts where actually comparing strings each time would be to expensive. StringIDs should
 /// always be created by a StringCollection.
-struct StringID final {
-	uint64_t id;
+struct StringID final {	
+	uint64_t id = STRING_ID_INVALID_HASH;
 
-	// Implicit conversion to and from uint64_t
-	StringID(uint64_t hashId) noexcept : id{hashId} {}
+	// Explicitly creates an invalid StringID.
+	static StringID invalid() noexcept { return StringID(STRING_ID_INVALID_HASH); }
+
+	// Conversion to and from uint64_t
+	explicit StringID(uint64_t hashId) noexcept : id{hashId} {}
 	operator uint64_t() const noexcept { return id; }
 
 	StringID() noexcept = default;
