@@ -262,6 +262,13 @@ uint32_t ResourceManager::registerMesh(
 	return globalIdx;
 }
 
+uint32_t ResourceManager::getMeshIndex(StringID globalPathId) const noexcept
+{
+	const uint32_t* idxPtr = mMeshMap.get(globalPathId);
+	if (idxPtr == nullptr) return ~0u;
+	return *idxPtr;
+}
+
 bool ResourceManager::hasMesh(StringID globalPathId) const noexcept
 {
 	return mMeshMap.get(globalPathId) != nullptr;

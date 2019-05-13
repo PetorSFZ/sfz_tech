@@ -136,6 +136,9 @@ public:
 	uint32_t registerMesh(
 		const char* globalPath, const Mesh& mesh, const DynArray<ImageAndPath>& textures) noexcept;
 
+	// Returns ~0 (UINT32_MAX) if mesh is not available
+	uint32_t getMeshIndex(StringID globalPathId) const noexcept;
+
 	// Checks if a given mesh is available or not without modifying any global state.
 	bool hasMesh(StringID globalPathId) const noexcept;
 
