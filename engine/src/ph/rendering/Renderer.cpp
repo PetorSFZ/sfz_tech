@@ -453,20 +453,22 @@ void Renderer::removeStaticScene()
 void Renderer::beginFrame(
 	const vec4& clearColor,
 	const phCameraData& camera,
+	const vec3& ambientLight,
 	const phSphereLight* dynamicSphereLights,
 	uint32_t numDynamicSphereLights) noexcept
 {
 	CALL_RENDERER_FUNCTION(mFunctionTable, phBeginFrame,
-		clearColor.data(), &camera, dynamicSphereLights, numDynamicSphereLights);
+		clearColor.data(), &camera, ambientLight.data(), dynamicSphereLights, numDynamicSphereLights);
 }
 
 void Renderer::beginFrame(
 	const vec4& clearColor,
 	const phCameraData& camera,
+	const vec3& ambientLight,
 	const DynArray<phSphereLight>& dynamicSphereLights) noexcept
 {
 	CALL_RENDERER_FUNCTION(mFunctionTable, phBeginFrame,
-		clearColor.data(), &camera, dynamicSphereLights.data(), dynamicSphereLights.size());
+		clearColor.data(), &camera, ambientLight.data(), dynamicSphereLights.data(), dynamicSphereLights.size());
 }
 
 void Renderer::renderStaticScene() noexcept

@@ -280,7 +280,7 @@ public:
 		if (mStatsWarmup >= 8) mStats.addSample(updateInfo.iterationDeltaSeconds * 1000.0f);
 		mStatsWarmup++;
 
-		renderer.beginFrame(settings.clearColor, mState.cam, mState.dynamicSphereLights);
+		renderer.beginFrame(settings.clearColor, mState.cam, settings.ambientLight, mState.dynamicSphereLights);
 
 		renderer.renderStaticScene();
 

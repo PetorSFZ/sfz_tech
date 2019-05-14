@@ -19,6 +19,9 @@ uniform sampler2D uNormalTexture;
 uniform sampler2D uOcclusionTexture;
 uniform sampler2D uEmissiveTexture;
 
+// Uniforms (ambient lighting)
+uniform vec3 uAmbientLight;
+
 // Uniforms (static spherelights)
 const int MAX_NUM_STATIC_SPHERE_LIGHTS = 32;
 uniform SphereLight uStaticSphereLights[MAX_NUM_STATIC_SPHERE_LIGHTS];
@@ -236,6 +239,10 @@ void main()
 			metallic);
 		totalOutput += res;
 	}
+
+	// Adds ambient lighting in a hackish way.
+	// TODO: Remove
+	totalOutput += uAmbientLight * albedo;
 
 	vec4 outTmp = vec4(applyGammaCorrection(totalOutput), 1.0);
 #ifdef PH_WEB_GL

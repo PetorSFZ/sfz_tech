@@ -54,6 +54,7 @@ struct ImguiControllers final {
 
 struct RenderSettings final {
 	vec4 clearColor = vec4(0.0f);
+	vec3 ambientLight = vec3(0.0f);
 };
 
 class GameLogic {

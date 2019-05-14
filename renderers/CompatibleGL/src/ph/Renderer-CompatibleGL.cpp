@@ -567,6 +567,7 @@ extern "C" PH_DLL_EXPORT
 void phBeginFrame(
 	const float* clearColor,
 	const phCameraData* camera,
+	const float* ambientLight,
 	const phSphereLight* dynamicSphereLights,
 	uint32_t numDynamicSphereLights)
 {
@@ -597,6 +598,11 @@ void phBeginFrame(
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glDisable(GL_SCISSOR_TEST);
+
+	// Upload ambient light constant to shader
+	vec3 ambientLightVec = vec3(ambientLight);
+	state.modelShader.useProgram();
+	gl::setUniform(state.modelShader, "uAmbientLight", ambientLightVec);
 
 	// Upload static sphere lights to shader
 	state.modelShader.useProgram();
