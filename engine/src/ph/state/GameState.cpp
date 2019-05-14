@@ -486,6 +486,10 @@ GameStateContainer createGameState(
 	ArrayHeader* generations = state->entityGenerationsListArray();
 	generations->createCopy(generationsHeader);
 
+	// Small hack, start entity 0 at generation 1. To reduce risk of default constructed entities
+	// (entity 0, generation 0) pointing at something valid.
+	generations->at<uint8_t>(0) += 1;
+
 	// Set component types array headers (i = 1 because first is active bit, which has no data)
 	for (uint32_t i = 1; i < state->numComponentTypes; i++) {
 		if (!componentsRegistry[i].componentTypeHasData()) continue;
