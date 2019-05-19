@@ -227,6 +227,7 @@ struct alignas(16) Matrix<T,4,4> final {
 		           e10, e11, e12, e13,
 		           e20, e21, e22, e23,
 		           e30, e31, e32, e33; };
+		struct { Matrix<T,3,4> row012; Vector<T,4> ___unusedRow4___; };
 	};
 
 	SFZ_CUDA_CALL T* data() noexcept { return &e00; }

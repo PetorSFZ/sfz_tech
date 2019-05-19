@@ -656,6 +656,7 @@ TEST_CASE("Matrix<T,4,4> specialization", "[sfz::Matrix]")
 		REQUIRE(m1.columnAt(1) == vec4(2.0f, 6.0f, 10.0f, 14.0f));
 		REQUIRE(m1.columnAt(2) == vec4(3.0f, 7.0f, 11.0f, 15.0f));
 		REQUIRE(m1.columnAt(3) == vec4(4.0f, 8.0f, 12.0f, 16.0f));
+		REQUIRE(m1.row012 == mat34(arr1));
 	}
 	SECTION("Individual element constructor") {
 		mat44 m1(1.0f, 2.0f, 3.0f, 4.0f,
@@ -792,6 +793,7 @@ TEST_CASE("Matrix<T,4,4> specialization", "[sfz::Matrix]")
 		REQUIRE(m2.at(3, 1) == 0.0f);
 		REQUIRE(m2.at(3, 2) == 0.0f);
 		REQUIRE(m2.at(3, 3) == 1.0f);
+		REQUIRE(m2.row012 == m1);
 	}
 	SECTION("fill() constructor function") {
 		mat44 zero = mat44::fill(0.0f);
