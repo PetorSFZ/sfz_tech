@@ -77,6 +77,55 @@ SFZ_CUDA_CALL Quaternion Quaternion::fromEuler(vec3 anglesDeg) noexcept
 	return Quaternion::fromEuler(anglesDeg.x, anglesDeg.y, anglesDeg.z);
 }
 
+SFZ_CUDA_CALL Quaternion Quaternion::fromRotationMatrix(const mat33& m) noexcept
+{
+	// Algorithm from page 205 of Game Engine Architecture 2nd Edition
+	float trace = m.e00 + m.e11 + m.e22;
+
+	Quaternion tmp;
+
+	// Check the diagonal
+	if (trace > 0.0f) {
+		float s = std::sqrt(trace + 1.0f);
+		tmp.w = s * 0.5f;
+
+		float t = 0.5f / s;
+		tmp.x = (m.e21 - m.e12) * t;
+		tmp.y = (m.e02 - m.e20) * t;
+		tmp.z = (m.e10 - m.e01) * t;
+	}
+	else {
+		// Diagonal is negative
+		int i = 0;
+		if (m.e11 > m.e00) i = 1;
+		if (m.e22 > m.at(i, i)) i = 2;
+
+		constexpr int NEXT[3] = { 1, 2, 0 };
+		int j = NEXT[i];
+		int k = NEXT[j];
+
+		float s = std::sqrt((m.at(i, j) - (m.at(j, j) + m.at(k, k))) + 1.0f);
+		tmp.vector[i] = s * 0.5f;
+
+		float t = (s != 0.0f) ? (0.5f / s) : s;
+
+		tmp.vector[3] = (m.at(k, j) - m.at(j, k)) * t;
+		tmp.vector[j] = (m.at(j, i) + m.at(i, j)) * t;
+		tmp.vector[k] = (m.at(k, i) + m.at(i, k)) * t;
+	}
+
+	return tmp;
+}
+
+SFZ_CUDA_CALL Quaternion Quaternion::fromRotationMatrix(const mat34& rotMatrix) noexcept
+{
+	mat33 tmpMat;
+	tmpMat.row0 = rotMatrix.row0.xyz;
+	tmpMat.row1 = rotMatrix.row1.xyz;
+	tmpMat.row2 = rotMatrix.row2.xyz;
+	return Quaternion::fromRotationMatrix(tmpMat);
+}
+
 // Quaternion: Methods
 // ------------------------------------------------------------------------------------------------
 

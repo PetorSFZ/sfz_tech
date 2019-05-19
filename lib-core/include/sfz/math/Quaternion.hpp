@@ -73,6 +73,10 @@ struct alignas(16) Quaternion final {
 	static SFZ_CUDA_CALL Quaternion fromEuler(float xDeg, float yDeg, float zDeg) noexcept;
 	static SFZ_CUDA_CALL Quaternion fromEuler(vec3 anglesDeg) noexcept;
 
+	// Constructs a Quaternion from a 3x3 rotation matrix
+	static SFZ_CUDA_CALL Quaternion fromRotationMatrix(const mat33& rotMatrix) noexcept;
+	static SFZ_CUDA_CALL Quaternion fromRotationMatrix(const mat34& rotMatrix) noexcept;
+
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
