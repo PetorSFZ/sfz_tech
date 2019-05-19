@@ -415,7 +415,8 @@ TEST_CASE("Arithmetic operators", "[sfz::Vector]")
 		REQUIRE(v3[1] == -1);
 	}
 	SECTION("Element-wise division assignment") {
-		v1 /= v1;
+		auto v1Copy = v1; // Not necessary, just to remove warning from Clang.
+		v1 /= v1Copy;
 		REQUIRE(v1[0] == 1);
 		REQUIRE(v1[1] == 1);
 		REQUIRE(v1[2] == 1);
