@@ -169,8 +169,8 @@ private:
 	Allocator* mAllocator = nullptr;
 	T* mDataPtr = nullptr;
 	uint64_t mCapacity = 0;
-	std::atomic_uint64_t mFirstIndex = RINGBUFFER_BASE_IDX;
-	std::atomic_uint64_t mLastIndex = RINGBUFFER_BASE_IDX;
+	std::atomic_uint64_t mFirstIndex{RINGBUFFER_BASE_IDX};
+	std::atomic_uint64_t mLastIndex{RINGBUFFER_BASE_IDX};
 };
 
 } // namespace sfz
