@@ -59,13 +59,12 @@ inline bool pointInside(const AABB& box, const vec3& point) noexcept
 inline bool pointInside(const OBB& box, const vec3& point) noexcept
 {
 	// Modified closest point algorithm from Real-Time Collision Detection (Section 5.1.4)
-	const vec3 distToPoint = point - box.position();
-	const OBBAxes& axes = box.axes();
+	const vec3 distToPoint = point - box.center;
 	float dist;
 	for (uint32_t i = 0; i < 3; i++) {
-		dist = dot(distToPoint, axes.axes[i]);
-		if (dist > box.halfExtents()[i]) return false;
-		if (dist < -box.halfExtents()[i]) return false;
+		dist = dot(distToPoint, box.axes[i]);
+		if (dist > box.halfExtents[i]) return false;
+		if (dist < -box.halfExtents[i]) return false;
 	}
 	return true;
 }
@@ -108,10 +107,10 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 	// OBB vs OBB SAT (Separating Axis Theorem) test from Real-Time Collision Detection
 	// (chapter 4.4.1 OBB-OBB Intersection)
 
-	const OBBAxes& aU = a.axes();
-	const vec3& aE = a.halfExtents();
-	const OBBAxes& bU = b.axes();
-	const vec3& bE = b.halfExtents();
+	const auto& aU = a.axes;
+	const vec3& aE = a.halfExtents;
+	const auto& bU = b.axes;
+	const vec3& bE = b.halfExtents;
 
 	// Compute the rotation matrix from b to a
 	mat3 R;
@@ -131,7 +130,7 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 	}
 
 	// Calculate translation vector from a to b and bring it into a's frame of reference
-	vec3 t = b.position() - a.position();
+	vec3 t = b.center - a.center;
 	t = vec3{dot(t, aU[0]), dot(t, aU[1]), dot(t, aU[2])};
 
 	float ra, rb;
@@ -294,11 +293,11 @@ inline bool intersects(const Plane& plane, const OBB& obb) noexcept
 {
 	// SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 	// Projected radius on line towards closest point on plane
-	float projectedRadius = obb.halfXExtent() * std::abs(dot(plane.normal(), obb.xAxis()))
-	                      + obb.halfYExtent() * std::abs(dot(plane.normal(), obb.yAxis()))
-	                      + obb.halfZExtent() * std::abs(dot(plane.normal(), obb.zAxis()));
+	float projectedRadius = obb.halfExtents.x * std::abs(dot(plane.normal(), obb.xAxis))
+	                      + obb.halfExtents.y * std::abs(dot(plane.normal(), obb.yAxis))
+	                      + obb.halfExtents.z * std::abs(dot(plane.normal(), obb.zAxis));
 
-	return detail::intersectsPlane(plane, obb.position(), projectedRadius);
+	return detail::intersectsPlane(plane, obb.center, projectedRadius);
 }
 
 inline bool intersects(const OBB& obb, const Plane& plane) noexcept
@@ -310,22 +309,22 @@ inline bool abovePlane(const Plane& plane, const OBB& obb) noexcept
 {
 	// Modified SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 	// Projected radius on line towards closest point on plane
-	float projectedRadius = obb.halfXExtent() * std::abs(dot(plane.normal(), obb.xAxis()))
-	                      + obb.halfYExtent() * std::abs(dot(plane.normal(), obb.yAxis()))
-	                      + obb.halfZExtent() * std::abs(dot(plane.normal(), obb.zAxis()));
+	float projectedRadius = obb.halfExtents.x * std::abs(dot(plane.normal(), obb.xAxis))
+	                      + obb.halfExtents.y * std::abs(dot(plane.normal(), obb.yAxis))
+	                      + obb.halfExtents.z * std::abs(dot(plane.normal(), obb.zAxis));
 
-	return detail::abovePlane(plane, obb.position(), projectedRadius);
+	return detail::abovePlane(plane, obb.center, projectedRadius);
 }
 
 inline bool belowPlane(const Plane& plane, const OBB& obb) noexcept
 {
 	// Modified SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 	// Projected radius on line towards closest point on plane
-	float projectedRadius = obb.halfXExtent() * std::abs(dot(plane.normal(), obb.xAxis()))
-	                      + obb.halfYExtent() * std::abs(dot(plane.normal(), obb.yAxis()))
-	                      + obb.halfZExtent() * std::abs(dot(plane.normal(), obb.zAxis()));
+	float projectedRadius = obb.halfExtents.x * std::abs(dot(plane.normal(), obb.xAxis))
+	                      + obb.halfExtents.y * std::abs(dot(plane.normal(), obb.yAxis))
+	                      + obb.halfExtents.z * std::abs(dot(plane.normal(), obb.zAxis));
 
-	return detail::belowPlane(plane, obb.position(), projectedRadius);
+	return detail::belowPlane(plane, obb.center, projectedRadius);
 }
 
 // Plane & Sphere tests
@@ -362,15 +361,15 @@ inline vec3 closestPoint(const AABB& aabb, const vec3& point) noexcept
 inline vec3 closestPoint(const OBB& obb, const vec3& point) noexcept
 {
 	// Algorithm from Real-Time Collision Detection (Section 5.1.4)
-	const vec3 distToPoint = point - obb.position();
-	vec3 res = obb.position();;
+	const vec3 distToPoint = point - obb.center;
+	vec3 res = obb.center;
 
 	float dist;
 	for (uint32_t i = 0; i < 3; i++) {
-		dist = dot(distToPoint, obb.axes()[i]);
-		if (dist > obb.halfExtents()[i]) dist = obb.halfExtents()[i];
-		if (dist < -obb.halfExtents()[i]) dist = -obb.halfExtents()[i];
-		res += (dist * obb.axes()[i]);
+		dist = dot(distToPoint, obb.axes[i]);
+		if (dist > obb.halfExtents[i]) dist = obb.halfExtents[i];
+		if (dist < -obb.halfExtents[i]) dist = -obb.halfExtents[i];
+		res += (dist * obb.axes[i]);
 	}
 
 	return res;
