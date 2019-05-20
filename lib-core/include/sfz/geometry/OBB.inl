@@ -75,14 +75,25 @@ inline void OBB::corners(vec3* arrayOut) const noexcept
 	arrayOut[7] = center + halfXExtVec + halfYExtVec + halfZExtVec; // Front-top-right
 }
 
-inline OBB OBB::transformOBB(const mat4& transform) const noexcept
+inline OBB OBB::transformOBB(const mat34& transform) const noexcept
 {
 	const vec3 newPos = transformPoint(transform, center);
-	const vec3 newXHExt = transformDir(transform, xAxis * halfExtents[0]);
-	const vec3 newYHExt = transformDir(transform, yAxis * halfExtents[1]);
-	const vec3 newZHExt = transformDir(transform, zAxis * halfExtents[2]);
-	return OBB(newPos, normalize(newXHExt), normalize(newYHExt), normalize(newZHExt),
-	           length(newXHExt), length(newYHExt), length(newZHExt));
+
+	const vec3 xAxisHalfExt = xAxis * halfExtents.x;
+	const vec3 yAxisHalfExt = yAxis * halfExtents.x;
+	const vec3 zAxisHalfExt = zAxis * halfExtents.x;
+	const vec3 newXAxisHalfExt = transformDir(transform, xAxisHalfExt);
+	const vec3 newYAxisHalfExt = transformDir(transform, yAxisHalfExt);
+	const vec3 newZAxisHalfExt = transformDir(transform, zAxisHalfExt);
+
+	const vec3 newHalfExt =
+		vec3(length(newXAxisHalfExt), length(newYAxisHalfExt), length(newZAxisHalfExt));
+	vec3 newAxes[3];
+	newAxes[0] = newXAxisHalfExt / newHalfExt.x;
+	newAxes[1] = newYAxisHalfExt / newHalfExt.y;
+	newAxes[2] = newZAxisHalfExt / newHalfExt.z;
+
+	return OBB(newPos, newAxes, newHalfExt * 2.0f);
 }
 
 // Getters/setters

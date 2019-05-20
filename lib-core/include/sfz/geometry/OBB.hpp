@@ -68,7 +68,7 @@ struct OBB final {
 
 	inline OBBCorners corners() const noexcept;
 	inline void corners(vec3* arrayOut) const noexcept;
-	inline OBB transformOBB(const mat4& transform) const noexcept;
+	inline OBB transformOBB(const mat34& transform) const noexcept;
 
 	// Getters/setters
 	// --------------------------------------------------------------------------------------------
