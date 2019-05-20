@@ -57,15 +57,11 @@ struct OBB final {
 	OBB& operator= (const OBB&) noexcept = default;
 	~OBB() noexcept = default;
 
-	inline OBB(const vec3& center, const vec3 axes[3], const vec3& extents) noexcept;
-
-	inline OBB(const vec3& center, const vec3& xAxis, const vec3& yAxis, const vec3& zAxis,
-	           const vec3& extents) noexcept;
-
-	inline OBB(const vec3& center, const vec3& xAxis, const vec3& yAxis, const vec3& zAxis,
-	           float xExtent, float yExtent, float zExtent) noexcept;
-
-	explicit inline OBB(const AABB& aabb) noexcept;
+	OBB(vec3 center, vec3 xAxis, vec3 yAxis, vec3 zAxis, vec3 extents) noexcept;
+	OBB(vec3 center, const vec3 axes[3], vec3 extents) noexcept;
+	OBB(vec3 center, vec3 xAxis, vec3 yAxis, vec3 zAxis,
+		float xExtent, float yExtent, float zExtent) noexcept;
+	explicit OBB(const AABB& aabb) noexcept;
 
 	// Member functions
 	// --------------------------------------------------------------------------------------------

@@ -21,44 +21,34 @@ namespace sfz {
 // Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-inline OBB::OBB(const vec3& center, const vec3 axes[3], const vec3& extents) noexcept
+inline OBB::OBB(vec3 center, vec3 xAxis, vec3 yAxis, vec3 zAxis, vec3 extents) noexcept
 {
 	this->center = center;
-	this->xAxis = axes[0];
-	this->yAxis = axes[1];
-	this->zAxis = axes[2];
+	this->xAxis = xAxis;
+	this->yAxis = yAxis;
+	this->zAxis = zAxis;
 	this->halfExtents = extents * 0.5f;
 	ensureCorrectAxes();
 	ensureCorrectExtents();
 }
 
-inline OBB::OBB(const vec3& center, const vec3& xAxis, const vec3& yAxis, const vec3& zAxis,
-                const vec3& extents) noexcept
-{
-	this->center = center;
-	this->axes[0] = xAxis;
-	this->axes[1] = yAxis;
-	this->axes[2] = zAxis;
-	this->halfExtents = extents * 0.5f;
-	ensureCorrectAxes();
-	ensureCorrectExtents();
-}
+inline OBB::OBB(vec3 center, const vec3 axes[3], vec3 extents) noexcept
+:
+	OBB(center, axes[0], axes[1], axes[2], extents)
+{ }
 
-inline OBB::OBB(const vec3& center, const vec3& xAxis, const vec3& yAxis, const vec3& zAxis,
-               float xExtent, float yExtent, float zExtent) noexcept
+inline OBB::OBB(vec3 center, vec3 xAxis, vec3 yAxis, vec3 zAxis,
+	float xExtent, float yExtent, float zExtent) noexcept
 :
 	OBB(center, xAxis, yAxis, zAxis, vec3(xExtent, yExtent, zExtent))
-{
-	// Done
-}
+{ }
 
 inline OBB::OBB(const AABB& aabb) noexcept
 :
-	OBB(aabb.position(), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f),
-        aabb.xExtent(), aabb.yExtent(), aabb.zExtent())
-{
-	// Done
-}
+	OBB(aabb.position(),
+		vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f),
+		aabb.extents())
+{ }
 
 // Member functions
 // ------------------------------------------------------------------------------------------------

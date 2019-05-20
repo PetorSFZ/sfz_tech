@@ -249,6 +249,7 @@ if(NOT hasParent)
 		${CORE_TESTS_DIR}/sfz/containers/RingBuffer_Tests.cpp
 
 		${CORE_TESTS_DIR}/sfz/geometry/Intersection_Tests.cpp
+		${CORE_TESTS_DIR}/sfz/geometry/OBB_Tests.cpp
 
 		${CORE_TESTS_DIR}/sfz/math/MathPrimitiveHashers_Tests.cpp
 		${CORE_TESTS_DIR}/sfz/math/MathSupport_Tests.cpp
