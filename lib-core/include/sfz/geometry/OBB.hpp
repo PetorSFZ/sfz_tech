@@ -21,6 +21,7 @@
 #include "sfz/Assert.hpp"
 #include "sfz/math/MathSupport.hpp"
 #include "sfz/math/Matrix.hpp"
+#include "sfz/math/Quaternion.hpp"
 #include "sfz/math/Vector.hpp"
 #include "sfz/geometry/AABB.hpp"
 
@@ -66,28 +67,29 @@ struct OBB final {
 	// Member functions
 	// --------------------------------------------------------------------------------------------
 
-	inline OBBCorners corners() const noexcept;
-	inline void corners(vec3* arrayOut) const noexcept;
-	inline OBB transformOBB(const mat34& transform) const noexcept;
+	OBBCorners corners() const noexcept;
+	void corners(vec3* arrayOut) const noexcept;
+	OBB transformOBB(const mat34& transform) const noexcept;
+	OBB transformOBB(Quaternion quaternion) const noexcept;
 
 	// Getters/setters
 	// --------------------------------------------------------------------------------------------
 
-	inline vec3 extents() const noexcept { return halfExtents * 2.0f; }
-	inline float xExtent() const noexcept { return halfExtents.x * 2.0f; }
-	inline float yExtent() const noexcept { return halfExtents.y * 2.0f; }
-	inline float zExtent() const noexcept { return halfExtents.z * 2.0f; }
+	vec3 extents() const noexcept { return halfExtents * 2.0f; }
+	float xExtent() const noexcept { return halfExtents.x * 2.0f; }
+	float yExtent() const noexcept { return halfExtents.y * 2.0f; }
+	float zExtent() const noexcept { return halfExtents.z * 2.0f; }
 
-	inline void setExtents(const vec3& newExtents) noexcept;
-	inline void setXExtent(float newXExtent) noexcept;
-	inline void setYExtent(float newYExtent) noexcept;
-	inline void setZExtent(float newZExtent) noexcept;
+	void setExtents(const vec3& newExtents) noexcept;
+	void setXExtent(float newXExtent) noexcept;
+	void setYExtent(float newYExtent) noexcept;
+	void setZExtent(float newZExtent) noexcept;
 
 	// Helper methods
 	// --------------------------------------------------------------------------------------------
 
-	inline void ensureCorrectAxes() const noexcept;
-	inline void ensureCorrectExtents() const noexcept;
+	void ensureCorrectAxes() const noexcept;
+	void ensureCorrectExtents() const noexcept;
 };
 static_assert(sizeof(OBB) == sizeof(vec3) * 5, "OBB is padded");
 

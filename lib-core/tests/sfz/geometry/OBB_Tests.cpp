@@ -94,4 +94,12 @@ TEST_CASE("OBB: transformOBB()", "[sfz:OBB]")
 	REQUIRE(approxEqual(obb3.xAxis, vec3(0.0f, 0.0f, -1.0f)));
 	REQUIRE(approxEqual(obb3.yAxis, vec3(1.0f, 0.0f, 0.0f)));
 	REQUIRE(approxEqual(obb3.zAxis, vec3(0.0f, -1.0f, 0.0f)));
+
+	Quaternion q = Quaternion::fromRotationMatrix(rot3.row012);
+	OBB obb4 = identityObb.transformOBB(q);
+	REQUIRE(approxEqual(obb4.halfExtents, identityObb.halfExtents));
+	REQUIRE(approxEqual(obb4.center, identityObb.center));
+	REQUIRE(approxEqual(obb4.xAxis, vec3(0.0f, 0.0f, -1.0f)));
+	REQUIRE(approxEqual(obb4.yAxis, vec3(1.0f, 0.0f, 0.0f)));
+	REQUIRE(approxEqual(obb4.zAxis, vec3(0.0f, -1.0f, 0.0f)));
 }

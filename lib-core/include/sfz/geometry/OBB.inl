@@ -96,6 +96,16 @@ inline OBB OBB::transformOBB(const mat34& transform) const noexcept
 	return OBB(newPos, newAxes, newHalfExt * 2.0f);
 }
 
+inline OBB OBB::transformOBB(Quaternion quaternion) const noexcept
+{
+	sfz_assert_debug(approxEqual(length(quaternion), 1.0f));
+	OBB tmp = *this;
+	tmp.xAxis = rotate(quaternion, tmp.xAxis);
+	tmp.yAxis = rotate(quaternion, tmp.yAxis);
+	tmp.zAxis = rotate(quaternion, tmp.zAxis);
+	return tmp;
+}
+
 // Getters/setters
 // ------------------------------------------------------------------------------------------------
 
