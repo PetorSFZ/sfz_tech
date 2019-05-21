@@ -201,7 +201,7 @@ static bool extractAssets(
 	StringCollection& resStrings = getResourceStrings();
 
 	// Load textures
-	texturesOut.create(model.textures.size(), allocator);
+	texturesOut.create(uint32_t(model.textures.size()), allocator);
 	for (uint32_t i = 0; i < model.textures.size(); i++) {
 		const tinygltf::Texture& tex = model.textures[i];
 		if (tex.source < 0 || int(model.images.size()) <= tex.source) {
