@@ -24,6 +24,9 @@
 #include <sfz/math/MathSupport.hpp>
 #include <sfz/memory/New.hpp>
 
+#include <ph/config/GlobalConfig.hpp>
+#include <ph/Context.hpp>
+
 namespace ph {
 
 using sfz::vec2;
@@ -224,6 +227,16 @@ void updateImgui(
 		return true;
 	}();
 
+	static Setting* invertedScrollSetting = nullptr;
+	if (invertedScrollSetting == nullptr) {
+		GlobalConfig& cfg = getGlobalConfig();
+		bool defaultVal = false;
+#ifdef __APPLE__
+		defaultVal = true;
+#endif
+		invertedScrollSetting = cfg.sanitizeBool("Imgui", "invertMouseScrollY", true, defaultVal);
+	}
+
 	ImGuiIO& io = ImGui::GetIO();
 
 	// Set display dimensions
@@ -240,7 +253,12 @@ void updateImgui(
 		io.MouseDown[1] = imguiMouse.rightButton != sdl::ButtonState::NOT_PRESSED;
 		io.MouseDown[2] = imguiMouse.middleButton != sdl::ButtonState::NOT_PRESSED;
 
-		io.MouseWheel = imguiMouse.wheel.y;
+		if (invertedScrollSetting->boolValue()) {
+			io.MouseWheel = -imguiMouse.wheel.y;
+		}
+		else {
+			io.MouseWheel = imguiMouse.wheel.y;
+		}
 	}
 	else {
 		io.MousePos.x = -FLT_MAX;
