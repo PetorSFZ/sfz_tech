@@ -22,7 +22,6 @@
 #include <SDL.h>
 
 #include <sfz/math/MathSupport.hpp>
-#include <sfz/memory/New.hpp>
 
 #include <ph/config/GlobalConfig.hpp>
 #include <ph/Context.hpp>
@@ -58,7 +57,7 @@ phImageView initializeImgui(Allocator* allocator) noexcept
 	ImGui::SetAllocatorFunctions(imguiAllocFunc, imguiFreeFunc, allocator);
 
 	// Allocate imgui state
-	imguiState = sfz::sfzNew<ImGuiState>(allocator);
+	imguiState = allocator->newObject<ImGuiState>("ImGuiState");
 	imguiState->allocator = allocator;
 
 	// Create Imgui context
@@ -203,7 +202,7 @@ void deinitializeImgui() noexcept
 {
 	ImGui::DestroyContext();
 	Allocator* allocator = imguiState->allocator;
-	sfz::sfzDelete(imguiState, allocator);
+	allocator->deleteObject(imguiState);
 }
 
 void updateImgui(

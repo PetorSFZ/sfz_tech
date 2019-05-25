@@ -30,7 +30,6 @@
 #endif
 
 #include <sfz/containers/HashMap.hpp>
-#include <sfz/memory/New.hpp>
 #include <sfz/strings/StringHashers.hpp>
 #include <sfz/Logging.hpp>
 #include <sfz/strings/StackString.hpp>
@@ -497,7 +496,8 @@ void GameStateEditor::init(
 	// Initialize binary string to byte lookup map
 	if (binaryStringToByteLookupMap == nullptr)
 	{
-		binaryStringToByteLookupMap = sfz::sfzNew<sfz::HashMap<str32, uint8_t>>(allocator);
+		binaryStringToByteLookupMap =
+			allocator->newObject<sfz::HashMap<str32, uint8_t>>("lookup table");
 		binaryStringToByteLookupMap->create(512, allocator);
 		for (uint32_t i = 0; i < 256; i++) {
 			(*binaryStringToByteLookupMap)[byteToBinaryStringLookupTable[i]] = uint8_t(i);
@@ -600,7 +600,7 @@ void GameStateEditor::destroy() noexcept
 
 	// TODO: Not perfect, probable race condition if multiple game state viewers.
 	if (binaryStringToByteLookupMap != nullptr) {
-		sfz::sfzDelete(binaryStringToByteLookupMap, binaryStringToByteLookupMap->allocator());
+		binaryStringToByteLookupMap->allocator()->deleteObject(binaryStringToByteLookupMap);
 		binaryStringToByteLookupMap = nullptr;
 	}
 }

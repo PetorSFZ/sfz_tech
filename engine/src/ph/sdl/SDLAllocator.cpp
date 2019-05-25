@@ -27,7 +27,6 @@
 #include <sfz/Assert.hpp>
 #include <sfz/Logging.hpp>
 #include <sfz/containers/HashMap.hpp>
-#include <sfz/memory/New.hpp>
 
 namespace ph {
 
@@ -156,7 +155,7 @@ bool setSDLAllocator(sfz::Allocator* allocator) noexcept
 	setBefore = true;
 
 	// Allocate state
-	bridgeState = sfz::sfzNew<BridgeState>(allocator);
+	bridgeState = allocator->newObject<BridgeState>("SDLAllocator: BridgeState");
 
 	// Set allocator
 	bridgeState->allocator = allocator;

@@ -31,7 +31,6 @@
 #include <sfz/gl/IncludeOpenGL.hpp>
 #include <sfz/math/MathSupport.hpp>
 #include <sfz/math/ProjectionMatrices.hpp>
-#include <sfz/memory/New.hpp>
 #include <sfz/strings/StackString.hpp>
 
 #include <sfz/gl/Program.hpp>
@@ -290,7 +289,7 @@ phBool32 phInitRenderer(
 	SFZ_INFO("Renderer-CompatibleGL", "Creating internal state");
 	{
 		Allocator* tmp = reinterpret_cast<Allocator*>(allocator);
-		statePtr = sfzNew<RendererState>(tmp);
+		statePtr = tmp->newObject<RendererState>("RendererState");
 		if (statePtr == nullptr) {
 			SFZ_ERROR("Renderer-CompatibleGL", "Failed to allocate memory for internal state.");
 			SDL_GL_DeleteContext(tmpContext);
@@ -364,7 +363,7 @@ void phDeinitRenderer(void)
 	SFZ_INFO("Renderer-CompatibleGL", "Destroying state");
 	{
 		Allocator* tmp = state.allocator;
-		sfzDelete(statePtr, tmp);
+		tmp->deleteObject(statePtr);
 	}
 	statePtr = nullptr;
 

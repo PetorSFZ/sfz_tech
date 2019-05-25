@@ -38,7 +38,6 @@
 #include <sfz/Assert.hpp>
 #include <sfz/Logging.hpp>
 #include <sfz/Context.hpp>
-#include <sfz/memory/New.hpp>
 #include <sfz/strings/StackString.hpp>
 
 #include "ph/Context.hpp"
@@ -226,7 +225,7 @@ void Renderer::load(const char* moduleName, Allocator* allocator) noexcept
 #endif
 
 	// Create function table
-	mFunctionTable = sfz::sfzNew<FunctionTable>(allocator);
+	mFunctionTable = allocator->newObject<FunctionTable>("Renderer: FunctionTable");
 	std::memset(mFunctionTable, 0, sizeof(FunctionTable));
 
 	// Start of with loading interface version function and checking that the correct interface is used
@@ -297,7 +296,7 @@ void Renderer::destroy() noexcept
 #endif
 
 		// Deallocate function table
-		sfz::sfzDelete(mFunctionTable, mAllocator);
+		mAllocator->deleteObject(mFunctionTable);
 
 		// Reset all variables
 		mModuleHandle = nullptr;

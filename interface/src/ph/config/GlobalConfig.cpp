@@ -51,7 +51,7 @@ struct GlobalConfigImpl final {
 void GlobalConfig::init(const char* basePath, const char* fileName, Allocator* allocator) noexcept
 {
 	if (mImpl != nullptr) this->destroy();
-	mImpl = sfzNew<GlobalConfigImpl>(allocator);
+	mImpl = allocator->newObject<GlobalConfigImpl>("GlobalConfigImpl");
 	mImpl->allocator = allocator;
 
 	// Initialize IniParser with path
@@ -67,7 +67,7 @@ void GlobalConfig::destroy() noexcept
 {
 	if (mImpl == nullptr) return;
 	Allocator* allocator = mImpl->allocator;
-	sfzDelete<GlobalConfigImpl>(mImpl, allocator);
+	allocator->deleteObject(mImpl);
 	mImpl = nullptr;
 }
 

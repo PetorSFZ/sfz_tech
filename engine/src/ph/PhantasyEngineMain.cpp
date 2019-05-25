@@ -73,7 +73,8 @@ static void setupContexts() noexcept
 	context->sfzContext.logger = &logger;
 	context->logger = &logger;
 	context->config = ph::getStaticGlobalConfigBoot();
-	context->resourceStrings = sfz::sfzNew<StringCollection>(allocator, 4096, allocator);
+	context->resourceStrings =
+		allocator->newObject<StringCollection>("Resource Strings", 4096, allocator);
 
 	// Set Phantasy Engine context
 	ph::setContext(context);
