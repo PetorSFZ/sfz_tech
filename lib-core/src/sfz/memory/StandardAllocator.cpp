@@ -21,6 +21,7 @@
 #include <cinttypes>
 
 #include "sfz/Assert.hpp"
+#include "sfz/memory/MemoryUtils.hpp"
 
 #ifdef _WIN32
 #include <malloc.h>
@@ -37,6 +38,8 @@ class StandardAllocator final : public Allocator {
 public:
 	void* allocate(uint64_t size, uint64_t alignment, const char*) noexcept override final
 	{
+		sfz_assert_debug(isPowerOfTwo(alignment));
+
 #ifdef _WIN32
 		return _aligned_malloc(size, alignment);
 #else

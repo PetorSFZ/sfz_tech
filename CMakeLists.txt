@@ -167,6 +167,7 @@ set(SFZ_CORE_INCLUDE_FILES
 	${CORE_INCLUDE_DIR}/sfz/math/Vector.inl
 
 	${CORE_INCLUDE_DIR}/sfz/memory/Allocator.hpp
+	${CORE_INCLUDE_DIR}/sfz/memory/ArenaAllocator.hpp
 	${CORE_INCLUDE_DIR}/sfz/memory/DebugAllocator.hpp
 	${CORE_INCLUDE_DIR}/sfz/memory/MemoryUtils.hpp
 	${CORE_INCLUDE_DIR}/sfz/memory/SmartPointers.hpp
@@ -195,6 +196,7 @@ set(SFZ_CORE_SOURCE_FILES
 	${CORE_SOURCE_DIR}/sfz/math/MathPrimitiveToStrings.cpp
 	${CORE_SOURCE_DIR}/sfz/math/ProjectionMatrices.cpp
 
+	${CORE_SOURCE_DIR}/sfz/memory/ArenaAllocator.cpp
 	${CORE_SOURCE_DIR}/sfz/memory/DebugAllocator.cpp
 	${CORE_SOURCE_DIR}/sfz/memory/StandardAllocator.cpp
 
@@ -257,6 +259,7 @@ if(NOT hasParent)
 		${CORE_TESTS_DIR}/sfz/math/Quaternion_Tests.cpp
 
 		${CORE_TESTS_DIR}/sfz/memory/Allocators_Tests.cpp
+		${CORE_TESTS_DIR}/sfz/memory/ArenaAllocator_Tests.cpp
 		${CORE_TESTS_DIR}/sfz/memory/SmartPointers_Tests.cpp
 
 		${CORE_TESTS_DIR}/sfz/strings/DynString_Tests.cpp

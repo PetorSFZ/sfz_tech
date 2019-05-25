@@ -19,6 +19,7 @@
 #pragma once
 
 #include <cstdint>
+
 namespace sfz {
 
 using std::uintptr_t;
@@ -26,12 +27,27 @@ using std::uintptr_t;
 // Memory utils
 // ------------------------------------------------------------------------------------------------
 
-/// Checks whether a pointer is aligned to a given byte aligment
-/// \param pointer the pointer to test
-/// \param alignment the byte aligment
-inline bool isAligned(const void* pointer, size_t alignment) noexcept
+// Checks whether a pointer is aligned to a given byte aligment
+// \param pointer the pointer to test
+// \param alignment the byte aligment
+inline bool isAligned(const void* pointer, uint64_t alignment) noexcept
 {
-	return ((uintptr_t)pointer % alignment) == 0;
+	return ((uintptr_t)pointer & (alignment - 1)) == 0;
 }
+
+// Checks whether an uint64_t is a power of two or not
+inline bool isPowerOfTwo(uint64_t value) noexcept
+{
+	// See https://graphics.stanford.edu/~seander/bithacks.html#DetermineIfPowerOf2
+	return value != 0 && (value & (value - 1)) == 0;
+}
+
+// Checks whether an uint32_t is a power of two or not
+inline bool isPowerOfTwo(uint32_t value) noexcept
+{
+	// See https://graphics.stanford.edu/~seander/bithacks.html#DetermineIfPowerOf2
+	return value != 0 && (value & (value - 1)) == 0;
+}
+
 
 } // namespace sfz
