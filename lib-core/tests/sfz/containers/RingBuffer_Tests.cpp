@@ -27,7 +27,6 @@
 #include "sfz/containers/RingBuffer.hpp"
 #undef private
 #include "sfz/memory/DebugAllocator.hpp"
-#include "sfz/memory/New.hpp"
 #include "sfz/memory/SmartPointers.hpp"
 
 using namespace sfz;

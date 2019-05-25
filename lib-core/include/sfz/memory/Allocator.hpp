@@ -19,87 +19,145 @@
 #pragma once
 
 #include <cstdint>
+#include <utility> // std::move, std::forward, std::swap
 
 namespace sfz {
 
 // sfzCore Allocator Interface
 // ------------------------------------------------------------------------------------------------
 
-/// The base interface for an sfzCore allocator
-///
-/// Allocators are used for everything in sfzCore that allocates memory, such as containers. There
-/// are two main differences compared to STL allocators:
-/// 1, An Allocator does not construct objects, only allocate/deallocate memory. I.e. more similar
-/// to malloc() and free() than operator new and delete.
-/// 2, sfzCore Allocators are instance based and does not use templates. This means that the
-/// allocator itself can be decided at runtime and does not need to be part of the type of a
-/// container.
-///
-/// sfzCore allocators are mainly inspired by "Towards a Better Allocator Model" and EASTL
-/// (http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1850.pdf and
-/// http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2271.html#std_allocator respectively).
-/// There are, however, a number of differences compared to both these approaches.
-///
-/// For containers (and other classes) that uses allocators, the following rules should be
-/// followed:
-/// * Allocators are not part of the type.
-/// * Allocators are not owned by the class instance, only a simple pointer (Allocator*) should be
-///   kept.
-/// * Classes should not create or destroy allocators, they should be supplied an Allocator pointer
-///   upon creation. A class might use the Allocator supplied by getDefaultAllocator() if no
-///   Allocator is provided upon creation, or optionally simply require that an Allocator is
-///   explicitly provided.
-/// * When a class instance is copied, the allocator (pointer) is also copied (in contrast to
-///   TaBAM above where allocators are not copied).
-/// * When a class instance is moved, the allocator (pointer) is also moved.
-/// * A container utilizing allocators is recommended to have a copy constructor that also takes
-///   an explicit additional allocator parameter (WITHOUT default value getDefaultAllocator()).
-///   I.e. for vector: vector(const vector& other, Allocator* allocator). This copy constructor
-///   should copy the contents but use the specified Allocator for the copy instead of the one
-///   used in the original instance.
-/// * Equality operators (==, !=) should ignore the Allocator pointer, i.e. two string instances
-///   with different allocators can still be equal.
-/// * Classes that uses Allocator should provide a getter to the pointer, a setter should however
-///   only be provided if it can be guaranteed safe.
-/// * A feature of TaBAM is that "children" inherit allocators. Imagine vector<vector<int>>,
-///   the inner vector class would use the same allocator as the outer vector. This is not the
-///   case with sfzCore Allocators. If the same allocator should be used for all inner vectors
-///   it must be supplied to each and every one of them upon creation.
-/// * It is up to the creator of the Allocator instance to ensure that there no longer exists
-///   any pointers to the instance before it is destroyed. In practice this can probably be
-///   pretty hard except for small contained problems, so once an Allocator is instantiated it
-///   will likely have to be kept alive for the rest of the program's lifetime.
-///
-/// All virtual methods are marked noexcept, meaning an allocator may never throw exceptions. It
-/// may, however, during really exceptional circumstances terminate the program.
+// The base interface for an sfzCore allocator
+//
+// Allocators are used for everything in sfzCore that allocates memory, such as containers. There
+// are two main differences compared to STL allocators:
+//
+//   1, An Allocator does not construct objects, only allocate/deallocate memory. I.e. more similar
+//   to malloc() and free() than operator new and delete.
+//   2, sfzCore Allocators are instance based and does not use templates. This means that the
+//   allocator itself can be decided at runtime and does not need to be part of the type of a
+//   container.
+//
+// sfzCore allocators are mainly inspired by "Towards a Better Allocator Model" and EASTL
+// (http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1850.pdf and
+// http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2271.html#std_allocator respectively).
+// There are, however, a number of differences compared to both these approaches.
+//
+// For containers (and other classes) that uses allocators, the following rules should be
+// followed:
+//
+//   * Allocators are not part of the type.
+//   * Allocators are not owned by the class instance, only a simple pointer (Allocator*) should be
+//     kept.
+//   * Classes should not create or destroy allocators, they should be supplied an Allocator pointer
+//     upon creation. A class might use the Allocator supplied by getDefaultAllocator() if no
+//     Allocator is provided upon creation, or optionally simply require that an Allocator is
+//     explicitly provided.
+//   * When a class instance is copied, the allocator (pointer) is also copied (in contrast to
+//     TaBAM above where allocators are not copied).
+//   * When a class instance is moved, the allocator (pointer) is also moved.
+//   * A container utilizing allocators is recommended to have a copy constructor that also takes
+//     an explicit additional allocator parameter (WITHOUT default value getDefaultAllocator()).
+//     I.e. for vector: vector(const vector& other, Allocator* allocator). This copy constructor
+//     should copy the contents but use the specified Allocator for the copy instead of the one
+//     used in the original instance.
+//   * Equality operators (==, !=) should ignore the Allocator pointer, i.e. two string instances
+//     with different allocators can still be equal.
+//   * Classes that uses Allocator should provide a getter to the pointer, a setter should however
+//     only be provided if it can be guaranteed safe.
+//   * A feature of TaBAM is that "children" inherit allocators. Imagine vector<vector<int>>,
+//     the inner vector class would use the same allocator as the outer vector. This is not the
+//     case with sfzCore Allocators. If the same allocator should be used for all inner vectors
+//     it must be supplied to each and every one of them upon creation.
+//   * It is up to the creator of the Allocator instance to ensure that there no longer exists
+//     any pointers to the instance before it is destroyed. In practice this can probably be
+//     pretty hard except for small contained problems, so once an Allocator is instantiated it
+//     will likely have to be kept alive for the rest of the program's lifetime.
+//
+// All virtual methods are marked noexcept, meaning an allocator may never throw exceptions. It
+// may, however, during really exceptional circumstances terminate the program.
 class Allocator {
 public:
-	/// Allocates memory with the specified byte alignment
-	/// \param size the number of bytes to allocate
-	/// \param alignment the byte alignment of the allocation
-	/// \param name the name of the allocation (optional for both caller and implementation)
-	/// \return pointer to allocated memory, nullptr if allocation failed
-	virtual void* allocate(uint64_t size, uint64_t alignment = 32,
-	                       const char* name = "???") noexcept = 0;
 
-	/// Deallocates memory previously allocated with this allocator instance. Deallocating memory
-	/// allocated by other Allocator (instance or even implementation) is only possible if the
-	/// allocator and deallocator are compatible(), otherwise it will likely result in hard to
-	/// debug catastrophic failure.
-	/// Attempting to deallocate nullptr is safe and will result in no change
-	/// \param pointer to the memory
-	virtual void deallocate(void* pointer) noexcept = 0;
-
-	/// Returns the name of this Allocator. Having a name is optional and how it is used is
-	/// completely up to the implementation. There are however some general implementation
-	/// suggestions:
-	/// * Have unique names per instance (even of same type)
-	/// * Specify name in constructor
-	/// * Never change the name after it has been set
-	/// * Keep the name short (<32 chars)
-	virtual const char* getName() const noexcept { return "sfzCore Allocator"; }
+	// Constructors & destructors
+	// ---------------------------------------------------------------------------------------------
 
 	virtual ~Allocator() noexcept {}
+
+	// Interface to be overriden by implementations
+	// ---------------------------------------------------------------------------------------------
+
+	// Allocates memory with the specified byte alignment
+	// \param size the number of bytes to allocate
+	// \param alignment the byte alignment of the allocation
+	// \param name the name of the allocation (optional for both caller and implementation)
+	// \return pointer to allocated memory, nullptr if allocation failed
+	virtual void* allocate(
+		uint64_t size, uint64_t alignment = 32, const char* name = "???") noexcept = 0;
+
+	// Deallocates memory previously allocated with this allocator instance. Deallocating memory
+	// allocated by another Allocator is not allowed and will likely result in catastrophic failure.
+	// Attempting to deallocate nullptr is safe and will result in no change
+	// \param pointer to the memory
+	virtual void deallocate(void* pointer) noexcept = 0;
+
+	// Returns the name of this Allocator. Having a name is optional and how it is used is
+	// completely up to the implementation. There are however some general implementation
+	// suggestions:
+	// * Have unique names per instance (even of same type)
+	// * Specify name in constructor
+	// * Never change the name after it has been set
+	// * Keep the name short (<32 chars)
+	virtual const char* getName() const noexcept { return "sfzCore Allocator"; }
+
+	// Helper methods for users of the Allocator
+	// ---------------------------------------------------------------------------------------------
+
+	// Constructs a new object of type T, similar to operator new.
+	//
+	// The object is guaranteed to be 32-byte aligned. Will exit the program if constructor throws
+	// exception.
+	//
+	// \param name the name of the memory allocation
+	// \return the newly allocated and constructed object, nullptr on failure
+	template<typename T, typename... Args>
+	T* newObject(const char* name, Args&&... args) noexcept
+	{
+		// Calculate memory alignment, minimum 32 bytes
+		uint64_t alignment = alignof(T);
+		if (alignment < 32) alignment = 32;
+
+		// Allocate memory, return nullptr on failure
+		void* memPtr = this->allocate(sizeof(T), alignment, name);
+		if (memPtr == nullptr) return nullptr;
+
+		// Placement new (i.e. calling objects constructor with the user-provided arguments)
+		// Will terminate program if constructor throws exception (because noexcept)
+		T* objPtr = nullptr;
+		objPtr = new(memPtr) T(std::forward<Args>(args)...);
+
+		return objPtr;
+	}
+
+	// Deletes an object created with this allocator, similar to operator delete.
+	//
+	// The callers pointer will be set to nullptr. Will exit the program if destructor throws an
+	// exception.
+	//
+	// \param pointer to the object
+	template<typename T>
+	void deleteObject(T*& pointer) noexcept
+	{
+		if (pointer == nullptr) return;
+
+		// Call destructor, will terminate program if it throws exception.
+		pointer->~T();
+
+		// Deallocate memory
+		this->deallocate(static_cast<void*>(pointer));
+
+		// Set callers pointer to nullptr, small attempt to avoid dangling pointers.
+		pointer = nullptr;
+	}
 };
 
 } // namespace sfz

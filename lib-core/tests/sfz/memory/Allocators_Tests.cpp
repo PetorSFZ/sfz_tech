@@ -45,3 +45,32 @@ TEST_CASE("Testing alignment", "[sfz::StandardAllocator]")
 	REQUIRE(isAligned(memory64byte, 64));
 	getDefaultAllocator()->deallocate(memory64byte);
 }
+
+TEST_CASE("Basic new and delete tests", "[sfz::StandardAllocator]")
+{
+	sfz::setContext(sfz::getStandardContext());
+
+	int flag = 0;
+
+	struct TestClass {
+		int* flagPtr;
+		TestClass(int* ptr)
+		{
+			flagPtr = ptr;
+			*flagPtr = 1;
+		}
+		~TestClass()
+		{
+			*flagPtr = 2;
+		}
+	};
+
+	TestClass* ptr = nullptr;
+	ptr = getDefaultAllocator()->newObject<TestClass>("name", &flag);
+	REQUIRE(ptr != nullptr);
+	REQUIRE(ptr->flagPtr == &flag);
+	REQUIRE(flag == 1);
+
+	getDefaultAllocator()->deleteObject(ptr);
+	REQUIRE(flag == 2);
+}

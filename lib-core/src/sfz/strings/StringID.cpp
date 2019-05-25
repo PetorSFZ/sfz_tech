@@ -23,7 +23,6 @@
 #include "sfz/Assert.hpp"
 #include "sfz/Logging.hpp"
 #include "sfz/containers/HashMap.hpp"
-#include "sfz/memory/New.hpp"
 #include "sfz/strings/DynString.hpp"
 #include "sfz/strings/StringHashers.hpp"
 
@@ -68,7 +67,7 @@ void StringCollection::createStringCollection(uint32_t initialCapacity, Allocato
 {
 	this->destroy();
 
-	mImpl = sfzNew<StringCollectionImpl>(allocator);
+	mImpl = allocator->newObject<StringCollectionImpl>("StringCollectionImpl");
 	mImpl->allocator = allocator;
 	mImpl->strings.create(initialCapacity, allocator);
 }
@@ -82,7 +81,7 @@ void StringCollection::destroy() noexcept
 {
 	if (mImpl == nullptr) return;
 
-	sfzDelete(mImpl, mImpl->allocator);
+	mImpl->allocator->deleteObject(mImpl);
 	mImpl = nullptr;
 }
 

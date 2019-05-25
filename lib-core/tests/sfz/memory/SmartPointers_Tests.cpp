@@ -20,7 +20,6 @@
 #include "catch2/catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
-#include "sfz/memory/New.hpp"
 #include "sfz/memory/SmartPointers.hpp"
 
 using namespace sfz;
@@ -70,7 +69,8 @@ TEST_CASE("Basic UniquePtr tests", "[sfz::UniquePtr]")
 
 	UniquePtr<TestClass> ptr = nullptr;
 	REQUIRE(ptr == nullptr);
-	ptr = UniquePtr<TestClass>(sfzNewDefault<TestClass>(&flag), getDefaultAllocator());
+	ptr = UniquePtr<TestClass>(
+		getDefaultAllocator()->newObject<TestClass>("", &flag), getDefaultAllocator());
 	REQUIRE(ptr.get() != nullptr);
 	REQUIRE(ptr != nullptr);
 	REQUIRE(ptr.get()->flagPtr == &flag);
@@ -155,7 +155,7 @@ TEST_CASE("Basic SharedPtr tests", "[sfz::SharedPtr]")
 	};
 
 	REQUIRE(flag == 0);
-	TestClass* item = sfzNewDefault<TestClass>(&flag);
+	TestClass* item = getDefaultAllocator()->newObject<TestClass>("", &flag);
 	REQUIRE(flag == 1);
 
 	{
@@ -171,7 +171,8 @@ TEST_CASE("Basic SharedPtr tests", "[sfz::SharedPtr]")
 	flag = 0;
 	{
 		REQUIRE(flag == 0);
-		SharedPtr<TestClass> ptr(sfzNewDefault<TestClass>(&flag), getDefaultAllocator());
+		SharedPtr<TestClass> ptr(
+			getDefaultAllocator()->newObject<TestClass>("", &flag), getDefaultAllocator());
 		REQUIRE(ptr != nullptr);
 		REQUIRE(ptr.refCount() == 1);
 		REQUIRE(flag == 1);

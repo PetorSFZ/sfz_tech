@@ -23,7 +23,6 @@
 #include "sfz/containers/DynArray.hpp"
 #include "sfz/math/Vector.hpp"
 #include "sfz/memory/DebugAllocator.hpp"
-#include "sfz/memory/New.hpp"
 #include "sfz/memory/SmartPointers.hpp"
 
 using namespace sfz;

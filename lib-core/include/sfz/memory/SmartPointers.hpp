@@ -24,7 +24,6 @@
 
 #include "sfz/Context.hpp"
 #include "sfz/memory/Allocator.hpp"
-#include "sfz/memory/New.hpp"
 
 namespace sfz {
 

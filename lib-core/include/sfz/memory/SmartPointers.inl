@@ -75,7 +75,7 @@ template<typename T>
 void UniquePtr<T>::destroy() noexcept
 {
 	if (mPtr == nullptr) return;
-	sfzDelete<T>(mPtr, mAllocator);
+	mAllocator->deleteObject<T>(mPtr);
 	mPtr = nullptr;
 	mAllocator = nullptr;
 }
@@ -147,7 +147,8 @@ bool operator!= (std::nullptr_t, const UniquePtr<T>& rhs) noexcept
 template<typename T, typename... Args>
 UniquePtr<T> makeUnique(Allocator* allocator, Args&&... args) noexcept
 {
-	return UniquePtr<T>(sfzNew<T>(allocator, std::forward<Args>(args)...), allocator);
+	return UniquePtr<T>(
+		allocator->newObject<T>("UniquePtr", std::forward<Args>(args)...), allocator);
 }
 
 template<typename T, typename... Args>
@@ -163,7 +164,7 @@ template<typename T>
 SharedPtr<T>::SharedPtr(T* object, Allocator* allocator) noexcept
 {
 	mPtr = object;
-	mState = sfzNew<detail::SharedPtrState>(allocator);
+	mState = allocator->newObject<detail::SharedPtrState>("SharedPtrState");
 	mState->allocator = allocator;
 	mState->refCount = 1;
 }
@@ -183,7 +184,7 @@ SharedPtr<T>::SharedPtr(UniquePtr<T2>&& subclassPtr) noexcept
 	static_assert(std::is_base_of<T,T2>::value || std::is_same<T,T2>::value, "T2 is not a subclass of T");
 	if (subclassPtr == nullptr) return;
 
-	mState = sfzNew<detail::SharedPtrState>(subclassPtr.allocator());
+	mState = subclassPtr.allocator()-> template newObject<detail::SharedPtrState>("SharedPtrState");
 	mState->allocator = subclassPtr.allocator();
 	mState->refCount = 1;
 	mPtr = static_cast<T*>(subclassPtr.take());
@@ -257,8 +258,8 @@ void SharedPtr<T>::destroy() noexcept
 	if (mPtr == nullptr) return;
 	uint32_t count = mState->refCount.fetch_sub(1) - 1;
 	if (count == 0) {
-		sfzDelete(mPtr, mState->allocator);
-		sfzDelete(mState, mState->allocator);
+		mState->allocator->deleteObject(mPtr);
+		mState->allocator->deleteObject(mState);
 	}
 	mPtr = nullptr;
 	mState = nullptr;
@@ -348,7 +349,8 @@ bool operator!= (std::nullptr_t, const SharedPtr<T>& rhs) noexcept
 template<typename T, typename... Args>
 SharedPtr<T> makeShared(Allocator* allocator, Args&&... args) noexcept
 {
-	return SharedPtr<T>(sfzNew<T>(allocator, std::forward<Args>(args)...), allocator);
+	return SharedPtr<T>(
+		allocator->newObject<T>("SharedPtr", std::forward<Args>(args)...), allocator);
 }
 
 template<typename T, typename... Args>

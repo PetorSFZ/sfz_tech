@@ -169,7 +169,6 @@ set(SFZ_CORE_INCLUDE_FILES
 	${CORE_INCLUDE_DIR}/sfz/memory/Allocator.hpp
 	${CORE_INCLUDE_DIR}/sfz/memory/DebugAllocator.hpp
 	${CORE_INCLUDE_DIR}/sfz/memory/MemoryUtils.hpp
-	${CORE_INCLUDE_DIR}/sfz/memory/New.hpp
 	${CORE_INCLUDE_DIR}/sfz/memory/SmartPointers.hpp
 	${CORE_INCLUDE_DIR}/sfz/memory/SmartPointers.inl
 	${CORE_INCLUDE_DIR}/sfz/memory/StandardAllocator.hpp
@@ -258,7 +257,6 @@ if(NOT hasParent)
 		${CORE_TESTS_DIR}/sfz/math/Quaternion_Tests.cpp
 
 		${CORE_TESTS_DIR}/sfz/memory/Allocators_Tests.cpp
-		${CORE_TESTS_DIR}/sfz/memory/New_Tests.cpp
 		${CORE_TESTS_DIR}/sfz/memory/SmartPointers_Tests.cpp
 
 		${CORE_TESTS_DIR}/sfz/strings/DynString_Tests.cpp
