@@ -62,7 +62,7 @@ inline bool pointInside(const OBB& box, const vec3& point) noexcept
 	const vec3 distToPoint = point - box.center;
 	float dist;
 	for (uint32_t i = 0; i < 3; i++) {
-		dist = dot(distToPoint, box.axes[i]);
+		dist = dot(distToPoint, box.rotation.rows[i]);
 		if (dist > box.halfExtents[i]) return false;
 		if (dist < -box.halfExtents[i]) return false;
 	}
@@ -107,16 +107,16 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 	// OBB vs OBB SAT (Separating Axis Theorem) test from Real-Time Collision Detection
 	// (chapter 4.4.1 OBB-OBB Intersection)
 
-	const auto& aU = a.axes;
+	const auto& aU = a.rotation;
 	const vec3& aE = a.halfExtents;
-	const auto& bU = b.axes;
+	const auto& bU = b.rotation;
 	const vec3& bE = b.halfExtents;
 
 	// Compute the rotation matrix from b to a
 	mat3 R;
 	for (uint32_t i = 0; i < 3; i++) {
 		for (uint32_t j = 0; j < 3; j++) {
-			R.set(i, j, dot(aU[i], bU[j]));
+			R.set(i, j, dot(aU.rows[i], bU.rows[j]));
 		}
 	}
 
@@ -131,7 +131,7 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 
 	// Calculate translation vector from a to b and bring it into a's frame of reference
 	vec3 t = b.center - a.center;
-	t = vec3{dot(t, aU[0]), dot(t, aU[1]), dot(t, aU[2])};
+	t = vec3{dot(t, aU.rows[0]), dot(t, aU.rows[1]), dot(t, aU.rows[2])};
 
 	float ra, rb;
 
@@ -293,9 +293,9 @@ inline bool intersects(const Plane& plane, const OBB& obb) noexcept
 {
 	// SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 	// Projected radius on line towards closest point on plane
-	float projectedRadius = obb.halfExtents.x * std::abs(dot(plane.normal(), obb.xAxis))
-	                      + obb.halfExtents.y * std::abs(dot(plane.normal(), obb.yAxis))
-	                      + obb.halfExtents.z * std::abs(dot(plane.normal(), obb.zAxis));
+	float projectedRadius = obb.halfExtents.x * std::abs(dot(plane.normal(), obb.xAxis()))
+	                      + obb.halfExtents.y * std::abs(dot(plane.normal(), obb.yAxis()))
+	                      + obb.halfExtents.z * std::abs(dot(plane.normal(), obb.zAxis()));
 
 	return detail::intersectsPlane(plane, obb.center, projectedRadius);
 }
@@ -309,9 +309,9 @@ inline bool abovePlane(const Plane& plane, const OBB& obb) noexcept
 {
 	// Modified SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 	// Projected radius on line towards closest point on plane
-	float projectedRadius = obb.halfExtents.x * std::abs(dot(plane.normal(), obb.xAxis))
-	                      + obb.halfExtents.y * std::abs(dot(plane.normal(), obb.yAxis))
-	                      + obb.halfExtents.z * std::abs(dot(plane.normal(), obb.zAxis));
+	float projectedRadius = obb.halfExtents.x * std::abs(dot(plane.normal(), obb.xAxis()))
+	                      + obb.halfExtents.y * std::abs(dot(plane.normal(), obb.yAxis()))
+	                      + obb.halfExtents.z * std::abs(dot(plane.normal(), obb.zAxis()));
 
 	return detail::abovePlane(plane, obb.center, projectedRadius);
 }
@@ -320,9 +320,9 @@ inline bool belowPlane(const Plane& plane, const OBB& obb) noexcept
 {
 	// Modified SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 	// Projected radius on line towards closest point on plane
-	float projectedRadius = obb.halfExtents.x * std::abs(dot(plane.normal(), obb.xAxis))
-	                      + obb.halfExtents.y * std::abs(dot(plane.normal(), obb.yAxis))
-	                      + obb.halfExtents.z * std::abs(dot(plane.normal(), obb.zAxis));
+	float projectedRadius = obb.halfExtents.x * std::abs(dot(plane.normal(), obb.xAxis()))
+	                      + obb.halfExtents.y * std::abs(dot(plane.normal(), obb.yAxis()))
+	                      + obb.halfExtents.z * std::abs(dot(plane.normal(), obb.zAxis()));
 
 	return detail::belowPlane(plane, obb.center, projectedRadius);
 }
@@ -366,10 +366,10 @@ inline vec3 closestPoint(const OBB& obb, const vec3& point) noexcept
 
 	float dist;
 	for (uint32_t i = 0; i < 3; i++) {
-		dist = dot(distToPoint, obb.axes[i]);
+		dist = dot(distToPoint, obb.rotation.rows[i]);
 		if (dist > obb.halfExtents[i]) dist = obb.halfExtents[i];
 		if (dist < -obb.halfExtents[i]) dist = -obb.halfExtents[i];
-		res += (dist * obb.axes[i]);
+		res += (dist * obb.rotation.rows[i]);
 	}
 
 	return res;

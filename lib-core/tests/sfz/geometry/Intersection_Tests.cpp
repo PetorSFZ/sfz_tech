@@ -154,6 +154,13 @@ TEST_CASE("OBB vs OBB test", "[sfz::Intersection]")
 	REQUIRE(!intersects(midLeftAA, midSmallRightAA));
 	REQUIRE(!intersects(midDownAA, midSmallUpAA));
 	REQUIRE(!intersects(midBackAA, midSmallFrontAA));
+
+	// Non-trivial edge case
+	OBB nonTrivial1st = OBB(vec3(0.0f), axisAlignedAxes, vec3(2.0f));
+	OBB nonTrivial2nd = OBB(vec3(2.0f), axisAlignedAxes, vec3(2.0f));
+	nonTrivial2nd = nonTrivial2nd.transformOBB(Quaternion::fromEuler(45.0f, 45.0f, 45.0f));
+
+	REQUIRE(!intersects(nonTrivial1st, nonTrivial2nd));
 }
 
 TEST_CASE("Sphere vs Sphere test", "[sfz::Intersection]")

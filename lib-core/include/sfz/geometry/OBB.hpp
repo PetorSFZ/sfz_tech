@@ -43,11 +43,8 @@ struct OBB final {
 	// Members
 	// --------------------------------------------------------------------------------------------
 
+	mat33 rotation;
 	vec3 center;
-	union {
-		struct { vec3 xAxis; vec3 yAxis; vec3 zAxis; };
-		vec3 axes[3];
-	};
 	vec3 halfExtents;
 
 	// Constructors & destructors
@@ -84,6 +81,16 @@ struct OBB final {
 	void setXExtent(float newXExtent) noexcept;
 	void setYExtent(float newYExtent) noexcept;
 	void setZExtent(float newZExtent) noexcept;
+
+	vec3& axis(uint32_t idx) noexcept { return rotation.rows[idx]; }
+	const vec3& axis(uint32_t idx) const noexcept { return rotation.rows[idx]; }
+
+	vec3& xAxis() noexcept { return rotation.row0; }
+	const vec3& xAxis() const noexcept { return rotation.row0; }
+	vec3& yAxis() noexcept { return rotation.row1; }
+	const vec3& yAxis() const noexcept { return rotation.row1; }
+	vec3& zAxis() noexcept { return rotation.row2; }
+	const vec3& zAxis() const noexcept { return rotation.row2; }
 
 	// Helper methods
 	// --------------------------------------------------------------------------------------------

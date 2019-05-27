@@ -24,9 +24,9 @@ namespace sfz {
 inline OBB::OBB(vec3 center, vec3 xAxis, vec3 yAxis, vec3 zAxis, vec3 extents) noexcept
 {
 	this->center = center;
-	this->xAxis = xAxis;
-	this->yAxis = yAxis;
-	this->zAxis = zAxis;
+	this->xAxis() = xAxis;
+	this->yAxis() = yAxis;
+	this->zAxis() = zAxis;
 	this->halfExtents = extents * 0.5f;
 	ensureCorrectAxes();
 	ensureCorrectExtents();
@@ -62,9 +62,9 @@ inline OBBCorners OBB::corners() const noexcept
 
 inline void OBB::corners(vec3* arrayOut) const noexcept
 {
-	vec3 halfXExtVec = xAxis * halfExtents[0];
-	vec3 halfYExtVec = yAxis * halfExtents[1];
-	vec3 halfZExtVec = zAxis * halfExtents[2];
+	vec3 halfXExtVec = xAxis() * halfExtents[0];
+	vec3 halfYExtVec = yAxis() * halfExtents[1];
+	vec3 halfZExtVec = zAxis() * halfExtents[2];
 	arrayOut[0] = center - halfXExtVec - halfYExtVec - halfZExtVec; // Back-bottom-left
 	arrayOut[1] = center - halfXExtVec - halfYExtVec + halfZExtVec; // Front-bottom-left
 	arrayOut[2] = center - halfXExtVec + halfYExtVec - halfZExtVec; // Back-top-left
@@ -79,9 +79,9 @@ inline OBB OBB::transformOBB(const mat34& transform) const noexcept
 {
 	const vec3 newPos = transformPoint(transform, center);
 
-	const vec3 xAxisHalfExt = xAxis * halfExtents.x;
-	const vec3 yAxisHalfExt = yAxis * halfExtents.x;
-	const vec3 zAxisHalfExt = zAxis * halfExtents.x;
+	const vec3 xAxisHalfExt = xAxis() * halfExtents.x;
+	const vec3 yAxisHalfExt = yAxis() * halfExtents.x;
+	const vec3 zAxisHalfExt = zAxis() * halfExtents.x;
 	const vec3 newXAxisHalfExt = transformDir(transform, xAxisHalfExt);
 	const vec3 newYAxisHalfExt = transformDir(transform, yAxisHalfExt);
 	const vec3 newZAxisHalfExt = transformDir(transform, zAxisHalfExt);
@@ -100,9 +100,9 @@ inline OBB OBB::transformOBB(Quaternion quaternion) const noexcept
 {
 	sfz_assert_debug(approxEqual(length(quaternion), 1.0f));
 	OBB tmp = *this;
-	tmp.xAxis = rotate(quaternion, tmp.xAxis);
-	tmp.yAxis = rotate(quaternion, tmp.yAxis);
-	tmp.zAxis = rotate(quaternion, tmp.zAxis);
+	tmp.rotation.row0 = rotate(quaternion, tmp.rotation.row0);
+	tmp.rotation.row1 = rotate(quaternion, tmp.rotation.row1);
+	tmp.rotation.row2 = rotate(quaternion, tmp.rotation.row2);
 	return tmp;
 }
 
@@ -139,14 +139,14 @@ inline void OBB::setZExtent(float newZExtent) noexcept
 inline void OBB::ensureCorrectAxes() const noexcept
 {
 	// Check if axes are orthogonal
-	sfz_assert_debug(approxEqual(dot(xAxis, yAxis), 0.0f));
-	sfz_assert_debug(approxEqual(dot(xAxis, zAxis), 0.0f));
-	sfz_assert_debug(approxEqual(dot(yAxis, zAxis), 0.0f));
+	sfz_assert_debug(approxEqual(dot(rotation.row0, rotation.row1), 0.0f));
+	sfz_assert_debug(approxEqual(dot(rotation.row0, rotation.row2), 0.0f));
+	sfz_assert_debug(approxEqual(dot(rotation.row1, rotation.row2), 0.0f));
 
 	// Check if axes are normalized
-	sfz_assert_debug(approxEqual(length(xAxis), 1.0f));
-	sfz_assert_debug(approxEqual(length(yAxis), 1.0f));
-	sfz_assert_debug(approxEqual(length(zAxis), 1.0f));
+	sfz_assert_debug(approxEqual(length(rotation.row0), 1.0f));
+	sfz_assert_debug(approxEqual(length(rotation.row1), 1.0f));
+	sfz_assert_debug(approxEqual(length(rotation.row2), 1.0f));
 }
 
 inline void OBB::ensureCorrectExtents() const noexcept
