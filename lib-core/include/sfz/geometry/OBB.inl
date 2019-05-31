@@ -80,8 +80,8 @@ inline OBB OBB::transformOBB(const mat34& transform) const noexcept
 	const vec3 newPos = transformPoint(transform, center);
 
 	const vec3 xAxisHalfExt = xAxis() * halfExtents.x;
-	const vec3 yAxisHalfExt = yAxis() * halfExtents.x;
-	const vec3 zAxisHalfExt = zAxis() * halfExtents.x;
+	const vec3 yAxisHalfExt = yAxis() * halfExtents.y;
+	const vec3 zAxisHalfExt = zAxis() * halfExtents.z;
 	const vec3 newXAxisHalfExt = transformDir(transform, xAxisHalfExt);
 	const vec3 newYAxisHalfExt = transformDir(transform, yAxisHalfExt);
 	const vec3 newZAxisHalfExt = transformDir(transform, zAxisHalfExt);
