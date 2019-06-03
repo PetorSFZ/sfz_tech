@@ -143,6 +143,12 @@ struct ParsedJsonImpl; // Pimpl pattern
 //
 // Parse a JSON file using either ParsedJson::parseString() or ParsedJson::parseFile(). The parsed
 // contents can then be accessed by recursively accessing the nodes, starting with the root node.
+//
+// The "allowCppComments" flag sets whether a PhantasyEngine specific extension should be enabled
+// or not. This extension enables the use of // comments in the json files. This is normally not
+// allowed, but makes it way more human-friendly to use them. This same extension seem to be in use
+// by e.g. Visual Studio Code, so it can't be entirely uncommon. A note of warning, this is not
+// super robust and will break json files which have "//" inside of a string.
 class ParsedJson final {
 public:
 	// Constructors & destructors
@@ -155,8 +161,10 @@ public:
 	ParsedJson& operator= (ParsedJson&& other) noexcept { this->swap(other); return *this; }
 	~ParsedJson() noexcept { this->destroy(); }
 
-	static ParsedJson parseString(const char* jsonString, sfz::Allocator* allocator) noexcept;
-	static ParsedJson parseFile(const char* jsonPath, sfz::Allocator* allocator) noexcept;
+	static ParsedJson parseString(
+		const char* jsonString, sfz::Allocator* allocator, bool allowCppComments = true) noexcept;
+	static ParsedJson parseFile(
+		const char* jsonPath, sfz::Allocator* allocator, bool allowCppComments = true) noexcept;
 
 	// State methods
 	// ---------------------------------------------------------------------------------------------

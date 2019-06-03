@@ -44,6 +44,56 @@ static const sajson::value& castToSajsonValue(const uint8_t* memory) noexcept
 	return *reinterpret_cast<const sajson::value*>(memory);
 }
 
+static uint64_t copyStripCppComments(char* dst, const char* src, uint64_t srcLen) noexcept
+{
+	sfz_assert_debug(srcLen > 0);
+
+	// The total number of bytes in the new string, excluding null-terminator
+	uint64_t totalNumBytes = 0;
+
+	const char* currSrc = src;
+	const char* nextComment = std::strstr(src, "//");
+	while (nextComment != nullptr) {
+
+		// Copy part until comment
+		uint64_t numBytesToCopy = nextComment - currSrc;
+		std::memcpy(dst + totalNumBytes, currSrc, numBytesToCopy);
+		totalNumBytes += numBytesToCopy;
+
+		// Update current src pointer to point to part right after comment
+		currSrc = nextComment + 2;
+
+		// Find next line break (so we know how much of string to skip)
+		const char* nextLineBreak = std::strchr(currSrc, '\n');
+
+		// If no line break found, skip rest of string
+		if (nextLineBreak == nullptr) {
+			// Set currSrc to length of src so we don't copy rest in post step
+			currSrc = src + srcLen;
+			break;
+		}
+
+		// Skip part between comment and line break
+		currSrc = nextLineBreak + 1;
+
+		// Find next comment
+		nextComment = std::strstr(currSrc, "//");
+	}
+
+	// Copy the remainder of the string
+	sfz_assert_debug(currSrc <= (src + srcLen));
+	uint64_t remainderNumBytes = (src + srcLen) - currSrc;
+	if (remainderNumBytes != 0) {
+		std::memcpy(dst + totalNumBytes, currSrc, remainderNumBytes);
+	}
+	totalNumBytes += remainderNumBytes;
+
+	// Set null terminator
+	dst[totalNumBytes] = '\0';
+
+	return totalNumBytes;
+}
+
 // ParsedJsonNode: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
@@ -314,7 +364,8 @@ struct ParsedJsonImpl {
 // ParsedJson: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-ParsedJson ParsedJson::parseString(const char* jsonString, sfz::Allocator* allocator) noexcept
+ParsedJson ParsedJson::parseString(
+	const char* jsonString, sfz::Allocator* allocator, bool allowCppComments) noexcept
 {
 	// Ensure json string is not nullptr
 	if (jsonString == nullptr) {
@@ -328,7 +379,7 @@ ParsedJson ParsedJson::parseString(const char* jsonString, sfz::Allocator* alloc
 	ParsedJsonImpl& impl = *parsedJson.mImpl;
 	impl.allocator = allocator;
 
-	// Calculate length of string and copy it
+	// Calculate length of string and allocate memory for it
 	uint64_t jsonStringLen = std::strlen(jsonString);
 	if (jsonStringLen == 0) {
 		allocator->deleteObject(parsedJson.mImpl);
@@ -337,7 +388,20 @@ ParsedJson ParsedJson::parseString(const char* jsonString, sfz::Allocator* alloc
 	}
 	impl.jsonStringCopy = reinterpret_cast<char*>(
 		allocator->allocate(jsonStringLen + 1, 32, "json string copy"));
-	std::memcpy(impl.jsonStringCopy, jsonString, jsonStringLen);
+
+	// Copy string and strip Cpp comments if specified, also modify length of string
+	if (allowCppComments) {
+		jsonStringLen = copyStripCppComments(impl.jsonStringCopy, jsonString, jsonStringLen);
+		//printf("Comment stripped json:\n\"%s\"", impl.jsonStringCopy);
+	}
+
+	// Otherwise just copy the string
+	else {
+		std::memcpy(impl.jsonStringCopy, jsonString, jsonStringLen);
+		impl.jsonStringCopy[jsonStringLen] = '\0';
+	}
+
+	// Create view of the string for sajson
 	impl.jsongStringView = sajson::mutable_string_view(jsonStringLen, impl.jsonStringCopy);
 
 	// Allocate memory for ast
@@ -361,14 +425,15 @@ ParsedJson ParsedJson::parseString(const char* jsonString, sfz::Allocator* alloc
 	return parsedJson;
 }
 
-ParsedJson ParsedJson::parseFile(const char* jsonPath, sfz::Allocator* allocator) noexcept
+ParsedJson ParsedJson::parseFile(
+	const char* jsonPath, sfz::Allocator* allocator, bool allowCppComments) noexcept
 {
 	sfz::DynString jsonString = sfz::readTextFile(jsonPath, allocator);
 	if (jsonString.size() == 0) {
 		SFZ_ERROR("JSON", "Failed to load JSON file at: %s", jsonPath);
 		return ParsedJson();
 	}
-	return ParsedJson::parseString(jsonString.str(), allocator);
+	return ParsedJson::parseString(jsonString.str(), allocator, allowCppComments);
 }
 
 // ParsedJson: State methods
