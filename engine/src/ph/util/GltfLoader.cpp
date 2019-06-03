@@ -345,12 +345,19 @@ static bool extractAssets(
 		}
 
 		// Remove default emissive factor if no emissive is specified
-		if (phMat.emissiveTex == uint16_t(~0) && !hasParamAdditionalValues("emissiveFactor")) {
+		if (phMat.emissiveTex == StringID::invalid() && !hasParamAdditionalValues("emissiveFactor")) {
 			phMat.emissive = vec3_u8(uint8_t(0));
 		}
 
 		// Add material to assets
 		meshOut.materials.add(phMat);
+	}
+
+	// Add single default material if no materials
+	if (meshOut.materials.size() == 0) {
+		ph::MaterialUnbound defaultMaterial;
+		defaultMaterial.emissive = vec3_u8(255, 0, 0);
+		meshOut.materials.add(defaultMaterial);
 	}
 
 	// Add meshes
@@ -433,7 +440,9 @@ static bool extractAssets(
 		}
 
 		// Material
-		phMeshComp.materialIdx = uint32_t(primitive.material);
+		uint32_t materialIdx = primitive.material < 0 ? 0 : primitive.material;
+		sfz_assert_release(materialIdx < meshOut.materials.size());
+		phMeshComp.materialIdx = materialIdx;
 
 		// Add component to mesh
 		meshOut.components.add(phMeshComp);
