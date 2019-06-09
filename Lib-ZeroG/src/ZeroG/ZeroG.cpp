@@ -31,7 +31,7 @@
 // Version information
 // ------------------------------------------------------------------------------------------------
 
-ZG_DLL_API uint32_t zgApiVersion(void)
+ZG_DLL_API uint32_t zgApiLinkedVersion(void)
 {
 	return ZG_COMPILED_API_VERSION;
 }

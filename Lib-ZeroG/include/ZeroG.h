@@ -106,11 +106,11 @@ typedef struct ZgFramebufferRect ZgFramebufferRect;
 // The API version used to compile ZeroG.
 static const uint32_t ZG_COMPILED_API_VERSION = 0;
 
-// Returns the API version of ZeroG.
+// Returns the API version of the ZeroG DLL you have linked with
 //
 // As long as the DLL has the same API version as the version you compiled with it should be
 // compatible.
-ZG_DLL_API uint32_t zgApiVersion(void);
+ZG_DLL_API uint32_t zgApiLinkedVersion(void);
 
 // Backends enums
 // ------------------------------------------------------------------------------------------------
