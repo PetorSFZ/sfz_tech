@@ -40,12 +40,12 @@ extern "C" {
 
 #if defined(_WIN32)
 #if defined(ZG_DLL_EXPORT)
-#define ZG_DLL_API __declspec(dllexport)
+#define ZG_API __declspec(dllexport)
 #else
-#define ZG_DLL_API __declspec(dllimport)
+#define ZG_API __declspec(dllimport)
 #endif
 #else
-#define ZG_DLL_API
+#define ZG_API
 #endif
 
 // ZeroG handles
@@ -110,7 +110,7 @@ static const uint32_t ZG_COMPILED_API_VERSION = 0;
 //
 // As long as the DLL has the same API version as the version you compiled with it should be
 // compatible.
-ZG_DLL_API uint32_t zgApiLinkedVersion(void);
+ZG_API uint32_t zgApiLinkedVersion(void);
 
 // Backends enums
 // ------------------------------------------------------------------------------------------------
@@ -145,7 +145,7 @@ enum ZgFeatureBitsEnum {
 typedef uint64_t ZgFeatureBits;
 
 // Returns a bitmask containing the features compiled into this ZeroG dll.
-ZG_DLL_API ZgFeatureBits zgCompiledFeatures(void);
+ZG_API ZgFeatureBits zgCompiledFeatures(void);
 
 // Error codes
 // ------------------------------------------------------------------------------------------------
@@ -248,11 +248,11 @@ struct ZgContextInitSettings {
 };
 typedef struct ZgContextInitSettings ZgContextInitSettings;
 
-ZG_DLL_API ZgErrorCode zgContextCreate(
+ZG_API ZgErrorCode zgContextCreate(
 	ZgContext** contextOut,
 	const ZgContextInitSettings* initSettings);
 
-ZG_DLL_API ZgErrorCode zgContextDestroy(
+ZG_API ZgErrorCode zgContextDestroy(
 	ZgContext* context);
 
 // Resize the back buffers in the swap chain to the new size.
@@ -260,22 +260,22 @@ ZG_DLL_API ZgErrorCode zgContextDestroy(
 // This should be called every time the size of the window or the resolution is changed. This
 // function is guaranteed to not do anything if the specified width or height is the same as last
 // time, so it is completely safe to call this at the beginning of each frame.
-ZG_DLL_API ZgErrorCode zgContextResize(
+ZG_API ZgErrorCode zgContextResize(
 	ZgContext* context,
 	uint32_t width,
 	uint32_t height);
 
-ZG_DLL_API ZgErrorCode zgContextGeCommandQueueGraphicsPresent(
+ZG_API ZgErrorCode zgContextGeCommandQueueGraphicsPresent(
 	ZgContext* context,
 	ZgCommandQueue** commandQueueOut);
 
 // TODO: zgContextGetCopyQueue(), zgContextGetComputeQueue
 
-ZG_DLL_API ZgErrorCode zgContextBeginFrame(
+ZG_API ZgErrorCode zgContextBeginFrame(
 	ZgContext* context,
 	ZgFramebuffer** framebufferOut);
 
-ZG_DLL_API ZgErrorCode zgContextFinishFrame(
+ZG_API ZgErrorCode zgContextFinishFrame(
 	ZgContext* context);
 
 // Pipeline
@@ -501,17 +501,17 @@ struct ZgPipelineRenderingSignature {
 };
 typedef struct ZgPipelineRenderingSignature ZgPipelineRenderingSignature;
 
-ZG_DLL_API ZgErrorCode zgPipelineRenderingCreate(
+ZG_API ZgErrorCode zgPipelineRenderingCreate(
 	ZgContext* context,
 	ZgPipelineRendering** pipelineOut,
 	ZgPipelineRenderingSignature* signatureOut,
 	const ZgPipelineRenderingCreateInfo* createInfo);
 
-ZG_DLL_API ZgErrorCode zgPipelineRenderingRelease(
+ZG_API ZgErrorCode zgPipelineRenderingRelease(
 	ZgContext* context,
 	ZgPipelineRendering* pipeline);
 
-ZG_DLL_API ZgErrorCode zgPipelineRenderingGetSignature(
+ZG_API ZgErrorCode zgPipelineRenderingGetSignature(
 	ZgContext* context,
 	const ZgPipelineRendering* pipeline,
 	ZgPipelineRenderingSignature* signatureOut);
@@ -546,12 +546,12 @@ struct ZgMemoryHeapCreateInfo {
 };
 typedef struct ZgMemoryHeapCreateInfo ZgMemoryHeapCreateInfo;
 
-ZG_DLL_API ZgErrorCode zgMemoryHeapCreate(
+ZG_API ZgErrorCode zgMemoryHeapCreate(
 	ZgContext* context,
 	ZgMemoryHeap** memoryHeapOut,
 	const ZgMemoryHeapCreateInfo* createInfo);
 
-ZG_DLL_API ZgErrorCode zgMemoryHeapRelease(
+ZG_API ZgErrorCode zgMemoryHeapRelease(
 	ZgContext* context,
 	ZgMemoryHeap* memoryHeap);
 
@@ -566,16 +566,16 @@ struct ZgBufferCreateInfo {
 };
 typedef struct ZgBufferCreateInfo ZgBufferCreateInfo;
 
-ZG_DLL_API ZgErrorCode zgMemoryHeapBufferCreate(
+ZG_API ZgErrorCode zgMemoryHeapBufferCreate(
 	ZgMemoryHeap* memoryHeap,
 	ZgBuffer** bufferOut,
 	const ZgBufferCreateInfo* createInfo);
 
-ZG_DLL_API ZgErrorCode zgMemoryHeapBufferRelease(
+ZG_API ZgErrorCode zgMemoryHeapBufferRelease(
 	ZgMemoryHeap* memoryHeap,
 	ZgBuffer* buffer);
 
-ZG_DLL_API ZgErrorCode zgBufferMemcpyTo(
+ZG_API ZgErrorCode zgBufferMemcpyTo(
 	ZgContext* context,
 	ZgBuffer* dstBuffer,
 	uint64_t bufferOffsetBytes,
@@ -592,12 +592,12 @@ struct ZgTextureHeapCreateInfo {
 };
 typedef struct ZgTextureHeapCreateInfo ZgTextureHeapCreateInfo;
 
-ZG_DLL_API ZgErrorCode zgTextureHeapCreate(
+ZG_API ZgErrorCode zgTextureHeapCreate(
 	ZgContext* context,
 	ZgTextureHeap** textureHeapOut,
 	const ZgTextureHeapCreateInfo* createInfo);
 
-ZG_DLL_API ZgErrorCode zgTextureHeapRelease(
+ZG_API ZgErrorCode zgTextureHeapRelease(
 	ZgContext* context,
 	ZgTextureHeap* textureHeap);
 
@@ -647,38 +647,38 @@ struct ZgTexture2DAllocationInfo {
 };
 
 // Gets the allocation info of a Texture2D specified by a ZgTexture2DCreateInfo.
-ZG_DLL_API ZgErrorCode zgTextureHeapTexture2DGetAllocationInfo(
+ZG_API ZgErrorCode zgTextureHeapTexture2DGetAllocationInfo(
 	ZgTextureHeap* textureHeap,
 	ZgTexture2DAllocationInfo* allocationInfoOut,
 	const ZgTexture2DCreateInfo* createInfo);
 
-ZG_DLL_API ZgErrorCode zgTextureHeapTexture2DCreate(
+ZG_API ZgErrorCode zgTextureHeapTexture2DCreate(
 	ZgTextureHeap* textureHeap,
 	ZgTexture2D** textureOut,
 	const ZgTexture2DCreateInfo* createInfo);
 
-ZG_DLL_API ZgErrorCode zgMemoryHeapTexture2DRelease(
+ZG_API ZgErrorCode zgMemoryHeapTexture2DRelease(
 	ZgTextureHeap* textureHeap,
 	ZgTexture2D* texture);
 
 // Command queue
 // ------------------------------------------------------------------------------------------------
 
-ZG_DLL_API ZgErrorCode zgCommandQueueFlush(
+ZG_API ZgErrorCode zgCommandQueueFlush(
 	ZgCommandQueue* commandQueue);
 
-ZG_DLL_API ZgErrorCode zgCommandQueueBeginCommandListRecording(
+ZG_API ZgErrorCode zgCommandQueueBeginCommandListRecording(
 	ZgCommandQueue* commandQueue,
 	ZgCommandList** commandListOut);
 
-ZG_DLL_API ZgErrorCode zgCommandQueueExecuteCommandList(
+ZG_API ZgErrorCode zgCommandQueueExecuteCommandList(
 	ZgCommandQueue* commandQueue,
 	ZgCommandList* commandList);
 
 // Command list
 // ------------------------------------------------------------------------------------------------
 
-ZG_DLL_API ZgErrorCode zgCommandListMemcpyBufferToBuffer(
+ZG_API ZgErrorCode zgCommandListMemcpyBufferToBuffer(
 	ZgCommandList* commandList,
 	ZgBuffer* dstBuffer,
 	uint64_t dstBufferOffsetBytes,
@@ -702,13 +702,13 @@ struct ZgImageViewConstCpu {
 // texture (dstTexture). In other words, the CPU memory containing the image can freely be removed
 // after this call. The temporary upload buffer will not be touched until this command list has
 // finished executing.
-ZG_DLL_API ZgErrorCode zgCommandListMemcpyToTexture(
+ZG_API ZgErrorCode zgCommandListMemcpyToTexture(
 	ZgCommandList* commandList,
 	ZgTexture2D* dstTexture,
 	const ZgImageViewConstCpu* srcImageCpu,
 	ZgBuffer* tempUploadBuffer);
 
-ZG_DLL_API ZgErrorCode zgCommandListSetPushConstant(
+ZG_API ZgErrorCode zgCommandListSetPushConstant(
 	ZgCommandList* commandList,
 	uint32_t shaderRegister,
 	const void* data,
@@ -737,11 +737,11 @@ struct ZgPipelineBindings {
 };
 typedef struct ZgPipelineBindings ZgPipelineBindings;
 
-ZG_DLL_API ZgErrorCode zgCommandListSetPipelineBindings(
+ZG_API ZgErrorCode zgCommandListSetPipelineBindings(
 	ZgCommandList* commandList,
 	const ZgPipelineBindings* bindings);
 
-ZG_DLL_API ZgErrorCode zgCommandListSetPipelineRendering(
+ZG_API ZgErrorCode zgCommandListSetPipelineRendering(
 	ZgCommandList* commandList,
 	ZgPipelineRendering* pipeline);
 
@@ -752,18 +752,18 @@ struct ZgCommandListSetFramebufferInfo {
 };
 typedef struct ZgCommandListSetFramebufferInfo ZgCommandListSetFramebufferInfo;
 
-ZG_DLL_API ZgErrorCode zgCommandListSetFramebuffer(
+ZG_API ZgErrorCode zgCommandListSetFramebuffer(
 	ZgCommandList* commandList,
 	const ZgCommandListSetFramebufferInfo* info);
 
-ZG_DLL_API ZgErrorCode zgCommandListClearFramebuffer(
+ZG_API ZgErrorCode zgCommandListClearFramebuffer(
 	ZgCommandList* commandList,
 	float red,
 	float green,
 	float blue,
 	float alpha);
 
-ZG_DLL_API ZgErrorCode zgCommandListClearDepthBuffer(
+ZG_API ZgErrorCode zgCommandListClearDepthBuffer(
 	ZgCommandList* commandList,
 	float depth);
 
@@ -773,22 +773,22 @@ enum ZgIndexBufferTypeEnum {
 };
 typedef uint32_t ZgIndexBufferType;
 
-ZG_DLL_API ZgErrorCode zgCommandListSetIndexBuffer(
+ZG_API ZgErrorCode zgCommandListSetIndexBuffer(
 	ZgCommandList* commandList,
 	ZgBuffer* indexBuffer,
 	ZgIndexBufferType type);
 
-ZG_DLL_API ZgErrorCode zgCommandListSetVertexBuffer(
+ZG_API ZgErrorCode zgCommandListSetVertexBuffer(
 	ZgCommandList* commandList,
 	uint32_t vertexBufferSlot,
 	ZgBuffer* vertexBuffer);
 
-ZG_DLL_API ZgErrorCode zgCommandListDrawTriangles(
+ZG_API ZgErrorCode zgCommandListDrawTriangles(
 	ZgCommandList* commandList,
 	uint32_t startVertexIndex,
 	uint32_t numVertices);
 
-ZG_DLL_API ZgErrorCode zgCommandListDrawTrianglesIndexed(
+ZG_API ZgErrorCode zgCommandListDrawTrianglesIndexed(
 	ZgCommandList* commandList,
 	uint32_t startIndex,
 	uint32_t numTriangles);
