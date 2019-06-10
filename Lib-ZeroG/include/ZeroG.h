@@ -700,7 +700,7 @@ struct ZgImageViewConstCpu {
 // The CPU image (srcImageCpu) is first (synchronously) copied to a temporary upload buffer
 // (tempUploadBuffer), and then asynchronously copied from this upload buffer to the specified
 // texture (dstTexture). In other words, the CPU memory containing the image can freely be removed
-// after this call. The temporary upload buffer will not be touched until this command list has
+// after this call. The temporary upload buffer must not be touched until this command list has
 // finished executing.
 ZG_API ZgErrorCode zgCommandListMemcpyToTexture(
 	ZgCommandList* commandList,
