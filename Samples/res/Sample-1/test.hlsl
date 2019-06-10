@@ -51,7 +51,20 @@ VSOutput VSMain(VSInput input)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-	//return float4(1.0, 1.0, 1.0, 1.0);
+	// Get texture dimensions and number of mip levels
+	uint texWidth = 0;
+	uint texHeight = 0;
+	uint texNumMipLevels = 0;
+	texture.GetDimensions(0, texWidth, texHeight, texNumMipLevels);
+
+	// Calculate texture integer coordinate
+	int coordX = (texWidth - 1) * input.texcoord.x;
+	int coordY = (texHeight - 1) * input.texcoord.y;
+	uint2 coord = uint2(coordX, coordY);
+
 	return float4(texture.Sample(textureSampler, input.texcoord).xyz, 1.0);
-	//return float4(input.normal, 1.0);
+
+	// Small hack to ensure sampler is used
+	//float4 val = float4(texture.Sample(textureSampler, input.texcoord).xyz, 1.0);
+	//return float4(texture.mips[1][coord].xyz, 1.0) * 0.75 + val * 0.25;
 }

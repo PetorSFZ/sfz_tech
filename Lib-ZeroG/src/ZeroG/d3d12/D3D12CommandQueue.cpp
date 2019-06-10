@@ -295,7 +295,7 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListStateChanges(
 		const PendingTextureState& state = pendingTextureStates[i];
 
 		// Don't insert barrier if resource already is in correct state
-		if (state.texture->lastCommittedState == state.neededInitialState) {
+		if (state.texture->lastCommittedStates[state.mipLevel] == state.neededInitialState) {
 			continue;
 		}
 
@@ -308,9 +308,9 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListStateChanges(
 		// Create barrier
 		barriers[numBarriers] = CD3DX12_RESOURCE_BARRIER::Transition(
 			state.texture->resource.Get(),
-			state.texture->lastCommittedState,
+			state.texture->lastCommittedStates[i],
 			state.neededInitialState,
-			0); // TODO: Mip levels
+			state.mipLevel);
 
 		// Store residency set
 		residencyObjects[numBarriers] = &state.texture->textureHeap->managedObject;
@@ -346,7 +346,7 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListStateChanges(
 	}
 	for (uint32_t i = 0; i < pendingTextureStates.size(); i++) {
 		const PendingTextureState& state = pendingTextureStates[i];
-		state.texture->lastCommittedState = state.currentState;
+		state.texture->lastCommittedStates[state.mipLevel] = state.currentState;
 	}
 
 	return ZG_SUCCESS;

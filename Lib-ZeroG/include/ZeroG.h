@@ -610,6 +610,8 @@ enum ZgTexture2DFormatEnum {
 };
 typedef uint32_t ZgTexture2DFormat;
 
+static const uint32_t ZG_TEXTURE_2D_MAX_NUM_MIPMAPS = 12;
+
 struct ZgTexture2DCreateInfo {
 
 	// The format of the texture
@@ -624,6 +626,12 @@ struct ZgTexture2DCreateInfo {
 	// The dimensions of the texture
 	uint32_t width;
 	uint32_t height;
+
+	// The number of mipmaps
+	//
+	// 1 equals no mipmaps, i.e. only a single layer. May not be 0, must be smaller than or equal
+	// to ZG_TEXTURE_2D_MAX_NUM_MIPMAPS.
+	uint32_t numMipmaps;
 	
 	// The offset from the start of the texture heap to create the buffer at.
 	// Note that the offset must be a multiple of the alignment of the texture, which can be
@@ -705,6 +713,7 @@ struct ZgImageViewConstCpu {
 ZG_API ZgErrorCode zgCommandListMemcpyToTexture(
 	ZgCommandList* commandList,
 	ZgTexture2D* dstTexture,
+	uint32_t dstTextureMipLevel,
 	const ZgImageViewConstCpu* srcImageCpu,
 	ZgBuffer* tempUploadBuffer);
 

@@ -16,6 +16,7 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
+#include <cassert>
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
@@ -137,7 +138,7 @@ static float calculateDelta(time_point& previousTime) noexcept
 	return delta;
 }
 
-static uint8_t* allocateRgbaTex(uint32_t width, uint32_t height) noexcept
+static ZgImageViewConstCpu allocateRgbaTex(uint32_t width, uint32_t height) noexcept
 {
 	uint8_t* data = new uint8_t[width * height * 4];
 	for (uint32_t y = 0; y < height; y++) {
@@ -157,7 +158,51 @@ static uint8_t* allocateRgbaTex(uint32_t width, uint32_t height) noexcept
 			}
 		}
 	}
-	return data;
+
+	// Create an image view of the data
+	ZgImageViewConstCpu imageView = {};
+	imageView.format = ZG_TEXTURE_2D_FORMAT_RGBA_U8;
+	imageView.data = data;
+	imageView.width = width;
+	imageView.height = height;
+	imageView.pitchInBytes = width * 4;
+
+	return imageView;
+}
+
+static ZgImageViewConstCpu copyDownsample(
+	const uint8_t* srcRgbaTex, uint32_t srcWidth, uint32_t srcHeight) noexcept
+{
+	assert((srcWidth % 2) == 0);
+	assert((srcHeight % 2) == 0);
+	uint32_t dstWidth = srcWidth / 2;
+	uint32_t dstHeight = srcHeight / 2;
+	uint8_t* dstImg = new uint8_t[dstWidth * dstHeight * 4];
+	for (uint32_t y = 0; y < dstHeight; y++) {
+		for (uint32_t x = 0; x < dstWidth; x++) {
+
+			uint8_t* dstPixelPtr = dstImg + y * dstWidth * 4 + x * 4;
+			const uint8_t* srcPixelPtrRow0 = srcRgbaTex + (y * 2) * srcWidth * 4 + (x * 2) * 4;
+			const uint8_t* srcPixelPtrRow1 = srcRgbaTex + ((y * 2) + 1) * srcWidth * 4 + (x * 2) * 4;
+
+			for (uint32_t i = 0; i < 4; i++) {
+				uint32_t inputSum =
+					uint32_t(srcPixelPtrRow0[(0 * 4) + i]) + uint32_t(srcPixelPtrRow0[(1 * 4) + i]) +
+					uint32_t(srcPixelPtrRow1[(0 * 4) + i]) + uint32_t(srcPixelPtrRow1[(1 * 4) + i]);
+				dstPixelPtr[i] = uint8_t(inputSum / 4);
+			}
+		}
+	}
+
+	// Create an image view of the data
+	ZgImageViewConstCpu imageView = {};
+	imageView.format = ZG_TEXTURE_2D_FORMAT_RGBA_U8;
+	imageView.data = dstImg;
+	imageView.width = dstWidth;
+	imageView.height = dstHeight;
+	imageView.pitchInBytes = dstWidth * 4;
+
+	return imageView;
 }
 
 // Main
@@ -237,7 +282,7 @@ int main(int argc, char* argv[])
 	pipelineInfo.pushConstantRegisters[0] = 0;
 
 	pipelineInfo.numSamplers = 1;
-	pipelineInfo.samplers[0].samplingMode = ZG_SAMPLING_MODE_NEAREST;
+	pipelineInfo.samplers[0].samplingMode = ZG_SAMPLING_MODE_ANISOTROPIC;
 	pipelineInfo.samplers[0].wrappingModeU = ZG_WRAPPING_MODE_CLAMP;
 	pipelineInfo.samplers[0].wrappingModeV = ZG_WRAPPING_MODE_CLAMP;
 	pipelineInfo.samplers[0].mipLodBias = 0.0f;
@@ -295,6 +340,7 @@ int main(int argc, char* argv[])
 	textureCreateInfo.normalized = ZG_FALSE;
 	textureCreateInfo.width = 256;
 	textureCreateInfo.height = 256;
+	textureCreateInfo.numMipmaps = 4;
 
 	ZgTexture2DAllocationInfo textureAllocInfo = {};
 	CHECK_ZG zgTextureHeapTexture2DGetAllocationInfo(
@@ -309,42 +355,62 @@ int main(int argc, char* argv[])
 	
 	// Fill texture with some random data
 	{
-		// Allocate and fill image on CPU
-		uint8_t* imageData = allocateRgbaTex(256, 256);
-		const uint32_t imageDataSize = 256 * 256 * 4;
+		// Allocates images
+		ZgImageViewConstCpu imageLvl0 = allocateRgbaTex(256, 256);
+		ZgImageViewConstCpu imageLvl1 =
+			copyDownsample(imageLvl0.data, imageLvl0.width, imageLvl0.height);
+		ZgImageViewConstCpu imageLvl2 =
+			copyDownsample(imageLvl1.data, imageLvl1.width, imageLvl1.height);
+		ZgImageViewConstCpu imageLvl3 =
+			copyDownsample(imageLvl2.data, imageLvl2.width, imageLvl2.height);
 
-		// Create an image view of the image data
-		ZgImageViewConstCpu imageView = {};
-		imageView.format = ZG_TEXTURE_2D_FORMAT_RGBA_U8;
-		imageView.data = imageData;
-		imageView.width = 256;
-		imageView.height = 256;
-		imageView.pitchInBytes = 256 * 4;
 
 		// Create temporary upload buffer (accessible from CPU)
-		ZgMemoryHeap* uploadHeap = nullptr;
-		ZgBuffer* uploadBuffer = nullptr;
-		allocateMemoryHeapAndBuffer(ctx.mContext, uploadHeap, uploadBuffer,
+		ZgMemoryHeap* uploadHeapLvl0 = nullptr;
+		ZgBuffer* uploadBufferLvl0 = nullptr;
+		allocateMemoryHeapAndBuffer(ctx.mContext, uploadHeapLvl0, uploadBufferLvl0,
 			ZG_MEMORY_TYPE_UPLOAD, textureAllocInfo.sizeInBytes);
 
-		// Copy image to CPU
-		//CHECK_ZG zgBufferMemcpyTo(ctx.mContext, uploadBuffer, 0, imageData, imageDataSize);
+		ZgMemoryHeap* uploadHeapLvl1 = nullptr;
+		ZgBuffer* uploadBufferLvl1 = nullptr;
+		allocateMemoryHeapAndBuffer(ctx.mContext, uploadHeapLvl1, uploadBufferLvl1,
+			ZG_MEMORY_TYPE_UPLOAD, textureAllocInfo.sizeInBytes);
+
+		ZgMemoryHeap* uploadHeapLvl2 = nullptr;
+		ZgBuffer* uploadBufferLvl2 = nullptr;
+		allocateMemoryHeapAndBuffer(ctx.mContext, uploadHeapLvl2, uploadBufferLvl2,
+			ZG_MEMORY_TYPE_UPLOAD, textureAllocInfo.sizeInBytes);
+
+		ZgMemoryHeap* uploadHeapLvl3 = nullptr;
+		ZgBuffer* uploadBufferLvl3 = nullptr;
+		allocateMemoryHeapAndBuffer(ctx.mContext, uploadHeapLvl3, uploadBufferLvl3,
+			ZG_MEMORY_TYPE_UPLOAD, textureAllocInfo.sizeInBytes);
 
 		// Copy to the texture
 		ZgCommandList* commandList = nullptr;
 		CHECK_ZG zgCommandQueueBeginCommandListRecording(commandQueue, &commandList);
-		CHECK_ZG zgCommandListMemcpyToTexture(commandList, texture, &imageView, uploadBuffer);
-		//CHECK_ZG zgCommandListMemcpyBufferToBuffer(
-		//	commandList, deviceBuffer, 0, uploadBuffer, 0, numBytes);
+		CHECK_ZG zgCommandListMemcpyToTexture(commandList, texture, 0, &imageLvl0, uploadBufferLvl0);
+		CHECK_ZG zgCommandListMemcpyToTexture(commandList, texture, 1, &imageLvl1, uploadBufferLvl1);
+		CHECK_ZG zgCommandListMemcpyToTexture(commandList, texture, 2, &imageLvl2, uploadBufferLvl2);
+		CHECK_ZG zgCommandListMemcpyToTexture(commandList, texture, 3, &imageLvl3, uploadBufferLvl3);
 		CHECK_ZG zgCommandQueueExecuteCommandList(commandQueue, commandList);
 		CHECK_ZG zgCommandQueueFlush(commandQueue);
 
 		// Release upload heap and buffer
-		CHECK_ZG zgMemoryHeapBufferRelease(uploadHeap, uploadBuffer);
-		CHECK_ZG zgMemoryHeapRelease(ctx.mContext, uploadHeap);
+		CHECK_ZG zgMemoryHeapBufferRelease(uploadHeapLvl0, uploadBufferLvl0);
+		CHECK_ZG zgMemoryHeapRelease(ctx.mContext, uploadHeapLvl0);
+		CHECK_ZG zgMemoryHeapBufferRelease(uploadHeapLvl1, uploadBufferLvl1);
+		CHECK_ZG zgMemoryHeapRelease(ctx.mContext, uploadHeapLvl1);
+		CHECK_ZG zgMemoryHeapBufferRelease(uploadHeapLvl2, uploadBufferLvl2);
+		CHECK_ZG zgMemoryHeapRelease(ctx.mContext, uploadHeapLvl2);
+		CHECK_ZG zgMemoryHeapBufferRelease(uploadHeapLvl3, uploadBufferLvl3);
+		CHECK_ZG zgMemoryHeapRelease(ctx.mContext, uploadHeapLvl3);
 
-		// Free image
-		delete[] imageData;
+		// Free images
+		delete[] imageLvl0.data;
+		delete[] imageLvl1.data;
+		delete[] imageLvl2.data;
+		delete[] imageLvl3.data;
 	}
 	
 

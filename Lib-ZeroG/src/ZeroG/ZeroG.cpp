@@ -306,6 +306,8 @@ ZG_API ZgErrorCode zgTextureHeapTexture2DGetAllocationInfo(
 	ZgTexture2DAllocationInfo* allocationInfoOut,
 	const ZgTexture2DCreateInfo* createInfo)
 {
+	if (createInfo->numMipmaps == 0) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->numMipmaps > ZG_TEXTURE_2D_MAX_NUM_MIPMAPS) return ZG_ERROR_INVALID_ARGUMENT;
 	zg::ITextureHeap* textureHeap = reinterpret_cast<zg::ITextureHeap*>(textureHeapIn);
 	return textureHeap->texture2DGetAllocationInfo(*allocationInfoOut, *createInfo);
 }
@@ -316,6 +318,8 @@ ZG_API ZgErrorCode zgTextureHeapTexture2DCreate(
 	const ZgTexture2DCreateInfo* createInfo)
 {
 	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->numMipmaps == 0) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->numMipmaps > ZG_TEXTURE_2D_MAX_NUM_MIPMAPS) return ZG_ERROR_INVALID_ARGUMENT;
 	//if ((createInfo->offsetInBytes % 65536) != 0) return ZG_ERROR_INVALID_ARGUMENT; // 64KiB alignment
 
 	zg::ITextureHeap* textureHeap = reinterpret_cast<zg::ITextureHeap*>(textureHeapIn);
@@ -389,6 +393,7 @@ ZG_API ZgErrorCode zgCommandListMemcpyBufferToBuffer(
 ZG_API ZgErrorCode zgCommandListMemcpyToTexture(
 	ZgCommandList* commandListIn,
 	ZgTexture2D* dstTexture,
+	uint32_t dstTextureMipLevel,
 	const ZgImageViewConstCpu* srcImageCpu,
 	ZgBuffer* tempUploadBuffer)
 {
@@ -396,9 +401,11 @@ ZG_API ZgErrorCode zgCommandListMemcpyToTexture(
 	if (srcImageCpu->width == 0) return ZG_ERROR_INVALID_ARGUMENT;
 	if (srcImageCpu->height == 0) return ZG_ERROR_INVALID_ARGUMENT;
 	if (srcImageCpu->pitchInBytes < srcImageCpu->width) return ZG_ERROR_INVALID_ARGUMENT;
+	if (dstTextureMipLevel >= ZG_TEXTURE_2D_MAX_NUM_MIPMAPS) return ZG_ERROR_INVALID_ARGUMENT;
 	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
 	return commandList->memcpyToTexture(
 		reinterpret_cast<zg::ITexture2D*>(dstTexture),
+		dstTextureMipLevel,
 		*srcImageCpu,
 		reinterpret_cast<zg::IBuffer*>(tempUploadBuffer));
 }

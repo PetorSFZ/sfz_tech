@@ -86,6 +86,9 @@ struct PendingTextureState final {
 	// The associated D3D12Texture
 	D3D12Texture2D* texture = nullptr;
 
+	// The mip level of the associated texture
+	uint32_t mipLevel = ~0u;
+
 	// The state the resource need to be in before the command list is executed
 	D3D12_RESOURCE_STATES neededInitialState = D3D12_RESOURCE_STATE_COMMON;
 

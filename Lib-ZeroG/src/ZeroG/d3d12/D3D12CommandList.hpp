@@ -69,6 +69,7 @@ public:
 
 	ZgErrorCode memcpyToTexture(
 		ITexture2D* dstTexture,
+		uint32_t dstTextureMipLevel,
 		const ZgImageViewConstCpu& srcImageCpu,
 		IBuffer* tempUploadBuffer) noexcept override final;
 
@@ -128,7 +129,11 @@ public:
 	Vector<uint64_t> pendingBufferIdentifiers;
 	Vector<PendingBufferState> pendingBufferStates;
 
-	Vector<uint64_t> pendingTextureIdentifiers;
+	struct TextureMipIdentifier {
+		uint64_t identifier = ~0u;
+		uint32_t mipLevel = ~0u;
+	};
+	Vector<TextureMipIdentifier> pendingTextureIdentifiers;
 	Vector<PendingTextureState> pendingTextureStates;
 
 private:
@@ -144,10 +149,18 @@ private:
 
 	ZgErrorCode getPendingTextureStates(
 		D3D12Texture2D& texture,
+		uint32_t mipLevel,
 		D3D12_RESOURCE_STATES neededState,
 		PendingTextureState*& pendingStatesOut) noexcept;
 
-	ZgErrorCode setTextureState(D3D12Texture2D& texture, D3D12_RESOURCE_STATES targetState) noexcept;
+	ZgErrorCode setTextureState(
+		D3D12Texture2D& texture,
+		uint32_t mipLevel,
+		D3D12_RESOURCE_STATES targetState) noexcept;
+
+	ZgErrorCode setTextureStateAllMipLevels(
+		D3D12Texture2D& texture,
+		D3D12_RESOURCE_STATES targetState) noexcept;
 
 	// Private members
 	// --------------------------------------------------------------------------------------------

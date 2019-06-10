@@ -98,6 +98,7 @@ public:
 
 	virtual ZgErrorCode memcpyToTexture(
 		ITexture2D* dstTexture,
+		uint32_t dstTextureMipLevel,
 		const ZgImageViewConstCpu& srcImageCpu,
 		IBuffer* tempUploadBuffer) noexcept = 0;
 

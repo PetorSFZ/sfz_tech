@@ -101,19 +101,19 @@ public:
 	DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
 	uint32_t width = 0;
 	uint32_t height = 0;
+	uint32_t numMipmaps = 0;
 
 	// Information from ID3D12Device::GetCopyableFootprints()
-	D3D12_PLACED_SUBRESOURCE_FOOTPRINT subresourceFootprint = {};
-	uint32_t numRows = 0;
-	uint64_t rowSizeInBytes = 0;
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT subresourceFootprints[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
+	uint32_t numRows[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
+	uint64_t rowSizesInBytes[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
 	uint64_t totalSizeInBytes = 0;
 
 	// The current resource state of the texture. Committed because the state has been committed
 	// in a command list which has been executed on a queue. There may be pending state changes
 	// in command lists not yet executed.
 	// TODO: Mutex protecting this? How handle changes submitted on different queues simulatenously?
-	// TODO: One for each mip level?
-	D3D12_RESOURCE_STATES lastCommittedState = D3D12_RESOURCE_STATE_GENERIC_READ;
+	D3D12_RESOURCE_STATES lastCommittedStates[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
 };
 
 } // namespace zg

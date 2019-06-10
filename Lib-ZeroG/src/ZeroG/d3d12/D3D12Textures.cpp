@@ -60,7 +60,7 @@ static D3D12_RESOURCE_DESC createInfoToResourceDesc(const ZgTexture2DCreateInfo&
 	desc.Width = info.width;
 	desc.Height = info.height;
 	desc.DepthOrArraySize = 1;
-	desc.MipLevels = 1; // TODO: Currently no mips I think. Expose this.
+	desc.MipLevels = (uint16_t)info.numMipmaps;
 	desc.Format = createInfoToDxgiFormat(info);
 	desc.SampleDesc.Count = 1;
 	desc.SampleDesc.Quality = 0;
@@ -126,13 +126,13 @@ ZgErrorCode D3D12TextureHeap::texture2DCreate(
 
 	// Get the subresource footprint for the texture
 	// TODO: One for each mipmap level?
-	D3D12_PLACED_SUBRESOURCE_FOOTPRINT subresourceFootprint = {};
-	uint32_t numRows = 0;
-	uint64_t rowSizeInBytes = 0;
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT subresourceFootprints[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
+	uint32_t numRows[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
+	uint64_t rowSizesInBytes[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
 	uint64_t totalSizeInBytes = 0;
 
-	device->GetCopyableFootprints(&desc, 0, 1, createInfo.offsetInBytes,
-		&subresourceFootprint, &numRows, &rowSizeInBytes, &totalSizeInBytes);
+	device->GetCopyableFootprints(&desc, 0, createInfo.numMipmaps, createInfo.offsetInBytes,
+		subresourceFootprints, numRows, rowSizesInBytes, &totalSizeInBytes);
 
 	// Allocate texture
 	D3D12Texture2D* texture =
@@ -147,13 +147,18 @@ ZgErrorCode D3D12TextureHeap::texture2DCreate(
 	texture->format = desc.Format;
 	texture->width = createInfo.width;
 	texture->height = createInfo.height;
+	texture->numMipmaps = createInfo.numMipmaps;
 
-	texture->subresourceFootprint = subresourceFootprint;
-	texture->numRows = numRows;
-	texture->rowSizeInBytes = rowSizeInBytes;
+	for (uint32_t i = 0; i < createInfo.numMipmaps; i++) {
+		texture->subresourceFootprints[i] = subresourceFootprints[i];
+		texture->numRows[i] = numRows[i];
+		texture->rowSizesInBytes[i] = rowSizesInBytes[i];
+	}
 	texture->totalSizeInBytes = totalSizeInBytes;
 
-	texture->lastCommittedState = initialResourceState;
+	for (uint32_t i = 0; i < createInfo.numMipmaps; i++) {
+		texture->lastCommittedStates[i] = initialResourceState;
+	}
 
 	// Return texture
 	*textureOut = texture;
