@@ -161,40 +161,8 @@ ZG_API ZgErrorCode zgContextFinishFrame(
 	return context->context->finishFrame();
 }
 
-// Pipeline
+// Pipeline Rendering - Common
 // ------------------------------------------------------------------------------------------------
-
-// Note: A ZgPipeline struct does not really exist. It's just an alias for the internal
-// zg::IPipeline currently. This may (or may not) change in the future.
-
-ZG_API ZgErrorCode zgPipelineRenderingCreate(
-	ZgContext* context,
-	ZgPipelineRendering** pipelineOut,
-	ZgPipelineRenderingSignature* signatureOut,
-	const ZgPipelineRenderingCreateInfo* createInfo)
-{
-	// Check arguments
-	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (pipelineOut == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (signatureOut == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->vertexShaderPath == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->vertexShaderEntry == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->pixelShaderPath == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->pixelShaderEntry == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->shaderVersion == ZG_SHADER_MODEL_UNDEFINED) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->numVertexAttributes == 0) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->numVertexBufferSlots == 0) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS) return ZG_ERROR_INVALID_ARGUMENT;
-
-	zg::IPipelineRendering* pipeline = nullptr;
-	ZgErrorCode res = context->context->pipelineRenderingCreate(
-		&pipeline, signatureOut, *createInfo);
-	if (res != ZG_SUCCESS) return res;
-	*pipelineOut = reinterpret_cast<ZgPipelineRendering*>(pipeline);
-	return ZG_SUCCESS;
-}
 
 ZG_API ZgErrorCode zgPipelineRenderingRelease(
 	ZgContext* context,
@@ -211,6 +179,98 @@ ZG_API ZgErrorCode zgPipelineRenderingGetSignature(
 {
 	return context->context->pipelineRenderingGetSignature(
 		reinterpret_cast<const zg::IPipelineRendering*>(pipeline), signatureOut);
+}
+
+// Pipeline Rendering - SPIRV
+// ------------------------------------------------------------------------------------------------
+
+ZG_API ZgErrorCode zgPipelineRenderingCreateFromFileSPIRV(
+	ZgContext* context,
+	ZgPipelineRendering** pipelineOut,
+	ZgPipelineRenderingSignature* signatureOut,
+	const ZgPipelineRenderingCreateInfoFileSPIRV* createInfo)
+{
+	// Check arguments
+	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (pipelineOut == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (signatureOut == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->vertexShaderPath == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.vertexShaderEntry == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->pixelShaderPath == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.pixelShaderEntry == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.numVertexAttributes == 0) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.numVertexBufferSlots == 0) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS) return ZG_ERROR_INVALID_ARGUMENT;
+	
+	zg::IPipelineRendering* pipeline = nullptr;
+	ZgErrorCode res = context->context->pipelineRenderingCreateFromFileSPIRV(
+		&pipeline, signatureOut, *createInfo);
+	if (res != ZG_SUCCESS) return res;
+	*pipelineOut = reinterpret_cast<ZgPipelineRendering*>(pipeline);
+	return ZG_SUCCESS;
+}
+
+// Pipeline Rendering - HLSL
+// ------------------------------------------------------------------------------------------------
+
+ZG_API ZgErrorCode zgPipelineRenderingCreateFromFileHLSL(
+	ZgContext* context,
+	ZgPipelineRendering** pipelineOut,
+	ZgPipelineRenderingSignature* signatureOut,
+	const ZgPipelineRenderingCreateInfoFileHLSL* createInfo)
+{
+	// Check arguments
+	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (pipelineOut == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (signatureOut == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->vertexShaderPath == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.vertexShaderEntry == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->pixelShaderPath == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.pixelShaderEntry == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->shaderModel == ZG_SHADER_MODEL_UNDEFINED) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.numVertexAttributes == 0) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.numVertexBufferSlots == 0) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS) return ZG_ERROR_INVALID_ARGUMENT;
+
+	zg::IPipelineRendering* pipeline = nullptr;
+	ZgErrorCode res = context->context->pipelineRenderingCreateFromFileHLSL(
+		&pipeline, signatureOut, *createInfo);
+	if (res != ZG_SUCCESS) return res;
+	*pipelineOut = reinterpret_cast<ZgPipelineRendering*>(pipeline);
+	return ZG_SUCCESS;
+}
+
+ZG_API ZgErrorCode zgPipelineRenderingCreateFromSourceHLSL(
+	ZgContext* context,
+	ZgPipelineRendering** pipelineOut,
+	ZgPipelineRenderingSignature* signatureOut,
+	const ZgPipelineRenderingCreateInfoSourceHLSL* createInfo)
+{
+	// Check arguments
+	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (pipelineOut == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (signatureOut == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->vertexShaderSrc == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.vertexShaderEntry == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->pixelShaderSrc == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.pixelShaderEntry == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->shaderModel == ZG_SHADER_MODEL_UNDEFINED) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.numVertexAttributes == 0) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.numVertexBufferSlots == 0) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo->common.numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS) return ZG_ERROR_INVALID_ARGUMENT;
+
+	zg::IPipelineRendering* pipeline = nullptr;
+	ZgErrorCode res = context->context->pipelineRenderingCreateFromSourceHLSL(
+		&pipeline, signatureOut, *createInfo);
+	if (res != ZG_SUCCESS) return res;
+	*pipelineOut = reinterpret_cast<ZgPipelineRendering*>(pipeline);
+	return ZG_SUCCESS;
 }
 
 // Memory

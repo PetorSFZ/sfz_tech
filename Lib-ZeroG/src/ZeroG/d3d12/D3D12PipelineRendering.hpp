@@ -69,21 +69,40 @@ public:
 	uint32_t numTextures = 0;
 	D3D12TextureMapping textures[ZG_MAX_NUM_TEXTURES] = {};
 	uint32_t dynamicBuffersParameterIndex = ~0u;
-	ZgPipelineRenderingCreateInfo createInfo = {}; // The info used to create the pipeline 
+	ZgPipelineRenderingCreateInfoCommon createInfo = {}; // The info used to create the pipeline 
 };
 
 // D3D12 PipelineRendering functions
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode createPipelineRendering(
+ZgErrorCode createPipelineRenderingFileSPIRV(
 	D3D12PipelineRendering** pipelineOut,
 	ZgPipelineRenderingSignature* signatureOut,
-	const ZgPipelineRenderingCreateInfo& createInfo,
+	ZgPipelineRenderingCreateInfoFileSPIRV createInfo,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	ZgLogger& logger,
 	ZgAllocator& allocator,
-	ID3D12Device3& device,
-	std::mutex& contextMutex) noexcept;
+	ID3D12Device3& device) noexcept;
+
+ZgErrorCode createPipelineRenderingFileHLSL(
+	D3D12PipelineRendering** pipelineOut,
+	ZgPipelineRenderingSignature* signatureOut,
+	const ZgPipelineRenderingCreateInfoFileHLSL& createInfo,
+	IDxcLibrary& dxcLibrary,
+	IDxcCompiler& dxcCompiler,
+	ZgLogger& logger,
+	ZgAllocator& allocator,
+	ID3D12Device3& device) noexcept;
+
+ZgErrorCode createPipelineRenderingSourceHLSL(
+	D3D12PipelineRendering** pipelineOut,
+	ZgPipelineRenderingSignature* signatureOut,
+	const ZgPipelineRenderingCreateInfoSourceHLSL& createInfo,
+	IDxcLibrary& dxcLibrary,
+	IDxcCompiler& dxcCompiler,
+	ZgLogger& logger,
+	ZgAllocator& allocator,
+	ID3D12Device3& device) noexcept;
 
 } // namespace zg

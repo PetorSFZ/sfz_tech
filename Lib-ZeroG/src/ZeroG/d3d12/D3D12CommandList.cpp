@@ -599,7 +599,7 @@ ZgErrorCode D3D12CommandList::setVertexBuffer(
 	if (!mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 
 	// Check that the vertex buffer slot is not out of bounds for the bound pipeline
-	const ZgPipelineRenderingCreateInfo& pipelineInfo = mBoundPipeline->createInfo;
+	const ZgPipelineRenderingCreateInfoCommon& pipelineInfo = mBoundPipeline->createInfo;
 	if (pipelineInfo.numVertexBufferSlots <= vertexBufferSlot) {
 		return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 	}

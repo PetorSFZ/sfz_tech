@@ -19,8 +19,10 @@
 #include "ZeroG-cpp.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cstdio>
 #include <cstring>
+
 namespace zg {
 
 
@@ -64,6 +66,7 @@ const char* errorCodeToString(ZgErrorCode errorCode) noexcept
 
 ZgErrorCode CheckZgImpl::operator% (ZgErrorCode result) noexcept
 {
+	assert(result == ZG_SUCCESS);
 	if (result == ZG_SUCCESS) return ZG_SUCCESS;
 	printf("%s:%i: ZeroG error: %s\n", stripFilePath(file), line, errorCodeToString(result));
 	return result;

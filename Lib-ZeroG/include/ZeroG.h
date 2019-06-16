@@ -20,20 +20,24 @@
 // ------------------------------------------------------------------------------------------------
 
 // This header file contains the ZeroG C-API. If you are using C++ you might also want to link with
-// and use the C++ wrapper static library where appropriate. The C++ wrapper header is
-// "ZeroG-cpp.hpp".
+// and use the C++ wrapper static library where appropriate.
 
 // Includes
 // ------------------------------------------------------------------------------------------------
 
 #pragma once
 
+// Include standard integer types
+#ifdef __cplusplus
+#include <cstdint>
+#else
+#include <stdint.h>
+#endif
+
 // This entire header is pure C
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdint.h>
 
 // Macros
 // ------------------------------------------------------------------------------------------------
@@ -278,22 +282,20 @@ ZG_API ZgErrorCode zgContextBeginFrame(
 ZG_API ZgErrorCode zgContextFinishFrame(
 	ZgContext* context);
 
-// Pipeline
+// Pipeline Rendering - Signature
 // ------------------------------------------------------------------------------------------------
 
-// Enum representing various shader model versions
-enum ZgShaderModelEnum {
-	ZG_SHADER_MODEL_UNDEFINED = 0,
-	ZG_SHADER_MODEL_5_1,
-	ZG_SHADER_MODEL_6_0,
-	ZG_SHADER_MODEL_6_1,
-	ZG_SHADER_MODEL_6_2,
-	ZG_SHADER_MODEL_6_3
-};
-typedef uint32_t ZgShaderModel;
+// The maximum number of vertex attributes allowed as input to a vertex shader
+static const uint32_t ZG_MAX_NUM_VERTEX_ATTRIBUTES = 8;
 
-// The maximum number of compiler flags allowed to the DXC shader compiler
-static const uint32_t ZG_MAX_NUM_DXC_COMPILER_FLAGS = 8;
+// The maximum number of constant buffers allowed on a single pipeline
+static const uint32_t ZG_MAX_NUM_CONSTANT_BUFFERS = 16;
+
+// The maximum number of textures allowed on a single pipeline
+static const uint32_t ZG_MAX_NUM_TEXTURES = 16;
+
+// The maximum number of samplers allowed on a single pipeline
+static const uint32_t ZG_MAX_NUM_SAMPLERS = 8;
 
 // The type of data contained in a vertex
 enum ZgVertexAttributeTypeEnum {
@@ -320,10 +322,11 @@ typedef uint32_t ZgVertexAttributeType;
 struct ZgVertexAttribute {
 	// The location of the attribute in the vertex input.
 	//
-	// For HLSL the semantic name need to be "ATTRIBUTE_LOCATION_<attributeLocation>"
+	// For HLSL the semantic name need to be "TEXCOORD<attributeLocation>"
 	// E.g.:
 	// struct VSInput {
-	//     float3 position : ATTRIBUTE_LOCATION_0;
+	//     float3 position : TEXCOORD0;
+	//     float3 normal : TEXCOORD1;
 	// }
 	uint32_t location;
 
@@ -344,95 +347,6 @@ struct ZgVertexAttribute {
 };
 typedef struct ZgVertexAttribute ZgVertexAttribute;
 
-// Sample mode of a sampler
-enum ZgSamplingModeEnum {
-	ZG_SAMPLING_MODE_UNDEFINED = 0,
-
-	ZG_SAMPLING_MODE_NEAREST, // D3D12_FILTER_MIN_MAG_MIP_POINT
-	ZG_SAMPLING_MODE_TRILINEAR, // D3D12_FILTER_MIN_MAG_MIP_LINEAR
-	ZG_SAMPLING_MODE_ANISOTROPIC, // D3D12_FILTER_ANISOTROPIC
-};
-typedef uint32_t ZgSamplingMode;
-
-// Wrapping mode of a sampler
-enum ZgWrappingModeEnum {
-	ZG_WRAPPING_MODE_UNDEFINED = 0,
-
-	ZG_WRAPPING_MODE_CLAMP, // D3D12_TEXTURE_ADDRESS_MODE_CLAMP
-	ZG_WRAPPING_MODE_REPEAT, // D3D12_TEXTURE_ADDRESS_MODE_WRAP
-};
-typedef uint32_t ZgWrappingMode;
-
-// A struct defining a texture sampler
-struct ZgSampler {
-
-	// The sampling mode of the sampler
-	ZgSamplingMode samplingMode;
-
-	// The wrapping mode of the sampler (u == x, v == y)
-	ZgWrappingMode wrappingModeU;
-	ZgWrappingMode wrappingModeV;
-
-	// Offset from the calculated mipmap level. E.g., if mipmap level 2 is calculated in the shader
-	// and the lod bias is -1, then level 1 will be used instead. Level 0 is the highest resolution
-	// texture.
-	float mipLodBias;
-};
-typedef struct ZgSampler ZgSampler;
-
-// The maximum number of vertex attributes allowed as input to a vertex shader
-static const uint32_t ZG_MAX_NUM_VERTEX_ATTRIBUTES = 8;
-
-// The maximum number of constant buffers allowed on a single pipeline.
-static const uint32_t ZG_MAX_NUM_CONSTANT_BUFFERS = 16;
-
-static const uint32_t ZG_MAX_NUM_TEXTURES = 16;
-
-// The maximum number of samplers allowed on a single pipeline
-static const uint32_t ZG_MAX_NUM_SAMPLERS = 8;
-
-// The information required to create a rendering pipeline
-struct ZgPipelineRenderingCreateInfo {
-
-	// Vertex shader information
-	const char* vertexShaderPath;
-	const char* vertexShaderEntry;
-
-	// Pixel shader information
-	const char* pixelShaderPath;
-	const char* pixelShaderEntry;
-
-	// Information to the DXC compiler
-	ZgShaderModel shaderVersion;
-	const char* dxcCompilerFlags[ZG_MAX_NUM_DXC_COMPILER_FLAGS];
-
-	// The vertex attributes to the vertex shader
-	uint32_t numVertexAttributes;
-	ZgVertexAttribute vertexAttributes[ZG_MAX_NUM_VERTEX_ATTRIBUTES];
-
-	// The number of vertex buffer slots used by the vertex attributes
-	//
-	// If only one buffer is used (i.e. array of vertex struct) then numVertexBufferSlots should be
-	// 1 and vertexBufferStrides[0] should be sizeof(Vertex) stored in your buffer.
-	uint32_t numVertexBufferSlots;
-	uint32_t vertexBufferStridesBytes[ZG_MAX_NUM_VERTEX_ATTRIBUTES];
-
-	// A list of constant buffer registers which should be declared as push constants. This is an
-	// optimization, however it can lead to worse performance if used improperly. Can be left empty
-	// if unsure.
-	uint32_t numPushConstants;
-	uint32_t pushConstantRegisters[ZG_MAX_NUM_CONSTANT_BUFFERS];
-
-	// A list of samplers used by the pipeline
-	//
-	// Note: For D3D12 the first sampler in the array (0th) corresponds with the 0th sampler
-	//       register, etc. E.g. meaning if you have three samplers, they need to have the
-	//       registers 0, 1, 2.
-	uint32_t numSamplers;
-	ZgSampler samplers[ZG_MAX_NUM_SAMPLERS];
-};
-typedef struct ZgPipelineRenderingCreateInfo ZgPipelineRenderingCreateInfo;
-
 struct ZgConstantBufferDesc {
 
 	// Which register this buffer corresponds to in the shader. In D3D12 this is the "register"
@@ -447,7 +361,7 @@ struct ZgConstantBufferDesc {
 	//
 	// The size of a push constant must be a multiple of 4 bytes, i.e. an even (32-bit) word.
 	//
-	// In D3D12, as push constant is stored directly in the root signature. No indirection needed
+	// In D3D12, a push constant is stored directly in the root signature. No indirection needed
 	// when loading it in the shader. Do note that the maximum size of a root signature in D3D12
 	// is 64 32-bit words. This is for ALL push constants and other types of parameters combined.
 	// Therefore ZeroG imposes an limit of a maximum size of 32 32-bit words (128 bytes) per push
@@ -484,7 +398,7 @@ typedef struct ZgTextureDesc ZgTextureDesc;
 //
 // The signature is inferred by performing reflection on the shaders being compiled. Some
 // information that can not be automatically inferred is created by additional data supplied
-// through the ZgPipelineRenderingCreateInfo struct.
+// when creating the pipeline.
 struct ZgPipelineRenderingSignature {
 
 	// The vertex attributes to the vertex shader
@@ -501,11 +415,78 @@ struct ZgPipelineRenderingSignature {
 };
 typedef struct ZgPipelineRenderingSignature ZgPipelineRenderingSignature;
 
-ZG_API ZgErrorCode zgPipelineRenderingCreate(
-	ZgContext* context,
-	ZgPipelineRendering** pipelineOut,
-	ZgPipelineRenderingSignature* signatureOut,
-	const ZgPipelineRenderingCreateInfo* createInfo);
+// Pipeline Rendering - Common
+
+// ------------------------------------------------------------------------------------------------
+// Sample mode of a sampler
+enum ZgSamplingModeEnum {
+	ZG_SAMPLING_MODE_UNDEFINED = 0,
+
+	ZG_SAMPLING_MODE_NEAREST, // D3D12_FILTER_MIN_MAG_MIP_POINT
+	ZG_SAMPLING_MODE_TRILINEAR, // D3D12_FILTER_MIN_MAG_MIP_LINEAR
+	ZG_SAMPLING_MODE_ANISOTROPIC, // D3D12_FILTER_ANISOTROPIC
+};
+typedef uint32_t ZgSamplingMode;
+
+// Wrapping mode of a sampler
+enum ZgWrappingModeEnum {
+	ZG_WRAPPING_MODE_UNDEFINED = 0,
+
+	ZG_WRAPPING_MODE_CLAMP, // D3D12_TEXTURE_ADDRESS_MODE_CLAMP
+	ZG_WRAPPING_MODE_REPEAT, // D3D12_TEXTURE_ADDRESS_MODE_WRAP
+};
+typedef uint32_t ZgWrappingMode;
+
+// A struct defining a texture sampler
+struct ZgSampler {
+
+	// The sampling mode of the sampler
+	ZgSamplingMode samplingMode;
+
+	// The wrapping mode of the sampler (u == x, v == y)
+	ZgWrappingMode wrappingModeU;
+	ZgWrappingMode wrappingModeV;
+
+	// Offset from the calculated mipmap level. E.g., if mipmap level 2 is calculated in the shader
+	// and the lod bias is -1, then level 1 will be used instead. Level 0 is the highest resolution
+	// texture.
+	float mipLodBias;
+};
+typedef struct ZgSampler ZgSampler;
+
+// The common information required to create a rendering pipeline
+struct ZgPipelineRenderingCreateInfoCommon {
+
+	// The names of the entry functions
+	const char* vertexShaderEntry;
+	const char* pixelShaderEntry;
+
+	// The vertex attributes to the vertex shader
+	uint32_t numVertexAttributes;
+	ZgVertexAttribute vertexAttributes[ZG_MAX_NUM_VERTEX_ATTRIBUTES];
+
+	// The number of vertex buffer slots used by the vertex attributes
+	//
+	// If only one buffer is used (i.e. array of vertex struct) then numVertexBufferSlots should be
+	// 1 and vertexBufferStrides[0] should be sizeof(Vertex) stored in your buffer.
+	uint32_t numVertexBufferSlots;
+	uint32_t vertexBufferStridesBytes[ZG_MAX_NUM_VERTEX_ATTRIBUTES];
+
+	// A list of constant buffer registers which should be declared as push constants. This is an
+	// optimization, however it can lead to worse performance if used improperly. Can be left empty
+	// if unsure.
+	uint32_t numPushConstants;
+	uint32_t pushConstantRegisters[ZG_MAX_NUM_CONSTANT_BUFFERS];
+
+	// A list of samplers used by the pipeline
+	//
+	// Note: For D3D12 the first sampler in the array (0th) corresponds with the 0th sampler
+	//       register, etc. E.g. meaning if you have three samplers, they need to have the
+	//       registers 0, 1, 2.
+	uint32_t numSamplers;
+	ZgSampler samplers[ZG_MAX_NUM_SAMPLERS];
+};
+typedef struct ZgPipelineRenderingCreateInfoCommon ZgPipelineRenderingCreateInfoCommon;
 
 ZG_API ZgErrorCode zgPipelineRenderingRelease(
 	ZgContext* context,
@@ -515,6 +496,84 @@ ZG_API ZgErrorCode zgPipelineRenderingGetSignature(
 	ZgContext* context,
 	const ZgPipelineRendering* pipeline,
 	ZgPipelineRenderingSignature* signatureOut);
+
+// Pipeline Rendering - SPIRV
+// ------------------------------------------------------------------------------------------------
+
+struct ZgPipelineRenderingCreateInfoFileSPIRV {
+
+	// The common information always needed to create a rendering pipeline
+	ZgPipelineRenderingCreateInfoCommon common;
+
+	// Paths to the shader files
+	const char* vertexShaderPath;
+	const char* pixelShaderPath;
+};
+typedef struct ZgPipelineRenderingCreateInfoFileSPIRV ZgPipelineRenderingCreateInfoFileSPIRV;
+
+ZG_API ZgErrorCode zgPipelineRenderingCreateFromFileSPIRV(
+	ZgContext* context,
+	ZgPipelineRendering** pipelineOut,
+	ZgPipelineRenderingSignature* signatureOut,
+	const ZgPipelineRenderingCreateInfoFileSPIRV* createInfo);
+
+// Pipeline Rendering - HLSL
+// ------------------------------------------------------------------------------------------------
+
+// Enum representing various shader model versions
+enum ZgShaderModelEnum {
+	ZG_SHADER_MODEL_UNDEFINED = 0,
+	ZG_SHADER_MODEL_6_0,
+	ZG_SHADER_MODEL_6_1,
+	ZG_SHADER_MODEL_6_2,
+	ZG_SHADER_MODEL_6_3
+};
+typedef uint32_t ZgShaderModel;
+
+// The maximum number of compiler flags allowed to the DXC shader compiler
+static const uint32_t ZG_MAX_NUM_DXC_COMPILER_FLAGS = 8;
+
+struct ZgPipelineRenderingCreateInfoFileHLSL {
+
+	// The common information always needed to create a rendering pipeline
+	ZgPipelineRenderingCreateInfoCommon common;
+
+	// Paths to the shader files
+	const char* vertexShaderPath;
+	const char* pixelShaderPath;
+
+	// Information to the DXC compiler
+	ZgShaderModel shaderModel;
+	const char* dxcCompilerFlags[ZG_MAX_NUM_DXC_COMPILER_FLAGS];
+};
+typedef struct ZgPipelineRenderingCreateInfoFileHLSL ZgPipelineRenderingCreateInfoFileHLSL;
+
+ZG_API ZgErrorCode zgPipelineRenderingCreateFromFileHLSL(
+	ZgContext* context,
+	ZgPipelineRendering** pipelineOut,
+	ZgPipelineRenderingSignature* signatureOut,
+	const ZgPipelineRenderingCreateInfoFileHLSL* createInfo);
+
+struct ZgPipelineRenderingCreateInfoSourceHLSL {
+
+	// The common information always needed to create a rendering pipeline
+	ZgPipelineRenderingCreateInfoCommon common;
+
+	// Shader sources
+	const char* vertexShaderSrc;
+	const char* pixelShaderSrc;
+
+	// Information to the DXC compiler
+	ZgShaderModel shaderModel;
+	const char* dxcCompilerFlags[ZG_MAX_NUM_DXC_COMPILER_FLAGS];
+};
+typedef struct ZgPipelineRenderingCreateInfoSourceHLSL ZgPipelineRenderingCreateInfoSourceHLSL;
+
+ZG_API ZgErrorCode zgPipelineRenderingCreateFromSourceHLSL(
+	ZgContext* context,
+	ZgPipelineRendering** pipelineOut,
+	ZgPipelineRenderingSignature* signatureOut,
+	const ZgPipelineRenderingCreateInfoSourceHLSL* createInfo);
 
 // Memory
 // ------------------------------------------------------------------------------------------------

@@ -477,10 +477,10 @@ public:
 	// Pipeline methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode pipelineRenderingCreate(
+	ZgErrorCode pipelineRenderingCreateFromFileSPIRV(
 		IPipelineRendering** pipelineOut,
 		ZgPipelineRenderingSignature* signatureOut,
-		const ZgPipelineRenderingCreateInfo& createInfo) noexcept override final
+		const ZgPipelineRenderingCreateInfoFileSPIRV& createInfo) noexcept override final
 	{
 		// Initialize DXC compiler if necessary
 		// TODO: Provide our own allocator
@@ -503,7 +503,7 @@ public:
 		
 		// Create pipeline
 		D3D12PipelineRendering* d3d12pipeline = nullptr;
-		ZgErrorCode res = createPipelineRendering(
+		ZgErrorCode res = createPipelineRenderingFileSPIRV(
 			&d3d12pipeline,
 			signatureOut,
 			createInfo,
@@ -511,9 +511,90 @@ public:
 			*mDxcCompiler.Get(),
 			mLog,
 			mAllocator,
-			*mDevice.Get(),
-			mContextMutex);
-		if (D3D12_FAIL(mLog, res)) return res;
+			*mDevice.Get());
+		if (res != ZG_SUCCESS) return res;
+		
+		*pipelineOut = d3d12pipeline;
+		return res;
+	}
+
+	ZgErrorCode pipelineRenderingCreateFromFileHLSL(
+		IPipelineRendering** pipelineOut,
+		ZgPipelineRenderingSignature* signatureOut,
+		const ZgPipelineRenderingCreateInfoFileHLSL& createInfo) noexcept override final
+	{
+		// Initialize DXC compiler if necessary
+		// TODO: Provide our own allocator
+		{
+			std::lock_guard<std::mutex> lock(mContextMutex);
+			if (mDxcLibrary == nullptr) {
+
+				// Initialize DXC library
+				HRESULT res = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&mDxcLibrary));
+				if (!SUCCEEDED(res)) return ZG_ERROR_GENERIC;
+
+				// Initialize DXC compiler
+				res = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&mDxcCompiler));
+				if (!SUCCEEDED(res)) {
+					mDxcLibrary = nullptr;
+					return ZG_ERROR_GENERIC;
+				}
+			}
+		}
+		
+		// Create pipeline
+		D3D12PipelineRendering* d3d12pipeline = nullptr;
+		ZgErrorCode res = createPipelineRenderingFileHLSL(
+			&d3d12pipeline,
+			signatureOut,
+			createInfo,
+			*mDxcLibrary.Get(),
+			*mDxcCompiler.Get(),
+			mLog,
+			mAllocator,
+			*mDevice.Get());
+		if (res != ZG_SUCCESS) return res;
+		
+		*pipelineOut = d3d12pipeline;
+		return res;
+	}
+
+	ZgErrorCode pipelineRenderingCreateFromSourceHLSL(
+		IPipelineRendering** pipelineOut,
+		ZgPipelineRenderingSignature* signatureOut,
+		const ZgPipelineRenderingCreateInfoSourceHLSL& createInfo) noexcept override final
+	{
+		// Initialize DXC compiler if necessary
+		// TODO: Provide our own allocator
+		{
+			std::lock_guard<std::mutex> lock(mContextMutex);
+			if (mDxcLibrary == nullptr) {
+
+				// Initialize DXC library
+				HRESULT res = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&mDxcLibrary));
+				if (!SUCCEEDED(res)) return ZG_ERROR_GENERIC;
+
+				// Initialize DXC compiler
+				res = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&mDxcCompiler));
+				if (!SUCCEEDED(res)) {
+					mDxcLibrary = nullptr;
+					return ZG_ERROR_GENERIC;
+				}
+			}
+		}
+		
+		// Create pipeline
+		D3D12PipelineRendering* d3d12pipeline = nullptr;
+		ZgErrorCode res = createPipelineRenderingSourceHLSL(
+			&d3d12pipeline,
+			signatureOut,
+			createInfo,
+			*mDxcLibrary.Get(),
+			*mDxcCompiler.Get(),
+			mLog,
+			mAllocator,
+			*mDevice.Get());
+		if (res != ZG_SUCCESS) return res;
 		
 		*pipelineOut = d3d12pipeline;
 		return res;

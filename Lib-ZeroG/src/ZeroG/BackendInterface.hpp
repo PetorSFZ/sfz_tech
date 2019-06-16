@@ -179,10 +179,20 @@ public:
 	// Pipeline methods
 	// --------------------------------------------------------------------------------------------
 
-	virtual ZgErrorCode pipelineRenderingCreate(
+	virtual ZgErrorCode pipelineRenderingCreateFromFileSPIRV(
 		IPipelineRendering** pipelineOut,
 		ZgPipelineRenderingSignature* signatureOut,
-		const ZgPipelineRenderingCreateInfo& createInfo) noexcept = 0;
+		const ZgPipelineRenderingCreateInfoFileSPIRV& createInfo) noexcept = 0;
+
+	virtual ZgErrorCode pipelineRenderingCreateFromFileHLSL(
+		IPipelineRendering** pipelineOut,
+		ZgPipelineRenderingSignature* signatureOut,
+		const ZgPipelineRenderingCreateInfoFileHLSL& createInfo) noexcept = 0;
+
+	virtual ZgErrorCode pipelineRenderingCreateFromSourceHLSL(
+		IPipelineRendering** pipelineOut,
+		ZgPipelineRenderingSignature* signatureOut,
+		const ZgPipelineRenderingCreateInfoSourceHLSL& createInfo) noexcept = 0;
 
 	virtual ZgErrorCode pipelineRenderingRelease(
 		IPipelineRendering* pipeline) noexcept = 0;

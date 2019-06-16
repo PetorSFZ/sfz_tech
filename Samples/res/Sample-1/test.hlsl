@@ -16,9 +16,9 @@ Texture2D texture : register(t0);
 SamplerState textureSampler : register(s0);
 
 struct VSInput {
-	float3 position : ATTRIBUTE_LOCATION_0;
-	float3 normal : ATTRIBUTE_LOCATION_1;
-	float2 texcoord : ATTRIBUTE_LOCATION_2;
+	float3 position : TEXCOORD0;
+	float3 normal : TEXCOORD1;
+	float2 texcoord : TEXCOORD2;
 };
 
 struct VSOutput {
