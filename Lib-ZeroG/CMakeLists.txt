@@ -70,6 +70,10 @@ add_subdirectory(${EXTERNALS_DIR}/D3DX12)
 # ${D3DX12_RESIDENCY_FOUND}, ${D3DX12_RESIDENCY_INCLUDE_DIRS}
 add_subdirectory(${EXTERNALS_DIR}/D3DX12Residency)
 
+# SPIRV-Cross
+# ${SPIRV_CROSS_FOUND}, ${SPIRV_CROSS_INCLUDE_DIRS}, ${SPIRV_CROSS_LIBRARIES}
+add_subdirectory(${EXTERNALS_DIR}/SPIRV-Cross)
+
 # ZeroG C-API
 # ------------------------------------------------------------------------------------------------
 
@@ -118,6 +122,11 @@ target_include_directories(ZeroG PRIVATE
 	${SRC_DIR}
 	${D3DX12_INCLUDE_DIRS}
 	${D3DX12_RESIDENCY_INCLUDE_DIRS}
+	${SPIRV_CROSS_INCLUDE_DIRS}
+)
+
+target_link_libraries(ZeroG
+	${SPIRV_CROSS_LIBRARIES}
 )
 
 # ZeroG C++ Wrapper
