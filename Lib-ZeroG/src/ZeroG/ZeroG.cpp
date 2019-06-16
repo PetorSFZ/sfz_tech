@@ -48,9 +48,15 @@ ZG_API ZgFeatureBits zgCompiledFeatures(void)
 // Context
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgErrorCode zgContextCreate(
-	ZgContext** contextOut, const ZgContextInitSettings* initSettings)
+ZG_API ZgBool zgContextAlreadyInitialized(void)
 {
+	return zg::getApiContext() == nullptr ? ZG_FALSE : ZG_TRUE;
+}
+
+ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
+{
+	if (zgContextAlreadyInitialized() == ZG_TRUE) return ZG_ERROR_ALREADY_INITIALIZED;
+
 	ZgContextInitSettings settings = *initSettings;
 
 	// Set default logger if none is specified
@@ -60,124 +66,114 @@ ZG_API ZgErrorCode zgContextCreate(
 	}
 	ZgLogger logger = settings.logger;
 	if (usingDefaultLogger) {
-		ZG_INFO(logger, "zgContextCreate(): Using default logger (printf)");
+		ZG_INFO(logger, "zgContextInit(): Using default logger (printf)");
 	}
 	else {
-		ZG_INFO(logger, "zgContextCreate(): Using user-provided logger");
+		ZG_INFO(logger, "zgContextInit(): Using user-provided logger");
 	}
 
 	// Set default allocator if none is specified
 	if (settings.allocator.allocate == nullptr || settings.allocator.deallocate == nullptr) {
 		settings.allocator = zg::getDefaultAllocator();
-		ZG_INFO(logger, "zgContextCreate(): Using default allocator");
+		ZG_INFO(logger, "zgContextInit(): Using default allocator");
 	}
 	else {
-		ZG_INFO(logger, "zgContextCreate(): Using user-provided allocator");
+		ZG_INFO(logger, "zgContextInit(): Using user-provided allocator");
 	}
 
-	// Allocate context
-	ZgContext* context = zg::zgNew<ZgContext>(settings.allocator, "ZeroG Context");
-	if (context == nullptr) return ZG_ERROR_CPU_OUT_OF_MEMORY;
-
 	// Set context's allocator
-	context->allocator = settings.allocator;
-	context->logger = settings.logger;
+	ZgContext tmpContext = {};
+	tmpContext.allocator = settings.allocator;
+	tmpContext.logger = settings.logger;
 
 	// Create and allocate requested backend api
 	switch (initSettings->backend) {
 
 	case ZG_BACKEND_NONE:
 		// TODO: Implement null backend
-		zg::zgDelete(settings.allocator, context);
-		ZG_ERROR(logger, "zgContextCreate(): Null backend not implemented, exiting.");
+		ZG_ERROR(logger, "zgContextInit(): Null backend not implemented, exiting.");
 		return ZG_ERROR_UNIMPLEMENTED;
 
 	case ZG_BACKEND_D3D12:
 		{
-			ZgErrorCode res = zg::createD3D12Backend(&context->context, settings);
+			ZgErrorCode res = zg::createD3D12Backend(&tmpContext.context, settings);
 			if (res != ZG_SUCCESS) {
-				zg::zgDelete(settings.allocator, context);
-				ZG_ERROR(logger, "zgContextCreate(): Could not create D3D12 backend, exiting.");
+				ZG_ERROR(logger, "zgContextInit(): Could not create D3D12 backend, exiting.");
 				return res;
 			}
-			ZG_INFO(logger, "zgContextCreate(): Created D3D12 backend");
+			ZG_INFO(logger, "zgContextInit(): Created D3D12 backend");
 		}
 		break;
 
 	default:
-		zg::zgDelete(settings.allocator, context);
 		return ZG_ERROR_GENERIC;
 	}
 
-	// Return context
-	*contextOut = context;
+	// Set context
+	zg::setContext(tmpContext);
 	return ZG_SUCCESS;
 }
 
-ZG_API ZgErrorCode zgContextDestroy(ZgContext* context)
+ZG_API ZgErrorCode zgContextDeinit(void)
 {
-	if (context == nullptr) return ZG_SUCCESS;
+	if (zgContextAlreadyInitialized() == ZG_FALSE) return ZG_SUCCESS;
 
-	// Delete API
-	zg::zgDelete<zg::IContext>(context->allocator, context->context);
+	ZgContext& ctx = zg::getContext();
 
-	// Delete context
-	ZgAllocator allocator = context->allocator;
-	zg::zgDelete<ZgContext>(allocator, context);
+	// Delete backend
+	zg::zgDelete<zg::IContext>(ctx.allocator, ctx.context);
+
+	// Reset context
+	ctx = {};
 
 	return ZG_SUCCESS;
 }
 
-ZG_API ZgErrorCode zgContextResize(ZgContext* context, uint32_t width, uint32_t height)
+ZG_API ZgErrorCode zgContextResize( uint32_t width, uint32_t height)
 {
-	return context->context->resize(width, height);
+	return zg::getApiContext()->resize(width, height);
 }
 
 ZG_API ZgErrorCode zgContextGeCommandQueueGraphicsPresent(
-	ZgContext* context,
 	ZgCommandQueue** commandQueueOut)
 {
 	zg::ICommandQueue* commandQueue = nullptr;
-	ZgErrorCode res = context->context->getCommandQueueGraphicsPresent(&commandQueue);
+	ZgErrorCode res = zg::getApiContext()->getCommandQueueGraphicsPresent(&commandQueue);
 	if (res != ZG_SUCCESS) return res;
 	*commandQueueOut = reinterpret_cast<ZgCommandQueue*>(commandQueue);
 	return ZG_SUCCESS;
 }
 
 ZG_API ZgErrorCode zgContextBeginFrame(
-	ZgContext* context,
 	ZgFramebuffer** framebufferOut)
 {
 	zg::IFramebuffer* framebuffer = nullptr;
-	ZgErrorCode res = context->context->beginFrame(&framebuffer);
+	ZgErrorCode res = zg::getApiContext()->beginFrame(&framebuffer);
 	if (res != ZG_SUCCESS) return res;
 	*framebufferOut = reinterpret_cast<ZgFramebuffer*>(framebuffer);
 	return ZG_SUCCESS;
 }
 
-ZG_API ZgErrorCode zgContextFinishFrame(
-	ZgContext* context)
+ZG_API ZgErrorCode zgContextFinishFrame(void)
 {
-	return context->context->finishFrame();
+	return zg::getApiContext()->finishFrame();
 }
 
 // Pipeline Rendering - Common
 // ------------------------------------------------------------------------------------------------
 
 ZG_API ZgErrorCode zgPipelineRenderingRelease(
-	ZgContext* context,
 	ZgPipelineRendering* pipeline)
 {
-	return context->context->pipelineRenderingRelease(
+	return zg::getApiContext()->pipelineRenderingRelease(
 		reinterpret_cast<zg::IPipelineRendering*>(pipeline));
 }
 
 ZG_API ZgErrorCode zgPipelineRenderingGetSignature(
-	ZgContext* context,
 	const ZgPipelineRendering* pipeline,
 	ZgPipelineRenderingSignature* signatureOut)
 {
-	return context->context->pipelineRenderingGetSignature(
+	return zg::getApiContext()->pipelineRenderingGetSignature(
 		reinterpret_cast<const zg::IPipelineRendering*>(pipeline), signatureOut);
 }
 
@@ -185,7 +181,6 @@ ZG_API ZgErrorCode zgPipelineRenderingGetSignature(
 // ------------------------------------------------------------------------------------------------
 
 ZG_API ZgErrorCode zgPipelineRenderingCreateFromFileSPIRV(
-	ZgContext* context,
 	ZgPipelineRendering** pipelineOut,
 	ZgPipelineRenderingSignature* signatureOut,
 	const ZgPipelineRenderingCreateInfoFileSPIRV* createInfo)
@@ -205,7 +200,7 @@ ZG_API ZgErrorCode zgPipelineRenderingCreateFromFileSPIRV(
 	if (createInfo->common.numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS) return ZG_ERROR_INVALID_ARGUMENT;
 	
 	zg::IPipelineRendering* pipeline = nullptr;
-	ZgErrorCode res = context->context->pipelineRenderingCreateFromFileSPIRV(
+	ZgErrorCode res = zg::getApiContext()->pipelineRenderingCreateFromFileSPIRV(
 		&pipeline, signatureOut, *createInfo);
 	if (res != ZG_SUCCESS) return res;
 	*pipelineOut = reinterpret_cast<ZgPipelineRendering*>(pipeline);
@@ -216,7 +211,6 @@ ZG_API ZgErrorCode zgPipelineRenderingCreateFromFileSPIRV(
 // ------------------------------------------------------------------------------------------------
 
 ZG_API ZgErrorCode zgPipelineRenderingCreateFromFileHLSL(
-	ZgContext* context,
 	ZgPipelineRendering** pipelineOut,
 	ZgPipelineRenderingSignature* signatureOut,
 	const ZgPipelineRenderingCreateInfoFileHLSL* createInfo)
@@ -237,7 +231,7 @@ ZG_API ZgErrorCode zgPipelineRenderingCreateFromFileHLSL(
 	if (createInfo->common.numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS) return ZG_ERROR_INVALID_ARGUMENT;
 
 	zg::IPipelineRendering* pipeline = nullptr;
-	ZgErrorCode res = context->context->pipelineRenderingCreateFromFileHLSL(
+	ZgErrorCode res = zg::getApiContext()->pipelineRenderingCreateFromFileHLSL(
 		&pipeline, signatureOut, *createInfo);
 	if (res != ZG_SUCCESS) return res;
 	*pipelineOut = reinterpret_cast<ZgPipelineRendering*>(pipeline);
@@ -245,7 +239,6 @@ ZG_API ZgErrorCode zgPipelineRenderingCreateFromFileHLSL(
 }
 
 ZG_API ZgErrorCode zgPipelineRenderingCreateFromSourceHLSL(
-	ZgContext* context,
 	ZgPipelineRendering** pipelineOut,
 	ZgPipelineRenderingSignature* signatureOut,
 	const ZgPipelineRenderingCreateInfoSourceHLSL* createInfo)
@@ -266,7 +259,7 @@ ZG_API ZgErrorCode zgPipelineRenderingCreateFromSourceHLSL(
 	if (createInfo->common.numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS) return ZG_ERROR_INVALID_ARGUMENT;
 
 	zg::IPipelineRendering* pipeline = nullptr;
-	ZgErrorCode res = context->context->pipelineRenderingCreateFromSourceHLSL(
+	ZgErrorCode res = zg::getApiContext()->pipelineRenderingCreateFromSourceHLSL(
 		&pipeline, signatureOut, *createInfo);
 	if (res != ZG_SUCCESS) return res;
 	*pipelineOut = reinterpret_cast<ZgPipelineRendering*>(pipeline);
@@ -277,7 +270,6 @@ ZG_API ZgErrorCode zgPipelineRenderingCreateFromSourceHLSL(
 // ------------------------------------------------------------------------------------------------
 
 ZG_API ZgErrorCode zgMemoryHeapCreate(
-	ZgContext* context,
 	ZgMemoryHeap** memoryHeapOut,
 	const ZgMemoryHeapCreateInfo* createInfo)
 {
@@ -285,17 +277,16 @@ ZG_API ZgErrorCode zgMemoryHeapCreate(
 	if (createInfo->sizeInBytes == 0) return ZG_ERROR_INVALID_ARGUMENT;
 
 	zg::IMemoryHeap* memoryHeap = nullptr;
-	ZgErrorCode res = context->context->memoryHeapCreate(&memoryHeap, *createInfo);
+	ZgErrorCode res = zg::getApiContext()->memoryHeapCreate(&memoryHeap, *createInfo);
 	if (res != ZG_SUCCESS) return res;
 	*memoryHeapOut = reinterpret_cast<ZgMemoryHeap*>(memoryHeap);
 	return ZG_SUCCESS;
 }
 
 ZG_API ZgErrorCode zgMemoryHeapRelease(
-	ZgContext* context,
 	ZgMemoryHeap* memoryHeap)
 {
-	return context->context->memoryHeapRelease(reinterpret_cast<zg::IMemoryHeap*>(memoryHeap));
+	return zg::getApiContext()->memoryHeapRelease(reinterpret_cast<zg::IMemoryHeap*>(memoryHeap));
 }
 
 ZG_API ZgErrorCode zgMemoryHeapBufferCreate(
@@ -323,13 +314,12 @@ ZG_API ZgErrorCode zgMemoryHeapBufferRelease(
 }
 
 ZG_API ZgErrorCode zgBufferMemcpyTo(
-	ZgContext* context,
 	ZgBuffer* dstBuffer,
 	uint64_t bufferOffsetBytes,
 	const void* srcMemory,
 	uint64_t numBytes)
 {
-	return context->context->bufferMemcpyTo(
+	return zg::getApiContext()->bufferMemcpyTo(
 		reinterpret_cast<zg::IBuffer*>(dstBuffer),
 		bufferOffsetBytes,
 		reinterpret_cast<const uint8_t*>(srcMemory),
@@ -340,7 +330,6 @@ ZG_API ZgErrorCode zgBufferMemcpyTo(
 // ------------------------------------------------------------------------------------------------
 
 ZG_API ZgErrorCode zgTextureHeapCreate(
-	ZgContext* context,
 	ZgTextureHeap** textureHeapOut,
 	const ZgTextureHeapCreateInfo* createInfo)
 {
@@ -348,17 +337,16 @@ ZG_API ZgErrorCode zgTextureHeapCreate(
 	if (createInfo->sizeInBytes == 0) return ZG_ERROR_INVALID_ARGUMENT;
 
 	zg::ITextureHeap* textureHeap = nullptr;
-	ZgErrorCode res = context->context->textureHeapCreate(&textureHeap, *createInfo);
+	ZgErrorCode res = zg::getApiContext()->textureHeapCreate(&textureHeap, *createInfo);
 	if (res != ZG_SUCCESS) return res;
 	*textureHeapOut = reinterpret_cast<ZgTextureHeap*>(textureHeap);
 	return ZG_SUCCESS;
 }
 
 ZG_API ZgErrorCode zgTextureHeapRelease(
-	ZgContext* context,
 	ZgTextureHeap* textureHeap)
 {
-	return context->context->textureHeapRelease(reinterpret_cast<zg::ITextureHeap*>(textureHeap));
+	return zg::getApiContext()->textureHeapRelease(reinterpret_cast<zg::ITextureHeap*>(textureHeap));
 }
 
 ZG_API ZgErrorCode zgTextureHeapTexture2DGetAllocationInfo(

@@ -16,30 +16,28 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#pragma once
-
-#include "ZeroG.h"
-
-#include "ZeroG/BackendInterface.hpp"
-
-// Context definition
-// ------------------------------------------------------------------------------------------------
-
-struct ZgContext final {
-	ZgAllocator allocator = {};
-	ZgLogger logger = {};
-	zg::IContext* context = nullptr;
-};
+#include "ZeroG/Context.hpp"
 
 // Global implicit context accessor
 // ------------------------------------------------------------------------------------------------
 
 namespace zg {
 
-ZgContext& getContext() noexcept;
+static ZgContext implicitContext = {};
 
-zg::IContext* getApiContext() noexcept;
+ZgContext& getContext() noexcept
+{
+	return implicitContext;
+}
 
-void setContext(const ZgContext& context) noexcept;
+zg::IContext* getApiContext() noexcept
+{
+	return implicitContext.context;
+}
+
+void setContext(const ZgContext& context) noexcept
+{
+	implicitContext = context;
+}
 
 } // namespace zg

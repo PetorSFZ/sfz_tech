@@ -61,9 +61,6 @@ extern "C" {
 	struct name; \
 	typedef struct name name;
 
-// The main ZeroG context handle
-ZG_HANDLE(ZgContext);
-
 // A handle representing a rendering pipeline
 ZG_HANDLE(ZgPipelineRendering);
 
@@ -159,6 +156,7 @@ enum ZgErrorCodeEnum {
 	ZG_SUCCESS = 0,
 	ZG_ERROR_GENERIC,
 	ZG_ERROR_UNIMPLEMENTED,
+	ZG_ERROR_ALREADY_INITIALIZED,
 	ZG_ERROR_CPU_OUT_OF_MEMORY,
 	ZG_ERROR_GPU_OUT_OF_MEMORY,
 	ZG_ERROR_NO_SUITABLE_DEVICE,
@@ -252,12 +250,16 @@ struct ZgContextInitSettings {
 };
 typedef struct ZgContextInitSettings ZgContextInitSettings;
 
-ZG_API ZgErrorCode zgContextCreate(
-	ZgContext** contextOut,
-	const ZgContextInitSettings* initSettings);
+// Checks if the implicit ZeroG context is already initialized or not
+ZG_API ZgBool zgContextAlreadyInitialized(void);
 
-ZG_API ZgErrorCode zgContextDestroy(
-	ZgContext* context);
+// Initializes the implicit ZeroG context, will fail if a context is already initialized
+ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings);
+
+// Deinitializes the implicit ZeroG context
+//
+// Completely safe to call even if no context has been created
+ZG_API ZgErrorCode zgContextDeinit(void);
 
 // Resize the back buffers in the swap chain to the new size.
 //
@@ -265,22 +267,18 @@ ZG_API ZgErrorCode zgContextDestroy(
 // function is guaranteed to not do anything if the specified width or height is the same as last
 // time, so it is completely safe to call this at the beginning of each frame.
 ZG_API ZgErrorCode zgContextResize(
-	ZgContext* context,
 	uint32_t width,
 	uint32_t height);
 
 ZG_API ZgErrorCode zgContextGeCommandQueueGraphicsPresent(
-	ZgContext* context,
 	ZgCommandQueue** commandQueueOut);
 
 // TODO: zgContextGetCopyQueue(), zgContextGetComputeQueue
 
 ZG_API ZgErrorCode zgContextBeginFrame(
-	ZgContext* context,
 	ZgFramebuffer** framebufferOut);
 
-ZG_API ZgErrorCode zgContextFinishFrame(
-	ZgContext* context);
+ZG_API ZgErrorCode zgContextFinishFrame(void);
 
 // Pipeline Rendering - Signature
 // ------------------------------------------------------------------------------------------------
@@ -489,11 +487,9 @@ struct ZgPipelineRenderingCreateInfoCommon {
 typedef struct ZgPipelineRenderingCreateInfoCommon ZgPipelineRenderingCreateInfoCommon;
 
 ZG_API ZgErrorCode zgPipelineRenderingRelease(
-	ZgContext* context,
 	ZgPipelineRendering* pipeline);
 
 ZG_API ZgErrorCode zgPipelineRenderingGetSignature(
-	ZgContext* context,
 	const ZgPipelineRendering* pipeline,
 	ZgPipelineRenderingSignature* signatureOut);
 
@@ -512,7 +508,6 @@ struct ZgPipelineRenderingCreateInfoFileSPIRV {
 typedef struct ZgPipelineRenderingCreateInfoFileSPIRV ZgPipelineRenderingCreateInfoFileSPIRV;
 
 ZG_API ZgErrorCode zgPipelineRenderingCreateFromFileSPIRV(
-	ZgContext* context,
 	ZgPipelineRendering** pipelineOut,
 	ZgPipelineRenderingSignature* signatureOut,
 	const ZgPipelineRenderingCreateInfoFileSPIRV* createInfo);
@@ -549,7 +544,6 @@ struct ZgPipelineRenderingCreateInfoFileHLSL {
 typedef struct ZgPipelineRenderingCreateInfoFileHLSL ZgPipelineRenderingCreateInfoFileHLSL;
 
 ZG_API ZgErrorCode zgPipelineRenderingCreateFromFileHLSL(
-	ZgContext* context,
 	ZgPipelineRendering** pipelineOut,
 	ZgPipelineRenderingSignature* signatureOut,
 	const ZgPipelineRenderingCreateInfoFileHLSL* createInfo);
@@ -570,7 +564,6 @@ struct ZgPipelineRenderingCreateInfoSourceHLSL {
 typedef struct ZgPipelineRenderingCreateInfoSourceHLSL ZgPipelineRenderingCreateInfoSourceHLSL;
 
 ZG_API ZgErrorCode zgPipelineRenderingCreateFromSourceHLSL(
-	ZgContext* context,
 	ZgPipelineRendering** pipelineOut,
 	ZgPipelineRenderingSignature* signatureOut,
 	const ZgPipelineRenderingCreateInfoSourceHLSL* createInfo);
@@ -606,12 +599,10 @@ struct ZgMemoryHeapCreateInfo {
 typedef struct ZgMemoryHeapCreateInfo ZgMemoryHeapCreateInfo;
 
 ZG_API ZgErrorCode zgMemoryHeapCreate(
-	ZgContext* context,
 	ZgMemoryHeap** memoryHeapOut,
 	const ZgMemoryHeapCreateInfo* createInfo);
 
 ZG_API ZgErrorCode zgMemoryHeapRelease(
-	ZgContext* context,
 	ZgMemoryHeap* memoryHeap);
 
 struct ZgBufferCreateInfo {
@@ -635,7 +626,6 @@ ZG_API ZgErrorCode zgMemoryHeapBufferRelease(
 	ZgBuffer* buffer);
 
 ZG_API ZgErrorCode zgBufferMemcpyTo(
-	ZgContext* context,
 	ZgBuffer* dstBuffer,
 	uint64_t bufferOffsetBytes,
 	const void* srcMemory,
@@ -652,12 +642,10 @@ struct ZgTextureHeapCreateInfo {
 typedef struct ZgTextureHeapCreateInfo ZgTextureHeapCreateInfo;
 
 ZG_API ZgErrorCode zgTextureHeapCreate(
-	ZgContext* context,
 	ZgTextureHeap** textureHeapOut,
 	const ZgTextureHeapCreateInfo* createInfo);
 
 ZG_API ZgErrorCode zgTextureHeapRelease(
-	ZgContext* context,
 	ZgTextureHeap* textureHeap);
 
 enum ZgTexture2DFormatEnum {

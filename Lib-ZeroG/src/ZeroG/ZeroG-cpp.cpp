@@ -18,10 +18,10 @@
 
 #include "ZeroG-cpp.hpp"
 
-#include <algorithm>
 #include <cassert>
 #include <cstdio>
 #include <cstring>
+#include <utility>
 
 namespace zg {
 
@@ -53,6 +53,7 @@ const char* errorCodeToString(ZgErrorCode errorCode) noexcept
 	case ZG_SUCCESS: return "ZG_SUCCESS";
 	case ZG_ERROR_GENERIC: return "ZG_ERROR_GENERIC";
 	case ZG_ERROR_UNIMPLEMENTED: return "ZG_ERROR_UNIMPLEMENTED";
+	case ZG_ERROR_ALREADY_INITIALIZED: return "ZG_ERROR_ALREADY_INITIALIZED";
 	case ZG_ERROR_CPU_OUT_OF_MEMORY: return "ZG_ERROR_CPU_OUT_OF_MEMORY";
 	case ZG_ERROR_GPU_OUT_OF_MEMORY: return "ZG_ERROR_GPU_OUT_OF_MEMORY";
 	case ZG_ERROR_NO_SUITABLE_DEVICE: return "ZG_ERROR_NO_SUITABLE_DEVICE";
@@ -78,18 +79,20 @@ ZgErrorCode CheckZgImpl::operator% (ZgErrorCode result) noexcept
 ZgErrorCode Context::init(const ZgContextInitSettings& settings)
 {
 	this->destroy();
-	return zgContextCreate(&mContext, &settings);
+	ZgErrorCode res = zgContextInit(&settings);
+	mInitialized = res == ZG_SUCCESS;
+	return res;
 }
 
 void Context::swap(Context& other) noexcept
 {
-	std::swap(this->mContext, other.mContext);
+	std::swap(mInitialized, other.mInitialized);
 }
 
 void Context::destroy() noexcept
 {
-	zgContextDestroy(mContext);
-	mContext = nullptr;
+	if (mInitialized) zgContextDeinit();
+	mInitialized = false;
 }
 
 } // namespace zg

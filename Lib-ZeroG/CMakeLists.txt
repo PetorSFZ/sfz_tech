@@ -110,6 +110,7 @@ set(ZEROG_CAPI_SRC_FILES
 	${SRC_DIR}/ZeroG/util/Vector.hpp
 	${SRC_DIR}/ZeroG/BackendInterface.hpp
 	${SRC_DIR}/ZeroG/Context.hpp
+	${SRC_DIR}/ZeroG/Context.cpp
 
 	${SRC_DIR}/ZeroG/ZeroG.cpp
 )
