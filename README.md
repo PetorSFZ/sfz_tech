@@ -1,7 +1,7 @@
 # ZeroG - A Cross-API GPU API
 ## Current state
 
-Currently in very early development, not worth trying out unless you are interested in getting involved with development. Work is done in the `Prototyping` branch until it is in an early alpha-state, at which point `master` will become the main development branch.
+Currently in very early development, not worth trying out unless you are interested in getting involved with development. ~~Work is done in the `Prototyping` branch until it is in an early alpha-state, at which point `master` will become the main development branch.~~ I accidentally rebased changes to `master`, so I guess `master` is the new prototyping branch. :P
 
 ## About and goal
 
