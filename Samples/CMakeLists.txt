@@ -72,7 +72,7 @@ endif()
 # ------------------------------------------------------------------------------------------------
 
 # Adding ZeroG
-# ${ZEROG_FOUND}, ${ZEROG_INCLUDE_DIRS}, ${ZEROG_LIBRARIES} and ${ZEROG_CPP_LIBRARIES}
+# ${ZEROG_FOUND}, ${ZEROG_INCLUDE_DIRS} and ${ZEROG_LIBRARIES}
 add_subdirectory(${ZEROG_REPO_ROOT_DIR}/Lib-ZeroG ${CMAKE_BINARY_DIR}/ZeroG)
 
 # Copy ZeroG runtime files
@@ -82,6 +82,10 @@ if(CMAKE_CONFIGURATION_TYPES)
 	file(COPY ${ZEROG_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR}/RelWithDebInfo)
 	file(COPY ${ZEROG_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR}/Release)
 endif()
+
+# Adding ZeroG-cpp
+# ${ZEROG_CPP_FOUND}, ${ZEROG_CPP_INCLUDE_DIRS} and ${ZEROG_CPP_LIBRARIES}
+add_subdirectory(${ZEROG_REPO_ROOT_DIR}/Lib-ZeroG-cpp ${CMAKE_BINARY_DIR}/ZeroG-cpp)
 
 # Compiler flags
 # ------------------------------------------------------------------------------------------------
