@@ -85,7 +85,7 @@ static void allocateMemoryHeapAndBuffer(
 // A simple helper function that allocates and copies data to a device buffer In practice you will
 // likely want to do something smarter.
 static void createDeviceBufferSimpleBlocking(
-	ZgCommandQueue* queue,
+	zg::CommandQueue& queue,
 	ZgBuffer*& bufferOut,
 	ZgMemoryHeap*& memoryHeapOut,
 	const void* data,
@@ -108,12 +108,12 @@ static void createDeviceBufferSimpleBlocking(
 		ZG_MEMORY_TYPE_DEVICE, bufferSizeBytes != 0 ? bufferSizeBytes : numBytes);
 
 	// Copy to the device buffer
-	ZgCommandList* commandList = nullptr;
-	CHECK_ZG zgCommandQueueBeginCommandListRecording(queue, &commandList);
+	zg::CommandList commandList;
+	CHECK_ZG queue.beginCommandListRecording(commandList);
 	CHECK_ZG zgCommandListMemcpyBufferToBuffer(
-		commandList, deviceBuffer, 0, uploadBuffer, 0, numBytes);
-	CHECK_ZG zgCommandQueueExecuteCommandList(queue, commandList);
-	CHECK_ZG zgCommandQueueFlush(queue);
+		commandList.commandList, deviceBuffer, 0, uploadBuffer, 0, numBytes);
+	CHECK_ZG queue.executeCommandList(commandList);
+	CHECK_ZG queue.flush();
 
 	// Release upload heap and buffer
 	CHECK_ZG zgMemoryHeapBufferRelease(uploadHeap, uploadBuffer);
@@ -234,24 +234,13 @@ static size_t readBinaryFile(const char* path, uint8_t* dataOut, size_t maxNumBy
 // Main
 // ------------------------------------------------------------------------------------------------
 
-int main(int argc, char* argv[])
+// This wrapper is only here to ensure the SDL2 Window is not destroyed before all the ZeroG
+// objects which uses destructors (through the C++ wrapper).
+static void realMain(SDL_Window* window) noexcept
 {
-	(void)argc;
-	(void)argv;
-
-	// Enable hi-dpi awareness on Windows
-#ifdef _WIN32
-	SetProcessDPIAware();
-
-	// Set current working directory to SDL_GetBasePath()
-	char* basePath = SDL_GetBasePath();
-	_chdir(basePath);
-	SDL_free(basePath);
-#endif
-
-	// Initialize SDL2 and create a window
-	SDL_Window* window = initializeSdl2CreateWindow("ZeroG - Sample1");
-
+	// Print compiled and linked version of ZeroG
+	printf("Compiled API version of ZeroG: %u, linked version: %u\n\n",
+		zg::Context::compiledApiVersion(), zg::Context::linkedApiVersion());
 
 	// Create ZeroG context
 	ZgContextInitSettings initSettings = {};
@@ -260,13 +249,13 @@ int main(int argc, char* argv[])
 	initSettings.height = 512;
 	initSettings.debugMode = DEBUG_MODE ? ZG_TRUE : ZG_FALSE;
 	initSettings.nativeWindowHandle = getNativeWindowHandle(window);
-	zg::Context ctx;
-	CHECK_ZG ctx.init(initSettings);
+	zg::Context zgCtx;
+	CHECK_ZG zgCtx.init(initSettings);
 
 
 	// Get the command queue
-	ZgCommandQueue* commandQueue = nullptr;
-	CHECK_ZG zgContextGeCommandQueueGraphicsPresent(&commandQueue);
+	zg::CommandQueue commandQueue;
+	CHECK_ZG zgCtx.getCommandQueueGraphicsPresent(commandQueue);
 
 
 	// Create a rendering pipeline
@@ -448,14 +437,14 @@ int main(int argc, char* argv[])
 			ZG_MEMORY_TYPE_UPLOAD, textureAllocInfo.sizeInBytes);
 
 		// Copy to the texture
-		ZgCommandList* commandList = nullptr;
-		CHECK_ZG zgCommandQueueBeginCommandListRecording(commandQueue, &commandList);
-		CHECK_ZG zgCommandListMemcpyToTexture(commandList, texture, 0, &imageLvl0, uploadBufferLvl0);
-		CHECK_ZG zgCommandListMemcpyToTexture(commandList, texture, 1, &imageLvl1, uploadBufferLvl1);
-		CHECK_ZG zgCommandListMemcpyToTexture(commandList, texture, 2, &imageLvl2, uploadBufferLvl2);
-		CHECK_ZG zgCommandListMemcpyToTexture(commandList, texture, 3, &imageLvl3, uploadBufferLvl3);
-		CHECK_ZG zgCommandQueueExecuteCommandList(commandQueue, commandList);
-		CHECK_ZG zgCommandQueueFlush(commandQueue);
+		zg::CommandList commandList;
+		CHECK_ZG commandQueue.beginCommandListRecording(commandList);
+		CHECK_ZG zgCommandListMemcpyToTexture(commandList.commandList, texture, 0, &imageLvl0, uploadBufferLvl0);
+		CHECK_ZG zgCommandListMemcpyToTexture(commandList.commandList, texture, 1, &imageLvl1, uploadBufferLvl1);
+		CHECK_ZG zgCommandListMemcpyToTexture(commandList.commandList, texture, 2, &imageLvl2, uploadBufferLvl2);
+		CHECK_ZG zgCommandListMemcpyToTexture(commandList.commandList, texture, 3, &imageLvl3, uploadBufferLvl3);
+		CHECK_ZG commandQueue.executeCommandList(commandList);
+		CHECK_ZG commandQueue.flush();
 
 		// Release upload heap and buffer
 		CHECK_ZG zgMemoryHeapBufferRelease(uploadHeapLvl0, uploadBufferLvl0);
@@ -512,7 +501,7 @@ int main(int argc, char* argv[])
 		int width = 0;
 		int height = 0;
 		SDL_GL_GetDrawableSize(window, &width, &height);
-		CHECK_ZG zgContextResize(uint32_t(width), uint32_t(height));
+		CHECK_ZG zgCtx.resize(uint32_t(width), uint32_t(height));
 
 		// Create view and projection matrices
 		float vertFovDeg = 40.0f;
@@ -530,18 +519,18 @@ int main(int argc, char* argv[])
 		CHECK_ZG zgContextBeginFrame(&framebuffer);
 
 		// Get a command list
-		ZgCommandList* commandList = nullptr;
-		CHECK_ZG zgCommandQueueBeginCommandListRecording(commandQueue, &commandList);
-
+		zg::CommandList commandList;
+		CHECK_ZG commandQueue.beginCommandListRecording(commandList);
+		
 		// Set framebuffer and clear it
 		ZgCommandListSetFramebufferInfo framebufferInfo = {};
 		framebufferInfo.framebuffer = framebuffer;
-		CHECK_ZG zgCommandListSetFramebuffer(commandList, &framebufferInfo);
-		CHECK_ZG zgCommandListClearFramebuffer(commandList, 0.2f, 0.2f, 0.3f, 1.0f);
-		CHECK_ZG zgCommandListClearDepthBuffer(commandList, 1.0f);
+		CHECK_ZG zgCommandListSetFramebuffer(commandList.commandList, &framebufferInfo);
+		CHECK_ZG zgCommandListClearFramebuffer(commandList.commandList, 0.2f, 0.2f, 0.3f, 1.0f);
+		CHECK_ZG zgCommandListClearDepthBuffer(commandList.commandList, 1.0f);
 
 		// Set pipeline
-		CHECK_ZG zgCommandListSetPipelineRendering(commandList, pipeline);
+		CHECK_ZG zgCommandListSetPipelineRendering(commandList.commandList, pipeline);
 
 		// Set pipeline bindings
 		ZgPipelineBindings bindings = {};
@@ -551,7 +540,7 @@ int main(int argc, char* argv[])
 		bindings.numTextures = 1;
 		bindings.textures[0].textureRegister = 0;
 		bindings.textures[0].texture = texture;
-		CHECK_ZG zgCommandListSetPipelineBindings(commandList, &bindings);
+		CHECK_ZG zgCommandListSetPipelineBindings(commandList.commandList, &bindings);
 
 		// Lambda to batch a call to render a cube with a specific transform
 		auto batchCubeRender = [&](Vector offset) {
@@ -569,16 +558,16 @@ int main(int argc, char* argv[])
 			transforms.normalMatrix = inverse(transpose(viewMatrix * modelMatrix));
 
 			// Send transforms to shader
-			CHECK_ZG zgCommandListSetPushConstant(commandList, 0, &transforms, sizeof(Transforms));
+			CHECK_ZG zgCommandListSetPushConstant(commandList.commandList, 0, &transforms, sizeof(Transforms));
 
 			// Draw cube
-			CHECK_ZG zgCommandListDrawTrianglesIndexed(commandList, 0, CUBE_NUM_INDICES / 3);
+			CHECK_ZG zgCommandListDrawTrianglesIndexed(commandList.commandList, 0, CUBE_NUM_INDICES / 3);
 		};
 
 		// Set Cube's vertex and index buffer
 		CHECK_ZG zgCommandListSetIndexBuffer(
-			commandList, cubeIndexBufferDevice, ZG_INDEX_BUFFER_TYPE_UINT32);
-		CHECK_ZG zgCommandListSetVertexBuffer(commandList, 0, cubeVertexBufferDevice);
+			commandList.commandList, cubeIndexBufferDevice, ZG_INDEX_BUFFER_TYPE_UINT32);
+		CHECK_ZG zgCommandListSetVertexBuffer(commandList.commandList, 0, cubeVertexBufferDevice);
 		
 		// Batch some cubes
 		batchCubeRender(Vector(0.0f, 0.0f, 0.0f));
@@ -596,14 +585,14 @@ int main(int argc, char* argv[])
 		batchCubeRender(Vector(1.5f, -1.5f, 1.5f));
 		
 		// Execute command list
-		CHECK_ZG zgCommandQueueExecuteCommandList(commandQueue, commandList);
+		CHECK_ZG commandQueue.executeCommandList(commandList);
 
 		// Finish frame
-		CHECK_ZG zgContextFinishFrame();
+		CHECK_ZG zgCtx.finishFrame();
 	}
 
 	// Flush command queue so nothing is running when we start releasing resources
-	CHECK_ZG zgCommandQueueFlush(commandQueue);
+	CHECK_ZG commandQueue.flush();
 
 	// Release ZeroG resources
 	CHECK_ZG zgMemoryHeapTexture2DRelease(textureHeap, texture);
@@ -619,9 +608,28 @@ int main(int argc, char* argv[])
 	CHECK_ZG zgMemoryHeapRelease(constBufferMemoryHeapDevice);
 
 	CHECK_ZG zgPipelineRenderingRelease(pipeline);
+}
 
-	// Destroy ZeroG context
-	ctx.destroy();
+int main(int argc, char* argv[])
+{
+	(void)argc;
+	(void)argv;
+
+	// Enable hi-dpi awareness on Windows
+#ifdef _WIN32
+	SetProcessDPIAware();
+
+	// Set current working directory to SDL_GetBasePath()
+	char* basePath = SDL_GetBasePath();
+	_chdir(basePath);
+	SDL_free(basePath);
+#endif
+
+	// Initialize SDL2 and create a window
+	SDL_Window* window = initializeSdl2CreateWindow("ZeroG - Sample1");
+
+	// Runs the real main function
+	realMain(window);
 
 	// Cleanup SDL2
 	cleanupSdl2(window);
