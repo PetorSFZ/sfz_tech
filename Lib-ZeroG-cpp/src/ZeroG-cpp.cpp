@@ -20,40 +20,9 @@
 
 #include <cassert>
 #include <cstdio>
-#include <cstring>
 #include <utility>
 
 namespace zg {
-
-
-// Statics
-// ------------------------------------------------------------------------------------------------
-
-static const char* stripFilePath(const char* file) noexcept
-{
-	const char* strippedFile1 = std::strrchr(file, '\\');
-	const char* strippedFile2 = std::strrchr(file, '/');
-	if (strippedFile1 == nullptr && strippedFile2 == nullptr) {
-		return file;
-	}
-	else if (strippedFile2 == nullptr) {
-		return strippedFile1 + 1;
-	}
-	else {
-		return strippedFile2 + 1;
-	}
-}
-
-// Error handling helpers
-// ------------------------------------------------------------------------------------------------
-
-ZgErrorCode CheckZgImpl::operator% (ZgErrorCode result) noexcept
-{
-	assert(result == ZG_SUCCESS);
-	if (result == ZG_SUCCESS) return ZG_SUCCESS;
-	printf("%s:%i: ZeroG error: %s\n", stripFilePath(file), line, zgErrorCodeToString(result));
-	return result;
-}
 
 // Context
 // ------------------------------------------------------------------------------------------------

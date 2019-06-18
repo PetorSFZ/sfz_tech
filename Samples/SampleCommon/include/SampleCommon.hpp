@@ -19,6 +19,24 @@
 #pragma once
 
 #include <SDL.h>
+#include <ZeroG.h>
+
+// Error handling helpers
+// ------------------------------------------------------------------------------------------------
+
+// Checks result (ZgErrorCode) from ZeroG call and log if not success, returns result unmodified
+#define CHECK_ZG (CheckZgImpl(__FILE__, __LINE__)) %
+
+// Implementation of CHECK_ZG
+struct CheckZgImpl final {
+	const char* file;
+	int line;
+
+	CheckZgImpl() = delete;
+	CheckZgImpl(const char* file, int line) noexcept : file(file), line(line) {}
+
+	ZgErrorCode operator% (ZgErrorCode result) noexcept;
+};
 
 // Initialization functions
 // ------------------------------------------------------------------------------------------------
