@@ -86,6 +86,10 @@ ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 	tmpContext.allocator = settings.allocator;
 	tmpContext.logger = settings.logger;
 
+	// Set tmp context as current active context, needed so operator new and delete will work when
+	// initializing the API backend.
+	zg::setContext(tmpContext);
+
 	// Create and allocate requested backend api
 	switch (initSettings->backend) {
 
