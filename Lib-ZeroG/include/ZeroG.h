@@ -167,6 +167,10 @@ enum ZgErrorCodeEnum {
 };
 typedef uint32_t ZgErrorCode;
 
+// Returns a string representation of the given ZeroG error code. The string is statically
+// allocated and must NOT be freed by the user.
+ZG_API const char* zgErrorCodeToString(ZgErrorCode errorCode);
+
 // Logging interface
 // ------------------------------------------------------------------------------------------------
 

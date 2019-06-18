@@ -47,29 +47,11 @@ static const char* stripFilePath(const char* file) noexcept
 // Error handling helpers
 // ------------------------------------------------------------------------------------------------
 
-const char* errorCodeToString(ZgErrorCode errorCode) noexcept
-{
-	switch (errorCode) {
-	case ZG_SUCCESS: return "ZG_SUCCESS";
-	case ZG_ERROR_GENERIC: return "ZG_ERROR_GENERIC";
-	case ZG_ERROR_UNIMPLEMENTED: return "ZG_ERROR_UNIMPLEMENTED";
-	case ZG_ERROR_ALREADY_INITIALIZED: return "ZG_ERROR_ALREADY_INITIALIZED";
-	case ZG_ERROR_CPU_OUT_OF_MEMORY: return "ZG_ERROR_CPU_OUT_OF_MEMORY";
-	case ZG_ERROR_GPU_OUT_OF_MEMORY: return "ZG_ERROR_GPU_OUT_OF_MEMORY";
-	case ZG_ERROR_NO_SUITABLE_DEVICE: return "ZG_ERROR_NO_SUITABLE_DEVICE";
-	case ZG_ERROR_INVALID_ARGUMENT: return "ZG_ERROR_INVALID_ARGUMENT";
-	case ZG_ERROR_SHADER_COMPILE_ERROR: return "ZG_ERROR_SHADER_COMPILE_ERROR";
-	case ZG_ERROR_OUT_OF_COMMAND_LISTS: return "ZG_ERROR_OUT_OF_COMMAND_LISTS";
-	case ZG_ERROR_INVALID_COMMAND_LIST_STATE: return "ZG_ERROR_INVALID_COMMAND_LIST_STATE";
-	}
-	return "UNKNOWN";
-}
-
 ZgErrorCode CheckZgImpl::operator% (ZgErrorCode result) noexcept
 {
 	assert(result == ZG_SUCCESS);
 	if (result == ZG_SUCCESS) return ZG_SUCCESS;
-	printf("%s:%i: ZeroG error: %s\n", stripFilePath(file), line, errorCodeToString(result));
+	printf("%s:%i: ZeroG error: %s\n", stripFilePath(file), line, zgErrorCodeToString(result));
 	return result;
 }
 

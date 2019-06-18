@@ -290,7 +290,7 @@ static ZgErrorCode dxcCreateHlslBlobFromSource(
 	// Create an encoding blob from memory
 	uint32_t CODE_PAGE = CP_UTF8;
 	if (D3D12_FAIL(logger, dxcLibrary.CreateBlobWithEncodingFromPinned(
-		source, std::strlen(source), CODE_PAGE, &blobOut))) {
+		source, uint32_t(std::strlen(source)), CODE_PAGE, &blobOut))) {
 		return ZG_ERROR_SHADER_COMPILE_ERROR;
 	}
 

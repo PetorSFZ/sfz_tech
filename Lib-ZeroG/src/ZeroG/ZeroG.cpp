@@ -45,6 +45,27 @@ ZG_API ZgFeatureBits zgCompiledFeatures(void)
 		uint64_t(ZG_FEATURE_BIT_BACKEND_D3D12);
 }
 
+// Error codes
+// ------------------------------------------------------------------------------------------------
+
+ZG_API const char* zgErrorCodeToString(ZgErrorCode errorCode)
+{
+	switch (errorCode) {
+	case ZG_SUCCESS: return "ZG_SUCCESS";
+	case ZG_ERROR_GENERIC: return "ZG_ERROR_GENERIC";
+	case ZG_ERROR_UNIMPLEMENTED: return "ZG_ERROR_UNIMPLEMENTED";
+	case ZG_ERROR_ALREADY_INITIALIZED: return "ZG_ERROR_ALREADY_INITIALIZED";
+	case ZG_ERROR_CPU_OUT_OF_MEMORY: return "ZG_ERROR_CPU_OUT_OF_MEMORY";
+	case ZG_ERROR_GPU_OUT_OF_MEMORY: return "ZG_ERROR_GPU_OUT_OF_MEMORY";
+	case ZG_ERROR_NO_SUITABLE_DEVICE: return "ZG_ERROR_NO_SUITABLE_DEVICE";
+	case ZG_ERROR_INVALID_ARGUMENT: return "ZG_ERROR_INVALID_ARGUMENT";
+	case ZG_ERROR_SHADER_COMPILE_ERROR: return "ZG_ERROR_SHADER_COMPILE_ERROR";
+	case ZG_ERROR_OUT_OF_COMMAND_LISTS: return "ZG_ERROR_OUT_OF_COMMAND_LISTS";
+	case ZG_ERROR_INVALID_COMMAND_LIST_STATE: return "ZG_ERROR_INVALID_COMMAND_LIST_STATE";
+	}
+	return "<UNKNOWN ERROR CODE>";
+}
+
 // Context
 // ------------------------------------------------------------------------------------------------
 
