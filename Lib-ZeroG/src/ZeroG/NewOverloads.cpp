@@ -59,26 +59,26 @@ void* operator new[] (std::size_t count, std::align_val_t val)
 	return allocator.allocate(allocator.userPtr, uint32_t(count), "operator new[]");
 }
 
-void* operator new (std::size_t count, const std::nothrow_t&)
+void* operator new (std::size_t count, const std::nothrow_t&) noexcept
 {
 	ZgAllocator& allocator = zg::getContext().allocator;
 	return allocator.allocate(allocator.userPtr, uint32_t(count), "operator new");
 }
 
-void* operator new[] (std::size_t count, const std::nothrow_t&)
+void* operator new[] (std::size_t count, const std::nothrow_t&) noexcept
 {
 	ZgAllocator& allocator = zg::getContext().allocator;
 	return allocator.allocate(allocator.userPtr, uint32_t(count), "operator new[]");
 }
 
-void* operator new (std::size_t count, std::align_val_t val, const std::nothrow_t&)
+void* operator new (std::size_t count, std::align_val_t val, const std::nothrow_t&) noexcept
 {
 	assert(size_t(val) <= 32);
 	ZgAllocator& allocator = zg::getContext().allocator;
 	return allocator.allocate(allocator.userPtr, uint32_t(count), "operator new");
 }
 
-void* operator new[] (std::size_t count, std::align_val_t val, const std::nothrow_t&)
+void* operator new[] (std::size_t count, std::align_val_t val, const std::nothrow_t&) noexcept
 {
 	assert(size_t(val) <= 32);
 	ZgAllocator& allocator = zg::getContext().allocator;
