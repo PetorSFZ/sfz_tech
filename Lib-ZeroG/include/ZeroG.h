@@ -625,8 +625,7 @@ ZG_API ZgErrorCode zgMemoryHeapBufferCreate(
 	ZgBuffer** bufferOut,
 	const ZgBufferCreateInfo* createInfo);
 
-ZG_API ZgErrorCode zgMemoryHeapBufferRelease(
-	ZgMemoryHeap* memoryHeap,
+ZG_API void zgBufferRelease(
 	ZgBuffer* buffer);
 
 ZG_API ZgErrorCode zgBufferMemcpyTo(

@@ -100,13 +100,6 @@ ZgErrorCode D3D12MemoryHeap::bufferCreate(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12MemoryHeap::bufferRelease(
-	IBuffer* buffer) noexcept
-{
-	zgDelete<IBuffer>(allocator, buffer);
-	return ZG_SUCCESS;
-}
-
 // D3D12 Memory Heap functions
 // ------------------------------------------------------------------------------------------------
 
@@ -163,7 +156,7 @@ ZgErrorCode createMemoryHeap(
 	return ZG_SUCCESS;
 }
 
-// D3D12 Buffer
+// D3D12Buffer: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
 D3D12Buffer::~D3D12Buffer() noexcept

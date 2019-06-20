@@ -45,9 +45,6 @@ public:
 	virtual ZgErrorCode bufferCreate(
 		IBuffer** bufferOut,
 		const ZgBufferCreateInfo& createInfo) noexcept = 0;
-
-	virtual ZgErrorCode bufferRelease(
-		IBuffer* buffer) noexcept = 0;
 };
 
 // Textures

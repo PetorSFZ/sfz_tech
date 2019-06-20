@@ -48,9 +48,6 @@ public:
 		IBuffer** bufferOut,
 		const ZgBufferCreateInfo& createInfo) noexcept override final;
 
-	ZgErrorCode bufferRelease(
-		IBuffer* buffer) noexcept override final;
-
 	// Members
 	// --------------------------------------------------------------------------------------------
 
@@ -82,12 +79,19 @@ ZgErrorCode createMemoryHeap(
 
 class D3D12Buffer final : public IBuffer {
 public:
+
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
 	D3D12Buffer() = default;
 	D3D12Buffer(const D3D12Buffer&) = delete;
 	D3D12Buffer& operator= (const D3D12Buffer&) = delete;
 	D3D12Buffer(D3D12Buffer&&) = delete;
 	D3D12Buffer& operator= (D3D12Buffer&&) = delete;
 	~D3D12Buffer() noexcept;
+
+	// Members
+	// --------------------------------------------------------------------------------------------
 
 	// A unique identifier for this buffer
 	uint64_t identifier = 0;

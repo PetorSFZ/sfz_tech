@@ -118,6 +118,100 @@ ZgErrorCode CommandQueue::executeCommandList(CommandList& commandList) noexcept
 }
 
 
+// PipelineRendering: State methods
+// ------------------------------------------------------------------------------------------------
+
+ZgErrorCode PipelineRendering::createFromFileSPIRV(
+	const ZgPipelineRenderingCreateInfoFileSPIRV& createInfo) noexcept
+{
+	this->release();
+	return zgPipelineRenderingCreateFromFileSPIRV(&this->pipeline, &this->signature, &createInfo);
+}
+
+ZgErrorCode PipelineRendering::createFromFileHLSL(
+	const ZgPipelineRenderingCreateInfoFileHLSL& createInfo) noexcept
+{
+	this->release();
+	return zgPipelineRenderingCreateFromFileHLSL(&this->pipeline, &this->signature, &createInfo);
+}
+
+ZgErrorCode PipelineRendering::createFromSourceHLSL(
+	const ZgPipelineRenderingCreateInfoSourceHLSL& createInfo) noexcept
+{
+	this->release();
+	return zgPipelineRenderingCreateFromSourceHLSL(&this->pipeline, &this->signature, &createInfo);
+}
+
+void PipelineRendering::swap(PipelineRendering& other) noexcept
+{
+	std::swap(this->pipeline, other.pipeline);
+	std::swap(this->signature, other.signature);
+}
+
+void PipelineRendering::release() noexcept
+{
+	if (this->pipeline != nullptr) zgPipelineRenderingRelease(this->pipeline);
+	this->pipeline = nullptr;
+	this->signature = {};
+}
+
+
+// MemoryHeap: State methods
+// ------------------------------------------------------------------------------------------------
+
+ZgErrorCode MemoryHeap::create(const ZgMemoryHeapCreateInfo& createInfo) noexcept
+{
+	this->release();
+	return zgMemoryHeapCreate(&this->memoryHeap, &createInfo);
+}
+
+void MemoryHeap::swap(MemoryHeap& other) noexcept
+{
+	std::swap(this->memoryHeap, other.memoryHeap);
+}
+
+void MemoryHeap::release() noexcept
+{
+	if (this->memoryHeap != nullptr) zgMemoryHeapRelease(this->memoryHeap);
+	this->memoryHeap = nullptr;
+}
+
+// MemoryHeap: MemoryHeap methods
+// ------------------------------------------------------------------------------------------------
+
+ZgErrorCode MemoryHeap::bufferCreate(zg::Buffer& bufferOut, const ZgBufferCreateInfo& createInfo) noexcept
+{
+	bufferOut.release();
+	ZgErrorCode res = zgMemoryHeapBufferCreate(this->memoryHeap, &bufferOut.buffer, &createInfo);
+	return res;
+}
+
+
+// Buffer: State methods
+// --------------------------------------------------------------------------------------------
+
+void Buffer::swap(Buffer& other) noexcept
+{
+	std::swap(this->buffer, other.buffer);
+}
+
+void Buffer::release() noexcept
+{
+	if (this->buffer != nullptr) {
+		zgBufferRelease(this->buffer);
+	}
+	this->buffer = nullptr;
+}
+
+// Buffer: Buffer methods
+// --------------------------------------------------------------------------------------------
+
+ZgErrorCode Buffer::memcpyTo(uint64_t bufferOffsetBytes, const void* srcMemory, uint64_t numBytes)
+{
+	return zgBufferMemcpyTo(this->buffer, bufferOffsetBytes, srcMemory, numBytes);
+}
+
+
 // CommandList: State methods
 // ------------------------------------------------------------------------------------------------
 
@@ -136,5 +230,25 @@ void CommandList::release() noexcept
 // CommandList: CommandList methods
 // ------------------------------------------------------------------------------------------------
 
+ZgErrorCode CommandList::memcpyBufferToBuffer(
+	zg::Buffer& dstBuffer,
+	uint64_t dstBufferOffsetBytes,
+	zg::Buffer& srcBuffer,
+	uint64_t srcBufferOffsetBytes,
+	uint64_t numBytes) noexcept
+{
+	return zgCommandListMemcpyBufferToBuffer(
+		this->commandList,
+		dstBuffer.buffer,
+		dstBufferOffsetBytes,
+		srcBuffer.buffer,
+		srcBufferOffsetBytes,
+		numBytes);
+}
+
+ZgErrorCode CommandList::setPipeline(PipelineRendering& pipeline) noexcept
+{
+	return zgCommandListSetPipelineRendering(this->commandList, pipeline.pipeline);
+}
 
 } // namespace zg

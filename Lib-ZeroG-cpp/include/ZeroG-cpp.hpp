@@ -29,6 +29,9 @@ namespace zg {
 
 class Context;
 class CommandQueue;
+class PipelineRendering;
+class MemoryHeap;
+class Buffer;
 class CommandList;
 
 // Context
@@ -80,13 +83,18 @@ public:
 	// Checks if a ZeroG context is already initialized, see zgContextAlreadyInitialized()
 	static bool alreadyInitialized() noexcept;
 
-	// Resizes the back buffers in the swap chain, safe to call every frame. See zgContextResize()
+	// Resizes the back buffers in the swap chain, safe to call every frame.
+	//
+	// See zgContextResize()
 	ZgErrorCode resize(uint32_t width, uint32_t height) noexcept;
 
+	// See zgContextGeCommandQueueGraphicsPresent()
 	ZgErrorCode getCommandQueueGraphicsPresent(CommandQueue& commandQueueOut) noexcept;
 
+	// See zgContextBeginFrame()
 	ZgErrorCode beginFrame(ZgFramebuffer*& framebufferOut) noexcept;
 
+	// See zgContextFinishFrame()
 	ZgErrorCode finishFrame() noexcept;
 
 	// Private members
@@ -121,16 +129,139 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	void swap(CommandQueue& other) noexcept;
+
+	// TODO: No-op because there currently is no releasing of Command Queues...
 	void release() noexcept;
 
 	// CommandQueue methods
 	// --------------------------------------------------------------------------------------------
 
+	// See zgCommandQueueFlush()
 	ZgErrorCode flush() noexcept;
 
+	// See zgCommandQueueBeginCommandListRecording()
 	ZgErrorCode beginCommandListRecording(CommandList& commandListOut) noexcept;
 
+	// See zgCommandQueueExecuteCommandList()
 	ZgErrorCode executeCommandList(CommandList& commandList) noexcept;
+};
+
+
+// PipelineRendering
+// ------------------------------------------------------------------------------------------------
+
+class PipelineRendering final {
+public:
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	ZgPipelineRendering* pipeline = nullptr;
+	ZgPipelineRenderingSignature signature = {};
+
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	PipelineRendering() noexcept = default;
+	PipelineRendering(const PipelineRendering&) = delete;
+	PipelineRendering& operator= (const PipelineRendering&) = delete;
+	PipelineRendering(PipelineRendering&& o) noexcept { this->swap(o); }
+	PipelineRendering& operator= (PipelineRendering&& o) noexcept { this->swap(o); return *this; }
+	~PipelineRendering() noexcept { this->release(); }
+
+	// State methods
+	// --------------------------------------------------------------------------------------------
+
+	// See zgPipelineRenderingCreateFromFileSPIRV()
+	ZgErrorCode createFromFileSPIRV(
+		const ZgPipelineRenderingCreateInfoFileSPIRV& createInfo) noexcept;
+	
+	// See ZgPipelineRenderingCreateInfoFileHLSL()
+	ZgErrorCode createFromFileHLSL(
+		const ZgPipelineRenderingCreateInfoFileHLSL& createInfo) noexcept;
+	
+	// See ZgPipelineRenderingCreateInfoSourceHLSL()
+	ZgErrorCode createFromSourceHLSL(
+		const ZgPipelineRenderingCreateInfoSourceHLSL& createInfo) noexcept;
+
+	void swap(PipelineRendering& other) noexcept;
+
+	// See zgPipelineRenderingRelease()
+	void release() noexcept;
+};
+
+
+// MemoryHeap
+// ------------------------------------------------------------------------------------------------
+
+class MemoryHeap final {
+public:
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	ZgMemoryHeap* memoryHeap = nullptr;
+
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	MemoryHeap() noexcept = default;
+	MemoryHeap(const MemoryHeap&) = delete;
+	MemoryHeap& operator= (const MemoryHeap&) = delete;
+	MemoryHeap(MemoryHeap&& o) noexcept { this->swap(o); }
+	MemoryHeap& operator= (MemoryHeap&& o) noexcept { this->swap(o); return *this; }
+	~MemoryHeap() noexcept { this->release(); }
+
+	// State methods
+	// --------------------------------------------------------------------------------------------
+
+	// See zgMemoryHeapCreate()
+	ZgErrorCode create(const ZgMemoryHeapCreateInfo& createInfo) noexcept;
+
+	void swap(MemoryHeap& other) noexcept;
+
+	// See zgMemoryHeapRelease()
+	void release() noexcept;
+
+	// MemoryHeap methods
+	// --------------------------------------------------------------------------------------------
+
+	// See zgMemoryHeapBufferCreate()
+	ZgErrorCode bufferCreate(zg::Buffer& bufferOut, const ZgBufferCreateInfo& createInfo) noexcept;
+};
+
+
+// Buffer
+// ------------------------------------------------------------------------------------------------
+
+class Buffer final {
+public:
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	ZgBuffer* buffer = nullptr;
+
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	Buffer() noexcept = default;
+	Buffer(const Buffer&) = delete;
+	Buffer& operator= (const Buffer&) = delete;
+	Buffer(Buffer&& o) noexcept { this->swap(o); }
+	Buffer& operator= (Buffer&& o) noexcept { this->swap(o); return *this; }
+	~Buffer() noexcept { this->release(); }
+
+	// State methods
+	// --------------------------------------------------------------------------------------------
+
+	void swap(Buffer& other) noexcept;
+
+	// See zgBufferRelease()
+	void release() noexcept;
+
+	// Buffer methods
+	// --------------------------------------------------------------------------------------------
+
+	// See zgBufferMemcpyTo()
+	ZgErrorCode memcpyTo(uint64_t bufferOffsetBytes, const void* srcMemory, uint64_t numBytes);
 };
 
 
@@ -158,12 +289,22 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	void swap(CommandList& other) noexcept;
+
 	void release() noexcept;
 
 	// CommandList methods
 	// --------------------------------------------------------------------------------------------
 
+	// See zgCommandListMemcpyBufferToBuffer()
+	ZgErrorCode memcpyBufferToBuffer(
+		zg::Buffer& dstBuffer,
+		uint64_t dstBufferOffsetBytes,
+		zg::Buffer& srcBuffer,
+		uint64_t srcBufferOffsetBytes,
+		uint64_t numBytes) noexcept;
 
+	// See zgCommandListSetPipelineRendering()
+	ZgErrorCode setPipeline(PipelineRendering& pipeline) noexcept;
 };
 
 

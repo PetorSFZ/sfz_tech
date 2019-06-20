@@ -57,8 +57,8 @@ static_assert(sizeof(Vertex) == sizeof(float) * 8, "Vertex is padded");
 // In practice you want to have multiple buffers per heap and use some sort of allocation scheme,
 // but this is good enough for this sample.
 static void allocateMemoryHeapAndBuffer(
-	ZgMemoryHeap*& heapOut,
-	ZgBuffer*& bufferOut,
+	zg::MemoryHeap& heapOut,
+	zg::Buffer& bufferOut,
 	ZgMemoryType memoryType,
 	uint64_t numBytes) noexcept
 {
@@ -67,60 +67,50 @@ static void allocateMemoryHeapAndBuffer(
 	heapInfo.memoryType = memoryType;
 	heapInfo.sizeInBytes = numBytes;
 
-	ZgMemoryHeap* heap = nullptr;
-	CHECK_ZG zgMemoryHeapCreate(&heap, &heapInfo);
+	CHECK_ZG heapOut.create(heapInfo);
 
 	// Create buffer
 	ZgBufferCreateInfo bufferInfo = {};
 	bufferInfo.offsetInBytes = 0;
 	bufferInfo.sizeInBytes = numBytes;
 	
-	ZgBuffer* buffer = nullptr;
-	CHECK_ZG zgMemoryHeapBufferCreate(heap, &buffer, &bufferInfo);
-
-	heapOut = heap;
-	bufferOut = buffer;
+	CHECK_ZG heapOut.bufferCreate(bufferOut, bufferInfo);
 }
 
 // A simple helper function that allocates and copies data to a device buffer In practice you will
 // likely want to do something smarter.
 static void createDeviceBufferSimpleBlocking(
 	zg::CommandQueue& queue,
-	ZgBuffer*& bufferOut,
-	ZgMemoryHeap*& memoryHeapOut,
+	zg::Buffer& bufferOut,
+	zg::MemoryHeap& memoryHeapOut,
 	const void* data,
 	uint64_t numBytes,
 	uint64_t bufferSizeBytes = 0) noexcept
 {
 	// Create temporary upload buffer (accessible from CPU)
-	ZgMemoryHeap* uploadHeap = nullptr;
-	ZgBuffer* uploadBuffer = nullptr;
+	zg::MemoryHeap uploadHeap;
+	zg::Buffer uploadBuffer;
 	allocateMemoryHeapAndBuffer(uploadHeap, uploadBuffer,
 		ZG_MEMORY_TYPE_UPLOAD, bufferSizeBytes != 0 ? bufferSizeBytes : numBytes);
 
 	// Copy cube vertices to upload buffer
-	CHECK_ZG zgBufferMemcpyTo(uploadBuffer, 0, data, numBytes);
+	CHECK_ZG uploadBuffer.memcpyTo(0, data, numBytes);
 
 	// Create device buffer
-	ZgMemoryHeap* deviceHeap = nullptr;
-	ZgBuffer* deviceBuffer = nullptr;
+	zg::MemoryHeap deviceHeap;
+	zg::Buffer deviceBuffer;
 	allocateMemoryHeapAndBuffer(deviceHeap, deviceBuffer,
 		ZG_MEMORY_TYPE_DEVICE, bufferSizeBytes != 0 ? bufferSizeBytes : numBytes);
 
 	// Copy to the device buffer
 	zg::CommandList commandList;
 	CHECK_ZG queue.beginCommandListRecording(commandList);
-	CHECK_ZG zgCommandListMemcpyBufferToBuffer(
-		commandList.commandList, deviceBuffer, 0, uploadBuffer, 0, numBytes);
+	CHECK_ZG commandList.memcpyBufferToBuffer(deviceBuffer, 0, uploadBuffer, 0, numBytes);
 	CHECK_ZG queue.executeCommandList(commandList);
 	CHECK_ZG queue.flush();
 
-	// Release upload heap and buffer
-	CHECK_ZG zgMemoryHeapBufferRelease(uploadHeap, uploadBuffer);
-	CHECK_ZG zgMemoryHeapRelease(uploadHeap);
-
-	bufferOut = deviceBuffer;
-	memoryHeapOut = deviceHeap;
+	bufferOut = std::move(deviceBuffer);
+	memoryHeapOut = std::move(deviceHeap);
 }
 
 using time_point = std::chrono::high_resolution_clock::time_point;
@@ -297,20 +287,17 @@ static void realMain(SDL_Window* window) noexcept
 	pipelineInfoCommon.samplers[0].mipLodBias = 0.0f;
 
 	// SPIRV File variant
-	ZgPipelineRendering* pipeline = nullptr;
-	ZgPipelineRenderingSignature signature = {};
+	zg::PipelineRendering pipeline;
 	{
 		ZgPipelineRenderingCreateInfoFileSPIRV pipelineInfoFileSpirv = {};
 		pipelineInfoFileSpirv.common = pipelineInfoCommon;
 		pipelineInfoFileSpirv.vertexShaderPath = "res/Sample-1/test_vs.spv";
 		pipelineInfoFileSpirv.pixelShaderPath = "res/Sample-1/test_ps.spv";
-		CHECK_ZG zgPipelineRenderingCreateFromFileSPIRV(
-			&pipeline, &signature, &pipelineInfoFileSpirv);
+		CHECK_ZG pipeline.createFromFileSPIRV(pipelineInfoFileSpirv);
 	}
 
 	// HLSL File variant
-	/*ZgPipelineRendering* pipeline = nullptr;
-	ZgPipelineRenderingSignature signature = {};
+	/*zg::PipelineRendering pipeline;
 	{
 		ZgPipelineRenderingCreateInfoFileHLSL pipelineInfoFileHlsl = {};
 		pipelineInfoFileHlsl.common = pipelineInfoCommon;
@@ -319,13 +306,11 @@ static void realMain(SDL_Window* window) noexcept
 		pipelineInfoFileHlsl.shaderModel = ZG_SHADER_MODEL_6_0;
 		pipelineInfoFileHlsl.dxcCompilerFlags[0] = "-Zi";
 		pipelineInfoFileHlsl.dxcCompilerFlags[1] = "-O3";
-		CHECK_ZG zgPipelineRenderingCreateFromFileHLSL(
-			&pipeline, &signature, &pipelineInfoFileHlsl);
+		CHECK_ZG pipeline.createFromFileHLSL(pipelineInfoFileHlsl);
 	}*/
 
 	// HLSL source variant
-	/*ZgPipelineRendering* pipeline = nullptr;
-	ZgPipelineRenderingSignature signature = {};
+	/*zg::PipelineRendering pipeline;
 	{
 		char hlslSource[2048] = {};
 		size_t numRead = readBinaryFile("res/Sample-1/test.hlsl", (uint8_t*)hlslSource, 2048);
@@ -337,8 +322,7 @@ static void realMain(SDL_Window* window) noexcept
 		pipelineInfoSrcHlsl.shaderModel = ZG_SHADER_MODEL_6_0;
 		pipelineInfoSrcHlsl.dxcCompilerFlags[0] = "-Zi";
 		pipelineInfoSrcHlsl.dxcCompilerFlags[1] = "-O3";
-		CHECK_ZG zgPipelineRenderingCreateFromSourceHLSL(
-			&pipeline, &signature, &pipelineInfoSrcHlsl);
+		CHECK_ZG pipeline.createFromSourceHLSL(pipelineInfoSrcHlsl);
 	}*/
 
 
@@ -356,14 +340,14 @@ static void realMain(SDL_Window* window) noexcept
 		v.texcoord[1] = CUBE_TEXCOORDS[i * 2 + 1];
 	}
 
-	ZgBuffer* cubeVertexBufferDevice = nullptr;
-	ZgMemoryHeap* cubeVertexMemoryHeapDevice = nullptr;
+	zg::Buffer cubeVertexBufferDevice;
+	zg::MemoryHeap cubeVertexMemoryHeapDevice;
 	createDeviceBufferSimpleBlocking(commandQueue, cubeVertexBufferDevice,
 		cubeVertexMemoryHeapDevice, cubeVertices, sizeof(Vertex) * CUBE_NUM_VERTICES);
 
 	// Create a index buffer for the cube's vertices
-	ZgBuffer* cubeIndexBufferDevice = nullptr;
-	ZgMemoryHeap* cubeIndexMemoryHeapDevice = nullptr;
+	zg::Buffer cubeIndexBufferDevice;
+	zg::MemoryHeap cubeIndexMemoryHeapDevice;
 	createDeviceBufferSimpleBlocking(commandQueue, cubeIndexBufferDevice,
 		cubeIndexMemoryHeapDevice, CUBE_INDICES, sizeof(uint32_t) * CUBE_NUM_INDICES);
 
@@ -371,8 +355,8 @@ static void realMain(SDL_Window* window) noexcept
 	// Create a constant buffer
 	Vector offsets;
 	offsets.x = 0.0f;
-	ZgBuffer* constBufferDevice = nullptr;
-	ZgMemoryHeap* constBufferMemoryHeapDevice = nullptr;
+	zg::Buffer constBufferDevice;
+	zg::MemoryHeap constBufferMemoryHeapDevice;
 	createDeviceBufferSimpleBlocking(commandQueue, constBufferDevice,
 		constBufferMemoryHeapDevice, &offsets, sizeof(Vector), 256);
 
@@ -416,45 +400,35 @@ static void realMain(SDL_Window* window) noexcept
 
 
 		// Create temporary upload buffer (accessible from CPU)
-		ZgMemoryHeap* uploadHeapLvl0 = nullptr;
-		ZgBuffer* uploadBufferLvl0 = nullptr;
+		zg::MemoryHeap uploadHeapLvl0;
+		zg::Buffer uploadBufferLvl0;
 		allocateMemoryHeapAndBuffer(uploadHeapLvl0, uploadBufferLvl0,
 			ZG_MEMORY_TYPE_UPLOAD, textureAllocInfo.sizeInBytes);
 
-		ZgMemoryHeap* uploadHeapLvl1 = nullptr;
-		ZgBuffer* uploadBufferLvl1 = nullptr;
+		zg::MemoryHeap uploadHeapLvl1;
+		zg::Buffer uploadBufferLvl1;
 		allocateMemoryHeapAndBuffer(uploadHeapLvl1, uploadBufferLvl1,
 			ZG_MEMORY_TYPE_UPLOAD, textureAllocInfo.sizeInBytes);
 
-		ZgMemoryHeap* uploadHeapLvl2 = nullptr;
-		ZgBuffer* uploadBufferLvl2 = nullptr;
+		zg::MemoryHeap uploadHeapLvl2;
+		zg::Buffer uploadBufferLvl2;
 		allocateMemoryHeapAndBuffer(uploadHeapLvl2, uploadBufferLvl2,
 			ZG_MEMORY_TYPE_UPLOAD, textureAllocInfo.sizeInBytes);
 
-		ZgMemoryHeap* uploadHeapLvl3 = nullptr;
-		ZgBuffer* uploadBufferLvl3 = nullptr;
+		zg::MemoryHeap uploadHeapLvl3;
+		zg::Buffer uploadBufferLvl3;
 		allocateMemoryHeapAndBuffer(uploadHeapLvl3, uploadBufferLvl3,
 			ZG_MEMORY_TYPE_UPLOAD, textureAllocInfo.sizeInBytes);
 
 		// Copy to the texture
 		zg::CommandList commandList;
 		CHECK_ZG commandQueue.beginCommandListRecording(commandList);
-		CHECK_ZG zgCommandListMemcpyToTexture(commandList.commandList, texture, 0, &imageLvl0, uploadBufferLvl0);
-		CHECK_ZG zgCommandListMemcpyToTexture(commandList.commandList, texture, 1, &imageLvl1, uploadBufferLvl1);
-		CHECK_ZG zgCommandListMemcpyToTexture(commandList.commandList, texture, 2, &imageLvl2, uploadBufferLvl2);
-		CHECK_ZG zgCommandListMemcpyToTexture(commandList.commandList, texture, 3, &imageLvl3, uploadBufferLvl3);
+		CHECK_ZG zgCommandListMemcpyToTexture(commandList.commandList, texture, 0, &imageLvl0, uploadBufferLvl0.buffer);
+		CHECK_ZG zgCommandListMemcpyToTexture(commandList.commandList, texture, 1, &imageLvl1, uploadBufferLvl1.buffer);
+		CHECK_ZG zgCommandListMemcpyToTexture(commandList.commandList, texture, 2, &imageLvl2, uploadBufferLvl2.buffer);
+		CHECK_ZG zgCommandListMemcpyToTexture(commandList.commandList, texture, 3, &imageLvl3, uploadBufferLvl3.buffer);
 		CHECK_ZG commandQueue.executeCommandList(commandList);
 		CHECK_ZG commandQueue.flush();
-
-		// Release upload heap and buffer
-		CHECK_ZG zgMemoryHeapBufferRelease(uploadHeapLvl0, uploadBufferLvl0);
-		CHECK_ZG zgMemoryHeapRelease(uploadHeapLvl0);
-		CHECK_ZG zgMemoryHeapBufferRelease(uploadHeapLvl1, uploadBufferLvl1);
-		CHECK_ZG zgMemoryHeapRelease(uploadHeapLvl1);
-		CHECK_ZG zgMemoryHeapBufferRelease(uploadHeapLvl2, uploadBufferLvl2);
-		CHECK_ZG zgMemoryHeapRelease(uploadHeapLvl2);
-		CHECK_ZG zgMemoryHeapBufferRelease(uploadHeapLvl3, uploadBufferLvl3);
-		CHECK_ZG zgMemoryHeapRelease(uploadHeapLvl3);
 
 		// Free images
 		delete[] imageLvl0.data;
@@ -530,13 +504,13 @@ static void realMain(SDL_Window* window) noexcept
 		CHECK_ZG zgCommandListClearDepthBuffer(commandList.commandList, 1.0f);
 
 		// Set pipeline
-		CHECK_ZG zgCommandListSetPipelineRendering(commandList.commandList, pipeline);
+		CHECK_ZG commandList.setPipeline(pipeline);
 
 		// Set pipeline bindings
 		ZgPipelineBindings bindings = {};
 		bindings.numConstantBuffers = 1;
 		bindings.constantBuffers[0].shaderRegister = 1;
-		bindings.constantBuffers[0].buffer = constBufferDevice;
+		bindings.constantBuffers[0].buffer = constBufferDevice.buffer;
 		bindings.numTextures = 1;
 		bindings.textures[0].textureRegister = 0;
 		bindings.textures[0].texture = texture;
@@ -566,8 +540,8 @@ static void realMain(SDL_Window* window) noexcept
 
 		// Set Cube's vertex and index buffer
 		CHECK_ZG zgCommandListSetIndexBuffer(
-			commandList.commandList, cubeIndexBufferDevice, ZG_INDEX_BUFFER_TYPE_UINT32);
-		CHECK_ZG zgCommandListSetVertexBuffer(commandList.commandList, 0, cubeVertexBufferDevice);
+			commandList.commandList, cubeIndexBufferDevice.buffer, ZG_INDEX_BUFFER_TYPE_UINT32);
+		CHECK_ZG zgCommandListSetVertexBuffer(commandList.commandList, 0, cubeVertexBufferDevice.buffer);
 		
 		// Batch some cubes
 		batchCubeRender(Vector(0.0f, 0.0f, 0.0f));
@@ -597,17 +571,6 @@ static void realMain(SDL_Window* window) noexcept
 	// Release ZeroG resources
 	CHECK_ZG zgMemoryHeapTexture2DRelease(textureHeap, texture);
 	CHECK_ZG zgTextureHeapRelease(textureHeap);
-
-	CHECK_ZG zgMemoryHeapBufferRelease(cubeVertexMemoryHeapDevice, cubeVertexBufferDevice);
-	CHECK_ZG zgMemoryHeapRelease(cubeVertexMemoryHeapDevice);
-
-	CHECK_ZG zgMemoryHeapBufferRelease(cubeIndexMemoryHeapDevice, cubeIndexBufferDevice);
-	CHECK_ZG zgMemoryHeapRelease(cubeIndexMemoryHeapDevice);
-
-	CHECK_ZG zgMemoryHeapBufferRelease(constBufferMemoryHeapDevice, constBufferDevice);
-	CHECK_ZG zgMemoryHeapRelease(constBufferMemoryHeapDevice);
-
-	CHECK_ZG zgPipelineRenderingRelease(pipeline);
 }
 
 int main(int argc, char* argv[])

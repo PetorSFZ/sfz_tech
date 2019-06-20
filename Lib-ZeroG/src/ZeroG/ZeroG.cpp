@@ -330,12 +330,12 @@ ZG_API ZgErrorCode zgMemoryHeapBufferCreate(
 	return ZG_SUCCESS;
 }
 
-ZG_API ZgErrorCode zgMemoryHeapBufferRelease(
-	ZgMemoryHeap* memoryHeapIn,
-	ZgBuffer* buffer)
+ZG_API void zgBufferRelease(
+	ZgBuffer* bufferIn)
 {
-	zg::IMemoryHeap* memoryHeap = reinterpret_cast<zg::IMemoryHeap*>(memoryHeapIn);
-	return memoryHeap->bufferRelease(reinterpret_cast<zg::IBuffer*>(buffer));
+	if (bufferIn == nullptr) return;
+	zg::IBuffer* buffer = reinterpret_cast<zg::IBuffer*>(bufferIn);
+	zg::zgDelete<zg::IBuffer>(zg::getContext().allocator, buffer);
 }
 
 ZG_API ZgErrorCode zgBufferMemcpyTo(
