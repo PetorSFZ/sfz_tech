@@ -165,13 +165,6 @@ ZgErrorCode D3D12TextureHeap::texture2DCreate(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12TextureHeap::texture2DRelease(
-	ITexture2D* texture) noexcept
-{
-	zgDelete<ITexture2D>(allocator, texture);
-	return ZG_SUCCESS;
-}
-
 // D3D12 Texture Heap functions
 // ------------------------------------------------------------------------------------------------
 

@@ -66,9 +66,6 @@ public:
 	virtual ZgErrorCode texture2DCreate(
 		ITexture2D** textureOut,
 		const ZgTexture2DCreateInfo& createInfo) noexcept = 0;
-
-	virtual ZgErrorCode texture2DRelease(
-		ITexture2D* texture) noexcept = 0;
 };
 
 // Framebuffer

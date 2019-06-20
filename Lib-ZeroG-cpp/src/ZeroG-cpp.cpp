@@ -84,42 +84,6 @@ ErrorCode Context::finishFrame() noexcept
 }
 
 
-// CommandQueue: State methods
-// ------------------------------------------------------------------------------------------------
-
-void CommandQueue::swap(CommandQueue& other) noexcept
-{
-	std::swap(this->commandQueue, other.commandQueue);
-}
-void CommandQueue::release() noexcept
-{
-	// TODO: Currently there is no destruction of command queues as there is only one
-	this->commandQueue = nullptr;
-}
-
-// CommandQueue: CommandQueue methods
-// ------------------------------------------------------------------------------------------------
-
-ErrorCode CommandQueue::flush() noexcept
-{
-	return (ErrorCode)zgCommandQueueFlush(this->commandQueue);
-}
-
-ErrorCode CommandQueue::beginCommandListRecording(CommandList& commandListOut) noexcept
-{
-	if (commandListOut.commandList != nullptr) return ErrorCode::INVALID_ARGUMENT;
-	return (ErrorCode)zgCommandQueueBeginCommandListRecording(
-		this->commandQueue, &commandListOut.commandList);
-}
-
-ErrorCode CommandQueue::executeCommandList(CommandList& commandList) noexcept
-{
-	ZgErrorCode res = zgCommandQueueExecuteCommandList(this->commandQueue, commandList.commandList);
-	commandList.commandList = nullptr;
-	return (ErrorCode)res;
-}
-
-
 // PipelineRendering: State methods
 // ------------------------------------------------------------------------------------------------
 
@@ -216,6 +180,98 @@ ErrorCode Buffer::memcpyTo(uint64_t bufferOffsetBytes, const void* srcMemory, ui
 }
 
 
+// TextureHeap: State methods
+// ------------------------------------------------------------------------------------------------
+
+ErrorCode TextureHeap::create(const ZgTextureHeapCreateInfo& createInfo) noexcept
+{
+	this->release();
+	return (ErrorCode)zgTextureHeapCreate(&this->textureHeap, &createInfo);
+}
+
+void TextureHeap::swap(TextureHeap& other) noexcept
+{
+	std::swap(this->textureHeap, other.textureHeap);
+}
+
+void TextureHeap::release() noexcept
+{
+	if (this->textureHeap != nullptr) zgTextureHeapRelease(this->textureHeap);
+	this->textureHeap = nullptr;
+}
+
+
+// TextureHeap: TextureHeap methods
+// ------------------------------------------------------------------------------------------------
+
+ErrorCode TextureHeap::texture2DGetAllocationInfo(
+	ZgTexture2DAllocationInfo& allocationInfoOut,
+	const ZgTexture2DCreateInfo& createInfo) noexcept
+{
+	return (ErrorCode)zgTextureHeapTexture2DGetAllocationInfo(
+		this->textureHeap, &allocationInfoOut, &createInfo);
+}
+
+ErrorCode TextureHeap::texture2DCreate(
+	Texture2D& textureOut, const ZgTexture2DCreateInfo& createInfo) noexcept
+{
+	textureOut.release();
+	return (ErrorCode)zgTextureHeapTexture2DCreate(
+		this->textureHeap, &textureOut.texture, &createInfo);
+}
+
+
+// Texture2D: State methods
+// ------------------------------------------------------------------------------------------------
+
+void Texture2D::swap(Texture2D& other) noexcept
+{
+	std::swap(this->texture, other.texture);
+}
+
+void Texture2D::release() noexcept
+{
+	if (this->texture != nullptr) zgTexture2DRelease(this->texture);
+	this->texture = nullptr;
+}
+
+
+// CommandQueue: State methods
+// ------------------------------------------------------------------------------------------------
+
+void CommandQueue::swap(CommandQueue& other) noexcept
+{
+	std::swap(this->commandQueue, other.commandQueue);
+}
+void CommandQueue::release() noexcept
+{
+	// TODO: Currently there is no destruction of command queues as there is only one
+	this->commandQueue = nullptr;
+}
+
+// CommandQueue: CommandQueue methods
+// ------------------------------------------------------------------------------------------------
+
+ErrorCode CommandQueue::flush() noexcept
+{
+	return (ErrorCode)zgCommandQueueFlush(this->commandQueue);
+}
+
+ErrorCode CommandQueue::beginCommandListRecording(CommandList& commandListOut) noexcept
+{
+	if (commandListOut.commandList != nullptr) return ErrorCode::INVALID_ARGUMENT;
+	return (ErrorCode)zgCommandQueueBeginCommandListRecording(
+		this->commandQueue, &commandListOut.commandList);
+}
+
+ErrorCode CommandQueue::executeCommandList(CommandList& commandList) noexcept
+{
+	ZgErrorCode res = zgCommandQueueExecuteCommandList(this->commandQueue, commandList.commandList);
+	commandList.commandList = nullptr;
+	return (ErrorCode)res;
+}
+
+
 // CommandList: State methods
 // ------------------------------------------------------------------------------------------------
 
@@ -250,9 +306,72 @@ ErrorCode CommandList::memcpyBufferToBuffer(
 		numBytes);
 }
 
+ErrorCode CommandList::memcpyToTexture(
+	Texture2D& dstTexture,
+	uint32_t dstTextureMipLevel,
+	const ZgImageViewConstCpu& srcImageCpu,
+	Buffer& tempUploadBuffer) noexcept
+{
+	return (ErrorCode)zgCommandListMemcpyToTexture(
+		this->commandList,
+		dstTexture.texture,
+		dstTextureMipLevel,
+		&srcImageCpu,
+		tempUploadBuffer.buffer);
+}
+
+ErrorCode CommandList::setPushConstant(
+	uint32_t shaderRegister, const void* data, uint32_t dataSizeInBytes) noexcept
+{
+	return (ErrorCode)zgCommandListSetPushConstant(
+		this->commandList, shaderRegister, data, dataSizeInBytes);
+}
+
+ErrorCode CommandList::setPipelineBindings(const ZgPipelineBindings& bindings) noexcept
+{
+	return (ErrorCode)zgCommandListSetPipelineBindings(this->commandList, &bindings);
+}
+
 ErrorCode CommandList::setPipeline(PipelineRendering& pipeline) noexcept
 {
 	return (ErrorCode)zgCommandListSetPipelineRendering(this->commandList, pipeline.pipeline);
+}
+
+ErrorCode CommandList::setFramebuffer(const ZgCommandListSetFramebufferInfo& info) noexcept
+{
+	return (ErrorCode)zgCommandListSetFramebuffer(this->commandList, &info);
+}
+
+ErrorCode CommandList::clearFramebuffer(float red, float green, float blue, float alpha) noexcept
+{
+	return (ErrorCode)zgCommandListClearFramebuffer(this->commandList, red, green, blue, alpha);
+}
+
+ErrorCode CommandList::clearDepthBuffer(float depth) noexcept
+{
+	return (ErrorCode)zgCommandListClearDepthBuffer(this->commandList, depth);
+}
+
+ErrorCode CommandList::setIndexBuffer(Buffer& indexBuffer, ZgIndexBufferType type) noexcept
+{
+	return (ErrorCode)zgCommandListSetIndexBuffer(this->commandList, indexBuffer.buffer, type);
+}
+
+ErrorCode CommandList::setVertexBuffer(uint32_t vertexBufferSlot, Buffer& vertexBuffer) noexcept
+{
+	return (ErrorCode)zgCommandListSetVertexBuffer(
+		this->commandList, vertexBufferSlot, vertexBuffer.buffer);
+}
+
+ErrorCode CommandList::drawTriangles(uint32_t startVertexIndex, uint32_t numVertices) noexcept
+{
+	return (ErrorCode)zgCommandListDrawTriangles(this->commandList, startVertexIndex, numVertices);
+}
+
+ErrorCode CommandList::drawTrianglesIndexed(uint32_t startIndex, uint32_t numTriangles) noexcept
+{
+	return (ErrorCode)zgCommandListDrawTrianglesIndexed(
+		this->commandList, startIndex, numTriangles);
 }
 
 } // namespace zg

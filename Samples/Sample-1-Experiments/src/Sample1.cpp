@@ -365,8 +365,8 @@ static void realMain(SDL_Window* window) noexcept
 	ZgTextureHeapCreateInfo textureHeapInfo = {};
 	textureHeapInfo.sizeInBytes = 64 * 1024 * 1024; // 64 MiB should be enough for anyone
 
-	ZgTextureHeap* textureHeap = nullptr;
-	CHECK_ZG zgTextureHeapCreate(&textureHeap, &textureHeapInfo);
+	zg::TextureHeap textureHeap;
+	CHECK_ZG textureHeap.create(textureHeapInfo);
 
 	// Create a texture
 	ZgTexture2DCreateInfo textureCreateInfo = {};
@@ -377,15 +377,14 @@ static void realMain(SDL_Window* window) noexcept
 	textureCreateInfo.numMipmaps = 4;
 
 	ZgTexture2DAllocationInfo textureAllocInfo = {};
-	CHECK_ZG zgTextureHeapTexture2DGetAllocationInfo(
-		textureHeap, &textureAllocInfo, &textureCreateInfo);
+	CHECK_ZG textureHeap.texture2DGetAllocationInfo(textureAllocInfo, textureCreateInfo);
 	
 	textureCreateInfo.offsetInBytes = 0;
 	textureCreateInfo.sizeInBytes = textureAllocInfo.sizeInBytes;
 
-	ZgTexture2D* texture = nullptr;
-	CHECK_ZG zgTextureHeapTexture2DCreate(textureHeap, &texture, &textureCreateInfo);
-
+	zg::Texture2D texture;
+	CHECK_ZG textureHeap.texture2DCreate(texture, textureCreateInfo);
+	
 	
 	// Fill texture with some random data
 	{
@@ -423,10 +422,10 @@ static void realMain(SDL_Window* window) noexcept
 		// Copy to the texture
 		zg::CommandList commandList;
 		CHECK_ZG commandQueue.beginCommandListRecording(commandList);
-		CHECK_ZG zgCommandListMemcpyToTexture(commandList.commandList, texture, 0, &imageLvl0, uploadBufferLvl0.buffer);
-		CHECK_ZG zgCommandListMemcpyToTexture(commandList.commandList, texture, 1, &imageLvl1, uploadBufferLvl1.buffer);
-		CHECK_ZG zgCommandListMemcpyToTexture(commandList.commandList, texture, 2, &imageLvl2, uploadBufferLvl2.buffer);
-		CHECK_ZG zgCommandListMemcpyToTexture(commandList.commandList, texture, 3, &imageLvl3, uploadBufferLvl3.buffer);
+		CHECK_ZG commandList.memcpyToTexture(texture, 0, imageLvl0, uploadBufferLvl0);
+		CHECK_ZG commandList.memcpyToTexture(texture, 1, imageLvl1, uploadBufferLvl1);
+		CHECK_ZG commandList.memcpyToTexture(texture, 2, imageLvl2, uploadBufferLvl2);
+		CHECK_ZG commandList.memcpyToTexture(texture, 3, imageLvl3, uploadBufferLvl3);
 		CHECK_ZG commandQueue.executeCommandList(commandList);
 		CHECK_ZG commandQueue.flush();
 
@@ -490,7 +489,7 @@ static void realMain(SDL_Window* window) noexcept
 
 		// Begin frame
 		ZgFramebuffer* framebuffer = nullptr;
-		CHECK_ZG zgContextBeginFrame(&framebuffer);
+		CHECK_ZG zgCtx.beginFrame(framebuffer);
 
 		// Get a command list
 		zg::CommandList commandList;
@@ -499,9 +498,9 @@ static void realMain(SDL_Window* window) noexcept
 		// Set framebuffer and clear it
 		ZgCommandListSetFramebufferInfo framebufferInfo = {};
 		framebufferInfo.framebuffer = framebuffer;
-		CHECK_ZG zgCommandListSetFramebuffer(commandList.commandList, &framebufferInfo);
-		CHECK_ZG zgCommandListClearFramebuffer(commandList.commandList, 0.2f, 0.2f, 0.3f, 1.0f);
-		CHECK_ZG zgCommandListClearDepthBuffer(commandList.commandList, 1.0f);
+		CHECK_ZG commandList.setFramebuffer(framebufferInfo);
+		CHECK_ZG commandList.clearFramebuffer(0.2f, 0.2f, 0.3f, 1.0f);
+		CHECK_ZG commandList.clearDepthBuffer(1.0f);
 
 		// Set pipeline
 		CHECK_ZG commandList.setPipeline(pipeline);
@@ -513,8 +512,8 @@ static void realMain(SDL_Window* window) noexcept
 		bindings.constantBuffers[0].buffer = constBufferDevice.buffer;
 		bindings.numTextures = 1;
 		bindings.textures[0].textureRegister = 0;
-		bindings.textures[0].texture = texture;
-		CHECK_ZG zgCommandListSetPipelineBindings(commandList.commandList, &bindings);
+		bindings.textures[0].texture = texture.texture;
+		CHECK_ZG commandList.setPipelineBindings(bindings);
 
 		// Lambda to batch a call to render a cube with a specific transform
 		auto batchCubeRender = [&](Vector offset) {
@@ -532,16 +531,16 @@ static void realMain(SDL_Window* window) noexcept
 			transforms.normalMatrix = inverse(transpose(viewMatrix * modelMatrix));
 
 			// Send transforms to shader
-			CHECK_ZG zgCommandListSetPushConstant(commandList.commandList, 0, &transforms, sizeof(Transforms));
+			CHECK_ZG commandList.setPushConstant(0, &transforms, sizeof(Transforms));
 
 			// Draw cube
-			CHECK_ZG zgCommandListDrawTrianglesIndexed(commandList.commandList, 0, CUBE_NUM_INDICES / 3);
+			CHECK_ZG commandList.drawTrianglesIndexed(0, CUBE_NUM_INDICES / 3);
 		};
 
 		// Set Cube's vertex and index buffer
-		CHECK_ZG zgCommandListSetIndexBuffer(
-			commandList.commandList, cubeIndexBufferDevice.buffer, ZG_INDEX_BUFFER_TYPE_UINT32);
-		CHECK_ZG zgCommandListSetVertexBuffer(commandList.commandList, 0, cubeVertexBufferDevice.buffer);
+		CHECK_ZG commandList.setIndexBuffer(
+			cubeIndexBufferDevice, ZG_INDEX_BUFFER_TYPE_UINT32);
+		CHECK_ZG commandList.setVertexBuffer(0, cubeVertexBufferDevice);
 		
 		// Batch some cubes
 		batchCubeRender(Vector(0.0f, 0.0f, 0.0f));
@@ -567,10 +566,6 @@ static void realMain(SDL_Window* window) noexcept
 
 	// Flush command queue so nothing is running when we start releasing resources
 	CHECK_ZG commandQueue.flush();
-
-	// Release ZeroG resources
-	CHECK_ZG zgMemoryHeapTexture2DRelease(textureHeap, texture);
-	CHECK_ZG zgTextureHeapRelease(textureHeap);
 }
 
 int main(int argc, char* argv[])

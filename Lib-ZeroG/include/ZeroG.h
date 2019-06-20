@@ -715,8 +715,7 @@ ZG_API ZgErrorCode zgTextureHeapTexture2DCreate(
 	ZgTexture2D** textureOut,
 	const ZgTexture2DCreateInfo* createInfo);
 
-ZG_API ZgErrorCode zgMemoryHeapTexture2DRelease(
-	ZgTextureHeap* textureHeap,
+ZG_API void zgTexture2DRelease(
 	ZgTexture2D* texture);
 
 // Command queue

@@ -403,12 +403,12 @@ ZG_API ZgErrorCode zgTextureHeapTexture2DCreate(
 	return ZG_SUCCESS;
 }
 
-ZG_API ZgErrorCode zgMemoryHeapTexture2DRelease(
-	ZgTextureHeap* textureHeapIn,
-	ZgTexture2D* texture)
+ZG_API void zgTexture2DRelease(
+	ZgTexture2D* textureIn)
 {
-	zg::ITextureHeap* textureHeap = reinterpret_cast<zg::ITextureHeap*>(textureHeapIn);
-	return textureHeap->texture2DRelease(reinterpret_cast<zg::ITexture2D*>(texture));
+	if (textureIn == nullptr) return;
+	zg::ITexture2D* texture = reinterpret_cast<zg::ITexture2D*>(textureIn);
+	zg::zgDelete<zg::ITexture2D>(zg::getContext().allocator, texture);
 }
 
 // Command queue

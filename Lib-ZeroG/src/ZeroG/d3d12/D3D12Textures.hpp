@@ -52,9 +52,6 @@ public:
 		ITexture2D** textureOut,
 		const ZgTexture2DCreateInfo& createInfo) noexcept override final;
 
-	ZgErrorCode texture2DRelease(
-		ITexture2D* texture) noexcept override final;
-
 	// Members
 	// --------------------------------------------------------------------------------------------
 

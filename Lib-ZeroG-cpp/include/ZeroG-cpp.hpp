@@ -28,10 +28,12 @@ namespace zg {
 // ------------------------------------------------------------------------------------------------
 
 class Context;
-class CommandQueue;
 class PipelineRendering;
 class MemoryHeap;
 class Buffer;
+class TextureHeap;
+class Texture2D;
+class CommandQueue;
 class CommandList;
 
 
@@ -124,48 +126,6 @@ private:
 };
 
 
-// CommandQueue
-// ------------------------------------------------------------------------------------------------
-
-class CommandQueue final {
-public:
-	// Members
-	// --------------------------------------------------------------------------------------------
-
-	ZgCommandQueue* commandQueue = nullptr;
-
-	// Constructors & destructors
-	// --------------------------------------------------------------------------------------------
-
-	CommandQueue() noexcept = default;
-	CommandQueue(const CommandQueue&) = delete;
-	CommandQueue& operator= (const CommandQueue&) = delete;
-	CommandQueue(CommandQueue&& other) noexcept { this->swap(other); }
-	CommandQueue& operator= (CommandQueue&& other) noexcept { this->swap(other); return *this; }
-	~CommandQueue() noexcept { this->release(); }
-
-	// State methods
-	// --------------------------------------------------------------------------------------------
-
-	void swap(CommandQueue& other) noexcept;
-
-	// TODO: No-op because there currently is no releasing of Command Queues...
-	void release() noexcept;
-
-	// CommandQueue methods
-	// --------------------------------------------------------------------------------------------
-
-	// See zgCommandQueueFlush()
-	ErrorCode flush() noexcept;
-
-	// See zgCommandQueueBeginCommandListRecording()
-	ErrorCode beginCommandListRecording(CommandList& commandListOut) noexcept;
-
-	// See zgCommandQueueExecuteCommandList()
-	ErrorCode executeCommandList(CommandList& commandList) noexcept;
-};
-
-
 // PipelineRendering
 // ------------------------------------------------------------------------------------------------
 
@@ -244,7 +204,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	// See zgMemoryHeapBufferCreate()
-	ErrorCode bufferCreate(zg::Buffer& bufferOut, const ZgBufferCreateInfo& createInfo) noexcept;
+	ErrorCode bufferCreate(Buffer& bufferOut, const ZgBufferCreateInfo& createInfo) noexcept;
 };
 
 
@@ -281,6 +241,123 @@ public:
 
 	// See zgBufferMemcpyTo()
 	ErrorCode memcpyTo(uint64_t bufferOffsetBytes, const void* srcMemory, uint64_t numBytes);
+};
+
+
+// TextureHeap
+// ------------------------------------------------------------------------------------------------
+
+class TextureHeap final {
+public:
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	ZgTextureHeap* textureHeap = nullptr;
+
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	TextureHeap() noexcept = default;
+	TextureHeap(const TextureHeap&) = delete;
+	TextureHeap& operator= (const TextureHeap&) = delete;
+	TextureHeap(TextureHeap&& o) noexcept { this->swap(o); }
+	TextureHeap& operator= (TextureHeap&& o) noexcept { this->swap(o); return *this; }
+	~TextureHeap() noexcept { this->release(); }
+
+	// State methods
+	// --------------------------------------------------------------------------------------------
+
+	// See zgTextureHeapCreate()
+	ErrorCode create(const ZgTextureHeapCreateInfo& createInfo) noexcept;
+
+	void swap(TextureHeap& other) noexcept;
+
+	// See zgTextureHeapRelease()
+	void release() noexcept;
+
+	// TextureHeap methods
+	// --------------------------------------------------------------------------------------------
+
+	// See zgTextureHeapTexture2DGetAllocationInfo()
+	ErrorCode texture2DGetAllocationInfo(
+		ZgTexture2DAllocationInfo& allocationInfoOut,
+		const ZgTexture2DCreateInfo& createInfo) noexcept;
+
+	// See zgTextureHeapTexture2DCreate()
+	ErrorCode texture2DCreate(
+		Texture2D& textureOut, const ZgTexture2DCreateInfo& createInfo) noexcept;
+};
+
+
+// Texture2D
+// ------------------------------------------------------------------------------------------------
+
+class Texture2D final {
+public:
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	ZgTexture2D* texture = nullptr;
+
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	Texture2D() noexcept = default;
+	Texture2D(const Texture2D&) = delete;
+	Texture2D& operator= (const Texture2D&) = delete;
+	Texture2D(Texture2D&& o) noexcept { this->swap(o); }
+	Texture2D& operator= (Texture2D&& o) noexcept { this->swap(o); return *this; }
+	~Texture2D() noexcept { this->release(); }
+
+	// State methods
+	// --------------------------------------------------------------------------------------------
+
+	void swap(Texture2D& other) noexcept;
+
+	// See zgTexture2DRelease()
+	void release() noexcept;
+};
+
+
+// CommandQueue
+// ------------------------------------------------------------------------------------------------
+
+class CommandQueue final {
+public:
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	ZgCommandQueue* commandQueue = nullptr;
+
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	CommandQueue() noexcept = default;
+	CommandQueue(const CommandQueue&) = delete;
+	CommandQueue& operator= (const CommandQueue&) = delete;
+	CommandQueue(CommandQueue&& other) noexcept { this->swap(other); }
+	CommandQueue& operator= (CommandQueue&& other) noexcept { this->swap(other); return *this; }
+	~CommandQueue() noexcept { this->release(); }
+
+	// State methods
+	// --------------------------------------------------------------------------------------------
+
+	void swap(CommandQueue& other) noexcept;
+
+	// TODO: No-op because there currently is no releasing of Command Queues...
+	void release() noexcept;
+
+	// CommandQueue methods
+	// --------------------------------------------------------------------------------------------
+
+	// See zgCommandQueueFlush()
+	ErrorCode flush() noexcept;
+
+	// See zgCommandQueueBeginCommandListRecording()
+	ErrorCode beginCommandListRecording(CommandList& commandListOut) noexcept;
+
+	// See zgCommandQueueExecuteCommandList()
+	ErrorCode executeCommandList(CommandList& commandList) noexcept;
 };
 
 
@@ -322,9 +399,43 @@ public:
 		uint64_t srcBufferOffsetBytes,
 		uint64_t numBytes) noexcept;
 
+	// See zgCommandListMemcpyToTexture()
+	ErrorCode memcpyToTexture(
+		Texture2D& dstTexture,
+		uint32_t dstTextureMipLevel,
+		const ZgImageViewConstCpu& srcImageCpu,
+		Buffer& tempUploadBuffer) noexcept;
+
+	// See zgCommandListSetPushConstant()
+	ErrorCode setPushConstant(
+		uint32_t shaderRegister, const void* data, uint32_t dataSizeInBytes) noexcept;
+
+	// See zgCommandListSetPipelineBindings()
+	ErrorCode setPipelineBindings(const ZgPipelineBindings& bindings) noexcept;
+
 	// See zgCommandListSetPipelineRendering()
 	ErrorCode setPipeline(PipelineRendering& pipeline) noexcept;
-};
 
+	// See zgCommandListSetFramebuffer()
+	ErrorCode setFramebuffer(const ZgCommandListSetFramebufferInfo& info) noexcept;
+
+	// See zgCommandListClearFramebuffer()
+	ErrorCode clearFramebuffer(float red, float green, float blue, float alpha) noexcept;
+
+	// See zgCommandListClearDepthBuffer()
+	ErrorCode clearDepthBuffer(float depth) noexcept;
+
+	// See zgCommandListSetIndexBuffer()
+	ErrorCode setIndexBuffer(Buffer& indexBuffer, ZgIndexBufferType type) noexcept;
+
+	// See zgCommandListSetVertexBuffer()
+	ErrorCode setVertexBuffer(uint32_t vertexBufferSlot, Buffer& vertexBuffer) noexcept;
+
+	// See zgCommandListDrawTriangles()
+	ErrorCode drawTriangles(uint32_t startVertexIndex, uint32_t numVertices) noexcept;
+
+	// See zgCommandListDrawTrianglesIndexed()
+	ErrorCode drawTrianglesIndexed(uint32_t startIndex, uint32_t numTriangles) noexcept;
+};
 
 } // namespace zg
