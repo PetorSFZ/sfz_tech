@@ -57,10 +57,18 @@ static const char* stripFilePath(const char* file) noexcept
 
 ZgErrorCode CheckZgImpl::operator% (ZgErrorCode result) noexcept
 {
-	assert(result == ZG_SUCCESS);
 	if (result == ZG_SUCCESS) return ZG_SUCCESS;
 	printf("%s:%i: ZeroG error: %s\n", stripFilePath(file), line, zgErrorCodeToString(result));
+	assert(false);
 	return result;
+}
+
+void CheckZgImpl::operator% (zg::ErrorCode result) noexcept
+{
+	if (result == zg::ErrorCode::SUCCESS) return;
+	printf("%s:%i: ZeroG error: %s\n",
+		stripFilePath(file), line, zgErrorCodeToString((ZgErrorCode)result));
+	assert(false);
 }
 
 

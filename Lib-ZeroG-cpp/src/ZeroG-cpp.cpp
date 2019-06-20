@@ -22,15 +22,16 @@
 
 namespace zg {
 
+
 // Context: State methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode Context::init(const ZgContextInitSettings& settings) noexcept
+ErrorCode Context::init(const ZgContextInitSettings& settings) noexcept
 {
 	this->deinit();
 	ZgErrorCode res = zgContextInit(&settings);
 	mInitialized = res == ZG_SUCCESS;
-	return res;
+	return (ErrorCode)res;
 }
 
 void Context::deinit() noexcept
@@ -60,26 +61,26 @@ bool Context::alreadyInitialized() noexcept
 	return zgContextAlreadyInitialized();
 }
 
-ZgErrorCode Context::resize(uint32_t width, uint32_t height) noexcept
+ErrorCode Context::resize(uint32_t width, uint32_t height) noexcept
 {
-	return zgContextResize(width, height);
+	return (ErrorCode)zgContextResize(width, height);
 }
 
-ZgErrorCode Context::getCommandQueueGraphicsPresent(CommandQueue& commandQueueOut) noexcept
+ErrorCode Context::getCommandQueueGraphicsPresent(CommandQueue& commandQueueOut) noexcept
 {
-	if (commandQueueOut.commandQueue != nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	return zgContextGeCommandQueueGraphicsPresent(&commandQueueOut.commandQueue);
+	if (commandQueueOut.commandQueue != nullptr) return ErrorCode::INVALID_ARGUMENT;
+	return (ErrorCode)zgContextGeCommandQueueGraphicsPresent(&commandQueueOut.commandQueue);
 }
 
-ZgErrorCode Context::beginFrame(ZgFramebuffer*& framebufferOut) noexcept
+ErrorCode Context::beginFrame(ZgFramebuffer*& framebufferOut) noexcept
 {
-	if (framebufferOut != nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	return zgContextBeginFrame(&framebufferOut);
+	if (framebufferOut != nullptr) return ErrorCode::INVALID_ARGUMENT;
+	return (ErrorCode)zgContextBeginFrame(&framebufferOut);
 }
 
-ZgErrorCode Context::finishFrame() noexcept
+ErrorCode Context::finishFrame() noexcept
 {
-	return zgContextFinishFrame();
+	return (ErrorCode)zgContextFinishFrame();
 }
 
 
@@ -99,47 +100,51 @@ void CommandQueue::release() noexcept
 // CommandQueue: CommandQueue methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode CommandQueue::flush() noexcept
+ErrorCode CommandQueue::flush() noexcept
 {
-	return zgCommandQueueFlush(this->commandQueue);
+	return (ErrorCode)zgCommandQueueFlush(this->commandQueue);
 }
 
-ZgErrorCode CommandQueue::beginCommandListRecording(CommandList& commandListOut) noexcept
+ErrorCode CommandQueue::beginCommandListRecording(CommandList& commandListOut) noexcept
 {
-	if (commandListOut.commandList != nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	return zgCommandQueueBeginCommandListRecording(this->commandQueue, &commandListOut.commandList);
+	if (commandListOut.commandList != nullptr) return ErrorCode::INVALID_ARGUMENT;
+	return (ErrorCode)zgCommandQueueBeginCommandListRecording(
+		this->commandQueue, &commandListOut.commandList);
 }
 
-ZgErrorCode CommandQueue::executeCommandList(CommandList& commandList) noexcept
+ErrorCode CommandQueue::executeCommandList(CommandList& commandList) noexcept
 {
 	ZgErrorCode res = zgCommandQueueExecuteCommandList(this->commandQueue, commandList.commandList);
 	commandList.commandList = nullptr;
-	return res;
+	return (ErrorCode)res;
 }
 
 
 // PipelineRendering: State methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode PipelineRendering::createFromFileSPIRV(
+ErrorCode PipelineRendering::createFromFileSPIRV(
 	const ZgPipelineRenderingCreateInfoFileSPIRV& createInfo) noexcept
 {
 	this->release();
-	return zgPipelineRenderingCreateFromFileSPIRV(&this->pipeline, &this->signature, &createInfo);
+	return (ErrorCode)zgPipelineRenderingCreateFromFileSPIRV(
+		&this->pipeline, &this->signature, &createInfo);
 }
 
-ZgErrorCode PipelineRendering::createFromFileHLSL(
+ErrorCode PipelineRendering::createFromFileHLSL(
 	const ZgPipelineRenderingCreateInfoFileHLSL& createInfo) noexcept
 {
 	this->release();
-	return zgPipelineRenderingCreateFromFileHLSL(&this->pipeline, &this->signature, &createInfo);
+	return (ErrorCode)zgPipelineRenderingCreateFromFileHLSL(
+		&this->pipeline, &this->signature, &createInfo);
 }
 
-ZgErrorCode PipelineRendering::createFromSourceHLSL(
+ErrorCode PipelineRendering::createFromSourceHLSL(
 	const ZgPipelineRenderingCreateInfoSourceHLSL& createInfo) noexcept
 {
 	this->release();
-	return zgPipelineRenderingCreateFromSourceHLSL(&this->pipeline, &this->signature, &createInfo);
+	return (ErrorCode)zgPipelineRenderingCreateFromSourceHLSL(
+		&this->pipeline, &this->signature, &createInfo);
 }
 
 void PipelineRendering::swap(PipelineRendering& other) noexcept
@@ -159,10 +164,10 @@ void PipelineRendering::release() noexcept
 // MemoryHeap: State methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode MemoryHeap::create(const ZgMemoryHeapCreateInfo& createInfo) noexcept
+ErrorCode MemoryHeap::create(const ZgMemoryHeapCreateInfo& createInfo) noexcept
 {
 	this->release();
-	return zgMemoryHeapCreate(&this->memoryHeap, &createInfo);
+	return (ErrorCode)zgMemoryHeapCreate(&this->memoryHeap, &createInfo);
 }
 
 void MemoryHeap::swap(MemoryHeap& other) noexcept
@@ -179,11 +184,10 @@ void MemoryHeap::release() noexcept
 // MemoryHeap: MemoryHeap methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode MemoryHeap::bufferCreate(zg::Buffer& bufferOut, const ZgBufferCreateInfo& createInfo) noexcept
+ErrorCode MemoryHeap::bufferCreate(zg::Buffer& bufferOut, const ZgBufferCreateInfo& createInfo) noexcept
 {
 	bufferOut.release();
-	ZgErrorCode res = zgMemoryHeapBufferCreate(this->memoryHeap, &bufferOut.buffer, &createInfo);
-	return res;
+	return (ErrorCode)zgMemoryHeapBufferCreate(this->memoryHeap, &bufferOut.buffer, &createInfo);
 }
 
 
@@ -206,9 +210,9 @@ void Buffer::release() noexcept
 // Buffer: Buffer methods
 // --------------------------------------------------------------------------------------------
 
-ZgErrorCode Buffer::memcpyTo(uint64_t bufferOffsetBytes, const void* srcMemory, uint64_t numBytes)
+ErrorCode Buffer::memcpyTo(uint64_t bufferOffsetBytes, const void* srcMemory, uint64_t numBytes)
 {
-	return zgBufferMemcpyTo(this->buffer, bufferOffsetBytes, srcMemory, numBytes);
+	return (ErrorCode)zgBufferMemcpyTo(this->buffer, bufferOffsetBytes, srcMemory, numBytes);
 }
 
 
@@ -230,14 +234,14 @@ void CommandList::release() noexcept
 // CommandList: CommandList methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode CommandList::memcpyBufferToBuffer(
+ErrorCode CommandList::memcpyBufferToBuffer(
 	zg::Buffer& dstBuffer,
 	uint64_t dstBufferOffsetBytes,
 	zg::Buffer& srcBuffer,
 	uint64_t srcBufferOffsetBytes,
 	uint64_t numBytes) noexcept
 {
-	return zgCommandListMemcpyBufferToBuffer(
+	return (ErrorCode)zgCommandListMemcpyBufferToBuffer(
 		this->commandList,
 		dstBuffer.buffer,
 		dstBufferOffsetBytes,
@@ -246,9 +250,9 @@ ZgErrorCode CommandList::memcpyBufferToBuffer(
 		numBytes);
 }
 
-ZgErrorCode CommandList::setPipeline(PipelineRendering& pipeline) noexcept
+ErrorCode CommandList::setPipeline(PipelineRendering& pipeline) noexcept
 {
-	return zgCommandListSetPipelineRendering(this->commandList, pipeline.pipeline);
+	return (ErrorCode)zgCommandListSetPipelineRendering(this->commandList, pipeline.pipeline);
 }
 
 } // namespace zg

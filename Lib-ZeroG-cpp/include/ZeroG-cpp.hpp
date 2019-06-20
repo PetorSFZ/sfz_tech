@@ -34,6 +34,25 @@ class MemoryHeap;
 class Buffer;
 class CommandList;
 
+
+// Error handling
+// ------------------------------------------------------------------------------------------------
+
+enum class [[nodiscard]] ErrorCode : ZgErrorCode {
+	SUCCESS = ZG_SUCCESS,
+	GENERIC = ZG_ERROR_GENERIC,
+	UNIMPLEMENTED = ZG_ERROR_UNIMPLEMENTED,
+	ALREADY_INITIALIZED = ZG_ERROR_ALREADY_INITIALIZED,
+	CPU_OUT_OF_MEMORY = ZG_ERROR_CPU_OUT_OF_MEMORY,
+	GPU_OUT_OF_MEMORY = ZG_ERROR_GPU_OUT_OF_MEMORY,
+	NO_SUITABLE_DEVICE = ZG_ERROR_NO_SUITABLE_DEVICE,
+	INVALID_ARGUMENT = ZG_ERROR_INVALID_ARGUMENT,
+	SHADER_COMPILE_ERROR = ZG_ERROR_SHADER_COMPILE_ERROR,
+	OUT_OF_COMMAND_LISTS = ZG_ERROR_OUT_OF_COMMAND_LISTS,
+	INVALID_COMMAND_LIST_STATE = ZG_ERROR_INVALID_COMMAND_LIST_STATE
+};
+
+
 // Context
 // ------------------------------------------------------------------------------------------------
 
@@ -58,7 +77,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	// Creates and initializes a context, see zgContextInit()
-	ZgErrorCode init(const ZgContextInitSettings& settings) noexcept;
+	ErrorCode init(const ZgContextInitSettings& settings) noexcept;
 
 	// Deinitializes a context, see zgContextDeinit()
 	//
@@ -86,16 +105,16 @@ public:
 	// Resizes the back buffers in the swap chain, safe to call every frame.
 	//
 	// See zgContextResize()
-	ZgErrorCode resize(uint32_t width, uint32_t height) noexcept;
+	ErrorCode resize(uint32_t width, uint32_t height) noexcept;
 
 	// See zgContextGeCommandQueueGraphicsPresent()
-	ZgErrorCode getCommandQueueGraphicsPresent(CommandQueue& commandQueueOut) noexcept;
+	ErrorCode getCommandQueueGraphicsPresent(CommandQueue& commandQueueOut) noexcept;
 
 	// See zgContextBeginFrame()
-	ZgErrorCode beginFrame(ZgFramebuffer*& framebufferOut) noexcept;
+	ErrorCode beginFrame(ZgFramebuffer*& framebufferOut) noexcept;
 
 	// See zgContextFinishFrame()
-	ZgErrorCode finishFrame() noexcept;
+	ErrorCode finishFrame() noexcept;
 
 	// Private members
 	// --------------------------------------------------------------------------------------------
@@ -137,13 +156,13 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	// See zgCommandQueueFlush()
-	ZgErrorCode flush() noexcept;
+	ErrorCode flush() noexcept;
 
 	// See zgCommandQueueBeginCommandListRecording()
-	ZgErrorCode beginCommandListRecording(CommandList& commandListOut) noexcept;
+	ErrorCode beginCommandListRecording(CommandList& commandListOut) noexcept;
 
 	// See zgCommandQueueExecuteCommandList()
-	ZgErrorCode executeCommandList(CommandList& commandList) noexcept;
+	ErrorCode executeCommandList(CommandList& commandList) noexcept;
 };
 
 
@@ -172,15 +191,15 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	// See zgPipelineRenderingCreateFromFileSPIRV()
-	ZgErrorCode createFromFileSPIRV(
+	ErrorCode createFromFileSPIRV(
 		const ZgPipelineRenderingCreateInfoFileSPIRV& createInfo) noexcept;
 	
 	// See ZgPipelineRenderingCreateInfoFileHLSL()
-	ZgErrorCode createFromFileHLSL(
+	ErrorCode createFromFileHLSL(
 		const ZgPipelineRenderingCreateInfoFileHLSL& createInfo) noexcept;
 	
 	// See ZgPipelineRenderingCreateInfoSourceHLSL()
-	ZgErrorCode createFromSourceHLSL(
+	ErrorCode createFromSourceHLSL(
 		const ZgPipelineRenderingCreateInfoSourceHLSL& createInfo) noexcept;
 
 	void swap(PipelineRendering& other) noexcept;
@@ -214,7 +233,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	// See zgMemoryHeapCreate()
-	ZgErrorCode create(const ZgMemoryHeapCreateInfo& createInfo) noexcept;
+	ErrorCode create(const ZgMemoryHeapCreateInfo& createInfo) noexcept;
 
 	void swap(MemoryHeap& other) noexcept;
 
@@ -225,7 +244,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	// See zgMemoryHeapBufferCreate()
-	ZgErrorCode bufferCreate(zg::Buffer& bufferOut, const ZgBufferCreateInfo& createInfo) noexcept;
+	ErrorCode bufferCreate(zg::Buffer& bufferOut, const ZgBufferCreateInfo& createInfo) noexcept;
 };
 
 
@@ -261,7 +280,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	// See zgBufferMemcpyTo()
-	ZgErrorCode memcpyTo(uint64_t bufferOffsetBytes, const void* srcMemory, uint64_t numBytes);
+	ErrorCode memcpyTo(uint64_t bufferOffsetBytes, const void* srcMemory, uint64_t numBytes);
 };
 
 
@@ -296,7 +315,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	// See zgCommandListMemcpyBufferToBuffer()
-	ZgErrorCode memcpyBufferToBuffer(
+	ErrorCode memcpyBufferToBuffer(
 		zg::Buffer& dstBuffer,
 		uint64_t dstBufferOffsetBytes,
 		zg::Buffer& srcBuffer,
@@ -304,7 +323,7 @@ public:
 		uint64_t numBytes) noexcept;
 
 	// See zgCommandListSetPipelineRendering()
-	ZgErrorCode setPipeline(PipelineRendering& pipeline) noexcept;
+	ErrorCode setPipeline(PipelineRendering& pipeline) noexcept;
 };
 
 

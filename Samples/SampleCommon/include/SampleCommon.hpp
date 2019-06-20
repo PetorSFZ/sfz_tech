@@ -20,6 +20,7 @@
 
 #include <SDL.h>
 #include <ZeroG.h>
+#include <ZeroG-cpp.hpp>
 
 // Error handling helpers
 // ------------------------------------------------------------------------------------------------
@@ -36,6 +37,7 @@ struct CheckZgImpl final {
 	CheckZgImpl(const char* file, int line) noexcept : file(file), line(line) {}
 
 	ZgErrorCode operator% (ZgErrorCode result) noexcept;
+	void operator% (zg::ErrorCode result) noexcept;
 };
 
 // Initialization functions

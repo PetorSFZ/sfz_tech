@@ -39,6 +39,7 @@ target_include_directories(ZeroG-SampleCommon PRIVATE
 	${SRC_DIR}
 	${SDL2_INCLUDE_DIRS}
 	${ZEROG_INCLUDE_DIRS}
+	${ZEROG_CPP_INCLUDE_DIRS}
 )
 
 target_link_libraries(ZeroG-SampleCommon ${SDL2_LIBRARIES} ${ZEROG_CPP_LIBRARIES})
