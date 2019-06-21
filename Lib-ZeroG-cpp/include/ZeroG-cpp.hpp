@@ -417,7 +417,10 @@ public:
 	ErrorCode setPipeline(PipelineRendering& pipeline) noexcept;
 
 	// See zgCommandListSetFramebuffer()
-	ErrorCode setFramebuffer(const ZgCommandListSetFramebufferInfo& info) noexcept;
+	ErrorCode setFramebuffer(
+		ZgFramebuffer* framebuffer,
+		const ZgFramebufferRect* optionalViewport = nullptr,
+		const ZgFramebufferRect* optionalScissor = nullptr) noexcept;
 
 	// See zgCommandListClearFramebuffer()
 	ErrorCode clearFramebuffer(float red, float green, float blue, float alpha) noexcept;

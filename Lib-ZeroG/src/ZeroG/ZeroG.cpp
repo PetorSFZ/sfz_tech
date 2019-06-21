@@ -512,10 +512,13 @@ ZG_API ZgErrorCode zgCommandListSetPipelineRendering(
 
 ZG_API ZgErrorCode zgCommandListSetFramebuffer(
 	ZgCommandList* commandListIn,
-	const ZgCommandListSetFramebufferInfo* info)
+	ZgFramebuffer* framebufferIn,
+	const ZgFramebufferRect* optionalViewport,
+	const ZgFramebufferRect* optionalScissor)
 {
 	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
-	return commandList->setFramebuffer(*info);
+	zg::IFramebuffer* framebuffer = reinterpret_cast<zg::IFramebuffer*>(framebufferIn);
+	return commandList->setFramebuffer(framebuffer, optionalViewport, optionalScissor);
 }
 
 ZG_API ZgErrorCode zgCommandListClearFramebuffer(

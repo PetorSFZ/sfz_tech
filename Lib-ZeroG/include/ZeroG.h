@@ -803,16 +803,12 @@ ZG_API ZgErrorCode zgCommandListSetPipelineRendering(
 	ZgCommandList* commandList,
 	ZgPipelineRendering* pipeline);
 
-struct ZgCommandListSetFramebufferInfo {
-	ZgFramebuffer* framebuffer;
-	ZgFramebufferRect viewport; // If all zero, the viewport will cover the entire framebuffer
-	ZgFramebufferRect scissor; // If all zero, the scissor will cover the entire framebuffer
-};
-typedef struct ZgCommandListSetFramebufferInfo ZgCommandListSetFramebufferInfo;
-
+// The viewport and scissor are optional, if nullptr they will cover the entire framebuffer
 ZG_API ZgErrorCode zgCommandListSetFramebuffer(
 	ZgCommandList* commandList,
-	const ZgCommandListSetFramebufferInfo* info);
+	ZgFramebuffer* framebuffer,
+	const ZgFramebufferRect* optionalViewport,
+	const ZgFramebufferRect* optionalScissor);
 
 ZG_API ZgErrorCode zgCommandListClearFramebuffer(
 	ZgCommandList* commandList,

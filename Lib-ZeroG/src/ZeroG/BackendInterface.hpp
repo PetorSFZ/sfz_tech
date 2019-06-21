@@ -108,7 +108,9 @@ public:
 		IPipelineRendering* pipeline) noexcept = 0;
 
 	virtual ZgErrorCode setFramebuffer(
-		const ZgCommandListSetFramebufferInfo& info) noexcept = 0;
+		IFramebuffer* framebuffer,
+		const ZgFramebufferRect* optionalViewport,
+		const ZgFramebufferRect* optionalScissor) noexcept = 0;
 
 	virtual ZgErrorCode clearFramebuffer(
 		float red,

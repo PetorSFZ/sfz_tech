@@ -461,10 +461,12 @@ ZgErrorCode D3D12CommandList::setPipelineRendering(
 }
 
 ZgErrorCode D3D12CommandList::setFramebuffer(
-	const ZgCommandListSetFramebufferInfo& info) noexcept
+	IFramebuffer* framebufferIn,
+	const ZgFramebufferRect* optionalViewport,
+	const ZgFramebufferRect* optionalScissor) noexcept
 {
 	// Cast input to D3D12
-	D3D12Framebuffer& framebuffer = *reinterpret_cast<D3D12Framebuffer*>(info.framebuffer);
+	D3D12Framebuffer& framebuffer = *static_cast<D3D12Framebuffer*>(framebufferIn);
 
 	// If a framebuffer is already set for this command list, return error. We currently only allow
 	// a single framebuffer per command list.
@@ -472,12 +474,9 @@ ZgErrorCode D3D12CommandList::setFramebuffer(
 	mFramebufferSet = true;
 	mFramebuffer = &framebuffer;
 
-	// If input viewport is zero, set one that covers entire screen
+	// If no viewport is requested, set one that covers entire screen
 	D3D12_VIEWPORT viewport = {};
-	if (info.viewport.topLeftX == 0 &&
-		info.viewport.topLeftY == 0 &&
-		info.viewport.width == 0 &&
-		info.viewport.height == 0) {
+	if (optionalViewport == nullptr) {
 
 		viewport.TopLeftX = 0;
 		viewport.TopLeftY = 0;
@@ -489,10 +488,10 @@ ZgErrorCode D3D12CommandList::setFramebuffer(
 
 	// Otherwise do what the user explicitly requested
 	else {
-		viewport.TopLeftX = float(info.viewport.topLeftX);
-		viewport.TopLeftY = float(info.viewport.topLeftY);
-		viewport.Width = float(info.viewport.width);
-		viewport.Height = float(info.viewport.height);
+		viewport.TopLeftX = float(optionalViewport->topLeftX);
+		viewport.TopLeftY = float(optionalViewport->topLeftY);
+		viewport.Width = float(optionalViewport->width);
+		viewport.Height = float(optionalViewport->height);
 		viewport.MinDepth = 0.0f;
 		viewport.MaxDepth = 1.0f;
 	}
@@ -500,12 +499,9 @@ ZgErrorCode D3D12CommandList::setFramebuffer(
 	// Set viewport
 	commandList->RSSetViewports(1, &viewport);
 	
-	// If scissor is zero, set on that covers entire screen
+	// If no scissor is requested, set one that covers entire screen
 	D3D12_RECT scissorRect = {};
-	if (info.scissor.topLeftX == 0 &&
-		info.scissor.topLeftY == 0 &&
-		info.scissor.width == 0 &&
-		info.scissor.height == 0) {
+	if (optionalScissor == nullptr) {
 
 		scissorRect.left = 0;
 		scissorRect.top = 0;
@@ -515,10 +511,10 @@ ZgErrorCode D3D12CommandList::setFramebuffer(
 
 	// Otherwise do what user explicitly requested
 	else {
-		scissorRect.left = info.scissor.topLeftX;
-		scissorRect.top = info.scissor.topLeftY;
-		scissorRect.right = info.scissor.topLeftX + info.scissor.width;
-		scissorRect.bottom = info.scissor.topLeftY + info.scissor.height;
+		scissorRect.left = optionalScissor->topLeftX;
+		scissorRect.top = optionalScissor->topLeftY;
+		scissorRect.right = optionalScissor->topLeftX + optionalScissor->width;
+		scissorRect.bottom = optionalScissor->topLeftY + optionalScissor->height;
 	}
 
 	// Set scissor rect

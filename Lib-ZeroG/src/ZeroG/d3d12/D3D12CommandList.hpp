@@ -85,7 +85,9 @@ public:
 		IPipelineRendering* pipeline) noexcept override final;
 
 	ZgErrorCode setFramebuffer(
-		const ZgCommandListSetFramebufferInfo& info) noexcept override final;
+		IFramebuffer* framebuffer,
+		const ZgFramebufferRect* optionalViewport,
+		const ZgFramebufferRect* optionalScissor) noexcept override final;
 
 	ZgErrorCode clearFramebuffer(
 		float red,

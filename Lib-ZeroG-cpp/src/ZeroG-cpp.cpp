@@ -337,9 +337,13 @@ ErrorCode CommandList::setPipeline(PipelineRendering& pipeline) noexcept
 	return (ErrorCode)zgCommandListSetPipelineRendering(this->commandList, pipeline.pipeline);
 }
 
-ErrorCode CommandList::setFramebuffer(const ZgCommandListSetFramebufferInfo& info) noexcept
+ErrorCode CommandList::setFramebuffer(
+	ZgFramebuffer* framebuffer,
+	const ZgFramebufferRect* optionalViewport,
+	const ZgFramebufferRect* optionalScissor) noexcept
 {
-	return (ErrorCode)zgCommandListSetFramebuffer(this->commandList, &info);
+	return (ErrorCode)zgCommandListSetFramebuffer(
+		this->commandList, framebuffer, optionalViewport, optionalScissor);
 }
 
 ErrorCode CommandList::clearFramebuffer(float red, float green, float blue, float alpha) noexcept
