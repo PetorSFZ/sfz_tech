@@ -106,17 +106,17 @@ public:
 
 	// Resizes the back buffers in the swap chain, safe to call every frame.
 	//
-	// See zgContextResize()
-	ErrorCode resize(uint32_t width, uint32_t height) noexcept;
+	// See zgContextSwapchainResize()
+	ErrorCode swapchainResize(uint32_t width, uint32_t height) noexcept;
 
-	// See zgContextGeCommandQueueGraphicsPresent()
-	ErrorCode getCommandQueueGraphicsPresent(CommandQueue& commandQueueOut) noexcept;
+	// See zgContextSwapchainCommandQueue()
+	ErrorCode swapchainCommandQueue(CommandQueue& commandQueueOut) noexcept;
 
-	// See zgContextBeginFrame()
-	ErrorCode beginFrame(ZgFramebuffer*& framebufferOut) noexcept;
+	// See zgContextSwapchainBeginFrame()
+	ErrorCode swapchainBeginFrame(ZgFramebuffer*& framebufferOut) noexcept;
 
-	// See zgContextFinishFrame()
-	ErrorCode finishFrame() noexcept;
+	// See zgContextSwapchainFinishFrame()
+	ErrorCode swapchainFinishFrame() noexcept;
 
 	// Private members
 	// --------------------------------------------------------------------------------------------

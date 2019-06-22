@@ -154,34 +154,34 @@ ZG_API ZgErrorCode zgContextDeinit(void)
 	return ZG_SUCCESS;
 }
 
-ZG_API ZgErrorCode zgContextResize( uint32_t width, uint32_t height)
+ZG_API ZgErrorCode zgContextSwapchainResize( uint32_t width, uint32_t height)
 {
-	return zg::getApiContext()->resize(width, height);
+	return zg::getApiContext()->swapchainResize(width, height);
 }
 
-ZG_API ZgErrorCode zgContextGeCommandQueueGraphicsPresent(
+ZG_API ZgErrorCode zgContextSwapchainCommandQueue(
 	ZgCommandQueue** commandQueueOut)
 {
 	zg::ICommandQueue* commandQueue = nullptr;
-	ZgErrorCode res = zg::getApiContext()->getCommandQueueGraphicsPresent(&commandQueue);
+	ZgErrorCode res = zg::getApiContext()->swapchainCommandQueue(&commandQueue);
 	if (res != ZG_SUCCESS) return res;
 	*commandQueueOut = reinterpret_cast<ZgCommandQueue*>(commandQueue);
 	return ZG_SUCCESS;
 }
 
-ZG_API ZgErrorCode zgContextBeginFrame(
+ZG_API ZgErrorCode zgContextSwapchainBeginFrame(
 	ZgFramebuffer** framebufferOut)
 {
 	zg::IFramebuffer* framebuffer = nullptr;
-	ZgErrorCode res = zg::getApiContext()->beginFrame(&framebuffer);
+	ZgErrorCode res = zg::getApiContext()->swapchainBeginFrame(&framebuffer);
 	if (res != ZG_SUCCESS) return res;
 	*framebufferOut = reinterpret_cast<ZgFramebuffer*>(framebuffer);
 	return ZG_SUCCESS;
 }
 
-ZG_API ZgErrorCode zgContextFinishFrame(void)
+ZG_API ZgErrorCode zgContextSwapchainFinishFrame(void)
 {
-	return zg::getApiContext()->finishFrame();
+	return zg::getApiContext()->swapchainFinishFrame();
 }
 
 // Pipeline Rendering - Common

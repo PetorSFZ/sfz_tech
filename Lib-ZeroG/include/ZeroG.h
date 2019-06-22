@@ -270,19 +270,17 @@ ZG_API ZgErrorCode zgContextDeinit(void);
 // This should be called every time the size of the window or the resolution is changed. This
 // function is guaranteed to not do anything if the specified width or height is the same as last
 // time, so it is completely safe to call this at the beginning of each frame.
-ZG_API ZgErrorCode zgContextResize(
+ZG_API ZgErrorCode zgContextSwapchainResize(
 	uint32_t width,
 	uint32_t height);
 
-ZG_API ZgErrorCode zgContextGeCommandQueueGraphicsPresent(
+ZG_API ZgErrorCode zgContextSwapchainCommandQueue(
 	ZgCommandQueue** commandQueueOut);
 
-// TODO: zgContextGetCopyQueue(), zgContextGetComputeQueue
-
-ZG_API ZgErrorCode zgContextBeginFrame(
+ZG_API ZgErrorCode zgContextSwapchainBeginFrame(
 	ZgFramebuffer** framebufferOut);
 
-ZG_API ZgErrorCode zgContextFinishFrame(void);
+ZG_API ZgErrorCode zgContextSwapchainFinishFrame(void);
 
 // Pipeline Rendering - Signature
 // ------------------------------------------------------------------------------------------------

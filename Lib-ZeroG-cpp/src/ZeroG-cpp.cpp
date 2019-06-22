@@ -62,26 +62,26 @@ bool Context::alreadyInitialized() noexcept
 	return zgContextAlreadyInitialized();
 }
 
-ErrorCode Context::resize(uint32_t width, uint32_t height) noexcept
+ErrorCode Context::swapchainResize(uint32_t width, uint32_t height) noexcept
 {
-	return (ErrorCode)zgContextResize(width, height);
+	return (ErrorCode)zgContextSwapchainResize(width, height);
 }
 
-ErrorCode Context::getCommandQueueGraphicsPresent(CommandQueue& commandQueueOut) noexcept
+ErrorCode Context::swapchainCommandQueue(CommandQueue& commandQueueOut) noexcept
 {
 	if (commandQueueOut.commandQueue != nullptr) return ErrorCode::INVALID_ARGUMENT;
-	return (ErrorCode)zgContextGeCommandQueueGraphicsPresent(&commandQueueOut.commandQueue);
+	return (ErrorCode)zgContextSwapchainCommandQueue(&commandQueueOut.commandQueue);
 }
 
-ErrorCode Context::beginFrame(ZgFramebuffer*& framebufferOut) noexcept
+ErrorCode Context::swapchainBeginFrame(ZgFramebuffer*& framebufferOut) noexcept
 {
 	if (framebufferOut != nullptr) return ErrorCode::INVALID_ARGUMENT;
-	return (ErrorCode)zgContextBeginFrame(&framebufferOut);
+	return (ErrorCode)zgContextSwapchainBeginFrame(&framebufferOut);
 }
 
-ErrorCode Context::finishFrame() noexcept
+ErrorCode Context::swapchainFinishFrame() noexcept
 {
-	return (ErrorCode)zgContextFinishFrame();
+	return (ErrorCode)zgContextSwapchainFinishFrame();
 }
 
 

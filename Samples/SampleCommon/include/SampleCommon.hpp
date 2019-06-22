@@ -36,7 +36,6 @@ struct CheckZgImpl final {
 	CheckZgImpl() = delete;
 	CheckZgImpl(const char* file, int line) noexcept : file(file), line(line) {}
 
-	ZgErrorCode operator% (ZgErrorCode result) noexcept;
 	void operator% (zg::ErrorCode result) noexcept;
 };
 

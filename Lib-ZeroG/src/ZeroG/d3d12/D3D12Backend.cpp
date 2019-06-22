@@ -275,7 +275,7 @@ public:
 		// Create swap chain framebuffers (RTVs and DSVs)
 		mWidth = 0;
 		mHeight = 0;
-		this->resize(settings.width, settings.height);
+		this->swapchainResize(settings.width, settings.height);
 
 		return ZG_SUCCESS;
 	}
@@ -283,7 +283,7 @@ public:
 	// Context methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode resize(uint32_t width, uint32_t height) noexcept override final
+	ZgErrorCode swapchainResize(uint32_t width, uint32_t height) noexcept override final
 	{
 		if (mWidth == width && mHeight == height) return ZG_SUCCESS;
 		std::lock_guard<std::mutex> lock(mContextMutex);
@@ -399,14 +399,14 @@ public:
 		return ZG_SUCCESS;
 	}
 
-	ZgErrorCode getCommandQueueGraphicsPresent(
+	ZgErrorCode swapchainCommandQueue(
 		ICommandQueue** commandQueueOut) noexcept override final
 	{
 		*commandQueueOut = &mCommandQueueGraphicsPresent;
 		return ZG_SUCCESS;
 	}
 
-	ZgErrorCode beginFrame(
+	ZgErrorCode swapchainBeginFrame(
 		zg::IFramebuffer** framebufferOut) noexcept override final
 	{
 		std::lock_guard<std::mutex> lock(mContextMutex);
@@ -435,7 +435,7 @@ public:
 		return ZG_SUCCESS;
 	}
 
-	ZgErrorCode finishFrame() noexcept override final
+	ZgErrorCode swapchainFinishFrame() noexcept override final
 	{
 		std::lock_guard<std::mutex> lock(mContextMutex);
 

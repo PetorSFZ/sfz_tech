@@ -245,7 +245,7 @@ static void realMain(SDL_Window* window) noexcept
 
 	// Get the command queue
 	zg::CommandQueue commandQueue;
-	CHECK_ZG zgCtx.getCommandQueueGraphicsPresent(commandQueue);
+	CHECK_ZG zgCtx.swapchainCommandQueue(commandQueue);
 
 
 	// Create a rendering pipeline
@@ -431,7 +431,7 @@ static void realMain(SDL_Window* window) noexcept
 		int width = 0;
 		int height = 0;
 		SDL_GL_GetDrawableSize(window, &width, &height);
-		CHECK_ZG zgCtx.resize(uint32_t(width), uint32_t(height));
+		CHECK_ZG zgCtx.swapchainResize(uint32_t(width), uint32_t(height));
 
 		// Create view and projection matrices
 		float vertFovDeg = 40.0f;
@@ -446,7 +446,7 @@ static void realMain(SDL_Window* window) noexcept
 
 		// Begin frame
 		ZgFramebuffer* framebuffer = nullptr;
-		CHECK_ZG zgCtx.beginFrame(framebuffer);
+		CHECK_ZG zgCtx.swapchainBeginFrame(framebuffer);
 
 		// Get a command list
 		zg::CommandList commandList;
@@ -516,7 +516,7 @@ static void realMain(SDL_Window* window) noexcept
 		CHECK_ZG commandQueue.executeCommandList(commandList);
 
 		// Finish frame
-		CHECK_ZG zgCtx.finishFrame();
+		CHECK_ZG zgCtx.swapchainFinishFrame();
 	}
 
 	// Flush command queue so nothing is running when we start releasing resources

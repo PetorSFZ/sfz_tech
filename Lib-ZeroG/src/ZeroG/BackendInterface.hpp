@@ -160,17 +160,17 @@ public:
 	// Context methods
 	// --------------------------------------------------------------------------------------------
 
-	virtual ZgErrorCode resize(
+	virtual ZgErrorCode swapchainResize(
 		uint32_t width,
 		uint32_t height) noexcept = 0;
 
-	virtual ZgErrorCode getCommandQueueGraphicsPresent(
+	virtual ZgErrorCode swapchainCommandQueue(
 		ICommandQueue** commandQueueOut) noexcept = 0;
 
-	virtual ZgErrorCode beginFrame(
+	virtual ZgErrorCode swapchainBeginFrame(
 		zg::IFramebuffer** framebufferOut) noexcept = 0;
 
-	virtual ZgErrorCode finishFrame() noexcept = 0;
+	virtual ZgErrorCode swapchainFinishFrame() noexcept = 0;
 
 	// Pipeline methods
 	// --------------------------------------------------------------------------------------------
