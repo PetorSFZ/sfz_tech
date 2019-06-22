@@ -416,6 +416,8 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
+	bool valid() const noexcept { return commandQueue != nullptr; }
+
 	void swap(CommandQueue& other) noexcept;
 
 	// TODO: No-op because there currently is no releasing of Command Queues...
@@ -505,6 +507,8 @@ public:
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
+
+	bool valid() const noexcept { return commandList != nullptr; }
 
 	void swap(CommandList& other) noexcept;
 
