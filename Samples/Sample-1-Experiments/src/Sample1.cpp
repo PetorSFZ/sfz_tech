@@ -447,14 +447,9 @@ static void realMain(SDL_Window* window) noexcept
 		CHECK_ZG commandList.setPipeline(pipeline);
 
 		// Set pipeline bindings
-		ZgPipelineBindings bindings = {};
-		bindings.numConstantBuffers = 1;
-		bindings.constantBuffers[0].shaderRegister = 1;
-		bindings.constantBuffers[0].buffer = constBufferDevice.buffer;
-		bindings.numTextures = 1;
-		bindings.textures[0].textureRegister = 0;
-		bindings.textures[0].texture = texture.texture;
-		CHECK_ZG commandList.setPipelineBindings(bindings);
+		CHECK_ZG commandList.setPipelineBindings(zg::PipelineBindings()
+			.addConstantBuffer(1, constBufferDevice)
+			.addTexture(0, texture));
 
 		// Lambda to batch a call to render a cube with a specific transform
 		auto batchCubeRender = [&](Vector offset) {

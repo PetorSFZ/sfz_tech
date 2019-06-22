@@ -444,6 +444,67 @@ ErrorCode CommandQueue::executeCommandList(CommandList& commandList) noexcept
 }
 
 
+// PipelineBindings: Methods
+// ------------------------------------------------------------------------------------------------
+
+PipelineBindings& PipelineBindings::addConstantBuffer(ConstantBufferBinding binding) noexcept
+{
+	assert(numConstantBuffers < ZG_MAX_NUM_CONSTANT_BUFFERS);
+	constantBuffers[numConstantBuffers] = binding;
+	numConstantBuffers += 1;
+	return *this;
+}
+
+PipelineBindings& PipelineBindings::addConstantBuffer(
+	uint32_t shaderRegister, Buffer& buffer) noexcept
+{
+	ConstantBufferBinding binding;
+	binding.shaderRegister = shaderRegister;
+	binding.buffer = &buffer;
+	return this->addConstantBuffer(binding);
+}
+
+PipelineBindings& PipelineBindings::addTexture(TextureBinding binding) noexcept
+{
+	assert(numTextures < ZG_MAX_NUM_TEXTURES);
+	textures[numTextures] = binding;
+	numTextures += 1;
+	return *this;
+}
+
+PipelineBindings& PipelineBindings::addTexture(
+	uint32_t textureRegister, Texture2D& texture) noexcept
+{
+	TextureBinding binding;
+	binding.textureRegister = textureRegister;
+	binding.texture = &texture;
+	return this->addTexture(binding);
+}
+
+ZgPipelineBindings PipelineBindings::toCApi() const noexcept
+{
+	assert(numConstantBuffers < ZG_MAX_NUM_CONSTANT_BUFFERS);
+	assert(numTextures < ZG_MAX_NUM_TEXTURES);
+
+	// Constant buffers
+	ZgPipelineBindings cBindings = {};
+	cBindings.numConstantBuffers = this->numConstantBuffers;
+	for (uint32_t i = 0; i < this->numConstantBuffers; i++) {
+		cBindings.constantBuffers[i].shaderRegister = this->constantBuffers[i].shaderRegister;
+		cBindings.constantBuffers[i].buffer = this->constantBuffers[i].buffer->buffer;
+	}
+
+	// Textures
+	cBindings.numTextures = this->numTextures;
+	for (uint32_t i = 0; i < this->numTextures; i++) {
+		cBindings.textures[i].textureRegister = this->textures[i].textureRegister;
+		cBindings.textures[i].texture = this->textures[i].texture->texture;
+	}
+
+	return cBindings;
+}
+
+
 // CommandList: State methods
 // ------------------------------------------------------------------------------------------------
 
@@ -499,9 +560,10 @@ ErrorCode CommandList::setPushConstant(
 		this->commandList, shaderRegister, data, dataSizeInBytes);
 }
 
-ErrorCode CommandList::setPipelineBindings(const ZgPipelineBindings& bindings) noexcept
+ErrorCode CommandList::setPipelineBindings(const PipelineBindings& bindings) noexcept
 {
-	return (ErrorCode)zgCommandListSetPipelineBindings(this->commandList, &bindings);
+	ZgPipelineBindings cBindings = bindings.toCApi();
+	return (ErrorCode)zgCommandListSetPipelineBindings(this->commandList, &cBindings);
 }
 
 ErrorCode CommandList::setPipeline(PipelineRendering& pipeline) noexcept

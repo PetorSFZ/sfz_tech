@@ -435,6 +435,54 @@ public:
 };
 
 
+// PipelineBindings
+// ------------------------------------------------------------------------------------------------
+
+struct ConstantBufferBinding final {
+	uint32_t shaderRegister = ~0u;
+	Buffer* buffer = nullptr;
+};
+
+struct TextureBinding final {
+	uint32_t textureRegister = ~0u;
+	Texture2D* texture = nullptr;
+};
+
+class PipelineBindings final {
+public:
+
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	// The constant buffers to bind
+	uint32_t numConstantBuffers = 0;
+	ConstantBufferBinding constantBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
+
+	// The textures to bind
+	uint32_t numTextures = 0;
+	TextureBinding textures[ZG_MAX_NUM_TEXTURES];
+
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	PipelineBindings() noexcept = default;
+	PipelineBindings(const PipelineBindings&) noexcept = default;
+	PipelineBindings& operator= (const PipelineBindings&) noexcept = default;
+	~PipelineBindings() noexcept = default;
+
+	// Methods
+	// --------------------------------------------------------------------------------------------
+
+	PipelineBindings& addConstantBuffer(ConstantBufferBinding binding) noexcept;
+	PipelineBindings& addConstantBuffer(uint32_t shaderRegister, Buffer& buffer) noexcept;
+
+	PipelineBindings& addTexture(TextureBinding binding) noexcept;
+	PipelineBindings& addTexture(uint32_t textureRegister, Texture2D& texture) noexcept;
+
+	ZgPipelineBindings toCApi() const noexcept;
+};
+
+
 // CommandList
 // ------------------------------------------------------------------------------------------------
 
@@ -485,7 +533,7 @@ public:
 		uint32_t shaderRegister, const void* data, uint32_t dataSizeInBytes) noexcept;
 
 	// See zgCommandListSetPipelineBindings()
-	ErrorCode setPipelineBindings(const ZgPipelineBindings& bindings) noexcept;
+	ErrorCode setPipelineBindings(const PipelineBindings& bindings) noexcept;
 
 	// See zgCommandListSetPipelineRendering()
 	ErrorCode setPipeline(PipelineRendering& pipeline) noexcept;
