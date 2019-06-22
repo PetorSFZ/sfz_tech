@@ -62,19 +62,8 @@ static void allocateMemoryHeapAndBuffer(
 	ZgMemoryType memoryType,
 	uint64_t numBytes) noexcept
 {
-	// Create heap
-	ZgMemoryHeapCreateInfo heapInfo = {};
-	heapInfo.memoryType = memoryType;
-	heapInfo.sizeInBytes = numBytes;
-
-	CHECK_ZG heapOut.create(heapInfo);
-
-	// Create buffer
-	ZgBufferCreateInfo bufferInfo = {};
-	bufferInfo.offsetInBytes = 0;
-	bufferInfo.sizeInBytes = numBytes;
-	
-	CHECK_ZG heapOut.bufferCreate(bufferOut, bufferInfo);
+	CHECK_ZG heapOut.create(numBytes, memoryType);
+	CHECK_ZG heapOut.bufferCreate(bufferOut, 0, numBytes);
 }
 
 // A simple helper function that allocates and copies data to a device buffer In practice you will

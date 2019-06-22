@@ -259,8 +259,11 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
+	bool valid() const noexcept { return memoryHeap != nullptr; }
+
 	// See zgMemoryHeapCreate()
 	ErrorCode create(const ZgMemoryHeapCreateInfo& createInfo) noexcept;
+	ErrorCode create(uint64_t sizeInBytes, ZgMemoryType memoryType) noexcept;
 
 	void swap(MemoryHeap& other) noexcept;
 
@@ -272,6 +275,7 @@ public:
 
 	// See zgMemoryHeapBufferCreate()
 	ErrorCode bufferCreate(Buffer& bufferOut, const ZgBufferCreateInfo& createInfo) noexcept;
+	ErrorCode bufferCreate(Buffer& bufferOut, uint64_t offset, uint64_t size) noexcept;
 };
 
 
@@ -297,6 +301,8 @@ public:
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
+
+	bool valid() const noexcept { return buffer != nullptr; }
 
 	void swap(Buffer& other) noexcept;
 

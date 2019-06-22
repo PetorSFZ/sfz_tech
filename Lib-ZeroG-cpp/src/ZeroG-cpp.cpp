@@ -304,6 +304,14 @@ ErrorCode MemoryHeap::create(const ZgMemoryHeapCreateInfo& createInfo) noexcept
 	return (ErrorCode)zgMemoryHeapCreate(&this->memoryHeap, &createInfo);
 }
 
+ErrorCode MemoryHeap::create(uint64_t sizeInBytes, ZgMemoryType memoryType) noexcept
+{
+	ZgMemoryHeapCreateInfo createInfo = {};
+	createInfo.sizeInBytes = sizeInBytes;
+	createInfo.memoryType = memoryType;
+	return this->create(createInfo);
+}
+
 void MemoryHeap::swap(MemoryHeap& other) noexcept
 {
 	std::swap(this->memoryHeap, other.memoryHeap);
@@ -322,6 +330,14 @@ ErrorCode MemoryHeap::bufferCreate(zg::Buffer& bufferOut, const ZgBufferCreateIn
 {
 	bufferOut.release();
 	return (ErrorCode)zgMemoryHeapBufferCreate(this->memoryHeap, &bufferOut.buffer, &createInfo);
+}
+
+ErrorCode MemoryHeap::bufferCreate(Buffer& bufferOut, uint64_t offset, uint64_t size) noexcept
+{
+	ZgBufferCreateInfo createInfo = {};
+	createInfo.offsetInBytes = offset;
+	createInfo.sizeInBytes = size;
+	return this->bufferCreate(bufferOut, createInfo);
 }
 
 
