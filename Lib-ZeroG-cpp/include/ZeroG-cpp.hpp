@@ -183,10 +183,6 @@ public:
 		PipelineRendering& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0) const noexcept;
 	ErrorCode buildFromSourceHLSL(
 		PipelineRendering& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0) const noexcept;
-
-	PipelineRendering buildFromFileSPIRV() const noexcept;
-	PipelineRendering buildFromFileHLSL(ZgShaderModel model = ZG_SHADER_MODEL_6_0) const noexcept;
-	PipelineRendering buildFromSourceHLSL(ZgShaderModel model = ZG_SHADER_MODEL_6_0) const noexcept;
 };
 
 
@@ -340,8 +336,11 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
+	bool valid() const noexcept { return textureHeap != nullptr; }
+
 	// See zgTextureHeapCreate()
 	ErrorCode create(const ZgTextureHeapCreateInfo& createInfo) noexcept;
+	ErrorCode create(uint64_t size) noexcept;
 
 	void swap(TextureHeap& other) noexcept;
 
@@ -384,6 +383,8 @@ public:
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
+
+	bool valid() const noexcept { return this->texture != nullptr;  }
 
 	void swap(Texture2D& other) noexcept;
 

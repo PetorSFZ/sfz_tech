@@ -232,27 +232,6 @@ ErrorCode PipelineRenderingBuilder::buildFromSourceHLSL(
 	return pipelineOut.createFromSourceHLSL(createInfo);
 }
 
-PipelineRendering PipelineRenderingBuilder::buildFromFileSPIRV() const noexcept
-{
-	PipelineRendering pipeline;
-	[[maybe_unused]] ErrorCode res = this->buildFromFileSPIRV(pipeline);
-	return pipeline;
-}
-
-PipelineRendering PipelineRenderingBuilder::buildFromFileHLSL(ZgShaderModel model) const noexcept
-{
-	PipelineRendering pipeline;
-	[[maybe_unused]] ErrorCode res = this->buildFromFileHLSL(pipeline, model);
-	return pipeline;
-}
-
-PipelineRendering PipelineRenderingBuilder::buildFromSourceHLSL(ZgShaderModel model) const noexcept
-{
-	PipelineRendering pipeline;
-	[[maybe_unused]] ErrorCode res = this->buildFromSourceHLSL(pipeline, model);
-	return pipeline;
-}
-
 
 // PipelineRendering: State methods
 // ------------------------------------------------------------------------------------------------
@@ -373,6 +352,13 @@ ErrorCode TextureHeap::create(const ZgTextureHeapCreateInfo& createInfo) noexcep
 {
 	this->release();
 	return (ErrorCode)zgTextureHeapCreate(&this->textureHeap, &createInfo);
+}
+
+ErrorCode TextureHeap::create(uint64_t size) noexcept
+{
+	ZgTextureHeapCreateInfo createInfo = {};
+	createInfo.sizeInBytes = size;
+	return this->create(createInfo);
 }
 
 void TextureHeap::swap(TextureHeap& other) noexcept
