@@ -126,6 +126,70 @@ private:
 };
 
 
+// PipelineRenderingBuilder
+// ------------------------------------------------------------------------------------------------
+
+class PipelineRenderingBuilder final {
+public:
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	ZgPipelineRenderingCreateInfoCommon commonInfo = {};
+	const char* vertexShaderPath = nullptr;
+	const char* pixelShaderPath = nullptr;
+	const char* vertexShaderSrc = nullptr;
+	const char* pixelShaderSrc = nullptr;
+
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	PipelineRenderingBuilder() noexcept = default;
+	PipelineRenderingBuilder(const PipelineRenderingBuilder&) noexcept = default;
+	PipelineRenderingBuilder& operator= (const PipelineRenderingBuilder&) noexcept = default;
+	~PipelineRenderingBuilder() noexcept = default;
+
+	// Methods
+	// --------------------------------------------------------------------------------------------
+
+	PipelineRenderingBuilder& addVertexAttribute(ZgVertexAttribute attribute) noexcept;
+	
+	PipelineRenderingBuilder& addVertexAttribute(
+		uint32_t location,
+		uint32_t vertexBufferSlot,
+		ZgVertexAttributeType type,
+		uint32_t offsetInBuffer) noexcept;
+	
+	PipelineRenderingBuilder& addVertexBufferInfo(
+		uint32_t slot, uint32_t vertexBufferStrideBytes) noexcept;
+	
+	PipelineRenderingBuilder& addPushConstant(uint32_t constantBufferRegister) noexcept;
+	
+	PipelineRenderingBuilder& addSampler(uint32_t samplerRegister, ZgSampler sampler) noexcept;
+	
+	PipelineRenderingBuilder& addSampler(
+		uint32_t samplerRegister,
+		ZgSamplingMode samplingMode,
+		ZgWrappingMode wrappingModeU = ZG_WRAPPING_MODE_CLAMP,
+		ZgWrappingMode wrappingModeV = ZG_WRAPPING_MODE_CLAMP,
+		float mipLodBias = 0.0f) noexcept;
+
+	PipelineRenderingBuilder& addVertexShaderPath(const char* entry, const char* path) noexcept;
+	PipelineRenderingBuilder& addPixelShaderPath(const char* entry, const char* path) noexcept;
+	PipelineRenderingBuilder& addVertexShaderSource(const char* entry, const char* src) noexcept;
+	PipelineRenderingBuilder& addPixelShaderSource(const char* entry, const char* src) noexcept;
+
+	ErrorCode buildFromFileSPIRV(PipelineRendering& pipelineOut) const noexcept;
+	ErrorCode buildFromFileHLSL(
+		PipelineRendering& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0) const noexcept;
+	ErrorCode buildFromSourceHLSL(
+		PipelineRendering& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0) const noexcept;
+
+	PipelineRendering buildFromFileSPIRV() const noexcept;
+	PipelineRendering buildFromFileHLSL(ZgShaderModel model = ZG_SHADER_MODEL_6_0) const noexcept;
+	PipelineRendering buildFromSourceHLSL(ZgShaderModel model = ZG_SHADER_MODEL_6_0) const noexcept;
+};
+
+
 // PipelineRendering
 // ------------------------------------------------------------------------------------------------
 
@@ -149,6 +213,9 @@ public:
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
+	
+	// Checks if this pipeline is valid
+	bool valid() const noexcept { return this->pipeline != nullptr; }
 
 	// See zgPipelineRenderingCreateFromFileSPIRV()
 	ErrorCode createFromFileSPIRV(

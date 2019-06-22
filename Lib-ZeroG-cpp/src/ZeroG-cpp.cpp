@@ -18,6 +18,7 @@
 
 #include "ZeroG-cpp.hpp"
 
+#include <cassert>
 #include <utility>
 
 namespace zg {
@@ -81,6 +82,175 @@ ErrorCode Context::beginFrame(ZgFramebuffer*& framebufferOut) noexcept
 ErrorCode Context::finishFrame() noexcept
 {
 	return (ErrorCode)zgContextFinishFrame();
+}
+
+
+// PipelineRenderingBuilder: Methods
+// ------------------------------------------------------------------------------------------------
+
+PipelineRenderingBuilder& PipelineRenderingBuilder::addVertexAttribute(
+	ZgVertexAttribute attribute) noexcept
+{
+	assert(commonInfo.numVertexAttributes < ZG_MAX_NUM_VERTEX_ATTRIBUTES);
+	commonInfo.vertexAttributes[commonInfo.numVertexAttributes] = attribute;
+	commonInfo.numVertexAttributes += 1;
+	return *this;
+}
+
+PipelineRenderingBuilder& PipelineRenderingBuilder::addVertexAttribute(
+	uint32_t location,
+	uint32_t vertexBufferSlot,
+	ZgVertexAttributeType type,
+	uint32_t offsetInBuffer) noexcept
+{
+	ZgVertexAttribute attribute = {};
+	attribute.location = location;
+	attribute.vertexBufferSlot = vertexBufferSlot;
+	attribute.type = type;
+	attribute.offsetToFirstElementInBytes = offsetInBuffer;
+	return addVertexAttribute(attribute);
+}
+
+PipelineRenderingBuilder& PipelineRenderingBuilder::addVertexBufferInfo(
+	uint32_t slot, uint32_t vertexBufferStrideBytes) noexcept
+{
+	assert(slot == commonInfo.numVertexBufferSlots);
+	assert(commonInfo.numVertexBufferSlots < ZG_MAX_NUM_VERTEX_ATTRIBUTES);
+	commonInfo.vertexBufferStridesBytes[commonInfo.numVertexBufferSlots] = vertexBufferStrideBytes;
+	commonInfo.numVertexBufferSlots += 1;
+	return *this;
+}
+
+PipelineRenderingBuilder& PipelineRenderingBuilder::addPushConstant(
+	uint32_t constantBufferRegister) noexcept
+{
+	assert(commonInfo.numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
+	commonInfo.pushConstantRegisters[commonInfo.numPushConstants] = constantBufferRegister;
+	commonInfo.numPushConstants += 1;
+	return *this;
+}
+
+PipelineRenderingBuilder& PipelineRenderingBuilder::addSampler(
+	uint32_t samplerRegister, ZgSampler sampler) noexcept
+{
+	assert(samplerRegister == commonInfo.numSamplers);
+	assert(commonInfo.numSamplers < ZG_MAX_NUM_SAMPLERS);
+	commonInfo.samplers[commonInfo.numSamplers] = sampler;
+	commonInfo.numSamplers += 1;
+	return *this;
+}
+
+PipelineRenderingBuilder& PipelineRenderingBuilder::addSampler(
+	uint32_t samplerRegister,
+	ZgSamplingMode samplingMode,
+	ZgWrappingMode wrappingModeU,
+	ZgWrappingMode wrappingModeV,
+	float mipLodBias) noexcept
+{
+	ZgSampler sampler = {};
+	sampler.samplingMode = samplingMode;
+	sampler.wrappingModeU = wrappingModeU;
+	sampler.wrappingModeV = wrappingModeV;
+	sampler.mipLodBias = mipLodBias;
+	return addSampler(samplerRegister, sampler);
+}
+
+PipelineRenderingBuilder& PipelineRenderingBuilder::addVertexShaderPath(
+	const char* entry, const char* path) noexcept
+{
+	commonInfo.vertexShaderEntry = entry;
+	vertexShaderPath = path;
+	return *this;
+}
+
+PipelineRenderingBuilder& PipelineRenderingBuilder::addPixelShaderPath(
+	const char* entry, const char* path) noexcept
+{
+	commonInfo.pixelShaderEntry = entry;
+	pixelShaderPath = path;
+	return *this;
+}
+
+PipelineRenderingBuilder& PipelineRenderingBuilder::addVertexShaderSource(
+	const char* entry, const char* src) noexcept
+{
+	commonInfo.vertexShaderEntry = entry;
+	vertexShaderSrc = src;
+	return *this;
+}
+
+PipelineRenderingBuilder& PipelineRenderingBuilder::addPixelShaderSource(
+	const char* entry, const char* src) noexcept
+{
+	commonInfo.pixelShaderEntry = entry;
+	pixelShaderSrc = src;
+	return *this;
+}
+
+ErrorCode PipelineRenderingBuilder::buildFromFileSPIRV(
+	PipelineRendering& pipelineOut) const noexcept
+{
+	// Build create info
+	ZgPipelineRenderingCreateInfoFileSPIRV createInfo = {};
+	createInfo.common = this->commonInfo;
+	createInfo.vertexShaderPath = this->vertexShaderPath;
+	createInfo.pixelShaderPath = this->pixelShaderPath;
+
+	// Build pipeline
+	return pipelineOut.createFromFileSPIRV(createInfo);
+}
+
+ErrorCode PipelineRenderingBuilder::buildFromFileHLSL(
+	PipelineRendering& pipelineOut, ZgShaderModel model) const noexcept
+{
+	// Build create info
+	ZgPipelineRenderingCreateInfoFileHLSL createInfo = {};
+	createInfo.common = this->commonInfo;
+	createInfo.vertexShaderPath = this->vertexShaderPath;
+	createInfo.pixelShaderPath = this->pixelShaderPath;
+	createInfo.shaderModel = model;
+	createInfo.dxcCompilerFlags[0] = "-Zi";
+	createInfo.dxcCompilerFlags[1] = "-O3";
+
+	// Build pipeline
+	return pipelineOut.createFromFileHLSL(createInfo);
+}
+
+ErrorCode PipelineRenderingBuilder::buildFromSourceHLSL(
+	PipelineRendering& pipelineOut, ZgShaderModel model) const noexcept
+{
+	// Build create info
+	ZgPipelineRenderingCreateInfoSourceHLSL createInfo = {};
+	createInfo.common = this->commonInfo;
+	createInfo.vertexShaderSrc = this->vertexShaderSrc;
+	createInfo.pixelShaderSrc= this->pixelShaderSrc;
+	createInfo.shaderModel = model;
+	createInfo.dxcCompilerFlags[0] = "-Zi";
+	createInfo.dxcCompilerFlags[1] = "-O3";
+
+	// Build pipeline
+	return pipelineOut.createFromSourceHLSL(createInfo);
+}
+
+PipelineRendering PipelineRenderingBuilder::buildFromFileSPIRV() const noexcept
+{
+	PipelineRendering pipeline;
+	[[maybe_unused]] ErrorCode res = this->buildFromFileSPIRV(pipeline);
+	return pipeline;
+}
+
+PipelineRendering PipelineRenderingBuilder::buildFromFileHLSL(ZgShaderModel model) const noexcept
+{
+	PipelineRendering pipeline;
+	[[maybe_unused]] ErrorCode res = this->buildFromFileHLSL(pipeline, model);
+	return pipeline;
+}
+
+PipelineRendering PipelineRenderingBuilder::buildFromSourceHLSL(ZgShaderModel model) const noexcept
+{
+	PipelineRendering pipeline;
+	[[maybe_unused]] ErrorCode res = this->buildFromSourceHLSL(pipeline, model);
+	return pipeline;
 }
 
 

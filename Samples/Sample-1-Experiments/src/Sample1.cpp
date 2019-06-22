@@ -249,81 +249,38 @@ static void realMain(SDL_Window* window) noexcept
 
 
 	// Create a rendering pipeline
-	ZgPipelineRenderingCreateInfoCommon pipelineInfoCommon = {};
-
-	pipelineInfoCommon.vertexShaderEntry = "VSMain";
-	pipelineInfoCommon.pixelShaderEntry = "PSMain";
-
-	pipelineInfoCommon.numVertexAttributes = 3;
-
-	// "position"
-	pipelineInfoCommon.vertexAttributes[0].location = 0;
-	pipelineInfoCommon.vertexAttributes[0].vertexBufferSlot = 0;
-	pipelineInfoCommon.vertexAttributes[0].offsetToFirstElementInBytes = offsetof(Vertex, position);
-	pipelineInfoCommon.vertexAttributes[0].type = ZG_VERTEX_ATTRIBUTE_F32_3;
-
-	// "normal"
-	pipelineInfoCommon.vertexAttributes[1].location = 1;
-	pipelineInfoCommon.vertexAttributes[1].vertexBufferSlot = 0;
-	pipelineInfoCommon.vertexAttributes[1].offsetToFirstElementInBytes = offsetof(Vertex, normal);
-	pipelineInfoCommon.vertexAttributes[1].type = ZG_VERTEX_ATTRIBUTE_F32_3;
-
-	// "texcoord"
-	pipelineInfoCommon.vertexAttributes[2].location = 2;
-	pipelineInfoCommon.vertexAttributes[2].vertexBufferSlot = 0;
-	pipelineInfoCommon.vertexAttributes[2].offsetToFirstElementInBytes = offsetof(Vertex, texcoord);
-	pipelineInfoCommon.vertexAttributes[2].type = ZG_VERTEX_ATTRIBUTE_F32_2;
-
-	pipelineInfoCommon.numVertexBufferSlots = 1;
-	pipelineInfoCommon.vertexBufferStridesBytes[0] = sizeof(Vertex);
-
-	pipelineInfoCommon.numPushConstants = 1;
-	pipelineInfoCommon.pushConstantRegisters[0] = 0;
-
-	pipelineInfoCommon.numSamplers = 1;
-	pipelineInfoCommon.samplers[0].samplingMode = ZG_SAMPLING_MODE_ANISOTROPIC;
-	pipelineInfoCommon.samplers[0].wrappingModeU = ZG_WRAPPING_MODE_CLAMP;
-	pipelineInfoCommon.samplers[0].wrappingModeV = ZG_WRAPPING_MODE_CLAMP;
-	pipelineInfoCommon.samplers[0].mipLodBias = 0.0f;
-
-	// SPIRV File variant
 	zg::PipelineRendering pipeline;
 	{
-		ZgPipelineRenderingCreateInfoFileSPIRV pipelineInfoFileSpirv = {};
-		pipelineInfoFileSpirv.common = pipelineInfoCommon;
-		pipelineInfoFileSpirv.vertexShaderPath = "res/Sample-1/test_vs.spv";
-		pipelineInfoFileSpirv.pixelShaderPath = "res/Sample-1/test_ps.spv";
-		CHECK_ZG pipeline.createFromFileSPIRV(pipelineInfoFileSpirv);
-	}
+		zg::PipelineRenderingBuilder pipelineBuilder = zg::PipelineRenderingBuilder()
+			.addVertexAttribute(0, 0, ZG_VERTEX_ATTRIBUTE_F32_3, offsetof(Vertex, position))
+			.addVertexAttribute(1, 0, ZG_VERTEX_ATTRIBUTE_F32_3, offsetof(Vertex, normal))
+			.addVertexAttribute(2, 0, ZG_VERTEX_ATTRIBUTE_F32_2, offsetof(Vertex, texcoord))
+			.addVertexBufferInfo(0, sizeof(Vertex))
+			.addPushConstant(0)
+			.addSampler(0, ZG_SAMPLING_MODE_ANISOTROPIC);
 
-	// HLSL File variant
-	/*zg::PipelineRendering pipeline;
-	{
-		ZgPipelineRenderingCreateInfoFileHLSL pipelineInfoFileHlsl = {};
-		pipelineInfoFileHlsl.common = pipelineInfoCommon;
-		pipelineInfoFileHlsl.vertexShaderPath = "res/Sample-1/test.hlsl";
-		pipelineInfoFileHlsl.pixelShaderPath = "res/Sample-1/test.hlsl";
-		pipelineInfoFileHlsl.shaderModel = ZG_SHADER_MODEL_6_0;
-		pipelineInfoFileHlsl.dxcCompilerFlags[0] = "-Zi";
-		pipelineInfoFileHlsl.dxcCompilerFlags[1] = "-O3";
-		CHECK_ZG pipeline.createFromFileHLSL(pipelineInfoFileHlsl);
-	}*/
+		// SPIRV file variant
+		CHECK_ZG pipelineBuilder
+			.addVertexShaderPath("VSMain", "res/Sample-1/test_vs.spv")
+			.addPixelShaderPath("PSMain", "res/Sample-1/test_ps.spv")
+			.buildFromFileSPIRV(pipeline);
 
-	// HLSL source variant
-	/*zg::PipelineRendering pipeline;
-	{
-		char hlslSource[2048] = {};
+		// HLSL file variant
+		/*CHECK_ZG pipelineBuilder
+			.addVertexShaderPath("VSMain", "res/Sample-1/test.hlsl")
+			.addPixelShaderPath("PSMain", "res/Sample-1/test.hlsl")
+			.buildFromFileHLSL(pipeline, ZG_SHADER_MODEL_6_0);*/
+
+		// HLSL source variant
+		/*char hlslSource[2048] = {};
 		size_t numRead = readBinaryFile("res/Sample-1/test.hlsl", (uint8_t*)hlslSource, 2048);
 		assert(0 < numRead && numRead < 2048);
-		ZgPipelineRenderingCreateInfoSourceHLSL pipelineInfoSrcHlsl = {};
-		pipelineInfoSrcHlsl.common = pipelineInfoCommon;
-		pipelineInfoSrcHlsl.vertexShaderSrc = hlslSource;
-		pipelineInfoSrcHlsl.pixelShaderSrc = hlslSource;
-		pipelineInfoSrcHlsl.shaderModel = ZG_SHADER_MODEL_6_0;
-		pipelineInfoSrcHlsl.dxcCompilerFlags[0] = "-Zi";
-		pipelineInfoSrcHlsl.dxcCompilerFlags[1] = "-O3";
-		CHECK_ZG pipeline.createFromSourceHLSL(pipelineInfoSrcHlsl);
-	}*/
+		CHECK_ZG pipelineBuilder
+			.addVertexShaderSource("VSMain", hlslSource)
+			.addPixelShaderSource("PSMain", hlslSource)
+			.buildFromSourceHLSL(pipeline, ZG_SHADER_MODEL_6_0);*/
+	}
+	if (!pipeline.valid()) return;
 
 
 	// Create a vertex buffer containing a Cube
