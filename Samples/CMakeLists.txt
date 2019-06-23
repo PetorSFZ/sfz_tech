@@ -35,8 +35,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 # SDL2
 # ------------------------------------------------------------------------------------------------
 
-# TODO: SDL2 is currently required to run the samples, should be removed sometime in the future
-
 # Adding SDL2
 # ${SDL2_FOUND}, ${SDL2_INCLUDE_DIRS}, ${SDL2_LIBRARIES}, ${SDL2_RUNTIME_FILES}
 if (EXISTS ${ZEROG_REPO_ROOT_DIR}/../Dependency-SDL2)
@@ -71,21 +69,11 @@ endif()
 # ZeroG
 # ------------------------------------------------------------------------------------------------
 
-# Adding ZeroG
-# ${ZEROG_FOUND}, ${ZEROG_INCLUDE_DIRS} and ${ZEROG_LIBRARIES}
-add_subdirectory(${ZEROG_REPO_ROOT_DIR}/Lib-ZeroG ${CMAKE_BINARY_DIR}/ZeroG)
+include(${ZEROG_REPO_ROOT_DIR}/ZeroG.cmake)
 
-# Copy ZeroG runtime files
-file(COPY ${ZEROG_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR})
-if(CMAKE_CONFIGURATION_TYPES)
-	file(COPY ${ZEROG_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR}/Debug)
-	file(COPY ${ZEROG_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR}/RelWithDebInfo)
-	file(COPY ${ZEROG_RUNTIME_FILES} DESTINATION ${CMAKE_BINARY_DIR}/Release)
-endif()
-
-# Adding ZeroG-cpp
-# ${ZEROG_CPP_FOUND}, ${ZEROG_CPP_INCLUDE_DIRS} and ${ZEROG_CPP_LIBRARIES}
-add_subdirectory(${ZEROG_REPO_ROOT_DIR}/Lib-ZeroG-cpp ${CMAKE_BINARY_DIR}/ZeroG-cpp)
+addZeroG()
+addZeroGcpp()
+msvcCopyZeroGRuntimeFiles()
 
 # Compiler flags
 # ------------------------------------------------------------------------------------------------

@@ -16,15 +16,116 @@
 #    misrepresented as being the original software.
 # 3. This notice may not be removed or altered from any source distribution.
 
+# Usage
+# ------------------------------------------------------------------------------------------------
 
+# This is an optional CMake file with helper functions to make it easier to bundle ZeroG directly
+# in your project. Essentially, you are meant to copy the entire ZeroG repo (with this file in the
+# root) somewhere and then include this file.
+#
+# I.e., if you have placed the ZeroG repo in a directory called "externals", you could include
+# this file with the following command:
+#
+#     include(${CMAKE_CURRENT_SOURCE_DIR}/externals/ZeroG/ZeroG.cmake)
+#
+# Then you can add ZeroG with:
+#
+#     addZeroG()
+#
+# And link ZeroG to a CMake target with:
+#
+#     linkZeroG(<target>)
 
-# TODO: NOT IMPLEMENTED
-# Intended to be a minimal wrapper that essentially does:
-#
-# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Lib-ZeroG)
-#
-# So the user of ZeroG calls:
-#
-# include(${EXTERNALS_DIR}/ZeroG/ZeroG.cmake)
-#
-# in their CMakeLists.txt in order to to include and build ZeroG.
+# Misc initialization
+# ------------------------------------------------------------------------------------------------
+
+# Set the root of the ZeroG repo
+set(ZEROG_REPO_ROOT ${CMAKE_CURRENT_LIST_DIR})
+
+# ZeroG
+# ------------------------------------------------------------------------------------------------
+
+# Adds the main ZeroG targets
+function(addZeroG)
+	message("-- [ZeroG]: Adding ZeroG targets")
+
+	add_subdirectory(
+		${ZEROG_REPO_ROOT}/Lib-ZeroG
+		${CMAKE_BINARY_DIR}/Lib-ZeroG
+	)
+
+	set(ZEROG_FOUND ${ZEROG_FOUND} PARENT_SCOPE)
+	set(ZEROG_INCLUDE_DIRS ${ZEROG_INCLUDE_DIRS} PARENT_SCOPE)
+	set(ZEROG_LIBRARIES ${ZEROG_LIBRARIES} PARENT_SCOPE)
+	set(ZEROG_RUNTIME_FILES ${ZEROG_RUNTIME_FILES} PARENT_SCOPE)
+endfunction()
+
+# Links ZeroG with the specified target
+function(linkZeroG linkTarget)
+	if (NOT ZEROG_FOUND)
+		message(FATAL_ERROR "-- [ZeroG]: Attempting to linkZeroG(), but ZeroG is not found")
+	endif()
+	message("-- [ZeroG]: Linking ZeroG to target: ${linkTarget}")
+
+	target_include_directories(${linkTarget} PUBLIC ${ZEROG_INCLUDE_DIRS})
+	target_link_libraries(${linkTarget} ${ZEROG_LIBRARIES})
+endfunction()
+
+# ZeroG-cpp
+# ------------------------------------------------------------------------------------------------
+
+function(addZeroGcpp)
+	message("-- [ZeroG]: Adding ZeroG-cpp targets")
+
+	add_subdirectory(
+		${ZEROG_REPO_ROOT}/Lib-ZeroG-cpp
+		${CMAKE_BINARY_DIR}/Lib-ZeroG-cpp
+	)
+
+	set(ZEROG_CPP_FOUND ${ZEROG_CPP_FOUND} PARENT_SCOPE)
+	set(ZEROG_CPP_INCLUDE_DIRS ${ZEROG_CPP_INCLUDE_DIRS} PARENT_SCOPE)
+	set(ZEROG_CPP_LIBRARIES ${ZEROG_CPP_LIBRARIES} PARENT_SCOPE)
+endfunction()
+
+function(linkZeroGcpp linkTarget)
+	if (NOT ZEROG_FOUND)
+		message(FATAL_ERROR "-- [ZeroG]: Attempting to linkZeroG-cpp(), but ZeroG is not found")
+	endif()
+	if (NOT ZEROG_CPP_FOUND)
+		message(FATAL_ERROR "-- [ZeroG]: Attempting to linkZeroG-cpp(), but ZeroG-cpp is not found")
+	endif()
+	message("-- [ZeroG]: Linking ZeroG-cpp to target: ${linkTarget}")
+
+	target_include_directories(${linkTarget} PUBLIC ${ZEROG_CPP_INCLUDE_DIRS})
+	target_link_libraries(${linkTarget} ${ZEROG_CPP_LIBRARIES})
+endfunction()
+
+# Misc helper functions
+# ------------------------------------------------------------------------------------------------
+
+function(msvcCopyZeroGRuntimeFiles)
+	if(MSVC)
+		if (NOT ZEROG_FOUND)
+			message(FATAL_ERROR "-- [ZeroG]: Attempting to msvcCopyZeroGRuntimeFiles(), but ZeroG is not found")
+		endif()
+
+		message("-- [ZeroG]: Copying following DLLs to binary directory:")
+		foreach(dllPath ${ZEROG_RUNTIME_FILES})
+			message("  -- ${dllPath}")
+		endforeach()
+
+		foreach(dllPath ${ZEROG_RUNTIME_FILES})
+
+			# Do different things depending on if we are generating .sln or using built-in VS CMake
+			if(CMAKE_CONFIGURATION_TYPES)
+				file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+				file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR}/RelWithDebInfo)
+				file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR}/Release)
+			else()
+				file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR})
+			endif()
+
+		endforeach()
+
+	endif()
+endfunction()
