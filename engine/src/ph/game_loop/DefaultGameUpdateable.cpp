@@ -384,7 +384,7 @@ private:
 	{
 		ImGuiViewport* viewport = ImGui::GetMainViewport();
 		ImGuiDockNodeFlags dockSpaceFlags = 0;
-		dockSpaceFlags |= ImGuiDockNodeFlags_PassthruDockspace;
+		dockSpaceFlags |= ImGuiDockNodeFlags_PassthruCentralNode;
 		mConsoleDockSpaceId = ImGui::DockSpaceOverViewport(viewport, dockSpaceFlags);
 	}
 
@@ -393,8 +393,8 @@ private:
 		ImGui::DockBuilderRemoveNode(mConsoleDockSpaceId);
 
 		ImGuiDockNodeFlags dockSpaceFlags = 0;
-		dockSpaceFlags |= ImGuiDockNodeFlags_PassthruDockspace;
-		dockSpaceFlags |= ImGuiDockNodeFlags_Dockspace;
+		dockSpaceFlags |= ImGuiDockNodeFlags_PassthruCentralNode;
+		dockSpaceFlags |= ImGuiDockNodeFlags_DockSpace;
 		ImGui::DockBuilderAddNode(mConsoleDockSpaceId, dockSpaceFlags);
 
 		ImGuiViewport* viewport = ImGui::GetMainViewport();
