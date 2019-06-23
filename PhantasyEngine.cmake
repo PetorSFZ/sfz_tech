@@ -415,6 +415,29 @@ function(phAddRendererCompatibleGL)
 
 endfunction()
 
+# Adds the Renderer-Null target, static for iOS and Emscripten, dynamic for everything else
+function(phAddRendererNull)
+	message("-- [PhantasyEngine]: Adding Renderer-Null target")
+
+	# Emscripten and iOS needs statically linked renderer
+	if(EMSCRIPTEN OR IOS)
+		message("  -- Static renderer")
+		set(PH_RENDERER_NULL_STATIC true)
+		set(PH_RENDERER_NULL_STATIC ${PH_RENDERER_NULL_STATIC} PARENT_SCOPE)
+	else()
+		message("  -- Dynamic renderer")
+	endif()
+
+	# Adding renderer
+	add_subdirectory(
+		${PH_ROOT}/renderers/Null
+		${CMAKE_BINARY_DIR}/Renderer-Null
+	)
+	set(PH_RENDERER_NULL_FOUND ${PH_RENDERER_NULL_FOUND} PARENT_SCOPE)
+	set(PH_RENDERER_NULL_LIBRARIES ${PH_RENDERER_NULL_LIBRARIES} PARENT_SCOPE)
+
+endfunction()
+
 # Linking
 # ------------------------------------------------------------------------------------------------
 
@@ -465,6 +488,18 @@ function(phLinkRendererCompatibleGL linkTarget)
 	else()
 		message("-- [PhantasyEngine]: Dynamically linking Renderer-CompatibleGL")
 		add_dependencies(${linkTarget} ${PH_RENDERER_COMPATIBLE_GL_LIBRARIES})
+	endif()
+endfunction()
+
+# Links the Renderer-Null to the specified target, static or dynamic depending on the value
+# of PH_RENDERER_NULL_STATIC (set automatically by phAddRendererNull()).
+function(phLinkRendererNull linkTarget)
+	if(PH_RENDERER_NULL_STATIC)
+		message("-- [PhantasyEngine]: Statically linking Renderer-Null")
+		target_link_libraries(${linkTarget} ${PH_RENDERER_NULL_LIBRARIES})
+	else()
+		message("-- [PhantasyEngine]: Dynamically linking Renderer-Null")
+		add_dependencies(${linkTarget} ${PH_RENDERER_NULL_LIBRARIES})
 	endif()
 endfunction()
 
