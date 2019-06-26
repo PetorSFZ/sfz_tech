@@ -567,7 +567,16 @@ ZgErrorCode D3D12CommandList::setIndexBuffer(
 	D3D12Buffer& indexBuffer = *reinterpret_cast<D3D12Buffer*>(indexBufferIn);
 
 	// Set buffer resource state
-	ZgErrorCode res = setBufferState(indexBuffer, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+	ZgErrorCode res;
+	if (indexBuffer.memoryHeap->memoryType == ZG_MEMORY_TYPE_DEVICE) {
+		res = setBufferState(indexBuffer, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+	}
+	else if (indexBuffer.memoryHeap->memoryType == ZG_MEMORY_TYPE_UPLOAD) {
+		res = setBufferState(indexBuffer, D3D12_RESOURCE_STATE_GENERIC_READ);
+	}
+	else {
+		return ZG_ERROR_INVALID_ARGUMENT;
+	}
 	if (res != ZG_SUCCESS) return res;
 
 	// Create index buffer view
@@ -604,7 +613,16 @@ ZgErrorCode D3D12CommandList::setVertexBuffer(
 	}
 
 	// Set buffer resource state
-	ZgErrorCode res = setBufferState(vertexBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+	ZgErrorCode res;
+	if (vertexBuffer.memoryHeap->memoryType == ZG_MEMORY_TYPE_DEVICE) {
+		res = setBufferState(vertexBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+	}
+	else if (vertexBuffer.memoryHeap->memoryType == ZG_MEMORY_TYPE_UPLOAD) {
+		res = setBufferState(vertexBuffer, D3D12_RESOURCE_STATE_GENERIC_READ);
+	}
+	else {
+		return ZG_ERROR_INVALID_ARGUMENT;
+	}
 	if (res != ZG_SUCCESS) return res;
 
 	// Create vertex buffer view
