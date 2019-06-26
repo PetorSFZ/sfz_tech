@@ -37,6 +37,17 @@ static D3D12_HEAP_TYPE bufferMemoryTypeToD3D12HeapType(ZgMemoryType type) noexce
 	return D3D12_HEAP_TYPE_DEFAULT;
 }
 
+static const char* memoryTypeToString(ZgMemoryType type) noexcept
+{
+	switch (type) {
+	case ZG_MEMORY_TYPE_UPLOAD: return "UPLOAD";
+	case ZG_MEMORY_TYPE_DOWNLOAD: return "DOWNLOAD";
+	case ZG_MEMORY_TYPE_DEVICE: return "DEVICE";
+	}
+	ZG_ASSERT(false);
+	return "<UNKNOWN>";
+}
+
 // D3D12MemoryHeap: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
@@ -150,6 +161,20 @@ ZgErrorCode createMemoryHeap(
 	memoryHeap->memoryType = createInfo.memoryType;
 	memoryHeap->sizeBytes = createInfo.sizeInBytes;
 	memoryHeap->heap = heap;
+
+	// Log that we created a memory heap
+	if (createInfo.sizeInBytes < 1024) {
+		ZG_INFO(logger, "Allocated memory heap (%s) of size: %u bytes",
+			memoryTypeToString(createInfo.memoryType), createInfo.sizeInBytes);
+	}
+	else if (createInfo.sizeInBytes < (1024 * 1024)) {
+		ZG_INFO(logger, "Allocated memory heap (%s) of size: %.2f KiB",
+			memoryTypeToString(createInfo.memoryType), createInfo.sizeInBytes / (1024.0f));
+	}
+	else {
+		ZG_INFO(logger, "Allocated memory heap (%s) of size: %.2f MiB",
+			memoryTypeToString(createInfo.memoryType), createInfo.sizeInBytes / (1024.0f * 1024.0f));
+	}
 
 	// Return heap
 	*heapOut = memoryHeap;

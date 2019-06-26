@@ -212,6 +212,20 @@ ZgErrorCode createTextureHeap(
 	textureHeap->sizeBytes = createInfo.sizeInBytes;
 	textureHeap->heap = heap;
 
+	// Log that we created a texture heap
+	if (createInfo.sizeInBytes < 1024) {
+		ZG_INFO(logger, "Allocated texture heap of size: %u bytes",
+			createInfo.sizeInBytes);
+	}
+	else if (createInfo.sizeInBytes < (1024 * 1024)) {
+		ZG_INFO(logger, "Allocated texture heap (%s) of size: %.2f KiB",
+			createInfo.sizeInBytes / (1024.0f));
+	}
+	else {
+		ZG_INFO(logger, "Allocated texture heap (%s) of size: %.2f MiB",
+			createInfo.sizeInBytes / (1024.0f * 1024.0f));
+	}
+
 	// Return heap
 	*heapOut = textureHeap;
 	return ZG_SUCCESS;
