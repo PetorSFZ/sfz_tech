@@ -33,7 +33,7 @@ using sfz::LogLevel;
 using sfz::RingBuffer;
 using sfz::StackString32;
 using sfz::StackString64;
-using sfz::StackString256;
+using sfz::StackString1024;
 
 using std::time_t;
 
@@ -46,7 +46,7 @@ struct TerminalMessageItem final {
 	time_t timestamp;
 	LogLevel level;
 	StackString32 tag;
-	StackString256 message;
+	StackString1024 message;
 };
 
 // TerminalLogger class
