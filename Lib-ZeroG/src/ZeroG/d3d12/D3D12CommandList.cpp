@@ -534,7 +534,10 @@ ZgErrorCode D3D12CommandList::clearFramebuffer(
 	float alpha) noexcept
 {
 	// Return error if no framebuffer is set
-	if (!mFramebufferSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+	if (!mFramebufferSet) {
+		ZG_ERROR(mLog, "clearFramebuffer(): Must set a framebuffer before you can clear it");
+		return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+	}
 
 	// Clear framebuffer
 	float clearColor[4] = { red, green, blue, alpha };
