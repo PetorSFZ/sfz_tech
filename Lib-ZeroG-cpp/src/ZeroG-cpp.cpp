@@ -376,14 +376,6 @@ void TextureHeap::release() noexcept
 // TextureHeap: TextureHeap methods
 // ------------------------------------------------------------------------------------------------
 
-ErrorCode TextureHeap::texture2DGetAllocationInfo(
-	ZgTexture2DAllocationInfo& allocationInfoOut,
-	const ZgTexture2DCreateInfo& createInfo) noexcept
-{
-	return (ErrorCode)zgTextureHeapTexture2DGetAllocationInfo(
-		this->textureHeap, &allocationInfoOut, &createInfo);
-}
-
 ErrorCode TextureHeap::texture2DCreate(
 	Texture2D& textureOut, const ZgTexture2DCreateInfo& createInfo) noexcept
 {
@@ -406,6 +398,18 @@ void Texture2D::release() noexcept
 	if (this->texture != nullptr) zgTexture2DRelease(this->texture);
 	this->texture = nullptr;
 }
+
+// Texture2D: Methods
+// ------------------------------------------------------------------------------------------------
+
+// See zgTexture2DGetAllocationInfo
+ErrorCode Texture2D::getAllocationInfo(
+	ZgTexture2DAllocationInfo& allocationInfoOut,
+	const ZgTexture2DCreateInfo& createInfo) noexcept
+{
+	return (ErrorCode)zgTexture2DGetAllocationInfo(&allocationInfoOut, &createInfo);
+}
+
 
 
 // CommandQueue: State methods

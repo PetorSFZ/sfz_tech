@@ -26,6 +26,11 @@
 
 namespace zg {
 
+// Helper functions
+// ------------------------------------------------------------------------------------------------
+
+D3D12_RESOURCE_DESC createInfoToResourceDesc(const ZgTexture2DCreateInfo& info) noexcept;
+
 // D3D12 Texture Heap
 // ------------------------------------------------------------------------------------------------
 
@@ -43,10 +48,6 @@ public:
 
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
-
-	ZgErrorCode texture2DGetAllocationInfo(
-		ZgTexture2DAllocationInfo& allocationInfoOut,
-		const ZgTexture2DCreateInfo& createInfo) noexcept override final;
 
 	ZgErrorCode texture2DCreate(
 		ITexture2D** textureOut,

@@ -320,7 +320,7 @@ static void realMain(SDL_Window* window) noexcept
 	textureCreateInfo.numMipmaps = 4;
 
 	ZgTexture2DAllocationInfo textureAllocInfo = {};
-	CHECK_ZG textureHeap.texture2DGetAllocationInfo(textureAllocInfo, textureCreateInfo);
+	CHECK_ZG zg::Texture2D::getAllocationInfo(textureAllocInfo, textureCreateInfo);
 	
 	textureCreateInfo.offsetInBytes = 0;
 	textureCreateInfo.sizeInBytes = textureAllocInfo.sizeInBytes;

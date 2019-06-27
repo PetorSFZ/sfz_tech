@@ -350,11 +350,6 @@ public:
 	// TextureHeap methods
 	// --------------------------------------------------------------------------------------------
 
-	// See zgTextureHeapTexture2DGetAllocationInfo()
-	ErrorCode texture2DGetAllocationInfo(
-		ZgTexture2DAllocationInfo& allocationInfoOut,
-		const ZgTexture2DCreateInfo& createInfo) noexcept;
-
 	// See zgTextureHeapTexture2DCreate()
 	ErrorCode texture2DCreate(
 		Texture2D& textureOut, const ZgTexture2DCreateInfo& createInfo) noexcept;
@@ -390,6 +385,14 @@ public:
 
 	// See zgTexture2DRelease()
 	void release() noexcept;
+
+	// Methods
+	// --------------------------------------------------------------------------------------------
+
+	// See zgTexture2DGetAllocationInfo
+	static ErrorCode getAllocationInfo(
+		ZgTexture2DAllocationInfo& allocationInfoOut,
+		const ZgTexture2DCreateInfo& createInfo) noexcept;
 };
 
 

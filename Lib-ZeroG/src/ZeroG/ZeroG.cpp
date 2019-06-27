@@ -375,15 +375,15 @@ ZG_API ZgErrorCode zgTextureHeapRelease(
 	return zg::getApiContext()->textureHeapRelease(reinterpret_cast<zg::ITextureHeap*>(textureHeap));
 }
 
-ZG_API ZgErrorCode zgTextureHeapTexture2DGetAllocationInfo(
-	ZgTextureHeap* textureHeapIn,
+ZG_API ZgErrorCode zgTexture2DGetAllocationInfo(
 	ZgTexture2DAllocationInfo* allocationInfoOut,
 	const ZgTexture2DCreateInfo* createInfo)
 {
+	if (allocationInfoOut == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
 	if (createInfo->numMipmaps == 0) return ZG_ERROR_INVALID_ARGUMENT;
 	if (createInfo->numMipmaps > ZG_TEXTURE_2D_MAX_NUM_MIPMAPS) return ZG_ERROR_INVALID_ARGUMENT;
-	zg::ITextureHeap* textureHeap = reinterpret_cast<zg::ITextureHeap*>(textureHeapIn);
-	return textureHeap->texture2DGetAllocationInfo(*allocationInfoOut, *createInfo);
+	return zg::getApiContext()->texture2DGetAllocationInfo(*allocationInfoOut, *createInfo);
 }
 
 ZG_API ZgErrorCode zgTextureHeapTexture2DCreate(

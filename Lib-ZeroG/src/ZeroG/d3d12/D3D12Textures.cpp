@@ -51,7 +51,10 @@ static DXGI_FORMAT createInfoToDxgiFormat(const ZgTexture2DCreateInfo& info) noe
 	return DXGI_FORMAT_UNKNOWN;
 }
 
-static D3D12_RESOURCE_DESC createInfoToResourceDesc(const ZgTexture2DCreateInfo& info) noexcept
+// Helper functions
+// ------------------------------------------------------------------------------------------------
+
+D3D12_RESOURCE_DESC createInfoToResourceDesc(const ZgTexture2DCreateInfo& info) noexcept
 {
 	D3D12_RESOURCE_DESC desc = {};
 
@@ -83,22 +86,6 @@ D3D12TextureHeap::~D3D12TextureHeap() noexcept
 
 // D3D12TextureHeap: Virtual methods
 // ------------------------------------------------------------------------------------------------
-
-ZgErrorCode D3D12TextureHeap::texture2DGetAllocationInfo(
-	ZgTexture2DAllocationInfo& allocationInfoOut,
-	const ZgTexture2DCreateInfo& createInfo) noexcept
-{
-	// Get resource desc
-	D3D12_RESOURCE_DESC desc = createInfoToResourceDesc(createInfo);
-
-	// Get allocation info
-	D3D12_RESOURCE_ALLOCATION_INFO allocInfo = device->GetResourceAllocationInfo(0, 1, &desc);
-
-	// Return allocation info
-	allocationInfoOut.sizeInBytes = (uint32_t)allocInfo.SizeInBytes;
-	allocationInfoOut.alignmentInBytes = (uint32_t)allocInfo.Alignment;
-	return ZG_SUCCESS;
-}
 
 ZgErrorCode D3D12TextureHeap::texture2DCreate(
 	ITexture2D** textureOut,

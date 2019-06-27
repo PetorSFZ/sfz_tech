@@ -688,8 +688,8 @@ struct ZgTexture2DCreateInfo {
 	uint64_t offsetInBytes;
 
 	// The size in bytes of the texture
-	// Note that this can only be learned by calling zgTextureHeapTexture2DGetAllocationInfo(). Do
-	// not need to be set before calling this function.
+	// Note that this can only be learned by calling zgTexture2DGetAllocationInfo(). Do not need
+	// to be set before calling this function.
 	uint64_t sizeInBytes;
 };
 
@@ -703,8 +703,7 @@ struct ZgTexture2DAllocationInfo {
 };
 
 // Gets the allocation info of a Texture2D specified by a ZgTexture2DCreateInfo.
-ZG_API ZgErrorCode zgTextureHeapTexture2DGetAllocationInfo(
-	ZgTextureHeap* textureHeap,
+ZG_API ZgErrorCode zgTexture2DGetAllocationInfo(
 	ZgTexture2DAllocationInfo* allocationInfoOut,
 	const ZgTexture2DCreateInfo* createInfo);
 

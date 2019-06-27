@@ -686,6 +686,22 @@ public:
 	// Texture methods
 	// --------------------------------------------------------------------------------------------
 
+	virtual ZgErrorCode texture2DGetAllocationInfo(
+		ZgTexture2DAllocationInfo& allocationInfoOut,
+		const ZgTexture2DCreateInfo& createInfo) noexcept override final
+	{
+		// Get resource desc
+		D3D12_RESOURCE_DESC desc = createInfoToResourceDesc(createInfo);
+
+		// Get allocation info
+		D3D12_RESOURCE_ALLOCATION_INFO allocInfo = mDevice->GetResourceAllocationInfo(0, 1, &desc);
+
+		// Return allocation info
+		allocationInfoOut.sizeInBytes = (uint32_t)allocInfo.SizeInBytes;
+		allocationInfoOut.alignmentInBytes = (uint32_t)allocInfo.Alignment;
+		return ZG_SUCCESS;
+	}
+
 	ZgErrorCode textureHeapCreate(
 		ITextureHeap** textureHeapOut,
 		const ZgTextureHeapCreateInfo& createInfo) noexcept override final

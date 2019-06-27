@@ -59,10 +59,6 @@ class ITextureHeap {
 public:
 	virtual ~ITextureHeap() noexcept {}
 
-	virtual ZgErrorCode texture2DGetAllocationInfo(
-		ZgTexture2DAllocationInfo& allocationInfoOut,
-		const ZgTexture2DCreateInfo& createInfo) noexcept = 0;
-
 	virtual ZgErrorCode texture2DCreate(
 		ITexture2D** textureOut,
 		const ZgTexture2DCreateInfo& createInfo) noexcept = 0;
@@ -215,6 +211,10 @@ public:
 
 	// Texture methods
 	// --------------------------------------------------------------------------------------------
+
+	virtual ZgErrorCode texture2DGetAllocationInfo(
+		ZgTexture2DAllocationInfo& allocationInfoOut,
+		const ZgTexture2DCreateInfo& createInfo) noexcept = 0;
 
 	virtual ZgErrorCode textureHeapCreate(
 		ITextureHeap** textureHeapOut,
