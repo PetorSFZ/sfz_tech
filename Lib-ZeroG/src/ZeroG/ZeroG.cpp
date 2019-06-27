@@ -76,6 +76,7 @@ ZG_API ZgBool zgContextAlreadyInitialized(void)
 
 ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 {
+	if (initSettings == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
 	if (zgContextAlreadyInitialized() == ZG_TRUE) return ZG_ERROR_ALREADY_INITIALIZED;
 
 	ZgContextInitSettings settings = *initSettings;

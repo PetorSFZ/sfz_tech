@@ -218,11 +218,11 @@ ZgErrorCode createTextureHeap(
 			createInfo.sizeInBytes);
 	}
 	else if (createInfo.sizeInBytes < (1024 * 1024)) {
-		ZG_INFO(logger, "Allocated texture heap (%s) of size: %.2f KiB",
+		ZG_INFO(logger, "Allocated texture heap of size: %.2f KiB",
 			createInfo.sizeInBytes / (1024.0f));
 	}
 	else {
-		ZG_INFO(logger, "Allocated texture heap (%s) of size: %.2f MiB",
+		ZG_INFO(logger, "Allocated texture heap of size: %.2f MiB",
 			createInfo.sizeInBytes / (1024.0f * 1024.0f));
 	}
 

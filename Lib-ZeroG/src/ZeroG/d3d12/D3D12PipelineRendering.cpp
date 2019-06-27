@@ -1118,12 +1118,20 @@ static ZgErrorCode createPipelineRenderingInternal(
 		
 		// TODO: Currently using the assumption that the shader register range is continuous,
 		//       which is probably not at all reasonable in practice
-		CD3DX12_DESCRIPTOR_RANGE1 ranges[2] = {};
-		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, numConstBufferMappings,
-			dynamicConstBuffersFirstRegister);
-		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, numTexMappings,
-			dynamicTexturesFirstRegister);
-		parameters[dynamicBuffersParameterIndex].InitAsDescriptorTable(2, ranges);
+		constexpr uint32_t MAX_NUM_RANGES = 2; // CBVs and SRVs
+		uint32_t numRanges = 0;
+		CD3DX12_DESCRIPTOR_RANGE1 ranges[MAX_NUM_RANGES] = {};
+		if (numConstBufferMappings != 0) {
+			ranges[numRanges].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, numConstBufferMappings,
+				dynamicConstBuffersFirstRegister);
+			numRanges += 1;
+		}
+		if (numTexMappings != 0) {
+			ranges[numRanges].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, numTexMappings,
+				dynamicTexturesFirstRegister);
+			numRanges += 1;
+		}
+		parameters[dynamicBuffersParameterIndex].InitAsDescriptorTable(numRanges, ranges);
 
 		// Add static samplers
 		D3D12_STATIC_SAMPLER_DESC samplers[ZG_MAX_NUM_SAMPLERS] = {};
