@@ -225,6 +225,20 @@ static D3D12_CULL_MODE toD3D12CullMode(
 	else return D3D12_CULL_MODE_FRONT;
 }
 
+static D3D12_COMPARISON_FUNC toD3D12ComparsionFunc(ZgDepthFunc func) noexcept
+{
+	switch (func) {
+	case ZG_DEPTH_FUNC_LESS: return D3D12_COMPARISON_FUNC_LESS;
+	case ZG_DEPTH_FUNC_LESS_EQUAL: return D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	case ZG_DEPTH_FUNC_EQUAL: return D3D12_COMPARISON_FUNC_EQUAL;
+	case ZG_DEPTH_FUNC_NOT_EQUAL: return D3D12_COMPARISON_FUNC_NOT_EQUAL;
+	case ZG_DEPTH_FUNC_GREATER: return D3D12_COMPARISON_FUNC_GREATER;
+	case ZG_DEPTH_FUNC_GREATER_EQUAL: return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
+	}
+	ZG_ASSERT(false);
+	return D3D12_COMPARISON_FUNC_LESS;
+}
+
 // DFCC_DXIL enum constant from DxilContainer/DxilContainer.h in DirectXShaderCompiler
 #define DXIL_FOURCC(ch0, ch1, ch2, ch3) ( \
 	(uint32_t)(uint8_t)(ch0)        | (uint32_t)(uint8_t)(ch1) << 8  | \
@@ -1197,6 +1211,7 @@ static ZgErrorCode createPipelineRenderingInternal(
 			CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS rtvFormats;
 			CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT dsvFormat;
 			CD3DX12_PIPELINE_STATE_STREAM_RASTERIZER rasterizer;
+			CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL1 depthStencil;
 		};
 
 		// Create our token stream and set root signature
@@ -1249,6 +1264,15 @@ static ZgErrorCode createPipelineRenderingInternal(
 		rasterizerDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 		stream.rasterizer = CD3DX12_RASTERIZER_DESC(rasterizerDesc);
 
+		// Set depth and stencil state
+		D3D12_DEPTH_STENCIL_DESC1 depthStencilDesc = {};
+		depthStencilDesc.DepthEnable =
+			(createInfo.depthTest.depthTestEnabled == ZG_FALSE) ? FALSE : TRUE; FALSE;
+		depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+		depthStencilDesc.DepthFunc = toD3D12ComparsionFunc(createInfo.depthTest.depthFunc);
+		depthStencilDesc.StencilEnable = FALSE;
+		depthStencilDesc.DepthBoundsTestEnable = FALSE;
+		stream.depthStencil = CD3DX12_DEPTH_STENCIL_DESC1(depthStencilDesc);
 
 		// Create pipeline state
 		D3D12_PIPELINE_STATE_STREAM_DESC streamDesc = {};

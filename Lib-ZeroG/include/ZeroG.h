@@ -474,6 +474,29 @@ struct ZgRasterizerSettings {
 };
 typedef struct ZgRasterizerSettings ZgRasterizerSettings;
 
+enum ZgDepthFuncEnum {
+	ZG_DEPTH_FUNC_LESS = 0,
+	ZG_DEPTH_FUNC_LESS_EQUAL,
+	ZG_DEPTH_FUNC_EQUAL,
+	ZG_DEPTH_FUNC_NOT_EQUAL,
+	ZG_DEPTH_FUNC_GREATER,
+	ZG_DEPTH_FUNC_GREATER_EQUAL
+};
+typedef uint32_t ZgDepthFunc;
+
+struct ZgDepthTestSettings {
+
+	// Whether to enable to the depth test or not
+	ZgBool depthTestEnabled;
+
+	// What function to use for the depth test.
+	//
+	// Default is ZG_DEPTH_FUNC_LESS (0), i.e. pixels with a depth value less than what is stored
+	// in the depth buffer is kept (in a "standard" 0 is near, 1 is furthest away depth buffer).
+	ZgDepthFunc depthFunc;
+};
+typedef struct ZgDepthTestSettings ZgDepthTestSettings;
+
 // The common information required to create a rendering pipeline
 struct ZgPipelineRenderingCreateInfoCommon {
 
@@ -508,6 +531,9 @@ struct ZgPipelineRenderingCreateInfoCommon {
 
 	// Rasterizer settings
 	ZgRasterizerSettings rasterizer;
+
+	// Depth test settings
+	ZgDepthTestSettings depthTest;
 };
 typedef struct ZgPipelineRenderingCreateInfoCommon ZgPipelineRenderingCreateInfoCommon;
 

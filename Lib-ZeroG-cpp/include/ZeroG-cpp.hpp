@@ -183,6 +183,9 @@ public:
 	PipelineRenderingBuilder& setCullMode(
 		bool cullFrontFacing, bool fontFacingIsCounterClockwise = false) noexcept;
 
+	PipelineRenderingBuilder& setDepthTestEnabled(bool depthTestEnabled) noexcept;
+	PipelineRenderingBuilder& setDepthFunc(ZgDepthFunc depthFunc) noexcept;
+
 	ErrorCode buildFromFileSPIRV(PipelineRendering& pipelineOut) const noexcept;
 	ErrorCode buildFromFileHLSL(
 		PipelineRendering& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0) const noexcept;

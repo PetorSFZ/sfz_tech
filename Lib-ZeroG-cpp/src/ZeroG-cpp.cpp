@@ -209,6 +209,19 @@ PipelineRenderingBuilder& PipelineRenderingBuilder::setCullMode(
 	return *this;
 }
 
+PipelineRenderingBuilder& PipelineRenderingBuilder::setDepthTestEnabled(
+	bool depthTestEnabled) noexcept
+{
+	commonInfo.depthTest.depthTestEnabled = depthTestEnabled ? ZG_TRUE : ZG_FALSE;
+	return *this;
+}
+
+PipelineRenderingBuilder& PipelineRenderingBuilder::setDepthFunc(ZgDepthFunc depthFunc) noexcept
+{
+	commonInfo.depthTest.depthFunc = depthFunc;
+	return *this;
+}
+
 ErrorCode PipelineRenderingBuilder::buildFromFileSPIRV(
 	PipelineRendering& pipelineOut) const noexcept
 {

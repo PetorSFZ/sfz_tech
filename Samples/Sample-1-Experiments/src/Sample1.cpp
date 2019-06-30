@@ -248,7 +248,9 @@ static void realMain(SDL_Window* window) noexcept
 			.addPushConstant(0)
 			.addSampler(0, ZG_SAMPLING_MODE_ANISOTROPIC)
 			.setCullingEnabled(true)
-			.setCullMode(false, false);
+			.setCullMode(false, false)
+			.setDepthTestEnabled(true)
+			.setDepthFunc(ZG_DEPTH_FUNC_LESS);
 
 		// SPIRV file variant
 		CHECK_ZG pipelineBuilder
