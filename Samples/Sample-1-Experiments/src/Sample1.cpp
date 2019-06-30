@@ -246,7 +246,9 @@ static void realMain(SDL_Window* window) noexcept
 			.addVertexAttribute(2, 0, ZG_VERTEX_ATTRIBUTE_F32_2, offsetof(Vertex, texcoord))
 			.addVertexBufferInfo(0, sizeof(Vertex))
 			.addPushConstant(0)
-			.addSampler(0, ZG_SAMPLING_MODE_ANISOTROPIC);
+			.addSampler(0, ZG_SAMPLING_MODE_ANISOTROPIC)
+			.setCullingEnabled(true)
+			.setCullMode(false, false);
 
 		// SPIRV file variant
 		CHECK_ZG pipelineBuilder

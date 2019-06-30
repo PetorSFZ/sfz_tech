@@ -178,6 +178,11 @@ public:
 	PipelineRenderingBuilder& addVertexShaderSource(const char* entry, const char* src) noexcept;
 	PipelineRenderingBuilder& addPixelShaderSource(const char* entry, const char* src) noexcept;
 
+	PipelineRenderingBuilder& setWireframeRendering(bool wireframeEnabled) noexcept;
+	PipelineRenderingBuilder& setCullingEnabled(bool cullingEnabled) noexcept;
+	PipelineRenderingBuilder& setCullMode(
+		bool cullFrontFacing, bool fontFacingIsCounterClockwise = false) noexcept;
+
 	ErrorCode buildFromFileSPIRV(PipelineRendering& pipelineOut) const noexcept;
 	ErrorCode buildFromFileHLSL(
 		PipelineRendering& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0) const noexcept;

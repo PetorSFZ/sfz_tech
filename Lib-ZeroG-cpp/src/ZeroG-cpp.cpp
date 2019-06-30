@@ -187,6 +187,28 @@ PipelineRenderingBuilder& PipelineRenderingBuilder::addPixelShaderSource(
 	return *this;
 }
 
+PipelineRenderingBuilder& PipelineRenderingBuilder::setWireframeRendering(
+	bool wireframeEnabled) noexcept
+{
+	commonInfo.rasterizer.wireframeMode = wireframeEnabled ? ZG_TRUE : ZG_FALSE;
+	return *this;
+}
+
+PipelineRenderingBuilder& PipelineRenderingBuilder::setCullingEnabled(bool cullingEnabled) noexcept
+{
+	commonInfo.rasterizer.cullingEnabled = cullingEnabled ? ZG_TRUE : ZG_FALSE;
+	return *this;
+}
+
+PipelineRenderingBuilder& PipelineRenderingBuilder::setCullMode(
+	bool cullFrontFacing, bool fontFacingIsCounterClockwise) noexcept
+{
+	commonInfo.rasterizer.cullFrontFacing = cullFrontFacing ? ZG_TRUE : ZG_FALSE;
+	commonInfo.rasterizer.fontFacingIsCounterClockwise =
+		fontFacingIsCounterClockwise ? ZG_TRUE : ZG_FALSE;
+	return *this;
+}
+
 ErrorCode PipelineRenderingBuilder::buildFromFileSPIRV(
 	PipelineRendering& pipelineOut) const noexcept
 {

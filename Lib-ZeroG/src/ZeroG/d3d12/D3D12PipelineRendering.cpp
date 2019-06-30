@@ -217,6 +217,14 @@ static bool fixPath(WCHAR* pathOut, uint32_t pathOutSizeBytes, const char* utf8I
 	return true;
 }
 
+static D3D12_CULL_MODE toD3D12CullMode(
+	const ZgRasterizerSettings& rasterizerSettings) noexcept
+{
+	if (rasterizerSettings.cullingEnabled == ZG_FALSE) return D3D12_CULL_MODE_NONE;
+	if (rasterizerSettings.cullFrontFacing == ZG_FALSE) return D3D12_CULL_MODE_BACK;
+	else return D3D12_CULL_MODE_FRONT;
+}
+
 // DFCC_DXIL enum constant from DxilContainer/DxilContainer.h in DirectXShaderCompiler
 #define DXIL_FOURCC(ch0, ch1, ch2, ch3) ( \
 	(uint32_t)(uint8_t)(ch0)        | (uint32_t)(uint8_t)(ch1) << 8  | \
@@ -1188,6 +1196,7 @@ static ZgErrorCode createPipelineRenderingInternal(
 			CD3DX12_PIPELINE_STATE_STREAM_PS pixelShader;
 			CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS rtvFormats;
 			CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT dsvFormat;
+			CD3DX12_PIPELINE_STATE_STREAM_RASTERIZER rasterizer;
 		};
 
 		// Create our token stream and set root signature
@@ -1222,6 +1231,24 @@ static ZgErrorCode createPipelineRenderingInternal(
 		// Set depth buffer formats
 		// TODO: Allow other depth formats? Stencil buffers?
 		stream.dsvFormat = DXGI_FORMAT_D32_FLOAT;
+
+		// Set rasterizer state
+		D3D12_RASTERIZER_DESC rasterizerDesc = {};
+		rasterizerDesc.FillMode = (createInfo.rasterizer.wireframeMode == ZG_FALSE) ?
+			D3D12_FILL_MODE_SOLID : D3D12_FILL_MODE_WIREFRAME;
+		rasterizerDesc.CullMode = toD3D12CullMode(createInfo.rasterizer);
+		rasterizerDesc.FrontCounterClockwise =
+			(createInfo.rasterizer.fontFacingIsCounterClockwise == ZG_FALSE) ? FALSE : TRUE;
+		rasterizerDesc.DepthBias = 0; // TODO: Expose
+		rasterizerDesc.DepthBiasClamp = 0.0f; // TODO: Expose
+		rasterizerDesc.SlopeScaledDepthBias = 0.0f; // TODO: Expose
+		rasterizerDesc.DepthClipEnable = TRUE; // TODO: Expose
+		rasterizerDesc.MultisampleEnable = FALSE;
+		rasterizerDesc.AntialiasedLineEnable = FALSE;
+		rasterizerDesc.ForcedSampleCount = 0;
+		rasterizerDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+		stream.rasterizer = CD3DX12_RASTERIZER_DESC(rasterizerDesc);
+
 
 		// Create pipeline state
 		D3D12_PIPELINE_STATE_STREAM_DESC streamDesc = {};

@@ -454,6 +454,26 @@ struct ZgSampler {
 };
 typedef struct ZgSampler ZgSampler;
 
+struct ZgRasterizerSettings {
+
+	// Renders in wireframe mode instead of solid mode, i.e. only lines between vertices.
+	ZgBool wireframeMode;
+
+	// Whether to enable culling of front (or back) facing triangles
+	ZgBool cullingEnabled;
+
+	// Whether to cull front or back-facing triangles. Default should be ZG_FALSE, i.e. cull
+	// back-facing triangles if culling is enabled.
+	ZgBool cullFrontFacing;
+
+	// Which winding order of a triangle is considered front-facing.
+	//
+	// Default is ZG_FALSE, in other words clockwise (left-hand rule). This is also the default
+	// of D3D12.
+	ZgBool fontFacingIsCounterClockwise;
+};
+typedef struct ZgRasterizerSettings ZgRasterizerSettings;
+
 // The common information required to create a rendering pipeline
 struct ZgPipelineRenderingCreateInfoCommon {
 
@@ -485,6 +505,9 @@ struct ZgPipelineRenderingCreateInfoCommon {
 	//       registers 0, 1, 2.
 	uint32_t numSamplers;
 	ZgSampler samplers[ZG_MAX_NUM_SAMPLERS];
+
+	// Rasterizer settings
+	ZgRasterizerSettings rasterizer;
 };
 typedef struct ZgPipelineRenderingCreateInfoCommon ZgPipelineRenderingCreateInfoCommon;
 
