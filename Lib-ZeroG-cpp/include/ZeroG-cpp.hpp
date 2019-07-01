@@ -183,6 +183,12 @@ public:
 	PipelineRenderingBuilder& setCullMode(
 		bool cullFrontFacing, bool fontFacingIsCounterClockwise = false) noexcept;
 
+	PipelineRenderingBuilder& setBlendingEnabled(bool blendingEnabled) noexcept;
+	PipelineRenderingBuilder& setBlendFuncColor(
+		ZgBlendFunc func, ZgBlendValue srcFactor, ZgBlendValue dstFactor) noexcept;
+	PipelineRenderingBuilder& setBlendFuncAlpha(
+		ZgBlendFunc func, ZgBlendValue srcFactor, ZgBlendValue dstFactor) noexcept;
+
 	PipelineRenderingBuilder& setDepthTestEnabled(bool depthTestEnabled) noexcept;
 	PipelineRenderingBuilder& setDepthFunc(ZgDepthFunc depthFunc) noexcept;
 

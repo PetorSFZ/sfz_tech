@@ -209,6 +209,30 @@ PipelineRenderingBuilder& PipelineRenderingBuilder::setCullMode(
 	return *this;
 }
 
+PipelineRenderingBuilder& PipelineRenderingBuilder::setBlendingEnabled(bool blendingEnabled) noexcept
+{
+	commonInfo.blending.blendingEnabled = blendingEnabled ? ZG_TRUE : ZG_FALSE;
+	return *this;
+}
+
+PipelineRenderingBuilder& PipelineRenderingBuilder::setBlendFuncColor(
+	ZgBlendFunc func, ZgBlendValue srcFactor, ZgBlendValue dstFactor) noexcept
+{
+	commonInfo.blending.blendFuncColor = func;
+	commonInfo.blending.srcValColor = srcFactor;
+	commonInfo.blending.dstValColor = dstFactor;
+	return *this;
+}
+
+PipelineRenderingBuilder& PipelineRenderingBuilder::setBlendFuncAlpha(
+	ZgBlendFunc func, ZgBlendValue srcFactor, ZgBlendValue dstFactor) noexcept
+{
+	commonInfo.blending.blendFuncAlpha = func;
+	commonInfo.blending.srcValAlpha = srcFactor;
+	commonInfo.blending.dstValAlpha = dstFactor;
+	return *this;
+}
+
 PipelineRenderingBuilder& PipelineRenderingBuilder::setDepthTestEnabled(
 	bool depthTestEnabled) noexcept
 {

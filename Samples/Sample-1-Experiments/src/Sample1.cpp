@@ -249,6 +249,8 @@ static void realMain(SDL_Window* window) noexcept
 			.addSampler(0, ZG_SAMPLING_MODE_ANISOTROPIC)
 			.setCullingEnabled(true)
 			.setCullMode(false, false)
+			.setBlendingEnabled(true)
+			.setBlendFuncColor(ZG_BLEND_FUNC_ADD, ZG_BLEND_FACTOR_SRC_ALPHA, ZG_BLEND_FACTOR_SRC_INV_ALPHA)
 			.setDepthTestEnabled(true)
 			.setDepthFunc(ZG_DEPTH_FUNC_LESS);
 

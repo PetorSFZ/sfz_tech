@@ -474,6 +474,51 @@ struct ZgRasterizerSettings {
 };
 typedef struct ZgRasterizerSettings ZgRasterizerSettings;
 
+enum ZgBlendFuncEnum {
+	ZG_BLEND_FUNC_ADD = 0,
+	ZG_BLEND_FUNC_DST_SUB_SRC, // dst - src
+	ZG_BLEND_FUNC_SRC_SUB_DST, // src - dst
+	ZG_BLEND_FUNC_MIN,
+	ZG_BLEND_FUNC_MAX
+};
+typedef uint32_t ZgBlendFunc;
+
+// See: https://docs.microsoft.com/en-us/windows/desktop/api/d3d12/ne-d3d12-d3d12_blend
+enum ZgBlendFactorEnum {
+	ZG_BLEND_FACTOR_ZERO = 0,
+	ZG_BLEND_FACTOR_ONE,
+	ZG_BLEND_FACTOR_SRC_COLOR,
+	ZG_BLEND_FACTOR_SRC_INV_COLOR,
+	ZG_BLEND_FACTOR_SRC_ALPHA,
+	ZG_BLEND_FACTOR_SRC_INV_ALPHA,
+	ZG_BLEND_FACTOR_DST_COLOR,
+	ZG_BLEND_FACTOR_DST_INV_COLOR,
+	ZG_BLEND_FACTOR_DST_ALPHA,
+	ZG_BLEND_FACTOR_DST_INV_ALPHA,
+};
+typedef uint32_t ZgBlendValue;
+
+struct ZgBlendSettings {
+
+	// Whether to enable blending or not
+	ZgBool blendingEnabled;
+
+	// What blend function to use for color and alpha respectively
+	ZgBlendFunc blendFuncColor;
+	ZgBlendFunc blendFuncAlpha;
+
+	// How the color values in src (output from pixel shader) and dst (value in framebuffer)
+	// should be blended.
+	ZgBlendValue srcValColor;
+	ZgBlendValue dstValColor;
+
+	// How the alpha values in src (output from pixel shader) and dst (value in framebuffer)
+	// should be blended.
+	ZgBlendValue srcValAlpha;
+	ZgBlendValue dstValAlpha;
+};
+typedef struct ZgBlendSettings ZgBlendSettings;
+
 enum ZgDepthFuncEnum {
 	ZG_DEPTH_FUNC_LESS = 0,
 	ZG_DEPTH_FUNC_LESS_EQUAL,
@@ -531,6 +576,9 @@ struct ZgPipelineRenderingCreateInfoCommon {
 
 	// Rasterizer settings
 	ZgRasterizerSettings rasterizer;
+
+	// Blend test settings
+	ZgBlendSettings blending;
 
 	// Depth test settings
 	ZgDepthTestSettings depthTest;

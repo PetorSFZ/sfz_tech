@@ -217,28 +217,6 @@ static bool fixPath(WCHAR* pathOut, uint32_t pathOutSizeBytes, const char* utf8I
 	return true;
 }
 
-static D3D12_CULL_MODE toD3D12CullMode(
-	const ZgRasterizerSettings& rasterizerSettings) noexcept
-{
-	if (rasterizerSettings.cullingEnabled == ZG_FALSE) return D3D12_CULL_MODE_NONE;
-	if (rasterizerSettings.cullFrontFacing == ZG_FALSE) return D3D12_CULL_MODE_BACK;
-	else return D3D12_CULL_MODE_FRONT;
-}
-
-static D3D12_COMPARISON_FUNC toD3D12ComparsionFunc(ZgDepthFunc func) noexcept
-{
-	switch (func) {
-	case ZG_DEPTH_FUNC_LESS: return D3D12_COMPARISON_FUNC_LESS;
-	case ZG_DEPTH_FUNC_LESS_EQUAL: return D3D12_COMPARISON_FUNC_LESS_EQUAL;
-	case ZG_DEPTH_FUNC_EQUAL: return D3D12_COMPARISON_FUNC_EQUAL;
-	case ZG_DEPTH_FUNC_NOT_EQUAL: return D3D12_COMPARISON_FUNC_NOT_EQUAL;
-	case ZG_DEPTH_FUNC_GREATER: return D3D12_COMPARISON_FUNC_GREATER;
-	case ZG_DEPTH_FUNC_GREATER_EQUAL: return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
-	}
-	ZG_ASSERT(false);
-	return D3D12_COMPARISON_FUNC_LESS;
-}
-
 // DFCC_DXIL enum constant from DxilContainer/DxilContainer.h in DirectXShaderCompiler
 #define DXIL_FOURCC(ch0, ch1, ch2, ch3) ( \
 	(uint32_t)(uint8_t)(ch0)        | (uint32_t)(uint8_t)(ch1) << 8  | \
@@ -408,6 +386,59 @@ static ZgErrorCode compileHlslShader(
 	}
 
 	return ZG_SUCCESS;
+}
+
+static D3D12_CULL_MODE toD3D12CullMode(
+	const ZgRasterizerSettings& rasterizerSettings) noexcept
+{
+	if (rasterizerSettings.cullingEnabled == ZG_FALSE) return D3D12_CULL_MODE_NONE;
+	if (rasterizerSettings.cullFrontFacing == ZG_FALSE) return D3D12_CULL_MODE_BACK;
+	else return D3D12_CULL_MODE_FRONT;
+}
+
+static D3D12_COMPARISON_FUNC toD3D12ComparsionFunc(ZgDepthFunc func) noexcept
+{
+	switch (func) {
+	case ZG_DEPTH_FUNC_LESS: return D3D12_COMPARISON_FUNC_LESS;
+	case ZG_DEPTH_FUNC_LESS_EQUAL: return D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	case ZG_DEPTH_FUNC_EQUAL: return D3D12_COMPARISON_FUNC_EQUAL;
+	case ZG_DEPTH_FUNC_NOT_EQUAL: return D3D12_COMPARISON_FUNC_NOT_EQUAL;
+	case ZG_DEPTH_FUNC_GREATER: return D3D12_COMPARISON_FUNC_GREATER;
+	case ZG_DEPTH_FUNC_GREATER_EQUAL: return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
+	}
+	ZG_ASSERT(false);
+	return D3D12_COMPARISON_FUNC_LESS;
+}
+
+static D3D12_BLEND_OP toD3D12BlendOp(ZgBlendFunc func) noexcept
+{
+	switch (func) {
+	case ZG_BLEND_FUNC_ADD: return D3D12_BLEND_OP_ADD;
+	case ZG_BLEND_FUNC_DST_SUB_SRC: return D3D12_BLEND_OP_SUBTRACT;
+	case ZG_BLEND_FUNC_SRC_SUB_DST: return D3D12_BLEND_OP_REV_SUBTRACT;
+	case ZG_BLEND_FUNC_MIN: return D3D12_BLEND_OP_MIN;
+	case ZG_BLEND_FUNC_MAX: return D3D12_BLEND_OP_MAX;
+	}
+	ZG_ASSERT(false);
+	return D3D12_BLEND_OP_ADD;
+}
+
+static D3D12_BLEND toD3D12BlendFactor(ZgBlendValue val) noexcept
+{
+	switch (val) {
+	case ZG_BLEND_FACTOR_ZERO: return D3D12_BLEND_ZERO;
+	case ZG_BLEND_FACTOR_ONE: return D3D12_BLEND_ONE;
+	case ZG_BLEND_FACTOR_SRC_COLOR: return D3D12_BLEND_SRC_COLOR;
+	case ZG_BLEND_FACTOR_SRC_INV_COLOR: return D3D12_BLEND_INV_SRC_COLOR;
+	case ZG_BLEND_FACTOR_SRC_ALPHA: return D3D12_BLEND_SRC_ALPHA;
+	case ZG_BLEND_FACTOR_SRC_INV_ALPHA: return D3D12_BLEND_INV_SRC_ALPHA;
+	case ZG_BLEND_FACTOR_DST_COLOR: return D3D12_BLEND_DEST_COLOR;
+	case ZG_BLEND_FACTOR_DST_INV_COLOR: return D3D12_BLEND_INV_DEST_COLOR;
+	case ZG_BLEND_FACTOR_DST_ALPHA: return D3D12_BLEND_DEST_ALPHA;
+	case ZG_BLEND_FACTOR_DST_INV_ALPHA: return D3D12_BLEND_INV_DEST_ALPHA;
+	}
+	ZG_ASSERT(false);
+	return D3D12_BLEND_ZERO;
 }
 
 static DXGI_FORMAT vertexAttributeTypeToFormat(ZgVertexAttributeType type) noexcept
@@ -1211,6 +1242,7 @@ static ZgErrorCode createPipelineRenderingInternal(
 			CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS rtvFormats;
 			CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT dsvFormat;
 			CD3DX12_PIPELINE_STATE_STREAM_RASTERIZER rasterizer;
+			CD3DX12_PIPELINE_STATE_STREAM_BLEND_DESC blending;
 			CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL1 depthStencil;
 		};
 
@@ -1263,6 +1295,23 @@ static ZgErrorCode createPipelineRenderingInternal(
 		rasterizerDesc.ForcedSampleCount = 0;
 		rasterizerDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 		stream.rasterizer = CD3DX12_RASTERIZER_DESC(rasterizerDesc);
+
+		// Set blending state
+		D3D12_BLEND_DESC blendDesc = {};
+		blendDesc.AlphaToCoverageEnable = FALSE;
+		blendDesc.IndependentBlendEnable = FALSE;
+		blendDesc.RenderTarget[0].BlendEnable =
+			(createInfo.blending.blendingEnabled == ZG_FALSE) ? FALSE : TRUE;
+		blendDesc.RenderTarget[0].LogicOpEnable = FALSE;
+		blendDesc.RenderTarget[0].SrcBlend = toD3D12BlendFactor (createInfo.blending.srcValColor);
+		blendDesc.RenderTarget[0].DestBlend = toD3D12BlendFactor(createInfo.blending.dstValColor);
+		blendDesc.RenderTarget[0].BlendOp = toD3D12BlendOp(createInfo.blending.blendFuncColor);
+		blendDesc.RenderTarget[0].SrcBlendAlpha = toD3D12BlendFactor (createInfo.blending.srcValAlpha);
+		blendDesc.RenderTarget[0].DestBlendAlpha = toD3D12BlendFactor(createInfo.blending.dstValAlpha);
+		blendDesc.RenderTarget[0].BlendOpAlpha = toD3D12BlendOp(createInfo.blending.blendFuncAlpha);
+		blendDesc.RenderTarget[0].LogicOp = D3D12_LOGIC_OP_NOOP;
+		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+		stream.blending = CD3DX12_BLEND_DESC(blendDesc);
 
 		// Set depth and stencil state
 		D3D12_DEPTH_STENCIL_DESC1 depthStencilDesc = {};
