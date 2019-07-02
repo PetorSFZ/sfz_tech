@@ -296,12 +296,14 @@ static void realMain(SDL_Window* window) noexcept
 	zg::MemoryHeap cubeVertexMemoryHeapDevice;
 	createDeviceBufferSimpleBlocking(commandQueue, cubeVertexBufferDevice,
 		cubeVertexMemoryHeapDevice, cubeVertices, sizeof(Vertex) * CUBE_NUM_VERTICES);
+	cubeVertexBufferDevice.setDebugName("cubeVertexBuffer");
 
 	// Create a index buffer for the cube's vertices
 	zg::Buffer cubeIndexBufferDevice;
 	zg::MemoryHeap cubeIndexMemoryHeapDevice;
 	createDeviceBufferSimpleBlocking(commandQueue, cubeIndexBufferDevice,
 		cubeIndexMemoryHeapDevice, CUBE_INDICES, sizeof(uint32_t) * CUBE_NUM_INDICES);
+	cubeIndexBufferDevice.setDebugName("cubeIndexBuffer");
 
 	
 	// Create a constant buffer
@@ -311,6 +313,7 @@ static void realMain(SDL_Window* window) noexcept
 	zg::MemoryHeap constBufferMemoryHeapDevice;
 	createDeviceBufferSimpleBlocking(commandQueue, constBufferDevice,
 		constBufferMemoryHeapDevice, &offsets, sizeof(Vector), 256);
+	constBufferDevice.setDebugName("constBufferDevice");
 
 
 	// Create texture heap
@@ -333,6 +336,7 @@ static void realMain(SDL_Window* window) noexcept
 
 	zg::Texture2D texture;
 	CHECK_ZG textureHeap.texture2DCreate(texture, textureCreateInfo);
+	texture.setDebugName("cubeTexture");
 	
 	
 	// Fill texture with some random data

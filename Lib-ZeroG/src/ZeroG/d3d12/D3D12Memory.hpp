@@ -105,6 +105,11 @@ public:
 	// in command lists not yet executed.
 	// TODO: Mutex protecting this? How handle changes submitted on different queues simulatenously?
 	D3D12_RESOURCE_STATES lastCommittedState = D3D12_RESOURCE_STATE_COMMON;
+
+	// Methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgErrorCode setDebugName(const char* name) noexcept override final;
 };
 
 } // namespace zg

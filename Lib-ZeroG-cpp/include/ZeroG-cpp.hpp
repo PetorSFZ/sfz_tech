@@ -324,6 +324,9 @@ public:
 
 	// See zgBufferMemcpyTo()
 	ErrorCode memcpyTo(uint64_t bufferOffsetBytes, const void* srcMemory, uint64_t numBytes);
+
+	// See zgBufferSetDebugName()
+	ErrorCode setDebugName(const char* name) noexcept;
 };
 
 
@@ -407,6 +410,9 @@ public:
 	static ErrorCode getAllocationInfo(
 		ZgTexture2DAllocationInfo& allocationInfoOut,
 		const ZgTexture2DCreateInfo& createInfo) noexcept;
+
+	// See zgTexture2DSetDebugName()
+	ErrorCode setDebugName(const char* name) noexcept;
 };
 
 

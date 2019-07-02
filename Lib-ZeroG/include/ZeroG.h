@@ -729,6 +729,10 @@ ZG_API ZgErrorCode zgBufferMemcpyTo(
 	const void* srcMemory,
 	uint64_t numBytes);
 
+ZG_API ZgErrorCode zgBufferSetDebugName(
+	ZgBuffer* buffer,
+	const char* name);
+
 // Textures
 // ------------------------------------------------------------------------------------------------
 
@@ -811,6 +815,10 @@ ZG_API ZgErrorCode zgTextureHeapTexture2DCreate(
 
 ZG_API void zgTexture2DRelease(
 	ZgTexture2D* texture);
+
+ZG_API ZgErrorCode zgTexture2DSetDebugName(
+	ZgTexture2D* texture,
+	const char* name);
 
 // Command queue
 // ------------------------------------------------------------------------------------------------

@@ -74,6 +74,13 @@ static const char* resultToString(HRESULT result) noexcept
 // Helper functions
 // ------------------------------------------------------------------------------------------------
 
+bool utf8ToWide(WCHAR* wideOut, uint32_t numWideChars, const char* utf8In) noexcept
+{
+	// TODO: Unsure if 6th paramter should be num chars or num bytes =/
+	int res = MultiByteToWideChar(CP_UTF8, 0, utf8In, -1, wideOut, numWideChars);
+	return res != 0;
+}
+
 HRESULT CheckD3D12Impl::operator% (HRESULT result) noexcept
 {
 	if (SUCCEEDED(result)) return result;

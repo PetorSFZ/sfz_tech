@@ -36,6 +36,9 @@ public:
 class IBuffer {
 public:
 	virtual ~IBuffer() noexcept {}
+
+	virtual ZgErrorCode setDebugName(
+		const char* name) noexcept = 0;
 };
 
 class IMemoryHeap {
@@ -53,6 +56,9 @@ public:
 class ITexture2D {
 public:
 	virtual ~ITexture2D() noexcept {}
+
+	virtual ZgErrorCode setDebugName(
+		const char* name) noexcept = 0;
 };
 
 class ITextureHeap {

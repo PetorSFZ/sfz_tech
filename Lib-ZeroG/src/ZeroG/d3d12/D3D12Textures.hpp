@@ -83,12 +83,18 @@ ZgErrorCode createTextureHeap(
 
 class D3D12Texture2D final : public ITexture2D {
 public:
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
 	D3D12Texture2D() = default;
 	D3D12Texture2D(const D3D12Texture2D&) = delete;
 	D3D12Texture2D& operator= (const D3D12Texture2D&) = delete;
 	D3D12Texture2D(D3D12Texture2D&&) = delete;
 	D3D12Texture2D& operator= (D3D12Texture2D&&) = delete;
 	~D3D12Texture2D() noexcept;
+
+	// Members
+	// --------------------------------------------------------------------------------------------
 
 	// A unique identifier for this texture
 	uint64_t identifier = 0;
@@ -112,6 +118,11 @@ public:
 	// in command lists not yet executed.
 	// TODO: Mutex protecting this? How handle changes submitted on different queues simulatenously?
 	D3D12_RESOURCE_STATES lastCommittedStates[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
+
+	// Methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgErrorCode setDebugName(const char* name) noexcept override final;
 };
 
 } // namespace zg

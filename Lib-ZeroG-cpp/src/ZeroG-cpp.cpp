@@ -403,6 +403,11 @@ ErrorCode Buffer::memcpyTo(uint64_t bufferOffsetBytes, const void* srcMemory, ui
 	return (ErrorCode)zgBufferMemcpyTo(this->buffer, bufferOffsetBytes, srcMemory, numBytes);
 }
 
+ErrorCode Buffer::setDebugName(const char* name) noexcept
+{
+	return (ErrorCode)zgBufferSetDebugName(this->buffer, name);
+}
+
 
 // TextureHeap: State methods
 // ------------------------------------------------------------------------------------------------
@@ -469,6 +474,10 @@ ErrorCode Texture2D::getAllocationInfo(
 	return (ErrorCode)zgTexture2DGetAllocationInfo(&allocationInfoOut, &createInfo);
 }
 
+ErrorCode Texture2D::setDebugName(const char* name) noexcept
+{
+	return (ErrorCode)zgTexture2DSetDebugName(this->texture, name);
+}
 
 
 // CommandQueue: State methods

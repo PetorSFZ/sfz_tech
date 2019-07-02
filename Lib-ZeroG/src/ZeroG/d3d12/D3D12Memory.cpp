@@ -189,4 +189,24 @@ D3D12Buffer::~D3D12Buffer() noexcept
 
 }
 
+// D3D12Buffer: Methods
+// ------------------------------------------------------------------------------------------------
+
+ZgErrorCode D3D12Buffer::setDebugName(const char* name) noexcept
+{
+	// Small hack to fix D3D12 bug with debug name shorter than 4 chars
+	char tmpBuffer[256] = {};
+	snprintf(tmpBuffer, 256, "zg__%s", name); 
+
+	// Convert to wide
+	WCHAR tmpBufferWide[256] = {};
+	utf8ToWide(tmpBufferWide, 256, tmpBuffer);
+
+	// Set debug name
+	/*CHECK_D3D12(mLog) */ this->resource->SetName(tmpBufferWide);
+
+	return ZG_SUCCESS;
+}
+
+
 } // namespace zg

@@ -155,7 +155,9 @@ ZG_API ZgErrorCode zgContextDeinit(void)
 	return ZG_SUCCESS;
 }
 
-ZG_API ZgErrorCode zgContextSwapchainResize( uint32_t width, uint32_t height)
+ZG_API ZgErrorCode zgContextSwapchainResize(
+	uint32_t width,
+	uint32_t height)
 {
 	return zg::getApiContext()->swapchainResize(width, height);
 }
@@ -352,6 +354,15 @@ ZG_API ZgErrorCode zgBufferMemcpyTo(
 		numBytes);
 }
 
+ZG_API ZgErrorCode zgBufferSetDebugName(
+	ZgBuffer* bufferIn,
+	const char* name)
+{
+	if (bufferIn == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	zg::IBuffer* buffer = reinterpret_cast<zg::IBuffer*>(bufferIn);
+	return buffer->setDebugName(name);
+}
+
 // Textures
 // ------------------------------------------------------------------------------------------------
 
@@ -410,6 +421,15 @@ ZG_API void zgTexture2DRelease(
 	if (textureIn == nullptr) return;
 	zg::ITexture2D* texture = reinterpret_cast<zg::ITexture2D*>(textureIn);
 	zg::zgDelete<zg::ITexture2D>(zg::getContext().allocator, texture);
+}
+
+ZG_API ZgErrorCode zgTexture2DSetDebugName(
+	ZgTexture2D* textureIn,
+	const char* name)
+{
+	if (textureIn == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	zg::ITexture2D* texture = reinterpret_cast<zg::ITexture2D*>(textureIn);
+	return texture->setDebugName(name);
 }
 
 // Command queue

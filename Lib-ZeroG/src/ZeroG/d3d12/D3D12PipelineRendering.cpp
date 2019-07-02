@@ -203,17 +203,11 @@ static bool relativeToAbsolute(char* pathOut, uint32_t pathOutSize, const char* 
 	return res > 0;
 }
 
-static bool utf8ToWide(WCHAR* wideOut, uint32_t wideSizeBytes, const char* utf8In) noexcept
-{
-	int res = MultiByteToWideChar(CP_UTF8, 0, utf8In, -1, wideOut, wideSizeBytes);
-	return res != 0;
-}
-
-static bool fixPath(WCHAR* pathOut, uint32_t pathOutSizeBytes, const char* utf8In) noexcept
+static bool fixPath(WCHAR* pathOut, uint32_t pathOutNumChars, const char* utf8In) noexcept
 {
 	char absolutePath[MAX_PATH] = { 0 };
 	if (!relativeToAbsolute(absolutePath, MAX_PATH, utf8In)) return false;
-	if (!utf8ToWide(pathOut, pathOutSizeBytes, absolutePath)) return false;
+	if (!utf8ToWide(pathOut, pathOutNumChars, absolutePath)) return false;
 	return true;
 }
 
@@ -266,8 +260,7 @@ static ZgErrorCode dxcCreateHlslBlobFromFile(
 {
 	// Convert paths to absolute wide strings
 	WCHAR shaderFilePathWide[MAX_PATH] = { 0 };
-	const uint32_t shaderFilePathWideSizeBytes = sizeof(shaderFilePathWide);
-	if (!fixPath(shaderFilePathWide, shaderFilePathWideSizeBytes, path)) {
+	if (!fixPath(shaderFilePathWide, MAX_PATH, path)) {
 		return ZG_ERROR_GENERIC;
 	}
 
@@ -311,8 +304,7 @@ static ZgErrorCode compileHlslShader(
 {
 	// Convert entry point to wide string
 	WCHAR shaderEntryWide[256] = { 0 };
-	const uint32_t shaderEntryWideSizeBytes = sizeof(shaderEntryWide);
-	if (!utf8ToWide(shaderEntryWide, shaderEntryWideSizeBytes, entryName)) {
+	if (!utf8ToWide(shaderEntryWide, 256, entryName)) {
 		return ZG_ERROR_GENERIC;
 	}
 
@@ -339,7 +331,7 @@ static ZgErrorCode compileHlslShader(
 	uint32_t numArgs = 0;
 	for (uint32_t i = 0; i < ZG_MAX_NUM_DXC_COMPILER_FLAGS; i++) {
 		if (compilerFlags[i] == nullptr) continue;
-		utf8ToWide(argsContainer[numArgs], 32 * sizeof(WCHAR), compilerFlags[i]);
+		utf8ToWide(argsContainer[numArgs], 32, compilerFlags[i]);
 		args[numArgs] = argsContainer[numArgs];
 		numArgs++;
 	}

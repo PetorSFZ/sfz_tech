@@ -99,6 +99,8 @@ struct PendingTextureState final {
 // Helper functions
 // ------------------------------------------------------------------------------------------------
 
+bool utf8ToWide(WCHAR* wideOut, uint32_t numWideChars, const char* utf8In) noexcept;
+
 // Checks result (HRESULT) from D3D call and log if not success, returns result unmodified
 #define CHECK_D3D12(logger) (CheckD3D12Impl((logger), __FILE__, __LINE__)) %
 
