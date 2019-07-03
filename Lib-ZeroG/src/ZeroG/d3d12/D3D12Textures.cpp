@@ -28,7 +28,10 @@ namespace zg {
 
 static DXGI_FORMAT createInfoToDxgiFormat(const ZgTexture2DCreateInfo& info) noexcept
 {
-	if (info.normalized == ZG_TRUE) {
+	if (info.normalized == ZG_FALSE) {
+		// TODO: This currently seems to be broken. Unormalized textures always return 0 when read
+		//       in shader. Should investigate further.
+		ZG_ASSERT(false);
 		switch (info.format) {
 		case ZG_TEXTURE_2D_FORMAT_R_U8: return DXGI_FORMAT_R8_UINT;
 		case ZG_TEXTURE_2D_FORMAT_RG_U8: return DXGI_FORMAT_R8G8_UINT;

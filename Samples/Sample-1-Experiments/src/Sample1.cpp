@@ -323,7 +323,7 @@ static void realMain(SDL_Window* window) noexcept
 	// Create a texture
 	ZgTexture2DCreateInfo textureCreateInfo = {};
 	textureCreateInfo.format = ZG_TEXTURE_2D_FORMAT_RGBA_U8;
-	textureCreateInfo.normalized = ZG_FALSE;
+	textureCreateInfo.normalized = ZG_TRUE;
 	textureCreateInfo.width = 256;
 	textureCreateInfo.height = 256;
 	textureCreateInfo.numMipmaps = 4;
