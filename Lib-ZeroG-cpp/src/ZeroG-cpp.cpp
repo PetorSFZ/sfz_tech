@@ -652,6 +652,18 @@ ErrorCode CommandList::setFramebuffer(
 		this->commandList, framebuffer, optionalViewport, optionalScissor);
 }
 
+ErrorCode CommandList::setFramebufferViewport(
+	const ZgFramebufferRect& viewport) noexcept
+{
+	return (ErrorCode)zgCommandListSetFramebufferViewport(this->commandList, &viewport);
+}
+
+ErrorCode CommandList::setFramebufferScissor(
+	const ZgFramebufferRect& scissor) noexcept
+{
+	return (ErrorCode)zgCommandListSetFramebufferScissor(this->commandList, &scissor);
+}
+
 ErrorCode CommandList::clearFramebuffer(float red, float green, float blue, float alpha) noexcept
 {
 	return (ErrorCode)zgCommandListClearFramebuffer(this->commandList, red, green, blue, alpha);

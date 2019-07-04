@@ -114,6 +114,12 @@ public:
 		const ZgFramebufferRect* optionalViewport,
 		const ZgFramebufferRect* optionalScissor) noexcept = 0;
 
+	virtual ZgErrorCode setFramebufferViewport(
+		const ZgFramebufferRect& viewport) noexcept = 0;
+
+	virtual ZgErrorCode setFramebufferScissor(
+		const ZgFramebufferRect& scissor) noexcept = 0;
+
 	virtual ZgErrorCode clearFramebuffer(
 		float red,
 		float green,

@@ -571,6 +571,14 @@ public:
 		const ZgFramebufferRect* optionalViewport = nullptr,
 		const ZgFramebufferRect* optionalScissor = nullptr) noexcept;
 
+	// See zgCommandListSetFramebufferViewport()
+	ErrorCode setFramebufferViewport(
+		const ZgFramebufferRect& viewport) noexcept;
+
+	// See zgCommandListSetFramebufferScissor()
+	ErrorCode setFramebufferScissor(
+		const ZgFramebufferRect& scissor) noexcept;
+
 	// See zgCommandListClearFramebuffer()
 	ErrorCode clearFramebuffer(float red, float green, float blue, float alpha) noexcept;
 

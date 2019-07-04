@@ -511,6 +511,7 @@ ZgErrorCode D3D12CommandList::setFramebuffer(
 
 	// Otherwise do what user explicitly requested
 	else {
+		// TODO: Possibly off by one (i.e. topLeftX + width - 1)
 		scissorRect.left = optionalScissor->topLeftX;
 		scissorRect.top = optionalScissor->topLeftY;
 		scissorRect.right = optionalScissor->topLeftX + optionalScissor->width;
@@ -523,6 +524,49 @@ ZgErrorCode D3D12CommandList::setFramebuffer(
 	// Set framebuffer
 	commandList->OMSetRenderTargets(
 		1, &framebuffer.rtvDescriptor, FALSE, &framebuffer.dsvDescriptor);
+
+	return ZG_SUCCESS;
+}
+
+ZgErrorCode D3D12CommandList::setFramebufferViewport(
+	const ZgFramebufferRect& viewportRect) noexcept
+{
+	// Return error if no framebuffer is set
+	if (!mFramebufferSet) {
+		ZG_ERROR(mLog, "setFramebufferViewport(): Must set a framebuffer before you can change viewport");
+		return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+	}
+
+	// Set viewport
+	D3D12_VIEWPORT viewport = {};
+	viewport.TopLeftX = float(viewportRect.topLeftX);
+	viewport.TopLeftY = float(viewportRect.topLeftY);
+	viewport.Width = float(viewportRect.width);
+	viewport.Height = float(viewportRect.height);
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	commandList->RSSetViewports(1, &viewport);
+
+	return ZG_SUCCESS;
+}
+
+ZgErrorCode D3D12CommandList::setFramebufferScissor(
+	const ZgFramebufferRect& scissor) noexcept
+{
+	// Return error if no framebuffer is set
+	if (!mFramebufferSet) {
+		ZG_ERROR(mLog, "setFramebufferScissor(): Must set a framebuffer before you can change scissor");
+		return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+	}
+
+	// Set scissor rect
+	// TODO: Possibly off by one (i.e. topLeftX + width - 1)
+	D3D12_RECT scissorRect = {};
+	scissorRect.left = scissor.topLeftX;
+	scissorRect.top = scissor.topLeftY;
+	scissorRect.right = scissor.topLeftX + scissor.width;
+	scissorRect.bottom = scissor.topLeftY + scissor.height;
+	commandList->RSSetScissorRects(1, &scissorRect);
 
 	return ZG_SUCCESS;
 }

@@ -912,6 +912,16 @@ ZG_API ZgErrorCode zgCommandListSetFramebuffer(
 	const ZgFramebufferRect* optionalViewport,
 	const ZgFramebufferRect* optionalScissor);
 
+// Change the viewport for an already set framebuffer
+ZG_API ZgErrorCode zgCommandListSetFramebufferViewport(
+	ZgCommandList* commandList,
+	const ZgFramebufferRect* viewport);
+
+// Change the scissor for an already set framebuffer
+ZG_API ZgErrorCode zgCommandListSetFramebufferScissor(
+	ZgCommandList* commandList,
+	const ZgFramebufferRect* scissor);
+
 ZG_API ZgErrorCode zgCommandListClearFramebuffer(
 	ZgCommandList* commandList,
 	float red,

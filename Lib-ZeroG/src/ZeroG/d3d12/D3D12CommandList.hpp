@@ -89,6 +89,12 @@ public:
 		const ZgFramebufferRect* optionalViewport,
 		const ZgFramebufferRect* optionalScissor) noexcept override final;
 
+	ZgErrorCode setFramebufferViewport(
+		const ZgFramebufferRect& viewport) noexcept override final;
+
+	ZgErrorCode setFramebufferScissor(
+		const ZgFramebufferRect& scissor) noexcept override final;
+
 	ZgErrorCode clearFramebuffer(
 		float red,
 		float green,

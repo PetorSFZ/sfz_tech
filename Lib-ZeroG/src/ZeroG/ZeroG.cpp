@@ -542,6 +542,22 @@ ZG_API ZgErrorCode zgCommandListSetFramebuffer(
 	return commandList->setFramebuffer(framebuffer, optionalViewport, optionalScissor);
 }
 
+ZG_API ZgErrorCode zgCommandListSetFramebufferViewport(
+	ZgCommandList* commandListIn,
+	const ZgFramebufferRect* viewport)
+{
+	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
+	return commandList->setFramebufferViewport(*viewport);
+}
+
+ZG_API ZgErrorCode zgCommandListSetFramebufferScissor(
+	ZgCommandList* commandListIn,
+	const ZgFramebufferRect* scissor)
+{
+	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
+	return commandList->setFramebufferScissor(*scissor);
+}
+
 ZG_API ZgErrorCode zgCommandListClearFramebuffer(
 	ZgCommandList* commandListIn,
 	float red,
