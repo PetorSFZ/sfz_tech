@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -46,7 +46,7 @@ void* operator new[] (std::size_t count)
 }
 
 void* operator new (std::size_t count, std::align_val_t val)
-{ 
+{
 	assert(size_t(val) <= 32);
 	ZgAllocator& allocator = zg::getContext().allocator;
 	return allocator.allocate(allocator.userPtr, uint32_t(count), "operator new");

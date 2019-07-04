@@ -291,7 +291,6 @@ static ZgErrorCode dxcCreateHlslBlobFromSource(
 }
 
 static ZgErrorCode compileHlslShader(
-	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	ZgLogger& logger,
 	ComPtr<IDxcBlob>& blobOut,
@@ -552,9 +551,7 @@ static void logPipelineInfo(
 	const ZgPipelineRenderingCreateInfoCommon& createInfo,
 	const char* vertexShaderName,
 	const char* pixelShaderName,
-	const ZgPipelineRenderingSignature& signature,
-	const ComPtr<ID3D12ShaderReflection>& vertexReflection,
-	const ComPtr<ID3D12ShaderReflection>& pixelReflection) noexcept
+	const ZgPipelineRenderingSignature& signature) noexcept
 {
 	// Allocate temp string to log
 	const uint32_t STRING_MAX_SIZE = 4096;
@@ -622,7 +619,6 @@ static ZgErrorCode createPipelineRenderingInternal(
 	const ComPtr<IDxcBlobEncoding> pixelEncodingBlob,
 	const char* vertexShaderName,
 	const char* pixelShaderName,
-	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	ZgLogger& logger,
 	ZgAllocator& allocator,
@@ -654,7 +650,6 @@ static ZgErrorCode createPipelineRenderingInternal(
 	ComPtr<IDxcBlob> vertexBlob;
 	ComPtr<ID3D12ShaderReflection> vertexReflection;
 	ZgErrorCode vertexShaderRes = compileHlslShader(
-		dxcLibrary,
 		dxcCompiler,
 		logger,
 		vertexBlob,
@@ -670,7 +665,6 @@ static ZgErrorCode createPipelineRenderingInternal(
 	ComPtr<IDxcBlob> pixelBlob;
 	ComPtr<ID3D12ShaderReflection> pixelReflection;
 	ZgErrorCode pixelShaderRes = compileHlslShader(
-		dxcLibrary,
 		dxcCompiler,
 		logger,
 		pixelBlob,
@@ -1332,9 +1326,7 @@ static ZgErrorCode createPipelineRenderingInternal(
 		createInfo,
 		vertexShaderName,
 		pixelShaderName,
-		*signatureOut,
-		vertexReflection,
-		pixelReflection);
+		*signatureOut);
 
 	// Allocate pipeline
 	D3D12PipelineRendering* pipeline =
@@ -1439,7 +1431,7 @@ ZgErrorCode createPipelineRenderingFileSPIRV(
 		pixelEncodingBlob,
 		"<From source, no vertex name>",
 		"<From source, no pixel name>",
-		dxcLibrary, dxcCompiler,
+		dxcCompiler,
 		logger,
 		allocator,
 		device);
@@ -1484,7 +1476,7 @@ ZgErrorCode createPipelineRenderingFileHLSL(
 		pixelEncodingBlob,
 		createInfo.vertexShaderPath,
 		createInfo.pixelShaderPath,
-		dxcLibrary, dxcCompiler,
+		dxcCompiler,
 		logger,
 		allocator,
 		device);
@@ -1522,7 +1514,7 @@ ZgErrorCode createPipelineRenderingSourceHLSL(
 		pixelEncodingBlob,
 		"<From source, no vertex name>",
 		"<From source, no pixel name>",
-		dxcLibrary, dxcCompiler,
+		dxcCompiler,
 		logger,
 		allocator,
 		device);

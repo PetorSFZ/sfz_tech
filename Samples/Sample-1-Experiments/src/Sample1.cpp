@@ -199,7 +199,7 @@ static size_t readBinaryFile(const char* path, uint8_t* dataOut, size_t maxNumBy
 		if ((currOffs + readSize) > maxNumBytes) {
 			std::fclose(file);
 			std::memcpy(dataOut + currOffs, buffer, maxNumBytes - currOffs);
-			return -2;
+			return 0;
 		}
 
 		std::memcpy(dataOut + currOffs, buffer, readSize);
@@ -296,14 +296,14 @@ static void realMain(SDL_Window* window) noexcept
 	zg::MemoryHeap cubeVertexMemoryHeapDevice;
 	createDeviceBufferSimpleBlocking(commandQueue, cubeVertexBufferDevice,
 		cubeVertexMemoryHeapDevice, cubeVertices, sizeof(Vertex) * CUBE_NUM_VERTICES);
-	cubeVertexBufferDevice.setDebugName("cubeVertexBuffer");
+	CHECK_ZG cubeVertexBufferDevice.setDebugName("cubeVertexBuffer");
 
 	// Create a index buffer for the cube's vertices
 	zg::Buffer cubeIndexBufferDevice;
 	zg::MemoryHeap cubeIndexMemoryHeapDevice;
 	createDeviceBufferSimpleBlocking(commandQueue, cubeIndexBufferDevice,
 		cubeIndexMemoryHeapDevice, CUBE_INDICES, sizeof(uint32_t) * CUBE_NUM_INDICES);
-	cubeIndexBufferDevice.setDebugName("cubeIndexBuffer");
+	CHECK_ZG cubeIndexBufferDevice.setDebugName("cubeIndexBuffer");
 
 	
 	// Create a constant buffer
@@ -313,7 +313,7 @@ static void realMain(SDL_Window* window) noexcept
 	zg::MemoryHeap constBufferMemoryHeapDevice;
 	createDeviceBufferSimpleBlocking(commandQueue, constBufferDevice,
 		constBufferMemoryHeapDevice, &offsets, sizeof(Vector), 256);
-	constBufferDevice.setDebugName("constBufferDevice");
+	CHECK_ZG constBufferDevice.setDebugName("constBufferDevice");
 
 
 	// Create texture heap
@@ -336,7 +336,7 @@ static void realMain(SDL_Window* window) noexcept
 
 	zg::Texture2D texture;
 	CHECK_ZG textureHeap.texture2DCreate(texture, textureCreateInfo);
-	texture.setDebugName("cubeTexture");
+	CHECK_ZG texture.setDebugName("cubeTexture");
 	
 	
 	// Fill texture with some random data
