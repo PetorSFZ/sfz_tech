@@ -480,6 +480,55 @@ ErrorCode Texture2D::setDebugName(const char* name) noexcept
 }
 
 
+// Fence: State methods
+// ------------------------------------------------------------------------------------------------
+
+ErrorCode Fence::create() noexcept
+{
+	this->release();
+	return (ErrorCode)zgFenceCreate(&this->fence);
+}
+
+void Fence::swap(Fence& other) noexcept
+{
+	std::swap(this->fence, other.fence);
+}
+
+void Fence::release() noexcept
+{
+	if (this->fence != nullptr) zgFenceRelease(this->fence);
+	this->fence = nullptr;
+}
+
+// Fence: Fence methods
+// ------------------------------------------------------------------------------------------------
+
+ErrorCode Fence::reset() noexcept
+{
+	return (ErrorCode)zgFenceReset(this->fence);
+}
+
+ErrorCode Fence::checkIfSignaled(bool& fenceSignaledOut) const noexcept
+{
+	ZgBool signaled = ZG_FALSE;
+	ErrorCode res = (ErrorCode)zgFenceCheckIfSignaled(this->fence, &signaled);
+	fenceSignaledOut = signaled == ZG_FALSE ? false : true;
+	return res;
+}
+
+bool Fence::checkIfSignaled() const noexcept
+{
+	bool signaled = false;
+	[[maybe_unused]] ErrorCode res = this->checkIfSignaled(signaled);
+	return signaled;
+}
+
+ErrorCode Fence::waitOnCpuBlocking() const noexcept
+{
+	return (ErrorCode)zgFenceWaitOnCpuBlocking(this->fence);
+}
+
+
 // CommandQueue: State methods
 // ------------------------------------------------------------------------------------------------
 
@@ -495,6 +544,16 @@ void CommandQueue::release() noexcept
 
 // CommandQueue: CommandQueue methods
 // ------------------------------------------------------------------------------------------------
+
+ErrorCode CommandQueue::signalOnGpu(Fence& fenceToSignal) noexcept
+{
+	return (ErrorCode)zgCommandQueueSignalOnGpu(this->commandQueue, fenceToSignal.fence);
+}
+
+ErrorCode CommandQueue::waitOnGpu(const Fence& fence) noexcept
+{
+	return (ErrorCode)zgCommandQueueWaitOnGpu(this->commandQueue, fence.fence);
+}
 
 ErrorCode CommandQueue::flush() noexcept
 {

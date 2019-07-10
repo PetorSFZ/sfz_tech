@@ -33,6 +33,7 @@ class MemoryHeap;
 class Buffer;
 class TextureHeap;
 class Texture2D;
+class Fence;
 class CommandQueue;
 class CommandList;
 
@@ -416,6 +417,54 @@ public:
 };
 
 
+// Fence
+// ------------------------------------------------------------------------------------------------
+
+class Fence final {
+public:
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	ZgFence* fence = nullptr;
+
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	Fence() noexcept = default;
+	Fence(const Fence&) = delete;
+	Fence& operator= (const Fence&) = delete;
+	Fence(Fence&& other) noexcept { this->swap(other); }
+	Fence& operator= (Fence&& other) noexcept { this->swap(other); }
+	~Fence() noexcept { this->release(); }
+
+	// State methods
+	// --------------------------------------------------------------------------------------------
+
+	bool valid() const noexcept { return this->fence != nullptr; }
+
+	// See zgFenceCreate()
+	ErrorCode create() noexcept;
+
+	void swap(Fence& other) noexcept;
+
+	// See zgFenceRelease()
+	void release() noexcept;
+
+	// Fence methods
+	// --------------------------------------------------------------------------------------------
+
+	// See zgFenceReset()
+	ErrorCode reset() noexcept;
+
+	// See zgFenceCheckIfSignaled()
+	ErrorCode checkIfSignaled(bool& fenceSignaledOut) const noexcept;
+	bool checkIfSignaled() const noexcept;
+
+	// See zgFenceWaitOnCpuBlocking()
+	ErrorCode waitOnCpuBlocking() const noexcept;
+};
+
+
 // CommandQueue
 // ------------------------------------------------------------------------------------------------
 
@@ -448,6 +497,12 @@ public:
 
 	// CommandQueue methods
 	// --------------------------------------------------------------------------------------------
+
+	// See zgCommandQueueSignalOnGpu()
+	ErrorCode signalOnGpu(Fence& fenceToSignal) noexcept;
+
+	// See zgCommandQueueWaitOnGpu()
+	ErrorCode waitOnGpu(const Fence& fence) noexcept;
 
 	// See zgCommandQueueFlush()
 	ErrorCode flush() noexcept;

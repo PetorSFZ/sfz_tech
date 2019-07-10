@@ -458,7 +458,7 @@ public:
 		mCommandQueueGraphicsPresent.executeCommandList(barrierCommandList);
 
 		// Signal the graphics present queue
-		mSwapChainFenceValues[mCurrentBackBufferIdx] = mCommandQueueGraphicsPresent.signalOnGpu();
+		mSwapChainFenceValues[mCurrentBackBufferIdx] = mCommandQueueGraphicsPresent.signalOnGpuInternal();
 
 		// Present back buffer
 		UINT vsync = 0; // TODO (MUST be 0 if DXGI_PRESENT_ALLOW_TEARING)
@@ -469,8 +469,15 @@ public:
 
 		// Wait for the next back buffer to finish rendering so it's safe to use
 		uint64_t nextBackBufferFenceValue = mSwapChainFenceValues[mCurrentBackBufferIdx];
-		mCommandQueueGraphicsPresent.waitOnCpu(nextBackBufferFenceValue);
+		mCommandQueueGraphicsPresent.waitOnCpuInternal(nextBackBufferFenceValue);
 
+		return ZG_SUCCESS;
+	}
+
+	ZgErrorCode fenceCreate(zg::IFence** fenceOut) noexcept override final
+	{
+		D3D12Fence* fence = zgNew<D3D12Fence>(mAllocator, "ZeroG - D3D12Fence");
+		*fenceOut = fence;
 		return ZG_SUCCESS;
 	}
 

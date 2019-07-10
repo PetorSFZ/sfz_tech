@@ -432,8 +432,70 @@ ZG_API ZgErrorCode zgTexture2DSetDebugName(
 	return texture->setDebugName(name);
 }
 
+// Fence
+// ------------------------------------------------------------------------------------------------
+
+ZG_API ZgErrorCode zgFenceCreate(
+	ZgFence** fenceOut)
+{
+	zg::IFence* fence = nullptr;
+	ZgErrorCode res = zg::getApiContext()->fenceCreate(&fence);
+	if (res != ZG_SUCCESS) return res;
+	*fenceOut = reinterpret_cast<ZgFence*>(fence);
+	return ZG_SUCCESS;
+}
+
+ZG_API void zgFenceRelease(
+	ZgFence* fenceIn)
+{
+	if (fenceIn == nullptr) return;
+	zg::IFence* fence = reinterpret_cast<zg::IFence*>(fenceIn);
+	zg::zgDelete<zg::IFence>(zg::getContext().allocator, fence);
+}
+
+ZG_API ZgErrorCode zgFenceReset(
+	ZgFence* fenceIn)
+{
+	return reinterpret_cast<zg::IFence*>(fenceIn)->reset();
+}
+
+ZG_API ZgErrorCode zgFenceCheckIfSignaled(
+	const ZgFence* fenceIn,
+	ZgBool* fenceSignaledOut)
+{
+	bool fenceSignaled = false;
+	ZgErrorCode res = 
+		reinterpret_cast<const zg::IFence*>(fenceIn)->checkIfSignaled(fenceSignaled);
+	*fenceSignaledOut = fenceSignaled ? ZG_TRUE : ZG_FALSE;
+	return res;
+}
+
+ZG_API ZgErrorCode zgFenceWaitOnCpuBlocking(
+	const ZgFence* fenceIn)
+{
+	return reinterpret_cast<const zg::IFence*>(fenceIn)->waitOnCpuBlocking();
+}
+
 // Command queue
 // ------------------------------------------------------------------------------------------------
+
+ZG_API ZgErrorCode zgCommandQueueSignalOnGpu(
+	ZgCommandQueue* commandQueueIn,
+	ZgFence* fenceToSignalIn)
+{
+	zg::ICommandQueue* commandQueue = reinterpret_cast<zg::ICommandQueue*>(commandQueueIn);
+	zg::IFence* fenceToSignal = reinterpret_cast<zg::IFence*>(fenceToSignalIn);
+	return commandQueue->signalOnGpu(*fenceToSignal);
+}
+
+ZG_API ZgErrorCode zgCommandQueueWaitOnGpu(
+	ZgCommandQueue* commandQueueIn,
+	const ZgFence* fenceIn)
+{
+	zg::ICommandQueue* commandQueue = reinterpret_cast<zg::ICommandQueue*>(commandQueueIn);
+	const zg::IFence* fence = reinterpret_cast<const zg::IFence*>(fenceIn);
+	return commandQueue->waitOnGpu(*fence);
+}
 
 ZG_API ZgErrorCode zgCommandQueueFlush(
 	ZgCommandQueue* commandQueueIn)

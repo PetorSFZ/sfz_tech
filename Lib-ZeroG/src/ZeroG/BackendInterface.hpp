@@ -146,6 +146,18 @@ public:
 		uint32_t numTriangles) noexcept = 0;
 };
 
+// Fence
+// ------------------------------------------------------------------------------------------------
+
+class IFence {
+public:
+	virtual ~IFence() noexcept {}
+
+	virtual ZgErrorCode reset() noexcept = 0;
+	virtual ZgErrorCode checkIfSignaled(bool& fenceSignaledOut) const noexcept = 0;
+	virtual ZgErrorCode waitOnCpuBlocking() const noexcept = 0;
+};
+
 // Command queue
 // ------------------------------------------------------------------------------------------------
 
@@ -153,6 +165,8 @@ class ICommandQueue {
 public:
 	virtual ~ICommandQueue() noexcept {}
 
+	virtual ZgErrorCode signalOnGpu(IFence& fenceToSignal) noexcept = 0;
+	virtual ZgErrorCode waitOnGpu(const IFence& fence) noexcept = 0;
 	virtual ZgErrorCode flush() noexcept = 0;
 	virtual ZgErrorCode beginCommandListRecording(ICommandList** commandListOut) noexcept = 0;
 	virtual ZgErrorCode executeCommandList(ICommandList* commandList) noexcept = 0;
@@ -179,6 +193,8 @@ public:
 		zg::IFramebuffer** framebufferOut) noexcept = 0;
 
 	virtual ZgErrorCode swapchainFinishFrame() noexcept = 0;
+
+	virtual ZgErrorCode fenceCreate(zg::IFence** fenceOut) noexcept = 0;
 
 	// Pipeline methods
 	// --------------------------------------------------------------------------------------------

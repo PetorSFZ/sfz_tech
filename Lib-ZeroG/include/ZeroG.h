@@ -79,11 +79,14 @@ ZG_HANDLE(ZgTexture2D);
 // A handle representing a framebuffer
 ZG_HANDLE(ZgFramebuffer);
 
-// A handle representing a command list
-ZG_HANDLE(ZgCommandList);
+// A handle representing a fence for synchronizing command queues
+ZG_HANDLE(ZgFence);
 
 // A handle representing a command queue
 ZG_HANDLE(ZgCommandQueue);
+
+// A handle representing a command list
+ZG_HANDLE(ZgCommandList);
 
 // Bool
 // ------------------------------------------------------------------------------------------------
@@ -820,8 +823,46 @@ ZG_API ZgErrorCode zgTexture2DSetDebugName(
 	ZgTexture2D* texture,
 	const char* name);
 
+// Fence
+// ------------------------------------------------------------------------------------------------
+
+ZG_API ZgErrorCode zgFenceCreate(
+	ZgFence** fenceOut);
+
+ZG_API void zgFenceRelease(
+	ZgFence* fence);
+
+// Resets a ZgFence to its initial state.
+//
+// Completely optional to call, zgCommandQueueSignalOnGpu() will performing an implicit reset by
+// modifying the fence anyway. But can be useful for debugging.
+ZG_API ZgErrorCode zgFenceReset(
+	ZgFence* fence);
+
+ZG_API ZgErrorCode zgFenceCheckIfSignaled(
+	const ZgFence* fence,
+	ZgBool* fenceSignaledOut);
+
+ZG_API ZgErrorCode zgFenceWaitOnCpuBlocking(
+	const ZgFence* fence);
+
 // Command queue
 // ------------------------------------------------------------------------------------------------
+
+// Enqueues the command queue to signal the ZgFence (from the GPU).
+//
+// Note: This operation will reset the ZgFence, it is important that nothing is waiting (either
+//       the CPU using zgFenceWaitOnCpuBlocking() or the GPU using zgCommandQueueWaitOnGpu()) on
+//       this fence. Doing so is undefined behavior. Best case is that someone waits longer than
+//       they have to, worst case is hard-lock. In other words, you will likely need more than one
+//       fence (think double or triple-buffering) unless you are explicitly flushing each frame.
+ZG_API ZgErrorCode zgCommandQueueSignalOnGpu(
+	ZgCommandQueue* commandQueue,
+	ZgFence* fenceToSignal);
+
+ZG_API ZgErrorCode zgCommandQueueWaitOnGpu(
+	ZgCommandQueue* commandQueue,
+	const ZgFence* fence);
 
 ZG_API ZgErrorCode zgCommandQueueFlush(
 	ZgCommandQueue* commandQueue);

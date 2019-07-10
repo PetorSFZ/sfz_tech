@@ -31,6 +31,37 @@
 
 namespace zg {
 
+// D3D12Fence
+// ------------------------------------------------------------------------------------------------
+
+class D3D12CommandQueue;
+
+class D3D12Fence final : public IFence {
+public:
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	D3D12Fence() noexcept = default;
+	D3D12Fence(const D3D12Fence&) = delete;
+	D3D12Fence& operator= (const D3D12Fence&) = delete;
+	D3D12Fence(D3D12Fence&&) = delete;
+	D3D12Fence& operator= (D3D12Fence&&) = delete;
+	~D3D12Fence() noexcept;
+
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	uint64_t fenceValue = 0;
+	D3D12CommandQueue* commandQueue = nullptr;
+
+	// Virtual methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgErrorCode reset() noexcept override final;
+	ZgErrorCode checkIfSignaled(bool& fenceSignaledOut) const noexcept override final;
+	ZgErrorCode waitOnCpuBlocking() const noexcept override final;
+};
+
 // D3D12CommandQueue
 // ------------------------------------------------------------------------------------------------
 
@@ -62,6 +93,8 @@ public:
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
 
+	ZgErrorCode signalOnGpu(IFence& fenceToSignal) noexcept override final;
+	ZgErrorCode waitOnGpu(const IFence& fence) noexcept override final;
 	ZgErrorCode flush() noexcept override final;
 	ZgErrorCode beginCommandListRecording(ICommandList** commandListOut) noexcept override final;
 	ZgErrorCode executeCommandList(ICommandList* commandList) noexcept override final;
@@ -69,8 +102,8 @@ public:
 	// Synchronization methods
 	// --------------------------------------------------------------------------------------------
 
-	uint64_t signalOnGpu() noexcept;
-	void waitOnCpu(uint64_t fenceValue) noexcept;
+	uint64_t signalOnGpuInternal() noexcept;
+	void waitOnCpuInternal(uint64_t fenceValue) noexcept;
 	bool isFenceValueDone(uint64_t fenceValue) noexcept;
 
 	// Getters

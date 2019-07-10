@@ -22,6 +22,39 @@
 
 namespace zg {
 
+// D3D12Fence: Constructors & destructors
+// ------------------------------------------------------------------------------------------------
+
+D3D12Fence::~D3D12Fence() noexcept
+{
+
+}
+
+// D3D12Fence: Virtual methods
+// ------------------------------------------------------------------------------------------------
+
+ZgErrorCode D3D12Fence::reset() noexcept
+{
+	this->fenceValue = 0;
+	this->commandQueue = nullptr;
+	return ZG_SUCCESS;
+}
+
+ZgErrorCode D3D12Fence::checkIfSignaled(bool& fenceSignaledOut) const noexcept
+{
+	if (this->commandQueue == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	fenceSignaledOut = this->commandQueue->isFenceValueDone(this->fenceValue);
+	return ZG_SUCCESS;
+}
+
+ZgErrorCode D3D12Fence::waitOnCpuBlocking() const noexcept
+{
+	if (this->commandQueue == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	this->commandQueue->waitOnCpuInternal(this->fenceValue);
+	return ZG_SUCCESS;
+}
+
+
 // D3D12CommandQueue: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
@@ -88,10 +121,27 @@ ZgErrorCode D3D12CommandQueue::create(
 // D3D12CommandQueue: Virtual methods
 // ------------------------------------------------------------------------------------------------
 
+ZgErrorCode D3D12CommandQueue::signalOnGpu(IFence& fenceToSignalIn) noexcept
+{
+	D3D12Fence& fenceToSignal = *static_cast<D3D12Fence*>(&fenceToSignalIn);
+	fenceToSignal.commandQueue = this;
+	fenceToSignal.fenceValue = signalOnGpuUnmutexed();
+	return ZG_SUCCESS;
+}
+
+ZgErrorCode D3D12CommandQueue::waitOnGpu(const IFence& fenceIn) noexcept
+{
+	const D3D12Fence& fence = *static_cast<const D3D12Fence*>(&fenceIn);
+	if (fence.commandQueue == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	CHECK_D3D12(mLog) this->mCommandQueue->Wait(
+		fence.commandQueue->mCommandQueueFence.Get(), fence.fenceValue);
+	return ZG_SUCCESS;
+}
+
 ZgErrorCode D3D12CommandQueue::flush() noexcept
 {
-	uint64_t fenceValue = this->signalOnGpu();
-	this->waitOnCpu(fenceValue);
+	uint64_t fenceValue = this->signalOnGpuInternal();
+	this->waitOnCpuInternal(fenceValue);
 	return ZG_SUCCESS;
 }
 
@@ -110,13 +160,13 @@ ZgErrorCode D3D12CommandQueue::executeCommandList(ICommandList* commandListIn) n
 // D3D12CommandQueue: Synchronization methods
 // ------------------------------------------------------------------------------------------------
 
-uint64_t D3D12CommandQueue::signalOnGpu() noexcept
+uint64_t D3D12CommandQueue::signalOnGpuInternal() noexcept
 {
 	std::lock_guard<std::mutex> lock(mQueueMutex);
 	return signalOnGpuUnmutexed();
 }
 
-void D3D12CommandQueue::waitOnCpu(uint64_t fenceValue) noexcept
+void D3D12CommandQueue::waitOnCpuInternal(uint64_t fenceValue) noexcept
 {
 	// TODO: Kind of bad to only have one event, must have mutex here because of that.
 	std::lock_guard<std::mutex> lock(mQueueMutex);
