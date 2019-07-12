@@ -82,6 +82,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	ZgErrorCode create(
+		D3D12_COMMAND_LIST_TYPE type,
 		ComPtr<ID3D12Device3>& device,
 		D3DX12Residency::ResidencyManager* residencyManager,
 		D3D12DescriptorRingBuffer* descriptorBuffer,
@@ -109,6 +110,7 @@ public:
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
+	D3D12_COMMAND_LIST_TYPE type() const noexcept { return mType; }
 	ID3D12CommandQueue* commandQueue() noexcept { return mCommandQueue.Get(); }
 
 private:
@@ -132,6 +134,7 @@ private:
 	ZgAllocator mAllocator = {};
 
 	std::mutex mQueueMutex;
+	D3D12_COMMAND_LIST_TYPE mType;
 	ComPtr<ID3D12Device3> mDevice;
 	D3DX12Residency::ResidencyManager* mResidencyManager = nullptr;
 	D3D12DescriptorRingBuffer* mDescriptorBuffer = nullptr;

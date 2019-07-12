@@ -119,6 +119,9 @@ public:
 	// See zgContextSwapchainFinishFrame()
 	ErrorCode swapchainFinishFrame() noexcept;
 
+	// See zgContextCopyQueue()
+	ErrorCode copyQueue(CommandQueue& copyQueueOut) noexcept;
+
 	// Private members
 	// --------------------------------------------------------------------------------------------
 private:
@@ -597,9 +600,9 @@ public:
 
 	// See zgCommandListMemcpyBufferToBuffer()
 	ErrorCode memcpyBufferToBuffer(
-		zg::Buffer& dstBuffer,
+		Buffer& dstBuffer,
 		uint64_t dstBufferOffsetBytes,
-		zg::Buffer& srcBuffer,
+		Buffer& srcBuffer,
 		uint64_t srcBufferOffsetBytes,
 		uint64_t numBytes) noexcept;
 
@@ -609,6 +612,12 @@ public:
 		uint32_t dstTextureMipLevel,
 		const ZgImageViewConstCpu& srcImageCpu,
 		Buffer& tempUploadBuffer) noexcept;
+
+	// See zgCommandListEnableQueueTransitionBuffer()
+	ErrorCode enableQueueTransition(Buffer& buffer) noexcept;
+
+	// See zgCommandListEnableQueueTransitionTexture()
+	ErrorCode enableQueueTransition(Texture2D& texture) noexcept;
 
 	// See zgCommandListSetPushConstant()
 	ErrorCode setPushConstant(

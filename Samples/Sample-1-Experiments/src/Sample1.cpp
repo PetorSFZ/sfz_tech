@@ -69,7 +69,7 @@ static void allocateMemoryHeapAndBuffer(
 // A simple helper function that allocates and copies data to a device buffer In practice you will
 // likely want to do something smarter.
 static void createDeviceBufferSimpleBlocking(
-	zg::CommandQueue& queue,
+	zg::CommandQueue& copyQueue,
 	zg::Buffer& bufferOut,
 	zg::MemoryHeap& memoryHeapOut,
 	const void* data,
@@ -93,10 +93,11 @@ static void createDeviceBufferSimpleBlocking(
 
 	// Copy to the device buffer
 	zg::CommandList commandList;
-	CHECK_ZG queue.beginCommandListRecording(commandList);
+	CHECK_ZG copyQueue.beginCommandListRecording(commandList);
 	CHECK_ZG commandList.memcpyBufferToBuffer(deviceBuffer, 0, uploadBuffer, 0, numBytes);
-	CHECK_ZG queue.executeCommandList(commandList);
-	CHECK_ZG queue.flush();
+	CHECK_ZG commandList.enableQueueTransition(deviceBuffer);
+	CHECK_ZG copyQueue.executeCommandList(commandList);
+	CHECK_ZG copyQueue.flush();
 
 	bufferOut = std::move(deviceBuffer);
 	memoryHeapOut = std::move(deviceHeap);
@@ -231,11 +232,11 @@ static void realMain(SDL_Window* window) noexcept
 	zg::Context zgCtx;
 	CHECK_ZG zgCtx.init(initSettings);
 
-
-	// Get the command queue
+	// Get the command queues
 	zg::CommandQueue commandQueue;
 	CHECK_ZG zgCtx.swapchainCommandQueue(commandQueue);
-
+	zg::CommandQueue copyQueue;
+	CHECK_ZG zgCtx.copyQueue(copyQueue);
 
 	// Create a rendering pipeline
 	zg::PipelineRendering pipeline;
@@ -277,7 +278,6 @@ static void realMain(SDL_Window* window) noexcept
 	}
 	if (!pipeline.valid()) return;
 
-
 	// Create a vertex buffer containing a Cube
 	Vertex cubeVertices[CUBE_NUM_VERTICES] = {};
 	for (uint32_t i = 0; i < CUBE_NUM_VERTICES; i++) {
@@ -294,14 +294,14 @@ static void realMain(SDL_Window* window) noexcept
 
 	zg::Buffer cubeVertexBufferDevice;
 	zg::MemoryHeap cubeVertexMemoryHeapDevice;
-	createDeviceBufferSimpleBlocking(commandQueue, cubeVertexBufferDevice,
+	createDeviceBufferSimpleBlocking(copyQueue, cubeVertexBufferDevice,
 		cubeVertexMemoryHeapDevice, cubeVertices, sizeof(Vertex) * CUBE_NUM_VERTICES);
 	CHECK_ZG cubeVertexBufferDevice.setDebugName("cubeVertexBuffer");
 
 	// Create a index buffer for the cube's vertices
 	zg::Buffer cubeIndexBufferDevice;
 	zg::MemoryHeap cubeIndexMemoryHeapDevice;
-	createDeviceBufferSimpleBlocking(commandQueue, cubeIndexBufferDevice,
+	createDeviceBufferSimpleBlocking(copyQueue, cubeIndexBufferDevice,
 		cubeIndexMemoryHeapDevice, CUBE_INDICES, sizeof(uint32_t) * CUBE_NUM_INDICES);
 	CHECK_ZG cubeIndexBufferDevice.setDebugName("cubeIndexBuffer");
 
@@ -311,7 +311,7 @@ static void realMain(SDL_Window* window) noexcept
 	offsets.x = 0.0f;
 	zg::Buffer constBufferDevice;
 	zg::MemoryHeap constBufferMemoryHeapDevice;
-	createDeviceBufferSimpleBlocking(commandQueue, constBufferDevice,
+	createDeviceBufferSimpleBlocking(copyQueue, constBufferDevice,
 		constBufferMemoryHeapDevice, &offsets, sizeof(Vector), 256);
 	CHECK_ZG constBufferDevice.setDebugName("constBufferDevice");
 
@@ -374,13 +374,14 @@ static void realMain(SDL_Window* window) noexcept
 
 		// Copy to the texture
 		zg::CommandList commandList;
-		CHECK_ZG commandQueue.beginCommandListRecording(commandList);
+		CHECK_ZG copyQueue.beginCommandListRecording(commandList);
 		CHECK_ZG commandList.memcpyToTexture(texture, 0, imageLvl0, uploadBufferLvl0);
 		CHECK_ZG commandList.memcpyToTexture(texture, 1, imageLvl1, uploadBufferLvl1);
 		CHECK_ZG commandList.memcpyToTexture(texture, 2, imageLvl2, uploadBufferLvl2);
 		CHECK_ZG commandList.memcpyToTexture(texture, 3, imageLvl3, uploadBufferLvl3);
-		CHECK_ZG commandQueue.executeCommandList(commandList);
-		CHECK_ZG commandQueue.flush();
+		CHECK_ZG commandList.enableQueueTransition(texture);
+		CHECK_ZG copyQueue.executeCommandList(commandList);
+		CHECK_ZG copyQueue.flush();
 
 		// Free images
 		delete[] imageLvl0.data;
@@ -389,8 +390,6 @@ static void realMain(SDL_Window* window) noexcept
 		delete[] imageLvl3.data;
 	}
 	
-
-
 	// Run our main loop
 	time_point previousTimePoint;
 	calculateDelta(previousTimePoint);

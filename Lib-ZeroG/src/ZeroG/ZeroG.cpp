@@ -187,6 +187,16 @@ ZG_API ZgErrorCode zgContextSwapchainFinishFrame(void)
 	return zg::getApiContext()->swapchainFinishFrame();
 }
 
+ZG_API ZgErrorCode zgContextCopyQueue(
+	ZgCommandQueue** copyQueueOut)
+{
+	zg::ICommandQueue* copyQueue = nullptr;
+	ZgErrorCode res = zg::getApiContext()->copyQueue(&copyQueue);
+	if (res != ZG_SUCCESS) return res;
+	*copyQueueOut = reinterpret_cast<ZgCommandQueue*>(copyQueue);
+	return ZG_SUCCESS;
+}
+
 // Pipeline Rendering - Common
 // ------------------------------------------------------------------------------------------------
 
@@ -564,6 +574,22 @@ ZG_API ZgErrorCode zgCommandListMemcpyToTexture(
 		dstTextureMipLevel,
 		*srcImageCpu,
 		reinterpret_cast<zg::IBuffer*>(tempUploadBuffer));
+}
+
+ZG_API ZgErrorCode zgCommandListEnableQueueTransitionBuffer(
+	ZgCommandList* commandListIn,
+	ZgBuffer* buffer)
+{
+	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
+	return commandList->enableQueueTransitionBuffer(reinterpret_cast<zg::IBuffer*>(buffer));
+}
+
+ZG_API ZgErrorCode zgCommandListEnableQueueTransitionTexture(
+	ZgCommandList* commandListIn,
+	ZgTexture2D* texture)
+{
+	zg::ICommandList* commandList = reinterpret_cast<zg::ICommandList*>(commandListIn);
+	return commandList->enableQueueTransitionTexture(reinterpret_cast<zg::ITexture2D*>(texture));
 }
 
 ZG_API ZgErrorCode zgCommandListSetPushConstant(

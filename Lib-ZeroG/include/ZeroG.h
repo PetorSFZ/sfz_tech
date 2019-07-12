@@ -285,6 +285,9 @@ ZG_API ZgErrorCode zgContextSwapchainBeginFrame(
 
 ZG_API ZgErrorCode zgContextSwapchainFinishFrame(void);
 
+ZG_API ZgErrorCode zgContextCopyQueue(
+	ZgCommandQueue** copyQueueOut);
+
 // Pipeline Rendering - Signature
 // ------------------------------------------------------------------------------------------------
 
@@ -908,6 +911,25 @@ ZG_API ZgErrorCode zgCommandListMemcpyToTexture(
 	uint32_t dstTextureMipLevel,
 	const ZgImageViewConstCpu* srcImageCpu,
 	ZgBuffer* tempUploadBuffer);
+
+// Transitions the specified buffer from copy queue -> other queues and vice versa.
+//
+// In order to switch a resource from usage on a e.g. copy queue to a graphics queue or vice versa
+// it must first be transitioned into a common state (D3D12_RESOURCE_STATE_COMMON). This can,
+// however, not always be done on the new queue. I.e. a copy queue can not transition most states
+// into the common state.
+//
+// Therefore, this command need to be manually called in the old command queue after it has stopped
+// using a resource. The new command queue then need to wait until it has actually been applied
+// (i.e. insert a ZgFence and wait for it). Then the new command queue can start using the resource.
+ZG_API ZgErrorCode zgCommandListEnableQueueTransitionBuffer(
+	ZgCommandList* commandList,
+	ZgBuffer* buffer);
+
+// See zgCommandListEnableQueueTransitionBuffer()
+ZG_API ZgErrorCode zgCommandListEnableQueueTransitionTexture(
+	ZgCommandList* commandList,
+	ZgTexture2D* texture);
 
 ZG_API ZgErrorCode zgCommandListSetPushConstant(
 	ZgCommandList* commandList,

@@ -98,6 +98,10 @@ public:
 		const ZgImageViewConstCpu& srcImageCpu,
 		IBuffer* tempUploadBuffer) noexcept = 0;
 
+	virtual ZgErrorCode enableQueueTransitionBuffer(IBuffer* buffer) noexcept = 0;
+
+	virtual ZgErrorCode enableQueueTransitionTexture(ITexture2D* texture) noexcept = 0;
+
 	virtual ZgErrorCode setPushConstant(
 		uint32_t shaderRegister,
 		const void* data,
@@ -193,6 +197,8 @@ public:
 		zg::IFramebuffer** framebufferOut) noexcept = 0;
 
 	virtual ZgErrorCode swapchainFinishFrame() noexcept = 0;
+
+	virtual ZgErrorCode copyQueue(zg::ICommandQueue** commandQueueOut) noexcept = 0;
 
 	virtual ZgErrorCode fenceCreate(zg::IFence** fenceOut) noexcept = 0;
 

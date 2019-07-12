@@ -192,17 +192,33 @@ public:
 		}
 
 		// Create command queue
-		const uint32_t MAX_NUM_COMMAND_LISTS = 256;
-		const uint32_t MAX_NUM_BUFFERS_PER_COMMAND_LIST = 256;
+		const uint32_t MAX_NUM_COMMAND_LISTS_SWAPCHAIN_QUEUE = 256;
+		const uint32_t MAX_NUM_BUFFERS_PER_COMMAND_LIST_SWAPCHAIN_QUEUE = 256;
 		ZgErrorCode res = mCommandQueueGraphicsPresent.create(
+			D3D12_COMMAND_LIST_TYPE_DIRECT,
 			mDevice,
 			&mResidencyManager,
 			&mGlobalDescriptorRingBuffer,
-			MAX_NUM_COMMAND_LISTS,
-			MAX_NUM_BUFFERS_PER_COMMAND_LIST,
+			MAX_NUM_COMMAND_LISTS_SWAPCHAIN_QUEUE,
+			MAX_NUM_BUFFERS_PER_COMMAND_LIST_SWAPCHAIN_QUEUE,
 			mLog,
 			mAllocator);
 		if (res != ZG_SUCCESS) return res;
+
+		// Create copy queue
+		const uint32_t MAX_NUM_COMMAND_LISTS_COPY_QUEUE = 256;
+		const uint32_t MAX_NUM_BUFFERS_PER_COMMAND_LIST_COPY_QUEUE = 256;
+		res = mCommandQueueCopy.create(
+			D3D12_COMMAND_LIST_TYPE_COPY,
+			mDevice,
+			&mResidencyManager,
+			&mGlobalDescriptorRingBuffer,
+			MAX_NUM_COMMAND_LISTS_COPY_QUEUE,
+			MAX_NUM_BUFFERS_PER_COMMAND_LIST_COPY_QUEUE,
+			mLog,
+			mAllocator);
+		if (res != ZG_SUCCESS) return res;
+		
 
 		// Check if screen-tearing is allowed
 		{
@@ -471,6 +487,12 @@ public:
 		uint64_t nextBackBufferFenceValue = mSwapChainFenceValues[mCurrentBackBufferIdx];
 		mCommandQueueGraphicsPresent.waitOnCpuInternal(nextBackBufferFenceValue);
 
+		return ZG_SUCCESS;
+	}
+
+	ZgErrorCode copyQueue(zg::ICommandQueue** commandQueueOut) noexcept override final
+	{
+		*commandQueueOut = &mCommandQueueCopy;
 		return ZG_SUCCESS;
 	}
 
@@ -762,7 +784,7 @@ private:
 	// Command queues
 	D3D12CommandQueue mCommandQueueGraphicsPresent;
 	//D3D12CommandQueue mCommandQueueAsyncCompute;
-	//D3D12CommandQueue mCommandQueueCopy;
+	D3D12CommandQueue mCommandQueueCopy;
 	
 	// Swapchain and backbuffers
 	uint32_t mWidth = 0;

@@ -74,6 +74,7 @@ D3D12CommandQueue::~D3D12CommandQueue() noexcept
 // ------------------------------------------------------------------------------------------------
 
 ZgErrorCode D3D12CommandQueue::create(
+	D3D12_COMMAND_LIST_TYPE type,
 	ComPtr<ID3D12Device3>& device,
 	D3DX12Residency::ResidencyManager* residencyManager,
 	D3D12DescriptorRingBuffer* descriptorBuffer,
@@ -82,6 +83,7 @@ ZgErrorCode D3D12CommandQueue::create(
 	ZgLogger logger,
 	ZgAllocator allocator) noexcept
 {
+	mType = type;
 	mDevice = device;
 	mResidencyManager = residencyManager;
 	mDescriptorBuffer = descriptorBuffer;
@@ -90,8 +92,8 @@ ZgErrorCode D3D12CommandQueue::create(
 
 	// Create command queue
 	D3D12_COMMAND_QUEUE_DESC desc = {};
-	desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-	desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_HIGH;
+	desc.Type = type;
+	desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
 	desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE; // TODO: D3D12_COMMAND_QUEUE_FLAG_DISABLE_GPU_TIMEOUT
 	desc.NodeMask = 0;
 
@@ -270,20 +272,19 @@ ZgErrorCode D3D12CommandQueue::createCommandList(D3D12CommandList*& commandListO
 	if (!addSuccesful) return ZG_ERROR_OUT_OF_COMMAND_LISTS;
 
 	D3D12CommandList& commandList = mCommandListStorage.last();
+	commandList.commandListType = this->mType;
 
 	// Create command allocator
-	// TODO: Type
 	if (D3D12_FAIL(mLog, mDevice->CreateCommandAllocator(
-		D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandList.commandAllocator)))) {
+		mType, IID_PPV_ARGS(&commandList.commandAllocator)))) {
 		mCommandListStorage.pop();
 		return ZG_ERROR_GENERIC;
 	}
 
 	// Create command list
-	// TODO: Type
 	if (D3D12_FAIL(mLog, mDevice->CreateCommandList(
 		0,
-		D3D12_COMMAND_LIST_TYPE_DIRECT,
+		mType,
 		commandList.commandAllocator.Get(),
 		nullptr,
 		IID_PPV_ARGS(&commandList.commandList)))) {
@@ -390,6 +391,10 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListStateChanges(
 	if (res != ZG_SUCCESS) return res;
 
 	// Commit state changes
+#pragma message("WARNING, probably serious race condition")
+	// TODO: This is problematic and we probably need to something smarter. TL;DR, this comitted
+	//       state is shared between all queues. Maybe it is enough to just put a mutex around it,
+	//       but it is not obvious to me that that would be enough.
 	for (uint32_t i = 0; i < pendingBufferStates.size(); i++) {
 		const PendingBufferState& state = pendingBufferStates[i];
 		state.buffer->lastCommittedState = state.currentState;

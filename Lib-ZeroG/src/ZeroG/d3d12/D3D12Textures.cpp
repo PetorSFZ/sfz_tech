@@ -102,7 +102,7 @@ ZgErrorCode D3D12TextureHeap::texture2DCreate(
 		device->GetResourceAllocationInfo(0, 1, &desc);
 
 	// Create placed resource
-	const D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_GENERIC_READ;
+	const D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_COMMON;
 	ComPtr<ID3D12Resource> resource;
 	if (D3D12_FAIL(logger, device->CreatePlacedResource(
 		heap.Get(),

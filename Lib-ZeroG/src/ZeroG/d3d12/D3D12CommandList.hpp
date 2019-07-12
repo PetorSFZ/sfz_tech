@@ -73,6 +73,10 @@ public:
 		const ZgImageViewConstCpu& srcImageCpu,
 		IBuffer* tempUploadBuffer) noexcept override final;
 
+	ZgErrorCode enableQueueTransitionBuffer(IBuffer* buffer) noexcept override final;
+
+	ZgErrorCode enableQueueTransitionTexture(ITexture2D* texture) noexcept override final;
+
 	ZgErrorCode setPushConstant(
 		uint32_t shaderRegister,
 		const void* data,
@@ -128,6 +132,7 @@ public:
 	// Members
 	// --------------------------------------------------------------------------------------------
 
+	D3D12_COMMAND_LIST_TYPE commandListType;
 	ComPtr<ID3D12CommandAllocator> commandAllocator;
 	ComPtr<ID3D12GraphicsCommandList> commandList;
 	uint64_t fenceValue = 0;

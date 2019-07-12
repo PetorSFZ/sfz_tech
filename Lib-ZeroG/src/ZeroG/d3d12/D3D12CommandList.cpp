@@ -137,7 +137,7 @@ ZgErrorCode D3D12CommandList::memcpyBufferToBuffer(
 	// Set buffer resource states
 	ZgErrorCode res = setBufferState(dstBuffer, dstTargetState);
 	if (res != ZG_SUCCESS) return res;
-	 res = setBufferState(srcBuffer, srcTargetState);
+	res = setBufferState(srcBuffer, srcTargetState);
 	if (res != ZG_SUCCESS) return res;
 
 	// Check if we should copy entire buffer or just a region of it
@@ -261,6 +261,37 @@ ZgErrorCode D3D12CommandList::memcpyToTexture(
 	dstCopyLoc.SubresourceIndex = dstTextureMipLevel;
 
 	commandList->CopyTextureRegion(&dstCopyLoc, 0, 0, 0, &tmpCopyLoc, nullptr);
+
+	return ZG_SUCCESS;
+}
+
+ZgErrorCode D3D12CommandList::enableQueueTransitionBuffer(IBuffer* bufferIn) noexcept
+{
+	// Cast to D3D12
+	D3D12Buffer& buffer = *reinterpret_cast<D3D12Buffer*>(bufferIn);
+
+	// Check that it is a device buffer
+	if (buffer.memoryHeap->memoryType == ZG_MEMORY_TYPE_UPLOAD ||
+		buffer.memoryHeap->memoryType == ZG_MEMORY_TYPE_DOWNLOAD) {
+		ZG_ERROR(mLog, "enableQueueTransitionBuffer(): Can't transition upload and download buffers");
+		return ZG_ERROR_INVALID_ARGUMENT;
+	}
+
+	// Set buffer resource state
+	ZgErrorCode res = setBufferState(buffer, D3D12_RESOURCE_STATE_COMMON);
+	if (res != ZG_SUCCESS) return res;
+
+	return ZG_SUCCESS;
+}
+
+ZgErrorCode D3D12CommandList::enableQueueTransitionTexture(ITexture2D* textureIn) noexcept
+{
+	// Cast to D3D12
+	D3D12Texture2D& texture = *reinterpret_cast<D3D12Texture2D*>(textureIn);
+
+	// Set buffer resource state
+	ZgErrorCode res = setTextureStateAllMipLevels(texture, D3D12_RESOURCE_STATE_COMMON);
+	if (res != ZG_SUCCESS) return res;
 
 	return ZG_SUCCESS;
 }

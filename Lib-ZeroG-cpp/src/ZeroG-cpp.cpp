@@ -84,6 +84,12 @@ ErrorCode Context::swapchainFinishFrame() noexcept
 	return (ErrorCode)zgContextSwapchainFinishFrame();
 }
 
+ErrorCode Context::copyQueue(CommandQueue& copyQueueOut) noexcept
+{
+	if (copyQueueOut.commandQueue != nullptr) return ErrorCode::INVALID_ARGUMENT;
+	return (ErrorCode)zgContextCopyQueue(&copyQueueOut.commandQueue);
+}
+
 
 // PipelineRenderingBuilder: Methods
 // ------------------------------------------------------------------------------------------------
@@ -655,9 +661,9 @@ void CommandList::release() noexcept
 // ------------------------------------------------------------------------------------------------
 
 ErrorCode CommandList::memcpyBufferToBuffer(
-	zg::Buffer& dstBuffer,
+	Buffer& dstBuffer,
 	uint64_t dstBufferOffsetBytes,
-	zg::Buffer& srcBuffer,
+	Buffer& srcBuffer,
 	uint64_t srcBufferOffsetBytes,
 	uint64_t numBytes) noexcept
 {
@@ -682,6 +688,16 @@ ErrorCode CommandList::memcpyToTexture(
 		dstTextureMipLevel,
 		&srcImageCpu,
 		tempUploadBuffer.buffer);
+}
+
+ErrorCode CommandList::enableQueueTransition(Buffer& buffer) noexcept
+{
+	return (ErrorCode)zgCommandListEnableQueueTransitionBuffer(this->commandList, buffer.buffer);
+}
+
+ErrorCode CommandList::enableQueueTransition(Texture2D& texture) noexcept
+{
+	return (ErrorCode)zgCommandListEnableQueueTransitionTexture(this->commandList, texture.texture);
 }
 
 ErrorCode CommandList::setPushConstant(
