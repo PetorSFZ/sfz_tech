@@ -597,6 +597,16 @@ ZgErrorCode D3D12CommandList::setFramebufferScissor(
 	scissorRect.top = scissor.topLeftY;
 	scissorRect.right = scissor.topLeftX + scissor.width;
 	scissorRect.bottom = scissor.topLeftY + scissor.height;
+
+	// Bad scissor specified, just use whole viewport
+	if (scissor.width == 0 && scissor.height == 0) {
+		ZG_INFO(mLog, "setFramebufferScissor(): Bad scissor specified, ignoring");
+		scissorRect.left = 0;
+		scissorRect.top = 0;
+		scissorRect.right = LONG_MAX;
+		scissorRect.bottom = LONG_MAX;
+	}
+
 	commandList->RSSetScissorRects(1, &scissorRect);
 
 	return ZG_SUCCESS;
