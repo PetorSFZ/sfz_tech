@@ -123,7 +123,7 @@ ZgErrorCode D3D12CommandQueue::create(
 // D3D12CommandQueue: Virtual methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode D3D12CommandQueue::signalOnGpu(IFence& fenceToSignalIn) noexcept
+ZgErrorCode D3D12CommandQueue::signalOnGpu(ZgFence& fenceToSignalIn) noexcept
 {
 	D3D12Fence& fenceToSignal = *static_cast<D3D12Fence*>(&fenceToSignalIn);
 	fenceToSignal.commandQueue = this;
@@ -131,7 +131,7 @@ ZgErrorCode D3D12CommandQueue::signalOnGpu(IFence& fenceToSignalIn) noexcept
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandQueue::waitOnGpu(const IFence& fenceIn) noexcept
+ZgErrorCode D3D12CommandQueue::waitOnGpu(const ZgFence& fenceIn) noexcept
 {
 	const D3D12Fence& fence = *static_cast<const D3D12Fence*>(&fenceIn);
 	if (fence.commandQueue == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
@@ -147,13 +147,13 @@ ZgErrorCode D3D12CommandQueue::flush() noexcept
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandQueue::beginCommandListRecording(ICommandList** commandListOut) noexcept
+ZgErrorCode D3D12CommandQueue::beginCommandListRecording(ZgCommandList** commandListOut) noexcept
 {
 	std::lock_guard<std::mutex> lock(mQueueMutex);
 	return this->beginCommandListRecordingUnmutexed(commandListOut);
 }
 
-ZgErrorCode D3D12CommandQueue::executeCommandList(ICommandList* commandListIn) noexcept
+ZgErrorCode D3D12CommandQueue::executeCommandList(ZgCommandList* commandListIn) noexcept
 {
 	std::lock_guard<std::mutex> lock(mQueueMutex);
 	return this->executeCommandListUnmutexed(commandListIn);
@@ -190,7 +190,7 @@ bool D3D12CommandQueue::isFenceValueDone(uint64_t fenceValue) noexcept
 // ------------------------------------------------------------------------------------------------
 
 ZgErrorCode D3D12CommandQueue::beginCommandListRecordingUnmutexed(
-	ICommandList** commandListOut) noexcept
+	ZgCommandList** commandListOut) noexcept
 {
 	D3D12CommandList* commandList = nullptr;
 	bool commandListFound = false;
@@ -223,10 +223,10 @@ ZgErrorCode D3D12CommandQueue::beginCommandListRecordingUnmutexed(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandQueue::executeCommandListUnmutexed(ICommandList* commandListIn) noexcept
+ZgErrorCode D3D12CommandQueue::executeCommandListUnmutexed(ZgCommandList* commandListIn) noexcept
 {
 	// Cast to D3D12
-	D3D12CommandList& commandList = *reinterpret_cast<D3D12CommandList*>(commandListIn);
+	D3D12CommandList& commandList = *static_cast<D3D12CommandList*>(commandListIn);
 
 	// Close command list
 	if (D3D12_FAIL(mLog, commandList.commandList->Close())) {
@@ -375,7 +375,7 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListStateChanges(
 	// Get command list to execute barriers in
 	D3D12CommandList* commandList = nullptr;
 	ZgErrorCode res =
-		this->beginCommandListRecordingUnmutexed(reinterpret_cast<ICommandList**>(&commandList));
+		this->beginCommandListRecordingUnmutexed(reinterpret_cast<ZgCommandList**>(&commandList));
 	if (res != ZG_SUCCESS) return res;
 
 	// Insert barrier call

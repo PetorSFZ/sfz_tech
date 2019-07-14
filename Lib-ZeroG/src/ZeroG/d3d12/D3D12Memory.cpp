@@ -60,7 +60,7 @@ D3D12MemoryHeap::~D3D12MemoryHeap() noexcept
 // ------------------------------------------------------------------------------------------------
 
 ZgErrorCode D3D12MemoryHeap::bufferCreate(
-	IBuffer** bufferOut,
+	ZgBuffer** bufferOut,
 	const ZgBufferCreateInfo& createInfo) noexcept
 {
 	// Create placed resource
@@ -71,6 +71,8 @@ ZgErrorCode D3D12MemoryHeap::bufferCreate(
 		case ZG_MEMORY_TYPE_DOWNLOAD: return D3D12_RESOURCE_STATE_COPY_DEST;
 		case ZG_MEMORY_TYPE_DEVICE: return D3D12_RESOURCE_STATE_COMMON;
 		}
+		ZG_ASSERT(false);
+		return D3D12_RESOURCE_STATE_COMMON;
 	}();
 	{
 		bool allowUav = memoryType == ZG_MEMORY_TYPE_DEVICE;

@@ -32,7 +32,7 @@ namespace zg {
 // D3D12CommandList
 // ------------------------------------------------------------------------------------------------
 
-class D3D12CommandList final : public ICommandList {
+class D3D12CommandList final : public ZgCommandList {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -61,21 +61,21 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	ZgErrorCode memcpyBufferToBuffer(
-		IBuffer* dstBuffer,
+		ZgBuffer* dstBuffer,
 		uint64_t dstBufferOffsetBytes,
-		IBuffer* srcBuffer,
+		ZgBuffer* srcBuffer,
 		uint64_t srcBufferOffsetBytes,
 		uint64_t numBytes) noexcept override final;
 
 	ZgErrorCode memcpyToTexture(
-		ITexture2D* dstTexture,
+		ZgTexture2D* dstTexture,
 		uint32_t dstTextureMipLevel,
 		const ZgImageViewConstCpu& srcImageCpu,
-		IBuffer* tempUploadBuffer) noexcept override final;
+		ZgBuffer* tempUploadBuffer) noexcept override final;
 
-	ZgErrorCode enableQueueTransitionBuffer(IBuffer* buffer) noexcept override final;
+	ZgErrorCode enableQueueTransitionBuffer(ZgBuffer* buffer) noexcept override final;
 
-	ZgErrorCode enableQueueTransitionTexture(ITexture2D* texture) noexcept override final;
+	ZgErrorCode enableQueueTransitionTexture(ZgTexture2D* texture) noexcept override final;
 
 	ZgErrorCode setPushConstant(
 		uint32_t shaderRegister,
@@ -86,10 +86,10 @@ public:
 		const ZgPipelineBindings& bindings) noexcept override final;
 
 	ZgErrorCode setPipelineRendering(
-		IPipelineRendering* pipeline) noexcept override final;
+		ZgPipelineRendering* pipeline) noexcept override final;
 
 	ZgErrorCode setFramebuffer(
-		IFramebuffer* framebuffer,
+		ZgFramebuffer* framebuffer,
 		const ZgFramebufferRect* optionalViewport,
 		const ZgFramebufferRect* optionalScissor) noexcept override final;
 
@@ -109,12 +109,12 @@ public:
 		float depth) noexcept override final;
 
 	ZgErrorCode setIndexBuffer(
-		IBuffer* indexBuffer,
+		ZgBuffer* indexBuffer,
 		ZgIndexBufferType type) noexcept override final;
 
 	ZgErrorCode setVertexBuffer(
 		uint32_t vertexBufferSlot,
-		IBuffer* vertexBuffer) noexcept override final;
+		ZgBuffer* vertexBuffer) noexcept override final;
 
 	ZgErrorCode drawTriangles(
 		uint32_t startVertexIndex,

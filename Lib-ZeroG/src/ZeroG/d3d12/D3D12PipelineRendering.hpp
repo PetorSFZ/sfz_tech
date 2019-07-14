@@ -49,7 +49,7 @@ struct D3D12TextureMapping {
 // D3D12 PipelineRendering
 // ------------------------------------------------------------------------------------------------
 
-class D3D12PipelineRendering final : public IPipelineRendering {
+class D3D12PipelineRendering final : public ZgPipelineRendering {
 public:
 
 	D3D12PipelineRendering() noexcept = default;

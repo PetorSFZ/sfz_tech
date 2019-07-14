@@ -114,9 +114,9 @@ void D3D12CommandList::destroy() noexcept
 // ------------------------------------------------------------------------------------------------
 
 ZgErrorCode D3D12CommandList::memcpyBufferToBuffer(
-	IBuffer* dstBufferIn,
+	ZgBuffer* dstBufferIn,
 	uint64_t dstBufferOffsetBytes,
-	IBuffer* srcBufferIn,
+	ZgBuffer* srcBufferIn,
 	uint64_t srcBufferOffsetBytes,
 	uint64_t numBytes) noexcept
 {
@@ -170,10 +170,10 @@ ZgErrorCode D3D12CommandList::memcpyBufferToBuffer(
 }
 
 ZgErrorCode D3D12CommandList::memcpyToTexture(
-	ITexture2D* dstTextureIn,
+	ZgTexture2D* dstTextureIn,
 	uint32_t dstTextureMipLevel,
 	const ZgImageViewConstCpu& srcImageCpu,
-	IBuffer* tempUploadBufferIn) noexcept
+	ZgBuffer* tempUploadBufferIn) noexcept
 {
 	// Cast input to D3D12
 	D3D12Texture2D& dstTexture = *reinterpret_cast<D3D12Texture2D*>(dstTextureIn);
@@ -265,7 +265,7 @@ ZgErrorCode D3D12CommandList::memcpyToTexture(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::enableQueueTransitionBuffer(IBuffer* bufferIn) noexcept
+ZgErrorCode D3D12CommandList::enableQueueTransitionBuffer(ZgBuffer* bufferIn) noexcept
 {
 	// Cast to D3D12
 	D3D12Buffer& buffer = *reinterpret_cast<D3D12Buffer*>(bufferIn);
@@ -284,7 +284,7 @@ ZgErrorCode D3D12CommandList::enableQueueTransitionBuffer(IBuffer* bufferIn) noe
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::enableQueueTransitionTexture(ITexture2D* textureIn) noexcept
+ZgErrorCode D3D12CommandList::enableQueueTransitionTexture(ZgTexture2D* textureIn) noexcept
 {
 	// Cast to D3D12
 	D3D12Texture2D& texture = *reinterpret_cast<D3D12Texture2D*>(textureIn);
@@ -470,7 +470,7 @@ ZgErrorCode D3D12CommandList::setPipelineBindings(
 }
 
 ZgErrorCode D3D12CommandList::setPipelineRendering(
-	IPipelineRendering* pipelineIn) noexcept
+	ZgPipelineRendering* pipelineIn) noexcept
 {
 	D3D12PipelineRendering& pipeline = *reinterpret_cast<D3D12PipelineRendering*>(pipelineIn);
 	
@@ -492,7 +492,7 @@ ZgErrorCode D3D12CommandList::setPipelineRendering(
 }
 
 ZgErrorCode D3D12CommandList::setFramebuffer(
-	IFramebuffer* framebufferIn,
+	ZgFramebuffer* framebufferIn,
 	const ZgFramebufferRect* optionalViewport,
 	const ZgFramebufferRect* optionalScissor) noexcept
 {
@@ -645,7 +645,7 @@ ZgErrorCode D3D12CommandList::clearDepthBuffer(
 }
 
 ZgErrorCode D3D12CommandList::setIndexBuffer(
-	IBuffer* indexBufferIn,
+	ZgBuffer* indexBufferIn,
 	ZgIndexBufferType type) noexcept
 {
 	// Cast input to D3D12
@@ -683,7 +683,7 @@ ZgErrorCode D3D12CommandList::setIndexBuffer(
 
 ZgErrorCode D3D12CommandList::setVertexBuffer(
 	uint32_t vertexBufferSlot,
-	IBuffer* vertexBufferIn) noexcept
+	ZgBuffer* vertexBufferIn) noexcept
 {
 	// Cast input to D3D12
 	D3D12Buffer& vertexBuffer = *reinterpret_cast<D3D12Buffer*>(vertexBufferIn);

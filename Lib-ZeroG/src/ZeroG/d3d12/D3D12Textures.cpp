@@ -91,7 +91,7 @@ D3D12TextureHeap::~D3D12TextureHeap() noexcept
 // ------------------------------------------------------------------------------------------------
 
 ZgErrorCode D3D12TextureHeap::texture2DCreate(
-	ITexture2D** textureOut,
+	ZgTexture2D** textureOut,
 	const ZgTexture2DCreateInfo& createInfo) noexcept
 {
 	// Get resource desc

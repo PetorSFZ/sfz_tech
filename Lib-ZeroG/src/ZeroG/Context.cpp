@@ -30,9 +30,9 @@ ZgContext& getContext() noexcept
 	return implicitContext;
 }
 
-zg::IContext* getApiContext() noexcept
+ZgBackend* getBackend() noexcept
 {
-	return implicitContext.context;
+	return implicitContext.backend;
 }
 
 void setContext(const ZgContext& context) noexcept

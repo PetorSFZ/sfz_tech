@@ -34,7 +34,7 @@ D3D12_RESOURCE_DESC createInfoToResourceDesc(const ZgTexture2DCreateInfo& info) 
 // D3D12 Texture Heap
 // ------------------------------------------------------------------------------------------------
 
-class D3D12TextureHeap final : public ITextureHeap {
+class D3D12TextureHeap final : public ZgTextureHeap {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -50,7 +50,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	ZgErrorCode texture2DCreate(
-		ITexture2D** textureOut,
+		ZgTexture2D** textureOut,
 		const ZgTexture2DCreateInfo& createInfo) noexcept override final;
 
 	// Members
@@ -81,7 +81,7 @@ ZgErrorCode createTextureHeap(
 // D3D12 Texture 2D
 // ------------------------------------------------------------------------------------------------
 
-class D3D12Texture2D final : public ITexture2D {
+class D3D12Texture2D final : public ZgTexture2D {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------

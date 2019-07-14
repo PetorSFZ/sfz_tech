@@ -36,7 +36,7 @@ namespace zg {
 
 class D3D12CommandQueue;
 
-class D3D12Fence final : public IFence {
+class D3D12Fence final : public ZgFence {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ public:
 // D3D12CommandQueue
 // ------------------------------------------------------------------------------------------------
 
-class D3D12CommandQueue final : public ICommandQueue {
+class D3D12CommandQueue final : public ZgCommandQueue {
 public:
 
 	// Constructors & destructors
@@ -94,11 +94,11 @@ public:
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode signalOnGpu(IFence& fenceToSignal) noexcept override final;
-	ZgErrorCode waitOnGpu(const IFence& fence) noexcept override final;
+	ZgErrorCode signalOnGpu(ZgFence& fenceToSignal) noexcept override final;
+	ZgErrorCode waitOnGpu(const ZgFence& fence) noexcept override final;
 	ZgErrorCode flush() noexcept override final;
-	ZgErrorCode beginCommandListRecording(ICommandList** commandListOut) noexcept override final;
-	ZgErrorCode executeCommandList(ICommandList* commandList) noexcept override final;
+	ZgErrorCode beginCommandListRecording(ZgCommandList** commandListOut) noexcept override final;
+	ZgErrorCode executeCommandList(ZgCommandList* commandList) noexcept override final;
 
 	// Synchronization methods
 	// --------------------------------------------------------------------------------------------
@@ -117,8 +117,8 @@ private:
 	// Private  methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode beginCommandListRecordingUnmutexed(ICommandList** commandListOut) noexcept;
-	ZgErrorCode executeCommandListUnmutexed(ICommandList* commandList) noexcept;
+	ZgErrorCode beginCommandListRecordingUnmutexed(ZgCommandList** commandListOut) noexcept;
+	ZgErrorCode executeCommandListUnmutexed(ZgCommandList* commandList) noexcept;
 	uint64_t signalOnGpuUnmutexed() noexcept;
 
 	ZgErrorCode createCommandList(D3D12CommandList*& commandListOut) noexcept;

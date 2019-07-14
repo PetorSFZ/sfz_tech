@@ -28,7 +28,7 @@
 struct ZgContext final {
 	ZgAllocator allocator = {};
 	ZgLogger logger = {};
-	zg::IContext* context = nullptr;
+	ZgBackend* backend = nullptr;
 };
 
 // Global implicit context accessor
@@ -38,7 +38,7 @@ namespace zg {
 
 ZgContext& getContext() noexcept;
 
-zg::IContext* getApiContext() noexcept;
+ZgBackend* getBackend() noexcept;
 
 void setContext(const ZgContext& context) noexcept;
 

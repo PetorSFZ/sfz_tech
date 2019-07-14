@@ -37,21 +37,21 @@ namespace zg {
 
 constexpr auto NUM_SWAP_CHAIN_BUFFERS = 3;
 
-// D3D12 Context implementation
+// D3D12 Backend implementation
 // ------------------------------------------------------------------------------------------------
 
-class D3D12Context final : public IContext {
+class D3D12Backend final : public ZgBackend {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	D3D12Context() = default;
-	D3D12Context(const D3D12Context&) = delete;
-	D3D12Context& operator= (const D3D12Context&) = delete;
-	D3D12Context(D3D12Context&&) = delete;
-	D3D12Context& operator= (D3D12Context&&) = delete;
+	D3D12Backend() = default;
+	D3D12Backend(const D3D12Backend&) = delete;
+	D3D12Backend& operator= (const D3D12Backend&) = delete;
+	D3D12Backend(D3D12Backend&&) = delete;
+	D3D12Backend& operator= (D3D12Backend&&) = delete;
 
-	virtual ~D3D12Context() noexcept
+	virtual ~D3D12Backend() noexcept
 	{
 		mCommandQueueGraphicsPresent.flush();
 	}
@@ -416,14 +416,14 @@ public:
 	}
 
 	ZgErrorCode swapchainCommandQueue(
-		ICommandQueue** commandQueueOut) noexcept override final
+		ZgCommandQueue** commandQueueOut) noexcept override final
 	{
 		*commandQueueOut = &mCommandQueueGraphicsPresent;
 		return ZG_SUCCESS;
 	}
 
 	ZgErrorCode swapchainBeginFrame(
-		zg::IFramebuffer** framebufferOut) noexcept override final
+		ZgFramebuffer** framebufferOut) noexcept override final
 	{
 		std::lock_guard<std::mutex> lock(mContextMutex);
 
@@ -431,7 +431,7 @@ public:
 		D3D12Framebuffer& backBuffer = mBackBuffers[mCurrentBackBufferIdx];
 
 		// Create a small command list to insert the transition barrier for the back buffer
-		ICommandList* barrierCommandList = nullptr;
+		ZgCommandList* barrierCommandList = nullptr;
 		ZgErrorCode zgRes =
 			mCommandQueueGraphicsPresent.beginCommandListRecording(&barrierCommandList);
 		if (zgRes != ZG_SUCCESS) return zgRes;
@@ -459,7 +459,7 @@ public:
 		D3D12Framebuffer& backBuffer = mBackBuffers[mCurrentBackBufferIdx];
 
 		// Create a small command list to insert the transition barrier for the back buffer
-		ICommandList* barrierCommandList = nullptr;
+		ZgCommandList* barrierCommandList = nullptr;
 		ZgErrorCode zgRes =
 			mCommandQueueGraphicsPresent.beginCommandListRecording(&barrierCommandList);
 		if (zgRes != ZG_SUCCESS) return zgRes;
@@ -490,16 +490,15 @@ public:
 		return ZG_SUCCESS;
 	}
 
-	ZgErrorCode copyQueue(zg::ICommandQueue** commandQueueOut) noexcept override final
+	ZgErrorCode copyQueue(ZgCommandQueue** commandQueueOut) noexcept override final
 	{
 		*commandQueueOut = &mCommandQueueCopy;
 		return ZG_SUCCESS;
 	}
 
-	ZgErrorCode fenceCreate(zg::IFence** fenceOut) noexcept override final
+	ZgErrorCode fenceCreate(ZgFence** fenceOut) noexcept override final
 	{
-		D3D12Fence* fence = zgNew<D3D12Fence>(mAllocator, "ZeroG - D3D12Fence");
-		*fenceOut = fence;
+		*fenceOut = zgNew<D3D12Fence>(mAllocator, "ZeroG - D3D12Fence");
 		return ZG_SUCCESS;
 	}
 
@@ -507,7 +506,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	ZgErrorCode pipelineRenderingCreateFromFileSPIRV(
-		IPipelineRendering** pipelineOut,
+		ZgPipelineRendering** pipelineOut,
 		ZgPipelineRenderingSignature* signatureOut,
 		const ZgPipelineRenderingCreateInfoFileSPIRV& createInfo) noexcept override final
 	{
@@ -548,7 +547,7 @@ public:
 	}
 
 	ZgErrorCode pipelineRenderingCreateFromFileHLSL(
-		IPipelineRendering** pipelineOut,
+		ZgPipelineRendering** pipelineOut,
 		ZgPipelineRenderingSignature* signatureOut,
 		const ZgPipelineRenderingCreateInfoFileHLSL& createInfo) noexcept override final
 	{
@@ -589,7 +588,7 @@ public:
 	}
 
 	ZgErrorCode pipelineRenderingCreateFromSourceHLSL(
-		IPipelineRendering** pipelineOut,
+		ZgPipelineRendering** pipelineOut,
 		ZgPipelineRenderingSignature* signatureOut,
 		const ZgPipelineRenderingCreateInfoSourceHLSL& createInfo) noexcept override final
 	{
@@ -630,15 +629,15 @@ public:
 	}
 
 	ZgErrorCode pipelineRenderingRelease(
-		IPipelineRendering* pipeline) noexcept override final
+		ZgPipelineRendering* pipeline) noexcept override final
 	{
 		// TODO: Check if pipeline is currently in use? Lock?
-		zgDelete<IPipelineRendering>(mAllocator, pipeline);
+		zgDelete(mAllocator, pipeline);
 		return ZG_SUCCESS;
 	}
 
 	ZgErrorCode pipelineRenderingGetSignature(
-		const IPipelineRendering* pipelineIn,
+		const ZgPipelineRendering* pipelineIn,
 		ZgPipelineRenderingSignature* signatureOut) const noexcept override final
 	{
 		const D3D12PipelineRendering* pipeline =
@@ -651,7 +650,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	ZgErrorCode memoryHeapCreate(
-		IMemoryHeap** memoryHeapOut,
+		ZgMemoryHeap** memoryHeapOut,
 		const ZgMemoryHeapCreateInfo& createInfo) noexcept override final
 	{
 		std::lock_guard<std::mutex> lock(mContextMutex);
@@ -666,20 +665,20 @@ public:
 	}
 
 	ZgErrorCode memoryHeapRelease(
-		IMemoryHeap* memoryHeapIn) noexcept override final
+		ZgMemoryHeap* memoryHeapIn) noexcept override final
 	{
 		// TODO: Check if any buffers still exist? Lock?
 
 		// Stop tracking
-		D3D12MemoryHeap* heap = reinterpret_cast<D3D12MemoryHeap*>(memoryHeapIn);
+		D3D12MemoryHeap* heap = static_cast<D3D12MemoryHeap*>(memoryHeapIn);
 		mResidencyManager.EndTrackingObject(&heap->managedObject);
 
-		zgDelete<IMemoryHeap>(mAllocator, heap);
+		zgDelete(mAllocator, heap);
 		return ZG_SUCCESS;
 	}
 
 	ZgErrorCode bufferMemcpyTo(
-		IBuffer* dstBufferInterface,
+		ZgBuffer* dstBufferInterface,
 		uint64_t bufferOffsetBytes,
 		const uint8_t* srcMemory,
 		uint64_t numBytes) noexcept override final
@@ -732,7 +731,7 @@ public:
 	}
 
 	ZgErrorCode textureHeapCreate(
-		ITextureHeap** textureHeapOut,
+		ZgTextureHeap** textureHeapOut,
 		const ZgTextureHeapCreateInfo& createInfo) noexcept override final
 	{
 		std::lock_guard<std::mutex> lock(mContextMutex);
@@ -747,15 +746,15 @@ public:
 	}
 
 	ZgErrorCode textureHeapRelease(
-		ITextureHeap* textureHeapIn) noexcept override final
+		ZgTextureHeap* textureHeapIn) noexcept override final
 	{
 		// TODO: Check if any textures still exist? Lock?
 
 		// Stop tracking
-		D3D12TextureHeap* heap = reinterpret_cast<D3D12TextureHeap*>(textureHeapIn);
+		D3D12TextureHeap* heap = static_cast<D3D12TextureHeap*>(textureHeapIn);
 		mResidencyManager.EndTrackingObject(&heap->managedObject);
 
-		zgDelete<ITextureHeap>(mAllocator, heap);
+		zgDelete(mAllocator, heap);
 		return ZG_SUCCESS;
 	}
 
@@ -807,20 +806,20 @@ private:
 // D3D12 API
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode createD3D12Backend(IContext** contextOut, ZgContextInitSettings& settings) noexcept
+ZgErrorCode createD3D12Backend(ZgBackend** backendOut, ZgContextInitSettings& settings) noexcept
 {
 	// Allocate and create D3D12 backend
-	D3D12Context* context = zgNew<D3D12Context>(settings.allocator, "D3D12 Context");
+	D3D12Backend* backend = zgNew<D3D12Backend>(settings.allocator, "D3D12 Backend");
 
 	// Initialize backend, return nullptr if init failed
-	ZgErrorCode initRes = context->init(settings);
+	ZgErrorCode initRes = backend->init(settings);
 	if (initRes != ZG_SUCCESS)
 	{
-		zgDelete(settings.allocator, context);
+		zgDelete(settings.allocator, backend);
 		return initRes;
 	}
 
-	*contextOut = context;
+	*backendOut = backend;
 	return ZG_SUCCESS;
 }
 

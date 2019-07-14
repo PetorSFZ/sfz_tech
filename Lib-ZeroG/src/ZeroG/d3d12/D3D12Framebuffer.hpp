@@ -27,7 +27,7 @@ namespace zg {
 // D3D12Framebuffer
 // ------------------------------------------------------------------------------------------------
 
-class D3D12Framebuffer final : public IFramebuffer {
+class D3D12Framebuffer final : public ZgFramebuffer {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------

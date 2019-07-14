@@ -29,7 +29,7 @@ namespace zg {
 // D3D12 Memory Heap
 // ------------------------------------------------------------------------------------------------
 
-class D3D12MemoryHeap final : public IMemoryHeap {
+class D3D12MemoryHeap final : public ZgMemoryHeap {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -45,7 +45,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	ZgErrorCode bufferCreate(
-		IBuffer** bufferOut,
+		ZgBuffer** bufferOut,
 		const ZgBufferCreateInfo& createInfo) noexcept override final;
 
 	// Members
@@ -77,7 +77,7 @@ ZgErrorCode createMemoryHeap(
 // D3D12 Buffer
 // ------------------------------------------------------------------------------------------------
 
-class D3D12Buffer final : public IBuffer {
+class D3D12Buffer final : public ZgBuffer {
 public:
 
 	// Constructors & destructors
