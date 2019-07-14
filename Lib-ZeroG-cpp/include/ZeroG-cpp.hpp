@@ -431,7 +431,7 @@ public:
 	Fence(const Fence&) = delete;
 	Fence& operator= (const Fence&) = delete;
 	Fence(Fence&& other) noexcept { this->swap(other); }
-	Fence& operator= (Fence&& other) noexcept { this->swap(other); }
+	Fence& operator= (Fence&& other) noexcept { this->swap(other); return *this; }
 	~Fence() noexcept { this->release(); }
 
 	// State methods
