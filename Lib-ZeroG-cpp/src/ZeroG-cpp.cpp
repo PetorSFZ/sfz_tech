@@ -67,12 +67,6 @@ ErrorCode Context::swapchainResize(uint32_t width, uint32_t height) noexcept
 	return (ErrorCode)zgContextSwapchainResize(width, height);
 }
 
-ErrorCode Context::swapchainCommandQueue(CommandQueue& commandQueueOut) noexcept
-{
-	if (commandQueueOut.commandQueue != nullptr) return ErrorCode::INVALID_ARGUMENT;
-	return (ErrorCode)zgContextSwapchainCommandQueue(&commandQueueOut.commandQueue);
-}
-
 ErrorCode Context::swapchainBeginFrame(ZgFramebuffer*& framebufferOut) noexcept
 {
 	if (framebufferOut != nullptr) return ErrorCode::INVALID_ARGUMENT;
@@ -82,12 +76,6 @@ ErrorCode Context::swapchainBeginFrame(ZgFramebuffer*& framebufferOut) noexcept
 ErrorCode Context::swapchainFinishFrame() noexcept
 {
 	return (ErrorCode)zgContextSwapchainFinishFrame();
-}
-
-ErrorCode Context::copyQueue(CommandQueue& copyQueueOut) noexcept
-{
-	if (copyQueueOut.commandQueue != nullptr) return ErrorCode::INVALID_ARGUMENT;
-	return (ErrorCode)zgContextCopyQueue(&copyQueueOut.commandQueue);
 }
 
 
@@ -534,6 +522,21 @@ ErrorCode Fence::waitOnCpuBlocking() const noexcept
 	return (ErrorCode)zgFenceWaitOnCpuBlocking(this->fence);
 }
 
+
+// CommandQueue: Constructors & destructors
+// ------------------------------------------------------------------------------------------------
+
+ErrorCode CommandQueue::getPresentQueue(CommandQueue& presentQueueOut) noexcept
+{
+	if (presentQueueOut.commandQueue != nullptr) return ErrorCode::INVALID_ARGUMENT;
+	return (ErrorCode)zgCommandQueueGetPresentQueue(&presentQueueOut.commandQueue);
+}
+
+ErrorCode CommandQueue::getCopyQueue(CommandQueue& copyQueueOut) noexcept
+{
+	if (copyQueueOut.commandQueue != nullptr) return ErrorCode::INVALID_ARGUMENT;
+	return (ErrorCode)zgCommandQueueGetCopyQueue(&copyQueueOut.commandQueue);
+}
 
 // CommandQueue: State methods
 // ------------------------------------------------------------------------------------------------

@@ -110,17 +110,11 @@ public:
 	// See zgContextSwapchainResize()
 	ErrorCode swapchainResize(uint32_t width, uint32_t height) noexcept;
 
-	// See zgContextSwapchainCommandQueue()
-	ErrorCode swapchainCommandQueue(CommandQueue& commandQueueOut) noexcept;
-
 	// See zgContextSwapchainBeginFrame()
 	ErrorCode swapchainBeginFrame(ZgFramebuffer*& framebufferOut) noexcept;
 
 	// See zgContextSwapchainFinishFrame()
 	ErrorCode swapchainFinishFrame() noexcept;
-
-	// See zgContextCopyQueue()
-	ErrorCode copyQueue(CommandQueue& copyQueueOut) noexcept;
 
 	// Private members
 	// --------------------------------------------------------------------------------------------
@@ -487,6 +481,12 @@ public:
 	CommandQueue(CommandQueue&& other) noexcept { this->swap(other); }
 	CommandQueue& operator= (CommandQueue&& other) noexcept { this->swap(other); return *this; }
 	~CommandQueue() noexcept { this->release(); }
+
+	// See zgCommandQueueGetPresentQueue()
+	static ErrorCode getPresentQueue(CommandQueue& presentQueueOut) noexcept;
+
+	// See zgCommandQueueGetCopyQueue()
+	static ErrorCode getCopyQueue(CommandQueue& copyQueueOut) noexcept;
 
 	// State methods
 	// --------------------------------------------------------------------------------------------

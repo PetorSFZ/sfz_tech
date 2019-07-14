@@ -162,12 +162,6 @@ ZG_API ZgErrorCode zgContextSwapchainResize(
 	return zg::getBackend()->swapchainResize(width, height);
 }
 
-ZG_API ZgErrorCode zgContextSwapchainCommandQueue(
-	ZgCommandQueue** commandQueueOut)
-{
-	return zg::getBackend()->swapchainCommandQueue(commandQueueOut);
-}
-
 ZG_API ZgErrorCode zgContextSwapchainBeginFrame(
 	ZgFramebuffer** framebufferOut)
 {
@@ -177,12 +171,6 @@ ZG_API ZgErrorCode zgContextSwapchainBeginFrame(
 ZG_API ZgErrorCode zgContextSwapchainFinishFrame(void)
 {
 	return zg::getBackend()->swapchainFinishFrame();
-}
-
-ZG_API ZgErrorCode zgContextCopyQueue(
-	ZgCommandQueue** copyQueueOut)
-{
-	return zg::getBackend()->copyQueue(copyQueueOut);
 }
 
 // Pipeline Rendering - Common
@@ -434,6 +422,18 @@ ZG_API ZgErrorCode zgFenceWaitOnCpuBlocking(
 
 // Command queue
 // ------------------------------------------------------------------------------------------------
+
+ZG_API ZgErrorCode zgCommandQueueGetPresentQueue(
+	ZgCommandQueue** presentQueueOut)
+{
+	return zg::getBackend()->getPresentQueue(presentQueueOut);
+}
+
+ZG_API ZgErrorCode zgCommandQueueGetCopyQueue(
+	ZgCommandQueue** copyQueueOut)
+{
+	return zg::getBackend()->getCopyQueue(copyQueueOut);
+}
 
 ZG_API ZgErrorCode zgCommandQueueSignalOnGpu(
 	ZgCommandQueue* commandQueue,

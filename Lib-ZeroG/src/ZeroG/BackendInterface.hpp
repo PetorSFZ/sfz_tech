@@ -33,15 +33,10 @@ struct ZgBackend {
 		uint32_t width,
 		uint32_t height) noexcept = 0;
 
-	virtual ZgErrorCode swapchainCommandQueue(
-		ZgCommandQueue** commandQueueOut) noexcept = 0;
-
 	virtual ZgErrorCode swapchainBeginFrame(
 		ZgFramebuffer** framebufferOut) noexcept = 0;
 
 	virtual ZgErrorCode swapchainFinishFrame() noexcept = 0;
-
-	virtual ZgErrorCode copyQueue(ZgCommandQueue** commandQueueOut) noexcept = 0;
 
 	virtual ZgErrorCode fenceCreate(ZgFence** fenceOut) noexcept = 0;
 
@@ -99,6 +94,12 @@ struct ZgBackend {
 
 	virtual ZgErrorCode textureHeapRelease(
 		ZgTextureHeap* textureHeap) noexcept = 0;
+
+	// CommandQueue methods
+	// --------------------------------------------------------------------------------------------
+
+	virtual ZgErrorCode getPresentQueue(ZgCommandQueue** presentQueueOut) noexcept = 0;
+	virtual ZgErrorCode getCopyQueue(ZgCommandQueue** copyQueueOut) noexcept = 0;
 };
 
 // PipelineRendering

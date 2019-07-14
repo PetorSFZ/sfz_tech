@@ -233,10 +233,10 @@ static void realMain(SDL_Window* window) noexcept
 	CHECK_ZG zgCtx.init(initSettings);
 
 	// Get the command queues
-	zg::CommandQueue commandQueue;
-	CHECK_ZG zgCtx.swapchainCommandQueue(commandQueue);
+	zg::CommandQueue presentQueue;
+	CHECK_ZG zg::CommandQueue::getPresentQueue(presentQueue);
 	zg::CommandQueue copyQueue;
-	CHECK_ZG zgCtx.copyQueue(copyQueue);
+	CHECK_ZG zg::CommandQueue::getCopyQueue(copyQueue);
 
 	// Create a rendering pipeline
 	zg::PipelineRendering pipeline;
@@ -445,7 +445,7 @@ static void realMain(SDL_Window* window) noexcept
 
 		// Get a command list
 		zg::CommandList commandList;
-		CHECK_ZG commandQueue.beginCommandListRecording(commandList);
+		CHECK_ZG presentQueue.beginCommandListRecording(commandList);
 		
 		// Set framebuffer and clear it
 		CHECK_ZG commandList.setFramebuffer(framebuffer);
@@ -503,14 +503,14 @@ static void realMain(SDL_Window* window) noexcept
 		batchCubeRender(Vector(1.5f, -1.5f, 1.5f));
 		
 		// Execute command list
-		CHECK_ZG commandQueue.executeCommandList(commandList);
+		CHECK_ZG presentQueue.executeCommandList(commandList);
 
 		// Finish frame
 		CHECK_ZG zgCtx.swapchainFinishFrame();
 	}
 
 	// Flush command queue so nothing is running when we start releasing resources
-	CHECK_ZG commandQueue.flush();
+	CHECK_ZG presentQueue.flush();
 }
 
 int main(int argc, char* argv[])

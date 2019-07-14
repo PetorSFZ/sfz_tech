@@ -277,16 +277,10 @@ ZG_API ZgErrorCode zgContextSwapchainResize(
 	uint32_t width,
 	uint32_t height);
 
-ZG_API ZgErrorCode zgContextSwapchainCommandQueue(
-	ZgCommandQueue** commandQueueOut);
-
 ZG_API ZgErrorCode zgContextSwapchainBeginFrame(
 	ZgFramebuffer** framebufferOut);
 
 ZG_API ZgErrorCode zgContextSwapchainFinishFrame(void);
-
-ZG_API ZgErrorCode zgContextCopyQueue(
-	ZgCommandQueue** copyQueueOut);
 
 // Pipeline Rendering - Signature
 // ------------------------------------------------------------------------------------------------
@@ -422,8 +416,8 @@ struct ZgPipelineRenderingSignature {
 typedef struct ZgPipelineRenderingSignature ZgPipelineRenderingSignature;
 
 // Pipeline Rendering - Common
-
 // ------------------------------------------------------------------------------------------------
+
 // Sample mode of a sampler
 enum ZgSamplingModeEnum {
 	ZG_SAMPLING_MODE_UNDEFINED = 0,
@@ -851,6 +845,12 @@ ZG_API ZgErrorCode zgFenceWaitOnCpuBlocking(
 
 // Command queue
 // ------------------------------------------------------------------------------------------------
+
+ZG_API ZgErrorCode zgCommandQueueGetPresentQueue(
+	ZgCommandQueue** presentQueueOut);
+
+ZG_API ZgErrorCode zgCommandQueueGetCopyQueue(
+	ZgCommandQueue** copyQueueOut);
 
 // Enqueues the command queue to signal the ZgFence (from the GPU).
 //

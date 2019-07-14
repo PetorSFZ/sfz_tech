@@ -53,7 +53,8 @@ public:
 
 	virtual ~D3D12Backend() noexcept
 	{
-		mCommandQueueGraphicsPresent.flush();
+		mCommandQueuePresent.flush();
+		mCommandQueueCopy.flush();
 	}
 
 	// State methods
@@ -194,7 +195,7 @@ public:
 		// Create command queue
 		const uint32_t MAX_NUM_COMMAND_LISTS_SWAPCHAIN_QUEUE = 256;
 		const uint32_t MAX_NUM_BUFFERS_PER_COMMAND_LIST_SWAPCHAIN_QUEUE = 256;
-		ZgErrorCode res = mCommandQueueGraphicsPresent.create(
+		ZgErrorCode res = mCommandQueuePresent.create(
 			D3D12_COMMAND_LIST_TYPE_DIRECT,
 			mDevice,
 			&mResidencyManager,
@@ -245,7 +246,7 @@ public:
 
 			ComPtr<IDXGISwapChain1> tmpSwapChain;
 			if (D3D12_FAIL(mLog, dxgiFactory->CreateSwapChainForHwnd(
-				mCommandQueueGraphicsPresent.commandQueue(), hwnd, &desc, nullptr, nullptr, &tmpSwapChain))) {
+				mCommandQueuePresent.commandQueue(), hwnd, &desc, nullptr, nullptr, &tmpSwapChain))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
 
@@ -318,7 +319,7 @@ public:
 		mHeight = height;
 
 		// Flush command queue so its safe to resize back buffers
-		mCommandQueueGraphicsPresent.flush();
+		mCommandQueuePresent.flush();
 
 		if (!initialCreation) {
 			// Release previous back buffers
@@ -415,13 +416,6 @@ public:
 		return ZG_SUCCESS;
 	}
 
-	ZgErrorCode swapchainCommandQueue(
-		ZgCommandQueue** commandQueueOut) noexcept override final
-	{
-		*commandQueueOut = &mCommandQueueGraphicsPresent;
-		return ZG_SUCCESS;
-	}
-
 	ZgErrorCode swapchainBeginFrame(
 		ZgFramebuffer** framebufferOut) noexcept override final
 	{
@@ -433,7 +427,7 @@ public:
 		// Create a small command list to insert the transition barrier for the back buffer
 		ZgCommandList* barrierCommandList = nullptr;
 		ZgErrorCode zgRes =
-			mCommandQueueGraphicsPresent.beginCommandListRecording(&barrierCommandList);
+			mCommandQueuePresent.beginCommandListRecording(&barrierCommandList);
 		if (zgRes != ZG_SUCCESS) return zgRes;
 
 		// Create barrier to transition back buffer into render target state
@@ -443,7 +437,7 @@ public:
 			commandList->ResourceBarrier(1, &barrier);
 
 		// Execute command list containing the barrier transition
-		mCommandQueueGraphicsPresent.executeCommandList(barrierCommandList);
+		mCommandQueuePresent.executeCommandList(barrierCommandList);
 
 		// Return backbuffer
 		*framebufferOut = &backBuffer;
@@ -461,7 +455,7 @@ public:
 		// Create a small command list to insert the transition barrier for the back buffer
 		ZgCommandList* barrierCommandList = nullptr;
 		ZgErrorCode zgRes =
-			mCommandQueueGraphicsPresent.beginCommandListRecording(&barrierCommandList);
+			mCommandQueuePresent.beginCommandListRecording(&barrierCommandList);
 		if (zgRes != ZG_SUCCESS) return zgRes;
 
 		// Create barrier to transition back buffer into present state
@@ -471,10 +465,10 @@ public:
 			commandList->ResourceBarrier(1, &barrier);
 
 		// Execute command list containing the barrier transition
-		mCommandQueueGraphicsPresent.executeCommandList(barrierCommandList);
+		mCommandQueuePresent.executeCommandList(barrierCommandList);
 
 		// Signal the graphics present queue
-		mSwapChainFenceValues[mCurrentBackBufferIdx] = mCommandQueueGraphicsPresent.signalOnGpuInternal();
+		mSwapChainFenceValues[mCurrentBackBufferIdx] = mCommandQueuePresent.signalOnGpuInternal();
 
 		// Present back buffer
 		UINT vsync = 0; // TODO (MUST be 0 if DXGI_PRESENT_ALLOW_TEARING)
@@ -485,14 +479,8 @@ public:
 
 		// Wait for the next back buffer to finish rendering so it's safe to use
 		uint64_t nextBackBufferFenceValue = mSwapChainFenceValues[mCurrentBackBufferIdx];
-		mCommandQueueGraphicsPresent.waitOnCpuInternal(nextBackBufferFenceValue);
+		mCommandQueuePresent.waitOnCpuInternal(nextBackBufferFenceValue);
 
-		return ZG_SUCCESS;
-	}
-
-	ZgErrorCode copyQueue(ZgCommandQueue** commandQueueOut) noexcept override final
-	{
-		*commandQueueOut = &mCommandQueueCopy;
 		return ZG_SUCCESS;
 	}
 
@@ -758,6 +746,21 @@ public:
 		return ZG_SUCCESS;
 	}
 
+	// CommandQueue methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgErrorCode getPresentQueue(ZgCommandQueue** presentQueueOut) noexcept override final
+	{
+		*presentQueueOut = &mCommandQueuePresent;
+		return ZG_SUCCESS;
+	}
+
+	ZgErrorCode getCopyQueue(ZgCommandQueue** copyQueueOut) noexcept override final
+	{
+		*copyQueueOut = &mCommandQueueCopy;
+		return ZG_SUCCESS;
+	}
+
 	// Private members
 	// --------------------------------------------------------------------------------------------
 private:
@@ -781,7 +784,7 @@ private:
 	D3D12DescriptorRingBuffer mGlobalDescriptorRingBuffer;
 
 	// Command queues
-	D3D12CommandQueue mCommandQueueGraphicsPresent;
+	D3D12CommandQueue mCommandQueuePresent;
 	//D3D12CommandQueue mCommandQueueAsyncCompute;
 	D3D12CommandQueue mCommandQueueCopy;
 	
