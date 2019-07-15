@@ -108,6 +108,9 @@ public:
 		// Destroy residency manager (which apparently has to be done manually...)
 		mState->residencyManager.Destroy();
 
+		// Log debug messages
+		logDebugMessages();
+
 		// Get debug device for report live objects in debug mode
 		ComPtr<ID3D12DebugDevice1> debugDevice;
 		if (mDebugMode) {
@@ -240,6 +243,9 @@ public:
 			// Break on corruption and error messages
 			CHECK_D3D12(mLog) mState->infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
 			CHECK_D3D12(mLog) mState->infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
+
+			// Log initial messages
+			logDebugMessages();
 		}
 
 		// Create residency manager
@@ -367,6 +373,7 @@ public:
 		mState->height = 0;
 		this->swapchainResize(settings.width, settings.height);
 
+		logDebugMessages();
 		return ZG_SUCCESS;
 	}
 
@@ -486,6 +493,7 @@ public:
 			mState->backBuffers[i].dsvResource = backBufferDsv;
 		}
 
+		logDebugMessages();
 		return ZG_SUCCESS;
 	}
 
@@ -515,6 +523,7 @@ public:
 		// Return backbuffer
 		*framebufferOut = &backBuffer;
 
+		logDebugMessages();
 		return ZG_SUCCESS;
 	}
 
@@ -556,44 +565,7 @@ public:
 		uint64_t nextBackBufferFenceValue = mState->swapChainFenceValues[mState->currentBackBufferIdx];
 		mState->commandQueuePresent.waitOnCpuInternal(nextBackBufferFenceValue);
 
-		// Log D3D12 messages in debug mode
-		if (mDebugMode) {
-
-			uint64_t numMessages = mState->infoQueue->GetNumStoredMessages();
-			for (uint64_t i = 0; i < numMessages; i++) {
-				
-				// Get the size of the message
-				SIZE_T messageLength = 0;
-				CHECK_D3D12(mLog) mState->infoQueue->GetMessage(0, NULL, &messageLength);
-
-				// Allocate space and get the message
-				D3D12_MESSAGE* message = (D3D12_MESSAGE*)mAllocator.allocate(
-					mAllocator.userPtr, uint32_t(messageLength), "D3D12Message");
-				CHECK_D3D12(mLog) mState->infoQueue->GetMessage(0, message, &messageLength);
-				
-				// Log message
-				switch (message->Severity) {
-				case D3D12_MESSAGE_SEVERITY_CORRUPTION:
-				case D3D12_MESSAGE_SEVERITY_ERROR:
-					ZG_ERROR(mLog, "D3D12Message: %s", message->pDescription);
-					break;
-				case D3D12_MESSAGE_SEVERITY_WARNING:
-					ZG_WARNING(mLog, "D3D12Message: %s", message->pDescription);
-					break;
-				case D3D12_MESSAGE_SEVERITY_INFO:
-				case D3D12_MESSAGE_SEVERITY_MESSAGE:
-					ZG_INFO(mLog, "D3D12Message: %s", message->pDescription);
-					break;
-				}
-
-				// Deallocate message
-				mAllocator.deallocate(mAllocator.userPtr, message);
-			}
-
-			// Clear stored messages
-			mState->infoQueue->ClearStoredMessages();
-		}
-
+		logDebugMessages();
 		return ZG_SUCCESS;
 	}
 
@@ -612,22 +584,9 @@ public:
 		const ZgPipelineRenderingCreateInfoFileSPIRV& createInfo) noexcept override final
 	{
 		// Initialize DXC compiler if necessary
-		// TODO: Provide our own allocator
 		{
-			std::lock_guard<std::mutex> lock(mContextMutex);
-			if (mState->dxcLibrary == nullptr) {
-
-				// Initialize DXC library
-				HRESULT res = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&mState->dxcLibrary));
-				if (!SUCCEEDED(res)) return ZG_ERROR_GENERIC;
-
-				// Initialize DXC compiler
-				res = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&mState->dxcCompiler));
-				if (!SUCCEEDED(res)) {
-					mState->dxcLibrary = nullptr;
-					return ZG_ERROR_GENERIC;
-				}
-			}
+			ZgErrorCode res = initializeDxcCompiler();
+			if (res != ZG_SUCCESS) return res;
 		}
 		
 		// Create pipeline
@@ -653,22 +612,9 @@ public:
 		const ZgPipelineRenderingCreateInfoFileHLSL& createInfo) noexcept override final
 	{
 		// Initialize DXC compiler if necessary
-		// TODO: Provide our own allocator
 		{
-			std::lock_guard<std::mutex> lock(mContextMutex);
-			if (mState->dxcLibrary == nullptr) {
-
-				// Initialize DXC library
-				HRESULT res = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&mState->dxcLibrary));
-				if (!SUCCEEDED(res)) return ZG_ERROR_GENERIC;
-
-				// Initialize DXC compiler
-				res = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&mState->dxcCompiler));
-				if (!SUCCEEDED(res)) {
-					mState->dxcLibrary = nullptr;
-					return ZG_ERROR_GENERIC;
-				}
-			}
+			ZgErrorCode res = initializeDxcCompiler();
+			if (res != ZG_SUCCESS) return res;
 		}
 		
 		// Create pipeline
@@ -694,22 +640,9 @@ public:
 		const ZgPipelineRenderingCreateInfoSourceHLSL& createInfo) noexcept override final
 	{
 		// Initialize DXC compiler if necessary
-		// TODO: Provide our own allocator
 		{
-			std::lock_guard<std::mutex> lock(mContextMutex);
-			if (mState->dxcLibrary == nullptr) {
-
-				// Initialize DXC library
-				HRESULT res = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&mState->dxcLibrary));
-				if (!SUCCEEDED(res)) return ZG_ERROR_GENERIC;
-
-				// Initialize DXC compiler
-				res = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&mState->dxcCompiler));
-				if (!SUCCEEDED(res)) {
-					mState->dxcLibrary = nullptr;
-					return ZG_ERROR_GENERIC;
-				}
-			}
+			ZgErrorCode res = initializeDxcCompiler();
+			if (res != ZG_SUCCESS) return res;
 		}
 		
 		// Create pipeline
@@ -874,9 +807,73 @@ public:
 		return ZG_SUCCESS;
 	}
 
+private:
+	// Private methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgErrorCode initializeDxcCompiler() noexcept
+	{
+		// Initialize DXC compiler if necessary
+		// TODO: Provide our own allocator
+		std::lock_guard<std::mutex> lock(mContextMutex);
+		if (mState->dxcLibrary == nullptr) {
+
+			// Initialize DXC library
+			HRESULT res = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&mState->dxcLibrary));
+			if (!SUCCEEDED(res)) return ZG_ERROR_GENERIC;
+
+			// Initialize DXC compiler
+			res = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&mState->dxcCompiler));
+			if (!SUCCEEDED(res)) {
+				mState->dxcLibrary = nullptr;
+				return ZG_ERROR_GENERIC;
+			}
+		}
+		return ZG_SUCCESS;
+	}
+
+	void logDebugMessages() noexcept
+	{
+		if (!mDebugMode) return;
+
+		// Log D3D12 messages in debug mode
+		uint64_t numMessages = mState->infoQueue->GetNumStoredMessages();
+		for (uint64_t i = 0; i < numMessages; i++) {
+
+			// Get the size of the message
+			SIZE_T messageLength = 0;
+			CHECK_D3D12(mLog) mState->infoQueue->GetMessage(0, NULL, &messageLength);
+
+			// Allocate space and get the message
+			D3D12_MESSAGE* message = (D3D12_MESSAGE*)mAllocator.allocate(
+				mAllocator.userPtr, uint32_t(messageLength), "D3D12Message");
+			CHECK_D3D12(mLog) mState->infoQueue->GetMessage(0, message, &messageLength);
+
+			// Log message
+			switch (message->Severity) {
+			case D3D12_MESSAGE_SEVERITY_CORRUPTION:
+			case D3D12_MESSAGE_SEVERITY_ERROR:
+				ZG_ERROR(mLog, "D3D12Message: %s", message->pDescription);
+				break;
+			case D3D12_MESSAGE_SEVERITY_WARNING:
+				ZG_WARNING(mLog, "D3D12Message: %s", message->pDescription);
+				break;
+			case D3D12_MESSAGE_SEVERITY_INFO:
+			case D3D12_MESSAGE_SEVERITY_MESSAGE:
+				ZG_INFO(mLog, "D3D12Message: %s", message->pDescription);
+				break;
+			}
+
+			// Deallocate message
+			mAllocator.deallocate(mAllocator.userPtr, message);
+		}
+
+		// Clear stored messages
+		mState->infoQueue->ClearStoredMessages();
+	}
+	
 	// Private members
 	// --------------------------------------------------------------------------------------------
-private:
 
 	std::mutex mContextMutex; // Access to the context is synchronized
 	ZgLogger mLog = {};
