@@ -37,6 +37,54 @@ namespace zg {
 
 constexpr auto NUM_SWAP_CHAIN_BUFFERS = 3;
 
+// D3D12 Backend State
+// ------------------------------------------------------------------------------------------------
+
+// We keep a separate state in order to create an easy way to control the order things are
+// destroyed in. E.g., we would like to destroy everything but the absolute minimal required in
+// order to check check for dangling objects using ReportLiveObjects.
+struct D3D12BackendState final {
+
+	// DXC compiler DLLs, lazily loaded if needed
+	ComPtr<IDxcLibrary> dxcLibrary;
+	ComPtr<IDxcCompiler> dxcCompiler;
+
+	// Device
+	ComPtr<IDXGIAdapter4> dxgiAdapter;
+	ComPtr<ID3D12Device3> device;
+	
+	// Debug info queue
+	ComPtr<ID3D12InfoQueue> infoQueue;
+
+	// Residency manager
+	D3DX12Residency::ResidencyManager residencyManager;
+
+	// Global descriptor ring buffers
+	D3D12DescriptorRingBuffer globalDescriptorRingBuffer;
+
+	// Command queues
+	D3D12CommandQueue commandQueuePresent;
+	//D3D12CommandQueue commandQueueAsyncCompute;
+	D3D12CommandQueue commandQueueCopy;
+	
+	// Swapchain and backbuffers
+	uint32_t width = 0;
+	uint32_t height = 0;
+	ComPtr<IDXGISwapChain4> swapChain;
+	ComPtr<ID3D12DescriptorHeap> swapChainRtvDescriptorHeap;
+	uint32_t descriptorSizeRTV = 0;
+	ComPtr<ID3D12DescriptorHeap> swapChainDsvDescriptorHeap;
+	uint32_t descriptorSizeDSV = 0;
+	D3D12Framebuffer backBuffers[NUM_SWAP_CHAIN_BUFFERS];
+	uint64_t swapChainFenceValues[NUM_SWAP_CHAIN_BUFFERS] = {};
+	int currentBackBufferIdx = 0;
+
+	bool allowTearing = false;
+
+	// Memory
+	std::atomic_uint64_t resourceUniqueIdentifierCounter = 1;
+};
+
 // D3D12 Backend implementation
 // ------------------------------------------------------------------------------------------------
 
@@ -53,8 +101,27 @@ public:
 
 	virtual ~D3D12Backend() noexcept
 	{
-		mCommandQueuePresent.flush();
-		mCommandQueueCopy.flush();
+		// Flush command queues
+		mState->commandQueuePresent.flush();
+		mState->commandQueueCopy.flush();
+
+		// Destroy residency manager (which apparently has to be done manually...)
+		mState->residencyManager.Destroy();
+
+		// Get debug device for report live objects in debug mode
+		ComPtr<ID3D12DebugDevice1> debugDevice;
+		if (mDebugMode) {
+			CHECK_D3D12(mLog) mState->device->QueryInterface(IID_PPV_ARGS(&debugDevice));
+		}
+
+		// Delete most state
+		zgDelete(mAllocator, mState);
+
+		// Report live objects
+		if (mDebugMode) {
+			CHECK_D3D12(mLog) debugDevice->ReportLiveDeviceObjects(
+				D3D12_RLDO_FLAGS(D3D12_RLDO_DETAIL | D3D12_RLDO_IGNORE_INTERNAL));
+		}
 	}
 
 	// State methods
@@ -62,23 +129,31 @@ public:
 
 	ZgErrorCode init(ZgContextInitSettings& settings) noexcept
 	{
+		// Initialize members
 		mLog = settings.logger;
 		mAllocator = settings.allocator;
 		mDebugMode = settings.debugMode;
-		mWidth = settings.width;
-		mHeight = settings.height;
+		mState = zgNew<D3D12BackendState>(mAllocator, "D3D12BackendState");
+		
+		// Initialize part of state
+		mState->width = settings.width;
+		mState->height = settings.height;
 		HWND hwnd = (HWND)settings.nativeWindowHandle;
-		if (mWidth == 0 || mHeight == 0) return ZG_ERROR_INVALID_ARGUMENT;
+		if (mState->width == 0 || mState->height == 0) return ZG_ERROR_INVALID_ARGUMENT;
 
 		// Enable debug layers in debug mode
 		if (settings.debugMode) {
-			ComPtr<ID3D12Debug> debugInterface;
-			if (D3D12_SUCC(mLog, D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface)))) {
-				debugInterface->EnableDebugLayer();
-			}
-			else {
+			
+			// Get debug interface
+			ComPtr<ID3D12Debug1> debugInterface;
+			if (D3D12_FAIL(mLog, D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface)))) {
 				return ZG_ERROR_GENERIC;
 			}
+			
+			// Enable debug layer and GPU based validation
+			debugInterface->EnableDebugLayer();
+			debugInterface->SetEnableGPUBasedValidation(TRUE);
+
 			ZG_INFO(mLog, "D3D12 debug mode enabled");
 		}
 
@@ -130,7 +205,7 @@ public:
 			if (bestAdapterVideoMemory == 0) return ZG_ERROR_NO_SUITABLE_DEVICE;
 
 			// Convert device to DXGIAdapter4
-			if (D3D12_FAIL(mLog, bestAdapter.As(&mDxgiAdapter))) {
+			if (D3D12_FAIL(mLog, bestAdapter.As(&mState->dxgiAdapter))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
 
@@ -151,31 +226,29 @@ public:
 
 		// Create device
 		if (D3D12_FAIL(mLog, D3D12CreateDevice(
-			mDxgiAdapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&mDevice)))) {
+			mState->dxgiAdapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&mState->device)))) {
 			return ZG_ERROR_NO_SUITABLE_DEVICE;
 		}
 
 		// Enable debug message in debug mode
-		// TODO: Figure out how to make work with callback based logger.
 		if (mDebugMode) {
 
-			ComPtr<ID3D12InfoQueue> infoQueue;
-			if (D3D12_FAIL(mLog, mDevice.As(&infoQueue))) {
+			if (D3D12_FAIL(mLog, mState->device->QueryInterface(IID_PPV_ARGS(&mState->infoQueue)))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
 
-			infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
-			infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
-			infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, TRUE);
+			// Break on corruption and error messages
+			CHECK_D3D12(mLog) mState->infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
+			CHECK_D3D12(mLog) mState->infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
 		}
 
 		// Create residency manager
 		// Latency: "NumberOfBufferedFrames * NumberOfCommandListSubmissionsPerFrame throughout
 		// the execution of your app."
-		// Hmm. Lets try 6 or something, seems to be default value.
-		const uint32_t residencyManagerMaxLatency = 6;
-		if (D3D12_FAIL(mLog, mResidencyManager.Initialize(
-			mDevice.Get(), 0, mDxgiAdapter.Get(), residencyManagerMaxLatency))) {
+		// Hmm. Lets try 128 or something
+		const uint32_t residencyManagerMaxLatency = 128;
+		if (D3D12_FAIL(mLog, mState->residencyManager.Initialize(
+			mState->device.Get(), 0, mState->dxgiAdapter.Get(), residencyManagerMaxLatency))) {
 			return ZG_ERROR_GENERIC;
 		}
 
@@ -184,8 +257,8 @@ public:
 		ZG_INFO(mLog, "Attempting to allocate %u descriptors for the global ring buffer",
 			NUM_DESCRIPTORS);
 		{
-			ZgErrorCode res = mGlobalDescriptorRingBuffer.create(
-				*mDevice.Get(), mLog, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, NUM_DESCRIPTORS);
+			ZgErrorCode res = mState->globalDescriptorRingBuffer.create(
+				*mState->device.Get(), mLog, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, NUM_DESCRIPTORS);
 			if (res != ZG_SUCCESS) {
 				ZG_ERROR(mLog, "Failed to allocate descriptors");
 				return ZG_ERROR_GPU_OUT_OF_MEMORY;
@@ -195,11 +268,11 @@ public:
 		// Create command queue
 		const uint32_t MAX_NUM_COMMAND_LISTS_SWAPCHAIN_QUEUE = 256;
 		const uint32_t MAX_NUM_BUFFERS_PER_COMMAND_LIST_SWAPCHAIN_QUEUE = 256;
-		ZgErrorCode res = mCommandQueuePresent.create(
+		ZgErrorCode res = mState->commandQueuePresent.create(
 			D3D12_COMMAND_LIST_TYPE_DIRECT,
-			mDevice,
-			&mResidencyManager,
-			&mGlobalDescriptorRingBuffer,
+			mState->device,
+			&mState->residencyManager,
+			&mState->globalDescriptorRingBuffer,
 			MAX_NUM_COMMAND_LISTS_SWAPCHAIN_QUEUE,
 			MAX_NUM_BUFFERS_PER_COMMAND_LIST_SWAPCHAIN_QUEUE,
 			mLog,
@@ -209,11 +282,11 @@ public:
 		// Create copy queue
 		const uint32_t MAX_NUM_COMMAND_LISTS_COPY_QUEUE = 256;
 		const uint32_t MAX_NUM_BUFFERS_PER_COMMAND_LIST_COPY_QUEUE = 256;
-		res = mCommandQueueCopy.create(
+		res = mState->commandQueueCopy.create(
 			D3D12_COMMAND_LIST_TYPE_COPY,
-			mDevice,
-			&mResidencyManager,
-			&mGlobalDescriptorRingBuffer,
+			mState->device,
+			&mState->residencyManager,
+			&mState->globalDescriptorRingBuffer,
 			MAX_NUM_COMMAND_LISTS_COPY_QUEUE,
 			MAX_NUM_BUFFERS_PER_COMMAND_LIST_COPY_QUEUE,
 			mLog,
@@ -226,14 +299,14 @@ public:
 			BOOL tearingAllowed = FALSE;
 			CHECK_D3D12(mLog) dxgiFactory->CheckFeatureSupport(
 				DXGI_FEATURE_PRESENT_ALLOW_TEARING, &tearingAllowed, sizeof(tearingAllowed));
-			mAllowTearing = tearingAllowed != FALSE;
+			mState->allowTearing = tearingAllowed != FALSE;
 		}
 
 		// Create swap chain
 		{
 			DXGI_SWAP_CHAIN_DESC1 desc = {};
-			desc.Width = mWidth;
-			desc.Height = mHeight;
+			desc.Width = mState->width;
+			desc.Height = mState->height;
 			desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 			desc.Stereo = FALSE;
 			desc.SampleDesc = { 1, 0 }; // No MSAA
@@ -242,15 +315,15 @@ public:
 			desc.Scaling = DXGI_SCALING_STRETCH;
 			desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL; // Vsync? TODO: DXGI_SWAP_EFFECT_FLIP_DISCARD
 			desc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-			desc.Flags = (mAllowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
+			desc.Flags = (mState->allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
 
 			ComPtr<IDXGISwapChain1> tmpSwapChain;
 			if (D3D12_FAIL(mLog, dxgiFactory->CreateSwapChainForHwnd(
-				mCommandQueuePresent.commandQueue(), hwnd, &desc, nullptr, nullptr, &tmpSwapChain))) {
+				mState->commandQueuePresent.commandQueue(), hwnd, &desc, nullptr, nullptr, &tmpSwapChain))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
 
-			if (D3D12_FAIL(mLog, tmpSwapChain.As(&mSwapChain))) {
+			if (D3D12_FAIL(mLog, tmpSwapChain.As(&mState->swapChain))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
 		}
@@ -265,13 +338,13 @@ public:
 			rtvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 			rtvDesc.NumDescriptors = NUM_SWAP_CHAIN_BUFFERS;
 			rtvDesc.NodeMask = 0;
-			if (D3D12_FAIL(mLog, mDevice->CreateDescriptorHeap(
-				&rtvDesc, IID_PPV_ARGS(&mSwapChainRtvDescriptorHeap)))) {
+			if (D3D12_FAIL(mLog, mState->device->CreateDescriptorHeap(
+				&rtvDesc, IID_PPV_ARGS(&mState->swapChainRtvDescriptorHeap)))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
 
 			// The size of a RTV descriptor
-			mDescriptorSizeRTV = mDevice->GetDescriptorHandleIncrementSize(
+			mState->descriptorSizeRTV = mState->device->GetDescriptorHandleIncrementSize(
 				D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 			// DSV descriptor heap
@@ -279,19 +352,19 @@ public:
 			dsvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 			dsvDesc.NumDescriptors = NUM_SWAP_CHAIN_BUFFERS;
 			dsvDesc.NodeMask = 0;
-			if (D3D12_FAIL(mLog, mDevice->CreateDescriptorHeap(
-				&dsvDesc, IID_PPV_ARGS(&mSwapChainDsvDescriptorHeap)))) {
+			if (D3D12_FAIL(mLog, mState->device->CreateDescriptorHeap(
+				&dsvDesc, IID_PPV_ARGS(&mState->swapChainDsvDescriptorHeap)))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
 
 			// The size of a DSV descriptor
-			mDescriptorSizeDSV = mDevice->GetDescriptorHandleIncrementSize(
+			mState->descriptorSizeDSV = mState->device->GetDescriptorHandleIncrementSize(
 				D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 		}
 
 		// Create swap chain framebuffers (RTVs and DSVs)
-		mWidth = 0;
-		mHeight = 0;
+		mState->width = 0;
+		mState->height = 0;
 		this->swapchainResize(settings.width, settings.height);
 
 		return ZG_SUCCESS;
@@ -302,66 +375,66 @@ public:
 
 	ZgErrorCode swapchainResize(uint32_t width, uint32_t height) noexcept override final
 	{
-		if (mWidth == width && mHeight == height) return ZG_SUCCESS;
+		if (mState->width == width && mState->height == height) return ZG_SUCCESS;
 		std::lock_guard<std::mutex> lock(mContextMutex);
 
 		// Log that we are resizing the swap chain and then change the stored size
 		bool initialCreation = false;
-		if (mWidth == 0 && mHeight == 0) {
+		if (mState->width == 0 && mState->height == 0) {
 			ZG_INFO(mLog, "Creating swap chain framebuffers, size: %ux%u", width, height);
 			initialCreation = true;
 		}
 		else {
 			ZG_INFO(mLog, "Resizing swap chain framebuffers from %ux%u to %ux%u",
-				mWidth, mHeight, width, height);
+				mState->width, mState->height, width, height);
 		}
-		mWidth = width;
-		mHeight = height;
+		mState->width = width;
+		mState->height = height;
 
 		// Flush command queue so its safe to resize back buffers
-		mCommandQueuePresent.flush();
+		mState->commandQueuePresent.flush();
 
 		if (!initialCreation) {
 			// Release previous back buffers
 			for (int i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
-				mBackBuffers[i].rtvResource.Reset();
+				mState->backBuffers[i].rtvResource.Reset();
 			}
 
 			// Resize swap chain's back buffers
 			DXGI_SWAP_CHAIN_DESC desc = {};
-			CHECK_D3D12(mLog) mSwapChain->GetDesc(&desc);
-			CHECK_D3D12(mLog) mSwapChain->ResizeBuffers(
+			CHECK_D3D12(mLog) mState->swapChain->GetDesc(&desc);
+			CHECK_D3D12(mLog) mState->swapChain->ResizeBuffers(
 				NUM_SWAP_CHAIN_BUFFERS, width, height, desc.BufferDesc.Format, desc.Flags);
 		}
 
 		// Update current back buffer index
-		mCurrentBackBufferIdx = mSwapChain->GetCurrentBackBufferIndex();
+		mState->currentBackBufferIdx = mState->swapChain->GetCurrentBackBufferIndex();
 
 		// The first descriptor of the swap chain's descriptor heaps
 		D3D12_CPU_DESCRIPTOR_HANDLE startOfRtvDescriptorHeap =
-			mSwapChainRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+			mState->swapChainRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 		D3D12_CPU_DESCRIPTOR_HANDLE startOfDsvDescriptorHeap =
-			mSwapChainDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+			mState->swapChainDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
 		// Create render target views (RTVs) for swap chain
 		for (UINT i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
 
 			// Get i:th back buffer from swap chain
 			ComPtr<ID3D12Resource> backBufferRtv;
-			CHECK_D3D12(mLog) mSwapChain->GetBuffer(i, IID_PPV_ARGS(&backBufferRtv));
+			CHECK_D3D12(mLog) mState->swapChain->GetBuffer(i, IID_PPV_ARGS(&backBufferRtv));
 
 			// Set width and height
-			mBackBuffers[i].width = width;
-			mBackBuffers[i].height = height;
+			mState->backBuffers[i].width = width;
+			mState->backBuffers[i].height = height;
 
 			// Get the i:th RTV descriptor from the swap chain descriptor heap
 			D3D12_CPU_DESCRIPTOR_HANDLE rtvDescriptor = {};
-			rtvDescriptor.ptr = startOfRtvDescriptorHeap.ptr + mDescriptorSizeRTV * i;
-			mBackBuffers[i].rtvDescriptor = rtvDescriptor;
+			rtvDescriptor.ptr = startOfRtvDescriptorHeap.ptr + mState->descriptorSizeRTV * i;
+			mState->backBuffers[i].rtvDescriptor = rtvDescriptor;
 
 			// Create render target view for i:th backbuffer
-			mDevice->CreateRenderTargetView(backBufferRtv.Get(), nullptr, rtvDescriptor);
-			mBackBuffers[i].rtvResource = backBufferRtv;
+			mState->device->CreateRenderTargetView(backBufferRtv.Get(), nullptr, rtvDescriptor);
+			mState->backBuffers[i].rtvResource = backBufferRtv;
 
 
 			// Create the depth buffer
@@ -389,7 +462,7 @@ public:
 			optimizedClearValue.DepthStencil.Stencil = 0;
 
 			ComPtr<ID3D12Resource> backBufferDsv;
-			CHECK_D3D12(mLog) mDevice->CreateCommittedResource(
+			CHECK_D3D12(mLog) mState->device->CreateCommittedResource(
 				&dsvHeapProperties,
 				D3D12_HEAP_FLAG_NONE,
 				&dsvResourceDesc,
@@ -399,8 +472,8 @@ public:
 			
 			// Get the i:th DSV descriptor from the swap chain descriptor heap
 			D3D12_CPU_DESCRIPTOR_HANDLE dsvDescriptor = {};
-			dsvDescriptor.ptr = startOfDsvDescriptorHeap.ptr + mDescriptorSizeDSV * i;
-			mBackBuffers[i].dsvDescriptor = dsvDescriptor;
+			dsvDescriptor.ptr = startOfDsvDescriptorHeap.ptr + mState->descriptorSizeDSV * i;
+			mState->backBuffers[i].dsvDescriptor = dsvDescriptor;
 
 			// Create depth buffer view
 			D3D12_DEPTH_STENCIL_VIEW_DESC dsvViewDesc = {};
@@ -409,8 +482,8 @@ public:
 			dsvViewDesc.Flags = D3D12_DSV_FLAG_NONE;
 			dsvViewDesc.Texture2D.MipSlice = 0;
 
-			mDevice->CreateDepthStencilView(backBufferDsv.Get(), &dsvViewDesc, dsvDescriptor);
-			mBackBuffers[i].dsvResource = backBufferDsv;
+			mState->device->CreateDepthStencilView(backBufferDsv.Get(), &dsvViewDesc, dsvDescriptor);
+			mState->backBuffers[i].dsvResource = backBufferDsv;
 		}
 
 		return ZG_SUCCESS;
@@ -422,12 +495,12 @@ public:
 		std::lock_guard<std::mutex> lock(mContextMutex);
 
 		// Retrieve current back buffer to be rendered to
-		D3D12Framebuffer& backBuffer = mBackBuffers[mCurrentBackBufferIdx];
+		D3D12Framebuffer& backBuffer = mState->backBuffers[mState->currentBackBufferIdx];
 
 		// Create a small command list to insert the transition barrier for the back buffer
 		ZgCommandList* barrierCommandList = nullptr;
 		ZgErrorCode zgRes =
-			mCommandQueuePresent.beginCommandListRecording(&barrierCommandList);
+			mState->commandQueuePresent.beginCommandListRecording(&barrierCommandList);
 		if (zgRes != ZG_SUCCESS) return zgRes;
 
 		// Create barrier to transition back buffer into render target state
@@ -437,7 +510,7 @@ public:
 			commandList->ResourceBarrier(1, &barrier);
 
 		// Execute command list containing the barrier transition
-		mCommandQueuePresent.executeCommandList(barrierCommandList);
+		mState->commandQueuePresent.executeCommandList(barrierCommandList);
 
 		// Return backbuffer
 		*framebufferOut = &backBuffer;
@@ -450,12 +523,12 @@ public:
 		std::lock_guard<std::mutex> lock(mContextMutex);
 
 		// Retrieve current back buffer that has been rendered to
-		D3D12Framebuffer& backBuffer = mBackBuffers[mCurrentBackBufferIdx];
+		D3D12Framebuffer& backBuffer = mState->backBuffers[mState->currentBackBufferIdx];
 
 		// Create a small command list to insert the transition barrier for the back buffer
 		ZgCommandList* barrierCommandList = nullptr;
 		ZgErrorCode zgRes =
-			mCommandQueuePresent.beginCommandListRecording(&barrierCommandList);
+			mState->commandQueuePresent.beginCommandListRecording(&barrierCommandList);
 		if (zgRes != ZG_SUCCESS) return zgRes;
 
 		// Create barrier to transition back buffer into present state
@@ -465,21 +538,61 @@ public:
 			commandList->ResourceBarrier(1, &barrier);
 
 		// Execute command list containing the barrier transition
-		mCommandQueuePresent.executeCommandList(barrierCommandList);
+		mState->commandQueuePresent.executeCommandList(barrierCommandList);
 
 		// Signal the graphics present queue
-		mSwapChainFenceValues[mCurrentBackBufferIdx] = mCommandQueuePresent.signalOnGpuInternal();
+		mState->swapChainFenceValues[mState->currentBackBufferIdx] =
+			mState->commandQueuePresent.signalOnGpuInternal();
 
 		// Present back buffer
 		UINT vsync = 0; // TODO (MUST be 0 if DXGI_PRESENT_ALLOW_TEARING)
-		CHECK_D3D12(mLog) mSwapChain->Present(vsync, mAllowTearing ? DXGI_PRESENT_ALLOW_TEARING : 0);
+		CHECK_D3D12(mLog) mState->swapChain->Present(
+			vsync, mState->allowTearing ? DXGI_PRESENT_ALLOW_TEARING : 0);
 
 		// Get next back buffer index
-		mCurrentBackBufferIdx = mSwapChain->GetCurrentBackBufferIndex();
+		mState->currentBackBufferIdx = mState->swapChain->GetCurrentBackBufferIndex();
 
 		// Wait for the next back buffer to finish rendering so it's safe to use
-		uint64_t nextBackBufferFenceValue = mSwapChainFenceValues[mCurrentBackBufferIdx];
-		mCommandQueuePresent.waitOnCpuInternal(nextBackBufferFenceValue);
+		uint64_t nextBackBufferFenceValue = mState->swapChainFenceValues[mState->currentBackBufferIdx];
+		mState->commandQueuePresent.waitOnCpuInternal(nextBackBufferFenceValue);
+
+		// Log D3D12 messages in debug mode
+		if (mDebugMode) {
+
+			uint64_t numMessages = mState->infoQueue->GetNumStoredMessages();
+			for (uint64_t i = 0; i < numMessages; i++) {
+				
+				// Get the size of the message
+				SIZE_T messageLength = 0;
+				CHECK_D3D12(mLog) mState->infoQueue->GetMessage(0, NULL, &messageLength);
+
+				// Allocate space and get the message
+				D3D12_MESSAGE* message = (D3D12_MESSAGE*)mAllocator.allocate(
+					mAllocator.userPtr, uint32_t(messageLength), "D3D12Message");
+				CHECK_D3D12(mLog) mState->infoQueue->GetMessage(0, message, &messageLength);
+				
+				// Log message
+				switch (message->Severity) {
+				case D3D12_MESSAGE_SEVERITY_CORRUPTION:
+				case D3D12_MESSAGE_SEVERITY_ERROR:
+					ZG_ERROR(mLog, "D3D12Message: %s", message->pDescription);
+					break;
+				case D3D12_MESSAGE_SEVERITY_WARNING:
+					ZG_WARNING(mLog, "D3D12Message: %s", message->pDescription);
+					break;
+				case D3D12_MESSAGE_SEVERITY_INFO:
+				case D3D12_MESSAGE_SEVERITY_MESSAGE:
+					ZG_INFO(mLog, "D3D12Message: %s", message->pDescription);
+					break;
+				}
+
+				// Deallocate message
+				mAllocator.deallocate(mAllocator.userPtr, message);
+			}
+
+			// Clear stored messages
+			mState->infoQueue->ClearStoredMessages();
+		}
 
 		return ZG_SUCCESS;
 	}
@@ -502,16 +615,16 @@ public:
 		// TODO: Provide our own allocator
 		{
 			std::lock_guard<std::mutex> lock(mContextMutex);
-			if (mDxcLibrary == nullptr) {
+			if (mState->dxcLibrary == nullptr) {
 
 				// Initialize DXC library
-				HRESULT res = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&mDxcLibrary));
+				HRESULT res = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&mState->dxcLibrary));
 				if (!SUCCEEDED(res)) return ZG_ERROR_GENERIC;
 
 				// Initialize DXC compiler
-				res = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&mDxcCompiler));
+				res = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&mState->dxcCompiler));
 				if (!SUCCEEDED(res)) {
-					mDxcLibrary = nullptr;
+					mState->dxcLibrary = nullptr;
 					return ZG_ERROR_GENERIC;
 				}
 			}
@@ -523,11 +636,11 @@ public:
 			&d3d12pipeline,
 			signatureOut,
 			createInfo,
-			*mDxcLibrary.Get(),
-			*mDxcCompiler.Get(),
+			*mState->dxcLibrary.Get(),
+			*mState->dxcCompiler.Get(),
 			mLog,
 			mAllocator,
-			*mDevice.Get());
+			*mState->device.Get());
 		if (res != ZG_SUCCESS) return res;
 		
 		*pipelineOut = d3d12pipeline;
@@ -543,16 +656,16 @@ public:
 		// TODO: Provide our own allocator
 		{
 			std::lock_guard<std::mutex> lock(mContextMutex);
-			if (mDxcLibrary == nullptr) {
+			if (mState->dxcLibrary == nullptr) {
 
 				// Initialize DXC library
-				HRESULT res = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&mDxcLibrary));
+				HRESULT res = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&mState->dxcLibrary));
 				if (!SUCCEEDED(res)) return ZG_ERROR_GENERIC;
 
 				// Initialize DXC compiler
-				res = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&mDxcCompiler));
+				res = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&mState->dxcCompiler));
 				if (!SUCCEEDED(res)) {
-					mDxcLibrary = nullptr;
+					mState->dxcLibrary = nullptr;
 					return ZG_ERROR_GENERIC;
 				}
 			}
@@ -564,11 +677,11 @@ public:
 			&d3d12pipeline,
 			signatureOut,
 			createInfo,
-			*mDxcLibrary.Get(),
-			*mDxcCompiler.Get(),
+			*mState->dxcLibrary.Get(),
+			*mState->dxcCompiler.Get(),
 			mLog,
 			mAllocator,
-			*mDevice.Get());
+			*mState->device.Get());
 		if (res != ZG_SUCCESS) return res;
 		
 		*pipelineOut = d3d12pipeline;
@@ -584,16 +697,16 @@ public:
 		// TODO: Provide our own allocator
 		{
 			std::lock_guard<std::mutex> lock(mContextMutex);
-			if (mDxcLibrary == nullptr) {
+			if (mState->dxcLibrary == nullptr) {
 
 				// Initialize DXC library
-				HRESULT res = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&mDxcLibrary));
+				HRESULT res = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&mState->dxcLibrary));
 				if (!SUCCEEDED(res)) return ZG_ERROR_GENERIC;
 
 				// Initialize DXC compiler
-				res = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&mDxcCompiler));
+				res = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&mState->dxcCompiler));
 				if (!SUCCEEDED(res)) {
-					mDxcLibrary = nullptr;
+					mState->dxcLibrary = nullptr;
 					return ZG_ERROR_GENERIC;
 				}
 			}
@@ -605,11 +718,11 @@ public:
 			&d3d12pipeline,
 			signatureOut,
 			createInfo,
-			*mDxcLibrary.Get(),
-			*mDxcCompiler.Get(),
+			*mState->dxcLibrary.Get(),
+			*mState->dxcCompiler.Get(),
 			mLog,
 			mAllocator,
-			*mDevice.Get());
+			*mState->device.Get());
 		if (res != ZG_SUCCESS) return res;
 		
 		*pipelineOut = d3d12pipeline;
@@ -645,9 +758,9 @@ public:
 		return createMemoryHeap(
 			mLog,
 			mAllocator,
-			*mDevice.Get(),
-			&mResourceUniqueIdentifierCounter,
-			mResidencyManager,
+			*mState->device.Get(),
+			&mState->resourceUniqueIdentifierCounter,
+			mState->residencyManager,
 			reinterpret_cast<D3D12MemoryHeap**>(memoryHeapOut),
 			createInfo);
 	}
@@ -659,7 +772,7 @@ public:
 
 		// Stop tracking
 		D3D12MemoryHeap* heap = static_cast<D3D12MemoryHeap*>(memoryHeapIn);
-		mResidencyManager.EndTrackingObject(&heap->managedObject);
+		mState->residencyManager.EndTrackingObject(&heap->managedObject);
 
 		zgDelete(mAllocator, heap);
 		return ZG_SUCCESS;
@@ -710,7 +823,7 @@ public:
 		D3D12_RESOURCE_DESC desc = createInfoToResourceDesc(createInfo);
 
 		// Get allocation info
-		D3D12_RESOURCE_ALLOCATION_INFO allocInfo = mDevice->GetResourceAllocationInfo(0, 1, &desc);
+		D3D12_RESOURCE_ALLOCATION_INFO allocInfo = mState->device->GetResourceAllocationInfo(0, 1, &desc);
 
 		// Return allocation info
 		allocationInfoOut.sizeInBytes = (uint32_t)allocInfo.SizeInBytes;
@@ -726,9 +839,9 @@ public:
 		return createTextureHeap(
 			mLog,
 			mAllocator,
-			*mDevice.Get(),
-			&mResourceUniqueIdentifierCounter,
-			mResidencyManager,
+			*mState->device.Get(),
+			&mState->resourceUniqueIdentifierCounter,
+			mState->residencyManager,
 			reinterpret_cast<D3D12TextureHeap**>(textureHeapOut),
 			createInfo);
 	}
@@ -740,7 +853,7 @@ public:
 
 		// Stop tracking
 		D3D12TextureHeap* heap = static_cast<D3D12TextureHeap*>(textureHeapIn);
-		mResidencyManager.EndTrackingObject(&heap->managedObject);
+		mState->residencyManager.EndTrackingObject(&heap->managedObject);
 
 		zgDelete(mAllocator, heap);
 		return ZG_SUCCESS;
@@ -751,59 +864,26 @@ public:
 
 	ZgErrorCode getPresentQueue(ZgCommandQueue** presentQueueOut) noexcept override final
 	{
-		*presentQueueOut = &mCommandQueuePresent;
+		*presentQueueOut = &mState->commandQueuePresent;
 		return ZG_SUCCESS;
 	}
 
 	ZgErrorCode getCopyQueue(ZgCommandQueue** copyQueueOut) noexcept override final
 	{
-		*copyQueueOut = &mCommandQueueCopy;
+		*copyQueueOut = &mState->commandQueueCopy;
 		return ZG_SUCCESS;
 	}
 
 	// Private members
 	// --------------------------------------------------------------------------------------------
 private:
+
 	std::mutex mContextMutex; // Access to the context is synchronized
 	ZgLogger mLog = {};
 	ZgAllocator mAllocator = {};
 	bool mDebugMode = false;
-
-	// DXC compiler DLLs, lazily loaded if needed
-	ComPtr<IDxcLibrary> mDxcLibrary;
-	ComPtr<IDxcCompiler> mDxcCompiler;
-
-	// Device
-	ComPtr<IDXGIAdapter4> mDxgiAdapter;
-	ComPtr<ID3D12Device3> mDevice;
 	
-	// Residency manager
-	D3DX12Residency::ResidencyManager mResidencyManager;
-
-	// Global descriptor ring buffers
-	D3D12DescriptorRingBuffer mGlobalDescriptorRingBuffer;
-
-	// Command queues
-	D3D12CommandQueue mCommandQueuePresent;
-	//D3D12CommandQueue mCommandQueueAsyncCompute;
-	D3D12CommandQueue mCommandQueueCopy;
-	
-	// Swapchain and backbuffers
-	uint32_t mWidth = 0;
-	uint32_t mHeight = 0;
-	ComPtr<IDXGISwapChain4> mSwapChain;
-	ComPtr<ID3D12DescriptorHeap> mSwapChainRtvDescriptorHeap;
-	uint32_t mDescriptorSizeRTV = 0;
-	ComPtr<ID3D12DescriptorHeap> mSwapChainDsvDescriptorHeap;
-	uint32_t mDescriptorSizeDSV = 0;
-	D3D12Framebuffer mBackBuffers[NUM_SWAP_CHAIN_BUFFERS];
-	uint64_t mSwapChainFenceValues[NUM_SWAP_CHAIN_BUFFERS] = {};
-	int mCurrentBackBufferIdx = 0;
-
-	bool mAllowTearing = false;
-
-	// Memory
-	std::atomic_uint64_t mResourceUniqueIdentifierCounter = 1;
+	D3D12BackendState* mState = nullptr;
 };
 
 // D3D12 API
