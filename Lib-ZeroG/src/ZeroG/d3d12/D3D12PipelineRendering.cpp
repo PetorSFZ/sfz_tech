@@ -19,6 +19,7 @@
 #include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <cstdio>
 
 #include "spirv_cross_c.h"
@@ -29,8 +30,21 @@
 
 namespace zg {
 
+using time_point = std::chrono::high_resolution_clock::time_point;
+
 // Statics
 // ------------------------------------------------------------------------------------------------
+
+static float calculateDeltaMillis(time_point& previousTime) noexcept
+{
+	time_point currentTime = std::chrono::high_resolution_clock::now();
+
+	using FloatMS = std::chrono::duration<float, std::milli>;
+	float delta = std::chrono::duration_cast<FloatMS>(currentTime - previousTime).count();
+
+	previousTime = currentTime;
+	return delta;
+}
 
 static Vector<uint8_t> readBinaryFile(const char* path, ZgAllocator& allocator) noexcept
 {
@@ -551,7 +565,8 @@ static void logPipelineInfo(
 	const ZgPipelineRenderingCreateInfoCommon& createInfo,
 	const char* vertexShaderName,
 	const char* pixelShaderName,
-	const ZgPipelineRenderingSignature& signature) noexcept
+	const ZgPipelineRenderingSignature& signature,
+	float compileTimeMs) noexcept
 {
 	// Allocate temp string to log
 	const uint32_t STRING_MAX_SIZE = 4096;
@@ -567,6 +582,9 @@ static void logPipelineInfo(
 		vertexShaderName, createInfo.vertexShaderEntry);
 	printfAppend(tmpStr, bytesLeft, " - Pixel shader: \"%s\" -- %s()\n\n",
 		pixelShaderName, createInfo.pixelShaderEntry);
+
+	// Print compile time
+	printfAppend(tmpStr, bytesLeft, "Compile time: %.2fms\n\n", compileTimeMs);
 
 	// Print vertex attributes
 	printfAppend(tmpStr, bytesLeft, "Vertex attributes (%u):\n", signature.numVertexAttributes);
@@ -613,6 +631,7 @@ static ZgErrorCode createPipelineRenderingInternal(
 	D3D12PipelineRendering** pipelineOut,
 	ZgPipelineRenderingSignature* signatureOut,
 	const ZgPipelineRenderingCreateInfoCommon& createInfo,
+	time_point compileStartTime,
 	ZgShaderModel shaderModel,
 	const char* const dxcCompilerFlags[],
 	const ComPtr<IDxcBlobEncoding>& vertexEncodingBlob,
@@ -1320,13 +1339,15 @@ static ZgErrorCode createPipelineRenderingInternal(
 	}
 
 	// Log information about the pipeline
+	float compileTimeMs = calculateDeltaMillis(compileStartTime);
 	logPipelineInfo(
 		allocator,
 		logger,
 		createInfo,
 		vertexShaderName,
 		pixelShaderName,
-		*signatureOut);
+		*signatureOut,
+		compileTimeMs);
 
 	// Allocate pipeline
 	D3D12PipelineRendering* pipeline =
@@ -1375,6 +1396,10 @@ ZgErrorCode createPipelineRenderingFileSPIRV(
 	ZgAllocator& allocator,
 	ID3D12Device3& device) noexcept
 {
+	// Start measuring compile-time
+	time_point compileStartTime;
+	calculateDeltaMillis(compileStartTime);
+
 	// Initialize SPIRV-Cross
 	spvc_context spvcContext = nullptr;
 	spvc_result res = CHECK_SPIRV_CROSS(logger, nullptr) spvc_context_create(&spvcContext);
@@ -1425,12 +1450,13 @@ ZgErrorCode createPipelineRenderingFileSPIRV(
 		pipelineOut,
 		signatureOut,
 		createInfo.common,
+		compileStartTime,
 		ZG_SHADER_MODEL_6_0,
 		dxcCompilerFlags,
 		vertexEncodingBlob,
 		pixelEncodingBlob,
-		"<From source, no vertex name>",
-		"<From source, no pixel name>",
+		createInfo.vertexShaderPath,
+		createInfo.pixelShaderPath,
 		dxcCompiler,
 		logger,
 		allocator,
@@ -1447,6 +1473,10 @@ ZgErrorCode createPipelineRenderingFileHLSL(
 	ZgAllocator& allocator,
 	ID3D12Device3& device) noexcept
 {
+	// Start measuring compile-time
+	time_point compileStartTime;
+	calculateDeltaMillis(compileStartTime);
+
 	// Read vertex shader from file
 	ComPtr<IDxcBlobEncoding> vertexEncodingBlob;
 	ZgErrorCode vertexBlobReadRes =
@@ -1470,6 +1500,7 @@ ZgErrorCode createPipelineRenderingFileHLSL(
 		pipelineOut,
 		signatureOut,
 		createInfo.common,
+		compileStartTime,
 		createInfo.shaderModel,
 		createInfo.dxcCompilerFlags,
 		vertexEncodingBlob,
@@ -1492,6 +1523,10 @@ ZgErrorCode createPipelineRenderingSourceHLSL(
 	ZgAllocator& allocator,
 	ID3D12Device3& device) noexcept
 {
+	// Start measuring compile-time
+	time_point compileStartTime;
+	calculateDeltaMillis(compileStartTime);
+
 	// Create encoding blob from source
 	ComPtr<IDxcBlobEncoding> vertexEncodingBlob;
 	ZgErrorCode vertexBlobReadRes =
@@ -1508,6 +1543,7 @@ ZgErrorCode createPipelineRenderingSourceHLSL(
 		pipelineOut,
 		signatureOut,
 		createInfo.common,
+		compileStartTime,
 		createInfo.shaderModel,
 		createInfo.dxcCompilerFlags,
 		vertexEncodingBlob,
