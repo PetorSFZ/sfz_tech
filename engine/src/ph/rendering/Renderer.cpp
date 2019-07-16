@@ -281,12 +281,14 @@ void Renderer::swap(Renderer& other) noexcept
 
 void Renderer::destroy() noexcept
 {
+	// TODO: This might be slightly borked
+
+	// Deinit renderer
+	this->deinitRenderer();
+
+	// Unload DLL on Windows
 	if (mModuleHandle != nullptr) {
 
-		// Deinit renderer
-		this->deinitRenderer();
-
-		// Unload DLL on Windows
 #ifdef _WIN32
 		BOOL freeSuccess = FreeLibrary((HMODULE)mModuleHandle);
 		if (!freeSuccess) {
@@ -297,13 +299,13 @@ void Renderer::destroy() noexcept
 
 		// Deallocate function table
 		mAllocator->deleteObject(mFunctionTable);
-
-		// Reset all variables
-		mModuleHandle = nullptr;
-		mAllocator = nullptr;
-		mFunctionTable = nullptr;
-		mInited = false;
 	}
+
+	// Reset all variables
+	mModuleHandle = nullptr;
+	mAllocator = nullptr;
+	mFunctionTable = nullptr;
+	mInited = false;
 }
 
 // Renderer: Renderer functions

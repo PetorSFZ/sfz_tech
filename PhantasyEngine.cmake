@@ -50,6 +50,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 # ------------------------------------------------------------------------------------------------
 
 # Sets the compiler flags for the given platform
+#
+# PH_STATIC_LINK_RENDERER can be defined to link the renderer statically
 function(phSetCompilerFlags)
 	message("-- [PhantasyEngine]: Setting compiler flags")
 
@@ -96,6 +98,10 @@ function(phSetCompilerFlags)
 			set(PH_CMAKE_CXX_FLAGS_DEBUG "/MDd /Od /DEBUG")
 			set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /Ob3 /fp:fast /DEBUG /DSFZ_NO_DEBUG")
 			set(PH_CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob3 /fp:fast /DNDEBUG /DSFZ_NO_DEBUG")
+		endif()
+
+		if (PH_STATIC_LINK_RENDERER)
+			set(PH_CMAKE_CXX_FLAGS "${PH_CMAKE_CXX_FLAGS} /DPH_STATIC_LINK_RENDERER")
 		endif()
 
 		set(PH_CMAKE_C_FLAGS ${PH_CMAKE_CXX_FLAGS})
