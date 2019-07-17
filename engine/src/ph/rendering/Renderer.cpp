@@ -349,11 +349,11 @@ bool Renderer::initRenderer(SDL_Window* window) noexcept
 
 void Renderer::deinitRenderer() noexcept
 {
-#if !defined(PH_STATIC_LINK_RENDERER)
-	sfz_assert_debug(mFunctionTable != nullptr);
-	sfz_assert_debug(mFunctionTable->phDeinitRenderer != nullptr);
-#endif
 	if (mInited) {
+#if !defined(PH_STATIC_LINK_RENDERER)
+		sfz_assert_debug(mFunctionTable != nullptr);
+		sfz_assert_debug(mFunctionTable->phDeinitRenderer != nullptr);
+#endif
 		CALL_RENDERER_FUNCTION(mFunctionTable, phDeinitRenderer);
 	}
 	mInited = false;
