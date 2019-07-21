@@ -78,6 +78,11 @@ ErrorCode Context::swapchainFinishFrame() noexcept
 	return (ErrorCode)zgContextSwapchainFinishFrame();
 }
 
+ErrorCode Context::getStats(ZgStats& statsOut) noexcept
+{
+	return (ErrorCode)zgContextGetStats(&statsOut);
+}
+
 
 // PipelineRenderingBuilder: Methods
 // ------------------------------------------------------------------------------------------------

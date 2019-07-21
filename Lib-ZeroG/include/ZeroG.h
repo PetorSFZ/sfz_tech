@@ -282,6 +282,46 @@ ZG_API ZgErrorCode zgContextSwapchainBeginFrame(
 
 ZG_API ZgErrorCode zgContextSwapchainFinishFrame(void);
 
+// Statistics
+// ------------------------------------------------------------------------------------------------
+
+// A struct containing general statistics
+struct ZgStats {
+
+	// Text description (i.e. name) of the device in use
+	char deviceDescription[128];
+
+	// Total amount of dedicated GPU memory (in bytes) available on the GPU
+	uint64_t dedicatedGpuMemoryBytes;
+
+	// Total amount of dedicated CPU memory (in bytes) for this GPU. I.e. CPU memory dedicated for
+	// the GPU and not directly usable by the CPU.
+	uint64_t dedicatedCpuMemoryBytes;
+
+	// Total amount of shared CPU memory (in bytes) for this GPU. I.e. CPU memory shared between
+	// the CPU and GPU.
+	uint64_t sharedCpuMemoryBytes;
+
+	// The amount of "fast local" memory provided to the application by the OS. If more memory is
+	// used then stuttering and swapping could occur among other things.
+	uint64_t memoryBudgetBytes;
+
+	// The amount of "fast local" memory used by the application. This will correspond to GPU
+	// memory on a device with dedicated GPU memory.
+	uint64_t memoryUsageBytes;
+
+	// The amount of "non-local" memory provided to the application by the OS.
+	uint64_t nonLocalBugetBytes;
+
+	// The amount of "non-local" memory used by the application.
+	uint64_t nonLocalUsageBytes;
+};
+typedef struct ZgStats ZgStats;
+
+// Gets the current statistics of the ZeroG backend. Normally called once (or maybe up to a couple
+// of times) per frame.
+ZG_API ZgErrorCode zgContextGetStats(ZgStats* statsOut);
+
 // Pipeline Rendering - Signature
 // ------------------------------------------------------------------------------------------------
 

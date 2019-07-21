@@ -40,6 +40,11 @@ struct ZgBackend {
 
 	virtual ZgErrorCode fenceCreate(ZgFence** fenceOut) noexcept = 0;
 
+	// Stats
+	// --------------------------------------------------------------------------------------------
+
+	virtual ZgErrorCode getStats(ZgStats& statsOut) noexcept = 0;
+
 	// Pipeline methods
 	// --------------------------------------------------------------------------------------------
 

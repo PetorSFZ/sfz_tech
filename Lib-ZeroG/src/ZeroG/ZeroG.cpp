@@ -173,6 +173,15 @@ ZG_API ZgErrorCode zgContextSwapchainFinishFrame(void)
 	return zg::getBackend()->swapchainFinishFrame();
 }
 
+// Statistics
+// ------------------------------------------------------------------------------------------------
+
+ZG_API ZgErrorCode zgContextGetStats(ZgStats* statsOut)
+{
+	if (statsOut == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	return zg::getBackend()->getStats(*statsOut);
+}
+
 // Pipeline Rendering - Common
 // ------------------------------------------------------------------------------------------------
 

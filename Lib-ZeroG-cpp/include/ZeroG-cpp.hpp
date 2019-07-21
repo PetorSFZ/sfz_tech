@@ -116,6 +116,9 @@ public:
 	// See zgContextSwapchainFinishFrame()
 	ErrorCode swapchainFinishFrame() noexcept;
 
+	// See zgContextGetStats()
+	ErrorCode getStats(ZgStats& statsOut) noexcept;
+
 	// Private members
 	// --------------------------------------------------------------------------------------------
 private:

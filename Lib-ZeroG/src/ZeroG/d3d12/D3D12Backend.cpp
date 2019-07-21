@@ -56,6 +56,9 @@ struct D3D12BackendState final {
 	// Debug info queue
 	ComPtr<ID3D12InfoQueue> infoQueue;
 
+	// Static stats which don't change
+	ZgStats staticStats = {};
+
 	// Residency manager
 	D3DX12Residency::ResidencyManager residencyManager;
 
@@ -225,6 +228,15 @@ public:
 				double(bestDesc.DedicatedVideoMemory) / (1024.0 * 1024.0 * 1024.0),
 				double(bestDesc.DedicatedSystemMemory) / (1024.0 * 1024.0 * 1024.0),
 				double(bestDesc.SharedSystemMemory) / (1024.0 * 1024.0 * 1024.0));
+
+			// Set some information about choosen adapter in static stats
+			snprintf(
+				mState->staticStats.deviceDescription,
+				sizeof(mState->staticStats.deviceDescription),
+				"%S", bestDesc.Description);
+			mState->staticStats.dedicatedGpuMemoryBytes = bestDesc.DedicatedVideoMemory;
+			mState->staticStats.dedicatedCpuMemoryBytes = bestDesc.DedicatedSystemMemory;
+			mState->staticStats.sharedCpuMemoryBytes = bestDesc.SharedSystemMemory;
 		}
 
 		// Create device
@@ -572,6 +584,34 @@ public:
 	ZgErrorCode fenceCreate(ZgFence** fenceOut) noexcept override final
 	{
 		*fenceOut = zgNew<D3D12Fence>(mAllocator, "ZeroG - D3D12Fence");
+		return ZG_SUCCESS;
+	}
+
+	// Stats
+	// --------------------------------------------------------------------------------------------
+
+	ZgErrorCode getStats(ZgStats& statsOut) noexcept override final
+	{
+		// First set the static stats which don't change
+		statsOut = mState->staticStats;
+
+		// Query information about "local" memory from DXGI
+		// Local memory is "the fastest" for the GPU
+		DXGI_QUERY_VIDEO_MEMORY_INFO memoryInfo = {};
+		CHECK_D3D12(mLog) mState->dxgiAdapter->QueryVideoMemoryInfo(
+			0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &memoryInfo);
+
+		// Query information about "non-local" memory from DXGI
+		DXGI_QUERY_VIDEO_MEMORY_INFO memoryInfoNonLocal = {};
+		CHECK_D3D12(mLog) mState->dxgiAdapter->QueryVideoMemoryInfo(
+			0, DXGI_MEMORY_SEGMENT_GROUP_NON_LOCAL, &memoryInfoNonLocal);
+
+		// Set memory info stats
+		statsOut.memoryBudgetBytes = memoryInfo.Budget;
+		statsOut.memoryUsageBytes = memoryInfo.CurrentUsage;
+		statsOut.nonLocalBugetBytes = memoryInfoNonLocal.Budget;
+		statsOut.nonLocalUsageBytes = memoryInfoNonLocal.CurrentUsage;
+
 		return ZG_SUCCESS;
 	}
 
