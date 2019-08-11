@@ -343,44 +343,46 @@ ZgErrorCode D3D12CommandList::setPipelineBindings(
 {
 	// Require that a pipeline has been set so we can query its parameters
 	if (!mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
-
-	// Require that all constant buffers be specified
-	if (bindings.numConstantBuffers != mBoundPipeline->numConstantBuffers) {
-		return ZG_ERROR_INVALID_ARGUMENT;
-	}
-	
-	// Require that all textures be specified
-	if (bindings.numTextures != mBoundPipeline->numTextures) {
-		return ZG_ERROR_INVALID_ARGUMENT;
-	}
+	uint32_t numConstantBuffers = mBoundPipeline->numConstantBuffers;
+	uint32_t numTextures = mBoundPipeline->numTextures;
 
 	// Allocate descriptors
 	D3D12_CPU_DESCRIPTOR_HANDLE rangeStartCpu = {};
 	D3D12_GPU_DESCRIPTOR_HANDLE rangeStartGpu = {};
 	ZgErrorCode allocRes = mDescriptorBuffer->allocateDescriptorRange(
-		bindings.numConstantBuffers + bindings.numTextures, rangeStartCpu, rangeStartGpu);
+		numConstantBuffers + numTextures, rangeStartCpu, rangeStartGpu);
 	if (allocRes != ZG_SUCCESS) return allocRes;
 
 	// Create constant buffer views and fill (CPU) descriptors
-	for (uint32_t i = 0; i < bindings.numConstantBuffers; i++) {
-		const ZgConstantBufferBinding& binding = bindings.constantBuffers[i];
-		
-		// Linear search to find mapping
-		uint32_t mappingIdx = ~0u;
-		for (uint32_t j = 0; j < mBoundPipeline->numConstantBuffers; j++) {
-			const D3D12ConstantBufferMapping& mapping = mBoundPipeline->constBuffers[j];
+	for (uint32_t i = 0; i < numConstantBuffers; i++) {
+		const D3D12ConstantBufferMapping& mapping = mBoundPipeline->constBuffers[i];
+
+		// Get the CPU descriptor
+		ZG_ASSERT(mapping.tableOffset < numConstantBuffers);
+		D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor;
+		cpuDescriptor.ptr =
+			rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
+
+		// Linear search to find matching argument among the bindings
+		uint32_t bindingIdx = ~0u;
+		for (uint32_t j = 0; j < bindings.numConstantBuffers; j++) {
+			const ZgConstantBufferBinding& binding = bindings.constantBuffers[j];
 			if (binding.shaderRegister == mapping.shaderRegister) {
-				mappingIdx = j;
+				bindingIdx = j;
 				break;
 			}
 		}
 
-		// Return invalid argument if there is no constant buffer associated with the given register
-		if (mappingIdx == ~0u) return ZG_ERROR_INVALID_ARGUMENT;
-		const D3D12ConstantBufferMapping& mapping = mBoundPipeline->constBuffers[mappingIdx];
+		// If we can't find argument we need to insert null descriptor
+		if (bindingIdx == ~0u) {
+			// TODO: Not sure if possible to implement?
+			ZG_ASSERT(false);
+			return ZG_ERROR_UNIMPLEMENTED;
+		}
 
-		// Cast buffer to D3D12Buffer
-		D3D12Buffer* buffer = reinterpret_cast<D3D12Buffer*>(binding.buffer);
+		// Get buffer from binding and cast it to D3D12 buffer
+		D3D12Buffer* buffer =
+			reinterpret_cast<D3D12Buffer*>(bindings.constantBuffers[bindingIdx].buffer);
 
 		// D3D12 requires that a Constant Buffer View is at least 256 bytes, and a multiple of 256.
 		// Round up constant buffer size to nearest 256 alignment
@@ -394,12 +396,6 @@ ZgErrorCode D3D12CommandList::setPipelineBindings(
 				mapping.shaderRegister, bufferSize256Aligned, buffer->sizeBytes);
 			return ZG_ERROR_INVALID_ARGUMENT;
 		}
-
-		/// Get the CPU descriptor
-		ZG_ASSERT(mapping.tableOffset < bindings.numConstantBuffers);
-		D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor;
-		cpuDescriptor.ptr =
-			rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
 
 		// Create constant buffer view
 		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
@@ -415,51 +411,60 @@ ZgErrorCode D3D12CommandList::setPipelineBindings(
 	}
 
 	// Create shader resource views and fill (CPU) descriptors
-	for (uint32_t i = 0; i < bindings.numTextures; i++) {
-		const ZgTextureBinding& binding = bindings.textures[i];
+	for (uint32_t i = 0; i < numTextures; i++) {
+		const D3D12TextureMapping& mapping = mBoundPipeline->textures[i];
 
-		// Linear search to find mapping
-		uint32_t mappingIdx = ~0u;
-		for (uint32_t j = 0; j < mBoundPipeline->numTextures; j++) {
-			const D3D12TextureMapping& mapping = mBoundPipeline->textures[j];
-			if (binding.textureRegister == mapping.textureRegister) {
-				mappingIdx = j;
-				break;
-			}
-		}
-
-		// Return invalid argument if there is no texture associated with the given register
-		if (mappingIdx == ~0u) return ZG_ERROR_INVALID_ARGUMENT;
-		const D3D12TextureMapping& mapping = mBoundPipeline->textures[mappingIdx];
-
-		// Cast texture to D3D12Texture2D
-		D3D12Texture2D* texture = reinterpret_cast<D3D12Texture2D*>(binding.texture);
-
-		/// Get the CPU descriptor
-		ZG_ASSERT(mapping.tableOffset >= bindings.numConstantBuffers);
-		ZG_ASSERT(mapping.tableOffset < (bindings.numConstantBuffers + bindings.numTextures));
+		// Get the CPU descriptor
+		ZG_ASSERT(mapping.tableOffset >= numConstantBuffers);
+		ZG_ASSERT(mapping.tableOffset < (numConstantBuffers + numTextures));
 		D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor;
 		cpuDescriptor.ptr =
 			rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
 
+		// Linear search to find matching argument among the bindings
+		uint32_t bindingIdx = ~0u;
+		for (uint32_t j = 0; j < bindings.numTextures; j++) {
+			const ZgTextureBinding& binding = bindings.textures[j];
+			if (binding.textureRegister == mapping.textureRegister) {
+				bindingIdx = j;
+				break;
+			}
+		}
+
+		// If binding found, get D3D12 texture and its resource and format. Otherwise set default
+		// in order to create null descriptor
+		D3D12Texture2D* texture = nullptr;
+		ID3D12Resource* resource = nullptr;
+		DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		if (bindingIdx != ~0u) {
+			texture = reinterpret_cast<D3D12Texture2D*>(bindings.textures[bindingIdx].texture);
+			resource = texture->resource.Get();
+			format = texture->format;
+		}
+
 		// Create shader resource view
+		// Will be null descriptor if no binding found
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-		srvDesc.Format = texture->format;
+		srvDesc.Format = format;
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 		srvDesc.Texture2D.MostDetailedMip = 0;
 		srvDesc.Texture2D.MipLevels = (uint32_t)-1; // All mip-levels from most detailed and downwards
 		srvDesc.Texture2D.PlaneSlice = 0;
 		srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-		mDevice->CreateShaderResourceView(texture->resource.Get(), &srvDesc, cpuDescriptor);
+		mDevice->CreateShaderResourceView(resource, &srvDesc, cpuDescriptor);
 
-		// Set texture resource state
-		setTextureStateAllMipLevels(
-			*texture,
-			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+		// Set texture resource state and insert into residency set if not null descriptor
+		if (bindingIdx != ~0u) {
 
-		// Insert into residency set
-		residencySet->Insert(&texture->textureHeap->managedObject);
+			// Set texture resource state
+			setTextureStateAllMipLevels(
+				*texture,
+				D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
+			// Insert into residency set
+			residencySet->Insert(&texture->textureHeap->managedObject);
+		}
 	}
 
 	// Set descriptor table to root signature
