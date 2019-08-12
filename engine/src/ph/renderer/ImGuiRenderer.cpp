@@ -65,11 +65,11 @@ bool ImGuiRenderer::init(
 		.setBlendingEnabled(true)
 		.setBlendFuncColor(ZG_BLEND_FUNC_ADD, ZG_BLEND_FACTOR_SRC_ALPHA, ZG_BLEND_FACTOR_SRC_INV_ALPHA)
 		.setDepthTestEnabled(false)
-		//.addVertexShaderPath("VSMain", "res/shaders/imgui.hlsl")
-		//.addPixelShaderPath("PSMain", "res/shaders/imgui.hlsl")
+		//.addVertexShaderPath("VSMain", "res_ph/shaders/imgui.hlsl")
+		//.addPixelShaderPath("PSMain", "res_ph/shaders/imgui.hlsl")
 		//.buildFromFileHLSL(mPipeline, ZG_SHADER_MODEL_6_0);
-		.addVertexShaderPath("VSMain", "res/shaders/imgui_vs.spv")
-		.addPixelShaderPath("PSMain", "res/shaders/imgui_ps.spv")
+		.addVertexShaderPath("VSMain", "res_ph/shaders/imgui_vs.spv")
+		.addPixelShaderPath("PSMain", "res_ph/shaders/imgui_ps.spv")
 		.buildFromFileSPIRV(mPipeline);
 	if (!pipelineSuccess) return false;
 

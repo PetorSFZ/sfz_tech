@@ -1,0 +1,36 @@
+{
+	"rendering_pipelines": [
+		{
+			"name": "Forward Shader",
+			"source_type": "hlsl",
+			"vertex_shader_path": "res_ph/shaders/forward_shader.hlsl",
+			"pixel_shader_path": "res_ph/shaders/forward_shader.hlsl",
+			"vertex_shader_entry": "VSMain",
+			"pixel_shader_entry": "PSMain",
+			"standard_vertex_attributes": true,
+			"push_constant_registers": [ 0, 1, 2 ],
+			"depth_func": "LESS",
+			"samplers": [
+				{
+					"register": 0,
+					"sampling_mode": "TRILINEAR",
+					"wrapping_mode": "REPEAT"
+				}
+			],
+			"non_user_settable_constant_buffers": [
+				4
+			]
+		}
+	],
+	"present_queue_stages": [
+		{
+			"stage_name": "Forward Pass",
+			"stage_type": "USER_INPUT_RENDERING",
+			"rendering_pipeline": "Forward Shader"
+		},
+		{
+			"stage_name": "FrameEndBarrier",
+			"stage_type": "USER_STAGE_BARRIER"
+		}
+	]
+}
