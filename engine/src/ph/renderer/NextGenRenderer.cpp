@@ -1,0 +1,668 @@
+// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+//               For other contributors see Contributors.txt
+//
+// This software is provided 'as-is', without any express or implied
+// warranty. In no event will the authors be held liable for any damages
+// arising from the use of this software.
+//
+// Permission is granted to anyone to use this software for any purpose,
+// including commercial applications, and to alter it and redistribute it
+// freely, subject to the following restrictions:
+//
+// 1. The origin of this software must not be misrepresented; you must not
+//    claim that you wrote the original software. If you use this software
+//    in a product, an acknowledgment in the product documentation would be
+//    appreciated but is not required.
+// 2. Altered source versions must be plainly marked as such, and must not be
+//    misrepresented as being the original software.
+// 3. This notice may not be removed or altered from any source distribution.
+
+#include "ph/renderer/NextGenRenderer.hpp"
+
+#include <utility> // std::swap()
+
+#include <SDL.h>
+
+#include <sfz/containers/DynArray.hpp>
+#include <sfz/Logging.hpp>
+#include <sfz/math/Matrix.hpp>
+#include <sfz/memory/Allocator.hpp>
+
+#include <ZeroG-cpp.hpp>
+
+#include "ph/Context.hpp"
+#include "ph/config/GlobalConfig.hpp"
+#include "ph/renderer/ImGuiRenderer.hpp"
+#include "ph/renderer/RendererConfigParser.hpp"
+#include "ph/renderer/NextGenRendererState.hpp"
+#include "ph/renderer/ZeroGUtils.hpp"
+
+namespace ph {
+
+using sfz::DynArray;
+using sfz::mat44;
+using sfz::vec2;
+using sfz::vec3;
+using sfz::vec4;
+
+// Statics
+// ------------------------------------------------------------------------------------------------
+
+static ZgTexture2DFormat toZeroGImageFormat(ImageType imageType) noexcept
+{
+	switch (imageType) {
+	case ImageType::UNDEFINED: return ZG_TEXTURE_2D_FORMAT_UNDEFINED;
+	case ImageType::R_U8: return ZG_TEXTURE_2D_FORMAT_R_U8;
+	case ImageType::RG_U8: return ZG_TEXTURE_2D_FORMAT_RG_U8;
+	case ImageType::RGBA_U8: return ZG_TEXTURE_2D_FORMAT_RGBA_U8;
+	
+	case ImageType::R_F32:
+	case ImageType::RG_F32:
+	case ImageType::RGBA_F32:
+		// TODO: Implement
+		break;
+	}
+	sfz_assert_debug(false);
+	return ZG_TEXTURE_2D_FORMAT_UNDEFINED;
+}
+
+static uint32_t sizeOfElement(ImageType imageType) noexcept
+{
+	switch (imageType) {
+	case ImageType::UNDEFINED: return 0;
+	case ImageType::R_U8: return 1 * sizeof(uint8_t);
+	case ImageType::RG_U8: return 2 * sizeof(uint8_t);
+	case ImageType::RGBA_U8: return 4 * sizeof(uint8_t);
+
+	case ImageType::R_F32: return 1 * sizeof(float);
+	case ImageType::RG_F32: return 2 * sizeof(float);
+	case ImageType::RGBA_F32: return 4 * sizeof(float);
+	}
+	sfz_assert_debug(false);
+	return 0;
+}
+
+enum class ImageType : uint32_t {
+	UNDEFINED = 0,
+	R_U8 = 1,
+	RG_U8 = 2,
+	RGBA_U8 = 3,
+	R_F32 = 4,
+	RG_F32 = 5,
+	RGBA_F32 = 6
+};
+
+// NextGenRenderer: State methods
+// ------------------------------------------------------------------------------------------------
+
+bool NextGenRenderer::init(
+	phContext* context, SDL_Window* window, sfz::Allocator* allocator) noexcept
+{
+	this->destroy();
+	mState = allocator->newObject<NextGenRendererState>("NextGenRendererState");
+	mState->allocator = allocator;
+	mState->window = window;
+
+	// Settings
+	GlobalConfig& cfg = getGlobalConfig();
+	Setting* debugModeSetting =
+		cfg.sanitizeBool("NextGenRenderer", "ZeroGDebugModeOnStartup", true, false);
+	mState->flushPresentQueueEachFrame =
+		cfg.sanitizeBool("NextGenRenderer", "flushPresentQueueEachFrame", false, false);
+	mState->flushCopyQueueEachFrame =
+		cfg.sanitizeBool("NextGenRenderer", "flushCopyQueueEachFrame", false, false);
+
+	// Initializer ZeroG
+	bool zgInitSuccess =
+		initializeZeroG(mState->zgCtx, window, allocator, debugModeSetting->boolValue());
+	if (!zgInitSuccess) {
+		this->destroy();
+		return false;
+	}
+
+	// Get command queues
+	if (!(CHECK_ZG zg::CommandQueue::getPresentQueue(mState->presentQueue))) {
+		this->destroy();
+		return false;
+	}
+	if (!(CHECK_ZG zg::CommandQueue::getCopyQueue(mState->copyQueue))) {
+		this->destroy();
+		return false;
+	}
+
+	// Initialize dynamic gpu allocator
+	mState->dynamicAllocator.init(mState->allocator);
+	mState->meshes.create(512, mState->allocator);
+
+	return true;
+}
+
+bool NextGenRenderer::initImgui(const phConstImageView& fontTexture) noexcept
+{
+	if (!this->active()) {
+		sfz_assert_debug(false);
+		return false;
+	}
+
+	// Initialize ImGui rendering state
+	bool imguiInitSuccess = mState->imguiRenderer.init(
+		mState->allocator, mState->copyQueue, fontTexture);
+	if (!imguiInitSuccess) {
+		this->destroy();
+		return false;
+	}
+	return true;
+}
+
+bool NextGenRenderer::loadConfiguration(const char* jsonConfigPath) noexcept
+{
+	if (!this->active()) {
+		sfz_assert_debug(false);
+		return false;
+	}
+
+	// Parse config
+	bool parseSuccess = parseRendererConfig(*mState, jsonConfigPath);
+	if (!parseSuccess) {
+		// TODO: Maybe this is a bit too extreme?
+		this->destroy();
+		return false;
+	}
+
+	return true;
+}
+
+void NextGenRenderer::swap(NextGenRenderer& other) noexcept
+{
+	std::swap(this->mState, other.mState);
+}
+
+void NextGenRenderer::destroy() noexcept
+{
+	if (mState != nullptr) {
+
+		// Flush queues
+		CHECK_ZG mState->presentQueue.flush();
+		CHECK_ZG mState->copyQueue.flush();
+
+		// Destroy all textures
+		for (auto pair : mState->textures) {
+			mState->dynamicAllocator.deallocate(pair.value.texture);
+		}
+
+		// Destroy all GPU meshes
+		for (auto pair : mState->meshes) {
+			gpuMeshDeallocate(pair.value, mState->dynamicAllocator);
+		}
+
+		// Deallocate stage memory
+		bool stageDeallocSuccess = deallocateStageMemory(*mState);
+		sfz_assert_debug(stageDeallocSuccess);
+
+		// Deallocate rest of state
+		sfz::Allocator* allocator = mState->allocator;
+		allocator->deleteObject(mState);
+	}
+	mState = nullptr;
+}
+
+// NextGenRenderer: Getters
+// ------------------------------------------------------------------------------------------------
+
+vec2_s32 NextGenRenderer::windowResolution() const noexcept
+{
+	return mState->windowRes;
+}
+
+// NextGenRenderer: ImGui UI methods
+// ------------------------------------------------------------------------------------------------
+
+void NextGenRenderer::renderImguiUI() noexcept
+{
+	mState->ui.render(*mState);
+}
+
+// NextGenRenderer: Resource methods
+// ------------------------------------------------------------------------------------------------
+
+bool NextGenRenderer::uploadTextureBlocking(StringID id, const phConstImageView& image) noexcept
+{
+	// Don't upload if it already exists
+	if (mState->textures.get(id) != nullptr) return true;
+
+	// Convert to ZeroG Image View
+	ZgImageViewConstCpu view = {};
+	view.format = toZeroGImageFormat(image.type);
+	view.data = image.rawData;
+	view.width = image.width;
+	view.height = image.height;
+	view.pitchInBytes = image.width * sizeOfElement(image.type);
+
+	// Allocate Texture
+	uint32_t textureSizeBytes = 0;
+	zg::Texture2D texture = mState->dynamicAllocator.allocateTexture2D(
+		view.format, view.width, view.height, 1, &textureSizeBytes);
+	sfz_assert_debug(texture.valid());
+	sfz_assert_debug(textureSizeBytes != 0);
+	if (!texture.valid()) return false;
+
+	// Allocate temporary upload buffer
+	zg::Buffer tmpUploadBuffer =
+		mState->dynamicAllocator.allocateBuffer(ZG_MEMORY_TYPE_UPLOAD, textureSizeBytes);
+	sfz_assert_debug(tmpUploadBuffer.valid());
+	if (!tmpUploadBuffer.valid()) {
+		mState->dynamicAllocator.deallocate(texture);
+		return false;
+	}
+
+	// Copy texture to GPU
+	zg::CommandList commandList;
+	CHECK_ZG mState->copyQueue.beginCommandListRecording(commandList);
+	CHECK_ZG commandList.memcpyToTexture(texture, 0, view, tmpUploadBuffer);
+	CHECK_ZG mState->copyQueue.executeCommandList(commandList);
+	CHECK_ZG mState->copyQueue.flush();
+
+	// Deallocate temporary upload buffer
+	mState->dynamicAllocator.deallocate(tmpUploadBuffer);
+
+	// Fill texture item with info and store it
+	TextureItem item;
+	item.texture = std::move(texture);
+	item.format = view.format;
+	item.width = view.width;
+	item.height = view.height;
+	item.numMipmaps = 1;
+	mState->textures[id] = std::move(item);
+
+	return true;
+}
+
+bool NextGenRenderer::uploadMeshBlocking(StringID id, const Mesh& mesh) noexcept
+{
+	sfz_assert_debug(id != StringID::invalid());
+	sfz_assert_debug(mState->meshes.get(id) == nullptr); // TODO: Should probably be fine to remove
+	if (mState->meshes.get(id) != nullptr) return true;
+
+	// Allocate memory for mesh
+	GpuMesh gpuMesh = gpuMeshAllocate(mesh, mState->dynamicAllocator, mState->allocator);
+
+	// Upload memory to mesh
+	gpuMeshUploadBlocking(
+		gpuMesh, mesh, mState->dynamicAllocator, mState->allocator, mState->copyQueue);
+
+	// Store mesh
+	mState->meshes[id] = std::move(gpuMesh);
+
+	return true;
+}
+
+// NextGenRenderer: Methods
+// ------------------------------------------------------------------------------------------------
+
+void NextGenRenderer::frameBegin() noexcept
+{
+	// Increment frame index
+	mState->currentFrameIdx += 1;
+
+	// Query drawable width and height from SDL
+	SDL_GL_GetDrawableSize(mState->window, &mState->windowRes.x, &mState->windowRes.y);
+
+	// Resize swapchain if necessary
+	CHECK_ZG mState->zgCtx.swapchainResize(
+		uint32_t(mState->windowRes.x), uint32_t(mState->windowRes.y));
+
+	// Begin ZeroG frame
+	sfz_assert_debug(mState->windowFramebuffer == nullptr);
+	CHECK_ZG mState->zgCtx.swapchainBeginFrame(mState->windowFramebuffer);
+
+	// Clear window framebuffer
+	zg::CommandList commandList;
+	CHECK_ZG mState->presentQueue.beginCommandListRecording(commandList);
+	CHECK_ZG commandList.setFramebuffer(mState->windowFramebuffer);
+	CHECK_ZG commandList.clearFramebuffer(0.0f, 0.0f, 0.0f, 1.0f);
+	CHECK_ZG commandList.clearDepthBuffer(1.0f);
+	CHECK_ZG mState->presentQueue.executeCommandList(commandList);
+
+	// Set current stage set index to first stage
+	mState->currentStageSetIdx = 0;
+	if (mState->configurable.presentQueueStages.size() > 0) {
+		sfz_assert_debug(
+			mState->configurable.presentQueueStages.first().stageType != StageType::USER_STAGE_BARRIER);
+	}
+}
+
+bool NextGenRenderer::inStageInputMode() const noexcept
+{
+	if (mState->currentInputEnabledStageIdx == ~0u) return false;
+	if (mState->currentInputEnabledStage == nullptr) return false;
+	if (mState->currentPipelineRendering == nullptr) return false;
+	if (!mState->currentCommandList.valid()) return false;
+	return true;
+}
+
+void NextGenRenderer::stageBeginInput(StringID stageName) noexcept
+{
+	// Ensure no stage is currently set to accept input
+	sfz_assert_debug(!inStageInputMode());
+	if (inStageInputMode()) return;
+
+	// Find stage
+	uint32_t stageIdx = mState->findActiveStageIdx(stageName);
+	sfz_assert_debug(stageIdx != ~0u);
+	if (stageIdx == ~0u) return;
+	sfz_assert_debug(stageIdx < mState->configurable.presentQueueStages.size());
+	Stage& stage = mState->configurable.presentQueueStages[stageIdx];
+	sfz_assert_debug(stage.stageType == StageType::USER_INPUT_RENDERING);
+
+	// Find rendering pipeline
+	uint32_t pipelineIdx = mState->findPipelineRenderingIdx(stage.renderingPipelineName);
+	sfz_assert_debug(pipelineIdx != ~0u);
+	if (pipelineIdx == ~0u) return;
+	sfz_assert_debug(pipelineIdx < mState->configurable.renderingPipelines.size());
+	PipelineRenderingItem& pipelineItem = mState->configurable.renderingPipelines[pipelineIdx];
+	sfz_assert_debug(pipelineItem.pipeline.valid());
+	if (!pipelineItem.pipeline.valid()) return;
+
+	// Set currently active stage
+	mState->currentInputEnabledStageIdx = stageIdx;
+	mState->currentInputEnabledStage = &stage;
+	mState->currentPipelineRendering = &pipelineItem;
+
+	// Begin recording command list and set pipeline and framebuffer
+	CHECK_ZG mState->presentQueue.beginCommandListRecording(mState->currentCommandList);
+	CHECK_ZG mState->currentCommandList.setFramebuffer(mState->windowFramebuffer);
+	CHECK_ZG mState->currentCommandList.setPipeline(pipelineItem.pipeline);
+}
+
+void NextGenRenderer::stageSetPushConstantUntyped(
+	uint32_t shaderRegister, const void* data, uint32_t numBytes) noexcept
+{
+	sfz_assert_debug(inStageInputMode());
+	sfz_assert_debug(data != nullptr);
+	sfz_assert_debug(numBytes > 0);
+	sfz_assert_debug(numBytes <= 128);
+
+	// In debug mode, validate that the specified shader registers corresponds to a a suitable
+	// push constant in the pipeline
+#if !defined(SFZ_NO_DEBUG)
+	const ZgPipelineRenderingSignature& signature =
+		mState->currentPipelineRendering->pipeline.signature;
+	
+	uint32_t bufferIdx = ~0u;
+	for (uint32_t i = 0; i < signature.numConstantBuffers; i++) {
+		if (shaderRegister == signature.constantBuffers[i].shaderRegister) {
+			bufferIdx = i;
+			break;
+		}
+	}
+	
+	sfz_assert_debug(bufferIdx != ~0u);
+	sfz_assert_debug(signature.constantBuffers[bufferIdx].pushConstant == ZG_TRUE);
+	sfz_assert_debug(signature.constantBuffers[bufferIdx].sizeInBytes >= numBytes);
+#endif
+
+	CHECK_ZG mState->currentCommandList.setPushConstant(shaderRegister, data, numBytes);
+}
+
+void NextGenRenderer::stageSetConstantBufferUntyped(
+	uint32_t shaderRegister, const void* data, uint32_t numBytes) noexcept
+{
+	sfz_assert_debug(inStageInputMode());
+	sfz_assert_debug(data != nullptr);
+	sfz_assert_debug(numBytes > 0);
+
+	// In debug mode, validate that the specified shader registers corresponds to a a suitable
+	// constant buffer in the pipeline
+#if !defined(SFZ_NO_DEBUG)
+	const ZgPipelineRenderingSignature& signature =
+		mState->currentPipelineRendering->pipeline.signature;
+
+	uint32_t bufferIdx = ~0u;
+	for (uint32_t i = 0; i < signature.numConstantBuffers; i++) {
+		if (shaderRegister == signature.constantBuffers[i].shaderRegister) {
+			bufferIdx = i;
+			break;
+		}
+	}
+
+	sfz_assert_debug(bufferIdx != ~0u);
+	sfz_assert_debug(signature.constantBuffers[bufferIdx].pushConstant == ZG_FALSE);
+	sfz_assert_debug(signature.constantBuffers[bufferIdx].sizeInBytes >= numBytes);
+#endif
+
+	// Find constant buffer
+	PerFrame<ConstantBufferMemory>* frame =
+		mState->findConstantBufferInCurrentInputStage(shaderRegister);
+	sfz_assert_debug(frame != nullptr);
+
+	// Ensure that we can only set constant buffer once per frame
+	sfz_assert_debug(frame->state.lastFrameIdxTouched != mState->currentFrameIdx);
+	frame->state.lastFrameIdxTouched = mState->currentFrameIdx;
+
+	// Wait until frame specific memory is available
+	CHECK_ZG frame->renderingFinished.waitOnCpuBlocking();
+
+	// Copy data to upload buffer
+	CHECK_ZG frame->state.uploadBuffer.memcpyTo(0, data, numBytes);
+
+	// Issue upload to device buffer
+	CHECK_ZG mState->currentCommandList.memcpyBufferToBuffer(
+		frame->state.deviceBuffer, 0, frame->state.uploadBuffer, 0, numBytes);
+	
+	// NOTE: Here we don't need to signal frame.uploadFinished because we are uploading and then
+	//       using the uploaded data in the same command list. Internal resource barriers set by
+	//       ZeroG should cover this case.
+}
+
+void NextGenRenderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) noexcept
+{
+	sfz_assert_debug(meshId != StringID::invalid());
+	sfz_assert_debug(inStageInputMode());
+
+	// Find mesh
+	GpuMesh* meshPtr = mState->meshes.get(meshId);
+	sfz_assert_debug(meshPtr != nullptr);
+	if (meshPtr == nullptr) return;
+
+	// Validate some stuff in debug mode
+#if !defined(SFZ_NO_DEBUG)
+	// Validate pipeline vertex input for standard mesh rendering
+	const ZgPipelineRenderingSignature& signature =
+		mState->currentPipelineRendering->pipeline.signature;
+	sfz_assert_debug(signature.numVertexAttributes == 3);
+
+	sfz_assert_debug(signature.vertexAttributes[0].location == 0);
+	sfz_assert_debug(signature.vertexAttributes[0].vertexBufferSlot == 0);
+	sfz_assert_debug(signature.vertexAttributes[0].type == ZG_VERTEX_ATTRIBUTE_F32_3);
+	sfz_assert_debug(
+		signature.vertexAttributes[0].offsetToFirstElementInBytes == offsetof(phVertex, pos));
+
+	sfz_assert_debug(signature.vertexAttributes[1].location == 1);
+	sfz_assert_debug(signature.vertexAttributes[1].vertexBufferSlot == 0);
+	sfz_assert_debug(signature.vertexAttributes[1].type == ZG_VERTEX_ATTRIBUTE_F32_3);
+	sfz_assert_debug(
+		signature.vertexAttributes[1].offsetToFirstElementInBytes == offsetof(phVertex, normal));
+
+	sfz_assert_debug(signature.vertexAttributes[2].location == 2);
+	sfz_assert_debug(signature.vertexAttributes[2].vertexBufferSlot == 0);
+	sfz_assert_debug(signature.vertexAttributes[2].type == ZG_VERTEX_ATTRIBUTE_F32_2);
+	sfz_assert_debug(
+		signature.vertexAttributes[2].offsetToFirstElementInBytes == offsetof(phVertex, texcoord));
+
+	// Validate material index push constant
+	if (registers.materialIdxPushConstant != ~0u) {
+		bool found = false;
+		for (uint32_t i = 0; i < signature.numConstantBuffers; i++) {
+			const ZgConstantBufferDesc& desc = signature.constantBuffers[i];
+			if (desc.shaderRegister == registers.materialIdxPushConstant) {
+				found = true;
+				sfz_assert_debug(desc.pushConstant == ZG_TRUE);
+				break;
+			}
+		}
+		sfz_assert_debug(found);
+	}
+
+	// Validate materials array
+	if (registers.materialsArray != ~0u) {
+		bool found = false;
+		for (uint32_t i = 0; i < signature.numConstantBuffers; i++) {
+			const ZgConstantBufferDesc& desc = signature.constantBuffers[i];
+			if (desc.shaderRegister == registers.materialsArray) {
+				found = true;
+				sfz_assert_debug(desc.pushConstant == ZG_FALSE);
+				sfz_assert_debug(desc.sizeInBytes >= meshPtr->numMaterials * sizeof(ShaderMaterial));
+				sfz_assert_debug(desc.sizeInBytes == sizeof(ForwardShaderMaterialsBuffer));
+				break;
+			}
+		}
+		sfz_assert_debug(found);
+	}
+
+	// Validate texture bindings
+	auto assertTextureRegister = [&](uint32_t texRegister) {
+		if (texRegister == ~0u) return;
+		bool found = false;
+		for (uint32_t i = 0; i < signature.numTextures; i++) {
+			const ZgTextureDesc& desc = signature.textures[i];
+			if (desc.textureRegister == texRegister) {
+				found = true;
+				break;
+			}
+		}
+		sfz_assert_debug(found);
+	};
+
+	assertTextureRegister(registers.albedo);
+	assertTextureRegister(registers.metallicRoughness);
+	assertTextureRegister(registers.normal);
+	assertTextureRegister(registers.occlusion);
+	assertTextureRegister(registers.emissive);
+#endif
+
+	// Set vertex buffer
+	sfz_assert_debug(meshPtr->vertexBuffer.valid());
+	CHECK_ZG mState->currentCommandList.setVertexBuffer(0, meshPtr->vertexBuffer);
+
+	// Set common pipeline bindings that are same for all components
+	zg::PipelineBindings commonBindings;
+
+	// Create materials array binding
+	if (registers.materialsArray != ~0u) {
+		sfz_assert_debug(meshPtr->materialsBuffer.valid());
+		commonBindings.addConstantBuffer(registers.materialsArray, meshPtr->materialsBuffer);
+	}
+
+	// User-specified constant buffers
+	for (Framed<ConstantBufferMemory>& framed : mState->currentInputEnabledStage->constantBuffers) {
+		PerFrame<ConstantBufferMemory>& frame = framed.getState(mState->currentFrameIdx);
+		sfz_assert_debug(frame.state.lastFrameIdxTouched == mState->currentFrameIdx);
+		commonBindings.addConstantBuffer(frame.state.shaderRegister, frame.state.deviceBuffer);
+	}
+
+	// Draw all mesh components
+	for (GpuMeshComponent& comp : meshPtr->components) {
+		
+		// Set index buffer
+		sfz_assert_debug(comp.indexBuffer.valid());
+		CHECK_ZG mState->currentCommandList.setIndexBuffer(
+			comp.indexBuffer, ZG_INDEX_BUFFER_TYPE_UINT32);
+		sfz_assert_debug(comp.numIndices != 0);
+		sfz_assert_debug((comp.numIndices % 3) == 0);
+		
+		// Set material index push constant
+		const CpuMaterial& texIds = comp.cpuMaterial;
+		if (registers.materialIdxPushConstant != ~0u) {
+			sfz::vec4_u32 tmp = sfz::vec4_u32(0u);
+			tmp.x = comp.cpuMaterial.materialIdx;
+			CHECK_ZG mState->currentCommandList.setPushConstant(
+				registers.materialIdxPushConstant, &tmp, sizeof(sfz::vec4_u32 ));
+		}
+
+		// Create texture bindings
+		zg::PipelineBindings bindings = commonBindings;
+		auto bindTexture = [&](uint32_t texRegister, StringID texID) {
+			if (texRegister != ~0u && texID != StringID::invalid()) {
+
+				// Find texture
+				TextureItem* texItem = mState->textures.get(texID);
+				sfz_assert_debug(texItem != nullptr);
+
+				// Bind texture
+				bindings.addTexture(texRegister, texItem->texture);
+			}
+		};
+		bindTexture(registers.albedo, texIds.albedoTex);
+		bindTexture(registers.metallicRoughness, texIds.metallicRoughnessTex);
+		bindTexture(registers.normal, texIds.normalTex);
+		bindTexture(registers.occlusion, texIds.occlusionTex);
+		bindTexture(registers.emissive, texIds.emissiveTex);
+
+		// Set pipeline bindings
+		CHECK_ZG mState->currentCommandList.setPipelineBindings(bindings);
+
+		// Issue draw command
+		CHECK_ZG mState->currentCommandList.drawTrianglesIndexed(0, comp.numIndices / 3);
+	}
+}
+
+void NextGenRenderer::stageEndInput() noexcept
+{
+	// Ensure a stage was set to accept input
+	sfz_assert_debug(inStageInputMode());
+	if (!inStageInputMode()) return;
+
+	// Execute command list
+	CHECK_ZG mState->presentQueue.executeCommandList(mState->currentCommandList);
+
+	// Signal all frame specific data
+	for (Framed<ConstantBufferMemory>& framed : mState->currentInputEnabledStage->constantBuffers) {
+		PerFrame<ConstantBufferMemory>& frame = framed.getState(mState->currentFrameIdx);
+		CHECK_ZG mState->presentQueue.signalOnGpu(frame.renderingFinished);
+	}
+	
+	// Clear currently active stage info
+	mState->currentInputEnabledStageIdx = ~0u;
+	mState->currentInputEnabledStage = nullptr;
+	mState->currentPipelineRendering = nullptr;
+	mState->currentCommandList.release();
+}
+
+void NextGenRenderer::renderImguiHack(
+	const phImguiVertex* vertices,
+	uint32_t numVertices,
+	const uint32_t* indices,
+	uint32_t numIndices,
+	const phImguiCommand* commands,
+	uint32_t numCommands) noexcept
+{
+	mState->imguiRenderer.render(
+		mState->currentFrameIdx,
+		mState->presentQueue,
+		mState->windowFramebuffer,
+		mState->windowRes,
+		vertices,
+		numVertices,
+		indices,
+		numIndices,
+		commands,
+		numCommands);
+}
+
+void NextGenRenderer::frameFinish() noexcept
+{
+	// Finish ZeroG frame
+	sfz_assert_debug(mState->windowFramebuffer != nullptr);
+	CHECK_ZG mState->zgCtx.swapchainFinishFrame();
+	mState->windowFramebuffer = nullptr;
+
+	// Flush queues if requested
+	if (mState->flushPresentQueueEachFrame->boolValue()) {
+		CHECK_ZG mState->presentQueue.flush();
+	}
+	if (mState->flushCopyQueueEachFrame->boolValue()) {
+		CHECK_ZG mState->copyQueue.flush();
+	}
+}
+
+} // namespace ph

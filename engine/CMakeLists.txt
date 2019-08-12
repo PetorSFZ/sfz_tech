@@ -47,6 +47,14 @@ if (NOT TINYGLTF_FOUND)
 	message(FATAL_ERROR "PhantasyEngine requires dear tinygltf.")
 endif()
 
+if (NOT ZEROG_FOUND)
+	message(FATAL_ERROR "PhantasyEngine requires ZeroG.")
+endif()
+
+if (NOT ZEROG_CPP_FOUND)
+	message(FATAL_ERROR "PhantasyEngine requires ZeroG-cpp.")
+endif()
+
 if (NOT SFZ_CORE_FOUND)
 	message(FATAL_ERROR "PhantasyEngine requires sfzCore.")
 endif()
@@ -67,6 +75,9 @@ set(PHANTASY_ENGINE_HEADER_FILES
 	${INCLUDE_DIR}/ph/game_loop/DefaultGameUpdateable.hpp
 	${INCLUDE_DIR}/ph/game_loop/GameLoop.hpp
 	${INCLUDE_DIR}/ph/game_loop/GameLoopUpdateable.hpp
+
+	${INCLUDE_DIR}/ph/renderer/NextGenRenderer.hpp
+	${INCLUDE_DIR}/ph/renderer/BuiltInShaderTypes.hpp
 
 	${INCLUDE_DIR}/ph/rendering/Image.hpp
 	${INCLUDE_DIR}/ph/rendering/ImguiSupport.hpp
@@ -100,6 +111,23 @@ set(PHANTASY_ENGINE_SOURCE_FILES
 	${SOURCE_DIR}/ph/game_loop/DefaultGameUpdateable.cpp
 	${SOURCE_DIR}/ph/game_loop/GameLoop.cpp
 
+	${SOURCE_DIR}/ph/renderer/DynamicGpuAllocator.hpp
+	${SOURCE_DIR}/ph/renderer/DynamicGpuAllocator.cpp
+	${SOURCE_DIR}/ph/renderer/GpuMesh.hpp
+	${SOURCE_DIR}/ph/renderer/GpuMesh.cpp
+	${SOURCE_DIR}/ph/renderer/ImGuiRenderer.hpp
+	${SOURCE_DIR}/ph/renderer/ImGuiRenderer.cpp
+	${SOURCE_DIR}/ph/renderer/NextGenRenderer.cpp
+	${SOURCE_DIR}/ph/renderer/NextGenRendererState.hpp
+	${SOURCE_DIR}/ph/renderer/NextGenRendererState.cpp
+	${SOURCE_DIR}/ph/renderer/RendererConfigParser.hpp
+	${SOURCE_DIR}/ph/renderer/RendererConfigParser.cpp
+	${SOURCE_DIR}/ph/renderer/Renderer-NextGen.cpp
+	${SOURCE_DIR}/ph/renderer/RendererUI.hpp
+	${SOURCE_DIR}/ph/renderer/RendererUI.cpp
+	${SOURCE_DIR}/ph/renderer/ZeroGUtils.hpp
+	${SOURCE_DIR}/ph/renderer/ZeroGUtils.cpp
+
 	${SOURCE_DIR}/ph/rendering/Image.cpp
 	${SOURCE_DIR}/ph/rendering/ImguiSupport.cpp
 	${SOURCE_DIR}/ph/rendering/Renderer.cpp
@@ -127,7 +155,10 @@ add_library(PhantasyEngineCore ${PHANTASY_ENGINE_HEADER_FILES} ${PHANTASY_ENGINE
 
 target_include_directories(PhantasyEngineCore PUBLIC
 	${INCLUDE_DIR}
+	${SOURCE_DIR}
 	${SDL2_INCLUDE_DIRS}
+	${ZEROG_INCLUDE_DIRS}
+	${ZEROG_CPP_INCLUDE_DIRS}
 	${SFZ_CORE_INCLUDE_DIRS}
 	${PH_INTERFACE_INCLUDE_DIRS}
 	${STB_INCLUDE_DIRS}
@@ -139,6 +170,8 @@ target_include_directories(PhantasyEngineCore PUBLIC
 
 target_link_libraries(PhantasyEngineCore
 	${SDL2_LIBRARIES}
+	${ZEROG_LIBRARIES}
+	${ZEROG_CPP_LIBRARIES}
 	${SFZ_CORE_LIBRARIES}
 	${PH_INTERFACE_LIBRARIES}
 	${IMGUI_LIBRARIES}
