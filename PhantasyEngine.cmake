@@ -321,13 +321,6 @@ function(phAddSfzCore)
 	set(SFZ_CORE_FOUND ${SFZ_CORE_FOUND} PARENT_SCOPE)
 	set(SFZ_CORE_INCLUDE_DIRS ${SFZ_CORE_INCLUDE_DIRS} PARENT_SCOPE)
 	set(SFZ_CORE_LIBRARIES ${SFZ_CORE_LIBRARIES} PARENT_SCOPE)
-	if(SFZ_CORE_OPENGL_FOUND)
-		set(SFZ_CORE_OPENGL_FOUND ${SFZ_CORE_OPENGL_FOUND} PARENT_SCOPE)
-		set(SFZ_CORE_OPENGL_INCLUDE_DIRS ${SFZ_CORE_OPENGL_INCLUDE_DIRS} PARENT_SCOPE)
-		set(SFZ_CORE_OPENGL_LIBRARIES ${SFZ_CORE_OPENGL_LIBRARIES} PARENT_SCOPE)
-		set(SFZ_CORE_OPENGL_RUNTIME_FILES ${SFZ_CORE_OPENGL_RUNTIME_FILES} PARENT_SCOPE)
-	endif()
-
 endfunction()
 
 # Adds the bundled externals, this is currently stb and dear-imgui.
@@ -394,56 +387,6 @@ function(phAddPhantasyEngineTargets)
 
 endfunction()
 
-# Renderers
-# ------------------------------------------------------------------------------------------------
-
-# Adds the Renderer-CompatibleGL target, static for iOS and Emscripten, dynamic for everything else
-function(phAddRendererCompatibleGL)
-	message("-- [PhantasyEngine]: Adding Renderer-CompatibleGL target")
-
-	# Emscripten and iOS needs statically linked renderer
-	if(EMSCRIPTEN OR IOS)
-		message("  -- Static renderer")
-		set(PH_RENDERER_COMPATIBLE_GL_STATIC true)
-		set(PH_RENDERER_COMPATIBLE_GL_STATIC ${PH_RENDERER_COMPATIBLE_GL_STATIC} PARENT_SCOPE)
-	else()
-		message("  -- Dynamic renderer")
-	endif()
-
-	# Adding renderer
-	add_subdirectory(
-		${PH_ROOT}/renderers/CompatibleGL
-		${CMAKE_BINARY_DIR}/Renderer-CompatibleGL
-	)
-	set(PH_RENDERER_COMPATIBLE_GL_FOUND ${PH_RENDERER_COMPATIBLE_GL_FOUND} PARENT_SCOPE)
-	set(PH_RENDERER_COMPATIBLE_GL_LIBRARIES ${PH_RENDERER_COMPATIBLE_GL_LIBRARIES} PARENT_SCOPE)
-	set(PH_RENDERER_COMPATIBLE_GL_RUNTIME_DIR ${PH_RENDERER_COMPATIBLE_GL_RUNTIME_DIR} PARENT_SCOPE)
-
-endfunction()
-
-# Adds the Renderer-Null target, static for iOS and Emscripten, dynamic for everything else
-function(phAddRendererNull)
-	message("-- [PhantasyEngine]: Adding Renderer-Null target")
-
-	# Emscripten and iOS needs statically linked renderer
-	if(EMSCRIPTEN OR IOS)
-		message("  -- Static renderer")
-		set(PH_RENDERER_NULL_STATIC true)
-		set(PH_RENDERER_NULL_STATIC ${PH_RENDERER_NULL_STATIC} PARENT_SCOPE)
-	else()
-		message("  -- Dynamic renderer")
-	endif()
-
-	# Adding renderer
-	add_subdirectory(
-		${PH_ROOT}/renderers/Null
-		${CMAKE_BINARY_DIR}/Renderer-Null
-	)
-	set(PH_RENDERER_NULL_FOUND ${PH_RENDERER_NULL_FOUND} PARENT_SCOPE)
-	set(PH_RENDERER_NULL_LIBRARIES ${PH_RENDERER_NULL_LIBRARIES} PARENT_SCOPE)
-
-endfunction()
-
 # Linking
 # ------------------------------------------------------------------------------------------------
 
@@ -485,30 +428,6 @@ function(phLinkPhantasyEngine linkTarget)
 	)
 endfunction()
 
-# Links the Renderer-CompatibleGL to the specified target, static or dynamic depending on the value
-# of PH_RENDERER_COMPATIBLE_GL_STATIC (set automatically by phAddRendererCompatibleGL()).
-function(phLinkRendererCompatibleGL linkTarget)
-	if(PH_RENDERER_COMPATIBLE_GL_STATIC)
-		message("-- [PhantasyEngine]: Statically linking Renderer-CompatibleGL")
-		target_link_libraries(${linkTarget} ${PH_RENDERER_COMPATIBLE_GL_LIBRARIES})
-	else()
-		message("-- [PhantasyEngine]: Dynamically linking Renderer-CompatibleGL")
-		add_dependencies(${linkTarget} ${PH_RENDERER_COMPATIBLE_GL_LIBRARIES})
-	endif()
-endfunction()
-
-# Links the Renderer-Null to the specified target, static or dynamic depending on the value
-# of PH_RENDERER_NULL_STATIC (set automatically by phAddRendererNull()).
-function(phLinkRendererNull linkTarget)
-	if(PH_RENDERER_NULL_STATIC)
-		message("-- [PhantasyEngine]: Statically linking Renderer-Null")
-		target_link_libraries(${linkTarget} ${PH_RENDERER_NULL_LIBRARIES})
-	else()
-		message("-- [PhantasyEngine]: Dynamically linking Renderer-Null")
-		add_dependencies(${linkTarget} ${PH_RENDERER_NULL_LIBRARIES})
-	endif()
-endfunction()
-
 # iOS only, links standard frameworks.
 function(phIosLinkStandardFrameworks linkTarget)
 	if(IOS)
@@ -535,8 +454,7 @@ endfunction()
 # This function takes a variable number of parameters (i.e. vararg), each parameter is a path to
 # a DLL to be copied in to your binary directory.
 #
-# Commonly you should call this with ${SDL2_RUNTIME_FILES} and ${SFZ_CORE_OPENGL_RUNTIME_FILES}
-# (if you are using OpenGL).
+# Commonly you should call this with ${SDL2_RUNTIME_FILES}
 function(phMsvcCopyRuntimeDLLs)
 	if(MSVC)
 		message("-- [PhantasyEngine]: Copying following DLLs to binary directory:")
