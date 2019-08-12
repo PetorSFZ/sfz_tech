@@ -24,7 +24,7 @@ namespace ph {
 // RendererUI class
 // ------------------------------------------------------------------------------------------------
 
-struct NextGenRendererState;
+struct RendererState;
 struct RendererConfigurableState;
 
 class RendererUI final {
@@ -48,18 +48,18 @@ public:
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	void render(NextGenRendererState& state) noexcept;
+	void render(RendererState& state) noexcept;
 
 private:
 	// Private methods
 	// --------------------------------------------------------------------------------------------
 
-	void renderGeneralTab(NextGenRendererState& state) noexcept;
+	void renderGeneralTab(RendererState& state) noexcept;
 	void renderStagesTab(RendererConfigurableState& state) noexcept;
 	void renderPipelinesTab(RendererConfigurableState& state) noexcept;
-	void renderMemoryTab(NextGenRendererState& state) noexcept;
-	void renderTexturesTab(NextGenRendererState& state) noexcept;
-	void renderMeshesTab(NextGenRendererState& state) noexcept;
+	void renderMemoryTab(RendererState& state) noexcept;
+	void renderTexturesTab(RendererState& state) noexcept;
+	void renderMeshesTab(RendererState& state) noexcept;
 };
 
 } // namespace ph

@@ -19,19 +19,19 @@
 
 #pragma once
 
-#include "ph/renderer/NextGenRendererState.hpp"
+#include "ph/renderer/RendererState.hpp"
 
 namespace ph {
 
 // Renderer config parser functions
 // ------------------------------------------------------------------------------------------------
 
-bool parseRendererConfig(NextGenRendererState& state, const char* configPath) noexcept;
+bool parseRendererConfig(RendererState& state, const char* configPath) noexcept;
 
 bool buildPipelineRendering(PipelineRenderingItem& item) noexcept;
 
-bool allocateStageMemory(NextGenRendererState& state) noexcept;
+bool allocateStageMemory(RendererState& state) noexcept;
 
-bool deallocateStageMemory(NextGenRendererState& state) noexcept;
+bool deallocateStageMemory(RendererState& state) noexcept;
 
 } // namespace ph

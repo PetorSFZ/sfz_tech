@@ -73,14 +73,14 @@ static MeshViewContainer toMeshView(
 // ResourceManager: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-ResourceManager ResourceManager::create(Renderer* renderer, Allocator* allocator) noexcept
+ResourceManager ResourceManager::create(void* renderer, Allocator* allocator) noexcept
 {
 	ResourceManager manager;
 	manager.mAllocator = allocator;
 	manager.mRenderer = renderer;
 
 	// Ensure renderer has not associated textures already, will break things
-	sfz_assert_debug(renderer->numTextures() == 0);
+	//sfz_assert_debug(renderer->numTextures() == 0);
 
 	return manager;
 }
@@ -124,7 +124,7 @@ uint32_t ResourceManager::registerTexture(const char* globalPath) noexcept
 
 	// Upload image to renderer
 	phConstImageView imageView = image;
-	uint16_t globalIdx = mRenderer->addTexture(imageView);
+	uint16_t globalIdx = 0;// mRenderer->addTexture(imageView);
 
 	// Record entry
 	mTextures.add(ResourceMapping::create(globalPathId, globalIdx));
@@ -154,7 +154,7 @@ uint32_t ResourceManager::registerTexture(const char* globalPath, const Image& t
 
 	// Upload image to renderer
 	phConstImageView imageView = texture;
-	uint16_t globalIdx = mRenderer->addTexture(imageView);
+	uint16_t globalIdx = 0;// mRenderer->addTexture(imageView);
 
 	// Record entry
 	mTextures.add(ResourceMapping::create(globalPathId, globalIdx));
@@ -242,7 +242,7 @@ uint32_t ResourceManager::registerMesh(
 
 	// Upload mesh to renderer
 	MeshViewContainer meshViewContainer = toMeshView(mesh, boundMaterials, mAllocator);
-	uint32_t globalIdx = mRenderer->addMesh(meshViewContainer.view);
+	uint32_t globalIdx = 0;// mRenderer->addMesh(meshViewContainer.view);
 
 	// Record entry
 	MeshDescriptor descriptor;

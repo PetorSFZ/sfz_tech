@@ -238,8 +238,15 @@ void updateImgui(
 
 	ImGuiIO& io = ImGui::GetIO();
 
+
+	// Retrieve scale factor from config
+	ph::GlobalConfig& cfg = ph::getGlobalConfig();
+	const ph::Setting* imguiScaleSetting =
+		cfg.sanitizeFloat("Imgui", "scale", true, ph::FloatBounds(2.0f, 1.0f, 3.0f));
+	float scaleFactor = 1.0f / imguiScaleSetting->floatValue();
+
 	// Set display dimensions
-	vec2 imguiDims = renderer.imguiWindowDimensions();
+	vec2 imguiDims = vec2(renderer.windowResolution()) * scaleFactor;
 	io.DisplaySize = imguiDims;
 
 	// Update mouse if available

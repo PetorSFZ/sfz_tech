@@ -22,7 +22,7 @@
 #include <sfz/Logging.hpp>
 
 #include "ph/Context.hpp"
-#include "ph/renderer/NextGenRendererState.hpp"
+#include "ph/renderer/RendererState.hpp"
 #include "ph/renderer/ZeroGUtils.hpp"
 #include "ph/rendering/Vertex.hpp"
 #include "ph/util/JsonParser.hpp"
@@ -84,7 +84,7 @@ static ZgDepthFunc depthFuncFromString(const str256& str) noexcept
 // Renderer config parser functions
 // ------------------------------------------------------------------------------------------------
 
-bool parseRendererConfig(NextGenRendererState& state, const char* configPath) noexcept
+bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 {
 	RendererConfigurableState& configurable = state.configurable;
 
@@ -278,7 +278,7 @@ bool buildPipelineRendering(PipelineRenderingItem& item) noexcept
 	return buildSuccess;
 }
 
-bool allocateStageMemory(NextGenRendererState& state) noexcept
+bool allocateStageMemory(RendererState& state) noexcept
 {
 	bool success = true;
 
@@ -345,7 +345,7 @@ bool allocateStageMemory(NextGenRendererState& state) noexcept
 	return success;
 }
 
-bool deallocateStageMemory(NextGenRendererState& state) noexcept
+bool deallocateStageMemory(RendererState& state) noexcept
 {
 	for (ph::Stage& stage : state.configurable.presentQueueStages) {
 		for (Framed<ConstantBufferMemory>& framed : stage.constantBuffers) {

@@ -120,7 +120,7 @@ struct TextureItem final {
 	uint32_t numMipmaps = 0;
 };
 
-// NextGenRendererState
+// RendererState
 // ------------------------------------------------------------------------------------------------
 
 struct RendererConfigurableState final {
@@ -132,7 +132,7 @@ struct RendererConfigurableState final {
 	DynArray<Stage> presentQueueStages;
 };
 
-struct NextGenRendererState final {
+struct RendererState final {
 
 	// Members
 	// --------------------------------------------------------------------------------------------

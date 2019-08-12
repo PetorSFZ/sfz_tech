@@ -25,7 +25,6 @@
 
 #include "ph/rendering/Image.hpp"
 #include "ph/rendering/Mesh.hpp"
-#include "ph/rendering/Renderer.hpp"
 
 namespace ph {
 
@@ -83,7 +82,7 @@ public:
 	~ResourceManager() noexcept { this->destroy(); }
 
 	// Creates a ResourceManager and makes it track the given renderer
-	static ResourceManager create(Renderer* renderer, Allocator* allocator) noexcept;
+	static ResourceManager create(void* renderer, Allocator* allocator) noexcept;
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
@@ -150,7 +149,7 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	Allocator* mAllocator = nullptr;
-	Renderer* mRenderer = nullptr;
+	void* mRenderer = nullptr;
 
 	sfz::DynArray<ResourceMapping> mTextures;
 	sfz::HashMap<StringID, uint32_t> mTextureMap;

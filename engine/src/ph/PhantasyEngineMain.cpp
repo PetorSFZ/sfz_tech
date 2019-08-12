@@ -194,10 +194,6 @@ int mainImpl(int, char*[], InitOptions&& options)
 	// Log SDL2 version
 	logSDL2Version();
 
-	// Load Renderer library (DLL on Windows)
-	UniquePtr<Renderer> renderer = sfz::makeUniqueDefault<Renderer>();
-	renderer->load(options.rendererName, sfz::getDefaultAllocator());
-
 	// Window settings
 	Setting* width = cfg.sanitizeInt("Window", "width", false, 1280, 128, 3840, 32);
 	Setting* height = cfg.sanitizeInt("Window", "height", false, 800, 128, 2160, 32);
@@ -209,7 +205,6 @@ int mainImpl(int, char*[], InitOptions&& options)
 
 	// Create SDL_Window
 	uint32_t windowFlags =
-		renderer->requiredSDL2WindowFlags() |
 		SDL_WINDOW_RESIZABLE |
 		SDL_WINDOW_ALLOW_HIGHDPI |
 		(fullscreen->boolValue() ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0) |
@@ -219,19 +214,23 @@ int mainImpl(int, char*[], InitOptions&& options)
 		width->intValue(), height->intValue(), windowFlags);
 	if (window == NULL) {
 		SFZ_ERROR("PhantasyEngine", "SDL_CreateWindow() failed: %s", SDL_GetError());
-		renderer.destroy();
 		SDL_Quit();
 		return EXIT_FAILURE;
 	}
 
-	// Initializing Imgui
+	// Initialize ImGui
 	SFZ_INFO("PhantasyEngine", "Initializing Imgui");
 	phImageView imguiFontTexView = initializeImgui(sfz::getDefaultAllocator());
 
 	// Initializing renderer
 	SFZ_INFO("PhantasyEngine", "Initializing renderer");
-	renderer->initRenderer(window);
-	renderer->initImgui(imguiFontTexView);
+	UniquePtr<Renderer> renderer = sfz::makeUniqueDefault<Renderer>();
+	bool rendererInitSuccess = renderer->init(window, imguiFontTexView, sfz::getDefaultAllocator());
+	if (!rendererInitSuccess) {
+		SFZ_ERROR("PhantasyEngine", "Renderer::init() failed");
+		SDL_Quit();
+		return EXIT_FAILURE;
+	}
 
 	// Start game loop
 	SFZ_INFO("PhantasyEngine", "Starting game loop");

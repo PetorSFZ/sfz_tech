@@ -24,7 +24,7 @@
 #include <sfz/memory/SmartPointers.hpp>
 
 #include "ph/game_loop/GameLoopUpdateable.hpp"
-#include "ph/rendering/Renderer.hpp"
+#include "ph/renderer/Renderer.hpp"
 
 namespace ph {
 

@@ -24,7 +24,7 @@
 #include <imgui.h>
 
 #include "ph/Context.hpp"
-#include "ph/renderer/NextGenRendererState.hpp"
+#include "ph/renderer/RendererState.hpp"
 #include "ph/renderer/ZeroGUtils.hpp"
 
 namespace ph {
@@ -138,7 +138,7 @@ void RendererUI::destroy() noexcept
 // RendererUI: Methods
 // ------------------------------------------------------------------------------------------------
 
-void RendererUI::render(NextGenRendererState& state) noexcept
+void RendererUI::render(RendererState& state) noexcept
 {
 	ImGuiWindowFlags windowFlags = 0;
 	windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
@@ -196,7 +196,7 @@ void RendererUI::render(NextGenRendererState& state) noexcept
 // RendererUI: Private methods
 // --------------------------------------------------------------------------------------------
 
-void RendererUI::renderGeneralTab(NextGenRendererState& state) noexcept
+void RendererUI::renderGeneralTab(RendererState& state) noexcept
 {
 	constexpr float offset = 250.0f;
 	alignedEdit("Current frame index", offset, [&](const char*) {
@@ -341,7 +341,7 @@ void RendererUI::renderPipelinesTab(RendererConfigurableState& state) noexcept
 	ImGui::Text("Compute Pipelines");
 }
 
-void RendererUI::renderMemoryTab(NextGenRendererState& state) noexcept
+void RendererUI::renderMemoryTab(RendererState& state) noexcept
 {
 	// Get ZeroG stats
 	ZgStats stats = {};
@@ -526,7 +526,7 @@ void RendererUI::renderMemoryTab(NextGenRendererState& state) noexcept
 	ImGui::Unindent(10.0f);
 }
 
-void RendererUI::renderTexturesTab(NextGenRendererState& state) noexcept
+void RendererUI::renderTexturesTab(RendererState& state) noexcept
 {
 	// Get global collection of resource strings in order to get strings from StringIDs
 	sfz::StringCollection& resStrings = ph::getResourceStrings();
@@ -559,7 +559,7 @@ void RendererUI::renderTexturesTab(NextGenRendererState& state) noexcept
 	}
 }
 
-void RendererUI::renderMeshesTab(NextGenRendererState& state) noexcept
+void RendererUI::renderMeshesTab(RendererState& state) noexcept
 {
 	// Get global collection of resource strings in order to get strings from StringIDs
 	sfz::StringCollection& resStrings = ph::getResourceStrings();

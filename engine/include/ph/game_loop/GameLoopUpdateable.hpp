@@ -28,7 +28,7 @@
 #include <sfz/math/Vector.hpp>
 #include <sfz/memory/SmartPointers.hpp>
 
-#include "ph/rendering/Renderer.hpp"
+#include "ph/renderer/Renderer.hpp"
 #include "ph/sdl/GameController.hpp"
 #include "ph/sdl/Mouse.hpp"
 

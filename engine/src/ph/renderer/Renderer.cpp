@@ -17,7 +17,7 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "ph/renderer/NextGenRenderer.hpp"
+#include "ph/renderer/Renderer.hpp"
 
 #include <utility> // std::swap()
 
@@ -34,7 +34,7 @@
 #include "ph/config/GlobalConfig.hpp"
 #include "ph/renderer/ImGuiRenderer.hpp"
 #include "ph/renderer/RendererConfigParser.hpp"
-#include "ph/renderer/NextGenRendererState.hpp"
+#include "ph/renderer/RendererState.hpp"
 #include "ph/renderer/ZeroGUtils.hpp"
 
 namespace ph {
@@ -92,25 +92,27 @@ enum class ImageType : uint32_t {
 	RGBA_F32 = 6
 };
 
-// NextGenRenderer: State methods
+// Renderer: State methods
 // ------------------------------------------------------------------------------------------------
 
-bool NextGenRenderer::init(
-	phContext* context, SDL_Window* window, sfz::Allocator* allocator) noexcept
+bool Renderer::init(
+	SDL_Window* window,
+	const phConstImageView& fontTexture,
+	sfz::Allocator* allocator) noexcept
 {
 	this->destroy();
-	mState = allocator->newObject<NextGenRendererState>("NextGenRendererState");
+	mState = allocator->newObject<RendererState>("RendererState");
 	mState->allocator = allocator;
 	mState->window = window;
 
 	// Settings
 	GlobalConfig& cfg = getGlobalConfig();
 	Setting* debugModeSetting =
-		cfg.sanitizeBool("NextGenRenderer", "ZeroGDebugModeOnStartup", true, false);
+		cfg.sanitizeBool("Renderer", "ZeroGDebugModeOnStartup", true, false);
 	mState->flushPresentQueueEachFrame =
-		cfg.sanitizeBool("NextGenRenderer", "flushPresentQueueEachFrame", false, false);
+		cfg.sanitizeBool("Renderer", "flushPresentQueueEachFrame", false, false);
 	mState->flushCopyQueueEachFrame =
-		cfg.sanitizeBool("NextGenRenderer", "flushCopyQueueEachFrame", false, false);
+		cfg.sanitizeBool("Renderer", "flushCopyQueueEachFrame", false, false);
 
 	// Initializer ZeroG
 	bool zgInitSuccess =
@@ -134,16 +136,6 @@ bool NextGenRenderer::init(
 	mState->dynamicAllocator.init(mState->allocator);
 	mState->meshes.create(512, mState->allocator);
 
-	return true;
-}
-
-bool NextGenRenderer::initImgui(const phConstImageView& fontTexture) noexcept
-{
-	if (!this->active()) {
-		sfz_assert_debug(false);
-		return false;
-	}
-
 	// Initialize ImGui rendering state
 	bool imguiInitSuccess = mState->imguiRenderer.init(
 		mState->allocator, mState->copyQueue, fontTexture);
@@ -151,10 +143,11 @@ bool NextGenRenderer::initImgui(const phConstImageView& fontTexture) noexcept
 		this->destroy();
 		return false;
 	}
+
 	return true;
 }
 
-bool NextGenRenderer::loadConfiguration(const char* jsonConfigPath) noexcept
+bool Renderer::loadConfiguration(const char* jsonConfigPath) noexcept
 {
 	if (!this->active()) {
 		sfz_assert_debug(false);
@@ -172,12 +165,12 @@ bool NextGenRenderer::loadConfiguration(const char* jsonConfigPath) noexcept
 	return true;
 }
 
-void NextGenRenderer::swap(NextGenRenderer& other) noexcept
+void Renderer::swap(Renderer& other) noexcept
 {
 	std::swap(this->mState, other.mState);
 }
 
-void NextGenRenderer::destroy() noexcept
+void Renderer::destroy() noexcept
 {
 	if (mState != nullptr) {
 
@@ -206,26 +199,26 @@ void NextGenRenderer::destroy() noexcept
 	mState = nullptr;
 }
 
-// NextGenRenderer: Getters
+// Renderer: Getters
 // ------------------------------------------------------------------------------------------------
 
-vec2_s32 NextGenRenderer::windowResolution() const noexcept
+vec2_s32 Renderer::windowResolution() const noexcept
 {
 	return mState->windowRes;
 }
 
-// NextGenRenderer: ImGui UI methods
+// Renderer: ImGui UI methods
 // ------------------------------------------------------------------------------------------------
 
-void NextGenRenderer::renderImguiUI() noexcept
+void Renderer::renderImguiUI() noexcept
 {
 	mState->ui.render(*mState);
 }
 
-// NextGenRenderer: Resource methods
+// Renderer: Resource methods
 // ------------------------------------------------------------------------------------------------
 
-bool NextGenRenderer::uploadTextureBlocking(StringID id, const phConstImageView& image) noexcept
+bool Renderer::uploadTextureBlocking(StringID id, const phConstImageView& image) noexcept
 {
 	// Don't upload if it already exists
 	if (mState->textures.get(id) != nullptr) return true;
@@ -277,7 +270,7 @@ bool NextGenRenderer::uploadTextureBlocking(StringID id, const phConstImageView&
 	return true;
 }
 
-bool NextGenRenderer::uploadMeshBlocking(StringID id, const Mesh& mesh) noexcept
+bool Renderer::uploadMeshBlocking(StringID id, const Mesh& mesh) noexcept
 {
 	sfz_assert_debug(id != StringID::invalid());
 	sfz_assert_debug(mState->meshes.get(id) == nullptr); // TODO: Should probably be fine to remove
@@ -296,10 +289,10 @@ bool NextGenRenderer::uploadMeshBlocking(StringID id, const Mesh& mesh) noexcept
 	return true;
 }
 
-// NextGenRenderer: Methods
+// Renderer: Methods
 // ------------------------------------------------------------------------------------------------
 
-void NextGenRenderer::frameBegin() noexcept
+void Renderer::frameBegin() noexcept
 {
 	// Increment frame index
 	mState->currentFrameIdx += 1;
@@ -331,7 +324,7 @@ void NextGenRenderer::frameBegin() noexcept
 	}
 }
 
-bool NextGenRenderer::inStageInputMode() const noexcept
+bool Renderer::inStageInputMode() const noexcept
 {
 	if (mState->currentInputEnabledStageIdx == ~0u) return false;
 	if (mState->currentInputEnabledStage == nullptr) return false;
@@ -340,7 +333,7 @@ bool NextGenRenderer::inStageInputMode() const noexcept
 	return true;
 }
 
-void NextGenRenderer::stageBeginInput(StringID stageName) noexcept
+void Renderer::stageBeginInput(StringID stageName) noexcept
 {
 	// Ensure no stage is currently set to accept input
 	sfz_assert_debug(!inStageInputMode());
@@ -374,7 +367,7 @@ void NextGenRenderer::stageBeginInput(StringID stageName) noexcept
 	CHECK_ZG mState->currentCommandList.setPipeline(pipelineItem.pipeline);
 }
 
-void NextGenRenderer::stageSetPushConstantUntyped(
+void Renderer::stageSetPushConstantUntyped(
 	uint32_t shaderRegister, const void* data, uint32_t numBytes) noexcept
 {
 	sfz_assert_debug(inStageInputMode());
@@ -404,7 +397,7 @@ void NextGenRenderer::stageSetPushConstantUntyped(
 	CHECK_ZG mState->currentCommandList.setPushConstant(shaderRegister, data, numBytes);
 }
 
-void NextGenRenderer::stageSetConstantBufferUntyped(
+void Renderer::stageSetConstantBufferUntyped(
 	uint32_t shaderRegister, const void* data, uint32_t numBytes) noexcept
 {
 	sfz_assert_debug(inStageInputMode());
@@ -454,7 +447,7 @@ void NextGenRenderer::stageSetConstantBufferUntyped(
 	//       ZeroG should cover this case.
 }
 
-void NextGenRenderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) noexcept
+void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) noexcept
 {
 	sfz_assert_debug(meshId != StringID::invalid());
 	sfz_assert_debug(inStageInputMode());
@@ -606,7 +599,7 @@ void NextGenRenderer::stageDrawMesh(StringID meshId, const MeshRegisters& regist
 	}
 }
 
-void NextGenRenderer::stageEndInput() noexcept
+void Renderer::stageEndInput() noexcept
 {
 	// Ensure a stage was set to accept input
 	sfz_assert_debug(inStageInputMode());
@@ -628,7 +621,7 @@ void NextGenRenderer::stageEndInput() noexcept
 	mState->currentCommandList.release();
 }
 
-void NextGenRenderer::renderImguiHack(
+void Renderer::renderImguiHack(
 	const phImguiVertex* vertices,
 	uint32_t numVertices,
 	const uint32_t* indices,
@@ -649,7 +642,7 @@ void NextGenRenderer::renderImguiHack(
 		numCommands);
 }
 
-void NextGenRenderer::frameFinish() noexcept
+void Renderer::frameFinish() noexcept
 {
 	// Finish ZeroG frame
 	sfz_assert_debug(mState->windowFramebuffer != nullptr);

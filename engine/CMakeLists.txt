@@ -68,21 +68,20 @@ endif()
 
 # Directories
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
-set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/res_ph)
 
-set(PHANTASY_ENGINE_HEADER_FILES
+set(HEADER_FILES
 	${INCLUDE_DIR}/ph/game_loop/DefaultGameUpdateable.hpp
 	${INCLUDE_DIR}/ph/game_loop/GameLoop.hpp
 	${INCLUDE_DIR}/ph/game_loop/GameLoopUpdateable.hpp
 
-	${INCLUDE_DIR}/ph/renderer/NextGenRenderer.hpp
 	${INCLUDE_DIR}/ph/renderer/BuiltInShaderTypes.hpp
+	${INCLUDE_DIR}/ph/renderer/Renderer.hpp
 
 	${INCLUDE_DIR}/ph/rendering/Image.hpp
 	${INCLUDE_DIR}/ph/rendering/ImguiSupport.hpp
 	${INCLUDE_DIR}/ph/rendering/Mesh.hpp
-	${INCLUDE_DIR}/ph/rendering/Renderer.hpp
 	${INCLUDE_DIR}/ph/rendering/ResourceManager.hpp
 	${INCLUDE_DIR}/ph/rendering/StaticScene.hpp
 
@@ -105,57 +104,55 @@ set(PHANTASY_ENGINE_HEADER_FILES
 
 	${INCLUDE_DIR}/ph/PhantasyEngineMain.hpp
 )
-source_group(TREE ${INCLUDE_DIR} FILES ${PHANTASY_ENGINE_HEADER_FILES})
+source_group(TREE ${INCLUDE_DIR} FILES ${HEADER_FILES})
 
-set(PHANTASY_ENGINE_SOURCE_FILES
-	${SOURCE_DIR}/ph/game_loop/DefaultGameUpdateable.cpp
-	${SOURCE_DIR}/ph/game_loop/GameLoop.cpp
+set(SRC_FILES
+	${SRC_DIR}/ph/game_loop/DefaultGameUpdateable.cpp
+	${SRC_DIR}/ph/game_loop/GameLoop.cpp
 
-	${SOURCE_DIR}/ph/renderer/DynamicGpuAllocator.hpp
-	${SOURCE_DIR}/ph/renderer/DynamicGpuAllocator.cpp
-	${SOURCE_DIR}/ph/renderer/GpuMesh.hpp
-	${SOURCE_DIR}/ph/renderer/GpuMesh.cpp
-	${SOURCE_DIR}/ph/renderer/ImGuiRenderer.hpp
-	${SOURCE_DIR}/ph/renderer/ImGuiRenderer.cpp
-	${SOURCE_DIR}/ph/renderer/NextGenRenderer.cpp
-	${SOURCE_DIR}/ph/renderer/NextGenRendererState.hpp
-	${SOURCE_DIR}/ph/renderer/NextGenRendererState.cpp
-	${SOURCE_DIR}/ph/renderer/RendererConfigParser.hpp
-	${SOURCE_DIR}/ph/renderer/RendererConfigParser.cpp
-	${SOURCE_DIR}/ph/renderer/Renderer-NextGen.cpp
-	${SOURCE_DIR}/ph/renderer/RendererUI.hpp
-	${SOURCE_DIR}/ph/renderer/RendererUI.cpp
-	${SOURCE_DIR}/ph/renderer/ZeroGUtils.hpp
-	${SOURCE_DIR}/ph/renderer/ZeroGUtils.cpp
+	${SRC_DIR}/ph/renderer/DynamicGpuAllocator.hpp
+	${SRC_DIR}/ph/renderer/DynamicGpuAllocator.cpp
+	${SRC_DIR}/ph/renderer/GpuMesh.hpp
+	${SRC_DIR}/ph/renderer/GpuMesh.cpp
+	${SRC_DIR}/ph/renderer/ImGuiRenderer.hpp
+	${SRC_DIR}/ph/renderer/ImGuiRenderer.cpp
+	${SRC_DIR}/ph/renderer/Renderer.cpp
+	${SRC_DIR}/ph/renderer/RendererConfigParser.hpp
+	${SRC_DIR}/ph/renderer/RendererConfigParser.cpp
+	${SRC_DIR}/ph/renderer/RendererState.hpp
+	${SRC_DIR}/ph/renderer/RendererState.cpp
+	${SRC_DIR}/ph/renderer/RendererUI.hpp
+	${SRC_DIR}/ph/renderer/RendererUI.cpp
+	${SRC_DIR}/ph/renderer/ZeroGUtils.hpp
+	${SRC_DIR}/ph/renderer/ZeroGUtils.cpp
 
-	${SOURCE_DIR}/ph/rendering/Image.cpp
-	${SOURCE_DIR}/ph/rendering/ImguiSupport.cpp
-	${SOURCE_DIR}/ph/rendering/Renderer.cpp
-	${SOURCE_DIR}/ph/rendering/ResourceManager.cpp
+	${SRC_DIR}/ph/rendering/Image.cpp
+	${SRC_DIR}/ph/rendering/ImguiSupport.cpp
+	${SRC_DIR}/ph/rendering/ResourceManager.cpp
 
-	${SOURCE_DIR}/ph/sdl/GameController.cpp
-	${SOURCE_DIR}/ph/sdl/Mouse.cpp
-	${SOURCE_DIR}/ph/sdl/SDLAllocator.cpp
+	${SRC_DIR}/ph/sdl/GameController.cpp
+	${SRC_DIR}/ph/sdl/Mouse.cpp
+	${SRC_DIR}/ph/sdl/SDLAllocator.cpp
 
-	${SOURCE_DIR}/ph/state/ArrayHeader.cpp
-	${SOURCE_DIR}/ph/state/GameState.cpp
-	${SOURCE_DIR}/ph/state/GameStateContainer.cpp
-	${SOURCE_DIR}/ph/state/GameStateEditor.cpp
+	${SRC_DIR}/ph/state/ArrayHeader.cpp
+	${SRC_DIR}/ph/state/GameState.cpp
+	${SRC_DIR}/ph/state/GameStateContainer.cpp
+	${SRC_DIR}/ph/state/GameStateEditor.cpp
 
-	${SOURCE_DIR}/ph/util/GltfLoader.cpp
-	${SOURCE_DIR}/ph/util/GltfWriter.cpp
-	${SOURCE_DIR}/ph/util/JsonParser.cpp
-	${SOURCE_DIR}/ph/util/TerminalLogger.cpp
+	${SRC_DIR}/ph/util/GltfLoader.cpp
+	${SRC_DIR}/ph/util/GltfWriter.cpp
+	${SRC_DIR}/ph/util/JsonParser.cpp
+	${SRC_DIR}/ph/util/TerminalLogger.cpp
 
-	${SOURCE_DIR}/ph/PhantasyEngineMain.cpp
+	${SRC_DIR}/ph/PhantasyEngineMain.cpp
 )
-source_group(TREE ${SOURCE_DIR} FILES ${PHANTASY_ENGINE_SOURCE_FILES})
+source_group(TREE ${SRC_DIR} FILES ${SRC_FILES})
 
-add_library(PhantasyEngineCore ${PHANTASY_ENGINE_HEADER_FILES} ${PHANTASY_ENGINE_SOURCE_FILES})
+add_library(PhantasyEngine ${HEADER_FILES} ${SRC_FILES})
 
-target_include_directories(PhantasyEngineCore PUBLIC
+target_include_directories(PhantasyEngine PUBLIC
 	${INCLUDE_DIR}
-	${SOURCE_DIR}
+	${SRC_DIR}
 	${SDL2_INCLUDE_DIRS}
 	${ZEROG_INCLUDE_DIRS}
 	${ZEROG_CPP_INCLUDE_DIRS}
@@ -168,7 +165,7 @@ target_include_directories(PhantasyEngineCore PUBLIC
 	${TINYGLTF_INCLUDE_DIRS}
 )
 
-target_link_libraries(PhantasyEngineCore
+target_link_libraries(PhantasyEngine
 	${SDL2_LIBRARIES}
 	${ZEROG_LIBRARIES}
 	${ZEROG_CPP_LIBRARIES}
@@ -183,5 +180,5 @@ target_link_libraries(PhantasyEngineCore
 
 set(PHANTASY_ENGINE_FOUND true PARENT_SCOPE)
 set(PHANTASY_ENGINE_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
-set(PHANTASY_ENGINE_LIBRARIES PhantasyEngineCore PARENT_SCOPE)
+set(PHANTASY_ENGINE_LIBRARIES PhantasyEngine PARENT_SCOPE)
 set(PHANTASY_ENGINE_RUNTIME_DIR ${RESOURCES_DIR} PARENT_SCOPE)

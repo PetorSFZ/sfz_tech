@@ -24,7 +24,7 @@
 #include <sfz/containers/DynArray.hpp>
 #include <ph/rendering/ImguiRenderingData.hpp>
 
-#include "ph/rendering/Renderer.hpp"
+#include "ph/renderer/Renderer.hpp"
 #include "ph/sdl/Mouse.hpp"
 #include "ph/sdl/GameController.hpp"
 

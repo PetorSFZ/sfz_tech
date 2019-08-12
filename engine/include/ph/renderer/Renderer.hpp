@@ -49,31 +49,33 @@ struct MeshRegisters final {
 	uint32_t emissive = ~0u;
 };
 
-// NextGenRenderer
+// Renderer
 // ------------------------------------------------------------------------------------------------
 
-struct NextGenRendererState;
+struct RendererState;
 
-class NextGenRenderer final {
+class Renderer final {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	NextGenRenderer() noexcept = default;
-	NextGenRenderer(const NextGenRenderer&) = delete;
-	NextGenRenderer& operator= (const NextGenRenderer&) = delete;
-	NextGenRenderer(NextGenRenderer&& o) noexcept { this->swap(o); }
-	NextGenRenderer& operator= (NextGenRenderer&& o) noexcept { this->swap(o); return *this; }
-	~NextGenRenderer() noexcept { this->destroy(); }
+	Renderer() noexcept = default;
+	Renderer(const Renderer&) = delete;
+	Renderer& operator= (const Renderer&) = delete;
+	Renderer(Renderer&& o) noexcept { this->swap(o); }
+	Renderer& operator= (Renderer&& o) noexcept { this->swap(o); return *this; }
+	~Renderer() noexcept { this->destroy(); }
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
 	bool active() const noexcept { return mState != nullptr; }
-	bool init(phContext* context, SDL_Window* window, sfz::Allocator* allocator) noexcept;
-	bool initImgui(const phConstImageView& fontTexture) noexcept;
+	bool init(
+		SDL_Window* window,
+		const phConstImageView& fontTexture,
+		sfz::Allocator* allocator) noexcept;
 	bool loadConfiguration(const char* jsonConfigPath) noexcept;
-	void swap(NextGenRenderer& other) noexcept;
+	void swap(Renderer& other) noexcept;
 	void destroy() noexcept;
 
 	// Getters
@@ -181,12 +183,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 private:
 
-	NextGenRendererState* mState = nullptr;
+	RendererState* mState = nullptr;
 };
 
 } // namespace ph
-
-// Temporary hack
-// ------------------------------------------------------------------------------------------------
-
-ph::NextGenRenderer* getNextGenRenderer() noexcept;

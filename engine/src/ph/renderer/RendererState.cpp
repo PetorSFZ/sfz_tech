@@ -17,14 +17,14 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "ph/renderer/NextGenRendererState.hpp"
+#include "ph/renderer/RendererState.hpp"
 
 namespace ph {
 
-// NextGenRendererState: Helper methods
+// RendererState: Helper methods
 // ------------------------------------------------------------------------------------------------
 
-uint32_t NextGenRendererState::findNextBarrierIdx() const noexcept
+uint32_t RendererState::findNextBarrierIdx() const noexcept
 {
 	uint32_t numStages = this->configurable.presentQueueStages.size();
 	for (uint32_t i = this->currentStageSetIdx; i < numStages; i++) {
@@ -34,7 +34,7 @@ uint32_t NextGenRendererState::findNextBarrierIdx() const noexcept
 	return ~0u;
 }
 
-uint32_t  NextGenRendererState::findActiveStageIdx(StringID stageName) const noexcept
+uint32_t  RendererState::findActiveStageIdx(StringID stageName) const noexcept
 {
 	sfz_assert_debug(stageName != StringID::invalid())
 	uint32_t numStages = this->configurable.presentQueueStages.size();
@@ -46,7 +46,7 @@ uint32_t  NextGenRendererState::findActiveStageIdx(StringID stageName) const noe
 	return ~0u;
 }
 
-uint32_t  NextGenRendererState::findPipelineRenderingIdx(StringID pipelineName) const noexcept
+uint32_t  RendererState::findPipelineRenderingIdx(StringID pipelineName) const noexcept
 {
 	sfz_assert_debug(pipelineName != StringID::invalid());
 	uint32_t numPipelines = this->configurable.renderingPipelines.size();
@@ -57,7 +57,7 @@ uint32_t  NextGenRendererState::findPipelineRenderingIdx(StringID pipelineName) 
 	return ~0u;
 }
 
-PerFrame<ConstantBufferMemory>* NextGenRendererState::findConstantBufferInCurrentInputStage(
+PerFrame<ConstantBufferMemory>* RendererState::findConstantBufferInCurrentInputStage(
 	uint32_t shaderRegister) noexcept
 {
 	// Find constant buffer

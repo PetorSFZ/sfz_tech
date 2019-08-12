@@ -43,6 +43,7 @@ using sfz::str32;
 using sfz::str96;
 using sfz::str128;
 using sfz::str256;
+using sfz::vec2;
 using sfz::vec4;
 using sfz::vec4_u8;
 
@@ -270,32 +271,33 @@ public:
 
 	void render(const UpdateInfo& updateInfo, Renderer& renderer) override final
 	{
-		// Call the pre-render hook
-		RenderSettings settings = mLogic->preRenderHook(mState, updateInfo, renderer);
-
-		// Some assets sanity checks
-		sfz_assert_debug(mState.resourceManager.textures().size() == renderer.numTextures());
-
 		// Update performance stats
 		if (mStatsWarmup >= 8) mStats.addSample(updateInfo.iterationDeltaSeconds * 1000.0f);
 		mStatsWarmup++;
 
-		renderer.beginFrame(settings.clearColor, mState.cam, settings.ambientLight, mState.dynamicSphereLights);
+		// Begin ImGui frame
+		ImGui::NewFrame();
 
-		renderer.renderStaticScene();
+		// Begin renderer frame
+		renderer.frameBegin();
 
-		renderer.render(mState.renderEntities.data(), mState.renderEntities.size());
+		mLogic->render(mState, updateInfo, renderer);
 
 		// Render Imgui
-		ImGui::NewFrame();
 		renderConsole(renderer);
 		if (!mConsoleActive) mLogic->renderCustomImgui();
 		ImGui::Render();
 		convertImguiDrawData(mImguiVertices, mImguiIndices, mImguiCommands);
-		renderer.renderImgui(mImguiVertices, mImguiIndices, mImguiCommands);
+		renderer.renderImguiHack(
+			mImguiVertices.data(),
+			mImguiVertices.size(),
+			mImguiIndices.data(),
+			mImguiIndices.size(),
+			mImguiCommands.data(),
+			mImguiCommands.size());
 
 		// Finish rendering frame
-		renderer.finishFrame();
+		renderer.frameFinish();
 	}
 
 	void onQuit() override final
@@ -325,6 +327,7 @@ private:
 		this->renderLogWindow();
 		this->renderConfigWindow();
 		this->renderResourceEditorWindow(renderer);
+		renderer.renderImguiUI();
 
 		// Render custom-injected windows
 		mLogic->injectConsoleMenu();
@@ -911,7 +914,7 @@ private:
 
 				// Send updated material to renderer
 				if (sendUpdatedMaterialToRenderer) {
-					renderer.updateMeshMaterials(mMaterialEditorCurrentMeshIdx, currentMesh->materials);
+					//renderer.updateMeshMaterials(mMaterialEditorCurrentMeshIdx, currentMesh->materials);
 				}
 
 				ImGui::EndTabItem();

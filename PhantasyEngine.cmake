@@ -286,6 +286,53 @@ function(phAddSDL2)
 
 endfunction()
 
+# Adds the ZeroG dependency. By default downloads from Github, but if PH_ZEROG_ROOT is set that
+# version will be used instead. In addition, if ZeroG is available one directory up from the
+# directory containing the CMakeLists.txt it will be used instead.
+# The following variables will be set:
+# ${ZEROG_FOUND}, ${ZEROG_INCLUDE_DIRS}, ${ZEROG_LIBRARIES} and ${ZEROG_RUNTIME_FILES}
+# ${ZEROG_CPP_FOUND}, ${ZEROG_CPP_INCLUDE_DIRS} and ${ZEROG_CPP_LIBRARIES}
+function(phAddZeroG)
+
+	set(PH_ZEROG_DEFAULT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../ZeroG)
+
+	if (PH_ZEROG_ROOT)
+		message("-- [PhantasyEngine]: Adding ZeroG from: \"${PH_ZEROG_ROOT}\"")
+		include(${PH_ZEROG_ROOT}/ZeroG.cmake)
+
+	elseif(EXISTS ${PH_ZEROG_DEFAULT_PATH})
+		message("-- [PhantasyEngine]: Adding ZeroG found at \"${PH_ZEROG_DEFAULT_PATH}\"")
+		include(${PH_ZEROG_DEFAULT_PATH}/ZeroG.cmake)
+
+	else()
+		message("-- [PhantasyEngine]: Downloading ZeroG from GitHub")
+
+		FetchContent_Declare(
+			ZeroG
+			GIT_REPOSITORY https://github.com/PetorSFZ/ZeroG.git
+			GIT_TAG f7a6d75ae9a0cf1d07950793d785d15df7f112c6
+		)
+		FetchContent_GetProperties(ZeroG)
+		if(NOT ZeroG_POPULATED)
+			FetchContent_Populate(ZeroG)
+			include(${ZeroG_SOURCE_DIR}/ZeroG.cmake)
+		endif()
+	endif()
+
+	addZeroG()
+	addZeroGcpp()
+
+	set(ZEROG_FOUND ${ZEROG_FOUND} PARENT_SCOPE)
+	set(ZEROG_INCLUDE_DIRS ${ZEROG_INCLUDE_DIRS} PARENT_SCOPE)
+	set(ZEROG_LIBRARIES ${ZEROG_LIBRARIES} PARENT_SCOPE)
+	set(ZEROG_RUNTIME_FILES ${ZEROG_RUNTIME_FILES} PARENT_SCOPE)
+
+	set(ZEROG_CPP_FOUND ${ZEROG_CPP_FOUND} PARENT_SCOPE)
+	set(ZEROG_CPP_INCLUDE_DIRS ${ZEROG_CPP_INCLUDE_DIRS} PARENT_SCOPE)
+	set(ZEROG_CPP_LIBRARIES ${ZEROG_CPP_LIBRARIES} PARENT_SCOPE)
+
+endfunction()
+
 # Adds sfzCore. By default downloads from GitHub, but if PH_SFZ_CORE_ROOT is set that version will
 # be used instead. In addition, if sfzCore is available on directory up from the directory
 # containing the CMakeLists.txt it will be used instead.

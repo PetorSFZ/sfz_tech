@@ -27,13 +27,18 @@
 #include "ph/rendering/CameraData.hpp"
 #include "ph/rendering/Image.hpp"
 #include "ph/rendering/Mesh.hpp"
+#include "ph/rendering/RenderEntity.hpp"
 #include "ph/rendering/ResourceManager.hpp"
+#include "ph/rendering/SphereLight.hpp"
 
 namespace ph {
 
 using sfz::Allocator;
 using sfz::DynArray;
 using sfz::UniquePtr;
+
+using sfz::vec3;
+using sfz::vec4;
 
 // DefaultGameUpdateable logic
 // ------------------------------------------------------------------------------------------------
@@ -50,11 +55,6 @@ struct ImguiControllers final {
 	bool useMouse = true;
 	bool useKeyboard = true;
 	int32_t controllerIndex = -1;
-};
-
-struct RenderSettings final {
-	vec4 clearColor = vec4(0.0f);
-	vec3 ambientLight = vec3(0.0f);
 };
 
 class GameLogic {
@@ -75,10 +75,7 @@ public:
 
 	virtual UpdateOp updateTick(UpdateableState& state, const UpdateInfo& updateInfo) = 0;
 
-	// A hook called in DefaultGameUpdateable's render() function before rendering starts. Good
-	// place to fill the list of phRenderEntity's to render (state.renderEntities). Called even
-	// when console is active (in contrast to updateTick()).
-	virtual RenderSettings preRenderHook(
+	virtual void render(
 		UpdateableState& state, const UpdateInfo& updateInfo, Renderer& renderer) = 0;
 
 	// Renders custom Imgui commands.
