@@ -44,11 +44,7 @@ using sfz::vec4;
 // ------------------------------------------------------------------------------------------------
 
 struct UpdateableState final {
-	phCameraData cam;
-	ResourceManager resourceManager;
 
-	DynArray<phRenderEntity> renderEntities;
-	DynArray<phSphereLight> dynamicSphereLights;
 };
 
 struct ImguiControllers final {

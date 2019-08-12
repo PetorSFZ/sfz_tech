@@ -103,6 +103,9 @@ public:
 	// TODO: NEED OPTION TO SPECIFY IF MIPMAPS SHOULD BE GENERATED OR NOT
 	bool uploadTextureBlocking(StringID id, const phConstImageView& image) noexcept;
 
+	// Check if a texture is loaded or not
+	bool textureLoaded(StringID id) const noexcept;
+
 	// Uploads a mesh to the renderer, blocks until done.
 	//
 	// The "id" is a unique string identifier for this mesh. This should normally be, assuming the

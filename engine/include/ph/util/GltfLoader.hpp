@@ -43,6 +43,7 @@ bool loadAssetsFromGltf(
 	Mesh& meshOut,
 	DynArray<ImageAndPath>& texturesOut,
 	sfz::Allocator* allocator,
-	const ResourceManager* resourceManager = nullptr) noexcept;
+	bool (*checkIfTextureIsLoaded)(StringID id, void* userPtr),
+	void* userPtr) noexcept;
 
 } // namespace ph

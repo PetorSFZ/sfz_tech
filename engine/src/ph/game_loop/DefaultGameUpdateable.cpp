@@ -203,9 +203,6 @@ public:
 			cfg.sanitizeBool("Console", "showInGamePreview", true, BoolBounds(false));
 		mLogMinLevelSetting = cfg.sanitizeInt("Console", "logMinLevel", false, IntBounds(0, 0, 3));
 
-		// Initialize resource manager
-		mState.resourceManager = ResourceManager::create(&renderer, sfz::getDefaultAllocator());
-
 		// Initialize logic
 		mLogic->initialize(mState, renderer);
 	}
@@ -721,7 +718,7 @@ private:
 
 	void renderResourceEditorWindow(Renderer& renderer) noexcept
 	{
-		// Get resource manager and resource strings
+		/*// Get resource manager and resource strings
 		const StringCollection& resStrings = getResourceStrings();
 
 		// Set window flags
@@ -923,7 +920,7 @@ private:
 			ImGui::EndTabBar();
 		}
 
-		ImGui::End();
+		ImGui::End();*/
 	}
 };
 

@@ -270,6 +270,12 @@ bool Renderer::uploadTextureBlocking(StringID id, const phConstImageView& image)
 	return true;
 }
 
+bool Renderer::textureLoaded(StringID id) const noexcept
+{
+	const ph::TextureItem* item = mState->textures.get(id);
+	return item != nullptr;
+}
+
 bool Renderer::uploadMeshBlocking(StringID id, const Mesh& mesh) noexcept
 {
 	sfz_assert_debug(id != StringID::invalid());

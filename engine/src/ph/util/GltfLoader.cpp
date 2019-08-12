@@ -195,7 +195,8 @@ static bool extractAssets(
 	const tinygltf::Model& model,
 	Mesh& meshOut,
 	DynArray<ImageAndPath>& texturesOut,
-	const ResourceManager* resourceManager,
+	bool (*checkIfTextureIsLoaded)(StringID id, void* userPtr),
+	void* userPtr,
 	sfz::Allocator* allocator) noexcept
 {
 	StringCollection& resStrings = getResourceStrings();
@@ -215,8 +216,8 @@ static bool extractAssets(
 		StringID globalPathId = resStrings.getStringID(globalPath.str);
 
 		// Check if texture is already loaded, skip it if it is
-		if (resourceManager != nullptr) {
-			if (resourceManager->hasTexture(globalPathId)) continue;
+		if (checkIfTextureIsLoaded != nullptr) {
+			if (checkIfTextureIsLoaded(globalPathId, userPtr)) continue;
 		}
 
 		// Load and store image
@@ -459,7 +460,8 @@ bool loadAssetsFromGltf(
 	Mesh& meshOut,
 	DynArray<ImageAndPath>& texturesOut,
 	sfz::Allocator* allocator,
-	const ResourceManager* resourceManager) noexcept
+	bool (*checkIfTextureIsLoaded)(StringID id, void* userPtr),
+	void* userPtr) noexcept
 {
 	str320 basePath = calculateBasePath(gltfPath);
 
@@ -492,8 +494,8 @@ bool loadAssetsFromGltf(
 	SFZ_INFO_NOISY("tinygltf", "Model \"%s\" loaded succesfully", gltfPath);
 
 	// Extract assets from results
-	bool extractSuccess =
-		extractAssets(basePath.str, model, meshOut, texturesOut, resourceManager, allocator);
+	bool extractSuccess = extractAssets(
+		basePath.str, model, meshOut, texturesOut, checkIfTextureIsLoaded, userPtr, allocator);
 	if (!extractSuccess) {
 		SFZ_ERROR("tinygltf", "Failed to create ph::Mesh from gltf: \"%s\"", gltfPath);
 		return false;
