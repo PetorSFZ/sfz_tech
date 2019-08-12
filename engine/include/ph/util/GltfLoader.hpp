@@ -22,7 +22,6 @@
 
 #include "ph/rendering/Image.hpp"
 #include "ph/rendering/Mesh.hpp"
-#include "ph/rendering/ResourceManager.hpp"
 
 namespace ph {
 
@@ -30,6 +29,11 @@ using sfz::DynArray;
 
 // Function for loading from gltf
 // ------------------------------------------------------------------------------------------------
+
+struct ImageAndPath final {
+	Image image;
+	StringID globalPathId;
+};
 
 // Loads all meshes, textures and materials from a .gltf file.
 //

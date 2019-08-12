@@ -19,22 +19,14 @@
 
 #pragma once
 
-#include <sfz/containers/DynArray.hpp>
 #include <sfz/memory/Allocator.hpp>
 #include <sfz/memory/SmartPointers.hpp>
 
 #include "ph/game_loop/GameLoopUpdateable.hpp"
-#include "ph/rendering/CameraData.hpp"
-#include "ph/rendering/Image.hpp"
-#include "ph/rendering/Mesh.hpp"
-#include "ph/rendering/RenderEntity.hpp"
-#include "ph/rendering/ResourceManager.hpp"
-#include "ph/rendering/SphereLight.hpp"
 
 namespace ph {
 
 using sfz::Allocator;
-using sfz::DynArray;
 using sfz::UniquePtr;
 
 using sfz::vec3;
@@ -42,10 +34,6 @@ using sfz::vec4;
 
 // DefaultGameUpdateable logic
 // ------------------------------------------------------------------------------------------------
-
-struct UpdateableState final {
-
-};
 
 struct ImguiControllers final {
 	bool useMouse = true;
@@ -57,22 +45,20 @@ class GameLogic {
 public:
 	virtual ~GameLogic() {}
 
-	virtual void initialize(UpdateableState& state, Renderer& renderer) = 0;
+	virtual void initialize(Renderer& renderer) = 0;
 
 	// Returns the index of the controller to be used for Imgui. If -1 is returned no controller
 	// input will be provided to Imgui.
 	virtual ImguiControllers imguiController(const UserInput&) { return ImguiControllers(); }
 
 	virtual UpdateOp processInput(
-		UpdateableState& state,
 		const UserInput& input,
 		const UpdateInfo& updateInfo,
 		Renderer& renderer) = 0;
 
-	virtual UpdateOp updateTick(UpdateableState& state, const UpdateInfo& updateInfo) = 0;
+	virtual UpdateOp updateTick(const UpdateInfo& updateInfo) = 0;
 
-	virtual void render(
-		UpdateableState& state, const UpdateInfo& updateInfo, Renderer& renderer) = 0;
+	virtual void render(const UpdateInfo& updateInfo, Renderer& renderer) = 0;
 
 	// Renders custom Imgui commands.
 	//
@@ -103,7 +89,7 @@ public:
 	// Called when the console is deactivated.
 	virtual void onConsoleDeactivated() {}
 
-	virtual void onQuit(UpdateableState& state) { (void)state; }
+	virtual void onQuit() { }
 };
 
 // DefaultGameUpdateable creation function

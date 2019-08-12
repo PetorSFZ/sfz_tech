@@ -82,7 +82,6 @@ set(HEADER_FILES
 	${INCLUDE_DIR}/ph/rendering/Image.hpp
 	${INCLUDE_DIR}/ph/rendering/ImguiSupport.hpp
 	${INCLUDE_DIR}/ph/rendering/Mesh.hpp
-	${INCLUDE_DIR}/ph/rendering/ResourceManager.hpp
 	${INCLUDE_DIR}/ph/rendering/StaticScene.hpp
 
 	${INCLUDE_DIR}/ph/sdl/ButtonState.hpp
@@ -128,7 +127,6 @@ set(SRC_FILES
 
 	${SRC_DIR}/ph/rendering/Image.cpp
 	${SRC_DIR}/ph/rendering/ImguiSupport.cpp
-	${SRC_DIR}/ph/rendering/ResourceManager.cpp
 
 	${SRC_DIR}/ph/sdl/GameController.cpp
 	${SRC_DIR}/ph/sdl/Mouse.cpp

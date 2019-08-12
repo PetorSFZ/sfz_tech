@@ -150,7 +150,6 @@ public:
 
 	bool mInitialized = false;
 
-	UpdateableState mState;
 	UniquePtr<GameLogic> mLogic = nullptr;
 
 	// Frametime stats
@@ -204,7 +203,7 @@ public:
 		mLogMinLevelSetting = cfg.sanitizeInt("Console", "logMinLevel", false, IntBounds(0, 0, 3));
 
 		// Initialize logic
-		mLogic->initialize(mState, renderer);
+		mLogic->initialize(renderer);
 	}
 
 	UpdateOp processInput(
@@ -253,7 +252,7 @@ public:
 		updateImgui(renderer, imguiMousePtr, imguiEventsPtr, imguiControllerPtr);
 
 		// Forward input to logic
-		if (!mConsoleActive) return mLogic->processInput(mState, input, updateInfo, renderer);
+		if (!mConsoleActive) return mLogic->processInput(input, updateInfo, renderer);
 
 		// If console is active, just return NO OP
 		return UpdateOp::NO_OP();
@@ -262,7 +261,7 @@ public:
 	UpdateOp updateTick(const UpdateInfo& updateInfo) override final
 	{
 		// Forward update to logic
-		if (!mConsoleActive) return mLogic->updateTick(mState, updateInfo);
+		if (!mConsoleActive) return mLogic->updateTick(updateInfo);
 		return UpdateOp::NO_OP();
 	}
 
@@ -278,7 +277,7 @@ public:
 		// Begin renderer frame
 		renderer.frameBegin();
 
-		mLogic->render(mState, updateInfo, renderer);
+		mLogic->render(updateInfo, renderer);
 
 		// Render Imgui
 		renderConsole(renderer);
@@ -299,7 +298,7 @@ public:
 
 	void onQuit() override final
 	{
-		mLogic->onQuit(mState);
+		mLogic->onQuit();
 	}
 
 private:
@@ -323,7 +322,6 @@ private:
 		this->renderPerformanceWindow();
 		this->renderLogWindow();
 		this->renderConfigWindow();
-		this->renderResourceEditorWindow(renderer);
 		renderer.renderImguiUI();
 
 		// Render custom-injected windows
@@ -408,8 +406,7 @@ private:
 		ImGui::DockBuilderDockWindow("Performance", dockUpperLeft);
 		ImGui::DockBuilderDockWindow("Log", dockBottom);
 		ImGui::DockBuilderDockWindow("Config", dockLeft);
-		ImGui::DockBuilderDockWindow("Resources", dockLeft);
-		ImGui::DockBuilderDockWindow("Dynamic Materials", dockLeft);
+		ImGui::DockBuilderDockWindow("Renderer", dockLeft);
 
 		uint32_t numInjectedWindowsToDock = mLogic->injectConsoleMenuNumWindowsToDockInitially();
 		for (uint32_t i = 0; i < numInjectedWindowsToDock; i++) {
@@ -714,213 +711,6 @@ private:
 
 		// End window
 		ImGui::End();
-	}
-
-	void renderResourceEditorWindow(Renderer& renderer) noexcept
-	{
-		/*// Get resource manager and resource strings
-		const StringCollection& resStrings = getResourceStrings();
-
-		// Set window flags
-		ImGuiWindowFlags windowFlags = 0;
-		windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
-
-		ImGui::SetNextWindowPos(vec2(500.0f, 500.0f), ImGuiCond_FirstUseEver);
-		ImGui::SetNextWindowContentSize(vec2(630.0f, 0.0f));
-		ImGui::Begin("Resources", nullptr, windowFlags);
-
-		// Tabs
-		ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_None;
-		if (ImGui::BeginTabBar("ResourcesTabBar", tabBarFlags)) {
-
-			// Meshes
-			if (ImGui::BeginTabItem("Meshes")) {
-				ImGui::Spacing();
-
-				for (const MeshDescriptor& descr : mState.resourceManager.meshDescriptors()) {
-					const char* globalPath = resStrings.getString(descr.globalPathId);
-					uint32_t globalIdx = descr.globalIdx;
-
-					str256 meshName("%u -- \"%s\" -- %u components",
-						globalIdx, globalPath, descr.componentDescriptors.size());
-					if (ImGui::CollapsingHeader(meshName.str)) {
-						ImGui::Indent(30.0f);
-						for (uint32_t i = 0; i < descr.componentDescriptors.size(); i++) {
-							const auto& compDescr = descr.componentDescriptors[i];
-							ImGui::Text("Component %u -- Material: %u", i, compDescr.materialIdx);
-						}
-						ImGui::Unindent(30.0f);
-					}
-				}
-
-				ImGui::EndTabItem();
-			}
-
-			// Textures
-			if (ImGui::BeginTabItem("Textures")) {
-				ImGui::Spacing();
-
-				for (const ResourceMapping& texMapping : mState.resourceManager.textures()) {
-					const char* globalPath = resStrings.getString(texMapping.globalPathId);
-					uint32_t globalIdx = texMapping.globalIdx;
-
-					ImGui::Text("%u -- \"%s\"", globalIdx, globalPath);
-				}
-
-				ImGui::EndTabItem();
-			}
-
-			// Materials
-			if (ImGui::BeginTabItem("Materials")) {
-				ImGui::Spacing();
-
-				// Check that mesh index is in range
-				DynArray<MeshDescriptor>& meshes = mState.resourceManager.meshDescriptors();
-				if (mMaterialEditorCurrentMeshIdx >= meshes.size()) {
-					mMaterialEditorCurrentMeshIdx = 0;
-				}
-				sfz_assert_debug(meshes.size() != 0);
-
-				// Mesh index selection combo box
-				MeshDescriptor* currentMesh = &meshes[mMaterialEditorCurrentMeshIdx];
-				str256 meshStr("%u -- \"%s\"",
-					mMaterialEditorCurrentMeshIdx, resStrings.getString(currentMesh->globalPathId));
-				if (ImGui::BeginCombo("Mesh", meshStr.str)) {
-					for (uint32_t i = 0; i < meshes.size(); i++) {
-
-						// Convert index to string and check if it is selected
-						meshStr = str256("%u -- \"%s\"",
-							i, resStrings.getString(meshes[i].globalPathId));
-						bool isSelected = mMaterialEditorCurrentMeshIdx == i;
-
-						// Report index to ImGui combo button and update current if it has changed
-						if (ImGui::Selectable(meshStr.str, isSelected)) {
-							mMaterialEditorCurrentMeshIdx = i;
-							mMaterialEditorCurrentMaterialIdx = 0;
-							currentMesh = &meshes[i];
-						}
-					}
-					ImGui::EndCombo();
-				}
-
-				// Check that material is in range
-				DynArray<phMaterial>& materials = currentMesh->materials;
-				if (mMaterialEditorCurrentMaterialIdx >= materials.size()) {
-					mMaterialEditorCurrentMaterialIdx = 0;
-				}
-				sfz_assert_debug(materials.size() != 0);
-
-				// Material index selection combo box
-				phMaterial* material = &materials[mMaterialEditorCurrentMaterialIdx];
-				if (ImGui::BeginCombo(
-					"Material", str32("Material %u", mMaterialEditorCurrentMaterialIdx).str)) {
-					for (uint32_t i = 0; i < materials.size(); i++) {
-
-						// Convert index to string and check if it is selected
-						str32 materialStr("Material %u", i);
-						bool isSelected = mMaterialEditorCurrentMaterialIdx == i;
-
-						// Report index to ImGui combo button and update current if it has changed
-						if (ImGui::Selectable(materialStr.str, isSelected)) {
-							mMaterialEditorCurrentMaterialIdx = i;
-							material = &materials[i];
-						}
-					}
-					ImGui::EndCombo();
-				}
-
-				ImGui::Spacing();
-				ImGui::Separator();
-				ImGui::Spacing();
-
-				bool sendUpdatedMaterialToRenderer = false;
-
-				// Lambdas for converting vec4_u8 to vec4_f32 and back
-				auto u8ToF32 = [](vec4_u8 v) { return vec4(v) * (1.0f / 255.0f); };
-				auto f32ToU8 = [](vec4 v) { return vec4_u8(v * 255.0f); };
-
-				// Lambda for converting texture index to combo string label
-				auto textureToComboStr = [&](uint16_t idx) {
-					const char* globalPathStr = mState.resourceManager.debugTextureIndexToGlobalPath(idx);
-					return str128("%u - %s", uint32_t(idx), globalPathStr);
-				};
-
-				// Lambda for creating a combo box to select texture
-				auto textureComboBox = [&](const char* comboName, uint16_t& texIndex) {
-					str128 selectedMaterialStr = textureToComboStr(texIndex);
-					if (ImGui::BeginCombo(comboName, selectedMaterialStr.str)) {
-
-						// Special case for no texture (~0)
-						{
-							bool isSelected = texIndex == uint16_t(~0);
-							if (ImGui::Selectable("~0 - NO TEXTURE", isSelected)) {
-								texIndex = uint16_t(~0);;
-								sendUpdatedMaterialToRenderer = true;
-							}
-						}
-
-						// Existing textures
-						uint32_t numTextures = mState.resourceManager.textures().size();
-						for (uint32_t i = 0; i < numTextures; i++) {
-
-							// Convert index to string and check if it is selected
-							str128 materialStr = textureToComboStr(uint16_t(i));
-							bool isSelected = texIndex == i;
-
-							// Report index to ImGui combo button and update current if it has changed
-							if (ImGui::Selectable(materialStr.str, isSelected)) {
-								texIndex = uint16_t(i);
-								sendUpdatedMaterialToRenderer = true;
-							}
-						}
-						ImGui::EndCombo();
-					}
-				};
-
-				// Albedo
-				vec4 colorFloat = u8ToF32(material->albedo);
-				if (ImGui::ColorEdit4("Albedo Factor", colorFloat.data(),
-					ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_Float)) {
-					material->albedo = f32ToU8(colorFloat);
-					sendUpdatedMaterialToRenderer = true;
-				}
-				textureComboBox("Albedo Texture", material->albedoTexIndex);
-
-				// Emissive
-				colorFloat = u8ToF32(vec4_u8(material->emissive, 0));
-				if (ImGui::ColorEdit3("Emissive Factor", colorFloat.data(), ImGuiColorEditFlags_Float)) {
-					material->emissive = f32ToU8(colorFloat).xyz;
-					sendUpdatedMaterialToRenderer = true;
-				}
-				textureComboBox("Emissive Texture", material->emissiveTexIndex);
-
-				// Metallic & roughness
-				vec4_u8 metallicRoughnessU8(material->metallic, material->roughness, 0, 0);
-				vec4 metallicRoughness = u8ToF32(metallicRoughnessU8);
-				if (ImGui::SliderFloat2("Metallic Roughness Factors", metallicRoughness.data(), 0.f, 1.f)) {
-					metallicRoughnessU8 = f32ToU8(metallicRoughness);
-					material->metallic = metallicRoughnessU8.x;
-					material->roughness = metallicRoughnessU8.y;
-					sendUpdatedMaterialToRenderer = true;
-				}
-				textureComboBox("Metallic Roughness Texture", material->metallicRoughnessTexIndex);
-
-				// Normal and Occlusion textures
-				textureComboBox("Normal Texture", material->normalTexIndex);
-				textureComboBox("Occlusion Texture", material->occlusionTexIndex);
-
-				// Send updated material to renderer
-				if (sendUpdatedMaterialToRenderer) {
-					//renderer.updateMeshMaterials(mMaterialEditorCurrentMeshIdx, currentMesh->materials);
-				}
-
-				ImGui::EndTabItem();
-			}
-
-			ImGui::EndTabBar();
-		}
-
-		ImGui::End();*/
 	}
 };
 
