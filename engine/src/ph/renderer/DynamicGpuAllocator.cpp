@@ -362,7 +362,7 @@ static uint32_t findAppropriatePage(DynArray<PageT>& pages, uint32_t size) noexc
 	sfz_assert_debug(size != 0);
 	for (uint32_t i = 0; i < pages.size(); i++) {
 		PageT& page = pages[i];
-		if (page.pageSize >= size) return i;
+		if (page.largestFreeBlockSize >= size) return i;
 	}
 	return ~0u;
 }
