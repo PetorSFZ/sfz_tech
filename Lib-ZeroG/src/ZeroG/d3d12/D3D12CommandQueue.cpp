@@ -311,9 +311,9 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListStateChanges(
 {
 	// Temporary storage array for the barriers to insert
 	uint32_t numBarriers = 0;
-	constexpr uint32_t MAX_NUM_BARRIERS = 256;
+	constexpr uint32_t MAX_NUM_BARRIERS = 512;
 	CD3DX12_RESOURCE_BARRIER barriers[MAX_NUM_BARRIERS] = {};
-	constexpr uint32_t MAX_NUM_RESIDENCY_OBJECTS = 512;
+	constexpr uint32_t MAX_NUM_RESIDENCY_OBJECTS = 1024;
 	D3DX12Residency::ManagedObject* residencyObjects[MAX_NUM_RESIDENCY_OBJECTS] = {};
 
 	// Gather buffer barriers
