@@ -31,9 +31,9 @@ namespace ph {
 using sfz::Allocator;
 using sfz::LogLevel;
 using sfz::RingBuffer;
-using sfz::StackString32;
-using sfz::StackString64;
-using sfz::StackString1024;
+using sfz::str32;
+using sfz::str64;
+using sfz::str2048;
 
 using std::time_t;
 
@@ -41,12 +41,12 @@ using std::time_t;
 // ------------------------------------------------------------------------------------------------
 
 struct TerminalMessageItem final {
-	StackString64 file;
+	str64 file;
 	int32_t lineNumber;
 	time_t timestamp;
 	LogLevel level;
-	StackString32 tag;
-	StackString1024 message;
+	str32 tag;
+	str2048 message;
 };
 
 // TerminalLogger class
