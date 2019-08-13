@@ -178,6 +178,13 @@ void gpuMeshUploadBlocking(
 	CHECK_ZG commandList.memcpyBufferToBuffer(
 		gpuMesh.materialsBuffer, 0, materialsUploadBuffer, 0, materialsBufferSizeBytes);
 
+	// Enable resources to be used on other queues than copy queue
+	for (GpuMeshComponent& comp : gpuMesh.components) {
+		CHECK_ZG commandList.enableQueueTransition(comp.indexBuffer);
+	}
+	CHECK_ZG commandList.enableQueueTransition(gpuMesh.vertexBuffer);
+	CHECK_ZG commandList.enableQueueTransition(gpuMesh.materialsBuffer);
+
 	// Execute command list to upload all data
 	CHECK_ZG copyQueue.executeCommandList(commandList);
 	CHECK_ZG copyQueue.flush();

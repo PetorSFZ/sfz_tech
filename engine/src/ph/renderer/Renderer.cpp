@@ -252,6 +252,7 @@ bool Renderer::uploadTextureBlocking(StringID id, const phConstImageView& image)
 	zg::CommandList commandList;
 	CHECK_ZG mState->copyQueue.beginCommandListRecording(commandList);
 	CHECK_ZG commandList.memcpyToTexture(texture, 0, view, tmpUploadBuffer);
+	CHECK_ZG commandList.enableQueueTransition(texture);
 	CHECK_ZG mState->copyQueue.executeCommandList(commandList);
 	CHECK_ZG mState->copyQueue.flush();
 
