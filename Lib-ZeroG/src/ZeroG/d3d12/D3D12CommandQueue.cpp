@@ -311,8 +311,10 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListStateChanges(
 {
 	// Temporary storage array for the barriers to insert
 	uint32_t numBarriers = 0;
-	CD3DX12_RESOURCE_BARRIER barriers[256] = {};
-	D3DX12Residency::ManagedObject* residencyObjects[512] = {};
+	constexpr uint32_t MAX_NUM_BARRIERS = 256;
+	CD3DX12_RESOURCE_BARRIER barriers[MAX_NUM_BARRIERS] = {};
+	constexpr uint32_t MAX_NUM_RESIDENCY_OBJECTS = 512;
+	D3DX12Residency::ManagedObject* residencyObjects[MAX_NUM_RESIDENCY_OBJECTS] = {};
 
 	// Gather buffer barriers
 	for (uint32_t i = 0; i < pendingBufferStates.size(); i++) {
@@ -324,7 +326,7 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListStateChanges(
 		}
 
 		// Error out if we don't have enough space in our temp array
-		if (numBarriers >= 256) {
+		if (numBarriers >= MAX_NUM_BARRIERS) {
 			ZG_ERROR(mLog, "Internal error, need to insert too many barriers. Fixable, please contact ZeroG devs.");
 			return ZG_ERROR_GENERIC;
 		}
@@ -351,7 +353,7 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListStateChanges(
 		}
 
 		// Error out if we don't have enough space in our temp array
-		if (numBarriers >= 256) {
+		if (numBarriers >= MAX_NUM_BARRIERS) {
 			ZG_ERROR(mLog, "Internal error, need to insert too many barriers. Fixable, please contact ZeroG devs.");
 			return ZG_ERROR_GENERIC;
 		}
@@ -359,7 +361,7 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListStateChanges(
 		// Create barrier
 		barriers[numBarriers] = CD3DX12_RESOURCE_BARRIER::Transition(
 			state.texture->resource.Get(),
-			state.texture->lastCommittedStates[i],
+			state.texture->lastCommittedStates[state.mipLevel],
 			state.neededInitialState,
 			state.mipLevel);
 

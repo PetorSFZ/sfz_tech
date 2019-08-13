@@ -285,7 +285,7 @@ public:
 
 		// Create command queue
 		const uint32_t MAX_NUM_COMMAND_LISTS_SWAPCHAIN_QUEUE = 256;
-		const uint32_t MAX_NUM_BUFFERS_PER_COMMAND_LIST_SWAPCHAIN_QUEUE = 256;
+		const uint32_t MAX_NUM_BUFFERS_PER_COMMAND_LIST_SWAPCHAIN_QUEUE = 1024;
 		ZgErrorCode res = mState->commandQueuePresent.create(
 			D3D12_COMMAND_LIST_TYPE_DIRECT,
 			mState->device,
@@ -298,8 +298,8 @@ public:
 		if (res != ZG_SUCCESS) return res;
 
 		// Create copy queue
-		const uint32_t MAX_NUM_COMMAND_LISTS_COPY_QUEUE = 256;
-		const uint32_t MAX_NUM_BUFFERS_PER_COMMAND_LIST_COPY_QUEUE = 256;
+		const uint32_t MAX_NUM_COMMAND_LISTS_COPY_QUEUE = 128;
+		const uint32_t MAX_NUM_BUFFERS_PER_COMMAND_LIST_COPY_QUEUE = 1024;
 		res = mState->commandQueueCopy.create(
 			D3D12_COMMAND_LIST_TYPE_COPY,
 			mState->device,
