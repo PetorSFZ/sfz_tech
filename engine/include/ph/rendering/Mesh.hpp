@@ -22,9 +22,10 @@
 #include <cstdint>
 
 #include <sfz/containers/DynArray.hpp>
+#include <sfz/math/Vector.hpp>
 #include <sfz/strings/StringID.hpp>
 
-#include <ph/rendering/MeshView.hpp>
+#include "ph/rendering/Vertex.hpp"
 
 namespace ph {
 
@@ -34,6 +35,29 @@ using sfz::StringID;
 // Material unbound
 // ------------------------------------------------------------------------------------------------
 
+// A rendering material used in Phantasy Engine.
+//
+// PhantasyEngine (currently) exclusively uses roughness-metallic pbr materials. This might change
+// in the future. When (if) this struct is changed or updated the version of the renderer interface
+// is also updated.
+//
+// A note regarding factors and textures:
+// For most information both a factor and a texture index is available. If the texture index is
+// "null" (in this case ~0, all bits set to 1), then only the factor is used. However, if the
+// texture is available the factor should be multiplied with the value read from the texture.
+// (Same as in glTF)
+//
+// Example shader pseudocode for loading albedo:
+// Material m = materials[vertex.materialIndex];
+// vec4_u8 albedo = m.albedo;
+// if (m.albedoTexIndex != uint16_t(~0)) {
+//     Texture albedoTex = textures[m.albedoTexIndex];
+//      albedo *= texFetch(albedoTex, vertex.texcoord);
+// }
+// // TODO: albedo is in gamma space, need to linearize before shading
+//
+// Above is old comment from now defunct phMaterial
+//
 // An unbound version of phMaterial that uses StringID instead of indices to textures.
 struct MaterialUnbound final {
 	sfz::vec4_u8 albedo = sfz::vec4_u8(255, 255, 255, 255);

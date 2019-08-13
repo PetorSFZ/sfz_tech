@@ -43,21 +43,14 @@ set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set(PH_INTERFACE_HEADER_FILES
-	${INCLUDE_DIR}/ph/Bool32.h
 	${INCLUDE_DIR}/ph/Context.hpp
-	${INCLUDE_DIR}/ph/RendererInterface.h
 
 	${INCLUDE_DIR}/ph/config/GlobalConfig.hpp
 	${INCLUDE_DIR}/ph/config/Setting.hpp
 
-	${INCLUDE_DIR}/ph/rendering/CameraData.hpp
 	${INCLUDE_DIR}/ph/rendering/ImageView.hpp
 	${INCLUDE_DIR}/ph/rendering/ImguiRenderingData.hpp
-	${INCLUDE_DIR}/ph/rendering/Material.hpp
-	${INCLUDE_DIR}/ph/rendering/MeshView.hpp
-	${INCLUDE_DIR}/ph/rendering/RenderEntity.hpp
 	${INCLUDE_DIR}/ph/rendering/SphereLight.hpp
-	${INCLUDE_DIR}/ph/rendering/StaticSceneView.hpp
 	${INCLUDE_DIR}/ph/rendering/Vertex.hpp
 )
 source_group(TREE ${INCLUDE_DIR} FILES ${PH_INTERFACE_HEADER_FILES})

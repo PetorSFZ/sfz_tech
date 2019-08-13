@@ -82,7 +82,6 @@ set(HEADER_FILES
 	${INCLUDE_DIR}/ph/rendering/Image.hpp
 	${INCLUDE_DIR}/ph/rendering/ImguiSupport.hpp
 	${INCLUDE_DIR}/ph/rendering/Mesh.hpp
-	${INCLUDE_DIR}/ph/rendering/StaticScene.hpp
 
 	${INCLUDE_DIR}/ph/sdl/ButtonState.hpp
 	${INCLUDE_DIR}/ph/sdl/GameController.hpp
