@@ -109,8 +109,37 @@ static void padRgb(DynArray<uint8_t>& dst, const uint8_t* src, int32_t w, int32_
 	}
 }
 
+static uint32_t sizeOfElement(ImageType imageType) noexcept
+{
+	switch (imageType) {
+	case ImageType::UNDEFINED: return 0;
+	case ImageType::R_U8: return 1 * sizeof(uint8_t);
+	case ImageType::RG_U8: return 2 * sizeof(uint8_t);
+	case ImageType::RGBA_U8: return 4 * sizeof(uint8_t);
+
+	case ImageType::R_F32: return 1 * sizeof(float);
+	case ImageType::RG_F32: return 2 * sizeof(float);
+	case ImageType::RGBA_F32: return 4 * sizeof(float);
+	}
+	sfz_assert_debug(false);
+	return 0;
+}
+
 // Implementations of functions from header
 // ------------------------------------------------------------------------------------------------
+
+Image Image::allocate(int32_t width, int32_t height, ImageType type, Allocator* allocator) noexcept
+{
+	Image image;
+	image.type = type;
+	image.width = width;
+	image.height = height;
+	image.bytesPerPixel = sizeOfElement(type);
+	image.rawData.create(width * height * image.bytesPerPixel, allocator);
+	image.rawData.setSize(image.rawData.capacity());
+	std::memset(image.rawData.data(), 0, image.rawData.size());
+	return image;
+}
 
 void setLoadImageAllocator(Allocator* allocator)
 {

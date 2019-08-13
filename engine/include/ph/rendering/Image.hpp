@@ -39,6 +39,9 @@ struct Image final {
 	int32_t height = -1;
 	int32_t bytesPerPixel = -1;
 
+	static Image allocate(
+		int32_t width, int32_t height, ImageType type, Allocator* allocator) noexcept;
+
 	inline phImageView toImageView() noexcept;
 	inline phConstImageView toImageView() const noexcept;
 	operator phImageView() noexcept { return this->toImageView(); }

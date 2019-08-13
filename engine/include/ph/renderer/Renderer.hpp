@@ -99,9 +99,8 @@ public:
 	// the same directory as the executable.
 	//
 	// Returns whether succesful or not
-	//
-	// TODO: NEED OPTION TO SPECIFY IF MIPMAPS SHOULD BE GENERATED OR NOT
-	bool uploadTextureBlocking(StringID id, const phConstImageView& image) noexcept;
+	bool uploadTextureBlocking(
+		StringID id, const phConstImageView& image, bool generateMipmaps) noexcept;
 
 	// Check if a texture is loaded or not
 	bool textureLoaded(StringID id) const noexcept;

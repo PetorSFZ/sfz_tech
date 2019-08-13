@@ -122,6 +122,8 @@ set(SRC_FILES
 	${SRC_DIR}/ph/renderer/DynamicGpuAllocator.cpp
 	${SRC_DIR}/ph/renderer/GpuMesh.hpp
 	${SRC_DIR}/ph/renderer/GpuMesh.cpp
+	${SRC_DIR}/ph/renderer/GpuTextures.hpp
+	${SRC_DIR}/ph/renderer/GpuTextures.cpp
 	${SRC_DIR}/ph/renderer/ImGuiRenderer.hpp
 	${SRC_DIR}/ph/renderer/ImGuiRenderer.cpp
 	${SRC_DIR}/ph/renderer/Renderer.cpp

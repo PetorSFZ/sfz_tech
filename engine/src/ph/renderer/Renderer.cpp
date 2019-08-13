@@ -32,6 +32,7 @@
 
 #include "ph/Context.hpp"
 #include "ph/config/GlobalConfig.hpp"
+#include "ph/renderer/GpuTextures.hpp"
 #include "ph/renderer/ImGuiRenderer.hpp"
 #include "ph/renderer/RendererConfigParser.hpp"
 #include "ph/renderer/RendererState.hpp"
@@ -44,53 +45,6 @@ using sfz::mat44;
 using sfz::vec2;
 using sfz::vec3;
 using sfz::vec4;
-
-// Statics
-// ------------------------------------------------------------------------------------------------
-
-static ZgTexture2DFormat toZeroGImageFormat(ImageType imageType) noexcept
-{
-	switch (imageType) {
-	case ImageType::UNDEFINED: return ZG_TEXTURE_2D_FORMAT_UNDEFINED;
-	case ImageType::R_U8: return ZG_TEXTURE_2D_FORMAT_R_U8;
-	case ImageType::RG_U8: return ZG_TEXTURE_2D_FORMAT_RG_U8;
-	case ImageType::RGBA_U8: return ZG_TEXTURE_2D_FORMAT_RGBA_U8;
-	
-	case ImageType::R_F32:
-	case ImageType::RG_F32:
-	case ImageType::RGBA_F32:
-		// TODO: Implement
-		break;
-	}
-	sfz_assert_debug(false);
-	return ZG_TEXTURE_2D_FORMAT_UNDEFINED;
-}
-
-static uint32_t sizeOfElement(ImageType imageType) noexcept
-{
-	switch (imageType) {
-	case ImageType::UNDEFINED: return 0;
-	case ImageType::R_U8: return 1 * sizeof(uint8_t);
-	case ImageType::RG_U8: return 2 * sizeof(uint8_t);
-	case ImageType::RGBA_U8: return 4 * sizeof(uint8_t);
-
-	case ImageType::R_F32: return 1 * sizeof(float);
-	case ImageType::RG_F32: return 2 * sizeof(float);
-	case ImageType::RGBA_F32: return 4 * sizeof(float);
-	}
-	sfz_assert_debug(false);
-	return 0;
-}
-
-enum class ImageType : uint32_t {
-	UNDEFINED = 0,
-	R_U8 = 1,
-	RG_U8 = 2,
-	RGBA_U8 = 3,
-	R_F32 = 4,
-	RG_F32 = 5,
-	RGBA_F32 = 6
-};
 
 // Renderer: State methods
 // ------------------------------------------------------------------------------------------------
@@ -218,54 +172,29 @@ void Renderer::renderImguiUI() noexcept
 // Renderer: Resource methods
 // ------------------------------------------------------------------------------------------------
 
-bool Renderer::uploadTextureBlocking(StringID id, const phConstImageView& image) noexcept
+bool Renderer::uploadTextureBlocking(
+	StringID id, const phConstImageView& image, bool generateMipmaps) noexcept
 {
 	// Don't upload if it already exists
 	if (mState->textures.get(id) != nullptr) return true;
 
-	// Convert to ZeroG Image View
-	ZgImageViewConstCpu view = {};
-	view.format = toZeroGImageFormat(image.type);
-	view.data = image.rawData;
-	view.width = image.width;
-	view.height = image.height;
-	view.pitchInBytes = image.width * sizeOfElement(image.type);
-
-	// Allocate Texture
-	uint32_t textureSizeBytes = 0;
-	zg::Texture2D texture = mState->dynamicAllocator.allocateTexture2D(
-		view.format, view.width, view.height, 1, &textureSizeBytes);
+	uint32_t numMipmaps = 0;
+	zg::Texture2D texture = textureAllocateAndUploadBlocking(
+		image,
+		mState->dynamicAllocator,
+		mState->allocator,
+		mState->copyQueue,
+		generateMipmaps,
+		numMipmaps);
 	sfz_assert_debug(texture.valid());
-	sfz_assert_debug(textureSizeBytes != 0);
-	if (!texture.valid()) return false;
-
-	// Allocate temporary upload buffer
-	zg::Buffer tmpUploadBuffer =
-		mState->dynamicAllocator.allocateBuffer(ZG_MEMORY_TYPE_UPLOAD, textureSizeBytes);
-	sfz_assert_debug(tmpUploadBuffer.valid());
-	if (!tmpUploadBuffer.valid()) {
-		mState->dynamicAllocator.deallocate(texture);
-		return false;
-	}
-
-	// Copy texture to GPU
-	zg::CommandList commandList;
-	CHECK_ZG mState->copyQueue.beginCommandListRecording(commandList);
-	CHECK_ZG commandList.memcpyToTexture(texture, 0, view, tmpUploadBuffer);
-	CHECK_ZG commandList.enableQueueTransition(texture);
-	CHECK_ZG mState->copyQueue.executeCommandList(commandList);
-	CHECK_ZG mState->copyQueue.flush();
-
-	// Deallocate temporary upload buffer
-	mState->dynamicAllocator.deallocate(tmpUploadBuffer);
 
 	// Fill texture item with info and store it
 	TextureItem item;
 	item.texture = std::move(texture);
-	item.format = view.format;
-	item.width = view.width;
-	item.height = view.height;
-	item.numMipmaps = 1;
+	item.format = toZeroGImageFormat(image.type);
+	item.width = image.width;
+	item.height = image.height;
+	item.numMipmaps = numMipmaps;
 	mState->textures[id] = std::move(item);
 
 	return true;
