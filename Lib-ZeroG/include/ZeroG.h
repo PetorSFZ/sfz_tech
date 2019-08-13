@@ -157,6 +157,7 @@ ZG_API ZgFeatureBits zgCompiledFeatures(void);
 // The error codes
 enum ZgErrorCodeEnum {
 	ZG_SUCCESS = 0,
+	ZG_WARNING_GENERIC,
 	ZG_ERROR_GENERIC,
 	ZG_ERROR_UNIMPLEMENTED,
 	ZG_ERROR_ALREADY_INITIALIZED,

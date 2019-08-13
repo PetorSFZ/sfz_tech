@@ -49,7 +49,7 @@ ZgErrorCode D3D12Fence::checkIfSignaled(bool& fenceSignaledOut) const noexcept
 
 ZgErrorCode D3D12Fence::waitOnCpuBlocking() const noexcept
 {
-	if (this->commandQueue == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (this->commandQueue == nullptr) return ZG_WARNING_GENERIC;
 	this->commandQueue->waitOnCpuInternal(this->fenceValue);
 	return ZG_SUCCESS;
 }

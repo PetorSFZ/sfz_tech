@@ -52,6 +52,7 @@ ZG_API const char* zgErrorCodeToString(ZgErrorCode errorCode)
 {
 	switch (errorCode) {
 	case ZG_SUCCESS: return "ZG_SUCCESS";
+	case ZG_WARNING_GENERIC: return "ZG_WARNING_GENERIC";
 	case ZG_ERROR_GENERIC: return "ZG_ERROR_GENERIC";
 	case ZG_ERROR_UNIMPLEMENTED: return "ZG_ERROR_UNIMPLEMENTED";
 	case ZG_ERROR_ALREADY_INITIALIZED: return "ZG_ERROR_ALREADY_INITIALIZED";
