@@ -280,77 +280,55 @@ static void pageDeallocateBlock(PageT& page, Block& allocatedBlock) noexcept
 	}
 #endif
 
-	// Find free block right before this allocated block
-	uint32_t freeBlockBeforeIdx = ~0u;
-	for (uint32_t i = 0; i < page.freeBlocks.size(); i++) {
-		const Block& freeBlock = page.freeBlocks[i];
-		if ((freeBlock.offset + freeBlock.size) == allocatedBlock.offset) {
-			freeBlockBeforeIdx = i;
-			break;
+	// Find where to insert allocated block among free blocks
+	uint32_t insertLoc = ~0u;
+	if (page.freeBlocks.size() == 0) {
+		insertLoc = 0;
+	}
+	else if (allocatedBlock.offset < page.freeBlocks.first().offset) {
+		insertLoc = 0;
+	}
+	else if (allocatedBlock.offset > page.freeBlocks.last().offset) {
+		insertLoc = page.freeBlocks.size();
+	}
+	else {
+		sfz_assert_debug(page.freeBlocks.size() >= 2);
+		for (uint32_t i = 1; i < page.freeBlocks.size(); i++) {
+			Block& prev = page.freeBlocks[i - 1];
+			Block& curr = page.freeBlocks[i];
+			if (prev.offset < allocatedBlock.offset && allocatedBlock.offset < curr.offset) {
+				insertLoc = i;
+				break;
+			}
 		}
 	}
+	sfz_assert_debug(insertLoc != ~0u);
 
-	// Merge allocated block with free block before it
-	uint32_t newFreeBlockIdx = ~0u;
-	{
-		// If free block before found, merge it with allocated block returned
-		if (freeBlockBeforeIdx != ~0u) {
-			Block& freeBlock = page.freeBlocks[freeBlockBeforeIdx];
-			sfz_assert_debug((freeBlock.offset + freeBlock.size) == allocatedBlock.offset);
-			freeBlock.size += allocatedBlock.size;
-			newFreeBlockIdx = freeBlockBeforeIdx;
-		}
-		
-		// If no free blocks left in page we can just insert allocated block as new free block
-		else if (page.freeBlocks.size() == 0) {
-			page.freeBlocks.add(allocatedBlock);
-			newFreeBlockIdx = 0;
-		}
+	// Insert block
+	page.freeBlocks.insert(insertLoc, allocatedBlock);
 
-		// Insert block at correct location
+	// Merge all blocks that can be merged and find largest block
+	uint32_t largestBlockSize = 0;
+	for (uint32_t i = 0; i < (page.freeBlocks.size() - 1);) {
+		Block& currBlock = page.freeBlocks[i];
+		Block& nextBlock = page.freeBlocks[i + 1];
+		if ((currBlock.offset + currBlock.size) == nextBlock.offset) {
+			currBlock.size = currBlock.size + nextBlock.size;
+			page.freeBlocks.remove(i + 1);
+		}
 		else {
-
-			// Find insertion location
-			uint32_t insertLoc = ~0u;
-			if (allocatedBlock.offset < page.freeBlocks.first().offset) {
-				insertLoc = 0;
-			}
-			else if (allocatedBlock.offset > page.freeBlocks.last().offset) {
-				insertLoc = page.freeBlocks.size() - 1;
-			}
-			else {
-				sfz_assert_debug(page.freeBlocks.size() >= 2);
-				for (uint32_t i = 1; i < page.freeBlocks.size(); i++) {
-					Block& prev = page.freeBlocks[i - 1];
-					Block& curr = page.freeBlocks[i];
-					if (prev.offset < allocatedBlock.offset && allocatedBlock.offset < curr.offset) {
-						insertLoc = i;
-						break;
-					}
-				}
-			}
-			sfz_assert_debug(insertLoc != ~0u);
-
-			// Insert block
-			page.freeBlocks.insert(insertLoc, allocatedBlock);
-			newFreeBlockIdx = insertLoc;
+			i++;
 		}
+		largestBlockSize = std::max(largestBlockSize, currBlock.size);
 	}
 
-	// Check if free block after the new one should be merged with it
-	if ((newFreeBlockIdx + 1) < page.freeBlocks.size()) {
-		Block& freeBlock = page.freeBlocks[newFreeBlockIdx];
-		Block& nextFreeBlock = page.freeBlocks[newFreeBlockIdx + 1];
-		bool shouldMerge = (freeBlock.offset + freeBlock.size) == nextFreeBlock.offset;
-		if (shouldMerge) {
-			freeBlock.size += nextFreeBlock.size;
-			page.freeBlocks.remove(newFreeBlockIdx + 1);
-		}
+	// Small edge case where largest block is last block in list
+	if (page.freeBlocks.size() > 0) {
+		largestBlockSize = std::max(largestBlockSize, page.freeBlocks.last().size);
 	}
 
 	// Update largest free block size
-	Block& newFreeBlock = page.freeBlocks[newFreeBlockIdx];
-	page.largestFreeBlockSize = std::max(page.largestFreeBlockSize, newFreeBlock.size);
+	page.largestFreeBlockSize = largestBlockSize;
 
 	// Decrement number of allocation counter
 	page.numAllocations -= 1;
