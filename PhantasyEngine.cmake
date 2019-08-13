@@ -409,18 +409,9 @@ endfunction()
 # PhantasyEngine targets
 # ------------------------------------------------------------------------------------------------
 
-# Adds the interface and engine targets
+# Adds the engine targets
 function(phAddPhantasyEngineTargets)
-	message("-- [PhantasyEngine]: Adding PhantasyEngine targets (engine and interface)")
-
-	# Adding interface
-	add_subdirectory(
-		${PH_ROOT}/interface
-		${CMAKE_BINARY_DIR}/PhantasyEngine-interface
-	)
-	set(PH_INTERFACE_FOUND ${PH_INTERFACE_FOUND} PARENT_SCOPE)
-	set(PH_INTERFACE_INCLUDE_DIRS ${PH_INTERFACE_INCLUDE_DIRS} PARENT_SCOPE)
-	set(PH_INTERFACE_LIBRARIES ${PH_INTERFACE_LIBRARIES} PARENT_SCOPE)
+	message("-- [PhantasyEngine]: Adding PhantasyEngine engine targets")
 
 	# Adding engine
 	add_subdirectory(
@@ -466,11 +457,9 @@ endfunction()
 # Links PhantasyEngine "engine" and "interface" to the specified target
 function(phLinkPhantasyEngine linkTarget)
 	target_include_directories(${linkTarget} PUBLIC
-		${PH_INTERFACE_INCLUDE_DIRS}
 		${PHANTASY_ENGINE_INCLUDE_DIRS}
 	)
 	target_link_libraries(${linkTarget}
-		${PH_INTERFACE_LIBRARIES}
 		${PHANTASY_ENGINE_LIBRARIES}
 	)
 endfunction()

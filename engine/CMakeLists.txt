@@ -59,10 +59,6 @@ if (NOT SFZ_CORE_FOUND)
 	message(FATAL_ERROR "PhantasyEngine requires sfzCore.")
 endif()
 
-if (NOT PH_INTERFACE_FOUND)
-	message(FATAL_ERROR "PhantasyEngine requires PhantasyEngine-Interface.")
-endif()
-
 # PhantasyEngine
 # ------------------------------------------------------------------------------------------------
 
@@ -72,6 +68,11 @@ set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/res_ph)
 
 set(HEADER_FILES
+	${INCLUDE_DIR}/ph/Context.hpp
+
+	${INCLUDE_DIR}/ph/config/GlobalConfig.hpp
+	${INCLUDE_DIR}/ph/config/Setting.hpp
+
 	${INCLUDE_DIR}/ph/game_loop/DefaultGameUpdateable.hpp
 	${INCLUDE_DIR}/ph/game_loop/GameLoop.hpp
 	${INCLUDE_DIR}/ph/game_loop/GameLoopUpdateable.hpp
@@ -79,9 +80,13 @@ set(HEADER_FILES
 	${INCLUDE_DIR}/ph/renderer/BuiltInShaderTypes.hpp
 	${INCLUDE_DIR}/ph/renderer/Renderer.hpp
 
+	${INCLUDE_DIR}/ph/rendering/ImageView.hpp
 	${INCLUDE_DIR}/ph/rendering/Image.hpp
+	${INCLUDE_DIR}/ph/rendering/ImguiRenderingData.hpp
 	${INCLUDE_DIR}/ph/rendering/ImguiSupport.hpp
 	${INCLUDE_DIR}/ph/rendering/Mesh.hpp
+	${INCLUDE_DIR}/ph/rendering/SphereLight.hpp
+	${INCLUDE_DIR}/ph/rendering/Vertex.hpp
 
 	${INCLUDE_DIR}/ph/sdl/ButtonState.hpp
 	${INCLUDE_DIR}/ph/sdl/GameController.hpp
@@ -105,6 +110,11 @@ set(HEADER_FILES
 source_group(TREE ${INCLUDE_DIR} FILES ${HEADER_FILES})
 
 set(SRC_FILES
+	${SRC_DIR}/ph/Context.cpp
+
+	${SRC_DIR}/ph/config/GlobalConfig.cpp
+	${SRC_DIR}/ph/config/Setting.cpp
+
 	${SRC_DIR}/ph/game_loop/DefaultGameUpdateable.cpp
 	${SRC_DIR}/ph/game_loop/GameLoop.cpp
 
@@ -154,7 +164,6 @@ target_include_directories(PhantasyEngine PUBLIC
 	${ZEROG_INCLUDE_DIRS}
 	${ZEROG_CPP_INCLUDE_DIRS}
 	${SFZ_CORE_INCLUDE_DIRS}
-	${PH_INTERFACE_INCLUDE_DIRS}
 	${STB_INCLUDE_DIRS}
 	${IMGUI_INCLUDE_DIRS}
 	${NATIVEFILEDIALOG_INCLUDE_DIRS}
@@ -167,7 +176,6 @@ target_link_libraries(PhantasyEngine
 	${ZEROG_LIBRARIES}
 	${ZEROG_CPP_LIBRARIES}
 	${SFZ_CORE_LIBRARIES}
-	${PH_INTERFACE_LIBRARIES}
 	${IMGUI_LIBRARIES}
 	${NATIVEFILEDIALOG_LIBRARIES}
 )
