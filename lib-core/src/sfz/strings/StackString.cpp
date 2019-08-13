@@ -177,5 +177,6 @@ template struct StackStringTempl<256>;
 template struct StackStringTempl<320>;
 template struct StackStringTempl<512>;
 template struct StackStringTempl<1024>;
+template struct StackStringTempl<2048>;
 
 } // namespace sfz
