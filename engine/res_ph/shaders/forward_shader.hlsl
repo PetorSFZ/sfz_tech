@@ -300,5 +300,5 @@ float4 PSMain(PSInput input) : SV_TARGET
 	// TODO: Configurable ambient light hack
 	totalOutput += 0.15 * albedo;
 
-	return float4(totalOutput, 1.0);
+	return float4(applyGammaCorrection(totalOutput), 1.0);
 }
