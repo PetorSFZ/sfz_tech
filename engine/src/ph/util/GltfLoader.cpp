@@ -250,7 +250,7 @@ static bool extractAssets(
 	meshOut.materials.create(uint32_t(model.materials.size()), allocator);
 	for (uint32_t i = 0; i < model.materials.size(); i++) {
 		const tinygltf::Material& material = model.materials[i];
-		MaterialUnbound phMat;
+		Material phMat;
 
 		// Lambda for checking if parameter exists
 		auto hasParamValues = [&](const char* key) {
@@ -294,7 +294,9 @@ static bool extractAssets(
 		// Emissive value
 		if (hasParamAdditionalValues("emissiveFactor")) {
 			const tinygltf::Parameter& param = material.additionalValues.find("emissiveFactor")->second;
-			phMat.emissive = toSfz(param.ColorFactor()).xyz;
+			phMat.emissive.x = float(param.ColorFactor()[0]);
+			phMat.emissive.y = float(param.ColorFactor()[1]);
+			phMat.emissive.z = float(param.ColorFactor()[2]);
 		}
 
 		// Roughness and Metallic texture
@@ -347,7 +349,7 @@ static bool extractAssets(
 
 		// Remove default emissive factor if no emissive is specified
 		if (phMat.emissiveTex == StringID::invalid() && !hasParamAdditionalValues("emissiveFactor")) {
-			phMat.emissive = vec3_u8(uint8_t(0));
+			phMat.emissive = vec3(0.0f);
 		}
 
 		// Add material to assets
@@ -356,14 +358,15 @@ static bool extractAssets(
 
 	// Add single default material if no materials
 	if (meshOut.materials.size() == 0) {
-		ph::MaterialUnbound defaultMaterial;
-		defaultMaterial.emissive = vec3_u8(255, 0, 0);
+		ph::Material defaultMaterial;
+		defaultMaterial.emissive = vec3(1.0, 0.0, 0.0);
 		meshOut.materials.add(defaultMaterial);
 	}
 
 	// Add meshes
 	uint32_t numVertexGuess = uint32_t(model.meshes.size()) * 256;
 	meshOut.vertices.create(numVertexGuess, allocator);
+	meshOut.indices.create(numVertexGuess * 2, allocator);
 	meshOut.components.create(uint32_t(model.meshes.size()), allocator);
 	for (uint32_t i = 0; i < uint32_t(model.meshes.size()); i++) {
 		const tinygltf::Mesh& mesh = model.meshes[i];
@@ -414,7 +417,7 @@ static bool extractAssets(
 		sfz_assert_release(posAccess.numElements == normalAccess.numElements);
 		uint32_t compVertexOffset = meshOut.vertices.size();
 		for (uint32_t j = 0; j < posAccess.numElements; j++) {
-			phVertex vertex;
+			Vertex vertex;
 			vertex.pos = posAccess.at<vec3>(j);
 			vertex.normal = normalAccess.at<vec3>(j);
 			vertex.texcoord = texcoord0Access.at<vec2>(j);
@@ -425,15 +428,16 @@ static bool extractAssets(
 		DataAccess idxAccess = accessData(model, primitive.indices);
 		sfz_assert_release(idxAccess.rawPtr != nullptr);
 		sfz_assert_release(idxAccess.compDims == ComponentDimensions::SCALAR);
-		phMeshComp.indices.create(idxAccess.numElements, allocator);
+		phMeshComp.firstIndex = meshOut.indices.size();
+		phMeshComp.numIndices = idxAccess.numElements;
 		if (idxAccess.compType == ComponentType::UINT32) {
 			for (uint32_t j = 0; j < idxAccess.numElements; j++) {
-				phMeshComp.indices.add(compVertexOffset + idxAccess.at<uint32_t>(j));
+				meshOut.indices.add(compVertexOffset + idxAccess.at<uint32_t>(j));
 			}
 		}
 		else if (idxAccess.compType == ComponentType::UINT16) {
 			for (uint32_t j = 0; j < idxAccess.numElements; j++) {
-				phMeshComp.indices.add(compVertexOffset + uint32_t(idxAccess.at<uint16_t>(j)));
+				meshOut.indices.add(compVertexOffset + uint32_t(idxAccess.at<uint16_t>(j)));
 			}
 		}
 		else {

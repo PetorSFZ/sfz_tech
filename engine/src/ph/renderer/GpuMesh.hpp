@@ -31,10 +31,10 @@ namespace ph {
 
 using sfz::vec4;
 
-// GpuMaterial
+// MaterialInfo
 // ------------------------------------------------------------------------------------------------
 
-struct CpuMaterial final {
+struct MaterialInfo final {
 	uint32_t materialIdx = ~0u;
 	StringID albedoTex = StringID::invalid();
 	StringID metallicRoughnessTex = StringID::invalid();
@@ -47,17 +47,17 @@ struct CpuMaterial final {
 // ------------------------------------------------------------------------------------------------
 
 struct GpuMeshComponent final {
-	// TODO: This is kinda wasteful. Would be better to store all indices in the same buffer.
-	zg::Buffer indexBuffer;
+	uint32_t firstIndex = ~0u;
 	uint32_t numIndices = 0;
-	CpuMaterial cpuMaterial;
+	MaterialInfo materialInfo;
 };
 
 struct GpuMesh final {
 	zg::Buffer vertexBuffer;
-	DynArray<GpuMeshComponent> components;
+	zg::Buffer indexBuffer;
 	zg::Buffer materialsBuffer;
 	uint32_t numMaterials = 0;
+	DynArray<GpuMeshComponent> components;
 };
 
 // GpuMesh functions

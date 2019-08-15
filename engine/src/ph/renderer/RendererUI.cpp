@@ -570,11 +570,9 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 		// Check if mesh is valid
 		bool meshValid = true;
 		if (!mesh.vertexBuffer.valid()) meshValid = false;
+		if (!mesh.indexBuffer.valid()) meshValid = false;
 		if (!mesh.materialsBuffer.valid()) meshValid = false;
-		for (const GpuMeshComponent& comp : mesh.components) {
-			if (!comp.indexBuffer.valid()) meshValid = false;
-		}
-		
+
 		// Mesh name
 		ImGui::Text("\"%s\"", resStrings.getString(itemItr.key));
 		if (!meshValid) {
@@ -590,7 +588,7 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 			ImGui::Text("Component %u:", i);
 			ImGui::Indent(20.0f);
 			alignedEdit("- Material Index", offset, [&](const char*) {
-				ImGui::Text("%u", comp.cpuMaterial.materialIdx);
+				ImGui::Text("%u", comp.materialInfo.materialIdx);
 			});
 			auto printTextureId = [&](const char* name, StringID texID) {
 				if (texID == StringID::invalid()) return;
@@ -598,11 +596,11 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 					ImGui::Text("%s", resStrings.getString(texID));
 				});
 			};
-			printTextureId("- Albedo Texture", comp.cpuMaterial.albedoTex);
-			printTextureId("- Metallic Roughness Texture", comp.cpuMaterial.metallicRoughnessTex);
-			printTextureId("- Normal Texture", comp.cpuMaterial.normalTex);
-			printTextureId("- Occlusion Texture", comp.cpuMaterial.occlusionTex);
-			printTextureId("- Emissive Texture", comp.cpuMaterial.emissiveTex);
+			printTextureId("- Albedo Texture", comp.materialInfo.albedoTex);
+			printTextureId("- Metallic Roughness Texture", comp.materialInfo.metallicRoughnessTex);
+			printTextureId("- Normal Texture", comp.materialInfo.normalTex);
+			printTextureId("- Occlusion Texture", comp.materialInfo.occlusionTex);
+			printTextureId("- Emissive Texture", comp.materialInfo.emissiveTex);
 
 			ImGui::Unindent(20.0f);
 			ImGui::Spacing();

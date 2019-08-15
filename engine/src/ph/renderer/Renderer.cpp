@@ -404,19 +404,19 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 	sfz_assert_debug(signature.vertexAttributes[0].vertexBufferSlot == 0);
 	sfz_assert_debug(signature.vertexAttributes[0].type == ZG_VERTEX_ATTRIBUTE_F32_3);
 	sfz_assert_debug(
-		signature.vertexAttributes[0].offsetToFirstElementInBytes == offsetof(phVertex, pos));
+		signature.vertexAttributes[0].offsetToFirstElementInBytes == offsetof(Vertex, pos));
 
 	sfz_assert_debug(signature.vertexAttributes[1].location == 1);
 	sfz_assert_debug(signature.vertexAttributes[1].vertexBufferSlot == 0);
 	sfz_assert_debug(signature.vertexAttributes[1].type == ZG_VERTEX_ATTRIBUTE_F32_3);
 	sfz_assert_debug(
-		signature.vertexAttributes[1].offsetToFirstElementInBytes == offsetof(phVertex, normal));
+		signature.vertexAttributes[1].offsetToFirstElementInBytes == offsetof(Vertex, normal));
 
 	sfz_assert_debug(signature.vertexAttributes[2].location == 2);
 	sfz_assert_debug(signature.vertexAttributes[2].vertexBufferSlot == 0);
 	sfz_assert_debug(signature.vertexAttributes[2].type == ZG_VERTEX_ATTRIBUTE_F32_2);
 	sfz_assert_debug(
-		signature.vertexAttributes[2].offsetToFirstElementInBytes == offsetof(phVertex, texcoord));
+		signature.vertexAttributes[2].offsetToFirstElementInBytes == offsetof(Vertex, texcoord));
 
 	// Validate material index push constant
 	if (registers.materialIdxPushConstant != ~0u) {
@@ -473,6 +473,11 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 	sfz_assert_debug(meshPtr->vertexBuffer.valid());
 	CHECK_ZG mState->currentCommandList.setVertexBuffer(0, meshPtr->vertexBuffer);
 
+	// Set index buffer
+	sfz_assert_debug(meshPtr->indexBuffer.valid());
+	CHECK_ZG mState->currentCommandList.setIndexBuffer(
+		meshPtr->indexBuffer, ZG_INDEX_BUFFER_TYPE_UINT32);
+
 	// Set common pipeline bindings that are same for all components
 	zg::PipelineBindings commonBindings;
 
@@ -491,19 +496,12 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 
 	// Draw all mesh components
 	for (GpuMeshComponent& comp : meshPtr->components) {
-		
-		// Set index buffer
-		sfz_assert_debug(comp.indexBuffer.valid());
-		CHECK_ZG mState->currentCommandList.setIndexBuffer(
-			comp.indexBuffer, ZG_INDEX_BUFFER_TYPE_UINT32);
-		sfz_assert_debug(comp.numIndices != 0);
-		sfz_assert_debug((comp.numIndices % 3) == 0);
-		
+
 		// Set material index push constant
-		const CpuMaterial& texIds = comp.cpuMaterial;
+		const MaterialInfo& texIds = comp.materialInfo;
 		if (registers.materialIdxPushConstant != ~0u) {
 			sfz::vec4_u32 tmp = sfz::vec4_u32(0u);
-			tmp.x = comp.cpuMaterial.materialIdx;
+			tmp.x = comp.materialInfo.materialIdx;
 			CHECK_ZG mState->currentCommandList.setPushConstant(
 				registers.materialIdxPushConstant, &tmp, sizeof(sfz::vec4_u32 ));
 		}
@@ -531,7 +529,10 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 		CHECK_ZG mState->currentCommandList.setPipelineBindings(bindings);
 
 		// Issue draw command
-		CHECK_ZG mState->currentCommandList.drawTrianglesIndexed(0, comp.numIndices / 3);
+		sfz_assert_debug(comp.numIndices != 0);
+		sfz_assert_debug((comp.numIndices % 3) == 0);
+		CHECK_ZG mState->currentCommandList.drawTrianglesIndexed(
+			comp.firstIndex, comp.numIndices / 3);
 	}
 }
 

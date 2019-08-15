@@ -260,12 +260,12 @@ float4 PSMain(PSInput input) : SV_TARGET
 	}
 	roughness = max(roughness, 0.001); // Div by 0 in ggx() if roughness = 0
 
-	// Emissive (Gamma space, TODO: Maybe linear???)
+	// Emissive (Linear space)
 	float3 emissive = m.emissive.rgb;
 	if (m.hasEmissiveTex != 0) {
 		emissive *= emissiveTex.Sample(texSampler, input.texcoord).rgb;
 	}
-	emissive = linearize(emissive);
+	emissive = emissive;
 
 	// Pixel's position and normal
 	// TODO: Normal mapping

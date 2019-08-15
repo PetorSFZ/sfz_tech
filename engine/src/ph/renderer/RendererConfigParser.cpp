@@ -24,7 +24,6 @@
 #include "ph/Context.hpp"
 #include "ph/renderer/RendererState.hpp"
 #include "ph/renderer/ZeroGUtils.hpp"
-#include "ph/rendering/Vertex.hpp"
 #include "ph/util/JsonParser.hpp"
 
 namespace ph {
@@ -236,10 +235,10 @@ bool buildPipelineRendering(PipelineRenderingItem& item) noexcept
 	// Set vertex attributes
 	if (item.standardVertexAttributes) {
 		pipelineBuilder
-			.addVertexBufferInfo(0, sizeof(phVertex))
-			.addVertexAttribute(0, 0, ZG_VERTEX_ATTRIBUTE_F32_3, offsetof(phVertex, pos))
-			.addVertexAttribute(1, 0, ZG_VERTEX_ATTRIBUTE_F32_3, offsetof(phVertex, normal))
-			.addVertexAttribute(2, 0, ZG_VERTEX_ATTRIBUTE_F32_2, offsetof(phVertex, texcoord));
+			.addVertexBufferInfo(0, sizeof(Vertex))
+			.addVertexAttribute(0, 0, ZG_VERTEX_ATTRIBUTE_F32_3, offsetof(Vertex, pos))
+			.addVertexAttribute(1, 0, ZG_VERTEX_ATTRIBUTE_F32_3, offsetof(Vertex, normal))
+			.addVertexAttribute(2, 0, ZG_VERTEX_ATTRIBUTE_F32_2, offsetof(Vertex, texcoord));
 	}
 	else {
 		// TODO: Not yet implemented
