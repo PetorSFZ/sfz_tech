@@ -495,13 +495,15 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 	}
 
 	// Draw all mesh components
-	for (GpuMeshComponent& comp : meshPtr->components) {
+	for (MeshComponent& comp : meshPtr->components) {
+
+		sfz_assert_debug(comp.materialIdx < meshPtr->cpuMaterials.size());
+		const Material& material = meshPtr->cpuMaterials[comp.materialIdx];
 
 		// Set material index push constant
-		const MaterialInfo& texIds = comp.materialInfo;
 		if (registers.materialIdxPushConstant != ~0u) {
 			sfz::vec4_u32 tmp = sfz::vec4_u32(0u);
-			tmp.x = comp.materialInfo.materialIdx;
+			tmp.x = comp.materialIdx;
 			CHECK_ZG mState->currentCommandList.setPushConstant(
 				registers.materialIdxPushConstant, &tmp, sizeof(sfz::vec4_u32 ));
 		}
@@ -519,11 +521,11 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 				bindings.addTexture(texRegister, texItem->texture);
 			}
 		};
-		bindTexture(registers.albedo, texIds.albedoTex);
-		bindTexture(registers.metallicRoughness, texIds.metallicRoughnessTex);
-		bindTexture(registers.normal, texIds.normalTex);
-		bindTexture(registers.occlusion, texIds.occlusionTex);
-		bindTexture(registers.emissive, texIds.emissiveTex);
+		bindTexture(registers.albedo, material.albedoTex);
+		bindTexture(registers.metallicRoughness, material.metallicRoughnessTex);
+		bindTexture(registers.normal, material.normalTex);
+		bindTexture(registers.occlusion, material.occlusionTex);
+		bindTexture(registers.emissive, material.emissiveTex);
 
 		// Set pipeline bindings
 		CHECK_ZG mState->currentCommandList.setPipelineBindings(bindings);

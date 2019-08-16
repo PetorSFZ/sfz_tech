@@ -31,37 +31,22 @@ namespace ph {
 
 using sfz::vec4;
 
-// MaterialInfo
-// ------------------------------------------------------------------------------------------------
-
-struct MaterialInfo final {
-	uint32_t materialIdx = ~0u;
-	StringID albedoTex = StringID::invalid();
-	StringID metallicRoughnessTex = StringID::invalid();
-	StringID normalTex = StringID::invalid();
-	StringID occlusionTex = StringID::invalid();
-	StringID emissiveTex = StringID::invalid();
-};
-
 // GpuMesh
 // ------------------------------------------------------------------------------------------------
-
-struct GpuMeshComponent final {
-	uint32_t firstIndex = ~0u;
-	uint32_t numIndices = 0;
-	MaterialInfo materialInfo;
-};
 
 struct GpuMesh final {
 	zg::Buffer vertexBuffer;
 	zg::Buffer indexBuffer;
 	zg::Buffer materialsBuffer;
 	uint32_t numMaterials = 0;
-	DynArray<GpuMeshComponent> components;
+	DynArray<MeshComponent> components;
+	DynArray<Material> cpuMaterials;
 };
 
 // GpuMesh functions
 // ------------------------------------------------------------------------------------------------
+
+ShaderMaterial cpuMaterialToShaderMaterial(const Material& cpuMaterial) noexcept;
 
 GpuMesh gpuMeshAllocate(
 	const Mesh& cpuMesh,

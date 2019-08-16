@@ -29,13 +29,15 @@
 
 namespace ph {
 
+using sfz::str64;
+
 // Statics
 // ------------------------------------------------------------------------------------------------
 
 template<typename Fun>
 static void alignedEdit(const char* name, float xOffset, Fun editor) noexcept
 {
-	ImGui::Text("%s:", name);
+	ImGui::Text("%s", name);
 	ImGui::SameLine(xOffset);
 	editor(sfz::str96("##%s_invisible", name).str);
 }
@@ -509,7 +511,7 @@ void RendererUI::renderMemoryTab(RendererState& state) noexcept
 			ImGui::Text("%.2f MiB", toMiB(info.pageSizeBytes));
 		});
 		alignedEdit("Num Allocations", pageOffset, [&](const char*) {
-			ImGui::Text("%u", info.numAllocations);
+ImGui::Text("%u", info.numAllocations);
 		});
 		alignedEdit("Num Free Blocks", pageOffset, [&](const char*) {
 			ImGui::Text("%u", info.numFreeBlocks);
@@ -552,7 +554,6 @@ void RendererUI::renderTexturesTab(RendererState& state) noexcept
 		alignedEdit("Mipmaps", offset, [&](const char*) {
 			ImGui::Text("%u", item.numMipmaps);
 		});
-		
 
 		ImGui::Unindent(20.0f);
 		ImGui::Spacing();
@@ -565,7 +566,7 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 	sfz::StringCollection& resStrings = ph::getResourceStrings();
 
 	for (auto itemItr : state.meshes) {
-		const GpuMesh& mesh = itemItr.value;
+		GpuMesh& mesh = itemItr.value;
 
 		// Check if mesh is valid
 		bool meshValid = true;
@@ -580,33 +581,172 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 			ImGui::Text("-- NOT VALID");
 		}
 
+		// Components
 		ImGui::Indent(20.0f);
-		for (uint32_t i = 0; i < mesh.components.size(); i++) {
-			const GpuMeshComponent& comp = mesh.components[i];
+		if (ImGui::CollapsingHeader(str64("Components (%u):##%llu", mesh.components.size(), itemItr.key))) {
 
-			constexpr float offset = 250.0f;
-			ImGui::Text("Component %u:", i);
 			ImGui::Indent(20.0f);
-			alignedEdit("- Material Index", offset, [&](const char*) {
-				ImGui::Text("%u", comp.materialInfo.materialIdx);
-			});
-			auto printTextureId = [&](const char* name, StringID texID) {
-				if (texID == StringID::invalid()) return;
-				alignedEdit(name, offset, [&](const char*) {
-					ImGui::Text("%s", resStrings.getString(texID));
-				});
-			};
-			printTextureId("- Albedo Texture", comp.materialInfo.albedoTex);
-			printTextureId("- Metallic Roughness Texture", comp.materialInfo.metallicRoughnessTex);
-			printTextureId("- Normal Texture", comp.materialInfo.normalTex);
-			printTextureId("- Occlusion Texture", comp.materialInfo.occlusionTex);
-			printTextureId("- Emissive Texture", comp.materialInfo.emissiveTex);
+			for (uint32_t i = 0; i < mesh.components.size(); i++) {
 
+				const MeshComponent& comp = mesh.components[i];
+				constexpr float offset = 250.0f;
+				ImGui::Text("Component %u -- Material Index: %u -- NumIndices: %u",
+					i, comp.materialIdx, comp.numIndices);
+			}
 			ImGui::Unindent(20.0f);
-			ImGui::Spacing();
 		}
-
 		ImGui::Unindent(20.0f);
+
+		// Lambdas for converting vec4_u8 to vec4_f32 and back
+		auto u8ToF32 = [](vec4_u8 v) { return vec4(v) * (1.0f / 255.0f); };
+		auto f32ToU8 = [](vec4 v) { return vec4_u8(v * 255.0f); };
+
+		// Lambda for converting texture index to combo string label
+		auto textureToComboStr = [&](StringID strId) {
+			str128 texStr;
+			if (strId == StringID::invalid()) texStr.printf("NO TEXTURE");
+			else texStr= str128("%s", resStrings.getString(strId));
+			return texStr;
+		};
+
+		// Lambda for creating a combo box to select texture
+		auto textureComboBox = [&](const char* comboName, StringID& texId, bool& updateMesh) {
+			str128 selectedTexStr = textureToComboStr(texId);
+			if (ImGui::BeginCombo(comboName, selectedTexStr)) {
+
+				// Special case for no texture (~0)
+				{
+					bool isSelected = texId == StringID::invalid();
+					if (ImGui::Selectable("NO TEXTURE", isSelected)) {
+						texId = StringID::invalid();
+						updateMesh = true;
+					}
+				}
+
+				// Existing textures
+				for (auto itemItr : state.textures) {
+					StringID id = itemItr.key;
+					const TextureItem& item = itemItr.value;
+
+					// Convert index to string and check if it is selected
+					str128 texStr = textureToComboStr(id);
+					bool isSelected = id == texId;
+
+					// Report index to ImGui combo button and update current if it has changed
+					if (ImGui::Selectable(texStr.str, isSelected)) {
+						texId = id;
+						updateMesh = true;
+					}
+				}
+				ImGui::EndCombo();
+			}
+		};
+
+		// Materials
+		ImGui::Indent(20.0f);
+		if (ImGui::CollapsingHeader(str64("Materials (%u):##%llu", mesh.cpuMaterials.size(), itemItr.key))) {
+
+			ImGui::Indent(20.0f);
+			for (uint32_t i = 0; i < mesh.cpuMaterials.size(); i++) {
+				Material& material = mesh.cpuMaterials[i];
+
+				// Edit CPU material
+				bool updateMesh = false;
+				if (ImGui::CollapsingHeader(str64("Material %u##%llu", i, itemItr.key))) {
+
+					ImGui::Indent(20.0f);
+					constexpr float offset = 310.0f;
+
+					// Albedo
+					vec4 colorFloat = u8ToF32(material.albedo);
+					alignedEdit("Albedo Factor", offset, [&](const char* name) {
+						if (ImGui::ColorEdit4(str128("%s##%u_%llu", name, i, itemItr.key), colorFloat.data(),
+							ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_Float)) {
+							material.albedo = f32ToU8(colorFloat);
+							updateMesh = true;
+						}
+					});
+					alignedEdit("Albedo Texture", offset, [&](const char* name) {
+						textureComboBox(str128("##%s_%u_%llu", name, i, itemItr.key), material.albedoTex, updateMesh);
+					});
+
+					// Emissive
+					alignedEdit("Emissive Factor", offset, [&](const char* name) {
+						if (ImGui::ColorEdit3(str128("%s##%u_%llu", name, i, itemItr.key), material.emissive.data(),
+							ImGuiColorEditFlags_Float)) {
+							updateMesh = true;
+						}
+					});
+					alignedEdit("Emissive Texture", offset, [&](const char* name) {
+						textureComboBox(str128("##%s_%u_%llu", name, i, itemItr.key), material.emissiveTex, updateMesh);
+					});
+
+					// Metallic & roughness
+					vec4_u8 metallicRoughnessU8(material.metallic, material.roughness, 0, 0);
+					vec4 metallicRoughness = u8ToF32(metallicRoughnessU8);
+					alignedEdit("Metallic Roughness Factors", offset, [&](const char* name) {
+						if (ImGui::SliderFloat2(str128("%s##%u_%llu", name, i, itemItr.key), metallicRoughness.data(), 0.0f, 1.0f)) {
+							metallicRoughnessU8 = f32ToU8(metallicRoughness);
+							material.metallic = metallicRoughnessU8.x;
+							material.roughness = metallicRoughnessU8.y;
+							updateMesh = true;
+						}
+					});
+					alignedEdit("Metallic Roughness Texture", offset, [&](const char* name) {
+						textureComboBox(str64("##%s_%u_%llu", name, i, itemItr.key), material.metallicRoughnessTex, updateMesh);
+					});
+
+					// Normal and Occlusion textures
+					alignedEdit("Normal Texture", offset, [&](const char* name) {
+						textureComboBox(str64("##%s_%u_%llu", name, i, itemItr.key), material.normalTex, updateMesh);
+					});
+					alignedEdit("Occlusion Texture", offset, [&](const char* name) {
+						textureComboBox(str64("##%s_%u_%llu", name, i, itemItr.key), material.occlusionTex, updateMesh);
+					});
+
+					ImGui::Unindent(20.0f);
+				}
+
+				// If material was edited, update mesh
+				if (updateMesh) {
+
+					// Flush ZeroG queues
+					state.copyQueue.flush();
+					state.presentQueue.flush();
+
+					// Allocate temporary upload buffer
+					zg::Buffer uploadBuffer = state.dynamicAllocator.allocateBuffer(
+						ZG_MEMORY_TYPE_UPLOAD, sizeof(ShaderMaterial));
+					sfz_assert_debug(uploadBuffer.valid());
+
+					// Convert new material to shader material
+					ShaderMaterial shaderMaterial = cpuMaterialToShaderMaterial(material);
+
+					// Memcpy to temporary upload buffer
+					uploadBuffer.memcpyTo(0, &shaderMaterial, sizeof(ShaderMaterial));
+
+					// Replace material in mesh with new material
+					zg::CommandList commandList;
+					CHECK_ZG state.presentQueue.beginCommandListRecording(commandList);
+					uint64_t dstOffset = sizeof(ShaderMaterial) * i;
+					CHECK_ZG commandList.memcpyBufferToBuffer(
+						mesh.materialsBuffer, dstOffset, uploadBuffer, 0, sizeof(ShaderMaterial));
+					CHECK_ZG state.presentQueue.executeCommandList(commandList);
+					CHECK_ZG state.presentQueue.flush();
+
+					// Deallocate temporary upload buffer
+					state.dynamicAllocator.deallocate(uploadBuffer);
+				}
+
+				/*const GpuMeshComponent& comp = mesh.components[i];
+				constexpr float offset = 250.0f;
+				ImGui::Text("Component %u -- Material Index: %u -- NumIndices: %u",
+					i, comp.materialInfo.materialIdx, comp.numIndices);*/
+			}
+			ImGui::Unindent(20.0f);
+		}
+		ImGui::Unindent(20.0f);
+
 		ImGui::Spacing();
 	}
 }

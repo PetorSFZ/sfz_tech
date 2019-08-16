@@ -29,6 +29,21 @@ namespace ph {
 // GpuMesh functions
 // ------------------------------------------------------------------------------------------------
 
+ShaderMaterial cpuMaterialToShaderMaterial(const Material& cpuMaterial) noexcept
+{
+	ShaderMaterial dst;
+	dst.albedo = vec4(cpuMaterial.albedo) * (1.0f / 255.0f);
+	dst.emissive.xyz = cpuMaterial.emissive;
+	dst.roughness = float(cpuMaterial.roughness) * (1.0f / 255.0f);
+	dst.metallic = float(cpuMaterial.metallic) * (1.0f / 255.0f);
+	dst.hasAlbedoTex = cpuMaterial.albedoTex != StringID::invalid() ? 1 : 0;
+	dst.hasMetallicRoughnessTex = cpuMaterial.metallicRoughnessTex != StringID::invalid() ? 1 : 0;
+	dst.hasNormalTex = cpuMaterial.normalTex != StringID::invalid() ? 1 : 0;
+	dst.hasOcclusionTex = cpuMaterial.occlusionTex != StringID::invalid() ? 1 : 0;
+	dst.hasEmissiveTex = cpuMaterial.emissiveTex != StringID::invalid() ? 1 : 0;
+	return dst;
+}
+
 GpuMesh gpuMeshAllocate(
 	const Mesh& cpuMesh,
 	DynamicGpuAllocator& gpuAllocator,
@@ -61,6 +76,10 @@ GpuMesh gpuMeshAllocate(
 	gpuMesh.numMaterials = cpuMesh.materials.size();
 	CHECK_ZG gpuMesh.materialsBuffer.setDebugName(sfz::str128("Material_Buffer_%i", counter++));
 
+	// Allocate (CPU) memory for cpu materials
+	gpuMesh.cpuMaterials.create(cpuMesh.materials.size(), cpuAllocator);
+	gpuMesh.cpuMaterials.addMany(cpuMesh.materials.size());
+
 	return gpuMesh;
 }
 
@@ -85,6 +104,7 @@ void gpuMeshDeallocate(
 
 	// Destroy remaining CPU memory
 	gpuMesh.components.destroy();
+	gpuMesh.cpuMaterials.destroy();
 }
 
 void gpuMeshUploadBlocking(
@@ -125,18 +145,7 @@ void gpuMeshUploadBlocking(
 	gpuMaterials.create(cpuMesh.materials.size(), cpuAllocator);
 	gpuMaterials.addMany(cpuMesh.materials.size());
 	for (uint32_t i = 0; i < cpuMesh.materials.size(); i++) {
-		ShaderMaterial& dst = gpuMaterials[i];
-		const Material& src = cpuMesh.materials[i];
-		
-		dst.albedo = vec4(src.albedo) * (1.0f / 255.0f);
-		dst.emissive.xyz = src.emissive;
-		dst.roughness = float(src.roughness) * (1.0f / 255.0f);
-		dst.metallic = float(src.metallic) * (1.0f / 255.0f);
-		dst.hasAlbedoTex = src.albedoTex != StringID::invalid() ? 1 : 0;
-		dst.hasMetallicRoughnessTex = src.metallicRoughnessTex != StringID::invalid() ? 1 : 0;
-		dst.hasNormalTex = src.normalTex != StringID::invalid() ? 1 : 0;
-		dst.hasOcclusionTex = src.occlusionTex != StringID::invalid() ? 1 : 0;
-		dst.hasEmissiveTex = src.emissiveTex != StringID::invalid() ? 1 : 0;
+		gpuMaterials[i] = cpuMaterialToShaderMaterial(cpuMesh.materials[i]);
 	}
 
 	// Allocate temporary materials upload buffer, memcpy data to it and queue upload command
@@ -147,31 +156,20 @@ void gpuMeshUploadBlocking(
 	CHECK_ZG commandList.memcpyBufferToBuffer(
 		gpuMesh.materialsBuffer, 0, materialsUploadBuffer, 0, materialsBufferSizeBytes);
 
-	// Fill components with required info
+	// Copy components
+	sfz_assert_debug(cpuMesh.components.size() == gpuMesh.components.size());
 	uint32_t totalNumIndices = 0;
 	for (uint32_t i = 0; i < cpuMesh.components.size(); i++) {
-		const MeshComponent& cpuComp = cpuMesh.components[i];
-		GpuMeshComponent& gpuComp = gpuMesh.components[i];
-
-		// Store index buffer offsets
-		gpuComp.firstIndex = cpuComp.firstIndex;
-		gpuComp.numIndices = cpuComp.numIndices;
-		totalNumIndices += gpuComp.numIndices;
-
-		// Store material index in component
-		sfz_assert_debug(cpuComp.materialIdx < cpuMesh.materials.size());
-		gpuComp.materialInfo.materialIdx = cpuComp.materialIdx;
-
-		// Store texture IDs in component
-		const Material& material = cpuMesh.materials[cpuComp.materialIdx];
-		gpuComp.materialInfo.albedoTex = material.albedoTex;
-		gpuComp.materialInfo.metallicRoughnessTex = material.metallicRoughnessTex;
-		gpuComp.materialInfo.normalTex = material.normalTex;
-		gpuComp.materialInfo.occlusionTex = material.occlusionTex;
-		gpuComp.materialInfo.emissiveTex = material.emissiveTex;
+		gpuMesh.components[i] = cpuMesh.components[i];
+		totalNumIndices += gpuMesh.components[i].numIndices;
 	}
 	sfz_assert_debug(totalNumIndices == cpuMesh.indices.size());
 
+	// Copy cpu materials
+	sfz_assert_debug(gpuMesh.cpuMaterials.size() == cpuMesh.materials.size());
+	for (uint32_t i = 0; i < gpuMesh.cpuMaterials.size(); i++) {
+		gpuMesh.cpuMaterials[i] = cpuMesh.materials[i];
+	}
 	
 	// Enable resources to be used on other queues than copy queue
 	CHECK_ZG commandList.enableQueueTransition(gpuMesh.vertexBuffer);
