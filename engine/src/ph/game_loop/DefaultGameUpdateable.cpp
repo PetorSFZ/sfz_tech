@@ -674,7 +674,7 @@ private:
 
 				// Value input field
 				ImGui::PushItemWidth(-1.0f);
-				tmpStr.printf("##%s___valueInput___", setting->key().str);
+				tmpStr.printf("##%s_%s___valueInput___", setting->section().str, setting->key().str);
 				switch (setting->type()) {
 				case ValueType::INT:
 					{
