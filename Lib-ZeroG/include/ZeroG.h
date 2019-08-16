@@ -511,7 +511,7 @@ struct ZgRasterizerSettings {
 	//
 	// Default is ZG_FALSE, in other words clockwise (left-hand rule). This is also the default
 	// of D3D12.
-	ZgBool fontFacingIsCounterClockwise;
+	ZgBool frontFacingIsCounterClockwise;
 };
 typedef struct ZgRasterizerSettings ZgRasterizerSettings;
 

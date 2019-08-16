@@ -1290,7 +1290,7 @@ static ZgErrorCode createPipelineRenderingInternal(
 			D3D12_FILL_MODE_SOLID : D3D12_FILL_MODE_WIREFRAME;
 		rasterizerDesc.CullMode = toD3D12CullMode(createInfo.rasterizer);
 		rasterizerDesc.FrontCounterClockwise =
-			(createInfo.rasterizer.fontFacingIsCounterClockwise == ZG_FALSE) ? FALSE : TRUE;
+			(createInfo.rasterizer.frontFacingIsCounterClockwise == ZG_FALSE) ? FALSE : TRUE;
 		rasterizerDesc.DepthBias = 0; // TODO: Expose
 		rasterizerDesc.DepthBiasClamp = 0.0f; // TODO: Expose
 		rasterizerDesc.SlopeScaledDepthBias = 0.0f; // TODO: Expose

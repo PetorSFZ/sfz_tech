@@ -203,7 +203,7 @@ PipelineRenderingBuilder& PipelineRenderingBuilder::setCullMode(
 	bool cullFrontFacing, bool fontFacingIsCounterClockwise) noexcept
 {
 	commonInfo.rasterizer.cullFrontFacing = cullFrontFacing ? ZG_TRUE : ZG_FALSE;
-	commonInfo.rasterizer.fontFacingIsCounterClockwise =
+	commonInfo.rasterizer.frontFacingIsCounterClockwise =
 		fontFacingIsCounterClockwise ? ZG_TRUE : ZG_FALSE;
 	return *this;
 }
