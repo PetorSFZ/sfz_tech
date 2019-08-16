@@ -181,6 +181,15 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			item.depthTest = true;
 			item.depthFunc = depthFuncFromString(CHECK_JSON depthFuncNode.valueStr256());
 		}
+
+		// Culling
+		ParsedJsonNode cullingNode = pipelineNode.accessMap("culling");
+		if (cullingNode.isValid()) {
+			item.cullingEnabled = true;
+			item.cullFrontFacing = CHECK_JSON cullingNode.accessMap("cull_front_face").valueBool();
+			item.frontFacingIsCounterClockwise =
+				CHECK_JSON cullingNode.accessMap("front_facing_is_counter_clockwise").valueBool();
+		}
 	}
 
 	// Get number of present queue stages to load and allocate memory for them
@@ -263,6 +272,13 @@ bool buildPipelineRendering(PipelineRenderingItem& item) noexcept
 		pipelineBuilder
 			.setDepthTestEnabled(true)
 			.setDepthFunc(item.depthFunc);
+	}
+
+	// Culling
+	if (item.cullingEnabled) {
+		pipelineBuilder
+			.setCullingEnabled(true)
+			.setCullMode(item.cullFrontFacing, item.frontFacingIsCounterClockwise);
 	}
 
 	// Build pipeline

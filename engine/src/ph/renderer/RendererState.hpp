@@ -78,6 +78,9 @@ struct PipelineRenderingItem final {
 	SamplerItem samplers[ZG_MAX_NUM_SAMPLERS];
 	bool depthTest = false;
 	ZgDepthFunc depthFunc = ZG_DEPTH_FUNC_LESS;
+	bool cullingEnabled = false;
+	bool cullFrontFacing = false;
+	bool frontFacingIsCounterClockwise = false;
 };
 
 // Stage types

@@ -10,6 +10,10 @@
 			"standard_vertex_attributes": true,
 			"push_constant_registers": [ 0, 1, 2 ],
 			"depth_func": "LESS",
+			"culling": {
+				"cull_front_face": false,
+				"front_facing_is_counter_clockwise": true
+			},
 			"samplers": [
 				{
 					"register": 0,

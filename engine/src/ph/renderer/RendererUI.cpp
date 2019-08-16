@@ -332,6 +332,16 @@ void RendererUI::renderPipelinesTab(RendererConfigurableState& state) noexcept
 			ImGui::Unindent(20.0f);
 		}
 
+		// Print culling info
+		ImGui::Spacing();
+		ImGui::Text("Culling: %s", pipeline.cullingEnabled ? "ENABLED" : "DISABLED");
+		if (pipeline.cullingEnabled) {
+			ImGui::Indent(20.0f);
+			ImGui::Text("Cull Front Face: %s", pipeline.cullFrontFacing ? "YES" : "NO");
+			ImGui::Text("Front Facing Is Counter Clockwise: %s", pipeline.frontFacingIsCounterClockwise ? "YES" : "NO");
+			ImGui::Unindent(20.0f);
+		}
+
 		ImGui::Unindent(20.0f);
 		ImGui::Unindent(20.0f);
 		ImGui::Spacing();
@@ -737,11 +747,6 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 					// Deallocate temporary upload buffer
 					state.dynamicAllocator.deallocate(uploadBuffer);
 				}
-
-				/*const GpuMeshComponent& comp = mesh.components[i];
-				constexpr float offset = 250.0f;
-				ImGui::Text("Component %u -- Material Index: %u -- NumIndices: %u",
-					i, comp.materialInfo.materialIdx, comp.numIndices);*/
 			}
 			ImGui::Unindent(20.0f);
 		}
