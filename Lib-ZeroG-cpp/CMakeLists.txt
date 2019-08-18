@@ -1,4 +1,4 @@
-# Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+# Copyright (c) Peter HillerstrÃ¶m (skipifzero.com, peter@hstroem.se)
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -54,6 +54,18 @@ if(MSVC)
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /Ob3 /fp:fast /DEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob3 /fp:fast /DNDEBUG")
 
+elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
+	# macOS flags
+	# -Wall -Wextra = Enable most warnings
+	# -std=c++14 = Enable C++14 support
+	# -march=sandybridge = Require at least a Sandy Bridge Intel CPU to run code
+	# -fno-rtti = Disable RTTI
+	# -fno-strict-aliasing = Disable strict aliasing optimizations
+	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -march=sandybridge -fno-rtti -fno-strict-aliasing")
+	set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DNDEBUG")
+	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DNDEBUG")
+
 else()
 	message(FATAL_ERROR "Not implemented!")
 endif()
@@ -96,4 +108,3 @@ if(hasParent)
 	set(ZEROG_CPP_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
 	set(ZEROG_CPP_LIBRARIES ZeroG-cpp ZeroG PARENT_SCOPE)
 endif()
-

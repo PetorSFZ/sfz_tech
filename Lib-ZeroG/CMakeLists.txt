@@ -16,7 +16,7 @@
 #    misrepresented as being the original software.
 # 3. This notice may not be removed or altered from any source distribution.
 
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project("ZeroG" LANGUAGES CXX)
 
 # Generate a "compile_commands.json" for VSCode and such when compiling with make
@@ -46,6 +46,18 @@ if(MSVC)
 	set(CMAKE_CXX_FLAGS_DEBUG "/MDd /Od /DEBUG")
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /Ob3 /fp:fast /DEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob3 /fp:fast /DNDEBUG")
+
+elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
+	# macOS flags
+	# -Wall -Wextra = Enable most warnings
+	# -std=c++14 = Enable C++14 support
+	# -march=sandybridge = Require at least a Sandy Bridge Intel CPU to run code
+	# -fno-rtti = Disable RTTI
+	# -fno-strict-aliasing = Disable strict aliasing optimizations
+	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -march=sandybridge -fno-rtti -fno-strict-aliasing")
+	set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DNDEBUG")
+	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DNDEBUG")
 
 else()
 	message(FATAL_ERROR "Not implemented!")
@@ -82,25 +94,40 @@ set(ZEROG_CAPI_INCLUDE_FILES
 )
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ZEROG_CAPI_INCLUDE_FILES})
 
-set(ZEROG_CAPI_SRC_FILES
-	${SRC_DIR}/ZeroG/d3d12/D3D12Backend.hpp
-	${SRC_DIR}/ZeroG/d3d12/D3D12Backend.cpp
-	${SRC_DIR}/ZeroG/d3d12/D3D12CommandList.hpp
-	${SRC_DIR}/ZeroG/d3d12/D3D12CommandList.cpp
-	${SRC_DIR}/ZeroG/d3d12/D3D12CommandQueue.hpp
-	${SRC_DIR}/ZeroG/d3d12/D3D12CommandQueue.cpp
-	${SRC_DIR}/ZeroG/d3d12/D3D12Common.hpp
-	${SRC_DIR}/ZeroG/d3d12/D3D12Common.cpp
-	${SRC_DIR}/ZeroG/d3d12/D3D12DescriptorRingBuffer.hpp
-	${SRC_DIR}/ZeroG/d3d12/D3D12DescriptorRingBuffer.cpp
-	${SRC_DIR}/ZeroG/d3d12/D3D12Framebuffer.hpp
-	${SRC_DIR}/ZeroG/d3d12/D3D12Framebuffer.cpp
-	${SRC_DIR}/ZeroG/d3d12/D3D12Memory.hpp
-	${SRC_DIR}/ZeroG/d3d12/D3D12Memory.cpp
-	${SRC_DIR}/ZeroG/d3d12/D3D12PipelineRendering.hpp
-	${SRC_DIR}/ZeroG/d3d12/D3D12PipelineRendering.cpp
-	${SRC_DIR}/ZeroG/d3d12/D3D12Textures.hpp
-	${SRC_DIR}/ZeroG/d3d12/D3D12Textures.cpp
+# D3D12 source files
+if (MSVC)
+	set(ZEROG_D3D12_SRC_FILES
+		${SRC_DIR}/ZeroG/d3d12/D3D12Backend.hpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12Backend.cpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12CommandList.hpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12CommandList.cpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12CommandQueue.hpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12CommandQueue.cpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12Common.hpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12Common.cpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12DescriptorRingBuffer.hpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12DescriptorRingBuffer.cpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12Framebuffer.hpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12Framebuffer.cpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12Memory.hpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12Memory.cpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12PipelineRendering.hpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12PipelineRendering.cpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12Textures.hpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12Textures.cpp
+	)
+endif()
+
+# Vulkan source files
+set(ZEROG_VULKAN_SRC_FILES
+	${SRC_DIR}/ZeroG/vulkan/VulkanBackend.hpp
+	${SRC_DIR}/ZeroG/vulkan/VulkanBackend.cpp
+)
+
+set(ZEROG_CAPI_SRC_FILES ${ZEROG_D3D12_SRC_FILES} ${ZEROG_VULKAN_SRC_FILES})
+
+# Common source files
+set(ZEROG_CAPI_SRC_FILES ${ZEROG_CAPI_SRC_FILES}
 	${SRC_DIR}/ZeroG/util/Assert.hpp
 	${SRC_DIR}/ZeroG/util/CpuAllocation.hpp
 	${SRC_DIR}/ZeroG/util/CpuAllocation.cpp

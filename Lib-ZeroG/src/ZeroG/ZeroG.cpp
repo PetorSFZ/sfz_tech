@@ -28,6 +28,8 @@
 #include "ZeroG/d3d12/D3D12Backend.hpp"
 #endif
 
+#include "ZeroG/vulkan/VulkanBackend.hpp"
+
 // Version information
 // ------------------------------------------------------------------------------------------------
 
@@ -42,7 +44,10 @@ ZG_API uint32_t zgApiLinkedVersion(void)
 ZG_API ZgFeatureBits zgCompiledFeatures(void)
 {
 	return
-		uint64_t(ZG_FEATURE_BIT_BACKEND_D3D12);
+#ifdef _WIN32
+		uint64_t(ZG_FEATURE_BIT_BACKEND_D3D12) |
+#endif
+		uint64_t(ZG_FEATURE_BIT_BACKEND_VULKAN);
 }
 
 // Error codes
@@ -121,6 +126,7 @@ ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 		ZG_ERROR(logger, "zgContextInit(): Null backend not implemented, exiting.");
 		return ZG_ERROR_UNIMPLEMENTED;
 
+#ifdef _WIN32
 	case ZG_BACKEND_D3D12:
 		{
 			ZgErrorCode res = zg::createD3D12Backend(&tmpContext.backend, settings);
@@ -129,6 +135,18 @@ ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 				return res;
 			}
 			ZG_INFO(logger, "zgContextInit(): Created D3D12 backend");
+		}
+		break;
+#endif
+
+	case ZG_BACKEND_VULKAN:
+		{
+			ZgErrorCode res = zg::createVulkanBackend(&tmpContext.backend, settings);
+			if (res != ZG_SUCCESS) {
+				ZG_ERROR(logger, "zgContextInit(): Could not create Vulkan backend, exiting.");
+				return res;
+			}
+			ZG_INFO(logger, "zgContextInit(): Created Vulkan backend");
 		}
 		break;
 
@@ -220,7 +238,7 @@ ZG_API ZgErrorCode zgPipelineRenderingCreateFromFileSPIRV(
 	if (createInfo->common.numVertexBufferSlots == 0) return ZG_ERROR_INVALID_ARGUMENT;
 	if (createInfo->common.numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES) return ZG_ERROR_INVALID_ARGUMENT;
 	if (createInfo->common.numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS) return ZG_ERROR_INVALID_ARGUMENT;
-	
+
 	return zg::getBackend()->pipelineRenderingCreateFromFileSPIRV(
 		pipelineOut, signatureOut, *createInfo);
 }

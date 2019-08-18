@@ -127,8 +127,8 @@ enum ZgBackendTypeEnum {
 	// The D3D12 backend, only available on Windows 10.
 	ZG_BACKEND_D3D12,
 
-	//ZG_BACKEND_VULKAN,
-	//ZG_BACKEND_METAL,
+	// The Vulkan backend, available on all platforms
+	ZG_BACKEND_VULKAN
 };
 typedef uint32_t ZgBackendType;
 
@@ -142,9 +142,7 @@ typedef uint32_t ZgBackendType;
 enum ZgFeatureBitsEnum {
 	ZG_FEATURE_BIT_NONE = 0,
 	ZG_FEATURE_BIT_BACKEND_D3D12 = 1 << 1,
-	//ZG_FEATURE_BIT_BACKEND_VULKAN = 1 << 2
-	//ZG_FEATURE_BIT_BACKEND_METAL = 1 << 3
-	//ZG_FEATURE_BIT_BACKEND_WEB_GPU = 1 << 4
+	ZG_FEATURE_BIT_BACKEND_VULKAN = 1 << 2
 };
 typedef uint64_t ZgFeatureBits;
 
@@ -746,7 +744,7 @@ ZG_API ZgErrorCode zgMemoryHeapRelease(
 	ZgMemoryHeap* memoryHeap);
 
 struct ZgBufferCreateInfo {
-	
+
 	// The offset from the start of the memory heap to create the buffer at.
 	// Note that the offset must be a multiple of 64KiB (= 2^16 bytes = 65 536 bytes), or 0.
 	uint64_t offsetInBytes;
@@ -822,7 +820,7 @@ struct ZgTexture2DCreateInfo {
 	// 1 equals no mipmaps, i.e. only a single layer. May not be 0, must be smaller than or equal
 	// to ZG_TEXTURE_2D_MAX_NUM_MIPMAPS.
 	uint32_t numMipmaps;
-	
+
 	// The offset from the start of the texture heap to create the buffer at.
 	// Note that the offset must be a multiple of the alignment of the texture, which can be
 	// acquired by zgTextureHeapTexture2DGetAllocationInfo(). Do not need to be set before calling
@@ -836,10 +834,10 @@ struct ZgTexture2DCreateInfo {
 };
 
 struct ZgTexture2DAllocationInfo {
-	
+
 	// The size of the texture in bytes
 	uint32_t sizeInBytes;
-	
+
 	// The alignment of the texture in bytes
 	uint32_t alignmentInBytes;
 };

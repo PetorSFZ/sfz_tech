@@ -224,7 +224,11 @@ static void realMain(SDL_Window* window) noexcept
 
 	// Create ZeroG context
 	ZgContextInitSettings initSettings = {};
+#ifdef _WIN32
 	initSettings.backend = ZG_BACKEND_D3D12;
+#else
+	initSettings.backend = ZG_BACKEND_VULKAN;
+#endif
 	initSettings.width = 512;
 	initSettings.height = 512;
 	initSettings.debugMode = DEBUG_MODE ? ZG_TRUE : ZG_FALSE;
@@ -305,7 +309,7 @@ static void realMain(SDL_Window* window) noexcept
 		cubeIndexMemoryHeapDevice, CUBE_INDICES, sizeof(uint32_t) * CUBE_NUM_INDICES);
 	CHECK_ZG cubeIndexBufferDevice.setDebugName("cubeIndexBuffer");
 
-	
+
 	// Create a constant buffer
 	Vector offsets;
 	offsets.x = 0.0f;
@@ -330,15 +334,15 @@ static void realMain(SDL_Window* window) noexcept
 
 	ZgTexture2DAllocationInfo textureAllocInfo = {};
 	CHECK_ZG zg::Texture2D::getAllocationInfo(textureAllocInfo, textureCreateInfo);
-	
+
 	textureCreateInfo.offsetInBytes = 0;
 	textureCreateInfo.sizeInBytes = textureAllocInfo.sizeInBytes;
 
 	zg::Texture2D texture;
 	CHECK_ZG textureHeap.texture2DCreate(texture, textureCreateInfo);
 	CHECK_ZG texture.setDebugName("cubeTexture");
-	
-	
+
+
 	// Fill texture with some random data
 	{
 		// Allocates images
@@ -389,7 +393,7 @@ static void realMain(SDL_Window* window) noexcept
 		delete[] imageLvl2.data;
 		delete[] imageLvl3.data;
 	}
-	
+
 	// Run our main loop
 	time_point previousTimePoint;
 	calculateDelta(previousTimePoint);
@@ -446,7 +450,7 @@ static void realMain(SDL_Window* window) noexcept
 		// Get a command list
 		zg::CommandList commandList;
 		CHECK_ZG presentQueue.beginCommandListRecording(commandList);
-		
+
 		// Set framebuffer and clear it
 		CHECK_ZG commandList.setFramebuffer(framebuffer);
 		CHECK_ZG commandList.clearFramebuffer(0.2f, 0.2f, 0.3f, 1.0f);
@@ -486,7 +490,7 @@ static void realMain(SDL_Window* window) noexcept
 		CHECK_ZG commandList.setIndexBuffer(
 			cubeIndexBufferDevice, ZG_INDEX_BUFFER_TYPE_UINT32);
 		CHECK_ZG commandList.setVertexBuffer(0, cubeVertexBufferDevice);
-		
+
 		// Batch some cubes
 		batchCubeRender(Vector(0.0f, 0.0f, 0.0f));
 
@@ -501,7 +505,7 @@ static void realMain(SDL_Window* window) noexcept
 		batchCubeRender(Vector(1.5f, -1.5f, -1.5f));
 		batchCubeRender(Vector(1.5f, -1.5f, 0.0f));
 		batchCubeRender(Vector(1.5f, -1.5f, 1.5f));
-		
+
 		// Execute command list
 		CHECK_ZG presentQueue.executeCommandList(commandList);
 
@@ -529,7 +533,7 @@ int main(int argc, char* argv[])
 #endif
 
 	// Initialize SDL2 and create a window
-	SDL_Window* window = initializeSdl2CreateWindow("ZeroG - Sample1");
+	SDL_Window* window = initializeSdl2CreateWindow("ZeroG - Sample2 - Experiments");
 
 	// Runs the real main function
 	realMain(window);

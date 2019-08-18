@@ -29,12 +29,20 @@
 // Statics
 // ------------------------------------------------------------------------------------------------
 
+#ifdef _WIN32
 static HWND getWin32WindowHandle(SDL_Window* window) noexcept
 {
 	SDL_SysWMinfo info = {};
 	SDL_VERSION(&info.version);
 	if (!SDL_GetWindowWMInfo(window, &info)) return nullptr;
 	return info.info.win.window;
+}
+#endif
+
+// TODO ifdef APPLE
+static void* getMacOSWindowHandle(SDL_Window* window) noexcept
+{
+	return nullptr;
 }
 
 static const char* stripFilePath(const char* file) noexcept
@@ -103,7 +111,9 @@ void* getNativeWindowHandle(SDL_Window* window) noexcept
 #ifdef WIN32
 	return getWin32WindowHandle(window);
 #else
-#error "Not implemented yet"
+	return getMacOSWindowHandle(window);
+//#else
+//#error "Not implemented yet"
 #endif
 }
 
@@ -170,7 +180,7 @@ Vector Matrix::columnAt(uint32_t i) const noexcept
 
 Matrix operator*(const Matrix& lhs, const Matrix& rhs) noexcept
 {
-	
+
 	Matrix tmp;
 	for (uint32_t y = 0; y < 4; y++) {
 		for (uint32_t x = 0; x < 4; x++) {
@@ -254,7 +264,7 @@ Matrix inverse(const Matrix& mat) noexcept
 	float b33 = m00*m11*m22 + m01*m12*m20 + m02*m10*m21 - m00*m12*m21 - m01*m10*m22 - m02*m11*m20;
 
 	Matrix tmp;
-	
+
 	tmp.m[0] = b00;
 	tmp.m[1] = b01;
 	tmp.m[2] = b02;

@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <new>
 
 #include "ZeroG/Context.hpp"
 
@@ -32,6 +33,8 @@
 
 // Operator new
 // ------------------------------------------------------------------------------------------------
+
+#ifdef _WIN32
 
 void* operator new (std::size_t count)
 {
@@ -207,3 +210,5 @@ void operator delete[] (void* ptr, std::size_t sz, std::align_val_t val) noexcep
 #endif
 	}
 }
+
+#endif

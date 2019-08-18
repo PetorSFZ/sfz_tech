@@ -17,22 +17,22 @@
 # 3. This notice may not be removed or altered from any source distribution.
 
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
-project("ZeroG Sample 1 - Experiments" LANGUAGES CXX)
+project("ZeroG Sample 2 - Experiments" LANGUAGES CXX)
 
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(SRC_FILES
-	${SRC_DIR}/Sample1.cpp
+	${SRC_DIR}/Sample2.cpp
 )
 
-add_executable(ZeroG-Sample1 ${SRC_FILES})
+add_executable(ZeroG-Sample2 ${SRC_FILES})
 
-target_include_directories(ZeroG-Sample1 PRIVATE
+target_include_directories(ZeroG-Sample2 PRIVATE
 	${SRC_DIR}
 	${SDL2_INCLUDE_DIRS}
 	${ZEROG_SAMPLE_COMMON_INCLUDE_DIRS}
 )
 
-target_link_libraries(ZeroG-Sample1 ${SDL2_LIBRARIES} ${ZEROG_SAMPLE_COMMON_LIBRARIES})
+target_link_libraries(ZeroG-Sample2 ${SDL2_LIBRARIES} ${ZEROG_SAMPLE_COMMON_LIBRARIES})
 
-linkZeroG(ZeroG-Sample1)
-linkZeroGcpp(ZeroG-Sample1)
+linkZeroG(ZeroG-Sample2)
+linkZeroGcpp(ZeroG-Sample2)

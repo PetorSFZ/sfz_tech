@@ -97,6 +97,17 @@ if(MSVC)
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /Ob3 /fp:fast /DEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob3 /fp:fast /DNDEBUG")
 
+elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
+	# macOS flags
+	# -Wall -Wextra = Enable most warnings
+	# -std=c++14 = Enable C++14 support
+	# -march=sandybridge = Require at least a Sandy Bridge Intel CPU to run code
+	# -fno-rtti = Disable RTTI
+	# -fno-strict-aliasing = Disable strict aliasing optimizations
+	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -march=sandybridge -fno-rtti -fno-strict-aliasing")
+	set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DNDEBUG")
+	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DNDEBUG")
 
 else()
 	message(FATAL_ERROR "Not implemented!")
@@ -118,7 +129,9 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/SampleCommon)
 # Add samples
 # ------------------------------------------------------------------------------------------------
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Sample-1-Experiments)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Sample-1-Minimal)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Sample-2-Experiments)
 
 # Symlink resource ("res") directory into build directory
 # ------------------------------------------------------------------------------------------------
@@ -147,6 +160,54 @@ if(MSVC)
 	message("-- [ZeroG Samples]: Executing create symlink script \"${SYMLINK_FILE}\"")
 	execute_process(COMMAND ${SYMLINK_FILE} OUTPUT_QUIET ERROR_QUIET)
 
-else()
+elseif(IOS)
 	message(FATAL_ERROR "Not implemented")
+
+else()
+
+	# Directories
+	set(DUMMY_DIR "${CMAKE_BINARY_DIR}/dummy")
+	set(DUMMY_SYMLINK_FILE "${CMAKE_BINARY_DIR}/dummy/create_symlinks.sh")
+	set(SYMLINK_FILE "${CMAKE_BINARY_DIR}/create_symlinks.sh")
+	set(DEBUG_DIR "${CMAKE_BINARY_DIR}/Debug")
+	set(RELWITHDEBINFO_DIR "${CMAKE_BINARY_DIR}/RelWithDebInfo")
+	set(RELEASE_DIR "${CMAKE_BINARY_DIR}/Release")
+
+	set(symlinkDirName "res")
+	set(symlinkPath "${CMAKE_CURRENT_SOURCE_DIR}/${symlinkDirName}")
+
+	# Create the dummy directory
+	file(MAKE_DIRECTORY ${DUMMY_DIR})
+
+	# Remove old files (if they existed)
+	file(REMOVE ${DUMMY_SYMLINK_FILE} ${SYMLINK_FILE})
+
+	# Append create directories commands to file
+	file(APPEND ${DUMMY_SYMLINK_FILE} "# Create Debug, Release and RelWithDebInfo directories\n")
+	file(APPEND ${DUMMY_SYMLINK_FILE} "# (These are used for some IDE's, such as Xcode. Not for makefiles.)\n")
+	file(APPEND ${DUMMY_SYMLINK_FILE} "mkdir ${DEBUG_DIR}\n")
+	file(APPEND ${DUMMY_SYMLINK_FILE} "mkdir ${RELWITHDEBINFO_DIR}\n")
+	file(APPEND ${DUMMY_SYMLINK_FILE} "mkdir ${RELEASE_DIR}\n")
+	file(APPEND ${DUMMY_SYMLINK_FILE} "\n")
+
+	# Get name of directory to symlink
+	get_filename_component(SYMLINK_DIR_NAME ${symlinkPath} NAME)
+
+	# Append symlink commands to file
+	file(APPEND ${DUMMY_SYMLINK_FILE} "# Create symlinks for \"${SYMLINK_DIR_NAME}\"\n")
+	file(APPEND ${DUMMY_SYMLINK_FILE} "ln -sfn ${symlinkPath} ${CMAKE_BINARY_DIR}/${SYMLINK_DIR_NAME}\n")
+	file(APPEND ${DUMMY_SYMLINK_FILE} "ln -sfn ${symlinkPath} ${DEBUG_DIR}/${SYMLINK_DIR_NAME}\n")
+	file(APPEND ${DUMMY_SYMLINK_FILE} "ln -sfn ${symlinkPath} ${RELWITHDEBINFO_DIR}/${SYMLINK_DIR_NAME}\n")
+	file(APPEND ${DUMMY_SYMLINK_FILE} "ln -sfn ${symlinkPath} ${RELEASE_DIR}/${SYMLINK_DIR_NAME}\n")
+	file(APPEND ${DUMMY_SYMLINK_FILE} "\n")
+
+	# Copy script from dummy folder to binary directory
+	# Small hack, needed because we need the script to be executable. The only way I could find
+	# to accomplish this in CMake was to copy the file
+	file(COPY ${DUMMY_SYMLINK_FILE} DESTINATION ${CMAKE_BINARY_DIR} FILE_PERMISSIONS
+		OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+
+	# Execute process
+	execute_process(COMMAND ${SYMLINK_FILE} OUTPUT_QUIET ERROR_QUIET)
+
 endif()
