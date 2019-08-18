@@ -16,49 +16,38 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "ZeroG/util/CpuAllocation.hpp"
+#pragma once
 
-#ifdef _WIN32
-#include <malloc.h>
-#else
-#include <stdlib.h>
-#endif
+#include <cstdarg>
+#include <cstdint>
+#include <cstdio>
+
+#include "ZeroG/util/Assert.hpp"
 
 namespace zg {
 
-// Default allocator
+// String helper functions
 // ------------------------------------------------------------------------------------------------
 
-static void* defaultAllocate(void* userPtr, uint32_t size, const char* name)
+// Usage:
+// constexpr uint32_t STRING_SIZE = 128;
+// char originalString[STRING_SIZE] = {};
+// char* tmpStr = originalString;
+// tmpStr[0] = '\0';
+// uint32_t bytesLeft = STRING_SIZE;
+// printfAppend(tmpStr, bytesLeft, "text");
+// printfAppend(tmpStr, bytesLeft, "more text");
+inline void printfAppend(char*& str, uint32_t& bytesLeft, const char* format, ...) noexcept
 {
-	(void)userPtr;
-	(void)name;
-#ifdef _WIN32
-	return reinterpret_cast<void*>(_aligned_malloc(size, 32));
-#else
-	void* ptr = nullptr;
-	posix_memalign(&ptr, 32, size);
-	return reinterpret_cast<void*>(ptr);
-#endif
-}
+	va_list args;
+	va_start(args, format);
+	int res = std::vsnprintf(str, bytesLeft, format, args);
+	va_end(args);
 
-static void defaultDeallocate(void* userPtr, void* allocation)
-{
-	(void)userPtr;
-	if (allocation == nullptr) return;
-#ifdef _WIN32
-	_aligned_free(allocation);
-#else
-	free(allocation);
-#endif
-}
-
-ZgAllocator getDefaultAllocator() noexcept
-{
-	ZgAllocator allocator = {};
-	allocator.allocate = defaultAllocate;
-	allocator.deallocate = defaultDeallocate;
-	return allocator;
+	ZG_ASSERT(res >= 0);
+	ZG_ASSERT(res < int(bytesLeft));
+	bytesLeft -= res;
+	str += res;
 }
 
 } // namespace zg

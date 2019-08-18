@@ -215,7 +215,7 @@ struct ZgAllocator {
 	// Function pointer to allocate function. The allocation created must be 32-byte aligned. The
 	// name is a short string (< ~32 chars) explaining what the allocation is used for, useful
 	// for debug or visualization purposes.
-	uint8_t* (*allocate)(void* userPtr, uint32_t size, const char* name);
+	void* (*allocate)(void* userPtr, uint32_t size, const char* name);
 
 	// Function pointer to deallocate function.
 	void (*deallocate)(void* userPtr, void* allocation);

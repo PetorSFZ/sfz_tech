@@ -33,7 +33,7 @@ template<typename T, typename... Args>
 T* zgNew(const char* name, Args&&... args) noexcept
 {
 	ZgAllocator allocator = getAllocator();
-	uint8_t* memPtr = allocator.allocate(allocator.userPtr, sizeof(T), name);
+	void* memPtr = allocator.allocate(allocator.userPtr, sizeof(T), name);
 	T* objPtr = nullptr;
 	objPtr = new(memPtr) T(std::forward<Args>(args)...);
 	// If constructor throws exception std::terminate() will be called since function is noexcept

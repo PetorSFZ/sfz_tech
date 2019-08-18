@@ -49,7 +49,7 @@ public:
 	{
 		// Allocate memory
 		ZgAllocator& allocator = getAllocator();
-		uint8_t* allocation = allocator.allocate(
+		void* allocation = allocator.allocate(
 			allocator.userPtr, sizeof(T) * capacity, allocationName);
 		if (allocation == nullptr) return false;
 
@@ -62,7 +62,7 @@ public:
 
 		return true;
 	}
-	
+
 	void swap(Vector& other) noexcept
 	{
 		std::swap(this->mSize, other.mSize);

@@ -26,6 +26,7 @@
 
 #include "ZeroG/util/Assert.hpp"
 #include "ZeroG/util/CpuAllocation.hpp"
+#include "ZeroG/util/Strings.hpp"
 #include "ZeroG/util/Vector.hpp"
 
 namespace zg {
@@ -88,7 +89,7 @@ struct CheckSpirvCrossImpl final {
 	CheckSpirvCrossImpl() = delete;
 	CheckSpirvCrossImpl(spvc_context ctx, const char* file, int line) noexcept
 	:
-		ctx(ctx), file(file), line(line) 
+		ctx(ctx), file(file), line(line)
 	{ }
 
 	spvc_result operator% (spvc_result result) noexcept
@@ -101,7 +102,7 @@ struct CheckSpirvCrossImpl final {
 
 		// Log error message
 		logWrapper(file, line, ZG_LOG_LEVEL_ERROR, "SPIRV-Cross error: %s\n", errorStr);
-		
+
 		ZG_ASSERT(false);
 
 		return result;
@@ -136,24 +137,24 @@ static Vector<char> crossCompileSpirvToHLSL(
 
 	for (size_t i = 0; i < numVertexInputs; i++) {
 		spvc_reflected_resource vertexInput = vertexInputs[i];
-		
-	
+
+
 	const spvc_reflected_resource* constantBuffers = nullptr;
 	size_t numConstantBuffers = 0;
 	CHECK_SPIRV_CROSS(logger, context) spvc_resources_get_resource_list_for_type(
 		resources, SPVC_RESOURCE_TYPE_UNIFORM_BUFFER, &constantBuffers, &numConstantBuffers);
-	
+
 
 	// Fix constant buffers
 	// TODO: This is bad, should fix per type, not per instance
 	for (size_t i = 0; i < numConstantBuffers; i++) {
-		
+
 		const spvc_reflected_resource& cb = constantBuffers[i];
 		spvc_type type = spvc_compiler_get_type_handle(compiler, cb.base_type_id);
 		uint32_t numMembers = spvc_type_get_num_member_types(type);
 
 		printf("Constant buffer %u: %s, numMembers: %u\n", i, constantBuffers[i].name, numMembers);
-		
+
 		//uint32_t numMembers = spvc_type_get_num_member_types(cb.type_id);
 
 		// Remove "type_" from type name of constant buffer
@@ -280,7 +281,7 @@ static ZgErrorCode dxcCreateHlslBlobFromFile(
 		shaderFilePathWide, &CODE_PAGE, &blobOut))) {
 		return ZG_ERROR_SHADER_COMPILE_ERROR;
 	}
-	
+
 	return ZG_SUCCESS;
 }
 
@@ -378,7 +379,7 @@ static ZgErrorCode compileHlslShader(
 	if (!SUCCEEDED(result->GetResult(&blobOut))) {
 		return ZG_ERROR_SHADER_COMPILE_ERROR;
 	}
-	
+
 	// Attempt to get reflection data
 	if (D3D12_FAIL(getShaderReflection(blobOut, reflectionOut))) {
 		return ZG_ERROR_SHADER_COMPILE_ERROR;
@@ -457,7 +458,7 @@ static DXGI_FORMAT vertexAttributeTypeToFormat(ZgVertexAttributeType type) noexc
 	case ZG_VERTEX_ATTRIBUTE_U32_2: return DXGI_FORMAT_R32G32_UINT;
 	case ZG_VERTEX_ATTRIBUTE_U32_3: return DXGI_FORMAT_R32G32B32_UINT;
 	case ZG_VERTEX_ATTRIBUTE_U32_4: return DXGI_FORMAT_R32G32B32A32_UINT;
-	
+
 	default: break;
 	}
 	ZG_ASSERT(false);
@@ -538,19 +539,6 @@ static D3D12_TEXTURE_ADDRESS_MODE wrappingModeToD3D12(ZgWrappingMode wrappingMod
 	}
 	ZG_ASSERT(false);
 	return D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-}
-
-static void printfAppend(char*& str, uint32_t& bytesLeft, const char* format, ...) noexcept
-{
-	va_list args;
-	va_start(args, format);
-	int res = std::vsnprintf(str, bytesLeft, format, args);
-	va_end(args);
-
-	ZG_ASSERT(res >= 0);
-	ZG_ASSERT(res < int(bytesLeft));
-	bytesLeft -= res;
-	str += res;
 }
 
 static void logPipelineInfo(
@@ -701,7 +689,7 @@ static ZgErrorCode createPipelineRenderingInternal(
 
 	// Validate vertex attributes
 	for (uint32_t i = 0; i < createInfo.numVertexAttributes; i++) {
-		
+
 		const ZgVertexAttribute& attrib = createInfo.vertexAttributes[i];
 
 		// Get signature for the i:th vertex attribute
@@ -1011,7 +999,7 @@ static ZgErrorCode createPipelineRenderingInternal(
 			ZG_ERROR("Sampler %s is bound to register %u, num specified samplers is %u",
 				resDesc.Name, resDesc.BindPoint, createInfo.numSamplers);
 			return ZG_ERROR_INVALID_ARGUMENT;
-		
+
 		}
 		ZG_ASSERT(resDesc.BindCount == 1);
 
@@ -1071,11 +1059,11 @@ static ZgErrorCode createPipelineRenderingInternal(
 	// List of constant buffer mappings to be filled in when creating root signature
 	D3D12ConstantBufferMapping constBufferMappings[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
 	uint32_t numConstBufferMappings = 0;
-	
+
 	// List of texture mappings to be filled in when creating root signature
 	D3D12TextureMapping texMappings[ZG_MAX_NUM_TEXTURES] = {};
 	uint32_t numTexMappings = 0;
-	
+
 	uint32_t dynamicBuffersParameterIndex = ~0u;
 
 	// Create root signature
@@ -1131,7 +1119,7 @@ static ZgErrorCode createPipelineRenderingInternal(
 			if (dynamicConstBuffersFirstRegister == ~0u) {
 				dynamicConstBuffersFirstRegister = cbuffer.shaderRegister;
 			}
-			
+
 			// Add to constant buffer mappings
 			uint32_t mappingIdx = numConstBufferMappings;
 			numConstBufferMappings += 1;
@@ -1144,7 +1132,7 @@ static ZgErrorCode createPipelineRenderingInternal(
 		uint32_t dynamicTexturesFirstRegister = ~0u; // TODO: THIS IS PROBABLY BAD
 		for (uint32_t i = 0; i < signatureOut->numTextures; i++) {
 			const ZgTextureDesc& texDesc = signatureOut->textures[i];
-			
+
 			if (dynamicTexturesFirstRegister == ~0u) {
 				dynamicTexturesFirstRegister = texDesc.textureRegister;
 			}
@@ -1162,7 +1150,7 @@ static ZgErrorCode createPipelineRenderingInternal(
 		if ((numConstBufferMappings + numTexMappings) != 0) {
 			numParameters += 1; // No dynamic table if no dynamic parameters
 		}
-		
+
 		// TODO: Currently using the assumption that the shader register range is continuous,
 		//       which is probably not at all reasonable in practice
 		constexpr uint32_t MAX_NUM_RANGES = 2; // CBVs and SRVs

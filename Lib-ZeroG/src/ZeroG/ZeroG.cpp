@@ -131,6 +131,7 @@ ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 #ifdef _WIN32
 	case ZG_BACKEND_D3D12:
 		{
+			ZG_INFO("zgContextInit(): Attempting to create D3D12 backend...");
 			ZgErrorCode res = zg::createD3D12Backend(&tmpContext.backend, settings);
 			if (res != ZG_SUCCESS) {
 				ZG_ERROR("zgContextInit(): Could not create D3D12 backend, exiting.");
@@ -144,6 +145,7 @@ ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 #ifdef ZG_VULKAN
 	case ZG_BACKEND_VULKAN:
 		{
+			ZG_INFO("zgContextInit(): Attempting to create Vulkan backend...");
 			ZgErrorCode res = zg::createVulkanBackend(&tmpContext.backend, settings);
 			if (res != ZG_SUCCESS) {
 				ZG_ERROR("zgContextInit(): Could not create Vulkan backend, exiting.");

@@ -16,49 +16,27 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "ZeroG/util/CpuAllocation.hpp"
+#pragma once
 
-#ifdef _WIN32
-#include <malloc.h>
-#else
-#include <stdlib.h>
-#endif
+#include <vulkan/vulkan.h>
 
 namespace zg {
 
-// Default allocator
+// Check Vulkan macro
 // ------------------------------------------------------------------------------------------------
 
-static void* defaultAllocate(void* userPtr, uint32_t size, const char* name)
-{
-	(void)userPtr;
-	(void)name;
-#ifdef _WIN32
-	return reinterpret_cast<void*>(_aligned_malloc(size, 32));
-#else
-	void* ptr = nullptr;
-	posix_memalign(&ptr, 32, size);
-	return reinterpret_cast<void*>(ptr);
-#endif
-}
+#define CHECK_VK (zg::CheckVkImpl(__FILE__, __LINE__)) %
 
-static void defaultDeallocate(void* userPtr, void* allocation)
-{
-	(void)userPtr;
-	if (allocation == nullptr) return;
-#ifdef _WIN32
-	_aligned_free(allocation);
-#else
-	free(allocation);
-#endif
-}
+struct CheckVkImpl final {
+	const char* file = nullptr;
+	int line = 0;
 
-ZgAllocator getDefaultAllocator() noexcept
-{
-	ZgAllocator allocator = {};
-	allocator.allocate = defaultAllocate;
-	allocator.deallocate = defaultDeallocate;
-	return allocator;
-}
+	CheckVkImpl() = delete;
+	CheckVkImpl(const char* file, int line) noexcept
+		: file(file), line(line) {}
+
+	bool operator% (VkResult result) const noexcept;
+};
+
 
 } // namespace zg

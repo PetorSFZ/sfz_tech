@@ -31,7 +31,7 @@ namespace zg {
 
 // Forward declare data accessor
 template<typename T>
-class MutexDataAccessor;
+class MutexAccessor;
 
 // A simple wrapper around std::mutex which attempts to make it clear exactly what the mutex is
 // protecting. A bit similar to Rust's mutex.
@@ -54,9 +54,9 @@ public:
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	MutexDataAccessor<T> access() noexcept
+	MutexAccessor<T> access() noexcept
 	{
-		return MutexDataAccessor<T>::accessMutexedData(&mMutex, &mData);
+		return MutexAccessor<T>::createAccessor(&mMutex, &mData);
 	}
 
 	// Private members
@@ -74,21 +74,21 @@ private:
 // Essentially calls lock() on creation and unlock() on destruction. Meaning there can only really
 // be one accessor existing for a given mutex at any given time.
 template<typename T>
-class MutexDataAccessor final {
+class MutexAccessor final {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	MutexDataAccessor() noexcept = default;
-	MutexDataAccessor(const MutexDataAccessor&) = delete;
-	MutexDataAccessor& operator= (const MutexDataAccessor&) = delete;
-	MutexDataAccessor(MutexDataAccessor&& o) noexcept { this->swap(o); }
-	MutexDataAccessor& operator= (MutexDataAccessor& o) noexcept { this->swap(o); return *this; }
-	~MutexDataAccessor() noexcept { this->destroy(); }
+	MutexAccessor() noexcept = default;
+	MutexAccessor(const MutexAccessor&) = delete;
+	MutexAccessor& operator= (const MutexAccessor&) = delete;
+	MutexAccessor(MutexAccessor&& o) noexcept { this->swap(o); }
+	MutexAccessor& operator= (MutexAccessor& o) noexcept { this->swap(o); return *this; }
+	~MutexAccessor() noexcept { this->destroy(); }
 
-	static MutexDataAccessor accessMutexedData(std::mutex* mutex, T* data) noexcept
+	static MutexAccessor createAccessor(std::mutex* mutex, T* data) noexcept
 	{
-		MutexDataAccessor accessor;
+		MutexAccessor accessor;
 		accessor.mMutex = mutex;
 		accessor.mData = data;
 		mutex->lock();
@@ -98,7 +98,7 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void swap(MutexDataAccessor& other) noexcept
+	void swap(MutexAccessor& other) noexcept
 	{
 		std::swap(this->mMutex, other.mMutex);
 		std::swap(this->mData, other.mData);

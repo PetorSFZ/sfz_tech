@@ -161,6 +161,10 @@ if (VULKAN_FOUND)
 	set(ZEROG_VULKAN_SRC_FILES
 		${SRC_DIR}/ZeroG/vulkan/VulkanBackend.hpp
 		${SRC_DIR}/ZeroG/vulkan/VulkanBackend.cpp
+		${SRC_DIR}/ZeroG/vulkan/VulkanCommon.hpp
+		${SRC_DIR}/ZeroG/vulkan/VulkanCommon.cpp
+		${SRC_DIR}/ZeroG/vulkan/VulkanDebug.hpp
+		${SRC_DIR}/ZeroG/vulkan/VulkanDebug.cpp
 	)
 endif()
 
@@ -175,6 +179,7 @@ set(ZEROG_CAPI_SRC_FILES ${ZEROG_CAPI_SRC_FILES}
 	${SRC_DIR}/ZeroG/util/Logging.cpp
 	${SRC_DIR}/ZeroG/util/Mutex.hpp
 	${SRC_DIR}/ZeroG/util/RingBuffer.hpp
+	${SRC_DIR}/ZeroG/util/Strings.hpp
 	${SRC_DIR}/ZeroG/util/Vector.hpp
 	${SRC_DIR}/ZeroG/BackendInterface.hpp
 	${SRC_DIR}/ZeroG/Context.hpp
