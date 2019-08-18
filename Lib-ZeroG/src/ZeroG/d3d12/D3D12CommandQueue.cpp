@@ -79,14 +79,12 @@ ZgErrorCode D3D12CommandQueue::create(
 	D3DX12Residency::ResidencyManager* residencyManager,
 	D3D12DescriptorRingBuffer* descriptorBuffer,
 	uint32_t maxNumCommandLists,
-	uint32_t maxNumBuffersPerCommandList,
-	ZgLogger logger) noexcept
+	uint32_t maxNumBuffersPerCommandList) noexcept
 {
 	mType = type;
 	mDevice = device;
 	mResidencyManager = residencyManager;
 	mDescriptorBuffer = descriptorBuffer;
-	mLog = logger;
 
 	// Create command queue
 	D3D12_COMMAND_QUEUE_DESC desc = {};
@@ -95,12 +93,12 @@ ZgErrorCode D3D12CommandQueue::create(
 	desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE; // TODO: D3D12_COMMAND_QUEUE_FLAG_DISABLE_GPU_TIMEOUT
 	desc.NodeMask = 0;
 
-	if (D3D12_FAIL(mLog, device->CreateCommandQueue(&desc, IID_PPV_ARGS(&mCommandQueue)))) {
+	if (D3D12_FAIL(device->CreateCommandQueue(&desc, IID_PPV_ARGS(&mCommandQueue)))) {
 		return ZG_ERROR_NO_SUITABLE_DEVICE;
 	}
 
 	// Create command queue fence
-	if (D3D12_FAIL(mLog, device->CreateFence(
+	if (D3D12_FAIL(device->CreateFence(
 		mCommandQueueFenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mCommandQueueFence)))) {
 		return ZG_ERROR_GENERIC;
 	}
@@ -133,7 +131,7 @@ ZgErrorCode D3D12CommandQueue::waitOnGpu(const ZgFence& fenceIn) noexcept
 {
 	const D3D12Fence& fence = *static_cast<const D3D12Fence*>(&fenceIn);
 	if (fence.commandQueue == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	CHECK_D3D12(mLog) this->mCommandQueue->Wait(
+	CHECK_D3D12 this->mCommandQueue->Wait(
 		fence.commandQueue->mCommandQueueFence.Get(), fence.fenceValue);
 	return ZG_SUCCESS;
 }
@@ -172,7 +170,7 @@ void D3D12CommandQueue::waitOnCpuInternal(uint64_t fenceValue) noexcept
 	std::lock_guard<std::mutex> lock(mQueueMutex);
 
 	if (!isFenceValueDone(fenceValue)) {
-		CHECK_D3D12(mLog) mCommandQueueFence->SetEventOnCompletion(
+		CHECK_D3D12 mCommandQueueFence->SetEventOnCompletion(
 			fenceValue, mCommandQueueFenceEvent);
 		// TODO: Don't wait forever
 		::WaitForSingleObject(mCommandQueueFenceEvent, INFINITE);
@@ -214,7 +212,7 @@ ZgErrorCode D3D12CommandQueue::beginCommandListRecordingUnmutexed(
 	if (res != ZG_SUCCESS) return res;
 
 	// Open command lists residency set
-	CHECK_D3D12(mLog) commandList->residencySet->Open();
+	CHECK_D3D12 commandList->residencySet->Open();
 
 	// Return command list
 	*commandListOut = commandList;
@@ -227,12 +225,12 @@ ZgErrorCode D3D12CommandQueue::executeCommandListUnmutexed(ZgCommandList* comman
 	D3D12CommandList& commandList = *static_cast<D3D12CommandList*>(commandListIn);
 
 	// Close command list
-	if (D3D12_FAIL(mLog, commandList.commandList->Close())) {
+	if (D3D12_FAIL(commandList.commandList->Close())) {
 		return ZG_ERROR_GENERIC;
 	}
 
 	// Close residency set
-	if (D3D12_FAIL(mLog, commandList.residencySet->Close())) {
+	if (D3D12_FAIL(commandList.residencySet->Close())) {
 		return ZG_ERROR_GENERIC;
 	}
 
@@ -253,13 +251,13 @@ ZgErrorCode D3D12CommandQueue::executeCommandListUnmutexed(ZgCommandList* comman
 	// Add command list to queue
 	mCommandListQueue.add(&commandList);
 
-	if (D3D12_FAIL(mLog, executeCommandListRes)) return ZG_ERROR_GENERIC;
+	if (D3D12_FAIL(executeCommandListRes)) return ZG_ERROR_GENERIC;
 	return ZG_SUCCESS;
 }
 
 uint64_t D3D12CommandQueue::signalOnGpuUnmutexed() noexcept
 {
-	CHECK_D3D12(mLog) mCommandQueue->Signal(mCommandQueueFence.Get(), mCommandQueueFenceValue);
+	CHECK_D3D12 mCommandQueue->Signal(mCommandQueueFence.Get(), mCommandQueueFenceValue);
 	return mCommandQueueFenceValue++;
 }
 
@@ -273,14 +271,14 @@ ZgErrorCode D3D12CommandQueue::createCommandList(D3D12CommandList*& commandListO
 	commandList.commandListType = this->mType;
 
 	// Create command allocator
-	if (D3D12_FAIL(mLog, mDevice->CreateCommandAllocator(
+	if (D3D12_FAIL(mDevice->CreateCommandAllocator(
 		mType, IID_PPV_ARGS(&commandList.commandAllocator)))) {
 		mCommandListStorage.pop();
 		return ZG_ERROR_GENERIC;
 	}
 
 	// Create command list
-	if (D3D12_FAIL(mLog, mDevice->CreateCommandList(
+	if (D3D12_FAIL(mDevice->CreateCommandList(
 		0,
 		mType,
 		commandList.commandAllocator.Get(),
@@ -291,12 +289,12 @@ ZgErrorCode D3D12CommandQueue::createCommandList(D3D12CommandList*& commandListO
 	}
 
 	// Ensure command list is in closed state
-	if (D3D12_FAIL(mLog, commandList.commandList->Close())) {
+	if (D3D12_FAIL(commandList.commandList->Close())) {
 		return ZG_ERROR_GENERIC;
 	}
 
 	// Initialize command list
-	commandList.create(mMaxNumBuffersPerCommandList, mLog, mDevice, mResidencyManager,
+	commandList.create(mMaxNumBuffersPerCommandList, mDevice, mResidencyManager,
 		mDescriptorBuffer);
 
 	commandListOut = &commandList;
@@ -325,7 +323,7 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListStateChanges(
 
 		// Error out if we don't have enough space in our temp array
 		if (numBarriers >= MAX_NUM_BARRIERS) {
-			ZG_ERROR(mLog, "Internal error, need to insert too many barriers. Fixable, please contact ZeroG devs.");
+			ZG_ERROR("Internal error, need to insert too many barriers. Fixable, please contact ZeroG devs.");
 			return ZG_ERROR_GENERIC;
 		}
 
@@ -352,7 +350,7 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListStateChanges(
 
 		// Error out if we don't have enough space in our temp array
 		if (numBarriers >= MAX_NUM_BARRIERS) {
-			ZG_ERROR(mLog, "Internal error, need to insert too many barriers. Fixable, please contact ZeroG devs.");
+			ZG_ERROR("Internal error, need to insert too many barriers. Fixable, please contact ZeroG devs.");
 			return ZG_ERROR_GENERIC;
 		}
 

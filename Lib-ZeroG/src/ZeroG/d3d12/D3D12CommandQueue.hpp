@@ -87,8 +87,7 @@ public:
 		D3DX12Residency::ResidencyManager* residencyManager,
 		D3D12DescriptorRingBuffer* descriptorBuffer,
 		uint32_t maxNumCommandLists,
-		uint32_t maxNumBuffersPerCommandList,
-		ZgLogger logger) noexcept;
+		uint32_t maxNumBuffersPerCommandList) noexcept;
 
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
@@ -128,8 +127,6 @@ private:
 
 	// Private members
 	// --------------------------------------------------------------------------------------------
-
-	ZgLogger mLog = {};
 
 	std::mutex mQueueMutex;
 	D3D12_COMMAND_LIST_TYPE mType;

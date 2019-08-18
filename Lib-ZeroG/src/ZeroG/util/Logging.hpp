@@ -26,23 +26,19 @@ namespace zg {
 // Logging macros
 // ------------------------------------------------------------------------------------------------
 
-#define ZG_LOG(logger, logLevel, format, ...) zg::logWrapper( \
-	(logger), __FILE__, __LINE__, (logLevel), (format), ##__VA_ARGS__)
+#define ZG_LOG(logLevel, format, ...) zg::logWrapper( \
+	__FILE__, __LINE__, (logLevel), (format), ##__VA_ARGS__)
 
-#define ZG_INFO(logger, format, ...) ZG_LOG((logger), ZG_LOG_LEVEL_INFO, (format), ##__VA_ARGS__)
+#define ZG_INFO(format, ...) ZG_LOG(ZG_LOG_LEVEL_INFO, (format), ##__VA_ARGS__)
 
-#define ZG_WARNING(logger, format, ...) ZG_LOG((logger), ZG_LOG_LEVEL_WARNING, (format), ##__VA_ARGS__)
+#define ZG_WARNING(format, ...) ZG_LOG(ZG_LOG_LEVEL_WARNING, (format), ##__VA_ARGS__)
 
-#define ZG_ERROR(logger, format, ...) ZG_LOG((logger), ZG_LOG_LEVEL_ERROR, (format), ##__VA_ARGS__)
+#define ZG_ERROR(format, ...) ZG_LOG(ZG_LOG_LEVEL_ERROR, (format), ##__VA_ARGS__)
 
 // Logger wrappers for logging macros
 // ------------------------------------------------------------------------------------------------
 
-void logWrapper(
-	ZgContext& ctx, const char* file, int line, ZgLogLevel level, const char* fmt, ...) noexcept;
-
-void logWrapper(
-	ZgLogger& logger, const char* file, int line, ZgLogLevel level, const char* fmt, ...) noexcept;
+void logWrapper(const char* file, int line, ZgLogLevel level, const char* fmt, ...) noexcept;
 
 // Default logger
 // ------------------------------------------------------------------------------------------------

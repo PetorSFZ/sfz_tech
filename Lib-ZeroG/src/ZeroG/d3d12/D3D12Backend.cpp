@@ -117,7 +117,7 @@ public:
 		// Get debug device for report live objects in debug mode
 		ComPtr<ID3D12DebugDevice1> debugDevice;
 		if (mDebugMode) {
-			CHECK_D3D12(mLog) mState->device->QueryInterface(IID_PPV_ARGS(&debugDevice));
+			CHECK_D3D12 mState->device->QueryInterface(IID_PPV_ARGS(&debugDevice));
 		}
 
 		// Delete most state
@@ -125,7 +125,7 @@ public:
 
 		// Report live objects
 		if (mDebugMode) {
-			CHECK_D3D12(mLog) debugDevice->ReportLiveDeviceObjects(
+			CHECK_D3D12 debugDevice->ReportLiveDeviceObjects(
 				D3D12_RLDO_FLAGS(D3D12_RLDO_DETAIL | D3D12_RLDO_IGNORE_INTERNAL));
 		}
 	}
@@ -136,7 +136,6 @@ public:
 	ZgErrorCode init(ZgContextInitSettings& settings) noexcept
 	{
 		// Initialize members
-		mLog = settings.logger;
 		mDebugMode = settings.debugMode;
 		mState = zgNew<D3D12BackendState>("D3D12BackendState");
 		
@@ -151,7 +150,7 @@ public:
 			
 			// Get debug interface
 			ComPtr<ID3D12Debug1> debugInterface;
-			if (D3D12_FAIL(mLog, D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface)))) {
+			if (D3D12_FAIL(D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface)))) {
 				return ZG_ERROR_GENERIC;
 			}
 			
@@ -159,7 +158,7 @@ public:
 			debugInterface->EnableDebugLayer();
 			debugInterface->SetEnableGPUBasedValidation(TRUE);
 
-			ZG_INFO(mLog, "D3D12 debug mode enabled");
+			ZG_INFO("D3D12 debug mode enabled");
 		}
 
 		// Create DXGI factory
@@ -167,7 +166,7 @@ public:
 		{
 			UINT flags = 0;
 			if (settings.debugMode) flags |= DXGI_CREATE_FACTORY_DEBUG;
-			if (D3D12_FAIL(mLog, CreateDXGIFactory2(flags, IID_PPV_ARGS(&dxgiFactory)))) {
+			if (D3D12_FAIL(CreateDXGIFactory2(flags, IID_PPV_ARGS(&dxgiFactory)))) {
 				return ZG_ERROR_GENERIC;
 			}
 		}
@@ -188,13 +187,13 @@ public:
 
 				// Get adapter description
 				DXGI_ADAPTER_DESC1 desc;
-				CHECK_D3D12(mLog) adapter->GetDesc1(&desc);
+				CHECK_D3D12 adapter->GetDesc1(&desc);
 
 				// Skip adapter if it is software renderer
 				if ((desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) != 0) continue;
 
 				// Skip adapter if it is not possible to create device with feature level 12.0
-				if (D3D12_FAIL(mLog, D3D12CreateDevice(
+				if (D3D12_FAIL(D3D12CreateDevice(
 					adapter.Get(), D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), nullptr))) {
 					continue;
 				}
@@ -210,14 +209,14 @@ public:
 			if (bestAdapterVideoMemory == 0) return ZG_ERROR_NO_SUITABLE_DEVICE;
 
 			// Convert device to DXGIAdapter4
-			if (D3D12_FAIL(mLog, bestAdapter.As(&mState->dxgiAdapter))) {
+			if (D3D12_FAIL(bestAdapter.As(&mState->dxgiAdapter))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
 
 			// Log some information about the choosen adapter
 			DXGI_ADAPTER_DESC1 bestDesc;
-			CHECK_D3D12(mLog) bestAdapter->GetDesc1(&bestDesc);
-			ZG_INFO(mLog, "Description: %S\nVendor ID: %#x\nDevice ID: %u\nRevision: %u\n"
+			CHECK_D3D12 bestAdapter->GetDesc1(&bestDesc);
+			ZG_INFO("Description: %S\nVendor ID: %#x\nDevice ID: %u\nRevision: %u\n"
 				"Dedicated video memory: %.2f GiB\nDedicated system memory: %.2f GiB\n"
 				"Shared system memory: %.2f GiB",
 				bestDesc.Description,
@@ -239,7 +238,7 @@ public:
 		}
 
 		// Create device
-		if (D3D12_FAIL(mLog, D3D12CreateDevice(
+		if (D3D12_FAIL(D3D12CreateDevice(
 			mState->dxgiAdapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&mState->device)))) {
 			return ZG_ERROR_NO_SUITABLE_DEVICE;
 		}
@@ -247,13 +246,13 @@ public:
 		// Enable debug message in debug mode
 		if (mDebugMode) {
 
-			if (D3D12_FAIL(mLog, mState->device->QueryInterface(IID_PPV_ARGS(&mState->infoQueue)))) {
+			if (D3D12_FAIL(mState->device->QueryInterface(IID_PPV_ARGS(&mState->infoQueue)))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
 
 			// Break on corruption and error messages
-			CHECK_D3D12(mLog) mState->infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
-			CHECK_D3D12(mLog) mState->infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
+			CHECK_D3D12 mState->infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
+			CHECK_D3D12 mState->infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
 
 			// Log initial messages
 			logDebugMessages();
@@ -264,20 +263,20 @@ public:
 		// the execution of your app."
 		// Hmm. Lets try 128 or something
 		const uint32_t residencyManagerMaxLatency = 128;
-		if (D3D12_FAIL(mLog, mState->residencyManager.Initialize(
+		if (D3D12_FAIL(mState->residencyManager.Initialize(
 			mState->device.Get(), 0, mState->dxgiAdapter.Get(), residencyManagerMaxLatency))) {
 			return ZG_ERROR_GENERIC;
 		}
 
 		// Allocate descriptors
 		const uint32_t NUM_DESCRIPTORS = 1000000;
-		ZG_INFO(mLog, "Attempting to allocate %u descriptors for the global ring buffer",
+		ZG_INFO("Attempting to allocate %u descriptors for the global ring buffer",
 			NUM_DESCRIPTORS);
 		{
 			ZgErrorCode res = mState->globalDescriptorRingBuffer.create(
-				*mState->device.Get(), mLog, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, NUM_DESCRIPTORS);
+				*mState->device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, NUM_DESCRIPTORS);
 			if (res != ZG_SUCCESS) {
-				ZG_ERROR(mLog, "Failed to allocate descriptors");
+				ZG_ERROR("Failed to allocate descriptors");
 				return ZG_ERROR_GPU_OUT_OF_MEMORY;
 			}
 		}
@@ -291,8 +290,7 @@ public:
 			&mState->residencyManager,
 			&mState->globalDescriptorRingBuffer,
 			MAX_NUM_COMMAND_LISTS_SWAPCHAIN_QUEUE,
-			MAX_NUM_BUFFERS_PER_COMMAND_LIST_SWAPCHAIN_QUEUE,
-			mLog);
+			MAX_NUM_BUFFERS_PER_COMMAND_LIST_SWAPCHAIN_QUEUE);
 		if (res != ZG_SUCCESS) return res;
 
 		// Create copy queue
@@ -304,15 +302,14 @@ public:
 			&mState->residencyManager,
 			&mState->globalDescriptorRingBuffer,
 			MAX_NUM_COMMAND_LISTS_COPY_QUEUE,
-			MAX_NUM_BUFFERS_PER_COMMAND_LIST_COPY_QUEUE,
-			mLog);
+			MAX_NUM_BUFFERS_PER_COMMAND_LIST_COPY_QUEUE);
 		if (res != ZG_SUCCESS) return res;
 		
 
 		// Check if screen-tearing is allowed
 		{
 			BOOL tearingAllowed = FALSE;
-			CHECK_D3D12(mLog) dxgiFactory->CheckFeatureSupport(
+			CHECK_D3D12 dxgiFactory->CheckFeatureSupport(
 				DXGI_FEATURE_PRESENT_ALLOW_TEARING, &tearingAllowed, sizeof(tearingAllowed));
 			mState->allowTearing = tearingAllowed != FALSE;
 		}
@@ -333,18 +330,18 @@ public:
 			desc.Flags = (mState->allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
 
 			ComPtr<IDXGISwapChain1> tmpSwapChain;
-			if (D3D12_FAIL(mLog, dxgiFactory->CreateSwapChainForHwnd(
+			if (D3D12_FAIL(dxgiFactory->CreateSwapChainForHwnd(
 				mState->commandQueuePresent.commandQueue(), hwnd, &desc, nullptr, nullptr, &tmpSwapChain))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
 
-			if (D3D12_FAIL(mLog, tmpSwapChain.As(&mState->swapChain))) {
+			if (D3D12_FAIL(tmpSwapChain.As(&mState->swapChain))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
 		}
 
 		// Disable Alt+Enter fullscreen toogle
-		CHECK_D3D12(mLog) dxgiFactory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);
+		CHECK_D3D12 dxgiFactory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);
 
 		// Create swap chain descriptor heaps
 		{
@@ -353,7 +350,7 @@ public:
 			rtvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 			rtvDesc.NumDescriptors = NUM_SWAP_CHAIN_BUFFERS;
 			rtvDesc.NodeMask = 0;
-			if (D3D12_FAIL(mLog, mState->device->CreateDescriptorHeap(
+			if (D3D12_FAIL(mState->device->CreateDescriptorHeap(
 				&rtvDesc, IID_PPV_ARGS(&mState->swapChainRtvDescriptorHeap)))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
@@ -367,7 +364,7 @@ public:
 			dsvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 			dsvDesc.NumDescriptors = NUM_SWAP_CHAIN_BUFFERS;
 			dsvDesc.NodeMask = 0;
-			if (D3D12_FAIL(mLog, mState->device->CreateDescriptorHeap(
+			if (D3D12_FAIL(mState->device->CreateDescriptorHeap(
 				&dsvDesc, IID_PPV_ARGS(&mState->swapChainDsvDescriptorHeap)))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
@@ -397,11 +394,11 @@ public:
 		// Log that we are resizing the swap chain and then change the stored size
 		bool initialCreation = false;
 		if (mState->width == 0 && mState->height == 0) {
-			ZG_INFO(mLog, "Creating swap chain framebuffers, size: %ux%u", width, height);
+			ZG_INFO("Creating swap chain framebuffers, size: %ux%u", width, height);
 			initialCreation = true;
 		}
 		else {
-			ZG_INFO(mLog, "Resizing swap chain framebuffers from %ux%u to %ux%u",
+			ZG_INFO("Resizing swap chain framebuffers from %ux%u to %ux%u",
 				mState->width, mState->height, width, height);
 		}
 		mState->width = width;
@@ -418,8 +415,8 @@ public:
 
 			// Resize swap chain's back buffers
 			DXGI_SWAP_CHAIN_DESC desc = {};
-			CHECK_D3D12(mLog) mState->swapChain->GetDesc(&desc);
-			CHECK_D3D12(mLog) mState->swapChain->ResizeBuffers(
+			CHECK_D3D12 mState->swapChain->GetDesc(&desc);
+			CHECK_D3D12 mState->swapChain->ResizeBuffers(
 				NUM_SWAP_CHAIN_BUFFERS, width, height, desc.BufferDesc.Format, desc.Flags);
 		}
 
@@ -437,7 +434,7 @@ public:
 
 			// Get i:th back buffer from swap chain
 			ComPtr<ID3D12Resource> backBufferRtv;
-			CHECK_D3D12(mLog) mState->swapChain->GetBuffer(i, IID_PPV_ARGS(&backBufferRtv));
+			CHECK_D3D12 mState->swapChain->GetBuffer(i, IID_PPV_ARGS(&backBufferRtv));
 
 			// Set width and height
 			mState->backBuffers[i].width = width;
@@ -478,7 +475,7 @@ public:
 			optimizedClearValue.DepthStencil.Stencil = 0;
 
 			ComPtr<ID3D12Resource> backBufferDsv;
-			CHECK_D3D12(mLog) mState->device->CreateCommittedResource(
+			CHECK_D3D12 mState->device->CreateCommittedResource(
 				&dsvHeapProperties,
 				D3D12_HEAP_FLAG_NONE,
 				&dsvResourceDesc,
@@ -564,7 +561,7 @@ public:
 
 		// Present back buffer
 		UINT vsync = 0; // TODO (MUST be 0 if DXGI_PRESENT_ALLOW_TEARING)
-		CHECK_D3D12(mLog) mState->swapChain->Present(
+		CHECK_D3D12 mState->swapChain->Present(
 			vsync, mState->allowTearing ? DXGI_PRESENT_ALLOW_TEARING : 0);
 
 		// Get next back buffer index
@@ -595,12 +592,12 @@ public:
 		// Query information about "local" memory from DXGI
 		// Local memory is "the fastest" for the GPU
 		DXGI_QUERY_VIDEO_MEMORY_INFO memoryInfo = {};
-		CHECK_D3D12(mLog) mState->dxgiAdapter->QueryVideoMemoryInfo(
+		CHECK_D3D12 mState->dxgiAdapter->QueryVideoMemoryInfo(
 			0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &memoryInfo);
 
 		// Query information about "non-local" memory from DXGI
 		DXGI_QUERY_VIDEO_MEMORY_INFO memoryInfoNonLocal = {};
-		CHECK_D3D12(mLog) mState->dxgiAdapter->QueryVideoMemoryInfo(
+		CHECK_D3D12 mState->dxgiAdapter->QueryVideoMemoryInfo(
 			0, DXGI_MEMORY_SEGMENT_GROUP_NON_LOCAL, &memoryInfoNonLocal);
 
 		// Set memory info stats
@@ -634,7 +631,6 @@ public:
 			createInfo,
 			*mState->dxcLibrary.Get(),
 			*mState->dxcCompiler.Get(),
-			mLog,
 			*mState->device.Get());
 		if (res != ZG_SUCCESS) return res;
 		
@@ -661,7 +657,6 @@ public:
 			createInfo,
 			*mState->dxcLibrary.Get(),
 			*mState->dxcCompiler.Get(),
-			mLog,
 			*mState->device.Get());
 		if (res != ZG_SUCCESS) return res;
 		
@@ -688,7 +683,6 @@ public:
 			createInfo,
 			*mState->dxcLibrary.Get(),
 			*mState->dxcCompiler.Get(),
-			mLog,
 			*mState->device.Get());
 		if (res != ZG_SUCCESS) return res;
 		
@@ -723,7 +717,6 @@ public:
 	{
 		std::lock_guard<std::mutex> lock(mContextMutex);
 		return createMemoryHeap(
-			mLog,
 			*mState->device.Get(),
 			&mState->resourceUniqueIdentifierCounter,
 			mState->residencyManager,
@@ -760,7 +753,7 @@ public:
 		
 		// Map buffer
 		void* mappedPtr = nullptr;
-		if (D3D12_FAIL(mLog, dstBuffer.resource->Map(0, &readRange, &mappedPtr))) {
+		if (D3D12_FAIL(dstBuffer.resource->Map(0, &readRange, &mappedPtr))) {
 			return ZG_ERROR_GENERIC;
 		}
 
@@ -803,7 +796,6 @@ public:
 	{
 		std::lock_guard<std::mutex> lock(mContextMutex);
 		return createTextureHeap(
-			mLog,
 			*mState->device.Get(),
 			&mState->resourceUniqueIdentifierCounter,
 			mState->residencyManager,
@@ -876,25 +868,25 @@ private:
 
 			// Get the size of the message
 			SIZE_T messageLength = 0;
-			CHECK_D3D12(mLog) mState->infoQueue->GetMessage(0, NULL, &messageLength);
+			CHECK_D3D12 mState->infoQueue->GetMessage(0, NULL, &messageLength);
 
 			// Allocate space and get the message
 			D3D12_MESSAGE* message = (D3D12_MESSAGE*)allocator.allocate(
 				allocator.userPtr, uint32_t(messageLength), "D3D12Message");
-			CHECK_D3D12(mLog) mState->infoQueue->GetMessage(0, message, &messageLength);
+			CHECK_D3D12 mState->infoQueue->GetMessage(0, message, &messageLength);
 
 			// Log message
 			switch (message->Severity) {
 			case D3D12_MESSAGE_SEVERITY_CORRUPTION:
 			case D3D12_MESSAGE_SEVERITY_ERROR:
-				ZG_ERROR(mLog, "D3D12Message: %s", message->pDescription);
+				ZG_ERROR("D3D12Message: %s", message->pDescription);
 				break;
 			case D3D12_MESSAGE_SEVERITY_WARNING:
-				ZG_WARNING(mLog, "D3D12Message: %s", message->pDescription);
+				ZG_WARNING("D3D12Message: %s", message->pDescription);
 				break;
 			case D3D12_MESSAGE_SEVERITY_INFO:
 			case D3D12_MESSAGE_SEVERITY_MESSAGE:
-				ZG_INFO(mLog, "D3D12Message: %s", message->pDescription);
+				ZG_INFO("D3D12Message: %s", message->pDescription);
 				break;
 			}
 
@@ -910,7 +902,6 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	std::mutex mContextMutex; // Access to the context is synchronized
-	ZgLogger mLog = {};
 	bool mDebugMode = false;
 	
 	D3D12BackendState* mState = nullptr;

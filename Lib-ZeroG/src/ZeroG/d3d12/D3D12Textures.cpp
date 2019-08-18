@@ -104,7 +104,7 @@ ZgErrorCode D3D12TextureHeap::texture2DCreate(
 	// Create placed resource
 	const D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_COMMON;
 	ComPtr<ID3D12Resource> resource;
-	if (D3D12_FAIL(logger, device->CreatePlacedResource(
+	if (D3D12_FAIL(device->CreatePlacedResource(
 		heap.Get(),
 		createInfo.offsetInBytes,
 		&desc,
@@ -158,7 +158,6 @@ ZgErrorCode D3D12TextureHeap::texture2DCreate(
 // ------------------------------------------------------------------------------------------------
 
 ZgErrorCode createTextureHeap(
-	ZgLogger& logger,
 	ID3D12Device3& device,
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
 	D3DX12Residency::ResidencyManager& residencyManager,
@@ -179,7 +178,7 @@ ZgErrorCode createTextureHeap(
 		desc.Flags = D3D12_HEAP_FLAG_ALLOW_ONLY_NON_RT_DS_TEXTURES;
 
 		// Create heap
-		if (D3D12_FAIL(logger, device.CreateHeap(&desc, IID_PPV_ARGS(&heap)))) {
+		if (D3D12_FAIL(device.CreateHeap(&desc, IID_PPV_ARGS(&heap)))) {
 			return ZG_ERROR_GPU_OUT_OF_MEMORY;
 		}
 	}
@@ -192,7 +191,6 @@ ZgErrorCode createTextureHeap(
 	residencyManager.BeginTrackingObject(&textureHeap->managedObject);
 
 	// Copy stuff
-	textureHeap->logger = logger;
 	textureHeap->device = &device;
 	textureHeap->resourceUniqueIdentifierCounter = resourceUniqueIdentifierCounter;
 	textureHeap->sizeBytes = createInfo.sizeInBytes;
@@ -200,15 +198,15 @@ ZgErrorCode createTextureHeap(
 
 	// Log that we created a texture heap
 	if (createInfo.sizeInBytes < 1024) {
-		ZG_INFO(logger, "Allocated texture heap of size: %u bytes",
+		ZG_INFO("Allocated texture heap of size: %u bytes",
 			createInfo.sizeInBytes);
 	}
 	else if (createInfo.sizeInBytes < (1024 * 1024)) {
-		ZG_INFO(logger, "Allocated texture heap of size: %.2f KiB",
+		ZG_INFO("Allocated texture heap of size: %.2f KiB",
 			createInfo.sizeInBytes / (1024.0f));
 	}
 	else {
-		ZG_INFO(logger, "Allocated texture heap of size: %.2f MiB",
+		ZG_INFO("Allocated texture heap of size: %.2f MiB",
 			createInfo.sizeInBytes / (1024.0f * 1024.0f));
 	}
 

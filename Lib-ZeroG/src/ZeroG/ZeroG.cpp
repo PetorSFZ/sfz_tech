@@ -94,41 +94,38 @@ ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 
 	// Set default logger if none is specified
 	bool usingDefaultLogger = settings.logger.log == nullptr;
-	if (usingDefaultLogger) {
-		settings.logger = zg::getDefaultLogger();
-	}
-	ZgLogger logger = settings.logger;
-	if (usingDefaultLogger) {
-		ZG_INFO(logger, "zgContextInit(): Using default logger (printf)");
-	}
-	else {
-		ZG_INFO(logger, "zgContextInit(): Using user-provided logger");
-	}
+	ZgLogger logger;
+	if (usingDefaultLogger) logger = zg::getDefaultLogger();
+	else logger = settings.logger;
 
 	// Set default allocator if none is specified
-	if (settings.allocator.allocate == nullptr || settings.allocator.deallocate == nullptr) {
-		settings.allocator = zg::getDefaultAllocator();
-		ZG_INFO(logger, "zgContextInit(): Using default allocator");
-	}
-	else {
-		ZG_INFO(logger, "zgContextInit(): Using user-provided allocator");
-	}
+	bool usingDefaultAllocator =
+		settings.allocator.allocate == nullptr || settings.allocator.deallocate == nullptr;
+	ZgAllocator allocator;
+	if (usingDefaultAllocator) allocator = zg::getDefaultAllocator();
+	else allocator = settings.allocator;
 
-	// Set context's allocator
+	// Set temporary context with logger and allocator. Required so rest of initialization can
+	// allocate memory and log.
 	ZgContext tmpContext = {};
-	tmpContext.allocator = settings.allocator;
-	tmpContext.logger = settings.logger;
-
-	// Set tmp context as current active context, needed so operator new and delete will work when
-	// initializing the API backend.
+	tmpContext.allocator = allocator;
+	tmpContext.logger = logger;
 	zg::setContext(tmpContext);
+
+	// Log which logger is used
+	if (usingDefaultLogger) ZG_INFO("zgContextInit(): Using default logger (printf)");
+	else ZG_INFO("zgContextInit(): Using user-provided logger");
+
+	// Log which allocator is used
+	if (usingDefaultAllocator) ZG_INFO("zgContextInit(): Using default allocator");
+	else ZG_INFO("zgContextInit(): Using user-provided allocator");
 
 	// Create and allocate requested backend api
 	switch (initSettings->backend) {
 
 	case ZG_BACKEND_NONE:
 		// TODO: Implement null backend
-		ZG_ERROR(logger, "zgContextInit(): Null backend not implemented, exiting.");
+		ZG_ERROR("zgContextInit(): Null backend not implemented, exiting.");
 		return ZG_ERROR_UNIMPLEMENTED;
 
 #ifdef _WIN32
@@ -136,10 +133,10 @@ ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 		{
 			ZgErrorCode res = zg::createD3D12Backend(&tmpContext.backend, settings);
 			if (res != ZG_SUCCESS) {
-				ZG_ERROR(logger, "zgContextInit(): Could not create D3D12 backend, exiting.");
+				ZG_ERROR("zgContextInit(): Could not create D3D12 backend, exiting.");
 				return res;
 			}
-			ZG_INFO(logger, "zgContextInit(): Created D3D12 backend");
+			ZG_INFO("zgContextInit(): Created D3D12 backend");
 		}
 		break;
 #endif
@@ -149,10 +146,10 @@ ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 		{
 			ZgErrorCode res = zg::createVulkanBackend(&tmpContext.backend, settings);
 			if (res != ZG_SUCCESS) {
-				ZG_ERROR(logger, "zgContextInit(): Could not create Vulkan backend, exiting.");
+				ZG_ERROR("zgContextInit(): Could not create Vulkan backend, exiting.");
 				return res;
 			}
-			ZG_INFO(logger, "zgContextInit(): Created Vulkan backend");
+			ZG_INFO"zgContextInit(): Created Vulkan backend");
 		}
 		break;
 #endif

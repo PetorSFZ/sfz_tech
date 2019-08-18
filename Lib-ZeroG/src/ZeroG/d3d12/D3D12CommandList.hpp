@@ -49,7 +49,6 @@ public:
 
 	void create(
 		uint32_t maxNumBuffers,
-		ZgLogger logger,
 		ComPtr<ID3D12Device3> device,
 		D3DX12Residency::ResidencyManager* residencyManager,
 		D3D12DescriptorRingBuffer* descriptorBuffer) noexcept;
@@ -177,7 +176,6 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	ZgLogger mLog = {};
 	ComPtr<ID3D12Device3> mDevice;
 	D3DX12Residency::ResidencyManager* mResidencyManager = nullptr;
 	D3D12DescriptorRingBuffer* mDescriptorBuffer = nullptr;

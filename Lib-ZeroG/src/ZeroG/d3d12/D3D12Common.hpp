@@ -106,24 +106,23 @@ struct PendingTextureState final {
 bool utf8ToWide(WCHAR* wideOut, uint32_t numWideChars, const char* utf8In) noexcept;
 
 // Checks result (HRESULT) from D3D call and log if not success, returns result unmodified
-#define CHECK_D3D12(logger) (CheckD3D12Impl((logger), __FILE__, __LINE__)) %
+#define CHECK_D3D12 (CheckD3D12Impl(__FILE__, __LINE__)) %
 
 // Checks result (HRESULT) from D3D call and log if not success, true on success
-#define D3D12_SUCC(logger, result) \
-	(CheckD3D12Impl((logger), __FILE__, __LINE__).succeeded((result)))
+#define D3D12_SUCC(result) \
+	(CheckD3D12Impl(__FILE__, __LINE__).succeeded((result)))
 
 // Checks result (HRESULT) from D3D call and log if not success, true on failure
-#define D3D12_FAIL(logger, result) \
-	(!CheckD3D12Impl((logger), __FILE__, __LINE__).succeeded((result)))
+#define D3D12_FAIL(result) \
+	(!CheckD3D12Impl(__FILE__, __LINE__).succeeded((result)))
 
 struct CheckD3D12Impl final {
-	ZgLogger logger = {};
 	const char* file = nullptr;
 	int line = 0;
 
 	CheckD3D12Impl() = delete;
-	CheckD3D12Impl(ZgLogger logger, const char* file, int line) noexcept
-		: logger(logger), file(file), line(line) {}
+	CheckD3D12Impl(const char* file, int line) noexcept
+		: file(file), line(line) {}
 
 	HRESULT operator% (HRESULT result) noexcept;
 	bool succeeded(HRESULT result) noexcept;

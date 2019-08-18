@@ -24,7 +24,7 @@ D3D12DescriptorRingBuffer::~D3D12DescriptorRingBuffer() noexcept
 {
 	if (descriptorHeap != nullptr) {
 		ID3D12Pageable* heapPagable[1] = { descriptorHeap.Get() };
-		CHECK_D3D12(mLog) mDevice->Evict(1, heapPagable);
+		CHECK_D3D12 mDevice->Evict(1, heapPagable);
 	}
 }
 
@@ -33,12 +33,10 @@ D3D12DescriptorRingBuffer::~D3D12DescriptorRingBuffer() noexcept
 
 ZgErrorCode D3D12DescriptorRingBuffer::create(
 	ID3D12Device3& device,
-	ZgLogger& logger,
 	D3D12_DESCRIPTOR_HEAP_TYPE type,
 	uint32_t numDescriptors) noexcept
 {
 	mDevice = &device;
-	mLog = logger;
 	mNumDescriptors = numDescriptors;
 
 	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
@@ -48,13 +46,13 @@ ZgErrorCode D3D12DescriptorRingBuffer::create(
 	desc.NodeMask = 0;
 
 	// Create descriptor heap
-	if (D3D12_FAIL(mLog, device.CreateDescriptorHeap(&desc, IID_PPV_ARGS(&descriptorHeap)))) {
+	if (D3D12_FAIL(device.CreateDescriptorHeap(&desc, IID_PPV_ARGS(&descriptorHeap)))) {
 		return ZG_ERROR_GPU_OUT_OF_MEMORY;
 	}
 
 	// Make descriptor heap resident
 	ID3D12Pageable* heapPagable[1] = { descriptorHeap.Get() };
-	if (D3D12_FAIL(mLog, device.MakeResident(1, heapPagable))) {
+	if (D3D12_FAIL(device.MakeResident(1, heapPagable))) {
 		return ZG_ERROR_GPU_OUT_OF_MEMORY;
 	}
 

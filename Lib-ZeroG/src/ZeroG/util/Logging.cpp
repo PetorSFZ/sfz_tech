@@ -74,22 +74,7 @@ static void defaultLog(
 // Logger wrappers for logging macros
 // ------------------------------------------------------------------------------------------------
 
-void logWrapper(
-	ZgContext& ctx, const char* file, int line, ZgLogLevel level, const char* fmt, ...) noexcept
-{
-	// Create message
-	char messageBuffer[2048];
-	va_list args;
-	va_start(args, fmt);
-	vsnprintf(messageBuffer, sizeof(messageBuffer), fmt, args);
-	va_end(args);
-
-	// Log
-	ctx.logger.log(ctx.logger.userPtr, file, line, level, messageBuffer);
-}
-
-void logWrapper(
-	ZgLogger& logger, const char* file, int line, ZgLogLevel level, const char* fmt, ...) noexcept
+void logWrapper(const char* file, int line, ZgLogLevel level, const char* fmt, ...) noexcept
 {
 	// Create message
 	char messageBuffer[2048];
@@ -99,6 +84,7 @@ void logWrapper(
 	va_end(args);
 	
 	// Log
+	ZgLogger logger = getLogger();
 	logger.log(logger.userPtr, file, line, level, messageBuffer);
 }
 

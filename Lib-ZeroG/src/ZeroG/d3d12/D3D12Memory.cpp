@@ -92,7 +92,7 @@ ZgErrorCode D3D12MemoryHeap::bufferCreate(
 			allowUav ? D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS : D3D12_RESOURCE_FLAGS(0);
 
 		// Create placed resource
-		if (D3D12_FAIL(logger, device->CreatePlacedResource(
+		if (D3D12_FAIL(device->CreatePlacedResource(
 			heap.Get(),
 			createInfo.offsetInBytes,
 			&desc,
@@ -122,7 +122,6 @@ ZgErrorCode D3D12MemoryHeap::bufferCreate(
 // ------------------------------------------------------------------------------------------------
 
 ZgErrorCode createMemoryHeap(
-	ZgLogger& logger,
 	ID3D12Device3& device,
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
 	D3DX12Residency::ResidencyManager& residencyManager,
@@ -146,7 +145,7 @@ ZgErrorCode createMemoryHeap(
 			(allowAtomics ? D3D12_HEAP_FLAG_ALLOW_SHADER_ATOMICS : D3D12_HEAP_FLAGS(0));
 
 		// Create heap
-		if (D3D12_FAIL(logger, device.CreateHeap(&desc, IID_PPV_ARGS(&heap)))) {
+		if (D3D12_FAIL(device.CreateHeap(&desc, IID_PPV_ARGS(&heap)))) {
 			return ZG_ERROR_GPU_OUT_OF_MEMORY;
 		}
 	}
@@ -159,7 +158,6 @@ ZgErrorCode createMemoryHeap(
 	residencyManager.BeginTrackingObject(&memoryHeap->managedObject);
 
 	// Copy stuff
-	memoryHeap->logger = logger;
 	memoryHeap->device = &device;
 	memoryHeap->resourceUniqueIdentifierCounter = resourceUniqueIdentifierCounter;
 	memoryHeap->memoryType = createInfo.memoryType;
@@ -168,15 +166,15 @@ ZgErrorCode createMemoryHeap(
 
 	// Log that we created a memory heap
 	if (createInfo.sizeInBytes < 1024) {
-		ZG_INFO(logger, "Allocated memory heap (%s) of size: %u bytes",
+		ZG_INFO("Allocated memory heap (%s) of size: %u bytes",
 			memoryTypeToString(createInfo.memoryType), createInfo.sizeInBytes);
 	}
 	else if (createInfo.sizeInBytes < (1024 * 1024)) {
-		ZG_INFO(logger, "Allocated memory heap (%s) of size: %.2f KiB",
+		ZG_INFO("Allocated memory heap (%s) of size: %.2f KiB",
 			memoryTypeToString(createInfo.memoryType), createInfo.sizeInBytes / (1024.0f));
 	}
 	else {
-		ZG_INFO(logger, "Allocated memory heap (%s) of size: %.2f MiB",
+		ZG_INFO("Allocated memory heap (%s) of size: %.2f MiB",
 			memoryTypeToString(createInfo.memoryType), createInfo.sizeInBytes / (1024.0f * 1024.0f));
 	}
 

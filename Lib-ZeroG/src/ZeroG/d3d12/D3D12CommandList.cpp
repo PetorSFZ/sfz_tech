@@ -44,12 +44,10 @@ static uint32_t numBytesPerPixelForFormat(ZgTexture2DFormat format) noexcept
 
 void D3D12CommandList::create(
 	uint32_t maxNumBuffers,
-	ZgLogger logger,
 	ComPtr<ID3D12Device3> device,
 	D3DX12Residency::ResidencyManager* residencyManager,
 	D3D12DescriptorRingBuffer* descriptorBuffer) noexcept
 {
-	mLog = logger;
 	mDevice = device;
 	mDescriptorBuffer = descriptorBuffer;
 	pendingBufferIdentifiers.create(maxNumBuffers, "ZeroG - D3D12CommandList - Internal");
@@ -73,7 +71,6 @@ void D3D12CommandList::swap(D3D12CommandList& other) noexcept
 	this->pendingTextureIdentifiers.swap(other.pendingTextureIdentifiers);
 	this->pendingTextureStates.swap(other.pendingTextureStates);
 
-	std::swap(this->mLog, other.mLog);
 	std::swap(this->mDevice, other.mDevice);
 	std::swap(this->mResidencyManager, other.mResidencyManager);
 	std::swap(this->mDescriptorBuffer, other.mDescriptorBuffer);
@@ -99,7 +96,6 @@ void D3D12CommandList::destroy() noexcept
 	pendingTextureIdentifiers.destroy();
 	pendingTextureStates.destroy();
 
-	mLog = {};
 	mDevice = nullptr;
 	mResidencyManager = nullptr;
 	mDescriptorBuffer = nullptr;
@@ -204,7 +200,7 @@ ZgErrorCode D3D12CommandList::memcpyToTexture(
 		D3D12_TEXTURE_DATA_PITCH_ALIGNMENT) * D3D12_TEXTURE_DATA_PITCH_ALIGNMENT;
 	uint32_t tmpBufferRequiredSize = tmpBufferPitch * srcImageCpu.height;
 	if (tmpBuffer.sizeBytes < tmpBufferRequiredSize) {
-		ZG_ERROR(mLog, "Temporary buffer is too small, it is %u bytes, but %u bytes is required."
+		ZG_ERROR("Temporary buffer is too small, it is %u bytes, but %u bytes is required."
 			" The pitch of the upload buffer is required to be %u byte aligned.",
 			tmpBuffer.sizeBytes,
 			tmpBufferRequiredSize,
@@ -219,7 +215,7 @@ ZgErrorCode D3D12CommandList::memcpyToTexture(
 
 	// Map buffer
 	void* mappedPtr = nullptr;
-	if (D3D12_FAIL(mLog, tmpBuffer.resource->Map(0, &readRange, &mappedPtr))) {
+	if (D3D12_FAIL(tmpBuffer.resource->Map(0, &readRange, &mappedPtr))) {
 		return ZG_ERROR_GENERIC;
 	}
 
@@ -272,7 +268,7 @@ ZgErrorCode D3D12CommandList::enableQueueTransitionBuffer(ZgBuffer* bufferIn) no
 	// Check that it is a device buffer
 	if (buffer.memoryHeap->memoryType == ZG_MEMORY_TYPE_UPLOAD ||
 		buffer.memoryHeap->memoryType == ZG_MEMORY_TYPE_DOWNLOAD) {
-		ZG_ERROR(mLog, "enableQueueTransitionBuffer(): Can't transition upload and download buffers");
+		ZG_ERROR("enableQueueTransitionBuffer(): Can't transition upload and download buffers");
 		return ZG_ERROR_INVALID_ARGUMENT;
 	}
 
@@ -318,8 +314,7 @@ ZgErrorCode D3D12CommandList::setPushConstant(
 
 	// Sanity check to attempt to see if user provided enough bytes to read
 	if (mapping.sizeInBytes != dataSizeInBytes) {
-		ZG_ERROR(mLog,
-			"Push constant at shader register %u is %u bytes, provided data is %u bytes",
+		ZG_ERROR("Push constant at shader register %u is %u bytes, provided data is %u bytes",
 			shaderRegister, mapping.sizeInBytes, dataSizeInBytes);
 		return ZG_ERROR_INVALID_ARGUMENT;
 	}
@@ -390,7 +385,7 @@ ZgErrorCode D3D12CommandList::setPipelineBindings(
 
 		// Check that buffer is large enough
 		if (buffer->sizeBytes < bufferSize256Aligned) {
-			ZG_ERROR(mLog, "Constant buffer at shader register %u requires a buffer that is at"
+			ZG_ERROR("Constant buffer at shader register %u requires a buffer that is at"
 				" least %u bytes, specified buffer is %u bytes.",
 				mapping.shaderRegister, bufferSize256Aligned, buffer->sizeBytes);
 			return ZG_ERROR_INVALID_ARGUMENT;
@@ -568,7 +563,7 @@ ZgErrorCode D3D12CommandList::setFramebufferViewport(
 {
 	// Return error if no framebuffer is set
 	if (!mFramebufferSet) {
-		ZG_ERROR(mLog, "setFramebufferViewport(): Must set a framebuffer before you can change viewport");
+		ZG_ERROR("setFramebufferViewport(): Must set a framebuffer before you can change viewport");
 		return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 	}
 
@@ -590,7 +585,7 @@ ZgErrorCode D3D12CommandList::setFramebufferScissor(
 {
 	// Return error if no framebuffer is set
 	if (!mFramebufferSet) {
-		ZG_ERROR(mLog, "setFramebufferScissor(): Must set a framebuffer before you can change scissor");
+		ZG_ERROR("setFramebufferScissor(): Must set a framebuffer before you can change scissor");
 		return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 	}
 
@@ -604,7 +599,7 @@ ZgErrorCode D3D12CommandList::setFramebufferScissor(
 
 	// Bad scissor specified, just use whole viewport
 	if (scissor.width == 0 && scissor.height == 0) {
-		ZG_INFO(mLog, "setFramebufferScissor(): Bad scissor specified, ignoring");
+		ZG_INFO("setFramebufferScissor(): Bad scissor specified, ignoring");
 		scissorRect.left = 0;
 		scissorRect.top = 0;
 		scissorRect.right = LONG_MAX;
@@ -624,7 +619,7 @@ ZgErrorCode D3D12CommandList::clearFramebuffer(
 {
 	// Return error if no framebuffer is set
 	if (!mFramebufferSet) {
-		ZG_ERROR(mLog, "clearFramebuffer(): Must set a framebuffer before you can clear it");
+		ZG_ERROR("clearFramebuffer(): Must set a framebuffer before you can clear it");
 		return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 	}
 
@@ -754,10 +749,10 @@ ZgErrorCode D3D12CommandList::drawTrianglesIndexed(
 
 ZgErrorCode D3D12CommandList::reset() noexcept
 {
-	if (D3D12_FAIL(mLog, commandAllocator->Reset())) {
+	if (D3D12_FAIL(commandAllocator->Reset())) {
 		return ZG_ERROR_GENERIC;
 	}
-	if (D3D12_FAIL(mLog, commandList->Reset(commandAllocator.Get(), nullptr))) {
+	if (D3D12_FAIL(commandList->Reset(commandAllocator.Get(), nullptr))) {
 		return ZG_ERROR_GENERIC;
 	}
 

@@ -51,7 +51,6 @@ public:
 
 	ZgErrorCode create(
 		ID3D12Device3& device,
-		ZgLogger& logger,
 		D3D12_DESCRIPTOR_HEAP_TYPE type,
 		uint32_t numDescriptors) noexcept;
 
@@ -74,7 +73,6 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	ID3D12Device3* mDevice = nullptr;
-	ZgLogger mLog = {};
 	std::atomic_uint64_t mHeadPointer = 0;
 	uint32_t mNumDescriptors = 0;
 	D3D12_CPU_DESCRIPTOR_HANDLE mHeapStartCpu;

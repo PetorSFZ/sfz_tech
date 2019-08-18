@@ -18,6 +18,8 @@
 
 #include "ZeroG/d3d12/D3D12Common.hpp"
 
+#include "ZeroG/Context.hpp"
+
 namespace zg {
 
 // Statics
@@ -84,7 +86,7 @@ bool utf8ToWide(WCHAR* wideOut, uint32_t numWideChars, const char* utf8In) noexc
 HRESULT CheckD3D12Impl::operator% (HRESULT result) noexcept
 {
 	if (SUCCEEDED(result)) return result;
-	logWrapper(logger, file, line, ZG_LOG_LEVEL_ERROR,
+	logWrapper(file, line, ZG_LOG_LEVEL_ERROR,
 		"D3D12 error: %s\n", resultToString(result));
 	return result;
 }
@@ -92,7 +94,7 @@ HRESULT CheckD3D12Impl::operator% (HRESULT result) noexcept
 bool CheckD3D12Impl::succeeded(HRESULT result) noexcept
 {
 	if (SUCCEEDED(result)) return true;
-	logWrapper(logger, file, line, ZG_LOG_LEVEL_ERROR,
+	logWrapper(file, line, ZG_LOG_LEVEL_ERROR,
 		"D3D12 error: %s\n", resultToString(result));
 	return false;
 }
