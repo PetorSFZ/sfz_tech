@@ -20,6 +20,7 @@
 
 #include <cstdint>
 
+#include "ZeroG/Context.hpp"
 #include "ZeroG/util/CpuAllocation.hpp"
 
 namespace zg {
@@ -44,9 +45,10 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	bool create(uint32_t capacity, ZgAllocator allocator, const char* allocationName) noexcept
+	bool create(uint32_t capacity, const char* allocationName) noexcept
 	{
 		// Allocate memory
+		ZgAllocator& allocator = getAllocator();
 		uint8_t* allocation = allocator.allocate(
 			allocator.userPtr, sizeof(T) * capacity, allocationName);
 		if (allocation == nullptr) return false;
@@ -55,7 +57,6 @@ public:
 		this->destroy();
 
 		// Store state
-		mAllocator = allocator;
 		mCapacity = capacity;
 		mDataPtr = reinterpret_cast<T*>(allocation);
 
@@ -67,7 +68,6 @@ public:
 		std::swap(this->mSize, other.mSize);
 		std::swap(this->mCapacity, other.mCapacity);
 		std::swap(this->mDataPtr, other.mDataPtr);
-		std::swap(this->mAllocator, other.mAllocator);
 	}
 
 	void destroy() noexcept
@@ -81,13 +81,13 @@ public:
 		}
 
 		// Deallocate memory
-		mAllocator.deallocate(mAllocator.userPtr, reinterpret_cast<uint8_t*>(mDataPtr));
+		ZgAllocator allocator = getAllocator();
+		allocator.deallocate(allocator.userPtr, reinterpret_cast<uint8_t*>(mDataPtr));
 
 		// Reset all members
 		mSize = 0;
 		mCapacity = 0;
 		mDataPtr = nullptr;
-		mAllocator = {};
 	}
 
 	// Methods
@@ -184,7 +184,6 @@ private:
 	uint32_t mSize = 0;
 	uint32_t mCapacity = 0;
 	T* mDataPtr = nullptr;
-	ZgAllocator mAllocator = {};
 };
 
 } // namespace zg

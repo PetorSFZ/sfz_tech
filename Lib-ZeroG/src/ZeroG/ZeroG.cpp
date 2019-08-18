@@ -173,7 +173,7 @@ ZG_API ZgErrorCode zgContextDeinit(void)
 	ZgContext& ctx = zg::getContext();
 
 	// Delete backend
-	zg::zgDelete(ctx.allocator, ctx.backend);
+	zg::zgDelete(ctx.backend);
 
 	// Reset context
 	ctx = {};
@@ -335,7 +335,7 @@ ZG_API void zgBufferRelease(
 	ZgBuffer* buffer)
 {
 	if (buffer == nullptr) return;
-	zg::zgDelete(zg::getContext().allocator, buffer);
+	zg::zgDelete(buffer);
 }
 
 ZG_API ZgErrorCode zgBufferMemcpyTo(
@@ -406,7 +406,7 @@ ZG_API void zgTexture2DRelease(
 	ZgTexture2D* texture)
 {
 	if (texture == nullptr) return;
-	zg::zgDelete(zg::getContext().allocator, texture);
+	zg::zgDelete(texture);
 }
 
 ZG_API ZgErrorCode zgTexture2DSetDebugName(
@@ -430,7 +430,7 @@ ZG_API void zgFenceRelease(
 	ZgFence* fence)
 {
 	if (fence == nullptr) return;
-	zg::zgDelete(zg::getContext().allocator, fence);
+	zg::zgDelete(fence);
 }
 
 ZG_API ZgErrorCode zgFenceReset(

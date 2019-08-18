@@ -88,8 +88,7 @@ public:
 		D3D12DescriptorRingBuffer* descriptorBuffer,
 		uint32_t maxNumCommandLists,
 		uint32_t maxNumBuffersPerCommandList,
-		ZgLogger logger,
-		ZgAllocator allocator) noexcept;
+		ZgLogger logger) noexcept;
 
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
@@ -131,7 +130,6 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	ZgLogger mLog = {};
-	ZgAllocator mAllocator = {};
 
 	std::mutex mQueueMutex;
 	D3D12_COMMAND_LIST_TYPE mType;

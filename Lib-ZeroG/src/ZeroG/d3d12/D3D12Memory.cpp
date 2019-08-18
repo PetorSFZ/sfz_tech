@@ -104,8 +104,7 @@ ZgErrorCode D3D12MemoryHeap::bufferCreate(
 	}
 
 	// Allocate buffer
-	D3D12Buffer* buffer =
-		zgNew<D3D12Buffer>(allocator, "ZeroG - D3D12Buffer");
+	D3D12Buffer* buffer = zgNew<D3D12Buffer>("ZeroG - D3D12Buffer");
 
 	// Copy stuff
 	buffer->identifier = std::atomic_fetch_add(resourceUniqueIdentifierCounter, 1);
@@ -124,7 +123,6 @@ ZgErrorCode D3D12MemoryHeap::bufferCreate(
 
 ZgErrorCode createMemoryHeap(
 	ZgLogger& logger,
-	ZgAllocator& allocator,
 	ID3D12Device3& device,
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
 	D3DX12Residency::ResidencyManager& residencyManager,
@@ -154,8 +152,7 @@ ZgErrorCode createMemoryHeap(
 	}
 
 	// Allocate memory heap
-	D3D12MemoryHeap* memoryHeap =
-		zgNew<D3D12MemoryHeap>(allocator, "ZeroG - D3D12MemoryHeap");
+	D3D12MemoryHeap* memoryHeap = zgNew<D3D12MemoryHeap>("ZeroG - D3D12MemoryHeap");
 
 	// Create residency manager object and begin tracking
 	memoryHeap->managedObject.Initialize(heap.Get(), createInfo.sizeInBytes);
@@ -163,7 +160,6 @@ ZgErrorCode createMemoryHeap(
 
 	// Copy stuff
 	memoryHeap->logger = logger;
-	memoryHeap->allocator = allocator;
 	memoryHeap->device = &device;
 	memoryHeap->resourceUniqueIdentifierCounter = resourceUniqueIdentifierCounter;
 	memoryHeap->memoryType = createInfo.memoryType;

@@ -45,7 +45,6 @@ static uint32_t numBytesPerPixelForFormat(ZgTexture2DFormat format) noexcept
 void D3D12CommandList::create(
 	uint32_t maxNumBuffers,
 	ZgLogger logger,
-	ZgAllocator allocator,
 	ComPtr<ID3D12Device3> device,
 	D3DX12Residency::ResidencyManager* residencyManager,
 	D3D12DescriptorRingBuffer* descriptorBuffer) noexcept
@@ -53,10 +52,10 @@ void D3D12CommandList::create(
 	mLog = logger;
 	mDevice = device;
 	mDescriptorBuffer = descriptorBuffer;
-	pendingBufferIdentifiers.create(maxNumBuffers, allocator, "ZeroG - D3D12CommandList - Internal");
-	pendingBufferStates.create(maxNumBuffers, allocator, "ZeroG - D3D12CommandList - Internal");
-	pendingTextureIdentifiers.create(maxNumBuffers, allocator, "ZeroG - D3D12CommandList - Internal");
-	pendingTextureStates.create(maxNumBuffers, allocator, "ZeroG - D3D12CommandList - Internal");
+	pendingBufferIdentifiers.create(maxNumBuffers, "ZeroG - D3D12CommandList - Internal");
+	pendingBufferStates.create(maxNumBuffers, "ZeroG - D3D12CommandList - Internal");
+	pendingTextureIdentifiers.create(maxNumBuffers, "ZeroG - D3D12CommandList - Internal");
+	pendingTextureStates.create(maxNumBuffers, "ZeroG - D3D12CommandList - Internal");
 
 	residencySet = residencyManager->CreateResidencySet();
 }

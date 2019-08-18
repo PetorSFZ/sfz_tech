@@ -22,6 +22,7 @@
 #include <atomic>
 #include <cstdint>
 
+#include "ZeroG/Context.hpp"
 #include "ZeroG/util/CpuAllocation.hpp"
 
 namespace zg {
@@ -57,9 +58,9 @@ public:
 	RingBuffer() noexcept = default;
 
 	/// Creates a RingBuffer using create().
-	RingBuffer(uint32_t capacity, ZgAllocator allocator, const char* allocationName) noexcept
+	RingBuffer(uint32_t capacity, const char* allocationName) noexcept
 	{
-		this->create(capacity, allocator, allocationName);
+		this->create(capacity, allocationName);
 	}
 
 	/// Copying not allowed.
@@ -77,27 +78,24 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	/// Calls destroy(), then sets the specified allocator and allocates memory from it.
-	void create(uint32_t capacity, ZgAllocator allocator, const char* allocationName) noexcept
+	void create(uint32_t capacity, const char* allocationName) noexcept
 	{
 		// Make sure instance is in a clean state
 		this->destroy();
-
-		// Set allocator
-		mAllocator = allocator;
 
 		// If capacity is 0, do nothing.
 		if (capacity == 0) return;
 		mCapacity = capacity;
 
 		// Allocate memory
+		ZgAllocator allocator = getAllocator();
 		mDataPtr = reinterpret_cast<T*>(
-			mAllocator.allocate(mAllocator.userPtr, mCapacity * sizeof(T), allocationName));
+			allocator.allocate(allocator.userPtr, mCapacity * sizeof(T), allocationName));
 	}
 
 	/// Swaps the contents of two RingBuffers, including the allocator pointers.
 	void swap(RingBuffer& other) noexcept
 	{
-		std::swap(this->mAllocator, other.mAllocator);
 		std::swap(this->mDataPtr, other.mDataPtr);
 		
 		//std::swap(this->mFirstIndex, other.mFirstIndex);
@@ -118,18 +116,15 @@ public:
 	/// the destructor.
 	void destroy() noexcept
 	{
-		// If no memory allocated, remove any potential allocator and return
-		if (mDataPtr == nullptr) {
-			mAllocator = {};
-			return;
-		}
+		// If no memory allocated, return
+		if (mDataPtr == nullptr) return;
 
 		// Remove elements
 		this->clear();
 
 		// Deallocate memory and reset member variables
-		mAllocator.deallocate(mAllocator.userPtr, reinterpret_cast<uint8_t*>(mDataPtr));
-		mAllocator = {};
+		ZgAllocator allocator = getAllocator();
+		allocator.deallocate(allocator.userPtr, reinterpret_cast<uint8_t*>(mDataPtr));
 		mDataPtr = nullptr;
 		mCapacity = 0;
 	}
@@ -308,7 +303,6 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	ZgAllocator mAllocator = {};
 	T* mDataPtr = nullptr;
 	uint32_t mCapacity = 0;
 	std::atomic_uint64_t mFirstIndex = RINGBUFFER_BASE_IDX;

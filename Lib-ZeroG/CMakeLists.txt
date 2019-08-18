@@ -55,7 +55,7 @@ if(VULKAN_FOUND)
 	message("  -- VULKAN_LIBRARIES: ${VULKAN_LIBRARIES}")
 else()
 	if(MSVC)
-		message("-- [ZeroG]: Vulkan SDK not found, compiling without Vulkan support")
+		message(WARNING "-- [ZeroG]: Vulkan SDK not found, compiling without Vulkan support")
 	else()
 		message(FATAL_ERROR "-- [ZeroG]: Vulkan SDK not found, required on this platform")
 	endif()
@@ -193,13 +193,16 @@ target_include_directories(ZeroG PRIVATE
 	${D3DX12_INCLUDE_DIRS}
 	${D3DX12_RESIDENCY_INCLUDE_DIRS}
 	${SPIRV_CROSS_INCLUDE_DIRS}
-	${VULKAN_INCLUDE_DIRS}
 )
 
 target_link_libraries(ZeroG
 	${SPIRV_CROSS_LIBRARIES}
-	${VULKAN_LIBRARIES}
 )
+
+if(VULKAN_FOUND)
+	target_include_directories(ZeroG PRIVATE ${VULKAN_INCLUDE_DIRS})
+	target_link_libraries(ZeroG ${VULKAN_LIBRARIES})
+endif()
 
 # Runtime files (DLLs)
 # ------------------------------------------------------------------------------------------------

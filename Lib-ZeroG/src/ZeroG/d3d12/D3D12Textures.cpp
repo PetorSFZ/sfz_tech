@@ -125,8 +125,7 @@ ZgErrorCode D3D12TextureHeap::texture2DCreate(
 		subresourceFootprints, numRows, rowSizesInBytes, &totalSizeInBytes);
 
 	// Allocate texture
-	D3D12Texture2D* texture =
-		zgNew<D3D12Texture2D>(allocator, "ZeroG - D3D12Texture");
+	D3D12Texture2D* texture = zgNew<D3D12Texture2D>("ZeroG - D3D12Texture");
 
 	// Copy stuff
 	texture->identifier = std::atomic_fetch_add(resourceUniqueIdentifierCounter, 1);
@@ -160,7 +159,6 @@ ZgErrorCode D3D12TextureHeap::texture2DCreate(
 
 ZgErrorCode createTextureHeap(
 	ZgLogger& logger,
-	ZgAllocator& allocator,
 	ID3D12Device3& device,
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
 	D3DX12Residency::ResidencyManager& residencyManager,
@@ -187,8 +185,7 @@ ZgErrorCode createTextureHeap(
 	}
 
 	// Allocate texture heap
-	D3D12TextureHeap* textureHeap =
-		zgNew<D3D12TextureHeap>(allocator, "ZeroG - D3D12TextureHeap");
+	D3D12TextureHeap* textureHeap = zgNew<D3D12TextureHeap>("ZeroG - D3D12TextureHeap");
 
 	// Create residency manager object and begin tracking
 	textureHeap->managedObject.Initialize(heap.Get(), createInfo.sizeInBytes);
@@ -196,7 +193,6 @@ ZgErrorCode createTextureHeap(
 
 	// Copy stuff
 	textureHeap->logger = logger;
-	textureHeap->allocator = allocator;
 	textureHeap->device = &device;
 	textureHeap->resourceUniqueIdentifierCounter = resourceUniqueIdentifierCounter;
 	textureHeap->sizeBytes = createInfo.sizeInBytes;

@@ -82,7 +82,6 @@ ZgErrorCode createPipelineRenderingFileSPIRV(
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	ZgLogger& logger,
-	ZgAllocator& allocator,
 	ID3D12Device3& device) noexcept;
 
 ZgErrorCode createPipelineRenderingFileHLSL(
@@ -92,7 +91,6 @@ ZgErrorCode createPipelineRenderingFileHLSL(
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	ZgLogger& logger,
-	ZgAllocator& allocator,
 	ID3D12Device3& device) noexcept;
 
 ZgErrorCode createPipelineRenderingSourceHLSL(
@@ -102,7 +100,6 @@ ZgErrorCode createPipelineRenderingSourceHLSL(
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	ZgLogger& logger,
-	ZgAllocator& allocator,
 	ID3D12Device3& device) noexcept;
 
 } // namespace zg

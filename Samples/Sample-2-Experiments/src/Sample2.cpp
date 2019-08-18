@@ -261,19 +261,19 @@ static void realMain(SDL_Window* window) noexcept
 
 		// SPIRV file variant
 		CHECK_ZG pipelineBuilder
-			.addVertexShaderPath("VSMain", "res/Sample-1/test_vs.spv")
-			.addPixelShaderPath("PSMain", "res/Sample-1/test_ps.spv")
+			.addVertexShaderPath("VSMain", "res/Sample-2/test_vs.spv")
+			.addPixelShaderPath("PSMain", "res/Sample-2/test_ps.spv")
 			.buildFromFileSPIRV(pipeline);
 
 		// HLSL file variant
 		/*CHECK_ZG pipelineBuilder
-			.addVertexShaderPath("VSMain", "res/Sample-1/test.hlsl")
-			.addPixelShaderPath("PSMain", "res/Sample-1/test.hlsl")
+			.addVertexShaderPath("VSMain", "res/Sample-2/test.hlsl")
+			.addPixelShaderPath("PSMain", "res/Sample-2/test.hlsl")
 			.buildFromFileHLSL(pipeline, ZG_SHADER_MODEL_6_0);*/
 
 		// HLSL source variant
 		/*char hlslSource[2048] = {};
-		size_t numRead = readBinaryFile("res/Sample-1/test.hlsl", (uint8_t*)hlslSource, 2048);
+		size_t numRead = readBinaryFile("res/Sample-2/test.hlsl", (uint8_t*)hlslSource, 2048);
 		assert(0 < numRead && numRead < 2048);
 		CHECK_ZG pipelineBuilder
 			.addVertexShaderSource("VSMain", hlslSource)

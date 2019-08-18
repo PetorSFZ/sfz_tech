@@ -22,6 +22,7 @@
 #include <utility> // std::forward
 
 #include "ZeroG.h"
+#include "ZeroG/Context.hpp"
 
 namespace zg {
 
@@ -29,8 +30,9 @@ namespace zg {
 // ------------------------------------------------------------------------------------------------
 
 template<typename T, typename... Args>
-T* zgNew(ZgAllocator& allocator, const char* name, Args&&... args) noexcept
+T* zgNew(const char* name, Args&&... args) noexcept
 {
+	ZgAllocator allocator = getAllocator();
 	uint8_t* memPtr = allocator.allocate(allocator.userPtr, sizeof(T), name);
 	T* objPtr = nullptr;
 	objPtr = new(memPtr) T(std::forward<Args>(args)...);
@@ -39,11 +41,12 @@ T* zgNew(ZgAllocator& allocator, const char* name, Args&&... args) noexcept
 }
 
 template<typename T>
-void zgDelete(ZgAllocator& allocator, T* pointer) noexcept
+void zgDelete(T* pointer) noexcept
 {
 	if (pointer == nullptr) return;
 	pointer->~T();
 	// If destructor throws exception std::terminate() will be called since function is noexcept
+	ZgAllocator allocator = getAllocator();
 	allocator.deallocate(allocator.userPtr, reinterpret_cast<uint8_t*>(pointer));
 }
 

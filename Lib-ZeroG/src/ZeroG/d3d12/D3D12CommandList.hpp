@@ -50,7 +50,6 @@ public:
 	void create(
 		uint32_t maxNumBuffers,
 		ZgLogger logger,
-		ZgAllocator allocator,
 		ComPtr<ID3D12Device3> device,
 		D3DX12Residency::ResidencyManager* residencyManager,
 		D3D12DescriptorRingBuffer* descriptorBuffer) noexcept;

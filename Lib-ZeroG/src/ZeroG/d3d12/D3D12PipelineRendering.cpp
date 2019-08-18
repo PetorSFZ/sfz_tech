@@ -46,7 +46,7 @@ static float calculateDeltaMillis(time_point& previousTime) noexcept
 	return delta;
 }
 
-static Vector<uint8_t> readBinaryFile(const char* path, ZgAllocator& allocator) noexcept
+static Vector<uint8_t> readBinaryFile(const char* path) noexcept
 {
 	// Open file
 	std::FILE* file = std::fopen(path, "rb");
@@ -63,7 +63,7 @@ static Vector<uint8_t> readBinaryFile(const char* path, ZgAllocator& allocator) 
 
 	// Allocate memory for file
 	Vector<uint8_t> data;
-	data.create(uint32_t(size), allocator, "binary file");
+	data.create(uint32_t(size), "binary file");
 	data.addMany(uint32_t(size));
 
 	// Read file
@@ -111,7 +111,6 @@ struct CheckSpirvCrossImpl final {
 
 static Vector<char> crossCompileSpirvToHLSL(
 	ZgLogger& logger,
-	ZgAllocator& allocator,
 	spvc_context context,
 	const Vector<uint8_t>& spirvData) noexcept
 {
@@ -204,7 +203,7 @@ static Vector<char> crossCompileSpirvToHLSL(
 	// Allocate memory and copy HLSL source to Vector<char> and return it
 	uint32_t hlslSrcLen = uint32_t(std::strlen(hlslSource));
 	Vector<char> hlslSourceTmp;
-	hlslSourceTmp.create(hlslSrcLen + 1, allocator, "HLSL Source");
+	hlslSourceTmp.create(hlslSrcLen + 1, "HLSL Source");
 	hlslSourceTmp.addMany(hlslSrcLen);
 	std::memcpy(hlslSourceTmp.data(), hlslSource, hlslSrcLen);
 	hlslSourceTmp[hlslSrcLen] = '\0';
@@ -560,7 +559,6 @@ static void printfAppend(char*& str, uint32_t& bytesLeft, const char* format, ..
 }
 
 static void logPipelineInfo(
-	ZgAllocator& allocator,
 	ZgLogger& logger,
 	const ZgPipelineRenderingCreateInfoCommon& createInfo,
 	const char* vertexShaderName,
@@ -569,6 +567,7 @@ static void logPipelineInfo(
 	float compileTimeMs) noexcept
 {
 	// Allocate temp string to log
+	ZgAllocator allocator = getAllocator();
 	const uint32_t STRING_MAX_SIZE = 4096;
 	char* const tmpStrOriginal = reinterpret_cast<char*>(allocator.allocate(
 		allocator.userPtr, STRING_MAX_SIZE, "Pipeline log temp string"));
@@ -640,7 +639,6 @@ static ZgErrorCode createPipelineRenderingInternal(
 	const char* pixelShaderName,
 	IDxcCompiler& dxcCompiler,
 	ZgLogger& logger,
-	ZgAllocator& allocator,
 	ID3D12Device3& device) noexcept
 {
 	// Pick out which vertex and pixel shader type to compile with
@@ -1341,7 +1339,6 @@ static ZgErrorCode createPipelineRenderingInternal(
 	// Log information about the pipeline
 	float compileTimeMs = calculateDeltaMillis(compileStartTime);
 	logPipelineInfo(
-		allocator,
 		logger,
 		createInfo,
 		vertexShaderName,
@@ -1351,7 +1348,7 @@ static ZgErrorCode createPipelineRenderingInternal(
 
 	// Allocate pipeline
 	D3D12PipelineRendering* pipeline =
-		zgNew<D3D12PipelineRendering>(allocator, "ZeroG - D3D12PipelineRendering");
+		zgNew<D3D12PipelineRendering>("ZeroG - D3D12PipelineRendering");
 
 	// Store pipeline state
 	pipeline->pipelineState = pipelineState;
@@ -1393,7 +1390,6 @@ ZgErrorCode createPipelineRenderingFileSPIRV(
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	ZgLogger& logger,
-	ZgAllocator& allocator,
 	ID3D12Device3& device) noexcept
 {
 	// Start measuring compile-time
@@ -1406,15 +1402,15 @@ ZgErrorCode createPipelineRenderingFileSPIRV(
 	if (res != SPVC_SUCCESS) return ZG_ERROR_GENERIC;
 
 	// Read vertex SPIRV binary and cross-compile to HLSL
-	Vector<uint8_t> vertexData = readBinaryFile(createInfo.vertexShaderPath, allocator);
+	Vector<uint8_t> vertexData = readBinaryFile(createInfo.vertexShaderPath);
 	if (vertexData.size() == 0) return ZG_ERROR_INVALID_ARGUMENT;
-	Vector<char> vertexHlslSrc = crossCompileSpirvToHLSL(logger, allocator, spvcContext, vertexData);
+	Vector<char> vertexHlslSrc = crossCompileSpirvToHLSL(logger, spvcContext, vertexData);
 	if (vertexHlslSrc.size() == 0) return ZG_ERROR_SHADER_COMPILE_ERROR;
 
 	// Read pixel SPIRV binary and cross-compile to HLSL
-	Vector<uint8_t> pixelData = readBinaryFile(createInfo.pixelShaderPath, allocator);
+	Vector<uint8_t> pixelData = readBinaryFile(createInfo.pixelShaderPath);
 	if (pixelData.size() == 0) return ZG_ERROR_INVALID_ARGUMENT;
-	Vector<char> pixelHlslSrc = crossCompileSpirvToHLSL(logger, allocator, spvcContext, pixelData);
+	Vector<char> pixelHlslSrc = crossCompileSpirvToHLSL(logger, spvcContext, pixelData);
 	if (pixelHlslSrc.size() == 0) return ZG_ERROR_SHADER_COMPILE_ERROR;
 
 	// Log the modified source code
@@ -1459,7 +1455,6 @@ ZgErrorCode createPipelineRenderingFileSPIRV(
 		createInfo.pixelShaderPath,
 		dxcCompiler,
 		logger,
-		allocator,
 		device);
 }
 
@@ -1470,7 +1465,6 @@ ZgErrorCode createPipelineRenderingFileHLSL(
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	ZgLogger& logger,
-	ZgAllocator& allocator,
 	ID3D12Device3& device) noexcept
 {
 	// Start measuring compile-time
@@ -1509,7 +1503,6 @@ ZgErrorCode createPipelineRenderingFileHLSL(
 		createInfo.pixelShaderPath,
 		dxcCompiler,
 		logger,
-		allocator,
 		device);
 }
 
@@ -1520,7 +1513,6 @@ ZgErrorCode createPipelineRenderingSourceHLSL(
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	ZgLogger& logger,
-	ZgAllocator& allocator,
 	ID3D12Device3& device) noexcept
 {
 	// Start measuring compile-time
@@ -1552,7 +1544,6 @@ ZgErrorCode createPipelineRenderingSourceHLSL(
 		"<From source, no pixel name>",
 		dxcCompiler,
 		logger,
-		allocator,
 		device);
 }
 

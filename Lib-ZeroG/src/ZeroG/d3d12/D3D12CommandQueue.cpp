@@ -80,15 +80,13 @@ ZgErrorCode D3D12CommandQueue::create(
 	D3D12DescriptorRingBuffer* descriptorBuffer,
 	uint32_t maxNumCommandLists,
 	uint32_t maxNumBuffersPerCommandList,
-	ZgLogger logger,
-	ZgAllocator allocator) noexcept
+	ZgLogger logger) noexcept
 {
 	mType = type;
 	mDevice = device;
 	mResidencyManager = residencyManager;
 	mDescriptorBuffer = descriptorBuffer;
 	mLog = logger;
-	mAllocator = allocator;
 
 	// Create command queue
 	D3D12_COMMAND_QUEUE_DESC desc = {};
@@ -113,9 +111,9 @@ ZgErrorCode D3D12CommandQueue::create(
 	// Allocate memory for command lists
 	mMaxNumBuffersPerCommandList = maxNumBuffersPerCommandList;
 	mCommandListStorage.create(
-		maxNumCommandLists, allocator, "ZeroG - D3D12CommandQueue - CommandListStorage");
+		maxNumCommandLists, "ZeroG - D3D12CommandQueue - CommandListStorage");
 	mCommandListQueue.create(
-		maxNumCommandLists, allocator, "ZeroG - D3D12CommandQueue - CommandListQueue");
+		maxNumCommandLists, "ZeroG - D3D12CommandQueue - CommandListQueue");
 
 	return ZG_SUCCESS;
 }
@@ -298,7 +296,7 @@ ZgErrorCode D3D12CommandQueue::createCommandList(D3D12CommandList*& commandListO
 	}
 
 	// Initialize command list
-	commandList.create(mMaxNumBuffersPerCommandList, mLog, mAllocator, mDevice, mResidencyManager,
+	commandList.create(mMaxNumBuffersPerCommandList, mLog, mDevice, mResidencyManager,
 		mDescriptorBuffer);
 
 	commandListOut = &commandList;
