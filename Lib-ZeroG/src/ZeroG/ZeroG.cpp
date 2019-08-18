@@ -149,7 +149,7 @@ ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 				ZG_ERROR("zgContextInit(): Could not create Vulkan backend, exiting.");
 				return res;
 			}
-			ZG_INFO"zgContextInit(): Created Vulkan backend");
+			ZG_INFO("zgContextInit(): Created Vulkan backend");
 		}
 		break;
 #endif

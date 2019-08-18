@@ -62,7 +62,7 @@ public:
 	virtual ~VulkanBackend() noexcept
 	{
 		// Delete most state
-		zgDelete(mAllocator, mState);
+		zgDelete(mState);
 	}
 
 	// State methods
@@ -71,10 +71,8 @@ public:
 	ZgErrorCode init(ZgContextInitSettings& settings) noexcept
 	{
 		// Initialize members
-		mLog = settings.logger;
-		mAllocator = settings.allocator;
 		mDebugMode = settings.debugMode;
-		mState = zgNew<VulkanBackendState>(mAllocator, "VulkanBackendState");
+		mState = zgNew<VulkanBackendState>( "VulkanBackendState");
 
 
 
@@ -219,8 +217,6 @@ public:
 	// Private methods
 	// --------------------------------------------------------------------------------------------
 private:
-	ZgLogger mLog = {};
-	ZgAllocator mAllocator = {};
 	bool mDebugMode = false;
 
 	VulkanBackendState* mState = nullptr;
@@ -232,13 +228,13 @@ private:
 ZgErrorCode createVulkanBackend(ZgBackend** backendOut, ZgContextInitSettings& settings) noexcept
 {
 	// Allocate and create Vulkan backend
-	VulkanBackend* backend = zgNew<VulkanBackend>(settings.allocator, "Vulkan Backend");
+	VulkanBackend* backend = zgNew<VulkanBackend>("Vulkan Backend");
 
 	// Initialize backend, return nullptr if init failed
 	ZgErrorCode initRes = backend->init(settings);
 	if (initRes != ZG_SUCCESS)
 	{
-		zgDelete(settings.allocator, backend);
+		zgDelete(backend);
 		return initRes;
 	}
 
