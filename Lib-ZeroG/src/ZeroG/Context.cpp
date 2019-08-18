@@ -30,11 +30,6 @@ ZgContext& getContext() noexcept
 	return implicitContext;
 }
 
-ZgBackend* getBackend() noexcept
-{
-	return implicitContext.backend;
-}
-
 void setContext(const ZgContext& context) noexcept
 {
 	implicitContext = context;

@@ -18,17 +18,32 @@
 
 #include "ZeroG/vulkan/VulkanBackend.hpp"
 
+#include <vulkan/vulkan.h>
+
 #include "ZeroG/util/CpuAllocation.hpp"
+#include "ZeroG/util/Mutex.hpp"
 
 namespace zg {
 
 // Vulkan Backend State
 // ------------------------------------------------------------------------------------------------
 
+struct VulkanContext final {
+	VkInstance instance = nullptr; // Externally synchronized
+};
+
 struct VulkanBackendState final {
 
+	// Collection of some externally synchronized vulkan state that could roughly be considered
+	// a "context" when grouped together
+	Mutex<VulkanContext> context;
 
 };
+
+// Statics
+// ------------------------------------------------------------------------------------------------
+
+
 
 // Vulkan Backend implementation
 // ------------------------------------------------------------------------------------------------
@@ -46,7 +61,8 @@ public:
 
 	virtual ~VulkanBackend() noexcept
 	{
-
+		// Delete most state
+		zgDelete(mAllocator, mState);
 	}
 
 	// State methods
@@ -54,6 +70,14 @@ public:
 
 	ZgErrorCode init(ZgContextInitSettings& settings) noexcept
 	{
+		// Initialize members
+		mLog = settings.logger;
+		mAllocator = settings.allocator;
+		mDebugMode = settings.debugMode;
+		mState = zgNew<VulkanBackendState>(mAllocator, "VulkanBackendState");
+
+
+
 		return ZG_SUCCESS;
 	}
 
@@ -191,6 +215,15 @@ public:
 	{
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
+
+	// Private methods
+	// --------------------------------------------------------------------------------------------
+private:
+	ZgLogger mLog = {};
+	ZgAllocator mAllocator = {};
+	bool mDebugMode = false;
+
+	VulkanBackendState* mState = nullptr;
 };
 
 // Vulkan backend

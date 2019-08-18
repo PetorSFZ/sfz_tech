@@ -28,7 +28,9 @@
 #include "ZeroG/d3d12/D3D12Backend.hpp"
 #endif
 
+#ifdef ZG_VULKAN
 #include "ZeroG/vulkan/VulkanBackend.hpp"
+#endif
 
 // Version information
 // ------------------------------------------------------------------------------------------------
@@ -43,11 +45,14 @@ ZG_API uint32_t zgApiLinkedVersion(void)
 
 ZG_API ZgFeatureBits zgCompiledFeatures(void)
 {
-	return
+	return 0
 #ifdef _WIN32
-		uint64_t(ZG_FEATURE_BIT_BACKEND_D3D12) |
+		| uint64_t(ZG_FEATURE_BIT_BACKEND_D3D12)
 #endif
-		uint64_t(ZG_FEATURE_BIT_BACKEND_VULKAN);
+#ifdef ZG_VULKAN
+		| uint64_t(ZG_FEATURE_BIT_BACKEND_VULKAN)
+#endif
+	;
 }
 
 // Error codes
@@ -139,6 +144,7 @@ ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 		break;
 #endif
 
+#ifdef ZG_VULKAN
 	case ZG_BACKEND_VULKAN:
 		{
 			ZgErrorCode res = zg::createVulkanBackend(&tmpContext.backend, settings);
@@ -149,6 +155,7 @@ ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 			ZG_INFO(logger, "zgContextInit(): Created Vulkan backend");
 		}
 		break;
+#endif
 
 	default:
 		return ZG_ERROR_GENERIC;

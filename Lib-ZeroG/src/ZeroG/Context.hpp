@@ -38,7 +38,9 @@ namespace zg {
 
 ZgContext& getContext() noexcept;
 
-ZgBackend* getBackend() noexcept;
+inline ZgAllocator& getAllocator() noexcept { return getContext().allocator; }
+inline ZgLogger& getLogger() noexcept { return getContext().logger; }
+inline ZgBackend* getBackend() noexcept { return getContext().backend; }
 
 void setContext(const ZgContext& context) noexcept;
 

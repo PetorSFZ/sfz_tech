@@ -26,6 +26,41 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS true)
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+# Vulkan
+# ------------------------------------------------------------------------------------------------
+
+# Vulkan
+# ${VULKAN_FOUND}, ${VULKAN_INCLUDE_DIRS} and ${VULKAN_LIBRARIES}
+if(IOS)
+	set(MoltenVK_Path $ENV{VULKAN_SDK}/..)
+	set(VULKAN_FOUND true)
+	set(VULKAN_INCLUDE_DIRS ${MoltenVK_Path}/MoltenVK/include)
+
+	find_library(MoltenVK_LIB
+		NAMES
+		MoltenVK
+		HINTS
+		${MoltenVK_Path}/MoltenVK/iOS)
+	set(VULKAN_LIBRARIES ${MoltenVK_LIB})
+else()
+	find_package(Vulkan)
+	set(VULKAN_FOUND ${Vulkan_FOUND})
+	set(VULKAN_INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
+	set(VULKAN_LIBRARIES ${Vulkan_LIBRARIES})
+endif()
+
+if(VULKAN_FOUND)
+	message("-- [ZeroG]: Vulkan SDK found")
+	message("  -- VULKAN_INCLUDE_DIRS: ${VULKAN_INCLUDE_DIRS}")
+	message("  -- VULKAN_LIBRARIES: ${VULKAN_LIBRARIES}")
+else()
+	if(MSVC)
+		message("-- [ZeroG]: Vulkan SDK not found, compiling without Vulkan support")
+	else()
+		message(FATAL_ERROR "-- [ZeroG]: Vulkan SDK not found, required on this platform")
+	endif()
+endif()
+
 # Compiler flags
 # ------------------------------------------------------------------------------------------------
 
@@ -46,6 +81,9 @@ if(MSVC)
 	set(CMAKE_CXX_FLAGS_DEBUG "/MDd /Od /DEBUG")
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /Ob3 /fp:fast /DEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob3 /fp:fast /DNDEBUG")
+	if (VULKAN_FOUND)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DZG_VULKAN")
+	endif()
 
 elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
 	# macOS flags
@@ -54,7 +92,7 @@ elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
 	# -march=sandybridge = Require at least a Sandy Bridge Intel CPU to run code
 	# -fno-rtti = Disable RTTI
 	# -fno-strict-aliasing = Disable strict aliasing optimizations
-	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -march=sandybridge -fno-rtti -fno-strict-aliasing")
+	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -march=sandybridge -fno-rtti -fno-strict-aliasing -DZG_VULKAN")
 	set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DNDEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DNDEBUG")
@@ -119,10 +157,12 @@ if (MSVC)
 endif()
 
 # Vulkan source files
-set(ZEROG_VULKAN_SRC_FILES
-	${SRC_DIR}/ZeroG/vulkan/VulkanBackend.hpp
-	${SRC_DIR}/ZeroG/vulkan/VulkanBackend.cpp
-)
+if (VULKAN_FOUND)
+	set(ZEROG_VULKAN_SRC_FILES
+		${SRC_DIR}/ZeroG/vulkan/VulkanBackend.hpp
+		${SRC_DIR}/ZeroG/vulkan/VulkanBackend.cpp
+	)
+endif()
 
 set(ZEROG_CAPI_SRC_FILES ${ZEROG_D3D12_SRC_FILES} ${ZEROG_VULKAN_SRC_FILES})
 
@@ -133,6 +173,7 @@ set(ZEROG_CAPI_SRC_FILES ${ZEROG_CAPI_SRC_FILES}
 	${SRC_DIR}/ZeroG/util/CpuAllocation.cpp
 	${SRC_DIR}/ZeroG/util/Logging.hpp
 	${SRC_DIR}/ZeroG/util/Logging.cpp
+	${SRC_DIR}/ZeroG/util/Mutex.hpp
 	${SRC_DIR}/ZeroG/util/RingBuffer.hpp
 	${SRC_DIR}/ZeroG/util/Vector.hpp
 	${SRC_DIR}/ZeroG/BackendInterface.hpp
@@ -152,10 +193,12 @@ target_include_directories(ZeroG PRIVATE
 	${D3DX12_INCLUDE_DIRS}
 	${D3DX12_RESIDENCY_INCLUDE_DIRS}
 	${SPIRV_CROSS_INCLUDE_DIRS}
+	${VULKAN_INCLUDE_DIRS}
 )
 
 target_link_libraries(ZeroG
 	${SPIRV_CROSS_LIBRARIES}
+	${VULKAN_LIBRARIES}
 )
 
 # Runtime files (DLLs)
