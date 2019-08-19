@@ -75,8 +75,8 @@ void generateMipmapSpecific(
 {
 	const T* srcImg = reinterpret_cast<const T*>(prevLevel.rawData);
 	T* dstImg = reinterpret_cast<T*>(currLevel.rawData.data());
-	for (uint32_t y = 0; y < currLevel.height; y++) {
-		for (uint32_t x = 0; x < currLevel.width; x++) {
+	for (int32_t y = 0; y < currLevel.height; y++) {
+		for (int32_t x = 0; x < currLevel.width; x++) {
 
 			T* dstPixelPtr = dstImg + y * currLevel.width + x;
 			const T* srcPixelPtrRow0 = srcImg + ((y * 2) + 0) * prevLevel.width + (x * 2);

@@ -91,7 +91,7 @@ bool ImGuiRenderer::init(
 
 	texMemSuccess &= CHECK_ZG mFontTextureHeap.texture2DCreate(
 		mFontTexture, texCreateInfo);
-	mFontTexture.setDebugName("ImGui_FontTexture");
+	CHECK_ZG mFontTexture.setDebugName("ImGui_FontTexture");
 
 	if (!texMemSuccess) return false;
 
@@ -271,10 +271,10 @@ void ImGuiRenderer::render(
 		sfz_assert_debug((cmd.numIndices % 3) == 0);
 
 		ZgFramebufferRect scissorRect = {};
-		scissorRect.topLeftX = cmd.clipRect.x * imguiInvScaleFactor;
-		scissorRect.topLeftY = cmd.clipRect.y * imguiInvScaleFactor;
-		scissorRect.width = (cmd.clipRect.z - cmd.clipRect.x) * imguiInvScaleFactor;
-		scissorRect.height = (cmd.clipRect.w - cmd.clipRect.y) * imguiInvScaleFactor;
+		scissorRect.topLeftX = uint32_t(cmd.clipRect.x * imguiInvScaleFactor);
+		scissorRect.topLeftY = uint32_t(cmd.clipRect.y * imguiInvScaleFactor);
+		scissorRect.width = uint32_t((cmd.clipRect.z - cmd.clipRect.x) * imguiInvScaleFactor);
+		scissorRect.height = uint32_t((cmd.clipRect.w - cmd.clipRect.y) * imguiInvScaleFactor);
 		CHECK_ZG commandList.setFramebufferScissor(scissorRect);
 
 		CHECK_ZG commandList.drawTrianglesIndexed(cmd.idxBufferOffset, cmd.numIndices / 3);

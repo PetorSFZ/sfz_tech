@@ -515,6 +515,7 @@ zg::Buffer DynamicGpuAllocator::allocateBuffer(ZgMemoryType memoryType, uint32_t
 			default: break;
 			}
 			sfz_assert_release(false);
+			return 0u;
 		}();
 		pageSize = std::max(pageSize, sizeBytes);
 

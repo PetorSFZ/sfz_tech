@@ -129,7 +129,7 @@ static const char* depthFuncToString(ZgDepthFunc func) noexcept
 
 void RendererUI::swap(RendererUI& other) noexcept
 {
-
+	(void)other;
 }
 
 void RendererUI::destroy() noexcept
@@ -285,8 +285,8 @@ void RendererUI::renderPipelinesTab(RendererConfigurableState& state) noexcept
 			ImGui::Spacing();
 			ImGui::Text("Constant buffers (%u):", signature.numConstantBuffers);
 			ImGui::Indent(20.0f);
-			for (uint32_t i = 0; i < signature.numConstantBuffers; i++) {
-				const ZgConstantBufferDesc& cbuffer = signature.constantBuffers[i];
+			for (uint32_t j = 0; j < signature.numConstantBuffers; j++) {
+				const ZgConstantBufferDesc& cbuffer = signature.constantBuffers[j];
 				ImGui::Text("- Register: %u -- Size: %u bytes -- Push constant: %s",
 					cbuffer.shaderRegister,
 					cbuffer.sizeInBytes,
@@ -636,7 +636,6 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 				// Existing textures
 				for (auto itemItr : state.textures) {
 					StringID id = itemItr.key;
-					const TextureItem& item = itemItr.value;
 
 					// Convert index to string and check if it is selected
 					str128 texStr = textureToComboStr(id);
@@ -721,8 +720,8 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 				if (updateMesh) {
 
 					// Flush ZeroG queues
-					state.copyQueue.flush();
-					state.presentQueue.flush();
+					CHECK_ZG state.copyQueue.flush();
+					CHECK_ZG state.presentQueue.flush();
 
 					// Allocate temporary upload buffer
 					zg::Buffer uploadBuffer = state.dynamicAllocator.allocateBuffer(
@@ -733,7 +732,7 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 					ShaderMaterial shaderMaterial = cpuMaterialToShaderMaterial(material);
 
 					// Memcpy to temporary upload buffer
-					uploadBuffer.memcpyTo(0, &shaderMaterial, sizeof(ShaderMaterial));
+					CHECK_ZG uploadBuffer.memcpyTo(0, &shaderMaterial, sizeof(ShaderMaterial));
 
 					// Replace material in mesh with new material
 					zg::CommandList commandList;
