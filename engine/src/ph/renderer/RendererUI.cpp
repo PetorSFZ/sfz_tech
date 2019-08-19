@@ -342,6 +342,11 @@ void RendererUI::renderPipelinesTab(RendererConfigurableState& state) noexcept
 			ImGui::Unindent(20.0f);
 		}
 
+		// Print wireframe rendering mode
+		ImGui::Spacing();
+		ImGui::Text("Wireframe Rendering: %s",
+			pipeline.wireframeRenderingEnabled ? "ENABLED" : "DISABLED");
+
 		ImGui::Unindent(20.0f);
 		ImGui::Unindent(20.0f);
 		ImGui::Spacing();

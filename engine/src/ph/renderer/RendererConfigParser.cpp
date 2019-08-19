@@ -190,6 +190,12 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			item.frontFacingIsCounterClockwise =
 				CHECK_JSON cullingNode.accessMap("front_facing_is_counter_clockwise").valueBool();
 		}
+
+		// Wireframe rendering
+		ParsedJsonNode wireframeNode = pipelineNode.accessMap("wireframe_rendering");
+		if (wireframeNode.isValid()) {
+			item.wireframeRenderingEnabled = CHECK_JSON wireframeNode.valueBool();
+		}
 	}
 
 	// Get number of present queue stages to load and allocate memory for them
@@ -279,6 +285,11 @@ bool buildPipelineRendering(PipelineRenderingItem& item) noexcept
 		pipelineBuilder
 			.setCullingEnabled(true)
 			.setCullMode(item.cullFrontFacing, item.frontFacingIsCounterClockwise);
+	}
+
+	// Wireframe rendering
+	if (item.wireframeRenderingEnabled) {
+		pipelineBuilder.setWireframeRendering(true);
 	}
 
 	// Build pipeline

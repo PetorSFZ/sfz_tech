@@ -81,6 +81,7 @@ struct PipelineRenderingItem final {
 	bool cullingEnabled = false;
 	bool cullFrontFacing = false;
 	bool frontFacingIsCounterClockwise = false;
+	bool wireframeRenderingEnabled = false;
 };
 
 // Stage types
