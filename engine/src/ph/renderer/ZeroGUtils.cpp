@@ -76,10 +76,10 @@ ZgLogger getPhantasyEngineZeroGLogger() noexcept
 // ZeroG sfz::Allocator wrapper
 // -----------------------------------------------------------------------------------------------
 
-static uint8_t* zgSfzAllocate(void* userPtr, uint32_t size, const char* name)
+static void* zgSfzAllocate(void* userPtr, uint32_t size, const char* name)
 {
 	sfz::Allocator* allocator = reinterpret_cast<sfz::Allocator*>(userPtr);
-	return reinterpret_cast<uint8_t*>(allocator->allocate(size, 32, name));
+	return allocator->allocate(size, 32, name);
 }
 
 static void zgSfzDeallocate(void* userPtr, void* allocation)
