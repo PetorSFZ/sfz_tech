@@ -340,6 +340,9 @@ ZgErrorCode D3D12CommandList::setPipelineBindings(
 	uint32_t numConstantBuffers = mBoundPipeline->numConstantBuffers;
 	uint32_t numTextures = mBoundPipeline->numTextures;
 
+	// If no bindings specified, do nothing.
+	if (bindings.numConstantBuffers == 0 && bindings.numTextures == 0) return ZG_SUCCESS;
+
 	// Allocate descriptors
 	D3D12_CPU_DESCRIPTOR_HANDLE rangeStartCpu = {};
 	D3D12_GPU_DESCRIPTOR_HANDLE rangeStartGpu = {};
