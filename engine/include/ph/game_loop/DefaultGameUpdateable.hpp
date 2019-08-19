@@ -56,7 +56,7 @@ public:
 		const UpdateInfo& updateInfo,
 		Renderer& renderer) = 0;
 
-	virtual UpdateOp updateTick(const UpdateInfo& updateInfo) = 0;
+	virtual UpdateOp updateTick(const UpdateInfo& updateInfo, Renderer& renderer) = 0;
 
 	virtual void render(const UpdateInfo& updateInfo, Renderer& renderer) = 0;
 

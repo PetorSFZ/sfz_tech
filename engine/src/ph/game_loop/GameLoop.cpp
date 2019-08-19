@@ -306,7 +306,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 
 	// Update
 	for (uint32_t i = 0; i < state.updateInfo.numUpdateTicks; i++) {
-		op = state.updateable->updateTick(state.updateInfo);
+		op = state.updateable->updateTick(state.updateInfo, *state.renderer);
 		if (handleUpdateOp(state, op)) return;
 	}
 

@@ -258,10 +258,10 @@ public:
 		return UpdateOp::NO_OP();
 	}
 
-	UpdateOp updateTick(const UpdateInfo& updateInfo) override final
+	UpdateOp updateTick(const UpdateInfo& updateInfo, Renderer& renderer) override final
 	{
 		// Forward update to logic
-		if (!mConsoleActive) return mLogic->updateTick(updateInfo);
+		if (!mConsoleActive) return mLogic->updateTick(updateInfo, renderer);
 		return UpdateOp::NO_OP();
 	}
 

@@ -155,7 +155,7 @@ public:
 	/// Potentially called multiple times (or non at all) each iteration of the game loop.
 	/// Corresponds to updating the simulation a single tick, i.e. updateInfo.tickTimeSeconds
 	/// seconds.
-	virtual UpdateOp updateTick(const UpdateInfo& updateInfo) = 0;
+	virtual UpdateOp updateTick(const UpdateInfo& updateInfo, Renderer& renderer) = 0;
 
 	/// Called last each iteration of the game loop. Responsible for rendering everything. Of note
 	/// is updateInfo.lagSeconds, which contains the amount of time since the last tick update.
