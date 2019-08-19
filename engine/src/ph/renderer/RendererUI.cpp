@@ -252,7 +252,7 @@ void RendererUI::renderPipelinesTab(RendererConfigurableState& state) noexcept
 		const char* name = resStrings.getString(pipeline.name);
 		bool collapsingHeaderOpen =
 			ImGui::CollapsingHeader(str256("Pipeline %u - \"%s\"", i, name).str);
-		if (collapsingHeaderOpen) continue;
+		if (!collapsingHeaderOpen) continue;
 		ImGui::Indent(20.0f);
 
 		// Valid or not
