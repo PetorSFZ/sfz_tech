@@ -22,4 +22,8 @@
 
 // Small wrapper around C's standard assert() macro. This way we can easily replace all asserts
 // inside ZeroG with some other construct if wanted.
+#if !defined(NDEBUG)
 #define ZG_ASSERT(condition) assert(condition)
+#else
+#define ZG_ASSERT(condition) if ((condition)) { }
+#endif

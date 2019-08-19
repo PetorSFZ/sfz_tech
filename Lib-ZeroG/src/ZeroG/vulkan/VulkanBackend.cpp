@@ -193,12 +193,15 @@ public:
 		uint32_t width,
 		uint32_t height) noexcept override final
 	{
+		(void)width;
+		(void)height;
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode swapchainBeginFrame(
 		ZgFramebuffer** framebufferOut) noexcept override final
 	{
+		(void)framebufferOut;
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
@@ -209,6 +212,7 @@ public:
 
 	ZgErrorCode fenceCreate(ZgFence** fenceOut) noexcept override final
 	{
+		(void)fenceOut;
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
@@ -217,6 +221,7 @@ public:
 
 	ZgErrorCode getStats(ZgStats& statsOut) noexcept override final
 	{
+		(void)statsOut;
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
@@ -228,6 +233,9 @@ public:
 		ZgPipelineRenderingSignature* signatureOut,
 		const ZgPipelineRenderingCreateInfoFileSPIRV& createInfo) noexcept override final
 	{
+		(void)pipelineOut;
+		(void)signatureOut;
+		(void)createInfo;
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
@@ -236,6 +244,9 @@ public:
 		ZgPipelineRenderingSignature* signatureOut,
 		const ZgPipelineRenderingCreateInfoFileHLSL& createInfo) noexcept override final
 	{
+		(void)pipelineOut;
+		(void)signatureOut;
+		(void)createInfo;
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
@@ -244,12 +255,16 @@ public:
 		ZgPipelineRenderingSignature* signatureOut,
 		const ZgPipelineRenderingCreateInfoSourceHLSL& createInfo) noexcept override final
 	{
+		(void)pipelineOut;
+		(void)signatureOut;
+		(void)createInfo;
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode pipelineRenderingRelease(
 		ZgPipelineRendering* pipeline) noexcept override final
 	{
+		(void)pipeline;
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
@@ -257,6 +272,8 @@ public:
 		const ZgPipelineRendering* pipeline,
 		ZgPipelineRenderingSignature* signatureOut) const noexcept override final
 	{
+		(void)pipeline;
+		(void)signatureOut;
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
@@ -267,12 +284,15 @@ public:
 		ZgMemoryHeap** memoryHeapOut,
 		const ZgMemoryHeapCreateInfo& createInfo) noexcept override final
 	{
+		(void)memoryHeapOut;
+		(void)createInfo;
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode memoryHeapRelease(
 		ZgMemoryHeap* memoryHeap) noexcept override final
 	{
+		(void)memoryHeap;
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
@@ -282,6 +302,10 @@ public:
 		const uint8_t* srcMemory,
 		uint64_t numBytes) noexcept override final
 	{
+		(void)dstBufferInterface;
+		(void)bufferOffsetBytes;
+		(void)srcMemory;
+		(void)numBytes;
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
@@ -292,6 +316,8 @@ public:
 		ZgTexture2DAllocationInfo& allocationInfoOut,
 		const ZgTexture2DCreateInfo& createInfo) noexcept override final
 	{
+		(void)allocationInfoOut;
+		(void)createInfo;
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
@@ -299,12 +325,15 @@ public:
 		ZgTextureHeap** textureHeapOut,
 		const ZgTextureHeapCreateInfo& createInfo) noexcept override final
 	{
+		(void)textureHeapOut;
+		(void)createInfo;
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode textureHeapRelease(
 		ZgTextureHeap* textureHeap) noexcept override final
 	{
+		(void)textureHeap;
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
@@ -313,11 +342,13 @@ public:
 
 	ZgErrorCode getPresentQueue(ZgCommandQueue** presentQueueOut) noexcept override final
 	{
+		(void)presentQueueOut;
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode getCopyQueue(ZgCommandQueue** copyQueueOut) noexcept override final
 	{
+		(void)copyQueueOut;
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 

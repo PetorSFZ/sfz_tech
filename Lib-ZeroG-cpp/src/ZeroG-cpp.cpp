@@ -115,7 +115,7 @@ PipelineRenderingBuilder& PipelineRenderingBuilder::addVertexBufferInfo(
 {
 	assert(slot == commonInfo.numVertexBufferSlots);
 	assert(commonInfo.numVertexBufferSlots < ZG_MAX_NUM_VERTEX_ATTRIBUTES);
-	commonInfo.vertexBufferStridesBytes[commonInfo.numVertexBufferSlots] = vertexBufferStrideBytes;
+	commonInfo.vertexBufferStridesBytes[slot] = vertexBufferStrideBytes;
 	commonInfo.numVertexBufferSlots += 1;
 	return *this;
 }
@@ -134,7 +134,7 @@ PipelineRenderingBuilder& PipelineRenderingBuilder::addSampler(
 {
 	assert(samplerRegister == commonInfo.numSamplers);
 	assert(commonInfo.numSamplers < ZG_MAX_NUM_SAMPLERS);
-	commonInfo.samplers[commonInfo.numSamplers] = sampler;
+	commonInfo.samplers[samplerRegister] = sampler;
 	commonInfo.numSamplers += 1;
 	return *this;
 }

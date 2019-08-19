@@ -30,7 +30,7 @@ namespace zg {
 
 static bool flagsContainBit(VkDebugReportFlagsEXT flags, VkDebugReportFlagBitsEXT bit) noexcept
 {
-	return (flags & bit) == bit;
+	return (uint32_t(flags) & uint32_t(bit)) == uint32_t(bit);
 };
 
 static const char* debugReportObjectTypeToString(VkDebugReportObjectTypeEXT type) noexcept

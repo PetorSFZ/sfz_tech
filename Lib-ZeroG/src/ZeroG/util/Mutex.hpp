@@ -83,7 +83,7 @@ public:
 	MutexAccessor(const MutexAccessor&) = delete;
 	MutexAccessor& operator= (const MutexAccessor&) = delete;
 	MutexAccessor(MutexAccessor&& o) noexcept { this->swap(o); }
-	MutexAccessor& operator= (MutexAccessor& o) noexcept { this->swap(o); return *this; }
+	MutexAccessor& operator= (MutexAccessor&& o) noexcept { this->swap(o); return *this; }
 	~MutexAccessor() noexcept { this->destroy(); }
 
 	static MutexAccessor createAccessor(std::mutex* mutex, T* data) noexcept
