@@ -566,6 +566,21 @@ void Renderer::stageEndInput() noexcept
 	mState->currentCommandList.release();
 }
 
+bool Renderer::stageBarrierProgressNext() noexcept
+{
+	sfz_assert_debug(!inStageInputMode());
+
+	// Find the next barrier stage
+	uint32_t barrierStageIdx = mState->findNextBarrierIdx();
+	if (barrierStageIdx == ~0u) return false;
+
+	// Set current stage set index to the stage after the barrier
+	mState->currentStageSetIdx = barrierStageIdx + 1;
+	sfz_assert_debug(mState->currentStageSetIdx < mState->configurable.presentQueueStages.size());
+
+	return true;
+}
+
 void Renderer::renderImguiHack(
 	const phImguiVertex* vertices,
 	uint32_t numVertices,

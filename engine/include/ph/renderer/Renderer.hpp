@@ -171,6 +171,9 @@ public:
 	// Ends user-input for the specified stage.
 	void stageEndInput() noexcept;
 
+	// Progress to the next stage barrier
+	bool stageBarrierProgressNext() noexcept;
+
 	void renderImguiHack(
 		const phImguiVertex* vertices,
 		uint32_t numVertices,
