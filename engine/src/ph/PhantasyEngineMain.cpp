@@ -195,8 +195,8 @@ int mainImpl(int, char*[], InitOptions&& options)
 	logSDL2Version();
 
 	// Window settings
-	Setting* width = cfg.sanitizeInt("Window", "width", false, 1280, 128, 3840, 32);
-	Setting* height = cfg.sanitizeInt("Window", "height", false, 800, 128, 2160, 32);
+	Setting* width = cfg.sanitizeInt("Window", "width", false, 1280, 128, 3840, 8);
+	Setting* height = cfg.sanitizeInt("Window", "height", false, 800, 128, 2160, 8);
 	Setting* fullscreen = cfg.sanitizeBool("Window", "fullscreen", false, false);
 	Setting* maximized = cfg.sanitizeBool("Window", "maximized", false, false);
 	if (fullscreen->boolValue() && maximized->boolValue()) {
