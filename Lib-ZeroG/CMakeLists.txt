@@ -16,7 +16,7 @@
 #    misrepresented as being the original software.
 # 3. This notice may not be removed or altered from any source distribution.
 
-cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project("ZeroG" LANGUAGES CXX)
 
 # Generate a "compile_commands.json" for VSCode and such when compiling with make
