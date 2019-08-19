@@ -225,6 +225,12 @@ bool Renderer::uploadMeshBlocking(StringID id, const Mesh& mesh) noexcept
 	return true;
 }
 
+bool Renderer::meshLoaded(StringID id) const noexcept
+{
+	const ph::GpuMesh* mesh = mState->meshes.get(id);
+	return mesh != nullptr;
+}
+
 // Renderer: Methods
 // ------------------------------------------------------------------------------------------------
 

@@ -113,9 +113,10 @@ public:
 	// directory in the same directory as the executable.
 	//
 	// Returns whether succesful or not.
-	//
-	// TODO: NEED TO ALSO SPECIFY HOW LOAD TEXTURES
 	bool uploadMeshBlocking(StringID id, const Mesh& mesh) noexcept;
+
+	// Check if a mesh is loaded or not
+	bool meshLoaded(StringID id) const noexcept;
 
 	// Stage methods
 	// --------------------------------------------------------------------------------------------
