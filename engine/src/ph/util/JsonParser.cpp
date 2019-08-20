@@ -416,9 +416,9 @@ ParsedJson ParsedJson::parseString(
 	impl.doc = allocator->newObject<sajson::document>(
 		"sajson::document",sajson::parse(impl.astAllocation, impl.jsongStringView));
 	if (!impl.doc->is_valid()) {
+		SFZ_ERROR("JSON", "Json parse failed at %i:%i: %s",
+			(int)impl.doc->get_error_line(), (int)impl.doc->get_error_column(), impl.doc->get_error_message_as_cstring());
 		parsedJson.destroy();
-		SFZ_ERROR("JSON", "Json parse failed at line %i: %s",
-			(int)impl.doc->get_error_line(), impl.doc->get_error_message_as_cstring());
 		return ParsedJson();
 	}
 
