@@ -22,7 +22,6 @@
 #include <cmath> // std::sqrt
 
 #include "sfz/CudaCompatibility.hpp"
-#include "sfz/SimdIntrinsics.hpp"
 
 namespace sfz {
 

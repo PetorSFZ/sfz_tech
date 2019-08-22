@@ -301,57 +301,6 @@ SFZ_CUDA_CALL T dot(Vector<T,4> lhs, Vector<T,4> rhs) noexcept
 	     + lhs.w * rhs.w;
 }
 
-template<>
-SFZ_CUDA_CALL float dot(vec2 lhs, vec2 rhs) noexcept
-{
-#ifdef SFZ_CUDA_DEVICE_CODE
-	return fmaf(lhs.x, rhs.x,
-	            lhs.y * rhs.y);
-#else
-	return dot<float,2>(lhs, rhs);
-#endif
-}
-
-template<>
-SFZ_CUDA_CALL float dot(vec3 lhs, vec3 rhs) noexcept
-{
-#ifdef SFZ_CUDA_DEVICE_CODE
-	return fmaf(lhs.x, rhs.x,
-	       fmaf(lhs.y, rhs.y,
-	            lhs.z * rhs.z));
-#elif defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
-	return dot<float,3>(lhs, rhs);
-#else
-	vec4 tmpLhs;
-	tmpLhs.xyz = lhs;
-	vec4 tmpRhs;
-	tmpRhs.xyz = rhs;
-
-	const __m128 lhsReg = _mm_load_ps(tmpLhs.data());
-	const __m128 rhsReg = _mm_load_ps(tmpRhs.data());
-	const __m128 dotProd = _mm_dp_ps(lhsReg, rhsReg, 0x71); // 0111 0001 (3 elements, store in lowest)
-	return _mm_cvtss_f32(dotProd);
-#endif
-}
-
-template<>
-SFZ_CUDA_CALL float dot(vec4 lhs, vec4 rhs) noexcept
-{
-#ifdef SFZ_CUDA_DEVICE_CODE
-	return fmaf(lhs.x, rhs.x,
-	       fmaf(lhs.y, rhs.y,
-	       fmaf(lhs.z, rhs.z,
-	            lhs.w * rhs.w)));
-#elif defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
-	return dot<float,4>(lhs, rhs);
-#else
-	const __m128 lhsReg = _mm_load_ps(lhs.data());
-	const __m128 rhsReg = _mm_load_ps(rhs.data());
-	const __m128 dotProd = _mm_dp_ps(lhsReg, rhsReg, 0xF1); // 1111 0001 (4 elements, store in lowest)
-	return _mm_cvtss_f32(dotProd);
-#endif
-}
-
 // Vector functions: length()
 // ------------------------------------------------------------------------------------------------
 
@@ -363,34 +312,14 @@ SFZ_CUDA_CALL float length(vec2 v) noexcept
 
 SFZ_CUDA_CALL float length(vec3 v) noexcept
 {
-#ifdef SFZ_CUDA_DEVICE_CODE
-	return sqrtf(dot(v, v));
-#elif defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
 	using std::sqrt;
 	return sqrt(dot(v, v));
-#else
-	vec4 tmp;
-	tmp.xyz = v;
-	const __m128 reg = _mm_load_ps(tmp.data());
-	const __m128 dotProd = _mm_dp_ps(reg, reg, 0x71); // 0111 0001 (3 elements, store in lowest)
-	const __m128 len = _mm_sqrt_ss(dotProd); // sqrt() of lowest
-	return _mm_cvtss_f32(len);
-#endif
 }
 
 SFZ_CUDA_CALL float length(vec4 v) noexcept
 {
-#ifdef SFZ_CUDA_DEVICE_CODE
-	return sqrtf(dot(v, v));
-#elif defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
 	using std::sqrt;
 	return sqrt(dot(v, v));
-#else
-	const __m128 reg = _mm_load_ps(v.data());
-	const __m128 dotProd = _mm_dp_ps(reg, reg, 0xF1); // 1111 0001 (4 elements, store in lowest)
-	const __m128 len = _mm_sqrt_ss(dotProd); // sqrt() of lowest
-	return _mm_cvtss_f32(len);
-#endif
 }
 
 // Vector functions: normalize()
@@ -398,48 +327,17 @@ SFZ_CUDA_CALL float length(vec4 v) noexcept
 
 SFZ_CUDA_CALL vec2 normalize(vec2 v) noexcept
 {
-#ifdef SFZ_CUDA_DEVICE_CODE
-	float inverseSqrt = rsqrtf(sfz::dot(v, v));
-	return inverseSqrt * v;
-#else
-	return v / sfz::length(v);
-#endif
+	return v * (1.0f / sfz::length(v));
 }
 
 SFZ_CUDA_CALL vec3 normalize(vec3 v) noexcept
 {
-#ifdef SFZ_CUDA_DEVICE_CODE
-	float inverseSqrt = rsqrtf(sfz::dot(v, v));
-	return inverseSqrt * v;
-#elif defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
-	return v / length(v);
-#else
-	vec4 tmp;
-	tmp.xyz = v;
-	const __m128 reg = _mm_load_ps(tmp.data());
-	const __m128 dotProd = _mm_dp_ps(reg, reg, 0x77); // 0111 0111 (3 elements, store in 3 lowest)
-	const __m128 inverseSqrt = _mm_rsqrt_ps(dotProd);
-	const __m128 res = _mm_mul_ps(reg, inverseSqrt);
-	_mm_store_ps(tmp.data(), res);
-	return tmp.xyz;
-#endif
+	return v * (1.0f / sfz::length(v));
 }
 
 SFZ_CUDA_CALL vec4 normalize(vec4 v) noexcept
 {
-#ifdef SFZ_CUDA_DEVICE_CODE
-	float inverseSqrt = rsqrtf(sfz::dot(v, v));
-	return inverseSqrt * v;
-#elif defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
-	return v / length(v);
-#else
-	const __m128 reg = _mm_load_ps(v.data());
-	const __m128 dotProd = _mm_dp_ps(reg, reg, 0xFF); // 1111 1111 (4 elements, store in all)
-	const __m128 inverseSqrt = _mm_rsqrt_ps(dotProd);
-	const __m128 res = _mm_mul_ps(reg, inverseSqrt);
-	_mm_store_ps(v.data(), res);
-	return v;
-#endif
+	return v * (1.0f / sfz::length(v));
 }
 
 // Vector functions: safeNormalize()
