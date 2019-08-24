@@ -160,6 +160,7 @@ set(SFZ_CORE_INCLUDE_FILES
 	${CORE_INCLUDE_DIR}/sfz/math/MathSupport.inl
 	${CORE_INCLUDE_DIR}/sfz/math/Matrix.hpp
 	${CORE_INCLUDE_DIR}/sfz/math/Matrix.inl
+	${CORE_INCLUDE_DIR}/sfz/math/MinMax.hpp
 	${CORE_INCLUDE_DIR}/sfz/math/ProjectionMatrices.hpp
 	${CORE_INCLUDE_DIR}/sfz/math/Quaternion.hpp
 	${CORE_INCLUDE_DIR}/sfz/math/Quaternion.inl
@@ -255,6 +256,7 @@ if(NOT hasParent)
 		${CORE_TESTS_DIR}/sfz/math/MathPrimitiveHashers_Tests.cpp
 		${CORE_TESTS_DIR}/sfz/math/MathSupport_Tests.cpp
 		${CORE_TESTS_DIR}/sfz/math/Matrix_Tests.cpp
+		${CORE_TESTS_DIR}/sfz/math/MinMax_Tests.cpp
 		${CORE_TESTS_DIR}/sfz/math/Vector_Tests.cpp
 		${CORE_TESTS_DIR}/sfz/math/Quaternion_Tests.cpp
 
