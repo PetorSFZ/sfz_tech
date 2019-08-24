@@ -23,6 +23,7 @@
 #include <cstdint>
 
 #include "sfz/Context.hpp"
+#include "sfz/math/MinMax.hpp"
 #include "sfz/memory/Allocator.hpp"
 
 namespace sfz {

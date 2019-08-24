@@ -45,7 +45,7 @@ void RingBuffer<T>::create(uint64_t capacity, Allocator* allocator) noexcept
 
 	// Allocate memory
 	mDataPtr = (T*)mAllocator->allocate(
-		mCapacity * sizeof(T), std::max<uint64_t>(32, alignof(T)), "RingBuffer");
+		mCapacity * sizeof(T), sfzMax(32, alignof(T)), "RingBuffer");
 }
 
 template<typename T>

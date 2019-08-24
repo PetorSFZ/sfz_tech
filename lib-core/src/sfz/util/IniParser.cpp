@@ -24,6 +24,7 @@
 #include "sfz/Assert.hpp"
 #include "sfz/Logging.hpp"
 #include "sfz/math/MathSupport.hpp"
+#include "sfz/math/MinMax.hpp"
 #include "sfz/util/IO.hpp"
 
 namespace sfz {
@@ -131,7 +132,7 @@ bool IniParser::load() noexcept
 			}
 			Item comment;
 			comment.type = ItemType::COMMENT_OWN_ROW;
-			comment.str.insertChars(startPtr + 1, std::min(uint32_t(191), line.length - 1));
+			comment.str.insertChars(startPtr + 1, sfzMin(uint32_t(191), line.length - 1));
 			newSections.last().items.add(comment);
 			continue;
 		}

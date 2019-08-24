@@ -21,7 +21,8 @@
 #include <algorithm>
 #include <cmath>
 
-#include <sfz/Assert.hpp>
+#include "sfz/Assert.hpp"
+#include "sfz/math/MinMax.hpp"
 
 namespace sfz {
 
@@ -50,8 +51,8 @@ void FrametimeStats::addSample(float sampleInMs) noexcept
 
 	for (float sample : mSamples) {
 		mTotalTime += sample;
-		mMin = std::min(mMin, sample);
-		mMax = std::max(mMax, sample);
+		mMin = sfzMin(mMin, sample);
+		mMax = sfzMax(mMax, sample);
 	}
 	mAvg = mTotalTime / float(mSamples.size());
 
