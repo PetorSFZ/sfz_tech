@@ -171,7 +171,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	// Calculate lag
 	float totalUpdateTime =
 		float(state.updateInfo.numUpdateTicks) * state.updateInfo.tickTimeSeconds;
-	state.updateInfo.lagSeconds = std::max(totalAvailableTime - totalUpdateTime, 0.0f);
+	state.updateInfo.lagSeconds = sfzMax(totalAvailableTime - totalUpdateTime, 0.0f);
 
 	// Remove old events
 	state.userInput.events.clear();
