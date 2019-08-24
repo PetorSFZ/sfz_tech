@@ -184,9 +184,9 @@ void DynArray<T>::setCapacity(uint32_t capacity) noexcept
 		if (mAllocator == nullptr) mAllocator = getDefaultAllocator();
 
 		// Allocates memory and returns
-		mCapacity = std::max(capacity, MIN_CAPACITY);
+		mCapacity = sfzMax(capacity, MIN_CAPACITY);
 		mDataPtr = (T*)mAllocator->allocate(mCapacity * sizeof(T),
-		                                    std::max<uint32_t>(MINIMUM_ALIGNMENT, alignof(T)),
+		                                    sfzMax(MINIMUM_ALIGNMENT, alignof(T)),
 		                                    "DynArray");
 		sfz_assert_debug(mDataPtr != nullptr);
 		return;
@@ -203,9 +203,9 @@ void DynArray<T>::setCapacity(uint32_t capacity) noexcept
 	}
 
 	// Allocate new memory and move/copy over elements from old memory
-	capacity = std::max(capacity, MIN_CAPACITY);
+	capacity = sfzMax(capacity, MIN_CAPACITY);
 	T* newDataPtr = (T*)mAllocator->allocate(capacity * sizeof(T),
-	                                         std::max<uint32_t>(MINIMUM_ALIGNMENT, alignof(T)),
+	                                         sfzMax(MINIMUM_ALIGNMENT, alignof(T)),
 	                                         "DynArray");
 	for (uint32_t i = 0; i < mSize; i++) {
 		new (newDataPtr + i) T(std::move(mDataPtr[i]));
@@ -399,7 +399,7 @@ template<typename T>
 void DynArray<T>::remove(uint32_t position, uint32_t numElements) noexcept
 {
 	// Destroy the elements to remove
-	uint32_t numElementsToRemove = std::min(numElements, mSize - position);
+	uint32_t numElementsToRemove = sfzMin(numElements, mSize - position);
 	for (uint32_t i = 0; i < numElementsToRemove; i++) {
 		mDataPtr[position + i].~T();
 	}

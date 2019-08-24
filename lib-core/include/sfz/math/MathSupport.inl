@@ -259,640 +259,52 @@ SFZ_CUDA_CALL vec4_s32 sgn(vec4_s32 val) noexcept
 	// TODO: Implement SSE variant
 }
 
-// min() - scalars
-// ------------------------------------------------------------------------------------------------
-
-SFZ_CUDA_CALL float min(float lhs, float rhs) noexcept
-{
-	return std::min(lhs, rhs);
-}
-
-SFZ_CUDA_CALL int32_t min(int32_t lhs, int32_t rhs) noexcept
-{
-	return std::min(lhs, rhs);
-}
-
-SFZ_CUDA_CALL uint32_t min(uint32_t lhs, uint32_t rhs) noexcept
-{
-	return std::min(lhs, rhs);
-}
-
-// min() - float vectors
-// ------------------------------------------------------------------------------------------------
-
-SFZ_CUDA_CALL vec2 min(vec2 lhs, vec2 rhs) noexcept
-{
-	vec2 tmp;
-	tmp.x = sfz::min(lhs.x, rhs.x);
-	tmp.y = sfz::min(lhs.y, rhs.y);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec3 min(vec3 lhs, vec3 rhs) noexcept
-{
-	vec3 tmp;
-	tmp.x = sfz::min(lhs.x, rhs.x);
-	tmp.y = sfz::min(lhs.y, rhs.y);
-	tmp.z = sfz::min(lhs.z, rhs.z);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec4 min(vec4 lhs, vec4 rhs) noexcept
-{
-#ifdef SFZ_CUDA_DEVICE_CODE
-	vec4 tmp;
-	tmp.x = sfz::min(lhs.x, rhs.x);
-	tmp.y = sfz::min(lhs.y, rhs.y);
-	tmp.z = sfz::min(lhs.z, rhs.z);
-	tmp.w = sfz::min(lhs.w, rhs.w);
-	return tmp;
-#elif defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
-	vec4 tmp;
-	tmp.x = sfz::min(lhs.x, rhs.x);
-	tmp.y = sfz::min(lhs.y, rhs.y);
-	tmp.z = sfz::min(lhs.z, rhs.z);
-	tmp.w = sfz::min(lhs.w, rhs.w);
-	return tmp;
-#else
-	const __m128 lhsReg = _mm_load_ps(lhs.data());
-	const __m128 rhsReg = _mm_load_ps(rhs.data());
-	const __m128 minReg = _mm_min_ps(lhsReg, rhsReg);
-	vec4 tmp;
-	_mm_store_ps(tmp.data(), minReg);
-	return tmp;
-#endif
-}
-
-SFZ_CUDA_CALL vec2 min(vec2 lhs, float rhs) noexcept { return min(rhs, lhs); }
-SFZ_CUDA_CALL vec2 min(float lhs, vec2 rhs) noexcept
-{
-	vec2 tmp;
-	tmp.x = sfz::min(lhs, rhs.x);
-	tmp.y = sfz::min(lhs, rhs.y);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec3 min(vec3 lhs, float rhs) noexcept { return min(rhs, lhs); }
-SFZ_CUDA_CALL vec3 min(float lhs, vec3 rhs) noexcept
-{
-	vec3 tmp;
-	tmp.x = sfz::min(lhs, rhs.x);
-	tmp.y = sfz::min(lhs, rhs.y);
-	tmp.z = sfz::min(lhs, rhs.z);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec4 min(vec4 lhs, float rhs) noexcept { return min(rhs, lhs); }
-SFZ_CUDA_CALL vec4 min(float lhs, vec4 rhs) noexcept
-{
-#ifdef SFZ_CUDA_DEVICE_CODE
-	vec4 tmp;
-	tmp.x = sfz::min(lhs, rhs.x);
-	tmp.y = sfz::min(lhs, rhs.y);
-	tmp.z = sfz::min(lhs, rhs.z);
-	tmp.w = sfz::min(lhs, rhs.w);
-	return tmp;
-#elif defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
-	vec4 tmp;
-	tmp.x = sfz::min(lhs, rhs.x);
-	tmp.y = sfz::min(lhs, rhs.y);
-	tmp.z = sfz::min(lhs, rhs.z);
-	tmp.w = sfz::min(lhs, rhs.w);
-	return tmp;
-#else
-	const __m128 lhsReg = _mm_set1_ps(lhs);
-	const __m128 rhsReg = _mm_load_ps(rhs.data());
-	const __m128 minReg = _mm_min_ps(lhsReg, rhsReg);
-	vec4 tmp;
-	_mm_store_ps(tmp.data(), minReg);
-	return tmp;
-#endif
-}
-
-// min() - int32_t vectors
-// ------------------------------------------------------------------------------------------------
-
-SFZ_CUDA_CALL vec2_s32 min(vec2_s32 lhs, vec2_s32 rhs) noexcept
-{
-	vec2_s32 tmp;
-	tmp.x = sfz::min(lhs.x, rhs.x);
-	tmp.y = sfz::min(lhs.y, rhs.y);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec3_s32 min(vec3_s32 lhs, vec3_s32 rhs) noexcept
-{
-	vec3_s32 tmp;
-	tmp.x = sfz::min(lhs.x, rhs.x);
-	tmp.y = sfz::min(lhs.y, rhs.y);
-	tmp.z = sfz::min(lhs.z, rhs.z);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec4_s32 min(vec4_s32 lhs, vec4_s32 rhs) noexcept
-{
-#ifdef SFZ_CUDA_DEVICE_CODE
-	vec4_s32 tmp;
-	tmp.x = sfz::min(lhs.x, rhs.x);
-	tmp.y = sfz::min(lhs.y, rhs.y);
-	tmp.z = sfz::min(lhs.z, rhs.z);
-	tmp.w = sfz::min(lhs.w, rhs.w);
-	return tmp;
-#elif defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
-	vec4_s32 tmp;
-	tmp.x = sfz::min(lhs.x, rhs.x);
-	tmp.y = sfz::min(lhs.y, rhs.y);
-	tmp.z = sfz::min(lhs.z, rhs.z);
-	tmp.w = sfz::min(lhs.w, rhs.w);
-	return tmp;
-#else
-	const __m128i lhsReg = _mm_load_si128((const __m128i*)lhs.data());
-	const __m128i rhsReg = _mm_load_si128((const __m128i*)rhs.data());
-	const __m128i minReg = _mm_min_epi32(lhsReg, rhsReg);
-	vec4_s32 tmp;
-	_mm_store_si128((__m128i*)tmp.data(), minReg);
-	return tmp;
-#endif
-}
-
-SFZ_CUDA_CALL vec2_s32 min(vec2_s32 lhs, int32_t rhs) noexcept { return min(rhs, lhs); }
-SFZ_CUDA_CALL vec2_s32 min(int32_t lhs, vec2_s32 rhs) noexcept
-{
-	vec2_s32 tmp;
-	tmp.x = sfz::min(lhs, rhs.x);
-	tmp.y = sfz::min(lhs, rhs.y);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec3_s32 min(vec3_s32 lhs, int32_t rhs) noexcept { return min(rhs, lhs); }
-SFZ_CUDA_CALL vec3_s32 min(int32_t lhs, vec3_s32 rhs) noexcept
-{
-	vec3_s32 tmp;
-	tmp.x = sfz::min(lhs, rhs.x);
-	tmp.y = sfz::min(lhs, rhs.y);
-	tmp.z = sfz::min(lhs, rhs.z);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec4_s32 min(vec4_s32 lhs, int32_t rhs) noexcept { return min(rhs, lhs); }
-SFZ_CUDA_CALL vec4_s32 min(int32_t lhs, vec4_s32 rhs) noexcept
-{
-#ifdef SFZ_CUDA_DEVICE_CODE
-	vec4_s32 tmp;
-	tmp.x = sfz::min(lhs, rhs.x);
-	tmp.y = sfz::min(lhs, rhs.y);
-	tmp.z = sfz::min(lhs, rhs.z);
-	tmp.w = sfz::min(lhs, rhs.w);
-	return tmp;
-#elif defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
-	vec4_s32 tmp;
-	tmp.x = sfz::min(lhs, rhs.x);
-	tmp.y = sfz::min(lhs, rhs.y);
-	tmp.z = sfz::min(lhs, rhs.z);
-	tmp.w = sfz::min(lhs, rhs.w);
-	return tmp;
-#else
-	const __m128i lhsReg = _mm_set1_epi32(lhs);
-	const __m128i rhsReg = _mm_load_si128((const __m128i*)rhs.data());
-	const __m128i minReg = _mm_min_epi32(lhsReg, rhsReg);
-	vec4_s32 tmp;
-	_mm_store_si128((__m128i*)tmp.data(), minReg);
-	return tmp;
-#endif
-}
-
-// min() - uint32_t vectors
-// ------------------------------------------------------------------------------------------------
-
-SFZ_CUDA_CALL vec2_u32 min(vec2_u32 lhs, vec2_u32 rhs) noexcept
-{
-	vec2_u32 tmp;
-	tmp.x = sfz::min(lhs.x, rhs.x);
-	tmp.y = sfz::min(lhs.y, rhs.y);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec3_u32 min(vec3_u32 lhs, vec3_u32 rhs) noexcept
-{
-	vec3_u32 tmp;
-	tmp.x = sfz::min(lhs.x, rhs.x);
-	tmp.y = sfz::min(lhs.y, rhs.y);
-	tmp.z = sfz::min(lhs.z, rhs.z);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec4_u32 min(vec4_u32 lhs, vec4_u32 rhs) noexcept
-{
-#ifdef SFZ_CUDA_DEVICE_CODE
-	vec4_u32 tmp;
-	tmp.x = sfz::min(lhs.x, rhs.x);
-	tmp.y = sfz::min(lhs.y, rhs.y);
-	tmp.z = sfz::min(lhs.z, rhs.z);
-	tmp.w = sfz::min(lhs.w, rhs.w);
-	return tmp;
-#elif defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
-	vec4_u32 tmp;
-	tmp.x = sfz::min(lhs.x, rhs.x);
-	tmp.y = sfz::min(lhs.y, rhs.y);
-	tmp.z = sfz::min(lhs.z, rhs.z);
-	tmp.w = sfz::min(lhs.w, rhs.w);
-	return tmp;
-#else
-	const __m128i lhsReg = _mm_load_si128((const __m128i*)lhs.data());
-	const __m128i rhsReg = _mm_load_si128((const __m128i*)rhs.data());
-	const __m128i minReg = _mm_min_epu32(lhsReg, rhsReg);
-	vec4_u32 tmp;
-	_mm_store_si128((__m128i*)tmp.data(), minReg);
-	return tmp;
-#endif
-}
-
-SFZ_CUDA_CALL vec2_u32 min(vec2_u32 lhs, uint32_t rhs) noexcept { return min(rhs, lhs); }
-SFZ_CUDA_CALL vec2_u32 min(uint32_t lhs, vec2_u32 rhs) noexcept
-{
-	vec2_u32 tmp;
-	tmp.x = sfz::min(lhs, rhs.x);
-	tmp.y = sfz::min(lhs, rhs.y);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec3_u32 min(vec3_u32 lhs, uint32_t rhs) noexcept { return min(rhs, lhs); }
-SFZ_CUDA_CALL vec3_u32 min(uint32_t lhs, vec3_u32 rhs) noexcept
-{
-	vec3_u32 tmp;
-	tmp.x = sfz::min(lhs, rhs.x);
-	tmp.y = sfz::min(lhs, rhs.y);
-	tmp.z = sfz::min(lhs, rhs.z);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec4_u32 min(vec4_u32 lhs, uint32_t rhs) noexcept { return min(rhs, lhs); }
-SFZ_CUDA_CALL vec4_u32 min(uint32_t lhs, vec4_u32 rhs) noexcept
-{
-#ifdef SFZ_CUDA_DEVICE_CODE
-	vec4_u32 tmp;
-	tmp.x = sfz::min(lhs, rhs.x);
-	tmp.y = sfz::min(lhs, rhs.y);
-	tmp.z = sfz::min(lhs, rhs.z);
-	tmp.w = sfz::min(lhs, rhs.w);
-	return tmp;
-#elif defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
-	vec4_u32 tmp;
-	tmp.x = sfz::min(lhs, rhs.x);
-	tmp.y = sfz::min(lhs, rhs.y);
-	tmp.z = sfz::min(lhs, rhs.z);
-	tmp.w = sfz::min(lhs, rhs.w);
-	return tmp;
-#else
-	const __m128i lhsReg = _mm_set1_epi32(*(int32_t*)&lhs);
-	const __m128i rhsReg = _mm_load_si128((const __m128i*)rhs.data());
-	const __m128i minReg = _mm_min_epi32(lhsReg, rhsReg);
-	vec4_u32 tmp;
-	_mm_store_si128((__m128i*)tmp.data(), minReg);
-	return tmp;
-#endif
-}
-
-// max() - scalars
-// ------------------------------------------------------------------------------------------------
-
-SFZ_CUDA_CALL float max(float lhs, float rhs) noexcept
-{
-	return std::max(lhs, rhs);
-}
-
-SFZ_CUDA_CALL int32_t max(int32_t lhs, int32_t rhs) noexcept
-{
-	return std::max(lhs, rhs);
-}
-
-SFZ_CUDA_CALL uint32_t max(uint32_t lhs, uint32_t rhs) noexcept
-{
-	return std::max(lhs, rhs);
-}
-
-// max() - float vectors
-// ------------------------------------------------------------------------------------------------
-
-SFZ_CUDA_CALL vec2 max(vec2 lhs, vec2 rhs) noexcept
-{
-	vec2 tmp;
-	tmp.x = sfz::max(lhs.x, rhs.x);
-	tmp.y = sfz::max(lhs.y, rhs.y);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec3 max(vec3 lhs, vec3 rhs) noexcept
-{
-	vec3 tmp;
-	tmp.x = sfz::max(lhs.x, rhs.x);
-	tmp.y = sfz::max(lhs.y, rhs.y);
-	tmp.z = sfz::max(lhs.z, rhs.z);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec4 max(vec4 lhs, vec4 rhs) noexcept
-{
-#ifdef SFZ_CUDA_DEVICE_CODE
-	vec4 tmp;
-	tmp.x = sfz::max(lhs.x, rhs.x);
-	tmp.y = sfz::max(lhs.y, rhs.y);
-	tmp.z = sfz::max(lhs.z, rhs.z);
-	tmp.w = sfz::max(lhs.w, rhs.w);
-	return tmp;
-#elif defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
-	vec4 tmp;
-	tmp.x = sfz::max(lhs.x, rhs.x);
-	tmp.y = sfz::max(lhs.y, rhs.y);
-	tmp.z = sfz::max(lhs.z, rhs.z);
-	tmp.w = sfz::max(lhs.w, rhs.w);
-	return tmp;
-#else
-	const __m128 lhsReg = _mm_load_ps(lhs.data());
-	const __m128 rhsReg = _mm_load_ps(rhs.data());
-	const __m128 maxReg = _mm_max_ps(lhsReg, rhsReg);
-	vec4 tmp;
-	_mm_store_ps(tmp.data(), maxReg);
-	return tmp;
-#endif
-}
-
-SFZ_CUDA_CALL vec2 max(vec2 lhs, float rhs) noexcept { return max(rhs, lhs); }
-SFZ_CUDA_CALL vec2 max(float lhs, vec2 rhs) noexcept
-{
-	vec2 tmp;
-	tmp.x = sfz::max(lhs, rhs.x);
-	tmp.y = sfz::max(lhs, rhs.y);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec3 max(vec3 lhs, float rhs) noexcept { return max(rhs, lhs); }
-SFZ_CUDA_CALL vec3 max(float lhs, vec3 rhs) noexcept
-{
-	vec3 tmp;
-	tmp.x = sfz::max(lhs, rhs.x);
-	tmp.y = sfz::max(lhs, rhs.y);
-	tmp.z = sfz::max(lhs, rhs.z);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec4 max(vec4 lhs, float rhs) noexcept { return max(rhs, lhs); }
-SFZ_CUDA_CALL vec4 max(float lhs, vec4 rhs) noexcept
-{
-#ifdef SFZ_CUDA_DEVICE_CODE
-	vec4 tmp;
-	tmp.x = sfz::max(lhs, rhs.x);
-	tmp.y = sfz::max(lhs, rhs.y);
-	tmp.z = sfz::max(lhs, rhs.z);
-	tmp.w = sfz::max(lhs, rhs.w);
-	return tmp;
-#elif defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
-	vec4 tmp;
-	tmp.x = sfz::max(lhs, rhs.x);
-	tmp.y = sfz::max(lhs, rhs.y);
-	tmp.z = sfz::max(lhs, rhs.z);
-	tmp.w = sfz::max(lhs, rhs.w);
-	return tmp;
-#else
-	const __m128 lhsReg = _mm_set1_ps(lhs);
-	const __m128 rhsReg = _mm_load_ps(rhs.data());
-	const __m128 maxReg = _mm_max_ps(lhsReg, rhsReg);
-	vec4 tmp;
-	_mm_store_ps(tmp.data(), maxReg);
-	return tmp;
-#endif
-}
-
-// max() - int32_t vectors
-// ------------------------------------------------------------------------------------------------
-
-SFZ_CUDA_CALL vec2_s32 max(vec2_s32 lhs, vec2_s32 rhs) noexcept
-{
-	vec2_s32 tmp;
-	tmp.x = sfz::max(lhs.x, rhs.x);
-	tmp.y = sfz::max(lhs.y, rhs.y);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec3_s32 max(vec3_s32 lhs, vec3_s32 rhs) noexcept
-{
-	vec3_s32 tmp;
-	tmp.x = sfz::max(lhs.x, rhs.x);
-	tmp.y = sfz::max(lhs.y, rhs.y);
-	tmp.z = sfz::max(lhs.z, rhs.z);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec4_s32 max(vec4_s32 lhs, vec4_s32 rhs) noexcept
-{
-#ifdef SFZ_CUDA_DEVICE_CODE
-	vec4_s32 tmp;
-	tmp.x = sfz::max(lhs.x, rhs.x);
-	tmp.y = sfz::max(lhs.y, rhs.y);
-	tmp.z = sfz::max(lhs.z, rhs.z);
-	tmp.w = sfz::max(lhs.w, rhs.w);
-	return tmp;
-#elif defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
-	vec4_s32 tmp;
-	tmp.x = sfz::max(lhs.x, rhs.x);
-	tmp.y = sfz::max(lhs.y, rhs.y);
-	tmp.z = sfz::max(lhs.z, rhs.z);
-	tmp.w = sfz::max(lhs.w, rhs.w);
-	return tmp;
-#else
-	const __m128i lhsReg = _mm_load_si128((const __m128i*)lhs.data());
-	const __m128i rhsReg = _mm_load_si128((const __m128i*)rhs.data());
-	const __m128i maxReg = _mm_max_epi32(lhsReg, rhsReg);
-	vec4_s32 tmp;
-	_mm_store_si128((__m128i*)tmp.data(), maxReg);
-	return tmp;
-#endif
-}
-
-SFZ_CUDA_CALL vec2_s32 max(vec2_s32 lhs, int32_t rhs) noexcept { return max(rhs, lhs); }
-SFZ_CUDA_CALL vec2_s32 max(int32_t lhs, vec2_s32 rhs) noexcept
-{
-	vec2_s32 tmp;
-	tmp.x = sfz::max(lhs, rhs.x);
-	tmp.y = sfz::max(lhs, rhs.y);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec3_s32 max(vec3_s32 lhs, int32_t rhs) noexcept { return max(rhs, lhs); }
-SFZ_CUDA_CALL vec3_s32 max(int32_t lhs, vec3_s32 rhs) noexcept
-{
-	vec3_s32 tmp;
-	tmp.x = sfz::max(lhs, rhs.x);
-	tmp.y = sfz::max(lhs, rhs.y);
-	tmp.z = sfz::max(lhs, rhs.z);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec4_s32 max(vec4_s32 lhs, int32_t rhs) noexcept { return max(rhs, lhs); }
-SFZ_CUDA_CALL vec4_s32 max(int32_t lhs, vec4_s32 rhs) noexcept
-{
-#ifdef SFZ_CUDA_DEVICE_CODE
-	vec4_s32 tmp;
-	tmp.x = sfz::max(lhs, rhs.x);
-	tmp.y = sfz::max(lhs, rhs.y);
-	tmp.z = sfz::max(lhs, rhs.z);
-	tmp.w = sfz::max(lhs, rhs.w);
-	return tmp;
-#elif defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
-	vec4_s32 tmp;
-	tmp.x = sfz::max(lhs, rhs.x);
-	tmp.y = sfz::max(lhs, rhs.y);
-	tmp.z = sfz::max(lhs, rhs.z);
-	tmp.w = sfz::max(lhs, rhs.w);
-	return tmp;
-#else
-	const __m128i lhsReg = _mm_set1_epi32(lhs);
-	const __m128i rhsReg = _mm_load_si128((const __m128i*)rhs.data());
-	const __m128i maxReg = _mm_max_epi32(lhsReg, rhsReg);
-	vec4_s32 tmp;
-	_mm_store_si128((__m128i*)tmp.data(), maxReg);
-	return tmp;
-#endif
-}
-
-// max() - uint32_t vectors
-// ------------------------------------------------------------------------------------------------
-
-SFZ_CUDA_CALL vec2_u32 max(vec2_u32 lhs, vec2_u32 rhs) noexcept
-{
-	vec2_u32 tmp;
-	tmp.x = sfz::max(lhs.x, rhs.x);
-	tmp.y = sfz::max(lhs.y, rhs.y);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec3_u32 max(vec3_u32 lhs, vec3_u32 rhs) noexcept
-{
-	vec3_u32 tmp;
-	tmp.x = sfz::max(lhs.x, rhs.x);
-	tmp.y = sfz::max(lhs.y, rhs.y);
-	tmp.z = sfz::max(lhs.z, rhs.z);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec4_u32 max(vec4_u32 lhs, vec4_u32 rhs) noexcept
-{
-#ifdef SFZ_CUDA_DEVICE_CODE
-	vec4_u32 tmp;
-	tmp.x = sfz::max(lhs.x, rhs.x);
-	tmp.y = sfz::max(lhs.y, rhs.y);
-	tmp.z = sfz::max(lhs.z, rhs.z);
-	tmp.w = sfz::max(lhs.w, rhs.w);
-	return tmp;
-#elif defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
-	vec4_u32 tmp;
-	tmp.x = sfz::max(lhs.x, rhs.x);
-	tmp.y = sfz::max(lhs.y, rhs.y);
-	tmp.z = sfz::max(lhs.z, rhs.z);
-	tmp.w = sfz::max(lhs.w, rhs.w);
-	return tmp;
-#else
-	const __m128i lhsReg = _mm_load_si128((const __m128i*)lhs.data());
-	const __m128i rhsReg = _mm_load_si128((const __m128i*)rhs.data());
-	const __m128i maxReg = _mm_max_epu32(lhsReg, rhsReg);
-	vec4_u32 tmp;
-	_mm_store_si128((__m128i*)tmp.data(), maxReg);
-	return tmp;
-#endif
-}
-
-SFZ_CUDA_CALL vec2_u32 max(vec2_u32 lhs, uint32_t rhs) noexcept { return max(rhs, lhs); }
-SFZ_CUDA_CALL vec2_u32 max(uint32_t lhs, vec2_u32 rhs) noexcept
-{
-	vec2_u32 tmp;
-	tmp.x = sfz::max(lhs, rhs.x);
-	tmp.y = sfz::max(lhs, rhs.y);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec3_u32 max(vec3_u32 lhs, uint32_t rhs) noexcept { return max(rhs, lhs); }
-SFZ_CUDA_CALL vec3_u32 max(uint32_t lhs, vec3_u32 rhs) noexcept
-{
-	vec3_u32 tmp;
-	tmp.x = sfz::max(lhs, rhs.x);
-	tmp.y = sfz::max(lhs, rhs.y);
-	tmp.z = sfz::max(lhs, rhs.z);
-	return tmp;
-}
-
-SFZ_CUDA_CALL vec4_u32 max(vec4_u32 lhs, uint32_t rhs) noexcept { return max(rhs, lhs); }
-SFZ_CUDA_CALL vec4_u32 max(uint32_t lhs, vec4_u32 rhs) noexcept
-{
-#ifdef SFZ_CUDA_DEVICE_CODE
-	vec4_u32 tmp;
-	tmp.x = sfz::max(lhs, rhs.x);
-	tmp.y = sfz::max(lhs, rhs.y);
-	tmp.z = sfz::max(lhs, rhs.z);
-	tmp.w = sfz::max(lhs, rhs.w);
-	return tmp;
-#elif defined(__EMSCRIPTEN__) || defined(SFZ_IOS)
-	vec4_u32 tmp;
-	tmp.x = sfz::max(lhs, rhs.x);
-	tmp.y = sfz::max(lhs, rhs.y);
-	tmp.z = sfz::max(lhs, rhs.z);
-	tmp.w = sfz::max(lhs, rhs.w);
-	return tmp;
-#else
-	const __m128i lhsReg = _mm_set1_epi32(*(int32_t*)&lhs);
-	const __m128i rhsReg = _mm_load_si128((const __m128i*)rhs.data());
-	const __m128i maxReg = _mm_max_epu32(lhsReg, rhsReg);
-	vec4_u32 tmp;
-	_mm_store_si128((__m128i*)tmp.data(), maxReg);
-	return tmp;
-#endif
-}
-
 // minElement()
 // ------------------------------------------------------------------------------------------------
 
 SFZ_CUDA_CALL float minElement(vec2 val) noexcept
 {
-	return sfz::min(val.x, val.y);
+	return sfzMin(val.x, val.y);
 }
 
 SFZ_CUDA_CALL float minElement(vec3 val) noexcept
 {
-	return sfz::min(sfz::min(val.x, val.y), val.z);
+	return sfzMin(sfzMin(val.x, val.y), val.z);
 }
 
 SFZ_CUDA_CALL float minElement(vec4 val) noexcept
 {
-	return sfz::min(sfz::min(sfz::min(val.x, val.y), val.z), val.w);
+	return sfzMin(sfzMin(sfzMin(val.x, val.y), val.z), val.w);
 }
 
 SFZ_CUDA_CALL int32_t minElement(vec2_s32 val) noexcept
 {
-	return sfz::min(val.x, val.y);
+	return sfzMin(val.x, val.y);
 }
 
 SFZ_CUDA_CALL int32_t minElement(vec3_s32 val) noexcept
 {
-	return sfz::min(sfz::min(val.x, val.y), val.z);
+	return sfzMin(sfzMin(val.x, val.y), val.z);
 }
 
 SFZ_CUDA_CALL int32_t minElement(vec4_s32 val) noexcept
 {
-	return sfz::min(sfz::min(sfz::min(val.x, val.y), val.z), val.w);
+	return sfzMin(sfzMin(sfzMin(val.x, val.y), val.z), val.w);
 }
 
 SFZ_CUDA_CALL uint32_t minElement(vec2_u32 val) noexcept
 {
-	return sfz::min(val.x, val.y);
+	return sfzMin(val.x, val.y);
 }
 
 SFZ_CUDA_CALL uint32_t minElement(vec3_u32 val) noexcept
 {
-	return sfz::min(sfz::min(val.x, val.y), val.z);
+	return sfzMin(sfzMin(val.x, val.y), val.z);
 }
 
 SFZ_CUDA_CALL uint32_t minElement(vec4_u32 val) noexcept
 {
-	return sfz::min(sfz::min(sfz::min(val.x, val.y), val.z), val.w);
+	return sfzMin(sfzMin(sfzMin(val.x, val.y), val.z), val.w);
 }
 
 // maxElement()
@@ -900,47 +312,47 @@ SFZ_CUDA_CALL uint32_t minElement(vec4_u32 val) noexcept
 
 SFZ_CUDA_CALL float maxElement(vec2 val) noexcept
 {
-	return sfz::max(val.x, val.y);
+	return sfzMax(val.x, val.y);
 }
 
 SFZ_CUDA_CALL float maxElement(vec3 val) noexcept
 {
-	return sfz::max(sfz::max(val.x, val.y), val.z);
+	return sfzMax(sfzMax(val.x, val.y), val.z);
 }
 
 SFZ_CUDA_CALL float maxElement(vec4 val) noexcept
 {
-	return sfz::max(sfz::max(sfz::max(val.x, val.y), val.z), val.w);
+	return sfzMax(sfzMax(sfzMax(val.x, val.y), val.z), val.w);
 }
 
 SFZ_CUDA_CALL int32_t maxElement(vec2_s32 val) noexcept
 {
-	return sfz::max(val.x, val.y);
+	return sfzMax(val.x, val.y);
 }
 
 SFZ_CUDA_CALL int32_t maxElement(vec3_s32 val) noexcept
 {
-	return sfz::max(sfz::max(val.x, val.y), val.z);
+	return sfzMax(sfzMax(val.x, val.y), val.z);
 }
 
 SFZ_CUDA_CALL int32_t maxElement(vec4_s32 val) noexcept
 {
-	return sfz::max(sfz::max(sfz::max(val.x, val.y), val.z), val.w);
+	return sfzMax(sfzMax(sfzMax(val.x, val.y), val.z), val.w);
 }
 
 SFZ_CUDA_CALL uint32_t maxElement(vec2_u32 val) noexcept
 {
-	return sfz::max(val.x, val.y);
+	return sfzMax(val.x, val.y);
 }
 
 SFZ_CUDA_CALL uint32_t maxElement(vec3_u32 val) noexcept
 {
-	return sfz::max(sfz::max(val.x, val.y), val.z);
+	return sfzMax(sfzMax(val.x, val.y), val.z);
 }
 
 SFZ_CUDA_CALL uint32_t maxElement(vec4_u32 val) noexcept
 {
-	return sfz::max(sfz::max(sfz::max(val.x, val.y), val.z), val.w);
+	return sfzMax(sfzMax(sfzMax(val.x, val.y), val.z), val.w);
 }
 
 // clamp() & saturate()
@@ -949,7 +361,7 @@ SFZ_CUDA_CALL uint32_t maxElement(vec4_u32 val) noexcept
 template<typename ArgT, typename LimitT>
 SFZ_CUDA_CALL ArgT clamp(const ArgT& value, const LimitT& minValue, const LimitT& maxValue) noexcept
 {
-	return sfz::max(minValue, sfz::min(value, maxValue));
+	return sfzMax(minValue, sfzMin(value, maxValue));
 }
 
 SFZ_CUDA_CALL float saturate(float value) noexcept

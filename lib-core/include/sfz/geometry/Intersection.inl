@@ -233,8 +233,8 @@ inline bool overlaps(const Circle& circle, const AABB2D& rect) noexcept
 	// If the length between the center of the circle and the closest point on the rectangle is
 	// less than or equal to the circles radius they overlap. Both sides of the equation is
 	// squared to avoid somewhat expensive sqrt() function.
-	vec2 e{max(rect.min - circle.pos, 0.0f)};
-	e += max(circle.pos - rect.max, 0.0f);
+	vec2 e = sfzMax(rect.min - circle.pos, 0.0f);
+	e += sfzMax(circle.pos - rect.max, 0.0f);
 	return dot(e, e) <= circle.radius * circle.radius;
 }
 
@@ -355,7 +355,7 @@ inline bool belowPlane(const Plane& plane, const Sphere& sphere) noexcept
 
 inline vec3 closestPoint(const AABB& aabb, const vec3& point) noexcept
 {
-	return sfz::min(sfz::max(point, aabb.min), aabb.max);
+	return sfzMin(sfzMax(point, aabb.min), aabb.max);
 }
 
 inline vec3 closestPoint(const OBB& obb, const vec3& point) noexcept

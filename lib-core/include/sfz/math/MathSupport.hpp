@@ -26,6 +26,7 @@
 #include "sfz/CudaCompatibility.hpp"
 #include "sfz/SimdIntrinsics.hpp"
 #include "sfz/math/Matrix.hpp"
+#include "sfz/math/MinMax.hpp"
 #include "sfz/math/Vector.hpp"
 #include "sfz/math/Quaternion.hpp"
 
@@ -98,90 +99,6 @@ SFZ_CUDA_CALL vec4 sgn(vec4 val) noexcept;
 SFZ_CUDA_CALL vec2_s32 sgn(vec2_s32 val) noexcept;
 SFZ_CUDA_CALL vec3_s32 sgn(vec3_s32 val) noexcept;
 SFZ_CUDA_CALL vec4_s32 sgn(vec4_s32 val) noexcept;
-
-// min()
-// ------------------------------------------------------------------------------------------------
-
-/// Returns the minimum value of two elements. Element-wise results for vector types.
-
-SFZ_CUDA_CALL float min(float lhs, float rhs) noexcept;
-SFZ_CUDA_CALL int32_t min(int32_t lhs, int32_t rhs) noexcept;
-SFZ_CUDA_CALL uint32_t min(uint32_t lhs, uint32_t rhs) noexcept;
-
-SFZ_CUDA_CALL vec2 min(vec2 lhs, vec2 rhs) noexcept;
-SFZ_CUDA_CALL vec3 min(vec3 lhs, vec3 rhs) noexcept;
-SFZ_CUDA_CALL vec4 min(vec4 lhs, vec4 rhs) noexcept;
-
-SFZ_CUDA_CALL vec2 min(vec2 lhs, float rhs) noexcept;
-SFZ_CUDA_CALL vec2 min(float lhs, vec2 rhs) noexcept;
-SFZ_CUDA_CALL vec3 min(vec3 lhs, float rhs) noexcept;
-SFZ_CUDA_CALL vec3 min(float lhs, vec3 rhs) noexcept;
-SFZ_CUDA_CALL vec4 min(vec4 lhs, float rhs) noexcept;
-SFZ_CUDA_CALL vec4 min(float lhs, vec4 rhs) noexcept;
-
-SFZ_CUDA_CALL vec2_s32 min(vec2_s32 lhs, vec2_s32 rhs) noexcept;
-SFZ_CUDA_CALL vec3_s32 min(vec3_s32 lhs, vec3_s32 rhs) noexcept;
-SFZ_CUDA_CALL vec4_s32 min(vec4_s32 lhs, vec4_s32 rhs) noexcept;
-
-SFZ_CUDA_CALL vec2_s32 min(vec2_s32 lhs, int32_t rhs) noexcept;
-SFZ_CUDA_CALL vec2_s32 min(int32_t lhs, vec2_s32 rhs) noexcept;
-SFZ_CUDA_CALL vec3_s32 min(vec3_s32 lhs, int32_t rhs) noexcept;
-SFZ_CUDA_CALL vec3_s32 min(int32_t lhs, vec3_s32 rhs) noexcept;
-SFZ_CUDA_CALL vec4_s32 min(vec4_s32 lhs, int32_t rhs) noexcept;
-SFZ_CUDA_CALL vec4_s32 min(int32_t lhs, vec4_s32 rhs) noexcept;
-
-SFZ_CUDA_CALL vec2_u32 min(vec2_u32 lhs, vec2_u32 rhs) noexcept;
-SFZ_CUDA_CALL vec3_u32 min(vec3_u32 lhs, vec3_u32 rhs) noexcept;
-SFZ_CUDA_CALL vec4_u32 min(vec4_u32 lhs, vec4_u32 rhs) noexcept;
-
-SFZ_CUDA_CALL vec2_u32 min(vec2_u32 lhs, uint32_t rhs) noexcept;
-SFZ_CUDA_CALL vec2_u32 min(uint32_t lhs, vec2_u32 rhs) noexcept;
-SFZ_CUDA_CALL vec3_u32 min(vec3_u32 lhs, uint32_t rhs) noexcept;
-SFZ_CUDA_CALL vec3_u32 min(uint32_t lhs, vec3_u32 rhs) noexcept;
-SFZ_CUDA_CALL vec4_u32 min(vec4_u32 lhs, uint32_t rhs) noexcept;
-SFZ_CUDA_CALL vec4_u32 min(uint32_t lhs, vec4_u32 rhs) noexcept;
-
-// max()
-// ------------------------------------------------------------------------------------------------
-
-/// Returns the maximum value of two elements. Element-wise results for vector types.
-
-SFZ_CUDA_CALL float max(float lhs, float rhs) noexcept;
-SFZ_CUDA_CALL int32_t max(int32_t lhs, int32_t rhs) noexcept;
-SFZ_CUDA_CALL uint32_t max(uint32_t lhs, uint32_t rhs) noexcept;
-
-SFZ_CUDA_CALL vec2 max(vec2 lhs, vec2 rhs) noexcept;
-SFZ_CUDA_CALL vec3 max(vec3 lhs, vec3 rhs) noexcept;
-SFZ_CUDA_CALL vec4 max(vec4 lhs, vec4 rhs) noexcept;
-
-SFZ_CUDA_CALL vec2 max(vec2 lhs, float rhs) noexcept;
-SFZ_CUDA_CALL vec2 max(float lhs, vec2 rhs) noexcept;
-SFZ_CUDA_CALL vec3 max(vec3 lhs, float rhs) noexcept;
-SFZ_CUDA_CALL vec3 max(float lhs, vec3 rhs) noexcept;
-SFZ_CUDA_CALL vec4 max(vec4 lhs, float rhs) noexcept;
-SFZ_CUDA_CALL vec4 max(float lhs, vec4 rhs) noexcept;
-
-SFZ_CUDA_CALL vec2_s32 max(vec2_s32 lhs, vec2_s32 rhs) noexcept;
-SFZ_CUDA_CALL vec3_s32 max(vec3_s32 lhs, vec3_s32 rhs) noexcept;
-SFZ_CUDA_CALL vec4_s32 max(vec4_s32 lhs, vec4_s32 rhs) noexcept;
-
-SFZ_CUDA_CALL vec2_s32 max(vec2_s32 lhs, int32_t rhs) noexcept;
-SFZ_CUDA_CALL vec2_s32 max(int32_t lhs, vec2_s32 rhs) noexcept;
-SFZ_CUDA_CALL vec3_s32 max(vec3_s32 lhs, int32_t rhs) noexcept;
-SFZ_CUDA_CALL vec3_s32 max(int32_t lhs, vec3_s32 rhs) noexcept;
-SFZ_CUDA_CALL vec4_s32 max(vec4_s32 lhs, int32_t rhs) noexcept;
-SFZ_CUDA_CALL vec4_s32 max(int32_t lhs, vec4_s32 rhs) noexcept;
-
-SFZ_CUDA_CALL vec2_u32 max(vec2_u32 lhs, vec2_u32 rhs) noexcept;
-SFZ_CUDA_CALL vec3_u32 max(vec3_u32 lhs, vec3_u32 rhs) noexcept;
-SFZ_CUDA_CALL vec4_u32 max(vec4_u32 lhs, vec4_u32 rhs) noexcept;
-
-SFZ_CUDA_CALL vec2_u32 max(vec2_u32 lhs, uint32_t rhs) noexcept;
-SFZ_CUDA_CALL vec2_u32 max(uint32_t lhs, vec2_u32 rhs) noexcept;
-SFZ_CUDA_CALL vec3_u32 max(vec3_u32 lhs, uint32_t rhs) noexcept;
-SFZ_CUDA_CALL vec3_u32 max(uint32_t lhs, vec3_u32 rhs) noexcept;
-SFZ_CUDA_CALL vec4_u32 max(vec4_u32 lhs, uint32_t rhs) noexcept;
-SFZ_CUDA_CALL vec4_u32 max(uint32_t lhs, vec4_u32 rhs) noexcept;
 
 // minElement()
 // ------------------------------------------------------------------------------------------------

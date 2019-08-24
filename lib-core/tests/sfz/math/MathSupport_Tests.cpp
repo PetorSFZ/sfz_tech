@@ -105,52 +105,6 @@ TEST_CASE("sgn()", "[sfz::MathSupport]")
 	}
 }
 
-TEST_CASE("min()", "[sfz::MathSupport]")
-{
-	SECTION("Scalars") {
-		REQUIRE(sfz::min(1.0f, 2.0f) == 1.0f);
-		REQUIRE(sfz::min(-1.0f, -2.0f) == -2.0f);
-		REQUIRE(sfz::min(1, 2) == 1);
-		REQUIRE(sfz::min(-1, -2) == -2);
-		REQUIRE(sfz::min(1u, 2u) == 1u);
-		REQUIRE(sfz::min(3u, 2u) == 2u);
-	}
-	SECTION("Vectors") {
-		REQUIRE(sfz::min(vec4(1.0f, 2.0f, -3.0f, -4.0f), vec4(2.0f, 1.0f, -5.0f, -2.0f)) == vec4(1.0f, 1.0f, -5.0f, -4.0f));
-		REQUIRE(sfz::min(vec4_s32(1, 2, -3, -4), vec4_s32(2, 1, -5, -2)) == vec4_s32(1, 1, -5, -4));
-		REQUIRE(sfz::min(vec4_u32(1u, 2u, 3u, 4u), vec4_u32(2u, 1u, 5u, 2u)) == vec4_u32(1u, 1u, 3u, 2u));
-	}
-	SECTION("Vectors & scalars")
-	{
-		REQUIRE(sfz::min(vec4(1.0f, 2.0f, -3.0f, -4.0f), -1.0f) == vec4(-1.0f, -1.0f, -3.0f, -4.0f));
-		REQUIRE(sfz::min(vec4_s32(1, 2, -3, -4), -1) == vec4_s32(-1, -1, -3, -4));
-		REQUIRE(sfz::min(vec4_u32(1u, 2u, 3u, 4u), 2u) == vec4_u32(1u, 2u, 2u, 2u));
-	}
-}
-
-TEST_CASE("max()", "[sfz::MathSupport]")
-{
-	SECTION("Scalars") {
-		REQUIRE(sfz::max(1.0f, 2.0f) == 2.0f);
-		REQUIRE(sfz::max(-1.0f, -2.0f) == -1.0f);
-		REQUIRE(sfz::max(1, 2) == 2);
-		REQUIRE(sfz::max(-1, -2) == -1);
-		REQUIRE(sfz::max(1u, 2u) == 2u);
-		REQUIRE(sfz::max(3u, 2u) == 3u);
-	}
-	SECTION("Vectors") {
-		REQUIRE(sfz::max(vec4(1.0f, 2.0f, -3.0f, -4.0f), vec4(2.0f, 1.0f, -5.0f, -2.0f)) == vec4(2.0f, 2.0f, -3.0f, -2.0f));
-		REQUIRE(sfz::max(vec4_s32(1, 2, -3, -4), vec4_s32(2, 1, -5, -2)) == vec4_s32(2, 2, -3, -2));
-		REQUIRE(sfz::max(vec4_u32(1u, 2u, 3u, 4u), vec4_u32(2u, 1u, 5u, 2u)) == vec4_u32(2u, 2u, 5u, 4u));
-	}
-	SECTION("Vectors & scalars")
-	{
-		REQUIRE(sfz::max(vec4(1.0f, 2.0f, -3.0f, -4.0f), 1.0f) == vec4(1.0f, 2.0f, 1.0f, 1.0f));
-		REQUIRE(sfz::max(vec4_s32(1, 2, -3, -4), 1) == vec4_s32(1, 2, 1, 1));
-		REQUIRE(sfz::max(vec4_u32(1u, 2u, 3u, 4u), 2u) == vec4_u32(2u, 2u, 3u, 4u));
-	}
-}
-
 TEST_CASE("minElement() & maxElement()", "[sfz::MathSupport]")
 {
 	REQUIRE(sfz::minElement(vec4_u32(5u, 2u, 3u, 1u)) == 1u);

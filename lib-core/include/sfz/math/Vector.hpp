@@ -22,6 +22,8 @@
 #include <cmath> // std::sqrt
 
 #include "sfz/CudaCompatibility.hpp"
+#include "sfz/SimdIntrinsics.hpp"
+#include "sfz/math/MinMax.hpp"
 
 namespace sfz {
 
@@ -34,7 +36,7 @@ namespace sfz {
 /// vectors (vec2i, vec3i, vec4i) and (32-bit) unsigned integer vectors (vec2u, vec3u, vec4u).
 ///
 /// 2, 3 and 4 dimensional vectors are specialized to have more constructors and ways of accessing
-/// data. For example, you can construct a vec3 with 3 floats (vec3(x, y, z)), or with a vec2 and a 
+/// data. For example, you can construct a vec3 with 3 floats (vec3(x, y, z)), or with a vec2 and a
 /// float (vec3(vec2(x,y), z) or vec3(x, vec2(y, z))). To access the x value of a vec3 v you can
 /// write v[0], v.elements[0] or v.x, you can also access two adjacent elements as a vector by
 /// writing v.xy or v.yz.
@@ -294,5 +296,26 @@ template<typename T, uint32_t N>
 SFZ_CUDA_CALL bool operator!= (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
 } // namespace sfz
+
+// Vector overloads of sfzMin() and sfzMax()
+// ------------------------------------------------------------------------------------------------
+
+template<typename T, uint32_t N>
+sfz::Vector<T,N> sfzMin(sfz::Vector<T,N> lhs, sfz::Vector<T,N> rhs) noexcept;
+
+template<typename T, uint32_t N>
+sfz::Vector<T,N> sfzMin(T lhs, sfz::Vector<T,N> rhs) noexcept;
+
+template<typename T, uint32_t N>
+sfz::Vector<T,N> sfzMin(sfz::Vector<T,N> lhs, T rhs) noexcept;
+
+template<typename T, uint32_t N>
+sfz::Vector<T,N> sfzMax(sfz::Vector<T,N> lhs, sfz::Vector<T,N> rhs) noexcept;
+
+template<typename T, uint32_t N>
+sfz::Vector<T,N> sfzMax(T lhs, sfz::Vector<T,N> rhs) noexcept;
+
+template<typename T, uint32_t N>
+sfz::Vector<T,N> sfzMax(sfz::Vector<T,N> lhs, T rhs) noexcept;
 
 #include "sfz/math/Vector.inl"

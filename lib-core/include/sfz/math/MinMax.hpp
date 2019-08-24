@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 // Implementations of min() and max() mathematical operations, similar to std::min() and std::max().
 //
 // The reason this is necessary is because std::min()/std::max() generate really poor code on
@@ -37,14 +39,38 @@
 //    Since we have prefixed their names with sfz there is literaly no point to also placing them
 //    inside the sfz namespace. sfz::sfzMin() just looks stupid.
 
-template<typename T>
-constexpr T sfzMin(T lhs, T rhs) noexcept
+// sfzMin()
+// ------------------------------------------------------------------------------------------------
+
+constexpr float sfzMin(float lhs, float rhs) noexcept
 {
 	return (lhs < rhs) ? lhs : rhs;
 }
 
-template<typename T>
-constexpr T sfzMax(T lhs, T rhs) noexcept
+constexpr int32_t sfzMin(int32_t lhs, int32_t rhs) noexcept
+{
+	return (lhs < rhs) ? lhs : rhs;
+}
+
+constexpr uint32_t sfzMin(uint32_t lhs, uint32_t rhs) noexcept
+{
+	return (lhs < rhs) ? lhs : rhs;
+}
+
+// sfzMax()
+// ------------------------------------------------------------------------------------------------
+
+constexpr float sfzMax(float lhs, float rhs) noexcept
+{
+	return (lhs < rhs) ? rhs : lhs;
+}
+
+constexpr int32_t sfzMax(int32_t lhs, int32_t rhs) noexcept
+{
+	return (lhs < rhs) ? rhs : lhs;
+}
+
+constexpr uint32_t sfzMax(uint32_t lhs, uint32_t rhs) noexcept
 {
 	return (lhs < rhs) ? rhs : lhs;
 }

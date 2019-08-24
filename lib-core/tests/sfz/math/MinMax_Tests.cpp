@@ -24,70 +24,92 @@
 
 #include "sfz/math/MinMax.hpp"
 
-TEST_CASE("sfzMin<float>()", "[sfzMin]")
+TEST_CASE("sfzMin() float tests", "[sfzMin]")
 {
-	REQUIRE(sfzMin<float>(0.0f, 0.0f) == 0.0f);
+	REQUIRE(sfzMin(0.0f, 0.0f) == 0.0f);
 
-	REQUIRE(sfzMin<float>(-1.0f, 0.0f) == -1.0f);
-	REQUIRE(sfzMin<float>(0.0f, -1.0f) == -1.0f);
+	REQUIRE(sfzMin(-1.0f, 0.0f) == -1.0f);
+	REQUIRE(sfzMin(0.0f, -1.0f) == -1.0f);
 
-	REQUIRE(sfzMin<float>(-1.0f, -2.0f) == -2.0f);
-	REQUIRE(sfzMin<float>(-2.0f, -1.0f) == -2.0f);
+	REQUIRE(sfzMin(-1.0f, -2.0f) == -2.0f);
+	REQUIRE(sfzMin(-2.0f, -1.0f) == -2.0f);
 
-	REQUIRE(sfzMin<float>(1.0f, 0.0f) == 0.0f);
-	REQUIRE(sfzMin<float>(0.0f, 1.0f) == 0.0f);
+	REQUIRE(sfzMin(1.0f, 0.0f) == 0.0f);
+	REQUIRE(sfzMin(0.0f, 1.0f) == 0.0f);
 
-	REQUIRE(sfzMin<float>(1.0f, 2.0f) == 1.0f);
-	REQUIRE(sfzMin<float>(2.0f, 1.0f) == 1.0f);
+	REQUIRE(sfzMin(1.0f, 2.0f) == 1.0f);
+	REQUIRE(sfzMin(2.0f, 1.0f) == 1.0f);
 }
 
-TEST_CASE("sfzMax<float>()", "[sfzMax]")
+TEST_CASE("sfzMax() float tests", "[sfzMax]")
 {
-	REQUIRE(sfzMax<float>(0.0f, 0.0f) == 0.0f);
+	REQUIRE(sfzMax(0.0f, 0.0f) == 0.0f);
 
-	REQUIRE(sfzMax<float>(-1.0f, 0.0f) == 0.0f);
-	REQUIRE(sfzMax<float>(0.0f, -1.0f) == 0.0f);
+	REQUIRE(sfzMax(-1.0f, 0.0f) == 0.0f);
+	REQUIRE(sfzMax(0.0f, -1.0f) == 0.0f);
 
-	REQUIRE(sfzMax<float>(-1.0f, -2.0f) == -1.0f);
-	REQUIRE(sfzMax<float>(-2.0f, -1.0f) == -1.0f);
+	REQUIRE(sfzMax(-1.0f, -2.0f) == -1.0f);
+	REQUIRE(sfzMax(-2.0f, -1.0f) == -1.0f);
 
-	REQUIRE(sfzMax<float>(1.0f, 0.0f) == 1.0f);
-	REQUIRE(sfzMax<float>(0.0f, 1.0f) == 1.0f);
+	REQUIRE(sfzMax(1.0f, 0.0f) == 1.0f);
+	REQUIRE(sfzMax(0.0f, 1.0f) == 1.0f);
 
-	REQUIRE(sfzMax<float>(1.0f, 2.0f) == 2.0f);
-	REQUIRE(sfzMax<float>(2.0f, 1.0f) == 2.0f);
+	REQUIRE(sfzMax(1.0f, 2.0f) == 2.0f);
+	REQUIRE(sfzMax(2.0f, 1.0f) == 2.0f);
 }
 
-TEST_CASE("sfzMin<int32_t>()", "[sfzMin]")
+TEST_CASE("sfzMin() int32_t tests", "[sfzMin]")
 {
-	REQUIRE(sfzMin<int32_t>(0, 0) == 0);
+	REQUIRE(sfzMin(0, 0) == 0);
 
-	REQUIRE(sfzMin<int32_t>(-1, 0) == -1);
-	REQUIRE(sfzMin<int32_t>(0, -1) == -1);
+	REQUIRE(sfzMin(-1, 0) == -1);
+	REQUIRE(sfzMin(0, -1) == -1);
 
-	REQUIRE(sfzMin<int32_t>(-1, -2) == -2);
-	REQUIRE(sfzMin<int32_t>(-2, -1) == -2);
+	REQUIRE(sfzMin(-1, -2) == -2);
+	REQUIRE(sfzMin(-2, -1) == -2);
 
-	REQUIRE(sfzMin<int32_t>(1, 0) == 0);
-	REQUIRE(sfzMin<int32_t>(0, 1) == 0);
+	REQUIRE(sfzMin(1, 0) == 0);
+	REQUIRE(sfzMin(0, 1) == 0);
 
-	REQUIRE(sfzMin<int32_t>(1, 2) == 1);
-	REQUIRE(sfzMin<int32_t>(2, 1) == 1);
+	REQUIRE(sfzMin(1, 2) == 1);
+	REQUIRE(sfzMin(2, 1) == 1);
 }
 
-TEST_CASE("sfzMax<int32_t>()", "[sfzMax]")
+TEST_CASE("sfzMax() int32_t tests", "[sfzMax]")
 {
-	REQUIRE(sfzMax<int32_t>(0, 0) == 0);
+	REQUIRE(sfzMax(0, 0) == 0);
 
-	REQUIRE(sfzMax<int32_t>(-1, 0) == 0);
-	REQUIRE(sfzMax<int32_t>(0, -1) == 0);
+	REQUIRE(sfzMax(-1, 0) == 0);
+	REQUIRE(sfzMax(0, -1) == 0);
 
-	REQUIRE(sfzMax<int32_t>(-1, -2) == -1);
-	REQUIRE(sfzMax<int32_t>(-2, -1) == -1);
+	REQUIRE(sfzMax(-1, -2) == -1);
+	REQUIRE(sfzMax(-2, -1) == -1);
 
-	REQUIRE(sfzMax<int32_t>(1, 0) == 1);
-	REQUIRE(sfzMax<int32_t>(0, 1) == 1);
+	REQUIRE(sfzMax(1, 0) == 1);
+	REQUIRE(sfzMax(0, 1) == 1);
 
-	REQUIRE(sfzMax<int32_t>(1, 2) == 2);
-	REQUIRE(sfzMax<int32_t>(2, 1) == 2);
+	REQUIRE(sfzMax(1, 2) == 2);
+	REQUIRE(sfzMax(2, 1) == 2);
+}
+
+TEST_CASE("sfzMin() uint32_t tests", "[sfzMin]")
+{
+	REQUIRE(sfzMin(0u, 0u) == 0u);
+
+	REQUIRE(sfzMin(1u, 0u) == 0u);
+	REQUIRE(sfzMin(0u, 1u) == 0u);
+
+	REQUIRE(sfzMin(1u, 2u) == 1u);
+	REQUIRE(sfzMin(2u, 1u) == 1u);
+}
+
+TEST_CASE("sfzMax() uint32_t tests", "[sfzMax]")
+{
+	REQUIRE(sfzMax(0u, 0u) == 0u);
+
+	REQUIRE(sfzMax(1u, 0u) == 1u);
+	REQUIRE(sfzMax(0u, 1u) == 1u);
+
+	REQUIRE(sfzMax(1u, 2u) == 2u);
+	REQUIRE(sfzMax(2u, 1u) == 2u);
 }

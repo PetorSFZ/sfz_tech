@@ -733,3 +733,151 @@ SFZ_CUDA_CALL bool operator!= (const Vector<T,N>& left, const Vector<T,N>& right
 }
 
 } // namespace sfz
+
+// Vector overloads of sfzMin() and sfzMax()
+// ------------------------------------------------------------------------------------------------
+
+template<typename T, uint32_t N>
+sfz::Vector<T,N> sfzMin(sfz::Vector<T,N> lhs, sfz::Vector<T,N> rhs) noexcept
+{
+	sfz::Vector<T,N> tmp;
+	for (uint32_t i = 0; i < N; i++) {
+		tmp[i] = sfzMin(lhs[i], rhs[i]);
+	}
+	return tmp;
+}
+
+template<typename T, uint32_t N>
+sfz::Vector<T,N> sfzMin(T lhs, sfz::Vector<T,N> rhs) noexcept
+{
+	sfz::Vector<T,N> tmp;
+	for (uint32_t i = 0; i < N; i++) {
+		tmp[i] = sfzMin(lhs, rhs[i]);
+	}
+	return tmp;
+}
+
+template<typename T, uint32_t N>
+sfz::Vector<T,N> sfzMin(sfz::Vector<T,N> lhs, T rhs) noexcept
+{
+	return sfzMin(rhs, lhs);
+}
+
+template<typename T, uint32_t N>
+sfz::Vector<T,N> sfzMax(sfz::Vector<T,N> lhs, sfz::Vector<T,N> rhs) noexcept
+{
+	sfz::Vector<T,N> tmp;
+	for (uint32_t i = 0; i < N; i++) {
+		tmp[i] = sfzMax(lhs[i], rhs[i]);
+	}
+	return tmp;
+}
+
+template<typename T, uint32_t N>
+sfz::Vector<T,N> sfzMax(T lhs, sfz::Vector<T,N> rhs) noexcept
+{
+	sfz::Vector<T,N> tmp;
+	for (uint32_t i = 0; i < N; i++) {
+		tmp[i] = sfzMax(lhs, rhs[i]);
+	}
+	return tmp;
+}
+
+template<typename T, uint32_t N>
+sfz::Vector<T,N> sfzMax(sfz::Vector<T,N> lhs, T rhs) noexcept
+{
+	return sfzMax(rhs, lhs);
+}
+
+// x86 SIMD implementations
+#if !defined(__EMSCRIPTEN__) && !defined(SFZ_IOS)
+
+template<>
+inline sfz::vec4 sfzMin<float,4>(sfz::vec4 lhs, sfz::vec4 rhs) noexcept
+{
+	const __m128 lhsReg = _mm_load_ps(lhs.data());
+	const __m128 rhsReg = _mm_load_ps(rhs.data());
+	const __m128 minReg = _mm_min_ps(lhsReg, rhsReg);
+	sfz::vec4 tmp;
+	_mm_store_ps(tmp.data(), minReg);
+	return tmp;
+}
+
+template<>
+inline sfz::vec4_s32 sfzMin<int32_t,4>(sfz::vec4_s32 lhs, sfz::vec4_s32 rhs) noexcept
+{
+	const __m128i lhsReg = _mm_load_si128((const __m128i*)lhs.data());
+	const __m128i rhsReg = _mm_load_si128((const __m128i*)rhs.data());
+	const __m128i minReg = _mm_min_epi32(lhsReg, rhsReg);
+	sfz::vec4_s32 tmp;
+	_mm_store_si128((__m128i*)tmp.data(), minReg);
+	return tmp;
+}
+
+template<>
+inline sfz::vec4 sfzMin<float,4>(float lhs, sfz::vec4 rhs) noexcept
+{
+	const __m128 lhsReg = _mm_set1_ps(lhs);
+	const __m128 rhsReg = _mm_load_ps(rhs.data());
+	const __m128 minReg = _mm_min_ps(lhsReg, rhsReg);
+	sfz::vec4 tmp;
+	_mm_store_ps(tmp.data(), minReg);
+	return tmp;
+}
+
+template<>
+inline sfz::vec4_s32 sfzMin<int32_t,4>(int32_t lhs, sfz::vec4_s32 rhs) noexcept
+{
+	const __m128i lhsReg = _mm_set1_epi32(lhs);
+	const __m128i rhsReg = _mm_load_si128((const __m128i*)rhs.data());
+	const __m128i minReg = _mm_min_epi32(lhsReg, rhsReg);
+	sfz::vec4_s32 tmp;
+	_mm_store_si128((__m128i*)tmp.data(), minReg);
+	return tmp;
+}
+
+template<>
+inline sfz::vec4 sfzMax<float,4>(sfz::vec4 lhs, sfz::vec4 rhs) noexcept
+{
+	const __m128 lhsReg = _mm_load_ps(lhs.data());
+	const __m128 rhsReg = _mm_load_ps(rhs.data());
+	const __m128 minReg = _mm_max_ps(lhsReg, rhsReg);
+	sfz::vec4 tmp;
+	_mm_store_ps(tmp.data(), minReg);
+	return tmp;
+}
+
+template<>
+inline sfz::vec4_s32 sfzMax<int32_t,4>(sfz::vec4_s32 lhs, sfz::vec4_s32 rhs) noexcept
+{
+	const __m128i lhsReg = _mm_load_si128((const __m128i*)lhs.data());
+	const __m128i rhsReg = _mm_load_si128((const __m128i*)rhs.data());
+	const __m128i maxReg = _mm_max_epi32(lhsReg, rhsReg);
+	sfz::vec4_s32 tmp;
+	_mm_store_si128((__m128i*)tmp.data(), maxReg);
+	return tmp;
+}
+
+template<>
+inline sfz::vec4 sfzMax<float,4>(float lhs, sfz::vec4 rhs) noexcept
+{
+	const __m128 lhsReg = _mm_set1_ps(lhs);
+	const __m128 rhsReg = _mm_load_ps(rhs.data());
+	const __m128 minReg = _mm_max_ps(lhsReg, rhsReg);
+	sfz::vec4 tmp;
+	_mm_store_ps(tmp.data(), minReg);
+	return tmp;
+}
+
+template<>
+inline sfz::vec4_s32 sfzMax<int32_t,4>(int32_t lhs, sfz::vec4_s32 rhs) noexcept
+{
+	const __m128i lhsReg = _mm_set1_epi32(lhs);
+	const __m128i rhsReg = _mm_load_si128((const __m128i*)rhs.data());
+	const __m128i maxReg = _mm_max_epi32(lhsReg, rhsReg);
+	sfz::vec4_s32 tmp;
+	_mm_store_si128((__m128i*)tmp.data(), maxReg);
+	return tmp;
+}
+
+#endif

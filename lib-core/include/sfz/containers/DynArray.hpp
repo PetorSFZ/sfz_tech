@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include <algorithm> // std::min()
 #include <cstdint>
 #include <cstring> // std::memcpy()
 #include <new> // Placement new
@@ -27,6 +26,7 @@
 
 #include "sfz/Assert.hpp"
 #include "sfz/Context.hpp"
+#include "sfz/math/MinMax.hpp"
 #include "sfz/memory/Allocator.hpp"
 
 namespace sfz {
