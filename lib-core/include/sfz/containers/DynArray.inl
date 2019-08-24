@@ -186,7 +186,7 @@ void DynArray<T>::setCapacity(uint32_t capacity) noexcept
 		// Allocates memory and returns
 		mCapacity = sfzMax(capacity, MIN_CAPACITY);
 		mDataPtr = (T*)mAllocator->allocate(mCapacity * sizeof(T),
-		                                    sfzMax(MINIMUM_ALIGNMENT, alignof(T)),
+		                                    sfzMax(MINIMUM_ALIGNMENT, uint32_t(alignof(T))),
 		                                    "DynArray");
 		sfz_assert_debug(mDataPtr != nullptr);
 		return;
@@ -205,7 +205,7 @@ void DynArray<T>::setCapacity(uint32_t capacity) noexcept
 	// Allocate new memory and move/copy over elements from old memory
 	capacity = sfzMax(capacity, MIN_CAPACITY);
 	T* newDataPtr = (T*)mAllocator->allocate(capacity * sizeof(T),
-	                                         sfzMax(MINIMUM_ALIGNMENT, alignof(T)),
+	                                         sfzMax(MINIMUM_ALIGNMENT, uint32_t(alignof(T))),
 	                                         "DynArray");
 	for (uint32_t i = 0; i < mSize; i++) {
 		new (newDataPtr + i) T(std::move(mDataPtr[i]));
