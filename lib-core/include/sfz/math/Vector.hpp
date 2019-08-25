@@ -49,21 +49,21 @@ struct Vector final {
 
 	T elements[N];
 
-	SFZ_CUDA_CALL T* data() noexcept { return elements; }
-	SFZ_CUDA_CALL const T* data() const noexcept { return elements; }
+	constexpr T* data() noexcept { return elements; }
+	constexpr const T* data() const noexcept { return elements; }
 
 	Vector() noexcept = default;
 	Vector(const Vector<T,N>&) noexcept = default;
 	Vector<T,N>& operator= (const Vector<T,N>&) noexcept = default;
 	~Vector() noexcept = default;
 
-	SFZ_CUDA_CALL explicit Vector(const T* arrayPtr) noexcept;
+	constexpr explicit Vector(const T* arrayPtr) noexcept;
 
 	template<typename T2>
-	SFZ_CUDA_CALL explicit Vector(const Vector<T2,N>& other) noexcept;
+	constexpr explicit Vector(const Vector<T2,N>& other) noexcept;
 
-	SFZ_CUDA_CALL T& operator[] (uint32_t index) noexcept;
-	SFZ_CUDA_CALL T operator[] (uint32_t index) const noexcept;
+	constexpr T& operator[] (uint32_t index) noexcept;
+	constexpr T operator[] (uint32_t index) const noexcept;
 };
 
 template<typename T>
@@ -71,23 +71,23 @@ struct Vector<T,2> final {
 
 	T x, y;
 
-	SFZ_CUDA_CALL T* data() noexcept { return &x; }
-	SFZ_CUDA_CALL const T* data() const noexcept { return &x; }
+	constexpr T* data() noexcept { return &x; }
+	constexpr const T* data() const noexcept { return &x; }
 
 	Vector() noexcept = default;
 	Vector(const Vector<T,2>&) noexcept = default;
 	Vector<T,2>& operator= (const Vector<T,2>&) noexcept = default;
 	~Vector() noexcept = default;
 
-	SFZ_CUDA_CALL explicit Vector(const T* arrayPtr) noexcept;
-	SFZ_CUDA_CALL explicit Vector(T value) noexcept;
-	SFZ_CUDA_CALL Vector(T x, T y) noexcept;
+	constexpr explicit Vector(const T* arrayPtr) noexcept;
+	constexpr explicit Vector(T value) noexcept;
+	constexpr Vector(T x, T y) noexcept;
 
 	template<typename T2>
-	SFZ_CUDA_CALL explicit Vector(const Vector<T2,2>& other) noexcept;
+	constexpr explicit Vector(const Vector<T2,2>& other) noexcept;
 
-	SFZ_CUDA_CALL T& operator[] (uint32_t index) noexcept;
-	SFZ_CUDA_CALL T operator[] (uint32_t index) const noexcept;
+	constexpr T& operator[] (uint32_t index) noexcept;
+	constexpr T operator[] (uint32_t index) const noexcept;
 };
 
 template<typename T>
@@ -98,25 +98,25 @@ struct Vector<T,3> final {
 		struct { T xAlias; Vector<T,2> yz; };
 	};
 
-	SFZ_CUDA_CALL T* data() noexcept { return &x; }
-	SFZ_CUDA_CALL const T* data() const noexcept { return &x; }
+	constexpr T* data() noexcept { return &x; }
+	constexpr const T* data() const noexcept { return &x; }
 
 	Vector() noexcept = default;
 	Vector(const Vector<T,3>&) noexcept = default;
 	Vector<T,3>& operator= (const Vector<T,3>&) noexcept = default;
 	~Vector() noexcept = default;
 
-	SFZ_CUDA_CALL explicit Vector(const T* arrayPtr) noexcept;
-	SFZ_CUDA_CALL explicit Vector(T value) noexcept;
-	SFZ_CUDA_CALL Vector(T x, T y, T z) noexcept;
-	SFZ_CUDA_CALL Vector(Vector<T,2> xy, T z) noexcept;
-	SFZ_CUDA_CALL Vector(T x, Vector<T,2> yz) noexcept;
+	constexpr explicit Vector(const T* arrayPtr) noexcept;
+	constexpr explicit Vector(T value) noexcept;
+	constexpr Vector(T x, T y, T z) noexcept;
+	constexpr Vector(Vector<T,2> xy, T z) noexcept;
+	constexpr Vector(T x, Vector<T,2> yz) noexcept;
 
 	template<typename T2>
-	SFZ_CUDA_CALL explicit Vector(const Vector<T2,3>& other) noexcept;
+	constexpr explicit Vector(const Vector<T2,3>& other) noexcept;
 
-	SFZ_CUDA_CALL T& operator[] (uint32_t index) noexcept;
-	SFZ_CUDA_CALL T operator[] (uint32_t index) const noexcept;
+	constexpr T& operator[] (uint32_t index) noexcept;
+	constexpr T operator[] (uint32_t index) const noexcept;
 };
 
 template<typename T>
@@ -129,29 +129,29 @@ struct alignas(sizeof(T) * 4) Vector<T,4> final {
 		struct { T xAlias2; Vector<T,2> yz; };
 	};
 
-	SFZ_CUDA_CALL T* data() noexcept { return &x; }
-	SFZ_CUDA_CALL const T* data() const noexcept { return &x; }
+	constexpr T* data() noexcept { return &x; }
+	constexpr const T* data() const noexcept { return &x; }
 
 	Vector() noexcept = default;
 	Vector(const Vector<T,4>&) noexcept = default;
 	Vector<T,4>& operator= (const Vector<T,4>&) noexcept = default;
 	~Vector() noexcept = default;
 
-	SFZ_CUDA_CALL explicit Vector(const T* arrayPtr) noexcept;
-	SFZ_CUDA_CALL explicit Vector(T value) noexcept;
-	SFZ_CUDA_CALL Vector(T x, T y, T z, T w) noexcept;
-	SFZ_CUDA_CALL Vector(Vector<T,3> xyz, T w) noexcept;
-	SFZ_CUDA_CALL Vector(T x, Vector<T,3> yzw) noexcept;
-	SFZ_CUDA_CALL Vector(Vector<T,2> xy, Vector<T,2> zw) noexcept;
-	SFZ_CUDA_CALL Vector(Vector<T,2> xy, T z, T w) noexcept;
-	SFZ_CUDA_CALL Vector(T x, Vector<T,2> yz, T w) noexcept;
-	SFZ_CUDA_CALL Vector(T x, T y, Vector<T,2> zw) noexcept;
+	constexpr explicit Vector(const T* arrayPtr) noexcept;
+	constexpr explicit Vector(T value) noexcept;
+	constexpr Vector(T x, T y, T z, T w) noexcept;
+	constexpr Vector(Vector<T,3> xyz, T w) noexcept;
+	constexpr Vector(T x, Vector<T,3> yzw) noexcept;
+	constexpr Vector(Vector<T,2> xy, Vector<T,2> zw) noexcept;
+	constexpr Vector(Vector<T,2> xy, T z, T w) noexcept;
+	constexpr Vector(T x, Vector<T,2> yz, T w) noexcept;
+	constexpr Vector(T x, T y, Vector<T,2> zw) noexcept;
 
 	template<typename T2>
-	SFZ_CUDA_CALL explicit Vector(const Vector<T2,4>& other) noexcept;
+	constexpr explicit Vector(const Vector<T2,4>& other) noexcept;
 
-	SFZ_CUDA_CALL T& operator[] (uint32_t index) noexcept;
-	SFZ_CUDA_CALL T operator[] (uint32_t index) const noexcept;
+	constexpr T& operator[] (uint32_t index) noexcept;
+	constexpr T operator[] (uint32_t index) const noexcept;
 };
 
 // Typedefs
@@ -206,7 +206,7 @@ using vec4 = vec4_f32;
 
 /// Calculates the dot product of two vectors
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL T dot(Vector<T,N> lhs, Vector<T,N> rhs) noexcept;
+constexpr T dot(Vector<T,N> lhs, Vector<T,N> rhs) noexcept;
 
 /// Calculates length of the vector
 SFZ_CUDA_CALL float length(vec2 v) noexcept;
@@ -225,75 +225,75 @@ SFZ_CUDA_CALL vec4 safeNormalize(vec4 v) noexcept;
 
 /// Calculates the cross product of two vectors
 template<typename T>
-SFZ_CUDA_CALL Vector<T,3> cross(Vector<T,3> lhs, Vector<T,3> rhs) noexcept;
+constexpr Vector<T,3> cross(Vector<T,3> lhs, Vector<T,3> rhs) noexcept;
 
 /// Calculates the sum of all the elements in the vector
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL T elementSum(Vector<T,N> v) noexcept;
+constexpr T elementSum(Vector<T,N> v) noexcept;
 
 // Operators (arithmetic & assignment)
 // ------------------------------------------------------------------------------------------------
 
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N>& operator+= (Vector<T,N>& left, const Vector<T,N>& right) noexcept;
+constexpr Vector<T,N>& operator+= (Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N>& operator-= (Vector<T,N>& left, const Vector<T,N>& right) noexcept;
+constexpr Vector<T,N>& operator-= (Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N>& operator*= (Vector<T,N>& left, T right) noexcept;
+constexpr Vector<T,N>& operator*= (Vector<T,N>& left, T right) noexcept;
 
 /// Element-wise multiplication assignment
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N>& operator*= (Vector<T,N>& left, const Vector<T,N>& right) noexcept;
+constexpr Vector<T,N>& operator*= (Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N>& operator/= (Vector<T,N>& left, T right) noexcept;
+constexpr Vector<T,N>& operator/= (Vector<T,N>& left, T right) noexcept;
 
 /// Element-wise division assignment
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N>& operator/= (Vector<T,N>& left, const Vector<T,N>& right) noexcept;
+constexpr Vector<T,N>& operator/= (Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
 // Operators (arithmetic)
 // ------------------------------------------------------------------------------------------------
 
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> operator+ (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
+constexpr Vector<T,N> operator+ (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> operator- (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
+constexpr Vector<T,N> operator- (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> operator- (const Vector<T,N>& vector) noexcept;
+constexpr Vector<T,N> operator- (const Vector<T,N>& vector) noexcept;
 
 /// Element-wise multiplication of two vectors
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> operator* (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
+constexpr Vector<T,N> operator* (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> operator* (const Vector<T,N>& left, T right) noexcept;
+constexpr Vector<T,N> operator* (const Vector<T,N>& left, T right) noexcept;
 
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> operator* (T left, const Vector<T,N>& right) noexcept;
+constexpr Vector<T,N> operator* (T left, const Vector<T,N>& right) noexcept;
 
 /// Element-wise division of two vectors
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> operator/ (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
+constexpr Vector<T,N> operator/ (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> operator/ (const Vector<T,N>& left, T right) noexcept;
+constexpr Vector<T,N> operator/ (const Vector<T,N>& left, T right) noexcept;
 
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL Vector<T,N> operator/ (T left, const Vector<T,N>& right) noexcept;
+constexpr Vector<T,N> operator/ (T left, const Vector<T,N>& right) noexcept;
 
 // Operators (comparison)
 // ------------------------------------------------------------------------------------------------
 
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL bool operator== (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
+constexpr bool operator== (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
 template<typename T, uint32_t N>
-SFZ_CUDA_CALL bool operator!= (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
+constexpr bool operator!= (const Vector<T,N>& left, const Vector<T,N>& right) noexcept;
 
 } // namespace sfz
 
@@ -301,21 +301,21 @@ SFZ_CUDA_CALL bool operator!= (const Vector<T,N>& left, const Vector<T,N>& right
 // ------------------------------------------------------------------------------------------------
 
 template<typename T, uint32_t N>
-sfz::Vector<T,N> sfzMin(sfz::Vector<T,N> lhs, sfz::Vector<T,N> rhs) noexcept;
+constexpr sfz::Vector<T,N> sfzMin(sfz::Vector<T,N> lhs, sfz::Vector<T,N> rhs) noexcept;
 
 template<typename T, uint32_t N>
-sfz::Vector<T,N> sfzMin(T lhs, sfz::Vector<T,N> rhs) noexcept;
+constexpr sfz::Vector<T,N> sfzMin(T lhs, sfz::Vector<T,N> rhs) noexcept;
 
 template<typename T, uint32_t N>
-sfz::Vector<T,N> sfzMin(sfz::Vector<T,N> lhs, T rhs) noexcept;
+constexpr sfz::Vector<T,N> sfzMin(sfz::Vector<T,N> lhs, T rhs) noexcept;
 
 template<typename T, uint32_t N>
-sfz::Vector<T,N> sfzMax(sfz::Vector<T,N> lhs, sfz::Vector<T,N> rhs) noexcept;
+constexpr sfz::Vector<T,N> sfzMax(sfz::Vector<T,N> lhs, sfz::Vector<T,N> rhs) noexcept;
 
 template<typename T, uint32_t N>
-sfz::Vector<T,N> sfzMax(T lhs, sfz::Vector<T,N> rhs) noexcept;
+constexpr sfz::Vector<T,N> sfzMax(T lhs, sfz::Vector<T,N> rhs) noexcept;
 
 template<typename T, uint32_t N>
-sfz::Vector<T,N> sfzMax(sfz::Vector<T,N> lhs, T rhs) noexcept;
+constexpr sfz::Vector<T,N> sfzMax(sfz::Vector<T,N> lhs, T rhs) noexcept;
 
 #include "sfz/math/Vector.inl"
