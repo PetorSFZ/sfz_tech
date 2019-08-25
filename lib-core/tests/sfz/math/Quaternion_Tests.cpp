@@ -48,16 +48,16 @@ TEST_CASE("Quaternion Constructors", "[sfz::Quaternion]")
 		float halfAngleRad = (angle * DEG_TO_RAD) / 2.0f;
 		vec3 axis = normalize(vec3(0.25f, 1.0f, 1.2f));
 		Quaternion rot1(std::sin(halfAngleRad) * axis, std::cos(halfAngleRad));
-		Quaternion rot2 = Quaternion::rotation(axis, angle);
+		Quaternion rot2 = Quaternion::rotationDeg(axis, angle);
 		REQUIRE(approxEqual(rot1, rot2));
 		REQUIRE(approxEqual(rot2.rotationAxis(), normalize(vec3(0.25f, 1.0f, 1.2f))));
 		REQUIRE(approxEqual(rot2.rotationAngleDeg(), angle));
 	}
 	SECTION("fromEuler() constructor function") {
 		REQUIRE(approxEqual(Quaternion::fromEuler(0.0f, 0.0f, 0.0f), Quaternion::identity()));
-		REQUIRE(approxEqual(Quaternion::fromEuler(90.0f, 0.0f, 0.0f), Quaternion::rotation(vec3(1.0f, 0.0f, 0.0f), 90.0f)));
-		REQUIRE(approxEqual(Quaternion::fromEuler(0.0f, 90.0f, 0.0f), Quaternion::rotation(vec3(0.0f, 1.0f, 0.0f), 90.0f)));
-		REQUIRE(approxEqual(Quaternion::fromEuler(0.0f, 0.0f, 90.0f), Quaternion::rotation(vec3(0.0f, 0.0f, 1.0f), 90.0f)));
+		REQUIRE(approxEqual(Quaternion::fromEuler(90.0f, 0.0f, 0.0f), Quaternion::rotationDeg(vec3(1.0f, 0.0f, 0.0f), 90.0f)));
+		REQUIRE(approxEqual(Quaternion::fromEuler(0.0f, 90.0f, 0.0f), Quaternion::rotationDeg(vec3(0.0f, 1.0f, 0.0f), 90.0f)));
+		REQUIRE(approxEqual(Quaternion::fromEuler(0.0f, 0.0f, 90.0f), Quaternion::rotationDeg(vec3(0.0f, 0.0f, 1.0f), 90.0f)));
 		vec3 angles(20.0f, 30.0f, 40.0f);
 		REQUIRE(approxEqual(Quaternion::fromEuler(angles).toEuler(), angles));
 	}
@@ -66,7 +66,7 @@ TEST_CASE("Quaternion Constructors", "[sfz::Quaternion]")
 		float angleRad1 = angleDeg1 * DEG_TO_RAD;
 		vec3 axis = normalize(vec3(0.25f, 1.0f, 1.2f));
 
-		Quaternion rotQuat1 = Quaternion::rotation(axis, angleDeg1);
+		Quaternion rotQuat1 = Quaternion::rotationDeg(axis, angleDeg1);
 		mat34 rotMat1 = mat34::rotation3(axis, angleRad1);
 		Quaternion rotQuat2 = Quaternion::fromRotationMatrix(rotMat1);
 		REQUIRE(approxEqual(rotQuat1, rotQuat2));
@@ -74,7 +74,7 @@ TEST_CASE("Quaternion Constructors", "[sfz::Quaternion]")
 		float angleDeg2 = 190.0f;
 		float angleRad2 = angleDeg2 * DEG_TO_RAD;
 
-		Quaternion rotQuat3 = Quaternion::rotation(axis, angleDeg2);
+		Quaternion rotQuat3 = Quaternion::rotationDeg(axis, angleDeg2);
 		mat34 rotMat2 = mat34::rotation3(axis, angleRad2);
 		Quaternion rotQuat4 = Quaternion::fromRotationMatrix(rotMat2);
 		REQUIRE(approxEqual(rotQuat3, rotQuat4, 0.04));
@@ -136,7 +136,7 @@ TEST_CASE("Quaternion functions", "[sfz::Quaternion]")
 		mat33 rot1mat = rot1.toMat33();
 		REQUIRE(approxEqual(rot1mat * vec3(1.0f, 0.0f, 0.0f), vec3 (0.0f, 0.0f, -1.0f)));
 
-		Quaternion rot2 = Quaternion::rotation(vec3(0.0f, 0.0f, 1.0f), 90.0f);
+		Quaternion rot2 = Quaternion::rotationDeg(vec3(0.0f, 0.0f, 1.0f), 90.0f);
 		vec3 p2 = rotate(rot2, vec3(1.0f, 0.0f, 0.0f));
 		REQUIRE(approxEqual(p2, vec3(0.0f, 1.0f, 0.0f)));
 		mat33 rot2mat = rot2.toMat33();

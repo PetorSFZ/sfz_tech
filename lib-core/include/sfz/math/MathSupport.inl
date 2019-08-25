@@ -477,4 +477,57 @@ SFZ_CUDA_CALL vec4 fma(vec4 a, vec4 b, vec4 c) noexcept
 	            sfz::fma(a.w, b.w, c.w));
 }
 
+// rotateTowards()
+// ------------------------------------------------------------------------------------------------
+
+SFZ_CUDA_CALL vec3 rotateTowardsRad(vec3 inDir, vec3 targetDir, float angleRads) noexcept
+{
+	sfz_assert_debug(approxEqual(length(inDir), 1.0f));
+	sfz_assert_debug(approxEqual(length(targetDir), 1.0f));
+	sfz_assert_debug(dot(inDir, targetDir) >= -0.99);
+	sfz_assert_debug(angleRads >= 0.0f);
+	sfz_assert_debug(angleRads < PI);
+	vec3 axis = cross(inDir, targetDir);
+	sfz_assert_debug(!approxEqual(axis, vec3(0.0f)));
+	Quaternion rotQuat = Quaternion::rotationRad(axis, angleRads);
+	vec3 newDir = rotate(rotQuat, inDir);
+	return newDir;
+}
+
+SFZ_CUDA_CALL vec3 rotateTowardsRadClampSafe(vec3 inDir, vec3 targetDir, float angleRads) noexcept
+{
+	sfz_assert_debug(angleRads >= 0.0f);
+	sfz_assert_debug(angleRads < PI);
+
+	vec3 inDirNorm = safeNormalize(inDir);
+	vec3 targetDirNorm = safeNormalize(targetDir);
+	sfz_assert_debug(!approxEqual(inDirNorm, vec3(0.0f)));
+	sfz_assert_debug(!approxEqual(targetDirNorm, vec3(0.0f)));
+
+	// Case where vectors are the same, just return the target dir
+	if (approxEqual(inDirNorm, targetDirNorm)) return targetDirNorm;
+
+	// Case where vectors are exact opposite, slightly nudge input a bit
+	if (approxEqual(inDirNorm, -targetDirNorm)) {
+		inDirNorm = normalize(inDir + (vec3(1.0f) - inDirNorm) * 0.025f);
+		sfz_assert_debug(!approxEqual(inDirNorm, -targetDirNorm));
+	}
+
+	// Case where angle is larger than the angle between the vectors
+	if (angleRads >= acos(dot(inDirNorm, targetDirNorm))) return targetDirNorm;
+
+	// At this point all annoying cases should be handled, just run the normal routine
+	return rotateTowardsRad(inDirNorm, targetDirNorm, angleRads);
+}
+
+SFZ_CUDA_CALL vec3 rotateTowardsDeg(vec3 inDir, vec3 targetDir, float angleDegs) noexcept
+{
+	return rotateTowardsRad(inDir, targetDir, DEG_TO_RAD * angleDegs);
+}
+
+SFZ_CUDA_CALL vec3 rotateTowardsDegClampSafe(vec3 inDir, vec3 targetDir, float angleDegs) noexcept
+{
+	return rotateTowardsRadClampSafe(inDir, targetDir, DEG_TO_RAD * angleDegs);
+}
+
 } // namespace sfz

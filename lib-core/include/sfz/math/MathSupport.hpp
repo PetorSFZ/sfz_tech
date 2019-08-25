@@ -49,7 +49,7 @@ constexpr float RAD_TO_DEG = 180.0f/ PI;
 // approxEqual()
 // ------------------------------------------------------------------------------------------------
 
-/// Approximate equal function for floating point types.
+// Approximate equal function for floating point types.
 
 constexpr float APPROX_EQUAL_EPS = 0.001f;
 
@@ -68,8 +68,8 @@ SFZ_CUDA_CALL bool approxEqual(Quaternion lhs, Quaternion rhs, float epsilon = A
 // abs()
 // ------------------------------------------------------------------------------------------------
 
-/// Returns the absolute value of the argument. The vector versions returns the absolute value of
-/// each element in the vector.
+// Returns the absolute value of the argument. The vector versions returns the absolute value of
+// each element in the vector.
 
 SFZ_CUDA_CALL float abs(float val) noexcept;
 SFZ_CUDA_CALL int32_t abs(int32_t val) noexcept;
@@ -85,9 +85,9 @@ SFZ_CUDA_CALL vec4_s32 abs(vec4_s32 val) noexcept;
 // sgn()
 // ------------------------------------------------------------------------------------------------
 
-/// Returns the sign of the parameter value. For integers it will return -1, 0 or 1. For floating
-/// points values it will always return -1.0f or 1.0f (as IEEE-754 has positive and negative 0).
-/// Element-wise results for vector types.
+// Returns the sign of the parameter value. For integers it will return -1, 0 or 1. For floating
+// points values it will always return -1.0f or 1.0f (as IEEE-754 has positive and negative 0).
+// Element-wise results for vector types.
 
 SFZ_CUDA_CALL float sgn(float val) noexcept;
 SFZ_CUDA_CALL int32_t sgn(int32_t val) noexcept;
@@ -103,7 +103,7 @@ SFZ_CUDA_CALL vec4_s32 sgn(vec4_s32 val) noexcept;
 // minElement()
 // ------------------------------------------------------------------------------------------------
 
-/// Returns the smallest element in a vector.
+// Returns the smallest element in a vector.
 
 SFZ_CUDA_CALL float minElement(vec2 val) noexcept;
 SFZ_CUDA_CALL float minElement(vec3 val) noexcept;
@@ -120,7 +120,7 @@ SFZ_CUDA_CALL uint32_t minElement(vec4_u32 val) noexcept;
 // maxElement()
 // ------------------------------------------------------------------------------------------------
 
-/// Returns the largest element in a vector.
+// Returns the largest element in a vector.
 
 SFZ_CUDA_CALL float maxElement(vec2 val) noexcept;
 SFZ_CUDA_CALL float maxElement(vec3 val) noexcept;
@@ -137,9 +137,9 @@ SFZ_CUDA_CALL uint32_t maxElement(vec4_u32 val) noexcept;
 // clamp() & saturate()
 // ------------------------------------------------------------------------------------------------
 
-/// Clamps an argument within the specfied interval. For vector types the limits can be either
-/// vectors or scalars. saturate() is a special case of clamp where the parameter is clamped to
-/// [0, 1] range.
+// Clamps an argument within the specfied interval. For vector types the limits can be either
+// vectors or scalars. saturate() is a special case of clamp where the parameter is clamped to
+// [0, 1] range.
 
 template<typename ArgT, typename LimitT = ArgT>
 SFZ_CUDA_CALL ArgT clamp(const ArgT& value, const LimitT& minValue, const LimitT& maxValue) noexcept;
@@ -152,9 +152,9 @@ SFZ_CUDA_CALL vec4 saturate(vec4 value) noexcept;
 // lerp()
 // ------------------------------------------------------------------------------------------------
 
-/// Linearly interpolates between two arguments. t should be a scalar in the range [0, 1].
-/// Quaternions has a specialized version, which assumes that both the parameter Quaternions are
-/// unit. In addition, the resulting Quaternion is normalized before returned.
+// Linearly interpolates between two arguments. t should be a scalar in the range [0, 1].
+// Quaternions has a specialized version, which assumes that both the parameter Quaternions are
+// unit. In addition, the resulting Quaternion is normalized before returned.
 
 template<typename ArgT, typename FloatT = ArgT>
 SFZ_CUDA_CALL ArgT lerp(ArgT v0, ArgT v1, FloatT t) noexcept;
@@ -165,13 +165,31 @@ SFZ_CUDA_CALL Quaternion lerp(Quaternion q0, Quaternion q1, float t) noexcept;
 // fma()
 // ------------------------------------------------------------------------------------------------
 
-/// Fused multiply add operation. Calculates a * b + c in one operation (if supported by the
-/// hardware).
+// Fused multiply add operation. Calculates a * b + c in one operation (if supported by the
+// hardware).
 
 SFZ_CUDA_CALL float fma(float a, float b, float c) noexcept;
 SFZ_CUDA_CALL vec2 fma(vec2 a, vec2 b, vec2 c) noexcept;
 SFZ_CUDA_CALL vec3 fma(vec3 a, vec3 b, vec3 c) noexcept;
 SFZ_CUDA_CALL vec4 fma(vec4 a, vec4 b, vec4 c) noexcept;
+
+// rotateTowards()
+// ------------------------------------------------------------------------------------------------
+
+// Rotates a vector towards another vector by a given amount of radians. Both the input and the
+// target vector must be normalized. In addition, they must not be the same vector or point in
+// exact opposite directions.
+//
+// The variants marked "ClampSafe" handle annoying edge cases. If the angle specified is greater
+// than the angle between the two vectors then the target vector will be returned. The input
+// vectors are no longer assumed to be normalized. And if they happen to be invalid (i.e. the same
+// vector or pointing in exact opposite directions) a sane default will be given.
+
+SFZ_CUDA_CALL vec3 rotateTowardsRad(vec3 inDir, vec3 targetDir, float angleRads) noexcept;
+SFZ_CUDA_CALL vec3 rotateTowardsRadClampSafe(vec3 inDir, vec3 targetDir, float angleRads) noexcept;
+
+SFZ_CUDA_CALL vec3 rotateTowardsDeg(vec3 inDir, vec3 targetDir, float angleDegs) noexcept;
+SFZ_CUDA_CALL vec3 rotateTowardsDegClampSafe(vec3 inDir, vec3 targetDir, float angleDegs) noexcept;
 
 } // namespace sfz
 

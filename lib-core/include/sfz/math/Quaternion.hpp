@@ -66,7 +66,8 @@ struct alignas(16) Quaternion final {
 
 	/// Creates a unit quaternion representing a (right-handed) rotation around the specified axis.
 	/// The given axis will be automatically normalized.
-	static SFZ_CUDA_CALL Quaternion rotation(vec3 axis, float angleDeg) noexcept;
+	static SFZ_CUDA_CALL Quaternion rotationDeg(vec3 axis, float angleDeg) noexcept;
+	static SFZ_CUDA_CALL Quaternion rotationRad(vec3 axis, float angleRad) noexcept;
 
 	/// Constructs a Quaternion from Euler angles. The rotation around the z axis is performed first,
 	/// then y and last x axis.
