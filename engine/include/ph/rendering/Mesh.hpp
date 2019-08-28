@@ -40,6 +40,11 @@ struct Vertex {
 	vec3 pos = vec3(0.0f);
 	vec3 normal = vec3(0.0f);
 	vec2 texcoord = vec2(0.0f);
+
+	constexpr Vertex() noexcept = default;
+	constexpr Vertex(vec3 pos, vec3 normal, vec2 texcoord) : pos(pos), normal(normal), texcoord(texcoord) {}
+	constexpr Vertex(const Vertex&) noexcept = default;
+	constexpr Vertex& operator= (const Vertex&) noexcept = default;
 };
 static_assert(sizeof(Vertex) == sizeof(float) * 8);
 
