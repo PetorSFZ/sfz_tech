@@ -29,6 +29,8 @@ namespace zg {
 #define ZG_LOG(logLevel, format, ...) zg::logWrapper( \
 	__FILE__, __LINE__, (logLevel), (format), ##__VA_ARGS__)
 
+#define ZG_NOISE(format, ...) ZG_LOG(ZG_LOG_LEVEL_NOISE, (format), ##__VA_ARGS__)
+
 #define ZG_INFO(format, ...) ZG_LOG(ZG_LOG_LEVEL_INFO, (format), ##__VA_ARGS__)
 
 #define ZG_WARNING(format, ...) ZG_LOG(ZG_LOG_LEVEL_WARNING, (format), ##__VA_ARGS__)

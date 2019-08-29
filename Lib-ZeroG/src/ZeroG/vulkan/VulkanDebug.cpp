@@ -18,10 +18,13 @@
 
 #include "ZeroG/vulkan/VulkanDebug.hpp"
 
+#include <algorithm>
+
 #include "ZeroG/util/CpuAllocation.hpp"
 #include "ZeroG/util/Logging.hpp"
 #include "ZeroG/util/Strings.hpp"
 #include "ZeroG/util/Vector.hpp"
+#include "ZeroG/vulkan/VulkanCommon.hpp"
 
 namespace zg {
 
@@ -78,6 +81,84 @@ static const char* debugReportObjectTypeToString(VkDebugReportObjectTypeEXT type
 	return "INVALID OBJECT TYPE";
 }
 
+static bool physicalDeviceQueueSupportsPresent(
+	VkPhysicalDevice physicalDevice, uint32_t queueFamily, VkSurfaceKHR surface) noexcept
+{
+	VkBool32 supportsPresent = VK_FALSE;
+	CHECK_VK vkGetPhysicalDeviceSurfaceSupportKHR(
+		physicalDevice, queueFamily, surface, &supportsPresent);
+	return supportsPresent;
+}
+
+static bool physicalDeviceSupportsPresent(
+	VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) noexcept
+{
+	// Get number of queue families for device
+	uint32_t numQueueFamilies = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &numQueueFamilies, nullptr);
+
+	// Go through each queue family in device and return true if any with present support exists
+	for (uint32_t queueFamily = 0; queueFamily < numQueueFamilies; queueFamily++) {
+		bool supportsPresent =
+			physicalDeviceQueueSupportsPresent(physicalDevice, queueFamily, surface);
+		if (supportsPresent) {
+			return true;
+		}
+	}
+
+	// Device does not support present
+	return false;
+}
+
+static const char* vendorIDToString(uint32_t vendorID) noexcept
+{
+	switch (vendorID) {
+	case 0x1002: return "AMD";
+	case 0x1010: return "ImgTec";
+	case 0x10DE: return "NVIDIA";
+	case 0x13B5: return "ARM";
+	case 0x5143: return "Qualcomm";
+	case 0x8086: return "INTEL";
+	default: return "UNKNOWN";
+	}
+}
+
+static const char* deviceTypeToString(VkPhysicalDeviceType physicalDeviceType) noexcept
+{
+	switch (physicalDeviceType) {
+	case VK_PHYSICAL_DEVICE_TYPE_OTHER: return "OTHER";
+	case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU: return "INTEGRATED_GPU";
+	case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU: return "DISCRETE_GPU";
+	case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU: return "VIRTUAL_GPU";
+	case VK_PHYSICAL_DEVICE_TYPE_CPU: return "CPU";
+	default: return "";
+	}
+	return "";
+}
+
+static uint64_t deviceNumBytesDeviceMemory(VkPhysicalDevice physicalDevice) noexcept
+{
+	// Get memory properties
+	VkPhysicalDeviceMemoryProperties memProperties = {};
+	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+
+	// Iterate through all memory heaps and find the largest amount of device local memory
+	uint64_t maxNumDeviceBytes = 0;
+	for (uint32_t i = 0; i < memProperties.memoryHeapCount; i++) {
+		VkMemoryHeap& memHeap = memProperties.memoryHeaps[i];
+		if ((memHeap.flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) == VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) {
+			maxNumDeviceBytes = std::max(maxNumDeviceBytes, memHeap.size);
+		}
+	}
+
+	return maxNumDeviceBytes;
+}
+
+static bool flagsContainBit(VkQueueFlags flags, VkQueueFlagBits bit)
+{
+	return (flags & bit) == bit;
+}
+
 // Debug information loggers
 // ------------------------------------------------------------------------------------------------
 
@@ -125,7 +206,6 @@ void vulkanLogAvailableInstanceExtensions() noexcept
 	vkEnumerateInstanceExtensionProperties(nullptr, &numExtensions, nullptr);
 
 	// Retrieve layer properties
-	ZgAllocator allocator = getAllocator();
 	Vector<VkExtensionProperties> extensionProperties;
 	bool success = extensionProperties.create(numExtensions, "logInstanceExtensionsProperties");
 	ZG_ASSERT(success);
@@ -133,11 +213,11 @@ void vulkanLogAvailableInstanceExtensions() noexcept
 
 	// Allocate memory for string
 	constexpr uint32_t TMP_STR_SIZE = 32768;
-	char* const tmpStrStart = reinterpret_cast<char*>(
-		allocator.allocate(allocator.userPtr, TMP_STR_SIZE, "logInstanceLayersTmpString"));
-	char* tmpStr = tmpStrStart;
+	Vector<char> tmpStrVec;
+	tmpStrVec.create(TMP_STR_SIZE, "logInstanceLayersTmpString");
+	char* tmpStr = tmpStrVec.data();
 	tmpStr[0] = '\0';
-	uint32_t tmpStrBytesLeft = TMP_STR_SIZE;
+	uint32_t tmpStrBytesLeft = tmpStrVec.capacity();
 
 	// Build extensions information strings
 	printfAppend(tmpStr, tmpStrBytesLeft, "Available Vulkan instance extensions:\n");
@@ -148,10 +228,165 @@ void vulkanLogAvailableInstanceExtensions() noexcept
 	}
 
 	// Log extensions informations
-	ZG_INFO("%s", tmpStrStart);
+	ZG_INFO("%s", tmpStrVec.data());
+}
 
-	// Deallocate memory
-	allocator.deallocate(allocator.userPtr, tmpStrStart);
+void vulkanLogAvailablePhysicalDevices(VkInstance instance, VkSurfaceKHR surface) noexcept
+{
+	constexpr uint32_t MAX_NUM_PHYSICAL_DEVICES = 32;
+
+	// Check how many physical devices there is
+	uint32_t numPhysicalDevices = 0;
+	CHECK_VK vkEnumeratePhysicalDevices(instance, &numPhysicalDevices, nullptr);
+	ZG_ASSERT(numPhysicalDevices <= MAX_NUM_PHYSICAL_DEVICES);
+	numPhysicalDevices = std::min(numPhysicalDevices, MAX_NUM_PHYSICAL_DEVICES);
+
+	// Retrieve physical devices
+	VkPhysicalDevice physicalDevices[MAX_NUM_PHYSICAL_DEVICES] = {};
+	CHECK_VK vkEnumeratePhysicalDevices(instance, &numPhysicalDevices, physicalDevices);
+
+	// Allocate memory for string
+	constexpr uint32_t TMP_STR_SIZE = 32768;
+	Vector<char> tmpStrVec;
+	tmpStrVec.create(TMP_STR_SIZE, "logPhysicalDevicesTmpString");
+	char* tmpStr = tmpStrVec.data();
+	tmpStr[0] = '\0';
+	uint32_t tmpStrBytesLeft = tmpStrVec.capacity();
+
+	// Build string containing information about all physical devices
+	printfAppend(tmpStr, tmpStrBytesLeft, "Vulkan physical devices:\n");
+	for (uint32_t i = 0; i < numPhysicalDevices; i++) {
+
+		// Get properties
+		VkPhysicalDevice& physicalDevice = physicalDevices[i];
+		VkPhysicalDeviceProperties properties = {};
+		vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+
+		// Check if device supports present if a surface is specified
+		const char* supportsPresentStr = "";
+		if (surface != nullptr) {
+			if (physicalDeviceSupportsPresent(physicalDevice, surface)) {
+				supportsPresentStr = " -- Present support";
+			}
+		}
+
+		printfAppend(tmpStr, tmpStrBytesLeft,
+			"- %u -- %s -- %s -- %s -- Device Local Memory: %.2f GiB -- API %u.%u.%u%s\n",
+			i,
+			properties.deviceName,
+			vendorIDToString(properties.vendorID),
+			deviceTypeToString(properties.deviceType),
+			float(deviceNumBytesDeviceMemory(physicalDevice)) / (1024.0f * 1024.0f * 1024.0f),
+			VK_VERSION_MAJOR(properties.apiVersion),
+			VK_VERSION_MINOR(properties.apiVersion),
+			VK_VERSION_PATCH(properties.apiVersion),
+			supportsPresentStr);
+	}
+
+	// Log physical devices
+	ZG_INFO("%s", tmpStrVec.data());
+}
+
+void vulkanLogDeviceExtensions(
+	uint32_t index, VkPhysicalDevice device, const VkPhysicalDeviceProperties& properties) noexcept
+{
+	constexpr uint32_t MAX_NUM_EXTENSIONS = 128;
+
+	// Get number of device extensions
+	uint32_t numExtensions = 0;
+	vkEnumerateDeviceExtensionProperties(device, nullptr, &numExtensions, nullptr);
+	ZG_ASSERT(numExtensions < MAX_NUM_EXTENSIONS);
+	numExtensions = std::min(numExtensions, MAX_NUM_EXTENSIONS);
+
+	// Get device extensions
+	VkExtensionProperties extensions[MAX_NUM_EXTENSIONS] = {};
+	vkEnumerateDeviceExtensionProperties(device, nullptr, &numExtensions, extensions);
+
+	// Allocate memory for string
+	constexpr uint32_t TMP_STR_SIZE = 32768;
+	Vector<char> tmpStrVec;
+	tmpStrVec.create(TMP_STR_SIZE, "logDeviceExtensionsTmpStr");
+	char* tmpStr = tmpStrVec.data();
+	tmpStr[0] = '\0';
+	uint32_t tmpStrBytesLeft = tmpStrVec.capacity();
+
+	// Build string containing information about all device extensions
+	printfAppend(tmpStr, tmpStrBytesLeft,
+		"Device %u -- %s extensions:\n", index, properties.deviceName);
+	for (uint32_t i = 0; i < numExtensions; i++) {
+		printfAppend(tmpStr, tmpStrBytesLeft, "- %s (v%u)\n",
+			extensions[i].extensionName,
+			extensions[i].specVersion);
+	}
+
+	// Log device extensions
+	ZG_INFO("%s", tmpStrVec.data());
+}
+
+void vulkanLogQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface) noexcept
+{
+	constexpr uint32_t MAX_NUM_QUEUE_FAMILIES = 32;
+
+	// Check how many queue families there are
+	uint32_t numQueueFamilies = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &numQueueFamilies, nullptr);
+	ZG_ASSERT(numQueueFamilies < MAX_NUM_QUEUE_FAMILIES);
+	numQueueFamilies = std::min(numQueueFamilies, MAX_NUM_QUEUE_FAMILIES);
+
+	// Get queue families
+	VkQueueFamilyProperties queueFamilyProperties[MAX_NUM_QUEUE_FAMILIES] = {};
+	vkGetPhysicalDeviceQueueFamilyProperties(
+		device, &numQueueFamilies, queueFamilyProperties);
+
+	// Allocate memory for string
+	constexpr uint32_t TMP_STR_SIZE = 32768;
+	Vector<char> tmpStrVec;
+	tmpStrVec.create(TMP_STR_SIZE, "logDeviceExtensionsTmpStr");
+	char* tmpStr = tmpStrVec.data();
+	tmpStr[0] = '\0';
+	uint32_t tmpStrBytesLeft = tmpStrVec.capacity();
+
+	// Create string with information about queue families
+	printfAppend(tmpStr, tmpStrBytesLeft, "Queue families:\n");
+	for (uint32_t i = 0; i < numQueueFamilies; i++) {
+		const VkQueueFamilyProperties& properties = queueFamilyProperties[i];
+
+		// Check which bits the family contains
+		bool graphicsBit = flagsContainBit(properties.queueFlags, VK_QUEUE_GRAPHICS_BIT);
+		bool computeBit = flagsContainBit(properties.queueFlags, VK_QUEUE_COMPUTE_BIT);
+		bool transferBit = flagsContainBit(properties.queueFlags, VK_QUEUE_TRANSFER_BIT);
+		bool sparseBindingBit = flagsContainBit(properties.queueFlags, VK_QUEUE_SPARSE_BINDING_BIT);
+		bool protectedBit = flagsContainBit(properties.queueFlags, VK_QUEUE_PROTECTED_BIT);
+
+		// Check for present support
+		bool presentSupport = false;
+		if (surface != nullptr) {
+			if (physicalDeviceQueueSupportsPresent(device, i, surface)) {
+				presentSupport = true;
+			}
+		}
+
+		// Start of string
+		printfAppend(tmpStr, tmpStrBytesLeft, "- Family %u -- Flags: ", i);
+
+		// Flags
+		if (presentSupport) printfAppend(tmpStr, tmpStrBytesLeft, "PRESENT, ");
+		if (graphicsBit) printfAppend(tmpStr, tmpStrBytesLeft, "GRAPHICS, ");
+		if (computeBit) printfAppend(tmpStr, tmpStrBytesLeft, "COMPUTE, ");
+		if (transferBit) printfAppend(tmpStr, tmpStrBytesLeft, "TRANSFER, ");
+		if (sparseBindingBit) printfAppend(tmpStr, tmpStrBytesLeft, "SPARSE BINDING, ");
+		if (protectedBit) printfAppend(tmpStr, tmpStrBytesLeft, "PROTECTED, ");
+
+		// Remove last two chars if (i.e. last ", ")
+		tmpStr -= 2;
+		*tmpStr = '\0';
+		tmpStrBytesLeft += 2;
+
+		printfAppend(tmpStr, tmpStrBytesLeft, " -- Count: %u\n", properties.queueCount);
+	}
+
+	// Log queue families extensions
+	ZG_INFO("%s", tmpStrVec.data());
 }
 
 // Vulkan debug report callback
@@ -179,8 +414,9 @@ VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugReportCallback(
 	bool debug = flagsContainBit(flags, VK_DEBUG_REPORT_DEBUG_BIT_EXT);
 
 	// Determine ZeroG log level
-	ZgLogLevel level = ZG_LOG_LEVEL_INFO; // INFO by default
-	if (warning || performance) level = ZG_LOG_LEVEL_WARNING;
+	ZgLogLevel level = ZG_LOG_LEVEL_NOISE; // NOISE by default
+	if (performance) level = ZG_LOG_LEVEL_INFO;
+	if (warning) level = ZG_LOG_LEVEL_WARNING;
 	if (error) level = ZG_LOG_LEVEL_ERROR;
 
 	// Convert debug report flags to strings

@@ -26,6 +26,7 @@
 #include "ZeroG/util/Mutex.hpp"
 #include "ZeroG/util/Strings.hpp"
 #include "ZeroG/util/Vector.hpp"
+#include "ZeroG/vulkan/VulkanCommandQueue.hpp"
 #include "ZeroG/vulkan/VulkanCommon.hpp"
 #include "ZeroG/vulkan/VulkanDebug.hpp"
 
@@ -36,6 +37,10 @@ namespace zg {
 
 struct VulkanContext final {
 	VkInstance instance = nullptr; // Externally synchronized
+	VkSurfaceKHR surface = nullptr;
+	VkPhysicalDevice physicalDevice = nullptr;
+	VkPhysicalDeviceProperties physicalDeviceProperties = {};
+	VkDevice device = nullptr;
 };
 
 struct VulkanSwapchain final {
@@ -50,6 +55,9 @@ struct VulkanBackendState final {
 	Mutex<VulkanContext> context;
 
 	Mutex<VulkanSwapchain> swapchain;
+
+	VulkanCommandQueue presentQueue;
+	VulkanCommandQueue copyQueue;
 };
 
 // Statics
@@ -72,8 +80,10 @@ public:
 
 	virtual ~VulkanBackend() noexcept
 	{
-		// Destroy VkInstance
+		// Access context
 		MutexAccessor<VulkanContext> context = mState->context.access();
+
+		// Destroy VkInstance
 		if (context.data().instance != nullptr) {
 			// TODO: Allocation callbacks
 			if (mDebugMode) {
@@ -161,6 +171,7 @@ public:
 			ZG_ERROR("Failed to create VkInstance");
 			return ZG_ERROR_GENERIC;
 		}
+		ZG_INFO("VkInstance created");
 
 		// Register debug report callback
 		if (mDebugMode) {
@@ -181,6 +192,49 @@ public:
 			CHECK_VK vkCreateDebugReportCallbackEXT(
 				context.data().instance, &callbackCreateInfo, nullptr, &vulkanDebugCallback);
 		}
+
+		// TODO: At this point we should create a VkSurface using platform specific code
+
+		// Log available physical devices
+		vulkanLogAvailablePhysicalDevices(context.data().instance, context.data().surface);
+
+		// TODO: Heuristic to choose physical device
+		//       Should probably take DISCRETE_GPU with largest amount of device local memory.
+		const uint32_t physicalDeviceIdx = 0;
+		{
+			constexpr uint32_t MAX_NUM_PHYSICAL_DEVICES = 32;
+
+			// Check how many physical devices there is
+			uint32_t numPhysicalDevices = 0;
+			CHECK_VK vkEnumeratePhysicalDevices(context.data().instance, &numPhysicalDevices, nullptr);
+			ZG_ASSERT(numPhysicalDevices <= MAX_NUM_PHYSICAL_DEVICES);
+			if (numPhysicalDevices > MAX_NUM_PHYSICAL_DEVICES) numPhysicalDevices = MAX_NUM_PHYSICAL_DEVICES;
+
+			// Retrieve physical devices
+			VkPhysicalDevice physicalDevices[MAX_NUM_PHYSICAL_DEVICES] = {};
+			CHECK_VK vkEnumeratePhysicalDevices(context.data().instance, &numPhysicalDevices, physicalDevices);
+
+			// Select the choosen physical device
+			ZG_ASSERT(physicalDeviceIdx < numPhysicalDevices);
+			context.data().physicalDevice = physicalDevices[physicalDeviceIdx];
+
+			// Store physical devices properties for the choosen device
+			vkGetPhysicalDeviceProperties(
+				context.data().physicalDevice, &context.data().physicalDeviceProperties);
+		}
+		ZG_INFO("Using physical device: %u -- %s",
+			physicalDeviceIdx, context.data().physicalDeviceProperties.deviceName);
+
+		// Log available device extensions
+		vulkanLogDeviceExtensions(physicalDeviceIdx,
+			context.data().physicalDevice, context.data().physicalDeviceProperties);
+
+		// Log available queue families
+		vulkanLogQueueFamilies(context.data().physicalDevice, context.data().surface);
+
+		// TODO: Heuristic to choose queue family for present and copy queues
+		//       Should require the correct flags for each queue
+		const uint32_t queueFamilyIdx = 0;
 
 
 		return ZG_SUCCESS;
@@ -342,14 +396,14 @@ public:
 
 	ZgErrorCode getPresentQueue(ZgCommandQueue** presentQueueOut) noexcept override final
 	{
-		(void)presentQueueOut;
-		return ZG_ERROR_UNIMPLEMENTED;
+		*presentQueueOut = &mState->presentQueue;
+		return ZG_SUCCESS;
 	}
 
 	ZgErrorCode getCopyQueue(ZgCommandQueue** copyQueueOut) noexcept override final
 	{
-		(void)copyQueueOut;
-		return ZG_ERROR_UNIMPLEMENTED;
+		*copyQueueOut = &mState->copyQueue;
+		return ZG_SUCCESS;
 	}
 
 	// Private methods

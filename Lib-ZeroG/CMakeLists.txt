@@ -161,6 +161,8 @@ if (VULKAN_FOUND)
 	set(ZEROG_VULKAN_SRC_FILES
 		${SRC_DIR}/ZeroG/vulkan/VulkanBackend.hpp
 		${SRC_DIR}/ZeroG/vulkan/VulkanBackend.cpp
+		${SRC_DIR}/ZeroG/vulkan/VulkanCommandQueue.hpp
+		${SRC_DIR}/ZeroG/vulkan/VulkanCommandQueue.cpp
 		${SRC_DIR}/ZeroG/vulkan/VulkanCommon.hpp
 		${SRC_DIR}/ZeroG/vulkan/VulkanCommon.cpp
 		${SRC_DIR}/ZeroG/vulkan/VulkanDebug.hpp

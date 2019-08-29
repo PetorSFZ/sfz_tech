@@ -16,39 +16,44 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#pragma once
-
-#include <vulkan/vulkan.h>
+#include "ZeroG/vulkan/VulkanCommandQueue.hpp"
 
 namespace zg {
 
-// Debug information loggers
+// VulkanCommandQueue: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-void vulkanLogAvailableInstanceLayers() noexcept;
+VulkanCommandQueue::~VulkanCommandQueue() noexcept
+{
 
-void vulkanLogAvailableInstanceExtensions() noexcept;
+}
 
-void vulkanLogAvailablePhysicalDevices(VkInstance instance, VkSurfaceKHR surface) noexcept;
-
-void vulkanLogDeviceExtensions(
-	uint32_t index, VkPhysicalDevice device, const VkPhysicalDeviceProperties& properties) noexcept;
-
-void vulkanLogQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface) noexcept;
-
-// Vulkan debug report callback
+// VulkanCommandQueue: Virtual methods
 // ------------------------------------------------------------------------------------------------
 
-VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugReportCallback(
-	VkDebugReportFlagsEXT flags,
-	VkDebugReportObjectTypeEXT objectType,
-	uint64_t object,
-	size_t location,
-	int32_t messageCode,
-	const char* pLayerPrefix,
-	const char* pMessage,
-	void* pUserData);
+ZgErrorCode VulkanCommandQueue::signalOnGpu(ZgFence& fenceToSignal) noexcept
+{
+	return ZG_ERROR_UNIMPLEMENTED;
+}
 
-extern VkDebugReportCallbackEXT vulkanDebugCallback;
+ZgErrorCode VulkanCommandQueue::waitOnGpu(const ZgFence& fence) noexcept
+{
+	return ZG_ERROR_UNIMPLEMENTED;
+}
+
+ZgErrorCode VulkanCommandQueue::flush() noexcept
+{
+	return ZG_ERROR_UNIMPLEMENTED;
+}
+
+ZgErrorCode VulkanCommandQueue::beginCommandListRecording(ZgCommandList** commandListOut) noexcept
+{
+	return ZG_ERROR_UNIMPLEMENTED;
+}
+
+ZgErrorCode VulkanCommandQueue::executeCommandList(ZgCommandList* commandList) noexcept
+{
+	return ZG_ERROR_UNIMPLEMENTED;
+}
 
 } // namespace zg

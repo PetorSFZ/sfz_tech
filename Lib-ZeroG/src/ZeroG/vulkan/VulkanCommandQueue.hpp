@@ -18,37 +18,35 @@
 
 #pragma once
 
-#include <vulkan/vulkan.h>
+#include "ZeroG.h"
+#include "ZeroG/BackendInterface.hpp"
 
 namespace zg {
 
-// Debug information loggers
+// VulkanCommandQueue
 // ------------------------------------------------------------------------------------------------
 
-void vulkanLogAvailableInstanceLayers() noexcept;
+class VulkanCommandQueue final : public ZgCommandQueue {
+public:
 
-void vulkanLogAvailableInstanceExtensions() noexcept;
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
 
-void vulkanLogAvailablePhysicalDevices(VkInstance instance, VkSurfaceKHR surface) noexcept;
+	VulkanCommandQueue() noexcept = default;
+	VulkanCommandQueue(const VulkanCommandQueue&) = delete;
+	VulkanCommandQueue& operator= (const VulkanCommandQueue&) = delete;
+	VulkanCommandQueue(VulkanCommandQueue&&) = delete;
+	VulkanCommandQueue& operator= (VulkanCommandQueue&&) = delete;
+	~VulkanCommandQueue() noexcept;
 
-void vulkanLogDeviceExtensions(
-	uint32_t index, VkPhysicalDevice device, const VkPhysicalDeviceProperties& properties) noexcept;
+	// Virtual methods
+	// --------------------------------------------------------------------------------------------
 
-void vulkanLogQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface) noexcept;
-
-// Vulkan debug report callback
-// ------------------------------------------------------------------------------------------------
-
-VKAPI_ATTR VkBool32 VKAPI_CALL vulkanDebugReportCallback(
-	VkDebugReportFlagsEXT flags,
-	VkDebugReportObjectTypeEXT objectType,
-	uint64_t object,
-	size_t location,
-	int32_t messageCode,
-	const char* pLayerPrefix,
-	const char* pMessage,
-	void* pUserData);
-
-extern VkDebugReportCallbackEXT vulkanDebugCallback;
+	ZgErrorCode signalOnGpu(ZgFence& fenceToSignal) noexcept override final;
+	ZgErrorCode waitOnGpu(const ZgFence& fence) noexcept override final;
+	ZgErrorCode flush() noexcept override final;
+	ZgErrorCode beginCommandListRecording(ZgCommandList** commandListOut) noexcept override final;
+	ZgErrorCode executeCommandList(ZgCommandList* commandList) noexcept override final;
+};
 
 } // namespace zg

@@ -32,6 +32,7 @@ namespace zg {
 static const char* toString(ZgLogLevel level) noexcept
 {
 	switch (level) {
+	case ZG_LOG_LEVEL_NOISE: return "NOISE";
 	case ZG_LOG_LEVEL_INFO: return "INFO";
 	case ZG_LOG_LEVEL_WARNING: return "WARNING";
 	case ZG_LOG_LEVEL_ERROR: return "ERROR";
@@ -82,7 +83,7 @@ void logWrapper(const char* file, int line, ZgLogLevel level, const char* fmt, .
 	va_start(args, fmt);
 	vsnprintf(messageBuffer, sizeof(messageBuffer), fmt, args);
 	va_end(args);
-	
+
 	// Log
 	ZgLogger logger = getLogger();
 	logger.log(logger.userPtr, file, line, level, messageBuffer);

@@ -108,7 +108,7 @@ typedef struct ZgFramebufferRect ZgFramebufferRect;
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 0;
+static const uint32_t ZG_COMPILED_API_VERSION = 1;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -177,7 +177,8 @@ ZG_API const char* zgErrorCodeToString(ZgErrorCode errorCode);
 // ------------------------------------------------------------------------------------------------
 
 enum ZgLogLevelEnum {
-	ZG_LOG_LEVEL_INFO = 0,
+	ZG_LOG_LEVEL_NOISE = 0,
+	ZG_LOG_LEVEL_INFO,
 	ZG_LOG_LEVEL_WARNING,
 	ZG_LOG_LEVEL_ERROR
 };
