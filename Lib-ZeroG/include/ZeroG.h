@@ -70,9 +70,6 @@ ZG_HANDLE(ZgMemoryHeap);
 // A handle representing a buffer
 ZG_HANDLE(ZgBuffer);
 
-// A handle representing a memory heap for textures
-ZG_HANDLE(ZgTextureHeap);
-
 // A handle representing a 2-dimensional texture
 ZG_HANDLE(ZgTexture2D);
 
@@ -108,7 +105,7 @@ typedef struct ZgFramebufferRect ZgFramebufferRect;
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 1;
+static const uint32_t ZG_COMPILED_API_VERSION = 2;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -723,7 +720,14 @@ enum ZgMemoryTypeEnum {
 	// Fastest memory available on GPU.
 	// Can't upload or download directly to this memory from CPU, need to use UPLOAD and DOWNLOAD
 	// as intermediary.
-	ZG_MEMORY_TYPE_DEVICE
+	ZG_MEMORY_TYPE_DEVICE,
+
+	// Special version of ZG_MEMORY_TYPE_DEVICE that can be used to allocate textures.
+	//
+	// Some GPUs can allocate textures directly from ZG_MEMORY_TYPE_DEVICE, making it unnecessary
+	// to create memory heaps of this type.
+	// TODO: Implement support for this use case.
+	ZG_MEMORY_TYPE_TEXTURE
 };
 typedef uint32_t ZgMemoryType;
 
@@ -776,19 +780,7 @@ ZG_API ZgErrorCode zgBufferSetDebugName(
 // Textures
 // ------------------------------------------------------------------------------------------------
 
-struct ZgTextureHeapCreateInfo {
-
-	// The size in bytes of the heap
-	uint64_t sizeInBytes;
-};
-typedef struct ZgTextureHeapCreateInfo ZgTextureHeapCreateInfo;
-
-ZG_API ZgErrorCode zgTextureHeapCreate(
-	ZgTextureHeap** textureHeapOut,
-	const ZgTextureHeapCreateInfo* createInfo);
-
-ZG_API ZgErrorCode zgTextureHeapRelease(
-	ZgTextureHeap* textureHeap);
+static const uint32_t ZG_TEXTURE_2D_MAX_NUM_MIPMAPS = 12;
 
 enum ZgTexture2DFormatEnum {
 	ZG_TEXTURE_2D_FORMAT_UNDEFINED = 0,
@@ -799,7 +791,6 @@ enum ZgTexture2DFormatEnum {
 };
 typedef uint32_t ZgTexture2DFormat;
 
-static const uint32_t ZG_TEXTURE_2D_MAX_NUM_MIPMAPS = 12;
 
 struct ZgTexture2DCreateInfo {
 
@@ -848,8 +839,8 @@ ZG_API ZgErrorCode zgTexture2DGetAllocationInfo(
 	ZgTexture2DAllocationInfo* allocationInfoOut,
 	const ZgTexture2DCreateInfo* createInfo);
 
-ZG_API ZgErrorCode zgTextureHeapTexture2DCreate(
-	ZgTextureHeap* textureHeap,
+ZG_API ZgErrorCode zgMemoryHeapTexture2DCreate(
+	ZgMemoryHeap* memoryHeap,
 	ZgTexture2D** textureOut,
 	const ZgTexture2DCreateInfo* createInfo);
 

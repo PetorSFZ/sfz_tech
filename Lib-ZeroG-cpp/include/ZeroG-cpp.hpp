@@ -288,6 +288,10 @@ public:
 	// See zgMemoryHeapBufferCreate()
 	ErrorCode bufferCreate(Buffer& bufferOut, const ZgBufferCreateInfo& createInfo) noexcept;
 	ErrorCode bufferCreate(Buffer& bufferOut, uint64_t offset, uint64_t size) noexcept;
+
+	// See zgMemoryHeapTexture2DCreate()
+	ErrorCode texture2DCreate(
+		Texture2D& textureOut, const ZgTexture2DCreateInfo& createInfo) noexcept;
 };
 
 
@@ -329,49 +333,6 @@ public:
 
 	// See zgBufferSetDebugName()
 	ErrorCode setDebugName(const char* name) noexcept;
-};
-
-
-// TextureHeap
-// ------------------------------------------------------------------------------------------------
-
-class TextureHeap final {
-public:
-	// Members
-	// --------------------------------------------------------------------------------------------
-
-	ZgTextureHeap* textureHeap = nullptr;
-
-	// Constructors & destructors
-	// --------------------------------------------------------------------------------------------
-
-	TextureHeap() noexcept = default;
-	TextureHeap(const TextureHeap&) = delete;
-	TextureHeap& operator= (const TextureHeap&) = delete;
-	TextureHeap(TextureHeap&& o) noexcept { this->swap(o); }
-	TextureHeap& operator= (TextureHeap&& o) noexcept { this->swap(o); return *this; }
-	~TextureHeap() noexcept { this->release(); }
-
-	// State methods
-	// --------------------------------------------------------------------------------------------
-
-	bool valid() const noexcept { return textureHeap != nullptr; }
-
-	// See zgTextureHeapCreate()
-	ErrorCode create(const ZgTextureHeapCreateInfo& createInfo) noexcept;
-	ErrorCode create(uint64_t size) noexcept;
-
-	void swap(TextureHeap& other) noexcept;
-
-	// See zgTextureHeapRelease()
-	void release() noexcept;
-
-	// TextureHeap methods
-	// --------------------------------------------------------------------------------------------
-
-	// See zgTextureHeapTexture2DCreate()
-	ErrorCode texture2DCreate(
-		Texture2D& textureOut, const ZgTexture2DCreateInfo& createInfo) noexcept;
 };
 
 

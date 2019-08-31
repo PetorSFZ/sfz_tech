@@ -137,6 +137,8 @@ if (MSVC)
 	set(ZEROG_D3D12_SRC_FILES
 		${SRC_DIR}/ZeroG/d3d12/D3D12Backend.hpp
 		${SRC_DIR}/ZeroG/d3d12/D3D12Backend.cpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12Buffer.hpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12Buffer.cpp
 		${SRC_DIR}/ZeroG/d3d12/D3D12CommandList.hpp
 		${SRC_DIR}/ZeroG/d3d12/D3D12CommandList.cpp
 		${SRC_DIR}/ZeroG/d3d12/D3D12CommandQueue.hpp
@@ -147,8 +149,8 @@ if (MSVC)
 		${SRC_DIR}/ZeroG/d3d12/D3D12DescriptorRingBuffer.cpp
 		${SRC_DIR}/ZeroG/d3d12/D3D12Framebuffer.hpp
 		${SRC_DIR}/ZeroG/d3d12/D3D12Framebuffer.cpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12Memory.hpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12Memory.cpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12MemoryHeap.hpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12MemoryHeap.cpp
 		${SRC_DIR}/ZeroG/d3d12/D3D12PipelineRendering.hpp
 		${SRC_DIR}/ZeroG/d3d12/D3D12PipelineRendering.cpp
 		${SRC_DIR}/ZeroG/d3d12/D3D12Textures.hpp

@@ -22,7 +22,7 @@
 #include "ZeroG/d3d12/D3D12Common.hpp"
 #include "ZeroG/d3d12/D3D12DescriptorRingBuffer.hpp"
 #include "ZeroG/d3d12/D3D12Framebuffer.hpp"
-#include "ZeroG/d3d12/D3D12Memory.hpp"
+#include "ZeroG/d3d12/D3D12Buffer.hpp"
 #include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
 #include "ZeroG/BackendInterface.hpp"
 #include "ZeroG/util/Vector.hpp"

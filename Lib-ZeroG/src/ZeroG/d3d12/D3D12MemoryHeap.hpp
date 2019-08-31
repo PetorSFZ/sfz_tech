@@ -21,10 +21,17 @@
 #include <atomic>
 
 #include "ZeroG.h"
+#include "ZeroG/d3d12/D3D12Buffer.hpp"
 #include "ZeroG/d3d12/D3D12Common.hpp"
+#include "ZeroG/d3d12/D3D12Textures.hpp"
 #include "ZeroG/BackendInterface.hpp"
 
 namespace zg {
+
+// Helper functions
+// ------------------------------------------------------------------------------------------------
+
+D3D12_RESOURCE_DESC createInfoToResourceDesc(const ZgTexture2DCreateInfo& info) noexcept;
 
 // D3D12 Memory Heap
 // ------------------------------------------------------------------------------------------------
@@ -48,6 +55,10 @@ public:
 		ZgBuffer** bufferOut,
 		const ZgBufferCreateInfo& createInfo) noexcept override final;
 
+	ZgErrorCode texture2DCreate(
+		ZgTexture2D** textureOut,
+		const ZgTexture2DCreateInfo& createInfo) noexcept override final;
+
 	// Members
 	// --------------------------------------------------------------------------------------------
 
@@ -69,43 +80,5 @@ ZgErrorCode createMemoryHeap(
 	D3DX12Residency::ResidencyManager& residencyManager,
 	D3D12MemoryHeap** heapOut,
 	const ZgMemoryHeapCreateInfo& createInfo) noexcept;
-
-// D3D12 Buffer
-// ------------------------------------------------------------------------------------------------
-
-class D3D12Buffer final : public ZgBuffer {
-public:
-
-	// Constructors & destructors
-	// --------------------------------------------------------------------------------------------
-
-	D3D12Buffer() = default;
-	D3D12Buffer(const D3D12Buffer&) = delete;
-	D3D12Buffer& operator= (const D3D12Buffer&) = delete;
-	D3D12Buffer(D3D12Buffer&&) = delete;
-	D3D12Buffer& operator= (D3D12Buffer&&) = delete;
-	~D3D12Buffer() noexcept;
-
-	// Members
-	// --------------------------------------------------------------------------------------------
-
-	// A unique identifier for this buffer
-	uint64_t identifier = 0;
-
-	D3D12MemoryHeap* memoryHeap = nullptr;
-	uint64_t sizeBytes = 0;
-	ComPtr<ID3D12Resource> resource;
-
-	// The current resource state of the buffer. Committed because the state has been committed
-	// in a command list which has been executed on a queue. There may be pending state changes
-	// in command lists not yet executed.
-	// TODO: Mutex protecting this? How handle changes submitted on different queues simulatenously?
-	D3D12_RESOURCE_STATES lastCommittedState = D3D12_RESOURCE_STATE_COMMON;
-
-	// Methods
-	// --------------------------------------------------------------------------------------------
-
-	ZgErrorCode setDebugName(const char* name) noexcept override final;
-};
 
 } // namespace zg

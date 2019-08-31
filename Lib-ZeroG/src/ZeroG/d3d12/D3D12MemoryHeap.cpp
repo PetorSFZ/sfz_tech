@@ -16,7 +16,7 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "ZeroG/d3d12/D3D12Memory.hpp"
+#include "ZeroG/d3d12/D3D12MemoryHeap.hpp"
 
 #include "ZeroG/util/Assert.hpp"
 #include "ZeroG/util/CpuAllocation.hpp"
@@ -32,6 +32,7 @@ static D3D12_HEAP_TYPE bufferMemoryTypeToD3D12HeapType(ZgMemoryType type) noexce
 	case ZG_MEMORY_TYPE_UPLOAD: return D3D12_HEAP_TYPE_UPLOAD;
 	case ZG_MEMORY_TYPE_DOWNLOAD: return D3D12_HEAP_TYPE_READBACK;
 	case ZG_MEMORY_TYPE_DEVICE: return D3D12_HEAP_TYPE_DEFAULT;
+	case ZG_MEMORY_TYPE_TEXTURE: return D3D12_HEAP_TYPE_DEFAULT;
 	}
 	ZG_ASSERT(false);
 	return D3D12_HEAP_TYPE_DEFAULT;
@@ -43,9 +44,63 @@ static const char* memoryTypeToString(ZgMemoryType type) noexcept
 	case ZG_MEMORY_TYPE_UPLOAD: return "UPLOAD";
 	case ZG_MEMORY_TYPE_DOWNLOAD: return "DOWNLOAD";
 	case ZG_MEMORY_TYPE_DEVICE: return "DEVICE";
+	case ZG_MEMORY_TYPE_TEXTURE: return "TEXTURE";
 	}
 	ZG_ASSERT(false);
 	return "<UNKNOWN>";
+}
+
+static DXGI_FORMAT createInfoToDxgiFormat(const ZgTexture2DCreateInfo& info) noexcept
+{
+	if (info.normalized == ZG_FALSE) {
+		// TODO: This currently seems to be broken. Unormalized textures always return 0 when read
+		//       in shader. Should investigate further.
+		ZG_ASSERT(false);
+		switch (info.format) {
+		case ZG_TEXTURE_2D_FORMAT_R_U8: return DXGI_FORMAT_R8_UINT;
+		case ZG_TEXTURE_2D_FORMAT_RG_U8: return DXGI_FORMAT_R8G8_UINT;
+		case ZG_TEXTURE_2D_FORMAT_RGBA_U8: return DXGI_FORMAT_R8G8B8A8_UINT;
+		default:
+			break;
+		}
+	}
+	else {
+		switch (info.format) {
+		case ZG_TEXTURE_2D_FORMAT_R_U8: return DXGI_FORMAT_R8_UNORM;
+		case ZG_TEXTURE_2D_FORMAT_RG_U8: return DXGI_FORMAT_R8G8_UNORM;
+		case ZG_TEXTURE_2D_FORMAT_RGBA_U8: return DXGI_FORMAT_R8G8B8A8_UNORM;
+		default:
+			break;
+		}
+	}
+
+	ZG_ASSERT(false);
+	return DXGI_FORMAT_UNKNOWN;
+}
+
+// Helper functions
+// ------------------------------------------------------------------------------------------------
+
+D3D12_RESOURCE_DESC createInfoToResourceDesc(const ZgTexture2DCreateInfo& info) noexcept
+{
+	D3D12_RESOURCE_DESC desc = {};
+
+	desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	desc.Alignment = 0;
+	desc.Width = info.width;
+	desc.Height = info.height;
+	desc.DepthOrArraySize = 1;
+	desc.MipLevels = (uint16_t)info.numMipmaps;
+	desc.Format = createInfoToDxgiFormat(info);
+	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Quality = 0;
+	desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	desc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	// TODO: Maybe expose flags:
+	//      * D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+	//      * D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS
+
+	return desc;
 }
 
 // D3D12MemoryHeap: Constructors & destructors
@@ -63,6 +118,8 @@ ZgErrorCode D3D12MemoryHeap::bufferCreate(
 	ZgBuffer** bufferOut,
 	const ZgBufferCreateInfo& createInfo) noexcept
 {
+	if (this->memoryType == ZG_MEMORY_TYPE_TEXTURE) return ZG_ERROR_INVALID_ARGUMENT;
+
 	// Create placed resource
 	ComPtr<ID3D12Resource> resource;
 	D3D12_RESOURCE_STATES initialResourceState = [&]() {
@@ -118,6 +175,72 @@ ZgErrorCode D3D12MemoryHeap::bufferCreate(
 	return ZG_SUCCESS;
 }
 
+ZgErrorCode D3D12MemoryHeap::texture2DCreate(
+	ZgTexture2D** textureOut,
+	const ZgTexture2DCreateInfo& createInfo) noexcept
+{
+	if (this->memoryType != ZG_MEMORY_TYPE_TEXTURE) return ZG_ERROR_INVALID_ARGUMENT;
+
+	// Get resource desc
+	D3D12_RESOURCE_DESC desc = createInfoToResourceDesc(createInfo);
+
+	// Get allocation info
+	D3D12_RESOURCE_ALLOCATION_INFO allocationInfo =
+		device->GetResourceAllocationInfo(0, 1, &desc);
+
+	// Create placed resource
+	const D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_COMMON;
+	ComPtr<ID3D12Resource> resource;
+	if (D3D12_FAIL(device->CreatePlacedResource(
+		heap.Get(),
+		createInfo.offsetInBytes,
+		&desc,
+		initialResourceState,
+		nullptr,
+		IID_PPV_ARGS(&resource)))) {
+		return ZG_ERROR_GPU_OUT_OF_MEMORY;
+	}
+
+	// Get the subresource footprint for the texture
+	// TODO: One for each mipmap level?
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT subresourceFootprints[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
+	uint32_t numRows[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
+	uint64_t rowSizesInBytes[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
+	uint64_t totalSizeInBytes = 0;
+
+	device->GetCopyableFootprints(&desc, 0, createInfo.numMipmaps, createInfo.offsetInBytes,
+		subresourceFootprints, numRows, rowSizesInBytes, &totalSizeInBytes);
+
+	// Allocate texture
+	D3D12Texture2D* texture = zgNew<D3D12Texture2D>("ZeroG - D3D12Texture");
+
+	// Copy stuff
+	texture->identifier = std::atomic_fetch_add(resourceUniqueIdentifierCounter, 1);
+
+	texture->textureHeap = this;
+	texture->resource = resource;
+	texture->zgFormat = createInfo.format;
+	texture->format = desc.Format;
+	texture->width = createInfo.width;
+	texture->height = createInfo.height;
+	texture->numMipmaps = createInfo.numMipmaps;
+
+	for (uint32_t i = 0; i < createInfo.numMipmaps; i++) {
+		texture->subresourceFootprints[i] = subresourceFootprints[i];
+		texture->numRows[i] = numRows[i];
+		texture->rowSizesInBytes[i] = rowSizesInBytes[i];
+	}
+	texture->totalSizeInBytes = totalSizeInBytes;
+
+	for (uint32_t i = 0; i < createInfo.numMipmaps; i++) {
+		texture->lastCommittedStates[i] = initialResourceState;
+	}
+
+	// Return texture
+	*textureOut = texture;
+	return ZG_SUCCESS;
+}
+
 // D3D12 Memory Heap functions
 // ------------------------------------------------------------------------------------------------
 
@@ -131,7 +254,18 @@ ZgErrorCode createMemoryHeap(
 	// Create heap
 	ComPtr<ID3D12Heap> heap;
 	{
-		bool allowAtomics = createInfo.memoryType == ZG_MEMORY_TYPE_DEVICE;
+		D3D12_HEAP_FLAGS flags = [&]() {
+			switch (createInfo.memoryType) {
+			case ZG_MEMORY_TYPE_UPLOAD: return D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS;
+			case ZG_MEMORY_TYPE_DOWNLOAD: return D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS;
+			case ZG_MEMORY_TYPE_DEVICE:
+				return D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS | D3D12_HEAP_FLAG_ALLOW_SHADER_ATOMICS;
+			case ZG_MEMORY_TYPE_TEXTURE: return D3D12_HEAP_FLAG_ALLOW_ONLY_NON_RT_DS_TEXTURES;
+			default: break;
+			}
+			ZG_ASSERT(false);
+			return D3D12_HEAP_FLAGS(0);
+		}();
 
 		D3D12_HEAP_DESC desc = {};
 		desc.SizeInBytes = createInfo.sizeInBytes;
@@ -140,9 +274,8 @@ ZgErrorCode createMemoryHeap(
 		desc.Properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 		desc.Properties.CreationNodeMask = 0; // No multi-GPU support
 		desc.Properties.VisibleNodeMask = 0; // No multi-GPU support
-		desc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-		desc.Flags = D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS |
-			(allowAtomics ? D3D12_HEAP_FLAG_ALLOW_SHADER_ATOMICS : D3D12_HEAP_FLAGS(0));
+		desc.Alignment = D3D12_DEFAULT_MSAA_RESOURCE_PLACEMENT_ALIGNMENT; // 4 MiB alignment
+		desc.Flags = flags;
 
 		// Create heap
 		if (D3D12_FAIL(device.CreateHeap(&desc, IID_PPV_ARGS(&heap)))) {
@@ -182,33 +315,5 @@ ZgErrorCode createMemoryHeap(
 	*heapOut = memoryHeap;
 	return ZG_SUCCESS;
 }
-
-// D3D12Buffer: Constructors & destructors
-// ------------------------------------------------------------------------------------------------
-
-D3D12Buffer::~D3D12Buffer() noexcept
-{
-
-}
-
-// D3D12Buffer: Methods
-// ------------------------------------------------------------------------------------------------
-
-ZgErrorCode D3D12Buffer::setDebugName(const char* name) noexcept
-{
-	// Small hack to fix D3D12 bug with debug name shorter than 4 chars
-	char tmpBuffer[256] = {};
-	snprintf(tmpBuffer, 256, "zg__%s", name); 
-
-	// Convert to wide
-	WCHAR tmpBufferWide[256] = {};
-	utf8ToWide(tmpBufferWide, 256, tmpBuffer);
-
-	// Set debug name
-	/*CHECK_D3D12(mLog) */ this->resource->SetName(tmpBufferWide);
-
-	return ZG_SUCCESS;
-}
-
 
 } // namespace zg

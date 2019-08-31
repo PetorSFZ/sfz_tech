@@ -321,8 +321,8 @@ static void realMain(SDL_Window* window) noexcept
 
 
 	// Create texture heap
-	zg::TextureHeap textureHeap;
-	CHECK_ZG textureHeap.create(64 * 1024 * 1024);// 64 MiB should be enough for anyone
+	zg::MemoryHeap textureHeap;
+	CHECK_ZG textureHeap.create(64 * 1024 * 1024, ZG_MEMORY_TYPE_TEXTURE);// 64 MiB should be enough for anyone
 
 	// Create a texture
 	ZgTexture2DCreateInfo textureCreateInfo = {};

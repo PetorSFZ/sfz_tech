@@ -16,23 +16,22 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "ZeroG/d3d12/D3D12Textures.hpp"
+#include "ZeroG/d3d12/D3D12Buffer.hpp"
 
 namespace zg {
 
-
-// D3D12Texture2D: Constructors & destructors
+// D3D12Buffer: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-D3D12Texture2D::~D3D12Texture2D() noexcept
+D3D12Buffer::~D3D12Buffer() noexcept
 {
 
 }
 
-// D3D12Texture2D: Methods
+// D3D12Buffer: Methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode D3D12Texture2D::setDebugName(const char* name) noexcept
+ZgErrorCode D3D12Buffer::setDebugName(const char* name) noexcept
 {
 	// Small hack to fix D3D12 bug with debug name shorter than 4 chars
 	char tmpBuffer[256] = {};

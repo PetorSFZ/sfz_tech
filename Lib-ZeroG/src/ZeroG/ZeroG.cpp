@@ -361,22 +361,6 @@ ZG_API ZgErrorCode zgBufferSetDebugName(
 // Textures
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgErrorCode zgTextureHeapCreate(
-	ZgTextureHeap** textureHeapOut,
-	const ZgTextureHeapCreateInfo* createInfo)
-{
-	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->sizeInBytes == 0) return ZG_ERROR_INVALID_ARGUMENT;
-
-	return zg::getBackend()->textureHeapCreate(textureHeapOut, *createInfo);
-}
-
-ZG_API ZgErrorCode zgTextureHeapRelease(
-	ZgTextureHeap* textureHeap)
-{
-	return zg::getBackend()->textureHeapRelease(textureHeap);
-}
-
 ZG_API ZgErrorCode zgTexture2DGetAllocationInfo(
 	ZgTexture2DAllocationInfo* allocationInfoOut,
 	const ZgTexture2DCreateInfo* createInfo)
@@ -388,8 +372,8 @@ ZG_API ZgErrorCode zgTexture2DGetAllocationInfo(
 	return zg::getBackend()->texture2DGetAllocationInfo(*allocationInfoOut, *createInfo);
 }
 
-ZG_API ZgErrorCode zgTextureHeapTexture2DCreate(
-	ZgTextureHeap* textureHeap,
+ZG_API ZgErrorCode zgMemoryHeapTexture2DCreate(
+	ZgMemoryHeap* memoryHeap,
 	ZgTexture2D** textureOut,
 	const ZgTexture2DCreateInfo* createInfo)
 {
@@ -398,7 +382,7 @@ ZG_API ZgErrorCode zgTextureHeapTexture2DCreate(
 	if (createInfo->numMipmaps > ZG_TEXTURE_2D_MAX_NUM_MIPMAPS) return ZG_ERROR_INVALID_ARGUMENT;
 	//if ((createInfo->offsetInBytes % 65536) != 0) return ZG_ERROR_INVALID_ARGUMENT; // 64KiB alignment
 
-	return textureHeap->texture2DCreate(textureOut, *createInfo);
+	return memoryHeap->texture2DCreate(textureOut, *createInfo);
 }
 
 ZG_API void zgTexture2DRelease(

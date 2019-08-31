@@ -377,6 +377,14 @@ ErrorCode MemoryHeap::bufferCreate(Buffer& bufferOut, uint64_t offset, uint64_t 
 	return this->bufferCreate(bufferOut, createInfo);
 }
 
+ErrorCode MemoryHeap::texture2DCreate(
+	Texture2D& textureOut, const ZgTexture2DCreateInfo& createInfo) noexcept
+{
+	textureOut.release();
+	return (ErrorCode)zgMemoryHeapTexture2DCreate(
+		this->memoryHeap, &textureOut.texture, &createInfo);
+}
+
 
 // Buffer: State methods
 // --------------------------------------------------------------------------------------------
@@ -405,46 +413,6 @@ ErrorCode Buffer::memcpyTo(uint64_t bufferOffsetBytes, const void* srcMemory, ui
 ErrorCode Buffer::setDebugName(const char* name) noexcept
 {
 	return (ErrorCode)zgBufferSetDebugName(this->buffer, name);
-}
-
-
-// TextureHeap: State methods
-// ------------------------------------------------------------------------------------------------
-
-ErrorCode TextureHeap::create(const ZgTextureHeapCreateInfo& createInfo) noexcept
-{
-	this->release();
-	return (ErrorCode)zgTextureHeapCreate(&this->textureHeap, &createInfo);
-}
-
-ErrorCode TextureHeap::create(uint64_t size) noexcept
-{
-	ZgTextureHeapCreateInfo createInfo = {};
-	createInfo.sizeInBytes = size;
-	return this->create(createInfo);
-}
-
-void TextureHeap::swap(TextureHeap& other) noexcept
-{
-	std::swap(this->textureHeap, other.textureHeap);
-}
-
-void TextureHeap::release() noexcept
-{
-	if (this->textureHeap != nullptr) zgTextureHeapRelease(this->textureHeap);
-	this->textureHeap = nullptr;
-}
-
-
-// TextureHeap: TextureHeap methods
-// ------------------------------------------------------------------------------------------------
-
-ErrorCode TextureHeap::texture2DCreate(
-	Texture2D& textureOut, const ZgTexture2DCreateInfo& createInfo) noexcept
-{
-	textureOut.release();
-	return (ErrorCode)zgTextureHeapTexture2DCreate(
-		this->textureHeap, &textureOut.texture, &createInfo);
 }
 
 

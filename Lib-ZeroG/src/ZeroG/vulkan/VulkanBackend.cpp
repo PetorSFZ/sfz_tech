@@ -375,22 +375,6 @@ public:
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
-	ZgErrorCode textureHeapCreate(
-		ZgTextureHeap** textureHeapOut,
-		const ZgTextureHeapCreateInfo& createInfo) noexcept override final
-	{
-		(void)textureHeapOut;
-		(void)createInfo;
-		return ZG_ERROR_UNIMPLEMENTED;
-	}
-
-	ZgErrorCode textureHeapRelease(
-		ZgTextureHeap* textureHeap) noexcept override final
-	{
-		(void)textureHeap;
-		return ZG_ERROR_UNIMPLEMENTED;
-	}
-
 	// CommandQueue methods
 	// --------------------------------------------------------------------------------------------
 

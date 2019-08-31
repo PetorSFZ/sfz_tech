@@ -93,13 +93,6 @@ struct ZgBackend {
 		ZgTexture2DAllocationInfo& allocationInfoOut,
 		const ZgTexture2DCreateInfo& createInfo) noexcept = 0;
 
-	virtual ZgErrorCode textureHeapCreate(
-		ZgTextureHeap** textureHeapOut,
-		const ZgTextureHeapCreateInfo& createInfo) noexcept = 0;
-
-	virtual ZgErrorCode textureHeapRelease(
-		ZgTextureHeap* textureHeap) noexcept = 0;
-
 	// CommandQueue methods
 	// --------------------------------------------------------------------------------------------
 
@@ -114,7 +107,7 @@ struct ZgPipelineRendering {
 	virtual ~ZgPipelineRendering() noexcept {}
 };
 
-// Memory
+// Memory heap
 // ------------------------------------------------------------------------------------------------
 
 struct ZgMemoryHeap {
@@ -123,7 +116,14 @@ struct ZgMemoryHeap {
 	virtual ZgErrorCode bufferCreate(
 		ZgBuffer** bufferOut,
 		const ZgBufferCreateInfo& createInfo) noexcept = 0;
+
+	virtual ZgErrorCode texture2DCreate(
+		ZgTexture2D** textureOut,
+		const ZgTexture2DCreateInfo& createInfo) noexcept = 0;
 };
+
+// Buffers
+// ------------------------------------------------------------------------------------------------
 
 struct ZgBuffer {
 	virtual ~ZgBuffer() noexcept {}
@@ -134,14 +134,6 @@ struct ZgBuffer {
 
 // Textures
 // ------------------------------------------------------------------------------------------------
-
-struct ZgTextureHeap {
-	virtual ~ZgTextureHeap() noexcept {}
-
-	virtual ZgErrorCode texture2DCreate(
-		ZgTexture2D** textureOut,
-		const ZgTexture2DCreateInfo& createInfo) noexcept = 0;
-};
 
 struct ZgTexture2D {
 	virtual ~ZgTexture2D() noexcept {}

@@ -25,7 +25,7 @@
 #include "ZeroG/d3d12/D3D12Common.hpp"
 #include "ZeroG/d3d12/D3D12DescriptorRingBuffer.hpp"
 #include "ZeroG/d3d12/D3D12Framebuffer.hpp"
-#include "ZeroG/d3d12/D3D12Memory.hpp"
+#include "ZeroG/d3d12/D3D12MemoryHeap.hpp"
 #include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
 #include "ZeroG/d3d12/D3D12Textures.hpp"
 #include "ZeroG/util/CpuAllocation.hpp"
@@ -787,32 +787,6 @@ public:
 		// Return allocation info
 		allocationInfoOut.sizeInBytes = (uint32_t)allocInfo.SizeInBytes;
 		allocationInfoOut.alignmentInBytes = (uint32_t)allocInfo.Alignment;
-		return ZG_SUCCESS;
-	}
-
-	ZgErrorCode textureHeapCreate(
-		ZgTextureHeap** textureHeapOut,
-		const ZgTextureHeapCreateInfo& createInfo) noexcept override final
-	{
-		std::lock_guard<std::mutex> lock(mContextMutex);
-		return createTextureHeap(
-			*mState->device.Get(),
-			&mState->resourceUniqueIdentifierCounter,
-			mState->residencyManager,
-			reinterpret_cast<D3D12TextureHeap**>(textureHeapOut),
-			createInfo);
-	}
-
-	ZgErrorCode textureHeapRelease(
-		ZgTextureHeap* textureHeapIn) noexcept override final
-	{
-		// TODO: Check if any textures still exist? Lock?
-
-		// Stop tracking
-		D3D12TextureHeap* heap = static_cast<D3D12TextureHeap*>(textureHeapIn);
-		mState->residencyManager.EndTrackingObject(&heap->managedObject);
-
-		zgDelete(heap);
 		return ZG_SUCCESS;
 	}
 
