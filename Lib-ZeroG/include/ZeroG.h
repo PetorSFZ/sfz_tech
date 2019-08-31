@@ -704,7 +704,7 @@ ZG_API ZgErrorCode zgPipelineRenderingCreateFromSourceHLSL(
 	ZgPipelineRenderingSignature* signatureOut,
 	const ZgPipelineRenderingCreateInfoSourceHLSL* createInfo);
 
-// Memory
+// Memory Heap
 // ------------------------------------------------------------------------------------------------
 
 enum ZgMemoryTypeEnum {
@@ -747,6 +747,9 @@ ZG_API ZgErrorCode zgMemoryHeapCreate(
 
 ZG_API ZgErrorCode zgMemoryHeapRelease(
 	ZgMemoryHeap* memoryHeap);
+
+// Buffer
+// ------------------------------------------------------------------------------------------------
 
 struct ZgBufferCreateInfo {
 
@@ -791,7 +794,6 @@ enum ZgTexture2DFormatEnum {
 };
 typedef uint32_t ZgTexture2DFormat;
 
-
 struct ZgTexture2DCreateInfo {
 
 	// The format of the texture
@@ -824,6 +826,7 @@ struct ZgTexture2DCreateInfo {
 	// to be set before calling this function.
 	uint64_t sizeInBytes;
 };
+typedef ZgTexture2DCreateInfo ZgTexture2DCreateInfo;
 
 struct ZgTexture2DAllocationInfo {
 
@@ -850,6 +853,7 @@ ZG_API void zgTexture2DRelease(
 ZG_API ZgErrorCode zgTexture2DSetDebugName(
 	ZgTexture2D* texture,
 	const char* name);
+
 
 // Fence
 // ------------------------------------------------------------------------------------------------

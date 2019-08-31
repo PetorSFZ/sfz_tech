@@ -300,7 +300,7 @@ ZG_API ZgErrorCode zgPipelineRenderingCreateFromSourceHLSL(
 		pipelineOut, signatureOut, *createInfo);
 }
 
-// Memory
+// Memory Heap
 // ------------------------------------------------------------------------------------------------
 
 ZG_API ZgErrorCode zgMemoryHeapCreate(
@@ -318,6 +318,9 @@ ZG_API ZgErrorCode zgMemoryHeapRelease(
 {
 	return zg::getBackend()->memoryHeapRelease(memoryHeap);
 }
+
+// Buffer
+// ------------------------------------------------------------------------------------------------
 
 ZG_API ZgErrorCode zgMemoryHeapBufferCreate(
 	ZgMemoryHeap* memoryHeap,
