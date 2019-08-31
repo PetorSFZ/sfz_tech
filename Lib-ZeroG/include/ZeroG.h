@@ -105,7 +105,7 @@ typedef struct ZgFramebufferRect ZgFramebufferRect;
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 2;
+static const uint32_t ZG_COMPILED_API_VERSION = 3;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -727,7 +727,15 @@ enum ZgMemoryTypeEnum {
 	// Some GPUs can allocate textures directly from ZG_MEMORY_TYPE_DEVICE, making it unnecessary
 	// to create memory heaps of this type.
 	// TODO: Implement support for this use case.
-	ZG_MEMORY_TYPE_TEXTURE
+	ZG_MEMORY_TYPE_TEXTURE,
+
+	// Special version of ZG_MEMORY_TYPE_DEVICE that can be used to allocate textures that can be
+	// written to as framebuffer targets.
+	//
+	// Some GPUs can allocate framebuffer textures directly from ZG_MEMORY_TYPE_DEVICE, making it
+	// unnecessary to create memory heaps of this type.
+	// TODO: Implement support for this use case.
+	ZG_MEMORY_TYPE_FRAMEBUFFER
 };
 typedef uint32_t ZgMemoryType;
 
@@ -794,10 +802,23 @@ enum ZgTexture2DFormatEnum {
 };
 typedef uint32_t ZgTexture2DFormat;
 
+enum ZgTextureModeEnum {
+	ZG_TEXTURE_MODE_DEFAULT = 0,
+	ZG_TEXTURE_MODE_RENDER_TARGET,
+	ZG_TEXTURE_MODE_DEPTH_BUFFER
+};
+typedef uint32_t ZgTextureMode;
+
 struct ZgTexture2DCreateInfo {
 
 	// The format of the texture
 	ZgTexture2DFormat format;
+
+	// The mode of the texture.
+	//
+	// If the texture is to be used as either a render target or a depth buffer it must be set
+	// here.
+	ZgTextureMode mode;
 
 	// Whether the texture is normalized or not.
 	//

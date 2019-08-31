@@ -33,6 +33,7 @@ static D3D12_HEAP_TYPE bufferMemoryTypeToD3D12HeapType(ZgMemoryType type) noexce
 	case ZG_MEMORY_TYPE_DOWNLOAD: return D3D12_HEAP_TYPE_READBACK;
 	case ZG_MEMORY_TYPE_DEVICE: return D3D12_HEAP_TYPE_DEFAULT;
 	case ZG_MEMORY_TYPE_TEXTURE: return D3D12_HEAP_TYPE_DEFAULT;
+	case ZG_MEMORY_TYPE_FRAMEBUFFER: return D3D12_HEAP_TYPE_DEFAULT;
 	}
 	ZG_ASSERT(false);
 	return D3D12_HEAP_TYPE_DEFAULT;
@@ -45,6 +46,7 @@ static const char* memoryTypeToString(ZgMemoryType type) noexcept
 	case ZG_MEMORY_TYPE_DOWNLOAD: return "DOWNLOAD";
 	case ZG_MEMORY_TYPE_DEVICE: return "DEVICE";
 	case ZG_MEMORY_TYPE_TEXTURE: return "TEXTURE";
+	case ZG_MEMORY_TYPE_FRAMEBUFFER: return "FRAMEBUFFER";
 	}
 	ZG_ASSERT(false);
 	return "<UNKNOWN>";
@@ -95,7 +97,15 @@ D3D12_RESOURCE_DESC createInfoToResourceDesc(const ZgTexture2DCreateInfo& info) 
 	desc.SampleDesc.Count = 1;
 	desc.SampleDesc.Quality = 0;
 	desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	desc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	desc.Flags = [&]() {
+		switch (info.mode) {
+		case ZG_TEXTURE_MODE_DEFAULT: return D3D12_RESOURCE_FLAG_NONE;
+		case ZG_TEXTURE_MODE_RENDER_TARGET: return D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+		case ZG_TEXTURE_MODE_DEPTH_BUFFER: return D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+		}
+		ZG_ASSERT(false);
+		return D3D12_RESOURCE_FLAG_NONE;
+	}();
 	// TODO: Maybe expose flags:
 	//      * D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
 	//      * D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS
@@ -119,6 +129,7 @@ ZgErrorCode D3D12MemoryHeap::bufferCreate(
 	const ZgBufferCreateInfo& createInfo) noexcept
 {
 	if (this->memoryType == ZG_MEMORY_TYPE_TEXTURE) return ZG_ERROR_INVALID_ARGUMENT;
+	if (this->memoryType == ZG_MEMORY_TYPE_FRAMEBUFFER) return ZG_ERROR_INVALID_ARGUMENT;
 
 	// Create placed resource
 	ComPtr<ID3D12Resource> resource;
@@ -179,7 +190,15 @@ ZgErrorCode D3D12MemoryHeap::texture2DCreate(
 	ZgTexture2D** textureOut,
 	const ZgTexture2DCreateInfo& createInfo) noexcept
 {
-	if (this->memoryType != ZG_MEMORY_TYPE_TEXTURE) return ZG_ERROR_INVALID_ARGUMENT;
+	if (this->memoryType == ZG_MEMORY_TYPE_UPLOAD) return ZG_ERROR_INVALID_ARGUMENT;
+	if (this->memoryType == ZG_MEMORY_TYPE_DOWNLOAD) return ZG_ERROR_INVALID_ARGUMENT;
+	if (this->memoryType == ZG_MEMORY_TYPE_DEVICE) return ZG_ERROR_INVALID_ARGUMENT;
+	if (this->memoryType == ZG_MEMORY_TYPE_TEXTURE) {
+		if (createInfo.mode != ZG_TEXTURE_MODE_DEFAULT) return ZG_ERROR_INVALID_ARGUMENT;
+	}
+	if (this->memoryType == ZG_MEMORY_TYPE_FRAMEBUFFER) {
+		if (createInfo.mode == ZG_TEXTURE_MODE_DEFAULT) return ZG_ERROR_INVALID_ARGUMENT;
+	}
 
 	// Get resource desc
 	D3D12_RESOURCE_DESC desc = createInfoToResourceDesc(createInfo);
@@ -261,6 +280,7 @@ ZgErrorCode createMemoryHeap(
 			case ZG_MEMORY_TYPE_DEVICE:
 				return D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS | D3D12_HEAP_FLAG_ALLOW_SHADER_ATOMICS;
 			case ZG_MEMORY_TYPE_TEXTURE: return D3D12_HEAP_FLAG_ALLOW_ONLY_NON_RT_DS_TEXTURES;
+			case ZG_MEMORY_TYPE_FRAMEBUFFER: return D3D12_HEAP_FLAG_ALLOW_ONLY_RT_DS_TEXTURES;
 			default: break;
 			}
 			ZG_ASSERT(false);
