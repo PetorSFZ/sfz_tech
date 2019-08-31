@@ -87,7 +87,8 @@ bool ImGuiRenderer::init(
 	texCreateInfo.offsetInBytes = 0;
 	texCreateInfo.sizeInBytes = texAllocInfo.sizeInBytes;
 
-	bool texMemSuccess = CHECK_ZG mFontTextureHeap.create(texAllocInfo.sizeInBytes);
+	bool texMemSuccess =
+		CHECK_ZG mFontTextureHeap.create(texAllocInfo.sizeInBytes, ZG_MEMORY_TYPE_TEXTURE);
 
 	texMemSuccess &= CHECK_ZG mFontTextureHeap.texture2DCreate(
 		mFontTexture, texCreateInfo);

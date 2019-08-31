@@ -103,7 +103,7 @@ private:
 	zg::PipelineRendering mPipeline;
 
 	// Font texture
-	zg::TextureHeap mFontTextureHeap;
+	zg::MemoryHeap mFontTextureHeap;
 	zg::Texture2D mFontTexture;
 
 	// Memory used to upload imgui vertices and indices for a given frame
