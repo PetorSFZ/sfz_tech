@@ -35,7 +35,7 @@ namespace zg {
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-constexpr auto NUM_SWAP_CHAIN_BUFFERS = 3;
+constexpr uint32_t NUM_SWAP_CHAIN_BUFFERS = 3;
 
 // D3D12 Backend State
 // ------------------------------------------------------------------------------------------------
@@ -73,13 +73,9 @@ struct D3D12BackendState final {
 	// Swapchain and backbuffers
 	uint32_t width = 0;
 	uint32_t height = 0;
-	ComPtr<IDXGISwapChain4> swapChain;
-	ComPtr<ID3D12DescriptorHeap> swapChainRtvDescriptorHeap;
-	uint32_t descriptorSizeRTV = 0;
-	ComPtr<ID3D12DescriptorHeap> swapChainDsvDescriptorHeap;
-	uint32_t descriptorSizeDSV = 0;
-	D3D12Framebuffer backBuffers[NUM_SWAP_CHAIN_BUFFERS];
-	uint64_t swapChainFenceValues[NUM_SWAP_CHAIN_BUFFERS] = {};
+	ComPtr<IDXGISwapChain4> swapchain;
+	D3D12Framebuffer swapchainFramebuffers[NUM_SWAP_CHAIN_BUFFERS];
+	uint64_t swapchainFenceValues[NUM_SWAP_CHAIN_BUFFERS] = {};
 	int currentBackBufferIdx = 0;
 
 	bool allowTearing = false;
@@ -335,7 +331,7 @@ public:
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
 
-			if (D3D12_FAIL(tmpSwapChain.As(&mState->swapChain))) {
+			if (D3D12_FAIL(tmpSwapChain.As(&mState->swapchain))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
 		}
@@ -343,35 +339,46 @@ public:
 		// Disable Alt+Enter fullscreen toogle
 		CHECK_D3D12 dxgiFactory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);
 
-		// Create swap chain descriptor heaps
-		{
-			// RTV descriptor heap
+		// Perform early hacky initializiation of the D3D12 framebuffers to prepare them for
+		// swapchain use
+		// TODO: Unify this with the more general case somehow?
+		for (uint32_t i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
+
+			D3D12Framebuffer& framebuffer = mState->swapchainFramebuffers[i];
+			
+			// Mark framebuffer as swapchain framebuffer
+			// TODO: Hacky hack, consider attempting to unify with general use case
+			framebuffer.swapchainFramebuffer = true;
+
+			// Create render target descriptor heap
 			D3D12_DESCRIPTOR_HEAP_DESC rtvDesc = {};
 			rtvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-			rtvDesc.NumDescriptors = NUM_SWAP_CHAIN_BUFFERS;
+			rtvDesc.NumDescriptors = 1;
 			rtvDesc.NodeMask = 0;
 			if (D3D12_FAIL(mState->device->CreateDescriptorHeap(
-				&rtvDesc, IID_PPV_ARGS(&mState->swapChainRtvDescriptorHeap)))) {
+				&rtvDesc, IID_PPV_ARGS(&framebuffer.descriptorHeapRTV)))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
 
-			// The size of a RTV descriptor
-			mState->descriptorSizeRTV = mState->device->GetDescriptorHandleIncrementSize(
-				D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+			// Set number of render targets and descriptor
+			framebuffer.numRenderTargets = 1;
+			framebuffer.renderTargetDescriptors[0] =
+				framebuffer.descriptorHeapRTV->GetCPUDescriptorHandleForHeapStart();
 
-			// DSV descriptor heap
+			// Create depth buffer descriptor heap
 			D3D12_DESCRIPTOR_HEAP_DESC dsvDesc = {};
 			dsvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-			dsvDesc.NumDescriptors = NUM_SWAP_CHAIN_BUFFERS;
+			dsvDesc.NumDescriptors = 1;
 			dsvDesc.NodeMask = 0;
 			if (D3D12_FAIL(mState->device->CreateDescriptorHeap(
-				&dsvDesc, IID_PPV_ARGS(&mState->swapChainDsvDescriptorHeap)))) {
+				&dsvDesc, IID_PPV_ARGS(&framebuffer.descriptorHeapDSV)))) {
 				return ZG_ERROR_NO_SUITABLE_DEVICE;
 			}
 
-			// The size of a DSV descriptor
-			mState->descriptorSizeDSV = mState->device->GetDescriptorHandleIncrementSize(
-				D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+			// Set depth buffer available and descriptor
+			framebuffer.hasDepthBuffer = true;
+			framebuffer.depthBufferDescriptor =
+				framebuffer.descriptorHeapDSV->GetCPUDescriptorHandleForHeapStart();
 		}
 
 		// Create swap chain framebuffers (RTVs and DSVs)
@@ -410,45 +417,38 @@ public:
 		if (!initialCreation) {
 			// Release previous back buffers
 			for (int i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
-				mState->backBuffers[i].rtvResource.Reset();
+				mState->swapchainFramebuffers[i].swapchain.renderTarget.Reset();
+				mState->swapchainFramebuffers[i].swapchain.depthBuffer.Reset();
 			}
 
 			// Resize swap chain's back buffers
 			DXGI_SWAP_CHAIN_DESC desc = {};
-			CHECK_D3D12 mState->swapChain->GetDesc(&desc);
-			CHECK_D3D12 mState->swapChain->ResizeBuffers(
+			CHECK_D3D12 mState->swapchain->GetDesc(&desc);
+			CHECK_D3D12 mState->swapchain->ResizeBuffers(
 				NUM_SWAP_CHAIN_BUFFERS, width, height, desc.BufferDesc.Format, desc.Flags);
 		}
 
 		// Update current back buffer index
-		mState->currentBackBufferIdx = mState->swapChain->GetCurrentBackBufferIndex();
-
-		// The first descriptor of the swap chain's descriptor heaps
-		D3D12_CPU_DESCRIPTOR_HANDLE startOfRtvDescriptorHeap =
-			mState->swapChainRtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-		D3D12_CPU_DESCRIPTOR_HANDLE startOfDsvDescriptorHeap =
-			mState->swapChainDsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+		mState->currentBackBufferIdx = mState->swapchain->GetCurrentBackBufferIndex();
 
 		// Create render target views (RTVs) for swap chain
-		for (UINT i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
+		for (uint32_t i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
 
 			// Get i:th back buffer from swap chain
 			ComPtr<ID3D12Resource> backBufferRtv;
-			CHECK_D3D12 mState->swapChain->GetBuffer(i, IID_PPV_ARGS(&backBufferRtv));
+			CHECK_D3D12 mState->swapchain->GetBuffer(i, IID_PPV_ARGS(&backBufferRtv));
 
 			// Set width and height
-			mState->backBuffers[i].width = width;
-			mState->backBuffers[i].height = height;
+			mState->swapchainFramebuffers[i].width = width;
+			mState->swapchainFramebuffers[i].height = height;
 
 			// Get the i:th RTV descriptor from the swap chain descriptor heap
-			D3D12_CPU_DESCRIPTOR_HANDLE rtvDescriptor = {};
-			rtvDescriptor.ptr = startOfRtvDescriptorHeap.ptr + mState->descriptorSizeRTV * i;
-			mState->backBuffers[i].rtvDescriptor = rtvDescriptor;
+			D3D12_CPU_DESCRIPTOR_HANDLE rtvDescriptor =
+				mState->swapchainFramebuffers[i].renderTargetDescriptors[0];
 
 			// Create render target view for i:th backbuffer
 			mState->device->CreateRenderTargetView(backBufferRtv.Get(), nullptr, rtvDescriptor);
-			mState->backBuffers[i].rtvResource = backBufferRtv;
-
+			mState->swapchainFramebuffers[i].swapchain.renderTarget = backBufferRtv;
 
 			// Create the depth buffer
 			D3D12_HEAP_PROPERTIES dsvHeapProperties = {};
@@ -484,9 +484,8 @@ public:
 				IID_PPV_ARGS(&backBufferDsv));
 			
 			// Get the i:th DSV descriptor from the swap chain descriptor heap
-			D3D12_CPU_DESCRIPTOR_HANDLE dsvDescriptor = {};
-			dsvDescriptor.ptr = startOfDsvDescriptorHeap.ptr + mState->descriptorSizeDSV * i;
-			mState->backBuffers[i].dsvDescriptor = dsvDescriptor;
+			D3D12_CPU_DESCRIPTOR_HANDLE dsvDescriptor =
+				mState->swapchainFramebuffers[i].depthBufferDescriptor;
 
 			// Create depth buffer view
 			D3D12_DEPTH_STENCIL_VIEW_DESC dsvViewDesc = {};
@@ -496,7 +495,7 @@ public:
 			dsvViewDesc.Texture2D.MipSlice = 0;
 
 			mState->device->CreateDepthStencilView(backBufferDsv.Get(), &dsvViewDesc, dsvDescriptor);
-			mState->backBuffers[i].dsvResource = backBufferDsv;
+			mState->swapchainFramebuffers[i].swapchain.depthBuffer = backBufferDsv;
 		}
 
 		logDebugMessages();
@@ -509,7 +508,7 @@ public:
 		std::lock_guard<std::mutex> lock(mContextMutex);
 
 		// Retrieve current back buffer to be rendered to
-		D3D12Framebuffer& backBuffer = mState->backBuffers[mState->currentBackBufferIdx];
+		D3D12Framebuffer& backBuffer = mState->swapchainFramebuffers[mState->currentBackBufferIdx];
 
 		// Create a small command list to insert the transition barrier for the back buffer
 		ZgCommandList* barrierCommandList = nullptr;
@@ -519,7 +518,7 @@ public:
 
 		// Create barrier to transition back buffer into render target state
 		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			backBuffer.rtvResource.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+			backBuffer.swapchain.renderTarget.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 		reinterpret_cast<D3D12CommandList*>(barrierCommandList)->
 			commandList->ResourceBarrier(1, &barrier);
 
@@ -538,7 +537,7 @@ public:
 		std::lock_guard<std::mutex> lock(mContextMutex);
 
 		// Retrieve current back buffer that has been rendered to
-		D3D12Framebuffer& backBuffer = mState->backBuffers[mState->currentBackBufferIdx];
+		D3D12Framebuffer& backBuffer = mState->swapchainFramebuffers[mState->currentBackBufferIdx];
 
 		// Create a small command list to insert the transition barrier for the back buffer
 		ZgCommandList* barrierCommandList = nullptr;
@@ -548,7 +547,7 @@ public:
 
 		// Create barrier to transition back buffer into present state
 		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			backBuffer.rtvResource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+			backBuffer.swapchain.renderTarget.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 		reinterpret_cast<D3D12CommandList*>(barrierCommandList)->
 			commandList->ResourceBarrier(1, &barrier);
 
@@ -556,19 +555,19 @@ public:
 		mState->commandQueuePresent.executeCommandList(barrierCommandList);
 
 		// Signal the graphics present queue
-		mState->swapChainFenceValues[mState->currentBackBufferIdx] =
+		mState->swapchainFenceValues[mState->currentBackBufferIdx] =
 			mState->commandQueuePresent.signalOnGpuInternal();
 
 		// Present back buffer
 		UINT vsync = 0; // TODO (MUST be 0 if DXGI_PRESENT_ALLOW_TEARING)
-		CHECK_D3D12 mState->swapChain->Present(
+		CHECK_D3D12 mState->swapchain->Present(
 			vsync, mState->allowTearing ? DXGI_PRESENT_ALLOW_TEARING : 0);
 
 		// Get next back buffer index
-		mState->currentBackBufferIdx = mState->swapChain->GetCurrentBackBufferIndex();
+		mState->currentBackBufferIdx = mState->swapchain->GetCurrentBackBufferIndex();
 
 		// Wait for the next back buffer to finish rendering so it's safe to use
-		uint64_t nextBackBufferFenceValue = mState->swapChainFenceValues[mState->currentBackBufferIdx];
+		uint64_t nextBackBufferFenceValue = mState->swapchainFenceValues[mState->currentBackBufferIdx];
 		mState->commandQueuePresent.waitOnCpuInternal(nextBackBufferFenceValue);
 
 		logDebugMessages();
@@ -788,6 +787,26 @@ public:
 		allocationInfoOut.sizeInBytes = (uint32_t)allocInfo.SizeInBytes;
 		allocationInfoOut.alignmentInBytes = (uint32_t)allocInfo.Alignment;
 		return ZG_SUCCESS;
+	}
+
+	// Framebuffer methods
+	// --------------------------------------------------------------------------------------------
+
+	virtual ZgErrorCode framebufferCreate(
+		ZgFramebuffer** framebufferOut,
+		const ZgFramebufferCreateInfo& createInfo) noexcept override final
+	{
+		return createFramebuffer(
+			*mState->device.Get(),
+			reinterpret_cast<D3D12Framebuffer**>(framebufferOut),
+			createInfo);
+	}
+
+	virtual void framebufferRelease(
+		ZgFramebuffer* framebuffer) noexcept override final
+	{
+		if (reinterpret_cast<D3D12Framebuffer*>(framebuffer)->swapchainFramebuffer) return;
+		zg::zgDelete(framebuffer);
 	}
 
 	// CommandQueue methods

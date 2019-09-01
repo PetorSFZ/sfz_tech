@@ -23,6 +23,7 @@
 #include "ZeroG/d3d12/D3D12MemoryHeap.hpp"
 #include "ZeroG/d3d12/D3D12Textures.hpp"
 #include "ZeroG/util/Assert.hpp"
+#include "ZeroG/util/ErrorReporting.hpp"
 
 namespace zg {
 
@@ -502,6 +503,10 @@ ZgErrorCode D3D12CommandList::setFramebuffer(
 	// Cast input to D3D12
 	D3D12Framebuffer& framebuffer = *static_cast<D3D12Framebuffer*>(framebufferIn);
 
+	// Check arguments
+	ZG_ARG_CHECK(!framebuffer.hasDepthBuffer && framebuffer.numRenderTargets == 0,
+		"Can't set a framebuffer with no render targets or depth buffer");
+
 	// If a framebuffer is already set for this command list, return error. We currently only allow
 	// a single framebuffer per command list.
 	if (mFramebufferSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
@@ -557,7 +562,10 @@ ZgErrorCode D3D12CommandList::setFramebuffer(
 
 	// Set framebuffer
 	commandList->OMSetRenderTargets(
-		1, &framebuffer.rtvDescriptor, FALSE, &framebuffer.dsvDescriptor);
+		framebuffer.numRenderTargets,
+		framebuffer.numRenderTargets > 0 ? framebuffer.renderTargetDescriptors : nullptr,
+		FALSE,
+		framebuffer.hasDepthBuffer ? &framebuffer.depthBufferDescriptor : nullptr);
 
 	return ZG_SUCCESS;
 }
@@ -626,10 +634,14 @@ ZgErrorCode D3D12CommandList::clearFramebuffer(
 		ZG_ERROR("clearFramebuffer(): Must set a framebuffer before you can clear it");
 		return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 	}
+	if (mFramebuffer->numRenderTargets == 0) return ZG_WARNING_GENERIC;
 
 	// Clear framebuffer
 	float clearColor[4] = { red, green, blue, alpha };
-	commandList->ClearRenderTargetView(mFramebuffer->rtvDescriptor, clearColor, 0, nullptr);
+	for (uint32_t i = 0; i < mFramebuffer->numRenderTargets; i++) {
+		commandList->ClearRenderTargetView(
+			mFramebuffer->renderTargetDescriptors[i], clearColor, 0, nullptr);
+	}
 
 	return ZG_SUCCESS;
 }
@@ -639,10 +651,11 @@ ZgErrorCode D3D12CommandList::clearDepthBuffer(
 {
 	// Return error if no framebuffer is set
 	if (!mFramebufferSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+	if (!mFramebuffer->hasDepthBuffer) return ZG_WARNING_GENERIC;
 
 	// Clear depth buffer
 	commandList->ClearDepthStencilView(
-		mFramebuffer->dsvDescriptor, D3D12_CLEAR_FLAG_DEPTH, depth, 0, 0, nullptr);
+		mFramebuffer->depthBufferDescriptor, D3D12_CLEAR_FLAG_DEPTH, depth, 0, 0, nullptr);
 
 	return ZG_SUCCESS;
 }

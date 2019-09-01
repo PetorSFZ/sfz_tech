@@ -93,6 +93,16 @@ struct ZgBackend {
 		ZgTexture2DAllocationInfo& allocationInfoOut,
 		const ZgTexture2DCreateInfo& createInfo) noexcept = 0;
 
+	// Framebuffer methods
+	// --------------------------------------------------------------------------------------------
+
+	virtual ZgErrorCode framebufferCreate(
+		ZgFramebuffer** framebufferOut,
+		const ZgFramebufferCreateInfo& createInfo) noexcept = 0;
+
+	virtual void framebufferRelease(
+		ZgFramebuffer* framebuffer) noexcept = 0;
+
 	// CommandQueue methods
 	// --------------------------------------------------------------------------------------------
 

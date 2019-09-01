@@ -375,6 +375,21 @@ public:
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
+	// Framebuffer methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgErrorCode framebufferCreate(
+		ZgFramebuffer** framebufferOut,
+		const ZgFramebufferCreateInfo& createInfo) noexcept override final
+	{
+		return ZG_ERROR_UNIMPLEMENTED;
+	}
+
+	void framebufferRelease(
+		ZgFramebuffer* framebuffer) noexcept override final
+	{
+	}
+
 	// CommandQueue methods
 	// --------------------------------------------------------------------------------------------
 

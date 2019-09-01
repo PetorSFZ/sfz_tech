@@ -27,6 +27,11 @@ namespace zg {
 // D3D12Framebuffer
 // ------------------------------------------------------------------------------------------------
 
+struct SwapchainBacking {
+	ComPtr<ID3D12Resource> renderTarget;
+	ComPtr<ID3D12Resource> depthBuffer;
+};
+
 class D3D12Framebuffer final : public ZgFramebuffer {
 public:
 	// Constructors & destructors
@@ -42,12 +47,31 @@ public:
 	// Members
 	// --------------------------------------------------------------------------------------------
 
+	// Legacy framebuffer
+	bool swapchainFramebuffer = false;
+	SwapchainBacking swapchain;
+
+	// Dimensions
 	uint32_t width = 0;
 	uint32_t height = 0;
-	ComPtr<ID3D12Resource> rtvResource;
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvDescriptor = {};
-	ComPtr<ID3D12Resource> dsvResource;
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvDescriptor = {};
+
+	// Render target descriptors
+	uint32_t numRenderTargets = 0;
+	ComPtr<ID3D12DescriptorHeap> descriptorHeapRTV;
+	D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDescriptors[ZG_FRAMEBUFFER_MAX_NUM_RENDER_TARGETS] = {};
+
+	// Depth buffer descriptors
+	bool hasDepthBuffer = false;
+	ComPtr<ID3D12DescriptorHeap> descriptorHeapDSV;
+	D3D12_CPU_DESCRIPTOR_HANDLE depthBufferDescriptor = {};
 };
+
+// D3D12 Framebuffer functions
+// ------------------------------------------------------------------------------------------------
+
+ZgErrorCode createFramebuffer(
+	ID3D12Device3& device,
+	D3D12Framebuffer** framebufferOut,
+	const ZgFramebufferCreateInfo& createInfo) noexcept;
 
 } // namespace zg

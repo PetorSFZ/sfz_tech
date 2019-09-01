@@ -404,6 +404,28 @@ ZG_API ZgErrorCode zgTexture2DSetDebugName(
 	return texture->setDebugName(name);
 }
 
+// Framebuffer
+// ------------------------------------------------------------------------------------------------
+
+ZG_API ZgErrorCode zgFramebufferCreate(
+	ZgFramebuffer** framebufferOut,
+	const ZgFramebufferCreateInfo* createInfo)
+{
+	ZG_ARG_CHECK(framebufferOut == nullptr, "");
+	ZG_ARG_CHECK(createInfo == nullptr, "");
+	ZG_ARG_CHECK(createInfo->numRenderTargets > ZG_FRAMEBUFFER_MAX_NUM_RENDER_TARGETS, "Too many render targets");
+	return zg::getBackend()->framebufferCreate(framebufferOut, *createInfo);
+}
+
+ZG_API void zgFramebufferRelease(
+	ZgFramebuffer* framebuffer)
+{
+	if (framebuffer == nullptr) return;
+	// Done via backend so it can have a chance to check if framebuffer is built-in (i.e. swapchain
+	// framebuffer) before it deallocates it.
+	return zg::getBackend()->framebufferRelease(framebuffer);
+}
+
 // Fence
 // ------------------------------------------------------------------------------------------------
 

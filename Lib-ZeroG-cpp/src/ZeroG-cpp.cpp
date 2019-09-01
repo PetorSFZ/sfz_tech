@@ -23,7 +23,6 @@
 
 namespace zg {
 
-
 // Context: State methods
 // ------------------------------------------------------------------------------------------------
 
@@ -67,10 +66,10 @@ ErrorCode Context::swapchainResize(uint32_t width, uint32_t height) noexcept
 	return (ErrorCode)zgContextSwapchainResize(width, height);
 }
 
-ErrorCode Context::swapchainBeginFrame(ZgFramebuffer*& framebufferOut) noexcept
+ErrorCode Context::swapchainBeginFrame(Framebuffer& framebufferOut) noexcept
 {
-	if (framebufferOut != nullptr) return ErrorCode::INVALID_ARGUMENT;
-	return (ErrorCode)zgContextSwapchainBeginFrame(&framebufferOut);
+	if (framebufferOut.valid()) return ErrorCode::INVALID_ARGUMENT;
+	return (ErrorCode)zgContextSwapchainBeginFrame(&framebufferOut.framebuffer);
 }
 
 ErrorCode Context::swapchainFinishFrame() noexcept
@@ -447,6 +446,27 @@ ErrorCode Texture2D::setDebugName(const char* name) noexcept
 }
 
 
+// Framebuffer: State methods
+// ------------------------------------------------------------------------------------------------
+
+ErrorCode Framebuffer::create(const ZgFramebufferCreateInfo& createInfo) noexcept
+{
+	this->release();
+	return (ErrorCode)zgFramebufferCreate(&this->framebuffer, &createInfo);
+}
+
+void Framebuffer::swap(Framebuffer& other) noexcept
+{
+	std::swap(this->framebuffer, other.framebuffer);
+}
+
+void Framebuffer::release() noexcept
+{
+	if (this->framebuffer != nullptr) zgFramebufferRelease(this->framebuffer);
+	this->framebuffer = nullptr;
+}
+
+
 // Fence: State methods
 // ------------------------------------------------------------------------------------------------
 
@@ -695,12 +715,12 @@ ErrorCode CommandList::setPipeline(PipelineRendering& pipeline) noexcept
 }
 
 ErrorCode CommandList::setFramebuffer(
-	ZgFramebuffer* framebuffer,
+	Framebuffer& framebuffer,
 	const ZgFramebufferRect* optionalViewport,
 	const ZgFramebufferRect* optionalScissor) noexcept
 {
 	return (ErrorCode)zgCommandListSetFramebuffer(
-		this->commandList, framebuffer, optionalViewport, optionalScissor);
+		this->commandList, framebuffer.framebuffer, optionalViewport, optionalScissor);
 }
 
 ErrorCode CommandList::setFramebufferViewport(

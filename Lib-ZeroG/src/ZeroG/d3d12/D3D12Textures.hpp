@@ -52,6 +52,7 @@ public:
 	D3D12MemoryHeap* textureHeap = nullptr;
 	ComPtr<ID3D12Resource> resource;
 	ZgTexture2DFormat zgFormat = ZG_TEXTURE_2D_FORMAT_UNDEFINED;
+	ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT;
 	DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
 	uint32_t width = 0;
 	uint32_t height = 0;

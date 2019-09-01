@@ -444,7 +444,7 @@ static void realMain(SDL_Window* window) noexcept
 		Matrix projMatrix = createProjectionMatrix(vertFovDeg, aspectRatio, 0.01f, 10.0f);
 
 		// Begin frame
-		ZgFramebuffer* framebuffer = nullptr;
+		zg::Framebuffer framebuffer;
 		CHECK_ZG zgCtx.swapchainBeginFrame(framebuffer);
 
 		// Get a command list

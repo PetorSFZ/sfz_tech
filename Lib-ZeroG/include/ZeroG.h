@@ -64,7 +64,7 @@ extern "C" {
 // A handle representing a rendering pipeline
 ZG_HANDLE(ZgPipelineRendering);
 
-// A handle representing a memory heap (to allocate ZgBuffers from)
+// A handle representing a memory heap (to allocate buffers and textures from)
 ZG_HANDLE(ZgMemoryHeap);
 
 // A handle representing a buffer
@@ -283,6 +283,9 @@ ZG_API ZgErrorCode zgContextSwapchainResize(
 	uint32_t width,
 	uint32_t height);
 
+// The framebuffer returned is owned by the swapchain and can't be released by the user. It is
+// still safe to call zgFramebufferRelease() on it, but it will be a no-op and the framebuffer
+// will still be valid afterwards.
 ZG_API ZgErrorCode zgContextSwapchainBeginFrame(
 	ZgFramebuffer** framebufferOut);
 
@@ -389,7 +392,6 @@ struct ZgVertexAttribute {
 
 	// Offset in bytes from start of buffer to the first element of this type.
 	uint32_t offsetToFirstElementInBytes;
-
 };
 typedef struct ZgVertexAttribute ZgVertexAttribute;
 
@@ -856,7 +858,7 @@ struct ZgTexture2DCreateInfo {
 	// to be set before calling this function.
 	uint64_t sizeInBytes;
 };
-typedef ZgTexture2DCreateInfo ZgTexture2DCreateInfo;
+typedef struct ZgTexture2DCreateInfo ZgTexture2DCreateInfo;
 
 struct ZgTexture2DAllocationInfo {
 
@@ -866,6 +868,7 @@ struct ZgTexture2DAllocationInfo {
 	// The alignment of the texture in bytes
 	uint32_t alignmentInBytes;
 };
+typedef struct ZgTexture2DAllocationInfo ZgTexture2DAllocationInfo;
 
 // Gets the allocation info of a Texture2D specified by a ZgTexture2DCreateInfo.
 ZG_API ZgErrorCode zgTexture2DGetAllocationInfo(
@@ -884,6 +887,30 @@ ZG_API ZgErrorCode zgTexture2DSetDebugName(
 	ZgTexture2D* texture,
 	const char* name);
 
+// Framebuffer
+// ------------------------------------------------------------------------------------------------
+
+static const uint32_t ZG_FRAMEBUFFER_MAX_NUM_RENDER_TARGETS = 8;
+
+struct ZgFramebufferCreateInfo {
+
+	// Render targets
+	uint32_t numRenderTargets;
+	ZgTexture2D* renderTargets[ZG_FRAMEBUFFER_MAX_NUM_RENDER_TARGETS];
+
+	// Depth buffer
+	ZgTexture2D* depthBuffer;
+};
+typedef struct ZgFramebufferCreateInfo ZgFramebufferCreateInfo;
+
+ZG_API ZgErrorCode zgFramebufferCreate(
+	ZgFramebuffer** framebufferOut,
+	const ZgFramebufferCreateInfo* createInfo);
+
+// No-op if framebuffer is built-in swapchain framebuffer, which is managed and owned by the ZeroG
+// context.
+ZG_API void zgFramebufferRelease(
+	ZgFramebuffer* framebuffer);
 
 // Fence
 // ------------------------------------------------------------------------------------------------

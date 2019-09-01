@@ -33,6 +33,7 @@ class MemoryHeap;
 class Buffer;
 class TextureHeap;
 class Texture2D;
+class Framebuffer;
 class Fence;
 class CommandQueue;
 class CommandList;
@@ -119,7 +120,7 @@ public:
 	ErrorCode swapchainResize(uint32_t width, uint32_t height) noexcept;
 
 	// See zgContextSwapchainBeginFrame()
-	ErrorCode swapchainBeginFrame(ZgFramebuffer*& framebufferOut) noexcept;
+	ErrorCode swapchainBeginFrame(Framebuffer& framebufferOut) noexcept;
 
 	// See zgContextSwapchainFinishFrame()
 	ErrorCode swapchainFinishFrame() noexcept;
@@ -386,6 +387,41 @@ public:
 };
 
 
+// Framebuffer
+// ------------------------------------------------------------------------------------------------
+
+class Framebuffer final {
+public:
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	ZgFramebuffer* framebuffer = nullptr;
+
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	Framebuffer() noexcept = default;
+	Framebuffer(const Framebuffer&) = delete;
+	Framebuffer& operator= (const Framebuffer&) = delete;
+	Framebuffer(Framebuffer&& other) noexcept { this->swap(other); }
+	Framebuffer& operator= (Framebuffer&& other) noexcept { this->swap(other); return *this; }
+	~Framebuffer() noexcept { this->release(); }
+
+	// State methods
+	// --------------------------------------------------------------------------------------------
+
+	bool valid() const noexcept { return this->framebuffer != nullptr; }
+
+	// See zgFramebufferCreate()
+	ErrorCode create(const ZgFramebufferCreateInfo& createInfo) noexcept;
+
+	void swap(Framebuffer& other) noexcept;
+
+	// See zgFramebufferRelease()
+	void release() noexcept;
+};
+
+
 // Fence
 // ------------------------------------------------------------------------------------------------
 
@@ -603,7 +639,7 @@ public:
 
 	// See zgCommandListSetFramebuffer()
 	ErrorCode setFramebuffer(
-		ZgFramebuffer* framebuffer,
+		Framebuffer& framebuffer,
 		const ZgFramebufferRect* optionalViewport = nullptr,
 		const ZgFramebufferRect* optionalScissor = nullptr) noexcept;
 

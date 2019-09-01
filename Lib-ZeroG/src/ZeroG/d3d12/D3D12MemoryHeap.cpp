@@ -242,6 +242,7 @@ ZgErrorCode D3D12MemoryHeap::texture2DCreate(
 	texture->textureHeap = this;
 	texture->resource = resource;
 	texture->zgFormat = createInfo.format;
+	texture->usage = createInfo.usage;
 	texture->format = desc.Format;
 	texture->width = createInfo.width;
 	texture->height = createInfo.height;

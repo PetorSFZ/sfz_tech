@@ -102,7 +102,7 @@ static void realMain(SDL_Window* window) noexcept
 		CHECK_ZG zgCtx.swapchainResize(uint32_t(width), uint32_t(height));
 
 		// Begin frame
-		ZgFramebuffer* framebuffer = nullptr;
+		zg::Framebuffer framebuffer;
 		CHECK_ZG zgCtx.swapchainBeginFrame(framebuffer);
 
 		// Get a command list
