@@ -42,11 +42,14 @@ class CommandList;
 // ------------------------------------------------------------------------------------------------
 
 enum class [[nodiscard]] ErrorCode : ZgErrorCode {
+
 	SUCCESS = ZG_SUCCESS,
+	
 	WARNING_GENERIC = ZG_WARNING_GENERIC,
+	WARNING_ALREADY_INITIALIZED = ZG_WARNING_ALREADY_INITIALIZED,
+
 	GENERIC = ZG_ERROR_GENERIC,
 	UNIMPLEMENTED = ZG_ERROR_UNIMPLEMENTED,
-	ALREADY_INITIALIZED = ZG_ERROR_ALREADY_INITIALIZED,
 	CPU_OUT_OF_MEMORY = ZG_ERROR_CPU_OUT_OF_MEMORY,
 	GPU_OUT_OF_MEMORY = ZG_ERROR_GPU_OUT_OF_MEMORY,
 	NO_SUITABLE_DEVICE = ZG_ERROR_NO_SUITABLE_DEVICE,
@@ -55,6 +58,10 @@ enum class [[nodiscard]] ErrorCode : ZgErrorCode {
 	OUT_OF_COMMAND_LISTS = ZG_ERROR_OUT_OF_COMMAND_LISTS,
 	INVALID_COMMAND_LIST_STATE = ZG_ERROR_INVALID_COMMAND_LIST_STATE
 };
+
+constexpr bool isSuccess(ErrorCode code) noexcept { return code == ErrorCode::SUCCESS; }
+constexpr bool isWarning(ErrorCode code) noexcept { return ZgErrorCode(code) > 0; }
+constexpr bool isError(ErrorCode code) noexcept { return ZgErrorCode(code) < 0; }
 
 
 // Context

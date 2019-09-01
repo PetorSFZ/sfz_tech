@@ -179,6 +179,7 @@ set(ZEROG_CAPI_SRC_FILES ${ZEROG_CAPI_SRC_FILES}
 	${SRC_DIR}/ZeroG/util/Assert.hpp
 	${SRC_DIR}/ZeroG/util/CpuAllocation.hpp
 	${SRC_DIR}/ZeroG/util/CpuAllocation.cpp
+	${SRC_DIR}/ZeroG/util/ErrorReporting.hpp
 	${SRC_DIR}/ZeroG/util/Logging.hpp
 	${SRC_DIR}/ZeroG/util/Logging.cpp
 	${SRC_DIR}/ZeroG/util/Mutex.hpp

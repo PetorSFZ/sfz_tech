@@ -118,6 +118,7 @@ ZG_API uint32_t zgApiLinkedVersion(void);
 
 // The various backends supported by ZeroG
 enum ZgBackendTypeEnum {
+
 	// The null backend, simply turn every ZeroG call into a no-op.
 	ZG_BACKEND_NONE = 0,
 
@@ -150,21 +151,29 @@ ZG_API ZgFeatureBits zgCompiledFeatures(void);
 // ------------------------------------------------------------------------------------------------
 
 // The error codes
+//
+// 0 is success, negative values are errors and positive values are warnings.
 enum ZgErrorCodeEnum {
+
+	// Success (0)
 	ZG_SUCCESS = 0,
-	ZG_WARNING_GENERIC,
-	ZG_ERROR_GENERIC,
-	ZG_ERROR_UNIMPLEMENTED,
-	ZG_ERROR_ALREADY_INITIALIZED,
-	ZG_ERROR_CPU_OUT_OF_MEMORY,
-	ZG_ERROR_GPU_OUT_OF_MEMORY,
-	ZG_ERROR_NO_SUITABLE_DEVICE,
-	ZG_ERROR_INVALID_ARGUMENT,
-	ZG_ERROR_SHADER_COMPILE_ERROR,
-	ZG_ERROR_OUT_OF_COMMAND_LISTS,
-	ZG_ERROR_INVALID_COMMAND_LIST_STATE
+
+	// Warnings (>0)
+	ZG_WARNING_GENERIC = 1,
+	ZG_WARNING_ALREADY_INITIALIZED = 2,
+
+	// Errors (<0)
+	ZG_ERROR_GENERIC = -1,
+	ZG_ERROR_UNIMPLEMENTED = -2,
+	ZG_ERROR_CPU_OUT_OF_MEMORY = -3,
+	ZG_ERROR_GPU_OUT_OF_MEMORY = -4,
+	ZG_ERROR_NO_SUITABLE_DEVICE = -5,
+	ZG_ERROR_INVALID_ARGUMENT = -6,
+	ZG_ERROR_SHADER_COMPILE_ERROR = -7,
+	ZG_ERROR_OUT_OF_COMMAND_LISTS = -8,
+	ZG_ERROR_INVALID_COMMAND_LIST_STATE = -9
 };
-typedef uint32_t ZgErrorCode;
+typedef int32_t ZgErrorCode;
 
 // Returns a string representation of the given ZeroG error code. The string is statically
 // allocated and must NOT be freed by the user.
@@ -802,23 +811,23 @@ enum ZgTexture2DFormatEnum {
 };
 typedef uint32_t ZgTexture2DFormat;
 
-enum ZgTextureModeEnum {
-	ZG_TEXTURE_MODE_DEFAULT = 0,
-	ZG_TEXTURE_MODE_RENDER_TARGET,
-	ZG_TEXTURE_MODE_DEPTH_BUFFER
+enum ZgTextureUsageEnum {
+	ZG_TEXTURE_USAGE_DEFAULT = 0,
+	ZG_TEXTURE_USAGE_RENDER_TARGET,
+	ZG_TEXTURE_USAGE_DEPTH_BUFFER
 };
-typedef uint32_t ZgTextureMode;
+typedef uint32_t ZgTextureUsage;
 
 struct ZgTexture2DCreateInfo {
 
 	// The format of the texture
 	ZgTexture2DFormat format;
 
-	// The mode of the texture.
+	// How the texture will be used.
 	//
 	// If the texture is to be used as either a render target or a depth buffer it must be set
 	// here.
-	ZgTextureMode mode;
+	ZgTextureUsage usage;
 
 	// Whether the texture is normalized or not.
 	//

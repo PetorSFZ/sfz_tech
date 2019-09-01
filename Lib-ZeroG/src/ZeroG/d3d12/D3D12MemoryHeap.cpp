@@ -20,6 +20,7 @@
 
 #include "ZeroG/util/Assert.hpp"
 #include "ZeroG/util/CpuAllocation.hpp"
+#include "ZeroG/util/ErrorReporting.hpp"
 
 namespace zg {
 
@@ -98,10 +99,10 @@ D3D12_RESOURCE_DESC createInfoToResourceDesc(const ZgTexture2DCreateInfo& info) 
 	desc.SampleDesc.Quality = 0;
 	desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	desc.Flags = [&]() {
-		switch (info.mode) {
-		case ZG_TEXTURE_MODE_DEFAULT: return D3D12_RESOURCE_FLAG_NONE;
-		case ZG_TEXTURE_MODE_RENDER_TARGET: return D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-		case ZG_TEXTURE_MODE_DEPTH_BUFFER: return D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+		switch (info.usage) {
+		case ZG_TEXTURE_USAGE_DEFAULT: return D3D12_RESOURCE_FLAG_NONE;
+		case ZG_TEXTURE_USAGE_RENDER_TARGET: return D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+		case ZG_TEXTURE_USAGE_DEPTH_BUFFER: return D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 		}
 		ZG_ASSERT(false);
 		return D3D12_RESOURCE_FLAG_NONE;
@@ -128,8 +129,8 @@ ZgErrorCode D3D12MemoryHeap::bufferCreate(
 	ZgBuffer** bufferOut,
 	const ZgBufferCreateInfo& createInfo) noexcept
 {
-	if (this->memoryType == ZG_MEMORY_TYPE_TEXTURE) return ZG_ERROR_INVALID_ARGUMENT;
-	if (this->memoryType == ZG_MEMORY_TYPE_FRAMEBUFFER) return ZG_ERROR_INVALID_ARGUMENT;
+	ZG_ARG_CHECK(this->memoryType == ZG_MEMORY_TYPE_TEXTURE, "Can't allocate buffers from TEXTURE heap");
+	ZG_ARG_CHECK(this->memoryType == ZG_MEMORY_TYPE_FRAMEBUFFER, "Can't allocate buffers from FRAMEBUFFER heap");
 
 	// Create placed resource
 	ComPtr<ID3D12Resource> resource;
@@ -190,14 +191,16 @@ ZgErrorCode D3D12MemoryHeap::texture2DCreate(
 	ZgTexture2D** textureOut,
 	const ZgTexture2DCreateInfo& createInfo) noexcept
 {
-	if (this->memoryType == ZG_MEMORY_TYPE_UPLOAD) return ZG_ERROR_INVALID_ARGUMENT;
-	if (this->memoryType == ZG_MEMORY_TYPE_DOWNLOAD) return ZG_ERROR_INVALID_ARGUMENT;
-	if (this->memoryType == ZG_MEMORY_TYPE_DEVICE) return ZG_ERROR_INVALID_ARGUMENT;
+	ZG_ARG_CHECK(this->memoryType == ZG_MEMORY_TYPE_UPLOAD, "Can't allocate textures from UPLOAD heap");
+	ZG_ARG_CHECK(this->memoryType == ZG_MEMORY_TYPE_DOWNLOAD, "Can't allocate textures from DOWNLOAD heap");
+	ZG_ARG_CHECK(this->memoryType == ZG_MEMORY_TYPE_DEVICE, "Can't allocate textures from DEVICE heap");
 	if (this->memoryType == ZG_MEMORY_TYPE_TEXTURE) {
-		if (createInfo.mode != ZG_TEXTURE_MODE_DEFAULT) return ZG_ERROR_INVALID_ARGUMENT;
+		ZG_ARG_CHECK(createInfo.usage != ZG_TEXTURE_USAGE_DEFAULT,
+			"Can only allocate textures with DEFAULT usage from TEXTURE heap");
 	}
 	if (this->memoryType == ZG_MEMORY_TYPE_FRAMEBUFFER) {
-		if (createInfo.mode == ZG_TEXTURE_MODE_DEFAULT) return ZG_ERROR_INVALID_ARGUMENT;
+		ZG_ARG_CHECK(createInfo.usage == ZG_TEXTURE_USAGE_DEFAULT,
+			"Can't allocate textures with DEFAULT usage from FRAMEBUFFER heap");
 	}
 
 	// Get resource desc

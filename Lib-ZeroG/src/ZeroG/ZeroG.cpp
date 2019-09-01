@@ -22,6 +22,7 @@
 #include "ZeroG/BackendInterface.hpp"
 #include "ZeroG/Context.hpp"
 #include "ZeroG/util/CpuAllocation.hpp"
+#include "ZeroG/util/ErrorReporting.hpp"
 #include "ZeroG/util/Logging.hpp"
 
 #ifdef _WIN32
@@ -62,10 +63,12 @@ ZG_API const char* zgErrorCodeToString(ZgErrorCode errorCode)
 {
 	switch (errorCode) {
 	case ZG_SUCCESS: return "ZG_SUCCESS";
+
 	case ZG_WARNING_GENERIC: return "ZG_WARNING_GENERIC";
+	case ZG_WARNING_ALREADY_INITIALIZED: return "ZG_WARNING_ALREADY_INITIALIZED";
+	
 	case ZG_ERROR_GENERIC: return "ZG_ERROR_GENERIC";
 	case ZG_ERROR_UNIMPLEMENTED: return "ZG_ERROR_UNIMPLEMENTED";
-	case ZG_ERROR_ALREADY_INITIALIZED: return "ZG_ERROR_ALREADY_INITIALIZED";
 	case ZG_ERROR_CPU_OUT_OF_MEMORY: return "ZG_ERROR_CPU_OUT_OF_MEMORY";
 	case ZG_ERROR_GPU_OUT_OF_MEMORY: return "ZG_ERROR_GPU_OUT_OF_MEMORY";
 	case ZG_ERROR_NO_SUITABLE_DEVICE: return "ZG_ERROR_NO_SUITABLE_DEVICE";
@@ -87,8 +90,10 @@ ZG_API ZgBool zgContextAlreadyInitialized(void)
 
 ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 {
+	// Can't use ZG_ARG_CHECK() here because logger is not yet initialized
 	if (initSettings == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (zgContextAlreadyInitialized() == ZG_TRUE) return ZG_ERROR_ALREADY_INITIALIZED;
+	if (initSettings == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (zgContextAlreadyInitialized() == ZG_TRUE) return ZG_WARNING_ALREADY_INITIALIZED;
 
 	ZgContextInitSettings settings = *initSettings;
 
@@ -203,7 +208,7 @@ ZG_API ZgErrorCode zgContextSwapchainFinishFrame(void)
 
 ZG_API ZgErrorCode zgContextGetStats(ZgStats* statsOut)
 {
-	if (statsOut == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	ZG_ARG_CHECK(statsOut != nullptr, "");
 	return zg::getBackend()->getStats(*statsOut);
 }
 
@@ -231,19 +236,18 @@ ZG_API ZgErrorCode zgPipelineRenderingCreateFromFileSPIRV(
 	ZgPipelineRenderingSignature* signatureOut,
 	const ZgPipelineRenderingCreateInfoFileSPIRV* createInfo)
 {
-	// Check arguments
-	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (pipelineOut == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (signatureOut == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->vertexShaderPath == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.vertexShaderEntry == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->pixelShaderPath == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.pixelShaderEntry == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.numVertexAttributes == 0) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.numVertexBufferSlots == 0) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS) return ZG_ERROR_INVALID_ARGUMENT;
+	ZG_ARG_CHECK(createInfo == nullptr, "");
+	ZG_ARG_CHECK(pipelineOut == nullptr, "");
+	ZG_ARG_CHECK(signatureOut == nullptr, "");
+	ZG_ARG_CHECK(createInfo->vertexShaderPath == nullptr, "");
+	ZG_ARG_CHECK(createInfo->common.vertexShaderEntry == nullptr, "");
+	ZG_ARG_CHECK(createInfo->pixelShaderPath == nullptr, "");
+	ZG_ARG_CHECK(createInfo->common.pixelShaderEntry == nullptr, "");
+	ZG_ARG_CHECK(createInfo->common.numVertexAttributes == 0, "Must specify at least one vertex attribute");
+	ZG_ARG_CHECK(createInfo->common.numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex attributes specified");
+	ZG_ARG_CHECK(createInfo->common.numVertexBufferSlots == 0, "Must specify at least one vertex buffer");
+	ZG_ARG_CHECK(createInfo->common.numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex buffers specified");
+	ZG_ARG_CHECK(createInfo->common.numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
 
 	return zg::getBackend()->pipelineRenderingCreateFromFileSPIRV(
 		pipelineOut, signatureOut, *createInfo);
@@ -257,20 +261,19 @@ ZG_API ZgErrorCode zgPipelineRenderingCreateFromFileHLSL(
 	ZgPipelineRenderingSignature* signatureOut,
 	const ZgPipelineRenderingCreateInfoFileHLSL* createInfo)
 {
-	// Check arguments
-	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (pipelineOut == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (signatureOut == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->vertexShaderPath == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.vertexShaderEntry == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->pixelShaderPath == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.pixelShaderEntry == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->shaderModel == ZG_SHADER_MODEL_UNDEFINED) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.numVertexAttributes == 0) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.numVertexBufferSlots == 0) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS) return ZG_ERROR_INVALID_ARGUMENT;
+	ZG_ARG_CHECK(createInfo == nullptr, "");
+	ZG_ARG_CHECK(pipelineOut == nullptr, "");
+	ZG_ARG_CHECK(signatureOut == nullptr, "");
+	ZG_ARG_CHECK(createInfo->vertexShaderPath == nullptr, "");
+	ZG_ARG_CHECK(createInfo->common.vertexShaderEntry == nullptr, "");
+	ZG_ARG_CHECK(createInfo->pixelShaderPath == nullptr, "");
+	ZG_ARG_CHECK(createInfo->common.pixelShaderEntry == nullptr, "");
+	ZG_ARG_CHECK(createInfo->shaderModel == ZG_SHADER_MODEL_UNDEFINED, "Must specify shader model");
+	ZG_ARG_CHECK(createInfo->common.numVertexAttributes == 0, "Must specify at least one vertex attribute");
+	ZG_ARG_CHECK(createInfo->common.numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex attributes specified");
+	ZG_ARG_CHECK(createInfo->common.numVertexBufferSlots == 0, "Must specify at least one vertex buffer");
+	ZG_ARG_CHECK(createInfo->common.numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex buffers specified");
+	ZG_ARG_CHECK(createInfo->common.numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
 
 	return zg::getBackend()->pipelineRenderingCreateFromFileHLSL(
 		pipelineOut, signatureOut, *createInfo);
@@ -281,20 +284,19 @@ ZG_API ZgErrorCode zgPipelineRenderingCreateFromSourceHLSL(
 	ZgPipelineRenderingSignature* signatureOut,
 	const ZgPipelineRenderingCreateInfoSourceHLSL* createInfo)
 {
-	// Check arguments
-	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (pipelineOut == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (signatureOut == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->vertexShaderSrc == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.vertexShaderEntry == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->pixelShaderSrc == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.pixelShaderEntry == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->shaderModel == ZG_SHADER_MODEL_UNDEFINED) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.numVertexAttributes == 0) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.numVertexBufferSlots == 0) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->common.numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS) return ZG_ERROR_INVALID_ARGUMENT;
+	ZG_ARG_CHECK(createInfo == nullptr, "");
+	ZG_ARG_CHECK(pipelineOut == nullptr, "");
+	ZG_ARG_CHECK(signatureOut == nullptr, "");
+	ZG_ARG_CHECK(createInfo->vertexShaderSrc == nullptr, "");
+	ZG_ARG_CHECK(createInfo->common.vertexShaderEntry == nullptr, "");
+	ZG_ARG_CHECK(createInfo->pixelShaderSrc == nullptr, "");
+	ZG_ARG_CHECK(createInfo->common.pixelShaderEntry == nullptr, "");
+	ZG_ARG_CHECK(createInfo->shaderModel == ZG_SHADER_MODEL_UNDEFINED, "Must specify shader model");
+	ZG_ARG_CHECK(createInfo->common.numVertexAttributes == 0, "Must specify at least one vertex attribute");
+	ZG_ARG_CHECK(createInfo->common.numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex attributes specified");
+	ZG_ARG_CHECK(createInfo->common.numVertexBufferSlots == 0, "Must specify at least one vertex buffer");
+	ZG_ARG_CHECK(createInfo->common.numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex buffers specified");
+	ZG_ARG_CHECK(createInfo->common.numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
 
 	return zg::getBackend()->pipelineRenderingCreateFromSourceHLSL(
 		pipelineOut, signatureOut, *createInfo);
@@ -307,8 +309,8 @@ ZG_API ZgErrorCode zgMemoryHeapCreate(
 	ZgMemoryHeap** memoryHeapOut,
 	const ZgMemoryHeapCreateInfo* createInfo)
 {
-	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->sizeInBytes == 0) return ZG_ERROR_INVALID_ARGUMENT;
+	ZG_ARG_CHECK(createInfo == nullptr, "");
+	ZG_ARG_CHECK(createInfo->sizeInBytes == 0, "Can't create an empty memory heap");
 
 	return zg::getBackend()->memoryHeapCreate(memoryHeapOut, *createInfo);
 }
@@ -327,8 +329,8 @@ ZG_API ZgErrorCode zgMemoryHeapBufferCreate(
 	ZgBuffer** bufferOut,
 	const ZgBufferCreateInfo* createInfo)
 {
-	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if ((createInfo->offsetInBytes % 65536) != 0) return ZG_ERROR_INVALID_ARGUMENT; // 64KiB alignment
+	ZG_ARG_CHECK(createInfo == nullptr, "");
+	ZG_ARG_CHECK((createInfo->offsetInBytes % 65536) != 0, "Buffer must be 64KiB aligned");
 
 	return memoryHeap->bufferCreate(bufferOut, *createInfo);
 }
@@ -357,7 +359,7 @@ ZG_API ZgErrorCode zgBufferSetDebugName(
 	ZgBuffer* buffer,
 	const char* name)
 {
-	if (buffer == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	ZG_ARG_CHECK(buffer == nullptr, "");
 	return buffer->setDebugName(name);
 }
 
@@ -368,10 +370,10 @@ ZG_API ZgErrorCode zgTexture2DGetAllocationInfo(
 	ZgTexture2DAllocationInfo* allocationInfoOut,
 	const ZgTexture2DCreateInfo* createInfo)
 {
-	if (allocationInfoOut == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->numMipmaps == 0) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->numMipmaps > ZG_TEXTURE_2D_MAX_NUM_MIPMAPS) return ZG_ERROR_INVALID_ARGUMENT;
+	ZG_ARG_CHECK(allocationInfoOut == nullptr, "");
+	ZG_ARG_CHECK(createInfo == nullptr, "");
+	ZG_ARG_CHECK(createInfo->numMipmaps == 0, "Must specify at least 1 mipmap layer (i.e. the full image)");
+	ZG_ARG_CHECK(createInfo->numMipmaps > ZG_TEXTURE_2D_MAX_NUM_MIPMAPS, "Too many mipmaps specified");
 	return zg::getBackend()->texture2DGetAllocationInfo(*allocationInfoOut, *createInfo);
 }
 
@@ -380,11 +382,9 @@ ZG_API ZgErrorCode zgMemoryHeapTexture2DCreate(
 	ZgTexture2D** textureOut,
 	const ZgTexture2DCreateInfo* createInfo)
 {
-	if (createInfo == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->numMipmaps == 0) return ZG_ERROR_INVALID_ARGUMENT;
-	if (createInfo->numMipmaps > ZG_TEXTURE_2D_MAX_NUM_MIPMAPS) return ZG_ERROR_INVALID_ARGUMENT;
-	//if ((createInfo->offsetInBytes % 65536) != 0) return ZG_ERROR_INVALID_ARGUMENT; // 64KiB alignment
-
+	ZG_ARG_CHECK(createInfo == nullptr, "");
+	ZG_ARG_CHECK(createInfo->numMipmaps == 0, "Must specify at least 1 mipmap layer (i.e. the full image)");
+	ZG_ARG_CHECK(createInfo->numMipmaps > ZG_TEXTURE_2D_MAX_NUM_MIPMAPS, "Too many mipmaps specified");
 	return memoryHeap->texture2DCreate(textureOut, *createInfo);
 }
 
@@ -399,7 +399,8 @@ ZG_API ZgErrorCode zgTexture2DSetDebugName(
 	ZgTexture2D* texture,
 	const char* name)
 {
-	if (texture == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	ZG_ARG_CHECK(texture == nullptr, "");
+	ZG_ARG_CHECK(name == nullptr, "");
 	return texture->setDebugName(name);
 }
 
@@ -501,7 +502,7 @@ ZG_API ZgErrorCode zgCommandListMemcpyBufferToBuffer(
 	uint64_t srcBufferOffsetBytes,
 	uint64_t numBytes)
 {
-	if (numBytes == 0) return ZG_ERROR_INVALID_ARGUMENT;
+	ZG_ARG_CHECK(numBytes == 0, "Can't copy zero bytes");
 	return commandList->memcpyBufferToBuffer(
 		dstBuffer,
 		dstBufferOffsetBytes,
@@ -517,11 +518,11 @@ ZG_API ZgErrorCode zgCommandListMemcpyToTexture(
 	const ZgImageViewConstCpu* srcImageCpu,
 	ZgBuffer* tempUploadBuffer)
 {
-	if (srcImageCpu->data == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (srcImageCpu->width == 0) return ZG_ERROR_INVALID_ARGUMENT;
-	if (srcImageCpu->height == 0) return ZG_ERROR_INVALID_ARGUMENT;
-	if (srcImageCpu->pitchInBytes < srcImageCpu->width) return ZG_ERROR_INVALID_ARGUMENT;
-	if (dstTextureMipLevel >= ZG_TEXTURE_2D_MAX_NUM_MIPMAPS) return ZG_ERROR_INVALID_ARGUMENT;
+	ZG_ARG_CHECK(srcImageCpu->data == nullptr, "");
+	ZG_ARG_CHECK(srcImageCpu->width == 0, "");
+	ZG_ARG_CHECK(srcImageCpu->height == 0, "");
+	ZG_ARG_CHECK(srcImageCpu->pitchInBytes < srcImageCpu->width, "");
+	ZG_ARG_CHECK(dstTextureMipLevel >= ZG_TEXTURE_2D_MAX_NUM_MIPMAPS, "Invalid target mip level");
 	return commandList->memcpyToTexture(
 		dstTexture,
 		dstTextureMipLevel,
@@ -549,7 +550,7 @@ ZG_API ZgErrorCode zgCommandListSetPushConstant(
 	const void* data,
 	uint32_t dataSizeInBytes)
 {
-	if (data == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	ZG_ARG_CHECK(data == nullptr, "");
 	return commandList->setPushConstant(shaderRegister, data, dataSizeInBytes);
 }
 
@@ -629,7 +630,7 @@ ZG_API ZgErrorCode zgCommandListDrawTriangles(
 	uint32_t startVertexIndex,
 	uint32_t numVertices)
 {
-	if ((numVertices % 3) != 0) return ZG_ERROR_INVALID_ARGUMENT;
+	ZG_ARG_CHECK((numVertices % 3) != 0, "Odd number of vertices");
 	return commandList->drawTriangles(startVertexIndex, numVertices);
 }
 
