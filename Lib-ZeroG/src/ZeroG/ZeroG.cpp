@@ -426,6 +426,14 @@ ZG_API void zgFramebufferRelease(
 	return zg::getBackend()->framebufferRelease(framebuffer);
 }
 
+ZG_API ZgErrorCode zgFramebufferGetResolution(
+	const ZgFramebuffer* framebuffer,
+	uint32_t* widthOut,
+	uint32_t* heightOut)
+{
+	return framebuffer->getResolution(*widthOut, *heightOut);
+}
+
 // Fence
 // ------------------------------------------------------------------------------------------------
 

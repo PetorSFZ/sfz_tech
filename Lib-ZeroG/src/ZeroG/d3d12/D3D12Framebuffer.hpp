@@ -66,6 +66,11 @@ public:
 	D3D12Texture2D* depthBuffer = nullptr;
 	ComPtr<ID3D12DescriptorHeap> descriptorHeapDSV;
 	D3D12_CPU_DESCRIPTOR_HANDLE depthBufferDescriptor = {};
+
+	// Virtual methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgErrorCode getResolution(uint32_t& widthOut, uint32_t& heightOut) const noexcept override final;
 };
 
 // D3D12 Framebuffer functions

@@ -912,6 +912,11 @@ ZG_API ZgErrorCode zgFramebufferCreate(
 ZG_API void zgFramebufferRelease(
 	ZgFramebuffer* framebuffer);
 
+ZG_API ZgErrorCode zgFramebufferGetResolution(
+	const ZgFramebuffer* framebuffer,
+	uint32_t* widthOut,
+	uint32_t* heightOut);
+
 // Fence
 // ------------------------------------------------------------------------------------------------
 

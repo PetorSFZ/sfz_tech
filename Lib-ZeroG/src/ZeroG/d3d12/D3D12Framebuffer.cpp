@@ -33,6 +33,16 @@ D3D12Framebuffer::~D3D12Framebuffer() noexcept
 
 }
 
+// D3D12Framebuffer: Virtual methods
+// ------------------------------------------------------------------------------------------------
+
+ZgErrorCode D3D12Framebuffer::getResolution(uint32_t& widthOut, uint32_t& heightOut) const noexcept
+{
+	widthOut = this->width;
+	heightOut = this->height;
+	return ZG_SUCCESS;
+}
+
 // D3D12 Framebuffer functions
 // ------------------------------------------------------------------------------------------------
 

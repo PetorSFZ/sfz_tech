@@ -157,6 +157,8 @@ struct ZgTexture2D {
 
 struct ZgFramebuffer {
 	virtual ~ZgFramebuffer() noexcept {}
+
+	virtual ZgErrorCode getResolution(uint32_t& widthOut, uint32_t& heightOut) const noexcept = 0;
 };
 
 // Fence

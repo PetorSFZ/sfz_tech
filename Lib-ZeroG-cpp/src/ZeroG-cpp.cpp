@@ -69,7 +69,10 @@ ErrorCode Context::swapchainResize(uint32_t width, uint32_t height) noexcept
 ErrorCode Context::swapchainBeginFrame(Framebuffer& framebufferOut) noexcept
 {
 	if (framebufferOut.valid()) return ErrorCode::INVALID_ARGUMENT;
-	return (ErrorCode)zgContextSwapchainBeginFrame(&framebufferOut.framebuffer);
+	ErrorCode res = (ErrorCode)zgContextSwapchainBeginFrame(&framebufferOut.framebuffer);
+	if (!isSuccess(res)) return res;
+	return (ErrorCode)zgFramebufferGetResolution(
+		framebufferOut.framebuffer, &framebufferOut.width, &framebufferOut.height);
 }
 
 ErrorCode Context::swapchainFinishFrame() noexcept
@@ -476,18 +479,24 @@ ErrorCode FramebufferBuilder::build(Framebuffer& framebufferOut) noexcept
 ErrorCode Framebuffer::create(const ZgFramebufferCreateInfo& createInfo) noexcept
 {
 	this->release();
-	return (ErrorCode)zgFramebufferCreate(&this->framebuffer, &createInfo);
+	ErrorCode res = (ErrorCode)zgFramebufferCreate(&this->framebuffer, &createInfo);
+	if (!isSuccess(res)) return res;
+	return (ErrorCode)zgFramebufferGetResolution(this->framebuffer, &this->width, &this->height);
 }
 
 void Framebuffer::swap(Framebuffer& other) noexcept
 {
 	std::swap(this->framebuffer, other.framebuffer);
+	std::swap(this->width, other.width);
+	std::swap(this->height, other.height);
 }
 
 void Framebuffer::release() noexcept
 {
 	if (this->framebuffer != nullptr) zgFramebufferRelease(this->framebuffer);
 	this->framebuffer = nullptr;
+	this->width = 0;
+	this->height = 0;
 }
 
 
