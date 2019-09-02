@@ -101,6 +101,37 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	// Ensure some necessary sections exist
 	if (!root.accessMap("rendering_pipelines").isValid()) return false;
 
+	// Parse framebuffers if section exist
+	if (root.accessMap("framebuffers").isValid()) {
+
+		// Get number of framebuffers and and allocate memory for them
+		ParsedJsonNode framebuffersNode = root.accessMap("framebuffers");
+		uint32_t numFramebuffers = framebuffersNode.arrayLength();
+		configurable.framebuffers.create(numFramebuffers, state.allocator);
+
+		// Parse information abotu each framebuffer
+		for (uint32_t i = 0; i < numFramebuffers; i++) {
+
+			ParsedJsonNode fbNode = framebuffersNode.accessArray(i);
+			configurable.framebuffers.add(FramebufferItem());
+			FramebufferItem& fbItem = configurable.framebuffers.last();
+
+			str256 name = CHECK_JSON fbNode.accessMap("name").valueStr256();
+			fbItem.name = resStrings.getStringID(name);
+
+			// Resolution type
+			if (fbNode.accessMap("resolution_scale").isValid()) {
+				fbItem.resolutionIsFixed = false;
+				fbItem.resolutionScale = CHECK_JSON fbNode.accessMap("resolution_scale").valueFloat();
+			}
+			else {
+				fbItem.resolutionIsFixed = true;
+				fbItem.resolutionFixed.x = CHECK_JSON fbNode.accessMap("resolution_fixed_width").valueInt();
+				fbItem.resolutionFixed.y = CHECK_JSON fbNode.accessMap("resolution_fixed_height").valueInt();
+			}
+		}
+	}
+
 	// Get number of rendering pipelines to load and allocate memory for them
 	ParsedJsonNode renderingPipelinesNode = root.accessMap("rendering_pipelines");
 	uint32_t numRenderingPipelines = renderingPipelinesNode.arrayLength();
@@ -225,10 +256,17 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		}
 	}
 
-	// Builds pipelines
+	// Create framebuffers
 	bool success = true;
+	for (FramebufferItem& item : configurable.framebuffers) {
+		if (!item.buildFramebuffer(state.windowRes, state.gpuAllocatorFramebuffer)) {
+			success = false;
+		}
+	}
+
+	// Builds pipelines
 	for (PipelineRenderingItem& item : configurable.renderingPipelines) {
-		if (!buildPipelineRendering(item)) {
+		if (!item.buildPipeline()) {
 			success = false;
 		}
 	}
@@ -237,71 +275,6 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	if (!allocateStageMemory(state)) success = false;
 
 	return success;
-}
-
-bool buildPipelineRendering(PipelineRenderingItem& item) noexcept
-{
-	// Create pipeline builder
-	zg::PipelineRenderingBuilder pipelineBuilder;
-	pipelineBuilder
-		.addVertexShaderPath(item.vertexShaderEntry, item.vertexShaderPath)
-		.addPixelShaderPath(item.pixelShaderEntry, item.pixelShaderPath);
-	
-	// Set vertex attributes
-	if (item.standardVertexAttributes) {
-		pipelineBuilder
-			.addVertexBufferInfo(0, sizeof(Vertex))
-			.addVertexAttribute(0, 0, ZG_VERTEX_ATTRIBUTE_F32_3, offsetof(Vertex, pos))
-			.addVertexAttribute(1, 0, ZG_VERTEX_ATTRIBUTE_F32_3, offsetof(Vertex, normal))
-			.addVertexAttribute(2, 0, ZG_VERTEX_ATTRIBUTE_F32_2, offsetof(Vertex, texcoord));
-	}
-	else {
-		// TODO: Not yet implemented
-		sfz_assert_release(false);
-	}
-
-	// Set push constants
-	sfz_assert_debug(item.numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
-	for (uint32_t i = 0; i < item.numPushConstants; i++) {
-		pipelineBuilder.addPushConstant(item.pushConstantRegisters[i]);
-	}
-
-	// Samplers
-	sfz_assert_debug(item.numSamplers < ZG_MAX_NUM_SAMPLERS);
-	for (uint32_t i = 0; i < item.numSamplers; i++) {
-		SamplerItem& sampler = item.samplers[i];
-		pipelineBuilder.addSampler(sampler.samplerRegister, sampler.sampler);
-	}
-
-	// Depth test
-	if (item.depthTest) {
-		pipelineBuilder
-			.setDepthTestEnabled(true)
-			.setDepthFunc(item.depthFunc);
-	}
-
-	// Culling
-	if (item.cullingEnabled) {
-		pipelineBuilder
-			.setCullingEnabled(true)
-			.setCullMode(item.cullFrontFacing, item.frontFacingIsCounterClockwise);
-	}
-
-	// Wireframe rendering
-	if (item.wireframeRenderingEnabled) {
-		pipelineBuilder.setWireframeRendering(true);
-	}
-
-	// Build pipeline
-	bool buildSuccess = false;
-	if (item.sourceType == PipelineSourceType::SPIRV) {
-		buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileSPIRV(item.pipeline);
-	}
-	else {
-		buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileHLSL(item.pipeline);
-	}
-
-	return buildSuccess;
 }
 
 bool allocateStageMemory(RendererState& state) noexcept

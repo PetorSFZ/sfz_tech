@@ -424,6 +424,7 @@ zg::Buffer DynamicGpuAllocator::allocateBuffer(uint32_t sizeBytes) noexcept
 
 zg::Texture2D DynamicGpuAllocator::allocateTexture2D(
 	ZgTexture2DFormat format,
+	ZgTextureUsage usage,
 	uint32_t width,
 	uint32_t height,
 	uint32_t numMipmaps,
@@ -441,6 +442,7 @@ zg::Texture2D DynamicGpuAllocator::allocateTexture2D(
 	// Fill in Texture2D create info and get allocation info in order to find suitable page
 	ZgTexture2DCreateInfo createInfo = {};
 	createInfo.format = format;
+	createInfo.usage = usage;
 	createInfo.normalized = ZG_TRUE;
 	createInfo.width = width;
 	createInfo.height = height;
@@ -460,7 +462,7 @@ zg::Texture2D DynamicGpuAllocator::allocateTexture2D(
 
 		// Allocate texture page
 		MemoryPage page;
-		bool createSuccess = createMemoryPage(page, pageSize, ZG_MEMORY_TYPE_TEXTURE, mState->allocator);
+		bool createSuccess = createMemoryPage(page, pageSize, mState->memoryType, mState->allocator);
 		sfz_assert_debug(createSuccess);
 		if (!createSuccess) return zg::Texture2D();
 

@@ -28,8 +28,6 @@ namespace ph {
 
 bool parseRendererConfig(RendererState& state, const char* configPath) noexcept;
 
-bool buildPipelineRendering(PipelineRenderingItem& item) noexcept;
-
 bool allocateStageMemory(RendererState& state) noexcept;
 
 bool deallocateStageMemory(RendererState& state) noexcept;

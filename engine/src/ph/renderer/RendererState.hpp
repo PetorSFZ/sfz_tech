@@ -45,6 +45,33 @@ using sfz::str256;
 using sfz::StringID;
 using sfz::vec2_s32;
 
+// Framebuffer types
+// ------------------------------------------------------------------------------------------------
+
+struct FramebufferBacked final {
+	zg::Framebuffer framebuffer;
+	uint32_t numRenderTargets = 0;
+	zg::Texture2D renderTargets[ZG_FRAMEBUFFER_MAX_NUM_RENDER_TARGETS];
+	zg::Texture2D depthBuffer;
+};
+
+struct FramebufferItem final {
+	
+	// The framebuffer
+	FramebufferBacked framebuffer;
+
+	// Parsed information
+	StringID name;
+	bool resolutionIsFixed = false;
+	float resolutionScale = 1.0f;
+	vec2_s32 resolutionFixed = vec2_s32(0);
+
+	// Method for deallocating previous framebuffer
+	void deallocate(DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept;
+
+	// Method for building the framebuffer given the parsed information
+	bool buildFramebuffer(vec2_s32 windowRes, DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept;
+};
 
 // Pipeline types
 // ------------------------------------------------------------------------------------------------
@@ -61,8 +88,10 @@ struct SamplerItem final {
 
 struct PipelineRenderingItem final {
 
+	// The pipeline
 	zg::PipelineRendering pipeline;
 
+	// Parsed information
 	StringID name;
 	PipelineSourceType sourceType = PipelineSourceType::SPIRV;
 	str256 vertexShaderPath;
@@ -82,6 +111,9 @@ struct PipelineRenderingItem final {
 	bool cullFrontFacing = false;
 	bool frontFacingIsCounterClockwise = false;
 	bool wireframeRenderingEnabled = false;
+
+	// Method for building pipeline given the parsed information
+	bool buildPipeline() noexcept;
 };
 
 // Stage types
@@ -128,6 +160,9 @@ struct TextureItem final {
 // ------------------------------------------------------------------------------------------------
 
 struct RendererConfigurableState final {
+
+	// Framebuffers
+	DynArray<FramebufferItem> framebuffers;
 
 	// Pipelines
 	DynArray<PipelineRenderingItem> renderingPipelines;

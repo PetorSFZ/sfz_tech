@@ -174,6 +174,12 @@ void RendererUI::render(RendererState& state) noexcept
 			this->renderStagesTab(state.configurable);
 			ImGui::EndTabItem();
 		}
+
+		if (ImGui::BeginTabItem("Framebuffers")) {
+			ImGui::Spacing();
+			this->renderFramebuffersTab(state.configurable);
+			ImGui::EndTabItem();
+		}
 		
 		if (ImGui::BeginTabItem("Pipelines")) {
 			ImGui::Spacing();
@@ -287,7 +293,47 @@ void RendererUI::renderStagesTab(RendererConfigurableState& state) noexcept
 		ImGui::Unindent(20.0f);
 		ImGui::Spacing();
 	}
+}
 
+void RendererUI::renderFramebuffersTab(RendererConfigurableState& state) noexcept
+{
+	// Get global collection of resource strings in order to get strings from StringIDs
+	sfz::StringCollection& resStrings = ph::getResourceStrings();
+
+	for (uint32_t i = 0; i < state.framebuffers.size(); i++) {
+		const FramebufferItem& fbItem = state.framebuffers[i];
+
+		// Framebuffer name
+		ImGui::Text("Framebuffer %u - \"%s\"", i, resStrings.getString(fbItem.name));
+		ImGui::Spacing();
+		ImGui::Indent(20.0f);
+
+		constexpr float offset = 220.0f;
+
+		// Resolution type
+		if (fbItem.resolutionIsFixed) {
+			alignedEdit("Fixed resolution", offset, [&](const char*) {
+				ImGui::Text("%i x %i", fbItem.resolutionFixed.x, fbItem.resolutionFixed.y);
+			});
+		}
+		else {
+			alignedEdit("Resolution scale", offset, [&](const char*) {
+				ImGui::Text("%.2f", fbItem.resolutionScale);
+			});
+		}
+
+		// Actual resolution
+		uint32_t width = fbItem.framebuffer.framebuffer.width;
+		uint32_t height = fbItem.framebuffer.framebuffer.height;
+		alignedEdit("Current resolution", offset, [&](const char*) {
+			ImGui::Text("%i x %i", width, height);
+		});
+
+
+		ImGui::Unindent(20.0f);
+		ImGui::Spacing();
+		ImGui::Spacing();
+	}
 }
 
 void RendererUI::renderPipelinesTab(RendererConfigurableState& state) noexcept

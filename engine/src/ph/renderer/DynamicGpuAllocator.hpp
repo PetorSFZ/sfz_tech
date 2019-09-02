@@ -73,6 +73,7 @@ public:
 
 	zg::Texture2D allocateTexture2D(
 		ZgTexture2DFormat format,
+		ZgTextureUsage usage,
 		uint32_t width,
 		uint32_t height,
 		uint32_t numMipmaps,

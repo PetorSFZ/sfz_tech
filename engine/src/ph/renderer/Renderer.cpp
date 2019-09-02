@@ -76,6 +76,9 @@ bool Renderer::init(
 		return false;
 	}
 
+	// Set window resolution to default value (512x512)
+	mState->windowRes = vec2_s32(512, 512);
+
 	// Get command queues
 	if (!(CHECK_ZG zg::CommandQueue::getPresentQueue(mState->presentQueue))) {
 		this->destroy();
@@ -150,6 +153,11 @@ void Renderer::destroy() noexcept
 		// Destroy all GPU meshes
 		for (auto pair : mState->meshes) {
 			gpuMeshDeallocate(pair.value, mState->gpuAllocatorDevice);
+		}
+
+		// Destroy framebuffers
+		for (FramebufferItem& item : mState->configurable.framebuffers) {
+			item.deallocate(mState->gpuAllocatorFramebuffer);
 		}
 
 		// Deallocate stage memory
@@ -251,11 +259,39 @@ void Renderer::frameBegin() noexcept
 	mState->currentFrameIdx += 1;
 
 	// Query drawable width and height from SDL
-	SDL_GL_GetDrawableSize(mState->window, &mState->windowRes.x, &mState->windowRes.y);
+	int32_t newResX = 0;
+	int32_t newResY = 0;
+	SDL_GL_GetDrawableSize(mState->window, &newResX, &newResY);
+	bool resolutionChanged = newResX != mState->windowRes.x || newResY != mState->windowRes.y;
+	
+	// If resolution has changed, resize swapchain and framebuffers
+	if (resolutionChanged) {
 
-	// Resize swapchain if necessary
-	CHECK_ZG mState->zgCtx.swapchainResize(
-		uint32_t(mState->windowRes.x), uint32_t(mState->windowRes.y));
+		// Set new resolution
+		mState->windowRes.x = newResX;
+		mState->windowRes.y = newResY;
+
+		// Stop present queue so its safe to reallocate framebuffers
+		CHECK_ZG mState->presentQueue.flush();
+		
+		// Resize swapchain
+		// Note: This is actually safe to call every frame and without first flushing present
+		//       queue, but since we are also resizing other framebuffers created by us we might
+		//       as well protect this call just the same.
+		CHECK_ZG mState->zgCtx.swapchainResize(
+			uint32_t(mState->windowRes.x), uint32_t(mState->windowRes.y));
+
+		// Resize our framebuffers
+		for (FramebufferItem& item : mState->configurable.framebuffers) {
+			
+			// Only resize if not fixed resolution
+			if (!item.resolutionIsFixed) {
+				item.deallocate(mState->gpuAllocatorFramebuffer);
+				bool res = item.buildFramebuffer(mState->windowRes, mState->gpuAllocatorFramebuffer);
+				sfz_assert_debug(res);
+			}
+		}
+	}
 
 	// Begin ZeroG frame
 	sfz_assert_debug(!mState->windowFramebuffer.valid());

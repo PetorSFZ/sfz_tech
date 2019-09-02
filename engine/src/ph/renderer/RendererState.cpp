@@ -21,6 +21,127 @@
 
 namespace ph {
 
+// Framebuffer types
+// ------------------------------------------------------------------------------------------------
+
+void FramebufferItem::deallocate(DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept
+{
+	// Deallocate framebuffer
+	if (framebuffer.framebuffer.valid()) {
+		framebuffer.framebuffer.release();
+	}
+
+	// Deallocate render targets
+	for (uint32_t i = 0; i < framebuffer.numRenderTargets; i++) {
+		if (framebuffer.renderTargets[i].valid()) {
+			gpuAllocatorFramebuffer.deallocate(framebuffer.renderTargets[i]);
+		}
+	}
+	framebuffer.numRenderTargets = 0;
+
+	// Deallocate depth buffer
+	if (framebuffer.depthBuffer.valid()) {
+		gpuAllocatorFramebuffer.deallocate(framebuffer.depthBuffer);
+	}
+}
+
+bool FramebufferItem::buildFramebuffer(vec2_s32 windowRes, DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept
+{
+	// Figure out resolution
+	uint32_t width = 0;
+	uint32_t height = 0;
+	if (resolutionIsFixed) {
+		width = uint32_t(resolutionFixed.x);
+		height = uint32_t(resolutionFixed.y);
+	}
+	else {
+		vec2 scaled =vec2(windowRes) * resolutionScale;
+		width = std::round(scaled.x);
+		height = std::round(scaled.y);
+	}
+
+	// Allocate memory and initialize framebuffer
+	framebuffer.numRenderTargets = 1;
+	framebuffer.renderTargets[0] = gpuAllocatorFramebuffer.allocateTexture2D(
+		ZG_TEXTURE_2D_FORMAT_RGBA_U8, ZG_TEXTURE_USAGE_RENDER_TARGET, width, height, 1);
+
+	return CHECK_ZG zg::FramebufferBuilder()
+		.addRenderTarget(framebuffer.renderTargets[0])
+		.build(framebuffer.framebuffer);
+}
+
+//  Pipeline types
+// ------------------------------------------------------------------------------------------------
+
+bool PipelineRenderingItem::buildPipeline() noexcept
+{
+	// Create pipeline builder
+	zg::PipelineRenderingBuilder pipelineBuilder;
+	pipelineBuilder
+		.addVertexShaderPath(vertexShaderEntry, vertexShaderPath)
+		.addPixelShaderPath(pixelShaderEntry, pixelShaderPath);
+	
+	// Set vertex attributes
+	if (standardVertexAttributes) {
+		pipelineBuilder
+			.addVertexBufferInfo(0, sizeof(Vertex))
+			.addVertexAttribute(0, 0, ZG_VERTEX_ATTRIBUTE_F32_3, offsetof(Vertex, pos))
+			.addVertexAttribute(1, 0, ZG_VERTEX_ATTRIBUTE_F32_3, offsetof(Vertex, normal))
+			.addVertexAttribute(2, 0, ZG_VERTEX_ATTRIBUTE_F32_2, offsetof(Vertex, texcoord));
+	}
+	else {
+		// TODO: Not yet implemented
+		sfz_assert_release(false);
+	}
+
+	// Set push constants
+	sfz_assert_debug(numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
+	for (uint32_t i = 0; i < numPushConstants; i++) {
+		pipelineBuilder.addPushConstant(pushConstantRegisters[i]);
+	}
+
+	// Samplers
+	sfz_assert_debug(numSamplers < ZG_MAX_NUM_SAMPLERS);
+	for (uint32_t i = 0; i < numSamplers; i++) {
+		SamplerItem& sampler = samplers[i];
+		pipelineBuilder.addSampler(sampler.samplerRegister, sampler.sampler);
+	}
+
+	// Depth test
+	if (depthTest) {
+		pipelineBuilder
+			.setDepthTestEnabled(true)
+			.setDepthFunc(depthFunc);
+	}
+
+	// Culling
+	if (cullingEnabled) {
+		pipelineBuilder
+			.setCullingEnabled(true)
+			.setCullMode(cullFrontFacing, frontFacingIsCounterClockwise);
+	}
+
+	// Wireframe rendering
+	if (wireframeRenderingEnabled) {
+		pipelineBuilder.setWireframeRendering(true);
+	}
+
+	// Build pipeline
+	bool buildSuccess = false;
+	zg::PipelineRendering tmpPipeline;
+	if (sourceType == PipelineSourceType::SPIRV) {
+		buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileSPIRV(tmpPipeline);
+	}
+	else {
+		buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileHLSL(tmpPipeline);
+	}
+
+	if (buildSuccess) {
+		this->pipeline = std::move(tmpPipeline);
+	}
+	return buildSuccess;
+}
+
 // RendererState: Helper methods
 // ------------------------------------------------------------------------------------------------
 
