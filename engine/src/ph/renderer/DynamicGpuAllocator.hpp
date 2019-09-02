@@ -52,37 +52,24 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void init(sfz::Allocator* allocator) noexcept;
+	void init(sfz::Allocator* allocator, ZgMemoryType memoryType, uint32_t defaultPageSize) noexcept;
 	void swap(DynamicGpuAllocator& other) noexcept;
 	void destroy() noexcept;
 
 	// State query methods
 	// --------------------------------------------------------------------------------------------
 
-	uint32_t queryTotalNumAllocationsDevice() const noexcept;
-	uint32_t queryTotalNumAllocationsUpload() const noexcept;
-	uint32_t queryTotalNumAllocationsTexture() const noexcept;
-
-	uint32_t queryTotalNumDeallocationsDevice() const noexcept;
-	uint32_t queryTotalNumDeallocationsUpload() const noexcept;
-	uint32_t queryTotalNumDeallocationsTexture() const noexcept;
-
-	uint32_t queryDefaultPageSizeDevice() const noexcept;
-	uint32_t queryDefaultPageSizeUpload() const noexcept;
-	uint32_t queryDefaultPageSizeTexture() const noexcept;
-
-	uint32_t queryNumPagesDevice() const noexcept;
-	uint32_t queryNumPagesUpload() const noexcept;
-	uint32_t queryNumPagesTexture() const noexcept;
-
-	PageInfo queryPageInfoDevice(uint32_t pageIdx) const noexcept;
-	PageInfo queryPageInfoUpload(uint32_t pageIdx) const noexcept;
-	PageInfo queryPageInfoTexture(uint32_t pageIdx) const noexcept;
+	ZgMemoryType queryMemoryType() const noexcept;
+	uint64_t queryTotalNumAllocations() const noexcept;
+	uint64_t queryTotalNumDeallocations() const noexcept;
+	uint64_t queryDefaultPageSize() const noexcept;
+	uint32_t queryNumPages() const noexcept;
+	PageInfo queryPageInfo(uint32_t pageIdx) const noexcept;
 
 	// Allocation methods
 	// --------------------------------------------------------------------------------------------
 
-	zg::Buffer allocateBuffer(ZgMemoryType memoryType, uint32_t sizeBytes) noexcept;
+	zg::Buffer allocateBuffer(uint32_t sizeBytes) noexcept;
 
 	zg::Texture2D allocateTexture2D(
 		ZgTexture2DFormat format,

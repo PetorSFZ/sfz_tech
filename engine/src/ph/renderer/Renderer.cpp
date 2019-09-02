@@ -87,7 +87,17 @@ bool Renderer::init(
 	}
 
 	// Initialize dynamic gpu allocator
-	mState->dynamicAllocator.init(mState->allocator);
+	constexpr uint32_t PAGE_SIZE_UPLOAD = 32 * 1024 * 1024; // 32 MiB
+	constexpr uint32_t PAGE_SIZE_DEVICE = 64 * 1024 * 1024; // 64 MiB
+	constexpr uint32_t PAGE_SIZE_TEXTURE = 64 * 1024 * 1024; // 64 MiB
+	constexpr uint32_t PAGE_SIZE_FRAMEBUFFER = 64 * 1024 * 1024; // 64 MiB
+	mState->gpuAllocatorUpload.init(mState->allocator, ZG_MEMORY_TYPE_UPLOAD, PAGE_SIZE_UPLOAD);
+	mState->gpuAllocatorDevice.init(mState->allocator, ZG_MEMORY_TYPE_DEVICE, PAGE_SIZE_DEVICE);
+	mState->gpuAllocatorTexture.init(mState->allocator, ZG_MEMORY_TYPE_TEXTURE, PAGE_SIZE_TEXTURE);
+	mState->gpuAllocatorFramebuffer.init(mState->allocator, ZG_MEMORY_TYPE_FRAMEBUFFER, PAGE_SIZE_FRAMEBUFFER);
+
+	// Initialize hashmaps for resources
+	mState->textures.create(512, mState->allocator);
 	mState->meshes.create(512, mState->allocator);
 
 	// Initialize ImGui rendering state
@@ -134,12 +144,12 @@ void Renderer::destroy() noexcept
 
 		// Destroy all textures
 		for (auto pair : mState->textures) {
-			mState->dynamicAllocator.deallocate(pair.value.texture);
+			mState->gpuAllocatorTexture.deallocate(pair.value.texture);
 		}
 
 		// Destroy all GPU meshes
 		for (auto pair : mState->meshes) {
-			gpuMeshDeallocate(pair.value, mState->dynamicAllocator);
+			gpuMeshDeallocate(pair.value, mState->gpuAllocatorDevice);
 		}
 
 		// Deallocate stage memory
@@ -181,7 +191,8 @@ bool Renderer::uploadTextureBlocking(
 	uint32_t numMipmaps = 0;
 	zg::Texture2D texture = textureAllocateAndUploadBlocking(
 		image,
-		mState->dynamicAllocator,
+		mState->gpuAllocatorTexture,
+		mState->gpuAllocatorUpload,
 		mState->allocator,
 		mState->copyQueue,
 		generateMipmaps,
@@ -213,11 +224,11 @@ bool Renderer::uploadMeshBlocking(StringID id, const Mesh& mesh) noexcept
 	if (mState->meshes.get(id) != nullptr) return true;
 
 	// Allocate memory for mesh
-	GpuMesh gpuMesh = gpuMeshAllocate(mesh, mState->dynamicAllocator, mState->allocator);
+	GpuMesh gpuMesh = gpuMeshAllocate(mesh, mState->gpuAllocatorDevice, mState->allocator);
 
 	// Upload memory to mesh
 	gpuMeshUploadBlocking(
-		gpuMesh, mesh, mState->dynamicAllocator, mState->allocator, mState->copyQueue);
+		gpuMesh, mesh, mState->gpuAllocatorUpload, mState->allocator, mState->copyQueue);
 
 	// Store mesh
 	mState->meshes[id] = std::move(gpuMesh);

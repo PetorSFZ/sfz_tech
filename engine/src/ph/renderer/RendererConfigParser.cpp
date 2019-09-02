@@ -352,13 +352,13 @@ bool allocateStageMemory(RendererState& state) noexcept
 				
 				// Allocate upload buffer
 				item.uploadBuffer =
-					state.dynamicAllocator.allocateBuffer(ZG_MEMORY_TYPE_UPLOAD, desc.sizeInBytes);
+					state.gpuAllocatorUpload.allocateBuffer(desc.sizeInBytes);
 				sfz_assert_debug(item.uploadBuffer.valid());
 				if (!item.uploadBuffer.valid()) success = false;
 
 				// Allocate device buffer
 				item.deviceBuffer =
-					state.dynamicAllocator.allocateBuffer(ZG_MEMORY_TYPE_DEVICE, desc.sizeInBytes);
+					state.gpuAllocatorDevice.allocateBuffer(desc.sizeInBytes);
 				sfz_assert_debug(item.deviceBuffer.valid());
 				if (!item.deviceBuffer.valid()) success = false;
 			});
@@ -379,12 +379,12 @@ bool deallocateStageMemory(RendererState& state) noexcept
 
 				// Deallocate upload buffer
 				sfz_assert_debug(item.uploadBuffer.valid());
-				state.dynamicAllocator.deallocate(item.uploadBuffer);
+				state.gpuAllocatorUpload.deallocate(item.uploadBuffer);
 				sfz_assert_debug(!item.uploadBuffer.valid());
 
 				// Deallocate device buffer
 				sfz_assert_debug(item.deviceBuffer.valid());
-				state.dynamicAllocator.deallocate(item.deviceBuffer);
+				state.gpuAllocatorDevice.deallocate(item.deviceBuffer);
 				sfz_assert_debug(!item.deviceBuffer.valid());
 			});
 			

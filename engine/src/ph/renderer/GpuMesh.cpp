@@ -46,21 +46,22 @@ ShaderMaterial cpuMaterialToShaderMaterial(const Material& cpuMaterial) noexcept
 
 GpuMesh gpuMeshAllocate(
 	const Mesh& cpuMesh,
-	DynamicGpuAllocator& gpuAllocator,
+	DynamicGpuAllocator& gpuAllocatorDevice,
 	sfz::Allocator* cpuAllocator) noexcept
 {
+	sfz_assert_debug(gpuAllocatorDevice.queryMemoryType() == ZG_MEMORY_TYPE_DEVICE);
 	static uint32_t counter = 0;
 	GpuMesh gpuMesh;
 
 	// Allocate (GPU) memory for vertices
-	gpuMesh.vertexBuffer = gpuAllocator.allocateBuffer(
-		ZG_MEMORY_TYPE_DEVICE, cpuMesh.vertices.size() * sizeof(Vertex));
+	gpuMesh.vertexBuffer = gpuAllocatorDevice.allocateBuffer(
+		cpuMesh.vertices.size() * sizeof(Vertex));
 	sfz_assert_debug(gpuMesh.vertexBuffer.valid());
 	CHECK_ZG gpuMesh.vertexBuffer.setDebugName(sfz::str128("Vertex_Buffer_%i", counter++));
 
 	// Allocate (GPU) memory for indices
-	gpuMesh.indexBuffer = gpuAllocator.allocateBuffer(
-		ZG_MEMORY_TYPE_DEVICE, cpuMesh.indices.size() * sizeof(uint32_t));
+	gpuMesh.indexBuffer = gpuAllocatorDevice.allocateBuffer(
+		cpuMesh.indices.size() * sizeof(uint32_t));
 	sfz_assert_debug(gpuMesh.indexBuffer.valid());
 	CHECK_ZG gpuMesh.indexBuffer.setDebugName(sfz::str128("Index_Buffer_%i", counter++));
 
@@ -70,8 +71,8 @@ GpuMesh gpuMeshAllocate(
 
 	// Allocate (GPU) memory for materials
 	sfz_assert_debug(cpuMesh.materials.size() <= MAX_NUM_SHADER_MATERIALS);
-	gpuMesh.materialsBuffer = gpuAllocator.allocateBuffer(
-		ZG_MEMORY_TYPE_DEVICE, cpuMesh.materials.size() * sizeof(ShaderMaterial));
+	gpuMesh.materialsBuffer = gpuAllocatorDevice.allocateBuffer(
+		cpuMesh.materials.size() * sizeof(ShaderMaterial));
 	sfz_assert_debug(gpuMesh.materialsBuffer.valid());
 	gpuMesh.numMaterials = cpuMesh.materials.size();
 	CHECK_ZG gpuMesh.materialsBuffer.setDebugName(sfz::str128("Material_Buffer_%i", counter++));
@@ -85,21 +86,23 @@ GpuMesh gpuMeshAllocate(
 
 void gpuMeshDeallocate(
 	GpuMesh& gpuMesh,
-	DynamicGpuAllocator& gpuAllocator) noexcept
+	DynamicGpuAllocator& gpuAllocatorDevice) noexcept
 {
+	sfz_assert_debug(gpuAllocatorDevice.queryMemoryType() == ZG_MEMORY_TYPE_DEVICE);
+
 	// Deallocate vertex buffer
 	sfz_assert_debug(gpuMesh.vertexBuffer.valid());
-	gpuAllocator.deallocate(gpuMesh.vertexBuffer);
+	gpuAllocatorDevice.deallocate(gpuMesh.vertexBuffer);
 	sfz_assert_debug(!gpuMesh.vertexBuffer.valid());
 
 	// Deallocate index buffer
 	sfz_assert_debug(gpuMesh.indexBuffer.valid());
-	gpuAllocator.deallocate(gpuMesh.indexBuffer);
+	gpuAllocatorDevice.deallocate(gpuMesh.indexBuffer);
 	sfz_assert_debug(!gpuMesh.indexBuffer.valid());
 
 	// Deallocate materials buffer
 	sfz_assert_debug(gpuMesh.materialsBuffer.valid());
-	gpuAllocator.deallocate(gpuMesh.materialsBuffer);
+	gpuAllocatorDevice.deallocate(gpuMesh.materialsBuffer);
 	sfz_assert_debug(!gpuMesh.materialsBuffer.valid());
 
 	// Destroy remaining CPU memory
@@ -110,10 +113,11 @@ void gpuMeshDeallocate(
 void gpuMeshUploadBlocking(
 	GpuMesh& gpuMesh,
 	const Mesh& cpuMesh,
-	DynamicGpuAllocator& gpuAllocator,
+	DynamicGpuAllocator& gpuAllocatorUpload,
 	sfz::Allocator* cpuAllocator,
 	zg::CommandQueue& copyQueue) noexcept
 {
+	sfz_assert_debug(gpuAllocatorUpload.queryMemoryType() == ZG_MEMORY_TYPE_UPLOAD);
 	sfz_assert_debug(gpuMesh.vertexBuffer.valid());
 	sfz_assert_debug(gpuMesh.indexBuffer.valid());
 	sfz_assert_debug(gpuMesh.materialsBuffer.valid());
@@ -126,7 +130,7 @@ void gpuMeshUploadBlocking(
 	// Allocate vertex upload buffer, memcpy data to it and queue upload command
 	uint32_t vertexBufferSizeBytes = cpuMesh.vertices.size() * sizeof(Vertex);
 	zg::Buffer vertexUploadBuffer =
-		gpuAllocator.allocateBuffer(ZG_MEMORY_TYPE_UPLOAD, vertexBufferSizeBytes);
+		gpuAllocatorUpload.allocateBuffer(vertexBufferSizeBytes);
 	CHECK_ZG vertexUploadBuffer.memcpyTo(0, cpuMesh.vertices.data(), vertexBufferSizeBytes);
 	CHECK_ZG commandList.memcpyBufferToBuffer(
 		gpuMesh.vertexBuffer, 0, vertexUploadBuffer, 0, vertexBufferSizeBytes);
@@ -134,7 +138,7 @@ void gpuMeshUploadBlocking(
 	// Allocate index upload buffer, memcpy data to it and queue upload command
 	uint32_t indexBufferSizeBytes = cpuMesh.indices.size() * sizeof(uint32_t);
 	zg::Buffer indexUploadBuffer =
-		gpuAllocator.allocateBuffer(ZG_MEMORY_TYPE_UPLOAD, indexBufferSizeBytes);
+		gpuAllocatorUpload.allocateBuffer(indexBufferSizeBytes);
 	CHECK_ZG indexUploadBuffer.memcpyTo(0, cpuMesh.indices.data(), indexBufferSizeBytes);
 	CHECK_ZG commandList.memcpyBufferToBuffer(
 		gpuMesh.indexBuffer, 0, indexUploadBuffer, 0, indexBufferSizeBytes);
@@ -151,7 +155,7 @@ void gpuMeshUploadBlocking(
 	// Allocate temporary materials upload buffer, memcpy data to it and queue upload command
 	uint32_t materialsBufferSizeBytes = cpuMesh.materials.size() * sizeof(ShaderMaterial);
 	zg::Buffer materialsUploadBuffer =
-		gpuAllocator.allocateBuffer(ZG_MEMORY_TYPE_UPLOAD, materialsBufferSizeBytes);
+		gpuAllocatorUpload.allocateBuffer(materialsBufferSizeBytes);
 	CHECK_ZG materialsUploadBuffer.memcpyTo(0, gpuMaterials.data(), materialsBufferSizeBytes);
 	CHECK_ZG commandList.memcpyBufferToBuffer(
 		gpuMesh.materialsBuffer, 0, materialsUploadBuffer, 0, materialsBufferSizeBytes);
@@ -181,9 +185,9 @@ void gpuMeshUploadBlocking(
 	CHECK_ZG copyQueue.flush();
 
 	// Deallocate temporary upload buffers
-	gpuAllocator.deallocate(vertexUploadBuffer);
-	gpuAllocator.deallocate(indexUploadBuffer);
-	gpuAllocator.deallocate(materialsUploadBuffer);
+	gpuAllocatorUpload.deallocate(vertexUploadBuffer);
+	gpuAllocatorUpload.deallocate(indexUploadBuffer);
+	gpuAllocatorUpload.deallocate(materialsUploadBuffer);
 }
 
 } // namespace ph

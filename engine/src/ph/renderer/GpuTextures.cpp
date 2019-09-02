@@ -147,12 +147,15 @@ ZgTexture2DFormat toZeroGImageFormat(ImageType imageType) noexcept
 
 zg::Texture2D textureAllocateAndUploadBlocking(
 	const phConstImageView& image,
-	DynamicGpuAllocator& gpuAllocator,
+	DynamicGpuAllocator& gpuAllocatorTexture,
+	DynamicGpuAllocator& gpuAllocatorUpload,
 	sfz::Allocator* cpuAllocator,
 	zg::CommandQueue& copyQueue,
 	bool generateMipmaps,
 	uint32_t& numMipmapsOut) noexcept
 {
+	sfz_assert_debug(gpuAllocatorTexture.queryMemoryType() == ZG_MEMORY_TYPE_TEXTURE);
+	sfz_assert_debug(gpuAllocatorUpload.queryMemoryType() == ZG_MEMORY_TYPE_UPLOAD);
 	sfz_assert_debug(isPowerOfTwo(image.width));
 	sfz_assert_debug(isPowerOfTwo(image.height));
 
@@ -170,7 +173,7 @@ zg::Texture2D textureAllocateAndUploadBlocking(
 
 	// Allocate Texture
 	uint32_t textureSizeBytes = 0;
-	zg::Texture2D texture = gpuAllocator.allocateTexture2D(
+	zg::Texture2D texture = gpuAllocatorTexture.allocateTexture2D(
 		view.format, view.width, view.height, numMipmaps, &textureSizeBytes);
 	sfz_assert_debug(texture.valid());
 	sfz_assert_debug(textureSizeBytes != 0);
@@ -206,7 +209,7 @@ zg::Texture2D textureAllocateAndUploadBlocking(
 	for (uint32_t i = 0; i < numMipmaps; i++) {
 		// TODO: Figure out exactly how much memory is needed
 		uint32_t bufferSize = (imageViews[i].pitchInBytes * imageViews[i].height) + 1024;
-		tmpUploadBuffers[i] = gpuAllocator.allocateBuffer(ZG_MEMORY_TYPE_UPLOAD, bufferSize);
+		tmpUploadBuffers[i] = gpuAllocatorUpload.allocateBuffer(bufferSize);
 		sfz_assert_debug(tmpUploadBuffers[i].valid());
 	}
 
@@ -222,7 +225,7 @@ zg::Texture2D textureAllocateAndUploadBlocking(
 
 	// Deallocate temporary upload buffers
 	for (uint32_t i = 0; i < numMipmaps; i++) {
-		gpuAllocator.deallocate(tmpUploadBuffers[i]);
+		gpuAllocatorUpload.deallocate(tmpUploadBuffers[i]);
 	}
 
 	numMipmapsOut = numMipmaps;

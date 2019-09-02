@@ -34,7 +34,8 @@ ZgTexture2DFormat toZeroGImageFormat(ImageType imageType) noexcept;
 
 zg::Texture2D textureAllocateAndUploadBlocking(
 	const phConstImageView& image,
-	DynamicGpuAllocator& gpuAllocator,
+	DynamicGpuAllocator& gpuAllocatorTexture,
+	DynamicGpuAllocator& gpuAllocatorUpload,
 	sfz::Allocator* cpuAllocator,
 	zg::CommandQueue& copyQueue,
 	bool generateMipmaps,

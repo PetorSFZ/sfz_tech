@@ -411,134 +411,63 @@ void RendererUI::renderMemoryTab(RendererState& state) noexcept
 	ImGui::Separator();
 	ImGui::Spacing();
 
-	DynamicGpuAllocator& alloc = state.dynamicAllocator;
-	ImGui::Text("Dynamic Memory Allocation");
-	ImGui::Spacing();
-	ImGui::Indent(10.0f);
 
+	struct AllocatorNameBundle {
+		DynamicGpuAllocator* allocator = nullptr;
+		const char* name = nullptr;
+	};
 
-	ImGui::Text("Device Memory");
-	ImGui::Indent(30.0f);
-	ImGui::Spacing();
-	constexpr float infoOffset = 280.0f;
-	alignedEdit("Total Num Allocations", infoOffset, [&](const char*) {
-		ImGui::Text("%u", alloc.queryTotalNumAllocationsDevice());
-	});
-	alignedEdit("Total Num Deallocations", infoOffset, [&](const char*) {
-		ImGui::Text("%u", alloc.queryTotalNumDeallocationsDevice());
-	});
-	alignedEdit("Default Page Size", infoOffset, [&](const char*) {
-		ImGui::Text("%.2f MiB", toMiB(alloc.queryDefaultPageSizeDevice()));
-	});
-	uint32_t numDevicePages = alloc.queryNumPagesDevice();
-	alignedEdit("Num Pages", infoOffset, [&](const char*) {
-		ImGui::Text("%u", numDevicePages);
-	});
-	ImGui::Spacing();
-	for (uint32_t i = 0; i < numDevicePages; i++) {
-		constexpr float pageOffset = 260.0f;
-		PageInfo info = alloc.queryPageInfoDevice(i);
-		ImGui::Text("Page %u:", i);
-		ImGui::Indent(20.0f);
-		alignedEdit("Size", pageOffset, [&](const char*) {
-			ImGui::Text("%.2f MiB", toMiB(info.pageSizeBytes));
-		});
-		alignedEdit("Num Allocations", pageOffset, [&](const char*) {
-			ImGui::Text("%u", info.numAllocations);
-		});
-		alignedEdit("Num Free Blocks", pageOffset, [&](const char*) {
-			ImGui::Text("%u", info.numFreeBlocks);
-		});
-		alignedEdit("Largest Free Block", pageOffset, [&](const char*) {
-			ImGui::Text("%.2f MiB", toMiB(info.largestFreeBlockBytes));
-		});
-		ImGui::Unindent(20.0f);
+	const AllocatorNameBundle allocators[]{
+		{ &state.gpuAllocatorUpload, "Upload" },
+		{ &state.gpuAllocatorDevice, "Device" },
+		{ &state.gpuAllocatorTexture, "Texture" },
+		{ &state.gpuAllocatorFramebuffer, "Framebuffer" }
+	};
+
+	for (const AllocatorNameBundle& bundle : allocators) {
+		
+		DynamicGpuAllocator& alloc = *bundle.allocator;
+
+		ImGui::Text("%s Memory", bundle.name);
+		ImGui::Indent(30.0f);
 		ImGui::Spacing();
-	}
-	ImGui::Unindent(30.0f);
-
-
-	ImGui::Spacing();
-	ImGui::Text("Upload Memory");
-	ImGui::Indent(30.0f);
-	ImGui::Spacing();
-	alignedEdit("Total Num Allocations", infoOffset, [&](const char*) {
-		ImGui::Text("%u", alloc.queryTotalNumAllocationsUpload());
-	});
-	alignedEdit("Total Num Deallocations", infoOffset, [&](const char*) {
-		ImGui::Text("%u", alloc.queryTotalNumDeallocationsUpload());
-	});
-	alignedEdit("Default Page Size", infoOffset, [&](const char*) {
-		ImGui::Text("%.2f MiB", toMiB(alloc.queryDefaultPageSizeUpload()));
-	});
-	uint32_t numUploadPages = alloc.queryNumPagesUpload();
-	alignedEdit("Num Pages", infoOffset, [&](const char*) {
-		ImGui::Text("%u", numUploadPages);
-	});
-	ImGui::Spacing();
-	for (uint32_t i = 0; i < numUploadPages; i++) {
-		constexpr float pageOffset = 260.0f;
-		PageInfo info = alloc.queryPageInfoUpload(i);
-		ImGui::Text("Page %u:", i);
-		ImGui::Indent(20.0f);
-		alignedEdit("Size", pageOffset, [&](const char*) {
-			ImGui::Text("%.2f MiB", toMiB(info.pageSizeBytes));
+		constexpr float infoOffset = 280.0f;
+		alignedEdit("Total Num Allocations", infoOffset, [&](const char*) {
+			ImGui::Text("%u", alloc.queryTotalNumAllocations());
 		});
-		alignedEdit("Num Allocations", pageOffset, [&](const char*) {
-			ImGui::Text("%u", info.numAllocations);
+		alignedEdit("Total Num Deallocations", infoOffset, [&](const char*) {
+			ImGui::Text("%u", alloc.queryTotalNumDeallocations());
 		});
-		alignedEdit("Num Free Blocks", pageOffset, [&](const char*) {
-			ImGui::Text("%u", info.numFreeBlocks);
+		alignedEdit("Default Page Size", infoOffset, [&](const char*) {
+			ImGui::Text("%.2f MiB", toMiB(alloc.queryDefaultPageSize()));
 		});
-		alignedEdit("Largest Free Block", pageOffset, [&](const char*) {
-			ImGui::Text("%.2f MiB", toMiB(info.largestFreeBlockBytes));
+		uint32_t numDevicePages = alloc.queryNumPages();
+		alignedEdit("Num Pages", infoOffset, [&](const char*) {
+			ImGui::Text("%u", numDevicePages);
 		});
-		ImGui::Unindent(20.0f);
 		ImGui::Spacing();
+		for (uint32_t i = 0; i < numDevicePages; i++) {
+			constexpr float pageOffset = 260.0f;
+			PageInfo info = alloc.queryPageInfo(i);
+			ImGui::Text("Page %u:", i);
+			ImGui::Indent(20.0f);
+			alignedEdit("Size", pageOffset, [&](const char*) {
+				ImGui::Text("%.2f MiB", toMiB(info.pageSizeBytes));
+			});
+			alignedEdit("Num Allocations", pageOffset, [&](const char*) {
+				ImGui::Text("%u", info.numAllocations);
+			});
+			alignedEdit("Num Free Blocks", pageOffset, [&](const char*) {
+				ImGui::Text("%u", info.numFreeBlocks);
+			});
+			alignedEdit("Largest Free Block", pageOffset, [&](const char*) {
+				ImGui::Text("%.2f MiB", toMiB(info.largestFreeBlockBytes));
+			});
+			ImGui::Unindent(20.0f);
+			ImGui::Spacing();
+		}
+		ImGui::Unindent(30.0f);
 	}
-	ImGui::Unindent(30.0f);
-
-
-	ImGui::Spacing();
-	ImGui::Text("Texture Memory");
-	ImGui::Indent(30.0f);
-	ImGui::Spacing();
-	alignedEdit("Total Num Allocations", infoOffset, [&](const char*) {
-		ImGui::Text("%u", alloc.queryTotalNumAllocationsTexture());
-	});
-	alignedEdit("Total Num Deallocations", infoOffset, [&](const char*) {
-		ImGui::Text("%u", alloc.queryTotalNumDeallocationsTexture());
-	});
-	alignedEdit("Default Page Size", infoOffset, [&](const char*) {
-		ImGui::Text("%.2f MiB", toMiB(alloc.queryDefaultPageSizeTexture()));
-	});
-	uint32_t numTexturePages = alloc.queryNumPagesTexture();
-	alignedEdit("Num Pages", infoOffset, [&](const char*) {
-		ImGui::Text("%u", numTexturePages);
-	});
-	ImGui::Spacing();
-	for (uint32_t i = 0; i < numTexturePages; i++) {
-		constexpr float pageOffset = 260.0f;
-		PageInfo info = alloc.queryPageInfoTexture(i);
-		ImGui::Text("Page %u:", i);
-		ImGui::Indent(20.0f);
-		alignedEdit("Size", pageOffset, [&](const char*) {
-			ImGui::Text("%.2f MiB", toMiB(info.pageSizeBytes));
-		});
-		alignedEdit("Num Allocations", pageOffset, [&](const char*) {
-ImGui::Text("%u", info.numAllocations);
-		});
-		alignedEdit("Num Free Blocks", pageOffset, [&](const char*) {
-			ImGui::Text("%u", info.numFreeBlocks);
-		});
-		alignedEdit("Largest Free Block", pageOffset, [&](const char*) {
-			ImGui::Text("%.2f MiB", toMiB(info.largestFreeBlockBytes));
-		});
-		ImGui::Unindent(20.0f);
-		ImGui::Spacing();
-	}
-	ImGui::Unindent(30.0f);
-
 
 	ImGui::Unindent(10.0f);
 }
@@ -729,8 +658,8 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 					CHECK_ZG state.presentQueue.flush();
 
 					// Allocate temporary upload buffer
-					zg::Buffer uploadBuffer = state.dynamicAllocator.allocateBuffer(
-						ZG_MEMORY_TYPE_UPLOAD, sizeof(ShaderMaterial));
+					zg::Buffer uploadBuffer =
+						state.gpuAllocatorUpload.allocateBuffer(sizeof(ShaderMaterial));
 					sfz_assert_debug(uploadBuffer.valid());
 
 					// Convert new material to shader material
@@ -749,7 +678,7 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 					CHECK_ZG state.presentQueue.flush();
 
 					// Deallocate temporary upload buffer
-					state.dynamicAllocator.deallocate(uploadBuffer);
+					state.gpuAllocatorUpload.deallocate(uploadBuffer);
 				}
 			}
 			ImGui::Unindent(20.0f);

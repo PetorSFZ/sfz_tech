@@ -154,7 +154,12 @@ struct RendererState final {
 	zg::CommandQueue copyQueue;
 
 	// Dynamic memory allocator
-	DynamicGpuAllocator dynamicAllocator;
+	DynamicGpuAllocator gpuAllocatorUpload;
+	DynamicGpuAllocator gpuAllocatorDevice;
+	DynamicGpuAllocator gpuAllocatorTexture;
+	DynamicGpuAllocator gpuAllocatorFramebuffer;
+
+	// GPU resources
 	HashMap<StringID, TextureItem> textures;
 	HashMap<StringID, GpuMesh> meshes;
 
