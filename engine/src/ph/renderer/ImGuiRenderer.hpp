@@ -44,7 +44,7 @@ struct ImGuiVertex final {
 	vec2 texcoord;
 	vec4 color;
 };
-static_assert(sizeof(ImGuiVertex) == 32);
+static_assert(sizeof(ImGuiVertex) == 32, "ImGuiVertex is padded");
 
 // ImGuiRenderer
 // ------------------------------------------------------------------------------------------------

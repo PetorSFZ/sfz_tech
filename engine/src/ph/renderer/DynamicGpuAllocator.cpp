@@ -423,7 +423,7 @@ zg::Buffer DynamicGpuAllocator::allocateBuffer(uint32_t sizeBytes) noexcept
 }
 
 zg::Texture2D DynamicGpuAllocator::allocateTexture2D(
-	ZgTexture2DFormat format,
+	ZgTextureFormat format,
 	ZgTextureUsage usage,
 	uint32_t width,
 	uint32_t height,
@@ -434,7 +434,7 @@ zg::Texture2D DynamicGpuAllocator::allocateTexture2D(
 	sfz_assert_debug(width > 0);
 	sfz_assert_debug(height > 0);
 	sfz_assert_debug(numMipmaps != 0);
-	sfz_assert_debug(numMipmaps <= ZG_TEXTURE_2D_MAX_NUM_MIPMAPS);
+	sfz_assert_debug(numMipmaps <= ZG_MAX_NUM_MIPMAPS);
 	sfz_assert_debug(mState->memoryType != ZG_MEMORY_TYPE_UPLOAD);
 	sfz_assert_debug(mState->memoryType != ZG_MEMORY_TYPE_DOWNLOAD);
 	sfz_assert_debug(mState->memoryType != ZG_MEMORY_TYPE_DEVICE);

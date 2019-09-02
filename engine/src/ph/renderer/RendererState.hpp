@@ -51,7 +51,7 @@ using sfz::vec2_s32;
 struct FramebufferBacked final {
 	zg::Framebuffer framebuffer;
 	uint32_t numRenderTargets = 0;
-	zg::Texture2D renderTargets[ZG_FRAMEBUFFER_MAX_NUM_RENDER_TARGETS];
+	zg::Texture2D renderTargets[ZG_MAX_NUM_RENDER_TARGETS];
 	zg::Texture2D depthBuffer;
 };
 
@@ -65,6 +65,8 @@ struct FramebufferItem final {
 	bool resolutionIsFixed = false;
 	float resolutionScale = 1.0f;
 	vec2_s32 resolutionFixed = vec2_s32(0);
+	bool hasDepthBuffer = false;
+	ZgTextureFormat depthBufferFormat = ZG_TEXTURE_FORMAT_R_F32;
 
 	// Method for deallocating previous framebuffer
 	void deallocate(DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept;
@@ -150,7 +152,7 @@ struct Stage final {
 
 struct TextureItem final {
 	zg::Texture2D texture;
-	ZgTexture2DFormat format = ZG_TEXTURE_2D_FORMAT_UNDEFINED;
+	ZgTextureFormat format = ZG_TEXTURE_FORMAT_UNDEFINED;
 	uint32_t width = 0;
 	uint32_t height = 0;
 	uint32_t numMipmaps = 0;

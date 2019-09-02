@@ -30,7 +30,7 @@ namespace ph {
 // Texture functions
 // ------------------------------------------------------------------------------------------------
 
-ZgTexture2DFormat toZeroGImageFormat(ImageType imageType) noexcept;
+ZgTextureFormat toZeroGImageFormat(ImageType imageType) noexcept;
 
 zg::Texture2D textureAllocateAndUploadBlocking(
 	const phConstImageView& image,

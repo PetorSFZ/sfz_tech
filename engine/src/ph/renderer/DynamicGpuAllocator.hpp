@@ -72,7 +72,7 @@ public:
 	zg::Buffer allocateBuffer(uint32_t sizeBytes) noexcept;
 
 	zg::Texture2D allocateTexture2D(
-		ZgTexture2DFormat format,
+		ZgTextureFormat format,
 		ZgTextureUsage usage,
 		uint32_t width,
 		uint32_t height,

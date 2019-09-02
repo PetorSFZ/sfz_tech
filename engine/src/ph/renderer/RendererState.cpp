@@ -60,14 +60,23 @@ bool FramebufferItem::buildFramebuffer(vec2_s32 windowRes, DynamicGpuAllocator& 
 		height = std::round(scaled.y);
 	}
 
-	// Allocate memory and initialize framebuffer
+	zg::FramebufferBuilder builder;
+
+	// Allocate render targets
 	framebuffer.numRenderTargets = 1;
 	framebuffer.renderTargets[0] = gpuAllocatorFramebuffer.allocateTexture2D(
-		ZG_TEXTURE_2D_FORMAT_RGBA_U8, ZG_TEXTURE_USAGE_RENDER_TARGET, width, height, 1);
+		ZG_TEXTURE_FORMAT_RGBA_U8, ZG_TEXTURE_USAGE_RENDER_TARGET, width, height, 1);
+	builder.addRenderTarget(framebuffer.renderTargets[0]);
 
-	return CHECK_ZG zg::FramebufferBuilder()
-		.addRenderTarget(framebuffer.renderTargets[0])
-		.build(framebuffer.framebuffer);
+	// Allocate depth buffer
+	if (hasDepthBuffer) {
+		framebuffer.depthBuffer = gpuAllocatorFramebuffer.allocateTexture2D(
+			ZG_TEXTURE_FORMAT_R_F32, ZG_TEXTURE_USAGE_DEPTH_BUFFER, width, height, 1);
+		builder.setDepthBuffer(framebuffer.depthBuffer);
+	}
+
+	// Build framebuffer
+	return CHECK_ZG builder.build(framebuffer.framebuffer);
 }
 
 //  Pipeline types

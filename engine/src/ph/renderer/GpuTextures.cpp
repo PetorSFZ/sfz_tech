@@ -127,22 +127,20 @@ static void generateMipmap(const phConstImageView& prevLevel, Image& currLevel) 
 // Texture functions
 // ------------------------------------------------------------------------------------------------
 
-ZgTexture2DFormat toZeroGImageFormat(ImageType imageType) noexcept
+ZgTextureFormat toZeroGImageFormat(ImageType imageType) noexcept
 {
 	switch (imageType) {
-	case ImageType::UNDEFINED: return ZG_TEXTURE_2D_FORMAT_UNDEFINED;
-	case ImageType::R_U8: return ZG_TEXTURE_2D_FORMAT_R_U8;
-	case ImageType::RG_U8: return ZG_TEXTURE_2D_FORMAT_RG_U8;
-	case ImageType::RGBA_U8: return ZG_TEXTURE_2D_FORMAT_RGBA_U8;
+	case ImageType::UNDEFINED: return ZG_TEXTURE_FORMAT_UNDEFINED;
+	case ImageType::R_U8: return ZG_TEXTURE_FORMAT_R_U8;
+	case ImageType::RG_U8: return ZG_TEXTURE_FORMAT_RG_U8;
+	case ImageType::RGBA_U8: return ZG_TEXTURE_FORMAT_RGBA_U8;
 
-	case ImageType::R_F32:
-	case ImageType::RG_F32:
-	case ImageType::RGBA_F32:
-		// TODO: Implement
-		break;
+	case ImageType::R_F32: return ZG_TEXTURE_FORMAT_R_F32;
+	case ImageType::RG_F32: return ZG_TEXTURE_FORMAT_RG_F32;
+	case ImageType::RGBA_F32: return ZG_TEXTURE_FORMAT_RGBA_F32;
 	}
 	sfz_assert_debug(false);
-	return ZG_TEXTURE_2D_FORMAT_UNDEFINED;
+	return ZG_TEXTURE_FORMAT_UNDEFINED;
 }
 
 zg::Texture2D textureAllocateAndUploadBlocking(
@@ -168,7 +166,7 @@ zg::Texture2D textureAllocateAndUploadBlocking(
 		uint32_t logWidth = uint32_t(log2(image.width));
 		uint32_t logHeight = uint32_t(log2(image.width));
 		uint32_t logMin = std::min(logWidth, logHeight);
-		numMipmaps = std::min(logMin, (ZG_TEXTURE_2D_MAX_NUM_MIPMAPS - 1));
+		numMipmaps = std::min(logMin, (ZG_MAX_NUM_MIPMAPS - 1));
 	}
 
 	// Allocate Texture
@@ -181,7 +179,7 @@ zg::Texture2D textureAllocateAndUploadBlocking(
 
 	// Generate mipmaps (on CPU)
 	sfz_assert_debug(numMipmaps != 0);
-	Image mipmaps[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS - 1];
+	Image mipmaps[ZG_MAX_NUM_MIPMAPS - 1];
 	for (uint32_t i = 0; i < (numMipmaps - 1); i++) {
 		
 		// Get previous mipmap level
@@ -198,14 +196,14 @@ zg::Texture2D textureAllocateAndUploadBlocking(
 	}
 
 	// Create image views
-	ZgImageViewConstCpu imageViews[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
+	ZgImageViewConstCpu imageViews[ZG_MAX_NUM_MIPMAPS] = {};
 	imageViews[0] = view;
 	for (uint32_t i = 0; i < (numMipmaps - 1); i++) {
 		imageViews[i + 1] = toZeroGImageView(mipmaps[i]);
 	}
 
 	// Allocate temporary upload buffers
-	zg::Buffer tmpUploadBuffers[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS];
+	zg::Buffer tmpUploadBuffers[ZG_MAX_NUM_MIPMAPS];
 	for (uint32_t i = 0; i < numMipmaps; i++) {
 		// TODO: Figure out exactly how much memory is needed
 		uint32_t bufferSize = (imageViews[i].pitchInBytes * imageViews[i].height) + 1024;

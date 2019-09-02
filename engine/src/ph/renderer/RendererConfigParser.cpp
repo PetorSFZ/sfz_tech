@@ -129,6 +129,13 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 				fbItem.resolutionFixed.x = CHECK_JSON fbNode.accessMap("resolution_fixed_width").valueInt();
 				fbItem.resolutionFixed.y = CHECK_JSON fbNode.accessMap("resolution_fixed_height").valueInt();
 			}
+
+			// Depth buffer
+			if (fbNode.accessMap("depth_buffer").isValid()) {
+				fbItem.hasDepthBuffer = true;
+				// TODO: Could also look at value of depth_buffer to set depthBufferFormat, but
+				//       not particularly important right now as we only support F32.
+			}
 		}
 	}
 

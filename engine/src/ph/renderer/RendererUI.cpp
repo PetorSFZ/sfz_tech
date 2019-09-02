@@ -62,14 +62,22 @@ static const char* toString(StageType type) noexcept
 	return "<ERROR>";
 }
 
-static const char* textureFormatToString(ZgTexture2DFormat format) noexcept
+static const char* textureFormatToString(ZgTextureFormat format) noexcept
 {
 	switch (format) {
-	case ZG_TEXTURE_2D_FORMAT_UNDEFINED: return "UNDEFINED";
+	case ZG_TEXTURE_FORMAT_UNDEFINED: return "UNDEFINED";
 
-	case ZG_TEXTURE_2D_FORMAT_R_U8: return "R_U8";
-	case ZG_TEXTURE_2D_FORMAT_RG_U8: return "RG_U8";
-	case ZG_TEXTURE_2D_FORMAT_RGBA_U8: return "RGBA_U8";
+	case ZG_TEXTURE_FORMAT_R_U8: return "R_U8";
+	case ZG_TEXTURE_FORMAT_RG_U8: return "RG_U8";
+	case ZG_TEXTURE_FORMAT_RGBA_U8: return "RGBA_U8";
+
+	case ZG_TEXTURE_FORMAT_R_F16: return "R_F16";
+	case ZG_TEXTURE_FORMAT_RG_F16: return "RG_F16";
+	case ZG_TEXTURE_FORMAT_RGBA_F16: return "RGBA_F16";
+
+	case ZG_TEXTURE_FORMAT_R_F32: return "R_F32";
+	case ZG_TEXTURE_FORMAT_RG_F32: return "RG_F32";
+	case ZG_TEXTURE_FORMAT_RGBA_F32: return "RGBA_F32";
 	}
 	sfz_assert_debug(false);
 	return "";
@@ -329,6 +337,12 @@ void RendererUI::renderFramebuffersTab(RendererConfigurableState& state) noexcep
 			ImGui::Text("%i x %i", width, height);
 		});
 
+		// Depth buffer
+		if (fbItem.hasDepthBuffer) {
+			alignedEdit("Depth buffer", offset, [&](const char*) {
+				ImGui::Text("%s", textureFormatToString(fbItem.depthBufferFormat));
+			});
+		}
 
 		ImGui::Unindent(20.0f);
 		ImGui::Spacing();

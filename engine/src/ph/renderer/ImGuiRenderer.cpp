@@ -76,7 +76,7 @@ bool ImGuiRenderer::init(
 	// Allocate memory for font texture
 	sfz_assert_release(fontTextureView.type == ImageType::R_U8);
 	ZgTexture2DCreateInfo texCreateInfo = {};
-	texCreateInfo.format = ZG_TEXTURE_2D_FORMAT_R_U8;
+	texCreateInfo.format = ZG_TEXTURE_FORMAT_R_U8;
 	texCreateInfo.normalized = ZG_TRUE;
 	texCreateInfo.width = fontTextureView.width;
 	texCreateInfo.height = fontTextureView.height;
@@ -109,7 +109,7 @@ bool ImGuiRenderer::init(
 
 		// Convert to ZgImageViewConstCpu
 		ZgImageViewConstCpu imageView = {};
-		imageView.format = ZG_TEXTURE_2D_FORMAT_R_U8;
+		imageView.format = ZG_TEXTURE_FORMAT_R_U8;
 		imageView.data = fontTextureView.rawData;
 		imageView.width = fontTextureView.width;
 		imageView.height = fontTextureView.height;
