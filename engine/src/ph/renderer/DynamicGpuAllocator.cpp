@@ -56,12 +56,7 @@ struct MemoryPage final {
 	uint32_t largestFreeBlockSize = 0;
 };
 
-struct AllocEntryBuffer final {
-	Block block;
-	void* heapPtr = nullptr; // Used as unique identifier to find page again
-};
-
-struct AllocEntryTexture final {
+struct AllocEntry final {
 	Block block;
 	void* heapPtr = nullptr; // Used as unique identifier to find page again
 };
@@ -74,8 +69,7 @@ struct DynamicGpuAllocatorState final {
 	uint32_t pageSize = 0;
 
 	DynArray<MemoryPage> pages;
-	sfz::HashMap<ZgBuffer*, AllocEntryBuffer> bufferEntries;
-	sfz::HashMap<ZgTexture2D*, AllocEntryTexture> textureEntries;
+	sfz::HashMap<void*, AllocEntry> entries; // ZgBuffer* or ZgTexture2D* is key
 
 	uint64_t totalNumAllocations = 0;
 	uint64_t totalNumDeallocations = 0;
@@ -146,9 +140,9 @@ static bool createMemoryPage(
 	return true;
 }
 
-template<typename PageT, typename ItemAllocFunc>
+template<typename ItemAllocFunc>
 static bool pageAllocateItem(
-	PageT& page, uint32_t size, Block& allocBlockOut, ItemAllocFunc itemAllocFunc) noexcept
+	MemoryPage& page, uint32_t size, Block& allocBlockOut, ItemAllocFunc itemAllocFunc) noexcept
 {
 	sfz_assert_debug(size <= page.largestFreeBlockSize);
 
@@ -203,8 +197,7 @@ static bool pageAllocateItem(
 	return true;
 }
 
-template<typename PageT>
-static void pageDeallocateBlock(PageT& page, Block& allocatedBlock) noexcept
+static void pageDeallocateBlock(MemoryPage& page, Block& allocatedBlock) noexcept
 {
 	sfz_assert_debug(allocatedBlock.size != 0);
 	sfz_assert_debug(allocatedBlock.size <= page.pageSize);
@@ -288,12 +281,11 @@ static void pageDeallocateBlock(PageT& page, Block& allocatedBlock) noexcept
 	page.numAllocations -= 1;
 }
 
-template<typename PageT>
-static uint32_t findAppropriatePage(DynArray<PageT>& pages, uint32_t size) noexcept
+static uint32_t findAppropriatePage(DynArray<MemoryPage>& pages, uint32_t size) noexcept
 {
 	sfz_assert_debug(size != 0);
 	for (uint32_t i = 0; i < pages.size(); i++) {
-		PageT& page = pages[i];
+		MemoryPage& page = pages[i];
 		if (page.largestFreeBlockSize >= size) return i;
 	}
 	return ~0u;
@@ -316,8 +308,7 @@ void DynamicGpuAllocator::init(
 
 	// Allocate memory for page meta data
 	mState->pages.create(MAX_NUM_PAGES, allocator);
-	mState->bufferEntries.create(MAX_NUM_PAGES * MAX_NUM_BLOCKS_PER_PAGE * 4 * 2, allocator);
-	mState->textureEntries.create(MAX_NUM_PAGES * MAX_NUM_BLOCKS_PER_PAGE * 4 * 2, allocator);
+	mState->entries.create(MAX_NUM_PAGES * MAX_NUM_BLOCKS_PER_PAGE * 4 * 2, allocator);
 }
 
 void DynamicGpuAllocator::swap(DynamicGpuAllocator& other) noexcept
@@ -328,8 +319,7 @@ void DynamicGpuAllocator::swap(DynamicGpuAllocator& other) noexcept
 void DynamicGpuAllocator::destroy() noexcept
 {
 	if (mState != nullptr) {
-		sfz_assert_debug(mState->bufferEntries.size() == 0);
-		sfz_assert_debug(mState->textureEntries.size() == 0);
+		sfz_assert_debug(mState->entries.size() == 0);
 		sfz_assert_debug(mState->totalNumAllocations == mState->totalNumDeallocations);
 		for (MemoryPage& page : mState->pages) sfz_assert_debug(page.numAllocations == 0);
 		sfz::Allocator* allocator = mState->allocator;
@@ -421,10 +411,10 @@ zg::Buffer DynamicGpuAllocator::allocateBuffer(uint32_t sizeBytes) noexcept
 	if (!bufferAllocSuccess) return zg::Buffer();
 
 	// Store entry with information about allocation
-	AllocEntryBuffer entry;
+	AllocEntry entry;
 	entry.block = bufferBlock;
 	entry.heapPtr = page.heap.memoryHeap;
-	mState->bufferEntries[buffer.buffer] = entry;
+	mState->entries[buffer.buffer] = entry;
 
 	// Increment total num allocation counter
 	mState->totalNumAllocations += 1;
@@ -444,6 +434,9 @@ zg::Texture2D DynamicGpuAllocator::allocateTexture2D(
 	sfz_assert_debug(height > 0);
 	sfz_assert_debug(numMipmaps != 0);
 	sfz_assert_debug(numMipmaps <= ZG_TEXTURE_2D_MAX_NUM_MIPMAPS);
+	sfz_assert_debug(mState->memoryType != ZG_MEMORY_TYPE_UPLOAD);
+	sfz_assert_debug(mState->memoryType != ZG_MEMORY_TYPE_DOWNLOAD);
+	sfz_assert_debug(mState->memoryType != ZG_MEMORY_TYPE_DEVICE);
 
 	// Fill in Texture2D create info and get allocation info in order to find suitable page
 	ZgTexture2DCreateInfo createInfo = {};
@@ -490,10 +483,10 @@ zg::Texture2D DynamicGpuAllocator::allocateTexture2D(
 	if (!texAllocSuccess) return zg::Texture2D();
 
 	// Store entry with information about allocation
-	AllocEntryTexture entry;
+	AllocEntry entry;
 	entry.block = texBlock;
 	entry.heapPtr = page.heap.memoryHeap;
-	mState->textureEntries[texture.texture] = entry;
+	mState->entries[texture.texture] = entry;
 
 	// Increment total num allocation counter
 	mState->totalNumAllocations += 1;
@@ -511,13 +504,13 @@ void DynamicGpuAllocator::deallocate(zg::Buffer& buffer) noexcept
 	sfz_assert_debug(buffer.valid());
 
 	// Get entry
-	AllocEntryBuffer* entryPtr = mState->bufferEntries.get(buffer.buffer);
+	AllocEntry* entryPtr = mState->entries.get(buffer.buffer);
 	sfz_assert_debug(entryPtr != nullptr);
 	if (entryPtr == nullptr) return;
 
 	// Remove entry from list of entries
-	AllocEntryBuffer entry = *entryPtr;
-	bool entryRemoveSuccess = mState->bufferEntries.remove(buffer.buffer);
+	AllocEntry entry = *entryPtr;
+	bool entryRemoveSuccess = mState->entries.remove(buffer.buffer);
 	sfz_assert_debug(entryRemoveSuccess);
 
 	// Release buffer
@@ -558,13 +551,13 @@ void DynamicGpuAllocator::deallocate(zg::Texture2D& texture) noexcept
 	sfz_assert_debug(texture.valid());
 
 	// Get entry
-	AllocEntryTexture* entryPtr = mState->textureEntries.get(texture.texture);
+	AllocEntry* entryPtr = mState->entries.get(texture.texture);
 	sfz_assert_debug(entryPtr != nullptr);
 	if (entryPtr == nullptr) return;
 
 	// Remove entry from list of entries
-	AllocEntryTexture entry = *entryPtr;
-	bool entryRemoveSuccess = mState->textureEntries.remove(texture.texture);
+	AllocEntry entry = *entryPtr;
+	bool entryRemoveSuccess = mState->entries.remove(texture.texture);
 	sfz_assert_debug(entryRemoveSuccess);
 
 	// Release texture
