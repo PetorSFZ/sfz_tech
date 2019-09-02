@@ -208,7 +208,7 @@ ZG_API ZgErrorCode zgContextSwapchainFinishFrame(void)
 
 ZG_API ZgErrorCode zgContextGetStats(ZgStats* statsOut)
 {
-	ZG_ARG_CHECK(statsOut != nullptr, "");
+	ZG_ARG_CHECK(statsOut == nullptr, "");
 	return zg::getBackend()->getStats(*statsOut);
 }
 
