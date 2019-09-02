@@ -103,9 +103,8 @@ ZgAllocator createZeroGAllocatorWrapper(sfz::Allocator* sfzAllocator) noexcept
 
 bool CheckZgImpl::operator% (zg::ErrorCode result) noexcept
 {
-	if (result == zg::ErrorCode::SUCCESS) return true;
-	bool isWarning = result == zg::ErrorCode::WARNING_GENERIC;
-	if (isWarning) {
+	if (zg::isSuccess(result)) return true;
+	if (zg::isWarning(result)) {
 		sfz::getLogger()->log(file, line, sfz::LogLevel::WARNING, "ZeroG",
 			"zg::ErrorCode: %s", zgErrorCodeToString((ZgErrorCode)result));
 	}

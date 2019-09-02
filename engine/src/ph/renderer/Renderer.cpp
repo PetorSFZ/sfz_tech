@@ -247,7 +247,7 @@ void Renderer::frameBegin() noexcept
 		uint32_t(mState->windowRes.x), uint32_t(mState->windowRes.y));
 
 	// Begin ZeroG frame
-	sfz_assert_debug(mState->windowFramebuffer == nullptr);
+	sfz_assert_debug(!mState->windowFramebuffer.valid());
 	CHECK_ZG mState->zgCtx.swapchainBeginFrame(mState->windowFramebuffer);
 
 	// Clear window framebuffer
@@ -605,9 +605,9 @@ void Renderer::renderImguiHack(
 void Renderer::frameFinish() noexcept
 {
 	// Finish ZeroG frame
-	sfz_assert_debug(mState->windowFramebuffer != nullptr);
+	sfz_assert_debug(mState->windowFramebuffer.valid());
 	CHECK_ZG mState->zgCtx.swapchainFinishFrame();
-	mState->windowFramebuffer = nullptr;
+	mState->windowFramebuffer.release();
 
 	// Flush queues if requested
 	if (mState->flushPresentQueueEachFrame->boolValue()) {

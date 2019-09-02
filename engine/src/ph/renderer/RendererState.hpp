@@ -149,7 +149,7 @@ struct RendererState final {
 	uint64_t currentFrameIdx = 0;
 
 	vec2_s32 windowRes = vec2_s32(0);
-	ZgFramebuffer* windowFramebuffer = nullptr;
+	zg::Framebuffer windowFramebuffer;
 	zg::CommandQueue presentQueue;
 	zg::CommandQueue copyQueue;
 

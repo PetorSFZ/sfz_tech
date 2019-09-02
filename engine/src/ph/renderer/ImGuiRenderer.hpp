@@ -84,7 +84,7 @@ public:
 	void render(
 		uint64_t frameIdx,
 		zg::CommandQueue& presentQueue,
-		ZgFramebuffer* framebuffer,
+		zg::Framebuffer& framebuffer,
 		vec2_s32 framebufferRes,
 		const phImguiVertex* vertices,
 		uint32_t numVertices,
