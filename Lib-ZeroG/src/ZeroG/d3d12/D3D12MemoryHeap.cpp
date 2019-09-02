@@ -59,19 +59,28 @@ static DXGI_FORMAT createInfoToDxgiFormat(const ZgTexture2DCreateInfo& info) noe
 		// TODO: This currently seems to be broken. Unormalized textures always return 0 when read
 		//       in shader. Should investigate further.
 		ZG_ASSERT(false);
-		switch (info.format) {
-		case ZG_TEXTURE_2D_FORMAT_R_U8: return DXGI_FORMAT_R8_UINT;
-		case ZG_TEXTURE_2D_FORMAT_RG_U8: return DXGI_FORMAT_R8G8_UINT;
-		case ZG_TEXTURE_2D_FORMAT_RGBA_U8: return DXGI_FORMAT_R8G8B8A8_UINT;
+		/*switch (info.format) {
+		case ZG_TEXTURE_FORMAT_R_U8: return DXGI_FORMAT_R8_UINT;
+		case ZG_TEXTURE_FORMAT_RG_U8: return DXGI_FORMAT_R8G8_UINT;
+		case ZG_TEXTURE_FORMAT_RGBA_U8: return DXGI_FORMAT_R8G8B8A8_UINT;
 		default:
 			break;
-		}
+		}*/
 	}
 	else {
 		switch (info.format) {
-		case ZG_TEXTURE_2D_FORMAT_R_U8: return DXGI_FORMAT_R8_UNORM;
-		case ZG_TEXTURE_2D_FORMAT_RG_U8: return DXGI_FORMAT_R8G8_UNORM;
-		case ZG_TEXTURE_2D_FORMAT_RGBA_U8: return DXGI_FORMAT_R8G8B8A8_UNORM;
+		case ZG_TEXTURE_FORMAT_R_U8: return DXGI_FORMAT_R8_UNORM;
+		case ZG_TEXTURE_FORMAT_RG_U8: return DXGI_FORMAT_R8G8_UNORM;
+		case ZG_TEXTURE_FORMAT_RGBA_U8: return DXGI_FORMAT_R8G8B8A8_UNORM;
+
+		case ZG_TEXTURE_FORMAT_R_F16: return DXGI_FORMAT_R16_FLOAT;
+		case ZG_TEXTURE_FORMAT_RG_F16: return DXGI_FORMAT_R16G16_FLOAT;
+		case ZG_TEXTURE_FORMAT_RGBA_F16: return DXGI_FORMAT_R16G16B16A16_FLOAT;
+
+		case ZG_TEXTURE_FORMAT_R_F32: return DXGI_FORMAT_R32_FLOAT;
+		case ZG_TEXTURE_FORMAT_RG_F32: return DXGI_FORMAT_R32G32_FLOAT;
+		case ZG_TEXTURE_FORMAT_RGBA_F32: return DXGI_FORMAT_R32G32B32A32_FLOAT;
+
 		default:
 			break;
 		}
@@ -225,9 +234,9 @@ ZgErrorCode D3D12MemoryHeap::texture2DCreate(
 
 	// Get the subresource footprint for the texture
 	// TODO: One for each mipmap level?
-	D3D12_PLACED_SUBRESOURCE_FOOTPRINT subresourceFootprints[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
-	uint32_t numRows[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
-	uint64_t rowSizesInBytes[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT subresourceFootprints[ZG_MAX_NUM_MIPMAPS] = {};
+	uint32_t numRows[ZG_MAX_NUM_MIPMAPS] = {};
+	uint64_t rowSizesInBytes[ZG_MAX_NUM_MIPMAPS] = {};
 	uint64_t totalSizeInBytes = 0;
 
 	device->GetCopyableFootprints(&desc, 0, createInfo.numMipmaps, createInfo.offsetInBytes,

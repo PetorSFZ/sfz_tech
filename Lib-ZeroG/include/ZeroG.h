@@ -105,7 +105,7 @@ typedef struct ZgFramebufferRect ZgFramebufferRect;
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 3;
+static const uint32_t ZG_COMPILED_API_VERSION = 4;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -802,16 +802,24 @@ ZG_API ZgErrorCode zgBufferSetDebugName(
 // Textures
 // ------------------------------------------------------------------------------------------------
 
-static const uint32_t ZG_TEXTURE_2D_MAX_NUM_MIPMAPS = 12;
+static const uint32_t ZG_MAX_NUM_MIPMAPS = 12;
 
-enum ZgTexture2DFormatEnum {
-	ZG_TEXTURE_2D_FORMAT_UNDEFINED = 0,
+enum ZgTextureFormatEnum {
+	ZG_TEXTURE_FORMAT_UNDEFINED = 0,
 
-	ZG_TEXTURE_2D_FORMAT_R_U8,
-	ZG_TEXTURE_2D_FORMAT_RG_U8,
-	ZG_TEXTURE_2D_FORMAT_RGBA_U8
+	ZG_TEXTURE_FORMAT_R_U8,
+	ZG_TEXTURE_FORMAT_RG_U8,
+	ZG_TEXTURE_FORMAT_RGBA_U8,
+
+	ZG_TEXTURE_FORMAT_R_F16,
+	ZG_TEXTURE_FORMAT_RG_F16,
+	ZG_TEXTURE_FORMAT_RGBA_F16,
+
+	ZG_TEXTURE_FORMAT_R_F32,
+	ZG_TEXTURE_FORMAT_RG_F32,
+	ZG_TEXTURE_FORMAT_RGBA_F32
 };
-typedef uint32_t ZgTexture2DFormat;
+typedef uint32_t ZgTextureFormat;
 
 enum ZgTextureUsageEnum {
 	ZG_TEXTURE_USAGE_DEFAULT = 0,
@@ -823,7 +831,7 @@ typedef uint32_t ZgTextureUsage;
 struct ZgTexture2DCreateInfo {
 
 	// The format of the texture
-	ZgTexture2DFormat format;
+	ZgTextureFormat format;
 
 	// How the texture will be used.
 	//
@@ -890,13 +898,13 @@ ZG_API ZgErrorCode zgTexture2DSetDebugName(
 // Framebuffer
 // ------------------------------------------------------------------------------------------------
 
-static const uint32_t ZG_FRAMEBUFFER_MAX_NUM_RENDER_TARGETS = 8;
+static const uint32_t ZG_MAX_NUM_RENDER_TARGETS = 8;
 
 struct ZgFramebufferCreateInfo {
 
 	// Render targets
 	uint32_t numRenderTargets;
-	ZgTexture2D* renderTargets[ZG_FRAMEBUFFER_MAX_NUM_RENDER_TARGETS];
+	ZgTexture2D* renderTargets[ZG_MAX_NUM_RENDER_TARGETS];
 
 	// Depth buffer
 	ZgTexture2D* depthBuffer;
@@ -988,8 +996,8 @@ ZG_API ZgErrorCode zgCommandListMemcpyBufferToBuffer(
 
 struct ZgImageViewConstCpu {
 
-	ZgTexture2DFormat format;
-	const uint8_t* data;
+	ZgTextureFormat format;
+	const void* data;
 	uint32_t width;
 	uint32_t height;
 	uint32_t pitchInBytes;

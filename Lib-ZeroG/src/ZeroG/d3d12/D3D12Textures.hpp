@@ -51,7 +51,7 @@ public:
 
 	D3D12MemoryHeap* textureHeap = nullptr;
 	ComPtr<ID3D12Resource> resource;
-	ZgTexture2DFormat zgFormat = ZG_TEXTURE_2D_FORMAT_UNDEFINED;
+	ZgTextureFormat zgFormat = ZG_TEXTURE_FORMAT_UNDEFINED;
 	ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT;
 	DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
 	uint32_t width = 0;
@@ -59,16 +59,16 @@ public:
 	uint32_t numMipmaps = 0;
 
 	// Information from ID3D12Device::GetCopyableFootprints()
-	D3D12_PLACED_SUBRESOURCE_FOOTPRINT subresourceFootprints[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
-	uint32_t numRows[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
-	uint64_t rowSizesInBytes[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT subresourceFootprints[ZG_MAX_NUM_MIPMAPS] = {};
+	uint32_t numRows[ZG_MAX_NUM_MIPMAPS] = {};
+	uint64_t rowSizesInBytes[ZG_MAX_NUM_MIPMAPS] = {};
 	uint64_t totalSizeInBytes = 0;
 
 	// The current resource state of the texture. Committed because the state has been committed
 	// in a command list which has been executed on a queue. There may be pending state changes
 	// in command lists not yet executed.
 	// TODO: Mutex protecting this? How handle changes submitted on different queues simulatenously?
-	D3D12_RESOURCE_STATES lastCommittedStates[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
+	D3D12_RESOURCE_STATES lastCommittedStates[ZG_MAX_NUM_MIPMAPS] = {};
 
 	// Methods
 	// --------------------------------------------------------------------------------------------

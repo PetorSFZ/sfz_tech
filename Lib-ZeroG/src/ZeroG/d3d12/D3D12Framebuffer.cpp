@@ -88,11 +88,12 @@ ZgErrorCode createFramebuffer(
 		ZG_ARG_CHECK(width != depthBuffer->width, "All depth buffers must be same size");
 		ZG_ARG_CHECK(height != depthBuffer->height, "All depth buffers must be same size");
 		ZG_ARG_CHECK(depthBuffer->numMipmaps != 1, "Depth buffers may not have mipmaps");
+		ZG_ARG_CHECK(depthBuffer->zgFormat != ZG_TEXTURE_FORMAT_R_F32, "Depth buffer may only be ZG_TEXTURE_FORMAT_R_F32 format");
 	}
 
 	// Create render target descriptors
 	ComPtr<ID3D12DescriptorHeap> descriptorHeapRTV;
-	D3D12_CPU_DESCRIPTOR_HANDLE descriptorsRTV[ZG_FRAMEBUFFER_MAX_NUM_RENDER_TARGETS] = {};
+	D3D12_CPU_DESCRIPTOR_HANDLE descriptorsRTV[ZG_MAX_NUM_RENDER_TARGETS] = {};
 	if (createInfo.numRenderTargets > 0) {
 		
 		// Create descriptor heap
@@ -140,6 +141,10 @@ ZgErrorCode createFramebuffer(
 	D3D12_CPU_DESCRIPTOR_HANDLE descriptorDSV = {};
 	if (createInfo.depthBuffer != nullptr) {
 
+		D3D12Texture2D* texture = reinterpret_cast<D3D12Texture2D*>(createInfo.depthBuffer);
+		ZG_ASSERT(texture->zgFormat == ZG_TEXTURE_FORMAT_R_F32);
+		ZG_ASSERT(texture->format == DXGI_FORMAT_R32_FLOAT);
+
 		// Create descriptor heap
 		D3D12_DESCRIPTOR_HEAP_DESC dsvDesc = {};
 		dsvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
@@ -153,12 +158,9 @@ ZgErrorCode createFramebuffer(
 		// Get descriptor
 		descriptorDSV = descriptorHeapDSV->GetCPUDescriptorHandleForHeapStart();
 
-		// Get texture
-		D3D12Texture2D* texture = reinterpret_cast<D3D12Texture2D*>(createInfo.depthBuffer);
-
 		// Create depth buffer view
 		D3D12_DEPTH_STENCIL_VIEW_DESC dsvViewDesc = {};
-		dsvViewDesc.Format = texture->format;
+		dsvViewDesc.Format = DXGI_FORMAT_D32_FLOAT; // Hacky hack? TODO: Figure out if this is the correct way to handle this
 		dsvViewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 		dsvViewDesc.Flags = D3D12_DSV_FLAG_NONE;
 		dsvViewDesc.Texture2D.MipSlice = 0; // TODO: Mipmax index
@@ -174,7 +176,7 @@ ZgErrorCode createFramebuffer(
 
 	framebuffer->numRenderTargets = createInfo.numRenderTargets;
 	framebuffer->descriptorHeapRTV = descriptorHeapRTV;
-	for (uint32_t i = 0; i < ZG_FRAMEBUFFER_MAX_NUM_RENDER_TARGETS; i++) {
+	for (uint32_t i = 0; i < ZG_MAX_NUM_RENDER_TARGETS; i++) {
 		framebuffer->renderTargets[i] =
 			reinterpret_cast<D3D12Texture2D*>(createInfo.renderTargets[i]);
 		framebuffer->renderTargetDescriptors[i] = descriptorsRTV[i];

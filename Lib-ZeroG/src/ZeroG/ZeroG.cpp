@@ -373,7 +373,7 @@ ZG_API ZgErrorCode zgTexture2DGetAllocationInfo(
 	ZG_ARG_CHECK(allocationInfoOut == nullptr, "");
 	ZG_ARG_CHECK(createInfo == nullptr, "");
 	ZG_ARG_CHECK(createInfo->numMipmaps == 0, "Must specify at least 1 mipmap layer (i.e. the full image)");
-	ZG_ARG_CHECK(createInfo->numMipmaps > ZG_TEXTURE_2D_MAX_NUM_MIPMAPS, "Too many mipmaps specified");
+	ZG_ARG_CHECK(createInfo->numMipmaps > ZG_MAX_NUM_MIPMAPS, "Too many mipmaps specified");
 	return zg::getBackend()->texture2DGetAllocationInfo(*allocationInfoOut, *createInfo);
 }
 
@@ -384,7 +384,7 @@ ZG_API ZgErrorCode zgMemoryHeapTexture2DCreate(
 {
 	ZG_ARG_CHECK(createInfo == nullptr, "");
 	ZG_ARG_CHECK(createInfo->numMipmaps == 0, "Must specify at least 1 mipmap layer (i.e. the full image)");
-	ZG_ARG_CHECK(createInfo->numMipmaps > ZG_TEXTURE_2D_MAX_NUM_MIPMAPS, "Too many mipmaps specified");
+	ZG_ARG_CHECK(createInfo->numMipmaps > ZG_MAX_NUM_MIPMAPS, "Too many mipmaps specified");
 	return memoryHeap->texture2DCreate(textureOut, *createInfo);
 }
 
@@ -413,7 +413,7 @@ ZG_API ZgErrorCode zgFramebufferCreate(
 {
 	ZG_ARG_CHECK(framebufferOut == nullptr, "");
 	ZG_ARG_CHECK(createInfo == nullptr, "");
-	ZG_ARG_CHECK(createInfo->numRenderTargets > ZG_FRAMEBUFFER_MAX_NUM_RENDER_TARGETS, "Too many render targets");
+	ZG_ARG_CHECK(createInfo->numRenderTargets > ZG_MAX_NUM_RENDER_TARGETS, "Too many render targets");
 	return zg::getBackend()->framebufferCreate(framebufferOut, *createInfo);
 }
 
@@ -552,7 +552,7 @@ ZG_API ZgErrorCode zgCommandListMemcpyToTexture(
 	ZG_ARG_CHECK(srcImageCpu->width == 0, "");
 	ZG_ARG_CHECK(srcImageCpu->height == 0, "");
 	ZG_ARG_CHECK(srcImageCpu->pitchInBytes < srcImageCpu->width, "");
-	ZG_ARG_CHECK(dstTextureMipLevel >= ZG_TEXTURE_2D_MAX_NUM_MIPMAPS, "Invalid target mip level");
+	ZG_ARG_CHECK(dstTextureMipLevel >= ZG_MAX_NUM_MIPMAPS, "Invalid target mip level");
 	return commandList->memcpyToTexture(
 		dstTexture,
 		dstTextureMipLevel,

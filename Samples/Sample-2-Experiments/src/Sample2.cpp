@@ -140,7 +140,7 @@ static ZgImageViewConstCpu allocateRgbaTex(uint32_t width, uint32_t height) noex
 
 	// Create an image view of the data
 	ZgImageViewConstCpu imageView = {};
-	imageView.format = ZG_TEXTURE_2D_FORMAT_RGBA_U8;
+	imageView.format = ZG_TEXTURE_FORMAT_RGBA_U8;
 	imageView.data = data;
 	imageView.width = width;
 	imageView.height = height;
@@ -150,7 +150,7 @@ static ZgImageViewConstCpu allocateRgbaTex(uint32_t width, uint32_t height) noex
 }
 
 static ZgImageViewConstCpu copyDownsample(
-	const uint8_t* srcRgbaTex, uint32_t srcWidth, uint32_t srcHeight) noexcept
+	const void* srcRgbaTex, uint32_t srcWidth, uint32_t srcHeight) noexcept
 {
 	assert((srcWidth % 2) == 0);
 	assert((srcHeight % 2) == 0);
@@ -161,8 +161,8 @@ static ZgImageViewConstCpu copyDownsample(
 		for (uint32_t x = 0; x < dstWidth; x++) {
 
 			uint8_t* dstPixelPtr = dstImg + y * dstWidth * 4 + x * 4;
-			const uint8_t* srcPixelPtrRow0 = srcRgbaTex + (y * 2) * srcWidth * 4 + (x * 2) * 4;
-			const uint8_t* srcPixelPtrRow1 = srcRgbaTex + ((y * 2) + 1) * srcWidth * 4 + (x * 2) * 4;
+			const uint8_t* srcPixelPtrRow0 = ((const uint8_t*)srcRgbaTex) + (y * 2) * srcWidth * 4 + (x * 2) * 4;
+			const uint8_t* srcPixelPtrRow1 = ((const uint8_t*)srcRgbaTex) + ((y * 2) + 1) * srcWidth * 4 + (x * 2) * 4;
 
 			for (uint32_t i = 0; i < 4; i++) {
 				uint32_t inputSum =
@@ -175,7 +175,7 @@ static ZgImageViewConstCpu copyDownsample(
 
 	// Create an image view of the data
 	ZgImageViewConstCpu imageView = {};
-	imageView.format = ZG_TEXTURE_2D_FORMAT_RGBA_U8;
+	imageView.format = ZG_TEXTURE_FORMAT_RGBA_U8;
 	imageView.data = dstImg;
 	imageView.width = dstWidth;
 	imageView.height = dstHeight;
@@ -326,7 +326,7 @@ static void realMain(SDL_Window* window) noexcept
 
 	// Create a texture
 	ZgTexture2DCreateInfo textureCreateInfo = {};
-	textureCreateInfo.format = ZG_TEXTURE_2D_FORMAT_RGBA_U8;
+	textureCreateInfo.format = ZG_TEXTURE_FORMAT_RGBA_U8;
 	textureCreateInfo.normalized = ZG_TRUE;
 	textureCreateInfo.width = 256;
 	textureCreateInfo.height = 256;

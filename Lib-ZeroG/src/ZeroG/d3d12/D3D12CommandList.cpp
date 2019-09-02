@@ -30,12 +30,20 @@ namespace zg {
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-static uint32_t numBytesPerPixelForFormat(ZgTexture2DFormat format) noexcept
+static uint32_t numBytesPerPixelForFormat(ZgTextureFormat format) noexcept
 {
 	switch (format) {
-	case ZG_TEXTURE_2D_FORMAT_R_U8: return 1;
-	case ZG_TEXTURE_2D_FORMAT_RG_U8: return 2;
-	case ZG_TEXTURE_2D_FORMAT_RGBA_U8: return 4;
+	case ZG_TEXTURE_FORMAT_R_U8: return 1 * sizeof(uint8_t);
+	case ZG_TEXTURE_FORMAT_RG_U8: return 2 * sizeof(uint8_t);
+	case ZG_TEXTURE_FORMAT_RGBA_U8: return 4 * sizeof(uint8_t);
+
+	case ZG_TEXTURE_FORMAT_R_F16: return 1 * sizeof(uint16_t);
+	case ZG_TEXTURE_FORMAT_RG_F16: return 2 * sizeof(uint16_t);
+	case ZG_TEXTURE_FORMAT_RGBA_F16: return 4 * sizeof(uint16_t);
+
+	case ZG_TEXTURE_FORMAT_R_F32: return 1 * sizeof(float);
+	case ZG_TEXTURE_FORMAT_RG_F32: return 2 * sizeof(float);
+	case ZG_TEXTURE_FORMAT_RGBA_F32: return 4 * sizeof(float);
 	}
 	ZG_ASSERT(false);
 	return 0;
@@ -223,7 +231,7 @@ ZgErrorCode D3D12CommandList::memcpyToTexture(
 
 	// Memcpy cpu image to tmp buffer
 	for (uint32_t y = 0; y < srcImageCpu.height; y++) {
-		const uint8_t* rowPtr = srcImageCpu.data + srcImageCpu.pitchInBytes * y;
+		const uint8_t* rowPtr = ((const uint8_t*)srcImageCpu.data) + srcImageCpu.pitchInBytes * y;
 		uint8_t* dstPtr = reinterpret_cast<uint8_t*>(mappedPtr) + tmpBufferPitch * y;
 		memcpy(dstPtr, rowPtr, numBytesPerRow);
 	}
@@ -950,7 +958,7 @@ ZgErrorCode D3D12CommandList::setTextureStateAllMipLevels(
 	D3D12_RESOURCE_STATES targetState) noexcept
 {
 	// Get pending states
-	PendingTextureState* pendingStates[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
+	PendingTextureState* pendingStates[ZG_MAX_NUM_MIPMAPS] = {};
 	for (uint32_t i = 0; i < texture.numMipmaps; i++) {
 		ZgErrorCode pendingStateRes = getPendingTextureStates(
 			texture, i, targetState, pendingStates[i]);
@@ -958,7 +966,7 @@ ZgErrorCode D3D12CommandList::setTextureStateAllMipLevels(
 	}
 
 	// Create all necessary barriers
-	CD3DX12_RESOURCE_BARRIER barriers[ZG_TEXTURE_2D_MAX_NUM_MIPMAPS] = {};
+	CD3DX12_RESOURCE_BARRIER barriers[ZG_MAX_NUM_MIPMAPS] = {};
 	uint32_t numBarriers = 0;
 	for (uint32_t i = 0; i < texture.numMipmaps; i++) {
 		if (pendingStates[i]->currentState != targetState) {

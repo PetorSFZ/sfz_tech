@@ -454,7 +454,7 @@ ErrorCode Texture2D::setDebugName(const char* name) noexcept
 
 FramebufferBuilder& FramebufferBuilder::addRenderTarget(Texture2D& renderTarget) noexcept
 {
-	assert(createInfo.numRenderTargets < ZG_FRAMEBUFFER_MAX_NUM_RENDER_TARGETS);
+	assert(createInfo.numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
 	uint32_t idx = createInfo.numRenderTargets;
 	createInfo.numRenderTargets += 1;
 	createInfo.renderTargets[idx] = renderTarget.texture;
