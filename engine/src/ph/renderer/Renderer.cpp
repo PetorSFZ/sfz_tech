@@ -297,13 +297,22 @@ void Renderer::frameBegin() noexcept
 	sfz_assert_debug(!mState->windowFramebuffer.valid());
 	CHECK_ZG mState->zgCtx.swapchainBeginFrame(mState->windowFramebuffer);
 
-	// Clear window framebuffer
+	// Clear all framebuffers
+	// TODO: Should probably only clear using a specific clear framebuffer stage
 	zg::CommandList commandList;
 	CHECK_ZG mState->presentQueue.beginCommandListRecording(commandList);
 	CHECK_ZG commandList.setFramebuffer(mState->windowFramebuffer);
 	CHECK_ZG commandList.clearFramebuffer(0.0f, 0.0f, 0.0f, 1.0f);
 	CHECK_ZG commandList.clearDepthBuffer(1.0f);
 	CHECK_ZG mState->presentQueue.executeCommandList(commandList);
+
+	for (FramebufferItem& fbItem : mState->configurable.framebuffers) {
+		CHECK_ZG mState->presentQueue.beginCommandListRecording(commandList);
+		CHECK_ZG commandList.setFramebuffer(fbItem.framebuffer.framebuffer);
+		CHECK_ZG commandList.clearFramebuffer(0.0f, 0.0f, 0.0f, 1.0f);
+		if (fbItem.hasDepthBuffer) CHECK_ZG commandList.clearDepthBuffer(1.0f);
+		CHECK_ZG mState->presentQueue.executeCommandList(commandList);
+	}
 
 	// Set current stage set index to first stage
 	mState->currentStageSetIdx = 0;
@@ -350,9 +359,14 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 	mState->currentInputEnabledStage = &stage;
 	mState->currentPipelineRendering = &pipelineItem;
 
+	// Get stage's framebuffer
+	zg::Framebuffer* framebuffer =
+		mState->configurable.getFramebuffer(mState->windowFramebuffer, stage.framebufferName);
+	sfz_assert_debug(framebuffer != nullptr);
+
 	// Begin recording command list and set pipeline and framebuffer
 	CHECK_ZG mState->presentQueue.beginCommandListRecording(mState->currentCommandList);
-	CHECK_ZG mState->currentCommandList.setFramebuffer(mState->windowFramebuffer);
+	CHECK_ZG mState->currentCommandList.setFramebuffer(*framebuffer);
 	CHECK_ZG mState->currentCommandList.setPipeline(pipelineItem.pipeline);
 }
 
@@ -545,6 +559,16 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 		PerFrame<ConstantBufferMemory>& frame = framed.getState(mState->currentFrameIdx);
 		sfz_assert_debug(frame.state.lastFrameIdxTouched == mState->currentFrameIdx);
 		commonBindings.addConstantBuffer(frame.state.shaderRegister, frame.state.deviceBuffer);
+	}
+
+	// Bound render targets
+	for (const BoundRenderTarget& target : mState->currentInputEnabledStage->boundRenderTargets) {
+		
+		FramebufferItem* item = mState->configurable.getFramebufferItem(target.framebuffer);
+		sfz_assert_debug(item != nullptr);
+		sfz_assert_debug(target.renderTargetIdx < item->framebuffer.numRenderTargets);
+		commonBindings.addTexture(
+			target.textureRegister, item->framebuffer.renderTargets[target.renderTargetIdx]);
 	}
 
 	// Draw all mesh components

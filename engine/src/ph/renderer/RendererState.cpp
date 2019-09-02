@@ -19,6 +19,8 @@
 
 #include "ph/renderer/RendererState.hpp"
 
+#include "ph/Context.hpp"
+
 namespace ph {
 
 // Framebuffer types
@@ -149,6 +151,42 @@ bool PipelineRenderingItem::buildPipeline() noexcept
 		this->pipeline = std::move(tmpPipeline);
 	}
 	return buildSuccess;
+}
+
+// RendererConfigurableState: Helper methods
+// ------------------------------------------------------------------------------------------------
+
+zg::Framebuffer* RendererConfigurableState::getFramebuffer(
+	zg::Framebuffer& defaultFramebuffer, StringID id) noexcept
+{
+	static StringID defaultId = []() {
+		sfz::StringCollection& resStrings = getResourceStrings();
+		return resStrings.getStringID("default");
+	}();
+
+	// If "default", return default framebuffer
+	if (id == defaultId) return &defaultFramebuffer;
+
+	// Otherwise linear search through framebuffers to find the correct one
+	for (FramebufferItem& item : framebuffers) {
+		if (item.name == id) return &item.framebuffer.framebuffer;
+	}
+
+	// Could not find framebuffer
+	sfz_assert_debug(false);
+	return nullptr;
+}
+
+FramebufferItem* RendererConfigurableState::getFramebufferItem(StringID id) noexcept
+{
+	// Linear search through framebuffers to find the correct one
+	for (FramebufferItem& item : framebuffers) {
+		if (item.name == id) return &item;
+	}
+
+	// Could not find framebuffer
+	sfz_assert_debug(false);
+	return nullptr;
 }
 
 // RendererState: Helper methods

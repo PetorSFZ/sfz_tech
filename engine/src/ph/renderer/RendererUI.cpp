@@ -296,6 +296,20 @@ void RendererUI::renderStagesTab(RendererConfigurableState& state) noexcept
 
 			// Pipeline name
 			ImGui::Text("Rendering Pipeline: \"%s\"", resStrings.getString(stage.renderingPipelineName));
+
+			// Framebuffer name
+			ImGui::Text("Framebuffer: \"%s\"", resStrings.getString(stage.framebufferName));
+
+			// Bound render targets
+			ImGui::Text("Bound render targets:");
+			ImGui::Indent(20.0f);
+			for (const BoundRenderTarget& target : stage.boundRenderTargets) {
+				ImGui::Text("- Register: %u  --  Framebuffer: \"%s\"  --  Render Target Index: %u",
+					target.textureRegister,
+					resStrings.getString(target.framebuffer),
+					target.renderTargetIdx);
+			}
+			ImGui::Unindent(20.0f);
 		}
 
 		ImGui::Unindent(20.0f);

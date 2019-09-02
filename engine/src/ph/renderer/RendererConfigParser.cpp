@@ -117,6 +117,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			FramebufferItem& fbItem = configurable.framebuffers.last();
 
 			str256 name = CHECK_JSON fbNode.accessMap("name").valueStr256();
+			sfz_assert_debug(name != "default");
 			fbItem.name = resStrings.getStringID(name);
 
 			// Resolution type
@@ -260,6 +261,31 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			str256 renderingPipelineName =
 				CHECK_JSON stageNode.accessMap("rendering_pipeline").valueStr256();
 			stage.renderingPipelineName = resStrings.getStringID(renderingPipelineName);
+
+			str256 framebufferName =
+				CHECK_JSON stageNode.accessMap("framebuffer").valueStr256();
+			stage.framebufferName = resStrings.getStringID(framebufferName);
+		}
+
+		// Bound render targets
+		if (stageNode.accessMap("bound_render_targets").isValid()) {
+			ParsedJsonNode boundTargetsNode = stageNode.accessMap("bound_render_targets");
+			uint32_t numBoundTargets = boundTargetsNode.arrayLength();
+
+			stage.boundRenderTargets.create(numBoundTargets, state.allocator);
+			for (uint32_t j = 0; j < numBoundTargets; j++) {
+
+				ParsedJsonNode targetNode = boundTargetsNode.accessArray(j);
+				BoundRenderTarget boundTarget;
+				boundTarget.textureRegister = CHECK_JSON targetNode.accessMap("register").valueInt();
+				str256 framebufferName = CHECK_JSON targetNode.accessMap("framebuffer").valueStr256();
+				sfz_assert_debug(framebufferName != "debug"); // Can't bind default framebuffer
+				boundTarget.framebuffer = resStrings.getStringID(framebufferName);
+				boundTarget.renderTargetIdx =
+					CHECK_JSON targetNode.accessMap("render_target_index").valueInt();
+
+				stage.boundRenderTargets.add(boundTarget);
+			}
 		}
 	}
 

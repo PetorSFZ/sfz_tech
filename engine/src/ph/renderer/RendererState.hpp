@@ -133,18 +133,26 @@ enum class StageType {
 	USER_STAGE_BARRIER
 };
 
-struct ConstantBufferMemory {
+struct ConstantBufferMemory final {
 	uint64_t lastFrameIdxTouched = 0;
 	uint32_t shaderRegister = ~0u;
 	zg::Buffer uploadBuffer;
 	zg::Buffer deviceBuffer;
 };
 
+struct BoundRenderTarget final {
+	uint32_t textureRegister = ~0u;
+	StringID framebuffer = StringID::invalid();
+	uint32_t renderTargetIdx = 0;
+};
+
 struct Stage final {
-	StringID stageName;
+	StringID stageName = StringID::invalid();
 	StageType stageType;
-	StringID renderingPipelineName;
+	StringID renderingPipelineName = StringID::invalid();
 	DynArray<Framed<ConstantBufferMemory>> constantBuffers;
+	StringID framebufferName = StringID::invalid();
+	DynArray<BoundRenderTarget> boundRenderTargets;
 };
 
 // Texture plus info
@@ -171,6 +179,10 @@ struct RendererConfigurableState final {
 
 	// Present Queue Stages
 	DynArray<Stage> presentQueueStages;
+
+	// Helper method to get a framebuffer given a StringID, returns nullptr on failure
+	zg::Framebuffer* getFramebuffer(zg::Framebuffer& defaultFramebuffer, StringID id) noexcept;
+	FramebufferItem* getFramebufferItem(StringID id) noexcept;
 };
 
 struct RendererState final {
