@@ -42,6 +42,16 @@ static void alignedEdit(const char* name, float xOffset, Fun editor) noexcept
 	editor(sfz::str96("##%s_invisible", name).str);
 }
 
+static float toGiB(uint64_t bytes) noexcept
+{
+	return float(bytes) / (1024.0f * 1024.0f * 1024.0f);
+}
+
+static float toMiB(uint64_t bytes) noexcept
+{
+	return float(bytes) / (1024.0f * 1024.0f);
+}
+
 static const char* toString(StageType type) noexcept
 {
 	switch (type) {
@@ -207,6 +217,50 @@ void RendererUI::renderGeneralTab(RendererState& state) noexcept
 	alignedEdit("Window resolution", offset, [&](const char*) {
 		ImGui::Text("%i x %i", state.windowRes.x, state.windowRes.y);
 	});
+
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
+	// Get ZeroG stats
+	ZgStats stats = {};
+	CHECK_ZG state.zgCtx.getStats(stats);
+
+	// Print ZeroG statistics
+	ImGui::Text("ZeroG Stats");
+	ImGui::Spacing();
+	ImGui::Indent(20.0f);
+
+	constexpr float statsValueOffset = 240.0f;
+	alignedEdit("Device", statsValueOffset, [&](const char*) {
+		ImGui::TextUnformatted(stats.deviceDescription);
+	});
+	ImGui::Spacing();
+	alignedEdit("Dedicated GPU Memory", statsValueOffset, [&](const char*) {
+		ImGui::Text("%.2f GiB", toGiB(stats.dedicatedGpuMemoryBytes));
+	});
+	alignedEdit("Dedicated CPU Memory", statsValueOffset, [&](const char*) {
+		ImGui::Text("%.2f GiB", toGiB(stats.dedicatedCpuMemoryBytes));
+	});
+	alignedEdit("Shared GPU Memory", statsValueOffset, [&](const char*) {
+		ImGui::Text("%.2f GiB", toGiB(stats.sharedCpuMemoryBytes));
+	});
+	ImGui::Spacing();
+	alignedEdit("Memory Budget", statsValueOffset, [&](const char*) {
+		ImGui::Text("%.2f GiB", toGiB(stats.memoryBudgetBytes));
+	});
+	alignedEdit("Current Memory Usage", statsValueOffset, [&](const char*) {
+		ImGui::Text("%.2f GiB", toGiB(stats.memoryUsageBytes));
+	});
+	ImGui::Spacing();
+	alignedEdit("Non-Local Budget", statsValueOffset, [&](const char*) {
+		ImGui::Text("%.2f GiB", toGiB(stats.nonLocalBugetBytes));
+	});
+	alignedEdit("Non-Local Usage", statsValueOffset, [&](const char*) {
+		ImGui::Text("%.2f GiB", toGiB(stats.nonLocalUsageBytes));
+	});
+
+	ImGui::Unindent(20.0f);
 }
 
 void RendererUI::renderStagesTab(RendererConfigurableState& state) noexcept
@@ -360,58 +414,6 @@ void RendererUI::renderPipelinesTab(RendererConfigurableState& state) noexcept
 
 void RendererUI::renderMemoryTab(RendererState& state) noexcept
 {
-	// Get ZeroG stats
-	ZgStats stats = {};
-	CHECK_ZG state.zgCtx.getStats(stats);
-
-	// Lambdas for converting bytes to various units
-	auto toGiB = [](uint64_t bytes) {
-		return float(bytes) / (1024.0f * 1024.0f * 1024.0f);
-	};
-	auto toMiB = [](uint64_t bytes) {
-		return float(bytes) / (1024.0f * 1024.0f);
-	};
-
-	// Print ZeroG statistics
-	ImGui::Text("ZeroG Statistics");
-	ImGui::Spacing();
-	ImGui::Indent(20.0f);
-
-	constexpr float statsValueOffset = 240.0f;
-	alignedEdit("Device Description", statsValueOffset, [&](const char*) {
-		ImGui::TextUnformatted(stats.deviceDescription);
-	});
-	ImGui::Spacing();
-	alignedEdit("Dedicated GPU Memory", statsValueOffset, [&](const char*) {
-		ImGui::Text("%.2f GiB", toGiB(stats.dedicatedGpuMemoryBytes));
-	});
-	alignedEdit("Dedicated CPU Memory", statsValueOffset, [&](const char*) {
-		ImGui::Text("%.2f GiB", toGiB(stats.dedicatedCpuMemoryBytes));
-	});
-	alignedEdit("Shared GPU Memory", statsValueOffset, [&](const char*) {
-		ImGui::Text("%.2f GiB", toGiB(stats.sharedCpuMemoryBytes));
-	});
-	ImGui::Spacing();
-	alignedEdit("Memory Budget", statsValueOffset, [&](const char*) {
-		ImGui::Text("%.2f GiB", toGiB(stats.memoryBudgetBytes));
-	});
-	alignedEdit("Current Memory Usage", statsValueOffset, [&](const char*) {
-		ImGui::Text("%.2f GiB", toGiB(stats.memoryUsageBytes));
-	});
-	ImGui::Spacing();
-	alignedEdit("Non-Local Budget", statsValueOffset, [&](const char*) {
-		ImGui::Text("%.2f GiB", toGiB(stats.nonLocalBugetBytes));
-	});
-	alignedEdit("Non-Local Usage", statsValueOffset, [&](const char*) {
-		ImGui::Text("%.2f GiB", toGiB(stats.nonLocalUsageBytes));
-	});
-
-	ImGui::Unindent(20.0f);
-	ImGui::Spacing();
-	ImGui::Separator();
-	ImGui::Spacing();
-
-
 	struct AllocatorNameBundle {
 		DynamicGpuAllocator* allocator = nullptr;
 		const char* name = nullptr;
@@ -428,7 +430,8 @@ void RendererUI::renderMemoryTab(RendererState& state) noexcept
 		
 		DynamicGpuAllocator& alloc = *bundle.allocator;
 
-		ImGui::Text("%s Memory", bundle.name);
+		if (!ImGui::CollapsingHeader(str128("%s Memory", bundle.name).str)) continue;
+
 		ImGui::Indent(30.0f);
 		ImGui::Spacing();
 		constexpr float infoOffset = 280.0f;
