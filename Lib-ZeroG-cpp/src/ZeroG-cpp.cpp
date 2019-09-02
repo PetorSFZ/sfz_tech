@@ -446,6 +446,30 @@ ErrorCode Texture2D::setDebugName(const char* name) noexcept
 }
 
 
+// FramebufferBuilder: Methods
+// ------------------------------------------------------------------------------------------------
+
+FramebufferBuilder& FramebufferBuilder::addRenderTarget(Texture2D& renderTarget) noexcept
+{
+	assert(createInfo.numRenderTargets < ZG_FRAMEBUFFER_MAX_NUM_RENDER_TARGETS);
+	uint32_t idx = createInfo.numRenderTargets;
+	createInfo.numRenderTargets += 1;
+	createInfo.renderTargets[idx] = renderTarget.texture;
+	return *this;
+}
+
+FramebufferBuilder& FramebufferBuilder::setDepthBuffer(Texture2D& depthBuffer) noexcept
+{
+	createInfo.depthBuffer = depthBuffer.texture;
+	return *this;
+}
+
+ErrorCode FramebufferBuilder::build(Framebuffer& framebufferOut) noexcept
+{
+	return framebufferOut.create(this->createInfo);
+}
+
+
 // Framebuffer: State methods
 // ------------------------------------------------------------------------------------------------
 

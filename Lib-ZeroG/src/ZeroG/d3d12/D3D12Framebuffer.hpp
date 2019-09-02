@@ -55,13 +55,15 @@ public:
 	uint32_t width = 0;
 	uint32_t height = 0;
 
-	// Render target descriptors
+	// Render targets
 	uint32_t numRenderTargets = 0;
+	D3D12Texture2D* renderTargets[ZG_FRAMEBUFFER_MAX_NUM_RENDER_TARGETS] = {};
 	ComPtr<ID3D12DescriptorHeap> descriptorHeapRTV;
 	D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDescriptors[ZG_FRAMEBUFFER_MAX_NUM_RENDER_TARGETS] = {};
 
-	// Depth buffer descriptors
+	// Depth buffer
 	bool hasDepthBuffer = false;
+	D3D12Texture2D* depthBuffer = nullptr;
 	ComPtr<ID3D12DescriptorHeap> descriptorHeapDSV;
 	D3D12_CPU_DESCRIPTOR_HANDLE depthBufferDescriptor = {};
 };

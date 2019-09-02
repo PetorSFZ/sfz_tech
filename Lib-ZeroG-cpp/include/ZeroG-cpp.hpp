@@ -387,6 +387,35 @@ public:
 };
 
 
+// FramebufferBuilder
+// ------------------------------------------------------------------------------------------------
+
+class FramebufferBuilder final {
+public:
+
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	ZgFramebufferCreateInfo createInfo = {};
+
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	FramebufferBuilder() noexcept = default;
+	FramebufferBuilder(const FramebufferBuilder&) noexcept = default;
+	FramebufferBuilder& operator= (const FramebufferBuilder&) noexcept = default;
+	~FramebufferBuilder() noexcept = default;
+
+	// Methods
+	// --------------------------------------------------------------------------------------------
+
+	FramebufferBuilder& addRenderTarget(Texture2D& renderTarget) noexcept;
+	FramebufferBuilder& setDepthBuffer(Texture2D& depthBuffer) noexcept;
+
+	ErrorCode build(Framebuffer& framebufferOut) noexcept;
+};
+
+
 // Framebuffer
 // ------------------------------------------------------------------------------------------------
 

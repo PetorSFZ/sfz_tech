@@ -560,6 +560,34 @@ ZgErrorCode D3D12CommandList::setFramebuffer(
 	// Set scissor rect
 	commandList->RSSetScissorRects(1, &scissorRect);
 
+	// If not swapchain framebuffer, set resource states and insert into residency sets
+	if (!framebuffer.swapchainFramebuffer) {
+
+		// Render targets
+		for (uint32_t i = 0; i < framebuffer.numRenderTargets; i++) {
+			D3D12Texture2D* renderTarget = framebuffer.renderTargets[i];
+
+			// Set resource state
+			ZG_ASSERT(renderTarget->numMipmaps == 1);
+			setTextureState(*renderTarget, 0, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+			// Insert into residency set
+			residencySet->Insert(&renderTarget->textureHeap->managedObject);
+		}
+
+		// Depth buffer
+		if (framebuffer.hasDepthBuffer) {
+			D3D12Texture2D* depthBuffer = framebuffer.depthBuffer;
+
+			// Set resource state
+			ZG_ASSERT(depthBuffer->numMipmaps == 1);
+			setTextureState(*depthBuffer, 0, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+
+			// Insert into residency set
+			residencySet->Insert(&depthBuffer->textureHeap->managedObject);
+		}
+	}
+
 	// Set framebuffer
 	commandList->OMSetRenderTargets(
 		framebuffer.numRenderTargets,

@@ -65,17 +65,19 @@ ZgErrorCode createFramebuffer(
 	for (uint32_t i = 0; i < createInfo.numRenderTargets; i++) {
 		ZG_ARG_CHECK(createInfo.renderTargets[i] == nullptr, "");
 		D3D12Texture2D* renderTarget = static_cast<D3D12Texture2D*>(createInfo.renderTargets[i]);
-		ZG_ARG_CHECK(renderTarget->usage == ZG_TEXTURE_USAGE_RENDER_TARGET,
+		ZG_ARG_CHECK(renderTarget->usage != ZG_TEXTURE_USAGE_RENDER_TARGET,
 			"Can only use textures created with the RENDER_TARGET usage flag as render targets");
 		ZG_ARG_CHECK(width != renderTarget->width, "All render targets must be same size");
 		ZG_ARG_CHECK(height != renderTarget->height, "All render targets must be same size");
+		ZG_ARG_CHECK(renderTarget->numMipmaps != 1, "Render targets may not have mipmaps");
 	}
 	if (createInfo.depthBuffer != nullptr) {
 		D3D12Texture2D* depthBuffer = static_cast<D3D12Texture2D*>(createInfo.depthBuffer);
-		ZG_ARG_CHECK(depthBuffer->usage == ZG_TEXTURE_USAGE_DEPTH_BUFFER,
+		ZG_ARG_CHECK(depthBuffer->usage != ZG_TEXTURE_USAGE_DEPTH_BUFFER,
 			"Can only use textures created with the DEPTH_BUFFER usage flag as depth buffers");
 		ZG_ARG_CHECK(width != depthBuffer->width, "All depth buffers must be same size");
 		ZG_ARG_CHECK(height != depthBuffer->height, "All depth buffers must be same size");
+		ZG_ARG_CHECK(depthBuffer->numMipmaps != 1, "Depth buffers may not have mipmaps");
 	}
 
 	// Create render target descriptors
@@ -163,10 +165,13 @@ ZgErrorCode createFramebuffer(
 	framebuffer->numRenderTargets = createInfo.numRenderTargets;
 	framebuffer->descriptorHeapRTV = descriptorHeapRTV;
 	for (uint32_t i = 0; i < ZG_FRAMEBUFFER_MAX_NUM_RENDER_TARGETS; i++) {
+		framebuffer->renderTargets[i] =
+			reinterpret_cast<D3D12Texture2D*>(createInfo.renderTargets[i]);
 		framebuffer->renderTargetDescriptors[i] = descriptorsRTV[i];
 	}
 
 	framebuffer->hasDepthBuffer = createInfo.depthBuffer != nullptr;
+	framebuffer->depthBuffer = reinterpret_cast<D3D12Texture2D*>(createInfo.depthBuffer);
 	framebuffer->descriptorHeapDSV = descriptorHeapDSV;
 	framebuffer->depthBufferDescriptor = descriptorDSV;
 
