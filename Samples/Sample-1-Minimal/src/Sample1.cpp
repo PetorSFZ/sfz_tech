@@ -111,7 +111,7 @@ static void realMain(SDL_Window* window) noexcept
 
 		// Set framebuffer and clear it
 		CHECK_ZG commandList.setFramebuffer(framebuffer);
-		CHECK_ZG commandList.clearFramebuffer(1.0f, 0.0f, 0.0f, 1.0f);
+		CHECK_ZG commandList.clearRenderTargets(1.0f, 0.0f, 0.0f, 1.0f);
 		CHECK_ZG commandList.clearDepthBuffer(1.0f);
 
 		// Execute command list

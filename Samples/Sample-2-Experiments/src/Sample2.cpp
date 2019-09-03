@@ -453,8 +453,7 @@ static void realMain(SDL_Window* window) noexcept
 
 		// Set framebuffer and clear it
 		CHECK_ZG commandList.setFramebuffer(framebuffer);
-		CHECK_ZG commandList.clearFramebuffer(0.2f, 0.2f, 0.3f, 1.0f);
-		CHECK_ZG commandList.clearDepthBuffer(1.0f);
+		CHECK_ZG commandList.clearFramebufferOptimal();
 
 		// Set pipeline
 		CHECK_ZG commandList.setPipeline(pipeline);
