@@ -302,15 +302,13 @@ void Renderer::frameBegin() noexcept
 	zg::CommandList commandList;
 	CHECK_ZG mState->presentQueue.beginCommandListRecording(commandList);
 	CHECK_ZG commandList.setFramebuffer(mState->windowFramebuffer);
-	CHECK_ZG commandList.clearFramebuffer(0.0f, 0.0f, 0.0f, 1.0f);
-	CHECK_ZG commandList.clearDepthBuffer(1.0f);
+	CHECK_ZG commandList.clearFramebufferOptimal();
 	CHECK_ZG mState->presentQueue.executeCommandList(commandList);
 
 	for (FramebufferItem& fbItem : mState->configurable.framebuffers) {
 		CHECK_ZG mState->presentQueue.beginCommandListRecording(commandList);
 		CHECK_ZG commandList.setFramebuffer(fbItem.framebuffer.framebuffer);
-		CHECK_ZG commandList.clearFramebuffer(0.0f, 0.0f, 0.0f, 1.0f);
-		if (fbItem.hasDepthBuffer) CHECK_ZG commandList.clearDepthBuffer(1.0f);
+		CHECK_ZG commandList.clearFramebufferOptimal();
 		CHECK_ZG mState->presentQueue.executeCommandList(commandList);
 	}
 

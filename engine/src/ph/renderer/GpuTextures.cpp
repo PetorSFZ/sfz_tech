@@ -170,11 +170,9 @@ zg::Texture2D textureAllocateAndUploadBlocking(
 	}
 
 	// Allocate Texture
-	uint32_t textureSizeBytes = 0;
 	zg::Texture2D texture = gpuAllocatorTexture.allocateTexture2D(
-		view.format, ZG_TEXTURE_USAGE_DEFAULT, view.width, view.height, numMipmaps, &textureSizeBytes);
+		view.format, view.width, view.height, numMipmaps);
 	sfz_assert_debug(texture.valid());
-	sfz_assert_debug(textureSizeBytes != 0);
 	if (!texture.valid()) return zg::Texture2D();
 
 	// Generate mipmaps (on CPU)

@@ -73,11 +73,11 @@ public:
 
 	zg::Texture2D allocateTexture2D(
 		ZgTextureFormat format,
-		ZgTextureUsage usage,
 		uint32_t width,
 		uint32_t height,
-		uint32_t numMipmaps,
-		uint32_t* allocSizeOut = nullptr) noexcept;
+		uint32_t numMipmaps = 1,
+		ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT,
+		ZgOptimalClearValue optimalClearValue = ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED) noexcept;
 	
 	// Deallocation methods
 	// --------------------------------------------------------------------------------------------

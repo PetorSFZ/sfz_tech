@@ -424,11 +424,11 @@ zg::Buffer DynamicGpuAllocator::allocateBuffer(uint32_t sizeBytes) noexcept
 
 zg::Texture2D DynamicGpuAllocator::allocateTexture2D(
 	ZgTextureFormat format,
-	ZgTextureUsage usage,
 	uint32_t width,
 	uint32_t height,
 	uint32_t numMipmaps,
-	uint32_t* allocSizeOut) noexcept
+	ZgTextureUsage usage,
+	ZgOptimalClearValue optimalClearValue) noexcept
 {
 	std::lock_guard<std::mutex> lock(mState->mutex);
 	sfz_assert_debug(width > 0);
@@ -443,6 +443,7 @@ zg::Texture2D DynamicGpuAllocator::allocateTexture2D(
 	ZgTexture2DCreateInfo createInfo = {};
 	createInfo.format = format;
 	createInfo.usage = usage;
+	createInfo.optimalClearValue = optimalClearValue;
 	createInfo.normalized = ZG_TRUE;
 	createInfo.width = width;
 	createInfo.height = height;
@@ -493,7 +494,6 @@ zg::Texture2D DynamicGpuAllocator::allocateTexture2D(
 	// Increment total num allocation counter
 	mState->totalNumAllocations += 1;
 
-	if (allocSizeOut != nullptr)* allocSizeOut = texBlock.size;
 	return texture;
 }
 

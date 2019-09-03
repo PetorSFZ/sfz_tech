@@ -67,13 +67,23 @@ bool FramebufferItem::buildFramebuffer(vec2_s32 windowRes, DynamicGpuAllocator& 
 	// Allocate render targets
 	framebuffer.numRenderTargets = 1;
 	framebuffer.renderTargets[0] = gpuAllocatorFramebuffer.allocateTexture2D(
-		ZG_TEXTURE_FORMAT_RGBA_U8, ZG_TEXTURE_USAGE_RENDER_TARGET, width, height, 1);
+		ZG_TEXTURE_FORMAT_RGBA_U8,
+		width,
+		height,
+		1,
+		ZG_TEXTURE_USAGE_RENDER_TARGET,
+		ZG_OPTIMAL_CLEAR_VALUE_ZERO);
 	builder.addRenderTarget(framebuffer.renderTargets[0]);
 
 	// Allocate depth buffer
 	if (hasDepthBuffer) {
 		framebuffer.depthBuffer = gpuAllocatorFramebuffer.allocateTexture2D(
-			ZG_TEXTURE_FORMAT_R_F32, ZG_TEXTURE_USAGE_DEPTH_BUFFER, width, height, 1);
+			ZG_TEXTURE_FORMAT_DEPTH_F32,
+			width,
+			height,
+			1,
+			ZG_TEXTURE_USAGE_DEPTH_BUFFER,
+			ZG_OPTIMAL_CLEAR_VALUE_ONE);
 		builder.setDepthBuffer(framebuffer.depthBuffer);
 	}
 
