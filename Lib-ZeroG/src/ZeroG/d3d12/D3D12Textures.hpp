@@ -53,6 +53,7 @@ public:
 	ComPtr<ID3D12Resource> resource;
 	ZgTextureFormat zgFormat = ZG_TEXTURE_FORMAT_UNDEFINED;
 	ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT;
+	ZgOptimalClearValue optimalClearValue = ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED;
 	DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
 	uint32_t width = 0;
 	uint32_t height = 0;

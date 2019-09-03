@@ -659,7 +659,55 @@ ZgErrorCode D3D12CommandList::setFramebufferScissor(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::clearFramebuffer(
+ZgErrorCode D3D12CommandList::clearFramebufferOptimal() noexcept
+{
+	// Return error if no framebuffer is set
+	if (!mFramebufferSet) {
+		ZG_ERROR("clearFramebufferOptimal(): Must set a framebuffer before you can clear it");
+		return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+	}
+
+	constexpr float ZEROS[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	constexpr float ONES[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	// Clear render targets
+	for (uint32_t i = 0; i < mFramebuffer->numRenderTargets; i++) {
+
+		const float* clearColor = [&]() -> const float* {
+			switch (mFramebuffer->renderTargetOptimalClearValues[i]) {
+			case ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED: return ZEROS;
+			case ZG_OPTIMAL_CLEAR_VALUE_ZERO: return ZEROS;
+			case ZG_OPTIMAL_CLEAR_VALUE_ONE: return ONES;
+			}
+			ZG_ASSERT(false);
+			return nullptr;
+		}();
+
+		commandList->ClearRenderTargetView(
+			mFramebuffer->renderTargetDescriptors[i], clearColor, 0, nullptr);
+	}
+
+	// Clear depth buffer
+	if (mFramebuffer->hasDepthBuffer) {
+
+		const float clearDepth = [&]() {
+			switch (mFramebuffer->depthBufferOptimalClearValue) {
+			case ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED: return 0.0f;
+			case ZG_OPTIMAL_CLEAR_VALUE_ZERO: return 0.0f;
+			case ZG_OPTIMAL_CLEAR_VALUE_ONE: return 1.0f;
+			}
+			ZG_ASSERT(false);
+			return 0.0f;
+		}();
+
+		commandList->ClearDepthStencilView(
+			mFramebuffer->depthBufferDescriptor, D3D12_CLEAR_FLAG_DEPTH, clearDepth, 0, 0, nullptr);
+	}
+
+	return ZG_SUCCESS;
+}
+
+ZgErrorCode D3D12CommandList::clearRenderTargets(
 	float red,
 	float green,
 	float blue,
@@ -667,12 +715,12 @@ ZgErrorCode D3D12CommandList::clearFramebuffer(
 {
 	// Return error if no framebuffer is set
 	if (!mFramebufferSet) {
-		ZG_ERROR("clearFramebuffer(): Must set a framebuffer before you can clear it");
+		ZG_ERROR("clearRenderTargets(): Must set a framebuffer before you can clear its render targets");
 		return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 	}
 	if (mFramebuffer->numRenderTargets == 0) return ZG_WARNING_GENERIC;
 
-	// Clear framebuffer
+	// Clear render targets
 	float clearColor[4] = { red, green, blue, alpha };
 	for (uint32_t i = 0; i < mFramebuffer->numRenderTargets; i++) {
 		commandList->ClearRenderTargetView(

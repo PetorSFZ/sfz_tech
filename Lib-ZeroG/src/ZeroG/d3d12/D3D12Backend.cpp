@@ -496,6 +496,7 @@ public:
 
 			mState->device->CreateDepthStencilView(backBufferDsv.Get(), &dsvViewDesc, dsvDescriptor);
 			mState->swapchainFramebuffers[i].swapchain.depthBuffer = backBufferDsv;
+			mState->swapchainFramebuffers[i].depthBufferOptimalClearValue = ZG_OPTIMAL_CLEAR_VALUE_ONE;
 		}
 
 		logDebugMessages();

@@ -81,6 +81,8 @@ static DXGI_FORMAT createInfoToDxgiFormat(const ZgTexture2DCreateInfo& info) noe
 		case ZG_TEXTURE_FORMAT_RG_F32: return DXGI_FORMAT_R32G32_FLOAT;
 		case ZG_TEXTURE_FORMAT_RGBA_F32: return DXGI_FORMAT_R32G32B32A32_FLOAT;
 
+		case ZG_TEXTURE_FORMAT_DEPTH_F32: return DXGI_FORMAT_D32_FLOAT;
+
 		default:
 			break;
 		}
@@ -211,6 +213,10 @@ ZgErrorCode D3D12MemoryHeap::texture2DCreate(
 		ZG_ARG_CHECK(createInfo.usage == ZG_TEXTURE_USAGE_DEFAULT,
 			"Can't allocate textures with DEFAULT usage from FRAMEBUFFER heap");
 	}
+	if (createInfo.usage == ZG_TEXTURE_USAGE_DEPTH_BUFFER) {
+		ZG_ARG_CHECK(createInfo.format != ZG_TEXTURE_FORMAT_DEPTH_F32,
+			"Can only use DEPTH formats for DEPTH_BUFFERs");
+	}
 
 	// Get resource desc
 	D3D12_RESOURCE_DESC desc = createInfoToResourceDesc(createInfo);
@@ -218,6 +224,25 @@ ZgErrorCode D3D12MemoryHeap::texture2DCreate(
 	// Get allocation info
 	D3D12_RESOURCE_ALLOCATION_INFO allocationInfo =
 		device->GetResourceAllocationInfo(0, 1, &desc);
+
+	// Optimal clear value
+	D3D12_CLEAR_VALUE clearValue = {};
+	D3D12_CLEAR_VALUE* optimalClearValue = nullptr;
+	if (createInfo.optimalClearValue != ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED) {
+		float value = (createInfo.optimalClearValue == ZG_OPTIMAL_CLEAR_VALUE_ZERO) ? 0.0f : 1.0f;
+		clearValue.Format = desc.Format;
+		if (createInfo.usage == ZG_TEXTURE_USAGE_RENDER_TARGET) {
+			clearValue.Color[0] = value;
+			clearValue.Color[1] = value;
+			clearValue.Color[2] = value;
+			clearValue.Color[3] = value;
+		}
+		else if (createInfo.usage == ZG_TEXTURE_USAGE_DEPTH_BUFFER) {
+			clearValue.DepthStencil.Depth = value;
+			clearValue.DepthStencil.Stencil = 0;
+		}
+		optimalClearValue = &clearValue;
+	}
 
 	// Create placed resource
 	const D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_COMMON;
@@ -227,7 +252,7 @@ ZgErrorCode D3D12MemoryHeap::texture2DCreate(
 		createInfo.offsetInBytes,
 		&desc,
 		initialResourceState,
-		nullptr,
+		optimalClearValue,
 		IID_PPV_ARGS(&resource)))) {
 		return ZG_ERROR_GPU_OUT_OF_MEMORY;
 	}
@@ -252,6 +277,7 @@ ZgErrorCode D3D12MemoryHeap::texture2DCreate(
 	texture->resource = resource;
 	texture->zgFormat = createInfo.format;
 	texture->usage = createInfo.usage;
+	texture->optimalClearValue = createInfo.optimalClearValue;
 	texture->format = desc.Format;
 	texture->width = createInfo.width;
 	texture->height = createInfo.height;

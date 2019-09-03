@@ -768,9 +768,14 @@ ErrorCode CommandList::setFramebufferScissor(
 	return (ErrorCode)zgCommandListSetFramebufferScissor(this->commandList, &scissor);
 }
 
-ErrorCode CommandList::clearFramebuffer(float red, float green, float blue, float alpha) noexcept
+ErrorCode CommandList::clearFramebufferOptimal() noexcept
 {
-	return (ErrorCode)zgCommandListClearFramebuffer(this->commandList, red, green, blue, alpha);
+	return (ErrorCode)zgCommandListClearFramebufferOptimal(this->commandList);
+}
+
+ErrorCode CommandList::clearRenderTargets(float red, float green, float blue, float alpha) noexcept
+{
+	return (ErrorCode)zgCommandListClearRenderTargets(this->commandList, red, green, blue, alpha);
 }
 
 ErrorCode CommandList::clearDepthBuffer(float depth) noexcept

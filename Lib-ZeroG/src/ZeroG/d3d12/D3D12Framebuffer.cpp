@@ -88,7 +88,7 @@ ZgErrorCode createFramebuffer(
 		ZG_ARG_CHECK(width != depthBuffer->width, "All depth buffers must be same size");
 		ZG_ARG_CHECK(height != depthBuffer->height, "All depth buffers must be same size");
 		ZG_ARG_CHECK(depthBuffer->numMipmaps != 1, "Depth buffers may not have mipmaps");
-		ZG_ARG_CHECK(depthBuffer->zgFormat != ZG_TEXTURE_FORMAT_R_F32, "Depth buffer may only be ZG_TEXTURE_FORMAT_R_F32 format");
+		ZG_ARG_CHECK(depthBuffer->zgFormat != ZG_TEXTURE_FORMAT_DEPTH_F32, "Depth buffer may only be ZG_TEXTURE_FORMAT_DEPTH_F32 format");
 	}
 
 	// Create render target descriptors
@@ -142,8 +142,8 @@ ZgErrorCode createFramebuffer(
 	if (createInfo.depthBuffer != nullptr) {
 
 		D3D12Texture2D* texture = reinterpret_cast<D3D12Texture2D*>(createInfo.depthBuffer);
-		ZG_ASSERT(texture->zgFormat == ZG_TEXTURE_FORMAT_R_F32);
-		ZG_ASSERT(texture->format == DXGI_FORMAT_R32_FLOAT);
+		ZG_ASSERT(texture->zgFormat == ZG_TEXTURE_FORMAT_DEPTH_F32);
+		ZG_ASSERT(texture->format == DXGI_FORMAT_D32_FLOAT);
 
 		// Create descriptor heap
 		D3D12_DESCRIPTOR_HEAP_DESC dsvDesc = {};
@@ -160,7 +160,7 @@ ZgErrorCode createFramebuffer(
 
 		// Create depth buffer view
 		D3D12_DEPTH_STENCIL_VIEW_DESC dsvViewDesc = {};
-		dsvViewDesc.Format = DXGI_FORMAT_D32_FLOAT; // Hacky hack? TODO: Figure out if this is the correct way to handle this
+		dsvViewDesc.Format = texture->format;
 		dsvViewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 		dsvViewDesc.Flags = D3D12_DSV_FLAG_NONE;
 		dsvViewDesc.Texture2D.MipSlice = 0; // TODO: Mipmax index
@@ -176,16 +176,20 @@ ZgErrorCode createFramebuffer(
 
 	framebuffer->numRenderTargets = createInfo.numRenderTargets;
 	framebuffer->descriptorHeapRTV = descriptorHeapRTV;
-	for (uint32_t i = 0; i < ZG_MAX_NUM_RENDER_TARGETS; i++) {
+	for (uint32_t i = 0; i < createInfo.numRenderTargets; i++) {
 		framebuffer->renderTargets[i] =
 			reinterpret_cast<D3D12Texture2D*>(createInfo.renderTargets[i]);
 		framebuffer->renderTargetDescriptors[i] = descriptorsRTV[i];
+		framebuffer->renderTargetOptimalClearValues[i] = framebuffer->renderTargets[i]->optimalClearValue;
 	}
 
 	framebuffer->hasDepthBuffer = createInfo.depthBuffer != nullptr;
 	framebuffer->depthBuffer = reinterpret_cast<D3D12Texture2D*>(createInfo.depthBuffer);
 	framebuffer->descriptorHeapDSV = descriptorHeapDSV;
 	framebuffer->depthBufferDescriptor = descriptorDSV;
+	if (framebuffer->depthBuffer != nullptr) {
+		framebuffer->depthBufferOptimalClearValue = framebuffer->depthBuffer->optimalClearValue;
+	}
 
 	*framebufferOut = framebuffer;
 	return ZG_SUCCESS;

@@ -682,8 +682,11 @@ public:
 	ErrorCode setFramebufferScissor(
 		const ZgFramebufferRect& scissor) noexcept;
 
-	// See zgCommandListClearFramebuffer()
-	ErrorCode clearFramebuffer(float red, float green, float blue, float alpha) noexcept;
+	// See zgCommandListClearFramebufferOptimal()
+	ErrorCode clearFramebufferOptimal() noexcept;
+
+	// See zgCommandListClearRenderTargets()
+	ErrorCode clearRenderTargets(float red, float green, float blue, float alpha) noexcept;
 
 	// See zgCommandListClearDepthBuffer()
 	ErrorCode clearDepthBuffer(float depth) noexcept;

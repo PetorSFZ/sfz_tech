@@ -817,7 +817,9 @@ enum ZgTextureFormatEnum {
 
 	ZG_TEXTURE_FORMAT_R_F32,
 	ZG_TEXTURE_FORMAT_RG_F32,
-	ZG_TEXTURE_FORMAT_RGBA_F32
+	ZG_TEXTURE_FORMAT_RGBA_F32,
+
+	ZG_TEXTURE_FORMAT_DEPTH_F32
 };
 typedef uint32_t ZgTextureFormat;
 
@@ -827,6 +829,13 @@ enum ZgTextureUsageEnum {
 	ZG_TEXTURE_USAGE_DEPTH_BUFFER
 };
 typedef uint32_t ZgTextureUsage;
+
+enum ZgOptimalClearValueEnum {
+	ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED = 0,
+	ZG_OPTIMAL_CLEAR_VALUE_ZERO,
+	ZG_OPTIMAL_CLEAR_VALUE_ONE
+};
+typedef uint32_t ZgOptimalClearValue;
 
 struct ZgTexture2DCreateInfo {
 
@@ -838,6 +847,12 @@ struct ZgTexture2DCreateInfo {
 	// If the texture is to be used as either a render target or a depth buffer it must be set
 	// here.
 	ZgTextureUsage usage;
+
+	// The optimal clear value of this texture.
+	//
+	// This may only be set when creating a texture with usage RENDER_TARGET or DEPTH_BUFFER.
+	// Otherwise it should be left to the default value (UNDEFINED).
+	ZgOptimalClearValue optimalClearValue;
 
 	// Whether the texture is normalized or not.
 	//
@@ -1090,7 +1105,12 @@ ZG_API ZgErrorCode zgCommandListSetFramebufferScissor(
 	ZgCommandList* commandList,
 	const ZgFramebufferRect* scissor);
 
-ZG_API ZgErrorCode zgCommandListClearFramebuffer(
+// Clears all render targets and depth buffers in a framebuffer to their optimal clear values, 0
+// if none is specified.
+ZG_API ZgErrorCode zgCommandListClearFramebufferOptimal(
+	ZgCommandList* commandList);
+
+ZG_API ZgErrorCode zgCommandListClearRenderTargets(
 	ZgCommandList* commandList,
 	float red,
 	float green,

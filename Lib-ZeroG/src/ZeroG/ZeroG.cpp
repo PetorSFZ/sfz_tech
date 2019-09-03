@@ -385,6 +385,10 @@ ZG_API ZgErrorCode zgMemoryHeapTexture2DCreate(
 	ZG_ARG_CHECK(createInfo == nullptr, "");
 	ZG_ARG_CHECK(createInfo->numMipmaps == 0, "Must specify at least 1 mipmap layer (i.e. the full image)");
 	ZG_ARG_CHECK(createInfo->numMipmaps > ZG_MAX_NUM_MIPMAPS, "Too many mipmaps specified");
+	if (createInfo->usage == ZG_TEXTURE_USAGE_DEFAULT) {
+		ZG_ARG_CHECK(createInfo->optimalClearValue != ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED,
+			"May not define optimal clear value for default textures");
+	}
 	return memoryHeap->texture2DCreate(textureOut, *createInfo);
 }
 
@@ -621,14 +625,20 @@ ZG_API ZgErrorCode zgCommandListSetFramebufferScissor(
 	return commandList->setFramebufferScissor(*scissor);
 }
 
-ZG_API ZgErrorCode zgCommandListClearFramebuffer(
+ZG_API ZgErrorCode zgCommandListClearFramebufferOptimal(
+	ZgCommandList* commandList)
+{
+	return commandList->clearFramebufferOptimal();
+}
+
+ZG_API ZgErrorCode zgCommandListClearRenderTargets(
 	ZgCommandList* commandList,
 	float red,
 	float green,
 	float blue,
 	float alpha)
 {
-	return commandList->clearFramebuffer(red, green, blue, alpha);
+	return commandList->clearRenderTargets(red, green, blue, alpha);
 }
 
 ZG_API ZgErrorCode zgCommandListClearDepthBuffer(

@@ -97,7 +97,9 @@ public:
 	ZgErrorCode setFramebufferScissor(
 		const ZgFramebufferRect& scissor) noexcept override final;
 
-	ZgErrorCode clearFramebuffer(
+	ZgErrorCode clearFramebufferOptimal() noexcept override final;
+
+	ZgErrorCode clearRenderTargets(
 		float red,
 		float green,
 		float blue,

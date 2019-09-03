@@ -230,7 +230,9 @@ struct ZgCommandList {
 	virtual ZgErrorCode setFramebufferScissor(
 		const ZgFramebufferRect& scissor) noexcept = 0;
 
-	virtual ZgErrorCode clearFramebuffer(
+	virtual ZgErrorCode clearFramebufferOptimal() noexcept = 0;
+
+	virtual ZgErrorCode clearRenderTargets(
 		float red,
 		float green,
 		float blue,
