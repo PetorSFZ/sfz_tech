@@ -80,6 +80,7 @@ set(HEADER_FILES
 	${INCLUDE_DIR}/ph/renderer/BuiltInShaderTypes.hpp
 	${INCLUDE_DIR}/ph/renderer/Renderer.hpp
 
+	${INCLUDE_DIR}/ph/rendering/FullscreenTriangle.hpp
 	${INCLUDE_DIR}/ph/rendering/ImageView.hpp
 	${INCLUDE_DIR}/ph/rendering/Image.hpp
 	${INCLUDE_DIR}/ph/rendering/ImguiRenderingData.hpp
@@ -135,6 +136,7 @@ set(SRC_FILES
 	${SRC_DIR}/ph/renderer/ZeroGUtils.hpp
 	${SRC_DIR}/ph/renderer/ZeroGUtils.cpp
 
+	${SRC_DIR}/ph/rendering/FullscreenTriangle.cpp
 	${SRC_DIR}/ph/rendering/Image.cpp
 	${SRC_DIR}/ph/rendering/ImguiSupport.cpp
 
