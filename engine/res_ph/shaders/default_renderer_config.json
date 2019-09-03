@@ -30,7 +30,8 @@
 		{
 			"stage_name": "Forward Pass",
 			"stage_type": "USER_INPUT_RENDERING",
-			"rendering_pipeline": "Forward Shader"
+			"rendering_pipeline": "Forward Shader",
+			"framebuffer": "default"
 		},
 		{
 			"stage_name": "FrameEndBarrier",
