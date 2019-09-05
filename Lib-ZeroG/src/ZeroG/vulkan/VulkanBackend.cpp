@@ -382,12 +382,15 @@ public:
 		ZgFramebuffer** framebufferOut,
 		const ZgFramebufferCreateInfo& createInfo) noexcept override final
 	{
+		(void)framebufferOut;
+		(void)createInfo;
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
 	void framebufferRelease(
 		ZgFramebuffer* framebuffer) noexcept override final
 	{
+		(void)framebuffer;
 	}
 
 	// CommandQueue methods

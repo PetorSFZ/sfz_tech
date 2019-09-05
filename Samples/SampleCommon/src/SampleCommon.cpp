@@ -42,6 +42,7 @@ static HWND getWin32WindowHandle(SDL_Window* window) noexcept
 // TODO ifdef APPLE
 static void* getMacOSWindowHandle(SDL_Window* window) noexcept
 {
+	(void)window;
 	return nullptr;
 }
 

@@ -131,8 +131,8 @@ static const char* deviceTypeToString(VkPhysicalDeviceType physicalDeviceType) n
 	case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU: return "DISCRETE_GPU";
 	case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU: return "VIRTUAL_GPU";
 	case VK_PHYSICAL_DEVICE_TYPE_CPU: return "CPU";
-	default: return "";
 	}
+	ZG_ASSERT(false);
 	return "";
 }
 
@@ -156,7 +156,7 @@ static uint64_t deviceNumBytesDeviceMemory(VkPhysicalDevice physicalDevice) noex
 
 static bool flagsContainBit(VkQueueFlags flags, VkQueueFlagBits bit)
 {
-	return (flags & bit) == bit;
+	return (uint32_t(flags) & uint32_t(bit)) == uint32_t(bit);
 }
 
 // Debug information loggers
