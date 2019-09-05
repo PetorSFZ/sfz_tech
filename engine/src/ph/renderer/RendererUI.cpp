@@ -342,9 +342,17 @@ void RendererUI::renderFramebuffersTab(RendererConfigurableState& state) noexcep
 			});
 		}
 		else {
-			alignedEdit("Resolution scale", offset, [&](const char*) {
-				ImGui::Text("%.2f", fbItem.resolutionScale);
-			});
+			if (fbItem.resolutionScaleSetting != nullptr) {
+				alignedEdit("Resolution scale", offset, [&](const char*) {
+					ImGui::Text("%.2f  --  (Setting: \"%s\")",
+						fbItem.resolutionScale, fbItem.resolutionScaleSetting->key().str);
+				});
+			}
+			else {
+				alignedEdit("Resolution scale", offset, [&](const char*) {
+					ImGui::Text("%.2f", fbItem.resolutionScale);
+				});
+			}
 		}
 
 		// Actual resolution

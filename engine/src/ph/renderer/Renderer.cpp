@@ -264,8 +264,24 @@ void Renderer::frameBegin() noexcept
 	SDL_GL_GetDrawableSize(mState->window, &newResX, &newResY);
 	bool resolutionChanged = newResX != mState->windowRes.x || newResY != mState->windowRes.y;
 	
+	// Check if any framebuffer scale settings has changed, necessating a resolution change
+	if (!resolutionChanged) {
+		for (FramebufferItem& item : mState->configurable.framebuffers) {
+			if (!item.resolutionIsFixed && item.resolutionScaleSetting != nullptr) {
+				if (item.resolutionScale != item.resolutionScaleSetting->floatValue()) {
+					resolutionChanged = true;
+					break;
+				}
+			}
+		}
+	}
+
 	// If resolution has changed, resize swapchain and framebuffers
 	if (resolutionChanged) {
+
+		SFZ_INFO("Renderer",
+			"Resolution changed, new resolution: %i x %i. Updating framebuffers...",
+			newResX, newResY);
 
 		// Set new resolution
 		mState->windowRes.x = newResX;

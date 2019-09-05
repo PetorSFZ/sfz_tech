@@ -65,6 +65,7 @@ struct FramebufferItem final {
 	StringID name;
 	bool resolutionIsFixed = false;
 	float resolutionScale = 1.0f;
+	Setting* resolutionScaleSetting = nullptr;
 	vec2_s32 resolutionFixed = vec2_s32(0);
 	bool hasDepthBuffer = false;
 	ZgTextureFormat depthBufferFormat = ZG_TEXTURE_FORMAT_R_F32;

@@ -85,6 +85,10 @@ static ZgDepthFunc depthFuncFromString(const str256& str) noexcept
 
 bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 {
+	// Get resource strings and global config
+	sfz::StringCollection& resStrings = getResourceStrings();
+	GlobalConfig& cfg = getGlobalConfig();
+
 	RendererConfigurableState& configurable = state.configurable;
 
 	// Attempt to parse JSON file containing game common
@@ -94,9 +98,6 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		return false;
 	}
 	ParsedJsonNode root = json.root();
-
-	// Get global collection of resource strings in order to create StringIDs
-	sfz::StringCollection& resStrings = getResourceStrings();
 
 	// Ensure some necessary sections exist
 	if (!root.accessMap("rendering_pipelines").isValid()) return false;
@@ -124,14 +125,32 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			fbItem.name = resStrings.getStringID(name);
 
 			// Resolution type
-			if (fbNode.accessMap("resolution_scale").isValid()) {
-				fbItem.resolutionIsFixed = false;
-				fbItem.resolutionScale = CHECK_JSON fbNode.accessMap("resolution_scale").valueFloat();
-			}
-			else {
-				fbItem.resolutionIsFixed = true;
+			fbItem.resolutionIsFixed = !(fbNode.accessMap("resolution_scale").isValid() ||
+				fbNode.accessMap("resolution_scale_setting").isValid());
+
+			// Resolution
+			if (fbItem.resolutionIsFixed) {
 				fbItem.resolutionFixed.x = CHECK_JSON fbNode.accessMap("resolution_fixed_width").valueInt();
 				fbItem.resolutionFixed.y = CHECK_JSON fbNode.accessMap("resolution_fixed_height").valueInt();
+			}
+			else {
+				bool hasSetting = fbNode.accessMap("resolution_scale_setting").isValid();
+				if (hasSetting) {
+					str256 settingKey = CHECK_JSON fbNode.accessMap("resolution_scale_setting").valueStr256();
+
+					// Default value
+					float defaultScale = 1.0f;
+					if (fbNode.accessMap("resolution_scale").isValid()) {
+						defaultScale = CHECK_JSON fbNode.accessMap("resolution_scale").valueFloat();
+					}
+					fbItem.resolutionScaleSetting =
+						cfg.sanitizeFloat("Renderer", settingKey, false, defaultScale, 0.1f, 4.0f);
+					fbItem.resolutionScale = fbItem.resolutionScaleSetting->floatValue();
+				}
+				else {
+					fbItem.resolutionScaleSetting = nullptr;
+					fbItem.resolutionScale = CHECK_JSON fbNode.accessMap("resolution_scale").valueFloat();
+				}
 			}
 
 			// Depth buffer
