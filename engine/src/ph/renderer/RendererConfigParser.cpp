@@ -156,6 +156,9 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			// Depth buffer
 			if (fbNode.accessMap("depth_buffer").isValid()) {
 				fbItem.hasDepthBuffer = true;
+				float clearValue = CHECK_JSON fbNode.accessMap("depth_buffer_clear_value").valueFloat();
+				sfz_assert_debug(clearValue == 0.0f || clearValue == 1.0f);
+				fbItem.depthBufferClearValue = clearValue;
 				// TODO: Could also look at value of depth_buffer to set depthBufferFormat, but
 				//       not particularly important right now as we only support F32.
 			}

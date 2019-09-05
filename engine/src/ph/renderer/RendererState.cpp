@@ -78,13 +78,22 @@ bool FramebufferItem::buildFramebuffer(vec2_s32 windowRes, DynamicGpuAllocator& 
 
 	// Allocate depth buffer
 	if (hasDepthBuffer) {
+		ZgOptimalClearValue optimalClear = ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED;
+		if (depthBufferClearValue == 0.0f) {
+			optimalClear = ZG_OPTIMAL_CLEAR_VALUE_ZERO;
+		}
+		else if (depthBufferClearValue == 1.0f) {
+			optimalClear = ZG_OPTIMAL_CLEAR_VALUE_ONE;
+		}
+		sfz_assert_debug(optimalClear != ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED);
+
 		framebuffer.depthBuffer = gpuAllocatorFramebuffer.allocateTexture2D(
 			ZG_TEXTURE_FORMAT_DEPTH_F32,
 			width,
 			height,
 			1,
 			ZG_TEXTURE_USAGE_DEPTH_BUFFER,
-			ZG_OPTIMAL_CLEAR_VALUE_ONE);
+			optimalClear);
 		builder.setDepthBuffer(framebuffer.depthBuffer);
 	}
 

@@ -69,6 +69,7 @@ struct FramebufferItem final {
 	vec2_s32 resolutionFixed = vec2_s32(0);
 	bool hasDepthBuffer = false;
 	ZgTextureFormat depthBufferFormat = ZG_TEXTURE_FORMAT_R_F32;
+	float depthBufferClearValue = 0.0f;
 
 	// Method for deallocating previous framebuffer
 	void deallocate(DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept;
