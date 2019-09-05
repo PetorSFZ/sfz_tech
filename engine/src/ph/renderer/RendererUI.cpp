@@ -225,6 +225,9 @@ void RendererUI::render(RendererState& state) noexcept
 void RendererUI::renderGeneralTab(RendererState& state) noexcept
 {
 	constexpr float offset = 250.0f;
+	alignedEdit("Config path", offset, [&](const char*) {
+		ImGui::Text("\"%s\"", state.configurable.configPath.str);
+	});
 	alignedEdit("Current frame index", offset, [&](const char*) {
 		ImGui::Text("%llu", state.currentFrameIdx);
 	});

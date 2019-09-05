@@ -42,6 +42,7 @@ using sfz::DynArray;
 using sfz::HashMap;
 using sfz::str128;
 using sfz::str256;
+using sfz::str320;
 using sfz::StringID;
 using sfz::vec2_s32;
 
@@ -170,6 +171,9 @@ struct TextureItem final {
 // ------------------------------------------------------------------------------------------------
 
 struct RendererConfigurableState final {
+
+	// Path to current configuration
+	str320 configPath;
 
 	// Framebuffers
 	DynArray<FramebufferItem> framebuffers;

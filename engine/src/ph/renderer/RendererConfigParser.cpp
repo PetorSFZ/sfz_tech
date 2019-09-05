@@ -101,6 +101,9 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	// Ensure some necessary sections exist
 	if (!root.accessMap("rendering_pipelines").isValid()) return false;
 
+	// Store path to configuration
+	configurable.configPath.printf("%s", configPath);
+
 	// Parse framebuffers if section exist
 	if (root.accessMap("framebuffers").isValid()) {
 
