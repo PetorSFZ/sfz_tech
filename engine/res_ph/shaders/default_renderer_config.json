@@ -1,4 +1,22 @@
 {
+	"framebuffers": [
+		{
+			"name": "InternalFB",
+			"resolution_scale": 1.0,
+			"resolution_scale_setting": "internalResolutionScale",
+			//"resolution_fixed_width": 256,
+			//"resolution_fixed_height": 256,
+			"render_targets": [
+				{
+					"format": "RGBA_F16",
+					"clear_value": 0.0
+				}
+			],
+			"depth_buffer": true,
+			"depth_buffer_format": "DEPTH_F32",
+			"depth_buffer_clear_value": 1.0
+		}
+	],
 	"rendering_pipelines": [
 		{
 			"name": "Forward Shader",
@@ -14,6 +32,7 @@
 				"cull_front_face": false,
 				"front_facing_is_counter_clockwise": true
 			},
+			"wireframe_rendering": false,
 			"samplers": [
 				{
 					"register": 0,
@@ -24,6 +43,27 @@
 			"non_user_settable_constant_buffers": [
 				4
 			]
+		},
+		{
+			"name": "Copy Out Shader",
+			"source_type": "hlsl",
+			"vertex_shader_path": "res_ph/shaders/copy_out_shader.hlsl",
+			"pixel_shader_path": "res_ph/shaders/copy_out_shader.hlsl",
+			"vertex_shader_entry": "VSMain",
+			"pixel_shader_entry": "PSMain",
+			"standard_vertex_attributes": true,
+			"culling": {
+				"cull_front_face": false,
+				"front_facing_is_counter_clockwise": true
+			},
+			"wireframe_rendering": false,
+			"samplers": [
+				{
+					"register": 0,
+					"sampling_mode": "ANISOTROPIC",
+					"wrapping_mode": "CLAMP"
+				}
+			]
 		}
 	],
 	"present_queue_stages": [
@@ -31,11 +71,24 @@
 			"stage_name": "Forward Pass",
 			"stage_type": "USER_INPUT_RENDERING",
 			"rendering_pipeline": "Forward Shader",
-			"framebuffer": "default"
+			"framebuffer": "InternalFB"
 		},
 		{
 			"stage_name": "FrameEndBarrier",
 			"stage_type": "USER_STAGE_BARRIER"
+		},
+		{
+			"stage_name": "Copy Out Pass",
+			"stage_type": "USER_INPUT_RENDERING",
+			"rendering_pipeline": "Copy Out Shader",
+			"framebuffer": "default",
+			"bound_render_targets": [
+				{
+					"register": 0,
+					"framebuffer": "InternalFB",
+					"render_target_index": 0
+				}
+			]
 		}
 	]
 }
