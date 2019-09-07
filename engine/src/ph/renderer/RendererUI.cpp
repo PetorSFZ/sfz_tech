@@ -78,6 +78,8 @@ static const char* textureFormatToString(ZgTextureFormat format) noexcept
 	case ZG_TEXTURE_FORMAT_R_F32: return "R_F32";
 	case ZG_TEXTURE_FORMAT_RG_F32: return "RG_F32";
 	case ZG_TEXTURE_FORMAT_RGBA_F32: return "RGBA_F32";
+
+	case ZG_TEXTURE_FORMAT_DEPTH_F32: return "DEPTH_F32";
 	}
 	sfz_assert_debug(false);
 	return "";
@@ -344,7 +346,7 @@ void RendererUI::renderFramebuffersTab(RendererConfigurableState& state) noexcep
 		else {
 			if (fbItem.resolutionScaleSetting != nullptr) {
 				alignedEdit("Resolution scale", offset, [&](const char*) {
-					ImGui::Text("%.2f  --  (Setting: \"%s\")",
+					ImGui::Text("%.2f  --  Setting: \"%s\"",
 						fbItem.resolutionScale, fbItem.resolutionScaleSetting->key().str);
 				});
 			}
@@ -362,10 +364,20 @@ void RendererUI::renderFramebuffersTab(RendererConfigurableState& state) noexcep
 			ImGui::Text("%i x %i", width, height);
 		});
 
+		// Render targets
+		for (uint32_t j = 0; j < fbItem.numRenderTargets; j++) {
+			const RenderTargetItem& rtItem = fbItem.renderTargetItems[j];
+			alignedEdit(str64("Render target [%u]", j).str, offset, [&](const char*) {
+				ImGui::Text("%s  --  Clear: %.1f",
+					textureFormatToString(rtItem.format), rtItem.clearValue);
+			});
+		}
+
 		// Depth buffer
 		if (fbItem.hasDepthBuffer) {
 			alignedEdit("Depth buffer", offset, [&](const char*) {
-				ImGui::Text("%s", textureFormatToString(fbItem.depthBufferFormat));
+				ImGui::Text("%s  --  Clear: %.1f",
+					textureFormatToString(fbItem.depthBufferFormat), fbItem.depthBufferClearValue);
 			});
 		}
 

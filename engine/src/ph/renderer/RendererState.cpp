@@ -23,6 +23,17 @@
 
 namespace ph {
 
+// Statics
+// ------------------------------------------------------------------------------------------------
+
+static ZgOptimalClearValue floatToOptimalClearValue(float value) noexcept
+{
+	if (value == 0.0f) return ZG_OPTIMAL_CLEAR_VALUE_ZERO;
+	if (value == 1.0f) return ZG_OPTIMAL_CLEAR_VALUE_ONE;
+	sfz_assert_debug(false);
+	return ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED;
+}
+
 // Framebuffer types
 // ------------------------------------------------------------------------------------------------
 
@@ -66,34 +77,28 @@ bool FramebufferItem::buildFramebuffer(vec2_s32 windowRes, DynamicGpuAllocator& 
 	zg::FramebufferBuilder builder;
 
 	// Allocate render targets
-	framebuffer.numRenderTargets = 1;
-	framebuffer.renderTargets[0] = gpuAllocatorFramebuffer.allocateTexture2D(
-		ZG_TEXTURE_FORMAT_RGBA_U8,
-		width,
-		height,
-		1,
-		ZG_TEXTURE_USAGE_RENDER_TARGET,
-		ZG_OPTIMAL_CLEAR_VALUE_ZERO);
-	builder.addRenderTarget(framebuffer.renderTargets[0]);
+	framebuffer.numRenderTargets = numRenderTargets;
+	for (uint32_t i = 0; i < numRenderTargets; i++) {
+		RenderTargetItem& rtItem = renderTargetItems[i];
+		framebuffer.renderTargets[i] = gpuAllocatorFramebuffer.allocateTexture2D(
+			rtItem.format,
+			width,
+			height,
+			1,
+			ZG_TEXTURE_USAGE_RENDER_TARGET,
+			floatToOptimalClearValue(rtItem.clearValue));
+		builder.addRenderTarget(framebuffer.renderTargets[i]);
+	}
 
 	// Allocate depth buffer
 	if (hasDepthBuffer) {
-		ZgOptimalClearValue optimalClear = ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED;
-		if (depthBufferClearValue == 0.0f) {
-			optimalClear = ZG_OPTIMAL_CLEAR_VALUE_ZERO;
-		}
-		else if (depthBufferClearValue == 1.0f) {
-			optimalClear = ZG_OPTIMAL_CLEAR_VALUE_ONE;
-		}
-		sfz_assert_debug(optimalClear != ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED);
-
 		framebuffer.depthBuffer = gpuAllocatorFramebuffer.allocateTexture2D(
-			ZG_TEXTURE_FORMAT_DEPTH_F32,
+			depthBufferFormat,
 			width,
 			height,
 			1,
 			ZG_TEXTURE_USAGE_DEPTH_BUFFER,
-			optimalClear);
+			floatToOptimalClearValue(depthBufferClearValue));
 		builder.setDepthBuffer(framebuffer.depthBuffer);
 	}
 

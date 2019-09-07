@@ -56,6 +56,11 @@ struct FramebufferBacked final {
 	zg::Texture2D depthBuffer;
 };
 
+struct RenderTargetItem final {
+	ZgTextureFormat format = ZG_TEXTURE_FORMAT_UNDEFINED;
+	float clearValue = 0.0f;
+};
+
 struct FramebufferItem final {
 	
 	// The framebuffer
@@ -67,6 +72,8 @@ struct FramebufferItem final {
 	float resolutionScale = 1.0f;
 	Setting* resolutionScaleSetting = nullptr;
 	vec2_s32 resolutionFixed = vec2_s32(0);
+	uint32_t numRenderTargets = 0;
+	RenderTargetItem renderTargetItems[ZG_MAX_NUM_RENDER_TARGETS];
 	bool hasDepthBuffer = false;
 	ZgTextureFormat depthBufferFormat = ZG_TEXTURE_FORMAT_R_F32;
 	float depthBufferClearValue = 0.0f;

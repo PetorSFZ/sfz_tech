@@ -80,6 +80,26 @@ static ZgDepthFunc depthFuncFromString(const str256& str) noexcept
 	return ZG_DEPTH_FUNC_LESS;
 }
 
+static ZgTextureFormat textureFormatFromString(const str256& str) noexcept
+{
+	if (str == "R_U8") return ZG_TEXTURE_FORMAT_R_U8;
+	if (str == "RG_U8") return ZG_TEXTURE_FORMAT_RG_U8;
+	if (str == "RGBA_U8") return ZG_TEXTURE_FORMAT_RGBA_U8;
+
+	if (str == "R_F16") return ZG_TEXTURE_FORMAT_R_F16;
+	if (str == "RG_F16") return ZG_TEXTURE_FORMAT_RG_F16;
+	if (str == "RGBA_F16") return ZG_TEXTURE_FORMAT_RGBA_F16;
+
+	if (str == "R_F32") return ZG_TEXTURE_FORMAT_R_F32;
+	if (str == "RG_F32") return ZG_TEXTURE_FORMAT_RG_F32;
+	if (str == "RGBA_F32") return ZG_TEXTURE_FORMAT_RGBA_F32;
+
+	if (str == "DEPTH_F32") return ZG_TEXTURE_FORMAT_DEPTH_F32;
+
+	sfz_assert_debug(false);
+	return ZG_TEXTURE_FORMAT_UNDEFINED;
+}
+
 // Renderer config parser functions
 // ------------------------------------------------------------------------------------------------
 
@@ -153,14 +173,30 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 				}
 			}
 
+			// Render targets
+			ParsedJsonNode renderTargetsNode = fbNode.accessMap("render_targets");
+			sfz_assert_debug(renderTargetsNode.isValid());
+			fbItem.numRenderTargets = renderTargetsNode.arrayLength();
+			for (uint32_t i = 0; i < fbItem.numRenderTargets; i++) {
+				ParsedJsonNode renderTarget = renderTargetsNode.accessArray(i);
+				fbItem.renderTargetItems[i].format = textureFormatFromString(
+					CHECK_JSON renderTarget.accessMap("format").valueStr256());
+				float clearValue = CHECK_JSON renderTarget.accessMap("clear_value").valueFloat();
+				sfz_assert_debug(clearValue == 0.0f || clearValue == 1.0f);
+				fbItem.renderTargetItems[i].clearValue = clearValue;
+			}
+
 			// Depth buffer
 			if (fbNode.accessMap("depth_buffer").isValid()) {
-				fbItem.hasDepthBuffer = true;
-				float clearValue = CHECK_JSON fbNode.accessMap("depth_buffer_clear_value").valueFloat();
-				sfz_assert_debug(clearValue == 0.0f || clearValue == 1.0f);
-				fbItem.depthBufferClearValue = clearValue;
-				// TODO: Could also look at value of depth_buffer to set depthBufferFormat, but
-				//       not particularly important right now as we only support F32.
+				fbItem.hasDepthBuffer = CHECK_JSON fbNode.accessMap("depth_buffer").valueBool();
+				if (fbItem.hasDepthBuffer) {
+					fbItem.depthBufferFormat = textureFormatFromString(
+						CHECK_JSON fbNode.accessMap("depth_buffer_format").valueStr256());
+					float clearValue = CHECK_JSON fbNode.accessMap("depth_buffer_clear_value").valueFloat();
+					sfz_assert_debug(clearValue == 0.0f || clearValue == 1.0f);
+					fbItem.depthBufferClearValue = clearValue;
+				}
+				
 			}
 		}
 	}
