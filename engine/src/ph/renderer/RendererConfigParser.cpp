@@ -120,7 +120,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	ParsedJsonNode root = json.root();
 
 	// Ensure some necessary sections exist
-	if (!root.accessMap("rendering_pipelines").isValid()) return false;
+	if (!root.accessMap("render_pipelines").isValid()) return false;
 
 	// Store path to configuration
 	configurable.configPath.printf("%s", configPath);
@@ -201,17 +201,17 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		}
 	}
 
-	// Get number of rendering pipelines to load and allocate memory for them
-	ParsedJsonNode renderingPipelinesNode = root.accessMap("rendering_pipelines");
-	uint32_t numRenderingPipelines = renderingPipelinesNode.arrayLength();
-	configurable.renderingPipelines.create(numRenderingPipelines, state.allocator);
+	// Get number of render pipelines to load and allocate memory for them
+	ParsedJsonNode renderPipelinesNode = root.accessMap("render_pipelines");
+	uint32_t numRenderPipelines = renderPipelinesNode.arrayLength();
+	configurable.renderPipelines.create(numRenderPipelines, state.allocator);
 
-	// Parse information about each rendering pipeline
-	for (uint32_t i = 0; i < numRenderingPipelines; i++) {
+	// Parse information about each render pipeline
+	for (uint32_t i = 0; i < numRenderPipelines; i++) {
 
-		ParsedJsonNode pipelineNode = renderingPipelinesNode.accessArray(i);
-		configurable.renderingPipelines.add(PipelineRenderingItem());
-		PipelineRenderingItem& item = configurable.renderingPipelines.last();
+		ParsedJsonNode pipelineNode = renderPipelinesNode.accessArray(i);
+		configurable.renderPipelines.add(PipelineRenderItem());
+		PipelineRenderItem& item = configurable.renderPipelines.last();
 
 		str256 name = CHECK_JSON pipelineNode.accessMap("name").valueStr256();
 		item.name = resStrings.getStringID(name);
@@ -319,9 +319,9 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		else return false;
 
 		if (stage.stageType == StageType::USER_INPUT_RENDERING) {
-			str256 renderingPipelineName =
-				CHECK_JSON stageNode.accessMap("rendering_pipeline").valueStr256();
-			stage.renderingPipelineName = resStrings.getStringID(renderingPipelineName);
+			str256 renderPipelineName =
+				CHECK_JSON stageNode.accessMap("render_pipeline").valueStr256();
+			stage.renderPipelineName = resStrings.getStringID(renderPipelineName);
 
 			str256 framebufferName =
 				CHECK_JSON stageNode.accessMap("framebuffer").valueStr256();
@@ -359,7 +359,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	}
 
 	// Builds pipelines
-	for (PipelineRenderingItem& item : configurable.renderingPipelines) {
+	for (PipelineRenderItem& item : configurable.renderPipelines) {
 		if (!item.buildPipeline()) {
 			success = false;
 		}
@@ -380,9 +380,9 @@ bool allocateStageMemory(RendererState& state) noexcept
 		if (stage.stageType != StageType::USER_INPUT_RENDERING) continue;
 		
 		// Find pipeline
-		PipelineRenderingItem* pipelineItem =
-			state.configurable.renderingPipelines.find([&](const PipelineRenderingItem& item) {
-			return item.name == stage.renderingPipelineName;
+		PipelineRenderItem* pipelineItem =
+			state.configurable.renderPipelines.find([&](const PipelineRenderItem& item) {
+			return item.name == stage.renderPipelineName;
 		});
 		sfz_assert_debug(pipelineItem != nullptr);
 		

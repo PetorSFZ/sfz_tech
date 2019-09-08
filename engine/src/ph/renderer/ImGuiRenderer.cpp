@@ -54,7 +54,7 @@ bool ImGuiRenderer::init(
 	mScaleSetting = cfg.sanitizeFloat("Imgui", "scale", true, FloatBounds(2.0f, 1.0f, 3.0f));
 
 	// Build ImGui pipeline
-	bool pipelineSuccess = CHECK_ZG zg::PipelineRenderingBuilder()
+	bool pipelineSuccess = CHECK_ZG zg::PipelineRenderBuilder()
 		.addVertexAttribute(0, 0, ZG_VERTEX_ATTRIBUTE_F32_2, offsetof(ImGuiVertex, pos))
 		.addVertexAttribute(1, 0, ZG_VERTEX_ATTRIBUTE_F32_2, offsetof(ImGuiVertex, texcoord))
 		.addVertexAttribute(2, 0, ZG_VERTEX_ATTRIBUTE_F32_4, offsetof(ImGuiVertex, color))

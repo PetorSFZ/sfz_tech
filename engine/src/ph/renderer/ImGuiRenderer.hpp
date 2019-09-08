@@ -100,7 +100,7 @@ private:
 	sfz::Allocator* mAllocator = nullptr;
 
 	// Pipeline used to render imgui gui with
-	zg::PipelineRendering mPipeline;
+	zg::PipelineRender mPipeline;
 
 	// Font texture
 	zg::MemoryHeap mFontTextureHeap;

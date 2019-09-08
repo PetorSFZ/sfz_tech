@@ -17,7 +17,7 @@
 			"depth_buffer_clear_value": 1.0
 		}
 	],
-	"rendering_pipelines": [
+	"render_pipelines": [
 		{
 			"name": "Forward Shader",
 			"source_type": "hlsl",
@@ -70,7 +70,7 @@
 		{
 			"stage_name": "Forward Pass",
 			"stage_type": "USER_INPUT_RENDERING",
-			"rendering_pipeline": "Forward Shader",
+			"render_pipeline": "Forward Shader",
 			"framebuffer": "InternalFB"
 		},
 		{
@@ -80,7 +80,7 @@
 		{
 			"stage_name": "Copy Out Pass",
 			"stage_type": "USER_INPUT_RENDERING",
-			"rendering_pipeline": "Copy Out Shader",
+			"render_pipeline": "Copy Out Shader",
 			"framebuffer": "default",
 			"bound_render_targets": [
 				{

@@ -109,10 +109,10 @@ bool FramebufferItem::buildFramebuffer(vec2_s32 windowRes, DynamicGpuAllocator& 
 //  Pipeline types
 // ------------------------------------------------------------------------------------------------
 
-bool PipelineRenderingItem::buildPipeline() noexcept
+bool PipelineRenderItem::buildPipeline() noexcept
 {
 	// Create pipeline builder
-	zg::PipelineRenderingBuilder pipelineBuilder;
+	zg::PipelineRenderBuilder pipelineBuilder;
 	pipelineBuilder
 		.addVertexShaderPath(vertexShaderEntry, vertexShaderPath)
 		.addPixelShaderPath(pixelShaderEntry, pixelShaderPath);
@@ -164,7 +164,7 @@ bool PipelineRenderingItem::buildPipeline() noexcept
 
 	// Build pipeline
 	bool buildSuccess = false;
-	zg::PipelineRendering tmpPipeline;
+	zg::PipelineRender tmpPipeline;
 	if (sourceType == PipelineSourceType::SPIRV) {
 		buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileSPIRV(tmpPipeline);
 	}
@@ -239,12 +239,12 @@ uint32_t  RendererState::findActiveStageIdx(StringID stageName) const noexcept
 	return ~0u;
 }
 
-uint32_t  RendererState::findPipelineRenderingIdx(StringID pipelineName) const noexcept
+uint32_t  RendererState::findPipelineRenderIdx(StringID pipelineName) const noexcept
 {
 	sfz_assert_debug(pipelineName != StringID::invalid());
-	uint32_t numPipelines = this->configurable.renderingPipelines.size();
+	uint32_t numPipelines = this->configurable.renderPipelines.size();
 	for (uint32_t i = 0; i < numPipelines; i++) {
-		const PipelineRenderingItem& item = this->configurable.renderingPipelines[i];
+		const PipelineRenderItem& item = this->configurable.renderPipelines[i];
 		if (item.name == pipelineName) return i;
 	}
 	return ~0u;

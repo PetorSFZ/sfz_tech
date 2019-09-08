@@ -302,7 +302,7 @@ void RendererUI::renderStagesTab(RendererConfigurableState& state) noexcept
 		if (stage.stageType != StageType::USER_STAGE_BARRIER) {
 
 			// Pipeline name
-			ImGui::Text("Rendering Pipeline: \"%s\"", resStrings.getString(stage.renderingPipelineName));
+			ImGui::Text("Render Pipeline: \"%s\"", resStrings.getString(stage.renderPipelineName));
 
 			// Framebuffer name
 			ImGui::Text("Framebuffer: \"%s\"", resStrings.getString(stage.framebufferName));
@@ -396,12 +396,12 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 
 	RendererConfigurableState& configurable = state.configurable;
 
-	// Rendering pipelines
-	ImGui::Text("Rendering Pipelines");
+	// Render pipelines
+	ImGui::Text("Render Pipelines");
 
 	// Reload all button
 	ImGui::SameLine(ImGui::GetWindowWidth() - 130.0f);
-	if (ImGui::Button("Reload All##__rendering_pipelines", vec2(120.0f, 0.0f))) {
+	if (ImGui::Button("Reload All##__render_pipelines", vec2(120.0f, 0.0f))) {
 
 		SFZ_INFO("Renderer", "Reloading all pipelines...");
 
@@ -409,8 +409,8 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 		CHECK_ZG state.presentQueue.flush();
 
 		// Rebuild pipelines
-		for (uint32_t i = 0; i < configurable.renderingPipelines.size(); i++) {
-			PipelineRenderingItem& pipeline = configurable.renderingPipelines[i];
+		for (uint32_t i = 0; i < configurable.renderPipelines.size(); i++) {
+			PipelineRenderItem& pipeline = configurable.renderPipelines[i];
 			bool success = pipeline.buildPipeline();
 			if (!success) {
 				SFZ_WARNING("Renderer", "Failed to rebuild pipeline: \"%s\"",
@@ -420,13 +420,13 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 	}
 
 	ImGui::Spacing();
-	for (uint32_t i = 0; i < configurable.renderingPipelines.size(); i++) {
-		PipelineRenderingItem& pipeline = configurable.renderingPipelines[i];
-		const ZgPipelineRenderingSignature& signature = pipeline.pipeline.signature;
+	for (uint32_t i = 0; i < configurable.renderPipelines.size(); i++) {
+		PipelineRenderItem& pipeline = configurable.renderPipelines[i];
+		const ZgPipelineRenderSignature& signature = pipeline.pipeline.signature;
 		const char* name = resStrings.getString(pipeline.name);
 
 		// Reload button
-		if (ImGui::Button(str64("Reload##__rendering_%u", i).str, vec2(80.0f, 0.0f))) {
+		if (ImGui::Button(str64("Reload##__render_%u", i).str, vec2(80.0f, 0.0f))) {
 
 			// Flush ZeroG queues
 			CHECK_ZG state.presentQueue.flush();

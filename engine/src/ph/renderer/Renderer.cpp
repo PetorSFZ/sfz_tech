@@ -340,7 +340,7 @@ bool Renderer::inStageInputMode() const noexcept
 {
 	if (mState->currentInputEnabledStageIdx == ~0u) return false;
 	if (mState->currentInputEnabledStage == nullptr) return false;
-	if (mState->currentPipelineRendering == nullptr) return false;
+	if (mState->currentPipelineRender == nullptr) return false;
 	if (!mState->currentCommandList.valid()) return false;
 	return true;
 }
@@ -359,19 +359,19 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 	Stage& stage = mState->configurable.presentQueueStages[stageIdx];
 	sfz_assert_debug(stage.stageType == StageType::USER_INPUT_RENDERING);
 
-	// Find rendering pipeline
-	uint32_t pipelineIdx = mState->findPipelineRenderingIdx(stage.renderingPipelineName);
+	// Find render pipeline
+	uint32_t pipelineIdx = mState->findPipelineRenderIdx(stage.renderPipelineName);
 	sfz_assert_debug(pipelineIdx != ~0u);
 	if (pipelineIdx == ~0u) return;
-	sfz_assert_debug(pipelineIdx < mState->configurable.renderingPipelines.size());
-	PipelineRenderingItem& pipelineItem = mState->configurable.renderingPipelines[pipelineIdx];
+	sfz_assert_debug(pipelineIdx < mState->configurable.renderPipelines.size());
+	PipelineRenderItem& pipelineItem = mState->configurable.renderPipelines[pipelineIdx];
 	sfz_assert_debug(pipelineItem.pipeline.valid());
 	if (!pipelineItem.pipeline.valid()) return;
 
 	// Set currently active stage
 	mState->currentInputEnabledStageIdx = stageIdx;
 	mState->currentInputEnabledStage = &stage;
-	mState->currentPipelineRendering = &pipelineItem;
+	mState->currentPipelineRender = &pipelineItem;
 
 	// Get stage's framebuffer
 	zg::Framebuffer* framebuffer =
@@ -395,8 +395,8 @@ void Renderer::stageSetPushConstantUntyped(
 	// In debug mode, validate that the specified shader registers corresponds to a a suitable
 	// push constant in the pipeline
 #if !defined(SFZ_NO_DEBUG)
-	const ZgPipelineRenderingSignature& signature =
-		mState->currentPipelineRendering->pipeline.signature;
+	const ZgPipelineRenderSignature& signature =
+		mState->currentPipelineRender->pipeline.signature;
 	
 	uint32_t bufferIdx = ~0u;
 	for (uint32_t i = 0; i < signature.numConstantBuffers; i++) {
@@ -424,8 +424,8 @@ void Renderer::stageSetConstantBufferUntyped(
 	// In debug mode, validate that the specified shader registers corresponds to a a suitable
 	// constant buffer in the pipeline
 #if !defined(SFZ_NO_DEBUG)
-	const ZgPipelineRenderingSignature& signature =
-		mState->currentPipelineRendering->pipeline.signature;
+	const ZgPipelineRenderSignature& signature =
+		mState->currentPipelineRender->pipeline.signature;
 
 	uint32_t bufferIdx = ~0u;
 	for (uint32_t i = 0; i < signature.numConstantBuffers; i++) {
@@ -477,8 +477,8 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 	// Validate some stuff in debug mode
 #if !defined(SFZ_NO_DEBUG)
 	// Validate pipeline vertex input for standard mesh rendering
-	const ZgPipelineRenderingSignature& signature =
-		mState->currentPipelineRendering->pipeline.signature;
+	const ZgPipelineRenderSignature& signature =
+		mState->currentPipelineRender->pipeline.signature;
 	sfz_assert_debug(signature.numVertexAttributes == 3);
 
 	sfz_assert_debug(signature.vertexAttributes[0].location == 0);
@@ -647,7 +647,7 @@ void Renderer::stageEndInput() noexcept
 	// Clear currently active stage info
 	mState->currentInputEnabledStageIdx = ~0u;
 	mState->currentInputEnabledStage = nullptr;
-	mState->currentPipelineRendering = nullptr;
+	mState->currentPipelineRender = nullptr;
 	mState->currentCommandList.release();
 }
 

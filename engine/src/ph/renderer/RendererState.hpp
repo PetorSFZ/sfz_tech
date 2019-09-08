@@ -98,10 +98,10 @@ struct SamplerItem final {
 	ZgSampler sampler = {};
 };
 
-struct PipelineRenderingItem final {
+struct PipelineRenderItem final {
 
 	// The pipeline
-	zg::PipelineRendering pipeline;
+	zg::PipelineRender pipeline;
 
 	// Parsed information
 	StringID name;
@@ -159,7 +159,7 @@ struct BoundRenderTarget final {
 struct Stage final {
 	StringID stageName = StringID::invalid();
 	StageType stageType;
-	StringID renderingPipelineName = StringID::invalid();
+	StringID renderPipelineName = StringID::invalid();
 	DynArray<Framed<ConstantBufferMemory>> constantBuffers;
 	StringID framebufferName = StringID::invalid();
 	DynArray<BoundRenderTarget> boundRenderTargets;
@@ -188,7 +188,7 @@ struct RendererConfigurableState final {
 	DynArray<FramebufferItem> framebuffers;
 
 	// Pipelines
-	DynArray<PipelineRenderingItem> renderingPipelines;
+	DynArray<PipelineRenderItem> renderPipelines;
 
 	// Present Queue Stages
 	DynArray<Stage> presentQueueStages;
@@ -246,7 +246,7 @@ struct RendererState final {
 	// Note: The current input-enabled stage must be part of the current stage set
 	uint32_t currentInputEnabledStageIdx = ~0u;
 	Stage* currentInputEnabledStage = nullptr;
-	PipelineRenderingItem* currentPipelineRendering = nullptr;
+	PipelineRenderItem* currentPipelineRender = nullptr;
 	zg::CommandList currentCommandList;
 
 	// Helper methods
@@ -261,8 +261,8 @@ struct RendererState final {
 	// active set.
 	uint32_t findActiveStageIdx(StringID stageName) const noexcept;
 
-	// Finds the index of the specified rendering pipeline. Returns ~0u if it does not exist.
-	uint32_t findPipelineRenderingIdx(StringID pipelineName) const noexcept;
+	// Finds the index of the specified render pipeline. Returns ~0u if it does not exist.
+	uint32_t findPipelineRenderIdx(StringID pipelineName) const noexcept;
 
 	// Finds the current constant buffer's memory for the current input stage given its shader
 	// register.
