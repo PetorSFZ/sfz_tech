@@ -23,7 +23,7 @@
 #include "ZeroG/d3d12/D3D12DescriptorRingBuffer.hpp"
 #include "ZeroG/d3d12/D3D12Framebuffer.hpp"
 #include "ZeroG/d3d12/D3D12Buffer.hpp"
-#include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
+#include "ZeroG/d3d12/D3D12PipelineRender.hpp"
 #include "ZeroG/BackendInterface.hpp"
 #include "ZeroG/util/Vector.hpp"
 
@@ -83,8 +83,8 @@ public:
 	ZgErrorCode setPipelineBindings(
 		const ZgPipelineBindings& bindings) noexcept override final;
 
-	ZgErrorCode setPipelineRendering(
-		ZgPipelineRendering* pipeline) noexcept override final;
+	ZgErrorCode setPipelineRender(
+		ZgPipelineRender* pipeline) noexcept override final;
 
 	ZgErrorCode setFramebuffer(
 		ZgFramebuffer* framebuffer,
@@ -182,7 +182,7 @@ private:
 	D3DX12Residency::ResidencyManager* mResidencyManager = nullptr;
 	D3D12DescriptorRingBuffer* mDescriptorBuffer = nullptr;
 	bool mPipelineSet = false; // Only allow a single pipeline per command list
-	D3D12PipelineRendering* mBoundPipeline = nullptr;
+	D3D12PipelineRender* mBoundPipeline = nullptr;
 	bool mFramebufferSet = false; // Only allow a single framebuffer to be set.
 	D3D12Framebuffer* mFramebuffer = nullptr;
 };

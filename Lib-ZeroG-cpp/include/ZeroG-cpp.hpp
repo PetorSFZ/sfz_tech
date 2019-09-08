@@ -28,7 +28,7 @@ namespace zg {
 // ------------------------------------------------------------------------------------------------
 
 class Context;
-class PipelineRendering;
+class PipelineRender;
 class MemoryHeap;
 class Buffer;
 class TextureHeap;
@@ -136,15 +136,15 @@ private:
 };
 
 
-// PipelineRenderingBuilder
+// PipelineRenderBuilder
 // ------------------------------------------------------------------------------------------------
 
-class PipelineRenderingBuilder final {
+class PipelineRenderBuilder final {
 public:
 	// Members
 	// --------------------------------------------------------------------------------------------
 
-	ZgPipelineRenderingCreateInfoCommon commonInfo = {};
+	ZgPipelineRenderCreateInfoCommon commonInfo = {};
 	const char* vertexShaderPath = nullptr;
 	const char* pixelShaderPath = nullptr;
 	const char* vertexShaderSrc = nullptr;
@@ -153,83 +153,83 @@ public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	PipelineRenderingBuilder() noexcept = default;
-	PipelineRenderingBuilder(const PipelineRenderingBuilder&) noexcept = default;
-	PipelineRenderingBuilder& operator= (const PipelineRenderingBuilder&) noexcept = default;
-	~PipelineRenderingBuilder() noexcept = default;
+	PipelineRenderBuilder() noexcept = default;
+	PipelineRenderBuilder(const PipelineRenderBuilder&) noexcept = default;
+	PipelineRenderBuilder& operator= (const PipelineRenderBuilder&) noexcept = default;
+	~PipelineRenderBuilder() noexcept = default;
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	PipelineRenderingBuilder& addVertexAttribute(ZgVertexAttribute attribute) noexcept;
+	PipelineRenderBuilder& addVertexAttribute(ZgVertexAttribute attribute) noexcept;
 	
-	PipelineRenderingBuilder& addVertexAttribute(
+	PipelineRenderBuilder& addVertexAttribute(
 		uint32_t location,
 		uint32_t vertexBufferSlot,
 		ZgVertexAttributeType type,
 		uint32_t offsetInBuffer) noexcept;
 	
-	PipelineRenderingBuilder& addVertexBufferInfo(
+	PipelineRenderBuilder& addVertexBufferInfo(
 		uint32_t slot, uint32_t vertexBufferStrideBytes) noexcept;
 	
-	PipelineRenderingBuilder& addPushConstant(uint32_t constantBufferRegister) noexcept;
+	PipelineRenderBuilder& addPushConstant(uint32_t constantBufferRegister) noexcept;
 	
-	PipelineRenderingBuilder& addSampler(uint32_t samplerRegister, ZgSampler sampler) noexcept;
+	PipelineRenderBuilder& addSampler(uint32_t samplerRegister, ZgSampler sampler) noexcept;
 	
-	PipelineRenderingBuilder& addSampler(
+	PipelineRenderBuilder& addSampler(
 		uint32_t samplerRegister,
 		ZgSamplingMode samplingMode,
 		ZgWrappingMode wrappingModeU = ZG_WRAPPING_MODE_CLAMP,
 		ZgWrappingMode wrappingModeV = ZG_WRAPPING_MODE_CLAMP,
 		float mipLodBias = 0.0f) noexcept;
 
-	PipelineRenderingBuilder& addVertexShaderPath(const char* entry, const char* path) noexcept;
-	PipelineRenderingBuilder& addPixelShaderPath(const char* entry, const char* path) noexcept;
-	PipelineRenderingBuilder& addVertexShaderSource(const char* entry, const char* src) noexcept;
-	PipelineRenderingBuilder& addPixelShaderSource(const char* entry, const char* src) noexcept;
+	PipelineRenderBuilder& addVertexShaderPath(const char* entry, const char* path) noexcept;
+	PipelineRenderBuilder& addPixelShaderPath(const char* entry, const char* path) noexcept;
+	PipelineRenderBuilder& addVertexShaderSource(const char* entry, const char* src) noexcept;
+	PipelineRenderBuilder& addPixelShaderSource(const char* entry, const char* src) noexcept;
 
-	PipelineRenderingBuilder& setWireframeRendering(bool wireframeEnabled) noexcept;
-	PipelineRenderingBuilder& setCullingEnabled(bool cullingEnabled) noexcept;
-	PipelineRenderingBuilder& setCullMode(
+	PipelineRenderBuilder& setWireframeRendering(bool wireframeEnabled) noexcept;
+	PipelineRenderBuilder& setCullingEnabled(bool cullingEnabled) noexcept;
+	PipelineRenderBuilder& setCullMode(
 		bool cullFrontFacing, bool fontFacingIsCounterClockwise = false) noexcept;
 
-	PipelineRenderingBuilder& setBlendingEnabled(bool blendingEnabled) noexcept;
-	PipelineRenderingBuilder& setBlendFuncColor(
+	PipelineRenderBuilder& setBlendingEnabled(bool blendingEnabled) noexcept;
+	PipelineRenderBuilder& setBlendFuncColor(
 		ZgBlendFunc func, ZgBlendValue srcFactor, ZgBlendValue dstFactor) noexcept;
-	PipelineRenderingBuilder& setBlendFuncAlpha(
+	PipelineRenderBuilder& setBlendFuncAlpha(
 		ZgBlendFunc func, ZgBlendValue srcFactor, ZgBlendValue dstFactor) noexcept;
 
-	PipelineRenderingBuilder& setDepthTestEnabled(bool depthTestEnabled) noexcept;
-	PipelineRenderingBuilder& setDepthFunc(ZgDepthFunc depthFunc) noexcept;
+	PipelineRenderBuilder& setDepthTestEnabled(bool depthTestEnabled) noexcept;
+	PipelineRenderBuilder& setDepthFunc(ZgDepthFunc depthFunc) noexcept;
 
-	ErrorCode buildFromFileSPIRV(PipelineRendering& pipelineOut) const noexcept;
+	ErrorCode buildFromFileSPIRV(PipelineRender& pipelineOut) const noexcept;
 	ErrorCode buildFromFileHLSL(
-		PipelineRendering& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0) const noexcept;
+		PipelineRender& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0) const noexcept;
 	ErrorCode buildFromSourceHLSL(
-		PipelineRendering& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0) const noexcept;
+		PipelineRender& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0) const noexcept;
 };
 
 
-// PipelineRendering
+// PipelineRender
 // ------------------------------------------------------------------------------------------------
 
-class PipelineRendering final {
+class PipelineRender final {
 public:
 	// Members
 	// --------------------------------------------------------------------------------------------
 
-	ZgPipelineRendering* pipeline = nullptr;
-	ZgPipelineRenderingSignature signature = {};
+	ZgPipelineRender* pipeline = nullptr;
+	ZgPipelineRenderSignature signature = {};
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	PipelineRendering() noexcept = default;
-	PipelineRendering(const PipelineRendering&) = delete;
-	PipelineRendering& operator= (const PipelineRendering&) = delete;
-	PipelineRendering(PipelineRendering&& o) noexcept { this->swap(o); }
-	PipelineRendering& operator= (PipelineRendering&& o) noexcept { this->swap(o); return *this; }
-	~PipelineRendering() noexcept { this->release(); }
+	PipelineRender() noexcept = default;
+	PipelineRender(const PipelineRender&) = delete;
+	PipelineRender& operator= (const PipelineRender&) = delete;
+	PipelineRender(PipelineRender&& o) noexcept { this->swap(o); }
+	PipelineRender& operator= (PipelineRender&& o) noexcept { this->swap(o); return *this; }
+	~PipelineRender() noexcept { this->release(); }
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
@@ -237,21 +237,21 @@ public:
 	// Checks if this pipeline is valid
 	bool valid() const noexcept { return this->pipeline != nullptr; }
 
-	// See zgPipelineRenderingCreateFromFileSPIRV()
+	// See zgPipelineRenderCreateFromFileSPIRV()
 	ErrorCode createFromFileSPIRV(
-		const ZgPipelineRenderingCreateInfoFileSPIRV& createInfo) noexcept;
+		const ZgPipelineRenderCreateInfoFileSPIRV& createInfo) noexcept;
 	
-	// See ZgPipelineRenderingCreateInfoFileHLSL()
+	// See ZgPipelineRenderCreateInfoFileHLSL()
 	ErrorCode createFromFileHLSL(
-		const ZgPipelineRenderingCreateInfoFileHLSL& createInfo) noexcept;
+		const ZgPipelineRenderCreateInfoFileHLSL& createInfo) noexcept;
 	
-	// See ZgPipelineRenderingCreateInfoSourceHLSL()
+	// See ZgPipelineRenderCreateInfoSourceHLSL()
 	ErrorCode createFromSourceHLSL(
-		const ZgPipelineRenderingCreateInfoSourceHLSL& createInfo) noexcept;
+		const ZgPipelineRenderCreateInfoSourceHLSL& createInfo) noexcept;
 
-	void swap(PipelineRendering& other) noexcept;
+	void swap(PipelineRender& other) noexcept;
 
-	// See zgPipelineRenderingRelease()
+	// See zgPipelineRenderRelease()
 	void release() noexcept;
 };
 
@@ -665,8 +665,8 @@ public:
 	// See zgCommandListSetPipelineBindings()
 	ErrorCode setPipelineBindings(const PipelineBindings& bindings) noexcept;
 
-	// See zgCommandListSetPipelineRendering()
-	ErrorCode setPipeline(PipelineRendering& pipeline) noexcept;
+	// See zgCommandListSetPipelineRender()
+	ErrorCode setPipeline(PipelineRender& pipeline) noexcept;
 
 	// See zgCommandListSetFramebuffer()
 	ErrorCode setFramebuffer(

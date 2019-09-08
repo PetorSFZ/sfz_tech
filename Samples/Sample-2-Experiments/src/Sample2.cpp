@@ -242,10 +242,10 @@ static void realMain(SDL_Window* window) noexcept
 	zg::CommandQueue copyQueue;
 	CHECK_ZG zg::CommandQueue::getCopyQueue(copyQueue);
 
-	// Create a rendering pipeline
-	zg::PipelineRendering pipeline;
+	// Create a render pipeline
+	zg::PipelineRender pipeline;
 	{
-		zg::PipelineRenderingBuilder pipelineBuilder = zg::PipelineRenderingBuilder()
+		zg::PipelineRenderBuilder pipelineBuilder = zg::PipelineRenderBuilder()
 			.addVertexAttribute(0, 0, ZG_VERTEX_ATTRIBUTE_F32_3, offsetof(Vertex, position))
 			.addVertexAttribute(1, 0, ZG_VERTEX_ATTRIBUTE_F32_3, offsetof(Vertex, normal))
 			.addVertexAttribute(2, 0, ZG_VERTEX_ATTRIBUTE_F32_2, offsetof(Vertex, texcoord))

@@ -282,10 +282,10 @@ public:
 	// Pipeline methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode pipelineRenderingCreateFromFileSPIRV(
-		ZgPipelineRendering** pipelineOut,
-		ZgPipelineRenderingSignature* signatureOut,
-		const ZgPipelineRenderingCreateInfoFileSPIRV& createInfo) noexcept override final
+	ZgErrorCode pipelineRenderCreateFromFileSPIRV(
+		ZgPipelineRender** pipelineOut,
+		ZgPipelineRenderSignature* signatureOut,
+		const ZgPipelineRenderCreateInfoFileSPIRV& createInfo) noexcept override final
 	{
 		(void)pipelineOut;
 		(void)signatureOut;
@@ -293,10 +293,10 @@ public:
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
-	ZgErrorCode pipelineRenderingCreateFromFileHLSL(
-		ZgPipelineRendering** pipelineOut,
-		ZgPipelineRenderingSignature* signatureOut,
-		const ZgPipelineRenderingCreateInfoFileHLSL& createInfo) noexcept override final
+	ZgErrorCode pipelineRenderCreateFromFileHLSL(
+		ZgPipelineRender** pipelineOut,
+		ZgPipelineRenderSignature* signatureOut,
+		const ZgPipelineRenderCreateInfoFileHLSL& createInfo) noexcept override final
 	{
 		(void)pipelineOut;
 		(void)signatureOut;
@@ -304,10 +304,10 @@ public:
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
-	ZgErrorCode pipelineRenderingCreateFromSourceHLSL(
-		ZgPipelineRendering** pipelineOut,
-		ZgPipelineRenderingSignature* signatureOut,
-		const ZgPipelineRenderingCreateInfoSourceHLSL& createInfo) noexcept override final
+	ZgErrorCode pipelineRenderCreateFromSourceHLSL(
+		ZgPipelineRender** pipelineOut,
+		ZgPipelineRenderSignature* signatureOut,
+		const ZgPipelineRenderCreateInfoSourceHLSL& createInfo) noexcept override final
 	{
 		(void)pipelineOut;
 		(void)signatureOut;
@@ -315,16 +315,16 @@ public:
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
-	ZgErrorCode pipelineRenderingRelease(
-		ZgPipelineRendering* pipeline) noexcept override final
+	ZgErrorCode pipelineRenderRelease(
+		ZgPipelineRender* pipeline) noexcept override final
 	{
 		(void)pipeline;
 		return ZG_ERROR_UNIMPLEMENTED;
 	}
 
-	ZgErrorCode pipelineRenderingGetSignature(
-		const ZgPipelineRendering* pipeline,
-		ZgPipelineRenderingSignature* signatureOut) const noexcept override final
+	ZgErrorCode pipelineRenderGetSignature(
+		const ZgPipelineRender* pipeline,
+		ZgPipelineRenderSignature* signatureOut) const noexcept override final
 	{
 		(void)pipeline;
 		(void)signatureOut;

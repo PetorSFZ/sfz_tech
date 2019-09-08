@@ -481,10 +481,10 @@ ZgErrorCode D3D12CommandList::setPipelineBindings(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::setPipelineRendering(
-	ZgPipelineRendering* pipelineIn) noexcept
+ZgErrorCode D3D12CommandList::setPipelineRender(
+	ZgPipelineRender* pipelineIn) noexcept
 {
-	D3D12PipelineRendering& pipeline = *reinterpret_cast<D3D12PipelineRendering*>(pipelineIn);
+	D3D12PipelineRender& pipeline = *reinterpret_cast<D3D12PipelineRender*>(pipelineIn);
 	
 	// If a pipeline is already set for this command list, return error. We currently only allow a
 	// single pipeline per command list.
@@ -792,7 +792,7 @@ ZgErrorCode D3D12CommandList::setVertexBuffer(
 	if (!mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 
 	// Check that the vertex buffer slot is not out of bounds for the bound pipeline
-	const ZgPipelineRenderingCreateInfoCommon& pipelineInfo = mBoundPipeline->createInfo;
+	const ZgPipelineRenderCreateInfoCommon& pipelineInfo = mBoundPipeline->createInfo;
 	if (pipelineInfo.numVertexBufferSlots <= vertexBufferSlot) {
 		return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 	}

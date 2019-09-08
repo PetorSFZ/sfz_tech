@@ -61,8 +61,8 @@ extern "C" {
 	struct name; \
 	typedef struct name name;
 
-// A handle representing a rendering pipeline
-ZG_HANDLE(ZgPipelineRendering);
+// A handle representing a render pipeline
+ZG_HANDLE(ZgPipelineRender);
 
 // A handle representing a memory heap (to allocate buffers and textures from)
 ZG_HANDLE(ZgMemoryHeap);
@@ -105,7 +105,7 @@ typedef struct ZgFramebufferRect ZgFramebufferRect;
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 4;
+static const uint32_t ZG_COMPILED_API_VERSION = 5;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -331,7 +331,7 @@ typedef struct ZgStats ZgStats;
 // of times) per frame.
 ZG_API ZgErrorCode zgContextGetStats(ZgStats* statsOut);
 
-// Pipeline Rendering - Signature
+// Pipeline Render - Signature
 // ------------------------------------------------------------------------------------------------
 
 // The maximum number of vertex attributes allowed as input to a vertex shader
@@ -416,12 +416,6 @@ struct ZgConstantBufferDesc {
 	// constant. In addition, Microsoft recommends keeping the root signature smaller than 16
 	// words to maximize performance on some hardware.
 	ZgBool pushConstant;
-
-	// Whether the buffer is accessed by the vertex shader or not
-	ZgBool vertexAccess;
-
-	// Whether the buffer is accessed by the pixel shader or not
-	ZgBool pixelAccess;
 };
 typedef struct ZgConstantBufferDesc ZgConstantBufferDesc;
 
@@ -429,16 +423,10 @@ struct ZgTextureDesc {
 
 	// Which register this texture corresponds to in the shader.
 	uint32_t textureRegister;
-
-	// Whether the texture is accessed by the vertex shader or not
-	ZgBool vertexAccess;
-
-	// Whether the texture is accessed by the pixel shader or not
-	ZgBool pixelAccess;
 };
 typedef struct ZgTextureDesc ZgTextureDesc;
 
-// A struct representing the signature of a rendering pipeline
+// A struct representing the signature of a render pipeline
 //
 // The signature contains all information necessary to know how to bind input and output to a
 // pipeline. Of course, in practice this is something the programmer should already be aware of as
@@ -447,7 +435,7 @@ typedef struct ZgTextureDesc ZgTextureDesc;
 // The signature is inferred by performing reflection on the shaders being compiled. Some
 // information that can not be automatically inferred is created by additional data supplied
 // when creating the pipeline.
-struct ZgPipelineRenderingSignature {
+struct ZgPipelineRenderSignature {
 
 	// The vertex attributes to the vertex shader
 	uint32_t numVertexAttributes;
@@ -461,9 +449,9 @@ struct ZgPipelineRenderingSignature {
 	uint32_t numTextures;
 	ZgTextureDesc textures[ZG_MAX_NUM_TEXTURES];
 };
-typedef struct ZgPipelineRenderingSignature ZgPipelineRenderingSignature;
+typedef struct ZgPipelineRenderSignature ZgPipelineRenderSignature;
 
-// Pipeline Rendering - Common
+// Pipeline Render - Common
 // ------------------------------------------------------------------------------------------------
 
 // Sample mode of a sampler
@@ -590,8 +578,8 @@ struct ZgDepthTestSettings {
 };
 typedef struct ZgDepthTestSettings ZgDepthTestSettings;
 
-// The common information required to create a rendering pipeline
-struct ZgPipelineRenderingCreateInfoCommon {
+// The common information required to create a render pipeline
+struct ZgPipelineRenderCreateInfoCommon {
 
 	// The names of the entry functions
 	const char* vertexShaderEntry;
@@ -631,35 +619,35 @@ struct ZgPipelineRenderingCreateInfoCommon {
 	// Depth test settings
 	ZgDepthTestSettings depthTest;
 };
-typedef struct ZgPipelineRenderingCreateInfoCommon ZgPipelineRenderingCreateInfoCommon;
+typedef struct ZgPipelineRenderCreateInfoCommon ZgPipelineRenderCreateInfoCommon;
 
-ZG_API ZgErrorCode zgPipelineRenderingRelease(
-	ZgPipelineRendering* pipeline);
+ZG_API ZgErrorCode zgPipelineRenderRelease(
+	ZgPipelineRender* pipeline);
 
-ZG_API ZgErrorCode zgPipelineRenderingGetSignature(
-	const ZgPipelineRendering* pipeline,
-	ZgPipelineRenderingSignature* signatureOut);
+ZG_API ZgErrorCode zgPipelineRenderGetSignature(
+	const ZgPipelineRender* pipeline,
+	ZgPipelineRenderSignature* signatureOut);
 
-// Pipeline Rendering - SPIRV
+// Pipeline Render - SPIRV
 // ------------------------------------------------------------------------------------------------
 
-struct ZgPipelineRenderingCreateInfoFileSPIRV {
+struct ZgPipelineRenderCreateInfoFileSPIRV {
 
-	// The common information always needed to create a rendering pipeline
-	ZgPipelineRenderingCreateInfoCommon common;
+	// The common information always needed to create a render pipeline
+	ZgPipelineRenderCreateInfoCommon common;
 
 	// Paths to the shader files
 	const char* vertexShaderPath;
 	const char* pixelShaderPath;
 };
-typedef struct ZgPipelineRenderingCreateInfoFileSPIRV ZgPipelineRenderingCreateInfoFileSPIRV;
+typedef struct ZgPipelineRenderCreateInfoFileSPIRV ZgPipelineRenderCreateInfoFileSPIRV;
 
-ZG_API ZgErrorCode zgPipelineRenderingCreateFromFileSPIRV(
-	ZgPipelineRendering** pipelineOut,
-	ZgPipelineRenderingSignature* signatureOut,
-	const ZgPipelineRenderingCreateInfoFileSPIRV* createInfo);
+ZG_API ZgErrorCode zgPipelineRenderCreateFromFileSPIRV(
+	ZgPipelineRender** pipelineOut,
+	ZgPipelineRenderSignature* signatureOut,
+	const ZgPipelineRenderCreateInfoFileSPIRV* createInfo);
 
-// Pipeline Rendering - HLSL
+// Pipeline Render - HLSL
 // ------------------------------------------------------------------------------------------------
 
 // Enum representing various shader model versions
@@ -675,10 +663,10 @@ typedef uint32_t ZgShaderModel;
 // The maximum number of compiler flags allowed to the DXC shader compiler
 static const uint32_t ZG_MAX_NUM_DXC_COMPILER_FLAGS = 8;
 
-struct ZgPipelineRenderingCreateInfoFileHLSL {
+struct ZgPipelineRenderCreateInfoFileHLSL {
 
-	// The common information always needed to create a rendering pipeline
-	ZgPipelineRenderingCreateInfoCommon common;
+	// The common information always needed to create a render pipeline
+	ZgPipelineRenderCreateInfoCommon common;
 
 	// Paths to the shader files
 	const char* vertexShaderPath;
@@ -688,17 +676,17 @@ struct ZgPipelineRenderingCreateInfoFileHLSL {
 	ZgShaderModel shaderModel;
 	const char* dxcCompilerFlags[ZG_MAX_NUM_DXC_COMPILER_FLAGS];
 };
-typedef struct ZgPipelineRenderingCreateInfoFileHLSL ZgPipelineRenderingCreateInfoFileHLSL;
+typedef struct ZgPipelineRenderCreateInfoFileHLSL ZgPipelineRenderCreateInfoFileHLSL;
 
-ZG_API ZgErrorCode zgPipelineRenderingCreateFromFileHLSL(
-	ZgPipelineRendering** pipelineOut,
-	ZgPipelineRenderingSignature* signatureOut,
-	const ZgPipelineRenderingCreateInfoFileHLSL* createInfo);
+ZG_API ZgErrorCode zgPipelineRenderCreateFromFileHLSL(
+	ZgPipelineRender** pipelineOut,
+	ZgPipelineRenderSignature* signatureOut,
+	const ZgPipelineRenderCreateInfoFileHLSL* createInfo);
 
-struct ZgPipelineRenderingCreateInfoSourceHLSL {
+struct ZgPipelineRenderCreateInfoSourceHLSL {
 
-	// The common information always needed to create a rendering pipeline
-	ZgPipelineRenderingCreateInfoCommon common;
+	// The common information always needed to create a render pipeline
+	ZgPipelineRenderCreateInfoCommon common;
 
 	// Shader sources
 	const char* vertexShaderSrc;
@@ -708,12 +696,12 @@ struct ZgPipelineRenderingCreateInfoSourceHLSL {
 	ZgShaderModel shaderModel;
 	const char* dxcCompilerFlags[ZG_MAX_NUM_DXC_COMPILER_FLAGS];
 };
-typedef struct ZgPipelineRenderingCreateInfoSourceHLSL ZgPipelineRenderingCreateInfoSourceHLSL;
+typedef struct ZgPipelineRenderCreateInfoSourceHLSL ZgPipelineRenderCreateInfoSourceHLSL;
 
-ZG_API ZgErrorCode zgPipelineRenderingCreateFromSourceHLSL(
-	ZgPipelineRendering** pipelineOut,
-	ZgPipelineRenderingSignature* signatureOut,
-	const ZgPipelineRenderingCreateInfoSourceHLSL* createInfo);
+ZG_API ZgErrorCode zgPipelineRenderCreateFromSourceHLSL(
+	ZgPipelineRender** pipelineOut,
+	ZgPipelineRenderSignature* signatureOut,
+	const ZgPipelineRenderCreateInfoSourceHLSL* createInfo);
 
 // Memory Heap
 // ------------------------------------------------------------------------------------------------
@@ -1084,9 +1072,9 @@ ZG_API ZgErrorCode zgCommandListSetPipelineBindings(
 	ZgCommandList* commandList,
 	const ZgPipelineBindings* bindings);
 
-ZG_API ZgErrorCode zgCommandListSetPipelineRendering(
+ZG_API ZgErrorCode zgCommandListSetPipelineRender(
 	ZgCommandList* commandList,
-	ZgPipelineRendering* pipeline);
+	ZgPipelineRender* pipeline);
 
 // The viewport and scissor are optional, if nullptr they will cover the entire framebuffer
 ZG_API ZgErrorCode zgCommandListSetFramebuffer(

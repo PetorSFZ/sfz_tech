@@ -16,7 +16,7 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
+#include "ZeroG/d3d12/D3D12PipelineRender.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -542,10 +542,10 @@ static D3D12_TEXTURE_ADDRESS_MODE wrappingModeToD3D12(ZgWrappingMode wrappingMod
 }
 
 static void logPipelineInfo(
-	const ZgPipelineRenderingCreateInfoCommon& createInfo,
+	const ZgPipelineRenderCreateInfoCommon& createInfo,
 	const char* vertexShaderName,
 	const char* pixelShaderName,
-	const ZgPipelineRenderingSignature& signature,
+	const ZgPipelineRenderSignature& signature,
 	float compileTimeMs) noexcept
 {
 	// Allocate temp string to log
@@ -581,12 +581,10 @@ static void logPipelineInfo(
 	for (uint32_t i = 0; i < signature.numConstantBuffers; i++) {
 		const ZgConstantBufferDesc& cbuffer = signature.constantBuffers[i];
 		printfAppend(tmpStr, bytesLeft,
-			" - Register: %u -- Size: %u bytes -- Push constant: %s -- Vertex shader: %s -- Pixel shader: %s\n",
+			" - Register: %u -- Size: %u bytes -- Push constant: %s\n",
 			cbuffer.shaderRegister,
 			cbuffer.sizeInBytes,
-			cbuffer.pushConstant ? "YES" : "NO",
-			cbuffer.vertexAccess == ZG_TRUE ? "YES" : "NO",
-			cbuffer.pixelAccess == ZG_TRUE ? "YES" : "NO");
+			cbuffer.pushConstant ? "YES" : "NO");
 	}
 
 	// Print textures
@@ -594,24 +592,22 @@ static void logPipelineInfo(
 	for (uint32_t i = 0; i < signature.numTextures; i++) {
 		const ZgTextureDesc& texture = signature.textures[i];
 		printfAppend(tmpStr, bytesLeft,
-			" - Register: %u -- Vertex shader: %s -- Pixel shader: %s\n",
-			texture.textureRegister,
-			texture.vertexAccess == ZG_TRUE ? "YES" : "NO",
-			texture.pixelAccess == ZG_TRUE ? "YES" : "NO");
+			" - Register: %u\n",
+			texture.textureRegister);
 	}
 
 
 	// Log
-	ZG_INFO("%s", tmpStrOriginal);
+	ZG_NOISE("%s", tmpStrOriginal);
 
 	// Deallocate temp string
 	allocator.deallocate(allocator.userPtr, tmpStrOriginal);
 }
 
-static ZgErrorCode createPipelineRenderingInternal(
-	D3D12PipelineRendering** pipelineOut,
-	ZgPipelineRenderingSignature* signatureOut,
-	const ZgPipelineRenderingCreateInfoCommon& createInfo,
+static ZgErrorCode createPipelineRenderInternal(
+	D3D12PipelineRender** pipelineOut,
+	ZgPipelineRenderSignature* signatureOut,
+	const ZgPipelineRenderCreateInfoCommon& createInfo,
 	time_point compileStartTime,
 	ZgShaderModel shaderModel,
 	const char* const dxcCompilerFlags[],
@@ -725,7 +721,12 @@ static ZgErrorCode createPipelineRenderingInternal(
 	}
 
 	// Build up list of all constant buffers
-	ZgConstantBufferDesc constBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
+	struct ConstBufferMeta {
+		ZgConstantBufferDesc desc = {};
+		bool vertexAccess = false;
+		bool pixelAccess = false;
+	};
+	ConstBufferMeta constBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
 	uint32_t numConstBuffers = 0;
 
 	// First add all constant buffers from vertex shader
@@ -765,13 +766,13 @@ static ZgErrorCode createPipelineRenderingInternal(
 		CHECK_D3D12 cbufferReflection->GetDesc(&cbufferDesc);
 
 		// Add slot for buffer in array
-		ZgConstantBufferDesc& cbuffer = constBuffers[numConstBuffers];
+		ConstBufferMeta& cbuffer = constBuffers[numConstBuffers];
 		numConstBuffers += 1;
 
 		// Set constant buffer members
-		cbuffer.shaderRegister = resDesc.BindPoint;
-		cbuffer.sizeInBytes = cbufferDesc.Size;
-		cbuffer.vertexAccess = ZG_TRUE;
+		cbuffer.desc.shaderRegister = resDesc.BindPoint;
+		cbuffer.desc.sizeInBytes = cbufferDesc.Size;
+		cbuffer.vertexAccess = true;
 	}
 
 	// Then add constant buffers from pixel shader
@@ -785,7 +786,7 @@ static ZgErrorCode createPipelineRenderingInternal(
 		// See if buffer was already found/used by vertex shader
 		uint32_t vertexCBufferIdx = ~0u;
 		for (uint32_t j = 0; j < numConstBuffers; j++) {
-			if (constBuffers[j].shaderRegister == resDesc.BindPoint) {
+			if (constBuffers[j].desc.shaderRegister == resDesc.BindPoint) {
 				vertexCBufferIdx = j;
 				break;
 			}
@@ -794,7 +795,7 @@ static ZgErrorCode createPipelineRenderingInternal(
 		// If buffer was already found, mark it as accessed by pixel shader and continue to next
 		// iteration
 		if (vertexCBufferIdx != ~0u) {
-			constBuffers[vertexCBufferIdx].pixelAccess = ZG_TRUE;
+			constBuffers[vertexCBufferIdx].pixelAccess = true;
 			continue;
 		}
 
@@ -827,32 +828,32 @@ static ZgErrorCode createPipelineRenderingInternal(
 		CHECK_D3D12 cbufferReflection->GetDesc(&cbufferDesc);
 
 		// Add slot for buffer in array
-		ZgConstantBufferDesc& cbuffer = constBuffers[numConstBuffers];
+		ConstBufferMeta& cbuffer = constBuffers[numConstBuffers];
 		numConstBuffers += 1;
 
 		// Set constant buffer members
-		cbuffer.shaderRegister = resDesc.BindPoint;
-		cbuffer.sizeInBytes = cbufferDesc.Size;
-		cbuffer.pixelAccess = ZG_TRUE;
+		cbuffer.desc.shaderRegister = resDesc.BindPoint;
+		cbuffer.desc.sizeInBytes = cbufferDesc.Size;
+		cbuffer.pixelAccess = true;
 	}
 
 	// Sort buffers by register
 	std::sort(constBuffers, constBuffers + numConstBuffers,
-		[](const ZgConstantBufferDesc& lhs, const ZgConstantBufferDesc& rhs) {
-		return lhs.shaderRegister < rhs.shaderRegister;
+		[](const ConstBufferMeta& lhs, const ConstBufferMeta& rhs) {
+		return lhs.desc.shaderRegister < rhs.desc.shaderRegister;
 	});
 
 	// Go through buffers and check if any of them are marked as push constants
 	bool pushConstantRegisterUsed[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
 	for (uint32_t i = 0; i < numConstBuffers; i++) {
-		ZgConstantBufferDesc& cbuffer = constBuffers[i];
+		ConstBufferMeta& cbuffer = constBuffers[i];
 		for (uint32_t j = 0; j < createInfo.numPushConstants; j++) {
-			if (cbuffer.shaderRegister == createInfo.pushConstantRegisters[j]) {
+			if (cbuffer.desc.shaderRegister == createInfo.pushConstantRegisters[j]) {
 				if (pushConstantRegisterUsed[j]) {
 					ZG_ASSERT(pushConstantRegisterUsed[j]);
 					return ZG_ERROR_INVALID_ARGUMENT;
 				}
-				cbuffer.pushConstant = ZG_TRUE;
+				cbuffer.desc.pushConstant = ZG_TRUE;
 				pushConstantRegisterUsed[j] = true;
 				break;
 			}
@@ -872,12 +873,17 @@ static ZgErrorCode createPipelineRenderingInternal(
 	// Copy constant buffer information to signature
 	signatureOut->numConstantBuffers = numConstBuffers;
 	for (uint32_t i = 0; i < numConstBuffers; i++) {
-		signatureOut->constantBuffers[i] = constBuffers[i];
+		signatureOut->constantBuffers[i] = constBuffers[i].desc;
 	}
 
 
 	// Gather all textures
-	ZgTextureDesc textureDescs[ZG_MAX_NUM_TEXTURES] = {};
+	struct TextureMeta {
+		ZgTextureDesc desc = {};
+		bool vertexAccess = false;
+		bool pixelAccess = false;
+	};
+	TextureMeta textureMetas[ZG_MAX_NUM_TEXTURES];
 	uint32_t numTextures = 0;
 
 	// First add all textures from vertex shader
@@ -910,12 +916,12 @@ static ZgErrorCode createPipelineRenderingInternal(
 		}
 
 		// Add slot for texture in array
-		ZgTextureDesc& texDesc = textureDescs[numTextures];
+		TextureMeta& texMeta = textureMetas[numTextures];
 		numTextures += 1;
 
 		// Set texture desc members
-		texDesc.textureRegister = resDesc.BindPoint;
-		texDesc.vertexAccess = ZG_TRUE;
+		texMeta.desc.textureRegister = resDesc.BindPoint;
+		texMeta.vertexAccess = true;
 	}
 
 	// Then add textures from pixel shader
@@ -929,7 +935,7 @@ static ZgErrorCode createPipelineRenderingInternal(
 		// See if texture was already found/used by vertex shader
 		uint32_t vertexTextureIdx = ~0u;
 		for (uint32_t j = 0; j < numTextures; j++) {
-			if (textureDescs[j].textureRegister == resDesc.BindPoint) {
+			if (textureMetas[j].desc.textureRegister == resDesc.BindPoint) {
 				vertexTextureIdx = j;
 				break;
 			}
@@ -938,7 +944,7 @@ static ZgErrorCode createPipelineRenderingInternal(
 		// If texture was already found, mark it as accessed by pixel shader and continue to next
 		// iteration
 		if (vertexTextureIdx != ~0u) {
-			textureDescs[vertexTextureIdx].pixelAccess = ZG_TRUE;
+			textureMetas[vertexTextureIdx].pixelAccess = true;
 			continue;
 		}
 
@@ -964,24 +970,24 @@ static ZgErrorCode createPipelineRenderingInternal(
 		}
 
 		// Add slot for texture in array
-		ZgTextureDesc& texDesc = textureDescs[numTextures];
+		TextureMeta& texMeta = textureMetas[numTextures];
 		numTextures += 1;
 
 		// Set texture desc members
-		texDesc.textureRegister = resDesc.BindPoint;
-		texDesc.pixelAccess = ZG_TRUE;
+		texMeta.desc.textureRegister = resDesc.BindPoint;
+		texMeta.pixelAccess = true;
 	}
 
 	// Sort texture descs by register
-	std::sort(textureDescs, textureDescs + numTextures,
-		[](const ZgTextureDesc& lhs, const ZgTextureDesc& rhs) {
-		return lhs.textureRegister < rhs.textureRegister;
+	std::sort(textureMetas, textureMetas + numTextures,
+		[](const TextureMeta& lhs, const TextureMeta& rhs) {
+		return lhs.desc.textureRegister < rhs.desc.textureRegister;
 	});
 
 	// Copy texture information to signature
 	signatureOut->numTextures = numTextures;
 	for (uint32_t i = 0; i < numTextures; i++) {
-		signatureOut->textures[i] = textureDescs[i];
+		signatureOut->textures[i] = textureMetas[i].desc;
 	}
 
 
@@ -1081,8 +1087,9 @@ static ZgErrorCode createPipelineRenderingInternal(
 
 		// Add push constants
 		for (uint32_t i = 0; i < signatureOut->numConstantBuffers; i++) {
-			const ZgConstantBufferDesc& cbuffer = signatureOut->constantBuffers[i];
-			if (cbuffer.pushConstant == ZG_FALSE) continue;
+			const ConstBufferMeta& cbuffer = constBuffers[i];
+			//const ZgConstantBufferDesc& cbuffer = signatureOut->constantBuffers[i];
+			if (cbuffer.desc.pushConstant == ZG_FALSE) continue;
 
 			// Get parameter index for the push constant
 			uint32_t parameterIndex = numParameters;
@@ -1091,22 +1098,22 @@ static ZgErrorCode createPipelineRenderingInternal(
 
 			// Calculate the correct shader visibility for the constant
 			D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL;
-			if (cbuffer.vertexAccess == ZG_TRUE && cbuffer.pixelAccess == ZG_FALSE) {
+			if (cbuffer.vertexAccess && !cbuffer.pixelAccess) {
 				visibility = D3D12_SHADER_VISIBILITY_VERTEX;
 			}
-			else if (cbuffer.vertexAccess == ZG_FALSE && cbuffer.pixelAccess == ZG_TRUE) {
+			else if (!cbuffer.vertexAccess && cbuffer.pixelAccess) {
 				visibility = D3D12_SHADER_VISIBILITY_PIXEL;
 			}
 
-			ZG_ASSERT((cbuffer.sizeInBytes % 4) == 0);
-			ZG_ASSERT(cbuffer.sizeInBytes <= 1024);
+			ZG_ASSERT((cbuffer.desc.sizeInBytes % 4) == 0);
+			ZG_ASSERT(cbuffer.desc.sizeInBytes <= 1024);
 			parameters[parameterIndex].InitAsConstants(
-				cbuffer.sizeInBytes / 4, cbuffer.shaderRegister, 0, visibility);
+				cbuffer.desc.sizeInBytes / 4, cbuffer.desc.shaderRegister, 0, visibility);
 
 			// Add to push constants mappings
-			pushConstantMappings[numPushConstantsMappings].shaderRegister = cbuffer.shaderRegister;
+			pushConstantMappings[numPushConstantsMappings].shaderRegister = cbuffer.desc.shaderRegister;
 			pushConstantMappings[numPushConstantsMappings].parameterIndex = parameterIndex;
-			pushConstantMappings[numPushConstantsMappings].sizeInBytes = cbuffer.sizeInBytes;
+			pushConstantMappings[numPushConstantsMappings].sizeInBytes = cbuffer.desc.sizeInBytes;
 			numPushConstantsMappings += 1;
 		}
 
@@ -1324,8 +1331,8 @@ static ZgErrorCode createPipelineRenderingInternal(
 		compileTimeMs);
 
 	// Allocate pipeline
-	D3D12PipelineRendering* pipeline =
-		zgNew<D3D12PipelineRendering>("ZeroG - D3D12PipelineRendering");
+	D3D12PipelineRender* pipeline =
+		zgNew<D3D12PipelineRender>("ZeroG - D3D12PipelineRender");
 
 	// Store pipeline state
 	pipeline->pipelineState = pipelineState;
@@ -1349,21 +1356,21 @@ static ZgErrorCode createPipelineRenderingInternal(
 	return ZG_SUCCESS;
 }
 
-// D3D12 PipelineRendering
+// D3D12 PipelineRender
 // ------------------------------------------------------------------------------------------------
 
-D3D12PipelineRendering::~D3D12PipelineRendering() noexcept
+D3D12PipelineRender::~D3D12PipelineRender() noexcept
 {
 	// Do nothing
 }
 
-// D3D12 PipelineRendering functions
+// D3D12 PipelineRender functions
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode createPipelineRenderingFileSPIRV(
-	D3D12PipelineRendering** pipelineOut,
-	ZgPipelineRenderingSignature* signatureOut,
-	ZgPipelineRenderingCreateInfoFileSPIRV createInfo,
+ZgErrorCode createPipelineRenderFileSPIRV(
+	D3D12PipelineRender** pipelineOut,
+	ZgPipelineRenderSignature* signatureOut,
+	ZgPipelineRenderCreateInfoFileSPIRV createInfo,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	ID3D12Device3& device) noexcept
@@ -1418,7 +1425,7 @@ ZgErrorCode createPipelineRenderingFileSPIRV(
 	createInfo.common.vertexShaderEntry = "main";
 	createInfo.common.pixelShaderEntry = "main";
 
-	return createPipelineRenderingInternal(
+	return createPipelineRenderInternal(
 		pipelineOut,
 		signatureOut,
 		createInfo.common,
@@ -1433,10 +1440,10 @@ ZgErrorCode createPipelineRenderingFileSPIRV(
 		device);
 }
 
-ZgErrorCode createPipelineRenderingFileHLSL(
-	D3D12PipelineRendering** pipelineOut,
-	ZgPipelineRenderingSignature* signatureOut,
-	const ZgPipelineRenderingCreateInfoFileHLSL& createInfo,
+ZgErrorCode createPipelineRenderFileHLSL(
+	D3D12PipelineRender** pipelineOut,
+	ZgPipelineRenderSignature* signatureOut,
+	const ZgPipelineRenderCreateInfoFileHLSL& createInfo,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	ID3D12Device3& device) noexcept
@@ -1464,7 +1471,7 @@ ZgErrorCode createPipelineRenderingFileHLSL(
 		if (pixelBlobReadRes != ZG_SUCCESS) return pixelBlobReadRes;
 	}
 
-	return createPipelineRenderingInternal(
+	return createPipelineRenderInternal(
 		pipelineOut,
 		signatureOut,
 		createInfo.common,
@@ -1479,10 +1486,10 @@ ZgErrorCode createPipelineRenderingFileHLSL(
 		device);
 }
 
-ZgErrorCode createPipelineRenderingSourceHLSL(
-	D3D12PipelineRendering** pipelineOut,
-	ZgPipelineRenderingSignature* signatureOut,
-	const ZgPipelineRenderingCreateInfoSourceHLSL& createInfo,
+ZgErrorCode createPipelineRenderSourceHLSL(
+	D3D12PipelineRender** pipelineOut,
+	ZgPipelineRenderSignature* signatureOut,
+	const ZgPipelineRenderCreateInfoSourceHLSL& createInfo,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	ID3D12Device3& device) noexcept
@@ -1503,7 +1510,7 @@ ZgErrorCode createPipelineRenderingSourceHLSL(
 		dxcCreateHlslBlobFromSource(dxcLibrary, createInfo.pixelShaderSrc, pixelEncodingBlob);
 	if (pixelBlobReadRes != ZG_SUCCESS) return pixelBlobReadRes;
 
-	return createPipelineRenderingInternal(
+	return createPipelineRenderInternal(
 		pipelineOut,
 		signatureOut,
 		createInfo.common,

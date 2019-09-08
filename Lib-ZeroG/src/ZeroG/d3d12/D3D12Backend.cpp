@@ -26,7 +26,7 @@
 #include "ZeroG/d3d12/D3D12DescriptorRingBuffer.hpp"
 #include "ZeroG/d3d12/D3D12Framebuffer.hpp"
 #include "ZeroG/d3d12/D3D12MemoryHeap.hpp"
-#include "ZeroG/d3d12/D3D12PipelineRendering.hpp"
+#include "ZeroG/d3d12/D3D12PipelineRender.hpp"
 #include "ZeroG/d3d12/D3D12Textures.hpp"
 #include "ZeroG/util/CpuAllocation.hpp"
 
@@ -612,10 +612,10 @@ public:
 	// Pipeline methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode pipelineRenderingCreateFromFileSPIRV(
-		ZgPipelineRendering** pipelineOut,
-		ZgPipelineRenderingSignature* signatureOut,
-		const ZgPipelineRenderingCreateInfoFileSPIRV& createInfo) noexcept override final
+	ZgErrorCode pipelineRenderCreateFromFileSPIRV(
+		ZgPipelineRender** pipelineOut,
+		ZgPipelineRenderSignature* signatureOut,
+		const ZgPipelineRenderCreateInfoFileSPIRV& createInfo) noexcept override final
 	{
 		// Initialize DXC compiler if necessary
 		{
@@ -624,8 +624,8 @@ public:
 		}
 		
 		// Create pipeline
-		D3D12PipelineRendering* d3d12pipeline = nullptr;
-		ZgErrorCode res = createPipelineRenderingFileSPIRV(
+		D3D12PipelineRender* d3d12pipeline = nullptr;
+		ZgErrorCode res = createPipelineRenderFileSPIRV(
 			&d3d12pipeline,
 			signatureOut,
 			createInfo,
@@ -638,10 +638,10 @@ public:
 		return res;
 	}
 
-	ZgErrorCode pipelineRenderingCreateFromFileHLSL(
-		ZgPipelineRendering** pipelineOut,
-		ZgPipelineRenderingSignature* signatureOut,
-		const ZgPipelineRenderingCreateInfoFileHLSL& createInfo) noexcept override final
+	ZgErrorCode pipelineRenderCreateFromFileHLSL(
+		ZgPipelineRender** pipelineOut,
+		ZgPipelineRenderSignature* signatureOut,
+		const ZgPipelineRenderCreateInfoFileHLSL& createInfo) noexcept override final
 	{
 		// Initialize DXC compiler if necessary
 		{
@@ -650,8 +650,8 @@ public:
 		}
 		
 		// Create pipeline
-		D3D12PipelineRendering* d3d12pipeline = nullptr;
-		ZgErrorCode res = createPipelineRenderingFileHLSL(
+		D3D12PipelineRender* d3d12pipeline = nullptr;
+		ZgErrorCode res = createPipelineRenderFileHLSL(
 			&d3d12pipeline,
 			signatureOut,
 			createInfo,
@@ -664,10 +664,10 @@ public:
 		return res;
 	}
 
-	ZgErrorCode pipelineRenderingCreateFromSourceHLSL(
-		ZgPipelineRendering** pipelineOut,
-		ZgPipelineRenderingSignature* signatureOut,
-		const ZgPipelineRenderingCreateInfoSourceHLSL& createInfo) noexcept override final
+	ZgErrorCode pipelineRenderCreateFromSourceHLSL(
+		ZgPipelineRender** pipelineOut,
+		ZgPipelineRenderSignature* signatureOut,
+		const ZgPipelineRenderCreateInfoSourceHLSL& createInfo) noexcept override final
 	{
 		// Initialize DXC compiler if necessary
 		{
@@ -676,8 +676,8 @@ public:
 		}
 		
 		// Create pipeline
-		D3D12PipelineRendering* d3d12pipeline = nullptr;
-		ZgErrorCode res = createPipelineRenderingSourceHLSL(
+		D3D12PipelineRender* d3d12pipeline = nullptr;
+		ZgErrorCode res = createPipelineRenderSourceHLSL(
 			&d3d12pipeline,
 			signatureOut,
 			createInfo,
@@ -690,20 +690,20 @@ public:
 		return res;
 	}
 
-	ZgErrorCode pipelineRenderingRelease(
-		ZgPipelineRendering* pipeline) noexcept override final
+	ZgErrorCode pipelineRenderRelease(
+		ZgPipelineRender* pipeline) noexcept override final
 	{
 		// TODO: Check if pipeline is currently in use? Lock?
 		zgDelete(pipeline);
 		return ZG_SUCCESS;
 	}
 
-	ZgErrorCode pipelineRenderingGetSignature(
-		const ZgPipelineRendering* pipelineIn,
-		ZgPipelineRenderingSignature* signatureOut) const noexcept override final
+	ZgErrorCode pipelineRenderGetSignature(
+		const ZgPipelineRender* pipelineIn,
+		ZgPipelineRenderSignature* signatureOut) const noexcept override final
 	{
-		const D3D12PipelineRendering* pipeline =
-			reinterpret_cast<const D3D12PipelineRendering*>(pipelineIn);
+		const D3D12PipelineRender* pipeline =
+			reinterpret_cast<const D3D12PipelineRender*>(pipelineIn);
 		*signatureOut = pipeline->signature;
 		return ZG_SUCCESS;
 	}

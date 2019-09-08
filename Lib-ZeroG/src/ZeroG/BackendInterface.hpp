@@ -48,27 +48,27 @@ struct ZgBackend {
 	// Pipeline methods
 	// --------------------------------------------------------------------------------------------
 
-	virtual ZgErrorCode pipelineRenderingCreateFromFileSPIRV(
-		ZgPipelineRendering** pipelineOut,
-		ZgPipelineRenderingSignature* signatureOut,
-		const ZgPipelineRenderingCreateInfoFileSPIRV& createInfo) noexcept = 0;
+	virtual ZgErrorCode pipelineRenderCreateFromFileSPIRV(
+		ZgPipelineRender** pipelineOut,
+		ZgPipelineRenderSignature* signatureOut,
+		const ZgPipelineRenderCreateInfoFileSPIRV& createInfo) noexcept = 0;
 
-	virtual ZgErrorCode pipelineRenderingCreateFromFileHLSL(
-		ZgPipelineRendering** pipelineOut,
-		ZgPipelineRenderingSignature* signatureOut,
-		const ZgPipelineRenderingCreateInfoFileHLSL& createInfo) noexcept = 0;
+	virtual ZgErrorCode pipelineRenderCreateFromFileHLSL(
+		ZgPipelineRender** pipelineOut,
+		ZgPipelineRenderSignature* signatureOut,
+		const ZgPipelineRenderCreateInfoFileHLSL& createInfo) noexcept = 0;
 
-	virtual ZgErrorCode pipelineRenderingCreateFromSourceHLSL(
-		ZgPipelineRendering** pipelineOut,
-		ZgPipelineRenderingSignature* signatureOut,
-		const ZgPipelineRenderingCreateInfoSourceHLSL& createInfo) noexcept = 0;
+	virtual ZgErrorCode pipelineRenderCreateFromSourceHLSL(
+		ZgPipelineRender** pipelineOut,
+		ZgPipelineRenderSignature* signatureOut,
+		const ZgPipelineRenderCreateInfoSourceHLSL& createInfo) noexcept = 0;
 
-	virtual ZgErrorCode pipelineRenderingRelease(
-		ZgPipelineRendering* pipeline) noexcept = 0;
+	virtual ZgErrorCode pipelineRenderRelease(
+		ZgPipelineRender* pipeline) noexcept = 0;
 
-	virtual ZgErrorCode pipelineRenderingGetSignature(
-		const ZgPipelineRendering* pipeline,
-		ZgPipelineRenderingSignature* signatureOut) const noexcept = 0;
+	virtual ZgErrorCode pipelineRenderGetSignature(
+		const ZgPipelineRender* pipeline,
+		ZgPipelineRenderSignature* signatureOut) const noexcept = 0;
 
 	// Memory methods
 	// --------------------------------------------------------------------------------------------
@@ -110,11 +110,11 @@ struct ZgBackend {
 	virtual ZgErrorCode getCopyQueue(ZgCommandQueue** copyQueueOut) noexcept = 0;
 };
 
-// PipelineRendering
+// PipelineRender
 // ------------------------------------------------------------------------------------------------
 
-struct ZgPipelineRendering {
-	virtual ~ZgPipelineRendering() noexcept {}
+struct ZgPipelineRender {
+	virtual ~ZgPipelineRender() noexcept {}
 };
 
 // Memory heap
@@ -216,8 +216,8 @@ struct ZgCommandList {
 	virtual ZgErrorCode setPipelineBindings(
 		const ZgPipelineBindings& bindings) noexcept = 0;
 
-	virtual ZgErrorCode setPipelineRendering(
-		ZgPipelineRendering* pipeline) noexcept = 0;
+	virtual ZgErrorCode setPipelineRender(
+		ZgPipelineRender* pipeline) noexcept = 0;
 
 	virtual ZgErrorCode setFramebuffer(
 		ZgFramebuffer* framebuffer,

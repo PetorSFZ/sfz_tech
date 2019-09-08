@@ -86,10 +86,10 @@ ErrorCode Context::getStats(ZgStats& statsOut) noexcept
 }
 
 
-// PipelineRenderingBuilder: Methods
+// PipelineRenderBuilder: Methods
 // ------------------------------------------------------------------------------------------------
 
-PipelineRenderingBuilder& PipelineRenderingBuilder::addVertexAttribute(
+PipelineRenderBuilder& PipelineRenderBuilder::addVertexAttribute(
 	ZgVertexAttribute attribute) noexcept
 {
 	assert(commonInfo.numVertexAttributes < ZG_MAX_NUM_VERTEX_ATTRIBUTES);
@@ -98,7 +98,7 @@ PipelineRenderingBuilder& PipelineRenderingBuilder::addVertexAttribute(
 	return *this;
 }
 
-PipelineRenderingBuilder& PipelineRenderingBuilder::addVertexAttribute(
+PipelineRenderBuilder& PipelineRenderBuilder::addVertexAttribute(
 	uint32_t location,
 	uint32_t vertexBufferSlot,
 	ZgVertexAttributeType type,
@@ -112,7 +112,7 @@ PipelineRenderingBuilder& PipelineRenderingBuilder::addVertexAttribute(
 	return addVertexAttribute(attribute);
 }
 
-PipelineRenderingBuilder& PipelineRenderingBuilder::addVertexBufferInfo(
+PipelineRenderBuilder& PipelineRenderBuilder::addVertexBufferInfo(
 	uint32_t slot, uint32_t vertexBufferStrideBytes) noexcept
 {
 	assert(slot == commonInfo.numVertexBufferSlots);
@@ -122,7 +122,7 @@ PipelineRenderingBuilder& PipelineRenderingBuilder::addVertexBufferInfo(
 	return *this;
 }
 
-PipelineRenderingBuilder& PipelineRenderingBuilder::addPushConstant(
+PipelineRenderBuilder& PipelineRenderBuilder::addPushConstant(
 	uint32_t constantBufferRegister) noexcept
 {
 	assert(commonInfo.numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
@@ -131,7 +131,7 @@ PipelineRenderingBuilder& PipelineRenderingBuilder::addPushConstant(
 	return *this;
 }
 
-PipelineRenderingBuilder& PipelineRenderingBuilder::addSampler(
+PipelineRenderBuilder& PipelineRenderBuilder::addSampler(
 	uint32_t samplerRegister, ZgSampler sampler) noexcept
 {
 	assert(samplerRegister == commonInfo.numSamplers);
@@ -141,7 +141,7 @@ PipelineRenderingBuilder& PipelineRenderingBuilder::addSampler(
 	return *this;
 }
 
-PipelineRenderingBuilder& PipelineRenderingBuilder::addSampler(
+PipelineRenderBuilder& PipelineRenderBuilder::addSampler(
 	uint32_t samplerRegister,
 	ZgSamplingMode samplingMode,
 	ZgWrappingMode wrappingModeU,
@@ -156,7 +156,7 @@ PipelineRenderingBuilder& PipelineRenderingBuilder::addSampler(
 	return addSampler(samplerRegister, sampler);
 }
 
-PipelineRenderingBuilder& PipelineRenderingBuilder::addVertexShaderPath(
+PipelineRenderBuilder& PipelineRenderBuilder::addVertexShaderPath(
 	const char* entry, const char* path) noexcept
 {
 	commonInfo.vertexShaderEntry = entry;
@@ -164,7 +164,7 @@ PipelineRenderingBuilder& PipelineRenderingBuilder::addVertexShaderPath(
 	return *this;
 }
 
-PipelineRenderingBuilder& PipelineRenderingBuilder::addPixelShaderPath(
+PipelineRenderBuilder& PipelineRenderBuilder::addPixelShaderPath(
 	const char* entry, const char* path) noexcept
 {
 	commonInfo.pixelShaderEntry = entry;
@@ -172,7 +172,7 @@ PipelineRenderingBuilder& PipelineRenderingBuilder::addPixelShaderPath(
 	return *this;
 }
 
-PipelineRenderingBuilder& PipelineRenderingBuilder::addVertexShaderSource(
+PipelineRenderBuilder& PipelineRenderBuilder::addVertexShaderSource(
 	const char* entry, const char* src) noexcept
 {
 	commonInfo.vertexShaderEntry = entry;
@@ -180,7 +180,7 @@ PipelineRenderingBuilder& PipelineRenderingBuilder::addVertexShaderSource(
 	return *this;
 }
 
-PipelineRenderingBuilder& PipelineRenderingBuilder::addPixelShaderSource(
+PipelineRenderBuilder& PipelineRenderBuilder::addPixelShaderSource(
 	const char* entry, const char* src) noexcept
 {
 	commonInfo.pixelShaderEntry = entry;
@@ -188,20 +188,20 @@ PipelineRenderingBuilder& PipelineRenderingBuilder::addPixelShaderSource(
 	return *this;
 }
 
-PipelineRenderingBuilder& PipelineRenderingBuilder::setWireframeRendering(
+PipelineRenderBuilder& PipelineRenderBuilder::setWireframeRendering(
 	bool wireframeEnabled) noexcept
 {
 	commonInfo.rasterizer.wireframeMode = wireframeEnabled ? ZG_TRUE : ZG_FALSE;
 	return *this;
 }
 
-PipelineRenderingBuilder& PipelineRenderingBuilder::setCullingEnabled(bool cullingEnabled) noexcept
+PipelineRenderBuilder& PipelineRenderBuilder::setCullingEnabled(bool cullingEnabled) noexcept
 {
 	commonInfo.rasterizer.cullingEnabled = cullingEnabled ? ZG_TRUE : ZG_FALSE;
 	return *this;
 }
 
-PipelineRenderingBuilder& PipelineRenderingBuilder::setCullMode(
+PipelineRenderBuilder& PipelineRenderBuilder::setCullMode(
 	bool cullFrontFacing, bool fontFacingIsCounterClockwise) noexcept
 {
 	commonInfo.rasterizer.cullFrontFacing = cullFrontFacing ? ZG_TRUE : ZG_FALSE;
@@ -210,13 +210,13 @@ PipelineRenderingBuilder& PipelineRenderingBuilder::setCullMode(
 	return *this;
 }
 
-PipelineRenderingBuilder& PipelineRenderingBuilder::setBlendingEnabled(bool blendingEnabled) noexcept
+PipelineRenderBuilder& PipelineRenderBuilder::setBlendingEnabled(bool blendingEnabled) noexcept
 {
 	commonInfo.blending.blendingEnabled = blendingEnabled ? ZG_TRUE : ZG_FALSE;
 	return *this;
 }
 
-PipelineRenderingBuilder& PipelineRenderingBuilder::setBlendFuncColor(
+PipelineRenderBuilder& PipelineRenderBuilder::setBlendFuncColor(
 	ZgBlendFunc func, ZgBlendValue srcFactor, ZgBlendValue dstFactor) noexcept
 {
 	commonInfo.blending.blendFuncColor = func;
@@ -225,7 +225,7 @@ PipelineRenderingBuilder& PipelineRenderingBuilder::setBlendFuncColor(
 	return *this;
 }
 
-PipelineRenderingBuilder& PipelineRenderingBuilder::setBlendFuncAlpha(
+PipelineRenderBuilder& PipelineRenderBuilder::setBlendFuncAlpha(
 	ZgBlendFunc func, ZgBlendValue srcFactor, ZgBlendValue dstFactor) noexcept
 {
 	commonInfo.blending.blendFuncAlpha = func;
@@ -234,24 +234,24 @@ PipelineRenderingBuilder& PipelineRenderingBuilder::setBlendFuncAlpha(
 	return *this;
 }
 
-PipelineRenderingBuilder& PipelineRenderingBuilder::setDepthTestEnabled(
+PipelineRenderBuilder& PipelineRenderBuilder::setDepthTestEnabled(
 	bool depthTestEnabled) noexcept
 {
 	commonInfo.depthTest.depthTestEnabled = depthTestEnabled ? ZG_TRUE : ZG_FALSE;
 	return *this;
 }
 
-PipelineRenderingBuilder& PipelineRenderingBuilder::setDepthFunc(ZgDepthFunc depthFunc) noexcept
+PipelineRenderBuilder& PipelineRenderBuilder::setDepthFunc(ZgDepthFunc depthFunc) noexcept
 {
 	commonInfo.depthTest.depthFunc = depthFunc;
 	return *this;
 }
 
-ErrorCode PipelineRenderingBuilder::buildFromFileSPIRV(
-	PipelineRendering& pipelineOut) const noexcept
+ErrorCode PipelineRenderBuilder::buildFromFileSPIRV(
+	PipelineRender& pipelineOut) const noexcept
 {
 	// Build create info
-	ZgPipelineRenderingCreateInfoFileSPIRV createInfo = {};
+	ZgPipelineRenderCreateInfoFileSPIRV createInfo = {};
 	createInfo.common = this->commonInfo;
 	createInfo.vertexShaderPath = this->vertexShaderPath;
 	createInfo.pixelShaderPath = this->pixelShaderPath;
@@ -260,11 +260,11 @@ ErrorCode PipelineRenderingBuilder::buildFromFileSPIRV(
 	return pipelineOut.createFromFileSPIRV(createInfo);
 }
 
-ErrorCode PipelineRenderingBuilder::buildFromFileHLSL(
-	PipelineRendering& pipelineOut, ZgShaderModel model) const noexcept
+ErrorCode PipelineRenderBuilder::buildFromFileHLSL(
+	PipelineRender& pipelineOut, ZgShaderModel model) const noexcept
 {
 	// Build create info
-	ZgPipelineRenderingCreateInfoFileHLSL createInfo = {};
+	ZgPipelineRenderCreateInfoFileHLSL createInfo = {};
 	createInfo.common = this->commonInfo;
 	createInfo.vertexShaderPath = this->vertexShaderPath;
 	createInfo.pixelShaderPath = this->pixelShaderPath;
@@ -276,11 +276,11 @@ ErrorCode PipelineRenderingBuilder::buildFromFileHLSL(
 	return pipelineOut.createFromFileHLSL(createInfo);
 }
 
-ErrorCode PipelineRenderingBuilder::buildFromSourceHLSL(
-	PipelineRendering& pipelineOut, ZgShaderModel model) const noexcept
+ErrorCode PipelineRenderBuilder::buildFromSourceHLSL(
+	PipelineRender& pipelineOut, ZgShaderModel model) const noexcept
 {
 	// Build create info
-	ZgPipelineRenderingCreateInfoSourceHLSL createInfo = {};
+	ZgPipelineRenderCreateInfoSourceHLSL createInfo = {};
 	createInfo.common = this->commonInfo;
 	createInfo.vertexShaderSrc = this->vertexShaderSrc;
 	createInfo.pixelShaderSrc= this->pixelShaderSrc;
@@ -293,42 +293,42 @@ ErrorCode PipelineRenderingBuilder::buildFromSourceHLSL(
 }
 
 
-// PipelineRendering: State methods
+// PipelineRender: State methods
 // ------------------------------------------------------------------------------------------------
 
-ErrorCode PipelineRendering::createFromFileSPIRV(
-	const ZgPipelineRenderingCreateInfoFileSPIRV& createInfo) noexcept
+ErrorCode PipelineRender::createFromFileSPIRV(
+	const ZgPipelineRenderCreateInfoFileSPIRV& createInfo) noexcept
 {
 	this->release();
-	return (ErrorCode)zgPipelineRenderingCreateFromFileSPIRV(
+	return (ErrorCode)zgPipelineRenderCreateFromFileSPIRV(
 		&this->pipeline, &this->signature, &createInfo);
 }
 
-ErrorCode PipelineRendering::createFromFileHLSL(
-	const ZgPipelineRenderingCreateInfoFileHLSL& createInfo) noexcept
+ErrorCode PipelineRender::createFromFileHLSL(
+	const ZgPipelineRenderCreateInfoFileHLSL& createInfo) noexcept
 {
 	this->release();
-	return (ErrorCode)zgPipelineRenderingCreateFromFileHLSL(
+	return (ErrorCode)zgPipelineRenderCreateFromFileHLSL(
 		&this->pipeline, &this->signature, &createInfo);
 }
 
-ErrorCode PipelineRendering::createFromSourceHLSL(
-	const ZgPipelineRenderingCreateInfoSourceHLSL& createInfo) noexcept
+ErrorCode PipelineRender::createFromSourceHLSL(
+	const ZgPipelineRenderCreateInfoSourceHLSL& createInfo) noexcept
 {
 	this->release();
-	return (ErrorCode)zgPipelineRenderingCreateFromSourceHLSL(
+	return (ErrorCode)zgPipelineRenderCreateFromSourceHLSL(
 		&this->pipeline, &this->signature, &createInfo);
 }
 
-void PipelineRendering::swap(PipelineRendering& other) noexcept
+void PipelineRender::swap(PipelineRender& other) noexcept
 {
 	std::swap(this->pipeline, other.pipeline);
 	std::swap(this->signature, other.signature);
 }
 
-void PipelineRendering::release() noexcept
+void PipelineRender::release() noexcept
 {
-	if (this->pipeline != nullptr) zgPipelineRenderingRelease(this->pipeline);
+	if (this->pipeline != nullptr) zgPipelineRenderRelease(this->pipeline);
 	this->pipeline = nullptr;
 	this->signature = {};
 }
@@ -742,9 +742,9 @@ ErrorCode CommandList::setPipelineBindings(const PipelineBindings& bindings) noe
 	return (ErrorCode)zgCommandListSetPipelineBindings(this->commandList, &cBindings);
 }
 
-ErrorCode CommandList::setPipeline(PipelineRendering& pipeline) noexcept
+ErrorCode CommandList::setPipeline(PipelineRender& pipeline) noexcept
 {
-	return (ErrorCode)zgCommandListSetPipelineRendering(this->commandList, pipeline.pipeline);
+	return (ErrorCode)zgCommandListSetPipelineRender(this->commandList, pipeline.pipeline);
 }
 
 ErrorCode CommandList::setFramebuffer(

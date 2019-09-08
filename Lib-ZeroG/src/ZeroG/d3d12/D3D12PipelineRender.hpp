@@ -46,22 +46,22 @@ struct D3D12TextureMapping {
 	uint32_t tableOffset = ~0u;
 };
 
-// D3D12 PipelineRendering
+// D3D12 PipelineRender
 // ------------------------------------------------------------------------------------------------
 
-class D3D12PipelineRendering final : public ZgPipelineRendering {
+class D3D12PipelineRender final : public ZgPipelineRender {
 public:
 
-	D3D12PipelineRendering() noexcept = default;
-	D3D12PipelineRendering(const D3D12PipelineRendering&) = delete;
-	D3D12PipelineRendering& operator= (const D3D12PipelineRendering&) = delete;
-	D3D12PipelineRendering(D3D12PipelineRendering&&) = delete;
-	D3D12PipelineRendering& operator= (D3D12PipelineRendering&&) = delete;
-	~D3D12PipelineRendering() noexcept;
+	D3D12PipelineRender() noexcept = default;
+	D3D12PipelineRender(const D3D12PipelineRender&) = delete;
+	D3D12PipelineRender& operator= (const D3D12PipelineRender&) = delete;
+	D3D12PipelineRender(D3D12PipelineRender&&) = delete;
+	D3D12PipelineRender& operator= (D3D12PipelineRender&&) = delete;
+	~D3D12PipelineRender() noexcept;
 
 	ComPtr<ID3D12PipelineState> pipelineState;
 	ComPtr<ID3D12RootSignature> rootSignature;
-	ZgPipelineRenderingSignature signature = {};
+	ZgPipelineRenderSignature signature = {};
 	uint32_t numPushConstants = 0;
 	D3D12PushConstantMapping pushConstants[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
 	uint32_t numConstantBuffers = 0;
@@ -69,32 +69,32 @@ public:
 	uint32_t numTextures = 0;
 	D3D12TextureMapping textures[ZG_MAX_NUM_TEXTURES] = {};
 	uint32_t dynamicBuffersParameterIndex = ~0u;
-	ZgPipelineRenderingCreateInfoCommon createInfo = {}; // The info used to create the pipeline 
+	ZgPipelineRenderCreateInfoCommon createInfo = {}; // The info used to create the pipeline 
 };
 
-// D3D12 PipelineRendering functions
+// D3D12 PipelineRender functions
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode createPipelineRenderingFileSPIRV(
-	D3D12PipelineRendering** pipelineOut,
-	ZgPipelineRenderingSignature* signatureOut,
-	ZgPipelineRenderingCreateInfoFileSPIRV createInfo,
+ZgErrorCode createPipelineRenderFileSPIRV(
+	D3D12PipelineRender** pipelineOut,
+	ZgPipelineRenderSignature* signatureOut,
+	ZgPipelineRenderCreateInfoFileSPIRV createInfo,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	ID3D12Device3& device) noexcept;
 
-ZgErrorCode createPipelineRenderingFileHLSL(
-	D3D12PipelineRendering** pipelineOut,
-	ZgPipelineRenderingSignature* signatureOut,
-	const ZgPipelineRenderingCreateInfoFileHLSL& createInfo,
+ZgErrorCode createPipelineRenderFileHLSL(
+	D3D12PipelineRender** pipelineOut,
+	ZgPipelineRenderSignature* signatureOut,
+	const ZgPipelineRenderCreateInfoFileHLSL& createInfo,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	ID3D12Device3& device) noexcept;
 
-ZgErrorCode createPipelineRenderingSourceHLSL(
-	D3D12PipelineRendering** pipelineOut,
-	ZgPipelineRenderingSignature* signatureOut,
-	const ZgPipelineRenderingCreateInfoSourceHLSL& createInfo,
+ZgErrorCode createPipelineRenderSourceHLSL(
+	D3D12PipelineRender** pipelineOut,
+	ZgPipelineRenderSignature* signatureOut,
+	const ZgPipelineRenderCreateInfoSourceHLSL& createInfo,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	ID3D12Device3& device) noexcept;
