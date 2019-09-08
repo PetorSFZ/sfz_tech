@@ -1397,8 +1397,8 @@ ZgErrorCode createPipelineRenderFileSPIRV(
 	if (pixelHlslSrc.size() == 0) return ZG_ERROR_SHADER_COMPILE_ERROR;
 
 	// Log the modified source code
-	ZG_INFO("SPIRV-Cross compiled vertex HLSL source:\n\n%s", vertexHlslSrc.data());
-	ZG_INFO("SPIRV-Cross compiled pixel HLSL source:\n\n%s", pixelHlslSrc.data());
+	ZG_NOISE("SPIRV-Cross compiled vertex HLSL source:\n\n%s", vertexHlslSrc.data());
+	ZG_NOISE("SPIRV-Cross compiled pixel HLSL source:\n\n%s", pixelHlslSrc.data());
 
 	// Deinitialize SPIRV-Cross
 	spvc_context_destroy(spvcContext);
