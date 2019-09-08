@@ -48,6 +48,7 @@ struct D3D12BackendState final {
 	// DXC compiler DLLs, lazily loaded if needed
 	ComPtr<IDxcLibrary> dxcLibrary;
 	ComPtr<IDxcCompiler> dxcCompiler;
+	IDxcIncludeHandler* dxcIncludeHandler = nullptr;
 
 	// Device
 	ComPtr<IDXGIAdapter4> dxgiAdapter;
@@ -103,6 +104,13 @@ public:
 		// Flush command queues
 		mState->commandQueuePresent.flush();
 		mState->commandQueueCopy.flush();
+
+		// Release include handler
+		// TODO: Probably correct...?
+		if (mState->dxcIncludeHandler != nullptr) {
+			mState->dxcIncludeHandler->Release();
+			mState->dxcIncludeHandler = nullptr;
+		}
 
 		// Destroy residency manager (which apparently has to be done manually...)
 		mState->residencyManager.Destroy();
@@ -631,6 +639,7 @@ public:
 			createInfo,
 			*mState->dxcLibrary.Get(),
 			*mState->dxcCompiler.Get(),
+			mState->dxcIncludeHandler,
 			*mState->device.Get());
 		if (res != ZG_SUCCESS) return res;
 		
@@ -657,6 +666,7 @@ public:
 			createInfo,
 			*mState->dxcLibrary.Get(),
 			*mState->dxcCompiler.Get(),
+			mState->dxcIncludeHandler,
 			*mState->device.Get());
 		if (res != ZG_SUCCESS) return res;
 		
@@ -683,6 +693,7 @@ public:
 			createInfo,
 			*mState->dxcLibrary.Get(),
 			*mState->dxcCompiler.Get(),
+			mState->dxcIncludeHandler,
 			*mState->device.Get());
 		if (res != ZG_SUCCESS) return res;
 		
@@ -844,6 +855,14 @@ private:
 			res = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&mState->dxcCompiler));
 			if (!SUCCEEDED(res)) {
 				mState->dxcLibrary = nullptr;
+				return ZG_ERROR_GENERIC;
+			}
+
+			// Create include handler
+			res = mState->dxcLibrary->CreateIncludeHandler(&mState->dxcIncludeHandler);
+			if (!SUCCEEDED(res)) {
+				mState->dxcLibrary = nullptr;
+				mState->dxcCompiler = nullptr;
 				return ZG_ERROR_GENERIC;
 			}
 		}

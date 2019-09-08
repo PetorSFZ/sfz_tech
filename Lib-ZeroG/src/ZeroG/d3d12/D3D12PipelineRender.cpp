@@ -302,6 +302,7 @@ static ZgErrorCode dxcCreateHlslBlobFromSource(
 
 static ZgErrorCode compileHlslShader(
 	IDxcCompiler& dxcCompiler,
+	IDxcIncludeHandler* dxcIncludeHandler,
 	ComPtr<IDxcBlob>& blobOut,
 	ComPtr<ID3D12ShaderReflection>& reflectionOut,
 	const ComPtr<IDxcBlobEncoding>& encodingBlob,
@@ -355,7 +356,7 @@ static ZgErrorCode compileHlslShader(
 		numArgs,
 		nullptr,
 		0,
-		nullptr, // TODO: include handler
+		dxcIncludeHandler,
 		&result))) {
 		return ZG_ERROR_SHADER_COMPILE_ERROR;
 	}
@@ -616,6 +617,7 @@ static ZgErrorCode createPipelineRenderInternal(
 	const char* vertexShaderName,
 	const char* pixelShaderName,
 	IDxcCompiler& dxcCompiler,
+	IDxcIncludeHandler* dxcIncludeHandler,
 	ID3D12Device3& device) noexcept
 {
 	// Pick out which vertex and pixel shader type to compile with
@@ -645,6 +647,7 @@ static ZgErrorCode createPipelineRenderInternal(
 	ComPtr<ID3D12ShaderReflection> vertexReflection;
 	ZgErrorCode vertexShaderRes = compileHlslShader(
 		dxcCompiler,
+		dxcIncludeHandler,
 		vertexBlob,
 		vertexReflection,
 		vertexEncodingBlob,
@@ -659,6 +662,7 @@ static ZgErrorCode createPipelineRenderInternal(
 	ComPtr<ID3D12ShaderReflection> pixelReflection;
 	ZgErrorCode pixelShaderRes = compileHlslShader(
 		dxcCompiler,
+		dxcIncludeHandler,
 		pixelBlob,
 		pixelReflection,
 		pixelEncodingBlob,
@@ -1373,6 +1377,7 @@ ZgErrorCode createPipelineRenderFileSPIRV(
 	ZgPipelineRenderCreateInfoFileSPIRV createInfo,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
+	IDxcIncludeHandler* dxcIncludeHandler,
 	ID3D12Device3& device) noexcept
 {
 	// Start measuring compile-time
@@ -1437,6 +1442,7 @@ ZgErrorCode createPipelineRenderFileSPIRV(
 		createInfo.vertexShaderPath,
 		createInfo.pixelShaderPath,
 		dxcCompiler,
+		dxcIncludeHandler,
 		device);
 }
 
@@ -1446,6 +1452,7 @@ ZgErrorCode createPipelineRenderFileHLSL(
 	const ZgPipelineRenderCreateInfoFileHLSL& createInfo,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
+	IDxcIncludeHandler* dxcIncludeHandler,
 	ID3D12Device3& device) noexcept
 {
 	// Start measuring compile-time
@@ -1483,6 +1490,7 @@ ZgErrorCode createPipelineRenderFileHLSL(
 		createInfo.vertexShaderPath,
 		createInfo.pixelShaderPath,
 		dxcCompiler,
+		dxcIncludeHandler,
 		device);
 }
 
@@ -1492,6 +1500,7 @@ ZgErrorCode createPipelineRenderSourceHLSL(
 	const ZgPipelineRenderCreateInfoSourceHLSL& createInfo,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
+	IDxcIncludeHandler* dxcIncludeHandler,
 	ID3D12Device3& device) noexcept
 {
 	// Start measuring compile-time
@@ -1522,6 +1531,7 @@ ZgErrorCode createPipelineRenderSourceHLSL(
 		"<From source, no vertex name>",
 		"<From source, no pixel name>",
 		dxcCompiler,
+		dxcIncludeHandler,
 		device);
 }
 
