@@ -23,6 +23,8 @@
 
 #include <imgui.h>
 
+#include <sfz/Logging.hpp>
+
 #include "ph/Context.hpp"
 #include "ph/renderer/RendererState.hpp"
 #include "ph/renderer/ZeroGUtils.hpp"
@@ -193,7 +195,7 @@ void RendererUI::render(RendererState& state) noexcept
 		
 		if (ImGui::BeginTabItem("Pipelines")) {
 			ImGui::Spacing();
-			this->renderPipelinesTab(state.configurable);
+			this->renderPipelinesTab(state);
 			ImGui::EndTabItem();
 		}
 
@@ -387,20 +389,58 @@ void RendererUI::renderFramebuffersTab(RendererConfigurableState& state) noexcep
 	}
 }
 
-void RendererUI::renderPipelinesTab(RendererConfigurableState& state) noexcept
+void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 {
 	// Get global collection of resource strings in order to get strings from StringIDs
 	sfz::StringCollection& resStrings = ph::getResourceStrings();
 
+	RendererConfigurableState& configurable = state.configurable;
+
 	// Rendering pipelines
 	ImGui::Text("Rendering Pipelines");
-	ImGui::Spacing();
-	for (uint32_t i = 0; i < state.renderingPipelines.size(); i++) {
-		const PipelineRenderingItem& pipeline = state.renderingPipelines[i];
-		const ZgPipelineRenderingSignature& signature = pipeline.pipeline.signature;
 
-		// Pipeline name
+	// Reload all button
+	ImGui::SameLine(ImGui::GetWindowWidth() - 130.0f);
+	if (ImGui::Button("Reload All##__rendering_pipelines", vec2(120.0f, 0.0f))) {
+
+		SFZ_INFO("Renderer", "Reloading all pipelines...");
+
+		// Flush ZeroG queues
+		CHECK_ZG state.presentQueue.flush();
+
+		// Rebuild pipelines
+		for (uint32_t i = 0; i < configurable.renderingPipelines.size(); i++) {
+			PipelineRenderingItem& pipeline = configurable.renderingPipelines[i];
+			bool success = pipeline.buildPipeline();
+			if (!success) {
+				SFZ_WARNING("Renderer", "Failed to rebuild pipeline: \"%s\"",
+					resStrings.getString(pipeline.name));
+			}
+		}
+	}
+
+	ImGui::Spacing();
+	for (uint32_t i = 0; i < configurable.renderingPipelines.size(); i++) {
+		PipelineRenderingItem& pipeline = configurable.renderingPipelines[i];
+		const ZgPipelineRenderingSignature& signature = pipeline.pipeline.signature;
 		const char* name = resStrings.getString(pipeline.name);
+
+		// Reload button
+		if (ImGui::Button(str64("Reload##__rendering_%u", i).str, vec2(80.0f, 0.0f))) {
+
+			// Flush ZeroG queues
+			CHECK_ZG state.presentQueue.flush();
+
+			if (pipeline.buildPipeline()) {
+				SFZ_INFO("Renderer", "Reloaded pipeline: \"%s\"", name);
+			}
+			else {
+				SFZ_WARNING("Renderer", "Failed to rebuild pipeline: \"%s\"", name);
+			}
+		}
+		ImGui::SameLine();
+
+		// Collapsing header with name
 		bool collapsingHeaderOpen =
 			ImGui::CollapsingHeader(str256("Pipeline %u - \"%s\"", i, name).str);
 		if (!collapsingHeaderOpen) continue;
