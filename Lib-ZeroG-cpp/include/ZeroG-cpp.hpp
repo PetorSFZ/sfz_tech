@@ -183,6 +183,8 @@ public:
 		ZgWrappingMode wrappingModeV = ZG_WRAPPING_MODE_CLAMP,
 		float mipLodBias = 0.0f) noexcept;
 
+	PipelineRenderBuilder& addRenderTarget(ZgTextureFormat format) noexcept;
+
 	PipelineRenderBuilder& addVertexShaderPath(const char* entry, const char* path) noexcept;
 	PipelineRenderBuilder& addPixelShaderPath(const char* entry, const char* path) noexcept;
 	PipelineRenderBuilder& addVertexShaderSource(const char* entry, const char* src) noexcept;

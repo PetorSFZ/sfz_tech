@@ -140,7 +140,7 @@ static ZgImageViewConstCpu allocateRgbaTex(uint32_t width, uint32_t height) noex
 
 	// Create an image view of the data
 	ZgImageViewConstCpu imageView = {};
-	imageView.format = ZG_TEXTURE_FORMAT_RGBA_U8;
+	imageView.format = ZG_TEXTURE_FORMAT_RGBA_U8_UNORM;
 	imageView.data = data;
 	imageView.width = width;
 	imageView.height = height;
@@ -175,7 +175,7 @@ static ZgImageViewConstCpu copyDownsample(
 
 	// Create an image view of the data
 	ZgImageViewConstCpu imageView = {};
-	imageView.format = ZG_TEXTURE_FORMAT_RGBA_U8;
+	imageView.format = ZG_TEXTURE_FORMAT_RGBA_U8_UNORM;
 	imageView.data = dstImg;
 	imageView.width = dstWidth;
 	imageView.height = dstHeight;
@@ -252,6 +252,7 @@ static void realMain(SDL_Window* window) noexcept
 			.addVertexBufferInfo(0, sizeof(Vertex))
 			.addPushConstant(0)
 			.addSampler(0, ZG_SAMPLING_MODE_ANISOTROPIC)
+			.addRenderTarget(ZG_TEXTURE_FORMAT_RGBA_U8_UNORM)
 			.setCullingEnabled(true)
 			.setCullMode(false, false)
 			.setBlendingEnabled(true)
@@ -326,8 +327,7 @@ static void realMain(SDL_Window* window) noexcept
 
 	// Create a texture
 	ZgTexture2DCreateInfo textureCreateInfo = {};
-	textureCreateInfo.format = ZG_TEXTURE_FORMAT_RGBA_U8;
-	textureCreateInfo.normalized = ZG_TRUE;
+	textureCreateInfo.format = ZG_TEXTURE_FORMAT_RGBA_U8_UNORM;
 	textureCreateInfo.width = 256;
 	textureCreateInfo.height = 256;
 	textureCreateInfo.numMipmaps = 4;

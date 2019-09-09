@@ -33,9 +33,9 @@ namespace zg {
 static uint32_t numBytesPerPixelForFormat(ZgTextureFormat format) noexcept
 {
 	switch (format) {
-	case ZG_TEXTURE_FORMAT_R_U8: return 1 * sizeof(uint8_t);
-	case ZG_TEXTURE_FORMAT_RG_U8: return 2 * sizeof(uint8_t);
-	case ZG_TEXTURE_FORMAT_RGBA_U8: return 4 * sizeof(uint8_t);
+	case ZG_TEXTURE_FORMAT_R_U8_UNORM: return 1 * sizeof(uint8_t);
+	case ZG_TEXTURE_FORMAT_RG_U8_UNORM: return 2 * sizeof(uint8_t);
+	case ZG_TEXTURE_FORMAT_RGBA_U8_UNORM: return 4 * sizeof(uint8_t);
 
 	case ZG_TEXTURE_FORMAT_R_F16: return 1 * sizeof(uint16_t);
 	case ZG_TEXTURE_FORMAT_RG_F16: return 2 * sizeof(uint16_t);

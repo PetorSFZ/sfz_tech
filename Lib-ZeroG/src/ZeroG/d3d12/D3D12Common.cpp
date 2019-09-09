@@ -19,6 +19,7 @@
 #include "ZeroG/d3d12/D3D12Common.hpp"
 
 #include "ZeroG/Context.hpp"
+#include "ZeroG/util/Assert.hpp"
 
 namespace zg {
 
@@ -71,6 +72,34 @@ static const char* resultToString(HRESULT result) noexcept
 	case S_FALSE: return "S_FALSE";
 	}
 	return "UNKNOWN";
+}
+
+// TextureFormats conversion
+// ------------------------------------------------------------------------------------------------
+
+DXGI_FORMAT zgToDxgiTextureFormat(ZgTextureFormat format) noexcept
+{
+	switch (format) {
+	case ZG_TEXTURE_FORMAT_R_U8_UNORM: return DXGI_FORMAT_R8_UNORM;
+	case ZG_TEXTURE_FORMAT_RG_U8_UNORM: return DXGI_FORMAT_R8G8_UNORM;
+	case ZG_TEXTURE_FORMAT_RGBA_U8_UNORM: return DXGI_FORMAT_R8G8B8A8_UNORM;
+
+	case ZG_TEXTURE_FORMAT_R_F16: return DXGI_FORMAT_R16_FLOAT;
+	case ZG_TEXTURE_FORMAT_RG_F16: return DXGI_FORMAT_R16G16_FLOAT;
+	case ZG_TEXTURE_FORMAT_RGBA_F16: return DXGI_FORMAT_R16G16B16A16_FLOAT;
+
+	case ZG_TEXTURE_FORMAT_R_F32: return DXGI_FORMAT_R32_FLOAT;
+	case ZG_TEXTURE_FORMAT_RG_F32: return DXGI_FORMAT_R32G32_FLOAT;
+	case ZG_TEXTURE_FORMAT_RGBA_F32: return DXGI_FORMAT_R32G32B32A32_FLOAT;
+
+	case ZG_TEXTURE_FORMAT_DEPTH_F32: return DXGI_FORMAT_D32_FLOAT;
+
+	default:
+		break;
+	}
+
+	ZG_ASSERT(false);
+	return DXGI_FORMAT_UNKNOWN;
 }
 
 // Helper functions

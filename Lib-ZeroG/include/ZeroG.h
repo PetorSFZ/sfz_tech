@@ -331,6 +331,28 @@ typedef struct ZgStats ZgStats;
 // of times) per frame.
 ZG_API ZgErrorCode zgContextGetStats(ZgStats* statsOut);
 
+// Texture formats
+// ------------------------------------------------------------------------------------------------
+
+enum ZgTextureFormatEnum {
+	ZG_TEXTURE_FORMAT_UNDEFINED = 0,
+
+	ZG_TEXTURE_FORMAT_R_U8_UNORM, // Normalized between [0, 1]
+	ZG_TEXTURE_FORMAT_RG_U8_UNORM, // Normalized between [0, 1]
+	ZG_TEXTURE_FORMAT_RGBA_U8_UNORM, // Normalized between [0, 1]
+
+	ZG_TEXTURE_FORMAT_R_F16,
+	ZG_TEXTURE_FORMAT_RG_F16,
+	ZG_TEXTURE_FORMAT_RGBA_F16,
+
+	ZG_TEXTURE_FORMAT_R_F32,
+	ZG_TEXTURE_FORMAT_RG_F32,
+	ZG_TEXTURE_FORMAT_RGBA_F32,
+
+	ZG_TEXTURE_FORMAT_DEPTH_F32
+};
+typedef uint32_t ZgTextureFormat;
+
 // Pipeline Render - Signature
 // ------------------------------------------------------------------------------------------------
 
@@ -345,6 +367,9 @@ static const uint32_t ZG_MAX_NUM_TEXTURES = 16;
 
 // The maximum number of samplers allowed on a single pipeline
 static const uint32_t ZG_MAX_NUM_SAMPLERS = 8;
+
+// The maximum number of render targets allowed on a single pipeline
+static const uint32_t ZG_MAX_NUM_RENDER_TARGETS = 8;
 
 // The type of data contained in a vertex
 enum ZgVertexAttributeTypeEnum {
@@ -448,6 +473,10 @@ struct ZgPipelineRenderSignature {
 	// The textures
 	uint32_t numTextures;
 	ZgTextureDesc textures[ZG_MAX_NUM_TEXTURES];
+
+	// Render targets
+	uint32_t numRenderTargets;
+	ZgTextureFormat renderTargets[ZG_MAX_NUM_RENDER_TARGETS];
 };
 typedef struct ZgPipelineRenderSignature ZgPipelineRenderSignature;
 
@@ -609,6 +638,10 @@ struct ZgPipelineRenderCreateInfoCommon {
 	//       registers 0, 1, 2.
 	uint32_t numSamplers;
 	ZgSampler samplers[ZG_MAX_NUM_SAMPLERS];
+
+	// A list of render targets used by the pipeline
+	uint32_t numRenderTargets;
+	ZgTextureFormat renderTargets[ZG_MAX_NUM_RENDER_TARGETS];
 
 	// Rasterizer settings
 	ZgRasterizerSettings rasterizer;
@@ -792,25 +825,6 @@ ZG_API ZgErrorCode zgBufferSetDebugName(
 
 static const uint32_t ZG_MAX_NUM_MIPMAPS = 12;
 
-enum ZgTextureFormatEnum {
-	ZG_TEXTURE_FORMAT_UNDEFINED = 0,
-
-	ZG_TEXTURE_FORMAT_R_U8,
-	ZG_TEXTURE_FORMAT_RG_U8,
-	ZG_TEXTURE_FORMAT_RGBA_U8,
-
-	ZG_TEXTURE_FORMAT_R_F16,
-	ZG_TEXTURE_FORMAT_RG_F16,
-	ZG_TEXTURE_FORMAT_RGBA_F16,
-
-	ZG_TEXTURE_FORMAT_R_F32,
-	ZG_TEXTURE_FORMAT_RG_F32,
-	ZG_TEXTURE_FORMAT_RGBA_F32,
-
-	ZG_TEXTURE_FORMAT_DEPTH_F32
-};
-typedef uint32_t ZgTextureFormat;
-
 enum ZgTextureUsageEnum {
 	ZG_TEXTURE_USAGE_DEFAULT = 0,
 	ZG_TEXTURE_USAGE_RENDER_TARGET,
@@ -841,12 +855,6 @@ struct ZgTexture2DCreateInfo {
 	// This may only be set when creating a texture with usage RENDER_TARGET or DEPTH_BUFFER.
 	// Otherwise it should be left to the default value (UNDEFINED).
 	ZgOptimalClearValue optimalClearValue;
-
-	// Whether the texture is normalized or not.
-	//
-	// A normalized texture will normalize the contained value to a range of [0.0, 1.0] when read
-	// in the shader.
-	ZgBool normalized;
 
 	// The dimensions of the texture
 	uint32_t width;
@@ -900,8 +908,6 @@ ZG_API ZgErrorCode zgTexture2DSetDebugName(
 
 // Framebuffer
 // ------------------------------------------------------------------------------------------------
-
-static const uint32_t ZG_MAX_NUM_RENDER_TARGETS = 8;
 
 struct ZgFramebufferCreateInfo {
 

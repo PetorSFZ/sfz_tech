@@ -156,6 +156,14 @@ PipelineRenderBuilder& PipelineRenderBuilder::addSampler(
 	return addSampler(samplerRegister, sampler);
 }
 
+PipelineRenderBuilder& PipelineRenderBuilder::addRenderTarget(ZgTextureFormat format) noexcept
+{
+	assert(commonInfo.numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
+	commonInfo.renderTargets[commonInfo.numRenderTargets] = format;
+	commonInfo.numRenderTargets += 1;
+	return *this;
+}
+
 PipelineRenderBuilder& PipelineRenderBuilder::addVertexShaderPath(
 	const char* entry, const char* path) noexcept
 {

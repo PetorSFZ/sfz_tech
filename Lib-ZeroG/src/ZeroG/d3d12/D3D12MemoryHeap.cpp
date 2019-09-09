@@ -53,45 +53,6 @@ static const char* memoryTypeToString(ZgMemoryType type) noexcept
 	return "<UNKNOWN>";
 }
 
-static DXGI_FORMAT createInfoToDxgiFormat(const ZgTexture2DCreateInfo& info) noexcept
-{
-	if (info.normalized == ZG_FALSE) {
-		// TODO: This currently seems to be broken. Unormalized textures always return 0 when read
-		//       in shader. Should investigate further.
-		ZG_ASSERT(false);
-		/*switch (info.format) {
-		case ZG_TEXTURE_FORMAT_R_U8: return DXGI_FORMAT_R8_UINT;
-		case ZG_TEXTURE_FORMAT_RG_U8: return DXGI_FORMAT_R8G8_UINT;
-		case ZG_TEXTURE_FORMAT_RGBA_U8: return DXGI_FORMAT_R8G8B8A8_UINT;
-		default:
-			break;
-		}*/
-	}
-	else {
-		switch (info.format) {
-		case ZG_TEXTURE_FORMAT_R_U8: return DXGI_FORMAT_R8_UNORM;
-		case ZG_TEXTURE_FORMAT_RG_U8: return DXGI_FORMAT_R8G8_UNORM;
-		case ZG_TEXTURE_FORMAT_RGBA_U8: return DXGI_FORMAT_R8G8B8A8_UNORM;
-
-		case ZG_TEXTURE_FORMAT_R_F16: return DXGI_FORMAT_R16_FLOAT;
-		case ZG_TEXTURE_FORMAT_RG_F16: return DXGI_FORMAT_R16G16_FLOAT;
-		case ZG_TEXTURE_FORMAT_RGBA_F16: return DXGI_FORMAT_R16G16B16A16_FLOAT;
-
-		case ZG_TEXTURE_FORMAT_R_F32: return DXGI_FORMAT_R32_FLOAT;
-		case ZG_TEXTURE_FORMAT_RG_F32: return DXGI_FORMAT_R32G32_FLOAT;
-		case ZG_TEXTURE_FORMAT_RGBA_F32: return DXGI_FORMAT_R32G32B32A32_FLOAT;
-
-		case ZG_TEXTURE_FORMAT_DEPTH_F32: return DXGI_FORMAT_D32_FLOAT;
-
-		default:
-			break;
-		}
-	}
-
-	ZG_ASSERT(false);
-	return DXGI_FORMAT_UNKNOWN;
-}
-
 // Helper functions
 // ------------------------------------------------------------------------------------------------
 
@@ -105,7 +66,7 @@ D3D12_RESOURCE_DESC createInfoToResourceDesc(const ZgTexture2DCreateInfo& info) 
 	desc.Height = info.height;
 	desc.DepthOrArraySize = 1;
 	desc.MipLevels = (uint16_t)info.numMipmaps;
-	desc.Format = createInfoToDxgiFormat(info);
+	desc.Format = zgToDxgiTextureFormat(info.format);
 	desc.SampleDesc.Count = 1;
 	desc.SampleDesc.Quality = 0;
 	desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;

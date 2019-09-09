@@ -100,6 +100,11 @@ struct PendingTextureState final {
 	D3D12_RESOURCE_STATES currentState = D3D12_RESOURCE_STATE_COMMON;
 };
 
+// TextureFormats conversion
+// ------------------------------------------------------------------------------------------------
+
+DXGI_FORMAT zgToDxgiTextureFormat(ZgTextureFormat format) noexcept;
+
 // Helper functions
 // ------------------------------------------------------------------------------------------------
 

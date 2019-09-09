@@ -1045,6 +1045,21 @@ static ZgErrorCode createPipelineRenderInternal(
 	}
 
 
+	// Check that the correct number of render targets is specified
+	uint32_t numRenderTargets = pixelDesc.OutputParameters;
+	if (numRenderTargets != createInfo.numRenderTargets) {
+		ZG_ERROR("%u render targets were specified, however %u is used by the pipeline",
+			createInfo.numRenderTargets, numRenderTargets);
+		return ZG_ERROR_INVALID_ARGUMENT;
+	}
+
+	// Copy render target info to signature
+	signatureOut->numRenderTargets = numRenderTargets;
+	for (uint32_t i = 0; i < numRenderTargets; i++) {
+		signatureOut->renderTargets[i] = createInfo.renderTargets[i];
+	}
+
+
 	// Convert ZgVertexAttribute's to D3D12_INPUT_ELEMENT_DESC
 	// This is the "input layout"
 	D3D12_INPUT_ELEMENT_DESC attributes[ZG_MAX_NUM_VERTEX_ATTRIBUTES] = {};
@@ -1262,10 +1277,11 @@ static ZgErrorCode createPipelineRenderInternal(
 			pixelBlob->GetBufferPointer(), pixelBlob->GetBufferSize());
 
 		// Set render target formats
-		// TODO: Probably here Multiple Render Targets (MRT) is specified?
 		D3D12_RT_FORMAT_ARRAY rtvFormats = {};
-		rtvFormats.NumRenderTargets = 1;
-		rtvFormats.RTFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM; // Same as in our swapchain
+		rtvFormats.NumRenderTargets = signatureOut->numRenderTargets;
+		for (uint32_t i = 0; i < signatureOut->numRenderTargets; i++) {
+			rtvFormats.RTFormats[i] = zgToDxgiTextureFormat(signatureOut->renderTargets[i]);
+		}
 		stream.rtvFormats = rtvFormats;
 
 		// Set depth buffer formats
