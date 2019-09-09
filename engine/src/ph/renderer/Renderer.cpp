@@ -378,6 +378,22 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 		mState->configurable.getFramebuffer(mState->windowFramebuffer, stage.framebufferName);
 	sfz_assert_debug(framebuffer != nullptr);
 
+	// In debug mode, validate that the pipeline's render targets matches the framebuffer
+#if !defined(SFZ_NO_DEBUG)
+	if (framebuffer == &mState->windowFramebuffer) {
+		sfz_assert_debug(pipelineItem.numRenderTargets == 1);
+		sfz_assert_debug(pipelineItem.renderTargets[0] == ZG_TEXTURE_FORMAT_RGBA_U8_UNORM);
+	}
+	else {
+		FramebufferItem* fbItem = mState->configurable.getFramebufferItem(stage.framebufferName);
+		sfz_assert_debug(fbItem != nullptr);
+		sfz_assert_debug(pipelineItem.numRenderTargets == fbItem->numRenderTargets);
+		for (uint32_t i = 0; i < fbItem->numRenderTargets; i++) {
+			sfz_assert_debug(pipelineItem.renderTargets[i] == fbItem->renderTargetItems[i].format);
+		}
+	}
+#endif
+
 	// Begin recording command list and set pipeline and framebuffer
 	CHECK_ZG mState->presentQueue.beginCommandListRecording(mState->currentCommandList);
 	CHECK_ZG mState->currentCommandList.setFramebuffer(*framebuffer);
@@ -580,9 +596,16 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 		
 		FramebufferItem* item = mState->configurable.getFramebufferItem(target.framebuffer);
 		sfz_assert_debug(item != nullptr);
-		sfz_assert_debug(target.renderTargetIdx < item->framebuffer.numRenderTargets);
-		commonBindings.addTexture(
-			target.textureRegister, item->framebuffer.renderTargets[target.renderTargetIdx]);
+		if (target.depthBuffer) {
+			sfz_assert_debug(item->hasDepthBuffer);
+			commonBindings.addTexture(
+				target.textureRegister, item->framebuffer.depthBuffer);
+		}
+		else {
+			sfz_assert_debug(target.renderTargetIdx < item->framebuffer.numRenderTargets);
+			commonBindings.addTexture(
+				target.textureRegister, item->framebuffer.renderTargets[target.renderTargetIdx]);
+		}
 	}
 
 	// Draw all mesh components

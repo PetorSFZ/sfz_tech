@@ -117,6 +117,8 @@ struct PipelineRenderItem final {
 	uint32_t nonUserSettableConstantBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
 	uint32_t numSamplers = 0;
 	SamplerItem samplers[ZG_MAX_NUM_SAMPLERS];
+	uint32_t numRenderTargets = 0;
+	ZgTextureFormat renderTargets[ZG_MAX_NUM_RENDER_TARGETS] = {};
 	bool depthTest = false;
 	ZgDepthFunc depthFunc = ZG_DEPTH_FUNC_LESS;
 	bool cullingEnabled = false;
@@ -153,7 +155,8 @@ struct ConstantBufferMemory final {
 struct BoundRenderTarget final {
 	uint32_t textureRegister = ~0u;
 	StringID framebuffer = StringID::invalid();
-	uint32_t renderTargetIdx = 0;
+	bool depthBuffer = false;
+	uint32_t renderTargetIdx = ~0u;
 };
 
 struct Stage final {

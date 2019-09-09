@@ -131,9 +131,9 @@ ZgTextureFormat toZeroGImageFormat(ImageType imageType) noexcept
 {
 	switch (imageType) {
 	case ImageType::UNDEFINED: return ZG_TEXTURE_FORMAT_UNDEFINED;
-	case ImageType::R_U8: return ZG_TEXTURE_FORMAT_R_U8;
-	case ImageType::RG_U8: return ZG_TEXTURE_FORMAT_RG_U8;
-	case ImageType::RGBA_U8: return ZG_TEXTURE_FORMAT_RGBA_U8;
+	case ImageType::R_U8: return ZG_TEXTURE_FORMAT_R_U8_UNORM;
+	case ImageType::RG_U8: return ZG_TEXTURE_FORMAT_RG_U8_UNORM;
+	case ImageType::RGBA_U8: return ZG_TEXTURE_FORMAT_RGBA_U8_UNORM;
 
 	case ImageType::R_F32: return ZG_TEXTURE_FORMAT_R_F32;
 	case ImageType::RG_F32: return ZG_TEXTURE_FORMAT_RG_F32;

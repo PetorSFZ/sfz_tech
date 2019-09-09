@@ -82,9 +82,9 @@ static ZgDepthFunc depthFuncFromString(const str256& str) noexcept
 
 static ZgTextureFormat textureFormatFromString(const str256& str) noexcept
 {
-	if (str == "R_U8") return ZG_TEXTURE_FORMAT_R_U8;
-	if (str == "RG_U8") return ZG_TEXTURE_FORMAT_RG_U8;
-	if (str == "RGBA_U8") return ZG_TEXTURE_FORMAT_RGBA_U8;
+	if (str == "R_U8_UNORM") return ZG_TEXTURE_FORMAT_R_U8_UNORM;
+	if (str == "RG_U8_UNORM") return ZG_TEXTURE_FORMAT_RG_U8_UNORM;
+	if (str == "RGBA_U8_UNORM") return ZG_TEXTURE_FORMAT_RGBA_U8_UNORM;
 
 	if (str == "R_F16") return ZG_TEXTURE_FORMAT_R_F16;
 	if (str == "RG_F16") return ZG_TEXTURE_FORMAT_RG_F16;
@@ -177,13 +177,13 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			ParsedJsonNode renderTargetsNode = fbNode.accessMap("render_targets");
 			sfz_assert_debug(renderTargetsNode.isValid());
 			fbItem.numRenderTargets = renderTargetsNode.arrayLength();
-			for (uint32_t i = 0; i < fbItem.numRenderTargets; i++) {
-				ParsedJsonNode renderTarget = renderTargetsNode.accessArray(i);
-				fbItem.renderTargetItems[i].format = textureFormatFromString(
+			for (uint32_t j = 0; j < fbItem.numRenderTargets; j++) {
+				ParsedJsonNode renderTarget = renderTargetsNode.accessArray(j);
+				fbItem.renderTargetItems[j].format = textureFormatFromString(
 					CHECK_JSON renderTarget.accessMap("format").valueStr256());
 				float clearValue = CHECK_JSON renderTarget.accessMap("clear_value").valueFloat();
 				sfz_assert_debug(clearValue == 0.0f || clearValue == 1.0f);
-				fbItem.renderTargetItems[i].clearValue = clearValue;
+				fbItem.renderTargetItems[j].clearValue = clearValue;
 			}
 
 			// Depth buffer
@@ -259,6 +259,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			}
 		}
 
+		// Samplers
 		ParsedJsonNode samplersNode = pipelineNode.accessMap("samplers");
 		if (samplersNode.isValid()) {
 			item.numSamplers = samplersNode.arrayLength();
@@ -273,6 +274,15 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 				sampler.sampler.wrappingModeV = sampler.sampler.wrappingModeU;
 				sampler.sampler.mipLodBias = 0.0f;
 			}
+		}
+
+		// Render targets
+		ParsedJsonNode renderTargetsNode = pipelineNode.accessMap("render_targets");
+		sfz_assert_debug(renderTargetsNode.isValid());
+		item.numRenderTargets = renderTargetsNode.arrayLength();
+		for (uint32_t j = 0; j < item.numRenderTargets; j++) {
+			item.renderTargets[j] =
+				textureFormatFromString(CHECK_JSON renderTargetsNode.accessArray(j).valueStr256());
 		}
 
 		// Depth test and function if specified
@@ -342,8 +352,18 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 				str256 framebufferName = CHECK_JSON targetNode.accessMap("framebuffer").valueStr256();
 				sfz_assert_debug(framebufferName != "debug"); // Can't bind default framebuffer
 				boundTarget.framebuffer = resStrings.getStringID(framebufferName);
-				boundTarget.renderTargetIdx =
-					CHECK_JSON targetNode.accessMap("render_target_index").valueInt();
+
+				// Check if depth buffer should be bound
+				if (targetNode.accessMap("depth_buffer").isValid()) {
+					sfz_assert_debug(CHECK_JSON targetNode.accessMap("depth_buffer").valueBool());
+					boundTarget.depthBuffer = true;
+					boundTarget.renderTargetIdx = ~0u;
+				}
+				else {
+					boundTarget.depthBuffer = false;
+					boundTarget.renderTargetIdx =
+						CHECK_JSON targetNode.accessMap("render_target_index").valueInt();
+				}
 
 				stage.boundRenderTargets.add(boundTarget);
 			}

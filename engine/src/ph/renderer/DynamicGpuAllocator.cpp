@@ -444,7 +444,6 @@ zg::Texture2D DynamicGpuAllocator::allocateTexture2D(
 	createInfo.format = format;
 	createInfo.usage = usage;
 	createInfo.optimalClearValue = optimalClearValue;
-	createInfo.normalized = ZG_TRUE;
 	createInfo.width = width;
 	createInfo.height = height;
 	createInfo.numMipmaps = numMipmaps;

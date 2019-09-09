@@ -69,9 +69,9 @@ static const char* textureFormatToString(ZgTextureFormat format) noexcept
 	switch (format) {
 	case ZG_TEXTURE_FORMAT_UNDEFINED: return "UNDEFINED";
 
-	case ZG_TEXTURE_FORMAT_R_U8: return "R_U8";
-	case ZG_TEXTURE_FORMAT_RG_U8: return "RG_U8";
-	case ZG_TEXTURE_FORMAT_RGBA_U8: return "RGBA_U8";
+	case ZG_TEXTURE_FORMAT_R_U8_UNORM: return "R_U8_UNORM";
+	case ZG_TEXTURE_FORMAT_RG_U8_UNORM: return "RG_U8_UNORM";
+	case ZG_TEXTURE_FORMAT_RGBA_U8_UNORM: return "RGBA_U8_UNORM";
 
 	case ZG_TEXTURE_FORMAT_R_F16: return "R_F16";
 	case ZG_TEXTURE_FORMAT_RG_F16: return "RG_F16";
@@ -373,10 +373,17 @@ void RendererUI::renderStagesTab(RendererConfigurableState& state) noexcept
 			ImGui::Text("Bound render targets:");
 			ImGui::Indent(20.0f);
 			for (const BoundRenderTarget& target : stage.boundRenderTargets) {
-				ImGui::Text("- Register: %u  --  Framebuffer: \"%s\"  --  Render Target Index: %u",
-					target.textureRegister,
-					resStrings.getString(target.framebuffer),
-					target.renderTargetIdx);
+				if (target.depthBuffer) {
+					ImGui::Text("- Register: %u  --  Framebuffer: \"%s\"  --  Depth Buffer",
+						target.textureRegister,
+						resStrings.getString(target.framebuffer));
+				}
+				else {
+					ImGui::Text("- Register: %u  --  Framebuffer: \"%s\"  --  Render Target Index: %u",
+						target.textureRegister,
+						resStrings.getString(target.framebuffer),
+						target.renderTargetIdx);
+				}
 			}
 			ImGui::Unindent(20.0f);
 		}
@@ -575,6 +582,16 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 			}
 			ImGui::Unindent(20.0f);
 		}
+
+		// Print render targets
+		ImGui::Spacing();
+		ImGui::Text("Render Targets (%u):", pipeline.numRenderTargets);
+		ImGui::Indent(20.0f);
+		for (uint32_t j = 0; j < pipeline.numRenderTargets; j++) {
+			ImGui::Text("- Render Target: %u -- %s",
+				j, textureFormatToString(pipeline.renderTargets[j]));
+		}
+		ImGui::Unindent(20.0f);
 
 		// Print depth test
 		ImGui::Spacing();

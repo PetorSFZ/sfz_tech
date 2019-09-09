@@ -70,8 +70,8 @@ bool FramebufferItem::buildFramebuffer(vec2_s32 windowRes, DynamicGpuAllocator& 
 	else {
 		if (resolutionScaleSetting != nullptr) resolutionScale = resolutionScaleSetting->floatValue();
 		vec2 scaled = vec2(windowRes) * resolutionScale;
-		width = std::round(scaled.x);
-		height = std::round(scaled.y);
+		width = uint32_t(std::round(scaled.x));
+		height = uint32_t(std::round(scaled.y));
 	}
 
 	zg::FramebufferBuilder builder;
@@ -141,6 +141,13 @@ bool PipelineRenderItem::buildPipeline() noexcept
 	for (uint32_t i = 0; i < numSamplers; i++) {
 		SamplerItem& sampler = samplers[i];
 		pipelineBuilder.addSampler(sampler.samplerRegister, sampler.sampler);
+	}
+
+	// Render targets
+	sfz_assert_debug(numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
+	sfz_assert_debug(0 < numRenderTargets);
+	for (uint32_t i = 0; i < numRenderTargets; i++) {
+		pipelineBuilder.addRenderTarget(renderTargets[i]);
 	}
 
 	// Depth test

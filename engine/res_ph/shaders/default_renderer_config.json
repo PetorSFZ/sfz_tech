@@ -40,6 +40,9 @@
 					"wrapping_mode": "REPEAT"
 				}
 			],
+			"render_targets": [
+				"RGBA_F16"
+			],
 			"non_user_settable_constant_buffers": [
 				4
 			]
@@ -63,6 +66,9 @@
 					"sampling_mode": "ANISOTROPIC",
 					"wrapping_mode": "CLAMP"
 				}
+			],
+			"render_targets": [
+				"RGBA_U8_UNORM"
 			]
 		}
 	],

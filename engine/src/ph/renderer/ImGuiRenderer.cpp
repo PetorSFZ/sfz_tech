@@ -61,6 +61,7 @@ bool ImGuiRenderer::init(
 		.addVertexBufferInfo(0, sizeof(ImGuiVertex))
 		.addPushConstant(0)
 		.addSampler(0, ZG_SAMPLING_MODE_TRILINEAR)
+		.addRenderTarget(ZG_TEXTURE_FORMAT_RGBA_U8_UNORM)
 		.setCullingEnabled(false)
 		.setBlendingEnabled(true)
 		.setBlendFuncColor(ZG_BLEND_FUNC_ADD, ZG_BLEND_FACTOR_SRC_ALPHA, ZG_BLEND_FACTOR_SRC_INV_ALPHA)
@@ -76,8 +77,7 @@ bool ImGuiRenderer::init(
 	// Allocate memory for font texture
 	sfz_assert_release(fontTextureView.type == ImageType::R_U8);
 	ZgTexture2DCreateInfo texCreateInfo = {};
-	texCreateInfo.format = ZG_TEXTURE_FORMAT_R_U8;
-	texCreateInfo.normalized = ZG_TRUE;
+	texCreateInfo.format = ZG_TEXTURE_FORMAT_R_U8_UNORM;
 	texCreateInfo.width = fontTextureView.width;
 	texCreateInfo.height = fontTextureView.height;
 	texCreateInfo.numMipmaps = 1; // TODO: Mipmaps
@@ -109,7 +109,7 @@ bool ImGuiRenderer::init(
 
 		// Convert to ZgImageViewConstCpu
 		ZgImageViewConstCpu imageView = {};
-		imageView.format = ZG_TEXTURE_FORMAT_R_U8;
+		imageView.format = ZG_TEXTURE_FORMAT_R_U8_UNORM;
 		imageView.data = fontTextureView.rawData;
 		imageView.width = fontTextureView.width;
 		imageView.height = fontTextureView.height;
