@@ -449,6 +449,11 @@ ZgErrorCode D3D12CommandList::setPipelineBindings(
 			format = texture->format;
 		}
 
+		// If depth format, convert to SRV compatible format
+		if (format == DXGI_FORMAT_D32_FLOAT) {
+			format = DXGI_FORMAT_R32_FLOAT;
+		}
+
 		// Create shader resource view
 		// Will be null descriptor if no binding found
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
