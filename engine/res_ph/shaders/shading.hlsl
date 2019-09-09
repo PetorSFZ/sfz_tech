@@ -1,100 +1,34 @@
-// Matrices input
+// Copyright 2019 Peter Hillerström and skipifzero, all rights reserved.
+
+#include "res_ph/shaders/common.hlsl"
+
+// Push constants
 // ------------------------------------------------------------------------------------------------
 
-cbuffer StaticMatricesBuffer : register(b0) {
-	row_major float4x4 projMatrix;
-}
-
-cbuffer DynamicMatricesBuffer : register(b1) {
-	row_major float4x4 modelViewMatrix;
-
-	// inverse(transpose(modelViewMatrix)) for non-uniform scaling
-	// TODO: https://github.com/graphitemaster/normals_revisited
-	row_major float4x4 normalMatrix;
-}
-
-// Materials inputs
-// ------------------------------------------------------------------------------------------------
-
-static const uint MAX_NUM_MATERIALS = 128;
-
-struct Material {
-	float4 albedo;
-	float4 emissive;
-	float roughness;
-	float metallic;
-	int hasAlbedoTex;
-	int hasMetallicRoughnessTex;
-	int hasNormalTex;
-	int hasOcclusionTex;
-	int hasEmissiveTex;
-	int ___PADDING___;
-};
-
-cbuffer MaterialIndex : register(b2) {
-	uint materialIdx;
-	uint3 ___MATERIAL_INDEX_BUFFER_PADDING___;
-}
-
-cbuffer MaterialsBuffer : register(b4) {
-	Material materials[MAX_NUM_MATERIALS];
+cbuffer Matrices : register(b0) {
+	row_major float4x4 invProjMatrix;
 }
 
 // Point light inputs
 // ------------------------------------------------------------------------------------------------
 
-static const uint MAX_NUM_POINT_LIGHTS = 128;
-
-struct PointLight {
-	float3 posVS;
-	float range;
-	float3 strength;
-	uint ___PADDING__;
-};
-
-cbuffer PointLightsBuffer : register(b5) {
+cbuffer PointLightsBuffer : register(b1) {
 	uint numPointLights;
 	uint3 ___PADDING___;
 	PointLight pointLights[MAX_NUM_POINT_LIGHTS];
 }
 
-// Texture and sampler inputs
+// Textures and samplers
 // ------------------------------------------------------------------------------------------------
 
 Texture2D albedoTex : register(t0);
 Texture2D metallicRoughnessTex : register(t1);
-//Texture2D normalTex : register(t2);
-//Texture2D occlusionTex : register(t3);
 Texture2D emissiveTex : register(t2);
+Texture2D normalTex : register(t3);
+Texture2D depthTex : register(t4);
 
-SamplerState texSampler : register(s0);
-
-// Gamma Correction Functions
-// ------------------------------------------------------------------------------------------------
-
-static const float gamma = 2.2;
-static const float3 gamma3 = float3(gamma, gamma, gamma);
-
-float3 linearize(float3 rgbGamma)
-{
-	return pow(rgbGamma, gamma3);
-}
-
-float4 linearize(float4 rgbaGamma)
-{
-	return float4(linearize(rgbaGamma.rgb), rgbaGamma.a);
-}
-
-float3 applyGammaCorrection(float3 linearValue)
-{
-	float3 gammaInv3 = 1.0 / gamma3;
-	return pow(linearValue, gammaInv3);
-}
-
-float4 applyGammaCorrection(float4 linearValue)
-{
-	return float4(applyGammaCorrection(linearValue.rgb), linearValue.a);
-}
+SamplerState nearestSampler : register(s0);
+SamplerState linearSampler : register(s1);
 
 // Shading functions
 // ------------------------------------------------------------------------------------------------
@@ -203,23 +137,15 @@ struct VSInput {
 };
 
 struct VSOutput {
-	float3 posVS : PARAM_0;
-	float3 normalVS : PARAM_1;
-	float2 texcoord : PARAM_2;
+	float2 texcoord : PARAM_0;
 	float4 position : SV_Position;
 };
 
 VSOutput VSMain(VSInput input)
 {
-	float4 tmpPosVS = mul(modelViewMatrix, float4(input.position, 1.0));
-	
 	VSOutput output;
-	
-	output.posVS = tmpPosVS.xyz / tmpPosVS.w;
-	output.normalVS = mul(normalMatrix, float4(input.normal, 0.0)).xyz;
 	output.texcoord = input.texcoord;
-	output.position = mul(projMatrix, tmpPosVS);
-	
+	output.position = float4(input.position, 1.0);
 	return output;
 }
 
@@ -227,50 +153,27 @@ VSOutput VSMain(VSInput input)
 // ------------------------------------------------------------------------------------------------
 
 struct PSInput {
-	float3 posVS : PARAM_0;
-	float3 normalVS : PARAM_1;
-	float2 texcoord : PARAM_2;
+	float2 texcoord : PARAM_0;
 };
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-	// Pick out material
-	Material m = materials[materialIdx];
+	// Read values from GBuffer
+	float3 albedo = albedoTex.Sample(linearSampler, input.texcoord).rgb; // Gamma space
+	float2 metallicRoughness = metallicRoughnessTex.Sample(linearSampler, input.texcoord).rg;
+	float metallic = metallicRoughness.r; // Linear space
+	float roughness = metallicRoughness.g; // Linear space
+	float3 emissive = emissiveTex.Sample(linearSampler, input.texcoord).rgb; // Linear space
+	float3 normal = normalTex.Sample(linearSampler, input.texcoord).rgb;
+	float depth = depthTex.Sample(nearestSampler, input.texcoord).r;
+	float3 pos = depthToViewSpacePos(depth, input.texcoord, invProjMatrix);
 
-	// Albedo (Gamma space)
-	float3 albedo = m.albedo.rgb;
-	float alpha = m.albedo.a;
-	if (m.hasAlbedoTex != 0) {
-		float4 tmp = albedoTex.Sample(texSampler, input.texcoord);
-		albedo *= tmp.rgb;
-		alpha *= tmp.a;
-	}
+	// Convert gamma space to linear
 	albedo = linearize(albedo);
 
-	// Skip pixel if it is transparent
-	if (alpha < 0.1) discard;
-
-	// Metallic & Roughness (Linear space)
-	float metallic = m.metallic;
-	float roughness = m.roughness;
-	if (m.hasMetallicRoughnessTex != 0) {
-		float2 tmp = metallicRoughnessTex.Sample(texSampler, input.texcoord).rg;
-		metallic *= tmp.r;
-		roughness *= tmp.g;
-	}
-	roughness = max(roughness, 0.001); // Div by 0 in ggx() if roughness = 0
-
-	// Emissive (Linear space)
-	float3 emissive = m.emissive.rgb;
-	if (m.hasEmissiveTex != 0) {
-		emissive *= emissiveTex.Sample(texSampler, input.texcoord).rgb;
-	}
-	emissive = emissive;
-
 	// Pixel's position and normal
-	// TODO: Normal mapping
-	float3 p = input.posVS;
-	float3 n = normalize(input.normalVS); // TODO: NormalMatrix necessary if we normalize anyway?
+	float3 p = pos;
+	float3 n = normalize(normal);
 
 	float3 v = normalize(-p); // to view
 	float nDotV = dot(n, v);
@@ -278,6 +181,9 @@ float4 PSMain(PSInput input) : SV_TARGET
 	// Interpolation of normals sometimes makes them face away from the camera. Clamp
 	// these to almost zero, to not break shading calculations.
 	nDotV = max(0.001, nDotV);
+
+	// Div by 0 in ggx() if roughness = 0
+	roughness = max(roughness, 0.001);
 
 	float3 totalOutput = emissive;
 
@@ -298,7 +204,10 @@ float4 PSMain(PSInput input) : SV_TARGET
 	}
 
 	// TODO: Configurable ambient light hack
-	totalOutput += 0.15 * albedo;
+	totalOutput += 0.1 * albedo;
 
-	return float4(applyGammaCorrection(totalOutput), 1.0);
+	//float4 forceUsage = 0.00001 *
+		//mul(invProjMatrix, float4((albedo * metallic * roughness + emissive * depth + normal), 1.0));
+	float4 forceUsage = float4(0.0, 0.0, 0.0, 0.0);
+	return float4(totalOutput, 1.0) + forceUsage;
 }
