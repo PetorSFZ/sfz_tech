@@ -57,7 +57,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 	// Just do a single linearly interpolated sample if texture is of lower resolution than window
 	float3 linearLightAvg = float3(0.0, 0.0, 0.0);
 	if (texWidth <= windowWidth && texHeight <= windowHeight) {
-		linearLightAvg = texture.Sample(texSampler, input.texcoord).rgb;
+		linearLightAvg = max(texture.Sample(texSampler, input.texcoord).rgb, float3(0.0, 0.0, 0.0));
 	}
 
 	// Otherwise, do 4x4 linearly interpolated samples and take the average of them
@@ -73,7 +73,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 		for (uint y = 0; y < 4; y++) {
 			for (uint x = 0; x < 4; x++) {
 				float2 coord = baseCoord + float2(diff.x * x, diff.y * y);
-				total += texture.Sample(texSampler, coord).rgb;
+				total += max(texture.Sample(texSampler, coord).rgb, float3(0.0, 0.0, 0.0));
 			}
 		}
 

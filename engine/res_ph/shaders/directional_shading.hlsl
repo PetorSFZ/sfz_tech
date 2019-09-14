@@ -112,6 +112,9 @@ float4 PSMain(PSInput input) : SV_TARGET
 	// TODO: Configurable ambient light hack
 	totalOutput += 0.1 * albedo;
 
+	// No negative output
+	totalOutput = max(totalOutput, float3(0.0, 0.0, 0.0));
+
 	//float4 forceUsage = 0.00001 *
 	//	mul(invProjMatrix, shadow * float4((albedo * metallic * roughness + emissive * depth + normal), 1.0));
 	float4 forceUsage = float4(0.0, 0.0, 0.0, 0.0);
