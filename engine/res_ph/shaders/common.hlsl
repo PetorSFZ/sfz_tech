@@ -30,6 +30,13 @@ struct PointLight {
 	uint ___PADDING__;
 };
 
+struct DirectionalLight {
+	float3 lightDirVS;
+	float ___PADDING0___;
+	float3 strength;
+	float ___PADDING1___;
+};
+
 // Standard vertex dynamic matrices
 // ------------------------------------------------------------------------------------------------
 
@@ -79,4 +86,154 @@ float3 applyGammaCorrection(float3 linearValue)
 float4 applyGammaCorrection(float4 linearValue)
 {
 	return float4(applyGammaCorrection(linearValue.rgb), linearValue.a);
+}
+
+// Shading functions
+// ------------------------------------------------------------------------------------------------
+
+static const float PI = 3.14159265359;
+
+// References used:
+// https://de45xmedrsdbp.cloudfront.net/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf
+// http://blog.selfshadow.com/publications/s2016-shading-course/
+// http://www.codinglabs.net/article_physically_based_rendering_cook_torrance.aspx
+// http://graphicrants.blogspot.se/2013/08/specular-brdf-reference.html
+
+// Normal distribution function, GGX/Trowbridge-Reitz
+// a = roughness^2, UE4 parameterization
+// dot(n,h) term should be clamped to 0 if negative
+float ggx(float nDotH, float a)
+{
+	float a2 = a * a;
+	float div = PI * pow(nDotH * nDotH * (a2 - 1.0) + 1.0, 2.0);
+	return a2 / div;
+}
+
+// Schlick's model adjusted to fit Smith's method
+// k = a/2, where a = roughness^2, however, for analytical light sources (non image based)
+// roughness is first remapped to roughness = (roughnessOrg + 1) / 2.
+// Essentially, for analytical light sources:
+// k = (roughness + 1)^2 / 8
+// For image based lighting:
+// k = roughness^2 / 2
+float geometricSchlick(float nDotL, float nDotV, float k)
+{
+	float g1 = nDotL / (nDotL * (1.0 - k) + k);
+	float g2 = nDotV / (nDotV * (1.0 - k) + k);
+	return g1 * g2;
+}
+
+// Schlick's approximation. F0 should typically be 0.04 for dielectrics
+float3 fresnelSchlick(float nDotL, float3 f0)
+{
+	return f0 + (float3(1.0, 1.0, 1.0) - f0) * clamp(pow(1.0 - nDotL, 5.0), 0.0, 1.0);
+}
+
+float3 shadeDirectional(
+	DirectionalLight light,
+	float shadow,
+	float3 p,
+	float3 n,
+	float3 v,
+	float nDotV,
+	float3 albedo,
+	float roughness,
+	float metallic)
+{
+	// Shading parameters
+	float3 toLight = -light.lightDirVS;
+	float toLightDist = length(toLight);
+	float3 l = toLight * (1.0 / toLightDist); // to light
+	float3 h = normalize(l + v); // half vector (normal of microfacet)
+
+	// If nDotL is <= 0 then the light source is not in the hemisphere of the surface, i.e.
+	// no shading needs to be performed
+	float nDotL = dot(n, l);
+	if (nDotL <= 0.0) return float3(0.0, 0.0, 0.0);
+
+	// Lambert diffuse
+	float3 diffuse = albedo / PI;
+
+	// Cook-Torrance specular
+	// Normal distribution function
+	float nDotH = max(dot(n, h), 0.0); // max() should be superfluous here
+	float ctD = ggx(nDotH, roughness * roughness);
+
+	// Geometric self-shadowing term
+	float k = pow(roughness + 1.0, 2.0) / 8.0;
+	float ctG = geometricSchlick(nDotL, nDotV, k);
+
+	// Fresnel function
+	// Assume all dielectrics have a f0 of 0.04, for metals we assume f0 == albedo
+	float3 f0 = lerp(float3(0.04, 0.04, 0.04), albedo, metallic);
+	float3 ctF = fresnelSchlick(nDotV, f0);
+
+	// Calculate final Cook-Torrance specular value
+	float3 specular = ctD * ctF * ctG / (4.0 * nDotL * nDotV);
+
+	// Calculates light strength
+	float3 lightContrib = light.strength * shadow;
+
+	float3 ks = ctF;
+	float3 kd = (1.0 - ks) * (1.0 - metallic);
+
+	// "Solves" reflectance equation under the assumption that the light source is a point light
+	// and that there is no global illumination.
+	return (kd * diffuse + specular) * lightContrib * nDotL;
+}
+
+float3 shadePointLight(
+	PointLight light,
+	float3 p,
+	float3 n,
+	float3 v,
+	float nDotV,
+	float3 albedo,
+	float roughness,
+	float metallic)
+{
+	// Shading parameters
+	float3 toLight = light.posVS - p;
+	float toLightDist = length(toLight);
+	float3 l = toLight * (1.0 / toLightDist); // to light
+	float3 h = normalize(l + v); // half vector (normal of microfacet)
+
+	// If nDotL is <= 0 then the light source is not in the hemisphere of the surface, i.e.
+	// no shading needs to be performed
+	float nDotL = dot(n, l);
+	if (nDotL <= 0.0) return float3(0.0, 0.0, 0.0);
+
+	// Lambert diffuse
+	float3 diffuse = albedo / PI;
+
+	// Cook-Torrance specular
+	// Normal distribution function
+	float nDotH = max(dot(n, h), 0.0); // max() should be superfluous here
+	float ctD = ggx(nDotH, roughness * roughness);
+
+	// Geometric self-shadowing term
+	float k = pow(roughness + 1.0, 2.0) / 8.0;
+	float ctG = geometricSchlick(nDotL, nDotV, k);
+
+	// Fresnel function
+	// Assume all dielectrics have a f0 of 0.04, for metals we assume f0 == albedo
+	float3 f0 = lerp(float3(0.04, 0.04, 0.04), albedo, metallic);
+	float3 ctF = fresnelSchlick(nDotV, f0);
+
+	// Calculate final Cook-Torrance specular value
+	float3 specular = ctD * ctF * ctG / (4.0 * nDotL * nDotV);
+
+	// Calculates light strength
+	float shadow = 1.0; // TODO: Shadow map
+	float fallofNumerator = pow(clamp(1.0 - pow(toLightDist / light.range, 4.0), 0.0, 1.0), 2.0);
+	float fallofDenominator = (toLightDist * toLightDist + 1.0);
+	float falloff = fallofNumerator / fallofDenominator;
+	float3 lightContrib = falloff * light.strength * shadow;
+
+	float3 ks = ctF;
+	float3 kd = (1.0 - ks) * (1.0 - metallic);
+
+	// "Solves" reflectance equation under the assumption that the light source is a point light
+	// and that there is no global illumination.
+	return (kd * diffuse + specular) * lightContrib * nDotL;
 }

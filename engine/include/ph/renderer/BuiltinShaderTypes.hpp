@@ -58,6 +58,17 @@ struct ShaderPointLight final {
 };
 static_assert(sizeof(ShaderPointLight) == sizeof(uint32_t) * 8);
 
+// DirectionalLight type
+// ------------------------------------------------------------------------------------------------
+
+struct DirectionalLight final {
+	vec3 lightDirVS = vec3(0.0f, -1.0f, 0.0);
+	float ___PADDING0___ = 0.0f;
+	vec3 strength = vec3(0.0f);
+	float ___PADDING1___ = 0.0f;
+};
+static_assert(sizeof(DirectionalLight) == sizeof(uint32_t) * 8);
+
 // ForwardShader specific limits
 // ------------------------------------------------------------------------------------------------
 

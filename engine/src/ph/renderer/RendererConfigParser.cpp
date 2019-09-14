@@ -175,15 +175,19 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 
 			// Render targets
 			ParsedJsonNode renderTargetsNode = fbNode.accessMap("render_targets");
-			sfz_assert_debug(renderTargetsNode.isValid());
-			fbItem.numRenderTargets = renderTargetsNode.arrayLength();
-			for (uint32_t j = 0; j < fbItem.numRenderTargets; j++) {
-				ParsedJsonNode renderTarget = renderTargetsNode.accessArray(j);
-				fbItem.renderTargetItems[j].format = textureFormatFromString(
-					CHECK_JSON renderTarget.accessMap("format").valueStr256());
-				float clearValue = CHECK_JSON renderTarget.accessMap("clear_value").valueFloat();
-				sfz_assert_debug(clearValue == 0.0f || clearValue == 1.0f);
-				fbItem.renderTargetItems[j].clearValue = clearValue;
+			if (renderTargetsNode.isValid()) {
+				fbItem.numRenderTargets = renderTargetsNode.arrayLength();
+				for (uint32_t j = 0; j < fbItem.numRenderTargets; j++) {
+					ParsedJsonNode renderTarget = renderTargetsNode.accessArray(j);
+					fbItem.renderTargetItems[j].format = textureFormatFromString(
+						CHECK_JSON renderTarget.accessMap("format").valueStr256());
+					float clearValue = CHECK_JSON renderTarget.accessMap("clear_value").valueFloat();
+					sfz_assert_debug(clearValue == 0.0f || clearValue == 1.0f);
+					fbItem.renderTargetItems[j].clearValue = clearValue;
+				}
+			}
+			else {
+				fbItem.numRenderTargets = 0;
 			}
 
 			// Depth buffer

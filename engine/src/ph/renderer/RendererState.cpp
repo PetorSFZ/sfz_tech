@@ -145,7 +145,6 @@ bool PipelineRenderItem::buildPipeline() noexcept
 
 	// Render targets
 	sfz_assert_debug(numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
-	sfz_assert_debug(0 < numRenderTargets);
 	for (uint32_t i = 0; i < numRenderTargets; i++) {
 		pipelineBuilder.addRenderTarget(renderTargets[i]);
 	}
