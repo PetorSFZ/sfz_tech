@@ -28,6 +28,7 @@ namespace ph {
 // Function that returns a mesh containing a "fullscreen" triangle
 // ------------------------------------------------------------------------------------------------
 
+// Counter-clock-wise triangle winding
 ph::Mesh createFullscreenTriangle(sfz::Allocator* allocator) noexcept;
 
 } // namespace ph
