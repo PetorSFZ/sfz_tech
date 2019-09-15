@@ -778,4 +778,18 @@ void createPerspectiveProjectionReverseInfinite(
 	float aspect,
 	float near) noexcept;
 
+void createOrthographicProjection(
+	float rowMajorMatrixOut[16],
+	float width,
+	float height,
+	float near,
+	float far) noexcept;
+
+void createOrthographicProjectionReverse(
+	float rowMajorMatrixOut[16],
+	float width,
+	float height,
+	float near,
+	float far) noexcept;
+
 } // namespace zg

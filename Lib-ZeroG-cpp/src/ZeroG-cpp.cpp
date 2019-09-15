@@ -879,7 +879,6 @@ void createPerspectiveProjection(
 	assert(vertFovDegs < 180.0f);
 	assert(0.0f < aspect);
 	assert(0.0f < near);
-	assert(0.0f < far);
 	assert(near < far);
 
 	// From: https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh
@@ -943,7 +942,6 @@ void createPerspectiveProjectionReverse(
 	assert(vertFovDegs < 180.0f);
 	assert(0.0f < aspect);
 	assert(0.0f < near);
-	assert(0.0f < far);
 	assert(near < far);
 
 	// http://dev.theomader.com/depth-precision/
@@ -993,6 +991,63 @@ void createPerspectiveProjectionReverseInfinite(
 		0.0f, yScale, 0.0f, 0.0f,
 		0.0f, 0.0f, 0.0f, near,
 		0.0f, 0.0f, -1.0f, 0.0f
+	};
+	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
+}
+
+void createOrthographicProjection(
+	float rowMajorMatrixOut[16],
+	float width,
+	float height,
+	float near,
+	float far) noexcept
+{
+	assert(0.0f < width);
+	assert(0.0f < height);
+	assert(0.0f < near);
+	assert(near < far);
+
+	// https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixorthorh
+	// 2/w  0    0           0
+	// 0    2/h  0           0
+	// 0    0    1/(zn-zf)   0
+	// 0    0    zn/(zn-zf)  1
+	//
+	// Note that D3D uses column major matrices, we use row-major, so above is transposed.
+
+	float matrix[16] = {
+		2.0f / width, 0.0f, 0.0f, 0.0f,
+		0.0f, 2.0f / height, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f / (near - far), near / (near - far),
+		0.0f, 0.0f, 0.0f, 1.0f
+	};
+	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
+}
+
+void createOrthographicProjectionReverse(
+	float rowMajorMatrixOut[16],
+	float width,
+	float height,
+	float near,
+	float far) noexcept
+{
+	assert(0.0f < width);
+	assert(0.0f < height);
+	assert(0.0f < near);
+	assert(near < far);
+
+	// http://dev.theomader.com/depth-precision/
+	// "This can be achieved by multiplying the projection matrix with a simple ‘z reversal’ matrix"
+	// 1, 0, 0, 0
+	// 0, 1, 0, 0
+	// 0, 0, -1, 1
+	// 0, 0, 0, 1
+
+	float matrix[16] = {
+		2.0f / width, 0.0f, 0.0f, 0.0f,
+		0.0f, 2.0f / height, 0.0f, 0.0f,
+		0.0f, 0.0f, -1.0f / (near - far), 1.0f - (near / (near - far)),
+		0.0f, 0.0f, 0.0f, 1.0f
 	};
 	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
 }
