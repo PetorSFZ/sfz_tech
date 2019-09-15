@@ -19,6 +19,8 @@
 #include "ZeroG-cpp.hpp"
 
 #include <cassert>
+#include <cmath>
+#include <cstring>
 #include <utility>
 
 namespace zg {
@@ -811,6 +813,188 @@ ErrorCode CommandList::drawTrianglesIndexed(uint32_t startIndex, uint32_t numTri
 {
 	return (ErrorCode)zgCommandListDrawTrianglesIndexed(
 		this->commandList, startIndex, numTriangles);
+}
+
+
+// Transformation and projection matrices
+// ------------------------------------------------------------------------------------------------
+
+void createViewMatrix(
+	float rowMajorMatrixOut[16],
+	const float origin[3],
+	const float dir[3],
+	const float up[3]) noexcept
+{
+	auto dot = [](const float lhs[3], const float rhs[3]) -> float {
+		return lhs[0] * rhs[0] + lhs[1] * rhs[1] + lhs[2] * rhs[2];
+	};
+
+	auto normalize = [&](float v[3]) {
+		float length = std::sqrt(dot(v, v));
+		v[0] /= length;
+		v[1] /= length;
+		v[2] /= length;
+	};
+
+	auto cross = [](float out[3], const float lhs[3], const float rhs[3]) {
+		out[0] = lhs[1] * rhs[2] - lhs[2] * rhs[1];
+		out[1] = lhs[2] * rhs[0] - lhs[0] * rhs[2];
+		out[2] = lhs[0] * rhs[1] - lhs[1] * rhs[0];
+	};
+
+	// Z-Axis, away from screen
+	float zAxis[3];
+	memcpy(zAxis, dir, sizeof(float) * 3);
+	normalize(zAxis);
+	zAxis[0] = -zAxis[0];
+	zAxis[1] = -zAxis[1];
+	zAxis[2] = -zAxis[2];
+
+	// X-Axis, to the right
+	float xAxis[3];
+	cross(xAxis, up, zAxis);
+	normalize(xAxis);
+
+	// Y-Axis, up
+	float yAxis[3];
+	cross(yAxis, zAxis, xAxis);
+
+	float matrix[16] = {
+		xAxis[0], xAxis[1], xAxis[2], -dot(xAxis, origin),
+		yAxis[0], yAxis[1], yAxis[2], -dot(yAxis, origin),
+		zAxis[0], zAxis[1], zAxis[2], -dot(zAxis, origin),
+		0.0f,     0.0f,     0.0f,     1.0f
+	};
+	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
+}
+
+void createPerspectiveProjection(
+	float rowMajorMatrixOut[16],
+	float vertFovDegs,
+	float aspect,
+	float near,
+	float far) noexcept
+{
+	assert(0.0f < vertFovDegs);
+	assert(vertFovDegs < 180.0f);
+	assert(0.0f < aspect);
+	assert(0.0f < near);
+	assert(0.0f < far);
+	assert(near < far);
+
+	// From: https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh
+	// xScale     0          0              0
+	// 0        yScale       0              0
+	// 0        0        zf/(zn-zf)        -1
+	// 0        0        zn*zf/(zn-zf)      0
+	// where:
+	// yScale = cot(fovY/2)
+	// xScale = yScale / aspect ratio
+	//
+	// Note that D3D uses column major matrices, we use row-major, so above is transposed.
+
+	constexpr float DEG_TO_RAD = 3.14159265358979323846f / 180.0f;
+	const float vertFovRads = vertFovDegs * DEG_TO_RAD;
+	const float yScale = 1.0f / std::tan(vertFovRads * 0.5f);
+	const float xScale = yScale / aspect;
+	float matrix[16] = {
+		xScale, 0.0f, 0.0f, 0.0f,
+		0.0f, yScale, 0.0f, 0.0f,
+		0.0f, 0.0f, far / (near - far), near * far / (near - far),
+		0.0f, 0.0f, -1.0f, 0.0f
+	};
+	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
+}
+
+void createPerspectiveProjectionInfinite(
+	float rowMajorMatrixOut[16],
+	float vertFovDegs,
+	float aspect,
+	float near) noexcept
+{
+	assert(0.0f < vertFovDegs);
+	assert(vertFovDegs < 180.0f);
+	assert(0.0f < aspect);
+	assert(0.0f < near);
+
+	// Same as createPerspectiveProjection(), but let far approach infinity
+
+	constexpr float DEG_TO_RAD = 3.14159265358979323846f / 180.0f;
+	const float vertFovRads = vertFovDegs * DEG_TO_RAD;
+	const float yScale = 1.0f / std::tan(vertFovRads * 0.5f);
+	const float xScale = yScale / aspect;
+	float matrix[16] = {
+		xScale, 0.0f, 0.0f, 0.0f,
+		0.0f, yScale, 0.0f, 0.0f,
+		0.0f, 0.0f, -1.0f,-near,
+		0.0f, 0.0f, -1.0f, 0.0f
+	};
+	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
+}
+
+void createPerspectiveProjectionReverse(
+	float rowMajorMatrixOut[16],
+	float vertFovDegs,
+	float aspect,
+	float near,
+	float far) noexcept
+{
+	assert(0.0f < vertFovDegs);
+	assert(vertFovDegs < 180.0f);
+	assert(0.0f < aspect);
+	assert(0.0f < near);
+	assert(0.0f < far);
+	assert(near < far);
+
+	// http://dev.theomader.com/depth-precision/
+	// "This can be achieved by multiplying the projection matrix with a simple ‘z reversal’ matrix"
+	// 1, 0, 0, 0
+	// 0, 1, 0, 0
+	// 0, 0, -1, 1
+	// 0, 0, 0, 1
+
+	constexpr float DEG_TO_RAD = 3.14159265358979323846f / 180.0f;
+	const float vertFovRads = vertFovDegs * DEG_TO_RAD;
+	const float yScale = 1.0f / std::tan(vertFovRads * 0.5f);
+	const float xScale = yScale / aspect;
+	float matrix[16] = {
+		xScale, 0.0f, 0.0f, 0.0f,
+		0.0f, yScale, 0.0f, 0.0f,
+		0.0f, 0.0f, -(far / (near - far)) - 1.0f, -(near * far / (near - far)),
+		0.0f, 0.0f, -1.0f, 0.0f
+	};
+	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
+}
+
+void createPerspectiveProjectionReverseInfinite(
+	float rowMajorMatrixOut[16],
+	float vertFovDegs,
+	float aspect,
+	float near) noexcept
+{
+	assert(0.0f < vertFovDegs);
+	assert(vertFovDegs < 180.0f);
+	assert(0.0f < aspect);
+	assert(0.0f < near);
+
+	// http://dev.theomader.com/depth-precision/
+	// "This can be achieved by multiplying the projection matrix with a simple ‘z reversal’ matrix"
+	// 1, 0, 0, 0
+	// 0, 1, 0, 0
+	// 0, 0, -1, 1
+	// 0, 0, 0, 1
+
+	constexpr float DEG_TO_RAD = 3.14159265358979323846f / 180.0f;
+	const float vertFovRads = vertFovDegs * DEG_TO_RAD;
+	const float yScale = 1.0f / std::tan(vertFovRads * 0.5f);
+	const float xScale = yScale / aspect;
+	float matrix[16] = {
+		xScale, 0.0f, 0.0f, 0.0f,
+		0.0f, yScale, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, near,
+		0.0f, 0.0f, -1.0f, 0.0f
+	};
+	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
 }
 
 } // namespace zg

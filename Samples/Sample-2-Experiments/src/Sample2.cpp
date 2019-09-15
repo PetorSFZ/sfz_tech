@@ -439,9 +439,12 @@ static void realMain(SDL_Window* window) noexcept
 			std::cos(timeSinceStart) * 5.0f,
 			std::sin(timeSinceStart * 0.75f) + 1.5f,
 			std::sin(timeSinceStart) * 5.0f);
-		Matrix viewMatrix = createViewMatrix(
-			origin, -origin, Vector(0.0f, 1.0f, 0.0f));
-		Matrix projMatrix = createProjectionMatrix(vertFovDeg, aspectRatio, 0.01f, 10.0f);
+		Vector dir = -origin;
+		Vector up = Vector(0.0f, 1.0f, 0.0f);
+		Matrix viewMatrix;
+		zg::createViewMatrix(viewMatrix.m, &origin.x, &dir.x, &up.x);
+		Matrix projMatrix;
+		zg::createPerspectiveProjection(projMatrix.m, vertFovDeg, aspectRatio, 0.01f, 10.0f);
 
 		// Begin frame
 		zg::Framebuffer framebuffer;

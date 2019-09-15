@@ -706,4 +706,76 @@ public:
 	ErrorCode drawTrianglesIndexed(uint32_t startIndex, uint32_t numTriangles) noexcept;
 };
 
+
+// Transformation and projection matrices
+// ------------------------------------------------------------------------------------------------
+
+// These are some helper functions to generate the standard transform and projection matrices you
+// typically want to use with ZeroG.
+//
+// The inclusion of these might seem a bit out of place compared to the other stuff here, however
+// when looking around I see quite a bit of confusion regarding these matrices. I figure I will save
+// myself and others quite a bit of time by providing reasonable defaults that should cover most use
+// cases.
+//
+// All matrices returned are 4x4 row-major matrices (i.e. column vectors). If passed directly into
+// HLSL the "float4x4" primitive must be marked "row_major", otherwise the matrix will get
+// transposed during the transfer and you will not get the results you expect.
+//
+// The createViewMatrix() function creates a view matrix similar to the one typically used in OpenGL.
+// In other words, right-handed coordinate system with x to the right, y up and z towards the camera
+// (negative z into the scene). This is the kind of view matrix that is expected for all the
+// projection matrices here.
+//
+// The are a couple of variants of the projection matrices, normal, "reverse" and "infinite".
+//
+// Reverse simply means that it uses reversed z (i.e. 1.0 is closest to camera, 0.0 is furthest away).
+// This can greatly improve the precision of the depth buffer, see:
+// * https://developer.nvidia.com/content/depth-precision-visualized
+// * http://dev.theomader.com/depth-precision/
+// * https://mynameismjp.wordpress.com/2010/03/22/attack-of-the-depth-buffer/
+// Of course, if you are using reverse projection you must also change your depth function from
+// "ZG_DEPTH_FUNC_LESS" to "ZG_DEPTH_FUNC_GREATER".
+//
+// Infinite means that the far plane is at infinity instead of at a fixed distance away from the camera.
+// Somewhat counter intuitively, this does not reduce the precision of the depth buffer all that much.
+// Because the depth buffer is logarithmic, mainly the distance to the near plane affects precision.
+// Setting the far plane to infinity gives you one less thing to think about and simplifies the
+// actual projection matrix a bit.
+//
+// If unsure I would recommend starting out with the basic createPerspectiveProjection() and then
+// switching to createPerspectiveProjectionReverseInfinite() when feeling more confident.
+
+void createViewMatrix(
+	float rowMajorMatrixOut[16],
+	const float origin[3],
+	const float dir[3],
+	const float up[3]) noexcept;
+
+void createPerspectiveProjection(
+	float rowMajorMatrixOut[16],
+	float vertFovDegs,
+	float aspect,
+	float near,
+	float far) noexcept;
+
+void createPerspectiveProjectionInfinite(
+	float rowMajorMatrixOut[16],
+	float vertFovDegs,
+	float aspect,
+	float near) noexcept;
+
+void createPerspectiveProjectionReverse(
+	float rowMajorMatrixOut[16],
+	float vertFovDegs,
+	float aspect,
+	float near,
+	float far) noexcept;
+
+void createPerspectiveProjectionReverseInfinite(
+	float rowMajorMatrixOut[16],
+	float vertFovDegs,
+	float aspect,
+	float near) noexcept;
+
 } // namespace zg

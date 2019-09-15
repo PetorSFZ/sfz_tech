@@ -111,14 +111,3 @@ Matrix inverse(const Matrix& m) noexcept;
 
 // Creates an identity matrix
 Matrix createIdentityMatrix() noexcept;
-
-// Creates a view matrix
-//
-// Right-handed, negative-z into the screen, positive-x to the right
-Matrix createViewMatrix(Vector origin, Vector dir, Vector up) noexcept;
-
-// Creates a projection matrix
-//
-// Right-handed view space, left-handed clip space (with origin in upper left corner), depth 0 to 1
-// where 0 is closest.
-Matrix createProjectionMatrix(float yFovDeg, float aspectRatio, float zNear, float zFar) noexcept;
