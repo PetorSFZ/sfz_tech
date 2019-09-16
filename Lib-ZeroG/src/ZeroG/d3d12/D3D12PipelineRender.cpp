@@ -424,7 +424,7 @@ static D3D12_BLEND_OP toD3D12BlendOp(ZgBlendFunc func) noexcept
 	return D3D12_BLEND_OP_ADD;
 }
 
-static D3D12_BLEND toD3D12BlendFactor(ZgBlendValue val) noexcept
+static D3D12_BLEND toD3D12BlendFactor(ZgBlendFactor val) noexcept
 {
 	switch (val) {
 	case ZG_BLEND_FACTOR_ZERO: return D3D12_BLEND_ZERO;

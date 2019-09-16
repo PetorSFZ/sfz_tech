@@ -227,7 +227,7 @@ PipelineRenderBuilder& PipelineRenderBuilder::setBlendingEnabled(bool blendingEn
 }
 
 PipelineRenderBuilder& PipelineRenderBuilder::setBlendFuncColor(
-	ZgBlendFunc func, ZgBlendValue srcFactor, ZgBlendValue dstFactor) noexcept
+	ZgBlendFunc func, ZgBlendFactor srcFactor, ZgBlendFactor dstFactor) noexcept
 {
 	commonInfo.blending.blendFuncColor = func;
 	commonInfo.blending.srcValColor = srcFactor;
@@ -236,7 +236,7 @@ PipelineRenderBuilder& PipelineRenderBuilder::setBlendFuncColor(
 }
 
 PipelineRenderBuilder& PipelineRenderBuilder::setBlendFuncAlpha(
-	ZgBlendFunc func, ZgBlendValue srcFactor, ZgBlendValue dstFactor) noexcept
+	ZgBlendFunc func, ZgBlendFactor srcFactor, ZgBlendFactor dstFactor) noexcept
 {
 	commonInfo.blending.blendFuncAlpha = func;
 	commonInfo.blending.srcValAlpha = srcFactor;

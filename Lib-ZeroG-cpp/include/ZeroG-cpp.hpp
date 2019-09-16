@@ -197,9 +197,9 @@ public:
 
 	PipelineRenderBuilder& setBlendingEnabled(bool blendingEnabled) noexcept;
 	PipelineRenderBuilder& setBlendFuncColor(
-		ZgBlendFunc func, ZgBlendValue srcFactor, ZgBlendValue dstFactor) noexcept;
+		ZgBlendFunc func, ZgBlendFactor srcFactor, ZgBlendFactor dstFactor) noexcept;
 	PipelineRenderBuilder& setBlendFuncAlpha(
-		ZgBlendFunc func, ZgBlendValue srcFactor, ZgBlendValue dstFactor) noexcept;
+		ZgBlendFunc func, ZgBlendFactor srcFactor, ZgBlendFactor dstFactor) noexcept;
 
 	PipelineRenderBuilder& setDepthTestEnabled(bool depthTestEnabled) noexcept;
 	PipelineRenderBuilder& setDepthFunc(ZgDepthFunc depthFunc) noexcept;

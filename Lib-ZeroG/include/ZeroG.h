@@ -561,7 +561,7 @@ enum ZgBlendFactorEnum {
 	ZG_BLEND_FACTOR_DST_ALPHA,
 	ZG_BLEND_FACTOR_DST_INV_ALPHA,
 };
-typedef uint32_t ZgBlendValue;
+typedef uint32_t ZgBlendFactor;
 
 struct ZgBlendSettings {
 
@@ -574,13 +574,13 @@ struct ZgBlendSettings {
 
 	// How the color values in src (output from pixel shader) and dst (value in framebuffer)
 	// should be blended.
-	ZgBlendValue srcValColor;
-	ZgBlendValue dstValColor;
+	ZgBlendFactor srcValColor;
+	ZgBlendFactor dstValColor;
 
 	// How the alpha values in src (output from pixel shader) and dst (value in framebuffer)
 	// should be blended.
-	ZgBlendValue srcValAlpha;
-	ZgBlendValue dstValAlpha;
+	ZgBlendFactor srcValAlpha;
+	ZgBlendFactor dstValAlpha;
 };
 typedef struct ZgBlendSettings ZgBlendSettings;
 
