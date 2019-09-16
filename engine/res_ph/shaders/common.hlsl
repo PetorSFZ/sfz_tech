@@ -61,6 +61,28 @@ float3 depthToViewSpacePos(float depth, float2 fullscreenTexcoord, float4x4 invP
 	return pos;
 }
 
+// Shadow map helpers
+// ------------------------------------------------------------------------------------------------
+
+// Samples the specified shadow map and returns whether the view space position is in light (1.0)
+// or shadow
+//
+// Assumes reverse-z shadow map
+float sampleShadowMap(
+	Texture2D shadowMap,
+	SamplerState samplerState,
+	float4x4 lightMatrix,
+	float3 posVS,
+	float bias = 0.0002)
+{
+	float4 tmp = mul(lightMatrix, float4(posVS, 1.0));
+	tmp.xyz /= tmp.w; // TODO: Unsure if necessary
+	tmp.y = 1.0 - tmp.y;
+	float lightDepth = shadowMap.Sample(samplerState, tmp.xy).r;
+	float shadow = (tmp.z + bias) >= lightDepth ? 1.0 : 0.0;
+	return shadow;
+}
+
 // Gamma correction functions
 // ------------------------------------------------------------------------------------------------
 

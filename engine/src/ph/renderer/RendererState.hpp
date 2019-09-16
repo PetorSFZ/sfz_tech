@@ -98,6 +98,12 @@ struct SamplerItem final {
 	ZgSampler sampler = {};
 };
 
+enum class PipelineBlendMode {
+	NO_BLENDING = 0,
+	ALPHA_BLENDING,
+	ADDITIVE_BLENDING
+};
+
 struct PipelineRenderItem final {
 
 	// The pipeline
@@ -125,6 +131,7 @@ struct PipelineRenderItem final {
 	bool cullFrontFacing = false;
 	bool frontFacingIsCounterClockwise = false;
 	bool wireframeRenderingEnabled = false;
+	PipelineBlendMode blendMode = PipelineBlendMode::NO_BLENDING;
 
 	// Method for building pipeline given the parsed information
 	bool buildPipeline() noexcept;

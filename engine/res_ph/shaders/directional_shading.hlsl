@@ -87,15 +87,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 	roughness = max(roughness, 0.001);
 
 	// Sample shadow map
-	// TODO: Clean up
-	float4 tmp = mul(dirLightMatrix, float4(p, 1.0));
-	tmp.xyz /= tmp.w;
-	//tmp.xy = tmp.xy * 0.5 + float2(0.5, 0.5);
-	tmp.y = 1.0 - tmp.y;
-	float lightDepth = shadowMap.Sample(nearestSampler, tmp.xy).r;
-	const float bias = 0.0002;
-	//const float bias = 0.0;
-	float shadow = (tmp.z + bias) >= lightDepth ? 1.0 : 0.0;
+	float shadow = sampleShadowMap(shadowMap, nearestSampler, dirLightMatrix, p);
 
 	float3 totalOutput = emissive;
 
@@ -111,7 +103,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 		metallic);
 
 	// TODO: Configurable ambient light hack
-	totalOutput += 0.1 * albedo;
+	totalOutput += 0.05 * albedo;
 
 	// No negative output
 	totalOutput = max(totalOutput, float3(0.0, 0.0, 0.0));

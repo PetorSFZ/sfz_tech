@@ -168,6 +168,26 @@ bool PipelineRenderItem::buildPipeline() noexcept
 		pipelineBuilder.setWireframeRendering(true);
 	}
 
+	// Blend mode
+	if (blendMode == PipelineBlendMode::NO_BLENDING) {
+		pipelineBuilder.setBlendingEnabled(false);
+	}
+	else if (blendMode == PipelineBlendMode::ALPHA_BLENDING) {
+		pipelineBuilder
+			.setBlendingEnabled(true)
+			.setBlendFuncColor(ZG_BLEND_FUNC_ADD, ZG_BLEND_FACTOR_SRC_ALPHA, ZG_BLEND_FACTOR_SRC_INV_ALPHA)
+			.setBlendFuncAlpha(ZG_BLEND_FUNC_ADD, ZG_BLEND_FACTOR_ONE, ZG_BLEND_FACTOR_ZERO);
+	}
+	else if (blendMode == PipelineBlendMode::ADDITIVE_BLENDING) {
+		pipelineBuilder
+			.setBlendingEnabled(true)
+			.setBlendFuncColor(ZG_BLEND_FUNC_ADD, ZG_BLEND_FACTOR_ONE, ZG_BLEND_FACTOR_ONE)
+			.setBlendFuncAlpha(ZG_BLEND_FUNC_ADD, ZG_BLEND_FACTOR_ONE, ZG_BLEND_FACTOR_ONE);
+	}
+	else {
+		sfz_assert_debug(false);
+	}
+
 	// Build pipeline
 	bool buildSuccess = false;
 	zg::PipelineRender tmpPipeline;

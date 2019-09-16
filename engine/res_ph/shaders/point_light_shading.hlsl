@@ -23,9 +23,8 @@ cbuffer PointLightsBuffer : register(b1) {
 
 Texture2D albedoTex : register(t0);
 Texture2D metallicRoughnessTex : register(t1);
-Texture2D emissiveTex : register(t2);
-Texture2D normalTex : register(t3);
-Texture2D depthTex : register(t4);
+Texture2D normalTex : register(t2);
+Texture2D depthTex : register(t3);
 
 SamplerState nearestSampler : register(s0);
 SamplerState linearSampler : register(s1);
@@ -66,7 +65,6 @@ float4 PSMain(PSInput input) : SV_TARGET
 	float2 metallicRoughness = metallicRoughnessTex.Sample(linearSampler, input.texcoord).rg;
 	float metallic = metallicRoughness.r; // Linear space
 	float roughness = metallicRoughness.g; // Linear space
-	float3 emissive = emissiveTex.Sample(linearSampler, input.texcoord).rgb; // Linear space
 	float3 normal = normalTex.Sample(linearSampler, input.texcoord).rgb;
 	float depth = depthTex.Sample(nearestSampler, input.texcoord).r;
 	float3 pos = depthToViewSpacePos(depth, input.texcoord, invProjMatrix);
@@ -88,7 +86,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 	// Div by 0 in ggx() if roughness = 0
 	roughness = max(roughness, 0.001);
 
-	float3 totalOutput = emissive;
+	float3 totalOutput = float3(0.0, 0.0, 0.0);
 
 	// Point lights
 	for (int i = 0; i < numPointLights; i++) {
@@ -106,14 +104,8 @@ float4 PSMain(PSInput input) : SV_TARGET
 		totalOutput += res;
 	}
 
-	// TODO: Configurable ambient light hack
-	totalOutput += 0.1 * albedo;
-
 	// No negative output
 	totalOutput = max(totalOutput, float3(0.0, 0.0, 0.0));
 
-	//float4 forceUsage = 0.00001 *
-		//mul(invProjMatrix, float4((albedo * metallic * roughness + emissive * depth + normal), 1.0));
-	float4 forceUsage = float4(0.0, 0.0, 0.0, 0.0);
-	return float4(totalOutput, 1.0) + forceUsage;
+	return float4(totalOutput, 1.0);
 }

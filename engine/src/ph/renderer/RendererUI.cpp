@@ -146,6 +146,17 @@ static const char* depthFuncToString(ZgDepthFunc func) noexcept
 	return "";
 }
 
+static const char* blendModeToString(PipelineBlendMode mode) noexcept
+{
+	switch (mode) {
+	case PipelineBlendMode::NO_BLENDING: return "no_blending";
+	case PipelineBlendMode::ALPHA_BLENDING: return "alpha_blending";
+	case PipelineBlendMode::ADDITIVE_BLENDING: return "additive_blending";
+	}
+	sfz_assert_debug(false);
+	return "";
+}
+
 // RendererUI: State methods
 // ------------------------------------------------------------------------------------------------
 
@@ -616,6 +627,10 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 		ImGui::Spacing();
 		ImGui::Text("Wireframe Rendering: %s",
 			pipeline.wireframeRenderingEnabled ? "ENABLED" : "DISABLED");
+
+		// Print blend mode
+		ImGui::Spacing();
+		ImGui::Text("Blend Mode: %s", blendModeToString(pipeline.blendMode));
 
 		ImGui::Unindent(20.0f);
 		ImGui::Unindent(20.0f);

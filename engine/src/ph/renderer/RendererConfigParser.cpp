@@ -100,6 +100,16 @@ static ZgTextureFormat textureFormatFromString(const str256& str) noexcept
 	return ZG_TEXTURE_FORMAT_UNDEFINED;
 }
 
+static PipelineBlendMode blendModeFromString(const str256& str) noexcept
+{
+	if (str == "no_blending") return PipelineBlendMode::NO_BLENDING;
+	if (str == "alpha_blending") return PipelineBlendMode::ALPHA_BLENDING;
+	if (str == "additive_blending") return PipelineBlendMode::ADDITIVE_BLENDING;
+
+	sfz_assert_debug(false);
+	return PipelineBlendMode::NO_BLENDING;
+}
+
 // Renderer config parser functions
 // ------------------------------------------------------------------------------------------------
 
@@ -309,6 +319,13 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		ParsedJsonNode wireframeNode = pipelineNode.accessMap("wireframe_rendering");
 		if (wireframeNode.isValid()) {
 			item.wireframeRenderingEnabled = CHECK_JSON wireframeNode.valueBool();
+		}
+
+		// Alpha blending
+		ParsedJsonNode blendModeNode = pipelineNode.accessMap("blend_mode");
+		item.blendMode = PipelineBlendMode::NO_BLENDING;
+		if (blendModeNode.isValid()) {
+			item.blendMode = blendModeFromString(CHECK_JSON blendModeNode.valueStr256());
 		}
 	}
 
