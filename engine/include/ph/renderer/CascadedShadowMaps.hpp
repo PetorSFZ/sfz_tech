@@ -33,11 +33,29 @@ using sfz::vec3;
 constexpr uint32_t MAX_NUM_CASCADED_SHADOW_MAP_LEVELS = 4;
 
 struct CascadedShadowMapInfo final {
+
+	// Number of cascaded shadow map levels (same as input to function)
 	uint32_t numLevels = 0;
+
+	// Maximum distance each shadow map level is valid for (same as input to function)
 	float levelDists[MAX_NUM_CASCADED_SHADOW_MAP_LEVELS] = {};
+
+	// View matrices for the levels shadow map camera
 	mat4 viewMatrices[MAX_NUM_CASCADED_SHADOW_MAP_LEVELS] = {};
+
+	// Projection matrix for the levels shadow map camera
 	mat4 projMatrices[MAX_NUM_CASCADED_SHADOW_MAP_LEVELS] = {};
-	mat4 camViewToLightClip[MAX_NUM_CASCADED_SHADOW_MAP_LEVELS] = {};
+
+	// The "light" matrix for the level, i.e. transforms from camera's view space to light's clip
+	// space scaled and translated by 0.5.
+	//
+	// E.g., to get a coordinate to sample in shadow map with in HLSL you should do:
+	// float4 tmp = mul(lightMatrix, float4(viewSpacePos, 1.0));
+	// tmp.xyz /= tmp.w;
+	// tmp.y = 1.0 - tmp.y;
+	// float lightDepth = shadowMap.Sample(sampler, tmp.xy).r;
+	// // compare lightDepth and tmp.z here
+	mat4 lightMatrices[MAX_NUM_CASCADED_SHADOW_MAP_LEVELS] = {};
 };
 
 // Calculates information necessary to render cascaded shadow maps for directional lighting.

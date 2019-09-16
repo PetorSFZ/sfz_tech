@@ -104,7 +104,12 @@ CascadedShadowMapInfo calculateCascadedShadowMapInfo(
 			worstCaseDim,
 			1.0f,
 			shadowHeightDist + worstCaseDim * 0.5f);
-		info.camViewToLightClip[i] = info.projMatrices[i] * info.viewMatrices[i] * invViewMatrix;
+		info.lightMatrices[i] = 
+			mat4::translation3(vec3(0.5f, 0.5f, 0.0f)) *
+			mat4::scaling3(0.5f, 0.5f, 1.0f) *
+			info.projMatrices[i] *
+			info.viewMatrices[i] *
+			invViewMatrix;
 	}
 
 	return info;

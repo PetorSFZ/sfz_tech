@@ -90,7 +90,7 @@ float4 PSMain(PSInput input) : SV_TARGET
 	// TODO: Clean up
 	float4 tmp = mul(dirLightMatrix, float4(p, 1.0));
 	tmp.xyz /= tmp.w;
-	tmp.xy = tmp.xy * 0.5 + float2(0.5, 0.5);
+	//tmp.xy = tmp.xy * 0.5 + float2(0.5, 0.5);
 	tmp.y = 1.0 - tmp.y;
 	float lightDepth = shadowMap.Sample(nearestSampler, tmp.xy).r;
 	const float bias = 0.0002;
