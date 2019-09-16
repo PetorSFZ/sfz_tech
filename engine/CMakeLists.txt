@@ -78,6 +78,7 @@ set(HEADER_FILES
 	${INCLUDE_DIR}/ph/game_loop/GameLoopUpdateable.hpp
 
 	${INCLUDE_DIR}/ph/renderer/BuiltInShaderTypes.hpp
+	${INCLUDE_DIR}/ph/renderer/CascadedShadowMaps.hpp
 	${INCLUDE_DIR}/ph/renderer/Renderer.hpp
 
 	${INCLUDE_DIR}/ph/rendering/FullscreenTriangle.hpp
@@ -118,6 +119,7 @@ set(SRC_FILES
 	${SRC_DIR}/ph/game_loop/DefaultGameUpdateable.cpp
 	${SRC_DIR}/ph/game_loop/GameLoop.cpp
 
+	${SRC_DIR}/ph/renderer/CascadedShadowMaps.cpp
 	${SRC_DIR}/ph/renderer/DynamicGpuAllocator.hpp
 	${SRC_DIR}/ph/renderer/DynamicGpuAllocator.cpp
 	${SRC_DIR}/ph/renderer/GpuMesh.hpp

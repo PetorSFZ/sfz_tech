@@ -93,8 +93,9 @@ float4 PSMain(PSInput input) : SV_TARGET
 	tmp.xy = tmp.xy * 0.5 + float2(0.5, 0.5);
 	tmp.y = 1.0 - tmp.y;
 	float lightDepth = shadowMap.Sample(nearestSampler, tmp.xy).r;
-	const float bias = 0.000005;
-	float shadow = (tmp.z - bias) <= lightDepth ? 1.0 : 0.0;
+	const float bias = 0.0002;
+	//const float bias = 0.0;
+	float shadow = (tmp.z + bias) >= lightDepth ? 1.0 : 0.0;
 
 	float3 totalOutput = emissive;
 
