@@ -536,6 +536,21 @@ struct ZgRasterizerSettings {
 	// Default is ZG_FALSE, in other words clockwise (left-hand rule). This is also the default
 	// of D3D12.
 	ZgBool frontFacingIsCounterClockwise;
+
+	// Depth bias added to each pixel.
+	//
+	// For D3D12, see: https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-output-merger-stage-depth-bias
+	int32_t depthBias;
+
+	// Depth bias for each pixel's slope.
+	//
+	// For D3D12, see: https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-output-merger-stage-depth-bias
+	float depthBiasSlopeScaled;
+
+	// The max depth bias for a pixel.
+	//
+	// For D3D12, see: https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-output-merger-stage-depth-bias
+	float depthBiasClamp;
 };
 typedef struct ZgRasterizerSettings ZgRasterizerSettings;
 

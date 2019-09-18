@@ -220,6 +220,15 @@ PipelineRenderBuilder& PipelineRenderBuilder::setCullMode(
 	return *this;
 }
 
+PipelineRenderBuilder& PipelineRenderBuilder::setDepthBias(
+	int32_t bias, float biasSlopeScaled, float biasClamp) noexcept
+{
+	commonInfo.rasterizer.depthBias = bias;
+	commonInfo.rasterizer.depthBiasSlopeScaled = biasSlopeScaled;
+	commonInfo.rasterizer.depthBiasClamp = biasClamp;
+	return *this;
+}
+
 PipelineRenderBuilder& PipelineRenderBuilder::setBlendingEnabled(bool blendingEnabled) noexcept
 {
 	commonInfo.blending.blendingEnabled = blendingEnabled ? ZG_TRUE : ZG_FALSE;

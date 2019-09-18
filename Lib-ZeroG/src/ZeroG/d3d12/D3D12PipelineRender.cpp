@@ -1295,10 +1295,10 @@ static ZgErrorCode createPipelineRenderInternal(
 		rasterizerDesc.CullMode = toD3D12CullMode(createInfo.rasterizer);
 		rasterizerDesc.FrontCounterClockwise =
 			(createInfo.rasterizer.frontFacingIsCounterClockwise == ZG_FALSE) ? FALSE : TRUE;
-		rasterizerDesc.DepthBias = 0; // TODO: Expose
-		rasterizerDesc.DepthBiasClamp = 0.0f; // TODO: Expose
-		rasterizerDesc.SlopeScaledDepthBias = 0.0f; // TODO: Expose
-		rasterizerDesc.DepthClipEnable = TRUE; // TODO: Expose
+		rasterizerDesc.DepthBias = createInfo.rasterizer.depthBias;
+		rasterizerDesc.DepthBiasClamp = createInfo.rasterizer.depthBiasClamp;
+		rasterizerDesc.SlopeScaledDepthBias = createInfo.rasterizer.depthBiasSlopeScaled;
+		rasterizerDesc.DepthClipEnable = TRUE;
 		rasterizerDesc.MultisampleEnable = FALSE;
 		rasterizerDesc.AntialiasedLineEnable = FALSE;
 		rasterizerDesc.ForcedSampleCount = 0;

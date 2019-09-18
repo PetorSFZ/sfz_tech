@@ -195,6 +195,9 @@ public:
 	PipelineRenderBuilder& setCullMode(
 		bool cullFrontFacing, bool fontFacingIsCounterClockwise = false) noexcept;
 
+	PipelineRenderBuilder& setDepthBias(
+		int32_t bias, float biasSlopeScaled, float biasClamp = 0.0f) noexcept;
+
 	PipelineRenderBuilder& setBlendingEnabled(bool blendingEnabled) noexcept;
 	PipelineRenderBuilder& setBlendFuncColor(
 		ZgBlendFunc func, ZgBlendFactor srcFactor, ZgBlendFactor dstFactor) noexcept;
