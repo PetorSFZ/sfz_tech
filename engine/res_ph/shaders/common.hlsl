@@ -72,14 +72,13 @@ float sampleShadowMap(
 	Texture2D shadowMap,
 	SamplerState samplerState,
 	float4x4 lightMatrix,
-	float3 posVS,
-	float bias = 0.0002)
+	float3 posVS)
 {
 	float4 tmp = mul(lightMatrix, float4(posVS, 1.0));
 	tmp.xyz /= tmp.w; // TODO: Unsure if necessary
 	tmp.y = 1.0 - tmp.y;
 	float lightDepth = shadowMap.Sample(samplerState, tmp.xy).r;
-	float shadow = (tmp.z + bias) >= lightDepth ? 1.0 : 0.0;
+	float shadow = tmp.z >= lightDepth ? 1.0 : 0.0;
 	return shadow;
 }
 

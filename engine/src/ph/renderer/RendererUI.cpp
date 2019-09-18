@@ -623,6 +623,12 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 			ImGui::Unindent(20.0f);
 		}
 
+		// Print depth bias info
+		ImGui::Spacing();
+		ImGui::Text("Depth Bias: %i", pipeline.depthBias);
+		ImGui::Text("Depth Bias Slope Scaled: %.4f", pipeline.depthBiasSlopeScaled);
+		ImGui::Text("Depth Bias Clamp: %.4f", pipeline.depthBiasClamp);
+
 		// Print wireframe rendering mode
 		ImGui::Spacing();
 		ImGui::Text("Wireframe Rendering: %s",

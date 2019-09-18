@@ -315,6 +315,17 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 				CHECK_JSON cullingNode.accessMap("front_facing_is_counter_clockwise").valueBool();
 		}
 
+		// Depth bias
+		ParsedJsonNode depthBiasNode = pipelineNode.accessMap("depth_bias");
+		item.depthBias = 0;
+		item.depthBiasSlopeScaled = 0.0f;
+		item.depthBiasClamp = 0.0f;
+		if (depthBiasNode.isValid()) {
+			item.depthBias = CHECK_JSON depthBiasNode.accessMap("bias").valueInt();
+			item.depthBiasSlopeScaled = CHECK_JSON depthBiasNode.accessMap("bias_slope_scaled").valueFloat();
+			item.depthBiasClamp = CHECK_JSON depthBiasNode.accessMap("bias_clamp").valueFloat();
+		}
+
 		// Wireframe rendering
 		ParsedJsonNode wireframeNode = pipelineNode.accessMap("wireframe_rendering");
 		if (wireframeNode.isValid()) {

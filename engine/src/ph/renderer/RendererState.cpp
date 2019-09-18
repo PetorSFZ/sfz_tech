@@ -163,6 +163,10 @@ bool PipelineRenderItem::buildPipeline() noexcept
 			.setCullMode(cullFrontFacing, frontFacingIsCounterClockwise);
 	}
 
+	// Depth bias
+	pipelineBuilder
+		.setDepthBias(depthBias, depthBiasSlopeScaled, depthBiasClamp);
+
 	// Wireframe rendering
 	if (wireframeRenderingEnabled) {
 		pipelineBuilder.setWireframeRendering(true);

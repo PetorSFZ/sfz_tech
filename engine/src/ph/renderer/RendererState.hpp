@@ -130,6 +130,9 @@ struct PipelineRenderItem final {
 	bool cullingEnabled = false;
 	bool cullFrontFacing = false;
 	bool frontFacingIsCounterClockwise = false;
+	int32_t depthBias = 0;
+	float depthBiasSlopeScaled = 0.0f;
+	float depthBiasClamp = 0.0f;
 	bool wireframeRenderingEnabled = false;
 	PipelineBlendMode blendMode = PipelineBlendMode::NO_BLENDING;
 

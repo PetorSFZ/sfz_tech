@@ -2,16 +2,22 @@
 
 #include "res_ph/shaders/common.hlsl"
 
-// Push constants
+// Constant buffers
 // ------------------------------------------------------------------------------------------------
 
 cbuffer PushConstants1 : register(b0) {
 	row_major float4x4 invProjMatrix;
-	row_major float4x4 dirLightMatrix;
 }
 
-cbuffer PushConstants2 : register(b1) {
+cbuffer LightInfo : register(b1) {
 	DirectionalLight dirLight;
+	row_major float4x4 lightMatrix1;
+	row_major float4x4 lightMatrix2;
+	row_major float4x4 lightMatrix3;
+	float levelDist1;
+	float levelDist2;
+	float levelDist3;
+	float ___PADDING___;
 }
 
 // Textures and samplers
@@ -23,7 +29,9 @@ Texture2D emissiveTex : register(t2);
 Texture2D normalTex : register(t3);
 Texture2D depthTex : register(t4);
 
-Texture2D shadowMap : register(t5);
+Texture2D shadowMap1 : register(t5);
+Texture2D shadowMap2 : register(t6);
+Texture2D shadowMap3 : register(t7);
 
 SamplerState nearestSampler : register(s0);
 SamplerState linearSampler : register(s1);
@@ -87,7 +95,17 @@ float4 PSMain(PSInput input) : SV_TARGET
 	roughness = max(roughness, 0.001);
 
 	// Sample shadow map
-	float shadow = sampleShadowMap(shadowMap, nearestSampler, dirLightMatrix, p);
+	float shadow = 1.0;
+	float absDepth = abs(p.z);
+	if (absDepth < levelDist1) {
+		shadow = sampleShadowMap(shadowMap1, nearestSampler, lightMatrix1, p);
+	}
+	else if (absDepth < levelDist2) {
+		shadow = sampleShadowMap(shadowMap2, nearestSampler, lightMatrix2, p);
+	}
+	else if (absDepth < levelDist3) {
+		shadow = sampleShadowMap(shadowMap3, nearestSampler, lightMatrix3, p);
+	}
 
 	float3 totalOutput = emissive;
 
@@ -107,6 +125,16 @@ float4 PSMain(PSInput input) : SV_TARGET
 
 	// No negative output
 	totalOutput = max(totalOutput, float3(0.0, 0.0, 0.0));
+
+	/*if (absDepth < levelDist1) {
+		totalOutput.r += 0.1;
+	}
+	else if (absDepth < levelDist2) {
+		totalOutput.g += 0.1;
+	}
+	else if (absDepth < levelDist3) {
+		totalOutput.b += 0.1;
+	}*/
 
 	//float4 forceUsage = 0.00001 *
 	//	mul(invProjMatrix, shadow * float4((albedo * metallic * roughness + emissive * depth + normal), 1.0));

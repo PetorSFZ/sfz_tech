@@ -39,9 +39,25 @@
 			"depth_buffer": false
 		},
 		{
-			"name": "ShadowMap1",
-			"resolution_fixed_width": 4096,
-			"resolution_fixed_height": 4096,
+			"name": "ShadowMapCascaded1",
+			"resolution_fixed_width": 2048,
+			"resolution_fixed_height": 2048,
+			"depth_buffer": true,
+			"depth_buffer_format": "DEPTH_F32",
+			"depth_buffer_clear_value": 0.0
+		},
+		{
+			"name": "ShadowMapCascaded2",
+			"resolution_fixed_width": 2048,
+			"resolution_fixed_height": 2048,
+			"depth_buffer": true,
+			"depth_buffer_format": "DEPTH_F32",
+			"depth_buffer_clear_value": 0.0
+		},
+		{
+			"name": "ShadowMapCascaded3",
+			"resolution_fixed_width": 1024,
+			"resolution_fixed_height": 1024,
 			"depth_buffer": true,
 			"depth_buffer_format": "DEPTH_F32",
 			"depth_buffer_clear_value": 0.0
@@ -94,6 +110,11 @@
 				"cull_front_face": false,
 				"front_facing_is_counter_clockwise": true
 			},
+			"depth_bias": {
+				"bias": -1000,
+				"bias_slope_scaled": 0.0,
+				"bias_clamp": 0.0
+			},
 			"wireframe_rendering": false,
 			"render_targets": [
 			]
@@ -106,7 +127,7 @@
 			"vertex_shader_entry": "VSMain",
 			"pixel_shader_entry": "PSMain",
 			"standard_vertex_attributes": true,
-			"push_constant_registers": [ 0, 1 ],
+			"push_constant_registers": [ 0 ],
 			"culling": {
 				"cull_front_face": false,
 				"front_facing_is_counter_clockwise": true
@@ -193,10 +214,22 @@
 			"framebuffer": "GBuffer"
 		},
 		{
-			"stage_name": "Directional Shadow Map Pass",
+			"stage_name": "Directional Shadow Map Pass 1",
 			"stage_type": "USER_INPUT_RENDERING",
 			"render_pipeline": "Shadow Map Generation",
-			"framebuffer": "ShadowMap1"
+			"framebuffer": "ShadowMapCascaded1"
+		},
+		{
+			"stage_name": "Directional Shadow Map Pass 2",
+			"stage_type": "USER_INPUT_RENDERING",
+			"render_pipeline": "Shadow Map Generation",
+			"framebuffer": "ShadowMapCascaded2"
+		},
+		{
+			"stage_name": "Directional Shadow Map Pass 3",
+			"stage_type": "USER_INPUT_RENDERING",
+			"render_pipeline": "Shadow Map Generation",
+			"framebuffer": "ShadowMapCascaded3"
 		},
 		{
 			"stage_name": "StageBarrier1",
@@ -235,7 +268,17 @@
 				},
 				{
 					"register": 5,
-					"framebuffer": "ShadowMap1",
+					"framebuffer": "ShadowMapCascaded1",
+					"depth_buffer": true
+				},
+				{
+					"register": 6,
+					"framebuffer": "ShadowMapCascaded2",
+					"depth_buffer": true
+				},
+				{
+					"register": 7,
+					"framebuffer": "ShadowMapCascaded3",
 					"depth_buffer": true
 				}
 			]

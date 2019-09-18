@@ -687,7 +687,7 @@ private:
 				case ValueType::FLOAT:
 					{
 						float f = setting->floatValue();
-						if (ImGui::InputFloat(tmpStr.str, &f, 0.25f)) {
+						if (ImGui::InputFloat(tmpStr.str, &f, 0.25f, 0.0f, "%.4f")) {
 							setting->setFloat(f);
 						}
 					}
