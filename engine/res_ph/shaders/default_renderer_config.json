@@ -111,8 +111,8 @@
 				"front_facing_is_counter_clockwise": true
 			},
 			"depth_bias": {
-				"bias": -1000,
-				"bias_slope_scaled": 0.0,
+				"bias": -100,
+				"bias_slope_scaled": -0.9,
 				"bias_clamp": 0.0
 			},
 			"wireframe_rendering": false,

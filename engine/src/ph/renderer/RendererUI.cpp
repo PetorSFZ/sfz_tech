@@ -625,9 +625,19 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 
 		// Print depth bias info
 		ImGui::Spacing();
-		ImGui::Text("Depth Bias: %i", pipeline.depthBias);
-		ImGui::Text("Depth Bias Slope Scaled: %.4f", pipeline.depthBiasSlopeScaled);
-		ImGui::Text("Depth Bias Clamp: %.4f", pipeline.depthBiasClamp);
+		ImGui::Text("Depth Bias");
+		ImGui::Indent(20.0f);
+		constexpr float xOffset = 300.0f;
+		alignedEdit("Bias", xOffset, [&](const char* name) {
+			ImGui::InputInt(str128("%s##render_%u", name, i).str, &pipeline.depthBias);
+		});
+		alignedEdit("Bias Slope Scaled", xOffset, [&](const char* name) {
+			ImGui::InputFloat(str128("%s##render_%u", name, i).str, &pipeline.depthBiasSlopeScaled, 0.0f, 0.0f, "%.4f");
+		});
+		alignedEdit("Bias Clamp", xOffset, [&](const char* name) {
+			ImGui::InputFloat(str128("%s##render_%u", name, i).str, &pipeline.depthBiasClamp, 0.0f, 0.0f, "%.4f");
+		});
+		ImGui::Unindent(20.0f);
 
 		// Print wireframe rendering mode
 		ImGui::Spacing();
