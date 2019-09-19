@@ -98,13 +98,13 @@ float4 PSMain(PSInput input) : SV_TARGET
 	float shadow = 1.0;
 	float absDepth = abs(p.z);
 	if (absDepth < levelDist1) {
-		shadow = sampleShadowMap(shadowMap1, nearestSampler, lightMatrix1, p);
+		shadow = sampleShadowMapPCF(shadowMap1, nearestSampler, lightMatrix1, p, 3, 4.0);
 	}
 	else if (absDepth < levelDist2) {
-		shadow = sampleShadowMap(shadowMap2, nearestSampler, lightMatrix2, p);
+		shadow = sampleShadowMapPCF(shadowMap2, nearestSampler, lightMatrix2, p, 2, 2.0);
 	}
 	else if (absDepth < levelDist3) {
-		shadow = sampleShadowMap(shadowMap3, nearestSampler, lightMatrix3, p);
+		shadow = sampleShadowMapPCF(shadowMap3, nearestSampler, lightMatrix3, p, 1);
 	}
 
 	float3 totalOutput = emissive;

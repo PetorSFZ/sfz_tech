@@ -64,11 +64,17 @@ float3 depthToViewSpacePos(float depth, float2 fullscreenTexcoord, float4x4 invP
 // Shadow map helpers
 // ------------------------------------------------------------------------------------------------
 
-// Samples the specified shadow map and returns whether the view space position is in light (1.0)
-// or shadow
-//
-// Assumes reverse-z shadow map
-float sampleShadowMap(
+struct SampleShadowMapRes {
+
+	// Depth stored in the shadow map
+	float lightDepth;
+
+	// Depth of the (view space) input coordinate, in the same space as the light depth
+	float coordDepth;
+};
+
+// Samples a shadow map and returns the depth stored and the depth of the view space coordinate
+SampleShadowMapRes sampleShadowMapDepth(
 	Texture2D shadowMap,
 	SamplerState samplerState,
 	float4x4 lightMatrix,
@@ -77,11 +83,77 @@ float sampleShadowMap(
 	float4 tmp = mul(lightMatrix, float4(posVS, 1.0));
 	tmp.xyz /= tmp.w; // TODO: Unsure if necessary
 	tmp.y = 1.0 - tmp.y;
-	float lightDepth = shadowMap.Sample(samplerState, tmp.xy).r;
-	float shadow = tmp.z >= lightDepth ? 1.0 : 0.0;
+	SampleShadowMapRes res;
+	res.lightDepth = shadowMap.Sample(samplerState, tmp.xy).r;
+	res.coordDepth = tmp.z;
+	return res;
+}
+
+// Samples a (reverse-z) shadow map and returns 1.0 if view space position is in light, 0 otherwise
+float sampleShadowMap(
+	Texture2D shadowMap,
+	SamplerState samplerState,
+	float4x4 lightMatrix,
+	float3 posVS)
+{
+	SampleShadowMapRes res = sampleShadowMapDepth(shadowMap, samplerState, lightMatrix, posVS);
+	float shadow = res.coordDepth >= res.lightDepth ? 1.0 : 0.0;
 	return shadow;
 }
 
+// Samples a (reverse-z) shadow map using PCF with a the specified kernel size.
+float sampleShadowMapPCF(
+	Texture2D shadowMap,
+	SamplerState samplerState,
+	float4x4 lightMatrix,
+	float3 posVS,
+	int kernelSize = 1,
+	float midSampleWeight = 1.0)
+{
+	// Get shadow map dimensions and number of mip levels
+	uint width = 0;
+	uint height = 0;
+	uint numMips = 0;
+	shadowMap.GetDimensions(0, width, height, numMips);
+
+	// Calculate texel size on shadow map from its dimensions
+	float2 texelSize = float2(1.0, 1.0) / float2(width, height);
+
+	// Transform view space coord to shadow map texture space
+	float4 tmp = mul(lightMatrix, float4(posVS, 1.0));
+	tmp.xyz /= tmp.w; // TODO: Unsure if necessary
+	tmp.y = 1.0 - tmp.y;
+	float2 centerCoord = tmp.xy;
+	float posDepth = tmp.z;
+
+	// Take (kernelSize * 2 + 1) to the power of two samples!
+	float totalShadow = 0.0;
+	for (int y = -kernelSize; y <= kernelSize; y++) {
+		float yCoord = centerCoord.y + float(y) * texelSize.y;
+
+		for (int x = -kernelSize; x <= kernelSize; x++) {
+			float xCoord = centerCoord.x + float(x) * texelSize.x;
+
+			// Sample shadow map
+			float depthSample = shadowMap.Sample(samplerState, float2(xCoord, yCoord)).r;
+			float shadowSample = posDepth >= depthSample ? 1.0 : 0.0;
+			if (y == 0 && x == 0) {
+				totalShadow += shadowSample * midSampleWeight; // Give mid sample extra weight
+			}
+			else {
+				totalShadow += shadowSample;
+			}
+
+		}
+	}
+
+	// Normalize shadow
+	uint totalNumSamples = kernelSize * 2 + 1;
+	totalNumSamples = totalNumSamples * totalNumSamples;
+	float normalizedShadow = totalShadow / (float(totalNumSamples - 1) + midSampleWeight);
+
+	return normalizedShadow;
+}
 // Gamma correction functions
 // ------------------------------------------------------------------------------------------------
 
