@@ -228,7 +228,6 @@ bool Renderer::textureLoaded(StringID id) const noexcept
 bool Renderer::uploadMeshBlocking(StringID id, const Mesh& mesh) noexcept
 {
 	sfz_assert_debug(id != StringID::invalid());
-	sfz_assert_debug(mState->meshes.get(id) == nullptr); // TODO: Should probably be fine to remove
 	if (mState->meshes.get(id) != nullptr) return true;
 
 	// Allocate memory for mesh
