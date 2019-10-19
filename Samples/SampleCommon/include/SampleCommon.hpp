@@ -47,9 +47,9 @@ struct CheckZgImpl final {
 SDL_Window* initializeSdl2CreateWindow(const char* sampleName) noexcept;
 void cleanupSdl2(SDL_Window* window) noexcept;
 
-// A function that given an SDL2 window returns the platform specific native window handle, in
-// the form of a void pointer which can be passed to ZeroG.
-void* getNativeWindowHandle(SDL_Window* window) noexcept;
+// A function that given an SDL2 window returns the platform specific native handle in the form of a
+// void pointer which can be passed to ZeroG.
+void* getNativeHandle(SDL_Window* window) noexcept;
 
 // Math
 // ------------------------------------------------------------------------------------------------

@@ -53,15 +53,15 @@ static void realMain(SDL_Window* window) noexcept
 
 	// Create ZeroG context
 	ZgContextInitSettings initSettings = {};
-#ifdef _WIN32
+#if defined(_WIN32)
 	initSettings.backend = ZG_BACKEND_D3D12;
-#else
-	initSettings.backend = ZG_BACKEND_VULKAN;
+#elif defined(ZG_MACOS) || defined(ZG_IOS)
+	initSettings.backend = ZG_BACKEND_METAL;
 #endif
 	initSettings.width = 512;
 	initSettings.height = 512;
 	initSettings.debugMode = DEBUG_MODE ? ZG_TRUE : ZG_FALSE;
-	initSettings.nativeWindowHandle = getNativeWindowHandle(window);
+	initSettings.nativeHandle = getNativeHandle(window);
 	zg::Context zgCtx;
 	CHECK_ZG zgCtx.init(initSettings);
 

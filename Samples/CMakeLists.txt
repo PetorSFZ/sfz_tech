@@ -47,7 +47,7 @@ else()
 	FetchContent_Declare(
 		sdl2
 		GIT_REPOSITORY https://github.com/PetorSFZ/Dependency-SDL2.git
-		GIT_TAG 9667334164b7fcaca6a7ec52f38bd79f9839a5dd
+		GIT_TAG 5b3f07516ef6554a4c3a6d14ae840a34ca850041
 	)
 	FetchContent_GetProperties(sdl2)
 	if(NOT sdl2_POPULATED)
@@ -75,6 +75,15 @@ addZeroG()
 addZeroGcpp()
 msvcCopyZeroGRuntimeFiles()
 
+# Check platforms
+# ------------------------------------------------------------------------------------------------
+
+if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+	set(iOS true)
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+	set(macOS true)
+endif()
+
 # Compiler flags
 # ------------------------------------------------------------------------------------------------
 
@@ -97,14 +106,26 @@ if(MSVC)
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /Ob3 /fp:fast /DEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob3 /fp:fast /DNDEBUG")
 
-elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
+elseif(macOS)
 	# macOS flags
 	# -Wall -Wextra = Enable most warnings
-	# -std=c++14 = Enable C++14 support
+	# -std=c++17 = Enable C++17 support
 	# -march=sandybridge = Require at least a Sandy Bridge Intel CPU to run code
 	# -fno-rtti = Disable RTTI
 	# -fno-strict-aliasing = Disable strict aliasing optimizations
-	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -march=sandybridge -fno-rtti -fno-strict-aliasing")
+	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -march=sandybridge -fno-rtti -fno-strict-aliasing -DZG_MACOS")
+	set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DNDEBUG")
+	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DNDEBUG")
+
+elseif(iOS)
+	# iOS flags
+	# -Wall -Wextra = Enable most warnings
+	# -std=c++17 = Enable C++17 support
+	# -march=sandybridge = Require at least a Sandy Bridge Intel CPU to run code
+	# -fno-rtti = Disable RTTI
+	# -fno-strict-aliasing = Disable strict aliasing optimizations
+	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -march=sandybridge -fno-rtti -fno-strict-aliasing -DZG_IOS")
 	set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DNDEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DNDEBUG")
@@ -160,10 +181,7 @@ if(MSVC)
 	message("-- [ZeroG Samples]: Executing create symlink script \"${SYMLINK_FILE}\"")
 	execute_process(COMMAND ${SYMLINK_FILE} OUTPUT_QUIET ERROR_QUIET)
 
-elseif(IOS)
-	message(FATAL_ERROR "Not implemented")
-
-else()
+elseif(macOS)
 
 	# Directories
 	set(DUMMY_DIR "${CMAKE_BINARY_DIR}/dummy")
@@ -210,4 +228,6 @@ else()
 	# Execute process
 	execute_process(COMMAND ${SYMLINK_FILE} OUTPUT_QUIET ERROR_QUIET)
 
+else()
+	message(FATAL_ERROR "Not implemented")
 endif()

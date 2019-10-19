@@ -125,7 +125,10 @@ enum ZgBackendTypeEnum {
 	// The D3D12 backend, only available on Windows 10.
 	ZG_BACKEND_D3D12,
 
-	// The Vulkan backend, available on all platforms
+	// The Metal backend, available on macOS and iOS.
+	ZG_BACKEND_METAL,
+
+	// The Vulkan backend, available on all platforms.
 	ZG_BACKEND_VULKAN
 };
 typedef uint32_t ZgBackendType;
@@ -140,7 +143,8 @@ typedef uint32_t ZgBackendType;
 enum ZgFeatureBitsEnum {
 	ZG_FEATURE_BIT_NONE = 0,
 	ZG_FEATURE_BIT_BACKEND_D3D12 = 1 << 1,
-	ZG_FEATURE_BIT_BACKEND_VULKAN = 1 << 2
+	ZG_FEATURE_BIT_BACKEND_METAL = 1 << 2,
+	ZG_FEATURE_BIT_BACKEND_VULKAN = 1 << 3
 };
 typedef uint64_t ZgFeatureBits;
 
@@ -255,11 +259,22 @@ struct ZgContextInitSettings {
 	// [Optional] The allocator used to allocate CPU memory
 	ZgAllocator allocator;
 
-	// [Mandatory] The native window handle, e.g. HWND on Windows
-	// TODO: Might want to change this in the future, possibly want different things depending on
-	//       backend and OS.
-	void* nativeWindowHandle;
-
+	// [Mandatory] Platform specific native handle.
+	//
+	// On Windows, this is a HWND, i.e. native window handle.
+	//
+	// On macOS and iOS this is currently a CAMetalLayer. This is a bit of a hack, we currently
+	// rely on SDL2 initializing Metal for us using the following trick:
+	//
+	//     SDL_SetHint(SDL_HINT_RENDER_DRIVER, "metal");
+	//     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
+	//     CAMetalLayer* metalLayer = (__bridge CAMetalLayer*)SDL_RenderGetMetalLayer(renderer);
+	//     SDL_DestroyRenderer(renderer);
+	//
+	// Of course, you shouldn't actually need SDL2 to create a CAMetalLayer, so technically ZeroG
+	// does not depend upon SDL2. In the future we might change this parameter to something else
+	// on Apple platforms, so keep an eye out.
+	void* nativeHandle;
 };
 typedef struct ZgContextInitSettings ZgContextInitSettings;
 

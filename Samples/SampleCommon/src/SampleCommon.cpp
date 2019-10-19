@@ -39,13 +39,6 @@ static HWND getWin32WindowHandle(SDL_Window* window) noexcept
 }
 #endif
 
-// TODO ifdef APPLE
-static void* getMacOSWindowHandle(SDL_Window* window) noexcept
-{
-	(void)window;
-	return nullptr;
-}
-
 static const char* stripFilePath(const char* file) noexcept
 {
 	const char* strippedFile1 = std::strrchr(file, '\\');
@@ -112,14 +105,18 @@ void cleanupSdl2(SDL_Window* window) noexcept
 	SDL_Quit();
 }
 
-void* getNativeWindowHandle(SDL_Window* window) noexcept
+void* getNativeHandle(SDL_Window* window) noexcept
 {
-#ifdef WIN32
+#if defined(_WIN32)
 	return getWin32WindowHandle(window);
+#elif defined(ZG_MACOS) || defined(ZG_IOS)
+	SDL_SetHint(SDL_HINT_RENDER_DRIVER, "metal");
+	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
+	void* metalLayer = SDL_RenderGetMetalLayer(renderer);
+	SDL_DestroyRenderer(renderer);
+	return metalLayer;
 #else
-	return getMacOSWindowHandle(window);
-//#else
-//#error "Not implemented yet"
+#error "Not implemented"
 #endif
 }
 

@@ -26,39 +26,46 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS true)
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+# Check platforms
+# ------------------------------------------------------------------------------------------------
+
+if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+	set(iOS true)
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+	set(macOS true)
+endif()
+
 # Vulkan
 # ------------------------------------------------------------------------------------------------
 
+# Attempt to find Vulkan, done now because we might need to set compiler flags
+
 # Vulkan
 # ${VULKAN_FOUND}, ${VULKAN_INCLUDE_DIRS} and ${VULKAN_LIBRARIES}
-if(IOS)
-	set(MoltenVK_Path $ENV{VULKAN_SDK}/..)
-	set(VULKAN_FOUND true)
-	set(VULKAN_INCLUDE_DIRS ${MoltenVK_Path}/MoltenVK/include)
-
-	find_library(MoltenVK_LIB
-		NAMES
-		MoltenVK
-		HINTS
-		${MoltenVK_Path}/MoltenVK/iOS)
-	set(VULKAN_LIBRARIES ${MoltenVK_LIB})
-else()
+#if(iOS)
+#	set(MoltenVK_Path $ENV{VULKAN_SDK}/..)
+#	set(VULKAN_FOUND true)
+#	set(VULKAN_INCLUDE_DIRS ${MoltenVK_Path}/MoltenVK/include)
+#
+#	find_library(MoltenVK_LIB
+#		NAMES
+#		MoltenVK
+#		HINTS
+#		${MoltenVK_Path}/MoltenVK/iOS)
+#	set(VULKAN_LIBRARIES ${MoltenVK_LIB})
+#else()
 	find_package(Vulkan)
 	set(VULKAN_FOUND ${Vulkan_FOUND})
 	set(VULKAN_INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
 	set(VULKAN_LIBRARIES ${Vulkan_LIBRARIES})
-endif()
+#endif()
 
 if(VULKAN_FOUND)
 	message("-- [ZeroG]: Vulkan SDK found")
 	message("  -- VULKAN_INCLUDE_DIRS: ${VULKAN_INCLUDE_DIRS}")
 	message("  -- VULKAN_LIBRARIES: ${VULKAN_LIBRARIES}")
 else()
-	if(MSVC)
-		message(WARNING "-- [ZeroG]: Vulkan SDK not found, compiling without Vulkan support")
-	else()
-		message(FATAL_ERROR "-- [ZeroG]: Vulkan SDK not found, required on this platform")
-	endif()
+	message(WARNING "-- [ZeroG]: Vulkan SDK not found, compiling without Vulkan support")
 endif()
 
 # Compiler flags
@@ -85,14 +92,26 @@ if(MSVC)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DZG_VULKAN")
 	endif()
 
-elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
+elseif(macOS)
 	# macOS flags
 	# -Wall -Wextra = Enable most warnings
-	# -std=c++14 = Enable C++14 support
+	# -std=c++17 = Enable C++17 support
 	# -march=sandybridge = Require at least a Sandy Bridge Intel CPU to run code
 	# -fno-rtti = Disable RTTI
 	# -fno-strict-aliasing = Disable strict aliasing optimizations
-	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -march=sandybridge -fno-rtti -fno-strict-aliasing -DZG_VULKAN")
+	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -march=sandybridge -fno-rtti -fno-strict-aliasing -DZG_MACOS")
+	set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DNDEBUG")
+	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DNDEBUG")
+
+elseif(iOS)
+	# iOS flags
+	# -Wall -Wextra = Enable most warnings
+	# -std=c++17 = Enable C++17 support
+	# -march=sandybridge = Require at least a Sandy Bridge Intel CPU to run code
+	# -fno-rtti = Disable RTTI
+	# -fno-strict-aliasing = Disable strict aliasing optimizations
+	set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -march=sandybridge -fno-rtti -fno-strict-aliasing -DZG_IOS")
 	set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DNDEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DNDEBUG")
@@ -158,6 +177,14 @@ if (MSVC)
 	)
 endif()
 
+# Metal source files
+if (macOS OR iOS)
+	set(ZEROG_METAL_SRC_FILES
+		${SRC_DIR}/ZeroG/metal/MetalBackend.hpp
+		${SRC_DIR}/ZeroG/metal/MetalBackend.mm
+	)
+endif()
+
 # Vulkan source files
 if (VULKAN_FOUND)
 	set(ZEROG_VULKAN_SRC_FILES
@@ -172,7 +199,7 @@ if (VULKAN_FOUND)
 	)
 endif()
 
-set(ZEROG_CAPI_SRC_FILES ${ZEROG_D3D12_SRC_FILES} ${ZEROG_VULKAN_SRC_FILES})
+set(ZEROG_CAPI_SRC_FILES ${ZEROG_D3D12_SRC_FILES} ${ZEROG_METAL_SRC_FILES} ${ZEROG_VULKAN_SRC_FILES})
 
 # Common source files
 set(ZEROG_CAPI_SRC_FILES ${ZEROG_CAPI_SRC_FILES}

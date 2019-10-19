@@ -25,8 +25,10 @@
 #include "ZeroG/util/ErrorReporting.hpp"
 #include "ZeroG/util/Logging.hpp"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #include "ZeroG/d3d12/D3D12Backend.hpp"
+#elif defined(ZG_MACOS) || defined(ZG_IOS)
+#include "ZeroG/metal/MetalBackend.hpp"
 #endif
 
 #ifdef ZG_VULKAN
@@ -47,8 +49,10 @@ ZG_API uint32_t zgApiLinkedVersion(void)
 ZG_API ZgFeatureBits zgCompiledFeatures(void)
 {
 	return 0
-#ifdef _WIN32
+#if defined(_WIN32)
 		| uint64_t(ZG_FEATURE_BIT_BACKEND_D3D12)
+#elif defined(ZG_MACOS) || defined(ZG_IOS)
+		| uint64_t(ZG_FEATURE_BIT_BACKEND_METAL)
 #endif
 #ifdef ZG_VULKAN
 		| uint64_t(ZG_FEATURE_BIT_BACKEND_VULKAN)
@@ -66,7 +70,7 @@ ZG_API const char* zgErrorCodeToString(ZgErrorCode errorCode)
 
 	case ZG_WARNING_GENERIC: return "ZG_WARNING_GENERIC";
 	case ZG_WARNING_ALREADY_INITIALIZED: return "ZG_WARNING_ALREADY_INITIALIZED";
-	
+
 	case ZG_ERROR_GENERIC: return "ZG_ERROR_GENERIC";
 	case ZG_ERROR_UNIMPLEMENTED: return "ZG_ERROR_UNIMPLEMENTED";
 	case ZG_ERROR_CPU_OUT_OF_MEMORY: return "ZG_ERROR_CPU_OUT_OF_MEMORY";
@@ -91,7 +95,6 @@ ZG_API ZgBool zgContextAlreadyInitialized(void)
 ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 {
 	// Can't use ZG_ARG_CHECK() here because logger is not yet initialized
-	if (initSettings == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
 	if (initSettings == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
 	if (zgContextAlreadyInitialized() == ZG_TRUE) return ZG_WARNING_ALREADY_INITIALIZED;
 
@@ -133,7 +136,7 @@ ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 		ZG_ERROR("zgContextInit(): Null backend not implemented, exiting.");
 		return ZG_ERROR_UNIMPLEMENTED;
 
-#ifdef _WIN32
+#if defined(_WIN32)
 	case ZG_BACKEND_D3D12:
 		{
 			ZG_INFO("zgContextInit(): Attempting to create D3D12 backend...");
@@ -143,6 +146,19 @@ ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 				return res;
 			}
 			ZG_INFO("zgContextInit(): Created D3D12 backend");
+		}
+		break;
+
+#elif defined(ZG_MACOS) || defined(ZG_IOS)
+	case ZG_BACKEND_METAL:
+		{
+			ZG_INFO("zgContextInit(): Attempting to create Metal backend...");
+			ZgErrorCode res = zg::createMetalBackend(&tmpContext.backend, settings);
+			if (res != ZG_SUCCESS) {
+				ZG_ERROR("zgContextInit(): Could not create Metal backend, exiting.");
+				return res;
+			}
+			ZG_INFO("zgContextInit(): Created Metal backend");
 		}
 		break;
 #endif
