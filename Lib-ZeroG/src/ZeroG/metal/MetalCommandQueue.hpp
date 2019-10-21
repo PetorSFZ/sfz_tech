@@ -46,11 +46,11 @@ public:
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode signalOnGpu(ZgFence& fenceToSignal) noexcept override final;
-	ZgErrorCode waitOnGpu(const ZgFence& fence) noexcept override final;
-	ZgErrorCode flush() noexcept override final;
-	ZgErrorCode beginCommandListRecording(ZgCommandList** commandListOut) noexcept override final;
-	ZgErrorCode executeCommandList(ZgCommandList* commandList) noexcept override final;
+	ZgResult signalOnGpu(ZgFence& fenceToSignal) noexcept override final;
+	ZgResult waitOnGpu(const ZgFence& fence) noexcept override final;
+	ZgResult flush() noexcept override final;
+	ZgResult beginCommandListRecording(ZgCommandList** commandListOut) noexcept override final;
+	ZgResult executeCommandList(ZgCommandList* commandList) noexcept override final;
 
 	// Members
 	// --------------------------------------------------------------------------------------------

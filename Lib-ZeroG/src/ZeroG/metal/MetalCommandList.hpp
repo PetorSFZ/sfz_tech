@@ -43,69 +43,69 @@ public:
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode memcpyBufferToBuffer(
+	ZgResult memcpyBufferToBuffer(
 		ZgBuffer* dstBuffer,
 		uint64_t dstBufferOffsetBytes,
 		ZgBuffer* srcBuffer,
 		uint64_t srcBufferOffsetBytes,
 		uint64_t numBytes) noexcept override final;
 
-	ZgErrorCode memcpyToTexture(
+	ZgResult memcpyToTexture(
 		ZgTexture2D* dstTexture,
 		uint32_t dstTextureMipLevel,
 		const ZgImageViewConstCpu& srcImageCpu,
 		ZgBuffer* tempUploadBuffer) noexcept override final;
 
-	ZgErrorCode enableQueueTransitionBuffer(ZgBuffer* buffer) noexcept override final;
+	ZgResult enableQueueTransitionBuffer(ZgBuffer* buffer) noexcept override final;
 
-	ZgErrorCode enableQueueTransitionTexture(ZgTexture2D* texture) noexcept override final;
+	ZgResult enableQueueTransitionTexture(ZgTexture2D* texture) noexcept override final;
 
-	ZgErrorCode setPushConstant(
+	ZgResult setPushConstant(
 		uint32_t shaderRegister,
 		const void* data,
 		uint32_t dataSizeInBytes) noexcept override final;
 
-	ZgErrorCode setPipelineBindings(
+	ZgResult setPipelineBindings(
 		const ZgPipelineBindings& bindings) noexcept override final;
 
-	ZgErrorCode setPipelineRender(
+	ZgResult setPipelineRender(
 		ZgPipelineRender* pipeline) noexcept override final;
 
-	ZgErrorCode setFramebuffer(
+	ZgResult setFramebuffer(
 		ZgFramebuffer* framebuffer,
 		const ZgFramebufferRect* optionalViewport,
 		const ZgFramebufferRect* optionalScissor) noexcept override final;
 
-	ZgErrorCode setFramebufferViewport(
+	ZgResult setFramebufferViewport(
 		const ZgFramebufferRect& viewport) noexcept override final;
 
-	ZgErrorCode setFramebufferScissor(
+	ZgResult setFramebufferScissor(
 		const ZgFramebufferRect& scissor) noexcept override final;
 
-	ZgErrorCode clearFramebufferOptimal() noexcept override final;
+	ZgResult clearFramebufferOptimal() noexcept override final;
 
-	ZgErrorCode clearRenderTargets(
+	ZgResult clearRenderTargets(
 		float red,
 		float green,
 		float blue,
 		float alpha) noexcept override final;
 
-	ZgErrorCode clearDepthBuffer(
+	ZgResult clearDepthBuffer(
 		float depth) noexcept override final;
 
-	ZgErrorCode setIndexBuffer(
+	ZgResult setIndexBuffer(
 		ZgBuffer* indexBuffer,
 		ZgIndexBufferType type) noexcept override final;
 
-	ZgErrorCode setVertexBuffer(
+	ZgResult setVertexBuffer(
 		uint32_t vertexBufferSlot,
 		ZgBuffer* vertexBuffer) noexcept override final;
 
-	ZgErrorCode drawTriangles(
+	ZgResult drawTriangles(
 		uint32_t startVertexIndex,
 		uint32_t numVertices) noexcept override final;
 
-	ZgErrorCode drawTrianglesIndexed(
+	ZgResult drawTrianglesIndexed(
 		uint32_t startIndex,
 		uint32_t numTriangles) noexcept override final;
 

@@ -67,7 +67,7 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode init(ZgContextInitSettings& settings) noexcept
+	ZgResult init(ZgContextInitSettings& settings) noexcept
 	{
 		// Initialize members and create state struct
 		mDebugMode = settings.debugMode;
@@ -88,7 +88,7 @@ public:
 	// Context methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode swapchainResize(
+	ZgResult swapchainResize(
 		uint32_t width,
 		uint32_t height) noexcept override final
 	{
@@ -97,19 +97,19 @@ public:
 		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
-	ZgErrorCode swapchainBeginFrame(
+	ZgResult swapchainBeginFrame(
 		ZgFramebuffer** framebufferOut) noexcept override final
 	{
 		(void)framebufferOut;
 		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
-	ZgErrorCode swapchainFinishFrame() noexcept override final
+	ZgResult swapchainFinishFrame() noexcept override final
 	{
 		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
-	ZgErrorCode fenceCreate(ZgFence** fenceOut) noexcept override final
+	ZgResult fenceCreate(ZgFence** fenceOut) noexcept override final
 	{
 		(void)fenceOut;
 		return ZG_WARNING_UNIMPLEMENTED;
@@ -118,7 +118,7 @@ public:
 	// Stats
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode getStats(ZgStats& statsOut) noexcept override final
+	ZgResult getStats(ZgStats& statsOut) noexcept override final
 	{
 		(void)statsOut;
 		return ZG_WARNING_UNIMPLEMENTED;
@@ -127,7 +127,7 @@ public:
 	// Pipeline methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode pipelineRenderCreateFromFileSPIRV(
+	ZgResult pipelineRenderCreateFromFileSPIRV(
 		ZgPipelineRender** pipelineOut,
 		ZgPipelineRenderSignature* signatureOut,
 		const ZgPipelineRenderCreateInfoFileSPIRV& createInfo) noexcept override final
@@ -138,7 +138,7 @@ public:
 		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
-	ZgErrorCode pipelineRenderCreateFromFileHLSL(
+	ZgResult pipelineRenderCreateFromFileHLSL(
 		ZgPipelineRender** pipelineOut,
 		ZgPipelineRenderSignature* signatureOut,
 		const ZgPipelineRenderCreateInfoFileHLSL& createInfo) noexcept override final
@@ -149,7 +149,7 @@ public:
 		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
-	ZgErrorCode pipelineRenderCreateFromSourceHLSL(
+	ZgResult pipelineRenderCreateFromSourceHLSL(
 		ZgPipelineRender** pipelineOut,
 		ZgPipelineRenderSignature* signatureOut,
 		const ZgPipelineRenderCreateInfoSourceHLSL& createInfo) noexcept override final
@@ -160,14 +160,14 @@ public:
 		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
-	ZgErrorCode pipelineRenderRelease(
+	ZgResult pipelineRenderRelease(
 		ZgPipelineRender* pipeline) noexcept override final
 	{
 		(void)pipeline;
 		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
-	ZgErrorCode pipelineRenderGetSignature(
+	ZgResult pipelineRenderGetSignature(
 		const ZgPipelineRender* pipeline,
 		ZgPipelineRenderSignature* signatureOut) const noexcept override final
 	{
@@ -179,7 +179,7 @@ public:
 	// Memory methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode memoryHeapCreate(
+	ZgResult memoryHeapCreate(
 		ZgMemoryHeap** memoryHeapOut,
 		const ZgMemoryHeapCreateInfo& createInfo) noexcept override final
 	{
@@ -188,14 +188,14 @@ public:
 		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
-	ZgErrorCode memoryHeapRelease(
+	ZgResult memoryHeapRelease(
 		ZgMemoryHeap* memoryHeap) noexcept override final
 	{
 		(void)memoryHeap;
 		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
-	ZgErrorCode bufferMemcpyTo(
+	ZgResult bufferMemcpyTo(
 		ZgBuffer* dstBufferInterface,
 		uint64_t bufferOffsetBytes,
 		const uint8_t* srcMemory,
@@ -211,7 +211,7 @@ public:
 	// Texture methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode texture2DGetAllocationInfo(
+	ZgResult texture2DGetAllocationInfo(
 		ZgTexture2DAllocationInfo& allocationInfoOut,
 		const ZgTexture2DCreateInfo& createInfo) noexcept override final
 	{
@@ -223,7 +223,7 @@ public:
 	// Framebuffer methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode framebufferCreate(
+	ZgResult framebufferCreate(
 		ZgFramebuffer** framebufferOut,
 		const ZgFramebufferCreateInfo& createInfo) noexcept override final
 	{
@@ -241,13 +241,13 @@ public:
 	// CommandQueue methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode getPresentQueue(ZgCommandQueue** presentQueueOut) noexcept override final
+	ZgResult getPresentQueue(ZgCommandQueue** presentQueueOut) noexcept override final
 	{
 		*presentQueueOut = &mState->presentQueue;
 		return ZG_SUCCESS;
 	}
 
-	ZgErrorCode getCopyQueue(ZgCommandQueue** copyQueueOut) noexcept override final
+	ZgResult getCopyQueue(ZgCommandQueue** copyQueueOut) noexcept override final
 	{
 		(void)copyQueueOut;
 		return ZG_WARNING_UNIMPLEMENTED;
@@ -264,13 +264,13 @@ private:
 // Metal backend
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode createMetalBackend(ZgBackend** backendOut, ZgContextInitSettings& settings) noexcept
+ZgResult createMetalBackend(ZgBackend** backendOut, ZgContextInitSettings& settings) noexcept
 {
 	// Allocate and create Metal backend
 	MetalBackend* backend = zgNew<MetalBackend>("Metal Backend");
 
 	// Initialize backend, return nullptr if init failed
-	ZgErrorCode initRes = backend->init(settings);
+	ZgResult initRes = backend->init(settings);
 	if (initRes != ZG_SUCCESS)
 	{
 		zgDelete(backend);

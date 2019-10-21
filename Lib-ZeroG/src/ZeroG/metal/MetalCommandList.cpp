@@ -23,7 +23,7 @@ namespace zg {
 // MetalCommandList: Virtual methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode MetalCommandList::memcpyBufferToBuffer(
+ZgResult MetalCommandList::memcpyBufferToBuffer(
 	ZgBuffer* dstBuffer,
 	uint64_t dstBufferOffsetBytes,
 	ZgBuffer* srcBuffer,
@@ -38,7 +38,7 @@ ZgErrorCode MetalCommandList::memcpyBufferToBuffer(
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode MetalCommandList::memcpyToTexture(
+ZgResult MetalCommandList::memcpyToTexture(
 	ZgTexture2D* dstTexture,
 	uint32_t dstTextureMipLevel,
 	const ZgImageViewConstCpu& srcImageCpu,
@@ -51,19 +51,19 @@ ZgErrorCode MetalCommandList::memcpyToTexture(
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode MetalCommandList::enableQueueTransitionBuffer(ZgBuffer* buffer) noexcept
+ZgResult MetalCommandList::enableQueueTransitionBuffer(ZgBuffer* buffer) noexcept
 {
 	(void)buffer;
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode MetalCommandList::enableQueueTransitionTexture(ZgTexture2D* texture) noexcept
+ZgResult MetalCommandList::enableQueueTransitionTexture(ZgTexture2D* texture) noexcept
 {
 	(void)texture;
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode MetalCommandList::setPushConstant(
+ZgResult MetalCommandList::setPushConstant(
 	uint32_t shaderRegister,
 	const void* data,
 	uint32_t dataSizeInBytes) noexcept
@@ -74,21 +74,21 @@ ZgErrorCode MetalCommandList::setPushConstant(
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode MetalCommandList::setPipelineBindings(
+ZgResult MetalCommandList::setPipelineBindings(
 	const ZgPipelineBindings& bindings) noexcept
 {
 	(void)bindings;
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode MetalCommandList::setPipelineRender(
+ZgResult MetalCommandList::setPipelineRender(
 	ZgPipelineRender* pipeline) noexcept
 {
 	(void)pipeline;
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode MetalCommandList::setFramebuffer(
+ZgResult MetalCommandList::setFramebuffer(
 	ZgFramebuffer* framebuffer,
 	const ZgFramebufferRect* optionalViewport,
 	const ZgFramebufferRect* optionalScissor) noexcept
@@ -99,26 +99,26 @@ ZgErrorCode MetalCommandList::setFramebuffer(
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode MetalCommandList::setFramebufferViewport(
+ZgResult MetalCommandList::setFramebufferViewport(
 	const ZgFramebufferRect& viewport) noexcept
 {
 	(void)viewport;
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode MetalCommandList::setFramebufferScissor(
+ZgResult MetalCommandList::setFramebufferScissor(
 	const ZgFramebufferRect& scissor) noexcept
 {
 	(void)scissor;
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode MetalCommandList::clearFramebufferOptimal() noexcept
+ZgResult MetalCommandList::clearFramebufferOptimal() noexcept
 {
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode MetalCommandList::clearRenderTargets(
+ZgResult MetalCommandList::clearRenderTargets(
 	float red,
 	float green,
 	float blue,
@@ -131,14 +131,14 @@ ZgErrorCode MetalCommandList::clearRenderTargets(
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode MetalCommandList::clearDepthBuffer(
+ZgResult MetalCommandList::clearDepthBuffer(
 	float depth) noexcept
 {
 	(void)depth;
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode MetalCommandList::setIndexBuffer(
+ZgResult MetalCommandList::setIndexBuffer(
 	ZgBuffer* indexBuffer,
 	ZgIndexBufferType type) noexcept
 {
@@ -147,7 +147,7 @@ ZgErrorCode MetalCommandList::setIndexBuffer(
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode MetalCommandList::setVertexBuffer(
+ZgResult MetalCommandList::setVertexBuffer(
 	uint32_t vertexBufferSlot,
 	ZgBuffer* vertexBuffer) noexcept
 {
@@ -156,7 +156,7 @@ ZgErrorCode MetalCommandList::setVertexBuffer(
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode MetalCommandList::drawTriangles(
+ZgResult MetalCommandList::drawTriangles(
 	uint32_t startVertexIndex,
 	uint32_t numVertices) noexcept
 {
@@ -165,7 +165,7 @@ ZgErrorCode MetalCommandList::drawTriangles(
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode MetalCommandList::drawTrianglesIndexed(
+ZgResult MetalCommandList::drawTrianglesIndexed(
 	uint32_t startIndex,
 	uint32_t numTriangles) noexcept
 {

@@ -26,6 +26,6 @@ namespace zg {
 // Metal backend
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode createMetalBackend(ZgBackend** backendOut, ZgContextInitSettings& settings) noexcept;
+ZgResult createMetalBackend(ZgBackend** backendOut, ZgContextInitSettings& settings) noexcept;
 
 } // namespace zg

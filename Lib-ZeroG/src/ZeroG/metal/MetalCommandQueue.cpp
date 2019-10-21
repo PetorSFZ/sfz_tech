@@ -31,30 +31,30 @@ MetalCommandQueue::~MetalCommandQueue() noexcept
 // MetalCommandQueue: Virtual methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode MetalCommandQueue::signalOnGpu(ZgFence& fenceToSignal) noexcept
+ZgResult MetalCommandQueue::signalOnGpu(ZgFence& fenceToSignal) noexcept
 {
 	(void)fenceToSignal;
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode MetalCommandQueue::waitOnGpu(const ZgFence& fence) noexcept
+ZgResult MetalCommandQueue::waitOnGpu(const ZgFence& fence) noexcept
 {
 	(void)fence;
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode MetalCommandQueue::flush() noexcept
+ZgResult MetalCommandQueue::flush() noexcept
 {
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode MetalCommandQueue::beginCommandListRecording(ZgCommandList** commandListOut) noexcept
+ZgResult MetalCommandQueue::beginCommandListRecording(ZgCommandList** commandListOut) noexcept
 {
 	*commandListOut = &this->hackCommandList;
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode MetalCommandQueue::executeCommandList(ZgCommandList* commandList) noexcept
+ZgResult MetalCommandQueue::executeCommandList(ZgCommandList* commandList) noexcept
 {
 	(void)commandList;
 	return ZG_WARNING_UNIMPLEMENTED;
