@@ -21,6 +21,9 @@
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
 
+#include <mtlpp.hpp>
+
+#include "ZeroG/metal/MetalCommandQueue.hpp"
 #include "ZeroG/util/Assert.hpp"
 #include "ZeroG/util/CpuAllocation.hpp"
 #include "ZeroG/util/Logging.hpp"
@@ -31,7 +34,13 @@ namespace zg {
 // ------------------------------------------------------------------------------------------------
 
 struct MetalBackendState final {
+
+	// Device
 	CAMetalLayer* metalLayer = nullptr;
+	mtlpp::Device device;
+
+	// Command queues
+	MetalCommandQueue presentQueue;
 };
 
 // Statics
@@ -67,6 +76,11 @@ public:
 		// Get CAMetalLayer from init settings
 		mState->metalLayer = (__bridge CAMetalLayer*)settings.nativeHandle;
 
+		// Bridge device from CAMetalLayer
+		mState->device = ns::Handle{(__bridge void*)mState->metalLayer.device};
+
+		// Initialize present queue
+		mState->presentQueue.queue = mState->device.NewCommandQueue();
 
 		return ZG_SUCCESS;
 	}
@@ -80,25 +94,25 @@ public:
 	{
 		(void)width;
 		(void)height;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode swapchainBeginFrame(
 		ZgFramebuffer** framebufferOut) noexcept override final
 	{
 		(void)framebufferOut;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode swapchainFinishFrame() noexcept override final
 	{
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode fenceCreate(ZgFence** fenceOut) noexcept override final
 	{
 		(void)fenceOut;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	// Stats
@@ -107,7 +121,7 @@ public:
 	ZgErrorCode getStats(ZgStats& statsOut) noexcept override final
 	{
 		(void)statsOut;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	// Pipeline methods
@@ -121,7 +135,7 @@ public:
 		(void)pipelineOut;
 		(void)signatureOut;
 		(void)createInfo;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode pipelineRenderCreateFromFileHLSL(
@@ -132,7 +146,7 @@ public:
 		(void)pipelineOut;
 		(void)signatureOut;
 		(void)createInfo;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode pipelineRenderCreateFromSourceHLSL(
@@ -143,14 +157,14 @@ public:
 		(void)pipelineOut;
 		(void)signatureOut;
 		(void)createInfo;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode pipelineRenderRelease(
 		ZgPipelineRender* pipeline) noexcept override final
 	{
 		(void)pipeline;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode pipelineRenderGetSignature(
@@ -159,7 +173,7 @@ public:
 	{
 		(void)pipeline;
 		(void)signatureOut;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	// Memory methods
@@ -171,14 +185,14 @@ public:
 	{
 		(void)memoryHeapOut;
 		(void)createInfo;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode memoryHeapRelease(
 		ZgMemoryHeap* memoryHeap) noexcept override final
 	{
 		(void)memoryHeap;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode bufferMemcpyTo(
@@ -191,7 +205,7 @@ public:
 		(void)bufferOffsetBytes;
 		(void)srcMemory;
 		(void)numBytes;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	// Texture methods
@@ -203,7 +217,7 @@ public:
 	{
 		(void)allocationInfoOut;
 		(void)createInfo;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	// Framebuffer methods
@@ -215,7 +229,7 @@ public:
 	{
 		(void)framebufferOut;
 		(void)createInfo;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	void framebufferRelease(
@@ -229,14 +243,14 @@ public:
 
 	ZgErrorCode getPresentQueue(ZgCommandQueue** presentQueueOut) noexcept override final
 	{
-		(void)presentQueueOut;
-		return ZG_ERROR_UNIMPLEMENTED;
+		*presentQueueOut = &mState->presentQueue;
+		return ZG_SUCCESS;
 	}
 
 	ZgErrorCode getCopyQueue(ZgCommandQueue** copyQueueOut) noexcept override final
 	{
 		(void)copyQueueOut;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	// Private methods

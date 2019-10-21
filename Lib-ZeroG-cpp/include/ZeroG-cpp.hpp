@@ -45,12 +45,12 @@ class CommandList;
 enum class [[nodiscard]] ErrorCode : ZgErrorCode {
 
 	SUCCESS = ZG_SUCCESS,
-	
+
 	WARNING_GENERIC = ZG_WARNING_GENERIC,
+	WARNING_UNIMPLEMENTED = ZG_WARNING_UNIMPLEMENTED,
 	WARNING_ALREADY_INITIALIZED = ZG_WARNING_ALREADY_INITIALIZED,
 
 	GENERIC = ZG_ERROR_GENERIC,
-	UNIMPLEMENTED = ZG_ERROR_UNIMPLEMENTED,
 	CPU_OUT_OF_MEMORY = ZG_ERROR_CPU_OUT_OF_MEMORY,
 	GPU_OUT_OF_MEMORY = ZG_ERROR_GPU_OUT_OF_MEMORY,
 	NO_SUITABLE_DEVICE = ZG_ERROR_NO_SUITABLE_DEVICE,
@@ -162,20 +162,20 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	PipelineRenderBuilder& addVertexAttribute(ZgVertexAttribute attribute) noexcept;
-	
+
 	PipelineRenderBuilder& addVertexAttribute(
 		uint32_t location,
 		uint32_t vertexBufferSlot,
 		ZgVertexAttributeType type,
 		uint32_t offsetInBuffer) noexcept;
-	
+
 	PipelineRenderBuilder& addVertexBufferInfo(
 		uint32_t slot, uint32_t vertexBufferStrideBytes) noexcept;
-	
+
 	PipelineRenderBuilder& addPushConstant(uint32_t constantBufferRegister) noexcept;
-	
+
 	PipelineRenderBuilder& addSampler(uint32_t samplerRegister, ZgSampler sampler) noexcept;
-	
+
 	PipelineRenderBuilder& addSampler(
 		uint32_t samplerRegister,
 		ZgSamplingMode samplingMode,
@@ -238,18 +238,18 @@ public:
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
-	
+
 	// Checks if this pipeline is valid
 	bool valid() const noexcept { return this->pipeline != nullptr; }
 
 	// See zgPipelineRenderCreateFromFileSPIRV()
 	ErrorCode createFromFileSPIRV(
 		const ZgPipelineRenderCreateInfoFileSPIRV& createInfo) noexcept;
-	
+
 	// See ZgPipelineRenderCreateInfoFileHLSL()
 	ErrorCode createFromFileHLSL(
 		const ZgPipelineRenderCreateInfoFileHLSL& createInfo) noexcept;
-	
+
 	// See ZgPipelineRenderCreateInfoSourceHLSL()
 	ErrorCode createFromSourceHLSL(
 		const ZgPipelineRenderCreateInfoSourceHLSL& createInfo) noexcept;

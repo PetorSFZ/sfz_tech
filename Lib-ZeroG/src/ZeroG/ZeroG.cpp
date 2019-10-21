@@ -69,10 +69,10 @@ ZG_API const char* zgErrorCodeToString(ZgErrorCode errorCode)
 	case ZG_SUCCESS: return "ZG_SUCCESS";
 
 	case ZG_WARNING_GENERIC: return "ZG_WARNING_GENERIC";
+	case ZG_WARNING_UNIMPLEMENTED: return "ZG_WARNING_UNIMPLEMENTED";
 	case ZG_WARNING_ALREADY_INITIALIZED: return "ZG_WARNING_ALREADY_INITIALIZED";
 
 	case ZG_ERROR_GENERIC: return "ZG_ERROR_GENERIC";
-	case ZG_ERROR_UNIMPLEMENTED: return "ZG_ERROR_UNIMPLEMENTED";
 	case ZG_ERROR_CPU_OUT_OF_MEMORY: return "ZG_ERROR_CPU_OUT_OF_MEMORY";
 	case ZG_ERROR_GPU_OUT_OF_MEMORY: return "ZG_ERROR_GPU_OUT_OF_MEMORY";
 	case ZG_ERROR_NO_SUITABLE_DEVICE: return "ZG_ERROR_NO_SUITABLE_DEVICE";
@@ -134,7 +134,7 @@ ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 	case ZG_BACKEND_NONE:
 		// TODO: Implement null backend
 		ZG_ERROR("zgContextInit(): Null backend not implemented, exiting.");
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 
 #if defined(_WIN32)
 	case ZG_BACKEND_D3D12:

@@ -191,6 +191,10 @@ if (macOS OR iOS)
 	set(ZEROG_METAL_SRC_FILES
 		${SRC_DIR}/ZeroG/metal/MetalBackend.hpp
 		${SRC_DIR}/ZeroG/metal/MetalBackend.mm
+		${SRC_DIR}/ZeroG/metal/MetalCommandList.hpp
+		${SRC_DIR}/ZeroG/metal/MetalCommandList.cpp
+		${SRC_DIR}/ZeroG/metal/MetalCommandQueue.hpp
+		${SRC_DIR}/ZeroG/metal/MetalCommandQueue.cpp
 	)
 endif()
 
@@ -250,6 +254,24 @@ target_link_libraries(ZeroG
 if(VULKAN_FOUND)
 	target_include_directories(ZeroG PRIVATE ${VULKAN_INCLUDE_DIRS})
 	target_link_libraries(ZeroG ${VULKAN_LIBRARIES})
+endif()
+
+if(macOS)
+	target_link_libraries(ZeroG "-framework AppKit")
+	target_link_libraries(ZeroG "-framework Metal")
+	target_link_libraries(ZeroG "-framework QuartzCore")
+
+elseif(iOS)
+	#target_link_libraries(MetalTest "-framework AudioToolbox")
+	#target_link_libraries(MetalTest "-framework AVFoundation")
+	#target_link_libraries(MetalTest "-framework CoreGraphics")
+	#target_link_libraries(MetalTest "-framework CoreMotion")
+	#target_link_libraries(MetalTest "-framework Foundation")
+	#target_link_libraries(MetalTest "-framework GameController")
+	#target_link_libraries(MetalTest "-framework OpenGLES")
+	#target_link_libraries(MetalTest "-framework QuartzCore")
+	#target_link_libraries(MetalTest "-framework UIKit")
+	#target_link_libraries(MetalTest "-framework Metal")
 endif()
 
 # Runtime files (DLLs)

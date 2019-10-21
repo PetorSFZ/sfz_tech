@@ -105,7 +105,7 @@ typedef struct ZgFramebufferRect ZgFramebufferRect;
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 5;
+static const uint32_t ZG_COMPILED_API_VERSION = 6;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -164,18 +164,18 @@ enum ZgErrorCodeEnum {
 
 	// Warnings (>0)
 	ZG_WARNING_GENERIC = 1,
-	ZG_WARNING_ALREADY_INITIALIZED = 2,
+	ZG_WARNING_UNIMPLEMENTED = 2,
+	ZG_WARNING_ALREADY_INITIALIZED = 3,
 
 	// Errors (<0)
 	ZG_ERROR_GENERIC = -1,
-	ZG_ERROR_UNIMPLEMENTED = -2,
-	ZG_ERROR_CPU_OUT_OF_MEMORY = -3,
-	ZG_ERROR_GPU_OUT_OF_MEMORY = -4,
-	ZG_ERROR_NO_SUITABLE_DEVICE = -5,
-	ZG_ERROR_INVALID_ARGUMENT = -6,
-	ZG_ERROR_SHADER_COMPILE_ERROR = -7,
-	ZG_ERROR_OUT_OF_COMMAND_LISTS = -8,
-	ZG_ERROR_INVALID_COMMAND_LIST_STATE = -9
+	ZG_ERROR_CPU_OUT_OF_MEMORY = -2,
+	ZG_ERROR_GPU_OUT_OF_MEMORY = -3,
+	ZG_ERROR_NO_SUITABLE_DEVICE = -4,
+	ZG_ERROR_INVALID_ARGUMENT = -5,
+	ZG_ERROR_SHADER_COMPILE_ERROR = -6,
+	ZG_ERROR_OUT_OF_COMMAND_LISTS = -7,
+	ZG_ERROR_INVALID_COMMAND_LIST_STATE = -8
 };
 typedef int32_t ZgErrorCode;
 
