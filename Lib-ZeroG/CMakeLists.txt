@@ -195,6 +195,8 @@ if (macOS OR iOS)
 		${SRC_DIR}/ZeroG/metal/MetalCommandList.cpp
 		${SRC_DIR}/ZeroG/metal/MetalCommandQueue.hpp
 		${SRC_DIR}/ZeroG/metal/MetalCommandQueue.cpp
+		${SRC_DIR}/ZeroG/metal/MetalFramebuffer.hpp
+		${SRC_DIR}/ZeroG/metal/MetalFramebuffer.cpp
 	)
 endif()
 

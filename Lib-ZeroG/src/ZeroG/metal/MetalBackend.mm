@@ -24,6 +24,7 @@
 #include <mtlpp.hpp>
 
 #include "ZeroG/metal/MetalCommandQueue.hpp"
+#include "ZeroG/metal/MetalFramebuffer.hpp"
 #include "ZeroG/util/Assert.hpp"
 #include "ZeroG/util/CpuAllocation.hpp"
 #include "ZeroG/util/Logging.hpp"
@@ -41,6 +42,9 @@ struct MetalBackendState final {
 
 	// Command queues
 	MetalCommandQueue presentQueue;
+
+	// Swapchain framebuffer
+	MetalFramebuffer swapchainFramebuffer;
 };
 
 // Statics
@@ -100,7 +104,13 @@ public:
 	ZgResult swapchainBeginFrame(
 		ZgFramebuffer** framebufferOut) noexcept override final
 	{
-		(void)framebufferOut;
+		// Grab next drawable from the metal layer
+		id<CAMetalDrawable> drawable = [mState->metalLayer nextDrawable];
+		mState->swapchainFramebuffer.drawable = ns::Handle{(__bridge void*)drawable};
+		mState->swapchainFramebuffer.texture  = ns::Handle{(__bridge void*)drawable.texture};
+
+		// Return swapchain framebuffer
+		*framebufferOut = &mState->swapchainFramebuffer;
 		return ZG_WARNING_UNIMPLEMENTED;
 	}
 

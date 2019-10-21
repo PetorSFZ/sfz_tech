@@ -23,6 +23,8 @@
 
 #include <mtlpp.hpp>
 
+#include "ZeroG/metal/MetalFramebuffer.hpp"
+
 namespace zg {
 
 // MetalCommandList
@@ -113,6 +115,12 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	mtlpp::CommandBuffer cmdBuffer;
+
+//private:
+	// Private members
+	// --------------------------------------------------------------------------------------------
+
+	MetalFramebuffer* mFramebuffer = nullptr;
 };
 
 } // namespace zg

@@ -16,51 +16,26 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "ZeroG/metal/MetalCommandQueue.hpp"
+#include "ZeroG/metal/MetalFramebuffer.hpp"
 
 namespace zg {
 
-// MetalCommandQueue: Constructors & destructors
+// MetalFramebuffer: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-MetalCommandQueue::~MetalCommandQueue() noexcept
+MetalFramebuffer::~MetalFramebuffer() noexcept
 {
 
 }
 
-// MetalCommandQueue: Virtual methods
+// MetalFramebuffer: Virtual methods
 // ------------------------------------------------------------------------------------------------
 
-ZgResult MetalCommandQueue::signalOnGpu(ZgFence& fenceToSignal) noexcept
+ZgResult MetalFramebuffer::getResolution(uint32_t& widthOut, uint32_t& heightOut) const noexcept
 {
-	(void)fenceToSignal;
+	(void)widthOut;
+	(void)heightOut;
 	return ZG_WARNING_UNIMPLEMENTED;
-}
-
-ZgResult MetalCommandQueue::waitOnGpu(const ZgFence& fence) noexcept
-{
-	(void)fence;
-	return ZG_WARNING_UNIMPLEMENTED;
-}
-
-ZgResult MetalCommandQueue::flush() noexcept
-{
-	return ZG_WARNING_UNIMPLEMENTED;
-}
-
-ZgResult MetalCommandQueue::beginCommandListRecording(ZgCommandList** commandListOut) noexcept
-{
-	this->hackCommandList.cmdBuffer = this->queue.CommandBuffer();
-	*commandListOut = &this->hackCommandList;
-	return ZG_WARNING_UNIMPLEMENTED;
-}
-
-ZgResult MetalCommandQueue::executeCommandList(ZgCommandList* commandListIn) noexcept
-{
-	MetalCommandList* commandList = static_cast<MetalCommandList*>(commandListIn);
-	commandList->cmdBuffer.Present(commandList->mFramebuffer->drawable);
-	commandList->cmdBuffer.Commit();
-	return ZG_SUCCESS;
 }
 
 } // namespace zg

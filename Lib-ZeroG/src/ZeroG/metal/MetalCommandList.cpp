@@ -18,6 +18,8 @@
 
 #include "ZeroG/metal/MetalCommandList.hpp"
 
+#include "ZeroG/util/Assert.hpp"
+
 namespace zg {
 
 // MetalCommandList: Virtual methods
@@ -93,10 +95,10 @@ ZgResult MetalCommandList::setFramebuffer(
 	const ZgFramebufferRect* optionalViewport,
 	const ZgFramebufferRect* optionalScissor) noexcept
 {
-	(void)framebuffer;
 	(void)optionalViewport;
 	(void)optionalScissor;
-	return ZG_WARNING_UNIMPLEMENTED;
+	mFramebuffer = static_cast<MetalFramebuffer*>(framebuffer);
+	return ZG_SUCCESS;
 }
 
 ZgResult MetalCommandList::setFramebufferViewport(
@@ -124,11 +126,20 @@ ZgResult MetalCommandList::clearRenderTargets(
 	float blue,
 	float alpha) noexcept
 {
-	(void)red;
-	(void)green;
-	(void)blue;
-	(void)alpha;
-	return ZG_WARNING_UNIMPLEMENTED;
+	ZG_ASSERT(mFramebuffer != nullptr);
+
+	mtlpp::ClearColor clearColor = mtlpp::ClearColor(red, green, blue, alpha);
+	mtlpp::RenderPassDescriptor pass;
+	pass.GetColorAttachments()[0].SetClearColor(clearColor);
+	pass.GetColorAttachments()[0].SetLoadAction(mtlpp::LoadAction::Clear);
+	pass.GetColorAttachments()[0].SetStoreAction(mtlpp::StoreAction::Store);
+	pass.GetColorAttachments()[0].SetTexture(mFramebuffer->texture);
+
+#warning "This is a huge hack"
+	mtlpp::RenderCommandEncoder encoder = cmdBuffer.RenderCommandEncoder(pass);
+	encoder.EndEncoding();
+
+	return ZG_SUCCESS;
 }
 
 ZgResult MetalCommandList::clearDepthBuffer(
