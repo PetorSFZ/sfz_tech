@@ -384,7 +384,7 @@ ZgErrorCode D3D12CommandList::setPipelineBindings(
 		if (bindingIdx == ~0u) {
 			// TODO: Not sure if possible to implement?
 			ZG_ASSERT(false);
-			return ZG_ERROR_UNIMPLEMENTED;
+			return ZG_WARNING_UNIMPLEMENTED;
 		}
 
 		// Get buffer from binding and cast it to D3D12 buffer

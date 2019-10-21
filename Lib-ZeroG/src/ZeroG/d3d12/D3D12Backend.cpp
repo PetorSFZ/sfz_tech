@@ -146,7 +146,7 @@ public:
 		// Initialize part of state
 		mState->width = settings.width;
 		mState->height = settings.height;
-		HWND hwnd = (HWND)settings.nativeWindowHandle;
+		HWND hwnd = (HWND)settings.nativeHandle;
 		if (mState->width == 0 || mState->height == 0) return ZG_ERROR_INVALID_ARGUMENT;
 
 		// Enable debug layers in debug mode

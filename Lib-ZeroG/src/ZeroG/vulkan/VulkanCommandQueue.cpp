@@ -34,30 +34,30 @@ VulkanCommandQueue::~VulkanCommandQueue() noexcept
 ZgErrorCode VulkanCommandQueue::signalOnGpu(ZgFence& fenceToSignal) noexcept
 {
 	(void)fenceToSignal;
-	return ZG_ERROR_UNIMPLEMENTED;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZgErrorCode VulkanCommandQueue::waitOnGpu(const ZgFence& fence) noexcept
 {
 	(void)fence;
-	return ZG_ERROR_UNIMPLEMENTED;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZgErrorCode VulkanCommandQueue::flush() noexcept
 {
-	return ZG_ERROR_UNIMPLEMENTED;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZgErrorCode VulkanCommandQueue::beginCommandListRecording(ZgCommandList** commandListOut) noexcept
 {
 	(void)commandListOut;
-	return ZG_ERROR_UNIMPLEMENTED;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZgErrorCode VulkanCommandQueue::executeCommandList(ZgCommandList* commandList) noexcept
 {
 	(void)commandList;
-	return ZG_ERROR_UNIMPLEMENTED;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 } // namespace zg

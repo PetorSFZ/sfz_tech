@@ -249,25 +249,25 @@ public:
 	{
 		(void)width;
 		(void)height;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode swapchainBeginFrame(
 		ZgFramebuffer** framebufferOut) noexcept override final
 	{
 		(void)framebufferOut;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode swapchainFinishFrame() noexcept override final
 	{
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode fenceCreate(ZgFence** fenceOut) noexcept override final
 	{
 		(void)fenceOut;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	// Stats
@@ -276,7 +276,7 @@ public:
 	ZgErrorCode getStats(ZgStats& statsOut) noexcept override final
 	{
 		(void)statsOut;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	// Pipeline methods
@@ -290,7 +290,7 @@ public:
 		(void)pipelineOut;
 		(void)signatureOut;
 		(void)createInfo;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode pipelineRenderCreateFromFileHLSL(
@@ -301,7 +301,7 @@ public:
 		(void)pipelineOut;
 		(void)signatureOut;
 		(void)createInfo;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode pipelineRenderCreateFromSourceHLSL(
@@ -312,14 +312,14 @@ public:
 		(void)pipelineOut;
 		(void)signatureOut;
 		(void)createInfo;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode pipelineRenderRelease(
 		ZgPipelineRender* pipeline) noexcept override final
 	{
 		(void)pipeline;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode pipelineRenderGetSignature(
@@ -328,7 +328,7 @@ public:
 	{
 		(void)pipeline;
 		(void)signatureOut;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	// Memory methods
@@ -340,14 +340,14 @@ public:
 	{
 		(void)memoryHeapOut;
 		(void)createInfo;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode memoryHeapRelease(
 		ZgMemoryHeap* memoryHeap) noexcept override final
 	{
 		(void)memoryHeap;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	ZgErrorCode bufferMemcpyTo(
@@ -360,7 +360,7 @@ public:
 		(void)bufferOffsetBytes;
 		(void)srcMemory;
 		(void)numBytes;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	// Texture methods
@@ -372,7 +372,7 @@ public:
 	{
 		(void)allocationInfoOut;
 		(void)createInfo;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	// Framebuffer methods
@@ -384,7 +384,7 @@ public:
 	{
 		(void)framebufferOut;
 		(void)createInfo;
-		return ZG_ERROR_UNIMPLEMENTED;
+		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	void framebufferRelease(

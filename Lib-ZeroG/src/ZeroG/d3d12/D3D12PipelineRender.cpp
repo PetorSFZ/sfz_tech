@@ -745,7 +745,7 @@ static ZgErrorCode createPipelineRenderInternal(
 		// TODO: This should probably be relaxed
 		if (resDesc.BindCount != 1) {
 			ZG_ERROR("Multiple registers for a single resource not allowed");
-			return ZG_ERROR_UNIMPLEMENTED;
+			return ZG_WARNING_UNIMPLEMENTED;
 		}
 
 		// Error out if we have too many constant buffers
@@ -807,7 +807,7 @@ static ZgErrorCode createPipelineRenderInternal(
 		// TODO: This should probably be relaxed
 		if (resDesc.BindCount != 1) {
 			ZG_ERROR("Multiple registers for a single resource not allowed");
-			return ZG_ERROR_UNIMPLEMENTED;
+			return ZG_WARNING_UNIMPLEMENTED;
 		}
 
 		// Error out if we have too many constant buffers
@@ -902,7 +902,7 @@ static ZgErrorCode createPipelineRenderInternal(
 		// TODO: This should probably be relaxed
 		if (resDesc.BindCount != 1) {
 			ZG_ERROR("Multiple registers for a single resource not allowed");
-			return ZG_ERROR_UNIMPLEMENTED;
+			return ZG_WARNING_UNIMPLEMENTED;
 		}
 
 		// Error out if we have too many textures
@@ -956,7 +956,7 @@ static ZgErrorCode createPipelineRenderInternal(
 		// TODO: This should probably be relaxed
 		if (resDesc.BindCount != 1) {
 			ZG_ERROR("Multiple registers for a single resource not allowed");
-			return ZG_ERROR_UNIMPLEMENTED;
+			return ZG_WARNING_UNIMPLEMENTED;
 		}
 
 		// Error out if we have too many textures
