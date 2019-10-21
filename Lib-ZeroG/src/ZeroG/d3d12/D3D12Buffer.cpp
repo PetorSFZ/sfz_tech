@@ -31,7 +31,7 @@ D3D12Buffer::~D3D12Buffer() noexcept
 // D3D12Buffer: Methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode D3D12Buffer::setDebugName(const char* name) noexcept
+ZgResult D3D12Buffer::setDebugName(const char* name) noexcept
 {
 	// Small hack to fix D3D12 bug with debug name shorter than 4 chars
 	char tmpBuffer[256] = {};

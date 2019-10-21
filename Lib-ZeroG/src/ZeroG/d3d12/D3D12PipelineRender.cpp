@@ -264,7 +264,7 @@ enum class HlslShaderType {
 	PIXEL_SHADER_6_3,
 };
 
-static ZgErrorCode dxcCreateHlslBlobFromFile(
+static ZgResult dxcCreateHlslBlobFromFile(
 	IDxcLibrary& dxcLibrary,
 	const char* path,
 	ComPtr<IDxcBlobEncoding>& blobOut) noexcept
@@ -285,7 +285,7 @@ static ZgErrorCode dxcCreateHlslBlobFromFile(
 	return ZG_SUCCESS;
 }
 
-static ZgErrorCode dxcCreateHlslBlobFromSource(
+static ZgResult dxcCreateHlslBlobFromSource(
 	IDxcLibrary& dxcLibrary,
 	const char* source,
 	ComPtr<IDxcBlobEncoding>& blobOut) noexcept
@@ -300,7 +300,7 @@ static ZgErrorCode dxcCreateHlslBlobFromSource(
 	return ZG_SUCCESS;
 }
 
-static ZgErrorCode compileHlslShader(
+static ZgResult compileHlslShader(
 	IDxcCompiler& dxcCompiler,
 	IDxcIncludeHandler* dxcIncludeHandler,
 	ComPtr<IDxcBlob>& blobOut,
@@ -605,7 +605,7 @@ static void logPipelineInfo(
 	allocator.deallocate(allocator.userPtr, tmpStrOriginal);
 }
 
-static ZgErrorCode createPipelineRenderInternal(
+static ZgResult createPipelineRenderInternal(
 	D3D12PipelineRender** pipelineOut,
 	ZgPipelineRenderSignature* signatureOut,
 	const ZgPipelineRenderCreateInfoCommon& createInfo,
@@ -645,7 +645,7 @@ static ZgErrorCode createPipelineRenderInternal(
 	// Compile vertex shader
 	ComPtr<IDxcBlob> vertexBlob;
 	ComPtr<ID3D12ShaderReflection> vertexReflection;
-	ZgErrorCode vertexShaderRes = compileHlslShader(
+	ZgResult vertexShaderRes = compileHlslShader(
 		dxcCompiler,
 		dxcIncludeHandler,
 		vertexBlob,
@@ -660,7 +660,7 @@ static ZgErrorCode createPipelineRenderInternal(
 	// Compile pixel shader
 	ComPtr<IDxcBlob> pixelBlob;
 	ComPtr<ID3D12ShaderReflection> pixelReflection;
-	ZgErrorCode pixelShaderRes = compileHlslShader(
+	ZgResult pixelShaderRes = compileHlslShader(
 		dxcCompiler,
 		dxcIncludeHandler,
 		pixelBlob,
@@ -1387,7 +1387,7 @@ D3D12PipelineRender::~D3D12PipelineRender() noexcept
 // D3D12 PipelineRender functions
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode createPipelineRenderFileSPIRV(
+ZgResult createPipelineRenderFileSPIRV(
 	D3D12PipelineRender** pipelineOut,
 	ZgPipelineRenderSignature* signatureOut,
 	ZgPipelineRenderCreateInfoFileSPIRV createInfo,
@@ -1426,13 +1426,13 @@ ZgErrorCode createPipelineRenderFileSPIRV(
 
 	// Create encoding blob from source
 	ComPtr<IDxcBlobEncoding> vertexEncodingBlob;
-	ZgErrorCode vertexBlobReadRes =
+	ZgResult vertexBlobReadRes =
 		dxcCreateHlslBlobFromSource(dxcLibrary, vertexHlslSrc.data(), vertexEncodingBlob);
 	if (vertexBlobReadRes != ZG_SUCCESS) return vertexBlobReadRes;
 
 	// Create encoding blob from source
 	ComPtr<IDxcBlobEncoding> pixelEncodingBlob;
-	ZgErrorCode pixelBlobReadRes =
+	ZgResult pixelBlobReadRes =
 		dxcCreateHlslBlobFromSource(dxcLibrary, pixelHlslSrc.data(), pixelEncodingBlob);
 	if (pixelBlobReadRes != ZG_SUCCESS) return pixelBlobReadRes;
 
@@ -1462,7 +1462,7 @@ ZgErrorCode createPipelineRenderFileSPIRV(
 		device);
 }
 
-ZgErrorCode createPipelineRenderFileHLSL(
+ZgResult createPipelineRenderFileHLSL(
 	D3D12PipelineRender** pipelineOut,
 	ZgPipelineRenderSignature* signatureOut,
 	const ZgPipelineRenderCreateInfoFileHLSL& createInfo,
@@ -1477,7 +1477,7 @@ ZgErrorCode createPipelineRenderFileHLSL(
 
 	// Read vertex shader from file
 	ComPtr<IDxcBlobEncoding> vertexEncodingBlob;
-	ZgErrorCode vertexBlobReadRes =
+	ZgResult vertexBlobReadRes =
 		dxcCreateHlslBlobFromFile(dxcLibrary, createInfo.vertexShaderPath, vertexEncodingBlob);
 	if (vertexBlobReadRes != ZG_SUCCESS) return vertexBlobReadRes;
 
@@ -1489,7 +1489,7 @@ ZgErrorCode createPipelineRenderFileHLSL(
 		pixelEncodingBlob = vertexEncodingBlob;
 	}
 	else {
-		ZgErrorCode pixelBlobReadRes =
+		ZgResult pixelBlobReadRes =
 			dxcCreateHlslBlobFromFile(dxcLibrary, createInfo.pixelShaderPath, pixelEncodingBlob);
 		if (pixelBlobReadRes != ZG_SUCCESS) return pixelBlobReadRes;
 	}
@@ -1510,7 +1510,7 @@ ZgErrorCode createPipelineRenderFileHLSL(
 		device);
 }
 
-ZgErrorCode createPipelineRenderSourceHLSL(
+ZgResult createPipelineRenderSourceHLSL(
 	D3D12PipelineRender** pipelineOut,
 	ZgPipelineRenderSignature* signatureOut,
 	const ZgPipelineRenderCreateInfoSourceHLSL& createInfo,
@@ -1525,13 +1525,13 @@ ZgErrorCode createPipelineRenderSourceHLSL(
 
 	// Create encoding blob from source
 	ComPtr<IDxcBlobEncoding> vertexEncodingBlob;
-	ZgErrorCode vertexBlobReadRes =
+	ZgResult vertexBlobReadRes =
 		dxcCreateHlslBlobFromSource(dxcLibrary, createInfo.vertexShaderSrc, vertexEncodingBlob);
 	if (vertexBlobReadRes != ZG_SUCCESS) return vertexBlobReadRes;
 
 	// Create encoding blob from source
 	ComPtr<IDxcBlobEncoding> pixelEncodingBlob;
-	ZgErrorCode pixelBlobReadRes =
+	ZgResult pixelBlobReadRes =
 		dxcCreateHlslBlobFromSource(dxcLibrary, createInfo.pixelShaderSrc, pixelEncodingBlob);
 	if (pixelBlobReadRes != ZG_SUCCESS) return pixelBlobReadRes;
 

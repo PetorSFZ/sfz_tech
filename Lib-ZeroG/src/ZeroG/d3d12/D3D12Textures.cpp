@@ -32,7 +32,7 @@ D3D12Texture2D::~D3D12Texture2D() noexcept
 // D3D12Texture2D: Methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode D3D12Texture2D::setDebugName(const char* name) noexcept
+ZgResult D3D12Texture2D::setDebugName(const char* name) noexcept
 {
 	// Small hack to fix D3D12 bug with debug name shorter than 4 chars
 	char tmpBuffer[256] = {};

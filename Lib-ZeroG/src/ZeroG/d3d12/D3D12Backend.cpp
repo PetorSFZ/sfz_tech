@@ -137,7 +137,7 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode init(ZgContextInitSettings& settings) noexcept
+	ZgResult init(ZgContextInitSettings& settings) noexcept
 	{
 		// Initialize members
 		mDebugMode = settings.debugMode;
@@ -277,7 +277,7 @@ public:
 		ZG_INFO("Attempting to allocate %u descriptors for the global ring buffer",
 			NUM_DESCRIPTORS);
 		{
-			ZgErrorCode res = mState->globalDescriptorRingBuffer.create(
+			ZgResult res = mState->globalDescriptorRingBuffer.create(
 				*mState->device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, NUM_DESCRIPTORS);
 			if (res != ZG_SUCCESS) {
 				ZG_ERROR("Failed to allocate descriptors");
@@ -288,7 +288,7 @@ public:
 		// Create command queue
 		const uint32_t MAX_NUM_COMMAND_LISTS_SWAPCHAIN_QUEUE = 256;
 		const uint32_t MAX_NUM_BUFFERS_PER_COMMAND_LIST_SWAPCHAIN_QUEUE = 1024;
-		ZgErrorCode res = mState->commandQueuePresent.create(
+		ZgResult res = mState->commandQueuePresent.create(
 			D3D12_COMMAND_LIST_TYPE_DIRECT,
 			mState->device,
 			&mState->residencyManager,
@@ -401,7 +401,7 @@ public:
 	// Context methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode swapchainResize(uint32_t width, uint32_t height) noexcept override final
+	ZgResult swapchainResize(uint32_t width, uint32_t height) noexcept override final
 	{
 		if (mState->width == width && mState->height == height) return ZG_SUCCESS;
 		std::lock_guard<std::mutex> lock(mContextMutex);
@@ -511,7 +511,7 @@ public:
 		return ZG_SUCCESS;
 	}
 
-	ZgErrorCode swapchainBeginFrame(
+	ZgResult swapchainBeginFrame(
 		ZgFramebuffer** framebufferOut) noexcept override final
 	{
 		std::lock_guard<std::mutex> lock(mContextMutex);
@@ -521,7 +521,7 @@ public:
 
 		// Create a small command list to insert the transition barrier for the back buffer
 		ZgCommandList* barrierCommandList = nullptr;
-		ZgErrorCode zgRes =
+		ZgResult zgRes =
 			mState->commandQueuePresent.beginCommandListRecording(&barrierCommandList);
 		if (zgRes != ZG_SUCCESS) return zgRes;
 
@@ -541,7 +541,7 @@ public:
 		return ZG_SUCCESS;
 	}
 
-	ZgErrorCode swapchainFinishFrame() noexcept override final
+	ZgResult swapchainFinishFrame() noexcept override final
 	{
 		std::lock_guard<std::mutex> lock(mContextMutex);
 
@@ -550,7 +550,7 @@ public:
 
 		// Create a small command list to insert the transition barrier for the back buffer
 		ZgCommandList* barrierCommandList = nullptr;
-		ZgErrorCode zgRes =
+		ZgResult zgRes =
 			mState->commandQueuePresent.beginCommandListRecording(&barrierCommandList);
 		if (zgRes != ZG_SUCCESS) return zgRes;
 
@@ -583,7 +583,7 @@ public:
 		return ZG_SUCCESS;
 	}
 
-	ZgErrorCode fenceCreate(ZgFence** fenceOut) noexcept override final
+	ZgResult fenceCreate(ZgFence** fenceOut) noexcept override final
 	{
 		*fenceOut = zgNew<D3D12Fence>("ZeroG - D3D12Fence");
 		return ZG_SUCCESS;
@@ -592,7 +592,7 @@ public:
 	// Stats
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode getStats(ZgStats& statsOut) noexcept override final
+	ZgResult getStats(ZgStats& statsOut) noexcept override final
 	{
 		// First set the static stats which don't change
 		statsOut = mState->staticStats;
@@ -620,20 +620,20 @@ public:
 	// Pipeline methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode pipelineRenderCreateFromFileSPIRV(
+	ZgResult pipelineRenderCreateFromFileSPIRV(
 		ZgPipelineRender** pipelineOut,
 		ZgPipelineRenderSignature* signatureOut,
 		const ZgPipelineRenderCreateInfoFileSPIRV& createInfo) noexcept override final
 	{
 		// Initialize DXC compiler if necessary
 		{
-			ZgErrorCode res = initializeDxcCompiler();
+			ZgResult res = initializeDxcCompiler();
 			if (res != ZG_SUCCESS) return res;
 		}
 		
 		// Create pipeline
 		D3D12PipelineRender* d3d12pipeline = nullptr;
-		ZgErrorCode res = createPipelineRenderFileSPIRV(
+		ZgResult res = createPipelineRenderFileSPIRV(
 			&d3d12pipeline,
 			signatureOut,
 			createInfo,
@@ -647,20 +647,20 @@ public:
 		return res;
 	}
 
-	ZgErrorCode pipelineRenderCreateFromFileHLSL(
+	ZgResult pipelineRenderCreateFromFileHLSL(
 		ZgPipelineRender** pipelineOut,
 		ZgPipelineRenderSignature* signatureOut,
 		const ZgPipelineRenderCreateInfoFileHLSL& createInfo) noexcept override final
 	{
 		// Initialize DXC compiler if necessary
 		{
-			ZgErrorCode res = initializeDxcCompiler();
+			ZgResult res = initializeDxcCompiler();
 			if (res != ZG_SUCCESS) return res;
 		}
 		
 		// Create pipeline
 		D3D12PipelineRender* d3d12pipeline = nullptr;
-		ZgErrorCode res = createPipelineRenderFileHLSL(
+		ZgResult res = createPipelineRenderFileHLSL(
 			&d3d12pipeline,
 			signatureOut,
 			createInfo,
@@ -674,20 +674,20 @@ public:
 		return res;
 	}
 
-	ZgErrorCode pipelineRenderCreateFromSourceHLSL(
+	ZgResult pipelineRenderCreateFromSourceHLSL(
 		ZgPipelineRender** pipelineOut,
 		ZgPipelineRenderSignature* signatureOut,
 		const ZgPipelineRenderCreateInfoSourceHLSL& createInfo) noexcept override final
 	{
 		// Initialize DXC compiler if necessary
 		{
-			ZgErrorCode res = initializeDxcCompiler();
+			ZgResult res = initializeDxcCompiler();
 			if (res != ZG_SUCCESS) return res;
 		}
 		
 		// Create pipeline
 		D3D12PipelineRender* d3d12pipeline = nullptr;
-		ZgErrorCode res = createPipelineRenderSourceHLSL(
+		ZgResult res = createPipelineRenderSourceHLSL(
 			&d3d12pipeline,
 			signatureOut,
 			createInfo,
@@ -701,7 +701,7 @@ public:
 		return res;
 	}
 
-	ZgErrorCode pipelineRenderRelease(
+	ZgResult pipelineRenderRelease(
 		ZgPipelineRender* pipeline) noexcept override final
 	{
 		// TODO: Check if pipeline is currently in use? Lock?
@@ -709,7 +709,7 @@ public:
 		return ZG_SUCCESS;
 	}
 
-	ZgErrorCode pipelineRenderGetSignature(
+	ZgResult pipelineRenderGetSignature(
 		const ZgPipelineRender* pipelineIn,
 		ZgPipelineRenderSignature* signatureOut) const noexcept override final
 	{
@@ -722,7 +722,7 @@ public:
 	// Memory methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode memoryHeapCreate(
+	ZgResult memoryHeapCreate(
 		ZgMemoryHeap** memoryHeapOut,
 		const ZgMemoryHeapCreateInfo& createInfo) noexcept override final
 	{
@@ -735,7 +735,7 @@ public:
 			createInfo);
 	}
 
-	ZgErrorCode memoryHeapRelease(
+	ZgResult memoryHeapRelease(
 		ZgMemoryHeap* memoryHeapIn) noexcept override final
 	{
 		// TODO: Check if any buffers still exist? Lock?
@@ -748,7 +748,7 @@ public:
 		return ZG_SUCCESS;
 	}
 
-	ZgErrorCode bufferMemcpyTo(
+	ZgResult bufferMemcpyTo(
 		ZgBuffer* dstBufferInterface,
 		uint64_t bufferOffsetBytes,
 		const uint8_t* srcMemory,
@@ -785,7 +785,7 @@ public:
 	// Texture methods
 	// --------------------------------------------------------------------------------------------
 
-	virtual ZgErrorCode texture2DGetAllocationInfo(
+	virtual ZgResult texture2DGetAllocationInfo(
 		ZgTexture2DAllocationInfo& allocationInfoOut,
 		const ZgTexture2DCreateInfo& createInfo) noexcept override final
 	{
@@ -804,7 +804,7 @@ public:
 	// Framebuffer methods
 	// --------------------------------------------------------------------------------------------
 
-	virtual ZgErrorCode framebufferCreate(
+	virtual ZgResult framebufferCreate(
 		ZgFramebuffer** framebufferOut,
 		const ZgFramebufferCreateInfo& createInfo) noexcept override final
 	{
@@ -824,13 +824,13 @@ public:
 	// CommandQueue methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode getPresentQueue(ZgCommandQueue** presentQueueOut) noexcept override final
+	ZgResult getPresentQueue(ZgCommandQueue** presentQueueOut) noexcept override final
 	{
 		*presentQueueOut = &mState->commandQueuePresent;
 		return ZG_SUCCESS;
 	}
 
-	ZgErrorCode getCopyQueue(ZgCommandQueue** copyQueueOut) noexcept override final
+	ZgResult getCopyQueue(ZgCommandQueue** copyQueueOut) noexcept override final
 	{
 		*copyQueueOut = &mState->commandQueueCopy;
 		return ZG_SUCCESS;
@@ -840,7 +840,7 @@ private:
 	// Private methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode initializeDxcCompiler() noexcept
+	ZgResult initializeDxcCompiler() noexcept
 	{
 		// Initialize DXC compiler if necessary
 		// TODO: Provide our own allocator
@@ -923,13 +923,13 @@ private:
 // D3D12 API
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode createD3D12Backend(ZgBackend** backendOut, ZgContextInitSettings& settings) noexcept
+ZgResult createD3D12Backend(ZgBackend** backendOut, ZgContextInitSettings& settings) noexcept
 {
 	// Allocate and create D3D12 backend
 	D3D12Backend* backend = zgNew<D3D12Backend>("D3D12 Backend");
 
 	// Initialize backend, return nullptr if init failed
-	ZgErrorCode initRes = backend->init(settings);
+	ZgResult initRes = backend->init(settings);
 	if (initRes != ZG_SUCCESS)
 	{
 		zgDelete(backend);

@@ -31,30 +31,30 @@ VulkanCommandQueue::~VulkanCommandQueue() noexcept
 // VulkanCommandQueue: Virtual methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode VulkanCommandQueue::signalOnGpu(ZgFence& fenceToSignal) noexcept
+ZgResult VulkanCommandQueue::signalOnGpu(ZgFence& fenceToSignal) noexcept
 {
 	(void)fenceToSignal;
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode VulkanCommandQueue::waitOnGpu(const ZgFence& fence) noexcept
+ZgResult VulkanCommandQueue::waitOnGpu(const ZgFence& fence) noexcept
 {
 	(void)fence;
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode VulkanCommandQueue::flush() noexcept
+ZgResult VulkanCommandQueue::flush() noexcept
 {
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode VulkanCommandQueue::beginCommandListRecording(ZgCommandList** commandListOut) noexcept
+ZgResult VulkanCommandQueue::beginCommandListRecording(ZgCommandList** commandListOut) noexcept
 {
 	(void)commandListOut;
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgErrorCode VulkanCommandQueue::executeCommandList(ZgCommandList* commandList) noexcept
+ZgResult VulkanCommandQueue::executeCommandList(ZgCommandList* commandList) noexcept
 {
 	(void)commandList;
 	return ZG_WARNING_UNIMPLEMENTED;

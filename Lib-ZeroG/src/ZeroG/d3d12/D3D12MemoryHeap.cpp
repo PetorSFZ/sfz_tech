@@ -97,7 +97,7 @@ D3D12MemoryHeap::~D3D12MemoryHeap() noexcept
 // D3D12MemoryHeap: Virtual methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode D3D12MemoryHeap::bufferCreate(
+ZgResult D3D12MemoryHeap::bufferCreate(
 	ZgBuffer** bufferOut,
 	const ZgBufferCreateInfo& createInfo) noexcept
 {
@@ -159,7 +159,7 @@ ZgErrorCode D3D12MemoryHeap::bufferCreate(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12MemoryHeap::texture2DCreate(
+ZgResult D3D12MemoryHeap::texture2DCreate(
 	ZgTexture2D** textureOut,
 	const ZgTexture2DCreateInfo& createInfo) noexcept
 {
@@ -263,7 +263,7 @@ ZgErrorCode D3D12MemoryHeap::texture2DCreate(
 // D3D12 Memory Heap functions
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode createMemoryHeap(
+ZgResult createMemoryHeap(
 	ID3D12Device3& device,
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
 	D3DX12Residency::ResidencyManager& residencyManager,

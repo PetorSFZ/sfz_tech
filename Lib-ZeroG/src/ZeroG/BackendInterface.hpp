@@ -29,58 +29,58 @@ struct ZgBackend {
 	// Context methods
 	// --------------------------------------------------------------------------------------------
 
-	virtual ZgErrorCode swapchainResize(
+	virtual ZgResult swapchainResize(
 		uint32_t width,
 		uint32_t height) noexcept = 0;
 
-	virtual ZgErrorCode swapchainBeginFrame(
+	virtual ZgResult swapchainBeginFrame(
 		ZgFramebuffer** framebufferOut) noexcept = 0;
 
-	virtual ZgErrorCode swapchainFinishFrame() noexcept = 0;
+	virtual ZgResult swapchainFinishFrame() noexcept = 0;
 
-	virtual ZgErrorCode fenceCreate(ZgFence** fenceOut) noexcept = 0;
+	virtual ZgResult fenceCreate(ZgFence** fenceOut) noexcept = 0;
 
 	// Stats
 	// --------------------------------------------------------------------------------------------
 
-	virtual ZgErrorCode getStats(ZgStats& statsOut) noexcept = 0;
+	virtual ZgResult getStats(ZgStats& statsOut) noexcept = 0;
 
 	// Pipeline methods
 	// --------------------------------------------------------------------------------------------
 
-	virtual ZgErrorCode pipelineRenderCreateFromFileSPIRV(
+	virtual ZgResult pipelineRenderCreateFromFileSPIRV(
 		ZgPipelineRender** pipelineOut,
 		ZgPipelineRenderSignature* signatureOut,
 		const ZgPipelineRenderCreateInfoFileSPIRV& createInfo) noexcept = 0;
 
-	virtual ZgErrorCode pipelineRenderCreateFromFileHLSL(
+	virtual ZgResult pipelineRenderCreateFromFileHLSL(
 		ZgPipelineRender** pipelineOut,
 		ZgPipelineRenderSignature* signatureOut,
 		const ZgPipelineRenderCreateInfoFileHLSL& createInfo) noexcept = 0;
 
-	virtual ZgErrorCode pipelineRenderCreateFromSourceHLSL(
+	virtual ZgResult pipelineRenderCreateFromSourceHLSL(
 		ZgPipelineRender** pipelineOut,
 		ZgPipelineRenderSignature* signatureOut,
 		const ZgPipelineRenderCreateInfoSourceHLSL& createInfo) noexcept = 0;
 
-	virtual ZgErrorCode pipelineRenderRelease(
+	virtual ZgResult pipelineRenderRelease(
 		ZgPipelineRender* pipeline) noexcept = 0;
 
-	virtual ZgErrorCode pipelineRenderGetSignature(
+	virtual ZgResult pipelineRenderGetSignature(
 		const ZgPipelineRender* pipeline,
 		ZgPipelineRenderSignature* signatureOut) const noexcept = 0;
 
 	// Memory methods
 	// --------------------------------------------------------------------------------------------
 
-	virtual ZgErrorCode memoryHeapCreate(
+	virtual ZgResult memoryHeapCreate(
 		ZgMemoryHeap** memoryHeapOut,
 		const ZgMemoryHeapCreateInfo& createInfo) noexcept = 0;
 
-	virtual ZgErrorCode memoryHeapRelease(
+	virtual ZgResult memoryHeapRelease(
 		ZgMemoryHeap* memoryHeap) noexcept = 0;
 
-	virtual ZgErrorCode bufferMemcpyTo(
+	virtual ZgResult bufferMemcpyTo(
 		ZgBuffer* dstBufferInterface,
 		uint64_t bufferOffsetBytes,
 		const uint8_t* srcMemory,
@@ -89,14 +89,14 @@ struct ZgBackend {
 	// Texture methods
 	// --------------------------------------------------------------------------------------------
 
-	virtual ZgErrorCode texture2DGetAllocationInfo(
+	virtual ZgResult texture2DGetAllocationInfo(
 		ZgTexture2DAllocationInfo& allocationInfoOut,
 		const ZgTexture2DCreateInfo& createInfo) noexcept = 0;
 
 	// Framebuffer methods
 	// --------------------------------------------------------------------------------------------
 
-	virtual ZgErrorCode framebufferCreate(
+	virtual ZgResult framebufferCreate(
 		ZgFramebuffer** framebufferOut,
 		const ZgFramebufferCreateInfo& createInfo) noexcept = 0;
 
@@ -106,8 +106,8 @@ struct ZgBackend {
 	// CommandQueue methods
 	// --------------------------------------------------------------------------------------------
 
-	virtual ZgErrorCode getPresentQueue(ZgCommandQueue** presentQueueOut) noexcept = 0;
-	virtual ZgErrorCode getCopyQueue(ZgCommandQueue** copyQueueOut) noexcept = 0;
+	virtual ZgResult getPresentQueue(ZgCommandQueue** presentQueueOut) noexcept = 0;
+	virtual ZgResult getCopyQueue(ZgCommandQueue** copyQueueOut) noexcept = 0;
 };
 
 // PipelineRender
@@ -123,11 +123,11 @@ struct ZgPipelineRender {
 struct ZgMemoryHeap {
 	virtual ~ZgMemoryHeap() noexcept {}
 
-	virtual ZgErrorCode bufferCreate(
+	virtual ZgResult bufferCreate(
 		ZgBuffer** bufferOut,
 		const ZgBufferCreateInfo& createInfo) noexcept = 0;
 
-	virtual ZgErrorCode texture2DCreate(
+	virtual ZgResult texture2DCreate(
 		ZgTexture2D** textureOut,
 		const ZgTexture2DCreateInfo& createInfo) noexcept = 0;
 };
@@ -138,7 +138,7 @@ struct ZgMemoryHeap {
 struct ZgBuffer {
 	virtual ~ZgBuffer() noexcept {}
 
-	virtual ZgErrorCode setDebugName(
+	virtual ZgResult setDebugName(
 		const char* name) noexcept = 0;
 };
 
@@ -148,7 +148,7 @@ struct ZgBuffer {
 struct ZgTexture2D {
 	virtual ~ZgTexture2D() noexcept {}
 
-	virtual ZgErrorCode setDebugName(
+	virtual ZgResult setDebugName(
 		const char* name) noexcept = 0;
 };
 
@@ -158,7 +158,7 @@ struct ZgTexture2D {
 struct ZgFramebuffer {
 	virtual ~ZgFramebuffer() noexcept {}
 
-	virtual ZgErrorCode getResolution(uint32_t& widthOut, uint32_t& heightOut) const noexcept = 0;
+	virtual ZgResult getResolution(uint32_t& widthOut, uint32_t& heightOut) const noexcept = 0;
 };
 
 // Fence
@@ -167,9 +167,9 @@ struct ZgFramebuffer {
 struct ZgFence {
 	virtual ~ZgFence() noexcept {}
 
-	virtual ZgErrorCode reset() noexcept = 0;
-	virtual ZgErrorCode checkIfSignaled(bool& fenceSignaledOut) const noexcept = 0;
-	virtual ZgErrorCode waitOnCpuBlocking() const noexcept = 0;
+	virtual ZgResult reset() noexcept = 0;
+	virtual ZgResult checkIfSignaled(bool& fenceSignaledOut) const noexcept = 0;
+	virtual ZgResult waitOnCpuBlocking() const noexcept = 0;
 };
 
 // Command queue
@@ -178,11 +178,11 @@ struct ZgFence {
 struct ZgCommandQueue {
 	virtual ~ZgCommandQueue() noexcept {}
 
-	virtual ZgErrorCode signalOnGpu(ZgFence& fenceToSignal) noexcept = 0;
-	virtual ZgErrorCode waitOnGpu(const ZgFence& fence) noexcept = 0;
-	virtual ZgErrorCode flush() noexcept = 0;
-	virtual ZgErrorCode beginCommandListRecording(ZgCommandList** commandListOut) noexcept = 0;
-	virtual ZgErrorCode executeCommandList(ZgCommandList* commandList) noexcept = 0;
+	virtual ZgResult signalOnGpu(ZgFence& fenceToSignal) noexcept = 0;
+	virtual ZgResult waitOnGpu(const ZgFence& fence) noexcept = 0;
+	virtual ZgResult flush() noexcept = 0;
+	virtual ZgResult beginCommandListRecording(ZgCommandList** commandListOut) noexcept = 0;
+	virtual ZgResult executeCommandList(ZgCommandList* commandList) noexcept = 0;
 };
 
 // Command lists
@@ -191,69 +191,69 @@ struct ZgCommandQueue {
 struct ZgCommandList {
 	virtual ~ZgCommandList() noexcept {};
 
-	virtual ZgErrorCode memcpyBufferToBuffer(
+	virtual ZgResult memcpyBufferToBuffer(
 		ZgBuffer* dstBuffer,
 		uint64_t dstBufferOffsetBytes,
 		ZgBuffer* srcBuffer,
 		uint64_t srcBufferOffsetBytes,
 		uint64_t numBytes) noexcept = 0;
 
-	virtual ZgErrorCode memcpyToTexture(
+	virtual ZgResult memcpyToTexture(
 		ZgTexture2D* dstTexture,
 		uint32_t dstTextureMipLevel,
 		const ZgImageViewConstCpu& srcImageCpu,
 		ZgBuffer* tempUploadBuffer) noexcept = 0;
 
-	virtual ZgErrorCode enableQueueTransitionBuffer(ZgBuffer* buffer) noexcept = 0;
+	virtual ZgResult enableQueueTransitionBuffer(ZgBuffer* buffer) noexcept = 0;
 
-	virtual ZgErrorCode enableQueueTransitionTexture(ZgTexture2D* texture) noexcept = 0;
+	virtual ZgResult enableQueueTransitionTexture(ZgTexture2D* texture) noexcept = 0;
 
-	virtual ZgErrorCode setPushConstant(
+	virtual ZgResult setPushConstant(
 		uint32_t shaderRegister,
 		const void* data,
 		uint32_t dataSizeInBytes) noexcept = 0;
 
-	virtual ZgErrorCode setPipelineBindings(
+	virtual ZgResult setPipelineBindings(
 		const ZgPipelineBindings& bindings) noexcept = 0;
 
-	virtual ZgErrorCode setPipelineRender(
+	virtual ZgResult setPipelineRender(
 		ZgPipelineRender* pipeline) noexcept = 0;
 
-	virtual ZgErrorCode setFramebuffer(
+	virtual ZgResult setFramebuffer(
 		ZgFramebuffer* framebuffer,
 		const ZgFramebufferRect* optionalViewport,
 		const ZgFramebufferRect* optionalScissor) noexcept = 0;
 
-	virtual ZgErrorCode setFramebufferViewport(
+	virtual ZgResult setFramebufferViewport(
 		const ZgFramebufferRect& viewport) noexcept = 0;
 
-	virtual ZgErrorCode setFramebufferScissor(
+	virtual ZgResult setFramebufferScissor(
 		const ZgFramebufferRect& scissor) noexcept = 0;
 
-	virtual ZgErrorCode clearFramebufferOptimal() noexcept = 0;
+	virtual ZgResult clearFramebufferOptimal() noexcept = 0;
 
-	virtual ZgErrorCode clearRenderTargets(
+	virtual ZgResult clearRenderTargets(
 		float red,
 		float green,
 		float blue,
 		float alpha) noexcept = 0;
 
-	virtual ZgErrorCode clearDepthBuffer(
+	virtual ZgResult clearDepthBuffer(
 		float depth) noexcept = 0;
 
-	virtual ZgErrorCode setIndexBuffer(
+	virtual ZgResult setIndexBuffer(
 		ZgBuffer* indexBuffer,
 		ZgIndexBufferType type) noexcept = 0;
 
-	virtual ZgErrorCode setVertexBuffer(
+	virtual ZgResult setVertexBuffer(
 		uint32_t vertexBufferSlot,
 		ZgBuffer* vertexBuffer) noexcept = 0;
 
-	virtual ZgErrorCode drawTriangles(
+	virtual ZgResult drawTriangles(
 		uint32_t startVertexIndex,
 		uint32_t numVertices) noexcept = 0;
 
-	virtual ZgErrorCode drawTrianglesIndexed(
+	virtual ZgResult drawTrianglesIndexed(
 		uint32_t startIndex,
 		uint32_t numTriangles) noexcept = 0;
 };

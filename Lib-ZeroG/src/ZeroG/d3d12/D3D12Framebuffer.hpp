@@ -72,13 +72,13 @@ public:
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode getResolution(uint32_t& widthOut, uint32_t& heightOut) const noexcept override final;
+	ZgResult getResolution(uint32_t& widthOut, uint32_t& heightOut) const noexcept override final;
 };
 
 // D3D12 Framebuffer functions
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode createFramebuffer(
+ZgResult createFramebuffer(
 	ID3D12Device3& device,
 	D3D12Framebuffer** framebufferOut,
 	const ZgFramebufferCreateInfo& createInfo) noexcept;

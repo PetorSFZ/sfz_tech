@@ -60,12 +60,12 @@ ZG_API ZgFeatureBits zgCompiledFeatures(void)
 	;
 }
 
-// Error codes
+// Results
 // ------------------------------------------------------------------------------------------------
 
-ZG_API const char* zgErrorCodeToString(ZgErrorCode errorCode)
+ZG_API const char* zgResultToString(ZgResult result)
 {
-	switch (errorCode) {
+	switch (result) {
 	case ZG_SUCCESS: return "ZG_SUCCESS";
 
 	case ZG_WARNING_GENERIC: return "ZG_WARNING_GENERIC";
@@ -81,7 +81,7 @@ ZG_API const char* zgErrorCodeToString(ZgErrorCode errorCode)
 	case ZG_ERROR_OUT_OF_COMMAND_LISTS: return "ZG_ERROR_OUT_OF_COMMAND_LISTS";
 	case ZG_ERROR_INVALID_COMMAND_LIST_STATE: return "ZG_ERROR_INVALID_COMMAND_LIST_STATE";
 	}
-	return "<UNKNOWN ERROR CODE>";
+	return "<UNKNOWN RESULT>";
 }
 
 // Context
@@ -92,7 +92,7 @@ ZG_API ZgBool zgContextAlreadyInitialized(void)
 	return zg::getBackend() == nullptr ? ZG_FALSE : ZG_TRUE;
 }
 
-ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
+ZG_API ZgResult zgContextInit(const ZgContextInitSettings* initSettings)
 {
 	// Can't use ZG_ARG_CHECK() here because logger is not yet initialized
 	if (initSettings == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
@@ -140,7 +140,7 @@ ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 	case ZG_BACKEND_D3D12:
 		{
 			ZG_INFO("zgContextInit(): Attempting to create D3D12 backend...");
-			ZgErrorCode res = zg::createD3D12Backend(&tmpContext.backend, settings);
+			ZgResult res = zg::createD3D12Backend(&tmpContext.backend, settings);
 			if (res != ZG_SUCCESS) {
 				ZG_ERROR("zgContextInit(): Could not create D3D12 backend, exiting.");
 				return res;
@@ -153,7 +153,7 @@ ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 	case ZG_BACKEND_METAL:
 		{
 			ZG_INFO("zgContextInit(): Attempting to create Metal backend...");
-			ZgErrorCode res = zg::createMetalBackend(&tmpContext.backend, settings);
+			ZgResult res = zg::createMetalBackend(&tmpContext.backend, settings);
 			if (res != ZG_SUCCESS) {
 				ZG_ERROR("zgContextInit(): Could not create Metal backend, exiting.");
 				return res;
@@ -167,7 +167,7 @@ ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 	case ZG_BACKEND_VULKAN:
 		{
 			ZG_INFO("zgContextInit(): Attempting to create Vulkan backend...");
-			ZgErrorCode res = zg::createVulkanBackend(&tmpContext.backend, settings);
+			ZgResult res = zg::createVulkanBackend(&tmpContext.backend, settings);
 			if (res != ZG_SUCCESS) {
 				ZG_ERROR("zgContextInit(): Could not create Vulkan backend, exiting.");
 				return res;
@@ -186,7 +186,7 @@ ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings)
 	return ZG_SUCCESS;
 }
 
-ZG_API ZgErrorCode zgContextDeinit(void)
+ZG_API ZgResult zgContextDeinit(void)
 {
 	if (zgContextAlreadyInitialized() == ZG_FALSE) return ZG_SUCCESS;
 
@@ -201,20 +201,20 @@ ZG_API ZgErrorCode zgContextDeinit(void)
 	return ZG_SUCCESS;
 }
 
-ZG_API ZgErrorCode zgContextSwapchainResize(
+ZG_API ZgResult zgContextSwapchainResize(
 	uint32_t width,
 	uint32_t height)
 {
 	return zg::getBackend()->swapchainResize(width, height);
 }
 
-ZG_API ZgErrorCode zgContextSwapchainBeginFrame(
+ZG_API ZgResult zgContextSwapchainBeginFrame(
 	ZgFramebuffer** framebufferOut)
 {
 	return zg::getBackend()->swapchainBeginFrame(framebufferOut);
 }
 
-ZG_API ZgErrorCode zgContextSwapchainFinishFrame(void)
+ZG_API ZgResult zgContextSwapchainFinishFrame(void)
 {
 	return zg::getBackend()->swapchainFinishFrame();
 }
@@ -222,7 +222,7 @@ ZG_API ZgErrorCode zgContextSwapchainFinishFrame(void)
 // Statistics
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgErrorCode zgContextGetStats(ZgStats* statsOut)
+ZG_API ZgResult zgContextGetStats(ZgStats* statsOut)
 {
 	ZG_ARG_CHECK(statsOut == nullptr, "");
 	return zg::getBackend()->getStats(*statsOut);
@@ -231,13 +231,13 @@ ZG_API ZgErrorCode zgContextGetStats(ZgStats* statsOut)
 // Pipeline Render - Common
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgErrorCode zgPipelineRenderRelease(
+ZG_API ZgResult zgPipelineRenderRelease(
 	ZgPipelineRender* pipeline)
 {
 	return zg::getBackend()->pipelineRenderRelease(pipeline);
 }
 
-ZG_API ZgErrorCode zgPipelineRenderGetSignature(
+ZG_API ZgResult zgPipelineRenderGetSignature(
 	const ZgPipelineRender* pipeline,
 	ZgPipelineRenderSignature* signatureOut)
 {
@@ -247,7 +247,7 @@ ZG_API ZgErrorCode zgPipelineRenderGetSignature(
 // Pipeline Render - SPIRV
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgErrorCode zgPipelineRenderCreateFromFileSPIRV(
+ZG_API ZgResult zgPipelineRenderCreateFromFileSPIRV(
 	ZgPipelineRender** pipelineOut,
 	ZgPipelineRenderSignature* signatureOut,
 	const ZgPipelineRenderCreateInfoFileSPIRV* createInfo)
@@ -272,7 +272,7 @@ ZG_API ZgErrorCode zgPipelineRenderCreateFromFileSPIRV(
 // Pipeline Render - HLSL
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgErrorCode zgPipelineRenderCreateFromFileHLSL(
+ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 	ZgPipelineRender** pipelineOut,
 	ZgPipelineRenderSignature* signatureOut,
 	const ZgPipelineRenderCreateInfoFileHLSL* createInfo)
@@ -295,7 +295,7 @@ ZG_API ZgErrorCode zgPipelineRenderCreateFromFileHLSL(
 		pipelineOut, signatureOut, *createInfo);
 }
 
-ZG_API ZgErrorCode zgPipelineRenderCreateFromSourceHLSL(
+ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
 	ZgPipelineRender** pipelineOut,
 	ZgPipelineRenderSignature* signatureOut,
 	const ZgPipelineRenderCreateInfoSourceHLSL* createInfo)
@@ -321,7 +321,7 @@ ZG_API ZgErrorCode zgPipelineRenderCreateFromSourceHLSL(
 // Memory Heap
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgErrorCode zgMemoryHeapCreate(
+ZG_API ZgResult zgMemoryHeapCreate(
 	ZgMemoryHeap** memoryHeapOut,
 	const ZgMemoryHeapCreateInfo* createInfo)
 {
@@ -331,7 +331,7 @@ ZG_API ZgErrorCode zgMemoryHeapCreate(
 	return zg::getBackend()->memoryHeapCreate(memoryHeapOut, *createInfo);
 }
 
-ZG_API ZgErrorCode zgMemoryHeapRelease(
+ZG_API ZgResult zgMemoryHeapRelease(
 	ZgMemoryHeap* memoryHeap)
 {
 	return zg::getBackend()->memoryHeapRelease(memoryHeap);
@@ -340,7 +340,7 @@ ZG_API ZgErrorCode zgMemoryHeapRelease(
 // Buffer
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgErrorCode zgMemoryHeapBufferCreate(
+ZG_API ZgResult zgMemoryHeapBufferCreate(
 	ZgMemoryHeap* memoryHeap,
 	ZgBuffer** bufferOut,
 	const ZgBufferCreateInfo* createInfo)
@@ -358,7 +358,7 @@ ZG_API void zgBufferRelease(
 	zg::zgDelete(buffer);
 }
 
-ZG_API ZgErrorCode zgBufferMemcpyTo(
+ZG_API ZgResult zgBufferMemcpyTo(
 	ZgBuffer* dstBuffer,
 	uint64_t bufferOffsetBytes,
 	const void* srcMemory,
@@ -371,7 +371,7 @@ ZG_API ZgErrorCode zgBufferMemcpyTo(
 		numBytes);
 }
 
-ZG_API ZgErrorCode zgBufferSetDebugName(
+ZG_API ZgResult zgBufferSetDebugName(
 	ZgBuffer* buffer,
 	const char* name)
 {
@@ -382,7 +382,7 @@ ZG_API ZgErrorCode zgBufferSetDebugName(
 // Textures
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgErrorCode zgTexture2DGetAllocationInfo(
+ZG_API ZgResult zgTexture2DGetAllocationInfo(
 	ZgTexture2DAllocationInfo* allocationInfoOut,
 	const ZgTexture2DCreateInfo* createInfo)
 {
@@ -393,7 +393,7 @@ ZG_API ZgErrorCode zgTexture2DGetAllocationInfo(
 	return zg::getBackend()->texture2DGetAllocationInfo(*allocationInfoOut, *createInfo);
 }
 
-ZG_API ZgErrorCode zgMemoryHeapTexture2DCreate(
+ZG_API ZgResult zgMemoryHeapTexture2DCreate(
 	ZgMemoryHeap* memoryHeap,
 	ZgTexture2D** textureOut,
 	const ZgTexture2DCreateInfo* createInfo)
@@ -415,7 +415,7 @@ ZG_API void zgTexture2DRelease(
 	zg::zgDelete(texture);
 }
 
-ZG_API ZgErrorCode zgTexture2DSetDebugName(
+ZG_API ZgResult zgTexture2DSetDebugName(
 	ZgTexture2D* texture,
 	const char* name)
 {
@@ -427,7 +427,7 @@ ZG_API ZgErrorCode zgTexture2DSetDebugName(
 // Framebuffer
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgErrorCode zgFramebufferCreate(
+ZG_API ZgResult zgFramebufferCreate(
 	ZgFramebuffer** framebufferOut,
 	const ZgFramebufferCreateInfo* createInfo)
 {
@@ -446,7 +446,7 @@ ZG_API void zgFramebufferRelease(
 	return zg::getBackend()->framebufferRelease(framebuffer);
 }
 
-ZG_API ZgErrorCode zgFramebufferGetResolution(
+ZG_API ZgResult zgFramebufferGetResolution(
 	const ZgFramebuffer* framebuffer,
 	uint32_t* widthOut,
 	uint32_t* heightOut)
@@ -457,7 +457,7 @@ ZG_API ZgErrorCode zgFramebufferGetResolution(
 // Fence
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgErrorCode zgFenceCreate(
+ZG_API ZgResult zgFenceCreate(
 	ZgFence** fenceOut)
 {
 	return zg::getBackend()->fenceCreate(fenceOut);
@@ -470,23 +470,23 @@ ZG_API void zgFenceRelease(
 	zg::zgDelete(fence);
 }
 
-ZG_API ZgErrorCode zgFenceReset(
+ZG_API ZgResult zgFenceReset(
 	ZgFence* fence)
 {
 	return fence->reset();
 }
 
-ZG_API ZgErrorCode zgFenceCheckIfSignaled(
+ZG_API ZgResult zgFenceCheckIfSignaled(
 	const ZgFence* fence,
 	ZgBool* fenceSignaledOut)
 {
 	bool fenceSignaled = false;
-	ZgErrorCode res = fence->checkIfSignaled(fenceSignaled);
+	ZgResult res = fence->checkIfSignaled(fenceSignaled);
 	*fenceSignaledOut = fenceSignaled ? ZG_TRUE : ZG_FALSE;
 	return res;
 }
 
-ZG_API ZgErrorCode zgFenceWaitOnCpuBlocking(
+ZG_API ZgResult zgFenceWaitOnCpuBlocking(
 	const ZgFence* fence)
 {
 	return fence->waitOnCpuBlocking();
@@ -495,46 +495,46 @@ ZG_API ZgErrorCode zgFenceWaitOnCpuBlocking(
 // Command queue
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgErrorCode zgCommandQueueGetPresentQueue(
+ZG_API ZgResult zgCommandQueueGetPresentQueue(
 	ZgCommandQueue** presentQueueOut)
 {
 	return zg::getBackend()->getPresentQueue(presentQueueOut);
 }
 
-ZG_API ZgErrorCode zgCommandQueueGetCopyQueue(
+ZG_API ZgResult zgCommandQueueGetCopyQueue(
 	ZgCommandQueue** copyQueueOut)
 {
 	return zg::getBackend()->getCopyQueue(copyQueueOut);
 }
 
-ZG_API ZgErrorCode zgCommandQueueSignalOnGpu(
+ZG_API ZgResult zgCommandQueueSignalOnGpu(
 	ZgCommandQueue* commandQueue,
 	ZgFence* fenceToSignal)
 {
 	return commandQueue->signalOnGpu(*fenceToSignal);
 }
 
-ZG_API ZgErrorCode zgCommandQueueWaitOnGpu(
+ZG_API ZgResult zgCommandQueueWaitOnGpu(
 	ZgCommandQueue* commandQueue,
 	const ZgFence* fence)
 {
 	return commandQueue->waitOnGpu(*fence);
 }
 
-ZG_API ZgErrorCode zgCommandQueueFlush(
+ZG_API ZgResult zgCommandQueueFlush(
 	ZgCommandQueue* commandQueue)
 {
 	return commandQueue->flush();
 }
 
-ZG_API ZgErrorCode zgCommandQueueBeginCommandListRecording(
+ZG_API ZgResult zgCommandQueueBeginCommandListRecording(
 	ZgCommandQueue* commandQueue,
 	ZgCommandList** commandListOut)
 {
 	return commandQueue->beginCommandListRecording(commandListOut);
 }
 
-ZG_API ZgErrorCode zgCommandQueueExecuteCommandList(
+ZG_API ZgResult zgCommandQueueExecuteCommandList(
 	ZgCommandQueue* commandQueue,
 	ZgCommandList* commandList)
 {
@@ -544,7 +544,7 @@ ZG_API ZgErrorCode zgCommandQueueExecuteCommandList(
 // Command list
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgErrorCode zgCommandListMemcpyBufferToBuffer(
+ZG_API ZgResult zgCommandListMemcpyBufferToBuffer(
 	ZgCommandList* commandList,
 	ZgBuffer* dstBuffer,
 	uint64_t dstBufferOffsetBytes,
@@ -561,7 +561,7 @@ ZG_API ZgErrorCode zgCommandListMemcpyBufferToBuffer(
 		numBytes);
 }
 
-ZG_API ZgErrorCode zgCommandListMemcpyToTexture(
+ZG_API ZgResult zgCommandListMemcpyToTexture(
 	ZgCommandList* commandList,
 	ZgTexture2D* dstTexture,
 	uint32_t dstTextureMipLevel,
@@ -580,21 +580,21 @@ ZG_API ZgErrorCode zgCommandListMemcpyToTexture(
 		tempUploadBuffer);
 }
 
-ZG_API ZgErrorCode zgCommandListEnableQueueTransitionBuffer(
+ZG_API ZgResult zgCommandListEnableQueueTransitionBuffer(
 	ZgCommandList* commandList,
 	ZgBuffer* buffer)
 {
 	return commandList->enableQueueTransitionBuffer(buffer);
 }
 
-ZG_API ZgErrorCode zgCommandListEnableQueueTransitionTexture(
+ZG_API ZgResult zgCommandListEnableQueueTransitionTexture(
 	ZgCommandList* commandList,
 	ZgTexture2D* texture)
 {
 	return commandList->enableQueueTransitionTexture(texture);
 }
 
-ZG_API ZgErrorCode zgCommandListSetPushConstant(
+ZG_API ZgResult zgCommandListSetPushConstant(
 	ZgCommandList* commandList,
 	uint32_t shaderRegister,
 	const void* data,
@@ -604,21 +604,21 @@ ZG_API ZgErrorCode zgCommandListSetPushConstant(
 	return commandList->setPushConstant(shaderRegister, data, dataSizeInBytes);
 }
 
-ZG_API ZgErrorCode zgCommandListSetPipelineBindings(
+ZG_API ZgResult zgCommandListSetPipelineBindings(
 	ZgCommandList* commandList,
 	const ZgPipelineBindings* bindings)
 {
 	return commandList->setPipelineBindings(*bindings);
 }
 
-ZG_API ZgErrorCode zgCommandListSetPipelineRender(
+ZG_API ZgResult zgCommandListSetPipelineRender(
 	ZgCommandList* commandList,
 	ZgPipelineRender* pipeline)
 {
 	return commandList->setPipelineRender(pipeline);
 }
 
-ZG_API ZgErrorCode zgCommandListSetFramebuffer(
+ZG_API ZgResult zgCommandListSetFramebuffer(
 	ZgCommandList* commandList,
 	ZgFramebuffer* framebuffer,
 	const ZgFramebufferRect* optionalViewport,
@@ -627,27 +627,27 @@ ZG_API ZgErrorCode zgCommandListSetFramebuffer(
 	return commandList->setFramebuffer(framebuffer, optionalViewport, optionalScissor);
 }
 
-ZG_API ZgErrorCode zgCommandListSetFramebufferViewport(
+ZG_API ZgResult zgCommandListSetFramebufferViewport(
 	ZgCommandList* commandList,
 	const ZgFramebufferRect* viewport)
 {
 	return commandList->setFramebufferViewport(*viewport);
 }
 
-ZG_API ZgErrorCode zgCommandListSetFramebufferScissor(
+ZG_API ZgResult zgCommandListSetFramebufferScissor(
 	ZgCommandList* commandList,
 	const ZgFramebufferRect* scissor)
 {
 	return commandList->setFramebufferScissor(*scissor);
 }
 
-ZG_API ZgErrorCode zgCommandListClearFramebufferOptimal(
+ZG_API ZgResult zgCommandListClearFramebufferOptimal(
 	ZgCommandList* commandList)
 {
 	return commandList->clearFramebufferOptimal();
 }
 
-ZG_API ZgErrorCode zgCommandListClearRenderTargets(
+ZG_API ZgResult zgCommandListClearRenderTargets(
 	ZgCommandList* commandList,
 	float red,
 	float green,
@@ -657,14 +657,14 @@ ZG_API ZgErrorCode zgCommandListClearRenderTargets(
 	return commandList->clearRenderTargets(red, green, blue, alpha);
 }
 
-ZG_API ZgErrorCode zgCommandListClearDepthBuffer(
+ZG_API ZgResult zgCommandListClearDepthBuffer(
 	ZgCommandList* commandList,
 	float depth)
 {
 	return commandList->clearDepthBuffer(depth);
 }
 
-ZG_API ZgErrorCode zgCommandListSetIndexBuffer(
+ZG_API ZgResult zgCommandListSetIndexBuffer(
 	ZgCommandList* commandList,
 	ZgBuffer* indexBuffer,
 	ZgIndexBufferType type)
@@ -672,7 +672,7 @@ ZG_API ZgErrorCode zgCommandListSetIndexBuffer(
 	return commandList->setIndexBuffer(indexBuffer, type);
 }
 
-ZG_API ZgErrorCode zgCommandListSetVertexBuffer(
+ZG_API ZgResult zgCommandListSetVertexBuffer(
 	ZgCommandList* commandList,
 	uint32_t vertexBufferSlot,
 	ZgBuffer* vertexBuffer)
@@ -681,7 +681,7 @@ ZG_API ZgErrorCode zgCommandListSetVertexBuffer(
 		vertexBufferSlot, vertexBuffer);
 }
 
-ZG_API ZgErrorCode zgCommandListDrawTriangles(
+ZG_API ZgResult zgCommandListDrawTriangles(
 	ZgCommandList* commandList,
 	uint32_t startVertexIndex,
 	uint32_t numVertices)
@@ -690,7 +690,7 @@ ZG_API ZgErrorCode zgCommandListDrawTriangles(
 	return commandList->drawTriangles(startVertexIndex, numVertices);
 }
 
-ZG_API ZgErrorCode zgCommandListDrawTrianglesIndexed(
+ZG_API ZgResult zgCommandListDrawTrianglesIndexed(
 	ZgCommandList* commandList,
 	uint32_t startIndex,
 	uint32_t numTriangles)

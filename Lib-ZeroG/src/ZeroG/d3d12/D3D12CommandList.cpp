@@ -118,7 +118,7 @@ void D3D12CommandList::destroy() noexcept
 // D3D12CommandList: Virtual methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode D3D12CommandList::memcpyBufferToBuffer(
+ZgResult D3D12CommandList::memcpyBufferToBuffer(
 	ZgBuffer* dstBufferIn,
 	uint64_t dstBufferOffsetBytes,
 	ZgBuffer* srcBufferIn,
@@ -140,7 +140,7 @@ ZgErrorCode D3D12CommandList::memcpyBufferToBuffer(
 	}
 
 	// Set buffer resource states
-	ZgErrorCode res = setBufferState(dstBuffer, dstTargetState);
+	ZgResult res = setBufferState(dstBuffer, dstTargetState);
 	if (res != ZG_SUCCESS) return res;
 	res = setBufferState(srcBuffer, srcTargetState);
 	if (res != ZG_SUCCESS) return res;
@@ -174,7 +174,7 @@ ZgErrorCode D3D12CommandList::memcpyBufferToBuffer(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::memcpyToTexture(
+ZgResult D3D12CommandList::memcpyToTexture(
 	ZgTexture2D* dstTextureIn,
 	uint32_t dstTextureMipLevel,
 	const ZgImageViewConstCpu& srcImageCpu,
@@ -240,7 +240,7 @@ ZgErrorCode D3D12CommandList::memcpyToTexture(
 	tmpBuffer.resource->Unmap(0, nullptr);
 
 	// Set texture resource state
-	ZgErrorCode stateRes = setTextureState(dstTexture, dstTextureMipLevel, D3D12_RESOURCE_STATE_COPY_DEST);
+	ZgResult stateRes = setTextureState(dstTexture, dstTextureMipLevel, D3D12_RESOURCE_STATE_COPY_DEST);
 	if (stateRes != ZG_SUCCESS) return stateRes;
 
 	// Insert into residency set
@@ -270,7 +270,7 @@ ZgErrorCode D3D12CommandList::memcpyToTexture(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::enableQueueTransitionBuffer(ZgBuffer* bufferIn) noexcept
+ZgResult D3D12CommandList::enableQueueTransitionBuffer(ZgBuffer* bufferIn) noexcept
 {
 	// Cast to D3D12
 	D3D12Buffer& buffer = *reinterpret_cast<D3D12Buffer*>(bufferIn);
@@ -283,25 +283,25 @@ ZgErrorCode D3D12CommandList::enableQueueTransitionBuffer(ZgBuffer* bufferIn) no
 	}
 
 	// Set buffer resource state
-	ZgErrorCode res = setBufferState(buffer, D3D12_RESOURCE_STATE_COMMON);
+	ZgResult res = setBufferState(buffer, D3D12_RESOURCE_STATE_COMMON);
 	if (res != ZG_SUCCESS) return res;
 
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::enableQueueTransitionTexture(ZgTexture2D* textureIn) noexcept
+ZgResult D3D12CommandList::enableQueueTransitionTexture(ZgTexture2D* textureIn) noexcept
 {
 	// Cast to D3D12
 	D3D12Texture2D& texture = *reinterpret_cast<D3D12Texture2D*>(textureIn);
 
 	// Set buffer resource state
-	ZgErrorCode res = setTextureStateAllMipLevels(texture, D3D12_RESOURCE_STATE_COMMON);
+	ZgResult res = setTextureStateAllMipLevels(texture, D3D12_RESOURCE_STATE_COMMON);
 	if (res != ZG_SUCCESS) return res;
 
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::setPushConstant(
+ZgResult D3D12CommandList::setPushConstant(
 	uint32_t shaderRegister,
 	const void* dataPtr,
 	uint32_t dataSizeInBytes) noexcept
@@ -342,7 +342,7 @@ ZgErrorCode D3D12CommandList::setPushConstant(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::setPipelineBindings(
+ZgResult D3D12CommandList::setPipelineBindings(
 	const ZgPipelineBindings& bindings) noexcept
 {
 	// Require that a pipeline has been set so we can query its parameters
@@ -356,7 +356,7 @@ ZgErrorCode D3D12CommandList::setPipelineBindings(
 	// Allocate descriptors
 	D3D12_CPU_DESCRIPTOR_HANDLE rangeStartCpu = {};
 	D3D12_GPU_DESCRIPTOR_HANDLE rangeStartGpu = {};
-	ZgErrorCode allocRes = mDescriptorBuffer->allocateDescriptorRange(
+	ZgResult allocRes = mDescriptorBuffer->allocateDescriptorRange(
 		numConstantBuffers + numTextures, rangeStartCpu, rangeStartGpu);
 	if (allocRes != ZG_SUCCESS) return allocRes;
 
@@ -486,7 +486,7 @@ ZgErrorCode D3D12CommandList::setPipelineBindings(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::setPipelineRender(
+ZgResult D3D12CommandList::setPipelineRender(
 	ZgPipelineRender* pipelineIn) noexcept
 {
 	D3D12PipelineRender& pipeline = *reinterpret_cast<D3D12PipelineRender*>(pipelineIn);
@@ -508,7 +508,7 @@ ZgErrorCode D3D12CommandList::setPipelineRender(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::setFramebuffer(
+ZgResult D3D12CommandList::setFramebuffer(
 	ZgFramebuffer* framebufferIn,
 	const ZgFramebufferRect* optionalViewport,
 	const ZgFramebufferRect* optionalScissor) noexcept
@@ -611,7 +611,7 @@ ZgErrorCode D3D12CommandList::setFramebuffer(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::setFramebufferViewport(
+ZgResult D3D12CommandList::setFramebufferViewport(
 	const ZgFramebufferRect& viewportRect) noexcept
 {
 	// Return error if no framebuffer is set
@@ -633,7 +633,7 @@ ZgErrorCode D3D12CommandList::setFramebufferViewport(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::setFramebufferScissor(
+ZgResult D3D12CommandList::setFramebufferScissor(
 	const ZgFramebufferRect& scissor) noexcept
 {
 	// Return error if no framebuffer is set
@@ -664,7 +664,7 @@ ZgErrorCode D3D12CommandList::setFramebufferScissor(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::clearFramebufferOptimal() noexcept
+ZgResult D3D12CommandList::clearFramebufferOptimal() noexcept
 {
 	// Return error if no framebuffer is set
 	if (!mFramebufferSet) {
@@ -712,7 +712,7 @@ ZgErrorCode D3D12CommandList::clearFramebufferOptimal() noexcept
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::clearRenderTargets(
+ZgResult D3D12CommandList::clearRenderTargets(
 	float red,
 	float green,
 	float blue,
@@ -735,7 +735,7 @@ ZgErrorCode D3D12CommandList::clearRenderTargets(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::clearDepthBuffer(
+ZgResult D3D12CommandList::clearDepthBuffer(
 	float depth) noexcept
 {
 	// Return error if no framebuffer is set
@@ -749,7 +749,7 @@ ZgErrorCode D3D12CommandList::clearDepthBuffer(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::setIndexBuffer(
+ZgResult D3D12CommandList::setIndexBuffer(
 	ZgBuffer* indexBufferIn,
 	ZgIndexBufferType type) noexcept
 {
@@ -757,7 +757,7 @@ ZgErrorCode D3D12CommandList::setIndexBuffer(
 	D3D12Buffer& indexBuffer = *reinterpret_cast<D3D12Buffer*>(indexBufferIn);
 
 	// Set buffer resource state
-	ZgErrorCode res;
+	ZgResult res;
 	if (indexBuffer.memoryHeap->memoryType == ZG_MEMORY_TYPE_DEVICE) {
 		res = setBufferState(indexBuffer, D3D12_RESOURCE_STATE_INDEX_BUFFER);
 	}
@@ -786,7 +786,7 @@ ZgErrorCode D3D12CommandList::setIndexBuffer(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::setVertexBuffer(
+ZgResult D3D12CommandList::setVertexBuffer(
 	uint32_t vertexBufferSlot,
 	ZgBuffer* vertexBufferIn) noexcept
 {
@@ -803,7 +803,7 @@ ZgErrorCode D3D12CommandList::setVertexBuffer(
 	}
 
 	// Set buffer resource state
-	ZgErrorCode res;
+	ZgResult res;
 	if (vertexBuffer.memoryHeap->memoryType == ZG_MEMORY_TYPE_DEVICE) {
 		res = setBufferState(vertexBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 	}
@@ -830,7 +830,7 @@ ZgErrorCode D3D12CommandList::setVertexBuffer(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::drawTriangles(
+ZgResult D3D12CommandList::drawTriangles(
 	uint32_t startVertexIndex,
 	uint32_t numVertices) noexcept
 {	
@@ -840,7 +840,7 @@ ZgErrorCode D3D12CommandList::drawTriangles(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::drawTrianglesIndexed(
+ZgResult D3D12CommandList::drawTrianglesIndexed(
 	uint32_t startIndex,
 	uint32_t numTriangles) noexcept
 {
@@ -853,7 +853,7 @@ ZgErrorCode D3D12CommandList::drawTrianglesIndexed(
 // D3D12CommandList: Helper methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode D3D12CommandList::reset() noexcept
+ZgResult D3D12CommandList::reset() noexcept
 {
 	if (D3D12_FAIL(commandAllocator->Reset())) {
 		return ZG_ERROR_GENERIC;
@@ -878,7 +878,7 @@ ZgErrorCode D3D12CommandList::reset() noexcept
 // D3D12CommandList: Private methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode D3D12CommandList::getPendingBufferStates(
+ZgResult D3D12CommandList::getPendingBufferStates(
 	D3D12Buffer& buffer,
 	D3D12_RESOURCE_STATES neededState,
 	PendingBufferState*& pendingStatesOut) noexcept
@@ -916,12 +916,12 @@ ZgErrorCode D3D12CommandList::getPendingBufferStates(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::setBufferState(
+ZgResult D3D12CommandList::setBufferState(
 	D3D12Buffer& buffer, D3D12_RESOURCE_STATES targetState) noexcept
 {
 	// Get pending states
 	PendingBufferState* pendingState = nullptr;
-	ZgErrorCode pendingStateRes = getPendingBufferStates(
+	ZgResult pendingStateRes = getPendingBufferStates(
 		buffer, targetState, pendingState);
 	if (pendingStateRes != ZG_SUCCESS) return pendingStateRes;
 
@@ -938,7 +938,7 @@ ZgErrorCode D3D12CommandList::setBufferState(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::getPendingTextureStates(
+ZgResult D3D12CommandList::getPendingTextureStates(
 	D3D12Texture2D& texture,
 	uint32_t mipLevel,
 	D3D12_RESOURCE_STATES neededState,
@@ -981,14 +981,14 @@ ZgErrorCode D3D12CommandList::getPendingTextureStates(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::setTextureState(
+ZgResult D3D12CommandList::setTextureState(
 	D3D12Texture2D& texture,
 	uint32_t mipLevel,
 	D3D12_RESOURCE_STATES targetState) noexcept
 {
 	// Get pending states
 	PendingTextureState* pendingState = nullptr;
-	ZgErrorCode pendingStateRes = getPendingTextureStates(
+	ZgResult pendingStateRes = getPendingTextureStates(
 		texture, mipLevel, targetState, pendingState);
 	if (pendingStateRes != ZG_SUCCESS) return pendingStateRes;
 
@@ -1006,14 +1006,14 @@ ZgErrorCode D3D12CommandList::setTextureState(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandList::setTextureStateAllMipLevels(
+ZgResult D3D12CommandList::setTextureStateAllMipLevels(
 	D3D12Texture2D& texture,
 	D3D12_RESOURCE_STATES targetState) noexcept
 {
 	// Get pending states
 	PendingTextureState* pendingStates[ZG_MAX_NUM_MIPMAPS] = {};
 	for (uint32_t i = 0; i < texture.numMipmaps; i++) {
-		ZgErrorCode pendingStateRes = getPendingTextureStates(
+		ZgResult pendingStateRes = getPendingTextureStates(
 			texture, i, targetState, pendingStates[i]);
 		if (pendingStateRes != ZG_SUCCESS) return pendingStateRes;
 	}

@@ -51,11 +51,11 @@ public:
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode bufferCreate(
+	ZgResult bufferCreate(
 		ZgBuffer** bufferOut,
 		const ZgBufferCreateInfo& createInfo) noexcept override final;
 
-	ZgErrorCode texture2DCreate(
+	ZgResult texture2DCreate(
 		ZgTexture2D** textureOut,
 		const ZgTexture2DCreateInfo& createInfo) noexcept override final;
 
@@ -74,7 +74,7 @@ public:
 // D3D12 Memory Heap functions
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode createMemoryHeap(
+ZgResult createMemoryHeap(
 	ID3D12Device3& device,
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
 	D3DX12Residency::ResidencyManager& residencyManager,

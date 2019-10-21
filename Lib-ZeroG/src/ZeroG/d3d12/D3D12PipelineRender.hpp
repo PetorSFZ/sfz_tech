@@ -75,7 +75,7 @@ public:
 // D3D12 PipelineRender functions
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode createPipelineRenderFileSPIRV(
+ZgResult createPipelineRenderFileSPIRV(
 	D3D12PipelineRender** pipelineOut,
 	ZgPipelineRenderSignature* signatureOut,
 	ZgPipelineRenderCreateInfoFileSPIRV createInfo,
@@ -84,7 +84,7 @@ ZgErrorCode createPipelineRenderFileSPIRV(
 	IDxcIncludeHandler* dxcIncludeHandler,
 	ID3D12Device3& device) noexcept;
 
-ZgErrorCode createPipelineRenderFileHLSL(
+ZgResult createPipelineRenderFileHLSL(
 	D3D12PipelineRender** pipelineOut,
 	ZgPipelineRenderSignature* signatureOut,
 	const ZgPipelineRenderCreateInfoFileHLSL& createInfo,
@@ -93,7 +93,7 @@ ZgErrorCode createPipelineRenderFileHLSL(
 	IDxcIncludeHandler* dxcIncludeHandler,
 	ID3D12Device3& device) noexcept;
 
-ZgErrorCode createPipelineRenderSourceHLSL(
+ZgResult createPipelineRenderSourceHLSL(
 	D3D12PipelineRender** pipelineOut,
 	ZgPipelineRenderSignature* signatureOut,
 	const ZgPipelineRenderCreateInfoSourceHLSL& createInfo,

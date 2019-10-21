@@ -39,10 +39,10 @@ class CommandQueue;
 class CommandList;
 
 
-// Error handling
+// Results
 // ------------------------------------------------------------------------------------------------
 
-enum class [[nodiscard]] ErrorCode : ZgErrorCode {
+enum class [[nodiscard]] Result : ZgResult {
 
 	SUCCESS = ZG_SUCCESS,
 
@@ -60,9 +60,9 @@ enum class [[nodiscard]] ErrorCode : ZgErrorCode {
 	INVALID_COMMAND_LIST_STATE = ZG_ERROR_INVALID_COMMAND_LIST_STATE
 };
 
-constexpr bool isSuccess(ErrorCode code) noexcept { return code == ErrorCode::SUCCESS; }
-constexpr bool isWarning(ErrorCode code) noexcept { return ZgErrorCode(code) > 0; }
-constexpr bool isError(ErrorCode code) noexcept { return ZgErrorCode(code) < 0; }
+constexpr bool isSuccess(Result code) noexcept { return code == Result::SUCCESS; }
+constexpr bool isWarning(Result code) noexcept { return ZgResult(code) > 0; }
+constexpr bool isError(Result code) noexcept { return ZgResult(code) < 0; }
 
 
 // Context
@@ -89,7 +89,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	// Creates and initializes a context, see zgContextInit()
-	ErrorCode init(const ZgContextInitSettings& settings) noexcept;
+	Result init(const ZgContextInitSettings& settings) noexcept;
 
 	// Deinitializes a context, see zgContextDeinit()
 	//
@@ -117,16 +117,16 @@ public:
 	// Resizes the back buffers in the swap chain, safe to call every frame.
 	//
 	// See zgContextSwapchainResize()
-	ErrorCode swapchainResize(uint32_t width, uint32_t height) noexcept;
+	Result swapchainResize(uint32_t width, uint32_t height) noexcept;
 
 	// See zgContextSwapchainBeginFrame()
-	ErrorCode swapchainBeginFrame(Framebuffer& framebufferOut) noexcept;
+	Result swapchainBeginFrame(Framebuffer& framebufferOut) noexcept;
 
 	// See zgContextSwapchainFinishFrame()
-	ErrorCode swapchainFinishFrame() noexcept;
+	Result swapchainFinishFrame() noexcept;
 
 	// See zgContextGetStats()
-	ErrorCode getStats(ZgStats& statsOut) noexcept;
+	Result getStats(ZgStats& statsOut) noexcept;
 
 	// Private members
 	// --------------------------------------------------------------------------------------------
@@ -207,10 +207,10 @@ public:
 	PipelineRenderBuilder& setDepthTestEnabled(bool depthTestEnabled) noexcept;
 	PipelineRenderBuilder& setDepthFunc(ZgDepthFunc depthFunc) noexcept;
 
-	ErrorCode buildFromFileSPIRV(PipelineRender& pipelineOut) const noexcept;
-	ErrorCode buildFromFileHLSL(
+	Result buildFromFileSPIRV(PipelineRender& pipelineOut) const noexcept;
+	Result buildFromFileHLSL(
 		PipelineRender& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0) const noexcept;
-	ErrorCode buildFromSourceHLSL(
+	Result buildFromSourceHLSL(
 		PipelineRender& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0) const noexcept;
 };
 
@@ -243,15 +243,15 @@ public:
 	bool valid() const noexcept { return this->pipeline != nullptr; }
 
 	// See zgPipelineRenderCreateFromFileSPIRV()
-	ErrorCode createFromFileSPIRV(
+	Result createFromFileSPIRV(
 		const ZgPipelineRenderCreateInfoFileSPIRV& createInfo) noexcept;
 
 	// See ZgPipelineRenderCreateInfoFileHLSL()
-	ErrorCode createFromFileHLSL(
+	Result createFromFileHLSL(
 		const ZgPipelineRenderCreateInfoFileHLSL& createInfo) noexcept;
 
 	// See ZgPipelineRenderCreateInfoSourceHLSL()
-	ErrorCode createFromSourceHLSL(
+	Result createFromSourceHLSL(
 		const ZgPipelineRenderCreateInfoSourceHLSL& createInfo) noexcept;
 
 	void swap(PipelineRender& other) noexcept;
@@ -287,8 +287,8 @@ public:
 	bool valid() const noexcept { return memoryHeap != nullptr; }
 
 	// See zgMemoryHeapCreate()
-	ErrorCode create(const ZgMemoryHeapCreateInfo& createInfo) noexcept;
-	ErrorCode create(uint64_t sizeInBytes, ZgMemoryType memoryType) noexcept;
+	Result create(const ZgMemoryHeapCreateInfo& createInfo) noexcept;
+	Result create(uint64_t sizeInBytes, ZgMemoryType memoryType) noexcept;
 
 	void swap(MemoryHeap& other) noexcept;
 
@@ -299,11 +299,11 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	// See zgMemoryHeapBufferCreate()
-	ErrorCode bufferCreate(Buffer& bufferOut, const ZgBufferCreateInfo& createInfo) noexcept;
-	ErrorCode bufferCreate(Buffer& bufferOut, uint64_t offset, uint64_t size) noexcept;
+	Result bufferCreate(Buffer& bufferOut, const ZgBufferCreateInfo& createInfo) noexcept;
+	Result bufferCreate(Buffer& bufferOut, uint64_t offset, uint64_t size) noexcept;
 
 	// See zgMemoryHeapTexture2DCreate()
-	ErrorCode texture2DCreate(
+	Result texture2DCreate(
 		Texture2D& textureOut, const ZgTexture2DCreateInfo& createInfo) noexcept;
 };
 
@@ -342,10 +342,10 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	// See zgBufferMemcpyTo()
-	ErrorCode memcpyTo(uint64_t bufferOffsetBytes, const void* srcMemory, uint64_t numBytes);
+	Result memcpyTo(uint64_t bufferOffsetBytes, const void* srcMemory, uint64_t numBytes);
 
 	// See zgBufferSetDebugName()
-	ErrorCode setDebugName(const char* name) noexcept;
+	Result setDebugName(const char* name) noexcept;
 };
 
 
@@ -383,12 +383,12 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	// See zgTexture2DGetAllocationInfo
-	static ErrorCode getAllocationInfo(
+	static Result getAllocationInfo(
 		ZgTexture2DAllocationInfo& allocationInfoOut,
 		const ZgTexture2DCreateInfo& createInfo) noexcept;
 
 	// See zgTexture2DSetDebugName()
-	ErrorCode setDebugName(const char* name) noexcept;
+	Result setDebugName(const char* name) noexcept;
 };
 
 
@@ -417,7 +417,7 @@ public:
 	FramebufferBuilder& addRenderTarget(Texture2D& renderTarget) noexcept;
 	FramebufferBuilder& setDepthBuffer(Texture2D& depthBuffer) noexcept;
 
-	ErrorCode build(Framebuffer& framebufferOut) noexcept;
+	Result build(Framebuffer& framebufferOut) noexcept;
 };
 
 
@@ -449,7 +449,7 @@ public:
 	bool valid() const noexcept { return this->framebuffer != nullptr; }
 
 	// See zgFramebufferCreate()
-	ErrorCode create(const ZgFramebufferCreateInfo& createInfo) noexcept;
+	Result create(const ZgFramebufferCreateInfo& createInfo) noexcept;
 
 	void swap(Framebuffer& other) noexcept;
 
@@ -484,7 +484,7 @@ public:
 	bool valid() const noexcept { return this->fence != nullptr; }
 
 	// See zgFenceCreate()
-	ErrorCode create() noexcept;
+	Result create() noexcept;
 
 	void swap(Fence& other) noexcept;
 
@@ -495,14 +495,14 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	// See zgFenceReset()
-	ErrorCode reset() noexcept;
+	Result reset() noexcept;
 
 	// See zgFenceCheckIfSignaled()
-	ErrorCode checkIfSignaled(bool& fenceSignaledOut) const noexcept;
+	Result checkIfSignaled(bool& fenceSignaledOut) const noexcept;
 	bool checkIfSignaled() const noexcept;
 
 	// See zgFenceWaitOnCpuBlocking()
-	ErrorCode waitOnCpuBlocking() const noexcept;
+	Result waitOnCpuBlocking() const noexcept;
 };
 
 
@@ -527,10 +527,10 @@ public:
 	~CommandQueue() noexcept { this->release(); }
 
 	// See zgCommandQueueGetPresentQueue()
-	static ErrorCode getPresentQueue(CommandQueue& presentQueueOut) noexcept;
+	static Result getPresentQueue(CommandQueue& presentQueueOut) noexcept;
 
 	// See zgCommandQueueGetCopyQueue()
-	static ErrorCode getCopyQueue(CommandQueue& copyQueueOut) noexcept;
+	static Result getCopyQueue(CommandQueue& copyQueueOut) noexcept;
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
@@ -546,19 +546,19 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	// See zgCommandQueueSignalOnGpu()
-	ErrorCode signalOnGpu(Fence& fenceToSignal) noexcept;
+	Result signalOnGpu(Fence& fenceToSignal) noexcept;
 
 	// See zgCommandQueueWaitOnGpu()
-	ErrorCode waitOnGpu(const Fence& fence) noexcept;
+	Result waitOnGpu(const Fence& fence) noexcept;
 
 	// See zgCommandQueueFlush()
-	ErrorCode flush() noexcept;
+	Result flush() noexcept;
 
 	// See zgCommandQueueBeginCommandListRecording()
-	ErrorCode beginCommandListRecording(CommandList& commandListOut) noexcept;
+	Result beginCommandListRecording(CommandList& commandListOut) noexcept;
 
 	// See zgCommandQueueExecuteCommandList()
-	ErrorCode executeCommandList(CommandList& commandList) noexcept;
+	Result executeCommandList(CommandList& commandList) noexcept;
 };
 
 
@@ -643,7 +643,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	// See zgCommandListMemcpyBufferToBuffer()
-	ErrorCode memcpyBufferToBuffer(
+	Result memcpyBufferToBuffer(
 		Buffer& dstBuffer,
 		uint64_t dstBufferOffsetBytes,
 		Buffer& srcBuffer,
@@ -651,62 +651,62 @@ public:
 		uint64_t numBytes) noexcept;
 
 	// See zgCommandListMemcpyToTexture()
-	ErrorCode memcpyToTexture(
+	Result memcpyToTexture(
 		Texture2D& dstTexture,
 		uint32_t dstTextureMipLevel,
 		const ZgImageViewConstCpu& srcImageCpu,
 		Buffer& tempUploadBuffer) noexcept;
 
 	// See zgCommandListEnableQueueTransitionBuffer()
-	ErrorCode enableQueueTransition(Buffer& buffer) noexcept;
+	Result enableQueueTransition(Buffer& buffer) noexcept;
 
 	// See zgCommandListEnableQueueTransitionTexture()
-	ErrorCode enableQueueTransition(Texture2D& texture) noexcept;
+	Result enableQueueTransition(Texture2D& texture) noexcept;
 
 	// See zgCommandListSetPushConstant()
-	ErrorCode setPushConstant(
+	Result setPushConstant(
 		uint32_t shaderRegister, const void* data, uint32_t dataSizeInBytes) noexcept;
 
 	// See zgCommandListSetPipelineBindings()
-	ErrorCode setPipelineBindings(const PipelineBindings& bindings) noexcept;
+	Result setPipelineBindings(const PipelineBindings& bindings) noexcept;
 
 	// See zgCommandListSetPipelineRender()
-	ErrorCode setPipeline(PipelineRender& pipeline) noexcept;
+	Result setPipeline(PipelineRender& pipeline) noexcept;
 
 	// See zgCommandListSetFramebuffer()
-	ErrorCode setFramebuffer(
+	Result setFramebuffer(
 		Framebuffer& framebuffer,
 		const ZgFramebufferRect* optionalViewport = nullptr,
 		const ZgFramebufferRect* optionalScissor = nullptr) noexcept;
 
 	// See zgCommandListSetFramebufferViewport()
-	ErrorCode setFramebufferViewport(
+	Result setFramebufferViewport(
 		const ZgFramebufferRect& viewport) noexcept;
 
 	// See zgCommandListSetFramebufferScissor()
-	ErrorCode setFramebufferScissor(
+	Result setFramebufferScissor(
 		const ZgFramebufferRect& scissor) noexcept;
 
 	// See zgCommandListClearFramebufferOptimal()
-	ErrorCode clearFramebufferOptimal() noexcept;
+	Result clearFramebufferOptimal() noexcept;
 
 	// See zgCommandListClearRenderTargets()
-	ErrorCode clearRenderTargets(float red, float green, float blue, float alpha) noexcept;
+	Result clearRenderTargets(float red, float green, float blue, float alpha) noexcept;
 
 	// See zgCommandListClearDepthBuffer()
-	ErrorCode clearDepthBuffer(float depth) noexcept;
+	Result clearDepthBuffer(float depth) noexcept;
 
 	// See zgCommandListSetIndexBuffer()
-	ErrorCode setIndexBuffer(Buffer& indexBuffer, ZgIndexBufferType type) noexcept;
+	Result setIndexBuffer(Buffer& indexBuffer, ZgIndexBufferType type) noexcept;
 
 	// See zgCommandListSetVertexBuffer()
-	ErrorCode setVertexBuffer(uint32_t vertexBufferSlot, Buffer& vertexBuffer) noexcept;
+	Result setVertexBuffer(uint32_t vertexBufferSlot, Buffer& vertexBuffer) noexcept;
 
 	// See zgCommandListDrawTriangles()
-	ErrorCode drawTriangles(uint32_t startVertexIndex, uint32_t numVertices) noexcept;
+	Result drawTriangles(uint32_t startVertexIndex, uint32_t numVertices) noexcept;
 
 	// See zgCommandListDrawTrianglesIndexed()
-	ErrorCode drawTrianglesIndexed(uint32_t startIndex, uint32_t numTriangles) noexcept;
+	Result drawTrianglesIndexed(uint32_t startIndex, uint32_t numTriangles) noexcept;
 };
 
 

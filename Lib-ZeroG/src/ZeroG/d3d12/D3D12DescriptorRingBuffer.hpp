@@ -49,7 +49,7 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode create(
+	ZgResult create(
 		ID3D12Device3& device,
 		D3D12_DESCRIPTOR_HEAP_TYPE type,
 		uint32_t numDescriptors) noexcept;
@@ -57,7 +57,7 @@ public:
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode allocateDescriptorRange(
+	ZgResult allocateDescriptorRange(
 		uint32_t numDescriptors,
 		D3D12_CPU_DESCRIPTOR_HANDLE& rangeStartCpu,
 		D3D12_GPU_DESCRIPTOR_HANDLE& rangeStartGpu) noexcept;

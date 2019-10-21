@@ -57,9 +57,9 @@ public:
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode reset() noexcept override final;
-	ZgErrorCode checkIfSignaled(bool& fenceSignaledOut) const noexcept override final;
-	ZgErrorCode waitOnCpuBlocking() const noexcept override final;
+	ZgResult reset() noexcept override final;
+	ZgResult checkIfSignaled(bool& fenceSignaledOut) const noexcept override final;
+	ZgResult waitOnCpuBlocking() const noexcept override final;
 };
 
 // D3D12CommandQueue
@@ -81,7 +81,7 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode create(
+	ZgResult create(
 		D3D12_COMMAND_LIST_TYPE type,
 		ComPtr<ID3D12Device3>& device,
 		D3DX12Residency::ResidencyManager* residencyManager,
@@ -92,11 +92,11 @@ public:
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode signalOnGpu(ZgFence& fenceToSignal) noexcept override final;
-	ZgErrorCode waitOnGpu(const ZgFence& fence) noexcept override final;
-	ZgErrorCode flush() noexcept override final;
-	ZgErrorCode beginCommandListRecording(ZgCommandList** commandListOut) noexcept override final;
-	ZgErrorCode executeCommandList(ZgCommandList* commandList) noexcept override final;
+	ZgResult signalOnGpu(ZgFence& fenceToSignal) noexcept override final;
+	ZgResult waitOnGpu(const ZgFence& fence) noexcept override final;
+	ZgResult flush() noexcept override final;
+	ZgResult beginCommandListRecording(ZgCommandList** commandListOut) noexcept override final;
+	ZgResult executeCommandList(ZgCommandList* commandList) noexcept override final;
 
 	// Synchronization methods
 	// --------------------------------------------------------------------------------------------
@@ -115,13 +115,13 @@ private:
 	// Private  methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode beginCommandListRecordingUnmutexed(ZgCommandList** commandListOut) noexcept;
-	ZgErrorCode executeCommandListUnmutexed(ZgCommandList* commandList) noexcept;
+	ZgResult beginCommandListRecordingUnmutexed(ZgCommandList** commandListOut) noexcept;
+	ZgResult executeCommandListUnmutexed(ZgCommandList* commandList) noexcept;
 	uint64_t signalOnGpuUnmutexed() noexcept;
 
-	ZgErrorCode createCommandList(D3D12CommandList*& commandListOut) noexcept;
+	ZgResult createCommandList(D3D12CommandList*& commandListOut) noexcept;
 
-	ZgErrorCode executePreCommandListStateChanges(
+	ZgResult executePreCommandListStateChanges(
 		Vector<PendingBufferState>& pendingBufferStates,
 		Vector<PendingTextureState>& pendingTextureStates) noexcept;
 

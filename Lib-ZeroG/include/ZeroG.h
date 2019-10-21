@@ -105,7 +105,7 @@ typedef struct ZgFramebufferRect ZgFramebufferRect;
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 6;
+static const uint32_t ZG_COMPILED_API_VERSION = 7;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -151,13 +151,13 @@ typedef uint64_t ZgFeatureBits;
 // Returns a bitmask containing the features compiled into this ZeroG dll.
 ZG_API ZgFeatureBits zgCompiledFeatures(void);
 
-// Error codes
+// Results
 // ------------------------------------------------------------------------------------------------
 
-// The error codes
+// The results
 //
 // 0 is success, negative values are errors and positive values are warnings.
-enum ZgErrorCodeEnum {
+enum ZgResultEnum {
 
 	// Success (0)
 	ZG_SUCCESS = 0,
@@ -177,11 +177,11 @@ enum ZgErrorCodeEnum {
 	ZG_ERROR_OUT_OF_COMMAND_LISTS = -7,
 	ZG_ERROR_INVALID_COMMAND_LIST_STATE = -8
 };
-typedef int32_t ZgErrorCode;
+typedef int32_t ZgResult;
 
-// Returns a string representation of the given ZeroG error code. The string is statically
-// allocated and must NOT be freed by the user.
-ZG_API const char* zgErrorCodeToString(ZgErrorCode errorCode);
+// Returns a string representation of the given ZeroG result. The string is statically allocated
+// and must NOT be freed by the user.
+ZG_API const char* zgResultToString(ZgResult errorCode);
 
 // Logging interface
 // ------------------------------------------------------------------------------------------------
@@ -282,29 +282,29 @@ typedef struct ZgContextInitSettings ZgContextInitSettings;
 ZG_API ZgBool zgContextAlreadyInitialized(void);
 
 // Initializes the implicit ZeroG context, will fail if a context is already initialized
-ZG_API ZgErrorCode zgContextInit(const ZgContextInitSettings* initSettings);
+ZG_API ZgResult zgContextInit(const ZgContextInitSettings* initSettings);
 
 // Deinitializes the implicit ZeroG context
 //
 // Completely safe to call even if no context has been created
-ZG_API ZgErrorCode zgContextDeinit(void);
+ZG_API ZgResult zgContextDeinit(void);
 
 // Resize the back buffers in the swap chain to the new size.
 //
 // This should be called every time the size of the window or the resolution is changed. This
 // function is guaranteed to not do anything if the specified width or height is the same as last
 // time, so it is completely safe to call this at the beginning of each frame.
-ZG_API ZgErrorCode zgContextSwapchainResize(
+ZG_API ZgResult zgContextSwapchainResize(
 	uint32_t width,
 	uint32_t height);
 
 // The framebuffer returned is owned by the swapchain and can't be released by the user. It is
 // still safe to call zgFramebufferRelease() on it, but it will be a no-op and the framebuffer
 // will still be valid afterwards.
-ZG_API ZgErrorCode zgContextSwapchainBeginFrame(
+ZG_API ZgResult zgContextSwapchainBeginFrame(
 	ZgFramebuffer** framebufferOut);
 
-ZG_API ZgErrorCode zgContextSwapchainFinishFrame(void);
+ZG_API ZgResult zgContextSwapchainFinishFrame(void);
 
 // Statistics
 // ------------------------------------------------------------------------------------------------
@@ -344,7 +344,7 @@ typedef struct ZgStats ZgStats;
 
 // Gets the current statistics of the ZeroG backend. Normally called once (or maybe up to a couple
 // of times) per frame.
-ZG_API ZgErrorCode zgContextGetStats(ZgStats* statsOut);
+ZG_API ZgResult zgContextGetStats(ZgStats* statsOut);
 
 // Texture formats
 // ------------------------------------------------------------------------------------------------
@@ -684,10 +684,10 @@ struct ZgPipelineRenderCreateInfoCommon {
 };
 typedef struct ZgPipelineRenderCreateInfoCommon ZgPipelineRenderCreateInfoCommon;
 
-ZG_API ZgErrorCode zgPipelineRenderRelease(
+ZG_API ZgResult zgPipelineRenderRelease(
 	ZgPipelineRender* pipeline);
 
-ZG_API ZgErrorCode zgPipelineRenderGetSignature(
+ZG_API ZgResult zgPipelineRenderGetSignature(
 	const ZgPipelineRender* pipeline,
 	ZgPipelineRenderSignature* signatureOut);
 
@@ -705,7 +705,7 @@ struct ZgPipelineRenderCreateInfoFileSPIRV {
 };
 typedef struct ZgPipelineRenderCreateInfoFileSPIRV ZgPipelineRenderCreateInfoFileSPIRV;
 
-ZG_API ZgErrorCode zgPipelineRenderCreateFromFileSPIRV(
+ZG_API ZgResult zgPipelineRenderCreateFromFileSPIRV(
 	ZgPipelineRender** pipelineOut,
 	ZgPipelineRenderSignature* signatureOut,
 	const ZgPipelineRenderCreateInfoFileSPIRV* createInfo);
@@ -741,7 +741,7 @@ struct ZgPipelineRenderCreateInfoFileHLSL {
 };
 typedef struct ZgPipelineRenderCreateInfoFileHLSL ZgPipelineRenderCreateInfoFileHLSL;
 
-ZG_API ZgErrorCode zgPipelineRenderCreateFromFileHLSL(
+ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 	ZgPipelineRender** pipelineOut,
 	ZgPipelineRenderSignature* signatureOut,
 	const ZgPipelineRenderCreateInfoFileHLSL* createInfo);
@@ -761,7 +761,7 @@ struct ZgPipelineRenderCreateInfoSourceHLSL {
 };
 typedef struct ZgPipelineRenderCreateInfoSourceHLSL ZgPipelineRenderCreateInfoSourceHLSL;
 
-ZG_API ZgErrorCode zgPipelineRenderCreateFromSourceHLSL(
+ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
 	ZgPipelineRender** pipelineOut,
 	ZgPipelineRenderSignature* signatureOut,
 	const ZgPipelineRenderCreateInfoSourceHLSL* createInfo);
@@ -811,11 +811,11 @@ struct ZgMemoryHeapCreateInfo {
 };
 typedef struct ZgMemoryHeapCreateInfo ZgMemoryHeapCreateInfo;
 
-ZG_API ZgErrorCode zgMemoryHeapCreate(
+ZG_API ZgResult zgMemoryHeapCreate(
 	ZgMemoryHeap** memoryHeapOut,
 	const ZgMemoryHeapCreateInfo* createInfo);
 
-ZG_API ZgErrorCode zgMemoryHeapRelease(
+ZG_API ZgResult zgMemoryHeapRelease(
 	ZgMemoryHeap* memoryHeap);
 
 // Buffer
@@ -832,7 +832,7 @@ struct ZgBufferCreateInfo {
 };
 typedef struct ZgBufferCreateInfo ZgBufferCreateInfo;
 
-ZG_API ZgErrorCode zgMemoryHeapBufferCreate(
+ZG_API ZgResult zgMemoryHeapBufferCreate(
 	ZgMemoryHeap* memoryHeap,
 	ZgBuffer** bufferOut,
 	const ZgBufferCreateInfo* createInfo);
@@ -840,13 +840,13 @@ ZG_API ZgErrorCode zgMemoryHeapBufferCreate(
 ZG_API void zgBufferRelease(
 	ZgBuffer* buffer);
 
-ZG_API ZgErrorCode zgBufferMemcpyTo(
+ZG_API ZgResult zgBufferMemcpyTo(
 	ZgBuffer* dstBuffer,
 	uint64_t bufferOffsetBytes,
 	const void* srcMemory,
 	uint64_t numBytes);
 
-ZG_API ZgErrorCode zgBufferSetDebugName(
+ZG_API ZgResult zgBufferSetDebugName(
 	ZgBuffer* buffer,
 	const char* name);
 
@@ -920,11 +920,11 @@ struct ZgTexture2DAllocationInfo {
 typedef struct ZgTexture2DAllocationInfo ZgTexture2DAllocationInfo;
 
 // Gets the allocation info of a Texture2D specified by a ZgTexture2DCreateInfo.
-ZG_API ZgErrorCode zgTexture2DGetAllocationInfo(
+ZG_API ZgResult zgTexture2DGetAllocationInfo(
 	ZgTexture2DAllocationInfo* allocationInfoOut,
 	const ZgTexture2DCreateInfo* createInfo);
 
-ZG_API ZgErrorCode zgMemoryHeapTexture2DCreate(
+ZG_API ZgResult zgMemoryHeapTexture2DCreate(
 	ZgMemoryHeap* memoryHeap,
 	ZgTexture2D** textureOut,
 	const ZgTexture2DCreateInfo* createInfo);
@@ -932,7 +932,7 @@ ZG_API ZgErrorCode zgMemoryHeapTexture2DCreate(
 ZG_API void zgTexture2DRelease(
 	ZgTexture2D* texture);
 
-ZG_API ZgErrorCode zgTexture2DSetDebugName(
+ZG_API ZgResult zgTexture2DSetDebugName(
 	ZgTexture2D* texture,
 	const char* name);
 
@@ -950,7 +950,7 @@ struct ZgFramebufferCreateInfo {
 };
 typedef struct ZgFramebufferCreateInfo ZgFramebufferCreateInfo;
 
-ZG_API ZgErrorCode zgFramebufferCreate(
+ZG_API ZgResult zgFramebufferCreate(
 	ZgFramebuffer** framebufferOut,
 	const ZgFramebufferCreateInfo* createInfo);
 
@@ -959,7 +959,7 @@ ZG_API ZgErrorCode zgFramebufferCreate(
 ZG_API void zgFramebufferRelease(
 	ZgFramebuffer* framebuffer);
 
-ZG_API ZgErrorCode zgFramebufferGetResolution(
+ZG_API ZgResult zgFramebufferGetResolution(
 	const ZgFramebuffer* framebuffer,
 	uint32_t* widthOut,
 	uint32_t* heightOut);
@@ -967,7 +967,7 @@ ZG_API ZgErrorCode zgFramebufferGetResolution(
 // Fence
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgErrorCode zgFenceCreate(
+ZG_API ZgResult zgFenceCreate(
 	ZgFence** fenceOut);
 
 ZG_API void zgFenceRelease(
@@ -977,23 +977,23 @@ ZG_API void zgFenceRelease(
 //
 // Completely optional to call, zgCommandQueueSignalOnGpu() will performing an implicit reset by
 // modifying the fence anyway. But can be useful for debugging.
-ZG_API ZgErrorCode zgFenceReset(
+ZG_API ZgResult zgFenceReset(
 	ZgFence* fence);
 
-ZG_API ZgErrorCode zgFenceCheckIfSignaled(
+ZG_API ZgResult zgFenceCheckIfSignaled(
 	const ZgFence* fence,
 	ZgBool* fenceSignaledOut);
 
-ZG_API ZgErrorCode zgFenceWaitOnCpuBlocking(
+ZG_API ZgResult zgFenceWaitOnCpuBlocking(
 	const ZgFence* fence);
 
 // Command queue
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgErrorCode zgCommandQueueGetPresentQueue(
+ZG_API ZgResult zgCommandQueueGetPresentQueue(
 	ZgCommandQueue** presentQueueOut);
 
-ZG_API ZgErrorCode zgCommandQueueGetCopyQueue(
+ZG_API ZgResult zgCommandQueueGetCopyQueue(
 	ZgCommandQueue** copyQueueOut);
 
 // Enqueues the command queue to signal the ZgFence (from the GPU).
@@ -1003,29 +1003,29 @@ ZG_API ZgErrorCode zgCommandQueueGetCopyQueue(
 //       this fence. Doing so is undefined behavior. Best case is that someone waits longer than
 //       they have to, worst case is hard-lock. In other words, you will likely need more than one
 //       fence (think double or triple-buffering) unless you are explicitly flushing each frame.
-ZG_API ZgErrorCode zgCommandQueueSignalOnGpu(
+ZG_API ZgResult zgCommandQueueSignalOnGpu(
 	ZgCommandQueue* commandQueue,
 	ZgFence* fenceToSignal);
 
-ZG_API ZgErrorCode zgCommandQueueWaitOnGpu(
+ZG_API ZgResult zgCommandQueueWaitOnGpu(
 	ZgCommandQueue* commandQueue,
 	const ZgFence* fence);
 
-ZG_API ZgErrorCode zgCommandQueueFlush(
+ZG_API ZgResult zgCommandQueueFlush(
 	ZgCommandQueue* commandQueue);
 
-ZG_API ZgErrorCode zgCommandQueueBeginCommandListRecording(
+ZG_API ZgResult zgCommandQueueBeginCommandListRecording(
 	ZgCommandQueue* commandQueue,
 	ZgCommandList** commandListOut);
 
-ZG_API ZgErrorCode zgCommandQueueExecuteCommandList(
+ZG_API ZgResult zgCommandQueueExecuteCommandList(
 	ZgCommandQueue* commandQueue,
 	ZgCommandList* commandList);
 
 // Command list
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgErrorCode zgCommandListMemcpyBufferToBuffer(
+ZG_API ZgResult zgCommandListMemcpyBufferToBuffer(
 	ZgCommandList* commandList,
 	ZgBuffer* dstBuffer,
 	uint64_t dstBufferOffsetBytes,
@@ -1049,7 +1049,7 @@ struct ZgImageViewConstCpu {
 // texture (dstTexture). In other words, the CPU memory containing the image can freely be removed
 // after this call. The temporary upload buffer must not be touched until this command list has
 // finished executing.
-ZG_API ZgErrorCode zgCommandListMemcpyToTexture(
+ZG_API ZgResult zgCommandListMemcpyToTexture(
 	ZgCommandList* commandList,
 	ZgTexture2D* dstTexture,
 	uint32_t dstTextureMipLevel,
@@ -1066,16 +1066,16 @@ ZG_API ZgErrorCode zgCommandListMemcpyToTexture(
 // Therefore, this command need to be manually called in the old command queue after it has stopped
 // using a resource. The new command queue then need to wait until it has actually been applied
 // (i.e. insert a ZgFence and wait for it). Then the new command queue can start using the resource.
-ZG_API ZgErrorCode zgCommandListEnableQueueTransitionBuffer(
+ZG_API ZgResult zgCommandListEnableQueueTransitionBuffer(
 	ZgCommandList* commandList,
 	ZgBuffer* buffer);
 
 // See zgCommandListEnableQueueTransitionBuffer()
-ZG_API ZgErrorCode zgCommandListEnableQueueTransitionTexture(
+ZG_API ZgResult zgCommandListEnableQueueTransitionTexture(
 	ZgCommandList* commandList,
 	ZgTexture2D* texture);
 
-ZG_API ZgErrorCode zgCommandListSetPushConstant(
+ZG_API ZgResult zgCommandListSetPushConstant(
 	ZgCommandList* commandList,
 	uint32_t shaderRegister,
 	const void* data,
@@ -1104,44 +1104,44 @@ struct ZgPipelineBindings {
 };
 typedef struct ZgPipelineBindings ZgPipelineBindings;
 
-ZG_API ZgErrorCode zgCommandListSetPipelineBindings(
+ZG_API ZgResult zgCommandListSetPipelineBindings(
 	ZgCommandList* commandList,
 	const ZgPipelineBindings* bindings);
 
-ZG_API ZgErrorCode zgCommandListSetPipelineRender(
+ZG_API ZgResult zgCommandListSetPipelineRender(
 	ZgCommandList* commandList,
 	ZgPipelineRender* pipeline);
 
 // The viewport and scissor are optional, if nullptr they will cover the entire framebuffer
-ZG_API ZgErrorCode zgCommandListSetFramebuffer(
+ZG_API ZgResult zgCommandListSetFramebuffer(
 	ZgCommandList* commandList,
 	ZgFramebuffer* framebuffer,
 	const ZgFramebufferRect* optionalViewport,
 	const ZgFramebufferRect* optionalScissor);
 
 // Change the viewport for an already set framebuffer
-ZG_API ZgErrorCode zgCommandListSetFramebufferViewport(
+ZG_API ZgResult zgCommandListSetFramebufferViewport(
 	ZgCommandList* commandList,
 	const ZgFramebufferRect* viewport);
 
 // Change the scissor for an already set framebuffer
-ZG_API ZgErrorCode zgCommandListSetFramebufferScissor(
+ZG_API ZgResult zgCommandListSetFramebufferScissor(
 	ZgCommandList* commandList,
 	const ZgFramebufferRect* scissor);
 
 // Clears all render targets and depth buffers in a framebuffer to their optimal clear values, 0
 // if none is specified.
-ZG_API ZgErrorCode zgCommandListClearFramebufferOptimal(
+ZG_API ZgResult zgCommandListClearFramebufferOptimal(
 	ZgCommandList* commandList);
 
-ZG_API ZgErrorCode zgCommandListClearRenderTargets(
+ZG_API ZgResult zgCommandListClearRenderTargets(
 	ZgCommandList* commandList,
 	float red,
 	float green,
 	float blue,
 	float alpha);
 
-ZG_API ZgErrorCode zgCommandListClearDepthBuffer(
+ZG_API ZgResult zgCommandListClearDepthBuffer(
 	ZgCommandList* commandList,
 	float depth);
 
@@ -1151,22 +1151,22 @@ enum ZgIndexBufferTypeEnum {
 };
 typedef uint32_t ZgIndexBufferType;
 
-ZG_API ZgErrorCode zgCommandListSetIndexBuffer(
+ZG_API ZgResult zgCommandListSetIndexBuffer(
 	ZgCommandList* commandList,
 	ZgBuffer* indexBuffer,
 	ZgIndexBufferType type);
 
-ZG_API ZgErrorCode zgCommandListSetVertexBuffer(
+ZG_API ZgResult zgCommandListSetVertexBuffer(
 	ZgCommandList* commandList,
 	uint32_t vertexBufferSlot,
 	ZgBuffer* vertexBuffer);
 
-ZG_API ZgErrorCode zgCommandListDrawTriangles(
+ZG_API ZgResult zgCommandListDrawTriangles(
 	ZgCommandList* commandList,
 	uint32_t startVertexIndex,
 	uint32_t numVertices);
 
-ZG_API ZgErrorCode zgCommandListDrawTrianglesIndexed(
+ZG_API ZgResult zgCommandListDrawTrianglesIndexed(
 	ZgCommandList* commandList,
 	uint32_t startIndex,
 	uint32_t numTriangles);

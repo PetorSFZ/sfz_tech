@@ -31,7 +31,7 @@ D3D12DescriptorRingBuffer::~D3D12DescriptorRingBuffer() noexcept
 // D3D12DescriptorRingBuffer: State methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode D3D12DescriptorRingBuffer::create(
+ZgResult D3D12DescriptorRingBuffer::create(
 	ID3D12Device3& device,
 	D3D12_DESCRIPTOR_HEAP_TYPE type,
 	uint32_t numDescriptors) noexcept
@@ -69,7 +69,7 @@ ZgErrorCode D3D12DescriptorRingBuffer::create(
 // D3D12DescriptorRingBuffer: Methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode D3D12DescriptorRingBuffer::allocateDescriptorRange(
+ZgResult D3D12DescriptorRingBuffer::allocateDescriptorRange(
 	uint32_t numDescriptors,
 	D3D12_CPU_DESCRIPTOR_HANDLE& rangeStartCpu,
 	D3D12_GPU_DESCRIPTOR_HANDLE& rangeStartGpu) noexcept

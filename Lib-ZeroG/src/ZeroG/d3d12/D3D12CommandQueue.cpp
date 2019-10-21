@@ -34,21 +34,21 @@ D3D12Fence::~D3D12Fence() noexcept
 // D3D12Fence: Virtual methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode D3D12Fence::reset() noexcept
+ZgResult D3D12Fence::reset() noexcept
 {
 	this->fenceValue = 0;
 	this->commandQueue = nullptr;
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12Fence::checkIfSignaled(bool& fenceSignaledOut) const noexcept
+ZgResult D3D12Fence::checkIfSignaled(bool& fenceSignaledOut) const noexcept
 {
 	if (this->commandQueue == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
 	fenceSignaledOut = this->commandQueue->isFenceValueDone(this->fenceValue);
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12Fence::waitOnCpuBlocking() const noexcept
+ZgResult D3D12Fence::waitOnCpuBlocking() const noexcept
 {
 	if (this->commandQueue == nullptr) return ZG_WARNING_GENERIC;
 	this->commandQueue->waitOnCpuInternal(this->fenceValue);
@@ -74,7 +74,7 @@ D3D12CommandQueue::~D3D12CommandQueue() noexcept
 // D3D12CommandQueue: State methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode D3D12CommandQueue::create(
+ZgResult D3D12CommandQueue::create(
 	D3D12_COMMAND_LIST_TYPE type,
 	ComPtr<ID3D12Device3>& device,
 	D3DX12Residency::ResidencyManager* residencyManager,
@@ -120,7 +120,7 @@ ZgErrorCode D3D12CommandQueue::create(
 // D3D12CommandQueue: Virtual methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode D3D12CommandQueue::signalOnGpu(ZgFence& fenceToSignalIn) noexcept
+ZgResult D3D12CommandQueue::signalOnGpu(ZgFence& fenceToSignalIn) noexcept
 {
 	D3D12Fence& fenceToSignal = *static_cast<D3D12Fence*>(&fenceToSignalIn);
 	fenceToSignal.commandQueue = this;
@@ -128,7 +128,7 @@ ZgErrorCode D3D12CommandQueue::signalOnGpu(ZgFence& fenceToSignalIn) noexcept
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandQueue::waitOnGpu(const ZgFence& fenceIn) noexcept
+ZgResult D3D12CommandQueue::waitOnGpu(const ZgFence& fenceIn) noexcept
 {
 	const D3D12Fence& fence = *static_cast<const D3D12Fence*>(&fenceIn);
 	if (fence.commandQueue == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
@@ -137,20 +137,20 @@ ZgErrorCode D3D12CommandQueue::waitOnGpu(const ZgFence& fenceIn) noexcept
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandQueue::flush() noexcept
+ZgResult D3D12CommandQueue::flush() noexcept
 {
 	uint64_t fenceValue = this->signalOnGpuInternal();
 	this->waitOnCpuInternal(fenceValue);
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandQueue::beginCommandListRecording(ZgCommandList** commandListOut) noexcept
+ZgResult D3D12CommandQueue::beginCommandListRecording(ZgCommandList** commandListOut) noexcept
 {
 	std::lock_guard<std::mutex> lock(mQueueMutex);
 	return this->beginCommandListRecordingUnmutexed(commandListOut);
 }
 
-ZgErrorCode D3D12CommandQueue::executeCommandList(ZgCommandList* commandListIn) noexcept
+ZgResult D3D12CommandQueue::executeCommandList(ZgCommandList* commandListIn) noexcept
 {
 	std::lock_guard<std::mutex> lock(mQueueMutex);
 	return this->executeCommandListUnmutexed(commandListIn);
@@ -186,7 +186,7 @@ bool D3D12CommandQueue::isFenceValueDone(uint64_t fenceValue) noexcept
 // D3D12CommandQueue: Private  methods
 // ------------------------------------------------------------------------------------------------
 
-ZgErrorCode D3D12CommandQueue::beginCommandListRecordingUnmutexed(
+ZgResult D3D12CommandQueue::beginCommandListRecordingUnmutexed(
 	ZgCommandList** commandListOut) noexcept
 {
 	D3D12CommandList* commandList = nullptr;
@@ -203,13 +203,13 @@ ZgErrorCode D3D12CommandQueue::beginCommandListRecordingUnmutexed(
 
 	// If no command list found, create new one
 	if (!commandListFound) {
-		ZgErrorCode res = createCommandList(commandList);
+		ZgResult res = createCommandList(commandList);
 		if (res != ZG_SUCCESS) return res;
 		commandListFound = true;
 	}
 
 	// Reset command list and allocator
-	ZgErrorCode res = commandList->reset();
+	ZgResult res = commandList->reset();
 	if (res != ZG_SUCCESS) return res;
 
 	// Open command lists residency set
@@ -220,7 +220,7 @@ ZgErrorCode D3D12CommandQueue::beginCommandListRecordingUnmutexed(
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandQueue::executeCommandListUnmutexed(ZgCommandList* commandListIn) noexcept
+ZgResult D3D12CommandQueue::executeCommandListUnmutexed(ZgCommandList* commandListIn) noexcept
 {
 	// Cast to D3D12
 	D3D12CommandList& commandList = *static_cast<D3D12CommandList*>(commandListIn);
@@ -236,7 +236,7 @@ ZgErrorCode D3D12CommandQueue::executeCommandListUnmutexed(ZgCommandList* comman
 	}
 
 	// Create and execute a quick command list to insert barriers and commit pending states
-	ZgErrorCode res = this->executePreCommandListStateChanges(
+	ZgResult res = this->executePreCommandListStateChanges(
 		commandList.pendingBufferStates,
 		commandList.pendingTextureStates);
 	if (res != ZG_SUCCESS) return res;
@@ -262,7 +262,7 @@ uint64_t D3D12CommandQueue::signalOnGpuUnmutexed() noexcept
 	return mCommandQueueFenceValue++;
 }
 
-ZgErrorCode D3D12CommandQueue::createCommandList(D3D12CommandList*& commandListOut) noexcept
+ZgResult D3D12CommandQueue::createCommandList(D3D12CommandList*& commandListOut) noexcept
 {
 	// Create a new command list in storage, return error if full
 	bool addSuccesful = mCommandListStorage.add(D3D12CommandList());
@@ -302,7 +302,7 @@ ZgErrorCode D3D12CommandQueue::createCommandList(D3D12CommandList*& commandListO
 	return ZG_SUCCESS;
 }
 
-ZgErrorCode D3D12CommandQueue::executePreCommandListStateChanges(
+ZgResult D3D12CommandQueue::executePreCommandListStateChanges(
 	Vector<PendingBufferState>& pendingBufferStates,
 	Vector<PendingTextureState>& pendingTextureStates) noexcept
 {
@@ -373,7 +373,7 @@ ZgErrorCode D3D12CommandQueue::executePreCommandListStateChanges(
 
 	// Get command list to execute barriers in
 	D3D12CommandList* commandList = nullptr;
-	ZgErrorCode res =
+	ZgResult res =
 		this->beginCommandListRecordingUnmutexed(reinterpret_cast<ZgCommandList**>(&commandList));
 	if (res != ZG_SUCCESS) return res;
 

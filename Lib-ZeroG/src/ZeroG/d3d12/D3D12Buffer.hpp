@@ -63,7 +63,7 @@ public:
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgErrorCode setDebugName(const char* name) noexcept override final;
+	ZgResult setDebugName(const char* name) noexcept override final;
 };
 
 } // namespace zg

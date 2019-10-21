@@ -28,12 +28,12 @@ namespace zg {
 // Context: State methods
 // ------------------------------------------------------------------------------------------------
 
-ErrorCode Context::init(const ZgContextInitSettings& settings) noexcept
+Result Context::init(const ZgContextInitSettings& settings) noexcept
 {
 	this->deinit();
-	ZgErrorCode res = zgContextInit(&settings);
+	ZgResult res = zgContextInit(&settings);
 	mInitialized = res == ZG_SUCCESS;
-	return (ErrorCode)res;
+	return (Result)res;
 }
 
 void Context::deinit() noexcept
@@ -63,28 +63,28 @@ bool Context::alreadyInitialized() noexcept
 	return zgContextAlreadyInitialized();
 }
 
-ErrorCode Context::swapchainResize(uint32_t width, uint32_t height) noexcept
+Result Context::swapchainResize(uint32_t width, uint32_t height) noexcept
 {
-	return (ErrorCode)zgContextSwapchainResize(width, height);
+	return (Result)zgContextSwapchainResize(width, height);
 }
 
-ErrorCode Context::swapchainBeginFrame(Framebuffer& framebufferOut) noexcept
+Result Context::swapchainBeginFrame(Framebuffer& framebufferOut) noexcept
 {
-	if (framebufferOut.valid()) return ErrorCode::INVALID_ARGUMENT;
-	ErrorCode res = (ErrorCode)zgContextSwapchainBeginFrame(&framebufferOut.framebuffer);
+	if (framebufferOut.valid()) return Result::INVALID_ARGUMENT;
+	Result res = (Result)zgContextSwapchainBeginFrame(&framebufferOut.framebuffer);
 	if (!isSuccess(res)) return res;
-	return (ErrorCode)zgFramebufferGetResolution(
+	return (Result)zgFramebufferGetResolution(
 		framebufferOut.framebuffer, &framebufferOut.width, &framebufferOut.height);
 }
 
-ErrorCode Context::swapchainFinishFrame() noexcept
+Result Context::swapchainFinishFrame() noexcept
 {
-	return (ErrorCode)zgContextSwapchainFinishFrame();
+	return (Result)zgContextSwapchainFinishFrame();
 }
 
-ErrorCode Context::getStats(ZgStats& statsOut) noexcept
+Result Context::getStats(ZgStats& statsOut) noexcept
 {
-	return (ErrorCode)zgContextGetStats(&statsOut);
+	return (Result)zgContextGetStats(&statsOut);
 }
 
 
@@ -266,7 +266,7 @@ PipelineRenderBuilder& PipelineRenderBuilder::setDepthFunc(ZgDepthFunc depthFunc
 	return *this;
 }
 
-ErrorCode PipelineRenderBuilder::buildFromFileSPIRV(
+Result PipelineRenderBuilder::buildFromFileSPIRV(
 	PipelineRender& pipelineOut) const noexcept
 {
 	// Build create info
@@ -279,7 +279,7 @@ ErrorCode PipelineRenderBuilder::buildFromFileSPIRV(
 	return pipelineOut.createFromFileSPIRV(createInfo);
 }
 
-ErrorCode PipelineRenderBuilder::buildFromFileHLSL(
+Result PipelineRenderBuilder::buildFromFileHLSL(
 	PipelineRender& pipelineOut, ZgShaderModel model) const noexcept
 {
 	// Build create info
@@ -295,7 +295,7 @@ ErrorCode PipelineRenderBuilder::buildFromFileHLSL(
 	return pipelineOut.createFromFileHLSL(createInfo);
 }
 
-ErrorCode PipelineRenderBuilder::buildFromSourceHLSL(
+Result PipelineRenderBuilder::buildFromSourceHLSL(
 	PipelineRender& pipelineOut, ZgShaderModel model) const noexcept
 {
 	// Build create info
@@ -315,27 +315,27 @@ ErrorCode PipelineRenderBuilder::buildFromSourceHLSL(
 // PipelineRender: State methods
 // ------------------------------------------------------------------------------------------------
 
-ErrorCode PipelineRender::createFromFileSPIRV(
+Result PipelineRender::createFromFileSPIRV(
 	const ZgPipelineRenderCreateInfoFileSPIRV& createInfo) noexcept
 {
 	this->release();
-	return (ErrorCode)zgPipelineRenderCreateFromFileSPIRV(
+	return (Result)zgPipelineRenderCreateFromFileSPIRV(
 		&this->pipeline, &this->signature, &createInfo);
 }
 
-ErrorCode PipelineRender::createFromFileHLSL(
+Result PipelineRender::createFromFileHLSL(
 	const ZgPipelineRenderCreateInfoFileHLSL& createInfo) noexcept
 {
 	this->release();
-	return (ErrorCode)zgPipelineRenderCreateFromFileHLSL(
+	return (Result)zgPipelineRenderCreateFromFileHLSL(
 		&this->pipeline, &this->signature, &createInfo);
 }
 
-ErrorCode PipelineRender::createFromSourceHLSL(
+Result PipelineRender::createFromSourceHLSL(
 	const ZgPipelineRenderCreateInfoSourceHLSL& createInfo) noexcept
 {
 	this->release();
-	return (ErrorCode)zgPipelineRenderCreateFromSourceHLSL(
+	return (Result)zgPipelineRenderCreateFromSourceHLSL(
 		&this->pipeline, &this->signature, &createInfo);
 }
 
@@ -356,13 +356,13 @@ void PipelineRender::release() noexcept
 // MemoryHeap: State methods
 // ------------------------------------------------------------------------------------------------
 
-ErrorCode MemoryHeap::create(const ZgMemoryHeapCreateInfo& createInfo) noexcept
+Result MemoryHeap::create(const ZgMemoryHeapCreateInfo& createInfo) noexcept
 {
 	this->release();
-	return (ErrorCode)zgMemoryHeapCreate(&this->memoryHeap, &createInfo);
+	return (Result)zgMemoryHeapCreate(&this->memoryHeap, &createInfo);
 }
 
-ErrorCode MemoryHeap::create(uint64_t sizeInBytes, ZgMemoryType memoryType) noexcept
+Result MemoryHeap::create(uint64_t sizeInBytes, ZgMemoryType memoryType) noexcept
 {
 	ZgMemoryHeapCreateInfo createInfo = {};
 	createInfo.sizeInBytes = sizeInBytes;
@@ -384,13 +384,13 @@ void MemoryHeap::release() noexcept
 // MemoryHeap: MemoryHeap methods
 // ------------------------------------------------------------------------------------------------
 
-ErrorCode MemoryHeap::bufferCreate(zg::Buffer& bufferOut, const ZgBufferCreateInfo& createInfo) noexcept
+Result MemoryHeap::bufferCreate(zg::Buffer& bufferOut, const ZgBufferCreateInfo& createInfo) noexcept
 {
 	bufferOut.release();
-	return (ErrorCode)zgMemoryHeapBufferCreate(this->memoryHeap, &bufferOut.buffer, &createInfo);
+	return (Result)zgMemoryHeapBufferCreate(this->memoryHeap, &bufferOut.buffer, &createInfo);
 }
 
-ErrorCode MemoryHeap::bufferCreate(Buffer& bufferOut, uint64_t offset, uint64_t size) noexcept
+Result MemoryHeap::bufferCreate(Buffer& bufferOut, uint64_t offset, uint64_t size) noexcept
 {
 	ZgBufferCreateInfo createInfo = {};
 	createInfo.offsetInBytes = offset;
@@ -398,11 +398,11 @@ ErrorCode MemoryHeap::bufferCreate(Buffer& bufferOut, uint64_t offset, uint64_t 
 	return this->bufferCreate(bufferOut, createInfo);
 }
 
-ErrorCode MemoryHeap::texture2DCreate(
+Result MemoryHeap::texture2DCreate(
 	Texture2D& textureOut, const ZgTexture2DCreateInfo& createInfo) noexcept
 {
 	textureOut.release();
-	return (ErrorCode)zgMemoryHeapTexture2DCreate(
+	return (Result)zgMemoryHeapTexture2DCreate(
 		this->memoryHeap, &textureOut.texture, &createInfo);
 }
 
@@ -426,14 +426,14 @@ void Buffer::release() noexcept
 // Buffer: Buffer methods
 // --------------------------------------------------------------------------------------------
 
-ErrorCode Buffer::memcpyTo(uint64_t bufferOffsetBytes, const void* srcMemory, uint64_t numBytes)
+Result Buffer::memcpyTo(uint64_t bufferOffsetBytes, const void* srcMemory, uint64_t numBytes)
 {
-	return (ErrorCode)zgBufferMemcpyTo(this->buffer, bufferOffsetBytes, srcMemory, numBytes);
+	return (Result)zgBufferMemcpyTo(this->buffer, bufferOffsetBytes, srcMemory, numBytes);
 }
 
-ErrorCode Buffer::setDebugName(const char* name) noexcept
+Result Buffer::setDebugName(const char* name) noexcept
 {
-	return (ErrorCode)zgBufferSetDebugName(this->buffer, name);
+	return (Result)zgBufferSetDebugName(this->buffer, name);
 }
 
 
@@ -455,16 +455,16 @@ void Texture2D::release() noexcept
 // ------------------------------------------------------------------------------------------------
 
 // See zgTexture2DGetAllocationInfo
-ErrorCode Texture2D::getAllocationInfo(
+Result Texture2D::getAllocationInfo(
 	ZgTexture2DAllocationInfo& allocationInfoOut,
 	const ZgTexture2DCreateInfo& createInfo) noexcept
 {
-	return (ErrorCode)zgTexture2DGetAllocationInfo(&allocationInfoOut, &createInfo);
+	return (Result)zgTexture2DGetAllocationInfo(&allocationInfoOut, &createInfo);
 }
 
-ErrorCode Texture2D::setDebugName(const char* name) noexcept
+Result Texture2D::setDebugName(const char* name) noexcept
 {
-	return (ErrorCode)zgTexture2DSetDebugName(this->texture, name);
+	return (Result)zgTexture2DSetDebugName(this->texture, name);
 }
 
 
@@ -486,7 +486,7 @@ FramebufferBuilder& FramebufferBuilder::setDepthBuffer(Texture2D& depthBuffer) n
 	return *this;
 }
 
-ErrorCode FramebufferBuilder::build(Framebuffer& framebufferOut) noexcept
+Result FramebufferBuilder::build(Framebuffer& framebufferOut) noexcept
 {
 	return framebufferOut.create(this->createInfo);
 }
@@ -495,12 +495,12 @@ ErrorCode FramebufferBuilder::build(Framebuffer& framebufferOut) noexcept
 // Framebuffer: State methods
 // ------------------------------------------------------------------------------------------------
 
-ErrorCode Framebuffer::create(const ZgFramebufferCreateInfo& createInfo) noexcept
+Result Framebuffer::create(const ZgFramebufferCreateInfo& createInfo) noexcept
 {
 	this->release();
-	ErrorCode res = (ErrorCode)zgFramebufferCreate(&this->framebuffer, &createInfo);
+	Result res = (Result)zgFramebufferCreate(&this->framebuffer, &createInfo);
 	if (!isSuccess(res)) return res;
-	return (ErrorCode)zgFramebufferGetResolution(this->framebuffer, &this->width, &this->height);
+	return (Result)zgFramebufferGetResolution(this->framebuffer, &this->width, &this->height);
 }
 
 void Framebuffer::swap(Framebuffer& other) noexcept
@@ -522,10 +522,10 @@ void Framebuffer::release() noexcept
 // Fence: State methods
 // ------------------------------------------------------------------------------------------------
 
-ErrorCode Fence::create() noexcept
+Result Fence::create() noexcept
 {
 	this->release();
-	return (ErrorCode)zgFenceCreate(&this->fence);
+	return (Result)zgFenceCreate(&this->fence);
 }
 
 void Fence::swap(Fence& other) noexcept
@@ -542,15 +542,15 @@ void Fence::release() noexcept
 // Fence: Fence methods
 // ------------------------------------------------------------------------------------------------
 
-ErrorCode Fence::reset() noexcept
+Result Fence::reset() noexcept
 {
-	return (ErrorCode)zgFenceReset(this->fence);
+	return (Result)zgFenceReset(this->fence);
 }
 
-ErrorCode Fence::checkIfSignaled(bool& fenceSignaledOut) const noexcept
+Result Fence::checkIfSignaled(bool& fenceSignaledOut) const noexcept
 {
 	ZgBool signaled = ZG_FALSE;
-	ErrorCode res = (ErrorCode)zgFenceCheckIfSignaled(this->fence, &signaled);
+	Result res = (Result)zgFenceCheckIfSignaled(this->fence, &signaled);
 	fenceSignaledOut = signaled == ZG_FALSE ? false : true;
 	return res;
 }
@@ -558,29 +558,29 @@ ErrorCode Fence::checkIfSignaled(bool& fenceSignaledOut) const noexcept
 bool Fence::checkIfSignaled() const noexcept
 {
 	bool signaled = false;
-	[[maybe_unused]] ErrorCode res = this->checkIfSignaled(signaled);
+	[[maybe_unused]] Result res = this->checkIfSignaled(signaled);
 	return signaled;
 }
 
-ErrorCode Fence::waitOnCpuBlocking() const noexcept
+Result Fence::waitOnCpuBlocking() const noexcept
 {
-	return (ErrorCode)zgFenceWaitOnCpuBlocking(this->fence);
+	return (Result)zgFenceWaitOnCpuBlocking(this->fence);
 }
 
 
 // CommandQueue: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-ErrorCode CommandQueue::getPresentQueue(CommandQueue& presentQueueOut) noexcept
+Result CommandQueue::getPresentQueue(CommandQueue& presentQueueOut) noexcept
 {
-	if (presentQueueOut.commandQueue != nullptr) return ErrorCode::INVALID_ARGUMENT;
-	return (ErrorCode)zgCommandQueueGetPresentQueue(&presentQueueOut.commandQueue);
+	if (presentQueueOut.commandQueue != nullptr) return Result::INVALID_ARGUMENT;
+	return (Result)zgCommandQueueGetPresentQueue(&presentQueueOut.commandQueue);
 }
 
-ErrorCode CommandQueue::getCopyQueue(CommandQueue& copyQueueOut) noexcept
+Result CommandQueue::getCopyQueue(CommandQueue& copyQueueOut) noexcept
 {
-	if (copyQueueOut.commandQueue != nullptr) return ErrorCode::INVALID_ARGUMENT;
-	return (ErrorCode)zgCommandQueueGetCopyQueue(&copyQueueOut.commandQueue);
+	if (copyQueueOut.commandQueue != nullptr) return Result::INVALID_ARGUMENT;
+	return (Result)zgCommandQueueGetCopyQueue(&copyQueueOut.commandQueue);
 }
 
 // CommandQueue: State methods
@@ -599,33 +599,33 @@ void CommandQueue::release() noexcept
 // CommandQueue: CommandQueue methods
 // ------------------------------------------------------------------------------------------------
 
-ErrorCode CommandQueue::signalOnGpu(Fence& fenceToSignal) noexcept
+Result CommandQueue::signalOnGpu(Fence& fenceToSignal) noexcept
 {
-	return (ErrorCode)zgCommandQueueSignalOnGpu(this->commandQueue, fenceToSignal.fence);
+	return (Result)zgCommandQueueSignalOnGpu(this->commandQueue, fenceToSignal.fence);
 }
 
-ErrorCode CommandQueue::waitOnGpu(const Fence& fence) noexcept
+Result CommandQueue::waitOnGpu(const Fence& fence) noexcept
 {
-	return (ErrorCode)zgCommandQueueWaitOnGpu(this->commandQueue, fence.fence);
+	return (Result)zgCommandQueueWaitOnGpu(this->commandQueue, fence.fence);
 }
 
-ErrorCode CommandQueue::flush() noexcept
+Result CommandQueue::flush() noexcept
 {
-	return (ErrorCode)zgCommandQueueFlush(this->commandQueue);
+	return (Result)zgCommandQueueFlush(this->commandQueue);
 }
 
-ErrorCode CommandQueue::beginCommandListRecording(CommandList& commandListOut) noexcept
+Result CommandQueue::beginCommandListRecording(CommandList& commandListOut) noexcept
 {
-	if (commandListOut.commandList != nullptr) return ErrorCode::INVALID_ARGUMENT;
-	return (ErrorCode)zgCommandQueueBeginCommandListRecording(
+	if (commandListOut.commandList != nullptr) return Result::INVALID_ARGUMENT;
+	return (Result)zgCommandQueueBeginCommandListRecording(
 		this->commandQueue, &commandListOut.commandList);
 }
 
-ErrorCode CommandQueue::executeCommandList(CommandList& commandList) noexcept
+Result CommandQueue::executeCommandList(CommandList& commandList) noexcept
 {
-	ZgErrorCode res = zgCommandQueueExecuteCommandList(this->commandQueue, commandList.commandList);
+	ZgResult res = zgCommandQueueExecuteCommandList(this->commandQueue, commandList.commandList);
 	commandList.commandList = nullptr;
-	return (ErrorCode)res;
+	return (Result)res;
 }
 
 
@@ -708,14 +708,14 @@ void CommandList::release() noexcept
 // CommandList: CommandList methods
 // ------------------------------------------------------------------------------------------------
 
-ErrorCode CommandList::memcpyBufferToBuffer(
+Result CommandList::memcpyBufferToBuffer(
 	Buffer& dstBuffer,
 	uint64_t dstBufferOffsetBytes,
 	Buffer& srcBuffer,
 	uint64_t srcBufferOffsetBytes,
 	uint64_t numBytes) noexcept
 {
-	return (ErrorCode)zgCommandListMemcpyBufferToBuffer(
+	return (Result)zgCommandListMemcpyBufferToBuffer(
 		this->commandList,
 		dstBuffer.buffer,
 		dstBufferOffsetBytes,
@@ -724,13 +724,13 @@ ErrorCode CommandList::memcpyBufferToBuffer(
 		numBytes);
 }
 
-ErrorCode CommandList::memcpyToTexture(
+Result CommandList::memcpyToTexture(
 	Texture2D& dstTexture,
 	uint32_t dstTextureMipLevel,
 	const ZgImageViewConstCpu& srcImageCpu,
 	Buffer& tempUploadBuffer) noexcept
 {
-	return (ErrorCode)zgCommandListMemcpyToTexture(
+	return (Result)zgCommandListMemcpyToTexture(
 		this->commandList,
 		dstTexture.texture,
 		dstTextureMipLevel,
@@ -738,89 +738,89 @@ ErrorCode CommandList::memcpyToTexture(
 		tempUploadBuffer.buffer);
 }
 
-ErrorCode CommandList::enableQueueTransition(Buffer& buffer) noexcept
+Result CommandList::enableQueueTransition(Buffer& buffer) noexcept
 {
-	return (ErrorCode)zgCommandListEnableQueueTransitionBuffer(this->commandList, buffer.buffer);
+	return (Result)zgCommandListEnableQueueTransitionBuffer(this->commandList, buffer.buffer);
 }
 
-ErrorCode CommandList::enableQueueTransition(Texture2D& texture) noexcept
+Result CommandList::enableQueueTransition(Texture2D& texture) noexcept
 {
-	return (ErrorCode)zgCommandListEnableQueueTransitionTexture(this->commandList, texture.texture);
+	return (Result)zgCommandListEnableQueueTransitionTexture(this->commandList, texture.texture);
 }
 
-ErrorCode CommandList::setPushConstant(
+Result CommandList::setPushConstant(
 	uint32_t shaderRegister, const void* data, uint32_t dataSizeInBytes) noexcept
 {
-	return (ErrorCode)zgCommandListSetPushConstant(
+	return (Result)zgCommandListSetPushConstant(
 		this->commandList, shaderRegister, data, dataSizeInBytes);
 }
 
-ErrorCode CommandList::setPipelineBindings(const PipelineBindings& bindings) noexcept
+Result CommandList::setPipelineBindings(const PipelineBindings& bindings) noexcept
 {
 	ZgPipelineBindings cBindings = bindings.toCApi();
-	return (ErrorCode)zgCommandListSetPipelineBindings(this->commandList, &cBindings);
+	return (Result)zgCommandListSetPipelineBindings(this->commandList, &cBindings);
 }
 
-ErrorCode CommandList::setPipeline(PipelineRender& pipeline) noexcept
+Result CommandList::setPipeline(PipelineRender& pipeline) noexcept
 {
-	return (ErrorCode)zgCommandListSetPipelineRender(this->commandList, pipeline.pipeline);
+	return (Result)zgCommandListSetPipelineRender(this->commandList, pipeline.pipeline);
 }
 
-ErrorCode CommandList::setFramebuffer(
+Result CommandList::setFramebuffer(
 	Framebuffer& framebuffer,
 	const ZgFramebufferRect* optionalViewport,
 	const ZgFramebufferRect* optionalScissor) noexcept
 {
-	return (ErrorCode)zgCommandListSetFramebuffer(
+	return (Result)zgCommandListSetFramebuffer(
 		this->commandList, framebuffer.framebuffer, optionalViewport, optionalScissor);
 }
 
-ErrorCode CommandList::setFramebufferViewport(
+Result CommandList::setFramebufferViewport(
 	const ZgFramebufferRect& viewport) noexcept
 {
-	return (ErrorCode)zgCommandListSetFramebufferViewport(this->commandList, &viewport);
+	return (Result)zgCommandListSetFramebufferViewport(this->commandList, &viewport);
 }
 
-ErrorCode CommandList::setFramebufferScissor(
+Result CommandList::setFramebufferScissor(
 	const ZgFramebufferRect& scissor) noexcept
 {
-	return (ErrorCode)zgCommandListSetFramebufferScissor(this->commandList, &scissor);
+	return (Result)zgCommandListSetFramebufferScissor(this->commandList, &scissor);
 }
 
-ErrorCode CommandList::clearFramebufferOptimal() noexcept
+Result CommandList::clearFramebufferOptimal() noexcept
 {
-	return (ErrorCode)zgCommandListClearFramebufferOptimal(this->commandList);
+	return (Result)zgCommandListClearFramebufferOptimal(this->commandList);
 }
 
-ErrorCode CommandList::clearRenderTargets(float red, float green, float blue, float alpha) noexcept
+Result CommandList::clearRenderTargets(float red, float green, float blue, float alpha) noexcept
 {
-	return (ErrorCode)zgCommandListClearRenderTargets(this->commandList, red, green, blue, alpha);
+	return (Result)zgCommandListClearRenderTargets(this->commandList, red, green, blue, alpha);
 }
 
-ErrorCode CommandList::clearDepthBuffer(float depth) noexcept
+Result CommandList::clearDepthBuffer(float depth) noexcept
 {
-	return (ErrorCode)zgCommandListClearDepthBuffer(this->commandList, depth);
+	return (Result)zgCommandListClearDepthBuffer(this->commandList, depth);
 }
 
-ErrorCode CommandList::setIndexBuffer(Buffer& indexBuffer, ZgIndexBufferType type) noexcept
+Result CommandList::setIndexBuffer(Buffer& indexBuffer, ZgIndexBufferType type) noexcept
 {
-	return (ErrorCode)zgCommandListSetIndexBuffer(this->commandList, indexBuffer.buffer, type);
+	return (Result)zgCommandListSetIndexBuffer(this->commandList, indexBuffer.buffer, type);
 }
 
-ErrorCode CommandList::setVertexBuffer(uint32_t vertexBufferSlot, Buffer& vertexBuffer) noexcept
+Result CommandList::setVertexBuffer(uint32_t vertexBufferSlot, Buffer& vertexBuffer) noexcept
 {
-	return (ErrorCode)zgCommandListSetVertexBuffer(
+	return (Result)zgCommandListSetVertexBuffer(
 		this->commandList, vertexBufferSlot, vertexBuffer.buffer);
 }
 
-ErrorCode CommandList::drawTriangles(uint32_t startVertexIndex, uint32_t numVertices) noexcept
+Result CommandList::drawTriangles(uint32_t startVertexIndex, uint32_t numVertices) noexcept
 {
-	return (ErrorCode)zgCommandListDrawTriangles(this->commandList, startVertexIndex, numVertices);
+	return (Result)zgCommandListDrawTriangles(this->commandList, startVertexIndex, numVertices);
 }
 
-ErrorCode CommandList::drawTrianglesIndexed(uint32_t startIndex, uint32_t numTriangles) noexcept
+Result CommandList::drawTrianglesIndexed(uint32_t startIndex, uint32_t numTriangles) noexcept
 {
-	return (ErrorCode)zgCommandListDrawTrianglesIndexed(
+	return (Result)zgCommandListDrawTrianglesIndexed(
 		this->commandList, startIndex, numTriangles);
 }
 
