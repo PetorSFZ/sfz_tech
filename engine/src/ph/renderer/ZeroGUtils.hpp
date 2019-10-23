@@ -52,7 +52,7 @@ struct CheckZgImpl final {
 	CheckZgImpl() = delete;
 	CheckZgImpl(const char* file, int line) noexcept : file(file), line(line) {}
 
-	bool operator% (zg::ErrorCode result) noexcept;
+	bool operator% (zg::Result result) noexcept;
 };
 
 // Initialization helpers
@@ -61,7 +61,7 @@ struct CheckZgImpl final {
 bool initializeZeroG(
 	zg::Context& zgCtx, SDL_Window* window, sfz::Allocator* allocator, bool debugMode) noexcept;
 
-void* getNativeWindowHandle(SDL_Window* window) noexcept;
+void* getNativeHandle(SDL_Window* window) noexcept;
 
 // PerFrame template
 // ------------------------------------------------------------------------------------------------
@@ -93,13 +93,13 @@ struct PerFrame {
 	zg::Fence renderingFinished;
 
 	// Simple helper method that initializes both fences
-	zg::ErrorCode initFences() noexcept
+	zg::Result initFences() noexcept
 	{
-		zg::ErrorCode res1 = uploadFinished.create();
-		if (res1 != zg::ErrorCode::SUCCESS) return res1;
-		zg::ErrorCode res2 = renderingFinished.create();
-		if (res2 != zg::ErrorCode::SUCCESS) return res2;
-		return zg::ErrorCode::SUCCESS;
+		zg::Result res1 = uploadFinished.create();
+		if (res1 != zg::Result::SUCCESS) return res1;
+		zg::Result res2 = renderingFinished.create();
+		if (res2 != zg::Result::SUCCESS) return res2;
+		return zg::Result::SUCCESS;
 	}
 
 	// Simple helper methods that releases both fences
@@ -144,13 +144,13 @@ struct Framed {
 		}
 	}
 
-	zg::ErrorCode initAllFences() noexcept
+	zg::Result initAllFences() noexcept
 	{
 		for (uint32_t i = 0; i < MAX_NUM_FRAMES; i++) {
-			zg::ErrorCode res = states[i].initFences();
-			if (res != zg::ErrorCode::SUCCESS) return res;
+			zg::Result res = states[i].initFences();
+			if (res != zg::Result::SUCCESS) return res;
 		}
-		return zg::ErrorCode::SUCCESS;
+		return zg::Result::SUCCESS;
 	}
 
 	void releaseAllFences() noexcept

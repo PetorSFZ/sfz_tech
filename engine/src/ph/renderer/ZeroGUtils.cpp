@@ -101,16 +101,16 @@ ZgAllocator createZeroGAllocatorWrapper(sfz::Allocator* sfzAllocator) noexcept
 // Error handling helpers
 // -----------------------------------------------------------------------------------------------
 
-bool CheckZgImpl::operator% (zg::ErrorCode result) noexcept
+bool CheckZgImpl::operator% (zg::Result result) noexcept
 {
 	if (zg::isSuccess(result)) return true;
 	if (zg::isWarning(result)) {
 		sfz::getLogger()->log(file, line, sfz::LogLevel::WARNING, "ZeroG",
-			"zg::ErrorCode: %s", zgErrorCodeToString((ZgErrorCode)result));
+			"zg::ErrorCode: %s", zgResultToString((ZgResult)result));
 	}
 	else {
 		sfz::getLogger()->log(file, line, sfz::LogLevel::ERROR_LVL, "ZeroG",
-			"zg::ErrorCode: %s", zgErrorCodeToString((ZgErrorCode)result));
+			"zg::ErrorCode: %s", zgResultToString((ZgResult)result));
 	}
 	return false;
 }
@@ -135,7 +135,7 @@ bool initializeZeroG(
 	initSettings.debugMode = debugMode ? ZG_TRUE : ZG_FALSE;
 	initSettings.logger = getPhantasyEngineZeroGLogger();
 	initSettings.allocator = createZeroGAllocatorWrapper(allocator);
-	initSettings.nativeWindowHandle = getNativeWindowHandle(window);
+	initSettings.nativeHandle = getNativeHandle(window);
 
 	// Initialize ZeroG
 	bool initSuccess = CHECK_ZG zgCtx.init(initSettings);
@@ -143,7 +143,7 @@ bool initializeZeroG(
 	return initSuccess;
 }
 
-void* getNativeWindowHandle(SDL_Window* window) noexcept
+void* getNativeHandle(SDL_Window* window) noexcept
 {
 #ifdef WIN32
 	return getWin32WindowHandle(window);
