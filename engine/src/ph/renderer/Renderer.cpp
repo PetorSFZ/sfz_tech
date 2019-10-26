@@ -145,15 +145,9 @@ void Renderer::destroy() noexcept
 		CHECK_ZG mState->presentQueue.flush();
 		CHECK_ZG mState->copyQueue.flush();
 
-		// Destroy all textures
-		for (auto pair : mState->textures) {
-			mState->gpuAllocatorTexture.deallocate(pair.value.texture);
-		}
-
-		// Destroy all GPU meshes
-		for (auto pair : mState->meshes) {
-			gpuMeshDeallocate(pair.value, mState->gpuAllocatorDevice);
-		}
+		// Destroy all textures and meshes
+		this->removeAllTexturesGpuBlocking();
+		this->removeAllMeshesGpuBlocking();
 
 		// Destroy framebuffers
 		for (FramebufferItem& item : mState->configurable.framebuffers) {
@@ -193,8 +187,8 @@ void Renderer::renderImguiUI() noexcept
 bool Renderer::uploadTextureBlocking(
 	StringID id, const phConstImageView& image, bool generateMipmaps) noexcept
 {
-	// Don't upload if it already exists
-	if (mState->textures.get(id) != nullptr) return true;
+	// Error out and return false if texture already exists
+	if (mState->textures.get(id) != nullptr) return false;
 
 	uint32_t numMipmaps = 0;
 	zg::Texture2D texture = textureAllocateAndUploadBlocking(
@@ -225,10 +219,45 @@ bool Renderer::textureLoaded(StringID id) const noexcept
 	return item != nullptr;
 }
 
+void Renderer::removeTextureGpuBlocking(StringID id) noexcept
+{
+	// Ensure not between frameBegin() and frameFinish()
+	sfz_assert_debug(!mState->windowFramebuffer.valid());
+
+	// Return if texture is not loaded in first place
+	ph::TextureItem* item = mState->textures.get(id);
+	if (item == nullptr) return;
+
+	// Ensure all GPU operations in progress are finished
+	mState->presentQueue.flush();
+	mState->copyQueue.flush();
+
+	// Destroy texture
+	mState->gpuAllocatorTexture.deallocate(item->texture);
+	mState->textures.remove(id);
+}
+
+void Renderer::removeAllTexturesGpuBlocking() noexcept
+{
+	// Ensure not between frameBegin() and frameFinish()
+	sfz_assert_debug(!mState->windowFramebuffer.valid());
+
+	// Ensure all GPU operations in progress are finished
+	mState->presentQueue.flush();
+	mState->copyQueue.flush();
+
+	// Destroy all textures
+	for (auto pair : mState->textures) {
+		mState->gpuAllocatorTexture.deallocate(pair.value.texture);
+	}
+	mState->textures.clear();
+}
+
 bool Renderer::uploadMeshBlocking(StringID id, const Mesh& mesh) noexcept
 {
+	// Error out and return false if mesh already exists
 	sfz_assert_debug(id != StringID::invalid());
-	if (mState->meshes.get(id) != nullptr) return true;
+	if (mState->meshes.get(id) != nullptr) return false;
 
 	// Allocate memory for mesh
 	GpuMesh gpuMesh = gpuMeshAllocate(mesh, mState->gpuAllocatorDevice, mState->allocator);
@@ -247,6 +276,40 @@ bool Renderer::meshLoaded(StringID id) const noexcept
 {
 	const ph::GpuMesh* mesh = mState->meshes.get(id);
 	return mesh != nullptr;
+}
+
+void Renderer::removeMeshGpuBlocking(StringID id) noexcept
+{
+	// Ensure not between frameBegin() and frameFinish()
+	sfz_assert_debug(!mState->windowFramebuffer.valid());
+
+	// Return if mesh is not loaded in first place
+	ph::GpuMesh* mesh = mState->meshes.get(id);
+	if (mesh == nullptr) return;
+
+	// Ensure all GPU operations in progress are finished
+	mState->presentQueue.flush();
+	mState->copyQueue.flush();
+
+	// Destroy mesh
+	gpuMeshDeallocate(*mesh, mState->gpuAllocatorDevice);
+	mState->meshes.remove(id);
+}
+
+void Renderer::removeAllMeshesGpuBlocking() noexcept
+{
+	// Ensure not between frameBegin() and frameFinish()
+	sfz_assert_debug(!mState->windowFramebuffer.valid());
+
+	// Ensure all GPU operations in progress are finished
+	mState->presentQueue.flush();
+	mState->copyQueue.flush();
+
+	// Destroy all meshes
+	for (auto pair : mState->meshes) {
+		gpuMeshDeallocate(pair.value, mState->gpuAllocatorDevice);
+	}
+	mState->meshes.clear();
 }
 
 // Renderer: Methods

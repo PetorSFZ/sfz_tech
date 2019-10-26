@@ -105,6 +105,20 @@ public:
 	// Check if a texture is loaded or not
 	bool textureLoaded(StringID id) const noexcept;
 
+	// Removes a texture from the renderer, will flush rendering.
+	//
+	// This operation flushes the rendering so we can guarantee no operation in progress is using
+	// the texture to be removed. This of course means that this is a slow operation that will
+	// cause frame stutter.
+	//
+	// WARNING: This must NOT be called between frameBegin() and frameFinish().
+	void removeTextureGpuBlocking(StringID id) noexcept;
+
+	// Removes all textures from the renderer, will flush rendering.
+	//
+	// WARNING: This must NOT be called between frameBegin() and frameFinish().
+	void removeAllTexturesGpuBlocking() noexcept;
+
 	// Uploads a mesh to the renderer, blocks until done.
 	//
 	// The "id" is a unique string identifier for this mesh. This should normally be, assuming the
@@ -117,6 +131,20 @@ public:
 
 	// Check if a mesh is loaded or not
 	bool meshLoaded(StringID id) const noexcept;
+
+	// Removes a mesh from the renderer, will flush rendering.
+	//
+	// This operation flushes the rendering so we can guarantee no operation in progress is using
+	// the texture to be removed. This of course means that this is a slow operation that will
+	// cause frame stutter.
+	//
+	// WARNING: This must NOT be called between frameBegin() and frameFinish().
+	void removeMeshGpuBlocking(StringID id) noexcept;
+
+	// Removes all meshes from the renderer, will flush rendering.
+	//
+	// WARNING: This must NOT be called between frameBegin() and frameFinish().
+	void removeAllMeshesGpuBlocking() noexcept;
 
 	// Stage methods
 	// --------------------------------------------------------------------------------------------
