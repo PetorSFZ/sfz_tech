@@ -277,6 +277,7 @@ public:
 		// Begin renderer frame
 		renderer.frameBegin();
 
+		// Render
 		mLogic->render(updateInfo, renderer);
 
 		// Render Imgui
@@ -294,6 +295,9 @@ public:
 
 		// Finish rendering frame
 		renderer.frameFinish();
+
+		// Post render hook
+		mLogic->postRenderHook(renderer, mConsoleActive);
 	}
 
 	void onQuit() override final

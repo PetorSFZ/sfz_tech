@@ -60,6 +60,16 @@ public:
 
 	virtual void render(const UpdateInfo& updateInfo, Renderer& renderer) = 0;
 
+	// Small hook that is called last in a frame, after rendering, regardless of whether the
+	// console is active or not.
+	//
+	// This is useful if you need to do some operations each frame when the renderer is not busy
+	// preparing commands to render a new frame (i.e., not between beginFrame() and finishFrame()).
+	//
+	// This is also the last thing that happens each frame, so it can also be a good place to put
+	// some per frame book keeping you are doing.
+	virtual void postRenderHook(ph::Renderer& renderer, bool consoleActive) {};
+
 	// Renders custom Imgui commands.
 	//
 	// This function and injectConsoleMenu() are the only places where Imgui commands can safely
