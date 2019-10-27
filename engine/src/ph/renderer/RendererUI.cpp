@@ -629,12 +629,15 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 		ImGui::Indent(20.0f);
 		constexpr float xOffset = 300.0f;
 		alignedEdit("Bias", xOffset, [&](const char* name) {
+			ImGui::SetNextItemWidth(165.0f);
 			ImGui::InputInt(str128("%s##render_%u", name, i).str, &pipeline.depthBias);
 		});
 		alignedEdit("Bias Slope Scaled", xOffset, [&](const char* name) {
+			ImGui::SetNextItemWidth(100.0f);
 			ImGui::InputFloat(str128("%s##render_%u", name, i).str, &pipeline.depthBiasSlopeScaled, 0.0f, 0.0f, "%.4f");
 		});
 		alignedEdit("Bias Clamp", xOffset, [&](const char* name) {
+			ImGui::SetNextItemWidth(100.0f);
 			ImGui::InputFloat(str128("%s##render_%u", name, i).str, &pipeline.depthBiasClamp, 0.0f, 0.0f, "%.4f");
 		});
 		ImGui::Unindent(20.0f);
