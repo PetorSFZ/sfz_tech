@@ -35,6 +35,7 @@ CascadedShadowMapInfo calculateCascadedShadowMapInfo(
 	float camVertFovDegs,
 	float camAspect,
 	float camNear,
+	mat4 camRealViewMatrix,
 	vec3 lightDir,
 	float shadowHeightDist,
 	uint32_t numLevels,
@@ -55,10 +56,8 @@ CascadedShadowMapInfo calculateCascadedShadowMapInfo(
 		sfz_assert_debug(levelDists[i - 1] < levelDists[i]);
 	}
 
-	// Recreate view matrix and inverse view matrix
-	mat4 viewMatrix;
-	zg::createViewMatrix(viewMatrix.data(), camPos.data(), camDir.data(), camUp.data());
-	mat4 invViewMatrix = sfz::inverse(viewMatrix);
+	// Calculate inverse view matrix
+	mat4 invViewMatrix = sfz::inverse(camRealViewMatrix);
 
 	// Calculate largest aspect ratio so we can pretend view frustrum has same width and height
 	float largestFovRads = 0.0f;

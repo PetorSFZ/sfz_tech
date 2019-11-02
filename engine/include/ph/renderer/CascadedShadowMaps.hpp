@@ -62,6 +62,10 @@ struct CascadedShadowMapInfo final {
 //
 // Assumes you are using reverse-z for shadow maps
 //
+// camRealViewMatrix: The view matrix to be used when calculating light matrices. Note that this
+//                    is ONLY used for this purpose, i.e. the view matrix does not have to be the
+//                    calculated from the camera properties provided. This is useful for debugging
+//                    the shadows.
 // lightDir: The direction of the light. NOT the direction towards the light.
 // shadowHeightDist: The "height" of the shadow map. I.e. how much geometry should be covered from
 //                   the view volume to towards the light.
@@ -76,6 +80,7 @@ CascadedShadowMapInfo calculateCascadedShadowMapInfo(
 	float camVertFovDegs,
 	float camAspect,
 	float camNear,
+	mat4 camRealViewMatrix,
 	vec3 lightDir,
 	float shadowHeightDist,
 	uint32_t numLevels,
