@@ -56,10 +56,10 @@ using std::uint32_t;
 template<typename T, uint32_t H, uint32_t W>
 struct Matrix final {
 
-	Vector<T,W> rows[H];
+	T elements[H][W];
 
-	SFZ_CUDA_CALL T* data() noexcept { return &rows[0][0]; }
-	SFZ_CUDA_CALL const T* data() const noexcept { return &rows[0][0]; }
+	SFZ_CUDA_CALL T* data() noexcept { return &elements[0][0];}
+	SFZ_CUDA_CALL const T* data() const noexcept { return &elements[0][0]; }
 
 	Matrix() noexcept = default;
 	Matrix(const Matrix<T,H,W>&) noexcept = default;
@@ -69,8 +69,8 @@ struct Matrix final {
 	/// Constructs a matrix with the elements in an array (assumes array is in row-major order)
 	SFZ_CUDA_CALL explicit Matrix(const T* arrayPtr) noexcept;
 
-	SFZ_CUDA_CALL T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
-	SFZ_CUDA_CALL T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
+	SFZ_CUDA_CALL T& at(uint32_t y, uint32_t x) noexcept { return elements[y][x]; }
+	SFZ_CUDA_CALL T at(uint32_t y, uint32_t x) const noexcept { return elements[y][x]; }
 	SFZ_CUDA_CALL Vector<T,H> columnAt(uint32_t x) const noexcept;
 
 	SFZ_CUDA_CALL void set(uint32_t y, uint32_t x, T value) noexcept { this->at(y, x) = value; }

@@ -39,7 +39,6 @@ TEST_CASE("Matrix<T,H,W> general definition", "[sfz::Matrix]")
 		REQUIRE(m1.at(0, 1) == 2.0f);
 		REQUIRE(m1.at(0, 2) == 3.0f);
 		REQUIRE(m1.at(0, 3) == 4.0f);
-		REQUIRE(m1.rows[0] == vec4(1.0f, 2.0f, 3.0f, 4.0f));
 
 		Matrix<float,4,1> m2(arr1);
 		REQUIRE(m2.at(0, 0) == 1.0f);
@@ -57,8 +56,6 @@ TEST_CASE("Matrix<T,H,W> general definition", "[sfz::Matrix]")
 		REQUIRE(m3.at(1, 0) == 3.0f);
 		REQUIRE(m3.at(1, 1) == 2.0f);
 		REQUIRE(m3.at(1, 2) == 1.0f);
-		REQUIRE(m3.rows[0] == vec3(6.0f, 5.0f, 4.0f));
-		REQUIRE(m3.rows[1] == vec3(3.0f, 2.0f, 1.0f));
 		REQUIRE(m3.columnAt(0) == vec2(6.0f, 3.0f));
 		REQUIRE(m3.columnAt(1) == vec2(5.0f, 2.0f));
 		REQUIRE(m3.columnAt(2) == vec2(4.0f, 1.0f));

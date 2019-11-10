@@ -757,7 +757,9 @@ template<typename T, uint32_t H, uint32_t W>
 SFZ_CUDA_CALL Matrix<T,H,W>& operator+= (Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexcept
 {
 	for (uint32_t y = 0; y < H; y++) {
-		lhs.rows[y] += rhs.rows[y];
+		for (uint32_t x = 0; x < W; x++) {
+			lhs.at(y, x) += rhs.at(y, x);
+		}
 	}
 	return lhs;
 }
@@ -766,7 +768,9 @@ template<typename T, uint32_t H, uint32_t W>
 SFZ_CUDA_CALL Matrix<T,H,W>& operator-= (Matrix<T,H,W>& lhs, const Matrix<T,H,W>& rhs) noexcept
 {
 	for (uint32_t y = 0; y < H; y++) {
-		lhs.rows[y] -= rhs.rows[y];
+		for (uint32_t x = 0; x < W; x++) {
+			lhs.at(y, x) -= rhs.at(y, x);
+		}
 	}
 	return lhs;
 }
@@ -775,7 +779,9 @@ template<typename T, uint32_t H, uint32_t W>
 SFZ_CUDA_CALL Matrix<T,H,W>& operator*= (Matrix<T,H,W>& lhs, T rhs) noexcept
 {
 	for (uint32_t y = 0; y < H; y++) {
-		lhs.rows[y] *= rhs;
+		for (uint32_t x = 0; x < W; x++) {
+			lhs.at(y, x) *= rhs;
+		}
 	}
 	return lhs;
 }
@@ -816,7 +822,7 @@ SFZ_CUDA_CALL Matrix<T,H,W> operator* (const Matrix<T,H,S>& lhs, const Matrix<T,
 	Matrix<T,H,W> res;
 	for (uint32_t y = 0; y < H; y++) {
 		for (uint32_t x = 0; x < W; x++) {
-			res.at(y, x) = dot(lhs.rows[y], rhs.columnAt(x));
+			res.at(y, x) = dot(Vector<T,S>(lhs.data() + y * S), rhs.columnAt(x));
 		}
 	}
 	return res;
@@ -827,7 +833,7 @@ SFZ_CUDA_CALL Vector<T,H> operator* (const Matrix<T,H,W>& lhs, const Vector<T,W>
 {
 	Vector<T,H> res;
 	for (uint32_t y = 0; y < H; y++) {
-		res[y] = dot(lhs.rows[y], rhs);
+		res[y] = dot(Vector<T,W>(lhs.data() + y * W), rhs);
 	}
 	return res;
 }
