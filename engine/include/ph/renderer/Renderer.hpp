@@ -34,7 +34,7 @@ struct phContext;
 namespace ph {
 
 using sfz::StringID;
-using sfz::vec2_s32;
+using sfz::vec2_i32;
 
 // Helper structs
 // ------------------------------------------------------------------------------------------------
@@ -81,7 +81,7 @@ public:
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
-	vec2_s32 windowResolution() const noexcept;
+	vec2_i32 windowResolution() const noexcept;
 
 	// ImGui UI methods
 	// --------------------------------------------------------------------------------------------

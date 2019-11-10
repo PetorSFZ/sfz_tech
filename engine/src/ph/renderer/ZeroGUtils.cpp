@@ -106,11 +106,11 @@ bool CheckZgImpl::operator% (zg::Result result) noexcept
 	if (zg::isSuccess(result)) return true;
 	if (zg::isWarning(result)) {
 		sfz::getLogger()->log(file, line, sfz::LogLevel::WARNING, "ZeroG",
-			"zg::ErrorCode: %s", zgResultToString((ZgResult)result));
+			"zg::Result: %s", zgResultToString((ZgResult)result));
 	}
 	else {
 		sfz::getLogger()->log(file, line, sfz::LogLevel::ERROR_LVL, "ZeroG",
-			"zg::ErrorCode: %s", zgResultToString((ZgResult)result));
+			"zg::Result: %s", zgResultToString((ZgResult)result));
 	}
 	return false;
 }

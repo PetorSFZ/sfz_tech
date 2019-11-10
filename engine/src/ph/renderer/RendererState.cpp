@@ -58,7 +58,7 @@ void FramebufferItem::deallocate(DynamicGpuAllocator& gpuAllocatorFramebuffer) n
 	}
 }
 
-bool FramebufferItem::buildFramebuffer(vec2_s32 windowRes, DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept
+bool FramebufferItem::buildFramebuffer(vec2_i32 windowRes, DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept
 {
 	// Figure out resolution
 	uint32_t width = 0;

@@ -33,7 +33,7 @@ namespace ph {
 
 using sfz::DynArray;
 using sfz::vec2;
-using sfz::vec2_s32;
+using sfz::vec2_i32;
 using sfz::vec4;
 
 // Vertex
@@ -85,7 +85,7 @@ public:
 		uint64_t frameIdx,
 		zg::CommandQueue& presentQueue,
 		zg::Framebuffer& framebuffer,
-		vec2_s32 framebufferRes,
+		vec2_i32 framebufferRes,
 		const phImguiVertex* vertices,
 		uint32_t numVertices,
 		const uint32_t* indices,

@@ -44,7 +44,7 @@ using sfz::str128;
 using sfz::str256;
 using sfz::str320;
 using sfz::StringID;
-using sfz::vec2_s32;
+using sfz::vec2_i32;
 
 // Framebuffer types
 // ------------------------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ struct FramebufferItem final {
 	bool resolutionIsFixed = false;
 	float resolutionScale = 1.0f;
 	Setting* resolutionScaleSetting = nullptr;
-	vec2_s32 resolutionFixed = vec2_s32(0);
+	vec2_i32 resolutionFixed = vec2_i32(0);
 	uint32_t numRenderTargets = 0;
 	RenderTargetItem renderTargetItems[ZG_MAX_NUM_RENDER_TARGETS];
 	bool hasDepthBuffer = false;
@@ -82,7 +82,7 @@ struct FramebufferItem final {
 	void deallocate(DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept;
 
 	// Method for building the framebuffer given the parsed information
-	bool buildFramebuffer(vec2_s32 windowRes, DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept;
+	bool buildFramebuffer(vec2_i32 windowRes, DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept;
 };
 
 // Pipeline types
@@ -223,7 +223,7 @@ struct RendererState final {
 	// The current index of the frame, increments at every frameBegin()
 	uint64_t currentFrameIdx = 0;
 
-	vec2_s32 windowRes = vec2_s32(0);
+	vec2_i32 windowRes = vec2_i32(0);
 	zg::Framebuffer windowFramebuffer;
 	zg::CommandQueue presentQueue;
 	zg::CommandQueue copyQueue;

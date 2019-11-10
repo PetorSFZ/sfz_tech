@@ -192,7 +192,7 @@ void ImGuiRenderer::render(
 	uint64_t frameIdx,
 	zg::CommandQueue& presentQueue,
 	zg::Framebuffer& framebuffer,
-	vec2_s32 framebufferRes,
+	vec2_i32 framebufferRes,
 	const phImguiVertex* vertices,
 	uint32_t numVertices,
 	const uint32_t* indices,

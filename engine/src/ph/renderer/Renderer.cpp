@@ -77,7 +77,7 @@ bool Renderer::init(
 	}
 
 	// Set window resolution to default value (512x512)
-	mState->windowRes = vec2_s32(512, 512);
+	mState->windowRes = vec2_i32(512, 512);
 
 	// Get command queues
 	if (!(CHECK_ZG zg::CommandQueue::getPresentQueue(mState->presentQueue))) {
@@ -168,7 +168,7 @@ void Renderer::destroy() noexcept
 // Renderer: Getters
 // ------------------------------------------------------------------------------------------------
 
-vec2_s32 Renderer::windowResolution() const noexcept
+vec2_i32 Renderer::windowResolution() const noexcept
 {
 	return mState->windowRes;
 }
