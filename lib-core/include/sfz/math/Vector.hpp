@@ -260,9 +260,9 @@ inline vec2 normalize(vec2 v) { return v * (1.0f / length(v)); }
 inline vec3 normalize(vec3 v) { return v * (1.0f / length(v)); }
 inline vec4 normalize(vec4 v) { return v * (1.0f / length(v)); }
 
-inline vec2 normalizeSafe(vec2 v) { float tmp = length(v); return (tmp == 0.0f) ? v : (v / tmp); }
-inline vec3 normalizeSafe(vec3 v) { float tmp = length(v); return (tmp == 0.0f) ? v : (v / tmp); }
-inline vec4 normalizeSafe(vec4 v) { float tmp = length(v); return (tmp == 0.0f) ? v : (v / tmp); }
+inline vec2 normalizeSafe(vec2 v) { float tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
+inline vec3 normalizeSafe(vec3 v) { float tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
+inline vec4 normalizeSafe(vec4 v) { float tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
 
 } // namespace sfz
 
