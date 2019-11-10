@@ -26,11 +26,11 @@
 
 #include <type_traits>
 
-TEST_CASE("Vector<T,2> specialization", "[sfz::Vector]")
+TEST_CASE("Vec<T,2> specialization", "[sfz::Vec]")
 {
-	sfz::Vector<int,2> v;
+	sfz::Vec<int,2> v;
 	SECTION("Data") {
-		REQUIRE(sizeof(sfz::Vector<int,2>) == sizeof(int)*2);
+		REQUIRE(sizeof(sfz::Vec<int,2>) == sizeof(int)*2);
 		v.data()[0] = 1;
 		v.data()[1] = 2;
 		REQUIRE(v.x == 1);
@@ -38,20 +38,20 @@ TEST_CASE("Vector<T,2> specialization", "[sfz::Vector]")
 	}
 	SECTION("Array pointer constructor") {
 		int arr[] = {1, 2, 3};
-		sfz::Vector<int,2> v1{arr};
-		sfz::Vector<int,2> v2{arr+1};
+		sfz::Vec<int,2> v1{arr};
+		sfz::Vec<int,2> v2{arr+1};
 		REQUIRE(v1[0] == 1);
 		REQUIRE(v1[1] == 2);
 		REQUIRE(v2[0] == 2);
 		REQUIRE(v2[1] == 3);
 	}
 	SECTION("Fill constructor") {
-		sfz::Vector<int,2> v1{3};
+		sfz::Vec<int,2> v1{3};
 		REQUIRE(v1.x == 3);
 		REQUIRE(v1.y == 3);
 	}
 	SECTION("Constructor (x, y)") {
-		sfz::Vector<int,2> v1{3, -1};
+		sfz::Vec<int,2> v1{3, -1};
 		REQUIRE(v1[0] == 3);
 		REQUIRE(v1[1] == -1);
 	}
@@ -68,24 +68,24 @@ TEST_CASE("Vector<T,2> specialization", "[sfz::Vector]")
 	}
 }
 
-TEST_CASE("Vector<T,3> specialization", "[sfz::Vector]")
+TEST_CASE("Vec<T,3> specialization", "[sfz::Vec]")
 {
-	sfz::Vector<int,3> v;
+	sfz::Vec<int,3> v;
 	SECTION("Data") {
-		REQUIRE(sizeof(sfz::Vector<int,3>) == sizeof(int)*3);
+		REQUIRE(sizeof(sfz::Vec<int,3>) == sizeof(int)*3);
 		v.data()[0] = 1;
 		v.data()[1] = 2;
 		v.data()[2] = 3;
 		REQUIRE(v.x == 1);
 		REQUIRE(v.y == 2);
 		REQUIRE(v.z == 3);
-		REQUIRE(v.xy == (sfz::Vector<int,2>{1, 2}));
-		REQUIRE(v.yz == (sfz::Vector<int,2>{2, 3}));
+		REQUIRE(v.xy == (sfz::Vec<int,2>{1, 2}));
+		REQUIRE(v.yz == (sfz::Vec<int,2>{2, 3}));
 	}
 	SECTION("Array pointer constructor") {
 		int arr[] = {1, 2, 3, 4};
-		sfz::Vector<int,3> v1{arr};
-		sfz::Vector<int,3> v2{arr+1};
+		sfz::Vec<int,3> v1{arr};
+		sfz::Vec<int,3> v2{arr+1};
 		REQUIRE(v1[0] == 1);
 		REQUIRE(v1[1] == 2);
 		REQUIRE(v1[2] == 3);
@@ -94,25 +94,25 @@ TEST_CASE("Vector<T,3> specialization", "[sfz::Vector]")
 		REQUIRE(v2[2] == 4);
 	}
 	SECTION("Fill constructor") {
-		sfz::Vector<int,3> v1{3};
+		sfz::Vec<int,3> v1{3};
 		REQUIRE(v1.x == 3);
 		REQUIRE(v1.y == 3);
 		REQUIRE(v1.z == 3);
 	}
 	SECTION("Constructor (x, y, z)") {
-		sfz::Vector<int,3> v1{3, -1, -2};
+		sfz::Vec<int,3> v1{3, -1, -2};
 		REQUIRE(v1[0] == 3);
 		REQUIRE(v1[1] == -1);
 		REQUIRE(v1[2] == -2);
 	}
 	SECTION("Constructor (xy, z)") {
-		sfz::Vector<int,3> v1{sfz::Vector<int,2>{3, -1}, -2};
+		sfz::Vec<int,3> v1{sfz::Vec<int,2>{3, -1}, -2};
 		REQUIRE(v1[0] == 3);
 		REQUIRE(v1[1] == -1);
 		REQUIRE(v1[2] == -2);
 	}
 	SECTION("Constructor (x, yz)") {
-		sfz::Vector<int,3> v1{3, sfz::Vector<int,2>{-1, -2}};
+		sfz::Vec<int,3> v1{3, sfz::Vec<int,2>{-1, -2}};
 		REQUIRE(v1[0] == 3);
 		REQUIRE(v1[1] == -1);
 		REQUIRE(v1[2] == -2);
@@ -133,11 +133,11 @@ TEST_CASE("Vector<T,3> specialization", "[sfz::Vector]")
 	}
 }
 
-TEST_CASE("Vector<T,4> specialization", "[sfz::Vector]")
+TEST_CASE("Vec<T,4> specialization", "[sfz::Vec]")
 {
-	sfz::Vector<int,4> v;
+	sfz::Vec<int,4> v;
 	SECTION("Data") {
-		REQUIRE(sizeof(sfz::Vector<int,4>) == sizeof(int)*4);
+		REQUIRE(sizeof(sfz::Vec<int,4>) == sizeof(int)*4);
 		v.data()[0] = 1;
 		v.data()[1] = 2;
 		v.data()[2] = 3;
@@ -146,16 +146,16 @@ TEST_CASE("Vector<T,4> specialization", "[sfz::Vector]")
 		REQUIRE(v.y == 2);
 		REQUIRE(v.z == 3);
 		REQUIRE(v.w == 4);
-		REQUIRE(v.xyz == (sfz::Vector<int,3>{1, 2, 3}));
-		REQUIRE(v.yzw == (sfz::Vector<int,3>{2, 3, 4}));
-		REQUIRE(v.xy == (sfz::Vector<int,2>{1, 2}));
-		REQUIRE(v.zw == (sfz::Vector<int,2>{3, 4}));
-		REQUIRE(v.yz == (sfz::Vector<int,2>{2, 3}));
+		REQUIRE(v.xyz == (sfz::Vec<int,3>{1, 2, 3}));
+		REQUIRE(v.yzw == (sfz::Vec<int,3>{2, 3, 4}));
+		REQUIRE(v.xy == (sfz::Vec<int,2>{1, 2}));
+		REQUIRE(v.zw == (sfz::Vec<int,2>{3, 4}));
+		REQUIRE(v.yz == (sfz::Vec<int,2>{2, 3}));
 	}
 	SECTION("Array pointer constructor") {
 		int arr[] = {1, 2, 3, 4, 5};
-		sfz::Vector<int,4> v1{arr};
-		sfz::Vector<int,4> v2{arr+1};
+		sfz::Vec<int,4> v1{arr};
+		sfz::Vec<int,4> v2{arr+1};
 		REQUIRE(v1[0] == 1);
 		REQUIRE(v1[1] == 2);
 		REQUIRE(v1[2] == 3);
@@ -166,56 +166,56 @@ TEST_CASE("Vector<T,4> specialization", "[sfz::Vector]")
 		REQUIRE(v2[3] == 5);
 	}
 	SECTION("Fill constructor") {
-		sfz::Vector<int,4> v1{3};
+		sfz::Vec<int,4> v1{3};
 		REQUIRE(v1.x == 3);
 		REQUIRE(v1.y == 3);
 		REQUIRE(v1.z == 3);
 		REQUIRE(v1.w == 3);
 	}
 	SECTION("Constructor (x, y, z, w)") {
-		sfz::Vector<int,4> v1{3, -1, -2, 9};
+		sfz::Vec<int,4> v1{3, -1, -2, 9};
 		REQUIRE(v1[0] == 3);
 		REQUIRE(v1[1] == -1);
 		REQUIRE(v1[2] == -2);
 		REQUIRE(v1[3] == 9);
 	}
 	SECTION("Constructor (xyz, w)") {
-		sfz::Vector<int,4> v1{sfz::Vector<int,3>{3, -1, -2}, 9};
+		sfz::Vec<int,4> v1{sfz::Vec<int,3>{3, -1, -2}, 9};
 		REQUIRE(v1[0] == 3);
 		REQUIRE(v1[1] == -1);
 		REQUIRE(v1[2] == -2);
 		REQUIRE(v1[3] == 9);
 	}
 	SECTION("Constructor (x, yzw)") {
-		sfz::Vector<int,4> v1{3, sfz::Vector<int,3>{-1, -2, 9}};
+		sfz::Vec<int,4> v1{3, sfz::Vec<int,3>{-1, -2, 9}};
 		REQUIRE(v1[0] == 3);
 		REQUIRE(v1[1] == -1);
 		REQUIRE(v1[2] == -2);
 		REQUIRE(v1[3] == 9);
 	}
 	SECTION("Constructor (xy, zw)") {
-		sfz::Vector<int,4> v1{sfz::Vector<int,2>{3, -1}, sfz::Vector<int,2>{-2, 9}};
+		sfz::Vec<int,4> v1{sfz::Vec<int,2>{3, -1}, sfz::Vec<int,2>{-2, 9}};
 		REQUIRE(v1[0] == 3);
 		REQUIRE(v1[1] == -1);
 		REQUIRE(v1[2] == -2);
 		REQUIRE(v1[3] == 9);
 	}
 	SECTION("Constructor (xy, z, w)") {
-		sfz::Vector<int,4> v1{sfz::Vector<int,2>{3, -1}, -2, 9};
+		sfz::Vec<int,4> v1{sfz::Vec<int,2>{3, -1}, -2, 9};
 		REQUIRE(v1[0] == 3);
 		REQUIRE(v1[1] == -1);
 		REQUIRE(v1[2] == -2);
 		REQUIRE(v1[3] == 9);
 	}
 	SECTION("Constructor (x, yz, w)") {
-		sfz::Vector<int,4> v1{3, sfz::Vector<int,2>{-1, -2}, 9};
+		sfz::Vec<int,4> v1{3, sfz::Vec<int,2>{-1, -2}, 9};
 		REQUIRE(v1[0] == 3);
 		REQUIRE(v1[1] == -1);
 		REQUIRE(v1[2] == -2);
 		REQUIRE(v1[3] == 9);
 	}
 	SECTION("Constructor (x, y, zw)") {
-		sfz::Vector<int,4> v1{3, -1, sfz::Vector<int,2>{-2, 9}};
+		sfz::Vec<int,4> v1{3, -1, sfz::Vec<int,2>{-2, 9}};
 		REQUIRE(v1[0] == 3);
 		REQUIRE(v1[1] == -1);
 		REQUIRE(v1[2] == -2);
@@ -240,59 +240,12 @@ TEST_CASE("Vector<T,4> specialization", "[sfz::Vector]")
 	}
 }
 
-TEST_CASE("Vector<T,N> general definition", "[sfz::Vector]")
+TEST_CASE("Arithmetic operators", "[sfz::Vec]")
 {
-	sfz::Vector<int,5> v;
-	SECTION("Data") {
-		REQUIRE(sizeof(sfz::Vector<int,5>) == sizeof(int)*5);
-		REQUIRE(sizeof(v.elements) == sizeof(int)*5);
-	}
-	SECTION("Array pointer constructor") {
-		int arr[] = {1, 2, 3, 4, 5, 6};
-		sfz::Vector<int,5> v1{arr};
-		sfz::Vector<int,5> v2{arr+1};
-		REQUIRE(v1[0] == 1);
-		REQUIRE(v1[1] == 2);
-		REQUIRE(v1[2] == 3);
-		REQUIRE(v1[3] == 4);
-		REQUIRE(v1[4] == 5);
-		REQUIRE(v2[0] == 2);
-		REQUIRE(v2[1] == 3);
-		REQUIRE(v2[2] == 4);
-		REQUIRE(v2[3] == 5);
-		REQUIRE(v2[4] == 6);
-	}
-	SECTION("Cast constructor")
-	{
-		float numbers[] = {-1.0f, 1.0f, -2.0f, 4.0, -6.0f};
-		sfz::Vector<float,5> vf(numbers);
-		sfz::Vector<int,5> vi(vf);
-		REQUIRE(vi[0] == -1);
-		REQUIRE(vi[1] == 1);
-		REQUIRE(vi[2] == -2);
-		REQUIRE(vi[3] == 4);
-		REQUIRE(vi[4] == -6);
-	}
-	SECTION("Access [] operator") {
-		v[0] = 4;
-		v[1] = -2;
-		v[2] = 1;
-		v[3] = 27;
-		v[4] = -9;
-		REQUIRE(v[0] == 4);
-		REQUIRE(v[1] == -2);
-		REQUIRE(v[2] == 1);
-		REQUIRE(v[3] == 27);
-		REQUIRE(v[4] == -9);
-	}
-}
+	sfz::Vec<int, 3> v1{1, -2, 5};
+	sfz::Vec<int, 3> v2{0, -2, 1};
 
-TEST_CASE("Arithmetic operators", "[sfz::Vector]")
-{
-	sfz::Vector<int, 3> v1{1, -2, 5};
-	sfz::Vector<int, 3> v2{0, -2, 1};
-
-	// Integrity check of base vectors
+	// Integrity check of base Vecs
 	REQUIRE(v1[0] == 1);
 	REQUIRE(v1[1] == -2);
 	REQUIRE(v1[2] == 5);
@@ -374,7 +327,7 @@ TEST_CASE("Arithmetic operators", "[sfz::Vector]")
 		REQUIRE(v2[2] == 1);
 	}
 	SECTION("Division by number") {
-		auto v3 = sfz::Vector<int,2>{2, -2}/2;
+		auto v3 = sfz::Vec<int,2>{2, -2}/2;
 		REQUIRE(v3[0] == 1);
 		REQUIRE(v3[1] == -1);
 	}
@@ -409,7 +362,7 @@ TEST_CASE("Arithmetic operators", "[sfz::Vector]")
 		REQUIRE(v1[2] == 5);
 	}
 	SECTION("Division by number assignment") {
-		sfz::Vector<int, 2> v3{2, -2};
+		sfz::Vec<int, 2> v3{2, -2};
 		v3 /= 2;
 		REQUIRE(v3[0] == 1);
 		REQUIRE(v3[1] == -1);
@@ -423,7 +376,7 @@ TEST_CASE("Arithmetic operators", "[sfz::Vector]")
 	}
 }
 
-TEST_CASE("Length of vector", "[sfz::Vector]")
+TEST_CASE("Length of vector", "[sfz::Vec]")
 {
 	using sfz::length;
 	using sfz::approxEqual;
@@ -437,9 +390,9 @@ TEST_CASE("Length of vector", "[sfz::Vector]")
 	}
 }
 
-TEST_CASE("Normalizing (making unit vector) vector", "[sfz::Vector]")
+TEST_CASE("Normalizing (making unit vector) vector", "[sfz::Vec]")
 {
-	sfz::Vector<float, 4> v1 = normalize(sfz::Vector<float, 4>{-2.f, 2.f, -2.f, 2.f});
+	sfz::Vec<float, 4> v1 = normalize(sfz::Vec<float, 4>{-2.f, 2.f, -2.f, 2.f});
 	const float delta = 1e-3f;
 
 	SECTION("Correct answer") {
@@ -460,16 +413,16 @@ TEST_CASE("Normalizing (making unit vector) vector", "[sfz::Vector]")
 		REQUIRE(posLower <= v1[3]);
 		REQUIRE(v1[3] <= posHigher);
 	}
-	SECTION("safeNormalize()") {
-		REQUIRE(safeNormalize(sfz::vec3(0.0f)) == sfz::vec3(0.0f));
+	SECTION("normalizeSafe()") {
+		REQUIRE(normalizeSafe(sfz::vec3(0.0f)) == sfz::vec3(0.0f));
 	}
 }
 
-TEST_CASE("Comparison operators", "[sfz::Vector]")
+TEST_CASE("Comparison operators", "[sfz::Vec]")
 {
-	sfz::Vector<int, 3> v1{-4, 0, 0};
-	sfz::Vector<int, 3> v2{0, 2, 0};
-	sfz::Vector<int, 3> v3{0, 2, 0};
+	sfz::Vec<int, 3> v1{-4, 0, 0};
+	sfz::Vec<int, 3> v2{0, 2, 0};
+	sfz::Vec<int, 3> v3{0, 2, 0};
 
 	SECTION("== and !=") {
 		REQUIRE(v1 == v1);
@@ -482,12 +435,12 @@ TEST_CASE("Comparison operators", "[sfz::Vector]")
 	}
 }
 
-TEST_CASE("Dot (scalar) product", "[sfz::Vector]")
+TEST_CASE("Dot (scalar) product", "[sfz::Vec]")
 {
 	using sfz::dot;
 	SECTION("Correctness test") {
-		sfz::Vector<int, 3> v1{1, 0, -2};
-		sfz::Vector<int, 3> v2{6, 2, 2};
+		sfz::Vec<int, 3> v1{1, 0, -2};
+		sfz::Vec<int, 3> v2{6, 2, 2};
 		int scalarProduct = dot(v1, v2);
 
 		REQUIRE(scalarProduct == 2);
@@ -500,7 +453,7 @@ TEST_CASE("Dot (scalar) product", "[sfz::Vector]")
 		REQUIRE(v2[2] == 2);
 	}
 	SECTION("Using same vector twice") {
-		sfz::Vector<int, 2> v1{-3, 2};
+		sfz::Vec<int, 2> v1{-3, 2};
 		int scalarProduct = dot(v1, v1);
 
 		REQUIRE(scalarProduct == 13);
@@ -515,10 +468,10 @@ TEST_CASE("Dot (scalar) product", "[sfz::Vector]")
 	}
 }
 
-TEST_CASE("Cross product", "[sfz::Vector]")
+TEST_CASE("Cross product", "[sfz::Vec]")
 {
-	sfz::Vector<int, 3> v1{-1, 4, 0};
-	sfz::Vector<int, 3> v2{1, -2, 3};
+	sfz::Vec<int, 3> v1{-1, 4, 0};
+	sfz::Vec<int, 3> v2{1, -2, 3};
 
 	SECTION("Correctness test") {
 		auto res = sfz::cross(v1, v2);
@@ -587,7 +540,7 @@ TEST_CASE("sfzMax() (Vector)", "[sfz::MathSupport]")
 	}
 }
 
-TEST_CASE("Converting to string", "[sfz::Vector]")
+TEST_CASE("Converting to string", "[sfz::Vec]")
 {
 	using namespace sfz;
 	vec3_s32 v{-1, 2, 10};
@@ -597,7 +550,7 @@ TEST_CASE("Converting to string", "[sfz::Vector]")
 	REQUIRE(toString(v2, 1) == "[1.0, 2.0, 3.0, 4.0]");
 }
 
-TEST_CASE("Is proper POD", "[sfz::Vector]")
+TEST_CASE("Is proper POD", "[sfz::Vec]")
 {
 	REQUIRE(std::is_trivially_default_constructible<sfz::vec2>::value);
 	REQUIRE(std::is_trivially_default_constructible<sfz::vec2_s32>::value);

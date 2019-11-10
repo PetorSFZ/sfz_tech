@@ -31,9 +31,9 @@ SFZ_CUDA_CALL Matrix<T,H,W>::Matrix(const T* arrayPtr) noexcept
 }
 
 template<typename T, uint32_t H, uint32_t W>
-SFZ_CUDA_CALL Vector<T,H> Matrix<T,H,W>::columnAt(uint32_t x) const noexcept
+SFZ_CUDA_CALL Vec<T,H> Matrix<T,H,W>::columnAt(uint32_t x) const noexcept
 {
-	Vector<T,H> column;
+	Vec<T,H> column;
 	for (uint32_t y = 0; y < H; y++) {
 		column[y] = this->at(y, x);
 	}
@@ -41,7 +41,7 @@ SFZ_CUDA_CALL Vector<T,H> Matrix<T,H,W>::columnAt(uint32_t x) const noexcept
 }
 
 template<typename T, uint32_t H, uint32_t W>
-SFZ_CUDA_CALL void Matrix<T,H,W>::setColumn(uint32_t x, Vector<T,H> column) noexcept
+SFZ_CUDA_CALL void Matrix<T,H,W>::setColumn(uint32_t x, Vec<T,H> column) noexcept
 {
 	for (uint32_t y = 0; y < W; y++) {
 		this->at(y, x) = column(y);
@@ -69,8 +69,8 @@ SFZ_CUDA_CALL Matrix<T,2,2>::Matrix(T e00, T e01,
 { }
 
 template<typename T>
-SFZ_CUDA_CALL Matrix<T,2,2>::Matrix(Vector<T,2> row0,
-                                    Vector<T,2> row1) noexcept
+SFZ_CUDA_CALL Matrix<T,2,2>::Matrix(Vec<T,2> row0,
+                                    Vec<T,2> row1) noexcept
 {
 	rows[0] = row0;
 	rows[1] = row1;
@@ -105,19 +105,19 @@ SFZ_CUDA_CALL Matrix<T,2,2> Matrix<T,2,2>::scaling2(T x, T y) noexcept
 }
 
 template<typename T>
-SFZ_CUDA_CALL Matrix<T,2,2> Matrix<T,2,2>::scaling2(Vector<T,2> scale) noexcept
+SFZ_CUDA_CALL Matrix<T,2,2> Matrix<T,2,2>::scaling2(Vec<T,2> scale) noexcept
 {
 	return Matrix<T,2,2>::scaling2(scale.x, scale.y);
 }
 
 template<typename T>
-SFZ_CUDA_CALL Vector<T,2> Matrix<T,2,2>::columnAt(uint32_t x) const noexcept
+SFZ_CUDA_CALL Vec<T,2> Matrix<T,2,2>::columnAt(uint32_t x) const noexcept
 {
-	return Vector<T,2>(this->at(0, x), this->at(1, x));
+	return Vec<T,2>(this->at(0, x), this->at(1, x));
 }
 
 template<typename T>
-SFZ_CUDA_CALL void Matrix<T,2,2>::setColumn(uint32_t x, Vector<T,2> column) noexcept
+SFZ_CUDA_CALL void Matrix<T,2,2>::setColumn(uint32_t x, Vec<T,2> column) noexcept
 {
 	this->set(0, x, column.x);
 	this->set(1, x, column.y);
@@ -153,9 +153,9 @@ SFZ_CUDA_CALL Matrix<T,3,3>::Matrix(T e00, T e01, T e02,
 { }
 
 template<typename T>
-SFZ_CUDA_CALL Matrix<T,3,3>::Matrix(Vector<T,3> row0,
-                                    Vector<T,3> row1,
-                                    Vector<T,3> row2) noexcept
+SFZ_CUDA_CALL Matrix<T,3,3>::Matrix(Vec<T,3> row0,
+                                    Vec<T,3> row1,
+                                    Vec<T,3> row2) noexcept
 {
 	rows[0] = row0;
 	rows[1] = row1;
@@ -211,17 +211,17 @@ SFZ_CUDA_CALL Matrix<T,3,3> Matrix<T,3,3>::scaling3(T x, T y, T z) noexcept
 }
 
 template<typename T>
-SFZ_CUDA_CALL Matrix<T,3,3> Matrix<T,3,3>::scaling3(Vector<T,3> scale) noexcept
+SFZ_CUDA_CALL Matrix<T,3,3> Matrix<T,3,3>::scaling3(Vec<T,3> scale) noexcept
 {
 	return Matrix<T,3,3>::scaling3(scale.x, scale.y, scale.z);
 }
 
 template<typename T>
-SFZ_CUDA_CALL Matrix<T,3,3> Matrix<T,3,3>::rotation3(Vector<T,3> axis, T angleRad) noexcept
+SFZ_CUDA_CALL Matrix<T,3,3> Matrix<T,3,3>::rotation3(Vec<T,3> axis, T angleRad) noexcept
 {
 	using std::cos;
 	using std::sin;
-	Vector<T,3> r = normalize(axis);
+	Vec<T,3> r = normalize(axis);
 	T x = r.x;
 	T y = r.y;
 	T z = r.z;
@@ -235,13 +235,13 @@ SFZ_CUDA_CALL Matrix<T,3,3> Matrix<T,3,3>::rotation3(Vector<T,3> axis, T angleRa
 }
 
 template<typename T>
-SFZ_CUDA_CALL Vector<T,3> Matrix<T,3,3>::columnAt(uint32_t x) const noexcept
+SFZ_CUDA_CALL Vec<T,3> Matrix<T,3,3>::columnAt(uint32_t x) const noexcept
 {
-	return Vector<T,3>(this->at(0, x), this->at(1, x), this->at(2, x));
+	return Vec<T,3>(this->at(0, x), this->at(1, x), this->at(2, x));
 }
 
 template<typename T>
-SFZ_CUDA_CALL void Matrix<T,3,3>::setColumn(uint32_t x, Vector<T,3> column) noexcept
+SFZ_CUDA_CALL void Matrix<T,3,3>::setColumn(uint32_t x, Vec<T,3> column) noexcept
 {
 	this->set(0, x, column.x);
 	this->set(1, x, column.y);
@@ -281,9 +281,9 @@ SFZ_CUDA_CALL Matrix<T,3,4>::Matrix(T e00, T e01, T e02, T e03,
 { }
 
 template<typename T>
-SFZ_CUDA_CALL Matrix<T,3,4>::Matrix(Vector<T,4> row0,
-                                    Vector<T,4> row1,
-                                    Vector<T,4> row2) noexcept
+SFZ_CUDA_CALL Matrix<T,3,4>::Matrix(Vec<T,4> row0,
+                                    Vec<T,4> row1,
+                                    Vec<T,4> row2) noexcept
 {
 	rows[0] = row0;
 	rows[1] = row1;
@@ -339,17 +339,17 @@ SFZ_CUDA_CALL Matrix<T,3,4> Matrix<T,3,4>::scaling3(T x, T y, T z) noexcept
 }
 
 template<typename T>
-SFZ_CUDA_CALL Matrix<T,3,4> Matrix<T,3,4>::scaling3(Vector<T,3> scale) noexcept
+SFZ_CUDA_CALL Matrix<T,3,4> Matrix<T,3,4>::scaling3(Vec<T,3> scale) noexcept
 {
 	return Matrix<T,3,4>::scaling3(scale.x, scale.y, scale.z);
 }
 
 template<typename T>
-SFZ_CUDA_CALL Matrix<T,3,4> Matrix<T,3,4>::rotation3(Vector<T,3> axis, T angleRad) noexcept
+SFZ_CUDA_CALL Matrix<T,3,4> Matrix<T,3,4>::rotation3(Vec<T,3> axis, T angleRad) noexcept
 {
 	using std::cos;
 	using std::sin;
-	Vector<T,3> r = normalize(axis);
+	Vec<T,3> r = normalize(axis);
 	T x = r.x;
 	T y = r.y;
 	T z = r.z;
@@ -363,7 +363,7 @@ SFZ_CUDA_CALL Matrix<T,3,4> Matrix<T,3,4>::rotation3(Vector<T,3> axis, T angleRa
 }
 
 template<typename T>
-SFZ_CUDA_CALL Matrix<T,3,4> Matrix<T,3,4>::translation3(Vector<T,3> delta) noexcept
+SFZ_CUDA_CALL Matrix<T,3,4> Matrix<T,3,4>::translation3(Vec<T,3> delta) noexcept
 {
 	return Matrix<T,3,4>(T(1), T(0), T(0), delta.x,
 	                     T(0), T(1), T(0), delta.y,
@@ -372,13 +372,13 @@ SFZ_CUDA_CALL Matrix<T,3,4> Matrix<T,3,4>::translation3(Vector<T,3> delta) noexc
 
 
 template<typename T>
-SFZ_CUDA_CALL Vector<T,3> Matrix<T,3,4>::columnAt(uint32_t x) const noexcept
+SFZ_CUDA_CALL Vec<T,3> Matrix<T,3,4>::columnAt(uint32_t x) const noexcept
 {
-	return Vector<T,3>(this->at(0, x), this->at(1, x), this->at(2, x));
+	return Vec<T,3>(this->at(0, x), this->at(1, x), this->at(2, x));
 }
 
 template<typename T>
-SFZ_CUDA_CALL void Matrix<T,3,4>::setColumn(uint32_t x, Vector<T,3> column) noexcept
+SFZ_CUDA_CALL void Matrix<T,3,4>::setColumn(uint32_t x, Vec<T,3> column) noexcept
 {
 	this->set(0, x, column.x);
 	this->set(1, x, column.y);
@@ -425,10 +425,10 @@ SFZ_CUDA_CALL Matrix<T,4,4>::Matrix(T e00, T e01, T e02, T e03,
 { }
 
 template<typename T>
-SFZ_CUDA_CALL Matrix<T,4,4>::Matrix(Vector<T,4> row0,
-                                    Vector<T,4> row1,
-                                    Vector<T,4> row2,
-                                    Vector<T,4> row3) noexcept
+SFZ_CUDA_CALL Matrix<T,4,4>::Matrix(Vec<T,4> row0,
+                                    Vec<T,4> row1,
+                                    Vec<T,4> row2,
+                                    Vec<T,4> row3) noexcept
 {
 	rows[0] = row0;
 	rows[1] = row1;
@@ -491,17 +491,17 @@ SFZ_CUDA_CALL Matrix<T,4,4> Matrix<T,4,4>::scaling3(T x, T y, T z) noexcept
 }
 
 template<typename T>
-SFZ_CUDA_CALL Matrix<T,4,4> Matrix<T,4,4>::scaling3(Vector<T,3> scale) noexcept
+SFZ_CUDA_CALL Matrix<T,4,4> Matrix<T,4,4>::scaling3(Vec<T,3> scale) noexcept
 {
 	return Matrix<T,4,4>::scaling3(scale.x, scale.y, scale.z);
 }
 
 template<typename T>
-SFZ_CUDA_CALL Matrix<T,4,4> Matrix<T,4,4>::rotation3(Vector<T,3> axis, T angleRad) noexcept
+SFZ_CUDA_CALL Matrix<T,4,4> Matrix<T,4,4>::rotation3(Vec<T,3> axis, T angleRad) noexcept
 {
 	using std::cos;
 	using std::sin;
-	Vector<T,3> r = normalize(axis);
+	Vec<T,3> r = normalize(axis);
 	T x = r.x;
 	T y = r.y;
 	T z = r.z;
@@ -516,7 +516,7 @@ SFZ_CUDA_CALL Matrix<T,4,4> Matrix<T,4,4>::rotation3(Vector<T,3> axis, T angleRa
 }
 
 template<typename T>
-SFZ_CUDA_CALL Matrix<T,4,4> Matrix<T,4,4>::translation3(Vector<T,3> delta) noexcept
+SFZ_CUDA_CALL Matrix<T,4,4> Matrix<T,4,4>::translation3(Vec<T,3> delta) noexcept
 {
 	return Matrix<T,4,4>(T(1), T(0), T(0), delta.x,
 	                     T(0), T(1), T(0), delta.y,
@@ -525,13 +525,13 @@ SFZ_CUDA_CALL Matrix<T,4,4> Matrix<T,4,4>::translation3(Vector<T,3> delta) noexc
 }
 
 template<typename T>
-SFZ_CUDA_CALL Vector<T,4> Matrix<T,4,4>::columnAt(uint32_t x) const noexcept
+SFZ_CUDA_CALL Vec<T,4> Matrix<T,4,4>::columnAt(uint32_t x) const noexcept
 {
-	return Vector<T,4>(this->at(0, x), this->at(1, x), this->at(2, x), this->at(3, x));
+	return Vec<T,4>(this->at(0, x), this->at(1, x), this->at(2, x), this->at(3, x));
 }
 
 template<typename T>
-SFZ_CUDA_CALL void Matrix<T,4,4>::setColumn(uint32_t x, Vector<T,4> column) noexcept
+SFZ_CUDA_CALL void Matrix<T,4,4>::setColumn(uint32_t x, Vec<T,4> column) noexcept
 {
 	this->set(0, x, column.x);
 	this->set(1, x, column.y);
@@ -606,31 +606,31 @@ SFZ_CUDA_CALL mat44 transpose(const mat44& m) noexcept
 }
 
 template<typename T>
-SFZ_CUDA_CALL Vector<T,3> transformPoint(const Matrix<T,3,4>& m, const Vector<T,3>& p) noexcept
+SFZ_CUDA_CALL Vec<T,3> transformPoint(const Matrix<T,3,4>& m, const Vec<T,3>& p) noexcept
 {
-	Vector<T,4> v(p, T(1));
+	Vec<T,4> v(p, T(1));
 	return m * v;
 }
 
 template<typename T>
-SFZ_CUDA_CALL Vector<T,3> transformPoint(const Matrix<T,4,4>& m, const Vector<T,3>& p) noexcept
+SFZ_CUDA_CALL Vec<T,3> transformPoint(const Matrix<T,4,4>& m, const Vec<T,3>& p) noexcept
 {
-	Vector<T,4> v(p, T(1));
+	Vec<T,4> v(p, T(1));
 	v = m * v;
 	return v.xyz / v.w;
 }
 
 template<typename T>
-SFZ_CUDA_CALL Vector<T,3> transformDir(const Matrix<T,3,4>& m, const Vector<T,3>& d) noexcept
+SFZ_CUDA_CALL Vec<T,3> transformDir(const Matrix<T,3,4>& m, const Vec<T,3>& d) noexcept
 {
-	Vector<T, 4> v(d, T(0));
+	Vec<T, 4> v(d, T(0));
 	return m * v;
 }
 
 template<typename T>
-SFZ_CUDA_CALL Vector<T,3> transformDir(const Matrix<T,4,4>& m, const Vector<T,3>& d) noexcept
+SFZ_CUDA_CALL Vec<T,3> transformDir(const Matrix<T,4,4>& m, const Vec<T,3>& d) noexcept
 {
-	Vector<T,4> v(d, T(0));
+	Vec<T,4> v(d, T(0));
 	v = m * v;
 	return v.xyz;
 }
@@ -822,18 +822,18 @@ SFZ_CUDA_CALL Matrix<T,H,W> operator* (const Matrix<T,H,S>& lhs, const Matrix<T,
 	Matrix<T,H,W> res;
 	for (uint32_t y = 0; y < H; y++) {
 		for (uint32_t x = 0; x < W; x++) {
-			res.at(y, x) = dot(Vector<T,S>(lhs.data() + y * S), rhs.columnAt(x));
+			res.at(y, x) = dot(Vec<T,S>(lhs.data() + y * S), rhs.columnAt(x));
 		}
 	}
 	return res;
 }
 
 template<typename T, uint32_t H, uint32_t W>
-SFZ_CUDA_CALL Vector<T,H> operator* (const Matrix<T,H,W>& lhs, const Vector<T,W>& rhs) noexcept
+SFZ_CUDA_CALL Vec<T,H> operator* (const Matrix<T,H,W>& lhs, const Vec<T,W>& rhs) noexcept
 {
-	Vector<T,H> res;
+	Vec<T,H> res;
 	for (uint32_t y = 0; y < H; y++) {
-		res[y] = dot(Vector<T,W>(lhs.data() + y * W), rhs);
+		res[y] = dot(Vec<T,W>(lhs.data() + y * W), rhs);
 	}
 	return res;
 }

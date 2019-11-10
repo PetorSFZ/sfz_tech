@@ -25,6 +25,7 @@
 #include "sfz/math/Vector.hpp"
 
 #include "sfz/CudaCompatibility.hpp"
+#include "sfz/math/MinMax.hpp"
 
 namespace sfz {
 

@@ -71,18 +71,18 @@ struct Matrix final {
 
 	SFZ_CUDA_CALL T& at(uint32_t y, uint32_t x) noexcept { return elements[y][x]; }
 	SFZ_CUDA_CALL T at(uint32_t y, uint32_t x) const noexcept { return elements[y][x]; }
-	SFZ_CUDA_CALL Vector<T,H> columnAt(uint32_t x) const noexcept;
+	SFZ_CUDA_CALL Vec<T,H> columnAt(uint32_t x) const noexcept;
 
 	SFZ_CUDA_CALL void set(uint32_t y, uint32_t x, T value) noexcept { this->at(y, x) = value; }
-	SFZ_CUDA_CALL void setColumn(uint32_t x, Vector<T,H> column) noexcept;
+	SFZ_CUDA_CALL void setColumn(uint32_t x, Vec<T,H> column) noexcept;
 };
 
 template<typename T>
 struct Matrix<T,2,2> final {
 
 	union {
-		struct { Vector<T,2> rows[2]; };
-		struct { Vector<T,2> row0, row1; };
+		struct { Vec<T,2> rows[2]; };
+		struct { Vec<T,2> row0, row1; };
 		struct { T e00, e01,
 		           e10, e11; };
 	};
@@ -101,29 +101,29 @@ struct Matrix<T,2,2> final {
 	SFZ_CUDA_CALL Matrix(T e00, T e01,
 	                     T e10, T e11) noexcept;
 
-	SFZ_CUDA_CALL Matrix(Vector<T,2> row0,
-	                     Vector<T,2> row1) noexcept;
+	SFZ_CUDA_CALL Matrix(Vec<T,2> row0,
+	                     Vec<T,2> row1) noexcept;
 
 	static SFZ_CUDA_CALL Matrix fill(T value) noexcept;
 	static SFZ_CUDA_CALL Matrix identity() noexcept;
 	static SFZ_CUDA_CALL Matrix scaling2(T scale) noexcept;
 	static SFZ_CUDA_CALL Matrix scaling2(T x, T y) noexcept;
-	static SFZ_CUDA_CALL Matrix scaling2(Vector<T,2> scale) noexcept;
+	static SFZ_CUDA_CALL Matrix scaling2(Vec<T,2> scale) noexcept;
 
 	SFZ_CUDA_CALL T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
 	SFZ_CUDA_CALL T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
-	SFZ_CUDA_CALL Vector<T,2> columnAt(uint32_t x) const noexcept;
+	SFZ_CUDA_CALL Vec<T,2> columnAt(uint32_t x) const noexcept;
 
 	SFZ_CUDA_CALL void set(uint32_t y, uint32_t x, T value) noexcept { this->at(y, x) = value; }
-	SFZ_CUDA_CALL void setColumn(uint32_t x, Vector<T,2> column) noexcept;
+	SFZ_CUDA_CALL void setColumn(uint32_t x, Vec<T,2> column) noexcept;
 };
 
 template<typename T>
 struct Matrix<T,3,3> final {
 
 	union {
-		struct { Vector<T,3> rows[3]; };
-		struct { Vector<T,3> row0, row1, row2; };
+		struct { Vec<T,3> rows[3]; };
+		struct { Vec<T,3> row0, row1, row2; };
 		struct { T e00, e01, e02,
 		           e10, e11, e12,
 		           e20, e21, e22; };
@@ -144,9 +144,9 @@ struct Matrix<T,3,3> final {
 	                     T e10, T e11, T e12,
 	                     T e20, T e21, T e22) noexcept;
 
-	SFZ_CUDA_CALL Matrix(Vector<T,3> row0,
-	                     Vector<T,3> row1,
-	                     Vector<T,3> row2) noexcept;
+	SFZ_CUDA_CALL Matrix(Vec<T,3> row0,
+	                     Vec<T,3> row1,
+	                     Vec<T,3> row2) noexcept;
 
 	/// Constructs a 3x3 matrix by removing elements from the specified matrix
 	SFZ_CUDA_CALL explicit Matrix(const Matrix<T,3,4>& matrix) noexcept;
@@ -156,23 +156,23 @@ struct Matrix<T,3,3> final {
 	static SFZ_CUDA_CALL Matrix identity() noexcept;
 	static SFZ_CUDA_CALL Matrix scaling3(T scale) noexcept;
 	static SFZ_CUDA_CALL Matrix scaling3(T x, T y, T z) noexcept;
-	static SFZ_CUDA_CALL Matrix scaling3(Vector<T,3> scale) noexcept;
-	static SFZ_CUDA_CALL Matrix rotation3(Vector<T,3> axis, T angleRad) noexcept;
+	static SFZ_CUDA_CALL Matrix scaling3(Vec<T,3> scale) noexcept;
+	static SFZ_CUDA_CALL Matrix rotation3(Vec<T,3> axis, T angleRad) noexcept;
 
 	SFZ_CUDA_CALL T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
 	SFZ_CUDA_CALL T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
-	SFZ_CUDA_CALL Vector<T,3> columnAt(uint32_t x) const noexcept;
+	SFZ_CUDA_CALL Vec<T,3> columnAt(uint32_t x) const noexcept;
 
 	SFZ_CUDA_CALL void set(uint32_t y, uint32_t x, T value) noexcept { this->at(y, x) = value; }
-	SFZ_CUDA_CALL void setColumn(uint32_t x, Vector<T,3> column) noexcept;
+	SFZ_CUDA_CALL void setColumn(uint32_t x, Vec<T,3> column) noexcept;
 };
 
 template<typename T>
 struct alignas(16) Matrix<T,3,4> final {
 
 	union {
-		struct { Vector<T,4> rows[3]; };
-		struct { Vector<T,4> row0, row1, row2; };
+		struct { Vec<T,4> rows[3]; };
+		struct { Vec<T,4> row0, row1, row2; };
 		struct { T e00, e01, e02, e03,
 		           e10, e11, e12, e13,
 		           e20, e21, e22, e23; };
@@ -193,9 +193,9 @@ struct alignas(16) Matrix<T,3,4> final {
 	                     T e10, T e11, T e12, T e13,
 	                     T e20, T e21, T e22, T e23) noexcept;
 
-	SFZ_CUDA_CALL Matrix(Vector<T,4> row0,
-	                     Vector<T,4> row1,
-	                     Vector<T,4> row2) noexcept;
+	SFZ_CUDA_CALL Matrix(Vec<T,4> row0,
+	                     Vec<T,4> row1,
+	                     Vec<T,4> row2) noexcept;
 
 	/// Constructs a 3x4 matrix by placing the specified matrix ontop a 3x4 identity-like matrix.
 	SFZ_CUDA_CALL explicit Matrix(const Matrix<T,3,3>& matrix) noexcept;
@@ -205,29 +205,29 @@ struct alignas(16) Matrix<T,3,4> final {
 	static SFZ_CUDA_CALL Matrix identity() noexcept; // Identity-like, identity does not exist for 3x4.
 	static SFZ_CUDA_CALL Matrix scaling3(T scale) noexcept;
 	static SFZ_CUDA_CALL Matrix scaling3(T x, T y, T z) noexcept;
-	static SFZ_CUDA_CALL Matrix scaling3(Vector<T,3> scale) noexcept;
-	static SFZ_CUDA_CALL Matrix rotation3(Vector<T,3> axis, T angleRad) noexcept;
-	static SFZ_CUDA_CALL Matrix translation3(Vector<T,3> delta) noexcept;
+	static SFZ_CUDA_CALL Matrix scaling3(Vec<T,3> scale) noexcept;
+	static SFZ_CUDA_CALL Matrix rotation3(Vec<T,3> axis, T angleRad) noexcept;
+	static SFZ_CUDA_CALL Matrix translation3(Vec<T,3> delta) noexcept;
 
 	SFZ_CUDA_CALL T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
 	SFZ_CUDA_CALL T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
-	SFZ_CUDA_CALL Vector<T,3> columnAt(uint32_t x) const noexcept;
+	SFZ_CUDA_CALL Vec<T,3> columnAt(uint32_t x) const noexcept;
 
 	SFZ_CUDA_CALL void set(uint32_t y, uint32_t x, T value) noexcept { this->at(y, x) = value; }
-	SFZ_CUDA_CALL void setColumn(uint32_t x, Vector<T,3> column) noexcept;
+	SFZ_CUDA_CALL void setColumn(uint32_t x, Vec<T,3> column) noexcept;
 };
 
 template<typename T>
 struct alignas(16) Matrix<T,4,4> final {
 
 	union {
-		struct { Vector<T,4> rows[4]; };
-		struct { Vector<T,4> row0, row1, row2, row3; };
+		struct { Vec<T,4> rows[4]; };
+		struct { Vec<T,4> row0, row1, row2, row3; };
 		struct { T e00, e01, e02, e03,
 		           e10, e11, e12, e13,
 		           e20, e21, e22, e23,
 		           e30, e31, e32, e33; };
-		struct { Matrix<T,3,4> row012; Vector<T,4> ___unusedRow4___; };
+		struct { Matrix<T,3,4> row012; Vec<T,4> ___unusedRow4___; };
 	};
 
 	SFZ_CUDA_CALL T* data() noexcept { return &e00; }
@@ -246,10 +246,10 @@ struct alignas(16) Matrix<T,4,4> final {
 	                     T e20, T e21, T e22, T e23,
 	                     T e30, T e31, T e32, T e33) noexcept;
 
-	SFZ_CUDA_CALL Matrix(Vector<T,4> row0,
-	                     Vector<T,4> row1,
-	                     Vector<T,4> row2,
-	                     Vector<T,4> row3) noexcept;
+	SFZ_CUDA_CALL Matrix(Vec<T,4> row0,
+	                     Vec<T,4> row1,
+	                     Vec<T,4> row2,
+	                     Vec<T,4> row3) noexcept;
 
 	/// Constructs a 4x4 matrix by placing the specified matrix ontop a 4x4 identity matrix.
 	SFZ_CUDA_CALL explicit Matrix(const Matrix<T,3,3>& matrix) noexcept;
@@ -259,16 +259,16 @@ struct alignas(16) Matrix<T,4,4> final {
 	static SFZ_CUDA_CALL Matrix identity() noexcept;
 	static SFZ_CUDA_CALL Matrix scaling3(T scale) noexcept; // Note that the bottom right corner is 1 for 4x4
 	static SFZ_CUDA_CALL Matrix scaling3(T x, T y, T z) noexcept; // Note that the bottom right corner is 1 for 4x4
-	static SFZ_CUDA_CALL Matrix scaling3(Vector<T,3> scale) noexcept; // Note that the bottom right corner is 1 for 4x4
-	static SFZ_CUDA_CALL Matrix rotation3(Vector<T,3> axis, T angleRad) noexcept;
-	static SFZ_CUDA_CALL Matrix translation3(Vector<T,3> delta) noexcept;
+	static SFZ_CUDA_CALL Matrix scaling3(Vec<T,3> scale) noexcept; // Note that the bottom right corner is 1 for 4x4
+	static SFZ_CUDA_CALL Matrix rotation3(Vec<T,3> axis, T angleRad) noexcept;
+	static SFZ_CUDA_CALL Matrix translation3(Vec<T,3> delta) noexcept;
 
 	SFZ_CUDA_CALL T& at(uint32_t y, uint32_t x) noexcept { return rows[y][x]; }
 	SFZ_CUDA_CALL T at(uint32_t y, uint32_t x) const noexcept { return rows[y][x]; }
-	SFZ_CUDA_CALL Vector<T,4> columnAt(uint32_t x) const noexcept;
+	SFZ_CUDA_CALL Vec<T,4> columnAt(uint32_t x) const noexcept;
 
 	SFZ_CUDA_CALL void set(uint32_t y, uint32_t x, T value) noexcept { this->at(y, x) = value; }
-	SFZ_CUDA_CALL void setColumn(uint32_t x, Vector<T,4> column) noexcept;
+	SFZ_CUDA_CALL void setColumn(uint32_t x, Vec<T,4> column) noexcept;
 };
 
 using mat22 = Matrix<float,2,2>;
@@ -296,16 +296,16 @@ template<typename T, uint32_t H, uint32_t W>
 SFZ_CUDA_CALL Matrix<T,W,H> transpose(const Matrix<T,H,W>& m) noexcept;
 
 template<typename T>
-SFZ_CUDA_CALL Vector<T,3> transformPoint(const Matrix<T,3,4>& m, const Vector<T,3>& p) noexcept;
+SFZ_CUDA_CALL Vec<T,3> transformPoint(const Matrix<T,3,4>& m, const Vec<T,3>& p) noexcept;
 
 template<typename T>
-SFZ_CUDA_CALL Vector<T,3> transformPoint(const Matrix<T,4,4>& m, const Vector<T,3>& p) noexcept;
+SFZ_CUDA_CALL Vec<T,3> transformPoint(const Matrix<T,4,4>& m, const Vec<T,3>& p) noexcept;
 
 template<typename T>
-SFZ_CUDA_CALL Vector<T,3> transformDir(const Matrix<T,3,4>& m, const Vector<T,3>& d) noexcept;
+SFZ_CUDA_CALL Vec<T,3> transformDir(const Matrix<T,3,4>& m, const Vec<T,3>& d) noexcept;
 
 template<typename T>
-SFZ_CUDA_CALL Vector<T,3> transformDir(const Matrix<T,4,4>& m, const Vector<T,3>& d) noexcept;
+SFZ_CUDA_CALL Vec<T,3> transformDir(const Matrix<T,4,4>& m, const Vec<T,3>& d) noexcept;
 
 template<typename T, uint32_t N>
 SFZ_CUDA_CALL T determinant(const Matrix<T,N,N>& m) noexcept;
@@ -344,7 +344,7 @@ template<typename T, uint32_t H, uint32_t S, uint32_t W>
 SFZ_CUDA_CALL Matrix<T,H,W> operator* (const Matrix<T,H,S>& lhs, const Matrix<T,S,W>& rhs) noexcept;
 
 template<typename T, uint32_t H, uint32_t W>
-SFZ_CUDA_CALL Vector<T,H> operator* (const Matrix<T,H,W>& lhs, const Vector<T,W>& rhs) noexcept;
+SFZ_CUDA_CALL Vec<T,H> operator* (const Matrix<T,H,W>& lhs, const Vec<T,W>& rhs) noexcept;
 
 template<typename T, uint32_t H, uint32_t W>
 SFZ_CUDA_CALL Matrix<T,H,W> operator* (const Matrix<T,H,W>& lhs, T rhs) noexcept;

@@ -22,7 +22,7 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 template<typename T, uint32_t N>
-size_t hash(const Vector<T,N>& vector) noexcept
+size_t hash(const Vec<T,N>& vector) noexcept
 {
 	std::hash<T> hasher;
 	size_t hash = 0;
@@ -58,7 +58,7 @@ namespace std {
 // ------------------------------------------------------------------------------------------------
 
 template<typename T, uint32_t N>
-size_t hash<sfz::Vector<T,N>>::operator() (const sfz::Vector<T,N>& vector) const noexcept
+size_t hash<sfz::Vec<T,N>>::operator() (const sfz::Vec<T,N>& vector) const noexcept
 {
 	return sfz::hash(vector);
 }

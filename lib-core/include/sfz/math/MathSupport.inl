@@ -499,8 +499,8 @@ SFZ_CUDA_CALL vec3 rotateTowardsRadClampSafe(vec3 inDir, vec3 targetDir, float a
 	sfz_assert_debug(angleRads >= 0.0f);
 	sfz_assert_debug(angleRads < PI);
 
-	vec3 inDirNorm = safeNormalize(inDir);
-	vec3 targetDirNorm = safeNormalize(targetDir);
+	vec3 inDirNorm = normalizeSafe(inDir);
+	vec3 targetDirNorm = normalizeSafe(targetDir);
 	sfz_assert_debug(!approxEqual(inDirNorm, vec3(0.0f)));
 	sfz_assert_debug(!approxEqual(targetDirNorm, vec3(0.0f)));
 

@@ -27,7 +27,7 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 template<typename T, uint32_t N>
-size_t hash(const Vector<T,N>& vector) noexcept;
+size_t hash(const Vec<T,N>& vector) noexcept;
 
 // Matrix hash function
 // ------------------------------------------------------------------------------------------------
@@ -43,8 +43,8 @@ namespace std {
 // ------------------------------------------------------------------------------------------------
 
 template<typename T, uint32_t N>
-struct hash<sfz::Vector<T,N>> {
-	size_t operator() (const sfz::Vector<T,N>& vector) const noexcept;
+struct hash<sfz::Vec<T,N>> {
+	size_t operator() (const sfz::Vec<T,N>& vector) const noexcept;
 };
 
 // Matrix hash struct

@@ -136,7 +136,7 @@ SFZ_CUDA_CALL Quaternion Quaternion::fromRotationMatrix(const mat34& rotMatrix) 
 
 SFZ_CUDA_CALL vec3 Quaternion::rotationAxis() const noexcept
 {
-	return safeNormalize(this->v);
+	return normalizeSafe(this->v);
 }
 
 SFZ_CUDA_CALL float Quaternion::rotationAngleDeg() const noexcept
