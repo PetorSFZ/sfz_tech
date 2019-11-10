@@ -81,12 +81,12 @@ public:
 
 	void bind() noexcept;
 	void bindViewport() noexcept;
-	void bindViewport(vec2_s32 viewportMin, vec2_s32 viewportMax) noexcept;
+	void bindViewport(vec2_i32 viewportMin, vec2_i32 viewportMax) noexcept;
 	void bindViewportClearColor(vec4 clearColor = vec4(0.0)) noexcept;
-	void bindViewportClearColor(vec2_s32 viewportMin, vec2_s32 viewportMax,
+	void bindViewportClearColor(vec2_i32 viewportMin, vec2_i32 viewportMax,
 	                            vec4 clearColor = vec4(0.0)) noexcept;
 	void bindViewportClearColorDepth(vec4 clearColor = vec4(0.0), float clearDepth = 1.0f) noexcept;
-	void bindViewportClearColorDepth(vec2_s32 viewportMin, vec2_s32 viewportMax,
+	void bindViewportClearColorDepth(vec2_i32 viewportMin, vec2_i32 viewportMax,
 	                                 vec4 clearColor = vec4(0.0), float clearDepth = 1.0f) noexcept;
 
 	// Attaching external depth/stencil buffers/textures
@@ -225,13 +225,13 @@ public:
 	FramebufferBuilder& operator= (const FramebufferBuilder&) noexcept = default;
 	~FramebufferBuilder() noexcept = default;
 
-	FramebufferBuilder(vec2_s32 dimensions) noexcept;
-	FramebufferBuilder(int32_t w, int32_t h) noexcept : FramebufferBuilder(vec2_s32(w, h)) { }
+	FramebufferBuilder(vec2_i32 dimensions) noexcept;
+	FramebufferBuilder(int32_t w, int32_t h) noexcept : FramebufferBuilder(vec2_i32(w, h)) { }
 
 	// Component adding methods
 	// --------------------------------------------------------------------------------------------
 
-	FramebufferBuilder& setDimensions(vec2_s32 dimensions) noexcept;
+	FramebufferBuilder& setDimensions(vec2_i32 dimensions) noexcept;
 	FramebufferBuilder& addTexture(uint32_t index, FBTextureFormat format, FBTextureFiltering filtering) noexcept;
 	FramebufferBuilder& addDepthBuffer(FBDepthFormat format) noexcept;
 	FramebufferBuilder& addDepthTexture(FBDepthFormat format, FBTextureFiltering filtering) noexcept;
@@ -264,7 +264,7 @@ private:
 	FBTextureFormat mTextureFormat[8];
 	FBDepthFormat mDepthFormat;
 	FBTextureFiltering mTextureFiltering[8], mDepthTextureFiltering, mStencilTextureFiltering;
-	vec2_s32 mDim = vec2_s32(-1);
+	vec2_i32 mDim = vec2_i32(-1);
 };
 
 // Shadow Map Framebuffer builder function
@@ -281,7 +281,7 @@ private:
 ///
 /// The wrapping mode used is "GL_CLAMP_TO_BORDER" where the border is the specified border
 /// parameter.
-Framebuffer createShadowMap(vec2_s32 dimensions, FBDepthFormat depthFormat, bool pcf = true,
+Framebuffer createShadowMap(vec2_i32 dimensions, FBDepthFormat depthFormat, bool pcf = true,
                             vec4 borderColor = vec4(0.0f, 0.0f, 0.0f, 1.0f)) noexcept;
 
 } // namespace gl

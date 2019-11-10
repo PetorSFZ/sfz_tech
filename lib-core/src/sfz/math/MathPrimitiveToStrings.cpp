@@ -65,38 +65,38 @@ void toString(const vec4& vector, StackString& string, uint32_t numDecimals) noe
 	string.printf(formatStr.str, vector.x, vector.y, vector.z, vector.w);
 }
 
-StackString toString(const vec2_s32& vector) noexcept
+StackString toString(const vec2_i32& vector) noexcept
 {
 	StackString tmp;
 	toString(vector, tmp);
 	return tmp;
 }
 
-StackString toString(const vec3_s32& vector) noexcept
+StackString toString(const vec3_i32& vector) noexcept
 {
 	StackString tmp;
 	toString(vector, tmp);
 	return tmp;
 }
 
-StackString toString(const vec4_s32& vector) noexcept
+StackString toString(const vec4_i32& vector) noexcept
 {
 	StackString tmp;
 	toString(vector, tmp);
 	return tmp;
 }
 
-void toString(const vec2_s32& vector, StackString& string) noexcept
+void toString(const vec2_i32& vector, StackString& string) noexcept
 {
 	string.printf("[%i, %i]", vector.x, vector.y);
 }
 
-void toString(const vec3_s32& vector, StackString& string) noexcept
+void toString(const vec3_i32& vector, StackString& string) noexcept
 {
 	string.printf("[%i, %i, %i]", vector.x, vector.y, vector.z);
 }
 
-void toString(const vec4_s32& vector, StackString& string) noexcept
+void toString(const vec4_i32& vector, StackString& string) noexcept
 {
 	string.printf("[%i, %i, %i, %i]", vector.x, vector.y, vector.z, vector.w);
 }

@@ -56,7 +56,7 @@ TEST_CASE("Vec<T,2> specialization", "[sfz::Vec]")
 		REQUIRE(v1[1] == -1);
 	}
 	SECTION("Cast constructor") {
-		sfz::vec2_s32 v1(sfz::vec2(-1.0f, 1.0f));
+		sfz::vec2_i32 v1(sfz::vec2(-1.0f, 1.0f));
 		REQUIRE(v1.x == -1);
 		REQUIRE(v1.y == 1);
 	}
@@ -118,7 +118,7 @@ TEST_CASE("Vec<T,3> specialization", "[sfz::Vec]")
 		REQUIRE(v1[2] == -2);
 	}
 	SECTION("Cast constructor") {
-		sfz::vec3_s32 v1(sfz::vec3(-1.0f, 1.0f, -2.0f));
+		sfz::vec3_i32 v1(sfz::vec3(-1.0f, 1.0f, -2.0f));
 		REQUIRE(v1.x == -1);
 		REQUIRE(v1.y == 1);
 		REQUIRE(v1.z == -2);
@@ -222,7 +222,7 @@ TEST_CASE("Vec<T,4> specialization", "[sfz::Vec]")
 		REQUIRE(v1[3] == 9);
 	}
 	SECTION("Cast constructor") {
-		sfz::vec4_s32 v1(sfz::vec4(-1.0f, 1.0f, -2.0f, 4.0f));
+		sfz::vec4_i32 v1(sfz::vec4(-1.0f, 1.0f, -2.0f, 4.0f));
 		REQUIRE(v1.x == -1);
 		REQUIRE(v1.y == 1);
 		REQUIRE(v1.z == -2);
@@ -505,13 +505,13 @@ TEST_CASE("sfzMin() (Vector)", "[sfz::MathSupport]")
 	using namespace sfz;
 	SECTION("Vectors") {
 		REQUIRE(sfzMin(vec4(1.0f, 2.0f, -3.0f, -4.0f), vec4(2.0f, 1.0f, -5.0f, -2.0f)) == vec4(1.0f, 1.0f, -5.0f, -4.0f));
-		REQUIRE(sfzMin(vec4_s32(1, 2, -3, -4), vec4_s32(2, 1, -5, -2)) == vec4_s32(1, 1, -5, -4));
+		REQUIRE(sfzMin(vec4_i32(1, 2, -3, -4), vec4_i32(2, 1, -5, -2)) == vec4_i32(1, 1, -5, -4));
 		REQUIRE(sfzMin(vec4_u32(1u, 2u, 3u, 4u), vec4_u32(2u, 1u, 5u, 2u)) == vec4_u32(1u, 1u, 3u, 2u));
 	}
 	SECTION("Vectors & scalars")
 	{
 		REQUIRE(sfzMin(vec4(1.0f, 2.0f, -3.0f, -4.0f), -1.0f) == vec4(-1.0f, -1.0f, -3.0f, -4.0f));
-		REQUIRE(sfzMin(vec4_s32(1, 2, -3, -4), -1) == vec4_s32(-1, -1, -3, -4));
+		REQUIRE(sfzMin(vec4_i32(1, 2, -3, -4), -1) == vec4_i32(-1, -1, -3, -4));
 		REQUIRE(sfzMin(vec4_u32(1u, 2u, 3u, 4u), 2u) == vec4_u32(1u, 2u, 2u, 2u));
 	}
 }
@@ -529,13 +529,13 @@ TEST_CASE("sfzMax() (Vector)", "[sfz::MathSupport]")
 	}
 	SECTION("Vectors") {
 		REQUIRE(sfzMax(vec4(1.0f, 2.0f, -3.0f, -4.0f), vec4(2.0f, 1.0f, -5.0f, -2.0f)) == vec4(2.0f, 2.0f, -3.0f, -2.0f));
-		REQUIRE(sfzMax(vec4_s32(1, 2, -3, -4), vec4_s32(2, 1, -5, -2)) == vec4_s32(2, 2, -3, -2));
+		REQUIRE(sfzMax(vec4_i32(1, 2, -3, -4), vec4_i32(2, 1, -5, -2)) == vec4_i32(2, 2, -3, -2));
 		REQUIRE(sfzMax(vec4_u32(1u, 2u, 3u, 4u), vec4_u32(2u, 1u, 5u, 2u)) == vec4_u32(2u, 2u, 5u, 4u));
 	}
 	SECTION("Vectors & scalars")
 	{
 		REQUIRE(sfzMax(vec4(1.0f, 2.0f, -3.0f, -4.0f), 1.0f) == vec4(1.0f, 2.0f, 1.0f, 1.0f));
-		REQUIRE(sfzMax(vec4_s32(1, 2, -3, -4), 1) == vec4_s32(1, 2, 1, 1));
+		REQUIRE(sfzMax(vec4_i32(1, 2, -3, -4), 1) == vec4_i32(1, 2, 1, 1));
 		REQUIRE(sfzMax(vec4_u32(1u, 2u, 3u, 4u), 2u) == vec4_u32(2u, 2u, 3u, 4u));
 	}
 }
@@ -543,7 +543,7 @@ TEST_CASE("sfzMax() (Vector)", "[sfz::MathSupport]")
 TEST_CASE("Converting to string", "[sfz::Vec]")
 {
 	using namespace sfz;
-	vec3_s32 v{-1, 2, 10};
+	vec3_i32 v{-1, 2, 10};
 	REQUIRE(toString(v) == "[-1, 2, 10]");
 
 	vec4 v2{1.0f, 2.0f, 3.0f, 4.0f};
@@ -553,27 +553,27 @@ TEST_CASE("Converting to string", "[sfz::Vec]")
 TEST_CASE("Is proper POD", "[sfz::Vec]")
 {
 	REQUIRE(std::is_trivially_default_constructible<sfz::vec2>::value);
-	REQUIRE(std::is_trivially_default_constructible<sfz::vec2_s32>::value);
+	REQUIRE(std::is_trivially_default_constructible<sfz::vec2_i32>::value);
 	REQUIRE(std::is_trivially_default_constructible<sfz::vec3>::value);
-	REQUIRE(std::is_trivially_default_constructible<sfz::vec3_s32>::value);
+	REQUIRE(std::is_trivially_default_constructible<sfz::vec3_i32>::value);
 
 	REQUIRE(std::is_trivially_copyable<sfz::vec2>::value);
-	REQUIRE(std::is_trivially_copyable<sfz::vec2_s32>::value);
+	REQUIRE(std::is_trivially_copyable<sfz::vec2_i32>::value);
 	REQUIRE(std::is_trivially_copyable<sfz::vec3>::value);
-	REQUIRE(std::is_trivially_copyable<sfz::vec3_s32>::value);
+	REQUIRE(std::is_trivially_copyable<sfz::vec3_i32>::value);
 
 	REQUIRE(std::is_trivial<sfz::vec2>::value);
-	REQUIRE(std::is_trivial<sfz::vec2_s32>::value);
+	REQUIRE(std::is_trivial<sfz::vec2_i32>::value);
 	REQUIRE(std::is_trivial<sfz::vec3>::value);
-	REQUIRE(std::is_trivial<sfz::vec3_s32>::value);
+	REQUIRE(std::is_trivial<sfz::vec3_i32>::value);
 
 	REQUIRE(std::is_standard_layout<sfz::vec2>::value);
-	REQUIRE(std::is_standard_layout<sfz::vec2_s32>::value);
+	REQUIRE(std::is_standard_layout<sfz::vec2_i32>::value);
 	REQUIRE(std::is_standard_layout<sfz::vec3>::value);
-	REQUIRE(std::is_standard_layout<sfz::vec3_s32>::value);
+	REQUIRE(std::is_standard_layout<sfz::vec3_i32>::value);
 
 	REQUIRE(std::is_pod<sfz::vec2>::value);
-	REQUIRE(std::is_pod<sfz::vec2_s32>::value);
+	REQUIRE(std::is_pod<sfz::vec2_i32>::value);
 	REQUIRE(std::is_pod<sfz::vec3>::value);
-	REQUIRE(std::is_pod<sfz::vec3_s32>::value);
+	REQUIRE(std::is_pod<sfz::vec3_i32>::value);
 }

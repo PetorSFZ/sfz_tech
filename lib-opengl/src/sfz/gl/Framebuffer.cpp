@@ -84,7 +84,7 @@ void Framebuffer::bindViewport() noexcept
 	glViewport(0, 0, width, height);
 }
 
-void Framebuffer::bindViewport(vec2_s32 viewportMin, vec2_s32 viewportMax) noexcept
+void Framebuffer::bindViewport(vec2_i32 viewportMin, vec2_i32 viewportMax) noexcept
 {
 	if (!this->isValid()) return;
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -100,7 +100,7 @@ void Framebuffer::bindViewportClearColor(vec4 clearColor) noexcept
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void Framebuffer::bindViewportClearColor(vec2_s32 viewportMin, vec2_s32 viewportMax,
+void Framebuffer::bindViewportClearColor(vec2_i32 viewportMin, vec2_i32 viewportMax,
                                          vec4 clearColor) noexcept
 {
 	if (!this->isValid()) return;
@@ -124,7 +124,7 @@ void Framebuffer::bindViewportClearColorDepth(vec4 clearColor, float clearDepth)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Framebuffer::bindViewportClearColorDepth(vec2_s32 viewportMin, vec2_s32 viewportMax,
+void Framebuffer::bindViewportClearColorDepth(vec2_i32 viewportMin, vec2_i32 viewportMax,
                                               vec4 clearColor, float clearDepth) noexcept
 {
 	if (!this->isValid()) return;
@@ -249,7 +249,7 @@ bool checkCurrentFramebufferStatus() noexcept
 // FramebufferBuilder: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-FramebufferBuilder::FramebufferBuilder(vec2_s32 dimensions) noexcept
+FramebufferBuilder::FramebufferBuilder(vec2_i32 dimensions) noexcept
 {
 	setDimensions(dimensions);
 }
@@ -257,7 +257,7 @@ FramebufferBuilder::FramebufferBuilder(vec2_s32 dimensions) noexcept
 // FramebufferBuilder: Component adding methods
 // ------------------------------------------------------------------------------------------------
 
-FramebufferBuilder& FramebufferBuilder::setDimensions(vec2_s32 dimensions) noexcept
+FramebufferBuilder& FramebufferBuilder::setDimensions(vec2_i32 dimensions) noexcept
 {
 	sfz_assert_debug(dimensions.x > 0);
 	sfz_assert_debug(dimensions.y > 0);
@@ -668,7 +668,7 @@ Framebuffer FramebufferBuilder::build() const noexcept
 // Shadow Map Framebuffer builder function
 // ------------------------------------------------------------------------------------------------
 
-Framebuffer createShadowMap(vec2_s32 dimensions, FBDepthFormat depthFormat, bool pcf, vec4 borderColor) noexcept
+Framebuffer createShadowMap(vec2_i32 dimensions, FBDepthFormat depthFormat, bool pcf, vec4 borderColor) noexcept
 {
 	sfz_assert_debug(dimensions.x > 0);
 	sfz_assert_debug(dimensions.y > 0);

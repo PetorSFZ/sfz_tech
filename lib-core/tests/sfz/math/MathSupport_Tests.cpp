@@ -72,8 +72,8 @@ TEST_CASE("approxEqual()", "[sfz::MathSupport]")
 TEST_CASE("abs()", "[sfz::MathSupport]")
 {
 	SECTION("Integer variant") {
-		vec4_s32 v = vec4_s32(-1, 4, -4, -9);
-		REQUIRE(sfz::abs(v) == vec4_s32(1, 4, 4, 9));
+		vec4_i32 v = vec4_i32(-1, 4, -4, -9);
+		REQUIRE(sfz::abs(v) == vec4_i32(1, 4, 4, 9));
 	}
 	SECTION("Float variant") {
 		vec4 v = vec4(-2.0f, 1.0f, -59.0f, -2.0f);
@@ -91,7 +91,7 @@ TEST_CASE("sgn()", "[sfz::MathSupport]")
 		REQUIRE(sgn(5) == 1);
 	}
 	SECTION("Integer vector") {
-		REQUIRE(sgn(vec4_s32(-4, 0, -2, 4)) == vec4_s32(-1, 0, -1, 1));
+		REQUIRE(sgn(vec4_i32(-4, 0, -2, 4)) == vec4_i32(-1, 0, -1, 1));
 	}
 	SECTION("Floating point scalar") {
 		REQUIRE(sgn(-4.0f) == -1.0f);
@@ -108,9 +108,9 @@ TEST_CASE("sgn()", "[sfz::MathSupport]")
 TEST_CASE("minElement() & maxElement()", "[sfz::MathSupport]")
 {
 	REQUIRE(sfz::minElement(vec4_u32(5u, 2u, 3u, 1u)) == 1u);
-	REQUIRE(sfz::minElement(vec4_s32(1, 2, -4, 0)) == -4);
+	REQUIRE(sfz::minElement(vec4_i32(1, 2, -4, 0)) == -4);
 	REQUIRE(sfz::maxElement(vec4_u32(5u, 2u, 3u, 1u)) == 5u);
-	REQUIRE(sfz::maxElement(vec4_s32(1, 2, -4, 0)) == 2);
+	REQUIRE(sfz::maxElement(vec4_i32(1, 2, -4, 0)) == 2);
 }
 
 TEST_CASE("lerp()", "[sfz::MathSupport]")
@@ -125,8 +125,8 @@ TEST_CASE("lerp()", "[sfz::MathSupport]")
 
 TEST_CASE("clamp()", "[sfz::MathSupport]")
 {
-	REQUIRE(sfz::clamp(vec4_s32(-2, 0, 2, 4), -1, 2) == vec4_s32(-1, 0, 2, 2));
-	REQUIRE(sfz::clamp(vec4_s32(-2, 0, 2, 4), vec4_s32(0, -1, -1, 5), vec4_s32(1, 1, 1, 6)) == vec4_s32(0, 0, 1, 5));
+	REQUIRE(sfz::clamp(vec4_i32(-2, 0, 2, 4), -1, 2) == vec4_i32(-1, 0, 2, 2));
+	REQUIRE(sfz::clamp(vec4_i32(-2, 0, 2, 4), vec4_i32(0, -1, -1, 5), vec4_i32(1, 1, 1, 6)) == vec4_i32(0, 0, 1, 5));
 }
 
 TEST_CASE("saturate()", "[sfz::MathSupport]")
@@ -183,4 +183,3 @@ TEST_CASE("rotateTowards()", "[sfz::MathSupport]")
 		REQUIRE(approxEqual(newVec8, LEFT));
 	}
 }
-

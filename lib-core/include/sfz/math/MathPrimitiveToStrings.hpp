@@ -33,13 +33,13 @@ void toString(const vec2& vector, StackString& string, uint32_t numDecimals = 2)
 void toString(const vec3& vector, StackString& string, uint32_t numDecimals = 2) noexcept;
 void toString(const vec4& vector, StackString& string, uint32_t numDecimals = 2) noexcept;
 
-StackString toString(const vec2_s32& vector) noexcept;
-StackString toString(const vec3_s32& vector) noexcept;
-StackString toString(const vec4_s32& vector) noexcept;
+StackString toString(const vec2_i32& vector) noexcept;
+StackString toString(const vec3_i32& vector) noexcept;
+StackString toString(const vec4_i32& vector) noexcept;
 
-void toString(const vec2_s32& vector, StackString& string) noexcept;
-void toString(const vec3_s32& vector, StackString& string) noexcept;
-void toString(const vec4_s32& vector, StackString& string) noexcept;
+void toString(const vec2_i32& vector, StackString& string) noexcept;
+void toString(const vec3_i32& vector, StackString& string) noexcept;
+void toString(const vec4_i32& vector, StackString& string) noexcept;
 
 StackString toString(const vec2_u32& vector) noexcept;
 StackString toString(const vec3_u32& vector) noexcept;

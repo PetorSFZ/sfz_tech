@@ -32,23 +32,21 @@ namespace sfz {
 // vector elements in different ways thanks to the union + nameless struct trick. E.g., you can
 // access the last two elements of a vec3 with v.yz.
 //
-// There are typedefs available for the primitives it is primarily meant to be used with. You should
-// normally only use these typedefs and not the template explicitly, unless you have a very specific
-// use-case which requires it.
+// There are typedefs available for the primary primitives meant to be used. You should normally
+// only use these typedefs and not the template explicitly, unless you have a very specific use-case
+// which requires it.
 
 template<typename T, uint32_t N>
-struct Vec final {
-	static_assert(N != N, "Only 2, 3 and 4-dimensional vectors supported.");
-};
+struct Vec final { static_assert(N != N, "Only 2, 3 and 4-dimensional vectors supported."); };
 
 template<typename T>
 struct Vec<T,2> final {
 
 	T x, y;
 
-	Vec() noexcept = default;
-	Vec(const Vec<T,2>&) noexcept = default;
-	Vec<T,2>& operator= (const Vec<T,2>&) noexcept = default;
+	constexpr Vec() noexcept = default;
+	constexpr Vec(const Vec<T,2>&) noexcept = default;
+	constexpr Vec<T,2>& operator= (const Vec<T,2>&) noexcept = default;
 	~Vec() noexcept = default;
 
 	constexpr explicit Vec(const T* ptr) : x(ptr[0]), y(ptr[1]) { }
@@ -70,11 +68,22 @@ struct Vec<T,2> final {
 	constexpr Vec& operator/= (T s) { x /= s; y /= s; return *this; }
 	constexpr Vec& operator/= (Vec o) { x /= o.x; y /= o.y; return *this; }
 
+	constexpr Vec operator+ (Vec o) const { return Vec(*this) += o; }
+	constexpr Vec operator- (Vec o) const { return Vec(*this) -= o; }
 	constexpr Vec operator- () const { return Vec(-x, -y); }
+	constexpr Vec operator* (Vec o) const { return Vec(*this) *= o; }
+	constexpr Vec operator* (T s) const { return Vec(*this) *= s; }
+	constexpr Vec operator/ (Vec o) const { return Vec(*this) /= o; }
+	constexpr Vec operator/ (T s) const { return Vec(*this) /= s; }
 
 	constexpr bool operator== (Vec o) const { return x == o.x && y == o.y; }
 	constexpr bool operator!= (Vec o) const { return !(*this == o); }
 };
+
+using vec2 = Vec<float, 2>;         static_assert(sizeof(vec2) == sizeof(float) * 2);
+using vec2_i32 = Vec<int32_t, 2>;   static_assert(sizeof(vec2_i32) == sizeof(int32_t) * 2);
+using vec2_u32 = Vec<uint32_t, 2>;  static_assert(sizeof(vec2_u32) == sizeof(uint32_t) * 2);
+using vec2_u8 = Vec<uint8_t, 2>;    static_assert(sizeof(vec2_u8) == sizeof(uint8_t) * 2);
 
 template<typename T>
 struct Vec<T,3> final {
@@ -85,9 +94,9 @@ struct Vec<T,3> final {
 		struct { T xAlias; Vec<T,2> yz; };
 	};
 
-	Vec() noexcept = default;
-	Vec(const Vec<T,3>&) noexcept = default;
-	Vec<T,3>& operator= (const Vec<T,3>&) noexcept = default;
+	constexpr Vec() noexcept = default;
+	constexpr Vec(const Vec<T,3>&) noexcept = default;
+	constexpr Vec<T,3>& operator= (const Vec<T,3>&) noexcept = default;
 	~Vec() noexcept = default;
 
 	constexpr explicit Vec(const T* ptr) : x(ptr[0]), y(ptr[1]), z(ptr[2]) { }
@@ -111,11 +120,22 @@ struct Vec<T,3> final {
 	constexpr Vec& operator/= (T s) { x /= s; y /= s; z /= s; return *this; }
 	constexpr Vec& operator/= (Vec o) { x /= o.x; y /= o.y; z /= o.z; return *this; }
 
+	constexpr Vec operator+ (Vec o) const { return Vec(*this) += o; }
+	constexpr Vec operator- (Vec o) const { return Vec(*this) -= o; }
 	constexpr Vec operator- () const { return Vec(-x, -y, -z); }
+	constexpr Vec operator* (Vec o) const { return Vec(*this) *= o; }
+	constexpr Vec operator* (T s) const { return Vec(*this) *= s; }
+	constexpr Vec operator/ (Vec o) const { return Vec(*this) /= o; }
+	constexpr Vec operator/ (T s) const { return Vec(*this) /= s; }
 
 	constexpr bool operator== (Vec o) const { return x == o.x && y == o.y && z == o.z; }
 	constexpr bool operator!= (Vec o) const { return !(*this == o); }
 };
+
+using vec3 = Vec<float, 3>;         static_assert(sizeof(vec3) == sizeof(float) * 3);
+using vec3_i32 = Vec<int32_t, 3>;   static_assert(sizeof(vec3_i32) == sizeof(int32_t) * 3);
+using vec3_u32 = Vec<uint32_t, 3>;  static_assert(sizeof(vec3_u32) == sizeof(uint32_t) * 3);
+using vec3_u8 = Vec<uint8_t, 3>;    static_assert(sizeof(vec3_u8) == sizeof(uint8_t) * 3);
 
 template<typename T>
 struct alignas(sizeof(T) * 4) Vec<T,4> final {
@@ -128,9 +148,9 @@ struct alignas(sizeof(T) * 4) Vec<T,4> final {
 		struct { T xAlias2; Vec<T,2> yz; };
 	};
 
-	Vec() noexcept = default;
-	Vec(const Vec<T,4>&) noexcept = default;
-	Vec<T,4>& operator= (const Vec<T,4>&) noexcept = default;
+	constexpr Vec() noexcept = default;
+	constexpr Vec(const Vec<T,4>&) noexcept = default;
+	constexpr Vec<T,4>& operator= (const Vec<T,4>&) noexcept = default;
 	~Vec() noexcept = default;
 
 	constexpr explicit Vec(const T* ptr) : x(ptr[0]), y(ptr[1]), z(ptr[2]), w(ptr[3]) { }
@@ -158,81 +178,33 @@ struct alignas(sizeof(T) * 4) Vec<T,4> final {
 	constexpr Vec& operator/= (T s) { x /= s; y /= s; z /= s; w /= s; return *this; }
 	constexpr Vec& operator/= (Vec o) { x /= o.x; y /= o.y; z /= o.z; w /= o.w; return *this; }
 
+	constexpr Vec operator+ (Vec o) const { return Vec(*this) += o; }
+	constexpr Vec operator- (Vec o) const { return Vec(*this) -= o; }
 	constexpr Vec operator- () const { return Vec(-x, -y, -z, -w); }
+	constexpr Vec operator* (Vec o) const { return Vec(*this) *= o; }
+	constexpr Vec operator* (T s) const { return Vec(*this) *= s; }
+	constexpr Vec operator/ (Vec o) const { return Vec(*this) /= o; }
+	constexpr Vec operator/ (T s) const { return Vec(*this) /= s; }
 
 	constexpr bool operator== (Vec o) const { return x == o.x && y == o.y && z == o.z && w == o.w; }
 	constexpr bool operator!= (Vec o) const { return !(*this == o); }
 };
 
-// Typedefs
-// ------------------------------------------------------------------------------------------------
+using vec4 = Vec<float, 4>;         static_assert(sizeof(vec4) == sizeof(float) * 4);
+using vec4_i32 = Vec<int32_t, 4>;   static_assert(sizeof(vec4_i32) == sizeof(int32_t) * 4);
+using vec4_u32 = Vec<uint32_t, 4>;  static_assert(sizeof(vec4_u32) == sizeof(uint32_t) * 4);
+using vec4_u8 = Vec<uint8_t, 4>;    static_assert(sizeof(vec4_u8) == sizeof(uint8_t) * 4);
 
-using vec2 = Vec<float,2>;
-using vec3 = Vec<float,3>;
-using vec4 = Vec<float,4>;
-static_assert(sizeof(vec2) == sizeof(float) * 2, "vec2 is padded");
-static_assert(sizeof(vec3) == sizeof(float) * 3, "vec3 is padded");
-static_assert(sizeof(vec4) == sizeof(float) * 4, "vec4 is padded");
-static_assert(alignof(vec4) == 16, "vec4 is not 16-byte aligned");
-
-using vec2_s32 = Vec<int32_t,2>;
-using vec3_s32 = Vec<int32_t,3>;
-using vec4_s32 = Vec<int32_t,4>;
-static_assert(sizeof(vec2_s32) == sizeof(int32_t) * 2, "vec2_s32 is padded");
-static_assert(sizeof(vec3_s32) == sizeof(int32_t) * 3, "vec3_s32 is padded");
-static_assert(sizeof(vec4_s32) == sizeof(int32_t) * 4, "vec4_s32 is padded");
-static_assert(alignof(vec4_s32) == 16, "vec4_s32 is not 16-byte aligned");
-
-using vec2_u32 = Vec<uint32_t,2>;
-using vec3_u32 = Vec<uint32_t,3>;
-using vec4_u32 = Vec<uint32_t,4>;
-static_assert(sizeof(vec2_u32) == sizeof(uint32_t) * 2, "vec2_u32 is padded");
-static_assert(sizeof(vec3_u32) == sizeof(uint32_t) * 3, "vec3_u32 is padded");
-static_assert(sizeof(vec4_u32) == sizeof(uint32_t) * 4, "vec4_u32 is padded");
-static_assert(alignof(vec4_u32) == 16, "vec4_u32 is not 16-byte aligned");
-
-using vec2_s8 = Vec<int8_t,2>;
-using vec3_s8 = Vec<int8_t,3>;
-using vec4_s8 = Vec<int8_t,4>;
-static_assert(sizeof(vec2_s8) == sizeof(int8_t) * 2, "vec2_s8 is padded");
-static_assert(sizeof(vec3_s8) == sizeof(int8_t) * 3, "vec3_s8 is padded");
-static_assert(sizeof(vec4_s8) == sizeof(int8_t) * 4, "vec4_s8 is padded");
-static_assert(alignof(vec4_s8) == 4, "vec4_s8 is not 4-byte aligned");
-
-using vec2_u8 = Vec<uint8_t,2>;
-using vec3_u8 = Vec<uint8_t,3>;
-using vec4_u8 = Vec<uint8_t,4>;
-static_assert(sizeof(vec2_u8) == sizeof(uint8_t) * 2, "vec2_u8 is padded");
-static_assert(sizeof(vec3_u8) == sizeof(uint8_t) * 3, "vec3_u8 is padded");
-static_assert(sizeof(vec4_u8) == sizeof(uint8_t) * 4, "vec4_u8 is padded");
-static_assert(alignof(vec4_u8) == 4, "vec4_u8 is not 4-byte aligned");
-
-// Free-standing operators
-// ------------------------------------------------------------------------------------------------
+static_assert(alignof(vec4) == 16);
+static_assert(alignof(vec4_i32) == 16);
+static_assert(alignof(vec4_u32) == 16);
+static_assert(alignof(vec4_u8) == 4);
 
 template<typename T, uint32_t N>
-constexpr Vec<T,N> operator+ (Vec<T,N> l, Vec<T,N> r) { return l += r; }
+constexpr Vec<T,N> operator* (T s, Vec<T,N> v) { return v * s; }
 
 template<typename T, uint32_t N>
-constexpr Vec<T,N> operator- (Vec<T,N> l, Vec<T,N> r) { return l -= r; }
-
-template<typename T, uint32_t N>
-constexpr Vec<T,N> operator* (Vec<T,N> l, Vec<T,N> r) { return l *= r; }
-
-template<typename T, uint32_t N>
-constexpr Vec<T,N> operator* (Vec<T,N> l, T r) { return l *= r; }
-
-template<typename T, uint32_t N>
-constexpr Vec<T,N> operator* (T l, Vec<T,N> r) { return r * l; }
-
-template<typename T, uint32_t N>
-constexpr Vec<T,N> operator/ (Vec<T,N> l, Vec<T,N> r) { return l /= r; }
-
-template<typename T, uint32_t N>
-constexpr Vec<T,N> operator/ (Vec<T,N> l, T r) { return l /= r; }
-
-template<typename T, uint32_t N>
-constexpr Vec<T,N> operator/ (T l, Vec<T,N> r) { return r / l; }
+constexpr Vec<T,N> operator/ (T s, Vec<T,N> v) { return v / s; }
 
 // Functions
 // ------------------------------------------------------------------------------------------------
@@ -287,7 +259,7 @@ template<typename T, uint32_t N>
 constexpr sfz::Vec<T,N> sfzMax(sfz::Vec<T,N> l, sfz::Vec<T,N> r)
 {
 	sfz::Vec<T,N> tmp;
-	for (uint32_t i = 0; i < N; i++) tmp[i] = (l[i] < r[i]) ? r[i] : l[i];
+	for (uint32_t i = 0; i < N; i++) { tmp[i] = (l[i] < r[i]) ? r[i] : l[i]; }
 	return tmp;
 }
 

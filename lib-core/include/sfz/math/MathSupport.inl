@@ -124,14 +124,14 @@ SFZ_CUDA_CALL vec4 abs(vec4 val) noexcept
 #endif
 }
 
-SFZ_CUDA_CALL vec2_s32 abs(vec2_s32 val) noexcept
+SFZ_CUDA_CALL vec2_i32 abs(vec2_i32 val) noexcept
 {
 	val.x = sfz::abs(val.x);
 	val.y = sfz::abs(val.y);
 	return val;
 }
 
-SFZ_CUDA_CALL vec3_s32 abs(vec3_s32 val) noexcept
+SFZ_CUDA_CALL vec3_i32 abs(vec3_i32 val) noexcept
 {
 	val.x = sfz::abs(val.x);
 	val.y = sfz::abs(val.y);
@@ -139,7 +139,7 @@ SFZ_CUDA_CALL vec3_s32 abs(vec3_s32 val) noexcept
 	return val;
 }
 
-SFZ_CUDA_CALL vec4_s32 abs(vec4_s32 val) noexcept
+SFZ_CUDA_CALL vec4_i32 abs(vec4_i32 val) noexcept
 {
 #ifdef SFZ_CUDA_DEVICE_CODE
 	val.x = sfz::abs(val.x);
@@ -233,14 +233,14 @@ SFZ_CUDA_CALL vec4 sgn(vec4 val) noexcept
 #endif
 }
 
-SFZ_CUDA_CALL vec2_s32 sgn(vec2_s32 val) noexcept
+SFZ_CUDA_CALL vec2_i32 sgn(vec2_i32 val) noexcept
 {
 	val.x = sfz::sgn(val.x);
 	val.y = sfz::sgn(val.y);
 	return val;
 }
 
-SFZ_CUDA_CALL vec3_s32 sgn(vec3_s32 val) noexcept
+SFZ_CUDA_CALL vec3_i32 sgn(vec3_i32 val) noexcept
 {
 	val.x = sfz::sgn(val.x);
 	val.y = sfz::sgn(val.y);
@@ -248,7 +248,7 @@ SFZ_CUDA_CALL vec3_s32 sgn(vec3_s32 val) noexcept
 	return val;
 }
 
-SFZ_CUDA_CALL vec4_s32 sgn(vec4_s32 val) noexcept
+SFZ_CUDA_CALL vec4_i32 sgn(vec4_i32 val) noexcept
 {
 	val.x = sfz::sgn(val.x);
 	val.y = sfz::sgn(val.y);
@@ -277,17 +277,17 @@ SFZ_CUDA_CALL float minElement(vec4 val) noexcept
 	return sfzMin(sfzMin(sfzMin(val.x, val.y), val.z), val.w);
 }
 
-SFZ_CUDA_CALL int32_t minElement(vec2_s32 val) noexcept
+SFZ_CUDA_CALL int32_t minElement(vec2_i32 val) noexcept
 {
 	return sfzMin(val.x, val.y);
 }
 
-SFZ_CUDA_CALL int32_t minElement(vec3_s32 val) noexcept
+SFZ_CUDA_CALL int32_t minElement(vec3_i32 val) noexcept
 {
 	return sfzMin(sfzMin(val.x, val.y), val.z);
 }
 
-SFZ_CUDA_CALL int32_t minElement(vec4_s32 val) noexcept
+SFZ_CUDA_CALL int32_t minElement(vec4_i32 val) noexcept
 {
 	return sfzMin(sfzMin(sfzMin(val.x, val.y), val.z), val.w);
 }
@@ -325,17 +325,17 @@ SFZ_CUDA_CALL float maxElement(vec4 val) noexcept
 	return sfzMax(sfzMax(sfzMax(val.x, val.y), val.z), val.w);
 }
 
-SFZ_CUDA_CALL int32_t maxElement(vec2_s32 val) noexcept
+SFZ_CUDA_CALL int32_t maxElement(vec2_i32 val) noexcept
 {
 	return sfzMax(val.x, val.y);
 }
 
-SFZ_CUDA_CALL int32_t maxElement(vec3_s32 val) noexcept
+SFZ_CUDA_CALL int32_t maxElement(vec3_i32 val) noexcept
 {
 	return sfzMax(sfzMax(val.x, val.y), val.z);
 }
 
-SFZ_CUDA_CALL int32_t maxElement(vec4_s32 val) noexcept
+SFZ_CUDA_CALL int32_t maxElement(vec4_i32 val) noexcept
 {
 	return sfzMax(sfzMax(sfzMax(val.x, val.y), val.z), val.w);
 }
