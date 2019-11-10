@@ -25,13 +25,13 @@ namespace sfz {
 // Vector toString()
 // ------------------------------------------------------------------------------------------------
 
-StackString toString(const vec2_f32& vector, uint32_t numDecimals = 2) noexcept;
-StackString toString(const vec3_f32& vector, uint32_t numDecimals = 2) noexcept;
-StackString toString(const vec4_f32& vector, uint32_t numDecimals = 2) noexcept;
+StackString toString(const vec2& vector, uint32_t numDecimals = 2) noexcept;
+StackString toString(const vec3& vector, uint32_t numDecimals = 2) noexcept;
+StackString toString(const vec4& vector, uint32_t numDecimals = 2) noexcept;
 
-void toString(const vec2_f32& vector, StackString& string, uint32_t numDecimals = 2) noexcept;
-void toString(const vec3_f32& vector, StackString& string, uint32_t numDecimals = 2) noexcept;
-void toString(const vec4_f32& vector, StackString& string, uint32_t numDecimals = 2) noexcept;
+void toString(const vec2& vector, StackString& string, uint32_t numDecimals = 2) noexcept;
+void toString(const vec3& vector, StackString& string, uint32_t numDecimals = 2) noexcept;
+void toString(const vec4& vector, StackString& string, uint32_t numDecimals = 2) noexcept;
 
 StackString toString(const vec2_s32& vector) noexcept;
 StackString toString(const vec3_s32& vector) noexcept;

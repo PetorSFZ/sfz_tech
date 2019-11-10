@@ -547,13 +547,6 @@ TEST_CASE("Cross product", "[sfz::Vector]")
 	}
 }
 
-TEST_CASE("Sum of vector", "[sfz::Vector]")
-{
-	using sfz::elementSum;
-	sfz::Vector<int, 4> v1{1, 2, -4, 9};
-	REQUIRE(elementSum(v1) == 8);
-}
-
 TEST_CASE("sfzMin() (Vector)", "[sfz::MathSupport]")
 {
 	using namespace sfz;

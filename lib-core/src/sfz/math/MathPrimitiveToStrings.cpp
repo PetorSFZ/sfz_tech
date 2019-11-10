@@ -23,42 +23,42 @@ namespace sfz {
 // Vector toString()
 // ------------------------------------------------------------------------------------------------
 
-StackString toString(const vec2_f32& vector, uint32_t numDecimals) noexcept
+StackString toString(const vec2& vector, uint32_t numDecimals) noexcept
 {
 	StackString tmp;
 	toString(vector, tmp, numDecimals);
 	return tmp;
 }
 
-StackString toString(const vec3_f32& vector, uint32_t numDecimals) noexcept
+StackString toString(const vec3& vector, uint32_t numDecimals) noexcept
 {
 	StackString tmp;
 	toString(vector, tmp, numDecimals);
 	return tmp;
 }
 
-StackString toString(const vec4_f32& vector, uint32_t numDecimals) noexcept
+StackString toString(const vec4& vector, uint32_t numDecimals) noexcept
 {
 	StackString tmp;
 	toString(vector, tmp, numDecimals);
 	return tmp;
 }
 
-void toString(const vec2_f32& vector, StackString& string, uint32_t numDecimals) noexcept
+void toString(const vec2& vector, StackString& string, uint32_t numDecimals) noexcept
 {
 	StackString32 formatStr;
 	formatStr.printf("[%%.%uf, %%.%uf]", numDecimals, numDecimals);
 	string.printf(formatStr.str, vector.x, vector.y);
 }
 
-void toString(const vec3_f32& vector, StackString& string, uint32_t numDecimals) noexcept
+void toString(const vec3& vector, StackString& string, uint32_t numDecimals) noexcept
 {
 	StackString32 formatStr;
 	formatStr.printf("[%%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals);
 	string.printf(formatStr.str, vector.x, vector.y, vector.z);
 }
 
-void toString(const vec4_f32& vector, StackString& string, uint32_t numDecimals) noexcept
+void toString(const vec4& vector, StackString& string, uint32_t numDecimals) noexcept
 {
 	StackString32 formatStr;
 	formatStr.printf("[%%.%uf, %%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals, numDecimals);

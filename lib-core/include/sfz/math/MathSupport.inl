@@ -484,7 +484,7 @@ SFZ_CUDA_CALL vec3 rotateTowardsRad(vec3 inDir, vec3 targetDir, float angleRads)
 {
 	sfz_assert_debug(approxEqual(length(inDir), 1.0f));
 	sfz_assert_debug(approxEqual(length(targetDir), 1.0f));
-	sfz_assert_debug(dot(inDir, targetDir) >= -0.99);
+	sfz_assert_debug(dot(inDir, targetDir) >= -0.99f);
 	sfz_assert_debug(angleRads >= 0.0f);
 	sfz_assert_debug(angleRads < PI);
 	vec3 axis = cross(inDir, targetDir);

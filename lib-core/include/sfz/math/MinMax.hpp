@@ -42,55 +42,17 @@
 // sfzMin()
 // ------------------------------------------------------------------------------------------------
 
-constexpr float sfzMin(float lhs, float rhs) noexcept
-{
-	return (lhs < rhs) ? lhs : rhs;
-}
-
-constexpr int32_t sfzMin(int32_t lhs, int32_t rhs) noexcept
-{
-	return (lhs < rhs) ? lhs : rhs;
-}
-
-constexpr uint32_t sfzMin(uint32_t lhs, uint32_t rhs) noexcept
-{
-	return (lhs < rhs) ? lhs : rhs;
-}
-
-constexpr int64_t sfzMin(int64_t lhs, int64_t rhs) noexcept
-{
-	return (lhs < rhs) ? lhs : rhs;
-}
-
-constexpr uint64_t sfzMin(uint64_t lhs, uint64_t rhs) noexcept
-{
-	return (lhs < rhs) ? lhs : rhs;
-}
+constexpr float sfzMin(float lhs, float rhs) noexcept { return (lhs < rhs) ? lhs : rhs; }
+constexpr int32_t sfzMin(int32_t lhs, int32_t rhs) noexcept { return (lhs < rhs) ? lhs : rhs; }
+constexpr uint32_t sfzMin(uint32_t lhs, uint32_t rhs) noexcept { return (lhs < rhs) ? lhs : rhs; }
+constexpr int64_t sfzMin(int64_t lhs, int64_t rhs) noexcept { return (lhs < rhs) ? lhs : rhs; }
+constexpr uint64_t sfzMin(uint64_t lhs, uint64_t rhs) noexcept { return (lhs < rhs) ? lhs : rhs; }
 
 // sfzMax()
 // ------------------------------------------------------------------------------------------------
 
-constexpr float sfzMax(float lhs, float rhs) noexcept
-{
-	return (lhs < rhs) ? rhs : lhs;
-}
-
-constexpr int32_t sfzMax(int32_t lhs, int32_t rhs) noexcept
-{
-	return (lhs < rhs) ? rhs : lhs;
-}
-
-constexpr uint32_t sfzMax(uint32_t lhs, uint32_t rhs) noexcept
-{
-	return (lhs < rhs) ? rhs : lhs;
-}
-
-constexpr int64_t sfzMax(int64_t lhs, int64_t rhs) noexcept
-{
-	return (lhs < rhs) ? rhs : lhs;
-}
-
-constexpr uint64_t sfzMax(uint64_t lhs, uint64_t rhs) noexcept
-{
-	return (lhs < rhs) ? rhs : lhs;
-}
+constexpr float sfzMax(float lhs, float rhs) noexcept { return (lhs < rhs) ? rhs : lhs; }
+constexpr int32_t sfzMax(int32_t lhs, int32_t rhs) noexcept { return (lhs < rhs) ? rhs : lhs; }
+constexpr uint32_t sfzMax(uint32_t lhs, uint32_t rhs) noexcept { return (lhs < rhs) ? rhs : lhs; }
+constexpr int64_t sfzMax(int64_t lhs, int64_t rhs) noexcept { return (lhs < rhs) ? rhs : lhs; }
+constexpr uint64_t sfzMax(uint64_t lhs, uint64_t rhs) noexcept { return (lhs < rhs) ? rhs : lhs; }

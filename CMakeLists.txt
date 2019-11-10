@@ -9,6 +9,15 @@ endif()
 # Check if sfzCore is built individually or part of a project
 get_directory_property(hasParent PARENT_DIRECTORY)
 
+# Check platforms
+# ------------------------------------------------------------------------------------------------
+
+if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+	set(iOS true)
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+	set(macOS true)
+endif()
+
 # Compiler flags
 # ------------------------------------------------------------------------------------------------
 
@@ -32,24 +41,24 @@ if(NOT hasParent)
 		# /Od = "disables optimization, speeding compilation and simplifying debugging"
 		set(CMAKE_CXX_FLAGS_DEBUG "/Od /DEBUG")
 
-	elseif(IOS)
-		# iOS flags
-		# -Wall -Wextra = Enable most warnings
-		# -std=c++14 = Enable C++14 support
-		# -fno-strict-aliasing = Disable strict aliasing optimizations
-		# -DSFZ_IOS = Defines the "SFZ_IOS" macro
-		set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -fno-strict-aliasing -DSFZ_IOS")
-		set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
-		set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
-		set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-
-	elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+	elseif(macOS)
 		# macOS flags
 		# -Wall -Wextra = Enable most warnings
 		# -std=c++14 = Enable C++14 support
 		# -march=sandybridge = Require at least a Sandy Bridge Intel CPU to run code
 		# -fno-strict-aliasing = Disable strict aliasing optimizations
-		set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -march=sandybridge -fno-strict-aliasing")
+		set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -march=sandybridge -fno-strict-aliasing")
+		set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
+		set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
+		set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+
+	elseif(iOS)
+		# iOS flags
+		# -Wall -Wextra = Enable most warnings
+		# -std=c++14 = Enable C++14 support
+		# -fno-strict-aliasing = Disable strict aliasing optimizations
+		# -DSFZ_IOS = Defines the "SFZ_IOS" macro
+		set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -fno-strict-aliasing -DSFZ_IOS")
 		set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
 		set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
 		set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
@@ -60,14 +69,14 @@ if(NOT hasParent)
 		# -std=c++14 = Enable C++14 support
 		# -fno-strict-aliasing = Disable strict aliasing optimizations
 		# -s TOTAL_MEMORY=134217728 = 128MiB heap, TODO: should probably not hard-code this
-		set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -fno-strict-aliasing -s TOTAL_MEMORY=134217728")
+		set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -fno-strict-aliasing -s TOTAL_MEMORY=134217728")
 		set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
 		set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
 		set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 
 	else()
 		# GCC / Clang flags
-		set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14 -march=sandybridge -pthread -fno-strict-aliasing")
+		set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -march=sandybridge -pthread -fno-strict-aliasing")
 		set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
 		set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
 		set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
@@ -165,7 +174,6 @@ set(SFZ_CORE_INCLUDE_FILES
 	${CORE_INCLUDE_DIR}/sfz/math/Quaternion.hpp
 	${CORE_INCLUDE_DIR}/sfz/math/Quaternion.inl
 	${CORE_INCLUDE_DIR}/sfz/math/Vector.hpp
-	${CORE_INCLUDE_DIR}/sfz/math/Vector.inl
 
 	${CORE_INCLUDE_DIR}/sfz/memory/Allocator.hpp
 	${CORE_INCLUDE_DIR}/sfz/memory/ArenaAllocator.hpp
