@@ -141,7 +141,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		// Get number of framebuffers and and allocate memory for them
 		ParsedJsonNode framebuffersNode = root.accessMap("framebuffers");
 		uint32_t numFramebuffers = framebuffersNode.arrayLength();
-		configurable.framebuffers.create(numFramebuffers, state.allocator);
+		configurable.framebuffers.init(numFramebuffers, state.allocator, "framebuffers");
 
 		// Parse information abotu each framebuffer
 		for (uint32_t i = 0; i < numFramebuffers; i++) {
@@ -218,7 +218,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	// Get number of render pipelines to load and allocate memory for them
 	ParsedJsonNode renderPipelinesNode = root.accessMap("render_pipelines");
 	uint32_t numRenderPipelines = renderPipelinesNode.arrayLength();
-	configurable.renderPipelines.create(numRenderPipelines, state.allocator);
+	configurable.renderPipelines.init(numRenderPipelines, state.allocator, "renderPipelines");
 
 	// Parse information about each render pipeline
 	for (uint32_t i = 0; i < numRenderPipelines; i++) {
@@ -343,7 +343,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	// Get number of present queue stages to load and allocate memory for them
 	ParsedJsonNode presentQueueStagesNode = root.accessMap("present_queue_stages");
 	uint32_t numPresentQueueStages = presentQueueStagesNode.arrayLength();
-	configurable.presentQueueStages.create(numPresentQueueStages, state.allocator);
+	configurable.presentQueueStages.init(numPresentQueueStages, state.allocator, "presentQueueStages");
 
 	// Parse information about present queue stage
 	for (uint32_t i = 0; i < numPresentQueueStages; i++) {
@@ -375,7 +375,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			ParsedJsonNode boundTargetsNode = stageNode.accessMap("bound_render_targets");
 			uint32_t numBoundTargets = boundTargetsNode.arrayLength();
 
-			stage.boundRenderTargets.create(numBoundTargets, state.allocator);
+			stage.boundRenderTargets.init(numBoundTargets, state.allocator, "boundRenderTargets");
 			for (uint32_t j = 0; j < numBoundTargets; j++) {
 
 				ParsedJsonNode targetNode = boundTargetsNode.accessArray(j);
@@ -440,7 +440,7 @@ bool allocateStageMemory(RendererState& state) noexcept
 		
 		// Allocate CPU memory for constant buffer data
 		uint32_t numConstantBuffers = pipelineItem->pipeline.signature.numConstantBuffers;
-		stage.constantBuffers.create(numConstantBuffers, state.allocator);
+		stage.constantBuffers.init(numConstantBuffers, state.allocator, "constantBuffers");
 
 		// Allocate GPU memory for all constant buffers
 		for (uint32_t j = 0; j < numConstantBuffers; j++) {

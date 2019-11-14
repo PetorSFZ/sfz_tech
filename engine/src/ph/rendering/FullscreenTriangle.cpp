@@ -50,11 +50,11 @@ ph::Mesh createFullscreenTriangle(sfz::Allocator* allocator) noexcept
 	ph::Mesh mesh;
 
 	// Vertices
-	mesh.vertices.create(NUM_TRIANGLE_VERTICES, allocator);
+	mesh.vertices.init(NUM_TRIANGLE_VERTICES, allocator, "vertices");
 	mesh.vertices.add(TRIANGLE_VERTICES, NUM_TRIANGLE_VERTICES);
 
 	// Indices
-	mesh.indices.create(NUM_TRIANGLE_INDICES, allocator);
+	mesh.indices.init(NUM_TRIANGLE_INDICES, allocator, "indices");
 	mesh.indices.add(TRIANGLE_INDICES, NUM_TRIANGLE_INDICES);
 
 	// Components
@@ -62,11 +62,11 @@ ph::Mesh createFullscreenTriangle(sfz::Allocator* allocator) noexcept
 	comp.materialIdx = 0;
 	comp.firstIndex = 0;
 	comp.numIndices = NUM_TRIANGLE_INDICES;
-	mesh.components.create(1, allocator);
+	mesh.components.init(1, allocator, "components");
 	mesh.components.add(std::move(comp));
 
 	// Material
-	mesh.materials.create(1, allocator);
+	mesh.materials.init(1, allocator, "materials");
 	mesh.materials.add(ph::Material());
 
 	return mesh;

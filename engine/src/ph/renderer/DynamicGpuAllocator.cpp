@@ -25,6 +25,7 @@
 #include <sfz/Assert.hpp>
 #include <sfz/containers/DynArray.hpp>
 #include <sfz/containers/HashMap.hpp>
+#include <sfz/math/MinMax.hpp>
 
 #include "ph/renderer/ZeroGUtils.hpp"
 
@@ -126,7 +127,7 @@ static bool createMemoryPage(
 	if (!heapAllocSuccess) return false;
 
 	// Allocate memory for free blocks
-	page.freeBlocks.create(MAX_NUM_BLOCKS_PER_PAGE, allocator);
+	page.freeBlocks.init(MAX_NUM_BLOCKS_PER_PAGE, allocator, "MemoryPage::freeBlocks");
 
 	// Add initial block
 	Block initialBlock;
@@ -307,7 +308,7 @@ void DynamicGpuAllocator::init(
 	mState->pageSize = pageSize;
 
 	// Allocate memory for page meta data
-	mState->pages.create(MAX_NUM_PAGES, allocator);
+	mState->pages.init(MAX_NUM_PAGES, allocator, "DynamicGpuAllocator::pages");
 	mState->entries.create(MAX_NUM_PAGES * MAX_NUM_BLOCKS_PER_PAGE * 4 * 2, allocator);
 }
 

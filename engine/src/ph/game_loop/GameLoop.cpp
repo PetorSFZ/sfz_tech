@@ -30,6 +30,7 @@
 
 #include <sfz/Logging.hpp>
 #include <sfz/containers/DynArray.hpp>
+#include <sfz/math/MinMax.hpp>
 
 #include "ph/Context.hpp"
 #include "ph/config/GlobalConfig.hpp"
@@ -329,6 +330,9 @@ void runGameLoop(
 	gameLoopState.renderer = std::move(renderer);
 	gameLoopState.window = window;
 	gameLoopState.cleanupCallback = cleanupCallback;
+	gameLoopState.userInput.events.init(0, sfz::getDefaultAllocator(), "UserInput::events");
+	gameLoopState.userInput.controllerEvents.init(0, sfz::getDefaultAllocator(), "UserInput::controllerEvents");
+	gameLoopState.userInput.mouseEvents.init(0, sfz::getDefaultAllocator(), "UserInput::mouseEvents");
 
 	calculateDelta(gameLoopState.previousItrTime); // Sets previousItrTime to current time
 

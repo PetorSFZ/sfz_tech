@@ -202,7 +202,7 @@ static bool extractAssets(
 	StringCollection& resStrings = getResourceStrings();
 
 	// Load textures
-	texturesOut.create(uint32_t(model.textures.size()), allocator);
+	texturesOut.init(uint32_t(model.textures.size()), allocator, "textures");
 	for (uint32_t i = 0; i < model.textures.size(); i++) {
 		const tinygltf::Texture& tex = model.textures[i];
 		if (tex.source < 0 || int(model.images.size()) <= tex.source) {
@@ -247,7 +247,7 @@ static bool extractAssets(
 	};
 
 	// Load materials
-	meshOut.materials.create(uint32_t(model.materials.size()), allocator);
+	meshOut.materials.init(uint32_t(model.materials.size()), allocator, "materials");
 	for (uint32_t i = 0; i < model.materials.size(); i++) {
 		const tinygltf::Material& material = model.materials[i];
 		Material phMat;
@@ -365,9 +365,9 @@ static bool extractAssets(
 
 	// Add meshes
 	uint32_t numVertexGuess = uint32_t(model.meshes.size()) * 256;
-	meshOut.vertices.create(numVertexGuess, allocator);
-	meshOut.indices.create(numVertexGuess * 2, allocator);
-	meshOut.components.create(uint32_t(model.meshes.size()), allocator);
+	meshOut.vertices.init(numVertexGuess, allocator, "vertices");
+	meshOut.indices.init(numVertexGuess * 2, allocator, "indices");
+	meshOut.components.init(uint32_t(model.meshes.size()), allocator, "components");
 	for (uint32_t i = 0; i < uint32_t(model.meshes.size()); i++) {
 		const tinygltf::Mesh& mesh = model.meshes[i];
 		MeshComponent phMeshComp;

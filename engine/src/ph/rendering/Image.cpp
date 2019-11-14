@@ -94,7 +94,7 @@ static void padRgb(DynArray<uint8_t>& dst, const uint8_t* src, int32_t w, int32_
 	const int32_t dstPitch = w * 4;
 
 	dst.ensureCapacity(h * dstPitch);
-	dst.setSize(h * dstPitch);
+	dst.hackSetSize(h * dstPitch);
 
 	for (int32_t y = 0; y < h; y++) {
 		int32_t srcOffs = y * srcPitch;
@@ -135,8 +135,8 @@ Image Image::allocate(int32_t width, int32_t height, ImageType type, Allocator* 
 	image.width = width;
 	image.height = height;
 	image.bytesPerPixel = sizeOfElement(type);
-	image.rawData.create(width * height * image.bytesPerPixel, allocator);
-	image.rawData.setSize(image.rawData.capacity());
+	image.rawData.init(width * height * image.bytesPerPixel, allocator, "Image::rawData");
+	image.rawData.hackSetSize(image.rawData.capacity());
 	std::memset(image.rawData.data(), 0, image.rawData.size());
 	return image;
 }
@@ -182,7 +182,7 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 
 	// Create image from data
 	Image tmp;
-	tmp.rawData.create(uint32_t(width * height * numChannels), static_allocator);
+	tmp.rawData.init(uint32_t(width * height * numChannels), static_allocator, "Image::rawData");
 	tmp.width = width;
 	tmp.height = height;
 	switch (numChannels) {
