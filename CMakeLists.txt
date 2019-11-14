@@ -31,7 +31,7 @@ if(NOT hasParent)
 		# /arch:AVX = Enable (require) Intel AVX instructions for code generation
 		# /D_CRT_SECURE_NO_WARNINGS = Removes annyoing warning when using c standard library
 		# /utf-8 = Specifies that both the source and execution character sets are encoded using UTF-8.
-		set(CMAKE_CXX_FLAGS "/W4 /wd4201 /Zi /EHsc /arch:AVX /D_CRT_SECURE_NO_WARNINGS /utf-8")
+		set(CMAKE_CXX_FLAGS "/W4 /std:c++17 /wd4201 /Zi /EHsc /arch:AVX /D_CRT_SECURE_NO_WARNINGS /utf-8")
 		# /O2 = Optimize code for fastest speed
 		# /fp:fast = "optimize floating-point code for speed at the expense of accuracy and correctness"
 		# /DSFZ_NO_DEBUG = defines the "SFZ_NO_DEBUG" macro, which disables sfz_assert_debug()
@@ -143,7 +143,6 @@ set(SFZ_CORE_INCLUDE_FILES
 	${CORE_INCLUDE_DIR}/sfz/SimdIntrinsics.hpp
 
 	${CORE_INCLUDE_DIR}/sfz/containers/DynArray.hpp
-	${CORE_INCLUDE_DIR}/sfz/containers/DynArray.inl
 	${CORE_INCLUDE_DIR}/sfz/containers/HashMap.hpp
 	${CORE_INCLUDE_DIR}/sfz/containers/HashMap.inl
 	${CORE_INCLUDE_DIR}/sfz/containers/HashTableKeyDescriptor.hpp

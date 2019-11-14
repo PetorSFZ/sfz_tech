@@ -77,7 +77,7 @@ TEST_CASE("Quaternion Constructors", "[sfz::Quaternion]")
 		Quaternion rotQuat3 = Quaternion::rotationDeg(axis, angleDeg2);
 		mat34 rotMat2 = mat34::rotation3(axis, angleRad2);
 		Quaternion rotQuat4 = Quaternion::fromRotationMatrix(rotMat2);
-		REQUIRE(approxEqual(rotQuat3, rotQuat4, 0.04));
+		REQUIRE(approxEqual(rotQuat3, rotQuat4, 0.04f));
 	}
 }
 

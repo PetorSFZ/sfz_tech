@@ -19,248 +19,256 @@
 #pragma once
 
 #include <cstdint>
-#include <cstring> // std::memcpy()
-#include <new> // Placement new
-#include <type_traits>
-#include <utility> // std::move()
+#include <utility> // std::forward(), std::move(), std::swap()
 
 #include "sfz/Assert.hpp"
-#include "sfz/Context.hpp"
-#include "sfz/math/MinMax.hpp"
 #include "sfz/memory/Allocator.hpp"
 
 namespace sfz {
 
-using std::uint32_t;
-using std::uint64_t;
-
-// DynArray (interface)
+// DynArray
 // ------------------------------------------------------------------------------------------------
 
-/// A class managing a dynamic array, somewhat like std::vector
-///
-/// A DynArray has both a size and a capacity. The size is the current number of active elements
-/// in the internal array. The capacity on the other hand is the number of elements the internal
-/// array can hold before it needs to be resized.
-///
-/// DynArray uses sfzCore allocators (read more about them in sfz/memory/Allocator.hpp). Basically
-/// they are instance based allocators, so each DynArray needs to have an Allocator pointer. The
-/// default constructor does not set any allocator (i.e. nullptr) and does not allocate any memory.
-/// An allocator can be set via the create() method or the constructor that takes an allocator.
-/// Once an allocator is set it can not be changed unless the DynArray is first destroy():ed, this
-/// is done automatically if create() is called again. If no allocator is available (nullptr) when
-/// attempting to allocate memory (setCapacity(), add(), etc), then the default allocator will be
-/// retrieved (getDefaultAllocator()) and set.
-///
-/// DynArray guarantees that the elements are stored in a (at least 32-byte aligned) contiguous
-/// array. It  does, however, not guarantee that a specific element will always occupy the same
-/// position in memory. When inserting elements or resizing the internal array objects (or the
-/// whole array) may be moved to different memory locations, using move or copy constructors.
-///
-/// DynArray iterators are simply pointers to the internal array. Modifying a DynArray while
-/// iterating over it will likely have unintended consequences if you are not very careful.
-///
-/// Every method in DynArray is declared noexcept. This means that if any constructor or
-/// destructor called throws an exception the program will terminate by std::terminate().
+constexpr float DYNARRAY_GROW_RATE = 1.75;
+constexpr uint32_t DYNARRAY_DEFAULT_INITIAL_CAPACITY = 64;
+constexpr uint32_t DYNARRAY_MIN_CAPACITY = 2;
+constexpr uint32_t DYNARRAY_MAX_CAPACITY = uint32_t(UINT32_MAX / DYNARRAY_GROW_RATE) - 1;
+
+// A class managing a dynamic array, somewhat like std::vector.
+//
+// A DynArray has both a size and a capacity. The size is the current number elements in the array,
+// the capacity is the amount of elements the array can hold before it needs to be resized.
+//
+// A DynArray needs to be supplied an allocator before it can start allocating memory, this is done
+// through the init() method (or it's constructor wrapper). Calling init() with capacity 0 is
+// guaranteed to just set the allocator and not allocate any memory.
+//
+// DynArray does not guarantee that a specific element will always occupy the same position in
+// memory. E.g., elements may be moved around when the array is modified. It is not safe to modify
+// the DynArray when iterating over it, as the iterators will not update on resize.
 template<typename T>
 class DynArray final {
 public:
-	// Constants
-	// --------------------------------------------------------------------------------------------
-
-	static constexpr uint32_t MINIMUM_ALIGNMENT = 32;
-	static constexpr uint32_t DEFAULT_INITIAL_CAPACITY = 64;
-	static constexpr uint32_t MIN_CAPACITY = 2;
-	static constexpr uint64_t MAX_CAPACITY = 4294967295;
-	static constexpr double CAPACITY_INCREASE_FACTOR = 1.75;
-
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	/// Creates an empty DynArray without setting an allocator or allocating any memory.
-	DynArray() noexcept = default;
+	DynArray()  = default;
+	DynArray(const DynArray& other) noexcept { *this = other.clone(); }
+	DynArray& operator= (const DynArray& other) noexcept { *this = other.clone(); return *this; }
+	DynArray(DynArray&& other) noexcept { this->swap(other); }
+	DynArray& operator= (DynArray&& other) noexcept { this->swap(other); return *this; }
+	~DynArray() noexcept { this->destroy(); }
 
-	/// Creates a DynArray using create().
-	explicit DynArray(uint32_t capacity, Allocator* allocator = getDefaultAllocator()) noexcept;
-
-	/// Copy constructors. Copies content and allocator pointer. If source and target have the
-	/// same allocator and target has larger capacity then no memory reallocation is performed.
-	DynArray(const DynArray& other) noexcept;
-	DynArray& operator= (const DynArray& other) noexcept;
-
-	/// Copy constructor that change allocator. Copies content but uses the specified allocator
-	/// for the copy instead of the original one.
-	DynArray(const DynArray& other, Allocator* allocator) noexcept;
-
-	/// Move constructors. Equivalent to calling target.swap(source).
-	DynArray(DynArray&& other) noexcept;
-	DynArray& operator= (DynArray&& other) noexcept;
-
-	/// Destroys the internal array using destroy()
-	~DynArray() noexcept;
+	explicit DynArray(uint32_t capacity, Allocator* allocator, const char* allocName) noexcept {
+		this->init(capacity, allocator, allocName);
+	}
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	/// Calls destroy(), then sets the specified allocator and allocates memory from it.
-	void create(uint32_t capacity, Allocator* allocator = getDefaultAllocator()) noexcept;
+	// Initializes with specified parameters. Guaranteed to only set allocator and not allocate
+	// memory if a capacity of 0 is requested.
+	void init(uint32_t capacity, Allocator* allocator, const char* allocName)
+	{
+		this->destroy();
+		mAllocator = allocator;
+		this->setCapacity(capacity, allocName);
+	}
 
-	/// Swaps the contents of two DynArrays, including the allocator pointers.
-	void swap(DynArray& other) noexcept;
+	DynArray clone(const char* allocName = "DynArray clone") const
+	{
+		DynArray tmp(mCapacity, mAllocator, allocName);
+		tmp.add(mData, mSize);
+		return tmp;
+	}
 
-	/// Destroys all elements stored in this DynArray, deallocates all memory and removes allocator.
-	/// After this method is called the internal array is nullptr, size and capacity is 0, allocator
-	/// is nullptr. This method is always safe to call and will attempt to do the minimum amount of
-	/// work. It is not necessary to call this method manually, it will automatically be called in
-	/// the destructor.
-	void destroy() noexcept;
+	void swap(DynArray& other)
+	{
+		std::swap(this->mSize, other.mSize);
+		std::swap(this->mCapacity, other.mCapacity);
+		std::swap(this->mData, other.mData);
+		std::swap(this->mAllocator, other.mAllocator);
+	}
 
-	/// Removes all elements from this DynArray without deallocating memory, changing capacity or
-	/// touching the allocator.
-	void clear() noexcept;
+	// Removes all elements without deallocating memory.
+	void clear() { for (uint32_t i = 0; i < mSize; i++) mData[i].~T(); mSize = 0; }
 
-	/// Directly sets the internal size member. Only available if T is a trivial type. If the size
-	/// parameter is larger than the capacity the internal size it will be set to capacity instead.
-	void setSize(uint32_t size) noexcept;
+	// Destroys all elements, deallocates memory and removes allocator.
+	void destroy()
+	{
+		this->clear();
+		if (mData != nullptr) mAllocator->deallocate(mData);
+		mCapacity = 0;
+		mData = nullptr;
+		mAllocator = nullptr;
+	}
 
-	/// Sets the capacity of this DynArray. If the requested capacity is less than the size (number
-	/// of elements) in this DynArray then the capacity will be set to the size instead. If no
-	/// allocator is available the default one will be retrieved and set. This function is
-	/// guaranteed to not remove the allocator from a DynArray. First calling clear() and then
-	/// setCapacity(0) is equivalent to destroy() except that the allocator is kept.
-	void setCapacity(uint32_t capacity) noexcept;
+	// Directly sets the size without touching or initializing any elements. Only safe if T is a
+	// trivial type and you know what you are doing, use at your own risk.
+	void hackSetSize(uint32_t size) { mSize = (size <= mCapacity) ? size : mCapacity; }
 
-	/// Ensures this DynArray has at least the specified amount of capacity. If the current
-	/// capacity is less than the requested one then setCapacity() will be called.
-	void ensureCapacity(uint32_t capacity) noexcept;
+	// Sets the capacity, allocating memory and moving elements if necessary.
+	void setCapacity(uint32_t capacity, const char* allocName = "DynArray")
+	{
+		if (mSize > capacity) capacity = mSize;
+		if (mCapacity == capacity) return;
+		if (capacity < DYNARRAY_MIN_CAPACITY) capacity = DYNARRAY_MIN_CAPACITY;
+		sfz_assert_release(mAllocator != nullptr);
+		sfz_assert_release(capacity < DYNARRAY_MAX_CAPACITY);
+
+		// Allocate memory and move/copy over elements from old memory
+		T* newAllocation = capacity == 0 ? nullptr : (T*)mAllocator->allocate(
+			capacity * sizeof(T), alignof(T) < 32 ? 32 : alignof(T), allocName);
+		for (uint32_t i = 0; i < mSize; i++) new(newAllocation + i) T(std::move(mData[i]));
+		
+		// Destroy old memory and replace state with new memory and values
+		uint32_t sizeBackup = mSize;
+		Allocator* allocatorBackup = mAllocator;
+		this->destroy();
+		mSize = sizeBackup;
+		mCapacity = capacity;
+		mData = newAllocation;
+		mAllocator = allocatorBackup;
+	}
+	void ensureCapacity(uint32_t capacity) { if (mCapacity < capacity) setCapacity(capacity); }
 
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
-	/// Returns the size of this DynArray. This is the number of elements in the internal array,
-	/// not the capacity of the array.
-	uint32_t size() const noexcept { return mSize; }
+	uint32_t size() const { return mSize; }
+	uint32_t capacity() const { return mCapacity; }
+	const T* data() const { return mData; }
+	T* data() { return mData; }
+	Allocator* allocator() const { return mAllocator; }
 
-	/// Returns the capacity of the internal array
-	uint32_t capacity() const noexcept { return mCapacity; }
+	T& operator[] (uint32_t idx) { sfz_assert_debug(idx < mSize); return mData[idx]; }
+	const T& operator[] (uint32_t idx) const { sfz_assert_debug(idx < mSize); return mData[idx]; }
 
-	/// Returns the allocator of this DynArray. Will return nullptr if no allocator is set.
-	Allocator* allocator() const noexcept { return mAllocator; }
+	T& first() { sfz_assert_debug(mSize > 0); return mData[0]; }
+	const T& first() const { sfz_assert_debug(mSize > 0); return mData[0]; }
 
-	/// Returns pointer to the internal array. Do note that if the capacity is changed this pointer
-	/// may be invalidated.
-	const T* data() const noexcept { return mDataPtr; }
+	T& last() { sfz_assert_debug(mSize > 0); return mData[mSize - 1]; }
+	const T& last() const { sfz_assert_debug(mSize > 0); return mData[mSize - 1]; }
 
-	/// Returns pointer to the internal array. Do note that if the capacity is changed this pointer
-	/// may be invalidated.
-	T* data() noexcept { return mDataPtr; }
-
-	/// Element access operator. No range checks.
-	T& operator[] (uint32_t index) noexcept { return mDataPtr[index]; }
-
-	/// Element access operator. No range checks.
-	const T& operator[] (uint32_t index) const noexcept { return mDataPtr[index]; }
-
-	/// Accesses the first element. Undefined if DynArray does not contain at least one element.
-	T& first() noexcept { return mDataPtr[0]; }
-
-	/// Accesses the first element. Undefined if DynArray does not contain at least one element.
-	const T& first() const noexcept { return mDataPtr[0]; }
-
-	/// Accesses the last element. Undefined if DynArray does not contain at least one element.
-	T& last() noexcept { return mDataPtr[mSize - 1]; }
-
-	/// Accesses the last element. Undefined if DynArray does not contain at least one element.
-	const T& last() const noexcept { return mDataPtr[mSize - 1]; }
-
-	// Public methods
+	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	/// Copy an element to the back of the internal array. Will increase capacity of internal
-	/// array if needed.
-	void add(const T& value) noexcept;
+	// Copy element numCopies times to the back of this array. Increases capacity if needed.
+	void add(const T& value, uint32_t numCopies = 1) { addImpl<const T&>(value, numCopies); }
+	void add(T&& value) { addImpl<T>(std::move(value), 1); }
 
-	/// Move an element to the back of the internal array. Will increase capacity of the internal
-	/// array if needed.
-	void add(T&& value) noexcept;
+	// Copy numElements elements to the back of this array. Increases capacity if needed.
+	void add(const T* ptr, uint32_t numElements)
+	{
+		growIfNeeded(numElements);
+		for (uint32_t i = 0; i < numElements; i++) new (this->mData + mSize + i) T(ptr[i]);
+		mSize += numElements;
+	}
 
-	/// Creates 'numElements' default constructed elements to the back of the internal array.
-	void addMany(uint32_t numElements) noexcept;
+	// Insert elements into the array at the specified position. Increases capacity if needed.
+	void insert(uint32_t pos, const T& value) { insertImpl(pos, &value, 1); }
+	void insert(uint32_t pos, const T* ptr, uint32_t numElements) { insertImpl(pos, ptr, numElements); }
 
-	/// Copy 'numElements' elements with the value 'value' to the back of the internal array. Will
-	/// increase capacity of the internal array if needed.
-	void addMany(uint32_t numElements, const T& value) noexcept;
+	// Removes the last element. If the array is empty nothing happens.
+	void pop() { if (mSize == 0) return; mSize -= 1; mData[mSize].~T(); }
 
-	/// Copy a number of elements to the back of the DynArray from a contiguous array. Undefined
-	/// behaviour if trying to add elements from this DynArray.
-	void add(const T* arrayPtr, uint32_t numElements) noexcept;
+	// Remove numElements elements starting at the specified position.
+	void remove(uint32_t pos, uint32_t numElements = 1)
+	{
+		// Destroy elements
+		sfz_assert_debug(pos < mSize);
+		if (numElements > (mSize - pos)) numElements = (mSize - pos);
+		for (uint32_t i = 0; i < numElements; i++) mData[pos + i].~T();
 
-	/// Copy all the elements from another DynArray to the back of this DynArray. Undefined
-	/// behaviour if attempting to add elements from the same DynArray.
-	void add(const DynArray& elements) noexcept;
+		// Move the elements after the removed elements
+		uint32_t numElementsToMove = mSize - pos - numElements;
+		for (uint32_t i = 0; i < numElementsToMove; i++) {
+			new (mData + pos + i) T(std::move(mData[pos + i + numElements]));
+			mData[pos + i + numElements].~T();
+		}
+		mSize -= numElements;
+	}
 
-	/// Insert an element to the specified position in the the internal array. Will move elements
-	/// one position ahead to make room. Will increase capacity of internal array if needed.
-	void insert(uint32_t position, const T& value) noexcept;
+	// Removes element at given position by swapping it with the last element in array.
+	// O(1) operation unlike remove(), but obviously does not maintain internal array order.
+	void removeQuickSwap(uint32_t pos) { sfz_assert_debug(pos < mSize); std::swap(mData[pos], last()); remove(mSize - 1); }
 
-	/// Insert an element to the specified position in the the internal array. Will move elements
-	/// one position ahead to make room. Will increase capacity of internal array if needed.
-	void insert(uint32_t position, T&& value) noexcept;
+	// Searches for the first instance of the given element, nullptr if not found.
+	T* search(const T& ref) { return searchImpl(mData, [&](const T& e) { return e == ref; }); }
+	const T* search(const T& ref) const { return searchImpl(mData, [&](const T& e) { return e == ref; }); }
 
-	/// Insert a number of elements to the internal array starting at the specified position. Will
-	/// move elements ahead to make room. Will increase capacity of the internal array if needed.
-	/// Undefined behaviour if trying to add elements from this DynArray.
-	void insert(uint32_t position, const T* arrayPtr, uint32_t numElements) noexcept;
-
-	/// Remove a number of elements starting at the specified position. Elements after the
-	/// specified range will be moved ahead in the array. If the numElements is larger than the
-	/// number of elements in the array only the available ones will be removed.
-	void remove(uint32_t position, uint32_t numElements = 1) noexcept;
-
-	/// Removes the last element. If the array is empty nothing happens.
-	void removeLast() noexcept;
-
-	/// Finds the first element in the array which satisfies the specified function. The function
-	/// must take an element of type T as parameter (by value or const ref) and return a bool that
-	/// specifies whether the element satisfies it or not.
-	/// \return pointer to element or nullptr if no element could be found
-	template<typename F>
-	T* find(F func) noexcept;
-
-	/// Finds the first element in the array which satisfies the specified function. The function
-	/// must take an element of type T as parameter (by value or const ref) and return a bool that
-	/// specifies whether the element satisfies it or not.
-	/// \return pointer to element or nullptr if no element could be found
-	template<typename F>
-	const T* find(F func) const noexcept;
-
-	/// Finds the first element in the array which satisfies the specified function. The function
-	/// must take an element of type T as parameter (by value or const ref) and return a bool that
-	/// specifies whether the element satisfies it or not.
-	/// \return index to element or -1 if no element could be found
-	template<typename F>
-	int64_t findIndex(F func) const noexcept;
+	// Finds the first element that satisfies the given function.
+	// Function should have signature: bool func(const T& element)
+	template<typename F> T* find(F func) { return searchImpl(mData, func); }
+	template<typename F> const T* find(F func) const { return searchImpl(mData, func); }
 
 	// Iterator methods
 	// --------------------------------------------------------------------------------------------
 
-	T* begin() noexcept { return mDataPtr; }
-	const T* begin() const noexcept { return mDataPtr; }
-	const T* cbegin() const noexcept { return mDataPtr; }
+	T* begin() { return mData; }
+	const T* begin() const { return mData; }
+	const T* cbegin() const { return mData; }
 
-	T* end() noexcept { return mDataPtr + mSize; }
-	const T* end() const noexcept { return mDataPtr + mSize; }
-	const T* cend() const noexcept { return mDataPtr + mSize; }
+	T* end() { return mData + mSize; }
+	const T* end() const { return mData + mSize; }
+	const T* cend() const { return mData + mSize; }
 
 private:
+	// Private methods
+	// --------------------------------------------------------------------------------------------
+
+	void growIfNeeded(uint32_t elementsToAdd)
+	{
+		uint32_t newSize = mSize + elementsToAdd;
+		if (newSize <= mCapacity) return;
+		uint32_t newCapacity = (mCapacity == 0) ? DYNARRAY_DEFAULT_INITIAL_CAPACITY :
+			uint32_t(mCapacity * DYNARRAY_GROW_RATE);
+		setCapacity(newCapacity);
+	}
+
+	template<typename ForwardT>
+	void addImpl(ForwardT&& value, uint32_t numCopies)
+	{
+		// Perfect forwarding: const reference: ForwardT == const T&, rvalue: ForwardT == T
+		// std::forward<ForwardT>(value) will then return the correct version of value
+		this->growIfNeeded(numCopies);
+		for(uint32_t i = 0; i < numCopies; i++) new (mData + mSize + i) T(std::forward<ForwardT>(value));
+		mSize += numCopies;
+	}
+
+	void insertImpl(uint32_t pos, const T* ptr, uint32_t numElements)
+	{
+		sfz_assert_debug(pos <= mSize);
+		growIfNeeded(numElements);
+
+		// Move elements
+		T* dstPtr = mData + pos + numElements;
+		T* srcPtr = mData + pos;
+		uint32_t numElementsToMove = (mSize - pos);
+		for (uint32_t i = numElementsToMove; i > 0; i--) {
+			uint32_t offs = i - 1;
+			new (dstPtr + offs) T(std::move(srcPtr[offs]));
+			srcPtr[offs].~T();
+		}
+
+		// Insert elements
+		for (uint32_t i = 0; i < numElements; ++i) new (this->mData + pos + i) T(ptr[i]);
+		mSize += numElements;
+	}
+
+	template<typename F>
+	T* searchImpl(T* data, F func) const
+	{
+		for (uint32_t i = 0; i < mSize; ++i) if (func(data[i])) return &data[i];
+		return nullptr;
+	}
+
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
 	uint32_t mSize = 0, mCapacity = 0;
-	T* mDataPtr = nullptr;
+	T* mData = nullptr;
 	Allocator* mAllocator = nullptr;
 };
 
 } // namespace sfz
-
-#include "sfz/containers/DynArray.inl"

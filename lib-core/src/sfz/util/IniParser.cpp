@@ -47,7 +47,8 @@ static void printLoadError(const DynString& path, uint32_t line, const char* mes
 
 IniParser::IniParser(const char* path) noexcept
 :
-	mPath(path)
+	mPath(path),
+	mSections(0, getDefaultAllocator(), "IniParser: mSections")
 { }
 
 // IniParser: Loading and saving to file functions
@@ -74,7 +75,7 @@ bool IniParser::load() noexcept
 		uint32_t startIndex = uint32_t(~0);
 		uint32_t length = uint32_t(~0);
 	};
-	DynArray<LineInfo> lines(256);
+	DynArray<LineInfo> lines(256, getDefaultAllocator(), "IniParser::load()");
 	{
 		LineInfo tmp;
 		tmp.lineNumber = 1;
@@ -116,7 +117,7 @@ bool IniParser::load() noexcept
 	}
 
 	// Create temporary parse tree and add the first initial empty section
-	DynArray<Section> newSections(64);
+	DynArray<Section> newSections(64, getDefaultAllocator(), "IniParser::load()");
 	newSections.add(Section(""));
 
 	// Parse contents of ini file

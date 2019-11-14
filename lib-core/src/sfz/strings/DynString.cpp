@@ -33,7 +33,7 @@ DynString::DynString(const char* string, uint32_t capacity, Allocator* allocator
 {
 	// Special case when string is nullptr
 	if (string == nullptr) {
-		mString.create(capacity, allocator);
+		mString.init(capacity, allocator, "DynString");
 		return;
 	}
 
@@ -42,8 +42,8 @@ DynString::DynString(const char* string, uint32_t capacity, Allocator* allocator
 	if (capacity < length) capacity = uint32_t(length);
 
 	// Set allocator and allocate memory
-	mString.create(capacity, allocator);
-	mString.setSize(uint32_t(length));
+	mString.init(capacity, allocator, "DynString");
+	mString.hackSetSize(uint32_t(length));
 
 	// Copy string to internal DynArray
 	std::strcpy(mString.data(), string);
@@ -69,7 +69,7 @@ int32_t DynString::printf(const char* format, ...) noexcept
 	int32_t res = std::vsnprintf(mString.data(), mString.capacity(), format, args);
 	va_end(args);
 	sfz_assert_debug(res >= 0);
-	mString.setSize(static_cast<uint32_t>(res) + 1); // +1 for null-terminator
+	mString.hackSetSize(static_cast<uint32_t>(res) + 1); // +1 for null-terminator
 	return res;
 }
 
@@ -81,7 +81,7 @@ int32_t DynString::printfAppend(const char* format, ...) noexcept
 	int32_t res = std::vsnprintf(mString.data() + len, mString.capacity() - len, format, args);
 	va_end(args);
 	sfz_assert_debug(res >= 0);
-	mString.setSize(len + static_cast<uint32_t>(res) + 1); // +1 for null-terminator
+	mString.hackSetSize(len + static_cast<uint32_t>(res) + 1); // +1 for null-terminator
 	return res;
 }
 

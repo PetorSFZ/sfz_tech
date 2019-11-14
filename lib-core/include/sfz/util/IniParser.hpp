@@ -182,8 +182,8 @@ private:
 	struct Section final {
 		StackString64 name;
 		DynArray<Item> items;
-		Section() = default;
-		Section(const char* name) : name(name) { }
+		Section() : items(0, getDefaultAllocator(), "Section: items") {}
+		Section(const char* name) : name(name), items(0, getDefaultAllocator(), "Section: items") { }
 	};
 
 	// Private methods

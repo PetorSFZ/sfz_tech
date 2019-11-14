@@ -20,6 +20,7 @@
 
 #include <cstdint>
 
+#include "sfz/Context.hpp"
 #include "sfz/containers/DynArray.hpp"
 #include "sfz/memory/Allocator.hpp"
 
@@ -41,7 +42,7 @@ public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	DynString() noexcept = default;
+	DynString() noexcept : mString(0, getDefaultAllocator(), "DynString") { }
 	DynString(const DynString&) noexcept = default;
 	DynString& operator= (const DynString&) noexcept = default;
 	DynString(DynString&&) noexcept = default;

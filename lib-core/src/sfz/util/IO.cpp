@@ -69,7 +69,7 @@ static DynArray<T> readFileInternal(const char* path, bool binaryMode, Allocator
 	}
 
 	// Create array with enough capacity to fit file
-	DynArray<T> temp(uint32_t(size + 1), allocator);
+	DynArray<T> temp(uint32_t(size + 1), allocator, "readFileInternal() tmp");
 
 	// Read the file into the array
 	uint8_t buffer[BUFSIZ];
@@ -86,7 +86,7 @@ static DynArray<T> readFileInternal(const char* path, bool binaryMode, Allocator
 	}
 
 	// Set size of array
-	temp.setSize(uint32_t(currOffs));
+	temp.hackSetSize(uint32_t(currOffs));
 
 	std::fclose(file);
 	return std::move(temp);
@@ -277,6 +277,9 @@ DynString readTextFile(const char* path, Allocator* allocator) noexcept
 {
 	DynArray<char> strData = readFileInternal<char>(path, false, allocator);
 	if (strData.size() == 0 || strData[strData.size() - 1] != '\0') {
+		if (strData.data() == nullptr) {
+			strData.init(0, allocator, "readTextFile()");
+		}
 		strData.add('\0');
 	}
 
