@@ -29,8 +29,8 @@ namespace sfz {
 
 void ArenaAllocator::init(void* memory, uint64_t memorySizeBytes) noexcept
 {
-	sfz_assert_debug(memory != nullptr);
-	sfz_assert_debug(isAligned(memory, 32));
+	sfz_assert(memory != nullptr);
+	sfz_assert(isAligned(memory, 32));
 
 	this->destroy();
 	mMemory = reinterpret_cast<uint8_t*>(memory);
@@ -57,7 +57,7 @@ void* ArenaAllocator::allocate(
 	uint64_t size, uint64_t alignment, const char* name) noexcept
 {
 	(void)name;
-	sfz_assert_debug(isPowerOfTwo(alignment));
+	sfz_assert(isPowerOfTwo(alignment));
 
 	// Get next suitable offset for allocation
 	uint64_t padding = 0;
@@ -66,7 +66,7 @@ void* ArenaAllocator::allocate(
 		// Calculate padding
 		uint64_t alignmentOffset = uint64_t(mMemory + mCurrentOffsetBytes) & (alignment - 1);
 		padding = alignment - alignmentOffset;
-		sfz_assert_debug(isAligned(mMemory + mCurrentOffsetBytes + padding, alignment));
+		sfz_assert(isAligned(mMemory + mCurrentOffsetBytes + padding, alignment));
 	}
 
 	// Check if there is enough space left

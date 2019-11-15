@@ -87,13 +87,13 @@ void StringCollection::destroy() noexcept
 
 uint32_t StringCollection::numStringsHeld() const noexcept
 {
-	sfz_assert_debug(mImpl != nullptr);
+	sfz_assert(mImpl != nullptr);
 	return mImpl->strings.size();
 }
 
 StringID StringCollection::getStringID(const char* string) noexcept
 {
-	sfz_assert_debug(mImpl != nullptr);
+	sfz_assert(mImpl != nullptr);
 
 	// Hash string
 	StringID strId;
@@ -120,7 +120,7 @@ StringID StringCollection::getStringID(const char* string) noexcept
 
 const char* StringCollection::getString(StringID id) const noexcept
 {
-	sfz_assert_debug(mImpl != nullptr);
+	sfz_assert(mImpl != nullptr);
 	DynString* strPtr = mImpl->strings.get(id);
 	if (strPtr == nullptr) return nullptr;
 	return strPtr->str();

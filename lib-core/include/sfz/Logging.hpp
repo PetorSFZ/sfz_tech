@@ -39,5 +39,5 @@
 #define SFZ_ERROR_AND_EXIT(tag, format, ...) \
 { \
 	SFZ_ERROR(tag, format, ##__VA_ARGS__); \
-	sfz_assert_release(false); \
+	sfz_assert_hard(false); \
 }

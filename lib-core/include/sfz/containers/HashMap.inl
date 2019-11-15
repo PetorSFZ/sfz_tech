@@ -359,8 +359,8 @@ typename HashMap<K,V,Descr>::Iterator HashMap<K,V,Descr>::Iterator::operator++ (
 template<typename K, typename V, typename Descr>
 typename HashMap<K,V,Descr>::KeyValuePair HashMap<K,V,Descr>::Iterator::operator* () noexcept
 {
-	sfz_assert_debug(mIndex != uint32_t(~0));
-	sfz_assert_debug(mHashMap->elementInfo(mIndex) == ELEMENT_INFO_OCCUPIED);
+	sfz_assert(mIndex != uint32_t(~0));
+	sfz_assert(mHashMap->elementInfo(mIndex) == ELEMENT_INFO_OCCUPIED);
 	return KeyValuePair(mHashMap->keysPtr()[mIndex], mHashMap->valuesPtr()[mIndex]);
 }
 
@@ -404,8 +404,8 @@ typename HashMap<K,V,Descr>::ConstIterator HashMap<K,V,Descr>::ConstIterator::op
 template<typename K, typename V, typename Descr>
 typename HashMap<K,V,Descr>::ConstKeyValuePair HashMap<K,V,Descr>::ConstIterator::operator* () noexcept
 {
-	sfz_assert_debug(mIndex != uint32_t(~0));
-	sfz_assert_debug(mHashMap->elementInfo(mIndex) == ELEMENT_INFO_OCCUPIED);
+	sfz_assert(mIndex != uint32_t(~0));
+	sfz_assert(mHashMap->elementInfo(mIndex) == ELEMENT_INFO_OCCUPIED);
 	return ConstKeyValuePair(mHashMap->keysPtr()[mIndex], mHashMap->valuesPtr()[mIndex]);
 }
 

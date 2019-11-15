@@ -114,8 +114,8 @@ public:
 		if (mSize > capacity) capacity = mSize;
 		if (mCapacity == capacity) return;
 		if (capacity < DYNARRAY_MIN_CAPACITY) capacity = DYNARRAY_MIN_CAPACITY;
-		sfz_assert_release(mAllocator != nullptr);
-		sfz_assert_release(capacity < DYNARRAY_MAX_CAPACITY);
+		sfz_assert_hard(mAllocator != nullptr);
+		sfz_assert_hard(capacity < DYNARRAY_MAX_CAPACITY);
 
 		// Allocate memory and move/copy over elements from old memory
 		T* newAllocation = capacity == 0 ? nullptr : (T*)mAllocator->allocate(
@@ -142,14 +142,14 @@ public:
 	T* data() { return mData; }
 	Allocator* allocator() const { return mAllocator; }
 
-	T& operator[] (uint32_t idx) { sfz_assert_debug(idx < mSize); return mData[idx]; }
-	const T& operator[] (uint32_t idx) const { sfz_assert_debug(idx < mSize); return mData[idx]; }
+	T& operator[] (uint32_t idx) { sfz_assert(idx < mSize); return mData[idx]; }
+	const T& operator[] (uint32_t idx) const { sfz_assert(idx < mSize); return mData[idx]; }
 
-	T& first() { sfz_assert_debug(mSize > 0); return mData[0]; }
-	const T& first() const { sfz_assert_debug(mSize > 0); return mData[0]; }
+	T& first() { sfz_assert(mSize > 0); return mData[0]; }
+	const T& first() const { sfz_assert(mSize > 0); return mData[0]; }
 
-	T& last() { sfz_assert_debug(mSize > 0); return mData[mSize - 1]; }
-	const T& last() const { sfz_assert_debug(mSize > 0); return mData[mSize - 1]; }
+	T& last() { sfz_assert(mSize > 0); return mData[mSize - 1]; }
+	const T& last() const { sfz_assert(mSize > 0); return mData[mSize - 1]; }
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
@@ -177,7 +177,7 @@ public:
 	void remove(uint32_t pos, uint32_t numElements = 1)
 	{
 		// Destroy elements
-		sfz_assert_debug(pos < mSize);
+		sfz_assert(pos < mSize);
 		if (numElements > (mSize - pos)) numElements = (mSize - pos);
 		for (uint32_t i = 0; i < numElements; i++) mData[pos + i].~T();
 
@@ -192,7 +192,7 @@ public:
 
 	// Removes element at given position by swapping it with the last element in array.
 	// O(1) operation unlike remove(), but obviously does not maintain internal array order.
-	void removeQuickSwap(uint32_t pos) { sfz_assert_debug(pos < mSize); std::swap(mData[pos], last()); remove(mSize - 1); }
+	void removeQuickSwap(uint32_t pos) { sfz_assert(pos < mSize); std::swap(mData[pos], last()); remove(mSize - 1); }
 
 	// Searches for the first instance of the given element, nullptr if not found.
 	T* search(const T& ref) { return searchImpl(mData, [&](const T& e) { return e == ref; }); }
@@ -239,7 +239,7 @@ private:
 
 	void insertImpl(uint32_t pos, const T* ptr, uint32_t numElements)
 	{
-		sfz_assert_debug(pos <= mSize);
+		sfz_assert(pos <= mSize);
 		growIfNeeded(numElements);
 
 		// Move elements

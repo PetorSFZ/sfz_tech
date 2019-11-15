@@ -68,7 +68,7 @@ int32_t DynString::printf(const char* format, ...) noexcept
 	va_start(args, format);
 	int32_t res = std::vsnprintf(mString.data(), mString.capacity(), format, args);
 	va_end(args);
-	sfz_assert_debug(res >= 0);
+	sfz_assert(res >= 0);
 	mString.hackSetSize(static_cast<uint32_t>(res) + 1); // +1 for null-terminator
 	return res;
 }
@@ -80,7 +80,7 @@ int32_t DynString::printfAppend(const char* format, ...) noexcept
 	uint32_t len = this->size();
 	int32_t res = std::vsnprintf(mString.data() + len, mString.capacity() - len, format, args);
 	va_end(args);
-	sfz_assert_debug(res >= 0);
+	sfz_assert(res >= 0);
 	mString.hackSetSize(len + static_cast<uint32_t>(res) + 1); // +1 for null-terminator
 	return res;
 }
@@ -120,8 +120,8 @@ bool DynString::operator>= (const DynString& other) const noexcept
 
 bool DynString::operator== (const char* other) const noexcept
 {
-	sfz_assert_debug(mString.data() != nullptr);
-	sfz_assert_debug(other != nullptr);
+	sfz_assert(mString.data() != nullptr);
+	sfz_assert(other != nullptr);
 	return std::strncmp(mString.data(), other, mString.size()) == 0;
 }
 
@@ -132,8 +132,8 @@ bool DynString::operator!= (const char* other) const noexcept
 
 bool DynString::operator< (const char* other) const noexcept
 {
-	sfz_assert_debug(mString.data() != nullptr);
-	sfz_assert_debug(other != nullptr);
+	sfz_assert(mString.data() != nullptr);
+	sfz_assert(other != nullptr);
 	return std::strncmp(mString.data(), other, mString.size()) < 0;
 }
 
@@ -144,8 +144,8 @@ bool DynString::operator<= (const char* other) const noexcept
 
 bool DynString::operator> (const char* other) const noexcept
 {
-	sfz_assert_debug(mString.data() != nullptr);
-	sfz_assert_debug(other != nullptr);
+	sfz_assert(mString.data() != nullptr);
+	sfz_assert(other != nullptr);
 	return std::strncmp(mString.data(), other, mString.size()) > 0;
 }
 

@@ -107,21 +107,21 @@ Message: %s
 	// Breaks if message is of high enough severity
 	switch (currentBreakLevel) {
 	case Severity::NOTIFICATION:
-		sfz_assert_debug(false);
+		sfz_assert(false);
 		break;
 	case Severity::LOW:
 		if (severity != GL_DEBUG_SEVERITY_NOTIFICATION) {
-			sfz_assert_debug(false);
+			sfz_assert(false);
 		}
 		break;
 	case Severity::MEDIUM:
 		if (severity != GL_DEBUG_SEVERITY_NOTIFICATION && severity != GL_DEBUG_SEVERITY_LOW) {
-			sfz_assert_debug(false);
+			sfz_assert(false);
 		}
 		break;
 	case Severity::HIGH:
 		if (severity == GL_DEBUG_SEVERITY_HIGH) {
-			sfz_assert_debug(false);
+			sfz_assert(false);
 		}
 		break;
 	case Severity::NONE:

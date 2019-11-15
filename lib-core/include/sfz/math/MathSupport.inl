@@ -482,13 +482,13 @@ SFZ_CUDA_CALL vec4 fma(vec4 a, vec4 b, vec4 c) noexcept
 
 SFZ_CUDA_CALL vec3 rotateTowardsRad(vec3 inDir, vec3 targetDir, float angleRads) noexcept
 {
-	sfz_assert_debug(approxEqual(length(inDir), 1.0f));
-	sfz_assert_debug(approxEqual(length(targetDir), 1.0f));
-	sfz_assert_debug(dot(inDir, targetDir) >= -0.99f);
-	sfz_assert_debug(angleRads >= 0.0f);
-	sfz_assert_debug(angleRads < PI);
+	sfz_assert(approxEqual(length(inDir), 1.0f));
+	sfz_assert(approxEqual(length(targetDir), 1.0f));
+	sfz_assert(dot(inDir, targetDir) >= -0.99f);
+	sfz_assert(angleRads >= 0.0f);
+	sfz_assert(angleRads < PI);
 	vec3 axis = cross(inDir, targetDir);
-	sfz_assert_debug(!approxEqual(axis, vec3(0.0f)));
+	sfz_assert(!approxEqual(axis, vec3(0.0f)));
 	Quaternion rotQuat = Quaternion::rotationRad(axis, angleRads);
 	vec3 newDir = rotate(rotQuat, inDir);
 	return newDir;
@@ -496,13 +496,13 @@ SFZ_CUDA_CALL vec3 rotateTowardsRad(vec3 inDir, vec3 targetDir, float angleRads)
 
 SFZ_CUDA_CALL vec3 rotateTowardsRadClampSafe(vec3 inDir, vec3 targetDir, float angleRads) noexcept
 {
-	sfz_assert_debug(angleRads >= 0.0f);
-	sfz_assert_debug(angleRads < PI);
+	sfz_assert(angleRads >= 0.0f);
+	sfz_assert(angleRads < PI);
 
 	vec3 inDirNorm = normalizeSafe(inDir);
 	vec3 targetDirNorm = normalizeSafe(targetDir);
-	sfz_assert_debug(!approxEqual(inDirNorm, vec3(0.0f)));
-	sfz_assert_debug(!approxEqual(targetDirNorm, vec3(0.0f)));
+	sfz_assert(!approxEqual(inDirNorm, vec3(0.0f)));
+	sfz_assert(!approxEqual(targetDirNorm, vec3(0.0f)));
 
 	// Case where vectors are the same, just return the target dir
 	if (approxEqual(inDirNorm, targetDirNorm)) return targetDirNorm;
@@ -510,7 +510,7 @@ SFZ_CUDA_CALL vec3 rotateTowardsRadClampSafe(vec3 inDir, vec3 targetDir, float a
 	// Case where vectors are exact opposite, slightly nudge input a bit
 	if (approxEqual(inDirNorm, -targetDirNorm)) {
 		inDirNorm = normalize(inDir + (vec3(1.0f) - inDirNorm) * 0.025f);
-		sfz_assert_debug(!approxEqual(inDirNorm, -targetDirNorm));
+		sfz_assert(!approxEqual(inDirNorm, -targetDirNorm));
 	}
 
 	// Case where angle is larger than the angle between the vectors

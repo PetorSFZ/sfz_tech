@@ -77,7 +77,7 @@ void StackStringTempl<N>::printfAppend(const char* format, ...) noexcept
 template<uint32_t N>
 void StackStringTempl<N>::insertChars(const char* first, uint32_t numChars) noexcept
 {
-	sfz_assert_debug(numChars < N);
+	sfz_assert(numChars < N);
 	std::strncpy(this->str, first, size_t(numChars));
 	this->str[numChars] = '\0';
 }
@@ -124,42 +124,42 @@ bool StackStringTempl<N>::operator>= (const StackStringTempl& other) const noexc
 template<uint32_t N>
 bool StackStringTempl<N>::operator== (const char* other) const noexcept
 {
-	sfz_assert_debug(other != nullptr);
+	sfz_assert(other != nullptr);
 	return std::strncmp(this->str, other, N) == 0;
 }
 
 template<uint32_t N>
 bool StackStringTempl<N>::operator!= (const char* other) const noexcept
 {
-	sfz_assert_debug(other != nullptr);
+	sfz_assert(other != nullptr);
 	return !(*this == other);
 }
 
 template<uint32_t N>
 bool StackStringTempl<N>::operator< (const char* other) const noexcept
 {
-	sfz_assert_debug(other != nullptr);
+	sfz_assert(other != nullptr);
 	return std::strncmp(this->str, other, N) < 0;
 }
 
 template<uint32_t N>
 bool StackStringTempl<N>::operator<= (const char* other) const noexcept
 {
-	sfz_assert_debug(other != nullptr);
+	sfz_assert(other != nullptr);
 	return std::strncmp(this->str, other, N) <= 0;
 }
 
 template<uint32_t N>
 bool StackStringTempl<N>::operator> (const char* other) const noexcept
 {
-	sfz_assert_debug(other != nullptr);
+	sfz_assert(other != nullptr);
 	return std::strncmp(this->str, other, N) > 0;
 }
 
 template<uint32_t N>
 bool StackStringTempl<N>::operator>= (const char* other) const noexcept
 {
-	sfz_assert_debug(other != nullptr);
+	sfz_assert(other != nullptr);
 	return std::strncmp(this->str, other, N) >= 0;
 }
 

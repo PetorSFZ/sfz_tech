@@ -457,7 +457,7 @@ void IniParser::setBool(const char* section, const char* key, bool value) noexce
 int32_t IniParser::sanitizeInt(const char* section, const char* key,
                                int32_t defaultValue, int32_t minValue, int32_t maxValue) noexcept
 {
-	sfz_assert_debug(minValue <= maxValue);
+	sfz_assert(minValue <= maxValue);
 	const Item* itemPtr = this->findItem(section, key);
 	if (itemPtr == nullptr || itemPtr->type != ItemType::NUMBER) {
 		this->setInt(section, key, defaultValue);
@@ -479,7 +479,7 @@ int32_t IniParser::sanitizeInt(const char* section, const char* key,
 float IniParser::sanitizeFloat(const char* section, const char* key,
                                float defaultValue, float minValue, float maxValue) noexcept
 {
-	sfz_assert_debug(minValue <= maxValue);
+	sfz_assert(minValue <= maxValue);
 	const Item* itemPtr = this->findItem(section, key);
 	if (itemPtr == nullptr || itemPtr->type != ItemType::NUMBER) {
 		this->setFloat(section, key, defaultValue);
@@ -517,9 +517,9 @@ IniParser::ItemAccessor::ItemAccessor(IniParser& iniParser, uint32_t sectionInde
 	mSectionIndex(sectionIndex),
 	mKeyIndex(keyIndex)
 {
-	sfz_assert_debug(mIniParser != nullptr);
-	sfz_assert_debug(mSectionIndex < mIniParser->mSections.size());
-	sfz_assert_debug(mKeyIndex < mIniParser->mSections[mSectionIndex].items.size());
+	sfz_assert(mIniParser != nullptr);
+	sfz_assert(mSectionIndex < mIniParser->mSections.size());
+	sfz_assert(mKeyIndex < mIniParser->mSections[mSectionIndex].items.size());
 }
 
 const char* IniParser::ItemAccessor::getSection() const noexcept
@@ -605,9 +605,9 @@ IniParser::Iterator IniParser::Iterator::operator++ (int) noexcept
 
 IniParser::ItemAccessor IniParser::Iterator::operator* () noexcept
 {
-	sfz_assert_debug(mIniParser != nullptr);
-	sfz_assert_debug(mSectionIndex < mIniParser->mSections.size());
-	sfz_assert_debug(mKeyIndex < mIniParser->mSections[mSectionIndex].items.size());
+	sfz_assert(mIniParser != nullptr);
+	sfz_assert(mSectionIndex < mIniParser->mSections.size());
+	sfz_assert(mKeyIndex < mIniParser->mSections[mSectionIndex].items.size());
 	return ItemAccessor(*mIniParser, mSectionIndex, mKeyIndex);
 }
 

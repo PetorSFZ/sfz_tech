@@ -144,42 +144,42 @@ void Framebuffer::bindViewportClearColorDepth(vec2_i32 viewportMin, vec2_i32 vie
 
 void Framebuffer::attachExternalDepthBuffer(uint32_t buffer) noexcept
 {
-	sfz_assert_debug(depthBuffer == 0);
-	sfz_assert_debug(depthTexture == 0);
+	sfz_assert(depthBuffer == 0);
+	sfz_assert(depthTexture == 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, buffer);
 	bool status = checkCurrentFramebufferStatus();
-	sfz_assert_debug(status);
+	sfz_assert(status);
 }
 
 void Framebuffer::attachExternalDepthTexture(uint32_t texture) noexcept
 {
-	sfz_assert_debug(depthBuffer == 0);
-	sfz_assert_debug(depthTexture == 0);
+	sfz_assert(depthBuffer == 0);
+	sfz_assert(depthTexture == 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, texture, 0);
 	bool status = checkCurrentFramebufferStatus();
-	sfz_assert_debug(status);
+	sfz_assert(status);
 }
 
 void Framebuffer::attachExternalStencilBuffer(uint32_t buffer) noexcept
 {
-	sfz_assert_debug(stencilBuffer == 0);
-	sfz_assert_debug(stencilTexture == 0);
+	sfz_assert(stencilBuffer == 0);
+	sfz_assert(stencilTexture == 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, buffer);
 	bool status = checkCurrentFramebufferStatus();
-	sfz_assert_debug(status);
+	sfz_assert(status);
 }
 
 void Framebuffer::attachExternalStencilTexture(uint32_t texture) noexcept
 {
-	sfz_assert_debug(stencilBuffer == 0);
-	sfz_assert_debug(stencilTexture == 0);
+	sfz_assert(stencilBuffer == 0);
+	sfz_assert(stencilTexture == 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, texture, 0);
 	bool status = checkCurrentFramebufferStatus();
-	sfz_assert_debug(status);
+	sfz_assert(status);
 }
 
 // Framebuffer helper functions
@@ -259,16 +259,16 @@ FramebufferBuilder::FramebufferBuilder(vec2_i32 dimensions) noexcept
 
 FramebufferBuilder& FramebufferBuilder::setDimensions(vec2_i32 dimensions) noexcept
 {
-	sfz_assert_debug(dimensions.x > 0);
-	sfz_assert_debug(dimensions.y > 0);
+	sfz_assert(dimensions.x > 0);
+	sfz_assert(dimensions.y > 0);
 	mDim = dimensions;
 	return *this;
 }
 
 FramebufferBuilder& FramebufferBuilder::addTexture(uint32_t index, FBTextureFormat format, FBTextureFiltering filtering) noexcept
 {
-	sfz_assert_debug(index < 8);
-	sfz_assert_debug(!mCreateTexture[index]);
+	sfz_assert(index < 8);
+	sfz_assert(!mCreateTexture[index]);
 	mCreateTexture[index] = true;
 	mTextureFormat[index] = format;
 	mTextureFiltering[index] = filtering;
@@ -277,8 +277,8 @@ FramebufferBuilder& FramebufferBuilder::addTexture(uint32_t index, FBTextureForm
 
 FramebufferBuilder& FramebufferBuilder::addDepthBuffer(FBDepthFormat format) noexcept
 {
-	sfz_assert_debug(!mCreateDepthBuffer);
-	sfz_assert_debug(!mCreateDepthTexture);
+	sfz_assert(!mCreateDepthBuffer);
+	sfz_assert(!mCreateDepthTexture);
 	mCreateDepthBuffer = true;
 	mDepthFormat = format;
 	return *this;
@@ -286,8 +286,8 @@ FramebufferBuilder& FramebufferBuilder::addDepthBuffer(FBDepthFormat format) noe
 
 FramebufferBuilder& FramebufferBuilder::addDepthTexture(FBDepthFormat format, FBTextureFiltering filtering) noexcept
 {
-	sfz_assert_debug(!mCreateDepthBuffer);
-	sfz_assert_debug(!mCreateDepthTexture);
+	sfz_assert(!mCreateDepthBuffer);
+	sfz_assert(!mCreateDepthTexture);
 	mCreateDepthTexture = true;
 	mDepthFormat = format;
 	mDepthTextureFiltering = filtering;
@@ -296,16 +296,16 @@ FramebufferBuilder& FramebufferBuilder::addDepthTexture(FBDepthFormat format, FB
 
 FramebufferBuilder& FramebufferBuilder::addStencilBuffer() noexcept
 {
-	sfz_assert_debug(!mCreateStencilBuffer);
-	sfz_assert_debug(!mCreateStencilTexture);
+	sfz_assert(!mCreateStencilBuffer);
+	sfz_assert(!mCreateStencilTexture);
 	mCreateStencilBuffer = true;
 	return *this;
 }
 
 FramebufferBuilder& FramebufferBuilder::addStencilTexture(FBTextureFiltering filtering) noexcept
 {
-	sfz_assert_debug(!mCreateStencilBuffer);
-	sfz_assert_debug(!mCreateStencilTexture);
+	sfz_assert(!mCreateStencilBuffer);
+	sfz_assert(!mCreateStencilTexture);
 	mCreateStencilTexture = true;
 	mStencilTextureFiltering = filtering;
 	return *this;
@@ -316,7 +316,7 @@ FramebufferBuilder& FramebufferBuilder::addStencilTexture(FBTextureFiltering fil
 
 FramebufferBuilder& FramebufferBuilder::removeTexture(uint32_t index) noexcept
 {
-	sfz_assert_debug(index < 8);
+	sfz_assert(index < 8);
 	mCreateTexture[index] = false;
 	return *this;
 }
@@ -350,13 +350,13 @@ FramebufferBuilder& FramebufferBuilder::removeStencilTexture() noexcept
 
 Framebuffer FramebufferBuilder::build() const noexcept
 {
-	sfz_assert_debug(mDim.x > 0);
-	sfz_assert_debug(mDim.y > 0);
-	sfz_assert_debug(!(mCreateDepthBuffer && mCreateDepthTexture));
-	sfz_assert_debug(!(mCreateStencilBuffer && mCreateStencilTexture));
+	sfz_assert(mDim.x > 0);
+	sfz_assert(mDim.y > 0);
+	sfz_assert(!(mCreateDepthBuffer && mCreateDepthTexture));
+	sfz_assert(!(mCreateStencilBuffer && mCreateStencilTexture));
 	for (uint32_t i = 0; i < 7; ++i) {
 		if (mCreateTexture[i+1]) {
-			sfz_assert_debug(mCreateTexture[i]);
+			sfz_assert(mCreateTexture[i]);
 		}
 	}
 
@@ -655,7 +655,7 @@ Framebuffer FramebufferBuilder::build() const noexcept
 
 	// Check that framebuffer is okay
 	bool status = checkCurrentFramebufferStatus();
-	sfz_assert_debug(status);
+	sfz_assert(status);
 
 	// Cleanup
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -670,8 +670,8 @@ Framebuffer FramebufferBuilder::build() const noexcept
 
 Framebuffer createShadowMap(vec2_i32 dimensions, FBDepthFormat depthFormat, bool pcf, vec4 borderColor) noexcept
 {
-	sfz_assert_debug(dimensions.x > 0);
-	sfz_assert_debug(dimensions.y > 0);
+	sfz_assert(dimensions.x > 0);
+	sfz_assert(dimensions.y > 0);
 
 	Framebuffer tmp;
 	tmp.width = dimensions.x;
@@ -742,7 +742,7 @@ Framebuffer createShadowMap(vec2_i32 dimensions, FBDepthFormat depthFormat, bool
 
 	// Check that framebuffer is okay
 	bool status = checkCurrentFramebufferStatus();
-	sfz_assert_debug(status);
+	sfz_assert(status);
 
 	// Cleanup
 	glBindTexture(GL_TEXTURE_2D, 0);

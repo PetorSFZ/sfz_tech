@@ -19,35 +19,11 @@
 #pragma once
 
 #include <cassert>
+#include <cstdlib> // std::abort()
 
-#ifdef _WIN32
-#include <intrin.h>
-#endif
-
-// Debug assert
+// Assert macros
 // ------------------------------------------------------------------------------------------------
 
-/// Stops program or opens debugger if condition is false.
-/// To be used often to catch bugs during debugging progress. Should normally only be enabled in
-/// debug builds. Disabled by defining SFZ_NO_DEBUG, but also by defining SFZ_NO_ASSERTIONS.
-#define sfz_assert_debug(condition) sfz_assert_debug_impl(condition)
+#define sfz_assert(condition) assert(condition)
 
-// Release assert
-// ------------------------------------------------------------------------------------------------
-
-/// Stops program or opens debugger if condition is false.
-/// To be used for more serious things that you want to catch quickly even in a release build.
-/// Should normally always be enabled, but can be disabled by defining SFZ_NO_ASSERTIONS.
-#define sfz_assert_release(condition) sfz_assert_release_impl(condition)
-
-namespace sfz {
-
-// Utility functions
-// ------------------------------------------------------------------------------------------------
-
-/// Terminates the program (wrapper for std::terminate())
-void terminateProgram() noexcept;
-
-} // namespace sfz
-
-#include "sfz/Assert.inl"
+#define sfz_assert_hard(condition) if (!(condition)) { assert((condition)); std::abort(); }

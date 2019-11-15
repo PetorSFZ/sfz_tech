@@ -214,7 +214,7 @@ void Buffer<T>::swap(Buffer& other) noexcept
 template<typename T>
 void Buffer<T>::upload(const T* dataPtr, uint32_t dstLocation, uint32_t numElements) noexcept
 {
-	sfz_assert_debug((dstLocation + numElements) <= mCapacity);
+	sfz_assert((dstLocation + numElements) <= mCapacity);
 	uint64_t numBytes = numElements * sizeof(T);
 	CHECK_CUDA cudaMemcpy(mDataPtr + dstLocation, dataPtr, numBytes, cudaMemcpyHostToDevice);
 }
@@ -228,7 +228,7 @@ void Buffer<T>::upload(const DynArray<T>& src) noexcept
 template<typename T>
 void Buffer<T>::download(T* dstPtr, uint32_t srcLocation, uint32_t numElements) noexcept
 {
-	sfz_assert_debug((srcLocation + numElements) <= mCapacity);
+	sfz_assert((srcLocation + numElements) <= mCapacity);
 	uint64_t numBytes = numElements * sizeof(T);
 	CHECK_CUDA cudaMemcpy(dstPtr, mDataPtr + srcLocation, numBytes, cudaMemcpyDeviceToHost);
 }
@@ -272,7 +272,7 @@ template<typename T>
 void Buffer<T>::copyTo(Buffer& dstBuffer, uint32_t dstLocation, uint32_t srcLocation,
                            uint32_t numElements) noexcept
 {
-	sfz_assert_debug(dstBuffer.capacity() >= (dstLocation + numElements));
+	sfz_assert(dstBuffer.capacity() >= (dstLocation + numElements));
 	uint64_t numBytes = numElements * sizeof(T);
 	CHECK_CUDA cudaMemcpy(dstBuffer.mDataPtr + dstLocation, this->mDataPtr + srcLocation,
 	                 numBytes, cudaMemcpyDeviceToDevice);

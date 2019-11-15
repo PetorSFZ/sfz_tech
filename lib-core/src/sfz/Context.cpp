@@ -31,13 +31,13 @@ static Context* globalContextPtr = nullptr;
 
 Context* getContext() noexcept
 {
-	sfz_assert_debug(globalContextPtr != nullptr);
+	sfz_assert(globalContextPtr != nullptr);
 	return globalContextPtr;
 }
 
 bool setContext(Context* context) noexcept
 {
-	sfz_assert_release(context != nullptr);
+	sfz_assert_hard(context != nullptr);
 	if (globalContextPtr != nullptr) return false;
 	globalContextPtr = context;
 	return true;

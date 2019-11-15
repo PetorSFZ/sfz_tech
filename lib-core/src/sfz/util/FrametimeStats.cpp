@@ -41,7 +41,7 @@ FrametimeStats::FrametimeStats(uint32_t maxNumSamples) noexcept
 
 void FrametimeStats::addSample(float sampleInMs) noexcept
 {
-	sfz_assert_debug(mSamples.capacity() > 0);
+	sfz_assert(mSamples.capacity() > 0);
 
 	if (mSamples.size() == mSamples.capacity()) mSamples.remove(0);
 	mSamples.add(sampleInMs);
