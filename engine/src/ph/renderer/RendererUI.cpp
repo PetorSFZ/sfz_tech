@@ -60,7 +60,7 @@ static const char* toString(StageType type) noexcept
 	case StageType::USER_INPUT_RENDERING: return "USER_INPUT_RENDERING";
 	case StageType::USER_STAGE_BARRIER: return "USER_STAGE_BARRIER";
 	}
-	sfz_assert_debug(false);
+	sfz_assert(false);
 	return "<ERROR>";
 }
 
@@ -83,7 +83,7 @@ static const char* textureFormatToString(ZgTextureFormat format) noexcept
 
 	case ZG_TEXTURE_FORMAT_DEPTH_F32: return "DEPTH_F32";
 	}
-	sfz_assert_debug(false);
+	sfz_assert(false);
 	return "";
 }
 
@@ -107,7 +107,7 @@ static const char* vertexAttributeTypeToString(ZgVertexAttributeType type) noexc
 
 	default: break;
 	}
-	sfz_assert_debug(false);
+	sfz_assert(false);
 	return "";
 }
 
@@ -118,7 +118,7 @@ static const char* samplingModeToString(ZgSamplingMode mode) noexcept
 	case ZG_SAMPLING_MODE_TRILINEAR: return "TRILINEAR";
 	case ZG_SAMPLING_MODE_ANISOTROPIC: return "ANISOTROPIC";
 	}
-	sfz_assert_debug(false);
+	sfz_assert(false);
 	return "UNDEFINED";
 }
 
@@ -128,7 +128,7 @@ static const char* wrappingModeToString(ZgWrappingMode mode) noexcept
 	case ZG_WRAPPING_MODE_CLAMP: return "CLAMP";
 	case ZG_WRAPPING_MODE_REPEAT: return "REPEAT";
 	}
-	sfz_assert_debug(false);
+	sfz_assert(false);
 	return "UNDEFINED";
 }
 
@@ -142,7 +142,7 @@ static const char* depthFuncToString(ZgDepthFunc func) noexcept
 	case ZG_DEPTH_FUNC_GREATER: return "GREATER";
 	case ZG_DEPTH_FUNC_GREATER_EQUAL: return "GREATER_EQUAL";
 	}
-	sfz_assert_debug(false);
+	sfz_assert(false);
 	return "";
 }
 
@@ -153,7 +153,7 @@ static const char* blendModeToString(PipelineBlendMode mode) noexcept
 	case PipelineBlendMode::ALPHA_BLENDING: return "alpha_blending";
 	case PipelineBlendMode::ADDITIVE_BLENDING: return "additive_blending";
 	}
-	sfz_assert_debug(false);
+	sfz_assert(false);
 	return "";
 }
 
@@ -850,7 +850,7 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 					// Allocate temporary upload buffer
 					zg::Buffer uploadBuffer =
 						state.gpuAllocatorUpload.allocateBuffer(sizeof(ShaderMaterial));
-					sfz_assert_debug(uploadBuffer.valid());
+					sfz_assert(uploadBuffer.valid());
 
 					// Convert new material to shader material
 					ShaderMaterial shaderMaterial = cpuMaterialToShaderMaterial(material);

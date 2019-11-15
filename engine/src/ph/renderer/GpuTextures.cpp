@@ -54,7 +54,7 @@ static uint32_t sizeOfElement(ImageType imageType) noexcept
 	case ImageType::RG_F32: return 2 * sizeof(float);
 	case ImageType::RGBA_F32: return 4 * sizeof(float);
 	}
-	sfz_assert_debug(false);
+	sfz_assert(false);
 	return 0;
 }
 
@@ -96,7 +96,7 @@ void generateMipmapSpecific(
 //    specific level.
 static void generateMipmap(const phConstImageView& prevLevel, Image& currLevel) noexcept
 {
-	sfz_assert_debug(prevLevel.type == currLevel.type);
+	sfz_assert(prevLevel.type == currLevel.type);
 	switch (currLevel.type) {
 	case ImageType::R_U8:
 		generateMipmapSpecific<uint8_t>(prevLevel, currLevel, [](uint8_t a, uint8_t b, uint8_t c, uint8_t d) {
@@ -119,7 +119,7 @@ static void generateMipmap(const phConstImageView& prevLevel, Image& currLevel) 
 	case ImageType::RG_F32:
 	case ImageType::RGBA_F32:
 	default:
-		sfz_assert_release(false);
+		sfz_assert_hard(false);
 		break;
 	};
 }
@@ -139,7 +139,7 @@ ZgTextureFormat toZeroGImageFormat(ImageType imageType) noexcept
 	case ImageType::RG_F32: return ZG_TEXTURE_FORMAT_RG_F32;
 	case ImageType::RGBA_F32: return ZG_TEXTURE_FORMAT_RGBA_F32;
 	}
-	sfz_assert_debug(false);
+	sfz_assert(false);
 	return ZG_TEXTURE_FORMAT_UNDEFINED;
 }
 
@@ -152,10 +152,10 @@ zg::Texture2D textureAllocateAndUploadBlocking(
 	bool generateMipmaps,
 	uint32_t& numMipmapsOut) noexcept
 {
-	sfz_assert_debug(gpuAllocatorTexture.queryMemoryType() == ZG_MEMORY_TYPE_TEXTURE);
-	sfz_assert_debug(gpuAllocatorUpload.queryMemoryType() == ZG_MEMORY_TYPE_UPLOAD);
-	sfz_assert_debug(isPowerOfTwo(image.width));
-	sfz_assert_debug(isPowerOfTwo(image.height));
+	sfz_assert(gpuAllocatorTexture.queryMemoryType() == ZG_MEMORY_TYPE_TEXTURE);
+	sfz_assert(gpuAllocatorUpload.queryMemoryType() == ZG_MEMORY_TYPE_UPLOAD);
+	sfz_assert(isPowerOfTwo(image.width));
+	sfz_assert(isPowerOfTwo(image.height));
 
 	// Convert to ZeroG Image View
 	ZgImageViewConstCpu view = toZeroGImageView(image);
@@ -172,11 +172,11 @@ zg::Texture2D textureAllocateAndUploadBlocking(
 	// Allocate Texture
 	zg::Texture2D texture = gpuAllocatorTexture.allocateTexture2D(
 		view.format, view.width, view.height, numMipmaps);
-	sfz_assert_debug(texture.valid());
+	sfz_assert(texture.valid());
 	if (!texture.valid()) return zg::Texture2D();
 
 	// Generate mipmaps (on CPU)
-	sfz_assert_debug(numMipmaps != 0);
+	sfz_assert(numMipmaps != 0);
 	Image mipmaps[ZG_MAX_NUM_MIPMAPS - 1];
 	for (uint32_t i = 0; i < (numMipmaps - 1); i++) {
 		
@@ -206,7 +206,7 @@ zg::Texture2D textureAllocateAndUploadBlocking(
 		// TODO: Figure out exactly how much memory is needed
 		uint32_t bufferSize = (imageViews[i].pitchInBytes * imageViews[i].height) + 1024;
 		tmpUploadBuffers[i] = gpuAllocatorUpload.allocateBuffer(bufferSize);
-		sfz_assert_debug(tmpUploadBuffers[i].valid());
+		sfz_assert(tmpUploadBuffers[i].valid());
 	}
 
 	// Copy texture to GPU

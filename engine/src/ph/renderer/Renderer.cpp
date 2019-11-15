@@ -117,7 +117,7 @@ bool Renderer::init(
 bool Renderer::loadConfiguration(const char* jsonConfigPath) noexcept
 {
 	if (!this->active()) {
-		sfz_assert_debug(false);
+		sfz_assert(false);
 		return false;
 	}
 
@@ -156,7 +156,7 @@ void Renderer::destroy() noexcept
 
 		// Deallocate stage memory
 		bool stageDeallocSuccess = deallocateStageMemory(*mState);
-		sfz_assert_debug(stageDeallocSuccess);
+		sfz_assert(stageDeallocSuccess);
 
 		// Deallocate rest of state
 		sfz::Allocator* allocator = mState->allocator;
@@ -199,7 +199,7 @@ bool Renderer::uploadTextureBlocking(
 		mState->copyQueue,
 		generateMipmaps,
 		numMipmaps);
-	sfz_assert_debug(texture.valid());
+	sfz_assert(texture.valid());
 
 	// Fill texture item with info and store it
 	TextureItem item;
@@ -222,7 +222,7 @@ bool Renderer::textureLoaded(StringID id) const noexcept
 void Renderer::removeTextureGpuBlocking(StringID id) noexcept
 {
 	// Ensure not between frameBegin() and frameFinish()
-	sfz_assert_debug(!mState->windowFramebuffer.valid());
+	sfz_assert(!mState->windowFramebuffer.valid());
 
 	// Return if texture is not loaded in first place
 	ph::TextureItem* item = mState->textures.get(id);
@@ -240,7 +240,7 @@ void Renderer::removeTextureGpuBlocking(StringID id) noexcept
 void Renderer::removeAllTexturesGpuBlocking() noexcept
 {
 	// Ensure not between frameBegin() and frameFinish()
-	sfz_assert_debug(!mState->windowFramebuffer.valid());
+	sfz_assert(!mState->windowFramebuffer.valid());
 
 	// Ensure all GPU operations in progress are finished
 	mState->presentQueue.flush();
@@ -256,7 +256,7 @@ void Renderer::removeAllTexturesGpuBlocking() noexcept
 bool Renderer::uploadMeshBlocking(StringID id, const Mesh& mesh) noexcept
 {
 	// Error out and return false if mesh already exists
-	sfz_assert_debug(id != StringID::invalid());
+	sfz_assert(id != StringID::invalid());
 	if (mState->meshes.get(id) != nullptr) return false;
 
 	// Allocate memory for mesh
@@ -281,7 +281,7 @@ bool Renderer::meshLoaded(StringID id) const noexcept
 void Renderer::removeMeshGpuBlocking(StringID id) noexcept
 {
 	// Ensure not between frameBegin() and frameFinish()
-	sfz_assert_debug(!mState->windowFramebuffer.valid());
+	sfz_assert(!mState->windowFramebuffer.valid());
 
 	// Return if mesh is not loaded in first place
 	ph::GpuMesh* mesh = mState->meshes.get(id);
@@ -299,7 +299,7 @@ void Renderer::removeMeshGpuBlocking(StringID id) noexcept
 void Renderer::removeAllMeshesGpuBlocking() noexcept
 {
 	// Ensure not between frameBegin() and frameFinish()
-	sfz_assert_debug(!mState->windowFramebuffer.valid());
+	sfz_assert(!mState->windowFramebuffer.valid());
 
 	// Ensure all GPU operations in progress are finished
 	mState->presentQueue.flush();
@@ -366,13 +366,13 @@ void Renderer::frameBegin() noexcept
 			if (!item.resolutionIsFixed) {
 				item.deallocate(mState->gpuAllocatorFramebuffer);
 				bool res = item.buildFramebuffer(mState->windowRes, mState->gpuAllocatorFramebuffer);
-				sfz_assert_debug(res);
+				sfz_assert(res);
 			}
 		}
 	}
 
 	// Begin ZeroG frame
-	sfz_assert_debug(!mState->windowFramebuffer.valid());
+	sfz_assert(!mState->windowFramebuffer.valid());
 	CHECK_ZG mState->zgCtx.swapchainBeginFrame(mState->windowFramebuffer);
 
 	// Clear all framebuffers
@@ -393,7 +393,7 @@ void Renderer::frameBegin() noexcept
 	// Set current stage set index to first stage
 	mState->currentStageSetIdx = 0;
 	if (mState->configurable.presentQueueStages.size() > 0) {
-		sfz_assert_debug(
+		sfz_assert(
 			mState->configurable.presentQueueStages.first().stageType != StageType::USER_STAGE_BARRIER);
 	}
 }
@@ -410,24 +410,24 @@ bool Renderer::inStageInputMode() const noexcept
 void Renderer::stageBeginInput(StringID stageName) noexcept
 {
 	// Ensure no stage is currently set to accept input
-	sfz_assert_debug(!inStageInputMode());
+	sfz_assert(!inStageInputMode());
 	if (inStageInputMode()) return;
 
 	// Find stage
 	uint32_t stageIdx = mState->findActiveStageIdx(stageName);
-	sfz_assert_debug(stageIdx != ~0u);
+	sfz_assert(stageIdx != ~0u);
 	if (stageIdx == ~0u) return;
-	sfz_assert_debug(stageIdx < mState->configurable.presentQueueStages.size());
+	sfz_assert(stageIdx < mState->configurable.presentQueueStages.size());
 	Stage& stage = mState->configurable.presentQueueStages[stageIdx];
-	sfz_assert_debug(stage.stageType == StageType::USER_INPUT_RENDERING);
+	sfz_assert(stage.stageType == StageType::USER_INPUT_RENDERING);
 
 	// Find render pipeline
 	uint32_t pipelineIdx = mState->findPipelineRenderIdx(stage.renderPipelineName);
-	sfz_assert_debug(pipelineIdx != ~0u);
+	sfz_assert(pipelineIdx != ~0u);
 	if (pipelineIdx == ~0u) return;
-	sfz_assert_debug(pipelineIdx < mState->configurable.renderPipelines.size());
+	sfz_assert(pipelineIdx < mState->configurable.renderPipelines.size());
 	PipelineRenderItem& pipelineItem = mState->configurable.renderPipelines[pipelineIdx];
-	sfz_assert_debug(pipelineItem.pipeline.valid());
+	sfz_assert(pipelineItem.pipeline.valid());
 	if (!pipelineItem.pipeline.valid()) return;
 
 	// Set currently active stage
@@ -438,20 +438,20 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 	// Get stage's framebuffer
 	zg::Framebuffer* framebuffer =
 		mState->configurable.getFramebuffer(mState->windowFramebuffer, stage.framebufferName);
-	sfz_assert_debug(framebuffer != nullptr);
+	sfz_assert(framebuffer != nullptr);
 
 	// In debug mode, validate that the pipeline's render targets matches the framebuffer
-#if !defined(SFZ_NO_DEBUG)
+#ifndef NDEBUG
 	if (framebuffer == &mState->windowFramebuffer) {
-		sfz_assert_debug(pipelineItem.numRenderTargets == 1);
-		sfz_assert_debug(pipelineItem.renderTargets[0] == ZG_TEXTURE_FORMAT_RGBA_U8_UNORM);
+		sfz_assert(pipelineItem.numRenderTargets == 1);
+		sfz_assert(pipelineItem.renderTargets[0] == ZG_TEXTURE_FORMAT_RGBA_U8_UNORM);
 	}
 	else {
 		FramebufferItem* fbItem = mState->configurable.getFramebufferItem(stage.framebufferName);
-		sfz_assert_debug(fbItem != nullptr);
-		sfz_assert_debug(pipelineItem.numRenderTargets == fbItem->numRenderTargets);
+		sfz_assert(fbItem != nullptr);
+		sfz_assert(pipelineItem.numRenderTargets == fbItem->numRenderTargets);
 		for (uint32_t i = 0; i < fbItem->numRenderTargets; i++) {
-			sfz_assert_debug(pipelineItem.renderTargets[i] == fbItem->renderTargetItems[i].format);
+			sfz_assert(pipelineItem.renderTargets[i] == fbItem->renderTargetItems[i].format);
 		}
 	}
 #endif
@@ -465,14 +465,14 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 void Renderer::stageSetPushConstantUntyped(
 	uint32_t shaderRegister, const void* data, uint32_t numBytes) noexcept
 {
-	sfz_assert_debug(inStageInputMode());
-	sfz_assert_debug(data != nullptr);
-	sfz_assert_debug(numBytes > 0);
-	sfz_assert_debug(numBytes <= 128);
+	sfz_assert(inStageInputMode());
+	sfz_assert(data != nullptr);
+	sfz_assert(numBytes > 0);
+	sfz_assert(numBytes <= 128);
 
 	// In debug mode, validate that the specified shader registers corresponds to a a suitable
 	// push constant in the pipeline
-#if !defined(SFZ_NO_DEBUG)
+#ifndef NDEBUG
 	const ZgPipelineRenderSignature& signature =
 		mState->currentPipelineRender->pipeline.signature;
 	
@@ -484,9 +484,9 @@ void Renderer::stageSetPushConstantUntyped(
 		}
 	}
 	
-	sfz_assert_debug(bufferIdx != ~0u);
-	sfz_assert_debug(signature.constantBuffers[bufferIdx].pushConstant == ZG_TRUE);
-	sfz_assert_debug(signature.constantBuffers[bufferIdx].sizeInBytes >= numBytes);
+	sfz_assert(bufferIdx != ~0u);
+	sfz_assert(signature.constantBuffers[bufferIdx].pushConstant == ZG_TRUE);
+	sfz_assert(signature.constantBuffers[bufferIdx].sizeInBytes >= numBytes);
 #endif
 
 	CHECK_ZG mState->currentCommandList.setPushConstant(shaderRegister, data, numBytes);
@@ -495,13 +495,13 @@ void Renderer::stageSetPushConstantUntyped(
 void Renderer::stageSetConstantBufferUntyped(
 	uint32_t shaderRegister, const void* data, uint32_t numBytes) noexcept
 {
-	sfz_assert_debug(inStageInputMode());
-	sfz_assert_debug(data != nullptr);
-	sfz_assert_debug(numBytes > 0);
+	sfz_assert(inStageInputMode());
+	sfz_assert(data != nullptr);
+	sfz_assert(numBytes > 0);
 
 	// In debug mode, validate that the specified shader registers corresponds to a a suitable
 	// constant buffer in the pipeline
-#if !defined(SFZ_NO_DEBUG)
+#ifndef NDEBUG
 	const ZgPipelineRenderSignature& signature =
 		mState->currentPipelineRender->pipeline.signature;
 
@@ -513,18 +513,18 @@ void Renderer::stageSetConstantBufferUntyped(
 		}
 	}
 
-	sfz_assert_debug(bufferIdx != ~0u);
-	sfz_assert_debug(signature.constantBuffers[bufferIdx].pushConstant == ZG_FALSE);
-	sfz_assert_debug(signature.constantBuffers[bufferIdx].sizeInBytes >= numBytes);
+	sfz_assert(bufferIdx != ~0u);
+	sfz_assert(signature.constantBuffers[bufferIdx].pushConstant == ZG_FALSE);
+	sfz_assert(signature.constantBuffers[bufferIdx].sizeInBytes >= numBytes);
 #endif
 
 	// Find constant buffer
 	PerFrame<ConstantBufferMemory>* frame =
 		mState->findConstantBufferInCurrentInputStage(shaderRegister);
-	sfz_assert_debug(frame != nullptr);
+	sfz_assert(frame != nullptr);
 
 	// Ensure that we can only set constant buffer once per frame
-	sfz_assert_debug(frame->state.lastFrameIdxTouched != mState->currentFrameIdx);
+	sfz_assert(frame->state.lastFrameIdxTouched != mState->currentFrameIdx);
 	frame->state.lastFrameIdxTouched = mState->currentFrameIdx;
 
 	// Wait until frame specific memory is available
@@ -544,37 +544,37 @@ void Renderer::stageSetConstantBufferUntyped(
 
 void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) noexcept
 {
-	sfz_assert_debug(meshId != StringID::invalid());
-	sfz_assert_debug(inStageInputMode());
+	sfz_assert(meshId != StringID::invalid());
+	sfz_assert(inStageInputMode());
 
 	// Find mesh
 	GpuMesh* meshPtr = mState->meshes.get(meshId);
-	sfz_assert_debug(meshPtr != nullptr);
+	sfz_assert(meshPtr != nullptr);
 	if (meshPtr == nullptr) return;
 
 	// Validate some stuff in debug mode
-#if !defined(SFZ_NO_DEBUG)
+#ifndef NDEBUG
 	// Validate pipeline vertex input for standard mesh rendering
 	const ZgPipelineRenderSignature& signature =
 		mState->currentPipelineRender->pipeline.signature;
-	sfz_assert_debug(signature.numVertexAttributes == 3);
+	sfz_assert(signature.numVertexAttributes == 3);
 
-	sfz_assert_debug(signature.vertexAttributes[0].location == 0);
-	sfz_assert_debug(signature.vertexAttributes[0].vertexBufferSlot == 0);
-	sfz_assert_debug(signature.vertexAttributes[0].type == ZG_VERTEX_ATTRIBUTE_F32_3);
-	sfz_assert_debug(
+	sfz_assert(signature.vertexAttributes[0].location == 0);
+	sfz_assert(signature.vertexAttributes[0].vertexBufferSlot == 0);
+	sfz_assert(signature.vertexAttributes[0].type == ZG_VERTEX_ATTRIBUTE_F32_3);
+	sfz_assert(
 		signature.vertexAttributes[0].offsetToFirstElementInBytes == offsetof(Vertex, pos));
 
-	sfz_assert_debug(signature.vertexAttributes[1].location == 1);
-	sfz_assert_debug(signature.vertexAttributes[1].vertexBufferSlot == 0);
-	sfz_assert_debug(signature.vertexAttributes[1].type == ZG_VERTEX_ATTRIBUTE_F32_3);
-	sfz_assert_debug(
+	sfz_assert(signature.vertexAttributes[1].location == 1);
+	sfz_assert(signature.vertexAttributes[1].vertexBufferSlot == 0);
+	sfz_assert(signature.vertexAttributes[1].type == ZG_VERTEX_ATTRIBUTE_F32_3);
+	sfz_assert(
 		signature.vertexAttributes[1].offsetToFirstElementInBytes == offsetof(Vertex, normal));
 
-	sfz_assert_debug(signature.vertexAttributes[2].location == 2);
-	sfz_assert_debug(signature.vertexAttributes[2].vertexBufferSlot == 0);
-	sfz_assert_debug(signature.vertexAttributes[2].type == ZG_VERTEX_ATTRIBUTE_F32_2);
-	sfz_assert_debug(
+	sfz_assert(signature.vertexAttributes[2].location == 2);
+	sfz_assert(signature.vertexAttributes[2].vertexBufferSlot == 0);
+	sfz_assert(signature.vertexAttributes[2].type == ZG_VERTEX_ATTRIBUTE_F32_2);
+	sfz_assert(
 		signature.vertexAttributes[2].offsetToFirstElementInBytes == offsetof(Vertex, texcoord));
 
 	// Validate material index push constant
@@ -584,11 +584,11 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 			const ZgConstantBufferDesc& desc = signature.constantBuffers[i];
 			if (desc.shaderRegister == registers.materialIdxPushConstant) {
 				found = true;
-				sfz_assert_debug(desc.pushConstant == ZG_TRUE);
+				sfz_assert(desc.pushConstant == ZG_TRUE);
 				break;
 			}
 		}
-		sfz_assert_debug(found);
+		sfz_assert(found);
 	}
 
 	// Validate materials array
@@ -598,13 +598,13 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 			const ZgConstantBufferDesc& desc = signature.constantBuffers[i];
 			if (desc.shaderRegister == registers.materialsArray) {
 				found = true;
-				sfz_assert_debug(desc.pushConstant == ZG_FALSE);
-				sfz_assert_debug(desc.sizeInBytes >= meshPtr->numMaterials * sizeof(ShaderMaterial));
-				sfz_assert_debug(desc.sizeInBytes == sizeof(ForwardShaderMaterialsBuffer));
+				sfz_assert(desc.pushConstant == ZG_FALSE);
+				sfz_assert(desc.sizeInBytes >= meshPtr->numMaterials * sizeof(ShaderMaterial));
+				sfz_assert(desc.sizeInBytes == sizeof(ForwardShaderMaterialsBuffer));
 				break;
 			}
 		}
-		sfz_assert_debug(found);
+		sfz_assert(found);
 	}
 
 	// Validate texture bindings
@@ -618,7 +618,7 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 				break;
 			}
 		}
-		sfz_assert_debug(found);
+		sfz_assert(found);
 	};
 
 	assertTextureRegister(registers.albedo);
@@ -629,11 +629,11 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 #endif
 
 	// Set vertex buffer
-	sfz_assert_debug(meshPtr->vertexBuffer.valid());
+	sfz_assert(meshPtr->vertexBuffer.valid());
 	CHECK_ZG mState->currentCommandList.setVertexBuffer(0, meshPtr->vertexBuffer);
 
 	// Set index buffer
-	sfz_assert_debug(meshPtr->indexBuffer.valid());
+	sfz_assert(meshPtr->indexBuffer.valid());
 	CHECK_ZG mState->currentCommandList.setIndexBuffer(
 		meshPtr->indexBuffer, ZG_INDEX_BUFFER_TYPE_UINT32);
 
@@ -642,14 +642,14 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 
 	// Create materials array binding
 	if (registers.materialsArray != ~0u) {
-		sfz_assert_debug(meshPtr->materialsBuffer.valid());
+		sfz_assert(meshPtr->materialsBuffer.valid());
 		commonBindings.addConstantBuffer(registers.materialsArray, meshPtr->materialsBuffer);
 	}
 
 	// User-specified constant buffers
 	for (Framed<ConstantBufferMemory>& framed : mState->currentInputEnabledStage->constantBuffers) {
 		PerFrame<ConstantBufferMemory>& frame = framed.getState(mState->currentFrameIdx);
-		sfz_assert_debug(frame.state.lastFrameIdxTouched == mState->currentFrameIdx);
+		sfz_assert(frame.state.lastFrameIdxTouched == mState->currentFrameIdx);
 		commonBindings.addConstantBuffer(frame.state.shaderRegister, frame.state.deviceBuffer);
 	}
 
@@ -657,14 +657,14 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 	for (const BoundRenderTarget& target : mState->currentInputEnabledStage->boundRenderTargets) {
 		
 		FramebufferItem* item = mState->configurable.getFramebufferItem(target.framebuffer);
-		sfz_assert_debug(item != nullptr);
+		sfz_assert(item != nullptr);
 		if (target.depthBuffer) {
-			sfz_assert_debug(item->hasDepthBuffer);
+			sfz_assert(item->hasDepthBuffer);
 			commonBindings.addTexture(
 				target.textureRegister, item->framebuffer.depthBuffer);
 		}
 		else {
-			sfz_assert_debug(target.renderTargetIdx < item->framebuffer.numRenderTargets);
+			sfz_assert(target.renderTargetIdx < item->framebuffer.numRenderTargets);
 			commonBindings.addTexture(
 				target.textureRegister, item->framebuffer.renderTargets[target.renderTargetIdx]);
 		}
@@ -673,7 +673,7 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 	// Draw all mesh components
 	for (MeshComponent& comp : meshPtr->components) {
 
-		sfz_assert_debug(comp.materialIdx < meshPtr->cpuMaterials.size());
+		sfz_assert(comp.materialIdx < meshPtr->cpuMaterials.size());
 		const Material& material = meshPtr->cpuMaterials[comp.materialIdx];
 
 		// Set material index push constant
@@ -691,7 +691,7 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 
 				// Find texture
 				TextureItem* texItem = mState->textures.get(texID);
-				sfz_assert_debug(texItem != nullptr);
+				sfz_assert(texItem != nullptr);
 
 				// Bind texture
 				bindings.addTexture(texRegister, texItem->texture);
@@ -707,8 +707,8 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 		CHECK_ZG mState->currentCommandList.setPipelineBindings(bindings);
 
 		// Issue draw command
-		sfz_assert_debug(comp.numIndices != 0);
-		sfz_assert_debug((comp.numIndices % 3) == 0);
+		sfz_assert(comp.numIndices != 0);
+		sfz_assert((comp.numIndices % 3) == 0);
 		CHECK_ZG mState->currentCommandList.drawTrianglesIndexed(
 			comp.firstIndex, comp.numIndices / 3);
 	}
@@ -717,7 +717,7 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 void Renderer::stageEndInput() noexcept
 {
 	// Ensure a stage was set to accept input
-	sfz_assert_debug(inStageInputMode());
+	sfz_assert(inStageInputMode());
 	if (!inStageInputMode()) return;
 
 	// Execute command list
@@ -738,7 +738,7 @@ void Renderer::stageEndInput() noexcept
 
 bool Renderer::stageBarrierProgressNext() noexcept
 {
-	sfz_assert_debug(!inStageInputMode());
+	sfz_assert(!inStageInputMode());
 
 	// Find the next barrier stage
 	uint32_t barrierStageIdx = mState->findNextBarrierIdx();
@@ -746,7 +746,7 @@ bool Renderer::stageBarrierProgressNext() noexcept
 
 	// Set current stage set index to the stage after the barrier
 	mState->currentStageSetIdx = barrierStageIdx + 1;
-	sfz_assert_debug(mState->currentStageSetIdx < mState->configurable.presentQueueStages.size());
+	sfz_assert(mState->currentStageSetIdx < mState->configurable.presentQueueStages.size());
 
 	return true;
 }
@@ -775,7 +775,7 @@ void Renderer::renderImguiHack(
 void Renderer::frameFinish() noexcept
 {
 	// Finish ZeroG frame
-	sfz_assert_debug(mState->windowFramebuffer.valid());
+	sfz_assert(mState->windowFramebuffer.valid());
 	CHECK_ZG mState->zgCtx.swapchainFinishFrame();
 	mState->windowFramebuffer.release();
 

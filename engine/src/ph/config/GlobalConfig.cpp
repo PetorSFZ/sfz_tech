@@ -73,8 +73,8 @@ void GlobalConfig::destroy() noexcept
 
 void GlobalConfig::load() noexcept
 {
-	sfz_assert_debug(mImpl != nullptr);
-	sfz_assert_debug(!mImpl->loaded); // TODO: Make it possible to reload settings from file
+	sfz_assert(mImpl != nullptr);
+	sfz_assert(!mImpl->loaded); // TODO: Make it possible to reload settings from file
 
 	// Load ini file
 	IniParser& ini = mImpl->ini;
@@ -131,7 +131,7 @@ void GlobalConfig::load() noexcept
 
 bool GlobalConfig::save() noexcept
 {
-	sfz_assert_debug(mImpl != nullptr);
+	sfz_assert(mImpl != nullptr);
 	IniParser& ini = mImpl->ini;
 
 	// Update internal ini with the current values of the setting
@@ -221,7 +221,7 @@ Setting* GlobalConfig::createSetting(const char* section, const char* key, bool*
 
 Setting* GlobalConfig::getSetting(const char* section, const char* key) noexcept
 {
-	sfz_assert_debug(mImpl != nullptr);
+	sfz_assert(mImpl != nullptr);
 	for (auto& sec : mImpl->sections) {
 		if (sec.sectionKey != section) continue;
 		for (auto& setting : sec.settings) {
@@ -238,7 +238,7 @@ Setting* GlobalConfig::getSetting(const char* key) noexcept
 
 void GlobalConfig::getAllSettings(DynArray<Setting*>& settings) noexcept
 {
-	sfz_assert_debug(mImpl != nullptr);
+	sfz_assert(mImpl != nullptr);
 	for (auto& section : mImpl->sections) {
 		for (auto& setting : section.settings) {
 			settings.add(setting.get());
@@ -248,7 +248,7 @@ void GlobalConfig::getAllSettings(DynArray<Setting*>& settings) noexcept
 
 void GlobalConfig::getSections(DynArray<StackString32>& sections) noexcept
 {
-	sfz_assert_debug(mImpl != nullptr);
+	sfz_assert(mImpl != nullptr);
 	sections.ensureCapacity(mImpl->sections.size() + sections.size());
 	for (auto& section : mImpl->sections) {
 		sections.add(section.sectionKey);
@@ -257,7 +257,7 @@ void GlobalConfig::getSections(DynArray<StackString32>& sections) noexcept
 
 void GlobalConfig::getSectionSettings(const char* section, DynArray<Setting*>& settings) noexcept
 {
-	sfz_assert_debug(mImpl != nullptr);
+	sfz_assert(mImpl != nullptr);
 
 	// Attempt to find section
 	Section* sectionPtr = nullptr;

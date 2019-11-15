@@ -84,37 +84,37 @@ Setting::Setting(const char* section, const char* key) noexcept
 
 int32_t Setting::intValue() const noexcept
 {
-	sfz_assert_debug(this->type() == ValueType::INT);
+	sfz_assert(this->type() == ValueType::INT);
 	return mValue.i.value;
 }
 
 float Setting::floatValue() const noexcept
 {
-	sfz_assert_debug(this->type() == ValueType::FLOAT);
+	sfz_assert(this->type() == ValueType::FLOAT);
 	return mValue.f.value;
 }
 
 bool Setting::boolValue() const noexcept
 {
-	sfz_assert_debug(this->type() == ValueType::BOOL);
+	sfz_assert(this->type() == ValueType::BOOL);
 	return mValue.b.value;
 }
 
 const IntBounds& Setting::intBounds() const noexcept
 {
-	sfz_assert_debug(this->type() == ValueType::INT);
+	sfz_assert(this->type() == ValueType::INT);
 	return mValue.i.bounds;
 }
 
 const FloatBounds& Setting::floatBounds() const noexcept
 {
-	sfz_assert_debug(this->type() == ValueType::FLOAT);
+	sfz_assert(this->type() == ValueType::FLOAT);
 	return mValue.f.bounds;
 }
 
 const BoolBounds& Setting::boolBounds() const noexcept
 {
-	sfz_assert_debug(this->type() == ValueType::BOOL);
+	sfz_assert(this->type() == ValueType::BOOL);
 	return mValue.b.bounds;
 }
 

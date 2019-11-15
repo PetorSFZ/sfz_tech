@@ -350,11 +350,11 @@ void runGameLoop(
 	// Get settings
 	GlobalConfig& cfg = getGlobalConfig();
 	gameLoopState.windowWidth = cfg.getSetting("Window", "width");
-	sfz_assert_debug(gameLoopState.windowWidth != nullptr);
+	sfz_assert(gameLoopState.windowWidth != nullptr);
 	gameLoopState.windowHeight = cfg.getSetting("Window", "height");
-	sfz_assert_debug(gameLoopState.windowHeight != nullptr);
+	sfz_assert(gameLoopState.windowHeight != nullptr);
 	gameLoopState.fullscreen = cfg.getSetting("Window", "fullscreen");
-	sfz_assert_debug(gameLoopState.fullscreen != nullptr);
+	sfz_assert(gameLoopState.fullscreen != nullptr);
 	gameLoopState.maximized = cfg.getSetting("Window", "maximized");
 
 	// Start the game loop

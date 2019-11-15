@@ -47,7 +47,7 @@ struct MeshComponent {
 // material. If the entire mesh uses a single material only one component will be returned.
 static DynArray<MeshComponent> componentsFromMesh(const phConstMeshView& mesh) noexcept
 {
-	sfz_assert_debug((mesh.numIndices % 3) == 0);
+	sfz_assert((mesh.numIndices % 3) == 0);
 
 	DynArray<MeshComponent> components;
 	components.create(10);
@@ -61,8 +61,8 @@ static DynArray<MeshComponent> componentsFromMesh(const phConstMeshView& mesh) n
 		uint32_t m0 = mesh.materialIndices[idx0];
 		uint32_t m1 = mesh.materialIndices[idx1];
 		uint32_t m2 = mesh.materialIndices[idx2];
-		sfz_assert_debug(m0 == m1);
-		sfz_assert_debug(m1 == m2);
+		sfz_assert(m0 == m1);
+		sfz_assert(m1 == m2);
 
 		// Try to find existing component with same material index
 		DynArray<uint32_t>* indicesPtr = nullptr;
@@ -191,35 +191,35 @@ static ProcessedAssets processAssets(
 
 		// Albedo
 		if (m.albedoTexIndex != uint16_t(~0)) {
-			sfz_assert_debug(m.albedoTexIndex < assets.textures.size());
+			sfz_assert(m.albedoTexIndex < assets.textures.size());
 			processedAssets.textureIndices.add(m.albedoTexIndex);
 			m.albedoTexIndex = uint16_t(processedAssets.textureIndices.size()) - 1;
 		}
 
 		// MetallicRoughness
 		if (m.metallicRoughnessTexIndex != uint16_t(~0)) {
-			sfz_assert_debug(m.metallicRoughnessTexIndex < assets.textures.size());
+			sfz_assert(m.metallicRoughnessTexIndex < assets.textures.size());
 			processedAssets.textureIndices.add(m.metallicRoughnessTexIndex);
 			m.metallicRoughnessTexIndex = uint16_t(processedAssets.textureIndices.size()) - 1;
 		}
 
 		// Normal
 		if (m.normalTexIndex != uint16_t(~0)) {
-			sfz_assert_debug(m.normalTexIndex < assets.textures.size());
+			sfz_assert(m.normalTexIndex < assets.textures.size());
 			processedAssets.textureIndices.add(m.normalTexIndex);
 			m.normalTexIndex = uint16_t(processedAssets.textureIndices.size()) - 1;
 		}
 
 		// Occlusion
 		if (m.occlusionTexIndex != uint16_t(~0)) {
-			sfz_assert_debug(m.occlusionTexIndex < assets.textures.size());
+			sfz_assert(m.occlusionTexIndex < assets.textures.size());
 			processedAssets.textureIndices.add(m.occlusionTexIndex);
 			m.occlusionTexIndex = uint16_t(processedAssets.textureIndices.size()) - 1;
 		}
 
 		// Emissive
 		if (m.emissiveTexIndex != uint16_t(~0)) {
-			sfz_assert_debug(m.emissiveTexIndex < assets.textures.size());
+			sfz_assert(m.emissiveTexIndex < assets.textures.size());
 			processedAssets.textureIndices.add(m.emissiveTexIndex);
 			m.emissiveTexIndex = uint16_t(processedAssets.textureIndices.size()) - 1;
 		}
@@ -456,7 +456,7 @@ static void writeTextures(
 	const LevelAssets& assets,
 	const ProcessedAssets& processedAssets) noexcept
 {
-	sfz_assert_debug(assets.textures.size() == assets.textureFileMappings.size());
+	sfz_assert(assets.textures.size() == assets.textureFileMappings.size());
 	if (processedAssets.textureIndices.size() == 0) return;
 
 	// Attempt to create directory for textures if necessary
@@ -644,7 +644,7 @@ static bool writeMeshes(
 
 	// Write "meshes" section
 	gltf.printfAppend("%s", "\t\"meshes\": [\n");
-	sfz_assert_debug(processedAssets.splitMeshes.size() == binaryData.offsets.size());
+	sfz_assert(processedAssets.splitMeshes.size() == binaryData.offsets.size());
 	uint32_t accessorIdx = 0;
 	for (uint32_t i = 0; i < processedAssets.splitMeshes.size(); i++) {
 		const SplitMesh& splitMesh = processedAssets.splitMeshes[i];
@@ -668,7 +668,7 @@ static bool writeMeshes(
 		// Primitives (components)
 		gltf.printfAppend("%s", "\t\t\t\"primitives\": [\n");
 
-		sfz_assert_debug(splitMesh.components.size() == offsets.indicesOffsets.size());
+		sfz_assert(splitMesh.components.size() == offsets.indicesOffsets.size());
 		for (uint32_t j = 0; j < splitMesh.components.size(); j++) {
 			const MeshComponent& component = splitMesh.components[j];
 

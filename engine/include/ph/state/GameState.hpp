@@ -206,7 +206,7 @@ struct GameStateHeader {
 		static_assert(std::is_trivially_destructible<T>::value, "Game state singletons must be trivially destructible");
 		uint32_t singletonSize = 0;
 		T* singleton = (T*)singletonUntyped(singletonIndex, singletonSize);
-		sfz_assert_debug(sizeof(T) == singletonSize);
+		sfz_assert(sizeof(T) == singletonSize);
 		return *singleton;
 	}
 	template<typename T>
@@ -216,7 +216,7 @@ struct GameStateHeader {
 		static_assert(std::is_trivially_destructible<T>::value, "Game state singletons must be trivially destructible");
 		uint32_t singletonSize = 0;
 		const T* singleton = (const T*)singletonUntyped(singletonIndex, singletonSize);
-		sfz_assert_debug(sizeof(T) == singletonSize);
+		sfz_assert(sizeof(T) == singletonSize);
 		return *singleton;
 	}
 
@@ -286,7 +286,7 @@ struct GameStateHeader {
 		static_assert(std::is_trivially_destructible<T>::value, "ECS components must be trivially destructible");
 		uint32_t componentSize = 0;
 		T* components = (T*)componentsUntyped(componentType, componentSize);
-		sfz_assert_debug(sizeof(T) == componentSize);
+		sfz_assert(sizeof(T) == componentSize);
 		return components;
 	}
 	template<typename T>
@@ -296,7 +296,7 @@ struct GameStateHeader {
 		static_assert(std::is_trivially_destructible<T>::value, "ECS components must be trivially destructible");
 		uint32_t componentSize = 0;
 		const T* components = (const T*)componentsUntyped(componentType, componentSize);
-		sfz_assert_debug(sizeof(T) == componentSize);
+		sfz_assert(sizeof(T) == componentSize);
 		return components;
 	}
 

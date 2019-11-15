@@ -46,7 +46,7 @@ static const sajson::value& castToSajsonValue(const uint8_t* memory) noexcept
 
 static uint64_t copyStripCppComments(char* dst, const char* src, uint64_t srcLen) noexcept
 {
-	sfz_assert_debug(srcLen > 0);
+	sfz_assert(srcLen > 0);
 
 	// The total number of bytes in the new string, excluding null-terminator
 	uint64_t totalNumBytes = 0;
@@ -81,7 +81,7 @@ static uint64_t copyStripCppComments(char* dst, const char* src, uint64_t srcLen
 	}
 
 	// Copy the remainder of the string
-	sfz_assert_debug(currSrc <= (src + srcLen));
+	sfz_assert(currSrc <= (src + srcLen));
 	uint64_t remainderNumBytes = (src + srcLen) - currSrc;
 	if (remainderNumBytes != 0) {
 		std::memcpy(dst + totalNumBytes, currSrc, remainderNumBytes);
@@ -143,7 +143,7 @@ ParsedJsonNodeType ParsedJsonNode::type() const noexcept
 	case sajson::TYPE_ARRAY: return ParsedJsonNodeType::ARRAY;
 	case sajson::TYPE_OBJECT: return ParsedJsonNodeType::MAP;
 	}
-	sfz_assert_debug(false);
+	sfz_assert(false);
 	return ParsedJsonNodeType::MAP;
 }
 
@@ -152,7 +152,7 @@ ParsedJsonNodeType ParsedJsonNode::type() const noexcept
 
 uint32_t ParsedJsonNode::mapNumObjects() const noexcept
 {
-	sfz_assert_debug(this->mActive);
+	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return NONE if wrong type
@@ -164,7 +164,7 @@ uint32_t ParsedJsonNode::mapNumObjects() const noexcept
 
 ParsedJsonNode ParsedJsonNode::accessMap(const char* nodeName) const noexcept
 {
-	sfz_assert_debug(this->mActive);
+	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return NONE if wrong type
@@ -183,7 +183,7 @@ ParsedJsonNode ParsedJsonNode::accessMap(const char* nodeName) const noexcept
 
 uint32_t ParsedJsonNode::arrayLength() const noexcept
 {
-	sfz_assert_debug(this->mActive);
+	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return 0 if node is of wrong type
@@ -194,7 +194,7 @@ uint32_t ParsedJsonNode::arrayLength() const noexcept
 
 ParsedJsonNode ParsedJsonNode::accessArray(uint32_t index) const noexcept
 {
-	sfz_assert_debug(this->mActive);
+	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return NONE if wrong type
@@ -213,7 +213,7 @@ ParsedJsonNode ParsedJsonNode::accessArray(uint32_t index) const noexcept
 
 bool ParsedJsonNode::value(bool& valueOut) const noexcept
 {
-	sfz_assert_debug(this->mActive);
+	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return false if node is of wrong type
@@ -226,7 +226,7 @@ bool ParsedJsonNode::value(bool& valueOut) const noexcept
 
 bool ParsedJsonNode::value(int32_t& valueOut) const noexcept
 {
-	sfz_assert_debug(this->mActive);
+	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return false if node is of wrong type
@@ -239,7 +239,7 @@ bool ParsedJsonNode::value(int32_t& valueOut) const noexcept
 
 bool ParsedJsonNode::value(float& valueOut) const noexcept
 {
-	sfz_assert_debug(this->mActive);
+	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return false if node is of wrong type
@@ -258,7 +258,7 @@ bool ParsedJsonNode::value(float& valueOut) const noexcept
 
 bool ParsedJsonNode::value(double& valueOut) const noexcept
 {
-	sfz_assert_debug(this->mActive);
+	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return false if node is of wrong type
@@ -277,7 +277,7 @@ bool ParsedJsonNode::value(double& valueOut) const noexcept
 
 bool ParsedJsonNode::value(char* strOut, uint32_t strCapacity) const noexcept
 {
-	sfz_assert_debug(this->mActive);
+	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return false if node is of wrong type
@@ -295,7 +295,7 @@ bool ParsedJsonNode::value(char* strOut, uint32_t strCapacity) const noexcept
 
 uint32_t ParsedJsonNode::stringLength() const noexcept
 {
-	sfz_assert_debug(this->mActive);
+	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return false if node is of wrong type
@@ -474,7 +474,7 @@ void ParsedJson::destroy() noexcept
 
 ParsedJsonNode ParsedJson::root() const noexcept
 {
-	sfz_assert_debug(mImpl->doc->is_valid());
+	sfz_assert(mImpl->doc->is_valid());
 	sajson::value value = mImpl->doc->get_root();
 	return ParsedJsonNode::createFromImplDefined(&value);
 }

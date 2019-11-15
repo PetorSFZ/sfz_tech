@@ -30,7 +30,7 @@ static ZgOptimalClearValue floatToOptimalClearValue(float value) noexcept
 {
 	if (value == 0.0f) return ZG_OPTIMAL_CLEAR_VALUE_ZERO;
 	if (value == 1.0f) return ZG_OPTIMAL_CLEAR_VALUE_ONE;
-	sfz_assert_debug(false);
+	sfz_assert(false);
 	return ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED;
 }
 
@@ -127,24 +127,24 @@ bool PipelineRenderItem::buildPipeline() noexcept
 	}
 	else {
 		// TODO: Not yet implemented
-		sfz_assert_release(false);
+		sfz_assert_hard(false);
 	}
 
 	// Set push constants
-	sfz_assert_debug(numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
+	sfz_assert(numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
 	for (uint32_t i = 0; i < numPushConstants; i++) {
 		pipelineBuilder.addPushConstant(pushConstantRegisters[i]);
 	}
 
 	// Samplers
-	sfz_assert_debug(numSamplers < ZG_MAX_NUM_SAMPLERS);
+	sfz_assert(numSamplers < ZG_MAX_NUM_SAMPLERS);
 	for (uint32_t i = 0; i < numSamplers; i++) {
 		SamplerItem& sampler = samplers[i];
 		pipelineBuilder.addSampler(sampler.samplerRegister, sampler.sampler);
 	}
 
 	// Render targets
-	sfz_assert_debug(numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
+	sfz_assert(numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
 	for (uint32_t i = 0; i < numRenderTargets; i++) {
 		pipelineBuilder.addRenderTarget(renderTargets[i]);
 	}
@@ -189,7 +189,7 @@ bool PipelineRenderItem::buildPipeline() noexcept
 			.setBlendFuncAlpha(ZG_BLEND_FUNC_ADD, ZG_BLEND_FACTOR_ONE, ZG_BLEND_FACTOR_ONE);
 	}
 	else {
-		sfz_assert_debug(false);
+		sfz_assert(false);
 	}
 
 	// Build pipeline
@@ -228,7 +228,7 @@ zg::Framebuffer* RendererConfigurableState::getFramebuffer(
 	}
 
 	// Could not find framebuffer
-	sfz_assert_debug(false);
+	sfz_assert(false);
 	return nullptr;
 }
 
@@ -240,7 +240,7 @@ FramebufferItem* RendererConfigurableState::getFramebufferItem(StringID id) noex
 	}
 
 	// Could not find framebuffer
-	sfz_assert_debug(false);
+	sfz_assert(false);
 	return nullptr;
 }
 
@@ -259,7 +259,7 @@ uint32_t RendererState::findNextBarrierIdx() const noexcept
 
 uint32_t  RendererState::findActiveStageIdx(StringID stageName) const noexcept
 {
-	sfz_assert_debug(stageName != StringID::invalid())
+	sfz_assert(stageName != StringID::invalid());
 	uint32_t numStages = this->configurable.presentQueueStages.size();
 	for (uint32_t i = this->currentStageSetIdx; i < numStages; i++) {
 		const Stage& stage = this->configurable.presentQueueStages[i];
@@ -271,7 +271,7 @@ uint32_t  RendererState::findActiveStageIdx(StringID stageName) const noexcept
 
 uint32_t  RendererState::findPipelineRenderIdx(StringID pipelineName) const noexcept
 {
-	sfz_assert_debug(pipelineName != StringID::invalid());
+	sfz_assert(pipelineName != StringID::invalid());
 	uint32_t numPipelines = this->configurable.renderPipelines.size();
 	for (uint32_t i = 0; i < numPipelines; i++) {
 		const PipelineRenderItem& item = this->configurable.renderPipelines[i];

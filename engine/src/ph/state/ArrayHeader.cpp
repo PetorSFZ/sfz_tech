@@ -30,8 +30,8 @@ namespace ph {
 
 void ArrayHeader::addUntyped(const uint8_t* data, uint32_t numBytes) noexcept
 {
-	sfz_assert_debug(numBytes == this->elementSize);
-	sfz_assert_debug(this->size < this->capacity);
+	sfz_assert(numBytes == this->elementSize);
+	sfz_assert(this->size < this->capacity);
 
 	// Add element to array and increment size
 	uint8_t* dstPtr = atUntyped(this->size);
@@ -41,7 +41,7 @@ void ArrayHeader::addUntyped(const uint8_t* data, uint32_t numBytes) noexcept
 
 void ArrayHeader::pop() noexcept
 {
-	sfz_assert_debug(0 < this->size);
+	sfz_assert(0 < this->size);
 
 	// Clear element and decrement size pointer
 	uint8_t* dstPtr = atUntyped(this->size - 1);

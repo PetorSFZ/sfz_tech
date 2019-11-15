@@ -45,7 +45,7 @@ struct CheckJsonImpl final {
 	T operator% (const ph::ParsedJsonNodeValue<T>& valuePair) noexcept {
 		if (!valuePair.exists) {
 			SFZ_ERROR("NextGenRenderer", "Key did not exist in JSON file: %s:%i", file, line);
-			sfz_assert_debug(false);
+			sfz_assert(false);
 		}
 		return std::move(valuePair.value);
 	}
@@ -56,7 +56,7 @@ static ZgSamplingMode samplingModeFromString(const str256& str) noexcept
 	if (str == "NEAREST") return ZG_SAMPLING_MODE_NEAREST;
 	if (str == "TRILINEAR") return ZG_SAMPLING_MODE_TRILINEAR;
 	if (str == "ANISOTROPIC") return ZG_SAMPLING_MODE_ANISOTROPIC;
-	sfz_assert_debug(false);
+	sfz_assert(false);
 	return ZG_SAMPLING_MODE_UNDEFINED;
 }
 
@@ -64,7 +64,7 @@ static ZgWrappingMode wrappingModeFromString(const str256& str) noexcept
 {
 	if (str == "CLAMP") return ZG_WRAPPING_MODE_CLAMP;
 	if (str == "REPEAT") return ZG_WRAPPING_MODE_REPEAT;
-	sfz_assert_debug(false);
+	sfz_assert(false);
 	return ZG_WRAPPING_MODE_UNDEFINED;
 }
 
@@ -76,7 +76,7 @@ static ZgDepthFunc depthFuncFromString(const str256& str) noexcept
 	if (str == "NOT_EQUAL") return ZG_DEPTH_FUNC_NOT_EQUAL;
 	if (str == "GREATER") return ZG_DEPTH_FUNC_GREATER;
 	if (str == "GREATER_EQUAL") return ZG_DEPTH_FUNC_GREATER_EQUAL;
-	sfz_assert_debug(false);
+	sfz_assert(false);
 	return ZG_DEPTH_FUNC_LESS;
 }
 
@@ -96,7 +96,7 @@ static ZgTextureFormat textureFormatFromString(const str256& str) noexcept
 
 	if (str == "DEPTH_F32") return ZG_TEXTURE_FORMAT_DEPTH_F32;
 
-	sfz_assert_debug(false);
+	sfz_assert(false);
 	return ZG_TEXTURE_FORMAT_UNDEFINED;
 }
 
@@ -106,7 +106,7 @@ static PipelineBlendMode blendModeFromString(const str256& str) noexcept
 	if (str == "alpha_blending") return PipelineBlendMode::ALPHA_BLENDING;
 	if (str == "additive_blending") return PipelineBlendMode::ADDITIVE_BLENDING;
 
-	sfz_assert_debug(false);
+	sfz_assert(false);
 	return PipelineBlendMode::NO_BLENDING;
 }
 
@@ -151,7 +151,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			FramebufferItem& fbItem = configurable.framebuffers.last();
 
 			str256 name = CHECK_JSON fbNode.accessMap("name").valueStr256();
-			sfz_assert_debug(name != "default");
+			sfz_assert(name != "default");
 			fbItem.name = resStrings.getStringID(name);
 
 			// Resolution type
@@ -192,7 +192,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 					fbItem.renderTargetItems[j].format = textureFormatFromString(
 						CHECK_JSON renderTarget.accessMap("format").valueStr256());
 					float clearValue = CHECK_JSON renderTarget.accessMap("clear_value").valueFloat();
-					sfz_assert_debug(clearValue == 0.0f || clearValue == 1.0f);
+					sfz_assert(clearValue == 0.0f || clearValue == 1.0f);
 					fbItem.renderTargetItems[j].clearValue = clearValue;
 				}
 			}
@@ -207,7 +207,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 					fbItem.depthBufferFormat = textureFormatFromString(
 						CHECK_JSON fbNode.accessMap("depth_buffer_format").valueStr256());
 					float clearValue = CHECK_JSON fbNode.accessMap("depth_buffer_clear_value").valueFloat();
-					sfz_assert_debug(clearValue == 0.0f || clearValue == 1.0f);
+					sfz_assert(clearValue == 0.0f || clearValue == 1.0f);
 					fbItem.depthBufferClearValue = clearValue;
 				}
 				
@@ -234,7 +234,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		item.sourceType = [&]() {
 			if (sourceTypeStr == "spirv") return PipelineSourceType::SPIRV;
 			if (sourceTypeStr == "hlsl") return PipelineSourceType::HLSL;
-			sfz_assert_release(false);
+			sfz_assert_hard(false);
 			return PipelineSourceType::SPIRV;
 		}();
 
@@ -292,7 +292,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 
 		// Render targets
 		ParsedJsonNode renderTargetsNode = pipelineNode.accessMap("render_targets");
-		sfz_assert_debug(renderTargetsNode.isValid());
+		sfz_assert(renderTargetsNode.isValid());
 		item.numRenderTargets = renderTargetsNode.arrayLength();
 		for (uint32_t j = 0; j < item.numRenderTargets; j++) {
 			item.renderTargets[j] =
@@ -382,12 +382,12 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 				BoundRenderTarget boundTarget;
 				boundTarget.textureRegister = CHECK_JSON targetNode.accessMap("register").valueInt();
 				str256 framebufferName = CHECK_JSON targetNode.accessMap("framebuffer").valueStr256();
-				sfz_assert_debug(framebufferName != "debug"); // Can't bind default framebuffer
+				sfz_assert(framebufferName != "debug"); // Can't bind default framebuffer
 				boundTarget.framebuffer = resStrings.getStringID(framebufferName);
 
 				// Check if depth buffer should be bound
 				if (targetNode.accessMap("depth_buffer").isValid()) {
-					sfz_assert_debug(CHECK_JSON targetNode.accessMap("depth_buffer").valueBool());
+					sfz_assert(CHECK_JSON targetNode.accessMap("depth_buffer").valueBool());
 					boundTarget.depthBuffer = true;
 					boundTarget.renderTargetIdx = ~0u;
 				}
@@ -436,7 +436,7 @@ bool allocateStageMemory(RendererState& state) noexcept
 			state.configurable.renderPipelines.find([&](const PipelineRenderItem& item) {
 			return item.name == stage.renderPipelineName;
 		});
-		sfz_assert_debug(pipelineItem != nullptr);
+		sfz_assert(pipelineItem != nullptr);
 		
 		// Allocate CPU memory for constant buffer data
 		uint32_t numConstantBuffers = pipelineItem->pipeline.signature.numConstantBuffers;
@@ -472,13 +472,13 @@ bool allocateStageMemory(RendererState& state) noexcept
 				// Allocate upload buffer
 				item.uploadBuffer =
 					state.gpuAllocatorUpload.allocateBuffer(desc.sizeInBytes);
-				sfz_assert_debug(item.uploadBuffer.valid());
+				sfz_assert(item.uploadBuffer.valid());
 				if (!item.uploadBuffer.valid()) success = false;
 
 				// Allocate device buffer
 				item.deviceBuffer =
 					state.gpuAllocatorDevice.allocateBuffer(desc.sizeInBytes);
-				sfz_assert_debug(item.deviceBuffer.valid());
+				sfz_assert(item.deviceBuffer.valid());
 				if (!item.deviceBuffer.valid()) success = false;
 			});
 
@@ -497,14 +497,14 @@ bool deallocateStageMemory(RendererState& state) noexcept
 			framed.deinitAllStates([&](ConstantBufferMemory& item) {
 
 				// Deallocate upload buffer
-				sfz_assert_debug(item.uploadBuffer.valid());
+				sfz_assert(item.uploadBuffer.valid());
 				state.gpuAllocatorUpload.deallocate(item.uploadBuffer);
-				sfz_assert_debug(!item.uploadBuffer.valid());
+				sfz_assert(!item.uploadBuffer.valid());
 
 				// Deallocate device buffer
-				sfz_assert_debug(item.deviceBuffer.valid());
+				sfz_assert(item.deviceBuffer.valid());
 				state.gpuAllocatorDevice.deallocate(item.deviceBuffer);
-				sfz_assert_debug(!item.deviceBuffer.valid());
+				sfz_assert(!item.deviceBuffer.valid());
 			});
 			
 			// Release fences

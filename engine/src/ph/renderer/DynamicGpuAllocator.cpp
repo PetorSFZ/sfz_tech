@@ -87,9 +87,9 @@ static bool calculateNewBlocks(
 	Block& allocBlockOut,
 	Block& newFreeBlockOut) noexcept
 {
-	sfz_assert_debug((oldFreeBlock.offset % alignment) == 0);
-	sfz_assert_debug(oldFreeBlock.size != 0);
-	sfz_assert_debug((oldFreeBlock.size % alignment) == 0);
+	sfz_assert((oldFreeBlock.offset % alignment) == 0);
+	sfz_assert(oldFreeBlock.size != 0);
+	sfz_assert((oldFreeBlock.size % alignment) == 0);
 
 	// Calculate aligned allocation size
 	uint32_t leftoverAlignedSize = allocSize % alignment;
@@ -97,9 +97,9 @@ static bool calculateNewBlocks(
 	if (leftoverAlignedSize != 0) {
 		alignedAllocSize += (alignment - leftoverAlignedSize);
 	}
-	sfz_assert_debug(allocSize <= alignedAllocSize);
-	sfz_assert_debug(alignedAllocSize <= oldFreeBlock.size);
-	sfz_assert_debug((alignedAllocSize % alignment) == 0);
+	sfz_assert(allocSize <= alignedAllocSize);
+	sfz_assert(alignedAllocSize <= oldFreeBlock.size);
+	sfz_assert((alignedAllocSize % alignment) == 0);
 
 	// Create and return allocation block
 	allocBlockOut = oldFreeBlock;
@@ -120,9 +120,9 @@ static bool calculateNewBlocks(
 static bool createMemoryPage(
 	MemoryPage& page, uint32_t size, ZgMemoryType memoryType, sfz::Allocator* allocator) noexcept
 {
-	sfz_assert_debug(size != 0);
-	sfz_assert_debug((size % BUFFER_ALIGNMENT) == 0);
-	sfz_assert_debug(!page.heap.valid());
+	sfz_assert(size != 0);
+	sfz_assert((size % BUFFER_ALIGNMENT) == 0);
+	sfz_assert(!page.heap.valid());
 	bool heapAllocSuccess = CHECK_ZG page.heap.create(size, memoryType);
 	if (!heapAllocSuccess) return false;
 
@@ -145,7 +145,7 @@ template<typename ItemAllocFunc>
 static bool pageAllocateItem(
 	MemoryPage& page, uint32_t size, Block& allocBlockOut, ItemAllocFunc itemAllocFunc) noexcept
 {
-	sfz_assert_debug(size <= page.largestFreeBlockSize);
+	sfz_assert(size <= page.largestFreeBlockSize);
 
 	// Find first free block big enough
 	// TODO: O(n) linear search, consider replacing with binary search
@@ -187,8 +187,8 @@ static bool pageAllocateItem(
 	for (const Block& block : page.freeBlocks) {
 		page.largestFreeBlockSize = sfzMax(page.largestFreeBlockSize, block.size);
 	}
-	sfz_assert_debug(!(page.freeBlocks.size() != 0 && page.largestFreeBlockSize == 0));
-	sfz_assert_debug((page.largestFreeBlockSize % BUFFER_ALIGNMENT) == 0);
+	sfz_assert(!(page.freeBlocks.size() != 0 && page.largestFreeBlockSize == 0));
+	sfz_assert((page.largestFreeBlockSize % BUFFER_ALIGNMENT) == 0);
 
 	// Increment number of allocation counter
 	page.numAllocations += 1;
@@ -200,11 +200,11 @@ static bool pageAllocateItem(
 
 static void pageDeallocateBlock(MemoryPage& page, Block& allocatedBlock) noexcept
 {
-	sfz_assert_debug(allocatedBlock.size != 0);
-	sfz_assert_debug(allocatedBlock.size <= page.pageSize);
-	sfz_assert_debug((allocatedBlock.offset + allocatedBlock.size) <= page.pageSize);
-	sfz_assert_debug((allocatedBlock.offset % BUFFER_ALIGNMENT) == 0);
-#if !defined(SFZ_NO_DEBUG)
+	sfz_assert(allocatedBlock.size != 0);
+	sfz_assert(allocatedBlock.size <= page.pageSize);
+	sfz_assert((allocatedBlock.offset + allocatedBlock.size) <= page.pageSize);
+	sfz_assert((allocatedBlock.offset % BUFFER_ALIGNMENT) == 0);
+#ifndef NDEBUG
 	// Check that no free block overlaps with the allocated block in debug
 	{
 		uint32_t allocatedBegin = allocatedBlock.offset;
@@ -218,11 +218,11 @@ static void pageDeallocateBlock(MemoryPage& page, Block& allocatedBlock) noexcep
 			//       thought about it too much. Since this is just a sanity check it should be
 			//       fine.
 			bool overlap = blockBegin < allocatedEnd && blockEnd > allocatedBegin;
-			sfz_assert_debug(!overlap);
+			sfz_assert(!overlap);
 
 			// Ensure that blocks are ordered by offset
 			if ((i + 1) < page.freeBlocks.size()) {
-				sfz_assert_debug(block.offset < page.freeBlocks[i + 1].offset);
+				sfz_assert(block.offset < page.freeBlocks[i + 1].offset);
 			}
 		}
 	}
@@ -240,7 +240,7 @@ static void pageDeallocateBlock(MemoryPage& page, Block& allocatedBlock) noexcep
 		insertLoc = page.freeBlocks.size();
 	}
 	else {
-		sfz_assert_debug(page.freeBlocks.size() >= 2);
+		sfz_assert(page.freeBlocks.size() >= 2);
 		for (uint32_t i = 1; i < page.freeBlocks.size(); i++) {
 			Block& prev = page.freeBlocks[i - 1];
 			Block& curr = page.freeBlocks[i];
@@ -250,7 +250,7 @@ static void pageDeallocateBlock(MemoryPage& page, Block& allocatedBlock) noexcep
 			}
 		}
 	}
-	sfz_assert_debug(insertLoc != ~0u);
+	sfz_assert(insertLoc != ~0u);
 
 	// Insert block
 	page.freeBlocks.insert(insertLoc, allocatedBlock);
@@ -284,7 +284,7 @@ static void pageDeallocateBlock(MemoryPage& page, Block& allocatedBlock) noexcep
 
 static uint32_t findAppropriatePage(DynArray<MemoryPage>& pages, uint32_t size) noexcept
 {
-	sfz_assert_debug(size != 0);
+	sfz_assert(size != 0);
 	for (uint32_t i = 0; i < pages.size(); i++) {
 		MemoryPage& page = pages[i];
 		if (page.largestFreeBlockSize >= size) return i;
@@ -298,8 +298,8 @@ static uint32_t findAppropriatePage(DynArray<MemoryPage>& pages, uint32_t size) 
 void DynamicGpuAllocator::init(
 	sfz::Allocator* allocator, ZgMemoryType memoryType, uint32_t pageSize) noexcept
 {
-	sfz_assert_debug((pageSize % BUFFER_ALIGNMENT) == 0);
-	sfz_assert_debug((pageSize % TEXTURE_ALIGNMENT) == 0);
+	sfz_assert((pageSize % BUFFER_ALIGNMENT) == 0);
+	sfz_assert((pageSize % TEXTURE_ALIGNMENT) == 0);
 
 	this->destroy();
 	mState = allocator->newObject<DynamicGpuAllocatorState>("DynamicGpuAllocatorState");
@@ -320,9 +320,9 @@ void DynamicGpuAllocator::swap(DynamicGpuAllocator& other) noexcept
 void DynamicGpuAllocator::destroy() noexcept
 {
 	if (mState != nullptr) {
-		sfz_assert_debug(mState->entries.size() == 0);
-		sfz_assert_debug(mState->totalNumAllocations == mState->totalNumDeallocations);
-		for (MemoryPage& page : mState->pages) sfz_assert_debug(page.numAllocations == 0);
+		sfz_assert(mState->entries.size() == 0);
+		sfz_assert(mState->totalNumAllocations == mState->totalNumDeallocations);
+		for (MemoryPage& page : mState->pages) sfz_assert(page.numAllocations == 0);
 		sfz::Allocator* allocator = mState->allocator;
 		allocator->deleteObject(mState);
 	}
@@ -376,8 +376,8 @@ PageInfo DynamicGpuAllocator::queryPageInfo(uint32_t pageIdx) const noexcept
 zg::Buffer DynamicGpuAllocator::allocateBuffer(uint32_t sizeBytes) noexcept
 {
 	std::lock_guard<std::mutex> lock(mState->mutex);
-	sfz_assert_debug(mState->memoryType != ZG_MEMORY_TYPE_TEXTURE);
-	sfz_assert_debug(mState->memoryType != ZG_MEMORY_TYPE_FRAMEBUFFER);
+	sfz_assert(mState->memoryType != ZG_MEMORY_TYPE_TEXTURE);
+	sfz_assert(mState->memoryType != ZG_MEMORY_TYPE_FRAMEBUFFER);
 
 	// Get index of page
 	uint32_t pageIdx = findAppropriatePage(mState->pages, sizeBytes);
@@ -392,7 +392,7 @@ zg::Buffer DynamicGpuAllocator::allocateBuffer(uint32_t sizeBytes) noexcept
 		// Allocate memory page
 		MemoryPage page;
 		bool createSuccess = createMemoryPage(page, pageSize, mState->memoryType, mState->allocator);
-		sfz_assert_debug(createSuccess);
+		sfz_assert(createSuccess);
 		if (!createSuccess) return zg::Buffer();
 
 		// Insert memory page into list of pages and set page index
@@ -408,7 +408,7 @@ zg::Buffer DynamicGpuAllocator::allocateBuffer(uint32_t sizeBytes) noexcept
 		[&](MemoryPage& page, Block allocBlock) {
 		return CHECK_ZG page.heap.bufferCreate(buffer, allocBlock.offset, allocBlock.size);
 	});
-	sfz_assert_debug(bufferAllocSuccess);
+	sfz_assert(bufferAllocSuccess);
 	if (!bufferAllocSuccess) return zg::Buffer();
 
 	// Store entry with information about allocation
@@ -432,13 +432,13 @@ zg::Texture2D DynamicGpuAllocator::allocateTexture2D(
 	ZgOptimalClearValue optimalClearValue) noexcept
 {
 	std::lock_guard<std::mutex> lock(mState->mutex);
-	sfz_assert_debug(width > 0);
-	sfz_assert_debug(height > 0);
-	sfz_assert_debug(numMipmaps != 0);
-	sfz_assert_debug(numMipmaps <= ZG_MAX_NUM_MIPMAPS);
-	sfz_assert_debug(mState->memoryType != ZG_MEMORY_TYPE_UPLOAD);
-	sfz_assert_debug(mState->memoryType != ZG_MEMORY_TYPE_DOWNLOAD);
-	sfz_assert_debug(mState->memoryType != ZG_MEMORY_TYPE_DEVICE);
+	sfz_assert(width > 0);
+	sfz_assert(height > 0);
+	sfz_assert(numMipmaps != 0);
+	sfz_assert(numMipmaps <= ZG_MAX_NUM_MIPMAPS);
+	sfz_assert(mState->memoryType != ZG_MEMORY_TYPE_UPLOAD);
+	sfz_assert(mState->memoryType != ZG_MEMORY_TYPE_DOWNLOAD);
+	sfz_assert(mState->memoryType != ZG_MEMORY_TYPE_DEVICE);
 
 	// Fill in Texture2D create info and get allocation info in order to find suitable page
 	ZgTexture2DCreateInfo createInfo = {};
@@ -464,7 +464,7 @@ zg::Texture2D DynamicGpuAllocator::allocateTexture2D(
 		// Allocate texture page
 		MemoryPage page;
 		bool createSuccess = createMemoryPage(page, pageSize, mState->memoryType, mState->allocator);
-		sfz_assert_debug(createSuccess);
+		sfz_assert(createSuccess);
 		if (!createSuccess) return zg::Texture2D();
 
 		// Insert texture page into list of pages and set page index
@@ -482,7 +482,7 @@ zg::Texture2D DynamicGpuAllocator::allocateTexture2D(
 		createInfo.sizeInBytes = allocBlock.size;
 		return CHECK_ZG page.heap.texture2DCreate(texture, createInfo);
 	});
-	sfz_assert_debug(texAllocSuccess);
+	sfz_assert(texAllocSuccess);
 	if (!texAllocSuccess) return zg::Texture2D();
 
 	// Store entry with information about allocation
@@ -503,23 +503,23 @@ zg::Texture2D DynamicGpuAllocator::allocateTexture2D(
 void DynamicGpuAllocator::deallocate(zg::Buffer& buffer) noexcept
 {
 	std::lock_guard<std::mutex> lock(mState->mutex);
-	sfz_assert_debug(buffer.valid());
+	sfz_assert(buffer.valid());
 
 	// Get entry
 	AllocEntry* entryPtr = mState->entries.get(buffer.buffer);
-	sfz_assert_debug(entryPtr != nullptr);
+	sfz_assert(entryPtr != nullptr);
 	if (entryPtr == nullptr) return;
 
 	// Remove entry from list of entries
 	AllocEntry entry = *entryPtr;
 	bool entryRemoveSuccess = mState->entries.remove(buffer.buffer);
-	sfz_assert_debug(entryRemoveSuccess);
+	sfz_assert(entryRemoveSuccess);
 
 	// Release buffer
 	buffer.release();
 
 	// Reclaim space
-	sfz_assert_debug(entry.heapPtr != nullptr);
+	sfz_assert(entry.heapPtr != nullptr);
 	bool spaceReclaimed = false;
 	for (uint32_t i = 0; i < mState->pages.size(); i++) {
 		MemoryPage& page = mState->pages[i];
@@ -541,7 +541,7 @@ void DynamicGpuAllocator::deallocate(zg::Buffer& buffer) noexcept
 			break;
 		}
 	}
-	sfz_assert_release(spaceReclaimed);
+	sfz_assert_hard(spaceReclaimed);
 
 	// Increment total num deallocation counter
 	mState->totalNumDeallocations += 1;
@@ -550,23 +550,23 @@ void DynamicGpuAllocator::deallocate(zg::Buffer& buffer) noexcept
 void DynamicGpuAllocator::deallocate(zg::Texture2D& texture) noexcept
 {
 	std::lock_guard<std::mutex> lock(mState->mutex);
-	sfz_assert_debug(texture.valid());
+	sfz_assert(texture.valid());
 
 	// Get entry
 	AllocEntry* entryPtr = mState->entries.get(texture.texture);
-	sfz_assert_debug(entryPtr != nullptr);
+	sfz_assert(entryPtr != nullptr);
 	if (entryPtr == nullptr) return;
 
 	// Remove entry from list of entries
 	AllocEntry entry = *entryPtr;
 	bool entryRemoveSuccess = mState->entries.remove(texture.texture);
-	sfz_assert_debug(entryRemoveSuccess);
+	sfz_assert(entryRemoveSuccess);
 
 	// Release texture
 	texture.release();
 
 	// Reclaim space
-	sfz_assert_debug(entry.heapPtr != nullptr);
+	sfz_assert(entry.heapPtr != nullptr);
 	bool spaceReclaimed = false;
 	for (uint32_t i = 0; i < mState->pages.size(); i++) {
 		MemoryPage& page = mState->pages[i];
@@ -588,7 +588,7 @@ void DynamicGpuAllocator::deallocate(zg::Texture2D& texture) noexcept
 			break;
 		}
 	}
-	sfz_assert_release(spaceReclaimed);
+	sfz_assert_hard(spaceReclaimed);
 
 	// Increment total num deallocation counter
 	mState->totalNumDeallocations += 1;

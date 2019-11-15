@@ -50,7 +50,7 @@ static void zeroGLog(
 		case ZG_LOG_LEVEL_WARNING: return sfz::LogLevel::WARNING;
 		case ZG_LOG_LEVEL_ERROR: return sfz::LogLevel::ERROR_LVL;
 		}
-		sfz_assert_debug(false);
+		sfz_assert(false);
 		return sfz::LogLevel::ERROR_LVL;
 	}();
 

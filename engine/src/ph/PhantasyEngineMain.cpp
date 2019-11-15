@@ -172,7 +172,7 @@ int mainImpl(int, char*[], InitOptions&& options)
 				sfz::gameBaseFolderPath(), iniFileName.str);
 		}
 		else {
-			sfz_assert_release(false);
+			sfz_assert_hard(false);
 		}
 
 		// Load ini file

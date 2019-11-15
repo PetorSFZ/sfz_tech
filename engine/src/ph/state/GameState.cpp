@@ -30,7 +30,7 @@ uint8_t* GameStateHeader::singletonUntyped(uint32_t singletonIndex, uint32_t& si
 {
 	// Get registry, return nullptr if component type is not in registry
 	ArrayHeader* registry = this->singletonRegistryArray();
-	sfz_assert_debug(singletonIndex < registry->size);
+	sfz_assert(singletonIndex < registry->size);
 	if (registry->size <= singletonIndex) return nullptr;
 
 	// Get registry entry, return nullptr if component type has no data
@@ -45,7 +45,7 @@ const uint8_t* GameStateHeader::singletonUntyped(uint32_t singletonIndex, uint32
 {
 	// Get registry, return nullptr if component type is not in registry
 	const ArrayHeader* registry = this->singletonRegistryArray();
-	sfz_assert_debug(singletonIndex < registry->size);
+	sfz_assert(singletonIndex < registry->size);
 	if (registry->size <= singletonIndex) return nullptr;
 
 	// Get registry entry, return nullptr if component type has no data
@@ -203,7 +203,7 @@ const uint8_t* GameStateHeader::entityGenerations() const noexcept
 
 uint8_t GameStateHeader::getGeneration(uint32_t entityId) const noexcept
 {
-	sfz_assert_debug(entityId < this->maxNumEntities);
+	sfz_assert(entityId < this->maxNumEntities);
 	const uint8_t* generations = this->entityGenerations();
 	return generations[entityId];
 }
@@ -352,9 +352,9 @@ GameStateContainer createGameState(
 	const uint32_t* componentSizes,
 	Allocator* allocator) noexcept
 {
-	sfz_assert_debug(numSingletonStructs <= 64);
-	sfz_assert_debug(maxNumEntities <= GAME_STATE_ECS_MAX_NUM_ENTITIES);
-	sfz_assert_debug(numComponentTypes <= 63); // Not 64 because one is reserved for active bit
+	sfz_assert(numSingletonStructs <= 64);
+	sfz_assert(maxNumEntities <= GAME_STATE_ECS_MAX_NUM_ENTITIES);
+	sfz_assert(numComponentTypes <= 63); // Not 64 because one is reserved for active bit
 
 	uint32_t totalSizeBytes = 0;
 
@@ -370,7 +370,7 @@ GameStateContainer createGameState(
 	// Singleton structs
 	SingletonRegistryEntry singleRegistryEntries[64] = {};
 	for (uint32_t i = 0; i < numSingletonStructs; i++) {
-		sfz_assert_debug(singletonStructSizes[i] != 0);
+		sfz_assert(singletonStructSizes[i] != 0);
 
 		// Fill singleton registry
 		singleRegistryEntries[i].offset = totalSizeBytes;

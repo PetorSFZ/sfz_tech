@@ -514,11 +514,11 @@ void GameStateEditor::init(
 	// Set rest of singleton infos
 	for (uint32_t i = 0; i < numSingletonInfos; i++) {
 		SingletonInfo& info = singletonInfos[i];
-		sfz_assert_debug(info.singletonIndex < 64);
+		sfz_assert(info.singletonIndex < 64);
 
 		ReducedSingletonInfo& target = mSingletonInfos[info.singletonIndex];
 		bool& set = singletonInfoSet[info.singletonIndex];
-		sfz_assert_debug(!set);
+		sfz_assert(!set);
 
 		set = true;
 		target.singletonName.printf("%02u - %s", info.singletonIndex, info.singletonName.str);
@@ -530,7 +530,7 @@ void GameStateEditor::init(
 
 	// Ensure that they are all set
 	for (uint32_t i = 0; i < mNumSingletonInfos; i++) {
-		sfz_assert_debug(singletonInfoSet[i]);
+		sfz_assert(singletonInfoSet[i]);
 	}
 
 	// Temp variable to ensure all necessary component infos are set
@@ -543,12 +543,12 @@ void GameStateEditor::init(
 	// Set rest of component infos
 	for (uint32_t i = 0; i < numComponentInfos; i++) {
 		ComponentInfo& info = componentInfos[i];
-		sfz_assert_debug(info.componentType != 0);
-		sfz_assert_debug(info.componentType < 64);
+		sfz_assert(info.componentType != 0);
+		sfz_assert(info.componentType < 64);
 
 		ReducedComponentInfo& target = mComponentInfos[info.componentType];
 		bool& set = componentInfoSet[info.componentType];
-		sfz_assert_debug(!set);
+		sfz_assert(!set);
 
 		set = true;
 		target.componentName.printf("%02u - %s", info.componentType, info.componentName.str);
@@ -561,7 +561,7 @@ void GameStateEditor::init(
 
 	// Ensure that they are all set
 	for (uint32_t i = 0; i < mNumComponentInfos; i++) {
-		sfz_assert_debug(componentInfoSet[i]);
+		sfz_assert(componentInfoSet[i]);
 	}
 }
 
@@ -711,7 +711,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 	const sfz::vec4 INACTIVE_TEXT_COLOR = sfz::vec4(0.35f, 0.35f, 0.35f, 1.0f);
 
 	// We need component info for each component type in ECS
-	sfz_assert_debug(state->numComponentTypes == mNumComponentInfos);
+	sfz_assert(state->numComponentTypes == mNumComponentInfos);
 
 	// Get some stuff from the game state
 	ComponentMask* masks = state->componentMasks();

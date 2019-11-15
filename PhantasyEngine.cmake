@@ -77,7 +77,7 @@ function(phSetCompilerFlags)
 		# /DEBUG = "creates debugging information for the .exe file or DLL"
 		# /O2 = Optimize code for fastest speed
 		# /fp:fast = "optimize floating-point code for speed at the expense of accuracy and correctness"
-		# /DSFZ_NO_DEBUG = defines the "SFZ_NO_DEBUG" macro, which disables sfz_assert_debug()
+		# /DNDEBUG = defines the "NDEBUG" macro, which disables asserts
 
 		# Visual Studio 2019+ exclusive
 		# /Ob3 = "which is a more aggressive version of -Ob2"
@@ -89,15 +89,15 @@ function(phSetCompilerFlags)
 		if(MSVC_VERSION LESS_EQUAL 1919)
 			set(PH_CMAKE_CXX_FLAGS "/W4 /wd4201 /std:c++17 /permissive- /Zc:twoPhase- /Zi /Zf /EHsc /GR- /arch:AVX /D_CRT_SECURE_NO_WARNINGS /DWIN32 /D_WINDOWS /JMC /utf-8")
 			set(PH_CMAKE_CXX_FLAGS_DEBUG "/MDd /Od /DEBUG")
-			set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /fp:fast /DEBUG /DSFZ_NO_DEBUG")
-			set(PH_CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /fp:fast /DNDEBUG /DSFZ_NO_DEBUG")
+			set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /fp:fast /DEBUG /DNDEBUG")
+			set(PH_CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /fp:fast /DNDEBUG")
 
 		# Visual Studio 2019+
 		else()
 			set(PH_CMAKE_CXX_FLAGS "/W4 /wd4201 /wd26451 /std:c++17 /permissive- /Zc:twoPhase- /Zi /Zf /EHsc /GR- /arch:AVX /D_CRT_SECURE_NO_WARNINGS /DWIN32 /D_WINDOWS /JMC /utf-8 /openmp:experimental")
 			set(PH_CMAKE_CXX_FLAGS_DEBUG "/MDd /Od /DEBUG")
-			set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /Ob3 /fp:fast /DEBUG /DSFZ_NO_DEBUG")
-			set(PH_CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob3 /fp:fast /DNDEBUG /DSFZ_NO_DEBUG")
+			set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /Ob3 /fp:fast /DEBUG /DNDEBUG")
+			set(PH_CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob3 /fp:fast /DNDEBUG")
 		endif()
 
 		if (PH_STATIC_LINK_RENDERER)
@@ -148,11 +148,11 @@ function(phSetCompilerFlags)
 		# -s TOTAL_MEMORY=1073741824 = 1GiB heap, change this value if you need more
 		# -DPH_STATIC_LINK_RENDERER = Link renderer statically instead of dynamically
 		# --preload-file resources = Load "resources" directory into generated javascript
-		# -DSFZ_NO_DEBUG = Used by sfzCore to disable assertions and such on release builds
+		# -DNDEBUG = Used to disable assertions and such on release builds
 		set(PH_CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -fno-rtti -fno-strict-aliasing -s USE_SDL=2 -s TOTAL_MEMORY=1073741824 -s DEMANGLE_SUPPORT=1 -s ERROR_ON_MISSING_LIBRARIES=0 -DPH_STATIC_LINK_RENDERER --preload-file res --preload-file res_ph --preload-file res_compgl")
 		set(PH_CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-		set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
-		set(PH_CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
+		set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DNDEBUG")
+		set(PH_CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DNDEBUG")
 
 		set(PH_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 		set(PH_CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
@@ -166,8 +166,8 @@ function(phSetCompilerFlags)
 	elseif(IOS)
 		set(PH_CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -fno-rtti -fno-strict-aliasing -DSFZ_IOS -DPH_STATIC_LINK_RENDERER")
 		set(PH_CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-		set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
-		set(PH_CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
+		set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DNDEBUG")
+		set(PH_CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DNDEBUG")
 
 		set(PH_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 		set(PH_CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
@@ -185,11 +185,11 @@ function(phSetCompilerFlags)
 		# -march=sandybridge = Require at least a Sandy Bridge Intel CPU to run code
 		# -fno-rtti = Disable RTTI
 		# -fno-strict-aliasing = Disable strict aliasing optimizations
-		# -DSFZ_NO_DEBUG = Used by sfzCore to disable assertions and such on release builds
+		# -DNDEBUG = Used to disable assertions and such on release builds
 		set(PH_CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -march=sandybridge -fno-rtti -fno-strict-aliasing")
 		set(PH_CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-		set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DSFZ_NO_DEBUG")
-		set(PH_CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DSFZ_NO_DEBUG")
+		set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DNDEBUG")
+		set(PH_CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DNDEBUG")
 
 		set(PH_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 		set(PH_CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})

@@ -121,7 +121,7 @@ static uint32_t sizeOfElement(ImageType imageType) noexcept
 	case ImageType::RG_F32: return 2 * sizeof(float);
 	case ImageType::RGBA_F32: return 4 * sizeof(float);
 	}
-	sfz_assert_debug(false);
+	sfz_assert(false);
 	return 0;
 }
 
@@ -212,7 +212,7 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 
 	default:
 		// Should never happen
-		sfz_assert_release(false);
+		sfz_assert_hard(false);
 	}
 
 	// Free temp memory used by stb_image and return image
@@ -223,8 +223,8 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 
 void flipVertically(Image& image, Allocator* allocator) noexcept
 {
-	sfz_assert_debug(image.rawData.data() != nullptr);
-	sfz_assert_debug((image.height % 2) == 0);
+	sfz_assert(image.rawData.data() != nullptr);
+	sfz_assert((image.height % 2) == 0);
 
 	int32_t pitch = image.width * image.bytesPerPixel;
 	uint8_t* buffer = (uint8_t*)allocator->allocate(uint64_t(pitch), 32, "flipVertically()");
@@ -243,9 +243,9 @@ void flipVertically(Image& image, Allocator* allocator) noexcept
 
 bool saveImagePng(const Image& image, const char* path) noexcept
 {
-	sfz_assert_debug(image.rawData.data() != nullptr);
-	sfz_assert_debug(image.width > 0);
-	sfz_assert_debug(image.height > 0);
+	sfz_assert(image.rawData.data() != nullptr);
+	sfz_assert(image.width > 0);
+	sfz_assert(image.height > 0);
 
 	int res = stbi_write_png(
 		path, image.width, image.height, image.bytesPerPixel, image.rawData.data(), 0);

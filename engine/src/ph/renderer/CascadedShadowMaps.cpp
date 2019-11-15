@@ -41,19 +41,19 @@ CascadedShadowMapInfo calculateCascadedShadowMapInfo(
 	uint32_t numLevels,
 	const float* levelDists) noexcept
 {
-	sfz_assert_debug(!sfz::approxEqual(camDir, vec3(0.0f)));
-	sfz_assert_debug(!sfz::approxEqual(camUp, vec3(0.0f)));
-	sfz_assert_debug(0.0f < camVertFovDegs);
-	sfz_assert_debug(camVertFovDegs < 180.0f);
-	sfz_assert_debug(0.0f < camAspect);
-	sfz_assert_debug(0.0f < camNear);
-	sfz_assert_debug(!sfz::approxEqual(lightDir, vec3(0.0f)));
-	sfz_assert_debug(0.0f < shadowHeightDist);
-	sfz_assert_debug(0 < numLevels);
-	sfz_assert_debug(numLevels <= MAX_NUM_CASCADED_SHADOW_MAP_LEVELS);
-	sfz_assert_debug(camNear < levelDists[0]);
+	sfz_assert(!sfz::approxEqual(camDir, vec3(0.0f)));
+	sfz_assert(!sfz::approxEqual(camUp, vec3(0.0f)));
+	sfz_assert(0.0f < camVertFovDegs);
+	sfz_assert(camVertFovDegs < 180.0f);
+	sfz_assert(0.0f < camAspect);
+	sfz_assert(0.0f < camNear);
+	sfz_assert(!sfz::approxEqual(lightDir, vec3(0.0f)));
+	sfz_assert(0.0f < shadowHeightDist);
+	sfz_assert(0 < numLevels);
+	sfz_assert(numLevels <= MAX_NUM_CASCADED_SHADOW_MAP_LEVELS);
+	sfz_assert(camNear < levelDists[0]);
 	for (uint32_t i = 1; i < numLevels; i++) {
-		sfz_assert_debug(levelDists[i - 1] < levelDists[i]);
+		sfz_assert(levelDists[i - 1] < levelDists[i]);
 	}
 
 	// Calculate inverse view matrix

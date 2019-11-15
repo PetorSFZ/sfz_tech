@@ -75,7 +75,7 @@ bool ImGuiRenderer::init(
 	if (!pipelineSuccess) return false;
 
 	// Allocate memory for font texture
-	sfz_assert_release(fontTextureView.type == ImageType::R_U8);
+	sfz_assert_hard(fontTextureView.type == ImageType::R_U8);
 	ZgTexture2DCreateInfo texCreateInfo = {};
 	texCreateInfo.format = ZG_TEXTURE_FORMAT_R_U8_UNORM;
 	texCreateInfo.width = fontTextureView.width;
@@ -140,7 +140,7 @@ bool ImGuiRenderer::init(
 
 		frameStateIdx += 1;
 	});
-	sfz_assert_debug(uploadHeapOffset == uploadHeapNumBytes);
+	sfz_assert(uploadHeapOffset == uploadHeapNumBytes);
 
 	if (!memSuccess) return false;
 
@@ -200,8 +200,8 @@ void ImGuiRenderer::render(
 	const phImguiCommand* commands,
 	uint32_t numCommands) noexcept
 {
-	sfz_assert_release(numVertices < IMGUI_MAX_NUM_VERTICES);
-	sfz_assert_release(numIndices < IMGUI_MAX_NUM_INDICES);
+	sfz_assert_hard(numVertices < IMGUI_MAX_NUM_VERTICES);
+	sfz_assert_hard(numIndices < IMGUI_MAX_NUM_INDICES);
 
 	// Get current frame's resources and then wait until they are available (i.e. the frame they
 	// are part of has finished rendering).
@@ -269,7 +269,7 @@ void ImGuiRenderer::render(
 	// Render ImGui commands
 	for (uint32_t i = 0; i < numCommands; i++) {
 		const phImguiCommand& cmd = commands[i];
-		sfz_assert_debug((cmd.numIndices % 3) == 0);
+		sfz_assert((cmd.numIndices % 3) == 0);
 
 		ZgFramebufferRect scissorRect = {};
 		scissorRect.topLeftX = uint32_t(cmd.clipRect.x * imguiInvScaleFactor);

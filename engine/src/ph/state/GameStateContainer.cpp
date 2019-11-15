@@ -32,8 +32,8 @@ namespace ph {
 	GameStateContainer GameStateContainer::createRaw(
 		uint64_t numBytes, sfz::Allocator* allocator) noexcept
 {
-	sfz_assert_debug(allocator != nullptr);
-	sfz_assert_debug(0 < numBytes);
+	sfz_assert(allocator != nullptr);
+	sfz_assert(0 < numBytes);
 
 	GameStateContainer container;
 	container.mAllocator = allocator;
@@ -48,17 +48,17 @@ namespace ph {
 
 void GameStateContainer::cloneTo(GameStateContainer& state) noexcept
 {
-	sfz_assert_debug(state.mGameStateMemoryChunk != nullptr);
-	sfz_assert_debug(this->mNumBytes == state.mNumBytes);
+	sfz_assert(state.mGameStateMemoryChunk != nullptr);
+	sfz_assert(this->mNumBytes == state.mNumBytes);
 
 	std::memcpy(state.mGameStateMemoryChunk, this->mGameStateMemoryChunk, this->mNumBytes);
 }
 
 GameStateContainer GameStateContainer::clone(Allocator* allocator) noexcept
 {
-	sfz_assert_debug(this->mGameStateMemoryChunk != nullptr);
-	sfz_assert_debug(this->mNumBytes != 0);
-	sfz_assert_debug(allocator != nullptr);
+	sfz_assert(this->mGameStateMemoryChunk != nullptr);
+	sfz_assert(this->mNumBytes != 0);
+	sfz_assert(allocator != nullptr);
 
 	GameStateContainer container;
 	container.mAllocator = allocator;

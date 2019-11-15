@@ -160,7 +160,7 @@ static DataAccess accessData(
 	tmp.compDims = ComponentDimensions(accessor.type);
 
 	// For now we require that that there is no padding between elements in buffer
-	sfz_assert_release(
+	sfz_assert_hard(
 		bufferView.byteStride == 0 ||
 		bufferView.byteStride == size_t(numDimensions(tmp.compDims) * numBytes(tmp.compType)));
 
@@ -382,9 +382,9 @@ static bool extractAssets(
 		// TINYGLTF_MODE_TRIANGLES (4)
 		// TINYGLTF_MODE_TRIANGLE_STRIP (5)
 		// TINYGLTF_MODE_TRIANGLE_FAN (6)
-		sfz_assert_release(primitive.mode == TINYGLTF_MODE_TRIANGLES);
+		sfz_assert_hard(primitive.mode == TINYGLTF_MODE_TRIANGLES);
 
-		sfz_assert_release(
+		sfz_assert_hard(
 			primitive.indices >= 0 && primitive.indices < int(model.accessors.size()));
 
 		// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#geometry
@@ -394,27 +394,27 @@ static bool extractAssets(
 		//
 		// Stupidly assume positions, normals, and texcoord_0 exists
 		DataAccess posAccess = accessData(model, primitive, "POSITION");
-		sfz_assert_release(posAccess.rawPtr != nullptr);
-		sfz_assert_release(posAccess.compType == ComponentType::FLOAT32);
-		sfz_assert_release(posAccess.compDims == ComponentDimensions::VEC3);
+		sfz_assert_hard(posAccess.rawPtr != nullptr);
+		sfz_assert_hard(posAccess.compType == ComponentType::FLOAT32);
+		sfz_assert_hard(posAccess.compDims == ComponentDimensions::VEC3);
 
 		DataAccess normalAccess = accessData(model, primitive, "NORMAL");
-		sfz_assert_release(normalAccess.rawPtr != nullptr);
-		sfz_assert_release(normalAccess.compType == ComponentType::FLOAT32);
-		sfz_assert_release(normalAccess.compDims == ComponentDimensions::VEC3);
+		sfz_assert_hard(normalAccess.rawPtr != nullptr);
+		sfz_assert_hard(normalAccess.compType == ComponentType::FLOAT32);
+		sfz_assert_hard(normalAccess.compDims == ComponentDimensions::VEC3);
 
 		DataAccess texcoord0Access = accessData(model, primitive, "TEXCOORD_0");
-		sfz_assert_release(texcoord0Access.rawPtr != nullptr)
-		sfz_assert_release(texcoord0Access.compType == ComponentType::FLOAT32);
-		sfz_assert_release(texcoord0Access.compDims == ComponentDimensions::VEC2);
+		sfz_assert_hard(texcoord0Access.rawPtr != nullptr)
+		sfz_assert_hard(texcoord0Access.compType == ComponentType::FLOAT32);
+		sfz_assert_hard(texcoord0Access.compDims == ComponentDimensions::VEC2);
 
 		// Assume texcoord_1 does NOT exist
 		DataAccess texcoord1Access = accessData(model, primitive, "TEXCOORD_1");
-		sfz_assert_release(texcoord1Access.rawPtr == nullptr);
+		sfz_assert_hard(texcoord1Access.rawPtr == nullptr);
 
 		// Create vertices from positions and normals
 		// TODO: Texcoords
-		sfz_assert_release(posAccess.numElements == normalAccess.numElements);
+		sfz_assert_hard(posAccess.numElements == normalAccess.numElements);
 		uint32_t compVertexOffset = meshOut.vertices.size();
 		for (uint32_t j = 0; j < posAccess.numElements; j++) {
 			Vertex vertex;
@@ -426,8 +426,8 @@ static bool extractAssets(
 
 		// Create indices
 		DataAccess idxAccess = accessData(model, primitive.indices);
-		sfz_assert_release(idxAccess.rawPtr != nullptr);
-		sfz_assert_release(idxAccess.compDims == ComponentDimensions::SCALAR);
+		sfz_assert_hard(idxAccess.rawPtr != nullptr);
+		sfz_assert_hard(idxAccess.compDims == ComponentDimensions::SCALAR);
 		phMeshComp.firstIndex = meshOut.indices.size();
 		phMeshComp.numIndices = idxAccess.numElements;
 		if (idxAccess.compType == ComponentType::UINT32) {
@@ -441,12 +441,12 @@ static bool extractAssets(
 			}
 		}
 		else {
-			sfz_assert_release(false);
+			sfz_assert_hard(false);
 		}
 
 		// Material
 		uint32_t materialIdx = primitive.material < 0 ? 0 : primitive.material;
-		sfz_assert_release(materialIdx < meshOut.materials.size());
+		sfz_assert_hard(materialIdx < meshOut.materials.size());
 		phMeshComp.materialIdx = materialIdx;
 
 		// Add component to mesh

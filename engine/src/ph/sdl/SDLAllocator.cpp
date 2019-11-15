@@ -87,7 +87,7 @@ static void* SDLCALL reallocBridge(void* mem, size_t size)
 		// TODO: If we reach here it might be because we don't support the special case where the
 		// memory was allocated with the original allocator. Should hopefully never happen.
 		SFZ_ERROR("SDL", "reallocBridge() failed");
-		sfz_assert_release(false);
+		sfz_assert_hard(false);
 	}
 	size_t sizePrevAlloc = *sizePtr;
 

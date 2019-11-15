@@ -69,7 +69,7 @@ struct Entity final {
 
 	static Entity create(uint32_t id, uint8_t generation) noexcept
 	{
-		sfz_assert_debug(id == (id & ENTITY_ID_PART_MASK));
+		sfz_assert(id == (id & ENTITY_ID_PART_MASK));
 		Entity tmp;
 		tmp.rawBits = (uint32_t(generation) << ENTITY_ID_NUM_BITS) | (id & ENTITY_ID_PART_MASK);
 		return tmp;
