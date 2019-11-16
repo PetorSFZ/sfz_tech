@@ -31,7 +31,7 @@ namespace sfz {
 
 FrametimeStats::FrametimeStats(uint32_t maxNumSamples) noexcept
 {
-	mSamples.init(maxNumSamples, getDefaultAllocator(), "FrametimeStats");
+	mSamples.init(maxNumSamples, getDefaultAllocator(), sfz_dbg("FrametimeStats"));
 	mString = DynString();
 	this->reset();
 }

@@ -46,28 +46,28 @@ TEST_CASE("ArenaAllocator: Stack based memory", "[sfz::ArenaAllocator]")
 	REQUIRE(arena.numPaddingBytes() == 0);
 
 	// Do some allocations
-	uint32_t* first = (uint32_t*)arena.allocate(sizeof(uint32_t), sizeof(uint32_t));
+	uint32_t* first = (uint32_t*)arena.allocate(sfz_dbg(""), sizeof(uint32_t), sizeof(uint32_t));
 	REQUIRE(arena.numBytesAllocated() == 4);
 	REQUIRE(arena.numPaddingBytes() == 0);
 	REQUIRE(first == (uint32_t*)&memoryHeap[0]);
 
-	uint32_t* second = (uint32_t*)arena.allocate(sizeof(uint32_t), sizeof(uint32_t));
+	uint32_t* second = (uint32_t*)arena.allocate(sfz_dbg(""), sizeof(uint32_t), sizeof(uint32_t));
 	REQUIRE(arena.numBytesAllocated() == 8);
 	REQUIRE(arena.numPaddingBytes() == 0);
 	REQUIRE(second == (uint32_t*)&memoryHeap[4]);
 
-	uint32_t* third = (uint32_t*)arena.allocate(sizeof(uint32_t), sizeof(uint32_t));
+	uint32_t* third = (uint32_t*)arena.allocate(sfz_dbg(""), sizeof(uint32_t), sizeof(uint32_t));
 	REQUIRE(arena.numBytesAllocated() == 12);
 	REQUIRE(arena.numPaddingBytes() == 0);
 	REQUIRE(third == (uint32_t*)&memoryHeap[8]);
 
-	uint32_t* fourth = (uint32_t*)arena.allocate(sizeof(uint32_t), sizeof(uint32_t));
+	uint32_t* fourth = (uint32_t*)arena.allocate(sfz_dbg(""), sizeof(uint32_t), sizeof(uint32_t));
 	REQUIRE(arena.numBytesAllocated() == 16);
 	REQUIRE(arena.numPaddingBytes() == 0);
 	REQUIRE(fourth == (uint32_t*)&memoryHeap[12]);
 
 	SFZ_INFO("ArenaAllocator Tests", "The warning below is expected, ignore");
-	void* fifth = arena.allocate(1, 1);
+	void* fifth = arena.allocate(sfz_dbg(""), 1, 1);
 	REQUIRE(arena.numBytesAllocated() == 16);
 	REQUIRE(arena.numPaddingBytes() == 0);
 	REQUIRE(fifth == nullptr);
@@ -76,12 +76,12 @@ TEST_CASE("ArenaAllocator: Stack based memory", "[sfz::ArenaAllocator]")
 	arena.reset();
 
 	// Allocations with larger alignment requirements
-	uint32_t* first2 = (uint32_t*)arena.allocate(sizeof(uint32_t), sizeof(uint32_t));
+	uint32_t* first2 = (uint32_t*)arena.allocate(sfz_dbg(""), sizeof(uint32_t), sizeof(uint32_t));
 	REQUIRE(arena.numBytesAllocated() == 4);
 	REQUIRE(arena.numPaddingBytes() == 0);
 	REQUIRE(first2 == (uint32_t*)&memoryHeap[0]);
 
-	uint32_t* largeAligned = (uint32_t*)arena.allocate(sizeof(uint32_t), 8);
+	uint32_t* largeAligned = (uint32_t*)arena.allocate(sfz_dbg(""), sizeof(uint32_t), 8);
 	REQUIRE(arena.numBytesAllocated() == 12);
 	REQUIRE(arena.numPaddingBytes() == 4);
 	REQUIRE(largeAligned == (uint32_t*)&memoryHeap[8]);

@@ -148,7 +148,7 @@ template<typename T, typename... Args>
 UniquePtr<T> makeUnique(Allocator* allocator, Args&&... args) noexcept
 {
 	return UniquePtr<T>(
-		allocator->newObject<T>("UniquePtr", std::forward<Args>(args)...), allocator);
+		allocator->newObject<T>(sfz_dbg("UniquePtr"), std::forward<Args>(args)...), allocator);
 }
 
 template<typename T, typename... Args>
@@ -164,7 +164,7 @@ template<typename T>
 SharedPtr<T>::SharedPtr(T* object, Allocator* allocator) noexcept
 {
 	mPtr = object;
-	mState = allocator->newObject<detail::SharedPtrState>("SharedPtrState");
+	mState = allocator->newObject<detail::SharedPtrState>(sfz_dbg("SharedPtrStr"));
 	mState->allocator = allocator;
 	mState->refCount = 1;
 }
@@ -184,7 +184,7 @@ SharedPtr<T>::SharedPtr(UniquePtr<T2>&& subclassPtr) noexcept
 	static_assert(std::is_base_of<T,T2>::value || std::is_same<T,T2>::value, "T2 is not a subclass of T");
 	if (subclassPtr == nullptr) return;
 
-	mState = subclassPtr.allocator()-> template newObject<detail::SharedPtrState>("SharedPtrState");
+	mState = subclassPtr.allocator()-> template newObject<detail::SharedPtrState>(sfz_dbg("SharedPtrState"));
 	mState->allocator = subclassPtr.allocator();
 	mState->refCount = 1;
 	mPtr = static_cast<T*>(subclassPtr.take());
@@ -350,7 +350,7 @@ template<typename T, typename... Args>
 SharedPtr<T> makeShared(Allocator* allocator, Args&&... args) noexcept
 {
 	return SharedPtr<T>(
-		allocator->newObject<T>("SharedPtr", std::forward<Args>(args)...), allocator);
+		allocator->newObject<T>(sfz_dbg("SharedPtr"), std::forward<Args>(args)...), allocator);
 }
 
 template<typename T, typename... Args>

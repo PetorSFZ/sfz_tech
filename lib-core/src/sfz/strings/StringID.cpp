@@ -67,7 +67,7 @@ void StringCollection::createStringCollection(uint32_t initialCapacity, Allocato
 {
 	this->destroy();
 
-	mImpl = allocator->newObject<StringCollectionImpl>("StringCollectionImpl");
+	mImpl = allocator->newObject<StringCollectionImpl>(sfz_dbg("StringCollectionImpl"));
 	mImpl->allocator = allocator;
 	mImpl->strings.create(initialCapacity, allocator);
 }

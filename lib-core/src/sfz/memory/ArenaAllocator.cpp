@@ -53,10 +53,9 @@ void ArenaAllocator::reset() noexcept
 // ArenaAllocator: Implemented sfz::Allocator methods
 // ------------------------------------------------------------------------------------------------
 
-void* ArenaAllocator::allocate(
-	uint64_t size, uint64_t alignment, const char* name) noexcept
+void* ArenaAllocator::allocate(DbgInfo dbg, uint64_t size, uint64_t alignment) noexcept
 {
-	(void)name;
+	(void)dbg;
 	sfz_assert(isPowerOfTwo(alignment));
 
 	// Get next suitable offset for allocation

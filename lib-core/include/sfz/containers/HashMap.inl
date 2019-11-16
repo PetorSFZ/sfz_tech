@@ -187,7 +187,8 @@ void HashMap<K,V,Descr>::rehash(uint32_t suggestedCapacity) noexcept
 	HashMap tmp;
 	tmp.mCapacity = newCapacity;
 	tmp.mAllocator = mAllocator;
-	tmp.mDataPtr = (uint8_t*)mAllocator->allocate(tmp.sizeOfAllocatedMemory(), ALIGNMENT, "HashMap");
+	tmp.mDataPtr =
+		(uint8_t*)mAllocator->allocate(sfz_dbg("HashMap"), tmp.sizeOfAllocatedMemory(), ALIGNMENT);
 	std::memset(tmp.mDataPtr, 0, tmp.sizeOfAllocatedMemory());
 
 	// Iterate over all pairs of objects in this HashMap and move them to the new one

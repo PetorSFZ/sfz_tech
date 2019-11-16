@@ -69,7 +69,7 @@ static DynArray<T> readFileInternal(const char* path, bool binaryMode, Allocator
 	}
 
 	// Create array with enough capacity to fit file
-	DynArray<T> temp(uint32_t(size + 1), allocator, "readFileInternal() tmp");
+	DynArray<T> temp(uint32_t(size + 1), allocator, sfz_dbg("readFileInternal()"));
 
 	// Read the file into the array
 	uint8_t buffer[BUFSIZ];
@@ -99,7 +99,7 @@ const char* myDocumentsPath() noexcept
 {
 	static const char* path = []() {
 #ifdef _WIN32
-		char* tmp = static_cast<char*>(getDefaultAllocator()->allocate(MAX_PATH + 2, 32, "sfz::myDocumentsPath()"));
+		char* tmp = static_cast<char*>(getDefaultAllocator()->allocate(sfz_dbg("sfz::myDocumentsPath()"), MAX_PATH + 2, 32));
 		HRESULT result = SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, tmp);
 		if (result != S_OK) SFZ_ERROR_AND_EXIT("sfzCore", "%s", "Could not retrieve MyDocuments path.");
 
@@ -113,7 +113,7 @@ const char* myDocumentsPath() noexcept
 		const char* envHome = std::getenv("HOME");
 		size_t pathLen = std::strlen(envHome);
 
-		char* tmp = static_cast<char*>(getDefaultAllocator()->allocate(pathLen + 2, 32, "sfz::myDocumentsPath()"));
+		char* tmp = static_cast<char*>(getDefaultAllocator()->allocate(sfz_dbg("sfz::myDocumentsPath()"), pathLen + 2, 32));
 		std::strncpy(tmp, envHome, pathLen);
 
 		// Add path separator
@@ -130,7 +130,7 @@ const char* gameBaseFolderPath() noexcept
 	static const char* path = []() {
 		const char* myDocuments = myDocumentsPath();
 		size_t len = std::strlen(myDocuments);
-		char* tmp = static_cast<char*>(getDefaultAllocator()->allocate(len + 32, 32, "sfz::gameBaseFolderPath()"));
+		char* tmp = static_cast<char*>(getDefaultAllocator()->allocate(sfz_dbg("sfz::gameBaseFolderPath()"), len + 32, 32));
 #ifdef __APPLE__
 		std::snprintf(tmp, len + 32, "%s%s", myDocuments, "Library/Application Support/");
 #else
@@ -278,7 +278,7 @@ DynString readTextFile(const char* path, Allocator* allocator) noexcept
 	DynArray<char> strData = readFileInternal<char>(path, false, allocator);
 	if (strData.size() == 0 || strData[strData.size() - 1] != '\0') {
 		if (strData.data() == nullptr) {
-			strData.init(0, allocator, "readTextFile()");
+			strData.init(0, allocator, sfz_dbg("readTextFile()"));
 		}
 		strData.add('\0');
 	}

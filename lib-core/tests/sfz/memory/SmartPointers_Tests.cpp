@@ -70,7 +70,7 @@ TEST_CASE("Basic UniquePtr tests", "[sfz::UniquePtr]")
 	UniquePtr<TestClass> ptr = nullptr;
 	REQUIRE(ptr == nullptr);
 	ptr = UniquePtr<TestClass>(
-		getDefaultAllocator()->newObject<TestClass>("", &flag), getDefaultAllocator());
+		getDefaultAllocator()->newObject<TestClass>(sfz_dbg(""), &flag), getDefaultAllocator());
 	REQUIRE(ptr.get() != nullptr);
 	REQUIRE(ptr != nullptr);
 	REQUIRE(ptr.get()->flagPtr == &flag);
@@ -155,7 +155,7 @@ TEST_CASE("Basic SharedPtr tests", "[sfz::SharedPtr]")
 	};
 
 	REQUIRE(flag == 0);
-	TestClass* item = getDefaultAllocator()->newObject<TestClass>("", &flag);
+	TestClass* item = getDefaultAllocator()->newObject<TestClass>(sfz_dbg(""),  &flag);
 	REQUIRE(flag == 1);
 
 	{
@@ -172,7 +172,7 @@ TEST_CASE("Basic SharedPtr tests", "[sfz::SharedPtr]")
 	{
 		REQUIRE(flag == 0);
 		SharedPtr<TestClass> ptr(
-			getDefaultAllocator()->newObject<TestClass>("", &flag), getDefaultAllocator());
+			getDefaultAllocator()->newObject<TestClass>(sfz_dbg(""), &flag), getDefaultAllocator());
 		REQUIRE(ptr != nullptr);
 		REQUIRE(ptr.refCount() == 1);
 		REQUIRE(flag == 1);

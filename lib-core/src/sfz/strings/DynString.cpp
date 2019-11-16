@@ -33,7 +33,7 @@ DynString::DynString(const char* string, uint32_t capacity, Allocator* allocator
 {
 	// Special case when string is nullptr
 	if (string == nullptr) {
-		mString.init(capacity, allocator, "DynString");
+		mString.init(capacity, allocator, sfz_dbg("DynString"));
 		return;
 	}
 
@@ -42,7 +42,7 @@ DynString::DynString(const char* string, uint32_t capacity, Allocator* allocator
 	if (capacity < length) capacity = uint32_t(length);
 
 	// Set allocator and allocate memory
-	mString.init(capacity, allocator, "DynString");
+	mString.init(capacity, allocator, sfz_dbg("DynString"));
 	mString.hackSetSize(uint32_t(length));
 
 	// Copy string to internal DynArray

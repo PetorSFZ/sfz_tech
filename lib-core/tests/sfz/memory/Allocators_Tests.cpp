@@ -30,17 +30,17 @@ TEST_CASE("Testing alignment", "[sfz::StandardAllocator]")
 {
 	sfz::setContext(sfz::getStandardContext());
 
-	void* memory16byte = getDefaultAllocator()->allocate(512, 16);
+	void* memory16byte = getDefaultAllocator()->allocate(sfz_dbg(""), 512, 16);
 	REQUIRE(memory16byte != nullptr);
 	REQUIRE(isAligned(memory16byte, 16));
 	getDefaultAllocator()->deallocate(memory16byte);
 
-	void* memory32byte = getDefaultAllocator()->allocate(512, 32);
+	void* memory32byte = getDefaultAllocator()->allocate(sfz_dbg(""), 512, 32);
 	REQUIRE(memory32byte != nullptr);
 	REQUIRE(isAligned(memory32byte, 32));
 	getDefaultAllocator()->deallocate(memory32byte);
 
-	void* memory64byte = getDefaultAllocator()->allocate(512, 64);
+	void* memory64byte = getDefaultAllocator()->allocate(sfz_dbg(""), 512, 64);
 	REQUIRE(memory64byte != nullptr);
 	REQUIRE(isAligned(memory64byte, 64));
 	getDefaultAllocator()->deallocate(memory64byte);
@@ -66,7 +66,7 @@ TEST_CASE("Basic new and delete tests", "[sfz::StandardAllocator]")
 	};
 
 	TestClass* ptr = nullptr;
-	ptr = getDefaultAllocator()->newObject<TestClass>("name", &flag);
+	ptr = getDefaultAllocator()->newObject<TestClass>(sfz_dbg("name"), &flag);
 	REQUIRE(ptr != nullptr);
 	REQUIRE(ptr->flagPtr == &flag);
 	REQUIRE(flag == 1);

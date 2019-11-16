@@ -62,7 +62,7 @@ DebugAllocator::~DebugAllocator() noexcept
 // DebugAllocator: Overriden Allocator methods
 // ------------------------------------------------------------------------------------------------
 
-void* DebugAllocator::allocate(uint64_t size, uint64_t alignment, const char* name) noexcept
+void* DebugAllocator::allocate(DbgInfo dbg, uint64_t size, uint64_t alignment) noexcept
 {
 	// Allocate memory
 #ifdef _WIN32
@@ -88,7 +88,7 @@ void* DebugAllocator::allocate(uint64_t size, uint64_t alignment, const char* na
 
 	// Record info about allocation
 	DebugAllocationInfo tmpInfo;
-	std::strncpy(tmpInfo.name, name, sizeof(tmpInfo.name));
+	std::strncpy(tmpInfo.name, dbg.staticMsg == nullptr ? "" : dbg.staticMsg, sizeof(tmpInfo.name));
 	tmpInfo.pointer = visiblePtr;
 	tmpInfo.size = size;
 	tmpInfo.alignment = alignment;
@@ -153,11 +153,6 @@ void DebugAllocator::deallocate(void* pointer) noexcept
 #endif
 }
 
-const char* DebugAllocator::getName() const noexcept
-{
-	return mImpl->allocatorName;
-}
-
 // DebugAllocator: Methods
 // ------------------------------------------------------------------------------------------------
 
@@ -180,7 +175,7 @@ DebugAllocationInfo* DebugAllocator::allocations(uint32_t* numAllocations) noexc
 {
 	*numAllocations = this->numAllocations();
 	DebugAllocationInfo* ptr = (DebugAllocationInfo*)this->allocate(
-		sizeof(DebugAllocationInfo) * (*numAllocations), 32, "DebugAllocator::allocations()");
+		sfz_dbg(""), sizeof(DebugAllocationInfo) * (*numAllocations), 32);
 	uint32_t i = 0;
 	for (auto& pair : mImpl->allocations) {
 		ptr[i] = pair.second;
@@ -193,7 +188,7 @@ DebugAllocationInfo* DebugAllocator::deallocatedAllocations(uint32_t* numAllocat
 {
 	*numAllocations = this->numDeallocated();
 	DebugAllocationInfo* ptr = (DebugAllocationInfo*)this->allocate(
-		sizeof(DebugAllocationInfo) * (*numAllocations), 32, "DebugAllocator::deallocatedAllocations()");
+		sfz_dbg(""), sizeof(DebugAllocationInfo) * (*numAllocations), 32);
 	uint32_t i = 0;
 	for (auto& pair : mImpl->history) {
 		ptr[i] = pair.second;

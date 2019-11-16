@@ -60,8 +60,8 @@ public:
 	DynArray& operator= (DynArray&& other) noexcept { this->swap(other); return *this; }
 	~DynArray() noexcept { this->destroy(); }
 
-	explicit DynArray(uint32_t capacity, Allocator* allocator, const char* allocName) noexcept {
-		this->init(capacity, allocator, allocName);
+	explicit DynArray(uint32_t capacity, Allocator* allocator, DbgInfo allocDbg) noexcept {
+		this->init(capacity, allocator, allocDbg);
 	}
 
 	// State methods
@@ -69,16 +69,16 @@ public:
 
 	// Initializes with specified parameters. Guaranteed to only set allocator and not allocate
 	// memory if a capacity of 0 is requested.
-	void init(uint32_t capacity, Allocator* allocator, const char* allocName)
+	void init(uint32_t capacity, Allocator* allocator, DbgInfo allocDbg)
 	{
 		this->destroy();
 		mAllocator = allocator;
-		this->setCapacity(capacity, allocName);
+		this->setCapacity(capacity, allocDbg);
 	}
 
-	DynArray clone(const char* allocName = "DynArray clone") const
+	DynArray clone(DbgInfo allocDbg = sfz_dbg("DynArray")) const
 	{
-		DynArray tmp(mCapacity, mAllocator, allocName);
+		DynArray tmp(mCapacity, mAllocator, allocDbg);
 		tmp.add(mData, mSize);
 		return tmp;
 	}
@@ -109,7 +109,7 @@ public:
 	void hackSetSize(uint32_t size) { mSize = (size <= mCapacity) ? size : mCapacity; }
 
 	// Sets the capacity, allocating memory and moving elements if necessary.
-	void setCapacity(uint32_t capacity, const char* allocName = "DynArray")
+	void setCapacity(uint32_t capacity, DbgInfo allocDbg = sfz_dbg("DynArray"))
 	{
 		if (mSize > capacity) capacity = mSize;
 		if (mCapacity == capacity) return;
@@ -119,7 +119,7 @@ public:
 
 		// Allocate memory and move/copy over elements from old memory
 		T* newAllocation = capacity == 0 ? nullptr : (T*)mAllocator->allocate(
-			capacity * sizeof(T), alignof(T) < 32 ? 32 : alignof(T), allocName);
+			allocDbg, capacity * sizeof(T), alignof(T) < 32 ? 32 : alignof(T));
 		for (uint32_t i = 0; i < mSize; i++) new(newAllocation + i) T(std::move(mData[i]));
 		
 		// Destroy old memory and replace state with new memory and values

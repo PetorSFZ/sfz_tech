@@ -73,12 +73,8 @@ public:
 	// Implemented sfz::Allocator methods
 	// --------------------------------------------------------------------------------------------
 
-	void* allocate(
-		uint64_t size, uint64_t alignment = 32, const char* name = "???") noexcept override final;
-
+	void* allocate(DbgInfo dbg, uint64_t size, uint64_t alignment = 32) noexcept override final;
 	void deallocate(void*) noexcept override final { /* no-op */ }
-
-	const char* getName() const noexcept override final { return "sfz::ArenaAllocator"; }
 
 	// Private members
 	// --------------------------------------------------------------------------------------------

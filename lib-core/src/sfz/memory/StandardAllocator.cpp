@@ -36,8 +36,9 @@ namespace sfz {
 
 class StandardAllocator final : public Allocator {
 public:
-	void* allocate(uint64_t size, uint64_t alignment, const char*) noexcept override final
+	void* allocate(DbgInfo dbg, uint64_t size, uint64_t alignment) noexcept override final
 	{
+		(void)dbg;
 		sfz_assert(isPowerOfTwo(alignment));
 
 #ifdef _WIN32
@@ -57,11 +58,6 @@ public:
 #else
 		free(pointer);
 #endif
-	}
-
-	const char* getName() const noexcept override final
-	{
-		return "sfzCore StandardAllocator";
 	}
 };
 

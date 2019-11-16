@@ -42,7 +42,7 @@ public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	DynString() noexcept : mString(0, getDefaultAllocator(), "DynString") { }
+	DynString() noexcept : mString(0, getDefaultAllocator(), sfz_dbg("DynString")) { }
 	DynString(const DynString&) noexcept = default;
 	DynString& operator= (const DynString&) noexcept = default;
 	DynString(DynString&&) noexcept = default;

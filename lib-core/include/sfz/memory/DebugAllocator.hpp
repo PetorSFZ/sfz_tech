@@ -76,9 +76,8 @@ public:
 	// Overriden Allocator methods
 	// --------------------------------------------------------------------------------------------
 
-	void* allocate(uint64_t size, uint64_t alignment, const char* name) noexcept override final;
+	void* allocate(DbgInfo dbg, uint64_t size, uint64_t alignment) noexcept override final;
 	void deallocate(void* pointer) noexcept override final;
-	const char* getName() const noexcept override final;
 
 	// Methods
 	// --------------------------------------------------------------------------------------------

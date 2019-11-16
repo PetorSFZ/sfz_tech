@@ -43,7 +43,7 @@ TEST_CASE("init() with 0 does not allocate memory", "[sfz::DynArray]")
 	sfz::setContext(sfz::getStandardContext());
 
 	DynArray<float> v;
-	v.init(0, getDefaultAllocator(), "v");
+	v.init(0, getDefaultAllocator(), sfz_dbg(""));
 	REQUIRE(v.size() == 0);
 	REQUIRE(v.capacity() == 0);
 	REQUIRE(v.data() == nullptr);
@@ -60,7 +60,7 @@ TEST_CASE("Fill constructor", "[sfz::DynArray]")
 {
 	sfz::setContext(sfz::getStandardContext());
 
-	DynArray<int> twos(0, getDefaultAllocator(), "twos");
+	DynArray<int> twos(0, getDefaultAllocator(), sfz_dbg(""));
 	twos.add(2, 8);
 
 	for (uint32_t i = 0; i < 8; ++i) {
@@ -79,7 +79,7 @@ TEST_CASE("Copy constructors", "[sfz::DynArray]")
 {
 	sfz::setContext(sfz::getStandardContext());
 
-	DynArray<int> first(0, getDefaultAllocator(), "first");
+	DynArray<int> first(0, getDefaultAllocator(), sfz_dbg(""));
 	first.add(3, 3);
 	DynArray<int> second;
 
@@ -115,7 +115,7 @@ TEST_CASE("Swap & move constructors", "[sfz::DynArray]")
 	sfz::setContext(sfz::getStandardContext());
 
 	DynArray<int> v1;
-	DynArray<int> v2(32, getDefaultAllocator(), "v2");
+	DynArray<int> v2(32, getDefaultAllocator(), sfz_dbg(""));
 	v2.add(42, 2);
 
 	REQUIRE(v1.size() == 0);
@@ -151,7 +151,7 @@ TEST_CASE("operator[]", "[sfz::DynArray]")
 {
 	sfz::setContext(sfz::getStandardContext());
 
-	DynArray<int> v{4, getDefaultAllocator(), "v"};
+	DynArray<int> v{4, getDefaultAllocator(), sfz_dbg("")};
 	v.hackSetSize(4);
 	v[0] = 0;
 	v[1] = 1;
@@ -169,7 +169,7 @@ TEST_CASE("iterators", "[sfz::DynArray]")
 {
 	sfz::setContext(sfz::getStandardContext());
 
-	DynArray<int> v{4, getDefaultAllocator(), "v"};
+	DynArray<int> v{4, getDefaultAllocator(), sfz_dbg("")};
 	v.hackSetSize(4);
 	v[0] = 0;
 	v[1] = 1;
@@ -187,7 +187,7 @@ TEST_CASE("add()", "[sfz::DynArray]")
 {
 	sfz::setContext(sfz::getStandardContext());
 
-	DynArray<int> v(2, getDefaultAllocator(), "v");
+	DynArray<int> v(2, getDefaultAllocator(), sfz_dbg(""));
 	REQUIRE(v.size() == 0);
 	REQUIRE(v.capacity() == 2);
 	v.add(-1, 2);
@@ -213,7 +213,7 @@ TEST_CASE("add()", "[sfz::DynArray]")
 	REQUIRE(v[2] == 3);
 	REQUIRE(v[3] == 3);
 
-	DynArray<UniquePtr<int>> v2(0, getDefaultAllocator(), "v2");;
+	DynArray<UniquePtr<int>> v2(0, getDefaultAllocator(), sfz_dbg(""));;
 
 	REQUIRE(v2.size() == 0);
 	REQUIRE(v2.capacity() == 0);
@@ -235,7 +235,7 @@ TEST_CASE("add()", "[sfz::DynArray]")
 	REQUIRE(*v2[1] == 42);
 
 
-	DynArray<int> v3(0, getDefaultAllocator(), "v3");
+	DynArray<int> v3(0, getDefaultAllocator(), sfz_dbg(""));
 	v3.add(v.data(), v.size());
 	v3.add(v.data(), v.size());
 	REQUIRE(v3.size() == 8);
@@ -253,7 +253,7 @@ TEST_CASE("insert()", "[sfz::DynArray]")
 {
 	sfz::setContext(sfz::getStandardContext());
 
-	DynArray<int> v(2, getDefaultAllocator(), "v");
+	DynArray<int> v(2, getDefaultAllocator(), sfz_dbg(""));
 	REQUIRE(v.size() == 0);
 	REQUIRE(v.capacity() == 2);
 	v.add(-1, 2);
@@ -279,7 +279,7 @@ TEST_CASE("insert()", "[sfz::DynArray]")
 	REQUIRE(v[2] == 3);
 	REQUIRE(v[3] == -1);
 
-	DynArray<int> v2(0, getDefaultAllocator(), "v2");
+	DynArray<int> v2(0, getDefaultAllocator(), sfz_dbg(""));
 	v2.add(42, 3);
 	v.insert(1, v2.data(), 2);
 	REQUIRE(v.size() == 6);
@@ -296,7 +296,7 @@ TEST_CASE("remove()", "[sfz::DynArray]")
 	sfz::setContext(sfz::getStandardContext());
 
 	SECTION("Basic test") {
-		DynArray<int> v(0, getDefaultAllocator(), "v");
+		DynArray<int> v(0, getDefaultAllocator(), sfz_dbg(""));
 		const int vals[] ={1, 2, 3, 4};
 		v.add(vals, 4);
 
@@ -317,7 +317,7 @@ TEST_CASE("remove()", "[sfz::DynArray]")
 		REQUIRE(v[0] == 3);
 	}
 	SECTION("Bug where memmove was passed numElements instead of numBytes") {
-		DynArray<vec2_i32> v(0, getDefaultAllocator(), "v");
+		DynArray<vec2_i32> v(0, getDefaultAllocator(), sfz_dbg(""));
 		const vec2_i32 vals[] = {vec2_i32(1), vec2_i32(2), vec2_i32(3), vec2_i32(4)};
 		v.add(vals, 4);
 
@@ -334,7 +334,7 @@ TEST_CASE("remove()", "[sfz::DynArray]")
 	}
 	SECTION("Bug where not enough elements are moved")
 	{
-		DynArray<int> v(0, getDefaultAllocator(), "v");
+		DynArray<int> v(0, getDefaultAllocator(), sfz_dbg(""));
 		const int vals[] = {1, 2, 3, 4, 5, 6};
 		v.add(vals, 6);
 
@@ -359,7 +359,7 @@ TEST_CASE("remove()", "[sfz::DynArray]")
 TEST_CASE("removeQuickSwap()", "[sfz::DynArray]")
 {
 	sfz::setContext(sfz::getStandardContext());
-	DynArray<int> v(0, getDefaultAllocator(), "v");
+	DynArray<int> v(0, getDefaultAllocator(), sfz_dbg(""));
 	const int vals[] = {1, 2, 3, 4, 5, 6};
 	v.add(vals, 6);
 
@@ -382,7 +382,7 @@ TEST_CASE("search()", "[sfz::DynArray]")
 {
 	sfz::setContext(sfz::getStandardContext());
 
-	DynArray<int> v(0, getDefaultAllocator(), "v");
+	DynArray<int> v(0, getDefaultAllocator(), sfz_dbg(""));
 	const int vals[] = {1, 2, 2, 4};
 	v.add(vals, 4);
 
@@ -409,7 +409,7 @@ TEST_CASE("find()", "[sfz::DynArray]")
 {
 	sfz::setContext(sfz::getStandardContext());
 
-	DynArray<int> v(0, getDefaultAllocator(), "v");
+	DynArray<int> v(0, getDefaultAllocator(), sfz_dbg(""));
 	const int vals[] = {1, 2, 3, 4};
 	v.add(vals, 4);
 
@@ -446,7 +446,7 @@ TEST_CASE("Allocator bug", "[sfz::DynArray]")
 
 	DebugAllocator debugAlloc("DebugAlloc", 4u);
 	{
-		DynArray<DynArray<uint32_t>> arr(0, &debugAlloc, "arr");
+		DynArray<DynArray<uint32_t>> arr(0, &debugAlloc, sfz_dbg(""));
 		REQUIRE(arr.size() == 0);
 		REQUIRE(arr.capacity() == 0);
 		REQUIRE(arr.allocator() == &debugAlloc);
@@ -462,9 +462,9 @@ TEST_CASE("Allocator bug", "[sfz::DynArray]")
 			REQUIRE(inner.capacity() == 0);
 		}
 
-		DynArray<DynArray<uint32_t>> arr2(0, &debugAlloc, "arr2");
+		DynArray<DynArray<uint32_t>> arr2(0, &debugAlloc, sfz_dbg(""));
 		for (uint32_t i = 0; i < 250; i++) {
-			DynArray<uint32_t> tmp(i * 100, &debugAlloc, "tmp");
+			DynArray<uint32_t> tmp(i * 100, &debugAlloc, sfz_dbg(""));
 			tmp.add(0u, i * 10);
 			arr2.add(std::move(tmp));
 		}
