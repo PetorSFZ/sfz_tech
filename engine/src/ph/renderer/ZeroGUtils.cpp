@@ -79,8 +79,9 @@ ZgLogger getPhantasyEngineZeroGLogger() noexcept
 
 static void* zgSfzAllocate(void* userPtr, uint32_t size, const char* name)
 {
+	(void)name;
 	sfz::Allocator* allocator = reinterpret_cast<sfz::Allocator*>(userPtr);
-	return allocator->allocate(size, 32, name);
+	return allocator->allocate(sfz_dbg("ZeroG"), size, 32);
 }
 
 static void zgSfzDeallocate(void* userPtr, void* allocation)

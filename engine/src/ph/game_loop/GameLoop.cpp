@@ -330,9 +330,9 @@ void runGameLoop(
 	gameLoopState.renderer = std::move(renderer);
 	gameLoopState.window = window;
 	gameLoopState.cleanupCallback = cleanupCallback;
-	gameLoopState.userInput.events.init(0, sfz::getDefaultAllocator(), "UserInput::events");
-	gameLoopState.userInput.controllerEvents.init(0, sfz::getDefaultAllocator(), "UserInput::controllerEvents");
-	gameLoopState.userInput.mouseEvents.init(0, sfz::getDefaultAllocator(), "UserInput::mouseEvents");
+	gameLoopState.userInput.events.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
+	gameLoopState.userInput.controllerEvents.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
+	gameLoopState.userInput.mouseEvents.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
 
 	calculateDelta(gameLoopState.previousItrTime); // Sets previousItrTime to current time
 

@@ -55,7 +55,7 @@ bool Renderer::init(
 	sfz::Allocator* allocator) noexcept
 {
 	this->destroy();
-	mState = allocator->newObject<RendererState>("RendererState");
+	mState = allocator->newObject<RendererState>(sfz_dbg("RendererState"));
 	mState->allocator = allocator;
 	mState->window = window;
 

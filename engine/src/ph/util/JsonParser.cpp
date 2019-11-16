@@ -375,7 +375,7 @@ ParsedJson ParsedJson::parseString(
 
 	// Allocate implementation
 	ParsedJson parsedJson;
-	parsedJson.mImpl = allocator->newObject<ParsedJsonImpl>("ParsedJsonImpl");
+	parsedJson.mImpl = allocator->newObject<ParsedJsonImpl>(sfz_dbg(""));
 	ParsedJsonImpl& impl = *parsedJson.mImpl;
 	impl.allocator = allocator;
 
@@ -387,7 +387,7 @@ ParsedJson ParsedJson::parseString(
 		return ParsedJson();
 	}
 	impl.jsonStringCopy = reinterpret_cast<char*>(
-		allocator->allocate(jsonStringLen + 1, 32, "json string copy"));
+		allocator->allocate(sfz_dbg(""), jsonStringLen + 1, 32));
 
 	// Copy string and strip Cpp comments if specified, also modify length of string
 	if (allowCppComments) {
@@ -409,12 +409,12 @@ ParsedJson ParsedJson::parseString(
 	const uint64_t SIZE_FACTOR = 4;
 	uint64_t allocationSize = SIZE_FACTOR * jsonStringLen;
 	impl.astMemory =
-		reinterpret_cast<size_t*>(allocator->allocate(allocationSize, 32, "sajson ast"));
+		reinterpret_cast<size_t*>(allocator->allocate(sfz_dbg(""), allocationSize, 32));
 	impl.astAllocation = sajson::bounded_allocation(impl.astMemory, allocationSize / sizeof(size_t));
 
 	// Parse json string
 	impl.doc = allocator->newObject<sajson::document>(
-		"sajson::document",sajson::parse(impl.astAllocation, impl.jsongStringView));
+		sfz_dbg("sajson::document") ,sajson::parse(impl.astAllocation, impl.jsongStringView));
 	if (!impl.doc->is_valid()) {
 		SFZ_ERROR("JSON", "Json parse failed at %i:%i: %s",
 			(int)impl.doc->get_error_line(), (int)impl.doc->get_error_column(), impl.doc->get_error_message_as_cstring());

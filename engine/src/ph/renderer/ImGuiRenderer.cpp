@@ -210,7 +210,7 @@ void ImGuiRenderer::render(
 
 	// Convert ImGui vertices because slightly different representation
 	if (imguiFrame.state.convertedVertices.data() == nullptr) {
-		imguiFrame.state.convertedVertices.init(IMGUI_MAX_NUM_VERTICES, mAllocator, "ImGui: convertedVertices");
+		imguiFrame.state.convertedVertices.init(IMGUI_MAX_NUM_VERTICES, mAllocator, sfz_dbg(""));
 	}
 	imguiFrame.state.convertedVertices.hackSetSize(numVertices);
 	for (uint32_t i = 0; i < numVertices; i++) {

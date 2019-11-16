@@ -127,7 +127,7 @@ static bool createMemoryPage(
 	if (!heapAllocSuccess) return false;
 
 	// Allocate memory for free blocks
-	page.freeBlocks.init(MAX_NUM_BLOCKS_PER_PAGE, allocator, "MemoryPage::freeBlocks");
+	page.freeBlocks.init(MAX_NUM_BLOCKS_PER_PAGE, allocator, sfz_dbg(""));
 
 	// Add initial block
 	Block initialBlock;
@@ -302,13 +302,13 @@ void DynamicGpuAllocator::init(
 	sfz_assert((pageSize % TEXTURE_ALIGNMENT) == 0);
 
 	this->destroy();
-	mState = allocator->newObject<DynamicGpuAllocatorState>("DynamicGpuAllocatorState");
+	mState = allocator->newObject<DynamicGpuAllocatorState>(sfz_dbg(""));
 	mState->allocator = allocator;
 	mState->memoryType = memoryType;
 	mState->pageSize = pageSize;
 
 	// Allocate memory for page meta data
-	mState->pages.init(MAX_NUM_PAGES, allocator, "DynamicGpuAllocator::pages");
+	mState->pages.init(MAX_NUM_PAGES, allocator, sfz_dbg(""));
 	mState->entries.create(MAX_NUM_PAGES * MAX_NUM_BLOCKS_PER_PAGE * 4 * 2, allocator);
 }
 

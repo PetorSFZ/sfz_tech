@@ -65,7 +65,7 @@ static sfz::Allocator* static_allocator = nullptr;
 
 static void* sfz_malloc_wrapper(size_t size)
 {
-	return static_allocator->allocate(size, 32, "stb_image");
+	return static_allocator->allocate(sfz_dbg("stb_image"), size, 32);
 }
 
 static void* sfz_realloc_sized_wrapper(void* ptr, size_t oldSize, size_t newSize)
@@ -135,7 +135,7 @@ Image Image::allocate(int32_t width, int32_t height, ImageType type, Allocator* 
 	image.width = width;
 	image.height = height;
 	image.bytesPerPixel = sizeOfElement(type);
-	image.rawData.init(width * height * image.bytesPerPixel, allocator, "Image::rawData");
+	image.rawData.init(width * height * image.bytesPerPixel, allocator, sfz_dbg(""));
 	image.rawData.hackSetSize(image.rawData.capacity());
 	std::memset(image.rawData.data(), 0, image.rawData.size());
 	return image;
@@ -182,7 +182,7 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 
 	// Create image from data
 	Image tmp;
-	tmp.rawData.init(uint32_t(width * height * numChannels), static_allocator, "Image::rawData");
+	tmp.rawData.init(uint32_t(width * height * numChannels), static_allocator, sfz_dbg(""));
 	tmp.width = width;
 	tmp.height = height;
 	switch (numChannels) {
@@ -227,7 +227,7 @@ void flipVertically(Image& image, Allocator* allocator) noexcept
 	sfz_assert((image.height % 2) == 0);
 
 	int32_t pitch = image.width * image.bytesPerPixel;
-	uint8_t* buffer = (uint8_t*)allocator->allocate(uint64_t(pitch), 32, "flipVertically()");
+	uint8_t* buffer = (uint8_t*)allocator->allocate(sfz_dbg(""), uint64_t(pitch), 32);
 
 	for (int32_t i = 0; i < (image.height / 2); i++) {
 		uint8_t* begin = image.rawData.data() + i * pitch;

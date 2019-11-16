@@ -34,7 +34,7 @@ using sfz::vec4;
 static void* imguiAllocFunc(size_t size, void* userData) noexcept
 {
 	Allocator* allocator = reinterpret_cast<Allocator*>(userData);
-	return allocator->allocate(size, 32, "Imgui");
+	return allocator->allocate(sfz_dbg("Imgui"), size, 32);
 }
 
 static void imguiFreeFunc(void* ptr, void* userData) noexcept
@@ -57,7 +57,7 @@ phImageView initializeImgui(Allocator* allocator) noexcept
 	ImGui::SetAllocatorFunctions(imguiAllocFunc, imguiFreeFunc, allocator);
 
 	// Allocate imgui state
-	imguiState = allocator->newObject<ImGuiState>("ImGuiState");
+	imguiState = allocator->newObject<ImGuiState>(sfz_dbg("ImGuiState"));
 	imguiState->allocator = allocator;
 
 	// Create Imgui context

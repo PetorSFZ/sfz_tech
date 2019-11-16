@@ -51,7 +51,7 @@ struct GlobalConfigImpl final {
 void GlobalConfig::init(const char* basePath, const char* fileName, Allocator* allocator) noexcept
 {
 	if (mImpl != nullptr) this->destroy();
-	mImpl = allocator->newObject<GlobalConfigImpl>("GlobalConfigImpl");
+	mImpl = allocator->newObject<GlobalConfigImpl>(sfz_dbg("GlobalConfigImpl"));
 	mImpl->allocator = allocator;
 
 	// Initialize IniParser with path
@@ -60,7 +60,7 @@ void GlobalConfig::init(const char* basePath, const char* fileName, Allocator* a
 	mImpl->ini = IniParser(tmpPath.str);
 
 	// Initialize settings array with allocator
-	mImpl->sections.init(64, allocator, "GlobalConfig::sections");
+	mImpl->sections.init(64, allocator, sfz_dbg(""));
 }
 
 void GlobalConfig::destroy() noexcept
@@ -101,7 +101,7 @@ void GlobalConfig::load() noexcept
 			mImpl->sections.add(Section());
 			section = &mImpl->sections.last();
 			section->sectionKey.printf("%s", item.getSection());
-			section->settings.init(64, mImpl->allocator, "settings");
+			section->settings.init(64, mImpl->allocator, sfz_dbg(""));
 		}
 
 		// Create new setting
@@ -207,7 +207,7 @@ Setting* GlobalConfig::createSetting(const char* section, const char* key, bool*
 		mImpl->sections.add(Section());
 		sectionPtr = &mImpl->sections.last();
 		sectionPtr->sectionKey.printf("%s", section);
-		sectionPtr->settings.init(64, mImpl->allocator, "settings");
+		sectionPtr->settings.init(64, mImpl->allocator, sfz_dbg(""));
 	}
 
 	// Create and return section

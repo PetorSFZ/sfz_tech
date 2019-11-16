@@ -38,7 +38,7 @@ namespace ph {
 	GameStateContainer container;
 	container.mAllocator = allocator;
 	container.mNumBytes = numBytes;
-	container.mGameStateMemoryChunk = static_cast<uint8_t*>(allocator->allocate(numBytes, 16, "ECS"));
+	container.mGameStateMemoryChunk = static_cast<uint8_t*>(allocator->allocate(sfz_dbg(""), numBytes, 16));
 	memset(container.mGameStateMemoryChunk, 0, numBytes);
 	return container;
 }
@@ -63,7 +63,7 @@ GameStateContainer GameStateContainer::clone(Allocator* allocator) noexcept
 	GameStateContainer container;
 	container.mAllocator = allocator;
 	container.mNumBytes = this->mNumBytes;
-	container.mGameStateMemoryChunk = static_cast<uint8_t*>(allocator->allocate(mNumBytes, 32, "ECS"));
+	container.mGameStateMemoryChunk = static_cast<uint8_t*>(allocator->allocate(sfz_dbg(""), mNumBytes, 32));
 	this->cloneTo(container);
 	return container;
 }

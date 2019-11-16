@@ -730,13 +730,13 @@ UniquePtr<GameLoopUpdateable> createDefaultGameUpdateable(
 	updateable->mLogic = std::move(logic);
 
 	// Imgui
-	updateable->mImguiVertices.init(1024, allocator, "mImguiVertices");
-	updateable->mImguiIndices.init(1024, allocator, "mImguiIndices");
-	updateable->mImguiCommands.init(1024, allocator, "mImguiCommands");
+	updateable->mImguiVertices.init(1024, allocator, sfz_dbg(""));
+	updateable->mImguiIndices.init(1024, allocator, sfz_dbg(""));
+	updateable->mImguiCommands.init(1024, allocator, sfz_dbg(""));
 
 	// Global Config
-	updateable->mCfgSections.init(32, allocator, "mCfgSections");
-	updateable->mCfgSectionSettings.init(64, allocator, "mCfgSectionSettings");
+	updateable->mCfgSections.init(32, allocator, sfz_dbg(""));
+	updateable->mCfgSectionSettings.init(64, allocator, sfz_dbg(""));
 
 	return updateable;
 }

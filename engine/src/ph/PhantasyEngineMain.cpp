@@ -74,7 +74,7 @@ static void setupContexts() noexcept
 	context->logger = &logger;
 	context->config = ph::getStaticGlobalConfigBoot();
 	context->resourceStrings =
-		allocator->newObject<StringCollection>("Resource Strings", 4096, allocator);
+		allocator->newObject<StringCollection>(sfz_dbg("Resource Strings"), 4096, allocator);
 
 	// Set Phantasy Engine context
 	ph::setContext(context);
@@ -92,7 +92,7 @@ static const char* basePath() noexcept
 		}
 		size_t len = std::strlen(tmp);
 		char* res = static_cast<char*>(
-			sfz::getDefaultAllocator()->allocate(len + 1, 32, "sfz::basePath()"));
+			sfz::getDefaultAllocator()->allocate(sfz_dbg("sfz::basePath()"), len + 1, 32));
 		std::strcpy(res, tmp);
 		SDL_free((void*)tmp);
 		return res;

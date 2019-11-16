@@ -50,7 +50,7 @@ static SDL_free_func oldSdlFree = nullptr;
 
 static void* SDLCALL mallocBridge(size_t size)
 {
-	void* ptr = bridgeState->allocator->allocate(size, 32, "SDL");
+	void* ptr = bridgeState->allocator->allocate(sfz_dbg("SDL"), size, 32);
 	if (ptr != nullptr) {
 		bridgeState->allocatedSizes[ptr] = size;
 	}
@@ -63,7 +63,7 @@ static void* SDLCALL mallocBridge(size_t size)
 static void* SDLCALL callocBridge(size_t nmemb, size_t size)
 {
 	size_t num_bytes = nmemb * size;
-	void* ptr = bridgeState->allocator->allocate(num_bytes, 32, "SDL");
+	void* ptr = bridgeState->allocator->allocate(sfz_dbg("SDL"), num_bytes, 32);
 	if (ptr != nullptr) {
 		bridgeState->allocatedSizes[ptr] = num_bytes;
 	}
@@ -155,7 +155,7 @@ bool setSDLAllocator(sfz::Allocator* allocator) noexcept
 	setBefore = true;
 
 	// Allocate state
-	bridgeState = allocator->newObject<BridgeState>("SDLAllocator: BridgeState");
+	bridgeState = allocator->newObject<BridgeState>(sfz_dbg(""));
 
 	// Set allocator
 	bridgeState->allocator = allocator;

@@ -66,7 +66,7 @@ GpuMesh gpuMeshAllocate(
 	CHECK_ZG gpuMesh.indexBuffer.setDebugName(sfz::str128("Index_Buffer_%i", counter++));
 
 	// Allocate (CPU) memory for mesh component handles
-	gpuMesh.components.init(cpuMesh.components.size(), cpuAllocator, "GpuMesh::components");
+	gpuMesh.components.init(cpuMesh.components.size(), cpuAllocator, sfz_dbg("GpuMesh::components"));
 	gpuMesh.components.add(MeshComponent(), cpuMesh.components.size());
 
 	// Allocate (GPU) memory for materials
@@ -78,7 +78,7 @@ GpuMesh gpuMeshAllocate(
 	CHECK_ZG gpuMesh.materialsBuffer.setDebugName(sfz::str128("Material_Buffer_%i", counter++));
 
 	// Allocate (CPU) memory for cpu materials
-	gpuMesh.cpuMaterials.init(cpuMesh.materials.size(), cpuAllocator, "GpuMesh::cpuMaterials");
+	gpuMesh.cpuMaterials.init(cpuMesh.materials.size(), cpuAllocator, sfz_dbg("GpuMesh::cpuMaterials"));
 	gpuMesh.cpuMaterials.add(Material(), cpuMesh.materials.size());
 
 	return gpuMesh;
@@ -146,7 +146,7 @@ void gpuMeshUploadBlocking(
 	// Allocate (cpu) memory for temporary materials buffer and fill it
 	sfz_assert(gpuMesh.numMaterials == cpuMesh.materials.size());
 	DynArray<ShaderMaterial> gpuMaterials;
-	gpuMaterials.init(cpuMesh.materials.size(), cpuAllocator, "gpuMaterials");
+	gpuMaterials.init(cpuMesh.materials.size(), cpuAllocator, sfz_dbg("gpuMaterials"));
 	gpuMaterials.add(ShaderMaterial(), cpuMesh.materials.size());
 	for (uint32_t i = 0; i < cpuMesh.materials.size(); i++) {
 		gpuMaterials[i] = cpuMaterialToShaderMaterial(cpuMesh.materials[i]);
