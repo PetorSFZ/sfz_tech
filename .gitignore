@@ -1,0 +1,46 @@
+# Mac specific files
+.DS_Store
+.Spotlight-V100
+.Trashes
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Executables
+*.exe
+*.out
+*.app
+
+# CMake files
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+install_manifest.txt
+
+# Visual Studio files
+.vs/
+
+# Build directories
+Lib-Core/build/
+Lib-Core/build_emscripten_debug/
+Lib-Core/build_emscripten_release/
+Lib-Core/build_make_debug/
+Lib-Core/build_make_release/
+Lib-Core/build_vs2017/
+Lib-Core/build_vs2019/
+Lib-Core/build_visualstudio/
+Lib-Core/build_xcode_macos/
+Lib-Core/build_xcode_ios/
+
+Lib-ZeroG/Samples/build_vs2017/
+Lib-ZeroG/Samples/build_vs2019/
+Lib-ZeroG/Samples/build_visualstudio/
+Lib-ZeroG/Samples/build_make_debug/
+Lib-ZeroG/Samples/build_make_release/
