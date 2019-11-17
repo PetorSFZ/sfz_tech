@@ -292,29 +292,29 @@ endfunction()
 function(phAddBundledExternals)
 
 	message("-- [PhantasyEngine]: Adding stb target")
-	add_subdirectory(${SFZ_TECH_ROOT}/Lib-PhantasyEngine/externals/stb ${CMAKE_BINARY_DIR}/stb)
+	add_subdirectory(${SFZ_TECH_ROOT}/externals/stb ${CMAKE_BINARY_DIR}/stb)
 	set(STB_FOUND ${STB_FOUND} PARENT_SCOPE)
 	set(STB_INCLUDE_DIRS ${STB_INCLUDE_DIRS} PARENT_SCOPE)
 
 	message("-- [PhantasyEngine]: Adding dear-imgui target")
-	add_subdirectory(${SFZ_TECH_ROOT}/Lib-PhantasyEngine/externals/dear-imgui ${CMAKE_BINARY_DIR}/dear-imgui)
+	add_subdirectory(${SFZ_TECH_ROOT}/externals/dear-imgui ${CMAKE_BINARY_DIR}/dear-imgui)
 	set(IMGUI_FOUND ${IMGUI_FOUND} PARENT_SCOPE)
 	set(IMGUI_INCLUDE_DIRS ${IMGUI_INCLUDE_DIRS} PARENT_SCOPE)
 	set(IMGUI_LIBRARIES ${IMGUI_LIBRARIES} PARENT_SCOPE)
 
 	message("-- [PhantasyEngine]: Adding nativefiledialog target")
-	add_subdirectory(${SFZ_TECH_ROOT}/Lib-PhantasyEngine/externals/nativefiledialog ${CMAKE_BINARY_DIR}/nativefiledialog)
+	add_subdirectory(${SFZ_TECH_ROOT}/externals/nativefiledialog ${CMAKE_BINARY_DIR}/nativefiledialog)
 	set(NATIVEFILEDIALOG_FOUND ${NATIVEFILEDIALOG_FOUND} PARENT_SCOPE)
 	set(NATIVEFILEDIALOG_INCLUDE_DIRS ${NATIVEFILEDIALOG_INCLUDE_DIRS} PARENT_SCOPE)
 	set(NATIVEFILEDIALOG_LIBRARIES ${NATIVEFILEDIALOG_LIBRARIES} PARENT_SCOPE)
 
 	message("-- [PhantasyEngine]: Adding sajson target")
-	add_subdirectory(${SFZ_TECH_ROOT}/Lib-PhantasyEngine/externals/sajson ${CMAKE_BINARY_DIR}/sajson)
+	add_subdirectory(${SFZ_TECH_ROOT}/externals/sajson ${CMAKE_BINARY_DIR}/sajson)
 	set(SAJSON_FOUND ${SAJSON_FOUND} PARENT_SCOPE)
 	set(SAJSON_INCLUDE_DIRS ${SAJSON_INCLUDE_DIRS} PARENT_SCOPE)
 
 	message("-- [PhantasyEngine]: Adding tinygltf target")
-	add_subdirectory(${SFZ_TECH_ROOT}/Lib-PhantasyEngine/externals/tinygltf ${CMAKE_BINARY_DIR}/tinygltf)
+	add_subdirectory(${SFZ_TECH_ROOT}/externals/tinygltf ${CMAKE_BINARY_DIR}/tinygltf)
 	set(TINYGLTF_FOUND ${TINYGLTF_FOUND} PARENT_SCOPE)
 	set(TINYGLTF_INCLUDE_DIRS ${TINYGLTF_INCLUDE_DIRS} PARENT_SCOPE)
 
@@ -329,7 +329,7 @@ function(phAddPhantasyEngineTargets)
 
 	# Adding engine
 	add_subdirectory(
-		${SFZ_TECH_ROOT}/Lib-PhantasyEngine/engine
+		${SFZ_TECH_ROOT}/Lib-PhantasyEngine
 		${CMAKE_BINARY_DIR}/PhantasyEngine
 	)
 	set(PHANTASY_ENGINE_FOUND ${PHANTASY_ENGINE_FOUND} PARENT_SCOPE)
