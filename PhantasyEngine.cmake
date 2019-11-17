@@ -17,17 +17,6 @@
 #    misrepresented as being the original software.
 # 3. This notice may not be removed or altered from any source distribution.
 
-# Input options
-# ------------------------------------------------------------------------------------------------
-
-# PH_CUDA_SUPPORT: Will build with CUDA support if defined
-
-# PH_SDL2_ROOT: Optional path to the root of the Dependency-SDL2 directory, if you don't want to
-#               download from GitHub.
-
-# PH_SFZ_CORE_ROOT: Optional path to the root of the sfzCore directory, if you don't want to
-#                   download from GitHub.
-
 # Miscallenous initialization operations
 # ------------------------------------------------------------------------------------------------
 
@@ -36,11 +25,8 @@ if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
 endif()
 
-# Add the FetchContent module
-include(FetchContent)
-
-# Set the root of PhantasyEngine
-set(PH_ROOT ${CMAKE_CURRENT_LIST_DIR})
+# Set the root of sfz_tech
+set(SFZ_TECH_ROOT ${CMAKE_CURRENT_LIST_DIR})
 
 # Make all projects compile to the same directory
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -247,37 +233,13 @@ endfunction()
 # 3rd-party dependencies
 # ------------------------------------------------------------------------------------------------
 
-# Adds the Dependency-SDL2 dependency. By default downloads from Github, but if PH_SDL2_ROOT is
-# set that version will be used instead. In addition, if Dependency-SDL2 is available on directory
-# up from the directory containing the CMakeLists.txt it will be used instead.
-# The following variables will be set:
+# Adds sfz_tech's bundled SDL2, the following variables will be set:
 # ${SDL2_FOUND}, ${SDL2_INCLUDE_DIRS}, ${SDL2_LIBRARIES} and ${SDL2_RUNTIME_FILES}
 function(phAddSDL2)
 
-	set(PH_SDL2_DEFAULT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../Dependency-SDL2)
-
-	if (PH_SDL2_ROOT)
-		message("-- [PhantasyEngine]: Adding Dependency-SDL2 from: \"${PH_SDL2_ROOT}\"")
-		add_subdirectory(${PH_SDL2_ROOT} ${CMAKE_BINARY_DIR}/sdl2)
-
-	elseif(EXISTS ${PH_SDL2_DEFAULT_PATH})
-		message("-- [PhantasyEngine]: Adding Dependency-SDL2 found at \"${PH_SDL2_DEFAULT_PATH}\"")
-		add_subdirectory(${PH_SDL2_DEFAULT_PATH} ${CMAKE_BINARY_DIR}/sdl2)
-
-	else()
-		message("-- [PhantasyEngine]: Downloading Dependency-SDL2 from GitHub")
-
-		FetchContent_Declare(
-			sdl2
-			GIT_REPOSITORY https://github.com/PetorSFZ/Dependency-SDL2.git
-			GIT_TAG 9667334164b7fcaca6a7ec52f38bd79f9839a5dd
-		)
-		FetchContent_GetProperties(sdl2)
-		if(NOT sdl2_POPULATED)
-			FetchContent_Populate(sdl2)
-			add_subdirectory(${sdl2_SOURCE_DIR} ${CMAKE_BINARY_DIR}/sdl2)
-		endif()
-	endif()
+	set(SDL2_PATH ${SFZ_TECH_ROOT}/externals/sdl2)
+	message("-- [PhantasyEngine]: Adding SDL2 from: \"${SDL2_PATH}\"")
+	add_subdirectory(${SDL2_PATH} ${CMAKE_BINARY_DIR}/sdl2)
 
 	set(SDL2_FOUND ${SDL2_FOUND} PARENT_SCOPE)
 	set(SDL2_INCLUDE_DIRS ${SDL2_INCLUDE_DIRS} PARENT_SCOPE)
@@ -286,38 +248,14 @@ function(phAddSDL2)
 
 endfunction()
 
-# Adds the ZeroG dependency. By default downloads from Github, but if PH_ZEROG_ROOT is set that
-# version will be used instead. In addition, if ZeroG is available one directory up from the
-# directory containing the CMakeLists.txt it will be used instead.
-# The following variables will be set:
+# Adds sfz_tech's ZeroG, the following variables will be set:
 # ${ZEROG_FOUND}, ${ZEROG_INCLUDE_DIRS}, ${ZEROG_LIBRARIES} and ${ZEROG_RUNTIME_FILES}
 # ${ZEROG_CPP_FOUND}, ${ZEROG_CPP_INCLUDE_DIRS} and ${ZEROG_CPP_LIBRARIES}
 function(phAddZeroG)
 
-	set(PH_ZEROG_DEFAULT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../ZeroG)
-
-	if (PH_ZEROG_ROOT)
-		message("-- [PhantasyEngine]: Adding ZeroG from: \"${PH_ZEROG_ROOT}\"")
-		include(${PH_ZEROG_ROOT}/ZeroG.cmake)
-
-	elseif(EXISTS ${PH_ZEROG_DEFAULT_PATH})
-		message("-- [PhantasyEngine]: Adding ZeroG found at \"${PH_ZEROG_DEFAULT_PATH}\"")
-		include(${PH_ZEROG_DEFAULT_PATH}/ZeroG.cmake)
-
-	else()
-		message("-- [PhantasyEngine]: Downloading ZeroG from GitHub")
-
-		FetchContent_Declare(
-			ZeroG
-			GIT_REPOSITORY https://github.com/PetorSFZ/ZeroG.git
-			GIT_TAG f7a6d75ae9a0cf1d07950793d785d15df7f112c6
-		)
-		FetchContent_GetProperties(ZeroG)
-		if(NOT ZeroG_POPULATED)
-			FetchContent_Populate(ZeroG)
-			include(${ZeroG_SOURCE_DIR}/ZeroG.cmake)
-		endif()
-	endif()
+	set(ZEROG_PATH ${SFZ_TECH_ROOT}/ZeroG)
+	message("-- [PhantasyEngine]: Adding ZeroG from: \"${ZEROG_PATH}\"")
+	include(${ZEROG_PATH}/ZeroG.cmake)
 
 	addZeroG()
 	addZeroGcpp()
@@ -333,37 +271,13 @@ function(phAddZeroG)
 
 endfunction()
 
-# Adds sfzCore. By default downloads from GitHub, but if PH_SFZ_CORE_ROOT is set that version will
-# be used instead. In addition, if sfzCore is available on directory up from the directory
-# containing the CMakeLists.txt it will be used instead.
-# The following variables will be set:
+# Adds sfz_tech's sfzCore, the following variables will be set:
 # ${SFZ_CORE_FOUND}, ${SFZ_CORE_INCLUDE_DIRS}, ${SFZ_CORE_LIBRARIES}
 function(phAddSfzCore)
 
-	set(PH_SFZ_CORE_DEFAULT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../sfzCore)
-
-	if (PH_SFZ_CORE_ROOT)
-		message("-- [PhantasyEngine]: Adding sfzCore from: \"${PH_SFZ_CORE_ROOT}\"")
-		add_subdirectory(${PH_SFZ_CORE_ROOT} ${CMAKE_BINARY_DIR}/sfzCore)
-
-	elseif(EXISTS ${PH_SFZ_CORE_DEFAULT_PATH})
-		message("-- [PhantasyEngine]: Adding sfzCore found at \"${PH_SFZ_CORE_DEFAULT_PATH}\"")
-		add_subdirectory(${PH_SFZ_CORE_DEFAULT_PATH} ${CMAKE_BINARY_DIR}/sfzCore)
-
-	else()
-		message("-- [PhantasyEngine]: Downloading sfzCore from GitHub")
-
-		FetchContent_Declare(
-			sfzCore
-			GIT_REPOSITORY https://github.com/PetorSFZ/sfzCore.git
-			GIT_TAG d1029f0921a3113939cc466c969eccb764fd0690
-		)
-		FetchContent_GetProperties(sfzCore)
-		if(NOT sfzCore_POPULATED)
-			FetchContent_Populate(sfzCore)
-			add_subdirectory(${sfzcore_SOURCE_DIR} ${CMAKE_BINARY_DIR}/sfzCore)
-		endif()
-	endif()
+	set(SFZ_CORE_PATH ${SFZ_TECH_ROOT}/sfzCore)
+	message("-- [PhantasyEngine]: Adding sfzCore from: \"${SFZ_CORE_PATH}\"")
+	add_subdirectory(${SFZ_CORE_PATH} ${CMAKE_BINARY_DIR}/sfzCore)
 
 	set(SFZ_CORE_FOUND ${SFZ_CORE_FOUND} PARENT_SCOPE)
 	set(SFZ_CORE_INCLUDE_DIRS ${SFZ_CORE_INCLUDE_DIRS} PARENT_SCOPE)
@@ -378,29 +292,29 @@ endfunction()
 function(phAddBundledExternals)
 
 	message("-- [PhantasyEngine]: Adding stb target")
-	add_subdirectory(${PH_ROOT}/externals/stb ${CMAKE_BINARY_DIR}/stb)
+	add_subdirectory(${SFZ_TECH_ROOT}/PhantasyEngine/externals/stb ${CMAKE_BINARY_DIR}/stb)
 	set(STB_FOUND ${STB_FOUND} PARENT_SCOPE)
 	set(STB_INCLUDE_DIRS ${STB_INCLUDE_DIRS} PARENT_SCOPE)
 
 	message("-- [PhantasyEngine]: Adding dear-imgui target")
-	add_subdirectory(${PH_ROOT}/externals/dear-imgui ${CMAKE_BINARY_DIR}/dear-imgui)
+	add_subdirectory(${SFZ_TECH_ROOT}/PhantasyEngine/externals/dear-imgui ${CMAKE_BINARY_DIR}/dear-imgui)
 	set(IMGUI_FOUND ${IMGUI_FOUND} PARENT_SCOPE)
 	set(IMGUI_INCLUDE_DIRS ${IMGUI_INCLUDE_DIRS} PARENT_SCOPE)
 	set(IMGUI_LIBRARIES ${IMGUI_LIBRARIES} PARENT_SCOPE)
 
 	message("-- [PhantasyEngine]: Adding nativefiledialog target")
-	add_subdirectory(${PH_ROOT}/externals/nativefiledialog ${CMAKE_BINARY_DIR}/nativefiledialog)
+	add_subdirectory(${SFZ_TECH_ROOT}/PhantasyEngine/externals/nativefiledialog ${CMAKE_BINARY_DIR}/nativefiledialog)
 	set(NATIVEFILEDIALOG_FOUND ${NATIVEFILEDIALOG_FOUND} PARENT_SCOPE)
 	set(NATIVEFILEDIALOG_INCLUDE_DIRS ${NATIVEFILEDIALOG_INCLUDE_DIRS} PARENT_SCOPE)
 	set(NATIVEFILEDIALOG_LIBRARIES ${NATIVEFILEDIALOG_LIBRARIES} PARENT_SCOPE)
 
 	message("-- [PhantasyEngine]: Adding sajson target")
-	add_subdirectory(${PH_ROOT}/externals/sajson ${CMAKE_BINARY_DIR}/sajson)
+	add_subdirectory(${SFZ_TECH_ROOT}/PhantasyEngine/externals/sajson ${CMAKE_BINARY_DIR}/sajson)
 	set(SAJSON_FOUND ${SAJSON_FOUND} PARENT_SCOPE)
 	set(SAJSON_INCLUDE_DIRS ${SAJSON_INCLUDE_DIRS} PARENT_SCOPE)
 
 	message("-- [PhantasyEngine]: Adding tinygltf target")
-	add_subdirectory(${PH_ROOT}/externals/tinygltf ${CMAKE_BINARY_DIR}/tinygltf)
+	add_subdirectory(${SFZ_TECH_ROOT}/PhantasyEngine/externals/tinygltf ${CMAKE_BINARY_DIR}/tinygltf)
 	set(TINYGLTF_FOUND ${TINYGLTF_FOUND} PARENT_SCOPE)
 	set(TINYGLTF_INCLUDE_DIRS ${TINYGLTF_INCLUDE_DIRS} PARENT_SCOPE)
 
@@ -415,7 +329,7 @@ function(phAddPhantasyEngineTargets)
 
 	# Adding engine
 	add_subdirectory(
-		${PH_ROOT}/engine
+		${SFZ_TECH_ROOT}/PhantasyEngine/engine
 		${CMAKE_BINARY_DIR}/PhantasyEngine-engine
 	)
 	set(PHANTASY_ENGINE_FOUND ${PHANTASY_ENGINE_FOUND} PARENT_SCOPE)
