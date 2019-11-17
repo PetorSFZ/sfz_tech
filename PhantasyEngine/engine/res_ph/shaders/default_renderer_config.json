@@ -1,0 +1,332 @@
+{
+	"framebuffers": [
+		{
+			"name": "GBuffer",
+			"resolution_scale": 1.0,
+			"resolution_scale_setting": "internalResolutionScale",
+			"render_targets": [
+				{
+					"format": "RGBA_U8_UNORM",
+					"clear_value": 0.0
+				},
+				{
+					"format": "RG_U8_UNORM",
+					"clear_value": 0.0
+				},
+				{
+					"format": "RGBA_U8_UNORM",
+					"clear_value": 0.0
+				},
+				{
+					"format": "RGBA_F16",
+					"clear_value": 0.0
+				}
+			],
+			"depth_buffer": true,
+			"depth_buffer_format": "DEPTH_F32",
+			"depth_buffer_clear_value": 0.0
+		},
+		{
+			"name": "LightAccumulation1",
+			"resolution_scale": 1.0,
+			"resolution_scale_setting": "internalResolutionScale",
+			"render_targets": [
+				{
+					"format": "RGBA_F16",
+					"clear_value": 0.0
+				}
+			],
+			"depth_buffer": false
+		},
+		{
+			"name": "ShadowMapCascaded1",
+			"resolution_fixed_width": 2048,
+			"resolution_fixed_height": 2048,
+			"depth_buffer": true,
+			"depth_buffer_format": "DEPTH_F32",
+			"depth_buffer_clear_value": 0.0
+		},
+		{
+			"name": "ShadowMapCascaded2",
+			"resolution_fixed_width": 2048,
+			"resolution_fixed_height": 2048,
+			"depth_buffer": true,
+			"depth_buffer_format": "DEPTH_F32",
+			"depth_buffer_clear_value": 0.0
+		},
+		{
+			"name": "ShadowMapCascaded3",
+			"resolution_fixed_width": 1024,
+			"resolution_fixed_height": 1024,
+			"depth_buffer": true,
+			"depth_buffer_format": "DEPTH_F32",
+			"depth_buffer_clear_value": 0.0
+		}
+	],
+	"render_pipelines": [
+		{
+			"name": "GBuffer Generation",
+			"source_type": "hlsl",
+			"vertex_shader_path": "res_ph/shaders/gbuffer_gen.hlsl",
+			"pixel_shader_path": "res_ph/shaders/gbuffer_gen.hlsl",
+			"vertex_shader_entry": "VSMain",
+			"pixel_shader_entry": "PSMain",
+			"standard_vertex_attributes": true,
+			"push_constant_registers": [ 0, 1, 2 ],
+			"depth_func": "GREATER",
+			"culling": {
+				"cull_front_face": false,
+				"front_facing_is_counter_clockwise": true
+			},
+			"wireframe_rendering": false,
+			"samplers": [
+				{
+					"register": 0,
+					"sampling_mode": "ANISOTROPIC",
+					"wrapping_mode": "REPEAT"
+				}
+			],
+			"render_targets": [
+				"RGBA_U8_UNORM",
+				"RG_U8_UNORM",
+				"RGBA_U8_UNORM",
+				"RGBA_F16"
+			],
+			"non_user_settable_constant_buffers": [
+				3
+			]
+		},
+		{
+			"name": "Shadow Map Generation",
+			"source_type": "hlsl",
+			"vertex_shader_path": "res_ph/shaders/shadow_map_gen.hlsl",
+			"pixel_shader_path": "res_ph/shaders/shadow_map_gen.hlsl",
+			"vertex_shader_entry": "VSMain",
+			"pixel_shader_entry": "PSMain",
+			"standard_vertex_attributes": true,
+			"push_constant_registers": [ 0, 1 ],
+			"depth_func": "GREATER",
+			"culling": {
+				"cull_front_face": false,
+				"front_facing_is_counter_clockwise": true
+			},
+			"depth_bias": {
+				"bias": -2500,
+				"bias_slope_scaled": -4.0,
+				"bias_clamp": 0.0
+			},
+			"wireframe_rendering": false,
+			"render_targets": [
+			]
+		},
+		{
+			"name": "Directional Shading",
+			"source_type": "hlsl",
+			"vertex_shader_path": "res_ph/shaders/directional_shading.hlsl",
+			"pixel_shader_path": "res_ph/shaders/directional_shading.hlsl",
+			"vertex_shader_entry": "VSMain",
+			"pixel_shader_entry": "PSMain",
+			"standard_vertex_attributes": true,
+			"push_constant_registers": [ 0 ],
+			"culling": {
+				"cull_front_face": false,
+				"front_facing_is_counter_clockwise": true
+			},
+			"wireframe_rendering": false,
+			"samplers": [
+				{
+					"register": 0,
+					"sampling_mode": "NEAREST",
+					"wrapping_mode": "CLAMP"
+				},
+				{
+					"register": 1,
+					"sampling_mode": "TRILINEAR",
+					"wrapping_mode": "CLAMP"
+				}
+			],
+			"render_targets": [
+				"RGBA_F16"
+			]
+		},
+		{
+			"name": "Point Light Shading",
+			"source_type": "hlsl",
+			"vertex_shader_path": "res_ph/shaders/point_light_shading.hlsl",
+			"pixel_shader_path": "res_ph/shaders/point_light_shading.hlsl",
+			"vertex_shader_entry": "VSMain",
+			"pixel_shader_entry": "PSMain",
+			"standard_vertex_attributes": true,
+			"push_constant_registers": [ 0 ],
+			"culling": {
+				"cull_front_face": false,
+				"front_facing_is_counter_clockwise": true
+			},
+			"wireframe_rendering": false,
+			"blend_mode": "additive_blending",
+			"samplers": [
+				{
+					"register": 0,
+					"sampling_mode": "NEAREST",
+					"wrapping_mode": "CLAMP"
+				},
+				{
+					"register": 1,
+					"sampling_mode": "TRILINEAR",
+					"wrapping_mode": "CLAMP"
+				}
+			],
+			"render_targets": [
+				"RGBA_F16"
+			]
+		},
+		{
+			"name": "Copy Out Shader",
+			"source_type": "hlsl",
+			"vertex_shader_path": "res_ph/shaders/copy_out_shader.hlsl",
+			"pixel_shader_path": "res_ph/shaders/copy_out_shader.hlsl",
+			"vertex_shader_entry": "VSMain",
+			"pixel_shader_entry": "PSMain",
+			"standard_vertex_attributes": true,
+			"push_constant_registers": [ 0 ],
+			"culling": {
+				"cull_front_face": false,
+				"front_facing_is_counter_clockwise": true
+			},
+			"wireframe_rendering": false,
+			"samplers": [
+				{
+					"register": 0,
+					"sampling_mode": "TRILINEAR",
+					"wrapping_mode": "CLAMP"
+				}
+			],
+			"render_targets": [
+				"RGBA_U8_UNORM"
+			]
+		}
+	],
+	"present_queue_stages": [
+		{
+			"stage_name": "GBuffer Pass",
+			"stage_type": "USER_INPUT_RENDERING",
+			"render_pipeline": "GBuffer Generation",
+			"framebuffer": "GBuffer"
+		},
+		{
+			"stage_name": "Directional Shadow Map Pass 1",
+			"stage_type": "USER_INPUT_RENDERING",
+			"render_pipeline": "Shadow Map Generation",
+			"framebuffer": "ShadowMapCascaded1"
+		},
+		{
+			"stage_name": "Directional Shadow Map Pass 2",
+			"stage_type": "USER_INPUT_RENDERING",
+			"render_pipeline": "Shadow Map Generation",
+			"framebuffer": "ShadowMapCascaded2"
+		},
+		{
+			"stage_name": "Directional Shadow Map Pass 3",
+			"stage_type": "USER_INPUT_RENDERING",
+			"render_pipeline": "Shadow Map Generation",
+			"framebuffer": "ShadowMapCascaded3"
+		},
+		{
+			"stage_name": "StageBarrier1",
+			"stage_type": "USER_STAGE_BARRIER"
+		},
+		{
+			"stage_name": "Directional Shading Pass",
+			"stage_type": "USER_INPUT_RENDERING",
+			"render_pipeline": "Directional Shading",
+			"framebuffer": "LightAccumulation1",
+			"bound_render_targets": [
+				{
+					"register": 0,
+					"framebuffer": "GBuffer",
+					"render_target_index": 0
+				},
+				{
+					"register": 1,
+					"framebuffer": "GBuffer",
+					"render_target_index": 1
+				},
+				{
+					"register": 2,
+					"framebuffer": "GBuffer",
+					"render_target_index": 2
+				},
+				{
+					"register": 3,
+					"framebuffer": "GBuffer",
+					"render_target_index": 3
+				},
+				{
+					"register": 4,
+					"framebuffer": "GBuffer",
+					"depth_buffer": true
+				},
+				{
+					"register": 5,
+					"framebuffer": "ShadowMapCascaded1",
+					"depth_buffer": true
+				},
+				{
+					"register": 6,
+					"framebuffer": "ShadowMapCascaded2",
+					"depth_buffer": true
+				},
+				{
+					"register": 7,
+					"framebuffer": "ShadowMapCascaded3",
+					"depth_buffer": true
+				}
+			]
+		},
+		{
+			"stage_name": "Point Light Shading Pass",
+			"stage_type": "USER_INPUT_RENDERING",
+			"render_pipeline": "Point Light Shading",
+			"framebuffer": "LightAccumulation1",
+			"bound_render_targets": [
+				{
+					"register": 0,
+					"framebuffer": "GBuffer",
+					"render_target_index": 0
+				},
+				{
+					"register": 1,
+					"framebuffer": "GBuffer",
+					"render_target_index": 1
+				},
+				{
+					"register": 2,
+					"framebuffer": "GBuffer",
+					"render_target_index": 3
+				},
+				{
+					"register": 3,
+					"framebuffer": "GBuffer",
+					"depth_buffer": true
+				}
+			]
+		},
+		{
+			"stage_name": "StageBarrier2",
+			"stage_type": "USER_STAGE_BARRIER"
+		},
+		{
+			"stage_name": "Copy Out Pass",
+			"stage_type": "USER_INPUT_RENDERING",
+			"render_pipeline": "Copy Out Shader",
+			"framebuffer": "default",
+			"bound_render_targets": [
+				{
+					"register": 0,
+					"framebuffer": "LightAccumulation1",
+					"render_target_index": 0
+				}
+			]
+		}
+	]
+}
