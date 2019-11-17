@@ -4,7 +4,7 @@
 # will be empty, but GLEW_DLLS will contain the dll needed. On other configurations GLEW
 # will be statically built.
 #
-# This file is public domain and may be used however you want, but it would be nice
+# This file is public domain and may be used however you want.
 
 # Check if 32 or 64bit compiler
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)

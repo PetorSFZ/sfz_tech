@@ -88,12 +88,12 @@ endif()
 # ------------------------------------------------------------------------------------------------
 
 # Externals directory
-set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/externals)
+set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../externals)
 
 # Catch (if building tests, i.e. if no parent)
 # ${CATCH_INCLUDE_DIRS}
 if(NOT hasParent)
-	add_subdirectory(${EXTERNALS_DIR}/catch)
+	add_subdirectory(${EXTERNALS_DIR}/catch ${CMAKE_BINARY_DIR}/catch)
 endif()
 
 # Dependencies for lib-opengl
@@ -114,7 +114,7 @@ if(SFZ_CORE_OPENGL)
 	# GLEW
 	# ${GLEW_INCLUDE_DIRS}, ${GLEW_LIBRARIES} and ${GLEW_DLLS}
 	if(NOT EMSCRIPTEN AND NOT IOS)
-		add_subdirectory(${EXTERNALS_DIR}/glew)
+		add_subdirectory(${EXTERNALS_DIR}/glew ${CMAKE_BINARY_DIR}/glew)
 	else()
 		set(GLEW_INCLUDE_DIRS "")
 		set(GLEW_LIBRARIES "")
