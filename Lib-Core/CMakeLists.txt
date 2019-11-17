@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
-project("sfzCore" LANGUAGES CXX C)
+project("LibCore" LANGUAGES CXX)
 
 # Sets build type to release if no build type is specified in a single-configuration generator.
 if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
@@ -96,248 +96,145 @@ if(NOT hasParent)
 	add_subdirectory(${EXTERNALS_DIR}/catch ${CMAKE_BINARY_DIR}/catch)
 endif()
 
-# Dependencies for lib-opengl
-if(SFZ_CORE_OPENGL)
-
-	# SDL2
-	# ${SDL2_FOUND}, ${SDL2_INCLUDE_DIRS}, ${SDL2_LIBRARIES} and ${SDL2_RUNTIME_FILES}
-	if (NOT SDL2_FOUND)
-		message(FATAL_ERROR "sfzCore lib-opengl requires SDL2. Add Dependency-SDL2.")
-	endif()
-
-	# OpenGL
-	# ${OPENGL_INCLUDE_DIR}, ${OPENGL_LIBRARIES}
-	if(NOT IOS)
-		find_package(OpenGL REQUIRED)
-	endif()
-
-	# GLEW
-	# ${GLEW_INCLUDE_DIRS}, ${GLEW_LIBRARIES} and ${GLEW_DLLS}
-	if(NOT EMSCRIPTEN AND NOT IOS)
-		add_subdirectory(${EXTERNALS_DIR}/glew ${CMAKE_BINARY_DIR}/glew)
-	else()
-		set(GLEW_INCLUDE_DIRS "")
-		set(GLEW_LIBRARIES "")
-		set(GLEW_DLLS "")
-	endif()
-
-endif()
-
-# sfzCore lib-core library
+# Lib-Core
 # ------------------------------------------------------------------------------------------------
 
 # Directories
-set(CORE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib-core/src)
-set(CORE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib-core/include)
-set(CORE_INCLUDE_CUDA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib-core/include_cuda)
-set(CORE_TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib-core/tests)
+set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
-set(SFZ_CORE_INCLUDE_FILES
-	${CORE_INCLUDE_DIR}/sfz/Assert.hpp
-	${CORE_INCLUDE_DIR}/sfz/Context.hpp
-	${CORE_INCLUDE_DIR}/sfz/CudaCompatibility.hpp
-	${CORE_INCLUDE_DIR}/sfz/Logging.hpp
-	${CORE_INCLUDE_DIR}/sfz/PopWarnings.hpp
-	${CORE_INCLUDE_DIR}/sfz/PushWarnings.hpp
-	${CORE_INCLUDE_DIR}/sfz/SimdIntrinsics.hpp
+set(INCLUDE_FILES
+	${INCLUDE_DIR}/sfz/Assert.hpp
+	${INCLUDE_DIR}/sfz/Context.hpp
+	${INCLUDE_DIR}/sfz/CudaCompatibility.hpp
+	${INCLUDE_DIR}/sfz/Logging.hpp
+	${INCLUDE_DIR}/sfz/PopWarnings.hpp
+	${INCLUDE_DIR}/sfz/PushWarnings.hpp
+	${INCLUDE_DIR}/sfz/SimdIntrinsics.hpp
 
-	${CORE_INCLUDE_DIR}/sfz/containers/DynArray.hpp
-	${CORE_INCLUDE_DIR}/sfz/containers/HashMap.hpp
-	${CORE_INCLUDE_DIR}/sfz/containers/HashMap.inl
-	${CORE_INCLUDE_DIR}/sfz/containers/HashTableKeyDescriptor.hpp
-	${CORE_INCLUDE_DIR}/sfz/containers/RingBuffer.hpp
-	${CORE_INCLUDE_DIR}/sfz/containers/RingBuffer.inl
+	${INCLUDE_DIR}/sfz/containers/DynArray.hpp
+	${INCLUDE_DIR}/sfz/containers/HashMap.hpp
+	${INCLUDE_DIR}/sfz/containers/HashMap.inl
+	${INCLUDE_DIR}/sfz/containers/HashTableKeyDescriptor.hpp
+	${INCLUDE_DIR}/sfz/containers/RingBuffer.hpp
+	${INCLUDE_DIR}/sfz/containers/RingBuffer.inl
 
-	${CORE_INCLUDE_DIR}/sfz/geometry/AABB.hpp
-	${CORE_INCLUDE_DIR}/sfz/geometry/AABB.inl
-	${CORE_INCLUDE_DIR}/sfz/geometry/AABB2D.hpp
-	${CORE_INCLUDE_DIR}/sfz/geometry/Circle.hpp
-	${CORE_INCLUDE_DIR}/sfz/geometry/Intersection.hpp
-	${CORE_INCLUDE_DIR}/sfz/geometry/Intersection.inl
-	${CORE_INCLUDE_DIR}/sfz/geometry/OBB.hpp
-	${CORE_INCLUDE_DIR}/sfz/geometry/OBB.inl
-	${CORE_INCLUDE_DIR}/sfz/geometry/Plane.hpp
-	${CORE_INCLUDE_DIR}/sfz/geometry/Plane.inl
-	${CORE_INCLUDE_DIR}/sfz/geometry/Sphere.hpp
+	${INCLUDE_DIR}/sfz/geometry/AABB.hpp
+	${INCLUDE_DIR}/sfz/geometry/AABB.inl
+	${INCLUDE_DIR}/sfz/geometry/AABB2D.hpp
+	${INCLUDE_DIR}/sfz/geometry/Circle.hpp
+	${INCLUDE_DIR}/sfz/geometry/Intersection.hpp
+	${INCLUDE_DIR}/sfz/geometry/Intersection.inl
+	${INCLUDE_DIR}/sfz/geometry/OBB.hpp
+	${INCLUDE_DIR}/sfz/geometry/OBB.inl
+	${INCLUDE_DIR}/sfz/geometry/Plane.hpp
+	${INCLUDE_DIR}/sfz/geometry/Plane.inl
+	${INCLUDE_DIR}/sfz/geometry/Sphere.hpp
 
-	${CORE_INCLUDE_DIR}/sfz/math/MathPrimitiveHashers.hpp
-	${CORE_INCLUDE_DIR}/sfz/math/MathPrimitiveHashers.inl
-	${CORE_INCLUDE_DIR}/sfz/math/MathPrimitiveToStrings.hpp
-	${CORE_INCLUDE_DIR}/sfz/math/MathSupport.hpp
-	${CORE_INCLUDE_DIR}/sfz/math/MathSupport.inl
-	${CORE_INCLUDE_DIR}/sfz/math/Matrix.hpp
-	${CORE_INCLUDE_DIR}/sfz/math/Matrix.inl
-	${CORE_INCLUDE_DIR}/sfz/math/MinMax.hpp
-	${CORE_INCLUDE_DIR}/sfz/math/ProjectionMatrices.hpp
-	${CORE_INCLUDE_DIR}/sfz/math/Quaternion.hpp
-	${CORE_INCLUDE_DIR}/sfz/math/Quaternion.inl
-	${CORE_INCLUDE_DIR}/sfz/math/Vector.hpp
+	${INCLUDE_DIR}/sfz/math/MathPrimitiveHashers.hpp
+	${INCLUDE_DIR}/sfz/math/MathPrimitiveHashers.inl
+	${INCLUDE_DIR}/sfz/math/MathPrimitiveToStrings.hpp
+	${INCLUDE_DIR}/sfz/math/MathSupport.hpp
+	${INCLUDE_DIR}/sfz/math/MathSupport.inl
+	${INCLUDE_DIR}/sfz/math/Matrix.hpp
+	${INCLUDE_DIR}/sfz/math/Matrix.inl
+	${INCLUDE_DIR}/sfz/math/MinMax.hpp
+	${INCLUDE_DIR}/sfz/math/ProjectionMatrices.hpp
+	${INCLUDE_DIR}/sfz/math/Quaternion.hpp
+	${INCLUDE_DIR}/sfz/math/Quaternion.inl
+	${INCLUDE_DIR}/sfz/math/Vector.hpp
 
-	${CORE_INCLUDE_DIR}/sfz/memory/Allocator.hpp
-	${CORE_INCLUDE_DIR}/sfz/memory/ArenaAllocator.hpp
-	${CORE_INCLUDE_DIR}/sfz/memory/DebugAllocator.hpp
-	${CORE_INCLUDE_DIR}/sfz/memory/MemoryUtils.hpp
-	${CORE_INCLUDE_DIR}/sfz/memory/SmartPointers.hpp
-	${CORE_INCLUDE_DIR}/sfz/memory/SmartPointers.inl
-	${CORE_INCLUDE_DIR}/sfz/memory/StandardAllocator.hpp
+	${INCLUDE_DIR}/sfz/memory/Allocator.hpp
+	${INCLUDE_DIR}/sfz/memory/ArenaAllocator.hpp
+	${INCLUDE_DIR}/sfz/memory/DebugAllocator.hpp
+	${INCLUDE_DIR}/sfz/memory/MemoryUtils.hpp
+	${INCLUDE_DIR}/sfz/memory/SmartPointers.hpp
+	${INCLUDE_DIR}/sfz/memory/SmartPointers.inl
+	${INCLUDE_DIR}/sfz/memory/StandardAllocator.hpp
 
-	${CORE_INCLUDE_DIR}/sfz/strings/DynString.hpp
-	${CORE_INCLUDE_DIR}/sfz/strings/StackString.hpp
-	${CORE_INCLUDE_DIR}/sfz/strings/StringHashers.hpp
-	${CORE_INCLUDE_DIR}/sfz/strings/StringID.hpp
+	${INCLUDE_DIR}/sfz/strings/DynString.hpp
+	${INCLUDE_DIR}/sfz/strings/StackString.hpp
+	${INCLUDE_DIR}/sfz/strings/StringHashers.hpp
+	${INCLUDE_DIR}/sfz/strings/StringID.hpp
 
-	${CORE_INCLUDE_DIR}/sfz/util/Enumerate.hpp
-	${CORE_INCLUDE_DIR}/sfz/util/FrametimeStats.hpp
-	${CORE_INCLUDE_DIR}/sfz/util/IniParser.hpp
-	${CORE_INCLUDE_DIR}/sfz/util/IO.hpp
-	${CORE_INCLUDE_DIR}/sfz/util/LoggingInterface.hpp
-	${CORE_INCLUDE_DIR}/sfz/util/StandardLogger.hpp
+	${INCLUDE_DIR}/sfz/util/Enumerate.hpp
+	${INCLUDE_DIR}/sfz/util/FrametimeStats.hpp
+	${INCLUDE_DIR}/sfz/util/IniParser.hpp
+	${INCLUDE_DIR}/sfz/util/IO.hpp
+	${INCLUDE_DIR}/sfz/util/LoggingInterface.hpp
+	${INCLUDE_DIR}/sfz/util/StandardLogger.hpp
 )
-source_group(TREE ${CORE_INCLUDE_DIR} FILES ${SFZ_CORE_INCLUDE_FILES})
+source_group(TREE ${INCLUDE_DIR} FILES ${INCLUDE_FILES})
 
-set(SFZ_CORE_SOURCE_FILES
+set(SRC_FILES
+	${SRC_DIR}/sfz/Context.cpp
 
-	${CORE_SOURCE_DIR}/sfz/Context.cpp
+	${SRC_DIR}/sfz/math/MathPrimitiveToStrings.cpp
+	${SRC_DIR}/sfz/math/ProjectionMatrices.cpp
 
-	${CORE_SOURCE_DIR}/sfz/math/MathPrimitiveToStrings.cpp
-	${CORE_SOURCE_DIR}/sfz/math/ProjectionMatrices.cpp
+	${SRC_DIR}/sfz/memory/ArenaAllocator.cpp
+	${SRC_DIR}/sfz/memory/DebugAllocator.cpp
+	${SRC_DIR}/sfz/memory/StandardAllocator.cpp
 
-	${CORE_SOURCE_DIR}/sfz/memory/ArenaAllocator.cpp
-	${CORE_SOURCE_DIR}/sfz/memory/DebugAllocator.cpp
-	${CORE_SOURCE_DIR}/sfz/memory/StandardAllocator.cpp
+	${SRC_DIR}/sfz/strings/DynString.cpp
+	${SRC_DIR}/sfz/strings/StackString.cpp
+	${SRC_DIR}/sfz/strings/StringHashers.cpp
+	${SRC_DIR}/sfz/strings/StringID.cpp
 
-	${CORE_SOURCE_DIR}/sfz/strings/DynString.cpp
-	${CORE_SOURCE_DIR}/sfz/strings/StackString.cpp
-	${CORE_SOURCE_DIR}/sfz/strings/StringHashers.cpp
-	${CORE_SOURCE_DIR}/sfz/strings/StringID.cpp
-
-	${CORE_SOURCE_DIR}/sfz/util/FrametimeStats.cpp
-	${CORE_SOURCE_DIR}/sfz/util/IniParser.cpp
-	${CORE_SOURCE_DIR}/sfz/util/IO.cpp
-	${CORE_SOURCE_DIR}/sfz/util/StandardLogger.cpp
+	${SRC_DIR}/sfz/util/FrametimeStats.cpp
+	${SRC_DIR}/sfz/util/IniParser.cpp
+	${SRC_DIR}/sfz/util/IO.cpp
+	${SRC_DIR}/sfz/util/StandardLogger.cpp
 )
-source_group(TREE ${CORE_SOURCE_DIR} FILES ${SFZ_CORE_SOURCE_FILES})
+source_group(TREE ${SRC_DIR} FILES ${SRC_FILES})
 
-set(SFZ_CORE_INCLUDE_CUDA_FILES
-	${CORE_INCLUDE_CUDA_DIR}/sfz/cuda/Buffer.hpp
-	${CORE_INCLUDE_CUDA_DIR}/sfz/cuda/CudaUtils.hpp
-)
-source_group(TREE ${CORE_INCLUDE_CUDA_DIR} FILES ${SFZ_CORE_INCLUDE_CUDA_FILES})
-
-set(SFZ_CORE_FILES
-	${SFZ_CORE_INCLUDE_FILES}
-	${SFZ_CORE_SOURCE_FILES}
-	${SFZ_CORE_INCLUDE_CUDA_FILES}
-)
-
-# Library compile target
-add_library(sfzCore
-	${SFZ_CORE_INCLUDE_FILES}
-	${SFZ_CORE_SOURCE_FILES}
-	${SFZ_CORE_INCLUDE_CUDA_FILES}
-)
-
-# Include directories
-target_include_directories(sfzCore PRIVATE
-	${CORE_INCLUDE_DIR}
-	${CORE_INCLUDE_CUDA_DIR}
-)
+add_library(LibCore ${INCLUDE_FILES} ${SRC_FILES})
+target_include_directories(LibCore PRIVATE ${INCLUDE_DIR})
 
 # sfzCore lib-core tests
 # ------------------------------------------------------------------------------------------------
 
 if(NOT hasParent)
 
-	set(SFZ_CORE_TEST_FILES
-		${CORE_TESTS_DIR}/sfz/Main_Tests.cpp
+	set(TEST_FILES
+		${TESTS_DIR}/sfz/Main_Tests.cpp
 
-		${CORE_TESTS_DIR}/sfz/containers/DynArray_Tests.cpp
-		${CORE_TESTS_DIR}/sfz/containers/HashMap_Tests.cpp
-		${CORE_TESTS_DIR}/sfz/containers/RingBuffer_Tests.cpp
+		${TESTS_DIR}/sfz/containers/DynArray_Tests.cpp
+		${TESTS_DIR}/sfz/containers/HashMap_Tests.cpp
+		${TESTS_DIR}/sfz/containers/RingBuffer_Tests.cpp
 
-		${CORE_TESTS_DIR}/sfz/geometry/Intersection_Tests.cpp
-		${CORE_TESTS_DIR}/sfz/geometry/OBB_Tests.cpp
+		${TESTS_DIR}/sfz/geometry/Intersection_Tests.cpp
+		${TESTS_DIR}/sfz/geometry/OBB_Tests.cpp
 
-		${CORE_TESTS_DIR}/sfz/math/MathPrimitiveHashers_Tests.cpp
-		${CORE_TESTS_DIR}/sfz/math/MathSupport_Tests.cpp
-		${CORE_TESTS_DIR}/sfz/math/Matrix_Tests.cpp
-		${CORE_TESTS_DIR}/sfz/math/MinMax_Tests.cpp
-		${CORE_TESTS_DIR}/sfz/math/Vector_Tests.cpp
-		${CORE_TESTS_DIR}/sfz/math/Quaternion_Tests.cpp
+		${TESTS_DIR}/sfz/math/MathPrimitiveHashers_Tests.cpp
+		${TESTS_DIR}/sfz/math/MathSupport_Tests.cpp
+		${TESTS_DIR}/sfz/math/Matrix_Tests.cpp
+		${TESTS_DIR}/sfz/math/MinMax_Tests.cpp
+		${TESTS_DIR}/sfz/math/Vector_Tests.cpp
+		${TESTS_DIR}/sfz/math/Quaternion_Tests.cpp
 
-		${CORE_TESTS_DIR}/sfz/memory/Allocators_Tests.cpp
-		${CORE_TESTS_DIR}/sfz/memory/ArenaAllocator_Tests.cpp
-		${CORE_TESTS_DIR}/sfz/memory/SmartPointers_Tests.cpp
+		${TESTS_DIR}/sfz/memory/Allocators_Tests.cpp
+		${TESTS_DIR}/sfz/memory/ArenaAllocator_Tests.cpp
+		${TESTS_DIR}/sfz/memory/SmartPointers_Tests.cpp
 
-		${CORE_TESTS_DIR}/sfz/strings/DynString_Tests.cpp
-		${CORE_TESTS_DIR}/sfz/strings/StackString_Tests.cpp
-		${CORE_TESTS_DIR}/sfz/strings/StringHashers_Tests.cpp
-		${CORE_TESTS_DIR}/sfz/strings/StringID_Tests.cpp
+		${TESTS_DIR}/sfz/strings/DynString_Tests.cpp
+		${TESTS_DIR}/sfz/strings/StackString_Tests.cpp
+		${TESTS_DIR}/sfz/strings/StringHashers_Tests.cpp
+		${TESTS_DIR}/sfz/strings/StringID_Tests.cpp
 
-		${CORE_TESTS_DIR}/sfz/util/Enumerate_Tests.cpp
-		${CORE_TESTS_DIR}/sfz/util/IniParser_Tests.cpp
-		${CORE_TESTS_DIR}/sfz/util/IO_Tests.cpp
+		${TESTS_DIR}/sfz/util/Enumerate_Tests.cpp
+		${TESTS_DIR}/sfz/util/IniParser_Tests.cpp
+		${TESTS_DIR}/sfz/util/IO_Tests.cpp
 	)
-	source_group(TREE ${CORE_TESTS_DIR} FILES ${SFZ_CORE_TEST_FILES})
+	source_group(TREE ${TESTS_DIR} FILES ${TEST_FILES})
 
-	add_executable(sfzCoreTests ${SFZ_CORE_TEST_FILES})
-	target_include_directories(sfzCoreTests PRIVATE
-		${CORE_INCLUDE_DIR}
-		${CORE_INCLUDE_CUDA_DIR}
+	add_executable(LibCoreTests ${TEST_FILES})
+	target_include_directories(LibCoreTests PRIVATE
+		${INCLUDE_DIR}
 		${CATCH_INCLUDE_DIRS}
 	)
-	target_link_libraries(sfzCoreTests sfzCore)
-
-endif()
-
-# lib-opengl library
-# ------------------------------------------------------------------------------------------------
-
-if(SFZ_CORE_OPENGL)
-
-	# Directories
-	set(LIBOPENGL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib-opengl/include)
-	set(LIBOPENGL_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib-opengl/src)
-
-	# Source files
-	set(LIBOPENGL_INCLUDE_FILES
-		${LIBOPENGL_INCLUDE_DIR}/sfz/gl/Framebuffer.hpp
-		${LIBOPENGL_INCLUDE_DIR}/sfz/gl/FullscreenGeometry.hpp
-		${LIBOPENGL_INCLUDE_DIR}/sfz/gl/GLUtils.hpp
-		${LIBOPENGL_INCLUDE_DIR}/sfz/gl/IncludeOpenGL.hpp
-		${LIBOPENGL_INCLUDE_DIR}/sfz/gl/Program.hpp
-		${LIBOPENGL_INCLUDE_DIR}/sfz/gl/UniformSetters.hpp
-	)
-	source_group(TREE ${LIBOPENGL_INCLUDE_DIR} FILES ${LIBOPENGL_INCLUDE_FILES})
-
-	set(LIBOPENGL_SOURCE_FILES
-		${LIBOPENGL_SOURCE_DIR}/sfz/gl/Framebuffer.cpp
-		${LIBOPENGL_SOURCE_DIR}/sfz/gl/FullscreenGeometry.cpp
-		${LIBOPENGL_SOURCE_DIR}/sfz/gl/GLUtils.cpp
-		${LIBOPENGL_SOURCE_DIR}/sfz/gl/Program.cpp
-		${LIBOPENGL_SOURCE_DIR}/sfz/gl/UniformSetters.cpp
-	)
-	source_group(TREE ${LIBOPENGL_SOURCE_DIR} FILES ${LIBOPENGL_SOURCE_FILES})
-
-	# Library compile target
-	add_library(sfzCoreLibOpenGL ${LIBOPENGL_INCLUDE_FILES} ${LIBOPENGL_SOURCE_FILES})
-
-	# Include directories
-	target_include_directories(sfzCoreLibOpenGL PRIVATE
-		${CORE_INCLUDE_DIR}
-		${LIBOPENGL_INCLUDE_DIR}
-		${SDL2_INCLUDE_DIRS}
-		${OPENGL_INCLUDE_DIR}
-		${GLEW_INCLUDE_DIRS}
-	)
-
-	# Linking libraries
-	target_link_libraries(sfzCoreLibOpenGL
-		sfzCore
-		${SDL2_LIBRARIES}
-		${OPENGL_LIBRARIES}
-		${GLEW_LIBRARIES}
-	)
+	target_link_libraries(LibCoreTests LibCore)
 
 endif()
 
@@ -346,15 +243,6 @@ endif()
 
 if(hasParent)
 	set(SFZ_CORE_FOUND true PARENT_SCOPE)
-	set(SFZ_CORE_INCLUDE_DIRS ${CORE_INCLUDE_DIR} ${CORE_INCLUDE_CUDA_DIR} PARENT_SCOPE)
-	set(SFZ_CORE_LIBRARIES sfzCore PARENT_SCOPE)
-
-	if(SFZ_CORE_OPENGL)
-		set(SFZ_CORE_OPENGL_FOUND true PARENT_SCOPE)
-		set(SFZ_CORE_OPENGL_INCLUDE_DIRS
-			${LIBOPENGL_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} PARENT_SCOPE)
-		set(SFZ_CORE_OPENGL_LIBRARIES
-			sfzCoreLibOpenGL ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} PARENT_SCOPE)
-		set(SFZ_CORE_OPENGL_RUNTIME_FILES ${GLEW_DLLS} PARENT_SCOPE)
-	endif()
+	set(SFZ_CORE_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
+	set(SFZ_CORE_LIBRARIES LibCore PARENT_SCOPE)
 endif()
