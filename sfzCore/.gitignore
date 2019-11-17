@@ -1,0 +1,43 @@
+# Mac specific files
+.DS_Store
+.Spotlight-V100
+.Trashes
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Precompiled GCC headers
+*.gch
+
+# CMake files
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+install_manifest.txt
+
+# Visual Studio files
+.vs/
+
+# Build directories
+build/
+build_emscripten_debug/
+build_emscripten_release/
+build_make_debug/
+build_make_release/
+build_vs2017/
+build_vs2019/
+build_visualstudio/
+build_xcode_macos/
+build_xcode_ios/
