@@ -22,9 +22,6 @@ project("ZeroG Samples" LANGUAGES CXX)
 # Generate a "compile_commands.json" for VSCode and such when compiling with make
 set(CMAKE_EXPORT_COMPILE_COMMANDS true)
 
-# Add the FetchContent module
-include(FetchContent)
-
 # The root directory of the ZeroG repository
 set(ZEROG_REPO_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
@@ -35,26 +32,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 # SDL2
 # ------------------------------------------------------------------------------------------------
 
-# Adding SDL2
+# SDL2
 # ${SDL2_FOUND}, ${SDL2_INCLUDE_DIRS}, ${SDL2_LIBRARIES}, ${SDL2_RUNTIME_FILES}
-if (EXISTS ${ZEROG_REPO_ROOT_DIR}/../Dependency-SDL2)
-	message("-- [ZeroG Samples]: Using local Dependency-SDL2")
-	add_subdirectory(${ZEROG_REPO_ROOT_DIR}/../Dependency-SDL2 ${CMAKE_BINARY_DIR}/sdl2)
-
-else()
-	message("-- [ZeroG Samples]: Downloading Dependency-SDL2 from GitHub")
-
-	FetchContent_Declare(
-		sdl2
-		GIT_REPOSITORY https://github.com/PetorSFZ/Dependency-SDL2.git
-		GIT_TAG 5b3f07516ef6554a4c3a6d14ae840a34ca850041
-	)
-	FetchContent_GetProperties(sdl2)
-	if(NOT sdl2_POPULATED)
-		FetchContent_Populate(sdl2)
-		add_subdirectory(${sdl2_SOURCE_DIR} ${CMAKE_BINARY_DIR}/sdl2)
-	endif()
-endif()
+message("-- [ZeroG Samples]: Adding sfz_tech's bundled SDL2")
+add_subdirectory(${ZEROG_REPO_ROOT_DIR}/../externals/sdl2 ${CMAKE_BINARY_DIR}/sdl2)
 
 # Copy SDL2.dll on Windows
 if (MSVC)
