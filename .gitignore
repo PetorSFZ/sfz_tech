@@ -28,6 +28,11 @@ install_manifest.txt
 .vs/
 
 # Build directories
+Lib-Core-Headers/build_make_debug/
+Lib-Core-Headers/build_make_release/
+Lib-Core-Headers/build_vs2019/
+Lib-Core-Headers/build_visualstudio/
+
 Lib-Core/build/
 Lib-Core/build_emscripten_debug/
 Lib-Core/build_emscripten_release/
