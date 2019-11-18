@@ -23,15 +23,15 @@
 #include <utility> // std::swap()
 
 #include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
 
-#include <sfz/containers/DynArray.hpp>
 #include <sfz/containers/HashMap.hpp>
 
 #include "ph/renderer/ZeroGUtils.hpp"
 
 namespace ph {
 
-using sfz::DynArray;
+using sfz::ArrayDynamic;
 
 // Constants
 // ------------------------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ struct Block final {
 
 struct MemoryPage final {
 	zg::MemoryHeap heap;
-	DynArray<Block> freeBlocks;
+	ArrayDynamic<Block> freeBlocks;
 	uint32_t pageSize = 0;
 	uint32_t numAllocations = 0;
 	uint32_t largestFreeBlockSize = 0;
@@ -69,7 +69,7 @@ struct DynamicGpuAllocatorState final {
 	ZgMemoryType memoryType = ZG_MEMORY_TYPE_UNDEFINED;
 	uint32_t pageSize = 0;
 
-	DynArray<MemoryPage> pages;
+	ArrayDynamic<MemoryPage> pages;
 	sfz::HashMap<void*, AllocEntry> entries; // ZgBuffer* or ZgTexture2D* is key
 
 	uint64_t totalNumAllocations = 0;
@@ -282,7 +282,7 @@ static void pageDeallocateBlock(MemoryPage& page, Block& allocatedBlock) noexcep
 	page.numAllocations -= 1;
 }
 
-static uint32_t findAppropriatePage(DynArray<MemoryPage>& pages, uint32_t size) noexcept
+static uint32_t findAppropriatePage(ArrayDynamic<MemoryPage>& pages, uint32_t size) noexcept
 {
 	sfz_assert(size != 0);
 	for (uint32_t i = 0; i < pages.size(); i++) {

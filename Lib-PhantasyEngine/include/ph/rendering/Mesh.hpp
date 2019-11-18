@@ -20,13 +20,13 @@
 #pragma once
 
 #include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
 
-#include <sfz/containers/DynArray.hpp>
 #include <sfz/strings/StringID.hpp>
 
 namespace ph {
 
-using sfz::DynArray;
+using sfz::ArrayDynamic;
 using sfz::StringID;
 using sfz::vec2;
 using sfz::vec3;
@@ -82,10 +82,10 @@ struct MeshComponent final {
 // ------------------------------------------------------------------------------------------------
 
 struct Mesh final {
-	DynArray<Vertex> vertices;
-	DynArray<uint32_t> indices;
-	DynArray<Material> materials;
-	DynArray<MeshComponent> components;
+	ArrayDynamic<Vertex> vertices;
+	ArrayDynamic<uint32_t> indices;
+	ArrayDynamic<Material> materials;
+	ArrayDynamic<MeshComponent> components;
 };
 
 } // namespace ph

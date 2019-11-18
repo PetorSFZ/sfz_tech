@@ -19,9 +19,9 @@
 #include "sfz/memory/ArenaAllocator.hpp"
 
 #include <skipifzero.hpp>
+#include <skipifzero_allocators.hpp>
 
 #include <sfz/Logging.hpp>
-#include <sfz/memory/MemoryUtils.hpp>
 
 namespace sfz {
 

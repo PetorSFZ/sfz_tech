@@ -60,7 +60,7 @@ struct EnumerateIterable final {
 /// test, see Enumerate_Tests.cpp).
 ///
 /// ExampleUsage:
-/// DynArray<uint32_t> elements = /* ... */
+/// ArrayDynamic<uint32_t> elements = /* ... */
 /// for (auto e : sfz::enumerate(elements)) {
 /// 	// Access index with e.idx, element with e.element.
 /// }

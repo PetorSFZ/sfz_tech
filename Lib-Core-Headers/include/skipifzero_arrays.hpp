@@ -18,44 +18,44 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include "skipifzero.hpp"
 
 namespace sfz {
 
-// DynArray
+// ArrayDynamic
 // ------------------------------------------------------------------------------------------------
 
-constexpr float DYNARRAY_GROW_RATE = 1.75;
-constexpr uint32_t DYNARRAY_DEFAULT_INITIAL_CAPACITY = 64;
-constexpr uint32_t DYNARRAY_MIN_CAPACITY = 2;
-constexpr uint32_t DYNARRAY_MAX_CAPACITY = uint32_t(UINT32_MAX / DYNARRAY_GROW_RATE) - 1;
+constexpr float ARRAY_DYNAMIC_GROW_RATE = 1.75;
+constexpr uint32_t ARRAY_DYNAMIC_DEFAULT_INITIAL_CAPACITY = 64;
+constexpr uint32_t ARRAY_DYNAMIC_MIN_CAPACITY = 2;
+constexpr uint32_t ARRAY_DYNAMIC_MAX_CAPACITY = uint32_t(UINT32_MAX / ARRAY_DYNAMIC_GROW_RATE) - 1;
 
 // A class managing a dynamic array, somewhat like std::vector.
 //
-// A DynArray has both a size and a capacity. The size is the current number elements in the array,
-// the capacity is the amount of elements the array can hold before it needs to be resized.
+// An ArrayDynamic has both a size and a capacity. The size is the current number elements in the
+// array, the capacity is the amount of elements the array can hold before it needs to be resized.
 //
-// A DynArray needs to be supplied an allocator before it can start allocating memory, this is done
-// through the init() method (or it's constructor wrapper). Calling init() with capacity 0 is
+// An ArrayDynamic needs to be supplied an allocator before it can start allocating memory, this is
+// done through the init() method (or it's constructor wrapper). Calling init() with capacity 0 is
 // guaranteed to just set the allocator and not allocate any memory.
 //
-// DynArray does not guarantee that a specific element will always occupy the same position in
+// ArrayDynamic does not guarantee that a specific element will always occupy the same position in
 // memory. E.g., elements may be moved around when the array is modified. It is not safe to modify
-// the DynArray when iterating over it, as the iterators will not update on resize.
+// the ArrayDynamic when iterating over it, as the iterators will not update on resize.
 template<typename T>
-class DynArray final {
+class ArrayDynamic final {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	DynArray()  = default;
-	DynArray(const DynArray& other) noexcept { *this = other.clone(); }
-	DynArray& operator= (const DynArray& other) noexcept { *this = other.clone(); return *this; }
-	DynArray(DynArray&& other) noexcept { this->swap(other); }
-	DynArray& operator= (DynArray&& other) noexcept { this->swap(other); return *this; }
-	~DynArray() noexcept { this->destroy(); }
+	ArrayDynamic()  = default;
+	ArrayDynamic(const ArrayDynamic& other) noexcept { *this = other.clone(); }
+	ArrayDynamic& operator= (const ArrayDynamic& other) noexcept { *this = other.clone(); return *this; }
+	ArrayDynamic(ArrayDynamic&& other) noexcept { this->swap(other); }
+	ArrayDynamic& operator= (ArrayDynamic&& other) noexcept { this->swap(other); return *this; }
+	~ArrayDynamic() noexcept { this->destroy(); }
 
-	explicit DynArray(uint32_t capacity, Allocator* allocator, DbgInfo allocDbg) noexcept {
+	explicit ArrayDynamic(uint32_t capacity, Allocator* allocator, DbgInfo allocDbg) noexcept {
 		this->init(capacity, allocator, allocDbg);
 	}
 
@@ -71,14 +71,14 @@ public:
 		this->setCapacity(capacity, allocDbg);
 	}
 
-	DynArray clone(DbgInfo allocDbg = sfz_dbg("DynArray")) const
+	ArrayDynamic clone(DbgInfo allocDbg = sfz_dbg("ArrayDynamic")) const
 	{
-		DynArray tmp(mCapacity, mAllocator, allocDbg);
+		ArrayDynamic tmp(mCapacity, mAllocator, allocDbg);
 		tmp.add(mData, mSize);
 		return tmp;
 	}
 
-	void swap(DynArray& other)
+	void swap(ArrayDynamic& other)
 	{
 		std::swap(this->mSize, other.mSize);
 		std::swap(this->mCapacity, other.mCapacity);
@@ -104,19 +104,19 @@ public:
 	void hackSetSize(uint32_t size) { mSize = (size <= mCapacity) ? size : mCapacity; }
 
 	// Sets the capacity, allocating memory and moving elements if necessary.
-	void setCapacity(uint32_t capacity, DbgInfo allocDbg = sfz_dbg("DynArray"))
+	void setCapacity(uint32_t capacity, DbgInfo allocDbg = sfz_dbg("ArrayDynamic"))
 	{
 		if (mSize > capacity) capacity = mSize;
 		if (mCapacity == capacity) return;
-		if (capacity < DYNARRAY_MIN_CAPACITY) capacity = DYNARRAY_MIN_CAPACITY;
+		if (capacity < ARRAY_DYNAMIC_MIN_CAPACITY) capacity = ARRAY_DYNAMIC_MIN_CAPACITY;
 		sfz_assert_hard(mAllocator != nullptr);
-		sfz_assert_hard(capacity < DYNARRAY_MAX_CAPACITY);
+		sfz_assert_hard(capacity < ARRAY_DYNAMIC_MAX_CAPACITY);
 
 		// Allocate memory and move/copy over elements from old memory
 		T* newAllocation = capacity == 0 ? nullptr : (T*)mAllocator->allocate(
 			allocDbg, capacity * sizeof(T), alignof(T) < 32 ? 32 : alignof(T));
 		for (uint32_t i = 0; i < mSize; i++) new(newAllocation + i) T(std::move(mData[i]));
-		
+
 		// Destroy old memory and replace state with new memory and values
 		uint32_t sizeBackup = mSize;
 		Allocator* allocatorBackup = mAllocator;
@@ -217,8 +217,8 @@ private:
 	{
 		uint32_t newSize = mSize + elementsToAdd;
 		if (newSize <= mCapacity) return;
-		uint32_t newCapacity = (mCapacity == 0) ? DYNARRAY_DEFAULT_INITIAL_CAPACITY :
-			uint32_t(mCapacity * DYNARRAY_GROW_RATE);
+		uint32_t newCapacity = (mCapacity == 0) ? ARRAY_DYNAMIC_DEFAULT_INITIAL_CAPACITY :
+			uint32_t(mCapacity * ARRAY_DYNAMIC_GROW_RATE);
 		setCapacity(newCapacity);
 	}
 

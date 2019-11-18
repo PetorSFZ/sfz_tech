@@ -20,15 +20,14 @@
 #pragma once
 
 #include <skipifzero.hpp>
-
-#include <sfz/containers/DynArray.hpp>
+#include <skipifzero_arrays.hpp>
 
 #include "ph/config/Setting.hpp"
 
 namespace ph {
 
 using sfz::Allocator;
-using sfz::DynArray;
+using sfz::ArrayDynamic;
 
 // GlobalConfig
 // ------------------------------------------------------------------------------------------------
@@ -87,13 +86,13 @@ public:
 	Setting* getSetting(const char* key) noexcept;
 
 	/// Returns pointers to all available settings
-	void getAllSettings(DynArray<Setting*>& settings) noexcept;
+	void getAllSettings(ArrayDynamic<Setting*>& settings) noexcept;
 
 	/// Returns all sections available
-	void getSections(DynArray<str32>& sections) noexcept;
+	void getSections(ArrayDynamic<str32>& sections) noexcept;
 
 	/// Returns all settings available in a given section
-	void getSectionSettings(const char* section, DynArray<Setting*>& settings) noexcept;
+	void getSectionSettings(const char* section, ArrayDynamic<Setting*>& settings) noexcept;
 
 	// Sanitizers
 	// --------------------------------------------------------------------------------------------

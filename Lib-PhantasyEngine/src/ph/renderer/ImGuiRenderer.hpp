@@ -20,8 +20,7 @@
 #pragma once
 
 #include <skipifzero.hpp>
-
-#include <sfz/containers/DynArray.hpp>
+#include <skipifzero_arrays.hpp>
 
 #include <ZeroG-cpp.hpp>
 
@@ -32,7 +31,7 @@
 
 namespace ph {
 
-using sfz::DynArray;
+using sfz::ArrayDynamic;
 using sfz::vec2;
 using sfz::vec2_i32;
 using sfz::vec4;
@@ -51,7 +50,7 @@ static_assert(sizeof(ImGuiVertex) == 32, "ImGuiVertex is padded");
 // ------------------------------------------------------------------------------------------------
 
 struct ImGuiFrameState final {
-	DynArray<ImGuiVertex> convertedVertices;
+	ArrayDynamic<ImGuiVertex> convertedVertices;
 	zg::Buffer uploadVertexBuffer;
 	zg::Buffer uploadIndexBuffer;
 };

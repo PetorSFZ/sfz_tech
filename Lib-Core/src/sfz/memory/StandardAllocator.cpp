@@ -21,8 +21,7 @@
 #include <cinttypes>
 
 #include <skipifzero.hpp>
-
-#include "sfz/memory/MemoryUtils.hpp"
+#include <skipifzero_allocators.hpp>
 
 #ifdef _WIN32
 #include <malloc.h>
@@ -31,36 +30,6 @@
 #endif
 
 namespace sfz {
-
-// Standard allocator implementation
-// ------------------------------------------------------------------------------------------------
-
-class StandardAllocator final : public Allocator {
-public:
-	void* allocate(DbgInfo dbg, uint64_t size, uint64_t alignment) noexcept override final
-	{
-		(void)dbg;
-		sfz_assert(isPowerOfTwo(alignment));
-
-#ifdef _WIN32
-		return _aligned_malloc(size, alignment);
-#else
-		void* ptr = nullptr;
-		posix_memalign(&ptr, alignment, size);
-		return ptr;
-#endif
-	}
-
-	void deallocate(void* pointer) noexcept override final
-	{
-		if (pointer == nullptr) return;
-#ifdef _WIN32
-		_aligned_free(pointer);
-#else
-		free(pointer);
-#endif
-	}
-};
 
 // StandardAllocator retrieval function
 // ------------------------------------------------------------------------------------------------

@@ -20,7 +20,8 @@
 
 #include <cstdint>
 
-#include "sfz/containers/DynArray.hpp"
+#include <skipifzero_arrays.hpp>
+
 #include "sfz/strings/DynString.hpp"
 
 namespace sfz {
@@ -45,7 +46,7 @@ public:
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
-	const DynArray<float>& samples() const noexcept { return mSamples; }
+	const ArrayDynamic<float>& samples() const noexcept { return mSamples; }
 
 	void addSample(float sampleInMs) noexcept;
 	void reset() noexcept;
@@ -63,7 +64,7 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	DynArray<float> mSamples;
+	ArrayDynamic<float> mSamples;
 	DynString mString;
 	float mMin, mMax, mAvg, mSD, mTotalTime;
 };

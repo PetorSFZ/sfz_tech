@@ -20,8 +20,8 @@
 #pragma once
 
 #include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
 
-#include <sfz/containers/DynArray.hpp>
 #include <sfz/containers/HashMap.hpp>
 #include <sfz/strings/StackString.hpp>
 #include <sfz/strings/StringID.hpp>
@@ -38,7 +38,7 @@ struct SDL_Window;
 
 namespace ph {
 
-using sfz::DynArray;
+using sfz::ArrayDynamic;
 using sfz::HashMap;
 using sfz::str128;
 using sfz::str256;
@@ -173,9 +173,9 @@ struct Stage final {
 	StringID stageName = StringID::invalid();
 	StageType stageType;
 	StringID renderPipelineName = StringID::invalid();
-	DynArray<Framed<ConstantBufferMemory>> constantBuffers;
+	ArrayDynamic<Framed<ConstantBufferMemory>> constantBuffers;
 	StringID framebufferName = StringID::invalid();
-	DynArray<BoundRenderTarget> boundRenderTargets;
+	ArrayDynamic<BoundRenderTarget> boundRenderTargets;
 };
 
 // Texture plus info
@@ -198,13 +198,13 @@ struct RendererConfigurableState final {
 	str320 configPath;
 
 	// Framebuffers
-	DynArray<FramebufferItem> framebuffers;
+	ArrayDynamic<FramebufferItem> framebuffers;
 
 	// Pipelines
-	DynArray<PipelineRenderItem> renderPipelines;
+	ArrayDynamic<PipelineRenderItem> renderPipelines;
 
 	// Present Queue Stages
-	DynArray<Stage> presentQueueStages;
+	ArrayDynamic<Stage> presentQueueStages;
 
 	// Helper method to get a framebuffer given a StringID, returns nullptr on failure
 	zg::Framebuffer* getFramebuffer(zg::Framebuffer& defaultFramebuffer, StringID id) noexcept;

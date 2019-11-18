@@ -29,9 +29,9 @@
 #endif
 
 #include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
 
 #include <sfz/Logging.hpp>
-#include <sfz/containers/DynArray.hpp>
 
 #include "ph/Context.hpp"
 #include "ph/config/GlobalConfig.hpp"
@@ -41,7 +41,7 @@ namespace ph {
 // Typedefs
 // ------------------------------------------------------------------------------------------------
 
-using sfz::DynArray;
+using sfz::ArrayDynamic;
 using time_point = std::chrono::high_resolution_clock::time_point;
 
 // GameLoopState

@@ -208,7 +208,7 @@ void deinitializeImgui() noexcept
 void updateImgui(
 	Renderer& renderer,
 	const sdl::Mouse* rawMouse,
-	const DynArray<SDL_Event>* keyboardEvents,
+	const ArrayDynamic<SDL_Event>* keyboardEvents,
 	const sdl::GameControllerState* controller) noexcept
 {
 	// Note, these should actually be freed using SDL_FreeCursor(). But I don't think it matters
@@ -360,9 +360,9 @@ void updateImgui(
 }
 
 void convertImguiDrawData(
-	DynArray<phImguiVertex>& vertices,
-	DynArray<uint32_t>& indices,
-	DynArray<phImguiCommand>& commands) noexcept
+	ArrayDynamic<phImguiVertex>& vertices,
+	ArrayDynamic<uint32_t>& indices,
+	ArrayDynamic<phImguiCommand>& commands) noexcept
 {
 	ImDrawData& drawData = *ImGui::GetDrawData();
 

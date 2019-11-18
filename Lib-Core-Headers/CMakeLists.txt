@@ -94,6 +94,8 @@ set(TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
 set(INCLUDE_FILES
 	${INCLUDE_DIR}/skipifzero.hpp
+	${INCLUDE_DIR}/skipifzero_allocators.hpp
+	${INCLUDE_DIR}/skipifzero_arrays.hpp
 )
 source_group(TREE ${INCLUDE_DIR} FILES ${INCLUDE_FILES})
 
@@ -107,6 +109,7 @@ if(NOT hasParent)
 
 	set(TEST_FILES
 		${TESTS_DIR}/LibCoreHeadersTestsMain.cpp
+		${TESTS_DIR}/skipifzero_arrays_tests.cpp
 	)
 	source_group(TREE ${TESTS_DIR} FILES ${TEST_FILES})
 

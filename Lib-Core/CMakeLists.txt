@@ -116,7 +116,6 @@ set(INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/PushWarnings.hpp
 	${INCLUDE_DIR}/sfz/SimdIntrinsics.hpp
 
-	${INCLUDE_DIR}/sfz/containers/DynArray.hpp
 	${INCLUDE_DIR}/sfz/containers/HashMap.hpp
 	${INCLUDE_DIR}/sfz/containers/HashMap.inl
 	${INCLUDE_DIR}/sfz/containers/HashTableKeyDescriptor.hpp
@@ -148,7 +147,6 @@ set(INCLUDE_FILES
 
 	${INCLUDE_DIR}/sfz/memory/ArenaAllocator.hpp
 	${INCLUDE_DIR}/sfz/memory/DebugAllocator.hpp
-	${INCLUDE_DIR}/sfz/memory/MemoryUtils.hpp
 	${INCLUDE_DIR}/sfz/memory/SmartPointers.hpp
 	${INCLUDE_DIR}/sfz/memory/SmartPointers.inl
 	${INCLUDE_DIR}/sfz/memory/StandardAllocator.hpp
@@ -200,7 +198,6 @@ if(NOT hasParent)
 	set(TEST_FILES
 		${TESTS_DIR}/sfz/Main_Tests.cpp
 
-		${TESTS_DIR}/sfz/containers/DynArray_Tests.cpp
 		${TESTS_DIR}/sfz/containers/HashMap_Tests.cpp
 		${TESTS_DIR}/sfz/containers/RingBuffer_Tests.cpp
 

@@ -135,7 +135,7 @@ public:
 	/// Swaps the contents of two HashMaps, including the allocators.
 	void swap(HashMap& other) noexcept;
 
-	/// Destroys all elements stored in this DynArray, deallocates all memory and removes allocator.
+	/// Destroys all elements stored in this HashMap, deallocates all memory and removes allocator.
 	/// After this method is called the size and capacity is 0, allocator is nullptr. If the HashMap
 	/// is already empty then this method will only remove the allocator if it exists. It is not
 	/// necessary to call this method manually, it will automatically be called in the destructor.

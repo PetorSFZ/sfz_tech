@@ -18,36 +18,58 @@
 
 #pragma once
 
-#include <cstdint>
+#include "skipifzero.hpp"
+
+#ifdef _WIN32
+#include <malloc.h>
+#endif
 
 namespace sfz {
 
-using std::uintptr_t;
-
-// Memory utils
+// Memory helpers functions
 // ------------------------------------------------------------------------------------------------
 
 // Checks whether a pointer is aligned to a given byte aligment
-// \param pointer the pointer to test
-// \param alignment the byte aligment
-inline bool isAligned(const void* pointer, uint64_t alignment) noexcept
+constexpr bool isAligned(const void* pointer, uint64_t alignment)
 {
 	return ((uintptr_t)pointer & (alignment - 1)) == 0;
 }
 
 // Checks whether an uint64_t is a power of two or not
-inline bool isPowerOfTwo(uint64_t value) noexcept
+constexpr bool isPowerOfTwo(uint64_t value)
 {
 	// See https://graphics.stanford.edu/~seander/bithacks.html#DetermineIfPowerOf2
 	return value != 0 && (value & (value - 1)) == 0;
 }
 
-// Checks whether an uint32_t is a power of two or not
-inline bool isPowerOfTwo(uint32_t value) noexcept
-{
-	// See https://graphics.stanford.edu/~seander/bithacks.html#DetermineIfPowerOf2
-	return value != 0 && (value & (value - 1)) == 0;
-}
+// StandardAllocator
+// ------------------------------------------------------------------------------------------------
 
+class StandardAllocator final : public Allocator {
+public:
+	void* allocate(DbgInfo dbg, uint64_t size, uint64_t alignment) noexcept override final
+	{
+		(void)dbg;
+		sfz_assert(isPowerOfTwo(alignment));
+
+#ifdef _WIN32
+		return _aligned_malloc(size, alignment);
+#else
+		void* ptr = nullptr;
+		posix_memalign(&ptr, alignment, size);
+		return ptr;
+#endif
+	}
+
+	void deallocate(void* pointer) noexcept override final
+	{
+		if (pointer == nullptr) return;
+#ifdef _WIN32
+		_aligned_free(pointer);
+#else
+		free(pointer);
+#endif
+	}
+};
 
 } // namespace sfz

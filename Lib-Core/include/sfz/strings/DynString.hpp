@@ -19,9 +19,9 @@
 #pragma once
 
 #include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
 
 #include "sfz/Context.hpp"
-#include "sfz/containers/DynArray.hpp"
 
 namespace sfz {
 
@@ -33,8 +33,8 @@ using std::uint32_t;
 
 /// A class for managing a dynamic string, replacement for std::string.
 ///
-/// Implemented using a (private) DynArray, many of the functions are simply wrappers around the
-/// DynArray interface. Check out DynArray for more specific documentation on these functions.
+/// Implemented using a (private) ArrayDynamic, many of the functions are simply wrappers around the
+/// ArrayDynamic interface. Check out ArrayDynamic for more specific documentation on these functions.
 class DynString final {
 public:
 
@@ -52,7 +52,7 @@ public:
 	/// parameter. If the string is shorter than the specified capacity or a nullptr then the
 	/// internal capacity will be set to the specified capacity.
 	/// \param string a null-terminated string or nullptr
-	/// \param capacity the capacity of the internal DynArray
+	/// \param capacity the capacity of the internal ArrayDynamic
 	explicit DynString(const char* string, uint32_t capacity = 0,
 	                   Allocator* allocator = getDefaultAllocator()) noexcept;
 
@@ -63,16 +63,16 @@ public:
 	char* str() noexcept { return mString.data(); }
 
 	/// Returns length of the internal string minus the null-terminator. If the size of the
-	/// internal DynArray is non-zero then this method will return DynArray.size() - 1.
+	/// internal ArrayDynamic is non-zero then this method will return ArrayDynamic.size() - 1.
 	uint32_t size() const noexcept;
 	uint32_t capacity() const noexcept { return mString.capacity(); }
 
 	Allocator* allocator() const noexcept { return mString.allocator(); }
 
-	const DynArray<char>& internalDynArray() const noexcept { return mString; }
-	DynArray<char>& internalDynArray() noexcept { return mString; }
+	const ArrayDynamic<char>& internalArrayDynamic() const noexcept { return mString; }
+	ArrayDynamic<char>& internalArrayDynamic() noexcept { return mString; }
 
-	// Public methods (DynArray)
+	// Public methods (ArrayDynamic)
 	// --------------------------------------------------------------------------------------------
 
 	void swap(DynString& other) noexcept { mString.swap(other.mString); }
@@ -112,7 +112,7 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	DynArray<char> mString;
+	ArrayDynamic<char> mString;
 };
 
 } // namespace sfz

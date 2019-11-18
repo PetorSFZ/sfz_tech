@@ -35,13 +35,13 @@ using namespace sfz;
 
 struct Section final {
 	StackString32 sectionKey;
-	DynArray<UniquePtr<Setting>> settings;
+	ArrayDynamic<UniquePtr<Setting>> settings;
 };
 
 struct GlobalConfigImpl final {
 	Allocator* allocator = nullptr;
 	IniParser ini;
-	DynArray<Section> sections;
+	ArrayDynamic<Section> sections;
 	bool loaded = false; // Can only be loaded once... for now
 };
 
@@ -236,7 +236,7 @@ Setting* GlobalConfig::getSetting(const char* key) noexcept
 	return this->getSetting("", key);
 }
 
-void GlobalConfig::getAllSettings(DynArray<Setting*>& settings) noexcept
+void GlobalConfig::getAllSettings(ArrayDynamic<Setting*>& settings) noexcept
 {
 	sfz_assert(mImpl != nullptr);
 	for (auto& section : mImpl->sections) {
@@ -246,7 +246,7 @@ void GlobalConfig::getAllSettings(DynArray<Setting*>& settings) noexcept
 	}
 }
 
-void GlobalConfig::getSections(DynArray<StackString32>& sections) noexcept
+void GlobalConfig::getSections(ArrayDynamic<StackString32>& sections) noexcept
 {
 	sfz_assert(mImpl != nullptr);
 	sections.ensureCapacity(mImpl->sections.size() + sections.size());
@@ -255,7 +255,7 @@ void GlobalConfig::getSections(DynArray<StackString32>& sections) noexcept
 	}
 }
 
-void GlobalConfig::getSectionSettings(const char* section, DynArray<Setting*>& settings) noexcept
+void GlobalConfig::getSectionSettings(const char* section, ArrayDynamic<Setting*>& settings) noexcept
 {
 	sfz_assert(mImpl != nullptr);
 

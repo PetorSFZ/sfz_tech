@@ -24,8 +24,8 @@
 #include <SDL.h>
 
 #include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
 
-#include <sfz/containers/DynArray.hpp>
 #include <sfz/containers/HashMap.hpp>
 #include <sfz/memory/SmartPointers.hpp>
 
@@ -36,7 +36,7 @@
 namespace ph {
 
 using std::int32_t;
-using sfz::DynArray;
+using sfz::ArrayDynamic;
 using sfz::HashMap;
 using sfz::UniquePtr;
 using sdl::GameController;
@@ -104,9 +104,9 @@ struct UpdateOp final {
 
 struct UserInput final {
 	// SDL events, the events array does not contain controller or mouse events
-	DynArray<SDL_Event> events;
-	DynArray<SDL_Event> controllerEvents;
-	DynArray<SDL_Event> mouseEvents;
+	ArrayDynamic<SDL_Event> events;
+	ArrayDynamic<SDL_Event> controllerEvents;
+	ArrayDynamic<SDL_Event> mouseEvents;
 
 	// Processed controller and mouse input
 	HashMap<int32_t, GameController> controllers;

@@ -45,7 +45,7 @@ DynString::DynString(const char* string, uint32_t capacity, Allocator* allocator
 	mString.init(capacity, allocator, sfz_dbg("DynString"));
 	mString.hackSetSize(uint32_t(length));
 
-	// Copy string to internal DynArray
+	// Copy string to internal ArrayDynamic
 	std::strcpy(mString.data(), string);
 }
 

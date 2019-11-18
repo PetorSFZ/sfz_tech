@@ -20,21 +20,20 @@
 #pragma once
 
 #include <skipifzero.hpp>
-
-#include <sfz/containers/DynArray.hpp>
+#include <skipifzero_arrays.hpp>
 
 #include <ph/rendering/ImageView.hpp>
 
 namespace ph {
 
 using sfz::Allocator;
-using sfz::DynArray;
+using sfz::ArrayDynamic;
 
 // Image struct
 // ------------------------------------------------------------------------------------------------
 
 struct Image final {
-	DynArray<uint8_t> rawData;
+	ArrayDynamic<uint8_t> rawData;
 	ImageType type = ImageType::UNDEFINED;
 	int32_t width = -1;
 	int32_t height = -1;

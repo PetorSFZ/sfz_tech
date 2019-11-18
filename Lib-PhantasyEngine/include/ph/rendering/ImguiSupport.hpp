@@ -21,7 +21,8 @@
 
 #include <imgui.h>
 
-#include <sfz/containers/DynArray.hpp>
+#include <skipifzero_arrays.hpp>
+
 #include <ph/rendering/ImguiRenderingData.hpp>
 
 #include "ph/renderer/Renderer.hpp"
@@ -31,7 +32,7 @@
 namespace ph {
 
 using sfz::Allocator;
-using sfz::DynArray;
+using sfz::ArrayDynamic;
 
 // Initializes imgui, returns font image view to be sent to renderers initImgui() function.
 phImageView initializeImgui(Allocator* allocator) noexcept;
@@ -41,13 +42,13 @@ void deinitializeImgui() noexcept;
 void updateImgui(
 	Renderer& renderer,
 	const sdl::Mouse* rawMouse,
-	const DynArray<SDL_Event>* keyboardEvents,
+	const ArrayDynamic<SDL_Event>* keyboardEvents,
 	const sdl::GameControllerState* controller) noexcept;
 
 void convertImguiDrawData(
-	DynArray<phImguiVertex>& vertices,
-	DynArray<uint32_t>& indices,
-	DynArray<phImguiCommand>& commands) noexcept;
+	ArrayDynamic<phImguiVertex>& vertices,
+	ArrayDynamic<uint32_t>& indices,
+	ArrayDynamic<phImguiCommand>& commands) noexcept;
 
 // The fonts initialized with Imgui
 ImFont* imguiFontDefault() noexcept;

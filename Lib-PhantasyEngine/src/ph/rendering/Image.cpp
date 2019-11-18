@@ -88,7 +88,7 @@ using sfz::StackString320;
 // Static helper functions
 // ------------------------------------------------------------------------------------------------
 
-static void padRgb(DynArray<uint8_t>& dst, const uint8_t* src, int32_t w, int32_t h) noexcept
+static void padRgb(ArrayDynamic<uint8_t>& dst, const uint8_t* src, int32_t w, int32_t h) noexcept
 {
 	const int32_t srcPitch = w * 3;
 	const int32_t dstPitch = w * 4;

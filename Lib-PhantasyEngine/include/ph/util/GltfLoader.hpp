@@ -18,14 +18,14 @@
 
 #pragma once
 
-#include <sfz/containers/DynArray.hpp>
+#include <skipifzero_arrays.hpp>
 
 #include "ph/rendering/Image.hpp"
 #include "ph/rendering/Mesh.hpp"
 
 namespace ph {
 
-using sfz::DynArray;
+using sfz::ArrayDynamic;
 
 // Function for loading from gltf
 // ------------------------------------------------------------------------------------------------
@@ -45,7 +45,7 @@ struct ImageAndPath final {
 bool loadAssetsFromGltf(
 	const char* gltfPath,
 	Mesh& meshOut,
-	DynArray<ImageAndPath>& texturesOut,
+	ArrayDynamic<ImageAndPath>& texturesOut,
 	sfz::Allocator* allocator,
 	bool (*checkIfTextureIsLoaded)(StringID id, void* userPtr),
 	void* userPtr) noexcept;

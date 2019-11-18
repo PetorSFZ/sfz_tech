@@ -20,10 +20,11 @@
 #include "catch2/catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
+#include <skipifzero_allocators.hpp>
+
 #include "sfz/Context.hpp"
 #include "sfz/Logging.hpp"
 #include "sfz/memory/ArenaAllocator.hpp"
-#include "sfz/memory/MemoryUtils.hpp"
 
 using namespace sfz;
 

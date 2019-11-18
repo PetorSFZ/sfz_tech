@@ -146,7 +146,7 @@ void gpuMeshUploadBlocking(
 
 	// Allocate (cpu) memory for temporary materials buffer and fill it
 	sfz_assert(gpuMesh.numMaterials == cpuMesh.materials.size());
-	DynArray<ShaderMaterial> gpuMaterials;
+	ArrayDynamic<ShaderMaterial> gpuMaterials;
 	gpuMaterials.init(cpuMesh.materials.size(), cpuAllocator, sfz_dbg("gpuMaterials"));
 	gpuMaterials.add(ShaderMaterial(), cpuMesh.materials.size());
 	for (uint32_t i = 0; i < cpuMesh.materials.size(); i++) {

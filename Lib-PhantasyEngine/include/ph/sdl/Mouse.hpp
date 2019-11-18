@@ -22,8 +22,8 @@
 #include <SDL.h>
 
 #include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
 
-#include <sfz/containers/DynArray.hpp>
 #include <sfz/geometry/AABB2D.hpp>
 
 #include "ph/sdl/ButtonState.hpp"
@@ -32,7 +32,7 @@ namespace ph {
 
 namespace sdl {
 
-using sfz::DynArray;
+using sfz::ArrayDynamic;
 using sfz::AABB2D;
 using sfz::vec2;
 
@@ -65,7 +65,7 @@ struct Mouse final {
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
-	void update(int windowWidth, int windowHeight, const DynArray<SDL_Event>& events) noexcept;
+	void update(int windowWidth, int windowHeight, const ArrayDynamic<SDL_Event>& events) noexcept;
 	Mouse scaleMouse(vec2 camPos, vec2 camDim) const noexcept;
 	Mouse scaleMouse(const AABB2D& camera) const noexcept;
 };

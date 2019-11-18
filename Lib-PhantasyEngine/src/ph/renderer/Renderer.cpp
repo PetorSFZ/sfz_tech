@@ -24,8 +24,8 @@
 #include <SDL.h>
 
 #include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
 
-#include <sfz/containers/DynArray.hpp>
 #include <sfz/Logging.hpp>
 #include <sfz/math/Matrix.hpp>
 
@@ -41,7 +41,7 @@
 
 namespace ph {
 
-using sfz::DynArray;
+using sfz::ArrayDynamic;
 using sfz::mat44;
 using sfz::vec2;
 using sfz::vec3;

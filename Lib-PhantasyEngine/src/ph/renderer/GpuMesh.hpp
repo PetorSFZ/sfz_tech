@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <sfz/containers/DynArray.hpp>
+#include <skipifzero_arrays.hpp>
 
 #include <ZeroG-cpp.hpp>
 
@@ -39,8 +39,8 @@ struct GpuMesh final {
 	zg::Buffer indexBuffer;
 	zg::Buffer materialsBuffer;
 	uint32_t numMaterials = 0;
-	DynArray<MeshComponent> components;
-	DynArray<Material> cpuMaterials;
+	ArrayDynamic<MeshComponent> components;
+	ArrayDynamic<Material> cpuMaterials;
 };
 
 // GpuMesh functions

@@ -20,7 +20,8 @@
 
 #include <skipifzero.hpp>
 
-#include "sfz/containers/DynArray.hpp"
+#include <skipifzero_arrays.hpp>
+
 #include "sfz/strings/DynString.hpp"
 
 namespace sfz {
@@ -67,8 +68,8 @@ int64_t sizeofFile(const char* path) noexcept;
 /// \return 0 on success, -1 on error, -2 if file was larger than pre-allocated memory
 int32_t readBinaryFile(const char* path, uint8_t* dataOut, size_t maxNumBytes) noexcept;
 
-/// Reads binary file, returns empty DynArray if error.
-DynArray<uint8_t> readBinaryFile(const char* path,
+/// Reads binary file, returns empty ArrayDynamic if error.
+ArrayDynamic<uint8_t> readBinaryFile(const char* path,
                                  Allocator* allocator = getDefaultAllocator()) noexcept;
 
 /// Reads text file, returns empty string if error.

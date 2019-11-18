@@ -22,8 +22,9 @@
 
 #include <algorithm>
 
+#include <skipifzero_arrays.hpp>
+
 #include "sfz/Context.hpp"
-#include "sfz/containers/DynArray.hpp"
 #include "sfz/util/Enumerate.hpp"
 
 using namespace sfz;
@@ -72,7 +73,7 @@ struct Counting {
 
 TEST_CASE("Basic enumerate() tests", "[sfz::enumerate()]")
 {
-	DynArray<Counting> elements(0, getDefaultAllocator(), sfz_dbg("elements"));
+	ArrayDynamic<Counting> elements(0, getDefaultAllocator(), sfz_dbg("elements"));
 	elements.ensureCapacity(32);
 	for (uint32_t i = 0; i < 10; i++) {
 		elements.add(Counting(i));

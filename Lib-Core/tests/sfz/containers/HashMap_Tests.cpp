@@ -91,7 +91,7 @@ TEST_CASE("HashMap: Copy constructors", "[sfz::HashMap]")
 	REQUIRE(m2[3] == -3);
 }
 
-TEST_CASE("HashMap: Copy constructor with allocator", "[sfz::DynArray]")
+TEST_CASE("HashMap: Copy constructor with allocator", "[sfz::ArrayDynamic]")
 {
 	sfz::setContext(sfz::getStandardContext());
 

@@ -459,7 +459,7 @@ static void loadDialog(GameStateHeader* state) noexcept
 
 	// Load game state from file if file dialog was succesful
 	if (result == NFD_OKAY) {
-		sfz::DynArray<uint8_t> binary = sfz::readBinaryFile(path);
+		sfz::ArrayDynamic<uint8_t> binary = sfz::readBinaryFile(path);
 		if (binary.size() == 0) {
 			SFZ_ERROR("PhantasyEngine", "Could not read game state from \"%s\"", path);
 		}

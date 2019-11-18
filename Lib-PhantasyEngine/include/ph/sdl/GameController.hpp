@@ -24,8 +24,8 @@
 #include <SDL.h>
 
 #include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
 
-#include <sfz/containers/DynArray.hpp>
 #include <sfz/containers/HashMap.hpp>
 
 #include "ph/sdl/ButtonState.hpp"
@@ -36,7 +36,7 @@ namespace sdl {
 
 using std::int32_t;
 
-using sfz::DynArray;
+using sfz::ArrayDynamic;
 using sfz::HashMap;
 using sfz::vec2;
 
@@ -108,7 +108,7 @@ private:
 // Update functions to update GameController struct
 // ------------------------------------------------------------------------------------------------
 
-void update(HashMap<int32_t, GameController>& controllers, const DynArray<SDL_Event>& events) noexcept;
+void update(HashMap<int32_t, GameController>& controllers, const ArrayDynamic<SDL_Event>& events) noexcept;
 
 } // namespace sdl
 } // namespace ph

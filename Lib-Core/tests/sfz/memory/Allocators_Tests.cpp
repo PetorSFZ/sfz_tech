@@ -21,9 +21,9 @@
 #include "sfz/PopWarnings.hpp"
 
 #include <skipifzero.hpp>
+#include <skipifzero_allocators.hpp>
 
 #include "sfz/Context.hpp"
-#include "sfz/memory/MemoryUtils.hpp"
 
 using namespace sfz;
 

@@ -21,7 +21,8 @@
 #include <cstdint>
 #include <limits>
 
-#include "sfz/containers/DynArray.hpp"
+#include <skipifzero_arrays.hpp>
+
 #include "sfz/strings/DynString.hpp"
 #include "sfz/strings/StackString.hpp"
 
@@ -181,7 +182,7 @@ private:
 
 	struct Section final {
 		StackString64 name;
-		DynArray<Item> items;
+		ArrayDynamic<Item> items;
 		Section() : items(0, getDefaultAllocator(), sfz_dbg("")) {}
 		Section(const char* name) : name(name), items(0, getDefaultAllocator(), sfz_dbg("")) { }
 	};
@@ -199,7 +200,7 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	DynString mPath;
-	DynArray<Section> mSections;
+	ArrayDynamic<Section> mSections;
 };
 
 } // namespace sfz
