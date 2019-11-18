@@ -22,6 +22,7 @@ That said, just because the projects are in the same repository does NOT mean th
 * [SDL2](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/sdl2) - [Original source](https://www.libsdl.org/) - Cross-platform low-level input/windowing API.
 * [stb headers](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/stb) - [Original source](https://github.com/nothings/stb) - Single file public domain headers.
 * [tinygltf](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/tinygltf) - [Original source](https://github.com/syoyo/tinygltf) - Header only library for loading glTF files.
+* [utest.h](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/utest.h) - [Original source](https://github.com/sheredom/utest.h) - Single-header testing framework.
 
 In addition individual projects inside this mega repository may have private 3rd-party dependencies, see each project for more information. In particular, [ZeroG](https://github.com/PetorSFZ/sfz_tech/tree/master/Lib-ZeroG) has a number of rendering related 3rd-party libraries which is exclusively used by it.
 
