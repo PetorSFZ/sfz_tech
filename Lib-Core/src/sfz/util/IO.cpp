@@ -17,7 +17,9 @@
 // 3. This notice may not be removed or altered from any source distribution.
 
 #include "sfz/util/IO.hpp"
-#include "sfz/Assert.hpp"
+
+#include <skipifzero.hpp>
+
 #include "sfz/Logging.hpp"
 
 #include <cstdlib>

@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <sfz/math/Vector.hpp>
-#include <sfz/memory/Allocator.hpp>
+#include <skipifzero.hpp>
+
 #include <sfz/strings/StringID.hpp>
 
 #include "ph/rendering/Mesh.hpp"

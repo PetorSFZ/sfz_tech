@@ -18,17 +18,12 @@
 
 #pragma once
 
-#include <cstdint>
+#include <skipifzero.hpp>
 
 #include "sfz/containers/DynArray.hpp"
-#include "sfz/memory/Allocator.hpp"
 #include "sfz/strings/DynString.hpp"
 
 namespace sfz {
-
-using std::int32_t;
-using std::int64_t;
-using std::uint8_t;
 
 // Paths
 // ------------------------------------------------------------------------------------------------

@@ -96,6 +96,10 @@ if(NOT hasParent)
 	add_subdirectory(${EXTERNALS_DIR}/catch ${CMAKE_BINARY_DIR}/catch)
 endif()
 
+# Lib-Core-Headers
+# ${SFZ_CORE_HEADERS_FOUND}, ${SFZ_CORE_HEADERS_INCLUDE_DIRS}
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../Lib-Core-Headers ${CMAKE_BINARY_DIR}/Lib-Core-Headers})
+
 # Lib-Core
 # ------------------------------------------------------------------------------------------------
 
@@ -105,7 +109,6 @@ set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
 set(INCLUDE_FILES
-	${INCLUDE_DIR}/sfz/Assert.hpp
 	${INCLUDE_DIR}/sfz/Context.hpp
 	${INCLUDE_DIR}/sfz/CudaCompatibility.hpp
 	${INCLUDE_DIR}/sfz/Logging.hpp
@@ -139,13 +142,10 @@ set(INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/math/MathSupport.inl
 	${INCLUDE_DIR}/sfz/math/Matrix.hpp
 	${INCLUDE_DIR}/sfz/math/Matrix.inl
-	${INCLUDE_DIR}/sfz/math/MinMax.hpp
 	${INCLUDE_DIR}/sfz/math/ProjectionMatrices.hpp
 	${INCLUDE_DIR}/sfz/math/Quaternion.hpp
 	${INCLUDE_DIR}/sfz/math/Quaternion.inl
-	${INCLUDE_DIR}/sfz/math/Vector.hpp
 
-	${INCLUDE_DIR}/sfz/memory/Allocator.hpp
 	${INCLUDE_DIR}/sfz/memory/ArenaAllocator.hpp
 	${INCLUDE_DIR}/sfz/memory/DebugAllocator.hpp
 	${INCLUDE_DIR}/sfz/memory/MemoryUtils.hpp
@@ -190,7 +190,7 @@ set(SRC_FILES
 source_group(TREE ${SRC_DIR} FILES ${SRC_FILES})
 
 add_library(LibCore ${INCLUDE_FILES} ${SRC_FILES})
-target_include_directories(LibCore PRIVATE ${INCLUDE_DIR})
+target_include_directories(LibCore PRIVATE ${INCLUDE_DIR} ${SFZ_CORE_HEADERS_INCLUDE_DIRS})
 
 # sfzCore lib-core tests
 # ------------------------------------------------------------------------------------------------
@@ -232,6 +232,7 @@ if(NOT hasParent)
 	add_executable(LibCoreTests ${TEST_FILES})
 	target_include_directories(LibCoreTests PRIVATE
 		${INCLUDE_DIR}
+		${SFZ_CORE_HEADERS_INCLUDE_DIRS}
 		${CATCH_INCLUDE_DIRS}
 	)
 	target_link_libraries(LibCoreTests LibCore)
@@ -243,6 +244,6 @@ endif()
 
 if(hasParent)
 	set(SFZ_CORE_FOUND true PARENT_SCOPE)
-	set(SFZ_CORE_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
+	set(SFZ_CORE_INCLUDE_DIRS ${INCLUDE_DIR} ${SFZ_CORE_HEADERS_INCLUDE_DIRS} PARENT_SCOPE)
 	set(SFZ_CORE_LIBRARIES LibCore PARENT_SCOPE)
 endif()

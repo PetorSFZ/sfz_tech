@@ -18,7 +18,8 @@
 
 #pragma once
 
-#include "sfz/Assert.hpp"
+#include <skipifzero.hpp>
+
 #include "sfz/Context.hpp"
 #include "sfz/util/LoggingInterface.hpp"
 

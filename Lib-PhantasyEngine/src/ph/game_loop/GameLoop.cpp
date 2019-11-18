@@ -28,9 +28,10 @@
 #include <emscripten.h>
 #endif
 
+#include <skipifzero.hpp>
+
 #include <sfz/Logging.hpp>
 #include <sfz/containers/DynArray.hpp>
-#include <sfz/math/MinMax.hpp>
 
 #include "ph/Context.hpp"
 #include "ph/config/GlobalConfig.hpp"

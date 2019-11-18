@@ -18,11 +18,11 @@
 
 #pragma once
 
-#include "sfz/Assert.hpp"
+#include <skipifzero.hpp>
+
 #include "sfz/math/MathSupport.hpp"
 #include "sfz/math/Matrix.hpp"
 #include "sfz/math/Quaternion.hpp"
-#include "sfz/math/Vector.hpp"
 #include "sfz/geometry/AABB.hpp"
 
 namespace sfz {

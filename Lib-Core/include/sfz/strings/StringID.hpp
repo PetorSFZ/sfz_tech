@@ -19,10 +19,9 @@
 #pragma once
 
 #include <cstddef>
-#include <cstdint>
 #include <functional> // std::hash
 
-#include "sfz/memory/Allocator.hpp"
+#include <skipifzero.hpp>
 
 namespace sfz {
 

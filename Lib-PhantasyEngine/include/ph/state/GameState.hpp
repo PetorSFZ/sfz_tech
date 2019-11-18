@@ -22,9 +22,9 @@
 #include <cstdint>
 #include <type_traits>
 
-#include <sfz/Assert.hpp>
+#include <skipifzero.hpp>
+
 #include <sfz/Context.hpp>
-#include <sfz/memory/Allocator.hpp>
 
 #include "ph/state/ArrayHeader.hpp"
 #include "ph/state/ComponentMask.hpp"

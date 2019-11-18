@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include "sfz/Assert.hpp"
-#include "sfz/math/Vector.hpp"
+#include <skipifzero.hpp>
+
 #include "sfz/math/MathSupport.hpp"
 
 namespace sfz {

@@ -19,8 +19,7 @@
 
 #pragma once
 
-#include <cstdint>
-#include <sfz/math/Vector.hpp>
+#include <skipifzero.hpp>
 
 // Imgui rendering structs
 // ------------------------------------------------------------------------------------------------

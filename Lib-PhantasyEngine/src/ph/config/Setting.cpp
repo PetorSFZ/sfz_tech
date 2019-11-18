@@ -19,9 +19,8 @@
 
 #include "ph/config/Setting.hpp"
 
-#include <cmath>
+#include <skipifzero.hpp>
 
-#include <sfz/Assert.hpp>
 #include <sfz/math/MathSupport.hpp>
 
 namespace ph {

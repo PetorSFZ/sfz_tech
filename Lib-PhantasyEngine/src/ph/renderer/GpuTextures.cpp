@@ -21,8 +21,7 @@
 
 #include <algorithm>
 
-#include <sfz/Assert.hpp>
-#include <sfz/math/Vector.hpp>
+#include <skipifzero.hpp>
 
 #include "ph/renderer/ZeroGUtils.hpp"
 #include "ph/rendering/Image.hpp"

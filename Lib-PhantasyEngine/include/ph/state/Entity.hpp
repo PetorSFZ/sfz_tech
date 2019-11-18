@@ -19,9 +19,7 @@
 
 #pragma once
 
-#include <cstdint>
-
-#include <sfz/Assert.hpp>
+#include <skipifzero.hpp>
 
 namespace ph {
 

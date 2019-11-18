@@ -16,8 +16,9 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
+#include <skipifzero.hpp>
+
 #include "sfz/math/Matrix.hpp"
-#include "sfz/math/Vector.hpp"
 #include "sfz/strings/StackString.hpp"
 
 namespace sfz {

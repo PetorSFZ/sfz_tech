@@ -20,8 +20,9 @@
 #include "catch2/catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
+#include <skipifzero.hpp>
+
 #include "sfz/Context.hpp"
-#include "sfz/memory/Allocator.hpp"
 #include "sfz/memory/MemoryUtils.hpp"
 
 using namespace sfz;

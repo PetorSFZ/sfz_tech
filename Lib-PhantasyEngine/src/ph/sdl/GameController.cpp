@@ -21,7 +21,8 @@
 
 #include <algorithm>
 
-#include <sfz/Assert.hpp>
+#include <skipifzero.hpp>
+
 #include <sfz/Logging.hpp>
 
 namespace ph {

@@ -19,7 +19,8 @@
 
 #include "ph/renderer/GpuMesh.hpp"
 
-#include <sfz/Assert.hpp>
+#include <skipifzero.hpp>
+
 #include <sfz/strings/StackString.hpp>
 
 #include "ph/renderer/ZeroGUtils.hpp"

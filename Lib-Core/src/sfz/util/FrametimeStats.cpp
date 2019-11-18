@@ -19,10 +19,8 @@
 #include "sfz/util/FrametimeStats.hpp"
 
 #include <algorithm>
-#include <cmath>
 
-#include "sfz/Assert.hpp"
-#include "sfz/math/MinMax.hpp"
+#include <skipifzero.hpp>
 
 namespace sfz {
 

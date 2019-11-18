@@ -18,10 +18,7 @@
 
 #pragma once
 
-#include <cstdint>
-
-#include "sfz/Assert.hpp"
-#include "sfz/math/Vector.hpp"
+#include <skipifzero.hpp>
 
 #include "sfz/CudaCompatibility.hpp"
 #include "sfz/SimdIntrinsics.hpp"

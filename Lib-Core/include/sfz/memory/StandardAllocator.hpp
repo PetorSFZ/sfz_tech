@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "sfz/memory/Allocator.hpp"
+#include <skipifzero.hpp>
 
 namespace sfz {
 

@@ -24,7 +24,7 @@
 #include <ZeroG.h>
 #include <ZeroG-cpp.hpp>
 
-#include <sfz/memory/Allocator.hpp>
+#include <skipifzero.hpp>
 
 namespace ph {
 

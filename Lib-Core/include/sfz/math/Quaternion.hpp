@@ -19,13 +19,11 @@
 #pragma once
 
 #include <algorithm>
-#include <cmath>
+
+#include <skipifzero.hpp>
 
 #include "sfz/math/Matrix.hpp"
-#include "sfz/math/Vector.hpp"
-
 #include "sfz/CudaCompatibility.hpp"
-#include "sfz/math/MinMax.hpp"
 
 namespace sfz {
 

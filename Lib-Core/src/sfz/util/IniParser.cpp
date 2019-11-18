@@ -21,10 +21,10 @@
 #include <algorithm>
 #include <cctype> // std::tolower()
 
-#include "sfz/Assert.hpp"
+#include <skipifzero.hpp>
+
 #include "sfz/Logging.hpp"
 #include "sfz/math/MathSupport.hpp"
-#include "sfz/math/MinMax.hpp"
 #include "sfz/util/IO.hpp"
 
 namespace sfz {

@@ -20,7 +20,8 @@
 #include "catch2/catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
-#include "sfz/math/Vector.hpp"
+#include <skipifzero.hpp>
+
 #include "sfz/math/MathPrimitiveToStrings.hpp"
 #include "sfz/math/MathSupport.hpp"
 

@@ -23,9 +23,10 @@
 
 #include <SDL.h>
 
+#include <skipifzero.hpp>
+
 #include <sfz/containers/DynArray.hpp>
 #include <sfz/containers/HashMap.hpp>
-#include <sfz/math/Vector.hpp>
 
 #include "ph/sdl/ButtonState.hpp"
 

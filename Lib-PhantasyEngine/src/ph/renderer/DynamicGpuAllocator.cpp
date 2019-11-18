@@ -22,10 +22,10 @@
 #include <mutex>
 #include <utility> // std::swap()
 
-#include <sfz/Assert.hpp>
+#include <skipifzero.hpp>
+
 #include <sfz/containers/DynArray.hpp>
 #include <sfz/containers/HashMap.hpp>
-#include <sfz/math/MinMax.hpp>
 
 #include "ph/renderer/ZeroGUtils.hpp"
 

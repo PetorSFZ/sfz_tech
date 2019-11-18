@@ -18,8 +18,9 @@
 
 #pragma once
 
+#include <skipifzero.hpp>
+
 #include "sfz/util/LoggingInterface.hpp"
-#include "sfz/memory/Allocator.hpp"
 
 namespace sfz {
 

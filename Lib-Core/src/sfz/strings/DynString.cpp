@@ -22,7 +22,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include "sfz/Assert.hpp"
+#include <skipifzero.hpp>
 
 namespace sfz {
 

@@ -24,7 +24,8 @@
 #include <SDL.h>
 #include <SDL_stdinc.h>
 
-#include <sfz/Assert.hpp>
+#include <skipifzero.hpp>
+
 #include <sfz/Logging.hpp>
 #include <sfz/containers/HashMap.hpp>
 

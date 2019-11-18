@@ -19,9 +19,8 @@
 
 #pragma once
 
-#include <cstdint>
+#include <skipifzero.hpp>
 
-#include <sfz/memory/Allocator.hpp>
 #include <sfz/strings/StackString.hpp>
 
 namespace ph {

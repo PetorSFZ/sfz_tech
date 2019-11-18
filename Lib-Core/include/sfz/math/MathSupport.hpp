@@ -19,15 +19,12 @@
 #pragma once
 
 #include <algorithm>
-#include <cmath>
-#include <cstdint>
-#include <cstdlib>
+
+#include <skipifzero.hpp>
 
 #include "sfz/CudaCompatibility.hpp"
 #include "sfz/SimdIntrinsics.hpp"
 #include "sfz/math/Matrix.hpp"
-#include "sfz/math/MinMax.hpp"
-#include "sfz/math/Vector.hpp"
 #include "sfz/math/Quaternion.hpp"
 
 // Stop defining min and max, stupid Windows.h.

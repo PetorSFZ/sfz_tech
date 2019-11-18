@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <sfz/math/Vector.hpp>
+#include <skipifzero.hpp>
 
 namespace ph {
 

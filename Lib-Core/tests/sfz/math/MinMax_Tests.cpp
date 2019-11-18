@@ -16,13 +16,11 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include <cstdint>
+#include <skipifzero.hpp>
 
 #include "sfz/PushWarnings.hpp"
 #include "catch2/catch.hpp"
 #include "sfz/PopWarnings.hpp"
-
-#include "sfz/math/MinMax.hpp"
 
 TEST_CASE("sfzMin() float tests", "[sfzMin]")
 {

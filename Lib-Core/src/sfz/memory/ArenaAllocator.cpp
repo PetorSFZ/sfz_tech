@@ -18,7 +18,8 @@
 
 #include "sfz/memory/ArenaAllocator.hpp"
 
-#include <sfz/Assert.hpp>
+#include <skipifzero.hpp>
+
 #include <sfz/Logging.hpp>
 #include <sfz/memory/MemoryUtils.hpp>
 

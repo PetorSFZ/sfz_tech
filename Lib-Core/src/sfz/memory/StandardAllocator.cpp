@@ -20,7 +20,8 @@
 
 #include <cinttypes>
 
-#include "sfz/Assert.hpp"
+#include <skipifzero.hpp>
+
 #include "sfz/memory/MemoryUtils.hpp"
 
 #ifdef _WIN32

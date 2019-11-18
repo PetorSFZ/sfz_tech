@@ -20,8 +20,9 @@
 #include "catch2/catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
+#include <skipifzero.hpp>
+
 #include "sfz/containers/DynArray.hpp"
-#include "sfz/math/Vector.hpp"
 #include "sfz/memory/DebugAllocator.hpp"
 #include "sfz/memory/SmartPointers.hpp"
 

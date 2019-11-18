@@ -21,7 +21,7 @@
 
 #include <cstring>
 
-#include <sfz/Assert.hpp>
+#include <skipifzero.hpp>
 
 namespace ph {
 

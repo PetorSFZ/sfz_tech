@@ -18,12 +18,7 @@
 
 #pragma once
 
-#include <cstdint>
-#include <new> // placement new
-#include <utility> // std::forward(), std::move(), std::swap()
-
-#include "sfz/Assert.hpp"
-#include "sfz/memory/Allocator.hpp"
+#include <skipifzero.hpp>
 
 namespace sfz {
 

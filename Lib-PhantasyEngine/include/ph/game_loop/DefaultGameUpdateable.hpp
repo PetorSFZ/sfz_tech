@@ -19,7 +19,8 @@
 
 #pragma once
 
-#include <sfz/memory/Allocator.hpp>
+#include <skipifzero.hpp>
+
 #include <sfz/memory/SmartPointers.hpp>
 
 #include "ph/game_loop/GameLoopUpdateable.hpp"

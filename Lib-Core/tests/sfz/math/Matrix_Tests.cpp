@@ -20,11 +20,12 @@
 #include "catch2/catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
+#include <skipifzero.hpp>
+
 #include "sfz/math/MathPrimitiveToStrings.hpp"
 #include "sfz/math/MathSupport.hpp"
 #include "sfz/math/Matrix.hpp"
 #include "sfz/math/ProjectionMatrices.hpp"
-#include "sfz/math/Vector.hpp"
 
 #include <type_traits>
 

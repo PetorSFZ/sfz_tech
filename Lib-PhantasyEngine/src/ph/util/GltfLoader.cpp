@@ -18,6 +18,8 @@
 
 #include "ph/util/GltfLoader.hpp"
 
+#include <skipifzero.hpp>
+
 #include <sfz/Logging.hpp>
 #include <sfz/strings/StackString.hpp>
 
@@ -31,8 +33,6 @@
 #include <sfz/PushWarnings.hpp>
 #include "tiny_gltf.h"
 #include <sfz/PopWarnings.hpp>
-
-#include <sfz/Assert.hpp>
 
 #include <ph/Context.hpp>
 

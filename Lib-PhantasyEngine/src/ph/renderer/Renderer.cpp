@@ -23,10 +23,11 @@
 
 #include <SDL.h>
 
+#include <skipifzero.hpp>
+
 #include <sfz/containers/DynArray.hpp>
 #include <sfz/Logging.hpp>
 #include <sfz/math/Matrix.hpp>
-#include <sfz/memory/Allocator.hpp>
 
 #include <ZeroG-cpp.hpp>
 

@@ -20,7 +20,8 @@
 
 #include <cinttypes>
 
-#include "sfz/Assert.hpp"
+#include <skipifzero.hpp>
+
 #include "sfz/Logging.hpp"
 #include "sfz/containers/HashMap.hpp"
 #include "sfz/strings/DynString.hpp"

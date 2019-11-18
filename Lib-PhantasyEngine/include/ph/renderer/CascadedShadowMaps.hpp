@@ -19,8 +19,9 @@
 
 #pragma once
 
+#include <skipifzero.hpp>
+
 #include <sfz/math/Matrix.hpp>
-#include <sfz/math/Vector.hpp>
 
 namespace ph {
 

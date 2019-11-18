@@ -13,9 +13,7 @@
 
 #pragma once
 
-#include <cstdint>
-
-#include <sfz/math/Vector.hpp>
+#include <skipifzero.hpp>
 
 //---- Define assertion handler. Defaults to calling assert().
 //#define IM_ASSERT(_EXPR)  MyAssert(_EXPR)

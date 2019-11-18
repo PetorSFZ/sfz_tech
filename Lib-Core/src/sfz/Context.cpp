@@ -18,7 +18,8 @@
 
 #include "sfz/Context.hpp"
 
-#include "sfz/Assert.hpp"
+#include <skipifzero.hpp>
+
 #include "sfz/memory/StandardAllocator.hpp"
 #include "sfz/util/StandardLogger.hpp"
 

@@ -19,8 +19,9 @@
 
 #pragma once
 
+#include <skipifzero.hpp>
+
 #include <sfz/containers/DynArray.hpp>
-#include <sfz/math/Vector.hpp>
 
 #include <ZeroG-cpp.hpp>
 

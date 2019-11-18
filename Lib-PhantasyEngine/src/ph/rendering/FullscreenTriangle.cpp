@@ -19,7 +19,7 @@
 
 #include "ph/rendering/FullscreenTriangle.hpp"
 
-#include <sfz/math/Vector.hpp>
+#include <skipifzero.hpp>
 
 namespace ph {
 

@@ -19,10 +19,9 @@
 
 #pragma once
 
-#include <cstdint>
+#include <skipifzero.hpp>
 
 #include <sfz/containers/DynArray.hpp>
-#include <sfz/math/Vector.hpp>
 #include <sfz/strings/StringID.hpp>
 
 namespace ph {

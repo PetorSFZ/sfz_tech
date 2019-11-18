@@ -19,8 +19,9 @@
 
 #pragma once
 
+#include <skipifzero.hpp>
+
 #include <sfz/containers/DynArray.hpp>
-#include <sfz/memory/Allocator.hpp>
 
 #include "ph/config/Setting.hpp"
 

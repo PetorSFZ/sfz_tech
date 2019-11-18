@@ -19,15 +19,13 @@
 #pragma once
 
 #include <cstddef>
-#include <cstdint>
 #include <cstring>
 #include <functional>
-#include <new> // Placement new
 
-#include "sfz/Assert.hpp"
+#include <skipifzero.hpp>
+
 #include "sfz/containers/HashTableKeyDescriptor.hpp"
 #include "sfz/Context.hpp"
-#include "sfz/memory/Allocator.hpp"
 
 namespace sfz {
 

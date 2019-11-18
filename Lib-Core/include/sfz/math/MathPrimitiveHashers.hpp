@@ -18,8 +18,9 @@
 
 #include <functional>
 
+#include <skipifzero.hpp>
+
 #include "sfz/math/Matrix.hpp"
-#include "sfz/math/Vector.hpp"
 
 namespace sfz {
 
