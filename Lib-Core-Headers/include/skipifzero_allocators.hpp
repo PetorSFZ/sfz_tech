@@ -30,13 +30,13 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 // Checks whether a pointer is aligned to a given byte aligment
-constexpr bool isAligned(const void* pointer, uint64_t alignment)
+inline bool isAligned(const void* pointer, uint64_t alignment) noexcept
 {
 	return ((uintptr_t)pointer & (alignment - 1)) == 0;
 }
 
 // Checks whether an uint64_t is a power of two or not
-constexpr bool isPowerOfTwo(uint64_t value)
+inline bool isPowerOfTwo(uint64_t value) noexcept
 {
 	// See https://graphics.stanford.edu/~seander/bithacks.html#DetermineIfPowerOf2
 	return value != 0 && (value & (value - 1)) == 0;
