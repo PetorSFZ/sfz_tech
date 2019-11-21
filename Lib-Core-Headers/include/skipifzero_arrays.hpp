@@ -48,7 +48,7 @@ public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	ArrayDynamic()  = default;
+	ArrayDynamic() noexcept = default;
 	ArrayDynamic(const ArrayDynamic& other) noexcept { *this = other.clone(); }
 	ArrayDynamic& operator= (const ArrayDynamic& other) noexcept { *this = other.clone(); return *this; }
 	ArrayDynamic(ArrayDynamic&& other) noexcept { this->swap(other); }
@@ -265,6 +265,164 @@ private:
 	uint32_t mSize = 0, mCapacity = 0;
 	T* mData = nullptr;
 	Allocator* mAllocator = nullptr;
+};
+
+// ArrayLocal
+// ------------------------------------------------------------------------------------------------
+
+template<typename T, uint32_t Capacity>
+class alignas(32) ArrayLocal final {
+public:
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	ArrayLocal() = default;
+	ArrayLocal(const ArrayLocal&) = default;
+	ArrayLocal& operator= (const ArrayLocal&) = default;
+	ArrayLocal(ArrayLocal&& other) noexcept { this->swap(other); }
+	ArrayLocal& operator= (ArrayLocal&& other) noexcept { this->swap(other); return *this; }
+	~ArrayLocal() = default;
+
+	// State methods
+	// --------------------------------------------------------------------------------------------
+
+	void swap(ArrayLocal& other)
+	{
+		for (uint32_t i = 0; i < Capacity; i++) std::swap(this->mData[i], other.mData[i]);
+		std::swap(this->mSize, other.mSize);
+	}
+
+	void clear() { for (uint32_t i = 0; i < mSize; i++) mData[i] = T(); mSize = 0; }
+	void setSize(uint32_t size) { sfz_assert(size <= Capacity); mSize = size; }
+
+	// Getters
+	// --------------------------------------------------------------------------------------------
+
+	uint32_t size() const { return mSize; }
+	uint32_t capacity() const { return Capacity; }
+	const T* data() const { return mData; }
+	T* data() { return mData; }
+
+	T& operator[] (uint32_t idx) { sfz_assert(idx < mSize); return mData[idx]; }
+	const T& operator[] (uint32_t idx) const { sfz_assert(idx < mSize); return mData[idx]; }
+
+	T& first() { sfz_assert(mSize > 0); return mData[0]; }
+	const T& first() const { sfz_assert(mSize > 0); return mData[0]; }
+
+	T& last() { sfz_assert(mSize > 0); return mData[mSize - 1]; }
+	const T& last() const { sfz_assert(mSize > 0); return mData[mSize - 1]; }
+
+	// Methods
+	// --------------------------------------------------------------------------------------------
+
+	// Copy element numCopies times to the back of this array.
+	void add(const T& value, uint32_t numCopies = 1) { addImpl<const T&>(value, numCopies); }
+	void add(T&& value) { addImpl<T>(std::move(value), 1); }
+
+	// Copy numElements elements to the back of this array.
+	void add(const T* ptr, uint32_t numElements)
+	{
+		sfz_assert((mSize + numElements) <= Capacity);
+		for (uint32_t i = 0; i < numElements; i++) mData[mSize + i] = ptr[i];
+		mSize += numElements;
+	}
+
+	// Insert elements into the array at the specified position.
+	void insert(uint32_t pos, const T& value) { insertImpl(pos, &value, 1); }
+	void insert(uint32_t pos, const T* ptr, uint32_t numElements) { insertImpl(pos, ptr, numElements); }
+
+	// Removes the last element. If the array is empty nothing happens.
+	void pop() { if (mSize == 0) return; mSize -= 1; mData[mSize] = T(); }
+
+	// Remove numElements elements starting at the specified position.
+	void remove(uint32_t pos, uint32_t numElements = 1)
+	{
+		// Destroy elements
+		sfz_assert(pos < mSize);
+		if (numElements > (mSize - pos)) numElements = (mSize - pos);
+		for (uint32_t i = 0; i < numElements; i++) mData[pos + i] = T();
+
+		// Move the elements after the removed elements
+		uint32_t numElementsToMove = mSize - pos - numElements;
+		for (uint32_t i = 0; i < numElementsToMove; i++) {
+			mData[pos + i] = std::move(mData[pos + i + numElements]);
+		}
+		mSize -= numElements;
+	}
+
+	// Removes element at given position by swapping it with the last element in array.
+	// O(1) operation unlike remove(), but obviously does not maintain internal array order.
+	void removeQuickSwap(uint32_t pos) { sfz_assert(pos < mSize); std::swap(mData[pos], last()); remove(mSize - 1); }
+
+	// Searches for the first instance of the given element, nullptr if not found.
+	T* search(const T& ref) { return searchImpl(mData, [&](const T& e) { return e == ref; }); }
+	const T* search(const T& ref) const { return searchImpl(mData, [&](const T& e) { return e == ref; }); }
+
+	// Finds the first element that satisfies the given function.
+	// Function should have signature: bool func(const T& element)
+	template<typename F> T* find(F func) { return searchImpl(mData, func); }
+	template<typename F> const T* find(F func) const { return searchImpl(mData, func); }
+
+	// Iterator methods
+	// --------------------------------------------------------------------------------------------
+
+	T* begin() { return mData; }
+	const T* begin() const { return mData; }
+	const T* cbegin() const { return mData; }
+
+	T* end() { return mData + mSize; }
+	const T* end() const { return mData + mSize; }
+	const T* cend() const { return mData + mSize; }
+
+private:
+	// Private methods
+	// --------------------------------------------------------------------------------------------
+
+	template<typename ForwardT>
+	void addImpl(ForwardT&& value, uint32_t numCopies)
+	{
+		// Perfect forwarding: const reference: ForwardT == const T&, rvalue: ForwardT == T
+		// std::forward<ForwardT>(value) will then return the correct version of value
+		sfz_assert((mSize + numCopies) <= Capacity);
+		for(uint32_t i = 0; i < numCopies; i++) mData[mSize + i] = std::forward<ForwardT>(value);
+		mSize += numCopies;
+	}
+
+	void insertImpl(uint32_t pos, const T* ptr, uint32_t numElements)
+	{
+		sfz_assert(pos <= mSize);
+		sfz_assert((mSize + numElements) <= Capacity);
+
+		// Move elements
+		T* dstPtr = mData + pos + numElements;
+		T* srcPtr = mData + pos;
+		uint32_t numElementsToMove = (mSize - pos);
+		for (uint32_t i = numElementsToMove; i > 0; i--) dstPtr[i - 1] = std::move(srcPtr[i - 1]);
+
+		// Insert elements
+		for (uint32_t i = 0; i < numElements; ++i) mData[pos + i] = ptr[i];
+		mSize += numElements;
+	}
+
+	template<typename F>
+	T* searchImpl(T* data, F func)
+	{
+		for (uint32_t i = 0; i < mSize; ++i) if (func(data[i])) return &data[i];
+		return nullptr;
+	}
+
+	template<typename F>
+	const T* searchImpl(const T* data, F func) const
+	{
+		for (uint32_t i = 0; i < mSize; ++i) if (func(data[i])) return &data[i];
+		return nullptr;
+	}
+
+	// Private members
+	// --------------------------------------------------------------------------------------------
+
+	T mData[Capacity];
+	uint32_t mSize = 0;
 };
 
 } // namespace sfz

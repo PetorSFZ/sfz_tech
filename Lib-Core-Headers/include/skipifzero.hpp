@@ -49,7 +49,7 @@ struct DbgInfo final {
 };
 
 // Tiny macro that creates a DbgInfo struct with current file and line number. Message must be a
-// compile time constant, i.e.string must be valid for the remaining duration of the program.
+// compile time constant, i.e. string must be valid for the remaining duration of the program.
 #define sfz_dbg(staticMsg) sfz::DbgInfo(staticMsg, __FILE__, __LINE__)
 
 // Allocator Interface
