@@ -101,8 +101,8 @@ bool Renderer::init(
 	mState->gpuAllocatorFramebuffer.init(mState->allocator, ZG_MEMORY_TYPE_FRAMEBUFFER, PAGE_SIZE_FRAMEBUFFER);
 
 	// Initialize hashmaps for resources
-	mState->textures.init(512, mState->allocator);
-	mState->meshes.init(512, mState->allocator);
+	mState->textures.init(512, mState->allocator, sfz_dbg(""));
+	mState->meshes.init(512, mState->allocator, sfz_dbg(""));
 
 	// Initialize ImGui rendering state
 	bool imguiInitSuccess = mState->imguiRenderer.init(

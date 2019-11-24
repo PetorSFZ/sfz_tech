@@ -301,7 +301,7 @@ static const char* byteToBinaryStringLookupTable[256] = {
 	"11111111",
 };
 
-static sfz::HashMap<str32, uint8_t>* binaryStringToByteLookupMap = nullptr;
+static sfz::HashMapDynamic<str32, uint8_t>* binaryStringToByteLookupMap = nullptr;
 
 static const char* byteToBinaryString(uint8_t byte) noexcept
 {
@@ -497,8 +497,8 @@ void GameStateEditor::init(
 	if (binaryStringToByteLookupMap == nullptr)
 	{
 		binaryStringToByteLookupMap =
-			allocator->newObject<sfz::HashMap<str32, uint8_t>>(sfz_dbg(""));
-		binaryStringToByteLookupMap->init(512, allocator);
+			allocator->newObject<sfz::HashMapDynamic<str32, uint8_t>>(sfz_dbg(""));
+		binaryStringToByteLookupMap->init(512, allocator, sfz_dbg(""));
 		for (uint32_t i = 0; i < 256; i++) {
 			(*binaryStringToByteLookupMap)[byteToBinaryStringLookupTable[i]] = uint8_t(i);
 		}

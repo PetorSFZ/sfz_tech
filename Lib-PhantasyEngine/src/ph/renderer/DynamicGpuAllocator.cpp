@@ -70,7 +70,7 @@ struct DynamicGpuAllocatorState final {
 	uint32_t pageSize = 0;
 
 	ArrayDynamic<MemoryPage> pages;
-	sfz::HashMap<void*, AllocEntry> entries; // ZgBuffer* or ZgTexture2D* is key
+	sfz::HashMapDynamic<void*, AllocEntry> entries; // ZgBuffer* or ZgTexture2D* is key
 
 	uint64_t totalNumAllocations = 0;
 	uint64_t totalNumDeallocations = 0;
@@ -309,7 +309,7 @@ void DynamicGpuAllocator::init(
 
 	// Allocate memory for page meta data
 	mState->pages.init(MAX_NUM_PAGES, allocator, sfz_dbg(""));
-	mState->entries.init(MAX_NUM_PAGES * MAX_NUM_BLOCKS_PER_PAGE * 4 * 2, allocator);
+	mState->entries.init(MAX_NUM_PAGES * MAX_NUM_BLOCKS_PER_PAGE * 4 * 2, allocator, sfz_dbg(""));
 }
 
 void DynamicGpuAllocator::swap(DynamicGpuAllocator& other) noexcept

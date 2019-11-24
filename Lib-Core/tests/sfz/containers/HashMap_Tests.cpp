@@ -32,7 +32,7 @@ using namespace sfz;
 
 TEST_CASE("HashMap: Default constructor", "[sfz::HashMap]")
 {
-	HashMap<int,int> m1;
+	HashMapDynamic<int,int> m1;
 	REQUIRE(m1.size() == 0);
 	REQUIRE(m1.capacity() == 0);
 	REQUIRE(m1.placeholders() == 0);
@@ -42,7 +42,7 @@ TEST_CASE("HashMap: Copy constructors", "[sfz::HashMap]")
 {
 	sfz::StandardAllocator allocator;
 
-	HashMap<int,int> m1(1, &allocator);
+	HashMapDynamic<int,int> m1(1, &allocator, sfz_dbg(""));
 	REQUIRE(m1.put(1, 2) == 2);
 	REQUIRE(m1.put(2, 3) == 3);
 	REQUIRE(m1.put(3, 4) == 4);
@@ -99,7 +99,7 @@ TEST_CASE("HashMap: Copy constructor with allocator", "[sfz::ArrayDynamic]")
 	REQUIRE(first.numAllocations() == 0);
 	REQUIRE(second.numAllocations() == 0);
 	{
-		HashMap<int,int> map1(10, &first);
+		HashMapDynamic<int,int> map1(10, &first, sfz_dbg(""));
 		REQUIRE(map1.allocator() == &first);
 		REQUIRE(first.numAllocations() == 1);
 
@@ -109,7 +109,7 @@ TEST_CASE("HashMap: Copy constructor with allocator", "[sfz::ArrayDynamic]")
 		REQUIRE(map1.size() == 3);
 
 		{
-			HashMap<int, int> map2 = map1.clone(sfz_dbg(""), &second);
+			HashMapDynamic<int, int> map2 = map1.clone(sfz_dbg(""), &second);
 			REQUIRE(map2.allocator() == &second);
 			REQUIRE(map2.capacity() == map1.capacity());
 			REQUIRE(map2.size() == map1.size());
@@ -131,8 +131,8 @@ TEST_CASE("HashMap: Swap & move constructors", "[sfz::HashMap]")
 {
 	sfz::StandardAllocator allocator;
 
-	HashMap<int,int> v1;
-	HashMap<int,int> v2(1, &allocator);
+	HashMapDynamic<int,int> v1;
+	HashMapDynamic<int,int> v2(1, &allocator, sfz_dbg(""));
 	v2.put(1, 2);
 	v2.put(2, 3);
 	v2.put(3, 4);
@@ -167,12 +167,12 @@ TEST_CASE("HashMap: rehash()", "[sfz::HashMap]")
 {
 	sfz::StandardAllocator allocator;
 
-	HashMap<int,int> m1(0, &allocator);
+	HashMapDynamic<int,int> m1(0, &allocator, sfz_dbg(""));
 	REQUIRE(m1.capacity() == 0);
 	REQUIRE(m1.size() == 0);
 	REQUIRE(m1.placeholders() == 0);
 
-	m1.rehash(1);
+	m1.rehash(1, sfz_dbg(""));
 	REQUIRE(m1.capacity() != 0);
 	REQUIRE(m1.size() == 0);
 	REQUIRE(m1.placeholders() == 0);
@@ -185,13 +185,13 @@ TEST_CASE("HashMap: rehash()", "[sfz::HashMap]")
 	REQUIRE(m1[3] == 4);
 	REQUIRE(m1.size() == 3);
 
-	m1.rehash(0);
+	m1.rehash(0, sfz_dbg(""));
 	REQUIRE(m1[1] == 2);
 	REQUIRE(m1[2] == 3);
 	REQUIRE(m1[3] == 4);
 	REQUIRE(m1.size() == 3);
 
-	m1.rehash(m1.capacity() + 4);
+	m1.rehash(m1.capacity() + 4, sfz_dbg(""));
 	REQUIRE(m1[1] == 2);
 	REQUIRE(m1[2] == 3);
 	REQUIRE(m1[3] == 4);
@@ -202,7 +202,7 @@ TEST_CASE("HashMap: Rehashing in put()", "[sfz::HashMap]")
 {
 	sfz::StandardAllocator allocator;
 
-	HashMap<int, int> m1(0, &allocator);
+	HashMapDynamic<int, int> m1(0, &allocator, sfz_dbg(""));
 	REQUIRE(m1.size() == 0);
 	REQUIRE(m1.capacity() == 0);
 
@@ -221,7 +221,7 @@ TEST_CASE("HashMap: Adding and retrieving elements", "[sfz::HashMap]")
 {
 	sfz::StandardAllocator allocator;
 
-	HashMap<int, int> m1(0, &allocator);
+	HashMapDynamic<int, int> m1(0, &allocator, sfz_dbg(""));
 
 	REQUIRE(m1.size() == 0);
 	REQUIRE(m1.capacity() == 0);
@@ -239,7 +239,7 @@ TEST_CASE("HashMap: Adding and retrieving elements", "[sfz::HashMap]")
 	REQUIRE(m1.get(0) == nullptr);
 	REQUIRE(m1.get(1) == nullptr);
 
-	const HashMap<int, int>& mConst = m1;
+	const HashMapDynamic<int, int>& mConst = m1;
 	REQUIRE(mConst.size() == 2);
 	REQUIRE(*mConst.get(2) == 3);
 	REQUIRE(*mConst.get(3) == 1);
@@ -271,7 +271,7 @@ TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
 {
 	sfz::StandardAllocator allocator;
 
-	HashMap<int, int, ZeroHashDescriptor> m(0, &allocator);
+	HashMapDynamic<int, int, ZeroHashDescriptor> m(0, &allocator, sfz_dbg(""));
 	REQUIRE(m.size() == 0);
 	REQUIRE(m.capacity() == 0);
 	REQUIRE(m.placeholders() == 0);
@@ -328,7 +328,7 @@ TEST_CASE("HashMap operator[]", "[sfz::HashMap]")
 {
 	sfz::StandardAllocator allocator;
 
-	HashMap<int, int> m(1, &allocator);
+	HashMapDynamic<int, int> m(1, &allocator, sfz_dbg(""));
 	REQUIRE(m.size() == 0);
 	REQUIRE(m.capacity() != 0);
 
@@ -357,19 +357,19 @@ TEST_CASE("Empty HashMap", "[sfz::HashMap]")
 {
 	sfz::StandardAllocator allocator;
 
-	HashMap<int, int> m(0, &allocator);
-	const HashMap<int,int> cm(0, &allocator);
+	HashMapDynamic<int, int> m(0, &allocator, sfz_dbg(""));
+	const HashMapDynamic<int,int> cm(0, &allocator, sfz_dbg(""));
 
 	SECTION("Iterating") {
 		int times = 0;
-		for (HashMap<int,int>::KeyValuePair pair : m) {
+		for (HashMapDynamic<int,int>::KeyValuePair pair : m) {
 			(void)pair;
 			times += 1;
 		}
 		REQUIRE(times == 0);
 
 		int ctimes = 0;
-		for (HashMap<int, int>::ConstKeyValuePair pair : cm) {
+		for (HashMapDynamic<int, int>::ConstKeyValuePair pair : cm) {
 			(void)pair;
 			ctimes += 1;
 		}
@@ -409,7 +409,7 @@ TEST_CASE("HashMap with strings", "[sfz::HashMap]")
 	sfz::StandardAllocator allocator;
 
 	SECTION("const char*") {
-		HashMap<const char*, uint32_t> m(0, &allocator);
+		HashMapDynamic<const char*, uint32_t> m(0, &allocator, sfz_dbg(""));
 		const char* strFoo = "foo";
 		const char* strBar = "bar";
 		const char* strCar = "car";
@@ -424,7 +424,7 @@ TEST_CASE("HashMap with strings", "[sfz::HashMap]")
 		REQUIRE(*m.get(strCar) == 3);
 	}
 	SECTION("DynString") {
-		HashMap<DynString,uint32_t> m(0, &allocator);
+		HashMapDynamic<DynString,uint32_t> m(0, &allocator, sfz_dbg(""));
 
 		const uint32_t NUM_TESTS = 100;
 		for (uint32_t i = 0; i < NUM_TESTS; i++) {
@@ -458,7 +458,7 @@ TEST_CASE("HashMap with strings", "[sfz::HashMap]")
 		REQUIRE(m["str0"] == 3);
 	}
 	SECTION("StackString") {
-		HashMap<StackString,uint32_t> m(0, &allocator);
+		HashMapDynamic<StackString,uint32_t> m(0, &allocator, sfz_dbg(""));
 
 		const uint32_t NUM_TESTS = 100;
 		for (uint32_t i = 0; i < NUM_TESTS; i++) {
@@ -539,7 +539,7 @@ TEST_CASE("Perfect forwarding in put()", "[sfz::HashMap]")
 {
 	sfz::StandardAllocator allocator;
 
-	HashMap<MoveTestStruct, MoveTestStruct> m(0, &allocator);
+	HashMapDynamic<MoveTestStruct, MoveTestStruct> m(0, &allocator, sfz_dbg(""));
 
 	SECTION("const ref, const ref") {
 		MoveTestStruct k = 2;
@@ -616,7 +616,7 @@ TEST_CASE("Perfect forwarding in put()", "[sfz::HashMap]")
 		REQUIRE(ptr2->value == 3);
 	}
 	SECTION("altKey, const ref") {
-		HashMap<StackString, MoveTestStruct> m2(0, &allocator);
+		HashMapDynamic<StackString, MoveTestStruct> m2(0, &allocator, sfz_dbg(""));
 		MoveTestStruct v(2);
 		REQUIRE(!v.moved);
 		m2.put("foo", v);
@@ -628,7 +628,7 @@ TEST_CASE("Perfect forwarding in put()", "[sfz::HashMap]")
 		REQUIRE(!ptr->moved);
 	}
 	SECTION("altKey, rvalue") {
-		HashMap<StackString, MoveTestStruct> m2(0, &allocator);
+		HashMapDynamic<StackString, MoveTestStruct> m2(0, &allocator, sfz_dbg(""));
 		MoveTestStruct v(2);
 		REQUIRE(!v.moved);
 		m2.put("foo", std::move(v));

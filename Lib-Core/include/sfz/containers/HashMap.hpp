@@ -106,7 +106,7 @@ struct HashTableKeyDescriptor final {
 // \param V the value type
 // \param Descr the HashTableKeyDescriptor (by default sfz::HashTableKeyDescriptor)
 template<typename K, typename V, typename Descr = HashTableKeyDescriptor<K>>
-class HashMap {
+class HashMapDynamic {
 public:
 	// Constants
 	// --------------------------------------------------------------------------------------------
@@ -137,28 +137,31 @@ public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	HashMap() noexcept = default;
-	HashMap(const HashMap& other) noexcept { *this = other; }
-	HashMap& operator= (const HashMap& other) noexcept { *this = other.clone(); return *this; }
-	HashMap(HashMap&& other) noexcept { this->swap(other); }
-	HashMap& operator= (HashMap&& other) noexcept { this->swap(other); return *this; }
-	~HashMap() noexcept { this->destroy(); }
+	HashMapDynamic() noexcept = default;
+	HashMapDynamic(const HashMapDynamic& other) noexcept { *this = other; }
+	HashMapDynamic& operator= (const HashMapDynamic& other) noexcept { *this = other.clone(); return *this; }
+	HashMapDynamic(HashMapDynamic&& other) noexcept { this->swap(other); }
+	HashMapDynamic& operator= (HashMapDynamic&& other) noexcept { this->swap(other); return *this; }
+	~HashMapDynamic() noexcept { this->destroy(); }
 
-	HashMap(uint32_t suggestedCapacity, Allocator* allocator) noexcept { this->init(suggestedCapacity, allocator); }
+	HashMapDynamic(uint32_t suggestedCapacity, Allocator* allocator, DbgInfo allocDbg) noexcept
+	{
+		this->init(suggestedCapacity, allocator, allocDbg);
+	}
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void init(uint32_t suggestedCapacity, Allocator* allocator) noexcept
+	void init(uint32_t suggestedCapacity, Allocator* allocator, DbgInfo allocDbg) noexcept
 	{
 		this->destroy();
 		mAllocator = allocator;
-		this->rehash(suggestedCapacity);
+		this->rehash(suggestedCapacity, allocDbg);
 	}
 
-	HashMap clone(DbgInfo allocDbg = sfz_dbg("HashMapDynamic"), Allocator* allocator = nullptr) const noexcept
+	HashMapDynamic clone(DbgInfo allocDbg = sfz_dbg("HashMapDynamic"), Allocator* allocator = nullptr) const noexcept
 	{
-		HashMap tmp(mCapacity, allocator != nullptr ? allocator : mAllocator);
+		HashMapDynamic tmp(mCapacity, allocator != nullptr ? allocator : mAllocator, allocDbg);
 		for (auto pair : *this) {
 			tmp.put(pair.key, pair.value);
 		}
@@ -166,7 +169,7 @@ public:
 	}
 
 	// Swaps the contents of two HashMaps, including the allocators.
-	void swap(HashMap& other) noexcept
+	void swap(HashMapDynamic& other) noexcept
 	{
 		uint32_t thisSize = this->mSize;
 		uint32_t thisCapacity = this->mCapacity;
@@ -240,7 +243,7 @@ public:
 	// in this HashMap and adds them to the new one. Finally this HashMap is replaced by the
 	// new one. Obviously all pointers and references into the old HashMap are invalidated. If no
 	// allocator is set then the default one will be retrieved and set.
-	void rehash(uint32_t suggestedCapacity) noexcept
+	void rehash(uint32_t suggestedCapacity, DbgInfo allocDbg) noexcept
 	{
 		// Can't decrease capacity with rehash()
 		if (suggestedCapacity < mCapacity) suggestedCapacity = mCapacity;
@@ -254,11 +257,11 @@ public:
 		sfz_assert_hard(mAllocator != nullptr);
 
 		// Create a new HashMap, set allocator and allocate memory to it
-		HashMap tmp;
+		HashMapDynamic tmp;
 		tmp.mCapacity = newCapacity;
 		tmp.mAllocator = mAllocator;
 		tmp.mDataPtr =
-			(uint8_t*)mAllocator->allocate(sfz_dbg("HashMap"), tmp.sizeOfAllocatedMemory(), ALIGNMENT);
+			(uint8_t*)mAllocator->allocate(allocDbg, tmp.sizeOfAllocatedMemory(), ALIGNMENT);
 		std::memset(tmp.mDataPtr, 0, tmp.sizeOfAllocatedMemory());
 
 		// Iterate over all pairs of objects in this HashMap and move them to the new one
@@ -279,7 +282,7 @@ public:
 	{
 		// If HashMap is empty initialize with smallest size
 		if (mCapacity == 0) {
-			this->rehash(1);
+			this->rehash(1, sfz_dbg("HashMapDynamic"));
 			return true;
 		}
 
@@ -292,7 +295,7 @@ public:
 			bool needCapacityIncrease = mSize > maxSize;
 
 			// Rehash
-			this->rehash(mCapacity + (needCapacityIncrease ? 1 : 0));
+			this->rehash(mCapacity + (needCapacityIncrease ? 1 : 0), sfz_dbg("HashMapDynamic"));
 			return true;
 		}
 
@@ -396,7 +399,7 @@ public:
 	// The normal non-const iterator for HashMap.
 	class Iterator final {
 	public:
-		Iterator(HashMap& hashMap, uint32_t index) noexcept : mHashMap(&hashMap), mIndex(index) { }
+		Iterator(HashMapDynamic& hashMap, uint32_t index) noexcept : mHashMap(&hashMap), mIndex(index) { }
 		Iterator(const Iterator&) noexcept = default;
 		Iterator& operator= (const Iterator&) noexcept = default;
 
@@ -438,7 +441,7 @@ public:
 		bool operator!= (const Iterator& other) const noexcept { return !(*this == other); }
 
 	private:
-		HashMap* mHashMap;
+		HashMapDynamic* mHashMap;
 		uint32_t mIndex;
 	};
 
@@ -455,7 +458,7 @@ public:
 	// The const iterator for HashMap
 	class ConstIterator final {
 	public:
-		ConstIterator(const HashMap& hashMap, uint32_t index) noexcept : mHashMap(&hashMap), mIndex(index) {}
+		ConstIterator(const HashMapDynamic& hashMap, uint32_t index) noexcept : mHashMap(&hashMap), mIndex(index) {}
 		ConstIterator(const ConstIterator&) noexcept = default;
 		ConstIterator& operator= (const ConstIterator&) noexcept = default;
 
@@ -497,7 +500,7 @@ public:
 		bool operator!= (const ConstIterator& other) const noexcept { return !(*this == other); }
 
 	private:
-		const HashMap* mHashMap;
+		const HashMapDynamic* mHashMap;
 		uint32_t mIndex;
 	};
 

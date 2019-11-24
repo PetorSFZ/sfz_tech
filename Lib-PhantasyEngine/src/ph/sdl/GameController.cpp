@@ -182,7 +182,7 @@ static void updateProcessEvent(GameController& controller, const SDL_Event& even
 // Finishes the update process, should be called once after all events have been processed.
 static void updateFinish(GameController& controller) noexcept;
 
-void update(HashMap<int32_t, GameController>& controllers, const ArrayDynamic<SDL_Event>& events) noexcept
+void update(HashMapDynamic<int32_t, GameController>& controllers, const ArrayDynamic<SDL_Event>& events) noexcept
 {
 	for (auto pair : controllers) updateStart(pair.value);
 

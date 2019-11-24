@@ -34,7 +34,7 @@ namespace sfz {
 
 struct StringCollectionImpl final {
 	Allocator* allocator;
-	HashMap<StringID, DynString> strings;
+	HashMapDynamic<StringID, DynString> strings;
 };
 
 // StringCollection: Constructors & destructors
@@ -70,7 +70,7 @@ void StringCollection::createStringCollection(uint32_t initialCapacity, Allocato
 
 	mImpl = allocator->newObject<StringCollectionImpl>(sfz_dbg("StringCollectionImpl"));
 	mImpl->allocator = allocator;
-	mImpl->strings.init(initialCapacity, allocator);
+	mImpl->strings.init(initialCapacity, allocator, sfz_dbg("StringCollection::strings"));
 }
 
 void StringCollection::swap(StringCollection& other) noexcept

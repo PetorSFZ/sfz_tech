@@ -109,7 +109,7 @@ static float calculateDelta(time_point& previousTime) noexcept
 	return delta;
 }
 
-static void initControllers(HashMap<int32_t, GameController>& controllers) noexcept
+static void initControllers(HashMapDynamic<int32_t, GameController>& controllers) noexcept
 {
 	controllers.clear();
 

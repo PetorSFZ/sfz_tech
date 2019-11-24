@@ -37,7 +37,7 @@ namespace ph {
 
 using std::int32_t;
 using sfz::ArrayDynamic;
-using sfz::HashMap;
+using sfz::HashMapDynamic;
 using sfz::UniquePtr;
 using sdl::GameController;
 using sdl::GameControllerState;
@@ -109,8 +109,8 @@ struct UserInput final {
 	ArrayDynamic<SDL_Event> mouseEvents;
 
 	// Processed controller and mouse input
-	HashMap<int32_t, GameController> controllers;
-	HashMap<int32_t, GameControllerState> controllersLastFrameState;
+	HashMapDynamic<int32_t, GameController> controllers;
+	HashMapDynamic<int32_t, GameControllerState> controllersLastFrameState;
 	Mouse rawMouse;
 };
 

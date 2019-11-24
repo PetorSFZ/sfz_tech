@@ -39,7 +39,7 @@ struct SDL_Window;
 namespace ph {
 
 using sfz::ArrayDynamic;
-using sfz::HashMap;
+using sfz::HashMapDynamic;
 using sfz::str128;
 using sfz::str256;
 using sfz::str320;
@@ -235,8 +235,8 @@ struct RendererState final {
 	DynamicGpuAllocator gpuAllocatorFramebuffer;
 
 	// GPU resources
-	HashMap<StringID, TextureItem> textures;
-	HashMap<StringID, GpuMesh> meshes;
+	HashMapDynamic<StringID, TextureItem> textures;
+	HashMapDynamic<StringID, GpuMesh> meshes;
 
 	// UI
 	RendererUI ui;
