@@ -19,7 +19,6 @@
 #pragma once
 
 #include <cstdint>
-#include <functional> // std::hash
 
 #include "sfz/containers/HashMap.hpp"
 #include "sfz/strings/DynString.hpp"
@@ -45,75 +44,17 @@ uint64_t hash(const DynString& str) noexcept;
 template<uint32_t N>
 uint64_t hash(const StackStringTempl<N>& str) noexcept { return sfz::hash(str.str); }
 
-// Raw string hash specializations
-// ------------------------------------------------------------------------------------------------
-
-/// Struct with same interface as std::hash, hashes raw strings with sfz::hash()
-struct RawStringHash {
-	size_t operator() (const char* str) const noexcept;
-};
-
-/// Struct with same interface as std::equal_to, compares to raw strings with strcmp().
-struct RawStringEqual {
-	bool operator()(const char* lhs, const char* rhs) const;
-};
-
-/// Specialization of HashTableKeyDescriptor for const char*, makes it possible to use raw strings
-/// as keys in hash tables.
-template<>
-struct HashTableKeyDescriptor<const char*> final {
-	using KeyT = const char*;
-	using KeyHash = RawStringHash;
-	using KeyEqual = RawStringEqual;
-
-	using AltKeyT = NO_ALT_KEY_TYPE;
-	using AltKeyHash = NO_ALT_KEY_TYPE;
-	using AltKeyKeyEqual = NO_ALT_KEY_TYPE;
-};
-
-} // namespace sfz
-
-namespace std {
-
-// DynString & StackString std::hash specializations
+// DynString & StackString HashMapAltKeyDescr specializations
 // ------------------------------------------------------------------------------------------------
 
 template<>
-struct hash<sfz::DynString> {
-	size_t operator() (const sfz::DynString& str) const noexcept;
+struct HashMapAltKeyDescr<DynString> final {
+	using AltKeyT = const char*;
 };
 
 template<size_t N>
-struct hash<sfz::StackStringTempl<N>> {
-	size_t operator() (const sfz::StackStringTempl<N>& str) const noexcept
-	{
-		return size_t(sfz::hash<N>(str));
-	}
-};
-
-} // namespace std
-
-namespace sfz {
-
-// DynString & StackString HashTableKeyDescriptor specializations
-// ------------------------------------------------------------------------------------------------
-
-template<>
-struct HashTableKeyDescriptor<DynString> final {
-	using KeyT = DynString;
-	using KeyHash = std::hash<KeyT>;
-
+struct HashMapAltKeyDescr<StackStringTempl<N>> final {
 	using AltKeyT = const char*;
-	using AltKeyHash = RawStringHash;
-};
-
-template<size_t N>
-struct HashTableKeyDescriptor<StackStringTempl<N>> final {
-	using KeyT = StackStringTempl<N>;
-	using KeyHash = std::hash<KeyT>;
-
-	using AltKeyT = const char*;
-	using AltKeyHash = RawStringHash;
 };
 
 } // namespace sfz

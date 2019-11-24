@@ -18,57 +18,45 @@
 
 #pragma once
 
-#include <cstddef>
-#include <cstring>
-#include <functional>
-
 #include <skipifzero.hpp>
 
 namespace sfz {
 
-// HashTableKeyDescriptor template
+// sfz::hash
+// ------------------------------------------------------------------------------------------------
+
+constexpr uint64_t hash(uint8_t value) noexcept { return uint64_t(value); }
+constexpr uint64_t hash(uint16_t value) noexcept { return uint64_t(value); }
+constexpr uint64_t hash(uint32_t value) noexcept { return uint64_t(value); }
+constexpr uint64_t hash(uint64_t value) noexcept { return uint64_t(value); }
+
+constexpr uint64_t hash(int16_t value) noexcept { return uint64_t(value); }
+constexpr uint64_t hash(int32_t value) noexcept { return uint64_t(value); }
+constexpr uint64_t hash(int64_t value) noexcept { return uint64_t(value); }
+
+constexpr uint64_t hash(float value) noexcept { return uint64_t(*((const uint32_t*)&value)); }
+constexpr uint64_t hash(double value) noexcept { return *((const uint64_t*)&value); }
+
+constexpr uint64_t hash(void* value) noexcept { return uint64_t(uintptr_t(value)); }
+
+// HashMapAltKeyDescr
 // ------------------------------------------------------------------------------------------------
 
 struct NO_ALT_KEY_TYPE final { NO_ALT_KEY_TYPE() = delete; };
 
-// Template used to describe how a key is hashed and compared with other keys in a hash table. Of
-// special note is the possibility to define an alternate key type compatible with the main type.
-// This is mainly useful when the key is a string class, in that case "const char*" can be defined
-// as an alt key. This can improve performance of the hash table as temporary copies, which might
-// require memory allocation, can be avoided.
+// Alternative key type for a given type, useful for e.g. string types so "const char*" can be
+// defined as an alternate key type.
 //
-// In order to be a HashTableKeyDescriptor the following typedefs need to be available:
-// KeyT: The key type.
-// KeyHash: A type with the same interface as std::hash which can hash a key.
-//
-// In addition the following typedefs used for the alternate key type needs to be available,
-// if no alternate key type exist they MUST all be set to NO_ALT_KEY_TYPE.
-// AltKeyT: An alternate key type compatible with KeyT.
-// AltKeyHash: Key hasher but for AltKeyT, must produce same hash as KeyHash for equivalent keys
-// (i.e. AltKeyKeyEqual says they are equal).
-//
-// In addition there is one additional constraint on an alt key type, it must be possible to
-// construct a normal key with the alt key. I.e., the key type needs a Key(AltKey alt)
-// constructor.
-//
-// The default implementation uses std::hash<K>. In other words, as long as std::hash is
-// specialized and an equality (==) operator is defined the default HashTableKeyDescriptor should
-// just work.
-//
-// If the default implementation is not enough (say if an alternate key type is wanted), this
-// template can either be specialized (in namespace sfz) for a specific key type. Alternatively
-// an equivalent struct (which fulfills all the constraints of a HashTableKeyDescriptor) can be
-// defined elsewhere and used in its place.
-template<typename K>
-struct HashTableKeyDescriptor final {
-	using KeyT = K;
-	using KeyHash = std::hash<KeyT>;
-
+// Requirements:
+//  * operator== (KeyT, AltKeyT) must be defined
+//  * sfz::hash(KeyT) == sfz::hash(HashMapAltKey<KeyT>::AltKeyT)
+//  * constructor KeyT(AltKeyT) must be defined
+template<typename KeyT>
+struct HashMapAltKeyDescr final {
 	using AltKeyT = NO_ALT_KEY_TYPE;
-	using AltKeyHash = NO_ALT_KEY_TYPE; // If specialized for alt key: std::hash<AltKeyT>
 };
 
-// HashMap (interface)
+// HashMapDynamic
 // ------------------------------------------------------------------------------------------------
 
 // A HashMap with closed hashing (open adressing).
@@ -92,24 +80,13 @@ struct HashTableKeyDescriptor final {
 // a temporary key object (which might need to allocate memory). As specified in the
 // HashTableKeyDescriptor documentation, the normal key type needs to be constructable using an
 // alt key.
-//
-// HashMap uses sfzCore allocators (read more about them in sfz/memory/Allocator.hpp). Basically
-// they are instance based allocators, so each HashMap needs to have an Allocator pointer. The
-// default constructor does not set any allocator (i.e. nullptr) and does not allocate any memory.
-// An allocator can be set via the create() method or the constructor that takes an allocator.
-// Once an allocator is set it can not be changed unless the HashMap is first destroy():ed, this
-// is done automatically if create() is called again. If no allocator is available (nullptr) when
-// attempting to allocate memory (rehash(), put(), etc), then the default allocator will be
-// retrieved (getDefaultAllocator()) and set.
-//
-// \param K the key type
-// \param V the value type
-// \param Descr the HashTableKeyDescriptor (by default sfz::HashTableKeyDescriptor)
-template<typename K, typename V, typename Descr = HashTableKeyDescriptor<K>>
+template<typename K, typename V, typename AltKeyDescr = HashMapAltKeyDescr<K>>
 class HashMapDynamic {
 public:
-	// Constants
+	// Constants and typedefs
 	// --------------------------------------------------------------------------------------------
+
+	using AltK = typename AltKeyDescr::AltKeyT;
 
 	static constexpr uint32_t ALIGNMENT_EXP = 5;
 	static constexpr uint32_t ALIGNMENT = 1 << ALIGNMENT_EXP; // 2^5 = 32
@@ -125,14 +102,6 @@ public:
 	// rehash, but would not increase capacity. Size 40% and placeholders 10% would trigger a
 	// rehash with capacity increase.
 	static constexpr float MAX_SIZE_KEEP_CAPACITY_FACTOR = 0.35f;
-
-	// Typedefs
-	// --------------------------------------------------------------------------------------------
-
-	using KeyHash = typename Descr::KeyHash;
-
-	using AltK = typename Descr::AltKeyT;
-	using AltKeyHash = typename Descr::AltKeyHash;
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -171,23 +140,11 @@ public:
 	// Swaps the contents of two HashMaps, including the allocators.
 	void swap(HashMapDynamic& other) noexcept
 	{
-		uint32_t thisSize = this->mSize;
-		uint32_t thisCapacity = this->mCapacity;
-		uint32_t thisPlaceholders = this->mPlaceholders;
-		uint8_t* thisDataPtr = this->mDataPtr;
-		Allocator* thisAllocator = this->mAllocator;
-
-		this->mSize = other.mSize;
-		this->mCapacity = other.mCapacity;
-		this->mPlaceholders = other.mPlaceholders;
-		this->mDataPtr = other.mDataPtr;
-		this->mAllocator = other.mAllocator;
-
-		other.mSize = thisSize;
-		other.mCapacity = thisCapacity;
-		other.mPlaceholders = thisPlaceholders;
-		other.mDataPtr = thisDataPtr;
-		other.mAllocator = thisAllocator;
+		std::swap(this->mSize, other.mSize);
+		std::swap(this->mCapacity, other.mCapacity);
+		std::swap(this->mPlaceholders, other.mPlaceholders);
+		std::swap(this->mData, other.mData);
+		std::swap(this->mAllocator, other.mAllocator);
 	}
 
 	// Destroys all elements stored in this HashMap, deallocates all memory and removes allocator.
@@ -196,7 +153,7 @@ public:
 	// necessary to call this method manually, it will automatically be called in the destructor.
 	void destroy() noexcept
 	{
-		if (mDataPtr == nullptr) {
+		if (mData == nullptr) {
 			mAllocator = nullptr;
 			return;
 		}
@@ -205,10 +162,10 @@ public:
 		this->clear();
 
 		// Deallocate memory
-		mAllocator->deallocate(mDataPtr);
+		mAllocator->deallocate(mData);
 		mCapacity = 0;
 		mPlaceholders = 0;
-		mDataPtr = nullptr;
+		mData = nullptr;
 		mAllocator = nullptr;
 	}
 
@@ -260,12 +217,12 @@ public:
 		HashMapDynamic tmp;
 		tmp.mCapacity = newCapacity;
 		tmp.mAllocator = mAllocator;
-		tmp.mDataPtr =
+		tmp.mData =
 			(uint8_t*)mAllocator->allocate(allocDbg, tmp.sizeOfAllocatedMemory(), ALIGNMENT);
-		std::memset(tmp.mDataPtr, 0, tmp.sizeOfAllocatedMemory());
+		std::memset(tmp.mData, 0, tmp.sizeOfAllocatedMemory());
 
 		// Iterate over all pairs of objects in this HashMap and move them to the new one
-		if (this->mDataPtr != nullptr) {
+		if (this->mData != nullptr) {
 			for (KeyValuePair pair : *this) {
 				tmp.put(pair.key, std::move(pair.value));
 			}
@@ -325,10 +282,10 @@ public:
 	// Instead it is recommended to make a copy of the returned value. This method is guaranteed
 	// to never change the state of the HashMap (by causing a rehash), the pointer returned can
 	// however be used to modify the stored value for an element.
-	V* get(const K& key) noexcept { return this->getInternal<K, KeyHash>(key); }
-	const V* get(const K& key) const noexcept { return this->getInternal<K, KeyHash>(key); }
-	V* get(const AltK& key) noexcept { return this->getInternal<AltK, AltKeyHash>(key); }
-	const V* get(const AltK& key) const noexcept { return this->getInternal<AltK, AltKeyHash>(key); }
+	V* get(const K& key) noexcept { return this->getInternal<K>(key); }
+	const V* get(const K& key) const noexcept { return this->getInternal<K>(key); }
+	V* get(const AltK& key) noexcept { return this->getInternal<AltK>(key); }
+	const V* get(const AltK& key) const noexcept { return this->getInternal<AltK>(key); }
 
 	// Public methods
 	// --------------------------------------------------------------------------------------------
@@ -345,12 +302,12 @@ public:
 	// a rehash. In this particular example consider ignoring the reference returned and instead
 	// retrieve pointers via the get() method (which is guaranteed to not cause a rehash) after
 	// all the keys have been inserted.
-	V& put(const K& key, const V& value) noexcept { return this->putInternal<const K&, const V&, KeyHash>(key, value); }
-	V& put(const K& key, V&& value) noexcept { return this->putInternal<const K&, V, KeyHash>(key, std::move(value)); }
-	V& put(K&& key, const V& value) noexcept { return this->putInternal<K, const V&, KeyHash>(std::move(key), value); }
-	V& put(K&& key, V&& value) noexcept { return this->putInternal<K, V, KeyHash>(std::move(key), std::move(value)); }
-	V& put(const AltK& key, const V& value) noexcept { return this->putInternal<const AltK&, const V&, AltKeyHash>(key, value); }
-	V& put(const AltK& key, V&& value) noexcept { return this->putInternal<const AltK&, V, AltKeyHash>(key, std::move(value)); }
+	V& put(const K& key, const V& value) noexcept { return this->putInternal<const K&, const V&>(key, value); }
+	V& put(const K& key, V&& value) noexcept { return this->putInternal<const K&, V>(key, std::move(value)); }
+	V& put(K&& key, const V& value) noexcept { return this->putInternal<K, const V&>(std::move(key), value); }
+	V& put(K&& key, V&& value) noexcept { return this->putInternal<K, V>(std::move(key), std::move(value)); }
+	V& put(const AltK& key, const V& value) noexcept { return this->putInternal<const AltK&, const V&>(key, value); }
+	V& put(const AltK& key, V&& value) noexcept { return this->putInternal<const AltK&, V>(key, std::move(value)); }
 
 	// Access operator, will return a reference to the element associated with the given key. If
 	// no such element exists it will be created with the default constructor. This method is
@@ -380,8 +337,8 @@ public:
 
 	// Attempts to remove the element associated with the given key. Returns false if this
 	// HashMap contains no such element. Guaranteed to not rehash.
-	bool remove(const K& key) noexcept { return this->removeInternal<K, KeyHash>(key); }
-	bool remove(const AltK& key) noexcept { return this->removeInternal<AltK, AltKeyHash>(key); }
+	bool remove(const K& key) noexcept { return this->removeInternal<K>(key); }
+	bool remove(const AltK& key) noexcept { return this->removeInternal<AltK>(key); }
 
 	// Iterators
 	// --------------------------------------------------------------------------------------------
@@ -591,7 +548,7 @@ private:
 	uint64_t sizeOfElementInfoArray() const noexcept
 	{
 		// 2 bits per info element, + 1 since mCapacity always is odd.
-		uint64_t infoMinRequiredSize = (mCapacity >> 2) + 1;
+		uint64_t infoMinRequiredSize = (uint64_t(mCapacity) >> 2) + 1;
 
 		// Calculate how many alignment sized chunks is needed to store element info
 		uint64_t infoNumAlignmentSizedChunks = (infoMinRequiredSize >> ALIGNMENT_EXP) + 1;
@@ -623,18 +580,18 @@ private:
 	}
 
 	// Returns pointer to the info bits part of the allocated memory
-	uint8_t* elementInfoPtr() const noexcept { return mDataPtr; }
+	uint8_t* elementInfoPtr() const noexcept { return mData; }
 
 	// Returns pointer to the key array part of the allocated memory
 	K* keysPtr() const noexcept
 	{
-		return reinterpret_cast<K*>(mDataPtr + sizeOfElementInfoArray());
+		return reinterpret_cast<K*>(mData + sizeOfElementInfoArray());
 	}
 
 	// Returns pointer to the value array port fo the allocated memory
 	V* valuesPtr() const noexcept
 	{
-		return reinterpret_cast<V*>(mDataPtr + sizeOfElementInfoArray() + sizeOfKeyArray());
+		return reinterpret_cast<V*>(mData + sizeOfElementInfoArray() + sizeOfKeyArray());
 	}
 
 	// Returns the 2 bit element info about an element position in the HashMap
@@ -673,13 +630,10 @@ private:
 	// ~0. Whether the found free slot is a placeholder slot or not is sent back through the
 	// isPlaceholder parameter.
 	// KT: The key type, either K or AltK
-	// KeyHash: Hasher for KeyT
-	template<typename KT, typename Hash>
+	template<typename KT>
 	uint32_t findElementIndex(const KT& key, bool& elementFound, uint32_t& firstFreeSlot,
 	                          bool& isPlaceholder) const noexcept
 	{
-		Hash keyHasher;
-
 		elementFound = false;
 		firstFreeSlot = uint32_t(~0);
 		isPlaceholder = false;
@@ -689,7 +643,7 @@ private:
 		if (mCapacity == 0) return uint32_t(~0);
 
 		// Hash the key and find the base index
-		const int64_t baseIndex = int64_t(keyHasher(key) % uint64_t(mCapacity));
+		const int64_t baseIndex = int64_t(sfz::hash(key) % uint64_t(mCapacity));
 
 		// Check if base index holds the element
 		uint8_t info = elementInfo(uint32_t(baseIndex));
@@ -758,14 +712,14 @@ private:
 	}
 
 	// Internal shared implementation of all get() methods
-	template<typename KT, typename Hash>
+	template<typename KT>
 	V* getInternal(const KT& key) const noexcept
 	{
 		// Finds the index of the element
 		uint32_t firstFreeSlot = uint32_t(~0);
 		bool elementFound = false;
 		bool isPlaceholder = false;
-		uint32_t index = this->findElementIndex<KT, Hash>(key, elementFound, firstFreeSlot, isPlaceholder);
+		uint32_t index = this->findElementIndex<KT>(key, elementFound, firstFreeSlot, isPlaceholder);
 
 		// Returns nullptr if map doesn't contain element
 		if (!elementFound) return nullptr;
@@ -775,7 +729,7 @@ private:
 	}
 
 	// Internal shared implementation of all put() methods
-	template<typename KT, typename VT, typename Hash>
+	template<typename KT, typename VT>
 	V& putInternal(KT&& key, VT&& value) noexcept
 	{
 		// Utilizes perfect forwarding in order to determine if parameters are const references or rvalues.
@@ -789,7 +743,7 @@ private:
 		uint32_t firstFreeSlot = uint32_t(~0);
 		bool elementFound = false;
 		bool isPlaceholder = false;
-		uint32_t index = this->findElementIndex<KT, Hash>(key, elementFound, firstFreeSlot, isPlaceholder);
+		uint32_t index = this->findElementIndex<KT>(key, elementFound, firstFreeSlot, isPlaceholder);
 
 		// If map contains key just replace value and return
 		if (elementFound) {
@@ -808,14 +762,14 @@ private:
 	}
 
 	// Internal shared implementation of all remove() methods
-	template<typename KT, typename Hash>
+	template<typename KT>
 	bool removeInternal(const KT& key) noexcept
 	{
 		// Finds the index of the element
 		uint32_t firstFreeSlot = uint32_t(~0);
 		bool elementFound = false;
 		bool isPlaceholder = false;
-		uint32_t index = this->findElementIndex<KT, Hash>(key, elementFound, firstFreeSlot, isPlaceholder);
+		uint32_t index = this->findElementIndex<KT>(key, elementFound, firstFreeSlot, isPlaceholder);
 
 		// Returns nullptr if map doesn't contain element
 		if (!elementFound) return false;
@@ -834,7 +788,7 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	uint32_t mSize = 0, mCapacity = 0, mPlaceholders = 0;
-	uint8_t* mDataPtr = nullptr;
+	uint8_t* mData = nullptr;
 	Allocator* mAllocator = nullptr;
 };
 

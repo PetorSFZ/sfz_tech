@@ -61,31 +61,4 @@ uint64_t hash(const DynString& str) noexcept
 	return sfz::hash(str.str());
 }
 
-// Raw string hash specializations
-// ------------------------------------------------------------------------------------------------
-
-bool RawStringEqual::operator()(const char* lhs, const char* rhs) const
-{
-	if (lhs == nullptr && rhs == nullptr) return true;
-	else if (lhs == nullptr || rhs == nullptr) return false;
-	return std::strcmp(lhs, rhs) == 0;
-}
-
-size_t RawStringHash::operator() (const char* str) const noexcept
-{
-	return size_t(sfz::hash(str));
-}
-
 } // namespace sfz
-
-namespace std {
-
-// DynString & StackString std::hash specializations
-// ------------------------------------------------------------------------------------------------
-
-size_t hash<sfz::DynString>::operator() (const sfz::DynString& str) const noexcept
-{
-	return size_t(sfz::hash(str));
-}
-
-} // namespace std

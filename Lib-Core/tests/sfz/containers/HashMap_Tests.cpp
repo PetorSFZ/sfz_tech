@@ -250,28 +250,24 @@ TEST_CASE("HashMap: Adding and retrieving elements", "[sfz::HashMap]")
 	REQUIRE(m1.placeholders() == 0);
 }
 
-struct ZeroHash {
-	size_t operator() (const int&)
-	{
-		return 0;
-	}
+struct ZeroHashInteger {
+	int value = 0;
+	ZeroHashInteger(int value) : value(value) {}
+	ZeroHashInteger() = default;
+	ZeroHashInteger(const ZeroHashInteger&) = default;
+	ZeroHashInteger& operator= (const ZeroHashInteger&) = default;
+	bool operator== (ZeroHashInteger other) { return this->value == other.value; }
 };
 
-struct ZeroHashDescriptor final {
-	using KeyT = int;
-	using KeyHash = ZeroHash;
-	using KeyEqual = std::equal_to<int>;
-
-	using AltKeyT = NO_ALT_KEY_TYPE;
-	using AltKeyHash = NO_ALT_KEY_TYPE;
-	using AltKeyKeyEqual = NO_ALT_KEY_TYPE;
-};
+namespace sfz {
+	constexpr uint64_t hash(ZeroHashInteger value) noexcept { return 0; }
+}
 
 TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
 {
 	sfz::StandardAllocator allocator;
 
-	HashMapDynamic<int, int, ZeroHashDescriptor> m(0, &allocator, sfz_dbg(""));
+	HashMapDynamic<ZeroHashInteger, int> m(0, &allocator, sfz_dbg(""));
 	REQUIRE(m.size() == 0);
 	REQUIRE(m.capacity() == 0);
 	REQUIRE(m.placeholders() == 0);
@@ -309,7 +305,7 @@ TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
 	for (auto pair : m) {
 		numPairs += 1;
 		REQUIRE(m[pair.key] == pair.value);
-		REQUIRE((pair.key - 1337) == pair.value);
+		REQUIRE((pair.key.value - 1337) == pair.value);
 	}
 	REQUIRE(numPairs == sizeCount);
 
@@ -319,7 +315,7 @@ TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
 	for (auto pair : constRef) {
 		numPairs += 1;
 		REQUIRE(m[pair.key] == pair.value);
-		REQUIRE((pair.key - 1337) == pair.value);
+		REQUIRE((pair.key.value - 1337) == pair.value);
 	}
 	REQUIRE(numPairs == sizeCount);
 }
@@ -523,16 +519,8 @@ struct MoveTestStruct {
 	}
 };
 
-namespace std {
-
-template<>
-struct hash<MoveTestStruct> {
-	inline size_t operator() (const MoveTestStruct& val) const
-	{
-		return size_t(val.value);
-	}
-};
-
+namespace sfz {
+	constexpr uint64_t hash(const MoveTestStruct& val) noexcept { return uint64_t(val.value); }
 }
 
 TEST_CASE("Perfect forwarding in put()", "[sfz::HashMap]")

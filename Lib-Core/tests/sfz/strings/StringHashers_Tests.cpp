@@ -20,7 +20,6 @@
 #include "catch2/catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
-#include "sfz/containers/HashMap.hpp"
 #include "sfz/strings/StringHashers.hpp"
 
 using namespace sfz;
@@ -38,33 +37,4 @@ TEST_CASE("fnv1aHash()", "[sfz::StringHashers]")
 	REQUIRE(sfz::hash("foo") == uint64_t(0xdcb27518fed9d577));
 	REQUIRE(sfz::hash("foobar") == uint64_t(0x85944171f73967e8));
 	REQUIRE(sfz::hash("chongo was here!\n") == uint64_t(0x46810940eff5f915));
-}
-
-TEST_CASE("Hash structs")
-{
-	sfz::RawStringHash cStrHasher;
-	std::hash<DynString> dynStrHasher;
-	std::hash<StackString> stackStrHasher;
-
-	SECTION("Empty strings") {
-		REQUIRE(cStrHasher("") == dynStrHasher(DynString()));
-		REQUIRE(cStrHasher("") == dynStrHasher(DynString("")));
-		DynString dynTmp("Herro");
-		dynTmp.clear();
-		REQUIRE(cStrHasher("") == dynStrHasher(dynTmp));
-		dynTmp.destroy();
-		REQUIRE(cStrHasher("") == dynStrHasher(dynTmp));
-
-		REQUIRE(cStrHasher("") == stackStrHasher(StackString()));
-		REQUIRE(cStrHasher("") == stackStrHasher(StackString("")));
-	}
-	SECTION("Longer strings") {
-		REQUIRE(cStrHasher("foobar") == dynStrHasher(DynString("foobar")));
-		REQUIRE(cStrHasher("foobar") != dynStrHasher(DynString("fooba")));
-		REQUIRE(cStrHasher("foobar") != dynStrHasher(DynString("foobar\n")));
-
-		REQUIRE(cStrHasher("foobar") == stackStrHasher(StackString("foobar")));
-		REQUIRE(cStrHasher("foobar") != stackStrHasher(StackString("fooba")));
-		REQUIRE(cStrHasher("foobar") != stackStrHasher(StackString("foobar\n")));
-	}
 }
