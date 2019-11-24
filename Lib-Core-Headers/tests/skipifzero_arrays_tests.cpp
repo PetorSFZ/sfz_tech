@@ -477,14 +477,6 @@ UTEST(ArrayDynamic, find)
 
 UTEST(ArrayLocal, default_constructor)
 {
-	sfz::ArrayLocal<float, 0> zeroArray;
-	ASSERT_TRUE(zeroArray.size() == 0);
-	ASSERT_TRUE(zeroArray.capacity() == 0);
-	ASSERT_TRUE((uintptr_t)zeroArray.data() == (uintptr_t)&zeroArray);
-	ASSERT_TRUE(sfz::isAligned(zeroArray.data(), 32));
-	ASSERT_TRUE((sizeof(zeroArray) % 32) == 0);
-	ASSERT_TRUE(sizeof(zeroArray) == 32);
-
 	sfz::ArrayLocal<float, 5> fiveArray;
 	ASSERT_TRUE(fiveArray.size() == 0);
 	ASSERT_TRUE(fiveArray.capacity() == 5);
