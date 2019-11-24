@@ -70,7 +70,7 @@ void StringCollection::createStringCollection(uint32_t initialCapacity, Allocato
 
 	mImpl = allocator->newObject<StringCollectionImpl>(sfz_dbg("StringCollectionImpl"));
 	mImpl->allocator = allocator;
-	mImpl->strings.create(initialCapacity, allocator);
+	mImpl->strings.init(initialCapacity, allocator);
 }
 
 void StringCollection::swap(StringCollection& other) noexcept

@@ -42,7 +42,8 @@ struct BridgeState final {
 	sfz::Allocator* allocator = nullptr;
 
 	// Hack because sfz::Allocators don't have realloc
-	sfz::HashMap<void*, size_t> allocatedSizes;
+	sfz::HashMap<void*, size_t> allocatedSizes =
+		sfz::HashMap<void*, size_t>(0, sfz::getDefaultAllocator());
 };
 
 static BridgeState* bridgeState = nullptr;

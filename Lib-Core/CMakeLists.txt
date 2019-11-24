@@ -117,8 +117,6 @@ set(INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/SimdIntrinsics.hpp
 
 	${INCLUDE_DIR}/sfz/containers/HashMap.hpp
-	${INCLUDE_DIR}/sfz/containers/HashMap.inl
-	${INCLUDE_DIR}/sfz/containers/HashTableKeyDescriptor.hpp
 	${INCLUDE_DIR}/sfz/containers/RingBuffer.hpp
 	${INCLUDE_DIR}/sfz/containers/RingBuffer.inl
 

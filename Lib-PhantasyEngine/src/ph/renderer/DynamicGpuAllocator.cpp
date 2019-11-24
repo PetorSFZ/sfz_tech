@@ -309,7 +309,7 @@ void DynamicGpuAllocator::init(
 
 	// Allocate memory for page meta data
 	mState->pages.init(MAX_NUM_PAGES, allocator, sfz_dbg(""));
-	mState->entries.create(MAX_NUM_PAGES * MAX_NUM_BLOCKS_PER_PAGE * 4 * 2, allocator);
+	mState->entries.init(MAX_NUM_PAGES * MAX_NUM_BLOCKS_PER_PAGE * 4 * 2, allocator);
 }
 
 void DynamicGpuAllocator::swap(DynamicGpuAllocator& other) noexcept

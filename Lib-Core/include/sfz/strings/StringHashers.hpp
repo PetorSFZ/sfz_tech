@@ -21,7 +21,7 @@
 #include <cstdint>
 #include <functional> // std::hash
 
-#include "sfz/containers/HashTableKeyDescriptor.hpp"
+#include "sfz/containers/HashMap.hpp"
 #include "sfz/strings/DynString.hpp"
 #include "sfz/strings/StackString.hpp"
 
@@ -99,35 +99,21 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 template<>
-struct EqualTo2<const char*, DynString> final {
-	bool operator() (const char* lhs, const DynString& rhs) noexcept { return rhs == lhs; }
-};
-
-template<>
 struct HashTableKeyDescriptor<DynString> final {
 	using KeyT = DynString;
 	using KeyHash = std::hash<KeyT>;
-	using KeyEqual = std::equal_to<KeyT>;
 
 	using AltKeyT = const char*;
 	using AltKeyHash = RawStringHash;
-	using AltKeyKeyEqual = EqualTo2<AltKeyT, KeyT>;
-};
-
-template<size_t N>
-struct EqualTo2<const char*, StackStringTempl<N>> final {
-	bool operator() (const char* lhs, const StackStringTempl<N>& rhs) noexcept { return rhs == lhs; }
 };
 
 template<size_t N>
 struct HashTableKeyDescriptor<StackStringTempl<N>> final {
 	using KeyT = StackStringTempl<N>;
 	using KeyHash = std::hash<KeyT>;
-	using KeyEqual = std::equal_to<KeyT>;
 
 	using AltKeyT = const char*;
 	using AltKeyHash = RawStringHash;
-	using AltKeyKeyEqual = EqualTo2<AltKeyT, KeyT>;
 };
 
 } // namespace sfz

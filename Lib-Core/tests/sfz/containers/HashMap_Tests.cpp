@@ -20,6 +20,8 @@
 #include "catch2/catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
+#include <skipifzero_allocators.hpp>
+
 #include "sfz/containers/HashMap.hpp"
 #include "sfz/memory/DebugAllocator.hpp"
 #include "sfz/strings/DynString.hpp"
@@ -30,8 +32,6 @@ using namespace sfz;
 
 TEST_CASE("HashMap: Default constructor", "[sfz::HashMap]")
 {
-	sfz::setContext(sfz::getStandardContext());
-
 	HashMap<int,int> m1;
 	REQUIRE(m1.size() == 0);
 	REQUIRE(m1.capacity() == 0);
@@ -40,9 +40,9 @@ TEST_CASE("HashMap: Default constructor", "[sfz::HashMap]")
 
 TEST_CASE("HashMap: Copy constructors", "[sfz::HashMap]")
 {
-	sfz::setContext(sfz::getStandardContext());
+	sfz::StandardAllocator allocator;
 
-	HashMap<int,int> m1(1);
+	HashMap<int,int> m1(1, &allocator);
 	REQUIRE(m1.put(1, 2) == 2);
 	REQUIRE(m1.put(2, 3) == 3);
 	REQUIRE(m1.put(3, 4) == 4);
@@ -109,7 +109,7 @@ TEST_CASE("HashMap: Copy constructor with allocator", "[sfz::ArrayDynamic]")
 		REQUIRE(map1.size() == 3);
 
 		{
-			HashMap<int,int> map2(map1, &second);
+			HashMap<int, int> map2 = map1.clone(sfz_dbg(""), &second);
 			REQUIRE(map2.allocator() == &second);
 			REQUIRE(map2.capacity() == map1.capacity());
 			REQUIRE(map2.size() == map1.size());
@@ -129,10 +129,10 @@ TEST_CASE("HashMap: Copy constructor with allocator", "[sfz::ArrayDynamic]")
 
 TEST_CASE("HashMap: Swap & move constructors", "[sfz::HashMap]")
 {
-	sfz::setContext(sfz::getStandardContext());
+	sfz::StandardAllocator allocator;
 
 	HashMap<int,int> v1;
-	HashMap<int,int> v2(1);
+	HashMap<int,int> v2(1, &allocator);
 	v2.put(1, 2);
 	v2.put(2, 3);
 	v2.put(3, 4);
@@ -165,9 +165,9 @@ TEST_CASE("HashMap: Swap & move constructors", "[sfz::HashMap]")
 
 TEST_CASE("HashMap: rehash()", "[sfz::HashMap]")
 {
-	sfz::setContext(sfz::getStandardContext());
+	sfz::StandardAllocator allocator;
 
-	HashMap<int,int> m1;
+	HashMap<int,int> m1(0, &allocator);
 	REQUIRE(m1.capacity() == 0);
 	REQUIRE(m1.size() == 0);
 	REQUIRE(m1.placeholders() == 0);
@@ -200,9 +200,9 @@ TEST_CASE("HashMap: rehash()", "[sfz::HashMap]")
 
 TEST_CASE("HashMap: Rehashing in put()", "[sfz::HashMap]")
 {
-	sfz::setContext(sfz::getStandardContext());
+	sfz::StandardAllocator allocator;
 
-	HashMap<int,int> m1;
+	HashMap<int, int> m1(0, &allocator);
 	REQUIRE(m1.size() == 0);
 	REQUIRE(m1.capacity() == 0);
 
@@ -219,9 +219,9 @@ TEST_CASE("HashMap: Rehashing in put()", "[sfz::HashMap]")
 
 TEST_CASE("HashMap: Adding and retrieving elements", "[sfz::HashMap]")
 {
-	sfz::setContext(sfz::getStandardContext());
+	sfz::StandardAllocator allocator;
 
-	HashMap<int,int> m1;
+	HashMap<int, int> m1(0, &allocator);
 
 	REQUIRE(m1.size() == 0);
 	REQUIRE(m1.capacity() == 0);
@@ -269,9 +269,9 @@ struct ZeroHashDescriptor final {
 
 TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
 {
-	sfz::setContext(sfz::getStandardContext());
+	sfz::StandardAllocator allocator;
 
-	HashMap<int,int,ZeroHashDescriptor> m;
+	HashMap<int, int, ZeroHashDescriptor> m(0, &allocator);
 	REQUIRE(m.size() == 0);
 	REQUIRE(m.capacity() == 0);
 	REQUIRE(m.placeholders() == 0);
@@ -326,9 +326,9 @@ TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
 
 TEST_CASE("HashMap operator[]", "[sfz::HashMap]")
 {
-	sfz::setContext(sfz::getStandardContext());
+	sfz::StandardAllocator allocator;
 
-	HashMap<int, int> m(1);
+	HashMap<int, int> m(1, &allocator);
 	REQUIRE(m.size() == 0);
 	REQUIRE(m.capacity() != 0);
 
@@ -355,10 +355,10 @@ TEST_CASE("HashMap operator[]", "[sfz::HashMap]")
 
 TEST_CASE("Empty HashMap", "[sfz::HashMap]")
 {
-	sfz::setContext(sfz::getStandardContext());
+	sfz::StandardAllocator allocator;
 
-	HashMap<int,int> m;
-	const HashMap<int,int> cm;
+	HashMap<int, int> m(0, &allocator);
+	const HashMap<int,int> cm(0, &allocator);
 
 	SECTION("Iterating") {
 		int times = 0;
@@ -406,22 +406,25 @@ TEST_CASE("Empty HashMap", "[sfz::HashMap]")
 
 TEST_CASE("HashMap with strings", "[sfz::HashMap]")
 {
-	sfz::setContext(sfz::getStandardContext());
+	sfz::StandardAllocator allocator;
 
 	SECTION("const char*") {
-		HashMap<const char*, uint32_t> m(0);
-		m.put("foo", 1);
-		m.put("bar", 2);
-		m.put("car", 3);
-		REQUIRE(m.get("foo") != nullptr);
-		REQUIRE(*m.get("foo") == 1);
-		REQUIRE(m.get("bar") != nullptr);
-		REQUIRE(*m.get("bar") == 2);
-		REQUIRE(m.get("car") != nullptr);
-		REQUIRE(*m.get("car") == 3);
+		HashMap<const char*, uint32_t> m(0, &allocator);
+		const char* strFoo = "foo";
+		const char* strBar = "bar";
+		const char* strCar = "car";
+		m.put(strFoo, 1);
+		m.put(strBar, 2);
+		m.put(strCar, 3);
+		REQUIRE(m.get(strFoo) != nullptr);
+		REQUIRE(*m.get(strFoo) == 1);
+		REQUIRE(m.get(strBar) != nullptr);
+		REQUIRE(*m.get(strBar) == 2);
+		REQUIRE(m.get(strCar) != nullptr);
+		REQUIRE(*m.get(strCar) == 3);
 	}
 	SECTION("DynString") {
-		HashMap<DynString,uint32_t> m(0);
+		HashMap<DynString,uint32_t> m(0, &allocator);
 
 		const uint32_t NUM_TESTS = 100;
 		for (uint32_t i = 0; i < NUM_TESTS; i++) {
@@ -455,7 +458,7 @@ TEST_CASE("HashMap with strings", "[sfz::HashMap]")
 		REQUIRE(m["str0"] == 3);
 	}
 	SECTION("StackString") {
-		HashMap<StackString,uint32_t> m(0);
+		HashMap<StackString,uint32_t> m(0, &allocator);
 
 		const uint32_t NUM_TESTS = 100;
 		for (uint32_t i = 0; i < NUM_TESTS; i++) {
@@ -494,18 +497,18 @@ struct MoveTestStruct {
 	int value = 0;
 	bool moved = false;
 
-	MoveTestStruct() = default;
-	MoveTestStruct(const MoveTestStruct&) = default;
-	MoveTestStruct& operator= (const MoveTestStruct&) = default;
+	MoveTestStruct() noexcept = default;
+	MoveTestStruct(const MoveTestStruct&) noexcept = default;
+	MoveTestStruct& operator= (const MoveTestStruct&) noexcept = default;
 
-	MoveTestStruct(int value) : value(value) { }
+	MoveTestStruct(int value) noexcept : value(value) { }
 
-	MoveTestStruct(MoveTestStruct&& other)
+	MoveTestStruct(MoveTestStruct&& other) noexcept
 	{
 		*this = std::move(other);
 	}
 
-	MoveTestStruct& operator= (MoveTestStruct&& other)
+	MoveTestStruct& operator= (MoveTestStruct&& other) noexcept
 	{
 		this->value = other.value;
 		this->moved = true;
@@ -514,7 +517,7 @@ struct MoveTestStruct {
 		return *this;
 	}
 
-	bool operator== (const MoveTestStruct& other) const
+	bool operator== (const MoveTestStruct& other) const noexcept
 	{
 		return this->value == other.value;
 	}
@@ -534,9 +537,9 @@ struct hash<MoveTestStruct> {
 
 TEST_CASE("Perfect forwarding in put()", "[sfz::HashMap]")
 {
-	sfz::setContext(sfz::getStandardContext());
+	sfz::StandardAllocator allocator;
 
-	HashMap<MoveTestStruct, MoveTestStruct> m;
+	HashMap<MoveTestStruct, MoveTestStruct> m(0, &allocator);
 
 	SECTION("const ref, const ref") {
 		MoveTestStruct k = 2;
@@ -613,7 +616,7 @@ TEST_CASE("Perfect forwarding in put()", "[sfz::HashMap]")
 		REQUIRE(ptr2->value == 3);
 	}
 	SECTION("altKey, const ref") {
-		HashMap<StackString, MoveTestStruct> m2;
+		HashMap<StackString, MoveTestStruct> m2(0, &allocator);
 		MoveTestStruct v(2);
 		REQUIRE(!v.moved);
 		m2.put("foo", v);
@@ -625,7 +628,7 @@ TEST_CASE("Perfect forwarding in put()", "[sfz::HashMap]")
 		REQUIRE(!ptr->moved);
 	}
 	SECTION("altKey, rvalue") {
-		HashMap<StackString, MoveTestStruct> m2;
+		HashMap<StackString, MoveTestStruct> m2(0, &allocator);
 		MoveTestStruct v(2);
 		REQUIRE(!v.moved);
 		m2.put("foo", std::move(v));
