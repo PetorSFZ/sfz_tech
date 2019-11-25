@@ -125,7 +125,10 @@ public:
 		std::swap(this->mSize, other.mSize);
 		std::swap(this->mCapacity, other.mCapacity);
 		std::swap(this->mPlaceholders, other.mPlaceholders);
-		std::swap(this->mData, other.mData);
+		std::swap(this->mAllocSizeBytes, other.mAllocSizeBytes);
+		std::swap(this->mAllocation, other.mAllocation);
+		std::swap(this->mKeys, other.mKeys);
+		std::swap(this->mValues, other.mValues);
 		std::swap(this->mAllocator, other.mAllocator);
 	}
 
@@ -135,19 +138,19 @@ public:
 	// necessary to call this method manually, it will automatically be called in the destructor.
 	void destroy()
 	{
-		if (mData == nullptr) {
-			mAllocator = nullptr;
-			return;
-		}
+		if (mAllocation == nullptr) { mAllocator = nullptr; return; }
 
 		// Remove elements
 		this->clear();
 
 		// Deallocate memory
-		mAllocator->deallocate(mData);
+		mAllocator->deallocate(mAllocation);
 		mCapacity = 0;
 		mPlaceholders = 0;
-		mData = nullptr;
+		mAllocSizeBytes = 0;
+		mAllocation = nullptr;
+		mKeys = nullptr;
+		mValues = nullptr;
 		mAllocator = nullptr;
 	}
 
@@ -158,12 +161,10 @@ public:
 		if (mSize == 0) return;
 
 		// Call destructors for all active keys and values
-		K* keyPtr = keysPtr();
-		V* valuePtr = valuesPtr();
 		for (uint32_t i = 0; i < mCapacity; ++i) {
 			if (elementInfo(i) == ELEMENT_INFO_OCCUPIED) {
-				keyPtr[i].~K();
-				valuePtr[i].~V();
+				mKeys[i].~K();
+				mValues[i].~V();
 			}
 		}
 
@@ -186,16 +187,25 @@ public:
 
 		sfz_assert_hard(mAllocator != nullptr);
 
-		// Create a new HashMap, set allocator and allocate memory to it
+		// Create new hash map and calculate size of its arrays
 		HashMapDynamic tmp;
 		tmp.mCapacity = newCapacity;
+		uint64_t sizeOfElementInfo = tmp.sizeOfElementInfoArray();
+		uint64_t sizeOfKeys = tmp.sizeOfKeyArray();
+		uint64_t sizeOfValues = tmp.sizeOfValueArray();
+
+		// Allocate memory for new hash map
+		tmp.mAllocSizeBytes = sizeOfElementInfo + sizeOfKeys + sizeOfValues;
+		tmp.mAllocation = mAllocator->allocate(allocDbg, tmp.mAllocSizeBytes, ALIGNMENT);
 		tmp.mAllocator = mAllocator;
-		tmp.mData =
-			(uint8_t*)mAllocator->allocate(allocDbg, tmp.sizeOfAllocatedMemory(), ALIGNMENT);
-		std::memset(tmp.mData, 0, tmp.sizeOfAllocatedMemory());
+		tmp.mKeys = (K*)(((uint8_t*)tmp.mAllocation) + sizeOfElementInfo);
+		tmp.mValues = (V*)(((uint8_t*)tmp.mKeys) + sizeOfKeys);
+
+		// Clear memory
+		std::memset(tmp.mAllocation, 0, tmp.mAllocSizeBytes);
 
 		// Iterate over all pairs of objects in this HashMap and move them to the new one
-		if (this->mData != nullptr) {
+		if (this->mAllocation != nullptr) {
 			for (KeyValuePair pair : *this) {
 				tmp.put(pair.key, std::move(pair.value));
 			}
@@ -316,7 +326,7 @@ public:
 		{
 			sfz_assert(mIndex != uint32_t(~0));
 			sfz_assert(mHashMap->elementInfo(mIndex) == ELEMENT_INFO_OCCUPIED);
-			return KeyValuePair(mHashMap->keysPtr()[mIndex], mHashMap->valuesPtr()[mIndex]);
+			return KeyValuePair(mHashMap->mKeys[mIndex], mHashMap->mValues[mIndex]);
 		}
 
 		bool operator== (const Iterator& other) const noexcept
@@ -375,7 +385,7 @@ public:
 		{
 			sfz_assert(mIndex != uint32_t(~0));
 			sfz_assert(mHashMap->elementInfo(mIndex) == ELEMENT_INFO_OCCUPIED);
-			return ConstKeyValuePair(mHashMap->keysPtr()[mIndex], mHashMap->valuesPtr()[mIndex]);
+			return ConstKeyValuePair(mHashMap->mKeys[mIndex], mHashMap->mValues[mIndex]);
 		}
 
 		bool operator== (const ConstIterator& other) const noexcept
@@ -461,26 +471,8 @@ private:
 		return valuesNumAlignmentSizedChunks << ALIGNMENT_EXP;
 	}
 
-	// Returns the size of the allocated memory in bytes
-	uint64_t sizeOfAllocatedMemory() const
-	{
-		return sizeOfElementInfoArray() + sizeOfKeyArray() + sizeOfValueArray();
-	}
-
 	// Returns pointer to the info bits part of the allocated memory
-	uint8_t* elementInfoPtr() const { return mData; }
-
-	// Returns pointer to the key array part of the allocated memory
-	K* keysPtr() const
-	{
-		return reinterpret_cast<K*>(mData + sizeOfElementInfoArray());
-	}
-
-	// Returns pointer to the value array port fo the allocated memory
-	V* valuesPtr() const
-	{
-		return reinterpret_cast<V*>(mData + sizeOfElementInfoArray() + sizeOfKeyArray());
-	}
+	uint8_t* elementInfoPtr() const { return reinterpret_cast<uint8_t*>(mAllocation); }
 
 	// Returns the 2 bit element info about an element position in the HashMap
 	// 0 = empty, 1 = removed, 2 = occupied, (3 is unused)
@@ -527,7 +519,6 @@ private:
 		elementFound = false;
 		firstFreeSlot = uint32_t(~0);
 		isPlaceholder = false;
-		K* const keys = keysPtr();
 
 		// Early exit if HashMap has no capacity
 		if (mCapacity == 0) return uint32_t(~0);
@@ -550,7 +541,7 @@ private:
 				}
 			}
 			else if (info == ELEMENT_INFO_OCCUPIED) {
-				if (keys[index] == key) {
+				if (mKeys[index] == key) {
 					elementFound = true;
 					return index;
 				}
@@ -574,7 +565,7 @@ private:
 		if (!elementFound) return nullptr;
 
 		// Returns pointer to element
-		return &(valuesPtr()[index]);
+		return mValues + index;
 	}
 
 	// Internal shared implementation of all put() methods
@@ -596,18 +587,18 @@ private:
 
 		// If map contains key just replace value and return
 		if (elementFound) {
-			valuesPtr()[index] = std::forward<VT>(value);
-			return valuesPtr()[index];
+			mValues[index] = std::forward<VT>(value);
+			return mValues[index];
 		}
 
 		// Otherwise insert info, key and value
 		setElementInfo(firstFreeSlot, ELEMENT_INFO_OCCUPIED);
-		new (keysPtr() + firstFreeSlot) K(key);
-		new (valuesPtr() + firstFreeSlot) V(std::forward<VT>(value));
+		new (mKeys + firstFreeSlot) K(key);
+		new (mValues + firstFreeSlot) V(std::forward<VT>(value));
 
 		mSize += 1;
 		if (isPlaceholder) mPlaceholders -= 1;
-		return valuesPtr()[firstFreeSlot];
+		return mValues[firstFreeSlot];
 	}
 
 	// Internal shared implementation of all remove() methods
@@ -625,8 +616,8 @@ private:
 
 		// Remove element
 		setElementInfo(index, ELEMENT_INFO_PLACEHOLDER);
-		keysPtr()[index].~K();
-		valuesPtr()[index].~V();
+		mKeys[index].~K();
+		mValues[index].~V();
 
 		mSize -= 1;
 		mPlaceholders += 1;
@@ -636,8 +627,10 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	uint32_t mSize = 0, mCapacity = 0, mPlaceholders = 0;
-	uint8_t* mData = nullptr;
+	uint32_t mSize = 0, mCapacity = 0, mPlaceholders = 0, mAllocSizeBytes = 0;
+	void* mAllocation = nullptr;
+	K* mKeys = nullptr;
+	V* mValues = nullptr;
 	Allocator* mAllocator = nullptr;
 };
 
