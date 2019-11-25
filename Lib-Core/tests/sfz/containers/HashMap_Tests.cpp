@@ -260,7 +260,7 @@ struct ZeroHashInteger {
 };
 
 namespace sfz {
-	constexpr uint64_t hash(ZeroHashInteger value) noexcept { return 0; }
+	constexpr uint64_t hash(ZeroHashInteger) noexcept { return 0; }
 }
 
 TEST_CASE("HashMap: Hashing conflicts", "[sfz::HashMap]")
@@ -562,42 +562,6 @@ TEST_CASE("Perfect forwarding in put()", "[sfz::HashMap]")
 		MoveTestStruct* ptr = m.get(k);
 		REQUIRE(ptr != nullptr);
 		REQUIRE(ptr->value == 3);
-
-		MoveTestStruct* ptr2 = m.get(MoveTestStruct(2));
-		REQUIRE(ptr2 != nullptr);
-		REQUIRE(ptr2->value == 3);
-	}
-	SECTION("rvalue, const ref") {
-		MoveTestStruct k = 2;
-		MoveTestStruct v = 3;
-		REQUIRE(!k.moved);
-		REQUIRE(!v.moved);
-		m.put(std::move(k), v);
-		REQUIRE(k.moved);
-		REQUIRE(k.value == 0);
-		REQUIRE(!v.moved);
-		REQUIRE(v.value == 3);
-
-		MoveTestStruct* ptr = m.get(k);
-		REQUIRE(ptr == nullptr);
-
-		MoveTestStruct* ptr2 = m.get(MoveTestStruct(2));
-		REQUIRE(ptr2 != nullptr);
-		REQUIRE(ptr2->value == 3);
-	}
-	SECTION("rvalue, rvalue") {
-		MoveTestStruct k = 2;
-		MoveTestStruct v = 3;
-		REQUIRE(!k.moved);
-		REQUIRE(!v.moved);
-		m.put(std::move(k), std::move(v));
-		REQUIRE(k.moved);
-		REQUIRE(k.value == 0);
-		REQUIRE(v.moved);
-		REQUIRE(v.value == 0);
-
-		MoveTestStruct* ptr = m.get(k);
-		REQUIRE(ptr == nullptr);
 
 		MoveTestStruct* ptr2 = m.get(MoveTestStruct(2));
 		REQUIRE(ptr2 != nullptr);

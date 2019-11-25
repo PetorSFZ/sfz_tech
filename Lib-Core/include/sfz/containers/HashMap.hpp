@@ -59,27 +59,15 @@ struct HashMapAltKeyDescr final {
 // HashMapDynamic
 // ------------------------------------------------------------------------------------------------
 
-// A HashMap with closed hashing (open adressing).
-//
-// Quadratic probing is used in the case of collisions, which can not guarantee that more than
-// half the slots will be searched. For this reason the load factor is 49%, which should
-// guarantee that this never poses a problem.
-//
-// The capacity of the the HashMap is always a prime number, so when a certain capacity is
-// suggested a prime bigger than the suggestion will simply be taken from an internal lookup
-// table. In the case of a rehash the capacity generally increases by (approximately) a factor
-// of 2.
+// A HashMap with closed hashing (open adressing) and linear probing.
 //
 // Removal of elements is O(1), but will leave a placeholder on the previously occupied slot. The
 // current number of placeholders can be queried by the placeholders() method. Both size and
 // placeholders count as load when checking if the HashMap needs to be rehashed or not.
 //
-// An alternate key type can be specified in the HashTableKeyDescriptor. This alt key can be used
-// in most methods instead of the normal key type. This is mostly useful when string classes are
-// used as keys, then const char* can be used as an alt key type. This removes the need to create
-// a temporary key object (which might need to allocate memory). As specified in the
-// HashTableKeyDescriptor documentation, the normal key type needs to be constructable using an
-// alt key.
+// An alternate key type can be specified in the HashMapAltKeyDescr. This is mostly useful when
+// string classes are used as keys, then const char* can be used as an alt key type. This removes
+// the need to create a temporary key object (which might need to allocate memory).
 template<typename K, typename V, typename AltKeyDescr = HashMapAltKeyDescr<K>>
 class HashMapDynamic {
 public:
@@ -93,15 +81,9 @@ public:
 	static constexpr uint32_t MIN_CAPACITY = 67;
 	static constexpr uint32_t MAX_CAPACITY = 2147483659;
 
-	// This factor decides the maximum number of occupied slots (size + placeholders) this
-	// HashMap may contain before it is rehashed by ensureProperlyHashed().
-	static constexpr float MAX_OCCUPIED_REHASH_FACTOR = 0.49f;
-
-	// This factor decides the maximum size allowed to not increase the capacity when rehashing
-	// in ensureProperlyHashed(). For example, size 20% and placeholders 30% would trigger a
-	// rehash, but would not increase capacity. Size 40% and placeholders 10% would trigger a
-	// rehash with capacity increase.
-	static constexpr float MAX_SIZE_KEEP_CAPACITY_FACTOR = 0.35f;
+	static constexpr uint32_t DEFAULT_INITIAL_CAPACITY = 64;
+	static constexpr float MAX_OCCUPIED_REHASH_FACTOR = 0.80f;
+	static constexpr float GROW_RATE = 1.75f;
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -121,14 +103,14 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void init(uint32_t suggestedCapacity, Allocator* allocator, DbgInfo allocDbg) noexcept
+	void init(uint32_t capacity, Allocator* allocator, DbgInfo allocDbg)
 	{
 		this->destroy();
 		mAllocator = allocator;
-		this->rehash(suggestedCapacity, allocDbg);
+		this->rehash(capacity, allocDbg);
 	}
 
-	HashMapDynamic clone(DbgInfo allocDbg = sfz_dbg("HashMapDynamic"), Allocator* allocator = nullptr) const noexcept
+	HashMapDynamic clone(DbgInfo allocDbg = sfz_dbg("HashMapDynamic"), Allocator* allocator = nullptr) const
 	{
 		HashMapDynamic tmp(mCapacity, allocator != nullptr ? allocator : mAllocator, allocDbg);
 		for (auto pair : *this) {
@@ -138,7 +120,7 @@ public:
 	}
 
 	// Swaps the contents of two HashMaps, including the allocators.
-	void swap(HashMapDynamic& other) noexcept
+	void swap(HashMapDynamic& other)
 	{
 		std::swap(this->mSize, other.mSize);
 		std::swap(this->mCapacity, other.mCapacity);
@@ -151,7 +133,7 @@ public:
 	// After this method is called the size and capacity is 0, allocator is nullptr. If the HashMap
 	// is already empty then this method will only remove the allocator if it exists. It is not
 	// necessary to call this method manually, it will automatically be called in the destructor.
-	void destroy() noexcept
+	void destroy()
 	{
 		if (mData == nullptr) {
 			mAllocator = nullptr;
@@ -171,19 +153,17 @@ public:
 
 	// Removes all elements from this HashMap without deallocating memory, changing capacity or
 	// touching the allocator.
-	void clear() noexcept
+	void clear()
 	{
 		if (mSize == 0) return;
 
-		// Call destructors for all active keys and values if they are not trivially destructible
-		if constexpr (!std::is_trivially_destructible<K>::value || !std::is_trivially_destructible<V>::value) {
-			K* keyPtr = keysPtr();
-			V* valuePtr = valuesPtr();
-			for (uint64_t i = 0; i < mCapacity; ++i) {
-				if (elementInfo((uint32_t)i) == ELEMENT_INFO_OCCUPIED) {
-					keyPtr[i].~K();
-					valuePtr[i].~V();
-				}
+		// Call destructors for all active keys and values
+		K* keyPtr = keysPtr();
+		V* valuePtr = valuesPtr();
+		for (uint32_t i = 0; i < mCapacity; ++i) {
+			if (elementInfo(i) == ELEMENT_INFO_OCCUPIED) {
+				keyPtr[i].~K();
+				valuePtr[i].~V();
 			}
 		}
 
@@ -195,21 +175,14 @@ public:
 		mPlaceholders = 0;
 	}
 
-	// Rehashes this HashMap. Creates a new HashMap with at least the same capacity as the
-	// current one, or larger if suggested by suggestedCapacity. Then iterates over all elements
-	// in this HashMap and adds them to the new one. Finally this HashMap is replaced by the
-	// new one. Obviously all pointers and references into the old HashMap are invalidated. If no
-	// allocator is set then the default one will be retrieved and set.
-	void rehash(uint32_t suggestedCapacity, DbgInfo allocDbg) noexcept
+	// Rehashes this HashMap to the specified capacity. All old pointers and references are invalidated.
+	void rehash(uint32_t newCapacity, DbgInfo allocDbg)
 	{
 		// Can't decrease capacity with rehash()
-		if (suggestedCapacity < mCapacity) suggestedCapacity = mCapacity;
+		if (newCapacity < mCapacity) newCapacity = mCapacity;
 
 		// Don't rehash if capacity already exists and there are no placeholders
-		if (suggestedCapacity == mCapacity && mPlaceholders == 0) return;
-
-		// Convert the suggested capacity to a larger (if possible) prime number
-		uint32_t newCapacity = findPrimeCapacity(suggestedCapacity);
+		if (newCapacity == mCapacity && mPlaceholders == 0) return;
 
 		sfz_assert_hard(mAllocator != nullptr);
 
@@ -232,31 +205,15 @@ public:
 		this->swap(tmp);
 	}
 
-	// Checks if HashMap needs to be rehashed, and will do so if necessary. This method is
-	// internally called by put() and operator[]. Will allocate capacity if this HashMap is
-	// empty. Returns whether HashMap was rehashed.
-	bool ensureProperlyHashed() noexcept
+	// Checks if HashMap needs to be rehashed, and will do so if necessary.
+	void ensureProperlyHashed(DbgInfo allocDbg = sfz_dbg("HashMapDynamic"))
 	{
-		// If HashMap is empty initialize with smallest size
-		if (mCapacity == 0) {
-			this->rehash(1, sfz_dbg("HashMapDynamic"));
-			return true;
+		uint32_t maxNumOccupied = uint32_t(mCapacity * MAX_OCCUPIED_REHASH_FACTOR);
+		if ((mSize + mPlaceholders) >= maxNumOccupied) {
+			uint32_t newCapacity = mCapacity * GROW_RATE;
+			if (newCapacity < DEFAULT_INITIAL_CAPACITY) newCapacity = DEFAULT_INITIAL_CAPACITY;
+			this->rehash(newCapacity, allocDbg);
 		}
-
-		// Check if HashMap needs to be rehashed
-		uint32_t maxOccupied = uint32_t(MAX_OCCUPIED_REHASH_FACTOR * mCapacity);
-		if ((mSize + mPlaceholders) > maxOccupied) {
-
-			// Determine whether capacity needs to be increase or if is enough to remove placeholders
-			uint32_t maxSize = uint32_t(MAX_OCCUPIED_REHASH_FACTOR * mCapacity);
-			bool needCapacityIncrease = mSize > maxSize;
-
-			// Rehash
-			this->rehash(mCapacity + (needCapacityIncrease ? 1 : 0), sfz_dbg("HashMapDynamic"));
-			return true;
-		}
-
-		return false;
 	}
 
 	// Getters
@@ -264,81 +221,53 @@ public:
 
 	// Returns the size of this HashMap. This is the number of elements stored, not the current
 	// capacity.
-	uint32_t size() const noexcept { return mSize; }
+	uint32_t size() const { return mSize; }
 
 	// Returns the capacity of this HashMap.
-	uint32_t capacity() const noexcept { return mCapacity; }
+	uint32_t capacity() const { return mCapacity; }
 
 	// Returns the number of placeholder positions for removed elements. size + placeholders <=
 	// capacity.
-	uint32_t placeholders() const noexcept { return mPlaceholders; }
+	uint32_t placeholders() const { return mPlaceholders; }
 
 	// Returns the allocator of this HashMap. Will return nullptr if no allocator is set.
-	Allocator* allocator() const noexcept { return mAllocator; }
+	Allocator* allocator() const { return mAllocator; }
 
 	// Returns pointer to the element associated with the given key, or nullptr if no such element
-	// exists. The pointer is owned by this HashMap and will not be valid if it is rehashed,
-	// which can automatically occur if for example keys are inserted via put() or operator[].
-	// Instead it is recommended to make a copy of the returned value. This method is guaranteed
-	// to never change the state of the HashMap (by causing a rehash), the pointer returned can
-	// however be used to modify the stored value for an element.
-	V* get(const K& key) noexcept { return this->getInternal<K>(key); }
-	const V* get(const K& key) const noexcept { return this->getInternal<K>(key); }
-	V* get(const AltK& key) noexcept { return this->getInternal<AltK>(key); }
-	const V* get(const AltK& key) const noexcept { return this->getInternal<AltK>(key); }
+	// exists. The pointer is valid until the HashMap is rehashed. This method will never cause a
+	// rehash by itself.
+	V* get(const K& key) { return this->getInternal<K>(key); }
+	const V* get(const K& key) const { return this->getInternal<K>(key); }
+	V* get(const AltK& key) { return this->getInternal<AltK>(key); }
+	const V* get(const AltK& key) const { return this->getInternal<AltK>(key); }
 
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
 	// Adds the specified key value pair to this HashMap. If a value is already associated with
 	// the given key it will be replaced with the new value. Returns a reference to the element
-	// set. As usual, the reference will be invalidated if the HashMap is rehashed, so be careful.
-	// This method will always call ensureProperlyHashed(), which might trigger a rehash.
+	// set. Might trigger a rehash, which will cause all references to be invalidated.
 	//
 	// In particular the following scenario presents a dangerous trap:
 	// V& ref1 = m.put(key1, value1);
 	// V& ref2 = m.put(key2, value2);
 	// At this point only ref2 is guaranteed to be valid, as the second call might have triggered
-	// a rehash. In this particular example consider ignoring the reference returned and instead
-	// retrieve pointers via the get() method (which is guaranteed to not cause a rehash) after
-	// all the keys have been inserted.
-	V& put(const K& key, const V& value) noexcept { return this->putInternal<const K&, const V&>(key, value); }
-	V& put(const K& key, V&& value) noexcept { return this->putInternal<const K&, V>(key, std::move(value)); }
-	V& put(K&& key, const V& value) noexcept { return this->putInternal<K, const V&>(std::move(key), value); }
-	V& put(K&& key, V&& value) noexcept { return this->putInternal<K, V>(std::move(key), std::move(value)); }
-	V& put(const AltK& key, const V& value) noexcept { return this->putInternal<const AltK&, const V&>(key, value); }
-	V& put(const AltK& key, V&& value) noexcept { return this->putInternal<const AltK&, V>(key, std::move(value)); }
+	// a rehash.
+	V& put(const K& key, const V& value) { return this->putInternal<const K&, const V&>(key, value); }
+	V& put(const K& key, V&& value) { return this->putInternal<const K&, V>(key, std::move(value)); }
+	V& put(const AltK& key, const V& value) { return this->putInternal<const AltK&, const V&>(key, value); }
+	V& put(const AltK& key, V&& value) { return this->putInternal<const AltK&, V>(key, std::move(value)); }
 
 	// Access operator, will return a reference to the element associated with the given key. If
-	// no such element exists it will be created with the default constructor. This method is
-	// implemented by a call to get(), and then a call to put() if no element existed. In
-	// practice this means that this function is guaranteed to not rehash if the requested
-	// element already exists. This might be dangerous to rely on, so get() should be preferred
-	// if rehashing needs to be avoided. As always, the reference will be invalidated if the
-	// HashMap is rehashed.
-	V& operator[] (const K& key) noexcept
-	{
-		V* ptr = this->get(key);
-		if (ptr != nullptr) return *ptr;
-		return this->put(key, V());
-	}
-	V& operator[] (K&& key) noexcept
-	{
-		V* ptr = this->get(key);
-		if (ptr != nullptr) return *ptr;
-		return this->put(std::move(key), V());
-	}
-	V& operator[] (const AltK& key) noexcept
-	{
-		V* ptr = this->get(key);
-		if (ptr != nullptr) return *ptr;
-		return this->put(key, V());
-	}
+	// no such element exists it will be created with the default constructor. If element does not
+	// exist and is created HashMap may be rehashed, and thus all references might be invalidated.
+	V& operator[] (const K& key) { V* ptr = get(key); return ptr != nullptr ? *ptr : put(key, V()); }
+	V& operator[] (const AltK& key) { V* ptr = get(key); return ptr != nullptr ? *ptr : put(key, V()); }
 
 	// Attempts to remove the element associated with the given key. Returns false if this
 	// HashMap contains no such element. Guaranteed to not rehash.
-	bool remove(const K& key) noexcept { return this->removeInternal<K>(key); }
-	bool remove(const AltK& key) noexcept { return this->removeInternal<AltK>(key); }
+	bool remove(const K& key) { return this->removeInternal<K>(key); }
+	bool remove(const AltK& key) { return this->removeInternal<AltK>(key); }
 
 	// Iterators
 	// --------------------------------------------------------------------------------------------
@@ -464,7 +393,7 @@ public:
 	// Iterator methods
 	// --------------------------------------------------------------------------------------------
 
-	Iterator begin() noexcept
+	Iterator begin()
 	{
 		if (this->size() == 0) return Iterator(*this, uint32_t(~0));
 		Iterator it(*this, 0);
@@ -475,9 +404,9 @@ public:
 		return it;
 	}
 
-	ConstIterator begin() const noexcept { return cbegin(); }
+	ConstIterator begin() const { return cbegin(); }
 
-	ConstIterator cbegin() const noexcept
+	ConstIterator cbegin() const
 	{
 		if (this->size() == 0) return ConstIterator(*this, uint32_t(~0));
 		ConstIterator it(*this, 0);
@@ -488,9 +417,9 @@ public:
 		return it;
 	}
 
-	Iterator end() noexcept { return Iterator(*this, uint32_t(~0)); }
-	ConstIterator end() const noexcept { return cend(); }
-	ConstIterator cend() const noexcept { return ConstIterator(*this, uint32_t(~0)); }
+	Iterator end() { return Iterator(*this, uint32_t(~0)); }
+	ConstIterator end() const { return cend(); }
+	ConstIterator cend() const { return ConstIterator(*this, uint32_t(~0)); }
 
 private:
 	// Private constants
@@ -503,49 +432,8 @@ private:
 	// Private methods
 	// --------------------------------------------------------------------------------------------
 
-	// Returns a prime number larger than the suggested capacity
-	uint32_t findPrimeCapacity(uint32_t capacity) const noexcept
-	{
-		constexpr uint32_t PRIMES[] = {
-			67,
-			131,
-			257,
-			521,
-			1031,
-			2053,
-			4099,
-			8209,
-			16411,
-			32771,
-			65537,
-			131101,
-			262147,
-			524309,
-			1048583,
-			2097169,
-			4194319,
-			8388617,
-			16777259,
-			33554467,
-			67108879,
-			134217757,
-			268435459,
-			536870923,
-			1073741827,
-			2147483659
-		};
-
-		// Linear search is probably okay for an array this small
-		for (uint32_t i = 0; i < sizeof(PRIMES) / sizeof(uint32_t); ++i) {
-			if (PRIMES[i] >= capacity) return PRIMES[i];
-		}
-
-		// Found no prime, which means that the suggested capacity is too large.
-		return MAX_CAPACITY;
-	}
-
 	// Return the size of the memory allocation for the element info array in bytes
-	uint64_t sizeOfElementInfoArray() const noexcept
+	uint64_t sizeOfElementInfoArray() const
 	{
 		// 2 bits per info element, + 1 since mCapacity always is odd.
 		uint64_t infoMinRequiredSize = (uint64_t(mCapacity) >> 2) + 1;
@@ -556,7 +444,7 @@ private:
 	}
 
 	// Returns the size of the memory allocation for the key array in bytes
-	uint64_t sizeOfKeyArray() const noexcept
+	uint64_t sizeOfKeyArray() const
 	{
 		// Calculate how many aligment sized chunks is needed to store keys
 		uint64_t keysMinRequiredSize = mCapacity * sizeof(K);
@@ -565,7 +453,7 @@ private:
 	}
 
 	// Returns the size of the memory allocation for the value array in bytes
-	uint64_t sizeOfValueArray() const noexcept
+	uint64_t sizeOfValueArray() const
 	{
 		// Calculate how many alignment sized chunks is needed to store values
 		uint64_t valuesMinRequiredSize = mCapacity * sizeof(V);
@@ -574,29 +462,29 @@ private:
 	}
 
 	// Returns the size of the allocated memory in bytes
-	uint64_t sizeOfAllocatedMemory() const noexcept
+	uint64_t sizeOfAllocatedMemory() const
 	{
 		return sizeOfElementInfoArray() + sizeOfKeyArray() + sizeOfValueArray();
 	}
 
 	// Returns pointer to the info bits part of the allocated memory
-	uint8_t* elementInfoPtr() const noexcept { return mData; }
+	uint8_t* elementInfoPtr() const { return mData; }
 
 	// Returns pointer to the key array part of the allocated memory
-	K* keysPtr() const noexcept
+	K* keysPtr() const
 	{
 		return reinterpret_cast<K*>(mData + sizeOfElementInfoArray());
 	}
 
 	// Returns pointer to the value array port fo the allocated memory
-	V* valuesPtr() const noexcept
+	V* valuesPtr() const
 	{
 		return reinterpret_cast<V*>(mData + sizeOfElementInfoArray() + sizeOfKeyArray());
 	}
 
 	// Returns the 2 bit element info about an element position in the HashMap
 	// 0 = empty, 1 = removed, 2 = occupied, (3 is unused)
-	uint8_t elementInfo(uint32_t index) const noexcept
+	uint8_t elementInfo(uint32_t index) const
 	{
 		uint32_t chunkIndex = index >> 2; // index / 4;
 		uint32_t chunkIndexModulo = index & 0x03; // index % 4
@@ -609,7 +497,7 @@ private:
 	}
 
 	// Sets the 2 bit element info with the selected value
-	void setElementInfo(uint32_t index, uint8_t value) noexcept
+	void setElementInfo(uint32_t index, uint8_t value)
 	{
 		uint32_t chunkIndex = index >> 2; // index / 4;
 		uint32_t chunkIndexModulo = index & 0x03; // index % 4
@@ -629,10 +517,12 @@ private:
 	// sent back through the firstFreeSlot parameter, if no free slot is found it will be set to
 	// ~0. Whether the found free slot is a placeholder slot or not is sent back through the
 	// isPlaceholder parameter.
-	// KT: The key type, either K or AltK
 	template<typename KT>
-	uint32_t findElementIndex(const KT& key, bool& elementFound, uint32_t& firstFreeSlot,
-	                          bool& isPlaceholder) const noexcept
+	uint32_t findElementIndex(
+		const KT& key,
+		bool& elementFound,
+		uint32_t& firstFreeSlot,
+		bool& isPlaceholder) const
 	{
 		elementFound = false;
 		firstFreeSlot = uint32_t(~0);
@@ -642,68 +532,27 @@ private:
 		// Early exit if HashMap has no capacity
 		if (mCapacity == 0) return uint32_t(~0);
 
-		// Hash the key and find the base index
-		const int64_t baseIndex = int64_t(sfz::hash(key) % uint64_t(mCapacity));
+		// Search for the element using linear probing
+		const uint32_t baseIndex = uint32_t(sfz::hash(key) % uint64_t(mCapacity));
+		for (uint32_t i = 0; i < mCapacity; i++) {
 
-		// Check if base index holds the element
-		uint8_t info = elementInfo(uint32_t(baseIndex));
-		if (info == ELEMENT_INFO_EMPTY) {
-			firstFreeSlot = uint32_t(baseIndex);
-			return uint32_t(~0);
-		}
-		else if (info == ELEMENT_INFO_PLACEHOLDER) {
-			firstFreeSlot = uint32_t(baseIndex);
-			isPlaceholder = true;
-		}
-		else if (info == ELEMENT_INFO_OCCUPIED) {
-			if (keys[baseIndex] == key) {
-				elementFound = true;
-				return uint32_t(baseIndex);
-			}
-		}
-
-		// Search for the element using quadratic probing
-		const int64_t maxNumProbingAttempts = int64_t(mCapacity);
-		for (int64_t i = 1; i < maxNumProbingAttempts; ++i) {
-			const int64_t iSquared = i * i;
-
-			// Try (base + i²) index
-			int64_t index = (baseIndex + iSquared) % int64_t(mCapacity);
-			info = elementInfo(uint32_t(index));
+			// Try (base + i) index
+			uint32_t index = (baseIndex + i) % mCapacity;
+			uint8_t info = elementInfo(uint32_t(index));
 			if (info == ELEMENT_INFO_EMPTY) {
-				if (firstFreeSlot == uint32_t(~0)) firstFreeSlot = uint32_t(index);
+				if (firstFreeSlot == uint32_t(~0)) firstFreeSlot = index;
 				break;
 			}
 			else if (info == ELEMENT_INFO_PLACEHOLDER) {
 				if (firstFreeSlot == uint32_t(~0)) {
-					firstFreeSlot = uint32_t(index);
+					firstFreeSlot = index;
 					isPlaceholder = true;
 				}
 			}
 			else if (info == ELEMENT_INFO_OCCUPIED) {
 				if (keys[index] == key) {
 					elementFound = true;
-					return uint32_t(index);
-				}
-			}
-
-			// Try (base - i²) index
-			index = (((baseIndex - iSquared) % int64_t(mCapacity)) + int64_t(mCapacity)) % int64_t(mCapacity);
-			info = elementInfo(uint32_t(index));
-			if (info == ELEMENT_INFO_EMPTY) {
-				if (firstFreeSlot == uint32_t(~0)) firstFreeSlot = uint32_t(index);
-				break;
-			}
-			else if (info == ELEMENT_INFO_PLACEHOLDER) {
-				if (firstFreeSlot == uint32_t(~0)) {
-					firstFreeSlot = uint32_t(index);
-					isPlaceholder = true;
-				}
-			}
-			else if (info == ELEMENT_INFO_OCCUPIED) {
-				if (keys[index] == key) {
-					elementFound = true;
-					return uint32_t(index);
+					return index;
 				}
 			}
 		}
@@ -713,7 +562,7 @@ private:
 
 	// Internal shared implementation of all get() methods
 	template<typename KT>
-	V* getInternal(const KT& key) const noexcept
+	V* getInternal(const KT& key) const
 	{
 		// Finds the index of the element
 		uint32_t firstFreeSlot = uint32_t(~0);
@@ -730,7 +579,7 @@ private:
 
 	// Internal shared implementation of all put() methods
 	template<typename KT, typename VT>
-	V& putInternal(KT&& key, VT&& value) noexcept
+	V& putInternal(const KT& key, VT&& value)
 	{
 		// Utilizes perfect forwarding in order to determine if parameters are const references or rvalues.
 		// const reference: KT == const K&
@@ -753,7 +602,7 @@ private:
 
 		// Otherwise insert info, key and value
 		setElementInfo(firstFreeSlot, ELEMENT_INFO_OCCUPIED);
-		new (keysPtr() + firstFreeSlot) K(std::forward<KT>(key));
+		new (keysPtr() + firstFreeSlot) K(key);
 		new (valuesPtr() + firstFreeSlot) V(std::forward<VT>(value));
 
 		mSize += 1;
@@ -763,7 +612,7 @@ private:
 
 	// Internal shared implementation of all remove() methods
 	template<typename KT>
-	bool removeInternal(const KT& key) noexcept
+	bool removeInternal(const KT& key)
 	{
 		// Finds the index of the element
 		uint32_t firstFreeSlot = uint32_t(~0);
