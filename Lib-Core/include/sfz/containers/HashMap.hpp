@@ -78,10 +78,8 @@ public:
 
 	static constexpr uint32_t ALIGNMENT_EXP = 5;
 	static constexpr uint32_t ALIGNMENT = 1 << ALIGNMENT_EXP; // 2^5 = 32
-	static constexpr uint32_t MIN_CAPACITY = 67;
-	static constexpr uint32_t MAX_CAPACITY = 2147483659;
-
-	static constexpr uint32_t DEFAULT_INITIAL_CAPACITY = 64;
+	static constexpr uint32_t MIN_CAPACITY = 64;
+	static constexpr uint32_t MAX_CAPACITY = (1 << 30) - 1; // 2 bits reserved for info
 	static constexpr float MAX_OCCUPIED_REHASH_FACTOR = 0.80f;
 	static constexpr float GROW_RATE = 1.75f;
 
@@ -191,8 +189,8 @@ public:
 		HashMapDynamic tmp;
 		tmp.mCapacity = newCapacity;
 		uint64_t sizeOfElementInfo = tmp.sizeOfElementInfoArray();
-		uint64_t sizeOfKeys = tmp.sizeOfKeyArray();
-		uint64_t sizeOfValues = tmp.sizeOfValueArray();
+		uint64_t sizeOfKeys = roundUpAligned(sizeof(K) * tmp.mCapacity, ALIGNMENT);
+		uint64_t sizeOfValues = roundUpAligned(sizeof(V) * tmp.mCapacity, ALIGNMENT);
 
 		// Allocate memory for new hash map
 		tmp.mAllocSizeBytes = sizeOfElementInfo + sizeOfKeys + sizeOfValues;
@@ -200,6 +198,8 @@ public:
 		tmp.mAllocator = mAllocator;
 		tmp.mKeys = (K*)(((uint8_t*)tmp.mAllocation) + sizeOfElementInfo);
 		tmp.mValues = (V*)(((uint8_t*)tmp.mKeys) + sizeOfKeys);
+		sfz_assert(isAligned(tmp.mKeys, ALIGNMENT));
+		sfz_assert(isAligned(tmp.mValues, ALIGNMENT));
 
 		// Clear memory
 		std::memset(tmp.mAllocation, 0, tmp.mAllocSizeBytes);
@@ -213,17 +213,6 @@ public:
 
 		// Replace this HashMap with the new one
 		this->swap(tmp);
-	}
-
-	// Checks if HashMap needs to be rehashed, and will do so if necessary.
-	void ensureProperlyHashed(DbgInfo allocDbg = sfz_dbg("HashMapDynamic"))
-	{
-		uint32_t maxNumOccupied = uint32_t(mCapacity * MAX_OCCUPIED_REHASH_FACTOR);
-		if ((mSize + mPlaceholders) >= maxNumOccupied) {
-			uint32_t newCapacity = mCapacity * GROW_RATE;
-			if (newCapacity < DEFAULT_INITIAL_CAPACITY) newCapacity = DEFAULT_INITIAL_CAPACITY;
-			this->rehash(newCapacity, allocDbg);
-		}
 	}
 
 	// Getters
@@ -453,24 +442,6 @@ private:
 		return infoNumAlignmentSizedChunks << ALIGNMENT_EXP;
 	}
 
-	// Returns the size of the memory allocation for the key array in bytes
-	uint64_t sizeOfKeyArray() const
-	{
-		// Calculate how many aligment sized chunks is needed to store keys
-		uint64_t keysMinRequiredSize = mCapacity * sizeof(K);
-		uint64_t keyNumAlignmentSizedChunks = (keysMinRequiredSize >> ALIGNMENT_EXP) + 1;
-		return keyNumAlignmentSizedChunks << ALIGNMENT_EXP;
-	}
-
-	// Returns the size of the memory allocation for the value array in bytes
-	uint64_t sizeOfValueArray() const
-	{
-		// Calculate how many alignment sized chunks is needed to store values
-		uint64_t valuesMinRequiredSize = mCapacity * sizeof(V);
-		uint64_t valuesNumAlignmentSizedChunks = (valuesMinRequiredSize >> ALIGNMENT_EXP) + 1;
-		return valuesNumAlignmentSizedChunks << ALIGNMENT_EXP;
-	}
-
 	// Returns pointer to the info bits part of the allocated memory
 	uint8_t* elementInfoPtr() const { return reinterpret_cast<uint8_t*>(mAllocation); }
 
@@ -573,11 +544,17 @@ private:
 	V& putInternal(const KT& key, VT&& value)
 	{
 		// Utilizes perfect forwarding in order to determine if parameters are const references or rvalues.
-		// const reference: KT == const K&
-		// rvalue: KT == K
-		// std::forward<KT>(key) will then return the correct version of key
+		// const reference: VT == const V&
+		// rvalue: VT == V
+		// std::forward<VT>(value) will then return the correct version of value
 
-		ensureProperlyHashed();
+		// Rehash if necessary
+		uint32_t maxNumOccupied = uint32_t(mCapacity * MAX_OCCUPIED_REHASH_FACTOR);
+		if ((mSize + mPlaceholders) >= maxNumOccupied) {
+			uint32_t newCapacity = mCapacity * GROW_RATE;
+			if (newCapacity < MIN_CAPACITY) newCapacity = MIN_CAPACITY;
+			this->rehash(newCapacity, sfz_dbg("HashMapDynamic"));
+		}
 
 		// Finds the index of the element
 		uint32_t firstFreeSlot = uint32_t(~0);

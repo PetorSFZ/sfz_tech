@@ -104,6 +104,29 @@ public:
 	}
 };
 
+// Memory helpers
+// ------------------------------------------------------------------------------------------------
+
+// Checks whether an uint64_t is a power of two or not
+constexpr bool isPowerOfTwo(uint64_t value)
+{
+	// See https://graphics.stanford.edu/~seander/bithacks.html#DetermineIfPowerOf2
+	return value != 0 && (value & (value - 1)) == 0;
+}
+
+// Checks whether a pointer is aligned to a given byte aligment
+inline bool isAligned(const void* pointer, uint64_t alignment) noexcept
+{
+	sfz_assert(isPowerOfTwo(alignment));
+	return ((uintptr_t)pointer & (alignment - 1)) == 0;
+}
+
+// Rounds up a given offset so that it is evenly divisible by the given alignment
+constexpr uint64_t roundUpAligned(uint64_t offset, uint64_t alignment)
+{
+	return ((offset + alignment - 1) / alignment) * alignment;
+}
+
 // Vector primitives
 // ------------------------------------------------------------------------------------------------
 
