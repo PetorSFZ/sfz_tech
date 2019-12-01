@@ -25,19 +25,19 @@ namespace sfz {
 // sfz::hash
 // ------------------------------------------------------------------------------------------------
 
-constexpr uint64_t hash(uint8_t value) noexcept { return uint64_t(value); }
-constexpr uint64_t hash(uint16_t value) noexcept { return uint64_t(value); }
-constexpr uint64_t hash(uint32_t value) noexcept { return uint64_t(value); }
-constexpr uint64_t hash(uint64_t value) noexcept { return uint64_t(value); }
+constexpr uint64_t hash(uint8_t value) { return uint64_t(value); }
+constexpr uint64_t hash(uint16_t value) { return uint64_t(value); }
+constexpr uint64_t hash(uint32_t value) { return uint64_t(value); }
+constexpr uint64_t hash(uint64_t value) { return uint64_t(value); }
 
-constexpr uint64_t hash(int16_t value) noexcept { return uint64_t(value); }
-constexpr uint64_t hash(int32_t value) noexcept { return uint64_t(value); }
-constexpr uint64_t hash(int64_t value) noexcept { return uint64_t(value); }
+constexpr uint64_t hash(int16_t value) { return uint64_t(value); }
+constexpr uint64_t hash(int32_t value) { return uint64_t(value); }
+constexpr uint64_t hash(int64_t value) { return uint64_t(value); }
 
-constexpr uint64_t hash(float value) noexcept { return uint64_t(*((const uint32_t*)&value)); }
-constexpr uint64_t hash(double value) noexcept { return *((const uint64_t*)&value); }
+inline uint64_t hash(float value) noexcept { return uint64_t(*reinterpret_cast<const uint32_t*>(&value)); }
+inline uint64_t hash(double value) noexcept { return *(reinterpret_cast<const uint64_t*>(&value)); }
 
-constexpr uint64_t hash(void* value) noexcept { return uint64_t(uintptr_t(value)); }
+constexpr uint64_t hash(const void* value) { return uint64_t(uintptr_t(value)); }
 
 // HashMapAltKeyDescr
 // ------------------------------------------------------------------------------------------------
@@ -52,23 +52,61 @@ struct NO_ALT_KEY_TYPE final { NO_ALT_KEY_TYPE() = delete; };
 //  * sfz::hash(KeyT) == sfz::hash(HashMapAltKey<KeyT>::AltKeyT)
 //  * constructor KeyT(AltKeyT) must be defined
 template<typename KeyT>
-struct HashMapAltKeyDescr final {
+struct HashMapAltKey final {
 	using AltKeyT = NO_ALT_KEY_TYPE;
 };
 
 // HashMapDynamic
 // ------------------------------------------------------------------------------------------------
 
+// The state of a slot in a HashMap
+enum class HashMapSlotState : uint32_t {
+	EMPTY = 0, // No key/value pair associated with slot
+	PLACEHOLDER = 1, // Key/value pair was associated, but subsequently removed
+	OCCUPIED = 2 // Key/value pair associated with slot
+};
+
+// The data for a slot in a HashMap. A slot in the OCCUPIED state has an index into the key and
+// value arrays of a HashMap indicating where the key/value pair are stored.
+class HashMapSlot final {
+public:
+	HashMapSlot() noexcept = default;
+	HashMapSlot(const HashMapSlot&) noexcept = default;
+	HashMapSlot& operator= (const HashMapSlot&) noexcept = default;
+
+	HashMapSlot(HashMapSlotState state, uint32_t index) noexcept
+	{
+		mSlot = ((uint32_t(state) & 0x03u) << 30u) | (index & 0x3FFFFFFFu);
+	}
+
+	HashMapSlotState state() const { return HashMapSlotState((mSlot >> 30u) & 0x03u); }
+	uint32_t index() const { return mSlot & 0x3FFFFFFFu; }
+
+private:
+	uint32_t mSlot = 0u;
+};
+static_assert(sizeof(HashMapSlot) == sizeof(uint32_t));
+
 // A HashMap with closed hashing (open adressing) and linear probing.
+//
+// Similarly to Mattias Gustavsson's excellent C hash table, the keys and values are compactly
+// stored in sequential arrays. This makes iterating over the contents of a HashMap very cache
+// efficient, while paying a small cost for an extra indirection when looking up a specific key.
+// See: https://github.com/mattiasgustavsson/libs/blob/master/hashtable.h
+//
+// In order to accomplish the above this implementation uses the concepts of "slots" and "indices".
+// A "slot" is a number in the range [0, capacity), and is what the hash a given key is mapped to.
+// A "slot" contains an "index" to where the value (and key) associated with the key is stored,
+// i.e. an "index" is in the range [0, size).
 //
 // Removal of elements is O(1), but will leave a placeholder on the previously occupied slot. The
 // current number of placeholders can be queried by the placeholders() method. Both size and
 // placeholders count as load when checking if the HashMap needs to be rehashed or not.
 //
-// An alternate key type can be specified in the HashMapAltKeyDescr. This is mostly useful when
-// string classes are used as keys, then const char* can be used as an alt key type. This removes
-// the need to create a temporary key object (which might need to allocate memory).
-template<typename K, typename V, typename AltKeyDescr = HashMapAltKeyDescr<K>>
+// An alternate key type can be specified in the HashMapAltKey. This is mostly useful when strings
+// are used as keys, then const char* can be used as an alt key type. This removesmthe need to
+// create a temporary key object (which might need to allocate memory).
+template<typename K, typename V, typename AltKeyDescr = HashMapAltKey<K>>
 class HashMapDynamic {
 public:
 	// Constants and typedefs
@@ -76,12 +114,14 @@ public:
 
 	using AltK = typename AltKeyDescr::AltKeyT;
 
-	static constexpr uint32_t ALIGNMENT_EXP = 5;
-	static constexpr uint32_t ALIGNMENT = 1 << ALIGNMENT_EXP; // 2^5 = 32
+	static constexpr uint32_t ALIGNMENT = 32;
 	static constexpr uint32_t MIN_CAPACITY = 64;
 	static constexpr uint32_t MAX_CAPACITY = (1 << 30) - 1; // 2 bits reserved for info
 	static constexpr float MAX_OCCUPIED_REHASH_FACTOR = 0.80f;
 	static constexpr float GROW_RATE = 1.75f;
+
+	static_assert(alignof(K) <= ALIGNMENT);
+	static_assert(alignof(V) <= ALIGNMENT);
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -93,9 +133,9 @@ public:
 	HashMapDynamic& operator= (HashMapDynamic&& other) noexcept { this->swap(other); return *this; }
 	~HashMapDynamic() noexcept { this->destroy(); }
 
-	HashMapDynamic(uint32_t suggestedCapacity, Allocator* allocator, DbgInfo allocDbg) noexcept
+	HashMapDynamic(uint32_t capacity, Allocator* allocator, DbgInfo allocDbg) noexcept
 	{
-		this->init(suggestedCapacity, allocator, allocDbg);
+		this->init(capacity, allocator, allocDbg);
 	}
 
 	// State methods
@@ -111,8 +151,14 @@ public:
 	HashMapDynamic clone(DbgInfo allocDbg = sfz_dbg("HashMapDynamic"), Allocator* allocator = nullptr) const
 	{
 		HashMapDynamic tmp(mCapacity, allocator != nullptr ? allocator : mAllocator, allocDbg);
-		for (auto pair : *this) {
-			tmp.put(pair.key, pair.value);
+		tmp.mSize = this->mSize;
+		for (uint32_t i = 0; i < mSize; i++) {
+			tmp.mKeys[i] = this->mKeys[i];
+			tmp.mValues[i] = this->mValues[i];
+		}
+		tmp.mPlaceholders = this->mPlaceholders;
+		for (uint32_t i = 0; i < mCapacity; i++) {
+			tmp.mSlots[i] = this->mSlots[i];
 		}
 		return tmp;
 	}
@@ -123,17 +169,14 @@ public:
 		std::swap(this->mSize, other.mSize);
 		std::swap(this->mCapacity, other.mCapacity);
 		std::swap(this->mPlaceholders, other.mPlaceholders);
-		std::swap(this->mAllocSizeBytes, other.mAllocSizeBytes);
 		std::swap(this->mAllocation, other.mAllocation);
+		std::swap(this->mSlots, other.mSlots);
 		std::swap(this->mKeys, other.mKeys);
 		std::swap(this->mValues, other.mValues);
 		std::swap(this->mAllocator, other.mAllocator);
 	}
 
 	// Destroys all elements stored in this HashMap, deallocates all memory and removes allocator.
-	// After this method is called the size and capacity is 0, allocator is nullptr. If the HashMap
-	// is already empty then this method will only remove the allocator if it exists. It is not
-	// necessary to call this method manually, it will automatically be called in the destructor.
 	void destroy()
 	{
 		if (mAllocation == nullptr) { mAllocator = nullptr; return; }
@@ -145,29 +188,26 @@ public:
 		mAllocator->deallocate(mAllocation);
 		mCapacity = 0;
 		mPlaceholders = 0;
-		mAllocSizeBytes = 0;
 		mAllocation = nullptr;
+		mSlots = nullptr;
 		mKeys = nullptr;
 		mValues = nullptr;
 		mAllocator = nullptr;
 	}
 
-	// Removes all elements from this HashMap without deallocating memory, changing capacity or
-	// touching the allocator.
+	// Removes all elements from this HashMap without deallocating memory.
 	void clear()
 	{
 		if (mSize == 0) return;
 
 		// Call destructors for all active keys and values
-		for (uint32_t i = 0; i < mCapacity; ++i) {
-			if (elementInfo(i) == ELEMENT_INFO_OCCUPIED) {
-				mKeys[i].~K();
-				mValues[i].~V();
-			}
+		for (uint32_t i = 0; i < mSize; i++) {
+			mKeys[i].~K();
+			mValues[i].~V();
 		}
 
-		// Clear all element info bits
-		std::memset(elementInfoPtr(), 0, sizeOfElementInfoArray());
+		// Clear all slots
+		std::memset(mSlots, 0, roundUpAligned(mCapacity * sizeof(HashMapSlot), ALIGNMENT));
 
 		// Set size to 0
 		mSize = 0;
@@ -177,7 +217,8 @@ public:
 	// Rehashes this HashMap to the specified capacity. All old pointers and references are invalidated.
 	void rehash(uint32_t newCapacity, DbgInfo allocDbg)
 	{
-		// Can't decrease capacity with rehash()
+		if (newCapacity == 0) return;
+		if (newCapacity < MIN_CAPACITY) newCapacity = MIN_CAPACITY;
 		if (newCapacity < mCapacity) newCapacity = mCapacity;
 
 		// Don't rehash if capacity already exists and there are no placeholders
@@ -188,26 +229,25 @@ public:
 		// Create new hash map and calculate size of its arrays
 		HashMapDynamic tmp;
 		tmp.mCapacity = newCapacity;
-		uint64_t sizeOfElementInfo = tmp.sizeOfElementInfoArray();
+		uint64_t sizeOfSlots = roundUpAligned(tmp.mCapacity * sizeof(HashMapSlot), ALIGNMENT);
 		uint64_t sizeOfKeys = roundUpAligned(sizeof(K) * tmp.mCapacity, ALIGNMENT);
 		uint64_t sizeOfValues = roundUpAligned(sizeof(V) * tmp.mCapacity, ALIGNMENT);
+		uint64_t allocSize = sizeOfSlots + sizeOfKeys + sizeOfValues;
 
-		// Allocate memory for new hash map
-		tmp.mAllocSizeBytes = sizeOfElementInfo + sizeOfKeys + sizeOfValues;
-		tmp.mAllocation = mAllocator->allocate(allocDbg, tmp.mAllocSizeBytes, ALIGNMENT);
+		// Allocate and clear memory for new hash map
+		tmp.mAllocation = static_cast<uint8_t*>(mAllocator->allocate(allocDbg, allocSize, ALIGNMENT));
+		std::memset(tmp.mAllocation, 0, allocSize);
 		tmp.mAllocator = mAllocator;
-		tmp.mKeys = (K*)(((uint8_t*)tmp.mAllocation) + sizeOfElementInfo);
-		tmp.mValues = (V*)(((uint8_t*)tmp.mKeys) + sizeOfKeys);
+		tmp.mSlots = reinterpret_cast<HashMapSlot*>(tmp.mAllocation);
+		tmp.mKeys = reinterpret_cast<K*>(tmp.mAllocation + sizeOfSlots);
+		tmp.mValues = reinterpret_cast<V*>(tmp.mAllocation + sizeOfSlots + sizeOfKeys);
 		sfz_assert(isAligned(tmp.mKeys, ALIGNMENT));
 		sfz_assert(isAligned(tmp.mValues, ALIGNMENT));
 
-		// Clear memory
-		std::memset(tmp.mAllocation, 0, tmp.mAllocSizeBytes);
-
 		// Iterate over all pairs of objects in this HashMap and move them to the new one
 		if (this->mAllocation != nullptr) {
-			for (KeyValuePair pair : *this) {
-				tmp.put(pair.key, std::move(pair.value));
+			for (uint32_t i = 0; i < mSize; i++) {
+				tmp.put(std::move(mKeys[i]), std::move(mValues[i]));
 			}
 		}
 
@@ -218,18 +258,9 @@ public:
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
-	// Returns the size of this HashMap. This is the number of elements stored, not the current
-	// capacity.
 	uint32_t size() const { return mSize; }
-
-	// Returns the capacity of this HashMap.
 	uint32_t capacity() const { return mCapacity; }
-
-	// Returns the number of placeholder positions for removed elements. size + placeholders <=
-	// capacity.
 	uint32_t placeholders() const { return mPlaceholders; }
-
-	// Returns the allocator of this HashMap. Will return nullptr if no allocator is set.
 	Allocator* allocator() const { return mAllocator; }
 
 	// Returns pointer to the element associated with the given key, or nullptr if no such element
@@ -271,331 +302,184 @@ public:
 	// Iterators
 	// --------------------------------------------------------------------------------------------
 
-	// The return value when dereferencing an iterator. Contains references into the HashMap in
-	// question, so it is only valid as long as no rehashing is performed.
-	struct KeyValuePair final {
-		const K& key; // Const so user doesn't change key, breaking invariants of the HashMap
-		V& value;
-		KeyValuePair(const K& key, V& value) noexcept : key(key), value(value) { }
-		KeyValuePair(const KeyValuePair&) noexcept = default;
-		KeyValuePair& operator= (const KeyValuePair&) = delete; // Because references...
-	};
-
-	// The normal non-const iterator for HashMap.
-	class Iterator final {
-	public:
-		Iterator(HashMapDynamic& hashMap, uint32_t index) noexcept : mHashMap(&hashMap), mIndex(index) { }
-		Iterator(const Iterator&) noexcept = default;
-		Iterator& operator= (const Iterator&) noexcept = default;
-
-		Iterator& operator++ () noexcept // Pre-increment
-		{
-			// Go through map until we find next occupied slot
-			for (uint32_t i = mIndex + 1; i < mHashMap->mCapacity; ++i) {
-				uint8_t info = mHashMap->elementInfo(i);
-				if (info == ELEMENT_INFO_OCCUPIED) {
-					mIndex = i;
-					return *this;
-				}
-			}
-
-			// Did not find any more elements, set to end
-			mIndex = uint32_t(~0);
-			return *this;
-		}
-
-		Iterator operator++ (int) noexcept // Post-increment
-		{
-			auto copy = *this;
-			++(*this);
-			return copy;
-		}
-
-		KeyValuePair operator* () noexcept
-		{
-			sfz_assert(mIndex != uint32_t(~0));
-			sfz_assert(mHashMap->elementInfo(mIndex) == ELEMENT_INFO_OCCUPIED);
-			return KeyValuePair(mHashMap->mKeys[mIndex], mHashMap->mValues[mIndex]);
-		}
-
-		bool operator== (const Iterator& other) const noexcept
-		{
-			return (this->mHashMap == other.mHashMap) && (this->mIndex == other.mIndex);
-		}
-
-		bool operator!= (const Iterator& other) const noexcept { return !(*this == other); }
-
-	private:
-		HashMapDynamic* mHashMap;
-		uint32_t mIndex;
-	};
-
-	// The return value when dereferencing a const iterator. Contains references into the HashMap
-	// in question, so it is only valid as long as no rehashing is performed.
-	struct ConstKeyValuePair final {
+	template<typename VT>
+	struct Pair final {
 		const K& key;
-		const V& value;
-		ConstKeyValuePair(const K& key, const V& value) noexcept : key(key), value(value) {}
-		ConstKeyValuePair(const ConstKeyValuePair&) noexcept = default;
-		ConstKeyValuePair& operator= (const ConstKeyValuePair&) = delete; // Because references...
+		VT& value;
+		Pair(const K& key, VT& value) noexcept : key(key), value(value) { }
+		Pair(const Pair&) noexcept = default;
+		Pair& operator= (const Pair&) = delete; // Because references...
 	};
 
-	// The const iterator for HashMap
-	class ConstIterator final {
+	template<typename MapT, typename VT>
+	class Itr final {
 	public:
-		ConstIterator(const HashMapDynamic& hashMap, uint32_t index) noexcept : mHashMap(&hashMap), mIndex(index) {}
-		ConstIterator(const ConstIterator&) noexcept = default;
-		ConstIterator& operator= (const ConstIterator&) noexcept = default;
+		Itr(MapT& map, uint32_t idx) noexcept : mMap(&map), mIdx(idx) { }
+		Itr(const Itr&) noexcept = default;
+		Itr& operator= (const Itr&) noexcept = default;
 
-		ConstIterator& operator++ () noexcept // Pre-increment
-		{
-			// Go through map until we find next occupied slot
-			for (uint32_t i = mIndex + 1; i < mHashMap->mCapacity; ++i) {
-				uint8_t info = mHashMap->elementInfo(i);
-				if (info == ELEMENT_INFO_OCCUPIED) {
-					mIndex = i;
-					return *this;
-				}
-			}
+		Itr& operator++ () { if (mIdx < mMap->mSize) { mIdx += 1; } return *this; } // Pre-increment
+		Itr operator++ (int) { auto copy = *this; ++(*this); return copy; } // Post-increment
+		Pair<VT> operator* () { sfz_assert(mIdx < mMap->mSize); return Pair<VT>(mMap->mKeys[mIdx], mMap->mValues[mIdx]); }
 
-			// Did not find any more elements, set to end
-			mIndex = uint32_t(~0);
-			return *this;
-		}
-
-		ConstIterator operator++ (int) noexcept // Post-increment
-		{
-			auto copy = *this;
-			++(*this);
-			return copy;
-		}
-
-		ConstKeyValuePair operator* () noexcept
-		{
-			sfz_assert(mIndex != uint32_t(~0));
-			sfz_assert(mHashMap->elementInfo(mIndex) == ELEMENT_INFO_OCCUPIED);
-			return ConstKeyValuePair(mHashMap->mKeys[mIndex], mHashMap->mValues[mIndex]);
-		}
-
-		bool operator== (const ConstIterator& other) const noexcept
-		{
-			return (this->mHashMap == other.mHashMap) && (this->mIndex == other.mIndex);
-		}
-
-		bool operator!= (const ConstIterator& other) const noexcept { return !(*this == other); }
+		bool operator== (const Itr& o) const { return (mMap == o.mMap) && (mIdx == o.mIdx); }
+		bool operator!= (const Itr& o) const { return !(*this == o); }
 
 	private:
-		const HashMapDynamic* mHashMap;
-		uint32_t mIndex;
+		MapT* mMap;
+		uint32_t mIdx;
 	};
 
-	// Iterator methods
-	// --------------------------------------------------------------------------------------------
+	using Iterator = Itr<HashMapDynamic, V>;
+	using ConstIterator = Itr<const HashMapDynamic, const V>;
 
-	Iterator begin()
-	{
-		if (this->size() == 0) return Iterator(*this, uint32_t(~0));
-		Iterator it(*this, 0);
-		// Unless there happens to be an element in slot 0 we increment the iterator to find it
-		if (elementInfo(uint32_t(0)) != ELEMENT_INFO_OCCUPIED) {
-			++it;
-		}
-		return it;
-	}
-
+	Iterator begin() { return Iterator(*this, 0); }
 	ConstIterator begin() const { return cbegin(); }
+	ConstIterator cbegin() const { return ConstIterator(*this, 0); }
 
-	ConstIterator cbegin() const
-	{
-		if (this->size() == 0) return ConstIterator(*this, uint32_t(~0));
-		ConstIterator it(*this, 0);
-		// Unless there happens to be an element in slot 0 we increment the iterator to find it
-		if (elementInfo(uint32_t(0)) != ELEMENT_INFO_OCCUPIED) {
-			++it;
-		}
-		return it;
-	}
-
-	Iterator end() { return Iterator(*this, uint32_t(~0)); }
+	Iterator end() { return Iterator(*this, mSize); }
 	ConstIterator end() const { return cend(); }
-	ConstIterator cend() const { return ConstIterator(*this, uint32_t(~0)); }
+	ConstIterator cend() const { return ConstIterator(*this, mSize); }
 
 private:
-	// Private constants
-	// --------------------------------------------------------------------------------------------
-
-	static constexpr uint8_t ELEMENT_INFO_EMPTY = 0;
-	static constexpr uint8_t ELEMENT_INFO_PLACEHOLDER = 1;
-	static constexpr uint8_t ELEMENT_INFO_OCCUPIED = 2;
-
 	// Private methods
 	// --------------------------------------------------------------------------------------------
 
-	// Return the size of the memory allocation for the element info array in bytes
-	uint64_t sizeOfElementInfoArray() const
-	{
-		// 2 bits per info element, + 1 since mCapacity always is odd.
-		uint64_t infoMinRequiredSize = (uint64_t(mCapacity) >> 2) + 1;
-
-		// Calculate how many alignment sized chunks is needed to store element info
-		uint64_t infoNumAlignmentSizedChunks = (infoMinRequiredSize >> ALIGNMENT_EXP) + 1;
-		return infoNumAlignmentSizedChunks << ALIGNMENT_EXP;
-	}
-
-	// Returns pointer to the info bits part of the allocated memory
-	uint8_t* elementInfoPtr() const { return reinterpret_cast<uint8_t*>(mAllocation); }
-
-	// Returns the 2 bit element info about an element position in the HashMap
-	// 0 = empty, 1 = removed, 2 = occupied, (3 is unused)
-	uint8_t elementInfo(uint32_t index) const
-	{
-		uint32_t chunkIndex = index >> 2; // index / 4;
-		uint32_t chunkIndexModulo = index & 0x03; // index % 4
-		uint32_t chunkIndexModuloTimes2 = chunkIndexModulo << 1;
-
-		uint8_t chunk = elementInfoPtr()[chunkIndex];
-		uint8_t info = static_cast<uint8_t>((chunk >> (chunkIndexModuloTimes2)) & 0x3);
-
-		return info;
-	}
-
-	// Sets the 2 bit element info with the selected value
-	void setElementInfo(uint32_t index, uint8_t value)
-	{
-		uint32_t chunkIndex = index >> 2; // index / 4;
-		uint32_t chunkIndexModulo = index & 0x03; // index % 4
-		uint32_t chunkIndexModuloTimes2 = chunkIndexModulo << 1;
-
-		uint8_t chunk = elementInfoPtr()[chunkIndex];
-
-		// Remove previous info
-		chunk = chunk & (~(uint32_t(0x03) << chunkIndexModuloTimes2));
-
-		// Insert new info
-		elementInfoPtr()[chunkIndex] = uint8_t(chunk | (value << chunkIndexModuloTimes2));
-	}
-
-	// Finds the index of an element associated with the specified key. Whether an element is
-	// found or not is returned through the elementFound parameter. The first free slot found is
-	// sent back through the firstFreeSlot parameter, if no free slot is found it will be set to
-	// ~0. Whether the found free slot is a placeholder slot or not is sent back through the
-	// isPlaceholder parameter.
 	template<typename KT>
-	uint32_t findElementIndex(
-		const KT& key,
-		bool& elementFound,
-		uint32_t& firstFreeSlot,
-		bool& isPlaceholder) const
+	void findSlot(const KT& key, uint32_t& firstFreeSlotIdx, uint32_t& occupiedSlotIdx) const
 	{
-		elementFound = false;
-		firstFreeSlot = uint32_t(~0);
-		isPlaceholder = false;
-
-		// Early exit if HashMap has no capacity
-		if (mCapacity == 0) return uint32_t(~0);
+		firstFreeSlotIdx = ~0u;
+		occupiedSlotIdx = ~0u;
 
 		// Search for the element using linear probing
-		const uint32_t baseIndex = uint32_t(sfz::hash(key) % uint64_t(mCapacity));
+		const uint32_t baseIndex = mCapacity != 0 ? uint32_t(sfz::hash(key) % uint64_t(mCapacity)) : 0;
 		for (uint32_t i = 0; i < mCapacity; i++) {
+			const uint32_t slotIdx = (baseIndex + i) % mCapacity;
+			HashMapSlot slot = mSlots[slotIdx];
+			HashMapSlotState state = slot.state();
 
-			// Try (base + i) index
-			uint32_t index = (baseIndex + i) % mCapacity;
-			uint8_t info = elementInfo(uint32_t(index));
-			if (info == ELEMENT_INFO_EMPTY) {
-				if (firstFreeSlot == uint32_t(~0)) firstFreeSlot = index;
-				break;
+			if (state != HashMapSlotState::OCCUPIED) {
+				if (firstFreeSlotIdx == ~0u) firstFreeSlotIdx = slotIdx;
+				if (state == HashMapSlotState::EMPTY) break;
 			}
-			else if (info == ELEMENT_INFO_PLACEHOLDER) {
-				if (firstFreeSlot == uint32_t(~0)) {
-					firstFreeSlot = index;
-					isPlaceholder = true;
-				}
-			}
-			else if (info == ELEMENT_INFO_OCCUPIED) {
-				if (mKeys[index] == key) {
-					elementFound = true;
-					return index;
+			else {
+				if (mKeys[slot.index()] == key) {
+					occupiedSlotIdx = slotIdx;
+					break;
 				}
 			}
 		}
-
-		return uint32_t(~0);
 	}
 
-	// Internal shared implementation of all get() methods
+	// Swaps the position of two key/value pairs in the internal arrays and updates their slots
+	void swapElements(uint32_t slotIdx1, uint32_t slotIdx2)
+	{
+		sfz_assert(slotIdx1 < mCapacity);
+		sfz_assert(slotIdx2 < mCapacity);
+		HashMapSlot slot1 = mSlots[slotIdx1];
+		HashMapSlot slot2 = mSlots[slotIdx2];
+		sfz_assert(slot1.state() == HashMapSlotState::OCCUPIED);
+		sfz_assert(slot2.state() == HashMapSlotState::OCCUPIED);
+		uint32_t idx1 = slot1.index();
+		uint32_t idx2 = slot2.index();
+		sfz_assert(idx1 < mSize);
+		sfz_assert(idx2 < mSize);
+		std::swap(mSlots[slotIdx1], mSlots[slotIdx2]);
+		std::swap(mKeys[idx1], mKeys[idx2]);
+		std::swap(mValues[idx1], mValues[idx2]);
+	}
+
 	template<typename KT>
 	V* getInternal(const KT& key) const
 	{
-		// Finds the index of the element
-		uint32_t firstFreeSlot = uint32_t(~0);
-		bool elementFound = false;
-		bool isPlaceholder = false;
-		uint32_t index = this->findElementIndex<KT>(key, elementFound, firstFreeSlot, isPlaceholder);
+		// Finds slots
+		uint32_t firstFreeSlotIdx = ~0u;
+		uint32_t occupiedSlotIdx = ~0u;
+		this->findSlot<KT>(key, firstFreeSlotIdx, occupiedSlotIdx);
 
-		// Returns nullptr if map doesn't contain element
-		if (!elementFound) return nullptr;
+		// Return nullptr if map does not contain element
+		if (occupiedSlotIdx == ~0u) return nullptr;
 
 		// Returns pointer to element
-		return mValues + index;
+		sfz_assert(occupiedSlotIdx < mCapacity);
+		HashMapSlot slot = mSlots[occupiedSlotIdx];
+		sfz_assert(slot.state() == HashMapSlotState::OCCUPIED);
+		uint32_t idx = slot.index();
+		sfz_assert(idx < mSize);
+		return mValues + idx;
 	}
 
-	// Internal shared implementation of all put() methods
 	template<typename KT, typename VT>
 	V& putInternal(const KT& key, VT&& value)
 	{
-		// Utilizes perfect forwarding in order to determine if parameters are const references or rvalues.
-		// const reference: VT == const V&
-		// rvalue: VT == V
-		// std::forward<VT>(value) will then return the correct version of value
-
 		// Rehash if necessary
 		uint32_t maxNumOccupied = uint32_t(mCapacity * MAX_OCCUPIED_REHASH_FACTOR);
 		if ((mSize + mPlaceholders) >= maxNumOccupied) {
-			uint32_t newCapacity = mCapacity * GROW_RATE;
-			if (newCapacity < MIN_CAPACITY) newCapacity = MIN_CAPACITY;
-			this->rehash(newCapacity, sfz_dbg("HashMapDynamic"));
+			this->rehash((mCapacity + 1) * GROW_RATE, sfz_dbg("HashMapDynamic"));
 		}
 
-		// Finds the index of the element
-		uint32_t firstFreeSlot = uint32_t(~0);
-		bool elementFound = false;
-		bool isPlaceholder = false;
-		uint32_t index = this->findElementIndex<KT>(key, elementFound, firstFreeSlot, isPlaceholder);
+		// Finds slots
+		uint32_t firstFreeSlotIdx = ~0u;
+		uint32_t occupiedSlotIdx = ~0u;
+		this->findSlot<KT>(key, firstFreeSlotIdx, occupiedSlotIdx);
 
-		// If map contains key just replace value and return
-		if (elementFound) {
-			mValues[index] = std::forward<VT>(value);
-			return mValues[index];
+		// If map contains key, replace value and return
+		if (occupiedSlotIdx != ~0u) {
+			sfz_assert(occupiedSlotIdx < mCapacity);
+			HashMapSlot slot = mSlots[occupiedSlotIdx];
+			uint32_t idx = slot.index();
+			sfz_assert(idx < mSize);
+			mValues[idx] = std::forward<VT>(value);
+			return mValues[idx];
 		}
 
-		// Otherwise insert info, key and value
-		setElementInfo(firstFreeSlot, ELEMENT_INFO_OCCUPIED);
-		new (mKeys + firstFreeSlot) K(key);
-		new (mValues + firstFreeSlot) V(std::forward<VT>(value));
-
+		// Calculate next index
+		uint32_t nextFreeIdx = mSize;
 		mSize += 1;
-		if (isPlaceholder) mPlaceholders -= 1;
-		return mValues[firstFreeSlot];
+
+		// Check if previous slot was placeholder and then create new slot
+		sfz_assert(firstFreeSlotIdx < mCapacity);
+		bool wasPlaceholder = mSlots[firstFreeSlotIdx].state() == HashMapSlotState::PLACEHOLDER;
+		if (wasPlaceholder) mPlaceholders -= 1;
+		mSlots[firstFreeSlotIdx] = HashMapSlot(HashMapSlotState::OCCUPIED, nextFreeIdx);
+
+		// Insert key and value
+		// Perfect forwarding: const reference: VT == const V&, rvalue: VT == V
+		// std::forward<VT>(value) will then return the correct version of value
+		new (mKeys + nextFreeIdx) K(key);
+		new (mValues + nextFreeIdx) V(std::forward<VT>(value));
+		return mValues[nextFreeIdx];
 	}
 
-	// Internal shared implementation of all remove() methods
 	template<typename KT>
 	bool removeInternal(const KT& key)
 	{
-		// Finds the index of the element
-		uint32_t firstFreeSlot = uint32_t(~0);
-		bool elementFound = false;
-		bool isPlaceholder = false;
-		uint32_t index = this->findElementIndex<KT>(key, elementFound, firstFreeSlot, isPlaceholder);
+		// Finds slots
+		uint32_t firstFreeSlotIdx = ~0u;
+		uint32_t occupiedSlotIdx = ~0u;
+		this->findSlot<KT>(key, firstFreeSlotIdx, occupiedSlotIdx);
 
-		// Returns nullptr if map doesn't contain element
-		if (!elementFound) return false;
+		// Return false if map does not contain element
+		if (occupiedSlotIdx == ~0u) return false;
 
-		// Remove element
-		setElementInfo(index, ELEMENT_INFO_PLACEHOLDER);
-		mKeys[index].~K();
-		mValues[index].~V();
+		// Swap the key/value pair with the last key/value pair in the arrays
+		uint32_t lastSlotIdx = ~0u;
+		{
+			sfz_assert(mSize > 0);
+			uint32_t unused = ~0u;
+			this->findSlot<K>(mKeys[mSize - 1], unused, lastSlotIdx);
+			sfz_assert(lastSlotIdx != ~0u);
+		}
+		this->swapElements(occupiedSlotIdx, lastSlotIdx);
 
+		// Remove the element
+		uint32_t idx = mSlots[occupiedSlotIdx].index();
+		sfz_assert(idx < mSize);
+		mSlots[occupiedSlotIdx] = HashMapSlot(HashMapSlotState::PLACEHOLDER, ~0u);
+		mKeys[idx].~K();
+		mValues[idx].~V();
+
+		// Update info
 		mSize -= 1;
 		mPlaceholders += 1;
 		return true;
@@ -604,8 +488,9 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	uint32_t mSize = 0, mCapacity = 0, mPlaceholders = 0, mAllocSizeBytes = 0;
-	void* mAllocation = nullptr;
+	uint32_t mSize = 0, mCapacity = 0, mPlaceholders = 0;
+	uint8_t* mAllocation = nullptr;
+	HashMapSlot* mSlots = nullptr;
 	K* mKeys = nullptr;
 	V* mValues = nullptr;
 	Allocator* mAllocator = nullptr;

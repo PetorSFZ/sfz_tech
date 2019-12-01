@@ -358,14 +358,14 @@ TEST_CASE("Empty HashMap", "[sfz::HashMap]")
 
 	SECTION("Iterating") {
 		int times = 0;
-		for (HashMapDynamic<int,int>::KeyValuePair pair : m) {
+		for (HashMapDynamic<int,int>::Pair<int> pair : m) {
 			(void)pair;
 			times += 1;
 		}
 		REQUIRE(times == 0);
 
 		int ctimes = 0;
-		for (HashMapDynamic<int, int>::ConstKeyValuePair pair : cm) {
+		for (HashMapDynamic<int, int>::Pair<const int> pair : cm) {
 			(void)pair;
 			ctimes += 1;
 		}

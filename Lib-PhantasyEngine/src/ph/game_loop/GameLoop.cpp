@@ -334,6 +334,8 @@ void runGameLoop(
 	gameLoopState.userInput.events.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
 	gameLoopState.userInput.controllerEvents.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
 	gameLoopState.userInput.mouseEvents.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
+	gameLoopState.userInput.controllers.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
+	gameLoopState.userInput.controllersLastFrameState.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
 
 	calculateDelta(gameLoopState.previousItrTime); // Sets previousItrTime to current time
 

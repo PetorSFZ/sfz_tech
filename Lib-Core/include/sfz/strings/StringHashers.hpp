@@ -48,12 +48,12 @@ uint64_t hash(const StackStringTempl<N>& str) noexcept { return sfz::hash(str.st
 // ------------------------------------------------------------------------------------------------
 
 template<>
-struct HashMapAltKeyDescr<DynString> final {
+struct HashMapAltKey<DynString> final {
 	using AltKeyT = const char*;
 };
 
 template<size_t N>
-struct HashMapAltKeyDescr<StackStringTempl<N>> final {
+struct HashMapAltKey<StackStringTempl<N>> final {
 	using AltKeyT = const char*;
 };
 
