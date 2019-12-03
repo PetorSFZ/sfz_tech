@@ -34,7 +34,7 @@ using namespace sfz;
 // ------------------------------------------------------------------------------------------------
 
 struct Section final {
-	StackString32 sectionKey;
+	str32 sectionKey;
 	ArrayDynamic<UniquePtr<Setting>> settings;
 };
 
@@ -55,7 +55,7 @@ void GlobalConfig::init(const char* basePath, const char* fileName, Allocator* a
 	mImpl->allocator = allocator;
 
 	// Initialize IniParser with path
-	StackString256 tmpPath;
+	str256 tmpPath;
 	tmpPath.printf("%s%s", basePath, fileName);
 	mImpl->ini = IniParser(tmpPath.str);
 
@@ -246,7 +246,7 @@ void GlobalConfig::getAllSettings(ArrayDynamic<Setting*>& settings) noexcept
 	}
 }
 
-void GlobalConfig::getSections(ArrayDynamic<StackString32>& sections) noexcept
+void GlobalConfig::getSections(ArrayDynamic<str32>& sections) noexcept
 {
 	sfz_assert(mImpl != nullptr);
 	sections.ensureCapacity(mImpl->sections.size() + sections.size());

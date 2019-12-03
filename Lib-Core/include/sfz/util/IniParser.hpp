@@ -22,9 +22,9 @@
 #include <limits>
 
 #include <skipifzero_arrays.hpp>
+#include <skipifzero_strings.hpp>
 
 #include "sfz/strings/DynString.hpp"
-#include "sfz/strings/StackString.hpp"
 
 namespace sfz {
 
@@ -177,11 +177,11 @@ private:
 			struct { int32_t i; float f; };
 			bool b;
 		};
-		StackString192 str; // Name or comment depending on ItemType
+		str192 str; // Name or comment depending on ItemType
 	};
 
 	struct Section final {
-		StackString64 name;
+		str64 name;
 		ArrayDynamic<Item> items;
 		Section() : items(0, getDefaultAllocator(), sfz_dbg("")) {}
 		Section(const char* name) : name(name), items(0, getDefaultAllocator(), sfz_dbg("")) { }

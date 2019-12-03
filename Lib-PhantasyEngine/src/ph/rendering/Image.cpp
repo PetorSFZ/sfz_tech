@@ -19,10 +19,9 @@
 
 #include "ph/rendering/Image.hpp"
 
-#include <cstring>
+#include <skipifzero_strings.hpp>
 
 #include <sfz/Logging.hpp>
-#include <sfz/strings/StackString.hpp>
 
 // stb_image implementation
 // ------------------------------------------------------------------------------------------------
@@ -83,7 +82,7 @@ static void sfz_free_wrapper(void* ptr)
 
 namespace ph {
 
-using sfz::StackString320;
+using sfz::str320;
 
 // Static helper functions
 // ------------------------------------------------------------------------------------------------
@@ -160,7 +159,7 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 	}
 
 	// Concatenate path
-	StackString320 path;
+	str320 path;
 	path.printf("%s%s", basePath, fileName);
 
 	// Loading image

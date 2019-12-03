@@ -30,10 +30,12 @@
 #include <direct.h>
 #endif
 
+#include <skipifzero.hpp>
+#include <skipifzero_strings.hpp>
+
 #include <sfz/Context.hpp>
 #include <sfz/Logging.hpp>
 #include <sfz/memory/StandardAllocator.hpp>
-#include <sfz/strings/StackString.hpp>
 #include <sfz/strings/StringID.hpp>
 #include <sfz/util/IO.hpp>
 
@@ -106,7 +108,7 @@ static void ensureAppUserDataDirExists(const char* appName) noexcept
 	sfz::createDirectory(sfz::gameBaseFolderPath());
 
 	// Create app directory in "My Games"
-	sfz::StackString320 tmp;
+	sfz::str320 tmp;
 	tmp.printf("%s%s/", sfz::gameBaseFolderPath(), appName);
 	sfz::createDirectory(tmp.str);
 }
@@ -154,7 +156,7 @@ int mainImpl(int, char*[], InitOptions&& options)
 	{
 		// Init config with ini location
 		if (options.iniLocation == IniLocation::NEXT_TO_EXECUTABLE) {
-			sfz::StackString192 iniFileName;
+			sfz::str192 iniFileName;
 			iniFileName.printf("%s.ini", options.appName);
 			cfg.init(basePath(), iniFileName.str, sfz::getDefaultAllocator());
 			SFZ_INFO("PhantasyEngine", "Ini location set to: %s%s", basePath(), iniFileName.str);
@@ -165,7 +167,7 @@ int mainImpl(int, char*[], InitOptions&& options)
 			ensureAppUserDataDirExists(options.appName);
 
 			// Initialize ini
-			sfz::StackString192 iniFileName;
+			sfz::str192 iniFileName;
 			iniFileName.printf("%s/%s.ini", options.appName, options.appName);
 			cfg.init(sfz::gameBaseFolderPath(), iniFileName.str, sfz::getDefaultAllocator());
 			SFZ_INFO("PhantasyEngine", "Ini location set to: %s%s",

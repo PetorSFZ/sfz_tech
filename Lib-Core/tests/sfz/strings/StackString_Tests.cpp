@@ -20,22 +20,19 @@
 #include "catch2/catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
-#include <cstdio>
-#include <cstring>
-
-#include "sfz/strings/StackString.hpp"
+#include <skipifzero_strings.hpp>
 
 using namespace sfz;
 
 TEST_CASE("printf() constructor", "[sfz::StackString]")
 {
-	StackString str1;
+	str96 str1;
 	str1.printf("%s: %i", "Test", 1);
 	
-	StackString str2("%s: %i", "Test", 1);
+	str96 str2("%s: %i", "Test", 1);
 	REQUIRE(str1 == str2);
 
-	StackString128 str3("%s", "1234567890123456789012345678901234567890123456789012345678901234123456789012345678901234567890123456789012345678901234567890123extra");
+	str128 str3("%s", "1234567890123456789012345678901234567890123456789012345678901234123456789012345678901234567890123456789012345678901234567890123extra");
 	REQUIRE(strcmp(str3.str, "1234567890123456789012345678901234567890123456789012345678901234123456789012345678901234567890123456789012345678901234567890123") == 0);
 
 	REQUIRE(str96("hello") == "hello");
@@ -50,7 +47,7 @@ TEST_CASE("Implicit conversion operators", "[sfz::StackString]")
 
 TEST_CASE("printf() & printfAppend()", "[sfz::StackString]")
 {
-	StackString str;
+	str96 str;
 	str.printf("%s: %i", "Test", 1);
 	REQUIRE(strcmp(str.str, "Test: 1") == 0);
 
@@ -61,7 +58,7 @@ TEST_CASE("printf() & printfAppend()", "[sfz::StackString]")
 
 TEST_CASE("insertChars()", "[sfz::StackString]")
 {
-	StackString32 str;
+	str32 str;
 	const char* aStr = "1234567890123456789012345678901234567890";
 	str.insertChars(aStr, 31);
 	REQUIRE(str == "1234567890123456789012345678901");
@@ -71,7 +68,7 @@ TEST_CASE("insertChars()", "[sfz::StackString]")
 
 TEST_CASE("StackString comparison operators", "[sfz::StackString]")
 {
-	StackString str("aba");
+	str96 str("aba");
 	REQUIRE(str == "aba");
 	REQUIRE(str != "afae");
 	REQUIRE(str < "bbb");

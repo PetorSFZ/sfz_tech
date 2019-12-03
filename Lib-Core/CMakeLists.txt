@@ -149,7 +149,6 @@ set(INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/memory/StandardAllocator.hpp
 
 	${INCLUDE_DIR}/sfz/strings/DynString.hpp
-	${INCLUDE_DIR}/sfz/strings/StackString.hpp
 	${INCLUDE_DIR}/sfz/strings/StringHashers.hpp
 	${INCLUDE_DIR}/sfz/strings/StringID.hpp
 
@@ -173,7 +172,6 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/memory/StandardAllocator.cpp
 
 	${SRC_DIR}/sfz/strings/DynString.cpp
-	${SRC_DIR}/sfz/strings/StackString.cpp
 	${SRC_DIR}/sfz/strings/StringHashers.cpp
 	${SRC_DIR}/sfz/strings/StringID.cpp
 

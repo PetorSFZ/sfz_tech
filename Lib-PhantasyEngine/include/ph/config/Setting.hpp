@@ -19,10 +19,9 @@
 
 #pragma once
 
-#include <cstdint>
 #include <cfloat>
 
-#include <sfz/strings/StackString.hpp>
+#include <skipifzero_strings.hpp>
 
 namespace ph {
 

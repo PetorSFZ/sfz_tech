@@ -20,8 +20,7 @@
 #include "ph/renderer/GpuMesh.hpp"
 
 #include <skipifzero.hpp>
-
-#include <sfz/strings/StackString.hpp>
+#include <skipifzero_strings.hpp>
 
 #include "ph/renderer/ZeroGUtils.hpp"
 

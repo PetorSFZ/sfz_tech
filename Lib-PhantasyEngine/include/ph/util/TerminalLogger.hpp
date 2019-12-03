@@ -22,8 +22,9 @@
 #include <cstdint>
 #include <ctime>
 
+#include <skipifzero_strings.hpp>
+
 #include <sfz/containers/RingBuffer.hpp>
-#include <sfz/strings/StackString.hpp>
 #include <sfz/util/LoggingInterface.hpp>
 
 namespace ph {

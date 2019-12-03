@@ -20,7 +20,8 @@
 #include "catch2/catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
-#include "sfz/strings/StackString.hpp"
+#include <skipifzero_strings.hpp>
+
 #include "sfz/util/IO.hpp"
 
 // TODO: Fix test cases for iOS

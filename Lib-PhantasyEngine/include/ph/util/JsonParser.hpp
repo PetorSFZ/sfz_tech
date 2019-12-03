@@ -20,8 +20,7 @@
 #pragma once
 
 #include <skipifzero.hpp>
-
-#include <sfz/strings/StackString.hpp>
+#include <skipifzero_strings.hpp>
 
 namespace ph {
 

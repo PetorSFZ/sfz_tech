@@ -25,9 +25,10 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
+#include <skipifzero_strings.hpp>
+
 #include <sfz/Logging.hpp>
 #include <sfz/math/MathSupport.hpp>
-#include <sfz/strings/StackString.hpp>
 #include <sfz/util/FrametimeStats.hpp>
 #include <sfz/util/IO.hpp>
 
@@ -129,7 +130,7 @@ static bool anyContainsFilter(const ArrayDynamic<Setting*>& settings, const char
 static void timeToString(str96& stringOut, time_t timestamp) noexcept
 {
 	std::tm* tmPtr = std::localtime(&timestamp);
-	size_t res = std::strftime(stringOut.str, stringOut.maxSize(), "%Y-%m-%d %H:%M:%S", tmPtr);
+	size_t res = std::strftime(stringOut.str, stringOut.capacity(), "%Y-%m-%d %H:%M:%S", tmPtr);
 	if (res == 0) stringOut.printf("INVALID TIME");
 }
 
@@ -483,7 +484,7 @@ private:
 		ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
 
 		ImGui::PushItemWidth(ImGui::GetWindowWidth() - 160.0f - 160.0f - 40.0f);
-		ImGui::InputText("##Tag filter", mLogTagFilter.str, mLogTagFilter.maxSize());
+		ImGui::InputText("##Tag filter", mLogTagFilter.str, mLogTagFilter.capacity());
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
 		strToLower(mLogTagFilter.str, mLogTagFilter.str);
@@ -596,7 +597,7 @@ private:
 		// Config filter string
 		//ImGui::PushItemWidth(-1.0f);
 		ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
-		ImGui::InputText("Filter", mConfigFilterString.str, mConfigFilterString.maxSize());
+		ImGui::InputText("Filter", mConfigFilterString.str, mConfigFilterString.capacity());
 		ImGui::PopStyleColor();
 		strToLower(mConfigFilterString.str, mConfigFilterString.str);
 		bool filterMode = mConfigFilterString != "";

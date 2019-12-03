@@ -19,9 +19,9 @@
 #include "ph/util/GltfLoader.hpp"
 
 #include <skipifzero.hpp>
+#include <skipifzero_strings.hpp>
 
 #include <sfz/Logging.hpp>
-#include <sfz/strings/StackString.hpp>
 
 #define TINYGLTF_NOEXCEPTION
 #define JSON_NOEXCEPTION

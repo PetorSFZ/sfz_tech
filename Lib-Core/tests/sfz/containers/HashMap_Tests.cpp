@@ -22,10 +22,10 @@
 
 #include <skipifzero_allocators.hpp>
 #include <skipifzero_hash_maps.hpp>
+#include <skipifzero_strings.hpp>
 
 #include "sfz/memory/DebugAllocator.hpp"
 #include "sfz/strings/DynString.hpp"
-#include "sfz/strings/StackString.hpp"
 #include "sfz/strings/StringHashers.hpp"
 
 using namespace sfz;
@@ -454,11 +454,11 @@ TEST_CASE("HashMap with strings", "[sfz::HashMap]")
 		REQUIRE(m["str0"] == 3);
 	}
 	SECTION("StackString") {
-		HashMapDynamic<StackString,uint32_t> m(0, &allocator, sfz_dbg(""));
+		HashMapDynamic<str96,uint32_t> m(0, &allocator, sfz_dbg(""));
 
 		const uint32_t NUM_TESTS = 100;
 		for (uint32_t i = 0; i < NUM_TESTS; i++) {
-			StackString tmp;
+			str96 tmp;
 			tmp.printf("str%u", i);
 			m.put(tmp, i);
 		}
@@ -467,7 +467,7 @@ TEST_CASE("HashMap with strings", "[sfz::HashMap]")
 		REQUIRE(m.capacity() >= m.size());
 
 		for (uint32_t i = 0; i < NUM_TESTS; i++) {
-			StackString tmp;
+			str96 tmp;
 			tmp.printf("str%u", i);
 			uint32_t* ptr = m.get(tmp);
 			REQUIRE(ptr != nullptr);
@@ -568,7 +568,7 @@ TEST_CASE("Perfect forwarding in put()", "[sfz::HashMap]")
 		REQUIRE(ptr2->value == 3);
 	}
 	SECTION("altKey, const ref") {
-		HashMapDynamic<StackString, MoveTestStruct> m2(0, &allocator, sfz_dbg(""));
+		HashMapDynamic<str96, MoveTestStruct> m2(0, &allocator, sfz_dbg(""));
 		MoveTestStruct v(2);
 		REQUIRE(!v.moved);
 		m2.put("foo", v);
@@ -580,7 +580,7 @@ TEST_CASE("Perfect forwarding in put()", "[sfz::HashMap]")
 		REQUIRE(!ptr->moved);
 	}
 	SECTION("altKey, rvalue") {
-		HashMapDynamic<StackString, MoveTestStruct> m2(0, &allocator, sfz_dbg(""));
+		HashMapDynamic<str96, MoveTestStruct> m2(0, &allocator, sfz_dbg(""));
 		MoveTestStruct v(2);
 		REQUIRE(!v.moved);
 		m2.put("foo", std::move(v));

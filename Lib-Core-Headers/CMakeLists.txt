@@ -96,6 +96,7 @@ set(INCLUDE_FILES
 	${INCLUDE_DIR}/skipifzero.hpp
 	${INCLUDE_DIR}/skipifzero_allocators.hpp
 	${INCLUDE_DIR}/skipifzero_hash_maps.hpp
+	${INCLUDE_DIR}/skipifzero_strings.hpp
 	${INCLUDE_DIR}/skipifzero_arrays.hpp
 )
 source_group(TREE ${INCLUDE_DIR} FILES ${INCLUDE_FILES})

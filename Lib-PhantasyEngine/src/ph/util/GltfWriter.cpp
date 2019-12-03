@@ -20,9 +20,10 @@
 
 #include <cfloat>
 
+#include <skipifzero_strings.hpp>
+
 #include <sfz/Logging.hpp>
 #include <sfz/math/MathSupport.hpp>
-#include <sfz/strings/StackString.hpp>
 #include <sfz/util/IO.hpp>
 
 namespace ph {

@@ -21,8 +21,9 @@
 
 #include "ph/state/GameState.hpp"
 
+#include <skipifzero_strings.hpp>
+
 #include <sfz/memory/SmartPointers.hpp>
-#include <sfz/strings/StackString.hpp>
 
 namespace ph {
 

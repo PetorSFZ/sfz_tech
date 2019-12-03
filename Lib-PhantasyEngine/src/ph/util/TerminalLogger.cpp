@@ -93,7 +93,7 @@ void TerminalLogger::log(
 
 	va_list args;
 	va_start(args, format);
-	vsnprintf(item.message.str, item.message.maxSize(), format, args);
+	vsnprintf(item.message.str, item.message.capacity(), format, args);
 	va_end(args);
 
 	// Also log to terminal

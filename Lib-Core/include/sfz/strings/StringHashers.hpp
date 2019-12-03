@@ -19,9 +19,9 @@
 #pragma once
 
 #include <skipifzero_hash_maps.hpp>
+#include <skipifzero_strings.hpp>
 
 #include "sfz/strings/DynString.hpp"
-#include "sfz/strings/StackString.hpp"
 
 namespace sfz {
 
@@ -41,7 +41,7 @@ uint64_t hash(const DynString& str) noexcept;
 
 /// Hashes a StackString, guaranteed to produce the same hash as an equivalent const char*.
 template<uint32_t N>
-uint64_t hash(const StackStringTempl<N>& str) noexcept { return sfz::hash(str.str); }
+uint64_t hash(const StringLocal<N>& str) noexcept { return sfz::hash(str.str); }
 
 // DynString & StackString HashMapAltKeyDescr specializations
 // ------------------------------------------------------------------------------------------------
@@ -52,7 +52,7 @@ struct HashMapAltKey<DynString> final {
 };
 
 template<size_t N>
-struct HashMapAltKey<StackStringTempl<N>> final {
+struct HashMapAltKey<StringLocal<N>> final {
 	using AltKeyT = const char*;
 };
 
