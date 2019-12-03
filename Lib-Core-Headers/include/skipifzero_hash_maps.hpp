@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include "skipifzero.hpp"
 
 namespace sfz {
 
@@ -33,9 +33,6 @@ constexpr uint64_t hash(uint64_t value) { return uint64_t(value); }
 constexpr uint64_t hash(int16_t value) { return uint64_t(value); }
 constexpr uint64_t hash(int32_t value) { return uint64_t(value); }
 constexpr uint64_t hash(int64_t value) { return uint64_t(value); }
-
-inline uint64_t hash(float value) noexcept { return uint64_t(*reinterpret_cast<const uint32_t*>(&value)); }
-inline uint64_t hash(double value) noexcept { return *(reinterpret_cast<const uint64_t*>(&value)); }
 
 constexpr uint64_t hash(const void* value) { return uint64_t(uintptr_t(value)); }
 

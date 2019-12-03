@@ -21,8 +21,8 @@
 #include "sfz/PopWarnings.hpp"
 
 #include <skipifzero_allocators.hpp>
+#include <skipifzero_hash_maps.hpp>
 
-#include "sfz/containers/HashMap.hpp"
 #include "sfz/memory/DebugAllocator.hpp"
 #include "sfz/strings/DynString.hpp"
 #include "sfz/strings/StackString.hpp"

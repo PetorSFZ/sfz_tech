@@ -18,9 +18,8 @@
 
 #pragma once
 
-#include <cstdint>
+#include <skipifzero_hash_maps.hpp>
 
-#include "sfz/containers/HashMap.hpp"
 #include "sfz/strings/DynString.hpp"
 #include "sfz/strings/StackString.hpp"
 

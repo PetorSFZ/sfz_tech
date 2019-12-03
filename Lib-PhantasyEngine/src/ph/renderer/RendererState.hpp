@@ -21,8 +21,8 @@
 
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
+#include <skipifzero_hash_maps.hpp>
 
-#include <sfz/containers/HashMap.hpp>
 #include <sfz/strings/StackString.hpp>
 #include <sfz/strings/StringID.hpp>
 

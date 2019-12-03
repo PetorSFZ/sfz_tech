@@ -25,8 +25,7 @@
 
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
-
-#include <sfz/containers/HashMap.hpp>
+#include <skipifzero_hash_maps.hpp>
 
 #include "ph/sdl/ButtonState.hpp"
 

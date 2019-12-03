@@ -21,9 +21,9 @@
 #include <cinttypes>
 
 #include <skipifzero.hpp>
+#include <skipifzero_hash_maps.hpp>
 
 #include "sfz/Logging.hpp"
-#include "sfz/containers/HashMap.hpp"
 #include "sfz/strings/DynString.hpp"
 #include "sfz/strings/StringHashers.hpp"
 

@@ -29,7 +29,8 @@
 #include <nfd.h>
 #endif
 
-#include <sfz/containers/HashMap.hpp>
+#include <skipifzero_hash_maps.hpp>
+
 #include <sfz/strings/StringHashers.hpp>
 #include <sfz/Logging.hpp>
 #include <sfz/strings/StackString.hpp>

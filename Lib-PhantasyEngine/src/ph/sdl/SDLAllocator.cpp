@@ -25,9 +25,9 @@
 #include <SDL_stdinc.h>
 
 #include <skipifzero.hpp>
+#include <skipifzero_hash_maps.hpp>
 
 #include <sfz/Logging.hpp>
-#include <sfz/containers/HashMap.hpp>
 
 namespace ph {
 
