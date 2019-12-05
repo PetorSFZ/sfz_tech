@@ -18,52 +18,6 @@
 
 namespace sfz {
 
-// approxEqual()
-// ------------------------------------------------------------------------------------------------
-
-SFZ_CUDA_CALL bool approxEqual(float lhs, float rhs, float epsilon) noexcept
-{
-	return (lhs <= (rhs + epsilon)) && (lhs >= (rhs - epsilon));
-}
-
-SFZ_CUDA_CALL bool approxEqual(vec2 lhs, vec2 rhs, float epsilon) noexcept
-{
-	return approxEqual(lhs.x, rhs.x, epsilon)
-	    && approxEqual(lhs.y, rhs.y, epsilon);
-}
-
-SFZ_CUDA_CALL bool approxEqual(vec3 lhs, vec3 rhs, float epsilon) noexcept
-{
-	return approxEqual(lhs.x, rhs.x, epsilon)
-	    && approxEqual(lhs.y, rhs.y, epsilon)
-	    && approxEqual(lhs.z, rhs.z, epsilon);
-}
-
-SFZ_CUDA_CALL bool approxEqual(vec4 lhs, vec4 rhs, float epsilon) noexcept
-{
-	return approxEqual(lhs.x, rhs.x, epsilon)
-	    && approxEqual(lhs.y, rhs.y, epsilon)
-	    && approxEqual(lhs.z, rhs.z, epsilon)
-	    && approxEqual(lhs.w, rhs.w, epsilon);
-}
-
-template<uint32_t M, uint32_t N>
-SFZ_CUDA_CALL bool approxEqual(const Matrix<float,M,N>& lhs, const Matrix<float,M,N>& rhs,
-                               float epsilon) noexcept
-{
-	for (uint32_t i = 0; i < M; i++) {
-		for (uint32_t j = 0; j < N; j++) {
-			if (!approxEqual(lhs.at(i, j), rhs.at(i, j), epsilon)) return false;
-		}
-	}
-	return true;
-}
-
-SFZ_CUDA_CALL bool approxEqual(Quaternion lhs, Quaternion rhs, float epsilon) noexcept
-{
-	return approxEqual(lhs.vector, rhs.vector, epsilon);
-}
-
 // abs()
 // ------------------------------------------------------------------------------------------------
 
@@ -482,13 +436,13 @@ SFZ_CUDA_CALL vec4 fma(vec4 a, vec4 b, vec4 c) noexcept
 
 SFZ_CUDA_CALL vec3 rotateTowardsRad(vec3 inDir, vec3 targetDir, float angleRads) noexcept
 {
-	sfz_assert(approxEqual(length(inDir), 1.0f));
-	sfz_assert(approxEqual(length(targetDir), 1.0f));
+	sfz_assert(equalsApprox(length(inDir), 1.0f));
+	sfz_assert(equalsApprox(length(targetDir), 1.0f));
 	sfz_assert(dot(inDir, targetDir) >= -0.99f);
 	sfz_assert(angleRads >= 0.0f);
 	sfz_assert(angleRads < PI);
 	vec3 axis = cross(inDir, targetDir);
-	sfz_assert(!approxEqual(axis, vec3(0.0f)));
+	sfz_assert(!equalsApprox(axis, vec3(0.0f)));
 	Quaternion rotQuat = Quaternion::rotationRad(axis, angleRads);
 	vec3 newDir = rotate(rotQuat, inDir);
 	return newDir;
@@ -501,16 +455,16 @@ SFZ_CUDA_CALL vec3 rotateTowardsRadClampSafe(vec3 inDir, vec3 targetDir, float a
 
 	vec3 inDirNorm = normalizeSafe(inDir);
 	vec3 targetDirNorm = normalizeSafe(targetDir);
-	sfz_assert(!approxEqual(inDirNorm, vec3(0.0f)));
-	sfz_assert(!approxEqual(targetDirNorm, vec3(0.0f)));
+	sfz_assert(!equalsApprox(inDirNorm, vec3(0.0f)));
+	sfz_assert(!equalsApprox(targetDirNorm, vec3(0.0f)));
 
 	// Case where vectors are the same, just return the target dir
-	if (approxEqual(inDirNorm, targetDirNorm)) return targetDirNorm;
+	if (equalsApprox(inDirNorm, targetDirNorm)) return targetDirNorm;
 
 	// Case where vectors are exact opposite, slightly nudge input a bit
-	if (approxEqual(inDirNorm, -targetDirNorm)) {
+	if (equalsApprox(inDirNorm, -targetDirNorm)) {
 		inDirNorm = normalize(inDir + (vec3(1.0f) - inDirNorm) * 0.025f);
-		sfz_assert(!approxEqual(inDirNorm, -targetDirNorm));
+		sfz_assert(!equalsApprox(inDirNorm, -targetDirNorm));
 	}
 
 	// Case where angle is larger than the angle between the vectors

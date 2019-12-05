@@ -41,7 +41,6 @@ SFZ_CUDA_CALL Quaternion Quaternion::identity() noexcept
 
 SFZ_CUDA_CALL Quaternion Quaternion::rotationDeg(vec3 axis, float angleDeg) noexcept
 {
-	constexpr float DEG_TO_RAD = 3.14159265358979323846f / 180.0f;
 	return Quaternion::rotationRad(axis, angleDeg * DEG_TO_RAD);
 }
 

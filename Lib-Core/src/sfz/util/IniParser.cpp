@@ -348,7 +348,7 @@ bool IniParser::save() noexcept
 			// Print items content to string
 			switch (item.type) {
 			case ItemType::NUMBER:
-				if (sfz::approxEqual(std::round(item.f), item.f)) {
+				if (sfz::equalsApprox(std::round(item.f), item.f)) {
 					str.printfAppend("%s=%i", item.str.str, item.i);
 				} else {
 					str.printfAppend("%s=%f", item.str.str, item.f);

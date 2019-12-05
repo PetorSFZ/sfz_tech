@@ -33,35 +33,6 @@
 
 namespace sfz {
 
-using std::int32_t;
-using std::uint32_t;
-
-// Floating-point constants
-// ------------------------------------------------------------------------------------------------
-
-constexpr float PI = 3.14159265358979323846f;
-constexpr float DEG_TO_RAD = PI / 180.0f;
-constexpr float RAD_TO_DEG = 180.0f/ PI;
-
-// approxEqual()
-// ------------------------------------------------------------------------------------------------
-
-// Approximate equal function for floating point types.
-
-constexpr float APPROX_EQUAL_EPS = 0.001f;
-
-SFZ_CUDA_CALL bool approxEqual(float lhs, float rhs, float epsilon = APPROX_EQUAL_EPS) noexcept;
-
-SFZ_CUDA_CALL bool approxEqual(vec2 lhs, vec2 rhs, float epsilon = APPROX_EQUAL_EPS) noexcept;
-SFZ_CUDA_CALL bool approxEqual(vec3 lhs, vec3 rhs, float epsilon = APPROX_EQUAL_EPS) noexcept;
-SFZ_CUDA_CALL bool approxEqual(vec4 lhs, vec4 rhs, float epsilon = APPROX_EQUAL_EPS) noexcept;
-
-template<uint32_t M, uint32_t N>
-SFZ_CUDA_CALL bool approxEqual(const Matrix<float,M,N>& lhs, const Matrix<float,M,N>& rhs,
-                               float epsilon = APPROX_EQUAL_EPS) noexcept;
-
-SFZ_CUDA_CALL bool approxEqual(Quaternion lhs, Quaternion rhs, float epsilon = APPROX_EQUAL_EPS) noexcept;
-
 // abs()
 // ------------------------------------------------------------------------------------------------
 

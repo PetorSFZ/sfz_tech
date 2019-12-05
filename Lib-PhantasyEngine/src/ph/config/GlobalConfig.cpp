@@ -113,7 +113,7 @@ void GlobalConfig::load() noexcept
 		if (item.getFloat() != nullptr) {
 			float floatVal = *item.getFloat();
 			int32_t intVal = *item.getInt();
-			if (approxEqual(floatVal, float(intVal))) {
+			if (equalsApprox(floatVal, float(intVal))) {
 				setting.create(SettingValue::createInt(intVal, true, IntBounds(0)));
 			}
 			else {

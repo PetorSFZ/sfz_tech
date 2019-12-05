@@ -93,19 +93,19 @@ TEST_CASE("IniParser sanitizer methods", "[sfz::IniParser]")
 	SECTION("sanitizeFloat()") {
 
 		REQUIRE(ini.getFloat("", "val1") == nullptr);
-		REQUIRE(approxEqual(ini.sanitizeFloat("", "val1"), 0.0f));
+		REQUIRE(equalsApprox(ini.sanitizeFloat("", "val1"), 0.0f));
 		REQUIRE(ini.getFloat("", "val1") != nullptr);
-		REQUIRE(approxEqual(*ini.getFloat("", "val1"), 0.0f));
+		REQUIRE(equalsApprox(*ini.getFloat("", "val1"), 0.0f));
 
 		REQUIRE(ini.getFloat("", "val2") == nullptr);
-		REQUIRE(approxEqual(ini.sanitizeFloat("", "val2", 37.0f), 37.0f));
+		REQUIRE(equalsApprox(ini.sanitizeFloat("", "val2", 37.0f), 37.0f));
 		REQUIRE(ini.getFloat("", "val2") != nullptr);
-		REQUIRE(approxEqual(*ini.getFloat("", "val2"), 37.0f));
+		REQUIRE(equalsApprox(*ini.getFloat("", "val2"), 37.0f));
 
-		REQUIRE(approxEqual(ini.sanitizeFloat("", "val2", 0.0f, 0.0f, 36.0f), 36.0f));
-		REQUIRE(approxEqual(*ini.getFloat("", "val2"), 36.0f));
-		REQUIRE(approxEqual(ini.sanitizeFloat("", "val2", 0.0f, 38.0f, 39.0f), 38.0f));
-		REQUIRE(approxEqual(*ini.getFloat("", "val2"), 38.0f));
+		REQUIRE(equalsApprox(ini.sanitizeFloat("", "val2", 0.0f, 0.0f, 36.0f), 36.0f));
+		REQUIRE(equalsApprox(*ini.getFloat("", "val2"), 36.0f));
+		REQUIRE(equalsApprox(ini.sanitizeFloat("", "val2", 0.0f, 38.0f, 39.0f), 38.0f));
+		REQUIRE(equalsApprox(*ini.getFloat("", "val2"), 38.0f));
 	}
 	SECTION("sanitizeBool()") {
 
@@ -186,7 +186,7 @@ var=true
 		REQUIRE(ini.getInt("sect1", "first") != nullptr);
 		REQUIRE(*ini.getInt("sect1", "first") == 2);
 		REQUIRE(ini.getFloat("sect1", "first") != nullptr);
-		REQUIRE(approxEqual(*ini.getFloat("sect1", "first"), 2.0f));
+		REQUIRE(equalsApprox(*ini.getFloat("sect1", "first"), 2.0f));
 		REQUIRE(ini.getBool("sect1", "first") == nullptr);
 		REQUIRE(ini.getBool("sect1", "second") != nullptr);
 		REQUIRE(*ini.getBool("sect1", "second") == true);
@@ -196,7 +196,7 @@ var=true
 		REQUIRE(ini.getInt("sect2", "third") != nullptr);
 		REQUIRE(*ini.getInt("sect2", "third") == 4);
 		REQUIRE(ini.getFloat("sect2", "third") != nullptr);
-		REQUIRE(approxEqual(*ini.getFloat("sect2", "third"), 4.0f));
+		REQUIRE(equalsApprox(*ini.getFloat("sect2", "third"), 4.0f));
 		REQUIRE(ini.getBool("sect2", "third") == nullptr);
 		REQUIRE(ini.getBool("sect2", "fifth") != nullptr);
 		REQUIRE(*ini.getBool("sect2", "fifth") == false);

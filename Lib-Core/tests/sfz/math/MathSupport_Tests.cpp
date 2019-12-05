@@ -24,48 +24,31 @@
 
 using namespace sfz;
 
-TEST_CASE("approxEqual()", "[sfz::MathSupport]")
+TEST_CASE("equalsApprox()", "[sfz::MathSupport]")
 {
 	SECTION("float") {
-		REQUIRE(approxEqual(2.0f, 2.0f + (APPROX_EQUAL_EPS * 0.95f)));
-		REQUIRE(!approxEqual(2.0f, 2.0f + (APPROX_EQUAL_EPS * 1.05f)));
-		REQUIRE(approxEqual(2.0f, 2.0f - (APPROX_EQUAL_EPS * 0.95f)));
-		REQUIRE(!approxEqual(2.0f, 2.0f - (APPROX_EQUAL_EPS * 1.05f)));
+		REQUIRE(equalsApprox(2.0f, 2.0f + (EQUALS_APPROX_EPS * 0.95f)));
+		REQUIRE(!equalsApprox(2.0f, 2.0f + (EQUALS_APPROX_EPS * 1.05f)));
+		REQUIRE(equalsApprox(2.0f, 2.0f - (EQUALS_APPROX_EPS * 0.95f)));
+		REQUIRE(!equalsApprox(2.0f, 2.0f - (EQUALS_APPROX_EPS * 1.05f)));
 	}
 	SECTION("vec2") {
-		REQUIRE(approxEqual(vec2(2.0f), vec2(2.0f + (APPROX_EQUAL_EPS * 0.95f))));
-		REQUIRE(!approxEqual(vec2(2.0f), vec2(2.0f + (APPROX_EQUAL_EPS * 1.05f))));
-		REQUIRE(approxEqual(vec2(2.0f), vec2(2.0f - (APPROX_EQUAL_EPS * 0.95f))));
-		REQUIRE(!approxEqual(vec2(2.0f), vec2(2.0f - (APPROX_EQUAL_EPS * 1.05f))));
+		REQUIRE(equalsApprox(vec2(2.0f), vec2(2.0f + (EQUALS_APPROX_EPS * 0.95f))));
+		REQUIRE(!equalsApprox(vec2(2.0f), vec2(2.0f + (EQUALS_APPROX_EPS * 1.05f))));
+		REQUIRE(equalsApprox(vec2(2.0f), vec2(2.0f - (EQUALS_APPROX_EPS * 0.95f))));
+		REQUIRE(!equalsApprox(vec2(2.0f), vec2(2.0f - (EQUALS_APPROX_EPS * 1.05f))));
 	}
 	SECTION("vec3") {
-		REQUIRE(approxEqual(vec3(2.0f), vec3(2.0f + (APPROX_EQUAL_EPS * 0.95f))));
-		REQUIRE(!approxEqual(vec3(2.0f), vec3(2.0f + (APPROX_EQUAL_EPS * 1.05f))));
-		REQUIRE(approxEqual(vec3(2.0f), vec3(2.0f - (APPROX_EQUAL_EPS * 0.95f))));
-		REQUIRE(!approxEqual(vec3(2.0f), vec3(2.0f - (APPROX_EQUAL_EPS * 1.05f))));
+		REQUIRE(equalsApprox(vec3(2.0f), vec3(2.0f + (EQUALS_APPROX_EPS * 0.95f))));
+		REQUIRE(!equalsApprox(vec3(2.0f), vec3(2.0f + (EQUALS_APPROX_EPS * 1.05f))));
+		REQUIRE(equalsApprox(vec3(2.0f), vec3(2.0f - (EQUALS_APPROX_EPS * 0.95f))));
+		REQUIRE(!equalsApprox(vec3(2.0f), vec3(2.0f - (EQUALS_APPROX_EPS * 1.05f))));
 	}
 	SECTION("vec4") {
-		REQUIRE(approxEqual(vec4(2.0f), vec4(2.0f + (APPROX_EQUAL_EPS * 0.95f))));
-		REQUIRE(!approxEqual(vec4(2.0f), vec4(2.0f + (APPROX_EQUAL_EPS * 1.05f))));
-		REQUIRE(approxEqual(vec4(2.0f), vec4(2.0f - (APPROX_EQUAL_EPS * 0.95f))));
-		REQUIRE(!approxEqual(vec4(2.0f), vec4(2.0f - (APPROX_EQUAL_EPS * 1.05f))));
-	}
-	SECTION("mat44") {
-		REQUIRE(approxEqual(mat44::fill(2.0f), mat44::fill(2.0f + (APPROX_EQUAL_EPS * 0.95f))));
-		REQUIRE(!approxEqual(mat44::fill(2.0f), mat44::fill(2.0f + (APPROX_EQUAL_EPS * 1.05f))));
-		REQUIRE(approxEqual(mat44::fill(2.0f), mat44::fill(2.0f - (APPROX_EQUAL_EPS * 0.95f))));
-		REQUIRE(!approxEqual(mat44::fill(2.0f), mat44::fill(2.0f - (APPROX_EQUAL_EPS * 1.05f))));
-	}
-	SECTION("Quaternion") {
-		float base = 2.0;
-		float lowOut = base - (APPROX_EQUAL_EPS * 1.05f);
-		float lowIn = base - (APPROX_EQUAL_EPS * 0.95f);
-		float highIn = base + (APPROX_EQUAL_EPS * 0.95f);
-		float highOut = base + (APPROX_EQUAL_EPS * 1.05f);
-		REQUIRE(!approxEqual(Quaternion(base, base, base, base), Quaternion(lowOut, lowOut, lowOut, lowOut)));
-		REQUIRE(approxEqual(Quaternion(base, base, base, base), Quaternion(lowIn, lowIn, lowIn, lowIn)));
-		REQUIRE(approxEqual(Quaternion(base, base, base, base), Quaternion(highIn, highIn, highIn, highIn)));
-		REQUIRE(!approxEqual(Quaternion(base, base, base, base), Quaternion(highOut, highOut, highOut, highOut)));
+		REQUIRE(equalsApprox(vec4(2.0f), vec4(2.0f + (EQUALS_APPROX_EPS * 0.95f))));
+		REQUIRE(!equalsApprox(vec4(2.0f), vec4(2.0f + (EQUALS_APPROX_EPS * 1.05f))));
+		REQUIRE(equalsApprox(vec4(2.0f), vec4(2.0f - (EQUALS_APPROX_EPS * 0.95f))));
+		REQUIRE(!equalsApprox(vec4(2.0f), vec4(2.0f - (EQUALS_APPROX_EPS * 1.05f))));
 	}
 }
 
@@ -119,7 +102,7 @@ TEST_CASE("lerp()", "[sfz::MathSupport]")
 		Quaternion q1 = Quaternion::rotationDeg(vec3(1.0f, 1.0f, 1.0f), 0.0f);
 		Quaternion q2 = Quaternion::rotationDeg(vec3(1.0f, 1.0f, 1.0f), 90.0f);
 		Quaternion q3 = Quaternion::rotationDeg(vec3(1.0f, 1.0f, 1.0f), 45.0f);
-		REQUIRE(approxEqual(lerp(q1, q2, 0.5f), q3));
+		REQUIRE(equalsApprox(lerp(q1, q2, 0.5f).vector, q3.vector));
 	}
 }
 
@@ -139,8 +122,8 @@ TEST_CASE("saturate()", "[sfz::MathSupport]")
 
 TEST_CASE("fma()", "[sfz::MathSupport]")
 {
-	REQUIRE(approxEqual(sfz::fma(2.0f, -2.0f, 6.0f), 2.0f));
-	REQUIRE(approxEqual(sfz::fma(vec4(1.0f, 2.0f, 3.0f, 4.0f), vec4(-1.0f, -2.0f, 3.0f, 4.0f),
+	REQUIRE(equalsApprox(sfz::fma(2.0f, -2.0f, 6.0f), 2.0f));
+	REQUIRE(equalsApprox(sfz::fma(vec4(1.0f, 2.0f, 3.0f, 4.0f), vec4(-1.0f, -2.0f, 3.0f, 4.0f),
 	                    vec4(1.0f, 2.0f, 3.0f, 4.0f)), vec4(0.0f, -2.0f, 12.0f, 20.0f)));
 }
 
@@ -152,34 +135,34 @@ TEST_CASE("rotateTowards()", "[sfz::MathSupport]")
 
 	SECTION("rotateTowardsDeg()") {
 		vec3 newVec1 = rotateTowardsDeg(LEFT, UP, 45.0f);
-		REQUIRE(approxEqual(newVec1, LEFT_UP));
+		REQUIRE(equalsApprox(newVec1, LEFT_UP));
 		vec3 newVec2 = rotateTowardsDeg(UP, LEFT, 45.0f);
-		REQUIRE(approxEqual(newVec2, LEFT_UP));
+		REQUIRE(equalsApprox(newVec2, LEFT_UP));
 		vec3 newVec3 = rotateTowardsDeg(LEFT, UP, 90.0f);
-		REQUIRE(approxEqual(newVec3, UP));
+		REQUIRE(equalsApprox(newVec3, UP));
 		vec3 newVec4 = rotateTowardsDeg(UP, LEFT, 90.0f);
-		REQUIRE(approxEqual(newVec4, LEFT));
+		REQUIRE(equalsApprox(newVec4, LEFT));
 		vec3 newVec5 = rotateTowardsDeg(LEFT, UP, 0.0f);
-		REQUIRE(approxEqual(newVec5, LEFT));
+		REQUIRE(equalsApprox(newVec5, LEFT));
 		vec3 newVec6 = rotateTowardsDeg(UP, LEFT, 0.0f);
-		REQUIRE(approxEqual(newVec6, UP));
+		REQUIRE(equalsApprox(newVec6, UP));
 	}
 	SECTION("rotateTowardsDegClampSafe()") {
 		vec3 newVec1 = rotateTowardsDegClampSafe(LEFT, UP, 45.0f);
-		REQUIRE(approxEqual(newVec1, LEFT_UP));
+		REQUIRE(equalsApprox(newVec1, LEFT_UP));
 		vec3 newVec2 = rotateTowardsDegClampSafe(UP, LEFT, 45.0f);
-		REQUIRE(approxEqual(newVec2, LEFT_UP));
+		REQUIRE(equalsApprox(newVec2, LEFT_UP));
 		vec3 newVec3 = rotateTowardsDegClampSafe(LEFT, UP, 90.0f);
-		REQUIRE(approxEqual(newVec3, UP));
+		REQUIRE(equalsApprox(newVec3, UP));
 		vec3 newVec4 = rotateTowardsDegClampSafe(UP, LEFT, 90.0f);
-		REQUIRE(approxEqual(newVec4, LEFT));
+		REQUIRE(equalsApprox(newVec4, LEFT));
 		vec3 newVec5 = rotateTowardsDegClampSafe(LEFT, UP, 0.0f);
-		REQUIRE(approxEqual(newVec5, LEFT));
+		REQUIRE(equalsApprox(newVec5, LEFT));
 		vec3 newVec6 = rotateTowardsDegClampSafe(UP, LEFT, 0.0f);
-		REQUIRE(approxEqual(newVec6, UP));
+		REQUIRE(equalsApprox(newVec6, UP));
 		vec3 newVec7 = rotateTowardsDegClampSafe(LEFT, UP, 100.0f);
-		REQUIRE(approxEqual(newVec7, UP));
+		REQUIRE(equalsApprox(newVec7, UP));
 		vec3 newVec8 = rotateTowardsDegClampSafe(UP, LEFT, 100.0f);
-		REQUIRE(approxEqual(newVec8, LEFT));
+		REQUIRE(equalsApprox(newVec8, LEFT));
 	}
 }

@@ -308,7 +308,7 @@ template<typename T, uint32_t N>
 constexpr Vec<T,N> operator* (T s, Vec<T,N> v) { return v * s; }
 
 template<typename T, uint32_t N>
-constexpr Vec<T,N> operator/ (T s, Vec<T,N> v) { return v / s; }
+constexpr Vec<T,N> operator/ (T s, Vec<T,N> v) { return Vec<T,N>(s) / v; }
 
 template<typename T>
 constexpr T dot(Vec<T,2> l, Vec<T,2> r) { return l.x * r.x + l.y * r.y; }
@@ -336,6 +336,36 @@ inline vec4 normalize(vec4 v) { return v * (1.0f / length(v)); }
 inline vec2 normalizeSafe(vec2 v) { float tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
 inline vec3 normalizeSafe(vec3 v) { float tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
 inline vec4 normalizeSafe(vec4 v) { float tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
+
+// Floating point helpers
+// ------------------------------------------------------------------------------------------------
+
+// Common constants
+constexpr float PI = 3.14159265358979323846f;
+constexpr float DEG_TO_RAD = PI / 180.0f;
+constexpr float RAD_TO_DEG = 180.0f / PI;
+
+constexpr float EQUALS_APPROX_EPS = 0.001f;
+
+constexpr bool equalsApprox(float l, float r, float eps = EQUALS_APPROX_EPS)
+{
+	return (l <= (r + eps)) && (l >= (r - eps));
+}
+
+constexpr bool equalsApprox(vec2 l, vec2 r, float eps = EQUALS_APPROX_EPS)
+{
+	return equalsApprox(l.x, r.x, eps) && equalsApprox(l.y, r.y, eps);
+}
+
+constexpr bool equalsApprox(vec3 l, vec3 r, float eps = EQUALS_APPROX_EPS)
+{
+	return equalsApprox(l.xy, r.xy, eps) && equalsApprox(l.z, r.z, eps);
+}
+
+constexpr bool equalsApprox(vec4 l, vec4 r, float eps = EQUALS_APPROX_EPS)
+{
+	return equalsApprox(l.xyz, r.xyz, eps) && equalsApprox(l.w, r.w, eps);
+}
 
 } // namespace sfz
 
