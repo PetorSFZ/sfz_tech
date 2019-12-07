@@ -191,7 +191,6 @@ if(NOT hasParent)
 	set(TEST_FILES
 		${TESTS_DIR}/sfz/Main_Tests.cpp
 
-		${TESTS_DIR}/sfz/containers/HashMap_Tests.cpp
 		${TESTS_DIR}/sfz/containers/RingBuffer_Tests.cpp
 
 		${TESTS_DIR}/sfz/geometry/Intersection_Tests.cpp
