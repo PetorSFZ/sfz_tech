@@ -149,7 +149,6 @@ set(INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/memory/StandardAllocator.hpp
 
 	${INCLUDE_DIR}/sfz/strings/DynString.hpp
-	${INCLUDE_DIR}/sfz/strings/StringHashers.hpp
 	${INCLUDE_DIR}/sfz/strings/StringID.hpp
 
 	${INCLUDE_DIR}/sfz/util/Enumerate.hpp
@@ -172,7 +171,6 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/memory/StandardAllocator.cpp
 
 	${SRC_DIR}/sfz/strings/DynString.cpp
-	${SRC_DIR}/sfz/strings/StringHashers.cpp
 	${SRC_DIR}/sfz/strings/StringID.cpp
 
 	${SRC_DIR}/sfz/util/FrametimeStats.cpp
@@ -210,8 +208,6 @@ if(NOT hasParent)
 		${TESTS_DIR}/sfz/memory/SmartPointers_Tests.cpp
 
 		${TESTS_DIR}/sfz/strings/DynString_Tests.cpp
-		${TESTS_DIR}/sfz/strings/StackString_Tests.cpp
-		${TESTS_DIR}/sfz/strings/StringHashers_Tests.cpp
 		${TESTS_DIR}/sfz/strings/StringID_Tests.cpp
 
 		${TESTS_DIR}/sfz/util/Enumerate_Tests.cpp

@@ -100,16 +100,16 @@ static_assert(sizeof(HashMapSlot) == sizeof(uint32_t));
 // current number of placeholders can be queried by the placeholders() method. Both size and
 // placeholders count as load when checking if the HashMap needs to be rehashed or not.
 //
-// An alternate key type can be specified in the HashMapAltKey. This is mostly useful when strings
-// are used as keys, then const char* can be used as an alt key type. This removesmthe need to
-// create a temporary key object (which might need to allocate memory).
-template<typename K, typename V, typename AltKeyDescr = HashMapAltKey<K>>
+// An alternate key type can be specified by specializing sfz::AltType<K>. This is mostly useful
+// when strings are used as keys, then const char* can be used as an alt key type. This removes
+// the need to create a temporary key object (which might need to allocate memory).
+template<typename K, typename V>
 class HashMapDynamic {
 public:
 	// Constants and typedefs
 	// --------------------------------------------------------------------------------------------
 
-	using AltK = typename AltKeyDescr::AltKeyT;
+	using AltK = typename sfz::AltType<K>::AltT;
 
 	static constexpr uint32_t ALIGNMENT = 32;
 	static constexpr uint32_t MIN_CAPACITY = 64;

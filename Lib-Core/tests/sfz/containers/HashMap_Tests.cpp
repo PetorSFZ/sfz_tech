@@ -26,7 +26,6 @@
 
 #include "sfz/memory/DebugAllocator.hpp"
 #include "sfz/strings/DynString.hpp"
-#include "sfz/strings/StringHashers.hpp"
 
 using namespace sfz;
 
@@ -419,7 +418,7 @@ TEST_CASE("HashMap with strings", "[sfz::HashMap]")
 		REQUIRE(m.get(strCar) != nullptr);
 		REQUIRE(*m.get(strCar) == 3);
 	}
-	SECTION("DynString") {
+	/*SECTION("DynString") {
 		HashMapDynamic<DynString,uint32_t> m(0, &allocator, sfz_dbg(""));
 
 		const uint32_t NUM_TESTS = 100;
@@ -452,7 +451,7 @@ TEST_CASE("HashMap with strings", "[sfz::HashMap]")
 
 		m["str0"] = 3;
 		REQUIRE(m["str0"] == 3);
-	}
+	}*/
 	SECTION("StackString") {
 		HashMapDynamic<str96,uint32_t> m(0, &allocator, sfz_dbg(""));
 

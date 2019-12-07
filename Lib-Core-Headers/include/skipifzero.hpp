@@ -68,7 +68,6 @@ struct DbgInfo final {
 // * All virtual methods are marked noexcept, meaning an allocator may never throw exceptions.
 class Allocator {
 public:
-
 	virtual ~Allocator() noexcept {}
 
 	// Allocates memory with the specified byte alignment, returns nullptr on failure.
@@ -126,6 +125,24 @@ constexpr uint64_t roundUpAligned(uint64_t offset, uint64_t alignment)
 {
 	return ((offset + alignment - 1) / alignment) * alignment;
 }
+
+// Alternate type definition
+// ------------------------------------------------------------------------------------------------
+
+struct NO_ALT_TYPE final { NO_ALT_TYPE() = delete; };
+
+// Defines an alternate type for a given type. Mainly used to define alternate key types for hash
+// maps. E.g., for a string type "const char*" can be defined as an alternate key type.
+//
+// Requirements of an alternate type:
+//  * operator== (T, AltT) must be defined
+//  * sfz::hash(T) and sfz::hash(AltT) must be defined
+//  * sfz::hash(T) == sfz::hash(AltT)
+//  * constructor T(AltT) must be defined
+template<typename T>
+struct AltType final {
+	using AltT = NO_ALT_TYPE;
+};
 
 // Vector primitives
 // ------------------------------------------------------------------------------------------------

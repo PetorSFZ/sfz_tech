@@ -32,7 +32,6 @@
 #include <skipifzero_hash_maps.hpp>
 #include <skipifzero_strings.hpp>
 
-#include <sfz/strings/StringHashers.hpp>
 #include <sfz/Logging.hpp>
 #include <sfz/util/IO.hpp>
 

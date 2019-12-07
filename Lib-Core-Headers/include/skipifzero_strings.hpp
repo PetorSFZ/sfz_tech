@@ -29,7 +29,7 @@ namespace sfz {
 // StringLocal
 // ------------------------------------------------------------------------------------------------
 
-template<uint32_t N>
+template<uint16_t N>
 struct StringLocal final {
 
 	// Public members
@@ -126,5 +126,53 @@ using str512 = StringLocal<512>;
 using str1024 = StringLocal<1024>;
 using str2048 = StringLocal<2048>;
 using str4096 = StringLocal<4096>;
+
+// const char* is an alternate type to StringLocal
+template<uint16_t N>
+struct AltType<StringLocal<N>> final {
+	using AltT = const char*;
+};
+
+// String hashing
+// ------------------------------------------------------------------------------------------------
+
+// FNV-1a hash function, based on public domain reference code by "chongo <Landon Curt Noll> /\oo/\"
+// See http://isthe.com/chongo/tech/comp/fnv/
+constexpr uint64_t hashStringFNV1a(const char* str)
+{
+	constexpr uint64_t FNV_64_MAGIC_PRIME = uint64_t(0x100000001B3);
+
+	// Set initial value to FNV-0 hash of "chongo <Landon Curt Noll> /\../\"
+	uint64_t tmp = uint64_t(0xCBF29CE484222325);
+
+	// Hash all bytes in string
+	while (char c = *str++) {
+		tmp ^= uint64_t(c); // Xor bottom with current byte
+		tmp *= FNV_64_MAGIC_PRIME; // Multiply with FNV magic prime
+	}
+	return tmp;
+}
+
+// Alternate version of hashStringFNV1a() which hashes a number of raw bytes (i.e. not a string)
+constexpr uint64_t hashBytesFNV1a(const uint8_t* bytes, uint64_t numBytes)
+{
+	constexpr uint64_t FNV_64_MAGIC_PRIME = uint64_t(0x100000001B3);
+
+	// Set initial value to FNV-0 hash of "chongo <Landon Curt Noll> /\../\"
+	uint64_t tmp = uint64_t(0xCBF29CE484222325);
+
+	// Hash all bytes
+	for (uint64_t i = 0; i < numBytes; i++) {
+		tmp ^= uint64_t(bytes[i]); // Xor bottom with current byte
+		tmp *= FNV_64_MAGIC_PRIME; // Multiply with FNV magic prime
+	}
+	return tmp;
+}
+
+// Hash strings with FNV-1a by default
+constexpr uint64_t hash(const char* str) { return hashStringFNV1a(str); }
+
+template<uint16_t N>
+constexpr uint64_t hash(const StringLocal<N>& str) { return hashStringFNV1a(str); }
 
 } // namespace sfz

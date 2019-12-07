@@ -22,10 +22,10 @@
 
 #include <skipifzero.hpp>
 #include <skipifzero_hash_maps.hpp>
+#include <skipifzero_strings.hpp>
 
 #include "sfz/Logging.hpp"
 #include "sfz/strings/DynString.hpp"
-#include "sfz/strings/StringHashers.hpp"
 
 namespace sfz {
 
