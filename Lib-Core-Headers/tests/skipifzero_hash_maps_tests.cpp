@@ -27,6 +27,42 @@
 #include "skipifzero_hash_maps.hpp"
 #include "skipifzero_strings.hpp"
 
+// Hashing tests
+// ------------------------------------------------------------------------------------------------
+
+UTEST(Hashing, vec_hashing)
+{
+	// vec2_s32
+	{
+		sfz::vec2_i32 v1(2, 100);
+		sfz::vec2_i32 v2(-1, -10);
+		sfz::vec2_i32 v3(0, 14);
+
+		ASSERT_TRUE(sfz::hash(v1) != sfz::hash(v2));
+		ASSERT_TRUE(sfz::hash(v2) != sfz::hash(v3));
+	}
+
+	// vec3_s32
+	{
+		sfz::vec3_i32 v1(2, 100, 32);
+		sfz::vec3_i32 v2(-1, 0, -10);
+		sfz::vec3_i32 v3(0, -9, 14);
+
+		ASSERT_TRUE(sfz::hash(v1) != sfz::hash(v2));
+		ASSERT_TRUE(sfz::hash(v2) != sfz::hash(v3));
+	}
+
+	// vec4_s32
+	{
+		sfz::vec4_i32 v1(2, 100, 32, 1);
+		sfz::vec4_i32 v2(-1, 0, -10, 9);
+		sfz::vec4_i32 v3(0, -9, 14, 1337);
+
+		ASSERT_TRUE(sfz::hash(v1) != sfz::hash(v2));
+		ASSERT_TRUE(sfz::hash(v2) != sfz::hash(v3));
+	}
+}
+
 // HashMap tests
 // ------------------------------------------------------------------------------------------------
 

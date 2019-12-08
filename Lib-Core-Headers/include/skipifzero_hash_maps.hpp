@@ -36,6 +36,17 @@ constexpr uint64_t hash(int64_t value) { return uint64_t(value); }
 
 constexpr uint64_t hash(const void* value) { return uint64_t(uintptr_t(value)); }
 
+template<typename T, uint32_t N>
+constexpr uint64_t hash(Vec<T,N> v)
+{
+	uint64_t hash = 0;
+	for (uint32_t i = 0; i < N; i++) {
+		// hash_combine algorithm from boost
+		hash ^= sfz::hash(v[i]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+	}
+	return hash;
+}
+
 // HashMap
 // ------------------------------------------------------------------------------------------------
 

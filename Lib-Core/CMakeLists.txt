@@ -131,8 +131,6 @@ set(INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/geometry/Plane.inl
 	${INCLUDE_DIR}/sfz/geometry/Sphere.hpp
 
-	${INCLUDE_DIR}/sfz/math/MathPrimitiveHashers.hpp
-	${INCLUDE_DIR}/sfz/math/MathPrimitiveHashers.inl
 	${INCLUDE_DIR}/sfz/math/MathPrimitiveToStrings.hpp
 	${INCLUDE_DIR}/sfz/math/MathSupport.hpp
 	${INCLUDE_DIR}/sfz/math/MathSupport.inl
@@ -196,7 +194,6 @@ if(NOT hasParent)
 		${TESTS_DIR}/sfz/geometry/Intersection_Tests.cpp
 		${TESTS_DIR}/sfz/geometry/OBB_Tests.cpp
 
-		${TESTS_DIR}/sfz/math/MathPrimitiveHashers_Tests.cpp
 		${TESTS_DIR}/sfz/math/MathSupport_Tests.cpp
 		${TESTS_DIR}/sfz/math/Matrix_Tests.cpp
 		${TESTS_DIR}/sfz/math/MinMax_Tests.cpp
