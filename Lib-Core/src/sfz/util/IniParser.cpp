@@ -335,9 +335,9 @@ bool IniParser::save() noexcept
 
 		// Print section header
 		if (section.name != "") {
-			str.printfAppend("[%s]", section.name.str);
+			str.printfAppend("[%s]", section.name.str());
 			if (section.items.size() >= 1 && section.items[0].type == ItemType::COMMENT_APPEND_PREVIOUS_ROW) {
-				str.printfAppend(" ;%s", section.items[0].str.str);
+				str.printfAppend(" ;%s", section.items[0].str.str());
 			}
 			str.printfAppend("\n");
 		}
@@ -349,16 +349,16 @@ bool IniParser::save() noexcept
 			switch (item.type) {
 			case ItemType::NUMBER:
 				if (sfz::equalsApprox(std::round(item.f), item.f)) {
-					str.printfAppend("%s=%i", item.str.str, item.i);
+					str.printfAppend("%s=%i", item.str.str(), item.i);
 				} else {
-					str.printfAppend("%s=%f", item.str.str, item.f);
+					str.printfAppend("%s=%f", item.str.str(), item.f);
 				}
 				break;
 			case ItemType::BOOL:
-				str.printfAppend("%s=%s", item.str.str, item.b ? "true" : "false");
+				str.printfAppend("%s=%s", item.str.str(), item.b ? "true" : "false");
 				break;
 			case ItemType::COMMENT_OWN_ROW:
-				str.printfAppend(";%s", item.str.str);
+				str.printfAppend(";%s", item.str.str());
 				break;
 			case ItemType::COMMENT_APPEND_PREVIOUS_ROW:
 				continue;
@@ -368,7 +368,7 @@ bool IniParser::save() noexcept
 			if ((i + 1) < section.items.size()) {
 				Item& nextItem = section.items[i + 1];
 				if (nextItem.type == ItemType::COMMENT_APPEND_PREVIOUS_ROW) {
-					str.printfAppend(" ;%s", nextItem.str.str);
+					str.printfAppend(" ;%s", nextItem.str.str());
 				}
 			}
 			str.printfAppend("\n");
@@ -524,12 +524,12 @@ IniParser::ItemAccessor::ItemAccessor(IniParser& iniParser, uint32_t sectionInde
 
 const char* IniParser::ItemAccessor::getSection() const noexcept
 {
-	return mIniParser->mSections[mSectionIndex].name.str;
+	return mIniParser->mSections[mSectionIndex].name.str();
 }
 
 const char* IniParser::ItemAccessor::getKey() const noexcept
 {
-	return mIniParser->mSections[mSectionIndex].items[mKeyIndex].str.str;
+	return mIniParser->mSections[mSectionIndex].items[mKeyIndex].str.str();
 }
 
 const int32_t* IniParser::ItemAccessor::getInt() const noexcept

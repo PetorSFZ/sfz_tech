@@ -73,10 +73,10 @@ static void renderFilteredText(
 	vec4 filterColor) noexcept
 {
 	str128 lowerStackStr;
-	strToLower(lowerStackStr.str, str);
+	strToLower(lowerStackStr.mRawStr, str);
 
 	const char* currStr = str;
-	const char* currLowerStr = lowerStackStr.str;
+	const char* currLowerStr = lowerStackStr.str();
 	const size_t filterLen = strlen(filter);
 
 	if (filterLen == 0) {
@@ -120,7 +120,7 @@ static void renderFilteredText(
 static bool anyContainsFilter(const Array<Setting*>& settings, const char* filter) noexcept
 {
 	for (Setting* setting : settings) {
-		if (strstr(setting->key().str, filter) != nullptr) {
+		if (strstr(setting->key(), filter) != nullptr) {
 			return true;
 		}
 	}
@@ -130,7 +130,7 @@ static bool anyContainsFilter(const Array<Setting*>& settings, const char* filte
 static void timeToString(str96& stringOut, time_t timestamp) noexcept
 {
 	std::tm* tmPtr = std::localtime(&timestamp);
-	size_t res = std::strftime(stringOut.str, stringOut.capacity(), "%Y-%m-%d %H:%M:%S", tmPtr);
+	size_t res = std::strftime(stringOut.mRawStr, stringOut.capacity(), "%Y-%m-%d %H:%M:%S", tmPtr);
 	if (res == 0) stringOut.printf("INVALID TIME");
 }
 
@@ -484,10 +484,10 @@ private:
 		ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
 
 		ImGui::PushItemWidth(ImGui::GetWindowWidth() - 160.0f - 160.0f - 40.0f);
-		ImGui::InputText("##Tag filter", mLogTagFilter.str, mLogTagFilter.capacity());
+		ImGui::InputText("##Tag filter", mLogTagFilter.mRawStr, mLogTagFilter.capacity());
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
-		strToLower(mLogTagFilter.str, mLogTagFilter.str);
+		strToLower(mLogTagFilter.mRawStr, mLogTagFilter);
 		bool tagFilterMode = mLogTagFilter != "";
 
 		int logMinLevelVal = mLogMinLevelSetting->intValue();
@@ -517,8 +517,8 @@ private:
 			// Skip section if nothing matches when filtering
 			if (tagFilterMode) {
 				str32 tagLowerStr;
-				strToLower(tagLowerStr.str, message.tag.str);
-				bool tagFilter = strstr(tagLowerStr.str, mLogTagFilter.str) != nullptr;
+				strToLower(tagLowerStr.mRawStr, message.tag);
+				bool tagFilter = strstr(tagLowerStr.str(), mLogTagFilter.str()) != nullptr;
 				if (!tagFilter) continue;
 			}
 
@@ -537,10 +537,10 @@ private:
 
 			// Print tag and messagess
 			ImGui::Separator();
-			renderFilteredText(message.tag.str, mLogTagFilter.str, messageColor, filterTextColor);
+			renderFilteredText(message.tag, mLogTagFilter, messageColor, filterTextColor);
 			ImGui::NextColumn();
 			ImGui::PushStyleColor(ImGuiCol_Text, messageColor);
-			ImGui::TextWrapped("%s", message.message.str); ImGui::NextColumn();
+			ImGui::TextWrapped("%s", message.message.str()); ImGui::NextColumn();
 			ImGui::PopStyleColor();
 
 			// Restore to 1 column
@@ -555,7 +555,7 @@ private:
 				// Print tooltip
 				ImGui::BeginTooltip();
 				ImGui::Text("%s -- %s -- %s:%i",
-					toString(message.level), timeStr.str, message.file.str, message.lineNumber);
+					toString(message.level), timeStr.str(), message.file.str(), message.lineNumber);
 				ImGui::EndTooltip();
 			}
 		}
@@ -597,9 +597,9 @@ private:
 		// Config filter string
 		//ImGui::PushItemWidth(-1.0f);
 		ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
-		ImGui::InputText("Filter", mConfigFilterString.str, mConfigFilterString.capacity());
+		ImGui::InputText("Filter", mConfigFilterString.mRawStr, mConfigFilterString.capacity());
 		ImGui::PopStyleColor();
-		strToLower(mConfigFilterString.str, mConfigFilterString.str);
+		strToLower(mConfigFilterString.mRawStr, mConfigFilterString);
 		bool filterMode = mConfigFilterString != "";
 
 		// Add spacing and separator between filter and configs
@@ -621,14 +621,14 @@ private:
 
 			// Get settings from Global Config
 			mCfgSectionSettings.clear();
-			cfg.getSectionSettings(sectionKey.str, mCfgSectionSettings);
+			cfg.getSectionSettings(sectionKey, mCfgSectionSettings);
 
 			// Skip section if nothing matches when filtering
 			if (filterMode) {
 				str32 sectionLowerStr;
-				strToLower(sectionLowerStr.str, sectionKey.str);
-				bool sectionFilter = strstr(sectionLowerStr.str, mConfigFilterString.str) != nullptr;
-				bool settingsFilter = anyContainsFilter(mCfgSectionSettings, mConfigFilterString.str);
+				strToLower(sectionLowerStr.mRawStr, sectionKey);
+				bool sectionFilter = strstr(sectionLowerStr, mConfigFilterString) != nullptr;
+				bool settingsFilter = anyContainsFilter(mCfgSectionSettings, mConfigFilterString);
 				if (!sectionFilter && !settingsFilter) continue;
 			}
 
@@ -636,11 +636,11 @@ private:
 			ImGui::Columns(1);
 			if (filterMode) {
 				ImGui::Separator();
-				renderFilteredText(sectionKey.str, mConfigFilterString.str,
+				renderFilteredText(sectionKey, mConfigFilterString,
 					vec4(1.0f), filterTextColor);
 			}
 			else {
-				if (ImGui::CollapsingHeader(sectionKey.str)) continue;
+				if (ImGui::CollapsingHeader(sectionKey)) continue;
 			}
 			ImGui::Columns(3);
 			ImGui::SetColumnWidth(0, 55.0f);
@@ -651,40 +651,40 @@ private:
 
 				// Combine key strings
 				str128 combinedKeyStr;
-				combinedKeyStr.printf("%s%s", sectionKey.str, setting->key().str);
+				combinedKeyStr.printf("%s%s", sectionKey.str(), setting->key().str());
 				str128 combinedKeyLowerStr;
-				strToLower(combinedKeyLowerStr.str, combinedKeyStr.str);
+				strToLower(combinedKeyLowerStr.mRawStr, combinedKeyStr);
 
 				// Check if setting contains filter
-				bool containsFilter = strstr(combinedKeyLowerStr.str, mConfigFilterString.str) != nullptr;
+				bool containsFilter = strstr(combinedKeyLowerStr, mConfigFilterString) != nullptr;
 				if (!containsFilter) continue;
 
 				// Write to file checkbox
-				tmpStr.printf("##%s___writeToFile___", setting->key().str);
+				tmpStr.printf("##%s___writeToFile___", setting->key().str());
 				bool writeToFile = setting->value().writeToFile;
-				if (ImGui::Checkbox(tmpStr.str, &writeToFile)) {
+				if (ImGui::Checkbox(tmpStr, &writeToFile)) {
 					setting->setWriteToFile(writeToFile);
 				}
 				ImGui::NextColumn();
 
 				// Render setting key
 				if (filterMode) {
-					renderFilteredText(setting->key().str, mConfigFilterString.str,
+					renderFilteredText(setting->key(), mConfigFilterString,
 						vec4(1.0f), filterTextColor);
 				}
 				else {
-					ImGui::TextUnformatted(setting->key().str);
+					ImGui::TextUnformatted(setting->key().str());
 				}
 				ImGui::NextColumn();
 
 				// Value input field
 				ImGui::PushItemWidth(-1.0f);
-				tmpStr.printf("##%s_%s___valueInput___", setting->section().str, setting->key().str);
+				tmpStr.printf("##%s_%s___valueInput___", setting->section().str(), setting->key().str());
 				switch (setting->type()) {
 				case ValueType::INT:
 					{
 						int32_t i = setting->intValue();
-						if (ImGui::InputInt(tmpStr.str, &i, setting->value().i.bounds.step)) {
+						if (ImGui::InputInt(tmpStr, &i, setting->value().i.bounds.step)) {
 							setting->setInt(i);
 						}
 					}
@@ -692,7 +692,7 @@ private:
 				case ValueType::FLOAT:
 					{
 						float f = setting->floatValue();
-						if (ImGui::InputFloat(tmpStr.str, &f, 0.25f, 0.0f, "%.4f")) {
+						if (ImGui::InputFloat(tmpStr, &f, 0.25f, 0.0f, "%.4f")) {
 							setting->setFloat(f);
 						}
 					}
@@ -700,7 +700,7 @@ private:
 				case ValueType::BOOL:
 					{
 						bool b = setting->boolValue();
-						if (ImGui::Checkbox(tmpStr.str, &b)) {
+						if (ImGui::Checkbox(tmpStr, &b)) {
 							setting->setBool(b);
 						}
 					}

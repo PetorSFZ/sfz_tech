@@ -48,21 +48,21 @@ void toString(const vec2& vector, str96& string, uint32_t numDecimals) noexcept
 {
 	str32 formatStr;
 	formatStr.printf("[%%.%uf, %%.%uf]", numDecimals, numDecimals);
-	string.printf(formatStr.str, vector.x, vector.y);
+	string.printf(formatStr.str(), vector.x, vector.y);
 }
 
 void toString(const vec3& vector, str96& string, uint32_t numDecimals) noexcept
 {
 	str32 formatStr;
 	formatStr.printf("[%%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals);
-	string.printf(formatStr.str, vector.x, vector.y, vector.z);
+	string.printf(formatStr.str(), vector.x, vector.y, vector.z);
 }
 
 void toString(const vec4& vector, str96& string, uint32_t numDecimals) noexcept
 {
 	str32 formatStr;
 	formatStr.printf("[%%.%uf, %%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals, numDecimals);
-	string.printf(formatStr.str, vector.x, vector.y, vector.z, vector.w);
+	string.printf(formatStr.str(), vector.x, vector.y, vector.z, vector.w);
 }
 
 str96 toString(const vec2_i32& vector) noexcept
@@ -164,12 +164,12 @@ str256 toString(const mat44& matrix, bool rowBreak, uint32_t numDecimals) noexce
 template<uint32_t H, uint32_t W>
 void toStringImpl(const Matrix<float,H,W>& matrix, str256& string, bool rowBreak, uint32_t numDecimals) noexcept
 {
-	string.str[0] = '\0';
+	string.clear();
 	string.printfAppend("[");
 	str96 tmp;
 	for (uint32_t y = 0; y < H; y++) {
 		toString(matrix.rows[y], tmp, numDecimals);
-		string.printfAppend("%s", tmp.str);
+		string.printfAppend("%s", tmp.str());
 		if (y < (H-1)) {
 			if (rowBreak) {
 				string.printfAppend(",\n ");

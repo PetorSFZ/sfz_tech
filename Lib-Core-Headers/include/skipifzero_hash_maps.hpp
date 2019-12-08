@@ -36,23 +36,6 @@ constexpr uint64_t hash(int64_t value) { return uint64_t(value); }
 
 constexpr uint64_t hash(const void* value) { return uint64_t(uintptr_t(value)); }
 
-// HashMapAltKeyDescr
-// ------------------------------------------------------------------------------------------------
-
-struct NO_ALT_KEY_TYPE final { NO_ALT_KEY_TYPE() = delete; };
-
-// Alternative key type for a given type, useful for e.g. string types so "const char*" can be
-// defined as an alternate key type.
-//
-// Requirements:
-//  * operator== (KeyT, AltKeyT) must be defined
-//  * sfz::hash(KeyT) == sfz::hash(HashMapAltKey<KeyT>::AltKeyT)
-//  * constructor KeyT(AltKeyT) must be defined
-template<typename KeyT>
-struct HashMapAltKey final {
-	using AltKeyT = NO_ALT_KEY_TYPE;
-};
-
 // HashMap
 // ------------------------------------------------------------------------------------------------
 

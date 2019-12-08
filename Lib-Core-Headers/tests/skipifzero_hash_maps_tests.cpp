@@ -416,7 +416,7 @@ UTEST(HashMap, hashmap_with_strings)
 			ASSERT_TRUE(ptr != nullptr);
 			ASSERT_TRUE(*ptr == i);
 
-			uint32_t* ptr2 = m.get(tmp.str); // alt key variant
+			uint32_t* ptr2 = m.get(tmp.str()); // alt key variant
 			ASSERT_TRUE(ptr2 != nullptr);
 			ASSERT_TRUE(*ptr2 == i);
 			ASSERT_TRUE(*ptr2 == *ptr);

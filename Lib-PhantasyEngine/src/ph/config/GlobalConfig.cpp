@@ -57,7 +57,7 @@ void GlobalConfig::init(const char* basePath, const char* fileName, Allocator* a
 	// Initialize IniParser with path
 	str256 tmpPath;
 	tmpPath.printf("%s%s", basePath, fileName);
-	mImpl->ini = IniParser(tmpPath.str);
+	mImpl->ini = IniParser(tmpPath);
 
 	// Initialize settings array with allocator
 	mImpl->sections.init(64, allocator, sfz_dbg(""));
@@ -144,20 +144,20 @@ bool GlobalConfig::save() noexcept
 			{
 				switch (setting->type()) {
 				case ValueType::INT:
-					if (ini.getInt(setting->section().str, setting->key().str) == nullptr) {
-						ini.setInt(setting->section().str, setting->key().str,
+					if (ini.getInt(setting->section(), setting->key()) == nullptr) {
+						ini.setInt(setting->section(), setting->key(),
 							setting->intBounds().defaultValue);
 					}
 					break;
 				case ValueType::FLOAT:
-					if (ini.getFloat(setting->section().str, setting->key().str) == nullptr) {
-						ini.setFloat(setting->section().str, setting->key().str,
+					if (ini.getFloat(setting->section(), setting->key()) == nullptr) {
+						ini.setFloat(setting->section(), setting->key(),
 							setting->floatBounds().defaultValue);
 					}
 					break;
 				case ValueType::BOOL:
-					if (ini.getBool(setting->section().str, setting->key().str) == nullptr) {
-						ini.setBool(setting->section().str, setting->key().str,
+					if (ini.getBool(setting->section(), setting->key()) == nullptr) {
+						ini.setBool(setting->section(), setting->key(),
 							setting->boolBounds().defaultValue);
 					}
 					break;
@@ -167,13 +167,13 @@ bool GlobalConfig::save() noexcept
 
 			switch (setting->type()) {
 			case ValueType::INT:
-				ini.setInt(setting->section().str, setting->key().str, setting->intValue());
+				ini.setInt(setting->section(), setting->key(), setting->intValue());
 				break;
 			case ValueType::FLOAT:
-				ini.setFloat(setting->section().str, setting->key().str, setting->floatValue());
+				ini.setFloat(setting->section(), setting->key(), setting->floatValue());
 				break;
 			case ValueType::BOOL:
-				ini.setBool(setting->section().str, setting->key().str, setting->boolValue());
+				ini.setBool(setting->section(), setting->key(), setting->boolValue());
 				break;
 			}
 		}

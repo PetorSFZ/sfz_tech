@@ -390,7 +390,7 @@ static bool componentMaskEditor(
 			ImGui::PushItemWidth(85.0f);
 			bool modified = ImGui::InputText(
 				str32("##%s_%u", identifier, byteIdx),
-				buffers[byteIdx],
+				buffers[byteIdx].mRawStr,
 				9, // We only allow 8 characters (bits) per byte
 				inputFlags,
 				imguiOnlyBinaryFilter);
@@ -521,7 +521,7 @@ void GameStateEditor::init(
 		sfz_assert(!set);
 
 		set = true;
-		target.singletonName.printf("%02u - %s", info.singletonIndex, info.singletonName.str);
+		target.singletonName.printf("%02u - %s", info.singletonIndex, info.singletonName.str());
 		target.singletonEditor = info.singletonEditor;
 		target.userPtr = std::move(info.userPtr); // Steal it!
 	}
@@ -551,7 +551,7 @@ void GameStateEditor::init(
 		sfz_assert(!set);
 
 		set = true;
-		target.componentName.printf("%02u - %s", info.componentType, info.componentName.str);
+		target.componentName.printf("%02u - %s", info.componentType, info.componentName.str());
 		target.componentEditor = info.componentEditor;
 		target.userPtr = std::move(info.userPtr); // Steal it!
 	}
@@ -616,7 +616,7 @@ void GameStateEditor::render(GameStateHeader* state) noexcept
 	//windowFlags |= ImGuiWindowFlags_NoResize;
 	//windowFlags |= ImGuiWindowFlags_NoScrollbar;
 	windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
-	ImGui::Begin(mWindowName.str, nullptr, windowFlags);
+	ImGui::Begin(mWindowName, nullptr, windowFlags);
 
 	// End window and return if no game state
 	if (state == nullptr) {
@@ -687,7 +687,7 @@ void GameStateEditor::renderSingletonEditor(GameStateHeader* state) noexcept
 	for (uint32_t i = 0; i < mNumSingletonInfos; i++) {
 		const ReducedSingletonInfo& info = mSingletonInfos[i];
 
-		if (ImGui::CollapsingHeader(info.singletonName.str, ImGuiTreeNodeFlags_DefaultOpen)) {
+		if (ImGui::CollapsingHeader(info.singletonName, ImGuiTreeNodeFlags_DefaultOpen)) {
 
 			// Run editor
 			ImGui::Indent(28.0f);
@@ -827,7 +827,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 			if (unsizedComponent) {
 				if (!entityHasComponent) ImGui::PushStyleColor(ImGuiCol_Text, INACTIVE_TEXT_COLOR);
 				bool checkboxBool = entityHasComponent;
-				if (ImGui::Checkbox(sfz::str96("##%s", info.componentName.str), &checkboxBool)) {
+				if (ImGui::Checkbox(sfz::str96("##%s", info.componentName.str()), &checkboxBool)) {
 					if (i != 0) {
 						uint8_t entityGen = state->getGeneration(mCurrentSelectedEntityId);
 						Entity entity = Entity::create(mCurrentSelectedEntityId, entityGen);
@@ -836,7 +836,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 				}
 				ImGui::SameLine();
 				ImGui::Indent(79.0f);
-				ImGui::Text("%s", info.componentName.str);
+				ImGui::Text("%s", info.componentName.str());
 				ImGui::Unindent(79.0f);
 				if (!entityHasComponent) ImGui::PopStyleColor();
 			}
@@ -847,7 +847,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 				bool checkboxBool = entityHasComponent;
 
 				if (ImGui::Checkbox(
-					sfz::str96("##%s_checkbox", info.componentName.str), &checkboxBool)) {
+					sfz::str96("##%s_checkbox", info.componentName.str()), &checkboxBool)) {
 					if (checkboxBool) {
 						mask.setComponentType(i, checkboxBool);
 					}
@@ -861,7 +861,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 				ImGui::SameLine();
 
 				if (!entityHasComponent) ImGui::PushStyleColor(ImGuiCol_Text, INACTIVE_TEXT_COLOR);
-				if (ImGui::CollapsingHeader(info.componentName.str, ImGuiTreeNodeFlags_DefaultOpen)) {
+				if (ImGui::CollapsingHeader(info.componentName, ImGuiTreeNodeFlags_DefaultOpen)) {
 
 					// Disable editor if entity does not have component
 					if (!entityHasComponent) ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);

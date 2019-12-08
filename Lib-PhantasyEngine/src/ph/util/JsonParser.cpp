@@ -342,7 +342,7 @@ ParsedJsonNodeValue<str256> ParsedJsonNode::valueStr256() const noexcept
 {
 	ParsedJsonNodeValue<str256> tmp;
 	tmp.value.printf(""); // Default-value
-	tmp.exists = this->value(tmp.value.str, tmp.value.capacity());
+	tmp.exists = this->value(tmp.value.mRawStr, tmp.value.capacity());
 	return tmp;
 }
 

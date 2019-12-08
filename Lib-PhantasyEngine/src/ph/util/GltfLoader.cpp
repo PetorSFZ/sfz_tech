@@ -61,9 +61,9 @@ static str320 calculateBasePath(const char* path) noexcept
 	// Go through path until the path separator is found
 	bool success = false;
 	for (uint32_t i = str.size() - 1; i > 0; i--) {
-		const char c = str.str[i - 1];
+		const char c = str.str()[i - 1];
 		if (c == '\\' || c == '/') {
-			str.str[i] = '\0';
+			str.mRawStr[i] = '\0';
 			success = true;
 			break;
 		}
@@ -213,7 +213,7 @@ static bool extractAssets(
 
 		// Create global path (path relative to game executable)
 		const str320 globalPath("%s%s", basePath, img.uri.c_str());
-		StringID globalPathId = resStrings.getStringID(globalPath.str);
+		StringID globalPathId = resStrings.getStringID(globalPath);
 
 		// Check if texture is already loaded, skip it if it is
 		if (checkIfTextureIsLoaded != nullptr) {
@@ -225,7 +225,7 @@ static bool extractAssets(
 		pack.globalPathId = globalPathId;
 		pack.image = loadImage("", globalPath);
 		if (pack.image.rawData.data() == nullptr) {
-			SFZ_ERROR("tinygltf", "Could not load texture: \"%s\"", globalPath.str);
+			SFZ_ERROR("tinygltf", "Could not load texture: \"%s\"", globalPath.str());
 			return false;
 		}
 		texturesOut.add(std::move(pack));
@@ -242,7 +242,7 @@ static bool extractAssets(
 		const tinygltf::Texture& tex = model.textures[texIndex];
 		const tinygltf::Image& img = model.images[tex.source];
 		str320 globalPath("%s%s", basePath, img.uri.c_str());
-		StringID globalPathId = resStrings.getStringID(globalPath.str);
+		StringID globalPathId = resStrings.getStringID(globalPath);
 		return globalPathId;
 	};
 
@@ -499,7 +499,7 @@ bool loadAssetsFromGltf(
 
 	// Extract assets from results
 	bool extractSuccess = extractAssets(
-		basePath.str, model, meshOut, texturesOut, checkIfTextureIsLoaded, userPtr, allocator);
+		basePath, model, meshOut, texturesOut, checkIfTextureIsLoaded, userPtr, allocator);
 	if (!extractSuccess) {
 		SFZ_ERROR("tinygltf", "Failed to create ph::Mesh from gltf: \"%s\"", gltfPath);
 		return false;

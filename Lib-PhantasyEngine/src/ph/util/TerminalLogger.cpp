@@ -93,7 +93,7 @@ void TerminalLogger::log(
 
 	va_list args;
 	va_start(args, format);
-	vsnprintf(item.message.str, item.message.capacity(), format, args);
+	vsnprintf(item.message.mRawStr, item.message.capacity(), format, args);
 	va_end(args);
 
 	// Also log to terminal
@@ -109,7 +109,7 @@ void TerminalLogger::log(
 		printf("[%s] -- [%s] -- [%s:%i]:\n", toString(level), tag, strippedFile, line);
 
 		// Print message
-		printf("%s", item.message.str);
+		printf("%s", item.message.str());
 		// Print newline
 		printf("\n\n");
 

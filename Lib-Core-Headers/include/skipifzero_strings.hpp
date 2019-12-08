@@ -37,12 +37,12 @@ struct StringLocal final {
 
 	static_assert(N > 0);
 
-	char str[N];
+	char mRawStr[N];
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	StringLocal() noexcept { str[0] = '\0'; }
+	StringLocal() noexcept { this->clear(); }
 	StringLocal(const StringLocal&) noexcept = default;
 	StringLocal& operator= (const StringLocal&) noexcept = default;
 	~StringLocal() noexcept = default;
@@ -53,23 +53,26 @@ struct StringLocal final {
 	{
 		va_list args;
 		va_start(args, format);
-		vsnprintf(this->str, N, format, args);
+		vsnprintf(this->mRawStr, N, format, args);
 		va_end(args);
-		str[N - 1] = '\0';
+		mRawStr[N - 1] = '\0';
 	}
 
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
-	uint32_t size() const { return uint32_t(strlen(this->str)); }
+	uint32_t size() const { return uint32_t(strlen(this->mRawStr)); }
 	uint32_t capacity() const { return N; }
+	const char* str() const { return mRawStr; }
+
+	void clear() { mRawStr[0] = '\0'; }
 
 	// Calls snprintf() on the internal string, overwriting the content.
 	void printf(const char* format, ...)
 	{
 		va_list args;
 		va_start(args, format);
-		vsnprintf(this->str, N, format, args);
+		vsnprintf(this->mRawStr, N, format, args);
 		va_end(args);
 	}
 
@@ -78,8 +81,8 @@ struct StringLocal final {
 	{
 		va_list args;
 		va_start(args, format);
-		size_t len = strlen(this->str);
-		vsnprintf(this->str + len, N - len, format, args);
+		size_t len = strlen(this->mRawStr);
+		vsnprintf(this->mRawStr + len, N - len, format, args);
 		va_end(args);
 	}
 
@@ -88,29 +91,28 @@ struct StringLocal final {
 	void insertChars(const char* first, uint32_t numChars)
 	{
 		sfz_assert(numChars < N);
-		strncpy(this->str, first, size_t(numChars));
-		this->str[numChars] = '\0';
+		strncpy(this->mRawStr, first, size_t(numChars));
+		this->mRawStr[numChars] = '\0';
 	}
 
 	// Operators
 	// --------------------------------------------------------------------------------------------
 
-	operator char*() { return this->str; }
-	operator const char*() const { return this->str; }
+	operator const char*() const { return this->mRawStr; }
 
-	bool operator== (const StringLocal& other) const { return *this == other.str; }
-	bool operator!= (const StringLocal& other) const { return *this != other.str; }
-	bool operator< (const StringLocal& other) const { return *this < other.str; }
-	bool operator<= (const StringLocal& other) const { return *this <= other.str; }
-	bool operator> (const StringLocal& other) const { return *this > other.str; }
-	bool operator>= (const StringLocal& other) const { return *this >= other.str; }
+	bool operator== (const StringLocal& other) const { return *this == other.mRawStr; }
+	bool operator!= (const StringLocal& other) const { return *this != other.mRawStr; }
+	bool operator< (const StringLocal& other) const { return *this < other.mRawStr; }
+	bool operator<= (const StringLocal& other) const { return *this <= other.mRawStr; }
+	bool operator> (const StringLocal& other) const { return *this > other.mRawStr; }
+	bool operator>= (const StringLocal& other) const { return *this >= other.mRawStr; }
 
-	bool operator== (const char* o) const { sfz_assert(o != nullptr); return strncmp(this->str, o, N) == 0; }
+	bool operator== (const char* o) const { sfz_assert(o != nullptr); return strncmp(this->mRawStr, o, N) == 0; }
 	bool operator!= (const char* o) const { sfz_assert(o != nullptr); return !(*this == o); }
-	bool operator< (const char* o) const { sfz_assert(o != nullptr); return strncmp(this->str, o, N) < 0; }
-	bool operator<= (const char* o) const { sfz_assert(o != nullptr); return strncmp(this->str, o, N) <= 0; }
-	bool operator> (const char* o) const { sfz_assert(o != nullptr); return strncmp(this->str, o, N) > 0; }
-	bool operator>= (const char* o) const { sfz_assert(o != nullptr); return strncmp(this->str, o, N) >= 0; }
+	bool operator< (const char* o) const { sfz_assert(o != nullptr); return strncmp(this->mRawStr, o, N) < 0; }
+	bool operator<= (const char* o) const { sfz_assert(o != nullptr); return strncmp(this->mRawStr, o, N) <= 0; }
+	bool operator> (const char* o) const { sfz_assert(o != nullptr); return strncmp(this->mRawStr, o, N) > 0; }
+	bool operator>= (const char* o) const { sfz_assert(o != nullptr); return strncmp(this->mRawStr, o, N) >= 0; }
 };
 
 using str32 = StringLocal<32>;

@@ -242,9 +242,9 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		item.pixelShaderPath = CHECK_JSON pipelineNode.accessMap("pixel_shader_path").valueStr256();
 
 		item.vertexShaderEntry.printf("%s",
-			(CHECK_JSON pipelineNode.accessMap("vertex_shader_entry").valueStr256()).str);
+			(CHECK_JSON pipelineNode.accessMap("vertex_shader_entry").valueStr256()).str());
 		item.pixelShaderEntry.printf("%s",
-			(CHECK_JSON pipelineNode.accessMap("pixel_shader_entry").valueStr256()).str);
+			(CHECK_JSON pipelineNode.accessMap("pixel_shader_entry").valueStr256()).str());
 
 		item.standardVertexAttributes =
 			CHECK_JSON pipelineNode.accessMap("standard_vertex_attributes").valueBool();

@@ -164,17 +164,17 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 
 	// Loading image
 	int width, height, numChannels;
-	uint8_t* img = stbi_load(path.str, &width, &height, &numChannels, 0);
+	uint8_t* img = stbi_load(path, &width, &height, &numChannels, 0);
 
 	// Error checking
 	if (img == nullptr) {
 		SFZ_WARNING("PhantasyEngine", "Unable to load image \"%s\", reason: %s",
-			path.str, stbi_failure_reason());
+			path.str(), stbi_failure_reason());
 		return Image();
 	}
 	if (numChannels != 1 && numChannels != 2 && numChannels != 3 && numChannels != 4) {
 		SFZ_WARNING("PhantasyEngine", "Image \"%s\" has unsupported number of channels: %i",
-			path.str, numChannels);
+			path.str(), numChannels);
 		stbi_image_free(img);
 		return Image();
 	}
@@ -215,7 +215,7 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 	}
 
 	// Free temp memory used by stb_image and return image
-	SFZ_INFO_NOISY("PhantasyEngine", "Image \"%s\" loaded succesfully", path.str);
+	SFZ_INFO_NOISY("PhantasyEngine", "Image \"%s\" loaded succesfully", path.str());
 	stbi_image_free(img);
 	return tmp;
 }

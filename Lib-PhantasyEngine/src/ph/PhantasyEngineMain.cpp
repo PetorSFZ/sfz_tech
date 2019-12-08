@@ -110,7 +110,7 @@ static void ensureAppUserDataDirExists(const char* appName) noexcept
 	// Create app directory in "My Games"
 	sfz::str320 tmp;
 	tmp.printf("%s%s/", sfz::gameBaseFolderPath(), appName);
-	sfz::createDirectory(tmp.str);
+	sfz::createDirectory(tmp);
 }
 
 static void logSDL2Version() noexcept
@@ -158,8 +158,8 @@ int mainImpl(int, char*[], InitOptions&& options)
 		if (options.iniLocation == IniLocation::NEXT_TO_EXECUTABLE) {
 			sfz::str192 iniFileName;
 			iniFileName.printf("%s.ini", options.appName);
-			cfg.init(basePath(), iniFileName.str, sfz::getDefaultAllocator());
-			SFZ_INFO("PhantasyEngine", "Ini location set to: %s%s", basePath(), iniFileName.str);
+			cfg.init(basePath(), iniFileName, sfz::getDefaultAllocator());
+			SFZ_INFO("PhantasyEngine", "Ini location set to: %s%s", basePath(), iniFileName.str());
 		}
 		else if (options.iniLocation == IniLocation::MY_GAMES_DIR) {
 
@@ -169,9 +169,9 @@ int mainImpl(int, char*[], InitOptions&& options)
 			// Initialize ini
 			sfz::str192 iniFileName;
 			iniFileName.printf("%s/%s.ini", options.appName, options.appName);
-			cfg.init(sfz::gameBaseFolderPath(), iniFileName.str, sfz::getDefaultAllocator());
+			cfg.init(sfz::gameBaseFolderPath(), iniFileName, sfz::getDefaultAllocator());
 			SFZ_INFO("PhantasyEngine", "Ini location set to: %s%s",
-				sfz::gameBaseFolderPath(), iniFileName.str);
+				sfz::gameBaseFolderPath(), iniFileName.str());
 		}
 		else {
 			sfz_assert_hard(false);

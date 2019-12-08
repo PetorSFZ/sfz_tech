@@ -146,7 +146,7 @@ TEST_CASE("writeTextFile()", "[sfz::IO]")
 	sfz::DynString fileStr = sfz::readTextFile(fpath);
 	REQUIRE(fileStr.size() == strToWrite.size());
 	REQUIRE(fileStr.size() == std::strlen(fileStr.str()));
-	REQUIRE(fileStr == strToWrite.str);
+	REQUIRE(fileStr == strToWrite.str());
 
 	REQUIRE(sfz::deleteFile(fpath));
 

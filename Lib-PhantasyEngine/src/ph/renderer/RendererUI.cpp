@@ -41,7 +41,7 @@ static void alignedEdit(const char* name, float xOffset, Fun editor) noexcept
 {
 	ImGui::Text("%s", name);
 	ImGui::SameLine(xOffset);
-	editor(sfz::str96("##%s_invisible", name).str);
+	editor(sfz::str96("##%s_invisible", name).str());
 }
 
 static float toGiB(uint64_t bytes) noexcept
@@ -235,7 +235,7 @@ void RendererUI::renderGeneralTab(RendererState& state) noexcept
 {
 	constexpr float offset = 250.0f;
 	alignedEdit("Config path", offset, [&](const char*) {
-		ImGui::Text("\"%s\"", state.configurable.configPath.str);
+		ImGui::Text("\"%s\"", state.configurable.configPath.str());
 	});
 	alignedEdit("Current frame index", offset, [&](const char*) {
 		ImGui::Text("%llu", state.currentFrameIdx);
@@ -314,7 +314,7 @@ void RendererUI::renderGeneralTab(RendererState& state) noexcept
 		
 		DynamicGpuAllocator& alloc = *bundle.allocator;
 
-		if (!ImGui::CollapsingHeader(str128("%s Memory", bundle.name).str)) continue;
+		if (!ImGui::CollapsingHeader(str128("%s Memory", bundle.name))) continue;
 
 		ImGui::Indent(30.0f);
 		ImGui::Spacing();
@@ -429,7 +429,7 @@ void RendererUI::renderFramebuffersTab(RendererConfigurableState& state) noexcep
 			if (fbItem.resolutionScaleSetting != nullptr) {
 				alignedEdit("Resolution scale", offset, [&](const char*) {
 					ImGui::Text("%.2f  --  Setting: \"%s\"",
-						fbItem.resolutionScale, fbItem.resolutionScaleSetting->key().str);
+						fbItem.resolutionScale, fbItem.resolutionScaleSetting->key().str());
 				});
 			}
 			else {
@@ -449,7 +449,7 @@ void RendererUI::renderFramebuffersTab(RendererConfigurableState& state) noexcep
 		// Render targets
 		for (uint32_t j = 0; j < fbItem.numRenderTargets; j++) {
 			const RenderTargetItem& rtItem = fbItem.renderTargetItems[j];
-			alignedEdit(str64("Render target [%u]", j).str, offset, [&](const char*) {
+			alignedEdit(str64("Render target [%u]", j), offset, [&](const char*) {
 				ImGui::Text("%s  --  Clear: %.1f",
 					textureFormatToString(rtItem.format), rtItem.clearValue);
 			});
@@ -506,7 +506,7 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 		const char* name = resStrings.getString(pipeline.name);
 
 		// Reload button
-		if (ImGui::Button(str64("Reload##__render_%u", i).str, vec2(80.0f, 0.0f))) {
+		if (ImGui::Button(str64("Reload##__render_%u", i), vec2(80.0f, 0.0f))) {
 
 			// Flush ZeroG queues
 			CHECK_ZG state.presentQueue.flush();
@@ -522,7 +522,7 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 
 		// Collapsing header with name
 		bool collapsingHeaderOpen =
-			ImGui::CollapsingHeader(str256("Pipeline %u - \"%s\"", i, name).str);
+			ImGui::CollapsingHeader(str256("Pipeline %u - \"%s\"", i, name));
 		if (!collapsingHeaderOpen) continue;
 		ImGui::Indent(20.0f);
 
@@ -536,9 +536,9 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 		// Pipeline info
 		ImGui::Spacing();
 		ImGui::Text("Vertex Shader: \"%s\" -- \"%s\"",
-			pipeline.vertexShaderPath.str, pipeline.vertexShaderEntry.str);
+			pipeline.vertexShaderPath.str(), pipeline.vertexShaderEntry.str());
 		ImGui::Text("Pixel Shader: \"%s\" -- \"%s\"",
-			pipeline.pixelShaderPath.str, pipeline.pixelShaderEntry.str);
+			pipeline.pixelShaderPath.str(), pipeline.pixelShaderEntry.str());
 
 		// Print vertex attributes
 		ImGui::Spacing();
@@ -630,15 +630,15 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 		constexpr float xOffset = 300.0f;
 		alignedEdit("Bias", xOffset, [&](const char* name) {
 			ImGui::SetNextItemWidth(165.0f);
-			ImGui::InputInt(str128("%s##render_%u", name, i).str, &pipeline.depthBias);
+			ImGui::InputInt(str128("%s##render_%u", name, i), &pipeline.depthBias);
 		});
 		alignedEdit("Bias Slope Scaled", xOffset, [&](const char* name) {
 			ImGui::SetNextItemWidth(100.0f);
-			ImGui::InputFloat(str128("%s##render_%u", name, i).str, &pipeline.depthBiasSlopeScaled, 0.0f, 0.0f, "%.4f");
+			ImGui::InputFloat(str128("%s##render_%u", name, i), &pipeline.depthBiasSlopeScaled, 0.0f, 0.0f, "%.4f");
 		});
 		alignedEdit("Bias Clamp", xOffset, [&](const char* name) {
 			ImGui::SetNextItemWidth(100.0f);
-			ImGui::InputFloat(str128("%s##render_%u", name, i).str, &pipeline.depthBiasClamp, 0.0f, 0.0f, "%.4f");
+			ImGui::InputFloat(str128("%s##render_%u", name, i), &pipeline.depthBiasClamp, 0.0f, 0.0f, "%.4f");
 		});
 		ImGui::Unindent(20.0f);
 
@@ -766,7 +766,7 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 					bool isSelected = id == texId;
 
 					// Report index to ImGui combo button and update current if it has changed
-					if (ImGui::Selectable(texStr.str, isSelected)) {
+					if (ImGui::Selectable(texStr, isSelected)) {
 						texId = id;
 						updateMesh = true;
 					}
