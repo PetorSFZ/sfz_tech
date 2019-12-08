@@ -9,8 +9,7 @@ That said, just because the projects are in the same repository does NOT mean th
 ## Projects
 
 * [Lib-Core-Headers](https://github.com/PetorSFZ/sfz_tech/tree/master/Lib-Core-Headers) - A small, compact, no-dependency, header-only, math and containers library. This can be considered a small portable core of `Lib-Core`. Easy to embed in other projects without the rest of `Lib-Core`.
-* [Lib-Core](https://github.com/PetorSFZ/sfz_tech/tree/master/Lib-Core) - A `C++` standard library replacement. Contains allocators, containers, strings, math, etc.
-* [Lib-Core-OpenGL](https://github.com/PetorSFZ/sfz_tech/tree/master/Lib-Core-OpenGL) - A OpenGL utility library. No longer in active use and not tested regularly, may be broken.
+* [Lib-Core](https://github.com/PetorSFZ/sfz_tech/tree/master/Lib-Core) - Common utility functions, sort of a `C++` standard library replacement. A lot of the core functionality now lives in the `Lib-Core-Headers` library.
 * [Lib-PhantasyEngine](https://github.com/PetorSFZ/sfz_tech/tree/master/Lib-PhantasyEngine) - A lightweight, barebones, DIY game engine.
 * [Lib-ZeroG](https://github.com/PetorSFZ/sfz_tech/tree/master/Lib-ZeroG) - `ZeroG` is a (somewhat higher-level) GPU API implemented on top modern low-level GPU API's, such as D3D12 and Metal.
 
