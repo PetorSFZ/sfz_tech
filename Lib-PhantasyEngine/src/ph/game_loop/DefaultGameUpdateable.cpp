@@ -131,7 +131,10 @@ static void timeToString(str96& stringOut, time_t timestamp) noexcept
 {
 	std::tm* tmPtr = std::localtime(&timestamp);
 	size_t res = std::strftime(stringOut.mRawStr, stringOut.capacity(), "%Y-%m-%d %H:%M:%S", tmPtr);
-	if (res == 0) stringOut.printf("INVALID TIME");
+	if (res == 0) {
+		stringOut.clear();
+		stringOut.appendf("INVALID TIME");
+	}
 }
 
 // DefaultGameUpdateable class
@@ -650,8 +653,7 @@ private:
 			for (Setting* setting : mCfgSectionSettings) {
 
 				// Combine key strings
-				str128 combinedKeyStr;
-				combinedKeyStr.printf("%s%s", sectionKey.str(), setting->key().str());
+				str128 combinedKeyStr("%s%s", sectionKey.str(), setting->key().str());
 				str128 combinedKeyLowerStr;
 				strToLower(combinedKeyLowerStr.mRawStr, combinedKeyStr);
 
@@ -660,7 +662,8 @@ private:
 				if (!containsFilter) continue;
 
 				// Write to file checkbox
-				tmpStr.printf("##%s___writeToFile___", setting->key().str());
+				tmpStr.clear();
+				tmpStr.appendf("##%s___writeToFile___", setting->key().str());
 				bool writeToFile = setting->value().writeToFile;
 				if (ImGui::Checkbox(tmpStr, &writeToFile)) {
 					setting->setWriteToFile(writeToFile);
@@ -679,7 +682,8 @@ private:
 
 				// Value input field
 				ImGui::PushItemWidth(-1.0f);
-				tmpStr.printf("##%s_%s___valueInput___", setting->section().str(), setting->key().str());
+				tmpStr.clear();
+				tmpStr.appendf("##%s_%s___valueInput___", setting->section().str(), setting->key().str());
 				switch (setting->type()) {
 				case ValueType::INT:
 					{

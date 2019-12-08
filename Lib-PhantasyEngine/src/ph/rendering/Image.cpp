@@ -159,8 +159,7 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 	}
 
 	// Concatenate path
-	str320 path;
-	path.printf("%s%s", basePath, fileName);
+	str320 path("%s%s", basePath, fileName);
 
 	// Loading image
 	int width, height, numChannels;

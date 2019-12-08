@@ -738,7 +738,7 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 		// Lambda for converting texture index to combo string label
 		auto textureToComboStr = [&](StringID strId) {
 			str128 texStr;
-			if (strId == StringID::invalid()) texStr.printf("NO TEXTURE");
+			if (strId == StringID::invalid()) texStr.appendf("NO TEXTURE");
 			else texStr= str128("%s", resStrings.getString(strId));
 			return texStr;
 		};

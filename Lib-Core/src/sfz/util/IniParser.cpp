@@ -133,7 +133,8 @@ bool IniParser::load() noexcept
 			}
 			Item comment;
 			comment.type = ItemType::COMMENT_OWN_ROW;
-			comment.str.insertChars(startPtr + 1, sfzMin(uint32_t(191), line.length - 1));
+			comment.str.clear();
+			comment.str.appendChars(startPtr + 1, sfzMin(uint32_t(191), line.length - 1));
 			newSections.last().items.add(comment);
 			continue;
 		}
@@ -164,7 +165,8 @@ bool IniParser::load() noexcept
 
 			// Insert section
 			Section tmpSection;
-			tmpSection.name.insertChars(startPtr + 1, nameLength);
+			tmpSection.name.clear();
+			tmpSection.name.appendChars(startPtr + 1, nameLength);
 			newSections.add(tmpSection);
 
 			// Find start of optional comment
@@ -195,7 +197,8 @@ bool IniParser::load() noexcept
 
 				Item item;
 				item.type = ItemType::COMMENT_APPEND_PREVIOUS_ROW;
-				item.str.insertChars(startPtr + index, commentLength);
+				item.str.clear();
+				item.str.appendChars(startPtr + index, commentLength);
 				newSections.last().items.add(item);
 			}
 		}
@@ -237,7 +240,8 @@ bool IniParser::load() noexcept
 
 			// Insert name into item
 			Item item;
-			item.str.insertChars(startPtr, nameLength);
+			item.str.clear();
+			item.str.appendChars(startPtr, nameLength);
 
 			// Find first char of value
 			uint32_t valueIndex = uint32_t(~0);
@@ -305,7 +309,8 @@ bool IniParser::load() noexcept
 
 				Item commentItem;
 				commentItem.type = ItemType::COMMENT_APPEND_PREVIOUS_ROW;
-				commentItem.str.insertChars(startPtr + index, commentLength);
+				commentItem.str.clear();
+				commentItem.str.appendChars(startPtr + index, commentLength);
 				newSections.last().items.add(commentItem);
 			}
 		}
@@ -692,7 +697,7 @@ IniParser::Item* IniParser::findItemEnsureExists(const char* section, const char
 	// Create item if it does not exist
 	if (itemPtr == nullptr) {
 		Item tmp;
-		tmp.str.printf(key);
+		tmp.str.appendf(key);
 		sectPtr->items.add(tmp);
 		itemPtr = &sectPtr->items.last();
 	}

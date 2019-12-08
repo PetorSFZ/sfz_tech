@@ -55,8 +55,7 @@ void GlobalConfig::init(const char* basePath, const char* fileName, Allocator* a
 	mImpl->allocator = allocator;
 
 	// Initialize IniParser with path
-	str256 tmpPath;
-	tmpPath.printf("%s%s", basePath, fileName);
+	str256 tmpPath("%s%s", basePath, fileName);
 	mImpl->ini = IniParser(tmpPath);
 
 	// Initialize settings array with allocator
@@ -100,7 +99,8 @@ void GlobalConfig::load() noexcept
 		if (section == nullptr) {
 			mImpl->sections.add(Section());
 			section = &mImpl->sections.last();
-			section->sectionKey.printf("%s", item.getSection());
+			section->sectionKey.clear();
+			section->sectionKey.appendf("%s", item.getSection());
 			section->settings.init(64, mImpl->allocator, sfz_dbg(""));
 		}
 
@@ -206,7 +206,8 @@ Setting* GlobalConfig::createSetting(const char* section, const char* key, bool*
 	if (sectionPtr == nullptr) {
 		mImpl->sections.add(Section());
 		sectionPtr = &mImpl->sections.last();
-		sectionPtr->sectionKey.printf("%s", section);
+		sectionPtr->sectionKey.clear();
+		sectionPtr->sectionKey.appendf("%s", section);
 		sectionPtr->settings.init(64, mImpl->allocator, sfz_dbg(""));
 	}
 

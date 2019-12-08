@@ -47,22 +47,22 @@ str96 toString(const vec4& vector, uint32_t numDecimals) noexcept
 void toString(const vec2& vector, str96& string, uint32_t numDecimals) noexcept
 {
 	str32 formatStr;
-	formatStr.printf("[%%.%uf, %%.%uf]", numDecimals, numDecimals);
-	string.printf(formatStr.str(), vector.x, vector.y);
+	formatStr.appendf("[%%.%uf, %%.%uf]", numDecimals, numDecimals);
+	string.appendf(formatStr.str(), vector.x, vector.y);
 }
 
 void toString(const vec3& vector, str96& string, uint32_t numDecimals) noexcept
 {
 	str32 formatStr;
-	formatStr.printf("[%%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals);
-	string.printf(formatStr.str(), vector.x, vector.y, vector.z);
+	formatStr.appendf("[%%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals);
+	string.appendf(formatStr.str(), vector.x, vector.y, vector.z);
 }
 
 void toString(const vec4& vector, str96& string, uint32_t numDecimals) noexcept
 {
 	str32 formatStr;
-	formatStr.printf("[%%.%uf, %%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals, numDecimals);
-	string.printf(formatStr.str(), vector.x, vector.y, vector.z, vector.w);
+	formatStr.appendf("[%%.%uf, %%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals, numDecimals);
+	string.appendf(formatStr.str(), vector.x, vector.y, vector.z, vector.w);
 }
 
 str96 toString(const vec2_i32& vector) noexcept
@@ -88,17 +88,17 @@ str96 toString(const vec4_i32& vector) noexcept
 
 void toString(const vec2_i32& vector, str96& string) noexcept
 {
-	string.printf("[%i, %i]", vector.x, vector.y);
+	string.appendf("[%i, %i]", vector.x, vector.y);
 }
 
 void toString(const vec3_i32& vector, str96& string) noexcept
 {
-	string.printf("[%i, %i, %i]", vector.x, vector.y, vector.z);
+	string.appendf("[%i, %i, %i]", vector.x, vector.y, vector.z);
 }
 
 void toString(const vec4_i32& vector, str96& string) noexcept
 {
-	string.printf("[%i, %i, %i, %i]", vector.x, vector.y, vector.z, vector.w);
+	string.appendf("[%i, %i, %i, %i]", vector.x, vector.y, vector.z, vector.w);
 }
 
 str96 toString(const vec2_u32& vector) noexcept
@@ -124,17 +124,17 @@ str96 toString(const vec4_u32& vector) noexcept
 
 void toString(const vec2_u32& vector, str96& string) noexcept
 {
-	string.printf("[%u, %u]", vector.x, vector.y);
+	string.appendf("[%u, %u]", vector.x, vector.y);
 }
 
 void toString(const vec3_u32& vector, str96& string) noexcept
 {
-	string.printf("[%u, %u, %u]", vector.x, vector.y, vector.z);
+	string.appendf("[%u, %u, %u]", vector.x, vector.y, vector.z);
 }
 
 void toString(const vec4_u32& vector, str96& string) noexcept
 {
-	string.printf("[%u, %u, %u, %u]", vector.x, vector.y, vector.z, vector.w);
+	string.appendf("[%u, %u, %u, %u]", vector.x, vector.y, vector.z, vector.w);
 }
 
 // Matrix toString()
@@ -165,20 +165,21 @@ template<uint32_t H, uint32_t W>
 void toStringImpl(const Matrix<float,H,W>& matrix, str256& string, bool rowBreak, uint32_t numDecimals) noexcept
 {
 	string.clear();
-	string.printfAppend("[");
+	string.appendf("[");
 	str96 tmp;
 	for (uint32_t y = 0; y < H; y++) {
+		tmp.clear();
 		toString(matrix.rows[y], tmp, numDecimals);
-		string.printfAppend("%s", tmp.str());
+		string.appendf("%s", tmp.str());
 		if (y < (H-1)) {
 			if (rowBreak) {
-				string.printfAppend(",\n ");
+				string.appendf(",\n ");
 			} else {
-				string.printfAppend(", ");
+				string.appendf(", ");
 			}
 		}
 	}
-	string.printfAppend("]");
+	string.appendf("]");
 }
 
 void toString(const mat22& matrix, str256& string, bool rowBreak, uint32_t numDecimals) noexcept

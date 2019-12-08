@@ -85,11 +85,13 @@ void TerminalLogger::log(
 	TerminalMessageItem& item = mMessages.last();
 
 	// Fill item with message
-	item.file.printf("%s", strippedFile);
+	item.file.clear();
+	item.file.appendf("%s", strippedFile);
 	item.lineNumber = line;
 	item.timestamp = std::time(nullptr);
 	item.level = level;
-	item.tag.printf("%s", tag);
+	item.tag.clear();
+	item.tag.appendf("%s", tag);
 
 	va_list args;
 	va_start(args, format);

@@ -402,7 +402,7 @@ UTEST(HashMap, hashmap_with_strings)
 		const uint32_t NUM_TESTS = 100;
 		for (uint32_t i = 0; i < NUM_TESTS; i++) {
 			sfz::str96 tmp;
-			tmp.printf("str%u", i);
+			tmp.appendf("str%u", i);
 			m.put(tmp, i);
 		}
 
@@ -411,7 +411,7 @@ UTEST(HashMap, hashmap_with_strings)
 
 		for (uint32_t i = 0; i < NUM_TESTS; i++) {
 			sfz::str96 tmp;
-			tmp.printf("str%u", i);
+			tmp.appendf("str%u", i);
 			uint32_t* ptr = m.get(tmp);
 			ASSERT_TRUE(ptr != nullptr);
 			ASSERT_TRUE(*ptr == i);

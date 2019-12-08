@@ -30,7 +30,7 @@
 UTEST(StringLocal, printf_constructor)
 {
 	sfz::str96 str1;
-	str1.printf("%s: %i", "Test", 1);
+	str1.appendf("%s: %i", "Test", 1);
 
 	sfz::str96 str2("%s: %i", "Test", 1);
 	ASSERT_TRUE(str1 == str2);
@@ -48,25 +48,28 @@ UTEST(StringLocal, implicit_conversion_operators)
 	ASSERT_TRUE(str == contents);
 }
 
-UTEST(StringLocal, printf_and_printfappend)
+UTEST(StringLocal, appendf)
 {
 	sfz::str96 str;
-	str.printf("%s: %i", "Test", 1);
+	str.appendf("%s: %i", "Test", 1);
 	ASSERT_TRUE(strcmp(str.str(), "Test: 1") == 0);
 
-	str.printfAppend(" && %s: %i", "Test", 2);
+	str.appendf(" && %s: %i", "Test", 2);
 	ASSERT_TRUE(strcmp(str.str(), "Test: 1 && Test: 2") == 0);
 
 }
 
-UTEST(StringLocal, Insert_chars)
+UTEST(StringLocal, append_chars)
 {
 	sfz::str32 str;
 	const char* aStr = "1234567890123456789012345678901234567890";
-	str.insertChars(aStr, 31);
+	str.appendChars(aStr, 31);
 	ASSERT_TRUE(str == "1234567890123456789012345678901");
-	str.insertChars(aStr, 4);
+	str.clear();
+	str.appendChars(aStr, 4);
 	ASSERT_TRUE(str == "1234");
+	str.appendChars(aStr, 2);
+	ASSERT_TRUE(str == "123412");
 }
 
 UTEST(StringLocal, comparison_operators)

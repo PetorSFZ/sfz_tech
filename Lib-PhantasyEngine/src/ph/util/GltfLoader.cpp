@@ -70,7 +70,10 @@ static str320 calculateBasePath(const char* path) noexcept
 	}
 
 	// If no path separator is found, assume we have no base path
-	if (!success) str.printf("");
+	if (!success) {
+		str.clear();
+		str.appendf("");
+	}
 
 	return str;
 }

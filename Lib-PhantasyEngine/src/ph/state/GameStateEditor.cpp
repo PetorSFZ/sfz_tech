@@ -320,7 +320,8 @@ static void initializeComponentMaskEditor(str32 buffers[8], ComponentMask initia
 	for (uint64_t i = 0; i < 8; i++) {
 		uint8_t byte = uint8_t((initialMask.rawMask >> (i * 8)) & uint64_t(0xFF));
 		const char* byteBinaryStr = byteToBinaryString(byte);
-		buffers[i].printf("%s", byteBinaryStr);
+		buffers[i].clear();
+		buffers[i].appendf("%s", byteBinaryStr);
 	}
 }
 
@@ -505,7 +506,8 @@ void GameStateEditor::init(
 	}
 
 	// Initialize some state
-	mWindowName.printf("%s", windowName);
+	mWindowName.clear();
+	mWindowName.appendf("%s", windowName);
 	initializeComponentMaskEditor(mFilterMaskEditBuffers, mFilterMask);
 
 	// Temp variable to ensure all necesary singleton infos are set
@@ -521,7 +523,8 @@ void GameStateEditor::init(
 		sfz_assert(!set);
 
 		set = true;
-		target.singletonName.printf("%02u - %s", info.singletonIndex, info.singletonName.str());
+		target.singletonName.clear();
+		target.singletonName.appendf("%02u - %s", info.singletonIndex, info.singletonName.str());
 		target.singletonEditor = info.singletonEditor;
 		target.userPtr = std::move(info.userPtr); // Steal it!
 	}
@@ -538,7 +541,8 @@ void GameStateEditor::init(
 
 	// Set active bit component info
 	componentInfoSet[0] = true;
-	mComponentInfos[0].componentName.printf("00 - Active bit");
+	mComponentInfos[0].componentName.clear();
+	mComponentInfos[0].componentName.appendf("00 - Active bit");
 
 	// Set rest of component infos
 	for (uint32_t i = 0; i < numComponentInfos; i++) {
@@ -551,7 +555,8 @@ void GameStateEditor::init(
 		sfz_assert(!set);
 
 		set = true;
-		target.componentName.printf("%02u - %s", info.componentType, info.componentName.str());
+		target.componentName.clear();
+		target.componentName.appendf("%02u - %s", info.componentType, info.componentName.str());
 		target.componentEditor = info.componentEditor;
 		target.userPtr = std::move(info.userPtr); // Steal it!
 	}
@@ -584,7 +589,7 @@ void GameStateEditor::swap(GameStateEditor& other) noexcept
 
 void GameStateEditor::destroy() noexcept
 {
-	mWindowName.printf("");
+	mWindowName.clear();
 	for (uint32_t i = 0; i < 64; i++) {
 		this->mSingletonInfos[i] = ReducedSingletonInfo();
 		this->mComponentInfos[i] = ReducedComponentInfo();
@@ -593,7 +598,8 @@ void GameStateEditor::destroy() noexcept
 	mNumComponentInfos = 0;
 	mFilterMask = ComponentMask::activeMask();
 	for (uint32_t i = 0; i < 8; i++) {
-		mFilterMaskEditBuffers[i].printf("");
+		mFilterMaskEditBuffers[i].clear();
+		mFilterMaskEditBuffers[i].appendf("");
 	}
 	mCompactEntityList = false;
 	mCurrentSelectedEntityId = 0;

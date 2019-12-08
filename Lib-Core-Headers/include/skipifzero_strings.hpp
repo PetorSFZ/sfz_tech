@@ -51,11 +51,11 @@ struct StringLocal final {
 	// only what fits will be stored. The resulting string is guaranteed to be null-terminated.
 	explicit StringLocal(const char* format, ...) noexcept
 	{
+		this->clear();
 		va_list args;
 		va_start(args, format);
-		vsnprintf(this->mRawStr, N, format, args);
+		this->vappendf(format, args);
 		va_end(args);
-		mRawStr[N - 1] = '\0';
 	}
 
 	// Public methods
@@ -67,32 +67,29 @@ struct StringLocal final {
 
 	void clear() { mRawStr[0] = '\0'; }
 
-	// Calls snprintf() on the internal string, overwriting the content.
-	void printf(const char* format, ...)
+	void appendf(const char* format, ...)
 	{
 		va_list args;
 		va_start(args, format);
-		vsnprintf(this->mRawStr, N, format, args);
+		this->vappendf(format, args);
 		va_end(args);
 	}
 
-	// Calls snprintf() on the remaining part of the internal string, effectively appending to it.
-	void printfAppend(const char* format, ...)
+	void vappendf(const char* format, va_list args)
 	{
-		va_list args;
-		va_start(args, format);
-		size_t len = strlen(this->mRawStr);
-		vsnprintf(this->mRawStr + len, N - len, format, args);
-		va_end(args);
+		uint32_t len = this->size();
+		uint32_t capacityLeft = this->capacity() - len;
+		int numWritten = vsnprintf(this->mRawStr + len, capacityLeft, format, args);
+		sfz_assert(numWritten >= 0);
 	}
 
-	// Inserts numChars characters into string. Will append null-terminator. Becomes a call to
-	// strncpy() internally.
-	void insertChars(const char* first, uint32_t numChars)
+	void appendChars(const char* chars, uint32_t numChars)
 	{
-		sfz_assert(numChars < N);
-		strncpy(this->mRawStr, first, size_t(numChars));
-		this->mRawStr[numChars] = '\0';
+		uint32_t len = this->size();
+		uint32_t capacityLeft = this->capacity() - len;
+		sfz_assert(numChars < capacityLeft);
+		strncpy(this->mRawStr + len, chars, size_t(numChars));
+		this->mRawStr[len + numChars] = '\0';
 	}
 
 	// Operators

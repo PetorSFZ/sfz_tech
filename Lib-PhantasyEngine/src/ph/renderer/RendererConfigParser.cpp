@@ -133,7 +133,8 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	if (!root.accessMap("render_pipelines").isValid()) return false;
 
 	// Store path to configuration
-	configurable.configPath.printf("%s", configPath);
+	configurable.configPath.clear();
+	configurable.configPath.appendf("%s", configPath);
 
 	// Parse framebuffers if section exist
 	if (root.accessMap("framebuffers").isValid()) {
@@ -241,9 +242,11 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		item.vertexShaderPath = CHECK_JSON pipelineNode.accessMap("vertex_shader_path").valueStr256();
 		item.pixelShaderPath = CHECK_JSON pipelineNode.accessMap("pixel_shader_path").valueStr256();
 
-		item.vertexShaderEntry.printf("%s",
+		item.vertexShaderEntry.clear();
+		item.vertexShaderEntry.appendf("%s",
 			(CHECK_JSON pipelineNode.accessMap("vertex_shader_entry").valueStr256()).str());
-		item.pixelShaderEntry.printf("%s",
+		item.pixelShaderEntry.clear();
+		item.pixelShaderEntry.appendf("%s",
 			(CHECK_JSON pipelineNode.accessMap("pixel_shader_entry").valueStr256()).str());
 
 		item.standardVertexAttributes =
