@@ -52,18 +52,6 @@ TEST_CASE("equalsApprox()", "[sfz::MathSupport]")
 	}
 }
 
-TEST_CASE("abs()", "[sfz::MathSupport]")
-{
-	SECTION("Integer variant") {
-		vec4_i32 v = vec4_i32(-1, 4, -4, -9);
-		REQUIRE(sfz::abs(v) == vec4_i32(1, 4, 4, 9));
-	}
-	SECTION("Float variant") {
-		vec4 v = vec4(-2.0f, 1.0f, -59.0f, -2.0f);
-		REQUIRE(sfz::abs(v) == vec4(2.0f, 1.0f, 59.0f, 2.0f));
-	}
-}
-
 TEST_CASE("sgn()", "[sfz::MathSupport]")
 {
 	SECTION("Integer scalar") {

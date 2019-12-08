@@ -114,7 +114,7 @@ if(NOT hasParent)
 		${TESTS_DIR}/skipifzero_arrays_tests.cpp
 		${TESTS_DIR}/skipifzero_hash_maps_tests.cpp
 		${TESTS_DIR}/skipifzero_strings_tests.cpp
-		${TESTS_DIR}/skipifzero_vector_tests.cpp
+		${TESTS_DIR}/skipifzero_tests.cpp
 	)
 	source_group(TREE ${TESTS_DIR} FILES ${TEST_FILES})
 

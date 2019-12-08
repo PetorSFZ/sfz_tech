@@ -354,13 +354,22 @@ inline vec2 normalizeSafe(vec2 v) { float tmp = length(v); return tmp == 0.0f ? 
 inline vec3 normalizeSafe(vec3 v) { float tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
 inline vec4 normalizeSafe(vec4 v) { float tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
 
-// Floating point helpers
+// Math functions
 // ------------------------------------------------------------------------------------------------
 
-// Common constants
 constexpr float PI = 3.14159265358979323846f;
 constexpr float DEG_TO_RAD = PI / 180.0f;
 constexpr float RAD_TO_DEG = 180.0f / PI;
+
+constexpr float abs(float v) { return v >= 0.0f ? v : -v; }
+constexpr vec2 abs(vec2 v) { return vec2(sfz::abs(v.x), sfz::abs(v.y)); }
+constexpr vec3 abs(vec3 v) { return vec3(sfz::abs(v.x), sfz::abs(v.y), sfz::abs(v.z)); }
+constexpr vec4 abs(vec4 v) { return vec4(sfz::abs(v.x), sfz::abs(v.y), sfz::abs(v.z), sfz::abs(v.w)); }
+
+constexpr int32_t abs(int32_t v) { return v >= 0 ? v : -v; }
+constexpr vec2_i32 abs(vec2_i32 v) { return vec2_i32(sfz::abs(v.x), sfz::abs(v.y)); }
+constexpr vec3_i32 abs(vec3_i32 v) { return vec3_i32(sfz::abs(v.x), sfz::abs(v.y), sfz::abs(v.z)); }
+constexpr vec4_i32 abs(vec4_i32 v) { return vec4_i32(sfz::abs(v.x), sfz::abs(v.y), sfz::abs(v.z), sfz::abs(v.w)); }
 
 constexpr float EQUALS_APPROX_EPS = 0.001f;
 

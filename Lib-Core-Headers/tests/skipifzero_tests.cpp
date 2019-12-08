@@ -26,6 +26,9 @@
 
 #include <type_traits>
 
+// Vector tests
+// ------------------------------------------------------------------------------------------------
+
 UTEST(Vec, vec2_specialization)
 {
 	// Data
@@ -536,29 +539,6 @@ UTEST(Vec, cross_product)
 		ASSERT_TRUE(res2[2] == 0);
 	}
 }
-
-UTEST(Vec, sfzMin)
-{
-	ASSERT_TRUE(sfzMin(sfz::vec4(1.0f, 2.0f, -3.0f, -4.0f), sfz::vec4(2.0f, 1.0f, -5.0f, -2.0f)) == sfz::vec4(1.0f, 1.0f, -5.0f, -4.0f));
-	ASSERT_TRUE(sfzMin(sfz::vec4_i32(1, 2, -3, -4), sfz::vec4_i32(2, 1, -5, -2)) == sfz::vec4_i32(1, 1, -5, -4));
-	ASSERT_TRUE(sfzMin(sfz::vec4_u32(1u, 2u, 3u, 4u), sfz::vec4_u32(2u, 1u, 5u, 2u)) == sfz::vec4_u32(1u, 1u, 3u, 2u));
-
-	ASSERT_TRUE(sfzMin(sfz::vec4(1.0f, 2.0f, -3.0f, -4.0f), -1.0f) == sfz::vec4(-1.0f, -1.0f, -3.0f, -4.0f));
-	ASSERT_TRUE(sfzMin(sfz::vec4_i32(1, 2, -3, -4), -1) == sfz::vec4_i32(-1, -1, -3, -4));
-	ASSERT_TRUE(sfzMin(sfz::vec4_u32(1u, 2u, 3u, 4u), 2u) == sfz::vec4_u32(1u, 2u, 2u, 2u));
-}
-
-UTEST(Vec, sfzMax)
-{
-	ASSERT_TRUE(sfzMax(sfz::vec4(1.0f, 2.0f, -3.0f, -4.0f), sfz::vec4(2.0f, 1.0f, -5.0f, -2.0f)) == sfz::vec4(2.0f, 2.0f, -3.0f, -2.0f));
-	ASSERT_TRUE(sfzMax(sfz::vec4_i32(1, 2, -3, -4), sfz::vec4_i32(2, 1, -5, -2)) == sfz::vec4_i32(2, 2, -3, -2));
-	ASSERT_TRUE(sfzMax(sfz::vec4_u32(1u, 2u, 3u, 4u), sfz::vec4_u32(2u, 1u, 5u, 2u)) == sfz::vec4_u32(2u, 2u, 5u, 4u));
-
-	ASSERT_TRUE(sfzMax(sfz::vec4(1.0f, 2.0f, -3.0f, -4.0f), 1.0f) == sfz::vec4(1.0f, 2.0f, 1.0f, 1.0f));
-	ASSERT_TRUE(sfzMax(sfz::vec4_i32(1, 2, -3, -4), 1) == sfz::vec4_i32(1, 2, 1, 1));
-	ASSERT_TRUE(sfzMax(sfz::vec4_u32(1u, 2u, 3u, 4u), 2u) == sfz::vec4_u32(2u, 2u, 3u, 4u));
-}
-
 UTEST(Vec, is_proper_pod)
 {
 	ASSERT_TRUE(std::is_trivially_default_constructible<sfz::vec2>::value);
@@ -586,3 +566,47 @@ UTEST(Vec, is_proper_pod)
 	ASSERT_TRUE(std::is_pod<sfz::vec3>::value);
 	ASSERT_TRUE(std::is_pod<sfz::vec3_i32>::value);
 }
+
+// Math functions
+// ------------------------------------------------------------------------------------------------
+
+UTEST(Math, abs)
+{
+	ASSERT_TRUE(sfz::abs(-2.0f) == 2.0f);
+	ASSERT_TRUE(sfz::abs(3.0f) == 3.0f);
+	ASSERT_TRUE(sfz::abs(sfz::vec2(-1.0f, 2.0f)) == sfz::vec2(1.0, 2.0));
+	ASSERT_TRUE(sfz::abs(sfz::vec3(2.0f, -4.0f, -6.0f)) == sfz::vec3(2.0f, 4.0f, 6.0f));
+	ASSERT_TRUE(sfz::abs(sfz::vec4(-4.0f, 2.0f, -4.0f, -1.0f)) == sfz::vec4(4.0f, 2.0f, 4.0f, 1.0f));
+
+	ASSERT_TRUE(sfz::abs(-2) == 2);
+	ASSERT_TRUE(sfz::abs(3) == 3);
+	ASSERT_TRUE(sfz::abs(sfz::vec2_i32(-1, 2)) == sfz::vec2_i32(1, 2));
+	ASSERT_TRUE(sfz::abs(sfz::vec3_i32(2, -4, -6)) == sfz::vec3_i32(2, 4, 6));
+	ASSERT_TRUE(sfz::abs(sfz::vec4_i32(-4, 2, -4, -1)) == sfz::vec4_i32(4, 2, 4, 1));
+}
+
+// sfzMax/sfzMin
+// ------------------------------------------------------------------------------------------------
+
+UTEST(Vec, sfzMin)
+{
+	ASSERT_TRUE(sfzMin(sfz::vec4(1.0f, 2.0f, -3.0f, -4.0f), sfz::vec4(2.0f, 1.0f, -5.0f, -2.0f)) == sfz::vec4(1.0f, 1.0f, -5.0f, -4.0f));
+	ASSERT_TRUE(sfzMin(sfz::vec4_i32(1, 2, -3, -4), sfz::vec4_i32(2, 1, -5, -2)) == sfz::vec4_i32(1, 1, -5, -4));
+	ASSERT_TRUE(sfzMin(sfz::vec4_u32(1u, 2u, 3u, 4u), sfz::vec4_u32(2u, 1u, 5u, 2u)) == sfz::vec4_u32(1u, 1u, 3u, 2u));
+
+	ASSERT_TRUE(sfzMin(sfz::vec4(1.0f, 2.0f, -3.0f, -4.0f), -1.0f) == sfz::vec4(-1.0f, -1.0f, -3.0f, -4.0f));
+	ASSERT_TRUE(sfzMin(sfz::vec4_i32(1, 2, -3, -4), -1) == sfz::vec4_i32(-1, -1, -3, -4));
+	ASSERT_TRUE(sfzMin(sfz::vec4_u32(1u, 2u, 3u, 4u), 2u) == sfz::vec4_u32(1u, 2u, 2u, 2u));
+}
+
+UTEST(Vec, sfzMax)
+{
+	ASSERT_TRUE(sfzMax(sfz::vec4(1.0f, 2.0f, -3.0f, -4.0f), sfz::vec4(2.0f, 1.0f, -5.0f, -2.0f)) == sfz::vec4(2.0f, 2.0f, -3.0f, -2.0f));
+	ASSERT_TRUE(sfzMax(sfz::vec4_i32(1, 2, -3, -4), sfz::vec4_i32(2, 1, -5, -2)) == sfz::vec4_i32(2, 2, -3, -2));
+	ASSERT_TRUE(sfzMax(sfz::vec4_u32(1u, 2u, 3u, 4u), sfz::vec4_u32(2u, 1u, 5u, 2u)) == sfz::vec4_u32(2u, 2u, 5u, 4u));
+
+	ASSERT_TRUE(sfzMax(sfz::vec4(1.0f, 2.0f, -3.0f, -4.0f), 1.0f) == sfz::vec4(1.0f, 2.0f, 1.0f, 1.0f));
+	ASSERT_TRUE(sfzMax(sfz::vec4_i32(1, 2, -3, -4), 1) == sfz::vec4_i32(1, 2, 1, 1));
+	ASSERT_TRUE(sfzMax(sfz::vec4_u32(1u, 2u, 3u, 4u), 2u) == sfz::vec4_u32(2u, 2u, 3u, 4u));
+}
+

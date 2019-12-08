@@ -33,23 +33,6 @@
 
 namespace sfz {
 
-// abs()
-// ------------------------------------------------------------------------------------------------
-
-// Returns the absolute value of the argument. The vector versions returns the absolute value of
-// each element in the vector.
-
-SFZ_CUDA_CALL float abs(float val) noexcept;
-SFZ_CUDA_CALL int32_t abs(int32_t val) noexcept;
-
-SFZ_CUDA_CALL vec2 abs(vec2 val) noexcept;
-SFZ_CUDA_CALL vec3 abs(vec3 val) noexcept;
-SFZ_CUDA_CALL vec4 abs(vec4 val) noexcept;
-
-SFZ_CUDA_CALL vec2_i32 abs(vec2_i32 val) noexcept;
-SFZ_CUDA_CALL vec3_i32 abs(vec3_i32 val) noexcept;
-SFZ_CUDA_CALL vec4_i32 abs(vec4_i32 val) noexcept;
-
 // sgn()
 // ------------------------------------------------------------------------------------------------
 
