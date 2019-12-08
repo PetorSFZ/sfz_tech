@@ -35,8 +35,8 @@ namespace sdl {
 
 using std::int32_t;
 
-using sfz::ArrayDynamic;
-using sfz::HashMapDynamic;
+using sfz::Array;
+using sfz::HashMap;
 using sfz::vec2;
 
 /// Struct used for representing the state of a GameController at a given point in time.
@@ -107,7 +107,7 @@ private:
 // Update functions to update GameController struct
 // ------------------------------------------------------------------------------------------------
 
-void update(HashMapDynamic<int32_t, GameController>& controllers, const ArrayDynamic<SDL_Event>& events) noexcept;
+void update(HashMap<int32_t, GameController>& controllers, const Array<SDL_Event>& events) noexcept;
 
 } // namespace sdl
 } // namespace ph

@@ -39,8 +39,8 @@ struct GpuMesh final {
 	zg::Buffer indexBuffer;
 	zg::Buffer materialsBuffer;
 	uint32_t numMaterials = 0;
-	ArrayDynamic<MeshComponent> components;
-	ArrayDynamic<Material> cpuMaterials;
+	Array<MeshComponent> components;
+	Array<Material> cpuMaterials;
 };
 
 // GpuMesh functions

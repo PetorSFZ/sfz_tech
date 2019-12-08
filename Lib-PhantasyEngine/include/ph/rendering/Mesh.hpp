@@ -26,7 +26,7 @@
 
 namespace ph {
 
-using sfz::ArrayDynamic;
+using sfz::Array;
 using sfz::StringID;
 using sfz::vec2;
 using sfz::vec3;
@@ -82,10 +82,10 @@ struct MeshComponent final {
 // ------------------------------------------------------------------------------------------------
 
 struct Mesh final {
-	ArrayDynamic<Vertex> vertices;
-	ArrayDynamic<uint32_t> indices;
-	ArrayDynamic<Material> materials;
-	ArrayDynamic<MeshComponent> components;
+	Array<Vertex> vertices;
+	Array<uint32_t> indices;
+	Array<Material> materials;
+	Array<MeshComponent> components;
 };
 
 } // namespace ph

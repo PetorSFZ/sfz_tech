@@ -30,7 +30,7 @@ were made.
 bool writeAssetsToGltf(
 	const char* writePath,
 	const LevelAssets& assets,
-	const ArrayDynamic<uint32_t>& meshIndices) noexcept;
+	const Array<uint32_t>& meshIndices) noexcept;
 
 */
 

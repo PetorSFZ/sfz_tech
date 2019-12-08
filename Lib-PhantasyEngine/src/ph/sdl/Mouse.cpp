@@ -47,7 +47,7 @@ static ButtonState* buttonStatePtr(Mouse& mouse, uint8_t button) noexcept
 // Mouse: Public methods
 // ------------------------------------------------------------------------------------------------
 
-void Mouse::update(int windowWidth, int windowHeight, const ArrayDynamic<SDL_Event>& events) noexcept
+void Mouse::update(int windowWidth, int windowHeight, const Array<SDL_Event>& events) noexcept
 {
 	// Pre-processing
 	// Changes previous DOWN state to HELD state.

@@ -38,8 +38,8 @@ struct SDL_Window;
 
 namespace ph {
 
-using sfz::ArrayDynamic;
-using sfz::HashMapDynamic;
+using sfz::Array;
+using sfz::HashMap;
 using sfz::str128;
 using sfz::str256;
 using sfz::str320;
@@ -173,9 +173,9 @@ struct Stage final {
 	StringID stageName = StringID::invalid();
 	StageType stageType;
 	StringID renderPipelineName = StringID::invalid();
-	ArrayDynamic<Framed<ConstantBufferMemory>> constantBuffers;
+	Array<Framed<ConstantBufferMemory>> constantBuffers;
 	StringID framebufferName = StringID::invalid();
-	ArrayDynamic<BoundRenderTarget> boundRenderTargets;
+	Array<BoundRenderTarget> boundRenderTargets;
 };
 
 // Texture plus info
@@ -198,13 +198,13 @@ struct RendererConfigurableState final {
 	str320 configPath;
 
 	// Framebuffers
-	ArrayDynamic<FramebufferItem> framebuffers;
+	Array<FramebufferItem> framebuffers;
 
 	// Pipelines
-	ArrayDynamic<PipelineRenderItem> renderPipelines;
+	Array<PipelineRenderItem> renderPipelines;
 
 	// Present Queue Stages
-	ArrayDynamic<Stage> presentQueueStages;
+	Array<Stage> presentQueueStages;
 
 	// Helper method to get a framebuffer given a StringID, returns nullptr on failure
 	zg::Framebuffer* getFramebuffer(zg::Framebuffer& defaultFramebuffer, StringID id) noexcept;
@@ -235,8 +235,8 @@ struct RendererState final {
 	DynamicGpuAllocator gpuAllocatorFramebuffer;
 
 	// GPU resources
-	HashMapDynamic<StringID, TextureItem> textures;
-	HashMapDynamic<StringID, GpuMesh> meshes;
+	HashMap<StringID, TextureItem> textures;
+	HashMap<StringID, GpuMesh> meshes;
 
 	// UI
 	RendererUI ui;

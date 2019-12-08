@@ -31,7 +31,7 @@
 
 namespace ph {
 
-using sfz::ArrayDynamic;
+using sfz::Array;
 using sfz::vec2;
 using sfz::vec2_i32;
 using sfz::vec4;
@@ -50,7 +50,7 @@ static_assert(sizeof(ImGuiVertex) == 32, "ImGuiVertex is padded");
 // ------------------------------------------------------------------------------------------------
 
 struct ImGuiFrameState final {
-	ArrayDynamic<ImGuiVertex> convertedVertices;
+	Array<ImGuiVertex> convertedVertices;
 	zg::Buffer uploadVertexBuffer;
 	zg::Buffer uploadIndexBuffer;
 };

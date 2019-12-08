@@ -36,8 +36,8 @@
 namespace ph {
 
 using std::int32_t;
-using sfz::ArrayDynamic;
-using sfz::HashMapDynamic;
+using sfz::Array;
+using sfz::HashMap;
 using sfz::UniquePtr;
 using sdl::GameController;
 using sdl::GameControllerState;
@@ -104,13 +104,13 @@ struct UpdateOp final {
 
 struct UserInput final {
 	// SDL events, the events array does not contain controller or mouse events
-	ArrayDynamic<SDL_Event> events;
-	ArrayDynamic<SDL_Event> controllerEvents;
-	ArrayDynamic<SDL_Event> mouseEvents;
+	Array<SDL_Event> events;
+	Array<SDL_Event> controllerEvents;
+	Array<SDL_Event> mouseEvents;
 
 	// Processed controller and mouse input
-	HashMapDynamic<int32_t, GameController> controllers;
-	HashMapDynamic<int32_t, GameControllerState> controllersLastFrameState;
+	HashMap<int32_t, GameController> controllers;
+	HashMap<int32_t, GameControllerState> controllersLastFrameState;
 	Mouse rawMouse;
 };
 

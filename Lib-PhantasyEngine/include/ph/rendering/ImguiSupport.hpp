@@ -32,7 +32,7 @@
 namespace ph {
 
 using sfz::Allocator;
-using sfz::ArrayDynamic;
+using sfz::Array;
 
 // Initializes imgui, returns font image view to be sent to renderers initImgui() function.
 phImageView initializeImgui(Allocator* allocator) noexcept;
@@ -42,13 +42,13 @@ void deinitializeImgui() noexcept;
 void updateImgui(
 	Renderer& renderer,
 	const sdl::Mouse* rawMouse,
-	const ArrayDynamic<SDL_Event>* keyboardEvents,
+	const Array<SDL_Event>* keyboardEvents,
 	const sdl::GameControllerState* controller) noexcept;
 
 void convertImguiDrawData(
-	ArrayDynamic<phImguiVertex>& vertices,
-	ArrayDynamic<uint32_t>& indices,
-	ArrayDynamic<phImguiCommand>& commands) noexcept;
+	Array<phImguiVertex>& vertices,
+	Array<uint32_t>& indices,
+	Array<phImguiCommand>& commands) noexcept;
 
 // The fonts initialized with Imgui
 ImFont* imguiFontDefault() noexcept;

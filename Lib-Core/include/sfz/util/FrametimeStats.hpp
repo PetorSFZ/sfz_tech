@@ -46,7 +46,7 @@ public:
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
-	const ArrayDynamic<float>& samples() const noexcept { return mSamples; }
+	const Array<float>& samples() const noexcept { return mSamples; }
 
 	void addSample(float sampleInMs) noexcept;
 	void reset() noexcept;
@@ -64,7 +64,7 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	ArrayDynamic<float> mSamples;
+	Array<float> mSamples;
 	DynString mString;
 	float mMin, mMax, mAvg, mSD, mTotalTime;
 };

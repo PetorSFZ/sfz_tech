@@ -34,7 +34,7 @@ namespace sfz {
 
 struct StringCollectionImpl final {
 	Allocator* allocator;
-	HashMapDynamic<StringID, DynString> strings;
+	HashMap<StringID, DynString> strings;
 };
 
 // StringCollection: Constructors & destructors

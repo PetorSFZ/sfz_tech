@@ -75,7 +75,7 @@ bool IniParser::load() noexcept
 		uint32_t startIndex = uint32_t(~0);
 		uint32_t length = uint32_t(~0);
 	};
-	ArrayDynamic<LineInfo> lines(256, getDefaultAllocator(), sfz_dbg(""));
+	Array<LineInfo> lines(256, getDefaultAllocator(), sfz_dbg(""));
 	{
 		LineInfo tmp;
 		tmp.lineNumber = 1;
@@ -117,7 +117,7 @@ bool IniParser::load() noexcept
 	}
 
 	// Create temporary parse tree and add the first initial empty section
-	ArrayDynamic<Section> newSections(64, getDefaultAllocator(), sfz_dbg(""));
+	Array<Section> newSections(64, getDefaultAllocator(), sfz_dbg(""));
 	newSections.add(Section(""));
 
 	// Parse contents of ini file

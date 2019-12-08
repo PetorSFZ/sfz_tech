@@ -33,8 +33,8 @@ using std::uint32_t;
 
 /// A class for managing a dynamic string, replacement for std::string.
 ///
-/// Implemented using a (private) ArrayDynamic, many of the functions are simply wrappers around the
-/// ArrayDynamic interface. Check out ArrayDynamic for more specific documentation on these functions.
+/// Implemented using a (private) Array, many of the functions are simply wrappers around the
+/// Array interface. Check out Array for more specific documentation on these functions.
 class DynString final {
 public:
 
@@ -52,7 +52,7 @@ public:
 	/// parameter. If the string is shorter than the specified capacity or a nullptr then the
 	/// internal capacity will be set to the specified capacity.
 	/// \param string a null-terminated string or nullptr
-	/// \param capacity the capacity of the internal ArrayDynamic
+	/// \param capacity the capacity of the internal Array
 	explicit DynString(const char* string, uint32_t capacity = 0,
 	                   Allocator* allocator = getDefaultAllocator()) noexcept;
 
@@ -63,16 +63,16 @@ public:
 	char* str() noexcept { return mString.data(); }
 
 	/// Returns length of the internal string minus the null-terminator. If the size of the
-	/// internal ArrayDynamic is non-zero then this method will return ArrayDynamic.size() - 1.
+	/// internal Array is non-zero then this method will return Array.size() - 1.
 	uint32_t size() const noexcept;
 	uint32_t capacity() const noexcept { return mString.capacity(); }
 
 	Allocator* allocator() const noexcept { return mString.allocator(); }
 
-	const ArrayDynamic<char>& internalArrayDynamic() const noexcept { return mString; }
-	ArrayDynamic<char>& internalArrayDynamic() noexcept { return mString; }
+	const Array<char>& internalArray() const noexcept { return mString; }
+	Array<char>& internalArray() noexcept { return mString; }
 
-	// Public methods (ArrayDynamic)
+	// Public methods (Array)
 	// --------------------------------------------------------------------------------------------
 
 	void swap(DynString& other) noexcept { mString.swap(other.mString); }
@@ -112,7 +112,7 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	ArrayDynamic<char> mString;
+	Array<char> mString;
 };
 
 } // namespace sfz

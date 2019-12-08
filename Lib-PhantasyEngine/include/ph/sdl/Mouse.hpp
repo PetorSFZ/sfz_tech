@@ -32,7 +32,7 @@ namespace ph {
 
 namespace sdl {
 
-using sfz::ArrayDynamic;
+using sfz::Array;
 using sfz::AABB2D;
 using sfz::vec2;
 
@@ -65,7 +65,7 @@ struct Mouse final {
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
-	void update(int windowWidth, int windowHeight, const ArrayDynamic<SDL_Event>& events) noexcept;
+	void update(int windowWidth, int windowHeight, const Array<SDL_Event>& events) noexcept;
 	Mouse scaleMouse(vec2 camPos, vec2 camDim) const noexcept;
 	Mouse scaleMouse(const AABB2D& camera) const noexcept;
 };

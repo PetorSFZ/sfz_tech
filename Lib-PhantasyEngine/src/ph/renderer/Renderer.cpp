@@ -41,7 +41,7 @@
 
 namespace ph {
 
-using sfz::ArrayDynamic;
+using sfz::Array;
 using sfz::mat44;
 using sfz::vec2;
 using sfz::vec3;

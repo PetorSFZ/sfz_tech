@@ -182,7 +182,7 @@ private:
 
 	struct Section final {
 		str64 name;
-		ArrayDynamic<Item> items;
+		Array<Item> items;
 		Section() : items(0, getDefaultAllocator(), sfz_dbg("")) {}
 		Section(const char* name) : name(name), items(0, getDefaultAllocator(), sfz_dbg("")) { }
 	};
@@ -200,7 +200,7 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	DynString mPath;
-	ArrayDynamic<Section> mSections;
+	Array<Section> mSections;
 };
 
 } // namespace sfz

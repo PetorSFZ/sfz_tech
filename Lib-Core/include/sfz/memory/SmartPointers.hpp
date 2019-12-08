@@ -32,7 +32,7 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 /// Simple replacement for std::unique_ptr using sfzCore allocators
-/// Unlike std::unique_ptr there is NO support for arrays, use sfz::ArrayDynamic for that.
+/// Unlike std::unique_ptr there is NO support for arrays, use sfz::Array for that.
 template<typename T>
 class UniquePtr final {
 public:
@@ -151,7 +151,7 @@ struct SharedPtrState final {
 }
 
 /// Simple replacement for std::shared_ptr using sfzCore allocators
-/// Unlike std::shared_ptr there is NO support for arrays, use sfz::ArrayDynamic for that.
+/// Unlike std::shared_ptr there is NO support for arrays, use sfz::Array for that.
 template<typename T>
 class SharedPtr final {
 public:

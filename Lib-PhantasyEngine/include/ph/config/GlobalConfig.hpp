@@ -27,7 +27,7 @@
 namespace ph {
 
 using sfz::Allocator;
-using sfz::ArrayDynamic;
+using sfz::Array;
 
 // GlobalConfig
 // ------------------------------------------------------------------------------------------------
@@ -86,13 +86,13 @@ public:
 	Setting* getSetting(const char* key) noexcept;
 
 	/// Returns pointers to all available settings
-	void getAllSettings(ArrayDynamic<Setting*>& settings) noexcept;
+	void getAllSettings(Array<Setting*>& settings) noexcept;
 
 	/// Returns all sections available
-	void getSections(ArrayDynamic<str32>& sections) noexcept;
+	void getSections(Array<str32>& sections) noexcept;
 
 	/// Returns all settings available in a given section
-	void getSectionSettings(const char* section, ArrayDynamic<Setting*>& settings) noexcept;
+	void getSectionSettings(const char* section, Array<Setting*>& settings) noexcept;
 
 	// Sanitizers
 	// --------------------------------------------------------------------------------------------

@@ -53,7 +53,7 @@ struct HashMapAltKey final {
 	using AltKeyT = NO_ALT_KEY_TYPE;
 };
 
-// HashMapDynamic
+// HashMap
 // ------------------------------------------------------------------------------------------------
 
 // The state of a slot in a HashMap
@@ -104,7 +104,7 @@ static_assert(sizeof(HashMapSlot) == sizeof(uint32_t));
 // when strings are used as keys, then const char* can be used as an alt key type. This removes
 // the need to create a temporary key object (which might need to allocate memory).
 template<typename K, typename V>
-class HashMapDynamic {
+class HashMap {
 public:
 	// Constants and typedefs
 	// --------------------------------------------------------------------------------------------
@@ -123,14 +123,14 @@ public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	HashMapDynamic() noexcept = default;
-	HashMapDynamic(const HashMapDynamic& other) noexcept { *this = other; }
-	HashMapDynamic& operator= (const HashMapDynamic& other) noexcept { *this = other.clone(); return *this; }
-	HashMapDynamic(HashMapDynamic&& other) noexcept { this->swap(other); }
-	HashMapDynamic& operator= (HashMapDynamic&& other) noexcept { this->swap(other); return *this; }
-	~HashMapDynamic() noexcept { this->destroy(); }
+	HashMap() noexcept = default;
+	HashMap(const HashMap& other) noexcept { *this = other; }
+	HashMap& operator= (const HashMap& other) noexcept { *this = other.clone(); return *this; }
+	HashMap(HashMap&& other) noexcept { this->swap(other); }
+	HashMap& operator= (HashMap&& other) noexcept { this->swap(other); return *this; }
+	~HashMap() noexcept { this->destroy(); }
 
-	HashMapDynamic(uint32_t capacity, Allocator* allocator, DbgInfo allocDbg) noexcept
+	HashMap(uint32_t capacity, Allocator* allocator, DbgInfo allocDbg) noexcept
 	{
 		this->init(capacity, allocator, allocDbg);
 	}
@@ -145,9 +145,9 @@ public:
 		this->rehash(capacity, allocDbg);
 	}
 
-	HashMapDynamic clone(DbgInfo allocDbg = sfz_dbg("HashMapDynamic"), Allocator* allocator = nullptr) const
+	HashMap clone(DbgInfo allocDbg = sfz_dbg("HashMap"), Allocator* allocator = nullptr) const
 	{
-		HashMapDynamic tmp(mCapacity, allocator != nullptr ? allocator : mAllocator, allocDbg);
+		HashMap tmp(mCapacity, allocator != nullptr ? allocator : mAllocator, allocDbg);
 		tmp.mSize = this->mSize;
 		for (uint32_t i = 0; i < mSize; i++) {
 			tmp.mKeys[i] = this->mKeys[i];
@@ -161,7 +161,7 @@ public:
 	}
 
 	// Swaps the contents of two HashMaps, including the allocators.
-	void swap(HashMapDynamic& other)
+	void swap(HashMap& other)
 	{
 		std::swap(this->mSize, other.mSize);
 		std::swap(this->mCapacity, other.mCapacity);
@@ -224,7 +224,7 @@ public:
 		sfz_assert_hard(mAllocator != nullptr);
 
 		// Create new hash map and calculate size of its arrays
-		HashMapDynamic tmp;
+		HashMap tmp;
 		tmp.mCapacity = newCapacity;
 		uint64_t sizeOfSlots = roundUpAligned(tmp.mCapacity * sizeof(HashMapSlot), ALIGNMENT);
 		uint64_t sizeOfKeys = roundUpAligned(sizeof(K) * tmp.mCapacity, ALIGNMENT);
@@ -327,8 +327,8 @@ public:
 		uint32_t mIdx;
 	};
 
-	using Iterator = Itr<HashMapDynamic, V>;
-	using ConstIterator = Itr<const HashMapDynamic, const V>;
+	using Iterator = Itr<HashMap, V>;
+	using ConstIterator = Itr<const HashMap, const V>;
 
 	Iterator begin() { return Iterator(*this, 0); }
 	ConstIterator begin() const { return cbegin(); }
@@ -412,7 +412,7 @@ private:
 		// Rehash if necessary
 		uint32_t maxNumOccupied = uint32_t(mCapacity * MAX_OCCUPIED_REHASH_FACTOR);
 		if ((mSize + mPlaceholders) >= maxNumOccupied) {
-			this->rehash((mCapacity + 1) * GROW_RATE, sfz_dbg("HashMapDynamic"));
+			this->rehash((mCapacity + 1) * GROW_RATE, sfz_dbg("HashMap"));
 		}
 
 		// Finds slots

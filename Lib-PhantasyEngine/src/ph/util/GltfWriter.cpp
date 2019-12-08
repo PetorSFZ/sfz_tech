@@ -40,17 +40,17 @@ using sfz::vec3;
 // ------------------------------------------------------------------------------------------------
 
 struct MeshComponent {
-	ArrayDynamic<uint32_t> indices;
+	Array<uint32_t> indices;
 	uint32_t materialIdx;
 };
 
 // Sorts all triangles in a mesh into different components where each component uses only one
 // material. If the entire mesh uses a single material only one component will be returned.
-static ArrayDynamic<MeshComponent> componentsFromMesh(const phConstMeshView& mesh) noexcept
+static Array<MeshComponent> componentsFromMesh(const phConstMeshView& mesh) noexcept
 {
 	sfz_assert((mesh.numIndices % 3) == 0);
 
-	ArrayDynamic<MeshComponent> components;
+	Array<MeshComponent> components;
 	components.create(10);
 
 	for (uint32_t i = 0; i < mesh.numIndices; i += 3) {
@@ -66,7 +66,7 @@ static ArrayDynamic<MeshComponent> componentsFromMesh(const phConstMeshView& mes
 		sfz_assert(m1 == m2);
 
 		// Try to find existing component with same material index
-		ArrayDynamic<uint32_t>* indicesPtr = nullptr;
+		Array<uint32_t>* indicesPtr = nullptr;
 		for (MeshComponent& component : components) {
 			if (component.materialIdx == m0) {
 				indicesPtr = &component.indices;
@@ -91,18 +91,18 @@ static ArrayDynamic<MeshComponent> componentsFromMesh(const phConstMeshView& mes
 }
 
 struct SplitMesh {
-	ArrayDynamic<phVertex> vertices;
-	ArrayDynamic<MeshComponent> components;
+	Array<phVertex> vertices;
+	Array<MeshComponent> components;
 	vec3 posMin = vec3(FLT_MAX);
 	vec3 posMax = vec3(-FLT_MAX);
 };
 
 // Pick out all meshes from the assets and split them into components
-static ArrayDynamic<SplitMesh> splitMeshes(
+static Array<SplitMesh> splitMeshes(
 	const LevelAssets& assets,
-	const ArrayDynamic<uint32_t>& meshIndices) noexcept
+	const Array<uint32_t>& meshIndices) noexcept
 {
-	ArrayDynamic<SplitMesh> splitMeshes;
+	Array<SplitMesh> splitMeshes;
 	splitMeshes.create(meshIndices.size());
 
 	// Go through all meshes, split into components
@@ -139,9 +139,9 @@ static ArrayDynamic<SplitMesh> splitMeshes(
 }
 
 struct ProcessedAssets {
-	ArrayDynamic<SplitMesh> splitMeshes;
-	ArrayDynamic<phMaterial> materials;
-	ArrayDynamic<uint32_t> textureIndices;
+	Array<SplitMesh> splitMeshes;
+	Array<phMaterial> materials;
+	Array<uint32_t> textureIndices;
 };
 
 // Process assets that are prepared for writing, this includes:
@@ -152,14 +152,14 @@ struct ProcessedAssets {
 // * Pick out which textures to write to file
 // * Update all indices in materials to point to the new textures list
 static ProcessedAssets processAssets(
-	const LevelAssets& assets, const ArrayDynamic<uint32_t>& meshIndices) noexcept
+	const LevelAssets& assets, const Array<uint32_t>& meshIndices) noexcept
 {
 	// Split meshes
 	ProcessedAssets processedAssets;
 	processedAssets.splitMeshes = splitMeshes(assets, meshIndices);
 
 	// List of material indices to write
-	ArrayDynamic<uint32_t> materialIndices;
+	Array<uint32_t> materialIndices;
 
 	// Add materials to write list and modify components to use the new indices
 	for (SplitMesh& splitMesh : processedAssets.splitMeshes) {
@@ -237,13 +237,13 @@ struct MeshOffsets {
 	uint32_t texcoordOffset;
 	uint32_t texcoordNumBytes;
 
-	ArrayDynamic<uint32_t> indicesOffsets;
-	ArrayDynamic<uint32_t> indicesNumBytes;
+	Array<uint32_t> indicesOffsets;
+	Array<uint32_t> indicesNumBytes;
 };
 
 struct BinaryData {
-	ArrayDynamic<uint8_t> combinedBinaryData;
-	ArrayDynamic<MeshOffsets> offsets;
+	Array<uint8_t> combinedBinaryData;
+	Array<MeshOffsets> offsets;
 };
 
 // Creates a single binary data chunk to write to file. This chunk contains all vertex and index
@@ -362,7 +362,7 @@ static void writeHeader(DynString& gltf) noexcept
 	gltf.printfAppend("%s", "\t},\n");
 }
 
-static void writeMaterials(DynString& gltf, const ArrayDynamic<phMaterial>& materials) noexcept
+static void writeMaterials(DynString& gltf, const Array<phMaterial>& materials) noexcept
 {
 	gltf.printfAppend("%s", "\t\"materials\": [\n");
 
@@ -752,7 +752,7 @@ static void writeExit(DynString& gltf) noexcept
 bool writeAssetsToGltf(
 	const char* writePath,
 	const LevelAssets& assets,
-	const ArrayDynamic<uint32_t>& meshIndices) noexcept
+	const Array<uint32_t>& meshIndices) noexcept
 {
 	// Try to create base directory if it does not exist
 	str320 basePath = calculateBasePath(writePath);

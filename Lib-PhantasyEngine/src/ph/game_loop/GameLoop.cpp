@@ -41,7 +41,7 @@ namespace ph {
 // Typedefs
 // ------------------------------------------------------------------------------------------------
 
-using sfz::ArrayDynamic;
+using sfz::Array;
 using time_point = std::chrono::high_resolution_clock::time_point;
 
 // GameLoopState
@@ -109,7 +109,7 @@ static float calculateDelta(time_point& previousTime) noexcept
 	return delta;
 }
 
-static void initControllers(HashMapDynamic<int32_t, GameController>& controllers) noexcept
+static void initControllers(HashMap<int32_t, GameController>& controllers) noexcept
 {
 	controllers.clear();
 

@@ -27,13 +27,13 @@
 namespace ph {
 
 using sfz::Allocator;
-using sfz::ArrayDynamic;
+using sfz::Array;
 
 // Image struct
 // ------------------------------------------------------------------------------------------------
 
 struct Image final {
-	ArrayDynamic<uint8_t> rawData;
+	Array<uint8_t> rawData;
 	ImageType type = ImageType::UNDEFINED;
 	int32_t width = -1;
 	int32_t height = -1;

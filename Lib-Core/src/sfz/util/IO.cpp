@@ -54,12 +54,12 @@ using std::uint8_t;
 // ------------------------------------------------------------------------------------------------
 
 template<typename T>
-static ArrayDynamic<T> readFileInternal(const char* path, bool binaryMode, Allocator* allocator) noexcept
+static Array<T> readFileInternal(const char* path, bool binaryMode, Allocator* allocator) noexcept
 {
 	// Open file
-	if (path == nullptr) return ArrayDynamic<T>();
+	if (path == nullptr) return Array<T>();
 	std::FILE* file = std::fopen(path, binaryMode ? "rb" : "r");
-	if (file == NULL) return ArrayDynamic<T>();
+	if (file == NULL) return Array<T>();
 
 	// Get size of file
 	std::fseek(file, 0, SEEK_END);
@@ -67,11 +67,11 @@ static ArrayDynamic<T> readFileInternal(const char* path, bool binaryMode, Alloc
 	std::rewind(file); // Rewind position to beginning of file
 	if (size < 0) {
 		std::fclose(file);
-		return ArrayDynamic<T>();
+		return Array<T>();
 	}
 
 	// Create array with enough capacity to fit file
-	ArrayDynamic<T> temp(uint32_t(size + 1), allocator, sfz_dbg("readFileInternal()"));
+	Array<T> temp(uint32_t(size + 1), allocator, sfz_dbg("readFileInternal()"));
 
 	// Read the file into the array
 	uint8_t buffer[BUFSIZ];
@@ -270,14 +270,14 @@ int32_t readBinaryFile(const char* path, uint8_t* dataOut, size_t maxNumBytes) n
 	return 0;
 }
 
-ArrayDynamic<uint8_t> readBinaryFile(const char* path, Allocator* allocator) noexcept
+Array<uint8_t> readBinaryFile(const char* path, Allocator* allocator) noexcept
 {
 	return readFileInternal<uint8_t>(path, true, allocator);
 }
 
 DynString readTextFile(const char* path, Allocator* allocator) noexcept
 {
-	ArrayDynamic<char> strData = readFileInternal<char>(path, false, allocator);
+	Array<char> strData = readFileInternal<char>(path, false, allocator);
 	if (strData.size() == 0 || strData[strData.size() - 1] != '\0') {
 		if (strData.data() == nullptr) {
 			strData.init(0, allocator, sfz_dbg("readTextFile()"));
@@ -286,7 +286,7 @@ DynString readTextFile(const char* path, Allocator* allocator) noexcept
 	}
 
 	DynString tmp;
-	tmp.internalArrayDynamic().swap(strData);
+	tmp.internalArray().swap(strData);
 
 	return tmp;
 }

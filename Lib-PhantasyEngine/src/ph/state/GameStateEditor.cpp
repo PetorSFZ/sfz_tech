@@ -301,7 +301,7 @@ static const char* byteToBinaryStringLookupTable[256] = {
 	"11111111",
 };
 
-static sfz::HashMapDynamic<str32, uint8_t>* binaryStringToByteLookupMap = nullptr;
+static sfz::HashMap<str32, uint8_t>* binaryStringToByteLookupMap = nullptr;
 
 static const char* byteToBinaryString(uint8_t byte) noexcept
 {
@@ -459,7 +459,7 @@ static void loadDialog(GameStateHeader* state) noexcept
 
 	// Load game state from file if file dialog was succesful
 	if (result == NFD_OKAY) {
-		sfz::ArrayDynamic<uint8_t> binary = sfz::readBinaryFile(path);
+		sfz::Array<uint8_t> binary = sfz::readBinaryFile(path);
 		if (binary.size() == 0) {
 			SFZ_ERROR("PhantasyEngine", "Could not read game state from \"%s\"", path);
 		}
@@ -497,7 +497,7 @@ void GameStateEditor::init(
 	if (binaryStringToByteLookupMap == nullptr)
 	{
 		binaryStringToByteLookupMap =
-			allocator->newObject<sfz::HashMapDynamic<str32, uint8_t>>(sfz_dbg(""));
+			allocator->newObject<sfz::HashMap<str32, uint8_t>>(sfz_dbg(""));
 		binaryStringToByteLookupMap->init(512, allocator, sfz_dbg(""));
 		for (uint32_t i = 0; i < 256; i++) {
 			(*binaryStringToByteLookupMap)[byteToBinaryStringLookupTable[i]] = uint8_t(i);

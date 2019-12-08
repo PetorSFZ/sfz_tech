@@ -26,7 +26,7 @@
 #include "skipifzero_allocators.hpp"
 #include "skipifzero_arrays.hpp"
 
-// ArrayDynamic tests
+// Array tests
 // ------------------------------------------------------------------------------------------------
 
 class Uncopiable {
@@ -43,20 +43,20 @@ public:
 	void swap(Uncopiable& other) { std::swap(this->val, other.val); }
 };
 
-UTEST(ArrayDynamic, default_constructor)
+UTEST(Array, default_constructor)
 {
-	sfz::ArrayDynamic<float> floatArray;
+	sfz::Array<float> floatArray;
 	ASSERT_TRUE(floatArray.size() == 0);
 	ASSERT_TRUE(floatArray.capacity() == 0);
 	ASSERT_TRUE(floatArray.data() == nullptr);
 	ASSERT_TRUE(floatArray.allocator() == nullptr);
 }
 
-UTEST(ArrayDynamic, init_with_0_does_not_allocate)
+UTEST(Array, init_with_0_does_not_allocate)
 {
 	sfz::StandardAllocator allocator;
 
-	sfz::ArrayDynamic<float> v;
+	sfz::Array<float> v;
 	v.init(0, &allocator, sfz_dbg(""));
 	ASSERT_TRUE(v.size() == 0);
 	ASSERT_TRUE(v.capacity() == 0);
@@ -70,11 +70,11 @@ UTEST(ArrayDynamic, init_with_0_does_not_allocate)
 	ASSERT_TRUE(v.allocator() == &allocator);
 }
 
-UTEST(ArrayDynamic, fill_constructor)
+UTEST(Array, fill_constructor)
 {
 	sfz::StandardAllocator allocator;
 
-	sfz::ArrayDynamic<int> twos(0, &allocator, sfz_dbg(""));
+	sfz::Array<int> twos(0, &allocator, sfz_dbg(""));
 	twos.add(2, 8);
 
 	for (uint32_t i = 0; i < 8; ++i) {
@@ -90,13 +90,13 @@ UTEST(ArrayDynamic, fill_constructor)
 	ASSERT_TRUE(twos.allocator() == nullptr);
 }
 
-UTEST(ArrayDynamic, copy_constructors)
+UTEST(Array, copy_constructors)
 {
 	sfz::StandardAllocator allocator;
 
-	sfz::ArrayDynamic<int> first(0, &allocator, sfz_dbg(""));
+	sfz::Array<int> first(0, &allocator, sfz_dbg(""));
 	first.add(3, 3);
-	sfz::ArrayDynamic<int> second;
+	sfz::Array<int> second;
 
 	ASSERT_TRUE(first.size() == 3);
 	ASSERT_TRUE(first.capacity() == sfz::ARRAY_DYNAMIC_DEFAULT_INITIAL_CAPACITY);
@@ -126,12 +126,12 @@ UTEST(ArrayDynamic, copy_constructors)
 	ASSERT_TRUE(second.data()[2] == 3);
 }
 
-UTEST(ArrayDynamic, swap_move_constructors)
+UTEST(Array, swap_move_constructors)
 {
 	sfz::StandardAllocator allocator;
 
-	sfz::ArrayDynamic<int> v1;
-	sfz::ArrayDynamic<int> v2(32, &allocator, sfz_dbg(""));
+	sfz::Array<int> v1;
+	sfz::Array<int> v2(32, &allocator, sfz_dbg(""));
 	v2.add(42, 2);
 
 	ASSERT_TRUE(v1.size() == 0);
@@ -175,11 +175,11 @@ UTEST(ArrayDynamic, swap_move_constructors)
 	ASSERT_TRUE(v2[1] == 42);
 }
 
-UTEST(ArrayDynamic, access_operator)
+UTEST(Array, access_operator)
 {
 	sfz::StandardAllocator allocator;
 
-	sfz::ArrayDynamic<int> v(4, &allocator, sfz_dbg(""));
+	sfz::Array<int> v(4, &allocator, sfz_dbg(""));
 	v.hackSetSize(4);
 	v[0] = 0;
 	v[1] = 1;
@@ -193,11 +193,11 @@ UTEST(ArrayDynamic, access_operator)
 	ASSERT_TRUE(cv[3] == 3);
 }
 
-UTEST(ArrayDynamic, iterators)
+UTEST(Array, iterators)
 {
 	sfz::StandardAllocator allocator;
 
-	sfz::ArrayDynamic<int> v(4, &allocator, sfz_dbg(""));
+	sfz::Array<int> v(4, &allocator, sfz_dbg(""));
 	v.hackSetSize(4);
 	v[0] = 0;
 	v[1] = 1;
@@ -211,11 +211,11 @@ UTEST(ArrayDynamic, iterators)
 	}
 }
 
-UTEST(ArrayDynamic, add)
+UTEST(Array, add)
 {
 	sfz::StandardAllocator allocator;
 
-	sfz::ArrayDynamic<int> v(2, &allocator, sfz_dbg(""));
+	sfz::Array<int> v(2, &allocator, sfz_dbg(""));
 	ASSERT_TRUE(v.size() == 0);
 	ASSERT_TRUE(v.capacity() == 2);
 
@@ -241,7 +241,7 @@ UTEST(ArrayDynamic, add)
 	ASSERT_TRUE(v[2] == 3);
 	ASSERT_TRUE(v[3] == 3);
 
-	sfz::ArrayDynamic<Uncopiable> v2(0, &allocator, sfz_dbg(""));;
+	sfz::Array<Uncopiable> v2(0, &allocator, sfz_dbg(""));;
 
 	ASSERT_TRUE(v2.size() == 0);
 	ASSERT_TRUE(v2.capacity() == 0);
@@ -262,7 +262,7 @@ UTEST(ArrayDynamic, add)
 	ASSERT_TRUE(v2[0].val == 3);
 	ASSERT_TRUE(v2[1].val == 42);
 
-	sfz::ArrayDynamic<int> v3(0, &allocator, sfz_dbg(""));
+	sfz::Array<int> v3(0, &allocator, sfz_dbg(""));
 	v3.add(v.data(), v.size());
 	v3.add(v.data(), v.size());
 	ASSERT_TRUE(v3.size() == 8);
@@ -276,11 +276,11 @@ UTEST(ArrayDynamic, add)
 	ASSERT_TRUE(v3[7] == 3);
 }
 
-UTEST(ArrayDynamic, insert)
+UTEST(Array, insert)
 {
 	sfz::StandardAllocator allocator;
 
-	sfz::ArrayDynamic<int> v(2, &allocator, sfz_dbg(""));
+	sfz::Array<int> v(2, &allocator, sfz_dbg(""));
 	ASSERT_TRUE(v.size() == 0);
 	ASSERT_TRUE(v.capacity() == 2);
 
@@ -306,7 +306,7 @@ UTEST(ArrayDynamic, insert)
 	ASSERT_TRUE(v[2] == 3);
 	ASSERT_TRUE(v[3] == -1);
 
-	sfz::ArrayDynamic<int> v2(0, &allocator, sfz_dbg(""));
+	sfz::Array<int> v2(0, &allocator, sfz_dbg(""));
 	v2.add(42, 3);
 	v.insert(1, v2.data(), 2);
 	ASSERT_TRUE(v.size() == 6);
@@ -318,13 +318,13 @@ UTEST(ArrayDynamic, insert)
 	ASSERT_TRUE(v[5] == -1);
 }
 
-UTEST(ArrayDynamic, remove)
+UTEST(Array, remove)
 {
 	sfz::StandardAllocator allocator;
 
 	// Basic test
 	{
-		sfz::ArrayDynamic<int> v(0, &allocator, sfz_dbg(""));
+		sfz::Array<int> v(0, &allocator, sfz_dbg(""));
 		const int vals[] ={1, 2, 3, 4};
 		v.add(vals, 4);
 
@@ -348,7 +348,7 @@ UTEST(ArrayDynamic, remove)
 	// Bug where memmove was passed numElements instead of numBytes
 	{
 		using sfz::vec2_i32;
-		sfz::ArrayDynamic<vec2_i32> v(0, &allocator, sfz_dbg(""));
+		sfz::Array<vec2_i32> v(0, &allocator, sfz_dbg(""));
 		const vec2_i32 vals[] = {vec2_i32(1), vec2_i32(2), vec2_i32(3), vec2_i32(4)};
 		v.add(vals, 4);
 
@@ -366,7 +366,7 @@ UTEST(ArrayDynamic, remove)
 
 	// Bug where not enough elements are moved
 	{
-		sfz::ArrayDynamic<int> v(0, &allocator, sfz_dbg(""));
+		sfz::Array<int> v(0, &allocator, sfz_dbg(""));
 		const int vals[] = {1, 2, 3, 4, 5, 6};
 		v.add(vals, 6);
 
@@ -388,10 +388,10 @@ UTEST(ArrayDynamic, remove)
 	}
 }
 
-UTEST(ArrayDynamic, removeQuickSwap)
+UTEST(Array, removeQuickSwap)
 {
 	sfz::StandardAllocator allocator;
-	sfz::ArrayDynamic<int> v(0, &allocator, sfz_dbg(""));
+	sfz::Array<int> v(0, &allocator, sfz_dbg(""));
 	const int vals[] = {1, 2, 3, 4, 5, 6};
 	v.add(vals, 6);
 
@@ -410,11 +410,11 @@ UTEST(ArrayDynamic, removeQuickSwap)
 	ASSERT_TRUE(v[1] == 5);
 }
 
-UTEST(ArrayDynamic, search)
+UTEST(Array, search)
 {
 	sfz::StandardAllocator allocator;
 
-	sfz::ArrayDynamic<int> v(0, &allocator, sfz_dbg(""));
+	sfz::Array<int> v(0, &allocator, sfz_dbg(""));
 	const int vals[] = {1, 2, 2, 4};
 	v.add(vals, 4);
 
@@ -437,11 +437,11 @@ UTEST(ArrayDynamic, search)
 	ASSERT_TRUE((ptr - v.data()) == 3);
 }
 
-UTEST(ArrayDynamic, find)
+UTEST(Array, find)
 {
 	sfz::StandardAllocator allocator;
 
-	sfz::ArrayDynamic<int> v(0, &allocator, sfz_dbg(""));
+	sfz::Array<int> v(0, &allocator, sfz_dbg(""));
 	const int vals[] = {1, 2, 3, 4};
 	v.add(vals, 4);
 
@@ -457,7 +457,7 @@ UTEST(ArrayDynamic, find)
 	ASSERT_TRUE(*ptr == 2);
 
 	{
-		const sfz::ArrayDynamic<int>& vc = v;
+		const sfz::Array<int>& vc = v;
 
 		const int* ptr2 = vc.find([](int) { return false; });
 		ASSERT_TRUE(ptr2 == nullptr);

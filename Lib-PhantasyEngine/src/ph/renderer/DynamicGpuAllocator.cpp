@@ -30,7 +30,7 @@
 
 namespace ph {
 
-using sfz::ArrayDynamic;
+using sfz::Array;
 
 // Constants
 // ------------------------------------------------------------------------------------------------
@@ -50,7 +50,7 @@ struct Block final {
 
 struct MemoryPage final {
 	zg::MemoryHeap heap;
-	ArrayDynamic<Block> freeBlocks;
+	Array<Block> freeBlocks;
 	uint32_t pageSize = 0;
 	uint32_t numAllocations = 0;
 	uint32_t largestFreeBlockSize = 0;
@@ -68,8 +68,8 @@ struct DynamicGpuAllocatorState final {
 	ZgMemoryType memoryType = ZG_MEMORY_TYPE_UNDEFINED;
 	uint32_t pageSize = 0;
 
-	ArrayDynamic<MemoryPage> pages;
-	sfz::HashMapDynamic<void*, AllocEntry> entries; // ZgBuffer* or ZgTexture2D* is key
+	Array<MemoryPage> pages;
+	sfz::HashMap<void*, AllocEntry> entries; // ZgBuffer* or ZgTexture2D* is key
 
 	uint64_t totalNumAllocations = 0;
 	uint64_t totalNumDeallocations = 0;
@@ -281,7 +281,7 @@ static void pageDeallocateBlock(MemoryPage& page, Block& allocatedBlock) noexcep
 	page.numAllocations -= 1;
 }
 
-static uint32_t findAppropriatePage(ArrayDynamic<MemoryPage>& pages, uint32_t size) noexcept
+static uint32_t findAppropriatePage(Array<MemoryPage>& pages, uint32_t size) noexcept
 {
 	sfz_assert(size != 0);
 	for (uint32_t i = 0; i < pages.size(); i++) {

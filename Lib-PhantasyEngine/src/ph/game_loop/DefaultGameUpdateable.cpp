@@ -117,7 +117,7 @@ static void renderFilteredText(
 	}
 }
 
-static bool anyContainsFilter(const ArrayDynamic<Setting*>& settings, const char* filter) noexcept
+static bool anyContainsFilter(const Array<Setting*>& settings, const char* filter) noexcept
 {
 	for (Setting* setting : settings) {
 		if (strstr(setting->key().str, filter) != nullptr) {
@@ -158,14 +158,14 @@ public:
 	int mStatsWarmup = 0;
 
 	// Imgui
-	ArrayDynamic<phImguiVertex> mImguiVertices;
-	ArrayDynamic<uint32_t> mImguiIndices;
-	ArrayDynamic<phImguiCommand> mImguiCommands;
+	Array<phImguiVertex> mImguiVertices;
+	Array<uint32_t> mImguiIndices;
+	Array<phImguiCommand> mImguiCommands;
 
 	// Global Config
 	str32 mConfigFilterString;
-	ArrayDynamic<str32> mCfgSections;
-	ArrayDynamic<Setting*> mCfgSectionSettings;
+	Array<str32> mCfgSections;
+	Array<Setting*> mCfgSectionSettings;
 
 	// Log
 	Setting* mLogMinLevelSetting = nullptr;
@@ -239,7 +239,7 @@ public:
 			imguiMousePtr = &input.rawMouse;
 		}
 
-		const ArrayDynamic<SDL_Event>* imguiEventsPtr = nullptr;
+		const Array<SDL_Event>* imguiEventsPtr = nullptr;
 		if (imguiControllers.useKeyboard) {
 			imguiEventsPtr = &input.events;
 		}

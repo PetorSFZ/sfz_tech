@@ -27,12 +27,12 @@
 #include "skipifzero_hash_maps.hpp"
 #include "skipifzero_strings.hpp"
 
-// HashMapDynamic tests
+// HashMap tests
 // ------------------------------------------------------------------------------------------------
 
 UTEST(HashMap, default_constructor)
 {
-	sfz::HashMapDynamic<int,int> m1;
+	sfz::HashMap<int,int> m1;
 	ASSERT_TRUE(m1.size() == 0);
 	ASSERT_TRUE(m1.capacity() == 0);
 	ASSERT_TRUE(m1.placeholders() == 0);
@@ -42,7 +42,7 @@ UTEST(HashMap, copy_constructors)
 {
 	sfz::StandardAllocator allocator;
 
-	sfz::HashMapDynamic<int,int> m1(1, &allocator, sfz_dbg(""));
+	sfz::HashMap<int,int> m1(1, &allocator, sfz_dbg(""));
 	ASSERT_TRUE(m1.put(1, 2) == 2);
 	ASSERT_TRUE(m1.put(2, 3) == 3);
 	ASSERT_TRUE(m1.put(3, 4) == 4);
@@ -95,8 +95,8 @@ UTEST(HashMap, swap_and_move_constructors)
 {
 	sfz::StandardAllocator allocator;
 
-	sfz::HashMapDynamic<int,int> v1;
-	sfz::HashMapDynamic<int,int> v2(1, &allocator, sfz_dbg(""));
+	sfz::HashMap<int,int> v1;
+	sfz::HashMap<int,int> v2(1, &allocator, sfz_dbg(""));
 	v2.put(1, 2);
 	v2.put(2, 3);
 	v2.put(3, 4);
@@ -131,7 +131,7 @@ UTEST(HashMap, rehash)
 {
 	sfz::StandardAllocator allocator;
 
-	sfz::HashMapDynamic<int,int> m1(0, &allocator, sfz_dbg(""));
+	sfz::HashMap<int,int> m1(0, &allocator, sfz_dbg(""));
 	ASSERT_TRUE(m1.capacity() == 0);
 	ASSERT_TRUE(m1.size() == 0);
 	ASSERT_TRUE(m1.placeholders() == 0);
@@ -166,7 +166,7 @@ UTEST(HashMap, rehashing_in_put)
 {
 	sfz::StandardAllocator allocator;
 
-	sfz::HashMapDynamic<int, int> m1(0, &allocator, sfz_dbg(""));
+	sfz::HashMap<int, int> m1(0, &allocator, sfz_dbg(""));
 	ASSERT_TRUE(m1.size() == 0);
 	ASSERT_TRUE(m1.capacity() == 0);
 
@@ -185,7 +185,7 @@ UTEST(HashMap, adding_and_retrieving_elements)
 {
 	sfz::StandardAllocator allocator;
 
-	sfz::HashMapDynamic<int, int> m1(0, &allocator, sfz_dbg(""));
+	sfz::HashMap<int, int> m1(0, &allocator, sfz_dbg(""));
 
 	ASSERT_TRUE(m1.size() == 0);
 	ASSERT_TRUE(m1.capacity() == 0);
@@ -203,7 +203,7 @@ UTEST(HashMap, adding_and_retrieving_elements)
 	ASSERT_TRUE(m1.get(0) == nullptr);
 	ASSERT_TRUE(m1.get(1) == nullptr);
 
-	const sfz::HashMapDynamic<int, int>& mConst = m1;
+	const sfz::HashMap<int, int>& mConst = m1;
 	ASSERT_TRUE(mConst.size() == 2);
 	ASSERT_TRUE(*mConst.get(2) == 3);
 	ASSERT_TRUE(*mConst.get(3) == 1);
@@ -231,7 +231,7 @@ UTEST(HashMap, hashing_conflicts)
 {
 	sfz::StandardAllocator allocator;
 
-	sfz::HashMapDynamic<ZeroHashInteger, int> m(0, &allocator, sfz_dbg(""));
+	sfz::HashMap<ZeroHashInteger, int> m(0, &allocator, sfz_dbg(""));
 	ASSERT_TRUE(m.size() == 0);
 	ASSERT_TRUE(m.capacity() == 0);
 	ASSERT_TRUE(m.placeholders() == 0);
@@ -288,7 +288,7 @@ UTEST(HashMap, access_operator)
 {
 	sfz::StandardAllocator allocator;
 
-	sfz::HashMapDynamic<int, int> m(1, &allocator, sfz_dbg(""));
+	sfz::HashMap<int, int> m(1, &allocator, sfz_dbg(""));
 	ASSERT_TRUE(m.size() == 0);
 	ASSERT_TRUE(m.capacity() != 0);
 
@@ -319,18 +319,18 @@ UTEST(HashMap, empty_hashmap)
 
 	// Iterating
 	{
-		sfz::HashMapDynamic<int, int> m(0, &allocator, sfz_dbg(""));
-		const sfz::HashMapDynamic<int, int> cm(0, &allocator, sfz_dbg(""));
+		sfz::HashMap<int, int> m(0, &allocator, sfz_dbg(""));
+		const sfz::HashMap<int, int> cm(0, &allocator, sfz_dbg(""));
 
 		int times = 0;
-		for (sfz::HashMapDynamic<int,int>::Pair<int> pair : m) {
+		for (sfz::HashMap<int,int>::Pair<int> pair : m) {
 			(void)pair;
 			times += 1;
 		}
 		ASSERT_TRUE(times == 0);
 
 		int ctimes = 0;
-		for (sfz::HashMapDynamic<int, int>::Pair<const int> pair : cm) {
+		for (sfz::HashMap<int, int>::Pair<const int> pair : cm) {
 			(void)pair;
 			ctimes += 1;
 		}
@@ -338,8 +338,8 @@ UTEST(HashMap, empty_hashmap)
 	}
 	// Retrieving
 	{
-		sfz::HashMapDynamic<int, int> m(0, &allocator, sfz_dbg(""));
-		const sfz::HashMapDynamic<int, int> cm(0, &allocator, sfz_dbg(""));
+		sfz::HashMap<int, int> m(0, &allocator, sfz_dbg(""));
+		const sfz::HashMap<int, int> cm(0, &allocator, sfz_dbg(""));
 
 		int* ptr = m.get(0);
 		ASSERT_TRUE(ptr == nullptr);
@@ -349,7 +349,7 @@ UTEST(HashMap, empty_hashmap)
 	}
 	// put()
 	{
-		sfz::HashMapDynamic<int, int> m(0, &allocator, sfz_dbg(""));
+		sfz::HashMap<int, int> m(0, &allocator, sfz_dbg(""));
 
 		int a = -1;
 		m.put(2, a);
@@ -362,7 +362,7 @@ UTEST(HashMap, empty_hashmap)
 	}
 	// operator[]
 	{
-		sfz::HashMapDynamic<int, int> m(0, &allocator, sfz_dbg(""));
+		sfz::HashMap<int, int> m(0, &allocator, sfz_dbg(""));
 
 		int a = -1;
 		m[2] = a;
@@ -381,7 +381,7 @@ UTEST(HashMap, hashmap_with_strings)
 
 	// const char*
 	{
-		sfz::HashMapDynamic<const char*, uint32_t> m(0, &allocator, sfz_dbg(""));
+		sfz::HashMap<const char*, uint32_t> m(0, &allocator, sfz_dbg(""));
 		const char* strFoo = "foo";
 		const char* strBar = "bar";
 		const char* strCar = "car";
@@ -397,7 +397,7 @@ UTEST(HashMap, hashmap_with_strings)
 	}
 	// LocalString
 	{
-		sfz::HashMapDynamic<sfz::str96,uint32_t> m(0, &allocator, sfz_dbg(""));
+		sfz::HashMap<sfz::str96,uint32_t> m(0, &allocator, sfz_dbg(""));
 
 		const uint32_t NUM_TESTS = 100;
 		for (uint32_t i = 0; i < NUM_TESTS; i++) {
@@ -470,7 +470,7 @@ UTEST(HashMap, perfect_forwarding_in_put)
 {
 	sfz::StandardAllocator allocator;
 
-	sfz::HashMapDynamic<MoveTestStruct, MoveTestStruct> m(0, &allocator, sfz_dbg(""));
+	sfz::HashMap<MoveTestStruct, MoveTestStruct> m(0, &allocator, sfz_dbg(""));
 
 	// (const ref, const ref)
 	{
@@ -514,7 +514,7 @@ UTEST(HashMap, perfect_forwarding_in_put)
 	}
 	// (altKey, const ref)
 	{
-		sfz::HashMapDynamic<sfz::str96, MoveTestStruct> m2(0, &allocator, sfz_dbg(""));
+		sfz::HashMap<sfz::str96, MoveTestStruct> m2(0, &allocator, sfz_dbg(""));
 		MoveTestStruct v(2);
 		ASSERT_TRUE(!v.moved);
 		m2.put("foo", v);
@@ -527,7 +527,7 @@ UTEST(HashMap, perfect_forwarding_in_put)
 	}
 	// (altKey, rvalue)
 	{
-		sfz::HashMapDynamic<sfz::str96, MoveTestStruct> m2(0, &allocator, sfz_dbg(""));
+		sfz::HashMap<sfz::str96, MoveTestStruct> m2(0, &allocator, sfz_dbg(""));
 		MoveTestStruct v(2);
 		ASSERT_TRUE(!v.moved);
 		m2.put("foo", std::move(v));

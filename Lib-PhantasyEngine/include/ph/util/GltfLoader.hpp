@@ -25,7 +25,7 @@
 
 namespace ph {
 
-using sfz::ArrayDynamic;
+using sfz::Array;
 
 // Function for loading from gltf
 // ------------------------------------------------------------------------------------------------
@@ -45,7 +45,7 @@ struct ImageAndPath final {
 bool loadAssetsFromGltf(
 	const char* gltfPath,
 	Mesh& meshOut,
-	ArrayDynamic<ImageAndPath>& texturesOut,
+	Array<ImageAndPath>& texturesOut,
 	sfz::Allocator* allocator,
 	bool (*checkIfTextureIsLoaded)(StringID id, void* userPtr),
 	void* userPtr) noexcept;

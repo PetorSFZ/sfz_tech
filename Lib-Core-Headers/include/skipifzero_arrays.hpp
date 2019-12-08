@@ -22,7 +22,7 @@
 
 namespace sfz {
 
-// ArrayDynamic
+// Array
 // ------------------------------------------------------------------------------------------------
 
 constexpr float ARRAY_DYNAMIC_GROW_RATE = 1.75;
@@ -32,30 +32,30 @@ constexpr uint32_t ARRAY_DYNAMIC_MAX_CAPACITY = uint32_t(UINT32_MAX / ARRAY_DYNA
 
 // A class managing a dynamic array, somewhat like std::vector.
 //
-// An ArrayDynamic has both a size and a capacity. The size is the current number elements in the
-// array, the capacity is the amount of elements the array can hold before it needs to be resized.
+// An Array has both a size and a capacity. The size is the current number elements in the array,
+// the capacity is the amount of elements the array can hold before it needs to be resized.
 //
-// An ArrayDynamic needs to be supplied an allocator before it can start allocating memory, this is
-// done through the init() method (or it's constructor wrapper). Calling init() with capacity 0 is
+// An Array needs to be supplied an allocator before it can start allocating memory, this is done
+// through the init() method (or it's constructor wrapper). Calling init() with capacity 0 is
 // guaranteed to just set the allocator and not allocate any memory.
 //
-// ArrayDynamic does not guarantee that a specific element will always occupy the same position in
-// memory. E.g., elements may be moved around when the array is modified. It is not safe to modify
-// the ArrayDynamic when iterating over it, as the iterators will not update on resize.
+// Array does not guarantee that a specific element will always occupy the same position in memory.
+// E.g., elements may be moved around when the array is modified. It is not safe to modify the
+// Array when iterating over it, as the iterators will not update on resize.
 template<typename T>
-class ArrayDynamic final {
+class Array final {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	ArrayDynamic() noexcept = default;
-	ArrayDynamic(const ArrayDynamic& other) noexcept { *this = other.clone(); }
-	ArrayDynamic& operator= (const ArrayDynamic& other) noexcept { *this = other.clone(); return *this; }
-	ArrayDynamic(ArrayDynamic&& other) noexcept { this->swap(other); }
-	ArrayDynamic& operator= (ArrayDynamic&& other) noexcept { this->swap(other); return *this; }
-	~ArrayDynamic() noexcept { this->destroy(); }
+	Array() noexcept = default;
+	Array(const Array& other) noexcept { *this = other.clone(); }
+	Array& operator= (const Array& other) noexcept { *this = other.clone(); return *this; }
+	Array(Array&& other) noexcept { this->swap(other); }
+	Array& operator= (Array&& other) noexcept { this->swap(other); return *this; }
+	~Array() noexcept { this->destroy(); }
 
-	explicit ArrayDynamic(uint32_t capacity, Allocator* allocator, DbgInfo allocDbg) noexcept {
+	explicit Array(uint32_t capacity, Allocator* allocator, DbgInfo allocDbg) noexcept {
 		this->init(capacity, allocator, allocDbg);
 	}
 
@@ -71,14 +71,14 @@ public:
 		this->setCapacity(capacity, allocDbg);
 	}
 
-	ArrayDynamic clone(DbgInfo allocDbg = sfz_dbg("ArrayDynamic")) const
+	Array clone(DbgInfo allocDbg = sfz_dbg("Array")) const
 	{
-		ArrayDynamic tmp(mCapacity, mAllocator, allocDbg);
+		Array tmp(mCapacity, mAllocator, allocDbg);
 		tmp.add(mData, mSize);
 		return tmp;
 	}
 
-	void swap(ArrayDynamic& other)
+	void swap(Array& other)
 	{
 		std::swap(this->mSize, other.mSize);
 		std::swap(this->mCapacity, other.mCapacity);
@@ -104,7 +104,7 @@ public:
 	void hackSetSize(uint32_t size) { mSize = (size <= mCapacity) ? size : mCapacity; }
 
 	// Sets the capacity, allocating memory and moving elements if necessary.
-	void setCapacity(uint32_t capacity, DbgInfo allocDbg = sfz_dbg("ArrayDynamic"))
+	void setCapacity(uint32_t capacity, DbgInfo allocDbg = sfz_dbg("Array"))
 	{
 		if (mSize > capacity) capacity = mSize;
 		if (mCapacity == capacity) return;

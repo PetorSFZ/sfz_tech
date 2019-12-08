@@ -194,7 +194,7 @@ static bool extractAssets(
 	const char* basePath,
 	const tinygltf::Model& model,
 	Mesh& meshOut,
-	ArrayDynamic<ImageAndPath>& texturesOut,
+	Array<ImageAndPath>& texturesOut,
 	bool (*checkIfTextureIsLoaded)(StringID id, void* userPtr),
 	void* userPtr,
 	sfz::Allocator* allocator) noexcept
@@ -462,7 +462,7 @@ static bool extractAssets(
 bool loadAssetsFromGltf(
 	const char* gltfPath,
 	Mesh& meshOut,
-	ArrayDynamic<ImageAndPath>& texturesOut,
+	Array<ImageAndPath>& texturesOut,
 	sfz::Allocator* allocator,
 	bool (*checkIfTextureIsLoaded)(StringID id, void* userPtr),
 	void* userPtr) noexcept
