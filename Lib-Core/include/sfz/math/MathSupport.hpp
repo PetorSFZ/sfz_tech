@@ -33,58 +33,6 @@
 
 namespace sfz {
 
-// sgn()
-// ------------------------------------------------------------------------------------------------
-
-// Returns the sign of the parameter value. For integers it will return -1, 0 or 1. For floating
-// points values it will always return -1.0f or 1.0f (as IEEE-754 has positive and negative 0).
-// Element-wise results for vector types.
-
-SFZ_CUDA_CALL float sgn(float val) noexcept;
-SFZ_CUDA_CALL int32_t sgn(int32_t val) noexcept;
-
-SFZ_CUDA_CALL vec2 sgn(vec2 val) noexcept;
-SFZ_CUDA_CALL vec3 sgn(vec3 val) noexcept;
-SFZ_CUDA_CALL vec4 sgn(vec4 val) noexcept;
-
-SFZ_CUDA_CALL vec2_i32 sgn(vec2_i32 val) noexcept;
-SFZ_CUDA_CALL vec3_i32 sgn(vec3_i32 val) noexcept;
-SFZ_CUDA_CALL vec4_i32 sgn(vec4_i32 val) noexcept;
-
-// minElement()
-// ------------------------------------------------------------------------------------------------
-
-// Returns the smallest element in a vector.
-
-SFZ_CUDA_CALL float minElement(vec2 val) noexcept;
-SFZ_CUDA_CALL float minElement(vec3 val) noexcept;
-SFZ_CUDA_CALL float minElement(vec4 val) noexcept;
-
-SFZ_CUDA_CALL int32_t minElement(vec2_i32 val) noexcept;
-SFZ_CUDA_CALL int32_t minElement(vec3_i32 val) noexcept;
-SFZ_CUDA_CALL int32_t minElement(vec4_i32 val) noexcept;
-
-SFZ_CUDA_CALL uint32_t minElement(vec2_u32 val) noexcept;
-SFZ_CUDA_CALL uint32_t minElement(vec3_u32 val) noexcept;
-SFZ_CUDA_CALL uint32_t minElement(vec4_u32 val) noexcept;
-
-// maxElement()
-// ------------------------------------------------------------------------------------------------
-
-// Returns the largest element in a vector.
-
-SFZ_CUDA_CALL float maxElement(vec2 val) noexcept;
-SFZ_CUDA_CALL float maxElement(vec3 val) noexcept;
-SFZ_CUDA_CALL float maxElement(vec4 val) noexcept;
-
-SFZ_CUDA_CALL int32_t maxElement(vec2_i32 val) noexcept;
-SFZ_CUDA_CALL int32_t maxElement(vec3_i32 val) noexcept;
-SFZ_CUDA_CALL int32_t maxElement(vec4_i32 val) noexcept;
-
-SFZ_CUDA_CALL uint32_t maxElement(vec2_u32 val) noexcept;
-SFZ_CUDA_CALL uint32_t maxElement(vec3_u32 val) noexcept;
-SFZ_CUDA_CALL uint32_t maxElement(vec4_u32 val) noexcept;
-
 // clamp() & saturate()
 // ------------------------------------------------------------------------------------------------
 
@@ -112,17 +60,6 @@ SFZ_CUDA_CALL ArgT lerp(ArgT v0, ArgT v1, FloatT t) noexcept;
 
 template<>
 SFZ_CUDA_CALL Quaternion lerp(Quaternion q0, Quaternion q1, float t) noexcept;
-
-// fma()
-// ------------------------------------------------------------------------------------------------
-
-// Fused multiply add operation. Calculates a * b + c in one operation (if supported by the
-// hardware).
-
-SFZ_CUDA_CALL float fma(float a, float b, float c) noexcept;
-SFZ_CUDA_CALL vec2 fma(vec2 a, vec2 b, vec2 c) noexcept;
-SFZ_CUDA_CALL vec3 fma(vec3 a, vec3 b, vec3 c) noexcept;
-SFZ_CUDA_CALL vec4 fma(vec4 a, vec4 b, vec4 c) noexcept;
 
 // rotateTowards()
 // ------------------------------------------------------------------------------------------------

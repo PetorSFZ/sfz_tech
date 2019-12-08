@@ -52,38 +52,6 @@ TEST_CASE("equalsApprox()", "[sfz::MathSupport]")
 	}
 }
 
-TEST_CASE("sgn()", "[sfz::MathSupport]")
-{
-	SECTION("Integer scalar") {
-		REQUIRE(sgn(-4) == -1);
-		REQUIRE(sgn(-1) == -1);
-		REQUIRE(sgn(0) == 0);
-		REQUIRE(sgn(1) == 1);
-		REQUIRE(sgn(5) == 1);
-	}
-	SECTION("Integer vector") {
-		REQUIRE(sgn(vec4_i32(-4, 0, -2, 4)) == vec4_i32(-1, 0, -1, 1));
-	}
-	SECTION("Floating point scalar") {
-		REQUIRE(sgn(-4.0f) == -1.0f);
-		REQUIRE(sgn(-1.0f) == -1.0f);
-		REQUIRE(sgn(1.0f) == 1.0f);
-		REQUIRE(sgn(5.0f) == 1.0f);
-		// Specifically don't test +0.0f and -0.0f, causes problem when compiling with fast-math.
-	}
-	SECTION("Floating point vector") {
-		REQUIRE(sgn(vec4(-4.0f, -1.0f, 2.0f, 5.0f)) == vec4(-1.0f, -1.0f, 1.0f, 1.0f));
-	}
-}
-
-TEST_CASE("minElement() & maxElement()", "[sfz::MathSupport]")
-{
-	REQUIRE(sfz::minElement(vec4_u32(5u, 2u, 3u, 1u)) == 1u);
-	REQUIRE(sfz::minElement(vec4_i32(1, 2, -4, 0)) == -4);
-	REQUIRE(sfz::maxElement(vec4_u32(5u, 2u, 3u, 1u)) == 5u);
-	REQUIRE(sfz::maxElement(vec4_i32(1, 2, -4, 0)) == 2);
-}
-
 TEST_CASE("lerp()", "[sfz::MathSupport]")
 {
 	SECTION("Quaternion specialization") {
@@ -106,13 +74,6 @@ TEST_CASE("saturate()", "[sfz::MathSupport]")
 	REQUIRE(sfz::saturate(-1.0f) == 0.0f);
 	REQUIRE(sfz::saturate(0.2f) == 0.2f);
 	REQUIRE(sfz::saturate(vec4(4.0f, -1.0f, 0.2f, 0.4f)) == vec4(1.0f, 0.0f, 0.2f, 0.4f));
-}
-
-TEST_CASE("fma()", "[sfz::MathSupport]")
-{
-	REQUIRE(equalsApprox(sfz::fma(2.0f, -2.0f, 6.0f), 2.0f));
-	REQUIRE(equalsApprox(sfz::fma(vec4(1.0f, 2.0f, 3.0f, 4.0f), vec4(-1.0f, -2.0f, 3.0f, 4.0f),
-	                    vec4(1.0f, 2.0f, 3.0f, 4.0f)), vec4(0.0f, -2.0f, 12.0f, 20.0f)));
 }
 
 TEST_CASE("rotateTowards()", "[sfz::MathSupport]")
