@@ -332,15 +332,15 @@ TEST_CASE("Matrix<T,3,3> specialization", "[sfz::Matrix]")
 		vec3 startPoint(1.0f, 0.0f, 0.0f);
 		vec3 axis = vec3(1.0f, 1.0f, 0.0f);
 		mat33 rot = mat33::rotation3(axis, PI);
-		REQUIRE(equalsApprox(rot * startPoint, vec3(0.0f, 1.0, 0.0f)));
+		REQUIRE(eqf(rot * startPoint, vec3(0.0f, 1.0, 0.0f)));
 
 		mat33 xRot90 = mat33::rotation3(vec3(1.0f, 0.0f, 0.0f), PI/2.0f);
-		REQUIRE(equalsApprox(xRot90.row0, vec3(1.0f, 0.0f, 0.0f)));
-		REQUIRE(equalsApprox(xRot90.row1, vec3(0.0f, 0.0f, -1.0f)));
-		REQUIRE(equalsApprox(xRot90.row2, vec3(0.0f, 1.0f, 0.0f)));
+		REQUIRE(eqf(xRot90.row0, vec3(1.0f, 0.0f, 0.0f)));
+		REQUIRE(eqf(xRot90.row1, vec3(0.0f, 0.0f, -1.0f)));
+		REQUIRE(eqf(xRot90.row2, vec3(0.0f, 1.0f, 0.0f)));
 
 		vec3 v = xRot90 * vec3(1.0f);
-		REQUIRE(equalsApprox(v, vec3(1.0f, -1.0f, 1.0f)));
+		REQUIRE(eqf(v, vec3(1.0f, -1.0f, 1.0f)));
 	}
 }
 
@@ -569,40 +569,40 @@ TEST_CASE("Matrix<T,3,4> specialization", "[sfz::Matrix]")
 		vec3 startPoint(1.0f, 0.0f, 0.0f);
 		vec3 axis = vec3(1.0f, 1.0f, 0.0f);
 		mat34 rot = mat34::rotation3(axis, PI);
-		REQUIRE(equalsApprox(transformPoint(rot, startPoint), vec3(0.0f, 1.0, 0.0f)));
+		REQUIRE(eqf(transformPoint(rot, startPoint), vec3(0.0f, 1.0, 0.0f)));
 
 		mat34 xRot90 = mat34::rotation3(vec3(1.0f, 0.0f, 0.0f), PI/2.0f);
-		REQUIRE(equalsApprox(xRot90.row0, vec4(1.0f, 0.0f, 0.0f, 0.0f)));
-		REQUIRE(equalsApprox(xRot90.row1, vec4(0.0f, 0.0f, -1.0f, 0.0f)));
-		REQUIRE(equalsApprox(xRot90.row2, vec4(0.0f, 1.0f, 0.0f, 0.0f)));
+		REQUIRE(eqf(xRot90.row0, vec4(1.0f, 0.0f, 0.0f, 0.0f)));
+		REQUIRE(eqf(xRot90.row1, vec4(0.0f, 0.0f, -1.0f, 0.0f)));
+		REQUIRE(eqf(xRot90.row2, vec4(0.0f, 1.0f, 0.0f, 0.0f)));
 
 		vec3 v = transformPoint(xRot90, vec3(1.0f));
-		REQUIRE(equalsApprox(v, vec3(1.0f, -1.0f, 1.0f)));
+		REQUIRE(eqf(v, vec3(1.0f, -1.0f, 1.0f)));
 	}
 	SECTION("translation3() constructor function") {
 		vec4 v1(1.0f, 1.0f, 1.0f, 1.0f);
 		mat44 m = mat44::translation3(vec3(-2.0f, 1.0f, 0.0f));
-		REQUIRE(equalsApprox(m.at(0, 0), 1.0f));
-		REQUIRE(equalsApprox(m.at(0, 1), 0.0f));
-		REQUIRE(equalsApprox(m.at(0, 2), 0.0f));
-		REQUIRE(equalsApprox(m.at(0, 3), -2.0f));
-		REQUIRE(equalsApprox(m.at(1, 0), 0.0f));
-		REQUIRE(equalsApprox(m.at(1, 1), 1.0f));
-		REQUIRE(equalsApprox(m.at(1, 2), 0.0f));
-		REQUIRE(equalsApprox(m.at(1, 3), 1.0f));
-		REQUIRE(equalsApprox(m.at(2, 0), 0.0f));
-		REQUIRE(equalsApprox(m.at(2, 1), 0.0f));
-		REQUIRE(equalsApprox(m.at(2, 2), 1.0f));
-		REQUIRE(equalsApprox(m.at(2, 3), 0.0f));
-		REQUIRE(equalsApprox(m.at(3, 0), 0.0f));
-		REQUIRE(equalsApprox(m.at(3, 1), 0.0f));
-		REQUIRE(equalsApprox(m.at(3, 2), 0.0f));
-		REQUIRE(equalsApprox(m.at(3, 3), 1.0f));
+		REQUIRE(eqf(m.at(0, 0), 1.0f));
+		REQUIRE(eqf(m.at(0, 1), 0.0f));
+		REQUIRE(eqf(m.at(0, 2), 0.0f));
+		REQUIRE(eqf(m.at(0, 3), -2.0f));
+		REQUIRE(eqf(m.at(1, 0), 0.0f));
+		REQUIRE(eqf(m.at(1, 1), 1.0f));
+		REQUIRE(eqf(m.at(1, 2), 0.0f));
+		REQUIRE(eqf(m.at(1, 3), 1.0f));
+		REQUIRE(eqf(m.at(2, 0), 0.0f));
+		REQUIRE(eqf(m.at(2, 1), 0.0f));
+		REQUIRE(eqf(m.at(2, 2), 1.0f));
+		REQUIRE(eqf(m.at(2, 3), 0.0f));
+		REQUIRE(eqf(m.at(3, 0), 0.0f));
+		REQUIRE(eqf(m.at(3, 1), 0.0f));
+		REQUIRE(eqf(m.at(3, 2), 0.0f));
+		REQUIRE(eqf(m.at(3, 3), 1.0f));
 		vec4 v2 = m * v1;
-		REQUIRE(equalsApprox(v2.x, -1.0f));
-		REQUIRE(equalsApprox(v2.y, 2.0f));
-		REQUIRE(equalsApprox(v2.z, 1.0f));
-		REQUIRE(equalsApprox(v2.w, 1.0f));
+		REQUIRE(eqf(v2.x, -1.0f));
+		REQUIRE(eqf(v2.y, 2.0f));
+		REQUIRE(eqf(v2.z, 1.0f));
+		REQUIRE(eqf(v2.w, 1.0f));
 	}
 }
 
@@ -890,41 +890,41 @@ TEST_CASE("Matrix<T,4,4> specialization", "[sfz::Matrix]")
 		vec4 startPoint(1.0f, 0.0f, 0.0f, 1.0f);
 		vec3 axis = vec3(1.0f, 1.0f, 0.0f);
 		mat44 rot = mat44::rotation3(axis, PI);
-		REQUIRE(equalsApprox(rot * startPoint, vec4(0.0f, 1.0, 0.0f, 1.0f)));
+		REQUIRE(eqf(rot * startPoint, vec4(0.0f, 1.0, 0.0f, 1.0f)));
 
 		mat44 xRot90 = mat44::rotation3(vec3(1.0f, 0.0f, 0.0f), PI/2.0f);
-		REQUIRE(equalsApprox(xRot90.row0, vec4(1.0f, 0.0f, 0.0f, 0.0f)));
-		REQUIRE(equalsApprox(xRot90.row1, vec4(0.0f, 0.0f, -1.0f, 0.0f)));
-		REQUIRE(equalsApprox(xRot90.row2, vec4(0.0f, 1.0f, 0.0f, 0.0f)));
-		REQUIRE(equalsApprox(xRot90.row3, vec4(0.0f, 0.0f, 0.0f, 1.0f)));
+		REQUIRE(eqf(xRot90.row0, vec4(1.0f, 0.0f, 0.0f, 0.0f)));
+		REQUIRE(eqf(xRot90.row1, vec4(0.0f, 0.0f, -1.0f, 0.0f)));
+		REQUIRE(eqf(xRot90.row2, vec4(0.0f, 1.0f, 0.0f, 0.0f)));
+		REQUIRE(eqf(xRot90.row3, vec4(0.0f, 0.0f, 0.0f, 1.0f)));
 
 		vec4 v = xRot90 * vec4(1.0f);
-		REQUIRE(equalsApprox(v, vec4(1.0f, -1.0f, 1.0f, 1.0f)));
+		REQUIRE(eqf(v, vec4(1.0f, -1.0f, 1.0f, 1.0f)));
 	}
 	SECTION("translation3() constructor function") {
 		vec4 v1(1.0f, 1.0f, 1.0f, 1.0f);
 		mat44 m = mat44::translation3(vec3(-2.0f, 1.0f, 0.0f));
-		REQUIRE(equalsApprox(m.at(0, 0), 1.0f));
-		REQUIRE(equalsApprox(m.at(0, 1), 0.0f));
-		REQUIRE(equalsApprox(m.at(0, 2), 0.0f));
-		REQUIRE(equalsApprox(m.at(0, 3), -2.0f));
-		REQUIRE(equalsApprox(m.at(1, 0), 0.0f));
-		REQUIRE(equalsApprox(m.at(1, 1), 1.0f));
-		REQUIRE(equalsApprox(m.at(1, 2), 0.0f));
-		REQUIRE(equalsApprox(m.at(1, 3), 1.0f));
-		REQUIRE(equalsApprox(m.at(2, 0), 0.0f));
-		REQUIRE(equalsApprox(m.at(2, 1), 0.0f));
-		REQUIRE(equalsApprox(m.at(2, 2), 1.0f));
-		REQUIRE(equalsApprox(m.at(2, 3), 0.0f));
-		REQUIRE(equalsApprox(m.at(3, 0), 0.0f));
-		REQUIRE(equalsApprox(m.at(3, 1), 0.0f));
-		REQUIRE(equalsApprox(m.at(3, 2), 0.0f));
-		REQUIRE(equalsApprox(m.at(3, 3), 1.0f));
+		REQUIRE(eqf(m.at(0, 0), 1.0f));
+		REQUIRE(eqf(m.at(0, 1), 0.0f));
+		REQUIRE(eqf(m.at(0, 2), 0.0f));
+		REQUIRE(eqf(m.at(0, 3), -2.0f));
+		REQUIRE(eqf(m.at(1, 0), 0.0f));
+		REQUIRE(eqf(m.at(1, 1), 1.0f));
+		REQUIRE(eqf(m.at(1, 2), 0.0f));
+		REQUIRE(eqf(m.at(1, 3), 1.0f));
+		REQUIRE(eqf(m.at(2, 0), 0.0f));
+		REQUIRE(eqf(m.at(2, 1), 0.0f));
+		REQUIRE(eqf(m.at(2, 2), 1.0f));
+		REQUIRE(eqf(m.at(2, 3), 0.0f));
+		REQUIRE(eqf(m.at(3, 0), 0.0f));
+		REQUIRE(eqf(m.at(3, 1), 0.0f));
+		REQUIRE(eqf(m.at(3, 2), 0.0f));
+		REQUIRE(eqf(m.at(3, 3), 1.0f));
 		vec4 v2 = m * v1;
-		REQUIRE(equalsApprox(v2.x, -1.0f));
-		REQUIRE(equalsApprox(v2.y, 2.0f));
-		REQUIRE(equalsApprox(v2.z, 1.0f));
-		REQUIRE(equalsApprox(v2.w, 1.0f));
+		REQUIRE(eqf(v2.x, -1.0f));
+		REQUIRE(eqf(v2.y, 2.0f));
+		REQUIRE(eqf(v2.z, 1.0f));
+		REQUIRE(eqf(v2.w, 1.0f));
 	}
 }
 
@@ -941,42 +941,42 @@ TEST_CASE("Arhitmetic & assignment operators", "[sfz::Matrix]")
 		m1 += m2;
 		m2 += m3;
 
-		REQUIRE(equalsApprox(m1.at(0, 0), 2.0f));
-		REQUIRE(equalsApprox(m1.at(0, 1), 4.0f));
-		REQUIRE(equalsApprox(m1.at(1, 0), 6.0f));
-		REQUIRE(equalsApprox(m1.at(1, 1), 8.0f));
+		REQUIRE(eqf(m1.at(0, 0), 2.0f));
+		REQUIRE(eqf(m1.at(0, 1), 4.0f));
+		REQUIRE(eqf(m1.at(1, 0), 6.0f));
+		REQUIRE(eqf(m1.at(1, 1), 8.0f));
 
-		REQUIRE(equalsApprox(m2.at(0, 0), -1.0f));
-		REQUIRE(equalsApprox(m2.at(0, 1), 1.0f));
-		REQUIRE(equalsApprox(m2.at(1, 0), 6.0f));
-		REQUIRE(equalsApprox(m2.at(1, 1), 37.0f));
+		REQUIRE(eqf(m2.at(0, 0), -1.0f));
+		REQUIRE(eqf(m2.at(0, 1), 1.0f));
+		REQUIRE(eqf(m2.at(1, 0), 6.0f));
+		REQUIRE(eqf(m2.at(1, 1), 37.0f));
 	}
 	SECTION("-=") {
 		m1 -= m2;
 		m2 -= m3;
 
-		REQUIRE(equalsApprox(m1.at(0, 0), 0.0f));
-		REQUIRE(equalsApprox(m1.at(0, 1), 0.0f));
-		REQUIRE(equalsApprox(m1.at(1, 0), 0.0f));
-		REQUIRE(equalsApprox(m1.at(1, 1), 0.0f));
+		REQUIRE(eqf(m1.at(0, 0), 0.0f));
+		REQUIRE(eqf(m1.at(0, 1), 0.0f));
+		REQUIRE(eqf(m1.at(1, 0), 0.0f));
+		REQUIRE(eqf(m1.at(1, 1), 0.0f));
 
-		REQUIRE(equalsApprox(m2.at(0, 0), 3.0f));
-		REQUIRE(equalsApprox(m2.at(0, 1), 3.0f));
-		REQUIRE(equalsApprox(m2.at(1, 0), 0.0f));
-		REQUIRE(equalsApprox(m2.at(1, 1), -29.0f));
+		REQUIRE(eqf(m2.at(0, 0), 3.0f));
+		REQUIRE(eqf(m2.at(0, 1), 3.0f));
+		REQUIRE(eqf(m2.at(1, 0), 0.0f));
+		REQUIRE(eqf(m2.at(1, 1), -29.0f));
 	}
 	SECTION("*= (scalar)") {
 		m1 *= 2.0f;
-		REQUIRE(equalsApprox(m1.at(0, 0), 2.0f));
-		REQUIRE(equalsApprox(m1.at(0, 1), 4.0f));
-		REQUIRE(equalsApprox(m1.at(1, 0), 6.0f));
-		REQUIRE(equalsApprox(m1.at(1, 1), 8.0f));
+		REQUIRE(eqf(m1.at(0, 0), 2.0f));
+		REQUIRE(eqf(m1.at(0, 1), 4.0f));
+		REQUIRE(eqf(m1.at(1, 0), 6.0f));
+		REQUIRE(eqf(m1.at(1, 1), 8.0f));
 
 		m3 *= -1.0f;
-		REQUIRE(equalsApprox(m3.at(0, 0), 2.0f));
-		REQUIRE(equalsApprox(m3.at(0, 1), 1.0f));
-		REQUIRE(equalsApprox(m3.at(1, 0), -3.0f));
-		REQUIRE(equalsApprox(m3.at(1, 1), -33.0f));
+		REQUIRE(eqf(m3.at(0, 0), 2.0f));
+		REQUIRE(eqf(m3.at(0, 1), 1.0f));
+		REQUIRE(eqf(m3.at(1, 0), -3.0f));
+		REQUIRE(eqf(m3.at(1, 1), -33.0f));
 	}
 	SECTION("*= (matrix of same size)") {
 		mat22 m4(1.0f, 0.0f,
@@ -984,16 +984,16 @@ TEST_CASE("Arhitmetic & assignment operators", "[sfz::Matrix]")
 		auto m1cpy = m1;
 		m1cpy *= m4;
 
-		REQUIRE(equalsApprox(m1cpy.at(0, 0), 1.0f));
-		REQUIRE(equalsApprox(m1cpy.at(0, 1), 2.0f));
-		REQUIRE(equalsApprox(m1cpy.at(1, 0), 3.0f));
-		REQUIRE(equalsApprox(m1cpy.at(1, 1), 4.0f));
+		REQUIRE(eqf(m1cpy.at(0, 0), 1.0f));
+		REQUIRE(eqf(m1cpy.at(0, 1), 2.0f));
+		REQUIRE(eqf(m1cpy.at(1, 0), 3.0f));
+		REQUIRE(eqf(m1cpy.at(1, 1), 4.0f));
 
 		m4 *= m1;
-		REQUIRE(equalsApprox(m4.at(0, 0), 1.0f));
-		REQUIRE(equalsApprox(m4.at(0, 1), 2.0f));
-		REQUIRE(equalsApprox(m4.at(1, 0), 3.0f));
-		REQUIRE(equalsApprox(m4.at(1, 1), 4.0f));
+		REQUIRE(eqf(m4.at(0, 0), 1.0f));
+		REQUIRE(eqf(m4.at(0, 1), 2.0f));
+		REQUIRE(eqf(m4.at(1, 0), 3.0f));
+		REQUIRE(eqf(m4.at(1, 1), 4.0f));
 	}
 }
 
@@ -1013,18 +1013,18 @@ TEST_CASE("Arhitmetic operators", "[sfz::Matrix]")
 
 	SECTION("+") {
 		auto res1 = m1 + m2;
-		REQUIRE(equalsApprox(res1.at(0, 0), 1.0f));
-		REQUIRE(equalsApprox(res1.at(0, 1), 3.0f));
-		REQUIRE(equalsApprox(res1.at(1, 0), 3.0f));
-		REQUIRE(equalsApprox(res1.at(1, 1), 4.0f));
+		REQUIRE(eqf(res1.at(0, 0), 1.0f));
+		REQUIRE(eqf(res1.at(0, 1), 3.0f));
+		REQUIRE(eqf(res1.at(1, 0), 3.0f));
+		REQUIRE(eqf(res1.at(1, 1), 4.0f));
 
 		auto res2 = m3 + m3;
-		REQUIRE(equalsApprox(res2.at(0, 0), 2.0f));
-		REQUIRE(equalsApprox(res2.at(0, 1), 4.0f));
-		REQUIRE(equalsApprox(res2.at(0, 2), 6.0f));
-		REQUIRE(equalsApprox(res2.at(1, 0), 8.0f));
-		REQUIRE(equalsApprox(res2.at(1, 1), 10.0f));
-		REQUIRE(equalsApprox(res2.at(1, 2), 12.0f));
+		REQUIRE(eqf(res2.at(0, 0), 2.0f));
+		REQUIRE(eqf(res2.at(0, 1), 4.0f));
+		REQUIRE(eqf(res2.at(0, 2), 6.0f));
+		REQUIRE(eqf(res2.at(1, 0), 8.0f));
+		REQUIRE(eqf(res2.at(1, 1), 10.0f));
+		REQUIRE(eqf(res2.at(1, 2), 12.0f));
 	}
 	SECTION("-") {
 		auto res1 = m1 - m2;
@@ -1032,72 +1032,72 @@ TEST_CASE("Arhitmetic operators", "[sfz::Matrix]")
 
 		REQUIRE(res1 != res2);
 
-		REQUIRE(equalsApprox(res1.at(0, 0), 1.0f));
-		REQUIRE(equalsApprox(res1.at(0, 1), 1.0f));
-		REQUIRE(equalsApprox(res1.at(1, 0), 3.0f));
-		REQUIRE(equalsApprox(res1.at(1, 1), 4.0f));
+		REQUIRE(eqf(res1.at(0, 0), 1.0f));
+		REQUIRE(eqf(res1.at(0, 1), 1.0f));
+		REQUIRE(eqf(res1.at(1, 0), 3.0f));
+		REQUIRE(eqf(res1.at(1, 1), 4.0f));
 
-		REQUIRE(equalsApprox(res2.at(0, 0), -1.0f));
-		REQUIRE(equalsApprox(res2.at(0, 1), -1.0f));
-		REQUIRE(equalsApprox(res2.at(1, 0), -3.0f));
-		REQUIRE(equalsApprox(res2.at(1, 1), -4.0f));
+		REQUIRE(eqf(res2.at(0, 0), -1.0f));
+		REQUIRE(eqf(res2.at(0, 1), -1.0f));
+		REQUIRE(eqf(res2.at(1, 0), -3.0f));
+		REQUIRE(eqf(res2.at(1, 1), -4.0f));
 	}
 	SECTION("- (negation)") {
 		auto res1 = -m1;
 
-		REQUIRE(equalsApprox(res1.at(0, 0), -1.0f));
-		REQUIRE(equalsApprox(res1.at(0, 1), -2.0f));
-		REQUIRE(equalsApprox(res1.at(1, 0), -3.0f));
-		REQUIRE(equalsApprox(res1.at(1, 1), -4.0f));
+		REQUIRE(eqf(res1.at(0, 0), -1.0f));
+		REQUIRE(eqf(res1.at(0, 1), -2.0f));
+		REQUIRE(eqf(res1.at(1, 0), -3.0f));
+		REQUIRE(eqf(res1.at(1, 1), -4.0f));
 	}
 	SECTION("* (matrix)") {
 		auto res1 = m1*m2;
-		REQUIRE(equalsApprox(res1.at(0, 0), 0.0f));
-		REQUIRE(equalsApprox(res1.at(0, 1), 1.0f));
-		REQUIRE(equalsApprox(res1.at(1, 0), 0.0f));
-		REQUIRE(equalsApprox(res1.at(1, 1), 3.0f));
+		REQUIRE(eqf(res1.at(0, 0), 0.0f));
+		REQUIRE(eqf(res1.at(0, 1), 1.0f));
+		REQUIRE(eqf(res1.at(1, 0), 0.0f));
+		REQUIRE(eqf(res1.at(1, 1), 3.0f));
 
 		auto res2 = m2*m1;
-		REQUIRE(equalsApprox(res2.at(0, 0), 3.0f));
-		REQUIRE(equalsApprox(res2.at(0, 1), 4.0f));
-		REQUIRE(equalsApprox(res2.at(1, 0), 0.0f));
-		REQUIRE(equalsApprox(res2.at(1, 1), 0.0f));
+		REQUIRE(eqf(res2.at(0, 0), 3.0f));
+		REQUIRE(eqf(res2.at(0, 1), 4.0f));
+		REQUIRE(eqf(res2.at(1, 0), 0.0f));
+		REQUIRE(eqf(res2.at(1, 1), 0.0f));
 
 		auto res3 = m3*m4;
-		REQUIRE(equalsApprox(res3.at(0, 0), 1.0f));
-		REQUIRE(equalsApprox(res3.at(0, 1), 2.0f));
-		REQUIRE(equalsApprox(res3.at(1, 0), 4.0f));
-		REQUIRE(equalsApprox(res3.at(1, 1), 5.0f));
+		REQUIRE(eqf(res3.at(0, 0), 1.0f));
+		REQUIRE(eqf(res3.at(0, 1), 2.0f));
+		REQUIRE(eqf(res3.at(1, 0), 4.0f));
+		REQUIRE(eqf(res3.at(1, 1), 5.0f));
 	}
 	SECTION("* (vector)") {
 		vec2 v1(1.0f, -2.0f);
 
 		vec2 res1 = m1 * v1;
-		REQUIRE(equalsApprox(res1.x, -3.0f));
-		REQUIRE(equalsApprox(res1.y, -5.0f));
+		REQUIRE(eqf(res1.x, -3.0f));
+		REQUIRE(eqf(res1.y, -5.0f));
 
 		vec3 res2 = m4 * v1;
-		REQUIRE(equalsApprox(res2.x, 1.0f));
-		REQUIRE(equalsApprox(res2.y, -2.0f));
-		REQUIRE(equalsApprox(res2.z, 0.0f));
+		REQUIRE(eqf(res2.x, 1.0f));
+		REQUIRE(eqf(res2.y, -2.0f));
+		REQUIRE(eqf(res2.z, 0.0f));
 
 		mat34 m5(1.0f, 2.0f, 3.0f, 4.0f,
 		         5.0f, 6.0f, 7.0f, 8.0f,
 		         9.0f, 10.0f, 11.0f, 12.0f);
-		REQUIRE(equalsApprox(m5 * vec4(1.0f), vec3(10.0f, 26.0f, 42.0f)));
+		REQUIRE(eqf(m5 * vec4(1.0f), vec3(10.0f, 26.0f, 42.0f)));
 	}
 	SECTION("* (scalar)") {
 		auto res1 = m1 * 2.0f;
-		REQUIRE(equalsApprox(res1.at(0, 0), 2.0f));
-		REQUIRE(equalsApprox(res1.at(0, 1), 4.0f));
-		REQUIRE(equalsApprox(res1.at(1, 0), 6.0f));
-		REQUIRE(equalsApprox(res1.at(1, 1), 8.0f));
+		REQUIRE(eqf(res1.at(0, 0), 2.0f));
+		REQUIRE(eqf(res1.at(0, 1), 4.0f));
+		REQUIRE(eqf(res1.at(1, 0), 6.0f));
+		REQUIRE(eqf(res1.at(1, 1), 8.0f));
 
 		auto res2 = -1.0f * m2;
-		REQUIRE(equalsApprox(res2.at(0, 0), 0.0f));
-		REQUIRE(equalsApprox(res2.at(0, 1), -1.0f));
-		REQUIRE(equalsApprox(res2.at(1, 0), 0.0f));
-		REQUIRE(equalsApprox(res2.at(1, 1), 0.0f));
+		REQUIRE(eqf(res2.at(0, 0), 0.0f));
+		REQUIRE(eqf(res2.at(0, 1), -1.0f));
+		REQUIRE(eqf(res2.at(1, 0), 0.0f));
+		REQUIRE(eqf(res2.at(1, 1), 0.0f));
 	}
 }
 
@@ -1134,10 +1134,10 @@ TEST_CASE("Element-wise multiplication", "[sfz::Matrix]")
 		3.0f, 4.0f);
 	mat22 res = elemMult(m, m);
 
-	REQUIRE(equalsApprox(res.at(0, 0), 1.0f));
-	REQUIRE(equalsApprox(res.at(0, 1), 4.0f));
-	REQUIRE(equalsApprox(res.at(1, 0), 9.0f));
-	REQUIRE(equalsApprox(res.at(1, 1), 16.0f));
+	REQUIRE(eqf(res.at(0, 0), 1.0f));
+	REQUIRE(eqf(res.at(0, 1), 4.0f));
+	REQUIRE(eqf(res.at(1, 0), 9.0f));
+	REQUIRE(eqf(res.at(1, 1), 16.0f));
 }
 
 TEST_CASE("Transpose", "[sfz::Matrix]")
@@ -1147,22 +1147,22 @@ TEST_CASE("Transpose", "[sfz::Matrix]")
 	Matrix<float, 2, 3> m1(arr);
 
 	Matrix<float, 3, 2> m2 = transpose(m1);
-	REQUIRE(equalsApprox(m2.at(0, 0), 1.0f));
-	REQUIRE(equalsApprox(m2.at(0, 1), 4.0f));
-	REQUIRE(equalsApprox(m2.at(1, 0), 2.0f));
-	REQUIRE(equalsApprox(m2.at(1, 1), 5.0f));
-	REQUIRE(equalsApprox(m2.at(2, 0), 3.0f));
-	REQUIRE(equalsApprox(m2.at(2, 1), 6.0f));
+	REQUIRE(eqf(m2.at(0, 0), 1.0f));
+	REQUIRE(eqf(m2.at(0, 1), 4.0f));
+	REQUIRE(eqf(m2.at(1, 0), 2.0f));
+	REQUIRE(eqf(m2.at(1, 1), 5.0f));
+	REQUIRE(eqf(m2.at(2, 0), 3.0f));
+	REQUIRE(eqf(m2.at(2, 1), 6.0f));
 
 	mat44 m3(1.0f, 2.0f, 3.0f, 4.0f,
 	         5.0f, 6.0f, 7.0f, 8.0f,
 	         9.0f, 10.0f, 11.0f, 12.0f,
 	         13.0f, 14.0f, 15.0f, 16.0f);
 	mat44 m3transp = transpose(m3);
-	REQUIRE(equalsApprox(m3transp.row0, vec4(1.0f, 5.0f, 9.0f, 13.0f)));
-	REQUIRE(equalsApprox(m3transp.row1, vec4(2.0f, 6.0f, 10.0f, 14.0f)));
-	REQUIRE(equalsApprox(m3transp.row2, vec4(3.0f, 7.0f, 11.0f, 15.0f)));
-	REQUIRE(equalsApprox(m3transp.row3, vec4(4.0f, 8.0f, 12.0f, 16.0f)));
+	REQUIRE(eqf(m3transp.row0, vec4(1.0f, 5.0f, 9.0f, 13.0f)));
+	REQUIRE(eqf(m3transp.row1, vec4(2.0f, 6.0f, 10.0f, 14.0f)));
+	REQUIRE(eqf(m3transp.row2, vec4(3.0f, 7.0f, 11.0f, 15.0f)));
+	REQUIRE(eqf(m3transp.row3, vec4(4.0f, 8.0f, 12.0f, 16.0f)));
 }
 
 TEST_CASE("Transforming 3D vector with 3x4 and 4x4 matrix", "[sfz::MatrixSupport]")
@@ -1178,27 +1178,27 @@ TEST_CASE("Transforming 3D vector with 3x4 and 4x4 matrix", "[sfz::MatrixSupport
 
 	SECTION("transformPoint() 3x4") {
 		vec3 v2 = transformPoint(m1, v);
-		REQUIRE(equalsApprox(v2.x, 3.0f));
-		REQUIRE(equalsApprox(v2.y, 2.0f));
-		REQUIRE(equalsApprox(v2.z, 2.0f));
+		REQUIRE(eqf(v2.x, 3.0f));
+		REQUIRE(eqf(v2.y, 2.0f));
+		REQUIRE(eqf(v2.z, 2.0f));
 	}
 	SECTION("transformPoint() 4x4") {
 		vec3 v2 = transformPoint(m2, v);
-		REQUIRE(equalsApprox(v2.x, 3.0f));
-		REQUIRE(equalsApprox(v2.y, 2.0f));
-		REQUIRE(equalsApprox(v2.z, 2.0f));
+		REQUIRE(eqf(v2.x, 3.0f));
+		REQUIRE(eqf(v2.y, 2.0f));
+		REQUIRE(eqf(v2.z, 2.0f));
 	}
 	SECTION("transformDir() 3x4") {
 		vec3 v2 = transformDir(m1, v);
-		REQUIRE(equalsApprox(v2.x, 2.0f));
-		REQUIRE(equalsApprox(v2.y, 2.0f));
-		REQUIRE(equalsApprox(v2.z, 2.0f));
+		REQUIRE(eqf(v2.x, 2.0f));
+		REQUIRE(eqf(v2.y, 2.0f));
+		REQUIRE(eqf(v2.z, 2.0f));
 	}
 	SECTION("transformDir() 4x4") {
 		vec3 v2 = transformDir(m2, v);
-		REQUIRE(equalsApprox(v2.x, 2.0f));
-		REQUIRE(equalsApprox(v2.y, 2.0f));
-		REQUIRE(equalsApprox(v2.z, 2.0f));
+		REQUIRE(eqf(v2.x, 2.0f));
+		REQUIRE(eqf(v2.y, 2.0f));
+		REQUIRE(eqf(v2.z, 2.0f));
 	}
 }
 
@@ -1206,23 +1206,23 @@ TEST_CASE("Determinants", "[sfz::MatrixSupport]")
 {
 	mat22 m1(1.0f, 2.0f,
 	         3.0f, 4.0f);
-	REQUIRE(equalsApprox(determinant(m1), -2.0f));
+	REQUIRE(eqf(determinant(m1), -2.0f));
 
 	mat33 m2(-1.0f, 1.0f, 0.0f,
 	         3.0f, 5.0f, 1.0f,
 	         7.0f, 8.0f, 9.0f);
-	REQUIRE(equalsApprox(determinant(m2), -57.0f));
+	REQUIRE(eqf(determinant(m2), -57.0f));
 
 	mat33 m3(99.0f, -2.0f, 5.0f,
 	         8.0f, -4.0f, -1.0f,
 	         6.0f, 1.0f, -88.0f);
-	REQUIRE(equalsApprox(determinant(m3), 33711.0f));
+	REQUIRE(eqf(determinant(m3), 33711.0f));
 
 	mat44 m4(1.0f, -2.0f, 1.0f, 3.0f,
 	         1.0f, 4.0f, -5.0f, 0.0f,
 	         -10.0f, 0.0f, 4.0f, 2.0f,
 	         -1.0f, 0.0f, 2.0f, 0.0f);
-	REQUIRE(equalsApprox(determinant(m4), -204.0f));
+	REQUIRE(eqf(determinant(m4), -204.0f));
 }
 
 TEST_CASE("Inverse", "[sfz::MatrixSupport]")
@@ -1232,8 +1232,8 @@ TEST_CASE("Inverse", "[sfz::MatrixSupport]")
 	mat22 m1Inv(2.0f, -1.0f,
 	            -1.0f, 1.0f);
 	mat22 m1CalcInv = inverse(m1);
-	REQUIRE(equalsApprox(m1CalcInv.row0, m1Inv.row0));
-	REQUIRE(equalsApprox(m1CalcInv.row1, m1Inv.row1));
+	REQUIRE(eqf(m1CalcInv.row0, m1Inv.row0));
+	REQUIRE(eqf(m1CalcInv.row1, m1Inv.row1));
 
 	mat33 m3(1.0f, 1.0f, 1.0f,
 	         1.0f, 1.0f, 2.0f,
@@ -1242,9 +1242,9 @@ TEST_CASE("Inverse", "[sfz::MatrixSupport]")
 	            1.0f, -2.0f, 1.0f,
 	            -1.0f, 1.0f, 0.0f);
 	mat33 m3CalcInv = inverse(m3);
-	REQUIRE(equalsApprox(m3CalcInv.row0, m3Inv.row0));
-	REQUIRE(equalsApprox(m3CalcInv.row1, m3Inv.row1));
-	REQUIRE(equalsApprox(m3CalcInv.row2, m3Inv.row2));
+	REQUIRE(eqf(m3CalcInv.row0, m3Inv.row0));
+	REQUIRE(eqf(m3CalcInv.row1, m3Inv.row1));
+	REQUIRE(eqf(m3CalcInv.row2, m3Inv.row2));
 
 	mat44 m5(1.0f, 1.0f, 1.0f, 1.0f,
 	         1.0f, 1.0f, 2.0f, 3.0f,
@@ -1255,10 +1255,10 @@ TEST_CASE("Inverse", "[sfz::MatrixSupport]")
 	            -3.0f, 3.0f, -2.0f, 2.0f,
 	            1.0f, -1.0f, 1.0f, -1.0f);
 	mat44 m5CalcInv = inverse(m5);
-	REQUIRE(equalsApprox(m5CalcInv.row0, m5Inv.row0));
-	REQUIRE(equalsApprox(m5CalcInv.row1, m5Inv.row1));
-	REQUIRE(equalsApprox(m5CalcInv.row2, m5Inv.row2));
-	REQUIRE(equalsApprox(m5CalcInv.row3, m5Inv.row3));
+	REQUIRE(eqf(m5CalcInv.row0, m5Inv.row0));
+	REQUIRE(eqf(m5CalcInv.row1, m5Inv.row1));
+	REQUIRE(eqf(m5CalcInv.row2, m5Inv.row2));
+	REQUIRE(eqf(m5CalcInv.row3, m5Inv.row3));
 }
 
 TEST_CASE("Matrix is proper POD", "[sfz::Matrix]")

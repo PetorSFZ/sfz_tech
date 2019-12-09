@@ -340,10 +340,10 @@ void updateImgui(
 
 		// scroll / move window (w/ PadMenu) // e.g. Left Analog Stick Left/Right/Up/Down
 		vec2 leftStick = c.leftStick;
-		io.NavInputs[ImGuiNavInput_LStickUp] = sfzMax(leftStick.y, 0.0f);
-		io.NavInputs[ImGuiNavInput_LStickDown] = sfz::abs(sfzMin(leftStick.y, 0.0f));
-		io.NavInputs[ImGuiNavInput_LStickLeft] = sfz::abs(sfzMin(leftStick.x, 0.0f));
-		io.NavInputs[ImGuiNavInput_LStickRight] = sfzMax(leftStick.x, 0.0f);
+		io.NavInputs[ImGuiNavInput_LStickUp] = sfz::max(leftStick.y, 0.0f);
+		io.NavInputs[ImGuiNavInput_LStickDown] = sfz::abs(sfz::min(leftStick.y, 0.0f));
+		io.NavInputs[ImGuiNavInput_LStickLeft] = sfz::abs(sfz::min(leftStick.x, 0.0f));
+		io.NavInputs[ImGuiNavInput_LStickRight] = sfz::max(leftStick.x, 0.0f);
 
 		// next window (w/ PadMenu) // e.g. L1 or L2 (PS4), LB or LT (Xbox), L or ZL (Switch)
 		io.NavInputs[ImGuiNavInput_FocusPrev] = buttonToImgui(c.leftShoulder);

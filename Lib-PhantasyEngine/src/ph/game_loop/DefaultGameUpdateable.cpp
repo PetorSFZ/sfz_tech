@@ -378,7 +378,7 @@ private:
 		ImGui::SameLine();
 		vec2 histogramDims = vec2(ImGui::GetWindowSize()) - vec2(145.0f, 25.0f);
 		ImGui::PlotLines("##Frametimes", mStats.samples().data(), mStats.samples().size(), 0, nullptr,
-			0.0f, sfzMax(mStats.max(), 0.020f), histogramDims);
+			0.0f, sfz::max(mStats.max(), 0.020f), histogramDims);
 
 		// End window
 		ImGui::End();
@@ -458,7 +458,7 @@ private:
 		ImGui::SameLine();
 		vec2 histogramDims = vec2(ImGui::GetWindowSize()) - vec2(140.0f, 50.0f);
 		ImGui::PlotLines("##Frametimes", mStats.samples().data(), mStats.samples().size(), 0, nullptr,
-			0.0f, sfzMax(mStats.max(), 0.020f), histogramDims);
+			0.0f, sfz::max(mStats.max(), 0.020f), histogramDims);
 
 		// End window
 		ImGui::End();

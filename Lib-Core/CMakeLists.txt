@@ -196,7 +196,6 @@ if(NOT hasParent)
 
 		${TESTS_DIR}/sfz/math/MathSupport_Tests.cpp
 		${TESTS_DIR}/sfz/math/Matrix_Tests.cpp
-		${TESTS_DIR}/sfz/math/MinMax_Tests.cpp
 		${TESTS_DIR}/sfz/math/Quaternion_Tests.cpp
 
 		${TESTS_DIR}/sfz/memory/Allocators_Tests.cpp

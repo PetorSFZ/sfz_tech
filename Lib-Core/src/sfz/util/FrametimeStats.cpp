@@ -50,8 +50,8 @@ void FrametimeStats::addSample(float sampleInMs) noexcept
 
 	for (float sample : mSamples) {
 		mTotalTime += sample;
-		mMin = sfzMin(mMin, sample);
-		mMax = sfzMax(mMax, sample);
+		mMin = sfz::min(mMin, sample);
+		mMax = sfz::max(mMax, sample);
 	}
 	mAvg = mTotalTime / float(mSamples.size());
 

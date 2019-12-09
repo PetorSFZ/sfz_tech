@@ -33,34 +33,6 @@
 
 namespace sfz {
 
-// clamp() & saturate()
-// ------------------------------------------------------------------------------------------------
-
-// Clamps an argument within the specfied interval. For vector types the limits can be either
-// vectors or scalars. saturate() is a special case of clamp where the parameter is clamped to
-// [0, 1] range.
-
-template<typename ArgT, typename LimitT = ArgT>
-SFZ_CUDA_CALL ArgT clamp(const ArgT& value, const LimitT& minValue, const LimitT& maxValue) noexcept;
-
-SFZ_CUDA_CALL float saturate(float value) noexcept;
-SFZ_CUDA_CALL vec2 saturate(vec2 value) noexcept;
-SFZ_CUDA_CALL vec3 saturate(vec3 value) noexcept;
-SFZ_CUDA_CALL vec4 saturate(vec4 value) noexcept;
-
-// lerp()
-// ------------------------------------------------------------------------------------------------
-
-// Linearly interpolates between two arguments. t should be a scalar in the range [0, 1].
-// Quaternions has a specialized version, which assumes that both the parameter Quaternions are
-// unit. In addition, the resulting Quaternion is normalized before returned.
-
-template<typename ArgT, typename FloatT = ArgT>
-SFZ_CUDA_CALL ArgT lerp(ArgT v0, ArgT v1, FloatT t) noexcept;
-
-template<>
-SFZ_CUDA_CALL Quaternion lerp(Quaternion q0, Quaternion q1, float t) noexcept;
-
 // rotateTowards()
 // ------------------------------------------------------------------------------------------------
 

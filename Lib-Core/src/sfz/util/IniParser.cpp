@@ -134,7 +134,7 @@ bool IniParser::load() noexcept
 			Item comment;
 			comment.type = ItemType::COMMENT_OWN_ROW;
 			comment.str.clear();
-			comment.str.appendChars(startPtr + 1, sfzMin(uint32_t(191), line.length - 1));
+			comment.str.appendChars(startPtr + 1, min(uint32_t(191), line.length - 1));
 			newSections.last().items.add(comment);
 			continue;
 		}
@@ -353,7 +353,7 @@ bool IniParser::save() noexcept
 			// Print items content to string
 			switch (item.type) {
 			case ItemType::NUMBER:
-				if (sfz::equalsApprox(std::round(item.f), item.f)) {
+				if (sfz::eqf(std::round(item.f), item.f)) {
 					str.printfAppend("%s=%i", item.str.str(), item.i);
 				} else {
 					str.printfAppend("%s=%f", item.str.str(), item.f);

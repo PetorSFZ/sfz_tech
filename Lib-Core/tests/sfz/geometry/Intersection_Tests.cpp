@@ -40,9 +40,9 @@ TEST_CASE("Signed distance to plane", "[sfz::Plane]")
 
 	Plane p{vec3{0.0f, 1.0f, 0.0f}, vec3{2.0f, 1.0f, 0.0f}};
 
-	REQUIRE(equalsApprox(p.signedDistance(vec3{2.0f, 3.0f, 0.0f}), 2.0f));
-	REQUIRE(equalsApprox(p.signedDistance(vec3{0.0f, 3.0f, 0.0f}), 2.0f));
-	REQUIRE(equalsApprox(p.signedDistance(vec3{2.0f, 0.0f, 0.0f}), -1.0f));
+	REQUIRE(eqf(p.signedDistance(vec3{2.0f, 3.0f, 0.0f}), 2.0f));
+	REQUIRE(eqf(p.signedDistance(vec3{0.0f, 3.0f, 0.0f}), 2.0f));
+	REQUIRE(eqf(p.signedDistance(vec3{2.0f, 0.0f, 0.0f}), -1.0f));
 }
 
 TEST_CASE("Point inside AABB test", "[sfz::Intersection]")

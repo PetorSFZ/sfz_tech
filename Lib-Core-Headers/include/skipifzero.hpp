@@ -25,6 +25,10 @@
 #include <new> // placement new
 #include <utility> // std::move, std::forward, std::swap
 
+#if defined(min) || defined(max)
+#error "min and/or max is defined (likely by Windows.h), fix before including this header"
+#endif
+
 namespace sfz {
 
 // Assert macros
@@ -361,88 +365,71 @@ constexpr float PI = 3.14159265358979323846f;
 constexpr float DEG_TO_RAD = PI / 180.0f;
 constexpr float RAD_TO_DEG = 180.0f / PI;
 
+constexpr float EQF_EPS = 0.001f;
+constexpr bool eqf(float l, float r, float eps = EQF_EPS) { return (l <= (r + eps)) && (l >= (r - eps)); }
+constexpr bool eqf(vec2 l, vec2 r, float eps = EQF_EPS) { return eqf(l.x, r.x, eps) && eqf(l.y, r.y, eps); }
+constexpr bool eqf(vec3 l, vec3 r, float eps = EQF_EPS) { return eqf(l.xy, r.xy, eps) && eqf(l.z, r.z, eps); }
+constexpr bool eqf(vec4 l, vec4 r, float eps = EQF_EPS) { return eqf(l.xyz, r.xyz, eps) && eqf(l.w, r.w, eps); }
+
 constexpr float abs(float v) { return v >= 0.0f ? v : -v; }
 constexpr vec2 abs(vec2 v) { return vec2(sfz::abs(v.x), sfz::abs(v.y)); }
-constexpr vec3 abs(vec3 v) { return vec3(sfz::abs(v.x), sfz::abs(v.y), sfz::abs(v.z)); }
-constexpr vec4 abs(vec4 v) { return vec4(sfz::abs(v.x), sfz::abs(v.y), sfz::abs(v.z), sfz::abs(v.w)); }
+constexpr vec3 abs(vec3 v) { return vec3(sfz::abs(v.xy), sfz::abs(v.z)); }
+constexpr vec4 abs(vec4 v) { return vec4(sfz::abs(v.xyz), sfz::abs(v.w)); }
 
 constexpr int32_t abs(int32_t v) { return v >= 0 ? v : -v; }
 constexpr vec2_i32 abs(vec2_i32 v) { return vec2_i32(sfz::abs(v.x), sfz::abs(v.y)); }
-constexpr vec3_i32 abs(vec3_i32 v) { return vec3_i32(sfz::abs(v.x), sfz::abs(v.y), sfz::abs(v.z)); }
-constexpr vec4_i32 abs(vec4_i32 v) { return vec4_i32(sfz::abs(v.x), sfz::abs(v.y), sfz::abs(v.z), sfz::abs(v.w)); }
+constexpr vec3_i32 abs(vec3_i32 v) { return vec3_i32(sfz::abs(v.xy),sfz::abs(v.z)); }
+constexpr vec4_i32 abs(vec4_i32 v) { return vec4_i32(sfz::abs(v.xyz), sfz::abs(v.w)); }
 
-constexpr float EQUALS_APPROX_EPS = 0.001f;
+constexpr float min(float l, float r) { return (l < r) ? l : r; }
+constexpr int32_t min(int32_t l, int32_t r) { return (l < r) ? l : r; }
+constexpr uint32_t min(uint32_t l, uint32_t r) { return (l < r) ? l : r; }
+constexpr uint8_t min(uint8_t l, uint8_t r) { return (l < r) ? l : r; }
 
-constexpr bool equalsApprox(float l, float r, float eps = EQUALS_APPROX_EPS)
+template<typename T, uint32_t N>
+constexpr Vec<T,N> min(Vec<T,N> l, Vec<T,N> r)
 {
-	return (l <= (r + eps)) && (l >= (r - eps));
+	Vec<T,N> tmp;
+	for (uint32_t i = 0; i < N; i++) tmp[i] = sfz::min(l[i], r[i]);
+	return tmp;
 }
 
-constexpr bool equalsApprox(vec2 l, vec2 r, float eps = EQUALS_APPROX_EPS)
+template<typename T, uint32_t N> constexpr Vec<T,N> min(Vec<T,N> l, T r) { return sfz::min(l, Vec<T,N>(r)); }
+template<typename T, uint32_t N> constexpr Vec<T,N> min(T l, Vec<T,N> r) { return sfz::min(r, l); }
+
+constexpr float max(float l, float r) { return (l < r) ? r : l; }
+constexpr int32_t max(int32_t l, int32_t r) { return (l < r) ? r : l; }
+constexpr uint32_t max(uint32_t l, uint32_t r) { return (l < r) ? r : l; }
+constexpr uint8_t max(uint8_t l, uint8_t r) { return (l < r) ? r : l; }
+
+template<typename T, uint32_t N>
+constexpr Vec<T,N> max(Vec<T,N> l, Vec<T,N> r)
 {
-	return equalsApprox(l.x, r.x, eps) && equalsApprox(l.y, r.y, eps);
+	Vec<T,N> tmp;
+	for (uint32_t i = 0; i < N; i++) tmp[i] = sfz::max(l[i], r[i]);
+	return tmp;
 }
 
-constexpr bool equalsApprox(vec3 l, vec3 r, float eps = EQUALS_APPROX_EPS)
+template<typename T, uint32_t N> constexpr Vec<T,N> max(Vec<T,N> l, T r) { return sfz::max(l, Vec<T,N>(r)); }
+template<typename T, uint32_t N> constexpr Vec<T,N> max(T l, Vec<T,N> r) { return sfz::max(r, l); }
+
+template<typename ArgT, typename LimitT>
+constexpr ArgT clamp(const ArgT& val, const LimitT& minVal, const LimitT& maxVal)
 {
-	return equalsApprox(l.xy, r.xy, eps) && equalsApprox(l.z, r.z, eps);
+	return sfz::max(minVal, sfz::min(val, maxVal));
 }
 
-constexpr bool equalsApprox(vec4 l, vec4 r, float eps = EQUALS_APPROX_EPS)
-{
-	return equalsApprox(l.xyz, r.xyz, eps) && equalsApprox(l.w, r.w, eps);
-}
+constexpr float saturate(float v) { return sfz::clamp(v, 0.0f, 1.0f); }
+constexpr int32_t saturate(int32_t v) { return sfz::clamp(v, 0, 255); }
+constexpr uint32_t saturate(uint32_t v) { return sfz::clamp(v, 0u, 255u); }
+
+template<typename T> constexpr Vec<T,2> saturate(Vec<T,2> v) { return Vec<T,2>(sfz::saturate(v.x), sfz::saturate(v.y)); }
+template<typename T> constexpr Vec<T,3> saturate(Vec<T,3> v) { return Vec<T,3>(sfz::saturate(v.xy), sfz::saturate(v.z)); }
+template<typename T> constexpr Vec<T,4> saturate(Vec<T,4> v) { return Vec<T,4>(sfz::saturate(v.xyz), sfz::saturate(v.w)); }
+
+constexpr float lerp(float v0, float v1, float t) { return (1.0f - t) * v0 + t * v1; }
+constexpr vec2 lerp(vec2 v0, vec2 v1, float t) { return (1.0f - t) * v0 + t * v1; }
+constexpr vec3 lerp(vec3 v0, vec3 v1, float t) { return (1.0f - t) * v0 + t * v1; }
+constexpr vec4 lerp(vec4 v0, vec4 v1, float t) { return (1.0f - t) * v0 + t * v1; }
 
 } // namespace sfz
-
-// sfzMin() & sfzMax()
-// ------------------------------------------------------------------------------------------------
-
-// Implementations of min() and max() mathematical operations, similar to std::min() and std::max().
-//
-// The reason this is necessary is because std::min()/std::max() generate really poor code on
-// Visual Studio. The below implementation seem to generate exactly the assembly we want (i.e.
-// the minss/maxss x86 instructions for T=float) on Visual Studio 2019. They also seem to generate
-// equally good code to std::min()/std::max() on Clang.
-//
-// See my tweet about it for experiments: https://twitter.com/PetorSFZ/status/1165330439269167104
-
-constexpr float sfzMin(float lhs, float rhs) noexcept { return (lhs < rhs) ? lhs : rhs; }
-constexpr int32_t sfzMin(int32_t lhs, int32_t rhs) noexcept { return (lhs < rhs) ? lhs : rhs; }
-constexpr uint32_t sfzMin(uint32_t lhs, uint32_t rhs) noexcept { return (lhs < rhs) ? lhs : rhs; }
-constexpr int64_t sfzMin(int64_t lhs, int64_t rhs) noexcept { return (lhs < rhs) ? lhs : rhs; }
-constexpr uint64_t sfzMin(uint64_t lhs, uint64_t rhs) noexcept { return (lhs < rhs) ? lhs : rhs; }
-
-template<typename T, uint32_t N>
-constexpr sfz::Vec<T,N> sfzMin(sfz::Vec<T,N> l, sfz::Vec<T,N> r)
-{
-	sfz::Vec<T,N> tmp;
-	for (uint32_t i = 0; i < N; i++) tmp[i] = (l[i] < r[i]) ? l[i] : r[i];
-	return tmp;
-}
-
-template<typename T, uint32_t N>
-constexpr sfz::Vec<T,N> sfzMin(sfz::Vec<T,N> l, T r) { return sfzMin(l, sfz::Vec<T,N>(r)); }
-
-template<typename T, uint32_t N>
-constexpr sfz::Vec<T,N> sfzMin(T l, sfz::Vec<T,N> r) { return sfzMin(r, l); }
-
-constexpr float sfzMax(float lhs, float rhs) noexcept { return (lhs < rhs) ? rhs : lhs; }
-constexpr int32_t sfzMax(int32_t lhs, int32_t rhs) noexcept { return (lhs < rhs) ? rhs : lhs; }
-constexpr uint32_t sfzMax(uint32_t lhs, uint32_t rhs) noexcept { return (lhs < rhs) ? rhs : lhs; }
-constexpr int64_t sfzMax(int64_t lhs, int64_t rhs) noexcept { return (lhs < rhs) ? rhs : lhs; }
-constexpr uint64_t sfzMax(uint64_t lhs, uint64_t rhs) noexcept { return (lhs < rhs) ? rhs : lhs; }
-
-template<typename T, uint32_t N>
-constexpr sfz::Vec<T,N> sfzMax(sfz::Vec<T,N> l, sfz::Vec<T,N> r)
-{
-	sfz::Vec<T,N> tmp;
-	for (uint32_t i = 0; i < N; i++) { tmp[i] = (l[i] < r[i]) ? r[i] : l[i]; }
-	return tmp;
-}
-
-template<typename T, uint32_t N>
-constexpr sfz::Vec<T,N> sfzMax(sfz::Vec<T,N> l, T r) { return sfzMax(l, sfz::Vec<T,N>(r)); }
-
-template<typename T, uint32_t N>
-constexpr sfz::Vec<T,N> sfzMax(T l, sfz::Vec<T,N> r) { return sfzMax(r, l); }

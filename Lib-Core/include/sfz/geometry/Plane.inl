@@ -8,7 +8,7 @@ inline Plane::Plane(const vec3& normal, float d) noexcept
 	mNormal(normal),
 	mD{d}
 {
-	sfz_assert(equalsApprox(length(normal), 1.0f, 0.025f));
+	sfz_assert(eqf(length(normal), 1.0f, 0.025f));
 }
 
 inline Plane::Plane(const vec3& normal, const vec3& position) noexcept
@@ -16,7 +16,7 @@ inline Plane::Plane(const vec3& normal, const vec3& position) noexcept
 	mNormal(normal),
 	mD{dot(normal, position)}
 {
-	sfz_assert(equalsApprox(length(normal), 1.0f, 0.025f));
+	sfz_assert(eqf(length(normal), 1.0f, 0.025f));
 }
 
 // Public member functions

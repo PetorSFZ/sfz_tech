@@ -33,73 +33,73 @@ TEST_CASE("OBB Constructors", "[sfz::OBB]")
 		vec3 zAxis = vec3(0.0f, 0.0f, 1.0f);
 		vec3 extents = vec3(4.0f, 5.0f, 6.0f);
 		OBB obb = OBB(pos, xAxis, yAxis, zAxis, extents);
-		REQUIRE(equalsApprox(obb.center, pos));
-		REQUIRE(equalsApprox(obb.xAxis(), xAxis));
-		REQUIRE(equalsApprox(obb.yAxis(), yAxis));
-		REQUIRE(equalsApprox(obb.zAxis(), zAxis));
-		REQUIRE(equalsApprox(obb.halfExtents, extents * 0.5f));
+		REQUIRE(eqf(obb.center, pos));
+		REQUIRE(eqf(obb.xAxis(), xAxis));
+		REQUIRE(eqf(obb.yAxis(), yAxis));
+		REQUIRE(eqf(obb.zAxis(), zAxis));
+		REQUIRE(eqf(obb.halfExtents, extents * 0.5f));
 	}
 	SECTION("AABB constructor") {
 		vec3 pos = vec3(1.0f, 2.0f, 3.0f);
 		vec3 ext = vec3(4.0f, 5.0f, 6.0f);
 		AABB aabb = AABB(pos, ext.x, ext.y, ext.z);
 		OBB obb = OBB(aabb);
-		REQUIRE(equalsApprox(obb.center, pos));
-		REQUIRE(equalsApprox(obb.xAxis(), vec3(1.0f, 0.0f, 0.0f)));
-		REQUIRE(equalsApprox(obb.yAxis(), vec3(0.0f, 1.0f, 0.0f)));
-		REQUIRE(equalsApprox(obb.zAxis(), vec3(0.0f, 0.0f, 1.0f)));
-		REQUIRE(equalsApprox(obb.halfExtents, ext * 0.5f));
+		REQUIRE(eqf(obb.center, pos));
+		REQUIRE(eqf(obb.xAxis(), vec3(1.0f, 0.0f, 0.0f)));
+		REQUIRE(eqf(obb.yAxis(), vec3(0.0f, 1.0f, 0.0f)));
+		REQUIRE(eqf(obb.zAxis(), vec3(0.0f, 0.0f, 1.0f)));
+		REQUIRE(eqf(obb.halfExtents, ext * 0.5f));
 	}
 }
 
 TEST_CASE("OBB: transformOBB()", "[sfz:OBB]")
 {
 	OBB identityObb = OBB(AABB(vec3(0.0f), 1.0f, 1.0f, 1.0f));
-	REQUIRE(equalsApprox(identityObb.center, vec3(0.0f)));
-	REQUIRE(equalsApprox(identityObb.xAxis(), vec3(1.0f, 0.0f, 0.0f)));
-	REQUIRE(equalsApprox(identityObb.yAxis(), vec3(0.0f, 1.0f, 0.0f)));
-	REQUIRE(equalsApprox(identityObb.zAxis(), vec3(0.0f, 0.0f, 1.0f)));
-	REQUIRE(equalsApprox(identityObb.halfExtents, vec3(0.5f)));
+	REQUIRE(eqf(identityObb.center, vec3(0.0f)));
+	REQUIRE(eqf(identityObb.xAxis(), vec3(1.0f, 0.0f, 0.0f)));
+	REQUIRE(eqf(identityObb.yAxis(), vec3(0.0f, 1.0f, 0.0f)));
+	REQUIRE(eqf(identityObb.zAxis(), vec3(0.0f, 0.0f, 1.0f)));
+	REQUIRE(eqf(identityObb.halfExtents, vec3(0.5f)));
 
 	mat44 rot1 = mat44::rotation3(vec3(0.0f, 0.0f, -1.0f), 3.1415926f * 0.5f);
-	REQUIRE(equalsApprox(transformDir(rot1, vec3(0.0f, 1.0f, 0.0f)), vec3(1.0f, 0.0f, 0.0f)));
+	REQUIRE(eqf(transformDir(rot1, vec3(0.0f, 1.0f, 0.0f)), vec3(1.0f, 0.0f, 0.0f)));
 
 	mat44 rot2 = mat44::rotation3(vec3(1.0f, 0.0f, 0.0f), 3.1415926f * 0.5f);
-	REQUIRE(equalsApprox(transformDir(rot2, vec3(0.0f, 1.0f, 0.0f)), vec3(0.0f, 0.0f, 1.0f)));
+	REQUIRE(eqf(transformDir(rot2, vec3(0.0f, 1.0f, 0.0f)), vec3(0.0f, 0.0f, 1.0f)));
 
 	mat44 rot3 = rot2 * rot1;
-	REQUIRE(equalsApprox(transformDir(rot3, vec3(1.0f, 0.0f, 0.0f)), vec3(0.0f, 0.0f, -1.0f)));
-	REQUIRE(equalsApprox(transformDir(rot3, vec3(0.0f, 1.0f, 0.0f)), vec3(1.0f, 0.0f, 0.0f)));
-	REQUIRE(equalsApprox(transformDir(rot3, vec3(0.0f, 0.0f, 1.0f)), vec3(0.0f, -1.0f, 0.0f)));
+	REQUIRE(eqf(transformDir(rot3, vec3(1.0f, 0.0f, 0.0f)), vec3(0.0f, 0.0f, -1.0f)));
+	REQUIRE(eqf(transformDir(rot3, vec3(0.0f, 1.0f, 0.0f)), vec3(1.0f, 0.0f, 0.0f)));
+	REQUIRE(eqf(transformDir(rot3, vec3(0.0f, 0.0f, 1.0f)), vec3(0.0f, -1.0f, 0.0f)));
 
 	OBB obb1 = identityObb.transformOBB(rot3.row012);
-	REQUIRE(equalsApprox(obb1.halfExtents, identityObb.halfExtents));
-	REQUIRE(equalsApprox(obb1.center, identityObb.center));
-	REQUIRE(equalsApprox(obb1.xAxis(), vec3(0.0f, 0.0f, -1.0f)));
-	REQUIRE(equalsApprox(obb1.yAxis(), vec3(1.0f, 0.0f, 0.0f)));
-	REQUIRE(equalsApprox(obb1.zAxis(), vec3(0.0f, -1.0f, 0.0f)));
+	REQUIRE(eqf(obb1.halfExtents, identityObb.halfExtents));
+	REQUIRE(eqf(obb1.center, identityObb.center));
+	REQUIRE(eqf(obb1.xAxis(), vec3(0.0f, 0.0f, -1.0f)));
+	REQUIRE(eqf(obb1.yAxis(), vec3(1.0f, 0.0f, 0.0f)));
+	REQUIRE(eqf(obb1.zAxis(), vec3(0.0f, -1.0f, 0.0f)));
 
 	mat4 scaleRot = rot3 * mat44::scaling3(4.0f, 5.0f, 6.0f);
 	OBB obb2 = identityObb.transformOBB(scaleRot.row012);
-	REQUIRE(equalsApprox(obb2.halfExtents, vec3(2.0f, 2.5f, 3.0f), 0.01f));
-	REQUIRE(equalsApprox(obb2.center, identityObb.center));
-	REQUIRE(equalsApprox(obb2.xAxis(), vec3(0.0f, 0.0f, -1.0f)));
-	REQUIRE(equalsApprox(obb2.yAxis(), vec3(1.0f, 0.0f, 0.0f)));
-	REQUIRE(equalsApprox(obb2.zAxis(), vec3(0.0f, -1.0f, 0.0f)));
+	REQUIRE(eqf(obb2.halfExtents, vec3(2.0f, 2.5f, 3.0f), 0.01f));
+	REQUIRE(eqf(obb2.center, identityObb.center));
+	REQUIRE(eqf(obb2.xAxis(), vec3(0.0f, 0.0f, -1.0f)));
+	REQUIRE(eqf(obb2.yAxis(), vec3(1.0f, 0.0f, 0.0f)));
+	REQUIRE(eqf(obb2.zAxis(), vec3(0.0f, -1.0f, 0.0f)));
 
 	mat4 rotTranslScale = mat44::translation3(vec3(1.0f, 2.0f, 3.0f)) * scaleRot;
 	OBB obb3 = identityObb.transformOBB(rotTranslScale.row012);
-	REQUIRE(equalsApprox(obb3.halfExtents, vec3(2.0f, 2.5f, 3.0f), 0.01f));
-	REQUIRE(equalsApprox(obb3.center, vec3(1.0f, 2.0f, 3.0f)));
-	REQUIRE(equalsApprox(obb3.xAxis(), vec3(0.0f, 0.0f, -1.0f)));
-	REQUIRE(equalsApprox(obb3.yAxis(), vec3(1.0f, 0.0f, 0.0f)));
-	REQUIRE(equalsApprox(obb3.zAxis(), vec3(0.0f, -1.0f, 0.0f)));
+	REQUIRE(eqf(obb3.halfExtents, vec3(2.0f, 2.5f, 3.0f), 0.01f));
+	REQUIRE(eqf(obb3.center, vec3(1.0f, 2.0f, 3.0f)));
+	REQUIRE(eqf(obb3.xAxis(), vec3(0.0f, 0.0f, -1.0f)));
+	REQUIRE(eqf(obb3.yAxis(), vec3(1.0f, 0.0f, 0.0f)));
+	REQUIRE(eqf(obb3.zAxis(), vec3(0.0f, -1.0f, 0.0f)));
 
 	Quaternion q = Quaternion::fromRotationMatrix(rot3.row012);
 	OBB obb4 = identityObb.transformOBB(q);
-	REQUIRE(equalsApprox(obb4.halfExtents, identityObb.halfExtents));
-	REQUIRE(equalsApprox(obb4.center, identityObb.center));
-	REQUIRE(equalsApprox(obb4.xAxis(), vec3(0.0f, 0.0f, -1.0f)));
-	REQUIRE(equalsApprox(obb4.yAxis(), vec3(1.0f, 0.0f, 0.0f)));
-	REQUIRE(equalsApprox(obb4.zAxis(), vec3(0.0f, -1.0f, 0.0f)));
+	REQUIRE(eqf(obb4.halfExtents, identityObb.halfExtents));
+	REQUIRE(eqf(obb4.center, identityObb.center));
+	REQUIRE(eqf(obb4.xAxis(), vec3(0.0f, 0.0f, -1.0f)));
+	REQUIRE(eqf(obb4.yAxis(), vec3(1.0f, 0.0f, 0.0f)));
+	REQUIRE(eqf(obb4.zAxis(), vec3(0.0f, -1.0f, 0.0f)));
 }

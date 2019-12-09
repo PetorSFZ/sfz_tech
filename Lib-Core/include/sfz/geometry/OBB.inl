@@ -98,7 +98,7 @@ inline OBB OBB::transformOBB(const mat34& transform) const noexcept
 
 inline OBB OBB::transformOBB(Quaternion quaternion) const noexcept
 {
-	sfz_assert(equalsApprox(length(quaternion), 1.0f));
+	sfz_assert(eqf(length(quaternion), 1.0f));
 	OBB tmp = *this;
 	tmp.rotation.row0 = rotate(quaternion, tmp.rotation.row0);
 	tmp.rotation.row1 = rotate(quaternion, tmp.rotation.row1);
@@ -139,14 +139,14 @@ inline void OBB::setZExtent(float newZExtent) noexcept
 inline void OBB::ensureCorrectAxes() const noexcept
 {
 	// Check if axes are orthogonal
-	sfz_assert(equalsApprox(dot(rotation.row0, rotation.row1), 0.0f));
-	sfz_assert(equalsApprox(dot(rotation.row0, rotation.row2), 0.0f));
-	sfz_assert(equalsApprox(dot(rotation.row1, rotation.row2), 0.0f));
+	sfz_assert(eqf(dot(rotation.row0, rotation.row1), 0.0f));
+	sfz_assert(eqf(dot(rotation.row0, rotation.row2), 0.0f));
+	sfz_assert(eqf(dot(rotation.row1, rotation.row2), 0.0f));
 
 	// Check if axes are normalized
-	sfz_assert(equalsApprox(length(rotation.row0), 1.0f));
-	sfz_assert(equalsApprox(length(rotation.row1), 1.0f));
-	sfz_assert(equalsApprox(length(rotation.row2), 1.0f));
+	sfz_assert(eqf(length(rotation.row0), 1.0f));
+	sfz_assert(eqf(length(rotation.row1), 1.0f));
+	sfz_assert(eqf(length(rotation.row2), 1.0f));
 }
 
 inline void OBB::ensureCorrectExtents() const noexcept

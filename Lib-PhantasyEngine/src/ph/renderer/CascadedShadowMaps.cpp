@@ -41,13 +41,13 @@ CascadedShadowMapInfo calculateCascadedShadowMapInfo(
 	uint32_t numLevels,
 	const float* levelDists) noexcept
 {
-	sfz_assert(!sfz::equalsApprox(camDir, vec3(0.0f)));
-	sfz_assert(!sfz::equalsApprox(camUp, vec3(0.0f)));
+	sfz_assert(!sfz::eqf(camDir, vec3(0.0f)));
+	sfz_assert(!sfz::eqf(camUp, vec3(0.0f)));
 	sfz_assert(0.0f < camVertFovDegs);
 	sfz_assert(camVertFovDegs < 180.0f);
 	sfz_assert(0.0f < camAspect);
 	sfz_assert(0.0f < camNear);
-	sfz_assert(!sfz::equalsApprox(lightDir, vec3(0.0f)));
+	sfz_assert(!sfz::eqf(lightDir, vec3(0.0f)));
 	sfz_assert(0.0f < shadowHeightDist);
 	sfz_assert(0 < numLevels);
 	sfz_assert(numLevels <= MAX_NUM_CASCADED_SHADOW_MAP_LEVELS);
@@ -86,7 +86,7 @@ CascadedShadowMapInfo calculateCascadedShadowMapInfo(
 		// Calculate lights camera position
 		vec3 lightCamPos = midPoint + -lightDir * shadowHeightDist;
 		vec3 lightCamUp = camUp;
-		if (sfz::equalsApprox(sfz::abs(sfz::dot(sfz::normalize(camUp), sfz::normalize(lightDir))), 1.0f, 0.01f)) {
+		if (sfz::eqf(sfz::abs(sfz::dot(sfz::normalize(camUp), sfz::normalize(lightDir))), 1.0f, 0.01f)) {
 			lightCamUp = sfz::normalize(camUp + camDir);
 		}
 

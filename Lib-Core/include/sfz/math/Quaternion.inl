@@ -155,7 +155,7 @@ SFZ_CUDA_CALL vec3 Quaternion::toEuler() const noexcept
 
 	vec3 tmp;
 	tmp.x = atan2(2.0f * (w * x + y * z), 1.0f - 2.0f * (x * x + y * y)) * RAD_ANGLE_TO_DEG;
-	tmp.y = asin(sfzMin(sfzMax(2.0f * (w * y - z * x), -1.0f), 1.0f)) * RAD_ANGLE_TO_DEG;
+	tmp.y = asin(sfz::min(sfz::max(2.0f * (w * y - z * x), -1.0f), 1.0f)) * RAD_ANGLE_TO_DEG;
 	tmp.z = atan2(2.0f * (w * z + x * y), 1.0f - 2.0f * (y * y + z * z)) * RAD_ANGLE_TO_DEG;
 	return tmp;
 }

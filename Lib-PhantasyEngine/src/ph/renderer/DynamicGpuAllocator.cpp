@@ -184,7 +184,7 @@ static bool pageAllocateItem(
 	//       blocks earlier in this method.
 	page.largestFreeBlockSize = 0;
 	for (const Block& block : page.freeBlocks) {
-		page.largestFreeBlockSize = sfzMax(page.largestFreeBlockSize, block.size);
+		page.largestFreeBlockSize = sfz::max(page.largestFreeBlockSize, block.size);
 	}
 	sfz_assert(!(page.freeBlocks.size() != 0 && page.largestFreeBlockSize == 0));
 	sfz_assert((page.largestFreeBlockSize % BUFFER_ALIGNMENT) == 0);
@@ -266,12 +266,12 @@ static void pageDeallocateBlock(MemoryPage& page, Block& allocatedBlock) noexcep
 		else {
 			i++;
 		}
-		largestBlockSize = sfzMax(largestBlockSize, currBlock.size);
+		largestBlockSize = sfz::max(largestBlockSize, currBlock.size);
 	}
 
 	// Small edge case where largest block is last block in list
 	if (page.freeBlocks.size() > 0) {
-		largestBlockSize = sfzMax(largestBlockSize, page.freeBlocks.last().size);
+		largestBlockSize = sfz::max(largestBlockSize, page.freeBlocks.last().size);
 	}
 
 	// Update largest free block size
@@ -386,7 +386,7 @@ zg::Buffer DynamicGpuAllocator::allocateBuffer(uint32_t sizeBytes) noexcept
 		
 		// Get page size
 		// Can potentially be bigger than default size for big resources
-		uint32_t pageSize = sfzMax(mState->pageSize, sizeBytes);
+		uint32_t pageSize = sfz::max(mState->pageSize, sizeBytes);
 
 		// Allocate memory page
 		MemoryPage page;
@@ -458,7 +458,7 @@ zg::Texture2D DynamicGpuAllocator::allocateTexture2D(
 	if (pageIdx == ~0u) {
 
 		// Get page size
-		uint32_t pageSize = sfzMax(mState->pageSize, allocInfo.sizeInBytes);
+		uint32_t pageSize = sfz::max(mState->pageSize, allocInfo.sizeInBytes);
 
 		// Allocate texture page
 		MemoryPage page;

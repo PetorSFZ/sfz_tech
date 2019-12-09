@@ -45,7 +45,7 @@ void RingBuffer<T>::create(uint64_t capacity, Allocator* allocator) noexcept
 
 	// Allocate memory
 	mDataPtr = (T*)mAllocator->allocate(
-		sfz_dbg("RingBuffer"), mCapacity * sizeof(T), sfzMax(32u, uint32_t(alignof(T))));
+		sfz_dbg("RingBuffer"), mCapacity * sizeof(T), max(32u, uint32_t(alignof(T))));
 }
 
 template<typename T>
