@@ -148,3 +148,11 @@ TEST_CASE("Quaternion functions", "[sfz::Quaternion]")
 		REQUIRE(eqf(rot2mat * vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f)));
 	}
 }
+
+TEST_CASE("lerp()", "[sfz::Quaternion]")
+{
+	Quaternion q1 = Quaternion::rotationDeg(vec3(1.0f, 1.0f, 1.0f), 0.0f);
+	Quaternion q2 = Quaternion::rotationDeg(vec3(1.0f, 1.0f, 1.0f), 90.0f);
+	Quaternion q3 = Quaternion::rotationDeg(vec3(1.0f, 1.0f, 1.0f), 45.0f);
+	REQUIRE(eqf(lerp(q1, q2, 0.5f).vector, q3.vector));
+}

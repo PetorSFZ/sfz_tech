@@ -24,16 +24,6 @@
 
 using namespace sfz;
 
-TEST_CASE("lerp()", "[sfz::MathSupport]")
-{
-	SECTION("Quaternion specialization") {
-		Quaternion q1 = Quaternion::rotationDeg(vec3(1.0f, 1.0f, 1.0f), 0.0f);
-		Quaternion q2 = Quaternion::rotationDeg(vec3(1.0f, 1.0f, 1.0f), 90.0f);
-		Quaternion q3 = Quaternion::rotationDeg(vec3(1.0f, 1.0f, 1.0f), 45.0f);
-		REQUIRE(eqf(lerp(q1, q2, 0.5f).vector, q3.vector));
-	}
-}
-
 TEST_CASE("rotateTowards()", "[sfz::MathSupport]")
 {
 	const vec3 LEFT = vec3(-1.0f, 0.0f, 0.0f);

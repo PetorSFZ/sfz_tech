@@ -134,6 +134,8 @@ SFZ_CUDA_CALL Quaternion inverse(const Quaternion& q) noexcept;
 SFZ_CUDA_CALL vec3 rotate(Quaternion q, vec3 v) noexcept;
 SFZ_CUDA_CALL vec3 rotate(Quaternion q, vec3 v, Quaternion qInv) noexcept;
 
+SFZ_CUDA_CALL Quaternion lerp(Quaternion q0, Quaternion q1, float t) noexcept;
+
 // Operators (comparison)
 // ------------------------------------------------------------------------------------------------
 
@@ -156,16 +158,6 @@ SFZ_CUDA_CALL Quaternion operator- (const Quaternion& left, const Quaternion& ri
 SFZ_CUDA_CALL Quaternion operator* (const Quaternion& left, const Quaternion& right) noexcept;
 SFZ_CUDA_CALL Quaternion operator* (const Quaternion& q, float scalar) noexcept;
 SFZ_CUDA_CALL Quaternion operator* (float scalar, const Quaternion& q) noexcept;
-
-
-SFZ_CUDA_CALL Quaternion lerp(Quaternion q0, Quaternion q1, float t) noexcept
-{
-	Quaternion tmp;
-	tmp.vector = sfz::lerp(q0.vector, q1.vector, t);
-	tmp = normalize(tmp);
-	return tmp;
-}
-
 
 } // namespace sfz
 

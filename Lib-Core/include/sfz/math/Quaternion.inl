@@ -255,6 +255,14 @@ SFZ_CUDA_CALL vec3 rotate(Quaternion q, vec3 v, Quaternion qInv) noexcept
 	return tmp.v;
 }
 
+SFZ_CUDA_CALL Quaternion lerp(Quaternion q0, Quaternion q1, float t) noexcept
+{
+	Quaternion tmp;
+	tmp.vector = sfz::lerp(q0.vector, q1.vector, t);
+	tmp = normalize(tmp);
+	return tmp;
+}
+
 // Quaternion:Operators (comparison)
 // ------------------------------------------------------------------------------------------------
 
