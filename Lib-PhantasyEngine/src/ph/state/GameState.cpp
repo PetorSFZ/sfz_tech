@@ -21,7 +21,7 @@
 
 #include <cstring>
 
-namespace ph {
+namespace sfz {
 
 // GameState: Singleton state API
 // ------------------------------------------------------------------------------------------------
@@ -500,4 +500,4 @@ GameStateContainer createGameState(
 	return container;
 }
 
-} // namespace ph
+} // namespace sfz

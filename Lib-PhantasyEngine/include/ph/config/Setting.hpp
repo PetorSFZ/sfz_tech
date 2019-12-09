@@ -23,7 +23,7 @@
 
 #include <skipifzero_strings.hpp>
 
-namespace ph {
+namespace sfz {
 
 using sfz::str32;
 using sfz::str48;
@@ -213,4 +213,4 @@ private:
 	str48 mKey;
 };
 
-} // namespace ph
+} // namespace sfz

@@ -25,7 +25,7 @@
 
 #include "ph/game_loop/GameLoopUpdateable.hpp"
 
-namespace ph {
+namespace sfz {
 
 using sfz::Allocator;
 using sfz::UniquePtr;
@@ -69,7 +69,7 @@ public:
 	//
 	// This is also the last thing that happens each frame, so it can also be a good place to put
 	// some per frame book keeping you are doing.
-	virtual void postRenderHook(ph::Renderer& renderer, bool consoleActive) {};
+	virtual void postRenderHook(sfz::Renderer& renderer, bool consoleActive) {};
 
 	// Renders custom Imgui commands.
 	//
@@ -110,4 +110,4 @@ UniquePtr<GameLoopUpdateable> createDefaultGameUpdateable(
 	Allocator* allocator,
 	UniquePtr<GameLogic> logic) noexcept;
 
-} // namespace ph
+} // namespace sfz

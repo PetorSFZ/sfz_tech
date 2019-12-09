@@ -28,7 +28,7 @@
 
 #include "ph/renderer/ZeroGUtils.hpp"
 
-namespace ph {
+namespace sfz {
 
 using sfz::Array;
 
@@ -593,4 +593,4 @@ void DynamicGpuAllocator::deallocate(zg::Texture2D& texture) noexcept
 	mState->totalNumDeallocations += 1;
 }
 
-} // namespace ph
+} // namespace sfz

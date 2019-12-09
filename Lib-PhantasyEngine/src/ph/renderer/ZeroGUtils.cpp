@@ -23,7 +23,7 @@
 
 #include <sfz/Logging.hpp>
 
-namespace ph {
+namespace sfz {
 
 // Statics
 // -----------------------------------------------------------------------------------------------
@@ -153,4 +153,4 @@ void* getNativeHandle(SDL_Window* window) noexcept
 #endif
 }
 
-} // namespace ph
+} // namespace sfz

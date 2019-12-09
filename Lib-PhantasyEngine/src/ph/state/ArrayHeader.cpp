@@ -23,7 +23,7 @@
 
 #include <skipifzero.hpp>
 
-namespace ph {
+namespace sfz {
 
 // ArrayHeader: Methods
 // ------------------------------------------------------------------------------------------------
@@ -109,4 +109,4 @@ const uint8_t* ArrayHeader::firstByteAfterArray32Byte() const noexcept
 	return dataUntyped() + numBytesNeededForArrayPart32Byte();
 }
 
-} // namespace ph
+} // namespace sfz

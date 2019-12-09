@@ -24,7 +24,7 @@
 
 #include "ph/renderer/ZeroGUtils.hpp"
 
-namespace ph {
+namespace sfz {
 
 // GpuMesh functions
 // ------------------------------------------------------------------------------------------------
@@ -190,4 +190,4 @@ void gpuMeshUploadBlocking(
 	gpuAllocatorUpload.deallocate(materialsUploadBuffer);
 }
 
-} // namespace ph
+} // namespace sfz

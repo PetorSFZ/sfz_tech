@@ -29,7 +29,7 @@
 
 #include <sfz/Logging.hpp>
 
-namespace ph {
+namespace sfz {
 
 namespace sdl {
 
@@ -178,4 +178,4 @@ bool setSDLAllocator(sfz::Allocator* allocator) noexcept
 }
 
 } // namespace sdl
-} // namespace ph
+} // namespace sfz

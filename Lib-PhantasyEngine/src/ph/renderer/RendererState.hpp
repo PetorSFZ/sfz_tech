@@ -36,7 +36,7 @@
 
 struct SDL_Window;
 
-namespace ph {
+namespace sfz {
 
 using sfz::Array;
 using sfz::HashMap;
@@ -285,4 +285,4 @@ struct RendererState final {
 		uint32_t shaderRegister) noexcept;
 };
 
-} // namespace ph
+} // namespace sfz

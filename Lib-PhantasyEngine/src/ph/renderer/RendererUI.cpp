@@ -29,7 +29,7 @@
 #include "ph/renderer/RendererState.hpp"
 #include "ph/renderer/ZeroGUtils.hpp"
 
-namespace ph {
+namespace sfz {
 
 using sfz::str64;
 
@@ -360,7 +360,7 @@ void RendererUI::renderGeneralTab(RendererState& state) noexcept
 void RendererUI::renderStagesTab(RendererConfigurableState& state) noexcept
 {
 	// Get global collection of resource strings in order to get strings from StringIDs
-	sfz::StringCollection& resStrings = ph::getResourceStrings();
+	sfz::StringCollection& resStrings = sfz::getResourceStrings();
 
 	for (uint32_t i = 0; i < state.presentQueueStages.size(); i++) {
 		const Stage& stage = state.presentQueueStages[i];
@@ -407,7 +407,7 @@ void RendererUI::renderStagesTab(RendererConfigurableState& state) noexcept
 void RendererUI::renderFramebuffersTab(RendererConfigurableState& state) noexcept
 {
 	// Get global collection of resource strings in order to get strings from StringIDs
-	sfz::StringCollection& resStrings = ph::getResourceStrings();
+	sfz::StringCollection& resStrings = sfz::getResourceStrings();
 
 	for (uint32_t i = 0; i < state.framebuffers.size(); i++) {
 		const FramebufferItem& fbItem = state.framebuffers[i];
@@ -472,7 +472,7 @@ void RendererUI::renderFramebuffersTab(RendererConfigurableState& state) noexcep
 void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 {
 	// Get global collection of resource strings in order to get strings from StringIDs
-	sfz::StringCollection& resStrings = ph::getResourceStrings();
+	sfz::StringCollection& resStrings = sfz::getResourceStrings();
 
 	RendererConfigurableState& configurable = state.configurable;
 
@@ -665,7 +665,7 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 void RendererUI::renderTexturesTab(RendererState& state) noexcept
 {
 	// Get global collection of resource strings in order to get strings from StringIDs
-	sfz::StringCollection& resStrings = ph::getResourceStrings();
+	sfz::StringCollection& resStrings = sfz::getResourceStrings();
 
 	constexpr float offset = 150.0f;
 
@@ -697,7 +697,7 @@ void RendererUI::renderTexturesTab(RendererState& state) noexcept
 void RendererUI::renderMeshesTab(RendererState& state) noexcept
 {
 	// Get global collection of resource strings in order to get strings from StringIDs
-	sfz::StringCollection& resStrings = ph::getResourceStrings();
+	sfz::StringCollection& resStrings = sfz::getResourceStrings();
 
 	for (auto itemItr : state.meshes) {
 		GpuMesh& mesh = itemItr.value;
@@ -879,4 +879,4 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 	}
 }
 
-} // namespace ph
+} // namespace sfz

@@ -26,7 +26,7 @@
 #include "ph/renderer/ZeroGUtils.hpp"
 #include "ph/util/JsonParser.hpp"
 
-namespace ph {
+namespace sfz {
 
 // Statics
 // ------------------------------------------------------------------------------------------------
@@ -42,7 +42,7 @@ struct CheckJsonImpl final {
 	CheckJsonImpl(const char* file, int line) noexcept : file(file), line(line) {}
 
 	template<typename T>
-	T operator% (const ph::ParsedJsonNodeValue<T>& valuePair) noexcept {
+	T operator% (const sfz::ParsedJsonNodeValue<T>& valuePair) noexcept {
 		if (!valuePair.exists) {
 			SFZ_ERROR("NextGenRenderer", "Key did not exist in JSON file: %s:%i", file, line);
 			sfz_assert(false);
@@ -431,7 +431,7 @@ bool allocateStageMemory(RendererState& state) noexcept
 	bool success = true;
 
 	for (uint32_t i = 0; i < state.configurable.presentQueueStages.size(); i++) {
-		ph::Stage& stage = state.configurable.presentQueueStages[i];
+		sfz::Stage& stage = state.configurable.presentQueueStages[i];
 		if (stage.stageType != StageType::USER_INPUT_RENDERING) continue;
 		
 		// Find pipeline
@@ -495,7 +495,7 @@ bool allocateStageMemory(RendererState& state) noexcept
 
 bool deallocateStageMemory(RendererState& state) noexcept
 {
-	for (ph::Stage& stage : state.configurable.presentQueueStages) {
+	for (sfz::Stage& stage : state.configurable.presentQueueStages) {
 		for (Framed<ConstantBufferMemory>& framed : stage.constantBuffers) {
 			framed.deinitAllStates([&](ConstantBufferMemory& item) {
 
@@ -520,4 +520,4 @@ bool deallocateStageMemory(RendererState& state) noexcept
 	return true;
 }
 
-} // namespace ph
+} // namespace sfz

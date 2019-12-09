@@ -29,7 +29,7 @@
 
 #include "ph/sdl/ButtonState.hpp"
 
-namespace ph {
+namespace sfz {
 
 namespace sdl {
 
@@ -110,4 +110,4 @@ private:
 void update(HashMap<int32_t, GameController>& controllers, const Array<SDL_Event>& events) noexcept;
 
 } // namespace sdl
-} // namespace ph
+} // namespace sfz

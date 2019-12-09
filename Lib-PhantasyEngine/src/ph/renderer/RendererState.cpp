@@ -21,7 +21,7 @@
 
 #include "ph/Context.hpp"
 
-namespace ph {
+namespace sfz {
 
 // Statics
 // ------------------------------------------------------------------------------------------------
@@ -294,4 +294,4 @@ PerFrame<ConstantBufferMemory>* RendererState::findConstantBufferInCurrentInputS
 	return &framed->getState(currentFrameIdx);
 }
 
-} // namespace ph
+} // namespace sfz

@@ -19,7 +19,7 @@
 
 #include <skipifzero.hpp>
 
-namespace ph {
+namespace sfz {
 
 namespace sdl {
 
@@ -29,4 +29,4 @@ namespace sdl {
 bool setSDLAllocator(sfz::Allocator* allocator) noexcept;
 
 } // namespace sdl
-} // namespace ph
+} // namespace sfz

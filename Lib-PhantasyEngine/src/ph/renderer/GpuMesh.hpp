@@ -27,7 +27,7 @@
 #include "ph/renderer/DynamicGpuAllocator.hpp"
 #include "ph/rendering/Mesh.hpp"
 
-namespace ph {
+namespace sfz {
 
 using sfz::vec4;
 
@@ -64,4 +64,4 @@ void gpuMeshUploadBlocking(
 	sfz::Allocator* cpuAllocator,
 	zg::CommandQueue& copyQueue) noexcept;
 
-} // namespace ph
+} // namespace sfz

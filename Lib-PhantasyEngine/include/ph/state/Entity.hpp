@@ -21,7 +21,7 @@
 
 #include <skipifzero.hpp>
 
-namespace ph {
+namespace sfz {
 
 // Entity constants
 // ------------------------------------------------------------------------------------------------
@@ -93,4 +93,4 @@ struct Entity final {
 };
 static_assert(sizeof(Entity) == 4, "Entity is padded");
 
-} // namespace ph
+} // namespace sfz

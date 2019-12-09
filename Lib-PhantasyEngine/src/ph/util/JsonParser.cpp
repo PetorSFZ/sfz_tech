@@ -31,7 +31,7 @@
 #include <sfz/Logging.hpp>
 #include <sfz/util/IO.hpp>
 
-namespace ph {
+namespace sfz {
 
 // Statics
 // ------------------------------------------------------------------------------------------------
@@ -478,4 +478,4 @@ ParsedJsonNode ParsedJson::root() const noexcept
 	return ParsedJsonNode::createFromImplDefined(&value);
 }
 
-} // namespace ph
+} // namespace sfz

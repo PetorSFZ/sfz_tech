@@ -25,7 +25,7 @@
 
 #include <sfz/memory/SmartPointers.hpp>
 
-namespace ph {
+namespace sfz {
 
 using sfz::str32;
 using sfz::str80;
@@ -124,4 +124,4 @@ private:
 	uint32_t mCurrentSelectedEntityId = 0;
 };
 
-} // namespace ph
+} // namespace sfz

@@ -21,7 +21,7 @@
 
 #include <cstdint>
 
-namespace ph {
+namespace sfz {
 
 // Component Mask
 // ------------------------------------------------------------------------------------------------
@@ -91,4 +91,4 @@ struct ComponentMask final {
 };
 static_assert(sizeof(ComponentMask) == 8, "ComponentMask is padded");
 
-} // namespace ph
+} // namespace sfz

@@ -19,14 +19,14 @@
 
 #include "ph/Context.hpp"
 
-namespace ph {
+namespace sfz {
 
 // Context getters/setters
 // ------------------------------------------------------------------------------------------------
 
 static phContext* globalContextPtr = nullptr;
 
-phContext* getContext() noexcept
+phContext* getPhContext() noexcept
 {
 	return globalContextPtr;
 }
@@ -47,4 +47,4 @@ phContext* getStaticContextBoot() noexcept
 	return &context;
 }
 
-} // namespace ph
+} // namespace sfz

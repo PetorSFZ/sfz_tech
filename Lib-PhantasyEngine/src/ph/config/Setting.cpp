@@ -23,7 +23,7 @@
 
 #include <sfz/math/MathSupport.hpp>
 
-namespace ph {
+namespace sfz {
 
 // SettingValue
 // ------------------------------------------------------------------------------------------------
@@ -202,4 +202,4 @@ bool Setting::create(const SettingValue& value) noexcept
 	return false;
 }
 
-} // namespace ph
+} // namespace sfz

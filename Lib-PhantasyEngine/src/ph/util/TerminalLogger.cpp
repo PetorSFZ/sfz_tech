@@ -23,7 +23,7 @@
 #include <cstdio>
 #include <cstring>
 
-namespace ph {
+namespace sfz {
 
 // Statics
 // ------------------------------------------------------------------------------------------------
@@ -129,4 +129,4 @@ TerminalLogger* getStaticTerminalLoggerForBoot() noexcept
 	return &logger;
 }
 
-} // namespace ph
+} // namespace sfz

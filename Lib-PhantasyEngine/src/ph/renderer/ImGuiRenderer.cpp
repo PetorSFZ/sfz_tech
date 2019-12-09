@@ -26,7 +26,7 @@
 #include "ph/Context.hpp"
 #include "ph/renderer/ZeroGUtils.hpp"
 
-namespace ph {
+namespace sfz {
 
 using sfz::mat44;
 
@@ -288,4 +288,4 @@ void ImGuiRenderer::render(
 	CHECK_ZG presentQueue.signalOnGpu(imguiFrame.renderingFinished);
 }
 
-} // namespace ph
+} // namespace sfz

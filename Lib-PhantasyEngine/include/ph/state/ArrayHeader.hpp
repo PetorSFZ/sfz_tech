@@ -22,7 +22,7 @@
 #include <cstdint>
 #include <cstring>
 
-namespace ph {
+namespace sfz {
 
 // ArrayHeader struct
 // ------------------------------------------------------------------------------------------------
@@ -146,4 +146,4 @@ struct ArrayHeader final {
 };
 static_assert(sizeof(ArrayHeader) == 32, "ArrayHeader is not 32-byte");
 
-} // namespace ph
+} // namespace sfz

@@ -23,7 +23,7 @@
 
 #include <sfz/math/MathSupport.hpp>
 
-namespace ph {
+namespace sfz {
 
 // Cascaded shadow map calculator
 // ------------------------------------------------------------------------------------------------
@@ -114,4 +114,4 @@ CascadedShadowMapInfo calculateCascadedShadowMapInfo(
 	return info;
 }
 
-} // namespace ph
+} // namespace sfz

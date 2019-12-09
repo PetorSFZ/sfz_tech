@@ -23,7 +23,7 @@
 #include "ph/rendering/Image.hpp"
 #include "ph/rendering/Mesh.hpp"
 
-namespace ph {
+namespace sfz {
 
 using sfz::Array;
 
@@ -50,4 +50,4 @@ bool loadAssetsFromGltf(
 	bool (*checkIfTextureIsLoaded)(StringID id, void* userPtr),
 	void* userPtr) noexcept;
 
-} // namespace ph
+} // namespace sfz

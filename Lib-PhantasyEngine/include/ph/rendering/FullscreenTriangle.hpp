@@ -23,12 +23,12 @@
 
 #include "ph/rendering/Mesh.hpp"
 
-namespace ph {
+namespace sfz {
 
 // Function that returns a mesh containing a "fullscreen" triangle
 // ------------------------------------------------------------------------------------------------
 
 // Counter-clock-wise triangle winding
-ph::Mesh createFullscreenTriangle(sfz::Allocator* allocator) noexcept;
+sfz::Mesh createFullscreenTriangle(sfz::Allocator* allocator) noexcept;
 
-} // namespace ph
+} // namespace sfz

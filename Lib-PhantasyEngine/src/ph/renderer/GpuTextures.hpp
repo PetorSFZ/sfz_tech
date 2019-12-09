@@ -25,7 +25,7 @@
 #include "ph/renderer/DynamicGpuAllocator.hpp"
 #include "ph/rendering/ImageView.hpp"
 
-namespace ph {
+namespace sfz {
 
 // Texture functions
 // ------------------------------------------------------------------------------------------------
@@ -41,4 +41,4 @@ zg::Texture2D textureAllocateAndUploadBlocking(
 	bool generateMipmaps,
 	uint32_t& numMipmapsOut) noexcept;
 
-} // namespace ph
+} // namespace sfz

@@ -21,7 +21,7 @@
 
 #include <skipifzero.hpp>
 
-namespace ph {
+namespace sfz {
 
 using sfz::vec3;
 using sfz::vec4;
@@ -91,4 +91,4 @@ static_assert(
 	sizeof(ForwardShaderPointLightsBuffer) ==
 	(sizeof(ShaderPointLight) * MAX_NUM_SHADER_POINT_LIGHTS + sizeof(uint32_t) * 4));
 
-} // namespace ph
+} // namespace sfz

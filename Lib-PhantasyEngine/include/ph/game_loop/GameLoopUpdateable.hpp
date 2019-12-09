@@ -33,7 +33,7 @@
 #include "ph/sdl/GameController.hpp"
 #include "ph/sdl/Mouse.hpp"
 
-namespace ph {
+namespace sfz {
 
 using std::int32_t;
 using sfz::Array;
@@ -170,4 +170,4 @@ public:
 
 inline void GameLoopUpdateable::onQuit() { /* Default empty implementation. */ }
 
-} // namespace ph
+} // namespace sfz

@@ -23,7 +23,7 @@
 
 #include <ZeroG-cpp.hpp>
 
-namespace ph {
+namespace sfz {
 
 // DynamicGpuAllocator
 // ------------------------------------------------------------------------------------------------
@@ -92,4 +92,4 @@ private:
 	DynamicGpuAllocatorState* mState = nullptr;
 };
 
-} // namespace ph
+} // namespace sfz

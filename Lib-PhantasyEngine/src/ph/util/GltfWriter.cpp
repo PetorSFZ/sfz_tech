@@ -26,7 +26,7 @@
 #include <sfz/math/MathSupport.hpp>
 #include <sfz/util/IO.hpp>
 
-namespace ph {
+namespace sfz {
 
 #if 0
 
@@ -808,5 +808,5 @@ bool writeAssetsToGltf(
 
 #endif // if 0
 
-} // namespace ph
+} // namespace sfz
 

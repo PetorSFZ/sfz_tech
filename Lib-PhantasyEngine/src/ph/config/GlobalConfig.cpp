@@ -26,7 +26,7 @@
 
 #include "ph/Context.hpp"
 
-namespace ph {
+namespace sfz {
 
 using namespace sfz;
 
@@ -451,4 +451,4 @@ GlobalConfig* getStaticGlobalConfigBoot() noexcept
 	return &config;
 }
 
-} // namespace ph
+} // namespace sfz

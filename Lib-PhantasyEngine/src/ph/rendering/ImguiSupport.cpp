@@ -26,7 +26,7 @@
 #include <ph/config/GlobalConfig.hpp>
 #include <ph/Context.hpp>
 
-namespace ph {
+namespace sfz {
 
 using sfz::vec2;
 using sfz::vec4;
@@ -240,9 +240,9 @@ void updateImgui(
 
 
 	// Retrieve scale factor from config
-	ph::GlobalConfig& cfg = ph::getGlobalConfig();
-	const ph::Setting* imguiScaleSetting =
-		cfg.sanitizeFloat("Imgui", "scale", true, ph::FloatBounds(2.0f, 1.0f, 3.0f));
+	sfz::GlobalConfig& cfg = sfz::getGlobalConfig();
+	const sfz::Setting* imguiScaleSetting =
+		cfg.sanitizeFloat("Imgui", "scale", true, sfz::FloatBounds(2.0f, 1.0f, 3.0f));
 	float scaleFactor = 1.0f / imguiScaleSetting->floatValue();
 
 	// Set display dimensions
@@ -427,4 +427,4 @@ ImFont* imguiFontMonospace() noexcept
 	return imguiState->monospaceFont;
 }
 
-} // namespace ph
+} // namespace sfz

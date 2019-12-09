@@ -21,7 +21,7 @@
 
 #include "ph/renderer/RendererState.hpp"
 
-namespace ph {
+namespace sfz {
 
 // Renderer config parser functions
 // ------------------------------------------------------------------------------------------------
@@ -32,4 +32,4 @@ bool allocateStageMemory(RendererState& state) noexcept;
 
 bool deallocateStageMemory(RendererState& state) noexcept;
 
-} // namespace ph
+} // namespace sfz

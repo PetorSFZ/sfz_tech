@@ -29,7 +29,7 @@
 #include "ph/rendering/ImageView.hpp"
 #include "ph/rendering/ImguiRenderingData.hpp"
 
-namespace ph {
+namespace sfz {
 
 using sfz::Array;
 using sfz::vec2;
@@ -116,4 +116,4 @@ private:
 	const Setting* mScaleSetting = nullptr;
 };
 
-} // namespace ph
+} // namespace sfz

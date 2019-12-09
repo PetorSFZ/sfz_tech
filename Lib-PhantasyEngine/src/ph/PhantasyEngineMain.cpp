@@ -47,7 +47,7 @@
 #include "ph/sdl/SDLAllocator.hpp"
 #include "ph/util/TerminalLogger.hpp"
 
-namespace ph {
+namespace sfz {
 
 // Request dedicated graphics card over integrated on Windows
 // ------------------------------------------------------------------------------------------------
@@ -66,20 +66,20 @@ static void setupContexts() noexcept
 	sfz::Allocator* allocator = sfz::getStandardAllocator();
 
 	// Create terminal logger
-	ph::TerminalLogger& logger = *ph::getStaticTerminalLoggerForBoot();
+	sfz::TerminalLogger& logger = *sfz::getStaticTerminalLoggerForBoot();
 	logger.init(256, allocator);
 
 	// Setup context
-	phContext* context = ph::getStaticContextBoot();
+	phContext* context = sfz::getStaticContextBoot();
 	context->sfzContext.defaultAllocator = allocator;
 	context->sfzContext.logger = &logger;
 	context->logger = &logger;
-	context->config = ph::getStaticGlobalConfigBoot();
+	context->config = sfz::getStaticGlobalConfigBoot();
 	context->resourceStrings =
 		allocator->newObject<StringCollection>(sfz_dbg("Resource Strings"), 4096, allocator);
 
 	// Set Phantasy Engine context
-	ph::setContext(context);
+	sfz::setContext(context);
 
 	// Set sfzCore context
 	sfz::setContext(&context->sfzContext);
@@ -139,7 +139,7 @@ int mainImpl(int, char*[], InitOptions&& options)
 	if (!sdl::setSDLAllocator(sfz::getDefaultAllocator())) return EXIT_FAILURE;
 
 	// Set load image allocator
-	ph::setLoadImageAllocator(sfz::getDefaultAllocator());
+	sfz::setLoadImageAllocator(sfz::getDefaultAllocator());
 
 	// Windwows specific hacks
 #ifdef _WIN32
@@ -151,7 +151,7 @@ int mainImpl(int, char*[], InitOptions&& options)
 #endif
 
 	// Load global settings
-	GlobalConfig& cfg = ph::getGlobalConfig();
+	GlobalConfig& cfg = sfz::getGlobalConfig();
 	{
 		// Init config with ini location
 		if (options.iniLocation == IniLocation::NEXT_TO_EXECUTABLE) {
@@ -248,7 +248,7 @@ int mainImpl(int, char*[], InitOptions&& options)
 		[]() {
 			// Store global settings
 			SFZ_INFO("PhantasyEngine", "Saving global config to file");
-			GlobalConfig& cfg = ph::getGlobalConfig();
+			GlobalConfig& cfg = sfz::getGlobalConfig();
 			if (!cfg.save()) {
 				SFZ_WARNING("PhantasyEngine", "Failed to write ini file");
 			}
@@ -271,4 +271,4 @@ int mainImpl(int, char*[], InitOptions&& options)
 	return EXIT_SUCCESS;
 }
 
-} // namespace ph
+} // namespace sfz

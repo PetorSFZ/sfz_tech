@@ -24,7 +24,7 @@
 
 #include "ph/config/Setting.hpp"
 
-namespace ph {
+namespace sfz {
 
 using sfz::Allocator;
 using sfz::Array;
@@ -151,4 +151,4 @@ private:
 /// PhantasyEngineMain.cpp during boot.
 GlobalConfig* getStaticGlobalConfigBoot() noexcept;
 
-} // namespace ph
+} // namespace sfz

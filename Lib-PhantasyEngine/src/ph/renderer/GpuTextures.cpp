@@ -26,7 +26,7 @@
 #include "ph/renderer/ZeroGUtils.hpp"
 #include "ph/rendering/Image.hpp"
 
-namespace ph {
+namespace sfz {
 
 using sfz::vec2_u8;
 using sfz::vec2_u32;
@@ -35,11 +35,6 @@ using sfz::vec4_u32;
 
 // Statics
 // ------------------------------------------------------------------------------------------------
-
-static constexpr bool isPowerOfTwo(uint32_t value) noexcept
-{
-	return value != 0 && (value & (value - 1)) == 0;
-}
 
 static uint32_t sizeOfElement(ImageType imageType) noexcept
 {
@@ -227,4 +222,4 @@ zg::Texture2D textureAllocateAndUploadBlocking(
 	return std::move(texture);
 }
 
-} // namespace ph
+} // namespace sfz

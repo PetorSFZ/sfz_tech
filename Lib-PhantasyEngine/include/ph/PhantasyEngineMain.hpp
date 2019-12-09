@@ -25,7 +25,7 @@
 
 #include "ph/game_loop/GameLoopUpdateable.hpp"
 
-namespace ph {
+namespace sfz {
 
 using sfz::UniquePtr;
 
@@ -65,7 +65,7 @@ struct InitOptions final {
 #define PHANTASY_ENGINE_MAIN(createInitOptions) \
 	int main(int argc, char* argv[]) \
 	{ \
-		return ph::mainImpl(argc, argv, (createInitOptions)()); \
+		return sfz::mainImpl(argc, argv, (createInitOptions)()); \
 	}
 
 // Implementation function
@@ -73,4 +73,4 @@ struct InitOptions final {
 
 int mainImpl(int argc, char* argv[], InitOptions&& options);
 
-} // namespace ph
+} // namespace sfz

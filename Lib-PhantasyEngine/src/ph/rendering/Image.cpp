@@ -80,7 +80,7 @@ static void sfz_free_wrapper(void* ptr)
 	static_allocator->deallocate(ptr);
 }
 
-namespace ph {
+namespace sfz {
 
 using sfz::str320;
 
@@ -251,4 +251,4 @@ bool saveImagePng(const Image& image, const char* path) noexcept
 	return res != 0;
 }
 
-} // namespace ph
+} // namespace sfz

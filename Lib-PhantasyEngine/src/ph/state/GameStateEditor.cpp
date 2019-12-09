@@ -35,7 +35,7 @@
 #include <sfz/Logging.hpp>
 #include <sfz/util/IO.hpp>
 
-namespace ph {
+namespace sfz {
 
 using sfz::vec2;
 
@@ -953,4 +953,4 @@ void GameStateEditor::renderInfoViewer(GameStateHeader* state) noexcept
 #endif
 }
 
-} // namespace ph
+} // namespace sfz

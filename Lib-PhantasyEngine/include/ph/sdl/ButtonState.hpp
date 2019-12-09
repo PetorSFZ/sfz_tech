@@ -21,7 +21,7 @@
 
 #include <cstdint>
 
-namespace ph {
+namespace sfz {
 
 namespace sdl {
 
@@ -35,4 +35,4 @@ enum class ButtonState : uint8_t {
 };
 
 } // namespace sdl
-} // namespace ph
+} // namespace sfz

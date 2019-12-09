@@ -23,7 +23,7 @@
 
 #include <sfz/Context.hpp>
 
-namespace ph {
+namespace sfz {
 
 using sfz::Allocator;
 
@@ -73,4 +73,4 @@ private:
 	uint64_t mNumBytes = 0;
 };
 
-} // namespace ph
+} // namespace sfz

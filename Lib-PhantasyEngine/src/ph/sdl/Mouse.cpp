@@ -21,7 +21,7 @@
 
 #include <cstdint>
 
-namespace ph {
+namespace sfz {
 
 namespace sdl {
 
@@ -114,4 +114,4 @@ Mouse Mouse::scaleMouse(const AABB2D& cam) const noexcept
 }
 
 } // namespace sdl
-} // namespace ph
+} // namespace sfz

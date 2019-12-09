@@ -18,7 +18,7 @@
 
 #pragma once
 
-namespace ph {
+namespace sfz {
 
 /*
 The glTF writer is temporarily broken as the way resources are handled by Phantasy Engine has
@@ -34,4 +34,4 @@ bool writeAssetsToGltf(
 
 */
 
-} // namespace ph
+} // namespace sfz

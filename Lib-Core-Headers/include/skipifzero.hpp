@@ -26,7 +26,8 @@
 #include <utility> // std::move, std::forward, std::swap
 
 #if defined(min) || defined(max)
-#error "min and/or max is defined (likely by Windows.h), fix before including this header"
+#undef min
+#undef max
 #endif
 
 namespace sfz {

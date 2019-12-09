@@ -31,7 +31,7 @@
 struct SDL_Window;
 struct phContext;
 
-namespace ph {
+namespace sfz {
 
 using sfz::StringID;
 using sfz::vec2_i32;
@@ -220,4 +220,4 @@ private:
 	RendererState* mState = nullptr;
 };
 
-} // namespace ph
+} // namespace sfz

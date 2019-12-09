@@ -24,7 +24,7 @@
 
 #include <skipifzero.hpp>
 
-namespace ph {
+namespace sfz {
 
 // GameStateContainer: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
@@ -98,4 +98,4 @@ const GameStateHeader* GameStateContainer::getHeader() const noexcept
 	return reinterpret_cast<const GameStateHeader*>(mGameStateMemoryChunk);
 }
 
-} // namespace ph
+} // namespace sfz

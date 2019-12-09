@@ -36,7 +36,7 @@
 #include "ph/Context.hpp"
 #include "ph/config/GlobalConfig.hpp"
 
-namespace ph {
+namespace sfz {
 
 // Typedefs
 // ------------------------------------------------------------------------------------------------
@@ -378,4 +378,4 @@ void runGameLoop(
 	// Don't place any code after the above #ifdef, it will never be called on some platforms.
 }
 
-} // namespace ph
+} // namespace sfz

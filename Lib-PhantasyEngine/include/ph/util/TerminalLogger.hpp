@@ -27,7 +27,7 @@
 #include <sfz/containers/RingBuffer.hpp>
 #include <sfz/util/LoggingInterface.hpp>
 
-namespace ph {
+namespace sfz {
 
 using sfz::Allocator;
 using sfz::LogLevel;
@@ -102,4 +102,4 @@ private:
 /// Phantasy Engine context at boot in PhantasyEngineMain.cpp.
 TerminalLogger* getStaticTerminalLoggerForBoot() noexcept;
 
-} // namespace ph
+} // namespace sfz

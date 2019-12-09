@@ -25,7 +25,7 @@
 
 #include <sfz/Logging.hpp>
 
-namespace ph {
+namespace sfz {
 
 namespace sdl {
 
@@ -366,4 +366,4 @@ static void updateFinish(GameController& controller) noexcept
 }
 
 } // namespace sdl
-} // namespace ph
+} // namespace sfz

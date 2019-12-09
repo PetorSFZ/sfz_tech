@@ -39,7 +39,7 @@
 #include "ph/renderer/RendererState.hpp"
 #include "ph/renderer/ZeroGUtils.hpp"
 
-namespace ph {
+namespace sfz {
 
 using sfz::Array;
 using sfz::mat44;
@@ -216,7 +216,7 @@ bool Renderer::uploadTextureBlocking(
 
 bool Renderer::textureLoaded(StringID id) const noexcept
 {
-	const ph::TextureItem* item = mState->textures.get(id);
+	const sfz::TextureItem* item = mState->textures.get(id);
 	return item != nullptr;
 }
 
@@ -226,7 +226,7 @@ void Renderer::removeTextureGpuBlocking(StringID id) noexcept
 	sfz_assert(!mState->windowFramebuffer.valid());
 
 	// Return if texture is not loaded in first place
-	ph::TextureItem* item = mState->textures.get(id);
+	sfz::TextureItem* item = mState->textures.get(id);
 	if (item == nullptr) return;
 
 	// Ensure all GPU operations in progress are finished
@@ -275,7 +275,7 @@ bool Renderer::uploadMeshBlocking(StringID id, const Mesh& mesh) noexcept
 
 bool Renderer::meshLoaded(StringID id) const noexcept
 {
-	const ph::GpuMesh* mesh = mState->meshes.get(id);
+	const sfz::GpuMesh* mesh = mState->meshes.get(id);
 	return mesh != nullptr;
 }
 
@@ -285,7 +285,7 @@ void Renderer::removeMeshGpuBlocking(StringID id) noexcept
 	sfz_assert(!mState->windowFramebuffer.valid());
 
 	// Return if mesh is not loaded in first place
-	ph::GpuMesh* mesh = mState->meshes.get(id);
+	sfz::GpuMesh* mesh = mState->meshes.get(id);
 	if (mesh == nullptr) return;
 
 	// Ensure all GPU operations in progress are finished
@@ -789,4 +789,4 @@ void Renderer::frameFinish() noexcept
 	}
 }
 
-} // namespace ph
+} // namespace sfz

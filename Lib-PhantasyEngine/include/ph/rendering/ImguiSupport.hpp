@@ -29,7 +29,7 @@
 #include "ph/sdl/Mouse.hpp"
 #include "ph/sdl/GameController.hpp"
 
-namespace ph {
+namespace sfz {
 
 using sfz::Allocator;
 using sfz::Array;
@@ -54,4 +54,4 @@ void convertImguiDrawData(
 ImFont* imguiFontDefault() noexcept;
 ImFont* imguiFontMonospace() noexcept;
 
-} // namespace ph
+} // namespace sfz

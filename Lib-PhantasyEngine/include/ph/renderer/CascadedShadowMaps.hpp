@@ -23,7 +23,7 @@
 
 #include <sfz/math/Matrix.hpp>
 
-namespace ph {
+namespace sfz {
 
 using sfz::mat4;
 using sfz::vec3;
@@ -87,4 +87,4 @@ CascadedShadowMapInfo calculateCascadedShadowMapInfo(
 	uint32_t numLevels,
 	const float* levelDists) noexcept;
 
-} // namespace ph
+} // namespace sfz

@@ -30,21 +30,21 @@ class StringCollection;
 
 } // namespace sfz
 
-namespace ph {
+namespace sfz {
 
 class TerminalLogger;
 class GlobalConfig;
 using sfz::StringCollection;
 
-} // namespace ph
+} // namespace sfz
 
 // PhantasyEngine Context struct
 // ------------------------------------------------------------------------------------------------
 
 struct phContext {
 	sfz::Context sfzContext;
-	ph::TerminalLogger* logger = nullptr;
-	ph::GlobalConfig* config = nullptr;
+	sfz::TerminalLogger* logger = nullptr;
+	sfz::GlobalConfig* config = nullptr;
 
 	// The resource strings registered with PhantasyEngine.
 	//
@@ -58,16 +58,16 @@ struct phContext {
 	sfz::StringCollection* resourceStrings = nullptr;
 };
 
-namespace ph {
+namespace sfz {
 
 // Context getters/setters
 // ------------------------------------------------------------------------------------------------
 
-phContext* getContext() noexcept;
+phContext* getPhContext() noexcept;
 
-inline GlobalConfig& getGlobalConfig() noexcept { return *getContext()->config; }
+inline GlobalConfig& getGlobalConfig() noexcept { return *getPhContext()->config; }
 
-inline StringCollection& getResourceStrings() noexcept { return *getContext()->resourceStrings; }
+inline StringCollection& getResourceStrings() noexcept { return *getPhContext()->resourceStrings; }
 
 bool setContext(phContext* context) noexcept;
 
@@ -78,4 +78,4 @@ bool setContext(phContext* context) noexcept;
 /// be used for setContext() in PhantasyEngineMain.cpp.
 phContext* getStaticContextBoot() noexcept;
 
-} // namespace ph
+} // namespace sfz

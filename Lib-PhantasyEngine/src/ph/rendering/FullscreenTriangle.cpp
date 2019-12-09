@@ -21,9 +21,9 @@
 
 #include <skipifzero.hpp>
 
-namespace ph {
+namespace sfz {
 
-using ph::Vertex;
+using sfz::Vertex;
 using sfz::vec2;
 using sfz::vec3;
 
@@ -45,9 +45,9 @@ static constexpr uint32_t NUM_TRIANGLE_INDICES = 3;
 // Function that returns a mesh containing a "fullscreen" triangle
 // ------------------------------------------------------------------------------------------------
 
-ph::Mesh createFullscreenTriangle(sfz::Allocator* allocator) noexcept
+sfz::Mesh createFullscreenTriangle(sfz::Allocator* allocator) noexcept
 {
-	ph::Mesh mesh;
+	sfz::Mesh mesh;
 
 	// Vertices
 	mesh.vertices.init(NUM_TRIANGLE_VERTICES, allocator, sfz_dbg(""));
@@ -58,7 +58,7 @@ ph::Mesh createFullscreenTriangle(sfz::Allocator* allocator) noexcept
 	mesh.indices.add(TRIANGLE_INDICES, NUM_TRIANGLE_INDICES);
 
 	// Components
-	ph::MeshComponent comp;
+	sfz::MeshComponent comp;
 	comp.materialIdx = 0;
 	comp.firstIndex = 0;
 	comp.numIndices = NUM_TRIANGLE_INDICES;
@@ -67,9 +67,9 @@ ph::Mesh createFullscreenTriangle(sfz::Allocator* allocator) noexcept
 
 	// Material
 	mesh.materials.init(1, allocator, sfz_dbg(""));
-	mesh.materials.add(ph::Material());
+	mesh.materials.add(sfz::Material());
 
 	return mesh;
 }
 
-} // namespace ph
+} // namespace sfz

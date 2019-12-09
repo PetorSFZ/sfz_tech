@@ -26,7 +26,7 @@
 #include "ph/game_loop/GameLoopUpdateable.hpp"
 #include "ph/renderer/Renderer.hpp"
 
-namespace ph {
+namespace sfz {
 
 using sfz::UniquePtr;
 
@@ -47,4 +47,4 @@ void runGameLoop(
 	SDL_Window* window,
 	void(*cleanupCallback)(void)) noexcept;
 
-} // namespace ph
+} // namespace sfz

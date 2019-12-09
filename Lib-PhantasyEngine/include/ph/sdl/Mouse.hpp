@@ -28,7 +28,7 @@
 
 #include "ph/sdl/ButtonState.hpp"
 
-namespace ph {
+namespace sfz {
 
 namespace sdl {
 
@@ -71,4 +71,4 @@ struct Mouse final {
 };
 
 } // namespace sdl
-} // namespace ph
+} // namespace sfz

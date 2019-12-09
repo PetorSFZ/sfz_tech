@@ -37,7 +37,7 @@
 #include "ph/rendering/ImguiSupport.hpp"
 #include "ph/util/TerminalLogger.hpp"
 
-namespace ph {
+namespace sfz {
 
 using sfz::FrametimeStats;
 using sfz::str32;
@@ -467,7 +467,7 @@ private:
 	void renderLogWindow() noexcept
 	{
 		const vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
-		TerminalLogger& logger = *getContext()->logger;
+		TerminalLogger& logger = *getPhContext()->logger;
 		str96 timeStr;
 
 		ImGui::SetNextWindowPos(vec2(0.0f, 130.0f), ImGuiCond_FirstUseEver);
@@ -746,4 +746,4 @@ UniquePtr<GameLoopUpdateable> createDefaultGameUpdateable(
 	return updateable;
 }
 
-} // namespace ph
+} // namespace sfz

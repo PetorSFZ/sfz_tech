@@ -24,7 +24,7 @@
 
 #include <ph/rendering/ImageView.hpp>
 
-namespace ph {
+namespace sfz {
 
 using sfz::Allocator;
 using sfz::Array;

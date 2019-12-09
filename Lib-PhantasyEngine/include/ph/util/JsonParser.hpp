@@ -22,7 +22,7 @@
 #include <skipifzero.hpp>
 #include <skipifzero_strings.hpp>
 
-namespace ph {
+namespace sfz {
 
 using sfz::str256;
 
@@ -183,4 +183,4 @@ private:
 	ParsedJsonImpl* mImpl = nullptr;
 };
 
-} // namespace ph
+} // namespace sfz

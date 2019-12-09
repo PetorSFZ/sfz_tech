@@ -26,7 +26,7 @@
 
 #include <skipifzero.hpp>
 
-namespace ph {
+namespace sfz {
 
 // ZeroG logger
 // -----------------------------------------------------------------------------------------------
@@ -42,7 +42,7 @@ ZgAllocator createZeroGAllocatorWrapper(sfz::Allocator* allocator) noexcept;
 // -----------------------------------------------------------------------------------------------
 
 // Checks result (zg::ErrorCode) from ZeroG call and log if not success, returns result unmodified
-#define CHECK_ZG (ph::CheckZgImpl(__FILE__, __LINE__)) %
+#define CHECK_ZG (sfz::CheckZgImpl(__FILE__, __LINE__)) %
 
 // Implementation of CHECK_ZG
 struct CheckZgImpl final {
@@ -161,4 +161,4 @@ struct Framed {
 	}
 };
 
-} // namespace ph
+} // namespace sfz

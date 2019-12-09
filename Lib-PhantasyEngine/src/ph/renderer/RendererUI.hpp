@@ -19,7 +19,7 @@
 
 #pragma once
 
-namespace ph {
+namespace sfz {
 
 // RendererUI class
 // ------------------------------------------------------------------------------------------------
@@ -62,4 +62,4 @@ private:
 	void renderMeshesTab(RendererState& state) noexcept;
 };
 
-} // namespace ph
+} // namespace sfz

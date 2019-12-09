@@ -36,7 +36,7 @@
 
 #include <ph/Context.hpp>
 
-namespace ph {
+namespace sfz {
 
 using sfz::str320;
 using sfz::vec2;
@@ -361,7 +361,7 @@ static bool extractAssets(
 
 	// Add single default material if no materials
 	if (meshOut.materials.size() == 0) {
-		ph::Material defaultMaterial;
+		sfz::Material defaultMaterial;
 		defaultMaterial.emissive = vec3(1.0, 0.0, 0.0);
 		meshOut.materials.add(defaultMaterial);
 	}
@@ -504,11 +504,11 @@ bool loadAssetsFromGltf(
 	bool extractSuccess = extractAssets(
 		basePath, model, meshOut, texturesOut, checkIfTextureIsLoaded, userPtr, allocator);
 	if (!extractSuccess) {
-		SFZ_ERROR("tinygltf", "Failed to create ph::Mesh from gltf: \"%s\"", gltfPath);
+		SFZ_ERROR("tinygltf", "Failed to create sfz::Mesh from gltf: \"%s\"", gltfPath);
 		return false;
 	}
 
 	return true;
 }
 
-} // namespace ph
+} // namespace sfz

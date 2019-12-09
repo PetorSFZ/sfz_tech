@@ -31,7 +31,7 @@
 #include "ph/state/Entity.hpp"
 #include "ph/state/GameStateContainer.hpp"
 
-namespace ph {
+namespace sfz {
 
 using sfz::Allocator;
 
@@ -392,4 +392,4 @@ GameStateContainer createGameState(
 	const uint32_t* componentSizes,
 	Allocator* allocator = sfz::getDefaultAllocator()) noexcept;
 
-} // namespace ph
+} // namespace sfz

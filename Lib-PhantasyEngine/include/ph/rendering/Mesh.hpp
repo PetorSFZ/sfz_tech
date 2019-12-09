@@ -24,7 +24,7 @@
 
 #include <sfz/strings/StringID.hpp>
 
-namespace ph {
+namespace sfz {
 
 using sfz::Array;
 using sfz::StringID;
@@ -88,4 +88,4 @@ struct Mesh final {
 	Array<MeshComponent> components;
 };
 
-} // namespace ph
+} // namespace sfz
