@@ -223,7 +223,7 @@ int mainImpl(int, char*[], InitOptions&& options)
 
 	// Initializing renderer
 	SFZ_INFO("PhantasyEngine", "Initializing renderer");
-	UniquePtr<Renderer> renderer = sfz::makeUniqueDefault<Renderer>();
+	UniquePtr<Renderer> renderer = sfz::makeUnique<Renderer>(getDefaultAllocator(), sfz_dbg(""));
 	bool rendererInitSuccess = renderer->init(window, imguiFontTexView, sfz::getDefaultAllocator());
 	if (!rendererInitSuccess) {
 		SFZ_ERROR("PhantasyEngine", "Renderer::init() failed");

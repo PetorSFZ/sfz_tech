@@ -106,7 +106,7 @@ void GlobalConfig::load() noexcept
 
 		// Create new setting
 		section->settings.add(
-			makeUnique<Setting>(mImpl->allocator, item.getSection(), item.getKey()));
+			makeUnique<Setting>(mImpl->allocator, sfz_dbg(""), item.getSection(), item.getKey()));
 		Setting& setting = *section->settings.last();
 
 		// Get value of setting
@@ -212,7 +212,7 @@ Setting* GlobalConfig::createSetting(const char* section, const char* key, bool*
 	}
 
 	// Create and return section
-	sectionPtr->settings.add(makeUniqueDefault<Setting>(section, key));
+	sectionPtr->settings.add(makeUnique<Setting>(getDefaultAllocator(), sfz_dbg(""), section, key));
 	if (created != nullptr) *created = true;
 	return sectionPtr->settings.last().get();
 }

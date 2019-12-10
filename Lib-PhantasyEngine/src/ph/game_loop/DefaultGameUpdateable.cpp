@@ -731,7 +731,7 @@ UniquePtr<GameLoopUpdateable> createDefaultGameUpdateable(
 	UniquePtr<GameLogic> logic) noexcept
 {
 	// Create updateable and set members
-	UniquePtr<DefaultGameUpdateable> updateable = sfz::makeUnique<DefaultGameUpdateable>(allocator);
+	UniquePtr<DefaultGameUpdateable> updateable = sfz::makeUnique<DefaultGameUpdateable>(allocator, sfz_dbg(""));
 	updateable->mLogic = std::move(logic);
 
 	// Imgui

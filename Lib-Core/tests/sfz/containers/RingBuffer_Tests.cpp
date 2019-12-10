@@ -309,7 +309,7 @@ TEST_CASE("RingBuffer: State methods", "[sfz::RingBuffer]")
 		REQUIRE(alloc.numAllocations() == 0);
 		{
 			RingBuffer<UniquePtr<int32_t>> buffer(3);
-			REQUIRE(buffer.add(makeUnique<int32_t>(&alloc, 2)));
+			REQUIRE(buffer.add(makeUnique<int32_t>(&alloc, sfz_dbg(""), 2)));
 			REQUIRE(alloc.numAllocations() == 1);
 			REQUIRE(*buffer[0] == 2);
 			{
@@ -328,8 +328,8 @@ TEST_CASE("RingBuffer: State methods", "[sfz::RingBuffer]")
 		REQUIRE(alloc.numAllocations() == 0);
 
 		RingBuffer<UniquePtr<int32_t>> buffer(2);
-		REQUIRE(buffer.add(makeUnique<int32_t>(&alloc, 2)));
-		REQUIRE(buffer.add(makeUnique<int32_t>(&alloc, 3)));
+		REQUIRE(buffer.add(makeUnique<int32_t>(&alloc, sfz_dbg(""), 2)));
+		REQUIRE(buffer.add(makeUnique<int32_t>(&alloc, sfz_dbg(""), 3)));
 		REQUIRE(alloc.numAllocations() == 2);
 		REQUIRE(*buffer.first() == 2);
 		REQUIRE(*buffer.last() == 3);

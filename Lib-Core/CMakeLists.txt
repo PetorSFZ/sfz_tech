@@ -143,7 +143,6 @@ set(INCLUDE_FILES
 	${INCLUDE_DIR}/sfz/memory/ArenaAllocator.hpp
 	${INCLUDE_DIR}/sfz/memory/DebugAllocator.hpp
 	${INCLUDE_DIR}/sfz/memory/SmartPointers.hpp
-	${INCLUDE_DIR}/sfz/memory/SmartPointers.inl
 	${INCLUDE_DIR}/sfz/memory/StandardAllocator.hpp
 
 	${INCLUDE_DIR}/sfz/strings/DynString.hpp

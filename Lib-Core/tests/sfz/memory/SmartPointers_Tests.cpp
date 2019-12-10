@@ -20,6 +20,9 @@
 #include "catch2/catch.hpp"
 #include "sfz/PopWarnings.hpp"
 
+#include <skipifzero_allocators.hpp>
+
+#include "sfz/Context.hpp"
 #include "sfz/memory/SmartPointers.hpp"
 
 using namespace sfz;
@@ -95,34 +98,34 @@ TEST_CASE("Basic UniquePtr tests", "[sfz::UniquePtr]")
 
 TEST_CASE("makeUnique()", "[sfz::SmartPointers]")
 {
-	sfz::setContext(sfz::getStandardContext());
+	StandardAllocator allocator;
 
 	struct Foo {
 		int a, b;
 		Foo(int a, int b) : a(a), b(b) {}
 	};
-	auto ptr = makeUniqueDefault<Foo>(3, 4);
+	auto ptr = makeUnique<Foo>(&allocator, sfz_dbg(""), 3, 4);
 	REQUIRE(ptr->a == 3);
 	REQUIRE(ptr->b == 4);
 }
 
 TEST_CASE("castTake()", "[sfz::SmartPointers]")
 {
-	sfz::setContext(sfz::getStandardContext());
+	StandardAllocator allocator;
 
-	UniquePtr<Derived> derived = makeUniqueDefault<Derived>(3);
+	UniquePtr<Derived> derived = makeUnique<Derived>(&allocator, sfz_dbg(""), 3);
 	REQUIRE(derived->val == 3);
 	UniquePtr<Base> base = derived.castTake<Base>();
 	REQUIRE(derived.get() == nullptr);
 	REQUIRE(derived.allocator() == nullptr);
 	REQUIRE(base->val == 3);
-	REQUIRE(base.allocator() == getDefaultAllocator());
+	REQUIRE(base.allocator() == &allocator);
 }
 
 TEST_CASE("Cast constructor", "[sfz::SmartPointers]")
 {
-	sfz::setContext(sfz::getStandardContext());
+	StandardAllocator allocator;
 
-	UniquePtr<Base> ptr = makeUniqueDefault<Derived>(3);
+	UniquePtr<Base> ptr = makeUnique<Derived>(&allocator, sfz_dbg(""), 3);
 	REQUIRE(ptr->val == 3);
 }

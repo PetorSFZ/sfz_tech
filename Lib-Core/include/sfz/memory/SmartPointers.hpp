@@ -18,83 +18,84 @@
 
 #pragma once
 
-#include <atomic>
-#include <cstddef> // nullptr_t
-#include <type_traits> // std::is_array
-
 #include <skipifzero.hpp>
-
-#include "sfz/Context.hpp"
 
 namespace sfz {
 
-// UniquePtr (interface)
+// UniquePtr
 // ------------------------------------------------------------------------------------------------
 
-/// Simple replacement for std::unique_ptr using sfzCore allocators
-/// Unlike std::unique_ptr there is NO support for arrays, use sfz::Array for that.
+// Simple replacement for std::unique_ptr using sfz::Allocator
 template<typename T>
 class UniquePtr final {
 public:
-	static_assert(!std::is_array<T>::value, "UniquePtr does not accept array types");
-
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	// Copying is prohibited
+	UniquePtr() noexcept = default;
 	UniquePtr(const UniquePtr&) = delete;
 	UniquePtr& operator= (const UniquePtr&) = delete;
+	UniquePtr(UniquePtr&& other) noexcept { this->swap(other); }
+	UniquePtr& operator= (UniquePtr&& other) noexcept { this->swap(other); return *this; }
+	~UniquePtr() noexcept { this->destroy(); }
 
-	/// Creates an empty UniquePtr (holding nullptr, no allocator set)
-	UniquePtr() noexcept = default;
-
-	/// Creates an empty UniquePtr (holding nullptr, no allocator set)
+	// Creates an empty UniquePtr (holding nullptr, no allocator set)
 	UniquePtr(std::nullptr_t) noexcept {};
 
-	/// Creates a UniquePtr with the specified object and allocator
-	/// This UniquePtr takes ownership of the specified object, thus the object in question must
-	/// be allocated by the sfzCore allocator specified so it can be properly destroyed.
-	UniquePtr(T* object, Allocator* allocator) noexcept;
+	// Creates a UniquePtr with the specified object and allocator
+	// This UniquePtr takes ownership of the specified object, thus the object in question must
+	// be allocated by the sfzCore allocator specified so it can be properly destroyed.
+	UniquePtr(T* object, Allocator* allocator) noexcept : mPtr(object), mAllocator(allocator) { }
 
-	/// Casts a subclass to a base class.
+	// Casts a subclass to a base class.
 	template<typename T2>
-	UniquePtr(UniquePtr<T2>&& subclassPtr) noexcept;
+	UniquePtr(UniquePtr<T2>&& subclassPtr) noexcept
+	{
+		static_assert(std::is_base_of<T, T2>::value, "T2 is not a subclass of T");
+		*this = subclassPtr.template castTake<T>();
+	}
 
-	/// Move constructors. Equivalent to swap() method.
-	UniquePtr(UniquePtr&& other) noexcept;
-	UniquePtr& operator= (UniquePtr&& other) noexcept;
-
-	/// Destroys the object held using destroy()
-	~UniquePtr() noexcept;
-
-	// Public methods
+	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	/// Swaps the internal pointers (and allocators) of this and the other UniquePtr
-	void swap(UniquePtr& other) noexcept;
+	void swap(UniquePtr& other) noexcept
+	{
+		std::swap(this->mPtr, other.mPtr);
+		std::swap(this->mAllocator, other.mAllocator);
+	}
 
-	/// Destroys the object held by this UniquePtr, deallocates its memory and removes allocator.
-	/// After this method is called the internal pointer and allocator will be assigned nullptr as
-	/// value. If the internal pointer already is a nullptr this method will do nothing. It is not
-	/// necessary to call this method manually, it will automatically be called in UniquePtr's
-	/// destructor.
-	void destroy() noexcept;
+	void destroy() noexcept
+	{
+		if (mPtr == nullptr) return;
+		mAllocator->deleteObject<T>(mPtr);
+		mPtr = nullptr;
+		mAllocator = nullptr;
+	}
 
-	/// Returns the internal pointer
+	// Methods
+	// --------------------------------------------------------------------------------------------
+
 	T* get() const noexcept { return mPtr; }
-
-	/// Returns the allocator of this UniquePtr, returns nullptr if no allocator is set
 	Allocator* allocator() const noexcept { return mAllocator; }
 
-	/// Caller takes ownership of the internal pointer
-	/// The internal pointer will be set to nullptr without being destroyed, allocator will be
-	/// set to nullptr
-	T* take() noexcept;
+	// Caller takes ownership of the internal pointer
+	T* take() noexcept
+	{
+		T* tmp = mPtr;
+		mPtr = nullptr;
+		mAllocator = nullptr;
+		return tmp;
+	}
 
-	/// Casts (static_cast) the UniquePtr to another type and destroys the original
-	/// The original UniquePtr will be destroyed afterwards (but not the object held).
+	// Casts (static_cast) the UniquePtr to another type and destroys the original (this) pointer.
 	template<typename T2>
-	UniquePtr<T2> castTake() noexcept;
+	UniquePtr<T2> castTake() noexcept
+	{
+		UniquePtr<T2> tmp(static_cast<T2*>(this->mPtr), this->mAllocator);
+		this->mPtr = nullptr;
+		this->mAllocator = nullptr;
+		return tmp;
+	}
 
 	// Operators
 	// --------------------------------------------------------------------------------------------
@@ -102,8 +103,11 @@ public:
 	T& operator* () const noexcept { return *mPtr; }
 	T* operator-> () const noexcept { return mPtr; }
 
-	bool operator== (const UniquePtr& other) const noexcept;
-	bool operator!= (const UniquePtr& other) const noexcept;
+	bool operator== (const UniquePtr& other) const noexcept { return this->mPtr == other.mPtr; }
+	bool operator!= (const UniquePtr& other) const noexcept { return !(*this == other); }
+
+	bool operator== (std::nullptr_t other) const noexcept { return this->mPtr == nullptr; }
+	bool operator!= (std::nullptr_t other) const noexcept { return this->mPtr != nullptr; }
 
 private:
 	// Private members
@@ -113,30 +117,12 @@ private:
 	Allocator* mAllocator = nullptr;
 };
 
-template<typename T>
-bool operator== (const UniquePtr<T>& lhs, std::nullptr_t rhs) noexcept;
-
-template<typename T>
-bool operator== (std::nullptr_t lhs, const UniquePtr<T>& rhs) noexcept;
-
-template<typename T>
-bool operator!= (const UniquePtr<T>& lhs, std::nullptr_t rhs) noexcept;
-
-template<typename T>
-bool operator!= (std::nullptr_t lhs, const UniquePtr<T>& rhs) noexcept;
-
-/// Constructs a new object of type T with the specified allocator and returns it in a UniquePtr
-/// Will exit the program through std::terminate() if constructor throws an exception
-/// \return nullptr if memory allocation failed
+// Constructs a new object of type T with the specified allocator and returns it in a UniquePtr
 template<typename T, typename... Args>
-UniquePtr<T> makeUnique(Allocator* allocator, Args&&... args) noexcept;
-
-/// Constructs a new object of type T with the default allocator and returns it in a UniquePtr
-/// Will exit the program through std::terminate() if constructor throws an exception
-/// \return nullptr if memory allocation failed
-template<typename T, typename... Args>
-UniquePtr<T> makeUniqueDefault(Args&&... args) noexcept;
+UniquePtr<T> makeUnique(Allocator* allocator, DbgInfo dbg, Args&&... args) noexcept
+{
+	return UniquePtr<T>(
+		allocator->newObject<T>(dbg, std::forward<Args>(args)...), allocator);
+}
 
 } // namespace sfz
-
-#include "sfz/memory/SmartPointers.inl"
