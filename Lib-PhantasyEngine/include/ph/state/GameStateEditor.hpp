@@ -21,14 +21,10 @@
 
 #include "ph/state/GameState.hpp"
 
+#include <skipifzero_smart_pointers.hpp>
 #include <skipifzero_strings.hpp>
 
-#include <sfz/memory/SmartPointers.hpp>
-
 namespace sfz {
-
-using sfz::str32;
-using sfz::str80;
 
 // Helper structs
 // ------------------------------------------------------------------------------------------------

@@ -21,7 +21,7 @@
 
 #include <SDL.h>
 
-#include <sfz/memory/SmartPointers.hpp>
+#include <skipifzero_smart_pointers.hpp>
 
 #include "ph/game_loop/GameLoopUpdateable.hpp"
 

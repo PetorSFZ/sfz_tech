@@ -19,9 +19,10 @@
 
 #include "ph/config/GlobalConfig.hpp"
 
+#include <skipifzero_smart_pointers.hpp>
+
 #include <sfz/Logging.hpp>
 #include <sfz/math/MathSupport.hpp>
-#include <sfz/memory/SmartPointers.hpp>
 #include <sfz/util/IniParser.hpp>
 
 #include "ph/Context.hpp"

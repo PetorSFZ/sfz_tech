@@ -26,8 +26,7 @@
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_hash_maps.hpp>
-
-#include <sfz/memory/SmartPointers.hpp>
+#include <skipifzero_smart_pointers.hpp>
 
 #include "ph/renderer/Renderer.hpp"
 #include "ph/sdl/GameController.hpp"

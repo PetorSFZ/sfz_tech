@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include "skipifzero.hpp"
 
 namespace sfz {
 
@@ -47,13 +47,9 @@ public:
 	// be allocated by the sfzCore allocator specified so it can be properly destroyed.
 	UniquePtr(T* object, Allocator* allocator) noexcept : mPtr(object), mAllocator(allocator) { }
 
-	// Casts a subclass to a base class.
+	// Casts another pointer and takes ownership
 	template<typename T2>
-	UniquePtr(UniquePtr<T2>&& subclassPtr) noexcept
-	{
-		static_assert(std::is_base_of<T, T2>::value, "T2 is not a subclass of T");
-		*this = subclassPtr.template castTake<T>();
-	}
+	UniquePtr(UniquePtr<T2>&& subclassPtr) noexcept { *this = subclassPtr.template castTake<T>(); }
 
 	// State methods
 	// --------------------------------------------------------------------------------------------

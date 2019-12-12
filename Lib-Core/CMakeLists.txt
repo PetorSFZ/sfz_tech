@@ -142,7 +142,6 @@ set(INCLUDE_FILES
 
 	${INCLUDE_DIR}/sfz/memory/ArenaAllocator.hpp
 	${INCLUDE_DIR}/sfz/memory/DebugAllocator.hpp
-	${INCLUDE_DIR}/sfz/memory/SmartPointers.hpp
 	${INCLUDE_DIR}/sfz/memory/StandardAllocator.hpp
 
 	${INCLUDE_DIR}/sfz/strings/DynString.hpp
@@ -199,7 +198,6 @@ if(NOT hasParent)
 
 		${TESTS_DIR}/sfz/memory/Allocators_Tests.cpp
 		${TESTS_DIR}/sfz/memory/ArenaAllocator_Tests.cpp
-		${TESTS_DIR}/sfz/memory/SmartPointers_Tests.cpp
 
 		${TESTS_DIR}/sfz/strings/DynString_Tests.cpp
 		${TESTS_DIR}/sfz/strings/StringID_Tests.cpp

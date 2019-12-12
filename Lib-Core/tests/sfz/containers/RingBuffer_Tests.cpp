@@ -23,11 +23,12 @@
 #include <chrono>
 #include <thread>
 
+#include <skipifzero_smart_pointers.hpp>
+
 #define private public
 #include "sfz/containers/RingBuffer.hpp"
 #undef private
 #include "sfz/memory/DebugAllocator.hpp"
-#include "sfz/memory/SmartPointers.hpp"
 
 using namespace sfz;
 

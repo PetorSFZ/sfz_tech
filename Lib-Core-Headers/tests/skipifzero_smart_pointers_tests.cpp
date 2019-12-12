@@ -16,16 +16,14 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/PushWarnings.hpp"
-#include "catch2/catch.hpp"
-#include "sfz/PopWarnings.hpp"
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include "utest.h"
+#undef near
+#undef far
 
-#include <skipifzero_allocators.hpp>
-
-#include "sfz/Context.hpp"
-#include "sfz/memory/SmartPointers.hpp"
-
-using namespace sfz;
+#include "skipifzero_allocators.hpp"
+#include "skipifzero_smart_pointers.hpp"
 
 class Base {
 public:
@@ -51,10 +49,9 @@ public:
 // UniquePtr tests
 // ------------------------------------------------------------------------------------------------
 
-TEST_CASE("Basic UniquePtr tests", "[sfz::UniquePtr]")
+UTEST(UniquePtr, basic_tests)
 {
-	sfz::setContext(sfz::getStandardContext());
-
+	sfz::StandardAllocator allocator;
 	int flag = 0;
 
 	struct TestClass {
@@ -70,62 +67,62 @@ TEST_CASE("Basic UniquePtr tests", "[sfz::UniquePtr]")
 		}
 	};
 
-	UniquePtr<TestClass> ptr = nullptr;
-	REQUIRE(ptr == nullptr);
-	ptr = UniquePtr<TestClass>(
-		getDefaultAllocator()->newObject<TestClass>(sfz_dbg(""), &flag), getDefaultAllocator());
-	REQUIRE(ptr.get() != nullptr);
-	REQUIRE(ptr != nullptr);
-	REQUIRE(ptr.get()->flagPtr == &flag);
-	REQUIRE((*ptr).flagPtr == &flag);
-	REQUIRE(ptr->flagPtr == &flag);
-	REQUIRE(flag == 1);
+	sfz::UniquePtr<TestClass> ptr = nullptr;
+	ASSERT_TRUE(ptr == nullptr);
+	ptr = sfz::UniquePtr<TestClass>(
+		allocator.newObject<TestClass>(sfz_dbg(""), &flag), &allocator);
+	ASSERT_TRUE(ptr.get() != nullptr);
+	ASSERT_TRUE(ptr != nullptr);
+	ASSERT_TRUE(ptr.get()->flagPtr == &flag);
+	ASSERT_TRUE((*ptr).flagPtr == &flag);
+	ASSERT_TRUE(ptr->flagPtr == &flag);
+	ASSERT_TRUE(flag == 1);
 
-	UniquePtr<TestClass> second;
-	REQUIRE(second == nullptr);
+	sfz::UniquePtr<TestClass> second;
+	ASSERT_TRUE(second == nullptr);
 	second = std::move(ptr);
-	REQUIRE(ptr == nullptr);
-	REQUIRE(second != nullptr);
+	ASSERT_TRUE(ptr == nullptr);
+	ASSERT_TRUE(second != nullptr);
 
 	ptr.destroy();
-	REQUIRE(flag == 1);
-	REQUIRE(ptr == nullptr);
+	ASSERT_TRUE(flag == 1);
+	ASSERT_TRUE(ptr == nullptr);
 
 	second.destroy();
-	REQUIRE(flag == 2);
-	REQUIRE(second == nullptr);
+	ASSERT_TRUE(flag == 2);
+	ASSERT_TRUE(second == nullptr);
 }
 
-TEST_CASE("makeUnique()", "[sfz::SmartPointers]")
+UTEST(UniquePtr, make_unique)
 {
-	StandardAllocator allocator;
+	sfz::StandardAllocator allocator;
 
 	struct Foo {
 		int a, b;
 		Foo(int a, int b) : a(a), b(b) {}
 	};
-	auto ptr = makeUnique<Foo>(&allocator, sfz_dbg(""), 3, 4);
-	REQUIRE(ptr->a == 3);
-	REQUIRE(ptr->b == 4);
+	auto ptr = sfz::makeUnique<Foo>(&allocator, sfz_dbg(""), 3, 4);
+	ASSERT_TRUE(ptr->a == 3);
+	ASSERT_TRUE(ptr->b == 4);
 }
 
-TEST_CASE("castTake()", "[sfz::SmartPointers]")
+UTEST(UniquePtr, cast_take)
 {
-	StandardAllocator allocator;
+	sfz::StandardAllocator allocator;
 
-	UniquePtr<Derived> derived = makeUnique<Derived>(&allocator, sfz_dbg(""), 3);
-	REQUIRE(derived->val == 3);
-	UniquePtr<Base> base = derived.castTake<Base>();
-	REQUIRE(derived.get() == nullptr);
-	REQUIRE(derived.allocator() == nullptr);
-	REQUIRE(base->val == 3);
-	REQUIRE(base.allocator() == &allocator);
+	sfz::UniquePtr<Derived> derived = sfz::makeUnique<Derived>(&allocator, sfz_dbg(""), 3);
+	ASSERT_TRUE(derived->val == 3);
+	sfz::UniquePtr<Base> base = derived.castTake<Base>();
+	ASSERT_TRUE(derived.get() == nullptr);
+	ASSERT_TRUE(derived.allocator() == nullptr);
+	ASSERT_TRUE(base->val == 3);
+	ASSERT_TRUE(base.allocator() == &allocator);
 }
 
-TEST_CASE("Cast constructor", "[sfz::SmartPointers]")
+UTEST(UniquePtr, cast_constructor)
 {
-	StandardAllocator allocator;
+	sfz::StandardAllocator allocator;
 
-	UniquePtr<Base> ptr = makeUnique<Derived>(&allocator, sfz_dbg(""), 3);
-	REQUIRE(ptr->val == 3);
+	sfz::UniquePtr<Base> ptr = sfz::makeUnique<Derived>(&allocator, sfz_dbg(""), 3);
+	ASSERT_TRUE(ptr->val == 3);
 }
