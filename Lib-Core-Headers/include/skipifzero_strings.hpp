@@ -16,6 +16,8 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
+#ifndef SKIPIFZERO_STRINGS_HPP
+#define SKIPIFZERO_STRINGS_HPP
 #pragma once
 
 #include <cstdarg>
@@ -175,3 +177,5 @@ template<uint16_t N>
 constexpr uint64_t hash(const StringLocal<N>& str) { return hashStringFNV1a(str); }
 
 } // namespace sfz
+
+#endif

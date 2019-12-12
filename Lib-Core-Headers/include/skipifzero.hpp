@@ -16,6 +16,8 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
+#ifndef SKIPIFZERO_HPP
+#define SKIPIFZERO_HPP
 #pragma once
 
 #include <cassert>
@@ -434,3 +436,5 @@ constexpr vec3 lerp(vec3 v0, vec3 v1, float t) { return (1.0f - t) * v0 + t * v1
 constexpr vec4 lerp(vec4 v0, vec4 v1, float t) { return (1.0f - t) * v0 + t * v1; }
 
 } // namespace sfz
+
+#endif

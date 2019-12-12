@@ -16,6 +16,8 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
+#ifndef SKIPIFZERO_SMART_POINTERS_HPP
+#define SKIPIFZERO_SMART_POINTERS_HPP
 #pragma once
 
 #include "skipifzero.hpp"
@@ -122,3 +124,5 @@ UniquePtr<T> makeUnique(Allocator* allocator, DbgInfo dbg, Args&&... args) noexc
 }
 
 } // namespace sfz
+
+#endif

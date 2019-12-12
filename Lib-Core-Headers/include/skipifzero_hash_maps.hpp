@@ -16,6 +16,8 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
+#ifndef SKIPIFZERO_HASH_MAPS_HPP
+#define SKIPIFZERO_HASH_MAPS_HPP
 #pragma once
 
 #include "skipifzero.hpp"
@@ -488,3 +490,5 @@ private:
 };
 
 } // namespace sfz
+
+#endif

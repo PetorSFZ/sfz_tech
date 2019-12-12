@@ -16,6 +16,8 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
+#ifndef SKIPIFZERO_ARRAYS_HPP
+#define SKIPIFZERO_ARRAYS_HPP
 #pragma once
 
 #include "skipifzero.hpp"
@@ -426,3 +428,5 @@ private:
 };
 
 } // namespace sfz
+
+#endif
