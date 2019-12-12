@@ -16,9 +16,11 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/PushWarnings.hpp"
-#include "catch2/catch.hpp"
-#include "sfz/PopWarnings.hpp"
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include "utest.h"
+#undef near
+#undef far
 
 #include <skipifzero_allocators.hpp>
 
@@ -28,62 +30,62 @@
 
 using namespace sfz;
 
-TEST_CASE("ArenaAllocator: Stack based memory", "[sfz::ArenaAllocator]")
+UTEST(ArenaAllocator, stack_based_memory)
 {
 	sfz::setContext(sfz::getStandardContext());
 
 	// Create default-constructed arena without memory
 	ArenaAllocator arena;
-	REQUIRE(arena.capacity() == 0);
-	REQUIRE(arena.numBytesAllocated() == 0);
-	REQUIRE(arena.numPaddingBytes() == 0);
+	ASSERT_TRUE(arena.capacity() == 0);
+	ASSERT_TRUE(arena.numBytesAllocated() == 0);
+	ASSERT_TRUE(arena.numPaddingBytes() == 0);
 
 	// Initialize arena with memory
 	constexpr uint64_t MEMORY_HEAP_SIZE = sizeof(uint32_t) * 4;
 	alignas(32) uint8_t memoryHeap[MEMORY_HEAP_SIZE];
 	arena.init(memoryHeap, MEMORY_HEAP_SIZE);
-	REQUIRE(arena.capacity() == MEMORY_HEAP_SIZE);
-	REQUIRE(arena.numBytesAllocated() == 0);
-	REQUIRE(arena.numPaddingBytes() == 0);
+	ASSERT_TRUE(arena.capacity() == MEMORY_HEAP_SIZE);
+	ASSERT_TRUE(arena.numBytesAllocated() == 0);
+	ASSERT_TRUE(arena.numPaddingBytes() == 0);
 
 	// Do some allocations
 	uint32_t* first = (uint32_t*)arena.allocate(sfz_dbg(""), sizeof(uint32_t), sizeof(uint32_t));
-	REQUIRE(arena.numBytesAllocated() == 4);
-	REQUIRE(arena.numPaddingBytes() == 0);
-	REQUIRE(first == (uint32_t*)&memoryHeap[0]);
+	ASSERT_TRUE(arena.numBytesAllocated() == 4);
+	ASSERT_TRUE(arena.numPaddingBytes() == 0);
+	ASSERT_TRUE(first == (uint32_t*)&memoryHeap[0]);
 
 	uint32_t* second = (uint32_t*)arena.allocate(sfz_dbg(""), sizeof(uint32_t), sizeof(uint32_t));
-	REQUIRE(arena.numBytesAllocated() == 8);
-	REQUIRE(arena.numPaddingBytes() == 0);
-	REQUIRE(second == (uint32_t*)&memoryHeap[4]);
+	ASSERT_TRUE(arena.numBytesAllocated() == 8);
+	ASSERT_TRUE(arena.numPaddingBytes() == 0);
+	ASSERT_TRUE(second == (uint32_t*)&memoryHeap[4]);
 
 	uint32_t* third = (uint32_t*)arena.allocate(sfz_dbg(""), sizeof(uint32_t), sizeof(uint32_t));
-	REQUIRE(arena.numBytesAllocated() == 12);
-	REQUIRE(arena.numPaddingBytes() == 0);
-	REQUIRE(third == (uint32_t*)&memoryHeap[8]);
+	ASSERT_TRUE(arena.numBytesAllocated() == 12);
+	ASSERT_TRUE(arena.numPaddingBytes() == 0);
+	ASSERT_TRUE(third == (uint32_t*)&memoryHeap[8]);
 
 	uint32_t* fourth = (uint32_t*)arena.allocate(sfz_dbg(""), sizeof(uint32_t), sizeof(uint32_t));
-	REQUIRE(arena.numBytesAllocated() == 16);
-	REQUIRE(arena.numPaddingBytes() == 0);
-	REQUIRE(fourth == (uint32_t*)&memoryHeap[12]);
+	ASSERT_TRUE(arena.numBytesAllocated() == 16);
+	ASSERT_TRUE(arena.numPaddingBytes() == 0);
+	ASSERT_TRUE(fourth == (uint32_t*)&memoryHeap[12]);
 
 	SFZ_INFO("ArenaAllocator Tests", "The warning below is expected, ignore");
 	void* fifth = arena.allocate(sfz_dbg(""), 1, 1);
-	REQUIRE(arena.numBytesAllocated() == 16);
-	REQUIRE(arena.numPaddingBytes() == 0);
-	REQUIRE(fifth == nullptr);
+	ASSERT_TRUE(arena.numBytesAllocated() == 16);
+	ASSERT_TRUE(arena.numPaddingBytes() == 0);
+	ASSERT_TRUE(fifth == nullptr);
 
 	// Reset the arena
 	arena.reset();
 
 	// Allocations with larger alignment requirements
 	uint32_t* first2 = (uint32_t*)arena.allocate(sfz_dbg(""), sizeof(uint32_t), sizeof(uint32_t));
-	REQUIRE(arena.numBytesAllocated() == 4);
-	REQUIRE(arena.numPaddingBytes() == 0);
-	REQUIRE(first2 == (uint32_t*)&memoryHeap[0]);
+	ASSERT_TRUE(arena.numBytesAllocated() == 4);
+	ASSERT_TRUE(arena.numPaddingBytes() == 0);
+	ASSERT_TRUE(first2 == (uint32_t*)&memoryHeap[0]);
 
 	uint32_t* largeAligned = (uint32_t*)arena.allocate(sfz_dbg(""), sizeof(uint32_t), 8);
-	REQUIRE(arena.numBytesAllocated() == 12);
-	REQUIRE(arena.numPaddingBytes() == 4);
-	REQUIRE(largeAligned == (uint32_t*)&memoryHeap[8]);
+	ASSERT_TRUE(arena.numBytesAllocated() == 12);
+	ASSERT_TRUE(arena.numPaddingBytes() == 4);
+	ASSERT_TRUE(largeAligned == (uint32_t*)&memoryHeap[8]);
 }

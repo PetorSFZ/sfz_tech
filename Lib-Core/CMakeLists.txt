@@ -90,10 +90,10 @@ endif()
 # Externals directory
 set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../externals)
 
-# Catch (if building tests, i.e. if no parent)
-# ${CATCH_INCLUDE_DIRS}
+# utest.h (if building tests, i.e. if no parent)
+# ${UTESTH_INCLUDE_DIRS}
 if(NOT hasParent)
-	add_subdirectory(${EXTERNALS_DIR}/catch ${CMAKE_BINARY_DIR}/catch)
+	add_subdirectory(${EXTERNALS_DIR}/utest.h ${CMAKE_BINARY_DIR}/utest.h)
 endif()
 
 # Lib-Core-Headers
@@ -212,7 +212,7 @@ if(NOT hasParent)
 	target_include_directories(LibCoreTests PRIVATE
 		${INCLUDE_DIR}
 		${SFZ_CORE_HEADERS_INCLUDE_DIRS}
-		${CATCH_INCLUDE_DIRS}
+		${UTESTH_INCLUDE_DIRS}
 	)
 	target_link_libraries(LibCoreTests LibCore)
 

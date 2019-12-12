@@ -15,7 +15,6 @@ That said, just because the projects are in the same repository does NOT mean th
 
 ## Third-party libraries
 
-* [catch](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/catch) - [Original source](https://github.com/catchorg/Catch2) - A C++ header only testing framework.
 * [dear-imgui](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/dear-imgui) - [Original source](https://github.com/ocornut/imgui) - Immediate mode gui library.
 * [nativefiledialog](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/nativefiledialog) - [Original source](https://github.com/mlabbe/nativefiledialog) - Portable library for native file open/save dialogs.
 * [sajson](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/sajson) - [Original source](https://github.com/chadaustin/sajson) - Single-allocation JSON parser.

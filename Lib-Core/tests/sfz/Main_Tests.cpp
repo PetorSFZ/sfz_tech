@@ -16,7 +16,11 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#define CATCH_CONFIG_MAIN
-#include "sfz/PushWarnings.hpp"
-#include "catch2/catch.hpp"
-#include "sfz/PopWarnings.hpp"
+#include "utest.h"
+
+UTEST_STATE();
+
+int main(int argc, char* argv[])
+{
+	return utest_main(argc, argv);
+}

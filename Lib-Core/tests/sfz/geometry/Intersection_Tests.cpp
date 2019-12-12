@@ -16,9 +16,11 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/PushWarnings.hpp"
-#include "catch2/catch.hpp"
-#include "sfz/PopWarnings.hpp"
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include "utest.h"
+#undef near
+#undef far
 
 #include <vector>
 
@@ -34,28 +36,28 @@
 
 #include "sfz/math/Matrix.hpp"
 
-TEST_CASE("Signed distance to plane", "[sfz::Plane]")
+UTEST(Intersection, signed_distance_to_plane)
 {
 	using namespace sfz;
 
 	Plane p{vec3{0.0f, 1.0f, 0.0f}, vec3{2.0f, 1.0f, 0.0f}};
 
-	REQUIRE(eqf(p.signedDistance(vec3{2.0f, 3.0f, 0.0f}), 2.0f));
-	REQUIRE(eqf(p.signedDistance(vec3{0.0f, 3.0f, 0.0f}), 2.0f));
-	REQUIRE(eqf(p.signedDistance(vec3{2.0f, 0.0f, 0.0f}), -1.0f));
+	ASSERT_TRUE(eqf(p.signedDistance(vec3{2.0f, 3.0f, 0.0f}), 2.0f));
+	ASSERT_TRUE(eqf(p.signedDistance(vec3{0.0f, 3.0f, 0.0f}), 2.0f));
+	ASSERT_TRUE(eqf(p.signedDistance(vec3{2.0f, 0.0f, 0.0f}), -1.0f));
 }
 
-TEST_CASE("Point inside AABB test", "[sfz::Intersection]")
+UTEST(Intersection, point_inside_aabb_test)
 {
 	using namespace sfz;
 
 	AABB box{vec3{-1,-1,-1}, vec3{1,1,1}};
 
-	REQUIRE(pointInside(box, vec3{0,0,0}));
-	REQUIRE(!pointInside(box, vec3{-2,0,0}));
+	ASSERT_TRUE(pointInside(box, vec3{0,0,0}));
+	ASSERT_TRUE(!pointInside(box, vec3{-2,0,0}));
 }
 
-TEST_CASE("AABB vs AABB test", "[sfz::Intersection]")
+UTEST(Intersection, aabb_vs_aabb_test)
 {
 	using namespace sfz;
 
@@ -79,25 +81,25 @@ TEST_CASE("AABB vs AABB test", "[sfz::Intersection]")
 	smallSurroundingBoxes.push_back(&boxLeftSmall);
 	smallSurroundingBoxes.push_back(&boxRightSMall);
 
-	REQUIRE(intersects(boxMidSmall, boxMid));
+	ASSERT_TRUE(intersects(boxMidSmall, boxMid));
 
 	for (AABB* boxPtr : smallSurroundingBoxes) {
-		REQUIRE(intersects(boxMid, *boxPtr));
+		ASSERT_TRUE(intersects(boxMid, *boxPtr));
 	}
 
 	for (AABB* boxPtr : smallSurroundingBoxes) {
-		REQUIRE(!intersects(boxMidSmall, *boxPtr));
+		ASSERT_TRUE(!intersects(boxMidSmall, *boxPtr));
 	}
 
 	for (AABB* boxPtr1 : smallSurroundingBoxes) {
 		for (AABB* boxPtr2 : smallSurroundingBoxes) {
-			if (boxPtr1 == boxPtr2) REQUIRE(intersects(*boxPtr1, *boxPtr2));
-			else REQUIRE(!intersects(*boxPtr1, *boxPtr2));
+			if (boxPtr1 == boxPtr2) { ASSERT_TRUE(intersects(*boxPtr1, *boxPtr2)); }
+			else { ASSERT_TRUE(!intersects(*boxPtr1, *boxPtr2)); }
 		}
 	}
 }
 
-TEST_CASE("OBB vs OBB test", "[sfz::Intersection]")
+UTEST(Intersection, obb_vs_obb_test)
 {
 	using namespace sfz;
 
@@ -140,31 +142,31 @@ TEST_CASE("OBB vs OBB test", "[sfz::Intersection]")
 	surroundingAABoxes.push_back(&midFrontAA);
 
 	for (OBB* smallPtr : smallSurroundingAABoxes) {
-		REQUIRE(intersects(*smallPtr, midAA));
-		REQUIRE(intersects(midAA, *smallPtr));
+		ASSERT_TRUE(intersects(*smallPtr, midAA));
+		ASSERT_TRUE(intersects(midAA, *smallPtr));
 	}
 
-	REQUIRE(!intersects(midSmallLeftAA, midSmallRightAA));
-	REQUIRE(!intersects(midSmallDownAA, midSmallUpAA));
-	REQUIRE(!intersects(midSmallBackAA, midSmallFrontAA));
+	ASSERT_TRUE(!intersects(midSmallLeftAA, midSmallRightAA));
+	ASSERT_TRUE(!intersects(midSmallDownAA, midSmallUpAA));
+	ASSERT_TRUE(!intersects(midSmallBackAA, midSmallFrontAA));
 
-	REQUIRE(!intersects(midSmallLeftAA, midRightAA));
-	REQUIRE(!intersects(midSmallDownAA, midUpAA));
-	REQUIRE(!intersects(midSmallBackAA, midFrontAA));
+	ASSERT_TRUE(!intersects(midSmallLeftAA, midRightAA));
+	ASSERT_TRUE(!intersects(midSmallDownAA, midUpAA));
+	ASSERT_TRUE(!intersects(midSmallBackAA, midFrontAA));
 
-	REQUIRE(!intersects(midLeftAA, midSmallRightAA));
-	REQUIRE(!intersects(midDownAA, midSmallUpAA));
-	REQUIRE(!intersects(midBackAA, midSmallFrontAA));
+	ASSERT_TRUE(!intersects(midLeftAA, midSmallRightAA));
+	ASSERT_TRUE(!intersects(midDownAA, midSmallUpAA));
+	ASSERT_TRUE(!intersects(midBackAA, midSmallFrontAA));
 
 	// Non-trivial edge case
 	OBB nonTrivial1st = OBB(vec3(0.0f), axisAlignedAxes, vec3(2.0f));
 	OBB nonTrivial2nd = OBB(vec3(2.0f), axisAlignedAxes, vec3(2.0f));
 	nonTrivial2nd = nonTrivial2nd.transformOBB(Quaternion::fromEuler(45.0f, 45.0f, 45.0f));
 
-	REQUIRE(!intersects(nonTrivial1st, nonTrivial2nd));
+	ASSERT_TRUE(!intersects(nonTrivial1st, nonTrivial2nd));
 }
 
-TEST_CASE("Sphere vs Sphere test", "[sfz::Intersection]")
+UTEST(Intersection, sphere_vs_sphere_test)
 {
 	using namespace sfz;
 
@@ -172,12 +174,12 @@ TEST_CASE("Sphere vs Sphere test", "[sfz::Intersection]")
 	Sphere midBig{vec3{0.0f, 0.0f, 0.0f}, 1.0f};
 	Sphere aBitOff{vec3{-1.1f, 0.0f, 0.0f}, 0.5f};
 
-	REQUIRE(intersects(mid, midBig));
-	REQUIRE(intersects(midBig, aBitOff));
-	REQUIRE(!intersects(mid, aBitOff));
+	ASSERT_TRUE(intersects(mid, midBig));
+	ASSERT_TRUE(intersects(midBig, aBitOff));
+	ASSERT_TRUE(!intersects(mid, aBitOff));
 }
 
-TEST_CASE("Circle vs Circle test", "[sfz::Intersection]")
+UTEST(Intersection, circle_vs_circle_test)
 {
 	using namespace sfz;
 
@@ -185,12 +187,12 @@ TEST_CASE("Circle vs Circle test", "[sfz::Intersection]")
 	Circle midBig{vec2{0.0f}, 2.0f};
 	Circle left{vec2{-2.1f, 0.0f}, 1.0f};
 
-	REQUIRE(overlaps(mid, midBig));
-	REQUIRE(!overlaps(mid, left));
-	REQUIRE(overlaps(midBig, left));
+	ASSERT_TRUE(overlaps(mid, midBig));
+	ASSERT_TRUE(!overlaps(mid, left));
+	ASSERT_TRUE(overlaps(midBig, left));
 }
 
-TEST_CASE("AABB2D vs AABB2D test", "[sfz::Intersection]")
+UTEST(Intersection, aabb2d_vs_aabb2d_test)
 {
 	using namespace sfz;
 
@@ -198,12 +200,12 @@ TEST_CASE("AABB2D vs AABB2D test", "[sfz::Intersection]")
 	AABB2D midBig{vec2{0.0f}, vec2{4.0f}};
 	AABB2D left{vec2{-2.1f, 0.0f}, vec2{2.0f}};
 
-	REQUIRE(overlaps(mid, midBig));
-	REQUIRE(!overlaps(mid, left));
-	REQUIRE(overlaps(midBig, left));
+	ASSERT_TRUE(overlaps(mid, midBig));
+	ASSERT_TRUE(!overlaps(mid, left));
+	ASSERT_TRUE(overlaps(midBig, left));
 }
 
-TEST_CASE("AABB2D vs Circle test", "[sfz::Intersection]")
+UTEST(Intersection, aabb2d_vs_circle_test)
 {
 	using namespace sfz;
 
@@ -215,32 +217,32 @@ TEST_CASE("AABB2D vs Circle test", "[sfz::Intersection]")
 	Circle cMidBig{vec2{0.0f}, 2.0f};
 	Circle cLeft{vec2{-2.1f, 0.0f}, 1.0f};
 
-	REQUIRE(overlaps(rMid, cMid));
-	REQUIRE(overlaps(rMid, cMidBig));
-	REQUIRE(!overlaps(rMid, cLeft));
+	ASSERT_TRUE(overlaps(rMid, cMid));
+	ASSERT_TRUE(overlaps(rMid, cMidBig));
+	ASSERT_TRUE(!overlaps(rMid, cLeft));
 
-	REQUIRE(overlaps(rMidBig, cMid));
-	REQUIRE(overlaps(rMidBig, cMidBig));
-	REQUIRE(overlaps(rMidBig, cLeft));
+	ASSERT_TRUE(overlaps(rMidBig, cMid));
+	ASSERT_TRUE(overlaps(rMidBig, cMidBig));
+	ASSERT_TRUE(overlaps(rMidBig, cLeft));
 
-	REQUIRE(!overlaps(rLeft, cMid));
-	REQUIRE(overlaps(rLeft, cMidBig));
-	REQUIRE(overlaps(rLeft, cLeft));
+	ASSERT_TRUE(!overlaps(rLeft, cMid));
+	ASSERT_TRUE(overlaps(rLeft, cMidBig));
+	ASSERT_TRUE(overlaps(rLeft, cLeft));
 
-	REQUIRE(overlaps(cMid, rMid));
-	REQUIRE(overlaps(cMid, rMidBig));
-	REQUIRE(!overlaps(cMid, rLeft));
+	ASSERT_TRUE(overlaps(cMid, rMid));
+	ASSERT_TRUE(overlaps(cMid, rMidBig));
+	ASSERT_TRUE(!overlaps(cMid, rLeft));
 
-	REQUIRE(overlaps(cMidBig, rMid));
-	REQUIRE(overlaps(cMidBig, rMidBig));
-	REQUIRE(overlaps(cMidBig, rLeft));
+	ASSERT_TRUE(overlaps(cMidBig, rMid));
+	ASSERT_TRUE(overlaps(cMidBig, rMidBig));
+	ASSERT_TRUE(overlaps(cMidBig, rLeft));
 
-	REQUIRE(!overlaps(cLeft, rMid));
-	REQUIRE(overlaps(cLeft, rMidBig));
-	REQUIRE(overlaps(cLeft, rLeft));
+	ASSERT_TRUE(!overlaps(cLeft, rMid));
+	ASSERT_TRUE(overlaps(cLeft, rMidBig));
+	ASSERT_TRUE(overlaps(cLeft, rLeft));
 }
 
-TEST_CASE("Plane vs AABB test", "[sfz::Intersection]")
+UTEST(Intersection, plane_vs_aabb_test)
 {
 	using namespace sfz;
 
@@ -248,11 +250,11 @@ TEST_CASE("Plane vs AABB test", "[sfz::Intersection]")
 	Plane p2{vec3{0.0f, 1.0f, 0.0f}, vec3{0.0f, 1.5f, 0.0f}};
 	AABB aabb{vec3{1.0f, 1.0f, 1.0f}, vec3{3.0f, 3.0f, 3.0f}};
 
-	REQUIRE(!intersects(p1, aabb));
-	REQUIRE(intersects(p2, aabb));
+	ASSERT_TRUE(!intersects(p1, aabb));
+	ASSERT_TRUE(intersects(p2, aabb));
 }
 
-TEST_CASE("Plane vs OBB test", "[sfz::Intersection]")
+UTEST(Intersection, plane_vs_obb_test)
 {
 	using namespace sfz;
 
@@ -260,6 +262,6 @@ TEST_CASE("Plane vs OBB test", "[sfz::Intersection]")
 	Plane p2{vec3{0.0f, 1.0f, 0.0f}, vec3{0.0f, 1.5f, 0.0f}};
 	OBB obb{AABB{vec3{1.0f, 1.0f, 1.0f}, vec3{3.0f, 3.0f, 3.0f}}};
 
-	REQUIRE(!intersects(p1, obb));
-	REQUIRE(intersects(p2, obb));
+	ASSERT_TRUE(!intersects(p1, obb));
+	ASSERT_TRUE(intersects(p2, obb));
 }

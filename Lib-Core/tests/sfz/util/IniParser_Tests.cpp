@@ -16,9 +16,11 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/PushWarnings.hpp"
-#include "catch2/catch.hpp"
-#include "sfz/PopWarnings.hpp"
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include "utest.h"
+#undef near
+#undef far
 
 #include "sfz/math/MathSupport.hpp"
 #include "sfz/util/IniParser.hpp"
@@ -31,7 +33,7 @@ using namespace sfz;
 
 static const char* stupidFileName = "fafeafeafeafaefa.ini";
 
-TEST_CASE("Basic IniParser tests", "[sfz::IniParser]")
+UTEST(IniParser, basic_tests)
 {
 	const char* fpath = stupidFileName;
 
@@ -42,86 +44,93 @@ TEST_CASE("Basic IniParser tests", "[sfz::IniParser]")
 	ini1.setFloat("Section2", "fFloat1", 3.5f);
 	ini1.setInt("Section2", "iInt1", -23);
 
-	REQUIRE(*ini1.getBool("Section1", "bBool1") == true);
-	REQUIRE(*ini1.getBool("Section1", "bBool2") == false);
-	REQUIRE(*ini1.getFloat("Section2", "fFloat1") == 3.5f);
-	REQUIRE(*ini1.getInt("Section2", "iInt1") == -23);
+	ASSERT_TRUE(*ini1.getBool("Section1", "bBool1") == true);
+	ASSERT_TRUE(*ini1.getBool("Section1", "bBool2") == false);
+	ASSERT_TRUE(*ini1.getFloat("Section2", "fFloat1") == 3.5f);
+	ASSERT_TRUE(*ini1.getInt("Section2", "iInt1") == -23);
 
-	deleteFile(fpath);
-	REQUIRE(ini1.save());
+	sfz::deleteFile(fpath);
+	ASSERT_TRUE(ini1.save());
 
 	IniParser ini2(fpath);
-	REQUIRE(ini2.load());
+	ASSERT_TRUE(ini2.load());
 
-	REQUIRE(*ini2.getBool("Section1", "bBool1"));
-	REQUIRE(!*ini2.getBool("Section1", "bBool2"));
-	REQUIRE(*ini2.getFloat("Section2", "fFloat1") == 3.5f);
-	REQUIRE(*ini2.getInt("Section2", "iInt1") == -23);
+	ASSERT_TRUE(*ini2.getBool("Section1", "bBool1"));
+	ASSERT_TRUE(!*ini2.getBool("Section1", "bBool2"));
+	ASSERT_TRUE(*ini2.getFloat("Section2", "fFloat1") == 3.5f);
+	ASSERT_TRUE(*ini2.getInt("Section2", "iInt1") == -23);
 
 	ini1.setBool("Section1", "bBool1", true);
 	ini1.setBool("Section1", "bBool2", false);
 	ini1.setFloat("Section2", "fFloat1", 3.5f);
 	ini1.setInt("Section2", "iInt1", -23);
 
-	deleteFile(fpath);
+	sfz::deleteFile(fpath);
 }
 
-TEST_CASE("IniParser sanitizer methods", "[sfz::IniParser]")
+UTEST(IniParser, sanitizer_methods)
 {
-	const char* fpath = stupidFileName;
+	// sanitizeInt()
+	{
+		const char* fpath = stupidFileName;
+		sfz::deleteFile(fpath);
+		IniParser ini(fpath);
 
-	deleteFile(fpath);
-	IniParser ini(fpath);
+		ASSERT_TRUE(ini.getInt("", "val1") == nullptr);
+		ASSERT_TRUE(ini.sanitizeInt("", "val1") == 0);
+		ASSERT_TRUE(ini.getInt("", "val1") != nullptr);
+		ASSERT_TRUE(*ini.getInt("", "val1") == 0);
 
-	SECTION("sanitizeInt()") {
+		ASSERT_TRUE(ini.getInt("", "val2") == nullptr);
+		ASSERT_TRUE(ini.sanitizeInt("", "val2", 37) == 37);
+		ASSERT_TRUE(ini.getInt("", "val2") != nullptr);
+		ASSERT_TRUE(*ini.getInt("", "val2") == 37);
 
-		REQUIRE(ini.getInt("", "val1") == nullptr);
-		REQUIRE(ini.sanitizeInt("", "val1") == 0);
-		REQUIRE(ini.getInt("", "val1") != nullptr);
-		REQUIRE(*ini.getInt("", "val1") == 0);
-
-		REQUIRE(ini.getInt("", "val2") == nullptr);
-		REQUIRE(ini.sanitizeInt("", "val2", 37) == 37);
-		REQUIRE(ini.getInt("", "val2") != nullptr);
-		REQUIRE(*ini.getInt("", "val2") == 37);
-
-		REQUIRE(ini.sanitizeInt("", "val2", 0, 0, 36) == 36);
-		REQUIRE(*ini.getInt("", "val2") == 36);
-		REQUIRE(ini.sanitizeInt("", "val2", 0, 38, 39) == 38);
-		REQUIRE(*ini.getInt("", "val2") == 38);
+		ASSERT_TRUE(ini.sanitizeInt("", "val2", 0, 0, 36) == 36);
+		ASSERT_TRUE(*ini.getInt("", "val2") == 36);
+		ASSERT_TRUE(ini.sanitizeInt("", "val2", 0, 38, 39) == 38);
+		ASSERT_TRUE(*ini.getInt("", "val2") == 38);
 	}
-	SECTION("sanitizeFloat()") {
+	// sanitizeFloat()
+	{
+		const char* fpath = stupidFileName;
+		sfz::deleteFile(fpath);
+		IniParser ini(fpath);
 
-		REQUIRE(ini.getFloat("", "val1") == nullptr);
-		REQUIRE(eqf(ini.sanitizeFloat("", "val1"), 0.0f));
-		REQUIRE(ini.getFloat("", "val1") != nullptr);
-		REQUIRE(eqf(*ini.getFloat("", "val1"), 0.0f));
+		ASSERT_TRUE(ini.getFloat("", "val1") == nullptr);
+		ASSERT_TRUE(eqf(ini.sanitizeFloat("", "val1"), 0.0f));
+		ASSERT_TRUE(ini.getFloat("", "val1") != nullptr);
+		ASSERT_TRUE(eqf(*ini.getFloat("", "val1"), 0.0f));
 
-		REQUIRE(ini.getFloat("", "val2") == nullptr);
-		REQUIRE(eqf(ini.sanitizeFloat("", "val2", 37.0f), 37.0f));
-		REQUIRE(ini.getFloat("", "val2") != nullptr);
-		REQUIRE(eqf(*ini.getFloat("", "val2"), 37.0f));
+		ASSERT_TRUE(ini.getFloat("", "val2") == nullptr);
+		ASSERT_TRUE(eqf(ini.sanitizeFloat("", "val2", 37.0f), 37.0f));
+		ASSERT_TRUE(ini.getFloat("", "val2") != nullptr);
+		ASSERT_TRUE(eqf(*ini.getFloat("", "val2"), 37.0f));
 
-		REQUIRE(eqf(ini.sanitizeFloat("", "val2", 0.0f, 0.0f, 36.0f), 36.0f));
-		REQUIRE(eqf(*ini.getFloat("", "val2"), 36.0f));
-		REQUIRE(eqf(ini.sanitizeFloat("", "val2", 0.0f, 38.0f, 39.0f), 38.0f));
-		REQUIRE(eqf(*ini.getFloat("", "val2"), 38.0f));
+		ASSERT_TRUE(eqf(ini.sanitizeFloat("", "val2", 0.0f, 0.0f, 36.0f), 36.0f));
+		ASSERT_TRUE(eqf(*ini.getFloat("", "val2"), 36.0f));
+		ASSERT_TRUE(eqf(ini.sanitizeFloat("", "val2", 0.0f, 38.0f, 39.0f), 38.0f));
+		ASSERT_TRUE(eqf(*ini.getFloat("", "val2"), 38.0f));
 	}
-	SECTION("sanitizeBool()") {
+	// sanitizeBool()
+	{
+		const char* fpath = stupidFileName;
+		sfz::deleteFile(fpath);
+		IniParser ini(fpath);
 
-		REQUIRE(ini.getBool("", "val1") == nullptr);
-		REQUIRE(ini.sanitizeBool("", "val1") == false);
-		REQUIRE(ini.getBool("", "val1") != nullptr);
-		REQUIRE(*ini.getBool("", "val1") == false);
+		ASSERT_TRUE(ini.getBool("", "val1") == nullptr);
+		ASSERT_TRUE(ini.sanitizeBool("", "val1") == false);
+		ASSERT_TRUE(ini.getBool("", "val1") != nullptr);
+		ASSERT_TRUE(*ini.getBool("", "val1") == false);
 
-		REQUIRE(ini.getBool("", "val2") == nullptr);
-		REQUIRE(ini.sanitizeBool("", "val2", true) == true);
-		REQUIRE(ini.getBool("", "val2") != nullptr);
-		REQUIRE(*ini.getBool("", "val2") == true);
+		ASSERT_TRUE(ini.getBool("", "val2") == nullptr);
+		ASSERT_TRUE(ini.sanitizeBool("", "val2", true) == true);
+		ASSERT_TRUE(ini.getBool("", "val2") != nullptr);
+		ASSERT_TRUE(*ini.getBool("", "val2") == true);
 	}
 }
 
-TEST_CASE("IniParser comparing input and output", "[sfz::IniParser]")
+UTEST(IniParser, comparing_input_and_output)
 {
 	const char INPUT_INI_1[] =
 R"(; This is a comment
@@ -174,99 +183,101 @@ var2=false
 var=true
 )";
 
-	SECTION("First ini") {
+	// First ini
+	{
 		const char* cpath = "test_ini_1.ini";
 
 		deleteFile(cpath);
-		REQUIRE(writeBinaryFile(cpath, reinterpret_cast<const uint8_t*>(INPUT_INI_1), sizeof(INPUT_INI_1)));
+		ASSERT_TRUE(writeBinaryFile(cpath, reinterpret_cast<const uint8_t*>(INPUT_INI_1), sizeof(INPUT_INI_1)));
 
 		IniParser ini(cpath);
-		REQUIRE(ini.load());
+		ASSERT_TRUE(ini.load());
 
-		REQUIRE(ini.getInt("sect1", "first") != nullptr);
-		REQUIRE(*ini.getInt("sect1", "first") == 2);
-		REQUIRE(ini.getFloat("sect1", "first") != nullptr);
-		REQUIRE(eqf(*ini.getFloat("sect1", "first"), 2.0f));
-		REQUIRE(ini.getBool("sect1", "first") == nullptr);
-		REQUIRE(ini.getBool("sect1", "second") != nullptr);
-		REQUIRE(*ini.getBool("sect1", "second") == true);
-		REQUIRE(ini.getInt("sect1", "second") == nullptr);
-		REQUIRE(ini.getFloat("sect1", "second") == nullptr);
+		ASSERT_TRUE(ini.getInt("sect1", "first") != nullptr);
+		ASSERT_TRUE(*ini.getInt("sect1", "first") == 2);
+		ASSERT_TRUE(ini.getFloat("sect1", "first") != nullptr);
+		ASSERT_TRUE(eqf(*ini.getFloat("sect1", "first"), 2.0f));
+		ASSERT_TRUE(ini.getBool("sect1", "first") == nullptr);
+		ASSERT_TRUE(ini.getBool("sect1", "second") != nullptr);
+		ASSERT_TRUE(*ini.getBool("sect1", "second") == true);
+		ASSERT_TRUE(ini.getInt("sect1", "second") == nullptr);
+		ASSERT_TRUE(ini.getFloat("sect1", "second") == nullptr);
 
-		REQUIRE(ini.getInt("sect2", "third") != nullptr);
-		REQUIRE(*ini.getInt("sect2", "third") == 4);
-		REQUIRE(ini.getFloat("sect2", "third") != nullptr);
-		REQUIRE(eqf(*ini.getFloat("sect2", "third"), 4.0f));
-		REQUIRE(ini.getBool("sect2", "third") == nullptr);
-		REQUIRE(ini.getBool("sect2", "fifth") != nullptr);
-		REQUIRE(*ini.getBool("sect2", "fifth") == false);
-		REQUIRE(ini.getInt("sect2", "fifth") == nullptr);
-		REQUIRE(ini.getFloat("sect2", "fifth") == nullptr);
+		ASSERT_TRUE(ini.getInt("sect2", "third") != nullptr);
+		ASSERT_TRUE(*ini.getInt("sect2", "third") == 4);
+		ASSERT_TRUE(ini.getFloat("sect2", "third") != nullptr);
+		ASSERT_TRUE(eqf(*ini.getFloat("sect2", "third"), 4.0f));
+		ASSERT_TRUE(ini.getBool("sect2", "third") == nullptr);
+		ASSERT_TRUE(ini.getBool("sect2", "fifth") != nullptr);
+		ASSERT_TRUE(*ini.getBool("sect2", "fifth") == false);
+		ASSERT_TRUE(ini.getInt("sect2", "fifth") == nullptr);
+		ASSERT_TRUE(ini.getFloat("sect2", "fifth") == nullptr);
 
 		int itemCounter = 0;
 		for (IniParser::ItemAccessor i : ini) {
 			(void)i;
 			itemCounter += 1;
 		}
-		REQUIRE(itemCounter == 4);
+		ASSERT_TRUE(itemCounter == 4);
 
 		IniParser::Iterator it = ini.begin();
-		REQUIRE(it != ini.end());
+		ASSERT_TRUE(it != ini.end());
 		auto ac = *it;
-		REQUIRE(std::strcmp(ac.getSection(), "sect1") == 0);
-		REQUIRE(std::strcmp(ac.getKey(), "first") == 0);
-		REQUIRE(ac.getInt() != nullptr);
-		REQUIRE(*ac.getInt() == 2);
-		REQUIRE(*ac.getFloat() == 2.0f);
+		ASSERT_TRUE(std::strcmp(ac.getSection(), "sect1") == 0);
+		ASSERT_TRUE(std::strcmp(ac.getKey(), "first") == 0);
+		ASSERT_TRUE(ac.getInt() != nullptr);
+		ASSERT_TRUE(*ac.getInt() == 2);
+		ASSERT_TRUE(*ac.getFloat() == 2.0f);
 		it++;
 		ac = *it;
-		REQUIRE(std::strcmp(ac.getSection(), "sect1") == 0);
-		REQUIRE(std::strcmp(ac.getKey(), "second") == 0);
-		REQUIRE(ac.getBool() != nullptr);
-		REQUIRE(*ac.getBool() == true);
+		ASSERT_TRUE(std::strcmp(ac.getSection(), "sect1") == 0);
+		ASSERT_TRUE(std::strcmp(ac.getKey(), "second") == 0);
+		ASSERT_TRUE(ac.getBool() != nullptr);
+		ASSERT_TRUE(*ac.getBool() == true);
 		it++;
 		ac = *it;
-		REQUIRE(std::strcmp(ac.getSection(), "sect2") == 0);
-		REQUIRE(std::strcmp(ac.getKey(), "third") == 0);
-		REQUIRE(ac.getInt() != nullptr);
-		REQUIRE(*ac.getInt() == 4);
-		REQUIRE(*ac.getFloat() == 4.0f);
+		ASSERT_TRUE(std::strcmp(ac.getSection(), "sect2") == 0);
+		ASSERT_TRUE(std::strcmp(ac.getKey(), "third") == 0);
+		ASSERT_TRUE(ac.getInt() != nullptr);
+		ASSERT_TRUE(*ac.getInt() == 4);
+		ASSERT_TRUE(*ac.getFloat() == 4.0f);
 		it++;
 		ac = *it;
-		REQUIRE(std::strcmp(ac.getSection(), "sect2") == 0);
-		REQUIRE(std::strcmp(ac.getKey(), "fifth") == 0);
-		REQUIRE(ac.getBool() != nullptr);
-		REQUIRE(*ac.getBool() == false);
+		ASSERT_TRUE(std::strcmp(ac.getSection(), "sect2") == 0);
+		ASSERT_TRUE(std::strcmp(ac.getKey(), "fifth") == 0);
+		ASSERT_TRUE(ac.getBool() != nullptr);
+		ASSERT_TRUE(*ac.getBool() == false);
 		it++;
-		REQUIRE(it == ini.end());
+		ASSERT_TRUE(it == ini.end());
 
 
-		REQUIRE(ini.save());
+		ASSERT_TRUE(ini.save());
 
 		DynString output = readTextFile(cpath);
-		REQUIRE(output == OUTPUT_INI_1);
+		ASSERT_TRUE(output == OUTPUT_INI_1);
 		deleteFile(cpath);
 	}
 
-	SECTION("Second ini") {
+	// Second ini
+	{
 		const char* cpath = "test_ini_2.ini";
 
 		deleteFile(cpath);
-		REQUIRE(writeBinaryFile(cpath, reinterpret_cast<const uint8_t*>(INPUT_INI_2), sizeof(INPUT_INI_2)));
+		ASSERT_TRUE(writeBinaryFile(cpath, reinterpret_cast<const uint8_t*>(INPUT_INI_2), sizeof(INPUT_INI_2)));
 
 		IniParser ini(cpath);
-		REQUIRE(ini.load());
+		ASSERT_TRUE(ini.load());
 
 		// Adding var2 = false
-		REQUIRE(ini.getBool("section1", "var2") == nullptr);
+		ASSERT_TRUE(ini.getBool("section1", "var2") == nullptr);
 		ini.setBool("section1", "var2", false);
-		REQUIRE(ini.getBool("section1", "var2") != nullptr);
-		REQUIRE(*ini.getBool("section1", "var2") == false);
+		ASSERT_TRUE(ini.getBool("section1", "var2") != nullptr);
+		ASSERT_TRUE(*ini.getBool("section1", "var2") == false);
 
-		REQUIRE(ini.save());
+		ASSERT_TRUE(ini.save());
 
 		DynString output = readTextFile(cpath);
-		REQUIRE(output == OUTPUT_INI_2);
+		ASSERT_TRUE(output == OUTPUT_INI_2);
 		deleteFile(cpath);
 	}
 }

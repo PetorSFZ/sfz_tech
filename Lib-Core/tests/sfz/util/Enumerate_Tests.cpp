@@ -16,9 +16,11 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/PushWarnings.hpp"
-#include "catch2/catch.hpp"
-#include "sfz/PopWarnings.hpp"
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include "utest.h"
+#undef near
+#undef far
 
 #include <algorithm>
 
@@ -71,7 +73,7 @@ struct Counting {
 	}
 };
 
-TEST_CASE("Basic enumerate() tests", "[sfz::enumerate()]")
+UTEST(enumerate, basic_tests)
 {
 	Array<Counting> elements(0, getDefaultAllocator(), sfz_dbg("elements"));
 	elements.ensureCapacity(32);
@@ -81,17 +83,17 @@ TEST_CASE("Basic enumerate() tests", "[sfz::enumerate()]")
 
 	for (uint32_t i = 0; i < 10; i++) {
 		const Counting& elem = elements[i];
-		REQUIRE(elem.payload == i);
-		REQUIRE(elem.copyCounter == 0);
-		REQUIRE(elem.moveCounter == 1);
+		ASSERT_TRUE(elem.payload == i);
+		ASSERT_TRUE(elem.copyCounter == 0);
+		ASSERT_TRUE(elem.moveCounter == 1);
 	}
 
 	uint32_t counter = 0;
 	for (auto e : enumerate(elements)) {
-		REQUIRE(e.idx == counter);
-		REQUIRE(e.element.payload == counter);
-		REQUIRE(e.element.copyCounter == 0);
-		REQUIRE(e.element.moveCounter == 1);
+		ASSERT_TRUE(e.idx == counter);
+		ASSERT_TRUE(e.element.payload == counter);
+		ASSERT_TRUE(e.element.copyCounter == 0);
+		ASSERT_TRUE(e.element.moveCounter == 1);
 		counter += 1;
 	}
 }

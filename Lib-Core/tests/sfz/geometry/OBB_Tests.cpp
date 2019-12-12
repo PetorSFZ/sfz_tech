@@ -16,90 +16,94 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/PushWarnings.hpp"
-#include "catch2/catch.hpp"
-#include "sfz/PopWarnings.hpp"
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include "utest.h"
+#undef near
+#undef far
 
 #include <sfz/geometry/OBB.hpp>
 
 using namespace sfz;
 
-TEST_CASE("OBB Constructors", "[sfz::OBB]")
+UTEST(OBB, constructors)
 {
-	SECTION("Normal constructor") {
+	// Normal constructor
+	{
 		vec3 pos = vec3(1.0f, 2.0f, 3.0f);
 		vec3 xAxis = vec3(0.0f, -1.0f, 0.0f);
 		vec3 yAxis = vec3(1.0f, 0.0f, 0.0f);
 		vec3 zAxis = vec3(0.0f, 0.0f, 1.0f);
 		vec3 extents = vec3(4.0f, 5.0f, 6.0f);
 		OBB obb = OBB(pos, xAxis, yAxis, zAxis, extents);
-		REQUIRE(eqf(obb.center, pos));
-		REQUIRE(eqf(obb.xAxis(), xAxis));
-		REQUIRE(eqf(obb.yAxis(), yAxis));
-		REQUIRE(eqf(obb.zAxis(), zAxis));
-		REQUIRE(eqf(obb.halfExtents, extents * 0.5f));
+		ASSERT_TRUE(eqf(obb.center, pos));
+		ASSERT_TRUE(eqf(obb.xAxis(), xAxis));
+		ASSERT_TRUE(eqf(obb.yAxis(), yAxis));
+		ASSERT_TRUE(eqf(obb.zAxis(), zAxis));
+		ASSERT_TRUE(eqf(obb.halfExtents, extents * 0.5f));
 	}
-	SECTION("AABB constructor") {
+	// AABB constructor
+	{
 		vec3 pos = vec3(1.0f, 2.0f, 3.0f);
 		vec3 ext = vec3(4.0f, 5.0f, 6.0f);
 		AABB aabb = AABB(pos, ext.x, ext.y, ext.z);
 		OBB obb = OBB(aabb);
-		REQUIRE(eqf(obb.center, pos));
-		REQUIRE(eqf(obb.xAxis(), vec3(1.0f, 0.0f, 0.0f)));
-		REQUIRE(eqf(obb.yAxis(), vec3(0.0f, 1.0f, 0.0f)));
-		REQUIRE(eqf(obb.zAxis(), vec3(0.0f, 0.0f, 1.0f)));
-		REQUIRE(eqf(obb.halfExtents, ext * 0.5f));
+		ASSERT_TRUE(eqf(obb.center, pos));
+		ASSERT_TRUE(eqf(obb.xAxis(), vec3(1.0f, 0.0f, 0.0f)));
+		ASSERT_TRUE(eqf(obb.yAxis(), vec3(0.0f, 1.0f, 0.0f)));
+		ASSERT_TRUE(eqf(obb.zAxis(), vec3(0.0f, 0.0f, 1.0f)));
+		ASSERT_TRUE(eqf(obb.halfExtents, ext * 0.5f));
 	}
 }
 
-TEST_CASE("OBB: transformOBB()", "[sfz:OBB]")
+UTEST(OBB, transform_obb)
 {
 	OBB identityObb = OBB(AABB(vec3(0.0f), 1.0f, 1.0f, 1.0f));
-	REQUIRE(eqf(identityObb.center, vec3(0.0f)));
-	REQUIRE(eqf(identityObb.xAxis(), vec3(1.0f, 0.0f, 0.0f)));
-	REQUIRE(eqf(identityObb.yAxis(), vec3(0.0f, 1.0f, 0.0f)));
-	REQUIRE(eqf(identityObb.zAxis(), vec3(0.0f, 0.0f, 1.0f)));
-	REQUIRE(eqf(identityObb.halfExtents, vec3(0.5f)));
+	ASSERT_TRUE(eqf(identityObb.center, vec3(0.0f)));
+	ASSERT_TRUE(eqf(identityObb.xAxis(), vec3(1.0f, 0.0f, 0.0f)));
+	ASSERT_TRUE(eqf(identityObb.yAxis(), vec3(0.0f, 1.0f, 0.0f)));
+	ASSERT_TRUE(eqf(identityObb.zAxis(), vec3(0.0f, 0.0f, 1.0f)));
+	ASSERT_TRUE(eqf(identityObb.halfExtents, vec3(0.5f)));
 
 	mat44 rot1 = mat44::rotation3(vec3(0.0f, 0.0f, -1.0f), 3.1415926f * 0.5f);
-	REQUIRE(eqf(transformDir(rot1, vec3(0.0f, 1.0f, 0.0f)), vec3(1.0f, 0.0f, 0.0f)));
+	ASSERT_TRUE(eqf(transformDir(rot1, vec3(0.0f, 1.0f, 0.0f)), vec3(1.0f, 0.0f, 0.0f)));
 
 	mat44 rot2 = mat44::rotation3(vec3(1.0f, 0.0f, 0.0f), 3.1415926f * 0.5f);
-	REQUIRE(eqf(transformDir(rot2, vec3(0.0f, 1.0f, 0.0f)), vec3(0.0f, 0.0f, 1.0f)));
+	ASSERT_TRUE(eqf(transformDir(rot2, vec3(0.0f, 1.0f, 0.0f)), vec3(0.0f, 0.0f, 1.0f)));
 
 	mat44 rot3 = rot2 * rot1;
-	REQUIRE(eqf(transformDir(rot3, vec3(1.0f, 0.0f, 0.0f)), vec3(0.0f, 0.0f, -1.0f)));
-	REQUIRE(eqf(transformDir(rot3, vec3(0.0f, 1.0f, 0.0f)), vec3(1.0f, 0.0f, 0.0f)));
-	REQUIRE(eqf(transformDir(rot3, vec3(0.0f, 0.0f, 1.0f)), vec3(0.0f, -1.0f, 0.0f)));
+	ASSERT_TRUE(eqf(transformDir(rot3, vec3(1.0f, 0.0f, 0.0f)), vec3(0.0f, 0.0f, -1.0f)));
+	ASSERT_TRUE(eqf(transformDir(rot3, vec3(0.0f, 1.0f, 0.0f)), vec3(1.0f, 0.0f, 0.0f)));
+	ASSERT_TRUE(eqf(transformDir(rot3, vec3(0.0f, 0.0f, 1.0f)), vec3(0.0f, -1.0f, 0.0f)));
 
 	OBB obb1 = identityObb.transformOBB(rot3.row012);
-	REQUIRE(eqf(obb1.halfExtents, identityObb.halfExtents));
-	REQUIRE(eqf(obb1.center, identityObb.center));
-	REQUIRE(eqf(obb1.xAxis(), vec3(0.0f, 0.0f, -1.0f)));
-	REQUIRE(eqf(obb1.yAxis(), vec3(1.0f, 0.0f, 0.0f)));
-	REQUIRE(eqf(obb1.zAxis(), vec3(0.0f, -1.0f, 0.0f)));
+	ASSERT_TRUE(eqf(obb1.halfExtents, identityObb.halfExtents));
+	ASSERT_TRUE(eqf(obb1.center, identityObb.center));
+	ASSERT_TRUE(eqf(obb1.xAxis(), vec3(0.0f, 0.0f, -1.0f)));
+	ASSERT_TRUE(eqf(obb1.yAxis(), vec3(1.0f, 0.0f, 0.0f)));
+	ASSERT_TRUE(eqf(obb1.zAxis(), vec3(0.0f, -1.0f, 0.0f)));
 
 	mat4 scaleRot = rot3 * mat44::scaling3(4.0f, 5.0f, 6.0f);
 	OBB obb2 = identityObb.transformOBB(scaleRot.row012);
-	REQUIRE(eqf(obb2.halfExtents, vec3(2.0f, 2.5f, 3.0f), 0.01f));
-	REQUIRE(eqf(obb2.center, identityObb.center));
-	REQUIRE(eqf(obb2.xAxis(), vec3(0.0f, 0.0f, -1.0f)));
-	REQUIRE(eqf(obb2.yAxis(), vec3(1.0f, 0.0f, 0.0f)));
-	REQUIRE(eqf(obb2.zAxis(), vec3(0.0f, -1.0f, 0.0f)));
+	ASSERT_TRUE(eqf(obb2.halfExtents, vec3(2.0f, 2.5f, 3.0f), 0.01f));
+	ASSERT_TRUE(eqf(obb2.center, identityObb.center));
+	ASSERT_TRUE(eqf(obb2.xAxis(), vec3(0.0f, 0.0f, -1.0f)));
+	ASSERT_TRUE(eqf(obb2.yAxis(), vec3(1.0f, 0.0f, 0.0f)));
+	ASSERT_TRUE(eqf(obb2.zAxis(), vec3(0.0f, -1.0f, 0.0f)));
 
 	mat4 rotTranslScale = mat44::translation3(vec3(1.0f, 2.0f, 3.0f)) * scaleRot;
 	OBB obb3 = identityObb.transformOBB(rotTranslScale.row012);
-	REQUIRE(eqf(obb3.halfExtents, vec3(2.0f, 2.5f, 3.0f), 0.01f));
-	REQUIRE(eqf(obb3.center, vec3(1.0f, 2.0f, 3.0f)));
-	REQUIRE(eqf(obb3.xAxis(), vec3(0.0f, 0.0f, -1.0f)));
-	REQUIRE(eqf(obb3.yAxis(), vec3(1.0f, 0.0f, 0.0f)));
-	REQUIRE(eqf(obb3.zAxis(), vec3(0.0f, -1.0f, 0.0f)));
+	ASSERT_TRUE(eqf(obb3.halfExtents, vec3(2.0f, 2.5f, 3.0f), 0.01f));
+	ASSERT_TRUE(eqf(obb3.center, vec3(1.0f, 2.0f, 3.0f)));
+	ASSERT_TRUE(eqf(obb3.xAxis(), vec3(0.0f, 0.0f, -1.0f)));
+	ASSERT_TRUE(eqf(obb3.yAxis(), vec3(1.0f, 0.0f, 0.0f)));
+	ASSERT_TRUE(eqf(obb3.zAxis(), vec3(0.0f, -1.0f, 0.0f)));
 
 	Quaternion q = Quaternion::fromRotationMatrix(rot3.row012);
 	OBB obb4 = identityObb.transformOBB(q);
-	REQUIRE(eqf(obb4.halfExtents, identityObb.halfExtents));
-	REQUIRE(eqf(obb4.center, identityObb.center));
-	REQUIRE(eqf(obb4.xAxis(), vec3(0.0f, 0.0f, -1.0f)));
-	REQUIRE(eqf(obb4.yAxis(), vec3(1.0f, 0.0f, 0.0f)));
-	REQUIRE(eqf(obb4.zAxis(), vec3(0.0f, -1.0f, 0.0f)));
+	ASSERT_TRUE(eqf(obb4.halfExtents, identityObb.halfExtents));
+	ASSERT_TRUE(eqf(obb4.center, identityObb.center));
+	ASSERT_TRUE(eqf(obb4.xAxis(), vec3(0.0f, 0.0f, -1.0f)));
+	ASSERT_TRUE(eqf(obb4.yAxis(), vec3(1.0f, 0.0f, 0.0f)));
+	ASSERT_TRUE(eqf(obb4.zAxis(), vec3(0.0f, -1.0f, 0.0f)));
 }

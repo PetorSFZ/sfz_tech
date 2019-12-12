@@ -16,9 +16,11 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/PushWarnings.hpp"
-#include "catch2/catch.hpp"
-#include "sfz/PopWarnings.hpp"
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include "utest.h"
+#undef near
+#undef far
 
 #include <skipifzero.hpp>
 #include <skipifzero_allocators.hpp>
@@ -27,27 +29,27 @@
 
 using namespace sfz;
 
-TEST_CASE("Testing alignment", "[sfz::StandardAllocator]")
+UTEST(StandardAllocator, testing_alignment)
 {
 	sfz::setContext(sfz::getStandardContext());
 
-	void* memory16byte = getDefaultAllocator()->allocate(sfz_dbg(""), 512, 16);
-	REQUIRE(memory16byte != nullptr);
-	REQUIRE(isAligned(memory16byte, 16));
-	getDefaultAllocator()->deallocate(memory16byte);
+	void* memory16byte = sfz::getDefaultAllocator()->allocate(sfz_dbg(""), 512, 16);
+	ASSERT_TRUE(memory16byte != nullptr);
+	ASSERT_TRUE(isAligned(memory16byte, 16));
+	sfz::getDefaultAllocator()->deallocate(memory16byte);
 
-	void* memory32byte = getDefaultAllocator()->allocate(sfz_dbg(""), 512, 32);
-	REQUIRE(memory32byte != nullptr);
-	REQUIRE(isAligned(memory32byte, 32));
-	getDefaultAllocator()->deallocate(memory32byte);
+	void* memory32byte = sfz::getDefaultAllocator()->allocate(sfz_dbg(""), 512, 32);
+	ASSERT_TRUE(memory32byte != nullptr);
+	ASSERT_TRUE(isAligned(memory32byte, 32));
+	sfz::getDefaultAllocator()->deallocate(memory32byte);
 
-	void* memory64byte = getDefaultAllocator()->allocate(sfz_dbg(""), 512, 64);
-	REQUIRE(memory64byte != nullptr);
-	REQUIRE(isAligned(memory64byte, 64));
-	getDefaultAllocator()->deallocate(memory64byte);
+	void* memory64byte = sfz::getDefaultAllocator()->allocate(sfz_dbg(""), 512, 64);
+	ASSERT_TRUE(memory64byte != nullptr);
+	ASSERT_TRUE(isAligned(memory64byte, 64));
+	sfz::getDefaultAllocator()->deallocate(memory64byte);
 }
 
-TEST_CASE("Basic new and delete tests", "[sfz::StandardAllocator]")
+UTEST(StandardAllocator, basic_new_and_delete_tests)
 {
 	sfz::setContext(sfz::getStandardContext());
 
@@ -68,10 +70,10 @@ TEST_CASE("Basic new and delete tests", "[sfz::StandardAllocator]")
 
 	TestClass* ptr = nullptr;
 	ptr = getDefaultAllocator()->newObject<TestClass>(sfz_dbg("name"), &flag);
-	REQUIRE(ptr != nullptr);
-	REQUIRE(ptr->flagPtr == &flag);
-	REQUIRE(flag == 1);
+	ASSERT_TRUE(ptr != nullptr);
+	ASSERT_TRUE(ptr->flagPtr == &flag);
+	ASSERT_TRUE(flag == 1);
 
 	getDefaultAllocator()->deleteObject(ptr);
-	REQUIRE(flag == 2);
+	ASSERT_TRUE(flag == 2);
 }
