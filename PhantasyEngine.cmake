@@ -272,7 +272,7 @@ function(phAddZeroG)
 endfunction()
 
 # Adds sfz_tech's sfzCore, the following variables will be set:
-# ${SFZ_CORE_FOUND}, ${SFZ_CORE_INCLUDE_DIRS}, ${SFZ_CORE_LIBRARIES}
+# ${SFZ_CORE_FOUND}, ${SFZ_CORE_INCLUDE_DIRS}
 function(phAddSfzCore)
 
 	set(SFZ_CORE_PATH ${SFZ_TECH_ROOT}/Lib-Core)
@@ -281,7 +281,6 @@ function(phAddSfzCore)
 
 	set(SFZ_CORE_FOUND ${SFZ_CORE_FOUND} PARENT_SCOPE)
 	set(SFZ_CORE_INCLUDE_DIRS ${SFZ_CORE_INCLUDE_DIRS} PARENT_SCOPE)
-	set(SFZ_CORE_LIBRARIES ${SFZ_CORE_LIBRARIES} PARENT_SCOPE)
 endfunction()
 
 # Adds the bundled externals, this is currently stb and dear-imgui.
@@ -351,7 +350,6 @@ endfunction()
 # Links sfzCore to the specified target
 function(phLinkSfzCore linkTarget)
 	target_include_directories(${linkTarget} PUBLIC ${SFZ_CORE_INCLUDE_DIRS})
-	target_link_libraries(${linkTarget} ${SFZ_CORE_LIBRARIES})
 endfunction()
 
 # Links the bundled externals to the specified target

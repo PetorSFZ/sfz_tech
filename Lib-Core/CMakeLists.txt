@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
-project("LibCore" LANGUAGES CXX)
+project("sfz_core" LANGUAGES CXX)
 
 # Sets build type to release if no build type is specified in a single-configuration generator.
 if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
@@ -21,7 +21,7 @@ endif()
 # Compiler flags
 # ------------------------------------------------------------------------------------------------
 
-# Set compiler flags only if building sfzCore individually
+# Set compiler flags only if building sfz_core individually
 if(NOT hasParent)
 	if(MSVC)
 		# MSVC flags
@@ -63,17 +63,6 @@ if(NOT hasParent)
 		set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DNDEBUG")
 		set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 
-	elseif(EMSCRIPTEN)
-		# Emscripten flags
-		# -Wall -Wextra = Enable most warnings
-		# -std=c++14 = Enable C++14 support
-		# -fno-strict-aliasing = Disable strict aliasing optimizations
-		# -s TOTAL_MEMORY=134217728 = 128MiB heap, TODO: should probably not hard-code this
-		set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -fno-strict-aliasing -s TOTAL_MEMORY=134217728")
-		set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -ffast-math -g -DNDEBUG")
-		set(CMAKE_CXX_FLAGS_RELEASE "-O3 -ffast-math -DNDEBUG")
-		set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-
 	else()
 		# GCC / Clang flags
 		set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -march=sandybridge -pthread -fno-strict-aliasing")
@@ -96,133 +85,53 @@ if(NOT hasParent)
 	add_subdirectory(${EXTERNALS_DIR}/utest.h ${CMAKE_BINARY_DIR}/utest.h)
 endif()
 
-# Lib-Core-Headers
-# ${SFZ_CORE_HEADERS_FOUND}, ${SFZ_CORE_HEADERS_INCLUDE_DIRS}
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../Lib-Core-Headers ${CMAKE_BINARY_DIR}/Lib-Core-Headers})
-
 # Lib-Core
 # ------------------------------------------------------------------------------------------------
 
 # Directories
-set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
 set(INCLUDE_FILES
-	${INCLUDE_DIR}/sfz/Context.hpp
-	${INCLUDE_DIR}/sfz/CudaCompatibility.hpp
-	${INCLUDE_DIR}/sfz/Logging.hpp
-	${INCLUDE_DIR}/sfz/PopWarnings.hpp
-	${INCLUDE_DIR}/sfz/PushWarnings.hpp
-	${INCLUDE_DIR}/sfz/SimdIntrinsics.hpp
-
-	${INCLUDE_DIR}/sfz/containers/RingBuffer.hpp
-	${INCLUDE_DIR}/sfz/containers/RingBuffer.inl
-
-	${INCLUDE_DIR}/sfz/geometry/AABB.hpp
-	${INCLUDE_DIR}/sfz/geometry/AABB.inl
-	${INCLUDE_DIR}/sfz/geometry/AABB2D.hpp
-	${INCLUDE_DIR}/sfz/geometry/Circle.hpp
-	${INCLUDE_DIR}/sfz/geometry/Intersection.hpp
-	${INCLUDE_DIR}/sfz/geometry/Intersection.inl
-	${INCLUDE_DIR}/sfz/geometry/OBB.hpp
-	${INCLUDE_DIR}/sfz/geometry/OBB.inl
-	${INCLUDE_DIR}/sfz/geometry/Plane.hpp
-	${INCLUDE_DIR}/sfz/geometry/Plane.inl
-	${INCLUDE_DIR}/sfz/geometry/Sphere.hpp
-
-	${INCLUDE_DIR}/sfz/math/MathPrimitiveToStrings.hpp
-	${INCLUDE_DIR}/sfz/math/MathSupport.hpp
-	${INCLUDE_DIR}/sfz/math/MathSupport.inl
-	${INCLUDE_DIR}/sfz/math/Matrix.hpp
-	${INCLUDE_DIR}/sfz/math/Matrix.inl
-	${INCLUDE_DIR}/sfz/math/ProjectionMatrices.hpp
-	${INCLUDE_DIR}/sfz/math/Quaternion.hpp
-	${INCLUDE_DIR}/sfz/math/Quaternion.inl
-
-	${INCLUDE_DIR}/sfz/memory/ArenaAllocator.hpp
-	${INCLUDE_DIR}/sfz/memory/DebugAllocator.hpp
-	${INCLUDE_DIR}/sfz/memory/StandardAllocator.hpp
-
-	${INCLUDE_DIR}/sfz/strings/DynString.hpp
-	${INCLUDE_DIR}/sfz/strings/StringID.hpp
-
-	${INCLUDE_DIR}/sfz/util/Enumerate.hpp
-	${INCLUDE_DIR}/sfz/util/FrametimeStats.hpp
-	${INCLUDE_DIR}/sfz/util/IniParser.hpp
-	${INCLUDE_DIR}/sfz/util/IO.hpp
-	${INCLUDE_DIR}/sfz/util/LoggingInterface.hpp
-	${INCLUDE_DIR}/sfz/util/StandardLogger.hpp
+	${INCLUDE_DIR}/skipifzero.hpp
+	${INCLUDE_DIR}/skipifzero_allocators.hpp
+	${INCLUDE_DIR}/skipifzero_hash_maps.hpp
+	${INCLUDE_DIR}/skipifzero_smart_pointers.hpp
+	${INCLUDE_DIR}/skipifzero_strings.hpp
+	${INCLUDE_DIR}/skipifzero_arrays.hpp
 )
 source_group(TREE ${INCLUDE_DIR} FILES ${INCLUDE_FILES})
 
-set(SRC_FILES
-	${SRC_DIR}/sfz/Context.cpp
+# Empty target in order to add headers to IDE
+add_custom_target(sfz_core SOURCES ${INCLUDE_FILES})
 
-	${SRC_DIR}/sfz/math/MathPrimitiveToStrings.cpp
-	${SRC_DIR}/sfz/math/ProjectionMatrices.cpp
-
-	${SRC_DIR}/sfz/memory/ArenaAllocator.cpp
-	${SRC_DIR}/sfz/memory/DebugAllocator.cpp
-	${SRC_DIR}/sfz/memory/StandardAllocator.cpp
-
-	${SRC_DIR}/sfz/strings/DynString.cpp
-	${SRC_DIR}/sfz/strings/StringID.cpp
-
-	${SRC_DIR}/sfz/util/FrametimeStats.cpp
-	${SRC_DIR}/sfz/util/IniParser.cpp
-	${SRC_DIR}/sfz/util/IO.cpp
-	${SRC_DIR}/sfz/util/StandardLogger.cpp
-)
-source_group(TREE ${SRC_DIR} FILES ${SRC_FILES})
-
-add_library(LibCore ${INCLUDE_FILES} ${SRC_FILES})
-target_include_directories(LibCore PRIVATE ${INCLUDE_DIR} ${SFZ_CORE_HEADERS_INCLUDE_DIRS})
-
-# sfzCore lib-core tests
+# sfz_core lib-core tests
 # ------------------------------------------------------------------------------------------------
 
 if(NOT hasParent)
 
 	set(TEST_FILES
-		${TESTS_DIR}/sfz/Main_Tests.cpp
-
-		${TESTS_DIR}/sfz/containers/RingBuffer_Tests.cpp
-
-		${TESTS_DIR}/sfz/geometry/Intersection_Tests.cpp
-		${TESTS_DIR}/sfz/geometry/OBB_Tests.cpp
-
-		${TESTS_DIR}/sfz/math/MathSupport_Tests.cpp
-		${TESTS_DIR}/sfz/math/Matrix_Tests.cpp
-		${TESTS_DIR}/sfz/math/Quaternion_Tests.cpp
-
-		${TESTS_DIR}/sfz/memory/Allocators_Tests.cpp
-		${TESTS_DIR}/sfz/memory/ArenaAllocator_Tests.cpp
-
-		${TESTS_DIR}/sfz/strings/DynString_Tests.cpp
-		${TESTS_DIR}/sfz/strings/StringID_Tests.cpp
-
-		${TESTS_DIR}/sfz/util/Enumerate_Tests.cpp
-		${TESTS_DIR}/sfz/util/IniParser_Tests.cpp
-		${TESTS_DIR}/sfz/util/IO_Tests.cpp
+		${TESTS_DIR}/LibCoreHeadersTestsMain.cpp
+		${TESTS_DIR}/skipifzero_arrays_tests.cpp
+		${TESTS_DIR}/skipifzero_hash_maps_tests.cpp
+		${TESTS_DIR}/skipifzero_smart_pointers_tests.cpp
+		${TESTS_DIR}/skipifzero_strings_tests.cpp
+		${TESTS_DIR}/skipifzero_tests.cpp
 	)
 	source_group(TREE ${TESTS_DIR} FILES ${TEST_FILES})
 
-	add_executable(LibCoreTests ${TEST_FILES})
-	target_include_directories(LibCoreTests PRIVATE
+	add_executable(sfz_core_tests ${TEST_FILES})
+	target_include_directories(sfz_core_tests PRIVATE
 		${INCLUDE_DIR}
-		${SFZ_CORE_HEADERS_INCLUDE_DIRS}
 		${UTESTH_INCLUDE_DIRS}
 	)
-	target_link_libraries(LibCoreTests LibCore)
 
 endif()
 
 # Output variables
 # ------------------------------------------------------------------------------------------------
 
-if(hasParent)
+if (hasParent)
 	set(SFZ_CORE_FOUND true PARENT_SCOPE)
-	set(SFZ_CORE_INCLUDE_DIRS ${INCLUDE_DIR} ${SFZ_CORE_HEADERS_INCLUDE_DIRS} PARENT_SCOPE)
-	set(SFZ_CORE_LIBRARIES LibCore PARENT_SCOPE)
+	set(SFZ_CORE_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
 endif()
