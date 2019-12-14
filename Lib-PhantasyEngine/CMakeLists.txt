@@ -246,45 +246,43 @@ set(HEADER_FILES
 	${INCLUDE_DIR}/sfz/util/LoggingInterface.hpp
 	${INCLUDE_DIR}/sfz/util/StandardLogger.hpp
 
-	${INCLUDE_DIR}/ph/Context.hpp
+	${INCLUDE_DIR}/sfz/config/GlobalConfig.hpp
+	${INCLUDE_DIR}/sfz/config/Setting.hpp
 
-	${INCLUDE_DIR}/ph/config/GlobalConfig.hpp
-	${INCLUDE_DIR}/ph/config/Setting.hpp
+	${INCLUDE_DIR}/sfz/game_loop/DefaultGameUpdateable.hpp
+	${INCLUDE_DIR}/sfz/game_loop/GameLoop.hpp
+	${INCLUDE_DIR}/sfz/game_loop/GameLoopUpdateable.hpp
 
-	${INCLUDE_DIR}/ph/game_loop/DefaultGameUpdateable.hpp
-	${INCLUDE_DIR}/ph/game_loop/GameLoop.hpp
-	${INCLUDE_DIR}/ph/game_loop/GameLoopUpdateable.hpp
+	${INCLUDE_DIR}/sfz/renderer/BuiltInShaderTypes.hpp
+	${INCLUDE_DIR}/sfz/renderer/CascadedShadowMaps.hpp
+	${INCLUDE_DIR}/sfz/renderer/Renderer.hpp
 
-	${INCLUDE_DIR}/ph/renderer/BuiltInShaderTypes.hpp
-	${INCLUDE_DIR}/ph/renderer/CascadedShadowMaps.hpp
-	${INCLUDE_DIR}/ph/renderer/Renderer.hpp
+	${INCLUDE_DIR}/sfz/rendering/FullscreenTriangle.hpp
+	${INCLUDE_DIR}/sfz/rendering/ImageView.hpp
+	${INCLUDE_DIR}/sfz/rendering/Image.hpp
+	${INCLUDE_DIR}/sfz/rendering/ImguiRenderingData.hpp
+	${INCLUDE_DIR}/sfz/rendering/ImguiSupport.hpp
+	${INCLUDE_DIR}/sfz/rendering/Mesh.hpp
+	${INCLUDE_DIR}/sfz/rendering/SphereLight.hpp
 
-	${INCLUDE_DIR}/ph/rendering/FullscreenTriangle.hpp
-	${INCLUDE_DIR}/ph/rendering/ImageView.hpp
-	${INCLUDE_DIR}/ph/rendering/Image.hpp
-	${INCLUDE_DIR}/ph/rendering/ImguiRenderingData.hpp
-	${INCLUDE_DIR}/ph/rendering/ImguiSupport.hpp
-	${INCLUDE_DIR}/ph/rendering/Mesh.hpp
-	${INCLUDE_DIR}/ph/rendering/SphereLight.hpp
+	${INCLUDE_DIR}/sfz/sdl/ButtonState.hpp
+	${INCLUDE_DIR}/sfz/sdl/GameController.hpp
+	${INCLUDE_DIR}/sfz/sdl/Mouse.hpp
+	${INCLUDE_DIR}/sfz/sdl/SDLAllocator.hpp
 
-	${INCLUDE_DIR}/ph/sdl/ButtonState.hpp
-	${INCLUDE_DIR}/ph/sdl/GameController.hpp
-	${INCLUDE_DIR}/ph/sdl/Mouse.hpp
-	${INCLUDE_DIR}/ph/sdl/SDLAllocator.hpp
+	${INCLUDE_DIR}/sfz/state/ArrayHeader.hpp
+	${INCLUDE_DIR}/sfz/state/ComponentMask.hpp
+	${INCLUDE_DIR}/sfz/state/Entity.hpp
+	${INCLUDE_DIR}/sfz/state/GameState.hpp
+	${INCLUDE_DIR}/sfz/state/GameStateContainer.hpp
+	${INCLUDE_DIR}/sfz/state/GameStateEditor.hpp
 
-	${INCLUDE_DIR}/ph/state/ArrayHeader.hpp
-	${INCLUDE_DIR}/ph/state/ComponentMask.hpp
-	${INCLUDE_DIR}/ph/state/Entity.hpp
-	${INCLUDE_DIR}/ph/state/GameState.hpp
-	${INCLUDE_DIR}/ph/state/GameStateContainer.hpp
-	${INCLUDE_DIR}/ph/state/GameStateEditor.hpp
+	${INCLUDE_DIR}/sfz/util/GltfLoader.hpp
+	${INCLUDE_DIR}/sfz/util/GltfWriter.hpp
+	${INCLUDE_DIR}/sfz/util/JsonParser.hpp
+	${INCLUDE_DIR}/sfz/util/TerminalLogger.hpp
 
-	${INCLUDE_DIR}/ph/util/GltfLoader.hpp
-	${INCLUDE_DIR}/ph/util/GltfWriter.hpp
-	${INCLUDE_DIR}/ph/util/JsonParser.hpp
-	${INCLUDE_DIR}/ph/util/TerminalLogger.hpp
-
-	${INCLUDE_DIR}/ph/PhantasyEngineMain.hpp
+	${INCLUDE_DIR}/sfz/PhantasyEngineMain.hpp
 )
 source_group(TREE ${INCLUDE_DIR} FILES ${HEADER_FILES})
 
@@ -306,52 +304,50 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/util/IO.cpp
 	${SRC_DIR}/sfz/util/StandardLogger.cpp
 
-	${SRC_DIR}/ph/Context.cpp
+	${SRC_DIR}/sfz/config/GlobalConfig.cpp
+	${SRC_DIR}/sfz/config/Setting.cpp
 
-	${SRC_DIR}/ph/config/GlobalConfig.cpp
-	${SRC_DIR}/ph/config/Setting.cpp
+	${SRC_DIR}/sfz/game_loop/DefaultGameUpdateable.cpp
+	${SRC_DIR}/sfz/game_loop/GameLoop.cpp
 
-	${SRC_DIR}/ph/game_loop/DefaultGameUpdateable.cpp
-	${SRC_DIR}/ph/game_loop/GameLoop.cpp
+	${SRC_DIR}/sfz/renderer/CascadedShadowMaps.cpp
+	${SRC_DIR}/sfz/renderer/DynamicGpuAllocator.hpp
+	${SRC_DIR}/sfz/renderer/DynamicGpuAllocator.cpp
+	${SRC_DIR}/sfz/renderer/GpuMesh.hpp
+	${SRC_DIR}/sfz/renderer/GpuMesh.cpp
+	${SRC_DIR}/sfz/renderer/GpuTextures.hpp
+	${SRC_DIR}/sfz/renderer/GpuTextures.cpp
+	${SRC_DIR}/sfz/renderer/ImGuiRenderer.hpp
+	${SRC_DIR}/sfz/renderer/ImGuiRenderer.cpp
+	${SRC_DIR}/sfz/renderer/Renderer.cpp
+	${SRC_DIR}/sfz/renderer/RendererConfigParser.hpp
+	${SRC_DIR}/sfz/renderer/RendererConfigParser.cpp
+	${SRC_DIR}/sfz/renderer/RendererState.hpp
+	${SRC_DIR}/sfz/renderer/RendererState.cpp
+	${SRC_DIR}/sfz/renderer/RendererUI.hpp
+	${SRC_DIR}/sfz/renderer/RendererUI.cpp
+	${SRC_DIR}/sfz/renderer/ZeroGUtils.hpp
+	${SRC_DIR}/sfz/renderer/ZeroGUtils.cpp
 
-	${SRC_DIR}/ph/renderer/CascadedShadowMaps.cpp
-	${SRC_DIR}/ph/renderer/DynamicGpuAllocator.hpp
-	${SRC_DIR}/ph/renderer/DynamicGpuAllocator.cpp
-	${SRC_DIR}/ph/renderer/GpuMesh.hpp
-	${SRC_DIR}/ph/renderer/GpuMesh.cpp
-	${SRC_DIR}/ph/renderer/GpuTextures.hpp
-	${SRC_DIR}/ph/renderer/GpuTextures.cpp
-	${SRC_DIR}/ph/renderer/ImGuiRenderer.hpp
-	${SRC_DIR}/ph/renderer/ImGuiRenderer.cpp
-	${SRC_DIR}/ph/renderer/Renderer.cpp
-	${SRC_DIR}/ph/renderer/RendererConfigParser.hpp
-	${SRC_DIR}/ph/renderer/RendererConfigParser.cpp
-	${SRC_DIR}/ph/renderer/RendererState.hpp
-	${SRC_DIR}/ph/renderer/RendererState.cpp
-	${SRC_DIR}/ph/renderer/RendererUI.hpp
-	${SRC_DIR}/ph/renderer/RendererUI.cpp
-	${SRC_DIR}/ph/renderer/ZeroGUtils.hpp
-	${SRC_DIR}/ph/renderer/ZeroGUtils.cpp
+	${SRC_DIR}/sfz/rendering/FullscreenTriangle.cpp
+	${SRC_DIR}/sfz/rendering/Image.cpp
+	${SRC_DIR}/sfz/rendering/ImguiSupport.cpp
 
-	${SRC_DIR}/ph/rendering/FullscreenTriangle.cpp
-	${SRC_DIR}/ph/rendering/Image.cpp
-	${SRC_DIR}/ph/rendering/ImguiSupport.cpp
+	${SRC_DIR}/sfz/sdl/GameController.cpp
+	${SRC_DIR}/sfz/sdl/Mouse.cpp
+	${SRC_DIR}/sfz/sdl/SDLAllocator.cpp
 
-	${SRC_DIR}/ph/sdl/GameController.cpp
-	${SRC_DIR}/ph/sdl/Mouse.cpp
-	${SRC_DIR}/ph/sdl/SDLAllocator.cpp
+	${SRC_DIR}/sfz/state/ArrayHeader.cpp
+	${SRC_DIR}/sfz/state/GameState.cpp
+	${SRC_DIR}/sfz/state/GameStateContainer.cpp
+	${SRC_DIR}/sfz/state/GameStateEditor.cpp
 
-	${SRC_DIR}/ph/state/ArrayHeader.cpp
-	${SRC_DIR}/ph/state/GameState.cpp
-	${SRC_DIR}/ph/state/GameStateContainer.cpp
-	${SRC_DIR}/ph/state/GameStateEditor.cpp
+	${SRC_DIR}/sfz/util/GltfLoader.cpp
+	${SRC_DIR}/sfz/util/GltfWriter.cpp
+	${SRC_DIR}/sfz/util/JsonParser.cpp
+	${SRC_DIR}/sfz/util/TerminalLogger.cpp
 
-	${SRC_DIR}/ph/util/GltfLoader.cpp
-	${SRC_DIR}/ph/util/GltfWriter.cpp
-	${SRC_DIR}/ph/util/JsonParser.cpp
-	${SRC_DIR}/ph/util/TerminalLogger.cpp
-
-	${SRC_DIR}/ph/PhantasyEngineMain.cpp
+	${SRC_DIR}/sfz/PhantasyEngineMain.cpp
 )
 source_group(TREE ${SRC_DIR} FILES ${SRC_FILES})
 

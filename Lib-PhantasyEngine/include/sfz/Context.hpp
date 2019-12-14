@@ -92,3 +92,62 @@ inline LoggingInterface* getLogger() noexcept
 Context* getStandardContext() noexcept;
 
 } // namespace sfz
+
+// Forward declared member types
+// ------------------------------------------------------------------------------------------------
+
+namespace sfz {
+
+class StringCollection;
+
+} // namespace sfz
+
+namespace sfz {
+
+class TerminalLogger;
+class GlobalConfig;
+using sfz::StringCollection;
+
+} // namespace sfz
+
+// PhantasyEngine Context struct
+// ------------------------------------------------------------------------------------------------
+
+struct phContext {
+	sfz::Context sfzContext;
+	sfz::TerminalLogger* logger = nullptr;
+	sfz::GlobalConfig* config = nullptr;
+
+	// The resource strings registered with PhantasyEngine.
+	//
+	// Comparing and storing strings when refering to specific assets (meshes, textures, etc)
+	// becomes expensive in the long run. A solution is to hash each string and use the hash
+	// instead. This works under the assumption that we have no hash collisions. See sfz::StringID
+	// for more information.
+	//
+	// Because we don't want any collisions globally in the game we store the datastructure keeping
+	// track of the strings and their hash in the global context.
+	sfz::StringCollection* resourceStrings = nullptr;
+};
+
+namespace sfz {
+
+// Context getters/setters
+// ------------------------------------------------------------------------------------------------
+
+phContext* getPhContext() noexcept;
+
+inline GlobalConfig& getGlobalConfig() noexcept { return *getPhContext()->config; }
+
+inline StringCollection& getResourceStrings() noexcept { return *getPhContext()->resourceStrings; }
+
+bool setContext(phContext* context) noexcept;
+
+// Statically owned context
+// ------------------------------------------------------------------------------------------------
+
+/// Statically owned context struct. Default constructed, members need to be set manually. Only to
+/// be used for setContext() in PhantasyEngineMain.cpp.
+phContext* getStaticContextBoot() noexcept;
+
+} // namespace sfz

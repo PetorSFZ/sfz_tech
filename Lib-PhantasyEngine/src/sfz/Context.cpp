@@ -58,4 +58,30 @@ Context* getStandardContext() noexcept
 	return &context;
 }
 
+// Context getters/setters
+// ------------------------------------------------------------------------------------------------
+
+static phContext* globalPhContextPtr = nullptr;
+
+phContext* getPhContext() noexcept
+{
+	return globalPhContextPtr;
+}
+
+bool setContext(phContext* context) noexcept
+{
+	if (globalPhContextPtr != nullptr) return false;
+	globalPhContextPtr = context;
+	return true;
+}
+
+// Statically owned context
+// ------------------------------------------------------------------------------------------------
+
+phContext* getStaticContextBoot() noexcept
+{
+	static phContext context;
+	return &context;
+}
+
 } // namespace sfz
