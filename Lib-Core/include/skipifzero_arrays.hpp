@@ -276,6 +276,8 @@ template<typename T, uint32_t Capacity>
 class alignas(32) ArrayLocal final {
 public:
 	static_assert(alignof(T) <= 32, "");
+	static_assert(
+		sizeof(ArrayLocal) == roundUpAligned(sizeof(T) * Capacity + sizeof(uint32_t), 32), "");
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
