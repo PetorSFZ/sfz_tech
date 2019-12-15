@@ -78,7 +78,7 @@ public:
 private:
 	uint32_t mSlot = 0u;
 };
-static_assert(sizeof(HashMapSlot) == sizeof(uint32_t));
+static_assert(sizeof(HashMapSlot) == sizeof(uint32_t), "");
 
 // A HashMap with closed hashing (open adressing) and linear probing.
 //
@@ -113,8 +113,8 @@ public:
 	static constexpr float MAX_OCCUPIED_REHASH_FACTOR = 0.80f;
 	static constexpr float GROW_RATE = 1.75f;
 
-	static_assert(alignof(K) <= ALIGNMENT);
-	static_assert(alignof(V) <= ALIGNMENT);
+	static_assert(alignof(K) <= ALIGNMENT, "");
+	static_assert(alignof(V) <= ALIGNMENT, "");
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -408,7 +408,7 @@ private:
 		// Rehash if necessary
 		uint32_t maxNumOccupied = uint32_t(mCapacity * MAX_OCCUPIED_REHASH_FACTOR);
 		if ((mSize + mPlaceholders) >= maxNumOccupied) {
-			this->rehash((mCapacity + 1) * GROW_RATE, sfz_dbg("HashMap"));
+			this->rehash(uint32_t((mCapacity + 1) * GROW_RATE), sfz_dbg("HashMap"));
 		}
 
 		// Finds slots

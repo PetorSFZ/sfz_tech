@@ -104,8 +104,8 @@ public:
 	bool operator== (const UniquePtr& other) const noexcept { return this->mPtr == other.mPtr; }
 	bool operator!= (const UniquePtr& other) const noexcept { return !(*this == other); }
 
-	bool operator== (std::nullptr_t other) const noexcept { return this->mPtr == nullptr; }
-	bool operator!= (std::nullptr_t other) const noexcept { return this->mPtr != nullptr; }
+	bool operator== (std::nullptr_t) const noexcept { return this->mPtr == nullptr; }
+	bool operator!= (std::nullptr_t) const noexcept { return this->mPtr != nullptr; }
 
 private:
 	// Private members

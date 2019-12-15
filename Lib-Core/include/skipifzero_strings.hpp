@@ -37,7 +37,7 @@ struct StringLocal final {
 	// Public members
 	// --------------------------------------------------------------------------------------------
 
-	static_assert(N > 0);
+	static_assert(N > 0, "");
 
 	char mRawStr[N];
 

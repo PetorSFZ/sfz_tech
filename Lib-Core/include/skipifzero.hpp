@@ -27,6 +27,11 @@
 #include <new> // placement new
 #include <utility> // std::move, std::forward, std::swap
 
+#ifdef _WIN32
+#pragma warning(disable : 4127) // conditional expression is constant
+#pragma warning(disable : 4201) // nonstandard extension: nameless struct/union
+#endif
+
 #if defined(min) || defined(max)
 #undef min
 #undef max
@@ -127,10 +132,16 @@ inline bool isAligned(const void* pointer, uint64_t alignment) noexcept
 	return ((uintptr_t)pointer & (alignment - 1)) == 0;
 }
 
-// Rounds up a given offset so that it is evenly divisible by the given alignment
-constexpr uint64_t roundUpAligned(uint64_t offset, uint64_t alignment)
+// Rounds up a given value so that it is evenly divisible by the given alignment
+constexpr uint64_t roundUpAligned(uint64_t value, uint64_t alignment)
 {
-	return ((offset + alignment - 1) / alignment) * alignment;
+	return ((value + alignment - 1) / alignment) * alignment;
+}
+
+// Gives the offset needed to make the given value evenly divisible by the given alignment
+constexpr uint64_t roundUpAlignedOffset(uint64_t value, uint64_t alignment)
+{
+	return roundUpAligned(value, alignment) - value;
 }
 
 // Alternate type definition
@@ -208,10 +219,10 @@ struct Vec<T,2> final {
 	constexpr bool operator!= (Vec o) const { return !(*this == o); }
 };
 
-using vec2 = Vec<float, 2>;         static_assert(sizeof(vec2) == sizeof(float) * 2);
-using vec2_i32 = Vec<int32_t, 2>;   static_assert(sizeof(vec2_i32) == sizeof(int32_t) * 2);
-using vec2_u32 = Vec<uint32_t, 2>;  static_assert(sizeof(vec2_u32) == sizeof(uint32_t) * 2);
-using vec2_u8 = Vec<uint8_t, 2>;    static_assert(sizeof(vec2_u8) == sizeof(uint8_t) * 2);
+using vec2 = Vec<float, 2>;         static_assert(sizeof(vec2) == sizeof(float) * 2, "");
+using vec2_i32 = Vec<int32_t, 2>;   static_assert(sizeof(vec2_i32) == sizeof(int32_t) * 2, "");
+using vec2_u32 = Vec<uint32_t, 2>;  static_assert(sizeof(vec2_u32) == sizeof(uint32_t) * 2, "");
+using vec2_u8 = Vec<uint8_t, 2>;    static_assert(sizeof(vec2_u8) == sizeof(uint8_t) * 2, "");
 
 template<typename T>
 struct Vec<T,3> final {
@@ -260,10 +271,10 @@ struct Vec<T,3> final {
 	constexpr bool operator!= (Vec o) const { return !(*this == o); }
 };
 
-using vec3 = Vec<float, 3>;         static_assert(sizeof(vec3) == sizeof(float) * 3);
-using vec3_i32 = Vec<int32_t, 3>;   static_assert(sizeof(vec3_i32) == sizeof(int32_t) * 3);
-using vec3_u32 = Vec<uint32_t, 3>;  static_assert(sizeof(vec3_u32) == sizeof(uint32_t) * 3);
-using vec3_u8 = Vec<uint8_t, 3>;    static_assert(sizeof(vec3_u8) == sizeof(uint8_t) * 3);
+using vec3 = Vec<float, 3>;         static_assert(sizeof(vec3) == sizeof(float) * 3, "");
+using vec3_i32 = Vec<int32_t, 3>;   static_assert(sizeof(vec3_i32) == sizeof(int32_t) * 3, "");
+using vec3_u32 = Vec<uint32_t, 3>;  static_assert(sizeof(vec3_u32) == sizeof(uint32_t) * 3, "");
+using vec3_u8 = Vec<uint8_t, 3>;    static_assert(sizeof(vec3_u8) == sizeof(uint8_t) * 3, "");
 
 template<typename T>
 struct alignas(sizeof(T) * 4) Vec<T,4> final {
@@ -318,15 +329,15 @@ struct alignas(sizeof(T) * 4) Vec<T,4> final {
 	constexpr bool operator!= (Vec o) const { return !(*this == o); }
 };
 
-using vec4 = Vec<float, 4>;         static_assert(sizeof(vec4) == sizeof(float) * 4);
-using vec4_i32 = Vec<int32_t, 4>;   static_assert(sizeof(vec4_i32) == sizeof(int32_t) * 4);
-using vec4_u32 = Vec<uint32_t, 4>;  static_assert(sizeof(vec4_u32) == sizeof(uint32_t) * 4);
-using vec4_u8 = Vec<uint8_t, 4>;    static_assert(sizeof(vec4_u8) == sizeof(uint8_t) * 4);
+using vec4 = Vec<float, 4>;         static_assert(sizeof(vec4) == sizeof(float) * 4, "");
+using vec4_i32 = Vec<int32_t, 4>;   static_assert(sizeof(vec4_i32) == sizeof(int32_t) * 4, "");
+using vec4_u32 = Vec<uint32_t, 4>;  static_assert(sizeof(vec4_u32) == sizeof(uint32_t) * 4, "");
+using vec4_u8 = Vec<uint8_t, 4>;    static_assert(sizeof(vec4_u8) == sizeof(uint8_t) * 4, "");
 
-static_assert(alignof(vec4) == 16);
-static_assert(alignof(vec4_i32) == 16);
-static_assert(alignof(vec4_u32) == 16);
-static_assert(alignof(vec4_u8) == 4);
+static_assert(alignof(vec4) == 16, "");
+static_assert(alignof(vec4_i32) == 16, "");
+static_assert(alignof(vec4_u32) == 16, "");
+static_assert(alignof(vec4_u8) == 4, "");
 
 template<typename T, uint32_t N>
 constexpr Vec<T,N> operator* (T s, Vec<T,N> v) { return v * s; }
