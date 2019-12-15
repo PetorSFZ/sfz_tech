@@ -223,8 +223,8 @@ void Renderer::removeTextureGpuBlocking(StringID id) noexcept
 	if (item == nullptr) return;
 
 	// Ensure all GPU operations in progress are finished
-	mState->presentQueue.flush();
-	mState->copyQueue.flush();
+	CHECK_ZG mState->presentQueue.flush();
+	CHECK_ZG mState->copyQueue.flush();
 
 	// Destroy texture
 	mState->gpuAllocatorTexture.deallocate(item->texture);
@@ -237,8 +237,8 @@ void Renderer::removeAllTexturesGpuBlocking() noexcept
 	sfz_assert(!mState->windowFramebuffer.valid());
 
 	// Ensure all GPU operations in progress are finished
-	mState->presentQueue.flush();
-	mState->copyQueue.flush();
+	CHECK_ZG mState->presentQueue.flush();
+	CHECK_ZG mState->copyQueue.flush();
 
 	// Destroy all textures
 	for (auto pair : mState->textures) {
@@ -282,8 +282,8 @@ void Renderer::removeMeshGpuBlocking(StringID id) noexcept
 	if (mesh == nullptr) return;
 
 	// Ensure all GPU operations in progress are finished
-	mState->presentQueue.flush();
-	mState->copyQueue.flush();
+	CHECK_ZG mState->presentQueue.flush();
+	CHECK_ZG mState->copyQueue.flush();
 
 	// Destroy mesh
 	gpuMeshDeallocate(*mesh, mState->gpuAllocatorDevice);
@@ -296,8 +296,8 @@ void Renderer::removeAllMeshesGpuBlocking() noexcept
 	sfz_assert(!mState->windowFramebuffer.valid());
 
 	// Ensure all GPU operations in progress are finished
-	mState->presentQueue.flush();
-	mState->copyQueue.flush();
+	CHECK_ZG mState->presentQueue.flush();
+	CHECK_ZG mState->copyQueue.flush();
 
 	// Destroy all meshes
 	for (auto pair : mState->meshes) {

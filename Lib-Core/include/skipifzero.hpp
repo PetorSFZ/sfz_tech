@@ -42,7 +42,7 @@ namespace sfz {
 // Assert macros
 // ------------------------------------------------------------------------------------------------
 
-#define sfz_assert(condition) assert(condition)
+#define sfz_assert(condition) if (condition) { assert(condition); }
 
 #define sfz_assert_hard(condition) if (!(condition)) { assert((condition)); std::abort(); }
 

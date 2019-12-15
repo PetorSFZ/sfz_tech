@@ -45,20 +45,26 @@ if(NOT hasParent)
 	if(MSVC)
 		# MSVC flags
 		# /W4 = Warning level 4 (/Wall is too picky and has annoying warnings in standard headers)
-		# /wd4201 = Disable warning 4201 (nonstandard extension used : nameless struct/union)
+		# /std:c++17 = Enables C++17 support (and disables newer stuff)
+		# /permissive- = This option disables permissive behaviors, and sets the /Zc compiler options for strict conformance
+		# /Zc:twoPhase- = Disables two-phase name lookup. Needed because it is not compatible with OpenMP
 		# /Zi = Produce .pdb debug information. Does not affect optimizations, but does imply /debug.
+		# /Zf = Faster pdb generation
+		# /EHsc = TODO: Add explanation
+		# /GR- = Disable RTTI
+		# /MD(d) = Uses multi-threaded dynamic run-time library
 		# /arch:AVX = Enable (require) Intel AVX instructions for code generation
 		# /D_CRT_SECURE_NO_WARNINGS = Removes annyoing warning when using c standard library
 		# /utf-8 = Specifies that both the source and execution character sets are encoded using UTF-8.
-		set(CMAKE_CXX_FLAGS "/W4 /std:c++17 /wd4201 /Zi /EHsc /arch:AVX /D_CRT_SECURE_NO_WARNINGS /utf-8")
+		# /Od = "disables optimization, speeding compilation and simplifying debugging"
 		# /O2 = Optimize code for fastest speed
+		# /Ob3 = "which is a more aggressive version of -Ob2"
 		# /fp:fast = "optimize floating-point code for speed at the expense of accuracy and correctness"
 		# /DNDEBUG = defines the "NDEBUG" macro, which disables asserts
-		set(CMAKE_CXX_FLAGS_RELEASE "/O2 /fp:fast /DNDEBUG")
-		# /DEBUG = "creates debugging information for the .exe file or DLL"
-		set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/O2 /fp:fast /DEBUG /DNDEBUG")
-		# /Od = "disables optimization, speeding compilation and simplifying debugging"
-		set(CMAKE_CXX_FLAGS_DEBUG "/Od /DEBUG")
+		set(CMAKE_CXX_FLAGS "/W4 /std:c++17 /permissive- /Zc:twoPhase- /Zi /Zf /EHsc /GR- /arch:AVX /D_CRT_SECURE_NO_WARNINGS /utf-8")
+		set(CMAKE_CXX_FLAGS_DEBUG "/MDd /Od")
+		set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /Ob3 /fp:fast")
+		set(CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob3 /fp:fast /DNDEBUG")
 
 	elseif(macOS)
 		# macOS flags

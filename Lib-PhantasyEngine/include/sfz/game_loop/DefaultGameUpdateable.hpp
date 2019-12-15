@@ -62,7 +62,7 @@ public:
 	//
 	// This is also the last thing that happens each frame, so it can also be a good place to put
 	// some per frame book keeping you are doing.
-	virtual void postRenderHook(sfz::Renderer& renderer, bool consoleActive) {};
+	virtual void postRenderHook(sfz::Renderer& renderer, bool consoleActive) { (void)renderer; (void)consoleActive; };
 
 	// Renders custom Imgui commands.
 	//

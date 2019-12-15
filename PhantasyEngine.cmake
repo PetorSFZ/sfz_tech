@@ -42,10 +42,8 @@ function(phSetCompilerFlags)
 	message("-- [PhantasyEngine]: Setting compiler flags")
 
 	if(MSVC)
-
-		# Visual Studio flags
+		# MSVC flags
 		# /W4 = Warning level 4 (/Wall is too picky and has annoying warnings in standard headers)
-		# /wd4201 = Disable warning 4201 (nonstandard extension used : nameless struct/union)
 		# /std:c++17 = Enables C++17 support (and disables newer stuff)
 		# /permissive- = This option disables permissive behaviors, and sets the /Zc compiler options for strict conformance
 		# /Zc:twoPhase- = Disables two-phase name lookup. Needed because it is not compatible with OpenMP
@@ -55,40 +53,19 @@ function(phSetCompilerFlags)
 		# /GR- = Disable RTTI
 		# /MD(d) = Uses multi-threaded dynamic run-time library
 		# /arch:AVX = Enable (require) Intel AVX instructions for code generation
+		# /openmp:experimental = "This allows loops annotated with “#pragma omp simd” to potentially be vectorized."
+		# /JMC = "Just my code" debugging, skip framework calls in callstack
 		# /D_CRT_SECURE_NO_WARNINGS = Removes annyoing warning when using c standard library
 		# /utf-8 = Specifies that both the source and execution character sets are encoded using UTF-8.
-		# /DWIN32, /D_WINDOWS = Define WIN32 and _WINDOWS
-		# /JMC = "Just my code" debugging, skip framework calls in callstack
 		# /Od = "disables optimization, speeding compilation and simplifying debugging"
-		# /DEBUG = "creates debugging information for the .exe file or DLL"
 		# /O2 = Optimize code for fastest speed
+		# /Ob3 = "which is a more aggressive version of -Ob2"
 		# /fp:fast = "optimize floating-point code for speed at the expense of accuracy and correctness"
 		# /DNDEBUG = defines the "NDEBUG" macro, which disables asserts
-
-		# Visual Studio 2019+ exclusive
-		# /Ob3 = "which is a more aggressive version of -Ob2"
-		# /openmp:experimental = "This allows loops annotated with “#pragma omp simd” to potentially be vectorized."
-		# /wd26451 = Disable warning C26451 ("arithmetic overflow")
-
-		# More cooler flags for Visual Studio 2019+
-		# Visual Studio Pre 2019
-		if(MSVC_VERSION LESS_EQUAL 1919)
-			set(PH_CMAKE_CXX_FLAGS "/W4 /wd4201 /std:c++17 /permissive- /Zc:twoPhase- /Zi /Zf /EHsc /GR- /arch:AVX /D_CRT_SECURE_NO_WARNINGS /DWIN32 /D_WINDOWS /JMC /utf-8")
-			set(PH_CMAKE_CXX_FLAGS_DEBUG "/MDd /Od /DEBUG")
-			set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /fp:fast /DEBUG /DNDEBUG")
-			set(PH_CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /fp:fast /DNDEBUG")
-
-		# Visual Studio 2019+
-		else()
-			set(PH_CMAKE_CXX_FLAGS "/W4 /wd4201 /wd26451 /std:c++17 /permissive- /Zc:twoPhase- /Zi /Zf /EHsc /GR- /arch:AVX /D_CRT_SECURE_NO_WARNINGS /DWIN32 /D_WINDOWS /JMC /utf-8 /openmp:experimental")
-			set(PH_CMAKE_CXX_FLAGS_DEBUG "/MDd /Od /DEBUG")
-			set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /Ob3 /fp:fast /DEBUG /DNDEBUG")
-			set(PH_CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob3 /fp:fast /DNDEBUG")
-		endif()
-
-		if (PH_STATIC_LINK_RENDERER)
-			set(PH_CMAKE_CXX_FLAGS "${PH_CMAKE_CXX_FLAGS} /DPH_STATIC_LINK_RENDERER")
-		endif()
+		set(PH_CMAKE_CXX_FLAGS "/W4 /std:c++17 /permissive- /Zc:twoPhase- /Zi /Zf /EHsc /GR- /arch:AVX /openmp:experimental /JMC /D_CRT_SECURE_NO_WARNINGS /utf-8")
+		set(PH_CMAKE_CXX_FLAGS_DEBUG "/MDd /Od")
+		set(PH_CMAKE_CXX_FLAGS_RELWITHDEBINFO "/MD /O2 /Ob3 /fp:fast")
+		set(PH_CMAKE_CXX_FLAGS_RELEASE "/MD /O2 /Ob3 /fp:fast /DNDEBUG")
 
 		set(PH_CMAKE_C_FLAGS ${PH_CMAKE_CXX_FLAGS})
 		set(PH_CMAKE_C_FLAGS_DEBUG ${PH_CMAKE_CXX_FLAGS_DEBUG})
