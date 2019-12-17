@@ -49,7 +49,7 @@ constexpr uint64_t hash(Vec<T,N> v)
 	return hash;
 }
 
-// HashMap
+// HashMap helpers
 // ------------------------------------------------------------------------------------------------
 
 // The state of a slot in a HashMap
@@ -79,6 +79,39 @@ private:
 	uint32_t mSlot = 0u;
 };
 static_assert(sizeof(HashMapSlot) == sizeof(uint32_t), "");
+
+// Simple container used for hash map iterators.
+template<typename K, typename V>
+struct HashMapPair final {
+	const K& key;
+	V& value;
+	HashMapPair(const K& key, V& value) noexcept : key(key), value(value) { }
+	HashMapPair(const HashMapPair&) noexcept = default;
+	HashMapPair& operator= (const HashMapPair&) = delete; // Because references...
+};
+
+template<typename MapT, typename K, typename V>
+class HashMapItr final {
+public:
+	HashMapItr(MapT& map, uint32_t idx) noexcept : mMap(&map), mIdx(idx) { }
+	HashMapItr(const HashMapItr&) noexcept = default;
+	HashMapItr& operator= (const HashMapItr&) noexcept = default;
+
+	HashMapItr& operator++ () { if (mIdx < mMap->size()) { mIdx += 1; } return *this; } // Pre-increment
+	HashMapItr operator++ (int) { auto copy = *this; ++(*this); return copy; } // Post-increment
+	HashMapPair<K, V> operator* () {
+		sfz_assert(mIdx < mMap->size()); return HashMapPair<K, V>(mMap->keys()[mIdx], mMap->values()[mIdx]); }
+
+	bool operator== (const HashMapItr& o) const { return (mMap == o.mMap) && (mIdx == o.mIdx); }
+	bool operator!= (const HashMapItr& o) const { return !(*this == o); }
+
+private:
+	MapT* mMap;
+	uint32_t mIdx;
+};
+
+// HashMap
+// ------------------------------------------------------------------------------------------------
 
 // A HashMap with closed hashing (open adressing) and linear probing.
 //
@@ -251,6 +284,9 @@ public:
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
+	const K* keys() const { return mKeys; }
+	V* values() { return mValues; }
+	const V* values() const { return mValues; }
 	uint32_t size() const { return mSize; }
 	uint32_t capacity() const { return mCapacity; }
 	uint32_t placeholders() const { return mPlaceholders; }
@@ -295,36 +331,8 @@ public:
 	// Iterators
 	// --------------------------------------------------------------------------------------------
 
-	template<typename VT>
-	struct Pair final {
-		const K& key;
-		VT& value;
-		Pair(const K& key, VT& value) noexcept : key(key), value(value) { }
-		Pair(const Pair&) noexcept = default;
-		Pair& operator= (const Pair&) = delete; // Because references...
-	};
-
-	template<typename MapT, typename VT>
-	class Itr final {
-	public:
-		Itr(MapT& map, uint32_t idx) noexcept : mMap(&map), mIdx(idx) { }
-		Itr(const Itr&) noexcept = default;
-		Itr& operator= (const Itr&) noexcept = default;
-
-		Itr& operator++ () { if (mIdx < mMap->mSize) { mIdx += 1; } return *this; } // Pre-increment
-		Itr operator++ (int) { auto copy = *this; ++(*this); return copy; } // Post-increment
-		Pair<VT> operator* () { sfz_assert(mIdx < mMap->mSize); return Pair<VT>(mMap->mKeys[mIdx], mMap->mValues[mIdx]); }
-
-		bool operator== (const Itr& o) const { return (mMap == o.mMap) && (mIdx == o.mIdx); }
-		bool operator!= (const Itr& o) const { return !(*this == o); }
-
-	private:
-		MapT* mMap;
-		uint32_t mIdx;
-	};
-
-	using Iterator = Itr<HashMap, V>;
-	using ConstIterator = Itr<const HashMap, const V>;
+	using Iterator = HashMapItr<HashMap, K, V>;
+	using ConstIterator = HashMapItr<const HashMap, K, const V>;
 
 	Iterator begin() { return Iterator(*this, 0); }
 	ConstIterator begin() const { return cbegin(); }
@@ -487,6 +495,269 @@ private:
 	K* mKeys = nullptr;
 	V* mValues = nullptr;
 	Allocator* mAllocator = nullptr;
+};
+
+// HashMapLocal
+// ------------------------------------------------------------------------------------------------
+
+template<typename K, typename V, uint32_t Capacity>
+class HashMapLocal {
+public:
+	using AltK = typename sfz::AltType<K>::AltT;
+	
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	HashMapLocal() { static_assert(sizeof(HashMapLocal) ==
+		((sizeof(HashMapSlot) + sizeof(K) + sizeof(V)) * Capacity + sizeof(uint32_t) * 2), ""); }
+	HashMapLocal(const HashMapLocal&) = default;
+	HashMapLocal& operator= (const HashMapLocal&) = default;
+	HashMapLocal(HashMapLocal&& other) noexcept { this->swap(other); }
+	HashMapLocal& operator= (HashMapLocal&& other) noexcept { this->swap(other); return *this; }
+	~HashMapLocal() = default;
+
+	// State methods
+	// --------------------------------------------------------------------------------------------
+
+	void swap(HashMapLocal& other)
+	{
+		for (uint32_t i = 0; i < Capacity; i++) {
+			std::swap(this->mSlots[i], other.mSlots[i]);
+			std::swap(this->mKeys[i], other.mKeys[i]);
+			std::swap(this->mValues[i], other.mValues[i]);
+		}
+		std::swap(this->mSize, other.mSize);
+		std::swap(this->mPlaceholders, other.mPlaceholders);
+	}
+
+	void clear()
+	{
+		if (mSize == 0) return;
+
+		// Call destructors for all active keys and values
+		for (uint32_t i = 0; i < mSize; i++) {
+			mKeys[i] = K();
+			mValues[i] = V();
+		}
+
+		// Clear all slots
+		std::memset(mSlots, 0, roundUpAligned(Capacity * sizeof(HashMapSlot), 32));
+
+		// Set size to 0
+		mSize = 0;
+		mPlaceholders = 0;
+	}
+
+	// Getters
+	// --------------------------------------------------------------------------------------------
+
+	const K* keys() const { return mKeys; }
+	V* values() { return mValues; }
+	const V* values() const { return mValues; }
+	uint32_t size() const { return mSize; }
+	uint32_t capacity() const { return Capacity; }
+	uint32_t placeholders() const { return mPlaceholders; }
+
+	V* get(const K& key) { return this->getInternal<K>(key); }
+	const V* get(const K& key) const { return this->getInternal<K>(key); }
+	V* get(const AltK& key) { return this->getInternal<AltK>(key); }
+	const V* get(const AltK& key) const { return this->getInternal<AltK>(key); }
+	
+	// Public methods
+	// --------------------------------------------------------------------------------------------
+
+	V& put(const K& key, const V& value) { return this->putInternal<const K&, const V&>(key, value); }
+	V& put(const K& key, V&& value) { return this->putInternal<const K&, V>(key, std::move(value)); }
+	V& put(const AltK& key, const V& value) { return this->putInternal<const AltK&, const V&>(key, value); }
+	V& put(const AltK& key, V&& value) { return this->putInternal<const AltK&, V>(key, std::move(value)); }
+
+	V& operator[] (const K& key) { V* ptr = get(key); return ptr != nullptr ? *ptr : put(key, V()); }
+	V& operator[] (const AltK& key) { V* ptr = get(key); return ptr != nullptr ? *ptr : put(key, V()); }
+
+	bool remove(const K& key) { return this->removeInternal<K>(key); }
+	bool remove(const AltK& key) { return this->removeInternal<AltK>(key); }
+
+	// Iterators
+	// --------------------------------------------------------------------------------------------
+
+	using Iterator = HashMapItr<HashMapLocal, K, V>;
+	using ConstIterator = HashMapItr<const HashMapLocal, K, const V>;
+
+	Iterator begin() { return Iterator(*this, 0); }
+	ConstIterator begin() const { return cbegin(); }
+	ConstIterator cbegin() const { return ConstIterator(*this, 0); }
+
+	Iterator end() { return Iterator(*this, mSize); }
+	ConstIterator end() const { return cend(); }
+	ConstIterator cend() const { return ConstIterator(*this, mSize); }
+
+private:
+	// Private methods
+	// --------------------------------------------------------------------------------------------
+
+	template<typename KT>
+	void findSlot(const KT& key, uint32_t& firstFreeSlotIdx, uint32_t& occupiedSlotIdx) const
+	{
+		firstFreeSlotIdx = ~0u;
+		occupiedSlotIdx = ~0u;
+
+		// Search for the element using linear probing
+		const uint32_t baseIndex = Capacity != 0 ? uint32_t(sfz::hash(key) % uint64_t(Capacity)) : 0;
+		for (uint32_t i = 0; i < Capacity; i++) {
+			const uint32_t slotIdx = (baseIndex + i) % Capacity;
+			HashMapSlot slot = mSlots[slotIdx];
+			HashMapSlotState state = slot.state();
+
+			if (state != HashMapSlotState::OCCUPIED) {
+				if (firstFreeSlotIdx == ~0u) firstFreeSlotIdx = slotIdx;
+				if (state == HashMapSlotState::EMPTY) break;
+			}
+			else {
+				if (mKeys[slot.index()] == key) {
+					occupiedSlotIdx = slotIdx;
+					break;
+				}
+			}
+		}
+	}
+
+	// Swaps the position of two key/value pairs in the internal arrays and updates their slots
+	void swapElements(uint32_t slotIdx1, uint32_t slotIdx2)
+	{
+		sfz_assert(slotIdx1 < Capacity);
+		sfz_assert(slotIdx2 < Capacity);
+		HashMapSlot slot1 = mSlots[slotIdx1];
+		HashMapSlot slot2 = mSlots[slotIdx2];
+		sfz_assert(slot1.state() == HashMapSlotState::OCCUPIED);
+		sfz_assert(slot2.state() == HashMapSlotState::OCCUPIED);
+		uint32_t idx1 = slot1.index();
+		uint32_t idx2 = slot2.index();
+		sfz_assert(idx1 < mSize);
+		sfz_assert(idx2 < mSize);
+		std::swap(mSlots[slotIdx1], mSlots[slotIdx2]);
+		std::swap(mKeys[idx1], mKeys[idx2]);
+		std::swap(mValues[idx1], mValues[idx2]);
+	}
+
+	template<typename KT>
+	V* getInternal(const KT& key)
+	{
+		// Finds slots
+		uint32_t firstFreeSlotIdx = ~0u;
+		uint32_t occupiedSlotIdx = ~0u;
+		this->findSlot<KT>(key, firstFreeSlotIdx, occupiedSlotIdx);
+
+		// Return nullptr if map does not contain element
+		if (occupiedSlotIdx == ~0u) return nullptr;
+
+		// Returns pointer to element
+		sfz_assert(occupiedSlotIdx < Capacity);
+		HashMapSlot slot = mSlots[occupiedSlotIdx];
+		sfz_assert(slot.state() == HashMapSlotState::OCCUPIED);
+		uint32_t idx = slot.index();
+		sfz_assert(idx < mSize);
+		return mValues + idx;
+	}
+
+	template<typename KT>
+	const V* getInternal(const KT& key) const
+	{
+		// Finds slots
+		uint32_t firstFreeSlotIdx = ~0u;
+		uint32_t occupiedSlotIdx = ~0u;
+		this->findSlot<KT>(key, firstFreeSlotIdx, occupiedSlotIdx);
+
+		// Return nullptr if map does not contain element
+		if (occupiedSlotIdx == ~0u) return nullptr;
+
+		// Returns pointer to element
+		sfz_assert(occupiedSlotIdx < Capacity);
+		HashMapSlot slot = mSlots[occupiedSlotIdx];
+		sfz_assert(slot.state() == HashMapSlotState::OCCUPIED);
+		uint32_t idx = slot.index();
+		sfz_assert(idx < mSize);
+		return mValues + idx;
+	}
+
+	template<typename KT, typename VT>
+	V& putInternal(const KT& key, VT&& value)
+	{
+		// Finds slots
+		uint32_t firstFreeSlotIdx = ~0u;
+		uint32_t occupiedSlotIdx = ~0u;
+		this->findSlot<KT>(key, firstFreeSlotIdx, occupiedSlotIdx);
+
+		// If map contains key, replace value and return
+		if (occupiedSlotIdx != ~0u) {
+			sfz_assert(occupiedSlotIdx < Capacity);
+			HashMapSlot slot = mSlots[occupiedSlotIdx];
+			uint32_t idx = slot.index();
+			sfz_assert(idx < mSize);
+			mValues[idx] = std::forward<VT>(value);
+			return mValues[idx];
+		}
+
+		// Calculate next index
+		sfz_assert_hard(mSize < Capacity);
+		uint32_t nextFreeIdx = mSize;
+		mSize += 1;
+
+		// Check if previous slot was placeholder and then create new slot
+		sfz_assert_hard(firstFreeSlotIdx < Capacity);
+		bool wasPlaceholder = mSlots[firstFreeSlotIdx].state() == HashMapSlotState::PLACEHOLDER;
+		if (wasPlaceholder) mPlaceholders -= 1;
+		mSlots[firstFreeSlotIdx] = HashMapSlot(HashMapSlotState::OCCUPIED, nextFreeIdx);
+
+		// Insert key and value
+		// Perfect forwarding: const reference: VT == const V&, rvalue: VT == V
+		// std::forward<VT>(value) will then return the correct version of value
+		mKeys[nextFreeIdx] = K(key);
+		mValues[nextFreeIdx] = std::forward<VT>(value);
+		return mValues[nextFreeIdx];
+	}
+
+	template<typename KT>
+	bool removeInternal(const KT& key)
+	{
+		// Finds slots
+		uint32_t firstFreeSlotIdx = ~0u;
+		uint32_t occupiedSlotIdx = ~0u;
+		this->findSlot<KT>(key, firstFreeSlotIdx, occupiedSlotIdx);
+
+		// Return false if map does not contain element
+		if (occupiedSlotIdx == ~0u) return false;
+
+		// Swap the key/value pair with the last key/value pair in the arrays
+		uint32_t lastSlotIdx = ~0u;
+		{
+			sfz_assert(mSize > 0);
+			uint32_t unused = ~0u;
+			this->findSlot<K>(mKeys[mSize - 1], unused, lastSlotIdx);
+			sfz_assert(lastSlotIdx != ~0u);
+		}
+		this->swapElements(occupiedSlotIdx, lastSlotIdx);
+
+		// Remove the element
+		uint32_t idx = mSlots[occupiedSlotIdx].index();
+		sfz_assert(idx < mSize);
+		mSlots[occupiedSlotIdx] = HashMapSlot(HashMapSlotState::PLACEHOLDER, ~0u);
+		mKeys[idx] = K();
+		mValues[idx] = V();
+
+		// Update info
+		mSize -= 1;
+		mPlaceholders += 1;
+		return true;
+	}
+
+	// Private members
+	// --------------------------------------------------------------------------------------------
+
+	HashMapSlot mSlots[Capacity];
+	K mKeys[Capacity];
+	V mValues[Capacity];
+	uint32_t mSize = 0;
+	uint32_t mPlaceholders = 0;
 };
 
 } // namespace sfz

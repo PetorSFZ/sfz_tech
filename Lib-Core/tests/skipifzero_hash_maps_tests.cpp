@@ -256,7 +256,7 @@ struct ZeroHashInteger {
 	ZeroHashInteger() = default;
 	ZeroHashInteger(const ZeroHashInteger&) = default;
 	ZeroHashInteger& operator= (const ZeroHashInteger&) = default;
-	bool operator== (ZeroHashInteger other) { return this->value == other.value; }
+	bool operator== (ZeroHashInteger other) const { return this->value == other.value; }
 };
 
 namespace sfz {
@@ -359,14 +359,14 @@ UTEST(HashMap, empty_hashmap)
 		const sfz::HashMap<int, int> cm(0, &allocator, sfz_dbg(""));
 
 		int times = 0;
-		for (sfz::HashMap<int,int>::Pair<int> pair : m) {
+		for (sfz::HashMapPair<int, int> pair : m) {
 			(void)pair;
 			times += 1;
 		}
 		ASSERT_TRUE(times == 0);
 
 		int ctimes = 0;
-		for (sfz::HashMap<int, int>::Pair<const int> pair : cm) {
+		for (sfz::HashMapPair<int, const int> pair : cm) {
 			(void)pair;
 			ctimes += 1;
 		}
@@ -576,3 +576,398 @@ UTEST(HashMap, perfect_forwarding_in_put)
 	}
 }
 
+// HashMapLocal tests
+// ------------------------------------------------------------------------------------------------
+
+UTEST(HashMapLocal, default_constructor)
+{
+	sfz::HashMapLocal<int, int, 16> m1;
+	ASSERT_TRUE(m1.size() == 0);
+	ASSERT_TRUE(m1.capacity() == 16);
+	ASSERT_TRUE(m1.placeholders() == 0);
+}
+
+UTEST(HashMapLocal, copy_constructors)
+{
+	sfz::HashMapLocal<int,int, 16> m1;
+	ASSERT_TRUE(m1.put(1, 2) == 2);
+	ASSERT_TRUE(m1.put(2, 3) == 3);
+	ASSERT_TRUE(m1.put(3, 4) == 4);
+	ASSERT_TRUE(m1.size() == 3);
+	ASSERT_TRUE(m1.capacity() == 16);
+	ASSERT_TRUE(m1.placeholders() == 0);
+	ASSERT_TRUE(m1[1] == 2);
+	ASSERT_TRUE(m1[2] == 3);
+	ASSERT_TRUE(m1[3] == 4);
+
+	auto m2 = m1;
+	ASSERT_TRUE(m2.size() == 3);
+	ASSERT_TRUE(m2.capacity() == 16);
+	ASSERT_TRUE(m2.placeholders() == 0);
+	ASSERT_TRUE(m2[1] == 2);
+	ASSERT_TRUE(m2[2] == 3);
+	ASSERT_TRUE(m2[3] == 4);
+
+	m2[1] = -1;
+	m2[2] = -2;
+	m2[3] = -3;
+	ASSERT_TRUE(m2.size() == 3);
+	ASSERT_TRUE(m2.capacity() == 16);
+	ASSERT_TRUE(m2.placeholders() == 0);
+	ASSERT_TRUE(m2[1] == -1);
+	ASSERT_TRUE(m2[2] == -2);
+	ASSERT_TRUE(m2[3] == -3);
+
+	ASSERT_TRUE(m1.size() == 3);
+	ASSERT_TRUE(m1.capacity() == 16);
+	ASSERT_TRUE(m1.placeholders() == 0);
+	ASSERT_TRUE(m1[1] == 2);
+	ASSERT_TRUE(m1[2] == 3);
+	ASSERT_TRUE(m1[3] == 4);
+
+	m1.clear();
+	ASSERT_TRUE(m1.size() == 0);
+	ASSERT_TRUE(m1.capacity() == 16);
+	ASSERT_TRUE(m1.placeholders() == 0);
+
+	ASSERT_TRUE(m2.size() == 3);
+	ASSERT_TRUE(m2.capacity() == 16);
+	ASSERT_TRUE(m2.placeholders() == 0);
+	ASSERT_TRUE(m2[1] == -1);
+	ASSERT_TRUE(m2[2] == -2);
+	ASSERT_TRUE(m2[3] == -3);
+}
+
+UTEST(HashMapLocal, swap_and_move_constructors)
+{
+	sfz::HashMapLocal<int,int, 16> v1;
+	sfz::HashMapLocal<int,int, 16> v2;
+	v2.put(1, 2);
+	v2.put(2, 3);
+	v2.put(3, 4);
+
+	ASSERT_TRUE(v1.size() == 0);
+	ASSERT_TRUE(v1.capacity() == 16);
+	ASSERT_TRUE(v1.placeholders() == 0);
+	ASSERT_TRUE(v2.size() == 3);
+	ASSERT_TRUE(v2.capacity() == 16);
+	ASSERT_TRUE(v1.placeholders() == 0);
+
+	v1.swap(v2);
+
+	ASSERT_TRUE(v1.size() == 3);
+	ASSERT_TRUE(v1.capacity() == 16);
+	ASSERT_TRUE(v1.placeholders() == 0);
+	ASSERT_TRUE(v2.size() == 0);
+	ASSERT_TRUE(v2.capacity() == 16);
+	ASSERT_TRUE(v2.placeholders() == 0);
+
+	v1 = std::move(v2);
+
+	ASSERT_TRUE(v1.size() == 0);
+	ASSERT_TRUE(v1.capacity() == 16);
+	ASSERT_TRUE(v1.placeholders() == 0);
+	ASSERT_TRUE(v2.size() == 3);
+	ASSERT_TRUE(v2.capacity() == 16);
+	ASSERT_TRUE(v2.placeholders() == 0);
+}
+
+UTEST(HashMapLocal, adding_and_retrieving_elements)
+{
+	sfz::HashMapLocal<int, int, 16> m1;
+
+	ASSERT_TRUE(m1.size() == 0);
+	ASSERT_TRUE(m1.capacity() == 16);
+	ASSERT_TRUE(m1.placeholders() == 0);
+
+	m1.put(2, 3);
+	ASSERT_TRUE(*m1.get(2) == 3);
+	ASSERT_TRUE(m1.size() == 1);
+
+	m1.put(3, 1);
+	ASSERT_TRUE((*m1.get(3)) == 1);
+	ASSERT_TRUE(m1.size() == 2);
+
+	ASSERT_TRUE(m1.get(6) == nullptr);
+	ASSERT_TRUE(m1.get(0) == nullptr);
+	ASSERT_TRUE(m1.get(1) == nullptr);
+
+	const sfz::HashMapLocal<int, int, 16>& mConst = m1;
+	ASSERT_TRUE(mConst.size() == 2);
+	ASSERT_TRUE(*mConst.get(2) == 3);
+	ASSERT_TRUE(*mConst.get(3) == 1);
+	ASSERT_TRUE(mConst.get(6) == nullptr);
+	ASSERT_TRUE(mConst.get(0) == nullptr);
+	ASSERT_TRUE(mConst.get(1) == nullptr);
+
+	ASSERT_TRUE(m1.placeholders() == 0);
+}
+
+UTEST(HashMapLocal, hashing_conflicts)
+{
+	sfz::HashMapLocal<ZeroHashInteger, int, 320> m;
+	ASSERT_TRUE(m.size() == 0);
+	ASSERT_TRUE(m.capacity() == 320);
+	ASSERT_TRUE(m.placeholders() == 0);
+
+	uint32_t sizeCount = 0;
+	for (int i = -140; i <= 140; ++i) {
+		m.put(i, i - 1337);
+		sizeCount += 1;
+		ASSERT_TRUE(m.size() == sizeCount);
+		ASSERT_TRUE(m.get(i) != nullptr);
+		ASSERT_TRUE(*m.get(i) == (i - 1337));
+		ASSERT_TRUE(m.placeholders() == 0);
+
+		if ((i % 3) == 0) {
+			ASSERT_TRUE(m.remove(i));
+			ASSERT_TRUE(!m.remove(i));
+			sizeCount -= 1;
+			ASSERT_TRUE(m.size() == sizeCount);
+			ASSERT_TRUE(m.get(i) == nullptr);
+			ASSERT_TRUE(m.placeholders() == 1); // Just removed an element (spot will be occupied again due to zero hash)
+		}
+	}
+
+	for (int i = -140; i <= 140; ++i) {
+		if ((i % 3) == 0) {
+			ASSERT_TRUE(m.get(i) == nullptr);
+			continue;
+		}
+		ASSERT_TRUE(m.get(i) != nullptr);
+		ASSERT_TRUE(*m.get(i) == (i - 1337));
+	}
+
+	// Iterators
+	uint32_t numPairs = 0;
+	for (auto pair : m) {
+		numPairs += 1;
+		ASSERT_TRUE(m[pair.key] == pair.value);
+		ASSERT_TRUE((pair.key.value - 1337) == pair.value);
+	}
+	ASSERT_TRUE(numPairs == sizeCount);
+
+	// Const iterators
+	const auto& constRef = m;
+	numPairs = 0;
+	for (auto pair : constRef) {
+		numPairs += 1;
+		ASSERT_TRUE(m[pair.key] == pair.value);
+		ASSERT_TRUE((pair.key.value - 1337) == pair.value);
+	}
+	ASSERT_TRUE(numPairs == sizeCount);
+}
+
+UTEST(HashMapLocal, access_operator)
+{
+	sfz::HashMapLocal<int, int, 512> m;
+	ASSERT_TRUE(m.size() == 0);
+	ASSERT_TRUE(m.capacity() != 0);
+
+	uint32_t sizeCount = 0;
+	for (int i = -256; i < 256; ++i) {
+		m[i] = i - 1337;
+		sizeCount += 1;
+		ASSERT_TRUE(m.size() == sizeCount);
+		ASSERT_TRUE(m[i] == (i - 1337));
+
+		if ((i % 3) == 0) {
+			ASSERT_TRUE(m.remove(i));
+			ASSERT_TRUE(!m.remove(i));
+			sizeCount -= 1;
+			ASSERT_TRUE(m.size() == sizeCount);
+			ASSERT_TRUE(m.placeholders() == 1);
+			m[i];
+			sizeCount += 1;
+			ASSERT_TRUE(m.size() == sizeCount);
+			ASSERT_TRUE(m.placeholders() == 0);
+		}
+	}
+}
+
+UTEST(HashMapLocal, empty_hashmap)
+{
+	// Iterating
+	{
+		sfz::HashMapLocal<int, int, 13> m;
+		const sfz::HashMapLocal<int, int, 21> cm;
+
+		int times = 0;
+		for (sfz::HashMapPair<int, int> pair : m) {
+			(void)pair;
+			times += 1;
+		}
+		ASSERT_TRUE(times == 0);
+
+		int ctimes = 0;
+		for (sfz::HashMapPair<int, const int> pair : cm) {
+			(void)pair;
+			ctimes += 1;
+		}
+		ASSERT_TRUE(ctimes == 0);
+	}
+	// Retrieving
+	{
+		sfz::HashMapLocal<int, int, 11> m;
+		const sfz::HashMapLocal<int, int, 11> cm;
+
+		int* ptr = m.get(0);
+		ASSERT_TRUE(ptr == nullptr);
+
+		const int* cPtr = cm.get(0);
+		ASSERT_TRUE(cPtr == nullptr);
+	}
+	// put()
+	{
+		sfz::HashMapLocal<int, int, 52> m;
+
+		int a = -1;
+		m.put(2, a);
+		m.put(3, 4);
+		ASSERT_TRUE(m.capacity() == 52);
+		ASSERT_TRUE(m.size() == 2);
+		ASSERT_TRUE(m[2] == -1);
+		ASSERT_TRUE(m.get(3) != nullptr);
+		ASSERT_TRUE(*m.get(3) == 4);
+	}
+	// operator[]
+	{
+		sfz::HashMapLocal<int, int, 17> m;
+
+		int a = -1;
+		m[2] = a;
+		m[3] = 4;
+		ASSERT_TRUE(m.capacity() == 17);
+		ASSERT_TRUE(m.size() == 2);
+		ASSERT_TRUE(m[2] == -1);
+		ASSERT_TRUE(m.get(3) != nullptr);
+		ASSERT_TRUE(*m.get(3) == 4);
+	}
+}
+
+UTEST(HashMapLocal, hashmap_with_strings)
+{
+	// const char*
+	{
+		sfz::HashMapLocal<const char*, uint32_t, 14> m;
+		const char* strFoo = "foo";
+		const char* strBar = "bar";
+		const char* strCar = "car";
+		m.put(strFoo, 1);
+		m.put(strBar, 2);
+		m.put(strCar, 3);
+		ASSERT_TRUE(m.get(strFoo) != nullptr);
+		ASSERT_TRUE(*m.get(strFoo) == 1);
+		ASSERT_TRUE(m.get(strBar) != nullptr);
+		ASSERT_TRUE(*m.get(strBar) == 2);
+		ASSERT_TRUE(m.get(strCar) != nullptr);
+		ASSERT_TRUE(*m.get(strCar) == 3);
+	}
+	// LocalString
+	{
+		sfz::HashMapLocal<sfz::str96,uint32_t, 101> m;
+
+		const uint32_t NUM_TESTS = 100;
+		for (uint32_t i = 0; i < NUM_TESTS; i++) {
+			sfz::str96 tmp;
+			tmp.appendf("str%u", i);
+			m.put(tmp, i);
+		}
+
+		ASSERT_TRUE(m.size() == NUM_TESTS);
+		ASSERT_TRUE(m.capacity() >= m.size());
+
+		for (uint32_t i = 0; i < NUM_TESTS; i++) {
+			sfz::str96 tmp;
+			tmp.appendf("str%u", i);
+			uint32_t* ptr = m.get(tmp);
+			ASSERT_TRUE(ptr != nullptr);
+			ASSERT_TRUE(*ptr == i);
+
+			uint32_t* ptr2 = m.get(tmp.str()); // alt key variant
+			ASSERT_TRUE(ptr2 != nullptr);
+			ASSERT_TRUE(*ptr2 == i);
+			ASSERT_TRUE(*ptr2 == *ptr);
+		}
+
+		ASSERT_TRUE(m.get("str0") != nullptr);
+		ASSERT_TRUE(*m.get("str0") == 0);
+		ASSERT_TRUE(m.remove("str0"));
+		ASSERT_TRUE(m.get("str0") == nullptr);
+
+		m["str0"] = 3;
+		ASSERT_TRUE(m["str0"] == 3);
+	}
+}
+
+UTEST(HashMapLocal, perfect_forwarding_in_put)
+{
+	sfz::HashMapLocal<MoveTestStruct, MoveTestStruct, 32> m;
+
+	// (const ref, const ref)
+	{
+		MoveTestStruct k = 2;
+		MoveTestStruct v = 3;
+		ASSERT_TRUE(!k.moved);
+		ASSERT_TRUE(!v.moved);
+		m.put(k, v);
+		ASSERT_TRUE(!k.moved);
+		ASSERT_TRUE(k.value == 2);
+		ASSERT_TRUE(!v.moved);
+		ASSERT_TRUE(v.value == 3);
+
+		MoveTestStruct* ptr = m.get(k);
+		ASSERT_TRUE(ptr != nullptr);
+		ASSERT_TRUE(ptr->value == 3);
+
+		MoveTestStruct* ptr2 = m.get(MoveTestStruct(2));
+		ASSERT_TRUE(ptr2 != nullptr);
+		ASSERT_TRUE(ptr2->value == 3);
+	}
+	// (const ref, rvalue)
+	{
+		MoveTestStruct k = 2;
+		MoveTestStruct v = 3;
+		ASSERT_TRUE(!k.moved);
+		ASSERT_TRUE(!v.moved);
+		m.put(k, std::move(v));
+		ASSERT_TRUE(!k.moved);
+		ASSERT_TRUE(k.value == 2);
+		ASSERT_TRUE(v.moved);
+		ASSERT_TRUE(v.value == 0);
+
+		MoveTestStruct* ptr = m.get(k);
+		ASSERT_TRUE(ptr != nullptr);
+		ASSERT_TRUE(ptr->value == 3);
+
+		MoveTestStruct* ptr2 = m.get(MoveTestStruct(2));
+		ASSERT_TRUE(ptr2 != nullptr);
+		ASSERT_TRUE(ptr2->value == 3);
+	}
+	// (altKey, const ref)
+	{
+		sfz::HashMapLocal<sfz::str96, MoveTestStruct, 72> m2;
+		MoveTestStruct v(2);
+		ASSERT_TRUE(!v.moved);
+		m2.put("foo", v);
+		ASSERT_TRUE(!v.moved);
+		ASSERT_TRUE(v.value == 2);
+		MoveTestStruct* ptr = m2.get("foo");
+		ASSERT_TRUE(ptr != nullptr);
+		ASSERT_TRUE(ptr->value == 2);
+		ASSERT_TRUE(!ptr->moved);
+	}
+	// (altKey, rvalue)
+	{
+		sfz::HashMapLocal<sfz::str96, MoveTestStruct, 63> m2;;
+		MoveTestStruct v(2);
+		ASSERT_TRUE(!v.moved);
+		m2.put("foo", std::move(v));
+		ASSERT_TRUE(v.moved);
+		ASSERT_TRUE(v.value == 0);
+		MoveTestStruct* ptr = m2.get("foo");
+		ASSERT_TRUE(ptr != nullptr);
+		ASSERT_TRUE(ptr->value == 2);
+		ASSERT_TRUE(ptr->moved);
+	}
+}

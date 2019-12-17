@@ -139,7 +139,7 @@ constexpr uint64_t roundUpAligned(uint64_t value, uint64_t alignment)
 }
 
 // Gives the offset needed to make the given value evenly divisible by the given alignment
-constexpr uint64_t roundUpAlignedOffset(uint64_t value, uint64_t alignment)
+constexpr uint64_t alignedDiff(uint64_t value, uint64_t alignment)
 {
 	return roundUpAligned(value, alignment) - value;
 }

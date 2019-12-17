@@ -273,16 +273,14 @@ private:
 // ------------------------------------------------------------------------------------------------
 
 template<typename T, uint32_t Capacity>
-class alignas(32) ArrayLocal final {
+class ArrayLocal final {
 public:
 	static_assert(alignof(T) <= 32, "");
-	static_assert(
-		sizeof(ArrayLocal) == roundUpAligned(sizeof(T) * Capacity + sizeof(uint32_t), 32), "");
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	ArrayLocal() = default;
+	ArrayLocal() { static_assert(sizeof(ArrayLocal) == (sizeof(T) * Capacity + sizeof(uint32_t)), ""); }
 	ArrayLocal(const ArrayLocal&) = default;
 	ArrayLocal& operator= (const ArrayLocal&) = default;
 	ArrayLocal(ArrayLocal&& other) noexcept { this->swap(other); }
@@ -428,7 +426,6 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	T mData[Capacity];
-	uint8_t _PADDING_[roundUpAlignedOffset(sizeof(T) * Capacity + sizeof(uint32_t), 32)];
 	uint32_t mSize = 0;
 };
 

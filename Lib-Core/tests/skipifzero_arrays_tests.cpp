@@ -477,21 +477,17 @@ UTEST(Array, find)
 
 UTEST(ArrayLocal, default_constructor)
 {
-	sfz::ArrayLocal<float, 5> fiveArray;
+	alignas(32) sfz::ArrayLocal<float, 5> fiveArray;
 	ASSERT_TRUE(fiveArray.size() == 0);
 	ASSERT_TRUE(fiveArray.capacity() == 5);
 	ASSERT_TRUE((uintptr_t)fiveArray.data() == (uintptr_t)&fiveArray);
 	ASSERT_TRUE(sfz::isAligned(fiveArray.data(), 32));
-	ASSERT_TRUE((sizeof(fiveArray) % 32) == 0);
-	ASSERT_TRUE(sizeof(fiveArray) == 32);
 
-	sfz::ArrayLocal<float, 8> eightArray;
+	alignas(64) sfz::ArrayLocal<float, 8> eightArray;
 	ASSERT_TRUE(eightArray.size() == 0);
 	ASSERT_TRUE(eightArray.capacity() == 8);
 	ASSERT_TRUE((uintptr_t)eightArray.data() == (uintptr_t)&eightArray);
-	ASSERT_TRUE(sfz::isAligned(eightArray.data(), 32));
-	ASSERT_TRUE((sizeof(eightArray) % 32) == 0);
-	ASSERT_TRUE(sizeof(eightArray) == 64);
+	ASSERT_TRUE(sfz::isAligned(eightArray.data(), 64));
 }
 
 UTEST(ArrayLocal, fill_constructor)
@@ -646,7 +642,7 @@ UTEST(ArrayLocal, add)
 
 UTEST(ArrayLocal, insert)
 {
-	sfz::ArrayLocal<int, 16> v;
+	sfz::ArrayLocal<int, 21> v;
 	ASSERT_TRUE(v.size() == 0);
 
 	v.add(-1, 2);
@@ -668,7 +664,7 @@ UTEST(ArrayLocal, insert)
 	ASSERT_TRUE(v[2] == 3);
 	ASSERT_TRUE(v[3] == -1);
 
-	sfz::ArrayLocal<int, 16> v2;
+	sfz::ArrayLocal<int, 23> v2;
 	v2.add(42, 3);
 	v.insert(1, v2.data(), 2);
 	ASSERT_TRUE(v.size() == 6);
@@ -684,7 +680,7 @@ UTEST(ArrayLocal, remove)
 {
 	// Basic test
 	{
-		sfz::ArrayLocal<int, 16> v;
+		sfz::ArrayLocal<int, 19> v;
 		const int vals[] ={1, 2, 3, 4};
 		v.add(vals, 4);
 
@@ -708,7 +704,7 @@ UTEST(ArrayLocal, remove)
 	// Bug where memmove was passed numElements instead of numBytes
 	{
 		using sfz::vec2_i32;
-		sfz::ArrayLocal<vec2_i32, 16> v;
+		sfz::ArrayLocal<vec2_i32, 7> v;
 		const vec2_i32 vals[] = {vec2_i32(1), vec2_i32(2), vec2_i32(3), vec2_i32(4)};
 		v.add(vals, 4);
 
@@ -726,7 +722,7 @@ UTEST(ArrayLocal, remove)
 
 	// Bug where not enough elements are moved
 	{
-		sfz::ArrayLocal<int, 16> v;
+		sfz::ArrayLocal<int, 11> v;
 		const int vals[] = {1, 2, 3, 4, 5, 6};
 		v.add(vals, 6);
 
@@ -750,7 +746,7 @@ UTEST(ArrayLocal, remove)
 
 UTEST(ArrayLocal, removeQuickSwap)
 {
-	sfz::ArrayLocal<int, 16> v;
+	sfz::ArrayLocal<int, 13> v;
 	const int vals[] = {1, 2, 3, 4, 5, 6};
 	v.add(vals, 6);
 
@@ -796,7 +792,7 @@ UTEST(ArrayLocal, search)
 
 UTEST(ArrayLocal, find)
 {
-	sfz::ArrayLocal<int, 16> v;
+	sfz::ArrayLocal<int, 15> v;
 	const int vals[] = {1, 2, 3, 4};
 	v.add(vals, 4);
 
@@ -812,7 +808,7 @@ UTEST(ArrayLocal, find)
 	ASSERT_TRUE(*ptr == 2);
 
 	{
-		const sfz::ArrayLocal<int, 16>& vc = v;
+		const sfz::ArrayLocal<int, 15>& vc = v;
 
 		const int* ptr2 = vc.find([](int) { return false; });
 		ASSERT_TRUE(ptr2 == nullptr);
