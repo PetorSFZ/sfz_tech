@@ -48,7 +48,7 @@ static const char* stripFilePath(const char* file) noexcept
 
 void TerminalLogger::init(uint32_t numHistoryItems, Allocator* allocator) noexcept
 {
-	mMessages.create(numHistoryItems, allocator);
+	mMessages.create(numHistoryItems, allocator, sfz_dbg(""));
 }
 
 uint32_t TerminalLogger::numMessages() const noexcept

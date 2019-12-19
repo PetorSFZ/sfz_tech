@@ -23,8 +23,8 @@
 #include <ctime>
 
 #include <skipifzero_strings.hpp>
+#include <skipifzero_ring_buffers.hpp>
 
-#include <sfz/containers/RingBuffer.hpp>
 #include <sfz/util/LoggingInterface.hpp>
 
 namespace sfz {

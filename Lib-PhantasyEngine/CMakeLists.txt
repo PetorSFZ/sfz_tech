@@ -214,9 +214,6 @@ set(HEADER_FILES
 	${INCLUDE_DIR}/sfz/PushWarnings.hpp
 	${INCLUDE_DIR}/sfz/SimdIntrinsics.hpp
 
-	${INCLUDE_DIR}/sfz/containers/RingBuffer.hpp
-	${INCLUDE_DIR}/sfz/containers/RingBuffer.inl
-
 	${INCLUDE_DIR}/sfz/geometry/AABB.hpp
 	${INCLUDE_DIR}/sfz/geometry/AABB.inl
 	${INCLUDE_DIR}/sfz/geometry/AABB2D.hpp
@@ -388,8 +385,6 @@ if(NOT hasParent)
 
 	set(TEST_FILES
 		${TESTS_DIR}/sfz/Main_Tests.cpp
-
-		${TESTS_DIR}/sfz/containers/RingBuffer_Tests.cpp
 
 		${TESTS_DIR}/sfz/geometry/Intersection_Tests.cpp
 		${TESTS_DIR}/sfz/geometry/OBB_Tests.cpp

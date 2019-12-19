@@ -25,19 +25,19 @@
 #include <chrono>
 #include <thread>
 
-#include <skipifzero_smart_pointers.hpp>
+#include "skipifzero.hpp"
+#include "skipifzero_allocators.hpp"
+#include "skipifzero_smart_pointers.hpp"
 
 #define private public
-#include "sfz/containers/RingBuffer.hpp"
+#include "skipifzero_ring_buffers.hpp"
 #undef private
-#include "sfz/memory/DebugAllocator.hpp"
 
 using namespace sfz;
 
 UTEST(RingBuffer, constructors)
 {
-	sfz::setContext(sfz::getStandardContext());
-	ASSERT_TRUE(getDefaultAllocator() != nullptr);
+	StandardAllocator allocator;
 
 	// Default constructor
 	{
@@ -46,63 +46,34 @@ UTEST(RingBuffer, constructors)
 		ASSERT_TRUE(buffer.capacity() == 0);
 		ASSERT_TRUE(buffer.allocator() == nullptr);
 		ASSERT_TRUE(buffer.mDataPtr == nullptr);
-		ASSERT_TRUE(buffer.mFirstIndex == RINGBUFFER_BASE_IDX);
-		ASSERT_TRUE(buffer.mLastIndex == RINGBUFFER_BASE_IDX);
+		ASSERT_TRUE(buffer.mFirstIndex == RingBuffer<int32_t>::BASE_IDX);
+		ASSERT_TRUE(buffer.mLastIndex == RingBuffer<int32_t>::BASE_IDX);
 	}
-	// No capacity default allocator
+	// No capacity init
 	{
-		RingBuffer<int32_t> buffer(0);
+		RingBuffer<int32_t> buffer(0, &allocator, sfz_dbg(""));
 		ASSERT_TRUE(buffer.size() == 0);
 		ASSERT_TRUE(buffer.capacity() == 0);
-		ASSERT_TRUE(buffer.allocator() == getDefaultAllocator());
+		ASSERT_TRUE(buffer.allocator() == nullptr);
 		ASSERT_TRUE(buffer.mDataPtr == nullptr);
-		ASSERT_TRUE(buffer.mFirstIndex == RINGBUFFER_BASE_IDX);
-		ASSERT_TRUE(buffer.mLastIndex == RINGBUFFER_BASE_IDX);
+		ASSERT_TRUE(buffer.mFirstIndex == RingBuffer<int32_t>::BASE_IDX);
+		ASSERT_TRUE(buffer.mLastIndex == RingBuffer<int32_t>::BASE_IDX);
 	}
-	// No capacity non-default allocator
+	// Init with capacity
 	{
-		DebugAllocator alloc("debug allocator");
-		ASSERT_TRUE(alloc.numAllocations() == 0);
-		RingBuffer<int32_t> buffer(0, &alloc);
-		ASSERT_TRUE(alloc.numAllocations() == 0);
-		ASSERT_TRUE(buffer.size() == 0);
-		ASSERT_TRUE(buffer.capacity() == 0);
-		ASSERT_TRUE(buffer.allocator() == &alloc);
-		ASSERT_TRUE(buffer.mDataPtr == nullptr);
-		ASSERT_TRUE(buffer.mFirstIndex == RINGBUFFER_BASE_IDX);
-		ASSERT_TRUE(buffer.mLastIndex == RINGBUFFER_BASE_IDX);
-	}
-	// Default allocator with capacity
-	{
-		RingBuffer<int32_t> buffer(32);
+		RingBuffer<int32_t> buffer(32, &allocator, sfz_dbg(""));
 		ASSERT_TRUE(buffer.size() == 0);
 		ASSERT_TRUE(buffer.capacity() == 32);
-		ASSERT_TRUE(buffer.allocator() == getDefaultAllocator());
+		ASSERT_TRUE(buffer.allocator() == &allocator);
 		ASSERT_TRUE(buffer.mDataPtr != nullptr);
-		ASSERT_TRUE(buffer.mFirstIndex == RINGBUFFER_BASE_IDX);
-		ASSERT_TRUE(buffer.mLastIndex == RINGBUFFER_BASE_IDX);
-	}
-	// Non-default allocator with capacity
-	{
-		DebugAllocator alloc("debug allocator");
-		ASSERT_TRUE(alloc.numAllocations() == 0);
-		{
-			RingBuffer<int32_t> buffer(32, &alloc);
-			ASSERT_TRUE(alloc.numAllocations() == 1);
-			ASSERT_TRUE(buffer.size() == 0);
-			ASSERT_TRUE(buffer.capacity() == 32);
-			ASSERT_TRUE(buffer.allocator() == &alloc);
-			ASSERT_TRUE(buffer.mDataPtr != nullptr);
-			ASSERT_TRUE(buffer.mFirstIndex == RINGBUFFER_BASE_IDX);
-			ASSERT_TRUE(buffer.mLastIndex == RINGBUFFER_BASE_IDX);
-		}
-		ASSERT_TRUE(alloc.numAllocations() == 0);
+		ASSERT_TRUE(buffer.mFirstIndex == RingBuffer<int32_t>::BASE_IDX);
+		ASSERT_TRUE(buffer.mLastIndex == RingBuffer<int32_t>::BASE_IDX);
 	}
 }
 
 UTEST(RingBuffer, adding_and_accessing_elements)
 {
-	sfz::setContext(sfz::getStandardContext());
+	sfz::StandardAllocator allocator;
 
 	// Capacity == 0
 	{
@@ -110,47 +81,47 @@ UTEST(RingBuffer, adding_and_accessing_elements)
 
 		ASSERT_TRUE(buffer.capacity() == 0);
 		ASSERT_TRUE(buffer.size() == 0);
-		ASSERT_TRUE(buffer.mFirstIndex == RINGBUFFER_BASE_IDX);
-		ASSERT_TRUE(buffer.mLastIndex == RINGBUFFER_BASE_IDX);
+		ASSERT_TRUE(buffer.mFirstIndex == RingBuffer<int32_t>::BASE_IDX);
+		ASSERT_TRUE(buffer.mLastIndex == RingBuffer<int32_t>::BASE_IDX);
 
 		ASSERT_TRUE(!buffer.pop());
 		ASSERT_TRUE(buffer.capacity() == 0);
 		ASSERT_TRUE(buffer.size() == 0);
-		ASSERT_TRUE(buffer.mFirstIndex == RINGBUFFER_BASE_IDX);
-		ASSERT_TRUE(buffer.mLastIndex == RINGBUFFER_BASE_IDX);
+		ASSERT_TRUE(buffer.mFirstIndex == RingBuffer<int32_t>::BASE_IDX);
+		ASSERT_TRUE(buffer.mLastIndex == RingBuffer<int32_t>::BASE_IDX);
 
 		int32_t res1 = 32;
 		ASSERT_TRUE(!buffer.pop(res1));
 		ASSERT_TRUE(res1 == 32);
 		ASSERT_TRUE(buffer.capacity() == 0);
 		ASSERT_TRUE(buffer.size() == 0);
-		ASSERT_TRUE(buffer.mFirstIndex == RINGBUFFER_BASE_IDX);
-		ASSERT_TRUE(buffer.mLastIndex == RINGBUFFER_BASE_IDX);
+		ASSERT_TRUE(buffer.mFirstIndex == RingBuffer<int32_t>::BASE_IDX);
+		ASSERT_TRUE(buffer.mLastIndex == RingBuffer<int32_t>::BASE_IDX);
 
 		ASSERT_TRUE(!buffer.popLast());
 		ASSERT_TRUE(buffer.capacity() == 0);
 		ASSERT_TRUE(buffer.size() == 0);
-		ASSERT_TRUE(buffer.mFirstIndex == RINGBUFFER_BASE_IDX);
-		ASSERT_TRUE(buffer.mLastIndex == RINGBUFFER_BASE_IDX);
+		ASSERT_TRUE(buffer.mFirstIndex == RingBuffer<int32_t>::BASE_IDX);
+		ASSERT_TRUE(buffer.mLastIndex == RingBuffer<int32_t>::BASE_IDX);
 
 		int32_t res2 = 27;
 		ASSERT_TRUE(!buffer.popLast(res2));
 		ASSERT_TRUE(res2 == 27);
 		ASSERT_TRUE(buffer.capacity() == 0);
 		ASSERT_TRUE(buffer.size() == 0);
-		ASSERT_TRUE(buffer.mFirstIndex == RINGBUFFER_BASE_IDX);
-		ASSERT_TRUE(buffer.mLastIndex == RINGBUFFER_BASE_IDX);
+		ASSERT_TRUE(buffer.mFirstIndex == RingBuffer<int32_t>::BASE_IDX);
+		ASSERT_TRUE(buffer.mLastIndex == RingBuffer<int32_t>::BASE_IDX);
 	}
 	// Capacity == 1
 	{
-		RingBuffer<int32_t> buffer(1);
+		RingBuffer<int32_t> buffer(1, &allocator, sfz_dbg(""));
 		ASSERT_TRUE(buffer.capacity() == 1);
 
 		ASSERT_TRUE(buffer.size() == 0);
 		ASSERT_TRUE(buffer.add(24));
 		ASSERT_TRUE(buffer.size() == 1);
-		ASSERT_TRUE(buffer.mFirstIndex == RINGBUFFER_BASE_IDX);
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX + 1));
+		ASSERT_TRUE(buffer.mFirstIndex == RingBuffer<int32_t>::BASE_IDX);
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX + 1));
 		ASSERT_TRUE(buffer.mapIndex(buffer.mFirstIndex) == 0);
 		ASSERT_TRUE(buffer.mapIndex(buffer.mLastIndex) == 0);
 		ASSERT_TRUE(buffer.first() == 24);
@@ -159,8 +130,8 @@ UTEST(RingBuffer, adding_and_accessing_elements)
 
 		ASSERT_TRUE(!buffer.add(36));
 		ASSERT_TRUE(buffer.size() == 1);
-		ASSERT_TRUE(buffer.mFirstIndex == RINGBUFFER_BASE_IDX);
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX + 1));
+		ASSERT_TRUE(buffer.mFirstIndex == RingBuffer<int32_t>::BASE_IDX);
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX + 1));
 		ASSERT_TRUE(buffer.mapIndex(buffer.mFirstIndex) == 0);
 		ASSERT_TRUE(buffer.mapIndex(buffer.mLastIndex) == 0);
 		ASSERT_TRUE(buffer.first() == 24);
@@ -171,22 +142,22 @@ UTEST(RingBuffer, adding_and_accessing_elements)
 		ASSERT_TRUE(buffer.pop(res));
 		ASSERT_TRUE(res == 24);
 		ASSERT_TRUE(buffer.size() == 0);
-		ASSERT_TRUE(buffer.mFirstIndex == (RINGBUFFER_BASE_IDX + 1));
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX + 1));
+		ASSERT_TRUE(buffer.mFirstIndex == (RingBuffer<int32_t>::BASE_IDX + 1));
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX + 1));
 		ASSERT_TRUE(buffer.mapIndex(buffer.mFirstIndex) == 0);
 		ASSERT_TRUE(buffer.mapIndex(buffer.mLastIndex) == 0);
 
 		ASSERT_TRUE(!buffer.pop());
 		ASSERT_TRUE(buffer.size() == 0);
-		ASSERT_TRUE(buffer.mFirstIndex == (RINGBUFFER_BASE_IDX + 1));
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX + 1));
+		ASSERT_TRUE(buffer.mFirstIndex == (RingBuffer<int32_t>::BASE_IDX + 1));
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX + 1));
 		ASSERT_TRUE(buffer.mapIndex(buffer.mFirstIndex) == 0);
 		ASSERT_TRUE(buffer.mapIndex(buffer.mLastIndex) == 0);
 
 		ASSERT_TRUE(buffer.add(36));
 		ASSERT_TRUE(buffer.size() == 1);
-		ASSERT_TRUE(buffer.mFirstIndex == (RINGBUFFER_BASE_IDX + 1));
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX + 2));
+		ASSERT_TRUE(buffer.mFirstIndex == (RingBuffer<int32_t>::BASE_IDX + 1));
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX + 2));
 		ASSERT_TRUE(buffer.mapIndex(buffer.mFirstIndex) == 0);
 		ASSERT_TRUE(buffer.mapIndex(buffer.mLastIndex) == 0);
 		ASSERT_TRUE(buffer.first() == 36);
@@ -197,22 +168,22 @@ UTEST(RingBuffer, adding_and_accessing_elements)
 		ASSERT_TRUE(buffer.popLast(res2));
 		ASSERT_TRUE(res2 == 36);
 		ASSERT_TRUE(buffer.size() == 0);
-		ASSERT_TRUE(buffer.mFirstIndex == (RINGBUFFER_BASE_IDX + 1));
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX + 1));
+		ASSERT_TRUE(buffer.mFirstIndex == (RingBuffer<int32_t>::BASE_IDX + 1));
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX + 1));
 		ASSERT_TRUE(buffer.mapIndex(buffer.mFirstIndex) == 0);
 		ASSERT_TRUE(buffer.mapIndex(buffer.mLastIndex) == 0);
 
 		ASSERT_TRUE(!buffer.popLast());
 		ASSERT_TRUE(buffer.size() == 0);
-		ASSERT_TRUE(buffer.mFirstIndex == (RINGBUFFER_BASE_IDX + 1));
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX + 1));
+		ASSERT_TRUE(buffer.mFirstIndex == (RingBuffer<int32_t>::BASE_IDX + 1));
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX + 1));
 		ASSERT_TRUE(buffer.mapIndex(buffer.mFirstIndex) == 0);
 		ASSERT_TRUE(buffer.mapIndex(buffer.mLastIndex) == 0);
 
 		ASSERT_TRUE(buffer.addFirst(12));
 		ASSERT_TRUE(buffer.size() == 1);
-		ASSERT_TRUE(buffer.mFirstIndex == (RINGBUFFER_BASE_IDX + 0));
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX + 1));
+		ASSERT_TRUE(buffer.mFirstIndex == (RingBuffer<int32_t>::BASE_IDX + 0));
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX + 1));
 		ASSERT_TRUE(buffer.mapIndex(buffer.mFirstIndex) == 0);
 		ASSERT_TRUE(buffer.mapIndex(buffer.mLastIndex) == 0);
 		ASSERT_TRUE(buffer.first() == 12);
@@ -221,21 +192,21 @@ UTEST(RingBuffer, adding_and_accessing_elements)
 	}
 	// Capacity == 2, add()
 	{
-		RingBuffer<int32_t> buffer(2);
+		RingBuffer<int32_t> buffer(2, &allocator, sfz_dbg(""));
 		ASSERT_TRUE(buffer.capacity() == 2);
 
 		ASSERT_TRUE(buffer.add(3));
 		ASSERT_TRUE(buffer.size() == 1);
-		ASSERT_TRUE(buffer.mFirstIndex == RINGBUFFER_BASE_IDX);
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX + 1));
+		ASSERT_TRUE(buffer.mFirstIndex == RingBuffer<int32_t>::BASE_IDX);
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX + 1));
 		ASSERT_TRUE(buffer.first() == 3);
 		ASSERT_TRUE(buffer.last() == 3);
 		ASSERT_TRUE(buffer[0] == 3);
 
 		ASSERT_TRUE(buffer.add(4));
 		ASSERT_TRUE(buffer.size() == 2);
-		ASSERT_TRUE(buffer.mFirstIndex == RINGBUFFER_BASE_IDX);
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX + 2));
+		ASSERT_TRUE(buffer.mFirstIndex == RingBuffer<int32_t>::BASE_IDX);
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX + 2));
 		ASSERT_TRUE(buffer.first() == 3);
 		ASSERT_TRUE(buffer.last() == 4);
 		ASSERT_TRUE(buffer[0] == 3);
@@ -243,8 +214,8 @@ UTEST(RingBuffer, adding_and_accessing_elements)
 
 		ASSERT_TRUE(!buffer.add(4));
 		ASSERT_TRUE(buffer.size() == 2);
-		ASSERT_TRUE(buffer.mFirstIndex == RINGBUFFER_BASE_IDX);
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX + 2));
+		ASSERT_TRUE(buffer.mFirstIndex == RingBuffer<int32_t>::BASE_IDX);
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX + 2));
 		ASSERT_TRUE(buffer.first() == 3);
 		ASSERT_TRUE(buffer.last() == 4);
 		ASSERT_TRUE(buffer[0] == 3);
@@ -254,16 +225,16 @@ UTEST(RingBuffer, adding_and_accessing_elements)
 		ASSERT_TRUE(buffer.pop(res1));
 		ASSERT_TRUE(res1 == 3);
 		ASSERT_TRUE(buffer.size() == 1);
-		ASSERT_TRUE(buffer.mFirstIndex == RINGBUFFER_BASE_IDX + 1);
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX + 2));
+		ASSERT_TRUE(buffer.mFirstIndex == RingBuffer<int32_t>::BASE_IDX + 1);
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX + 2));
 		ASSERT_TRUE(buffer.first() == 4);
 		ASSERT_TRUE(buffer.last() == 4);
 		ASSERT_TRUE(buffer[0] == 4);
 
 		ASSERT_TRUE(buffer.add(5));
 		ASSERT_TRUE(buffer.size() == 2);
-		ASSERT_TRUE(buffer.mFirstIndex == RINGBUFFER_BASE_IDX + 1);
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX + 3));
+		ASSERT_TRUE(buffer.mFirstIndex == RingBuffer<int32_t>::BASE_IDX + 1);
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX + 3));
 		ASSERT_TRUE(buffer.first() == 4);
 		ASSERT_TRUE(buffer.last() == 5);
 		ASSERT_TRUE(buffer[0] == 4);
@@ -271,21 +242,21 @@ UTEST(RingBuffer, adding_and_accessing_elements)
 	}
 	// Capacity == 2, addFirst()
 	{
-		RingBuffer<int32_t> buffer(2);
+		RingBuffer<int32_t> buffer(2, &allocator, sfz_dbg(""));
 		ASSERT_TRUE(buffer.capacity() == 2);
 
 		ASSERT_TRUE(buffer.addFirst(3));
 		ASSERT_TRUE(buffer.size() == 1);
-		ASSERT_TRUE(buffer.mFirstIndex == RINGBUFFER_BASE_IDX - 1);
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX));
+		ASSERT_TRUE(buffer.mFirstIndex == RingBuffer<int32_t>::BASE_IDX - 1);
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX));
 		ASSERT_TRUE(buffer.first() == 3);
 		ASSERT_TRUE(buffer.last() == 3);
 		ASSERT_TRUE(buffer[0] == 3);
 
 		ASSERT_TRUE(buffer.addFirst(4));
 		ASSERT_TRUE(buffer.size() == 2);
-		ASSERT_TRUE(buffer.mFirstIndex == (RINGBUFFER_BASE_IDX - 2));
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX + 0));
+		ASSERT_TRUE(buffer.mFirstIndex == (RingBuffer<int32_t>::BASE_IDX - 2));
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX + 0));
 		ASSERT_TRUE(buffer.first() == 4);
 		ASSERT_TRUE(buffer.last() == 3);
 		ASSERT_TRUE(buffer[0] == 4);
@@ -293,8 +264,8 @@ UTEST(RingBuffer, adding_and_accessing_elements)
 
 		ASSERT_TRUE(!buffer.addFirst(5));
 		ASSERT_TRUE(buffer.size() == 2);
-		ASSERT_TRUE(buffer.mFirstIndex == (RINGBUFFER_BASE_IDX - 2));
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX + 0));
+		ASSERT_TRUE(buffer.mFirstIndex == (RingBuffer<int32_t>::BASE_IDX - 2));
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX + 0));
 		ASSERT_TRUE(buffer.first() == 4);
 		ASSERT_TRUE(buffer.last() == 3);
 		ASSERT_TRUE(buffer[0] == 4);
@@ -304,8 +275,8 @@ UTEST(RingBuffer, adding_and_accessing_elements)
 		ASSERT_TRUE(buffer.popLast(res1));
 		ASSERT_TRUE(res1 == 3);
 		ASSERT_TRUE(buffer.size() == 1);
-		ASSERT_TRUE(buffer.mFirstIndex == (RINGBUFFER_BASE_IDX - 2));
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX - 1));
+		ASSERT_TRUE(buffer.mFirstIndex == (RingBuffer<int32_t>::BASE_IDX - 2));
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX - 1));
 		ASSERT_TRUE(buffer.first() == 4);
 		ASSERT_TRUE(buffer.last() == 4);
 		ASSERT_TRUE(buffer[0] == 4);
@@ -314,64 +285,52 @@ UTEST(RingBuffer, adding_and_accessing_elements)
 
 UTEST(RingBuffer, state_methods)
 {
-	sfz::setContext(sfz::getStandardContext());
+	StandardAllocator allocator;
 
 	// swap() and move constructors
 	{
-		DebugAllocator alloc("debug");
-		ASSERT_TRUE(alloc.numAllocations() == 0);
+		RingBuffer<UniquePtr<int32_t>> buffer(3, &allocator, sfz_dbg(""));
+		ASSERT_TRUE(buffer.add(makeUnique<int32_t>(&allocator, sfz_dbg(""), 2)));
+		ASSERT_TRUE(*buffer[0] == 2);
 		{
-			RingBuffer<UniquePtr<int32_t>> buffer(3);
-			ASSERT_TRUE(buffer.add(makeUnique<int32_t>(&alloc, sfz_dbg(""), 2)));
-			ASSERT_TRUE(alloc.numAllocations() == 1);
-			ASSERT_TRUE(*buffer[0] == 2);
-			{
-				RingBuffer<UniquePtr<int32_t>> buffer2;
-				buffer2 = std::move(buffer);
-				ASSERT_TRUE(alloc.numAllocations() == 1);
-				ASSERT_TRUE(buffer.size() == 0);
-				ASSERT_TRUE(buffer2.size() == 1);
-				ASSERT_TRUE(*buffer2[0] == 2);
-			}
-			ASSERT_TRUE(alloc.numAllocations() == 0);
+			RingBuffer<UniquePtr<int32_t>> buffer2;
+			buffer2 = std::move(buffer);
+			ASSERT_TRUE(buffer.size() == 0);
+			ASSERT_TRUE(buffer2.size() == 1);
+			ASSERT_TRUE(*buffer2[0] == 2);
 		}
 	}
 	// clear()
 	{
-		DebugAllocator alloc("debug");
-		ASSERT_TRUE(alloc.numAllocations() == 0);
-
-		RingBuffer<UniquePtr<int32_t>> buffer(2);
-		ASSERT_TRUE(buffer.add(makeUnique<int32_t>(&alloc, sfz_dbg(""), 2)));
-		ASSERT_TRUE(buffer.add(makeUnique<int32_t>(&alloc, sfz_dbg(""), 3)));
-		ASSERT_TRUE(alloc.numAllocations() == 2);
+		RingBuffer<UniquePtr<int32_t>> buffer(2, &allocator, sfz_dbg(""));
+		ASSERT_TRUE(buffer.add(makeUnique<int32_t>(&allocator, sfz_dbg(""), 2)));
+		ASSERT_TRUE(buffer.add(makeUnique<int32_t>(&allocator, sfz_dbg(""), 3)));
 		ASSERT_TRUE(*buffer.first() == 2);
 		ASSERT_TRUE(*buffer.last() == 3);
 		ASSERT_TRUE(buffer.size() == 2);
 		ASSERT_TRUE(*buffer[0] == 2);
 		ASSERT_TRUE(*buffer[1] == 3);
-		ASSERT_TRUE(buffer.mFirstIndex == RINGBUFFER_BASE_IDX);
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX + 2));
+		ASSERT_TRUE(buffer.mFirstIndex == RingBuffer<int32_t>::BASE_IDX);
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX + 2));
 
 		buffer.clear();
 		ASSERT_TRUE(buffer.size() == 0);
 		ASSERT_TRUE(buffer.capacity() == 2);
-		ASSERT_TRUE(buffer.allocator() == getDefaultAllocator());
-		ASSERT_TRUE(buffer.mFirstIndex == RINGBUFFER_BASE_IDX);
-		ASSERT_TRUE(buffer.mLastIndex == RINGBUFFER_BASE_IDX);
-		ASSERT_TRUE(alloc.numAllocations() == 0);
+		ASSERT_TRUE(buffer.allocator() == &allocator);
+		ASSERT_TRUE(buffer.mFirstIndex == RingBuffer<int32_t>::BASE_IDX);
+		ASSERT_TRUE(buffer.mLastIndex == RingBuffer<int32_t>::BASE_IDX);
 	}
 }
 
 #ifndef __EMSCRIPTEN__
 UTEST(RingBuffer, multi_threading)
 {
-	sfz::setContext(sfz::getStandardContext());
+	sfz::StandardAllocator allocator;
 
 	// Slow Producer & fast consumer (add() & pop())
 	{
 		constexpr uint64_t NUM_RESULTS = 1024;
-		RingBuffer<int32_t> buffer(16);
+		RingBuffer<int32_t> buffer(16, &allocator, sfz_dbg(""));
 		bool results[NUM_RESULTS];
 		for (bool& b : results) b = false;
 
@@ -401,13 +360,13 @@ UTEST(RingBuffer, multi_threading)
 
 		for (bool& b : results) ASSERT_TRUE(b);
 		ASSERT_TRUE(buffer.size() == 0);
-		ASSERT_TRUE(buffer.mFirstIndex == (RINGBUFFER_BASE_IDX + NUM_RESULTS));
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX + NUM_RESULTS));
+		ASSERT_TRUE(buffer.mFirstIndex == (RingBuffer<int32_t>::BASE_IDX + NUM_RESULTS));
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX + NUM_RESULTS));
 	}
 	// Fast Producer & slow consumer (add() & pop())
 	{
 		constexpr uint64_t NUM_RESULTS = 1024;
-		RingBuffer<int32_t> buffer(16);
+		RingBuffer<int32_t> buffer(16, &allocator, sfz_dbg(""));
 		bool results[NUM_RESULTS];
 		for (bool& b : results) b = false;
 
@@ -437,13 +396,13 @@ UTEST(RingBuffer, multi_threading)
 
 		for (bool& b : results) ASSERT_TRUE(b);
 		ASSERT_TRUE(buffer.size() == 0);
-		ASSERT_TRUE(buffer.mFirstIndex == (RINGBUFFER_BASE_IDX + NUM_RESULTS));
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX + NUM_RESULTS));
+		ASSERT_TRUE(buffer.mFirstIndex == (RingBuffer<int32_t>::BASE_IDX + NUM_RESULTS));
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX + NUM_RESULTS));
 	}
 	// Slow Producer & fast consumer (addFirst() & popLast())
 	{
 		constexpr uint64_t NUM_RESULTS = 1024;
-		RingBuffer<int32_t> buffer(16);
+		RingBuffer<int32_t> buffer(16, &allocator, sfz_dbg(""));
 		bool results[NUM_RESULTS];
 		for (bool& b : results) b = false;
 
@@ -473,13 +432,13 @@ UTEST(RingBuffer, multi_threading)
 
 		for (bool& b : results) ASSERT_TRUE(b);
 		ASSERT_TRUE(buffer.size() == 0);
-		ASSERT_TRUE(buffer.mFirstIndex == (RINGBUFFER_BASE_IDX - NUM_RESULTS));
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX - NUM_RESULTS));
+		ASSERT_TRUE(buffer.mFirstIndex == (RingBuffer<int32_t>::BASE_IDX - NUM_RESULTS));
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX - NUM_RESULTS));
 	}
 	// Fast Producer & slow consumer (addFirst() & popLast())
 	{
 		constexpr uint64_t NUM_RESULTS = 1024;
-		RingBuffer<int32_t> buffer(16);
+		RingBuffer<int32_t> buffer(16, &allocator, sfz_dbg(""));
 		bool results[NUM_RESULTS];
 		for (bool& b : results) b = false;
 
@@ -509,14 +468,14 @@ UTEST(RingBuffer, multi_threading)
 
 		for (bool& b : results) ASSERT_TRUE(b);
 		ASSERT_TRUE(buffer.size() == 0);
-		ASSERT_TRUE(buffer.mFirstIndex == (RINGBUFFER_BASE_IDX - NUM_RESULTS));
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX - NUM_RESULTS));
+		ASSERT_TRUE(buffer.mFirstIndex == (RingBuffer<int32_t>::BASE_IDX - NUM_RESULTS));
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX - NUM_RESULTS));
 	}
 	// Two producers (add() & addFirst())
 	{
 		constexpr uint64_t NUM_RESULTS = 1024;
 		constexpr uint64_t HALF_NUM_RESULTS = NUM_RESULTS / 2;
-		RingBuffer<int32_t> buffer(NUM_RESULTS);
+		RingBuffer<int32_t> buffer(NUM_RESULTS, &allocator, sfz_dbg(""));
 		bool results[NUM_RESULTS];
 		for (bool& b : results) b = false;
 
@@ -549,8 +508,8 @@ UTEST(RingBuffer, multi_threading)
 		ASSERT_TRUE(!producerFirstNoSuccess);
 		ASSERT_TRUE(!producerLastNoSuccess);
 		ASSERT_TRUE(buffer.size() == NUM_RESULTS);
-		ASSERT_TRUE(buffer.mFirstIndex == (RINGBUFFER_BASE_IDX - HALF_NUM_RESULTS));
-		ASSERT_TRUE(buffer.mLastIndex == (RINGBUFFER_BASE_IDX + HALF_NUM_RESULTS));
+		ASSERT_TRUE(buffer.mFirstIndex == (RingBuffer<int32_t>::BASE_IDX - HALF_NUM_RESULTS));
+		ASSERT_TRUE(buffer.mLastIndex == (RingBuffer<int32_t>::BASE_IDX + HALF_NUM_RESULTS));
 		for (uint64_t i = 0; i < HALF_NUM_RESULTS; i++) {
 			ASSERT_TRUE(buffer[i] == int32_t(HALF_NUM_RESULTS - i - 1));
 		}
