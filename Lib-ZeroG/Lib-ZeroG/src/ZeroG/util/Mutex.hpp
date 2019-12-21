@@ -22,7 +22,7 @@
 #include <mutex>
 #include <utility> // std::swap
 
-#include "ZeroG/util/Assert.hpp"
+#include <skipifzero.hpp>
 
 namespace zg {
 

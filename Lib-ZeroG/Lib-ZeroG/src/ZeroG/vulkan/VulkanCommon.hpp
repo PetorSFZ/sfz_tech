@@ -20,6 +20,8 @@
 
 #include <vulkan/vulkan.h>
 
+#include <skipifzero.hpp>
+
 namespace zg {
 
 // Check Vulkan macro

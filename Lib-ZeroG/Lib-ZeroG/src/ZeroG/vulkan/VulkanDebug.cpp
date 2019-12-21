@@ -132,7 +132,7 @@ static const char* deviceTypeToString(VkPhysicalDeviceType physicalDeviceType) n
 	case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU: return "VIRTUAL_GPU";
 	case VK_PHYSICAL_DEVICE_TYPE_CPU: return "CPU";
 	}
-	ZG_ASSERT(false);
+	sfz_assert(false);
 	return "";
 }
 
@@ -172,7 +172,7 @@ void vulkanLogAvailableInstanceLayers() noexcept
 	ZgAllocator allocator = getAllocator();
 	Vector<VkLayerProperties> layerProperties;
 	bool success = layerProperties.create(numLayers, "logInstanceLayersProperties");
-	ZG_ASSERT(success);
+	sfz_assert(success);
 	vkEnumerateInstanceLayerProperties(&numLayers, layerProperties.data());
 
 	// Allocate memory for string
@@ -208,7 +208,7 @@ void vulkanLogAvailableInstanceExtensions() noexcept
 	// Retrieve layer properties
 	Vector<VkExtensionProperties> extensionProperties;
 	bool success = extensionProperties.create(numExtensions, "logInstanceExtensionsProperties");
-	ZG_ASSERT(success);
+	sfz_assert(success);
 	vkEnumerateInstanceExtensionProperties(nullptr, &numExtensions, extensionProperties.data());
 
 	// Allocate memory for string
@@ -238,7 +238,7 @@ void vulkanLogAvailablePhysicalDevices(VkInstance instance, VkSurfaceKHR surface
 	// Check how many physical devices there is
 	uint32_t numPhysicalDevices = 0;
 	CHECK_VK vkEnumeratePhysicalDevices(instance, &numPhysicalDevices, nullptr);
-	ZG_ASSERT(numPhysicalDevices <= MAX_NUM_PHYSICAL_DEVICES);
+	sfz_assert(numPhysicalDevices <= MAX_NUM_PHYSICAL_DEVICES);
 	numPhysicalDevices = std::min(numPhysicalDevices, MAX_NUM_PHYSICAL_DEVICES);
 
 	// Retrieve physical devices
@@ -295,7 +295,7 @@ void vulkanLogDeviceExtensions(
 	// Get number of device extensions
 	uint32_t numExtensions = 0;
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &numExtensions, nullptr);
-	ZG_ASSERT(numExtensions < MAX_NUM_EXTENSIONS);
+	sfz_assert(numExtensions < MAX_NUM_EXTENSIONS);
 	numExtensions = std::min(numExtensions, MAX_NUM_EXTENSIONS);
 
 	// Get device extensions
@@ -330,7 +330,7 @@ void vulkanLogQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface) noexc
 	// Check how many queue families there are
 	uint32_t numQueueFamilies = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(device, &numQueueFamilies, nullptr);
-	ZG_ASSERT(numQueueFamilies < MAX_NUM_QUEUE_FAMILIES);
+	sfz_assert(numQueueFamilies < MAX_NUM_QUEUE_FAMILIES);
 	numQueueFamilies = std::min(numQueueFamilies, MAX_NUM_QUEUE_FAMILIES);
 
 	// Get queue families

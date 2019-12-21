@@ -20,7 +20,6 @@
 
 #include <vulkan/vulkan.h>
 
-#include "ZeroG/util/Assert.hpp"
 #include "ZeroG/util/CpuAllocation.hpp"
 #include "ZeroG/util/Logging.hpp"
 #include "ZeroG/util/Mutex.hpp"
@@ -207,7 +206,7 @@ public:
 			// Check how many physical devices there is
 			uint32_t numPhysicalDevices = 0;
 			CHECK_VK vkEnumeratePhysicalDevices(context.data().instance, &numPhysicalDevices, nullptr);
-			ZG_ASSERT(numPhysicalDevices <= MAX_NUM_PHYSICAL_DEVICES);
+			sfz_assert(numPhysicalDevices <= MAX_NUM_PHYSICAL_DEVICES);
 			if (numPhysicalDevices > MAX_NUM_PHYSICAL_DEVICES) numPhysicalDevices = MAX_NUM_PHYSICAL_DEVICES;
 
 			// Retrieve physical devices
@@ -215,7 +214,7 @@ public:
 			CHECK_VK vkEnumeratePhysicalDevices(context.data().instance, &numPhysicalDevices, physicalDevices);
 
 			// Select the choosen physical device
-			ZG_ASSERT(physicalDeviceIdx < numPhysicalDevices);
+			sfz_assert(physicalDeviceIdx < numPhysicalDevices);
 			context.data().physicalDevice = physicalDevices[physicalDeviceIdx];
 
 			// Store physical devices properties for the choosen device
