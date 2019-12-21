@@ -19,7 +19,6 @@
 #include "ZeroG/d3d12/D3D12Framebuffer.hpp"
 
 #include "ZeroG/d3d12/D3D12Textures.hpp"
-#include "ZeroG/util/Assert.hpp"
 #include "ZeroG/util/CpuAllocation.hpp"
 #include "ZeroG/util/ErrorReporting.hpp"
 
@@ -65,11 +64,11 @@ ZgResult createFramebuffer(
 		height = renderTarget->height;
 	}
 	else {
-		ZG_ASSERT(false);
+		sfz_assert(false);
 		return ZG_ERROR_INVALID_ARGUMENT;
 	}
-	ZG_ASSERT(width != 0);
-	ZG_ASSERT(height != 0);
+	sfz_assert(width != 0);
+	sfz_assert(height != 0);
 
 	// Check inputs
 	for (uint32_t i = 0; i < createInfo.numRenderTargets; i++) {
@@ -142,8 +141,8 @@ ZgResult createFramebuffer(
 	if (createInfo.depthBuffer != nullptr) {
 
 		D3D12Texture2D* texture = reinterpret_cast<D3D12Texture2D*>(createInfo.depthBuffer);
-		ZG_ASSERT(texture->zgFormat == ZG_TEXTURE_FORMAT_DEPTH_F32);
-		ZG_ASSERT(texture->format == DXGI_FORMAT_D32_FLOAT);
+		sfz_assert(texture->zgFormat == ZG_TEXTURE_FORMAT_DEPTH_F32);
+		sfz_assert(texture->format == DXGI_FORMAT_D32_FLOAT);
 
 		// Create descriptor heap
 		D3D12_DESCRIPTOR_HEAP_DESC dsvDesc = {};

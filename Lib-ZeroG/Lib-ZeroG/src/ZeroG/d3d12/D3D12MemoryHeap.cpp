@@ -18,7 +18,6 @@
 
 #include "ZeroG/d3d12/D3D12MemoryHeap.hpp"
 
-#include "ZeroG/util/Assert.hpp"
 #include "ZeroG/util/CpuAllocation.hpp"
 #include "ZeroG/util/ErrorReporting.hpp"
 
@@ -36,7 +35,7 @@ static D3D12_HEAP_TYPE bufferMemoryTypeToD3D12HeapType(ZgMemoryType type) noexce
 	case ZG_MEMORY_TYPE_TEXTURE: return D3D12_HEAP_TYPE_DEFAULT;
 	case ZG_MEMORY_TYPE_FRAMEBUFFER: return D3D12_HEAP_TYPE_DEFAULT;
 	}
-	ZG_ASSERT(false);
+	sfz_assert(false);
 	return D3D12_HEAP_TYPE_DEFAULT;
 }
 
@@ -49,7 +48,7 @@ static const char* memoryTypeToString(ZgMemoryType type) noexcept
 	case ZG_MEMORY_TYPE_TEXTURE: return "TEXTURE";
 	case ZG_MEMORY_TYPE_FRAMEBUFFER: return "FRAMEBUFFER";
 	}
-	ZG_ASSERT(false);
+	sfz_assert(false);
 	return "<UNKNOWN>";
 }
 
@@ -76,7 +75,7 @@ D3D12_RESOURCE_DESC createInfoToResourceDesc(const ZgTexture2DCreateInfo& info) 
 		case ZG_TEXTURE_USAGE_RENDER_TARGET: return D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 		case ZG_TEXTURE_USAGE_DEPTH_BUFFER: return D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 		}
-		ZG_ASSERT(false);
+		sfz_assert(false);
 		return D3D12_RESOURCE_FLAG_NONE;
 	}();
 	// TODO: Maybe expose flags:
@@ -112,7 +111,7 @@ ZgResult D3D12MemoryHeap::bufferCreate(
 		case ZG_MEMORY_TYPE_DOWNLOAD: return D3D12_RESOURCE_STATE_COPY_DEST;
 		case ZG_MEMORY_TYPE_DEVICE: return D3D12_RESOURCE_STATE_COMMON;
 		}
-		ZG_ASSERT(false);
+		sfz_assert(false);
 		return D3D12_RESOURCE_STATE_COMMON;
 	}();
 	{
@@ -283,7 +282,7 @@ ZgResult createMemoryHeap(
 			case ZG_MEMORY_TYPE_FRAMEBUFFER: return D3D12_HEAP_FLAG_ALLOW_ONLY_RT_DS_TEXTURES;
 			default: break;
 			}
-			ZG_ASSERT(false);
+			sfz_assert(false);
 			return D3D12_HEAP_FLAGS(0);
 		}();
 

@@ -21,8 +21,9 @@
 #include <cstdlib>
 #include <new>
 
+#include <skipifzero.hpp>
+
 #include "ZeroG/Context.hpp"
-#include "ZeroG/util/Assert.hpp"
 
 // About
 // ------------------------------------------------------------------------------------------------
@@ -50,14 +51,14 @@ void* operator new[] (std::size_t count)
 
 void* operator new (std::size_t count, std::align_val_t val)
 {
-	ZG_ASSERT(size_t(val) <= 32);
+	sfz_assert(size_t(val) <= 32);
 	ZgAllocator& allocator = zg::getContext().allocator;
 	return allocator.allocate(allocator.userPtr, uint32_t(count), "operator new");
 }
 
 void* operator new[] (std::size_t count, std::align_val_t val)
 {
-	ZG_ASSERT(size_t(val) <= 32);
+	sfz_assert(size_t(val) <= 32);
 	ZgAllocator& allocator = zg::getContext().allocator;
 	return allocator.allocate(allocator.userPtr, uint32_t(count), "operator new[]");
 }
@@ -76,14 +77,14 @@ void* operator new[] (std::size_t count, const std::nothrow_t&) noexcept
 
 void* operator new (std::size_t count, std::align_val_t val, const std::nothrow_t&) noexcept
 {
-	ZG_ASSERT(size_t(val) <= 32);
+	sfz_assert(size_t(val) <= 32);
 	ZgAllocator& allocator = zg::getContext().allocator;
 	return allocator.allocate(allocator.userPtr, uint32_t(count), "operator new");
 }
 
 void* operator new[] (std::size_t count, std::align_val_t val, const std::nothrow_t&) noexcept
 {
-	ZG_ASSERT(size_t(val) <= 32);
+	sfz_assert(size_t(val) <= 32);
 	ZgAllocator& allocator = zg::getContext().allocator;
 	return allocator.allocate(allocator.userPtr, uint32_t(count), "operator new[]");
 }
@@ -121,7 +122,7 @@ void operator delete[] (void* ptr) noexcept
 
 void operator delete (void* ptr, std::align_val_t val) noexcept
 {
-	ZG_ASSERT(size_t(val) <= 32);
+	sfz_assert(size_t(val) <= 32);
 	ZgAllocator& allocator = zg::getContext().allocator;
 	if (allocator.deallocate != nullptr) {
 		return allocator.deallocate(allocator.userPtr, ptr);
@@ -136,7 +137,7 @@ void operator delete (void* ptr, std::align_val_t val) noexcept
 
 void operator delete[] (void* ptr, std::align_val_t val) noexcept
 {
-	ZG_ASSERT(size_t(val) <= 32);
+	sfz_assert(size_t(val) <= 32);
 	ZgAllocator& allocator = zg::getContext().allocator;
 	if (allocator.deallocate != nullptr) {
 		return allocator.deallocate(allocator.userPtr, ptr);
@@ -181,7 +182,7 @@ void operator delete[] (void* ptr, std::size_t sz) noexcept
 
 void operator delete (void* ptr, std::size_t sz, std::align_val_t val) noexcept
 {
-	ZG_ASSERT(size_t(val) <= 32);
+	sfz_assert(size_t(val) <= 32);
 	(void)sz;
 	ZgAllocator& allocator = zg::getContext().allocator;
 	if (allocator.deallocate != nullptr) {
@@ -197,7 +198,7 @@ void operator delete (void* ptr, std::size_t sz, std::align_val_t val) noexcept
 
 void operator delete[] (void* ptr, std::size_t sz, std::align_val_t val) noexcept
 {
-	ZG_ASSERT(size_t(val) <= 32);
+	sfz_assert(size_t(val) <= 32);
 	(void)sz;
 	ZgAllocator& allocator = zg::getContext().allocator;
 	if (allocator.deallocate != nullptr) {

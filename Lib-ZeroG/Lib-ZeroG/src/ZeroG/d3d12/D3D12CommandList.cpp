@@ -22,7 +22,6 @@
 
 #include "ZeroG/d3d12/D3D12MemoryHeap.hpp"
 #include "ZeroG/d3d12/D3D12Textures.hpp"
-#include "ZeroG/util/Assert.hpp"
 #include "ZeroG/util/ErrorReporting.hpp"
 
 namespace zg {
@@ -45,7 +44,7 @@ static uint32_t numBytesPerPixelForFormat(ZgTextureFormat format) noexcept
 	case ZG_TEXTURE_FORMAT_RG_F32: return 2 * sizeof(float);
 	case ZG_TEXTURE_FORMAT_RGBA_F32: return 4 * sizeof(float);
 	}
-	ZG_ASSERT(false);
+	sfz_assert(false);
 	return 0;
 }
 
@@ -365,7 +364,7 @@ ZgResult D3D12CommandList::setPipelineBindings(
 		const D3D12ConstantBufferMapping& mapping = mBoundPipeline->constBuffers[i];
 
 		// Get the CPU descriptor
-		ZG_ASSERT(mapping.tableOffset < numConstantBuffers);
+		sfz_assert(mapping.tableOffset < numConstantBuffers);
 		D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor;
 		cpuDescriptor.ptr =
 			rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
@@ -383,7 +382,7 @@ ZgResult D3D12CommandList::setPipelineBindings(
 		// If we can't find argument we need to insert null descriptor
 		if (bindingIdx == ~0u) {
 			// TODO: Not sure if possible to implement?
-			ZG_ASSERT(false);
+			sfz_assert(false);
 			return ZG_WARNING_UNIMPLEMENTED;
 		}
 
@@ -393,7 +392,7 @@ ZgResult D3D12CommandList::setPipelineBindings(
 
 		// D3D12 requires that a Constant Buffer View is at least 256 bytes, and a multiple of 256.
 		// Round up constant buffer size to nearest 256 alignment
-		ZG_ASSERT(mapping.sizeInBytes != 0);
+		sfz_assert(mapping.sizeInBytes != 0);
 		uint32_t bufferSize256Aligned = (mapping.sizeInBytes + 255) & 0xFFFFFF00u;
 
 		// Check that buffer is large enough
@@ -422,8 +421,8 @@ ZgResult D3D12CommandList::setPipelineBindings(
 		const D3D12TextureMapping& mapping = mBoundPipeline->textures[i];
 
 		// Get the CPU descriptor
-		ZG_ASSERT(mapping.tableOffset >= numConstantBuffers);
-		ZG_ASSERT(mapping.tableOffset < (numConstantBuffers + numTextures));
+		sfz_assert(mapping.tableOffset >= numConstantBuffers);
+		sfz_assert(mapping.tableOffset < (numConstantBuffers + numTextures));
 		D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor;
 		cpuDescriptor.ptr =
 			rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
@@ -581,7 +580,7 @@ ZgResult D3D12CommandList::setFramebuffer(
 			D3D12Texture2D* renderTarget = framebuffer.renderTargets[i];
 
 			// Set resource state
-			ZG_ASSERT(renderTarget->numMipmaps == 1);
+			sfz_assert(renderTarget->numMipmaps == 1);
 			setTextureState(*renderTarget, 0, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 			// Insert into residency set
@@ -593,7 +592,7 @@ ZgResult D3D12CommandList::setFramebuffer(
 			D3D12Texture2D* depthBuffer = framebuffer.depthBuffer;
 
 			// Set resource state
-			ZG_ASSERT(depthBuffer->numMipmaps == 1);
+			sfz_assert(depthBuffer->numMipmaps == 1);
 			setTextureState(*depthBuffer, 0, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
 			// Insert into residency set
@@ -684,7 +683,7 @@ ZgResult D3D12CommandList::clearFramebufferOptimal() noexcept
 			case ZG_OPTIMAL_CLEAR_VALUE_ZERO: return ZEROS;
 			case ZG_OPTIMAL_CLEAR_VALUE_ONE: return ONES;
 			}
-			ZG_ASSERT(false);
+			sfz_assert(false);
 			return nullptr;
 		}();
 
@@ -701,7 +700,7 @@ ZgResult D3D12CommandList::clearFramebufferOptimal() noexcept
 			case ZG_OPTIMAL_CLEAR_VALUE_ZERO: return 0.0f;
 			case ZG_OPTIMAL_CLEAR_VALUE_ONE: return 1.0f;
 			}
-			ZG_ASSERT(false);
+			sfz_assert(false);
 			return 0.0f;
 		}();
 
@@ -772,7 +771,7 @@ ZgResult D3D12CommandList::setIndexBuffer(
 	// Create index buffer view
 	D3D12_INDEX_BUFFER_VIEW indexBufferView = {};
 	indexBufferView.BufferLocation = indexBuffer.resource->GetGPUVirtualAddress();
-	ZG_ASSERT(indexBuffer.sizeBytes <= uint64_t(UINT32_MAX));
+	sfz_assert(indexBuffer.sizeBytes <= uint64_t(UINT32_MAX));
 	indexBufferView.SizeInBytes = uint32_t(indexBuffer.sizeBytes);
 	indexBufferView.Format = type == ZG_INDEX_BUFFER_TYPE_UINT32 ?
 		DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;

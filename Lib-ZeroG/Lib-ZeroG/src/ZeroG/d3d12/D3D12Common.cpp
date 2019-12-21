@@ -19,7 +19,6 @@
 #include "ZeroG/d3d12/D3D12Common.hpp"
 
 #include "ZeroG/Context.hpp"
-#include "ZeroG/util/Assert.hpp"
 
 namespace zg {
 
@@ -98,7 +97,7 @@ DXGI_FORMAT zgToDxgiTextureFormat(ZgTextureFormat format) noexcept
 		break;
 	}
 
-	ZG_ASSERT(false);
+	sfz_assert(false);
 	return DXGI_FORMAT_UNKNOWN;
 }
 
@@ -110,6 +109,20 @@ bool utf8ToWide(WCHAR* wideOut, uint32_t numWideChars, const char* utf8In) noexc
 	// TODO: Unsure if 6th paramter should be num chars or num bytes =/
 	int res = MultiByteToWideChar(CP_UTF8, 0, utf8In, -1, wideOut, numWideChars);
 	return res != 0;
+}
+
+void setDebugName(ComPtr<ID3D12Resource>& resource, const char* name) noexcept
+{
+	// Small hack to fix D3D12 bug with debug name shorter than 4 chars
+	char tmpBuffer[256] = {};
+	snprintf(tmpBuffer, 256, "zg__%s", name);
+
+	// Convert to wide
+	WCHAR tmpBufferWide[256] = {};
+	utf8ToWide(tmpBufferWide, 256, tmpBuffer);
+
+	// Set debug name
+	CHECK_D3D12 resource->SetName(tmpBufferWide);
 }
 
 HRESULT CheckD3D12Impl::operator% (HRESULT result) noexcept

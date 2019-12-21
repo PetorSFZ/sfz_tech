@@ -126,6 +126,15 @@ message("  -- CMAKE_CXX_FLAGS_DEBUG: " ${CMAKE_CXX_FLAGS_DEBUG})
 message("  -- CMAKE_CXX_FLAGS_RELWITHDEBINFO: " ${CMAKE_CXX_FLAGS_RELWITHDEBINFO})
 message("  -- CMAKE_CXX_FLAGS_RELEASE: " ${CMAKE_CXX_FLAGS_RELEASE})
 
+# sfz_core
+# ------------------------------------------------------------------------------------------------
+
+# Note: sfz_core is currently handled a bit wobbly. We essentially require that "Lib-Core" is placed
+#       in the same relative location to "Lib-ZeroG" as it is in the "sfz_tech" repo.
+
+# ${SFZ_CORE_FOUND}, ${SFZ_CORE_INCLUDE_DIRS}
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../Lib-Core ${CMAKE_BINARY_DIR}/sfz_core)
+
 # Bundled externals
 # ------------------------------------------------------------------------------------------------
 
@@ -218,7 +227,6 @@ set(ZEROG_CAPI_SRC_FILES ${ZEROG_D3D12_SRC_FILES} ${ZEROG_METAL_SRC_FILES} ${ZER
 
 # Common source files
 set(ZEROG_CAPI_SRC_FILES ${ZEROG_CAPI_SRC_FILES}
-	${SRC_DIR}/ZeroG/util/Assert.hpp
 	${SRC_DIR}/ZeroG/util/CpuAllocation.hpp
 	${SRC_DIR}/ZeroG/util/CpuAllocation.cpp
 	${SRC_DIR}/ZeroG/util/ErrorReporting.hpp
@@ -242,6 +250,7 @@ add_library(ZeroG SHARED ${ZEROG_CAPI_INCLUDE_FILES} ${ZEROG_CAPI_SRC_FILES})
 target_include_directories(ZeroG PRIVATE
 	${INCLUDE_DIR}
 	${SRC_DIR}
+	${SFZ_CORE_INCLUDE_DIRS}
 	${D3DX12_INCLUDE_DIRS}
 	${D3DX12_RESIDENCY_INCLUDE_DIRS}
 	${MTLPP_INCLUDE_DIRS}

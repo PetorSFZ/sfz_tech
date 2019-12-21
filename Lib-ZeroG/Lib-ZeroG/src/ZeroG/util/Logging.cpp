@@ -22,7 +22,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include "ZeroG/util/Assert.hpp"
+#include <skipifzero.hpp>
 
 namespace zg {
 
@@ -37,13 +37,13 @@ static const char* toString(ZgLogLevel level) noexcept
 	case ZG_LOG_LEVEL_WARNING: return "WARNING";
 	case ZG_LOG_LEVEL_ERROR: return "ERROR";
 	}
-	ZG_ASSERT(false);
+	sfz_assert(false);
 	return "";
 }
 
 static const char* stripFilePath(const char* file) noexcept
 {
-	ZG_ASSERT(file != nullptr);
+	sfz_assert(file != nullptr);
 	const char* strippedFile1 = std::strrchr(file, '\\');
 	const char* strippedFile2 = std::strrchr(file, '/');
 	if (strippedFile1 == nullptr && strippedFile2 == nullptr) {

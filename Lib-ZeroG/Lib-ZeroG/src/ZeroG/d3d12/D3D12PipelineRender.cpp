@@ -24,7 +24,6 @@
 
 #include "spirv_cross_c.h"
 
-#include "ZeroG/util/Assert.hpp"
 #include "ZeroG/util/CpuAllocation.hpp"
 #include "ZeroG/util/Strings.hpp"
 #include "ZeroG/util/Vector.hpp"
@@ -103,7 +102,7 @@ struct CheckSpirvCrossImpl final {
 		// Log error message
 		logWrapper(file, line, ZG_LOG_LEVEL_ERROR, "SPIRV-Cross error: %s\n", errorStr);
 
-		ZG_ASSERT(false);
+		sfz_assert(false);
 
 		return result;
 	}
@@ -407,7 +406,7 @@ static D3D12_COMPARISON_FUNC toD3D12ComparsionFunc(ZgDepthFunc func) noexcept
 	case ZG_DEPTH_FUNC_GREATER: return D3D12_COMPARISON_FUNC_GREATER;
 	case ZG_DEPTH_FUNC_GREATER_EQUAL: return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
 	}
-	ZG_ASSERT(false);
+	sfz_assert(false);
 	return D3D12_COMPARISON_FUNC_LESS;
 }
 
@@ -420,7 +419,7 @@ static D3D12_BLEND_OP toD3D12BlendOp(ZgBlendFunc func) noexcept
 	case ZG_BLEND_FUNC_MIN: return D3D12_BLEND_OP_MIN;
 	case ZG_BLEND_FUNC_MAX: return D3D12_BLEND_OP_MAX;
 	}
-	ZG_ASSERT(false);
+	sfz_assert(false);
 	return D3D12_BLEND_OP_ADD;
 }
 
@@ -438,7 +437,7 @@ static D3D12_BLEND toD3D12BlendFactor(ZgBlendFactor val) noexcept
 	case ZG_BLEND_FACTOR_DST_ALPHA: return D3D12_BLEND_DEST_ALPHA;
 	case ZG_BLEND_FACTOR_DST_INV_ALPHA: return D3D12_BLEND_INV_DEST_ALPHA;
 	}
-	ZG_ASSERT(false);
+	sfz_assert(false);
 	return D3D12_BLEND_ZERO;
 }
 
@@ -462,7 +461,7 @@ static DXGI_FORMAT vertexAttributeTypeToFormat(ZgVertexAttributeType type) noexc
 
 	default: break;
 	}
-	ZG_ASSERT(false);
+	sfz_assert(false);
 	return DXGI_FORMAT_UNKNOWN;
 }
 
@@ -486,17 +485,17 @@ static const char* vertexAttributeTypeToString(ZgVertexAttributeType type) noexc
 
 	default: break;
 	}
-	ZG_ASSERT(false);
+	sfz_assert(false);
 	return "";
 }
 
 static ZgVertexAttributeType vertexReflectionToAttribute(
 	D3D_REGISTER_COMPONENT_TYPE compType, BYTE mask) noexcept
 {
-	ZG_ASSERT(compType == D3D_REGISTER_COMPONENT_FLOAT32
+	sfz_assert(compType == D3D_REGISTER_COMPONENT_FLOAT32
 		|| compType == D3D_REGISTER_COMPONENT_SINT32
 		|| compType == D3D_REGISTER_COMPONENT_UINT32);
-	ZG_ASSERT(mask == 1 || mask == 3 || mask == 7 || mask == 15);
+	sfz_assert(mask == 1 || mask == 3 || mask == 7 || mask == 15);
 
 	if (compType == D3D_REGISTER_COMPONENT_FLOAT32) {
 		if (mask == 1) return ZG_VERTEX_ATTRIBUTE_F32;
@@ -517,7 +516,7 @@ static ZgVertexAttributeType vertexReflectionToAttribute(
 		if (mask == 15)return ZG_VERTEX_ATTRIBUTE_U32_4;
 	}
 
-	ZG_ASSERT(false);
+	sfz_assert(false);
 	return ZG_VERTEX_ATTRIBUTE_UNDEFINED;
 }
 
@@ -528,7 +527,7 @@ static D3D12_FILTER samplingModeToD3D12(ZgSamplingMode samplingMode) noexcept
 	case ZG_SAMPLING_MODE_TRILINEAR: return D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 	case ZG_SAMPLING_MODE_ANISOTROPIC: return D3D12_FILTER_ANISOTROPIC;
 	}
-	ZG_ASSERT(false);
+	sfz_assert(false);
 	return D3D12_FILTER_MIN_MAG_MIP_POINT;
 }
 
@@ -538,7 +537,7 @@ static D3D12_TEXTURE_ADDRESS_MODE wrappingModeToD3D12(ZgWrappingMode wrappingMod
 	case ZG_WRAPPING_MODE_CLAMP: return D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 	case ZG_WRAPPING_MODE_REPEAT: return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	}
-	ZG_ASSERT(false);
+	sfz_assert(false);
 	return D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 }
 
@@ -854,7 +853,7 @@ static ZgResult createPipelineRenderInternal(
 		for (uint32_t j = 0; j < createInfo.numPushConstants; j++) {
 			if (cbuffer.desc.shaderRegister == createInfo.pushConstantRegisters[j]) {
 				if (pushConstantRegisterUsed[j]) {
-					ZG_ASSERT(pushConstantRegisterUsed[j]);
+					sfz_assert(pushConstantRegisterUsed[j]);
 					return ZG_ERROR_INVALID_ARGUMENT;
 				}
 				cbuffer.desc.pushConstant = ZG_TRUE;
@@ -1011,7 +1010,7 @@ static ZgResult createPipelineRenderInternal(
 			return ZG_ERROR_INVALID_ARGUMENT;
 
 		}
-		ZG_ASSERT(resDesc.BindCount == 1);
+		sfz_assert(resDesc.BindCount == 1);
 
 		// Mark sampler as found
 		samplerSet[resDesc.BindPoint] = true;
@@ -1030,7 +1029,7 @@ static ZgResult createPipelineRenderInternal(
 			return ZG_ERROR_INVALID_ARGUMENT;
 
 		}
-		ZG_ASSERT(resDesc.BindCount == 1);
+		sfz_assert(resDesc.BindCount == 1);
 
 		// Mark sampler as found
 		samplerSet[resDesc.BindPoint] = true;
@@ -1113,7 +1112,7 @@ static ZgResult createPipelineRenderInternal(
 			// Get parameter index for the push constant
 			uint32_t parameterIndex = numParameters;
 			numParameters += 1;
-			ZG_ASSERT(numParameters <= MAX_NUM_ROOT_PARAMETERS);
+			sfz_assert(numParameters <= MAX_NUM_ROOT_PARAMETERS);
 
 			// Calculate the correct shader visibility for the constant
 			D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL;
@@ -1124,8 +1123,8 @@ static ZgResult createPipelineRenderInternal(
 				visibility = D3D12_SHADER_VISIBILITY_PIXEL;
 			}
 
-			ZG_ASSERT((cbuffer.desc.sizeInBytes % 4) == 0);
-			ZG_ASSERT(cbuffer.desc.sizeInBytes <= 1024);
+			sfz_assert((cbuffer.desc.sizeInBytes % 4) == 0);
+			sfz_assert(cbuffer.desc.sizeInBytes <= 1024);
 			parameters[parameterIndex].InitAsConstants(
 				cbuffer.desc.sizeInBytes / 4, cbuffer.desc.shaderRegister, 0, visibility);
 
@@ -1172,7 +1171,7 @@ static ZgResult createPipelineRenderInternal(
 
 		// Index of the parameter containing the dynamic table
 		dynamicBuffersParameterIndex = numParameters;
-		ZG_ASSERT(numParameters < MAX_NUM_ROOT_PARAMETERS);
+		sfz_assert(numParameters < MAX_NUM_ROOT_PARAMETERS);
 		if ((numConstBufferMappings + numTexMappings) != 0) {
 			numParameters += 1; // No dynamic table if no dynamic parameters
 		}

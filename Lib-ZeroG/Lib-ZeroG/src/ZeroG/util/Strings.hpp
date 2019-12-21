@@ -19,10 +19,9 @@
 #pragma once
 
 #include <cstdarg>
-#include <cstdint>
 #include <cstdio>
 
-#include "ZeroG/util/Assert.hpp"
+#include <skipifzero.hpp>
 
 namespace zg {
 
@@ -44,8 +43,8 @@ inline void printfAppend(char*& str, uint32_t& bytesLeft, const char* format, ..
 	int res = std::vsnprintf(str, bytesLeft, format, args);
 	va_end(args);
 
-	ZG_ASSERT(res >= 0);
-	ZG_ASSERT(res < int(bytesLeft));
+	sfz_assert(res >= 0);
+	sfz_assert(res < int(bytesLeft));
 	bytesLeft -= res;
 	str += res;
 }

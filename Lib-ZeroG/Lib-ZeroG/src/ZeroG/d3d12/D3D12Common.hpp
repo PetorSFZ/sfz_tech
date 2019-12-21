@@ -18,8 +18,7 @@
 
 #pragma once
 
-// D3D12 headers
-// ------------------------------------------------------------------------------------------------
+#include <skipifzero.hpp>
 
 // Windows.h
 #define NOMINMAX
@@ -109,6 +108,8 @@ DXGI_FORMAT zgToDxgiTextureFormat(ZgTextureFormat format) noexcept;
 // ------------------------------------------------------------------------------------------------
 
 bool utf8ToWide(WCHAR* wideOut, uint32_t numWideChars, const char* utf8In) noexcept;
+
+void setDebugName(ComPtr<ID3D12Resource>& resource, const char* name) noexcept;
 
 // Checks result (HRESULT) from D3D call and log if not success, returns result unmodified
 #define CHECK_D3D12 (CheckD3D12Impl(__FILE__, __LINE__)) %

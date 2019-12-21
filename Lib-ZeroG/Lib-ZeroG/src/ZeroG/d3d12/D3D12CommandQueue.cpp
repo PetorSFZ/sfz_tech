@@ -19,7 +19,6 @@
 #include "ZeroG/d3d12/D3D12CommandQueue.hpp"
 
 #include "ZeroG/d3d12/D3D12MemoryHeap.hpp"
-#include "ZeroG/util/Assert.hpp"
 
 namespace zg {
 
@@ -65,7 +64,7 @@ D3D12CommandQueue::~D3D12CommandQueue() noexcept
 	this->flush();
 
 	// Check that all command lists have been returned
-	ZG_ASSERT(mCommandListStorage.size() == mCommandListQueue.size());
+	sfz_assert(mCommandListStorage.size() == mCommandListQueue.size());
 
 	// Destroy fence event
 	CloseHandle(mCommandQueueFenceEvent);
