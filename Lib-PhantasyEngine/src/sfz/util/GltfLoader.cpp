@@ -399,7 +399,7 @@ static bool extractAssets(
 		sfz_assert_hard(normalAccess.compDims == ComponentDimensions::VEC3);
 
 		DataAccess texcoord0Access = accessData(model, primitive, "TEXCOORD_0");
-		sfz_assert_hard(texcoord0Access.rawPtr != nullptr)
+		sfz_assert_hard(texcoord0Access.rawPtr != nullptr);
 		sfz_assert_hard(texcoord0Access.compType == ComponentType::FLOAT32);
 		sfz_assert_hard(texcoord0Access.compDims == ComponentDimensions::VEC2);
 
