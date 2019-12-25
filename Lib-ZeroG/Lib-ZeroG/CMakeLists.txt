@@ -133,7 +133,9 @@ message("  -- CMAKE_CXX_FLAGS_RELEASE: " ${CMAKE_CXX_FLAGS_RELEASE})
 #       in the same relative location to "Lib-ZeroG" as it is in the "sfz_tech" repo.
 
 # ${SFZ_CORE_FOUND}, ${SFZ_CORE_INCLUDE_DIRS}
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../Lib-Core ${CMAKE_BINARY_DIR}/sfz_core)
+if (NOT SFZ_CORE_FOUND)
+	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../Lib-Core ${CMAKE_BINARY_DIR}/sfz_core)
+endif()
 
 # Bundled externals
 # ------------------------------------------------------------------------------------------------
