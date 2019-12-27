@@ -109,12 +109,6 @@ void* getNativeHandle(SDL_Window* window) noexcept
 {
 #if defined(_WIN32)
 	return getWin32WindowHandle(window);
-#elif defined(ZG_MACOS) || defined(ZG_IOS)
-	SDL_SetHint(SDL_HINT_RENDER_DRIVER, "metal");
-	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
-	void* metalLayer = SDL_RenderGetMetalLayer(renderer);
-	SDL_DestroyRenderer(renderer);
-	return metalLayer;
 #else
 #error "Not implemented"
 #endif

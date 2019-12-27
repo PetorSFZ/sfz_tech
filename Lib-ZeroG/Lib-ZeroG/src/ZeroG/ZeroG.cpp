@@ -26,8 +26,6 @@
 
 #if defined(_WIN32)
 #include "ZeroG/d3d12/D3D12Backend.hpp"
-#elif defined(ZG_MACOS) || defined(ZG_IOS)
-#include "ZeroG/metal/MetalBackend.hpp"
 #endif
 
 #ifdef ZG_VULKAN
@@ -50,8 +48,6 @@ ZG_API ZgFeatureBits zgCompiledFeatures(void)
 	return 0
 #if defined(_WIN32)
 		| uint64_t(ZG_FEATURE_BIT_BACKEND_D3D12)
-#elif defined(ZG_MACOS) || defined(ZG_IOS)
-		| uint64_t(ZG_FEATURE_BIT_BACKEND_METAL)
 #endif
 #ifdef ZG_VULKAN
 		| uint64_t(ZG_FEATURE_BIT_BACKEND_VULKAN)
@@ -140,19 +136,6 @@ ZG_API ZgResult zgContextInit(const ZgContextInitSettings* settings)
 				return res;
 			}
 			ZG_INFO("zgContextInit(): Created D3D12 backend");
-		}
-		break;
-
-#elif defined(ZG_MACOS) || defined(ZG_IOS)
-	case ZG_BACKEND_METAL:
-		{
-			ZG_INFO("zgContextInit(): Attempting to create Metal backend...");
-			ZgResult res = zg::createMetalBackend(&tmpContext.backend, *settings);
-			if (res != ZG_SUCCESS) {
-				ZG_ERROR("zgContextInit(): Could not create Metal backend, exiting.");
-				return res;
-			}
-			ZG_INFO("zgContextInit(): Created Metal backend");
 		}
 		break;
 #endif
