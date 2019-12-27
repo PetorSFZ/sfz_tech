@@ -105,7 +105,7 @@ typedef struct ZgFramebufferRect ZgFramebufferRect;
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 7;
+static const uint32_t ZG_COMPILED_API_VERSION = 8;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -223,10 +223,9 @@ typedef struct ZgLogger ZgLogger;
 // If no custom allocator is required, just leave all fields zero in this struct.
 struct ZgAllocator {
 
-	// Function pointer to allocate function. The allocation created must be 32-byte aligned. The
-	// name is a short string (< ~32 chars) explaining what the allocation is used for, useful
-	// for debug or visualization purposes.
-	void* (*allocate)(void* userPtr, uint32_t size, const char* name);
+	// Function pointer to allocate function. The allocation created must be 32-byte aligned. name,
+	// file and line is (statically allocated) debug information related to the allocation.
+	void* (*allocate)(void* userPtr, uint32_t size, const char* name, const char* file, uint32_t line);
 
 	// Function pointer to deallocate function.
 	void (*deallocate)(void* userPtr, void* allocation);

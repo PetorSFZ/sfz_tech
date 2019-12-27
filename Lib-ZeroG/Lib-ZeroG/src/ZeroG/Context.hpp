@@ -53,7 +53,8 @@ public:
 	{
 		sfz_assert(mInited);
 		if (mHasUserDefinedAllocator) {
-			return mZgAllocator.allocate(mZgAllocator.userPtr, uint32_t(size), dbg.staticMsg);
+			return mZgAllocator.allocate(
+				mZgAllocator.userPtr, uint32_t(size), dbg.staticMsg, dbg.file, dbg.line);
 		}
 		else {
 			return mStandardAllocator.allocate(dbg, size, alignment);
