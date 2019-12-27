@@ -229,15 +229,11 @@ set(ZEROG_CAPI_SRC_FILES ${ZEROG_D3D12_SRC_FILES} ${ZEROG_METAL_SRC_FILES} ${ZER
 
 # Common source files
 set(ZEROG_CAPI_SRC_FILES ${ZEROG_CAPI_SRC_FILES}
-	${SRC_DIR}/ZeroG/util/CpuAllocation.hpp
-	${SRC_DIR}/ZeroG/util/CpuAllocation.cpp
 	${SRC_DIR}/ZeroG/util/ErrorReporting.hpp
 	${SRC_DIR}/ZeroG/util/Logging.hpp
 	${SRC_DIR}/ZeroG/util/Logging.cpp
 	${SRC_DIR}/ZeroG/util/Mutex.hpp
-	${SRC_DIR}/ZeroG/util/RingBuffer.hpp
 	${SRC_DIR}/ZeroG/util/Strings.hpp
-	${SRC_DIR}/ZeroG/util/Vector.hpp
 	${SRC_DIR}/ZeroG/BackendInterface.hpp
 	${SRC_DIR}/ZeroG/Context.hpp
 	${SRC_DIR}/ZeroG/Context.cpp

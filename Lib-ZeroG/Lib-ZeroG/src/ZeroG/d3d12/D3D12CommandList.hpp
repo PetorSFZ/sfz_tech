@@ -18,6 +18,9 @@
 
 #pragma once
 
+#include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
+
 #include "ZeroG.h"
 #include "ZeroG/d3d12/D3D12Common.hpp"
 #include "ZeroG/d3d12/D3D12DescriptorRingBuffer.hpp"
@@ -25,7 +28,6 @@
 #include "ZeroG/d3d12/D3D12Buffer.hpp"
 #include "ZeroG/d3d12/D3D12PipelineRender.hpp"
 #include "ZeroG/BackendInterface.hpp"
-#include "ZeroG/util/Vector.hpp"
 
 namespace zg {
 
@@ -139,15 +141,15 @@ public:
 
 	D3DX12Residency::ResidencySet* residencySet = nullptr;
 
-	Vector<uint64_t> pendingBufferIdentifiers;
-	Vector<PendingBufferState> pendingBufferStates;
+	sfz::Array<uint64_t> pendingBufferIdentifiers;
+	sfz::Array<PendingBufferState> pendingBufferStates;
 
 	struct TextureMipIdentifier {
 		uint64_t identifier = ~0u;
 		uint32_t mipLevel = ~0u;
 	};
-	Vector<TextureMipIdentifier> pendingTextureIdentifiers;
-	Vector<PendingTextureState> pendingTextureStates;
+	sfz::Array<TextureMipIdentifier> pendingTextureIdentifiers;
+	sfz::Array<PendingTextureState> pendingTextureStates;
 
 private:
 	// Private methods

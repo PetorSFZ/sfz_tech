@@ -18,7 +18,6 @@
 
 #include "ZeroG/d3d12/D3D12MemoryHeap.hpp"
 
-#include "ZeroG/util/CpuAllocation.hpp"
 #include "ZeroG/util/ErrorReporting.hpp"
 
 namespace zg {
@@ -144,7 +143,7 @@ ZgResult D3D12MemoryHeap::bufferCreate(
 	}
 
 	// Allocate buffer
-	D3D12Buffer* buffer = zgNew<D3D12Buffer>("ZeroG - D3D12Buffer");
+	D3D12Buffer* buffer = getAllocator()->newObject<D3D12Buffer>(sfz_dbg("D3D12Buffer"));
 
 	// Copy stuff
 	buffer->identifier = std::atomic_fetch_add(resourceUniqueIdentifierCounter, 1);
@@ -228,7 +227,7 @@ ZgResult D3D12MemoryHeap::texture2DCreate(
 		subresourceFootprints, numRows, rowSizesInBytes, &totalSizeInBytes);
 
 	// Allocate texture
-	D3D12Texture2D* texture = zgNew<D3D12Texture2D>("ZeroG - D3D12Texture");
+	D3D12Texture2D* texture = getAllocator()->newObject<D3D12Texture2D>(sfz_dbg("D3D12Texture2D"));
 
 	// Copy stuff
 	texture->identifier = std::atomic_fetch_add(resourceUniqueIdentifierCounter, 1);
@@ -303,7 +302,7 @@ ZgResult createMemoryHeap(
 	}
 
 	// Allocate memory heap
-	D3D12MemoryHeap* memoryHeap = zgNew<D3D12MemoryHeap>("ZeroG - D3D12MemoryHeap");
+	D3D12MemoryHeap* memoryHeap = getAllocator()->newObject<D3D12MemoryHeap>(sfz_dbg("D3D12MemoryHeap"));
 
 	// Create residency manager object and begin tracking
 	memoryHeap->managedObject.Initialize(heap.Get(), createInfo.sizeInBytes);

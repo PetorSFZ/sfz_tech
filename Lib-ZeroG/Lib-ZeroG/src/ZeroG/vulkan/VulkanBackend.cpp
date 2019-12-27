@@ -20,11 +20,12 @@
 
 #include <vulkan/vulkan.h>
 
-#include "ZeroG/util/CpuAllocation.hpp"
+#include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
+
 #include "ZeroG/util/Logging.hpp"
 #include "ZeroG/util/Mutex.hpp"
 #include "ZeroG/util/Strings.hpp"
-#include "ZeroG/util/Vector.hpp"
 #include "ZeroG/vulkan/VulkanCommandQueue.hpp"
 #include "ZeroG/vulkan/VulkanCommon.hpp"
 #include "ZeroG/vulkan/VulkanDebug.hpp"
@@ -94,17 +95,17 @@ public:
 		}
 
 		// Delete remaining state
-		zgDelete(mState);
+		getAllocator()->deleteObject(mState);
 	}
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgResult init(ZgContextInitSettings& settings) noexcept
+	ZgResult init(const ZgContextInitSettings& settings) noexcept
 	{
 		// Initialize members and create state struct
 		mDebugMode = settings.debugMode;
-		mState = zgNew<VulkanBackendState>( "VulkanBackendState");
+		mState = getAllocator()->newObject<VulkanBackendState>(sfz_dbg("VulkanBackendState"));
 
 		// Log available instance layers and extensions
 		vulkanLogAvailableInstanceLayers();
@@ -116,10 +117,10 @@ public:
 		appInfo.apiVersion = VK_API_VERSION_1_0;
 
 		// Layers and extensions arrays
-		Vector<const char*> layers;
-		layers.create(64, "VulkanInit: layers");
-		Vector<const char*> extensions;
-		extensions.create(64, "VulkanInit: extensions");
+		sfz::Array<const char*> layers;
+		layers.init(64, getAllocator(), sfz_dbg("VulkanInit: layers"));
+		sfz::Array<const char*> extensions;
+		extensions.init(64, getAllocator(), sfz_dbg("VulkanInit: extensions"));
 
 		// Debug mode layers and extensions
 		if (mDebugMode) {
@@ -418,16 +419,16 @@ private:
 // Vulkan backend
 // ------------------------------------------------------------------------------------------------
 
-ZgResult createVulkanBackend(ZgBackend** backendOut, ZgContextInitSettings& settings) noexcept
+ZgResult createVulkanBackend(ZgBackend** backendOut, const ZgContextInitSettings& settings) noexcept
 {
 	// Allocate and create Vulkan backend
-	VulkanBackend* backend = zgNew<VulkanBackend>("Vulkan Backend");
+	VulkanBackend* backend = getAllocator()->newObject<VulkanBackend>(sfz_dbg("VulkanBackend"));
 
 	// Initialize backend, return nullptr if init failed
 	ZgResult initRes = backend->init(settings);
 	if (initRes != ZG_SUCCESS)
 	{
-		zgDelete(backend);
+		getAllocator()->deleteObject(backend);
 		return initRes;
 	}
 

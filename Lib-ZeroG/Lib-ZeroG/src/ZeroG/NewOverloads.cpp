@@ -39,54 +39,54 @@
 
 void* operator new (std::size_t count)
 {
-	ZgAllocator& allocator = zg::getContext().allocator;
-	return allocator.allocate(allocator.userPtr, uint32_t(count), "operator new");
+	sfz::Allocator* allocator = zg::getAllocator();
+	return allocator->allocate(sfz_dbg("operator new"), count);
 }
 
 void* operator new[] (std::size_t count)
 {
-	ZgAllocator& allocator = zg::getContext().allocator;
-	return allocator.allocate(allocator.userPtr, uint32_t(count), "operator new[]");
+	sfz::Allocator* allocator = zg::getAllocator();
+	return allocator->allocate(sfz_dbg("operator new[]"), count);
 }
 
 void* operator new (std::size_t count, std::align_val_t val)
 {
 	sfz_assert(size_t(val) <= 32);
-	ZgAllocator& allocator = zg::getContext().allocator;
-	return allocator.allocate(allocator.userPtr, uint32_t(count), "operator new");
+	sfz::Allocator* allocator = zg::getAllocator();
+	return allocator->allocate(sfz_dbg("operator new"), count, uint64_t(val));
 }
 
 void* operator new[] (std::size_t count, std::align_val_t val)
 {
 	sfz_assert(size_t(val) <= 32);
-	ZgAllocator& allocator = zg::getContext().allocator;
-	return allocator.allocate(allocator.userPtr, uint32_t(count), "operator new[]");
+	sfz::Allocator* allocator = zg::getAllocator();
+	return allocator->allocate(sfz_dbg("operator new[]"), count, uint64_t(val));
 }
 
 void* operator new (std::size_t count, const std::nothrow_t&) noexcept
 {
-	ZgAllocator& allocator = zg::getContext().allocator;
-	return allocator.allocate(allocator.userPtr, uint32_t(count), "operator new");
+	sfz::Allocator* allocator = zg::getAllocator();
+	return allocator->allocate(sfz_dbg("operator new"), count);
 }
 
 void* operator new[] (std::size_t count, const std::nothrow_t&) noexcept
 {
-	ZgAllocator& allocator = zg::getContext().allocator;
-	return allocator.allocate(allocator.userPtr, uint32_t(count), "operator new[]");
+	sfz::Allocator* allocator = zg::getAllocator();
+	return allocator->allocate(sfz_dbg("operator new[]"), count);
 }
 
 void* operator new (std::size_t count, std::align_val_t val, const std::nothrow_t&) noexcept
 {
 	sfz_assert(size_t(val) <= 32);
-	ZgAllocator& allocator = zg::getContext().allocator;
-	return allocator.allocate(allocator.userPtr, uint32_t(count), "operator new");
+	sfz::Allocator* allocator = zg::getAllocator();
+	return allocator->allocate(sfz_dbg("operator new"), count, uint64_t(val));
 }
 
 void* operator new[] (std::size_t count, std::align_val_t val, const std::nothrow_t&) noexcept
 {
 	sfz_assert(size_t(val) <= 32);
-	ZgAllocator& allocator = zg::getContext().allocator;
-	return allocator.allocate(allocator.userPtr, uint32_t(count), "operator new[]");
+	sfz::Allocator* allocator = zg::getAllocator();
+	return allocator->allocate(sfz_dbg("operator new[]"), count, uint64_t(val));
 }
 
 // Operator delete
@@ -94,9 +94,9 @@ void* operator new[] (std::size_t count, std::align_val_t val, const std::nothro
 
 void operator delete (void* ptr) noexcept
 {
-	ZgAllocator& allocator = zg::getContext().allocator;
-	if (allocator.deallocate != nullptr) {
-		return allocator.deallocate(allocator.userPtr, ptr);
+	AllocatorWrapper& allocator = zg::getContext().allocator;
+	if (allocator.isInitialized()) {
+		allocator.deallocate(ptr);
 	}
 	else {
 #ifndef NDEBUG
@@ -108,9 +108,9 @@ void operator delete (void* ptr) noexcept
 
 void operator delete[] (void* ptr) noexcept
 {
-	ZgAllocator& allocator = zg::getContext().allocator;
-	if (allocator.deallocate != nullptr) {
-		return allocator.deallocate(allocator.userPtr, ptr);
+	AllocatorWrapper& allocator = zg::getContext().allocator;
+	if (allocator.isInitialized()) {
+		allocator.deallocate(ptr);
 	}
 	else {
 #ifndef NDEBUG
@@ -123,9 +123,9 @@ void operator delete[] (void* ptr) noexcept
 void operator delete (void* ptr, std::align_val_t val) noexcept
 {
 	sfz_assert(size_t(val) <= 32);
-	ZgAllocator& allocator = zg::getContext().allocator;
-	if (allocator.deallocate != nullptr) {
-		return allocator.deallocate(allocator.userPtr, ptr);
+	AllocatorWrapper& allocator = zg::getContext().allocator;
+	if (allocator.isInitialized()) {
+		allocator.deallocate(ptr);
 	}
 	else {
 #ifndef NDEBUG
@@ -138,9 +138,9 @@ void operator delete (void* ptr, std::align_val_t val) noexcept
 void operator delete[] (void* ptr, std::align_val_t val) noexcept
 {
 	sfz_assert(size_t(val) <= 32);
-	ZgAllocator& allocator = zg::getContext().allocator;
-	if (allocator.deallocate != nullptr) {
-		return allocator.deallocate(allocator.userPtr, ptr);
+	AllocatorWrapper& allocator = zg::getContext().allocator;
+	if (allocator.isInitialized()) {
+		allocator.deallocate(ptr);
 	}
 	else {
 #ifndef NDEBUG
@@ -153,9 +153,9 @@ void operator delete[] (void* ptr, std::align_val_t val) noexcept
 void operator delete (void* ptr, std::size_t sz) noexcept
 {
 	(void)sz;
-	ZgAllocator& allocator = zg::getContext().allocator;
-	if (allocator.deallocate != nullptr) {
-		return allocator.deallocate(allocator.userPtr, ptr);
+	AllocatorWrapper& allocator = zg::getContext().allocator;
+	if (allocator.isInitialized()) {
+		allocator.deallocate(ptr);
 	}
 	else {
 #ifndef NDEBUG
@@ -168,9 +168,9 @@ void operator delete (void* ptr, std::size_t sz) noexcept
 void operator delete[] (void* ptr, std::size_t sz) noexcept
 {
 	(void)sz;
-	ZgAllocator& allocator = zg::getContext().allocator;
-	if (allocator.deallocate != nullptr) {
-		return allocator.deallocate(allocator.userPtr, ptr);
+	AllocatorWrapper& allocator = zg::getContext().allocator;
+	if (allocator.isInitialized()) {
+		allocator.deallocate(ptr);
 	}
 	else {
 #ifndef NDEBUG
@@ -184,9 +184,9 @@ void operator delete (void* ptr, std::size_t sz, std::align_val_t val) noexcept
 {
 	sfz_assert(size_t(val) <= 32);
 	(void)sz;
-	ZgAllocator& allocator = zg::getContext().allocator;
-	if (allocator.deallocate != nullptr) {
-		return allocator.deallocate(allocator.userPtr, ptr);
+	AllocatorWrapper& allocator = zg::getContext().allocator;
+	if (allocator.isInitialized()) {
+		allocator.deallocate(ptr);
 	}
 	else {
 #ifndef NDEBUG
@@ -200,9 +200,9 @@ void operator delete[] (void* ptr, std::size_t sz, std::align_val_t val) noexcep
 {
 	sfz_assert(size_t(val) <= 32);
 	(void)sz;
-	ZgAllocator& allocator = zg::getContext().allocator;
-	if (allocator.deallocate != nullptr) {
-		return allocator.deallocate(allocator.userPtr, ptr);
+	AllocatorWrapper& allocator = zg::getContext().allocator;
+	if (allocator.isInitialized()) {
+		allocator.deallocate(ptr);
 	}
 	else {
 #ifndef NDEBUG

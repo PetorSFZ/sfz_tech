@@ -20,13 +20,15 @@
 
 #include <mutex>
 
+#include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
+#include <skipifzero_ring_buffers.hpp>
+
 #include "ZeroG.h"
 #include "ZeroG/d3d12/D3D12Common.hpp"
 #include "ZeroG/d3d12/D3D12CommandList.hpp"
 #include "ZeroG/d3d12/D3D12DescriptorRingBuffer.hpp"
 #include "ZeroG/d3d12/D3D12Textures.hpp"
-#include "ZeroG/util/RingBuffer.hpp"
-#include "ZeroG/util/Vector.hpp"
 #include "ZeroG/BackendInterface.hpp"
 
 namespace zg {
@@ -122,8 +124,8 @@ private:
 	ZgResult createCommandList(D3D12CommandList*& commandListOut) noexcept;
 
 	ZgResult executePreCommandListStateChanges(
-		Vector<PendingBufferState>& pendingBufferStates,
-		Vector<PendingTextureState>& pendingTextureStates) noexcept;
+		sfz::Array<PendingBufferState>& pendingBufferStates,
+		sfz::Array<PendingTextureState>& pendingTextureStates) noexcept;
 
 	// Private members
 	// --------------------------------------------------------------------------------------------
@@ -141,8 +143,8 @@ private:
 	HANDLE mCommandQueueFenceEvent = nullptr;
 
 	uint32_t mMaxNumBuffersPerCommandList = 0;
-	Vector<D3D12CommandList> mCommandListStorage;
-	RingBuffer<D3D12CommandList*> mCommandListQueue;
+	sfz::Array<D3D12CommandList> mCommandListStorage;
+	sfz::RingBuffer<D3D12CommandList*> mCommandListQueue;
 };
 
 } // namespace zg

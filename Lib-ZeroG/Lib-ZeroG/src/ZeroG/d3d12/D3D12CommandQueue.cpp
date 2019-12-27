@@ -108,10 +108,10 @@ ZgResult D3D12CommandQueue::create(
 
 	// Allocate memory for command lists
 	mMaxNumBuffersPerCommandList = maxNumBuffersPerCommandList;
-	mCommandListStorage.create(
-		maxNumCommandLists, "ZeroG - D3D12CommandQueue - CommandListStorage");
+	mCommandListStorage.init(
+		maxNumCommandLists, getAllocator(), sfz_dbg("ZeroG - D3D12CommandQueue - CommandListStorage"));
 	mCommandListQueue.create(
-		maxNumCommandLists, "ZeroG - D3D12CommandQueue - CommandListQueue");
+		maxNumCommandLists, getAllocator(), sfz_dbg("ZeroG - D3D12CommandQueue - CommandListQueue"));
 
 	return ZG_SUCCESS;
 }
@@ -263,9 +263,8 @@ uint64_t D3D12CommandQueue::signalOnGpuUnmutexed() noexcept
 
 ZgResult D3D12CommandQueue::createCommandList(D3D12CommandList*& commandListOut) noexcept
 {
-	// Create a new command list in storage, return error if full
-	bool addSuccesful = mCommandListStorage.add(D3D12CommandList());
-	if (!addSuccesful) return ZG_ERROR_OUT_OF_COMMAND_LISTS;
+	// Create a new command list in storage
+	mCommandListStorage.add(D3D12CommandList());
 
 	D3D12CommandList& commandList = mCommandListStorage.last();
 	commandList.commandListType = this->mType;
@@ -302,8 +301,8 @@ ZgResult D3D12CommandQueue::createCommandList(D3D12CommandList*& commandListOut)
 }
 
 ZgResult D3D12CommandQueue::executePreCommandListStateChanges(
-	Vector<PendingBufferState>& pendingBufferStates,
-	Vector<PendingTextureState>& pendingTextureStates) noexcept
+	sfz::Array<PendingBufferState>& pendingBufferStates,
+	sfz::Array<PendingTextureState>& pendingTextureStates) noexcept
 {
 	// Temporary storage array for the barriers to insert
 	uint32_t numBarriers = 0;

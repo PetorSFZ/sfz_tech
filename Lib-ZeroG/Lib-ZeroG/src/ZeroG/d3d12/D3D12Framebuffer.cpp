@@ -19,7 +19,6 @@
 #include "ZeroG/d3d12/D3D12Framebuffer.hpp"
 
 #include "ZeroG/d3d12/D3D12Textures.hpp"
-#include "ZeroG/util/CpuAllocation.hpp"
 #include "ZeroG/util/ErrorReporting.hpp"
 
 namespace zg {
@@ -168,7 +167,8 @@ ZgResult createFramebuffer(
 	}
 
 	// Allocate framebuffer and copy members
-	D3D12Framebuffer* framebuffer = zgNew<D3D12Framebuffer>("D3D12Framebuffer");
+	D3D12Framebuffer* framebuffer =
+		getAllocator()->newObject<D3D12Framebuffer>(sfz_dbg("D3D12Framebuffer"));
 
 	framebuffer->width = width;
 	framebuffer->height = height;

@@ -28,7 +28,6 @@
 #include "ZeroG/d3d12/D3D12MemoryHeap.hpp"
 #include "ZeroG/d3d12/D3D12PipelineRender.hpp"
 #include "ZeroG/d3d12/D3D12Textures.hpp"
-#include "ZeroG/util/CpuAllocation.hpp"
 
 namespace zg {
 
@@ -125,7 +124,7 @@ public:
 		}
 
 		// Delete most state
-		zgDelete(mState);
+		getAllocator()->deleteObject(mState);
 
 		// Report live objects
 		if (mDebugMode) {
@@ -137,11 +136,11 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgResult init(ZgContextInitSettings& settings) noexcept
+	ZgResult init(const ZgContextInitSettings& settings) noexcept
 	{
 		// Initialize members
 		mDebugMode = settings.debugMode;
-		mState = zgNew<D3D12BackendState>("D3D12BackendState");
+		mState = getAllocator()->newObject<D3D12BackendState>(sfz_dbg("D3D12BackendState"));
 		
 		// Initialize part of state
 		mState->width = settings.width;
@@ -585,7 +584,7 @@ public:
 
 	ZgResult fenceCreate(ZgFence** fenceOut) noexcept override final
 	{
-		*fenceOut = zgNew<D3D12Fence>("ZeroG - D3D12Fence");
+		*fenceOut = getAllocator()->newObject<D3D12Fence>(sfz_dbg("D3D12Fence"));
 		return ZG_SUCCESS;
 	}
 
@@ -705,7 +704,7 @@ public:
 		ZgPipelineRender* pipeline) noexcept override final
 	{
 		// TODO: Check if pipeline is currently in use? Lock?
-		zgDelete(pipeline);
+		getAllocator()->deleteObject(pipeline);
 		return ZG_SUCCESS;
 	}
 
@@ -744,7 +743,7 @@ public:
 		D3D12MemoryHeap* heap = static_cast<D3D12MemoryHeap*>(memoryHeapIn);
 		mState->residencyManager.EndTrackingObject(&heap->managedObject);
 
-		zgDelete(heap);
+		getAllocator()->deleteObject(heap);
 		return ZG_SUCCESS;
 	}
 
@@ -818,7 +817,7 @@ public:
 		ZgFramebuffer* framebuffer) noexcept override final
 	{
 		if (reinterpret_cast<D3D12Framebuffer*>(framebuffer)->swapchainFramebuffer) return;
-		zg::zgDelete(framebuffer);
+		getAllocator()->deleteObject(framebuffer);
 	}
 
 	// CommandQueue methods
@@ -873,7 +872,7 @@ private:
 	{
 		if (!mDebugMode) return;
 
-		ZgAllocator allocator = getAllocator();
+		sfz::Allocator* allocator = getAllocator();
 
 		// Log D3D12 messages in debug mode
 		uint64_t numMessages = mState->infoQueue->GetNumStoredMessages();
@@ -884,8 +883,8 @@ private:
 			CHECK_D3D12 mState->infoQueue->GetMessage(0, NULL, &messageLength);
 
 			// Allocate space and get the message
-			D3D12_MESSAGE* message = (D3D12_MESSAGE*)allocator.allocate(
-				allocator.userPtr, uint32_t(messageLength), "D3D12Message");
+			D3D12_MESSAGE* message =
+				(D3D12_MESSAGE*)allocator->allocate(sfz_dbg("D3D12_MESSAGE"), messageLength);
 			CHECK_D3D12 mState->infoQueue->GetMessage(0, message, &messageLength);
 
 			// Log message
@@ -904,7 +903,7 @@ private:
 			}
 
 			// Deallocate message
-			allocator.deallocate(allocator.userPtr, message);
+			allocator->deallocate(message);
 		}
 
 		// Clear stored messages
@@ -923,16 +922,16 @@ private:
 // D3D12 API
 // ------------------------------------------------------------------------------------------------
 
-ZgResult createD3D12Backend(ZgBackend** backendOut, ZgContextInitSettings& settings) noexcept
+ZgResult createD3D12Backend(ZgBackend** backendOut, const ZgContextInitSettings& settings) noexcept
 {
 	// Allocate and create D3D12 backend
-	D3D12Backend* backend = zgNew<D3D12Backend>("D3D12 Backend");
+	D3D12Backend* backend = getAllocator()->newObject<D3D12Backend>(sfz_dbg("D3D12Backend"));
 
 	// Initialize backend, return nullptr if init failed
 	ZgResult initRes = backend->init(settings);
 	if (initRes != ZG_SUCCESS)
 	{
-		zgDelete(backend);
+		getAllocator()->deleteObject(backend);
 		return initRes;
 	}
 

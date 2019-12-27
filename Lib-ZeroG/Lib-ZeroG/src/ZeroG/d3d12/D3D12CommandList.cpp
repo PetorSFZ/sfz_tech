@@ -59,10 +59,10 @@ void D3D12CommandList::create(
 {
 	mDevice = device;
 	mDescriptorBuffer = descriptorBuffer;
-	pendingBufferIdentifiers.create(maxNumBuffers, "ZeroG - D3D12CommandList - Internal");
-	pendingBufferStates.create(maxNumBuffers, "ZeroG - D3D12CommandList - Internal");
-	pendingTextureIdentifiers.create(maxNumBuffers, "ZeroG - D3D12CommandList - Internal");
-	pendingTextureStates.create(maxNumBuffers, "ZeroG - D3D12CommandList - Internal");
+	pendingBufferIdentifiers.init(maxNumBuffers, getAllocator(), sfz_dbg("ZeroG - D3D12CommandList - Internal"));
+	pendingBufferStates.init(maxNumBuffers, getAllocator(), sfz_dbg("ZeroG - D3D12CommandList - Internal"));
+	pendingTextureIdentifiers.init(maxNumBuffers, getAllocator(), sfz_dbg("ZeroG - D3D12CommandList - Internal"));
+	pendingTextureStates.init(maxNumBuffers, getAllocator(), sfz_dbg("ZeroG - D3D12CommandList - Internal"));
 
 	residencySet = residencyManager->CreateResidencySet();
 }

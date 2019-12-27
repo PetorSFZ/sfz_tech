@@ -21,7 +21,6 @@
 
 #include "ZeroG/BackendInterface.hpp"
 #include "ZeroG/Context.hpp"
-#include "ZeroG/util/CpuAllocation.hpp"
 #include "ZeroG/util/ErrorReporting.hpp"
 #include "ZeroG/util/Logging.hpp"
 
@@ -92,32 +91,27 @@ ZG_API ZgBool zgContextAlreadyInitialized(void)
 	return zg::getBackend() == nullptr ? ZG_FALSE : ZG_TRUE;
 }
 
-ZG_API ZgResult zgContextInit(const ZgContextInitSettings* initSettings)
+ZG_API ZgResult zgContextInit(const ZgContextInitSettings* settings)
 {
 	// Can't use ZG_ARG_CHECK() here because logger is not yet initialized
-	if (initSettings == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (settings == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
 	if (zgContextAlreadyInitialized() == ZG_TRUE) return ZG_WARNING_ALREADY_INITIALIZED;
 
-	ZgContextInitSettings settings = *initSettings;
+	ZgContext tmpContext;
 
 	// Set default logger if none is specified
-	bool usingDefaultLogger = settings.logger.log == nullptr;
-	ZgLogger logger;
-	if (usingDefaultLogger) logger = zg::getDefaultLogger();
-	else logger = settings.logger;
+	bool usingDefaultLogger = settings->logger.log == nullptr;
+	if (usingDefaultLogger) tmpContext.logger = zg::getDefaultLogger();
+	else tmpContext.logger = settings->logger;
 
 	// Set default allocator if none is specified
 	bool usingDefaultAllocator =
-		settings.allocator.allocate == nullptr || settings.allocator.deallocate == nullptr;
-	ZgAllocator allocator;
-	if (usingDefaultAllocator) allocator = zg::getDefaultAllocator();
-	else allocator = settings.allocator;
+		settings->allocator.allocate == nullptr || settings->allocator.deallocate == nullptr;
+	if (usingDefaultAllocator) tmpContext.allocator = AllocatorWrapper::createDefaultAllocator();
+	else tmpContext.allocator = AllocatorWrapper::createWrapper(settings->allocator);
 
-	// Set temporary context with logger and allocator. Required so rest of initialization can
-	// allocate memory and log.
-	ZgContext tmpContext = {};
-	tmpContext.allocator = allocator;
-	tmpContext.logger = logger;
+	// Set temporary context (without API backend). Required so rest of initialization can allocate
+	// memory and log.
 	zg::setContext(tmpContext);
 
 	// Log which logger is used
@@ -129,7 +123,7 @@ ZG_API ZgResult zgContextInit(const ZgContextInitSettings* initSettings)
 	else ZG_INFO("zgContextInit(): Using user-provided allocator");
 
 	// Create and allocate requested backend api
-	switch (initSettings->backend) {
+	switch (settings->backend) {
 
 	case ZG_BACKEND_NONE:
 		// TODO: Implement null backend
@@ -140,7 +134,7 @@ ZG_API ZgResult zgContextInit(const ZgContextInitSettings* initSettings)
 	case ZG_BACKEND_D3D12:
 		{
 			ZG_INFO("zgContextInit(): Attempting to create D3D12 backend...");
-			ZgResult res = zg::createD3D12Backend(&tmpContext.backend, settings);
+			ZgResult res = zg::createD3D12Backend(&tmpContext.backend, *settings);
 			if (res != ZG_SUCCESS) {
 				ZG_ERROR("zgContextInit(): Could not create D3D12 backend, exiting.");
 				return res;
@@ -153,7 +147,7 @@ ZG_API ZgResult zgContextInit(const ZgContextInitSettings* initSettings)
 	case ZG_BACKEND_METAL:
 		{
 			ZG_INFO("zgContextInit(): Attempting to create Metal backend...");
-			ZgResult res = zg::createMetalBackend(&tmpContext.backend, settings);
+			ZgResult res = zg::createMetalBackend(&tmpContext.backend, *settings);
 			if (res != ZG_SUCCESS) {
 				ZG_ERROR("zgContextInit(): Could not create Metal backend, exiting.");
 				return res;
@@ -167,7 +161,7 @@ ZG_API ZgResult zgContextInit(const ZgContextInitSettings* initSettings)
 	case ZG_BACKEND_VULKAN:
 		{
 			ZG_INFO("zgContextInit(): Attempting to create Vulkan backend...");
-			ZgResult res = zg::createVulkanBackend(&tmpContext.backend, settings);
+			ZgResult res = zg::createVulkanBackend(&tmpContext.backend, *settings);
 			if (res != ZG_SUCCESS) {
 				ZG_ERROR("zgContextInit(): Could not create Vulkan backend, exiting.");
 				return res;
@@ -193,10 +187,11 @@ ZG_API ZgResult zgContextDeinit(void)
 	ZgContext& ctx = zg::getContext();
 
 	// Delete backend
-	zg::zgDelete(ctx.backend);
+	zg::getAllocator()->deleteObject(ctx.backend);
 
 	// Reset context
 	ctx = {};
+	ctx.allocator = AllocatorWrapper();
 
 	return ZG_SUCCESS;
 }
@@ -355,7 +350,7 @@ ZG_API void zgBufferRelease(
 	ZgBuffer* buffer)
 {
 	if (buffer == nullptr) return;
-	zg::zgDelete(buffer);
+	zg::getAllocator()->deleteObject(buffer);
 }
 
 ZG_API ZgResult zgBufferMemcpyTo(
@@ -412,7 +407,7 @@ ZG_API void zgTexture2DRelease(
 	ZgTexture2D* texture)
 {
 	if (texture == nullptr) return;
-	zg::zgDelete(texture);
+	zg::getAllocator()->deleteObject(texture);
 }
 
 ZG_API ZgResult zgTexture2DSetDebugName(
@@ -467,7 +462,7 @@ ZG_API void zgFenceRelease(
 	ZgFence* fence)
 {
 	if (fence == nullptr) return;
-	zg::zgDelete(fence);
+	zg::getAllocator()->deleteObject(fence);
 }
 
 ZG_API ZgResult zgFenceReset(

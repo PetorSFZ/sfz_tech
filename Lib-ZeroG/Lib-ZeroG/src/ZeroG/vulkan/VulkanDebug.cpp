@@ -20,10 +20,11 @@
 
 #include <algorithm>
 
-#include "ZeroG/util/CpuAllocation.hpp"
+#include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
+
 #include "ZeroG/util/Logging.hpp"
 #include "ZeroG/util/Strings.hpp"
-#include "ZeroG/util/Vector.hpp"
 #include "ZeroG/vulkan/VulkanCommon.hpp"
 
 namespace zg {
@@ -169,16 +170,14 @@ void vulkanLogAvailableInstanceLayers() noexcept
 	vkEnumerateInstanceLayerProperties(&numLayers, nullptr);
 
 	// Retrieve instance layers
-	ZgAllocator allocator = getAllocator();
-	Vector<VkLayerProperties> layerProperties;
-	bool success = layerProperties.create(numLayers, "logInstanceLayersProperties");
-	sfz_assert(success);
+	sfz::Array<VkLayerProperties> layerProperties;
+	layerProperties.init(numLayers, getAllocator(), sfz_dbg("logInstanceLayersProperties"));
 	vkEnumerateInstanceLayerProperties(&numLayers, layerProperties.data());
 
 	// Allocate memory for string
 	constexpr uint32_t TMP_STR_SIZE = 32768;
 	char* const tmpStrStart = reinterpret_cast<char*>(
-		allocator.allocate(allocator.userPtr, TMP_STR_SIZE, "logInstanceLayersTmpString"));
+		getAllocator()->allocate(sfz_dbg("logInstanceLayersTmpString"), TMP_STR_SIZE));
 	char* tmpStr = tmpStrStart;
 	tmpStr[0] = '\0';
 	uint32_t tmpStrBytesLeft = TMP_STR_SIZE;
@@ -196,7 +195,7 @@ void vulkanLogAvailableInstanceLayers() noexcept
 	ZG_INFO("%s", tmpStrStart);
 
 	// Deallocate memory
-	allocator.deallocate(allocator.userPtr, tmpStrStart);
+	getAllocator()->deallocate(tmpStrStart);
 }
 
 void vulkanLogAvailableInstanceExtensions() noexcept
@@ -206,15 +205,14 @@ void vulkanLogAvailableInstanceExtensions() noexcept
 	vkEnumerateInstanceExtensionProperties(nullptr, &numExtensions, nullptr);
 
 	// Retrieve layer properties
-	Vector<VkExtensionProperties> extensionProperties;
-	bool success = extensionProperties.create(numExtensions, "logInstanceExtensionsProperties");
-	sfz_assert(success);
+	sfz::Array<VkExtensionProperties> extensionProperties;
+	extensionProperties.init(numExtensions, getAllocator(), sfz_dbg("logInstanceExtensionsProperties"));
 	vkEnumerateInstanceExtensionProperties(nullptr, &numExtensions, extensionProperties.data());
 
 	// Allocate memory for string
 	constexpr uint32_t TMP_STR_SIZE = 32768;
-	Vector<char> tmpStrVec;
-	tmpStrVec.create(TMP_STR_SIZE, "logInstanceLayersTmpString");
+	sfz::Array<char> tmpStrVec;
+	tmpStrVec.init(TMP_STR_SIZE, getAllocator(), sfz_dbg("logInstanceLayersTmpString"));
 	char* tmpStr = tmpStrVec.data();
 	tmpStr[0] = '\0';
 	uint32_t tmpStrBytesLeft = tmpStrVec.capacity();
@@ -247,8 +245,8 @@ void vulkanLogAvailablePhysicalDevices(VkInstance instance, VkSurfaceKHR surface
 
 	// Allocate memory for string
 	constexpr uint32_t TMP_STR_SIZE = 32768;
-	Vector<char> tmpStrVec;
-	tmpStrVec.create(TMP_STR_SIZE, "logPhysicalDevicesTmpString");
+	sfz::Array<char> tmpStrVec;
+	tmpStrVec.init(TMP_STR_SIZE, getAllocator(), sfz_dbg("logPhysicalDevicesTmpString"));
 	char* tmpStr = tmpStrVec.data();
 	tmpStr[0] = '\0';
 	uint32_t tmpStrBytesLeft = tmpStrVec.capacity();
@@ -304,8 +302,8 @@ void vulkanLogDeviceExtensions(
 
 	// Allocate memory for string
 	constexpr uint32_t TMP_STR_SIZE = 32768;
-	Vector<char> tmpStrVec;
-	tmpStrVec.create(TMP_STR_SIZE, "logDeviceExtensionsTmpStr");
+	sfz::Array<char> tmpStrVec;
+	tmpStrVec.init(TMP_STR_SIZE, getAllocator(), sfz_dbg("logDeviceExtensionsTmpStr"));
 	char* tmpStr = tmpStrVec.data();
 	tmpStr[0] = '\0';
 	uint32_t tmpStrBytesLeft = tmpStrVec.capacity();
@@ -340,8 +338,8 @@ void vulkanLogQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface) noexc
 
 	// Allocate memory for string
 	constexpr uint32_t TMP_STR_SIZE = 32768;
-	Vector<char> tmpStrVec;
-	tmpStrVec.create(TMP_STR_SIZE, "logDeviceExtensionsTmpStr");
+	sfz::Array<char> tmpStrVec;
+	tmpStrVec.init(TMP_STR_SIZE, getAllocator(), sfz_dbg("logDeviceExtensionsTmpStr"));
 	char* tmpStr = tmpStrVec.data();
 	tmpStr[0] = '\0';
 	uint32_t tmpStrBytesLeft = tmpStrVec.capacity();

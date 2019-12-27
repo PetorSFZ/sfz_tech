@@ -26,6 +26,6 @@ namespace zg {
 // Vulkan backend
 // ------------------------------------------------------------------------------------------------
 
-ZgResult createVulkanBackend(ZgBackend** backendOut, ZgContextInitSettings& settings) noexcept;
+ZgResult createVulkanBackend(ZgBackend** backendOut, const ZgContextInitSettings& settings) noexcept;
 
 } // namespace zg

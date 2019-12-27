@@ -26,6 +26,6 @@ namespace zg {
 // D3D12 Context
 // ------------------------------------------------------------------------------------------------
 
-ZgResult createD3D12Backend(ZgBackend** backendOut, ZgContextInitSettings& settings) noexcept;
+ZgResult createD3D12Backend(ZgBackend** backendOut, const ZgContextInitSettings& settings) noexcept;
 
 } // namespace zg

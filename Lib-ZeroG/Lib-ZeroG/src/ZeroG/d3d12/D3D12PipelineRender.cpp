@@ -18,15 +18,16 @@
 
 #include "ZeroG/d3d12/D3D12PipelineRender.hpp"
 
+#include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
+
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
 
 #include "spirv_cross_c.h"
 
-#include "ZeroG/util/CpuAllocation.hpp"
 #include "ZeroG/util/Strings.hpp"
-#include "ZeroG/util/Vector.hpp"
 
 namespace zg {
 
@@ -46,31 +47,31 @@ static float calculateDeltaMillis(time_point& previousTime) noexcept
 	return delta;
 }
 
-static Vector<uint8_t> readBinaryFile(const char* path) noexcept
+static sfz::Array<uint8_t> readBinaryFile(const char* path) noexcept
 {
 	// Open file
 	std::FILE* file = std::fopen(path, "rb");
-	if (file == NULL) return Vector<uint8_t>();
+	if (file == NULL) return sfz::Array<uint8_t>();
 
 	// Get size of file
 	std::fseek(file, 0, SEEK_END);
 	int64_t size = std::ftell(file);
 	if (size <= 0) {
 		std::fclose(file);
-		return Vector<uint8_t>();
+		return sfz::Array<uint8_t>();
 	}
 	std::fseek(file, 0, SEEK_SET);
 
 	// Allocate memory for file
-	Vector<uint8_t> data;
-	data.create(uint32_t(size), "binary file");
-	data.addMany(uint32_t(size));
+	sfz::Array<uint8_t> data;
+	data.init(uint32_t(size), getAllocator(), sfz_dbg("binary file"));
+	data.hackSetSize(uint32_t(size));
 
 	// Read file
 	size_t bytesRead = std::fread(data.data(), 1, data.size(), file);
 	if (bytesRead != size_t(size)) {
 		std::fclose(file);
-		return Vector<uint8_t>();
+		return sfz::Array<uint8_t>();
 	}
 
 	// Close file and return data
@@ -108,9 +109,9 @@ struct CheckSpirvCrossImpl final {
 	}
 };
 
-static Vector<char> crossCompileSpirvToHLSL(
+static sfz::Array<char> crossCompileSpirvToHLSL(
 	spvc_context context,
-	const Vector<uint8_t>& spirvData) noexcept
+	const sfz::Array<uint8_t>& spirvData) noexcept
 {
 	// Parse SPIR-V
 	spvc_parsed_ir parsedIr = nullptr;
@@ -200,9 +201,9 @@ static Vector<char> crossCompileSpirvToHLSL(
 
 	// Allocate memory and copy HLSL source to Vector<char> and return it
 	uint32_t hlslSrcLen = uint32_t(std::strlen(hlslSource));
-	Vector<char> hlslSourceTmp;
-	hlslSourceTmp.create(hlslSrcLen + 1, "HLSL Source");
-	hlslSourceTmp.addMany(hlslSrcLen);
+	sfz::Array<char> hlslSourceTmp;
+	hlslSourceTmp.init(hlslSrcLen + 1, getAllocator(), sfz_dbg("HLSL Source"));
+	hlslSourceTmp.hackSetSize(hlslSrcLen + 1);
 	std::memcpy(hlslSourceTmp.data(), hlslSource, hlslSrcLen);
 	hlslSourceTmp[hlslSrcLen] = '\0';
 	return hlslSourceTmp;
@@ -549,10 +550,10 @@ static void logPipelineInfo(
 	float compileTimeMs) noexcept
 {
 	// Allocate temp string to log
-	ZgAllocator allocator = getAllocator();
+	sfz::Allocator* allocator = getAllocator();
 	const uint32_t STRING_MAX_SIZE = 4096;
-	char* const tmpStrOriginal = reinterpret_cast<char*>(allocator.allocate(
-		allocator.userPtr, STRING_MAX_SIZE, "Pipeline log temp string"));
+	char* const tmpStrOriginal = reinterpret_cast<char*>(allocator->allocate(
+		sfz_dbg("Pipeline log tmp string"), STRING_MAX_SIZE));
 	char* tmpStr = tmpStrOriginal;
 	tmpStr[0] = '\0';
 	uint32_t bytesLeft = STRING_MAX_SIZE;
@@ -601,7 +602,7 @@ static void logPipelineInfo(
 	ZG_NOISE("%s", tmpStrOriginal);
 
 	// Deallocate temp string
-	allocator.deallocate(allocator.userPtr, tmpStrOriginal);
+	allocator->deallocate(tmpStrOriginal);
 }
 
 static ZgResult createPipelineRenderInternal(
@@ -1351,7 +1352,7 @@ static ZgResult createPipelineRenderInternal(
 
 	// Allocate pipeline
 	D3D12PipelineRender* pipeline =
-		zgNew<D3D12PipelineRender>("ZeroG - D3D12PipelineRender");
+		getAllocator()->newObject<D3D12PipelineRender>(sfz_dbg("D3D12PipelineRender"));
 
 	// Store pipeline state
 	pipeline->pipelineState = pipelineState;
@@ -1405,15 +1406,15 @@ ZgResult createPipelineRenderFileSPIRV(
 	if (res != SPVC_SUCCESS) return ZG_ERROR_GENERIC;
 
 	// Read vertex SPIRV binary and cross-compile to HLSL
-	Vector<uint8_t> vertexData = readBinaryFile(createInfo.vertexShaderPath);
+	sfz::Array<uint8_t> vertexData = readBinaryFile(createInfo.vertexShaderPath);
 	if (vertexData.size() == 0) return ZG_ERROR_INVALID_ARGUMENT;
-	Vector<char> vertexHlslSrc = crossCompileSpirvToHLSL(spvcContext, vertexData);
+	sfz::Array<char> vertexHlslSrc = crossCompileSpirvToHLSL(spvcContext, vertexData);
 	if (vertexHlslSrc.size() == 0) return ZG_ERROR_SHADER_COMPILE_ERROR;
 
 	// Read pixel SPIRV binary and cross-compile to HLSL
-	Vector<uint8_t> pixelData = readBinaryFile(createInfo.pixelShaderPath);
+	sfz::Array<uint8_t> pixelData = readBinaryFile(createInfo.pixelShaderPath);
 	if (pixelData.size() == 0) return ZG_ERROR_INVALID_ARGUMENT;
-	Vector<char> pixelHlslSrc = crossCompileSpirvToHLSL(spvcContext, pixelData);
+	sfz::Array<char> pixelHlslSrc = crossCompileSpirvToHLSL(spvcContext, pixelData);
 	if (pixelHlslSrc.size() == 0) return ZG_ERROR_SHADER_COMPILE_ERROR;
 
 	// Log the modified source code
