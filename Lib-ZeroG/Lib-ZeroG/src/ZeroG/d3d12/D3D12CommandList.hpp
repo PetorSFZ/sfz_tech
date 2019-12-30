@@ -26,7 +26,7 @@
 #include "ZeroG/d3d12/D3D12DescriptorRingBuffer.hpp"
 #include "ZeroG/d3d12/D3D12Framebuffer.hpp"
 #include "ZeroG/d3d12/D3D12Buffer.hpp"
-#include "ZeroG/d3d12/D3D12PipelineRender.hpp"
+#include "ZeroG/d3d12/D3D12Pipelines.hpp"
 #include "ZeroG/BackendInterface.hpp"
 
 namespace zg {
@@ -85,6 +85,9 @@ public:
 	ZgResult setPipelineBindings(
 		const ZgPipelineBindings& bindings) noexcept override final;
 
+	ZgResult setPipelineCompute(
+		ZgPipelineCompute* pipeline) noexcept override final;
+
 	ZgResult setPipelineRender(
 		ZgPipelineRender* pipeline) noexcept override final;
 
@@ -117,6 +120,11 @@ public:
 	ZgResult setVertexBuffer(
 		uint32_t vertexBufferSlot,
 		ZgBuffer* vertexBuffer) noexcept override final;
+
+	ZgResult dispatchCompute(
+		uint32_t groupCountX,
+		uint32_t groupCountY,
+		uint32_t groupCountZ) noexcept override final;
 
 	ZgResult drawTriangles(
 		uint32_t startVertexIndex,
@@ -184,7 +192,8 @@ private:
 	D3DX12Residency::ResidencyManager* mResidencyManager = nullptr;
 	D3D12DescriptorRingBuffer* mDescriptorBuffer = nullptr;
 	bool mPipelineSet = false; // Only allow a single pipeline per command list
-	D3D12PipelineRender* mBoundPipeline = nullptr;
+	D3D12PipelineRender* mBoundPipelineRender = nullptr;
+	D3D12PipelineCompute* mBoundPipelineCompute = nullptr;
 	bool mFramebufferSet = false; // Only allow a single framebuffer to be set.
 	D3D12Framebuffer* mFramebuffer = nullptr;
 };

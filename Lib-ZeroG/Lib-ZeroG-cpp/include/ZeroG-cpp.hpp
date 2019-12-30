@@ -18,8 +18,6 @@
 
 #pragma once
 
-#include <cstdint>
-
 #include "ZeroG.h"
 
 namespace zg {
@@ -28,10 +26,10 @@ namespace zg {
 // ------------------------------------------------------------------------------------------------
 
 class Context;
+class PipelineCompute;
 class PipelineRender;
 class MemoryHeap;
 class Buffer;
-class TextureHeap;
 class Texture2D;
 class Framebuffer;
 class Fence;
@@ -136,6 +134,44 @@ private:
 };
 
 
+// PipelineCompute
+// ------------------------------------------------------------------------------------------------
+
+class PipelineCompute final {
+public:
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	ZgPipelineCompute* pipeline = nullptr;
+
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	PipelineCompute() noexcept = default;
+	PipelineCompute(const PipelineCompute&) = delete;
+	PipelineCompute& operator= (const PipelineCompute&) = delete;
+	PipelineCompute(PipelineCompute&& o) noexcept { this->swap(o); }
+	PipelineCompute& operator= (PipelineCompute&& o) noexcept { this->swap(o); return *this; }
+	~PipelineCompute() noexcept { this->release(); }
+
+	// State methods
+	// --------------------------------------------------------------------------------------------
+
+	// Checks if this pipeline is valid
+	bool valid() const noexcept { return this->pipeline != nullptr; }
+
+	// See zgPipelineComputeCreateInfoFileHLSL()
+	Result createFromFileHLSL(
+		const ZgPipelineComputeCreateInfo& createInfo,
+		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept;
+
+	void swap(PipelineCompute& other) noexcept;
+
+	// See zgPipelineComputeRelease()
+	void release() noexcept;
+};
+
+
 // PipelineRenderBuilder
 // ------------------------------------------------------------------------------------------------
 
@@ -144,7 +180,7 @@ public:
 	// Members
 	// --------------------------------------------------------------------------------------------
 
-	ZgPipelineRenderCreateInfoCommon commonInfo = {};
+	ZgPipelineRenderCreateInfo createInfo = {};
 	const char* vertexShaderPath = nullptr;
 	const char* pixelShaderPath = nullptr;
 	const char* vertexShaderSrc = nullptr;
@@ -207,11 +243,11 @@ public:
 	PipelineRenderBuilder& setDepthTestEnabled(bool depthTestEnabled) noexcept;
 	PipelineRenderBuilder& setDepthFunc(ZgDepthFunc depthFunc) noexcept;
 
-	Result buildFromFileSPIRV(PipelineRender& pipelineOut) const noexcept;
+	Result buildFromFileSPIRV(PipelineRender& pipelineOut) noexcept;
 	Result buildFromFileHLSL(
-		PipelineRender& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0) const noexcept;
+		PipelineRender& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0) noexcept;
 	Result buildFromSourceHLSL(
-		PipelineRender& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0) const noexcept;
+		PipelineRender& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0) noexcept;
 };
 
 
@@ -244,15 +280,17 @@ public:
 
 	// See zgPipelineRenderCreateFromFileSPIRV()
 	Result createFromFileSPIRV(
-		const ZgPipelineRenderCreateInfoFileSPIRV& createInfo) noexcept;
+		const ZgPipelineRenderCreateInfo& createInfo) noexcept;
 
 	// See ZgPipelineRenderCreateInfoFileHLSL()
 	Result createFromFileHLSL(
-		const ZgPipelineRenderCreateInfoFileHLSL& createInfo) noexcept;
+		const ZgPipelineRenderCreateInfo& createInfo,
+		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept;
 
 	// See ZgPipelineRenderCreateInfoSourceHLSL()
 	Result createFromSourceHLSL(
-		const ZgPipelineRenderCreateInfoSourceHLSL& createInfo) noexcept;
+		const ZgPipelineRenderCreateInfo& createInfo,
+		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept;
 
 	void swap(PipelineRender& other) noexcept;
 
@@ -670,6 +708,9 @@ public:
 	// See zgCommandListSetPipelineBindings()
 	Result setPipelineBindings(const PipelineBindings& bindings) noexcept;
 
+	// See zgCommandListSetPipelineCompute()
+	Result setPipeline(PipelineCompute& pipeline) noexcept;
+
 	// See zgCommandListSetPipelineRender()
 	Result setPipeline(PipelineRender& pipeline) noexcept;
 
@@ -701,6 +742,10 @@ public:
 
 	// See zgCommandListSetVertexBuffer()
 	Result setVertexBuffer(uint32_t vertexBufferSlot, Buffer& vertexBuffer) noexcept;
+
+	// See zgCommandListDispatchCompute()
+	Result dispatchCompute(
+		uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) noexcept;
 
 	// See zgCommandListDrawTriangles()
 	Result drawTriangles(uint32_t startVertexIndex, uint32_t numVertices) noexcept;

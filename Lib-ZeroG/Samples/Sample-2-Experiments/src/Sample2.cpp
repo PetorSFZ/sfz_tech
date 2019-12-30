@@ -226,8 +226,8 @@ static void realMain(SDL_Window* window) noexcept
 	ZgContextInitSettings initSettings = {};
 #if defined(_WIN32)
 	initSettings.backend = ZG_BACKEND_D3D12;
-#elif defined(ZG_MACOS) || defined(ZG_IOS)
-	initSettings.backend = ZG_BACKEND_METAL;
+#else
+	initSettings.backend = ZG_BACKEND_VULKAN;
 #endif
 	initSettings.width = 512;
 	initSettings.height = 512;

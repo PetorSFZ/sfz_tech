@@ -88,15 +88,39 @@ Result Context::getStats(ZgStats& statsOut) noexcept
 }
 
 
+// PipelineCompute: State methods
+// ------------------------------------------------------------------------------------------------
+
+void PipelineCompute::swap(PipelineCompute& other) noexcept
+{
+	std::swap(this->pipeline, other.pipeline);
+}
+
+Result PipelineCompute::createFromFileHLSL(
+	const ZgPipelineComputeCreateInfo& createInfo,
+	const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept
+{
+	this->release();
+	return (Result)zgPipelineComputeCreateFromFileHLSL(
+		&this->pipeline, &createInfo, &compileSettings);
+}
+
+void PipelineCompute::release() noexcept
+{
+	if (this->pipeline != nullptr) zgPipelineComputeRelease(this->pipeline);
+	this->pipeline = nullptr;
+}
+
+
 // PipelineRenderBuilder: Methods
 // ------------------------------------------------------------------------------------------------
 
 PipelineRenderBuilder& PipelineRenderBuilder::addVertexAttribute(
 	ZgVertexAttribute attribute) noexcept
 {
-	assert(commonInfo.numVertexAttributes < ZG_MAX_NUM_VERTEX_ATTRIBUTES);
-	commonInfo.vertexAttributes[commonInfo.numVertexAttributes] = attribute;
-	commonInfo.numVertexAttributes += 1;
+	assert(createInfo.numVertexAttributes < ZG_MAX_NUM_VERTEX_ATTRIBUTES);
+	createInfo.vertexAttributes[createInfo.numVertexAttributes] = attribute;
+	createInfo.numVertexAttributes += 1;
 	return *this;
 }
 
@@ -117,29 +141,29 @@ PipelineRenderBuilder& PipelineRenderBuilder::addVertexAttribute(
 PipelineRenderBuilder& PipelineRenderBuilder::addVertexBufferInfo(
 	uint32_t slot, uint32_t vertexBufferStrideBytes) noexcept
 {
-	assert(slot == commonInfo.numVertexBufferSlots);
-	assert(commonInfo.numVertexBufferSlots < ZG_MAX_NUM_VERTEX_ATTRIBUTES);
-	commonInfo.vertexBufferStridesBytes[slot] = vertexBufferStrideBytes;
-	commonInfo.numVertexBufferSlots += 1;
+	assert(slot == createInfo.numVertexBufferSlots);
+	assert(createInfo.numVertexBufferSlots < ZG_MAX_NUM_VERTEX_ATTRIBUTES);
+	createInfo.vertexBufferStridesBytes[slot] = vertexBufferStrideBytes;
+	createInfo.numVertexBufferSlots += 1;
 	return *this;
 }
 
 PipelineRenderBuilder& PipelineRenderBuilder::addPushConstant(
 	uint32_t constantBufferRegister) noexcept
 {
-	assert(commonInfo.numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
-	commonInfo.pushConstantRegisters[commonInfo.numPushConstants] = constantBufferRegister;
-	commonInfo.numPushConstants += 1;
+	assert(createInfo.numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
+	createInfo.pushConstantRegisters[createInfo.numPushConstants] = constantBufferRegister;
+	createInfo.numPushConstants += 1;
 	return *this;
 }
 
 PipelineRenderBuilder& PipelineRenderBuilder::addSampler(
 	uint32_t samplerRegister, ZgSampler sampler) noexcept
 {
-	assert(samplerRegister == commonInfo.numSamplers);
-	assert(commonInfo.numSamplers < ZG_MAX_NUM_SAMPLERS);
-	commonInfo.samplers[samplerRegister] = sampler;
-	commonInfo.numSamplers += 1;
+	assert(samplerRegister == createInfo.numSamplers);
+	assert(createInfo.numSamplers < ZG_MAX_NUM_SAMPLERS);
+	createInfo.samplers[samplerRegister] = sampler;
+	createInfo.numSamplers += 1;
 	return *this;
 }
 
@@ -160,16 +184,16 @@ PipelineRenderBuilder& PipelineRenderBuilder::addSampler(
 
 PipelineRenderBuilder& PipelineRenderBuilder::addRenderTarget(ZgTextureFormat format) noexcept
 {
-	assert(commonInfo.numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
-	commonInfo.renderTargets[commonInfo.numRenderTargets] = format;
-	commonInfo.numRenderTargets += 1;
+	assert(createInfo.numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
+	createInfo.renderTargets[createInfo.numRenderTargets] = format;
+	createInfo.numRenderTargets += 1;
 	return *this;
 }
 
 PipelineRenderBuilder& PipelineRenderBuilder::addVertexShaderPath(
 	const char* entry, const char* path) noexcept
 {
-	commonInfo.vertexShaderEntry = entry;
+	createInfo.vertexShaderEntry = entry;
 	vertexShaderPath = path;
 	return *this;
 }
@@ -177,7 +201,7 @@ PipelineRenderBuilder& PipelineRenderBuilder::addVertexShaderPath(
 PipelineRenderBuilder& PipelineRenderBuilder::addPixelShaderPath(
 	const char* entry, const char* path) noexcept
 {
-	commonInfo.pixelShaderEntry = entry;
+	createInfo.pixelShaderEntry = entry;
 	pixelShaderPath = path;
 	return *this;
 }
@@ -185,7 +209,7 @@ PipelineRenderBuilder& PipelineRenderBuilder::addPixelShaderPath(
 PipelineRenderBuilder& PipelineRenderBuilder::addVertexShaderSource(
 	const char* entry, const char* src) noexcept
 {
-	commonInfo.vertexShaderEntry = entry;
+	createInfo.vertexShaderEntry = entry;
 	vertexShaderSrc = src;
 	return *this;
 }
@@ -193,7 +217,7 @@ PipelineRenderBuilder& PipelineRenderBuilder::addVertexShaderSource(
 PipelineRenderBuilder& PipelineRenderBuilder::addPixelShaderSource(
 	const char* entry, const char* src) noexcept
 {
-	commonInfo.pixelShaderEntry = entry;
+	createInfo.pixelShaderEntry = entry;
 	pixelShaderSrc = src;
 	return *this;
 }
@@ -201,21 +225,21 @@ PipelineRenderBuilder& PipelineRenderBuilder::addPixelShaderSource(
 PipelineRenderBuilder& PipelineRenderBuilder::setWireframeRendering(
 	bool wireframeEnabled) noexcept
 {
-	commonInfo.rasterizer.wireframeMode = wireframeEnabled ? ZG_TRUE : ZG_FALSE;
+	createInfo.rasterizer.wireframeMode = wireframeEnabled ? ZG_TRUE : ZG_FALSE;
 	return *this;
 }
 
 PipelineRenderBuilder& PipelineRenderBuilder::setCullingEnabled(bool cullingEnabled) noexcept
 {
-	commonInfo.rasterizer.cullingEnabled = cullingEnabled ? ZG_TRUE : ZG_FALSE;
+	createInfo.rasterizer.cullingEnabled = cullingEnabled ? ZG_TRUE : ZG_FALSE;
 	return *this;
 }
 
 PipelineRenderBuilder& PipelineRenderBuilder::setCullMode(
 	bool cullFrontFacing, bool fontFacingIsCounterClockwise) noexcept
 {
-	commonInfo.rasterizer.cullFrontFacing = cullFrontFacing ? ZG_TRUE : ZG_FALSE;
-	commonInfo.rasterizer.frontFacingIsCounterClockwise =
+	createInfo.rasterizer.cullFrontFacing = cullFrontFacing ? ZG_TRUE : ZG_FALSE;
+	createInfo.rasterizer.frontFacingIsCounterClockwise =
 		fontFacingIsCounterClockwise ? ZG_TRUE : ZG_FALSE;
 	return *this;
 }
@@ -223,92 +247,92 @@ PipelineRenderBuilder& PipelineRenderBuilder::setCullMode(
 PipelineRenderBuilder& PipelineRenderBuilder::setDepthBias(
 	int32_t bias, float biasSlopeScaled, float biasClamp) noexcept
 {
-	commonInfo.rasterizer.depthBias = bias;
-	commonInfo.rasterizer.depthBiasSlopeScaled = biasSlopeScaled;
-	commonInfo.rasterizer.depthBiasClamp = biasClamp;
+	createInfo.rasterizer.depthBias = bias;
+	createInfo.rasterizer.depthBiasSlopeScaled = biasSlopeScaled;
+	createInfo.rasterizer.depthBiasClamp = biasClamp;
 	return *this;
 }
 
 PipelineRenderBuilder& PipelineRenderBuilder::setBlendingEnabled(bool blendingEnabled) noexcept
 {
-	commonInfo.blending.blendingEnabled = blendingEnabled ? ZG_TRUE : ZG_FALSE;
+	createInfo.blending.blendingEnabled = blendingEnabled ? ZG_TRUE : ZG_FALSE;
 	return *this;
 }
 
 PipelineRenderBuilder& PipelineRenderBuilder::setBlendFuncColor(
 	ZgBlendFunc func, ZgBlendFactor srcFactor, ZgBlendFactor dstFactor) noexcept
 {
-	commonInfo.blending.blendFuncColor = func;
-	commonInfo.blending.srcValColor = srcFactor;
-	commonInfo.blending.dstValColor = dstFactor;
+	createInfo.blending.blendFuncColor = func;
+	createInfo.blending.srcValColor = srcFactor;
+	createInfo.blending.dstValColor = dstFactor;
 	return *this;
 }
 
 PipelineRenderBuilder& PipelineRenderBuilder::setBlendFuncAlpha(
 	ZgBlendFunc func, ZgBlendFactor srcFactor, ZgBlendFactor dstFactor) noexcept
 {
-	commonInfo.blending.blendFuncAlpha = func;
-	commonInfo.blending.srcValAlpha = srcFactor;
-	commonInfo.blending.dstValAlpha = dstFactor;
+	createInfo.blending.blendFuncAlpha = func;
+	createInfo.blending.srcValAlpha = srcFactor;
+	createInfo.blending.dstValAlpha = dstFactor;
 	return *this;
 }
 
 PipelineRenderBuilder& PipelineRenderBuilder::setDepthTestEnabled(
 	bool depthTestEnabled) noexcept
 {
-	commonInfo.depthTest.depthTestEnabled = depthTestEnabled ? ZG_TRUE : ZG_FALSE;
+	createInfo.depthTest.depthTestEnabled = depthTestEnabled ? ZG_TRUE : ZG_FALSE;
 	return *this;
 }
 
 PipelineRenderBuilder& PipelineRenderBuilder::setDepthFunc(ZgDepthFunc depthFunc) noexcept
 {
-	commonInfo.depthTest.depthFunc = depthFunc;
+	createInfo.depthTest.depthFunc = depthFunc;
 	return *this;
 }
 
 Result PipelineRenderBuilder::buildFromFileSPIRV(
-	PipelineRender& pipelineOut) const noexcept
+	PipelineRender& pipelineOut) noexcept
 {
-	// Build create info
-	ZgPipelineRenderCreateInfoFileSPIRV createInfo = {};
-	createInfo.common = this->commonInfo;
-	createInfo.vertexShaderPath = this->vertexShaderPath;
-	createInfo.pixelShaderPath = this->pixelShaderPath;
+	// Set path
+	createInfo.vertexShader = this->vertexShaderPath;
+	createInfo.pixelShader = this->pixelShaderPath;
 
 	// Build pipeline
 	return pipelineOut.createFromFileSPIRV(createInfo);
 }
 
 Result PipelineRenderBuilder::buildFromFileHLSL(
-	PipelineRender& pipelineOut, ZgShaderModel model) const noexcept
+	PipelineRender& pipelineOut, ZgShaderModel model) noexcept
 {
-	// Build create info
-	ZgPipelineRenderCreateInfoFileHLSL createInfo = {};
-	createInfo.common = this->commonInfo;
-	createInfo.vertexShaderPath = this->vertexShaderPath;
-	createInfo.pixelShaderPath = this->pixelShaderPath;
-	createInfo.shaderModel = model;
-	createInfo.dxcCompilerFlags[0] = "-Zi";
-	createInfo.dxcCompilerFlags[1] = "-O3";
+	// Set path
+	createInfo.vertexShader = this->vertexShaderPath;
+	createInfo.pixelShader = this->pixelShaderPath;
+
+	// Create compile settings
+	ZgPipelineCompileSettingsHLSL compileSettings = {};
+	compileSettings.shaderModel = model;
+	compileSettings.dxcCompilerFlags[0] = "-Zi";
+	compileSettings.dxcCompilerFlags[1] = "-O3";
 
 	// Build pipeline
-	return pipelineOut.createFromFileHLSL(createInfo);
+	return pipelineOut.createFromFileHLSL(createInfo, compileSettings);
 }
 
 Result PipelineRenderBuilder::buildFromSourceHLSL(
-	PipelineRender& pipelineOut, ZgShaderModel model) const noexcept
+	PipelineRender& pipelineOut, ZgShaderModel model) noexcept
 {
-	// Build create info
-	ZgPipelineRenderCreateInfoSourceHLSL createInfo = {};
-	createInfo.common = this->commonInfo;
-	createInfo.vertexShaderSrc = this->vertexShaderSrc;
-	createInfo.pixelShaderSrc= this->pixelShaderSrc;
-	createInfo.shaderModel = model;
-	createInfo.dxcCompilerFlags[0] = "-Zi";
-	createInfo.dxcCompilerFlags[1] = "-O3";
+	// Set source
+	createInfo.vertexShader = this->vertexShaderSrc;
+	createInfo.pixelShader = this->pixelShaderSrc;
+
+	// Create compile settings
+	ZgPipelineCompileSettingsHLSL compileSettings = {};
+	compileSettings.shaderModel = model;
+	compileSettings.dxcCompilerFlags[0] = "-Zi";
+	compileSettings.dxcCompilerFlags[1] = "-O3";
 
 	// Build pipeline
-	return pipelineOut.createFromSourceHLSL(createInfo);
+	return pipelineOut.createFromSourceHLSL(createInfo, compileSettings);
 }
 
 
@@ -316,7 +340,7 @@ Result PipelineRenderBuilder::buildFromSourceHLSL(
 // ------------------------------------------------------------------------------------------------
 
 Result PipelineRender::createFromFileSPIRV(
-	const ZgPipelineRenderCreateInfoFileSPIRV& createInfo) noexcept
+	const ZgPipelineRenderCreateInfo& createInfo) noexcept
 {
 	this->release();
 	return (Result)zgPipelineRenderCreateFromFileSPIRV(
@@ -324,19 +348,21 @@ Result PipelineRender::createFromFileSPIRV(
 }
 
 Result PipelineRender::createFromFileHLSL(
-	const ZgPipelineRenderCreateInfoFileHLSL& createInfo) noexcept
+	const ZgPipelineRenderCreateInfo& createInfo,
+	const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept
 {
 	this->release();
 	return (Result)zgPipelineRenderCreateFromFileHLSL(
-		&this->pipeline, &this->signature, &createInfo);
+		&this->pipeline, &this->signature, &createInfo, &compileSettings);
 }
 
 Result PipelineRender::createFromSourceHLSL(
-	const ZgPipelineRenderCreateInfoSourceHLSL& createInfo) noexcept
+	const ZgPipelineRenderCreateInfo& createInfo,
+	const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept
 {
 	this->release();
 	return (Result)zgPipelineRenderCreateFromSourceHLSL(
-		&this->pipeline, &this->signature, &createInfo);
+		&this->pipeline, &this->signature, &createInfo, &compileSettings);
 }
 
 void PipelineRender::swap(PipelineRender& other) noexcept
@@ -761,6 +787,11 @@ Result CommandList::setPipelineBindings(const PipelineBindings& bindings) noexce
 	return (Result)zgCommandListSetPipelineBindings(this->commandList, &cBindings);
 }
 
+Result CommandList::setPipeline(PipelineCompute& pipeline) noexcept
+{
+	return (Result)zgCommandListSetPipelineCompute(this->commandList, pipeline.pipeline);
+}
+
 Result CommandList::setPipeline(PipelineRender& pipeline) noexcept
 {
 	return (Result)zgCommandListSetPipelineRender(this->commandList, pipeline.pipeline);
@@ -811,6 +842,13 @@ Result CommandList::setVertexBuffer(uint32_t vertexBufferSlot, Buffer& vertexBuf
 {
 	return (Result)zgCommandListSetVertexBuffer(
 		this->commandList, vertexBufferSlot, vertexBuffer.buffer);
+}
+
+Result CommandList::dispatchCompute(
+	uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) noexcept
+{
+	return (Result)zgCommandListDispatchCompute(
+		this->commandList, groupCountX, groupCountY, groupCountZ);
 }
 
 Result CommandList::drawTriangles(uint32_t startVertexIndex, uint32_t numVertices) noexcept

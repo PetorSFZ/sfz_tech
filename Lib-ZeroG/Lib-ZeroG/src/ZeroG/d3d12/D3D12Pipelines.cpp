@@ -16,7 +16,7 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "ZeroG/d3d12/D3D12PipelineRender.hpp"
+#include "ZeroG/d3d12/D3D12Pipelines.hpp"
 
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
@@ -252,18 +252,6 @@ static HRESULT getShaderReflection(
 	return S_OK;
 }
 
-enum class HlslShaderType {
-	VERTEX_SHADER_6_0,
-	VERTEX_SHADER_6_1,
-	VERTEX_SHADER_6_2,
-	VERTEX_SHADER_6_3,
-
-	PIXEL_SHADER_6_0,
-	PIXEL_SHADER_6_1,
-	PIXEL_SHADER_6_2,
-	PIXEL_SHADER_6_3,
-};
-
 static ZgResult dxcCreateHlslBlobFromFile(
 	IDxcLibrary& dxcLibrary,
 	const char* path,
@@ -300,6 +288,12 @@ static ZgResult dxcCreateHlslBlobFromSource(
 	return ZG_SUCCESS;
 }
 
+enum class ShaderType {
+	VERTEX,
+	PIXEL,
+	COMPUTE
+};
+
 static ZgResult compileHlslShader(
 	IDxcCompiler& dxcCompiler,
 	IDxcIncludeHandler* dxcIncludeHandler,
@@ -308,8 +302,8 @@ static ZgResult compileHlslShader(
 	const ComPtr<IDxcBlobEncoding>& encodingBlob,
 	const char* shaderName,
 	const char* entryName,
-	const char* const * compilerFlags,
-	HlslShaderType shaderType) noexcept
+	const ZgPipelineCompileSettingsHLSL& compileSettings,
+	ShaderType shaderType) noexcept
 {
 	// Convert entry point to wide string
 	WCHAR shaderEntryWide[256] = { 0 };
@@ -320,16 +314,44 @@ static ZgResult compileHlslShader(
 	// Select shader type target profile string
 	LPCWSTR targetProfile = [&]() {
 		switch (shaderType) {
-		case HlslShaderType::VERTEX_SHADER_6_0: return L"vs_6_0";
-		case HlslShaderType::VERTEX_SHADER_6_1: return L"vs_6_1";
-		case HlslShaderType::VERTEX_SHADER_6_2: return L"vs_6_2";
-		case HlslShaderType::VERTEX_SHADER_6_3: return L"vs_6_3";
 
-		case HlslShaderType::PIXEL_SHADER_6_0: return L"ps_6_0";
-		case HlslShaderType::PIXEL_SHADER_6_1: return L"ps_6_1";
-		case HlslShaderType::PIXEL_SHADER_6_2: return L"ps_6_2";
-		case HlslShaderType::PIXEL_SHADER_6_3: return L"ps_6_3";
+		case ShaderType::VERTEX:
+			switch (compileSettings.shaderModel) {
+			case ZG_SHADER_MODEL_6_0: return L"vs_6_0";
+			case ZG_SHADER_MODEL_6_1: return L"vs_6_1";
+			case ZG_SHADER_MODEL_6_2: return L"vs_6_2";
+			case ZG_SHADER_MODEL_6_3: return L"vs_6_3";
+			case ZG_SHADER_MODEL_UNDEFINED:
+			default:
+				sfz_assert_hard(false);
+				return L"UNKNOWN";
+			}
+
+		case ShaderType::PIXEL:
+			switch (compileSettings.shaderModel) {
+			case ZG_SHADER_MODEL_6_0: return L"ps_6_0";
+			case ZG_SHADER_MODEL_6_1: return L"ps_6_1";
+			case ZG_SHADER_MODEL_6_2: return L"ps_6_2";
+			case ZG_SHADER_MODEL_6_3: return L"ps_6_3";
+			case ZG_SHADER_MODEL_UNDEFINED:
+			default:
+				sfz_assert_hard(false);
+				return L"UNKNOWN";
+			}
+
+		case ShaderType::COMPUTE:
+			switch (compileSettings.shaderModel) {
+			case ZG_SHADER_MODEL_6_0: return L"cs_6_0";
+			case ZG_SHADER_MODEL_6_1: return L"cs_6_1";
+			case ZG_SHADER_MODEL_6_2: return L"cs_6_2";
+			case ZG_SHADER_MODEL_6_3: return L"cs_6_3";
+			case ZG_SHADER_MODEL_UNDEFINED:
+			default:
+				sfz_assert_hard(false);
+				return L"UNKNOWN";
+			}
 		}
+		sfz_assert_hard(false);
 		return L"UNKNOWN";
 	}();
 
@@ -339,8 +361,8 @@ static ZgResult compileHlslShader(
 
 	uint32_t numArgs = 0;
 	for (uint32_t i = 0; i < ZG_MAX_NUM_DXC_COMPILER_FLAGS; i++) {
-		if (compilerFlags[i] == nullptr) continue;
-		utf8ToWide(argsContainer[numArgs], 32, compilerFlags[i]);
+		if (compileSettings.dxcCompilerFlags[i] == nullptr) continue;
+		utf8ToWide(argsContainer[numArgs], 32, compileSettings.dxcCompilerFlags[i]);
 		args[numArgs] = argsContainer[numArgs];
 		numArgs++;
 	}
@@ -542,8 +564,8 @@ static D3D12_TEXTURE_ADDRESS_MODE wrappingModeToD3D12(ZgWrappingMode wrappingMod
 	return D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 }
 
-static void logPipelineInfo(
-	const ZgPipelineRenderCreateInfoCommon& createInfo,
+static void logPipelineRenderInfo(
+	const ZgPipelineRenderCreateInfo& createInfo,
 	const char* vertexShaderName,
 	const char* pixelShaderName,
 	const ZgPipelineRenderSignature& signature,
@@ -597,7 +619,6 @@ static void logPipelineInfo(
 			texture.textureRegister);
 	}
 
-
 	// Log
 	ZG_NOISE("%s", tmpStrOriginal);
 
@@ -605,13 +626,156 @@ static void logPipelineInfo(
 	allocator->deallocate(tmpStrOriginal);
 }
 
+// D3D12PipelineCompute functions
+// ------------------------------------------------------------------------------------------------
+
+static ZgResult createPipelineComputeInternal(
+	D3D12PipelineCompute** pipelineOut,
+	const ZgPipelineComputeCreateInfo& createInfo,
+	const ZgPipelineCompileSettingsHLSL& compileSettings,
+	time_point compileStartTime,
+	const ComPtr<IDxcBlobEncoding>& encodingBlob,
+	const char* computeShaderName,
+	IDxcCompiler& dxcCompiler,
+	IDxcIncludeHandler* dxcIncludeHandler,
+	ID3D12Device3& device) noexcept
+{
+	// Compile compute shader
+	ComPtr<IDxcBlob> computeBlob;
+	ComPtr<ID3D12ShaderReflection> computeReflection;
+	ZgResult computeShaderRes = compileHlslShader(
+		dxcCompiler,
+		dxcIncludeHandler,
+		computeBlob,
+		computeReflection,
+		encodingBlob,
+		computeShaderName,
+		createInfo.computeShaderEntry,
+		compileSettings,
+		ShaderType::COMPUTE);
+	if (computeShaderRes != ZG_SUCCESS) return computeShaderRes;
+
+	// Get shader description froms reflection data
+	D3D12_SHADER_DESC computeDesc = {};
+	CHECK_D3D12 computeReflection->GetDesc(&computeDesc);
+
+	// Create root signature
+	ComPtr<ID3D12RootSignature> rootSignature;
+	{
+		D3D12_ROOT_SIGNATURE_FLAGS flags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
+
+		CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC desc;
+		desc.Init_1_1(0, nullptr, 0, nullptr, flags);
+
+		// Serialize the root signature.
+		ComPtr<ID3DBlob> blob;
+		ComPtr<ID3DBlob> errorBlob;
+		if (D3D12_FAIL(D3DX12SerializeVersionedRootSignature(
+			&desc, D3D_ROOT_SIGNATURE_VERSION_1_1, &blob, &errorBlob))) {
+
+			ZG_ERROR("D3DX12SerializeVersionedRootSignature() failed: %s\n",
+				(const char*)errorBlob->GetBufferPointer());
+			return ZG_ERROR_GENERIC;
+		}
+
+		// Create root signature
+		if (D3D12_FAIL(device.CreateRootSignature(
+			0, blob->GetBufferPointer(), blob->GetBufferSize(), IID_PPV_ARGS(&rootSignature)))) {
+			return ZG_ERROR_GENERIC;
+		}
+	}
+
+	// Create Pipeline State Object (PSO)
+	ComPtr<ID3D12PipelineState> pipelineState;
+	{
+		// Essentially tokens are sent to Device->CreatePipelineState(), it does not matter
+		// what order the tokens are sent in. For this reason we create our own struct with
+		// the tokens we care about.
+		struct PipelineStateStream {
+			CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE rootSignature;
+			CD3DX12_PIPELINE_STATE_STREAM_CS computeShader;
+		};
+
+		// Create our token stream and set root signature
+		PipelineStateStream stream = {};
+		stream.rootSignature = rootSignature.Get();
+
+		// Set compute shader
+		stream.computeShader = CD3DX12_SHADER_BYTECODE(
+			computeBlob->GetBufferPointer(), computeBlob->GetBufferSize());
+
+		// Create pipeline state
+		D3D12_PIPELINE_STATE_STREAM_DESC streamDesc = {};
+		streamDesc.pPipelineStateSubobjectStream = &stream;
+		streamDesc.SizeInBytes = sizeof(PipelineStateStream);
+		if (D3D12_FAIL(device.CreatePipelineState(&streamDesc, IID_PPV_ARGS(&pipelineState)))) {
+			return ZG_ERROR_GENERIC;
+		}
+	}
+
+	// Log information about the pipeline
+	float compileTimeMs = calculateDeltaMillis(compileStartTime);
+	// TODO
+	/*logPipelineInfo(
+		createInfo,
+		vertexShaderName,
+		pixelShaderName,
+		*signatureOut,
+		compileTimeMs);*/
+
+	// Allocate pipeline
+	D3D12PipelineCompute* pipeline =
+		getAllocator()->newObject<D3D12PipelineCompute>(sfz_dbg("D3D12PipelineCompute"));
+
+	// Store pipeline state
+	pipeline->rootSignature = rootSignature;
+	pipeline->pipelineState = pipelineState;
+
+	// Return pipeline
+	*pipelineOut = pipeline;
+	return ZG_SUCCESS;
+}
+
+ZgResult createPipelineComputeFileHLSL(
+	D3D12PipelineCompute** pipelineOut,
+	const ZgPipelineComputeCreateInfo& createInfo,
+	const ZgPipelineCompileSettingsHLSL& compileSettings,
+	IDxcLibrary& dxcLibrary,
+	IDxcCompiler& dxcCompiler,
+	IDxcIncludeHandler* dxcIncludeHandler,
+	ID3D12Device3& device) noexcept
+{
+	// Start measuring compile-time
+	time_point compileStartTime;
+	calculateDeltaMillis(compileStartTime);
+
+	// Read compute shader from file
+	ComPtr<IDxcBlobEncoding> encodingBlob;
+	ZgResult blobReadRes =
+		dxcCreateHlslBlobFromFile(dxcLibrary, createInfo.computeShader, encodingBlob);
+	if (blobReadRes != ZG_SUCCESS) return blobReadRes;
+
+	return createPipelineComputeInternal(
+		pipelineOut,
+		createInfo,
+		compileSettings,
+		compileStartTime,
+		encodingBlob,
+		createInfo.computeShader,
+		dxcCompiler,
+		dxcIncludeHandler,
+		device);
+}
+
+// D3D12PipelineRender functions
+// ------------------------------------------------------------------------------------------------
+
 static ZgResult createPipelineRenderInternal(
 	D3D12PipelineRender** pipelineOut,
 	ZgPipelineRenderSignature* signatureOut,
-	const ZgPipelineRenderCreateInfoCommon& createInfo,
+	const ZgPipelineRenderCreateInfo& createInfo,
+	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	time_point compileStartTime,
-	ZgShaderModel shaderModel,
-	const char* const dxcCompilerFlags[],
 	const ComPtr<IDxcBlobEncoding>& vertexEncodingBlob,
 	const ComPtr<IDxcBlobEncoding> pixelEncodingBlob,
 	const char* vertexShaderName,
@@ -620,28 +784,6 @@ static ZgResult createPipelineRenderInternal(
 	IDxcIncludeHandler* dxcIncludeHandler,
 	ID3D12Device3& device) noexcept
 {
-	// Pick out which vertex and pixel shader type to compile with
-	HlslShaderType vertexShaderType = HlslShaderType::VERTEX_SHADER_6_0;
-	HlslShaderType pixelShaderType = HlslShaderType::PIXEL_SHADER_6_0;
-	switch (shaderModel) {
-	case ZG_SHADER_MODEL_6_0:
-		vertexShaderType = HlslShaderType::VERTEX_SHADER_6_0;
-		pixelShaderType = HlslShaderType::PIXEL_SHADER_6_0;
-		break;
-	case ZG_SHADER_MODEL_6_1:
-		vertexShaderType = HlslShaderType::VERTEX_SHADER_6_1;
-		pixelShaderType = HlslShaderType::PIXEL_SHADER_6_1;
-		break;
-	case ZG_SHADER_MODEL_6_2:
-		vertexShaderType = HlslShaderType::VERTEX_SHADER_6_2;
-		pixelShaderType = HlslShaderType::PIXEL_SHADER_6_2;
-		break;
-	case ZG_SHADER_MODEL_6_3:
-		vertexShaderType = HlslShaderType::VERTEX_SHADER_6_3;
-		pixelShaderType = HlslShaderType::PIXEL_SHADER_6_3;
-		break;
-	}
-
 	// Compile vertex shader
 	ComPtr<IDxcBlob> vertexBlob;
 	ComPtr<ID3D12ShaderReflection> vertexReflection;
@@ -653,8 +795,8 @@ static ZgResult createPipelineRenderInternal(
 		vertexEncodingBlob,
 		vertexShaderName,
 		createInfo.vertexShaderEntry,
-		dxcCompilerFlags,
-		vertexShaderType);
+		compileSettings,
+		ShaderType::VERTEX);
 	if (vertexShaderRes != ZG_SUCCESS) return vertexShaderRes;
 
 	// Compile pixel shader
@@ -668,8 +810,8 @@ static ZgResult createPipelineRenderInternal(
 		pixelEncodingBlob,
 		pixelShaderName,
 		createInfo.pixelShaderEntry,
-		dxcCompilerFlags,
-		pixelShaderType);
+		compileSettings,
+		ShaderType::PIXEL);
 	if (pixelShaderRes != ZG_SUCCESS) return pixelShaderRes;
 
 	// Get shader description froms reflection data
@@ -1343,7 +1485,7 @@ static ZgResult createPipelineRenderInternal(
 
 	// Log information about the pipeline
 	float compileTimeMs = calculateDeltaMillis(compileStartTime);
-	logPipelineInfo(
+	logPipelineRenderInfo(
 		createInfo,
 		vertexShaderName,
 		pixelShaderName,
@@ -1376,21 +1518,10 @@ static ZgResult createPipelineRenderInternal(
 	return ZG_SUCCESS;
 }
 
-// D3D12 PipelineRender
-// ------------------------------------------------------------------------------------------------
-
-D3D12PipelineRender::~D3D12PipelineRender() noexcept
-{
-	// Do nothing
-}
-
-// D3D12 PipelineRender functions
-// ------------------------------------------------------------------------------------------------
-
 ZgResult createPipelineRenderFileSPIRV(
 	D3D12PipelineRender** pipelineOut,
 	ZgPipelineRenderSignature* signatureOut,
-	ZgPipelineRenderCreateInfoFileSPIRV createInfo,
+	ZgPipelineRenderCreateInfo createInfo,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	IDxcIncludeHandler* dxcIncludeHandler,
@@ -1406,13 +1537,13 @@ ZgResult createPipelineRenderFileSPIRV(
 	if (res != SPVC_SUCCESS) return ZG_ERROR_GENERIC;
 
 	// Read vertex SPIRV binary and cross-compile to HLSL
-	sfz::Array<uint8_t> vertexData = readBinaryFile(createInfo.vertexShaderPath);
+	sfz::Array<uint8_t> vertexData = readBinaryFile(createInfo.vertexShader);
 	if (vertexData.size() == 0) return ZG_ERROR_INVALID_ARGUMENT;
 	sfz::Array<char> vertexHlslSrc = crossCompileSpirvToHLSL(spvcContext, vertexData);
 	if (vertexHlslSrc.size() == 0) return ZG_ERROR_SHADER_COMPILE_ERROR;
 
 	// Read pixel SPIRV binary and cross-compile to HLSL
-	sfz::Array<uint8_t> pixelData = readBinaryFile(createInfo.pixelShaderPath);
+	sfz::Array<uint8_t> pixelData = readBinaryFile(createInfo.pixelShader);
 	if (pixelData.size() == 0) return ZG_ERROR_INVALID_ARGUMENT;
 	sfz::Array<char> pixelHlslSrc = crossCompileSpirvToHLSL(spvcContext, pixelData);
 	if (pixelHlslSrc.size() == 0) return ZG_ERROR_SHADER_COMPILE_ERROR;
@@ -1436,27 +1567,27 @@ ZgResult createPipelineRenderFileSPIRV(
 		dxcCreateHlslBlobFromSource(dxcLibrary, pixelHlslSrc.data(), pixelEncodingBlob);
 	if (pixelBlobReadRes != ZG_SUCCESS) return pixelBlobReadRes;
 
-	// Fake some compiler flags
-	const char* dxcCompilerFlags[ZG_MAX_NUM_DXC_COMPILER_FLAGS] = {};
-	dxcCompilerFlags[0] = "-Zi";
-	dxcCompilerFlags[1] = "-O3";
+	// Fake some compiler settings
+	ZgPipelineCompileSettingsHLSL compileSettings = {};
+	compileSettings.shaderModel = ZG_SHADER_MODEL_6_0;
+	compileSettings.dxcCompilerFlags[0] = "-Zi";
+	compileSettings.dxcCompilerFlags[1] = "-O3";
 
 	// Modify entry points in create info to always be "main", because that seems to be what
 	// SPIRV-Cross generates
-	createInfo.common.vertexShaderEntry = "main";
-	createInfo.common.pixelShaderEntry = "main";
+	createInfo.vertexShaderEntry = "main";
+	createInfo.pixelShaderEntry = "main";
 
 	return createPipelineRenderInternal(
 		pipelineOut,
 		signatureOut,
-		createInfo.common,
+		createInfo,
+		compileSettings,
 		compileStartTime,
-		ZG_SHADER_MODEL_6_0,
-		dxcCompilerFlags,
 		vertexEncodingBlob,
 		pixelEncodingBlob,
-		createInfo.vertexShaderPath,
-		createInfo.pixelShaderPath,
+		createInfo.vertexShader,
+		createInfo.pixelShader,
 		dxcCompiler,
 		dxcIncludeHandler,
 		device);
@@ -1465,7 +1596,8 @@ ZgResult createPipelineRenderFileSPIRV(
 ZgResult createPipelineRenderFileHLSL(
 	D3D12PipelineRender** pipelineOut,
 	ZgPipelineRenderSignature* signatureOut,
-	const ZgPipelineRenderCreateInfoFileHLSL& createInfo,
+	const ZgPipelineRenderCreateInfo& createInfo,
+	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	IDxcIncludeHandler* dxcIncludeHandler,
@@ -1478,33 +1610,32 @@ ZgResult createPipelineRenderFileHLSL(
 	// Read vertex shader from file
 	ComPtr<IDxcBlobEncoding> vertexEncodingBlob;
 	ZgResult vertexBlobReadRes =
-		dxcCreateHlslBlobFromFile(dxcLibrary, createInfo.vertexShaderPath, vertexEncodingBlob);
+		dxcCreateHlslBlobFromFile(dxcLibrary, createInfo.vertexShader, vertexEncodingBlob);
 	if (vertexBlobReadRes != ZG_SUCCESS) return vertexBlobReadRes;
 
 	// Read pixel shader from file
 	ComPtr<IDxcBlobEncoding> pixelEncodingBlob;
 	bool vertexAndPixelSameEncodingBlob =
-		std::strcmp(createInfo.vertexShaderPath, createInfo.pixelShaderPath) == 0;
+		std::strcmp(createInfo.vertexShader, createInfo.pixelShader) == 0;
 	if (vertexAndPixelSameEncodingBlob) {
 		pixelEncodingBlob = vertexEncodingBlob;
 	}
 	else {
 		ZgResult pixelBlobReadRes =
-			dxcCreateHlslBlobFromFile(dxcLibrary, createInfo.pixelShaderPath, pixelEncodingBlob);
+			dxcCreateHlslBlobFromFile(dxcLibrary, createInfo.pixelShader, pixelEncodingBlob);
 		if (pixelBlobReadRes != ZG_SUCCESS) return pixelBlobReadRes;
 	}
 
 	return createPipelineRenderInternal(
 		pipelineOut,
 		signatureOut,
-		createInfo.common,
+		createInfo,
+		compileSettings,
 		compileStartTime,
-		createInfo.shaderModel,
-		createInfo.dxcCompilerFlags,
 		vertexEncodingBlob,
 		pixelEncodingBlob,
-		createInfo.vertexShaderPath,
-		createInfo.pixelShaderPath,
+		createInfo.vertexShader,
+		createInfo.pixelShader,
 		dxcCompiler,
 		dxcIncludeHandler,
 		device);
@@ -1513,7 +1644,8 @@ ZgResult createPipelineRenderFileHLSL(
 ZgResult createPipelineRenderSourceHLSL(
 	D3D12PipelineRender** pipelineOut,
 	ZgPipelineRenderSignature* signatureOut,
-	const ZgPipelineRenderCreateInfoSourceHLSL& createInfo,
+	const ZgPipelineRenderCreateInfo& createInfo,
+	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	IDxcIncludeHandler* dxcIncludeHandler,
@@ -1526,22 +1658,21 @@ ZgResult createPipelineRenderSourceHLSL(
 	// Create encoding blob from source
 	ComPtr<IDxcBlobEncoding> vertexEncodingBlob;
 	ZgResult vertexBlobReadRes =
-		dxcCreateHlslBlobFromSource(dxcLibrary, createInfo.vertexShaderSrc, vertexEncodingBlob);
+		dxcCreateHlslBlobFromSource(dxcLibrary, createInfo.vertexShader, vertexEncodingBlob);
 	if (vertexBlobReadRes != ZG_SUCCESS) return vertexBlobReadRes;
 
 	// Create encoding blob from source
 	ComPtr<IDxcBlobEncoding> pixelEncodingBlob;
 	ZgResult pixelBlobReadRes =
-		dxcCreateHlslBlobFromSource(dxcLibrary, createInfo.pixelShaderSrc, pixelEncodingBlob);
+		dxcCreateHlslBlobFromSource(dxcLibrary, createInfo.pixelShader, pixelEncodingBlob);
 	if (pixelBlobReadRes != ZG_SUCCESS) return pixelBlobReadRes;
 
 	return createPipelineRenderInternal(
 		pipelineOut,
 		signatureOut,
-		createInfo.common,
+		createInfo,
+		compileSettings,
 		compileStartTime,
-		createInfo.shaderModel,
-		createInfo.dxcCompilerFlags,
 		vertexEncodingBlob,
 		pixelEncodingBlob,
 		"<From source, no vertex name>",

@@ -26,7 +26,7 @@
 #include "ZeroG/d3d12/D3D12DescriptorRingBuffer.hpp"
 #include "ZeroG/d3d12/D3D12Framebuffer.hpp"
 #include "ZeroG/d3d12/D3D12MemoryHeap.hpp"
-#include "ZeroG/d3d12/D3D12PipelineRender.hpp"
+#include "ZeroG/d3d12/D3D12Pipelines.hpp"
 #include "ZeroG/d3d12/D3D12Textures.hpp"
 
 namespace zg {
@@ -616,13 +616,50 @@ public:
 		return ZG_SUCCESS;
 	}
 
-	// Pipeline methods
+	// Pipeline compute methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgResult pipelineComputeCreateFromFileHLSL(
+		ZgPipelineCompute** pipelineOut,
+		const ZgPipelineComputeCreateInfo& createInfo,
+		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept override final
+	{
+		// Initialize DXC compiler if necessary
+		{
+			ZgResult res = initializeDxcCompiler();
+			if (res != ZG_SUCCESS) return res;
+		}
+
+		// Create pipeline
+		D3D12PipelineCompute* d3d12pipeline = nullptr;
+		ZgResult res = createPipelineComputeFileHLSL(
+			&d3d12pipeline,
+			createInfo,
+			compileSettings,
+			*mState->dxcLibrary.Get(),
+			*mState->dxcCompiler.Get(),
+			mState->dxcIncludeHandler,
+			*mState->device.Get());
+		if (res != ZG_SUCCESS) return res;
+
+		*pipelineOut = d3d12pipeline;
+		return res;
+	}
+
+	ZgResult pipelineComputeRelease(
+		ZgPipelineCompute* pipeline) noexcept override final
+	{
+		(void)pipeline;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	// Pipeline rendeer methods
 	// --------------------------------------------------------------------------------------------
 
 	ZgResult pipelineRenderCreateFromFileSPIRV(
 		ZgPipelineRender** pipelineOut,
 		ZgPipelineRenderSignature* signatureOut,
-		const ZgPipelineRenderCreateInfoFileSPIRV& createInfo) noexcept override final
+		const ZgPipelineRenderCreateInfo& createInfo) noexcept override final
 	{
 		// Initialize DXC compiler if necessary
 		{
@@ -649,7 +686,8 @@ public:
 	ZgResult pipelineRenderCreateFromFileHLSL(
 		ZgPipelineRender** pipelineOut,
 		ZgPipelineRenderSignature* signatureOut,
-		const ZgPipelineRenderCreateInfoFileHLSL& createInfo) noexcept override final
+		const ZgPipelineRenderCreateInfo& createInfo,
+		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept override final
 	{
 		// Initialize DXC compiler if necessary
 		{
@@ -663,6 +701,7 @@ public:
 			&d3d12pipeline,
 			signatureOut,
 			createInfo,
+			compileSettings,
 			*mState->dxcLibrary.Get(),
 			*mState->dxcCompiler.Get(),
 			mState->dxcIncludeHandler,
@@ -676,7 +715,8 @@ public:
 	ZgResult pipelineRenderCreateFromSourceHLSL(
 		ZgPipelineRender** pipelineOut,
 		ZgPipelineRenderSignature* signatureOut,
-		const ZgPipelineRenderCreateInfoSourceHLSL& createInfo) noexcept override final
+		const ZgPipelineRenderCreateInfo& createInfo,
+		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept override final
 	{
 		// Initialize DXC compiler if necessary
 		{
@@ -690,6 +730,7 @@ public:
 			&d3d12pipeline,
 			signatureOut,
 			createInfo,
+			compileSettings,
 			*mState->dxcLibrary.Get(),
 			*mState->dxcCompiler.Get(),
 			mState->dxcIncludeHandler,

@@ -184,8 +184,8 @@ if (MSVC)
 		${SRC_DIR}/ZeroG/d3d12/D3D12Framebuffer.cpp
 		${SRC_DIR}/ZeroG/d3d12/D3D12MemoryHeap.hpp
 		${SRC_DIR}/ZeroG/d3d12/D3D12MemoryHeap.cpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12PipelineRender.hpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12PipelineRender.cpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12Pipelines.hpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12Pipelines.cpp
 		${SRC_DIR}/ZeroG/d3d12/D3D12Textures.hpp
 		${SRC_DIR}/ZeroG/d3d12/D3D12Textures.cpp
 	)

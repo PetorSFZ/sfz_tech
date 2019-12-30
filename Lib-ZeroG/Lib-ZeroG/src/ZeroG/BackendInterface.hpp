@@ -45,23 +45,36 @@ struct ZgBackend {
 
 	virtual ZgResult getStats(ZgStats& statsOut) noexcept = 0;
 
-	// Pipeline methods
+	// Pipeline compute methods
+	// --------------------------------------------------------------------------------------------
+
+	virtual ZgResult pipelineComputeCreateFromFileHLSL(
+		ZgPipelineCompute** pipelineOut,
+		const ZgPipelineComputeCreateInfo& createInfo,
+		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept = 0;
+
+	virtual ZgResult pipelineComputeRelease(
+		ZgPipelineCompute* pipeline) noexcept = 0;
+
+	// Pipeline render methods
 	// --------------------------------------------------------------------------------------------
 
 	virtual ZgResult pipelineRenderCreateFromFileSPIRV(
 		ZgPipelineRender** pipelineOut,
 		ZgPipelineRenderSignature* signatureOut,
-		const ZgPipelineRenderCreateInfoFileSPIRV& createInfo) noexcept = 0;
+		const ZgPipelineRenderCreateInfo& createInfo) noexcept = 0;
 
 	virtual ZgResult pipelineRenderCreateFromFileHLSL(
 		ZgPipelineRender** pipelineOut,
 		ZgPipelineRenderSignature* signatureOut,
-		const ZgPipelineRenderCreateInfoFileHLSL& createInfo) noexcept = 0;
+		const ZgPipelineRenderCreateInfo& createInfo,
+		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept = 0;
 
 	virtual ZgResult pipelineRenderCreateFromSourceHLSL(
 		ZgPipelineRender** pipelineOut,
 		ZgPipelineRenderSignature* signatureOut,
-		const ZgPipelineRenderCreateInfoSourceHLSL& createInfo) noexcept = 0;
+		const ZgPipelineRenderCreateInfo& createInfo,
+		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept = 0;
 
 	virtual ZgResult pipelineRenderRelease(
 		ZgPipelineRender* pipeline) noexcept = 0;
@@ -108,6 +121,13 @@ struct ZgBackend {
 
 	virtual ZgResult getPresentQueue(ZgCommandQueue** presentQueueOut) noexcept = 0;
 	virtual ZgResult getCopyQueue(ZgCommandQueue** copyQueueOut) noexcept = 0;
+};
+
+// PipelineCompute
+// ------------------------------------------------------------------------------------------------
+
+struct ZgPipelineCompute {
+	virtual ~ZgPipelineCompute() noexcept {}
 };
 
 // PipelineRender
@@ -216,6 +236,9 @@ struct ZgCommandList {
 	virtual ZgResult setPipelineBindings(
 		const ZgPipelineBindings& bindings) noexcept = 0;
 
+	virtual ZgResult setPipelineCompute(
+		ZgPipelineCompute* pipeline) noexcept = 0;
+
 	virtual ZgResult setPipelineRender(
 		ZgPipelineRender* pipeline) noexcept = 0;
 
@@ -248,6 +271,11 @@ struct ZgCommandList {
 	virtual ZgResult setVertexBuffer(
 		uint32_t vertexBufferSlot,
 		ZgBuffer* vertexBuffer) noexcept = 0;
+
+	virtual ZgResult dispatchCompute(
+		uint32_t groupCountX,
+		uint32_t groupCountY,
+		uint32_t groupCountZ) noexcept = 0;
 
 	virtual ZgResult drawTriangles(
 		uint32_t startVertexIndex,

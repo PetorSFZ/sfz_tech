@@ -84,7 +84,8 @@ void D3D12CommandList::swap(D3D12CommandList& other) noexcept
 	std::swap(this->mResidencyManager, other.mResidencyManager);
 	std::swap(this->mDescriptorBuffer, other.mDescriptorBuffer);
 	std::swap(this->mPipelineSet, other.mPipelineSet);
-	std::swap(this->mBoundPipeline, other.mBoundPipeline);
+	std::swap(this->mBoundPipelineRender, other.mBoundPipelineRender);
+	std::swap(this->mBoundPipelineCompute, other.mBoundPipelineCompute);
 	std::swap(this->mFramebufferSet, other.mFramebufferSet);
 	std::swap(this->mFramebuffer, other.mFramebuffer);
 }
@@ -109,7 +110,8 @@ void D3D12CommandList::destroy() noexcept
 	mResidencyManager = nullptr;
 	mDescriptorBuffer = nullptr;
 	mPipelineSet = false;
-	mBoundPipeline = nullptr;
+	mBoundPipelineRender = nullptr;
+	mBoundPipelineCompute = nullptr;
 	mFramebufferSet = false;
 	mFramebuffer = nullptr;
 }
@@ -310,8 +312,8 @@ ZgResult D3D12CommandList::setPushConstant(
 
 	// Linear search to find push constant mapping
 	uint32_t mappingIdx = ~0u;
-	for (uint32_t i = 0; i < mBoundPipeline->numPushConstants; i++) {
-		if (mBoundPipeline->pushConstants[i].shaderRegister == shaderRegister) {
+	for (uint32_t i = 0; i < mBoundPipelineRender->numPushConstants; i++) {
+		if (mBoundPipelineRender->pushConstants[i].shaderRegister == shaderRegister) {
 			mappingIdx = i;
 			break;
 		}
@@ -319,7 +321,7 @@ ZgResult D3D12CommandList::setPushConstant(
 
 	// Return invalid argument if there is no push constant associated with the given register
 	if (mappingIdx == ~0u) return ZG_ERROR_INVALID_ARGUMENT;
-	const D3D12PushConstantMapping& mapping = mBoundPipeline->pushConstants[mappingIdx];
+	const D3D12PushConstantMapping& mapping = mBoundPipelineRender->pushConstants[mappingIdx];
 
 	// Sanity check to attempt to see if user provided enough bytes to read
 	if (mapping.sizeInBytes != dataSizeInBytes) {
@@ -346,8 +348,8 @@ ZgResult D3D12CommandList::setPipelineBindings(
 {
 	// Require that a pipeline has been set so we can query its parameters
 	if (!mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
-	uint32_t numConstantBuffers = mBoundPipeline->numConstantBuffers;
-	uint32_t numTextures = mBoundPipeline->numTextures;
+	uint32_t numConstantBuffers = mBoundPipelineRender->numConstantBuffers;
+	uint32_t numTextures = mBoundPipelineRender->numTextures;
 
 	// If no bindings specified, do nothing.
 	if (bindings.numConstantBuffers == 0 && bindings.numTextures == 0) return ZG_SUCCESS;
@@ -361,7 +363,7 @@ ZgResult D3D12CommandList::setPipelineBindings(
 
 	// Create constant buffer views and fill (CPU) descriptors
 	for (uint32_t i = 0; i < numConstantBuffers; i++) {
-		const D3D12ConstantBufferMapping& mapping = mBoundPipeline->constBuffers[i];
+		const D3D12ConstantBufferMapping& mapping = mBoundPipelineRender->constBuffers[i];
 
 		// Get the CPU descriptor
 		sfz_assert(mapping.tableOffset < numConstantBuffers);
@@ -418,7 +420,7 @@ ZgResult D3D12CommandList::setPipelineBindings(
 
 	// Create shader resource views and fill (CPU) descriptors
 	for (uint32_t i = 0; i < numTextures; i++) {
-		const D3D12TextureMapping& mapping = mBoundPipeline->textures[i];
+		const D3D12TextureMapping& mapping = mBoundPipelineRender->textures[i];
 
 		// Get the CPU descriptor
 		sfz_assert(mapping.tableOffset >= numConstantBuffers);
@@ -480,7 +482,25 @@ ZgResult D3D12CommandList::setPipelineBindings(
 
 	// Set descriptor table to root signature
 	commandList->SetGraphicsRootDescriptorTable(
-		mBoundPipeline->dynamicBuffersParameterIndex, rangeStartGpu);
+		mBoundPipelineRender->dynamicBuffersParameterIndex, rangeStartGpu);
+
+	return ZG_SUCCESS;
+}
+
+ZgResult D3D12CommandList::setPipelineCompute(
+	ZgPipelineCompute* pipelineIn) noexcept
+{
+	D3D12PipelineCompute& pipeline = *static_cast<D3D12PipelineCompute*>(pipelineIn);
+
+	// If a pipeline is already set for this command list, return error. We currently only allow a
+	// single pipeline per command list.
+	if (mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+	mPipelineSet = true;
+	mBoundPipelineCompute = &pipeline;
+
+	// Set compute pipeline
+	commandList->SetPipelineState(pipeline.pipelineState.Get());
+	commandList->SetComputeRootSignature(pipeline.rootSignature.Get());
 
 	return ZG_SUCCESS;
 }
@@ -488,15 +508,15 @@ ZgResult D3D12CommandList::setPipelineBindings(
 ZgResult D3D12CommandList::setPipelineRender(
 	ZgPipelineRender* pipelineIn) noexcept
 {
-	D3D12PipelineRender& pipeline = *reinterpret_cast<D3D12PipelineRender*>(pipelineIn);
+	D3D12PipelineRender& pipeline = *static_cast<D3D12PipelineRender*>(pipelineIn);
 	
 	// If a pipeline is already set for this command list, return error. We currently only allow a
 	// single pipeline per command list.
 	if (mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 	mPipelineSet = true;
-	mBoundPipeline = &pipeline;
+	mBoundPipelineRender = &pipeline;
 
-	// Set pipeline
+	// Set render pipeline
 	commandList->SetPipelineState(pipeline.pipelineState.Get());
 	commandList->SetGraphicsRootSignature(pipeline.rootSignature.Get());
 
@@ -796,7 +816,7 @@ ZgResult D3D12CommandList::setVertexBuffer(
 	if (!mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 
 	// Check that the vertex buffer slot is not out of bounds for the bound pipeline
-	const ZgPipelineRenderCreateInfoCommon& pipelineInfo = mBoundPipeline->createInfo;
+	const ZgPipelineRenderCreateInfo& pipelineInfo = mBoundPipelineRender->createInfo;
 	if (pipelineInfo.numVertexBufferSlots <= vertexBufferSlot) {
 		return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 	}
@@ -826,6 +846,16 @@ ZgResult D3D12CommandList::setVertexBuffer(
 	// Insert into residency set
 	residencySet->Insert(&vertexBuffer.memoryHeap->managedObject);
 
+	return ZG_SUCCESS;
+}
+
+ZgResult D3D12CommandList::dispatchCompute(
+	uint32_t groupCountX,
+	uint32_t groupCountY,
+	uint32_t groupCountZ) noexcept
+{
+	if (!mPipelineSet || mBoundPipelineCompute == nullptr) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+	commandList->Dispatch(groupCountX, groupCountY, groupCountZ);
 	return ZG_SUCCESS;
 }
 
@@ -868,7 +898,8 @@ ZgResult D3D12CommandList::reset() noexcept
 	pendingTextureStates.clear();
 
 	mPipelineSet = false;
-	mBoundPipeline = nullptr;
+	mBoundPipelineCompute = nullptr;
+	mBoundPipelineRender = nullptr;
 	mFramebufferSet = false;
 	mFramebuffer = nullptr;
 	return ZG_SUCCESS;

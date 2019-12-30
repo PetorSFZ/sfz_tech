@@ -61,6 +61,9 @@ extern "C" {
 	struct name; \
 	typedef struct name name;
 
+// A handle representing a compute pipeline
+ZG_HANDLE(ZgPipelineCompute);
+
 // A handle representing a render pipeline
 ZG_HANDLE(ZgPipelineRender);
 
@@ -277,6 +280,9 @@ ZG_API ZgResult zgContextDeinit(void);
 // This should be called every time the size of the window or the resolution is changed. This
 // function is guaranteed to not do anything if the specified width or height is the same as last
 // time, so it is completely safe to call this at the beginning of each frame.
+//
+// Note: MUST be called before zgContextSwapchainBeginFrame() or after zgContextSwapchainFinishFrame(),
+//       may NOT be called in-between.
 ZG_API ZgResult zgContextSwapchainResize(
 	uint32_t width,
 	uint32_t height);
@@ -350,6 +356,55 @@ enum ZgTextureFormatEnum {
 	ZG_TEXTURE_FORMAT_DEPTH_F32
 };
 typedef uint32_t ZgTextureFormat;
+
+// Pipeline Common
+// ------------------------------------------------------------------------------------------------
+
+// Enum representing various shader model versions
+enum ZgShaderModelEnum {
+	ZG_SHADER_MODEL_UNDEFINED = 0,
+	ZG_SHADER_MODEL_6_0,
+	ZG_SHADER_MODEL_6_1,
+	ZG_SHADER_MODEL_6_2,
+	ZG_SHADER_MODEL_6_3
+};
+typedef uint32_t ZgShaderModel;
+
+// The maximum number of compiler flags allowed to the DXC shader compiler
+static const uint32_t ZG_MAX_NUM_DXC_COMPILER_FLAGS = 8;
+
+// Compile settings to the HLSL compiler
+struct ZgPipelineCompileSettingsHLSL {
+
+	// Which shader model to target when compiling the HLSL file
+	ZgShaderModel shaderModel;
+
+	// Flags to the DXC compiler
+	const char* dxcCompilerFlags[ZG_MAX_NUM_DXC_COMPILER_FLAGS];
+};
+typedef struct ZgPipelineCompileSettingsHLSL ZgPipelineCompileSettingsHLSL;
+
+// Pipeline Compute
+// ------------------------------------------------------------------------------------------------
+
+struct ZgPipelineComputeCreateInfo {
+
+	// Path to the shader source or the source directly depending on what create function is called.
+	const char* computeShader;
+
+	// The name of the entry function
+	const char* computeShaderEntry;
+
+};
+
+ZG_API ZgResult zgPipelineComputeCreateFromFileHLSL(
+	ZgPipelineCompute** pipelineOut,
+	const ZgPipelineComputeCreateInfo* createInfo,
+	const ZgPipelineCompileSettingsHLSL* compileSettings);
+
+ZG_API ZgResult zgPipelineComputeRelease(
+	ZgPipelineCompute* pipeline);
+
 
 // Pipeline Render - Signature
 // ------------------------------------------------------------------------------------------------
@@ -478,7 +533,7 @@ struct ZgPipelineRenderSignature {
 };
 typedef struct ZgPipelineRenderSignature ZgPipelineRenderSignature;
 
-// Pipeline Render - Common
+// Pipeline Render
 // ------------------------------------------------------------------------------------------------
 
 // Sample mode of a sampler
@@ -621,7 +676,11 @@ struct ZgDepthTestSettings {
 typedef struct ZgDepthTestSettings ZgDepthTestSettings;
 
 // The common information required to create a render pipeline
-struct ZgPipelineRenderCreateInfoCommon {
+struct ZgPipelineRenderCreateInfo {
+
+	// Path to the shader source or the source directly depending on what create function is called.
+	const char* vertexShader;
+	const char* pixelShader;
 
 	// The names of the entry functions
 	const char* vertexShaderEntry;
@@ -665,7 +724,25 @@ struct ZgPipelineRenderCreateInfoCommon {
 	// Depth test settings
 	ZgDepthTestSettings depthTest;
 };
-typedef struct ZgPipelineRenderCreateInfoCommon ZgPipelineRenderCreateInfoCommon;
+typedef struct ZgPipelineRenderCreateInfo ZgPipelineRenderCreateInfo;
+
+ZG_API ZgResult zgPipelineRenderCreateFromFileSPIRV(
+	ZgPipelineRender** pipelineOut,
+	ZgPipelineRenderSignature* signatureOut,
+	const ZgPipelineRenderCreateInfo* createInfo);
+
+ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
+	ZgPipelineRender** pipelineOut,
+	ZgPipelineRenderSignature* signatureOut,
+	const ZgPipelineRenderCreateInfo* createInfo,
+	const ZgPipelineCompileSettingsHLSL* compileSettings);
+
+
+ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
+	ZgPipelineRender** pipelineOut,
+	ZgPipelineRenderSignature* signatureOut,
+	const ZgPipelineRenderCreateInfo* createInfo,
+	const ZgPipelineCompileSettingsHLSL* compileSettings);
 
 ZG_API ZgResult zgPipelineRenderRelease(
 	ZgPipelineRender* pipeline);
@@ -673,81 +750,6 @@ ZG_API ZgResult zgPipelineRenderRelease(
 ZG_API ZgResult zgPipelineRenderGetSignature(
 	const ZgPipelineRender* pipeline,
 	ZgPipelineRenderSignature* signatureOut);
-
-// Pipeline Render - SPIRV
-// ------------------------------------------------------------------------------------------------
-
-struct ZgPipelineRenderCreateInfoFileSPIRV {
-
-	// The common information always needed to create a render pipeline
-	ZgPipelineRenderCreateInfoCommon common;
-
-	// Paths to the shader files
-	const char* vertexShaderPath;
-	const char* pixelShaderPath;
-};
-typedef struct ZgPipelineRenderCreateInfoFileSPIRV ZgPipelineRenderCreateInfoFileSPIRV;
-
-ZG_API ZgResult zgPipelineRenderCreateFromFileSPIRV(
-	ZgPipelineRender** pipelineOut,
-	ZgPipelineRenderSignature* signatureOut,
-	const ZgPipelineRenderCreateInfoFileSPIRV* createInfo);
-
-// Pipeline Render - HLSL
-// ------------------------------------------------------------------------------------------------
-
-// Enum representing various shader model versions
-enum ZgShaderModelEnum {
-	ZG_SHADER_MODEL_UNDEFINED = 0,
-	ZG_SHADER_MODEL_6_0,
-	ZG_SHADER_MODEL_6_1,
-	ZG_SHADER_MODEL_6_2,
-	ZG_SHADER_MODEL_6_3
-};
-typedef uint32_t ZgShaderModel;
-
-// The maximum number of compiler flags allowed to the DXC shader compiler
-static const uint32_t ZG_MAX_NUM_DXC_COMPILER_FLAGS = 8;
-
-struct ZgPipelineRenderCreateInfoFileHLSL {
-
-	// The common information always needed to create a render pipeline
-	ZgPipelineRenderCreateInfoCommon common;
-
-	// Paths to the shader files
-	const char* vertexShaderPath;
-	const char* pixelShaderPath;
-
-	// Information to the DXC compiler
-	ZgShaderModel shaderModel;
-	const char* dxcCompilerFlags[ZG_MAX_NUM_DXC_COMPILER_FLAGS];
-};
-typedef struct ZgPipelineRenderCreateInfoFileHLSL ZgPipelineRenderCreateInfoFileHLSL;
-
-ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
-	ZgPipelineRender** pipelineOut,
-	ZgPipelineRenderSignature* signatureOut,
-	const ZgPipelineRenderCreateInfoFileHLSL* createInfo);
-
-struct ZgPipelineRenderCreateInfoSourceHLSL {
-
-	// The common information always needed to create a render pipeline
-	ZgPipelineRenderCreateInfoCommon common;
-
-	// Shader sources
-	const char* vertexShaderSrc;
-	const char* pixelShaderSrc;
-
-	// Information to the DXC compiler
-	ZgShaderModel shaderModel;
-	const char* dxcCompilerFlags[ZG_MAX_NUM_DXC_COMPILER_FLAGS];
-};
-typedef struct ZgPipelineRenderCreateInfoSourceHLSL ZgPipelineRenderCreateInfoSourceHLSL;
-
-ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
-	ZgPipelineRender** pipelineOut,
-	ZgPipelineRenderSignature* signatureOut,
-	const ZgPipelineRenderCreateInfoSourceHLSL* createInfo);
 
 // Memory Heap
 // ------------------------------------------------------------------------------------------------
@@ -1091,6 +1093,10 @@ ZG_API ZgResult zgCommandListSetPipelineBindings(
 	ZgCommandList* commandList,
 	const ZgPipelineBindings* bindings);
 
+ZG_API ZgResult zgCommandListSetPipelineCompute(
+	ZgCommandList* commandList,
+	ZgPipelineCompute* pipeline);
+
 ZG_API ZgResult zgCommandListSetPipelineRender(
 	ZgCommandList* commandList,
 	ZgPipelineRender* pipeline);
@@ -1143,6 +1149,12 @@ ZG_API ZgResult zgCommandListSetVertexBuffer(
 	ZgCommandList* commandList,
 	uint32_t vertexBufferSlot,
 	ZgBuffer* vertexBuffer);
+
+ZG_API ZgResult zgCommandListDispatchCompute(
+	ZgCommandList* commandList,
+	uint32_t groupCountX,
+	uint32_t groupCountY,
+	uint32_t groupCountZ);
 
 ZG_API ZgResult zgCommandListDrawTriangles(
 	ZgCommandList* commandList,

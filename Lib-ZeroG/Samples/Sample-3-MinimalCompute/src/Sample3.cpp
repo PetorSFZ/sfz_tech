@@ -65,6 +65,24 @@ static void realMain(SDL_Window* window) noexcept
 	zg::Context zgCtx;
 	CHECK_ZG zgCtx.init(initSettings);
 
+	// Create simply compute pipeline
+	zg::PipelineCompute memcpyPipeline;
+	{
+		// Create info
+		ZgPipelineComputeCreateInfo createInfo = {};
+		createInfo.computeShader = "res/Sample-3/memcpy.hlsl";
+		createInfo.computeShaderEntry = "mainCS";
+
+		// Compile settings
+		ZgPipelineCompileSettingsHLSL compileSettings = {};
+		compileSettings.shaderModel = ZG_SHADER_MODEL_6_0;
+		compileSettings.dxcCompilerFlags[0] = "-Zi";
+		compileSettings.dxcCompilerFlags[1] = "-O3";
+
+		// Create pipeline
+		CHECK_ZG memcpyPipeline.createFromFileHLSL(createInfo, compileSettings);
+	}
+
 	// Get the command queues
 	zg::CommandQueue presentQueue;
 	CHECK_ZG zg::CommandQueue::getPresentQueue(presentQueue);
@@ -77,23 +95,23 @@ static void realMain(SDL_Window* window) noexcept
 		// loop. "return false;" == continue to next iteration
 		if (![&]() -> bool {
 			SDL_Event event = {};
-			while (SDL_PollEvent(&event) != 0) {
-				switch (event.type) {
+				while (SDL_PollEvent(&event) != 0) {
+					switch (event.type) {
 
-				case SDL_QUIT:
-					running = false;
-					return false;
+					case SDL_QUIT:
+						running = false;
+							return false;
 
-				case SDL_KEYUP:
-					//if (event.key.keysym.sym == SDLK_ESCAPE) {
+					case SDL_KEYUP:
+						//if (event.key.keysym.sym == SDLK_ESCAPE) {
 						running = false;
 						return false;
-					//}
-					break;
+						//}
+						break;
+					}
 				}
-			}
 			return true;
-		}()) continue;
+			}()) continue;
 
 		// Query drawable width and height and update ZeroG context
 		int width = 0;
@@ -113,6 +131,10 @@ static void realMain(SDL_Window* window) noexcept
 		CHECK_ZG commandList.setFramebuffer(framebuffer);
 		CHECK_ZG commandList.clearRenderTargets(1.0f, 0.0f, 0.0f, 1.0f);
 		CHECK_ZG commandList.clearDepthBuffer(1.0f);
+
+		// Set compute pipeline and run it
+		CHECK_ZG commandList.setPipeline(memcpyPipeline);
+		CHECK_ZG commandList.dispatchCompute(1);
 
 		// Execute command list
 		CHECK_ZG presentQueue.executeCommandList(commandList);
@@ -141,7 +163,7 @@ int main(int argc, char* argv[])
 #endif
 
 	// Initialize SDL2 and create a window
-	SDL_Window* window = initializeSdl2CreateWindow("ZeroG - Sample1 - Minimal");
+	SDL_Window* window = initializeSdl2CreateWindow("ZeroG - Sample3 - Minimal Compute");
 
 	// Runs the real main function
 	realMain(window);

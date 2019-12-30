@@ -279,13 +279,34 @@ public:
 		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
-	// Pipeline methods
+	// Pipeline compute methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgResult pipelineComputeCreateFromFileHLSL(
+		ZgPipelineCompute** pipelineOut,
+		const ZgPipelineComputeCreateInfo& createInfo,
+		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept override final
+	{
+		(void)pipelineOut;
+		(void)createInfo;
+		(void)compileSettings;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	ZgResult pipelineComputeRelease(
+		ZgPipelineCompute* pipeline) noexcept override final
+	{
+		(void)pipeline;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	// Pipeline render methods
 	// --------------------------------------------------------------------------------------------
 
 	ZgResult pipelineRenderCreateFromFileSPIRV(
 		ZgPipelineRender** pipelineOut,
 		ZgPipelineRenderSignature* signatureOut,
-		const ZgPipelineRenderCreateInfoFileSPIRV& createInfo) noexcept override final
+		const ZgPipelineRenderCreateInfo& createInfo) noexcept override final
 	{
 		(void)pipelineOut;
 		(void)signatureOut;
@@ -296,22 +317,26 @@ public:
 	ZgResult pipelineRenderCreateFromFileHLSL(
 		ZgPipelineRender** pipelineOut,
 		ZgPipelineRenderSignature* signatureOut,
-		const ZgPipelineRenderCreateInfoFileHLSL& createInfo) noexcept override final
+		const ZgPipelineRenderCreateInfo& createInfo,
+		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept override final
 	{
 		(void)pipelineOut;
 		(void)signatureOut;
 		(void)createInfo;
+		(void)compileSettings;
 		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	ZgResult pipelineRenderCreateFromSourceHLSL(
 		ZgPipelineRender** pipelineOut,
 		ZgPipelineRenderSignature* signatureOut,
-		const ZgPipelineRenderCreateInfoSourceHLSL& createInfo) noexcept override final
+		const ZgPipelineRenderCreateInfo& createInfo,
+		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept override final
 	{
 		(void)pipelineOut;
 		(void)signatureOut;
 		(void)createInfo;
+		(void)compileSettings;
 		return ZG_WARNING_UNIMPLEMENTED;
 	}
 

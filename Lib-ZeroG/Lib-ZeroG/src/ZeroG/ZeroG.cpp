@@ -206,8 +206,102 @@ ZG_API ZgResult zgContextGetStats(ZgStats* statsOut)
 	return zg::getBackend()->getStats(*statsOut);
 }
 
-// Pipeline Render - Common
+// Pipeline Compute
 // ------------------------------------------------------------------------------------------------
+
+ZG_API ZgResult zgPipelineComputeCreateFromFileHLSL(
+	ZgPipelineCompute** pipelineOut,
+	const ZgPipelineComputeCreateInfo* createInfo,
+	const ZgPipelineCompileSettingsHLSL* compileSettings)
+{
+	ZG_ARG_CHECK(pipelineOut == nullptr, "");
+	ZG_ARG_CHECK(createInfo == nullptr, "");
+	ZG_ARG_CHECK(compileSettings == nullptr, "");
+	
+	return zg::getBackend()->pipelineComputeCreateFromFileHLSL(
+		pipelineOut, *createInfo, *compileSettings);
+}
+
+ZG_API ZgResult zgPipelineComputeRelease(
+	ZgPipelineCompute* pipeline)
+{
+	return zg::getBackend()->pipelineComputeRelease(pipeline);
+}
+
+// Pipeline Render
+// ------------------------------------------------------------------------------------------------
+
+ZG_API ZgResult zgPipelineRenderCreateFromFileSPIRV(
+	ZgPipelineRender** pipelineOut,
+	ZgPipelineRenderSignature* signatureOut,
+	const ZgPipelineRenderCreateInfo* createInfo)
+{
+	ZG_ARG_CHECK(createInfo == nullptr, "");
+	ZG_ARG_CHECK(pipelineOut == nullptr, "");
+	ZG_ARG_CHECK(signatureOut == nullptr, "");
+	ZG_ARG_CHECK(createInfo->vertexShader == nullptr, "");
+	ZG_ARG_CHECK(createInfo->vertexShaderEntry == nullptr, "");
+	ZG_ARG_CHECK(createInfo->pixelShader == nullptr, "");
+	ZG_ARG_CHECK(createInfo->pixelShaderEntry == nullptr, "");
+	ZG_ARG_CHECK(createInfo->numVertexAttributes == 0, "Must specify at least one vertex attribute");
+	ZG_ARG_CHECK(createInfo->numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex attributes specified");
+	ZG_ARG_CHECK(createInfo->numVertexBufferSlots == 0, "Must specify at least one vertex buffer");
+	ZG_ARG_CHECK(createInfo->numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex buffers specified");
+	ZG_ARG_CHECK(createInfo->numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
+
+	return zg::getBackend()->pipelineRenderCreateFromFileSPIRV(
+		pipelineOut, signatureOut, *createInfo);
+}
+
+ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
+	ZgPipelineRender** pipelineOut,
+	ZgPipelineRenderSignature* signatureOut,
+	const ZgPipelineRenderCreateInfo* createInfo,
+	const ZgPipelineCompileSettingsHLSL* compileSettings)
+{
+	ZG_ARG_CHECK(createInfo == nullptr, "");
+	ZG_ARG_CHECK(compileSettings == nullptr, "");
+	ZG_ARG_CHECK(pipelineOut == nullptr, "");
+	ZG_ARG_CHECK(signatureOut == nullptr, "");
+	ZG_ARG_CHECK(createInfo->vertexShader == nullptr, "");
+	ZG_ARG_CHECK(createInfo->vertexShaderEntry == nullptr, "");
+	ZG_ARG_CHECK(createInfo->pixelShader == nullptr, "");
+	ZG_ARG_CHECK(createInfo->pixelShaderEntry == nullptr, "");
+	ZG_ARG_CHECK(compileSettings->shaderModel == ZG_SHADER_MODEL_UNDEFINED, "Must specify shader model");
+	ZG_ARG_CHECK(createInfo->numVertexAttributes == 0, "Must specify at least one vertex attribute");
+	ZG_ARG_CHECK(createInfo->numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex attributes specified");
+	ZG_ARG_CHECK(createInfo->numVertexBufferSlots == 0, "Must specify at least one vertex buffer");
+	ZG_ARG_CHECK(createInfo->numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex buffers specified");
+	ZG_ARG_CHECK(createInfo->numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
+
+	return zg::getBackend()->pipelineRenderCreateFromFileHLSL(
+		pipelineOut, signatureOut, *createInfo, *compileSettings);
+}
+
+ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
+	ZgPipelineRender** pipelineOut,
+	ZgPipelineRenderSignature* signatureOut,
+	const ZgPipelineRenderCreateInfo* createInfo,
+	const ZgPipelineCompileSettingsHLSL* compileSettings)
+{
+	ZG_ARG_CHECK(createInfo == nullptr, "");
+	ZG_ARG_CHECK(compileSettings == nullptr, "");
+	ZG_ARG_CHECK(pipelineOut == nullptr, "");
+	ZG_ARG_CHECK(signatureOut == nullptr, "");
+	ZG_ARG_CHECK(createInfo->vertexShader == nullptr, "");
+	ZG_ARG_CHECK(createInfo->vertexShaderEntry == nullptr, "");
+	ZG_ARG_CHECK(createInfo->pixelShader == nullptr, "");
+	ZG_ARG_CHECK(createInfo->pixelShaderEntry == nullptr, "");
+	ZG_ARG_CHECK(compileSettings->shaderModel == ZG_SHADER_MODEL_UNDEFINED, "Must specify shader model");
+	ZG_ARG_CHECK(createInfo->numVertexAttributes == 0, "Must specify at least one vertex attribute");
+	ZG_ARG_CHECK(createInfo->numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex attributes specified");
+	ZG_ARG_CHECK(createInfo->numVertexBufferSlots == 0, "Must specify at least one vertex buffer");
+	ZG_ARG_CHECK(createInfo->numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex buffers specified");
+	ZG_ARG_CHECK(createInfo->numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
+
+	return zg::getBackend()->pipelineRenderCreateFromSourceHLSL(
+		pipelineOut, signatureOut, *createInfo, *compileSettings);
+}
 
 ZG_API ZgResult zgPipelineRenderRelease(
 	ZgPipelineRender* pipeline)
@@ -220,80 +314,6 @@ ZG_API ZgResult zgPipelineRenderGetSignature(
 	ZgPipelineRenderSignature* signatureOut)
 {
 	return zg::getBackend()->pipelineRenderGetSignature(pipeline, signatureOut);
-}
-
-// Pipeline Render - SPIRV
-// ------------------------------------------------------------------------------------------------
-
-ZG_API ZgResult zgPipelineRenderCreateFromFileSPIRV(
-	ZgPipelineRender** pipelineOut,
-	ZgPipelineRenderSignature* signatureOut,
-	const ZgPipelineRenderCreateInfoFileSPIRV* createInfo)
-{
-	ZG_ARG_CHECK(createInfo == nullptr, "");
-	ZG_ARG_CHECK(pipelineOut == nullptr, "");
-	ZG_ARG_CHECK(signatureOut == nullptr, "");
-	ZG_ARG_CHECK(createInfo->vertexShaderPath == nullptr, "");
-	ZG_ARG_CHECK(createInfo->common.vertexShaderEntry == nullptr, "");
-	ZG_ARG_CHECK(createInfo->pixelShaderPath == nullptr, "");
-	ZG_ARG_CHECK(createInfo->common.pixelShaderEntry == nullptr, "");
-	ZG_ARG_CHECK(createInfo->common.numVertexAttributes == 0, "Must specify at least one vertex attribute");
-	ZG_ARG_CHECK(createInfo->common.numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex attributes specified");
-	ZG_ARG_CHECK(createInfo->common.numVertexBufferSlots == 0, "Must specify at least one vertex buffer");
-	ZG_ARG_CHECK(createInfo->common.numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex buffers specified");
-	ZG_ARG_CHECK(createInfo->common.numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
-
-	return zg::getBackend()->pipelineRenderCreateFromFileSPIRV(
-		pipelineOut, signatureOut, *createInfo);
-}
-
-// Pipeline Render - HLSL
-// ------------------------------------------------------------------------------------------------
-
-ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
-	ZgPipelineRender** pipelineOut,
-	ZgPipelineRenderSignature* signatureOut,
-	const ZgPipelineRenderCreateInfoFileHLSL* createInfo)
-{
-	ZG_ARG_CHECK(createInfo == nullptr, "");
-	ZG_ARG_CHECK(pipelineOut == nullptr, "");
-	ZG_ARG_CHECK(signatureOut == nullptr, "");
-	ZG_ARG_CHECK(createInfo->vertexShaderPath == nullptr, "");
-	ZG_ARG_CHECK(createInfo->common.vertexShaderEntry == nullptr, "");
-	ZG_ARG_CHECK(createInfo->pixelShaderPath == nullptr, "");
-	ZG_ARG_CHECK(createInfo->common.pixelShaderEntry == nullptr, "");
-	ZG_ARG_CHECK(createInfo->shaderModel == ZG_SHADER_MODEL_UNDEFINED, "Must specify shader model");
-	ZG_ARG_CHECK(createInfo->common.numVertexAttributes == 0, "Must specify at least one vertex attribute");
-	ZG_ARG_CHECK(createInfo->common.numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex attributes specified");
-	ZG_ARG_CHECK(createInfo->common.numVertexBufferSlots == 0, "Must specify at least one vertex buffer");
-	ZG_ARG_CHECK(createInfo->common.numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex buffers specified");
-	ZG_ARG_CHECK(createInfo->common.numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
-
-	return zg::getBackend()->pipelineRenderCreateFromFileHLSL(
-		pipelineOut, signatureOut, *createInfo);
-}
-
-ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
-	ZgPipelineRender** pipelineOut,
-	ZgPipelineRenderSignature* signatureOut,
-	const ZgPipelineRenderCreateInfoSourceHLSL* createInfo)
-{
-	ZG_ARG_CHECK(createInfo == nullptr, "");
-	ZG_ARG_CHECK(pipelineOut == nullptr, "");
-	ZG_ARG_CHECK(signatureOut == nullptr, "");
-	ZG_ARG_CHECK(createInfo->vertexShaderSrc == nullptr, "");
-	ZG_ARG_CHECK(createInfo->common.vertexShaderEntry == nullptr, "");
-	ZG_ARG_CHECK(createInfo->pixelShaderSrc == nullptr, "");
-	ZG_ARG_CHECK(createInfo->common.pixelShaderEntry == nullptr, "");
-	ZG_ARG_CHECK(createInfo->shaderModel == ZG_SHADER_MODEL_UNDEFINED, "Must specify shader model");
-	ZG_ARG_CHECK(createInfo->common.numVertexAttributes == 0, "Must specify at least one vertex attribute");
-	ZG_ARG_CHECK(createInfo->common.numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex attributes specified");
-	ZG_ARG_CHECK(createInfo->common.numVertexBufferSlots == 0, "Must specify at least one vertex buffer");
-	ZG_ARG_CHECK(createInfo->common.numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex buffers specified");
-	ZG_ARG_CHECK(createInfo->common.numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
-
-	return zg::getBackend()->pipelineRenderCreateFromSourceHLSL(
-		pipelineOut, signatureOut, *createInfo);
 }
 
 // Memory Heap
@@ -589,6 +609,13 @@ ZG_API ZgResult zgCommandListSetPipelineBindings(
 	return commandList->setPipelineBindings(*bindings);
 }
 
+ZG_API ZgResult zgCommandListSetPipelineCompute(
+	ZgCommandList* commandList,
+	ZgPipelineCompute* pipeline)
+{
+	return commandList->setPipelineCompute(pipeline);
+}
+
 ZG_API ZgResult zgCommandListSetPipelineRender(
 	ZgCommandList* commandList,
 	ZgPipelineRender* pipeline)
@@ -657,6 +684,15 @@ ZG_API ZgResult zgCommandListSetVertexBuffer(
 {
 	return commandList->setVertexBuffer(
 		vertexBufferSlot, vertexBuffer);
+}
+
+ZG_API ZgResult zgCommandListDispatchCompute(
+	ZgCommandList* commandList,
+	uint32_t groupCountX,
+	uint32_t groupCountY,
+	uint32_t groupCountZ)
+{
+	return commandList->dispatchCompute(groupCountX, groupCountY, groupCountZ);
 }
 
 ZG_API ZgResult zgCommandListDrawTriangles(
