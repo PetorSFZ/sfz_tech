@@ -88,6 +88,67 @@ Result Context::getStats(ZgStats& statsOut) noexcept
 }
 
 
+// PipelineBindings: Methods
+// ------------------------------------------------------------------------------------------------
+
+PipelineBindings& PipelineBindings::addConstantBuffer(ConstantBufferBinding binding) noexcept
+{
+	assert(numConstantBuffers < ZG_MAX_NUM_CONSTANT_BUFFERS);
+	constantBuffers[numConstantBuffers] = binding;
+	numConstantBuffers += 1;
+	return *this;
+}
+
+PipelineBindings& PipelineBindings::addConstantBuffer(
+	uint32_t shaderRegister, Buffer& buffer) noexcept
+{
+	ConstantBufferBinding binding;
+	binding.shaderRegister = shaderRegister;
+	binding.buffer = &buffer;
+	return this->addConstantBuffer(binding);
+}
+
+PipelineBindings& PipelineBindings::addTexture(TextureBinding binding) noexcept
+{
+	assert(numTextures < ZG_MAX_NUM_TEXTURES);
+	textures[numTextures] = binding;
+	numTextures += 1;
+	return *this;
+}
+
+PipelineBindings& PipelineBindings::addTexture(
+	uint32_t textureRegister, Texture2D& texture) noexcept
+{
+	TextureBinding binding;
+	binding.textureRegister = textureRegister;
+	binding.texture = &texture;
+	return this->addTexture(binding);
+}
+
+ZgPipelineBindings PipelineBindings::toCApi() const noexcept
+{
+	assert(numConstantBuffers < ZG_MAX_NUM_CONSTANT_BUFFERS);
+	assert(numTextures < ZG_MAX_NUM_TEXTURES);
+
+	// Constant buffers
+	ZgPipelineBindings cBindings = {};
+	cBindings.numConstantBuffers = this->numConstantBuffers;
+	for (uint32_t i = 0; i < this->numConstantBuffers; i++) {
+		cBindings.constantBuffers[i].shaderRegister = this->constantBuffers[i].shaderRegister;
+		cBindings.constantBuffers[i].buffer = this->constantBuffers[i].buffer->buffer;
+	}
+
+	// Textures
+	cBindings.numTextures = this->numTextures;
+	for (uint32_t i = 0; i < this->numTextures; i++) {
+		cBindings.textures[i].textureRegister = this->textures[i].textureRegister;
+		cBindings.textures[i].texture = this->textures[i].texture->texture;
+	}
+
+	return cBindings;
+}
+
+
 // PipelineCompute: State methods
 // ------------------------------------------------------------------------------------------------
 
@@ -344,7 +405,7 @@ Result PipelineRender::createFromFileSPIRV(
 {
 	this->release();
 	return (Result)zgPipelineRenderCreateFromFileSPIRV(
-		&this->pipeline, &this->signature, &createInfo);
+		&this->pipeline, &this->bindingsSignature, &this->renderSignature, &createInfo);
 }
 
 Result PipelineRender::createFromFileHLSL(
@@ -353,7 +414,7 @@ Result PipelineRender::createFromFileHLSL(
 {
 	this->release();
 	return (Result)zgPipelineRenderCreateFromFileHLSL(
-		&this->pipeline, &this->signature, &createInfo, &compileSettings);
+		&this->pipeline, &this->bindingsSignature, &this->renderSignature, &createInfo, &compileSettings);
 }
 
 Result PipelineRender::createFromSourceHLSL(
@@ -362,20 +423,22 @@ Result PipelineRender::createFromSourceHLSL(
 {
 	this->release();
 	return (Result)zgPipelineRenderCreateFromSourceHLSL(
-		&this->pipeline, &this->signature, &createInfo, &compileSettings);
+		&this->pipeline, &this->bindingsSignature, &this->renderSignature, &createInfo, &compileSettings);
 }
 
 void PipelineRender::swap(PipelineRender& other) noexcept
 {
 	std::swap(this->pipeline, other.pipeline);
-	std::swap(this->signature, other.signature);
+	std::swap(this->bindingsSignature, other.bindingsSignature);
+	std::swap(this->renderSignature, other.renderSignature);
 }
 
 void PipelineRender::release() noexcept
 {
 	if (this->pipeline != nullptr) zgPipelineRenderRelease(this->pipeline);
 	this->pipeline = nullptr;
-	this->signature = {};
+	this->bindingsSignature = {};
+	this->renderSignature = {};
 }
 
 
@@ -652,67 +715,6 @@ Result CommandQueue::executeCommandList(CommandList& commandList) noexcept
 	ZgResult res = zgCommandQueueExecuteCommandList(this->commandQueue, commandList.commandList);
 	commandList.commandList = nullptr;
 	return (Result)res;
-}
-
-
-// PipelineBindings: Methods
-// ------------------------------------------------------------------------------------------------
-
-PipelineBindings& PipelineBindings::addConstantBuffer(ConstantBufferBinding binding) noexcept
-{
-	assert(numConstantBuffers < ZG_MAX_NUM_CONSTANT_BUFFERS);
-	constantBuffers[numConstantBuffers] = binding;
-	numConstantBuffers += 1;
-	return *this;
-}
-
-PipelineBindings& PipelineBindings::addConstantBuffer(
-	uint32_t shaderRegister, Buffer& buffer) noexcept
-{
-	ConstantBufferBinding binding;
-	binding.shaderRegister = shaderRegister;
-	binding.buffer = &buffer;
-	return this->addConstantBuffer(binding);
-}
-
-PipelineBindings& PipelineBindings::addTexture(TextureBinding binding) noexcept
-{
-	assert(numTextures < ZG_MAX_NUM_TEXTURES);
-	textures[numTextures] = binding;
-	numTextures += 1;
-	return *this;
-}
-
-PipelineBindings& PipelineBindings::addTexture(
-	uint32_t textureRegister, Texture2D& texture) noexcept
-{
-	TextureBinding binding;
-	binding.textureRegister = textureRegister;
-	binding.texture = &texture;
-	return this->addTexture(binding);
-}
-
-ZgPipelineBindings PipelineBindings::toCApi() const noexcept
-{
-	assert(numConstantBuffers < ZG_MAX_NUM_CONSTANT_BUFFERS);
-	assert(numTextures < ZG_MAX_NUM_TEXTURES);
-
-	// Constant buffers
-	ZgPipelineBindings cBindings = {};
-	cBindings.numConstantBuffers = this->numConstantBuffers;
-	for (uint32_t i = 0; i < this->numConstantBuffers; i++) {
-		cBindings.constantBuffers[i].shaderRegister = this->constantBuffers[i].shaderRegister;
-		cBindings.constantBuffers[i].buffer = this->constantBuffers[i].buffer->buffer;
-	}
-
-	// Textures
-	cBindings.numTextures = this->numTextures;
-	for (uint32_t i = 0; i < this->numTextures; i++) {
-		cBindings.textures[i].textureRegister = this->textures[i].textureRegister;
-		cBindings.textures[i].texture = this->textures[i].texture->texture;
-	}
-
-	return cBindings;
 }
 
 

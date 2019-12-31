@@ -467,8 +467,8 @@ void Renderer::stageSetPushConstantUntyped(
 	// In debug mode, validate that the specified shader registers corresponds to a a suitable
 	// push constant in the pipeline
 #ifndef NDEBUG
-	const ZgPipelineRenderSignature& signature =
-		mState->currentPipelineRender->pipeline.signature;
+	const ZgPipelineBindingsSignature& signature =
+		mState->currentPipelineRender->pipeline.bindingsSignature;
 	
 	uint32_t bufferIdx = ~0u;
 	for (uint32_t i = 0; i < signature.numConstantBuffers; i++) {
@@ -496,8 +496,8 @@ void Renderer::stageSetConstantBufferUntyped(
 	// In debug mode, validate that the specified shader registers corresponds to a a suitable
 	// constant buffer in the pipeline
 #ifndef NDEBUG
-	const ZgPipelineRenderSignature& signature =
-		mState->currentPipelineRender->pipeline.signature;
+	const ZgPipelineBindingsSignature& signature =
+		mState->currentPipelineRender->pipeline.bindingsSignature;
 
 	uint32_t bufferIdx = ~0u;
 	for (uint32_t i = 0; i < signature.numConstantBuffers; i++) {
@@ -549,33 +549,36 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 	// Validate some stuff in debug mode
 #ifndef NDEBUG
 	// Validate pipeline vertex input for standard mesh rendering
-	const ZgPipelineRenderSignature& signature =
-		mState->currentPipelineRender->pipeline.signature;
-	sfz_assert(signature.numVertexAttributes == 3);
+	const ZgPipelineRenderSignature& renderSignature =
+		mState->currentPipelineRender->pipeline.renderSignature;
+	sfz_assert(renderSignature.numVertexAttributes == 3);
 
-	sfz_assert(signature.vertexAttributes[0].location == 0);
-	sfz_assert(signature.vertexAttributes[0].vertexBufferSlot == 0);
-	sfz_assert(signature.vertexAttributes[0].type == ZG_VERTEX_ATTRIBUTE_F32_3);
+	sfz_assert(renderSignature.vertexAttributes[0].location == 0);
+	sfz_assert(renderSignature.vertexAttributes[0].vertexBufferSlot == 0);
+	sfz_assert(renderSignature.vertexAttributes[0].type == ZG_VERTEX_ATTRIBUTE_F32_3);
 	sfz_assert(
-		signature.vertexAttributes[0].offsetToFirstElementInBytes == offsetof(Vertex, pos));
+		renderSignature.vertexAttributes[0].offsetToFirstElementInBytes == offsetof(Vertex, pos));
 
-	sfz_assert(signature.vertexAttributes[1].location == 1);
-	sfz_assert(signature.vertexAttributes[1].vertexBufferSlot == 0);
-	sfz_assert(signature.vertexAttributes[1].type == ZG_VERTEX_ATTRIBUTE_F32_3);
+	sfz_assert(renderSignature.vertexAttributes[1].location == 1);
+	sfz_assert(renderSignature.vertexAttributes[1].vertexBufferSlot == 0);
+	sfz_assert(renderSignature.vertexAttributes[1].type == ZG_VERTEX_ATTRIBUTE_F32_3);
 	sfz_assert(
-		signature.vertexAttributes[1].offsetToFirstElementInBytes == offsetof(Vertex, normal));
+		renderSignature.vertexAttributes[1].offsetToFirstElementInBytes == offsetof(Vertex, normal));
 
-	sfz_assert(signature.vertexAttributes[2].location == 2);
-	sfz_assert(signature.vertexAttributes[2].vertexBufferSlot == 0);
-	sfz_assert(signature.vertexAttributes[2].type == ZG_VERTEX_ATTRIBUTE_F32_2);
+	sfz_assert(renderSignature.vertexAttributes[2].location == 2);
+	sfz_assert(renderSignature.vertexAttributes[2].vertexBufferSlot == 0);
+	sfz_assert(renderSignature.vertexAttributes[2].type == ZG_VERTEX_ATTRIBUTE_F32_2);
 	sfz_assert(
-		signature.vertexAttributes[2].offsetToFirstElementInBytes == offsetof(Vertex, texcoord));
+		renderSignature.vertexAttributes[2].offsetToFirstElementInBytes == offsetof(Vertex, texcoord));
+
+	const ZgPipelineBindingsSignature& bindingsSignature =
+		mState->currentPipelineRender->pipeline.bindingsSignature;
 
 	// Validate material index push constant
 	if (registers.materialIdxPushConstant != ~0u) {
 		bool found = false;
-		for (uint32_t i = 0; i < signature.numConstantBuffers; i++) {
-			const ZgConstantBufferDesc& desc = signature.constantBuffers[i];
+		for (uint32_t i = 0; i < bindingsSignature.numConstantBuffers; i++) {
+			const ZgConstantBufferBindingDesc& desc = bindingsSignature.constantBuffers[i];
 			if (desc.shaderRegister == registers.materialIdxPushConstant) {
 				found = true;
 				sfz_assert(desc.pushConstant == ZG_TRUE);
@@ -588,8 +591,8 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 	// Validate materials array
 	if (registers.materialsArray != ~0u) {
 		bool found = false;
-		for (uint32_t i = 0; i < signature.numConstantBuffers; i++) {
-			const ZgConstantBufferDesc& desc = signature.constantBuffers[i];
+		for (uint32_t i = 0; i < bindingsSignature.numConstantBuffers; i++) {
+			const ZgConstantBufferBindingDesc& desc = bindingsSignature.constantBuffers[i];
 			if (desc.shaderRegister == registers.materialsArray) {
 				found = true;
 				sfz_assert(desc.pushConstant == ZG_FALSE);
@@ -605,8 +608,8 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 	auto assertTextureRegister = [&](uint32_t texRegister) {
 		if (texRegister == ~0u) return;
 		bool found = false;
-		for (uint32_t i = 0; i < signature.numTextures; i++) {
-			const ZgTextureDesc& desc = signature.textures[i];
+		for (uint32_t i = 0; i < bindingsSignature.numTextures; i++) {
+			const ZgTextureBindingDesc& desc = bindingsSignature.textures[i];
 			if (desc.textureRegister == texRegister) {
 				found = true;
 				break;

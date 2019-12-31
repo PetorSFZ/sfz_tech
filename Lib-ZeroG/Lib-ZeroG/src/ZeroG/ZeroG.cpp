@@ -233,12 +233,14 @@ ZG_API ZgResult zgPipelineComputeRelease(
 
 ZG_API ZgResult zgPipelineRenderCreateFromFileSPIRV(
 	ZgPipelineRender** pipelineOut,
-	ZgPipelineRenderSignature* signatureOut,
+	ZgPipelineBindingsSignature* bindingsSignatureOut,
+	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo* createInfo)
 {
 	ZG_ARG_CHECK(createInfo == nullptr, "");
 	ZG_ARG_CHECK(pipelineOut == nullptr, "");
-	ZG_ARG_CHECK(signatureOut == nullptr, "");
+	ZG_ARG_CHECK(bindingsSignatureOut == nullptr, "");
+	ZG_ARG_CHECK(renderSignatureOut == nullptr, "");
 	ZG_ARG_CHECK(createInfo->vertexShader == nullptr, "");
 	ZG_ARG_CHECK(createInfo->vertexShaderEntry == nullptr, "");
 	ZG_ARG_CHECK(createInfo->pixelShader == nullptr, "");
@@ -250,19 +252,21 @@ ZG_API ZgResult zgPipelineRenderCreateFromFileSPIRV(
 	ZG_ARG_CHECK(createInfo->numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
 
 	return zg::getBackend()->pipelineRenderCreateFromFileSPIRV(
-		pipelineOut, signatureOut, *createInfo);
+		pipelineOut, bindingsSignatureOut, renderSignatureOut, *createInfo);
 }
 
 ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 	ZgPipelineRender** pipelineOut,
-	ZgPipelineRenderSignature* signatureOut,
+	ZgPipelineBindingsSignature* bindingsSignatureOut,
+	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo* createInfo,
 	const ZgPipelineCompileSettingsHLSL* compileSettings)
 {
 	ZG_ARG_CHECK(createInfo == nullptr, "");
 	ZG_ARG_CHECK(compileSettings == nullptr, "");
 	ZG_ARG_CHECK(pipelineOut == nullptr, "");
-	ZG_ARG_CHECK(signatureOut == nullptr, "");
+	ZG_ARG_CHECK(bindingsSignatureOut == nullptr, "");
+	ZG_ARG_CHECK(renderSignatureOut == nullptr, "");
 	ZG_ARG_CHECK(createInfo->vertexShader == nullptr, "");
 	ZG_ARG_CHECK(createInfo->vertexShaderEntry == nullptr, "");
 	ZG_ARG_CHECK(createInfo->pixelShader == nullptr, "");
@@ -275,19 +279,21 @@ ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 	ZG_ARG_CHECK(createInfo->numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
 
 	return zg::getBackend()->pipelineRenderCreateFromFileHLSL(
-		pipelineOut, signatureOut, *createInfo, *compileSettings);
+		pipelineOut, bindingsSignatureOut, renderSignatureOut, *createInfo, *compileSettings);
 }
 
 ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
 	ZgPipelineRender** pipelineOut,
-	ZgPipelineRenderSignature* signatureOut,
+	ZgPipelineBindingsSignature* bindingsSignatureOut,
+	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo* createInfo,
 	const ZgPipelineCompileSettingsHLSL* compileSettings)
 {
 	ZG_ARG_CHECK(createInfo == nullptr, "");
 	ZG_ARG_CHECK(compileSettings == nullptr, "");
 	ZG_ARG_CHECK(pipelineOut == nullptr, "");
-	ZG_ARG_CHECK(signatureOut == nullptr, "");
+	ZG_ARG_CHECK(bindingsSignatureOut == nullptr, "");
+	ZG_ARG_CHECK(renderSignatureOut == nullptr, "");
 	ZG_ARG_CHECK(createInfo->vertexShader == nullptr, "");
 	ZG_ARG_CHECK(createInfo->vertexShaderEntry == nullptr, "");
 	ZG_ARG_CHECK(createInfo->pixelShader == nullptr, "");
@@ -300,20 +306,13 @@ ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
 	ZG_ARG_CHECK(createInfo->numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
 
 	return zg::getBackend()->pipelineRenderCreateFromSourceHLSL(
-		pipelineOut, signatureOut, *createInfo, *compileSettings);
+		pipelineOut, bindingsSignatureOut, renderSignatureOut, *createInfo, *compileSettings);
 }
 
 ZG_API ZgResult zgPipelineRenderRelease(
 	ZgPipelineRender* pipeline)
 {
 	return zg::getBackend()->pipelineRenderRelease(pipeline);
-}
-
-ZG_API ZgResult zgPipelineRenderGetSignature(
-	const ZgPipelineRender* pipeline,
-	ZgPipelineRenderSignature* signatureOut)
-{
-	return zg::getBackend()->pipelineRenderGetSignature(pipeline, signatureOut);
 }
 
 // Memory Heap

@@ -78,7 +78,8 @@ public:
 
 	ComPtr<ID3D12RootSignature> rootSignature;
 	ComPtr<ID3D12PipelineState> pipelineState;
-	ZgPipelineRenderSignature signature = {};
+	ZgPipelineBindingsSignature bindingsSignature = {};
+	ZgPipelineRenderSignature renderSignature = {};
 	uint32_t numPushConstants = 0;
 	D3D12PushConstantMapping pushConstants[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
 	uint32_t numConstantBuffers = 0;
@@ -106,7 +107,8 @@ ZgResult createPipelineComputeFileHLSL(
 
 ZgResult createPipelineRenderFileSPIRV(
 	D3D12PipelineRender** pipelineOut,
-	ZgPipelineRenderSignature* signatureOut,
+	ZgPipelineBindingsSignature* bindingsSignatureOut,
+	ZgPipelineRenderSignature* renderSignatureOut,
 	ZgPipelineRenderCreateInfo createInfo,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
@@ -115,7 +117,8 @@ ZgResult createPipelineRenderFileSPIRV(
 
 ZgResult createPipelineRenderFileHLSL(
 	D3D12PipelineRender** pipelineOut,
-	ZgPipelineRenderSignature* signatureOut,
+	ZgPipelineBindingsSignature* bindingsSignatureOut,
+	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,
@@ -125,7 +128,8 @@ ZgResult createPipelineRenderFileHLSL(
 
 ZgResult createPipelineRenderSourceHLSL(
 	D3D12PipelineRender** pipelineOut,
-	ZgPipelineRenderSignature* signatureOut,
+	ZgPipelineBindingsSignature* bindingsSignatureOut,
+	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,

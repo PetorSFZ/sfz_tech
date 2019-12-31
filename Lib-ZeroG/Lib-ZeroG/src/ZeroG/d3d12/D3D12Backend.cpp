@@ -658,7 +658,8 @@ public:
 
 	ZgResult pipelineRenderCreateFromFileSPIRV(
 		ZgPipelineRender** pipelineOut,
-		ZgPipelineRenderSignature* signatureOut,
+		ZgPipelineBindingsSignature* bindingsSignatureOut,
+		ZgPipelineRenderSignature* renderSignatureOut,
 		const ZgPipelineRenderCreateInfo& createInfo) noexcept override final
 	{
 		// Initialize DXC compiler if necessary
@@ -671,7 +672,8 @@ public:
 		D3D12PipelineRender* d3d12pipeline = nullptr;
 		ZgResult res = createPipelineRenderFileSPIRV(
 			&d3d12pipeline,
-			signatureOut,
+			bindingsSignatureOut,
+			renderSignatureOut,
 			createInfo,
 			*mState->dxcLibrary.Get(),
 			*mState->dxcCompiler.Get(),
@@ -685,7 +687,8 @@ public:
 
 	ZgResult pipelineRenderCreateFromFileHLSL(
 		ZgPipelineRender** pipelineOut,
-		ZgPipelineRenderSignature* signatureOut,
+		ZgPipelineBindingsSignature* bindingsSignatureOut,
+		ZgPipelineRenderSignature* renderSignatureOut,
 		const ZgPipelineRenderCreateInfo& createInfo,
 		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept override final
 	{
@@ -699,7 +702,8 @@ public:
 		D3D12PipelineRender* d3d12pipeline = nullptr;
 		ZgResult res = createPipelineRenderFileHLSL(
 			&d3d12pipeline,
-			signatureOut,
+			bindingsSignatureOut,
+			renderSignatureOut,
 			createInfo,
 			compileSettings,
 			*mState->dxcLibrary.Get(),
@@ -714,7 +718,8 @@ public:
 
 	ZgResult pipelineRenderCreateFromSourceHLSL(
 		ZgPipelineRender** pipelineOut,
-		ZgPipelineRenderSignature* signatureOut,
+		ZgPipelineBindingsSignature* bindingsSignatureOut,
+		ZgPipelineRenderSignature* renderSignatureOut,
 		const ZgPipelineRenderCreateInfo& createInfo,
 		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept override final
 	{
@@ -728,7 +733,8 @@ public:
 		D3D12PipelineRender* d3d12pipeline = nullptr;
 		ZgResult res = createPipelineRenderSourceHLSL(
 			&d3d12pipeline,
-			signatureOut,
+			bindingsSignatureOut,
+			renderSignatureOut,
 			createInfo,
 			compileSettings,
 			*mState->dxcLibrary.Get(),
@@ -746,16 +752,6 @@ public:
 	{
 		// TODO: Check if pipeline is currently in use? Lock?
 		getAllocator()->deleteObject(pipeline);
-		return ZG_SUCCESS;
-	}
-
-	ZgResult pipelineRenderGetSignature(
-		const ZgPipelineRender* pipelineIn,
-		ZgPipelineRenderSignature* signatureOut) const noexcept override final
-	{
-		const D3D12PipelineRender* pipeline =
-			reinterpret_cast<const D3D12PipelineRender*>(pipelineIn);
-		*signatureOut = pipeline->signature;
 		return ZG_SUCCESS;
 	}
 

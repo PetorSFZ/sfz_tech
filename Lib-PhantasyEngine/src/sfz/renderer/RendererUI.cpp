@@ -501,7 +501,8 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 	ImGui::Spacing();
 	for (uint32_t i = 0; i < configurable.renderPipelines.size(); i++) {
 		PipelineRenderItem& pipeline = configurable.renderPipelines[i];
-		const ZgPipelineRenderSignature& signature = pipeline.pipeline.signature;
+		const ZgPipelineBindingsSignature& bindingsSignature = pipeline.pipeline.bindingsSignature;
+		const ZgPipelineRenderSignature& renderSignature = pipeline.pipeline.renderSignature;
 		const char* name = resStrings.getString(pipeline.name);
 
 		// Reload button
@@ -541,22 +542,22 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 
 		// Print vertex attributes
 		ImGui::Spacing();
-		ImGui::Text("Vertex attributes (%u):", signature.numVertexAttributes);
+		ImGui::Text("Vertex attributes (%u):", renderSignature.numVertexAttributes);
 		ImGui::Indent(20.0f);
-		for (uint32_t j = 0; j < signature.numVertexAttributes; j++) {
-			const ZgVertexAttribute& attrib = signature.vertexAttributes[j];
+		for (uint32_t j = 0; j < renderSignature.numVertexAttributes; j++) {
+			const ZgVertexAttribute& attrib = renderSignature.vertexAttributes[j];
 			ImGui::Text("- Location: %u -- Type: %s",
 				attrib.location, vertexAttributeTypeToString(attrib.type));
 		}
 		ImGui::Unindent(20.0f);
 
 		// Print constant buffers
-		if (signature.numConstantBuffers > 0) {
+		if (bindingsSignature.numConstantBuffers > 0) {
 			ImGui::Spacing();
-			ImGui::Text("Constant buffers (%u):", signature.numConstantBuffers);
+			ImGui::Text("Constant buffers (%u):", bindingsSignature.numConstantBuffers);
 			ImGui::Indent(20.0f);
-			for (uint32_t j = 0; j < signature.numConstantBuffers; j++) {
-				const ZgConstantBufferDesc& cbuffer = signature.constantBuffers[j];
+			for (uint32_t j = 0; j < bindingsSignature.numConstantBuffers; j++) {
+				const ZgConstantBufferBindingDesc& cbuffer = bindingsSignature.constantBuffers[j];
 				ImGui::Text("- Register: %u -- Size: %u bytes -- Push constant: %s",
 					cbuffer.shaderRegister,
 					cbuffer.sizeInBytes,
@@ -566,12 +567,12 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 		}
 
 		// Print textures
-		if (signature.numTextures > 0) {
+		if (bindingsSignature.numTextures > 0) {
 			ImGui::Spacing();
-			ImGui::Text("Textures (%u):", signature.numTextures);
+			ImGui::Text("Textures (%u):", bindingsSignature.numTextures);
 			ImGui::Indent(20.0f);
-			for (uint32_t j = 0; j < signature.numTextures; j++) {
-				const ZgTextureDesc& texture = signature.textures[j];
+			for (uint32_t j = 0; j < bindingsSignature.numTextures; j++) {
+				const ZgTextureBindingDesc& texture = bindingsSignature.textures[j];
 				ImGui::Text("- Register: %u", texture.textureRegister);
 			}
 			ImGui::Unindent(20.0f);

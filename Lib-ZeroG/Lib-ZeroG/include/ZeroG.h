@@ -108,7 +108,7 @@ typedef struct ZgFramebufferRect ZgFramebufferRect;
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 9;
+static const uint32_t ZG_COMPILED_API_VERSION = 10;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -357,7 +357,87 @@ enum ZgTextureFormatEnum {
 };
 typedef uint32_t ZgTextureFormat;
 
-// Pipeline Common
+// Pipeline Bindings
+// ------------------------------------------------------------------------------------------------
+
+// The maximum number of constant buffers allowed on a single pipeline
+static const uint32_t ZG_MAX_NUM_CONSTANT_BUFFERS = 16;
+
+// The maximum number of textures allowed on a single pipeline
+static const uint32_t ZG_MAX_NUM_TEXTURES = 16;
+
+// The maximum number of samplers allowed on a single pipeline
+static const uint32_t ZG_MAX_NUM_SAMPLERS = 8;
+
+struct ZgConstantBufferBindingDesc {
+
+	// Which register this buffer corresponds to in the shader. In D3D12 this is the "register"
+	// keyword, i.e. a value of 0 would mean "register(b0)".
+	uint32_t shaderRegister;
+
+	// Size of the buffer in bytes
+	uint32_t sizeInBytes;
+
+	// Whether the buffer is a push constant or not
+	//
+	// The size of a push constant must be a multiple of 4 bytes, i.e. an even (32-bit) word.
+	//
+	// In D3D12, a push constant is stored directly in the root signature. Note that the maximum
+	// size of a root signature in D3D12 is 64 32-bit words. Therefore ZeroG imposes an limit of a
+	// maximum size of 32 32-bit words (128 bytes) per push constant. Microsoft recommends keeping
+	// the root signature smaller than 16 words to maximize performance on some hardware.
+	ZgBool pushConstant;
+};
+typedef struct ZgConstantBufferBindingDesc ZgConstantBufferBindingDesc;
+
+struct ZgTextureBindingDesc {
+
+	// Which register this texture corresponds to in the shader.
+	uint32_t textureRegister;
+};
+typedef struct ZgTextureBindingDesc ZgTextureBindingDesc;
+
+// A struct representing the signature of a pipeline, indicating what resources can be bound to it.
+//
+// The signature contains all information necessary to know how to bind input and output to a
+// pipeline. This information is inferred by performing reflection on the shaders being compiled.
+struct ZgPipelineBindingsSignature {
+
+	// The constant buffers
+	uint32_t numConstantBuffers;
+	ZgConstantBufferBindingDesc constantBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
+
+	// The textures
+	uint32_t numTextures;
+	ZgTextureBindingDesc textures[ZG_MAX_NUM_TEXTURES];
+};
+typedef struct ZgPipelineBindingsSignature ZgPipelineBindingsSignature;
+
+struct ZgConstantBufferBinding {
+	uint32_t shaderRegister;
+	ZgBuffer* buffer;
+};
+typedef struct ZgConstantBufferBinding ZgConstantBufferBinding;
+
+struct ZgTextureBinding {
+	uint32_t textureRegister;
+	ZgTexture2D* texture;
+};
+typedef struct ZgTextureBinding ZgTextureBinding;
+
+struct ZgPipelineBindings {
+
+	// The constant buffers to bind
+	uint32_t numConstantBuffers;
+	ZgConstantBufferBinding constantBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
+
+	// The textures to bind
+	uint32_t numTextures;
+	ZgTextureBinding textures[ZG_MAX_NUM_TEXTURES];
+};
+typedef struct ZgPipelineBindings ZgPipelineBindings;
+
+// Pipeline Compiler Settings
 // ------------------------------------------------------------------------------------------------
 
 // Enum representing various shader model versions
@@ -384,6 +464,7 @@ struct ZgPipelineCompileSettingsHLSL {
 };
 typedef struct ZgPipelineCompileSettingsHLSL ZgPipelineCompileSettingsHLSL;
 
+
 // Pipeline Compute
 // ------------------------------------------------------------------------------------------------
 
@@ -406,20 +487,17 @@ ZG_API ZgResult zgPipelineComputeRelease(
 	ZgPipelineCompute* pipeline);
 
 
-// Pipeline Render - Signature
+
+
+
+
+
+
+// Pipeline Render Signature
 // ------------------------------------------------------------------------------------------------
 
 // The maximum number of vertex attributes allowed as input to a vertex shader
 static const uint32_t ZG_MAX_NUM_VERTEX_ATTRIBUTES = 8;
-
-// The maximum number of constant buffers allowed on a single pipeline
-static const uint32_t ZG_MAX_NUM_CONSTANT_BUFFERS = 16;
-
-// The maximum number of textures allowed on a single pipeline
-static const uint32_t ZG_MAX_NUM_TEXTURES = 16;
-
-// The maximum number of samplers allowed on a single pipeline
-static const uint32_t ZG_MAX_NUM_SAMPLERS = 8;
 
 // The maximum number of render targets allowed on a single pipeline
 static const uint32_t ZG_MAX_NUM_RENDER_TARGETS = 8;
@@ -473,59 +551,19 @@ struct ZgVertexAttribute {
 };
 typedef struct ZgVertexAttribute ZgVertexAttribute;
 
-struct ZgConstantBufferDesc {
-
-	// Which register this buffer corresponds to in the shader. In D3D12 this is the "register"
-	// keyword, i.e. a value of 0 would mean "register(b0)". In GLSL this corresponds to the
-	// "binding" keyword, i.e. "layout(binding = 0)".
-	uint32_t shaderRegister;
-
-	// Size of the buffer in bytes
-	uint32_t sizeInBytes;
-
-	// Whether the buffer is a push constant or not
-	//
-	// The size of a push constant must be a multiple of 4 bytes, i.e. an even (32-bit) word.
-	//
-	// In D3D12, a push constant is stored directly in the root signature. No indirection needed
-	// when loading it in the shader. Do note that the maximum size of a root signature in D3D12
-	// is 64 32-bit words. This is for ALL push constants and other types of parameters combined.
-	// Therefore ZeroG imposes an limit of a maximum size of 32 32-bit words (128 bytes) per push
-	// constant. In addition, Microsoft recommends keeping the root signature smaller than 16
-	// words to maximize performance on some hardware.
-	ZgBool pushConstant;
-};
-typedef struct ZgConstantBufferDesc ZgConstantBufferDesc;
-
-struct ZgTextureDesc {
-
-	// Which register this texture corresponds to in the shader.
-	uint32_t textureRegister;
-};
-typedef struct ZgTextureDesc ZgTextureDesc;
-
-// A struct representing the signature of a render pipeline
+// A struct representing the rendering signature of a render pipeline.
 //
-// The signature contains all information necessary to know how to bind input and output to a
-// pipeline. Of course, in practice this is something the programmer should already be aware of as
-// they have access to (or even wrote) the shaders in the first place.
+// In contrast to ZgPipelineBindingsSignature, this specifies render pipeline specific bendings of
+// a render pipeline. I.e. how vertex data is loaded and render targets being written to.
 //
-// The signature is inferred by performing reflection on the shaders being compiled. Some
-// information that can not be automatically inferred is created by additional data supplied
-// when creating the pipeline.
+// Unlike ZgPipelineBindingsSignature, this data can not be inferred by reflection and is specified
+// by the user when creating a pipeline anyway. It is mainly kept and provided in this form to make
+// life a bit simpler for the user.
 struct ZgPipelineRenderSignature {
 
 	// The vertex attributes to the vertex shader
 	uint32_t numVertexAttributes;
 	ZgVertexAttribute vertexAttributes[ZG_MAX_NUM_VERTEX_ATTRIBUTES];
-
-	// The constant buffers
-	uint32_t numConstantBuffers;
-	ZgConstantBufferDesc constantBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
-
-	// The textures
-	uint32_t numTextures;
-	ZgTextureDesc textures[ZG_MAX_NUM_TEXTURES];
 
 	// Render targets
 	uint32_t numRenderTargets;
@@ -728,28 +766,26 @@ typedef struct ZgPipelineRenderCreateInfo ZgPipelineRenderCreateInfo;
 
 ZG_API ZgResult zgPipelineRenderCreateFromFileSPIRV(
 	ZgPipelineRender** pipelineOut,
-	ZgPipelineRenderSignature* signatureOut,
+	ZgPipelineBindingsSignature* bindingsSignatureOut,
+	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo* createInfo);
 
 ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 	ZgPipelineRender** pipelineOut,
-	ZgPipelineRenderSignature* signatureOut,
+	ZgPipelineBindingsSignature* bindingsSignatureOut,
+	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo* createInfo,
 	const ZgPipelineCompileSettingsHLSL* compileSettings);
 
-
 ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
 	ZgPipelineRender** pipelineOut,
-	ZgPipelineRenderSignature* signatureOut,
+	ZgPipelineBindingsSignature* bindingsSignatureOut,
+	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo* createInfo,
 	const ZgPipelineCompileSettingsHLSL* compileSettings);
 
 ZG_API ZgResult zgPipelineRenderRelease(
 	ZgPipelineRender* pipeline);
-
-ZG_API ZgResult zgPipelineRenderGetSignature(
-	const ZgPipelineRender* pipeline,
-	ZgPipelineRenderSignature* signatureOut);
 
 // Memory Heap
 // ------------------------------------------------------------------------------------------------
@@ -1065,29 +1101,6 @@ ZG_API ZgResult zgCommandListSetPushConstant(
 	uint32_t shaderRegister,
 	const void* data,
 	uint32_t dataSizeInBytes);
-
-struct ZgConstantBufferBinding {
-	uint32_t shaderRegister;
-	ZgBuffer* buffer;
-};
-typedef struct ZgConstantBufferBinding ZgConstantBufferBinding;
-
-struct ZgTextureBinding {
-	uint32_t textureRegister;
-	ZgTexture2D* texture;
-};
-
-struct ZgPipelineBindings {
-
-	// The constant buffers to bind
-	uint32_t numConstantBuffers;
-	ZgConstantBufferBinding constantBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
-
-	// The textures to bind
-	uint32_t numTextures;
-	ZgTextureBinding textures[ZG_MAX_NUM_TEXTURES];
-};
-typedef struct ZgPipelineBindings ZgPipelineBindings;
 
 ZG_API ZgResult zgCommandListSetPipelineBindings(
 	ZgCommandList* commandList,

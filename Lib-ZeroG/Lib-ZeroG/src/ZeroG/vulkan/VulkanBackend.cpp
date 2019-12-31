@@ -305,23 +305,27 @@ public:
 
 	ZgResult pipelineRenderCreateFromFileSPIRV(
 		ZgPipelineRender** pipelineOut,
-		ZgPipelineRenderSignature* signatureOut,
+		ZgPipelineBindingsSignature* bindingsSignatureOut,
+		ZgPipelineRenderSignature* renderSignatureOut,
 		const ZgPipelineRenderCreateInfo& createInfo) noexcept override final
 	{
 		(void)pipelineOut;
-		(void)signatureOut;
+		(void)bindingsSignatureOut;
+		(void)renderSignatureOut;
 		(void)createInfo;
 		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
 	ZgResult pipelineRenderCreateFromFileHLSL(
 		ZgPipelineRender** pipelineOut,
-		ZgPipelineRenderSignature* signatureOut,
+		ZgPipelineBindingsSignature* bindingsSignatureOut,
+		ZgPipelineRenderSignature* renderSignatureOut,
 		const ZgPipelineRenderCreateInfo& createInfo,
 		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept override final
 	{
 		(void)pipelineOut;
-		(void)signatureOut;
+		(void)bindingsSignatureOut;
+		(void)renderSignatureOut;
 		(void)createInfo;
 		(void)compileSettings;
 		return ZG_WARNING_UNIMPLEMENTED;
@@ -329,12 +333,14 @@ public:
 
 	ZgResult pipelineRenderCreateFromSourceHLSL(
 		ZgPipelineRender** pipelineOut,
-		ZgPipelineRenderSignature* signatureOut,
+		ZgPipelineBindingsSignature* bindingsSignatureOut,
+		ZgPipelineRenderSignature* renderSignatureOut,
 		const ZgPipelineRenderCreateInfo& createInfo,
 		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept override final
 	{
 		(void)pipelineOut;
-		(void)signatureOut;
+		(void)bindingsSignatureOut;
+		(void)renderSignatureOut;
 		(void)createInfo;
 		(void)compileSettings;
 		return ZG_WARNING_UNIMPLEMENTED;
@@ -344,15 +350,6 @@ public:
 		ZgPipelineRender* pipeline) noexcept override final
 	{
 		(void)pipeline;
-		return ZG_WARNING_UNIMPLEMENTED;
-	}
-
-	ZgResult pipelineRenderGetSignature(
-		const ZgPipelineRender* pipeline,
-		ZgPipelineRenderSignature* signatureOut) const noexcept override final
-	{
-		(void)pipeline;
-		(void)signatureOut;
 		return ZG_WARNING_UNIMPLEMENTED;
 	}
 

@@ -441,14 +441,14 @@ bool allocateStageMemory(RendererState& state) noexcept
 		sfz_assert(pipelineItem != nullptr);
 		
 		// Allocate CPU memory for constant buffer data
-		uint32_t numConstantBuffers = pipelineItem->pipeline.signature.numConstantBuffers;
+		uint32_t numConstantBuffers = pipelineItem->pipeline.bindingsSignature.numConstantBuffers;
 		stage.constantBuffers.init(numConstantBuffers, state.allocator, sfz_dbg(""));
 
 		// Allocate GPU memory for all constant buffers
 		for (uint32_t j = 0; j < numConstantBuffers; j++) {
 			
 			// Get constant buffer description, skip if push constant
-			const ZgConstantBufferDesc& desc = pipelineItem->pipeline.signature.constantBuffers[j];
+			const ZgConstantBufferBindingDesc& desc = pipelineItem->pipeline.bindingsSignature.constantBuffers[j];
 			if (desc.pushConstant == ZG_TRUE) continue;
 
 			// Check if constant buffer is marked as non-user-settable, in that case skip it

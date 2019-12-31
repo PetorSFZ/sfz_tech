@@ -26,6 +26,7 @@ namespace zg {
 // ------------------------------------------------------------------------------------------------
 
 class Context;
+class PipelineBindings;
 class PipelineCompute;
 class PipelineRender;
 class MemoryHeap;
@@ -66,11 +67,10 @@ constexpr bool isError(Result code) noexcept { return ZgResult(code) < 0; }
 // Context
 // ------------------------------------------------------------------------------------------------
 
-// The ZeroG context is the main entry point for all ZeroG functions.
+// Initializes and deinitializes the ZeroG context.
 //
-// ZeroG actually has an implicit context (i.e., it is only possible to have a single context
-// running at the time), but we pretend that there is an explicit context in order to make the user
-// write their code that way.
+// ZeroG has an implicit context, but we force access to all functions directly associated with the
+// implicit context through methods on this class.
 class Context final {
 public:
 	// Constructors & destructors
@@ -131,6 +131,54 @@ public:
 private:
 
 	bool mInitialized = false;
+};
+
+
+// PipelineBindings
+// ------------------------------------------------------------------------------------------------
+
+struct ConstantBufferBinding final {
+	uint32_t shaderRegister = ~0u;
+	Buffer* buffer = nullptr;
+};
+
+struct TextureBinding final {
+	uint32_t textureRegister = ~0u;
+	Texture2D* texture = nullptr;
+};
+
+class PipelineBindings final {
+public:
+
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	// The constant buffers to bind
+	uint32_t numConstantBuffers = 0;
+	ConstantBufferBinding constantBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
+
+	// The textures to bind
+	uint32_t numTextures = 0;
+	TextureBinding textures[ZG_MAX_NUM_TEXTURES];
+
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	PipelineBindings() noexcept = default;
+	PipelineBindings(const PipelineBindings&) noexcept = default;
+	PipelineBindings& operator= (const PipelineBindings&) noexcept = default;
+	~PipelineBindings() noexcept = default;
+
+	// Methods
+	// --------------------------------------------------------------------------------------------
+
+	PipelineBindings& addConstantBuffer(ConstantBufferBinding binding) noexcept;
+	PipelineBindings& addConstantBuffer(uint32_t shaderRegister, Buffer& buffer) noexcept;
+
+	PipelineBindings& addTexture(TextureBinding binding) noexcept;
+	PipelineBindings& addTexture(uint32_t textureRegister, Texture2D& texture) noexcept;
+
+	ZgPipelineBindings toCApi() const noexcept;
 };
 
 
@@ -260,7 +308,8 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	ZgPipelineRender* pipeline = nullptr;
-	ZgPipelineRenderSignature signature = {};
+	ZgPipelineBindingsSignature bindingsSignature = {};
+	ZgPipelineRenderSignature renderSignature = {};
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -597,54 +646,6 @@ public:
 
 	// See zgCommandQueueExecuteCommandList()
 	Result executeCommandList(CommandList& commandList) noexcept;
-};
-
-
-// PipelineBindings
-// ------------------------------------------------------------------------------------------------
-
-struct ConstantBufferBinding final {
-	uint32_t shaderRegister = ~0u;
-	Buffer* buffer = nullptr;
-};
-
-struct TextureBinding final {
-	uint32_t textureRegister = ~0u;
-	Texture2D* texture = nullptr;
-};
-
-class PipelineBindings final {
-public:
-
-	// Members
-	// --------------------------------------------------------------------------------------------
-
-	// The constant buffers to bind
-	uint32_t numConstantBuffers = 0;
-	ConstantBufferBinding constantBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
-
-	// The textures to bind
-	uint32_t numTextures = 0;
-	TextureBinding textures[ZG_MAX_NUM_TEXTURES];
-
-	// Constructors & destructors
-	// --------------------------------------------------------------------------------------------
-
-	PipelineBindings() noexcept = default;
-	PipelineBindings(const PipelineBindings&) noexcept = default;
-	PipelineBindings& operator= (const PipelineBindings&) noexcept = default;
-	~PipelineBindings() noexcept = default;
-
-	// Methods
-	// --------------------------------------------------------------------------------------------
-
-	PipelineBindings& addConstantBuffer(ConstantBufferBinding binding) noexcept;
-	PipelineBindings& addConstantBuffer(uint32_t shaderRegister, Buffer& buffer) noexcept;
-
-	PipelineBindings& addTexture(TextureBinding binding) noexcept;
-	PipelineBindings& addTexture(uint32_t textureRegister, Texture2D& texture) noexcept;
-
-	ZgPipelineBindings toCApi() const noexcept;
 };
 
 

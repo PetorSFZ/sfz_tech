@@ -61,27 +61,26 @@ struct ZgBackend {
 
 	virtual ZgResult pipelineRenderCreateFromFileSPIRV(
 		ZgPipelineRender** pipelineOut,
-		ZgPipelineRenderSignature* signatureOut,
+		ZgPipelineBindingsSignature* bindingsSignatureOut,
+		ZgPipelineRenderSignature* renderSignatureOut,
 		const ZgPipelineRenderCreateInfo& createInfo) noexcept = 0;
 
 	virtual ZgResult pipelineRenderCreateFromFileHLSL(
 		ZgPipelineRender** pipelineOut,
-		ZgPipelineRenderSignature* signatureOut,
+		ZgPipelineBindingsSignature* bindingsSignatureOut,
+		ZgPipelineRenderSignature* renderSignatureOut,
 		const ZgPipelineRenderCreateInfo& createInfo,
 		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept = 0;
 
 	virtual ZgResult pipelineRenderCreateFromSourceHLSL(
 		ZgPipelineRender** pipelineOut,
-		ZgPipelineRenderSignature* signatureOut,
+		ZgPipelineBindingsSignature* bindingsSignatureOut,
+		ZgPipelineRenderSignature* renderSignatureOut,
 		const ZgPipelineRenderCreateInfo& createInfo,
 		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept = 0;
 
 	virtual ZgResult pipelineRenderRelease(
 		ZgPipelineRender* pipeline) noexcept = 0;
-
-	virtual ZgResult pipelineRenderGetSignature(
-		const ZgPipelineRender* pipeline,
-		ZgPipelineRenderSignature* signatureOut) const noexcept = 0;
 
 	// Memory methods
 	// --------------------------------------------------------------------------------------------
