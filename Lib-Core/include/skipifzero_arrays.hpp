@@ -191,14 +191,14 @@ public:
 	// O(1) operation unlike remove(), but obviously does not maintain internal array order.
 	void removeQuickSwap(uint32_t pos) { sfz_assert(pos < mSize); std::swap(mData[pos], last()); remove(mSize - 1); }
 
-	// Searches for the first instance of the given element, nullptr if not found.
-	T* search(const T& ref) { return searchImpl(mData, [&](const T& e) { return e == ref; }); }
-	const T* search(const T& ref) const { return searchImpl(mData, [&](const T& e) { return e == ref; }); }
+	// Finds the first instance of the given element, nullptr if not found.
+	T* findElement(const T& ref) { return findImpl(mData, [&](const T& e) { return e == ref; }); }
+	const T* findElement(const T& ref) const { return findImpl(mData, [&](const T& e) { return e == ref; }); }
 
 	// Finds the first element that satisfies the given function.
 	// Function should have signature: bool func(const T& element)
-	template<typename F> T* find(F func) { return searchImpl(mData, func); }
-	template<typename F> const T* find(F func) const { return searchImpl(mData, func); }
+	template<typename F> T* find(F func) { return findImpl(mData, func); }
+	template<typename F> const T* find(F func) const { return findImpl(mData, func); }
 
 	// Iterator methods
 	// --------------------------------------------------------------------------------------------
@@ -255,7 +255,7 @@ private:
 	}
 
 	template<typename F>
-	T* searchImpl(T* data, F func) const
+	T* findImpl(T* data, F func) const
 	{
 		for (uint32_t i = 0; i < mSize; ++i) if (func(data[i])) return &data[i];
 		return nullptr;
@@ -296,7 +296,7 @@ public:
 		std::swap(this->mSize, other.mSize);
 	}
 
-	void clear() { for (uint32_t i = 0; i < mSize; i++) mData[i] = T(); mSize = 0; }
+	void clear() { for (uint32_t i = 0; i < mSize; i++) mData[i] = {}; mSize = 0; }
 	void setSize(uint32_t size) { sfz_assert(size <= Capacity); mSize = size; }
 
 	// Getters
@@ -336,7 +336,7 @@ public:
 	void insert(uint32_t pos, const T* ptr, uint32_t numElements) { insertImpl(pos, ptr, numElements); }
 
 	// Removes the last element. If the array is empty nothing happens.
-	void pop() { if (mSize == 0) return; mSize -= 1; mData[mSize] = T(); }
+	void pop() { if (mSize == 0) return; mSize -= 1; mData[mSize] = {}; }
 
 	// Remove numElements elements starting at the specified position.
 	void remove(uint32_t pos, uint32_t numElements = 1)
@@ -344,7 +344,7 @@ public:
 		// Destroy elements
 		sfz_assert(pos < mSize);
 		if (numElements > (mSize - pos)) numElements = (mSize - pos);
-		for (uint32_t i = 0; i < numElements; i++) mData[pos + i] = T();
+		for (uint32_t i = 0; i < numElements; i++) mData[pos + i] = {};
 
 		// Move the elements after the removed elements
 		uint32_t numElementsToMove = mSize - pos - numElements;
@@ -358,14 +358,14 @@ public:
 	// O(1) operation unlike remove(), but obviously does not maintain internal array order.
 	void removeQuickSwap(uint32_t pos) { sfz_assert(pos < mSize); std::swap(mData[pos], last()); remove(mSize - 1); }
 
-	// Searches for the first instance of the given element, nullptr if not found.
-	T* search(const T& ref) { return searchImpl(mData, [&](const T& e) { return e == ref; }); }
-	const T* search(const T& ref) const { return searchImpl(mData, [&](const T& e) { return e == ref; }); }
+	// Finds the first instance of the given element, nullptr if not found.
+	T* findElement(const T& ref) { return findImpl(mData, [&](const T& e) { return e == ref; }); }
+	const T* findElement(const T& ref) const { return findImpl(mData, [&](const T& e) { return e == ref; }); }
 
 	// Finds the first element that satisfies the given function.
 	// Function should have signature: bool func(const T& element)
-	template<typename F> T* find(F func) { return searchImpl(mData, func); }
-	template<typename F> const T* find(F func) const { return searchImpl(mData, func); }
+	template<typename F> T* find(F func) { return findImpl(mData, func); }
+	template<typename F> const T* find(F func) const { return findImpl(mData, func); }
 
 	// Iterator methods
 	// --------------------------------------------------------------------------------------------
@@ -409,14 +409,14 @@ private:
 	}
 
 	template<typename F>
-	T* searchImpl(T* data, F func)
+	T* findImpl(T* data, F func)
 	{
 		for (uint32_t i = 0; i < mSize; ++i) if (func(data[i])) return &data[i];
 		return nullptr;
 	}
 
 	template<typename F>
-	const T* searchImpl(const T* data, F func) const
+	const T* findImpl(const T* data, F func) const
 	{
 		for (uint32_t i = 0; i < mSize; ++i) if (func(data[i])) return &data[i];
 		return nullptr;
@@ -425,7 +425,7 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	T mData[Capacity];
+	T mData[Capacity] = {};
 	uint32_t mSize = 0;
 };
 

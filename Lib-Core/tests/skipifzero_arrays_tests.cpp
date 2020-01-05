@@ -410,7 +410,7 @@ UTEST(Array, removeQuickSwap)
 	ASSERT_TRUE(v[1] == 5);
 }
 
-UTEST(Array, search)
+UTEST(Array, findElement)
 {
 	sfz::StandardAllocator allocator;
 
@@ -418,21 +418,21 @@ UTEST(Array, search)
 	const int vals[] = {1, 2, 2, 4};
 	v.add(vals, 4);
 
-	int* ptr = v.search(0);
+	int* ptr = v.findElement(0);
 	ASSERT_TRUE(ptr == nullptr);
 
-	ptr = v.search(5);
+	ptr = v.findElement(5);
 	ASSERT_TRUE(ptr == nullptr);
 
-	ptr = v.search(1);
+	ptr = v.findElement(1);
 	ASSERT_TRUE(ptr != nullptr);
 	ASSERT_TRUE((ptr - v.data()) == 0);
 
-	ptr = v.search(2);
+	ptr = v.findElement(2);
 	ASSERT_TRUE(ptr != nullptr);
 	ASSERT_TRUE((ptr - v.data()) == 1);
 
-	ptr = v.search(4);
+	ptr = v.findElement(4);
 	ASSERT_TRUE(ptr != nullptr);
 	ASSERT_TRUE((ptr - v.data()) == 3);
 }
@@ -765,27 +765,27 @@ UTEST(ArrayLocal, removeQuickSwap)
 	ASSERT_TRUE(v[1] == 5);
 }
 
-UTEST(ArrayLocal, search)
+UTEST(ArrayLocal, findElement)
 {
 	sfz::ArrayLocal<int, 16> v;
 	const int vals[] = {1, 2, 2, 4};
 	v.add(vals, 4);
 
-	int* ptr = v.search(0);
+	int* ptr = v.findElement(0);
 	ASSERT_TRUE(ptr == nullptr);
 
-	ptr = v.search(5);
+	ptr = v.findElement(5);
 	ASSERT_TRUE(ptr == nullptr);
 
-	ptr = v.search(1);
+	ptr = v.findElement(1);
 	ASSERT_TRUE(ptr != nullptr);
 	ASSERT_TRUE((ptr - v.data()) == 0);
 
-	ptr = v.search(2);
+	ptr = v.findElement(2);
 	ASSERT_TRUE(ptr != nullptr);
 	ASSERT_TRUE((ptr - v.data()) == 1);
 
-	ptr = v.search(4);
+	ptr = v.findElement(4);
 	ASSERT_TRUE(ptr != nullptr);
 	ASSERT_TRUE((ptr - v.data()) == 3);
 }
