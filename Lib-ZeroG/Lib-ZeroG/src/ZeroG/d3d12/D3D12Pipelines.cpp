@@ -601,12 +601,12 @@ static void logPipelineRenderInfo(
 	}
 
 	// Print constant buffers
-	printfAppend(tmpStr, bytesLeft, "\nConstant buffers (%u):\n", bindingsSignature.numConstantBuffers);
-	for (uint32_t i = 0; i < bindingsSignature.numConstantBuffers; i++) {
-		const ZgConstantBufferBindingDesc& cbuffer = bindingsSignature.constantBuffers[i];
+	printfAppend(tmpStr, bytesLeft, "\nConstant buffers (%u):\n", bindingsSignature.numConstBuffers);
+	for (uint32_t i = 0; i < bindingsSignature.numConstBuffers; i++) {
+		const ZgConstantBufferBindingDesc& cbuffer = bindingsSignature.constBuffers[i];
 		printfAppend(tmpStr, bytesLeft,
 			" - Register: %u -- Size: %u bytes -- Push constant: %s\n",
-			cbuffer.shaderRegister,
+			cbuffer.bufferRegister,
 			cbuffer.sizeInBytes,
 			cbuffer.pushConstant ? "YES" : "NO");
 	}
@@ -625,6 +625,113 @@ static void logPipelineRenderInfo(
 
 	// Deallocate temp string
 	allocator->deallocate(tmpStrOriginal);
+}
+
+static ZgResult bindingsFromReflection(
+	const ComPtr<ID3D12ShaderReflection>& reflection,
+	const sfz::ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS>& pushConstantRegisters,
+	D3D12PipelineBindingsSignature& bindingsOut) noexcept
+{
+	// Get shader description from reflection
+	D3D12_SHADER_DESC shaderDesc = {};
+	CHECK_D3D12 reflection->GetDesc(&shaderDesc);
+
+	// Add all constant buffers from shader
+	for (uint32_t i = 0; i < shaderDesc.BoundResources; i++) {
+
+		// Get resource desc and skip if not a constant buffer
+		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
+		CHECK_D3D12 reflection->GetResourceBindingDesc(i, &resDesc);
+		if (resDesc.Type != D3D_SIT_CBUFFER) continue;
+
+		// Error out if buffers uses more than one register
+		// TODO: This should probably be relaxed
+		if (resDesc.BindCount != 1) {
+			ZG_ERROR("Multiple registers for a single resource not allowed");
+			return ZG_WARNING_UNIMPLEMENTED;
+		}
+
+		// Error out if we have too many constant buffers
+		if (bindingsOut.constBuffers.isFull()) {
+			ZG_ERROR("Too many constant buffers, only %u allowed",
+				bindingsOut.constBuffers.capacity());
+			return ZG_ERROR_SHADER_COMPILE_ERROR;
+		}
+
+		// Error out if another register space than 0 is used
+		if (resDesc.Space != 0) {
+			ZG_ERROR("Shader resource %s (register = %u) uses register space %u, only 0 is allowed",
+				resDesc.Name, resDesc.BindPoint, resDesc.Space);
+			return ZG_ERROR_SHADER_COMPILE_ERROR;
+		}
+
+		// Get constant buffer reflection
+		ID3D12ShaderReflectionConstantBuffer* cbufferReflection =
+			reflection->GetConstantBufferByName(resDesc.Name);
+		D3D12_SHADER_BUFFER_DESC cbufferDesc = {};
+		CHECK_D3D12 cbufferReflection->GetDesc(&cbufferDesc);
+
+		// Add constant buffer bindings
+		ZgConstantBufferBindingDesc binding = {};
+		binding.bufferRegister = resDesc.BindPoint;
+		binding.sizeInBytes = cbufferDesc.Size;
+		binding.pushConstant = ZG_FALSE;
+		bindingsOut.constBuffers.add(binding);
+	}
+
+	// Go through buffers and check if any of them are marked as push constants
+	for (ZgConstantBufferBindingDesc& buffer : bindingsOut.constBuffers) {
+		bool isPushConstant = pushConstantRegisters.findElement(buffer.bufferRegister) != nullptr;
+		if (isPushConstant) buffer.pushConstant = ZG_TRUE;
+	}
+
+	// Sort buffers by register
+	bindingsOut.constBuffers.sort(
+		[](const ZgConstantBufferBindingDesc& lhs, const ZgConstantBufferBindingDesc& rhs) {
+			return lhs.bufferRegister < rhs.bufferRegister;
+		});
+
+	// All textures from shader
+	for (uint32_t i = 0; i < shaderDesc.BoundResources; i++) {
+
+		// Get resource desc and skip if not a texture
+		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
+		CHECK_D3D12 reflection->GetResourceBindingDesc(i, &resDesc);
+		if (resDesc.Type != D3D_SIT_TEXTURE) continue;
+
+		// Error out if texture uses more than one register
+		// TODO: This should probably be relaxed
+		if (resDesc.BindCount != 1) {
+			ZG_ERROR("Multiple registers for a single resource not allowed");
+			return ZG_WARNING_UNIMPLEMENTED;
+		}
+
+		// Error out if we have too many textures
+		if (bindingsOut.textures.isFull()) {
+			ZG_ERROR("Too many textures, only %u allowed", bindingsOut.textures.capacity());
+			return ZG_ERROR_SHADER_COMPILE_ERROR;
+		}
+
+		// Error out if another register space than 0 is used
+		if (resDesc.Space != 0) {
+			ZG_ERROR("Shader resource %s (register = %u) uses register space %u, only 0 is allowed",
+				resDesc.Name, resDesc.BindPoint, resDesc.Space);
+			return ZG_ERROR_SHADER_COMPILE_ERROR;
+		}
+
+		// Add texture bindings
+		ZgTextureBindingDesc binding = {};
+		binding.textureRegister = resDesc.BindPoint;
+		bindingsOut.textures.add(binding);
+	}
+
+	// Sort textures by register
+	bindingsOut.textures.sort(
+		[](const ZgTextureBindingDesc& lhs, const ZgTextureBindingDesc& rhs) {
+			return lhs.textureRegister < rhs.textureRegister;
+		});
+
+	return ZG_SUCCESS;
 }
 
 // D3D12PipelineCompute functions
@@ -868,276 +975,72 @@ static ZgResult createPipelineRenderInternal(
 		renderSignatureOut->vertexAttributes[i] = attrib;
 	}
 
-	// Build up list of all constant buffers
-	struct ConstBufferMeta {
-		ZgConstantBufferBindingDesc desc = {};
-		bool vertexAccess = false;
-		bool pixelAccess = false;
-	};
-	ConstBufferMeta constBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
-	uint32_t numConstBuffers = 0;
+	// Get pipeline bindings signature
+	D3D12PipelineBindingsSignature bindings = {};
+	{
+		sfz::ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstantRegisters;
+		pushConstantRegisters.add(createInfo.pushConstantRegisters, createInfo.numPushConstants);
 
-	// First add all constant buffers from vertex shader
-	for (uint32_t i = 0; i < vertexDesc.BoundResources; i++) {
-		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
-		CHECK_D3D12 vertexReflection->GetResourceBindingDesc(i, &resDesc);
+		ZgResult vertexBindingsRes = bindingsFromReflection(
+			vertexReflection, pushConstantRegisters, bindings);
+		if (vertexBindingsRes != ZG_SUCCESS) return vertexBindingsRes;
 
-		// Continue if not a constant buffer
-		if (resDesc.Type != D3D_SIT_CBUFFER) continue;
+		D3D12PipelineBindingsSignature pixelBindings = {};
+		ZgResult pixelBindingsRes = bindingsFromReflection(
+			pixelReflection, pushConstantRegisters, pixelBindings);
+		if (pixelBindingsRes != ZG_SUCCESS) return pixelBindingsRes;
 
-		// Error out if buffers uses more than one register
-		// TODO: This should probably be relaxed
-		if (resDesc.BindCount != 1) {
-			ZG_ERROR("Multiple registers for a single resource not allowed");
-			return ZG_WARNING_UNIMPLEMENTED;
-		}
+		// Merge constant buffers
+		for (const ZgConstantBufferBindingDesc& binding : pixelBindings.constBuffers) {
 
-		// Error out if we have too many constant buffers
-		if (numConstBuffers >= ZG_MAX_NUM_CONSTANT_BUFFERS) {
-			ZG_ERROR("Too many constant buffers, only %u allowed",
-				ZG_MAX_NUM_CONSTANT_BUFFERS);
-			return ZG_ERROR_SHADER_COMPILE_ERROR;
-		}
+			// Add binding if we don't already have it
+			bool haveBinding = bindings.constBuffers.find(
+				[&](const auto& e) { return e.bufferRegister == binding.bufferRegister;  }) != nullptr;
+			if (!haveBinding) {
 
-		// Error out if another register space than 0 is used
-		if (resDesc.Space != 0) {
-			ZG_ERROR(
-				"Vertex shader resource %s (register = %u) uses register space %u, only 0 is allowed",
-				resDesc.Name, resDesc.BindPoint, resDesc.Space);
-			return ZG_ERROR_SHADER_COMPILE_ERROR;
-		}
-
-		// Get constant buffer reflection
-		ID3D12ShaderReflectionConstantBuffer* cbufferReflection =
-			vertexReflection->GetConstantBufferByName(resDesc.Name);
-		D3D12_SHADER_BUFFER_DESC cbufferDesc = {};
-		CHECK_D3D12 cbufferReflection->GetDesc(&cbufferDesc);
-
-		// Add slot for buffer in array
-		ConstBufferMeta& cbuffer = constBuffers[numConstBuffers];
-		numConstBuffers += 1;
-
-		// Set constant buffer members
-		cbuffer.desc.shaderRegister = resDesc.BindPoint;
-		cbuffer.desc.sizeInBytes = cbufferDesc.Size;
-		cbuffer.vertexAccess = true;
-	}
-
-	// Then add constant buffers from pixel shader
-	for (uint32_t i = 0; i < pixelDesc.BoundResources; i++) {
-		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
-		CHECK_D3D12 pixelReflection->GetResourceBindingDesc(i, &resDesc);
-
-		// Continue if not a constant buffer
-		if (resDesc.Type != D3D_SIT_CBUFFER) continue;
-
-		// See if buffer was already found/used by vertex shader
-		uint32_t vertexCBufferIdx = ~0u;
-		for (uint32_t j = 0; j < numConstBuffers; j++) {
-			if (constBuffers[j].desc.shaderRegister == resDesc.BindPoint) {
-				vertexCBufferIdx = j;
-				break;
-			}
-		}
-
-		// If buffer was already found, mark it as accessed by pixel shader and continue to next
-		// iteration
-		if (vertexCBufferIdx != ~0u) {
-			constBuffers[vertexCBufferIdx].pixelAccess = true;
-			continue;
-		}
-
-		// Error out if buffers uses more than one register
-		// TODO: This should probably be relaxed
-		if (resDesc.BindCount != 1) {
-			ZG_ERROR("Multiple registers for a single resource not allowed");
-			return ZG_WARNING_UNIMPLEMENTED;
-		}
-
-		// Error out if we have too many constant buffers
-		if (numConstBuffers >= ZG_MAX_NUM_CONSTANT_BUFFERS) {
-			ZG_ERROR("Too many constant buffers, only %u allowed",
-				ZG_MAX_NUM_CONSTANT_BUFFERS);
-			return ZG_ERROR_SHADER_COMPILE_ERROR;
-		}
-
-		// Error out if another register space than 0 is used
-		if (resDesc.Space != 0) {
-			ZG_ERROR(
-				"Pixel shader resource %s (register = %u) uses register space %u, only 0 is allowed",
-				resDesc.Name, resDesc.BindPoint, resDesc.Space);
-			return ZG_ERROR_SHADER_COMPILE_ERROR;
-		}
-
-		// Get constant buffer reflection
-		ID3D12ShaderReflectionConstantBuffer* cbufferReflection =
-			pixelReflection->GetConstantBufferByName(resDesc.Name);
-		D3D12_SHADER_BUFFER_DESC cbufferDesc = {};
-		CHECK_D3D12 cbufferReflection->GetDesc(&cbufferDesc);
-
-		// Add slot for buffer in array
-		ConstBufferMeta& cbuffer = constBuffers[numConstBuffers];
-		numConstBuffers += 1;
-
-		// Set constant buffer members
-		cbuffer.desc.shaderRegister = resDesc.BindPoint;
-		cbuffer.desc.sizeInBytes = cbufferDesc.Size;
-		cbuffer.pixelAccess = true;
-	}
-
-	// Sort buffers by register
-	std::sort(constBuffers, constBuffers + numConstBuffers,
-		[](const ConstBufferMeta& lhs, const ConstBufferMeta& rhs) {
-		return lhs.desc.shaderRegister < rhs.desc.shaderRegister;
-	});
-
-	// Go through buffers and check if any of them are marked as push constants
-	bool pushConstantRegisterUsed[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
-	for (uint32_t i = 0; i < numConstBuffers; i++) {
-		ConstBufferMeta& cbuffer = constBuffers[i];
-		for (uint32_t j = 0; j < createInfo.numPushConstants; j++) {
-			if (cbuffer.desc.shaderRegister == createInfo.pushConstantRegisters[j]) {
-				if (pushConstantRegisterUsed[j]) {
-					sfz_assert(pushConstantRegisterUsed[j]);
-					return ZG_ERROR_INVALID_ARGUMENT;
+				// Ensure we don't have too many constants buffers
+				if (bindings.constBuffers.isFull()) {
+					ZG_ERROR("Too many constant buffers, only %u allowed",
+						bindings.constBuffers.capacity());
+					return ZG_ERROR_SHADER_COMPILE_ERROR;
 				}
-				cbuffer.desc.pushConstant = ZG_TRUE;
-				pushConstantRegisterUsed[j] = true;
-				break;
-			}
-		}
-	}
-
-	// Check that all push constant registers specified was actually used
-	for (uint32_t i = 0; i < createInfo.numPushConstants; i++) {
-		if (!pushConstantRegisterUsed[i]) {
-			ZG_ERROR(
-				"Shader register %u was registered as a push constant, but never used in the shader",
-				createInfo.pushConstantRegisters[i]);
-			return ZG_ERROR_INVALID_ARGUMENT;
-		}
-	}
-
-	// Copy constant buffer information to signature
-	bindingsSignatureOut->numConstantBuffers = numConstBuffers;
-	for (uint32_t i = 0; i < numConstBuffers; i++) {
-		bindingsSignatureOut->constantBuffers[i] = constBuffers[i].desc;
-	}
-
-
-	// Gather all textures
-	struct TextureMeta {
-		ZgTextureBindingDesc desc = {};
-		bool vertexAccess = false;
-		bool pixelAccess = false;
-	};
-	TextureMeta textureMetas[ZG_MAX_NUM_TEXTURES];
-	uint32_t numTextures = 0;
-
-	// First add all textures from vertex shader
-	for (uint32_t i = 0; i < vertexDesc.BoundResources; i++) {
-		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
-		CHECK_D3D12 vertexReflection->GetResourceBindingDesc(i, &resDesc);
-
-		// Continue if not a texture
-		if (resDesc.Type != D3D_SIT_TEXTURE) continue;
-
-		// Error out if texture uses more than one register
-		// TODO: This should probably be relaxed
-		if (resDesc.BindCount != 1) {
-			ZG_ERROR("Multiple registers for a single resource not allowed");
-			return ZG_WARNING_UNIMPLEMENTED;
-		}
-
-		// Error out if we have too many textures
-		if (numTextures >= ZG_MAX_NUM_TEXTURES) {
-			ZG_ERROR("Too many textures, only %u allowed", ZG_MAX_NUM_TEXTURES);
-			return ZG_ERROR_SHADER_COMPILE_ERROR;
-		}
-
-		// Error out if another register space than 0 is used
-		if (resDesc.Space != 0) {
-			ZG_ERROR(
-				"Vertex shader resource %s (register = %u) uses register space %u, only 0 is allowed",
-				resDesc.Name, resDesc.BindPoint, resDesc.Space);
-			return ZG_ERROR_SHADER_COMPILE_ERROR;
-		}
-
-		// Add slot for texture in array
-		TextureMeta& texMeta = textureMetas[numTextures];
-		numTextures += 1;
-
-		// Set texture desc members
-		texMeta.desc.textureRegister = resDesc.BindPoint;
-		texMeta.vertexAccess = true;
-	}
-
-	// Then add textures from pixel shader
-	for (uint32_t i = 0; i < pixelDesc.BoundResources; i++) {
-		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
-		CHECK_D3D12 pixelReflection->GetResourceBindingDesc(i, &resDesc);
-
-		// Continue if not a texture
-		if (resDesc.Type != D3D_SIT_TEXTURE) continue;
-
-		// See if texture was already found/used by vertex shader
-		uint32_t vertexTextureIdx = ~0u;
-		for (uint32_t j = 0; j < numTextures; j++) {
-			if (textureMetas[j].desc.textureRegister == resDesc.BindPoint) {
-				vertexTextureIdx = j;
-				break;
+				
+				// Add it
+				bindings.constBuffers.add(binding);
 			}
 		}
 
-		// If texture was already found, mark it as accessed by pixel shader and continue to next
-		// iteration
-		if (vertexTextureIdx != ~0u) {
-			textureMetas[vertexTextureIdx].pixelAccess = true;
-			continue;
+		// Merge textures
+		for (const ZgTextureBindingDesc& binding : pixelBindings.textures) {
+
+			// Add binding if we don't already have it
+			bool haveBinding = bindings.textures.find(
+				[&](const auto& e) { return e.textureRegister == binding.textureRegister; }) != nullptr;
+			if (!haveBinding) {
+
+				// Ensure we don't have too many textures
+				if (bindings.textures.isFull()) {
+					ZG_ERROR("Too many textures, only %u allowed", bindings.textures.capacity());
+					return ZG_ERROR_SHADER_COMPILE_ERROR;
+				}
+
+				// Add it
+				bindings.textures.add(binding);
+			}
 		}
 
-		// Error out if texture uses more than one register
-		// TODO: This should probably be relaxed
-		if (resDesc.BindCount != 1) {
-			ZG_ERROR("Multiple registers for a single resource not allowed");
-			return ZG_WARNING_UNIMPLEMENTED;
-		}
+		// Sort buffers by register
+		bindings.constBuffers.sort(
+			[](const ZgConstantBufferBindingDesc& lhs, const ZgConstantBufferBindingDesc& rhs) {
+				return lhs.bufferRegister < rhs.bufferRegister;
+			});
 
-		// Error out if we have too many textures
-		if (numTextures >= ZG_MAX_NUM_TEXTURES) {
-			ZG_ERROR("Too many textures, only %u allowed", ZG_MAX_NUM_TEXTURES);
-			return ZG_ERROR_SHADER_COMPILE_ERROR;
-		}
-
-		// Error out if another register space than 0 is used
-		if (resDesc.Space != 0) {
-			ZG_ERROR(
-				"Vertex shader resource %s (register = %u) uses register space %u, only 0 is allowed",
-				resDesc.Name, resDesc.BindPoint, resDesc.Space);
-			return ZG_ERROR_SHADER_COMPILE_ERROR;
-		}
-
-		// Add slot for texture in array
-		TextureMeta& texMeta = textureMetas[numTextures];
-		numTextures += 1;
-
-		// Set texture desc members
-		texMeta.desc.textureRegister = resDesc.BindPoint;
-		texMeta.pixelAccess = true;
+		// Sort textures by register
+		bindings.textures.sort(
+			[](const ZgTextureBindingDesc& lhs, const ZgTextureBindingDesc& rhs) {
+				return lhs.textureRegister < rhs.textureRegister;
+			});
 	}
-
-	// Sort texture descs by register
-	std::sort(textureMetas, textureMetas + numTextures,
-		[](const TextureMeta& lhs, const TextureMeta& rhs) {
-		return lhs.desc.textureRegister < rhs.desc.textureRegister;
-	});
-
-	// Copy texture information to signature
-	bindingsSignatureOut->numTextures = numTextures;
-	for (uint32_t i = 0; i < numTextures; i++) {
-		bindingsSignatureOut->textures[i] = textureMetas[i].desc;
-	}
-
 
 	// Check that all necessary sampler data is available
 	bool samplerSet[ZG_MAX_NUM_SAMPLERS] = {};
@@ -1188,7 +1091,6 @@ static ZgResult createPipelineRenderInternal(
 		}
 	}
 
-
 	// Check that the correct number of render targets is specified
 	uint32_t numRenderTargets = pixelDesc.OutputParameters;
 	if (numRenderTargets != createInfo.numRenderTargets) {
@@ -1202,7 +1104,6 @@ static ZgResult createPipelineRenderInternal(
 	for (uint32_t i = 0; i < numRenderTargets; i++) {
 		renderSignatureOut->renderTargets[i] = createInfo.renderTargets[i];
 	}
-
 
 	// Convert ZgVertexAttribute's to D3D12_INPUT_ELEMENT_DESC
 	// This is the "input layout"
@@ -1249,59 +1150,50 @@ static ZgResult createPipelineRenderInternal(
 		uint32_t numParameters = 0;
 
 		// Add push constants
-		for (uint32_t i = 0; i < bindingsSignatureOut->numConstantBuffers; i++) {
-			const ConstBufferMeta& cbuffer = constBuffers[i];
+		for (uint32_t i = 0; i < bindings.constBuffers.size(); i++) {
+			const ZgConstantBufferBindingDesc& cbuffer = bindings.constBuffers[i];
 			//const ZgConstantBufferDesc& cbuffer = signatureOut->constantBuffers[i];
-			if (cbuffer.desc.pushConstant == ZG_FALSE) continue;
+			if (cbuffer.pushConstant == ZG_FALSE) continue;
 
 			// Get parameter index for the push constant
 			uint32_t parameterIndex = numParameters;
 			numParameters += 1;
 			sfz_assert(numParameters <= MAX_NUM_ROOT_PARAMETERS);
 
-			// Calculate the correct shader visibility for the constant
-			D3D12_SHADER_VISIBILITY visibility = D3D12_SHADER_VISIBILITY_ALL;
-			if (cbuffer.vertexAccess && !cbuffer.pixelAccess) {
-				visibility = D3D12_SHADER_VISIBILITY_VERTEX;
-			}
-			else if (!cbuffer.vertexAccess && cbuffer.pixelAccess) {
-				visibility = D3D12_SHADER_VISIBILITY_PIXEL;
-			}
-
-			sfz_assert((cbuffer.desc.sizeInBytes % 4) == 0);
-			sfz_assert(cbuffer.desc.sizeInBytes <= 1024);
+			sfz_assert((cbuffer.sizeInBytes % 4) == 0);
+			sfz_assert(cbuffer.sizeInBytes <= 1024);
 			parameters[parameterIndex].InitAsConstants(
-				cbuffer.desc.sizeInBytes / 4, cbuffer.desc.shaderRegister, 0, visibility);
+				cbuffer.sizeInBytes / 4, cbuffer.bufferRegister, 0, D3D12_SHADER_VISIBILITY_ALL);
 
 			// Add to push constants mappings
-			pushConstantMappings[numPushConstantsMappings].shaderRegister = cbuffer.desc.shaderRegister;
+			pushConstantMappings[numPushConstantsMappings].shaderRegister = cbuffer.bufferRegister;
 			pushConstantMappings[numPushConstantsMappings].parameterIndex = parameterIndex;
-			pushConstantMappings[numPushConstantsMappings].sizeInBytes = cbuffer.desc.sizeInBytes;
+			pushConstantMappings[numPushConstantsMappings].sizeInBytes = cbuffer.sizeInBytes;
 			numPushConstantsMappings += 1;
 		}
 
 		// Add dynamic constant buffers (non-push constants)
 		uint32_t dynamicConstBuffersFirstRegister = ~0u; // TODO: THIS IS PROBABLY BAD
-		for (uint32_t i = 0; i < bindingsSignatureOut->numConstantBuffers; i++) {
-			const ZgConstantBufferBindingDesc& cbuffer = bindingsSignatureOut->constantBuffers[i];
+		for (uint32_t i = 0; i < bindings.constBuffers.size(); i++) {
+			const ZgConstantBufferBindingDesc& cbuffer = bindings.constBuffers[i];
 			if (cbuffer.pushConstant == ZG_TRUE) continue;
 
 			if (dynamicConstBuffersFirstRegister == ~0u) {
-				dynamicConstBuffersFirstRegister = cbuffer.shaderRegister;
+				dynamicConstBuffersFirstRegister = cbuffer.bufferRegister;
 			}
 
 			// Add to constant buffer mappings
 			uint32_t mappingIdx = numConstBufferMappings;
 			numConstBufferMappings += 1;
-			constBufferMappings[mappingIdx].shaderRegister = cbuffer.shaderRegister;
+			constBufferMappings[mappingIdx].shaderRegister = cbuffer.bufferRegister;
 			constBufferMappings[mappingIdx].tableOffset = mappingIdx;
 			constBufferMappings[mappingIdx].sizeInBytes = cbuffer.sizeInBytes;
 		}
 
 		// Add texture mappings
 		uint32_t dynamicTexturesFirstRegister = ~0u; // TODO: THIS IS PROBABLY BAD
-		for (uint32_t i = 0; i < bindingsSignatureOut->numTextures; i++) {
-			const ZgTextureBindingDesc& texDesc = bindingsSignatureOut->textures[i];
+		for (uint32_t i = 0; i < bindings.textures.size(); i++) {
+			const ZgTextureBindingDesc& texDesc = bindings.textures[i];
 
 			if (dynamicTexturesFirstRegister == ~0u) {
 				dynamicTexturesFirstRegister = texDesc.textureRegister;
@@ -1502,7 +1394,7 @@ static ZgResult createPipelineRenderInternal(
 	// Store pipeline state
 	pipeline->pipelineState = pipelineState;
 	pipeline->rootSignature = rootSignature;
-	pipeline->bindingsSignature = *bindingsSignatureOut;
+	pipeline->bindingsSignature = bindings;
 	pipeline->renderSignature = *renderSignatureOut;
 	pipeline->numPushConstants = numPushConstantsMappings;
 	pipeline->numConstantBuffers = numConstBufferMappings;
@@ -1519,6 +1411,7 @@ static ZgResult createPipelineRenderInternal(
 
 	// Return pipeline
 	*pipelineOut = pipeline;
+	*bindingsSignatureOut = bindings.toZgSignature();
 	return ZG_SUCCESS;
 }
 

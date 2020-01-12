@@ -552,14 +552,14 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 		ImGui::Unindent(20.0f);
 
 		// Print constant buffers
-		if (bindingsSignature.numConstantBuffers > 0) {
+		if (bindingsSignature.numConstBuffers > 0) {
 			ImGui::Spacing();
-			ImGui::Text("Constant buffers (%u):", bindingsSignature.numConstantBuffers);
+			ImGui::Text("Constant buffers (%u):", bindingsSignature.numConstBuffers);
 			ImGui::Indent(20.0f);
-			for (uint32_t j = 0; j < bindingsSignature.numConstantBuffers; j++) {
-				const ZgConstantBufferBindingDesc& cbuffer = bindingsSignature.constantBuffers[j];
+			for (uint32_t j = 0; j < bindingsSignature.numConstBuffers; j++) {
+				const ZgConstantBufferBindingDesc& cbuffer = bindingsSignature.constBuffers[j];
 				ImGui::Text("- Register: %u -- Size: %u bytes -- Push constant: %s",
-					cbuffer.shaderRegister,
+					cbuffer.bufferRegister,
 					cbuffer.sizeInBytes,
 					cbuffer.pushConstant == ZG_TRUE ? "YES" : "NO");
 			}

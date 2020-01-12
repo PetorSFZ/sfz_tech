@@ -19,6 +19,7 @@
 #pragma once
 
 #include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
 
 // Windows.h
 #define NOMINMAX
@@ -61,9 +62,11 @@
 
 #include "ZeroG/util/Logging.hpp"
 
-namespace zg { using Microsoft::WRL::ComPtr; }
-
 namespace zg {
+
+ using Microsoft::WRL::ComPtr;
+
+using sfz::ArrayLocal;
 
 // PendingState struct
 // ------------------------------------------------------------------------------------------------

@@ -471,16 +471,16 @@ void Renderer::stageSetPushConstantUntyped(
 		mState->currentPipelineRender->pipeline.bindingsSignature;
 	
 	uint32_t bufferIdx = ~0u;
-	for (uint32_t i = 0; i < signature.numConstantBuffers; i++) {
-		if (shaderRegister == signature.constantBuffers[i].shaderRegister) {
+	for (uint32_t i = 0; i < signature.numConstBuffers; i++) {
+		if (shaderRegister == signature.constBuffers[i].bufferRegister) {
 			bufferIdx = i;
 			break;
 		}
 	}
 	
 	sfz_assert(bufferIdx != ~0u);
-	sfz_assert(signature.constantBuffers[bufferIdx].pushConstant == ZG_TRUE);
-	sfz_assert(signature.constantBuffers[bufferIdx].sizeInBytes >= numBytes);
+	sfz_assert(signature.constBuffers[bufferIdx].pushConstant == ZG_TRUE);
+	sfz_assert(signature.constBuffers[bufferIdx].sizeInBytes >= numBytes);
 #endif
 
 	CHECK_ZG mState->currentCommandList.setPushConstant(shaderRegister, data, numBytes);
@@ -500,16 +500,16 @@ void Renderer::stageSetConstantBufferUntyped(
 		mState->currentPipelineRender->pipeline.bindingsSignature;
 
 	uint32_t bufferIdx = ~0u;
-	for (uint32_t i = 0; i < signature.numConstantBuffers; i++) {
-		if (shaderRegister == signature.constantBuffers[i].shaderRegister) {
+	for (uint32_t i = 0; i < signature.numConstBuffers; i++) {
+		if (shaderRegister == signature.constBuffers[i].bufferRegister) {
 			bufferIdx = i;
 			break;
 		}
 	}
 
 	sfz_assert(bufferIdx != ~0u);
-	sfz_assert(signature.constantBuffers[bufferIdx].pushConstant == ZG_FALSE);
-	sfz_assert(signature.constantBuffers[bufferIdx].sizeInBytes >= numBytes);
+	sfz_assert(signature.constBuffers[bufferIdx].pushConstant == ZG_FALSE);
+	sfz_assert(signature.constBuffers[bufferIdx].sizeInBytes >= numBytes);
 #endif
 
 	// Find constant buffer
@@ -577,9 +577,9 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 	// Validate material index push constant
 	if (registers.materialIdxPushConstant != ~0u) {
 		bool found = false;
-		for (uint32_t i = 0; i < bindingsSignature.numConstantBuffers; i++) {
-			const ZgConstantBufferBindingDesc& desc = bindingsSignature.constantBuffers[i];
-			if (desc.shaderRegister == registers.materialIdxPushConstant) {
+		for (uint32_t i = 0; i < bindingsSignature.numConstBuffers; i++) {
+			const ZgConstantBufferBindingDesc& desc = bindingsSignature.constBuffers[i];
+			if (desc.bufferRegister == registers.materialIdxPushConstant) {
 				found = true;
 				sfz_assert(desc.pushConstant == ZG_TRUE);
 				break;
@@ -591,9 +591,9 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 	// Validate materials array
 	if (registers.materialsArray != ~0u) {
 		bool found = false;
-		for (uint32_t i = 0; i < bindingsSignature.numConstantBuffers; i++) {
-			const ZgConstantBufferBindingDesc& desc = bindingsSignature.constantBuffers[i];
-			if (desc.shaderRegister == registers.materialsArray) {
+		for (uint32_t i = 0; i < bindingsSignature.numConstBuffers; i++) {
+			const ZgConstantBufferBindingDesc& desc = bindingsSignature.constBuffers[i];
+			if (desc.bufferRegister == registers.materialsArray) {
 				found = true;
 				sfz_assert(desc.pushConstant == ZG_FALSE);
 				sfz_assert(desc.sizeInBytes >= meshPtr->numMaterials * sizeof(ShaderMaterial));

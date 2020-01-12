@@ -441,20 +441,20 @@ bool allocateStageMemory(RendererState& state) noexcept
 		sfz_assert(pipelineItem != nullptr);
 		
 		// Allocate CPU memory for constant buffer data
-		uint32_t numConstantBuffers = pipelineItem->pipeline.bindingsSignature.numConstantBuffers;
+		uint32_t numConstantBuffers = pipelineItem->pipeline.bindingsSignature.numConstBuffers;
 		stage.constantBuffers.init(numConstantBuffers, state.allocator, sfz_dbg(""));
 
 		// Allocate GPU memory for all constant buffers
 		for (uint32_t j = 0; j < numConstantBuffers; j++) {
 			
 			// Get constant buffer description, skip if push constant
-			const ZgConstantBufferBindingDesc& desc = pipelineItem->pipeline.bindingsSignature.constantBuffers[j];
+			const ZgConstantBufferBindingDesc& desc = pipelineItem->pipeline.bindingsSignature.constBuffers[j];
 			if (desc.pushConstant == ZG_TRUE) continue;
 
 			// Check if constant buffer is marked as non-user-settable, in that case skip it
 			bool nonUserSettable = false;
 			for (uint32_t k = 0; k < pipelineItem->numNonUserSettableConstantBuffers; k++) {
-				if (pipelineItem->nonUserSettableConstantBuffers[k] == desc.shaderRegister) {
+				if (pipelineItem->nonUserSettableConstantBuffers[k] == desc.bufferRegister) {
 					nonUserSettable = true;
 					break;
 				}
@@ -469,7 +469,7 @@ bool allocateStageMemory(RendererState& state) noexcept
 			framed.initAllStates([&](ConstantBufferMemory& item) {
 
 				// Seet 
-				item.shaderRegister = desc.shaderRegister;
+				item.shaderRegister = desc.bufferRegister;
 				
 				// Allocate upload buffer
 				item.uploadBuffer =

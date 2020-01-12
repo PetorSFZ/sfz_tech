@@ -46,6 +46,42 @@ struct D3D12TextureMapping {
 	uint32_t tableOffset = ~0u;
 };
 
+// D3D12PipelineBindingsSignature
+// ------------------------------------------------------------------------------------------------
+
+struct D3D12PipelineBindingsSignature final {
+
+	ArrayLocal<ZgConstantBufferBindingDesc, ZG_MAX_NUM_CONSTANT_BUFFERS> constBuffers;
+	ArrayLocal<ZgTextureBindingDesc, ZG_MAX_NUM_TEXTURES> textures;
+
+	D3D12PipelineBindingsSignature() = default;
+	D3D12PipelineBindingsSignature(const D3D12PipelineBindingsSignature&) = default;
+	D3D12PipelineBindingsSignature& operator= (const D3D12PipelineBindingsSignature&) = default;
+
+	explicit D3D12PipelineBindingsSignature(const ZgPipelineBindingsSignature& signature)
+	{
+		this->constBuffers.add(signature.constBuffers, signature.numConstBuffers);
+		this->textures.add(signature.textures, signature.numTextures);
+	}
+
+	ZgPipelineBindingsSignature toZgSignature() const
+	{
+		ZgPipelineBindingsSignature signature = {};
+		
+		for (uint32_t i = 0; i < constBuffers.size(); i++) {
+			signature.constBuffers[i] = constBuffers[i];
+		}
+		signature.numConstBuffers = constBuffers.size();
+
+		for (uint32_t i = 0; i < textures.size(); i++) {
+			signature.textures[i] = textures[i];
+		}
+		signature.numTextures = textures.size();
+		
+		return signature;
+	}
+};
+
 // D3D12PipelineCompute
 // ------------------------------------------------------------------------------------------------
 
@@ -69,7 +105,7 @@ public:
 class D3D12PipelineRender final : public ZgPipelineRender {
 public:
 
-	D3D12PipelineRender() noexcept = default;
+	D3D12PipelineRender() noexcept {};
 	D3D12PipelineRender(const D3D12PipelineRender&) = delete;
 	D3D12PipelineRender& operator= (const D3D12PipelineRender&) = delete;
 	D3D12PipelineRender(D3D12PipelineRender&&) = delete;
@@ -78,7 +114,7 @@ public:
 
 	ComPtr<ID3D12RootSignature> rootSignature;
 	ComPtr<ID3D12PipelineState> pipelineState;
-	ZgPipelineBindingsSignature bindingsSignature = {};
+	D3D12PipelineBindingsSignature bindingsSignature;
 	ZgPipelineRenderSignature renderSignature = {};
 	uint32_t numPushConstants = 0;
 	D3D12PushConstantMapping pushConstants[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};

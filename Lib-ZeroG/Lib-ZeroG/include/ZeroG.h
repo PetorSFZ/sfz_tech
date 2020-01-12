@@ -373,7 +373,7 @@ struct ZgConstantBufferBindingDesc {
 
 	// Which register this buffer corresponds to in the shader. In D3D12 this is the "register"
 	// keyword, i.e. a value of 0 would mean "register(b0)".
-	uint32_t shaderRegister;
+	uint32_t bufferRegister;
 
 	// Size of the buffer in bytes
 	uint32_t sizeInBytes;
@@ -404,8 +404,8 @@ typedef struct ZgTextureBindingDesc ZgTextureBindingDesc;
 struct ZgPipelineBindingsSignature {
 
 	// The constant buffers
-	uint32_t numConstantBuffers;
-	ZgConstantBufferBindingDesc constantBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
+	uint32_t numConstBuffers;
+	ZgConstantBufferBindingDesc constBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
 
 	// The textures
 	uint32_t numTextures;
