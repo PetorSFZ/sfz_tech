@@ -472,6 +472,78 @@ UTEST(Array, find)
 	}
 }
 
+UTEST(Array, sort)
+{
+	sfz::StandardAllocator allocator;
+
+	sfz::Array<int> v(0, &allocator, sfz_dbg(""));
+	const int vals[] = { 7, 1, 0, 2, 9, -1, -2, -2, 10, 11, 9, 0 };
+	v.add(vals, 12);
+
+	v.sort();
+	ASSERT_TRUE(v[0] == -2);
+	ASSERT_TRUE(v[1] == -2);
+	ASSERT_TRUE(v[2] == -1);
+	ASSERT_TRUE(v[3] == 0);
+	ASSERT_TRUE(v[4] == 0);
+	ASSERT_TRUE(v[5] == 1);
+	ASSERT_TRUE(v[6] == 2);
+	ASSERT_TRUE(v[7] == 7);
+	ASSERT_TRUE(v[8] == 9);
+	ASSERT_TRUE(v[9] == 9);
+	ASSERT_TRUE(v[10] == 10);
+	ASSERT_TRUE(v[11] == 11);
+
+	v.sort([](int lhs, int rhs) {
+		return lhs > rhs;
+	});
+	ASSERT_TRUE(v[0] == 11);
+	ASSERT_TRUE(v[1] == 10);
+	ASSERT_TRUE(v[2] == 9);
+	ASSERT_TRUE(v[3] == 9);
+	ASSERT_TRUE(v[4] == 7);
+	ASSERT_TRUE(v[5] == 2);
+	ASSERT_TRUE(v[6] == 1);
+	ASSERT_TRUE(v[7] == 0);
+	ASSERT_TRUE(v[8] == 0);
+	ASSERT_TRUE(v[9] == -1);
+	ASSERT_TRUE(v[10] == -2);
+	ASSERT_TRUE(v[11] == -2);
+	
+	// Sort twice
+	v.sort([](int lhs, int rhs) {
+		return lhs > rhs;
+	});
+	ASSERT_TRUE(v[0] == 11);
+	ASSERT_TRUE(v[1] == 10);
+	ASSERT_TRUE(v[2] == 9);
+	ASSERT_TRUE(v[3] == 9);
+	ASSERT_TRUE(v[4] == 7);
+	ASSERT_TRUE(v[5] == 2);
+	ASSERT_TRUE(v[6] == 1);
+	ASSERT_TRUE(v[7] == 0);
+	ASSERT_TRUE(v[8] == 0);
+	ASSERT_TRUE(v[9] == -1);
+	ASSERT_TRUE(v[10] == -2);
+	ASSERT_TRUE(v[11] == -2);
+
+	v.sort([](int lhs, int rhs) {
+		return lhs < rhs;
+	});
+	ASSERT_TRUE(v[0] == -2);
+	ASSERT_TRUE(v[1] == -2);
+	ASSERT_TRUE(v[2] == -1);
+	ASSERT_TRUE(v[3] == 0);
+	ASSERT_TRUE(v[4] == 0);
+	ASSERT_TRUE(v[5] == 1);
+	ASSERT_TRUE(v[6] == 2);
+	ASSERT_TRUE(v[7] == 7);
+	ASSERT_TRUE(v[8] == 9);
+	ASSERT_TRUE(v[9] == 9);
+	ASSERT_TRUE(v[10] == 10);
+	ASSERT_TRUE(v[11] == 11);
+}
+
 // ArrayLocal tests
 // ------------------------------------------------------------------------------------------------
 
@@ -821,4 +893,74 @@ UTEST(ArrayLocal, find)
 		ASSERT_TRUE(ptr2 != nullptr);
 		ASSERT_TRUE(*ptr2 == 2);
 	}
+}
+
+UTEST(ArrayLocal, sort)
+{
+	sfz::ArrayLocal<int, 16> v;
+	const int vals[] = { 7, 1, 0, 2, 9, -1, -2, -2, 10, 11, 9, 0 };
+	v.add(vals, 12);
+
+	v.sort();
+	ASSERT_TRUE(v[0] == -2);
+	ASSERT_TRUE(v[1] == -2);
+	ASSERT_TRUE(v[2] == -1);
+	ASSERT_TRUE(v[3] == 0);
+	ASSERT_TRUE(v[4] == 0);
+	ASSERT_TRUE(v[5] == 1);
+	ASSERT_TRUE(v[6] == 2);
+	ASSERT_TRUE(v[7] == 7);
+	ASSERT_TRUE(v[8] == 9);
+	ASSERT_TRUE(v[9] == 9);
+	ASSERT_TRUE(v[10] == 10);
+	ASSERT_TRUE(v[11] == 11);
+
+	v.sort([](int lhs, int rhs) {
+		return lhs > rhs;
+	});
+	ASSERT_TRUE(v[0] == 11);
+	ASSERT_TRUE(v[1] == 10);
+	ASSERT_TRUE(v[2] == 9);
+	ASSERT_TRUE(v[3] == 9);
+	ASSERT_TRUE(v[4] == 7);
+	ASSERT_TRUE(v[5] == 2);
+	ASSERT_TRUE(v[6] == 1);
+	ASSERT_TRUE(v[7] == 0);
+	ASSERT_TRUE(v[8] == 0);
+	ASSERT_TRUE(v[9] == -1);
+	ASSERT_TRUE(v[10] == -2);
+	ASSERT_TRUE(v[11] == -2);
+	
+	// Sort twice
+	v.sort([](int lhs, int rhs) {
+		return lhs > rhs;
+	});
+	ASSERT_TRUE(v[0] == 11);
+	ASSERT_TRUE(v[1] == 10);
+	ASSERT_TRUE(v[2] == 9);
+	ASSERT_TRUE(v[3] == 9);
+	ASSERT_TRUE(v[4] == 7);
+	ASSERT_TRUE(v[5] == 2);
+	ASSERT_TRUE(v[6] == 1);
+	ASSERT_TRUE(v[7] == 0);
+	ASSERT_TRUE(v[8] == 0);
+	ASSERT_TRUE(v[9] == -1);
+	ASSERT_TRUE(v[10] == -2);
+	ASSERT_TRUE(v[11] == -2);
+
+	v.sort([](int lhs, int rhs) {
+		return lhs < rhs;
+	});
+	ASSERT_TRUE(v[0] == -2);
+	ASSERT_TRUE(v[1] == -2);
+	ASSERT_TRUE(v[2] == -1);
+	ASSERT_TRUE(v[3] == 0);
+	ASSERT_TRUE(v[4] == 0);
+	ASSERT_TRUE(v[5] == 1);
+	ASSERT_TRUE(v[6] == 2);
+	ASSERT_TRUE(v[7] == 7);
+	ASSERT_TRUE(v[8] == 9);
+	ASSERT_TRUE(v[9] == 9);
+	ASSERT_TRUE(v[10] == 10);
+	ASSERT_TRUE(v[11] == 11);
 }

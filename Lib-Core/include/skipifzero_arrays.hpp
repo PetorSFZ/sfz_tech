@@ -139,6 +139,8 @@ public:
 	T* data() { return mData; }
 	Allocator* allocator() const { return mAllocator; }
 
+	bool isEmpty() const { return mSize == 0; }
+
 	T& operator[] (uint32_t idx) { sfz_assert(idx < mSize); return mData[idx]; }
 	const T& operator[] (uint32_t idx) const { sfz_assert(idx < mSize); return mData[idx]; }
 
@@ -199,6 +201,10 @@ public:
 	// Function should have signature: bool func(const T& element)
 	template<typename F> T* find(F func) { return findImpl(mData, func); }
 	template<typename F> const T* find(F func) const { return findImpl(mData, func); }
+
+	// Sorts the elements in the array, same sort of comparator as std::sort().
+	void sort() { sortImpl([](const T& lhs, const T& rhs) { return lhs < rhs; }); }
+	template<typename F> void sort(F compareFunc) { sortImpl<F>(compareFunc); }
 
 	// Iterator methods
 	// --------------------------------------------------------------------------------------------
@@ -261,6 +267,31 @@ private:
 		return nullptr;
 	}
 
+	template<typename F>
+	void sortImpl(F cppCompareFunc)
+	{
+		if (mSize == 0) return;
+
+		// Store pointer to compare in temp variable, fix so lambda don't have to capture.
+		static thread_local const F* cppCompareFuncPtr = nullptr;
+		cppCompareFuncPtr = &cppCompareFunc;
+
+		// Convert C++ compare function to qsort compatible C compare function
+		using CCompareT = int(const void*, const void*);
+		CCompareT* cCompareFunc = [](const void* rawLhs, const void* rawRhs) -> int {
+			const T& lhs = *static_cast<const T*>(rawLhs);
+			const T& rhs = *static_cast<const T*>(rawRhs);
+			const bool lhsSmaller = (*cppCompareFuncPtr)(lhs, rhs);
+			if (lhsSmaller) return -1;
+			const bool rhsSmaller = (*cppCompareFuncPtr)(rhs, lhs);
+			if (rhsSmaller) return 1;
+			return 0;
+		};
+
+		// Sort using C's qsort()
+		std::qsort(mData, mSize, sizeof(T), cCompareFunc);
+	}
+
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
@@ -306,6 +337,9 @@ public:
 	uint32_t capacity() const { return Capacity; }
 	const T* data() const { return mData; }
 	T* data() { return mData; }
+
+	bool isEmpty() const { return mSize == 0; }
+	bool isFull() const { return mSize == Capacity; }
 
 	T& operator[] (uint32_t idx) { sfz_assert(idx < mSize); return mData[idx]; }
 	const T& operator[] (uint32_t idx) const { sfz_assert(idx < mSize); return mData[idx]; }
@@ -367,6 +401,10 @@ public:
 	template<typename F> T* find(F func) { return findImpl(mData, func); }
 	template<typename F> const T* find(F func) const { return findImpl(mData, func); }
 
+	// Sorts the elements in the array, same sort of comparator as std::sort().
+	void sort() { sortImpl([](const T& lhs, const T& rhs) { return lhs < rhs; }); }
+	template<typename F> void sort(F compareFunc) { sortImpl<F>(compareFunc); }
+
 	// Iterator methods
 	// --------------------------------------------------------------------------------------------
 
@@ -420,6 +458,31 @@ private:
 	{
 		for (uint32_t i = 0; i < mSize; ++i) if (func(data[i])) return &data[i];
 		return nullptr;
+	}
+
+	template<typename F>
+	void sortImpl(F cppCompareFunc)
+	{
+		if (mSize == 0) return;
+
+		// Store pointer to compare in temp variable, fix so lambda don't have to capture.
+		static thread_local const F* cppCompareFuncPtr = nullptr;
+		cppCompareFuncPtr = &cppCompareFunc;
+
+		// Convert C++ compare function to qsort compatible C compare function
+		using CCompareT = int(const void*, const void*);
+		CCompareT* cCompareFunc = [](const void* rawLhs, const void* rawRhs) -> int {
+			const T& lhs = *static_cast<const T*>(rawLhs);
+			const T& rhs = *static_cast<const T*>(rawRhs);
+			const bool lhsSmaller = (*cppCompareFuncPtr)(lhs, rhs);
+			if (lhsSmaller) return -1;
+			const bool rhsSmaller = (*cppCompareFuncPtr)(rhs, lhs);
+			if (rhsSmaller) return 1;
+			return 0;
+		};
+
+		// Sort using C's qsort()
+		std::qsort(mData, mSize, sizeof(T), cCompareFunc);
 	}
 
 	// Private members
