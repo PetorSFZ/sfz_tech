@@ -306,12 +306,12 @@ private:
 template<typename T, uint32_t Capacity>
 class ArrayLocal final {
 public:
-	static_assert(alignof(T) <= 32, "");
+	static_assert(alignof(T) <= 16, "");
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	ArrayLocal() { static_assert(sizeof(ArrayLocal) == (sizeof(T) * Capacity + sizeof(uint32_t)), ""); }
+	ArrayLocal() { static_assert(sizeof(ArrayLocal) == (sizeof(T) * Capacity + 16), ""); }
 	ArrayLocal(const ArrayLocal&) = default;
 	ArrayLocal& operator= (const ArrayLocal&) = default;
 	ArrayLocal(ArrayLocal&& other) noexcept { this->swap(other); }
@@ -490,6 +490,7 @@ private:
 
 	T mData[Capacity] = {};
 	uint32_t mSize = 0;
+	uint32_t mPadding[3] = {};
 };
 
 } // namespace sfz

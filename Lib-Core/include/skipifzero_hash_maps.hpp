@@ -504,12 +504,14 @@ template<typename K, typename V, uint32_t Capacity>
 class HashMapLocal {
 public:
 	using AltK = typename sfz::AltType<K>::AltT;
+	static_assert(alignof(K) <= 16, "");
+	static_assert(alignof(V) <= 16, "");
 	
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
 	HashMapLocal() { static_assert(sizeof(HashMapLocal) ==
-		((sizeof(HashMapSlot) + sizeof(K) + sizeof(V)) * Capacity + sizeof(uint32_t) * 2), ""); }
+		((sizeof(HashMapSlot) + sizeof(K) + sizeof(V)) * Capacity + 16), ""); }
 	HashMapLocal(const HashMapLocal&) = default;
 	HashMapLocal& operator= (const HashMapLocal&) = default;
 	HashMapLocal(HashMapLocal&& other) noexcept { this->swap(other); }
@@ -758,6 +760,7 @@ private:
 	V mValues[Capacity];
 	uint32_t mSize = 0;
 	uint32_t mPlaceholders = 0;
+	uint32_t mPadding[2] = {};
 };
 
 } // namespace sfz

@@ -585,6 +585,16 @@ UTEST(HashMapLocal, default_constructor)
 	ASSERT_TRUE(m1.size() == 0);
 	ASSERT_TRUE(m1.capacity() == 16);
 	ASSERT_TRUE(m1.placeholders() == 0);
+
+	sfz::HashMapLocal<int, sfz::vec4, 8> m2;
+	ASSERT_TRUE(m2.size() == 0);
+	ASSERT_TRUE(m2.capacity() == 8);
+	ASSERT_TRUE(m2.placeholders() == 0);
+
+	sfz::HashMapLocal<sfz::vec4_u32, sfz::vec4, 8> m3;
+	ASSERT_TRUE(m3.size() == 0);
+	ASSERT_TRUE(m3.capacity() == 8);
+	ASSERT_TRUE(m3.placeholders() == 0);
 }
 
 UTEST(HashMapLocal, copy_constructors)

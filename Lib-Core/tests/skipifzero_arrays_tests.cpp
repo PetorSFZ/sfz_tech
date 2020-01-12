@@ -560,6 +560,12 @@ UTEST(ArrayLocal, default_constructor)
 	ASSERT_TRUE(eightArray.capacity() == 8);
 	ASSERT_TRUE((uintptr_t)eightArray.data() == (uintptr_t)&eightArray);
 	ASSERT_TRUE(sfz::isAligned(eightArray.data(), 64));
+
+	sfz::ArrayLocal<sfz::vec4, 8> vecs;
+	ASSERT_TRUE(vecs.size() == 0);
+	ASSERT_TRUE(vecs.capacity() == 8);
+	ASSERT_TRUE((uintptr_t)vecs.data() == (uintptr_t)&vecs);
+	ASSERT_TRUE(sfz::isAligned(vecs.data(), alignof(sfz::vec4)));
 }
 
 UTEST(ArrayLocal, fill_constructor)
