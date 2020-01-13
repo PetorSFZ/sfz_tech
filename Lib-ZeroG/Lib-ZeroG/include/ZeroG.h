@@ -108,7 +108,7 @@ typedef struct ZgFramebufferRect ZgFramebufferRect;
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 10;
+static const uint32_t ZG_COMPILED_API_VERSION = 11;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -360,13 +360,16 @@ typedef uint32_t ZgTextureFormat;
 // Pipeline Bindings
 // ------------------------------------------------------------------------------------------------
 
-// The maximum number of constant buffers allowed on a single pipeline
+// The maximum number of constant buffers allowed on a single pipeline.
 static const uint32_t ZG_MAX_NUM_CONSTANT_BUFFERS = 16;
 
-// The maximum number of textures allowed on a single pipeline
+// The maximum number of unordered buffers allowed on a single pipeline.
+static const uint32_t ZG_MAX_NUM_UNORDERED_BUFFERS = 16;
+
+// The maximum number of textures allowed on a single pipeline.
 static const uint32_t ZG_MAX_NUM_TEXTURES = 16;
 
-// The maximum number of samplers allowed on a single pipeline
+// The maximum number of samplers allowed on a single pipeline.
 static const uint32_t ZG_MAX_NUM_SAMPLERS = 8;
 
 struct ZgConstantBufferBindingDesc {
@@ -390,6 +393,14 @@ struct ZgConstantBufferBindingDesc {
 };
 typedef struct ZgConstantBufferBindingDesc ZgConstantBufferBindingDesc;
 
+struct ZgUnorderedBufferBindingDesc {
+
+	// Which register this buffer corresponds to in the shader.In D3D12 this is the "register"
+	// keyword, i.e. a value of 0 would mean "register(u0)".
+	uint32_t unorderedRegister;
+};
+typedef struct ZgUnorderedBufferBindingDesc ZgUnorderedBufferBindingDesc;
+
 struct ZgTextureBindingDesc {
 
 	// Which register this texture corresponds to in the shader.
@@ -407,6 +418,10 @@ struct ZgPipelineBindingsSignature {
 	uint32_t numConstBuffers;
 	ZgConstantBufferBindingDesc constBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
 
+	// The unordered buffers
+	uint32_t numUnorderedBuffers;
+	ZgUnorderedBufferBindingDesc unorderedBuffers[ZG_MAX_NUM_UNORDERED_BUFFERS];
+
 	// The textures
 	uint32_t numTextures;
 	ZgTextureBindingDesc textures[ZG_MAX_NUM_TEXTURES];
@@ -414,7 +429,7 @@ struct ZgPipelineBindingsSignature {
 typedef struct ZgPipelineBindingsSignature ZgPipelineBindingsSignature;
 
 struct ZgConstantBufferBinding {
-	uint32_t shaderRegister;
+	uint32_t bufferRegister;
 	ZgBuffer* buffer;
 };
 typedef struct ZgConstantBufferBinding ZgConstantBufferBinding;
@@ -425,11 +440,34 @@ struct ZgTextureBinding {
 };
 typedef struct ZgTextureBinding ZgTextureBinding;
 
+struct ZgUnorderedBufferBinding {
+	
+	// Register the unordered buffer is bound to
+	uint32_t unorderedRegister;
+
+	// The first element in the buffer (0 to bind from start of buffer)
+	uint32_t firstElementIdx;
+	
+	// The number of elements to bind in the buffer
+	uint32_t numElements;
+
+	// The stride (size most of the time) between elements in the buffer in bytes
+	uint32_t elementStrideBytes;
+
+	// The buffer to bind as an unordered buffer
+	ZgBuffer* buffer;
+};
+typedef struct ZgUnorderedBufferBinding ZgUnorderedBufferBinding;
+
 struct ZgPipelineBindings {
 
 	// The constant buffers to bind
 	uint32_t numConstantBuffers;
 	ZgConstantBufferBinding constantBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
+
+	// The unordered buffers to bind
+	uint32_t numUnorderedBuffers;
+	ZgUnorderedBufferBinding unorderedBuffers[ZG_MAX_NUM_UNORDERED_BUFFERS];
 
 	// The textures to bind
 	uint32_t numTextures;
@@ -475,7 +513,6 @@ struct ZgPipelineComputeCreateInfo {
 
 	// The name of the entry function
 	const char* computeShaderEntry;
-
 };
 
 ZG_API ZgResult zgPipelineComputeCreateFromFileHLSL(
@@ -485,13 +522,6 @@ ZG_API ZgResult zgPipelineComputeCreateFromFileHLSL(
 
 ZG_API ZgResult zgPipelineComputeRelease(
 	ZgPipelineCompute* pipeline);
-
-
-
-
-
-
-
 
 // Pipeline Render Signature
 // ------------------------------------------------------------------------------------------------

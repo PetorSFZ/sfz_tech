@@ -26,32 +26,13 @@
 
 namespace zg {
 
-// Shader register mappings
-// ------------------------------------------------------------------------------------------------
-
-struct D3D12PushConstantMapping {
-	uint32_t shaderRegister = ~0u;
-	uint32_t parameterIndex = ~0u;
-	uint32_t sizeInBytes = ~0u;
-};
-
-struct D3D12ConstantBufferMapping {
-	uint32_t shaderRegister = ~0u;
-	uint32_t tableOffset = ~0u;
-	uint32_t sizeInBytes = ~0u;
-};
-
-struct D3D12TextureMapping {
-	uint32_t textureRegister = ~0u;
-	uint32_t tableOffset = ~0u;
-};
-
 // D3D12PipelineBindingsSignature
 // ------------------------------------------------------------------------------------------------
 
 struct D3D12PipelineBindingsSignature final {
 
 	ArrayLocal<ZgConstantBufferBindingDesc, ZG_MAX_NUM_CONSTANT_BUFFERS> constBuffers;
+	ArrayLocal<ZgUnorderedBufferBindingDesc, ZG_MAX_NUM_UNORDERED_BUFFERS> unorderedBuffers;
 	ArrayLocal<ZgTextureBindingDesc, ZG_MAX_NUM_TEXTURES> textures;
 
 	D3D12PipelineBindingsSignature() = default;
@@ -61,6 +42,7 @@ struct D3D12PipelineBindingsSignature final {
 	explicit D3D12PipelineBindingsSignature(const ZgPipelineBindingsSignature& signature)
 	{
 		this->constBuffers.add(signature.constBuffers, signature.numConstBuffers);
+		this->unorderedBuffers.add(signature.unorderedBuffers, signature.numUnorderedBuffers);
 		this->textures.add(signature.textures, signature.numTextures);
 	}
 
@@ -73,6 +55,11 @@ struct D3D12PipelineBindingsSignature final {
 		}
 		signature.numConstBuffers = constBuffers.size();
 
+		for (uint32_t i = 0; i < unorderedBuffers.size(); i++) {
+			signature.unorderedBuffers[i] = unorderedBuffers[i];
+		}
+		signature.numUnorderedBuffers = unorderedBuffers.size();
+
 		for (uint32_t i = 0; i < textures.size(); i++) {
 			signature.textures[i] = textures[i];
 		}
@@ -80,6 +67,52 @@ struct D3D12PipelineBindingsSignature final {
 		
 		return signature;
 	}
+};
+
+// D3D12RootSignature
+// ------------------------------------------------------------------------------------------------
+
+// A D3D12 root signature can at most contain 64 32-bit parameters, these parameters can contain
+// push constants directly, inline descriptors (currently unused in ZeroG) or descriptors to
+// tables of descriptors.
+//
+// In ZeroG we currently place all the push constants at the top, then we have a parameter
+// containing a descriptor pointing to a table with all SRVs, UAVs and CBVs.
+
+struct D3D12PushConstantMapping final {
+	uint32_t bufferRegister = ~0u;
+	uint32_t parameterIndex = ~0u;
+	uint32_t sizeInBytes = ~0u;
+};
+
+struct D3D12ConstantBufferMapping final {
+	uint32_t bufferRegister = ~0u;
+	uint32_t tableOffset = ~0u;
+	uint32_t sizeInBytes = ~0u;
+};
+
+struct D3D12UnorderedBufferMapping final {
+	uint32_t unorderedRegister = ~0u;
+	uint32_t tableOffset = ~0u;
+};
+
+struct D3D12TextureMapping final {
+	uint32_t textureRegister = ~0u;
+	uint32_t tableOffset = ~0u;
+};
+
+struct D3D12RootSignature final {
+	ComPtr<ID3D12RootSignature> rootSignature;
+	uint32_t dynamicBuffersParameterIndex = ~0u;
+	ArrayLocal<D3D12PushConstantMapping, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstants;
+	ArrayLocal<D3D12ConstantBufferMapping, ZG_MAX_NUM_CONSTANT_BUFFERS> constBuffers;
+	ArrayLocal<D3D12UnorderedBufferMapping, ZG_MAX_NUM_UNORDERED_BUFFERS> unorderedBuffers;
+	ArrayLocal<D3D12TextureMapping, ZG_MAX_NUM_TEXTURES> textures;
+
+	const D3D12PushConstantMapping* getPushConstantMapping(uint32_t bufferRegister) const noexcept;
+	const D3D12ConstantBufferMapping* getConstBufferMapping(uint32_t bufferRegister) const noexcept;
+	const D3D12UnorderedBufferMapping* getUnorderedBufferMapping(uint32_t unorderedRegister) const noexcept;
+	const D3D12TextureMapping* getTextureMapping(uint32_t textureRegister) const noexcept;
 };
 
 // D3D12PipelineCompute
@@ -112,14 +145,10 @@ public:
 	D3D12PipelineRender& operator= (D3D12PipelineRender&&) = delete;
 	~D3D12PipelineRender() noexcept {}
 
-	ComPtr<ID3D12RootSignature> rootSignature;
 	ComPtr<ID3D12PipelineState> pipelineState;
+	D3D12RootSignature rootSignature;
 	D3D12PipelineBindingsSignature bindingsSignature;
 	ZgPipelineRenderSignature renderSignature = {};
-	ArrayLocal<D3D12PushConstantMapping, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstants;
-	ArrayLocal<D3D12ConstantBufferMapping, ZG_MAX_NUM_CONSTANT_BUFFERS> constBuffers;
-	ArrayLocal<D3D12TextureMapping, ZG_MAX_NUM_TEXTURES> textures;;
-	uint32_t dynamicBuffersParameterIndex = ~0u;
 	ZgPipelineRenderCreateInfo createInfo = {}; // The info used to create the pipeline 
 };
 

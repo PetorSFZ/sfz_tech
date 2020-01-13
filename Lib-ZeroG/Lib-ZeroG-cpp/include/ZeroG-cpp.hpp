@@ -137,29 +137,13 @@ private:
 // PipelineBindings
 // ------------------------------------------------------------------------------------------------
 
-struct ConstantBufferBinding final {
-	uint32_t shaderRegister = ~0u;
-	Buffer* buffer = nullptr;
-};
-
-struct TextureBinding final {
-	uint32_t textureRegister = ~0u;
-	Texture2D* texture = nullptr;
-};
-
 class PipelineBindings final {
 public:
 
 	// Members
 	// --------------------------------------------------------------------------------------------
 
-	// The constant buffers to bind
-	uint32_t numConstantBuffers = 0;
-	ConstantBufferBinding constantBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
-
-	// The textures to bind
-	uint32_t numTextures = 0;
-	TextureBinding textures[ZG_MAX_NUM_TEXTURES];
+	ZgPipelineBindings bindings = {};
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -172,13 +156,24 @@ public:
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	PipelineBindings& addConstantBuffer(ConstantBufferBinding binding) noexcept;
-	PipelineBindings& addConstantBuffer(uint32_t shaderRegister, Buffer& buffer) noexcept;
+	PipelineBindings& addConstantBuffer(ZgConstantBufferBinding binding) noexcept;
+	PipelineBindings& addConstantBuffer(uint32_t bufferRegister, Buffer& buffer) noexcept;
 
-	PipelineBindings& addTexture(TextureBinding binding) noexcept;
+	PipelineBindings& addUnorderedBuffer(ZgUnorderedBufferBinding binding) noexcept;
+	PipelineBindings& addUnorderedBuffer(
+		uint32_t unorderedRegister,
+		uint32_t numElements,
+		uint32_t elementStrideBytes,
+		Buffer& buffer) noexcept;
+	PipelineBindings& addUnorderedBuffer(
+		uint32_t unorderedRegister,
+		uint32_t firstElementIdx,
+		uint32_t numElements,
+		uint32_t elementStrideBytes,
+		Buffer& buffer) noexcept;
+
+	PipelineBindings& addTexture(ZgTextureBinding binding) noexcept;
 	PipelineBindings& addTexture(uint32_t textureRegister, Texture2D& texture) noexcept;
-
-	ZgPipelineBindings toCApi() const noexcept;
 };
 
 

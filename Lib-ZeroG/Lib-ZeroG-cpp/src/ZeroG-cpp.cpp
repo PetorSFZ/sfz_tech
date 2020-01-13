@@ -91,61 +91,71 @@ Result Context::getStats(ZgStats& statsOut) noexcept
 // PipelineBindings: Methods
 // ------------------------------------------------------------------------------------------------
 
-PipelineBindings& PipelineBindings::addConstantBuffer(ConstantBufferBinding binding) noexcept
+PipelineBindings& PipelineBindings::addConstantBuffer(ZgConstantBufferBinding binding) noexcept
 {
-	assert(numConstantBuffers < ZG_MAX_NUM_CONSTANT_BUFFERS);
-	constantBuffers[numConstantBuffers] = binding;
-	numConstantBuffers += 1;
+	assert(bindings.numConstantBuffers < ZG_MAX_NUM_CONSTANT_BUFFERS);
+	bindings.constantBuffers[bindings.numConstantBuffers] = binding;
+	bindings.numConstantBuffers += 1;
 	return *this;
 }
 
 PipelineBindings& PipelineBindings::addConstantBuffer(
-	uint32_t shaderRegister, Buffer& buffer) noexcept
+	uint32_t bufferRegister, Buffer& buffer) noexcept
 {
-	ConstantBufferBinding binding;
-	binding.shaderRegister = shaderRegister;
-	binding.buffer = &buffer;
+	ZgConstantBufferBinding binding = {};
+	binding.bufferRegister = bufferRegister;
+	binding.buffer = buffer.buffer;
 	return this->addConstantBuffer(binding);
 }
 
-PipelineBindings& PipelineBindings::addTexture(TextureBinding binding) noexcept
+PipelineBindings& PipelineBindings::addUnorderedBuffer(ZgUnorderedBufferBinding binding) noexcept
 {
-	assert(numTextures < ZG_MAX_NUM_TEXTURES);
-	textures[numTextures] = binding;
-	numTextures += 1;
+	assert(bindings.numUnorderedBuffers < ZG_MAX_NUM_UNORDERED_BUFFERS);
+	bindings.unorderedBuffers[bindings.numUnorderedBuffers] = binding;
+	bindings.numUnorderedBuffers += 1;
+	return *this;
+}
+
+PipelineBindings& PipelineBindings::addUnorderedBuffer(
+	uint32_t unorderedRegister,
+	uint32_t numElements,
+	uint32_t elementStrideBytes,
+	Buffer& buffer) noexcept
+{
+	return this->addUnorderedBuffer(unorderedRegister, 0, numElements, elementStrideBytes, buffer);
+}
+
+PipelineBindings& PipelineBindings::addUnorderedBuffer(
+	uint32_t unorderedRegister,
+	uint32_t firstElementIdx,
+	uint32_t numElements,
+	uint32_t elementStrideBytes,
+	Buffer& buffer) noexcept
+{
+	ZgUnorderedBufferBinding binding = {};
+	binding.unorderedRegister = unorderedRegister;
+	binding.firstElementIdx = firstElementIdx;
+	binding.numElements = numElements;
+	binding.elementStrideBytes = elementStrideBytes;
+	binding.buffer = buffer.buffer;
+	return this->addUnorderedBuffer(binding);
+}
+
+PipelineBindings& PipelineBindings::addTexture(ZgTextureBinding binding) noexcept
+{
+	assert(bindings.numTextures < ZG_MAX_NUM_TEXTURES);
+	bindings.textures[bindings.numTextures] = binding;
+	bindings.numTextures += 1;
 	return *this;
 }
 
 PipelineBindings& PipelineBindings::addTexture(
 	uint32_t textureRegister, Texture2D& texture) noexcept
 {
-	TextureBinding binding;
+	ZgTextureBinding binding;
 	binding.textureRegister = textureRegister;
-	binding.texture = &texture;
+	binding.texture = texture.texture;
 	return this->addTexture(binding);
-}
-
-ZgPipelineBindings PipelineBindings::toCApi() const noexcept
-{
-	assert(numConstantBuffers < ZG_MAX_NUM_CONSTANT_BUFFERS);
-	assert(numTextures < ZG_MAX_NUM_TEXTURES);
-
-	// Constant buffers
-	ZgPipelineBindings cBindings = {};
-	cBindings.numConstantBuffers = this->numConstantBuffers;
-	for (uint32_t i = 0; i < this->numConstantBuffers; i++) {
-		cBindings.constantBuffers[i].shaderRegister = this->constantBuffers[i].shaderRegister;
-		cBindings.constantBuffers[i].buffer = this->constantBuffers[i].buffer->buffer;
-	}
-
-	// Textures
-	cBindings.numTextures = this->numTextures;
-	for (uint32_t i = 0; i < this->numTextures; i++) {
-		cBindings.textures[i].textureRegister = this->textures[i].textureRegister;
-		cBindings.textures[i].texture = this->textures[i].texture->texture;
-	}
-
-	return cBindings;
 }
 
 
@@ -785,8 +795,7 @@ Result CommandList::setPushConstant(
 
 Result CommandList::setPipelineBindings(const PipelineBindings& bindings) noexcept
 {
-	ZgPipelineBindings cBindings = bindings.toCApi();
-	return (Result)zgCommandListSetPipelineBindings(this->commandList, &cBindings);
+	return (Result)zgCommandListSetPipelineBindings(this->commandList, &bindings.bindings);
 }
 
 Result CommandList::setPipeline(PipelineCompute& pipeline) noexcept
