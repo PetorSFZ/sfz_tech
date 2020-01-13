@@ -1043,7 +1043,8 @@ static ZgResult createPipelineRenderInternal(
 	}
 
 	// Check that all necessary sampler data is available
-	bool samplerSet[ZG_MAX_NUM_SAMPLERS] = {};
+	ArrayLocal<bool, ZG_MAX_NUM_SAMPLERS> samplerSet;
+	samplerSet.add(false, ZG_MAX_NUM_SAMPLERS);
 	for (uint32_t i = 0; i < vertexDesc.BoundResources; i++) {
 		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
 		CHECK_D3D12 vertexReflection->GetResourceBindingDesc(i, &resDesc);
@@ -1092,7 +1093,7 @@ static ZgResult createPipelineRenderInternal(
 	}
 
 	// Check that the correct number of render targets is specified
-	uint32_t numRenderTargets = pixelDesc.OutputParameters;
+	const uint32_t numRenderTargets = pixelDesc.OutputParameters;
 	if (numRenderTargets != createInfo.numRenderTargets) {
 		ZG_ERROR("%u render targets were specified, however %u is used by the pipeline",
 			createInfo.numRenderTargets, numRenderTargets);
@@ -1107,7 +1108,7 @@ static ZgResult createPipelineRenderInternal(
 
 	// Convert ZgVertexAttribute's to D3D12_INPUT_ELEMENT_DESC
 	// This is the "input layout"
-	D3D12_INPUT_ELEMENT_DESC attributes[ZG_MAX_NUM_VERTEX_ATTRIBUTES] = {};
+	ArrayLocal<D3D12_INPUT_ELEMENT_DESC, ZG_MAX_NUM_VERTEX_ATTRIBUTES> attributes;
 	for (uint32_t i = 0; i < createInfo.numVertexAttributes; i++) {
 
 		const ZgVertexAttribute& attribute = createInfo.vertexAttributes[i];
@@ -1119,20 +1120,13 @@ static ZgResult createPipelineRenderInternal(
 		desc.AlignedByteOffset = attribute.offsetToFirstElementInBytes;
 		desc.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
 		desc.InstanceDataStepRate = 0;
-		attributes[i] = desc;
+		attributes.add(desc);
 	}
 
-	// List of push constant mappings to be filled in when creating root signature
-	D3D12PushConstantMapping pushConstantMappings[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
-	uint32_t numPushConstantsMappings = 0;
-
-	// List of constant buffer mappings to be filled in when creating root signature
-	D3D12ConstantBufferMapping constBufferMappings[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
-	uint32_t numConstBufferMappings = 0;
-
-	// List of texture mappings to be filled in when creating root signature
-	D3D12TextureMapping texMappings[ZG_MAX_NUM_TEXTURES] = {};
-	uint32_t numTexMappings = 0;
+	// List of mappings to be filled in when creating the root signature
+	ArrayLocal<D3D12PushConstantMapping, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstantMappings;
+	ArrayLocal<D3D12ConstantBufferMapping, ZG_MAX_NUM_CONSTANT_BUFFERS> constBufferMappings;
+	ArrayLocal<D3D12TextureMapping, ZG_MAX_NUM_TEXTURES> texMappings;
 
 	uint32_t dynamicBuffersParameterIndex = ~0u;
 
@@ -1166,10 +1160,11 @@ static ZgResult createPipelineRenderInternal(
 				cbuffer.sizeInBytes / 4, cbuffer.bufferRegister, 0, D3D12_SHADER_VISIBILITY_ALL);
 
 			// Add to push constants mappings
-			pushConstantMappings[numPushConstantsMappings].shaderRegister = cbuffer.bufferRegister;
-			pushConstantMappings[numPushConstantsMappings].parameterIndex = parameterIndex;
-			pushConstantMappings[numPushConstantsMappings].sizeInBytes = cbuffer.sizeInBytes;
-			numPushConstantsMappings += 1;
+			D3D12PushConstantMapping mapping;
+			mapping.shaderRegister = cbuffer.bufferRegister;
+			mapping.parameterIndex = parameterIndex;
+			mapping.sizeInBytes = cbuffer.sizeInBytes;
+			pushConstantMappings.add(mapping);
 		}
 
 		// Add dynamic constant buffers (non-push constants)
@@ -1183,11 +1178,12 @@ static ZgResult createPipelineRenderInternal(
 			}
 
 			// Add to constant buffer mappings
-			uint32_t mappingIdx = numConstBufferMappings;
-			numConstBufferMappings += 1;
-			constBufferMappings[mappingIdx].shaderRegister = cbuffer.bufferRegister;
-			constBufferMappings[mappingIdx].tableOffset = mappingIdx;
-			constBufferMappings[mappingIdx].sizeInBytes = cbuffer.sizeInBytes;
+			uint32_t mappingIdx = constBufferMappings.size();
+			D3D12ConstantBufferMapping mapping;
+			mapping.shaderRegister = cbuffer.bufferRegister;
+			mapping.tableOffset = mappingIdx;
+			mapping.sizeInBytes = cbuffer.sizeInBytes;
+			constBufferMappings.add(mapping);
 		}
 
 		// Add texture mappings
@@ -1200,16 +1196,17 @@ static ZgResult createPipelineRenderInternal(
 			}
 
 			// Add to texture mappings
-			uint32_t mappingIdx = numTexMappings;
-			numTexMappings += 1;
-			texMappings[mappingIdx].textureRegister = texDesc.textureRegister;
-			texMappings[mappingIdx].tableOffset = mappingIdx + numConstBufferMappings;
+			uint32_t mappingIdx = texMappings.size();
+			D3D12TextureMapping mapping;
+			mapping.textureRegister = texDesc.textureRegister;
+			mapping.tableOffset = mappingIdx + constBufferMappings.size();
+			texMappings.add(mapping);
 		}
 
 		// Index of the parameter containing the dynamic table
 		dynamicBuffersParameterIndex = numParameters;
 		sfz_assert(numParameters < MAX_NUM_ROOT_PARAMETERS);
-		if ((numConstBufferMappings + numTexMappings) != 0) {
+		if ((constBufferMappings.size() + texMappings.size()) != 0) {
 			numParameters += 1; // No dynamic table if no dynamic parameters
 		}
 
@@ -1218,13 +1215,13 @@ static ZgResult createPipelineRenderInternal(
 		constexpr uint32_t MAX_NUM_RANGES = 2; // CBVs and SRVs
 		uint32_t numRanges = 0;
 		CD3DX12_DESCRIPTOR_RANGE1 ranges[MAX_NUM_RANGES] = {};
-		if (numConstBufferMappings != 0) {
-			ranges[numRanges].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, numConstBufferMappings,
+		if (constBufferMappings.size() != 0) {
+			ranges[numRanges].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, constBufferMappings.size(),
 				dynamicConstBuffersFirstRegister);
 			numRanges += 1;
 		}
-		if (numTexMappings != 0) {
-			ranges[numRanges].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, numTexMappings,
+		if (texMappings.size() != 0) {
+			ranges[numRanges].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, texMappings.size(),
 				dynamicTexturesFirstRegister);
 			numRanges += 1;
 		}
@@ -1296,8 +1293,8 @@ static ZgResult createPipelineRenderInternal(
 
 		// Set input layout
 		D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = {};
-		inputLayoutDesc.pInputElementDescs = attributes;
-		inputLayoutDesc.NumElements = createInfo.numVertexAttributes;
+		inputLayoutDesc.pInputElementDescs = attributes.data();
+		inputLayoutDesc.NumElements = attributes.size();
 		stream.inputLayout = inputLayoutDesc;
 
 		// Set primitive topology
@@ -1396,16 +1393,9 @@ static ZgResult createPipelineRenderInternal(
 	pipeline->rootSignature = rootSignature;
 	pipeline->bindingsSignature = bindings;
 	pipeline->renderSignature = *renderSignatureOut;
-	pipeline->numPushConstants = numPushConstantsMappings;
-	pipeline->numConstantBuffers = numConstBufferMappings;
-	for (uint32_t i = 0; i < ZG_MAX_NUM_CONSTANT_BUFFERS; i++) {
-		pipeline->pushConstants[i] = pushConstantMappings[i];
-		pipeline->constBuffers[i] = constBufferMappings[i];
-	}
-	pipeline->numTextures = numTexMappings;
-	for (uint32_t i = 0; i < ZG_MAX_NUM_TEXTURES; i++) {
-		pipeline->textures[i] = texMappings[i];
-	}
+	pipeline->pushConstants = pushConstantMappings;
+	pipeline->constBuffers = constBufferMappings;
+	pipeline->textures = texMappings;
 	pipeline->dynamicBuffersParameterIndex = dynamicBuffersParameterIndex;
 	pipeline->createInfo = createInfo;
 

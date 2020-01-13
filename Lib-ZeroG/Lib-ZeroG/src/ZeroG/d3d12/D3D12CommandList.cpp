@@ -310,18 +310,11 @@ ZgResult D3D12CommandList::setPushConstant(
 	// Require that a pipeline has been set so we can query its parameters
 	if (!mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 
-	// Linear search to find push constant mapping
-	uint32_t mappingIdx = ~0u;
-	for (uint32_t i = 0; i < mBoundPipelineRender->numPushConstants; i++) {
-		if (mBoundPipelineRender->pushConstants[i].shaderRegister == shaderRegister) {
-			mappingIdx = i;
-			break;
-		}
-	}
-
-	// Return invalid argument if there is no push constant associated with the given register
-	if (mappingIdx == ~0u) return ZG_ERROR_INVALID_ARGUMENT;
-	const D3D12PushConstantMapping& mapping = mBoundPipelineRender->pushConstants[mappingIdx];
+	// Linear search to find push constant maping
+	const D3D12PushConstantMapping* mappingPtr = mBoundPipelineRender->pushConstants.find(
+		[&](const auto& e) { return e.shaderRegister == shaderRegister; });
+	if (mappingPtr == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	const D3D12PushConstantMapping& mapping = *mappingPtr;
 
 	// Sanity check to attempt to see if user provided enough bytes to read
 	if (mapping.sizeInBytes != dataSizeInBytes) {
@@ -348,8 +341,8 @@ ZgResult D3D12CommandList::setPipelineBindings(
 {
 	// Require that a pipeline has been set so we can query its parameters
 	if (!mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
-	uint32_t numConstantBuffers = mBoundPipelineRender->numConstantBuffers;
-	uint32_t numTextures = mBoundPipelineRender->numTextures;
+	uint32_t numConstantBuffers = mBoundPipelineRender->constBuffers.size();
+	uint32_t numTextures = mBoundPipelineRender->textures.size();
 
 	// If no bindings specified, do nothing.
 	if (bindings.numConstantBuffers == 0 && bindings.numTextures == 0) return ZG_SUCCESS;
@@ -362,8 +355,7 @@ ZgResult D3D12CommandList::setPipelineBindings(
 	if (allocRes != ZG_SUCCESS) return allocRes;
 
 	// Create constant buffer views and fill (CPU) descriptors
-	for (uint32_t i = 0; i < numConstantBuffers; i++) {
-		const D3D12ConstantBufferMapping& mapping = mBoundPipelineRender->constBuffers[i];
+	for (const D3D12ConstantBufferMapping& mapping : mBoundPipelineRender->constBuffers) {
 
 		// Get the CPU descriptor
 		sfz_assert(mapping.tableOffset < numConstantBuffers);
@@ -419,8 +411,7 @@ ZgResult D3D12CommandList::setPipelineBindings(
 	}
 
 	// Create shader resource views and fill (CPU) descriptors
-	for (uint32_t i = 0; i < numTextures; i++) {
-		const D3D12TextureMapping& mapping = mBoundPipelineRender->textures[i];
+	for (const D3D12TextureMapping& mapping : mBoundPipelineRender->textures) {
 
 		// Get the CPU descriptor
 		sfz_assert(mapping.tableOffset >= numConstantBuffers);

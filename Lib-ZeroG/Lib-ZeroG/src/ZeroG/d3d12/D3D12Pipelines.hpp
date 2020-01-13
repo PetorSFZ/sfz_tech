@@ -116,12 +116,9 @@ public:
 	ComPtr<ID3D12PipelineState> pipelineState;
 	D3D12PipelineBindingsSignature bindingsSignature;
 	ZgPipelineRenderSignature renderSignature = {};
-	uint32_t numPushConstants = 0;
-	D3D12PushConstantMapping pushConstants[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
-	uint32_t numConstantBuffers = 0;
-	D3D12ConstantBufferMapping constBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
-	uint32_t numTextures = 0;
-	D3D12TextureMapping textures[ZG_MAX_NUM_TEXTURES] = {};
+	ArrayLocal<D3D12PushConstantMapping, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstants;
+	ArrayLocal<D3D12ConstantBufferMapping, ZG_MAX_NUM_CONSTANT_BUFFERS> constBuffers;
+	ArrayLocal<D3D12TextureMapping, ZG_MAX_NUM_TEXTURES> textures;;
 	uint32_t dynamicBuffersParameterIndex = ~0u;
 	ZgPipelineRenderCreateInfo createInfo = {}; // The info used to create the pipeline 
 };
