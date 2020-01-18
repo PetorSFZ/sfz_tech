@@ -310,9 +310,15 @@ ZgResult D3D12CommandList::setPushConstant(
 	// Require that a pipeline has been set so we can query its parameters
 	if (!mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 
+	// Get root signature
+	const D3D12RootSignature* rootSignaturePtr = nullptr;
+	if (mBoundPipelineRender != nullptr) rootSignaturePtr = &mBoundPipelineRender->rootSignature;
+	else if (mBoundPipelineCompute != nullptr) rootSignaturePtr = &mBoundPipelineCompute->rootSignature;
+	else return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+
 	// Linear search to find push constant maping
 	const D3D12PushConstantMapping* mappingPtr =
-		mBoundPipelineRender->rootSignature.getPushConstantMapping(shaderRegister);
+		rootSignaturePtr->getPushConstantMapping(shaderRegister);
 	if (mappingPtr == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
 	const D3D12PushConstantMapping& mapping = *mappingPtr;
 
@@ -324,13 +330,25 @@ ZgResult D3D12CommandList::setPushConstant(
 	}
 
 	// Set push constant
-	if (mapping.sizeInBytes == 4) {
-		uint32_t data = *reinterpret_cast<const uint32_t*>(dataPtr);
-		commandList->SetGraphicsRoot32BitConstant(mapping.parameterIndex, data, 0);
+	if (mBoundPipelineRender != nullptr) {
+		if (mapping.sizeInBytes == 4) {
+			uint32_t data = *reinterpret_cast<const uint32_t*>(dataPtr);
+			commandList->SetGraphicsRoot32BitConstant(mapping.parameterIndex, data, 0);
+		}
+		else {
+			commandList->SetGraphicsRoot32BitConstants(
+				mapping.parameterIndex, mapping.sizeInBytes / 4, dataPtr, 0);
+		}
 	}
 	else {
-		commandList->SetGraphicsRoot32BitConstants(
-			mapping.parameterIndex, mapping.sizeInBytes / 4, dataPtr, 0);
+		if (mapping.sizeInBytes == 4) {
+			uint32_t data = *reinterpret_cast<const uint32_t*>(dataPtr);
+			commandList->SetComputeRoot32BitConstant(mapping.parameterIndex, data, 0);
+		}
+		else {
+			commandList->SetComputeRoot32BitConstants(
+				mapping.parameterIndex, mapping.sizeInBytes / 4, dataPtr, 0);
+		}
 	}
 	
 	return ZG_SUCCESS;
@@ -341,12 +359,21 @@ ZgResult D3D12CommandList::setPipelineBindings(
 {
 	// Require that a pipeline has been set so we can query its parameters
 	if (!mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
-	const uint32_t numConstantBuffers = mBoundPipelineRender->rootSignature.constBuffers.size();
-	const uint32_t numUnorderedBuffers = mBoundPipelineRender->rootSignature.unorderedBuffers.size();
-	const uint32_t numTextures = mBoundPipelineRender->rootSignature.textures.size();
+
+	// Get root signature
+	const D3D12RootSignature* rootSignaturePtr = nullptr;
+	if (mBoundPipelineRender != nullptr) rootSignaturePtr = &mBoundPipelineRender->rootSignature;
+	else if (mBoundPipelineCompute != nullptr) rootSignaturePtr = &mBoundPipelineCompute->rootSignature;
+	else return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+
+	const uint32_t numConstantBuffers = rootSignaturePtr->constBuffers.size();
+	const uint32_t numUnorderedBuffers = rootSignaturePtr->unorderedBuffers.size();
+	const uint32_t numTextures = rootSignaturePtr->textures.size();
 
 	// If no bindings specified, do nothing.
-	if (bindings.numConstantBuffers == 0 && bindings.numTextures == 0) return ZG_SUCCESS;
+	if (bindings.numConstantBuffers == 0 &&
+		bindings.numUnorderedBuffers == 0 &&
+		bindings.numTextures == 0) return ZG_SUCCESS;
 
 	// Allocate descriptors
 	D3D12_CPU_DESCRIPTOR_HANDLE rangeStartCpu = {};
@@ -356,7 +383,7 @@ ZgResult D3D12CommandList::setPipelineBindings(
 	if (allocRes != ZG_SUCCESS) return allocRes;
 
 	// Create constant buffer views and fill (CPU) descriptors
-	for (const D3D12ConstantBufferMapping& mapping : mBoundPipelineRender->rootSignature.constBuffers) {
+	for (const D3D12ConstantBufferMapping& mapping : rootSignaturePtr->constBuffers) {
 
 		// Get the CPU descriptor
 		sfz_assert(mapping.tableOffset < numConstantBuffers);
@@ -412,7 +439,7 @@ ZgResult D3D12CommandList::setPipelineBindings(
 	}
 
 	// Create unordered resource views and fill (CPU) descriptors
-	for (const D3D12UnorderedBufferMapping& mapping : mBoundPipelineRender->rootSignature.unorderedBuffers) {
+	for (const D3D12UnorderedBufferMapping& mapping : rootSignaturePtr->unorderedBuffers) {
 
 		// Get the CPU descriptor
 		sfz_assert(mapping.tableOffset >= numConstantBuffers);
@@ -462,7 +489,7 @@ ZgResult D3D12CommandList::setPipelineBindings(
 	}
 
 	// Create shader resource views and fill (CPU) descriptors
-	for (const D3D12TextureMapping& mapping : mBoundPipelineRender->rootSignature.textures) {
+	for (const D3D12TextureMapping& mapping : rootSignaturePtr->textures) {
 
 		// Get the CPU descriptor
 		sfz_assert(mapping.tableOffset >= (numConstantBuffers + numUnorderedBuffers));
@@ -523,8 +550,14 @@ ZgResult D3D12CommandList::setPipelineBindings(
 	}
 
 	// Set descriptor table to root signature
-	commandList->SetGraphicsRootDescriptorTable(
-		mBoundPipelineRender->rootSignature.dynamicBuffersParameterIndex, rangeStartGpu);
+	if (mBoundPipelineRender != nullptr) {
+		commandList->SetGraphicsRootDescriptorTable(
+			rootSignaturePtr->dynamicBuffersParameterIndex, rangeStartGpu);
+	}
+	else {
+		commandList->SetComputeRootDescriptorTable(
+			rootSignaturePtr->dynamicBuffersParameterIndex, rangeStartGpu);
+	}
 
 	return ZG_SUCCESS;
 }
@@ -542,7 +575,11 @@ ZgResult D3D12CommandList::setPipelineCompute(
 
 	// Set compute pipeline
 	commandList->SetPipelineState(pipeline.pipelineState.Get());
-	commandList->SetComputeRootSignature(pipeline.rootSignature.Get());
+	commandList->SetComputeRootSignature(pipeline.rootSignature.rootSignature.Get());
+
+	// Set descriptor heap
+	ID3D12DescriptorHeap* heaps[] = { mDescriptorBuffer->descriptorHeap.Get() };
+	commandList->SetDescriptorHeaps(1, heaps);
 
 	return ZG_SUCCESS;
 }

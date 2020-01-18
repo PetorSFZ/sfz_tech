@@ -621,6 +621,7 @@ public:
 
 	ZgResult pipelineComputeCreateFromFileHLSL(
 		ZgPipelineCompute** pipelineOut,
+		ZgPipelineBindingsSignature* bindingsSignatureOut,
 		const ZgPipelineComputeCreateInfo& createInfo,
 		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept override final
 	{
@@ -634,6 +635,7 @@ public:
 		D3D12PipelineCompute* d3d12pipeline = nullptr;
 		ZgResult res = createPipelineComputeFileHLSL(
 			&d3d12pipeline,
+			bindingsSignatureOut,
 			createInfo,
 			compileSettings,
 			*mState->dxcLibrary.Get(),
@@ -649,8 +651,8 @@ public:
 	ZgResult pipelineComputeRelease(
 		ZgPipelineCompute* pipeline) noexcept override final
 	{
-		(void)pipeline;
-		return ZG_WARNING_UNIMPLEMENTED;
+		getAllocator()->deleteObject(pipeline);
+		return ZG_SUCCESS;
 	}
 
 	// Pipeline rendeer methods
@@ -785,12 +787,12 @@ public:
 	}
 
 	ZgResult bufferMemcpyTo(
-		ZgBuffer* dstBufferInterface,
-		uint64_t bufferOffsetBytes,
+		ZgBuffer* dstBufferIn,
+		uint64_t dstBufferOffsetBytes,
 		const uint8_t* srcMemory,
 		uint64_t numBytes) noexcept override final
 	{
-		D3D12Buffer& dstBuffer = *reinterpret_cast<D3D12Buffer*>(dstBufferInterface);
+		D3D12Buffer& dstBuffer = *reinterpret_cast<D3D12Buffer*>(dstBufferIn);
 		if (dstBuffer.memoryHeap->memoryType != ZG_MEMORY_TYPE_UPLOAD) return ZG_ERROR_INVALID_ARGUMENT;
 
 		// Not gonna read from buffer
@@ -805,15 +807,49 @@ public:
 		}
 
 		// Memcpy to buffer
-		memcpy(reinterpret_cast<uint8_t*>(mappedPtr) + bufferOffsetBytes, srcMemory, numBytes);
+		memcpy(reinterpret_cast<uint8_t*>(mappedPtr) + dstBufferOffsetBytes, srcMemory, numBytes);
 
 		// The range we memcpy'd to
 		D3D12_RANGE writeRange = {};
-		writeRange.Begin = bufferOffsetBytes;
+		writeRange.Begin = dstBufferOffsetBytes;
 		writeRange.End = writeRange.Begin + numBytes;
 
 		// Unmap buffer
-		dstBuffer.resource->Unmap(0, nullptr);// &writeRange);
+		dstBuffer.resource->Unmap(0, &writeRange);
+
+		return ZG_SUCCESS;
+	}
+
+	ZgResult bufferMemcpyFrom(
+		uint8_t* dstMemory,
+		ZgBuffer* srcBufferIn,
+		uint64_t srcBufferOffsetBytes,
+		uint64_t numBytes) noexcept override final
+	{
+		D3D12Buffer& srcBuffer = *reinterpret_cast<D3D12Buffer*>(srcBufferIn);
+		if (srcBuffer.memoryHeap->memoryType != ZG_MEMORY_TYPE_DOWNLOAD) return ZG_ERROR_INVALID_ARGUMENT;
+
+		// Specify range which we are going to read from in buffer
+		D3D12_RANGE readRange = {};
+		readRange.Begin = srcBufferOffsetBytes;
+		readRange.End = srcBufferOffsetBytes + numBytes;
+
+		// Map buffer
+		void* mappedPtr = nullptr;
+		if (D3D12_FAIL(srcBuffer.resource->Map(0, &readRange, &mappedPtr))) {
+			return ZG_ERROR_GENERIC;
+		}
+
+		// Memcpy to buffer
+		memcpy(dstMemory, reinterpret_cast<const uint8_t*>(mappedPtr) + srcBufferOffsetBytes, numBytes);
+		
+		// The didn't write anything
+		D3D12_RANGE writeRange = {};
+		writeRange.Begin = 0;
+		writeRange.End = 0;
+
+		// Unmap buffer
+		srcBuffer.resource->Unmap(0, &writeRange);
 
 		return ZG_SUCCESS;
 	}

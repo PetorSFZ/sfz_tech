@@ -50,6 +50,7 @@ struct ZgBackend {
 
 	virtual ZgResult pipelineComputeCreateFromFileHLSL(
 		ZgPipelineCompute** pipelineOut,
+		ZgPipelineBindingsSignature* bindingsSignatureOut,
 		const ZgPipelineComputeCreateInfo& createInfo,
 		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept = 0;
 
@@ -94,8 +95,14 @@ struct ZgBackend {
 
 	virtual ZgResult bufferMemcpyTo(
 		ZgBuffer* dstBufferInterface,
-		uint64_t bufferOffsetBytes,
+		uint64_t dstBufferOffsetBytes,
 		const uint8_t* srcMemory,
+		uint64_t numBytes) noexcept = 0;
+
+	virtual ZgResult bufferMemcpyFrom(
+		uint8_t* dstMemory,
+		ZgBuffer* srcBuffer,
+		uint64_t srcBufferOffsetBytes,
 		uint64_t numBytes) noexcept = 0;
 
 	// Texture methods

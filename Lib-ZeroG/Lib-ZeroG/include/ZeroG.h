@@ -108,7 +108,7 @@ typedef struct ZgFramebufferRect ZgFramebufferRect;
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 11;
+static const uint32_t ZG_COMPILED_API_VERSION = 12;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -502,9 +502,44 @@ struct ZgPipelineCompileSettingsHLSL {
 };
 typedef struct ZgPipelineCompileSettingsHLSL ZgPipelineCompileSettingsHLSL;
 
-
 // Pipeline Compute
 // ------------------------------------------------------------------------------------------------
+
+// Sample mode of a sampler
+enum ZgSamplingModeEnum {
+	ZG_SAMPLING_MODE_UNDEFINED = 0,
+
+	ZG_SAMPLING_MODE_NEAREST, // D3D12_FILTER_MIN_MAG_MIP_POINT
+	ZG_SAMPLING_MODE_TRILINEAR, // D3D12_FILTER_MIN_MAG_MIP_LINEAR
+	ZG_SAMPLING_MODE_ANISOTROPIC, // D3D12_FILTER_ANISOTROPIC
+};
+typedef uint32_t ZgSamplingMode;
+
+// Wrapping mode of a sampler
+enum ZgWrappingModeEnum {
+	ZG_WRAPPING_MODE_UNDEFINED = 0,
+
+	ZG_WRAPPING_MODE_CLAMP, // D3D12_TEXTURE_ADDRESS_MODE_CLAMP
+	ZG_WRAPPING_MODE_REPEAT, // D3D12_TEXTURE_ADDRESS_MODE_WRAP
+};
+typedef uint32_t ZgWrappingMode;
+
+// A struct defining a texture sampler
+struct ZgSampler {
+
+	// The sampling mode of the sampler
+	ZgSamplingMode samplingMode;
+
+	// The wrapping mode of the sampler (u == x, v == y)
+	ZgWrappingMode wrappingModeU;
+	ZgWrappingMode wrappingModeV;
+
+	// Offset from the calculated mipmap level. E.g., if mipmap level 2 is calculated in the shader
+	// and the lod bias is -1, then level 1 will be used instead. Level 0 is the highest resolution
+	// texture.
+	float mipLodBias;
+};
+typedef struct ZgSampler ZgSampler;
 
 struct ZgPipelineComputeCreateInfo {
 
@@ -513,10 +548,25 @@ struct ZgPipelineComputeCreateInfo {
 
 	// The name of the entry function
 	const char* computeShaderEntry;
+
+	// A list of constant buffer registers which should be declared as push constants. This is an
+	// optimization, however it can lead to worse performance if used improperly. Can be left empty
+	// if unsure.
+	uint32_t numPushConstants;
+	uint32_t pushConstantRegisters[ZG_MAX_NUM_CONSTANT_BUFFERS];
+
+	// A list of samplers used by the pipeline
+	//
+	// Note: For D3D12 the first sampler in the array (0th) corresponds with the 0th sampler
+	//       register, etc. E.g. meaning if you have three samplers, they need to have the
+	//       registers 0, 1, 2.
+	uint32_t numSamplers;
+	ZgSampler samplers[ZG_MAX_NUM_SAMPLERS];
 };
 
 ZG_API ZgResult zgPipelineComputeCreateFromFileHLSL(
 	ZgPipelineCompute** pipelineOut,
+	ZgPipelineBindingsSignature* bindingsSignatureOut,
 	const ZgPipelineComputeCreateInfo* createInfo,
 	const ZgPipelineCompileSettingsHLSL* compileSettings);
 
@@ -603,42 +653,6 @@ typedef struct ZgPipelineRenderSignature ZgPipelineRenderSignature;
 
 // Pipeline Render
 // ------------------------------------------------------------------------------------------------
-
-// Sample mode of a sampler
-enum ZgSamplingModeEnum {
-	ZG_SAMPLING_MODE_UNDEFINED = 0,
-
-	ZG_SAMPLING_MODE_NEAREST, // D3D12_FILTER_MIN_MAG_MIP_POINT
-	ZG_SAMPLING_MODE_TRILINEAR, // D3D12_FILTER_MIN_MAG_MIP_LINEAR
-	ZG_SAMPLING_MODE_ANISOTROPIC, // D3D12_FILTER_ANISOTROPIC
-};
-typedef uint32_t ZgSamplingMode;
-
-// Wrapping mode of a sampler
-enum ZgWrappingModeEnum {
-	ZG_WRAPPING_MODE_UNDEFINED = 0,
-
-	ZG_WRAPPING_MODE_CLAMP, // D3D12_TEXTURE_ADDRESS_MODE_CLAMP
-	ZG_WRAPPING_MODE_REPEAT, // D3D12_TEXTURE_ADDRESS_MODE_WRAP
-};
-typedef uint32_t ZgWrappingMode;
-
-// A struct defining a texture sampler
-struct ZgSampler {
-
-	// The sampling mode of the sampler
-	ZgSamplingMode samplingMode;
-
-	// The wrapping mode of the sampler (u == x, v == y)
-	ZgWrappingMode wrappingModeU;
-	ZgWrappingMode wrappingModeV;
-
-	// Offset from the calculated mipmap level. E.g., if mipmap level 2 is calculated in the shader
-	// and the lod bias is -1, then level 1 will be used instead. Level 0 is the highest resolution
-	// texture.
-	float mipLodBias;
-};
-typedef struct ZgSampler ZgSampler;
 
 struct ZgRasterizerSettings {
 
@@ -893,8 +907,14 @@ ZG_API void zgBufferRelease(
 
 ZG_API ZgResult zgBufferMemcpyTo(
 	ZgBuffer* dstBuffer,
-	uint64_t bufferOffsetBytes,
+	uint64_t dstBufferOffsetBytes,
 	const void* srcMemory,
+	uint64_t numBytes);
+
+ZG_API ZgResult zgBufferMemcpyFrom(
+	void* dstMemory,
+	ZgBuffer* srcBuffer,
+	uint64_t srcBufferOffsetBytes,
 	uint64_t numBytes);
 
 ZG_API ZgResult zgBufferSetDebugName(

@@ -20,6 +20,7 @@
 
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
+#include <skipifzero_strings.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -564,6 +565,50 @@ static D3D12_TEXTURE_ADDRESS_MODE wrappingModeToD3D12(ZgWrappingMode wrappingMod
 	return D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 }
 
+static void logPipelineComputeInfo(
+	const ZgPipelineComputeCreateInfo& createInfo,
+	const char* computeShaderName,
+	const ZgPipelineBindingsSignature& bindingsSignature,
+	float compileTimeMs) noexcept
+{
+	sfz::str4096 tmpStr;
+
+	// Print header
+	tmpStr.appendf("Compiled ZgPipelineCompute with:\n");
+	tmpStr.appendf(" - Compute shader: \"%s\" -- %s()\n\n",
+		computeShaderName, createInfo.computeShaderEntry);
+
+	// Print compile time
+	tmpStr.appendf("Compile time: %.2fms\n\n", compileTimeMs);
+
+	// Print constant buffers
+	tmpStr.appendf("Constant buffers (%u):\n", bindingsSignature.numConstBuffers);
+	for (uint32_t i = 0; i < bindingsSignature.numConstBuffers; i++) {
+		const ZgConstantBufferBindingDesc& cbuffer = bindingsSignature.constBuffers[i];
+		tmpStr.appendf(" - Register: %u -- Size: %u bytes -- Push constant: %s\n",
+			cbuffer.bufferRegister,
+			cbuffer.sizeInBytes,
+			cbuffer.pushConstant ? "YES" : "NO");
+	}
+
+	// Print unordered buffers
+	tmpStr.appendf("\nUnordered buffers (%u):\n", bindingsSignature.numUnorderedBuffers);
+	for (uint32_t i = 0; i < bindingsSignature.numUnorderedBuffers; i++) {
+		const ZgUnorderedBufferBindingDesc& buffer = bindingsSignature.unorderedBuffers[i];
+		tmpStr.appendf(" - Register: %u\n", buffer.unorderedRegister);
+	}
+
+	// Print textures
+	tmpStr.appendf("\nTextures (%u):\n", bindingsSignature.numTextures);
+	for (uint32_t i = 0; i < bindingsSignature.numTextures; i++) {
+		const ZgTextureBindingDesc& texture = bindingsSignature.textures[i];
+		tmpStr.appendf(" - Register: %u\n", texture.textureRegister);
+	}
+
+	// Log
+	ZG_NOISE("%s", tmpStr.str());
+}
+
 static void logPipelineRenderInfo(
 	const ZgPipelineRenderCreateInfo& createInfo,
 	const char* vertexShaderName,
@@ -572,59 +617,53 @@ static void logPipelineRenderInfo(
 	const ZgPipelineRenderSignature& renderSignature,
 	float compileTimeMs) noexcept
 {
-	// Allocate temp string to log
-	sfz::Allocator* allocator = getAllocator();
-	const uint32_t STRING_MAX_SIZE = 4096;
-	char* const tmpStrOriginal = reinterpret_cast<char*>(allocator->allocate(
-		sfz_dbg("Pipeline log tmp string"), STRING_MAX_SIZE));
-	char* tmpStr = tmpStrOriginal;
-	tmpStr[0] = '\0';
-	uint32_t bytesLeft = STRING_MAX_SIZE;
+	sfz::str4096 tmpStr;
 
 	// Print header
-	printfAppend(tmpStr, bytesLeft, "Compiled ZgPipelineRendering with:\n");
-	printfAppend(tmpStr, bytesLeft, " - Vertex shader: \"%s\" -- %s()\n",
+	tmpStr.appendf("Compiled ZgPipelineRendering with:\n");
+	tmpStr.appendf(" - Vertex shader: \"%s\" -- %s()\n",
 		vertexShaderName, createInfo.vertexShaderEntry);
-	printfAppend(tmpStr, bytesLeft, " - Pixel shader: \"%s\" -- %s()\n\n",
+	tmpStr.appendf(" - Pixel shader: \"%s\" -- %s()\n\n",
 		pixelShaderName, createInfo.pixelShaderEntry);
 
 	// Print compile time
-	printfAppend(tmpStr, bytesLeft, "Compile time: %.2fms\n\n", compileTimeMs);
+	tmpStr.appendf("Compile time: %.2fms\n\n", compileTimeMs);
 
 	// Print vertex attributes
-	printfAppend(tmpStr, bytesLeft, "Vertex attributes (%u):\n", renderSignature.numVertexAttributes);
+	tmpStr.appendf("Vertex attributes (%u):\n", renderSignature.numVertexAttributes);
 	for (uint32_t i = 0; i < renderSignature.numVertexAttributes; i++) {
 		const ZgVertexAttribute& attrib = renderSignature.vertexAttributes[i];
-		printfAppend(tmpStr, bytesLeft, " - Location: %u -- Type: %s\n",
+		tmpStr.appendf(" - Location: %u -- Type: %s\n",
 			attrib.location,
 			vertexAttributeTypeToString(attrib.type));
 	}
 
 	// Print constant buffers
-	printfAppend(tmpStr, bytesLeft, "\nConstant buffers (%u):\n", bindingsSignature.numConstBuffers);
+	tmpStr.appendf("\nConstant buffers (%u):\n", bindingsSignature.numConstBuffers);
 	for (uint32_t i = 0; i < bindingsSignature.numConstBuffers; i++) {
 		const ZgConstantBufferBindingDesc& cbuffer = bindingsSignature.constBuffers[i];
-		printfAppend(tmpStr, bytesLeft,
-			" - Register: %u -- Size: %u bytes -- Push constant: %s\n",
+		tmpStr.appendf(" - Register: %u -- Size: %u bytes -- Push constant: %s\n",
 			cbuffer.bufferRegister,
 			cbuffer.sizeInBytes,
 			cbuffer.pushConstant ? "YES" : "NO");
 	}
 
+	// Print unordered buffers
+	tmpStr.appendf("\nUnordered buffers (%u):\n", bindingsSignature.numUnorderedBuffers);
+	for (uint32_t i = 0; i < bindingsSignature.numUnorderedBuffers; i++) {
+		const ZgUnorderedBufferBindingDesc& buffer = bindingsSignature.unorderedBuffers[i];
+		tmpStr.appendf(" - Register: %u\n", buffer.unorderedRegister);
+	}
+
 	// Print textures
-	printfAppend(tmpStr, bytesLeft, "\nTextures (%u):\n", bindingsSignature.numTextures);
+	tmpStr.appendf("\nTextures (%u):\n", bindingsSignature.numTextures);
 	for (uint32_t i = 0; i < bindingsSignature.numTextures; i++) {
 		const ZgTextureBindingDesc& texture = bindingsSignature.textures[i];
-		printfAppend(tmpStr, bytesLeft,
-			" - Register: %u\n",
-			texture.textureRegister);
+		tmpStr.appendf(" - Register: %u\n", texture.textureRegister);
 	}
 
 	// Log
-	ZG_NOISE("%s", tmpStrOriginal);
-
-	// Deallocate temp string
-	allocator->deallocate(tmpStrOriginal);
+	ZG_NOISE("%s", tmpStr.str());
 }
 
 static ZgResult bindingsFromReflection(
@@ -951,6 +990,7 @@ const D3D12TextureMapping* D3D12RootSignature::getTextureMapping(uint32_t textur
 
 static ZgResult createPipelineComputeInternal(
 	D3D12PipelineCompute** pipelineOut,
+	ZgPipelineBindingsSignature* bindingsSignatureOut,
 	const ZgPipelineComputeCreateInfo& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	time_point compileStartTime,
@@ -979,30 +1019,24 @@ static ZgResult createPipelineComputeInternal(
 	D3D12_SHADER_DESC computeDesc = {};
 	CHECK_D3D12 computeReflection->GetDesc(&computeDesc);
 
-	// Create root signature
-	ComPtr<ID3D12RootSignature> rootSignature;
+	// Get pipeline bindings signature
+	D3D12PipelineBindingsSignature bindings = {};
 	{
-		D3D12_ROOT_SIGNATURE_FLAGS flags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
+		sfz::ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstantRegisters;
+		pushConstantRegisters.add(createInfo.pushConstantRegisters, createInfo.numPushConstants);
 
-		CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC desc;
-		desc.Init_1_1(0, nullptr, 0, nullptr, flags);
+		ZgResult bindingsRes = bindingsFromReflection(
+			computeReflection, pushConstantRegisters, bindings);
+		if (bindingsRes != ZG_SUCCESS) return bindingsRes;
+	}
 
-		// Serialize the root signature.
-		ComPtr<ID3DBlob> blob;
-		ComPtr<ID3DBlob> errorBlob;
-		if (D3D12_FAIL(D3DX12SerializeVersionedRootSignature(
-			&desc, D3D_ROOT_SIGNATURE_VERSION_1_1, &blob, &errorBlob))) {
-
-			ZG_ERROR("D3DX12SerializeVersionedRootSignature() failed: %s\n",
-				(const char*)errorBlob->GetBufferPointer());
-			return ZG_ERROR_GENERIC;
-		}
-
-		// Create root signature
-		if (D3D12_FAIL(device.CreateRootSignature(
-			0, blob->GetBufferPointer(), blob->GetBufferSize(), IID_PPV_ARGS(&rootSignature)))) {
-			return ZG_ERROR_GENERIC;
-		}
+	// Create root signature
+	D3D12RootSignature rootSignature;
+	{
+		ArrayLocal<ZgSampler, ZG_MAX_NUM_SAMPLERS> samplers;
+		samplers.add(createInfo.samplers, createInfo.numSamplers);
+		ZgResult res = createRootSignature(rootSignature, bindings, samplers, device);
+		if (res != ZG_SUCCESS) return res;
 	}
 
 	// Create Pipeline State Object (PSO)
@@ -1018,7 +1052,7 @@ static ZgResult createPipelineComputeInternal(
 
 		// Create our token stream and set root signature
 		PipelineStateStream stream = {};
-		stream.rootSignature = rootSignature.Get();
+		stream.rootSignature = rootSignature.rootSignature.Get();
 
 		// Set compute shader
 		stream.computeShader = CD3DX12_SHADER_BYTECODE(
@@ -1035,29 +1069,30 @@ static ZgResult createPipelineComputeInternal(
 
 	// Log information about the pipeline
 	float compileTimeMs = calculateDeltaMillis(compileStartTime);
-	// TODO
-	/*logPipelineInfo(
+	logPipelineComputeInfo(
 		createInfo,
-		vertexShaderName,
-		pixelShaderName,
-		*signatureOut,
-		compileTimeMs);*/
+		computeShaderName,
+		bindings.toZgSignature(),
+		compileTimeMs);
 
 	// Allocate pipeline
 	D3D12PipelineCompute* pipeline =
 		getAllocator()->newObject<D3D12PipelineCompute>(sfz_dbg("D3D12PipelineCompute"));
 
 	// Store pipeline state
-	pipeline->rootSignature = rootSignature;
 	pipeline->pipelineState = pipelineState;
+	pipeline->rootSignature = rootSignature;
+	pipeline->bindingsSignature = bindings;
 
 	// Return pipeline
 	*pipelineOut = pipeline;
+	*bindingsSignatureOut = bindings.toZgSignature();
 	return ZG_SUCCESS;
 }
 
 ZgResult createPipelineComputeFileHLSL(
 	D3D12PipelineCompute** pipelineOut,
+	ZgPipelineBindingsSignature* bindingsSignatureOut,
 	const ZgPipelineComputeCreateInfo& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,
@@ -1077,6 +1112,7 @@ ZgResult createPipelineComputeFileHLSL(
 
 	return createPipelineComputeInternal(
 		pipelineOut,
+		bindingsSignatureOut,
 		createInfo,
 		compileSettings,
 		compileStartTime,
@@ -1482,7 +1518,7 @@ static ZgResult createPipelineRenderInternal(
 		createInfo,
 		vertexShaderName,
 		pixelShaderName,
-		*bindingsSignatureOut,
+		bindings.toZgSignature(),
 		*renderSignatureOut,
 		compileTimeMs);
 

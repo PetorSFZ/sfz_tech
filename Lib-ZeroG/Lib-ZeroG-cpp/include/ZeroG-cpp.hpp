@@ -186,6 +186,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	ZgPipelineCompute* pipeline = nullptr;
+	ZgPipelineBindingsSignature bindingsSignature = {};
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -425,6 +426,9 @@ public:
 
 	// See zgBufferMemcpyTo()
 	Result memcpyTo(uint64_t bufferOffsetBytes, const void* srcMemory, uint64_t numBytes);
+
+	// See zgBufferMemcpyFrom()
+	Result memcpyFrom(void* dstMemory, uint64_t srcBufferOffsetBytes, uint64_t numBytes);
 
 	// See zgBufferSetDebugName()
 	Result setDebugName(const char* name) noexcept;

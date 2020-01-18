@@ -165,6 +165,7 @@ PipelineBindings& PipelineBindings::addTexture(
 void PipelineCompute::swap(PipelineCompute& other) noexcept
 {
 	std::swap(this->pipeline, other.pipeline);
+	std::swap(this->bindingsSignature, other.bindingsSignature);
 }
 
 Result PipelineCompute::createFromFileHLSL(
@@ -173,13 +174,14 @@ Result PipelineCompute::createFromFileHLSL(
 {
 	this->release();
 	return (Result)zgPipelineComputeCreateFromFileHLSL(
-		&this->pipeline, &createInfo, &compileSettings);
+		&this->pipeline, &this->bindingsSignature, &createInfo, &compileSettings);
 }
 
 void PipelineCompute::release() noexcept
 {
 	if (this->pipeline != nullptr) zgPipelineComputeRelease(this->pipeline);
 	this->pipeline = nullptr;
+	this->bindingsSignature = {};
 }
 
 
@@ -528,6 +530,11 @@ void Buffer::release() noexcept
 Result Buffer::memcpyTo(uint64_t bufferOffsetBytes, const void* srcMemory, uint64_t numBytes)
 {
 	return (Result)zgBufferMemcpyTo(this->buffer, bufferOffsetBytes, srcMemory, numBytes);
+}
+
+Result Buffer::memcpyFrom(void* dstMemory, uint64_t srcBufferOffsetBytes, uint64_t numBytes)
+{
+	return (Result)zgBufferMemcpyFrom(dstMemory, this->buffer, srcBufferOffsetBytes, numBytes);
 }
 
 Result Buffer::setDebugName(const char* name) noexcept

@@ -121,15 +121,16 @@ struct D3D12RootSignature final {
 class D3D12PipelineCompute final : public ZgPipelineCompute {
 public:
 
-	D3D12PipelineCompute() noexcept = default;
+	D3D12PipelineCompute() noexcept {}
 	D3D12PipelineCompute(const D3D12PipelineCompute&) = delete;
 	D3D12PipelineCompute& operator= (const D3D12PipelineCompute&) = delete;
 	D3D12PipelineCompute(D3D12PipelineCompute&&) = delete;
 	D3D12PipelineCompute& operator= (D3D12PipelineCompute&&) = delete;
 	~D3D12PipelineCompute() noexcept {}
 
-	ComPtr<ID3D12RootSignature> rootSignature;
 	ComPtr<ID3D12PipelineState> pipelineState;
+	D3D12RootSignature rootSignature;
+	D3D12PipelineBindingsSignature bindingsSignature;
 };
 
 // D3D12PipelineRender
@@ -138,7 +139,7 @@ public:
 class D3D12PipelineRender final : public ZgPipelineRender {
 public:
 
-	D3D12PipelineRender() noexcept {};
+	D3D12PipelineRender() noexcept {}
 	D3D12PipelineRender(const D3D12PipelineRender&) = delete;
 	D3D12PipelineRender& operator= (const D3D12PipelineRender&) = delete;
 	D3D12PipelineRender(D3D12PipelineRender&&) = delete;
@@ -157,6 +158,7 @@ public:
 
 ZgResult createPipelineComputeFileHLSL(
 	D3D12PipelineCompute** pipelineOut,
+	ZgPipelineBindingsSignature* bindingsSignatureOut,
 	const ZgPipelineComputeCreateInfo& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,

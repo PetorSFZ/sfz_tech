@@ -284,10 +284,12 @@ public:
 
 	ZgResult pipelineComputeCreateFromFileHLSL(
 		ZgPipelineCompute** pipelineOut,
+		ZgPipelineBindingsSignature* bindingsSignatureOut,
 		const ZgPipelineComputeCreateInfo& createInfo,
 		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept override final
 	{
 		(void)pipelineOut;
+		(void)bindingsSignatureOut;
 		(void)createInfo;
 		(void)compileSettings;
 		return ZG_WARNING_UNIMPLEMENTED;
@@ -374,13 +376,26 @@ public:
 
 	ZgResult bufferMemcpyTo(
 		ZgBuffer* dstBufferInterface,
-		uint64_t bufferOffsetBytes,
+		uint64_t dstBufferOffsetBytes,
 		const uint8_t* srcMemory,
 		uint64_t numBytes) noexcept override final
 	{
 		(void)dstBufferInterface;
-		(void)bufferOffsetBytes;
+		(void)dstBufferOffsetBytes;
 		(void)srcMemory;
+		(void)numBytes;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	ZgResult bufferMemcpyFrom(
+		uint8_t* dstMemory,
+		ZgBuffer* srcBuffer,
+		uint64_t srcBufferOffsetBytes,
+		uint64_t numBytes) noexcept override final
+	{
+		(void)dstMemory;
+		(void)srcBuffer;
+		(void)srcBufferOffsetBytes;
 		(void)numBytes;
 		return ZG_WARNING_UNIMPLEMENTED;
 	}

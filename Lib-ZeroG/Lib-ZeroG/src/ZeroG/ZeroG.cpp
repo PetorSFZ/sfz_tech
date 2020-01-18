@@ -211,15 +211,17 @@ ZG_API ZgResult zgContextGetStats(ZgStats* statsOut)
 
 ZG_API ZgResult zgPipelineComputeCreateFromFileHLSL(
 	ZgPipelineCompute** pipelineOut,
+	ZgPipelineBindingsSignature* bindingsSignatureOut,
 	const ZgPipelineComputeCreateInfo* createInfo,
 	const ZgPipelineCompileSettingsHLSL* compileSettings)
 {
 	ZG_ARG_CHECK(pipelineOut == nullptr, "");
+	ZG_ARG_CHECK(bindingsSignatureOut == nullptr, "");
 	ZG_ARG_CHECK(createInfo == nullptr, "");
 	ZG_ARG_CHECK(compileSettings == nullptr, "");
 	
 	return zg::getBackend()->pipelineComputeCreateFromFileHLSL(
-		pipelineOut, *createInfo, *compileSettings);
+		pipelineOut, bindingsSignatureOut, *createInfo, *compileSettings);
 }
 
 ZG_API ZgResult zgPipelineComputeRelease(
@@ -357,14 +359,27 @@ ZG_API void zgBufferRelease(
 
 ZG_API ZgResult zgBufferMemcpyTo(
 	ZgBuffer* dstBuffer,
-	uint64_t bufferOffsetBytes,
+	uint64_t dstBufferOffsetBytes,
 	const void* srcMemory,
 	uint64_t numBytes)
 {
 	return zg::getBackend()->bufferMemcpyTo(
 		dstBuffer,
-		bufferOffsetBytes,
+		dstBufferOffsetBytes,
 		reinterpret_cast<const uint8_t*>(srcMemory),
+		numBytes);
+}
+
+ZG_API ZgResult zgBufferMemcpyFrom(
+	void* dstMemory,
+	ZgBuffer* srcBuffer,
+	uint64_t srcBufferOffsetBytes,
+	uint64_t numBytes)
+{
+	return zg::getBackend()->bufferMemcpyFrom(
+		reinterpret_cast<uint8_t*>(dstMemory),
+		srcBuffer,
+		srcBufferOffsetBytes,
 		numBytes);
 }
 

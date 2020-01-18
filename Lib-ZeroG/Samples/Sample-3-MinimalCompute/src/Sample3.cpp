@@ -72,6 +72,8 @@ static void realMain(SDL_Window* window) noexcept
 		ZgPipelineComputeCreateInfo createInfo = {};
 		createInfo.computeShader = "res/Sample-3/memcpy.hlsl";
 		createInfo.computeShaderEntry = "mainCS";
+		createInfo.numPushConstants = 1;
+		createInfo.pushConstantRegisters[0] = 0;
 
 		// Compile settings
 		ZgPipelineCompileSettingsHLSL compileSettings = {};
@@ -87,64 +89,75 @@ static void realMain(SDL_Window* window) noexcept
 	zg::CommandQueue presentQueue;
 	CHECK_ZG zg::CommandQueue::getPresentQueue(presentQueue);
 
-	// Run our main loop
-	bool running = true;
-	while (running) {
+	// Create memory heaps
+	constexpr uint32_t BUFFER_ALIGNMENT = 64 * 1024; // Buffers must be 64KiB aligned
+	constexpr uint32_t NUM_VECS = 1024;
+	constexpr uint32_t NUM_FLOATS = NUM_VECS * 4;
+	constexpr uint32_t BUFFER_SIZE_BYTES = NUM_FLOATS * sizeof(float);
+	zg::MemoryHeap uploadHeap, deviceHeap, downloadHeap;
+	CHECK_ZG uploadHeap.create(BUFFER_SIZE_BYTES, ZG_MEMORY_TYPE_UPLOAD);
+	CHECK_ZG deviceHeap.create(BUFFER_ALIGNMENT * 2, ZG_MEMORY_TYPE_DEVICE);
+	CHECK_ZG downloadHeap.create(BUFFER_SIZE_BYTES, ZG_MEMORY_TYPE_DOWNLOAD);
 
-		// Query SDL events, loop wrapped in a lambda so we can continue to next iteration of main
-		// loop. "return false;" == continue to next iteration
-		if (![&]() -> bool {
-			SDL_Event event = {};
-				while (SDL_PollEvent(&event) != 0) {
-					switch (event.type) {
+	// Create buffers
+	zg::Buffer uploadBuffer, deviceBufferSrc, deviceBufferDst, downloadBuffer;
+	CHECK_ZG uploadHeap.bufferCreate(uploadBuffer, 0, BUFFER_SIZE_BYTES);
+	CHECK_ZG deviceHeap.bufferCreate(deviceBufferSrc, 0, BUFFER_SIZE_BYTES);
+	CHECK_ZG deviceHeap.bufferCreate(deviceBufferDst, BUFFER_ALIGNMENT, BUFFER_SIZE_BYTES);
+	CHECK_ZG downloadHeap.bufferCreate(downloadBuffer, 0, BUFFER_SIZE_BYTES);
 
-					case SDL_QUIT:
-						running = false;
-							return false;
+	// Copy data to upload buffer
+	float referenceData[NUM_FLOATS];
+	for (uint32_t i = 0; i < NUM_FLOATS; i++) referenceData[i] = float(i);
+	CHECK_ZG uploadBuffer.memcpyTo(0, referenceData, BUFFER_SIZE_BYTES);
 
-					case SDL_KEYUP:
-						//if (event.key.keysym.sym == SDLK_ESCAPE) {
-						running = false;
-						return false;
-						//}
-						break;
-					}
-				}
-			return true;
-			}()) continue;
+	// Get a command list
+	zg::CommandList commandList;
+	CHECK_ZG presentQueue.beginCommandListRecording(commandList);
 
-		// Query drawable width and height and update ZeroG context
-		int width = 0;
-		int height = 0;
-		SDL_GL_GetDrawableSize(window, &width, &height);
-		CHECK_ZG zgCtx.swapchainResize(uint32_t(width), uint32_t(height));
+	// Upload data to src buffer
+	CHECK_ZG commandList.memcpyBufferToBuffer(deviceBufferSrc, 0, uploadBuffer, 0, BUFFER_SIZE_BYTES);
 
-		// Begin frame
-		zg::Framebuffer framebuffer;
-		CHECK_ZG zgCtx.swapchainBeginFrame(framebuffer);
+	// Memcpy data from src to dst buffer using compute pipeline
+	CHECK_ZG commandList.setPipeline(memcpyPipeline);
+	struct { uint32_t numVectors; uint32_t padding[3]; } pushConstantData;
+	pushConstantData.numVectors = NUM_VECS;
+	CHECK_ZG commandList.setPushConstant(0, &pushConstantData, sizeof(pushConstantData));
+	CHECK_ZG commandList.setPipelineBindings(zg::PipelineBindings()
+		.addUnorderedBuffer(0, 0, NUM_VECS, sizeof(float) * 4, deviceBufferSrc)
+		.addUnorderedBuffer(1, 0, NUM_VECS, sizeof(float) * 4, deviceBufferDst));
+	CHECK_ZG commandList.dispatchCompute(NUM_VECS / 64);
 
-		// Get a command list
-		zg::CommandList commandList;
-		CHECK_ZG presentQueue.beginCommandListRecording(commandList);
+	// Download data from dst buffer
+	CHECK_ZG commandList.memcpyBufferToBuffer(downloadBuffer, 0, deviceBufferDst, 0, BUFFER_SIZE_BYTES);
 
-		// Set framebuffer and clear it
-		CHECK_ZG commandList.setFramebuffer(framebuffer);
-		CHECK_ZG commandList.clearRenderTargets(1.0f, 0.0f, 0.0f, 1.0f);
-		CHECK_ZG commandList.clearDepthBuffer(1.0f);
+	// Execute command list
+	CHECK_ZG presentQueue.executeCommandList(commandList);
 
-		// Set compute pipeline and run it
-		CHECK_ZG commandList.setPipeline(memcpyPipeline);
-		CHECK_ZG commandList.dispatchCompute(1);
+	// Flush present queue so we are finishing the gpu operations
+	CHECK_ZG presentQueue.flush();
 
-		// Execute command list
-		CHECK_ZG presentQueue.executeCommandList(commandList);
+	// Copy data from download buffer
+	float resultData[NUM_FLOATS] = {};
+	CHECK_ZG downloadBuffer.memcpyFrom(resultData, 0, BUFFER_SIZE_BYTES);
 
-		// Finish frame
-		CHECK_ZG zgCtx.swapchainFinishFrame();
+	// Compare result data with reference
+	bool success = true;
+	for (uint32_t i = 0; i < NUM_FLOATS; i++) {
+		const float ref = referenceData[i];
+		const float res = resultData[i];
+		if (ref != res) {
+			printf("Memcpy failed! referenceData[%u] = 0x%08x, resultData[%u] = 0x%08x\n",
+				i, *((const uint32_t*)&ref), i, *((const uint32_t*)&res));
+			success = false;
+			break;
+		}
 	}
 
-	// Flush command queue so nothing is running when we start releasing resources
-	CHECK_ZG presentQueue.flush();
+	// Print result
+	if (success) {
+		printf("Memcpy successful! Downloaded data matches reference data\n");
+	}
 }
 
 int main(int argc, char* argv[])
