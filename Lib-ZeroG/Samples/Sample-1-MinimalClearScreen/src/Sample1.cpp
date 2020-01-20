@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
 #endif
 
 	// Initialize SDL2 and create a window
-	SDL_Window* window = initializeSdl2CreateWindow("ZeroG - Sample1 - Minimal");
+	SDL_Window* window = initializeSdl2CreateWindow("ZeroG - Sample1 - Minimal Clear Screen");
 
 	// Runs the real main function
 	realMain(window);

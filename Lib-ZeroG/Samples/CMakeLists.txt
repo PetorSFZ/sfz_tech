@@ -131,9 +131,9 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/SampleCommon)
 # Add samples
 # ------------------------------------------------------------------------------------------------
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Sample-1-Minimal)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Sample-1-MinimalClearScreen)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Sample-2-Experiments)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Sample-2-SimpleRendering)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Sample-3-MinimalCompute)
 

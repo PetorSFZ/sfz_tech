@@ -67,23 +67,10 @@ static void realMain(SDL_Window* window) noexcept
 
 	// Create simply compute pipeline
 	zg::PipelineCompute memcpyPipeline;
-	{
-		// Create info
-		ZgPipelineComputeCreateInfo createInfo = {};
-		createInfo.computeShader = "res/Sample-3/memcpy.hlsl";
-		createInfo.computeShaderEntry = "mainCS";
-		createInfo.numPushConstants = 1;
-		createInfo.pushConstantRegisters[0] = 0;
-
-		// Compile settings
-		ZgPipelineCompileSettingsHLSL compileSettings = {};
-		compileSettings.shaderModel = ZG_SHADER_MODEL_6_0;
-		compileSettings.dxcCompilerFlags[0] = "-Zi";
-		compileSettings.dxcCompilerFlags[1] = "-O3";
-
-		// Create pipeline
-		CHECK_ZG memcpyPipeline.createFromFileHLSL(createInfo, compileSettings);
-	}
+	CHECK_ZG zg::PipelineComputeBuilder()
+		.addComputeShaderPath("mainCS", "res/Sample-3/memcpy.hlsl")
+		.addPushConstant(0)
+		.buildFromFileHLSL(memcpyPipeline);
 
 	// Get the command queues
 	zg::CommandQueue presentQueue;

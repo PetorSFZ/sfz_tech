@@ -177,6 +177,47 @@ public:
 };
 
 
+// PipelineComputeBuilder
+// ------------------------------------------------------------------------------------------------
+
+class PipelineComputeBuilder final {
+public:
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	ZgPipelineComputeCreateInfo createInfo = {};
+	const char* computeShaderPath = nullptr;
+	const char* computeShaderSrc = nullptr;
+
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	PipelineComputeBuilder() noexcept = default;
+	PipelineComputeBuilder(const PipelineComputeBuilder&) noexcept = default;
+	PipelineComputeBuilder& operator= (const PipelineComputeBuilder&) noexcept = default;
+	~PipelineComputeBuilder() noexcept = default;
+
+	// Methods
+	// --------------------------------------------------------------------------------------------
+
+	PipelineComputeBuilder& addComputeShaderPath(const char* entry, const char* path) noexcept;
+	PipelineComputeBuilder& addComputeShaderSource(const char* entry, const char* src) noexcept;
+
+	PipelineComputeBuilder& addPushConstant(uint32_t constantBufferRegister) noexcept;
+
+	PipelineComputeBuilder& addSampler(uint32_t samplerRegister, ZgSampler sampler) noexcept;
+	PipelineComputeBuilder& addSampler(
+		uint32_t samplerRegister,
+		ZgSamplingMode samplingMode,
+		ZgWrappingMode wrappingModeU = ZG_WRAPPING_MODE_CLAMP,
+		ZgWrappingMode wrappingModeV = ZG_WRAPPING_MODE_CLAMP,
+		float mipLodBias = 0.0f) noexcept;
+
+	Result buildFromFileHLSL(
+		PipelineCompute& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0) noexcept;
+};
+
+
 // PipelineCompute
 // ------------------------------------------------------------------------------------------------
 
@@ -241,6 +282,11 @@ public:
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
+	PipelineRenderBuilder& addVertexShaderPath(const char* entry, const char* path) noexcept;
+	PipelineRenderBuilder& addPixelShaderPath(const char* entry, const char* path) noexcept;
+	PipelineRenderBuilder& addVertexShaderSource(const char* entry, const char* src) noexcept;
+	PipelineRenderBuilder& addPixelShaderSource(const char* entry, const char* src) noexcept;
+
 	PipelineRenderBuilder& addVertexAttribute(ZgVertexAttribute attribute) noexcept;
 
 	PipelineRenderBuilder& addVertexAttribute(
@@ -255,7 +301,6 @@ public:
 	PipelineRenderBuilder& addPushConstant(uint32_t constantBufferRegister) noexcept;
 
 	PipelineRenderBuilder& addSampler(uint32_t samplerRegister, ZgSampler sampler) noexcept;
-
 	PipelineRenderBuilder& addSampler(
 		uint32_t samplerRegister,
 		ZgSamplingMode samplingMode,
@@ -264,11 +309,6 @@ public:
 		float mipLodBias = 0.0f) noexcept;
 
 	PipelineRenderBuilder& addRenderTarget(ZgTextureFormat format) noexcept;
-
-	PipelineRenderBuilder& addVertexShaderPath(const char* entry, const char* path) noexcept;
-	PipelineRenderBuilder& addPixelShaderPath(const char* entry, const char* path) noexcept;
-	PipelineRenderBuilder& addVertexShaderSource(const char* entry, const char* src) noexcept;
-	PipelineRenderBuilder& addPixelShaderSource(const char* entry, const char* src) noexcept;
 
 	PipelineRenderBuilder& setWireframeRendering(bool wireframeEnabled) noexcept;
 	PipelineRenderBuilder& setCullingEnabled(bool cullingEnabled) noexcept;

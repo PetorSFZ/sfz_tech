@@ -159,6 +159,72 @@ PipelineBindings& PipelineBindings::addTexture(
 }
 
 
+// PipelineComputeBuilder: Methods
+// ------------------------------------------------------------------------------------------------
+
+PipelineComputeBuilder& PipelineComputeBuilder::addComputeShaderPath(const char* entry, const char* path) noexcept
+{
+	createInfo.computeShaderEntry = entry;
+	computeShaderPath = path;
+	return *this;
+}
+
+PipelineComputeBuilder& PipelineComputeBuilder::addComputeShaderSource(const char* entry, const char* src) noexcept
+{
+	createInfo.computeShaderEntry = entry;
+	computeShaderSrc = src;
+	return *this;
+}
+
+PipelineComputeBuilder& PipelineComputeBuilder::addPushConstant(uint32_t constantBufferRegister) noexcept
+{
+	assert(createInfo.numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
+	createInfo.pushConstantRegisters[createInfo.numPushConstants] = constantBufferRegister;
+	createInfo.numPushConstants += 1;
+	return *this;
+}
+
+PipelineComputeBuilder& PipelineComputeBuilder::addSampler(uint32_t samplerRegister, ZgSampler sampler) noexcept
+{
+	assert(samplerRegister == createInfo.numSamplers);
+	assert(createInfo.numSamplers < ZG_MAX_NUM_SAMPLERS);
+	createInfo.samplers[samplerRegister] = sampler;
+	createInfo.numSamplers += 1;
+	return *this;
+}
+
+PipelineComputeBuilder& PipelineComputeBuilder::addSampler(
+	uint32_t samplerRegister,
+	ZgSamplingMode samplingMode,
+	ZgWrappingMode wrappingModeU,
+	ZgWrappingMode wrappingModeV,
+	float mipLodBias) noexcept
+{
+	ZgSampler sampler = {};
+	sampler.samplingMode = samplingMode;
+	sampler.wrappingModeU = wrappingModeU;
+	sampler.wrappingModeV = wrappingModeV;
+	sampler.mipLodBias = mipLodBias;
+	return addSampler(samplerRegister, sampler);
+}
+
+Result PipelineComputeBuilder::buildFromFileHLSL(
+	PipelineCompute& pipelineOut, ZgShaderModel model) noexcept
+{
+	// Set path
+	createInfo.computeShader = this->computeShaderPath;
+
+	// Create compile settings
+	ZgPipelineCompileSettingsHLSL compileSettings = {};
+	compileSettings.shaderModel = model;
+	compileSettings.dxcCompilerFlags[0] = "-Zi";
+	compileSettings.dxcCompilerFlags[1] = "-O3";
+
+	// Build pipeline
+	return pipelineOut.createFromFileHLSL(createInfo, compileSettings);
+}
+
+
 // PipelineCompute: State methods
 // ------------------------------------------------------------------------------------------------
 
@@ -187,6 +253,38 @@ void PipelineCompute::release() noexcept
 
 // PipelineRenderBuilder: Methods
 // ------------------------------------------------------------------------------------------------
+
+PipelineRenderBuilder& PipelineRenderBuilder::addVertexShaderPath(
+	const char* entry, const char* path) noexcept
+{
+	createInfo.vertexShaderEntry = entry;
+	vertexShaderPath = path;
+	return *this;
+}
+
+PipelineRenderBuilder& PipelineRenderBuilder::addPixelShaderPath(
+	const char* entry, const char* path) noexcept
+{
+	createInfo.pixelShaderEntry = entry;
+	pixelShaderPath = path;
+	return *this;
+}
+
+PipelineRenderBuilder& PipelineRenderBuilder::addVertexShaderSource(
+	const char* entry, const char* src) noexcept
+{
+	createInfo.vertexShaderEntry = entry;
+	vertexShaderSrc = src;
+	return *this;
+}
+
+PipelineRenderBuilder& PipelineRenderBuilder::addPixelShaderSource(
+	const char* entry, const char* src) noexcept
+{
+	createInfo.pixelShaderEntry = entry;
+	pixelShaderSrc = src;
+	return *this;
+}
 
 PipelineRenderBuilder& PipelineRenderBuilder::addVertexAttribute(
 	ZgVertexAttribute attribute) noexcept
@@ -260,38 +358,6 @@ PipelineRenderBuilder& PipelineRenderBuilder::addRenderTarget(ZgTextureFormat fo
 	assert(createInfo.numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
 	createInfo.renderTargets[createInfo.numRenderTargets] = format;
 	createInfo.numRenderTargets += 1;
-	return *this;
-}
-
-PipelineRenderBuilder& PipelineRenderBuilder::addVertexShaderPath(
-	const char* entry, const char* path) noexcept
-{
-	createInfo.vertexShaderEntry = entry;
-	vertexShaderPath = path;
-	return *this;
-}
-
-PipelineRenderBuilder& PipelineRenderBuilder::addPixelShaderPath(
-	const char* entry, const char* path) noexcept
-{
-	createInfo.pixelShaderEntry = entry;
-	pixelShaderPath = path;
-	return *this;
-}
-
-PipelineRenderBuilder& PipelineRenderBuilder::addVertexShaderSource(
-	const char* entry, const char* src) noexcept
-{
-	createInfo.vertexShaderEntry = entry;
-	vertexShaderSrc = src;
-	return *this;
-}
-
-PipelineRenderBuilder& PipelineRenderBuilder::addPixelShaderSource(
-	const char* entry, const char* src) noexcept
-{
-	createInfo.pixelShaderEntry = entry;
-	pixelShaderSrc = src;
 	return *this;
 }
 

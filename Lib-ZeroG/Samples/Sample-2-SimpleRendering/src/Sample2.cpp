@@ -535,7 +535,7 @@ int main(int argc, char* argv[])
 #endif
 
 	// Initialize SDL2 and create a window
-	SDL_Window* window = initializeSdl2CreateWindow("ZeroG - Sample2 - Experiments");
+	SDL_Window* window = initializeSdl2CreateWindow("ZeroG - Sample2 - Simple Rendering");
 
 	// Runs the real main function
 	realMain(window);

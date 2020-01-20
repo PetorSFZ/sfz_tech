@@ -791,7 +791,7 @@ static ZgResult bindingsFromReflection(
 static ZgResult createRootSignature(
 	D3D12RootSignature& rootSignatureOut,
 	const D3D12PipelineBindingsSignature& bindings,
-	const ArrayLocal<ZgSampler, ZG_MAX_NUM_SAMPLERS> zgSamplers,
+	const ArrayLocal<ZgSampler, ZG_MAX_NUM_SAMPLERS>& zgSamplers,
 	ID3D12Device3& device) noexcept
 {
 	// Allow root signature access from all shader stages, opt in to using an input layout
