@@ -243,7 +243,7 @@ static void realMain(SDL_Window* window) noexcept
 	CHECK_ZG zg::CommandQueue::getCopyQueue(copyQueue);
 
 	// Create a render pipeline
-	zg::PipelineRender pipeline;
+	zg::PipelineRender renderPipeline;
 	{
 		zg::PipelineRenderBuilder pipelineBuilder = zg::PipelineRenderBuilder()
 			.addVertexAttribute(0, 0, ZG_VERTEX_ATTRIBUTE_F32_3, offsetof(Vertex, position))
@@ -261,16 +261,16 @@ static void realMain(SDL_Window* window) noexcept
 			.setDepthFunc(ZG_DEPTH_FUNC_LESS);
 
 		// SPIRV file variant
-		CHECK_ZG pipelineBuilder
+		/*CHECK_ZG pipelineBuilder
 			.addVertexShaderPath("VSMain", "res/Sample-2/test_vs.spv")
 			.addPixelShaderPath("PSMain", "res/Sample-2/test_ps.spv")
-			.buildFromFileSPIRV(pipeline);
+			.buildFromFileSPIRV(renderPipeline);*/
 
 		// HLSL file variant
-		/*CHECK_ZG pipelineBuilder
+		CHECK_ZG pipelineBuilder
 			.addVertexShaderPath("VSMain", "res/Sample-2/test.hlsl")
 			.addPixelShaderPath("PSMain", "res/Sample-2/test.hlsl")
-			.buildFromFileHLSL(pipeline, ZG_SHADER_MODEL_6_0);*/
+			.buildFromFileHLSL(renderPipeline, ZG_SHADER_MODEL_6_0);
 
 		// HLSL source variant
 		/*char hlslSource[2048] = {};
@@ -279,9 +279,16 @@ static void realMain(SDL_Window* window) noexcept
 		CHECK_ZG pipelineBuilder
 			.addVertexShaderSource("VSMain", hlslSource)
 			.addPixelShaderSource("PSMain", hlslSource)
-			.buildFromSourceHLSL(pipeline, ZG_SHADER_MODEL_6_0);*/
+			.buildFromSourceHLSL(renderPipeline, ZG_SHADER_MODEL_6_0);*/
 	}
-	if (!pipeline.valid()) return;
+	if (!renderPipeline.valid()) return;
+
+	// Create a compute pipeline
+	zg::PipelineCompute textureModifyPipeline;
+	CHECK_ZG zg::PipelineComputeBuilder()
+		.addComputeShaderPath("mainCS", "res/Sample-2/texture_modify.hlsl")
+		.buildFromFileHLSL(textureModifyPipeline);
+
 
 	// Create a vertex buffer containing a Cube
 	Vertex cubeVertices[CUBE_NUM_VERTICES] = {};
@@ -450,66 +457,102 @@ static void realMain(SDL_Window* window) noexcept
 		zg::Framebuffer framebuffer;
 		CHECK_ZG zgCtx.swapchainBeginFrame(framebuffer);
 
-		// Get a command list
-		zg::CommandList commandList;
-		CHECK_ZG presentQueue.beginCommandListRecording(commandList);
+		// Run compute command list
+		{
+			// Get a command list
+			zg::CommandList commandList;
+			CHECK_ZG presentQueue.beginCommandListRecording(commandList);
 
-		// Set framebuffer and clear it
-		CHECK_ZG commandList.setFramebuffer(framebuffer);
-		CHECK_ZG commandList.clearFramebufferOptimal();
+			// Set pipeline
+			CHECK_ZG commandList.setPipeline(textureModifyPipeline);
 
-		// Set pipeline
-		CHECK_ZG commandList.setPipeline(pipeline);
+			// Mipmap level 0 - 256x256
+			CHECK_ZG commandList.setPipelineBindings(zg::PipelineBindings()
+				.addUnorderedTexture(0, 0, texture));
+			CHECK_ZG commandList.dispatchCompute(256 / 64, 256);
 
-		// Set pipeline bindings
-		CHECK_ZG commandList.setPipelineBindings(zg::PipelineBindings()
-			.addConstantBuffer(1, constBufferDevice)
-			.addTexture(0, texture));
+			// Mipmap level 1 - 128x128
+			CHECK_ZG commandList.setPipelineBindings(zg::PipelineBindings()
+				.addUnorderedTexture(0, 1, texture));
+			CHECK_ZG commandList.dispatchCompute(128 / 64, 128);
 
-		// Lambda to batch a call to render a cube with a specific transform
-		auto batchCubeRender = [&](Vector offset) {
+			// Mipmap level 2 - 64x64
+			CHECK_ZG commandList.setPipelineBindings(zg::PipelineBindings()
+				.addUnorderedTexture(0, 2, texture));
+			CHECK_ZG commandList.dispatchCompute(64 / 64, 64);
 
-			// Calculate transforms to send to shader
-			Matrix modelMatrix = createIdentityMatrix();
-			modelMatrix.m[3] = offset.x;
-			modelMatrix.m[7] = offset.y;
-			modelMatrix.m[11] = offset.z;
-			struct Transforms {
-				Matrix mvpMatrix;
-				Matrix normalMatrix;
-			} transforms;
-			transforms.mvpMatrix = projMatrix * viewMatrix * modelMatrix;
-			transforms.normalMatrix = inverse(transpose(viewMatrix * modelMatrix));
+			// Mipmap level 3 - 32x32
+			CHECK_ZG commandList.setPipelineBindings(zg::PipelineBindings()
+				.addUnorderedTexture(0, 3, texture));
+			CHECK_ZG commandList.dispatchCompute(1, 32);
 
-			// Send transforms to shader
-			CHECK_ZG commandList.setPushConstant(0, &transforms, sizeof(Transforms));
+			// Execute command list
+			CHECK_ZG presentQueue.executeCommandList(commandList);
+		}
 
-			// Draw cube
-			CHECK_ZG commandList.drawTrianglesIndexed(0, CUBE_NUM_INDICES / 3);
-		};
+		// Run render command list
+		{
+			// Get a command list
+			zg::CommandList commandList;
+			CHECK_ZG presentQueue.beginCommandListRecording(commandList);
 
-		// Set Cube's vertex and index buffer
-		CHECK_ZG commandList.setIndexBuffer(
-			cubeIndexBufferDevice, ZG_INDEX_BUFFER_TYPE_UINT32);
-		CHECK_ZG commandList.setVertexBuffer(0, cubeVertexBufferDevice);
+			// Set framebuffer and clear it
+			CHECK_ZG commandList.setFramebuffer(framebuffer);
+			CHECK_ZG commandList.clearFramebufferOptimal();
 
-		// Batch some cubes
-		batchCubeRender(Vector(0.0f, 0.0f, 0.0f));
+			// Set pipeline
+			CHECK_ZG commandList.setPipeline(renderPipeline);
 
-		batchCubeRender(Vector(-1.5f, -1.5f, -1.5f));
-		batchCubeRender(Vector(-1.5f, -1.5f, 0.0f));
-		batchCubeRender(Vector(-1.5f, -1.5f, 1.5f));
+			// Set pipeline bindings
+			CHECK_ZG commandList.setPipelineBindings(zg::PipelineBindings()
+				.addConstantBuffer(1, constBufferDevice)
+				.addTexture(0, texture));
 
-		batchCubeRender(Vector(0.0f, -1.5f, -1.5f));
-		batchCubeRender(Vector(0.0f, -1.5f, 0.0f));
-		batchCubeRender(Vector(0.0f, -1.5f, 1.5f));
+			// Lambda to batch a call to render a cube with a specific transform
+			auto batchCubeRender = [&](Vector offset) {
 
-		batchCubeRender(Vector(1.5f, -1.5f, -1.5f));
-		batchCubeRender(Vector(1.5f, -1.5f, 0.0f));
-		batchCubeRender(Vector(1.5f, -1.5f, 1.5f));
+				// Calculate transforms to send to shader
+				Matrix modelMatrix = createIdentityMatrix();
+				modelMatrix.m[3] = offset.x;
+				modelMatrix.m[7] = offset.y;
+				modelMatrix.m[11] = offset.z;
+				struct Transforms {
+					Matrix mvpMatrix;
+					Matrix normalMatrix;
+				} transforms;
+				transforms.mvpMatrix = projMatrix * viewMatrix * modelMatrix;
+				transforms.normalMatrix = inverse(transpose(viewMatrix * modelMatrix));
 
-		// Execute command list
-		CHECK_ZG presentQueue.executeCommandList(commandList);
+				// Send transforms to shader
+				CHECK_ZG commandList.setPushConstant(0, &transforms, sizeof(Transforms));
+
+				// Draw cube
+				CHECK_ZG commandList.drawTrianglesIndexed(0, CUBE_NUM_INDICES / 3);
+			};
+
+			// Set Cube's vertex and index buffer
+			CHECK_ZG commandList.setIndexBuffer(
+				cubeIndexBufferDevice, ZG_INDEX_BUFFER_TYPE_UINT32);
+			CHECK_ZG commandList.setVertexBuffer(0, cubeVertexBufferDevice);
+
+			// Batch some cubes
+			batchCubeRender(Vector(0.0f, 0.0f, 0.0f));
+
+			batchCubeRender(Vector(-1.5f, -1.5f, -1.5f));
+			batchCubeRender(Vector(-1.5f, -1.5f, 0.0f));
+			batchCubeRender(Vector(-1.5f, -1.5f, 1.5f));
+
+			batchCubeRender(Vector(0.0f, -1.5f, -1.5f));
+			batchCubeRender(Vector(0.0f, -1.5f, 0.0f));
+			batchCubeRender(Vector(0.0f, -1.5f, 1.5f));
+
+			batchCubeRender(Vector(1.5f, -1.5f, -1.5f));
+			batchCubeRender(Vector(1.5f, -1.5f, 0.0f));
+			batchCubeRender(Vector(1.5f, -1.5f, 1.5f));
+
+			// Execute command list
+			CHECK_ZG presentQueue.executeCommandList(commandList);
+		}
 
 		// Finish frame
 		CHECK_ZG zgCtx.swapchainFinishFrame();

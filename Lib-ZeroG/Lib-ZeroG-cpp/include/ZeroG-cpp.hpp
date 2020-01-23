@@ -174,6 +174,12 @@ public:
 
 	PipelineBindings& addTexture(ZgTextureBinding binding) noexcept;
 	PipelineBindings& addTexture(uint32_t textureRegister, Texture2D& texture) noexcept;
+
+	PipelineBindings& addUnorderedTexture(ZgUnorderedTextureBinding binding) noexcept;
+	PipelineBindings& addUnorderedTexture(
+		uint32_t unorderedRegister,
+		uint32_t mipLevel,
+		Texture2D& texture) noexcept;
 };
 
 

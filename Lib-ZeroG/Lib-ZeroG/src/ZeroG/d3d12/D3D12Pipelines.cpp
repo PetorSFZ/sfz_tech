@@ -579,30 +579,45 @@ static void logPipelineComputeInfo(
 		computeShaderName, createInfo.computeShaderEntry);
 
 	// Print compile time
-	tmpStr.appendf("Compile time: %.2fms\n\n", compileTimeMs);
+	tmpStr.appendf("Compile time: %.2fms\n", compileTimeMs);
 
 	// Print constant buffers
-	tmpStr.appendf("Constant buffers (%u):\n", bindingsSignature.numConstBuffers);
-	for (uint32_t i = 0; i < bindingsSignature.numConstBuffers; i++) {
-		const ZgConstantBufferBindingDesc& cbuffer = bindingsSignature.constBuffers[i];
-		tmpStr.appendf(" - Register: %u -- Size: %u bytes -- Push constant: %s\n",
-			cbuffer.bufferRegister,
-			cbuffer.sizeInBytes,
-			cbuffer.pushConstant ? "YES" : "NO");
+	if (bindingsSignature.numConstBuffers > 0) {
+		tmpStr.appendf("\nConstant buffers (%u):\n", bindingsSignature.numConstBuffers);
+		for (uint32_t i = 0; i < bindingsSignature.numConstBuffers; i++) {
+			const ZgConstantBufferBindingDesc& cbuffer = bindingsSignature.constBuffers[i];
+			tmpStr.appendf(" - Register: %u -- Size: %u bytes -- Push constant: %s\n",
+				cbuffer.bufferRegister,
+				cbuffer.sizeInBytes,
+				cbuffer.pushConstant ? "YES" : "NO");
+		}
 	}
 
 	// Print unordered buffers
-	tmpStr.appendf("\nUnordered buffers (%u):\n", bindingsSignature.numUnorderedBuffers);
-	for (uint32_t i = 0; i < bindingsSignature.numUnorderedBuffers; i++) {
-		const ZgUnorderedBufferBindingDesc& buffer = bindingsSignature.unorderedBuffers[i];
-		tmpStr.appendf(" - Register: %u\n", buffer.unorderedRegister);
+	if (bindingsSignature.numUnorderedBuffers > 0) {
+		tmpStr.appendf("\nUnordered buffers (%u):\n", bindingsSignature.numUnorderedBuffers);
+		for (uint32_t i = 0; i < bindingsSignature.numUnorderedBuffers; i++) {
+			const ZgUnorderedBufferBindingDesc& buffer = bindingsSignature.unorderedBuffers[i];
+			tmpStr.appendf(" - Register: %u\n", buffer.unorderedRegister);
+		}
 	}
 
 	// Print textures
-	tmpStr.appendf("\nTextures (%u):\n", bindingsSignature.numTextures);
-	for (uint32_t i = 0; i < bindingsSignature.numTextures; i++) {
-		const ZgTextureBindingDesc& texture = bindingsSignature.textures[i];
-		tmpStr.appendf(" - Register: %u\n", texture.textureRegister);
+	if (bindingsSignature.numTextures > 0) {
+		tmpStr.appendf("\nTextures (%u):\n", bindingsSignature.numTextures);
+		for (uint32_t i = 0; i < bindingsSignature.numTextures; i++) {
+			const ZgTextureBindingDesc& texture = bindingsSignature.textures[i];
+			tmpStr.appendf(" - Register: %u\n", texture.textureRegister);
+		}
+	}
+
+	// Print unordered textures
+	if (bindingsSignature.numUnorderedTextures > 0) {
+		tmpStr.appendf("\nUnordered textures (%u):\n", bindingsSignature.numUnorderedTextures);
+		for (uint32_t i = 0; i < bindingsSignature.numUnorderedTextures; i++) {
+			const ZgUnorderedTextureBindingDesc& texture = bindingsSignature.unorderedTextures[i];
+			tmpStr.appendf(" - Register: %u\n", texture.unorderedRegister);
+		}
 	}
 
 	// Log
@@ -627,39 +642,56 @@ static void logPipelineRenderInfo(
 		pixelShaderName, createInfo.pixelShaderEntry);
 
 	// Print compile time
-	tmpStr.appendf("Compile time: %.2fms\n\n", compileTimeMs);
+	tmpStr.appendf("Compile time: %.2fms\n", compileTimeMs);
 
 	// Print vertex attributes
-	tmpStr.appendf("Vertex attributes (%u):\n", renderSignature.numVertexAttributes);
-	for (uint32_t i = 0; i < renderSignature.numVertexAttributes; i++) {
-		const ZgVertexAttribute& attrib = renderSignature.vertexAttributes[i];
-		tmpStr.appendf(" - Location: %u -- Type: %s\n",
-			attrib.location,
-			vertexAttributeTypeToString(attrib.type));
+	if (renderSignature.numVertexAttributes > 0) {
+		tmpStr.appendf("\nVertex attributes (%u):\n", renderSignature.numVertexAttributes);
+		for (uint32_t i = 0; i < renderSignature.numVertexAttributes; i++) {
+			const ZgVertexAttribute& attrib = renderSignature.vertexAttributes[i];
+			tmpStr.appendf(" - Location: %u -- Type: %s\n",
+				attrib.location,
+				vertexAttributeTypeToString(attrib.type));
+		}
 	}
-
+	
 	// Print constant buffers
-	tmpStr.appendf("\nConstant buffers (%u):\n", bindingsSignature.numConstBuffers);
-	for (uint32_t i = 0; i < bindingsSignature.numConstBuffers; i++) {
-		const ZgConstantBufferBindingDesc& cbuffer = bindingsSignature.constBuffers[i];
-		tmpStr.appendf(" - Register: %u -- Size: %u bytes -- Push constant: %s\n",
-			cbuffer.bufferRegister,
-			cbuffer.sizeInBytes,
-			cbuffer.pushConstant ? "YES" : "NO");
+	if (bindingsSignature.numConstBuffers > 0) {
+		tmpStr.appendf("\nConstant buffers (%u):\n", bindingsSignature.numConstBuffers);
+		for (uint32_t i = 0; i < bindingsSignature.numConstBuffers; i++) {
+			const ZgConstantBufferBindingDesc& cbuffer = bindingsSignature.constBuffers[i];
+			tmpStr.appendf(" - Register: %u -- Size: %u bytes -- Push constant: %s\n",
+				cbuffer.bufferRegister,
+				cbuffer.sizeInBytes,
+				cbuffer.pushConstant ? "YES" : "NO");
+		}
 	}
-
+	
 	// Print unordered buffers
-	tmpStr.appendf("\nUnordered buffers (%u):\n", bindingsSignature.numUnorderedBuffers);
-	for (uint32_t i = 0; i < bindingsSignature.numUnorderedBuffers; i++) {
-		const ZgUnorderedBufferBindingDesc& buffer = bindingsSignature.unorderedBuffers[i];
-		tmpStr.appendf(" - Register: %u\n", buffer.unorderedRegister);
+	if (bindingsSignature.numUnorderedBuffers > 0) {
+		tmpStr.appendf("\nUnordered buffers (%u):\n", bindingsSignature.numUnorderedBuffers);
+		for (uint32_t i = 0; i < bindingsSignature.numUnorderedBuffers; i++) {
+			const ZgUnorderedBufferBindingDesc& buffer = bindingsSignature.unorderedBuffers[i];
+			tmpStr.appendf(" - Register: %u\n", buffer.unorderedRegister);
+		}
 	}
 
 	// Print textures
-	tmpStr.appendf("\nTextures (%u):\n", bindingsSignature.numTextures);
-	for (uint32_t i = 0; i < bindingsSignature.numTextures; i++) {
-		const ZgTextureBindingDesc& texture = bindingsSignature.textures[i];
-		tmpStr.appendf(" - Register: %u\n", texture.textureRegister);
+	if (bindingsSignature.numTextures > 0) {
+		tmpStr.appendf("\nTextures (%u):\n", bindingsSignature.numTextures);
+		for (uint32_t i = 0; i < bindingsSignature.numTextures; i++) {
+			const ZgTextureBindingDesc& texture = bindingsSignature.textures[i];
+			tmpStr.appendf(" - Register: %u\n", texture.textureRegister);
+		}
+	}
+
+	// Print unordered textures
+	if (bindingsSignature.numUnorderedTextures > 0) {
+		tmpStr.appendf("\nUnordered textures (%u):\n", bindingsSignature.numUnorderedTextures);
+		for (uint32_t i = 0; i < bindingsSignature.numUnorderedTextures; i++) {
+			const ZgUnorderedTextureBindingDesc& texture = bindingsSignature.unorderedTextures[i];
+			tmpStr.appendf(" - Register: %u\n", texture.unorderedRegister);
+		}
 	}
 
 	// Log
@@ -754,6 +786,22 @@ static ZgResult bindingsFromReflection(
 			bindingsOut.textures.add(binding);
 		}
 		
+		// Unordered texture
+		else if (resDesc.Type == D3D_SIT_UAV_RWTYPED) {
+
+			// Error out if we have too many unordered textures
+			if (bindingsOut.textures.isFull()) {
+				ZG_ERROR("Too many unordered textures, only %u allowed",
+					bindingsOut.unorderedTextures.capacity());
+				return ZG_ERROR_SHADER_COMPILE_ERROR;
+			}
+
+			// Add unordered texture binding
+			ZgUnorderedTextureBindingDesc binding = {};
+			binding.unorderedRegister = resDesc.BindPoint;
+			bindingsOut.unorderedTextures.add(binding);
+		}
+
 		// Samplers
 		else if (resDesc.Type == D3D_SIT_SAMPLER) {
 			// Note: We don't expose dynamic samplers currently
@@ -863,6 +911,24 @@ static ZgResult createRootSignature(
 		rootSignatureOut.unorderedBuffers.add(mapping);
 	}
 
+	// Add unordered texture mappings
+	// Actually sort of an unordered buffer, so lets pretend it is
+	for (const ZgUnorderedTextureBindingDesc& texture : bindings.unorderedTextures) {
+
+		if (dynamicUnorderedBuffersFirstRegister == ~0u) {
+			dynamicUnorderedBuffersFirstRegister = texture.unorderedRegister;
+		}
+
+		// Add to unordered texture mappings
+		D3D12UnorderedTextureMapping mapping;
+		mapping.unorderedRegister = texture.unorderedRegister;
+		mapping.tableOffset =
+			rootSignatureOut.constBuffers.size() +
+			rootSignatureOut.unorderedBuffers.size() +
+			rootSignatureOut.unorderedTextures.size();
+		rootSignatureOut.unorderedTextures.add(mapping);
+	}
+
 	// Add texture mappings
 	uint32_t dynamicTexturesFirstRegister = ~0u; // TODO: THIS IS PROBABLY BAD
 	for (const ZgTextureBindingDesc& texDesc : bindings.textures) {
@@ -876,6 +942,7 @@ static ZgResult createRootSignature(
 		mapping.tableOffset =
 			rootSignatureOut.constBuffers.size() +
 			rootSignatureOut.unorderedBuffers.size() +
+			rootSignatureOut.unorderedTextures.size() +
 			rootSignatureOut.textures.size();
 		rootSignatureOut.textures.add(mapping);
 	}
@@ -883,7 +950,8 @@ static ZgResult createRootSignature(
 	// Add dynamic table parameter if we need to
 	if (!rootSignatureOut.constBuffers.isEmpty() || 
 		!rootSignatureOut.unorderedBuffers.isEmpty() ||
-		!rootSignatureOut.textures.isEmpty()) {
+		!rootSignatureOut.textures.isEmpty() ||
+		!rootSignatureOut.unorderedTextures.isEmpty()) {
 
 		// Store parameter index of dynamic table
 		sfz_assert(!parameters.isFull());
@@ -892,17 +960,18 @@ static ZgResult createRootSignature(
 		// TODO: Currently using the assumption that the shader register range is continuous,
 		//       which is probably not at all reasonable in practice
 		constexpr uint32_t MAX_NUM_RANGES = 3; // CBVs, UAVs and SRVs
-		ArrayLocal< CD3DX12_DESCRIPTOR_RANGE1, MAX_NUM_RANGES> ranges;
+		ArrayLocal<CD3DX12_DESCRIPTOR_RANGE1, MAX_NUM_RANGES> ranges;
 		if (!rootSignatureOut.constBuffers.isEmpty()) {
 			CD3DX12_DESCRIPTOR_RANGE1 range;
 			range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV,
 				rootSignatureOut.constBuffers.size(), dynamicConstBuffersFirstRegister);
 			ranges.add(std::move(range));
 		}
-		if (!rootSignatureOut.unorderedBuffers.isEmpty()) {
+		if (!rootSignatureOut.unorderedBuffers.isEmpty() || !rootSignatureOut.unorderedTextures.isEmpty()) {
 			CD3DX12_DESCRIPTOR_RANGE1 range;
 			range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV,
-				rootSignatureOut.unorderedBuffers.size(), dynamicUnorderedBuffersFirstRegister);
+				rootSignatureOut.unorderedBuffers.size() + rootSignatureOut.unorderedTextures.size(),
+				dynamicUnorderedBuffersFirstRegister);
 			ranges.add(std::move(range));
 		}
 		if (!rootSignatureOut.textures.isEmpty()) {
@@ -975,14 +1044,19 @@ const D3D12ConstantBufferMapping* D3D12RootSignature::getConstBufferMapping(uint
 	return constBuffers.find([&](const auto& e) { return e.bufferRegister == bufferRegister; });
 }
 
+const D3D12TextureMapping* D3D12RootSignature::getTextureMapping(uint32_t textureRegister) const noexcept
+{
+	return textures.find([&](const auto& e) { return e.textureRegister == textureRegister; });
+}
+
 const D3D12UnorderedBufferMapping* D3D12RootSignature::getUnorderedBufferMapping(uint32_t unorderedRegister) const noexcept
 {
 	return unorderedBuffers.find([&](const auto& e) { return e.unorderedRegister == unorderedRegister; });
 }
 
-const D3D12TextureMapping* D3D12RootSignature::getTextureMapping(uint32_t textureRegister) const noexcept
+const D3D12UnorderedTextureMapping* D3D12RootSignature::getUnorderedTextureMapping(uint32_t unorderedRegister) const noexcept
 {
-	return textures.find([&](const auto& e) { return e.textureRegister == textureRegister; });
+	return unorderedTextures.find([&](const auto& e) { return e.unorderedRegister == unorderedRegister; });
 }
 
 // D3D12PipelineCompute functions
@@ -1297,6 +1371,26 @@ static ZgResult createPipelineRenderInternal(
 			}
 		}
 
+		// Merge unordered textures
+		for (const ZgUnorderedTextureBindingDesc& binding : pixelBindings.unorderedTextures) {
+
+			// Add binding if we don't already have it
+			bool haveBinding = bindings.unorderedTextures.find(
+				[&](const auto& e) { return e.unorderedRegister == binding.unorderedRegister; }) != nullptr;
+			if (!haveBinding) {
+
+				// Ensure we don't have too many textures
+				if (bindings.textures.isFull()) {
+					ZG_ERROR("Too many unordered textures, only %u allowed",
+						bindings.unorderedTextures.capacity());
+					return ZG_ERROR_SHADER_COMPILE_ERROR;
+				}
+
+				// Add it
+				bindings.unorderedTextures.add(binding);
+			}
+		}
+
 		// Sort buffers by register
 		bindings.constBuffers.sort(
 			[](const ZgConstantBufferBindingDesc& lhs, const ZgConstantBufferBindingDesc& rhs) {
@@ -1313,6 +1407,12 @@ static ZgResult createPipelineRenderInternal(
 		bindings.textures.sort(
 			[](const ZgTextureBindingDesc& lhs, const ZgTextureBindingDesc& rhs) {
 				return lhs.textureRegister < rhs.textureRegister;
+			});
+
+		// Sort unordered textures by register
+		bindings.unorderedTextures.sort(
+			[](const ZgUnorderedTextureBindingDesc& lhs, const ZgUnorderedTextureBindingDesc& rhs) {
+				return lhs.unorderedRegister < rhs.unorderedRegister;
 			});
 	}
 

@@ -368,25 +368,26 @@ ZgResult D3D12CommandList::setPipelineBindings(
 
 	const uint32_t numConstantBuffers = rootSignaturePtr->constBuffers.size();
 	const uint32_t numUnorderedBuffers = rootSignaturePtr->unorderedBuffers.size();
+	const uint32_t numUnorderedTextures = rootSignaturePtr->unorderedTextures.size();
 	const uint32_t numTextures = rootSignaturePtr->textures.size();
 
 	// If no bindings specified, do nothing.
 	if (bindings.numConstantBuffers == 0 &&
 		bindings.numUnorderedBuffers == 0 &&
+		bindings.numUnorderedTextures == 0 &&
 		bindings.numTextures == 0) return ZG_SUCCESS;
 
 	// Allocate descriptors
 	D3D12_CPU_DESCRIPTOR_HANDLE rangeStartCpu = {};
 	D3D12_GPU_DESCRIPTOR_HANDLE rangeStartGpu = {};
 	ZgResult allocRes = mDescriptorBuffer->allocateDescriptorRange(
-		numConstantBuffers + numTextures, rangeStartCpu, rangeStartGpu);
+		numConstantBuffers + numUnorderedBuffers + numUnorderedTextures + numTextures, rangeStartCpu, rangeStartGpu);
 	if (allocRes != ZG_SUCCESS) return allocRes;
 
 	// Create constant buffer views and fill (CPU) descriptors
 	for (const D3D12ConstantBufferMapping& mapping : rootSignaturePtr->constBuffers) {
 
 		// Get the CPU descriptor
-		sfz_assert(mapping.tableOffset < numConstantBuffers);
 		D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor;
 		cpuDescriptor.ptr =
 			rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
@@ -438,12 +439,10 @@ ZgResult D3D12CommandList::setPipelineBindings(
 		residencySet->Insert(&buffer->memoryHeap->managedObject);
 	}
 
-	// Create unordered resource views and fill (CPU) descriptors
+	// Create unordered resource views and fill (CPU) descriptors for unordered buffers
 	for (const D3D12UnorderedBufferMapping& mapping : rootSignaturePtr->unorderedBuffers) {
 
 		// Get the CPU descriptor
-		sfz_assert(mapping.tableOffset >= numConstantBuffers);
-		sfz_assert(mapping.tableOffset < (numConstantBuffers + numUnorderedBuffers));
 		D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor;
 		cpuDescriptor.ptr =
 			rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
@@ -488,12 +487,55 @@ ZgResult D3D12CommandList::setPipelineBindings(
 		residencySet->Insert(&buffer->memoryHeap->managedObject);
 	}
 
+	// Create unordered access views and fill (CPU) descriptors for unordered textures
+	for (const D3D12UnorderedTextureMapping& mapping : rootSignaturePtr->unorderedTextures) {
+
+		// Get the CPU descriptor
+		D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor;
+		cpuDescriptor.ptr =
+			rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
+
+		// Linear search to find matching argument among the bindings
+		uint32_t bindingIdx = ~0u;
+		for (uint32_t j = 0; j < bindings.numUnorderedTextures; j++) {
+			const ZgUnorderedTextureBinding& binding = bindings.unorderedTextures[j];
+			if (binding.unorderedRegister == mapping.unorderedRegister) {
+				bindingIdx = j;
+				break;
+			}
+		}
+
+		// If we can't find argument we need to insert null descriptor
+		if (bindingIdx == ~0u) {
+			// TODO: Is definitely possible
+			sfz_assert(false);
+			return ZG_WARNING_UNIMPLEMENTED;
+		}
+
+		// Get binding and texture
+		const ZgUnorderedTextureBinding& binding = bindings.unorderedTextures[bindingIdx];
+		D3D12Texture2D* texture =
+			reinterpret_cast<D3D12Texture2D*>(binding.texture);
+
+		// Create unordered access view
+		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+		uavDesc.Format = texture->format;
+		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+		uavDesc.Texture2D.MipSlice = binding.mipLevel;
+		uavDesc.Texture2D.PlaneSlice = 0;
+		mDevice->CreateUnorderedAccessView(texture->resource.Get(), nullptr, &uavDesc, cpuDescriptor);
+
+		// Set texture resource state
+		setTextureState(*texture, binding.mipLevel, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+
+		// Insert into residency set
+		residencySet->Insert(&texture->textureHeap->managedObject);
+	}
+
 	// Create shader resource views and fill (CPU) descriptors
 	for (const D3D12TextureMapping& mapping : rootSignaturePtr->textures) {
 
-		// Get the CPU descriptor
-		sfz_assert(mapping.tableOffset >= (numConstantBuffers + numUnorderedBuffers));
-		sfz_assert(mapping.tableOffset < (numConstantBuffers + numUnorderedBuffers + numTextures));
+		// Get the CPU descriptor;
 		D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor;
 		cpuDescriptor.ptr =
 			rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;

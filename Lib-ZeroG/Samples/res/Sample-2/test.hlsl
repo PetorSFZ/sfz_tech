@@ -11,7 +11,7 @@ cbuffer AnotherCB : register(b1) {
 	float __padding2;
 };
 
-Texture2D texture : register(t0);
+Texture2D<float4> texture : register(t0);
 
 SamplerState textureSampler : register(s0);
 

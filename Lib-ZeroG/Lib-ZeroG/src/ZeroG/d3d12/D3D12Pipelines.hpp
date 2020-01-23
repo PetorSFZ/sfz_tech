@@ -34,6 +34,7 @@ struct D3D12PipelineBindingsSignature final {
 	ArrayLocal<ZgConstantBufferBindingDesc, ZG_MAX_NUM_CONSTANT_BUFFERS> constBuffers;
 	ArrayLocal<ZgUnorderedBufferBindingDesc, ZG_MAX_NUM_UNORDERED_BUFFERS> unorderedBuffers;
 	ArrayLocal<ZgTextureBindingDesc, ZG_MAX_NUM_TEXTURES> textures;
+	ArrayLocal<ZgUnorderedTextureBindingDesc, ZG_MAX_NUM_UNORDERED_TEXTURES> unorderedTextures;
 
 	D3D12PipelineBindingsSignature() = default;
 	D3D12PipelineBindingsSignature(const D3D12PipelineBindingsSignature&) = default;
@@ -44,6 +45,7 @@ struct D3D12PipelineBindingsSignature final {
 		this->constBuffers.add(signature.constBuffers, signature.numConstBuffers);
 		this->unorderedBuffers.add(signature.unorderedBuffers, signature.numUnorderedBuffers);
 		this->textures.add(signature.textures, signature.numTextures);
+		this->unorderedTextures.add(signature.unorderedTextures, signature.numUnorderedTextures);
 	}
 
 	ZgPipelineBindingsSignature toZgSignature() const
@@ -64,6 +66,11 @@ struct D3D12PipelineBindingsSignature final {
 			signature.textures[i] = textures[i];
 		}
 		signature.numTextures = textures.size();
+
+		for (uint32_t i = 0; i < unorderedTextures.size(); i++) {
+			signature.unorderedTextures[i] = unorderedTextures[i];
+		}
+		signature.numUnorderedTextures = unorderedTextures.size();
 		
 		return signature;
 	}
@@ -91,13 +98,18 @@ struct D3D12ConstantBufferMapping final {
 	uint32_t sizeInBytes = ~0u;
 };
 
+struct D3D12TextureMapping final {
+	uint32_t textureRegister = ~0u;
+	uint32_t tableOffset = ~0u;
+};
+
 struct D3D12UnorderedBufferMapping final {
 	uint32_t unorderedRegister = ~0u;
 	uint32_t tableOffset = ~0u;
 };
 
-struct D3D12TextureMapping final {
-	uint32_t textureRegister = ~0u;
+struct D3D12UnorderedTextureMapping final {
+	uint32_t unorderedRegister = ~0u;
 	uint32_t tableOffset = ~0u;
 };
 
@@ -106,13 +118,15 @@ struct D3D12RootSignature final {
 	uint32_t dynamicBuffersParameterIndex = ~0u;
 	ArrayLocal<D3D12PushConstantMapping, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstants;
 	ArrayLocal<D3D12ConstantBufferMapping, ZG_MAX_NUM_CONSTANT_BUFFERS> constBuffers;
-	ArrayLocal<D3D12UnorderedBufferMapping, ZG_MAX_NUM_UNORDERED_BUFFERS> unorderedBuffers;
 	ArrayLocal<D3D12TextureMapping, ZG_MAX_NUM_TEXTURES> textures;
+	ArrayLocal<D3D12UnorderedBufferMapping, ZG_MAX_NUM_UNORDERED_BUFFERS> unorderedBuffers;
+	ArrayLocal<D3D12UnorderedTextureMapping, ZG_MAX_NUM_UNORDERED_TEXTURES> unorderedTextures;
 
 	const D3D12PushConstantMapping* getPushConstantMapping(uint32_t bufferRegister) const noexcept;
 	const D3D12ConstantBufferMapping* getConstBufferMapping(uint32_t bufferRegister) const noexcept;
-	const D3D12UnorderedBufferMapping* getUnorderedBufferMapping(uint32_t unorderedRegister) const noexcept;
 	const D3D12TextureMapping* getTextureMapping(uint32_t textureRegister) const noexcept;
+	const D3D12UnorderedBufferMapping* getUnorderedBufferMapping(uint32_t unorderedRegister) const noexcept;
+	const D3D12UnorderedTextureMapping* getUnorderedTextureMapping(uint32_t unorderedRegister) const noexcept;
 };
 
 // D3D12PipelineCompute

@@ -158,6 +158,26 @@ PipelineBindings& PipelineBindings::addTexture(
 	return this->addTexture(binding);
 }
 
+PipelineBindings& PipelineBindings::addUnorderedTexture(ZgUnorderedTextureBinding binding) noexcept
+{
+	assert(bindings.numUnorderedTextures < ZG_MAX_NUM_UNORDERED_TEXTURES);
+	bindings.unorderedTextures[bindings.numUnorderedTextures] = binding;
+	bindings.numUnorderedTextures += 1;
+	return *this;
+}
+
+PipelineBindings& PipelineBindings::addUnorderedTexture(
+	uint32_t unorderedRegister,
+	uint32_t mipLevel,
+	Texture2D& texture) noexcept
+{
+	ZgUnorderedTextureBinding binding = {};
+	binding.unorderedRegister = unorderedRegister;
+	binding.mipLevel = mipLevel;
+	binding.texture = texture.texture;
+	return this->addUnorderedTexture(binding);
+}
+
 
 // PipelineComputeBuilder: Methods
 // ------------------------------------------------------------------------------------------------
