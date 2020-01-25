@@ -626,6 +626,50 @@ ZgResult D3D12CommandList::setPipelineCompute(
 	return ZG_SUCCESS;
 }
 
+ZgResult D3D12CommandList::unorderedBarrierBuffer(
+	ZgBuffer* bufferIn) noexcept
+{
+	D3D12Buffer* buffer = static_cast<D3D12Buffer*>(bufferIn);
+	D3D12_RESOURCE_BARRIER barrier = {};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.UAV.pResource = buffer->resource.Get();
+	commandList->ResourceBarrier(1, &barrier);
+	return ZG_SUCCESS;
+}
+
+ZgResult D3D12CommandList::unorderedBarrierTexture(
+	ZgTexture2D* textureIn) noexcept
+{
+	D3D12Texture2D* texture = static_cast<D3D12Texture2D*>(textureIn);
+	D3D12_RESOURCE_BARRIER barrier = {};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.UAV.pResource = texture->resource.Get();
+	commandList->ResourceBarrier(1, &barrier);
+	return ZG_SUCCESS;
+}
+
+ZgResult D3D12CommandList::unorderedBarrierAll() noexcept
+{
+	D3D12_RESOURCE_BARRIER barrier = {};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.UAV.pResource = nullptr;
+	commandList->ResourceBarrier(1, &barrier);
+	return ZG_SUCCESS;
+}
+
+ZgResult D3D12CommandList::dispatchCompute(
+	uint32_t groupCountX,
+	uint32_t groupCountY,
+	uint32_t groupCountZ) noexcept
+{
+	if (!mPipelineSet || mBoundPipelineCompute == nullptr) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+	commandList->Dispatch(groupCountX, groupCountY, groupCountZ);
+	return ZG_SUCCESS;
+}
+
 ZgResult D3D12CommandList::setPipelineRender(
 	ZgPipelineRender* pipelineIn) noexcept
 {
@@ -967,16 +1011,6 @@ ZgResult D3D12CommandList::setVertexBuffer(
 	// Insert into residency set
 	residencySet->Insert(&vertexBuffer.memoryHeap->managedObject);
 
-	return ZG_SUCCESS;
-}
-
-ZgResult D3D12CommandList::dispatchCompute(
-	uint32_t groupCountX,
-	uint32_t groupCountY,
-	uint32_t groupCountZ) noexcept
-{
-	if (!mPipelineSet || mBoundPipelineCompute == nullptr) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
-	commandList->Dispatch(groupCountX, groupCountY, groupCountZ);
 	return ZG_SUCCESS;
 }
 

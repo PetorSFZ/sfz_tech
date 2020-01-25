@@ -757,6 +757,19 @@ public:
 	// See zgCommandListSetPipelineCompute()
 	Result setPipeline(PipelineCompute& pipeline) noexcept;
 
+	// See zgCommandListUnorderedBarrierBuffer()
+	Result unorderedBarrier(Buffer& buffer) noexcept;
+
+	// See zgCommandListUnorderedBarrierTexture()
+	Result unorderedBarrier(Texture2D& texture) noexcept;
+
+	// See zgCommandListUnorderedBarrierAll()
+	Result unorderedBarrier() noexcept;
+
+	// See zgCommandListDispatchCompute()
+	Result dispatchCompute(
+		uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) noexcept;
+
 	// See zgCommandListSetPipelineRender()
 	Result setPipeline(PipelineRender& pipeline) noexcept;
 
@@ -788,10 +801,6 @@ public:
 
 	// See zgCommandListSetVertexBuffer()
 	Result setVertexBuffer(uint32_t vertexBufferSlot, Buffer& vertexBuffer) noexcept;
-
-	// See zgCommandListDispatchCompute()
-	Result dispatchCompute(
-		uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) noexcept;
 
 	// See zgCommandListDrawTriangles()
 	Result drawTriangles(uint32_t startVertexIndex, uint32_t numVertices) noexcept;

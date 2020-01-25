@@ -896,6 +896,28 @@ Result CommandList::setPipeline(PipelineCompute& pipeline) noexcept
 	return (Result)zgCommandListSetPipelineCompute(this->commandList, pipeline.pipeline);
 }
 
+Result CommandList::unorderedBarrier(Buffer& buffer) noexcept
+{
+	return (Result)zgCommandListUnorderedBarrierBuffer(this->commandList, buffer.buffer);
+}
+
+Result CommandList::unorderedBarrier(Texture2D& texture) noexcept
+{
+	return (Result)zgCommandListUnorderedBarrierTexture(this->commandList, texture.texture);
+}
+
+Result CommandList::unorderedBarrier() noexcept
+{
+	return (Result)zgCommandListUnorderedBarrierAll(this->commandList);
+}
+
+Result CommandList::dispatchCompute(
+	uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) noexcept
+{
+	return (Result)zgCommandListDispatchCompute(
+		this->commandList, groupCountX, groupCountY, groupCountZ);
+}
+
 Result CommandList::setPipeline(PipelineRender& pipeline) noexcept
 {
 	return (Result)zgCommandListSetPipelineRender(this->commandList, pipeline.pipeline);
@@ -946,13 +968,6 @@ Result CommandList::setVertexBuffer(uint32_t vertexBufferSlot, Buffer& vertexBuf
 {
 	return (Result)zgCommandListSetVertexBuffer(
 		this->commandList, vertexBufferSlot, vertexBuffer.buffer);
-}
-
-Result CommandList::dispatchCompute(
-	uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) noexcept
-{
-	return (Result)zgCommandListDispatchCompute(
-		this->commandList, groupCountX, groupCountY, groupCountZ);
 }
 
 Result CommandList::drawTriangles(uint32_t startVertexIndex, uint32_t numVertices) noexcept

@@ -108,7 +108,7 @@ typedef struct ZgFramebufferRect ZgFramebufferRect;
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 13;
+static const uint32_t ZG_COMPILED_API_VERSION = 14;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -1191,6 +1191,38 @@ ZG_API ZgResult zgCommandListSetPipelineCompute(
 	ZgCommandList* commandList,
 	ZgPipelineCompute* pipeline);
 
+// Inserts an UAV barrier for the specified buffer, meaning all unordered reads/writes must finish
+// before any new ones start.
+//
+// "You don't need to insert a UAV barrier between 2 draw or dispatch calls that only read a UAV.
+//  Additionally, you don't need to insert a UAV barrier between 2 draw or dispatch calls that
+//  write to the same UAV if you know that it's safe to execute the UAV accesses in any order."
+ZG_API ZgResult zgCommandListUnorderedBarrierBuffer(
+	ZgCommandList* commandList,
+	ZgBuffer* buffer);
+
+// Inserts an UAV barrier for the specified texture, meaning all unordered reads/writes must finish
+// before any new ones start.
+//
+// "You don't need to insert a UAV barrier between 2 draw or dispatch calls that only read a UAV.
+//  Additionally, you don't need to insert a UAV barrier between 2 draw or dispatch calls that
+//  write to the same UAV if you know that it's safe to execute the UAV accesses in any order."
+ZG_API ZgResult zgCommandListUnorderedBarrierTexture(
+	ZgCommandList* commandList,
+	ZgTexture2D* texture);
+
+// Inserts an UAV barrier for all unordered resources, meaning that all read/writes must finish
+// before any new read/writes start.
+// "The resource can be NULL, which indicates that any UAV access could require the barrier.
+ZG_API ZgResult zgCommandListUnorderedBarrierAll(
+	ZgCommandList* commandList);
+
+ZG_API ZgResult zgCommandListDispatchCompute(
+	ZgCommandList* commandList,
+	uint32_t groupCountX,
+	uint32_t groupCountY,
+	uint32_t groupCountZ);
+
 ZG_API ZgResult zgCommandListSetPipelineRender(
 	ZgCommandList* commandList,
 	ZgPipelineRender* pipeline);
@@ -1243,12 +1275,6 @@ ZG_API ZgResult zgCommandListSetVertexBuffer(
 	ZgCommandList* commandList,
 	uint32_t vertexBufferSlot,
 	ZgBuffer* vertexBuffer);
-
-ZG_API ZgResult zgCommandListDispatchCompute(
-	ZgCommandList* commandList,
-	uint32_t groupCountX,
-	uint32_t groupCountY,
-	uint32_t groupCountZ);
 
 ZG_API ZgResult zgCommandListDrawTriangles(
 	ZgCommandList* commandList,

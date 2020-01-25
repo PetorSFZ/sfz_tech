@@ -88,6 +88,19 @@ public:
 	ZgResult setPipelineCompute(
 		ZgPipelineCompute* pipeline) noexcept override final;
 
+	ZgResult unorderedBarrierBuffer(
+		ZgBuffer* buffer) noexcept override final;
+
+	ZgResult unorderedBarrierTexture(
+		ZgTexture2D* texture) noexcept override final;
+
+	ZgResult unorderedBarrierAll() noexcept override final;
+
+	ZgResult dispatchCompute(
+		uint32_t groupCountX,
+		uint32_t groupCountY,
+		uint32_t groupCountZ) noexcept override final;
+
 	ZgResult setPipelineRender(
 		ZgPipelineRender* pipeline) noexcept override final;
 
@@ -120,11 +133,6 @@ public:
 	ZgResult setVertexBuffer(
 		uint32_t vertexBufferSlot,
 		ZgBuffer* vertexBuffer) noexcept override final;
-
-	ZgResult dispatchCompute(
-		uint32_t groupCountX,
-		uint32_t groupCountY,
-		uint32_t groupCountZ) noexcept override final;
 
 	ZgResult drawTriangles(
 		uint32_t startVertexIndex,

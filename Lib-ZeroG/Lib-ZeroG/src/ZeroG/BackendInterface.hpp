@@ -244,6 +244,19 @@ struct ZgCommandList {
 
 	virtual ZgResult setPipelineCompute(
 		ZgPipelineCompute* pipeline) noexcept = 0;
+	
+	virtual ZgResult unorderedBarrierBuffer(
+		ZgBuffer* buffer) noexcept = 0;
+
+	virtual ZgResult unorderedBarrierTexture(
+		ZgTexture2D* texture) noexcept = 0;
+
+	virtual ZgResult unorderedBarrierAll() noexcept = 0;
+
+	virtual ZgResult dispatchCompute(
+		uint32_t groupCountX,
+		uint32_t groupCountY,
+		uint32_t groupCountZ) noexcept = 0;
 
 	virtual ZgResult setPipelineRender(
 		ZgPipelineRender* pipeline) noexcept = 0;
@@ -277,11 +290,6 @@ struct ZgCommandList {
 	virtual ZgResult setVertexBuffer(
 		uint32_t vertexBufferSlot,
 		ZgBuffer* vertexBuffer) noexcept = 0;
-
-	virtual ZgResult dispatchCompute(
-		uint32_t groupCountX,
-		uint32_t groupCountY,
-		uint32_t groupCountZ) noexcept = 0;
 
 	virtual ZgResult drawTriangles(
 		uint32_t startVertexIndex,

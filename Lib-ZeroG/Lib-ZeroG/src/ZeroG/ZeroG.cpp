@@ -630,6 +630,35 @@ ZG_API ZgResult zgCommandListSetPipelineCompute(
 	return commandList->setPipelineCompute(pipeline);
 }
 
+ZG_API ZgResult zgCommandListUnorderedBarrierBuffer(
+	ZgCommandList* commandList,
+	ZgBuffer* buffer)
+{
+	return commandList->unorderedBarrierBuffer(buffer);
+}
+
+ZG_API ZgResult zgCommandListUnorderedBarrierTexture(
+	ZgCommandList* commandList,
+	ZgTexture2D* texture)
+{
+	return commandList->unorderedBarrierTexture(texture);
+}
+
+ZG_API ZgResult zgCommandListUnorderedBarrierAll(
+	ZgCommandList* commandList)
+{
+	return commandList->unorderedBarrierAll();
+}
+
+ZG_API ZgResult zgCommandListDispatchCompute(
+	ZgCommandList* commandList,
+	uint32_t groupCountX,
+	uint32_t groupCountY,
+	uint32_t groupCountZ)
+{
+	return commandList->dispatchCompute(groupCountX, groupCountY, groupCountZ);
+}
+
 ZG_API ZgResult zgCommandListSetPipelineRender(
 	ZgCommandList* commandList,
 	ZgPipelineRender* pipeline)
@@ -698,15 +727,6 @@ ZG_API ZgResult zgCommandListSetVertexBuffer(
 {
 	return commandList->setVertexBuffer(
 		vertexBufferSlot, vertexBuffer);
-}
-
-ZG_API ZgResult zgCommandListDispatchCompute(
-	ZgCommandList* commandList,
-	uint32_t groupCountX,
-	uint32_t groupCountY,
-	uint32_t groupCountZ)
-{
-	return commandList->dispatchCompute(groupCountX, groupCountY, groupCountZ);
 }
 
 ZG_API ZgResult zgCommandListDrawTriangles(
