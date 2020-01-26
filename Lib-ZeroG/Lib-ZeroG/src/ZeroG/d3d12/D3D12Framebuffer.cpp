@@ -18,7 +18,7 @@
 
 #include "ZeroG/d3d12/D3D12Framebuffer.hpp"
 
-#include "ZeroG/d3d12/D3D12Textures.hpp"
+#include "ZeroG/d3d12/D3D12Memory.hpp"
 #include "ZeroG/util/ErrorReporting.hpp"
 
 namespace zg {

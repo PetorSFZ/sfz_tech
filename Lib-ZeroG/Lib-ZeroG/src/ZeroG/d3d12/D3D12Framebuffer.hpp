@@ -20,6 +20,7 @@
 
 #include "ZeroG.h"
 #include "ZeroG/d3d12/D3D12Common.hpp"
+#include "ZeroG/d3d12/D3D12Memory.hpp"
 #include "ZeroG/BackendInterface.hpp"
 
 namespace zg {

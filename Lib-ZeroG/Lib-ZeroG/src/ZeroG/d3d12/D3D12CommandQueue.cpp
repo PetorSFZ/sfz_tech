@@ -18,7 +18,7 @@
 
 #include "ZeroG/d3d12/D3D12CommandQueue.hpp"
 
-#include "ZeroG/d3d12/D3D12MemoryHeap.hpp"
+#include "ZeroG/d3d12/D3D12Memory.hpp"
 
 namespace zg {
 

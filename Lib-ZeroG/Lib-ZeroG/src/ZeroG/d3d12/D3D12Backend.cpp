@@ -25,7 +25,7 @@
 #include "ZeroG/d3d12/D3D12Common.hpp"
 #include "ZeroG/d3d12/D3D12DescriptorRingBuffer.hpp"
 #include "ZeroG/d3d12/D3D12Framebuffer.hpp"
-#include "ZeroG/d3d12/D3D12MemoryHeap.hpp"
+#include "ZeroG/d3d12/D3D12Memory.hpp"
 #include "ZeroG/d3d12/D3D12Pipelines.hpp"
 #include "ZeroG/d3d12/D3D12Textures.hpp"
 

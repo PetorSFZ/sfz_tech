@@ -16,7 +16,7 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "ZeroG/d3d12/D3D12MemoryHeap.hpp"
+#include "ZeroG/d3d12/D3D12Memory.hpp"
 
 #include "ZeroG/util/ErrorReporting.hpp"
 
@@ -330,6 +330,24 @@ ZgResult createMemoryHeap(
 
 	// Return heap
 	*heapOut = memoryHeap;
+	return ZG_SUCCESS;
+}
+
+// D3D12Buffer: Methods
+// ------------------------------------------------------------------------------------------------
+
+ZgResult D3D12Buffer::setDebugName(const char* name) noexcept
+{
+	zg::setDebugName(this->resource, name);
+	return ZG_SUCCESS;
+}
+
+// D3D12Texture2D: Methods
+// ------------------------------------------------------------------------------------------------
+
+ZgResult D3D12Texture2D::setDebugName(const char* name) noexcept
+{
+	zg::setDebugName(this->resource, name);
 	return ZG_SUCCESS;
 }
 

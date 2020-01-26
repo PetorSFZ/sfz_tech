@@ -68,40 +68,6 @@ namespace zg {
 
 using sfz::ArrayLocal;
 
-// PendingState struct
-// ------------------------------------------------------------------------------------------------
-
-class D3D12Buffer; // Forward declare
-class D3D12Texture2D; // Forward declare
-
-// Struct representing the pending state for a buffer in a command list
-struct PendingBufferState final {
-
-	// The associated D3D12Buffer
-	D3D12Buffer* buffer = nullptr;
-
-	// The state the resource need to be in before the command list is executed
-	D3D12_RESOURCE_STATES neededInitialState = D3D12_RESOURCE_STATE_COMMON;
-
-	// The state the resource is in after the command list is executed
-	D3D12_RESOURCE_STATES currentState = D3D12_RESOURCE_STATE_COMMON;
-};
-
-struct PendingTextureState final {
-
-	// The associated D3D12Texture
-	D3D12Texture2D* texture = nullptr;
-
-	// The mip level of the associated texture
-	uint32_t mipLevel = ~0u;
-
-	// The state the resource need to be in before the command list is executed
-	D3D12_RESOURCE_STATES neededInitialState = D3D12_RESOURCE_STATE_COMMON;
-
-	// The state the resource is in after the command list is executed
-	D3D12_RESOURCE_STATES currentState = D3D12_RESOURCE_STATE_COMMON;
-};
-
 // TextureFormats conversion
 // ------------------------------------------------------------------------------------------------
 
