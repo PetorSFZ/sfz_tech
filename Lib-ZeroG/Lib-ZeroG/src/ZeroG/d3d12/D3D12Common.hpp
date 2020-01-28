@@ -20,6 +20,7 @@
 
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
+#include <skipifzero_strings.hpp>
 
 // Windows.h
 #define NOMINMAX
@@ -67,6 +68,7 @@ namespace zg {
  using Microsoft::WRL::ComPtr;
 
 using sfz::ArrayLocal;
+using sfz::str320;
 
 // TextureFormats conversion
 // ------------------------------------------------------------------------------------------------
@@ -102,5 +104,20 @@ struct CheckD3D12Impl final {
 	HRESULT operator% (HRESULT result) noexcept;
 	bool succeeded(HRESULT result) noexcept;
 };
+
+// Device creation functions
+// ------------------------------------------------------------------------------------------------
+
+void d3d12LogAvailableDevices(ComPtr<IDXGIFactory7>& dxgiFactory) noexcept;
+
+ZgResult createHighPerformanceDevice(
+	ComPtr<IDXGIFactory7>& dxgiFactory,
+	ComPtr<IDXGIAdapter4>& adapterOut,
+	ComPtr<ID3D12Device3>& deviceOut) noexcept;
+
+ZgResult createSoftwareDevice(
+	ComPtr<IDXGIFactory7>& dxgiFactory,
+	ComPtr<IDXGIAdapter4>& adapterOut,
+	ComPtr<ID3D12Device3>& deviceOut) noexcept;
 
 } // namespace zg

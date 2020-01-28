@@ -133,10 +133,10 @@ bool initializeZeroG(
 	initSettings.backend = ZG_BACKEND_D3D12;
 	initSettings.width = 512;
 	initSettings.height = 512;
-	initSettings.debugMode = debugMode ? ZG_TRUE : ZG_FALSE;
 	initSettings.logger = getPhantasyEngineZeroGLogger();
 	initSettings.allocator = createZeroGAllocatorWrapper(allocator);
 	initSettings.nativeHandle = getNativeHandle(window);
+	initSettings.d3d12.debugMode = debugMode ? ZG_TRUE : ZG_FALSE;
 
 	// Initialize ZeroG
 	bool initSuccess = CHECK_ZG zgCtx.init(initSettings);

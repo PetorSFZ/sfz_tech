@@ -108,7 +108,7 @@ typedef struct ZgFramebufferRect ZgFramebufferRect;
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 14;
+static const uint32_t ZG_COMPILED_API_VERSION = 15;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -237,6 +237,23 @@ typedef struct ZgAllocator ZgAllocator;
 // Context
 // ------------------------------------------------------------------------------------------------
 
+struct ZgContextInitSettingsD3D12 {
+	
+	// [Optional] Used to enable D3D12 validation.
+	ZgBool debugMode;
+
+	// [Optional]
+	ZgBool useSoftwareRenderer;
+};
+typedef struct ZgContextInitSettingsD3D12 ZgContextInitSettingsD3D12;
+
+struct ZgContextInitSettingsVulkan {
+
+	// [Optional] Used to enable Vulkan debug layers
+	ZgBool debugMode;
+};
+typedef struct ZgContextInitSettingsVulkan ZgContextInitSettingsVulkan;
+
 // The settings used to create a context and initialize ZeroG
 struct ZgContextInitSettings {
 
@@ -246,10 +263,6 @@ struct ZgContextInitSettings {
 	// [Mandatory] The dimensions (in pixels) of the window being rendered to
 	uint32_t width;
 	uint32_t height;
-
-	// [Optional] Used to enable debug mode. This means enabling various debug layers and such
-	//            in the underlaying APIs.
-	ZgBool debugMode;
 
 	// [Optional] The logger used for logging
 	ZgLogger logger;
@@ -261,6 +274,12 @@ struct ZgContextInitSettings {
 	//
 	// On Windows, this is a HWND, i.e. native window handle.
 	void* nativeHandle;
+
+	// [Optional] D3D12 specific settings
+	ZgContextInitSettingsD3D12 d3d12;
+
+	// [Optional] Vulkan specific settings
+	ZgContextInitSettingsVulkan vulkan;
 };
 typedef struct ZgContextInitSettings ZgContextInitSettings;
 

@@ -55,12 +55,13 @@ static void realMain(SDL_Window* window) noexcept
 	ZgContextInitSettings initSettings = {};
 #if defined(_WIN32)
 	initSettings.backend = ZG_BACKEND_D3D12;
+	initSettings.d3d12.debugMode = DEBUG_MODE ? ZG_TRUE : ZG_FALSE;
 #else
 	initSettings.backend = ZG_BACKEND_VULKAN;
+	initSettings.vulkan.debugMode = DEBUG_MODE ? ZG_TRUE : ZG_FALSE;
 #endif
 	initSettings.width = 512;
 	initSettings.height = 512;
-	initSettings.debugMode = DEBUG_MODE ? ZG_TRUE : ZG_FALSE;
 	initSettings.nativeHandle = getNativeHandle(window);
 	zg::Context zgCtx;
 	CHECK_ZG zgCtx.init(initSettings);

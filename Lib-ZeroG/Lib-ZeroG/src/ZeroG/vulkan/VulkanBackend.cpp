@@ -104,7 +104,7 @@ public:
 	ZgResult init(const ZgContextInitSettings& settings) noexcept
 	{
 		// Initialize members and create state struct
-		mDebugMode = settings.debugMode;
+		mDebugMode = settings.vulkan.debugMode;
 		mState = getAllocator()->newObject<VulkanBackendState>(sfz_dbg("VulkanBackendState"));
 
 		// Log available instance layers and extensions

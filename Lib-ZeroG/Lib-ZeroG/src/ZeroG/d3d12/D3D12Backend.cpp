@@ -139,7 +139,7 @@ public:
 	ZgResult init(const ZgContextInitSettings& settings) noexcept
 	{
 		// Initialize members
-		mDebugMode = settings.debugMode;
+		mDebugMode = settings.d3d12.debugMode;
 		mState = getAllocator()->newObject<D3D12BackendState>(sfz_dbg("D3D12BackendState"));
 		
 		// Initialize part of state
@@ -149,7 +149,7 @@ public:
 		if (mState->width == 0 || mState->height == 0) return ZG_ERROR_INVALID_ARGUMENT;
 
 		// Enable debug layers in debug mode
-		if (settings.debugMode) {
+		if (settings.d3d12.debugMode) {
 			
 			// Get debug interface
 			ComPtr<ID3D12Debug1> debugInterface;
@@ -168,82 +168,43 @@ public:
 		ComPtr<IDXGIFactory7> dxgiFactory;
 		{
 			UINT flags = 0;
-			if (settings.debugMode) flags |= DXGI_CREATE_FACTORY_DEBUG;
+			if (settings.d3d12.debugMode) flags |= DXGI_CREATE_FACTORY_DEBUG;
 			if (D3D12_FAIL(CreateDXGIFactory2(flags, IID_PPV_ARGS(&dxgiFactory)))) {
 				return ZG_ERROR_GENERIC;
 			}
 		}
 
-		// Create DXGI adapter
+		// Log available D3D12 devices
+		d3d12LogAvailableDevices(dxgiFactory);
+
+		// Create DXGI adapter and device. Software renderer if requested, otherwise high-performance
+		if (settings.d3d12.useSoftwareRenderer) {
+			ZgResult res = createSoftwareDevice(
+				dxgiFactory,
+				mState->dxgiAdapter,
+				mState->device);
+			if (res != ZG_SUCCESS) return res;
+		}
+		else {
+			ZgResult res = createHighPerformanceDevice(
+				dxgiFactory,
+				mState->dxgiAdapter,
+				mState->device);
+			if (res != ZG_SUCCESS) return res;
+		}
+
+		// Store some info about device in stats
 		{
-			// Iterate over all adapters and attempt to select the best one, current assumption
-			// is that the device with the most amount of video memory is the best device
-			ComPtr<IDXGIAdapter1> bestAdapter;
-			SIZE_T bestAdapterVideoMemory = 0;
-			for (UINT i = 0; true; i++) {
-
-				// Get adapter, exit loop if no more adapters
-				ComPtr<IDXGIAdapter1> adapter;
-				if (dxgiFactory->EnumAdapters1(i, &adapter) == DXGI_ERROR_NOT_FOUND) {
-					break;
-				}
-
-				// Get adapter description
-				DXGI_ADAPTER_DESC1 desc;
-				CHECK_D3D12 adapter->GetDesc1(&desc);
-
-				// Skip adapter if it is software renderer
-				if ((desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) != 0) continue;
-
-				// Skip adapter if it is not possible to create device with feature level 12.0
-				if (D3D12_FAIL(D3D12CreateDevice(
-					adapter.Get(), D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), nullptr))) {
-					continue;
-				}
-
-				// Store best adapter if it has more video memory than the last one
-				if (desc.DedicatedVideoMemory > bestAdapterVideoMemory) {
-					bestAdapterVideoMemory = desc.DedicatedVideoMemory;
-					bestAdapter = adapter;
-				}
-			}
-
-			// Return error if not suitable device found
-			if (bestAdapterVideoMemory == 0) return ZG_ERROR_NO_SUITABLE_DEVICE;
-
-			// Convert device to DXGIAdapter4
-			if (D3D12_FAIL(bestAdapter.As(&mState->dxgiAdapter))) {
-				return ZG_ERROR_NO_SUITABLE_DEVICE;
-			}
-
-			// Log some information about the choosen adapter
-			DXGI_ADAPTER_DESC1 bestDesc;
-			CHECK_D3D12 bestAdapter->GetDesc1(&bestDesc);
-			ZG_INFO("Description: %S\nVendor ID: %#x\nDevice ID: %u\nRevision: %u\n"
-				"Dedicated video memory: %.2f GiB\nDedicated system memory: %.2f GiB\n"
-				"Shared system memory: %.2f GiB",
-				bestDesc.Description,
-				uint32_t(bestDesc.VendorId),
-				uint32_t(bestDesc.DeviceId),
-				uint32_t(bestDesc.Revision),
-				double(bestDesc.DedicatedVideoMemory) / (1024.0 * 1024.0 * 1024.0),
-				double(bestDesc.DedicatedSystemMemory) / (1024.0 * 1024.0 * 1024.0),
-				double(bestDesc.SharedSystemMemory) / (1024.0 * 1024.0 * 1024.0));
-
 			// Set some information about choosen adapter in static stats
+			DXGI_ADAPTER_DESC1 desc;
+			CHECK_D3D12 mState->dxgiAdapter->GetDesc1(&desc);
 			snprintf(
 				mState->staticStats.deviceDescription,
 				sizeof(mState->staticStats.deviceDescription),
-				"%S", bestDesc.Description);
-			mState->staticStats.dedicatedGpuMemoryBytes = bestDesc.DedicatedVideoMemory;
-			mState->staticStats.dedicatedCpuMemoryBytes = bestDesc.DedicatedSystemMemory;
-			mState->staticStats.sharedCpuMemoryBytes = bestDesc.SharedSystemMemory;
-		}
-
-		// Create device
-		if (D3D12_FAIL(D3D12CreateDevice(
-			mState->dxgiAdapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&mState->device)))) {
-			return ZG_ERROR_NO_SUITABLE_DEVICE;
+				"%S", desc.Description);
+			mState->staticStats.dedicatedGpuMemoryBytes = desc.DedicatedVideoMemory;
+			mState->staticStats.dedicatedCpuMemoryBytes = desc.DedicatedSystemMemory;
+			mState->staticStats.sharedCpuMemoryBytes = desc.SharedSystemMemory;
 		}
 
 		// Enable debug message in debug mode

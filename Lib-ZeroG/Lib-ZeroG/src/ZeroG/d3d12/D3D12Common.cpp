@@ -141,4 +141,106 @@ bool CheckD3D12Impl::succeeded(HRESULT result) noexcept
 	return false;
 }
 
+// Device creation functions
+// ------------------------------------------------------------------------------------------------
+
+void d3d12LogAvailableDevices(ComPtr<IDXGIFactory7>& dxgiFactory) noexcept
+{
+	for (uint32_t i = 0; true; i++) {
+
+		// Get adapter, exit loop if no more adapters
+		ComPtr<IDXGIAdapter1> adapter;
+		if (dxgiFactory->EnumAdapters1(i, &adapter) == DXGI_ERROR_NOT_FOUND) break;
+
+		//dxgiFactory->EnumAdapterByGpuPreference
+
+		// Get adapter description
+		DXGI_ADAPTER_DESC1 desc;
+		CHECK_D3D12 adapter->GetDesc1(&desc);
+
+		// Log description
+		ZG_INFO("Adapter: %u\nDescription: %S\nVendor ID: %#x\nDevice ID: %u\nRevision: %u\n"
+			"Dedicated video memory: %.2f GiB\nDedicated system memory: %.2f GiB\n"
+			"Shared system memory: %.2f GiB",
+			i,
+			desc.Description,
+			uint32_t(desc.VendorId),
+			uint32_t(desc.DeviceId),
+			uint32_t(desc.Revision),
+			double(desc.DedicatedVideoMemory) / (1024.0 * 1024.0 * 1024.0),
+			double(desc.DedicatedSystemMemory) / (1024.0 * 1024.0 * 1024.0),
+			double(desc.SharedSystemMemory) / (1024.0 * 1024.0 * 1024.0));
+
+	}
+}
+
+ZgResult createHighPerformanceDevice(
+	ComPtr<IDXGIFactory7>& dxgiFactory,
+	ComPtr<IDXGIAdapter4>& adapterOut,
+	ComPtr<ID3D12Device3>& deviceOut) noexcept
+{
+	// Create high-performance adapter
+	bool adapterSuccess = D3D12_SUCC(
+		dxgiFactory->EnumAdapterByGpuPreference(
+		0, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&adapterOut)));
+	if (!adapterSuccess) return ZG_ERROR_NO_SUITABLE_DEVICE;
+
+	// Log adapter description
+	DXGI_ADAPTER_DESC1 desc;
+	CHECK_D3D12 adapterOut->GetDesc1(&desc);
+	ZG_INFO("Using adapter: %S", desc.Description);
+
+	// Create device
+	bool deviceSuccess = D3D12_SUCC(D3D12CreateDevice(
+		adapterOut.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&deviceOut)));
+	if (!deviceSuccess) return ZG_ERROR_NO_SUITABLE_DEVICE;
+
+	return ZG_SUCCESS;
+}
+
+ZgResult createSoftwareDevice(
+	ComPtr<IDXGIFactory7>& dxgiFactory,
+	ComPtr<IDXGIAdapter4>& adapterOut,
+	ComPtr<ID3D12Device3>& deviceOut) noexcept
+{
+	// Find software adapter
+	bool foundPixAdapter = false;
+	ComPtr<IDXGIAdapter1> adapter;
+	for (uint32_t i = 0; true; i++) {
+
+		// Get adapter, exit loop if no more adapters
+		if (dxgiFactory->EnumAdapters1(i, &adapter) == DXGI_ERROR_NOT_FOUND) {
+			break;
+		}
+
+		// Get adapter description
+		DXGI_ADAPTER_DESC1 desc;
+		CHECK_D3D12 adapter->GetDesc1(&desc);
+
+		// Skip adapter if it is not software renderer
+		if ((desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) == 0) continue;
+		foundPixAdapter = true;
+		break;
+	}
+	if (!foundPixAdapter) return ZG_ERROR_NO_SUITABLE_DEVICE;
+
+	// Convert adapter to DXGIAdapter4 and return it
+	{
+		bool convSuccess = D3D12_SUCC(adapter.As(&adapterOut));
+		if (!convSuccess) return ZG_ERROR_NO_SUITABLE_DEVICE;
+	}
+
+	// Log adapter description
+	DXGI_ADAPTER_DESC1 desc;
+	CHECK_D3D12 adapterOut->GetDesc1(&desc);
+	ZG_INFO("Using adapter: %S", desc.Description);
+
+	// Create device
+	bool deviceSuccess = D3D12_SUCC(D3D12CreateDevice(
+		adapterOut.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&deviceOut)));
+	if (!deviceSuccess) return ZG_ERROR_NO_SUITABLE_DEVICE;
+
+	return ZG_SUCCESS;
+}
+
 } // namespace zg
