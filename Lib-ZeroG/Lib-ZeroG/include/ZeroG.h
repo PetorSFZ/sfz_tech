@@ -52,14 +52,29 @@ extern "C" {
 #define ZG_API
 #endif
 
-// ZeroG handles
-// ------------------------------------------------------------------------------------------------
-
 // Macro to declare a ZeroG handle. As a user you can never dereference or inspect a ZeroG handle,
 // you can only store pointers to them.
 #define ZG_HANDLE(name) \
 	struct name; \
-	typedef struct name name;
+	typedef struct name name
+
+// Macro to simplify the creation of C structs. In C you have to typedef the struct to its name in
+// order to not have to write out struct each time you use it. This macro is used to enable us to
+// only specify the struct name once, at the top of the struct declaration, while still getting the
+// typedef done.
+#define ZG_STRUCT(name) \
+	struct name; \
+	typedef struct name name; \
+	struct name
+
+// Macro to simplify the creation of C enums. Similar to ZG_STRUCT(), except all ZeroG enums have
+// the type int32_t.
+#define ZG_ENUM(name) \
+	typedef int32_t name; \
+	enum name ## Enum
+
+// ZeroG handles
+// ------------------------------------------------------------------------------------------------
 
 // A handle representing a compute pipeline
 ZG_HANDLE(ZgPipelineCompute);
@@ -92,23 +107,23 @@ ZG_HANDLE(ZgCommandList);
 // ------------------------------------------------------------------------------------------------
 
 // The ZeroG bool type.
-typedef uint32_t ZgBool;
-static const ZgBool ZG_FALSE = 0;
-static const ZgBool ZG_TRUE = 1;
+ZG_ENUM(ZgBool) {
+	ZG_FALSE = 0,
+	ZG_TRUE = 1
+};
 
 // Framebuffer rectangle
 // ------------------------------------------------------------------------------------------------
 
-struct ZgFramebufferRect {
+ZG_STRUCT(ZgFramebufferRect) {
 	uint32_t topLeftX, topLeftY, width, height;
 };
-typedef struct ZgFramebufferRect ZgFramebufferRect;
 
 // Version information
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 15;
+static const uint32_t ZG_COMPILED_API_VERSION = 16;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -120,7 +135,7 @@ ZG_API uint32_t zgApiLinkedVersion(void);
 // ------------------------------------------------------------------------------------------------
 
 // The various backends supported by ZeroG
-enum ZgBackendTypeEnum {
+ZG_ENUM(ZgBackendType) {
 
 	// The null backend, simply turn every ZeroG call into a no-op.
 	ZG_BACKEND_NONE = 0,
@@ -131,7 +146,6 @@ enum ZgBackendTypeEnum {
 	// The Vulkan backend, available on all platforms.
 	ZG_BACKEND_VULKAN
 };
-typedef uint32_t ZgBackendType;
 
 // Compiled features
 // ------------------------------------------------------------------------------------------------
@@ -140,23 +154,18 @@ typedef uint32_t ZgBackendType;
 //
 // If you depend on a specific feature (such as the D3D12 backend) it is a good idea to query and
 // check if it is available
-enum ZgFeatureBitsEnum {
-	ZG_FEATURE_BIT_NONE = 0,
-	ZG_FEATURE_BIT_BACKEND_D3D12 = 1 << 1,
-	ZG_FEATURE_BIT_BACKEND_VULKAN = 1 << 2
-};
-typedef uint64_t ZgFeatureBits;
+static const uint64_t ZG_FEATURE_BIT_NONE = 0;
+static const uint64_t ZG_FEATURE_BIT_BACKEND_D3D12 = 1 << 1;
+static const uint64_t ZG_FEATURE_BIT_BACKEND_VULKAN = 1 << 2;
 
 // Returns a bitmask containing the features compiled into this ZeroG dll.
-ZG_API ZgFeatureBits zgCompiledFeatures(void);
+ZG_API uint64_t zgCompiledFeatures(void);
 
 // Results
 // ------------------------------------------------------------------------------------------------
 
-// The results
-//
-// 0 is success, negative values are errors and positive values are warnings.
-enum ZgResultEnum {
+// The results, 0 is success, negative values are errors and positive values are warnings.
+ZG_ENUM(ZgResult) {
 
 	// Success (0)
 	ZG_SUCCESS = 0,
@@ -176,7 +185,6 @@ enum ZgResultEnum {
 	ZG_ERROR_OUT_OF_COMMAND_LISTS = -7,
 	ZG_ERROR_INVALID_COMMAND_LIST_STATE = -8
 };
-typedef int32_t ZgResult;
 
 // Returns a string representation of the given ZeroG result. The string is statically allocated
 // and must NOT be freed by the user.
@@ -185,13 +193,12 @@ ZG_API const char* zgResultToString(ZgResult errorCode);
 // Logging interface
 // ------------------------------------------------------------------------------------------------
 
-enum ZgLogLevelEnum {
+ZG_ENUM(ZgLogLevel) {
 	ZG_LOG_LEVEL_NOISE = 0,
 	ZG_LOG_LEVEL_INFO,
 	ZG_LOG_LEVEL_WARNING,
 	ZG_LOG_LEVEL_ERROR
 };
-typedef uint32_t ZgLogLevel;
 
 // Logger used for logging inside ZeroG.
 //
@@ -200,7 +207,7 @@ typedef uint32_t ZgLogLevel;
 //
 // If no custom logger is wanted leave all fields zero in this struct. Normal printf() will then be
 // used for logging instead.
-struct ZgLogger {
+ZG_STRUCT(ZgLogger) {
 
 	// Function pointer to user-specified log function.
 	void(*log)(void* userPtr, const char* file, int line, ZgLogLevel level, const char* message);
@@ -208,7 +215,6 @@ struct ZgLogger {
 	// User specified pointer that is provied to each log() call.
 	void* userPtr;
 };
-typedef struct ZgLogger ZgLogger;
 
 // Memory allocator interface
 // ------------------------------------------------------------------------------------------------
@@ -220,7 +226,7 @@ typedef struct ZgLogger ZgLogger;
 // * All allocations must be at least 32-byte aligned.
 //
 // If no custom allocator is required, just leave all fields zero in this struct.
-struct ZgAllocator {
+ZG_STRUCT(ZgAllocator) {
 
 	// Function pointer to allocate function. The allocation created must be 32-byte aligned. name,
 	// file and line is (statically allocated) debug information related to the allocation.
@@ -232,12 +238,11 @@ struct ZgAllocator {
 	// User specified pointer that is provided to each allocate/free call.
 	void* userPtr;
 };
-typedef struct ZgAllocator ZgAllocator;
 
 // Context
 // ------------------------------------------------------------------------------------------------
 
-struct ZgContextInitSettingsD3D12 {
+ZG_STRUCT(ZgContextInitSettingsD3D12) {
 	
 	// [Optional] Used to enable D3D12 validation.
 	ZgBool debugMode;
@@ -245,17 +250,15 @@ struct ZgContextInitSettingsD3D12 {
 	// [Optional]
 	ZgBool useSoftwareRenderer;
 };
-typedef struct ZgContextInitSettingsD3D12 ZgContextInitSettingsD3D12;
 
-struct ZgContextInitSettingsVulkan {
+ZG_STRUCT(ZgContextInitSettingsVulkan) {
 
 	// [Optional] Used to enable Vulkan debug layers
 	ZgBool debugMode;
 };
-typedef struct ZgContextInitSettingsVulkan ZgContextInitSettingsVulkan;
 
 // The settings used to create a context and initialize ZeroG
-struct ZgContextInitSettings {
+ZG_STRUCT(ZgContextInitSettings) {
 
 	// [Mandatory] The wanted ZeroG backend
 	ZgBackendType backend;
@@ -281,7 +284,6 @@ struct ZgContextInitSettings {
 	// [Optional] Vulkan specific settings
 	ZgContextInitSettingsVulkan vulkan;
 };
-typedef struct ZgContextInitSettings ZgContextInitSettings;
 
 // Checks if the implicit ZeroG context is already initialized or not
 ZG_API ZgBool zgContextAlreadyInitialized(void);
@@ -318,7 +320,7 @@ ZG_API ZgResult zgContextSwapchainFinishFrame(void);
 // ------------------------------------------------------------------------------------------------
 
 // A struct containing general statistics
-struct ZgStats {
+ZG_STRUCT(ZgStats) {
 
 	// Text description (i.e. name) of the device in use
 	char deviceDescription[128];
@@ -348,7 +350,6 @@ struct ZgStats {
 	// The amount of "non-local" memory used by the application.
 	uint64_t nonLocalUsageBytes;
 };
-typedef struct ZgStats ZgStats;
 
 // Gets the current statistics of the ZeroG backend. Normally called once (or maybe up to a couple
 // of times) per frame.
@@ -357,7 +358,7 @@ ZG_API ZgResult zgContextGetStats(ZgStats* statsOut);
 // Texture formats
 // ------------------------------------------------------------------------------------------------
 
-enum ZgTextureFormatEnum {
+ZG_ENUM(ZgTextureFormat) {
 	ZG_TEXTURE_FORMAT_UNDEFINED = 0,
 
 	ZG_TEXTURE_FORMAT_R_U8_UNORM, // Normalized between [0, 1]
@@ -374,7 +375,6 @@ enum ZgTextureFormatEnum {
 
 	ZG_TEXTURE_FORMAT_DEPTH_F32
 };
-typedef uint32_t ZgTextureFormat;
 
 // Pipeline Bindings
 // ------------------------------------------------------------------------------------------------
@@ -394,7 +394,7 @@ static const uint32_t ZG_MAX_NUM_UNORDERED_TEXTURES = 16;
 // The maximum number of samplers allowed on a single pipeline.
 static const uint32_t ZG_MAX_NUM_SAMPLERS = 8;
 
-struct ZgConstantBufferBindingDesc {
+ZG_STRUCT(ZgConstantBufferBindingDesc) {
 
 	// Which register this buffer corresponds to in the shader. In D3D12 this is the "register"
 	// keyword, i.e. a value of 0 would mean "register(b0)".
@@ -413,35 +413,31 @@ struct ZgConstantBufferBindingDesc {
 	// the root signature smaller than 16 words to maximize performance on some hardware.
 	ZgBool pushConstant;
 };
-typedef struct ZgConstantBufferBindingDesc ZgConstantBufferBindingDesc;
 
-struct ZgUnorderedBufferBindingDesc {
+ZG_STRUCT(ZgUnorderedBufferBindingDesc) {
 
 	// Which register this buffer corresponds to in the shader.In D3D12 this is the "register"
 	// keyword, i.e. a value of 0 would mean "register(u0)".
 	uint32_t unorderedRegister;
 };
-typedef struct ZgUnorderedBufferBindingDesc ZgUnorderedBufferBindingDesc;
 
-struct ZgTextureBindingDesc {
+ZG_STRUCT(ZgTextureBindingDesc) {
 
 	// Which register this texture corresponds to in the shader.
 	uint32_t textureRegister;
 };
-typedef struct ZgTextureBindingDesc ZgTextureBindingDesc;
 
-struct ZgUnorderedTextureBindingDesc {
+ZG_STRUCT(ZgUnorderedTextureBindingDesc) {
 
 	// Which register this texture corresponds to in the shader.
 	uint32_t unorderedRegister;
 };
-typedef struct ZgUnorderedTextureBindingDesc ZgUnorderedTextureBindingDesc;
 
 // A struct representing the signature of a pipeline, indicating what resources can be bound to it.
 //
 // The signature contains all information necessary to know how to bind input and output to a
 // pipeline. This information is inferred by performing reflection on the shaders being compiled.
-struct ZgPipelineBindingsSignature {
+ZG_STRUCT(ZgPipelineBindingsSignature) {
 
 	// The constant buffers
 	uint32_t numConstBuffers;
@@ -459,15 +455,13 @@ struct ZgPipelineBindingsSignature {
 	uint32_t numUnorderedTextures;
 	ZgUnorderedTextureBindingDesc unorderedTextures[ZG_MAX_NUM_UNORDERED_TEXTURES];
 };
-typedef struct ZgPipelineBindingsSignature ZgPipelineBindingsSignature;
 
-struct ZgConstantBufferBinding {
+ZG_STRUCT(ZgConstantBufferBinding) {
 	uint32_t bufferRegister;
 	ZgBuffer* buffer;
 };
-typedef struct ZgConstantBufferBinding ZgConstantBufferBinding;
 
-struct ZgUnorderedBufferBinding {
+ZG_STRUCT(ZgUnorderedBufferBinding) {
 	
 	// Register the unordered buffer is bound to
 	uint32_t unorderedRegister;
@@ -484,15 +478,13 @@ struct ZgUnorderedBufferBinding {
 	// The buffer to bind as an unordered buffer
 	ZgBuffer* buffer;
 };
-typedef struct ZgUnorderedBufferBinding ZgUnorderedBufferBinding;
 
-struct ZgTextureBinding {
+ZG_STRUCT(ZgTextureBinding) {
 	uint32_t textureRegister;
 	ZgTexture2D* texture;
 };
-typedef struct ZgTextureBinding ZgTextureBinding;
 
-struct ZgUnorderedTextureBinding {
+ZG_STRUCT(ZgUnorderedTextureBinding) {
 
 	// Register the unordered texture is bound to
 	uint32_t unorderedRegister;
@@ -503,9 +495,8 @@ struct ZgUnorderedTextureBinding {
 	// The texture to bind as an unordered texture
 	ZgTexture2D* texture;
 };
-typedef struct ZgUnorderedTextureBinding ZgUnorderedTextureBinding;
 
-struct ZgPipelineBindings {
+ZG_STRUCT(ZgPipelineBindings) {
 
 	// The constant buffers to bind
 	uint32_t numConstantBuffers;
@@ -523,26 +514,24 @@ struct ZgPipelineBindings {
 	uint32_t numUnorderedTextures;
 	ZgUnorderedTextureBinding unorderedTextures[ZG_MAX_NUM_UNORDERED_TEXTURES];
 };
-typedef struct ZgPipelineBindings ZgPipelineBindings;
 
 // Pipeline Compiler Settings
 // ------------------------------------------------------------------------------------------------
 
 // Enum representing various shader model versions
-enum ZgShaderModelEnum {
+ZG_ENUM(ZgShaderModel) {
 	ZG_SHADER_MODEL_UNDEFINED = 0,
 	ZG_SHADER_MODEL_6_0,
 	ZG_SHADER_MODEL_6_1,
 	ZG_SHADER_MODEL_6_2,
 	ZG_SHADER_MODEL_6_3
 };
-typedef uint32_t ZgShaderModel;
 
 // The maximum number of compiler flags allowed to the DXC shader compiler
 static const uint32_t ZG_MAX_NUM_DXC_COMPILER_FLAGS = 8;
 
 // Compile settings to the HLSL compiler
-struct ZgPipelineCompileSettingsHLSL {
+ZG_STRUCT(ZgPipelineCompileSettingsHLSL) {
 
 	// Which shader model to target when compiling the HLSL file
 	ZgShaderModel shaderModel;
@@ -550,32 +539,29 @@ struct ZgPipelineCompileSettingsHLSL {
 	// Flags to the DXC compiler
 	const char* dxcCompilerFlags[ZG_MAX_NUM_DXC_COMPILER_FLAGS];
 };
-typedef struct ZgPipelineCompileSettingsHLSL ZgPipelineCompileSettingsHLSL;
 
 // Pipeline Compute
 // ------------------------------------------------------------------------------------------------
 
 // Sample mode of a sampler
-enum ZgSamplingModeEnum {
+ZG_ENUM(ZgSamplingMode) {
 	ZG_SAMPLING_MODE_UNDEFINED = 0,
 
 	ZG_SAMPLING_MODE_NEAREST, // D3D12_FILTER_MIN_MAG_MIP_POINT
 	ZG_SAMPLING_MODE_TRILINEAR, // D3D12_FILTER_MIN_MAG_MIP_LINEAR
 	ZG_SAMPLING_MODE_ANISOTROPIC, // D3D12_FILTER_ANISOTROPIC
 };
-typedef uint32_t ZgSamplingMode;
 
 // Wrapping mode of a sampler
-enum ZgWrappingModeEnum {
+ZG_ENUM(ZgWrappingMode) {
 	ZG_WRAPPING_MODE_UNDEFINED = 0,
 
 	ZG_WRAPPING_MODE_CLAMP, // D3D12_TEXTURE_ADDRESS_MODE_CLAMP
 	ZG_WRAPPING_MODE_REPEAT, // D3D12_TEXTURE_ADDRESS_MODE_WRAP
 };
-typedef uint32_t ZgWrappingMode;
 
 // A struct defining a texture sampler
-struct ZgSampler {
+ZG_STRUCT(ZgSampler) {
 
 	// The sampling mode of the sampler
 	ZgSamplingMode samplingMode;
@@ -589,9 +575,8 @@ struct ZgSampler {
 	// texture.
 	float mipLodBias;
 };
-typedef struct ZgSampler ZgSampler;
 
-struct ZgPipelineComputeCreateInfo {
+ZG_STRUCT(ZgPipelineComputeCreateInfo) {
 
 	// Path to the shader source or the source directly depending on what create function is called.
 	const char* computeShader;
@@ -633,7 +618,7 @@ static const uint32_t ZG_MAX_NUM_VERTEX_ATTRIBUTES = 8;
 static const uint32_t ZG_MAX_NUM_RENDER_TARGETS = 8;
 
 // The type of data contained in a vertex
-enum ZgVertexAttributeTypeEnum {
+ZG_ENUM(ZgVertexAttributeType) {
 	ZG_VERTEX_ATTRIBUTE_UNDEFINED = 0,
 
 	ZG_VERTEX_ATTRIBUTE_F32,
@@ -651,10 +636,9 @@ enum ZgVertexAttributeTypeEnum {
 	ZG_VERTEX_ATTRIBUTE_U32_3,
 	ZG_VERTEX_ATTRIBUTE_U32_4,
 };
-typedef uint32_t ZgVertexAttributeType;
 
 // A struct defining a vertex attribute
-struct ZgVertexAttribute {
+ZG_STRUCT(ZgVertexAttribute) {
 	// The location of the attribute in the vertex input.
 	//
 	// For HLSL the semantic name need to be "TEXCOORD<attributeLocation>"
@@ -679,7 +663,6 @@ struct ZgVertexAttribute {
 	// Offset in bytes from start of buffer to the first element of this type.
 	uint32_t offsetToFirstElementInBytes;
 };
-typedef struct ZgVertexAttribute ZgVertexAttribute;
 
 // A struct representing the rendering signature of a render pipeline.
 //
@@ -689,7 +672,7 @@ typedef struct ZgVertexAttribute ZgVertexAttribute;
 // Unlike ZgPipelineBindingsSignature, this data can not be inferred by reflection and is specified
 // by the user when creating a pipeline anyway. It is mainly kept and provided in this form to make
 // life a bit simpler for the user.
-struct ZgPipelineRenderSignature {
+ZG_STRUCT(ZgPipelineRenderSignature) {
 
 	// The vertex attributes to the vertex shader
 	uint32_t numVertexAttributes;
@@ -699,12 +682,11 @@ struct ZgPipelineRenderSignature {
 	uint32_t numRenderTargets;
 	ZgTextureFormat renderTargets[ZG_MAX_NUM_RENDER_TARGETS];
 };
-typedef struct ZgPipelineRenderSignature ZgPipelineRenderSignature;
 
 // Pipeline Render
 // ------------------------------------------------------------------------------------------------
 
-struct ZgRasterizerSettings {
+ZG_STRUCT(ZgRasterizerSettings) {
 
 	// Renders in wireframe mode instead of solid mode, i.e. only lines between vertices.
 	ZgBool wireframeMode;
@@ -737,19 +719,17 @@ struct ZgRasterizerSettings {
 	// For D3D12, see: https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-output-merger-stage-depth-bias
 	float depthBiasClamp;
 };
-typedef struct ZgRasterizerSettings ZgRasterizerSettings;
 
-enum ZgBlendFuncEnum {
+ZG_ENUM(ZgBlendFunc) {
 	ZG_BLEND_FUNC_ADD = 0,
 	ZG_BLEND_FUNC_DST_SUB_SRC, // dst - src
 	ZG_BLEND_FUNC_SRC_SUB_DST, // src - dst
 	ZG_BLEND_FUNC_MIN,
 	ZG_BLEND_FUNC_MAX
 };
-typedef uint32_t ZgBlendFunc;
 
 // See: https://docs.microsoft.com/en-us/windows/desktop/api/d3d12/ne-d3d12-d3d12_blend
-enum ZgBlendFactorEnum {
+ZG_ENUM(ZgBlendFactor) {
 	ZG_BLEND_FACTOR_ZERO = 0,
 	ZG_BLEND_FACTOR_ONE,
 	ZG_BLEND_FACTOR_SRC_COLOR,
@@ -761,9 +741,8 @@ enum ZgBlendFactorEnum {
 	ZG_BLEND_FACTOR_DST_ALPHA,
 	ZG_BLEND_FACTOR_DST_INV_ALPHA,
 };
-typedef uint32_t ZgBlendFactor;
 
-struct ZgBlendSettings {
+ZG_STRUCT(ZgBlendSettings) {
 
 	// Whether to enable blending or not
 	ZgBool blendingEnabled;
@@ -782,9 +761,8 @@ struct ZgBlendSettings {
 	ZgBlendFactor srcValAlpha;
 	ZgBlendFactor dstValAlpha;
 };
-typedef struct ZgBlendSettings ZgBlendSettings;
 
-enum ZgDepthFuncEnum {
+ZG_ENUM(ZgDepthFunc) {
 	ZG_DEPTH_FUNC_LESS = 0,
 	ZG_DEPTH_FUNC_LESS_EQUAL,
 	ZG_DEPTH_FUNC_EQUAL,
@@ -792,9 +770,8 @@ enum ZgDepthFuncEnum {
 	ZG_DEPTH_FUNC_GREATER,
 	ZG_DEPTH_FUNC_GREATER_EQUAL
 };
-typedef uint32_t ZgDepthFunc;
 
-struct ZgDepthTestSettings {
+ZG_STRUCT(ZgDepthTestSettings) {
 
 	// Whether to enable to the depth test or not
 	ZgBool depthTestEnabled;
@@ -805,10 +782,9 @@ struct ZgDepthTestSettings {
 	// in the depth buffer is kept (in a "standard" 0 is near, 1 is furthest away depth buffer).
 	ZgDepthFunc depthFunc;
 };
-typedef struct ZgDepthTestSettings ZgDepthTestSettings;
 
 // The common information required to create a render pipeline
-struct ZgPipelineRenderCreateInfo {
+ZG_STRUCT(ZgPipelineRenderCreateInfo) {
 
 	// Path to the shader source or the source directly depending on what create function is called.
 	const char* vertexShader;
@@ -856,7 +832,6 @@ struct ZgPipelineRenderCreateInfo {
 	// Depth test settings
 	ZgDepthTestSettings depthTest;
 };
-typedef struct ZgPipelineRenderCreateInfo ZgPipelineRenderCreateInfo;
 
 ZG_API ZgResult zgPipelineRenderCreateFromFileSPIRV(
 	ZgPipelineRender** pipelineOut,
@@ -884,7 +859,7 @@ ZG_API ZgResult zgPipelineRenderRelease(
 // Memory Heap
 // ------------------------------------------------------------------------------------------------
 
-enum ZgMemoryTypeEnum {
+ZG_ENUM(ZgMemoryType) {
 	ZG_MEMORY_TYPE_UNDEFINED = 0,
 
 	// Memory suitable for uploading data to GPU.
@@ -914,9 +889,8 @@ enum ZgMemoryTypeEnum {
 	// TODO: Implement support for this use case.
 	ZG_MEMORY_TYPE_FRAMEBUFFER
 };
-typedef uint32_t ZgMemoryType;
 
-struct ZgMemoryHeapCreateInfo {
+ZG_STRUCT(ZgMemoryHeapCreateInfo) {
 
 	// The size in bytes of the heap
 	uint64_t sizeInBytes;
@@ -924,7 +898,6 @@ struct ZgMemoryHeapCreateInfo {
 	// The type of memory
 	ZgMemoryType memoryType;
 };
-typedef struct ZgMemoryHeapCreateInfo ZgMemoryHeapCreateInfo;
 
 ZG_API ZgResult zgMemoryHeapCreate(
 	ZgMemoryHeap** memoryHeapOut,
@@ -936,7 +909,7 @@ ZG_API ZgResult zgMemoryHeapRelease(
 // Buffer
 // ------------------------------------------------------------------------------------------------
 
-struct ZgBufferCreateInfo {
+ZG_STRUCT(ZgBufferCreateInfo) {
 
 	// The offset from the start of the memory heap to create the buffer at.
 	// Note that the offset must be a multiple of 64KiB (= 2^16 bytes = 65 536 bytes), or 0.
@@ -945,7 +918,6 @@ struct ZgBufferCreateInfo {
 	// The size in bytes of the buffer
 	uint64_t sizeInBytes;
 };
-typedef struct ZgBufferCreateInfo ZgBufferCreateInfo;
 
 ZG_API ZgResult zgMemoryHeapBufferCreate(
 	ZgMemoryHeap* memoryHeap,
@@ -976,21 +948,19 @@ ZG_API ZgResult zgBufferSetDebugName(
 
 static const uint32_t ZG_MAX_NUM_MIPMAPS = 12;
 
-enum ZgTextureUsageEnum {
+ZG_ENUM(ZgTextureUsage) {
 	ZG_TEXTURE_USAGE_DEFAULT = 0,
 	ZG_TEXTURE_USAGE_RENDER_TARGET,
 	ZG_TEXTURE_USAGE_DEPTH_BUFFER
 };
-typedef uint32_t ZgTextureUsage;
 
-enum ZgOptimalClearValueEnum {
+ZG_ENUM(ZgOptimalClearValue) {
 	ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED = 0,
 	ZG_OPTIMAL_CLEAR_VALUE_ZERO,
 	ZG_OPTIMAL_CLEAR_VALUE_ONE
 };
-typedef uint32_t ZgOptimalClearValue;
 
-struct ZgTexture2DCreateInfo {
+ZG_STRUCT(ZgTexture2DCreateInfo) {
 
 	// The format of the texture
 	ZgTextureFormat format;
@@ -1028,9 +998,8 @@ struct ZgTexture2DCreateInfo {
 	// to be set before calling this function.
 	uint64_t sizeInBytes;
 };
-typedef struct ZgTexture2DCreateInfo ZgTexture2DCreateInfo;
 
-struct ZgTexture2DAllocationInfo {
+ZG_STRUCT(ZgTexture2DAllocationInfo) {
 
 	// The size of the texture in bytes
 	uint32_t sizeInBytes;
@@ -1038,7 +1007,6 @@ struct ZgTexture2DAllocationInfo {
 	// The alignment of the texture in bytes
 	uint32_t alignmentInBytes;
 };
-typedef struct ZgTexture2DAllocationInfo ZgTexture2DAllocationInfo;
 
 // Gets the allocation info of a Texture2D specified by a ZgTexture2DCreateInfo.
 ZG_API ZgResult zgTexture2DGetAllocationInfo(
@@ -1060,7 +1028,7 @@ ZG_API ZgResult zgTexture2DSetDebugName(
 // Framebuffer
 // ------------------------------------------------------------------------------------------------
 
-struct ZgFramebufferCreateInfo {
+ZG_STRUCT(ZgFramebufferCreateInfo) {
 
 	// Render targets
 	uint32_t numRenderTargets;
@@ -1069,7 +1037,6 @@ struct ZgFramebufferCreateInfo {
 	// Depth buffer
 	ZgTexture2D* depthBuffer;
 };
-typedef struct ZgFramebufferCreateInfo ZgFramebufferCreateInfo;
 
 ZG_API ZgResult zgFramebufferCreate(
 	ZgFramebuffer** framebufferOut,
@@ -1154,8 +1121,7 @@ ZG_API ZgResult zgCommandListMemcpyBufferToBuffer(
 	uint64_t srcBufferOffsetBytes,
 	uint64_t numBytes);
 
-struct ZgImageViewConstCpu {
-
+ZG_STRUCT(ZgImageViewConstCpu) {
 	ZgTextureFormat format;
 	const void* data;
 	uint32_t width;
@@ -1279,11 +1245,10 @@ ZG_API ZgResult zgCommandListClearDepthBuffer(
 	ZgCommandList* commandList,
 	float depth);
 
-enum ZgIndexBufferTypeEnum {
+ZG_ENUM(ZgIndexBufferType) {
 	ZG_INDEX_BUFFER_TYPE_UINT32 = 0,
 	ZG_INDEX_BUFFER_TYPE_UINT16
 };
-typedef uint32_t ZgIndexBufferType;
 
 ZG_API ZgResult zgCommandListSetIndexBuffer(
 	ZgCommandList* commandList,

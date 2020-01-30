@@ -43,7 +43,7 @@ ZG_API uint32_t zgApiLinkedVersion(void)
 // Compiled features
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgFeatureBits zgCompiledFeatures(void)
+ZG_API uint64_t zgCompiledFeatures(void)
 {
 	return 0
 #if defined(_WIN32)
