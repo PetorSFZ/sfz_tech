@@ -333,6 +333,75 @@ ZgResult createMemoryHeap(
 	return ZG_SUCCESS;
 }
 
+// D3D12Buffer: Virtual methods
+// ------------------------------------------------------------------------------------------------
+
+ZgResult D3D12Buffer::memcpyTo(
+	uint64_t dstBufferOffsetBytes,
+	const void* srcMemory,
+	uint64_t numBytes) noexcept
+{
+	D3D12Buffer& dstBuffer = *this;
+	if (dstBuffer.memoryHeap->memoryType != ZG_MEMORY_TYPE_UPLOAD) return ZG_ERROR_INVALID_ARGUMENT;
+
+	// Not gonna read from buffer
+	D3D12_RANGE readRange = {};
+	readRange.Begin = 0;
+	readRange.End = 0;
+
+	// Map buffer
+	void* mappedPtr = nullptr;
+	if (D3D12_FAIL(dstBuffer.resource->Map(0, &readRange, &mappedPtr))) {
+		return ZG_ERROR_GENERIC;
+	}
+
+	// Memcpy to buffer
+	memcpy(reinterpret_cast<uint8_t*>(mappedPtr) + dstBufferOffsetBytes, srcMemory, numBytes);
+
+	// The range we memcpy'd to
+	D3D12_RANGE writeRange = {};
+	writeRange.Begin = dstBufferOffsetBytes;
+	writeRange.End = writeRange.Begin + numBytes;
+
+	// Unmap buffer
+	dstBuffer.resource->Unmap(0, &writeRange);
+
+	return ZG_SUCCESS;
+}
+
+ZgResult D3D12Buffer::memcpyFrom(
+	uint64_t srcBufferOffsetBytes,
+	void* dstMemory,
+	uint64_t numBytes) noexcept
+{
+	D3D12Buffer& srcBuffer = *this;
+	if (srcBuffer.memoryHeap->memoryType != ZG_MEMORY_TYPE_DOWNLOAD) return ZG_ERROR_INVALID_ARGUMENT;
+
+	// Specify range which we are going to read from in buffer
+	D3D12_RANGE readRange = {};
+	readRange.Begin = srcBufferOffsetBytes;
+	readRange.End = srcBufferOffsetBytes + numBytes;
+
+	// Map buffer
+	void* mappedPtr = nullptr;
+	if (D3D12_FAIL(srcBuffer.resource->Map(0, &readRange, &mappedPtr))) {
+		return ZG_ERROR_GENERIC;
+	}
+
+	// Memcpy to buffer
+	memcpy(dstMemory, reinterpret_cast<const uint8_t*>(mappedPtr) + srcBufferOffsetBytes, numBytes);
+
+	// The didn't write anything
+	D3D12_RANGE writeRange = {};
+	writeRange.Begin = 0;
+	writeRange.End = 0;
+
+	// Unmap buffer
+	srcBuffer.resource->Unmap(0, &writeRange);
+
+	return ZG_SUCCESS;
+}
+
 // D3D12Buffer: Methods
 // ------------------------------------------------------------------------------------------------
 

@@ -21,6 +21,7 @@
 #include <algorithm>
 
 #include "ZeroG/d3d12/D3D12Memory.hpp"
+#include "ZeroG/d3d12/D3D12Profiler.hpp"
 #include "ZeroG/util/ErrorReporting.hpp"
 
 namespace zg {
@@ -1030,6 +1031,74 @@ ZgResult D3D12CommandList::drawTrianglesIndexed(
 	// Draw triangles indexed
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	commandList->DrawIndexedInstanced(numTriangles * 3, 1, startIndex, 0, 0);
+	return ZG_SUCCESS;
+}
+
+ZgResult D3D12CommandList::profileBegin(
+	ZgProfiler* profilerIn,
+	uint64_t& measurementIdOut) noexcept
+{
+	// TODO: This is necessary because we don't get timestamp frequency for other queue types.
+	//       Besides, timestamp queries only work on present and compute queues in the first place.
+	sfz_assert(commandListType == D3D12_COMMAND_LIST_TYPE_DIRECT);
+
+	// Access profilers state through its mutex
+	D3D12Profiler* profiler = static_cast<D3D12Profiler*>(profilerIn);
+	MutexAccessor<D3D12ProfilerState> profilerStateAccessor = profiler->state.access();
+	D3D12ProfilerState& profilerState = profilerStateAccessor.data();
+
+	// Get next measurement id and calculate query idx
+	uint64_t measurementId = profilerState.nextMeasurementId;
+	measurementIdOut = measurementId;
+	profilerState.nextMeasurementId += 1;
+	uint32_t queryIdx = measurementId % profilerState.maxNumMeasurements;
+	uint32_t timestampIdx = queryIdx * 2;
+
+	// Start timestamp query
+	commandList->EndQuery(profilerState.queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, timestampIdx);
+	return ZG_SUCCESS;
+}
+
+ZgResult D3D12CommandList::profileEnd(
+	ZgProfiler* profilerIn,
+	uint64_t measurementId) noexcept
+{
+	// TODO: This is necessary because we don't get timestamp frequency for other queue types.
+	//       Besides, timestamp queries only work on present and compute queues in the first place.
+	sfz_assert(commandListType == D3D12_COMMAND_LIST_TYPE_DIRECT);
+
+	// Access profilers state through its mutex
+	D3D12Profiler* profiler = static_cast<D3D12Profiler*>(profilerIn);
+	MutexAccessor<D3D12ProfilerState> profilerStateAccessor = profiler->state.access();
+	D3D12ProfilerState& state = profilerStateAccessor.data();
+
+	// Return invalid argument if measurement id is not valid
+	bool validMeasurementId =
+		measurementId < state.nextMeasurementId &&
+		(measurementId + state.maxNumMeasurements) >= state.nextMeasurementId;
+	if (!validMeasurementId) return ZG_ERROR_INVALID_ARGUMENT;
+
+	// Get query idx
+	uint32_t queryIdx = measurementId % state.maxNumMeasurements;
+	uint32_t timestampBaseIdx = queryIdx * 2;
+	uint32_t timestampIdx = timestampBaseIdx + 1;
+
+	// End timestamp query
+	commandList->EndQuery(state.queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, timestampIdx);
+	
+	// Resolve query
+	uint64_t bufferOffset = timestampBaseIdx * sizeof(uint64_t);
+	commandList->ResolveQueryData(
+		state.queryHeap.Get(),
+		D3D12_QUERY_TYPE_TIMESTAMP,
+		timestampBaseIdx,
+		2,
+		state.downloadBuffer->resource.Get(),
+		bufferOffset);
+	
+	// Insert into residency set
+	residencySet->Insert(&state.downloadHeap->managedObject);
+
 	return ZG_SUCCESS;
 }
 

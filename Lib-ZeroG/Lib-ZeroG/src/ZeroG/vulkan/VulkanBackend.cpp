@@ -374,32 +374,6 @@ public:
 		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
-	ZgResult bufferMemcpyTo(
-		ZgBuffer* dstBufferInterface,
-		uint64_t dstBufferOffsetBytes,
-		const uint8_t* srcMemory,
-		uint64_t numBytes) noexcept override final
-	{
-		(void)dstBufferInterface;
-		(void)dstBufferOffsetBytes;
-		(void)srcMemory;
-		(void)numBytes;
-		return ZG_WARNING_UNIMPLEMENTED;
-	}
-
-	ZgResult bufferMemcpyFrom(
-		uint8_t* dstMemory,
-		ZgBuffer* srcBuffer,
-		uint64_t srcBufferOffsetBytes,
-		uint64_t numBytes) noexcept override final
-	{
-		(void)dstMemory;
-		(void)srcBuffer;
-		(void)srcBufferOffsetBytes;
-		(void)numBytes;
-		return ZG_WARNING_UNIMPLEMENTED;
-	}
-
 	// Texture methods
 	// --------------------------------------------------------------------------------------------
 
@@ -443,6 +417,24 @@ public:
 	{
 		*copyQueueOut = &mState->copyQueue;
 		return ZG_SUCCESS;
+	}
+
+	// Profiler methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgResult profilerCreate(
+		ZgProfiler** profilerOut,
+		const ZgProfilerCreateInfo& createInfo) noexcept override final
+	{
+		(void)profilerOut;
+		(void)createInfo;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	void profilerRelease(
+		ZgProfiler* profilerIn) noexcept override final
+	{
+		(void)profilerIn;
 	}
 
 	// Private methods

@@ -103,6 +103,9 @@ ZG_HANDLE(ZgCommandQueue);
 // A handle representing a command list
 ZG_HANDLE(ZgCommandList);
 
+// A handle representing a profiler
+ZG_HANDLE(ZgProfiler);
+
 // Bool
 // ------------------------------------------------------------------------------------------------
 
@@ -123,7 +126,7 @@ ZG_STRUCT(ZgFramebufferRect) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 16;
+static const uint32_t ZG_COMPILED_API_VERSION = 17;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -1269,6 +1272,51 @@ ZG_API ZgResult zgCommandListDrawTrianglesIndexed(
 	ZgCommandList* commandList,
 	uint32_t startIndex,
 	uint32_t numTriangles);
+
+// Begins profiling operations from this point until zgCommandListProfileEnd() is called.
+//
+// "measurementIdOut" returns a unique identifier for this measurement. This identifier is later
+// used to retrieve the measurement using zgProfilerGetMeasurement().
+ZG_API ZgResult zgCommandListProfileBegin(
+	ZgCommandList* commandList,
+	ZgProfiler* profiler,
+	uint64_t* measurementIdOut);
+
+ZG_API ZgResult zgCommandListProfileEnd(
+	ZgCommandList* commandList,
+	ZgProfiler* profiler,
+	uint64_t measurementId);
+
+// Profiler
+// ------------------------------------------------------------------------------------------------
+
+ZG_STRUCT(ZgProfilerCreateInfo) {
+	
+	// The number of measurements that this profiler can hold. Once this limit has been reached
+	// older measurements will automatically be thrown out to make room for newer ones. In other
+	// words, this should be at least "number of measurements per frame" times "number of frames
+	// before syncing".
+	uint32_t maxNumMeasurements;
+};
+
+ZG_API ZgResult zgProfilerCreate(
+	ZgProfiler** profilerOut,
+	const ZgProfilerCreateInfo* createInfo);
+
+ZG_API void zgProfilerRelease(
+	ZgProfiler* profiler);
+
+// Retrieves the measurement recorded fora given measurement id.
+//
+// Note: Profiling is an async operation, this function must NOT be called before the command list
+//       in which the profiling occured in has finished executing. Doing so is undefined behavior.
+//
+// Note: Will return an error if the measurement associated with the id has already been thrown
+//       out and replaced with a newer one.
+ZG_API ZgResult zgProfilerGetMeasurement(
+	ZgProfiler* profiler,
+	uint64_t measurementId,
+	float* measurementMsOut);
 
 // This entire header is pure C
 #ifdef __cplusplus

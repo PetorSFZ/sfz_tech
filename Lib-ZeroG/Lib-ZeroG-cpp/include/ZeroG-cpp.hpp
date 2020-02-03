@@ -36,6 +36,7 @@ class Framebuffer;
 class Fence;
 class CommandQueue;
 class CommandList;
+class Profiler;
 
 
 // Results
@@ -807,6 +808,55 @@ public:
 
 	// See zgCommandListDrawTrianglesIndexed()
 	Result drawTrianglesIndexed(uint32_t startIndex, uint32_t numTriangles) noexcept;
+
+	// See zgCommandListProfileBegin()
+	Result profileBegin(Profiler& profiler, uint64_t& measurementIdOut) noexcept;
+
+	// See zgCommandListProfileEnd()
+	Result profileEnd(Profiler& profiler, uint64_t measurementId) noexcept;
+};
+
+
+// Profiler
+// ------------------------------------------------------------------------------------------------
+
+class Profiler final {
+public:
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	ZgProfiler* profiler = nullptr;
+
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	Profiler() noexcept = default;
+	Profiler(const Profiler&) = delete;
+	Profiler& operator= (const Profiler&) = delete;
+	Profiler(Profiler&& other) noexcept { this->swap(other); }
+	Profiler& operator= (Profiler&& other) noexcept { this->swap(other); return *this; }
+	~Profiler() noexcept { this->release(); }
+
+	// State methods
+	// --------------------------------------------------------------------------------------------
+
+	bool valid() const noexcept { return this->profiler != nullptr; }
+
+	// See zgProfilerCreate()
+	Result create(const ZgProfilerCreateInfo& createInfo) noexcept;
+
+	void swap(Profiler& other) noexcept;
+
+	// See zgProfilerRelease()
+	void release() noexcept;
+
+	// Profiler methods
+	// --------------------------------------------------------------------------------------------
+
+	// See zgProfilerGetMeasurement()
+	Result getMeasurement(
+		uint64_t measurementId,
+		float& measurementMsOut) noexcept;
 };
 
 

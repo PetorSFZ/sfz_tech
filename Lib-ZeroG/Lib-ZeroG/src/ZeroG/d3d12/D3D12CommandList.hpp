@@ -173,6 +173,14 @@ public:
 		uint32_t startIndex,
 		uint32_t numTriangles) noexcept override final;
 
+	ZgResult profileBegin(
+		ZgProfiler* profilerIn,
+		uint64_t& measurementIdOut) noexcept override final;
+
+	ZgResult profileEnd(
+		ZgProfiler* profilerIn,
+		uint64_t measurementId) noexcept override final;
+
 	// Helper methods
 	// --------------------------------------------------------------------------------------------
 

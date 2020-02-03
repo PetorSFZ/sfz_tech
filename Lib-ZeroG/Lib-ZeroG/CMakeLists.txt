@@ -184,6 +184,8 @@ if (MSVC)
 		${SRC_DIR}/ZeroG/d3d12/D3D12Memory.cpp
 		${SRC_DIR}/ZeroG/d3d12/D3D12Pipelines.hpp
 		${SRC_DIR}/ZeroG/d3d12/D3D12Pipelines.cpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12Profiler.hpp
+		${SRC_DIR}/ZeroG/d3d12/D3D12Profiler.cpp
 	)
 endif()
 

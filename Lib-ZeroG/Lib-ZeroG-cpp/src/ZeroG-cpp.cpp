@@ -981,6 +981,47 @@ Result CommandList::drawTrianglesIndexed(uint32_t startIndex, uint32_t numTriang
 		this->commandList, startIndex, numTriangles);
 }
 
+Result CommandList::profileBegin(Profiler& profiler, uint64_t& measurementIdOut) noexcept
+{
+	return (Result)zgCommandListProfileBegin(this->commandList, profiler.profiler, &measurementIdOut);
+}
+
+Result CommandList::profileEnd(Profiler& profiler, uint64_t measurementId) noexcept
+{
+	return (Result)zgCommandListProfileEnd(this->commandList, profiler.profiler, measurementId);
+}
+
+
+// Profiler: State methods
+// ------------------------------------------------------------------------------------------------
+
+Result Profiler::create(const ZgProfilerCreateInfo& createInfo) noexcept
+{
+	this->release();
+	return (Result)zgProfilerCreate(&this->profiler, &createInfo);
+}
+
+void Profiler::swap(Profiler& other) noexcept
+{
+	std::swap(this->profiler, other.profiler);
+}
+
+void Profiler::release() noexcept
+{
+	if (this->profiler != nullptr) zgProfilerRelease(this->profiler);
+	this->profiler = nullptr;
+}
+
+// Profiler: Methods
+// ------------------------------------------------------------------------------------------------
+
+Result Profiler::getMeasurement(
+	uint64_t measurementId,
+	float& measurementMsOut) noexcept
+{
+	return (Result)zgProfilerGetMeasurement(this->profiler, measurementId, &measurementMsOut);
+}
+
 
 // Transformation and projection matrices
 // ------------------------------------------------------------------------------------------------

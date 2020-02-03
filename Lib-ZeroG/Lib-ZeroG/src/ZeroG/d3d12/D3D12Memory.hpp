@@ -95,6 +95,19 @@ public:
 	D3D12Buffer& operator= (D3D12Buffer&&) = delete;
 	~D3D12Buffer() noexcept {}
 
+	// Virtual methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgResult memcpyTo(
+		uint64_t dstBufferOffsetBytes,
+		const void* srcMemory,
+		uint64_t numBytes) noexcept override final;
+
+	ZgResult memcpyFrom(
+		uint64_t srcBufferOffsetBytes,
+		void* dstMemory,
+		uint64_t numBytes) noexcept override final;
+
 	// Members
 	// --------------------------------------------------------------------------------------------
 

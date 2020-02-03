@@ -93,18 +93,6 @@ struct ZgBackend {
 	virtual ZgResult memoryHeapRelease(
 		ZgMemoryHeap* memoryHeap) noexcept = 0;
 
-	virtual ZgResult bufferMemcpyTo(
-		ZgBuffer* dstBufferInterface,
-		uint64_t dstBufferOffsetBytes,
-		const uint8_t* srcMemory,
-		uint64_t numBytes) noexcept = 0;
-
-	virtual ZgResult bufferMemcpyFrom(
-		uint8_t* dstMemory,
-		ZgBuffer* srcBuffer,
-		uint64_t srcBufferOffsetBytes,
-		uint64_t numBytes) noexcept = 0;
-
 	// Texture methods
 	// --------------------------------------------------------------------------------------------
 
@@ -127,6 +115,16 @@ struct ZgBackend {
 
 	virtual ZgResult getPresentQueue(ZgCommandQueue** presentQueueOut) noexcept = 0;
 	virtual ZgResult getCopyQueue(ZgCommandQueue** copyQueueOut) noexcept = 0;
+
+	// Profiler methods
+	// --------------------------------------------------------------------------------------------
+
+	virtual ZgResult profilerCreate(
+		ZgProfiler** profilerOut,
+		const ZgProfilerCreateInfo& createInfo) noexcept = 0;
+
+	virtual void profilerRelease(
+		ZgProfiler* profilerIn) noexcept = 0;
 };
 
 // PipelineCompute
@@ -163,6 +161,16 @@ struct ZgMemoryHeap {
 
 struct ZgBuffer {
 	virtual ~ZgBuffer() noexcept {}
+
+	virtual ZgResult memcpyTo(
+		uint64_t dstBufferOffsetBytes,
+		const void* srcMemory,
+		uint64_t numBytes) noexcept = 0;
+
+	virtual ZgResult memcpyFrom(
+		uint64_t srcBufferOffsetBytes,
+		void* dstMemory,
+		uint64_t numBytes) noexcept = 0;
 
 	virtual ZgResult setDebugName(
 		const char* name) noexcept = 0;
@@ -298,4 +306,23 @@ struct ZgCommandList {
 	virtual ZgResult drawTrianglesIndexed(
 		uint32_t startIndex,
 		uint32_t numTriangles) noexcept = 0;
+
+	virtual ZgResult profileBegin(
+		ZgProfiler* profilerIn,
+		uint64_t& measurementIdOut) noexcept = 0;
+
+	virtual ZgResult profileEnd(
+		ZgProfiler* profilerIn,
+		uint64_t measurementId) noexcept = 0;
+};
+
+// Profiler
+// ------------------------------------------------------------------------------------------------
+
+struct ZgProfiler {
+	virtual ~ZgProfiler() noexcept {}
+
+	virtual ZgResult getMeasurement(
+		uint64_t measurementId,
+		float& measurementMsOut) noexcept = 0;
 };

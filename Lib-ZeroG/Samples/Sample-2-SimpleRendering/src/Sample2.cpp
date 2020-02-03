@@ -243,6 +243,14 @@ static void realMain(SDL_Window* window) noexcept
 	zg::CommandQueue copyQueue;
 	CHECK_ZG zg::CommandQueue::getCopyQueue(copyQueue);
 
+	// Create profiler
+	zg::Profiler profiler;
+	{
+		ZgProfilerCreateInfo createInfo = {};
+		createInfo.maxNumMeasurements = 100;
+		CHECK_ZG profiler.create(createInfo);
+	}
+
 	// Create a render pipeline
 	zg::PipelineRender renderPipeline;
 	{
@@ -458,11 +466,18 @@ static void realMain(SDL_Window* window) noexcept
 		zg::Framebuffer framebuffer;
 		CHECK_ZG zgCtx.swapchainBeginFrame(framebuffer);
 
+		// Profile ids
+		uint64_t computeMeasurementId = ~0ull;
+		uint64_t renderMeasurementId = ~0ull;
+
 		// Run compute command list
 		{
 			// Get a command list
 			zg::CommandList commandList;
 			CHECK_ZG presentQueue.beginCommandListRecording(commandList);
+
+			// Start measuring performance
+			CHECK_ZG commandList.profileBegin(profiler, computeMeasurementId);
 
 			// Set pipeline
 			CHECK_ZG commandList.setPipeline(textureModifyPipeline);
@@ -487,6 +502,9 @@ static void realMain(SDL_Window* window) noexcept
 				.addUnorderedTexture(0, 3, texture));
 			CHECK_ZG commandList.dispatchCompute(1, 32);
 
+			// Finish measuring performance
+			CHECK_ZG commandList.profileEnd(profiler, computeMeasurementId);
+
 			// Execute command list
 			CHECK_ZG presentQueue.executeCommandList(commandList);
 		}
@@ -496,6 +514,9 @@ static void realMain(SDL_Window* window) noexcept
 			// Get a command list
 			zg::CommandList commandList;
 			CHECK_ZG presentQueue.beginCommandListRecording(commandList);
+
+			// Start measuring performance
+			CHECK_ZG commandList.profileBegin(profiler, renderMeasurementId);
 
 			// Set framebuffer and clear it
 			CHECK_ZG commandList.setFramebuffer(framebuffer);
@@ -551,8 +572,21 @@ static void realMain(SDL_Window* window) noexcept
 			batchCubeRender(Vector(1.5f, -1.5f, 0.0f));
 			batchCubeRender(Vector(1.5f, -1.5f, 1.5f));
 
+			// Finish measuring performance
+			CHECK_ZG commandList.profileEnd(profiler, renderMeasurementId);
+
 			// Execute command list
 			CHECK_ZG presentQueue.executeCommandList(commandList);
+
+			// Small hack: Flush present queue so we can get measurements
+			CHECK_ZG presentQueue.flush();
+
+			// Get measurements and print them
+			float computeTimeMs = 0.0f;
+			float renderTimeMs = 0.0f;
+			CHECK_ZG profiler.getMeasurement(computeMeasurementId, computeTimeMs);
+			CHECK_ZG profiler.getMeasurement(renderMeasurementId, renderTimeMs);
+			printf("Compute time: %.2f ms\nRender time: %.2f ms\n\n", computeTimeMs, renderTimeMs);
 		}
 
 		// Finish frame

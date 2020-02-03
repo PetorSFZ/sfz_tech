@@ -363,11 +363,7 @@ ZG_API ZgResult zgBufferMemcpyTo(
 	const void* srcMemory,
 	uint64_t numBytes)
 {
-	return zg::getBackend()->bufferMemcpyTo(
-		dstBuffer,
-		dstBufferOffsetBytes,
-		reinterpret_cast<const uint8_t*>(srcMemory),
-		numBytes);
+	return dstBuffer->memcpyTo(dstBufferOffsetBytes, srcMemory, numBytes);
 }
 
 ZG_API ZgResult zgBufferMemcpyFrom(
@@ -376,11 +372,7 @@ ZG_API ZgResult zgBufferMemcpyFrom(
 	uint64_t srcBufferOffsetBytes,
 	uint64_t numBytes)
 {
-	return zg::getBackend()->bufferMemcpyFrom(
-		reinterpret_cast<uint8_t*>(dstMemory),
-		srcBuffer,
-		srcBufferOffsetBytes,
-		numBytes);
+	return srcBuffer->memcpyFrom(srcBufferOffsetBytes, dstMemory, numBytes);
 }
 
 ZG_API ZgResult zgBufferSetDebugName(
@@ -744,4 +736,50 @@ ZG_API ZgResult zgCommandListDrawTrianglesIndexed(
 	uint32_t numTriangles)
 {
 	return commandList->drawTrianglesIndexed(startIndex, numTriangles);
+}
+
+ZG_API ZgResult zgCommandListProfileBegin(
+	ZgCommandList* commandList,
+	ZgProfiler* profiler,
+	uint64_t* measurementIdOut)
+{
+	ZG_ARG_CHECK(profiler == nullptr, "");
+	ZG_ARG_CHECK(measurementIdOut == nullptr, "");
+	return commandList->profileBegin(profiler, *measurementIdOut);
+}
+
+ZG_API ZgResult zgCommandListProfileEnd(
+	ZgCommandList* commandList,
+	ZgProfiler* profiler,
+	uint64_t measurementId)
+{
+	ZG_ARG_CHECK(profiler == nullptr, "");
+	return commandList->profileEnd(profiler, measurementId);
+}
+
+// Profiler
+// ------------------------------------------------------------------------------------------------
+
+ZG_API ZgResult zgProfilerCreate(
+	ZgProfiler** profilerOut,
+	const ZgProfilerCreateInfo* createInfo)
+{
+	return zg::getBackend()->profilerCreate(profilerOut, *createInfo);
+}
+
+ZG_API void zgProfilerRelease(
+	ZgProfiler* profiler)
+{
+	if (profiler == nullptr) return;
+	zg::getBackend()->profilerRelease(profiler);
+}
+
+ZG_API ZgResult zgProfilerGetMeasurement(
+	ZgProfiler* profiler,
+	uint64_t measurementId,
+	float* measurementMsOut)
+{
+	ZG_ARG_CHECK(profiler == nullptr, "");
+	ZG_ARG_CHECK(measurementMsOut == nullptr, "");
+	return profiler->getMeasurement(measurementId, *measurementMsOut);
 }

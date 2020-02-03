@@ -27,7 +27,7 @@
 #include "ZeroG/d3d12/D3D12Framebuffer.hpp"
 #include "ZeroG/d3d12/D3D12Memory.hpp"
 #include "ZeroG/d3d12/D3D12Pipelines.hpp"
-#include "ZeroG/d3d12/D3D12Textures.hpp"
+#include "ZeroG/d3d12/D3D12Profiler.hpp"
 
 namespace zg {
 
@@ -747,74 +747,6 @@ public:
 		return ZG_SUCCESS;
 	}
 
-	ZgResult bufferMemcpyTo(
-		ZgBuffer* dstBufferIn,
-		uint64_t dstBufferOffsetBytes,
-		const uint8_t* srcMemory,
-		uint64_t numBytes) noexcept override final
-	{
-		D3D12Buffer& dstBuffer = *reinterpret_cast<D3D12Buffer*>(dstBufferIn);
-		if (dstBuffer.memoryHeap->memoryType != ZG_MEMORY_TYPE_UPLOAD) return ZG_ERROR_INVALID_ARGUMENT;
-
-		// Not gonna read from buffer
-		D3D12_RANGE readRange = {};
-		readRange.Begin = 0;
-		readRange.End = 0;
-		
-		// Map buffer
-		void* mappedPtr = nullptr;
-		if (D3D12_FAIL(dstBuffer.resource->Map(0, &readRange, &mappedPtr))) {
-			return ZG_ERROR_GENERIC;
-		}
-
-		// Memcpy to buffer
-		memcpy(reinterpret_cast<uint8_t*>(mappedPtr) + dstBufferOffsetBytes, srcMemory, numBytes);
-
-		// The range we memcpy'd to
-		D3D12_RANGE writeRange = {};
-		writeRange.Begin = dstBufferOffsetBytes;
-		writeRange.End = writeRange.Begin + numBytes;
-
-		// Unmap buffer
-		dstBuffer.resource->Unmap(0, &writeRange);
-
-		return ZG_SUCCESS;
-	}
-
-	ZgResult bufferMemcpyFrom(
-		uint8_t* dstMemory,
-		ZgBuffer* srcBufferIn,
-		uint64_t srcBufferOffsetBytes,
-		uint64_t numBytes) noexcept override final
-	{
-		D3D12Buffer& srcBuffer = *reinterpret_cast<D3D12Buffer*>(srcBufferIn);
-		if (srcBuffer.memoryHeap->memoryType != ZG_MEMORY_TYPE_DOWNLOAD) return ZG_ERROR_INVALID_ARGUMENT;
-
-		// Specify range which we are going to read from in buffer
-		D3D12_RANGE readRange = {};
-		readRange.Begin = srcBufferOffsetBytes;
-		readRange.End = srcBufferOffsetBytes + numBytes;
-
-		// Map buffer
-		void* mappedPtr = nullptr;
-		if (D3D12_FAIL(srcBuffer.resource->Map(0, &readRange, &mappedPtr))) {
-			return ZG_ERROR_GENERIC;
-		}
-
-		// Memcpy to buffer
-		memcpy(dstMemory, reinterpret_cast<const uint8_t*>(mappedPtr) + srcBufferOffsetBytes, numBytes);
-		
-		// The didn't write anything
-		D3D12_RANGE writeRange = {};
-		writeRange.Begin = 0;
-		writeRange.End = 0;
-
-		// Unmap buffer
-		srcBuffer.resource->Unmap(0, &writeRange);
-
-		return ZG_SUCCESS;
-	}
-
 	// Texture methods
 	// --------------------------------------------------------------------------------------------
 
@@ -867,6 +799,40 @@ public:
 	{
 		*copyQueueOut = &mState->commandQueueCopy;
 		return ZG_SUCCESS;
+	}
+
+	// Profiler methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgResult profilerCreate(
+		ZgProfiler** profilerOut,
+		const ZgProfilerCreateInfo& createInfo) noexcept override final
+	{
+		// Get present queue timestamp frequency
+		uint64_t timestampTicksPerSecond = 0;
+		{
+			bool success = D3D12_SUCC(mState->commandQueuePresent.
+				commandQueue()->GetTimestampFrequency(&timestampTicksPerSecond));
+			if (!success) return ZG_ERROR_GENERIC;
+		}
+
+		D3D12Profiler* profiler = nullptr;
+		ZgResult res = d3d12CreateProfiler(
+			*mState->device.Get(),
+			&mState->resourceUniqueIdentifierCounter,
+			mState->residencyManager,
+			timestampTicksPerSecond,
+			&profiler,
+			createInfo);
+		if (res != ZG_SUCCESS) return res;
+		*profilerOut = profiler;
+		return ZG_SUCCESS;
+	}
+
+	void profilerRelease(
+		ZgProfiler* profilerIn) noexcept override final
+	{
+		getAllocator()->deleteObject(profilerIn);
 	}
 
 private:
