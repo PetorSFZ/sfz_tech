@@ -39,6 +39,7 @@ constexpr uint64_t IMGUI_INDEX_BUFFER_SIZE = IMGUI_MAX_NUM_INDICES * sizeof(uint
 // ------------------------------------------------------------------------------------------------
 
 bool ImGuiRenderer::init(
+	uint32_t frameLatency,
 	sfz::Allocator* allocator,
 	zg::CommandQueue& copyQueue,
 	const phConstImageView& fontTextureView) noexcept
@@ -94,7 +95,7 @@ bool ImGuiRenderer::init(
 	if (!texMemSuccess) return false;
 
 	// Allocate memory for vertex and index buffer
-	const uint64_t uploadHeapNumBytes = (IMGUI_VERTEX_BUFFER_SIZE + IMGUI_INDEX_BUFFER_SIZE) * MAX_NUM_FRAMES;
+	const uint64_t uploadHeapNumBytes = (IMGUI_VERTEX_BUFFER_SIZE + IMGUI_INDEX_BUFFER_SIZE) * frameLatency;
 	bool memSuccess = CHECK_ZG mUploadHeap.create(uploadHeapNumBytes, ZG_MEMORY_TYPE_UPLOAD);
 
 	// Upload font texture to GPU
@@ -124,7 +125,9 @@ bool ImGuiRenderer::init(
 	// Actually create the vertex and index buffers
 	uint64_t uploadHeapOffset = 0;
 	uint32_t frameStateIdx = 0;
-	mFrameStates.initAllStates([&](ImGuiFrameState& frame) {
+	mFrameStates.init(frameLatency, [&](ImGuiFrameState& frame) {
+		CHECK_ZG frame.fence.create();
+
 		memSuccess &= CHECK_ZG mUploadHeap.bufferCreate(
 			frame.uploadVertexBuffer, uploadHeapOffset, IMGUI_VERTEX_BUFFER_SIZE);
 		uploadHeapOffset += IMGUI_VERTEX_BUFFER_SIZE;
@@ -141,26 +144,7 @@ bool ImGuiRenderer::init(
 
 	if (!memSuccess) return false;
 
-	// Initialize fences for per frame state
-	CHECK_ZG mFrameStates.initAllFences();
-
 	return true;
-}
-
-void ImGuiRenderer::swap(ImGuiRenderer& other) noexcept
-{
-	std::swap(this->mAllocator, other.mAllocator);
-
-	this->mPipeline.swap(other.mPipeline);
-
-	this->mFontTextureHeap.swap(other.mFontTextureHeap);
-	this->mFontTexture.swap(other.mFontTexture);
-
-	this->mUploadHeap.swap(other.mUploadHeap);
-
-	std::swap(this->mFrameStates, other.mFrameStates);
-
-	std::swap(this->mScaleSetting, other.mScaleSetting);
 }
 
 void ImGuiRenderer::destroy() noexcept
@@ -174,10 +158,7 @@ void ImGuiRenderer::destroy() noexcept
 
 	mUploadHeap.release();
 
-	mFrameStates.deinitAllStates([](ImGuiFrameState& state) {
-		state = ImGuiFrameState();
-	});
-	mFrameStates.releaseAllFences();
+	mFrameStates.destroy();
 
 	mScaleSetting = nullptr;
 }
@@ -202,18 +183,18 @@ void ImGuiRenderer::render(
 
 	// Get current frame's resources and then wait until they are available (i.e. the frame they
 	// are part of has finished rendering).
-	PerFrame<ImGuiFrameState>& imguiFrame = mFrameStates.getState(frameIdx);
-	CHECK_ZG imguiFrame.renderingFinished.waitOnCpuBlocking();
+	ImGuiFrameState& imguiFrame = mFrameStates.data(frameIdx);
+	CHECK_ZG imguiFrame.fence.waitOnCpuBlocking();
 
 	// Convert ImGui vertices because slightly different representation
-	if (imguiFrame.state.convertedVertices.data() == nullptr) {
-		imguiFrame.state.convertedVertices.init(IMGUI_MAX_NUM_VERTICES, mAllocator, sfz_dbg(""));
+	if (imguiFrame.convertedVertices.data() == nullptr) {
+		imguiFrame.convertedVertices.init(IMGUI_MAX_NUM_VERTICES, mAllocator, sfz_dbg(""));
 	}
-	imguiFrame.state.convertedVertices.hackSetSize(numVertices);
+	imguiFrame.convertedVertices.hackSetSize(numVertices);
 	for (uint32_t i = 0; i < numVertices; i++) {
-		imguiFrame.state.convertedVertices[i].pos = vertices[i].pos;
-		imguiFrame.state.convertedVertices[i].texcoord = vertices[i].texcoord;
-		imguiFrame.state.convertedVertices[i].color = [&]() {
+		imguiFrame.convertedVertices[i].pos = vertices[i].pos;
+		imguiFrame.convertedVertices[i].texcoord = vertices[i].texcoord;
+		imguiFrame.convertedVertices[i].color = [&]() {
 			vec4 color;
 			color.x = float(vertices[i].color & 0xFFu) * (1.0f / 255.0f);
 			color.y = float((vertices[i].color >> 8u) & 0xFFu) * (1.0f / 255.0f);
@@ -224,9 +205,9 @@ void ImGuiRenderer::render(
 	}
 
 	// Memcpy vertices and indices to imgui upload buffers
-	CHECK_ZG imguiFrame.state.uploadVertexBuffer.memcpyTo(
-		0, imguiFrame.state.convertedVertices.data(), numVertices * sizeof(ImGuiVertex));
-	CHECK_ZG imguiFrame.state.uploadIndexBuffer.memcpyTo(
+	CHECK_ZG imguiFrame.uploadVertexBuffer.memcpyTo(
+		0, imguiFrame.convertedVertices.data(), numVertices * sizeof(ImGuiVertex));
+	CHECK_ZG imguiFrame.uploadIndexBuffer.memcpyTo(
 		0, indices, numIndices * sizeof(uint32_t));
 
 	// Here we should normally signal that imguiFrame.uploadFinished() and then wait on it before
@@ -241,8 +222,8 @@ void ImGuiRenderer::render(
 
 	// Set ImGui pipeline
 	CHECK_ZG commandList.setPipeline(mPipeline);
-	CHECK_ZG commandList.setIndexBuffer(imguiFrame.state.uploadIndexBuffer, ZG_INDEX_BUFFER_TYPE_UINT32);
-	CHECK_ZG commandList.setVertexBuffer(0, imguiFrame.state.uploadVertexBuffer);
+	CHECK_ZG commandList.setIndexBuffer(imguiFrame.uploadIndexBuffer, ZG_INDEX_BUFFER_TYPE_UINT32);
+	CHECK_ZG commandList.setVertexBuffer(0, imguiFrame.uploadVertexBuffer);
 
 	// Bind pipeline parameters
 	CHECK_ZG commandList.setPipelineBindings(zg::PipelineBindings()
@@ -282,7 +263,7 @@ void ImGuiRenderer::render(
 	CHECK_ZG presentQueue.executeCommandList(commandList);
 
 	// Signal that we have finished rendering this ImGui frame
-	CHECK_ZG presentQueue.signalOnGpu(imguiFrame.renderingFinished);
+	CHECK_ZG presentQueue.signalOnGpu(imguiFrame.fence);
 }
 
 } // namespace sfz

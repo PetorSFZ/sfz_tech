@@ -25,6 +25,7 @@
 #include <ZeroG-cpp.hpp>
 
 #include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
 
 namespace sfz {
 
@@ -63,102 +64,57 @@ bool initializeZeroG(
 
 void* getNativeHandle(SDL_Window* window) noexcept;
 
-// PerFrame template
-// ------------------------------------------------------------------------------------------------
+
+// PerFrameData template
+// -----------------------------------------------------------------------------------------------
+
+constexpr uint64_t MAX_NUM_FRAME_LATENCY = 3;
 
 // A template used to signify that a given set of resources are frame-specific.
 //
 // For resources that are updated every frame (constants buffers, streaming vertex data such as
 // imgui, etc) there need to be multiple copies of the memory on the GPU. Otherwise we can't start
 // uploading the next frame's data until the previous frame has finished rendering. This template
-// signifies that resources are "per-frame", and it also contains the necessary synchronization
-// primitives to sync that.
+// signifies that resources are "per-frame".
 //
-// Typically we should have at least two copies of each "PerFrame" state so we can upload to one
-// while we render using the other.
+// Typically we should have a latency of at least two so that we can upload to resource while
+// rendering using the other.
 template<typename T>
-struct PerFrame {
-
-	// A chunk of state (i.e. resources) for a specific frame.
-	T state;
-
-	// Fence that should be signaled (from GPU or CPU depending on type of resources and type of
-	// upload) when resources have finished uploading from CPU. This fence should then be waited on
-	// (on GPU) before the frame starts rendering using the resources.
-	zg::Fence uploadFinished;
-
-	// Fence that should be signaled (from GPU) when frame has finished rendering using the
-	// resources. Typically the CPU should (blockingly) wait on this fence before starting to
-	// upload the next frame's resources.
-	zg::Fence renderingFinished;
-
-	// Simple helper method that initializes both fences
-	zg::Result initFences() noexcept
-	{
-		zg::Result res1 = uploadFinished.create();
-		if (res1 != zg::Result::SUCCESS) return res1;
-		zg::Result res2 = renderingFinished.create();
-		if (res2 != zg::Result::SUCCESS) return res2;
-		return zg::Result::SUCCESS;
-	}
-
-	// Simple helper methods that releases both fences
-	void releaseFences() noexcept
-	{
-		uploadFinished.release();
-		renderingFinished.release();
-	}
-};
-
-// Framed template
-// ------------------------------------------------------------------------------------------------
-
-// The maximum number of frames that can be rendered simulatenously
-constexpr uint64_t MAX_NUM_FRAMES = 2;
-
-// A simple wrapper around the PerFrame template which makes it a bit easier to handle in a similar
-// way in the codebase.
-template<typename T>
-struct Framed {
-
-	PerFrame<T> states[MAX_NUM_FRAMES];
-
-	PerFrame<T>& getState(uint64_t frameIdx) noexcept { return states[frameIdx % MAX_NUM_FRAMES]; }
-	const PerFrame<T>& getState(uint64_t frameIdx) const noexcept { return states[frameIdx % MAX_NUM_FRAMES]; }
+class PerFrameData {
+public:
+	PerFrameData() noexcept {}
+	PerFrameData(const PerFrameData&) = delete;
+	PerFrameData& operator= (const PerFrameData&) = delete;
+	PerFrameData(PerFrameData&& other) = default;
+	PerFrameData& operator= (PerFrameData&& other) = default;
+	~PerFrameData() noexcept { this->destroy(); }
 
 	template<typename InitFun>
-	void initAllStates(InitFun initFun) noexcept
+	void init(uint32_t latency, InitFun initFun)
 	{
-		for (uint32_t i = 0; i < MAX_NUM_FRAMES; i++) {
-			T& state = states[i].state;
-			initFun(state);
+		sfz_assert(mData.isEmpty());
+		for (uint32_t i = 0; i < latency; i++) {
+			mData.add({});
+			initFun(mData.last());
 		}
 	}
+	void init(uint32_t latency) { this->init(latency, [](T&) {}); }
 
 	template<typename DeinitFun>
-	void deinitAllStates(DeinitFun deinitFun) noexcept
+	void destroy(DeinitFun deinitFun)
 	{
-		for (uint32_t i = 0; i < MAX_NUM_FRAMES; i++) {
-			T& state = states[i].state;
-			deinitFun(state);
+		for (uint32_t i = 0; i < mData.size(); i++) {
+			deinitFun(mData[i]);
 		}
+		mData.clear();
 	}
+	void destroy() { this->destroy([](T&) {}); }
 
-	zg::Result initAllFences() noexcept
-	{
-		for (uint32_t i = 0; i < MAX_NUM_FRAMES; i++) {
-			zg::Result res = states[i].initFences();
-			if (res != zg::Result::SUCCESS) return res;
-		}
-		return zg::Result::SUCCESS;
-	}
+	T& data(uint64_t frameIdx) { return mData[frameIdx % mData.size()]; }
+	const T& data(uint64_t frameIdx) const { return mData[frameIdx % mData.size()]; }
 
-	void releaseAllFences() noexcept
-	{
-		for (uint32_t i = 0; i < MAX_NUM_FRAMES; i++) {
-			states[i].releaseFences();
-		}
-	}
+private:
+	ArrayLocal<T, MAX_NUM_FRAME_LATENCY> mData;
 };
 
 } // namespace sfz

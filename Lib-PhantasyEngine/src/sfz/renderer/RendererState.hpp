@@ -164,7 +164,7 @@ struct Stage final {
 	StringID stageName = StringID::invalid();
 	StageType stageType;
 	StringID renderPipelineName = StringID::invalid();
-	Array<Framed<ConstantBufferMemory>> constantBuffers;
+	Array<PerFrameData<ConstantBufferMemory>> constantBuffers;
 	StringID framebufferName = StringID::invalid();
 	Array<BoundRenderTarget> boundRenderTargets;
 };
@@ -214,10 +214,19 @@ struct RendererState final {
 	// The current index of the frame, increments at every frameBegin()
 	uint64_t currentFrameIdx = 0;
 
+	// Synchronization primitives to make sure we have finished rendering using a given set of
+	//" PerFrameData" resources so we can start uploading new data to them.
+	uint32_t frameLatency = 2;
+	PerFrameData<zg::Fence> frameFences;
+
 	vec2_i32 windowRes = vec2_i32(0);
 	zg::Framebuffer windowFramebuffer;
 	zg::CommandQueue presentQueue;
 	zg::CommandQueue copyQueue;
+
+	// Profiler
+	zg::Profiler profiler;
+	PerFrameData<uint64_t> frameMeasurementIds;
 
 	// Dynamic memory allocator
 	DynamicGpuAllocator gpuAllocatorUpload;
@@ -272,8 +281,7 @@ struct RendererState final {
 	// register.
 	//
 	// Returns nullptr if not found
-	PerFrame<ConstantBufferMemory>* findConstantBufferInCurrentInputStage(
-		uint32_t shaderRegister) noexcept;
+	ConstantBufferMemory* findConstantBufferInCurrentInputStage(uint32_t shaderRegister) noexcept;
 };
 
 } // namespace sfz

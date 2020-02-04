@@ -280,18 +280,18 @@ uint32_t  RendererState::findPipelineRenderIdx(StringID pipelineName) const noex
 	return ~0u;
 }
 
-PerFrame<ConstantBufferMemory>* RendererState::findConstantBufferInCurrentInputStage(
+ConstantBufferMemory* RendererState::findConstantBufferInCurrentInputStage(
 	uint32_t shaderRegister) noexcept
 {
 	// Find constant buffer
-	Framed<ConstantBufferMemory>* framed = currentInputEnabledStage->constantBuffers.find(
-		[&](Framed<ConstantBufferMemory>& item) {
-		return item.states[0].state.shaderRegister == shaderRegister;
+	PerFrameData<ConstantBufferMemory>* data = currentInputEnabledStage->constantBuffers.find(
+		[&](PerFrameData<ConstantBufferMemory>& item) {
+		return item.data(0).shaderRegister == shaderRegister;
 	});
-	if (framed == nullptr) return nullptr;
+	if (data == nullptr) return nullptr;
 
 	// Get this frame's data
-	return &framed->getState(currentFrameIdx);
+	return &data->data(currentFrameIdx);
 }
 
 } // namespace sfz

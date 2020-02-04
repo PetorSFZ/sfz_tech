@@ -70,6 +70,11 @@ bool Renderer::init(
 		return false;
 	}
 
+	// Initialize fences
+	mState->frameFences.init(mState->frameLatency, [](zg::Fence& fence) {
+		CHECK_ZG fence.create();
+	});
+
 	// Set window resolution to default value (512x512)
 	mState->windowRes = vec2_i32(512, 512);
 
@@ -81,6 +86,14 @@ bool Renderer::init(
 	if (!(CHECK_ZG zg::CommandQueue::getCopyQueue(mState->copyQueue))) {
 		this->destroy();
 		return false;
+	}
+
+	// Initialize profiler
+	{
+		ZgProfilerCreateInfo createInfo = {};
+		createInfo.maxNumMeasurements = 1024;
+		CHECK_ZG mState->profiler.create(createInfo);
+		mState->frameMeasurementIds.init(mState->frameLatency, [](uint64_t& id) { id = ~0ull; });
 	}
 
 	// Initialize dynamic gpu allocator
@@ -99,7 +112,7 @@ bool Renderer::init(
 
 	// Initialize ImGui rendering state
 	bool imguiInitSuccess = mState->imguiRenderer.init(
-		mState->allocator, mState->copyQueue, fontTexture);
+		mState->frameLatency, mState->allocator, mState->copyQueue, fontTexture);
 	if (!imguiInitSuccess) {
 		this->destroy();
 		return false;
@@ -314,6 +327,17 @@ void Renderer::frameBegin() noexcept
 	// Increment frame index
 	mState->currentFrameIdx += 1;
 
+	// Wait on fence to ensure we have finished rendering frame that previously used this data
+	CHECK_ZG mState->frameFences.data(mState->currentFrameIdx).waitOnCpuBlocking();
+
+	// Get frame profiling data for frame that was previously rendered using these resources
+	uint64_t& frameMeasurementId = mState->frameMeasurementIds.data(mState->currentFrameIdx);
+	float frameTimeMs = 0.0f;
+	if (frameMeasurementId != ~0ull) {
+		CHECK_ZG mState->profiler.getMeasurement(frameMeasurementId, frameTimeMs);
+	}
+	//SFZ_INFO("Renderer", "Frametime on GPU: %.2f ms", frameTimeMs);
+
 	// Query drawable width and height from SDL
 	int32_t newResX = 0;
 	int32_t newResY = 0;
@@ -364,10 +388,10 @@ void Renderer::frameBegin() noexcept
 			}
 		}
 	}
-
+	
 	// Begin ZeroG frame
 	sfz_assert(!mState->windowFramebuffer.valid());
-	CHECK_ZG mState->zgCtx.swapchainBeginFrame(mState->windowFramebuffer);
+	CHECK_ZG mState->zgCtx.swapchainBeginFrame(mState->windowFramebuffer, mState->profiler, frameMeasurementId);
 
 	// Clear all framebuffers
 	// TODO: Should probably only clear using a specific clear framebuffer stage
@@ -513,27 +537,20 @@ void Renderer::stageSetConstantBufferUntyped(
 #endif
 
 	// Find constant buffer
-	PerFrame<ConstantBufferMemory>* frame =
+	ConstantBufferMemory* frame =
 		mState->findConstantBufferInCurrentInputStage(shaderRegister);
 	sfz_assert(frame != nullptr);
 
 	// Ensure that we can only set constant buffer once per frame
-	sfz_assert(frame->state.lastFrameIdxTouched != mState->currentFrameIdx);
-	frame->state.lastFrameIdxTouched = mState->currentFrameIdx;
-
-	// Wait until frame specific memory is available
-	CHECK_ZG frame->renderingFinished.waitOnCpuBlocking();
+	sfz_assert(frame->lastFrameIdxTouched != mState->currentFrameIdx);
+	frame->lastFrameIdxTouched = mState->currentFrameIdx;
 
 	// Copy data to upload buffer
-	CHECK_ZG frame->state.uploadBuffer.memcpyTo(0, data, numBytes);
+	CHECK_ZG frame->uploadBuffer.memcpyTo(0, data, numBytes);
 
 	// Issue upload to device buffer
 	CHECK_ZG mState->currentCommandList.memcpyBufferToBuffer(
-		frame->state.deviceBuffer, 0, frame->state.uploadBuffer, 0, numBytes);
-	
-	// NOTE: Here we don't need to signal frame.uploadFinished because we are uploading and then
-	//       using the uploaded data in the same command list. Internal resource barriers set by
-	//       ZeroG should cover this case.
+		frame->deviceBuffer, 0, frame->uploadBuffer, 0, numBytes);
 }
 
 void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) noexcept
@@ -644,10 +661,10 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 	}
 
 	// User-specified constant buffers
-	for (Framed<ConstantBufferMemory>& framed : mState->currentInputEnabledStage->constantBuffers) {
-		PerFrame<ConstantBufferMemory>& frame = framed.getState(mState->currentFrameIdx);
-		sfz_assert(frame.state.lastFrameIdxTouched == mState->currentFrameIdx);
-		commonBindings.addConstantBuffer(frame.state.shaderRegister, frame.state.deviceBuffer);
+	for (PerFrameData<ConstantBufferMemory>& framed : mState->currentInputEnabledStage->constantBuffers) {
+		ConstantBufferMemory& frame = framed.data(mState->currentFrameIdx);
+		sfz_assert(frame.lastFrameIdxTouched == mState->currentFrameIdx);
+		commonBindings.addConstantBuffer(frame.shaderRegister, frame.deviceBuffer);
 	}
 
 	// Bound render targets
@@ -720,12 +737,6 @@ void Renderer::stageEndInput() noexcept
 	// Execute command list
 	CHECK_ZG mState->presentQueue.executeCommandList(mState->currentCommandList);
 
-	// Signal all frame specific data
-	for (Framed<ConstantBufferMemory>& framed : mState->currentInputEnabledStage->constantBuffers) {
-		PerFrame<ConstantBufferMemory>& frame = framed.getState(mState->currentFrameIdx);
-		CHECK_ZG mState->presentQueue.signalOnGpu(frame.renderingFinished);
-	}
-	
 	// Clear currently active stage info
 	mState->currentInputEnabledStageIdx = ~0u;
 	mState->currentInputEnabledStage = nullptr;
@@ -773,8 +784,13 @@ void Renderer::frameFinish() noexcept
 {
 	// Finish ZeroG frame
 	sfz_assert(mState->windowFramebuffer.valid());
-	CHECK_ZG mState->zgCtx.swapchainFinishFrame();
+	uint64_t frameMeasurementId = mState->frameMeasurementIds.data(mState->currentFrameIdx);
+	CHECK_ZG mState->zgCtx.swapchainFinishFrame(mState->profiler, frameMeasurementId);
 	mState->windowFramebuffer.release();
+
+	// Signal that we are done rendering use these resources
+	zg::Fence& frameFence = mState->frameFences.data(mState->currentFrameIdx);
+	CHECK_ZG mState->presentQueue.signalOnGpu(frameFence);
 
 	// Flush queues if requested
 	if (mState->flushPresentQueueEachFrame->boolValue()) {

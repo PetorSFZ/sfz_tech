@@ -45,6 +45,7 @@ static_assert(sizeof(ImGuiVertex) == 32, "ImGuiVertex is padded");
 // ------------------------------------------------------------------------------------------------
 
 struct ImGuiFrameState final {
+	zg::Fence fence;
 	Array<ImGuiVertex> convertedVertices;
 	zg::Buffer uploadVertexBuffer;
 	zg::Buffer uploadIndexBuffer;
@@ -59,18 +60,18 @@ public:
 	ImGuiRenderer() noexcept = default;
 	ImGuiRenderer(const ImGuiRenderer&) = delete;
 	ImGuiRenderer& operator= (const ImGuiRenderer&) = delete;
-	ImGuiRenderer(ImGuiRenderer&& other) noexcept { this->swap(other); }
-	ImGuiRenderer& operator= (ImGuiRenderer&& other) noexcept { this->swap(other); return *this; }
+	ImGuiRenderer(ImGuiRenderer&&) = delete;
+	ImGuiRenderer& operator= (ImGuiRenderer&&) = delete;
 	~ImGuiRenderer() noexcept { this->destroy(); }
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
 	bool init(
+		uint32_t frameLatency,
 		sfz::Allocator* allocator,
 		zg::CommandQueue& copyQueue,
 		const phConstImageView& fontTexture) noexcept;
-	void swap(ImGuiRenderer& other) noexcept;
 	void destroy() noexcept;
 
 	// Methods
@@ -105,7 +106,7 @@ private:
 	zg::MemoryHeap mUploadHeap;
 
 	// Per frame state
-	Framed<ImGuiFrameState> mFrameStates;
+	PerFrameData<ImGuiFrameState> mFrameStates;
 
 	// Settings
 	const Setting* mScaleSetting = nullptr;

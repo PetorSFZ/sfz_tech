@@ -463,10 +463,10 @@ bool allocateStageMemory(RendererState& state) noexcept
 
 			// Allocate container
 			stage.constantBuffers.add({});
-			Framed<ConstantBufferMemory>& framed = stage.constantBuffers.last();
+			PerFrameData<ConstantBufferMemory>& framed = stage.constantBuffers.last();
 
 			// Allocate ZeroG memory
-			framed.initAllStates([&](ConstantBufferMemory& item) {
+			framed.init(state.frameLatency, [&](ConstantBufferMemory& item) {
 
 				// Seet 
 				item.shaderRegister = desc.bufferRegister;
@@ -483,9 +483,6 @@ bool allocateStageMemory(RendererState& state) noexcept
 				sfz_assert(item.deviceBuffer.valid());
 				if (!item.deviceBuffer.valid()) success = false;
 			});
-
-			// Initialize fences
-			CHECK_ZG framed.initAllFences();
 		}
 	}
 
@@ -495,8 +492,8 @@ bool allocateStageMemory(RendererState& state) noexcept
 bool deallocateStageMemory(RendererState& state) noexcept
 {
 	for (sfz::Stage& stage : state.configurable.presentQueueStages) {
-		for (Framed<ConstantBufferMemory>& framed : stage.constantBuffers) {
-			framed.deinitAllStates([&](ConstantBufferMemory& item) {
+		for (PerFrameData<ConstantBufferMemory>& framed : stage.constantBuffers) {
+			framed.destroy([&](ConstantBufferMemory& item) {
 
 				// Deallocate upload buffer
 				sfz_assert(item.uploadBuffer.valid());
@@ -508,9 +505,6 @@ bool deallocateStageMemory(RendererState& state) noexcept
 				state.gpuAllocatorDevice.deallocate(item.deviceBuffer);
 				sfz_assert(!item.deviceBuffer.valid());
 			});
-			
-			// Release fences
-			framed.releaseAllFences();
 		}
 
 		stage.constantBuffers.destroy();
