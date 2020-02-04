@@ -227,6 +227,8 @@ struct RendererState final {
 	// Profiler
 	zg::Profiler profiler;
 	PerFrameData<uint64_t> frameMeasurementIds;
+	float lastRetrievedFrameTimeMs = 0.0f;
+	uint64_t lastRetrievedFrameTimeFrameIdx = ~0ull;
 
 	// Dynamic memory allocator
 	DynamicGpuAllocator gpuAllocatorUpload;

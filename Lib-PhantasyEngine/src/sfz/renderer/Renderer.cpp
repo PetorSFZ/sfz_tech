@@ -175,9 +175,20 @@ void Renderer::destroy() noexcept
 // Renderer: Getters
 // ------------------------------------------------------------------------------------------------
 
+uint64_t Renderer::currentFrameIdx() const noexcept
+{
+	return mState->currentFrameIdx;
+}
+
 vec2_i32 Renderer::windowResolution() const noexcept
 {
 	return mState->windowRes;
+}
+
+void Renderer::frameTimeMs(uint64_t& frameIdxOut, float& frameTimeMsOut) const noexcept
+{
+	frameIdxOut = mState->lastRetrievedFrameTimeFrameIdx;
+	frameTimeMsOut = mState->lastRetrievedFrameTimeMs;
 }
 
 // Renderer: ImGui UI methods
@@ -332,11 +343,10 @@ void Renderer::frameBegin() noexcept
 
 	// Get frame profiling data for frame that was previously rendered using these resources
 	uint64_t& frameMeasurementId = mState->frameMeasurementIds.data(mState->currentFrameIdx);
-	float frameTimeMs = 0.0f;
 	if (frameMeasurementId != ~0ull) {
-		CHECK_ZG mState->profiler.getMeasurement(frameMeasurementId, frameTimeMs);
+		CHECK_ZG mState->profiler.getMeasurement(frameMeasurementId, mState->lastRetrievedFrameTimeMs);
+		mState->lastRetrievedFrameTimeFrameIdx = mState->currentFrameIdx - mState->frameLatency;
 	}
-	//SFZ_INFO("Renderer", "Frametime on GPU: %.2f ms", frameTimeMs);
 
 	// Query drawable width and height from SDL
 	int32_t newResX = 0;
