@@ -34,9 +34,13 @@ struct ZgBackend {
 		uint32_t height) noexcept = 0;
 
 	virtual ZgResult swapchainBeginFrame(
-		ZgFramebuffer** framebufferOut) noexcept = 0;
+		ZgFramebuffer** framebufferOut,
+		ZgProfiler* profiler,
+		uint64_t* measurementIdOut) noexcept = 0;
 
-	virtual ZgResult swapchainFinishFrame() noexcept = 0;
+	virtual ZgResult swapchainFinishFrame(
+		ZgProfiler* profiler,
+		uint64_t measurementId) noexcept = 0;
 
 	virtual ZgResult fenceCreate(ZgFence** fenceOut) noexcept = 0;
 

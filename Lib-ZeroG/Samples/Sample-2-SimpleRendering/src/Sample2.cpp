@@ -462,13 +462,14 @@ static void realMain(SDL_Window* window) noexcept
 		Matrix projMatrix;
 		zg::createPerspectiveProjection(projMatrix.m, vertFovDeg, aspectRatio, 0.01f, 10.0f);
 
-		// Begin frame
-		zg::Framebuffer framebuffer;
-		CHECK_ZG zgCtx.swapchainBeginFrame(framebuffer);
-
-		// Profile ids
+		// Measurement ids
+		uint64_t frameMeasurementId = ~0ull;
 		uint64_t computeMeasurementId = ~0ull;
 		uint64_t renderMeasurementId = ~0ull;
+
+		// Begin frame
+		zg::Framebuffer framebuffer;
+		CHECK_ZG zgCtx.swapchainBeginFrame(framebuffer, profiler, frameMeasurementId);
 
 		// Run compute command list
 		{
@@ -577,20 +578,23 @@ static void realMain(SDL_Window* window) noexcept
 
 			// Execute command list
 			CHECK_ZG presentQueue.executeCommandList(commandList);
-
-			// Small hack: Flush present queue so we can get measurements
-			CHECK_ZG presentQueue.flush();
-
-			// Get measurements and print them
-			float computeTimeMs = 0.0f;
-			float renderTimeMs = 0.0f;
-			CHECK_ZG profiler.getMeasurement(computeMeasurementId, computeTimeMs);
-			CHECK_ZG profiler.getMeasurement(renderMeasurementId, renderTimeMs);
-			printf("Compute time: %.2f ms\nRender time: %.2f ms\n\n", computeTimeMs, renderTimeMs);
 		}
 
 		// Finish frame
-		CHECK_ZG zgCtx.swapchainFinishFrame();
+		CHECK_ZG zgCtx.swapchainFinishFrame(profiler, frameMeasurementId);
+
+		// Small hack: Flush present queue so we can get measurements
+		CHECK_ZG presentQueue.flush();
+
+		// Get measurements and print them
+		float frameTimeMs = 0.0f;
+		float computeTimeMs = 0.0f;
+		float renderTimeMs = 0.0f;
+		CHECK_ZG profiler.getMeasurement(frameMeasurementId, frameTimeMs);
+		CHECK_ZG profiler.getMeasurement(computeMeasurementId, computeTimeMs);
+		CHECK_ZG profiler.getMeasurement(renderMeasurementId, renderTimeMs);
+		printf("Frame time: %.2f ms\nCompute time: %.2f ms\nRender time: %.2f ms\n\n",
+			frameTimeMs, computeTimeMs, renderTimeMs);
 	}
 
 	// Flush command queue so nothing is running when we start releasing resources

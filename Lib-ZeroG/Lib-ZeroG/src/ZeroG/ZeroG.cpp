@@ -187,14 +187,18 @@ ZG_API ZgResult zgContextSwapchainResize(
 }
 
 ZG_API ZgResult zgContextSwapchainBeginFrame(
-	ZgFramebuffer** framebufferOut)
+	ZgFramebuffer** framebufferOut,
+	ZgProfiler* profiler,
+	uint64_t* measurementIdOut)
 {
-	return zg::getBackend()->swapchainBeginFrame(framebufferOut);
+	return zg::getBackend()->swapchainBeginFrame(framebufferOut, profiler, measurementIdOut);
 }
 
-ZG_API ZgResult zgContextSwapchainFinishFrame(void)
+ZG_API ZgResult zgContextSwapchainFinishFrame(
+	ZgProfiler* profiler,
+	uint64_t measurementId)
 {
-	return zg::getBackend()->swapchainFinishFrame();
+	return zg::getBackend()->swapchainFinishFrame(profiler, measurementId);
 }
 
 // Statistics

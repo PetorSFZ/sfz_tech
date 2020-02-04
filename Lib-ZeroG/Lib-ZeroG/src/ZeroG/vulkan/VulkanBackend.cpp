@@ -253,14 +253,22 @@ public:
 	}
 
 	ZgResult swapchainBeginFrame(
-		ZgFramebuffer** framebufferOut) noexcept override final
+		ZgFramebuffer** framebufferOut,
+		ZgProfiler* profiler,
+		uint64_t* measurementIdOut) noexcept override final
 	{
 		(void)framebufferOut;
+		(void)profiler;
+		(void)measurementIdOut;
 		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
-	ZgResult swapchainFinishFrame() noexcept override final
+	ZgResult swapchainFinishFrame(
+		ZgProfiler* profiler,
+		uint64_t measurementId) noexcept override final
 	{
+		(void)profiler;
+		(void)measurementId;
 		return ZG_WARNING_UNIMPLEMENTED;
 	}
 

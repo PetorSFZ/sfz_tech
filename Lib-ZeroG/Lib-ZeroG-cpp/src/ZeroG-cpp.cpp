@@ -71,7 +71,18 @@ Result Context::swapchainResize(uint32_t width, uint32_t height) noexcept
 Result Context::swapchainBeginFrame(Framebuffer& framebufferOut) noexcept
 {
 	if (framebufferOut.valid()) return Result::INVALID_ARGUMENT;
-	Result res = (Result)zgContextSwapchainBeginFrame(&framebufferOut.framebuffer);
+	Result res = (Result)zgContextSwapchainBeginFrame(&framebufferOut.framebuffer, nullptr, nullptr);
+	if (!isSuccess(res)) return res;
+	return (Result)zgFramebufferGetResolution(
+		framebufferOut.framebuffer, &framebufferOut.width, &framebufferOut.height);
+}
+
+Result Context::swapchainBeginFrame(
+	Framebuffer& framebufferOut, Profiler& profiler, uint64_t& measurementIdOut) noexcept
+{
+	if (framebufferOut.valid()) return Result::INVALID_ARGUMENT;
+	Result res = (Result)zgContextSwapchainBeginFrame(
+		&framebufferOut.framebuffer, profiler.profiler, &measurementIdOut);
 	if (!isSuccess(res)) return res;
 	return (Result)zgFramebufferGetResolution(
 		framebufferOut.framebuffer, &framebufferOut.width, &framebufferOut.height);
@@ -79,7 +90,12 @@ Result Context::swapchainBeginFrame(Framebuffer& framebufferOut) noexcept
 
 Result Context::swapchainFinishFrame() noexcept
 {
-	return (Result)zgContextSwapchainFinishFrame();
+	return (Result)zgContextSwapchainFinishFrame(nullptr, 0);
+}
+
+Result Context::swapchainFinishFrame(Profiler& profiler, uint64_t measurementId) noexcept
+{
+	return (Result)zgContextSwapchainFinishFrame(profiler.profiler, measurementId);
 }
 
 Result Context::getStats(ZgStats& statsOut) noexcept

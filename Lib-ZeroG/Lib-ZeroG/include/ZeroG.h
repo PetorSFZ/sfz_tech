@@ -126,7 +126,7 @@ ZG_STRUCT(ZgFramebufferRect) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 17;
+static const uint32_t ZG_COMPILED_API_VERSION = 18;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -314,10 +314,20 @@ ZG_API ZgResult zgContextSwapchainResize(
 // The framebuffer returned is owned by the swapchain and can't be released by the user. It is
 // still safe to call zgFramebufferRelease() on it, but it will be a no-op and the framebuffer
 // will still be valid afterwards.
+//
+// Optionally a profiler can be specified in order to measure the time it takes to render the
+// frame. Specify nullptr for the profiler and measurementIdOut if you don't intend to measure
+// performance.
 ZG_API ZgResult zgContextSwapchainBeginFrame(
-	ZgFramebuffer** framebufferOut);
+	ZgFramebuffer** framebufferOut,
+	ZgProfiler* profiler,
+	uint64_t* measurementIdOut);
 
-ZG_API ZgResult zgContextSwapchainFinishFrame(void);
+// Only specify profiler if you specified one to the begin frame call. Otherwise send in nullptr
+// and 0.
+ZG_API ZgResult zgContextSwapchainFinishFrame(
+	ZgProfiler* profiler,
+	uint64_t measurementId);
 
 // Statistics
 // ------------------------------------------------------------------------------------------------

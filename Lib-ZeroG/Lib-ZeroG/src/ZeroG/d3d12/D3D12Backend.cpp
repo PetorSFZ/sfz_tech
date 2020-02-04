@@ -472,7 +472,9 @@ public:
 	}
 
 	ZgResult swapchainBeginFrame(
-		ZgFramebuffer** framebufferOut) noexcept override final
+		ZgFramebuffer** framebufferOut,
+		ZgProfiler* profiler,
+		uint64_t* measurementIdOut) noexcept override final
 	{
 		std::lock_guard<std::mutex> lock(mContextMutex);
 
@@ -491,6 +493,12 @@ public:
 		reinterpret_cast<D3D12CommandList*>(barrierCommandList)->
 			commandList->ResourceBarrier(1, &barrier);
 
+		// Insert profiling begin call if a profiler is specified
+		if (profiler != nullptr) {
+			ZgResult res = barrierCommandList->profileBegin(profiler, *measurementIdOut);
+			sfz_assert(res == ZG_SUCCESS);
+		}
+
 		// Execute command list containing the barrier transition
 		mState->commandQueuePresent.executeCommandList(barrierCommandList);
 
@@ -501,7 +509,9 @@ public:
 		return ZG_SUCCESS;
 	}
 
-	ZgResult swapchainFinishFrame() noexcept override final
+	ZgResult swapchainFinishFrame(
+		ZgProfiler* profiler,
+		uint64_t measurementId) noexcept override final
 	{
 		std::lock_guard<std::mutex> lock(mContextMutex);
 
@@ -519,6 +529,12 @@ public:
 			backBuffer.swapchain.renderTarget.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 		reinterpret_cast<D3D12CommandList*>(barrierCommandList)->
 			commandList->ResourceBarrier(1, &barrier);
+
+		// Finish profiling if a profiler is specified
+		if (profiler != nullptr) {
+			ZgResult res = barrierCommandList->profileEnd(profiler, measurementId);
+			sfz_assert(res == ZG_SUCCESS);
+		}
 
 		// Execute command list containing the barrier transition
 		mState->commandQueuePresent.executeCommandList(barrierCommandList);

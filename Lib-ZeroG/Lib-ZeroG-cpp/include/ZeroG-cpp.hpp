@@ -120,9 +120,12 @@ public:
 
 	// See zgContextSwapchainBeginFrame()
 	Result swapchainBeginFrame(Framebuffer& framebufferOut) noexcept;
+	Result swapchainBeginFrame(
+		Framebuffer& framebufferOut, Profiler& profiler, uint64_t& measurementIdOut) noexcept;
 
 	// See zgContextSwapchainFinishFrame()
 	Result swapchainFinishFrame() noexcept;
+	Result swapchainFinishFrame(Profiler& profiler, uint64_t measurementId) noexcept;
 
 	// See zgContextGetStats()
 	Result getStats(ZgStats& statsOut) noexcept;
