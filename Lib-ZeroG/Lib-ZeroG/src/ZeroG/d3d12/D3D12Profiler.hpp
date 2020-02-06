@@ -18,6 +18,9 @@
 
 #pragma once
 
+#include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
+
 #include "ZeroG/d3d12/D3D12Common.hpp"
 #include "ZeroG/d3d12/D3D12Memory.hpp"
 #include "ZeroG/BackendInterface.hpp"
@@ -34,8 +37,8 @@ struct D3D12ProfilerState final {
 	uint64_t nextMeasurementId = 0;
 	uint32_t maxNumMeasurements = 0;
 
-	uint64_t timestampTicksPerSecond = 0;
-	
+	sfz::Array<uint64_t> ticksPerSecond;
+
 	ComPtr<ID3D12QueryHeap> queryHeap;
 
 	D3D12MemoryHeap* downloadHeap = nullptr;
@@ -74,7 +77,6 @@ ZgResult d3d12CreateProfiler(
 	ID3D12Device3& device,
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
 	D3DX12Residency::ResidencyManager& residencyManager,
-	uint64_t timestampTicksPerSecond,
 	D3D12Profiler** profilerOut,
 	const ZgProfilerCreateInfo& createInfo) noexcept;
 

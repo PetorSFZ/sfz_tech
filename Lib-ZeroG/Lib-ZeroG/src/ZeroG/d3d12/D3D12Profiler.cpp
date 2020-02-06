@@ -71,8 +71,11 @@ ZgResult D3D12Profiler::getMeasurement(
 		profilerState.downloadBuffer->memcpyFrom(bufferOffset, timestamps, sizeof(uint64_t) * 2);
 	if (memcpyRes != ZG_SUCCESS) return memcpyRes;
 
+	// Get number of ticks per second when this query was issued
+	uint64_t ticksPerSecond = profilerState.ticksPerSecond[queryIdx];
+
 	// Calculate time between timestamps in ms
-	float diffSeconds = float(timestamps[1] - timestamps[0]) / float(profilerState.timestampTicksPerSecond);
+	float diffSeconds = float(timestamps[1] - timestamps[0]) / float(ticksPerSecond);
 	measurementMsOut = diffSeconds * 1000.0f;
 
 	return ZG_SUCCESS;
@@ -85,7 +88,6 @@ ZgResult d3d12CreateProfiler(
 	ID3D12Device3& device,
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
 	D3DX12Residency::ResidencyManager& residencyManager,
-	uint64_t timestampTicksPerSecond,
 	D3D12Profiler** profilerOut,
 	const ZgProfilerCreateInfo& createInfo) noexcept
 {
@@ -137,7 +139,9 @@ ZgResult d3d12CreateProfiler(
 		D3D12ProfilerState& state = accessor.data();
 		state.maxNumMeasurements = createInfo.maxNumMeasurements;
 		
-		state.timestampTicksPerSecond = timestampTicksPerSecond;
+		state.ticksPerSecond.init(
+			createInfo.maxNumMeasurements, getAllocator(), sfz_dbg("D3D12Profiler::ticksPerSecond"));
+		state.ticksPerSecond.add(0ull, createInfo.maxNumMeasurements);
 
 		state.queryHeap = queryHeap;
 

@@ -824,20 +824,11 @@ public:
 		ZgProfiler** profilerOut,
 		const ZgProfilerCreateInfo& createInfo) noexcept override final
 	{
-		// Get present queue timestamp frequency
-		uint64_t timestampTicksPerSecond = 0;
-		{
-			bool success = D3D12_SUCC(mState->commandQueuePresent.
-				commandQueue()->GetTimestampFrequency(&timestampTicksPerSecond));
-			if (!success) return ZG_ERROR_GENERIC;
-		}
-
 		D3D12Profiler* profiler = nullptr;
 		ZgResult res = d3d12CreateProfiler(
 			*mState->device.Get(),
 			&mState->resourceUniqueIdentifierCounter,
 			mState->residencyManager,
-			timestampTicksPerSecond,
 			&profiler,
 			createInfo);
 		if (res != ZG_SUCCESS) return res;

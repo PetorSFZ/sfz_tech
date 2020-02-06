@@ -31,6 +31,8 @@
 
 namespace zg {
 
+class D3D12CommandQueue;
+
 // PendingState struct
 // ------------------------------------------------------------------------------------------------
 
@@ -81,6 +83,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	void create(
+		D3D12CommandQueue* queue,
 		uint32_t maxNumBuffers,
 		ComPtr<ID3D12Device3> device,
 		D3DX12Residency::ResidencyManager* residencyManager,
@@ -189,6 +192,7 @@ public:
 	// Members
 	// --------------------------------------------------------------------------------------------
 
+	D3D12CommandQueue* queue = nullptr;
 	D3D12_COMMAND_LIST_TYPE commandListType;
 	ComPtr<ID3D12CommandAllocator> commandAllocator;
 	ComPtr<ID3D12GraphicsCommandList> commandList;

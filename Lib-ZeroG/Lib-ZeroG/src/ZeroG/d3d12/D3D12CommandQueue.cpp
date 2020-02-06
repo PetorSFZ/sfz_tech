@@ -293,7 +293,11 @@ ZgResult D3D12CommandQueue::createCommandList(D3D12CommandList*& commandListOut)
 	}
 
 	// Initialize command list
-	commandList.create(mMaxNumBuffersPerCommandList, mDevice, mResidencyManager,
+	commandList.create(
+		this,
+		mMaxNumBuffersPerCommandList,
+		mDevice,
+		mResidencyManager,
 		mDescriptorBuffer);
 
 	commandListOut = &commandList;

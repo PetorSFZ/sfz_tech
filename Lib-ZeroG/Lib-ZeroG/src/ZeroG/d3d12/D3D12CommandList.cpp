@@ -20,6 +20,7 @@
 
 #include <algorithm>
 
+#include "ZeroG/d3d12/D3D12CommandQueue.hpp"
 #include "ZeroG/d3d12/D3D12Memory.hpp"
 #include "ZeroG/d3d12/D3D12Profiler.hpp"
 #include "ZeroG/util/ErrorReporting.hpp"
@@ -52,11 +53,13 @@ static uint32_t numBytesPerPixelForFormat(ZgTextureFormat format) noexcept
 // ------------------------------------------------------------------------------------------------
 
 void D3D12CommandList::create(
+	D3D12CommandQueue* queueIn,
 	uint32_t maxNumBuffers,
 	ComPtr<ID3D12Device3> device,
 	D3DX12Residency::ResidencyManager* residencyManager,
 	D3D12DescriptorRingBuffer* descriptorBuffer) noexcept
 {
+	queue = queueIn;
 	mDevice = device;
 	mDescriptorBuffer = descriptorBuffer;
 	pendingBufferIdentifiers.init(maxNumBuffers, getAllocator(), sfz_dbg("ZeroG - D3D12CommandList - Internal"));
@@ -69,6 +72,7 @@ void D3D12CommandList::create(
 
 void D3D12CommandList::swap(D3D12CommandList& other) noexcept
 {
+	std::swap(this->queue, other.queue);
 	std::swap(this->commandAllocator, other.commandAllocator);
 	std::swap(this->commandList, other.commandList);
 	std::swap(this->fenceValue, other.fenceValue);
@@ -92,6 +96,7 @@ void D3D12CommandList::swap(D3D12CommandList& other) noexcept
 
 void D3D12CommandList::destroy() noexcept
 {
+	queue = nullptr;
 	commandAllocator = nullptr;
 	commandList = nullptr;
 	fenceValue = 0;
@@ -1067,6 +1072,14 @@ ZgResult D3D12CommandList::profileEnd(
 	//       Besides, timestamp queries only work on present and compute queues in the first place.
 	sfz_assert(commandListType == D3D12_COMMAND_LIST_TYPE_DIRECT);
 
+	// Get command queue timestamp frequency
+	uint64_t timestampTicksPerSecond = 0;
+	{
+		bool success =
+			D3D12_SUCC(queue->commandQueue()->GetTimestampFrequency(&timestampTicksPerSecond));
+		if (!success) return ZG_ERROR_GENERIC;
+	}
+
 	// Access profilers state through its mutex
 	D3D12Profiler* profiler = static_cast<D3D12Profiler*>(profilerIn);
 	MutexAccessor<D3D12ProfilerState> profilerStateAccessor = profiler->state.access();
@@ -1095,6 +1108,9 @@ ZgResult D3D12CommandList::profileEnd(
 		2,
 		state.downloadBuffer->resource.Get(),
 		bufferOffset);
+
+	// Store ticks per second
+	state.ticksPerSecond[queryIdx] = timestampTicksPerSecond;
 	
 	// Insert into residency set
 	residencySet->Insert(&state.downloadHeap->managedObject);
