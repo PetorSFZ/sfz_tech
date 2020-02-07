@@ -1,5 +1,4 @@
 // Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
-//               For other contributors see Contributors.txt
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -17,15 +16,30 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/renderer/ImGuiRenderer.hpp"
+#include "ZeroG-ImGui.hpp"
 
 #include <utility> // std::swap()
 
-#include "sfz/Context.hpp"
-#include "sfz/renderer/ZeroGUtils.hpp"
-#include "sfz/math/Matrix.hpp"
+#include <skipifzero_strings.hpp>
 
-namespace sfz {
+
+struct phImguiVertex {
+	sfz::vec2 pos;
+	sfz::vec2 texcoord;
+	uint32_t color;
+};
+static_assert(sizeof(phImguiVertex) == sizeof(float) * 5, "phImguiVertex is padded");
+
+struct phImguiCommand {
+	uint32_t idxBufferOffset = 0;
+	uint32_t numIndices = 0;
+	uint32_t padding[2];
+	sfz::vec4 clipRect = sfz::vec4(0.0f);
+};
+static_assert(sizeof(phImguiCommand) == sizeof(uint32_t) * 8, "phImguiCommand is padded");
+
+
+namespace zg {
 
 // Constants
 // ------------------------------------------------------------------------------------------------
@@ -35,142 +49,133 @@ constexpr uint32_t IMGUI_MAX_NUM_INDICES = 32768;
 constexpr uint64_t IMGUI_VERTEX_BUFFER_SIZE = IMGUI_MAX_NUM_VERTICES * sizeof(ImGuiVertex);
 constexpr uint64_t IMGUI_INDEX_BUFFER_SIZE = IMGUI_MAX_NUM_INDICES * sizeof(uint32_t);
 
-// ImGuiRenderer: State methods
+// ImGui Renderer
 // ------------------------------------------------------------------------------------------------
 
-bool ImGuiRenderer::init(
+zg::Result imguiInitRenderState(
+	ImGuiRenderState& state,
 	uint32_t frameLatency,
 	sfz::Allocator* allocator,
-	zg::CommandQueue& copyQueue,
-	const phConstImageView& fontTextureView) noexcept
+	zg::CommandQueue& queue,
+	const ZgImageViewConstCpu& fontTexture,
+	float scale) noexcept
 {
-	// Init some general stuff
-	mAllocator = allocator;
+	sfz_assert(state.allocator == nullptr);
 
-	// Init imgui settings
-	GlobalConfig& cfg = getGlobalConfig();
-	mScaleSetting = cfg.sanitizeFloat("Imgui", "scale", true, FloatBounds(2.0f, 1.0f, 3.0f));
+	// Init some general stuff
+	state.allocator = allocator;
 
 	// Build ImGui pipeline
-	bool pipelineSuccess = CHECK_ZG zg::PipelineRenderBuilder()
-		.addVertexAttribute(0, 0, ZG_VERTEX_ATTRIBUTE_F32_2, offsetof(ImGuiVertex, pos))
-		.addVertexAttribute(1, 0, ZG_VERTEX_ATTRIBUTE_F32_2, offsetof(ImGuiVertex, texcoord))
-		.addVertexAttribute(2, 0, ZG_VERTEX_ATTRIBUTE_F32_4, offsetof(ImGuiVertex, color))
-		.addVertexBufferInfo(0, sizeof(ImGuiVertex))
-		.addPushConstant(0)
-		.addSampler(0, ZG_SAMPLING_MODE_TRILINEAR)
-		.addRenderTarget(ZG_TEXTURE_FORMAT_RGBA_U8_UNORM)
-		.setCullingEnabled(false)
-		.setBlendingEnabled(true)
-		.setBlendFuncColor(ZG_BLEND_FUNC_ADD, ZG_BLEND_FACTOR_SRC_ALPHA, ZG_BLEND_FACTOR_SRC_INV_ALPHA)
-		.setDepthTestEnabled(false)
-		//.addVertexShaderPath("VSMain", "res_ph/shaders/imgui.hlsl")
-		//.addPixelShaderPath("PSMain", "res_ph/shaders/imgui.hlsl")
-		//.buildFromFileHLSL(mPipeline, ZG_SHADER_MODEL_6_0);
-		.addVertexShaderPath("VSMain", "res_ph/shaders/imgui_vs.spv")
-		.addPixelShaderPath("PSMain", "res_ph/shaders/imgui_ps.spv")
-		.buildFromFileSPIRV(mPipeline);
-	if (!pipelineSuccess) return false;
+	{
+		zg::Result res = zg::PipelineRenderBuilder()
+			.addVertexAttribute(0, 0, ZG_VERTEX_ATTRIBUTE_F32_2, offsetof(ImGuiVertex, pos))
+			.addVertexAttribute(1, 0, ZG_VERTEX_ATTRIBUTE_F32_2, offsetof(ImGuiVertex, texcoord))
+			.addVertexAttribute(2, 0, ZG_VERTEX_ATTRIBUTE_F32_4, offsetof(ImGuiVertex, color))
+			.addVertexBufferInfo(0, sizeof(ImGuiVertex))
+			.addPushConstant(0)
+			.addSampler(0, ZG_SAMPLING_MODE_TRILINEAR)
+			.addRenderTarget(ZG_TEXTURE_FORMAT_RGBA_U8_UNORM)
+			.setCullingEnabled(false)
+			.setBlendingEnabled(true)
+			.setBlendFuncColor(ZG_BLEND_FUNC_ADD, ZG_BLEND_FACTOR_SRC_ALPHA, ZG_BLEND_FACTOR_SRC_INV_ALPHA)
+			.setDepthTestEnabled(false)
+			//.addVertexShaderPath("VSMain", "res_ph/shaders/imgui.hlsl")
+			//.addPixelShaderPath("PSMain", "res_ph/shaders/imgui.hlsl")
+			//.buildFromFileHLSL(mPipeline, ZG_SHADER_MODEL_6_0);
+			.addVertexShaderPath("VSMain", "res_ph/shaders/imgui_vs.spv")
+			.addPixelShaderPath("PSMain", "res_ph/shaders/imgui_ps.spv")
+			.buildFromFileSPIRV(state.pipeline);
+		if (!zg::isSuccess(res)) return res;
+	}
 
 	// Allocate memory for font texture
-	sfz_assert_hard(fontTextureView.type == ImageType::R_U8);
+	sfz_assert_hard(fontTexture.format == ZG_TEXTURE_FORMAT_R_U8_UNORM);
 	ZgTexture2DCreateInfo texCreateInfo = {};
 	texCreateInfo.format = ZG_TEXTURE_FORMAT_R_U8_UNORM;
-	texCreateInfo.width = fontTextureView.width;
-	texCreateInfo.height = fontTextureView.height;
+	texCreateInfo.width = fontTexture.width;
+	texCreateInfo.height = fontTexture.height;
 	texCreateInfo.numMipmaps = 1; // TODO: Mipmaps
 
 	ZgTexture2DAllocationInfo texAllocInfo = {};
-	CHECK_ZG zg::Texture2D::getAllocationInfo(texAllocInfo, texCreateInfo);
+	{
+		zg::Result res = zg::Texture2D::getAllocationInfo(texAllocInfo, texCreateInfo);
+		if (!zg::isSuccess(res)) return res;
+	}
 	texCreateInfo.offsetInBytes = 0;
 	texCreateInfo.sizeInBytes = texAllocInfo.sizeInBytes;
 
-	bool texMemSuccess =
-		CHECK_ZG mFontTextureHeap.create(texAllocInfo.sizeInBytes, ZG_MEMORY_TYPE_TEXTURE);
+	{
+		zg::Result res = state.fontTextureHeap.create(texAllocInfo.sizeInBytes, ZG_MEMORY_TYPE_TEXTURE);
+		if (!zg::isSuccess(res)) return res;
+	}
 
-	texMemSuccess &= CHECK_ZG mFontTextureHeap.texture2DCreate(
-		mFontTexture, texCreateInfo);
-	CHECK_ZG mFontTexture.setDebugName("ImGui_FontTexture");
-
-	if (!texMemSuccess) return false;
+	{
+		zg::Result res = state.fontTextureHeap.texture2DCreate(state.fontTexture, texCreateInfo);
+		if (!zg::isSuccess(res)) return res;
+	}
+	state.fontTexture.setDebugName("ImGui_FontTexture");
 
 	// Allocate memory for vertex and index buffer
 	const uint64_t uploadHeapNumBytes = (IMGUI_VERTEX_BUFFER_SIZE + IMGUI_INDEX_BUFFER_SIZE) * frameLatency;
-	bool memSuccess = CHECK_ZG mUploadHeap.create(uploadHeapNumBytes, ZG_MEMORY_TYPE_UPLOAD);
+	{
+		zg::Result res = state.uploadHeap.create(uploadHeapNumBytes, ZG_MEMORY_TYPE_UPLOAD);
+		if (!zg::isSuccess(res)) return res;
+	}
 
 	// Upload font texture to GPU
 	{
 		// Utilize vertex and index buffer upload heap to upload font texture
 		// Create temporary upload buffer
 		zg::Buffer tmpUploadBuffer;
-		CHECK_ZG mUploadHeap.bufferCreate(tmpUploadBuffer, 0, texAllocInfo.sizeInBytes);
-
-		// Convert to ZgImageViewConstCpu
-		ZgImageViewConstCpu imageView = {};
-		imageView.format = ZG_TEXTURE_FORMAT_R_U8_UNORM;
-		imageView.data = fontTextureView.rawData;
-		imageView.width = fontTextureView.width;
-		imageView.height = fontTextureView.height;
-		imageView.pitchInBytes = fontTextureView.width * sizeof(uint8_t);
+		{
+			zg::Result res = state.uploadHeap.bufferCreate(tmpUploadBuffer, 0, texAllocInfo.sizeInBytes);
+			if (!zg::isSuccess(res)) return res;
+		}
 
 		// Copy to the texture
 		zg::CommandList commandList;
-		CHECK_ZG copyQueue.beginCommandListRecording(commandList);
-		CHECK_ZG commandList.memcpyToTexture(mFontTexture, 0, imageView, tmpUploadBuffer);
-		CHECK_ZG commandList.enableQueueTransition(mFontTexture);
-		CHECK_ZG copyQueue.executeCommandList(commandList);
-		CHECK_ZG copyQueue.flush();
+		queue.beginCommandListRecording(commandList);
+		commandList.memcpyToTexture(state.fontTexture, 0, fontTexture, tmpUploadBuffer);
+		commandList.enableQueueTransition(state.fontTexture);
+		queue.executeCommandList(commandList);
+		queue.flush();
 	}
 
 	// Actually create the vertex and index buffers
 	uint64_t uploadHeapOffset = 0;
 	uint32_t frameStateIdx = 0;
-	mFrameStates.init(frameLatency, [&](ImGuiFrameState& frame) {
-		CHECK_ZG frame.fence.create();
+	state.frameStates.init(frameLatency, allocator, sfz_dbg(""));
+	for (uint32_t i = 0; i < frameLatency; i++) {
+		state.frameStates.add({});
+		ImGuiFrameState& frame = state.frameStates.last();
 
-		memSuccess &= CHECK_ZG mUploadHeap.bufferCreate(
+		frame.fence.create();
+
+		/*memSuccess &= CHECK_ZG*/ state.uploadHeap.bufferCreate(
 			frame.uploadVertexBuffer, uploadHeapOffset, IMGUI_VERTEX_BUFFER_SIZE);
 		uploadHeapOffset += IMGUI_VERTEX_BUFFER_SIZE;
-		CHECK_ZG frame.uploadVertexBuffer.setDebugName(str32("ImGui_VertexBuffer_%u", frameStateIdx));
+		frame.uploadVertexBuffer.setDebugName(sfz::str32("ImGui_VertexBuffer_%u", frameStateIdx));
 
-		memSuccess &= CHECK_ZG mUploadHeap.bufferCreate(
+		/*memSuccess &= CHECK_ZG */state.uploadHeap.bufferCreate(
 			frame.uploadIndexBuffer, uploadHeapOffset, IMGUI_INDEX_BUFFER_SIZE);
 		uploadHeapOffset += IMGUI_INDEX_BUFFER_SIZE;
-		CHECK_ZG frame.uploadIndexBuffer.setDebugName(str32("ImGui_IndexBuffer_%u", frameStateIdx));
+		frame.uploadIndexBuffer.setDebugName(sfz::str32("ImGui_IndexBuffer_%u", frameStateIdx));
 
 		frameStateIdx += 1;
-	});
+	}
 	sfz_assert(uploadHeapOffset == uploadHeapNumBytes);
 
-	if (!memSuccess) return false;
+	//if (!memSuccess) return false;
 
-	return true;
+	return zg::Result::SUCCESS;
 }
 
-void ImGuiRenderer::destroy() noexcept
-{
-	mAllocator = nullptr;
-
-	mPipeline.release();
-
-	mFontTextureHeap.release();
-	mFontTexture.release();
-
-	mUploadHeap.release();
-
-	mFrameStates.destroy();
-
-	mScaleSetting = nullptr;
-}
-
-// ImGuiRenderer: Methods
-// ------------------------------------------------------------------------------------------------
-
-void ImGuiRenderer::render(
+zg::Result imguiRender(
+	ImGuiRenderState& state,
 	uint64_t frameIdx,
 	zg::CommandQueue& presentQueue,
 	zg::Framebuffer& framebuffer,
-	vec2_i32 framebufferRes,
+	float scale,
 	const phImguiVertex* vertices,
 	uint32_t numVertices,
 	const uint32_t* indices,
@@ -183,12 +188,12 @@ void ImGuiRenderer::render(
 
 	// Get current frame's resources and then wait until they are available (i.e. the frame they
 	// are part of has finished rendering).
-	ImGuiFrameState& imguiFrame = mFrameStates.data(frameIdx);
-	CHECK_ZG imguiFrame.fence.waitOnCpuBlocking();
+	ImGuiFrameState& imguiFrame = state.getFrameState(frameIdx);
+	/*CHECK_ZG */imguiFrame.fence.waitOnCpuBlocking();
 
 	// Convert ImGui vertices because slightly different representation
 	if (imguiFrame.convertedVertices.data() == nullptr) {
-		imguiFrame.convertedVertices.init(IMGUI_MAX_NUM_VERTICES, mAllocator, sfz_dbg(""));
+		imguiFrame.convertedVertices.init(IMGUI_MAX_NUM_VERTICES, state.allocator, sfz_dbg(""));
 	}
 	imguiFrame.convertedVertices.hackSetSize(numVertices);
 	for (uint32_t i = 0; i < numVertices; i++) {
@@ -205,9 +210,9 @@ void ImGuiRenderer::render(
 	}
 
 	// Memcpy vertices and indices to imgui upload buffers
-	CHECK_ZG imguiFrame.uploadVertexBuffer.memcpyTo(
+	/*CHECK_ZG */imguiFrame.uploadVertexBuffer.memcpyTo(
 		0, imguiFrame.convertedVertices.data(), numVertices * sizeof(ImGuiVertex));
-	CHECK_ZG imguiFrame.uploadIndexBuffer.memcpyTo(
+	/*CHECK_ZG */imguiFrame.uploadIndexBuffer.memcpyTo(
 		0, indices, numIndices * sizeof(uint32_t));
 
 	// Here we should normally signal that imguiFrame.uploadFinished() and then wait on it before
@@ -215,34 +220,35 @@ void ImGuiRenderer::render(
 	// (which is synchronous) we don't actually need to do this. Therefore we skip it in this case.
 
 	zg::CommandList commandList;
-	CHECK_ZG presentQueue.beginCommandListRecording(commandList);
+	/*CHECK_ZG */presentQueue.beginCommandListRecording(commandList);
 
 	// Set framebuffer
-	CHECK_ZG commandList.setFramebuffer(framebuffer);
+	/*CHECK_ZG */commandList.setFramebuffer(framebuffer);
 
 	// Set ImGui pipeline
-	CHECK_ZG commandList.setPipeline(mPipeline);
-	CHECK_ZG commandList.setIndexBuffer(imguiFrame.uploadIndexBuffer, ZG_INDEX_BUFFER_TYPE_UINT32);
-	CHECK_ZG commandList.setVertexBuffer(0, imguiFrame.uploadVertexBuffer);
+	/*CHECK_ZG */commandList.setPipeline(state.pipeline);
+	/*CHECK_ZG */commandList.setIndexBuffer(imguiFrame.uploadIndexBuffer, ZG_INDEX_BUFFER_TYPE_UINT32);
+	/*CHECK_ZG */commandList.setVertexBuffer(0, imguiFrame.uploadVertexBuffer);
 
 	// Bind pipeline parameters
-	CHECK_ZG commandList.setPipelineBindings(zg::PipelineBindings()
-		.addTexture(0, mFontTexture));
+	/*CHECK_ZG */commandList.setPipelineBindings(zg::PipelineBindings()
+		.addTexture(0, state.fontTexture));
 
 	// Retrieve imgui scale factor
 	float imguiScaleFactor = 1.0f;
-	if (mScaleSetting != nullptr) imguiScaleFactor /= mScaleSetting->floatValue();
+	imguiScaleFactor /= scale;
 	float imguiInvScaleFactor = 1.0f / imguiScaleFactor;
-	float imguiWidth = framebufferRes.x * imguiScaleFactor;
-	float imguiHeight = framebufferRes.y * imguiScaleFactor;
+	float imguiWidth = framebuffer.width * imguiScaleFactor;
+	float imguiHeight = framebuffer.height * imguiScaleFactor;
 
 	// Calculate and set ImGui projection matrix
-	mat44 projMatrix;
-	projMatrix.row0 = vec4(2.0f / imguiWidth, 0.0f, 0.0f, -1.0f);
-	projMatrix.row1 = vec4(0.0f, 2.0f / -imguiHeight, 0.0f, 1.0f);
-	projMatrix.row2 = vec4(0.0f, 0.0f, 0.5f, 0.5f);
-	projMatrix.row3 = vec4(0.0f, 0.0f, 0.0f, 1.0f);
-	CHECK_ZG commandList.setPushConstant(0, &projMatrix, sizeof(mat44));
+	sfz::vec4 projMatrix[4] = {
+		sfz::vec4(2.0f / imguiWidth, 0.0f, 0.0f, -1.0f),
+		sfz::vec4(0.0f, 2.0f / -imguiHeight, 0.0f, 1.0f),
+		sfz::vec4(0.0f, 0.0f, 0.5f, 0.5f),
+		sfz::vec4(0.0f, 0.0f, 0.0f, 1.0f)
+	};
+	/*CHECK_ZG */commandList.setPushConstant(0, &projMatrix, sizeof(float) * 16);
 
 	// Render ImGui commands
 	for (uint32_t i = 0; i < numCommands; i++) {
@@ -254,16 +260,18 @@ void ImGuiRenderer::render(
 		scissorRect.topLeftY = uint32_t(cmd.clipRect.y * imguiInvScaleFactor);
 		scissorRect.width = uint32_t((cmd.clipRect.z - cmd.clipRect.x) * imguiInvScaleFactor);
 		scissorRect.height = uint32_t((cmd.clipRect.w - cmd.clipRect.y) * imguiInvScaleFactor);
-		CHECK_ZG commandList.setFramebufferScissor(scissorRect);
+		/*CHECK_ZG */commandList.setFramebufferScissor(scissorRect);
 
-		CHECK_ZG commandList.drawTrianglesIndexed(cmd.idxBufferOffset, cmd.numIndices / 3);
+		/*CHECK_ZG */commandList.drawTrianglesIndexed(cmd.idxBufferOffset, cmd.numIndices / 3);
 	}
 
 	// Execute command list
-	CHECK_ZG presentQueue.executeCommandList(commandList);
+	/*CHECK_ZG */presentQueue.executeCommandList(commandList);
 
 	// Signal that we have finished rendering this ImGui frame
-	CHECK_ZG presentQueue.signalOnGpu(imguiFrame.fence);
+	/*CHECK_ZG */presentQueue.signalOnGpu(imguiFrame.fence);
+
+	return zg::Result::SUCCESS;
 }
 
-} // namespace sfz
+} // namespace zg

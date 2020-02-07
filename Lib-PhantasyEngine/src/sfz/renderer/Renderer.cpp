@@ -28,12 +28,13 @@
 
 #include <ZeroG-cpp.hpp>
 
+#include <ZeroG-ImGui.hpp>
+
 #include "sfz/Context.hpp"
 #include "sfz/Logging.hpp"
 #include "sfz/config/GlobalConfig.hpp"
 #include "sfz/math/Matrix.hpp"
 #include "sfz/renderer/GpuTextures.hpp"
-#include "sfz/renderer/ImGuiRenderer.hpp"
 #include "sfz/renderer/RendererConfigParser.hpp"
 #include "sfz/renderer/RendererState.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
@@ -111,8 +112,22 @@ bool Renderer::init(
 	mState->meshes.init(512, mState->allocator, sfz_dbg(""));
 
 	// Initialize ImGui rendering state
-	bool imguiInitSuccess = mState->imguiRenderer.init(
-		mState->frameLatency, mState->allocator, mState->copyQueue, fontTexture);
+	mState->imguiScaleSetting =
+		cfg.sanitizeFloat("Imgui", "scale", true, FloatBounds(1.5f, 1.0f, 3.0f));
+	sfz_assert(fontTexture.type == ImageType::R_U8);
+	ZgImageViewConstCpu zgFontTextureView = {};
+	zgFontTextureView.format = ZG_TEXTURE_FORMAT_R_U8_UNORM;
+	zgFontTextureView.data = fontTexture.rawData;
+	zgFontTextureView.width = fontTexture.width;
+	zgFontTextureView.height = fontTexture.height;
+	zgFontTextureView.pitchInBytes = fontTexture.width * sizeof(uint8_t);
+	bool imguiInitSuccess = CHECK_ZG zg::imguiInitRenderState(
+		mState->imguiRenderState,
+		mState->frameLatency,
+		mState->allocator,
+		mState->copyQueue,
+		zgFontTextureView,
+		mState->imguiScaleSetting->floatValue());
 	if (!imguiInitSuccess) {
 		this->destroy();
 		return false;
@@ -777,11 +792,12 @@ void Renderer::renderImguiHack(
 	const phImguiCommand* commands,
 	uint32_t numCommands) noexcept
 {
-	mState->imguiRenderer.render(
+	CHECK_ZG zg::imguiRender(
+		mState->imguiRenderState,
 		mState->currentFrameIdx,
 		mState->presentQueue,
 		mState->windowFramebuffer,
-		mState->windowRes,
+		mState->imguiScaleSetting->floatValue(),
 		vertices,
 		numVertices,
 		indices,

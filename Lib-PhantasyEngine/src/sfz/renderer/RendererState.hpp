@@ -26,11 +26,13 @@
 
 #include <ZeroG-cpp.hpp>
 
+#include <ZeroG-ImGui.hpp>
+
 #include "sfz/config/GlobalConfig.hpp"
 #include "sfz/renderer/DynamicGpuAllocator.hpp"
 #include "sfz/renderer/GpuMesh.hpp"
-#include "sfz/renderer/ImGuiRenderer.hpp"
 #include "sfz/renderer/RendererUI.hpp"
+#include "sfz/renderer/ZeroGUtils.hpp"
 #include "sfz/strings/StringID.hpp"
 
 struct SDL_Window;
@@ -244,7 +246,8 @@ struct RendererState final {
 	RendererUI ui;
 
 	// Imgui renderer
-	ImGuiRenderer imguiRenderer;
+	const Setting* imguiScaleSetting = nullptr;
+	zg::ImGuiRenderState imguiRenderState;
 
 	// Settings
 	const Setting* flushPresentQueueEachFrame = nullptr;

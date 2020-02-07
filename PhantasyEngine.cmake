@@ -225,6 +225,19 @@ function(phAddSDL2)
 
 endfunction()
 
+# Adds sfz_tech's sfz_core, the following variables will be set:
+# ${SFZ_CORE_FOUND}, ${SFZ_CORE_INCLUDE_DIRS}
+function(phAddSfzCore)
+
+	set(SFZ_CORE_PATH ${SFZ_TECH_ROOT}/Lib-Core)
+	message("-- [PhantasyEngine]: Adding sfzCore from: \"${SFZ_CORE_PATH}\"")
+	add_subdirectory(${SFZ_CORE_PATH} ${CMAKE_BINARY_DIR}/sfzCore)
+
+	set(SFZ_CORE_FOUND ${SFZ_CORE_FOUND} PARENT_SCOPE)
+	set(SFZ_CORE_INCLUDE_DIRS ${SFZ_CORE_INCLUDE_DIRS} PARENT_SCOPE)
+
+endfunction()
+
 # Adds sfz_tech's ZeroG, the following variables will be set:
 # ${ZEROG_FOUND}, ${ZEROG_INCLUDE_DIRS}, ${ZEROG_LIBRARIES} and ${ZEROG_RUNTIME_FILES}
 # ${ZEROG_CPP_FOUND}, ${ZEROG_CPP_INCLUDE_DIRS} and ${ZEROG_CPP_LIBRARIES}
@@ -248,17 +261,21 @@ function(phAddZeroG)
 
 endfunction()
 
-# Adds sfz_tech's sfzCore, the following variables will be set:
-# ${SFZ_CORE_FOUND}, ${SFZ_CORE_INCLUDE_DIRS}
-function(phAddSfzCore)
+# Adds sfz_tech's ZeroG-ImGui, the following variables will be set:
+# ${ZEROG_IMGUI_FOUND}, ${ZEROG_IMGUI_INCLUDE_DIRS}, ${ZEROG_IMGUI_LIBRARIES}
+function(phAddZeroGImGui)
 
-	set(SFZ_CORE_PATH ${SFZ_TECH_ROOT}/Lib-Core)
-	message("-- [PhantasyEngine]: Adding sfzCore from: \"${SFZ_CORE_PATH}\"")
-	add_subdirectory(${SFZ_CORE_PATH} ${CMAKE_BINARY_DIR}/sfzCore)
+	set(ZEROG_IMGUI_PATH ${SFZ_TECH_ROOT}/Lib-ZeroG-ImGui)
+	message("-- [PhantasyEngine]: Adding ZeroG-ImGui from: \"${ZEROG_IMGUI_PATH}\"")
+	add_subdirectory(${ZEROG_IMGUI_PATH} ${CMAKE_BINARY_DIR}/ZeroG-ImGui)
 
-	set(SFZ_CORE_FOUND ${SFZ_CORE_FOUND} PARENT_SCOPE)
-	set(SFZ_CORE_INCLUDE_DIRS ${SFZ_CORE_INCLUDE_DIRS} PARENT_SCOPE)
+	set(ZEROG_IMGUI_FOUND ${ZEROG_IMGUI_FOUND} PARENT_SCOPE)
+	set(ZEROG_IMGUI_INCLUDE_DIRS ${ZEROG_IMGUI_INCLUDE_DIRS} PARENT_SCOPE)
+	set(ZEROG_IMGUI_LIBRARIES ${ZEROG_IMGUI_LIBRARIES} PARENT_SCOPE)
+
 endfunction()
+
+
 
 # Adds the bundled externals, this is currently stb and dear-imgui.
 # stb: ${STB_FOUND}, ${STB_INCLUDE_DIRS}

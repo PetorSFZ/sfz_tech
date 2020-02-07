@@ -156,6 +156,10 @@ if (NOT hasParent)
 	# ${IMGUI_FOUND}, ${IMGUI_INCLUDE_DIRS}, ${IMGUI_LIBRARIES}
 	add_subdirectory(${EXTERNALS_DIR}/dear-imgui ${CMAKE_BINARY_DIR}/dear-imgui)
 
+	# ZeroG-ImGui
+	# ${ZEROG_IMGUI_FOUND}, ${ZEROG_IMGUI_INCLUDE_DIRS}, ${ZEROG_IMGUI_LIBRARIES}
+	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../Lib-ZeroG-ImGui ${CMAKE_BINARY_DIR}/ZeroG-ImGui)
+
 # Otherwise check if dependencies are already included
 else()
 
@@ -193,6 +197,10 @@ else()
 
 	if (NOT IMGUI_FOUND)
 		message(FATAL_ERROR "PhantasyEngine requires dear-imgui.")
+	endif()
+
+	if (NOT ZEROG_IMGUI_FOUND)
+		message(FATAL_ERROR "PhantasyEngine requires ZeroG-ImGui")
 	endif()
 
 endif()
@@ -320,8 +328,7 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/renderer/GpuMesh.cpp
 	${SRC_DIR}/sfz/renderer/GpuTextures.hpp
 	${SRC_DIR}/sfz/renderer/GpuTextures.cpp
-	${SRC_DIR}/sfz/renderer/ImGuiRenderer.hpp
-	${SRC_DIR}/sfz/renderer/ImGuiRenderer.cpp
+
 	${SRC_DIR}/sfz/renderer/Renderer.cpp
 	${SRC_DIR}/sfz/renderer/RendererConfigParser.hpp
 	${SRC_DIR}/sfz/renderer/RendererConfigParser.cpp
@@ -365,6 +372,7 @@ target_include_directories(PhantasyEngine PUBLIC
 	${SFZ_CORE_INCLUDE_DIRS}
 	${STB_INCLUDE_DIRS}
 	${IMGUI_INCLUDE_DIRS}
+	${ZEROG_IMGUI_INCLUDE_DIRS}
 	${NATIVEFILEDIALOG_INCLUDE_DIRS}
 	${SAJSON_INCLUDE_DIRS}
 	${TINYGLTF_INCLUDE_DIRS}
@@ -375,6 +383,7 @@ target_link_libraries(PhantasyEngine
 	${ZEROG_LIBRARIES}
 	${ZEROG_CPP_LIBRARIES}
 	${IMGUI_LIBRARIES}
+	${ZEROG_IMGUI_LIBRARIES}
 	${NATIVEFILEDIALOG_LIBRARIES}
 )
 
