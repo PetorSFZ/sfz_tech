@@ -74,11 +74,10 @@ zg::Result imguiInitRenderState(
 	ImGuiRenderState& state,
 	uint32_t frameLatency,
 	sfz::Allocator* allocator,
-	zg::CommandQueue& queue,
-	const ZgImageViewConstCpu& fontTexture,
-	float scale) noexcept;
+	zg::CommandQueue& copyQueue,
+	const ZgImageViewConstCpu& fontTexture) noexcept;
 
-zg::Result imguiRender(
+void imguiRender(
 	ImGuiRenderState& state,
 	uint64_t frameIdx,
 	zg::CommandQueue& presentQueue,

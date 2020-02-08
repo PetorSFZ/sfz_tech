@@ -126,8 +126,7 @@ bool Renderer::init(
 		mState->frameLatency,
 		mState->allocator,
 		mState->copyQueue,
-		zgFontTextureView,
-		mState->imguiScaleSetting->floatValue());
+		zgFontTextureView);
 	if (!imguiInitSuccess) {
 		this->destroy();
 		return false;
@@ -792,7 +791,7 @@ void Renderer::renderImguiHack(
 	const phImguiCommand* commands,
 	uint32_t numCommands) noexcept
 {
-	CHECK_ZG zg::imguiRender(
+	zg::imguiRender(
 		mState->imguiRenderState,
 		mState->currentFrameIdx,
 		mState->presentQueue,
