@@ -49,6 +49,56 @@ constexpr uint32_t IMGUI_MAX_NUM_INDICES = 32768;
 constexpr uint64_t IMGUI_VERTEX_BUFFER_SIZE = IMGUI_MAX_NUM_VERTICES * sizeof(ImGuiVertex);
 constexpr uint64_t IMGUI_INDEX_BUFFER_SIZE = IMGUI_MAX_NUM_INDICES * sizeof(uint32_t);
 
+// Shader source
+// ------------------------------------------------------------------------------------------------
+
+static constexpr char IMGUI_SHADER_HLSL_SRC[] = R"(
+
+cbuffer TransformsCB : register(b0) {
+	row_major float4x4 projMatrix;
+}
+
+struct VSInput {
+	float2 position : TEXCOORD0;
+	float2 texcoord : TEXCOORD1;
+	float4 color : TEXCOORD2;
+};
+
+struct VSOutput {
+	float2 texcoord : PARAM_0;
+	float4 color : PARAM_1;
+	float4 position : SV_Position;
+};
+
+struct PSInput {
+	float2 texcoord : PARAM_0;
+	float4 color : PARAM_1;
+};
+
+Texture2D fontTexture : register(t0);
+
+SamplerState fontSampler : register(s0);
+
+VSOutput VSMain(VSInput input)
+{
+	VSOutput output;
+
+	output.texcoord = input.texcoord;
+	output.color = input.color;
+
+	output.position = mul(projMatrix, float4(input.position, 0.0f, 1.0f));
+
+	return output;
+}
+
+float4 PSMain(PSInput input) : SV_TARGET
+{
+	float fontAlpha = fontTexture.Sample(fontSampler, input.texcoord).r;
+	return float4(input.color.rgb, input.color.a * fontAlpha);
+}
+
+)";
+
 // Error handling helpers
 // -----------------------------------------------------------------------------------------------
 
@@ -85,12 +135,9 @@ zg::Result imguiInitRenderState(
 			.setBlendingEnabled(true)
 			.setBlendFuncColor(ZG_BLEND_FUNC_ADD, ZG_BLEND_FACTOR_SRC_ALPHA, ZG_BLEND_FACTOR_SRC_INV_ALPHA)
 			.setDepthTestEnabled(false)
-			//.addVertexShaderPath("VSMain", "res_ph/shaders/imgui.hlsl")
-			//.addPixelShaderPath("PSMain", "res_ph/shaders/imgui.hlsl")
-			//.buildFromFileHLSL(mPipeline, ZG_SHADER_MODEL_6_0);
-			.addVertexShaderPath("VSMain", "res_ph/shaders/imgui_vs.spv")
-			.addPixelShaderPath("PSMain", "res_ph/shaders/imgui_ps.spv")
-			.buildFromFileSPIRV(state.pipeline);
+			.addVertexShaderSource("VSMain", IMGUI_SHADER_HLSL_SRC)
+			.addPixelShaderSource("PSMain", IMGUI_SHADER_HLSL_SRC)
+			.buildFromSourceHLSL(state.pipeline, ZG_SHADER_MODEL_6_0);
 		if (!zg::isSuccess(res)) return res;
 	}
 
