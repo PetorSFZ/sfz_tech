@@ -24,7 +24,6 @@
 #include <skipifzero_arrays.hpp>
 
 #include "sfz/renderer/Renderer.hpp"
-#include "sfz/rendering/ImguiRenderingData.hpp"
 #include "sfz/sdl/Mouse.hpp"
 #include "sfz/sdl/GameController.hpp"
 
@@ -40,11 +39,6 @@ void updateImgui(
 	const sdl::Mouse* rawMouse,
 	const Array<SDL_Event>* keyboardEvents,
 	const sdl::GameControllerState* controller) noexcept;
-
-void convertImguiDrawData(
-	Array<phImguiVertex>& vertices,
-	Array<uint32_t>& indices,
-	Array<phImguiCommand>& commands) noexcept;
 
 // The fonts initialized with Imgui
 ImFont* imguiFontDefault() noexcept;

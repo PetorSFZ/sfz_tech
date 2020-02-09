@@ -783,30 +783,16 @@ bool Renderer::stageBarrierProgressNext() noexcept
 	return true;
 }
 
-void Renderer::renderImguiHack(
-	const phImguiVertex* vertices,
-	uint32_t numVertices,
-	const uint32_t* indices,
-	uint32_t numIndices,
-	const phImguiCommand* commands,
-	uint32_t numCommands) noexcept
+void Renderer::frameFinish() noexcept
 {
+	// Render ImGui
 	zg::imguiRender(
 		mState->imguiRenderState,
 		mState->currentFrameIdx,
 		mState->presentQueue,
 		mState->windowFramebuffer,
-		mState->imguiScaleSetting->floatValue(),
-		vertices,
-		numVertices,
-		indices,
-		numIndices,
-		commands,
-		numCommands);
-}
+		mState->imguiScaleSetting->floatValue());
 
-void Renderer::frameFinish() noexcept
-{
 	// Finish ZeroG frame
 	sfz_assert(mState->windowFramebuffer.valid());
 	uint64_t frameMeasurementId = mState->frameMeasurementIds.data(mState->currentFrameIdx);

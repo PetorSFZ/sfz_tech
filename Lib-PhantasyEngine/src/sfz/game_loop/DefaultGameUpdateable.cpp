@@ -150,11 +150,6 @@ public:
 	FrametimeStats mStats = FrametimeStats(480);
 	int mStatsWarmup = 0;
 
-	// Imgui
-	Array<phImguiVertex> mImguiVertices;
-	Array<uint32_t> mImguiIndices;
-	Array<phImguiCommand> mImguiCommands;
-
 	// Global Config
 	str32 mConfigFilterString;
 	Array<str32> mCfgSections;
@@ -277,15 +272,6 @@ public:
 		// Render Imgui
 		renderConsole(renderer);
 		if (!mConsoleActive) mLogic->renderCustomImgui();
-		ImGui::Render();
-		convertImguiDrawData(mImguiVertices, mImguiIndices, mImguiCommands);
-		renderer.renderImguiHack(
-			mImguiVertices.data(),
-			mImguiVertices.size(),
-			mImguiIndices.data(),
-			mImguiIndices.size(),
-			mImguiCommands.data(),
-			mImguiCommands.size());
 
 		// Finish rendering frame
 		renderer.frameFinish();
@@ -723,11 +709,6 @@ UniquePtr<GameLoopUpdateable> createDefaultGameUpdateable(
 	// Create updateable and set members
 	UniquePtr<DefaultGameUpdateable> updateable = sfz::makeUnique<DefaultGameUpdateable>(allocator, sfz_dbg(""));
 	updateable->mLogic = std::move(logic);
-
-	// Imgui
-	updateable->mImguiVertices.init(1024, allocator, sfz_dbg(""));
-	updateable->mImguiIndices.init(1024, allocator, sfz_dbg(""));
-	updateable->mImguiCommands.init(1024, allocator, sfz_dbg(""));
 
 	// Global Config
 	updateable->mCfgSections.init(32, allocator, sfz_dbg(""));

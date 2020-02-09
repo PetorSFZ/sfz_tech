@@ -25,7 +25,6 @@
 
 #include "sfz/rendering/Mesh.hpp"
 #include "sfz/rendering/ImageView.hpp"
-#include "sfz/rendering/ImguiRenderingData.hpp"
 
 // Forward declarations
 struct SDL_Window;
@@ -203,14 +202,6 @@ public:
 	// Progress to the next stage barrier
 	bool stageBarrierProgressNext() noexcept;
 
-	void renderImguiHack(
-		const phImguiVertex* vertices,
-		uint32_t numVertices,
-		const uint32_t* indices,
-		uint32_t numIndices,
-		const phImguiCommand* commands,
-		uint32_t numCommands) noexcept; // TODO: This should be baked into finishFrame()
-	
 	// Finished the frame, no additional stage methods may be called after this.
 	void frameFinish() noexcept;
 

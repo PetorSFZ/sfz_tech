@@ -271,7 +271,6 @@ set(HEADER_FILES
 	${INCLUDE_DIR}/sfz/rendering/FullscreenTriangle.hpp
 	${INCLUDE_DIR}/sfz/rendering/ImageView.hpp
 	${INCLUDE_DIR}/sfz/rendering/Image.hpp
-	${INCLUDE_DIR}/sfz/rendering/ImguiRenderingData.hpp
 	${INCLUDE_DIR}/sfz/rendering/ImguiSupport.hpp
 	${INCLUDE_DIR}/sfz/rendering/Mesh.hpp
 	${INCLUDE_DIR}/sfz/rendering/SphereLight.hpp

@@ -35,6 +35,7 @@ using sfz::vec4;
 // Helper structs
 // ------------------------------------------------------------------------------------------------
 
+// TODO: Remove
 struct ImGuiVertex final {
 	vec2 pos;
 	vec2 texcoord;
@@ -42,12 +43,20 @@ struct ImGuiVertex final {
 };
 static_assert(sizeof(ImGuiVertex) == 32, "ImGuiVertex is padded");
 
+// TODO: Remove
+struct ImGuiCommand {
+	uint32_t idxBufferOffset = 0;
+	uint32_t numIndices = 0;
+	uint32_t padding[2];
+	sfz::vec4 clipRect = sfz::vec4(0.0f);
+};
+static_assert(sizeof(ImGuiCommand) == sizeof(uint32_t) * 8, "ImguiCommand is padded");
+
 // ImGui Renderer
 // ------------------------------------------------------------------------------------------------
 
 struct ImGuiFrameState final {
 	zg::Fence fence;
-	sfz::Array<ImGuiVertex> convertedVertices;
 	zg::Buffer uploadVertexBuffer;
 	zg::Buffer uploadIndexBuffer;
 };
@@ -68,6 +77,12 @@ struct ImGuiRenderState final {
 	// Per frame state
 	sfz::Array<ImGuiFrameState> frameStates;
 	ImGuiFrameState& getFrameState(uint64_t idx) { return frameStates[idx % frameStates.size()]; }
+
+	// Temp arrays
+	// TODO: Remove
+	sfz::Array<ImGuiVertex> tmpVertices;
+	sfz::Array<uint32_t> tmpIndices;
+	sfz::Array<ImGuiCommand> tmpCommands;
 };
 
 zg::Result imguiInitRenderState(
@@ -82,12 +97,6 @@ void imguiRender(
 	uint64_t frameIdx,
 	zg::CommandQueue& presentQueue,
 	zg::Framebuffer& framebuffer,
-	float scale,
-	const phImguiVertex* vertices,
-	uint32_t numVertices,
-	const uint32_t* indices,
-	uint32_t numIndices,
-	const phImguiCommand* commands,
-	uint32_t numCommands) noexcept;
+	float scale) noexcept;
 
 } // namespace zg

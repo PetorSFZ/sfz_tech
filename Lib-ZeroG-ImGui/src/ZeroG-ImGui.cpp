@@ -22,22 +22,7 @@
 
 #include <skipifzero_strings.hpp>
 
-
-struct phImguiVertex {
-	sfz::vec2 pos;
-	sfz::vec2 texcoord;
-	uint32_t color;
-};
-static_assert(sizeof(phImguiVertex) == sizeof(float) * 5, "phImguiVertex is padded");
-
-struct phImguiCommand {
-	uint32_t idxBufferOffset = 0;
-	uint32_t numIndices = 0;
-	uint32_t padding[2];
-	sfz::vec4 clipRect = sfz::vec4(0.0f);
-};
-static_assert(sizeof(phImguiCommand) == sizeof(uint32_t) * 8, "phImguiCommand is padded");
-
+#include <imgui.h>
 
 namespace zg {
 
@@ -212,6 +197,11 @@ zg::Result imguiInitRenderState(
 	}
 	sfz_assert(uploadHeapOffset == uploadHeapNumBytes);
 
+	// TODO: Remove
+	state.tmpVertices.init(IMGUI_MAX_NUM_VERTICES, allocator, sfz_dbg(""));
+	state.tmpIndices.init(IMGUI_MAX_NUM_INDICES, allocator, sfz_dbg(""));
+	state.tmpCommands.init(100, allocator, sfz_dbg(""));
+
 	return zg::Result::SUCCESS;
 }
 
@@ -220,45 +210,82 @@ void imguiRender(
 	uint64_t frameIdx,
 	zg::CommandQueue& presentQueue,
 	zg::Framebuffer& framebuffer,
-	float scale,
-	const phImguiVertex* vertices,
-	uint32_t numVertices,
-	const uint32_t* indices,
-	uint32_t numIndices,
-	const phImguiCommand* commands,
-	uint32_t numCommands) noexcept
+	float scale) noexcept
 {
-	sfz_assert_hard(numVertices < IMGUI_MAX_NUM_VERTICES);
-	sfz_assert_hard(numIndices < IMGUI_MAX_NUM_INDICES);
+	// Generate ImGui draw lists and get the draw data
+	ImGui::Render();
+	ImDrawData& drawData = *ImGui::GetDrawData();
+
+	// Clear old temp data
+	state.tmpVertices.clear();
+	state.tmpIndices.clear();
+	state.tmpCommands.clear();
+
+	// Convert draw data
+	for (int i = 0; i < drawData.CmdListsCount; i++) {
+
+		const ImDrawList& cmdList = *drawData.CmdLists[i];
+
+		// indexOffset is the offset to offset all indices with
+		const uint32_t indexOffset = state.tmpVertices.size();
+
+		// indexBufferOffset is the offset to where the indices start
+		uint32_t indexBufferOffset = state.tmpIndices.size();
+
+		// Convert vertices and add to global list
+		for (int j = 0; j < cmdList.VtxBuffer.size(); j++) {
+			const ImDrawVert& imguiVertex = cmdList.VtxBuffer[j];
+
+			ImGuiVertex convertedVertex;
+			convertedVertex.pos = vec2(imguiVertex.pos.x, imguiVertex.pos.y);
+			convertedVertex.texcoord = vec2(imguiVertex.uv.x, imguiVertex.uv.y);
+			convertedVertex.color = [&]() {
+				vec4 color;
+				color.x = float(imguiVertex.col & 0xFFu) * (1.0f / 255.0f);
+				color.y = float((imguiVertex.col >> 8u) & 0xFFu)* (1.0f / 255.0f);
+				color.z = float((imguiVertex.col >> 16u) & 0xFFu)* (1.0f / 255.0f);
+				color.w = float((imguiVertex.col >> 24u) & 0xFFu)* (1.0f / 255.0f);
+				return color;
+			}();
+
+			state.tmpVertices.add(convertedVertex);
+		}
+
+		// Fix indices and add to global list
+		for (int j = 0; j < cmdList.IdxBuffer.size(); j++) {
+			state.tmpIndices.add(cmdList.IdxBuffer[j] + indexOffset);
+		}
+
+		// Create new commands
+		for (int j = 0; j < cmdList.CmdBuffer.Size; j++) {
+			const ImDrawCmd& inCmd = cmdList.CmdBuffer[j];
+
+			ImGuiCommand cmd;
+			cmd.idxBufferOffset = indexBufferOffset;
+			cmd.numIndices = inCmd.ElemCount;
+			indexBufferOffset += inCmd.ElemCount;
+			cmd.clipRect.x = inCmd.ClipRect.x;
+			cmd.clipRect.y = inCmd.ClipRect.y;
+			cmd.clipRect.z = inCmd.ClipRect.z;
+			cmd.clipRect.w = inCmd.ClipRect.w;
+
+			state.tmpCommands.add(cmd);
+		}
+	}
+
+	sfz_assert_hard(state.tmpVertices.size() < IMGUI_MAX_NUM_VERTICES);
+	sfz_assert_hard(state.tmpIndices.size() < IMGUI_MAX_NUM_INDICES);
 
 	// Get current frame's resources and then wait until they are available (i.e. the frame they
 	// are part of has finished rendering).
 	ImGuiFrameState& imguiFrame = state.getFrameState(frameIdx);
 	ASSERT_ZG imguiFrame.fence.waitOnCpuBlocking();
 
-	// Convert ImGui vertices because slightly different representation
-	if (imguiFrame.convertedVertices.data() == nullptr) {
-		imguiFrame.convertedVertices.init(IMGUI_MAX_NUM_VERTICES, state.allocator, sfz_dbg(""));
-	}
-	imguiFrame.convertedVertices.hackSetSize(numVertices);
-	for (uint32_t i = 0; i < numVertices; i++) {
-		imguiFrame.convertedVertices[i].pos = vertices[i].pos;
-		imguiFrame.convertedVertices[i].texcoord = vertices[i].texcoord;
-		imguiFrame.convertedVertices[i].color = [&]() {
-			vec4 color;
-			color.x = float(vertices[i].color & 0xFFu) * (1.0f / 255.0f);
-			color.y = float((vertices[i].color >> 8u) & 0xFFu) * (1.0f / 255.0f);
-			color.z = float((vertices[i].color >> 16u) & 0xFFu) * (1.0f / 255.0f);
-			color.w = float((vertices[i].color >> 24u) & 0xFFu) * (1.0f / 255.0f);
-			return color;
-		}();
-	}
-
 	// Memcpy vertices and indices to imgui upload buffers
 	ASSERT_ZG imguiFrame.uploadVertexBuffer.memcpyTo(
-		0, imguiFrame.convertedVertices.data(), numVertices * sizeof(ImGuiVertex));
+		0, state.tmpVertices.data(), state.tmpVertices.size() * sizeof(ImGuiVertex));
 	ASSERT_ZG imguiFrame.uploadIndexBuffer.memcpyTo(
-		0, indices, numIndices * sizeof(uint32_t));
+		0, state.tmpIndices.data(), state.tmpIndices.size() * sizeof(uint32_t));
 
 	zg::CommandList commandList;
 	ASSERT_ZG presentQueue.beginCommandListRecording(commandList);
@@ -292,8 +319,8 @@ void imguiRender(
 	ASSERT_ZG commandList.setPushConstant(0, &projMatrix, sizeof(float) * 16);
 
 	// Render ImGui commands
-	for (uint32_t i = 0; i < numCommands; i++) {
-		const phImguiCommand& cmd = commands[i];
+	for (uint32_t i = 0; i < state.tmpCommands.size(); i++) {
+		const ImGuiCommand& cmd = state.tmpCommands[i];
 		sfz_assert((cmd.numIndices % 3) == 0);
 
 		ZgFramebufferRect scissorRect = {};

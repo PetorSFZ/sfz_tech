@@ -355,64 +355,6 @@ void updateImgui(
 	}
 }
 
-void convertImguiDrawData(
-	Array<phImguiVertex>& vertices,
-	Array<uint32_t>& indices,
-	Array<phImguiCommand>& commands) noexcept
-{
-	ImDrawData& drawData = *ImGui::GetDrawData();
-
-	// Clear old data
-	vertices.clear();
-	indices.clear();
-	commands.clear();
-
-	// Convert draw data
-	for (int i = 0; i < drawData.CmdListsCount; i++) {
-
-		const ImDrawList& cmdList = *drawData.CmdLists[i];
-
-		// indexOffset is the offset to offset all indices with
-		const uint32_t indexOffset = vertices.size();
-
-		// indexBufferOffset is the offset to where the indices start
-		uint32_t indexBufferOffset = indices.size();
-
-		// Convert vertices and add to global list
-		for (int j = 0; j < cmdList.VtxBuffer.size(); j++) {
-			const ImDrawVert& imguiVertex = cmdList.VtxBuffer[j];
-
-			phImguiVertex convertedVertex;
-			convertedVertex.pos = vec2(imguiVertex.pos.x, imguiVertex.pos.y);
-			convertedVertex.texcoord = vec2(imguiVertex.uv.x, imguiVertex.uv.y);
-			convertedVertex.color = imguiVertex.col;
-
-			vertices.add(convertedVertex);
-		}
-
-		// Fix indices and add to global list
-		for (int j = 0; j < cmdList.IdxBuffer.size(); j++) {
-			indices.add(cmdList.IdxBuffer[j] + indexOffset);
-		}
-
-		// Create new commands
-		for (int j = 0; j < cmdList.CmdBuffer.Size; j++) {
-			const ImDrawCmd& inCmd = cmdList.CmdBuffer[j];
-
-			phImguiCommand cmd;
-			cmd.idxBufferOffset = indexBufferOffset;
-			cmd.numIndices = inCmd.ElemCount;
-			indexBufferOffset += inCmd.ElemCount;
-			cmd.clipRect.x = inCmd.ClipRect.x;
-			cmd.clipRect.y = inCmd.ClipRect.y;
-			cmd.clipRect.z = inCmd.ClipRect.z;
-			cmd.clipRect.w = inCmd.ClipRect.w;
-
-			commands.add(cmd);
-		}
-	}
-}
-
 ImFont* imguiFontDefault() noexcept
 {
 	return imguiState->defaultFont;
