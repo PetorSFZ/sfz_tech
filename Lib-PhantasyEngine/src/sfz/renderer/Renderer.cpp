@@ -166,6 +166,10 @@ void Renderer::destroy() noexcept
 		CHECK_ZG mState->presentQueue.flush();
 		CHECK_ZG mState->copyQueue.flush();
 
+		// Destroy ImGui renderer
+		zg::imguiDestroyRenderState(mState->imguiRenderState);
+		mState->imguiRenderState = nullptr;
+
 		// Destroy all textures and meshes
 		this->removeAllTexturesGpuBlocking();
 		this->removeAllMeshesGpuBlocking();

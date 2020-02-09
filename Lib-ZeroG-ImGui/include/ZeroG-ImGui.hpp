@@ -19,81 +19,27 @@
 #pragma once
 
 #include <skipifzero.hpp>
-#include <skipifzero_arrays.hpp>
 
 #include <ZeroG-cpp.hpp>
 
-struct phImguiVertex;
-struct phImguiCommand;
-
 namespace zg {
-
-using sfz::vec2;
-using sfz::vec3;
-using sfz::vec4;
-
-// Helper structs
-// ------------------------------------------------------------------------------------------------
-
-// TODO: Remove
-struct ImGuiVertex final {
-	vec2 pos;
-	vec2 texcoord;
-	vec4 color;
-};
-static_assert(sizeof(ImGuiVertex) == 32, "ImGuiVertex is padded");
-
-// TODO: Remove
-struct ImGuiCommand {
-	uint32_t idxBufferOffset = 0;
-	uint32_t numIndices = 0;
-	uint32_t padding[2];
-	sfz::vec4 clipRect = sfz::vec4(0.0f);
-};
-static_assert(sizeof(ImGuiCommand) == sizeof(uint32_t) * 8, "ImguiCommand is padded");
 
 // ImGui Renderer
 // ------------------------------------------------------------------------------------------------
 
-struct ImGuiFrameState final {
-	zg::Fence fence;
-	zg::Buffer uploadVertexBuffer;
-	zg::Buffer uploadIndexBuffer;
-};
-
-struct ImGuiRenderState final {
-	sfz::Allocator* allocator = nullptr;
-
-	// Pipeline used to render ImGui
-	zg::PipelineRender pipeline;
-
-	// Font texture
-	zg::MemoryHeap fontTextureHeap;
-	zg::Texture2D fontTexture;
-
-	// Memory used to upload ImgGi vertices and indices for a given frame
-	zg::MemoryHeap uploadHeap;
-
-	// Per frame state
-	sfz::Array<ImGuiFrameState> frameStates;
-	ImGuiFrameState& getFrameState(uint64_t idx) { return frameStates[idx % frameStates.size()]; }
-
-	// Temp arrays
-	// TODO: Remove
-	sfz::Array<ImGuiVertex> tmpVertices;
-	sfz::Array<uint32_t> tmpIndices;
-	sfz::Array<ImGuiCommand> tmpCommands;
-};
+struct ImGuiRenderState;
 
 zg::Result imguiInitRenderState(
-	ImGuiRenderState& state,
+	ImGuiRenderState*& stateOut,
 	uint32_t frameLatency,
 	sfz::Allocator* allocator,
 	zg::CommandQueue& copyQueue,
 	const ZgImageViewConstCpu& fontTexture) noexcept;
 
+void imguiDestroyRenderState(ImGuiRenderState*& state) noexcept;
+
 void imguiRender(
-	ImGuiRenderState& state,
+	ImGuiRenderState* state,
 	uint64_t frameIdx,
 	zg::CommandQueue& presentQueue,
 	zg::Framebuffer& framebuffer,

@@ -247,7 +247,7 @@ struct RendererState final {
 
 	// Imgui renderer
 	const Setting* imguiScaleSetting = nullptr;
-	zg::ImGuiRenderState imguiRenderState;
+	zg::ImGuiRenderState* imguiRenderState = nullptr;;
 
 	// Settings
 	const Setting* flushPresentQueueEachFrame = nullptr;
