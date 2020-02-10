@@ -215,12 +215,14 @@ set(TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/res_ph)
 
 set(HEADER_FILES
-	${INCLUDE_DIR}/sfz/Context.hpp
-	${INCLUDE_DIR}/sfz/CudaCompatibility.hpp
-	${INCLUDE_DIR}/sfz/Logging.hpp
-	${INCLUDE_DIR}/sfz/PopWarnings.hpp
-	${INCLUDE_DIR}/sfz/PushWarnings.hpp
-	${INCLUDE_DIR}/sfz/SimdIntrinsics.hpp
+	${INCLUDE_DIR}/sfz/config/GlobalConfig.hpp
+	${INCLUDE_DIR}/sfz/config/Setting.hpp
+
+	${INCLUDE_DIR}/sfz/console/Console.hpp
+
+	${INCLUDE_DIR}/sfz/game_loop/DefaultGameUpdateable.hpp
+	${INCLUDE_DIR}/sfz/game_loop/GameLoop.hpp
+	${INCLUDE_DIR}/sfz/game_loop/GameLoopUpdateable.hpp
 
 	${INCLUDE_DIR}/sfz/geometry/AABB.hpp
 	${INCLUDE_DIR}/sfz/geometry/AABB.inl
@@ -247,27 +249,10 @@ set(HEADER_FILES
 	${INCLUDE_DIR}/sfz/memory/DebugAllocator.hpp
 	${INCLUDE_DIR}/sfz/memory/StandardAllocator.hpp
 
-	${INCLUDE_DIR}/sfz/strings/DynString.hpp
-	${INCLUDE_DIR}/sfz/strings/StringID.hpp
-
-	${INCLUDE_DIR}/sfz/util/Enumerate.hpp
-	${INCLUDE_DIR}/sfz/util/FrametimeStats.hpp
-	${INCLUDE_DIR}/sfz/util/IniParser.hpp
-	${INCLUDE_DIR}/sfz/util/IO.hpp
-	${INCLUDE_DIR}/sfz/util/LoggingInterface.hpp
-	${INCLUDE_DIR}/sfz/util/StandardLogger.hpp
-
-	${INCLUDE_DIR}/sfz/config/GlobalConfig.hpp
-	${INCLUDE_DIR}/sfz/config/Setting.hpp
-
-	${INCLUDE_DIR}/sfz/game_loop/DefaultGameUpdateable.hpp
-	${INCLUDE_DIR}/sfz/game_loop/GameLoop.hpp
-	${INCLUDE_DIR}/sfz/game_loop/GameLoopUpdateable.hpp
-
 	${INCLUDE_DIR}/sfz/renderer/BuiltInShaderTypes.hpp
 	${INCLUDE_DIR}/sfz/renderer/CascadedShadowMaps.hpp
 	${INCLUDE_DIR}/sfz/renderer/Renderer.hpp
-
+	
 	${INCLUDE_DIR}/sfz/rendering/FullscreenTriangle.hpp
 	${INCLUDE_DIR}/sfz/rendering/ImageView.hpp
 	${INCLUDE_DIR}/sfz/rendering/Image.hpp
@@ -287,17 +272,38 @@ set(HEADER_FILES
 	${INCLUDE_DIR}/sfz/state/GameStateContainer.hpp
 	${INCLUDE_DIR}/sfz/state/GameStateEditor.hpp
 
+	${INCLUDE_DIR}/sfz/strings/DynString.hpp
+	${INCLUDE_DIR}/sfz/strings/StringID.hpp
+
+	${INCLUDE_DIR}/sfz/util/Enumerate.hpp
+	${INCLUDE_DIR}/sfz/util/FrametimeStats.hpp
 	${INCLUDE_DIR}/sfz/util/GltfLoader.hpp
 	${INCLUDE_DIR}/sfz/util/GltfWriter.hpp
+	${INCLUDE_DIR}/sfz/util/IniParser.hpp
+	${INCLUDE_DIR}/sfz/util/IO.hpp
 	${INCLUDE_DIR}/sfz/util/JsonParser.hpp
+	${INCLUDE_DIR}/sfz/util/LoggingInterface.hpp
+	${INCLUDE_DIR}/sfz/util/StandardLogger.hpp
 	${INCLUDE_DIR}/sfz/util/TerminalLogger.hpp
 
+	${INCLUDE_DIR}/sfz/Context.hpp
+	${INCLUDE_DIR}/sfz/CudaCompatibility.hpp
+	${INCLUDE_DIR}/sfz/Logging.hpp
 	${INCLUDE_DIR}/sfz/PhantasyEngineMain.hpp
+	${INCLUDE_DIR}/sfz/PopWarnings.hpp
+	${INCLUDE_DIR}/sfz/PushWarnings.hpp
+	${INCLUDE_DIR}/sfz/SimdIntrinsics.hpp
 )
 source_group(TREE ${INCLUDE_DIR} FILES ${HEADER_FILES})
 
 set(SRC_FILES
-	${SRC_DIR}/sfz/Context.cpp
+	${SRC_DIR}/sfz/config/GlobalConfig.cpp
+	${SRC_DIR}/sfz/config/Setting.cpp
+
+	${SRC_DIR}/sfz/console/Console.cpp
+
+	${SRC_DIR}/sfz/game_loop/DefaultGameUpdateable.cpp
+	${SRC_DIR}/sfz/game_loop/GameLoop.cpp
 
 	${SRC_DIR}/sfz/math/MathPrimitiveToStrings.cpp
 	${SRC_DIR}/sfz/math/ProjectionMatrices.cpp
@@ -306,20 +312,6 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/memory/DebugAllocator.cpp
 	${SRC_DIR}/sfz/memory/StandardAllocator.cpp
 
-	${SRC_DIR}/sfz/strings/DynString.cpp
-	${SRC_DIR}/sfz/strings/StringID.cpp
-
-	${SRC_DIR}/sfz/util/FrametimeStats.cpp
-	${SRC_DIR}/sfz/util/IniParser.cpp
-	${SRC_DIR}/sfz/util/IO.cpp
-	${SRC_DIR}/sfz/util/StandardLogger.cpp
-
-	${SRC_DIR}/sfz/config/GlobalConfig.cpp
-	${SRC_DIR}/sfz/config/Setting.cpp
-
-	${SRC_DIR}/sfz/game_loop/DefaultGameUpdateable.cpp
-	${SRC_DIR}/sfz/game_loop/GameLoop.cpp
-
 	${SRC_DIR}/sfz/renderer/CascadedShadowMaps.cpp
 	${SRC_DIR}/sfz/renderer/DynamicGpuAllocator.hpp
 	${SRC_DIR}/sfz/renderer/DynamicGpuAllocator.cpp
@@ -327,7 +319,6 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/renderer/GpuMesh.cpp
 	${SRC_DIR}/sfz/renderer/GpuTextures.hpp
 	${SRC_DIR}/sfz/renderer/GpuTextures.cpp
-
 	${SRC_DIR}/sfz/renderer/Renderer.cpp
 	${SRC_DIR}/sfz/renderer/RendererConfigParser.hpp
 	${SRC_DIR}/sfz/renderer/RendererConfigParser.cpp
@@ -351,11 +342,19 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/state/GameStateContainer.cpp
 	${SRC_DIR}/sfz/state/GameStateEditor.cpp
 
+	${SRC_DIR}/sfz/strings/DynString.cpp
+	${SRC_DIR}/sfz/strings/StringID.cpp
+
+	${SRC_DIR}/sfz/util/FrametimeStats.cpp
 	${SRC_DIR}/sfz/util/GltfLoader.cpp
 	${SRC_DIR}/sfz/util/GltfWriter.cpp
+	${SRC_DIR}/sfz/util/IniParser.cpp
+	${SRC_DIR}/sfz/util/IO.cpp
 	${SRC_DIR}/sfz/util/JsonParser.cpp
+	${SRC_DIR}/sfz/util/StandardLogger.cpp
 	${SRC_DIR}/sfz/util/TerminalLogger.cpp
 
+	${SRC_DIR}/sfz/Context.cpp
 	${SRC_DIR}/sfz/PhantasyEngineMain.cpp
 )
 source_group(TREE ${SRC_DIR} FILES ${SRC_FILES})

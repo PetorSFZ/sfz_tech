@@ -202,7 +202,7 @@ void deinitializeImgui() noexcept
 }
 
 void updateImgui(
-	Renderer& renderer,
+	vec2_i32 windowResolution,
 	const sdl::Mouse* rawMouse,
 	const Array<SDL_Event>* keyboardEvents,
 	const sdl::GameControllerState* controller) noexcept
@@ -242,7 +242,7 @@ void updateImgui(
 	float scaleFactor = 1.0f / imguiScaleSetting->floatValue();
 
 	// Set display dimensions
-	vec2 imguiDims = vec2(renderer.windowResolution()) * scaleFactor;
+	vec2 imguiDims = vec2(windowResolution) * scaleFactor;
 	io.DisplaySize = imguiDims;
 
 	// Update mouse if available

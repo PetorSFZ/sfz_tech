@@ -35,7 +35,7 @@ phImageView initializeImgui(Allocator* allocator) noexcept;
 void deinitializeImgui() noexcept;
 
 void updateImgui(
-	Renderer& renderer,
+	vec2_i32 windowResolution,
 	const sdl::Mouse* rawMouse,
 	const Array<SDL_Event>* keyboardEvents,
 	const sdl::GameControllerState* controller) noexcept;
