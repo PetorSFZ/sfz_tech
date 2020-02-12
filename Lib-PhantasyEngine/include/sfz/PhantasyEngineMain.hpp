@@ -19,11 +19,10 @@
 
 #pragma once
 
-#include <SDL.h>
-
 #include <skipifzero_smart_pointers.hpp>
 
 #include "sfz/game_loop/GameLoopUpdateable.hpp"
+#include "sfz/game_loop/DefaultGameUpdateable.hpp"
 
 namespace sfz {
 
@@ -31,44 +30,38 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 enum class IniLocation {
-	/// The ini file is placed next to the exe file.
+	
+	// The ini file is placed next to the exe file.
 	NEXT_TO_EXECUTABLE,
 
-	/// "C:\Users\<username>\Documents\My Games" on Windows, i.e. where many games store their
-	/// save files and config files. On macOS (and Linux) this is instead "~/My Games".
+	// "C:\Users\<username>\Documents\My Games" on Windows, i.e. where many games store their
+	// save files and config files. On macOS (and Linux) this is instead "~/My Games".
 	MY_GAMES_DIR
 };
 
 struct InitOptions final {
-	/// Name of application. Is used for, among other things, window title, name of ini file, etc.
+
+	// Name of application. Is used for, among other things, window title, name of ini file, etc.
 	const char* appName = "NO_APP_NAME";
 
-	/// Location of Ini file
+	// Location of Ini file
 	IniLocation iniLocation = IniLocation::NEXT_TO_EXECUTABLE;
 
-	/// Function that creates the initial GameLoopUpdateable, will only be called once. It's okay
-	/// (and necessary) to use sfz::Allocator in this function, but nowhere else in the ini code.
-	UniquePtr<GameLoopUpdateable> (*createInitialUpdateable)(void);
+	// The initial game logic
+	UniquePtr<GameLogic> initialGameLogic;
 };
 
-// Phantasy Engine main macro
-// ------------------------------------------------------------------------------------------------
-
-/// This is used to initialize PhantasyEngine.
-/// The "Main.cpp" file for your project should essentially only include this header and call this
-/// macro. It is very important that you don't allocate any heap memory (especially using
-/// sfz::Allocator) before this function has executed. PhantasyEngine may replace the default
-/// allocator with a custom one.
-/// \param createInitOptions a function that creates an InitOptions struct
-#define PHANTASY_ENGINE_MAIN(createInitOptions) \
-	int main(int argc, char* argv[]) \
-	{ \
-		return sfz::mainImpl(argc, argv, (createInitOptions)()); \
-	}
-
-// Implementation function
-// ------------------------------------------------------------------------------------------------
-
-int mainImpl(int argc, char* argv[], InitOptions&& options);
-
 } // namespace sfz
+
+// User's main signature
+// ------------------------------------------------------------------------------------------------
+
+// The signature of the user's main function called when PhantasyEngine is initialized.
+//
+// The "Main.cpp" file for your project should implement this function. It will be called fairly
+// on in the actual "main" function that is owned by PhantasyEngine, mainly the allocator and
+// logging parts of PhantasyEngine's context will be setup before this is called.
+//
+// You should not perform too much work in this function, mainly setting some options and callbacks
+// for the game loop.
+sfz::InitOptions PhantasyEngineUserMain(int argc, char* argv[]);

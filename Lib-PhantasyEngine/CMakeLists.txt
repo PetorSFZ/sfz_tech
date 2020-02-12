@@ -221,7 +221,6 @@ set(HEADER_FILES
 	${INCLUDE_DIR}/sfz/console/Console.hpp
 
 	${INCLUDE_DIR}/sfz/game_loop/DefaultGameUpdateable.hpp
-	${INCLUDE_DIR}/sfz/game_loop/GameLoop.hpp
 	${INCLUDE_DIR}/sfz/game_loop/GameLoopUpdateable.hpp
 
 	${INCLUDE_DIR}/sfz/geometry/AABB.hpp
@@ -303,7 +302,6 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/console/Console.cpp
 
 	${SRC_DIR}/sfz/game_loop/DefaultGameUpdateable.cpp
-	${SRC_DIR}/sfz/game_loop/GameLoop.cpp
 
 	${SRC_DIR}/sfz/math/MathPrimitiveToStrings.cpp
 	${SRC_DIR}/sfz/math/ProjectionMatrices.cpp

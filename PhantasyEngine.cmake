@@ -275,8 +275,6 @@ function(phAddZeroGImGui)
 
 endfunction()
 
-
-
 # Adds the bundled externals, this is currently stb and dear-imgui.
 # stb: ${STB_FOUND}, ${STB_INCLUDE_DIRS}
 # dear-imgui: ${IMGUI_FOUND}, ${IMGUI_INCLUDE_DIRS}, ${IMGUI_LIBRARIES}

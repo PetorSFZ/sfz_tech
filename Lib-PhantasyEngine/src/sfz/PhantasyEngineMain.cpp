@@ -20,6 +20,8 @@
 #include <sfz/PhantasyEngineMain.hpp>
 
 #include <cstdlib>
+#include <chrono>
+#include <exception> // std::terminate()
 
 #ifdef _WIN32
 #define NOMINMAX
@@ -30,13 +32,19 @@
 #include <direct.h>
 #endif
 
+#include <SDL.h>
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
 #include <skipifzero_strings.hpp>
 
 #include "sfz/Context.hpp"
 #include "sfz/Logging.hpp"
 #include "sfz/config/GlobalConfig.hpp"
-#include "sfz/game_loop/GameLoop.hpp"
 #include "sfz/memory/StandardAllocator.hpp"
 #include "sfz/rendering/Image.hpp"
 #include "sfz/rendering/ImguiSupport.hpp"
@@ -44,8 +52,6 @@
 #include "sfz/strings/StringID.hpp"
 #include "sfz/util/IO.hpp"
 #include "sfz/util/TerminalLogger.hpp"
-
-namespace sfz {
 
 // Request dedicated graphics card over integrated on Windows
 // ------------------------------------------------------------------------------------------------
@@ -74,7 +80,7 @@ static void setupContexts() noexcept
 	context->logger = &logger;
 	context->config = sfz::getStaticGlobalConfigBoot();
 	context->resourceStrings =
-		allocator->newObject<StringCollection>(sfz_dbg("Resource Strings"), 4096, allocator);
+		allocator->newObject<sfz::StringCollection>(sfz_dbg("Resource Strings"), 4096, allocator);
 
 	// Set Phantasy Engine context
 	sfz::setContext(context);
@@ -125,16 +131,293 @@ static void logSDL2Version() noexcept
 		uint32_t(version.major), uint32_t(version.minor), uint32_t(version.patch));
 }
 
+// Typedefs
+// ------------------------------------------------------------------------------------------------
+
+using time_point = std::chrono::high_resolution_clock::time_point;
+
+// GameLoopState
+// ------------------------------------------------------------------------------------------------
+
+struct GameLoopState final {
+	sfz::UniquePtr<sfz::GameLoopUpdateable> updateable;
+	sfz::UniquePtr<sfz::Renderer> renderer;
+	SDL_Window* window = nullptr;
+	void(*cleanupCallback)(void) = nullptr;
+	bool quit = false;
+
+	time_point previousItrTime;
+
+	// Input structs for updateable
+	sfz::UserInput userInput;
+	sfz::UpdateInfo updateInfo;
+
+	// Window settings
+	sfz::Setting* windowWidth = nullptr;
+	sfz::Setting* windowHeight = nullptr;
+	sfz::Setting* fullscreen = nullptr;
+	bool lastFullscreenValue;
+	sfz::Setting* maximized = nullptr;
+	bool lastMaximizedValue;
+};
+
+// Static helper functions
+// ------------------------------------------------------------------------------------------------
+
+static void quit(GameLoopState& gameLoopState) noexcept
+{
+	gameLoopState.quit = true; // Exit infinite while loop (on some platforms)
+
+	SFZ_INFO("PhantasyEngine", "Destroying current updateable");
+	gameLoopState.updateable->onQuit();
+	gameLoopState.updateable.destroy(); // Destroy the current updateable
+
+	SFZ_INFO("PhantasyEngine", "Destroying renderer");
+	gameLoopState.renderer.destroy(); // Destroy the current renderer
+
+	SFZ_INFO("PhantasyEngine", "Closing SDL controllers");
+	gameLoopState.userInput.controllers.clear();
+
+	SFZ_INFO("PhantasyEngine", "Destroying SDL Window");
+	SDL_DestroyWindow(gameLoopState.window);
+
+	SFZ_INFO("PhantasyEngine", "Calling cleanup callback");
+	gameLoopState.cleanupCallback(); // Call the cleanup callback
+
+	// Exit program on Emscripten
+#ifdef __EMSCRIPTEN__
+	emscripten_cancel_main_loop();
+#endif
+}
+
+static float calculateDelta(time_point& previousTime) noexcept
+{
+	time_point currentTime = std::chrono::high_resolution_clock::now();
+
+	using FloatSecond = std::chrono::duration<float>;
+	float delta = std::chrono::duration_cast<FloatSecond>(currentTime - previousTime).count();
+
+	previousTime = currentTime;
+	return delta;
+}
+
+static void initControllers(sfz::HashMap<int32_t, sfz::GameController>& controllers) noexcept
+{
+	controllers.clear();
+
+	int numJoysticks = SDL_NumJoysticks();
+	for (int i = 0; i < numJoysticks; ++i) {
+		if (!SDL_IsGameController(i)) continue;
+
+		sfz::GameController c(i);
+		if (c.id() == -1) continue;
+		if (controllers.get(c.id()) != nullptr) continue;
+
+		controllers[c.id()] = std::move(c);
+	}
+}
+
+static bool handleUpdateOp(GameLoopState& state, sfz::UpdateOp& op) noexcept
+{
+	switch (op.type) {
+	case sfz::UpdateOpType::QUIT:
+		quit(state);
+		return true;
+	case sfz::UpdateOpType::CHANGE_UPDATEABLE:
+		state.updateable = std::move(op.newUpdateable);
+		state.updateable->initialize(*state.renderer);
+		return true;
+	case sfz::UpdateOpType::CHANGE_TICK_RATE:
+		if (op.ticksPerSecond != 0) {
+			state.updateInfo.tickRate = op.ticksPerSecond;
+			state.updateInfo.tickTimeSeconds = 1.0f / float(op.ticksPerSecond);
+		}
+		return true;
+	case sfz::UpdateOpType::REINIT_CONTROLLERS:
+		initControllers(state.userInput.controllers);
+		return true;
+	case sfz::UpdateOpType::NO_OP:
+	default:
+		// Do nothing
+		return false;
+	}
+}
+
+// gameLoopIteration()
+// ------------------------------------------------------------------------------------------------
+
+/// Called for each iteration of the game loop
+void gameLoopIteration(void* gameLoopStatePtr) noexcept
+{
+	GameLoopState& state = *static_cast<GameLoopState*>(gameLoopStatePtr);
+
+	// Calculate delta since previous iteration
+	state.updateInfo.iterationDeltaSeconds = calculateDelta(state.previousItrTime);
+	//PH_LOG(LogLevel::INFO, "PhantasyEngine", "Frametime = %.3f ms",
+	//	state.updateInfo.iterationDeltaSeconds * 100.0f);
+
+	float totalAvailableTime = state.updateInfo.iterationDeltaSeconds + state.updateInfo.lagSeconds;
+
+	// Calculate how many updates should be performed
+	state.updateInfo.numUpdateTicks =
+		uint32_t(std::floorf(totalAvailableTime / state.updateInfo.tickTimeSeconds));
+
+	// Calculate lag
+	float totalUpdateTime =
+		float(state.updateInfo.numUpdateTicks) * state.updateInfo.tickTimeSeconds;
+	state.updateInfo.lagSeconds = sfz::max(totalAvailableTime - totalUpdateTime, 0.0f);
+
+	// Remove old events
+	state.userInput.events.clear();
+	state.userInput.controllerEvents.clear();
+	state.userInput.mouseEvents.clear();
+
+	// Check window status
+	uint32_t currentWindowFlags = SDL_GetWindowFlags(state.window);
+	bool isFullscreen = (currentWindowFlags & SDL_WINDOW_FULLSCREEN_DESKTOP) != 0;
+	bool isMaximized = (currentWindowFlags & SDL_WINDOW_MAXIMIZED) != 0;
+	bool shouldBeFullscreen = state.fullscreen->boolValue();
+	bool shouldBeMaximized = state.maximized->boolValue();
+
+	// Process SDL events
+	SDL_Event event;
+	while (SDL_PollEvent(&event) != 0) {
+		switch (event.type) {
+
+		// Quitting
+		case SDL_QUIT:
+			SFZ_INFO("PhantasyEngine", "SDL_QUIT event recevied, quitting.");
+			quit(state);
+			return;
+
+		// SDL_GameController events
+		case SDL_CONTROLLERDEVICEADDED:
+		case SDL_CONTROLLERDEVICEREMOVED:
+		case SDL_CONTROLLERDEVICEREMAPPED:
+		case SDL_CONTROLLERBUTTONDOWN:
+		case SDL_CONTROLLERBUTTONUP:
+		case SDL_CONTROLLERAXISMOTION:
+			state.userInput.controllerEvents.add(event);
+			break;
+
+		// Mouse events
+		case SDL_MOUSEMOTION:
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+		case SDL_MOUSEWHEEL:
+			state.userInput.mouseEvents.add(event);
+			break;
+
+		// Window events
+		case SDL_WINDOWEVENT:
+			switch (event.window.event) {
+			case SDL_WINDOWEVENT_MAXIMIZED:
+				state.maximized->setBool(true);
+				isMaximized = true;
+				shouldBeMaximized = true;
+				break;
+			case SDL_WINDOWEVENT_RESIZED:
+				if (!isFullscreen && !isMaximized) {
+					state.windowWidth->setInt(event.window.data1);
+					state.windowHeight->setInt(event.window.data2);
+				}
+				break;
+			case SDL_WINDOWEVENT_RESTORED:
+				state.maximized->setBool(false);
+				isMaximized = false;
+				shouldBeMaximized = false;
+				state.fullscreen->setBool(false);
+				isFullscreen = false;
+				shouldBeFullscreen = false;
+				break;
+			default:
+				// Do nothing.
+				break;
+			}
+
+			// Still add event to user input
+			state.userInput.events.add(event);
+			break;
+
+		// All other events
+		default:
+			state.userInput.events.add(event);
+			break;
+
+		}
+	}
+
+	// Resize window
+	if (!isFullscreen && !isMaximized) {
+		int prevWidth, prevHeight;
+		SDL_GetWindowSize(state.window, &prevWidth, &prevHeight);
+		int newWidth = state.windowWidth->intValue();
+		int newHeight = state.windowHeight->intValue();
+		if (prevWidth != newWidth || prevHeight != newHeight) {
+			SDL_SetWindowSize(state.window, newWidth, newHeight);
+		}
+	}
+
+	// Set maximized
+	if (isMaximized != shouldBeMaximized && !isFullscreen && !shouldBeFullscreen) {
+		if (shouldBeMaximized) {
+			SDL_MaximizeWindow(state.window);
+		}
+		else {
+			SDL_RestoreWindow(state.window);
+		}
+	}
+
+	// Set fullscreen
+	if (isFullscreen != shouldBeFullscreen) {
+		uint32_t fullscreenFlags = shouldBeFullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
+		if (SDL_SetWindowFullscreen(state.window, fullscreenFlags) < 0) {
+			SFZ_ERROR("PhantasyEngine", "SDL_SetWindowFullscreen() failed: %s", SDL_GetError());
+		}
+		if (!shouldBeFullscreen) {
+			SDL_SetWindowSize(state.window,
+				state.windowWidth->intValue(), state.windowHeight->intValue());
+		}
+	}
+
+	// Updates controllers
+	state.userInput.controllersLastFrameState.clear();
+	for (auto pair : state.userInput.controllers) {
+		state.userInput.controllersLastFrameState[pair.key] = pair.value.state();
+	}
+	sfz::sdl::update(state.userInput.controllers, state.userInput.controllerEvents);
+
+	// Updates mouse
+	int windowWidth = -1;
+	int windowHeight = -1;
+	SDL_GetWindowSize(state.window, &windowWidth, &windowHeight);
+	state.userInput.rawMouse.update(windowWidth, windowHeight, state.userInput.mouseEvents);
+
+	// Process input
+	sfz::UpdateOp op = state.updateable->processInput(
+		state.userInput, state.updateInfo, *state.renderer);
+	if (handleUpdateOp(state, op)) return;
+
+	// Update
+	for (uint32_t i = 0; i < state.updateInfo.numUpdateTicks; i++) {
+		op = state.updateable->updateTick(state.updateInfo, *state.renderer);
+		if (handleUpdateOp(state, op)) return;
+	}
+
+	// Render
+	state.updateable->render(state.updateInfo, *state.renderer);
+}
+
 // Implementation function
 // ------------------------------------------------------------------------------------------------
 
-int mainImpl(int, char*[], InitOptions&& options)
+int main(int argc, char* argv[])
 {
 	// Setup sfzCore and PhantasyEngine contexts
 	setupContexts();
 
 	// Set SDL allocators
-	if (!sdl::setSDLAllocator(sfz::getDefaultAllocator())) return EXIT_FAILURE;
+	if (!sfz::sdl::setSDLAllocator(sfz::getDefaultAllocator())) return EXIT_FAILURE;
 
 	// Set load image allocator
 	sfz::setLoadImageAllocator(sfz::getDefaultAllocator());
@@ -148,16 +431,23 @@ int mainImpl(int, char*[], InitOptions&& options)
 	_chdir(basePath());
 #endif
 
+	// Run user's main function after we have setup the phantasy engine context (allocators and
+	// logging).
+	//
+	// If you are getting linked errors here, it might be because you haven't implemented this
+	// function.
+	sfz::InitOptions options = PhantasyEngineUserMain(argc, argv);
+
 	// Load global settings
-	GlobalConfig& cfg = sfz::getGlobalConfig();
+	sfz::GlobalConfig& cfg = sfz::getGlobalConfig();
 	{
 		// Init config with ini location
-		if (options.iniLocation == IniLocation::NEXT_TO_EXECUTABLE) {
+		if (options.iniLocation == sfz::IniLocation::NEXT_TO_EXECUTABLE) {
 			sfz::str192 iniFileName("%s.ini", options.appName);
 			cfg.init(basePath(), iniFileName, sfz::getDefaultAllocator());
 			SFZ_INFO("PhantasyEngine", "Ini location set to: %s%s", basePath(), iniFileName.str());
 		}
-		else if (options.iniLocation == IniLocation::MY_GAMES_DIR) {
+		else if (options.iniLocation == sfz::IniLocation::MY_GAMES_DIR) {
 
 			// Create user data directory
 			ensureAppUserDataDirExists(options.appName);
@@ -192,10 +482,10 @@ int mainImpl(int, char*[], InitOptions&& options)
 	logSDL2Version();
 
 	// Window settings
-	Setting* width = cfg.sanitizeInt("Window", "width", false, 1280, 128, 3840, 8);
-	Setting* height = cfg.sanitizeInt("Window", "height", false, 800, 128, 2160, 8);
-	Setting* fullscreen = cfg.sanitizeBool("Window", "fullscreen", false, false);
-	Setting* maximized = cfg.sanitizeBool("Window", "maximized", false, false);
+	sfz::Setting* width = cfg.sanitizeInt("Window", "width", false, 1280, 128, 3840, 8);
+	sfz::Setting* height = cfg.sanitizeInt("Window", "height", false, 800, 128, 2160, 8);
+	sfz::Setting* fullscreen = cfg.sanitizeBool("Window", "fullscreen", false, false);
+	sfz::Setting* maximized = cfg.sanitizeBool("Window", "maximized", false, false);
 	if (fullscreen->boolValue() && maximized->boolValue()) {
 		maximized->setBool(false);
 	}
@@ -221,7 +511,7 @@ int mainImpl(int, char*[], InitOptions&& options)
 
 	// Initializing renderer
 	SFZ_INFO("PhantasyEngine", "Initializing renderer");
-	UniquePtr<Renderer> renderer = sfz::makeUnique<Renderer>(getDefaultAllocator(), sfz_dbg(""));
+	sfz::UniquePtr<sfz::Renderer> renderer = sfz::makeUnique<sfz::Renderer>(sfz::getDefaultAllocator(), sfz_dbg(""));
 	bool rendererInitSuccess = renderer->init(window, imguiFontTexView, sfz::getDefaultAllocator());
 	if (!rendererInitSuccess) {
 		SFZ_ERROR("PhantasyEngine", "Renderer::init() failed");
@@ -231,22 +521,17 @@ int mainImpl(int, char*[], InitOptions&& options)
 
 	// Start game loop
 	SFZ_INFO("PhantasyEngine", "Starting game loop");
-	runGameLoop(
-
-		// Create initial GameLoopUpdateable
-		options.createInitialUpdateable(),
-
-		// Moving renderer
-		std::move(renderer),
-
-		// Providing SDL Window handle
-		window,
-
-		// Cleanup callback
-		[]() {
+	{
+		// Initialize game loop state
+		GameLoopState gameLoopState = {};
+		gameLoopState.updateable =
+			sfz::createDefaultGameUpdateable(sfz::getDefaultAllocator(), std::move(options.initialGameLogic));
+		gameLoopState.renderer = std::move(renderer);
+		gameLoopState.window = window;
+		gameLoopState.cleanupCallback = []() {
 			// Store global settings
 			SFZ_INFO("PhantasyEngine", "Saving global config to file");
-			GlobalConfig& cfg = sfz::getGlobalConfig();
+			sfz::GlobalConfig& cfg = sfz::getGlobalConfig();
 			if (!cfg.save()) {
 				SFZ_WARNING("PhantasyEngine", "Failed to write ini file");
 			}
@@ -254,19 +539,57 @@ int mainImpl(int, char*[], InitOptions&& options)
 
 			// Deinitializing Imgui
 			SFZ_INFO("PhantasyEngine", "Deinitializing Imgui");
-			deinitializeImgui();
+			sfz::deinitializeImgui();
 
 			// Cleanup SDL2
 			SFZ_INFO("PhantasyEngine", "Cleaning up SDL2");
 			SDL_Quit();
+		};
+		gameLoopState.userInput.events.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
+		gameLoopState.userInput.controllerEvents.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
+		gameLoopState.userInput.mouseEvents.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
+		gameLoopState.userInput.controllers.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
+		gameLoopState.userInput.controllersLastFrameState.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
+
+		calculateDelta(gameLoopState.previousItrTime); // Sets previousItrTime to current time
+
+		// Set initial tickrate to 100
+		gameLoopState.updateInfo.tickRate = 100;
+		gameLoopState.updateInfo.tickTimeSeconds = 0.01f;
+
+		// Initialize controllers
+		SDL_GameControllerEventState(SDL_ENABLE);
+		initControllers(gameLoopState.userInput.controllers);
+
+		// Initialize GameLoopUpdateable
+		gameLoopState.updateable->initialize(*gameLoopState.renderer);
+
+		// Get settings
+		gameLoopState.windowWidth = cfg.getSetting("Window", "width");
+		sfz_assert(gameLoopState.windowWidth != nullptr);
+		gameLoopState.windowHeight = cfg.getSetting("Window", "height");
+		sfz_assert(gameLoopState.windowHeight != nullptr);
+		gameLoopState.fullscreen = cfg.getSetting("Window", "fullscreen");
+		sfz_assert(gameLoopState.fullscreen != nullptr);
+		gameLoopState.maximized = cfg.getSetting("Window", "maximized");
+
+		// Start the game loop
+#ifdef __EMSCRIPTEN__
+	// https://kripken.github.io/emscripten-site/docs/api_reference/emscripten.h.html#browser-execution-environment
+	// Setting 0 or a negative value as the fps will instead use the browser’s requestAnimationFrame
+	// mechanism to call the main loop function. This is HIGHLY recommended if you are doing
+	// rendering, as the browser’s requestAnimationFrame will make sure you render at a proper
+	// smooth rate that lines up properly with the browser and monitor.
+		emscripten_set_main_loop_arg(gameLoopIteration, &gameLoopState, 0, true);
+#else
+		while (!gameLoopState.quit) {
+			gameLoopIteration(&gameLoopState);
 		}
-	);
+#endif
+	}
 
 	// DEAD ZONE
-	// Don't place any code after the game loop has been initialized, it will never be called on
-	// some platforms.
+	// Don't place any code after the game loop, it will never be called on some platforms.
 
 	return EXIT_SUCCESS;
 }
-
-} // namespace sfz
