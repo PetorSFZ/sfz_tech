@@ -52,7 +52,6 @@ struct UserInput final {
 
 	// Processed controller and mouse input
 	HashMap<int32_t, GameController> controllers;
-	HashMap<int32_t, GameControllerState> controllersLastFrameState;
 	Mouse rawMouse;
 };
 

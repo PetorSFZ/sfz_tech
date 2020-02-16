@@ -234,27 +234,9 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 
 		// Quitting
 		case SDL_QUIT:
-			SFZ_INFO("PhantasyEngine", "SDL_QUIT event recevied, quitting.");
+			SFZ_INFO("PhantasyEngine", "SDL_QUIT event received, quitting.");
 			quit(state);
 			return;
-
-		// SDL_GameController events
-		case SDL_CONTROLLERDEVICEADDED:
-		case SDL_CONTROLLERDEVICEREMOVED:
-		case SDL_CONTROLLERDEVICEREMAPPED:
-		case SDL_CONTROLLERBUTTONDOWN:
-		case SDL_CONTROLLERBUTTONUP:
-		case SDL_CONTROLLERAXISMOTION:
-			state.userInput.events.add(event);
-			break;
-
-		// Mouse events
-		case SDL_MOUSEMOTION:
-		case SDL_MOUSEBUTTONDOWN:
-		case SDL_MOUSEBUTTONUP:
-		case SDL_MOUSEWHEEL:
-			state.userInput.events.add(event);
-			break;
 
 		// Window events
 		case SDL_WINDOWEVENT:
@@ -291,7 +273,6 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 		default:
 			state.userInput.events.add(event);
 			break;
-
 		}
 	}
 
@@ -329,10 +310,6 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	}
 
 	// Updates controllers
-	state.userInput.controllersLastFrameState.clear();
-	for (auto pair : state.userInput.controllers) {
-		state.userInput.controllersLastFrameState[pair.key] = pair.value.state();
-	}
 	sfz::sdl::update(state.userInput.controllers, state.userInput.events);
 
 	// Updates mouse
@@ -341,20 +318,16 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	SDL_GetWindowSize(state.window, &windowWidth, &windowHeight);
 	state.userInput.rawMouse.update(windowWidth, windowHeight, state.userInput.events);
 
-	// Update
-	if (state.updateFunc) {
+	// Call user's update func
+	sfz::UpdateOp op = state.updateFunc(
+		state.renderer.get(),
+		deltaSecs,
+		&state.userInput,
+		state.userPtr);
 
-		// Call user's update func
-		sfz::UpdateOp op = state.updateFunc(
-			state.renderer.get(),
-			deltaSecs,
-			&state.userInput,
-			state.userPtr);
-
-		// Handle operation returned
-		if (op == sfz::UpdateOp::QUIT) quit(state);
-		if (op == sfz::UpdateOp::REINIT_CONTROLLERS) initControllers(state.userInput.controllers);
-	}
+	// Handle operation returned
+	if (op == sfz::UpdateOp::QUIT) quit(state);
+	if (op == sfz::UpdateOp::REINIT_CONTROLLERS) initControllers(state.userInput.controllers);
 }
 
 // Implementation function
@@ -500,7 +473,6 @@ int main(int argc, char* argv[])
 
 		gameLoopState.userInput.events.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
 		gameLoopState.userInput.controllers.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
-		gameLoopState.userInput.controllersLastFrameState.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
 
 		gameLoopState.prevPerfCounterTickValue = SDL_GetPerformanceCounter();
 		gameLoopState.perfCounterTicksPerSec = SDL_GetPerformanceFrequency();
