@@ -20,7 +20,6 @@
 #include <sfz/PhantasyEngineMain.hpp>
 
 #include <cstdlib>
-#include <chrono>
 
 #ifdef _WIN32
 #define NOMINMAX
@@ -130,11 +129,6 @@ static void logSDL2Version() noexcept
 		uint32_t(version.major), uint32_t(version.minor), uint32_t(version.patch));
 }
 
-// Typedefs
-// ------------------------------------------------------------------------------------------------
-
-using time_point = std::chrono::high_resolution_clock::time_point;
-
 // GameLoopState
 // ------------------------------------------------------------------------------------------------
 
@@ -144,7 +138,8 @@ struct GameLoopState final {
 	void(*cleanupCallback)(void) = nullptr;
 	bool quit = false;
 
-	time_point previousItrTime;
+	uint64_t prevPerfCounterTickValue = 0;
+	uint64_t perfCounterTicksPerSec = 0;
 
 	void* userPtr = nullptr;
 	sfz::InitFunc* initFunc = nullptr;
@@ -193,17 +188,6 @@ static void quit(GameLoopState& gameLoopState) noexcept
 #endif
 }
 
-static float calculateDelta(time_point& previousTime) noexcept
-{
-	time_point currentTime = std::chrono::high_resolution_clock::now();
-
-	using FloatSecond = std::chrono::duration<float>;
-	float delta = std::chrono::duration_cast<FloatSecond>(currentTime - previousTime).count();
-
-	previousTime = currentTime;
-	return delta;
-}
-
 static void initControllers(sfz::HashMap<int32_t, sfz::GameController>& controllers) noexcept
 {
 	controllers.clear();
@@ -229,7 +213,9 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	GameLoopState& state = *static_cast<GameLoopState*>(gameLoopStatePtr);
 
 	// Calculate delta since previous iteration
-	float deltaSecs = calculateDelta(state.previousItrTime);
+	uint64_t perfCounterTickValue = SDL_GetPerformanceCounter();
+	float deltaSecs = float(double(perfCounterTickValue - state.prevPerfCounterTickValue) / double(state.perfCounterTicksPerSec));
+	state.prevPerfCounterTickValue = perfCounterTickValue;
 
 	// Remove old events
 	state.userInput.events.clear();
@@ -516,7 +502,8 @@ int main(int argc, char* argv[])
 		gameLoopState.userInput.controllers.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
 		gameLoopState.userInput.controllersLastFrameState.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
 
-		calculateDelta(gameLoopState.previousItrTime); // Sets previousItrTime to current time
+		gameLoopState.prevPerfCounterTickValue = SDL_GetPerformanceCounter();
+		gameLoopState.perfCounterTicksPerSec = SDL_GetPerformanceFrequency();
 
 		// Initialize controllers
 		SDL_GameControllerEventState(SDL_ENABLE);
