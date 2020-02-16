@@ -538,7 +538,7 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 // Console: State methods
 // ------------------------------------------------------------------------------------------------
 
-void Console::init(Allocator* allocator, uint32_t numWindowsToDock, const char* windowNames[]) noexcept
+void Console::init(Allocator* allocator, uint32_t numWindowsToDock, const char* const* windowNames) noexcept
 {
 	// Allocate ConsoleState and set allocator
 	this->destroy();
