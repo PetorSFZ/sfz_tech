@@ -278,6 +278,7 @@ endfunction()
 # Adds the bundled externals, this is currently stb and dear-imgui.
 # stb: ${STB_FOUND}, ${STB_INCLUDE_DIRS}
 # dear-imgui: ${IMGUI_FOUND}, ${IMGUI_INCLUDE_DIRS}, ${IMGUI_LIBRARIES}
+# imgui_plot: ${IMGUI_PLOT_FOUND}, ${IMGUI_PLOT_INCLUDE_DIRS}, ${IMGUI_PLOT_LIBRARIES}
 # nativefiledialog: ${NATIVEFILEDIALOG_FOUND}, ${NATIVEFILEDIALOG_INCLUDE_DIRS}, ${NATIVEFILEDIALOG_LIBRARIES}
 # tinygltf: ${TINYGLTF_FOUND}, ${TINYGLTF_INCLUDE_DIRS}
 function(phAddBundledExternals)
@@ -292,6 +293,12 @@ function(phAddBundledExternals)
 	set(IMGUI_FOUND ${IMGUI_FOUND} PARENT_SCOPE)
 	set(IMGUI_INCLUDE_DIRS ${IMGUI_INCLUDE_DIRS} PARENT_SCOPE)
 	set(IMGUI_LIBRARIES ${IMGUI_LIBRARIES} PARENT_SCOPE)
+
+	message("-- [PhantasyEngine]: Adding imgui_plot target")
+	add_subdirectory(${SFZ_TECH_ROOT}/externals/imgui-plot ${CMAKE_BINARY_DIR}/imgui-plot)
+	set(IMGUI_PLOT_FOUND ${IMGUI_PLOT_FOUND} PARENT_SCOPE)
+	set(IMGUI_PLOT_INCLUDE_DIRS ${IMGUI_PLOT_INCLUDE_DIRS} PARENT_SCOPE)
+	set(IMGUI_PLOT_LIBRARIES ${IMGUI_PLOT_LIBRARIES} PARENT_SCOPE)
 
 	message("-- [PhantasyEngine]: Adding nativefiledialog target")
 	add_subdirectory(${SFZ_TECH_ROOT}/externals/nativefiledialog ${CMAKE_BINARY_DIR}/nativefiledialog)
@@ -349,11 +356,13 @@ function(phLinkBundledExternals linkTarget)
 	target_include_directories(${linkTarget} PUBLIC
 		${STB_INCLUDE_DIRS}
 		${IMGUI_INCLUDE_DIRS}
+		${IMGUI_PLOT_INCLUDE_DIRS}
 		${NATIVEFILEDIALOG_INCLUDE_DIRS}
 		${TINYGLTF_INCLUDE_DIRS}
 	)
 	target_link_libraries(${linkTarget}
 		${IMGUI_LIBRARIES}
+		${IMGUI_PLOT_LIBRARIES}
 		${NATIVEFILEDIALOG_LIBRARIES}
 	)
 endfunction()

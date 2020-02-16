@@ -156,6 +156,10 @@ if (NOT hasParent)
 	# ${IMGUI_FOUND}, ${IMGUI_INCLUDE_DIRS}, ${IMGUI_LIBRARIES}
 	add_subdirectory(${EXTERNALS_DIR}/dear-imgui ${CMAKE_BINARY_DIR}/dear-imgui)
 
+	# imgui_plot
+	# ${IMGUI_PLOT_FOUND}, ${IMGUI_PLOT_INCLUDE_DIRS}, ${IMGUI_PLOT_LIBRARIES}
+	add_subdirectory(${EXTERNALS_DIR}/imgui_plot ${CMAKE_BINARY_DIR}/imgui_plot)
+
 	# ZeroG-ImGui
 	# ${ZEROG_IMGUI_FOUND}, ${ZEROG_IMGUI_INCLUDE_DIRS}, ${ZEROG_IMGUI_LIBRARIES}
 	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../Lib-ZeroG-ImGui ${CMAKE_BINARY_DIR}/ZeroG-ImGui)
@@ -197,6 +201,10 @@ else()
 
 	if (NOT IMGUI_FOUND)
 		message(FATAL_ERROR "PhantasyEngine requires dear-imgui.")
+	endif()
+
+	if (NOT IMGUI_PLOT_FOUND)
+		message(FATAL_ERROR "PhantasyEngine requires imgui_plot.")
 	endif()
 
 	if (NOT ZEROG_IMGUI_FOUND)
@@ -248,7 +256,7 @@ set(HEADER_FILES
 	${INCLUDE_DIR}/sfz/renderer/BuiltInShaderTypes.hpp
 	${INCLUDE_DIR}/sfz/renderer/CascadedShadowMaps.hpp
 	${INCLUDE_DIR}/sfz/renderer/Renderer.hpp
-	
+
 	${INCLUDE_DIR}/sfz/rendering/FullscreenTriangle.hpp
 	${INCLUDE_DIR}/sfz/rendering/ImageView.hpp
 	${INCLUDE_DIR}/sfz/rendering/Image.hpp
@@ -364,6 +372,7 @@ target_include_directories(PhantasyEngine PUBLIC
 	${SFZ_CORE_INCLUDE_DIRS}
 	${STB_INCLUDE_DIRS}
 	${IMGUI_INCLUDE_DIRS}
+	${IMGUI_PLOT_INCLUDE_DIRS}
 	${ZEROG_IMGUI_INCLUDE_DIRS}
 	${NATIVEFILEDIALOG_INCLUDE_DIRS}
 	${SAJSON_INCLUDE_DIRS}
@@ -375,6 +384,7 @@ target_link_libraries(PhantasyEngine
 	${ZEROG_LIBRARIES}
 	${ZEROG_CPP_LIBRARIES}
 	${IMGUI_LIBRARIES}
+	${IMGUI_PLOT_LIBRARIES}
 	${ZEROG_IMGUI_LIBRARIES}
 	${NATIVEFILEDIALOG_LIBRARIES}
 )
