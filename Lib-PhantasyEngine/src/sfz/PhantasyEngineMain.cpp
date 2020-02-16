@@ -62,6 +62,9 @@ extern "C" { _declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 1
 // Statics
 // ------------------------------------------------------------------------------------------------
 
+// This is the global PhantasyEngine context, a pointer to it will be set using setContext().
+static sfz::Context phantasyEngineContext;
+
 static void setupContext() noexcept
 {
 	// Get sfz standard allocator
@@ -72,9 +75,8 @@ static void setupContext() noexcept
 	logger.init(256, allocator);
 
 	// Setup context
-	phContext* context = sfz::getStaticContextBoot();
-	context->sfzContext.defaultAllocator = allocator;
-	context->sfzContext.logger = &logger;
+	sfz::Context* context = &phantasyEngineContext;
+	context->defaultAllocator = allocator;
 	context->logger = &logger;
 	context->config = sfz::getStaticGlobalConfigBoot();
 	context->resourceStrings =
@@ -82,9 +84,6 @@ static void setupContext() noexcept
 
 	// Set Phantasy Engine context
 	sfz::setContext(context);
-
-	// Set sfzCore context
-	sfz::setContext(&context->sfzContext);
 }
 
 static const char* basePath() noexcept

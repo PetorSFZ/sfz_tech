@@ -20,9 +20,6 @@
 
 #include <skipifzero.hpp>
 
-#include "sfz/memory/StandardAllocator.hpp"
-#include "sfz/util/StandardLogger.hpp"
-
 namespace sfz {
 
 // Context getters/setters
@@ -36,52 +33,10 @@ Context* getContext() noexcept
 	return globalContextPtr;
 }
 
-bool setContext(Context* context) noexcept
+void setContext(Context* context) noexcept
 {
-	sfz_assert_hard(context != nullptr);
-	if (globalContextPtr != nullptr) return false;
+	sfz_assert_hard(globalContextPtr == nullptr);
 	globalContextPtr = context;
-	return true;
-}
-
-// Standard context
-// ------------------------------------------------------------------------------------------------
-
-Context* getStandardContext() noexcept
-{
-	static Context context = []() {
-		Context tmp;
-		tmp.defaultAllocator = getStandardAllocator();
-		tmp.logger = getStandardLogger();
-		return tmp;
-	}();
-	return &context;
-}
-
-// Context getters/setters
-// ------------------------------------------------------------------------------------------------
-
-static phContext* globalPhContextPtr = nullptr;
-
-phContext* getPhContext() noexcept
-{
-	return globalPhContextPtr;
-}
-
-bool setContext(phContext* context) noexcept
-{
-	if (globalPhContextPtr != nullptr) return false;
-	globalPhContextPtr = context;
-	return true;
-}
-
-// Statically owned context
-// ------------------------------------------------------------------------------------------------
-
-phContext* getStaticContextBoot() noexcept
-{
-	static phContext context;
-	return &context;
 }
 
 } // namespace sfz

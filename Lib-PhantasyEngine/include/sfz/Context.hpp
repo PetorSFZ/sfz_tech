@@ -18,136 +18,74 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
-
-#include "sfz/util/LoggingInterface.hpp"
-
 namespace sfz {
 
-// sfzCore Context struct
+// Forward declarations
+class Allocator;
+class LoggingInterface;
+class GlobalConfig;
+class StringCollection;
+
+// PhantasyEngine global context
 // ------------------------------------------------------------------------------------------------
 
-/// The sfzCore context
-///
-/// Each application using sfzCore must create a context and set it with setContext() before sfzCore
-/// is used. All global (singleton) state of sfzCore is stored in this context.
-///
-/// If using sfzCore with dynamically linked libraries it is necessary to initialize these libraries
-/// by sending them a pointer to the context so they themselves can set their sfzCore context to be
-/// the same as for the main application. Otherwise multiple contexts will exist, which will likely
-/// cause dangerous problems.
+// The PhantasyEngine global context.
+//
+// This context stores all of PhantasyEngine's globally available state. This includes things such
+// as the global allocator, the logging interface to log via, the string collection where strings
+// are registered, etc.
+//
+// Generally PhantasyEngine tries to avoid global state, but the things stored in this context are
+// exceptions because it would be too annoying to pass them around everywhere. The general (but
+// loose) rule is that things should only be put in the global context if it makes a lot of sense.
+//
+// When using dynamically linked libraries it is necessary to initialize these libraries by sending
+// them a pointer to the context so they themselves can set it using "setContext()". If they don't
+// then multiple contexts could theoretically exist, which could cause dangerous problems.
 struct Context final {
 
-	/// The default allocator used by sfzCore. Will be used if no allocator is specified for
-	/// functions and classes that uses such. This should be set in the beginning of the program,
-	/// remaing valid for the rest of it, and never be replaced in the context. If it is replaced
-	/// by another allocator you must make very sure that sfzCore has not allocated any memory using
-	/// the previous instance, which can be very hard.
+	// The default allocator that is retrieved when "getDefaultAllocator()" is called. This should
+	// be set in the beginning of the program, and may then NEVER be changed. I.e. is must remain
+	// valid for the remaining duration of the program.
 	Allocator* defaultAllocator = nullptr;
 
-	/// The current logger used by sfzCore. See `sfz/logging/Logging.hpp` for the logging macros
-	/// use this logger.
+	// The current logger used, see "sfz/Logging.hpp" for logging macros which use it.
 	LoggingInterface* logger = nullptr;
+
+	// The global config system which keeps track of key/value pair of settings.
+	GlobalConfig* config = nullptr;
+
+	// The registered resource strings.
+	//
+	// Comparing and storing strings when refering to specific assets (meshes, textures, etc)
+	// becomes expensive in the long run. A solution is to hash each string and use the hash
+	// instead. This works under the assumption that we have no hash collisions. See StringID for
+	// more information.
+	//
+	// Because we don't want any collisions globally in the game we store the datastructure keeping
+	// track of the strings and their hash in the global context.
+	StringCollection* resourceStrings = nullptr;
 };
 
 // Context getters/setters
 // ------------------------------------------------------------------------------------------------
 
-/// Gets the current sfzCore context. Will return nullptr if it has not been set using setContext().
-/// \return pointer to the context
+// Gets the current context. Will return nullptr if it has not been set using setContext().
 Context* getContext() noexcept;
 
-/// Sets the current sfzCore context. Will not take ownership of the Context struct itself, so the
-/// caller has to ensure the pointer remains valid for the remaining duration of the program.
-/// If the pointer has already been set this function does nothing and returns false.
-/// \param context the sfzCore context to set
-/// \return whether context was set or not
-bool setContext(Context* context) noexcept;
+// Sets the current context.
+//
+// Will not take ownership of the Context struct itself, so the  caller has to ensure the pointer
+// remains valid for the remaining duration of the program. If the pointer has already been set
+// this function will terminate the program.
+void setContext(Context* context) noexcept;
 
 // Convenience getters
 // ------------------------------------------------------------------------------------------------
 
-/// Returns pointer to the default Allocator.
-inline Allocator* getDefaultAllocator() noexcept
-{
-	return getContext()->defaultAllocator;
-}
-
-/// Returns pointer to the current logger.
-inline LoggingInterface* getLogger() noexcept
-{
-	return getContext()->logger;
-}
-
-// Standard context
-// ------------------------------------------------------------------------------------------------
-
-/// Returns pointer to the standard context. This context can be used if you don't want to create
-/// and setup a context yourself. To use this context you could use the following call in the
-/// beginning of your program:
-///
-/// sfz::setContext(sfz::getStandardContext());
-///
-/// \return pointer to the standard context
-Context* getStandardContext() noexcept;
-
-} // namespace sfz
-
-// Forward declared member types
-// ------------------------------------------------------------------------------------------------
-
-namespace sfz {
-
-class StringCollection;
-
-} // namespace sfz
-
-namespace sfz {
-
-class TerminalLogger;
-class GlobalConfig;
-using sfz::StringCollection;
-
-} // namespace sfz
-
-// PhantasyEngine Context struct
-// ------------------------------------------------------------------------------------------------
-
-struct phContext {
-	sfz::Context sfzContext;
-	sfz::TerminalLogger* logger = nullptr;
-	sfz::GlobalConfig* config = nullptr;
-
-	// The resource strings registered with PhantasyEngine.
-	//
-	// Comparing and storing strings when refering to specific assets (meshes, textures, etc)
-	// becomes expensive in the long run. A solution is to hash each string and use the hash
-	// instead. This works under the assumption that we have no hash collisions. See sfz::StringID
-	// for more information.
-	//
-	// Because we don't want any collisions globally in the game we store the datastructure keeping
-	// track of the strings and their hash in the global context.
-	sfz::StringCollection* resourceStrings = nullptr;
-};
-
-namespace sfz {
-
-// Context getters/setters
-// ------------------------------------------------------------------------------------------------
-
-phContext* getPhContext() noexcept;
-
-inline GlobalConfig& getGlobalConfig() noexcept { return *getPhContext()->config; }
-
-inline StringCollection& getResourceStrings() noexcept { return *getPhContext()->resourceStrings; }
-
-bool setContext(phContext* context) noexcept;
-
-// Statically owned context
-// ------------------------------------------------------------------------------------------------
-
-/// Statically owned context struct. Default constructed, members need to be set manually. Only to
-/// be used for setContext() in PhantasyEngineMain.cpp.
-phContext* getStaticContextBoot() noexcept;
+inline Allocator* getDefaultAllocator() { return getContext()->defaultAllocator; }
+inline LoggingInterface* getLogger() { return getContext()->logger; }
+inline GlobalConfig& getGlobalConfig() { return *getContext()->config; }
+inline StringCollection& getResourceStrings() { return *getContext()->resourceStrings; }
 
 } // namespace sfz
