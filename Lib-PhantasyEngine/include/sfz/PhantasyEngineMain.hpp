@@ -19,15 +19,42 @@
 
 #pragma once
 
-#include <skipifzero_smart_pointers.hpp>
+#include <SDL.h>
 
-#include "sfz/game_loop/GameLoopUpdateable.hpp"
-#include "sfz/game_loop/DefaultGameUpdateable.hpp"
+#include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
+#include <skipifzero_hash_maps.hpp>
+
+#include "sfz/sdl/GameController.hpp"
+#include "sfz/sdl/Mouse.hpp"
 
 namespace sfz {
 
-// InitOptions struct
+using sdl::GameController;
+using sdl::GameControllerState;
+using sdl::Mouse;
+
+// Structs
 // ------------------------------------------------------------------------------------------------
+
+class Renderer;
+
+enum class UpdateOp : uint32_t {
+	NO_OP = 0,
+	QUIT,
+	REINIT_CONTROLLERS
+};
+
+struct UserInput final {
+
+	// SDL events
+	Array<SDL_Event> events;
+
+	// Processed controller and mouse input
+	HashMap<int32_t, GameController> controllers;
+	HashMap<int32_t, GameControllerState> controllersLastFrameState;
+	Mouse rawMouse;
+};
 
 enum class IniLocation {
 	
@@ -39,6 +66,14 @@ enum class IniLocation {
 	MY_GAMES_DIR
 };
 
+using InitFunc = void(Renderer* renderer, void* userPtr);
+using UpdateFunc = UpdateOp(
+	Renderer* renderer,
+	float deltaSecs,
+	const UserInput* input,
+	void* userPtr);
+using QuitFunc = void(void* userPtr);
+
 struct InitOptions final {
 
 	// Name of application. Is used for, among other things, window title, name of ini file, etc.
@@ -47,8 +82,17 @@ struct InitOptions final {
 	// Location of Ini file
 	IniLocation iniLocation = IniLocation::NEXT_TO_EXECUTABLE;
 
-	// The initial game logic
-	UniquePtr<GameLogic> initialGameLogic;
+	// User specified pointer which will be passed as an argument to the specified functions.
+	void* userPtr = nullptr;
+
+	// Init function, called right before gameloop starts.
+	InitFunc* initFunc = nullptr;
+
+	// Called each iteration of the gameloop.
+	UpdateFunc* updateFunc = nullptr;
+
+	// Called when program is exiting.
+	QuitFunc* quitFunc = nullptr;
 };
 
 } // namespace sfz
@@ -59,8 +103,8 @@ struct InitOptions final {
 // The signature of the user's main function called when PhantasyEngine is initialized.
 //
 // The "Main.cpp" file for your project should implement this function. It will be called fairly
-// on in the actual "main" function that is owned by PhantasyEngine, mainly the allocator and
-// logging parts of PhantasyEngine's context will be setup before this is called.
+// early on in the actual "main" function that is owned by PhantasyEngine, mainly the allocator
+// and logging parts of PhantasyEngine's context will be setup before this is called.
 //
 // You should not perform too much work in this function, mainly setting some options and callbacks
 // for the game loop.

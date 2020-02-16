@@ -21,7 +21,6 @@
 
 #include <cstdlib>
 #include <chrono>
-#include <exception> // std::terminate()
 
 #ifdef _WIN32
 #define NOMINMAX
@@ -40,6 +39,7 @@
 
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
+#include <skipifzero_smart_pointers.hpp>
 #include <skipifzero_strings.hpp>
 
 #include "sfz/Context.hpp"
@@ -49,7 +49,6 @@
 #include "sfz/rendering/Image.hpp"
 #include "sfz/rendering/ImguiSupport.hpp"
 #include "sfz/sdl/SDLAllocator.hpp"
-#include "sfz/strings/StringID.hpp"
 #include "sfz/util/IO.hpp"
 #include "sfz/util/TerminalLogger.hpp"
 
@@ -64,7 +63,7 @@ extern "C" { _declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 1
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-static void setupContexts() noexcept
+static void setupContext() noexcept
 {
 	// Get sfz standard allocator
 	sfz::Allocator* allocator = sfz::getStandardAllocator();
@@ -140,7 +139,6 @@ using time_point = std::chrono::high_resolution_clock::time_point;
 // ------------------------------------------------------------------------------------------------
 
 struct GameLoopState final {
-	sfz::UniquePtr<sfz::GameLoopUpdateable> updateable;
 	sfz::UniquePtr<sfz::Renderer> renderer;
 	SDL_Window* window = nullptr;
 	void(*cleanupCallback)(void) = nullptr;
@@ -148,9 +146,13 @@ struct GameLoopState final {
 
 	time_point previousItrTime;
 
+	void* userPtr = nullptr;
+	sfz::InitFunc* initFunc = nullptr;
+	sfz::UpdateFunc* updateFunc = nullptr;
+	sfz::QuitFunc* quitFunc = nullptr;
+
 	// Input structs for updateable
 	sfz::UserInput userInput;
-	sfz::UpdateInfo updateInfo;
 
 	// Window settings
 	sfz::Setting* windowWidth = nullptr;
@@ -168,9 +170,10 @@ static void quit(GameLoopState& gameLoopState) noexcept
 {
 	gameLoopState.quit = true; // Exit infinite while loop (on some platforms)
 
-	SFZ_INFO("PhantasyEngine", "Destroying current updateable");
-	gameLoopState.updateable->onQuit();
-	gameLoopState.updateable.destroy(); // Destroy the current updateable
+	SFZ_INFO("PhantasyEngine", "Calling user quit func");
+	if (gameLoopState.quitFunc) {
+		gameLoopState.quitFunc(gameLoopState.userPtr);
+	}
 
 	SFZ_INFO("PhantasyEngine", "Destroying renderer");
 	gameLoopState.renderer.destroy(); // Destroy the current renderer
@@ -181,8 +184,8 @@ static void quit(GameLoopState& gameLoopState) noexcept
 	SFZ_INFO("PhantasyEngine", "Destroying SDL Window");
 	SDL_DestroyWindow(gameLoopState.window);
 
-	SFZ_INFO("PhantasyEngine", "Calling cleanup callback");
-	gameLoopState.cleanupCallback(); // Call the cleanup callback
+	// Call the cleanup callback
+	gameLoopState.cleanupCallback(); 
 
 	// Exit program on Emscripten
 #ifdef __EMSCRIPTEN__
@@ -217,32 +220,6 @@ static void initControllers(sfz::HashMap<int32_t, sfz::GameController>& controll
 	}
 }
 
-static bool handleUpdateOp(GameLoopState& state, sfz::UpdateOp& op) noexcept
-{
-	switch (op.type) {
-	case sfz::UpdateOpType::QUIT:
-		quit(state);
-		return true;
-	case sfz::UpdateOpType::CHANGE_UPDATEABLE:
-		state.updateable = std::move(op.newUpdateable);
-		state.updateable->initialize(*state.renderer);
-		return true;
-	case sfz::UpdateOpType::CHANGE_TICK_RATE:
-		if (op.ticksPerSecond != 0) {
-			state.updateInfo.tickRate = op.ticksPerSecond;
-			state.updateInfo.tickTimeSeconds = 1.0f / float(op.ticksPerSecond);
-		}
-		return true;
-	case sfz::UpdateOpType::REINIT_CONTROLLERS:
-		initControllers(state.userInput.controllers);
-		return true;
-	case sfz::UpdateOpType::NO_OP:
-	default:
-		// Do nothing
-		return false;
-	}
-}
-
 // gameLoopIteration()
 // ------------------------------------------------------------------------------------------------
 
@@ -252,25 +229,10 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	GameLoopState& state = *static_cast<GameLoopState*>(gameLoopStatePtr);
 
 	// Calculate delta since previous iteration
-	state.updateInfo.iterationDeltaSeconds = calculateDelta(state.previousItrTime);
-	//PH_LOG(LogLevel::INFO, "PhantasyEngine", "Frametime = %.3f ms",
-	//	state.updateInfo.iterationDeltaSeconds * 100.0f);
-
-	float totalAvailableTime = state.updateInfo.iterationDeltaSeconds + state.updateInfo.lagSeconds;
-
-	// Calculate how many updates should be performed
-	state.updateInfo.numUpdateTicks =
-		uint32_t(std::floorf(totalAvailableTime / state.updateInfo.tickTimeSeconds));
-
-	// Calculate lag
-	float totalUpdateTime =
-		float(state.updateInfo.numUpdateTicks) * state.updateInfo.tickTimeSeconds;
-	state.updateInfo.lagSeconds = sfz::max(totalAvailableTime - totalUpdateTime, 0.0f);
+	float deltaSecs = calculateDelta(state.previousItrTime);
 
 	// Remove old events
 	state.userInput.events.clear();
-	state.userInput.controllerEvents.clear();
-	state.userInput.mouseEvents.clear();
 
 	// Check window status
 	uint32_t currentWindowFlags = SDL_GetWindowFlags(state.window);
@@ -297,7 +259,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 		case SDL_CONTROLLERBUTTONDOWN:
 		case SDL_CONTROLLERBUTTONUP:
 		case SDL_CONTROLLERAXISMOTION:
-			state.userInput.controllerEvents.add(event);
+			state.userInput.events.add(event);
 			break;
 
 		// Mouse events
@@ -305,7 +267,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
 		case SDL_MOUSEWHEEL:
-			state.userInput.mouseEvents.add(event);
+			state.userInput.events.add(event);
 			break;
 
 		// Window events
@@ -385,27 +347,28 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	for (auto pair : state.userInput.controllers) {
 		state.userInput.controllersLastFrameState[pair.key] = pair.value.state();
 	}
-	sfz::sdl::update(state.userInput.controllers, state.userInput.controllerEvents);
+	sfz::sdl::update(state.userInput.controllers, state.userInput.events);
 
 	// Updates mouse
 	int windowWidth = -1;
 	int windowHeight = -1;
 	SDL_GetWindowSize(state.window, &windowWidth, &windowHeight);
-	state.userInput.rawMouse.update(windowWidth, windowHeight, state.userInput.mouseEvents);
-
-	// Process input
-	sfz::UpdateOp op = state.updateable->processInput(
-		state.userInput, state.updateInfo, *state.renderer);
-	if (handleUpdateOp(state, op)) return;
+	state.userInput.rawMouse.update(windowWidth, windowHeight, state.userInput.events);
 
 	// Update
-	for (uint32_t i = 0; i < state.updateInfo.numUpdateTicks; i++) {
-		op = state.updateable->updateTick(state.updateInfo, *state.renderer);
-		if (handleUpdateOp(state, op)) return;
-	}
+	if (state.updateFunc) {
 
-	// Render
-	state.updateable->render(state.updateInfo, *state.renderer);
+		// Call user's update func
+		sfz::UpdateOp op = state.updateFunc(
+			state.renderer.get(),
+			deltaSecs,
+			&state.userInput,
+			state.userPtr);
+
+		// Handle operation returned
+		if (op == sfz::UpdateOp::QUIT) quit(state);
+		if (op == sfz::UpdateOp::REINIT_CONTROLLERS) initControllers(state.userInput.controllers);
+	}
 }
 
 // Implementation function
@@ -413,8 +376,8 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 
 int main(int argc, char* argv[])
 {
-	// Setup sfzCore and PhantasyEngine contexts
-	setupContexts();
+	// Setup PhantasyEngine context
+	setupContext();
 
 	// Set SDL allocators
 	if (!sfz::sdl::setSDLAllocator(sfz::getDefaultAllocator())) return EXIT_FAILURE;
@@ -524,8 +487,6 @@ int main(int argc, char* argv[])
 	{
 		// Initialize game loop state
 		GameLoopState gameLoopState = {};
-		gameLoopState.updateable =
-			sfz::createDefaultGameUpdateable(sfz::getDefaultAllocator(), std::move(options.initialGameLogic));
 		gameLoopState.renderer = std::move(renderer);
 		gameLoopState.window = window;
 		gameLoopState.cleanupCallback = []() {
@@ -545,24 +506,21 @@ int main(int argc, char* argv[])
 			SFZ_INFO("PhantasyEngine", "Cleaning up SDL2");
 			SDL_Quit();
 		};
+
+		gameLoopState.userPtr = options.userPtr;
+		gameLoopState.initFunc = options.initFunc;
+		gameLoopState.updateFunc = options.updateFunc;
+		gameLoopState.quitFunc = options.quitFunc;
+
 		gameLoopState.userInput.events.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
-		gameLoopState.userInput.controllerEvents.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
-		gameLoopState.userInput.mouseEvents.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
 		gameLoopState.userInput.controllers.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
 		gameLoopState.userInput.controllersLastFrameState.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
 
 		calculateDelta(gameLoopState.previousItrTime); // Sets previousItrTime to current time
 
-		// Set initial tickrate to 100
-		gameLoopState.updateInfo.tickRate = 100;
-		gameLoopState.updateInfo.tickTimeSeconds = 0.01f;
-
 		// Initialize controllers
 		SDL_GameControllerEventState(SDL_ENABLE);
 		initControllers(gameLoopState.userInput.controllers);
-
-		// Initialize GameLoopUpdateable
-		gameLoopState.updateable->initialize(*gameLoopState.renderer);
 
 		// Get settings
 		gameLoopState.windowWidth = cfg.getSetting("Window", "width");
@@ -572,6 +530,11 @@ int main(int argc, char* argv[])
 		gameLoopState.fullscreen = cfg.getSetting("Window", "fullscreen");
 		sfz_assert(gameLoopState.fullscreen != nullptr);
 		gameLoopState.maximized = cfg.getSetting("Window", "maximized");
+
+		// Call users init function
+		if (gameLoopState.initFunc) {
+			gameLoopState.initFunc(gameLoopState.renderer.get(), gameLoopState.userPtr);
+		}
 
 		// Start the game loop
 #ifdef __EMSCRIPTEN__

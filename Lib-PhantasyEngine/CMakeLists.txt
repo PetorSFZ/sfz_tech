@@ -220,9 +220,6 @@ set(HEADER_FILES
 
 	${INCLUDE_DIR}/sfz/console/Console.hpp
 
-	${INCLUDE_DIR}/sfz/game_loop/DefaultGameUpdateable.hpp
-	${INCLUDE_DIR}/sfz/game_loop/GameLoopUpdateable.hpp
-
 	${INCLUDE_DIR}/sfz/geometry/AABB.hpp
 	${INCLUDE_DIR}/sfz/geometry/AABB.inl
 	${INCLUDE_DIR}/sfz/geometry/AABB2D.hpp
@@ -275,6 +272,7 @@ set(HEADER_FILES
 	${INCLUDE_DIR}/sfz/strings/StringID.hpp
 
 	${INCLUDE_DIR}/sfz/util/Enumerate.hpp
+	${INCLUDE_DIR}/sfz/util/FixedTimeUpdateHelpers.hpp
 	${INCLUDE_DIR}/sfz/util/FrametimeStats.hpp
 	${INCLUDE_DIR}/sfz/util/GltfLoader.hpp
 	${INCLUDE_DIR}/sfz/util/GltfWriter.hpp
@@ -300,8 +298,6 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/config/Setting.cpp
 
 	${SRC_DIR}/sfz/console/Console.cpp
-
-	${SRC_DIR}/sfz/game_loop/DefaultGameUpdateable.cpp
 
 	${SRC_DIR}/sfz/math/MathPrimitiveToStrings.cpp
 	${SRC_DIR}/sfz/math/ProjectionMatrices.cpp
