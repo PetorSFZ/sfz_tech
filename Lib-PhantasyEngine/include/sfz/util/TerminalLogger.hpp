@@ -69,10 +69,10 @@ public:
 
 	void init(uint32_t numHistoryItems, Allocator* allocator) noexcept;
 
-	/// Returns current number of messages
+	// Returns current number of messages
 	uint32_t numMessages() const noexcept;
 
-	/// Returns message
+	// Returns message
 	const TerminalMessageItem& getMessage(uint32_t index) const noexcept;
 
 	void clearMessages() noexcept { mMessages.clear(); }
@@ -94,12 +94,5 @@ private:
 
 	RingBuffer<TerminalMessageItem> mMessages;
 };
-
-// Statically owned logger
-// ------------------------------------------------------------------------------------------------
-
-/// Statically owned TerminalLogger. Default constructed. Only to be used when creating the
-/// Phantasy Engine context at boot in PhantasyEngineMain.cpp.
-TerminalLogger* getStaticTerminalLoggerForBoot() noexcept;
 
 } // namespace sfz

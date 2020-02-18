@@ -60,7 +60,7 @@ public:
 	GlobalConfig(GlobalConfig&&) = delete;
 	GlobalConfig& operator= (GlobalConfig&&) = delete;
 
-	~GlobalConfig() noexcept;
+	~GlobalConfig() noexcept { this->destroy(); }
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
@@ -140,12 +140,5 @@ private:
 
 	GlobalConfigImpl* mImpl;
 };
-
-// Statically owned global config
-// ------------------------------------------------------------------------------------------------
-
-/// Statically owned global config. Default constructed. Only to be used for setContext() in
-/// PhantasyEngineMain.cpp during boot.
-GlobalConfig* getStaticGlobalConfigBoot() noexcept;
 
 } // namespace sfz

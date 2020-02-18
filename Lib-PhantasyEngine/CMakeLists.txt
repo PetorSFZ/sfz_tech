@@ -226,7 +226,8 @@ set(HEADER_FILES
 	${INCLUDE_DIR}/sfz/config/GlobalConfig.hpp
 	${INCLUDE_DIR}/sfz/config/Setting.hpp
 
-	${INCLUDE_DIR}/sfz/console/Console.hpp
+	${INCLUDE_DIR}/sfz/debug/Console.hpp
+	${INCLUDE_DIR}/sfz/debug/ProfilingStats.hpp
 
 	${INCLUDE_DIR}/sfz/geometry/AABB.hpp
 	${INCLUDE_DIR}/sfz/geometry/AABB.inl
@@ -251,7 +252,6 @@ set(HEADER_FILES
 
 	${INCLUDE_DIR}/sfz/memory/ArenaAllocator.hpp
 	${INCLUDE_DIR}/sfz/memory/DebugAllocator.hpp
-	${INCLUDE_DIR}/sfz/memory/StandardAllocator.hpp
 
 	${INCLUDE_DIR}/sfz/renderer/BuiltInShaderTypes.hpp
 	${INCLUDE_DIR}/sfz/renderer/CascadedShadowMaps.hpp
@@ -281,7 +281,6 @@ set(HEADER_FILES
 
 	${INCLUDE_DIR}/sfz/util/Enumerate.hpp
 	${INCLUDE_DIR}/sfz/util/FixedTimeUpdateHelpers.hpp
-	${INCLUDE_DIR}/sfz/util/FrametimeStats.hpp
 	${INCLUDE_DIR}/sfz/util/GltfLoader.hpp
 	${INCLUDE_DIR}/sfz/util/GltfWriter.hpp
 	${INCLUDE_DIR}/sfz/util/IniParser.hpp
@@ -305,14 +304,14 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/config/GlobalConfig.cpp
 	${SRC_DIR}/sfz/config/Setting.cpp
 
-	${SRC_DIR}/sfz/console/Console.cpp
+	${SRC_DIR}/sfz/debug/Console.cpp
+	${SRC_DIR}/sfz/debug/ProfilingStats.cpp
 
 	${SRC_DIR}/sfz/math/MathPrimitiveToStrings.cpp
 	${SRC_DIR}/sfz/math/ProjectionMatrices.cpp
 
 	${SRC_DIR}/sfz/memory/ArenaAllocator.cpp
 	${SRC_DIR}/sfz/memory/DebugAllocator.cpp
-	${SRC_DIR}/sfz/memory/StandardAllocator.cpp
 
 	${SRC_DIR}/sfz/renderer/CascadedShadowMaps.cpp
 	${SRC_DIR}/sfz/renderer/DynamicGpuAllocator.hpp
@@ -347,7 +346,6 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/strings/DynString.cpp
 	${SRC_DIR}/sfz/strings/StringID.cpp
 
-	${SRC_DIR}/sfz/util/FrametimeStats.cpp
 	${SRC_DIR}/sfz/util/GltfLoader.cpp
 	${SRC_DIR}/sfz/util/GltfWriter.cpp
 	${SRC_DIR}/sfz/util/IniParser.cpp

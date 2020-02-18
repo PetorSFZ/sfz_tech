@@ -114,6 +114,7 @@ struct StringLocal final {
 	bool operator>= (const char* o) const { sfz_assert(o != nullptr); return strncmp(this->mRawStr, o, N) >= 0; }
 };
 
+using str16 = StringLocal<16>;
 using str32 = StringLocal<32>;
 using str48 = StringLocal<48>;
 using str64 = StringLocal<64>;

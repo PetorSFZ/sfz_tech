@@ -432,21 +432,4 @@ Setting* GlobalConfig::sanitizeBool(
 		BoolBounds(defaultValue));
 }
 
-// GlobalConfig: Private constructors & destructors
-// ------------------------------------------------------------------------------------------------
-
-GlobalConfig::~GlobalConfig() noexcept
-{
-	this->destroy();
-}
-
-// Statically owned global config
-// ------------------------------------------------------------------------------------------------
-
-GlobalConfig* getStaticGlobalConfigBoot() noexcept
-{
-	static GlobalConfig config;
-	return &config;
-}
-
 } // namespace sfz

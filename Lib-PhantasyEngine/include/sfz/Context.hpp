@@ -21,9 +21,12 @@
 namespace sfz {
 
 // Forward declarations
+// ------------------------------------------------------------------------------------------------
+
 class Allocator;
 class LoggingInterface;
 class GlobalConfig;
+class ProfilingStats;
 class StringCollection;
 
 // PhantasyEngine global context
@@ -65,6 +68,9 @@ struct Context final {
 	// Because we don't want any collisions globally in the game we store the datastructure keeping
 	// track of the strings and their hash in the global context.
 	StringCollection* resourceStrings = nullptr;
+
+	// Global profiling stats.
+	ProfilingStats* profilingStats = nullptr;
 };
 
 // Context getters/setters
@@ -87,5 +93,6 @@ inline Allocator* getDefaultAllocator() { return getContext()->defaultAllocator;
 inline LoggingInterface* getLogger() { return getContext()->logger; }
 inline GlobalConfig& getGlobalConfig() { return *getContext()->config; }
 inline StringCollection& getResourceStrings() { return *getContext()->resourceStrings; }
+inline ProfilingStats& getProfilingStats() { return *getContext()->profilingStats; }
 
 } // namespace sfz

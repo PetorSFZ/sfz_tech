@@ -1,4 +1,5 @@
 // Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+//               For other contributors see Contributors.txt
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -18,55 +19,48 @@
 
 #pragma once
 
-#include <cstdint>
-
-#include <skipifzero_arrays.hpp>
-
-#include "sfz/strings/DynString.hpp"
+#include <skipifzero.hpp>
 
 namespace sfz {
 
-using std::uint32_t;
+// Console
+// ------------------------------------------------------------------------------------------------
 
-/// Class used to calculate useful frametime statistics. All frametimes entered and received are
-/// in milliseconds.
-class FrametimeStats final {
+struct ConsoleState; // Pimpl
+
+class Console final {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	FrametimeStats() = delete;
-	FrametimeStats(const FrametimeStats&) = delete;
-	FrametimeStats& operator= (const FrametimeStats&) = delete;
-	FrametimeStats(FrametimeStats&&) noexcept = default;
-	FrametimeStats& operator= (FrametimeStats&&) noexcept = default;
+	Console() noexcept = default;
+	Console(const Console&) = delete;
+	Console& operator= (const Console&) = delete;
+	Console(Console&& other) noexcept { this->swap(other); }
+	Console& operator= (Console&& other) noexcept { this->swap(other); return *this; }
+	~Console() noexcept { this->destroy(); }
 
-	FrametimeStats(uint32_t maxNumSamples) noexcept;
-
-	// Public methods
+	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	const Array<float>& samples() const noexcept { return mSamples; }
+	void init(Allocator* allocator, uint32_t numWindowsToDock, const char* const* windowNames) noexcept;
+	void swap(Console& other) noexcept;
+	void destroy() noexcept;
 
-	void addSample(float sampleInMs) noexcept;
-	void reset() noexcept;
+	// Methods
+	// --------------------------------------------------------------------------------------------
 
-	inline uint32_t maxNumSamples() const noexcept { return mSamples.capacity(); }
-	inline uint32_t currentNumSamples() const noexcept { return mSamples.size(); }
-	inline float min() const noexcept { return mMin; }
-	inline float max() const noexcept { return mMax; }
-	inline float avg() const noexcept { return mAvg; }
-	inline float sd() const noexcept { return mSD; }
-	inline float time() const noexcept { return mTotalTime; }
-	inline const char* toString() const noexcept { return mString.str(); }
+	// If the console is active the game should be paused
+	void toggleActive() noexcept;
+	bool active() noexcept;
+
+	void render() noexcept;
 
 private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	Array<float> mSamples;
-	DynString mString;
-	float mMin, mMax, mAvg, mSD, mTotalTime;
+	ConsoleState* mState = nullptr;
 };
 
 } // namespace sfz

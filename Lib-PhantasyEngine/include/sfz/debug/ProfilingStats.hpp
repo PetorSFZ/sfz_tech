@@ -23,44 +23,73 @@
 
 namespace sfz {
 
-// Console
+// ProfilingStats
 // ------------------------------------------------------------------------------------------------
 
-struct ConsoleState; // Pimpl
+struct LabelStats final {
+	float avg = 0.0f;
+	float std = 0.0f;
+	float min = 0.0f;
+	float max = 0.0f;
+};
 
-class Console final {
+struct ProfilingStatsState; // Pimpl pattern
+
+class ProfilingStats final {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	Console() noexcept = default;
-	Console(const Console&) = delete;
-	Console& operator= (const Console&) = delete;
-	Console(Console&& other) noexcept { this->swap(other); }
-	Console& operator= (Console&& other) noexcept { this->swap(other); return *this; }
-	~Console() noexcept { this->destroy(); }
+	ProfilingStats() noexcept = default;
+	ProfilingStats(const ProfilingStats&) = delete;
+	ProfilingStats& operator= (const ProfilingStats&) = delete;
+	ProfilingStats(ProfilingStats&&) = delete;
+	ProfilingStats& operator= (ProfilingStats&&) = delete;
+	~ProfilingStats() noexcept { this->destroy(); }
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void init(Allocator* allocator, uint32_t numWindowsToDock, const char* const* windowNames) noexcept;
-	void swap(Console& other) noexcept;
+	void init(Allocator* allocator) noexcept;
 	void destroy() noexcept;
+
+	// Getters
+	// --------------------------------------------------------------------------------------------
+	
+	uint32_t numCategories() const noexcept;
+	const char* const* categories() const noexcept;
+
+	uint32_t numLabels(const char* category) const noexcept;
+	const char* const* labels(const char* category) const noexcept;
+
+	uint32_t numSamples(const char* category) const noexcept;
+	const uint64_t* sampleIndices(const char* category) const noexcept;
+	const float* sampleIndicesFloat(const char* category) const noexcept;
+
+	const float* samples(const char* category, const char* label) const noexcept;
+	vec4 color(const char* category, const char* label) const noexcept;
+	LabelStats stats(const char* category, const char* label) const noexcept;
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	// If the console is active the game should be paused
-	void toggleActive() noexcept;
-	bool active() noexcept;
+	void createCategory(
+		const char* category,
+		uint32_t numSamples,
+		const char* sampleUnit,
+		const char* idxUnit) noexcept;
 
-	void render(float deltaSampleMs) noexcept;
+	void createLabel(
+		const char* category,
+		const char* label,
+		vec4 color = vec4(1.0f),
+		float defaultValue = 0.0f) noexcept;
+
+	void addSample(
+		const char* category, const char* label, uint64_t sampleIdx, float sample) noexcept;
 
 private:
-	// Private members
-	// --------------------------------------------------------------------------------------------
-
-	ConsoleState* mState = nullptr;
+	ProfilingStatsState* mState = nullptr;
 };
 
 } // namespace sfz

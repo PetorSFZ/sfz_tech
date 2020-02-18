@@ -37,6 +37,7 @@
 #endif
 
 #include <skipifzero.hpp>
+#include <skipifzero_allocators.hpp>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_smart_pointers.hpp>
 #include <skipifzero_strings.hpp>
@@ -44,7 +45,7 @@
 #include "sfz/Context.hpp"
 #include "sfz/Logging.hpp"
 #include "sfz/config/GlobalConfig.hpp"
-#include "sfz/memory/StandardAllocator.hpp"
+#include "sfz/debug/ProfilingStats.hpp"
 #include "sfz/rendering/Image.hpp"
 #include "sfz/rendering/ImguiSupport.hpp"
 #include "sfz/sdl/SDLAllocator.hpp"
@@ -59,32 +60,46 @@ extern "C" { _declspec(dllexport) DWORD NvOptimusEnablement = 1; }
 extern "C" { _declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 1; }
 #endif
 
-// Statics
+// Context
 // ------------------------------------------------------------------------------------------------
 
 // This is the global PhantasyEngine context, a pointer to it will be set using setContext().
+static sfz::StandardAllocator standardAllocator;
 static sfz::Context phantasyEngineContext;
+static sfz::TerminalLogger terminalLogger;
+static sfz::GlobalConfig globalConfig;
+static sfz::StringCollection stringCollection;
+static sfz::ProfilingStats profilingStats;
 
 static void setupContext() noexcept
 {
-	// Get sfz standard allocator
-	sfz::Allocator* allocator = sfz::getStandardAllocator();
-
-	// Create terminal logger
-	sfz::TerminalLogger& logger = *sfz::getStaticTerminalLoggerForBoot();
-	logger.init(256, allocator);
-
-	// Setup context
 	sfz::Context* context = &phantasyEngineContext;
+
+	// Set sfz standard allocator
+	sfz::Allocator* allocator = &standardAllocator;
 	context->defaultAllocator = allocator;
-	context->logger = &logger;
-	context->config = sfz::getStaticGlobalConfigBoot();
-	context->resourceStrings =
-		allocator->newObject<sfz::StringCollection>(sfz_dbg("Resource Strings"), 4096, allocator);
+
+	// Set terminal logger
+	terminalLogger.init(256, allocator);
+	context->logger = &terminalLogger;
+
+	// Set global config
+	context->config = &globalConfig;
+
+	// Resource strings
+	stringCollection.createStringCollection(4096, allocator);
+	context->resourceStrings = &stringCollection;
+
+	// Profiling stats
+	profilingStats.init(allocator);
+	context->profilingStats = &profilingStats;
 
 	// Set Phantasy Engine context
 	sfz::setContext(context);
 }
+
+// Statics
+// ------------------------------------------------------------------------------------------------
 
 static const char* basePath() noexcept
 {
@@ -206,7 +221,7 @@ static void initControllers(sfz::HashMap<int32_t, sfz::GameController>& controll
 // gameLoopIteration()
 // ------------------------------------------------------------------------------------------------
 
-/// Called for each iteration of the game loop
+// Called for each iteration of the game loop
 void gameLoopIteration(void* gameLoopStatePtr) noexcept
 {
 	GameLoopState& state = *static_cast<GameLoopState*>(gameLoopStatePtr);
@@ -317,6 +332,25 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	SDL_GetWindowSize(state.window, &windowWidth, &windowHeight);
 	state.userInput.rawMouse.update(windowWidth, windowHeight, state.userInput.events);
 
+	// Add last frame's CPU frametime to the global profiling stats.
+	sfz::getProfilingStats().addSample(
+		"default", "cpu_frametime_ms", state.renderer->currentFrameIdx(), deltaSecs * 1000.0f);
+
+	// Add last finished GPU frame's frametime to the global profiling stats
+	{
+		uint64_t frameIdx = ~0u;
+		float gpuFrameTimeMs = 0.0f;
+		state.renderer->frameTimeMs(frameIdx, gpuFrameTimeMs);
+		if (frameIdx != ~0ull) {
+			sfz::getProfilingStats().addSample(
+				"default", "gpu_frametime_ms", frameIdx, gpuFrameTimeMs);
+		}
+		else {
+			sfz::getProfilingStats().addSample(
+				"default", "gpu_frametime_ms", 0, 0.0f);
+		}
+	}
+
 	// Call user's update func
 	sfz::UpdateOp op = state.updateFunc(
 		state.renderer.get(),
@@ -386,6 +420,11 @@ int main(int argc, char* argv[])
 		// Load ini file
 		cfg.load();
 	}
+
+	// Init default category of profiling stats
+	sfz::getProfilingStats().createCategory("default", 300, "ms", "frame"); // 300 = 60 fps * 5 seconds
+	sfz::getProfilingStats().createLabel("default", "cpu_frametime_ms", sfz:: vec4(1.0f, 0.0f, 0.0f, 1.0f));
+	sfz::getProfilingStats().createLabel("default", "gpu_frametime_ms", sfz::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
 	// Init SDL2
 	uint32_t sdlInitFlags =

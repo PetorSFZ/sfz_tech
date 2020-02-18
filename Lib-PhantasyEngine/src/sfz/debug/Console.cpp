@@ -17,7 +17,7 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/console/Console.hpp"
+#include "sfz/debug/Console.hpp"
 
 #include <cctype>
 #include <ctime>
@@ -28,8 +28,10 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
+#include <imgui_plot.h>
+
 #include "sfz/config/GlobalConfig.hpp"
-#include "sfz/util/FrametimeStats.hpp"
+#include "sfz/debug/ProfilingStats.hpp"
 #include "sfz/util/IO.hpp"
 #include "sfz/util/TerminalLogger.hpp"
 
@@ -47,10 +49,6 @@ struct ConsoleState final {
 	bool imguiFirstRun = false;
 	ImGuiID dockSpaceId = 0;
 	Setting* showInGamePreview = nullptr;
-
-	// Frametime stats
-	FrametimeStats stats = FrametimeStats(384);
-	int statsWarmup = 0;
 
 	// Global Config
 	str32 configFilterString;
@@ -154,52 +152,6 @@ static void timeToString(str96& stringOut, time_t timestamp) noexcept
 	}
 }
 
-static void renderConsoleInGamePreview(ConsoleState& state) noexcept
-{
-	// Calculate and set size of window
-	ImGui::SetNextWindowSize(vec2(800, 115), ImGuiCond_Always);
-	ImGui::SetNextWindowPos(vec2(0.0f), ImGuiCond_Always);
-
-	// Set window flags
-	ImGuiWindowFlags windowFlags = 0;
-	windowFlags |= ImGuiWindowFlags_NoTitleBar;
-	windowFlags |= ImGuiWindowFlags_NoResize;
-	windowFlags |= ImGuiWindowFlags_NoMove;
-	windowFlags |= ImGuiWindowFlags_NoScrollbar;
-	windowFlags |= ImGuiWindowFlags_NoCollapse;
-	//windowFlags |= ImGuiWindowFlags_NoBackground;
-	windowFlags |= ImGuiWindowFlags_NoMouseInputs;
-	windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
-	windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
-	windowFlags |= ImGuiWindowFlags_NoNav;
-	windowFlags |= ImGuiWindowFlags_NoInputs;
-
-	// Begin window
-	ImGui::PushStyleColor(ImGuiCol_WindowBg, vec4(0.05f, 0.05f, 0.05f, 0.3f));
-	ImGui::PushStyleColor(ImGuiCol_Border, vec4(0.0f, 0.0f, 0.0f, 0.0f));
-	ImGui::Begin("Console Preview", nullptr, windowFlags);
-
-	// Render performance numbers
-	ImGui::BeginGroup();
-	ImGui::Text("Avg: %.1f ms", state.stats.avg());
-	ImGui::Text("Std: %.1f ms", state.stats.sd());
-	ImGui::Text("Min: %.1f ms", state.stats.min());
-	ImGui::Text("Max: %.1f ms", state.stats.max());
-	//ImGui::Text("%u samples, %.1f s", mStats.currentNumSamples(), mStats.time());
-	ImGui::EndGroup();
-
-	// Render performance histogram
-	ImGui::SameLine();
-	vec2 histogramDims = vec2(ImGui::GetWindowSize()) - vec2(145.0f, 25.0f);
-	ImGui::PlotLines("##Frametimes", state.stats.samples().data(), state.stats.samples().size(), 0, nullptr,
-		0.0f, sfz::max(state.stats.max(), 0.020f), histogramDims);
-
-	// End window
-	ImGui::End();
-	ImGui::PopStyleColor();
-	ImGui::PopStyleColor();
-}
-
 static void renderConsoleDockSpace(ConsoleState& state) noexcept
 {
 	ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -239,48 +191,140 @@ static void renderConsoleDockSpaceInitialize(ConsoleState& state) noexcept
 }
 
 // Returns whether window is docked or not, small hack to create initial docked layout
-static void renderPerformanceWindow(ConsoleState& state) noexcept
+static void renderPerformanceWindow(bool isPreview) noexcept
 {
+	ProfilingStats& stats = getProfilingStats();
+
 	// Calculate and set size of window
-	ImGui::SetNextWindowSize(vec2(800, 135), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowPos(vec2(0.0f), ImGuiCond_FirstUseEver);
+	if (isPreview) {
+		ImGui::SetNextWindowSize(vec2(800, 115), ImGuiCond_Always);
+		ImGui::SetNextWindowPos(vec2(0.0f), ImGuiCond_Always);
+	}
+	else {
+		ImGui::SetNextWindowSize(vec2(800, 135), ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowPos(vec2(0.0f), ImGuiCond_FirstUseEver);
+	}
 
 	// Set window flags
-	ImGuiWindowFlags performanceWindowFlags = 0;
-	//performanceWindowFlags |= ImGuiWindowFlags_NoTitleBar;
-	performanceWindowFlags |= ImGuiWindowFlags_NoScrollbar;
-	//performanceWindowFlags |= ImGuiWindowFlags_NoMove;
-	//performanceWindowFlags |= ImGuiWindowFlags_NoResize;
-	//performanceWindowFlags |= ImGuiWindowFlags_NoCollapse;
-	performanceWindowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
-	performanceWindowFlags |= ImGuiWindowFlags_NoNav;
+	ImGuiWindowFlags windowFlags = 0;
+	if (isPreview) {
+		windowFlags |= ImGuiWindowFlags_NoTitleBar;
+		windowFlags |= ImGuiWindowFlags_NoResize;
+		windowFlags |= ImGuiWindowFlags_NoMove;
+		windowFlags |= ImGuiWindowFlags_NoScrollbar;
+		windowFlags |= ImGuiWindowFlags_NoCollapse;
+		//windowFlags |= ImGuiWindowFlags_NoBackground;
+		windowFlags |= ImGuiWindowFlags_NoMouseInputs;
+		windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
+		windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+		windowFlags |= ImGuiWindowFlags_NoNav;
+		windowFlags |= ImGuiWindowFlags_NoInputs;
+	}
+	else {
+		
+		//windowFlags |= ImGuiWindowFlags_NoTitleBar;
+		windowFlags |= ImGuiWindowFlags_NoScrollbar;
+		//windowFlags |= ImGuiWindowFlags_NoMove;
+		//windowFlags |= ImGuiWindowFlags_NoResize;
+		//windowFlags |= ImGuiWindowFlags_NoCollapse;
+		windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
+		windowFlags |= ImGuiWindowFlags_NoNav;
+	}
 
 	// Begin window
-	ImGui::Begin("Performance", nullptr, performanceWindowFlags);
+	if (isPreview) {
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, vec4(0.05f, 0.05f, 0.05f, 0.3f));
+		ImGui::PushStyleColor(ImGuiCol_Border, vec4(0.0f, 0.0f, 0.0f, 0.0f));
+		ImGui::Begin("Console Preview", nullptr, windowFlags);
+	}
+	else {
+		ImGui::Begin("Performance", nullptr, windowFlags);
+	}
 
 	// Render performance numbers
+	LabelStats labelStats = stats.stats("default", "cpu_frametime_ms");
 	ImGui::BeginGroup();
-	ImGui::Text("Avg: %.1f ms", state.stats.avg());
-	ImGui::Text("Std: %.1f ms", state.stats.sd());
-	ImGui::Text("Min: %.1f ms", state.stats.min());
-	ImGui::Text("Max: %.1f ms", state.stats.max());
-	//ImGui::Text("%u samples, %.1f s", mStats.currentNumSamples(), mStats.time());
+	ImGui::Text("Avg: %.1f ms", labelStats.avg);
+	ImGui::Text("Std: %.1f ms", labelStats.std);
+	ImGui::Text("Min: %.1f ms", labelStats.min);
+	ImGui::Text("Max: %.1f ms", labelStats.max);
 	ImGui::EndGroup();
 
 	// Render performance histogram
 	ImGui::SameLine();
-	vec2 histogramDims = vec2(ImGui::GetWindowSize()) - vec2(140.0f, 50.0f);
-	ImGui::PlotLines("##Frametimes", state.stats.samples().data(), state.stats.samples().size(), 0, nullptr,
-		0.0f, sfz::max(state.stats.max(), 0.020f), histogramDims);
+	vec2 histogramDims;
+	if (isPreview) {
+		histogramDims = vec2(ImGui::GetWindowSize()) - vec2(145.0f, 25.0f);
+	}
+	else {
+		histogramDims = vec2(ImGui::GetWindowSize()) - vec2(140.0f, 50.0f);
+	}
+
+	const float* yValuesList[2] = {
+		stats.samples("default", "cpu_frametime_ms"),
+		stats.samples("default", "gpu_frametime_ms")
+	};
+
+	const ImU32 colorsList[2] = {
+		ImGui::GetColorU32(vec4(1.0f, 0.0f, 0.0f, 1.0f)),
+		ImGui::GetColorU32(vec4(0.0f, 1.0f, 0.0f, 1.0f))
+	};
+
+
+	ImGui::PlotConfig conf;
+	//conf.values.ys = state.stats.samples().data();
+	//conf.values.count = (int)state.stats.samples().size();
+	conf.values.xs = stats.sampleIndicesFloat("default");
+	//conf.values.ys = stats.samples("default", "cpu_frametime_ms");
+	conf.values.ys_list = yValuesList;
+	conf.values.ys_count = 2;
+	conf.values.colors = colorsList;
+
+	conf.values.count = stats.numSamples("default");
+	conf.scale.min = 0.0f;
+	conf.scale.max = sfz::max(labelStats.max, 25.0f);
+
+	//conf.values.color = ImGui::GetColorU32(vec4(1.0f, 0.0f, 0.0f, 1.0f));
+
+	conf.tooltip.show = true;
+	conf.tooltip.format = "%.0f: %.2f ms";
+
+	conf.grid_x.show = true;
+	conf.grid_x.size = 60;
+	conf.grid_x.subticks = 1;
+	conf.grid_y.show = true;
+	conf.grid_y.size = 8.333333333f;
+	conf.grid_y.subticks = 1;
+
+	conf.frame_size = histogramDims;
+	conf.line_thickness = 1.0f;
+
+
+	/*conf.values.xs = x_data; // this line is optional
+	conf.values.ys = y_data;
+	conf.values.count = data_count;
+	conf.scale.min = -1;
+	conf.scale.max = 1;
+	conf.tooltip.show = true;
+	conf.tooltip.format = "x=%.2f, y=%.2f";
+	conf.grid_x.show = true;
+	conf.grid_y.show = true;
+	*/
+
+	ImGui::Plot("##Frametimes", conf);
 
 	// End window
 	ImGui::End();
+	if (isPreview) {
+		ImGui::PopStyleColor();
+		ImGui::PopStyleColor();
+	}
 }
 
 static void renderLogWindow(ConsoleState& state) noexcept
 {
 	const vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
-	TerminalLogger& logger = *getPhContext()->logger;
+	TerminalLogger& logger = *reinterpret_cast<TerminalLogger*>(getLogger());
 	str96 timeStr;
 
 	ImGui::SetNextWindowPos(vec2(0.0f, 130.0f), ImGuiCond_FirstUseEver);
@@ -397,7 +441,7 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 	cfg.getSections(state.cfgSections);
 
 	// Set window size
-	ImGui::SetNextWindowPos(vec2(state.stats.maxNumSamples() * 1.25f + 17.0f, 0.0f), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(vec2(300.0f * 1.25f + 17.0f, 0.0f), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(vec2(400.0f, 0.0f), ImGuiCond_FirstUseEver);
 
 	// Set window flags
@@ -590,15 +634,11 @@ bool Console::active() noexcept
 	return mState->active;
 }
 
-void Console::render(float deltaSampleMs) noexcept
+void Console::render() noexcept
 {
-	// Update performance stats
-	if (mState->statsWarmup >= 8) mState->stats.addSample(deltaSampleMs);
-	mState->statsWarmup++;
-
 	// Render in-game console preview
 	if (!mState->active && mState->showInGamePreview->boolValue()) {
-		renderConsoleInGamePreview(*mState);
+		renderPerformanceWindow(true);
 	}
 
 	// Return if console should not be rendered
@@ -608,7 +648,7 @@ void Console::render(float deltaSampleMs) noexcept
 	renderConsoleDockSpace(*mState);
 
 	// Render console windows
-	renderPerformanceWindow(*mState);
+	renderPerformanceWindow(false);
 	renderLogWindow(*mState);
 	renderConfigWindow(*mState);
 

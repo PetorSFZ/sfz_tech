@@ -120,13 +120,4 @@ void TerminalLogger::log(
 	}
 };
 
-// Statically owned logger
-// ------------------------------------------------------------------------------------------------
-
-TerminalLogger* getStaticTerminalLoggerForBoot() noexcept
-{
-	static TerminalLogger logger;
-	return &logger;
-}
-
 } // namespace sfz
