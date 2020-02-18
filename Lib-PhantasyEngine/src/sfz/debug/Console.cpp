@@ -652,9 +652,6 @@ void Console::render() noexcept
 	renderLogWindow(*mState);
 	renderConfigWindow(*mState);
 
-	// Render custom-injected windows
-	//mLogic->injectConsoleMenu();
-
 	// Initialize dockspace with default docked layout if first run
 	if (mState->imguiFirstRun) renderConsoleDockSpaceInitialize(*mState);
 	mState->imguiFirstRun = false;

@@ -1,6 +1,11 @@
 project("imgui_plot" LANGUAGES CXX C )
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
+if (MSVC)
+	string(REPLACE "/W4" "" TMP1 ${CMAKE_CXX_FLAGS})
+	set(CMAKE_CXX_FLAGS "${TMP1} /W0")
+endif()
+
 if (NOT IMGUI_FOUND)
 	message(FATAL_ERROR "imgui_plot requires dear-imgui.")
 endif()
