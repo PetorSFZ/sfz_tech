@@ -31,9 +31,6 @@ namespace sfz {
 // ProfilingStatsState
 // ------------------------------------------------------------------------------------------------
 
-constexpr uint32_t MAX_NUM_CATEGORIES = 8;
-constexpr uint32_t MAX_NUM_LABELS = 80;
-
 struct StatsLabel final {
 	vec4 color = vec4(1.0f);
 	float defaultValue = 0.0f;
@@ -42,12 +39,13 @@ struct StatsLabel final {
 
 struct StatsCategory final {
 	uint32_t numSamples = 0;
+	float sampleOutlierMax = FLT_MAX;
 	str16 sampleUnit;
 	str16 idxUnit;
 
-	HashMapLocal<str48, StatsLabel, MAX_NUM_LABELS> labels;
-	ArrayLocal<str48, MAX_NUM_LABELS> labelStringBackings;
-	ArrayLocal<const char*, MAX_NUM_LABELS> labelStrings;
+	HashMapLocal<str32, StatsLabel, PROFILING_STATS_MAX_NUM_LABELS> labels;
+	ArrayLocal<str32, PROFILING_STATS_MAX_NUM_LABELS> labelStringBackings;
+	ArrayLocal<const char*, PROFILING_STATS_MAX_NUM_LABELS> labelStrings;
 
 	Array<uint64_t> indices;
 	Array<float> indicesAsFloat;
@@ -55,9 +53,9 @@ struct StatsCategory final {
 
 struct ProfilingStatsState final {
 	Allocator* allocator = nullptr;
-	HashMapLocal<str32, StatsCategory, MAX_NUM_CATEGORIES> categories;
-	ArrayLocal<str32, MAX_NUM_CATEGORIES> categoryStringBackings;
-	ArrayLocal<const char*, MAX_NUM_CATEGORIES> categoryStrings;
+	HashMapLocal<str32, StatsCategory, PROFILING_STATS_MAX_NUM_CATEGORIES> categories;
+	ArrayLocal<str32, PROFILING_STATS_MAX_NUM_CATEGORIES> categoryStringBackings;
+	ArrayLocal<const char*, PROFILING_STATS_MAX_NUM_CATEGORIES> categoryStrings;
 };
 
 // ProfilingStats: State methods
@@ -126,6 +124,20 @@ const float* ProfilingStats::sampleIndicesFloat(const char* category) const noex
 	return cat->indicesAsFloat.data();
 }
 
+const char* ProfilingStats::sampleUnit(const char* category) const noexcept
+{
+	const StatsCategory* cat = mState->categories.get(category);
+	sfz_assert(cat != nullptr);
+	return cat->sampleUnit;
+}
+
+const char* ProfilingStats::idxUnit(const char* category) const noexcept
+{
+	const StatsCategory* cat = mState->categories.get(category);
+	sfz_assert(cat != nullptr);
+	return cat->idxUnit;
+}
+
 const float* ProfilingStats::samples(const char* category, const char* label) const noexcept
 {
 	const StatsCategory* cat = mState->categories.get(category);
@@ -192,14 +204,19 @@ LabelStats ProfilingStats::stats(const char* category, const char* label) const 
 void ProfilingStats::createCategory(
 	const char* category,
 	uint32_t numSamples,
+	float sampleOutlierMax,
 	const char* sampleUnit,
 	const char* idxUnit) noexcept
 {
 	sfz_assert(mState->categories.get(category) == nullptr);
+	sfz_assert(strnlen(category, 33) < 32);
+	sfz_assert(strnlen(sampleUnit, 9) < 8);
+	sfz_assert(strnlen(idxUnit, 9) < 8);
 
 	// Add category
 	StatsCategory& cat = mState->categories.put(category, {});
 	cat.numSamples = numSamples;
+	cat.sampleOutlierMax = sampleOutlierMax;
 	cat.sampleUnit.appendf("%s", sampleUnit);
 	cat.idxUnit.appendf("%s", idxUnit);
 
@@ -225,6 +242,8 @@ void ProfilingStats::createLabel(
 	vec4 color,
 	float defaultValue) noexcept
 {
+	sfz_assert(strnlen(label, 33) < 32);
+
 	StatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
 	sfz_assert(cat->labels.get(label) == nullptr);
@@ -237,7 +256,7 @@ void ProfilingStats::createLabel(
 	lab.samples.add(defaultValue, cat->numSamples);
 
 	// Add label string
-	cat->labelStringBackings.add(str48("%s", label));
+	cat->labelStringBackings.add(str32("%s", label));
 	cat->labelStrings.add(cat->labelStringBackings.last());
 }
 
@@ -248,6 +267,9 @@ void ProfilingStats::addSample(
 	sfz_assert(cat != nullptr);
 	StatsLabel* lab = cat->labels.get(label);
 	sfz_assert(lab != nullptr);
+
+	// Clamp sample against ceiling for this category
+	sample = sfz::min(sample, cat->sampleOutlierMax);
 
 	// Find latest matching idx
 	sfz_assert(sampleIdx >= cat->indices.first());
@@ -282,7 +304,7 @@ void ProfilingStats::addSample(
 		// Remove first sample and add default one last for all labels
 		for (auto pair : cat->labels) {
 			pair.value.samples.remove(0, 1);
-			pair.value.samples.add(lab->defaultValue);
+			pair.value.samples.add(pair.value.defaultValue);
 		}
 		
 		// Set last sample to the new sample for the given label

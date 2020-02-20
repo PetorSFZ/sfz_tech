@@ -20,6 +20,7 @@
 #include "sfz/debug/Console.hpp"
 
 #include <cctype>
+#include <cstring>
 #include <ctime>
 
 #include <skipifzero_arrays.hpp>
@@ -48,7 +49,12 @@ struct ConsoleState final {
 	bool active = false;
 	bool imguiFirstRun = false;
 	ImGuiID dockSpaceId = 0;
+
+	// Performance
 	Setting* showInGamePreview = nullptr;
+	Setting* inGamePreviewWidth = nullptr;
+	Setting* inGamePreviewHeight = nullptr;
+	str64 categoryStr = str64("default");
 
 	// Global Config
 	str32 configFilterString;
@@ -191,18 +197,19 @@ static void renderConsoleDockSpaceInitialize(ConsoleState& state) noexcept
 }
 
 // Returns whether window is docked or not, small hack to create initial docked layout
-static void renderPerformanceWindow(bool isPreview) noexcept
+static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcept
 {
 	ProfilingStats& stats = getProfilingStats();
 
 	// Calculate and set size of window
 	if (isPreview) {
-		ImGui::SetNextWindowSize(vec2(800, 115), ImGuiCond_Always);
+		vec2 windowSize =
+			vec2(state.inGamePreviewWidth->intValue(), state.inGamePreviewHeight->intValue());
+		ImGui::SetNextWindowSize(windowSize, ImGuiCond_Always);
 		ImGui::SetNextWindowPos(vec2(0.0f), ImGuiCond_Always);
 	}
 	else {
 		ImGui::SetNextWindowSize(vec2(800, 135), ImGuiCond_FirstUseEver);
-		ImGui::SetNextWindowPos(vec2(0.0f), ImGuiCond_FirstUseEver);
 	}
 
 	// Set window flags
@@ -221,12 +228,7 @@ static void renderPerformanceWindow(bool isPreview) noexcept
 		windowFlags |= ImGuiWindowFlags_NoInputs;
 	}
 	else {
-		
-		//windowFlags |= ImGuiWindowFlags_NoTitleBar;
 		windowFlags |= ImGuiWindowFlags_NoScrollbar;
-		//windowFlags |= ImGuiWindowFlags_NoMove;
-		//windowFlags |= ImGuiWindowFlags_NoResize;
-		//windowFlags |= ImGuiWindowFlags_NoCollapse;
 		windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
 		windowFlags |= ImGuiWindowFlags_NoNav;
 	}
@@ -241,77 +243,88 @@ static void renderPerformanceWindow(bool isPreview) noexcept
 		ImGui::Begin("Performance", nullptr, windowFlags);
 	}
 
+	// Show tab with category selection if not in preview mode
+	if (!isPreview) {
+		if (ImGui::BeginTabBar("PerformanceTabBar")) {
+			const uint32_t numCategories = stats.numCategories();
+			const char* const* categories = stats.categories();
+			for (uint32_t i = 0; i < numCategories; i++) {
+				if (ImGui::BeginTabItem(str96("%s##PerfBar", categories[i]))) {
+					state.categoryStr.clear();
+					state.categoryStr.appendf("%s", categories[i]);
+					ImGui::EndTabItem();
+				}
+			}
+			ImGui::EndTabBar();
+		}
+	}
+
+	// Get information about the selected category from the stats
+	const uint32_t numLabels = stats.numLabels(state.categoryStr);
+	const char* const* labelStrs = stats.labels(state.categoryStr);
+	const char* idxUnit = stats.idxUnit(state.categoryStr);
+	const char* sampleUnit = stats.sampleUnit(state.categoryStr);
+
+	// Retrieve sample arrays, colors and stats for each label in the selected category
+	// Also get the worst max
+	ArrayLocal<const float*, PROFILING_STATS_MAX_NUM_LABELS> valuesList;
+	ArrayLocal<ImU32, PROFILING_STATS_MAX_NUM_LABELS> colorsList;
+	ArrayLocal<LabelStats, PROFILING_STATS_MAX_NUM_LABELS> labelStats;
+	float worstMax = FLT_MIN;
+	uint32_t longestLabelStr = 0;
+	for (uint32_t i = 0; i < numLabels; i++) {
+		const char* label = labelStrs[i];
+		const float* samples = stats.samples(state.categoryStr, label);
+		valuesList.add(samples);
+		vec4 color = stats.color(state.categoryStr, label);
+		colorsList.add(ImGui::GetColorU32(color));
+		LabelStats labelStat = stats.stats(state.categoryStr, label);
+		labelStats.add(labelStat);
+		worstMax = sfz::max(worstMax, labelStat.max);
+		longestLabelStr = sfz::max(longestLabelStr, strnlen(label, 33));
+	}
+
 	// Render performance numbers
-	LabelStats labelStats = stats.stats("default", "cpu_frametime_ms");
+	ImGui::SetNextItemWidth(800.0f);
 	ImGui::BeginGroup();
-	ImGui::Text("Avg: %.1f ms", labelStats.avg);
-	ImGui::Text("Std: %.1f ms", labelStats.std);
-	ImGui::Text("Min: %.1f ms", labelStats.min);
-	ImGui::Text("Max: %.1f ms", labelStats.max);
+
+	for (uint32_t i = 0; i < numLabels; i++) {
+		ImGui::PushStyleColor(ImGuiCol_Text, colorsList[i]);
+		str64 format("%%-%us  avg %%5.1f %%s   max %%5.1f %%s", longestLabelStr);
+		ImGui::Text(format.str(),
+			labelStrs[i], labelStats[i].avg, sampleUnit, labelStats[i].max, sampleUnit);
+		ImGui::PopStyleColor();
+	}
 	ImGui::EndGroup();
 
-	// Render performance histogram
+	// Calculate dimensions of plot
+	const vec2 infoDims = ImGui::GetItemRectMax();
 	ImGui::SameLine();
-	vec2 histogramDims;
-	if (isPreview) {
-		histogramDims = vec2(ImGui::GetWindowSize()) - vec2(145.0f, 25.0f);
-	}
-	else {
-		histogramDims = vec2(ImGui::GetWindowSize()) - vec2(140.0f, 50.0f);
-	}
-
-	const float* yValuesList[2] = {
-		stats.samples("default", "cpu_frametime_ms"),
-		stats.samples("default", "gpu_frametime_ms")
-	};
-
-	const ImU32 colorsList[2] = {
-		ImGui::GetColorU32(vec4(1.0f, 0.0f, 0.0f, 1.0f)),
-		ImGui::GetColorU32(vec4(0.0f, 1.0f, 0.0f, 1.0f))
-	};
-
-
+	vec2 plotDims = vec2(ImGui::GetWindowSize()) - vec2(infoDims.x + 10.0f, isPreview ? 20.0f : 80.0f);
+	
+	// Render plot
 	ImGui::PlotConfig conf;
-	//conf.values.ys = state.stats.samples().data();
-	//conf.values.count = (int)state.stats.samples().size();
-	conf.values.xs = stats.sampleIndicesFloat("default");
-	//conf.values.ys = stats.samples("default", "cpu_frametime_ms");
-	conf.values.ys_list = yValuesList;
-	conf.values.ys_count = 2;
-	conf.values.colors = colorsList;
+	conf.values.xs = stats.sampleIndicesFloat(state.categoryStr);
+	conf.values.count = int(stats.numSamples(state.categoryStr));
+	conf.values.ys_count = int(numLabels);
+	conf.values.ys_list = valuesList.data();
+	conf.values.colors = colorsList.data();
 
-	conf.values.count = stats.numSamples("default");
 	conf.scale.min = 0.0f;
-	conf.scale.max = sfz::max(labelStats.max, 25.0f);
-
-	//conf.values.color = ImGui::GetColorU32(vec4(1.0f, 0.0f, 0.0f, 1.0f));
+	conf.scale.max = sfz::max(worstMax, 25.0f);
 
 	conf.tooltip.show = true;
-	conf.tooltip.format = "%.0f: %.2f ms";
+	str64 tooltipFormat("%s%%.0f: %%.2f %s", idxUnit, sampleUnit);
+	conf.tooltip.format = tooltipFormat.str();
 
 	conf.grid_x.show = true;
 	conf.grid_x.size = 60;
 	conf.grid_x.subticks = 1;
-	conf.grid_y.show = true;
-	conf.grid_y.size = 8.333333333f;
-	conf.grid_y.subticks = 1;
 
-	conf.frame_size = histogramDims;
+	conf.frame_size = plotDims;
 	conf.line_thickness = 1.0f;
 
-
-	/*conf.values.xs = x_data; // this line is optional
-	conf.values.ys = y_data;
-	conf.values.count = data_count;
-	conf.scale.min = -1;
-	conf.scale.max = 1;
-	conf.tooltip.show = true;
-	conf.tooltip.format = "x=%.2f, y=%.2f";
-	conf.grid_x.show = true;
-	conf.grid_y.show = true;
-	*/
-
-	ImGui::Plot("##Frametimes", conf);
+	ImGui::Plot("##PerformanceGraph", conf);
 
 	// End window
 	ImGui::End();
@@ -596,6 +609,8 @@ void Console::init(Allocator* allocator, uint32_t numWindowsToDock, const char* 
 	GlobalConfig& cfg = getGlobalConfig();
 	mState->showInGamePreview =
 		cfg.sanitizeBool("Console", "showInGamePreview", true, BoolBounds(false));
+	mState->inGamePreviewWidth = cfg.sanitizeInt("Console", "inGamePreviewWidth", true, IntBounds(1200, 700, 1500, 50));
+	mState->inGamePreviewHeight = cfg.sanitizeInt("Console", "inGamePreviewHeight", true, IntBounds(150, 100, 500, 25));
 	mState->logMinLevelSetting = cfg.sanitizeInt("Console", "logMinLevel", false, IntBounds(0, 0, 3));
 
 	// Global Config
@@ -638,7 +653,7 @@ void Console::render() noexcept
 {
 	// Render in-game console preview
 	if (!mState->active && mState->showInGamePreview->boolValue()) {
-		renderPerformanceWindow(true);
+		renderPerformanceWindow(*mState, true);
 	}
 
 	// Return if console should not be rendered
@@ -648,7 +663,7 @@ void Console::render() noexcept
 	renderConsoleDockSpace(*mState);
 
 	// Render console windows
-	renderPerformanceWindow(false);
+	renderPerformanceWindow(*mState, false);
 	renderLogWindow(*mState);
 	renderConfigWindow(*mState);
 

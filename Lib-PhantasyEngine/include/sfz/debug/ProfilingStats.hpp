@@ -26,6 +26,9 @@ namespace sfz {
 // ProfilingStats
 // ------------------------------------------------------------------------------------------------
 
+constexpr uint32_t PROFILING_STATS_MAX_NUM_CATEGORIES = 8;
+constexpr uint32_t PROFILING_STATS_MAX_NUM_LABELS = 80;
+
 struct LabelStats final {
 	float avg = 0.0f;
 	float std = 0.0f;
@@ -65,6 +68,8 @@ public:
 	uint32_t numSamples(const char* category) const noexcept;
 	const uint64_t* sampleIndices(const char* category) const noexcept;
 	const float* sampleIndicesFloat(const char* category) const noexcept;
+	const char* sampleUnit(const char* category) const noexcept;
+	const char* idxUnit(const char* category) const noexcept;
 
 	const float* samples(const char* category, const char* label) const noexcept;
 	vec4 color(const char* category, const char* label) const noexcept;
@@ -76,6 +81,7 @@ public:
 	void createCategory(
 		const char* category,
 		uint32_t numSamples,
+		float sampleOutlierMax,
 		const char* sampleUnit,
 		const char* idxUnit) noexcept;
 

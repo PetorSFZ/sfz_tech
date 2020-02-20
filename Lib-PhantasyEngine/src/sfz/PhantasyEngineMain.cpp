@@ -334,7 +334,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 
 	// Add last frame's CPU frametime to the global profiling stats.
 	sfz::getProfilingStats().addSample(
-		"default", "cpu_frametime_ms", state.renderer->currentFrameIdx(), deltaSecs * 1000.0f);
+		"default", "cpu_frametime", state.renderer->currentFrameIdx(), deltaSecs * 1000.0f);
 
 	// Add last finished GPU frame's frametime to the global profiling stats
 	{
@@ -343,11 +343,11 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 		state.renderer->frameTimeMs(frameIdx, gpuFrameTimeMs);
 		if (frameIdx != ~0ull) {
 			sfz::getProfilingStats().addSample(
-				"default", "gpu_frametime_ms", frameIdx, gpuFrameTimeMs);
+				"default", "gpu_frametime", frameIdx, gpuFrameTimeMs);
 		}
 		else {
 			sfz::getProfilingStats().addSample(
-				"default", "gpu_frametime_ms", 0, 0.0f);
+				"default", "gpu_frametime", 0, 0.0f);
 		}
 	}
 
@@ -422,9 +422,10 @@ int main(int argc, char* argv[])
 	}
 
 	// Init default category of profiling stats
-	sfz::getProfilingStats().createCategory("default", 300, "ms", "frame"); // 300 = 60 fps * 5 seconds
-	sfz::getProfilingStats().createLabel("default", "cpu_frametime_ms", sfz:: vec4(1.0f, 0.0f, 0.0f, 1.0f));
-	sfz::getProfilingStats().createLabel("default", "gpu_frametime_ms", sfz::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+	sfz::getProfilingStats().createCategory("default", 300, 66.7f, "ms", "frame"); // 300 = 60 fps * 5 seconds
+	sfz::getProfilingStats().createLabel("default", "cpu_frametime", sfz:: vec4(1.0f, 0.0f, 0.0f, 1.0f));
+	sfz::getProfilingStats().createLabel("default", "gpu_frametime", sfz::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+	sfz::getProfilingStats().createLabel("default", "16.67 ms", sfz::vec4(0.5f, 0.5f, 0.7f, 1.0f), 16.67f);
 
 	// Init SDL2
 	uint32_t sdlInitFlags =
