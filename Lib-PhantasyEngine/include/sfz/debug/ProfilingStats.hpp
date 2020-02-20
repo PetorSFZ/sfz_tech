@@ -70,6 +70,7 @@ public:
 	const float* sampleIndicesFloat(const char* category) const noexcept;
 	const char* sampleUnit(const char* category) const noexcept;
 	const char* idxUnit(const char* category) const noexcept;
+	float smallestPlotMax(const char* category) const noexcept;
 
 	const float* samples(const char* category, const char* label) const noexcept;
 	vec4 color(const char* category, const char* label) const noexcept;
@@ -83,7 +84,8 @@ public:
 		uint32_t numSamples,
 		float sampleOutlierMax,
 		const char* sampleUnit,
-		const char* idxUnit) noexcept;
+		const char* idxUnit,
+		float smallestPlotMax = 10.0f) noexcept;
 
 	void createLabel(
 		const char* category,

@@ -311,10 +311,11 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 	conf.values.colors = colorsList.data();
 
 	conf.scale.min = 0.0f;
-	conf.scale.max = sfz::max(worstMax, 25.0f);
+	const float smallestPlotMax = stats.smallestPlotMax(state.categoryStr);
+	conf.scale.max = sfz::max(worstMax, smallestPlotMax);
 
 	conf.tooltip.show = true;
-	str64 tooltipFormat("%s%%.0f: %%.2f %s", idxUnit, sampleUnit);
+	str64 tooltipFormat("%s %%.0f: %%.2f %s", idxUnit, sampleUnit);
 	conf.tooltip.format = tooltipFormat.str();
 
 	conf.grid_x.show = true;

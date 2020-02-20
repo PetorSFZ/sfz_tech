@@ -422,7 +422,7 @@ int main(int argc, char* argv[])
 	}
 
 	// Init default category of profiling stats
-	sfz::getProfilingStats().createCategory("default", 300, 66.7f, "ms", "frame"); // 300 = 60 fps * 5 seconds
+	sfz::getProfilingStats().createCategory("default", 300, 66.7f, "ms", "frame", 25.0f); // 300 = 60 fps * 5 seconds
 	sfz::getProfilingStats().createLabel("default", "cpu_frametime", sfz:: vec4(1.0f, 0.0f, 0.0f, 1.0f));
 	sfz::getProfilingStats().createLabel("default", "gpu_frametime", sfz::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 	sfz::getProfilingStats().createLabel("default", "16.67 ms", sfz::vec4(0.5f, 0.5f, 0.7f, 1.0f), 16.67f);
