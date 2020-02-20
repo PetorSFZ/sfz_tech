@@ -204,7 +204,7 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 	// Calculate and set size of window
 	if (isPreview) {
 		vec2 windowSize =
-			vec2(state.inGamePreviewWidth->intValue(), state.inGamePreviewHeight->intValue());
+			vec2(float(state.inGamePreviewWidth->intValue()), float(state.inGamePreviewHeight->intValue()));
 		ImGui::SetNextWindowSize(windowSize, ImGuiCond_Always);
 		ImGui::SetNextWindowPos(vec2(0.0f), ImGuiCond_Always);
 	}
@@ -281,7 +281,7 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 		LabelStats labelStat = stats.stats(state.categoryStr, label);
 		labelStats.add(labelStat);
 		worstMax = sfz::max(worstMax, labelStat.max);
-		longestLabelStr = sfz::max(longestLabelStr, strnlen(label, 33));
+		longestLabelStr = sfz::max(longestLabelStr, uint32_t(strnlen(label, 33)));
 	}
 
 	// Render performance numbers
