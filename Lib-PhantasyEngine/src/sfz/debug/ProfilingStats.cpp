@@ -43,6 +43,7 @@ struct StatsCategory final {
 	str16 sampleUnit;
 	str16 idxUnit;
 	float smallestPlotMax = 0.0f;
+	StatsVisualizationType visualizationType = StatsVisualizationType::INDIVIDUALLY;
 
 	HashMapLocal<str32, StatsLabel, PROFILING_STATS_MAX_NUM_LABELS> labels;
 	ArrayLocal<str32, PROFILING_STATS_MAX_NUM_LABELS> labelStringBackings;
@@ -146,6 +147,13 @@ float ProfilingStats::smallestPlotMax(const char* category) const noexcept
 	return cat->smallestPlotMax;
 }
 
+StatsVisualizationType ProfilingStats::visualizationType(const char* category) const noexcept
+{
+	const StatsCategory* cat = mState->categories.get(category);
+	sfz_assert(cat != nullptr);
+	return cat->visualizationType;
+}
+
 const float* ProfilingStats::samples(const char* category, const char* label) const noexcept
 {
 	const StatsCategory* cat = mState->categories.get(category);
@@ -215,7 +223,8 @@ void ProfilingStats::createCategory(
 	float sampleOutlierMax,
 	const char* sampleUnit,
 	const char* idxUnit,
-	float smallestPlotMax) noexcept
+	float smallestPlotMax,
+	StatsVisualizationType visualizationType) noexcept
 {
 	sfz_assert(mState->categories.get(category) == nullptr);
 	sfz_assert(strnlen(category, 33) < 32);
@@ -229,6 +238,7 @@ void ProfilingStats::createCategory(
 	cat.sampleUnit.appendf("%s", sampleUnit);
 	cat.idxUnit.appendf("%s", idxUnit);
 	cat.smallestPlotMax = smallestPlotMax;
+	cat.visualizationType = visualizationType;
 
 	// Add category string
 	mState->categoryStringBackings.add(str32("%s", category));

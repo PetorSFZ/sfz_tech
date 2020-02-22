@@ -55,6 +55,7 @@ struct ConsoleState final {
 	Setting* inGamePreviewWidth = nullptr;
 	Setting* inGamePreviewHeight = nullptr;
 	str64 categoryStr = str64("default");
+	ArrayLocal<Array<float>, PROFILING_STATS_MAX_NUM_LABELS> processedValues;
 
 	// Global Config
 	str32 configFilterString;
@@ -261,9 +262,11 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 
 	// Get information about the selected category from the stats
 	const uint32_t numLabels = stats.numLabels(state.categoryStr);
+	const uint32_t numSamples = stats.numSamples(state.categoryStr);
 	const char* const* labelStrs = stats.labels(state.categoryStr);
 	const char* idxUnit = stats.idxUnit(state.categoryStr);
 	const char* sampleUnit = stats.sampleUnit(state.categoryStr);
+	StatsVisualizationType visType = stats.visualizationType(state.categoryStr);
 
 	// Retrieve sample arrays, colors and stats for each label in the selected category
 	// Also get the worst max
@@ -273,15 +276,40 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 	float worstMax = FLT_MIN;
 	uint32_t longestLabelStr = 0;
 	for (uint32_t i = 0; i < numLabels; i++) {
+		
+		// Get samples
 		const char* label = labelStrs[i];
 		const float* samples = stats.samples(state.categoryStr, label);
-		valuesList.add(samples);
+
+		// Process samples and copy them to temp array, add temp array to valuesList
+		Array<float>& processed = state.processedValues[i];
+		processed.ensureCapacity(numSamples);
+		processed.clear();
+		processed.add(samples, numSamples);
+		valuesList.add(processed.data());
+		
+		// Get color and stats
 		vec4 color = stats.color(state.categoryStr, label);
 		colorsList.add(ImGui::GetColorU32(color));
 		LabelStats labelStat = stats.stats(state.categoryStr, label);
 		labelStats.add(labelStat);
+
+		// Calculate worst max from stats and longest label string
 		worstMax = sfz::max(worstMax, labelStat.max);
 		longestLabelStr = sfz::max(longestLabelStr, uint32_t(strnlen(label, 33)));
+	}
+
+	// Combine samples if requested
+	if (visType == StatsVisualizationType::FIRST_INDIVIDUALLY_REST_ADDED) {
+		for (uint32_t i = 1; i < numLabels; i++) {
+			Array<float>& targetVals = state.processedValues[i];
+			for (uint32_t j = i + 1; j < numLabels; j++) {
+				const Array<float>& readVals = state.processedValues[j];
+				for (uint32_t k = 0; k < numSamples; k++) {
+					targetVals[k] += readVals[k];
+				}
+			}
+		}
 	}
 
 	// Render performance numbers
@@ -305,7 +333,7 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 	// Render plot
 	ImGui::PlotConfig conf;
 	conf.values.xs = stats.sampleIndicesFloat(state.categoryStr);
-	conf.values.count = int(stats.numSamples(state.categoryStr));
+	conf.values.count = int(numSamples);
 	conf.values.ys_count = int(numLabels);
 	conf.values.ys_list = valuesList.data();
 	conf.values.colors = colorsList.data();
@@ -605,6 +633,11 @@ void Console::init(Allocator* allocator, uint32_t numWindowsToDock, const char* 
 
 	// Check if this is first run of imgui or not. I.e., whether imgui.ini existed or not.
 	mState->imguiFirstRun = !fileExists("imgui.ini");
+
+	// Initialize some temp arrays with allocators
+	for (uint32_t i = 0; i < mState->processedValues.capacity(); i++) {
+		mState->processedValues.add(Array<float>(0, allocator, sfz_dbg("")));
+	}
 
 	// Pick out console settings
 	GlobalConfig& cfg = getGlobalConfig();

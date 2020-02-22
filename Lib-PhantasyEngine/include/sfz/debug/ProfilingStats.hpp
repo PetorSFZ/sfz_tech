@@ -36,6 +36,11 @@ struct LabelStats final {
 	float max = 0.0f;
 };
 
+enum class StatsVisualizationType : uint32_t {
+	INDIVIDUALLY,
+	FIRST_INDIVIDUALLY_REST_ADDED
+};
+
 struct ProfilingStatsState; // Pimpl pattern
 
 class ProfilingStats final {
@@ -71,6 +76,7 @@ public:
 	const char* sampleUnit(const char* category) const noexcept;
 	const char* idxUnit(const char* category) const noexcept;
 	float smallestPlotMax(const char* category) const noexcept;
+	StatsVisualizationType visualizationType(const char* category) const noexcept;
 
 	const float* samples(const char* category, const char* label) const noexcept;
 	vec4 color(const char* category, const char* label) const noexcept;
@@ -85,7 +91,8 @@ public:
 		float sampleOutlierMax,
 		const char* sampleUnit,
 		const char* idxUnit,
-		float smallestPlotMax = 10.0f) noexcept;
+		float smallestPlotMax = 10.0f,
+		StatsVisualizationType visType = StatsVisualizationType::INDIVIDUALLY) noexcept;
 
 	void createLabel(
 		const char* category,
