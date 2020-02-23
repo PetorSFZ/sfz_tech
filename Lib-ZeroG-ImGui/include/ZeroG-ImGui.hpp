@@ -43,6 +43,8 @@ void imguiRender(
 	uint64_t frameIdx,
 	zg::CommandQueue& presentQueue,
 	zg::Framebuffer& framebuffer,
-	float scale) noexcept;
+	float scale,
+	zg::Profiler* profiler = nullptr,
+	uint64_t* measurentIdOut = nullptr) noexcept;
 
 } // namespace zg

@@ -277,7 +277,9 @@ void imguiRender(
 	uint64_t frameIdx,
 	zg::CommandQueue& presentQueue,
 	zg::Framebuffer& framebuffer,
-	float scale) noexcept
+	float scale,
+	zg::Profiler* profiler,
+	uint64_t* measurentIdOut) noexcept
 {
 	// Generate ImGui draw lists and get the draw data
 	ImGui::Render();
@@ -357,6 +359,12 @@ void imguiRender(
 	zg::CommandList commandList;
 	ASSERT_ZG presentQueue.beginCommandListRecording(commandList);
 
+	// Start profiling if requested
+	if (profiler != nullptr) {
+		sfz_assert(measurentIdOut != nullptr);
+		ASSERT_ZG commandList.profileBegin(*profiler, *measurentIdOut);
+	}
+
 	// Set framebuffer
 	ASSERT_ZG commandList.setFramebuffer(framebuffer);
 
@@ -398,6 +406,12 @@ void imguiRender(
 		ASSERT_ZG commandList.setFramebufferScissor(scissorRect);
 
 		ASSERT_ZG commandList.drawTrianglesIndexed(cmd.idxBufferOffset, cmd.numIndices / 3);
+	}
+
+	// End profiling if requested
+	if (profiler != nullptr) {
+		sfz_assert(measurentIdOut != nullptr);
+		ASSERT_ZG commandList.profileEnd(*profiler, *measurentIdOut);
 	}
 
 	// Execute command list

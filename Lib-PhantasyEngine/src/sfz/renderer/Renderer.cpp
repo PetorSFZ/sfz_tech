@@ -161,6 +161,7 @@ bool Renderer::loadConfiguration(const char* jsonConfigPath) noexcept
 		const char* label = resStrings.getString(group.groupName);
 		stats.createLabel("gpu", label, vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.0f);
 	}
+	stats.createLabel("gpu", "imgui", vec4(1.0f, 1.0f, 0.0f, 1.0f), 0.0f);
 
 	return true;
 }
@@ -387,6 +388,12 @@ void Renderer::frameBegin() noexcept
 		CHECK_ZG mState->profiler.getMeasurement(groupId.id, groupTimeMs);
 		const char* label = resStrings.getString(groupId.groupName);
 		stats.addSample("gpu", label, frameIdx, groupTimeMs);
+	}
+	if (frameIds.imguiId != ~0ull) {
+		uint64_t frameIdx = mState->lastRetrievedFrameTimeFrameIdx;
+		float imguiTimeMs = 0.0f;
+		CHECK_ZG mState->profiler.getMeasurement(frameIds.imguiId, imguiTimeMs);
+		stats.addSample("gpu", "imgui", frameIdx, imguiTimeMs);
 	}
 	frameIds.groupIds.clear();
 
@@ -874,7 +881,9 @@ void Renderer::frameFinish() noexcept
 		mState->currentFrameIdx,
 		mState->presentQueue,
 		mState->windowFramebuffer,
-		mState->imguiScaleSetting->floatValue());
+		mState->imguiScaleSetting->floatValue(),
+		&mState->profiler,
+		&frameIds.imguiId);
 
 	// Finish ZeroG frame
 	sfz_assert(mState->windowFramebuffer.valid());
