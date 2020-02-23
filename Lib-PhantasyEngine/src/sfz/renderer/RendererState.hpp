@@ -209,6 +209,11 @@ struct RendererConfigurableState final {
 	FramebufferItem* getFramebufferItem(StringID id) noexcept;
 };
 
+struct StageCommandList {
+	StringID stageName;
+	zg::CommandList commandList;
+};
+
 struct RendererState final {
 
 	// Members
@@ -263,13 +268,16 @@ struct RendererState final {
 
 	// The currently active stage group
 	uint32_t currentStageGroupIdx = 0;
+	ArrayLocal<StageCommandList, 32> groupCommandLists;
 
 	// The current input-enabled stage
-	// Note: The current input-enabled stage must be part of the current stage set
-	uint32_t currentInputEnabledStageIdx = ~0u;
-	Stage* currentInputEnabledStage = nullptr;
-	PipelineRenderItem* currentPipelineRender = nullptr;
-	zg::CommandList currentCommandList;
+	struct {
+		bool inInputMode = false;
+		uint32_t stageIdx = ~0u;
+		Stage* stage = nullptr;
+		PipelineRenderItem* pipelineRender = nullptr;
+		StageCommandList* commandList = nullptr;
+	} inputEnabled;
 
 	// Helper methods
 	// --------------------------------------------------------------------------------------------
@@ -278,6 +286,10 @@ struct RendererState final {
 	// current set index to the next stage barrier). Returns ~0u if stage is not among the current
 	// active set.
 	uint32_t findActiveStageIdx(StringID stageName) const noexcept;
+
+	StageCommandList* getStageCommandList(StringID stageName) noexcept;
+	
+	zg::CommandList& inputEnabledCommandList() noexcept;
 
 	// Finds the index of the specified render pipeline. Returns ~0u if it does not exist.
 	uint32_t findPipelineRenderIdx(StringID pipelineName) const noexcept;

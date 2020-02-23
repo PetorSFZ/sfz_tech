@@ -442,11 +442,7 @@ void Renderer::frameBegin() noexcept
 
 bool Renderer::inStageInputMode() const noexcept
 {
-	if (mState->currentInputEnabledStageIdx == ~0u) return false;
-	if (mState->currentInputEnabledStage == nullptr) return false;
-	if (mState->currentPipelineRender == nullptr) return false;
-	if (!mState->currentCommandList.valid()) return false;
-	return true;
+	return mState->inputEnabled.inInputMode;
 }
 
 void Renderer::stageBeginInput(StringID stageName) noexcept
@@ -472,9 +468,10 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 	if (!pipelineItem.pipeline.valid()) return;
 
 	// Set currently active stage
-	mState->currentInputEnabledStageIdx = stageIdx;
-	mState->currentInputEnabledStage = &stage;
-	mState->currentPipelineRender = &pipelineItem;
+	mState->inputEnabled.inInputMode = true;
+	mState->inputEnabled.stageIdx = stageIdx;
+	mState->inputEnabled.stage = &stage;
+	mState->inputEnabled.pipelineRender = &pipelineItem;
 
 	// Get stage's framebuffer
 	zg::Framebuffer* framebuffer =
@@ -497,10 +494,22 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 	}
 #endif
 
-	// Begin recording command list and set pipeline and framebuffer
-	CHECK_ZG mState->presentQueue.beginCommandListRecording(mState->currentCommandList);
-	CHECK_ZG mState->currentCommandList.setFramebuffer(*framebuffer);
-	CHECK_ZG mState->currentCommandList.setPipeline(pipelineItem.pipeline);
+	// Get command list for this stage, if it has not yet been created, create it.
+	StageCommandList* commandList = mState->getStageCommandList(stageName);
+	if (commandList == nullptr) {
+
+		mState->groupCommandLists.add({});
+		StageCommandList& list = mState->groupCommandLists.last();
+		list.stageName = stageName;
+
+		// Begin recording command list and set pipeline and framebuffer
+		CHECK_ZG mState->presentQueue.beginCommandListRecording(list.commandList);
+		CHECK_ZG list.commandList.setFramebuffer(*framebuffer);
+		CHECK_ZG list.commandList.setPipeline(pipelineItem.pipeline);
+
+		commandList = &list;
+	}
+	mState->inputEnabled.commandList = commandList;
 }
 
 void Renderer::stageSetPushConstantUntyped(
@@ -515,7 +524,7 @@ void Renderer::stageSetPushConstantUntyped(
 	// push constant in the pipeline
 #ifndef NDEBUG
 	const ZgPipelineBindingsSignature& signature =
-		mState->currentPipelineRender->pipeline.bindingsSignature;
+		mState->inputEnabled.pipelineRender->pipeline.bindingsSignature;
 	
 	uint32_t bufferIdx = ~0u;
 	for (uint32_t i = 0; i < signature.numConstBuffers; i++) {
@@ -530,7 +539,7 @@ void Renderer::stageSetPushConstantUntyped(
 	sfz_assert(signature.constBuffers[bufferIdx].sizeInBytes >= numBytes);
 #endif
 
-	CHECK_ZG mState->currentCommandList.setPushConstant(shaderRegister, data, numBytes);
+	CHECK_ZG mState->inputEnabledCommandList().setPushConstant(shaderRegister, data, numBytes);
 }
 
 void Renderer::stageSetConstantBufferUntyped(
@@ -544,7 +553,7 @@ void Renderer::stageSetConstantBufferUntyped(
 	// constant buffer in the pipeline
 #ifndef NDEBUG
 	const ZgPipelineBindingsSignature& signature =
-		mState->currentPipelineRender->pipeline.bindingsSignature;
+		mState->inputEnabled.pipelineRender->pipeline.bindingsSignature;
 
 	uint32_t bufferIdx = ~0u;
 	for (uint32_t i = 0; i < signature.numConstBuffers; i++) {
@@ -572,7 +581,7 @@ void Renderer::stageSetConstantBufferUntyped(
 	CHECK_ZG frame->uploadBuffer.memcpyTo(0, data, numBytes);
 
 	// Issue upload to device buffer
-	CHECK_ZG mState->currentCommandList.memcpyBufferToBuffer(
+	CHECK_ZG mState->inputEnabledCommandList().memcpyBufferToBuffer(
 		frame->deviceBuffer, 0, frame->uploadBuffer, 0, numBytes);
 }
 
@@ -590,7 +599,7 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 #ifndef NDEBUG
 	// Validate pipeline vertex input for standard mesh rendering
 	const ZgPipelineRenderSignature& renderSignature =
-		mState->currentPipelineRender->pipeline.renderSignature;
+		mState->inputEnabled.pipelineRender->pipeline.renderSignature;
 	sfz_assert(renderSignature.numVertexAttributes == 3);
 
 	sfz_assert(renderSignature.vertexAttributes[0].location == 0);
@@ -612,7 +621,7 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 		renderSignature.vertexAttributes[2].offsetToFirstElementInBytes == offsetof(Vertex, texcoord));
 
 	const ZgPipelineBindingsSignature& bindingsSignature =
-		mState->currentPipelineRender->pipeline.bindingsSignature;
+		mState->inputEnabled.pipelineRender->pipeline.bindingsSignature;
 
 	// Validate material index push constant
 	if (registers.materialIdxPushConstant != ~0u) {
@@ -667,11 +676,11 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 
 	// Set vertex buffer
 	sfz_assert(meshPtr->vertexBuffer.valid());
-	CHECK_ZG mState->currentCommandList.setVertexBuffer(0, meshPtr->vertexBuffer);
+	CHECK_ZG mState->inputEnabledCommandList().setVertexBuffer(0, meshPtr->vertexBuffer);
 
 	// Set index buffer
 	sfz_assert(meshPtr->indexBuffer.valid());
-	CHECK_ZG mState->currentCommandList.setIndexBuffer(
+	CHECK_ZG mState->inputEnabledCommandList().setIndexBuffer(
 		meshPtr->indexBuffer, ZG_INDEX_BUFFER_TYPE_UINT32);
 
 	// Set common pipeline bindings that are same for all components
@@ -684,14 +693,14 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 	}
 
 	// User-specified constant buffers
-	for (PerFrameData<ConstantBufferMemory>& framed : mState->currentInputEnabledStage->constantBuffers) {
+	for (PerFrameData<ConstantBufferMemory>& framed : mState->inputEnabled.stage->constantBuffers) {
 		ConstantBufferMemory& frame = framed.data(mState->currentFrameIdx);
 		sfz_assert(frame.lastFrameIdxTouched == mState->currentFrameIdx);
 		commonBindings.addConstantBuffer(frame.shaderRegister, frame.deviceBuffer);
 	}
 
 	// Bound render targets
-	for (const BoundRenderTarget& target : mState->currentInputEnabledStage->boundRenderTargets) {
+	for (const BoundRenderTarget& target : mState->inputEnabled.stage->boundRenderTargets) {
 		
 		FramebufferItem* item = mState->configurable.getFramebufferItem(target.framebuffer);
 		sfz_assert(item != nullptr);
@@ -717,7 +726,7 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 		if (registers.materialIdxPushConstant != ~0u) {
 			sfz::vec4_u32 tmp = sfz::vec4_u32(0u);
 			tmp.x = comp.materialIdx;
-			CHECK_ZG mState->currentCommandList.setPushConstant(
+			CHECK_ZG mState->inputEnabledCommandList().setPushConstant(
 				registers.materialIdxPushConstant, &tmp, sizeof(sfz::vec4_u32 ));
 		}
 
@@ -741,12 +750,12 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 		bindTexture(registers.emissive, material.emissiveTex);
 
 		// Set pipeline bindings
-		CHECK_ZG mState->currentCommandList.setPipelineBindings(bindings);
+		CHECK_ZG mState->inputEnabledCommandList().setPipelineBindings(bindings);
 
 		// Issue draw command
 		sfz_assert(comp.numIndices != 0);
 		sfz_assert((comp.numIndices % 3) == 0);
-		CHECK_ZG mState->currentCommandList.drawTrianglesIndexed(
+		CHECK_ZG mState->inputEnabledCommandList().drawTrianglesIndexed(
 			comp.firstIndex, comp.numIndices / 3);
 	}
 }
@@ -757,26 +766,43 @@ void Renderer::stageEndInput() noexcept
 	sfz_assert(inStageInputMode());
 	if (!inStageInputMode()) return;
 
-	// Execute command list
-	CHECK_ZG mState->presentQueue.executeCommandList(mState->currentCommandList);
-
 	// Clear currently active stage info
-	mState->currentInputEnabledStageIdx = ~0u;
-	mState->currentInputEnabledStage = nullptr;
-	mState->currentPipelineRender = nullptr;
-	mState->currentCommandList.release();
+	mState->inputEnabled = {};
 }
 
 bool Renderer::frameProgressNextStageGroup() noexcept
 {
 	sfz_assert(!inStageInputMode());
+
+	// Execute command lists
+	// TODO: This should be a single "executeCommandLists()" call when that is implemented in ZeroG.
+	for (uint32_t i = 0; i < mState->groupCommandLists.size(); i++) {
+		StageCommandList& cmdList = mState->groupCommandLists[i];
+		CHECK_ZG mState->presentQueue.executeCommandList(cmdList.commandList);
+	}
+
+	// Release command lists
+	mState->groupCommandLists.clear();
+
+	// Move to next stage group
 	mState->currentStageGroupIdx += 1;
 	sfz_assert(mState->currentStageGroupIdx < mState->configurable.presentQueue.size());
+	
 	return true;
 }
 
 void Renderer::frameFinish() noexcept
 {
+	// Execute command lists
+	// TODO: This should be a single "executeCommandLists()" call when that is implemented in ZeroG.
+	for (uint32_t i = 0; i < mState->groupCommandLists.size(); i++) {
+		StageCommandList& cmdList = mState->groupCommandLists[i];
+		CHECK_ZG mState->presentQueue.executeCommandList(cmdList.commandList);
+	}
+
+	// Release command lists
+	mState->groupCommandLists.clear();
+
 	// Render ImGui
 	zg::imguiRender(
 		mState->imguiRenderState,
