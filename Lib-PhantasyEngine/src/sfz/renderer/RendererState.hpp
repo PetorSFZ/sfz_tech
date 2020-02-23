@@ -171,6 +171,11 @@ struct Stage final {
 	Array<BoundRenderTarget> boundRenderTargets;
 };
 
+struct StageGroup final {
+	StringID groupName = StringID::invalid();
+	Array<Stage> stages;
+};
+
 // Texture plus info
 // ------------------------------------------------------------------------------------------------
 
@@ -196,8 +201,8 @@ struct RendererConfigurableState final {
 	// Pipelines
 	Array<PipelineRenderItem> renderPipelines;
 
-	// Present Queue Stages
-	Array<Stage> presentQueueStages;
+	// Present Queue
+	Array<StageGroup> presentQueue;
 
 	// Helper method to get a framebuffer given a StringID, returns nullptr on failure
 	zg::Framebuffer* getFramebuffer(zg::Framebuffer& defaultFramebuffer, StringID id) noexcept;
@@ -256,9 +261,8 @@ struct RendererState final {
 	// Configurable state
 	RendererConfigurableState configurable;
 
-	// The current stage set index
-	// Note that all stages until the next stage barrier is active simulatenously.
-	uint32_t currentStageSetIdx = 0;
+	// The currently active stage group
+	uint32_t currentStageGroupIdx = 0;
 
 	// The current input-enabled stage
 	// Note: The current input-enabled stage must be part of the current stage set
@@ -269,10 +273,6 @@ struct RendererState final {
 
 	// Helper methods
 	// --------------------------------------------------------------------------------------------
-
-	// Gets the index of the next barrier stage, starting from the current stage set index
-	// Returns ~0u if no barrier stage is found
-	uint32_t findNextBarrierIdx() const noexcept;
 
 	// Finds the index of the specified stage among the current actives ones (i.e. the ones from the
 	// current set index to the next stage barrier). Returns ~0u if stage is not among the current

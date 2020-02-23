@@ -199,8 +199,8 @@ public:
 	// Ends user-input for the specified stage.
 	void stageEndInput() noexcept;
 
-	// Progress to the next stage barrier
-	bool stageBarrierProgressNext() noexcept;
+	// Progress to the next stage group
+	bool frameProgressNextStageGroup() noexcept;
 
 	// Finished the frame, no additional stage methods may be called after this.
 	void frameFinish() noexcept;

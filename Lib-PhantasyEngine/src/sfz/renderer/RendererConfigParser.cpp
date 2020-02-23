@@ -342,64 +342,84 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		}
 	}
 
-	// Get number of present queue stages to load and allocate memory for them
-	ParsedJsonNode presentQueueStagesNode = root.accessMap("present_queue_stages");
-	uint32_t numPresentQueueStages = presentQueueStagesNode.arrayLength();
-	configurable.presentQueueStages.init(numPresentQueueStages, state.allocator, sfz_dbg(""));
 
-	// Parse information about present queue stage
-	for (uint32_t i = 0; i < numPresentQueueStages; i++) {
+	// Present queue
+	{
+		ParsedJsonNode presentQueueNode = root.accessMap("present_queue");
+		const uint32_t numGroups = presentQueueNode.arrayLength();
+		
+		// Allocate memory for stage groups
+		configurable.presentQueue.init(numGroups, state.allocator, sfz_dbg(""));
 
-		ParsedJsonNode stageNode = presentQueueStagesNode.accessArray(i);
-		configurable.presentQueueStages.add(Stage());
-		Stage& stage = configurable.presentQueueStages.last();
+		// Parse stage groups
+		for (uint32_t groupIdx = 0; groupIdx < numGroups; groupIdx++) {
+			ParsedJsonNode groupNode = presentQueueNode.accessArray(groupIdx);
 
-		str256 stageName = CHECK_JSON stageNode.accessMap("stage_name").valueStr256();
-		stage.stageName = resStrings.getStringID(stageName);
+			// Create group and read its name
+			configurable.presentQueue.add({});
+			StageGroup& group = configurable.presentQueue.last();
+			group.groupName =
+				resStrings.getStringID(CHECK_JSON groupNode.accessMap("group_name").valueStr256());
 
-		str256 stageType = CHECK_JSON stageNode.accessMap("stage_type").valueStr256();
-		if (stageType == "USER_INPUT_RENDERING") stage.stageType = StageType::USER_INPUT_RENDERING;
-		else if (stageType == "USER_STAGE_BARRIER") stage.stageType = StageType::USER_STAGE_BARRIER;
-		else return false;
+			// Get number of stages and allocate memory for them
+			ParsedJsonNode stages = groupNode.accessMap("stages");
+			const uint32_t numStages = stages.arrayLength();
+			group.stages.init(numStages, state.allocator, sfz_dbg(""));
 
-		if (stage.stageType == StageType::USER_INPUT_RENDERING) {
-			str256 renderPipelineName =
-				CHECK_JSON stageNode.accessMap("render_pipeline").valueStr256();
-			stage.renderPipelineName = resStrings.getStringID(renderPipelineName);
+			// Stages
+			for (uint32_t stageIdx = 0; stageIdx < numStages; stageIdx++) {
+				ParsedJsonNode stageNode = stages.accessArray(stageIdx);
+				group.stages.add({});
+				Stage& stage = group.stages.last();
 
-			str256 framebufferName =
-				CHECK_JSON stageNode.accessMap("framebuffer").valueStr256();
-			stage.framebufferName = resStrings.getStringID(framebufferName);
-		}
+				str256 stageName = CHECK_JSON stageNode.accessMap("stage_name").valueStr256();
+				stage.stageName = resStrings.getStringID(stageName);
 
-		// Bound render targets
-		if (stageNode.accessMap("bound_render_targets").isValid()) {
-			ParsedJsonNode boundTargetsNode = stageNode.accessMap("bound_render_targets");
-			uint32_t numBoundTargets = boundTargetsNode.arrayLength();
+				str256 stageType = CHECK_JSON stageNode.accessMap("stage_type").valueStr256();
+				if (stageType == "USER_INPUT_RENDERING") stage.stageType = StageType::USER_INPUT_RENDERING;
+				else if (stageType == "USER_STAGE_BARRIER") stage.stageType = StageType::USER_STAGE_BARRIER;
+				else return false;
 
-			stage.boundRenderTargets.init(numBoundTargets, state.allocator, sfz_dbg(""));
-			for (uint32_t j = 0; j < numBoundTargets; j++) {
+				if (stage.stageType == StageType::USER_INPUT_RENDERING) {
+					str256 renderPipelineName =
+						CHECK_JSON stageNode.accessMap("render_pipeline").valueStr256();
+					stage.renderPipelineName = resStrings.getStringID(renderPipelineName);
 
-				ParsedJsonNode targetNode = boundTargetsNode.accessArray(j);
-				BoundRenderTarget boundTarget;
-				boundTarget.textureRegister = CHECK_JSON targetNode.accessMap("register").valueInt();
-				str256 framebufferName = CHECK_JSON targetNode.accessMap("framebuffer").valueStr256();
-				sfz_assert(framebufferName != "debug"); // Can't bind default framebuffer
-				boundTarget.framebuffer = resStrings.getStringID(framebufferName);
-
-				// Check if depth buffer should be bound
-				if (targetNode.accessMap("depth_buffer").isValid()) {
-					sfz_assert(CHECK_JSON targetNode.accessMap("depth_buffer").valueBool());
-					boundTarget.depthBuffer = true;
-					boundTarget.renderTargetIdx = ~0u;
-				}
-				else {
-					boundTarget.depthBuffer = false;
-					boundTarget.renderTargetIdx =
-						CHECK_JSON targetNode.accessMap("render_target_index").valueInt();
+					str256 framebufferName =
+						CHECK_JSON stageNode.accessMap("framebuffer").valueStr256();
+					stage.framebufferName = resStrings.getStringID(framebufferName);
 				}
 
-				stage.boundRenderTargets.add(boundTarget);
+				// Bound render targets
+				if (stageNode.accessMap("bound_render_targets").isValid()) {
+					ParsedJsonNode boundTargetsNode = stageNode.accessMap("bound_render_targets");
+					uint32_t numBoundTargets = boundTargetsNode.arrayLength();
+
+					stage.boundRenderTargets.init(numBoundTargets, state.allocator, sfz_dbg(""));
+					for (uint32_t j = 0; j < numBoundTargets; j++) {
+
+						ParsedJsonNode targetNode = boundTargetsNode.accessArray(j);
+						BoundRenderTarget boundTarget;
+						boundTarget.textureRegister = CHECK_JSON targetNode.accessMap("register").valueInt();
+						str256 framebufferName = CHECK_JSON targetNode.accessMap("framebuffer").valueStr256();
+						sfz_assert(framebufferName != "debug"); // Can't bind default framebuffer
+						boundTarget.framebuffer = resStrings.getStringID(framebufferName);
+
+						// Check if depth buffer should be bound
+						if (targetNode.accessMap("depth_buffer").isValid()) {
+							sfz_assert(CHECK_JSON targetNode.accessMap("depth_buffer").valueBool());
+							boundTarget.depthBuffer = true;
+							boundTarget.renderTargetIdx = ~0u;
+						}
+						else {
+							boundTarget.depthBuffer = false;
+							boundTarget.renderTargetIdx =
+								CHECK_JSON targetNode.accessMap("render_target_index").valueInt();
+						}
+
+						stage.boundRenderTargets.add(boundTarget);
+					}
+				}
 			}
 		}
 	}
@@ -429,60 +449,64 @@ bool allocateStageMemory(RendererState& state) noexcept
 {
 	bool success = true;
 
-	for (uint32_t i = 0; i < state.configurable.presentQueueStages.size(); i++) {
-		sfz::Stage& stage = state.configurable.presentQueueStages[i];
-		if (stage.stageType != StageType::USER_INPUT_RENDERING) continue;
-		
-		// Find pipeline
-		PipelineRenderItem* pipelineItem =
-			state.configurable.renderPipelines.find([&](const PipelineRenderItem& item) {
-			return item.name == stage.renderPipelineName;
-		});
-		sfz_assert(pipelineItem != nullptr);
-		
-		// Allocate CPU memory for constant buffer data
-		uint32_t numConstantBuffers = pipelineItem->pipeline.bindingsSignature.numConstBuffers;
-		stage.constantBuffers.init(numConstantBuffers, state.allocator, sfz_dbg(""));
+	for (uint32_t groupIdx = 0; groupIdx < state.configurable.presentQueue.size(); groupIdx++) {
+		StageGroup& group = state.configurable.presentQueue[groupIdx];
 
-		// Allocate GPU memory for all constant buffers
-		for (uint32_t j = 0; j < numConstantBuffers; j++) {
-			
-			// Get constant buffer description, skip if push constant
-			const ZgConstantBufferBindingDesc& desc = pipelineItem->pipeline.bindingsSignature.constBuffers[j];
-			if (desc.pushConstant == ZG_TRUE) continue;
+		for (uint32_t stageIdx = 0; stageIdx < group.stages.size(); stageIdx++) {
+			sfz::Stage& stage = group.stages[stageIdx];
+			if (stage.stageType != StageType::USER_INPUT_RENDERING) continue;
 
-			// Check if constant buffer is marked as non-user-settable, in that case skip it
-			bool nonUserSettable = false;
-			for (uint32_t k = 0; k < pipelineItem->numNonUserSettableConstantBuffers; k++) {
-				if (pipelineItem->nonUserSettableConstantBuffers[k] == desc.bufferRegister) {
-					nonUserSettable = true;
-					break;
+			// Find pipeline
+			PipelineRenderItem* pipelineItem =
+				state.configurable.renderPipelines.find([&](const PipelineRenderItem& item) {
+					return item.name == stage.renderPipelineName;
+				});
+			sfz_assert(pipelineItem != nullptr);
+
+			// Allocate CPU memory for constant buffer data
+			uint32_t numConstantBuffers = pipelineItem->pipeline.bindingsSignature.numConstBuffers;
+			stage.constantBuffers.init(numConstantBuffers, state.allocator, sfz_dbg(""));
+
+			// Allocate GPU memory for all constant buffers
+			for (uint32_t j = 0; j < numConstantBuffers; j++) {
+
+				// Get constant buffer description, skip if push constant
+				const ZgConstantBufferBindingDesc& desc = pipelineItem->pipeline.bindingsSignature.constBuffers[j];
+				if (desc.pushConstant == ZG_TRUE) continue;
+
+				// Check if constant buffer is marked as non-user-settable, in that case skip it
+				bool nonUserSettable = false;
+				for (uint32_t k = 0; k < pipelineItem->numNonUserSettableConstantBuffers; k++) {
+					if (pipelineItem->nonUserSettableConstantBuffers[k] == desc.bufferRegister) {
+						nonUserSettable = true;
+						break;
+					}
 				}
+				if (nonUserSettable) continue;
+
+				// Allocate container
+				stage.constantBuffers.add({});
+				PerFrameData<ConstantBufferMemory>& framed = stage.constantBuffers.last();
+
+				// Allocate ZeroG memory
+				framed.init(state.frameLatency, [&](ConstantBufferMemory& item) {
+
+					// Set shader register
+					item.shaderRegister = desc.bufferRegister;
+
+					// Allocate upload buffer
+					item.uploadBuffer =
+						state.gpuAllocatorUpload.allocateBuffer(desc.sizeInBytes);
+					sfz_assert(item.uploadBuffer.valid());
+					if (!item.uploadBuffer.valid()) success = false;
+
+					// Allocate device buffer
+					item.deviceBuffer =
+						state.gpuAllocatorDevice.allocateBuffer(desc.sizeInBytes);
+					sfz_assert(item.deviceBuffer.valid());
+					if (!item.deviceBuffer.valid()) success = false;
+				});
 			}
-			if (nonUserSettable) continue;
-
-			// Allocate container
-			stage.constantBuffers.add({});
-			PerFrameData<ConstantBufferMemory>& framed = stage.constantBuffers.last();
-
-			// Allocate ZeroG memory
-			framed.init(state.frameLatency, [&](ConstantBufferMemory& item) {
-
-				// Seet 
-				item.shaderRegister = desc.bufferRegister;
-				
-				// Allocate upload buffer
-				item.uploadBuffer =
-					state.gpuAllocatorUpload.allocateBuffer(desc.sizeInBytes);
-				sfz_assert(item.uploadBuffer.valid());
-				if (!item.uploadBuffer.valid()) success = false;
-
-				// Allocate device buffer
-				item.deviceBuffer =
-					state.gpuAllocatorDevice.allocateBuffer(desc.sizeInBytes);
-				sfz_assert(item.deviceBuffer.valid());
-				if (!item.deviceBuffer.valid()) success = false;
-			});
 		}
 	}
 
@@ -491,23 +515,25 @@ bool allocateStageMemory(RendererState& state) noexcept
 
 bool deallocateStageMemory(RendererState& state) noexcept
 {
-	for (sfz::Stage& stage : state.configurable.presentQueueStages) {
-		for (PerFrameData<ConstantBufferMemory>& framed : stage.constantBuffers) {
-			framed.destroy([&](ConstantBufferMemory& item) {
+	for (StageGroup& group : state.configurable.presentQueue) {
+		for (Stage& stage : group.stages) {
+			for (PerFrameData<ConstantBufferMemory>& framed : stage.constantBuffers) {
+				framed.destroy([&](ConstantBufferMemory& item) {
 
-				// Deallocate upload buffer
-				sfz_assert(item.uploadBuffer.valid());
-				state.gpuAllocatorUpload.deallocate(item.uploadBuffer);
-				sfz_assert(!item.uploadBuffer.valid());
+					// Deallocate upload buffer
+					sfz_assert(item.uploadBuffer.valid());
+					state.gpuAllocatorUpload.deallocate(item.uploadBuffer);
+					sfz_assert(!item.uploadBuffer.valid());
 
-				// Deallocate device buffer
-				sfz_assert(item.deviceBuffer.valid());
-				state.gpuAllocatorDevice.deallocate(item.deviceBuffer);
-				sfz_assert(!item.deviceBuffer.valid());
-			});
+					// Deallocate device buffer
+					sfz_assert(item.deviceBuffer.valid());
+					state.gpuAllocatorDevice.deallocate(item.deviceBuffer);
+					sfz_assert(!item.deviceBuffer.valid());
+				});
+			}
+
+			stage.constantBuffers.destroy();
 		}
-
-		stage.constantBuffers.destroy();
 	}
 
 	return true;

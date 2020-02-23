@@ -436,12 +436,8 @@ void Renderer::frameBegin() noexcept
 		CHECK_ZG mState->presentQueue.executeCommandList(commandList);
 	}
 
-	// Set current stage set index to first stage
-	mState->currentStageSetIdx = 0;
-	if (mState->configurable.presentQueueStages.size() > 0) {
-		sfz_assert(
-			mState->configurable.presentQueueStages.first().stageType != StageType::USER_STAGE_BARRIER);
-	}
+	// Set current stage group and stage to first
+	mState->currentStageGroupIdx = 0;
 }
 
 bool Renderer::inStageInputMode() const noexcept
@@ -463,8 +459,7 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 	uint32_t stageIdx = mState->findActiveStageIdx(stageName);
 	sfz_assert(stageIdx != ~0u);
 	if (stageIdx == ~0u) return;
-	sfz_assert(stageIdx < mState->configurable.presentQueueStages.size());
-	Stage& stage = mState->configurable.presentQueueStages[stageIdx];
+	Stage& stage = mState->configurable.presentQueue[mState->currentStageGroupIdx].stages[stageIdx];
 	sfz_assert(stage.stageType == StageType::USER_INPUT_RENDERING);
 
 	// Find render pipeline
@@ -772,18 +767,11 @@ void Renderer::stageEndInput() noexcept
 	mState->currentCommandList.release();
 }
 
-bool Renderer::stageBarrierProgressNext() noexcept
+bool Renderer::frameProgressNextStageGroup() noexcept
 {
 	sfz_assert(!inStageInputMode());
-
-	// Find the next barrier stage
-	uint32_t barrierStageIdx = mState->findNextBarrierIdx();
-	if (barrierStageIdx == ~0u) return false;
-
-	// Set current stage set index to the stage after the barrier
-	mState->currentStageSetIdx = barrierStageIdx + 1;
-	sfz_assert(mState->currentStageSetIdx < mState->configurable.presentQueueStages.size());
-
+	mState->currentStageGroupIdx += 1;
+	sfz_assert(mState->currentStageGroupIdx < mState->configurable.presentQueue.size());
 	return true;
 }
 

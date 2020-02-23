@@ -191,9 +191,9 @@ void RendererUI::render(RendererState& state) noexcept
 			ImGui::EndTabItem();
 		}
 
-		if (ImGui::BeginTabItem("Stages")) {
+		if (ImGui::BeginTabItem("Present Queue")) {
 			ImGui::Spacing();
-			this->renderStagesTab(state.configurable);
+			this->renderPresentQueueTab(state.configurable);
 			ImGui::EndTabItem();
 		}
 
@@ -356,50 +356,62 @@ void RendererUI::renderGeneralTab(RendererState& state) noexcept
 	}
 }
 
-void RendererUI::renderStagesTab(RendererConfigurableState& state) noexcept
+void RendererUI::renderPresentQueueTab(RendererConfigurableState& state) noexcept
 {
 	// Get global collection of resource strings in order to get strings from StringIDs
 	sfz::StringCollection& resStrings = sfz::getResourceStrings();
 
-	for (uint32_t i = 0; i < state.presentQueueStages.size(); i++) {
-		const Stage& stage = state.presentQueueStages[i];
+	for (uint32_t groupIdx = 0; groupIdx < state.presentQueue.size(); groupIdx++) {
+		const StageGroup& group = state.presentQueue[groupIdx];
+		const char* groupName = resStrings.getString(group.groupName);
 
-		// Stage name
-		ImGui::Text("Stage %u - \"%s\"", i, resStrings.getString(stage.stageName));
+		// Collapsing header with group name
+		const bool collapsingHeaderOpen =
+			ImGui::CollapsingHeader(str256("Stage Group %u - \"%s\"", groupIdx, groupName));
+		if (!collapsingHeaderOpen) continue;
+
 		ImGui::Indent(20.0f);
+		for (uint32_t stageIdx = 0; stageIdx < group.stages.size(); stageIdx++) {
+			const Stage& stage = group.stages[stageIdx];
 
-		// Stage type
-		ImGui::Text("Type: %s", toString(stage.stageType));
-
-		if (stage.stageType != StageType::USER_STAGE_BARRIER) {
-
-			// Pipeline name
-			ImGui::Text("Render Pipeline: \"%s\"", resStrings.getString(stage.renderPipelineName));
-
-			// Framebuffer name
-			ImGui::Text("Framebuffer: \"%s\"", resStrings.getString(stage.framebufferName));
-
-			// Bound render targets
-			ImGui::Text("Bound render targets:");
+			// Stage name
+			ImGui::Text("Stage %u - \"%s\"", stageIdx, resStrings.getString(stage.stageName));
 			ImGui::Indent(20.0f);
-			for (const BoundRenderTarget& target : stage.boundRenderTargets) {
-				if (target.depthBuffer) {
-					ImGui::Text("- Register: %u  --  Framebuffer: \"%s\"  --  Depth Buffer",
-						target.textureRegister,
-						resStrings.getString(target.framebuffer));
-				}
-				else {
-					ImGui::Text("- Register: %u  --  Framebuffer: \"%s\"  --  Render Target Index: %u",
-						target.textureRegister,
-						resStrings.getString(target.framebuffer),
-						target.renderTargetIdx);
-				}
-			}
-			ImGui::Unindent(20.0f);
-		}
 
+			// Stage type
+			ImGui::Text("Type: %s", toString(stage.stageType));
+
+			if (stage.stageType != StageType::USER_STAGE_BARRIER) {
+
+				// Pipeline name
+				ImGui::Text("Render Pipeline: \"%s\"", resStrings.getString(stage.renderPipelineName));
+
+				// Framebuffer name
+				ImGui::Text("Framebuffer: \"%s\"", resStrings.getString(stage.framebufferName));
+
+				// Bound render targets
+				ImGui::Text("Bound render targets:");
+				ImGui::Indent(20.0f);
+				for (const BoundRenderTarget& target : stage.boundRenderTargets) {
+					if (target.depthBuffer) {
+						ImGui::Text("- Register: %u  --  Framebuffer: \"%s\"  --  Depth Buffer",
+							target.textureRegister,
+							resStrings.getString(target.framebuffer));
+					}
+					else {
+						ImGui::Text("- Register: %u  --  Framebuffer: \"%s\"  --  Render Target Index: %u",
+							target.textureRegister,
+							resStrings.getString(target.framebuffer),
+							target.renderTargetIdx);
+					}
+				}
+				ImGui::Unindent(20.0f);
+			}
+
+			ImGui::Unindent(20.0f);
+			ImGui::Spacing();
+		}
 		ImGui::Unindent(20.0f);
-		ImGui::Spacing();
 	}
 }
 

@@ -247,29 +247,16 @@ FramebufferItem* RendererConfigurableState::getFramebufferItem(StringID id) noex
 // RendererState: Helper methods
 // ------------------------------------------------------------------------------------------------
 
-uint32_t RendererState::findNextBarrierIdx() const noexcept
-{
-	uint32_t numStages = this->configurable.presentQueueStages.size();
-	for (uint32_t i = this->currentStageSetIdx; i < numStages; i++) {
-		const Stage& stage = this->configurable.presentQueueStages[i];
-		if (stage.stageType == StageType::USER_STAGE_BARRIER) return i;
-	}
-	return ~0u;
-}
-
-uint32_t  RendererState::findActiveStageIdx(StringID stageName) const noexcept
+uint32_t RendererState::findActiveStageIdx(StringID stageName) const noexcept
 {
 	sfz_assert(stageName != StringID::invalid());
-	uint32_t numStages = this->configurable.presentQueueStages.size();
-	for (uint32_t i = this->currentStageSetIdx; i < numStages; i++) {
-		const Stage& stage = this->configurable.presentQueueStages[i];
-		if (stage.stageName == stageName) return i;
-		if (stage.stageType == StageType::USER_STAGE_BARRIER) break;
-	}
-	return ~0u;
+	const Array<Stage>& stages = configurable.presentQueue[currentStageGroupIdx].stages;
+	const Stage* stage = stages.find([&](const Stage& e) { return e.stageName == stageName; });
+	if (stage == nullptr) return ~0u;
+	return uint32_t(stage - stages.data());
 }
 
-uint32_t  RendererState::findPipelineRenderIdx(StringID pipelineName) const noexcept
+uint32_t RendererState::findPipelineRenderIdx(StringID pipelineName) const noexcept
 {
 	sfz_assert(pipelineName != StringID::invalid());
 	uint32_t numPipelines = this->configurable.renderPipelines.size();
