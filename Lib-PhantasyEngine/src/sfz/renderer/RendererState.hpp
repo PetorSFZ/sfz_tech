@@ -190,6 +190,21 @@ struct TextureItem final {
 // RendererState
 // ------------------------------------------------------------------------------------------------
 
+struct StageCommandList final {
+	StringID stageName;
+	zg::CommandList commandList;
+};
+
+struct GroupProfilingID final {
+	StringID groupName = StringID::invalid();
+	uint64_t id = ~0ull;
+};
+
+struct FrameProfilingIDs final {
+	uint64_t frameId = ~0ull;
+	ArrayLocal<GroupProfilingID, 64> groupIds;
+};
+
 struct RendererConfigurableState final {
 
 	// Path to current configuration
@@ -207,11 +222,6 @@ struct RendererConfigurableState final {
 	// Helper method to get a framebuffer given a StringID, returns nullptr on failure
 	zg::Framebuffer* getFramebuffer(zg::Framebuffer& defaultFramebuffer, StringID id) noexcept;
 	FramebufferItem* getFramebufferItem(StringID id) noexcept;
-};
-
-struct StageCommandList {
-	StringID stageName;
-	zg::CommandList commandList;
 };
 
 struct RendererState final {
@@ -238,7 +248,7 @@ struct RendererState final {
 
 	// Profiler
 	zg::Profiler profiler;
-	PerFrameData<uint64_t> frameMeasurementIds;
+	PerFrameData<FrameProfilingIDs> frameMeasurementIds;
 	float lastRetrievedFrameTimeMs = 0.0f;
 	uint64_t lastRetrievedFrameTimeFrameIdx = ~0ull;
 

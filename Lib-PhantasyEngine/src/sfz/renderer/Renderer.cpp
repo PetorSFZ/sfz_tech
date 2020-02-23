@@ -31,6 +31,7 @@
 #include <ZeroG-ImGui.hpp>
 
 #include "sfz/Context.hpp"
+#include "sfz/debug/ProfilingStats.hpp"
 #include "sfz/Logging.hpp"
 #include "sfz/config/GlobalConfig.hpp"
 #include "sfz/math/Matrix.hpp"
@@ -94,7 +95,7 @@ bool Renderer::init(
 		ZgProfilerCreateInfo createInfo = {};
 		createInfo.maxNumMeasurements = 1024;
 		CHECK_ZG mState->profiler.create(createInfo);
-		mState->frameMeasurementIds.init(mState->frameLatency, [](uint64_t& id) { id = ~0ull; });
+		mState->frameMeasurementIds.init(mState->frameLatency);
 	}
 
 	// Initialize dynamic gpu allocator
@@ -148,6 +149,17 @@ bool Renderer::loadConfiguration(const char* jsonConfigPath) noexcept
 		// TODO: Maybe this is a bit too extreme?
 		this->destroy();
 		return false;
+	}
+
+	// Initialize profiling stats
+	StringCollection& resStrings = getResourceStrings();
+	ProfilingStats& stats = getProfilingStats();
+	stats.createCategory("gpu", 300, 66.7f, "ms", "frame", 20.0f,
+		StatsVisualizationType::FIRST_INDIVIDUALLY_REST_ADDED);
+	stats.createLabel("gpu", "frametime", vec4(1.0f, 0.0f, 0.0f, 1.0f), 0.0f);
+	for (const StageGroup& group : mState->configurable.presentQueue) {
+		const char* label = resStrings.getString(group.groupName);
+		stats.createLabel("gpu", label, vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.0f);
 	}
 
 	return true;
@@ -360,11 +372,23 @@ void Renderer::frameBegin() noexcept
 	CHECK_ZG mState->frameFences.data(mState->currentFrameIdx).waitOnCpuBlocking();
 
 	// Get frame profiling data for frame that was previously rendered using these resources
-	uint64_t& frameMeasurementId = mState->frameMeasurementIds.data(mState->currentFrameIdx);
-	if (frameMeasurementId != ~0ull) {
-		CHECK_ZG mState->profiler.getMeasurement(frameMeasurementId, mState->lastRetrievedFrameTimeMs);
+	ProfilingStats& stats = getProfilingStats();
+	StringCollection& resStrings = getResourceStrings();
+	FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
+	if (frameIds.frameId != ~0ull) {
+		CHECK_ZG mState->profiler.getMeasurement(frameIds.frameId, mState->lastRetrievedFrameTimeMs);
 		mState->lastRetrievedFrameTimeFrameIdx = mState->currentFrameIdx - mState->frameLatency;
+		stats.addSample("gpu", "frametime",
+			mState->lastRetrievedFrameTimeFrameIdx, mState->lastRetrievedFrameTimeMs);
 	}
+	for (const GroupProfilingID& groupId : frameIds.groupIds) {
+		uint64_t frameIdx = mState->lastRetrievedFrameTimeFrameIdx;
+		float groupTimeMs = 0.0f;
+		CHECK_ZG mState->profiler.getMeasurement(groupId.id, groupTimeMs);
+		const char* label = resStrings.getString(groupId.groupName);
+		stats.addSample("gpu", label, frameIdx, groupTimeMs);
+	}
+	frameIds.groupIds.clear();
 
 	// Query drawable width and height from SDL
 	int32_t newResX = 0;
@@ -419,7 +443,7 @@ void Renderer::frameBegin() noexcept
 	
 	// Begin ZeroG frame
 	sfz_assert(!mState->windowFramebuffer.valid());
-	CHECK_ZG mState->zgCtx.swapchainBeginFrame(mState->windowFramebuffer, mState->profiler, frameMeasurementId);
+	CHECK_ZG mState->zgCtx.swapchainBeginFrame(mState->windowFramebuffer, mState->profiler, frameIds.frameId);
 
 	// Clear all framebuffers
 	// TODO: Should probably only clear using a specific clear framebuffer stage
@@ -506,6 +530,17 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 		CHECK_ZG mState->presentQueue.beginCommandListRecording(list.commandList);
 		CHECK_ZG list.commandList.setFramebuffer(*framebuffer);
 		CHECK_ZG list.commandList.setPipeline(pipelineItem.pipeline);
+
+		// If first command list created, insert call to profile begin
+		if (mState->groupCommandLists.size() == 1) {
+			FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
+			sfz_assert(frameIds.groupIds.size() <= mState->currentStageGroupIdx);
+			frameIds.groupIds.add({});
+			GroupProfilingID& groupId = frameIds.groupIds.last();
+			groupId.groupName =
+				mState->configurable.presentQueue[mState->currentStageGroupIdx].groupName;
+			CHECK_ZG list.commandList.profileBegin(mState->profiler, groupId.id);
+		}
 
 		commandList = &list;
 	}
@@ -774,10 +809,25 @@ bool Renderer::frameProgressNextStageGroup() noexcept
 {
 	sfz_assert(!inStageInputMode());
 
+	FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
+
 	// Execute command lists
 	// TODO: This should be a single "executeCommandLists()" call when that is implemented in ZeroG.
-	for (uint32_t i = 0; i < mState->groupCommandLists.size(); i++) {
-		StageCommandList& cmdList = mState->groupCommandLists[i];
+	for (uint32_t groupIdx = 0; groupIdx < mState->groupCommandLists.size(); groupIdx++) {
+		StageCommandList& cmdList = mState->groupCommandLists[groupIdx];
+
+		// If last command list to be executed, insert profile end call
+		if ((groupIdx + 1) == mState->groupCommandLists.size()) {
+			StringID groupName =
+				mState->configurable.presentQueue[mState->currentStageGroupIdx].groupName;
+			GroupProfilingID* groupId = frameIds.groupIds.find([&](const GroupProfilingID& e) {
+				return e.groupName == groupName;
+			});
+			sfz_assert(groupId != nullptr);
+			sfz_assert(groupId->id != ~0ull);
+			CHECK_ZG cmdList.commandList.profileEnd(mState->profiler, groupId->id);
+		}
+
 		CHECK_ZG mState->presentQueue.executeCommandList(cmdList.commandList);
 	}
 
@@ -793,10 +843,25 @@ bool Renderer::frameProgressNextStageGroup() noexcept
 
 void Renderer::frameFinish() noexcept
 {
+	FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
+
 	// Execute command lists
 	// TODO: This should be a single "executeCommandLists()" call when that is implemented in ZeroG.
-	for (uint32_t i = 0; i < mState->groupCommandLists.size(); i++) {
-		StageCommandList& cmdList = mState->groupCommandLists[i];
+	for (uint32_t groupIdx = 0; groupIdx < mState->groupCommandLists.size(); groupIdx++) {
+		StageCommandList& cmdList = mState->groupCommandLists[groupIdx];
+
+		// If last command list to be executed, insert profile end call
+		if ((groupIdx + 1) == mState->groupCommandLists.size()) {
+			StringID groupName =
+				mState->configurable.presentQueue[mState->currentStageGroupIdx].groupName;
+			GroupProfilingID* groupId = frameIds.groupIds.find([&](const GroupProfilingID& e) {
+				return e.groupName == groupName;
+				});
+			sfz_assert(groupId != nullptr);
+			sfz_assert(groupId->id != ~0ull);
+			CHECK_ZG cmdList.commandList.profileEnd(mState->profiler, groupId->id);
+		}
+
 		CHECK_ZG mState->presentQueue.executeCommandList(cmdList.commandList);
 	}
 
@@ -813,8 +878,7 @@ void Renderer::frameFinish() noexcept
 
 	// Finish ZeroG frame
 	sfz_assert(mState->windowFramebuffer.valid());
-	uint64_t frameMeasurementId = mState->frameMeasurementIds.data(mState->currentFrameIdx);
-	CHECK_ZG mState->zgCtx.swapchainFinishFrame(mState->profiler, frameMeasurementId);
+	CHECK_ZG mState->zgCtx.swapchainFinishFrame(mState->profiler, frameIds.frameId);
 	mState->windowFramebuffer.release();
 
 	// Signal that we are done rendering use these resources

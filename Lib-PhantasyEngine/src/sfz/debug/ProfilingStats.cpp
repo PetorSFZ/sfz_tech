@@ -201,6 +201,10 @@ LabelStats ProfilingStats::stats(const char* category, const char* label) const 
 	}
 	stats.avg = numValidSamples != 0 ? total / float(numValidSamples) : 0.0f;
 	
+	// Fix min and max if not set
+	if (stats.min == FLT_MAX) stats.min = lab->defaultValue;
+	if (stats.max == -FLT_MAX) stats.max = lab->defaultValue;
+
 	// Calculate standard deviation
 	float varianceSum = 0.0f;
 	for (uint32_t i = cat->numSamples; i > 0; i--) {
