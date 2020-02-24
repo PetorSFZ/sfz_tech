@@ -192,11 +192,6 @@ void Renderer::destroy() noexcept
 			item.deallocate(mState->gpuAllocatorFramebuffer);
 		}
 
-		// Destroy framebuffers
-		for (FramebufferItem& item : mState->configurable.framebuffers) {
-			item.deallocate(mState->gpuAllocatorFramebuffer);
-		}
-
 		// Deallocate stage memory
 		bool stageDeallocSuccess = deallocateStageMemory(*mState);
 		sfz_assert(stageDeallocSuccess);
@@ -420,18 +415,6 @@ void Renderer::frameBegin() noexcept
 		}
 	}
 
-	// Check if any framebuffer scale settings has changed, necessating a resolution change
-	if (!resolutionChanged) {
-		for (FramebufferItem& item : mState->configurable.framebuffers) {
-			if (!item.resolutionIsFixed && item.resolutionScaleSetting != nullptr) {
-				if (item.resolutionScale != item.resolutionScaleSetting->floatValue()) {
-					resolutionChanged = true;
-					break;
-				}
-			}
-		}
-	}
-
 	// If resolution has changed, resize swapchain and framebuffers
 	if (resolutionChanged) {
 
@@ -463,14 +446,10 @@ void Renderer::frameBegin() noexcept
 			}
 		}
 
-		// Resize our framebuffers
-		for (FramebufferItem& item : mState->configurable.framebuffers) {
-			
-			// Only resize if not fixed resolution
-			if (!item.resolutionIsFixed) {
-				item.deallocate(mState->gpuAllocatorFramebuffer);
-				bool res = item.buildFramebuffer(mState->windowRes, mState->gpuAllocatorFramebuffer);
-				sfz_assert(res);
+		// Rebuild all stages' framebuffer objects
+		for (StageGroup& group : mState->configurable.presentQueue) {
+			for (Stage& stage : group.stages) {
+				stage.rebuildFramebuffer(mState->configurable.staticTextures);
 			}
 		}
 	}
@@ -487,11 +466,16 @@ void Renderer::frameBegin() noexcept
 	CHECK_ZG commandList.clearFramebufferOptimal();
 	CHECK_ZG mState->presentQueue.executeCommandList(commandList);
 
-	for (FramebufferItem& fbItem : mState->configurable.framebuffers) {
-		CHECK_ZG mState->presentQueue.beginCommandListRecording(commandList);
-		CHECK_ZG commandList.setFramebuffer(fbItem.framebuffer.framebuffer);
-		CHECK_ZG commandList.clearFramebufferOptimal();
-		CHECK_ZG mState->presentQueue.executeCommandList(commandList);
+	// TODO: This is clearly ridiculusly unoptimal, do it some smarter way
+	for (StageGroup& group : mState->configurable.presentQueue) {
+		for (Stage& stage : group.stages) {
+			if (stage.framebuffer.valid()) {
+				CHECK_ZG mState->presentQueue.beginCommandListRecording(commandList);
+				CHECK_ZG commandList.setFramebuffer(stage.framebuffer);
+				CHECK_ZG commandList.clearFramebufferOptimal();
+				CHECK_ZG mState->presentQueue.executeCommandList(commandList);
+			}
+		}
 	}
 
 	// Set current stage group and stage to first
@@ -514,7 +498,7 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 	sfz_assert(stageIdx != ~0u);
 	if (stageIdx == ~0u) return;
 	Stage& stage = mState->configurable.presentQueue[mState->currentStageGroupIdx].stages[stageIdx];
-	sfz_assert(stage.stageType == StageType::USER_INPUT_RENDERING);
+	sfz_assert(stage.type == StageType::USER_INPUT_RENDERING);
 
 	// Find render pipeline
 	uint32_t pipelineIdx = mState->findPipelineRenderIdx(stage.renderPipelineName);
@@ -531,24 +515,17 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 	mState->inputEnabled.stage = &stage;
 	mState->inputEnabled.pipelineRender = &pipelineItem;
 
-	// Get stage's framebuffer
-	zg::Framebuffer* framebuffer =
-		mState->configurable.getFramebuffer(mState->windowFramebuffer, stage.framebufferName);
-	sfz_assert(framebuffer != nullptr);
-
 	// In debug mode, validate that the pipeline's render targets matches the framebuffer
 #ifndef NDEBUG
-	if (framebuffer == &mState->windowFramebuffer) {
+	if (stage.defaultFramebuffer) {
 		sfz_assert(pipelineItem.numRenderTargets == 1);
 		sfz_assert(pipelineItem.renderTargets[0] == ZG_TEXTURE_FORMAT_RGBA_U8_UNORM);
 	}
 	else {
-		FramebufferItem* fbItem = mState->configurable.getFramebufferItem(stage.framebufferName);
-		sfz_assert(fbItem != nullptr);
-		sfz_assert(pipelineItem.numRenderTargets == fbItem->numRenderTargets);
-		for (uint32_t i = 0; i < fbItem->numRenderTargets; i++) {
+		sfz_assert(pipelineItem.numRenderTargets == stage.renderTargetNames.size());
+		/*for (uint32_t i = 0; i < stage.renderTargetNames.size(); i++) {
 			sfz_assert(pipelineItem.renderTargets[i] == fbItem->renderTargetItems[i].format);
-		}
+		}*/
 	}
 #endif
 
@@ -562,7 +539,12 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 
 		// Begin recording command list and set pipeline and framebuffer
 		CHECK_ZG mState->presentQueue.beginCommandListRecording(list.commandList);
-		CHECK_ZG list.commandList.setFramebuffer(*framebuffer);
+		if (stage.defaultFramebuffer) {
+			CHECK_ZG list.commandList.setFramebuffer(mState->windowFramebuffer);
+		}
+		else {
+			CHECK_ZG list.commandList.setFramebuffer(stage.framebuffer);
+		}
 		CHECK_ZG list.commandList.setPipeline(pipelineItem.pipeline);
 
 		// If first command list created, insert call to profile begin
@@ -768,21 +750,14 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 		commonBindings.addConstantBuffer(frame.shaderRegister, frame.deviceBuffer);
 	}
 
-	// Bound render targets
-	for (const BoundRenderTarget& target : mState->inputEnabled.stage->boundRenderTargets) {
-		
-		FramebufferItem* item = mState->configurable.getFramebufferItem(target.framebuffer);
-		sfz_assert(item != nullptr);
-		if (target.depthBuffer) {
-			sfz_assert(item->hasDepthBuffer);
-			commonBindings.addTexture(
-				target.textureRegister, item->framebuffer.depthBuffer);
-		}
-		else {
-			sfz_assert(target.renderTargetIdx < item->framebuffer.numRenderTargets);
-			commonBindings.addTexture(
-				target.textureRegister, item->framebuffer.renderTargets[target.renderTargetIdx]);
-		}
+	// Bound textures
+	for (const BoundTexture& boundTex : mState->inputEnabled.stage->boundTextures) {
+		StaticTextureItem* texItem =
+			mState->configurable.staticTextures.find([&](const StaticTextureItem& e) {
+				return e.name == boundTex.textureName;
+			});
+		sfz_assert(texItem != nullptr);
+		commonBindings.addTexture(boundTex.textureRegister, texItem->texture);
 	}
 
 	// Draw all mesh components

@@ -326,94 +326,10 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		}
 	}
 
-
-	// Framebuffers
-
-	// Parse framebuffers if section exist
-	if (root.accessMap("framebuffers").isValid()) {
-
-		// Get number of framebuffers and and allocate memory for them
-		ParsedJsonNode framebuffersNode = root.accessMap("framebuffers");
-		uint32_t numFramebuffers = framebuffersNode.arrayLength();
-		configurable.framebuffers.init(numFramebuffers, state.allocator, sfz_dbg(""));
-
-		// Parse information about each framebuffer
-		for (uint32_t i = 0; i < numFramebuffers; i++) {
-
-			ParsedJsonNode fbNode = framebuffersNode.accessArray(i);
-			configurable.framebuffers.add(FramebufferItem());
-			FramebufferItem& fbItem = configurable.framebuffers.last();
-
-			str256 name = CHECK_JSON fbNode.accessMap("name").valueStr256();
-			sfz_assert(name != "default");
-			fbItem.name = resStrings.getStringID(name);
-
-			// Resolution type
-			fbItem.resolutionIsFixed = !(fbNode.accessMap("resolution_scale").isValid() ||
-				fbNode.accessMap("resolution_scale_setting").isValid());
-
-			// Resolution
-			if (fbItem.resolutionIsFixed) {
-				fbItem.resolutionFixed.x = CHECK_JSON fbNode.accessMap("resolution_fixed_width").valueInt();
-				fbItem.resolutionFixed.y = CHECK_JSON fbNode.accessMap("resolution_fixed_height").valueInt();
-			}
-			else {
-				bool hasSetting = fbNode.accessMap("resolution_scale_setting").isValid();
-				if (hasSetting) {
-					str256 settingKey = CHECK_JSON fbNode.accessMap("resolution_scale_setting").valueStr256();
-
-					// Default value
-					float defaultScale = 1.0f;
-					if (fbNode.accessMap("resolution_scale").isValid()) {
-						defaultScale = CHECK_JSON fbNode.accessMap("resolution_scale").valueFloat();
-					}
-					fbItem.resolutionScaleSetting =
-						cfg.sanitizeFloat("Renderer", settingKey, false, defaultScale, 0.1f, 4.0f);
-					fbItem.resolutionScale = fbItem.resolutionScaleSetting->floatValue();
-				}
-				else {
-					fbItem.resolutionScaleSetting = nullptr;
-					fbItem.resolutionScale = CHECK_JSON fbNode.accessMap("resolution_scale").valueFloat();
-				}
-			}
-
-			// Render targets
-			ParsedJsonNode renderTargetsNode = fbNode.accessMap("render_targets");
-			if (renderTargetsNode.isValid()) {
-				fbItem.numRenderTargets = renderTargetsNode.arrayLength();
-				for (uint32_t j = 0; j < fbItem.numRenderTargets; j++) {
-					ParsedJsonNode renderTarget = renderTargetsNode.accessArray(j);
-					fbItem.renderTargetItems[j].format = textureFormatFromString(
-						CHECK_JSON renderTarget.accessMap("format").valueStr256());
-					float clearValue = CHECK_JSON renderTarget.accessMap("clear_value").valueFloat();
-					sfz_assert(clearValue == 0.0f || clearValue == 1.0f);
-					fbItem.renderTargetItems[j].clearValue = clearValue;
-				}
-			}
-			else {
-				fbItem.numRenderTargets = 0;
-			}
-
-			// Depth buffer
-			if (fbNode.accessMap("depth_buffer").isValid()) {
-				fbItem.hasDepthBuffer = CHECK_JSON fbNode.accessMap("depth_buffer").valueBool();
-				if (fbItem.hasDepthBuffer) {
-					fbItem.depthBufferFormat = textureFormatFromString(
-						CHECK_JSON fbNode.accessMap("depth_buffer_format").valueStr256());
-					float clearValue = CHECK_JSON fbNode.accessMap("depth_buffer_clear_value").valueFloat();
-					sfz_assert(clearValue == 0.0f || clearValue == 1.0f);
-					fbItem.depthBufferClearValue = clearValue;
-				}
-				
-			}
-		}
-	}
-
-	
-
-
 	// Present queue
 	{
+		StringID defaultId = resStrings.getStringID("default");
+
 		ParsedJsonNode presentQueueNode = root.accessMap("present_queue");
 		const uint32_t numGroups = presentQueueNode.arrayLength();
 		
@@ -442,51 +358,51 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 				Stage& stage = group.stages.last();
 
 				str256 stageName = CHECK_JSON stageNode.accessMap("stage_name").valueStr256();
-				stage.stageName = resStrings.getStringID(stageName);
+				stage.name = resStrings.getStringID(stageName);
 
 				str256 stageType = CHECK_JSON stageNode.accessMap("stage_type").valueStr256();
-				if (stageType == "USER_INPUT_RENDERING") stage.stageType = StageType::USER_INPUT_RENDERING;
-				else if (stageType == "USER_STAGE_BARRIER") stage.stageType = StageType::USER_STAGE_BARRIER;
+				if (stageType == "USER_INPUT_RENDERING") stage.type = StageType::USER_INPUT_RENDERING;
 				else return false;
 
-				if (stage.stageType == StageType::USER_INPUT_RENDERING) {
+				if (stage.type == StageType::USER_INPUT_RENDERING) {
 					str256 renderPipelineName =
 						CHECK_JSON stageNode.accessMap("render_pipeline").valueStr256();
 					stage.renderPipelineName = resStrings.getStringID(renderPipelineName);
 
-					str256 framebufferName =
-						CHECK_JSON stageNode.accessMap("framebuffer").valueStr256();
-					stage.framebufferName = resStrings.getStringID(framebufferName);
+					if (stageNode.accessMap("render_targets").isValid()) {
+						ParsedJsonNode renderTargetsNode = stageNode.accessMap("render_targets");
+						uint32_t numRenderTargets = renderTargetsNode.arrayLength();
+						for (uint32_t i = 0; i < numRenderTargets; i++) {
+							str256 renderTargetName =
+								CHECK_JSON renderTargetsNode.accessArray(i).valueStr256();
+							stage.renderTargetNames.add(resStrings.getStringID(renderTargetName));
+						}
+					}
+
+					if (stageNode.accessMap("depth_buffer").isValid()) {
+						str256 depthBufferName =
+							CHECK_JSON stageNode.accessMap("depth_buffer").valueStr256();
+						stage.depthBufferName = resStrings.getStringID(depthBufferName);
+					}
+
+					stage.defaultFramebuffer =
+						stage.renderTargetNames.size() == 1 &&
+						stage.renderTargetNames[0] == defaultId &&
+						stage.depthBufferName == defaultId;
 				}
 
-				// Bound render targets
-				if (stageNode.accessMap("bound_render_targets").isValid()) {
-					ParsedJsonNode boundTargetsNode = stageNode.accessMap("bound_render_targets");
-					uint32_t numBoundTargets = boundTargetsNode.arrayLength();
+				// Bound textures
+				if (stageNode.accessMap("bound_textures").isValid()) {
+					ParsedJsonNode boundTexsNode = stageNode.accessMap("bound_textures");
+					uint32_t numBoundTextures = boundTexsNode.arrayLength();
 
-					stage.boundRenderTargets.init(numBoundTargets, state.allocator, sfz_dbg(""));
-					for (uint32_t j = 0; j < numBoundTargets; j++) {
-
-						ParsedJsonNode targetNode = boundTargetsNode.accessArray(j);
-						BoundRenderTarget boundTarget;
-						boundTarget.textureRegister = CHECK_JSON targetNode.accessMap("register").valueInt();
-						str256 framebufferName = CHECK_JSON targetNode.accessMap("framebuffer").valueStr256();
-						sfz_assert(framebufferName != "debug"); // Can't bind default framebuffer
-						boundTarget.framebuffer = resStrings.getStringID(framebufferName);
-
-						// Check if depth buffer should be bound
-						if (targetNode.accessMap("depth_buffer").isValid()) {
-							sfz_assert(CHECK_JSON targetNode.accessMap("depth_buffer").valueBool());
-							boundTarget.depthBuffer = true;
-							boundTarget.renderTargetIdx = ~0u;
-						}
-						else {
-							boundTarget.depthBuffer = false;
-							boundTarget.renderTargetIdx =
-								CHECK_JSON targetNode.accessMap("render_target_index").valueInt();
-						}
-
-						stage.boundRenderTargets.add(boundTarget);
+					for (uint32_t i = 0; i < numBoundTextures; i++) {
+						ParsedJsonNode texNode = boundTexsNode.accessArray(i);
+						BoundTexture boundTex;
+						boundTex.textureRegister = CHECK_JSON texNode.accessMap("register").valueInt();
+						str256 texName = CHECK_JSON texNode.accessMap("texture").valueStr256();
+						boundTex.textureName = resStrings.getStringID(texName);
+						stage.boundTextures.add(boundTex);
 					}
 				}
 			}
@@ -506,13 +422,6 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		item.buildTexture(state.windowRes, state.gpuAllocatorFramebuffer);
 	}
 
-	// Create framebuffers
-	for (FramebufferItem& item : configurable.framebuffers) {
-		if (!item.buildFramebuffer(state.windowRes, state.gpuAllocatorFramebuffer)) {
-			success = false;
-		}
-	}
-
 	// Allocate stage memory
 	if (!allocateStageMemory(state)) success = false;
 
@@ -527,8 +436,11 @@ bool allocateStageMemory(RendererState& state) noexcept
 		StageGroup& group = state.configurable.presentQueue[groupIdx];
 
 		for (uint32_t stageIdx = 0; stageIdx < group.stages.size(); stageIdx++) {
-			sfz::Stage& stage = group.stages[stageIdx];
-			if (stage.stageType != StageType::USER_INPUT_RENDERING) continue;
+			Stage& stage = group.stages[stageIdx];
+			if (stage.type != StageType::USER_INPUT_RENDERING) continue;
+
+			// Create framebuffer
+			stage.rebuildFramebuffer(state.configurable.staticTextures);
 
 			// Find pipeline
 			PipelineRenderItem* pipelineItem =

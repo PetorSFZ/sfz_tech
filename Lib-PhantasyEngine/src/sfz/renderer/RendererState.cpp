@@ -69,78 +69,6 @@ void StaticTextureItem::deallocate(DynamicGpuAllocator& gpuAllocatorFramebuffer)
 	}
 }
 
-// Framebuffer types
-// ------------------------------------------------------------------------------------------------
-
-void FramebufferItem::deallocate(DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept
-{
-	// Deallocate framebuffer
-	if (framebuffer.framebuffer.valid()) {
-		framebuffer.framebuffer.release();
-	}
-
-	// Deallocate render targets
-	for (uint32_t i = 0; i < framebuffer.numRenderTargets; i++) {
-		if (framebuffer.renderTargets[i].valid()) {
-			gpuAllocatorFramebuffer.deallocate(framebuffer.renderTargets[i]);
-		}
-	}
-	framebuffer.numRenderTargets = 0;
-
-	// Deallocate depth buffer
-	if (framebuffer.depthBuffer.valid()) {
-		gpuAllocatorFramebuffer.deallocate(framebuffer.depthBuffer);
-	}
-}
-
-bool FramebufferItem::buildFramebuffer(vec2_i32 windowRes, DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept
-{
-	// Figure out resolution
-	uint32_t width = 0;
-	uint32_t height = 0;
-	if (resolutionIsFixed) {
-		width = uint32_t(resolutionFixed.x);
-		height = uint32_t(resolutionFixed.y);
-	}
-	else {
-		if (resolutionScaleSetting != nullptr) resolutionScale = resolutionScaleSetting->floatValue();
-		vec2 scaled = vec2(windowRes) * resolutionScale;
-		width = uint32_t(std::round(scaled.x));
-		height = uint32_t(std::round(scaled.y));
-	}
-
-	zg::FramebufferBuilder builder;
-
-	// Allocate render targets
-	framebuffer.numRenderTargets = numRenderTargets;
-	for (uint32_t i = 0; i < numRenderTargets; i++) {
-		RenderTargetItem& rtItem = renderTargetItems[i];
-		framebuffer.renderTargets[i] = gpuAllocatorFramebuffer.allocateTexture2D(
-			rtItem.format,
-			width,
-			height,
-			1,
-			ZG_TEXTURE_USAGE_RENDER_TARGET,
-			floatToOptimalClearValue(rtItem.clearValue));
-		builder.addRenderTarget(framebuffer.renderTargets[i]);
-	}
-
-	// Allocate depth buffer
-	if (hasDepthBuffer) {
-		framebuffer.depthBuffer = gpuAllocatorFramebuffer.allocateTexture2D(
-			depthBufferFormat,
-			width,
-			height,
-			1,
-			ZG_TEXTURE_USAGE_DEPTH_BUFFER,
-			floatToOptimalClearValue(depthBufferClearValue));
-		builder.setDepthBuffer(framebuffer.depthBuffer);
-	}
-
-	// Build framebuffer
-	return CHECK_ZG builder.build(framebuffer.framebuffer);
-}
-
 //  Pipeline types
 // ------------------------------------------------------------------------------------------------
 
@@ -248,40 +176,44 @@ bool PipelineComputeItem::buildPipeline() noexcept
 	return false;
 }
 
-// RendererConfigurableState: Helper methods
+// Stage: Helper methods
 // ------------------------------------------------------------------------------------------------
 
-zg::Framebuffer* RendererConfigurableState::getFramebuffer(
-	zg::Framebuffer& defaultFramebuffer, StringID id) noexcept
+void Stage::rebuildFramebuffer(Array<StaticTextureItem>& staticTextures) noexcept
 {
-	static StringID defaultId = []() {
-		sfz::StringCollection& resStrings = getResourceStrings();
-		return resStrings.getStringID("default");
-	}();
+	StringCollection& resStrings = getResourceStrings();
+	StringID defaultId = resStrings.getStringID("default");
 
-	// If "default", return default framebuffer
-	if (id == defaultId) return &defaultFramebuffer;
+	// Create framebuffer
+	if (!defaultFramebuffer) {
 
-	// Otherwise linear search through framebuffers to find the correct one
-	for (FramebufferItem& item : framebuffers) {
-		if (item.name == id) return &item.framebuffer.framebuffer;
+		if (!renderTargetNames.isEmpty() || depthBufferName != StringID::invalid()) {
+			zg::FramebufferBuilder fbBuilder;
+
+			for (StringID renderTargetName : renderTargetNames) {
+				sfz_assert(renderTargetName != defaultId);
+				StaticTextureItem* renderTarget =
+					staticTextures.find([&](const StaticTextureItem& e) {
+						return e.name == renderTargetName;
+					});
+				sfz_assert(renderTarget != nullptr);
+				fbBuilder.addRenderTarget(renderTarget->texture);
+			}
+
+			if (depthBufferName != StringID::invalid()) {
+				sfz_assert(depthBufferName != defaultId);
+				StaticTextureItem* depthBuffer =
+					staticTextures.find([&](const StaticTextureItem& e) {
+						return e.name == depthBufferName;
+					});
+				sfz_assert(depthBuffer != nullptr);
+				fbBuilder.setDepthBuffer(depthBuffer->texture);
+			}
+
+			bool fbSuccess = CHECK_ZG fbBuilder.build(framebuffer);
+			sfz_assert(fbSuccess);
+		}
 	}
-
-	// Could not find framebuffer
-	sfz_assert(false);
-	return nullptr;
-}
-
-FramebufferItem* RendererConfigurableState::getFramebufferItem(StringID id) noexcept
-{
-	// Linear search through framebuffers to find the correct one
-	for (FramebufferItem& item : framebuffers) {
-		if (item.name == id) return &item;
-	}
-
-	// Could not find framebuffer
-	sfz_assert(false);
-	return nullptr;
 }
 
 // RendererState: Helper methods
@@ -291,7 +223,7 @@ uint32_t RendererState::findActiveStageIdx(StringID stageName) const noexcept
 {
 	sfz_assert(stageName != StringID::invalid());
 	const Array<Stage>& stages = configurable.presentQueue[currentStageGroupIdx].stages;
-	const Stage* stage = stages.find([&](const Stage& e) { return e.stageName == stageName; });
+	const Stage* stage = stages.find([&](const Stage& e) { return e.name == stageName; });
 	if (stage == nullptr) return ~0u;
 	return uint32_t(stage - stages.data());
 }

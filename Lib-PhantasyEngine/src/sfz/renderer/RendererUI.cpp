@@ -57,7 +57,6 @@ static const char* toString(StageType type) noexcept
 {
 	switch (type) {
 	case StageType::USER_INPUT_RENDERING: return "USER_INPUT_RENDERING";
-	case StageType::USER_STAGE_BARRIER: return "USER_STAGE_BARRIER";
 	}
 	sfz_assert(false);
 	return "<ERROR>";
@@ -206,12 +205,6 @@ void RendererUI::render(RendererState& state) noexcept
 		if (ImGui::BeginTabItem("Static Resources")) {
 			ImGui::Spacing();
 			this->renderStaticResourcesTab(state.configurable);
-			ImGui::EndTabItem();
-		}
-
-		if (ImGui::BeginTabItem("Framebuffers")) {
-			ImGui::Spacing();
-			this->renderFramebuffersTab(state.configurable);
 			ImGui::EndTabItem();
 		}
 
@@ -381,37 +374,51 @@ void RendererUI::renderPresentQueueTab(RendererConfigurableState& state) noexcep
 			const Stage& stage = group.stages[stageIdx];
 
 			// Stage name
-			ImGui::Text("Stage %u - \"%s\"", stageIdx, resStrings.getString(stage.stageName));
+			ImGui::Text("Stage %u - \"%s\"", stageIdx, resStrings.getString(stage.name));
 			ImGui::Indent(20.0f);
 
 			// Stage type
-			ImGui::Text("Type: %s", toString(stage.stageType));
+			ImGui::Text("Type: %s", toString(stage.type));
 
-			if (stage.stageType != StageType::USER_STAGE_BARRIER) {
+			if (stage.type == StageType::USER_INPUT_RENDERING) {
 
 				// Pipeline name
 				ImGui::Text("Render Pipeline: \"%s\"", resStrings.getString(stage.renderPipelineName));
 
-				// Framebuffer name
-				ImGui::Text("Framebuffer: \"%s\"", resStrings.getString(stage.framebufferName));
-
-				// Bound render targets
-				ImGui::Text("Bound render targets:");
-				ImGui::Indent(20.0f);
-				for (const BoundRenderTarget& target : stage.boundRenderTargets) {
-					if (target.depthBuffer) {
-						ImGui::Text("- Register: %u  --  Framebuffer: \"%s\"  --  Depth Buffer",
-							target.textureRegister,
-							resStrings.getString(target.framebuffer));
+				if (stage.defaultFramebuffer) {
+					ImGui::Text("Framebuffer: \"default\"");
+				}
+				else {
+					// Render targets
+					if (!stage.renderTargetNames.isEmpty()) {
+						ImGui::Text("Render targets:");
+						ImGui::Indent(20.0f);
+						for (uint32_t i = 0; i < stage.renderTargetNames.size(); i++) {
+							StringID renderTarget = stage.renderTargetNames[i];
+							ImGui::Text("- Render target %u: \"%s\"",
+								i, resStrings.getString(renderTarget));
+						}
+						ImGui::Unindent(20.0f);
 					}
-					else {
-						ImGui::Text("- Register: %u  --  Framebuffer: \"%s\"  --  Render Target Index: %u",
-							target.textureRegister,
-							resStrings.getString(target.framebuffer),
-							target.renderTargetIdx);
+
+					// Depth buffer
+					if (stage.depthBufferName != StringID::invalid()) {
+						ImGui::Text("Depth buffer: \"%s\"",
+							resStrings.getString(stage.depthBufferName));
 					}
 				}
-				ImGui::Unindent(20.0f);
+
+				// Bound textures
+				if (!stage.boundTextures.isEmpty()) {
+					ImGui::Text("Bound textures:");
+					ImGui::Indent(20.0f);
+					for (const BoundTexture& boundTex : stage.boundTextures) {
+						ImGui::Text("- Register: %u  --  Texture: \"%s\"",
+							boundTex.textureRegister,
+							resStrings.getString(boundTex.textureName));
+					}
+					ImGui::Unindent(20.0f);
+				}
 			}
 
 			ImGui::Unindent(20.0f);
@@ -843,72 +850,6 @@ void RendererUI::renderStaticResourcesTab(RendererConfigurableState& state) noex
 		ImGui::Spacing();
 	}
 }
-
-void RendererUI::renderFramebuffersTab(RendererConfigurableState& state) noexcept
-{
-	StringCollection& resStrings = getResourceStrings();
-
-	for (uint32_t i = 0; i < state.framebuffers.size(); i++) {
-		const FramebufferItem& fbItem = state.framebuffers[i];
-
-		// Framebuffer name
-		ImGui::Text("Framebuffer %u - \"%s\"", i, resStrings.getString(fbItem.name));
-		ImGui::Spacing();
-		ImGui::Indent(20.0f);
-
-		constexpr float offset = 220.0f;
-
-		// Resolution type
-		if (fbItem.resolutionIsFixed) {
-			alignedEdit("Fixed resolution", offset, [&](const char*) {
-				ImGui::Text("%i x %i", fbItem.resolutionFixed.x, fbItem.resolutionFixed.y);
-			});
-		}
-		else {
-			if (fbItem.resolutionScaleSetting != nullptr) {
-				alignedEdit("Resolution scale", offset, [&](const char*) {
-					ImGui::Text("%.2f  --  Setting: \"%s\"",
-						fbItem.resolutionScale, fbItem.resolutionScaleSetting->key().str());
-				});
-			}
-			else {
-				alignedEdit("Resolution scale", offset, [&](const char*) {
-					ImGui::Text("%.2f", fbItem.resolutionScale);
-				});
-			}
-		}
-
-		// Actual resolution
-		uint32_t width = fbItem.framebuffer.framebuffer.width;
-		uint32_t height = fbItem.framebuffer.framebuffer.height;
-		alignedEdit("Current resolution", offset, [&](const char*) {
-			ImGui::Text("%i x %i", width, height);
-		});
-
-		// Render targets
-		for (uint32_t j = 0; j < fbItem.numRenderTargets; j++) {
-			const RenderTargetItem& rtItem = fbItem.renderTargetItems[j];
-			alignedEdit(str64("Render target [%u]", j), offset, [&](const char*) {
-				ImGui::Text("%s  --  Clear: %.1f",
-					textureFormatToString(rtItem.format), rtItem.clearValue);
-			});
-		}
-
-		// Depth buffer
-		if (fbItem.hasDepthBuffer) {
-			alignedEdit("Depth buffer", offset, [&](const char*) {
-				ImGui::Text("%s  --  Clear: %.1f",
-					textureFormatToString(fbItem.depthBufferFormat), fbItem.depthBufferClearValue);
-			});
-		}
-
-		ImGui::Unindent(20.0f);
-		ImGui::Spacing();
-		ImGui::Spacing();
-	}
-}
-
-
 
 void RendererUI::renderTexturesTab(RendererState& state) noexcept
 {

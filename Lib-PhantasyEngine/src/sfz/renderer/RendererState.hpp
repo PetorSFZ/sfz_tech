@@ -129,45 +129,6 @@ struct StaticTextureItem final {
 	void deallocate(DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept;
 };
 
-// Framebuffer types
-// ------------------------------------------------------------------------------------------------
-
-struct FramebufferBacked final {
-	zg::Framebuffer framebuffer;
-	uint32_t numRenderTargets = 0;
-	zg::Texture2D renderTargets[ZG_MAX_NUM_RENDER_TARGETS];
-	zg::Texture2D depthBuffer;
-};
-
-struct RenderTargetItem final {
-	ZgTextureFormat format = ZG_TEXTURE_FORMAT_UNDEFINED;
-	float clearValue = 0.0f;
-};
-
-struct FramebufferItem final {
-	
-	// The framebuffer
-	FramebufferBacked framebuffer;
-
-	// Parsed information
-	StringID name;
-	bool resolutionIsFixed = false;
-	float resolutionScale = 1.0f;
-	Setting* resolutionScaleSetting = nullptr;
-	vec2_i32 resolutionFixed = vec2_i32(0);
-	uint32_t numRenderTargets = 0;
-	RenderTargetItem renderTargetItems[ZG_MAX_NUM_RENDER_TARGETS];
-	bool hasDepthBuffer = false;
-	ZgTextureFormat depthBufferFormat = ZG_TEXTURE_FORMAT_R_F32;
-	float depthBufferClearValue = 0.0f;
-
-	// Method for deallocating previous framebuffer
-	void deallocate(DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept;
-
-	// Method for building the framebuffer given the parsed information
-	bool buildFramebuffer(vec2_i32 windowRes, DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept;
-};
-
 // Stage types
 // ------------------------------------------------------------------------------------------------
 
@@ -177,10 +138,6 @@ enum class StageType {
 	// A rendering pass (i.e. rendering pipeline) where all the draw calls are provided by the user
 	// through code.
 	USER_INPUT_RENDERING,
-
-	// A barrier that ensures the stages before has finished executing before the stages afterward
-	// starts. The user must manually (through code) check this barrier before it can be passed.
-	USER_STAGE_BARRIER
 };
 
 struct ConstantBufferMemory final {
@@ -190,20 +147,26 @@ struct ConstantBufferMemory final {
 	zg::Buffer deviceBuffer;
 };
 
-struct BoundRenderTarget final {
+struct BoundTexture final {
 	uint32_t textureRegister = ~0u;
-	StringID framebuffer = StringID::invalid();
-	bool depthBuffer = false;
-	uint32_t renderTargetIdx = ~0u;
+	StringID textureName = StringID::invalid();
 };
 
 struct Stage final {
-	StringID stageName = StringID::invalid();
-	StageType stageType;
-	StringID renderPipelineName = StringID::invalid();
+
+	zg::Framebuffer framebuffer;
 	Array<PerFrameData<ConstantBufferMemory>> constantBuffers;
-	StringID framebufferName = StringID::invalid();
-	Array<BoundRenderTarget> boundRenderTargets;
+
+	// Parsed information
+	StringID name;
+	StageType type;
+	StringID renderPipelineName;
+	ArrayLocal<StringID, ZG_MAX_NUM_RENDER_TARGETS> renderTargetNames;
+	StringID depthBufferName;
+	bool defaultFramebuffer = false;
+	ArrayLocal<BoundTexture, ZG_MAX_NUM_TEXTURES> boundTextures;
+
+	void rebuildFramebuffer(Array<StaticTextureItem>& staticTextures) noexcept;
 };
 
 struct StageGroup final {
@@ -253,15 +216,8 @@ struct RendererConfigurableState final {
 	// Static resources
 	Array<StaticTextureItem> staticTextures;
 
-	// Framebuffers
-	Array<FramebufferItem> framebuffers;
-
 	// Present Queue
 	Array<StageGroup> presentQueue;
-
-	// Helper method to get a framebuffer given a StringID, returns nullptr on failure
-	zg::Framebuffer* getFramebuffer(zg::Framebuffer& defaultFramebuffer, StringID id) noexcept;
-	FramebufferItem* getFramebufferItem(StringID id) noexcept;
 };
 
 struct RendererState final {
