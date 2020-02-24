@@ -187,6 +187,11 @@ void Renderer::destroy() noexcept
 		this->removeAllTexturesGpuBlocking();
 		this->removeAllMeshesGpuBlocking();
 
+		// Destroy static textures
+		for (StaticTextureItem& item : mState->configurable.staticTextures) {
+			item.deallocate(mState->gpuAllocatorFramebuffer);
+		}
+
 		// Destroy framebuffers
 		for (FramebufferItem& item : mState->configurable.framebuffers) {
 			item.deallocate(mState->gpuAllocatorFramebuffer);
@@ -403,6 +408,18 @@ void Renderer::frameBegin() noexcept
 	SDL_GL_GetDrawableSize(mState->window, &newResX, &newResY);
 	bool resolutionChanged = newResX != mState->windowRes.x || newResY != mState->windowRes.y;
 	
+	// Check if any texture scale setting has changed, necessating a resolution change
+	if (!resolutionChanged) {
+		for (StaticTextureItem& item : mState->configurable.staticTextures) {
+			if (!item.resolutionIsFixed && item.resolutionScaleSetting != nullptr) {
+				if (item.resolutionScale != item.resolutionScaleSetting->floatValue()) {
+					resolutionChanged = true;
+					break;
+				}
+			}
+		}
+	}
+
 	// Check if any framebuffer scale settings has changed, necessating a resolution change
 	if (!resolutionChanged) {
 		for (FramebufferItem& item : mState->configurable.framebuffers) {
@@ -435,6 +452,16 @@ void Renderer::frameBegin() noexcept
 		//       as well protect this call just the same.
 		CHECK_ZG mState->zgCtx.swapchainResize(
 			uint32_t(mState->windowRes.x), uint32_t(mState->windowRes.y));
+
+		// Resize static textures
+		for (StaticTextureItem& item : mState->configurable.staticTextures) {
+			
+			// Only resize if not fixed resolution
+			if (!item.resolutionIsFixed) {
+				item.deallocate(mState->gpuAllocatorFramebuffer);
+				item.buildTexture(mState->windowRes, mState->gpuAllocatorFramebuffer);
+			}
+		}
 
 		// Resize our framebuffers
 		for (FramebufferItem& item : mState->configurable.framebuffers) {

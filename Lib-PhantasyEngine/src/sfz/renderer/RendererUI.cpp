@@ -197,18 +197,24 @@ void RendererUI::render(RendererState& state) noexcept
 			ImGui::EndTabItem();
 		}
 
-		if (ImGui::BeginTabItem("Framebuffers")) {
-			ImGui::Spacing();
-			this->renderFramebuffersTab(state.configurable);
-			ImGui::EndTabItem();
-		}
-		
 		if (ImGui::BeginTabItem("Pipelines")) {
 			ImGui::Spacing();
 			this->renderPipelinesTab(state);
 			ImGui::EndTabItem();
 		}
-		
+
+		if (ImGui::BeginTabItem("Static Resources")) {
+			ImGui::Spacing();
+			this->renderStaticResourcesTab(state.configurable);
+			ImGui::EndTabItem();
+		}
+
+		if (ImGui::BeginTabItem("Framebuffers")) {
+			ImGui::Spacing();
+			this->renderFramebuffersTab(state.configurable);
+			ImGui::EndTabItem();
+		}
+
 		if (ImGui::BeginTabItem("Textures")) {
 			ImGui::Spacing();
 			this->renderTexturesTab(state);
@@ -415,75 +421,10 @@ void RendererUI::renderPresentQueueTab(RendererConfigurableState& state) noexcep
 	}
 }
 
-void RendererUI::renderFramebuffersTab(RendererConfigurableState& state) noexcept
-{
-	// Get global collection of resource strings in order to get strings from StringIDs
-	sfz::StringCollection& resStrings = sfz::getResourceStrings();
-
-	for (uint32_t i = 0; i < state.framebuffers.size(); i++) {
-		const FramebufferItem& fbItem = state.framebuffers[i];
-
-		// Framebuffer name
-		ImGui::Text("Framebuffer %u - \"%s\"", i, resStrings.getString(fbItem.name));
-		ImGui::Spacing();
-		ImGui::Indent(20.0f);
-
-		constexpr float offset = 220.0f;
-
-		// Resolution type
-		if (fbItem.resolutionIsFixed) {
-			alignedEdit("Fixed resolution", offset, [&](const char*) {
-				ImGui::Text("%i x %i", fbItem.resolutionFixed.x, fbItem.resolutionFixed.y);
-			});
-		}
-		else {
-			if (fbItem.resolutionScaleSetting != nullptr) {
-				alignedEdit("Resolution scale", offset, [&](const char*) {
-					ImGui::Text("%.2f  --  Setting: \"%s\"",
-						fbItem.resolutionScale, fbItem.resolutionScaleSetting->key().str());
-				});
-			}
-			else {
-				alignedEdit("Resolution scale", offset, [&](const char*) {
-					ImGui::Text("%.2f", fbItem.resolutionScale);
-				});
-			}
-		}
-
-		// Actual resolution
-		uint32_t width = fbItem.framebuffer.framebuffer.width;
-		uint32_t height = fbItem.framebuffer.framebuffer.height;
-		alignedEdit("Current resolution", offset, [&](const char*) {
-			ImGui::Text("%i x %i", width, height);
-		});
-
-		// Render targets
-		for (uint32_t j = 0; j < fbItem.numRenderTargets; j++) {
-			const RenderTargetItem& rtItem = fbItem.renderTargetItems[j];
-			alignedEdit(str64("Render target [%u]", j), offset, [&](const char*) {
-				ImGui::Text("%s  --  Clear: %.1f",
-					textureFormatToString(rtItem.format), rtItem.clearValue);
-			});
-		}
-
-		// Depth buffer
-		if (fbItem.hasDepthBuffer) {
-			alignedEdit("Depth buffer", offset, [&](const char*) {
-				ImGui::Text("%s  --  Clear: %.1f",
-					textureFormatToString(fbItem.depthBufferFormat), fbItem.depthBufferClearValue);
-			});
-		}
-
-		ImGui::Unindent(20.0f);
-		ImGui::Spacing();
-		ImGui::Spacing();
-	}
-}
-
 void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 {
 	// Get global collection of resource strings in order to get strings from StringIDs
-	sfz::StringCollection& resStrings = sfz::getResourceStrings();
+	StringCollection& resStrings = getResourceStrings();
 
 	RendererConfigurableState& configurable = state.configurable;
 
@@ -494,7 +435,7 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 	ImGui::SameLine(ImGui::GetWindowWidth() - 130.0f);
 	if (ImGui::Button("Reload All##__render_pipelines", vec2(120.0f, 0.0f))) {
 
-		SFZ_INFO("Renderer", "Reloading all pipelines...");
+		SFZ_INFO("Renderer", "Reloading all render pipelines...");
 
 		// Flush ZeroG queues
 		CHECK_ZG state.presentQueue.flush();
@@ -668,11 +609,306 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 		ImGui::Spacing();
 	}
 
+
+
 	ImGui::Spacing();
 	ImGui::Separator();
 	ImGui::Spacing();
 	ImGui::Text("Compute Pipelines");
+
+	// Reload all button
+	ImGui::SameLine(ImGui::GetWindowWidth() - 130.0f);
+	if (ImGui::Button("Reload All##__compute_pipelines", vec2(120.0f, 0.0f))) {
+
+		SFZ_INFO("Renderer", "Reloading all compute pipelines...");
+
+		// Flush ZeroG queues
+		CHECK_ZG state.presentQueue.flush();
+
+		// Rebuild pipelines
+		for (uint32_t i = 0; i < configurable.computePipelines.size(); i++) {
+			PipelineComputeItem& pipeline = configurable.computePipelines[i];
+			bool success = pipeline.buildPipeline();
+			if (!success) {
+				SFZ_WARNING("Renderer", "Failed to rebuild pipeline: \"%s\"",
+					resStrings.getString(pipeline.name));
+			}
+		}
+	}
+
+	ImGui::Spacing();
+	for (uint32_t i = 0; i < configurable.computePipelines.size(); i++) {
+		PipelineComputeItem& pipeline = configurable.computePipelines[i];
+		const ZgPipelineBindingsSignature& bindingsSignature = pipeline.pipeline.bindingsSignature;
+		const char* name = resStrings.getString(pipeline.name);
+
+		// Reload button
+		if (ImGui::Button(str64("Reload##__compute_%u", i), vec2(80.0f, 0.0f))) {
+
+			// Flush ZeroG queues
+			CHECK_ZG state.presentQueue.flush();
+
+			if (pipeline.buildPipeline()) {
+				SFZ_INFO("Renderer", "Reloaded pipeline: \"%s\"", name);
+			}
+			else {
+				SFZ_WARNING("Renderer", "Failed to rebuild pipeline: \"%s\"", name);
+			}
+		}
+		ImGui::SameLine();
+
+		// Collapsing header with name
+		bool collapsingHeaderOpen =
+			ImGui::CollapsingHeader(str256("Pipeline %u - \"%s\"", i, name));
+		if (!collapsingHeaderOpen) continue;
+		ImGui::Indent(20.0f);
+
+		// Valid or not
+		ImGui::Indent(20.0f);
+		if (!pipeline.pipeline.valid()) {
+			ImGui::SameLine();
+			ImGui::TextUnformatted("-- INVALID PIPELINE");
+		}
+
+		// Pipeline info
+		/*ImGui::Spacing();
+		ImGui::Text("Vertex Shader: \"%s\" -- \"%s\"",
+			pipeline.vertexShaderPath.str(), pipeline.vertexShaderEntry.str());
+		ImGui::Text("Pixel Shader: \"%s\" -- \"%s\"",
+			pipeline.pixelShaderPath.str(), pipeline.pixelShaderEntry.str());
+
+		// Print vertex attributes
+		ImGui::Spacing();
+		ImGui::Text("Vertex attributes (%u):", renderSignature.numVertexAttributes);
+		ImGui::Indent(20.0f);
+		for (uint32_t j = 0; j < renderSignature.numVertexAttributes; j++) {
+			const ZgVertexAttribute& attrib = renderSignature.vertexAttributes[j];
+			ImGui::Text("- Location: %u -- Type: %s",
+				attrib.location, vertexAttributeTypeToString(attrib.type));
+		}
+		ImGui::Unindent(20.0f);
+
+		// Print constant buffers
+		if (bindingsSignature.numConstBuffers > 0) {
+			ImGui::Spacing();
+			ImGui::Text("Constant buffers (%u):", bindingsSignature.numConstBuffers);
+			ImGui::Indent(20.0f);
+			for (uint32_t j = 0; j < bindingsSignature.numConstBuffers; j++) {
+				const ZgConstantBufferBindingDesc& cbuffer = bindingsSignature.constBuffers[j];
+				ImGui::Text("- Register: %u -- Size: %u bytes -- Push constant: %s",
+					cbuffer.bufferRegister,
+					cbuffer.sizeInBytes,
+					cbuffer.pushConstant == ZG_TRUE ? "YES" : "NO");
+			}
+			ImGui::Unindent(20.0f);
+		}
+
+		// Print textures
+		if (bindingsSignature.numTextures > 0) {
+			ImGui::Spacing();
+			ImGui::Text("Textures (%u):", bindingsSignature.numTextures);
+			ImGui::Indent(20.0f);
+			for (uint32_t j = 0; j < bindingsSignature.numTextures; j++) {
+				const ZgTextureBindingDesc& texture = bindingsSignature.textures[j];
+				ImGui::Text("- Register: %u", texture.textureRegister);
+			}
+			ImGui::Unindent(20.0f);
+		}
+
+		// Print samplers
+		if (pipeline.numSamplers > 0) {
+			ImGui::Spacing();
+			ImGui::Text("Samplers (%u):", pipeline.numSamplers);
+			ImGui::Indent(20.0f);
+			for (uint32_t j = 0; j < pipeline.numSamplers; j++) {
+				const SamplerItem& item = pipeline.samplers[j];
+				ImGui::Text("- Register: %u -- Sampling: %s -- Wrapping: %s",
+					item.samplerRegister,
+					samplingModeToString(item.sampler.samplingMode),
+					wrappingModeToString(item.sampler.wrappingModeU));
+
+			}
+			ImGui::Unindent(20.0f);
+		}
+
+		// Print render targets
+		ImGui::Spacing();
+		ImGui::Text("Render Targets (%u):", pipeline.numRenderTargets);
+		ImGui::Indent(20.0f);
+		for (uint32_t j = 0; j < pipeline.numRenderTargets; j++) {
+			ImGui::Text("- Render Target: %u -- %s",
+				j, textureFormatToString(pipeline.renderTargets[j]));
+		}
+		ImGui::Unindent(20.0f);
+
+		// Print depth test
+		ImGui::Spacing();
+		ImGui::Text("Depth Test: %s", pipeline.depthTest ? "ENABLED" : "DISABLED");
+		if (pipeline.depthTest) {
+			ImGui::Indent(20.0f);
+			ImGui::Text("Depth function: %s", depthFuncToString(pipeline.depthFunc));
+			ImGui::Unindent(20.0f);
+		}
+
+		// Print culling info
+		ImGui::Spacing();
+		ImGui::Text("Culling: %s", pipeline.cullingEnabled ? "ENABLED" : "DISABLED");
+		if (pipeline.cullingEnabled) {
+			ImGui::Indent(20.0f);
+			ImGui::Text("Cull Front Face: %s", pipeline.cullFrontFacing ? "YES" : "NO");
+			ImGui::Text("Front Facing Is Counter Clockwise: %s", pipeline.frontFacingIsCounterClockwise ? "YES" : "NO");
+			ImGui::Unindent(20.0f);
+		}
+
+		// Print depth bias info
+		ImGui::Spacing();
+		ImGui::Text("Depth Bias");
+		ImGui::Indent(20.0f);
+		constexpr float xOffset = 300.0f;
+		alignedEdit("Bias", xOffset, [&](const char* name) {
+			ImGui::SetNextItemWidth(165.0f);
+			ImGui::InputInt(str128("%s##render_%u", name, i), &pipeline.depthBias);
+		});
+		alignedEdit("Bias Slope Scaled", xOffset, [&](const char* name) {
+			ImGui::SetNextItemWidth(100.0f);
+			ImGui::InputFloat(str128("%s##render_%u", name, i), &pipeline.depthBiasSlopeScaled, 0.0f, 0.0f, "%.4f");
+		});
+		alignedEdit("Bias Clamp", xOffset, [&](const char* name) {
+			ImGui::SetNextItemWidth(100.0f);
+			ImGui::InputFloat(str128("%s##render_%u", name, i), &pipeline.depthBiasClamp, 0.0f, 0.0f, "%.4f");
+		});
+		ImGui::Unindent(20.0f);
+
+		// Print wireframe rendering mode
+		ImGui::Spacing();
+		ImGui::Text("Wireframe Rendering: %s",
+			pipeline.wireframeRenderingEnabled ? "ENABLED" : "DISABLED");
+
+		// Print blend mode
+		ImGui::Spacing();
+		ImGui::Text("Blend Mode: %s", blendModeToString(pipeline.blendMode));*/
+
+		ImGui::Unindent(20.0f);
+		ImGui::Unindent(20.0f);
+		ImGui::Spacing();
+	}
 }
+
+void RendererUI::renderStaticResourcesTab(RendererConfigurableState& state) noexcept
+{
+	StringCollection& resStrings = getResourceStrings();
+
+	for (uint32_t i = 0; i < state.staticTextures.size(); i++) {
+		const StaticTextureItem& texItem = state.staticTextures[i];
+
+		// Texture name
+		ImGui::Text("Texture %u - \"%s\" - %s - %ux%u", i,
+			resStrings.getString(texItem.name),
+			textureFormatToString(texItem.format),
+			texItem.texture.width,
+			texItem.texture.height);
+		ImGui::Indent(20.0f);
+
+		constexpr float offset = 220.0f;
+
+		// Clear value
+		if (texItem.clearValue != 0.0f) {
+			alignedEdit(" - Clear", offset, [&](const char*) {
+				ImGui::Text("%.1f", texItem.clearValue);
+			});
+		}
+
+		// Resolution type
+		if (texItem.resolutionIsFixed) {
+			alignedEdit(" - Fixed resolution", offset, [&](const char*) {
+				ImGui::Text("%i x %i", texItem.resolutionFixed.x, texItem.resolutionFixed.y);
+			});
+		}
+		else {
+			if (texItem.resolutionScaleSetting != nullptr) {
+				alignedEdit(" - Resolution scale", offset, [&](const char*) {
+					ImGui::Text("%.2f  --  Setting: \"%s\"",
+						texItem.resolutionScale, texItem.resolutionScaleSetting->key().str());
+				});
+			}
+			else {
+				alignedEdit(" - Resolution scale", offset, [&](const char*) {
+					ImGui::Text("%.2f", texItem.resolutionScale);
+				});
+			}
+		}
+
+		ImGui::Unindent(20.0f);
+		ImGui::Spacing();
+		ImGui::Spacing();
+	}
+}
+
+void RendererUI::renderFramebuffersTab(RendererConfigurableState& state) noexcept
+{
+	StringCollection& resStrings = getResourceStrings();
+
+	for (uint32_t i = 0; i < state.framebuffers.size(); i++) {
+		const FramebufferItem& fbItem = state.framebuffers[i];
+
+		// Framebuffer name
+		ImGui::Text("Framebuffer %u - \"%s\"", i, resStrings.getString(fbItem.name));
+		ImGui::Spacing();
+		ImGui::Indent(20.0f);
+
+		constexpr float offset = 220.0f;
+
+		// Resolution type
+		if (fbItem.resolutionIsFixed) {
+			alignedEdit("Fixed resolution", offset, [&](const char*) {
+				ImGui::Text("%i x %i", fbItem.resolutionFixed.x, fbItem.resolutionFixed.y);
+			});
+		}
+		else {
+			if (fbItem.resolutionScaleSetting != nullptr) {
+				alignedEdit("Resolution scale", offset, [&](const char*) {
+					ImGui::Text("%.2f  --  Setting: \"%s\"",
+						fbItem.resolutionScale, fbItem.resolutionScaleSetting->key().str());
+				});
+			}
+			else {
+				alignedEdit("Resolution scale", offset, [&](const char*) {
+					ImGui::Text("%.2f", fbItem.resolutionScale);
+				});
+			}
+		}
+
+		// Actual resolution
+		uint32_t width = fbItem.framebuffer.framebuffer.width;
+		uint32_t height = fbItem.framebuffer.framebuffer.height;
+		alignedEdit("Current resolution", offset, [&](const char*) {
+			ImGui::Text("%i x %i", width, height);
+		});
+
+		// Render targets
+		for (uint32_t j = 0; j < fbItem.numRenderTargets; j++) {
+			const RenderTargetItem& rtItem = fbItem.renderTargetItems[j];
+			alignedEdit(str64("Render target [%u]", j), offset, [&](const char*) {
+				ImGui::Text("%s  --  Clear: %.1f",
+					textureFormatToString(rtItem.format), rtItem.clearValue);
+			});
+		}
+
+		// Depth buffer
+		if (fbItem.hasDepthBuffer) {
+			alignedEdit("Depth buffer", offset, [&](const char*) {
+				ImGui::Text("%s  --  Clear: %.1f",
+					textureFormatToString(fbItem.depthBufferFormat), fbItem.depthBufferClearValue);
+			});
+		}
+
+		ImGui::Unindent(20.0f);
+		ImGui::Spacing();
+		ImGui::Spacing();
+	}
+}
+
+
 
 void RendererUI::renderTexturesTab(RendererState& state) noexcept
 {

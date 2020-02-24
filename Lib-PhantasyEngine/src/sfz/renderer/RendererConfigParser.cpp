@@ -135,85 +135,8 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	configurable.configPath.clear();
 	configurable.configPath.appendf("%s", configPath);
 
-	// Parse framebuffers if section exist
-	if (root.accessMap("framebuffers").isValid()) {
 
-		// Get number of framebuffers and and allocate memory for them
-		ParsedJsonNode framebuffersNode = root.accessMap("framebuffers");
-		uint32_t numFramebuffers = framebuffersNode.arrayLength();
-		configurable.framebuffers.init(numFramebuffers, state.allocator, sfz_dbg(""));
-
-		// Parse information abotu each framebuffer
-		for (uint32_t i = 0; i < numFramebuffers; i++) {
-
-			ParsedJsonNode fbNode = framebuffersNode.accessArray(i);
-			configurable.framebuffers.add(FramebufferItem());
-			FramebufferItem& fbItem = configurable.framebuffers.last();
-
-			str256 name = CHECK_JSON fbNode.accessMap("name").valueStr256();
-			sfz_assert(name != "default");
-			fbItem.name = resStrings.getStringID(name);
-
-			// Resolution type
-			fbItem.resolutionIsFixed = !(fbNode.accessMap("resolution_scale").isValid() ||
-				fbNode.accessMap("resolution_scale_setting").isValid());
-
-			// Resolution
-			if (fbItem.resolutionIsFixed) {
-				fbItem.resolutionFixed.x = CHECK_JSON fbNode.accessMap("resolution_fixed_width").valueInt();
-				fbItem.resolutionFixed.y = CHECK_JSON fbNode.accessMap("resolution_fixed_height").valueInt();
-			}
-			else {
-				bool hasSetting = fbNode.accessMap("resolution_scale_setting").isValid();
-				if (hasSetting) {
-					str256 settingKey = CHECK_JSON fbNode.accessMap("resolution_scale_setting").valueStr256();
-
-					// Default value
-					float defaultScale = 1.0f;
-					if (fbNode.accessMap("resolution_scale").isValid()) {
-						defaultScale = CHECK_JSON fbNode.accessMap("resolution_scale").valueFloat();
-					}
-					fbItem.resolutionScaleSetting =
-						cfg.sanitizeFloat("Renderer", settingKey, false, defaultScale, 0.1f, 4.0f);
-					fbItem.resolutionScale = fbItem.resolutionScaleSetting->floatValue();
-				}
-				else {
-					fbItem.resolutionScaleSetting = nullptr;
-					fbItem.resolutionScale = CHECK_JSON fbNode.accessMap("resolution_scale").valueFloat();
-				}
-			}
-
-			// Render targets
-			ParsedJsonNode renderTargetsNode = fbNode.accessMap("render_targets");
-			if (renderTargetsNode.isValid()) {
-				fbItem.numRenderTargets = renderTargetsNode.arrayLength();
-				for (uint32_t j = 0; j < fbItem.numRenderTargets; j++) {
-					ParsedJsonNode renderTarget = renderTargetsNode.accessArray(j);
-					fbItem.renderTargetItems[j].format = textureFormatFromString(
-						CHECK_JSON renderTarget.accessMap("format").valueStr256());
-					float clearValue = CHECK_JSON renderTarget.accessMap("clear_value").valueFloat();
-					sfz_assert(clearValue == 0.0f || clearValue == 1.0f);
-					fbItem.renderTargetItems[j].clearValue = clearValue;
-				}
-			}
-			else {
-				fbItem.numRenderTargets = 0;
-			}
-
-			// Depth buffer
-			if (fbNode.accessMap("depth_buffer").isValid()) {
-				fbItem.hasDepthBuffer = CHECK_JSON fbNode.accessMap("depth_buffer").valueBool();
-				if (fbItem.hasDepthBuffer) {
-					fbItem.depthBufferFormat = textureFormatFromString(
-						CHECK_JSON fbNode.accessMap("depth_buffer_format").valueStr256());
-					float clearValue = CHECK_JSON fbNode.accessMap("depth_buffer_clear_value").valueFloat();
-					sfz_assert(clearValue == 0.0f || clearValue == 1.0f);
-					fbItem.depthBufferClearValue = clearValue;
-				}
-				
-			}
-		}
-	}
+	// Render pipelines
 
 	// Get number of render pipelines to load and allocate memory for them
 	ParsedJsonNode renderPipelinesNode = root.accessMap("render_pipelines");
@@ -343,6 +266,152 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	}
 
 
+	// Static textures
+	{
+		// Get number of static textures to create and allocate memory for their handles
+		ParsedJsonNode staticTexturesNode = root.accessMap("static_textures");
+		uint32_t numStaticTextures = staticTexturesNode.arrayLength();
+		configurable.staticTextures.init(numStaticTextures, state.allocator, sfz_dbg(""));
+
+		// Parse information about each static texture
+		for (uint32_t i = 0; i < numStaticTextures; i++) {
+			
+			ParsedJsonNode texNode = staticTexturesNode.accessArray(i);
+			configurable.staticTextures.add(StaticTextureItem());
+			StaticTextureItem& texItem = configurable.staticTextures.last();
+
+			// Name
+			str256 name = CHECK_JSON texNode.accessMap("name").valueStr256();
+			sfz_assert(name != "default");
+			texItem.name = resStrings.getStringID(name);
+
+			// Format and clear value
+			texItem.format = textureFormatFromString(
+				CHECK_JSON texNode.accessMap("format").valueStr256());
+			float clearValue = 0.0f;
+			if (texNode.accessMap("clear_value").isValid()) {
+				clearValue = CHECK_JSON texNode.accessMap("clear_value").valueFloat();
+			}
+			sfz_assert(clearValue == 0.0f || clearValue == 1.0f);
+			texItem.clearValue = clearValue;
+
+			// Resolution type
+			texItem.resolutionIsFixed = !(texNode.accessMap("resolution_scale").isValid() ||
+				texNode.accessMap("resolution_scale_setting").isValid());
+
+			// Resolution
+			if (texItem.resolutionIsFixed) {
+				texItem.resolutionFixed.x = CHECK_JSON texNode.accessMap("resolution_fixed_width").valueInt();
+				texItem.resolutionFixed.y = CHECK_JSON texNode.accessMap("resolution_fixed_height").valueInt();
+			}
+			else {
+				bool hasSetting = texNode.accessMap("resolution_scale_setting").isValid();
+				if (hasSetting) {
+					str256 settingKey = CHECK_JSON texNode.accessMap("resolution_scale_setting").valueStr256();
+
+					// Default value
+					float defaultScale = 1.0f;
+					if (texNode.accessMap("resolution_scale").isValid()) {
+						defaultScale = CHECK_JSON texNode.accessMap("resolution_scale").valueFloat();
+					}
+					texItem.resolutionScaleSetting =
+						cfg.sanitizeFloat("Renderer", settingKey, false, defaultScale, 0.1f, 4.0f);
+					texItem.resolutionScale = texItem.resolutionScaleSetting->floatValue();
+				}
+				else {
+					texItem.resolutionScaleSetting = nullptr;
+					texItem.resolutionScale = CHECK_JSON texNode.accessMap("resolution_scale").valueFloat();
+				}
+			}
+		}
+	}
+
+
+	// Framebuffers
+
+	// Parse framebuffers if section exist
+	if (root.accessMap("framebuffers").isValid()) {
+
+		// Get number of framebuffers and and allocate memory for them
+		ParsedJsonNode framebuffersNode = root.accessMap("framebuffers");
+		uint32_t numFramebuffers = framebuffersNode.arrayLength();
+		configurable.framebuffers.init(numFramebuffers, state.allocator, sfz_dbg(""));
+
+		// Parse information about each framebuffer
+		for (uint32_t i = 0; i < numFramebuffers; i++) {
+
+			ParsedJsonNode fbNode = framebuffersNode.accessArray(i);
+			configurable.framebuffers.add(FramebufferItem());
+			FramebufferItem& fbItem = configurable.framebuffers.last();
+
+			str256 name = CHECK_JSON fbNode.accessMap("name").valueStr256();
+			sfz_assert(name != "default");
+			fbItem.name = resStrings.getStringID(name);
+
+			// Resolution type
+			fbItem.resolutionIsFixed = !(fbNode.accessMap("resolution_scale").isValid() ||
+				fbNode.accessMap("resolution_scale_setting").isValid());
+
+			// Resolution
+			if (fbItem.resolutionIsFixed) {
+				fbItem.resolutionFixed.x = CHECK_JSON fbNode.accessMap("resolution_fixed_width").valueInt();
+				fbItem.resolutionFixed.y = CHECK_JSON fbNode.accessMap("resolution_fixed_height").valueInt();
+			}
+			else {
+				bool hasSetting = fbNode.accessMap("resolution_scale_setting").isValid();
+				if (hasSetting) {
+					str256 settingKey = CHECK_JSON fbNode.accessMap("resolution_scale_setting").valueStr256();
+
+					// Default value
+					float defaultScale = 1.0f;
+					if (fbNode.accessMap("resolution_scale").isValid()) {
+						defaultScale = CHECK_JSON fbNode.accessMap("resolution_scale").valueFloat();
+					}
+					fbItem.resolutionScaleSetting =
+						cfg.sanitizeFloat("Renderer", settingKey, false, defaultScale, 0.1f, 4.0f);
+					fbItem.resolutionScale = fbItem.resolutionScaleSetting->floatValue();
+				}
+				else {
+					fbItem.resolutionScaleSetting = nullptr;
+					fbItem.resolutionScale = CHECK_JSON fbNode.accessMap("resolution_scale").valueFloat();
+				}
+			}
+
+			// Render targets
+			ParsedJsonNode renderTargetsNode = fbNode.accessMap("render_targets");
+			if (renderTargetsNode.isValid()) {
+				fbItem.numRenderTargets = renderTargetsNode.arrayLength();
+				for (uint32_t j = 0; j < fbItem.numRenderTargets; j++) {
+					ParsedJsonNode renderTarget = renderTargetsNode.accessArray(j);
+					fbItem.renderTargetItems[j].format = textureFormatFromString(
+						CHECK_JSON renderTarget.accessMap("format").valueStr256());
+					float clearValue = CHECK_JSON renderTarget.accessMap("clear_value").valueFloat();
+					sfz_assert(clearValue == 0.0f || clearValue == 1.0f);
+					fbItem.renderTargetItems[j].clearValue = clearValue;
+				}
+			}
+			else {
+				fbItem.numRenderTargets = 0;
+			}
+
+			// Depth buffer
+			if (fbNode.accessMap("depth_buffer").isValid()) {
+				fbItem.hasDepthBuffer = CHECK_JSON fbNode.accessMap("depth_buffer").valueBool();
+				if (fbItem.hasDepthBuffer) {
+					fbItem.depthBufferFormat = textureFormatFromString(
+						CHECK_JSON fbNode.accessMap("depth_buffer_format").valueStr256());
+					float clearValue = CHECK_JSON fbNode.accessMap("depth_buffer_clear_value").valueFloat();
+					sfz_assert(clearValue == 0.0f || clearValue == 1.0f);
+					fbItem.depthBufferClearValue = clearValue;
+				}
+				
+			}
+		}
+	}
+
+	
+
+
 	// Present queue
 	{
 		ParsedJsonNode presentQueueNode = root.accessMap("present_queue");
@@ -424,17 +493,22 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		}
 	}
 
-	// Create framebuffers
+	// Builds pipelines
 	bool success = true;
-	for (FramebufferItem& item : configurable.framebuffers) {
-		if (!item.buildFramebuffer(state.windowRes, state.gpuAllocatorFramebuffer)) {
+	for (PipelineRenderItem& item : configurable.renderPipelines) {
+		if (!item.buildPipeline()) {
 			success = false;
 		}
 	}
 
-	// Builds pipelines
-	for (PipelineRenderItem& item : configurable.renderPipelines) {
-		if (!item.buildPipeline()) {
+	// Create static textures
+	for (StaticTextureItem& item : configurable.staticTextures) {
+		item.buildTexture(state.windowRes, state.gpuAllocatorFramebuffer);
+	}
+
+	// Create framebuffers
+	for (FramebufferItem& item : configurable.framebuffers) {
+		if (!item.buildFramebuffer(state.windowRes, state.gpuAllocatorFramebuffer)) {
 			success = false;
 		}
 	}

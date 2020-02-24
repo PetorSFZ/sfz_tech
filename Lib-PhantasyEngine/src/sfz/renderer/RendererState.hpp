@@ -39,45 +39,6 @@ struct SDL_Window;
 
 namespace sfz {
 
-// Framebuffer types
-// ------------------------------------------------------------------------------------------------
-
-struct FramebufferBacked final {
-	zg::Framebuffer framebuffer;
-	uint32_t numRenderTargets = 0;
-	zg::Texture2D renderTargets[ZG_MAX_NUM_RENDER_TARGETS];
-	zg::Texture2D depthBuffer;
-};
-
-struct RenderTargetItem final {
-	ZgTextureFormat format = ZG_TEXTURE_FORMAT_UNDEFINED;
-	float clearValue = 0.0f;
-};
-
-struct FramebufferItem final {
-	
-	// The framebuffer
-	FramebufferBacked framebuffer;
-
-	// Parsed information
-	StringID name;
-	bool resolutionIsFixed = false;
-	float resolutionScale = 1.0f;
-	Setting* resolutionScaleSetting = nullptr;
-	vec2_i32 resolutionFixed = vec2_i32(0);
-	uint32_t numRenderTargets = 0;
-	RenderTargetItem renderTargetItems[ZG_MAX_NUM_RENDER_TARGETS];
-	bool hasDepthBuffer = false;
-	ZgTextureFormat depthBufferFormat = ZG_TEXTURE_FORMAT_R_F32;
-	float depthBufferClearValue = 0.0f;
-
-	// Method for deallocating previous framebuffer
-	void deallocate(DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept;
-
-	// Method for building the framebuffer given the parsed information
-	bool buildFramebuffer(vec2_i32 windowRes, DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept;
-};
-
 // Pipeline types
 // ------------------------------------------------------------------------------------------------
 
@@ -131,6 +92,80 @@ struct PipelineRenderItem final {
 
 	// Method for building pipeline given the parsed information
 	bool buildPipeline() noexcept;
+};
+
+struct PipelineComputeItem final {
+
+	// The pipeline
+	zg::PipelineCompute pipeline;
+
+	// Parsed information
+	StringID name;
+	PipelineSourceType sourceType = PipelineSourceType::SPIRV;
+
+	// Method for building pipeline given the parsed information
+	bool buildPipeline() noexcept;
+};
+
+// Static resources
+// ------------------------------------------------------------------------------------------------
+
+struct StaticTextureItem final {
+	
+	// The texture
+	zg::Texture2D texture;
+
+	// Parsed information
+	StringID name;
+	ZgTextureFormat format = ZG_TEXTURE_FORMAT_UNDEFINED;
+	float clearValue = 0.0f;
+	bool resolutionIsFixed = false;
+	float resolutionScale = 1.0f;
+	Setting* resolutionScaleSetting = nullptr;
+	vec2_i32 resolutionFixed = vec2_i32(0);
+
+	// Allocation and deallocating the static texture using the parsed information
+	void buildTexture(vec2_i32 windowRes, DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept;
+	void deallocate(DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept;
+};
+
+// Framebuffer types
+// ------------------------------------------------------------------------------------------------
+
+struct FramebufferBacked final {
+	zg::Framebuffer framebuffer;
+	uint32_t numRenderTargets = 0;
+	zg::Texture2D renderTargets[ZG_MAX_NUM_RENDER_TARGETS];
+	zg::Texture2D depthBuffer;
+};
+
+struct RenderTargetItem final {
+	ZgTextureFormat format = ZG_TEXTURE_FORMAT_UNDEFINED;
+	float clearValue = 0.0f;
+};
+
+struct FramebufferItem final {
+	
+	// The framebuffer
+	FramebufferBacked framebuffer;
+
+	// Parsed information
+	StringID name;
+	bool resolutionIsFixed = false;
+	float resolutionScale = 1.0f;
+	Setting* resolutionScaleSetting = nullptr;
+	vec2_i32 resolutionFixed = vec2_i32(0);
+	uint32_t numRenderTargets = 0;
+	RenderTargetItem renderTargetItems[ZG_MAX_NUM_RENDER_TARGETS];
+	bool hasDepthBuffer = false;
+	ZgTextureFormat depthBufferFormat = ZG_TEXTURE_FORMAT_R_F32;
+	float depthBufferClearValue = 0.0f;
+
+	// Method for deallocating previous framebuffer
+	void deallocate(DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept;
+
+	// Method for building the framebuffer given the parsed information
+	bool buildFramebuffer(vec2_i32 windowRes, DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept;
 };
 
 // Stage types
@@ -211,11 +246,15 @@ struct RendererConfigurableState final {
 	// Path to current configuration
 	str320 configPath;
 
-	// Framebuffers
-	Array<FramebufferItem> framebuffers;
-
 	// Pipelines
 	Array<PipelineRenderItem> renderPipelines;
+	Array<PipelineComputeItem> computePipelines;
+
+	// Static resources
+	Array<StaticTextureItem> staticTextures;
+
+	// Framebuffers
+	Array<FramebufferItem> framebuffers;
 
 	// Present Queue
 	Array<StageGroup> presentQueue;
