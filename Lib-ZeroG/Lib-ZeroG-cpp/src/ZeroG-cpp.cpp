@@ -605,8 +605,13 @@ Result MemoryHeap::texture2DCreate(
 	Texture2D& textureOut, const ZgTexture2DCreateInfo& createInfo) noexcept
 {
 	textureOut.release();
-	return (Result)zgMemoryHeapTexture2DCreate(
+	Result res = (Result)zgMemoryHeapTexture2DCreate(
 		this->memoryHeap, &textureOut.texture, &createInfo);
+	if (isSuccess(res)) {
+		textureOut.width = createInfo.width;
+		textureOut.height = createInfo.height;
+	}
+	return res;
 }
 
 
@@ -651,12 +656,16 @@ Result Buffer::setDebugName(const char* name) noexcept
 void Texture2D::swap(Texture2D& other) noexcept
 {
 	std::swap(this->texture, other.texture);
+	std::swap(this->width, other.width);
+	std::swap(this->height, other.height);
 }
 
 void Texture2D::release() noexcept
 {
 	if (this->texture != nullptr) zgTexture2DRelease(this->texture);
 	this->texture = nullptr;
+	this->width = 0;
+	this->height = 0;
 }
 
 // Texture2D: Methods
