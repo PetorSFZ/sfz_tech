@@ -85,8 +85,8 @@ struct ImGuiRenderState final {
 // Constants
 // ------------------------------------------------------------------------------------------------
 
-constexpr uint32_t IMGUI_MAX_NUM_VERTICES = 32768;
-constexpr uint32_t IMGUI_MAX_NUM_INDICES = 32768;
+constexpr uint32_t IMGUI_MAX_NUM_VERTICES = 65536;
+constexpr uint32_t IMGUI_MAX_NUM_INDICES = 65536;
 constexpr uint64_t IMGUI_VERTEX_BUFFER_SIZE = IMGUI_MAX_NUM_VERTICES * sizeof(ImGuiVertex);
 constexpr uint64_t IMGUI_INDEX_BUFFER_SIZE = IMGUI_MAX_NUM_INDICES * sizeof(uint32_t);
 
