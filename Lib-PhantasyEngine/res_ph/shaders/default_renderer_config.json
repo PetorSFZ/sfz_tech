@@ -1,68 +1,4 @@
 {
-	"framebuffers": [
-		{
-			"name": "GBuffer",
-			"resolution_scale": 1.0,
-			"resolution_scale_setting": "internalResolutionScale",
-			"render_targets": [
-				{
-					"format": "RGBA_U8_UNORM",
-					"clear_value": 0.0
-				},
-				{
-					"format": "RG_U8_UNORM",
-					"clear_value": 0.0
-				},
-				{
-					"format": "RGBA_U8_UNORM",
-					"clear_value": 0.0
-				},
-				{
-					"format": "RGBA_F16",
-					"clear_value": 0.0
-				}
-			],
-			"depth_buffer": true,
-			"depth_buffer_format": "DEPTH_F32",
-			"depth_buffer_clear_value": 0.0
-		},
-		{
-			"name": "LightAccumulation1",
-			"resolution_scale": 1.0,
-			"resolution_scale_setting": "internalResolutionScale",
-			"render_targets": [
-				{
-					"format": "RGBA_F16",
-					"clear_value": 0.0
-				}
-			],
-			"depth_buffer": false
-		},
-		{
-			"name": "ShadowMapCascaded1",
-			"resolution_fixed_width": 2048,
-			"resolution_fixed_height": 2048,
-			"depth_buffer": true,
-			"depth_buffer_format": "DEPTH_F32",
-			"depth_buffer_clear_value": 0.0
-		},
-		{
-			"name": "ShadowMapCascaded2",
-			"resolution_fixed_width": 2048,
-			"resolution_fixed_height": 2048,
-			"depth_buffer": true,
-			"depth_buffer_format": "DEPTH_F32",
-			"depth_buffer_clear_value": 0.0
-		},
-		{
-			"name": "ShadowMapCascaded3",
-			"resolution_fixed_width": 1024,
-			"resolution_fixed_height": 1024,
-			"depth_buffer": true,
-			"depth_buffer_format": "DEPTH_F32",
-			"depth_buffer_clear_value": 0.0
-		}
-	],
 	"render_pipelines": [
 		{
 			"name": "GBuffer Generation",
@@ -206,7 +142,71 @@
 			]
 		}
 	],
-
+	"static_textures": [
+		{
+			"name": "GBuffer_albedo",
+			"format": "RGBA_U8_UNORM",
+			"clear_value": 0.0,
+			"resolution_scale": 1.0,
+			"resolution_scale_setting": "internalResolutionScale"
+		},
+		{
+			"name": "GBuffer_metallic_roughness",
+			"format": "RGBA_U8_UNORM",
+			"clear_value": 0.0,
+			"resolution_scale": 1.0,
+			"resolution_scale_setting": "internalResolutionScale"
+		},
+		{
+			"name": "GBuffer_emissive",
+			"format": "RGBA_U8_UNORM",
+			"clear_value": 0.0,
+			"resolution_scale": 1.0,
+			"resolution_scale_setting": "internalResolutionScale"
+		},
+		{
+			"name": "GBuffer_normal",
+			"format": "RGBA_F16",
+			"clear_value": 0.0,
+			"resolution_scale": 1.0,
+			"resolution_scale_setting": "internalResolutionScale"
+		},
+		{
+			"name": "GBuffer_depthbuffer",
+			"format": "DEPTH_F32",
+			"clear_value": 0.0,
+			"resolution_scale": 1.0,
+			"resolution_scale_setting": "internalResolutionScale"
+		},
+		{
+			"name": "LightAccumulation1",
+			"format": "RGBA_F16",
+			"clear_value": 0.0,
+			"resolution_scale": 1.0,
+			"resolution_scale_setting": "internalResolutionScale"
+		},
+		{
+			"name": "ShadowMapCascaded1",
+			"format": "DEPTH_F32",
+			"clear_value": 0.0,
+			"resolution_fixed_width": 2048,
+			"resolution_fixed_height": 2048
+		},
+		{
+			"name": "ShadowMapCascaded2",
+			"format": "DEPTH_F32",
+			"clear_value": 0.0,
+			"resolution_fixed_width": 2048,
+			"resolution_fixed_height": 2048
+		},
+		{
+			"name": "ShadowMapCascaded3",
+			"format": "DEPTH_F32",
+			"clear_value": 0.0,
+			"resolution_fixed_width": 1024,
+			"resolution_fixed_height": 1024
+		}
+	],
 	"present_queue": [
 		{
 			"group_name": "GBuffer + Cascaded Shadows",
@@ -215,25 +215,31 @@
 					"stage_name": "GBuffer Pass",
 					"stage_type": "USER_INPUT_RENDERING",
 					"render_pipeline": "GBuffer Generation",
-					"framebuffer": "GBuffer"
+					"render_targets": [
+						"GBuffer_albedo",
+						"GBuffer_metallic_roughness",
+						"GBuffer_emissive",
+						"GBuffer_normal"
+					],
+					"depth_buffer": "GBuffer_depthbuffer"
 				},
 				{
 					"stage_name": "Directional Shadow Map Pass 1",
 					"stage_type": "USER_INPUT_RENDERING",
 					"render_pipeline": "Shadow Map Generation",
-					"framebuffer": "ShadowMapCascaded1"
+					"depth_buffer": "ShadowMapCascaded1"
 				},
 				{
 					"stage_name": "Directional Shadow Map Pass 2",
 					"stage_type": "USER_INPUT_RENDERING",
 					"render_pipeline": "Shadow Map Generation",
-					"framebuffer": "ShadowMapCascaded2"
+					"depth_buffer": "ShadowMapCascaded2"
 				},
 				{
 					"stage_name": "Directional Shadow Map Pass 3",
 					"stage_type": "USER_INPUT_RENDERING",
 					"render_pipeline": "Shadow Map Generation",
-					"framebuffer": "ShadowMapCascaded3"
+					"depth_buffer": "ShadowMapCascaded3"
 				}
 			]
 		},
@@ -244,47 +250,41 @@
 					"stage_name": "Directional Shading Pass",
 					"stage_type": "USER_INPUT_RENDERING",
 					"render_pipeline": "Directional Shading",
-					"framebuffer": "LightAccumulation1",
-					"bound_render_targets": [
+					"render_targets": [
+						"LightAccumulation1"
+					],
+					"bound_textures": [
 						{
 							"register": 0,
-							"framebuffer": "GBuffer",
-							"render_target_index": 0
+							"texture": "GBuffer_albedo"
 						},
 						{
 							"register": 1,
-							"framebuffer": "GBuffer",
-							"render_target_index": 1
+							"texture": "GBuffer_metallic_roughness"
 						},
 						{
 							"register": 2,
-							"framebuffer": "GBuffer",
-							"render_target_index": 2
+							"texture": "GBuffer_emissive"
 						},
 						{
 							"register": 3,
-							"framebuffer": "GBuffer",
-							"render_target_index": 3
+							"texture": "GBuffer_normal"
 						},
 						{
 							"register": 4,
-							"framebuffer": "GBuffer",
-							"depth_buffer": true
+							"texture": "GBuffer_depthbuffer"
 						},
 						{
 							"register": 5,
-							"framebuffer": "ShadowMapCascaded1",
-							"depth_buffer": true
+							"texture": "ShadowMapCascaded1"
 						},
 						{
 							"register": 6,
-							"framebuffer": "ShadowMapCascaded2",
-							"depth_buffer": true
+							"texture": "ShadowMapCascaded2"
 						},
 						{
 							"register": 7,
-							"framebuffer": "ShadowMapCascaded3",
-							"depth_buffer": true
+							"texture": "ShadowMapCascaded3"
 						}
 					]
 				},
@@ -292,27 +292,25 @@
 					"stage_name": "Point Light Shading Pass",
 					"stage_type": "USER_INPUT_RENDERING",
 					"render_pipeline": "Point Light Shading",
-					"framebuffer": "LightAccumulation1",
-					"bound_render_targets": [
+					"render_targets": [
+						"LightAccumulation1"
+					],
+					"bound_textures": [
 						{
 							"register": 0,
-							"framebuffer": "GBuffer",
-							"render_target_index": 0
+							"texture": "GBuffer_albedo"
 						},
 						{
 							"register": 1,
-							"framebuffer": "GBuffer",
-							"render_target_index": 1
+							"texture": "GBuffer_metallic_roughness"
 						},
 						{
 							"register": 2,
-							"framebuffer": "GBuffer",
-							"render_target_index": 3
+							"texture": "GBuffer_normal"
 						},
 						{
 							"register": 3,
-							"framebuffer": "GBuffer",
-							"depth_buffer": true
+							"texture": "GBuffer_depthbuffer"
 						}
 					]
 				}
@@ -325,12 +323,14 @@
 					"stage_name": "Copy Out Pass",
 					"stage_type": "USER_INPUT_RENDERING",
 					"render_pipeline": "Copy Out Shader",
-					"framebuffer": "default",
-					"bound_render_targets": [
+					"render_targets": [
+						"default"
+					],
+					"depth_buffer": "default",
+					"bound_textures": [
 						{
 							"register": 0,
-							"framebuffer": "LightAccumulation1",
-							"render_target_index": 0
+							"texture": "LightAccumulation1"
 						}
 					]
 				}
