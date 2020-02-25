@@ -863,6 +863,20 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 	}
 }
 
+vec3_i32 Renderer::stageGetComputeGroupDims() noexcept
+{
+	sfz_assert(inStageInputMode());
+	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_COMPUTE);
+
+	const ZgPipelineComputeSignature& sign =
+		mState->inputEnabled.pipelineCompute->pipeline.computeSignature;
+	vec3_i32 groupDims;
+	groupDims.x = int32_t(sign.groupDimX);
+	groupDims.y = int32_t(sign.groupDimY);
+	groupDims.z = int32_t(sign.groupDimZ);
+	return groupDims;
+}
+
 void Renderer::stageDispatchCompute(
 	uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) noexcept
 {

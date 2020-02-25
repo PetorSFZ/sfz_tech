@@ -516,9 +516,9 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 
 		// Pipeline info
 		ImGui::Spacing();
-		ImGui::Text("Vertex Shader: \"%s\" -- \"%s\"",
+		ImGui::Text("Vertex shader: \"%s\" -- \"%s\"",
 			pipeline.vertexShaderPath.str(), pipeline.vertexShaderEntry.str());
-		ImGui::Text("Pixel Shader: \"%s\" -- \"%s\"",
+		ImGui::Text("Pixel shader: \"%s\" -- \"%s\"",
 			pipeline.pixelShaderPath.str(), pipeline.pixelShaderEntry.str());
 
 		// Print vertex attributes
@@ -724,8 +724,15 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 
 		// Pipeline info
 		ImGui::Spacing();
-		ImGui::Text("Compute Shader: \"%s\" -- \"%s\"",
+		ImGui::Text("Compute shader: \"%s\" -- \"%s\"",
 			pipeline.computeShaderPath.str(), pipeline.computeShaderEntry.str());
+
+		// Group dimensions
+		ImGui::Spacing();
+		ImGui::Text("Group dims: %u x %u x %u",
+			pipeline.pipeline.computeSignature.groupDimX,
+			pipeline.pipeline.computeSignature.groupDimY,
+			pipeline.pipeline.computeSignature.groupDimZ);
 
 		// Print constant buffers
 		if (bindingsSignature.numConstBuffers > 0) {

@@ -196,6 +196,9 @@ public:
 	// The specified registers will get data if available
 	void stageDrawMesh(StringID meshId, const MeshRegisters& registers) noexcept;
 
+	// Gets the group dimensions of the compute pipeline associated with the currently active stage.
+	vec3_i32 stageGetComputeGroupDims() noexcept;
+
 	// Runs a compute pipeline with the specified number of groups.
 	void stageDispatchCompute(
 		uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) noexcept;
