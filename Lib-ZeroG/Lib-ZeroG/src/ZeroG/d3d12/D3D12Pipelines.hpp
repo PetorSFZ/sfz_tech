@@ -173,6 +173,7 @@ public:
 ZgResult createPipelineComputeFileHLSL(
 	D3D12PipelineCompute** pipelineOut,
 	ZgPipelineBindingsSignature* bindingsSignatureOut,
+	ZgPipelineComputeSignature* computeSignatureOut,
 	const ZgPipelineComputeCreateInfo& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,

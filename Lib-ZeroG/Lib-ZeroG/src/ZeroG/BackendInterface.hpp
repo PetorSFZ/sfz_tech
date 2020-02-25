@@ -55,6 +55,7 @@ struct ZgBackend {
 	virtual ZgResult pipelineComputeCreateFromFileHLSL(
 		ZgPipelineCompute** pipelineOut,
 		ZgPipelineBindingsSignature* bindingsSignatureOut,
+		ZgPipelineComputeSignature* computeSignatureOut,
 		const ZgPipelineComputeCreateInfo& createInfo,
 		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept = 0;
 

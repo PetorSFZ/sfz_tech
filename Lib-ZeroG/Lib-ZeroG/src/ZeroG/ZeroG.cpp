@@ -216,16 +216,18 @@ ZG_API ZgResult zgContextGetStats(ZgStats* statsOut)
 ZG_API ZgResult zgPipelineComputeCreateFromFileHLSL(
 	ZgPipelineCompute** pipelineOut,
 	ZgPipelineBindingsSignature* bindingsSignatureOut,
+	ZgPipelineComputeSignature* computeSignatureOut,
 	const ZgPipelineComputeCreateInfo* createInfo,
 	const ZgPipelineCompileSettingsHLSL* compileSettings)
 {
 	ZG_ARG_CHECK(pipelineOut == nullptr, "");
 	ZG_ARG_CHECK(bindingsSignatureOut == nullptr, "");
+	ZG_ARG_CHECK(computeSignatureOut == nullptr, "");
 	ZG_ARG_CHECK(createInfo == nullptr, "");
 	ZG_ARG_CHECK(compileSettings == nullptr, "");
 	
 	return zg::getBackend()->pipelineComputeCreateFromFileHLSL(
-		pipelineOut, bindingsSignatureOut, *createInfo, *compileSettings);
+		pipelineOut, bindingsSignatureOut, computeSignatureOut, *createInfo, *compileSettings);
 }
 
 ZG_API ZgResult zgPipelineComputeRelease(

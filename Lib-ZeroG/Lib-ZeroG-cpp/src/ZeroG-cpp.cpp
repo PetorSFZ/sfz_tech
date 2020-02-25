@@ -268,6 +268,7 @@ void PipelineCompute::swap(PipelineCompute& other) noexcept
 {
 	std::swap(this->pipeline, other.pipeline);
 	std::swap(this->bindingsSignature, other.bindingsSignature);
+	std::swap(this->computeSignature, other.computeSignature);
 }
 
 Result PipelineCompute::createFromFileHLSL(
@@ -276,7 +277,7 @@ Result PipelineCompute::createFromFileHLSL(
 {
 	this->release();
 	return (Result)zgPipelineComputeCreateFromFileHLSL(
-		&this->pipeline, &this->bindingsSignature, &createInfo, &compileSettings);
+		&this->pipeline, &this->bindingsSignature, &this->computeSignature, &createInfo, &compileSettings);
 }
 
 void PipelineCompute::release() noexcept
@@ -284,6 +285,7 @@ void PipelineCompute::release() noexcept
 	if (this->pipeline != nullptr) zgPipelineComputeRelease(this->pipeline);
 	this->pipeline = nullptr;
 	this->bindingsSignature = {};
+	this->computeSignature = {};
 }
 
 

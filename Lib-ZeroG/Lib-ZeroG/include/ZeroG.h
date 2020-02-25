@@ -126,7 +126,7 @@ ZG_STRUCT(ZgFramebufferRect) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 18;
+static const uint32_t ZG_COMPILED_API_VERSION = 19;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -612,9 +612,19 @@ ZG_STRUCT(ZgPipelineComputeCreateInfo) {
 	ZgSampler samplers[ZG_MAX_NUM_SAMPLERS];
 };
 
+// A struct representing the compute signature of a compute pipeline.
+ZG_STRUCT(ZgPipelineComputeSignature) {
+
+	// The dimensions of the thread group launched by this compute pipeline.
+	uint32_t groupDimX;
+	uint32_t groupDimY;
+	uint32_t groupDimZ;
+};
+
 ZG_API ZgResult zgPipelineComputeCreateFromFileHLSL(
 	ZgPipelineCompute** pipelineOut,
 	ZgPipelineBindingsSignature* bindingsSignatureOut,
+	ZgPipelineComputeSignature* computeSignatureOut,
 	const ZgPipelineComputeCreateInfo* createInfo,
 	const ZgPipelineCompileSettingsHLSL* compileSettings);
 

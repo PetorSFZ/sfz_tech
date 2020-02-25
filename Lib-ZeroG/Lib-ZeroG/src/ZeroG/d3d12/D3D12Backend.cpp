@@ -599,6 +599,7 @@ public:
 	ZgResult pipelineComputeCreateFromFileHLSL(
 		ZgPipelineCompute** pipelineOut,
 		ZgPipelineBindingsSignature* bindingsSignatureOut,
+		ZgPipelineComputeSignature* computeSignatureOut,
 		const ZgPipelineComputeCreateInfo& createInfo,
 		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept override final
 	{
@@ -613,6 +614,7 @@ public:
 		ZgResult res = createPipelineComputeFileHLSL(
 			&d3d12pipeline,
 			bindingsSignatureOut,
+			computeSignatureOut,
 			createInfo,
 			compileSettings,
 			*mState->dxcLibrary.Get(),

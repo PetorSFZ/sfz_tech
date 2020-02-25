@@ -293,11 +293,13 @@ public:
 	ZgResult pipelineComputeCreateFromFileHLSL(
 		ZgPipelineCompute** pipelineOut,
 		ZgPipelineBindingsSignature* bindingsSignatureOut,
+		ZgPipelineComputeSignature* computeSignatureOut,
 		const ZgPipelineComputeCreateInfo& createInfo,
 		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept override final
 	{
 		(void)pipelineOut;
 		(void)bindingsSignatureOut;
+		(void)computeSignatureOut;
 		(void)createInfo;
 		(void)compileSettings;
 		return ZG_WARNING_UNIMPLEMENTED;

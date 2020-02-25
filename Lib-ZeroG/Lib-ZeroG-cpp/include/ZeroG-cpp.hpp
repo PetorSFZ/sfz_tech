@@ -238,6 +238,7 @@ public:
 
 	ZgPipelineCompute* pipeline = nullptr;
 	ZgPipelineBindingsSignature bindingsSignature = {};
+	ZgPipelineComputeSignature computeSignature = {};
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------

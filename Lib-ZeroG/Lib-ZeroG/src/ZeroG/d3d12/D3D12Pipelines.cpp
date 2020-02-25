@@ -569,6 +569,7 @@ static void logPipelineComputeInfo(
 	const ZgPipelineComputeCreateInfo& createInfo,
 	const char* computeShaderName,
 	const ZgPipelineBindingsSignature& bindingsSignature,
+	const ZgPipelineComputeSignature& computeSignature,
 	float compileTimeMs) noexcept
 {
 	sfz::str4096 tmpStr;
@@ -580,6 +581,10 @@ static void logPipelineComputeInfo(
 
 	// Print compile time
 	tmpStr.appendf("Compile time: %.2fms\n", compileTimeMs);
+
+	// Print group dim
+	tmpStr.appendf("\nGroup dimensions: %u x %u x %u\n",
+		computeSignature.groupDimX, computeSignature.groupDimY, computeSignature.groupDimZ);
 
 	// Print constant buffers
 	if (bindingsSignature.numConstBuffers > 0) {
@@ -1065,6 +1070,7 @@ const D3D12UnorderedTextureMapping* D3D12RootSignature::getUnorderedTextureMappi
 static ZgResult createPipelineComputeInternal(
 	D3D12PipelineCompute** pipelineOut,
 	ZgPipelineBindingsSignature* bindingsSignatureOut,
+	ZgPipelineComputeSignature* computeSignatureOut,
 	const ZgPipelineComputeCreateInfo& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	time_point compileStartTime,
@@ -1141,12 +1147,23 @@ static ZgResult createPipelineComputeInternal(
 		}
 	}
 
+	// Get thread group dimensions of the compute pipeline
+	computeSignatureOut->groupDimX = 0;
+	computeSignatureOut->groupDimY = 0;
+	computeSignatureOut->groupDimZ = 0;
+	computeReflection->GetThreadGroupSize(
+		&computeSignatureOut->groupDimX, &computeSignatureOut->groupDimY, &computeSignatureOut->groupDimZ);
+	sfz_assert(computeSignatureOut->groupDimX != 0);
+	sfz_assert(computeSignatureOut->groupDimY != 0);
+	sfz_assert(computeSignatureOut->groupDimZ != 0);
+
 	// Log information about the pipeline
 	float compileTimeMs = calculateDeltaMillis(compileStartTime);
 	logPipelineComputeInfo(
 		createInfo,
 		computeShaderName,
 		bindings.toZgSignature(),
+		*computeSignatureOut,
 		compileTimeMs);
 
 	// Allocate pipeline
@@ -1167,6 +1184,7 @@ static ZgResult createPipelineComputeInternal(
 ZgResult createPipelineComputeFileHLSL(
 	D3D12PipelineCompute** pipelineOut,
 	ZgPipelineBindingsSignature* bindingsSignatureOut,
+	ZgPipelineComputeSignature* computeSignatureOut,
 	const ZgPipelineComputeCreateInfo& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,
@@ -1187,6 +1205,7 @@ ZgResult createPipelineComputeFileHLSL(
 	return createPipelineComputeInternal(
 		pipelineOut,
 		bindingsSignatureOut,
+		computeSignatureOut,
 		createInfo,
 		compileSettings,
 		compileStartTime,
