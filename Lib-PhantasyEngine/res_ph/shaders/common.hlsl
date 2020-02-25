@@ -135,7 +135,7 @@ float sampleShadowMapPCF(
 			float xCoord = centerCoord.x + float(x) * texelSize.x;
 
 			// Sample shadow map
-			float depthSample = shadowMap.Sample(samplerState, float2(xCoord, yCoord)).r;
+			float depthSample = shadowMap.SampleLevel(samplerState, float2(xCoord, yCoord), 0).r;
 			float shadowSample = posDepth >= depthSample ? 1.0 : 0.0;
 			if (y == 0 && x == 0) {
 				totalShadow += shadowSample * midSampleWeight; // Give mid sample extra weight

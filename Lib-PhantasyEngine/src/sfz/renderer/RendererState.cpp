@@ -94,21 +94,18 @@ bool PipelineRenderItem::buildPipeline() noexcept
 	}
 
 	// Set push constants
-	sfz_assert(numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
-	for (uint32_t i = 0; i < numPushConstants; i++) {
-		pipelineBuilder.addPushConstant(pushConstantRegisters[i]);
+	for (uint32_t i = 0; i < pushConstRegisters.size(); i++) {
+		pipelineBuilder.addPushConstant(pushConstRegisters[i]);
 	}
 
 	// Samplers
-	sfz_assert(numSamplers < ZG_MAX_NUM_SAMPLERS);
-	for (uint32_t i = 0; i < numSamplers; i++) {
+	for (uint32_t i = 0; i < samplers.size(); i++) {
 		SamplerItem& sampler = samplers[i];
 		pipelineBuilder.addSampler(sampler.samplerRegister, sampler.sampler);
 	}
 
 	// Render targets
-	sfz_assert(numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
-	for (uint32_t i = 0; i < numRenderTargets; i++) {
+	for (uint32_t i = 0; i < renderTargets.size(); i++) {
 		pipelineBuilder.addRenderTarget(renderTargets[i]);
 	}
 
@@ -173,7 +170,37 @@ bool PipelineRenderItem::buildPipeline() noexcept
 
 bool PipelineComputeItem::buildPipeline() noexcept
 {
-	return false;
+	// Create pipeline builder
+	zg::PipelineComputeBuilder pipelineBuilder;
+	pipelineBuilder
+		.addComputeShaderPath(computeShaderEntry, computeShaderPath);
+	
+	// Set push constants
+	for (uint32_t i = 0; i < pushConstRegisters.size(); i++) {
+		pipelineBuilder.addPushConstant(pushConstRegisters[i]);
+	}
+
+	// Samplers
+	for (uint32_t i = 0; i < samplers.size(); i++) {
+		SamplerItem& sampler = samplers[i];
+		pipelineBuilder.addSampler(sampler.samplerRegister, sampler.sampler);
+	}
+
+	// Build pipeline
+	bool buildSuccess = false;
+	zg::PipelineCompute tmpPipeline;
+	if (sourceType == PipelineSourceType::SPIRV) {
+		sfz_assert_hard(false);
+		//buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileSPIRV(tmpPipeline);
+	}
+	else {
+		buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileHLSL(tmpPipeline, ZG_SHADER_MODEL_6_1);
+	}
+
+	if (buildSuccess) {
+		this->pipeline = std::move(tmpPipeline);
+	}
+	return buildSuccess;
 }
 
 // Stage: Helper methods

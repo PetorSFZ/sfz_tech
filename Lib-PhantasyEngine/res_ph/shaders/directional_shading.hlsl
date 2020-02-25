@@ -141,3 +141,104 @@ float4 PSMain(PSInput input) : SV_TARGET
 	float4 forceUsage = float4(0.0, 0.0, 0.0, 0.0);
 	return float4(totalOutput, 1.0) + forceUsage;
 }
+
+// Compute shader
+// ------------------------------------------------------------------------------------------------
+
+RWTexture2D<float4> outputTex : register(u0);
+
+[numthreads(32, 16, 1)]
+void CSMain(
+	uint3 groupIdx : SV_GroupID, // Index of group
+	uint groupFlatIdx : SV_GroupIndex, // Flattened version of group index
+	uint3 groupThreadIdx : SV_GroupThreadID, // Index of thread within group
+	uint3 dispatchThreadIdx : SV_DispatchThreadID) // Global index of thread
+{
+	// Get output texture dimensions
+	uint outputTexWidth = 0;
+	uint outputTexHeight = 0;
+	outputTex.GetDimensions(outputTexWidth, outputTexHeight);
+
+	// Get thread index and exit if out of range
+	uint2 idx = dispatchThreadIdx.xy;
+	if (idx.x >= outputTexWidth || idx.y >= outputTexHeight) return;
+
+	// Calculate a texcoord
+	float2 texcoord = float2(idx) / float2(outputTexWidth, outputTexHeight);
+
+	// Read values from GBuffer
+	float3 albedo = albedoTex.SampleLevel(linearSampler, texcoord, 0).rgb; // Gamma space
+	float2 metallicRoughness = metallicRoughnessTex.SampleLevel(linearSampler, texcoord, 0).rg;
+	float metallic = metallicRoughness.r; // Linear space
+	float roughness = metallicRoughness.g; // Linear space
+	float3 emissive = emissiveTex.SampleLevel(linearSampler, texcoord, 0).rgb; // Linear space
+	float3 normal = normalTex.SampleLevel(linearSampler, texcoord, 0).rgb;
+	float depth = depthTex.SampleLevel(nearestSampler, texcoord, 0).r;
+	float3 pos = depthToViewSpacePos(depth, texcoord, invProjMatrix);
+
+	// Convert gamma space to linear
+	albedo = linearize(albedo);
+
+	// Pixel's position and normal
+	float3 p = pos;
+	float3 n = normalize(normal);
+
+	float3 v = normalize(-p); // to view
+	float nDotV = dot(n, v);
+
+	// Interpolation of normals sometimes makes them face away from the camera. Clamp
+	// these to almost zero, to not break shading calculations.
+	nDotV = max(0.001, nDotV);
+
+	// Div by 0 in ggx() if roughness = 0
+	roughness = max(roughness, 0.001);
+
+	// Sample shadow map
+	float shadow = 1.0;
+	float absDepth = abs(p.z);
+	if (absDepth < levelDist1) {
+		shadow = sampleShadowMapPCF(shadowMap1, nearestSampler, lightMatrix1, p, 3, 4.0);
+	}
+	else if (absDepth < levelDist2) {
+		shadow = sampleShadowMapPCF(shadowMap2, nearestSampler, lightMatrix2, p, 2, 2.0);
+	}
+	else if (absDepth < levelDist3) {
+		shadow = sampleShadowMapPCF(shadowMap3, nearestSampler, lightMatrix3, p, 1);
+	}
+
+	float3 totalOutput = emissive;
+
+	totalOutput += shadeDirectional(
+		dirLight,
+		shadow,
+		p,
+		n,
+		v,
+		nDotV,
+		albedo,
+		roughness,
+		metallic);
+
+	// TODO: Configurable ambient light hack
+	totalOutput += 0.05 * albedo;
+
+	// No negative output
+	totalOutput = max(totalOutput, float3(0.0, 0.0, 0.0));
+
+	/*if (absDepth < levelDist1) {
+		totalOutput.r += 0.1;
+	}
+	else if (absDepth < levelDist2) {
+		totalOutput.g += 0.1;
+	}
+	else if (absDepth < levelDist3) {
+		totalOutput.b += 0.1;
+	}*/
+
+	//float4 forceUsage = 0.00001 *
+	//	mul(invProjMatrix, shadow * float4((albedo * metallic * roughness + emissive * depth + normal), 1.0));
+	float4 forceUsage = float4(0.0, 0.0, 0.0, 0.0);
+	
+	// Write value
+	outputTex[idx] = float4(totalOutput, 1.0) + forceUsage;
+}

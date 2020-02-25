@@ -518,11 +518,11 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 	// In debug mode, validate that the pipeline's render targets matches the framebuffer
 #ifndef NDEBUG
 	if (stage.defaultFramebuffer) {
-		sfz_assert(pipelineItem.numRenderTargets == 1);
+		sfz_assert(pipelineItem.renderTargets.size() == 1);
 		sfz_assert(pipelineItem.renderTargets[0] == ZG_TEXTURE_FORMAT_RGBA_U8_UNORM);
 	}
 	else {
-		sfz_assert(pipelineItem.numRenderTargets == stage.renderTargetNames.size());
+		sfz_assert(pipelineItem.renderTargets.size() == stage.renderTargetNames.size());
 		/*for (uint32_t i = 0; i < stage.renderTargetNames.size(); i++) {
 			sfz_assert(pipelineItem.renderTargets[i] == fbItem->renderTargetItems[i].format);
 		}*/

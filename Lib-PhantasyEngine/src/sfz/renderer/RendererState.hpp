@@ -71,14 +71,10 @@ struct PipelineRenderItem final {
 	str128 vertexShaderEntry;
 	str128 pixelShaderEntry;
 	bool standardVertexAttributes = false;
-	uint32_t numPushConstants = 0;
-	uint32_t pushConstantRegisters[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
-	uint32_t numNonUserSettableConstantBuffers = 0;
-	uint32_t nonUserSettableConstantBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS] = {};
-	uint32_t numSamplers = 0;
-	SamplerItem samplers[ZG_MAX_NUM_SAMPLERS];
-	uint32_t numRenderTargets = 0;
-	ZgTextureFormat renderTargets[ZG_MAX_NUM_RENDER_TARGETS] = {};
+	ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstRegisters;
+	ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS> nonUserSettableConstBuffers;
+	ArrayLocal<SamplerItem, ZG_MAX_NUM_SAMPLERS> samplers;
+	ArrayLocal<ZgTextureFormat, ZG_MAX_NUM_RENDER_TARGETS> renderTargets;
 	bool depthTest = false;
 	ZgDepthFunc depthFunc = ZG_DEPTH_FUNC_LESS;
 	bool cullingEnabled = false;
@@ -102,6 +98,11 @@ struct PipelineComputeItem final {
 	// Parsed information
 	StringID name;
 	PipelineSourceType sourceType = PipelineSourceType::SPIRV;
+	str256 computeShaderPath;
+	str128 computeShaderEntry;
+	ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstRegisters;
+	ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS> nonUserSettableConstBuffers;
+	ArrayLocal<SamplerItem, ZG_MAX_NUM_SAMPLERS> samplers;
 
 	// Method for building pipeline given the parsed information
 	bool buildPipeline() noexcept;

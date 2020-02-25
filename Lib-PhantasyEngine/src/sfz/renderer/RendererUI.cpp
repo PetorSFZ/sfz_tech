@@ -526,6 +526,18 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 			ImGui::Unindent(20.0f);
 		}
 
+		// Print unordered buffers
+		if (bindingsSignature.numUnorderedBuffers > 0) {
+			ImGui::Spacing();
+			ImGui::Text("Unordered buffers (%u):", bindingsSignature.numUnorderedBuffers);
+			ImGui::Indent(20.0f);
+			for (uint32_t j = 0; j < bindingsSignature.numUnorderedBuffers; j++) {
+				const ZgUnorderedBufferBindingDesc& buffer = bindingsSignature.unorderedBuffers[j];
+				ImGui::Text("- Register: %u", buffer.unorderedRegister);
+			}
+			ImGui::Unindent(20.0f);
+		}
+
 		// Print textures
 		if (bindingsSignature.numTextures > 0) {
 			ImGui::Spacing();
@@ -538,12 +550,24 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 			ImGui::Unindent(20.0f);
 		}
 
-		// Print samplers
-		if (pipeline.numSamplers > 0) {
+		// Print unordered textures
+		if (bindingsSignature.numUnorderedTextures > 0) {
 			ImGui::Spacing();
-			ImGui::Text("Samplers (%u):", pipeline.numSamplers);
+			ImGui::Text("Unordered textures (%u):", bindingsSignature.numUnorderedTextures);
 			ImGui::Indent(20.0f);
-			for (uint32_t j = 0; j < pipeline.numSamplers; j++) {
+			for (uint32_t j = 0; j < bindingsSignature.numUnorderedTextures; j++) {
+				const ZgUnorderedTextureBindingDesc& texture = bindingsSignature.unorderedTextures[j];
+				ImGui::Text("- Register: %u", texture.unorderedRegister);
+			}
+			ImGui::Unindent(20.0f);
+		}
+
+		// Print samplers
+		if (pipeline.samplers.size() > 0) {
+			ImGui::Spacing();
+			ImGui::Text("Samplers (%u):", pipeline.samplers.size());
+			ImGui::Indent(20.0f);
+			for (uint32_t j = 0; j < pipeline.samplers.size(); j++) {
 				const SamplerItem& item = pipeline.samplers[j];
 				ImGui::Text("- Register: %u -- Sampling: %s -- Wrapping: %s",
 					item.samplerRegister,
@@ -556,9 +580,9 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 
 		// Print render targets
 		ImGui::Spacing();
-		ImGui::Text("Render Targets (%u):", pipeline.numRenderTargets);
+		ImGui::Text("Render Targets (%u):", pipeline.renderTargets.size());
 		ImGui::Indent(20.0f);
-		for (uint32_t j = 0; j < pipeline.numRenderTargets; j++) {
+		for (uint32_t j = 0; j < pipeline.renderTargets.size(); j++) {
 			ImGui::Text("- Render Target: %u -- %s",
 				j, textureFormatToString(pipeline.renderTargets[j]));
 		}
@@ -644,13 +668,13 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 	}
 
 	ImGui::Spacing();
-	for (uint32_t i = 0; i < configurable.computePipelines.size(); i++) {
-		PipelineComputeItem& pipeline = configurable.computePipelines[i];
+	for (uint32_t pipelineIdx = 0; pipelineIdx < configurable.computePipelines.size(); pipelineIdx++) {
+		PipelineComputeItem& pipeline = configurable.computePipelines[pipelineIdx];
 		const ZgPipelineBindingsSignature& bindingsSignature = pipeline.pipeline.bindingsSignature;
 		const char* name = resStrings.getString(pipeline.name);
 
 		// Reload button
-		if (ImGui::Button(str64("Reload##__compute_%u", i), vec2(80.0f, 0.0f))) {
+		if (ImGui::Button(str64("Reload##__compute_%u", pipelineIdx), vec2(80.0f, 0.0f))) {
 
 			// Flush ZeroG queues
 			CHECK_ZG state.presentQueue.flush();
@@ -666,7 +690,7 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 
 		// Collapsing header with name
 		bool collapsingHeaderOpen =
-			ImGui::CollapsingHeader(str256("Pipeline %u - \"%s\"", i, name));
+			ImGui::CollapsingHeader(str256("Pipeline %u - \"%s\"", pipelineIdx, name));
 		if (!collapsingHeaderOpen) continue;
 		ImGui::Indent(20.0f);
 
@@ -678,22 +702,9 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 		}
 
 		// Pipeline info
-		/*ImGui::Spacing();
-		ImGui::Text("Vertex Shader: \"%s\" -- \"%s\"",
-			pipeline.vertexShaderPath.str(), pipeline.vertexShaderEntry.str());
-		ImGui::Text("Pixel Shader: \"%s\" -- \"%s\"",
-			pipeline.pixelShaderPath.str(), pipeline.pixelShaderEntry.str());
-
-		// Print vertex attributes
 		ImGui::Spacing();
-		ImGui::Text("Vertex attributes (%u):", renderSignature.numVertexAttributes);
-		ImGui::Indent(20.0f);
-		for (uint32_t j = 0; j < renderSignature.numVertexAttributes; j++) {
-			const ZgVertexAttribute& attrib = renderSignature.vertexAttributes[j];
-			ImGui::Text("- Location: %u -- Type: %s",
-				attrib.location, vertexAttributeTypeToString(attrib.type));
-		}
-		ImGui::Unindent(20.0f);
+		ImGui::Text("Compute Shader: \"%s\" -- \"%s\"",
+			pipeline.computeShaderPath.str(), pipeline.computeShaderEntry.str());
 
 		// Print constant buffers
 		if (bindingsSignature.numConstBuffers > 0) {
@@ -710,6 +721,18 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 			ImGui::Unindent(20.0f);
 		}
 
+		// Print unordered buffers
+		if (bindingsSignature.numUnorderedBuffers > 0) {
+			ImGui::Spacing();
+			ImGui::Text("Unordered buffers (%u):", bindingsSignature.numUnorderedBuffers);
+			ImGui::Indent(20.0f);
+			for (uint32_t j = 0; j < bindingsSignature.numUnorderedBuffers; j++) {
+				const ZgUnorderedBufferBindingDesc& buffer = bindingsSignature.unorderedBuffers[j];
+				ImGui::Text("- Register: %u", buffer.unorderedRegister);
+			}
+			ImGui::Unindent(20.0f);
+		}
+
 		// Print textures
 		if (bindingsSignature.numTextures > 0) {
 			ImGui::Spacing();
@@ -722,12 +745,24 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 			ImGui::Unindent(20.0f);
 		}
 
-		// Print samplers
-		if (pipeline.numSamplers > 0) {
+		// Print unordered textures
+		if (bindingsSignature.numUnorderedTextures > 0) {
 			ImGui::Spacing();
-			ImGui::Text("Samplers (%u):", pipeline.numSamplers);
+			ImGui::Text("Unordered textures (%u):", bindingsSignature.numUnorderedTextures);
 			ImGui::Indent(20.0f);
-			for (uint32_t j = 0; j < pipeline.numSamplers; j++) {
+			for (uint32_t j = 0; j < bindingsSignature.numUnorderedTextures; j++) {
+				const ZgUnorderedTextureBindingDesc& texture = bindingsSignature.unorderedTextures[j];
+				ImGui::Text("- Register: %u", texture.unorderedRegister);
+			}
+			ImGui::Unindent(20.0f);
+		}
+
+		// Print samplers
+		if (pipeline.samplers.size() > 0) {
+			ImGui::Spacing();
+			ImGui::Text("Samplers (%u):", pipeline.samplers.size());
+			ImGui::Indent(20.0f);
+			for (uint32_t j = 0; j < pipeline.samplers.size(); j++) {
 				const SamplerItem& item = pipeline.samplers[j];
 				ImGui::Text("- Register: %u -- Sampling: %s -- Wrapping: %s",
 					item.samplerRegister,
@@ -737,63 +772,6 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 			}
 			ImGui::Unindent(20.0f);
 		}
-
-		// Print render targets
-		ImGui::Spacing();
-		ImGui::Text("Render Targets (%u):", pipeline.numRenderTargets);
-		ImGui::Indent(20.0f);
-		for (uint32_t j = 0; j < pipeline.numRenderTargets; j++) {
-			ImGui::Text("- Render Target: %u -- %s",
-				j, textureFormatToString(pipeline.renderTargets[j]));
-		}
-		ImGui::Unindent(20.0f);
-
-		// Print depth test
-		ImGui::Spacing();
-		ImGui::Text("Depth Test: %s", pipeline.depthTest ? "ENABLED" : "DISABLED");
-		if (pipeline.depthTest) {
-			ImGui::Indent(20.0f);
-			ImGui::Text("Depth function: %s", depthFuncToString(pipeline.depthFunc));
-			ImGui::Unindent(20.0f);
-		}
-
-		// Print culling info
-		ImGui::Spacing();
-		ImGui::Text("Culling: %s", pipeline.cullingEnabled ? "ENABLED" : "DISABLED");
-		if (pipeline.cullingEnabled) {
-			ImGui::Indent(20.0f);
-			ImGui::Text("Cull Front Face: %s", pipeline.cullFrontFacing ? "YES" : "NO");
-			ImGui::Text("Front Facing Is Counter Clockwise: %s", pipeline.frontFacingIsCounterClockwise ? "YES" : "NO");
-			ImGui::Unindent(20.0f);
-		}
-
-		// Print depth bias info
-		ImGui::Spacing();
-		ImGui::Text("Depth Bias");
-		ImGui::Indent(20.0f);
-		constexpr float xOffset = 300.0f;
-		alignedEdit("Bias", xOffset, [&](const char* name) {
-			ImGui::SetNextItemWidth(165.0f);
-			ImGui::InputInt(str128("%s##render_%u", name, i), &pipeline.depthBias);
-		});
-		alignedEdit("Bias Slope Scaled", xOffset, [&](const char* name) {
-			ImGui::SetNextItemWidth(100.0f);
-			ImGui::InputFloat(str128("%s##render_%u", name, i), &pipeline.depthBiasSlopeScaled, 0.0f, 0.0f, "%.4f");
-		});
-		alignedEdit("Bias Clamp", xOffset, [&](const char* name) {
-			ImGui::SetNextItemWidth(100.0f);
-			ImGui::InputFloat(str128("%s##render_%u", name, i), &pipeline.depthBiasClamp, 0.0f, 0.0f, "%.4f");
-		});
-		ImGui::Unindent(20.0f);
-
-		// Print wireframe rendering mode
-		ImGui::Spacing();
-		ImGui::Text("Wireframe Rendering: %s",
-			pipeline.wireframeRenderingEnabled ? "ENABLED" : "DISABLED");
-
-		// Print blend mode
-		ImGui::Spacing();
-		ImGui::Text("Blend Mode: %s", blendModeToString(pipeline.blendMode));*/
 
 		ImGui::Unindent(20.0f);
 		ImGui::Unindent(20.0f);

@@ -175,35 +175,34 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			CHECK_JSON pipelineNode.accessMap("standard_vertex_attributes").valueBool();
 
 		// Push constants registers if specified
-		item.numPushConstants = 0;
 		ParsedJsonNode pushConstantsNode = pipelineNode.accessMap("push_constant_registers");
 		if (pushConstantsNode.isValid()) {
-			item.numPushConstants = pushConstantsNode.arrayLength();
-			for (uint32_t j = 0; j < item.numPushConstants; j++) {
-				item.pushConstantRegisters[j] =
-					(uint32_t)(CHECK_JSON pushConstantsNode.accessArray(j).valueInt());
+			uint32_t numPushConstants = pushConstantsNode.arrayLength();
+			for (uint32_t j = 0; j < numPushConstants; j++) {
+				item.pushConstRegisters.add(
+					(uint32_t)(CHECK_JSON pushConstantsNode.accessArray(j).valueInt()));
 			}
 		}
 		
 		// Constant buffers which are not user settable
 		// I.e., constant buffers which should not have memory allocated for them
-		item.numNonUserSettableConstantBuffers = 0;
 		ParsedJsonNode nonUserSettableCBsNode =
 			pipelineNode.accessMap("non_user_settable_constant_buffers");
 		if (nonUserSettableCBsNode.isValid()) {
-			item.numNonUserSettableConstantBuffers = nonUserSettableCBsNode.arrayLength();
-			for (uint32_t j = 0; j < item.numNonUserSettableConstantBuffers; j++) {
-				item.nonUserSettableConstantBuffers[j] =
-					(uint32_t)(CHECK_JSON nonUserSettableCBsNode.accessArray(j).valueInt());
+			uint32_t numNonUserSettableConstantBuffers = nonUserSettableCBsNode.arrayLength();
+			for (uint32_t j = 0; j < numNonUserSettableConstantBuffers; j++) {
+				item.nonUserSettableConstBuffers.add(
+					(uint32_t)(CHECK_JSON nonUserSettableCBsNode.accessArray(j).valueInt()));
 			}
 		}
 
 		// Samplers
 		ParsedJsonNode samplersNode = pipelineNode.accessMap("samplers");
 		if (samplersNode.isValid()) {
-			item.numSamplers = samplersNode.arrayLength();
-			for (uint32_t j = 0; j < item.numSamplers; j++) {
+			uint32_t numSamplers = samplersNode.arrayLength();
+			for (uint32_t j = 0; j < numSamplers; j++) {
 				ParsedJsonNode node = samplersNode.accessArray(j);
+				item.samplers.add({});
 				SamplerItem& sampler = item.samplers[j];
 				sampler.samplerRegister = CHECK_JSON node.accessMap("register").valueInt();
 				sampler.sampler.samplingMode = samplingModeFromString(
@@ -218,10 +217,10 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		// Render targets
 		ParsedJsonNode renderTargetsNode = pipelineNode.accessMap("render_targets");
 		sfz_assert(renderTargetsNode.isValid());
-		item.numRenderTargets = renderTargetsNode.arrayLength();
-		for (uint32_t j = 0; j < item.numRenderTargets; j++) {
-			item.renderTargets[j] =
-				textureFormatFromString(CHECK_JSON renderTargetsNode.accessArray(j).valueStr256());
+		uint32_t numRenderTargets = renderTargetsNode.arrayLength();
+		for (uint32_t j = 0; j < numRenderTargets; j++) {
+			item.renderTargets.add(
+				textureFormatFromString(CHECK_JSON renderTargetsNode.accessArray(j).valueStr256()));
 		}
 
 		// Depth test and function if specified
@@ -262,6 +261,79 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		item.blendMode = PipelineBlendMode::NO_BLENDING;
 		if (blendModeNode.isValid()) {
 			item.blendMode = blendModeFromString(CHECK_JSON blendModeNode.valueStr256());
+		}
+	}
+
+
+	// Compute pipelines
+
+	// Get number of compute pipelines to load and allocate memory for them
+	ParsedJsonNode computePipelinesNode = root.accessMap("compute_pipelines");
+	uint32_t numComputePipelines = computePipelinesNode.arrayLength();
+	configurable.computePipelines.init(numComputePipelines, state.allocator, sfz_dbg(""));
+
+	// Parse information about each compute pipeline
+	for (uint32_t i = 0; i < numComputePipelines; i++) {
+		
+	
+		ParsedJsonNode pipelineNode = computePipelinesNode.accessArray(i);
+		configurable.computePipelines.add(PipelineComputeItem());
+		PipelineComputeItem& item = configurable.computePipelines.last();
+
+		str256 name = CHECK_JSON pipelineNode.accessMap("name").valueStr256();
+		item.name = resStrings.getStringID(name);
+
+		str256 sourceTypeStr = CHECK_JSON pipelineNode.accessMap("source_type").valueStr256();
+		item.sourceType = [&]() {
+			if (sourceTypeStr == "spirv") return PipelineSourceType::SPIRV;
+			if (sourceTypeStr == "hlsl") return PipelineSourceType::HLSL;
+			sfz_assert_hard(false);
+			return PipelineSourceType::SPIRV;
+		}();
+
+		item.computeShaderPath = CHECK_JSON pipelineNode.accessMap("compute_shader_path").valueStr256();
+		item.computeShaderEntry.clear();
+		item.computeShaderEntry.appendf("%s",
+			(CHECK_JSON pipelineNode.accessMap("compute_shader_entry").valueStr256()).str());
+
+		// Push constants registers if specified
+		ParsedJsonNode pushConstantsNode = pipelineNode.accessMap("push_constant_registers");
+		if (pushConstantsNode.isValid()) {
+			uint32_t numPushConstants = pushConstantsNode.arrayLength();
+			for (uint32_t j = 0; j < numPushConstants; j++) {
+				item.pushConstRegisters.add(
+					(uint32_t)(CHECK_JSON pushConstantsNode.accessArray(j).valueInt()));
+			}
+		}
+		
+		// Constant buffers which are not user settable
+		// I.e., constant buffers which should not have memory allocated for them
+		ParsedJsonNode nonUserSettableCBsNode =
+			pipelineNode.accessMap("non_user_settable_constant_buffers");
+		if (nonUserSettableCBsNode.isValid()) {
+			uint32_t numNonUserSettableConstantBuffers = nonUserSettableCBsNode.arrayLength();
+			for (uint32_t j = 0; j < numNonUserSettableConstantBuffers; j++) {
+				item.nonUserSettableConstBuffers.add(
+					(uint32_t)(CHECK_JSON nonUserSettableCBsNode.accessArray(j).valueInt()));
+			}
+		}
+
+		// Samplers
+		ParsedJsonNode samplersNode = pipelineNode.accessMap("samplers");
+		if (samplersNode.isValid()) {
+			uint32_t numSamplers = samplersNode.arrayLength();
+			for (uint32_t j = 0; j < numSamplers; j++) {
+				ParsedJsonNode node = samplersNode.accessArray(j);
+				item.samplers.add({});
+				SamplerItem& sampler = item.samplers[j];
+				sampler.samplerRegister = CHECK_JSON node.accessMap("register").valueInt();
+				sampler.sampler.samplingMode = samplingModeFromString(
+					CHECK_JSON node.accessMap("sampling_mode").valueStr256());
+				sampler.sampler.wrappingModeU = wrappingModeFromString(
+					CHECK_JSON node.accessMap("wrapping_mode").valueStr256());
+				sampler.sampler.wrappingModeV = sampler.sampler.wrappingModeU;
+				sampler.sampler.mipLodBias = 0.0f;
+			}
 		}
 	}
 
@@ -416,6 +488,11 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			success = false;
 		}
 	}
+	for (PipelineComputeItem& item : configurable.computePipelines) {
+		if (!item.buildPipeline()) {
+			success = false;
+		}
+	}
 
 	// Create static textures
 	for (StaticTextureItem& item : configurable.staticTextures) {
@@ -461,13 +538,8 @@ bool allocateStageMemory(RendererState& state) noexcept
 				if (desc.pushConstant == ZG_TRUE) continue;
 
 				// Check if constant buffer is marked as non-user-settable, in that case skip it
-				bool nonUserSettable = false;
-				for (uint32_t k = 0; k < pipelineItem->numNonUserSettableConstantBuffers; k++) {
-					if (pipelineItem->nonUserSettableConstantBuffers[k] == desc.bufferRegister) {
-						nonUserSettable = true;
-						break;
-					}
-				}
+				bool nonUserSettable = pipelineItem->nonUserSettableConstBuffers
+					.findElement(desc.bufferRegister) != nullptr;
 				if (nonUserSettable) continue;
 
 				// Allocate container
