@@ -469,9 +469,9 @@ void Renderer::frameBegin() noexcept
 	// TODO: This is clearly ridiculusly unoptimal, do it some smarter way
 	for (StageGroup& group : mState->configurable.presentQueue) {
 		for (Stage& stage : group.stages) {
-			if (stage.framebuffer.valid()) {
+			if (stage.render.framebuffer.valid()) {
 				CHECK_ZG mState->presentQueue.beginCommandListRecording(commandList);
-				CHECK_ZG commandList.setFramebuffer(stage.framebuffer);
+				CHECK_ZG commandList.setFramebuffer(stage.render.framebuffer);
 				CHECK_ZG commandList.clearFramebufferOptimal();
 				CHECK_ZG mState->presentQueue.executeCommandList(commandList);
 			}
@@ -497,37 +497,59 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 	uint32_t stageIdx = mState->findActiveStageIdx(stageName);
 	sfz_assert(stageIdx != ~0u);
 	if (stageIdx == ~0u) return;
-	Stage& stage = mState->configurable.presentQueue[mState->currentStageGroupIdx].stages[stageIdx];
-	sfz_assert(stage.type == StageType::USER_INPUT_RENDERING);
 
-	// Find render pipeline
-	uint32_t pipelineIdx = mState->findPipelineRenderIdx(stage.renderPipelineName);
-	sfz_assert(pipelineIdx != ~0u);
-	if (pipelineIdx == ~0u) return;
-	sfz_assert(pipelineIdx < mState->configurable.renderPipelines.size());
-	PipelineRenderItem& pipelineItem = mState->configurable.renderPipelines[pipelineIdx];
-	sfz_assert(pipelineItem.pipeline.valid());
-	if (!pipelineItem.pipeline.valid()) return;
+	Stage& stage = mState->configurable.presentQueue[mState->currentStageGroupIdx].stages[stageIdx];
+
+	if (stage.type == StageType::USER_INPUT_RENDERING) {
+	
+		// Find render pipeline
+		uint32_t pipelineIdx = mState->findPipelineRenderIdx(stage.render.pipelineName);
+		sfz_assert(pipelineIdx != ~0u);
+		if (pipelineIdx == ~0u) return;
+		sfz_assert(pipelineIdx < mState->configurable.renderPipelines.size());
+		PipelineRenderItem& pipelineItem = mState->configurable.renderPipelines[pipelineIdx];
+		sfz_assert(pipelineItem.pipeline.valid());
+		if (!pipelineItem.pipeline.valid()) return;
+
+		// Store pipeline in input enabled
+		mState->inputEnabled.pipelineRender = &pipelineItem;
+
+		// In debug mode, validate that the pipeline's render targets matches the framebuffer
+#ifndef NDEBUG
+		if (stage.render.defaultFramebuffer) {
+			sfz_assert(pipelineItem.renderTargets.size() == 1);
+			sfz_assert(pipelineItem.renderTargets[0] == ZG_TEXTURE_FORMAT_RGBA_U8_UNORM);
+		}
+		else {
+			sfz_assert(pipelineItem.renderTargets.size() == stage.render.renderTargetNames.size());
+			/*for (uint32_t i = 0; i < stage.renderTargetNames.size(); i++) {
+				sfz_assert(pipelineItem.renderTargets[i] == fbItem->renderTargetItems[i].format);
+			}*/
+		}
+#endif
+	}
+	else if (stage.type == StageType::USER_INPUT_COMPUTE) {
+
+		// Find compute pipeline
+		uint32_t pipelineIdx = mState->findPipelineComputeIdx(stage.compute.pipelineName);
+		sfz_assert(pipelineIdx != ~0u);
+		if (pipelineIdx == ~0u) return;
+		sfz_assert(pipelineIdx < mState->configurable.computePipelines.size());
+		PipelineComputeItem& pipelineItem = mState->configurable.computePipelines[pipelineIdx];
+		sfz_assert(pipelineItem.pipeline.valid());
+		if (!pipelineItem.pipeline.valid()) return;
+
+		// Store pipeline in input enabled
+		mState->inputEnabled.pipelineCompute = &pipelineItem;
+	}
+	else {
+		sfz_assert(false);
+	}
 
 	// Set currently active stage
 	mState->inputEnabled.inInputMode = true;
 	mState->inputEnabled.stageIdx = stageIdx;
 	mState->inputEnabled.stage = &stage;
-	mState->inputEnabled.pipelineRender = &pipelineItem;
-
-	// In debug mode, validate that the pipeline's render targets matches the framebuffer
-#ifndef NDEBUG
-	if (stage.defaultFramebuffer) {
-		sfz_assert(pipelineItem.renderTargets.size() == 1);
-		sfz_assert(pipelineItem.renderTargets[0] == ZG_TEXTURE_FORMAT_RGBA_U8_UNORM);
-	}
-	else {
-		sfz_assert(pipelineItem.renderTargets.size() == stage.renderTargetNames.size());
-		/*for (uint32_t i = 0; i < stage.renderTargetNames.size(); i++) {
-			sfz_assert(pipelineItem.renderTargets[i] == fbItem->renderTargetItems[i].format);
-		}*/
-	}
-#endif
 
 	// Get command list for this stage, if it has not yet been created, create it.
 	StageCommandList* commandList = mState->getStageCommandList(stageName);
@@ -537,15 +559,25 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 		StageCommandList& list = mState->groupCommandLists.last();
 		list.stageName = stageName;
 
-		// Begin recording command list and set pipeline and framebuffer
+		// Begin recording command list
 		CHECK_ZG mState->presentQueue.beginCommandListRecording(list.commandList);
-		if (stage.defaultFramebuffer) {
-			CHECK_ZG list.commandList.setFramebuffer(mState->windowFramebuffer);
+
+		// Set pipeline and framebuffer (if rendering)
+		if (stage.type == StageType::USER_INPUT_RENDERING) {
+			CHECK_ZG list.commandList.setPipeline(mState->inputEnabled.pipelineRender->pipeline);
+			if (stage.render.defaultFramebuffer) {
+				CHECK_ZG list.commandList.setFramebuffer(mState->windowFramebuffer);
+			}
+			else {
+				CHECK_ZG list.commandList.setFramebuffer(stage.render.framebuffer);
+			}
+		}
+		else if (stage.type == StageType::USER_INPUT_COMPUTE) {
+			CHECK_ZG list.commandList.setPipeline(mState->inputEnabled.pipelineCompute->pipeline);
 		}
 		else {
-			CHECK_ZG list.commandList.setFramebuffer(stage.framebuffer);
+			sfz_assert(false);
 		}
-		CHECK_ZG list.commandList.setPipeline(pipelineItem.pipeline);
 
 		// If first command list created, insert call to profile begin
 		if (mState->groupCommandLists.size() == 1) {
@@ -574,20 +606,28 @@ void Renderer::stageSetPushConstantUntyped(
 	// In debug mode, validate that the specified shader registers corresponds to a a suitable
 	// push constant in the pipeline
 #ifndef NDEBUG
-	const ZgPipelineBindingsSignature& signature =
-		mState->inputEnabled.pipelineRender->pipeline.bindingsSignature;
+	const ZgPipelineBindingsSignature* signature = nullptr;
+	if (mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING) {
+		signature = &mState->inputEnabled.pipelineRender->pipeline.bindingsSignature;
+	}
+	else if (mState->inputEnabled.stage->type == StageType::USER_INPUT_COMPUTE) {
+		signature = &mState->inputEnabled.pipelineCompute->pipeline.bindingsSignature;
+	}
+	else {
+		sfz_assert(false);
+	}
 	
 	uint32_t bufferIdx = ~0u;
-	for (uint32_t i = 0; i < signature.numConstBuffers; i++) {
-		if (shaderRegister == signature.constBuffers[i].bufferRegister) {
+	for (uint32_t i = 0; i < signature->numConstBuffers; i++) {
+		if (shaderRegister == signature->constBuffers[i].bufferRegister) {
 			bufferIdx = i;
 			break;
 		}
 	}
 	
 	sfz_assert(bufferIdx != ~0u);
-	sfz_assert(signature.constBuffers[bufferIdx].pushConstant == ZG_TRUE);
-	sfz_assert(signature.constBuffers[bufferIdx].sizeInBytes >= numBytes);
+	sfz_assert(signature->constBuffers[bufferIdx].pushConstant == ZG_TRUE);
+	sfz_assert(signature->constBuffers[bufferIdx].sizeInBytes >= numBytes);
 #endif
 
 	CHECK_ZG mState->inputEnabledCommandList().setPushConstant(shaderRegister, data, numBytes);
@@ -603,20 +643,28 @@ void Renderer::stageSetConstantBufferUntyped(
 	// In debug mode, validate that the specified shader registers corresponds to a a suitable
 	// constant buffer in the pipeline
 #ifndef NDEBUG
-	const ZgPipelineBindingsSignature& signature =
-		mState->inputEnabled.pipelineRender->pipeline.bindingsSignature;
+	const ZgPipelineBindingsSignature* signature = nullptr;
+	if (mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING) {
+		signature = &mState->inputEnabled.pipelineRender->pipeline.bindingsSignature;
+	}
+	else if (mState->inputEnabled.stage->type == StageType::USER_INPUT_COMPUTE) {
+		signature = &mState->inputEnabled.pipelineCompute->pipeline.bindingsSignature;
+	}
+	else {
+		sfz_assert(false);
+	}
 
 	uint32_t bufferIdx = ~0u;
-	for (uint32_t i = 0; i < signature.numConstBuffers; i++) {
-		if (shaderRegister == signature.constBuffers[i].bufferRegister) {
+	for (uint32_t i = 0; i < signature->numConstBuffers; i++) {
+		if (shaderRegister == signature->constBuffers[i].bufferRegister) {
 			bufferIdx = i;
 			break;
 		}
 	}
 
 	sfz_assert(bufferIdx != ~0u);
-	sfz_assert(signature.constBuffers[bufferIdx].pushConstant == ZG_FALSE);
-	sfz_assert(signature.constBuffers[bufferIdx].sizeInBytes >= numBytes);
+	sfz_assert(signature->constBuffers[bufferIdx].pushConstant == ZG_FALSE);
+	sfz_assert(signature->constBuffers[bufferIdx].sizeInBytes >= numBytes);
 #endif
 
 	// Find constant buffer
@@ -640,6 +688,7 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 {
 	sfz_assert(meshId != StringID::invalid());
 	sfz_assert(inStageInputMode());
+	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
 
 	// Find mesh
 	GpuMesh* meshPtr = mState->meshes.get(meshId);
@@ -760,6 +809,16 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 		commonBindings.addTexture(boundTex.textureRegister, texItem->texture);
 	}
 
+	// Bound unordered textures
+	for (const BoundTexture& boundTex : mState->inputEnabled.stage->boundUnorderedTextures) {
+		StaticTextureItem* texItem =
+			mState->configurable.staticTextures.find([&](const StaticTextureItem& e) {
+				return e.name == boundTex.textureName;
+			});
+		sfz_assert(texItem != nullptr);
+		commonBindings.addUnorderedTexture(boundTex.textureRegister, 0, texItem->texture);
+	}
+
 	// Draw all mesh components
 	for (MeshComponent& comp : meshPtr->components) {
 
@@ -802,6 +861,52 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 		CHECK_ZG mState->inputEnabledCommandList().drawTrianglesIndexed(
 			comp.firstIndex, comp.numIndices / 3);
 	}
+}
+
+void Renderer::stageDispatchCompute(
+	uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) noexcept
+{
+	sfz_assert(inStageInputMode());
+	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_COMPUTE);
+	sfz_assert(groupCountX > 0);
+	sfz_assert(groupCountY > 0);
+	sfz_assert(groupCountZ > 0);
+
+	// Set common pipeline bindings that are same for all components
+	zg::PipelineBindings commonBindings;
+
+	// User-specified constant buffers
+	for (PerFrameData<ConstantBufferMemory>& framed : mState->inputEnabled.stage->constantBuffers) {
+		ConstantBufferMemory& frame = framed.data(mState->currentFrameIdx);
+		sfz_assert(frame.lastFrameIdxTouched == mState->currentFrameIdx);
+		commonBindings.addConstantBuffer(frame.shaderRegister, frame.deviceBuffer);
+	}
+
+	// Bound textures
+	for (const BoundTexture& boundTex : mState->inputEnabled.stage->boundTextures) {
+		StaticTextureItem* texItem =
+			mState->configurable.staticTextures.find([&](const StaticTextureItem& e) {
+				return e.name == boundTex.textureName;
+			});
+		sfz_assert(texItem != nullptr);
+		commonBindings.addTexture(boundTex.textureRegister, texItem->texture);
+	}
+
+	// Bound unordered textures
+	for (const BoundTexture& boundTex : mState->inputEnabled.stage->boundUnorderedTextures) {
+		StaticTextureItem* texItem =
+			mState->configurable.staticTextures.find([&](const StaticTextureItem& e) {
+				return e.name == boundTex.textureName;
+			});
+		sfz_assert(texItem != nullptr);
+		commonBindings.addUnorderedTexture(boundTex.textureRegister, 0, texItem->texture);
+	}
+
+	// Set pipeline bindings
+	CHECK_ZG mState->inputEnabledCommandList().setPipelineBindings(commonBindings);
+
+	// Issue dispatch
+	CHECK_ZG mState->inputEnabledCommandList().dispatchCompute(groupCountX, groupCountY, groupCountZ);
 }
 
 void Renderer::stageEndInput() noexcept

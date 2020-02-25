@@ -196,6 +196,10 @@ public:
 	// The specified registers will get data if available
 	void stageDrawMesh(StringID meshId, const MeshRegisters& registers) noexcept;
 
+	// Runs a compute pipeline with the specified number of groups.
+	void stageDispatchCompute(
+		uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) noexcept;
+
 	// Ends user-input for the specified stage.
 	void stageEndInput() noexcept;
 

@@ -57,6 +57,7 @@ static const char* toString(StageType type) noexcept
 {
 	switch (type) {
 	case StageType::USER_INPUT_RENDERING: return "USER_INPUT_RENDERING";
+	case StageType::USER_INPUT_COMPUTE: return "USER_INPUT_COMPUTE";
 	}
 	sfz_assert(false);
 	return "<ERROR>";
@@ -383,18 +384,18 @@ void RendererUI::renderPresentQueueTab(RendererConfigurableState& state) noexcep
 			if (stage.type == StageType::USER_INPUT_RENDERING) {
 
 				// Pipeline name
-				ImGui::Text("Render Pipeline: \"%s\"", resStrings.getString(stage.renderPipelineName));
+				ImGui::Text("Render Pipeline: \"%s\"", resStrings.getString(stage.render.pipelineName));
 
-				if (stage.defaultFramebuffer) {
+				if (stage.render.defaultFramebuffer) {
 					ImGui::Text("Framebuffer: \"default\"");
 				}
 				else {
 					// Render targets
-					if (!stage.renderTargetNames.isEmpty()) {
+					if (!stage.render.renderTargetNames.isEmpty()) {
 						ImGui::Text("Render targets:");
 						ImGui::Indent(20.0f);
-						for (uint32_t i = 0; i < stage.renderTargetNames.size(); i++) {
-							StringID renderTarget = stage.renderTargetNames[i];
+						for (uint32_t i = 0; i < stage.render.renderTargetNames.size(); i++) {
+							StringID renderTarget = stage.render.renderTargetNames[i];
 							ImGui::Text("- Render target %u: \"%s\"",
 								i, resStrings.getString(renderTarget));
 						}
@@ -402,23 +403,43 @@ void RendererUI::renderPresentQueueTab(RendererConfigurableState& state) noexcep
 					}
 
 					// Depth buffer
-					if (stage.depthBufferName != StringID::invalid()) {
+					if (stage.render.depthBufferName != StringID::invalid()) {
 						ImGui::Text("Depth buffer: \"%s\"",
-							resStrings.getString(stage.depthBufferName));
+							resStrings.getString(stage.render.depthBufferName));
 					}
 				}
+			}
+			else if (stage.type == StageType::USER_INPUT_COMPUTE) {
+				
+				// Pipeline name
+				ImGui::Text("Compute Pipeline: \"%s\"", resStrings.getString(stage.compute.pipelineName));
+			}
+			else {
+				sfz_assert(false);
+			}
 
-				// Bound textures
-				if (!stage.boundTextures.isEmpty()) {
-					ImGui::Text("Bound textures:");
-					ImGui::Indent(20.0f);
-					for (const BoundTexture& boundTex : stage.boundTextures) {
-						ImGui::Text("- Register: %u  --  Texture: \"%s\"",
-							boundTex.textureRegister,
-							resStrings.getString(boundTex.textureName));
-					}
-					ImGui::Unindent(20.0f);
+			// Bound textures
+			if (!stage.boundTextures.isEmpty()) {
+				ImGui::Text("Bound textures:");
+				ImGui::Indent(20.0f);
+				for (const BoundTexture& boundTex : stage.boundTextures) {
+					ImGui::Text("- Register: %u  --  Texture: \"%s\"",
+						boundTex.textureRegister,
+						resStrings.getString(boundTex.textureName));
 				}
+				ImGui::Unindent(20.0f);
+			}
+
+			// Bound unordered textures
+			if (!stage.boundUnorderedTextures.isEmpty()) {
+				ImGui::Text("Bound unordered textures:");
+				ImGui::Indent(20.0f);
+				for (const BoundTexture& boundTex : stage.boundUnorderedTextures) {
+					ImGui::Text("- Register: %u  --  Texture: \"%s\"",
+						boundTex.textureRegister,
+						resStrings.getString(boundTex.textureName));
+				}
+				ImGui::Unindent(20.0f);
 			}
 
 			ImGui::Unindent(20.0f);

@@ -208,16 +208,18 @@ bool PipelineComputeItem::buildPipeline() noexcept
 
 void Stage::rebuildFramebuffer(Array<StaticTextureItem>& staticTextures) noexcept
 {
+	if (type != StageType::USER_INPUT_RENDERING) return;
+
 	StringCollection& resStrings = getResourceStrings();
 	StringID defaultId = resStrings.getStringID("default");
 
 	// Create framebuffer
-	if (!defaultFramebuffer) {
+	if (!render.defaultFramebuffer) {
 
-		if (!renderTargetNames.isEmpty() || depthBufferName != StringID::invalid()) {
+		if (!render.renderTargetNames.isEmpty() || render.depthBufferName != StringID::invalid()) {
 			zg::FramebufferBuilder fbBuilder;
 
-			for (StringID renderTargetName : renderTargetNames) {
+			for (StringID renderTargetName : render.renderTargetNames) {
 				sfz_assert(renderTargetName != defaultId);
 				StaticTextureItem* renderTarget =
 					staticTextures.find([&](const StaticTextureItem& e) {
@@ -227,17 +229,17 @@ void Stage::rebuildFramebuffer(Array<StaticTextureItem>& staticTextures) noexcep
 				fbBuilder.addRenderTarget(renderTarget->texture);
 			}
 
-			if (depthBufferName != StringID::invalid()) {
-				sfz_assert(depthBufferName != defaultId);
+			if (render.depthBufferName != StringID::invalid()) {
+				sfz_assert(render.depthBufferName != defaultId);
 				StaticTextureItem* depthBuffer =
 					staticTextures.find([&](const StaticTextureItem& e) {
-						return e.name == depthBufferName;
+						return e.name == render.depthBufferName;
 					});
 				sfz_assert(depthBuffer != nullptr);
 				fbBuilder.setDepthBuffer(depthBuffer->texture);
 			}
 
-			bool fbSuccess = CHECK_ZG fbBuilder.build(framebuffer);
+			bool fbSuccess = CHECK_ZG fbBuilder.build(render.framebuffer);
 			sfz_assert(fbSuccess);
 		}
 	}
@@ -277,6 +279,17 @@ uint32_t RendererState::findPipelineRenderIdx(StringID pipelineName) const noexc
 	uint32_t numPipelines = this->configurable.renderPipelines.size();
 	for (uint32_t i = 0; i < numPipelines; i++) {
 		const PipelineRenderItem& item = this->configurable.renderPipelines[i];
+		if (item.name == pipelineName) return i;
+	}
+	return ~0u;
+}
+
+uint32_t RendererState::findPipelineComputeIdx(StringID pipelineName) const noexcept
+{
+	sfz_assert(pipelineName != StringID::invalid());
+	uint32_t numPipelines = this->configurable.computePipelines.size();
+	for (uint32_t i = 0; i < numPipelines; i++) {
+		const PipelineComputeItem& item = this->configurable.computePipelines[i];
 		if (item.name == pipelineName) return i;
 	}
 	return ~0u;

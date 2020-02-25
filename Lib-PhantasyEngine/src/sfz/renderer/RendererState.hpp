@@ -139,6 +139,10 @@ enum class StageType {
 	// A rendering pass (i.e. rendering pipeline) where all the draw calls are provided by the user
 	// through code.
 	USER_INPUT_RENDERING,
+
+	// A compute pass (i.e. compute pipeline) where all the dispatches are provided by the user
+	// through code
+	USER_INPUT_COMPUTE
 };
 
 struct ConstantBufferMemory final {
@@ -155,17 +159,23 @@ struct BoundTexture final {
 
 struct Stage final {
 
-	zg::Framebuffer framebuffer;
 	Array<PerFrameData<ConstantBufferMemory>> constantBuffers;
 
 	// Parsed information
 	StringID name;
 	StageType type;
-	StringID renderPipelineName;
-	ArrayLocal<StringID, ZG_MAX_NUM_RENDER_TARGETS> renderTargetNames;
-	StringID depthBufferName;
-	bool defaultFramebuffer = false;
+	struct {
+		zg::Framebuffer framebuffer;
+		StringID pipelineName;
+		ArrayLocal<StringID, ZG_MAX_NUM_RENDER_TARGETS> renderTargetNames;
+		StringID depthBufferName;
+		bool defaultFramebuffer = false;
+	} render;
+	struct {
+		StringID pipelineName;
+	} compute;
 	ArrayLocal<BoundTexture, ZG_MAX_NUM_TEXTURES> boundTextures;
+	ArrayLocal<BoundTexture, ZG_MAX_NUM_UNORDERED_TEXTURES> boundUnorderedTextures;
 
 	void rebuildFramebuffer(Array<StaticTextureItem>& staticTextures) noexcept;
 };
@@ -283,6 +293,7 @@ struct RendererState final {
 		uint32_t stageIdx = ~0u;
 		Stage* stage = nullptr;
 		PipelineRenderItem* pipelineRender = nullptr;
+		PipelineComputeItem* pipelineCompute = nullptr;
 		StageCommandList* commandList = nullptr;
 	} inputEnabled;
 
@@ -298,8 +309,9 @@ struct RendererState final {
 	
 	zg::CommandList& inputEnabledCommandList() noexcept;
 
-	// Finds the index of the specified render pipeline. Returns ~0u if it does not exist.
+	// Finds the index of the specified pipeline. Returns ~0u if it does not exist.
 	uint32_t findPipelineRenderIdx(StringID pipelineName) const noexcept;
+	uint32_t findPipelineComputeIdx(StringID pipelineName) const noexcept;
 
 	// Finds the current constant buffer's memory for the current input stage given its shader
 	// register.

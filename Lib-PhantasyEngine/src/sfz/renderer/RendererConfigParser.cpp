@@ -275,7 +275,6 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	// Parse information about each compute pipeline
 	for (uint32_t i = 0; i < numComputePipelines; i++) {
 		
-	
 		ParsedJsonNode pipelineNode = computePipelinesNode.accessArray(i);
 		configurable.computePipelines.add(PipelineComputeItem());
 		PipelineComputeItem& item = configurable.computePipelines.last();
@@ -434,12 +433,13 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 
 				str256 stageType = CHECK_JSON stageNode.accessMap("stage_type").valueStr256();
 				if (stageType == "USER_INPUT_RENDERING") stage.type = StageType::USER_INPUT_RENDERING;
+				else if (stageType == "USER_INPUT_COMPUTE") stage.type = StageType::USER_INPUT_COMPUTE;
 				else return false;
 
 				if (stage.type == StageType::USER_INPUT_RENDERING) {
 					str256 renderPipelineName =
 						CHECK_JSON stageNode.accessMap("render_pipeline").valueStr256();
-					stage.renderPipelineName = resStrings.getStringID(renderPipelineName);
+					stage.render.pipelineName = resStrings.getStringID(renderPipelineName);
 
 					if (stageNode.accessMap("render_targets").isValid()) {
 						ParsedJsonNode renderTargetsNode = stageNode.accessMap("render_targets");
@@ -447,20 +447,28 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 						for (uint32_t i = 0; i < numRenderTargets; i++) {
 							str256 renderTargetName =
 								CHECK_JSON renderTargetsNode.accessArray(i).valueStr256();
-							stage.renderTargetNames.add(resStrings.getStringID(renderTargetName));
+							stage.render.renderTargetNames.add(resStrings.getStringID(renderTargetName));
 						}
 					}
 
 					if (stageNode.accessMap("depth_buffer").isValid()) {
 						str256 depthBufferName =
 							CHECK_JSON stageNode.accessMap("depth_buffer").valueStr256();
-						stage.depthBufferName = resStrings.getStringID(depthBufferName);
+						stage.render.depthBufferName = resStrings.getStringID(depthBufferName);
 					}
 
-					stage.defaultFramebuffer =
-						stage.renderTargetNames.size() == 1 &&
-						stage.renderTargetNames[0] == defaultId &&
-						stage.depthBufferName == defaultId;
+					stage.render.defaultFramebuffer =
+						stage.render.renderTargetNames.size() == 1 &&
+						stage.render.renderTargetNames[0] == defaultId &&
+						stage.render.depthBufferName == defaultId;
+				}
+				else if (stage.type == StageType::USER_INPUT_COMPUTE) {
+					str256 computePipelineName =
+						CHECK_JSON stageNode.accessMap("compute_pipeline").valueStr256();
+					stage.compute.pipelineName = resStrings.getStringID(computePipelineName);
+				}
+				else {
+					sfz_assert(false);
 				}
 
 				// Bound textures
@@ -475,6 +483,21 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 						str256 texName = CHECK_JSON texNode.accessMap("texture").valueStr256();
 						boundTex.textureName = resStrings.getStringID(texName);
 						stage.boundTextures.add(boundTex);
+					}
+				}
+
+				// Bound unordered textures
+				if (stageNode.accessMap("bound_unordered_textures").isValid()) {
+					ParsedJsonNode boundTexsNode = stageNode.accessMap("bound_unordered_textures");
+					uint32_t numBoundTextures = boundTexsNode.arrayLength();
+
+					for (uint32_t i = 0; i < numBoundTextures; i++) {
+						ParsedJsonNode texNode = boundTexsNode.accessArray(i);
+						BoundTexture boundTex;
+						boundTex.textureRegister = CHECK_JSON texNode.accessMap("register").valueInt();
+						str256 texName = CHECK_JSON texNode.accessMap("texture").valueStr256();
+						boundTex.textureName = resStrings.getStringID(texName);
+						stage.boundUnorderedTextures.add(boundTex);
 					}
 				}
 			}
@@ -514,32 +537,59 @@ bool allocateStageMemory(RendererState& state) noexcept
 
 		for (uint32_t stageIdx = 0; stageIdx < group.stages.size(); stageIdx++) {
 			Stage& stage = group.stages[stageIdx];
-			if (stage.type != StageType::USER_INPUT_RENDERING) continue;
 
-			// Create framebuffer
-			stage.rebuildFramebuffer(state.configurable.staticTextures);
+			// Grab bindings and nonUserSettableConstBuffers from pipeline
+			ZgPipelineBindingsSignature* bindings = nullptr;
+			ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS>* nonUserSettableConstBuffers = nullptr;
+			if (stage.type == StageType::USER_INPUT_RENDERING) {
 
-			// Find pipeline
-			PipelineRenderItem* pipelineItem =
-				state.configurable.renderPipelines.find([&](const PipelineRenderItem& item) {
-					return item.name == stage.renderPipelineName;
-				});
-			sfz_assert(pipelineItem != nullptr);
+				// Create framebuffer
+				stage.rebuildFramebuffer(state.configurable.staticTextures);
+
+				// Find pipeline
+				PipelineRenderItem* pipelineItem =
+					state.configurable.renderPipelines.find([&](const PipelineRenderItem& item) {
+						return item.name == stage.render.pipelineName;
+					});
+				sfz_assert(pipelineItem != nullptr);
+
+				// Grab stuff from pipeline item
+				bindings = &pipelineItem->pipeline.bindingsSignature;
+				nonUserSettableConstBuffers = &pipelineItem->nonUserSettableConstBuffers;
+			}
+			else if (stage.type == StageType::USER_INPUT_COMPUTE) {
+
+				// Find pipeline
+				PipelineComputeItem* pipelineItem =
+					state.configurable.computePipelines.find([&](const PipelineComputeItem& item) {
+						return item.name == stage.compute.pipelineName;
+					});
+				sfz_assert(pipelineItem != nullptr);
+
+				// Grab stuff from pipeline item
+				bindings = &pipelineItem->pipeline.bindingsSignature;
+				nonUserSettableConstBuffers = &pipelineItem->nonUserSettableConstBuffers;
+			}
+			else {
+				sfz_assert(false);
+			}
+			sfz_assert(bindings != nullptr);
+			sfz_assert(nonUserSettableConstBuffers != nullptr);
 
 			// Allocate CPU memory for constant buffer data
-			uint32_t numConstantBuffers = pipelineItem->pipeline.bindingsSignature.numConstBuffers;
+			uint32_t numConstantBuffers = bindings->numConstBuffers;
 			stage.constantBuffers.init(numConstantBuffers, state.allocator, sfz_dbg(""));
 
 			// Allocate GPU memory for all constant buffers
 			for (uint32_t j = 0; j < numConstantBuffers; j++) {
 
 				// Get constant buffer description, skip if push constant
-				const ZgConstantBufferBindingDesc& desc = pipelineItem->pipeline.bindingsSignature.constBuffers[j];
+				const ZgConstantBufferBindingDesc& desc = bindings->constBuffers[j];
 				if (desc.pushConstant == ZG_TRUE) continue;
 
 				// Check if constant buffer is marked as non-user-settable, in that case skip it
-				bool nonUserSettable = pipelineItem->nonUserSettableConstBuffers
-					.findElement(desc.bufferRegister) != nullptr;
+				bool nonUserSettable =
+					nonUserSettableConstBuffers->findElement(desc.bufferRegister) != nullptr;
 				if (nonUserSettable) continue;
 
 				// Allocate container
