@@ -38,6 +38,7 @@ set(SRC_FILES
 	${INCLUDE_DIR}/soloud_noise.h
 	${INCLUDE_DIR}/soloud_queue.h
 	${INCLUDE_DIR}/soloud_robotizefilter.h
+	${INCLUDE_DIR}/soloud_speech.h
 	${INCLUDE_DIR}/soloud_thread.h
 	${INCLUDE_DIR}/soloud_vizsn.h
 	${INCLUDE_DIR}/soloud_wav.h
@@ -45,6 +46,15 @@ set(SRC_FILES
 	${INCLUDE_DIR}/soloud_wavstream.h
 
 	${SRC_DIR}/audiosource/noise/soloud_noise.cpp
+	${SRC_DIR}/audiosource/speech/darray.cpp
+	${SRC_DIR}/audiosource/speech/darray.h
+	${SRC_DIR}/audiosource/speech/klatt.cpp
+	${SRC_DIR}/audiosource/speech/klatt.h
+	${SRC_DIR}/audiosource/speech/resonator.cpp
+	${SRC_DIR}/audiosource/speech/resonator.h
+	${SRC_DIR}/audiosource/speech/soloud_speech.cpp
+	${SRC_DIR}/audiosource/speech/tts.cpp
+	${SRC_DIR}/audiosource/speech/tts.h
 	${SRC_DIR}/audiosource/vizsn/soloud_vizsn.cpp
 	${SRC_DIR}/audiosource/wav/dr_flac.h
 	${SRC_DIR}/audiosource/wav/dr_impl.cpp
