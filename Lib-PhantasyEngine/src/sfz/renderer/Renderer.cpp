@@ -280,7 +280,7 @@ bool Renderer::uploadTextureBlocking(
 	item.width = image.width;
 	item.height = image.height;
 	item.numMipmaps = numMipmaps;
-	mState->textures[id] = std::move(item);
+	mState->textures.put(id, std::move(item));
 
 	return true;
 }
@@ -354,7 +354,7 @@ bool Renderer::uploadMeshBlocking(StringID id, const Mesh& mesh) noexcept
 	}
 
 	// Store mesh
-	mState->meshes[id] = std::move(gpuMesh);
+	mState->meshes.put(id, std::move(gpuMesh));
 
 	return true;
 }

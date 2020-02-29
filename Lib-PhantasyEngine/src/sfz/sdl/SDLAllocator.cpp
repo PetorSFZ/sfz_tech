@@ -54,7 +54,7 @@ static void* SDLCALL mallocBridge(size_t size)
 {
 	void* ptr = bridgeState->allocator->allocate(sfz_dbg("SDL"), size, 32);
 	if (ptr != nullptr) {
-		bridgeState->allocatedSizes[ptr] = size;
+		bridgeState->allocatedSizes.put(ptr, size);
 	}
 	else {
 		SFZ_ERROR("SDL", "mallocBridge() failed");
@@ -64,15 +64,15 @@ static void* SDLCALL mallocBridge(size_t size)
 
 static void* SDLCALL callocBridge(size_t nmemb, size_t size)
 {
-	size_t num_bytes = nmemb * size;
-	void* ptr = bridgeState->allocator->allocate(sfz_dbg("SDL"), num_bytes, 32);
+	size_t numBytes = nmemb * size;
+	void* ptr = bridgeState->allocator->allocate(sfz_dbg("SDL"), numBytes, 32);
 	if (ptr != nullptr) {
-		bridgeState->allocatedSizes[ptr] = num_bytes;
+		bridgeState->allocatedSizes.put(ptr, numBytes);
 	}
 	else {
 		SFZ_ERROR("SDL", "callocBridge() failed");
 	}
-	std::memset(ptr, 0, num_bytes);
+	std::memset(ptr, 0, numBytes);
 	return ptr;
 }
 

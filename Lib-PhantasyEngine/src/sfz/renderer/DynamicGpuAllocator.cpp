@@ -414,7 +414,7 @@ zg::Buffer DynamicGpuAllocator::allocateBuffer(uint32_t sizeBytes) noexcept
 	AllocEntry entry;
 	entry.block = bufferBlock;
 	entry.heapPtr = page.heap.memoryHeap;
-	mState->entries[buffer.buffer] = entry;
+	mState->entries.put(buffer.buffer, entry);
 
 	// Increment total num allocation counter
 	mState->totalNumAllocations += 1;
@@ -488,7 +488,7 @@ zg::Texture2D DynamicGpuAllocator::allocateTexture2D(
 	AllocEntry entry;
 	entry.block = texBlock;
 	entry.heapPtr = page.heap.memoryHeap;
-	mState->entries[texture.texture] = entry;
+	mState->entries.put(texture.texture, entry);
 
 	// Increment total num allocation counter
 	mState->totalNumAllocations += 1;

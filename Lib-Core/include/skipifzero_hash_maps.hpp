@@ -300,6 +300,13 @@ public:
 	V* get(const AltK& key) { return this->getInternal<AltK>(key); }
 	const V* get(const AltK& key) const { return this->getInternal<AltK>(key); }
 
+	// Access operator, will return a reference to the element associated with the given key.
+	// Will terminate the program if no such key exists.
+	V& operator[] (const K& key) { V* ptr = get(key); sfz_assert_hard(ptr != nullptr); return *ptr; }
+	const V& operator[] (const K& key) const { const V* ptr = get(key); sfz_assert_hard(ptr != nullptr); return *ptr; }
+	V& operator[] (const AltK& key) { V* ptr = get(key); sfz_assert_hard(ptr != nullptr); return *ptr; }
+	const V& operator[] (const AltK& key) const { const V* ptr = get(key); sfz_assert_hard(ptr != nullptr); return *ptr; }
+
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
@@ -316,12 +323,6 @@ public:
 	V& put(const K& key, V&& value) { return this->putInternal<const K&, V>(key, std::move(value)); }
 	V& put(const AltK& key, const V& value) { return this->putInternal<const AltK&, const V&>(key, value); }
 	V& put(const AltK& key, V&& value) { return this->putInternal<const AltK&, V>(key, std::move(value)); }
-
-	// Access operator, will return a reference to the element associated with the given key. If
-	// no such element exists it will be created with the default constructor. If element does not
-	// exist and is created HashMap may be rehashed, and thus all references might be invalidated.
-	V& operator[] (const K& key) { V* ptr = get(key); return ptr != nullptr ? *ptr : put(key, V()); }
-	V& operator[] (const AltK& key) { V* ptr = get(key); return ptr != nullptr ? *ptr : put(key, V()); }
 
 	// Attempts to remove the element associated with the given key. Returns false if this
 	// HashMap contains no such element. Guaranteed to not rehash.
@@ -564,6 +565,11 @@ public:
 	const V* get(const K& key) const { return this->getInternal<K>(key); }
 	V* get(const AltK& key) { return this->getInternal<AltK>(key); }
 	const V* get(const AltK& key) const { return this->getInternal<AltK>(key); }
+
+	V& operator[] (const K& key) { V* ptr = get(key); sfz_assert_hard(ptr != nullptr); return *ptr; }
+	const V& operator[] (const K& key) const { const V* ptr = get(key); sfz_assert_hard(ptr != nullptr); return *ptr; }
+	V& operator[] (const AltK& key) { V* ptr = get(key); sfz_assert_hard(ptr != nullptr); return *ptr; }
+	const V& operator[] (const AltK& key) const { const V* ptr = get(key); sfz_assert_hard(ptr != nullptr); return *ptr; }
 	
 	// Public methods
 	// --------------------------------------------------------------------------------------------
@@ -572,9 +578,6 @@ public:
 	V& put(const K& key, V&& value) { return this->putInternal<const K&, V>(key, std::move(value)); }
 	V& put(const AltK& key, const V& value) { return this->putInternal<const AltK&, const V&>(key, value); }
 	V& put(const AltK& key, V&& value) { return this->putInternal<const AltK&, V>(key, std::move(value)); }
-
-	V& operator[] (const K& key) { V* ptr = get(key); return ptr != nullptr ? *ptr : put(key, V()); }
-	V& operator[] (const AltK& key) { V* ptr = get(key); return ptr != nullptr ? *ptr : put(key, V()); }
 
 	bool remove(const K& key) { return this->removeInternal<K>(key); }
 	bool remove(const AltK& key) { return this->removeInternal<AltK>(key); }

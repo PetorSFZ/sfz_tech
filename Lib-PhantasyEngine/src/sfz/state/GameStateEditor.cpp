@@ -499,7 +499,7 @@ void GameStateEditor::init(
 			allocator->newObject<sfz::HashMap<str32, uint8_t>>(sfz_dbg(""));
 		binaryStringToByteLookupMap->init(512, allocator, sfz_dbg(""));
 		for (uint32_t i = 0; i < 256; i++) {
-			(*binaryStringToByteLookupMap)[byteToBinaryStringLookupTable[i]] = uint8_t(i);
+			binaryStringToByteLookupMap->put(byteToBinaryStringLookupTable[i], uint8_t(i));
 		}
 	}
 
