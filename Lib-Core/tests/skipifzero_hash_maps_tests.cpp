@@ -330,7 +330,7 @@ UTEST(HashMap, access_operator)
 
 	uint32_t sizeCount = 0;
 	for (int i = -256; i <= 256; ++i) {
-		m[i] = i - 1337;
+		m.put(i, i - 1337);
 		sizeCount += 1;
 		ASSERT_TRUE(m.size() == sizeCount);
 		ASSERT_TRUE(m[i] == (i - 1337));
@@ -340,11 +340,6 @@ UTEST(HashMap, access_operator)
 			ASSERT_TRUE(!m.remove(i));
 			sizeCount -= 1;
 			ASSERT_TRUE(m.size() == sizeCount);
-			ASSERT_TRUE(m.placeholders() == 1);
-			m[i];
-			sizeCount += 1;
-			ASSERT_TRUE(m.size() == sizeCount);
-			ASSERT_TRUE(m.placeholders() == 0);
 		}
 	}
 }
@@ -401,13 +396,15 @@ UTEST(HashMap, empty_hashmap)
 		sfz::HashMap<int, int> m(0, &allocator, sfz_dbg(""));
 
 		int a = -1;
-		m[2] = a;
-		m[3] = 4;
+		m.put(2, a);
+		m.put(3, 4);
 		ASSERT_TRUE(m.capacity() != 0);
 		ASSERT_TRUE(m.size() == 2);
 		ASSERT_TRUE(m[2] == -1);
 		ASSERT_TRUE(m.get(3) != nullptr);
 		ASSERT_TRUE(*m.get(3) == 4);
+		ASSERT_TRUE(m[2] == a);
+		ASSERT_TRUE(m[3] == 4);
 	}
 }
 
@@ -463,7 +460,7 @@ UTEST(HashMap, hashmap_with_strings)
 		ASSERT_TRUE(m.remove("str0"));
 		ASSERT_TRUE(m.get("str0") == nullptr);
 
-		m["str0"] = 3;
+		m.put("str0", 3);
 		ASSERT_TRUE(m["str0"] == 3);
 	}
 }
@@ -776,7 +773,7 @@ UTEST(HashMapLocal, access_operator)
 
 	uint32_t sizeCount = 0;
 	for (int i = -256; i < 256; ++i) {
-		m[i] = i - 1337;
+		m.put(i, i - 1337);
 		sizeCount += 1;
 		ASSERT_TRUE(m.size() == sizeCount);
 		ASSERT_TRUE(m[i] == (i - 1337));
@@ -786,11 +783,6 @@ UTEST(HashMapLocal, access_operator)
 			ASSERT_TRUE(!m.remove(i));
 			sizeCount -= 1;
 			ASSERT_TRUE(m.size() == sizeCount);
-			ASSERT_TRUE(m.placeholders() == 1);
-			m[i];
-			sizeCount += 1;
-			ASSERT_TRUE(m.size() == sizeCount);
-			ASSERT_TRUE(m.placeholders() == 0);
 		}
 	}
 }
@@ -845,13 +837,15 @@ UTEST(HashMapLocal, empty_hashmap)
 		sfz::HashMapLocal<int, int, 17> m;
 
 		int a = -1;
-		m[2] = a;
-		m[3] = 4;
+		m.put(2, a);
+		m.put(3, 4);
 		ASSERT_TRUE(m.capacity() == 17);
 		ASSERT_TRUE(m.size() == 2);
 		ASSERT_TRUE(m[2] == -1);
 		ASSERT_TRUE(m.get(3) != nullptr);
 		ASSERT_TRUE(*m.get(3) == 4);
+		ASSERT_TRUE(m[2] == a);
+		ASSERT_TRUE(m[3] == 4);
 	}
 }
 
@@ -905,7 +899,7 @@ UTEST(HashMapLocal, hashmap_with_strings)
 		ASSERT_TRUE(m.remove("str0"));
 		ASSERT_TRUE(m.get("str0") == nullptr);
 
-		m["str0"] = 3;
+		m.put("str0", 3);
 		ASSERT_TRUE(m["str0"] == 3);
 	}
 }

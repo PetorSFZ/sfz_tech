@@ -88,6 +88,10 @@ set(EXTERNALS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../externals)
 # ${UTESTH_INCLUDE_DIRS}
 if(NOT hasParent)
 	add_subdirectory(${EXTERNALS_DIR}/utest.h ${CMAKE_BINARY_DIR}/utest.h)
+elseif(SFZ_CORE_BUILD_TESTS)
+	if (NOT UTESTH_FOUND)
+		message(FATAL_ERROR "sfz_core requires utest.h.")
+	endif()
 endif()
 
 # Lib-Core
@@ -114,7 +118,7 @@ add_custom_target(sfz_core SOURCES ${INCLUDE_FILES})
 # sfz_core lib-core tests
 # ------------------------------------------------------------------------------------------------
 
-if(NOT hasParent)
+if(NOT hasParent OR SFZ_CORE_BUILD_TESTS)
 
 	set(TEST_FILES
 		${TESTS_DIR}/LibCoreHeadersTestsMain.cpp

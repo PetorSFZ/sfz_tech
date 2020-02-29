@@ -225,6 +225,15 @@ function(phAddSDL2)
 
 endfunction()
 
+# Add sfz_tech's bundled utest.h
+# ${UTESTH_FOUND}, ${UTESTH_INCLUDE_DIRS}
+function(phAddUtestH)
+	message("-- [PhantasyEngine]: Adding utest.h target")
+	add_subdirectory(${SFZ_TECH_ROOT}/externals/utest.h ${CMAKE_BINARY_DIR}/utest.h)
+	set(UTESTH_FOUND ${UTESTH_FOUND} PARENT_SCOPE)
+	set(UTESTH_INCLUDE_DIRS ${UTESTH_INCLUDE_DIRS} PARENT_SCOPE)
+endfunction()
+
 # Adds sfz_tech's sfz_core, the following variables will be set:
 # ${SFZ_CORE_FOUND}, ${SFZ_CORE_INCLUDE_DIRS}
 function(phAddSfzCore)
@@ -275,7 +284,7 @@ function(phAddZeroGImGui)
 
 endfunction()
 
-# Adds the bundled externals, this is currently stb and dear-imgui.
+# Adds the remaining bundled externals
 # stb: ${STB_FOUND}, ${STB_INCLUDE_DIRS}
 # dear-imgui: ${IMGUI_FOUND}, ${IMGUI_INCLUDE_DIRS}, ${IMGUI_LIBRARIES}
 # imgui_plot: ${IMGUI_PLOT_FOUND}, ${IMGUI_PLOT_INCLUDE_DIRS}, ${IMGUI_PLOT_LIBRARIES}
