@@ -44,6 +44,7 @@
 
 #include "sfz/Context.hpp"
 #include "sfz/Logging.hpp"
+#include "sfz/audio/AudioEngine.hpp"
 #include "sfz/config/GlobalConfig.hpp"
 #include "sfz/debug/ProfilingStats.hpp"
 #include "sfz/rendering/Image.hpp"
@@ -69,6 +70,7 @@ static sfz::Context phantasyEngineContext;
 static sfz::TerminalLogger terminalLogger;
 static sfz::GlobalConfig globalConfig;
 static sfz::Renderer renderer;
+static sfz::AudioEngine audioEngine;
 static sfz::StringCollection stringCollection;
 static sfz::ProfilingStats profilingStats;
 
@@ -89,6 +91,9 @@ static void setupContext() noexcept
 
 	// Set renderer
 	context->renderer = &renderer;
+
+	// Set audio engine
+	context->audioEngine = &audioEngine;
 
 	// Resource strings
 	stringCollection.createStringCollection(4096, allocator);
@@ -189,6 +194,9 @@ static void quit(GameLoopState& gameLoopState) noexcept
 
 	SFZ_INFO("PhantasyEngine", "Destroying renderer");
 	sfz::getRenderer().destroy(); // Destroy the current renderer
+
+	SFZ_INFO("PhantasyEngine", "Destroying audio engine");
+	sfz::getAudioEngine().destroy();
 
 	SFZ_INFO("PhantasyEngine", "Closing SDL controllers");
 	gameLoopState.userInput.controllers.clear();
@@ -471,11 +479,20 @@ int main(int argc, char* argv[])
 	SFZ_INFO("PhantasyEngine", "Initializing Imgui");
 	phImageView imguiFontTexView = initializeImgui(sfz::getDefaultAllocator());
 
-	// Initializing renderer
+	// Initialize renderer
 	SFZ_INFO("PhantasyEngine", "Initializing renderer");
 	bool rendererInitSuccess = sfz::getRenderer().init(window, imguiFontTexView, sfz::getDefaultAllocator());
 	if (!rendererInitSuccess) {
 		SFZ_ERROR("PhantasyEngine", "Renderer::init() failed");
+		SDL_Quit();
+		return EXIT_FAILURE;
+	}
+
+	// Initialize audio engine
+	SFZ_INFO("PhantasyEngine", "Initializing audio engine");
+	bool audioInitSuccess = sfz::getAudioEngine().init(sfz::getDefaultAllocator());
+	if (!audioInitSuccess) {
+		SFZ_ERROR("PhantasyEngine", "AudioEngine::init() failed");
 		SDL_Quit();
 		return EXIT_FAILURE;
 	}

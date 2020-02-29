@@ -27,6 +27,7 @@ class Allocator;
 class LoggingInterface;
 class GlobalConfig;
 class Renderer;
+class AudioEngine;
 class ProfilingStats;
 class StringCollection;
 
@@ -61,6 +62,9 @@ struct Context final {
 
 	// The renderer.
 	Renderer* renderer = nullptr;
+
+	// The audio engine.
+	AudioEngine* audioEngine = nullptr;
 
 	// The registered resource strings.
 	//
@@ -97,6 +101,7 @@ inline Allocator* getDefaultAllocator() { return getContext()->defaultAllocator;
 inline LoggingInterface* getLogger() { return getContext()->logger; }
 inline GlobalConfig& getGlobalConfig() { return *getContext()->config; }
 inline Renderer& getRenderer() { return *getContext()->renderer; }
+inline AudioEngine& getAudioEngine() { return *getContext()->audioEngine; }
 inline StringCollection& getResourceStrings() { return *getContext()->resourceStrings; }
 inline ProfilingStats& getProfilingStats() { return *getContext()->profilingStats; }
 

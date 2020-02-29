@@ -223,6 +223,8 @@ set(TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/res_ph)
 
 set(HEADER_FILES
+	${INCLUDE_DIR}/sfz/audio/AudioEngine.hpp
+
 	${INCLUDE_DIR}/sfz/config/GlobalConfig.hpp
 	${INCLUDE_DIR}/sfz/config/Setting.hpp
 
@@ -301,6 +303,8 @@ set(HEADER_FILES
 source_group(TREE ${INCLUDE_DIR} FILES ${HEADER_FILES})
 
 set(SRC_FILES
+	${SRC_DIR}/sfz/audio/AudioEngine.cpp
+
 	${SRC_DIR}/sfz/config/GlobalConfig.cpp
 	${SRC_DIR}/sfz/config/Setting.cpp
 
