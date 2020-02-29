@@ -1,0 +1,4 @@
+url: https://github.com/jarikomppa/soloud
+release: SoLoud 20200207
+commit: c8e339fdce5c7107bdb3e64bbf707c8fd3449beb
+downloaded: 2020-02-29

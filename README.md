@@ -20,6 +20,7 @@ That said, just because the projects are in the same repository does NOT mean th
 * [nativefiledialog](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/nativefiledialog) - [Original source](https://github.com/mlabbe/nativefiledialog) - Portable library for native file open/save dialogs.
 * [sajson](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/sajson) - [Original source](https://github.com/chadaustin/sajson) - Single-allocation JSON parser.
 * [SDL2](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/sdl2) - [Original source](https://www.libsdl.org/) - Cross-platform low-level input/windowing API.
+* [SoLoud](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/soloud) - [Original source](https://github.com/jarikomppa/soloud) - Free, easy, portable audio engine for games.
 * [stb headers](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/stb) - [Original source](https://github.com/nothings/stb) - Single file public domain headers.
 * [tinygltf](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/tinygltf) - [Original source](https://github.com/syoyo/tinygltf) - Header only library for loading glTF files.
 * [utest.h](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/utest.h) - [Original source](https://github.com/sheredom/utest.h) - Single-header testing framework.

@@ -289,6 +289,8 @@ endfunction()
 # dear-imgui: ${IMGUI_FOUND}, ${IMGUI_INCLUDE_DIRS}, ${IMGUI_LIBRARIES}
 # imgui_plot: ${IMGUI_PLOT_FOUND}, ${IMGUI_PLOT_INCLUDE_DIRS}, ${IMGUI_PLOT_LIBRARIES}
 # nativefiledialog: ${NATIVEFILEDIALOG_FOUND}, ${NATIVEFILEDIALOG_INCLUDE_DIRS}, ${NATIVEFILEDIALOG_LIBRARIES}
+# sajson: ${SAJSON_FOUND}, ${SAJSON_INCLUDE_DIRS}
+# soloud: ${SOLOUD_FOUND}, ${SOLOUD_INCLUDE_DIRS}, ${SOLOUD_LIBRARIES}
 # tinygltf: ${TINYGLTF_FOUND}, ${TINYGLTF_INCLUDE_DIRS}
 function(phAddBundledExternals)
 
@@ -319,6 +321,12 @@ function(phAddBundledExternals)
 	add_subdirectory(${SFZ_TECH_ROOT}/externals/sajson ${CMAKE_BINARY_DIR}/sajson)
 	set(SAJSON_FOUND ${SAJSON_FOUND} PARENT_SCOPE)
 	set(SAJSON_INCLUDE_DIRS ${SAJSON_INCLUDE_DIRS} PARENT_SCOPE)
+
+	message("-- [PhantasyEngine]: Adding soloud target")
+	add_subdirectory(${SFZ_TECH_ROOT}/externals/soloud ${CMAKE_BINARY_DIR}/soloud)
+	set(SOLOUD_FOUND ${SOLOUD_FOUND} PARENT_SCOPE)
+	set(SOLOUD_INCLUDE_DIRS ${SOLOUD_INCLUDE_DIRS} PARENT_SCOPE)
+	set(SOLOUD_LIBRARIES ${SOLOUD_LIBRARIES} PARENT_SCOPE)
 
 	message("-- [PhantasyEngine]: Adding tinygltf target")
 	add_subdirectory(${SFZ_TECH_ROOT}/externals/tinygltf ${CMAKE_BINARY_DIR}/tinygltf)
@@ -367,11 +375,14 @@ function(phLinkBundledExternals linkTarget)
 		${IMGUI_INCLUDE_DIRS}
 		${IMGUI_PLOT_INCLUDE_DIRS}
 		${NATIVEFILEDIALOG_INCLUDE_DIRS}
+		${SAJSON_INCLUDE_DIRS}
+		${SOLOUD_INCLUDE_DIRS}
 		${TINYGLTF_INCLUDE_DIRS}
 	)
 	target_link_libraries(${linkTarget}
 		${IMGUI_LIBRARIES}
 		${IMGUI_PLOT_LIBRARIES}
+		${SOLOUD_LIBRARIES}
 		${NATIVEFILEDIALOG_LIBRARIES}
 	)
 endfunction()
