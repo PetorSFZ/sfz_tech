@@ -390,7 +390,7 @@ target_link_libraries(PhantasyEngine
 # PhantasyEngine tests
 # ------------------------------------------------------------------------------------------------
 
-if(NOT hasParent)
+if(NOT hasParent OR PHANTASY_ENGINE_BUILD_TESTS)
 
 	set(TEST_FILES
 		${TESTS_DIR}/sfz/Main_Tests.cpp
@@ -402,7 +402,6 @@ if(NOT hasParent)
 		${TESTS_DIR}/sfz/math/Matrix_Tests.cpp
 		${TESTS_DIR}/sfz/math/Quaternion_Tests.cpp
 
-		${TESTS_DIR}/sfz/memory/Allocators_Tests.cpp
 		${TESTS_DIR}/sfz/memory/ArenaAllocator_Tests.cpp
 
 		${TESTS_DIR}/sfz/strings/DynString_Tests.cpp

@@ -32,8 +32,6 @@ using namespace sfz;
 
 UTEST(ArenaAllocator, stack_based_memory)
 {
-	sfz::setContext(sfz::getStandardContext());
-
 	// Create default-constructed arena without memory
 	ArenaAllocator arena;
 	ASSERT_TRUE(arena.capacity() == 0);
