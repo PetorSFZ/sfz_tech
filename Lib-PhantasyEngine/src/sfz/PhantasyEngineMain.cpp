@@ -68,7 +68,7 @@ static sfz::StandardAllocator standardAllocator;
 static sfz::Context phantasyEngineContext;
 static sfz::TerminalLogger terminalLogger;
 static sfz::GlobalConfig globalConfig;
-sfz::Renderer renderer;
+static sfz::Renderer renderer;
 static sfz::StringCollection stringCollection;
 static sfz::ProfilingStats profilingStats;
 
