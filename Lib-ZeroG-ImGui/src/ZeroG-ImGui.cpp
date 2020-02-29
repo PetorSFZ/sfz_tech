@@ -233,7 +233,6 @@ zg::Result imguiInitRenderState(
 
 	// Actually create the vertex and index buffers
 	uint64_t uploadHeapOffset = 0;
-	uint32_t frameStateIdx = 0;
 	stateOut->frameStates.init(frameLatency, allocator, sfz_dbg(""));
 	for (uint32_t i = 0; i < frameLatency; i++) {
 		stateOut->frameStates.add({});
@@ -244,14 +243,12 @@ zg::Result imguiInitRenderState(
 		ASSERT_ZG stateOut->uploadHeap.bufferCreate(
 			frame.uploadVertexBuffer, uploadHeapOffset, IMGUI_VERTEX_BUFFER_SIZE);
 		uploadHeapOffset += IMGUI_VERTEX_BUFFER_SIZE;
-		ASSERT_ZG frame.uploadVertexBuffer.setDebugName(sfz::str32("ImGui_VertexBuffer_%u", frameStateIdx));
+		ASSERT_ZG frame.uploadVertexBuffer.setDebugName(sfz::str32("ImGui_VertexBuffer_%u", i));
 
 		ASSERT_ZG stateOut->uploadHeap.bufferCreate(
 			frame.uploadIndexBuffer, uploadHeapOffset, IMGUI_INDEX_BUFFER_SIZE);
 		uploadHeapOffset += IMGUI_INDEX_BUFFER_SIZE;
-		ASSERT_ZG frame.uploadIndexBuffer.setDebugName(sfz::str32("ImGui_IndexBuffer_%u", frameStateIdx));
-
-		frameStateIdx += 1;
+		ASSERT_ZG frame.uploadIndexBuffer.setDebugName(sfz::str32("ImGui_IndexBuffer_%u", i));
 	}
 	sfz_assert(uploadHeapOffset == uploadHeapNumBytes);
 

@@ -60,6 +60,11 @@ void StaticTextureItem::buildTexture(
 	ZgOptimalClearValue optimalClear = floatToOptimalClearValue(clearValue);
 	this->texture =
 		gpuAllocatorFramebuffer.allocateTexture2D(format, width, height, 1, usage, optimalClear);
+
+	// Set debug name for texture
+	StringCollection& resStrings = getResourceStrings();
+	str128 debugName("static_tex__%s", resStrings.getString(this->name));
+	CHECK_ZG this->texture.setDebugName(debugName);
 }
 
 void StaticTextureItem::deallocate(DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept
