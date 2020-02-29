@@ -26,6 +26,7 @@ namespace sfz {
 class Allocator;
 class LoggingInterface;
 class GlobalConfig;
+class Renderer;
 class ProfilingStats;
 class StringCollection;
 
@@ -57,6 +58,9 @@ struct Context final {
 
 	// The global config system which keeps track of key/value pair of settings.
 	GlobalConfig* config = nullptr;
+
+	// The renderer.
+	Renderer* renderer = nullptr;
 
 	// The registered resource strings.
 	//
@@ -92,6 +96,7 @@ void setContext(Context* context) noexcept;
 inline Allocator* getDefaultAllocator() { return getContext()->defaultAllocator; }
 inline LoggingInterface* getLogger() { return getContext()->logger; }
 inline GlobalConfig& getGlobalConfig() { return *getContext()->config; }
+inline Renderer& getRenderer() { return *getContext()->renderer; }
 inline StringCollection& getResourceStrings() { return *getContext()->resourceStrings; }
 inline ProfilingStats& getProfilingStats() { return *getContext()->profilingStats; }
 

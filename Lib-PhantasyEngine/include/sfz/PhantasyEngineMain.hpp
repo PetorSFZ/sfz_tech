@@ -37,8 +37,6 @@ using sdl::Mouse;
 // Structs
 // ------------------------------------------------------------------------------------------------
 
-class Renderer;
-
 enum class UpdateOp : uint32_t {
 	NO_OP = 0,
 	QUIT,
@@ -65,9 +63,8 @@ enum class IniLocation {
 	MY_GAMES_DIR
 };
 
-using InitFunc = void(Renderer* renderer, void* userPtr);
+using InitFunc = void(void* userPtr);
 using UpdateFunc = UpdateOp(
-	Renderer* renderer,
 	float deltaSecs,
 	const UserInput* input,
 	void* userPtr);

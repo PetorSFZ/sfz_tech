@@ -68,6 +68,7 @@ static sfz::StandardAllocator standardAllocator;
 static sfz::Context phantasyEngineContext;
 static sfz::TerminalLogger terminalLogger;
 static sfz::GlobalConfig globalConfig;
+sfz::Renderer renderer;
 static sfz::StringCollection stringCollection;
 static sfz::ProfilingStats profilingStats;
 
@@ -85,6 +86,9 @@ static void setupContext() noexcept
 
 	// Set global config
 	context->config = &globalConfig;
+
+	// Set renderer
+	context->renderer = &renderer;
 
 	// Resource strings
 	stringCollection.createStringCollection(4096, allocator);
@@ -147,7 +151,6 @@ static void logSDL2Version() noexcept
 // ------------------------------------------------------------------------------------------------
 
 struct GameLoopState final {
-	sfz::UniquePtr<sfz::Renderer> renderer;
 	SDL_Window* window = nullptr;
 	void(*cleanupCallback)(void) = nullptr;
 	bool quit = false;
@@ -185,7 +188,7 @@ static void quit(GameLoopState& gameLoopState) noexcept
 	}
 
 	SFZ_INFO("PhantasyEngine", "Destroying renderer");
-	gameLoopState.renderer.destroy(); // Destroy the current renderer
+	sfz::getRenderer().destroy(); // Destroy the current renderer
 
 	SFZ_INFO("PhantasyEngine", "Closing SDL controllers");
 	gameLoopState.userInput.controllers.clear();
@@ -334,13 +337,13 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 
 	// Add last frame's CPU frametime to the global profiling stats.
 	sfz::getProfilingStats().addSample(
-		"default", "cpu_frametime", state.renderer->currentFrameIdx(), deltaSecs * 1000.0f);
+		"default", "cpu_frametime", sfz::getRenderer().currentFrameIdx(), deltaSecs * 1000.0f);
 
 	// Add last finished GPU frame's frametime to the global profiling stats
 	{
 		uint64_t frameIdx = ~0u;
 		float gpuFrameTimeMs = 0.0f;
-		state.renderer->frameTimeMs(frameIdx, gpuFrameTimeMs);
+		sfz::getRenderer().frameTimeMs(frameIdx, gpuFrameTimeMs);
 		if (frameIdx != ~0ull) {
 			sfz::getProfilingStats().addSample(
 				"default", "gpu_frametime", frameIdx, gpuFrameTimeMs);
@@ -353,7 +356,6 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 
 	// Call user's update func
 	sfz::UpdateOp op = state.updateFunc(
-		state.renderer.get(),
 		deltaSecs,
 		&state.userInput,
 		state.userPtr);
@@ -471,8 +473,7 @@ int main(int argc, char* argv[])
 
 	// Initializing renderer
 	SFZ_INFO("PhantasyEngine", "Initializing renderer");
-	sfz::UniquePtr<sfz::Renderer> renderer = sfz::makeUnique<sfz::Renderer>(sfz::getDefaultAllocator(), sfz_dbg(""));
-	bool rendererInitSuccess = renderer->init(window, imguiFontTexView, sfz::getDefaultAllocator());
+	bool rendererInitSuccess = sfz::getRenderer().init(window, imguiFontTexView, sfz::getDefaultAllocator());
 	if (!rendererInitSuccess) {
 		SFZ_ERROR("PhantasyEngine", "Renderer::init() failed");
 		SDL_Quit();
@@ -484,7 +485,6 @@ int main(int argc, char* argv[])
 	{
 		// Initialize game loop state
 		GameLoopState gameLoopState = {};
-		gameLoopState.renderer = std::move(renderer);
 		gameLoopState.window = window;
 		gameLoopState.cleanupCallback = []() {
 			// Store global settings
@@ -530,7 +530,7 @@ int main(int argc, char* argv[])
 
 		// Call users init function
 		if (gameLoopState.initFunc) {
-			gameLoopState.initFunc(gameLoopState.renderer.get(), gameLoopState.userPtr);
+			gameLoopState.initFunc(gameLoopState.userPtr);
 		}
 		sfz::getProfilingStats().createLabel("default", "16.67 ms", sfz::vec4(0.5f, 0.5f, 0.7f, 1.0f), 16.67f);
 
