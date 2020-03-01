@@ -47,6 +47,12 @@ public:
 	void swap(AudioEngine& other) noexcept;
 	void destroy() noexcept;
 
+	// Methods
+	// --------------------------------------------------------------------------------------------
+
+	void renderDebugUI() noexcept;
+
+
 	// Private members
 	// --------------------------------------------------------------------------------------------
 private:

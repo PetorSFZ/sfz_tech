@@ -31,8 +31,10 @@
 
 #include <imgui_plot.h>
 
+#include "sfz/audio/AudioEngine.hpp"
 #include "sfz/config/GlobalConfig.hpp"
 #include "sfz/debug/ProfilingStats.hpp"
+#include "sfz/renderer/Renderer.hpp"
 #include "sfz/util/IO.hpp"
 #include "sfz/util/TerminalLogger.hpp"
 
@@ -188,6 +190,7 @@ static void renderConsoleDockSpaceInitialize(ConsoleState& state) noexcept
 	ImGui::DockBuilderDockWindow("Log", dockBottom);
 	ImGui::DockBuilderDockWindow("Config", dockLeft);
 	ImGui::DockBuilderDockWindow("Renderer", dockLeft);
+	ImGui::DockBuilderDockWindow("Audio", dockLeft);
 
 	for (uint32_t i = 0; i < state.injectedWindowNames.size(); i++) {
 		const char* windowName = state.injectedWindowNames[i].str();
@@ -700,6 +703,8 @@ void Console::render() noexcept
 	renderPerformanceWindow(*mState, false);
 	renderLogWindow(*mState);
 	renderConfigWindow(*mState);
+	getRenderer().renderImguiUI();
+	getAudioEngine().renderDebugUI();
 
 	// Initialize dockspace with default docked layout if first run
 	if (mState->imguiFirstRun) renderConsoleDockSpaceInitialize(*mState);

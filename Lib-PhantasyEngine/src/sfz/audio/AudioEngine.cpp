@@ -18,6 +18,8 @@
 
 #include "sfz/audio/AudioEngine.hpp"
 
+#include <imgui.h>
+
 namespace sfz {
 
 // AudioEngineState
@@ -50,6 +52,21 @@ void AudioEngine::destroy() noexcept
 	Allocator* allocator = mState->allocator;
 	allocator->deleteObject(mState);
 	mState = nullptr;
+}
+
+// AudioEngine:: State methods
+// ------------------------------------------------------------------------------------------------
+
+void AudioEngine::renderDebugUI() noexcept
+{
+	ImGuiWindowFlags windowFlags = 0;
+	windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
+	if (!ImGui::Begin("Audio", nullptr, windowFlags)) {
+		ImGui::End();
+		return;
+	}
+
+	ImGui::End();
 }
 
 } // namespace sfz
