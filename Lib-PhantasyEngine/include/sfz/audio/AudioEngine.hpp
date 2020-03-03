@@ -20,6 +20,8 @@
 
 #include <skipifzero.hpp>
 
+#include "sfz/strings/StringID.hpp"
+
 namespace sfz {
 
 // AudioEngine
@@ -51,6 +53,8 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	void renderDebugUI() noexcept;
+
+
 
 
 	// Private members

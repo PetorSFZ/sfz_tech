@@ -20,6 +20,8 @@
 
 #include <imgui.h>
 
+#include <soloud.h>
+
 namespace sfz {
 
 // AudioEngineState
@@ -28,6 +30,8 @@ namespace sfz {
 struct AudioEngineState final {
 
 	Allocator* allocator = nullptr;
+
+	SoLoud::Soloud soloud;
 };
 
 // AudioEngine:: State methods
@@ -38,6 +42,10 @@ bool AudioEngine::init(Allocator* allocator) noexcept
 	this->destroy();
 	mState = allocator->newObject<AudioEngineState>(sfz_dbg(""));
 	mState->allocator = allocator;
+
+	// Initialize SoLoud
+	mState->soloud.init();
+
 	return true;
 }
 
@@ -49,6 +57,10 @@ void AudioEngine::swap(AudioEngine& other) noexcept
 void AudioEngine::destroy() noexcept
 {
 	if (mState == nullptr) return;
+
+	// Deinitialize SoLoud
+	mState->soloud.deinit();
+
 	Allocator* allocator = mState->allocator;
 	allocator->deleteObject(mState);
 	mState = nullptr;

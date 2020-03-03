@@ -138,6 +138,10 @@ if (NOT hasParent)
 	# ${SAJSON_FOUND}, ${SAJSON_INCLUDE_DIRS}
 	add_subdirectory(${EXTERNALS_DIR}/sajson ${CMAKE_BINARY_DIR}/sajson)
 
+	# SoLoud
+	# ${SOLOUD_FOUND}, ${SOLOUD_INCLUDE_DIRS}, ${SOLOUD_LIBRARIES}
+	add_subdirectory(${EXTERNALS_DIR}/soloud ${CMAKE_BINARY_DIR}/soloud)
+
 	# tinygltf
 	# ${TINYGLTF_FOUND}, ${TINYGLTF_INCLUDE_DIRS}
 	add_subdirectory(${EXTERNALS_DIR}/tinygltf ${CMAKE_BINARY_DIR}/tinygltf)
@@ -181,6 +185,10 @@ else()
 
 	if (NOT SAJSON_FOUND)
 		message(FATAL_ERROR "PhantasyEngine requires sajson.")
+	endif()
+
+	if (NOT SOLOUD_FOUND)
+		message(FATAL_ERROR "PhantasyEngine requires SoLoud.")
 	endif()
 
 	if (NOT TINYGLTF_FOUND)
@@ -378,6 +386,7 @@ target_include_directories(PhantasyEngine PUBLIC
 	${ZEROG_IMGUI_INCLUDE_DIRS}
 	${NATIVEFILEDIALOG_INCLUDE_DIRS}
 	${SAJSON_INCLUDE_DIRS}
+	${SOLOUD_INCLUDE_DIRS}
 	${TINYGLTF_INCLUDE_DIRS}
 )
 
@@ -389,6 +398,7 @@ target_link_libraries(PhantasyEngine
 	${IMGUI_PLOT_LIBRARIES}
 	${ZEROG_IMGUI_LIBRARIES}
 	${NATIVEFILEDIALOG_LIBRARIES}
+	${SOLOUD_LIBRARIES}
 )
 
 # PhantasyEngine tests
