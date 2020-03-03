@@ -108,15 +108,15 @@ struct CheckD3D12Impl final {
 // Device creation functions
 // ------------------------------------------------------------------------------------------------
 
-void d3d12LogAvailableDevices(ComPtr<IDXGIFactory7>& dxgiFactory) noexcept;
+void d3d12LogAvailableDevices(ComPtr<IDXGIFactory6>& dxgiFactory) noexcept;
 
 ZgResult createHighPerformanceDevice(
-	ComPtr<IDXGIFactory7>& dxgiFactory,
+	ComPtr<IDXGIFactory6>& dxgiFactory,
 	ComPtr<IDXGIAdapter4>& adapterOut,
 	ComPtr<ID3D12Device3>& deviceOut) noexcept;
 
 ZgResult createSoftwareDevice(
-	ComPtr<IDXGIFactory7>& dxgiFactory,
+	ComPtr<IDXGIFactory6>& dxgiFactory,
 	ComPtr<IDXGIAdapter4>& adapterOut,
 	ComPtr<ID3D12Device3>& deviceOut) noexcept;
 

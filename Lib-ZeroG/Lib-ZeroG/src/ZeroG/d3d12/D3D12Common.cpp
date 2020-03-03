@@ -144,7 +144,7 @@ bool CheckD3D12Impl::succeeded(HRESULT result) noexcept
 // Device creation functions
 // ------------------------------------------------------------------------------------------------
 
-void d3d12LogAvailableDevices(ComPtr<IDXGIFactory7>& dxgiFactory) noexcept
+void d3d12LogAvailableDevices(ComPtr<IDXGIFactory6>& dxgiFactory) noexcept
 {
 	for (uint32_t i = 0; true; i++) {
 
@@ -175,7 +175,7 @@ void d3d12LogAvailableDevices(ComPtr<IDXGIFactory7>& dxgiFactory) noexcept
 }
 
 ZgResult createHighPerformanceDevice(
-	ComPtr<IDXGIFactory7>& dxgiFactory,
+	ComPtr<IDXGIFactory6>& dxgiFactory,
 	ComPtr<IDXGIAdapter4>& adapterOut,
 	ComPtr<ID3D12Device3>& deviceOut) noexcept
 {
@@ -199,7 +199,7 @@ ZgResult createHighPerformanceDevice(
 }
 
 ZgResult createSoftwareDevice(
-	ComPtr<IDXGIFactory7>& dxgiFactory,
+	ComPtr<IDXGIFactory6>& dxgiFactory,
 	ComPtr<IDXGIAdapter4>& adapterOut,
 	ComPtr<ID3D12Device3>& deviceOut) noexcept
 {

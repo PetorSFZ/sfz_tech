@@ -165,7 +165,7 @@ public:
 		}
 
 		// Create DXGI factory
-		ComPtr<IDXGIFactory7> dxgiFactory;
+		ComPtr<IDXGIFactory6> dxgiFactory;
 		{
 			UINT flags = 0;
 			if (settings.d3d12.debugMode) flags |= DXGI_CREATE_FACTORY_DEBUG;
