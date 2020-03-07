@@ -71,11 +71,14 @@ public:
 		const phConstImageView& fontTexture,
 		sfz::Allocator* allocator) noexcept;
 	bool loadConfiguration(const char* jsonConfigPath) noexcept;
+	void loadDummyConfiguration() noexcept;
 	void swap(Renderer& other) noexcept;
 	void destroy() noexcept;
 
 	// Getters
 	// --------------------------------------------------------------------------------------------
+
+	RendererState& getStateDummyMode() noexcept;
 
 	uint64_t currentFrameIdx() const noexcept; // Incremented each frameBegin()
 	vec2_i32 windowResolution() const noexcept;

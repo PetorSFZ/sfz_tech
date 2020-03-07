@@ -184,6 +184,31 @@ bool Renderer::loadConfiguration(const char* jsonConfigPath) noexcept
 	return true;
 }
 
+void Renderer::loadDummyConfiguration() noexcept
+{
+	if (!this->active()) {
+		sfz_assert_hard(false);
+	}
+
+	// Parse dummy config
+	bool parseSuccess = parseRendererConfig(*mState, "res_ph/shaders/dummy_renderer_config.json");
+	if (!parseSuccess) {
+		this->destroy();
+		sfz_assert_hard(false);
+	}
+
+	// Initialize profiling stats
+	StringCollection& resStrings = getResourceStrings();
+	ProfilingStats& stats = getProfilingStats();
+	stats.createCategory("gpu", 300, 66.7f, "ms", "frame", 20.0f,
+		StatsVisualizationType::FIRST_INDIVIDUALLY_REST_ADDED);
+	stats.createLabel("gpu", "frametime", vec4(1.0f, 0.0f, 0.0f, 1.0f), 0.0f);
+	stats.createLabel("gpu", "imgui", vec4(1.0f, 1.0f, 0.0f, 1.0f), 0.0f);
+
+	// Set renderer to dummy mode
+	mState->dummyMode = true;
+}
+
 void Renderer::swap(Renderer& other) noexcept
 {
 	std::swap(this->mState, other.mState);
@@ -223,6 +248,12 @@ void Renderer::destroy() noexcept
 
 // Renderer: Getters
 // ------------------------------------------------------------------------------------------------
+
+RendererState& Renderer::getStateDummyMode() noexcept
+{
+	sfz_assert_hard(mState->dummyMode);
+	return *mState;
+}
 
 uint64_t Renderer::currentFrameIdx() const noexcept
 {

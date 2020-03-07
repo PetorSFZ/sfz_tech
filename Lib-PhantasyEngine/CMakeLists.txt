@@ -265,7 +265,14 @@ set(HEADER_FILES
 
 	${INCLUDE_DIR}/sfz/renderer/BuiltInShaderTypes.hpp
 	${INCLUDE_DIR}/sfz/renderer/CascadedShadowMaps.hpp
+	${INCLUDE_DIR}/sfz/renderer/DynamicGpuAllocator.hpp
+	${INCLUDE_DIR}/sfz/renderer/GpuMesh.hpp
+	${INCLUDE_DIR}/sfz/renderer/GpuTextures.hpp
 	${INCLUDE_DIR}/sfz/renderer/Renderer.hpp
+	${INCLUDE_DIR}/sfz/renderer/RendererConfigParser.hpp
+	${INCLUDE_DIR}/sfz/renderer/RendererState.hpp
+	${INCLUDE_DIR}/sfz/renderer/RendererUI.hpp
+	${INCLUDE_DIR}/sfz/renderer/ZeroGUtils.hpp
 
 	${INCLUDE_DIR}/sfz/rendering/FullscreenTriangle.hpp
 	${INCLUDE_DIR}/sfz/rendering/ImageView.hpp
@@ -326,20 +333,13 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/memory/DebugAllocator.cpp
 
 	${SRC_DIR}/sfz/renderer/CascadedShadowMaps.cpp
-	${SRC_DIR}/sfz/renderer/DynamicGpuAllocator.hpp
 	${SRC_DIR}/sfz/renderer/DynamicGpuAllocator.cpp
-	${SRC_DIR}/sfz/renderer/GpuMesh.hpp
 	${SRC_DIR}/sfz/renderer/GpuMesh.cpp
-	${SRC_DIR}/sfz/renderer/GpuTextures.hpp
 	${SRC_DIR}/sfz/renderer/GpuTextures.cpp
 	${SRC_DIR}/sfz/renderer/Renderer.cpp
-	${SRC_DIR}/sfz/renderer/RendererConfigParser.hpp
 	${SRC_DIR}/sfz/renderer/RendererConfigParser.cpp
-	${SRC_DIR}/sfz/renderer/RendererState.hpp
 	${SRC_DIR}/sfz/renderer/RendererState.cpp
-	${SRC_DIR}/sfz/renderer/RendererUI.hpp
 	${SRC_DIR}/sfz/renderer/RendererUI.cpp
-	${SRC_DIR}/sfz/renderer/ZeroGUtils.hpp
 	${SRC_DIR}/sfz/renderer/ZeroGUtils.cpp
 
 	${SRC_DIR}/sfz/rendering/FullscreenTriangle.cpp
