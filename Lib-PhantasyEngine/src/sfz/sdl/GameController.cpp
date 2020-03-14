@@ -194,7 +194,7 @@ void update(HashMap<int32_t, GameController>& controllers, const Array<SDL_Event
 				GameController c(event.cdevice.which);
 				if (c.id() == -1) break;
 				if (controllers.get(c.id()) != nullptr) break;
-				controllers[c.id()] = std::move(c);
+				controllers.put(c.id(), std::move(c));
 			}
 			break;
 		case SDL_CONTROLLERDEVICEREMOVED:

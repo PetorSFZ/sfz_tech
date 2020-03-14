@@ -224,8 +224,8 @@ static void initControllers(sfz::HashMap<int32_t, sfz::GameController>& controll
 		sfz::GameController c(i);
 		if (c.id() == -1) continue;
 		if (controllers.get(c.id()) != nullptr) continue;
-
-		controllers[c.id()] = std::move(c);
+		
+		controllers.put(c.id(), std::move(c));
 	}
 }
 
