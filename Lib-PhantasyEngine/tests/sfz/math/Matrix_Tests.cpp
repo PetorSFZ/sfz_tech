@@ -75,8 +75,8 @@ UTEST(Matrix, matrix_2x2_specialization)
 		mat22 m1(arr1);
 		ASSERT_TRUE(m1.at(0, 0) == 1.0f);
 		ASSERT_TRUE(m1.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m1.at(0, 2) == 3.0f);
-		ASSERT_TRUE(m1.at(0, 3) == 4.0f);
+		ASSERT_TRUE(m1.at(1, 0) == 3.0f);
+		ASSERT_TRUE(m1.at(1, 1) == 4.0f);
 		ASSERT_TRUE(m1.e00 == 1.0f);
 		ASSERT_TRUE(m1.e01 == 2.0f);
 		ASSERT_TRUE(m1.e10 == 3.0f);
@@ -92,8 +92,8 @@ UTEST(Matrix, matrix_2x2_specialization)
 		         3.0f, 4.0f);
 		ASSERT_TRUE(m1.at(0, 0) == 1.0f);
 		ASSERT_TRUE(m1.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m1.at(0, 2) == 3.0f);
-		ASSERT_TRUE(m1.at(0, 3) == 4.0f);
+		ASSERT_TRUE(m1.at(1, 0) == 3.0f);
+		ASSERT_TRUE(m1.at(1, 1) == 4.0f);
 		ASSERT_TRUE(m1.e00 == 1.0f);
 		ASSERT_TRUE(m1.e01 == 2.0f);
 		ASSERT_TRUE(m1.e10 == 3.0f);
@@ -109,8 +109,8 @@ UTEST(Matrix, matrix_2x2_specialization)
 		         vec2(3.0f, 4.0f));
 		ASSERT_TRUE(m1.at(0, 0) == 1.0f);
 		ASSERT_TRUE(m1.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m1.at(0, 2) == 3.0f);
-		ASSERT_TRUE(m1.at(0, 3) == 4.0f);
+		ASSERT_TRUE(m1.at(1, 0) == 3.0f);
+		ASSERT_TRUE(m1.at(1, 1) == 4.0f);
 		ASSERT_TRUE(m1.e00 == 1.0f);
 		ASSERT_TRUE(m1.e01 == 2.0f);
 		ASSERT_TRUE(m1.e10 == 3.0f);
@@ -125,36 +125,36 @@ UTEST(Matrix, matrix_2x2_specialization)
 		mat22 zero = mat22::fill(0.0f);
 		ASSERT_TRUE(zero.at(0, 0) == 0.0f);
 		ASSERT_TRUE(zero.at(0, 1) == 0.0f);
-		ASSERT_TRUE(zero.at(0, 2) == 0.0f);
-		ASSERT_TRUE(zero.at(0, 3) == 0.0f);
+		ASSERT_TRUE(zero.at(1, 0) == 0.0f);
+		ASSERT_TRUE(zero.at(1, 1) == 0.0f);
 
 		mat22 one = mat22::fill(1.0f);
 		ASSERT_TRUE(one.at(0, 0) == 1.0f);
 		ASSERT_TRUE(one.at(0, 1) == 1.0f);
-		ASSERT_TRUE(one.at(0, 2) == 1.0f);
-		ASSERT_TRUE(one.at(0, 3) == 1.0f);
+		ASSERT_TRUE(one.at(1, 0) == 1.0f);
+		ASSERT_TRUE(one.at(1, 1) == 1.0f);
 	}
 	// identity() constructor function
 	{
 		mat22 ident = mat22::identity();
 		ASSERT_TRUE(ident.at(0, 0) == 1.0f);
 		ASSERT_TRUE(ident.at(0, 1) == 0.0f);
-		ASSERT_TRUE(ident.at(0, 2) == 0.0f);
-		ASSERT_TRUE(ident.at(0, 3) == 1.0f);
+		ASSERT_TRUE(ident.at(1, 0) == 0.0f);
+		ASSERT_TRUE(ident.at(1, 1) == 1.0f);
 	}
 	// scaling2() constructor function
 	{
 		mat22 scale = mat22::scaling2(2.0f);
 		ASSERT_TRUE(scale.at(0, 0) == 2.0f);
 		ASSERT_TRUE(scale.at(0, 1) == 0.0f);
-		ASSERT_TRUE(scale.at(0, 2) == 0.0f);
-		ASSERT_TRUE(scale.at(0, 3) == 2.0f);
+		ASSERT_TRUE(scale.at(1, 0) == 0.0f);
+		ASSERT_TRUE(scale.at(1, 1) == 2.0f);
 
 		mat22 scale2 = mat22::scaling2(vec2(1.0f, 2.0f));
 		ASSERT_TRUE(scale2.at(0, 0) == 1.0f);
 		ASSERT_TRUE(scale2.at(0, 1) == 0.0f);
-		ASSERT_TRUE(scale2.at(0, 2) == 0.0f);
-		ASSERT_TRUE(scale2.at(0, 3) == 2.0f);
+		ASSERT_TRUE(scale2.at(1, 0) == 0.0f);
+		ASSERT_TRUE(scale2.at(1, 1) == 2.0f);
 	}
 }
 
