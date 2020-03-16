@@ -201,8 +201,8 @@ struct Vec<T,2> final {
 
 	constexpr T* data() noexcept { return &x; }
 	constexpr const T* data() const noexcept { return &x; }
-	constexpr T& operator[] (uint32_t index) { return data()[index]; }
-	constexpr T operator[] (uint32_t index) const { return data()[index]; }
+	constexpr T& operator[] (uint32_t idx) { sfz_assert(idx < 2); return data()[idx]; }
+	constexpr T operator[] (uint32_t idx) const { sfz_assert(idx < 2); return data()[idx]; }
 
 	constexpr Vec& operator+= (Vec o) { x += o.x; y += o.y; return *this; }
 	constexpr Vec& operator-= (Vec o) { x -= o.x; y -= o.y; return *this; }
@@ -253,8 +253,8 @@ struct Vec<T,3> final {
 
 	constexpr T* data() { return &x; }
 	constexpr const T* data() const { return &x; }
-	constexpr T& operator[] (uint32_t index) { return data()[index]; }
-	constexpr T operator[] (uint32_t index) const { return data()[index]; }
+	constexpr T& operator[] (uint32_t idx) { sfz_assert(idx < 3); return data()[idx]; }
+	constexpr T operator[] (uint32_t idx) const { sfz_assert(idx < 3); return data()[idx]; }
 
 	constexpr Vec& operator+= (Vec o) { x += o.x; y += o.y; z += o.z; return *this; }
 	constexpr Vec& operator-= (Vec o) { x -= o.x; y -= o.y; z -= o.z; return *this; }
@@ -311,8 +311,8 @@ struct alignas(sizeof(T) * 4) Vec<T,4> final {
 
 	constexpr T* data() noexcept { return &x; }
 	constexpr const T* data() const noexcept { return &x; }
-	constexpr T& operator[] (uint32_t index) { return data()[index]; }
-	constexpr T operator[] (uint32_t index) const { return data()[index]; }
+	constexpr T& operator[] (uint32_t idx) { sfz_assert(idx < 4); return data()[idx]; }
+	constexpr T operator[] (uint32_t idx) const { sfz_assert(idx < 4); return data()[idx]; }
 
 	constexpr Vec& operator+= (Vec o) { x += o.x; y += o.y; z += o.z; w += o.w; return *this; }
 	constexpr Vec& operator-= (Vec o) { x -= o.x; y -= o.y; z -= o.z; w -= o.w; return *this; }
