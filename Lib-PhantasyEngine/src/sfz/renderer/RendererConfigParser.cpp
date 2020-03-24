@@ -202,8 +202,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			uint32_t numSamplers = samplersNode.arrayLength();
 			for (uint32_t j = 0; j < numSamplers; j++) {
 				ParsedJsonNode node = samplersNode.accessArray(j);
-				item.samplers.add({});
-				SamplerItem& sampler = item.samplers[j];
+				SamplerItem& sampler = item.samplers.add();
 				sampler.samplerRegister = CHECK_JSON node.accessMap("register").valueInt();
 				sampler.sampler.samplingMode = samplingModeFromString(
 					CHECK_JSON node.accessMap("sampling_mode").valueStr256());
@@ -323,8 +322,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			uint32_t numSamplers = samplersNode.arrayLength();
 			for (uint32_t j = 0; j < numSamplers; j++) {
 				ParsedJsonNode node = samplersNode.accessArray(j);
-				item.samplers.add({});
-				SamplerItem& sampler = item.samplers[j];
+				SamplerItem& sampler = item.samplers.add();
 				sampler.samplerRegister = CHECK_JSON node.accessMap("register").valueInt();
 				sampler.sampler.samplingMode = samplingModeFromString(
 					CHECK_JSON node.accessMap("sampling_mode").valueStr256());
@@ -412,8 +410,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			ParsedJsonNode groupNode = presentQueueNode.accessArray(groupIdx);
 
 			// Create group and read its name
-			configurable.presentQueue.add({});
-			StageGroup& group = configurable.presentQueue.last();
+			StageGroup& group = configurable.presentQueue.add();
 			group.groupName =
 				resStrings.getStringID(CHECK_JSON groupNode.accessMap("group_name").valueStr256());
 
@@ -425,8 +422,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			// Stages
 			for (uint32_t stageIdx = 0; stageIdx < numStages; stageIdx++) {
 				ParsedJsonNode stageNode = stages.accessArray(stageIdx);
-				group.stages.add({});
-				Stage& stage = group.stages.last();
+				Stage& stage = group.stages.add();
 
 				str256 stageName = CHECK_JSON stageNode.accessMap("stage_name").valueStr256();
 				stage.name = resStrings.getStringID(stageName);
@@ -593,8 +589,7 @@ bool allocateStageMemory(RendererState& state) noexcept
 				if (nonUserSettable) continue;
 
 				// Allocate container
-				stage.constantBuffers.add({});
-				PerFrameData<ConstantBufferMemory>& framed = stage.constantBuffers.last();
+				PerFrameData<ConstantBufferMemory>& framed = stage.constantBuffers.add();
 
 				// Allocate ZeroG memory
 				framed.init(state.frameLatency, [&](ConstantBufferMemory& item) {

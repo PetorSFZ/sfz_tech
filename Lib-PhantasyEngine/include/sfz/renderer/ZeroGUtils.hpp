@@ -94,8 +94,7 @@ public:
 	{
 		sfz_assert(mData.isEmpty());
 		for (uint32_t i = 0; i < latency; i++) {
-			mData.add({});
-			initFun(mData.last());
+			initFun(mData.add());
 		}
 	}
 	void init(uint32_t latency) { this->init(latency, [](T&) {}); }

@@ -624,8 +624,7 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 	StageCommandList* commandList = mState->getStageCommandList(stageName);
 	if (commandList == nullptr) {
 
-		mState->groupCommandLists.add({});
-		StageCommandList& list = mState->groupCommandLists.last();
+		StageCommandList& list = mState->groupCommandLists.add();
 		list.stageName = stageName;
 
 		// Begin recording command list
@@ -652,8 +651,7 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 		if (mState->groupCommandLists.size() == 1) {
 			FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
 			sfz_assert(frameIds.groupIds.size() <= mState->currentStageGroupIdx);
-			frameIds.groupIds.add({});
-			GroupProfilingID& groupId = frameIds.groupIds.last();
+			GroupProfilingID& groupId = frameIds.groupIds.add();
 			groupId.groupName =
 				mState->configurable.presentQueue[mState->currentStageGroupIdx].groupName;
 			CHECK_ZG list.commandList.profileBegin(mState->profiler, groupId.id);
@@ -763,6 +761,9 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 	GpuMesh* meshPtr = mState->meshes.get(meshId);
 	sfz_assert(meshPtr != nullptr);
 	if (meshPtr == nullptr) return;
+
+	// If mesh is not enabled, skip rendering it
+	if (!meshPtr->enabled) return;
 
 	// Validate some stuff in debug mode
 #ifndef NDEBUG

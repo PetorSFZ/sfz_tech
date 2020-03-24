@@ -235,8 +235,7 @@ zg::Result imguiInitRenderState(
 	uint64_t uploadHeapOffset = 0;
 	stateOut->frameStates.init(frameLatency, allocator, sfz_dbg(""));
 	for (uint32_t i = 0; i < frameLatency; i++) {
-		stateOut->frameStates.add({});
-		ImGuiFrameState& frame = stateOut->frameStates.last();
+		ImGuiFrameState& frame = stateOut->frameStates.add();
 
 		ASSERT_ZG frame.fence.create();
 

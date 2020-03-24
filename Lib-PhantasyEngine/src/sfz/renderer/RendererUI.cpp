@@ -909,6 +909,8 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 			ImGui::SameLine();
 			ImGui::Text("-- NOT VALID");
 		}
+		ImGui::SameLine();
+		ImGui::Checkbox(str64("##mesh_%llu_enabled", itemItr.key), &mesh.enabled);
 
 		// Components
 		ImGui::Indent(20.0f);

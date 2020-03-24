@@ -165,12 +165,22 @@ public:
 		mSize += numElements;
 	}
 
+	// Adds a zero:ed element and returns reference to it.
+	T& add() { addImpl<T>({}, 1); return last(); }
+
 	// Insert elements into the array at the specified position. Increases capacity if needed.
 	void insert(uint32_t pos, const T& value) { insertImpl(pos, &value, 1); }
 	void insert(uint32_t pos, const T* ptr, uint32_t numElements) { insertImpl(pos, ptr, numElements); }
 
-	// Removes the last element. If the array is empty nothing happens.
-	void pop() { if (mSize == 0) return; mSize -= 1; mData[mSize].~T(); }
+	// Removes and returns the last element. Undefined if array is empty.
+	T pop()
+	{
+		sfz_assert(mSize > 0);
+		mSize -= 1;
+		T tmp = std::move(mData[mSize]);
+		mData[mSize].~T();
+		return std::move(tmp);
+	}
 
 	// Remove numElements elements starting at the specified position.
 	void remove(uint32_t pos, uint32_t numElements = 1)
@@ -365,12 +375,22 @@ public:
 		mSize += numElements;
 	}
 
+	// Adds a zero:ed element and returns reference to it.
+	T& add() { addImpl<T>({}, 1); return last(); }
+
 	// Insert elements into the array at the specified position.
 	void insert(uint32_t pos, const T& value) { insertImpl(pos, &value, 1); }
 	void insert(uint32_t pos, const T* ptr, uint32_t numElements) { insertImpl(pos, ptr, numElements); }
 
-	// Removes the last element. If the array is empty nothing happens.
-	void pop() { if (mSize == 0) return; mSize -= 1; mData[mSize] = {}; }
+	// Removes and returns the last element. Undefined if array is empty.
+	T pop()
+	{
+		sfz_assert(mSize > 0);
+		mSize -= 1;
+		T tmp = std::move(mData[mSize]);
+		mData[mSize].~T();
+		return std::move(tmp);
+	}
 
 	// Remove numElements elements starting at the specified position.
 	void remove(uint32_t pos, uint32_t numElements = 1)

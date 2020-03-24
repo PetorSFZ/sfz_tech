@@ -33,6 +33,7 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 struct GpuMesh final {
+	bool enabled = true;
 	zg::Buffer vertexBuffer;
 	zg::Buffer indexBuffer;
 	zg::Buffer materialsBuffer;
