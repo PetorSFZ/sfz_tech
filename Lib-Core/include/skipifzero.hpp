@@ -376,6 +376,14 @@ inline vec2 normalizeSafe(vec2 v) { float tmp = length(v); return tmp == 0.0f ? 
 inline vec3 normalizeSafe(vec3 v) { float tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
 inline vec4 normalizeSafe(vec4 v) { float tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
 
+template<typename T, uint32_t N>
+constexpr T elemSum(Vec<T,N> v)
+{
+	T sum = T(0);
+	for (uint32_t i = 0; i < N; i++) sum += v[i];
+	return sum;
+}
+
 // Math functions
 // ------------------------------------------------------------------------------------------------
 

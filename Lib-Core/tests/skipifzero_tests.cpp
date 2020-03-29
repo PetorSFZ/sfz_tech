@@ -539,6 +539,26 @@ UTEST(Vec, cross_product)
 		ASSERT_TRUE(res2[2] == 0);
 	}
 }
+
+UTEST(Vec, element_sum)
+{
+	ASSERT_TRUE(sfz::elemSum(sfz::vec2(1.0f, 2.0f)) == 3.0f);
+	ASSERT_TRUE(sfz::elemSum(sfz::vec3(1.0f, 2.0f, 3.0f)) == 6.0f);
+	ASSERT_TRUE(sfz::elemSum(sfz::vec4(1.0f, 2.0f, 3.0f, 4.0f)) == 10.0f);
+
+	ASSERT_TRUE(sfz::elemSum(sfz::vec2_i32(1, 2)) == 3);
+	ASSERT_TRUE(sfz::elemSum(sfz::vec3_i32(1, 2, 3)) == 6);
+	ASSERT_TRUE(sfz::elemSum(sfz::vec4_i32(1, 2, 3, 4)) == 10);
+
+	ASSERT_TRUE(sfz::elemSum(sfz::vec2_i32(0, 0)) == 0);
+	ASSERT_TRUE(sfz::elemSum(sfz::vec3_i32(0, 0, 0)) == 0);
+	ASSERT_TRUE(sfz::elemSum(sfz::vec4_i32(0, 0, 0, 0)) == 0);
+
+	ASSERT_TRUE(sfz::elemSum(sfz::vec2_i32(-3, 3)) == 0);
+	ASSERT_TRUE(sfz::elemSum(sfz::vec3_i32(-2, -1, 3)) == 0);
+	ASSERT_TRUE(sfz::elemSum(sfz::vec4_i32(-4, -5, 10, -2)) == -1);
+}
+
 UTEST(Vec, is_proper_pod)
 {
 	ASSERT_TRUE(std::is_trivially_default_constructible<sfz::vec2>::value);
