@@ -41,7 +41,7 @@ struct CheckJsonImpl final {
 	CheckJsonImpl(const char* file, int line) noexcept : file(file), line(line) {}
 
 	template<typename T>
-	T operator% (const sfz::ParsedJsonNodeValue<T>& valuePair) noexcept {
+	T operator% (const sfz::JsonNodeValue<T>& valuePair) noexcept {
 		if (!valuePair.exists) {
 			SFZ_ERROR("NextGenRenderer", "Key did not exist in JSON file: %s:%i", file, line);
 			sfz_assert(false);
@@ -126,7 +126,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		SFZ_ERROR("NextGenRenderer", "Failed to load config at: %s", configPath);
 		return false;
 	}
-	ParsedJsonNode root = json.root();
+	JsonNode root = json.root();
 
 	// Ensure some necessary sections exist
 	if (!root.accessMap("render_pipelines").isValid()) return false;
@@ -139,14 +139,14 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	// Render pipelines
 
 	// Get number of render pipelines to load and allocate memory for them
-	ParsedJsonNode renderPipelinesNode = root.accessMap("render_pipelines");
+	JsonNode renderPipelinesNode = root.accessMap("render_pipelines");
 	uint32_t numRenderPipelines = renderPipelinesNode.arrayLength();
 	configurable.renderPipelines.init(numRenderPipelines, state.allocator, sfz_dbg(""));
 
 	// Parse information about each render pipeline
 	for (uint32_t i = 0; i < numRenderPipelines; i++) {
 
-		ParsedJsonNode pipelineNode = renderPipelinesNode.accessArray(i);
+		JsonNode pipelineNode = renderPipelinesNode.accessArray(i);
 		configurable.renderPipelines.add(PipelineRenderItem());
 		PipelineRenderItem& item = configurable.renderPipelines.last();
 
@@ -175,7 +175,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			CHECK_JSON pipelineNode.accessMap("standard_vertex_attributes").valueBool();
 
 		// Push constants registers if specified
-		ParsedJsonNode pushConstantsNode = pipelineNode.accessMap("push_constant_registers");
+		JsonNode pushConstantsNode = pipelineNode.accessMap("push_constant_registers");
 		if (pushConstantsNode.isValid()) {
 			uint32_t numPushConstants = pushConstantsNode.arrayLength();
 			for (uint32_t j = 0; j < numPushConstants; j++) {
@@ -186,7 +186,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		
 		// Constant buffers which are not user settable
 		// I.e., constant buffers which should not have memory allocated for them
-		ParsedJsonNode nonUserSettableCBsNode =
+		JsonNode nonUserSettableCBsNode =
 			pipelineNode.accessMap("non_user_settable_constant_buffers");
 		if (nonUserSettableCBsNode.isValid()) {
 			uint32_t numNonUserSettableConstantBuffers = nonUserSettableCBsNode.arrayLength();
@@ -197,11 +197,11 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		}
 
 		// Samplers
-		ParsedJsonNode samplersNode = pipelineNode.accessMap("samplers");
+		JsonNode samplersNode = pipelineNode.accessMap("samplers");
 		if (samplersNode.isValid()) {
 			uint32_t numSamplers = samplersNode.arrayLength();
 			for (uint32_t j = 0; j < numSamplers; j++) {
-				ParsedJsonNode node = samplersNode.accessArray(j);
+				JsonNode node = samplersNode.accessArray(j);
 				SamplerItem& sampler = item.samplers.add();
 				sampler.samplerRegister = CHECK_JSON node.accessMap("register").valueInt();
 				sampler.sampler.samplingMode = samplingModeFromString(
@@ -214,7 +214,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		}
 
 		// Render targets
-		ParsedJsonNode renderTargetsNode = pipelineNode.accessMap("render_targets");
+		JsonNode renderTargetsNode = pipelineNode.accessMap("render_targets");
 		sfz_assert(renderTargetsNode.isValid());
 		uint32_t numRenderTargets = renderTargetsNode.arrayLength();
 		for (uint32_t j = 0; j < numRenderTargets; j++) {
@@ -223,14 +223,14 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		}
 
 		// Depth test and function if specified
-		ParsedJsonNode depthFuncNode = pipelineNode.accessMap("depth_func");
+		JsonNode depthFuncNode = pipelineNode.accessMap("depth_func");
 		if (depthFuncNode.isValid()) {
 			item.depthTest = true;
 			item.depthFunc = depthFuncFromString(CHECK_JSON depthFuncNode.valueStr256());
 		}
 
 		// Culling
-		ParsedJsonNode cullingNode = pipelineNode.accessMap("culling");
+		JsonNode cullingNode = pipelineNode.accessMap("culling");
 		if (cullingNode.isValid()) {
 			item.cullingEnabled = true;
 			item.cullFrontFacing = CHECK_JSON cullingNode.accessMap("cull_front_face").valueBool();
@@ -239,7 +239,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		}
 
 		// Depth bias
-		ParsedJsonNode depthBiasNode = pipelineNode.accessMap("depth_bias");
+		JsonNode depthBiasNode = pipelineNode.accessMap("depth_bias");
 		item.depthBias = 0;
 		item.depthBiasSlopeScaled = 0.0f;
 		item.depthBiasClamp = 0.0f;
@@ -250,13 +250,13 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		}
 
 		// Wireframe rendering
-		ParsedJsonNode wireframeNode = pipelineNode.accessMap("wireframe_rendering");
+		JsonNode wireframeNode = pipelineNode.accessMap("wireframe_rendering");
 		if (wireframeNode.isValid()) {
 			item.wireframeRenderingEnabled = CHECK_JSON wireframeNode.valueBool();
 		}
 
 		// Alpha blending
-		ParsedJsonNode blendModeNode = pipelineNode.accessMap("blend_mode");
+		JsonNode blendModeNode = pipelineNode.accessMap("blend_mode");
 		item.blendMode = PipelineBlendMode::NO_BLENDING;
 		if (blendModeNode.isValid()) {
 			item.blendMode = blendModeFromString(CHECK_JSON blendModeNode.valueStr256());
@@ -267,14 +267,14 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	// Compute pipelines
 
 	// Get number of compute pipelines to load and allocate memory for them
-	ParsedJsonNode computePipelinesNode = root.accessMap("compute_pipelines");
+	JsonNode computePipelinesNode = root.accessMap("compute_pipelines");
 	uint32_t numComputePipelines = computePipelinesNode.arrayLength();
 	configurable.computePipelines.init(numComputePipelines, state.allocator, sfz_dbg(""));
 
 	// Parse information about each compute pipeline
 	for (uint32_t i = 0; i < numComputePipelines; i++) {
 		
-		ParsedJsonNode pipelineNode = computePipelinesNode.accessArray(i);
+		JsonNode pipelineNode = computePipelinesNode.accessArray(i);
 		configurable.computePipelines.add(PipelineComputeItem());
 		PipelineComputeItem& item = configurable.computePipelines.last();
 
@@ -295,7 +295,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			(CHECK_JSON pipelineNode.accessMap("compute_shader_entry").valueStr256()).str());
 
 		// Push constants registers if specified
-		ParsedJsonNode pushConstantsNode = pipelineNode.accessMap("push_constant_registers");
+		JsonNode pushConstantsNode = pipelineNode.accessMap("push_constant_registers");
 		if (pushConstantsNode.isValid()) {
 			uint32_t numPushConstants = pushConstantsNode.arrayLength();
 			for (uint32_t j = 0; j < numPushConstants; j++) {
@@ -306,7 +306,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		
 		// Constant buffers which are not user settable
 		// I.e., constant buffers which should not have memory allocated for them
-		ParsedJsonNode nonUserSettableCBsNode =
+		JsonNode nonUserSettableCBsNode =
 			pipelineNode.accessMap("non_user_settable_constant_buffers");
 		if (nonUserSettableCBsNode.isValid()) {
 			uint32_t numNonUserSettableConstantBuffers = nonUserSettableCBsNode.arrayLength();
@@ -317,11 +317,11 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		}
 
 		// Samplers
-		ParsedJsonNode samplersNode = pipelineNode.accessMap("samplers");
+		JsonNode samplersNode = pipelineNode.accessMap("samplers");
 		if (samplersNode.isValid()) {
 			uint32_t numSamplers = samplersNode.arrayLength();
 			for (uint32_t j = 0; j < numSamplers; j++) {
-				ParsedJsonNode node = samplersNode.accessArray(j);
+				JsonNode node = samplersNode.accessArray(j);
 				SamplerItem& sampler = item.samplers.add();
 				sampler.samplerRegister = CHECK_JSON node.accessMap("register").valueInt();
 				sampler.sampler.samplingMode = samplingModeFromString(
@@ -338,14 +338,14 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	// Static textures
 	{
 		// Get number of static textures to create and allocate memory for their handles
-		ParsedJsonNode staticTexturesNode = root.accessMap("static_textures");
+		JsonNode staticTexturesNode = root.accessMap("static_textures");
 		uint32_t numStaticTextures = staticTexturesNode.arrayLength();
 		configurable.staticTextures.init(numStaticTextures, state.allocator, sfz_dbg(""));
 
 		// Parse information about each static texture
 		for (uint32_t i = 0; i < numStaticTextures; i++) {
 			
-			ParsedJsonNode texNode = staticTexturesNode.accessArray(i);
+			JsonNode texNode = staticTexturesNode.accessArray(i);
 			configurable.staticTextures.add(StaticTextureItem());
 			StaticTextureItem& texItem = configurable.staticTextures.last();
 
@@ -399,7 +399,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	{
 		StringID defaultId = resStrings.getStringID("default");
 
-		ParsedJsonNode presentQueueNode = root.accessMap("present_queue");
+		JsonNode presentQueueNode = root.accessMap("present_queue");
 		const uint32_t numGroups = presentQueueNode.arrayLength();
 		
 		// Allocate memory for stage groups
@@ -407,7 +407,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 
 		// Parse stage groups
 		for (uint32_t groupIdx = 0; groupIdx < numGroups; groupIdx++) {
-			ParsedJsonNode groupNode = presentQueueNode.accessArray(groupIdx);
+			JsonNode groupNode = presentQueueNode.accessArray(groupIdx);
 
 			// Create group and read its name
 			StageGroup& group = configurable.presentQueue.add();
@@ -415,13 +415,13 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 				resStrings.getStringID(CHECK_JSON groupNode.accessMap("group_name").valueStr256());
 
 			// Get number of stages and allocate memory for them
-			ParsedJsonNode stages = groupNode.accessMap("stages");
+			JsonNode stages = groupNode.accessMap("stages");
 			const uint32_t numStages = stages.arrayLength();
 			group.stages.init(numStages, state.allocator, sfz_dbg(""));
 
 			// Stages
 			for (uint32_t stageIdx = 0; stageIdx < numStages; stageIdx++) {
-				ParsedJsonNode stageNode = stages.accessArray(stageIdx);
+				JsonNode stageNode = stages.accessArray(stageIdx);
 				Stage& stage = group.stages.add();
 
 				str256 stageName = CHECK_JSON stageNode.accessMap("stage_name").valueStr256();
@@ -438,7 +438,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 					stage.render.pipelineName = resStrings.getStringID(renderPipelineName);
 
 					if (stageNode.accessMap("render_targets").isValid()) {
-						ParsedJsonNode renderTargetsNode = stageNode.accessMap("render_targets");
+						JsonNode renderTargetsNode = stageNode.accessMap("render_targets");
 						uint32_t numRenderTargets = renderTargetsNode.arrayLength();
 						for (uint32_t i = 0; i < numRenderTargets; i++) {
 							str256 renderTargetName =
@@ -469,11 +469,11 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 
 				// Bound textures
 				if (stageNode.accessMap("bound_textures").isValid()) {
-					ParsedJsonNode boundTexsNode = stageNode.accessMap("bound_textures");
+					JsonNode boundTexsNode = stageNode.accessMap("bound_textures");
 					uint32_t numBoundTextures = boundTexsNode.arrayLength();
 
 					for (uint32_t i = 0; i < numBoundTextures; i++) {
-						ParsedJsonNode texNode = boundTexsNode.accessArray(i);
+						JsonNode texNode = boundTexsNode.accessArray(i);
 						BoundTexture boundTex;
 						boundTex.textureRegister = CHECK_JSON texNode.accessMap("register").valueInt();
 						str256 texName = CHECK_JSON texNode.accessMap("texture").valueStr256();
@@ -484,11 +484,11 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 
 				// Bound unordered textures
 				if (stageNode.accessMap("bound_unordered_textures").isValid()) {
-					ParsedJsonNode boundTexsNode = stageNode.accessMap("bound_unordered_textures");
+					JsonNode boundTexsNode = stageNode.accessMap("bound_unordered_textures");
 					uint32_t numBoundTextures = boundTexsNode.arrayLength();
 
 					for (uint32_t i = 0; i < numBoundTextures; i++) {
-						ParsedJsonNode texNode = boundTexsNode.accessArray(i);
+						JsonNode texNode = boundTexsNode.accessArray(i);
 						BoundTexture boundTex;
 						boundTex.textureRegister = CHECK_JSON texNode.accessMap("register").valueInt();
 						str256 texName = CHECK_JSON texNode.accessMap("texture").valueStr256();

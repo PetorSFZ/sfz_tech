@@ -26,11 +26,11 @@ namespace sfz {
 
 using sfz::str256;
 
-// ParsedJsonNodeType enum
+// JsonNodeType enum
 // ------------------------------------------------------------------------------------------------
 
 // The different types of nodes
-enum class ParsedJsonNodeType : uint32_t {
+enum class JsonNodeType : uint32_t {
 	// Undefined node, not valid to do any operations on
 	NONE = 0,
 
@@ -45,17 +45,17 @@ enum class ParsedJsonNodeType : uint32_t {
 	STRING,
 };
 
-// ParsedJsonNode class
+// JsonNode class
 // ------------------------------------------------------------------------------------------------
 
-// Size of the implementation of ParsedJsonNode in bytes
-constexpr uint32_t PARSED_JSON_NODE_IMPL_SIZE = 32;
+// Size of the implementation of JsonNode in bytes
+constexpr uint32_t JSON_NODE_IMPL_SIZE = 32;
 
 // Minimal helper struct that contains a value and whether the value existed or not
 //
 // Used as alternative getter for retrieving values from a ParsedJsonNode.
 template<typename T>
-struct ParsedJsonNodeValue {
+struct JsonNodeValue {
 	T value;
 	bool exists = false;
 };
@@ -64,31 +64,31 @@ struct ParsedJsonNodeValue {
 //
 // Used to traverse and access contents of a ParsedJson. NONE nodes are considered invalid and are
 // used as error codes for invalid accesses. Default constructed ParsedJsonNodes are also NONE.
-class ParsedJsonNode final {
+class JsonNode final {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	ParsedJsonNode() noexcept = default;
-	ParsedJsonNode(const ParsedJsonNode&) = delete;
-	ParsedJsonNode& operator= (const ParsedJsonNode&) = delete;
-	ParsedJsonNode(ParsedJsonNode&& other) noexcept { this->swap(other); }
-	ParsedJsonNode& operator= (ParsedJsonNode&& other) noexcept { this->swap(other); return *this; }
-	~ParsedJsonNode() noexcept { this->destroy(); }
+	JsonNode() noexcept = default;
+	JsonNode(const JsonNode&) = delete;
+	JsonNode& operator= (const JsonNode&) = delete;
+	JsonNode(JsonNode&& other) noexcept { this->swap(other); }
+	JsonNode& operator= (JsonNode&& other) noexcept { this->swap(other); return *this; }
+	~JsonNode() noexcept { this->destroy(); }
 
-	static ParsedJsonNode createFromImplDefined(const void* implDefined) noexcept;
+	static JsonNode createFromImplDefined(const void* implDefined) noexcept;
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void swap(ParsedJsonNode& other) noexcept;
+	void swap(JsonNode& other) noexcept;
 	void destroy() noexcept;
 
 	// Methods (all nodes)
 	// --------------------------------------------------------------------------------------------
 
 	// Returns type of node. NONE if the node is invalid for some reason.
-	ParsedJsonNodeType type() const noexcept;
+	JsonNodeType type() const noexcept;
 
 	// Returns whether the node is valid or not. NONE nodes are considered invalid.
 	bool isValid() const noexcept { return mActive; }
@@ -100,13 +100,13 @@ public:
 	uint32_t mapNumObjects() const noexcept;
 
 	// Accesses a node in a map, returns NONE on invalid access or if not map
-	ParsedJsonNode accessMap(const char* nodeName) const noexcept;
+	JsonNode accessMap(const char* nodeName) const noexcept;
 
 	// Length of the array, returns 0 if not an array node
 	uint32_t arrayLength() const noexcept;
 
 	// Accesses a node in the array, returns NONE on invalid access or if not array
-	ParsedJsonNode accessArray(uint32_t index) const noexcept;
+	JsonNode accessArray(uint32_t index) const noexcept;
 
 	// Methods (leaf nodes)
 	// --------------------------------------------------------------------------------------------
@@ -118,17 +118,17 @@ public:
 	bool value(char* strOut, uint32_t strCapacity) const noexcept;
 	uint32_t stringLength() const noexcept; // Returns 0 if not a string
 
-	ParsedJsonNodeValue<bool> valueBool() const noexcept;
-	ParsedJsonNodeValue<int32_t> valueInt() const noexcept;
-	ParsedJsonNodeValue<float> valueFloat() const noexcept;
-	ParsedJsonNodeValue<double> valueDouble() const noexcept;
-	ParsedJsonNodeValue<str256> valueStr256() const noexcept;
+	JsonNodeValue<bool> valueBool() const noexcept;
+	JsonNodeValue<int32_t> valueInt() const noexcept;
+	JsonNodeValue<float> valueFloat() const noexcept;
+	JsonNodeValue<double> valueDouble() const noexcept;
+	JsonNodeValue<str256> valueStr256() const noexcept;
 
 private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	uint8_t mImpl[PARSED_JSON_NODE_IMPL_SIZE] = {};
+	alignas(8) uint8_t mImpl[JSON_NODE_IMPL_SIZE] = {};
 	bool mActive = false;
 };
 
@@ -174,7 +174,7 @@ public:
 	// ---------------------------------------------------------------------------------------------
 
 	bool isValid() const noexcept { return mImpl != nullptr; }
-	ParsedJsonNode root() const noexcept;
+	JsonNode root() const noexcept;
 
 private:
 	// Private members

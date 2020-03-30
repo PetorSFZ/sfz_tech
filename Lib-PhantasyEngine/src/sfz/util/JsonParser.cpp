@@ -36,7 +36,7 @@ namespace sfz {
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-static_assert(PARSED_JSON_NODE_IMPL_SIZE >= sizeof(sajson::value), "ParsedJsonNode is too small");
+static_assert(JSON_NODE_IMPL_SIZE >= sizeof(sajson::value), "JsonNode is too small");
 //static_assert(std::is_trivially_copyable<sajson::value>::value, "sajson::value is not memcpy:able");
 
 static const sajson::value& castToSajsonValue(const uint8_t* memory) noexcept
@@ -94,28 +94,28 @@ static uint64_t copyStripCppComments(char* dst, const char* src, uint64_t srcLen
 	return totalNumBytes;
 }
 
-// ParsedJsonNode: Constructors & destructors
+// JsonNode: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-ParsedJsonNode ParsedJsonNode::createFromImplDefined(const void* implDefined) noexcept
+JsonNode JsonNode::createFromImplDefined(const void* implDefined) noexcept
 {
 	const sajson::value& value = *reinterpret_cast<const sajson::value*>(implDefined);
-	ParsedJsonNode node;
+	JsonNode node;
 	new (node.mImpl) sajson::value(value);
 	node.mActive = true;
 	return node;
 }
 
-// ParsedJsonNode: State methods
+// JsonNode: State methods
 // ------------------------------------------------------------------------------------------------
 
-void ParsedJsonNode::swap(ParsedJsonNode& other) noexcept
+void JsonNode::swap(JsonNode& other) noexcept
 {
 	std::swap(this->mImpl, other.mImpl);
 	std::swap(this->mActive, other.mActive);
 }
 
-void ParsedJsonNode::destroy() noexcept
+void JsonNode::destroy() noexcept
 {
 	if (!mActive) return;
 	reinterpret_cast<sajson::value*>(mImpl)->~value();
@@ -123,131 +123,131 @@ void ParsedJsonNode::destroy() noexcept
 	mActive = false;
 }
 
-// ParsedJsonNode: Methods (all nodes)
+// JsonNode: Methods (all nodes)
 // ------------------------------------------------------------------------------------------------
 
-ParsedJsonNodeType ParsedJsonNode::type() const noexcept
+JsonNodeType JsonNode::type() const noexcept
 {
 	// Return NONE type if not active
-	if (!mActive) return ParsedJsonNodeType::NONE;
+	if (!mActive) return JsonNodeType::NONE;
 
 	const sajson::value& value = castToSajsonValue(mImpl);
 	sajson::type type = value.get_type();
 	switch (type) {
-	case sajson::TYPE_INTEGER: return ParsedJsonNodeType::INTEGER;
-	case sajson::TYPE_DOUBLE: return ParsedJsonNodeType::FLOATING_POINT;
-	case sajson::TYPE_NULL: return ParsedJsonNodeType::NONE;
-	case sajson::TYPE_FALSE: return ParsedJsonNodeType::BOOL;
-	case sajson::TYPE_TRUE: return ParsedJsonNodeType::BOOL;
-	case sajson::TYPE_STRING: return ParsedJsonNodeType::STRING;
-	case sajson::TYPE_ARRAY: return ParsedJsonNodeType::ARRAY;
-	case sajson::TYPE_OBJECT: return ParsedJsonNodeType::MAP;
+	case sajson::TYPE_INTEGER: return JsonNodeType::INTEGER;
+	case sajson::TYPE_DOUBLE: return JsonNodeType::FLOATING_POINT;
+	case sajson::TYPE_NULL: return JsonNodeType::NONE;
+	case sajson::TYPE_FALSE: return JsonNodeType::BOOL;
+	case sajson::TYPE_TRUE: return JsonNodeType::BOOL;
+	case sajson::TYPE_STRING: return JsonNodeType::STRING;
+	case sajson::TYPE_ARRAY: return JsonNodeType::ARRAY;
+	case sajson::TYPE_OBJECT: return JsonNodeType::MAP;
 	}
 	sfz_assert(false);
-	return ParsedJsonNodeType::MAP;
+	return JsonNodeType::MAP;
 }
 
-// ParsedJsonNode: Methods (non-leaf nodes)
+// JsonNode: Methods (non-leaf nodes)
 // ------------------------------------------------------------------------------------------------
 
-uint32_t ParsedJsonNode::mapNumObjects() const noexcept
+uint32_t JsonNode::mapNumObjects() const noexcept
 {
 	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return NONE if wrong type
-	if (this->type() != ParsedJsonNodeType::MAP) return 0;
+	if (this->type() != JsonNodeType::MAP) return 0;
 
 	// Return number of objects
 	return (uint32_t)value.get_length();
 }
 
-ParsedJsonNode ParsedJsonNode::accessMap(const char* nodeName) const noexcept
+JsonNode JsonNode::accessMap(const char* nodeName) const noexcept
 {
 	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return NONE if wrong type
-	if (this->type() != ParsedJsonNodeType::MAP) return ParsedJsonNode();
+	if (this->type() != JsonNodeType::MAP) return JsonNode();
 
 	// Get value in map
 	sajson::string nodeNameStr(nodeName, std::strlen(nodeName));
 	sajson::value elementValue = value.get_value_of_key(nodeNameStr);
 
 	// Return NONE node if invalid access
-	if (elementValue.get_type() == sajson::TYPE_NULL) return ParsedJsonNode();
+	if (elementValue.get_type() == sajson::TYPE_NULL) return JsonNode();
 
 	// Return node
-	return ParsedJsonNode::createFromImplDefined(&elementValue);
+	return JsonNode::createFromImplDefined(&elementValue);
 }
 
-uint32_t ParsedJsonNode::arrayLength() const noexcept
+uint32_t JsonNode::arrayLength() const noexcept
 {
 	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return 0 if node is of wrong type
-	if (this->type() != ParsedJsonNodeType::ARRAY) return 0;
+	if (this->type() != JsonNodeType::ARRAY) return 0;
 
 	return (uint32_t)value.get_length();
 }
 
-ParsedJsonNode ParsedJsonNode::accessArray(uint32_t index) const noexcept
+JsonNode JsonNode::accessArray(uint32_t index) const noexcept
 {
 	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return NONE if wrong type
-	if (this->type() != ParsedJsonNodeType::ARRAY) return ParsedJsonNode();
+	if (this->type() != JsonNodeType::ARRAY) return JsonNode();
 
 	// Return NONE if out of range
-	if (index >= (uint32_t)value.get_length()) return ParsedJsonNode();
+	if (index >= (uint32_t)value.get_length()) return JsonNode();
 
 	// Return array element
 	sajson::value elementValue = value.get_array_element(index);
-	return ParsedJsonNode::createFromImplDefined(&elementValue);
+	return JsonNode::createFromImplDefined(&elementValue);
 }
 
-// ParsedJsonNode: Methods (leaf nodes)
+// JsonNode: Methods (leaf nodes)
 // ------------------------------------------------------------------------------------------------
 
-bool ParsedJsonNode::value(bool& valueOut) const noexcept
+bool JsonNode::value(bool& valueOut) const noexcept
 {
 	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return false if node is of wrong type
-	if (this->type() != ParsedJsonNodeType::BOOL) return false;
+	if (this->type() != JsonNodeType::BOOL) return false;
 
 	// Return value
 	valueOut = value.get_type() == sajson::TYPE_TRUE;
 	return true;
 }
 
-bool ParsedJsonNode::value(int32_t& valueOut) const noexcept
+bool JsonNode::value(int32_t& valueOut) const noexcept
 {
 	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return false if node is of wrong type
-	if (this->type() != ParsedJsonNodeType::INTEGER) return false;
+	if (this->type() != JsonNodeType::INTEGER) return false;
 
 	// Return value
 	valueOut = value.get_integer_value();
 	return true;
 }
 
-bool ParsedJsonNode::value(float& valueOut) const noexcept
+bool JsonNode::value(float& valueOut) const noexcept
 {
 	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return false if node is of wrong type
-	ParsedJsonNodeType t = this->type();
-	if (t != ParsedJsonNodeType::FLOATING_POINT && t != ParsedJsonNodeType::INTEGER) return false;
+	JsonNodeType t = this->type();
+	if (t != JsonNodeType::FLOATING_POINT && t != JsonNodeType::INTEGER) return false;
 
 	// Return value
-	if (t == ParsedJsonNodeType::FLOATING_POINT) {
+	if (t == JsonNodeType::FLOATING_POINT) {
 		valueOut = (float)value.get_double_value();
 	}
 	else {
@@ -256,17 +256,17 @@ bool ParsedJsonNode::value(float& valueOut) const noexcept
 	return true;
 }
 
-bool ParsedJsonNode::value(double& valueOut) const noexcept
+bool JsonNode::value(double& valueOut) const noexcept
 {
 	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return false if node is of wrong type
-	ParsedJsonNodeType t = this->type();
-	if (t != ParsedJsonNodeType::FLOATING_POINT && t != ParsedJsonNodeType::INTEGER) return false;
+	JsonNodeType t = this->type();
+	if (t != JsonNodeType::FLOATING_POINT && t != JsonNodeType::INTEGER) return false;
 
 	// Return value
-	if (t == ParsedJsonNodeType::FLOATING_POINT) {
+	if (t == JsonNodeType::FLOATING_POINT) {
 		valueOut = value.get_double_value();
 	}
 	else {
@@ -275,13 +275,13 @@ bool ParsedJsonNode::value(double& valueOut) const noexcept
 	return true;
 }
 
-bool ParsedJsonNode::value(char* strOut, uint32_t strCapacity) const noexcept
+bool JsonNode::value(char* strOut, uint32_t strCapacity) const noexcept
 {
 	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return false if node is of wrong type
-	if (this->type() != ParsedJsonNodeType::STRING) return false;
+	if (this->type() != JsonNodeType::STRING) return false;
 
 	// Check that capacity is enough
 	uint32_t strLen = (uint32_t)value.get_string_length();
@@ -293,54 +293,54 @@ bool ParsedJsonNode::value(char* strOut, uint32_t strCapacity) const noexcept
 	return true;
 }
 
-uint32_t ParsedJsonNode::stringLength() const noexcept
+uint32_t JsonNode::stringLength() const noexcept
 {
 	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
 
 	// Return false if node is of wrong type
-	if (this->type() != ParsedJsonNodeType::STRING) return 0;
+	if (this->type() != JsonNodeType::STRING) return 0;
 
 	// Return string length
 	uint32_t strLen = (uint32_t)value.get_string_length();
 	return strLen;
 }
 
-ParsedJsonNodeValue<bool> ParsedJsonNode::valueBool() const noexcept
+JsonNodeValue<bool> JsonNode::valueBool() const noexcept
 {
-	ParsedJsonNodeValue<bool> tmp;
+	JsonNodeValue<bool> tmp;
 	tmp.value = false; // Default-value
 	tmp.exists = this->value(tmp.value);
 	return tmp;
 }
 
-ParsedJsonNodeValue<int32_t> ParsedJsonNode::valueInt() const noexcept
+JsonNodeValue<int32_t> JsonNode::valueInt() const noexcept
 {
-	ParsedJsonNodeValue<int32_t> tmp;
+	JsonNodeValue<int32_t> tmp;
 	tmp.value = 0; // Default-value
 	tmp.exists = this->value(tmp.value);
 	return tmp;
 }
 
-ParsedJsonNodeValue<float> ParsedJsonNode::valueFloat() const noexcept
+JsonNodeValue<float> JsonNode::valueFloat() const noexcept
 {
-	ParsedJsonNodeValue<float> tmp;
+	JsonNodeValue<float> tmp;
 	tmp.value = 0.0f; // Default-value
 	tmp.exists = this->value(tmp.value);
 	return tmp;
 }
 
-ParsedJsonNodeValue<double> ParsedJsonNode::valueDouble() const noexcept
+JsonNodeValue<double> JsonNode::valueDouble() const noexcept
 {
-	ParsedJsonNodeValue<double> tmp;
+	JsonNodeValue<double> tmp;
 	tmp.value = 0.0; // Default-value
 	tmp.exists = this->value(tmp.value);
 	return tmp;
 }
 
-ParsedJsonNodeValue<str256> ParsedJsonNode::valueStr256() const noexcept
+JsonNodeValue<str256> JsonNode::valueStr256() const noexcept
 {
-	ParsedJsonNodeValue<str256> tmp;
+	JsonNodeValue<str256> tmp;
 	tmp.exists = this->value(tmp.value.mRawStr, tmp.value.capacity());
 	return tmp;
 }
@@ -471,11 +471,11 @@ void ParsedJson::destroy() noexcept
 // ParsedJson: State methods
 // ------------------------------------------------------------------------------------------------
 
-ParsedJsonNode ParsedJson::root() const noexcept
+JsonNode ParsedJson::root() const noexcept
 {
 	sfz_assert(mImpl->doc->is_valid());
 	sajson::value value = mImpl->doc->get_root();
-	return ParsedJsonNode::createFromImplDefined(&value);
+	return JsonNode::createFromImplDefined(&value);
 }
 
 } // namespace sfz

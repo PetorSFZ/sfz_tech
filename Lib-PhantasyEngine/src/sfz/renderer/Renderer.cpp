@@ -198,7 +198,6 @@ void Renderer::loadDummyConfiguration() noexcept
 	}
 
 	// Initialize profiling stats
-	StringCollection& resStrings = getResourceStrings();
 	ProfilingStats& stats = getProfilingStats();
 	stats.createCategory("gpu", 300, 66.7f, "ms", "frame", 20.0f,
 		StatsVisualizationType::FIRST_INDIVIDUALLY_REST_ADDED);
