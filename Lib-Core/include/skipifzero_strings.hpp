@@ -63,7 +63,7 @@ struct StringLocal final {
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
-	uint32_t size() const { return uint32_t(strlen(this->mRawStr)); }
+	uint32_t size() const { return uint32_t(strnlen(this->mRawStr, N)); }
 	uint32_t capacity() const { return N; }
 	const char* str() const { return mRawStr; }
 
