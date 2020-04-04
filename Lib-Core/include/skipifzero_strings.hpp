@@ -23,6 +23,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
+#include <cctype>
 
 #include "skipifzero.hpp"
 
@@ -92,6 +93,15 @@ struct StringLocal final {
 		sfz_assert(numChars < capacityLeft);
 		strncpy(this->mRawStr + len, chars, size_t(numChars));
 		this->mRawStr[len + numChars] = '\0';
+	}
+
+	void toLower()
+	{
+		char* c = mRawStr;
+		while (*c != '\0') {
+			*c = tolower(*c);
+			c++;
+		}
 	}
 
 	// Operators

@@ -44,6 +44,7 @@ In addition, some headers have additional standard library header requirements. 
 * `<cstdarg>`: Needed for `va_list` and related functionality.
 * `<cstdio>`: Needed for `vsnprintf()`.
 * `<cstring>`: Needed for various memory and string related functionality.
+* `<cctype>`: Needed for `tolower()`
 * `<malloc.h>`: (Windows only): Needed for `_aligned_malloc()`.
 
 ## Building and running tests
