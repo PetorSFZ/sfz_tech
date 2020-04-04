@@ -19,7 +19,6 @@
 
 #include "sfz/debug/Console.hpp"
 
-#include <cctype>
 #include <cstring>
 #include <ctime>
 
@@ -50,8 +49,7 @@ struct ConsoleState final {
 	// Console settings
 	bool active = false;
 	bool imguiFirstRun = false;
-	ImGuiID dockSpaceId = 0;
-
+	
 	// Performance
 	Setting* showInGamePreview = nullptr;
 	Setting* inGamePreviewWidth = nullptr;
@@ -75,14 +73,6 @@ struct ConsoleState final {
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-static void strToLower(char* dst, const char* src) noexcept
-{
-	size_t srcLen = strlen(src);
-	for (size_t i = 0; i <= srcLen; i++) { // <= to catch null-terminator
-		dst[i] = char(tolower(src[i]));
-	}
-}
-
 static void imguiPrintText(const char* str, vec4 color, const char* strEnd = nullptr) noexcept
 {
 	ImGui::PushStyleColor(ImGuiCol_Text, color);
@@ -96,8 +86,8 @@ static void renderFilteredText(
 	vec4 stringColor,
 	vec4 filterColor) noexcept
 {
-	str128 lowerStackStr;
-	strToLower(lowerStackStr.mRawStr, str);
+	str128 lowerStackStr("%s", str);
+	lowerStackStr.toLower();
 
 	const char* currStr = str;
 	const char* currLowerStr = lowerStackStr.str();
@@ -161,107 +151,10 @@ static void timeToString(str96& stringOut, time_t timestamp) noexcept
 	}
 }
 
-static void renderConsoleDockSpace(ConsoleState& state) noexcept
-{
-	ImGuiViewport* viewport = ImGui::GetMainViewport();
-	ImGuiDockNodeFlags dockSpaceFlags = 0;
-	dockSpaceFlags |= ImGuiDockNodeFlags_PassthruCentralNode;
-	state.dockSpaceId = ImGui::DockSpaceOverViewport(viewport, dockSpaceFlags);
-}
-
-static void renderConsoleDockSpaceInitialize(ConsoleState& state) noexcept
-{
-	ImGui::DockBuilderRemoveNode(state.dockSpaceId);
-
-	ImGuiDockNodeFlags dockSpaceFlags = 0;
-	dockSpaceFlags |= ImGuiDockNodeFlags_PassthruCentralNode;
-	dockSpaceFlags |= ImGuiDockNodeFlags_DockSpace;
-	ImGui::DockBuilderAddNode(state.dockSpaceId, dockSpaceFlags);
-
-	ImGuiViewport* viewport = ImGui::GetMainViewport();
-	ImGui::DockBuilderSetNodeSize(state.dockSpaceId, viewport->Size);
-
-	ImGuiID dockMain = state.dockSpaceId;
-	ImGuiID dockLeft = ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Left, 0.45f, NULL, &dockMain);
-	ImGuiID dockUpperLeft = ImGui::DockBuilderSplitNode(dockLeft, ImGuiDir_Up, 0.20f, NULL, &dockLeft);
-	ImGuiID dockBottom = ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Down, 0.5f, NULL, &dockMain);
-
-	ImGui::DockBuilderDockWindow("Performance", dockUpperLeft);
-	ImGui::DockBuilderDockWindow("Log", dockBottom);
-	ImGui::DockBuilderDockWindow("Config", dockLeft);
-	ImGui::DockBuilderDockWindow("Renderer", dockLeft);
-	ImGui::DockBuilderDockWindow("Audio", dockLeft);
-
-	for (uint32_t i = 0; i < state.injectedWindowNames.size(); i++) {
-		const char* windowName = state.injectedWindowNames[i].str();
-		ImGui::DockBuilderDockWindow(windowName, dockLeft);
-	}
-
-	ImGui::DockBuilderFinish(state.dockSpaceId);
-}
-
 // Returns whether window is docked or not, small hack to create initial docked layout
 static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcept
 {
 	ProfilingStats& stats = getProfilingStats();
-
-	// Calculate and set size of window
-	if (isPreview) {
-		vec2 windowSize =
-			vec2(float(state.inGamePreviewWidth->intValue()), float(state.inGamePreviewHeight->intValue()));
-		ImGui::SetNextWindowSize(windowSize, ImGuiCond_Always);
-		ImGui::SetNextWindowPos(vec2(0.0f), ImGuiCond_Always);
-	}
-	else {
-		ImGui::SetNextWindowSize(vec2(800, 135), ImGuiCond_FirstUseEver);
-	}
-
-	// Set window flags
-	ImGuiWindowFlags windowFlags = 0;
-	if (isPreview) {
-		windowFlags |= ImGuiWindowFlags_NoTitleBar;
-		windowFlags |= ImGuiWindowFlags_NoResize;
-		windowFlags |= ImGuiWindowFlags_NoMove;
-		windowFlags |= ImGuiWindowFlags_NoScrollbar;
-		windowFlags |= ImGuiWindowFlags_NoCollapse;
-		//windowFlags |= ImGuiWindowFlags_NoBackground;
-		windowFlags |= ImGuiWindowFlags_NoMouseInputs;
-		windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
-		windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
-		windowFlags |= ImGuiWindowFlags_NoNav;
-		windowFlags |= ImGuiWindowFlags_NoInputs;
-	}
-	else {
-		windowFlags |= ImGuiWindowFlags_NoScrollbar;
-		windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
-		windowFlags |= ImGuiWindowFlags_NoNav;
-	}
-
-	// Begin window
-	if (isPreview) {
-		ImGui::PushStyleColor(ImGuiCol_WindowBg, vec4(0.05f, 0.05f, 0.05f, 0.3f));
-		ImGui::PushStyleColor(ImGuiCol_Border, vec4(0.0f, 0.0f, 0.0f, 0.0f));
-		ImGui::Begin("Console Preview", nullptr, windowFlags);
-	}
-	else {
-		ImGui::Begin("Performance", nullptr, windowFlags);
-	}
-
-	// Show tab with category selection if not in preview mode
-	if (!isPreview) {
-		if (ImGui::BeginTabBar("PerformanceTabBar")) {
-			const uint32_t numCategories = stats.numCategories();
-			const char* const* categories = stats.categories();
-			for (uint32_t i = 0; i < numCategories; i++) {
-				if (ImGui::BeginTabItem(str96("%s##PerfBar", categories[i]))) {
-					state.categoryStr.clear();
-					state.categoryStr.appendf("%s", categories[i]);
-					ImGui::EndTabItem();
-				}
-			}
-			ImGui::EndTabBar();
-		}
-	}
 
 	// Get information about the selected category from the stats
 	const uint32_t numLabels = stats.numLabels(state.categoryStr);
@@ -279,7 +172,7 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 	float worstMax = FLT_MIN;
 	uint32_t longestLabelStr = 0;
 	for (uint32_t i = 0; i < numLabels; i++) {
-		
+
 		// Get samples
 		const char* label = labelStrs[i];
 		const float* samples = stats.samples(state.categoryStr, label);
@@ -290,7 +183,7 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 		processed.clear();
 		processed.add(samples, numSamples);
 		valuesList.add(processed.data());
-		
+
 		// Get color and stats
 		vec4 color = stats.color(state.categoryStr, label);
 		colorsList.add(ImGui::GetColorU32(color));
@@ -315,25 +208,7 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 		}
 	}
 
-	// Render performance numbers
-	ImGui::SetNextItemWidth(800.0f);
-	ImGui::BeginGroup();
-
-	for (uint32_t i = 0; i < numLabels; i++) {
-		ImGui::PushStyleColor(ImGuiCol_Text, colorsList[i]);
-		str64 format("%%-%us  avg %%5.1f %%s   max %%5.1f %%s", longestLabelStr);
-		ImGui::Text(format.str(),
-			labelStrs[i], labelStats[i].avg, sampleUnit, labelStats[i].max, sampleUnit);
-		ImGui::PopStyleColor();
-	}
-	ImGui::EndGroup();
-
-	// Calculate dimensions of plot
-	const vec2 infoDims = ImGui::GetItemRectMax();
-	ImGui::SameLine();
-	vec2 plotDims = vec2(ImGui::GetWindowSize()) - vec2(infoDims.x + 10.0f, isPreview ? 20.0f : 80.0f);
-	
-	// Render plot
+	// Create (most of) plot config
 	ImGui::PlotConfig conf;
 	conf.values.xs = stats.sampleIndicesFloat(state.categoryStr);
 	conf.values.count = int(numSamples);
@@ -353,16 +228,102 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 	conf.grid_x.size = 60;
 	conf.grid_x.subticks = 1;
 
-	conf.frame_size = plotDims;
-	conf.line_thickness = 1.0f;
 
-	ImGui::Plot("##PerformanceGraph", conf);
-
-	// End window
-	ImGui::End();
+	// Preview version
 	if (isPreview) {
+
+		// Calculate window size
+		vec2 windowSize =
+			vec2(float(state.inGamePreviewWidth->intValue()), float(state.inGamePreviewHeight->intValue()));
+		ImGui::SetNextWindowSize(windowSize, ImGuiCond_Always);
+		ImGui::SetNextWindowPos(vec2(0.0f), ImGuiCond_Always);
+
+		// Begin window
+		ImGuiWindowFlags windowFlags = 0;
+		windowFlags |= ImGuiWindowFlags_NoTitleBar;
+		windowFlags |= ImGuiWindowFlags_NoResize;
+		windowFlags |= ImGuiWindowFlags_NoMove;
+		windowFlags |= ImGuiWindowFlags_NoScrollbar;
+		windowFlags |= ImGuiWindowFlags_NoCollapse;
+		//windowFlags |= ImGuiWindowFlags_NoBackground;
+		windowFlags |= ImGuiWindowFlags_NoMouseInputs;
+		windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
+		windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+		windowFlags |= ImGuiWindowFlags_NoNav;
+		windowFlags |= ImGuiWindowFlags_NoInputs;
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, vec4(0.05f, 0.05f, 0.05f, 0.3f));
+		ImGui::PushStyleColor(ImGuiCol_Border, vec4(0.0f, 0.0f, 0.0f, 0.0f));
+		ImGui::Begin("Console Preview", nullptr, windowFlags);
+
+		// Render performance numbers
+		ImGui::SetNextItemWidth(800.0f);
+		ImGui::BeginGroup();
+		for (uint32_t i = 0; i < numLabels; i++) {
+			ImGui::PushStyleColor(ImGuiCol_Text, colorsList[i]);
+			str64 format("%%-%us  avg %%5.1f %%s   max %%5.1f %%s", longestLabelStr);
+			ImGui::Text(format.str(),
+				labelStrs[i], labelStats[i].avg, sampleUnit, labelStats[i].max, sampleUnit);
+			ImGui::PopStyleColor();
+		}
+		ImGui::EndGroup();
+
+		// Render plot
+		const vec2 infoDims = ImGui::GetItemRectMax();
+		ImGui::SameLine();
+		vec2 plotDims = vec2(ImGui::GetWindowSize()) - vec2(infoDims.x + 10.0f, 20.0f);
+		conf.frame_size = plotDims;
+		conf.line_thickness = 1.0f;
+		ImGui::Plot("##PerformanceGraph", conf);
+
+		// End window
+		ImGui::End();
 		ImGui::PopStyleColor();
 		ImGui::PopStyleColor();
+		return;
+	}
+
+	// If not preview
+	else {
+
+		// Begin window
+		ImGuiWindowFlags windowFlags = 0;
+		windowFlags |= ImGuiWindowFlags_NoScrollbar;
+		windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
+		windowFlags |= ImGuiWindowFlags_NoNav;
+		ImGui::Begin("Performance", nullptr, windowFlags);
+
+		// Tab bar
+		if (ImGui::BeginTabBar("PerformanceTabBar")) {
+			const uint32_t numCategories = stats.numCategories();
+			const char* const* categories = stats.categories();
+			for (uint32_t i = 0; i < numCategories; i++) {
+				if (ImGui::BeginTabItem(str96("%s##PerfBar", categories[i]))) {
+					state.categoryStr.clear();
+					state.categoryStr.appendf("%s", categories[i]);
+					ImGui::EndTabItem();
+				}
+			}
+			ImGui::EndTabBar();
+		}
+
+		// Render plot
+		vec2 plotDims = vec2(ImGui::GetWindowSize().y, 360);
+		conf.frame_size = plotDims;
+		conf.line_thickness = 1.0f;
+		ImGui::Plot("##PerformanceGraph", conf);
+
+		// Render performance numbers
+		for (uint32_t i = 0; i < numLabels; i++) {
+			ImGui::PushStyleColor(ImGuiCol_Text, colorsList[i]);
+			str64 format("%%-%us  avg %%5.1f %%s   max %%5.1f %%s", longestLabelStr);
+			ImGui::Text(format.str(),
+				labelStrs[i], labelStats[i].avg, sampleUnit, labelStats[i].max, sampleUnit);
+			ImGui::PopStyleColor();
+		}
+
+		// End window
+		ImGui::End();
+		return;
 	}
 }
 
@@ -392,7 +353,7 @@ static void renderLogWindow(ConsoleState& state) noexcept
 	ImGui::InputText("##Tag filter", state.logTagFilter.mRawStr, state.logTagFilter.capacity());
 	ImGui::PopItemWidth();
 	ImGui::SameLine();
-	strToLower(state.logTagFilter.mRawStr, state.logTagFilter);
+	state.logTagFilter.toLower();
 	bool tagFilterMode = state.logTagFilter != "";
 
 	int logMinLevelVal = state.logMinLevelSetting->intValue();
@@ -421,8 +382,8 @@ static void renderLogWindow(ConsoleState& state) noexcept
 
 		// Skip section if nothing matches when filtering
 		if (tagFilterMode) {
-			str32 tagLowerStr;
-			strToLower(tagLowerStr.mRawStr, message.tag);
+			str32 tagLowerStr("%s", message.tag.str());
+			tagLowerStr.toLower();
 			bool tagFilter = strstr(tagLowerStr.str(), state.logTagFilter.str()) != nullptr;
 			if (!tagFilter) continue;
 		}
@@ -438,7 +399,7 @@ static void renderLogWindow(ConsoleState& state) noexcept
 
 		// Create columns
 		ImGui::Columns(2);
-		ImGui::SetColumnWidth(0, 220.0f);
+		ImGui::SetColumnWidth(0, 200.0f);
 
 		// Print tag and messagess
 		ImGui::Separator();
@@ -504,7 +465,7 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
 	ImGui::InputText("Filter", state.configFilterString.mRawStr, state.configFilterString.capacity());
 	ImGui::PopStyleColor();
-	strToLower(state.configFilterString.mRawStr, state.configFilterString);
+	state.configFilterString.toLower();
 	bool filterMode = state.configFilterString != "";
 
 	// Add spacing and separator between filter and configs
@@ -530,8 +491,8 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 
 		// Skip section if nothing matches when filtering
 		if (filterMode) {
-			str32 sectionLowerStr;
-			strToLower(sectionLowerStr.mRawStr, sectionKey);
+			str32 sectionLowerStr("%s", sectionKey.str());
+			sectionLowerStr.toLower();
 			bool sectionFilter = strstr(sectionLowerStr, state.configFilterString) != nullptr;
 			bool settingsFilter = anyContainsFilter(state.cfgSectionSettings, state.configFilterString);
 			if (!sectionFilter && !settingsFilter) continue;
@@ -556,8 +517,8 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 
 			// Combine key strings
 			str128 combinedKeyStr("%s%s", sectionKey.str(), setting->key().str());
-			str128 combinedKeyLowerStr;
-			strToLower(combinedKeyLowerStr.mRawStr, combinedKeyStr);
+			str128 combinedKeyLowerStr("%s", combinedKeyStr.str());
+			combinedKeyLowerStr.toLower();
 
 			// Check if setting contains filter
 			bool containsFilter = strstr(combinedKeyLowerStr, state.configFilterString) != nullptr;
@@ -697,18 +658,48 @@ void Console::render() noexcept
 	if (!mState->active) return;
 
 	// Console dock space
-	renderConsoleDockSpace(*mState);
+	ImGuiID dockSpaceId = 0;
+	{
+		ImGuiDockNodeFlags dockSpaceFlags = 0;
+		dockSpaceFlags |= ImGuiDockNodeFlags_PassthruCentralNode;
+		dockSpaceId = ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), dockSpaceFlags);
+	}
 
 	// Render console windows
-	renderPerformanceWindow(*mState, false);
 	renderLogWindow(*mState);
+	renderPerformanceWindow(*mState, false);
 	renderConfigWindow(*mState);
 	getRenderer().renderImguiUI();
 	getAudioEngine().renderDebugUI();
 
 	// Initialize dockspace with default docked layout if first run
-	if (mState->imguiFirstRun) renderConsoleDockSpaceInitialize(*mState);
-	mState->imguiFirstRun = false;
+	if (mState->imguiFirstRun) {
+		ImGui::DockBuilderRemoveNode(dockSpaceId);
+
+		ImGuiDockNodeFlags dockSpaceFlags = 0;
+		dockSpaceFlags |= ImGuiDockNodeFlags_PassthruCentralNode;
+		dockSpaceFlags |= ImGuiDockNodeFlags_DockSpace;
+		ImGui::DockBuilderAddNode(dockSpaceId, dockSpaceFlags);
+		ImGui::DockBuilderSetNodeSize(dockSpaceId, ImGui::GetMainViewport()->Size);
+
+		ImGuiID dockMain = dockSpaceId;
+		ImGuiID dockLeft = ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Left, 0.6f, NULL, &dockMain);
+		//ImGuiID dockBottom = ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Down, 0.5f, NULL, &dockMain);
+
+		ImGui::DockBuilderDockWindow("Log", dockLeft);
+		ImGui::DockBuilderDockWindow("Performance", dockLeft);
+		ImGui::DockBuilderDockWindow("Config", dockLeft);
+		ImGui::DockBuilderDockWindow("Renderer", dockLeft);
+		ImGui::DockBuilderDockWindow("Audio", dockLeft);
+
+		for (uint32_t i = 0; i < mState->injectedWindowNames.size(); i++) {
+			const char* windowName = mState->injectedWindowNames[i].str();
+			ImGui::DockBuilderDockWindow(windowName, dockLeft);
+		}
+
+		ImGui::DockBuilderFinish(dockSpaceId);
+		mState->imguiFirstRun = false;
+	}
 }
 
 } // namespace sfz
