@@ -559,6 +559,44 @@ UTEST(Vec, element_sum)
 	ASSERT_TRUE(sfz::elemSum(sfz::vec4_i32(-4, -5, 10, -2)) == -1);
 }
 
+UTEST(Vec, element_max)
+{
+	ASSERT_TRUE(sfz::elemMax(sfz::vec2(1.0f, 2.0f)) == 2.0f);
+	ASSERT_TRUE(sfz::elemMax(sfz::vec3(1.0f, 2.0f, 3.0f)) == 3.0f);
+	ASSERT_TRUE(sfz::elemMax(sfz::vec4(1.0f, 2.0f, 3.0f, 4.0f)) == 4.0f);
+
+	ASSERT_TRUE(sfz::elemMax(sfz::vec2_i32(1, 2)) == 2);
+	ASSERT_TRUE(sfz::elemMax(sfz::vec3_i32(1, 2, 3)) == 3);
+	ASSERT_TRUE(sfz::elemMax(sfz::vec4_i32(1, 2, 3, 4)) == 4);
+
+	ASSERT_TRUE(sfz::elemMax(sfz::vec2_i32(0, 0)) == 0);
+	ASSERT_TRUE(sfz::elemMax(sfz::vec3_i32(0, 0, 0)) == 0);
+	ASSERT_TRUE(sfz::elemMax(sfz::vec4_i32(0, 0, 0, 0)) == 0);
+
+	ASSERT_TRUE(sfz::elemMax(sfz::vec2_i32(-3, 3)) == 3);
+	ASSERT_TRUE(sfz::elemMax(sfz::vec3_i32(-2, -1, 3)) == 3);
+	ASSERT_TRUE(sfz::elemMax(sfz::vec4_i32(-4, -5, 10, -2)) == 10);
+}
+
+UTEST(Vec, element_min)
+{
+	ASSERT_TRUE(sfz::elemMin(sfz::vec2(1.0f, 2.0f)) == 1.0f);
+	ASSERT_TRUE(sfz::elemMin(sfz::vec3(1.0f, 2.0f, 3.0f)) == 1.0f);
+	ASSERT_TRUE(sfz::elemMin(sfz::vec4(1.0f, 2.0f, 3.0f, 4.0f)) == 1.0f);
+
+	ASSERT_TRUE(sfz::elemMin(sfz::vec2_i32(1, 2)) == 1);
+	ASSERT_TRUE(sfz::elemMin(sfz::vec3_i32(1, 2, 3)) == 1);
+	ASSERT_TRUE(sfz::elemMin(sfz::vec4_i32(1, 2, 3, 4)) == 1);
+
+	ASSERT_TRUE(sfz::elemMin(sfz::vec2_i32(0, 0)) == 0);
+	ASSERT_TRUE(sfz::elemMin(sfz::vec3_i32(0, 0, 0)) == 0);
+	ASSERT_TRUE(sfz::elemMin(sfz::vec4_i32(0, 0, 0, 0)) == 0);
+
+	ASSERT_TRUE(sfz::elemMin(sfz::vec2_i32(-3, 3)) == -3);
+	ASSERT_TRUE(sfz::elemMin(sfz::vec3_i32(-2, -1, 3)) == -2);
+	ASSERT_TRUE(sfz::elemMin(sfz::vec4_i32(-4, -5, 10, -2)) == -5);
+}
+
 UTEST(Vec, is_proper_pod)
 {
 	ASSERT_TRUE(std::is_trivially_default_constructible<sfz::vec2>::value);

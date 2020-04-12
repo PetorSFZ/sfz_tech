@@ -384,6 +384,22 @@ constexpr T elemSum(Vec<T,N> v)
 	return sum;
 }
 
+template<typename T, uint32_t N>
+constexpr T elemMax(Vec<T,N> v)
+{
+	T m = v[0];
+	for (uint32_t i = 1; i < N; i++) m = sfz::max(m, v[i]);
+	return m;
+}
+
+template<typename T, uint32_t N>
+constexpr T elemMin(Vec<T,N> v)
+{
+	T m = v[0];
+	for (uint32_t i = 1; i < N; i++) m = sfz::min(m, v[i]);
+	return m;
+}
+
 // Math functions
 // ------------------------------------------------------------------------------------------------
 
