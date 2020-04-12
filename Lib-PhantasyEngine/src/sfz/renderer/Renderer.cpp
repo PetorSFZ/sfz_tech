@@ -177,9 +177,9 @@ bool Renderer::loadConfiguration(const char* jsonConfigPath) noexcept
 	stats.createLabel("gpu", "frametime", vec4(1.0f, 0.0f, 0.0f, 1.0f), 0.0f);
 	for (const StageGroup& group : mState->configurable.presentQueue) {
 		const char* label = resStrings.getString(group.groupName);
-		stats.createLabel("gpu", label, vec4(1.0f, 1.0f, 1.0f, 1.0f), 0.0f);
+		stats.createLabel("gpu", label);
 	}
-	stats.createLabel("gpu", "imgui", vec4(1.0f, 1.0f, 0.0f, 1.0f), 0.0f);
+	stats.createLabel("gpu", "imgui");
 
 	return true;
 }

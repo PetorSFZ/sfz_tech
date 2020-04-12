@@ -97,7 +97,7 @@ public:
 	void createLabel(
 		const char* category,
 		const char* label,
-		vec4 color = vec4(1.0f),
+		vec4 color = vec4(-1.0f),
 		float defaultValue = 0.0f) noexcept;
 
 	void addSample(

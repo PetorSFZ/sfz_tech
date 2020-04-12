@@ -305,6 +305,7 @@ set(HEADER_FILES
 	${INCLUDE_DIR}/sfz/util/IO.hpp
 	${INCLUDE_DIR}/sfz/util/JsonParser.hpp
 	${INCLUDE_DIR}/sfz/util/LoggingInterface.hpp
+	${INCLUDE_DIR}/sfz/util/RandomColors.hpp
 	${INCLUDE_DIR}/sfz/util/StandardLogger.hpp
 	${INCLUDE_DIR}/sfz/util/TerminalLogger.hpp
 
@@ -364,6 +365,7 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/util/IniParser.cpp
 	${SRC_DIR}/sfz/util/IO.cpp
 	${SRC_DIR}/sfz/util/JsonParser.cpp
+	${SRC_DIR}/sfz/util/RandomColors.cpp
 	${SRC_DIR}/sfz/util/StandardLogger.cpp
 	${SRC_DIR}/sfz/util/TerminalLogger.cpp
 

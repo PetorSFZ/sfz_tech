@@ -26,6 +26,8 @@
 #include <skipifzero_hash_maps.hpp>
 #include <skipifzero_strings.hpp>
 
+#include "sfz/util/RandomColors.hpp"
+
 namespace sfz {
 
 // ProfilingStatsState
@@ -275,9 +277,16 @@ void ProfilingStats::createLabel(
 	// Add label and fill with default values
 	StatsLabel& lab = cat->labels.put(label, {});
 	lab.defaultValue = defaultValue;
-	lab.color = color;
 	lab.samples.init(cat->numSamples, mState->allocator, sfz_dbg(""));
 	lab.samples.add(defaultValue, cat->numSamples);
+
+	// If no color specified, get random color
+	if (elemMax(color) < 0.0f) {
+		lab.color = vec4(getRandomColor(cat->labels.size() - 1), 1.0f);
+	}
+	else {
+		lab.color = color;
+	}
 
 	// Add label string
 	cat->labelStringBackings.add(str32("%s", label));
