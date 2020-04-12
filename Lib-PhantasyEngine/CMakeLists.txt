@@ -275,6 +275,7 @@ set(HEADER_FILES
 	${INCLUDE_DIR}/sfz/renderer/ZeroGUtils.hpp
 
 	${INCLUDE_DIR}/sfz/rendering/FullscreenTriangle.hpp
+	${INCLUDE_DIR}/sfz/rendering/HSV.hpp
 	${INCLUDE_DIR}/sfz/rendering/ImageView.hpp
 	${INCLUDE_DIR}/sfz/rendering/Image.hpp
 	${INCLUDE_DIR}/sfz/rendering/ImguiSupport.hpp
@@ -415,6 +416,8 @@ if(NOT hasParent OR PHANTASY_ENGINE_BUILD_TESTS)
 		${TESTS_DIR}/sfz/math/MathSupport_Tests.cpp
 		${TESTS_DIR}/sfz/math/Matrix_Tests.cpp
 		${TESTS_DIR}/sfz/math/Quaternion_Tests.cpp
+
+		${TESTS_DIR}/sfz/rendering/HSV_Tests.cpp
 
 		${TESTS_DIR}/sfz/memory/ArenaAllocator_Tests.cpp
 
