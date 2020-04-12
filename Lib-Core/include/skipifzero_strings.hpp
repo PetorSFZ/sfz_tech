@@ -99,7 +99,7 @@ struct StringLocal final {
 	{
 		char* c = mRawStr;
 		while (*c != '\0') {
-			*c = tolower(*c);
+			*c = char(tolower(*c));
 			c++;
 		}
 	}
