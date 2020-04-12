@@ -193,7 +193,7 @@ zg::Texture2D textureAllocateAndUploadBlocking(
 	zg::Buffer tmpUploadBuffers[ZG_MAX_NUM_MIPMAPS];
 	for (uint32_t i = 0; i < numMipmaps; i++) {
 		// TODO: Figure out exactly how much memory is needed
-		uint32_t bufferSize = (imageViews[i].pitchInBytes * imageViews[i].height) + 1024;
+		uint32_t bufferSize = (imageViews[i].pitchInBytes * imageViews[i].height) + 65536;
 		tmpUploadBuffers[i] = gpuAllocatorUpload.allocateBuffer(bufferSize);
 		sfz_assert(tmpUploadBuffers[i].valid());
 	}
