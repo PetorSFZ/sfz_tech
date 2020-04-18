@@ -75,6 +75,9 @@ struct InitOptions final {
 	// Name of application. Is used for, among other things, window title, name of ini file, etc.
 	const char* appName = "NO_APP_NAME";
 
+	// You can set this if you want another window name than your app name
+	const char* windowNameOverride = nullptr;
+
 	// Location of Ini file
 	IniLocation iniLocation = IniLocation::NEXT_TO_EXECUTABLE;
 

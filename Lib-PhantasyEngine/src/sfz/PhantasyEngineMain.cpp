@@ -466,8 +466,10 @@ int main(int argc, char* argv[])
 		SDL_WINDOW_ALLOW_HIGHDPI |
 		(fullscreen->boolValue() ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0) |
 		(maximized->boolValue() ? SDL_WINDOW_MAXIMIZED : 0);
+	const char* windowName =
+		options.windowNameOverride != nullptr ? options.windowNameOverride : options.appName;
 	SDL_Window* window =
-		SDL_CreateWindow(options.appName, 0, SDL_WINDOWPOS_UNDEFINED,
+		SDL_CreateWindow(windowName, 0, SDL_WINDOWPOS_UNDEFINED,
 		width->intValue(), height->intValue(), windowFlags);
 	if (window == NULL) {
 		SFZ_ERROR("PhantasyEngine", "SDL_CreateWindow() failed: %s", SDL_GetError());
