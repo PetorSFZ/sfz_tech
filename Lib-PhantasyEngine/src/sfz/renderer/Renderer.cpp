@@ -76,7 +76,9 @@ bool Renderer::init(
 	// Settings
 	GlobalConfig& cfg = getGlobalConfig();
 	Setting* debugModeSetting =
-		cfg.sanitizeBool("Renderer", "ZeroGDebugModeOnStartup", true, false);
+		cfg.sanitizeBool("Renderer", "OnStartupZeroG_DebugMode", true, false);
+	mState->vsync =
+		cfg.sanitizeBool("Renderer", "vsync", true, false);
 	mState->flushPresentQueueEachFrame =
 		cfg.sanitizeBool("Renderer", "flushPresentQueueEachFrame", false, false);
 	mState->flushCopyQueueEachFrame =
@@ -84,7 +86,7 @@ bool Renderer::init(
 
 	// Initializer ZeroG
 	bool zgInitSuccess =
-		initializeZeroG(mState->zgCtx, window, allocator, debugModeSetting->boolValue());
+		initializeZeroG(mState->zgCtx, window, allocator, debugModeSetting->boolValue(), mState->vsync->boolValue());
 	if (!zgInitSuccess) {
 		this->destroy();
 		return false;
@@ -521,6 +523,9 @@ void Renderer::frameBegin() noexcept
 			}
 		}
 	}
+
+	// Set vsync settings
+	CHECK_ZG mState->zgCtx.swapchainSetVsync(mState->vsync->boolValue());
 	
 	// Begin ZeroG frame
 	sfz_assert(!mState->windowFramebuffer.valid());

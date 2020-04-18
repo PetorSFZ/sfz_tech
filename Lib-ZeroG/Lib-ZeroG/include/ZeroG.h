@@ -126,7 +126,7 @@ ZG_STRUCT(ZgFramebufferRect) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 19;
+static const uint32_t ZG_COMPILED_API_VERSION = 20;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -270,6 +270,9 @@ ZG_STRUCT(ZgContextInitSettings) {
 	uint32_t width;
 	uint32_t height;
 
+	// [Optional] Whether VSync should be enabled or not
+	ZgBool vsync;
+
 	// [Optional] The logger used for logging
 	ZgLogger logger;
 
@@ -310,6 +313,11 @@ ZG_API ZgResult zgContextDeinit(void);
 ZG_API ZgResult zgContextSwapchainResize(
 	uint32_t width,
 	uint32_t height);
+
+// Sets whether VSync should be enabled or not. Should be cheap and safe to call every frame if
+// wanted.
+ZG_API ZgResult zgContextSwapchainSetVsync(
+	ZgBool vsync);
 
 // The framebuffer returned is owned by the swapchain and can't be released by the user. It is
 // still safe to call zgFramebufferRelease() on it, but it will be a no-op and the framebuffer

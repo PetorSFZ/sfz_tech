@@ -282,6 +282,7 @@ struct RendererState final {
 	zg::ImGuiRenderState* imguiRenderState = nullptr;;
 
 	// Settings
+	const Setting* vsync = nullptr;
 	const Setting* flushPresentQueueEachFrame = nullptr;
 	const Setting* flushCopyQueueEachFrame = nullptr;
 

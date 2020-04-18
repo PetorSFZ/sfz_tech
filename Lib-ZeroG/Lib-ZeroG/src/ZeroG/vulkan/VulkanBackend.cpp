@@ -252,6 +252,13 @@ public:
 		return ZG_WARNING_UNIMPLEMENTED;
 	}
 
+	ZgResult setVsync(
+		bool vsync) noexcept override final
+	{
+		(void)vsync;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
 	ZgResult swapchainBeginFrame(
 		ZgFramebuffer** framebufferOut,
 		ZgProfiler* profiler,

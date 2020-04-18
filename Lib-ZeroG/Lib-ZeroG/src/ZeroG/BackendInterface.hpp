@@ -33,6 +33,9 @@ struct ZgBackend {
 		uint32_t width,
 		uint32_t height) noexcept = 0;
 
+	virtual ZgResult setVsync(
+		bool vsync) noexcept = 0;
+
 	virtual ZgResult swapchainBeginFrame(
 		ZgFramebuffer** framebufferOut,
 		ZgProfiler* profiler,

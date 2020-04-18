@@ -68,6 +68,11 @@ Result Context::swapchainResize(uint32_t width, uint32_t height) noexcept
 	return (Result)zgContextSwapchainResize(width, height);
 }
 
+Result Context::swapchainSetVsync(bool vsync) noexcept
+{
+	return (Result)zgContextSwapchainSetVsync(vsync ? ZG_TRUE : ZG_FALSE);
+}
+
 Result Context::swapchainBeginFrame(Framebuffer& framebufferOut) noexcept
 {
 	if (framebufferOut.valid()) return Result::INVALID_ARGUMENT;

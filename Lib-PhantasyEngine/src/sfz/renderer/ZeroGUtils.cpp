@@ -120,7 +120,7 @@ bool CheckZgImpl::operator% (zg::Result result) noexcept
 // -----------------------------------------------------------------------------------------------
 
 bool initializeZeroG(
-	zg::Context& zgCtx, SDL_Window* window, sfz::Allocator* allocator, bool debugMode) noexcept
+	zg::Context& zgCtx, SDL_Window* window, sfz::Allocator* allocator, bool debugMode, bool vsync) noexcept
 {
 	SFZ_INFO("NextGenRenderer", "Initializing ZeroG");
 
@@ -133,6 +133,7 @@ bool initializeZeroG(
 	initSettings.backend = ZG_BACKEND_D3D12;
 	initSettings.width = 512;
 	initSettings.height = 512;
+	initSettings.vsync = vsync ? ZG_TRUE : ZG_FALSE;
 	initSettings.logger = getPhantasyEngineZeroGLogger();
 	initSettings.allocator = createZeroGAllocatorWrapper(allocator);
 	initSettings.nativeHandle = getNativeHandle(window);

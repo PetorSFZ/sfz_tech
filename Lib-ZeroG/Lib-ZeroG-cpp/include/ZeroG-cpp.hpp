@@ -118,6 +118,9 @@ public:
 	// See zgContextSwapchainResize()
 	Result swapchainResize(uint32_t width, uint32_t height) noexcept;
 
+	// See zgContextSwapchainSetVsync()
+	Result swapchainSetVsync(bool vsync) noexcept;
+
 	// See zgContextSwapchainBeginFrame()
 	Result swapchainBeginFrame(Framebuffer& framebufferOut) noexcept;
 	Result swapchainBeginFrame(

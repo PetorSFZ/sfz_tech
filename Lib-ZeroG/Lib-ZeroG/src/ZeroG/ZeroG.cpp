@@ -186,6 +186,12 @@ ZG_API ZgResult zgContextSwapchainResize(
 	return zg::getBackend()->swapchainResize(width, height);
 }
 
+ZG_API ZgResult zgContextSwapchainSetVsync(
+	ZgBool vsync)
+{
+	return zg::getBackend()->setVsync(vsync != ZG_FALSE);
+}
+
 ZG_API ZgResult zgContextSwapchainBeginFrame(
 	ZgFramebuffer** framebufferOut,
 	ZgProfiler* profiler,

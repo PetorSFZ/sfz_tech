@@ -78,7 +78,9 @@ struct D3D12BackendState final {
 	uint64_t swapchainFenceValues[NUM_SWAP_CHAIN_BUFFERS] = {};
 	int currentBackBufferIdx = 0;
 
+	// Vsync settings
 	bool allowTearing = false;
+	bool vsyncEnabled = false;
 
 	// Memory
 	std::atomic_uint64_t resourceUniqueIdentifierCounter = 1;
@@ -277,6 +279,7 @@ public:
 				DXGI_FEATURE_PRESENT_ALLOW_TEARING, &tearingAllowed, sizeof(tearingAllowed));
 			mState->allowTearing = tearingAllowed != FALSE;
 		}
+		mState->vsyncEnabled = settings.vsync != ZG_FALSE;
 
 		// Create swap chain
 		{
@@ -289,7 +292,7 @@ public:
 			desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 			desc.BufferCount = NUM_SWAP_CHAIN_BUFFERS; // 3 buffers, TODO: 1-2 buffers for no-vsync?
 			desc.Scaling = DXGI_SCALING_STRETCH;
-			desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL; // Vsync? TODO: DXGI_SWAP_EFFECT_FLIP_DISCARD
+			desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 			desc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
 			desc.Flags = (mState->allowTearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
 
@@ -471,6 +474,13 @@ public:
 		return ZG_SUCCESS;
 	}
 
+	ZgResult setVsync(
+		bool vsync) noexcept override final
+	{
+		mState->vsyncEnabled = vsync;
+		return ZG_SUCCESS;
+	}
+
 	ZgResult swapchainBeginFrame(
 		ZgFramebuffer** framebufferOut,
 		ZgProfiler* profiler,
@@ -544,9 +554,18 @@ public:
 			mState->commandQueuePresent.signalOnGpuInternal();
 
 		// Present back buffer
-		UINT vsync = 0; // TODO (MUST be 0 if DXGI_PRESENT_ALLOW_TEARING)
-		CHECK_D3D12 mState->swapchain->Present(
-			vsync, mState->allowTearing ? DXGI_PRESENT_ALLOW_TEARING : 0);
+		{
+			UINT vsync = 0;
+			UINT flags = 0;
+			if (mState->vsyncEnabled) {
+				vsync = 1;
+			}
+			else if (mState->allowTearing) {
+				// vsync MUST be 0 if we use the DXGI_PRESENT_ALLOW_TEARING flag
+				flags = DXGI_PRESENT_ALLOW_TEARING;
+			}
+			CHECK_D3D12 mState->swapchain->Present(vsync, flags);
+		}
 
 		// Get next back buffer index
 		mState->currentBackBufferIdx = mState->swapchain->GetCurrentBackBufferIndex();
