@@ -1,0 +1,10 @@
+set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+set(INCLUDE_FILES
+	${INCLUDE_DIR}/cgltf.h
+	${INCLUDE_DIR}/cgltf_write.h
+)
+add_custom_target(cgltf SOURCES ${INCLUDE_FILES})
+
+set(CGLTF_FOUND true PARENT_SCOPE)
+set(CGLTF_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)

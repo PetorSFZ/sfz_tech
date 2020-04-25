@@ -285,6 +285,7 @@ function(phAddZeroGImGui)
 endfunction()
 
 # Adds the remaining bundled externals
+# cgltf: ${CGLTF_FOUND}, ${CGLTF_INCLUDE_DIRS}
 # stb: ${STB_FOUND}, ${STB_INCLUDE_DIRS}
 # dear-imgui: ${IMGUI_FOUND}, ${IMGUI_INCLUDE_DIRS}, ${IMGUI_LIBRARIES}
 # imgui_plot: ${IMGUI_PLOT_FOUND}, ${IMGUI_PLOT_INCLUDE_DIRS}, ${IMGUI_PLOT_LIBRARIES}
@@ -293,6 +294,11 @@ endfunction()
 # soloud: ${SOLOUD_FOUND}, ${SOLOUD_INCLUDE_DIRS}, ${SOLOUD_LIBRARIES}
 # tinygltf: ${TINYGLTF_FOUND}, ${TINYGLTF_INCLUDE_DIRS}
 function(phAddBundledExternals)
+
+	message("-- [PhantasyEngine]: Adding cgltf target")
+	add_subdirectory(${SFZ_TECH_ROOT}/externals/cgltf ${CMAKE_BINARY_DIR}/cgltf)
+	set(CGLTF_FOUND ${CGLTF_FOUND} PARENT_SCOPE)
+	set(CGLTF_INCLUDE_DIRS ${CGLTF_INCLUDE_DIRS} PARENT_SCOPE)
 
 	message("-- [PhantasyEngine]: Adding stb target")
 	add_subdirectory(${SFZ_TECH_ROOT}/externals/stb ${CMAKE_BINARY_DIR}/stb)

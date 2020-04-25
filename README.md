@@ -15,6 +15,7 @@ That said, just because the projects are in the same repository does NOT mean th
 
 ## Third-party libraries
 
+* [cgltf](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/cgltf) - [Original source](https://github.com/jkuhlmann/cgltf) - glTF loader written in C.
 * [dear-imgui](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/dear-imgui) - [Original source](https://github.com/ocornut/imgui) - Immediate mode gui library.
 * [imgui-plot](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/imgui-plot) - [Original source](https://github.com/soulthreads/imgui-plot) - Improved plot widget for dear-imgui.
 * [nativefiledialog](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/nativefiledialog) - [Original source](https://github.com/mlabbe/nativefiledialog) - Portable library for native file open/save dialogs.
