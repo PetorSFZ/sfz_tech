@@ -292,7 +292,6 @@ endfunction()
 # nativefiledialog: ${NATIVEFILEDIALOG_FOUND}, ${NATIVEFILEDIALOG_INCLUDE_DIRS}, ${NATIVEFILEDIALOG_LIBRARIES}
 # sajson: ${SAJSON_FOUND}, ${SAJSON_INCLUDE_DIRS}
 # soloud: ${SOLOUD_FOUND}, ${SOLOUD_INCLUDE_DIRS}, ${SOLOUD_LIBRARIES}
-# tinygltf: ${TINYGLTF_FOUND}, ${TINYGLTF_INCLUDE_DIRS}
 function(phAddBundledExternals)
 
 	message("-- [PhantasyEngine]: Adding cgltf target")
@@ -333,11 +332,6 @@ function(phAddBundledExternals)
 	set(SOLOUD_FOUND ${SOLOUD_FOUND} PARENT_SCOPE)
 	set(SOLOUD_INCLUDE_DIRS ${SOLOUD_INCLUDE_DIRS} PARENT_SCOPE)
 	set(SOLOUD_LIBRARIES ${SOLOUD_LIBRARIES} PARENT_SCOPE)
-
-	message("-- [PhantasyEngine]: Adding tinygltf target")
-	add_subdirectory(${SFZ_TECH_ROOT}/externals/tinygltf ${CMAKE_BINARY_DIR}/tinygltf)
-	set(TINYGLTF_FOUND ${TINYGLTF_FOUND} PARENT_SCOPE)
-	set(TINYGLTF_INCLUDE_DIRS ${TINYGLTF_INCLUDE_DIRS} PARENT_SCOPE)
 
 endfunction()
 

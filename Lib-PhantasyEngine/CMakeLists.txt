@@ -130,6 +130,10 @@ if (NOT hasParent)
 	# ${STB_FOUND}, ${STB_INCLUDE_DIRS}
 	add_subdirectory(${EXTERNALS_DIR}/stb ${CMAKE_BINARY_DIR}/stb)
 
+	# cgltf
+	# ${CGLTF_FOUND}, ${CGLTF_INCLUDE_DIRS}
+	add_subdirectory(${EXTERNALS_DIR}/cgltf ${CMAKE_BINARY_DIR}/cgltf)
+
 	# nativefiledialog
 	# ${NATIVEFILEDIALOG_FOUND}, ${NATIVEFILEDIALOG_INCLUDE_DIRS}, ${NATIVEFILEDIALOG_LIBRARIES}
 	add_subdirectory(${EXTERNALS_DIR}/nativefiledialog ${CMAKE_BINARY_DIR}/nativefiledialog)
@@ -141,10 +145,6 @@ if (NOT hasParent)
 	# SoLoud
 	# ${SOLOUD_FOUND}, ${SOLOUD_INCLUDE_DIRS}, ${SOLOUD_LIBRARIES}
 	add_subdirectory(${EXTERNALS_DIR}/soloud ${CMAKE_BINARY_DIR}/soloud)
-
-	# tinygltf
-	# ${TINYGLTF_FOUND}, ${TINYGLTF_INCLUDE_DIRS}
-	add_subdirectory(${EXTERNALS_DIR}/tinygltf ${CMAKE_BINARY_DIR}/tinygltf)
 
 	# skipifzero Lib-Core
 	# ${SFZ_CORE_FOUND}, ${SFZ_CORE_INCLUDE_DIRS}
@@ -179,6 +179,10 @@ else()
 		message(FATAL_ERROR "PhantasyEngine requires stb libraries.")
 	endif()
 
+	if (NOT CGLTF_FOUND)
+		message(FATAL_ERROR "PhantasyEngine requires cgltf.")
+	endif()
+
 	if (NOT NATIVEFILEDIALOG_FOUND)
 		message(FATAL_ERROR "PhantasyEngine requires nativefiledialog.")
 	endif()
@@ -189,10 +193,6 @@ else()
 
 	if (NOT SOLOUD_FOUND)
 		message(FATAL_ERROR "PhantasyEngine requires SoLoud.")
-	endif()
-
-	if (NOT TINYGLTF_FOUND)
-		message(FATAL_ERROR "PhantasyEngine requires dear tinygltf.")
 	endif()
 
 	if (NOT SFZ_CORE_FOUND)
@@ -383,6 +383,7 @@ target_include_directories(PhantasyEngine PUBLIC
 	${ZEROG_INCLUDE_DIRS}
 	${ZEROG_CPP_INCLUDE_DIRS}
 	${SFZ_CORE_INCLUDE_DIRS}
+	${CGLTF_INCLUDE_DIRS}
 	${STB_INCLUDE_DIRS}
 	${IMGUI_INCLUDE_DIRS}
 	${IMGUI_PLOT_INCLUDE_DIRS}
@@ -390,7 +391,6 @@ target_include_directories(PhantasyEngine PUBLIC
 	${NATIVEFILEDIALOG_INCLUDE_DIRS}
 	${SAJSON_INCLUDE_DIRS}
 	${SOLOUD_INCLUDE_DIRS}
-	${TINYGLTF_INCLUDE_DIRS}
 )
 
 target_link_libraries(PhantasyEngine

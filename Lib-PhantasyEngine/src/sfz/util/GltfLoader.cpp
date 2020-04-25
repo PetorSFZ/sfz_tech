@@ -24,27 +24,13 @@
 #include "sfz/Context.hpp"
 #include "sfz/Logging.hpp"
 
-#define TINYGLTF_NOEXCEPTION
-#define JSON_NOEXCEPTION
-#define TINYGLTF_IMPLEMENTATION
-
-#define TINYGLTF_NO_STB_IMAGE
-#define TINYGLTF_NO_STB_IMAGE_WRITE
-
-#include "sfz/PushWarnings.hpp"
-#include "tiny_gltf.h"
-#include "sfz/PopWarnings.hpp"
+#define CGLTF_IMPLEMENTATION
+#include <cgltf.h>
 
 namespace sfz {
 
 // Statics
 // ------------------------------------------------------------------------------------------------
-
-static bool dummyLoadImageDataFunction(
-	tinygltf::Image*, const int, std::string*, std::string*, int, int, const unsigned char*, int, void*)
-{
-	return true;
-}
 
 static str320 calculateBasePath(const char* path) noexcept
 {
@@ -70,385 +56,98 @@ static str320 calculateBasePath(const char* path) noexcept
 	return str;
 }
 
-enum class ComponentType : uint32_t {
-	INT8 = 5120,
-	UINT8 = 5121,
-	INT16 = 5122,
-	UINT16 = 5123,
-	UINT32 = 5125,
-	FLOAT32 = 5126,
-};
-
-static uint32_t numBytes(ComponentType type)
-{
-	switch (type) {
-	case ComponentType::INT8: return 1;
-	case ComponentType::UINT8: return 1;
-	case ComponentType::INT16: return 2;
-	case ComponentType::UINT16: return 2;
-	case ComponentType::UINT32: return 4;
-	case ComponentType::FLOAT32: return 4;
-	}
-	return 0;
-}
-
-enum class ComponentDimensions : uint32_t {
-	SCALAR = TINYGLTF_TYPE_SCALAR,
-	VEC2 = TINYGLTF_TYPE_VEC2,
-	VEC3 = TINYGLTF_TYPE_VEC3,
-	VEC4 = TINYGLTF_TYPE_VEC4,
-	MAT2 = TINYGLTF_TYPE_MAT2,
-	MAT3 = TINYGLTF_TYPE_MAT3,
-	MAT4 = TINYGLTF_TYPE_MAT4,
-};
-
-static uint32_t numDimensions(ComponentDimensions dims)
-{
-	switch (dims) {
-	case ComponentDimensions::SCALAR: return 1;
-	case ComponentDimensions::VEC2: return 2;
-	case ComponentDimensions::VEC3: return 3;
-	case ComponentDimensions::VEC4: return 4;
-	case ComponentDimensions::MAT2: return 4;
-	case ComponentDimensions::MAT3: return 9;
-	case ComponentDimensions::MAT4: return 16;
-	}
-	return 0;
-}
-
-struct DataAccess final {
-	const uint8_t* rawPtr = nullptr;
-	uint32_t numElements = 0;
-	ComponentType compType = ComponentType::UINT8;
-	ComponentDimensions compDims = ComponentDimensions::SCALAR;
-
-	template<typename T>
-	const T& at(uint32_t index) const noexcept
-	{
-		return reinterpret_cast<const T*>(rawPtr)[index];
-	}
-};
-
-static DataAccess accessData(
-	const tinygltf::Model& model, int accessorIdx) noexcept
-{
-	// Access Accessor
-	if (accessorIdx < 0) return DataAccess();
-	if (accessorIdx >= int32_t(model.accessors.size())) return DataAccess();
-	const tinygltf::Accessor& accessor = model.accessors[accessorIdx];
-
-	// Access BufferView
-	if (accessor.bufferView < 0) return DataAccess();
-	if (accessor.bufferView >= int32_t(model.bufferViews.size())) return DataAccess();
-	const tinygltf::BufferView& bufferView = model.bufferViews[accessor.bufferView];
-
-	// Access Buffer
-	if (bufferView.buffer < 0) return DataAccess();
-	if (bufferView.buffer >= int32_t(model.buffers.size())) return DataAccess();
-	const tinygltf::Buffer& buffer = model.buffers[bufferView.buffer];
-
-	// Fill DataAccess struct
-	DataAccess tmp;
-	tmp.rawPtr = &buffer.data[accessor.byteOffset + bufferView.byteOffset];
-	tmp.numElements = uint32_t(accessor.count);
-	tmp.compType = ComponentType(accessor.componentType);
-	tmp.compDims = ComponentDimensions(accessor.type);
-
-	// For now we require that that there is no padding between elements in buffer
-	sfz_assert_hard(
-		bufferView.byteStride == 0 ||
-		bufferView.byteStride == size_t(numDimensions(tmp.compDims) * numBytes(tmp.compType)));
-
-	return tmp;
-}
-
-static DataAccess accessData(
-	const tinygltf::Model& model, const tinygltf::Primitive& primitive, const char* type) noexcept
-{
-	const auto& itr = primitive.attributes.find(type);
-	if (itr == primitive.attributes.end()) return DataAccess();
-	return accessData(model, itr->second);
-}
-
 static uint8_t toU8(float val) noexcept
 {
 	return uint8_t(std::roundf(val * 255.0f));
 }
 
-static vec4_u8 toSfz(const tinygltf::ColorValue& val) noexcept
+static vec4_u8 toU8(vec4 val) noexcept
 {
 	vec4_u8 tmp;
-	tmp.x = toU8(float(val[0]));
-	tmp.y = toU8(float(val[1]));
-	tmp.z = toU8(float(val[2]));
-	tmp.w = toU8(float(val[3]));
+	tmp.x = toU8(val.x);
+	tmp.y = toU8(val.y);
+	tmp.z = toU8(val.z);
+	tmp.w = toU8(val.w);
 	return tmp;
 }
 
-static bool extractAssets(
-	const char* basePath,
-	const tinygltf::Model& model,
-	Mesh& meshOut,
-	Array<ImageAndPath>& texturesOut,
-	bool (*checkIfTextureIsLoaded)(StringID id, void* userPtr),
-	void* userPtr,
-	sfz::Allocator* allocator) noexcept
+static void* cgltfAlloc(void* userPtr, cgltf_size size) noexcept
 {
-	StringCollection& resStrings = getResourceStrings();
+	sfz::Allocator* allocator = static_cast<sfz::Allocator*>(userPtr);
+	return allocator->allocate(sfz_dbg("cgltf"), uint64_t(size));
+}
 
-	// Load textures
-	texturesOut.init(uint32_t(model.textures.size()), allocator, sfz_dbg(""));
-	for (uint32_t i = 0; i < model.textures.size(); i++) {
-		const tinygltf::Texture& tex = model.textures[i];
-		if (tex.source < 0 || int(model.images.size()) <= tex.source) {
-			SFZ_ERROR("tinygltf", "Bad texture source: %i", tex.source);
-			return false;
-		}
-		const tinygltf::Image& img = model.images[tex.source];
+static void cgltfFree(void* userPtr, void* ptr) noexcept
+{
+	sfz::Allocator* allocator = static_cast<sfz::Allocator*>(userPtr);
+	allocator->deallocate(ptr);
+}
 
-		// Create global path (path relative to game executable)
-		const str320 globalPath("%s%s", basePath, img.uri.c_str());
-		StringID globalPathId = resStrings.getStringID(globalPath);
+static cgltf_memory_options sfzToCgltfAllocator(sfz::Allocator* allocator) noexcept
+{
+	cgltf_memory_options memOptions = {};
+	memOptions.alloc = cgltfAlloc;
+	memOptions.free = cgltfFree;
+	memOptions.user_data = allocator;
+	return memOptions;
+}
 
-		// Check if texture is already loaded, skip it if it is
-		if (checkIfTextureIsLoaded != nullptr) {
-			if (checkIfTextureIsLoaded(globalPathId, userPtr)) continue;
-		}
-
-		// Load and store image
-		ImageAndPath pack;
-		pack.globalPathId = globalPathId;
-		pack.image = loadImage("", globalPath);
-		if (pack.image.rawData.data() == nullptr) {
-			SFZ_ERROR("tinygltf", "Could not load texture: \"%s\"", globalPath.str());
-			return false;
-		}
-		texturesOut.add(std::move(pack));
-
-		// TODO: We need to store these two values somewhere. Likely in material (because it does
-		//       not make perfect sense that everything should access the texture the same way)
-		//const tinygltf::Sampler& sampler = model.samplers[tex.sampler];
-		//int wrapS = sampler.wrapS; // ["CLAMP_TO_EDGE", "MIRRORED_REPEAT", "REPEAT"], default "REPEAT"
-		//int wrapT = sampler.wrapT; // ["CLAMP_TO_EDGE", "MIRRORED_REPEAT", "REPEAT"], default "REPEAT"
+static const char* toString(cgltf_result res) noexcept
+{
+	switch (res) {
+	case cgltf_result_success: return "success";
+	case cgltf_result_data_too_short: return "data_too_short";
+	case cgltf_result_unknown_format: return "unknown_format";
+	case cgltf_result_invalid_json: return "invalid_json";
+	case cgltf_result_invalid_gltf: return "invalid_gltf";
+	case cgltf_result_invalid_options: return "invalid_options";
+	case cgltf_result_file_not_found: return "file_not_found";
+	case cgltf_result_io_error: return "io_error";
+	case cgltf_result_out_of_memory: return "out_of_memory";
+	case cgltf_result_legacy_gltf: return "legacy_gltf";
 	}
+	sfz_assert(false);
+	return "";
+}
 
-	// Lambda for getting the StringID from a material
-	auto getStringID = [&](int texIndex) -> StringID {
-		const tinygltf::Texture& tex = model.textures[texIndex];
-		const tinygltf::Image& img = model.images[tex.source];
-		str320 globalPath("%s%s", basePath, img.uri.c_str());
-		StringID globalPathId = resStrings.getStringID(globalPath);
-		return globalPathId;
-	};
-
-	// Load materials
-	meshOut.materials.init(uint32_t(model.materials.size()), allocator, sfz_dbg(""));
-	for (uint32_t i = 0; i < model.materials.size(); i++) {
-		const tinygltf::Material& material = model.materials[i];
-		Material phMat;
-
-		// Lambda for checking if parameter exists
-		auto hasParamValues = [&](const char* key) {
-			return material.values.find(key) != material.values.end();
-		};
-		auto hasParamAdditionalValues = [&](const char* key) {
-			return material.additionalValues.find(key) != material.additionalValues.end();
-		};
-
-		// Albedo value
-		if (hasParamValues("baseColorFactor")) {
-			const tinygltf::Parameter& param = material.values.find("baseColorFactor")->second;
-			tinygltf::ColorValue color = param.ColorFactor();
-			phMat.albedo = toSfz(color);
-		}
-
-		// Albedo texture
-		if (hasParamValues("baseColorTexture")) {
-			const tinygltf::Parameter& param = material.values.find("baseColorTexture")->second;
-			int texIndex = param.TextureIndex();
-			if (texIndex < 0 || int(model.textures.size()) <= texIndex) {
-				SFZ_ERROR("tinygltf", "Bad texture index for material %u", i);
-				continue;
-			}
-			phMat.albedoTex = getStringID(texIndex);
-			// TODO: Store which texcoords to use
-		}
-
-		// Roughness Value
-		if (hasParamValues("roughnessFactor")) {
-			const tinygltf::Parameter& param = material.values.find("roughnessFactor")->second;
-			phMat.roughness = toU8(float(param.Factor()));
-		}
-
-		// Metallic Value
-		if (hasParamValues("metallicFactor")) {
-			const tinygltf::Parameter& param = material.values.find("metallicFactor")->second;
-			phMat.metallic = toU8(float(param.Factor()));
-		}
-
-		// Emissive value
-		if (hasParamAdditionalValues("emissiveFactor")) {
-			const tinygltf::Parameter& param = material.additionalValues.find("emissiveFactor")->second;
-			phMat.emissive.x = float(param.ColorFactor()[0]);
-			phMat.emissive.y = float(param.ColorFactor()[1]);
-			phMat.emissive.z = float(param.ColorFactor()[2]);
-		}
-
-		// Roughness and Metallic texture
-		if (hasParamValues("metallicRoughnessTexture")) {
-			const tinygltf::Parameter& param = material.values.find("metallicRoughnessTexture")->second;
-			int texIndex = param.TextureIndex();
-			if (texIndex < 0 || int(model.textures.size()) <= texIndex) {
-				SFZ_ERROR("tinygltf", "Bad texture index for material %u", i);
-				continue;
-			}
-			phMat.metallicRoughnessTex = getStringID(texIndex);
-			// TODO: Store which texcoords to use
-		}
-
-		// Normal texture
-		if (hasParamAdditionalValues("normalTexture")) {
-			const tinygltf::Parameter& param = material.additionalValues.find("normalTexture")->second;
-			int texIndex = param.TextureIndex();
-			if (texIndex < 0 || int(model.textures.size()) <= texIndex) {
-				SFZ_ERROR("tinygltf", "Bad texture index for material %u", i);
-				continue;
-			}
-			phMat.normalTex = getStringID(texIndex);
-			// TODO: Store which texcoords to use
-		}
-
-		// Occlusion texture
-		if (hasParamAdditionalValues("occlusionTexture")) {
-			const tinygltf::Parameter& param = material.additionalValues.find("occlusionTexture")->second;
-			int texIndex = param.TextureIndex();
-			if (texIndex < 0 || int(model.textures.size()) <= texIndex) {
-				SFZ_ERROR("tinygltf", "Bad texture index for material %u", i);
-				continue;
-			}
-			phMat.occlusionTex = getStringID(texIndex);
-			// TODO: Store which texcoords to use
-		}
-
-		// Emissive texture
-		if (hasParamAdditionalValues("emissiveTexture")) {
-			const tinygltf::Parameter& param = material.additionalValues.find("emissiveTexture")->second;
-			int texIndex = param.TextureIndex();
-			if (texIndex < 0 || int(model.textures.size()) <= texIndex) {
-				SFZ_ERROR("tinygltf", "Bad texture index for material %u", i);
-				continue;
-			}
-			phMat.emissiveTex = getStringID(texIndex);
-			// TODO: Store which texcoords to use
-		}
-
-		// Remove default emissive factor if no emissive is specified
-		if (phMat.emissiveTex == StringID::invalid() && !hasParamAdditionalValues("emissiveFactor")) {
-			phMat.emissive = vec3(0.0f);
-		}
-
-		// Add material to assets
-		meshOut.materials.add(phMat);
+static cgltf_attribute* findAttributeByName(cgltf_primitive& primitive, const char* nameIn)
+{
+	str64 name = str64("%s", nameIn);
+	const uint32_t numAttributes = uint32_t(primitive.attributes_count);
+	for (uint32_t i = 0; i < numAttributes; i++) {
+		cgltf_attribute& attribute = primitive.attributes[i];
+		if (name == attribute.name) return &attribute;
 	}
+	return nullptr;
+}
 
-	// Add single default material if no materials
-	if (meshOut.materials.size() == 0) {
-		sfz::Material defaultMaterial;
-		defaultMaterial.emissive = vec3(1.0, 0.0, 0.0);
-		meshOut.materials.add(defaultMaterial);
+static const uint8_t* getBufferStart(cgltf_accessor* accessor)
+{
+	// Start of buffer is offset both by the buffer_view's offset and the accessor's offset
+	const uint32_t accessorOffset = uint32_t(accessor->offset);
+	const uint32_t bufferViewOffset = uint32_t(accessor->buffer_view->offset);
+	const uint8_t* buffer = static_cast<const uint8_t*>(accessor->buffer_view->buffer->data);
+	return buffer + accessorOffset + bufferViewOffset;
+}
+
+static uint32_t getBufferStrideBytes(cgltf_accessor* accessor)
+{
+	const uint32_t accessorStrideBytes = uint32_t(accessor->stride);
+	const uint32_t bufferViewStrideBytes = uint32_t(accessor->buffer_view->stride);
+	if (bufferViewStrideBytes == 0) {
+		// If buffer_view's stride is 0, then the stride is determined by the accessor
+		sfz_assert(accessorStrideBytes != 0);
+		return accessorStrideBytes;
 	}
+	// TODO: Unsure what's correct here
+	sfz_assert(accessorStrideBytes == bufferViewStrideBytes);
+	return accessorStrideBytes;// +bufferViewStrideBytes;
+}
 
-	// Add meshes
-	uint32_t numVertexGuess = uint32_t(model.meshes.size()) * 256;
-	meshOut.vertices.init(numVertexGuess, allocator, sfz_dbg(""));
-	meshOut.indices.init(numVertexGuess * 2, allocator, sfz_dbg(""));
-	meshOut.components.init(uint32_t(model.meshes.size()), allocator, sfz_dbg(""));
-	for (uint32_t i = 0; i < uint32_t(model.meshes.size()); i++) {
-		const tinygltf::Mesh& mesh = model.meshes[i];
-		MeshComponent phMeshComp;
-
-		// TODO: For now, stupidly assume each mesh only have one primitive
-		const tinygltf::Primitive& primitive = mesh.primitives[0];
-
-		// Mode can be:
-		// TINYGLTF_MODE_POINTS (0)
-		// TINYGLTF_MODE_LINE (1)
-		// TINYGLTF_MODE_LINE_LOOP (2)
-		// TINYGLTF_MODE_TRIANGLES (4)
-		// TINYGLTF_MODE_TRIANGLE_STRIP (5)
-		// TINYGLTF_MODE_TRIANGLE_FAN (6)
-		sfz_assert_hard(primitive.mode == TINYGLTF_MODE_TRIANGLES);
-
-		sfz_assert_hard(
-			primitive.indices >= 0 && primitive.indices < int(model.accessors.size()));
-
-		// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#geometry
-		//
-		// Allowed attributes:
-		// POSITION, NORMAL, TANGENT, TEXCOORD_0, TEXCOORD_1, COLOR_0, JOINTS_0, WEIGHTS_0
-		//
-		// Stupidly assume positions, normals, and texcoord_0 exists
-		DataAccess posAccess = accessData(model, primitive, "POSITION");
-		sfz_assert_hard(posAccess.rawPtr != nullptr);
-		sfz_assert_hard(posAccess.compType == ComponentType::FLOAT32);
-		sfz_assert_hard(posAccess.compDims == ComponentDimensions::VEC3);
-
-		DataAccess normalAccess = accessData(model, primitive, "NORMAL");
-		sfz_assert_hard(normalAccess.rawPtr != nullptr);
-		sfz_assert_hard(normalAccess.compType == ComponentType::FLOAT32);
-		sfz_assert_hard(normalAccess.compDims == ComponentDimensions::VEC3);
-
-		DataAccess texcoord0Access = accessData(model, primitive, "TEXCOORD_0");
-		sfz_assert_hard(texcoord0Access.rawPtr != nullptr);
-		sfz_assert_hard(texcoord0Access.compType == ComponentType::FLOAT32);
-		sfz_assert_hard(texcoord0Access.compDims == ComponentDimensions::VEC2);
-
-		// Assume texcoord_1 does NOT exist
-		DataAccess texcoord1Access = accessData(model, primitive, "TEXCOORD_1");
-		sfz_assert_hard(texcoord1Access.rawPtr == nullptr);
-
-		// Create vertices from positions and normals
-		// TODO: Texcoords
-		sfz_assert_hard(posAccess.numElements == normalAccess.numElements);
-		uint32_t compVertexOffset = meshOut.vertices.size();
-		for (uint32_t j = 0; j < posAccess.numElements; j++) {
-			Vertex vertex;
-			vertex.pos = posAccess.at<vec3>(j);
-			vertex.normal = normalAccess.at<vec3>(j);
-			vertex.texcoord = texcoord0Access.at<vec2>(j);
-			meshOut.vertices.add(vertex);
-		}
-
-		// Create indices
-		DataAccess idxAccess = accessData(model, primitive.indices);
-		sfz_assert_hard(idxAccess.rawPtr != nullptr);
-		sfz_assert_hard(idxAccess.compDims == ComponentDimensions::SCALAR);
-		phMeshComp.firstIndex = meshOut.indices.size();
-		phMeshComp.numIndices = idxAccess.numElements;
-		if (idxAccess.compType == ComponentType::UINT32) {
-			for (uint32_t j = 0; j < idxAccess.numElements; j++) {
-				meshOut.indices.add(compVertexOffset + idxAccess.at<uint32_t>(j));
-			}
-		}
-		else if (idxAccess.compType == ComponentType::UINT16) {
-			for (uint32_t j = 0; j < idxAccess.numElements; j++) {
-				meshOut.indices.add(compVertexOffset + uint32_t(idxAccess.at<uint16_t>(j)));
-			}
-		}
-		else {
-			sfz_assert_hard(false);
-		}
-
-		// Material
-		uint32_t materialIdx = primitive.material < 0 ? 0 : primitive.material;
-		sfz_assert_hard(materialIdx < meshOut.materials.size());
-		phMeshComp.materialIdx = materialIdx;
-
-		// Add component to mesh
-		meshOut.components.add(phMeshComp);
-	}
-
-	return true;
+template<typename T>
+static T access(const uint8_t* buffer, uint32_t strideBytes, uint32_t idx)
+{
+	return *reinterpret_cast<const T*>(buffer + strideBytes * idx);
 }
 
 // Function for loading from gltf
@@ -462,44 +161,201 @@ bool loadAssetsFromGltf(
 	bool (*checkIfTextureIsLoaded)(StringID id, void* userPtr),
 	void* userPtr) noexcept
 {
+	cgltf_options cgltfOptions = {};
+	cgltfOptions.memory = sfzToCgltfAllocator(allocator);
+
+	// Attempt to read the gltf file and parse it
+	cgltf_data* data = nullptr;
+	{
+		cgltf_result res = cgltf_parse_file(&cgltfOptions, gltfPath, &data);
+		if (res != cgltf_result_success) {
+			SFZ_ERROR("cgltf", "Failed to load glTF from \"%s\", result: %s",
+				gltfPath, toString(res));
+			return false;
+		}
+	}
+
+	// Attempt to load buffers
+	{
+		cgltf_result res = cgltf_load_buffers(&cgltfOptions, data, gltfPath);
+		if (res != cgltf_result_success) {
+			SFZ_ERROR("cgltf", "Failed to load buffers from \"%s\", result: %s",
+				gltfPath, toString(res));
+			cgltf_free(data);
+			return false;
+		}
+	}
+
 	str320 basePath = calculateBasePath(gltfPath);
+	StringCollection& resStrings = getResourceStrings();
 
-	// Initializing loader with dummy image loader function
-	tinygltf::TinyGLTF loader;
-	loader.SetImageLoader(dummyLoadImageDataFunction, nullptr);
+	// Load textures
+	{
+		const uint32_t numTextures = uint32_t(data->textures_count);
+		texturesOut.init(numTextures, allocator, sfz_dbg(""));
+		for (uint32_t texIdx = 0; texIdx < numTextures; texIdx++) {
+			cgltf_texture& texture = data->textures[texIdx];
+			cgltf_image& image = *texture.image;
 
-	// Read model from file
-	tinygltf::Model model;
-	std::string error;
-	std::string warnings;
-	bool result = loader.LoadASCIIFromFile(&model, &error, &warnings, gltfPath);
+			// Create global path (path relative to game executable)
+			const str320 globalPath("%s%s", basePath, image.uri);
+			StringID globalPathId = resStrings.getStringID(globalPath);
 
-	// Check error string
-	if (!warnings.empty()) {
-		SFZ_WARNING("tinygltf", "Warnings loading \"%s\": %s", gltfPath, warnings.c_str());
-	}
-	if (!error.empty()) {
-		SFZ_ERROR("tinygltf", "Error loading \"%s\": %s", gltfPath, error.c_str());
-		return false;
-	}
+			// Check if texture is already loaded, skip it if it is
+			if (checkIfTextureIsLoaded != nullptr) {
+				if (checkIfTextureIsLoaded(globalPathId, userPtr)) continue;
+			}
 
-	// Check return code
-	if (!result) {
-		SFZ_ERROR("tinygltf", "Error loading \"%s\"", gltfPath);
-		return false;
-	}
-
-	// Log that model was succesfully loaded
-	SFZ_INFO_NOISY("tinygltf", "Model \"%s\" loaded succesfully", gltfPath);
-
-	// Extract assets from results
-	bool extractSuccess = extractAssets(
-		basePath, model, meshOut, texturesOut, checkIfTextureIsLoaded, userPtr, allocator);
-	if (!extractSuccess) {
-		SFZ_ERROR("tinygltf", "Failed to create sfz::Mesh from gltf: \"%s\"", gltfPath);
-		return false;
+			// Load and store image
+			ImageAndPath pack;
+			pack.globalPathId = globalPathId;
+			pack.image = loadImage("", globalPath);
+			if (pack.image.rawData.data() == nullptr) {
+				SFZ_ERROR("cgltf", "Could not load texture: \"%s\"", globalPath.str());
+				return false;
+			}
+			texturesOut.add(std::move(pack));
+		}
 	}
 
+	// Add materials
+	{
+		const uint32_t numMaterials = uint32_t(data->materials_count);
+		meshOut.materials.init(numMaterials, allocator, sfz_dbg(""));
+		for (uint32_t matIdx = 0; matIdx < numMaterials; matIdx++) {
+			cgltf_material& material = data->materials[matIdx];
+
+			sfz_assert(material.has_pbr_metallic_roughness);
+			cgltf_pbr_metallic_roughness& pbr = material.pbr_metallic_roughness;
+
+			Material& phMat = meshOut.materials.add();
+			phMat.albedo = toU8(vec4(pbr.base_color_factor));
+			phMat.roughness = toU8(pbr.roughness_factor);
+			phMat.metallic = toU8(pbr.metallic_factor);
+			phMat.emissive = vec3(material.emissive_factor);
+				
+			auto lookupTexture = [&](cgltf_texture_view& view) -> StringID {
+				if (view.texture == nullptr) return StringID();
+				sfz_assert(!view.has_transform);
+
+				// Create global path (path relative to game executable)
+				const str320 globalPath("%s%s", basePath, view.texture->image->uri);
+				return resStrings.getStringID(globalPath);
+			};
+
+			phMat.albedoTex = lookupTexture(pbr.base_color_texture);
+			phMat.metallicRoughnessTex = lookupTexture(pbr.metallic_roughness_texture);
+			phMat.normalTex = lookupTexture(material.normal_texture);
+			phMat.occlusionTex = lookupTexture(material.occlusion_texture);
+			phMat.emissiveTex = lookupTexture(material.emissive_texture);
+		}
+	}
+
+	// Add single default material if no materials
+	if (meshOut.materials.size() == 0) {
+		sfz::Material& defaultMaterial = meshOut.materials.add();
+		defaultMaterial.emissive = vec3(1.0, 0.0, 0.0);
+	}
+
+	// Load all meshes inside file and store them in a single mesh
+	{
+		const uint32_t numMeshes = uint32_t(data->meshes_count);
+		const uint32_t numVertexGuess = numMeshes * 256;
+		meshOut.vertices.init(numVertexGuess, allocator, sfz_dbg(""));
+		meshOut.indices.init(numVertexGuess * 2, allocator, sfz_dbg(""));
+		meshOut.components.init(numMeshes, allocator, sfz_dbg(""));
+		for (uint32_t meshIdx = 0; meshIdx < numMeshes; meshIdx++) {
+			cgltf_mesh& mesh = data->meshes[meshIdx];
+
+			// TODO: For now, stupidly assume each mesh only have one triangle primitive
+			sfz_assert_hard(mesh.primitives_count == 1);
+			cgltf_primitive& primitive = mesh.primitives[0];
+			sfz_assert_hard(primitive.type == cgltf_primitive_type_triangles);
+
+			// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#geometry
+			//
+			// Allowed attributes:
+			// POSITION, NORMAL, TANGENT, TEXCOORD_0, TEXCOORD_1, COLOR_0, JOINTS_0, WEIGHTS_0
+			//
+			// Stupidly assume positions, normals, and texcoord_0 exists
+			cgltf_attribute* posAttrib = findAttributeByName(primitive, "POSITION");
+			cgltf_attribute* normalAttrib = findAttributeByName(primitive, "NORMAL");
+			cgltf_attribute* texcoordAttrib = findAttributeByName(primitive, "TEXCOORD_0");
+			sfz_assert(findAttributeByName(primitive, "TEXCOORD_1") == nullptr);
+			sfz_assert_hard(posAttrib != nullptr);
+			sfz_assert_hard(normalAttrib != nullptr);
+			sfz_assert_hard(texcoordAttrib != nullptr);
+			sfz_assert_hard(posAttrib->data->component_type == cgltf_component_type_r_32f);
+			sfz_assert_hard(posAttrib->data->type == cgltf_type_vec3);
+			sfz_assert_hard(normalAttrib->data->component_type == cgltf_component_type_r_32f);
+			sfz_assert_hard(normalAttrib->data->type == cgltf_type_vec3);
+			sfz_assert_hard(texcoordAttrib->data->component_type == cgltf_component_type_r_32f);
+			sfz_assert_hard(texcoordAttrib->data->type == cgltf_type_vec2);
+			sfz_assert(posAttrib->data->count == normalAttrib->data->count);
+			sfz_assert(posAttrib->data->count == texcoordAttrib->data->count);
+			const uint32_t numVertices = uint32_t(posAttrib->data->count);
+
+			// Grab data pointers and strides
+			const uint8_t* posBuffer = getBufferStart(posAttrib->data);
+			const uint32_t posStride = getBufferStrideBytes(posAttrib->data);
+			const uint8_t* normalBuffer = getBufferStart(normalAttrib->data);
+			const uint32_t normalStride = getBufferStrideBytes(normalAttrib->data);
+			const uint8_t* texcoordBuffer = getBufferStart(texcoordAttrib->data);
+			const uint32_t texcoordStride = getBufferStrideBytes(texcoordAttrib->data);
+
+			// Add vertices to list of vertices
+			const uint32_t offsetToThisComp = meshOut.vertices.size();
+			for (uint32_t i = 0; i < numVertices; i++) {
+				Vertex& v = meshOut.vertices.add();
+				v.pos = access<vec3>(posBuffer, posStride, i);
+				v.normal = access<vec3>(normalBuffer, normalStride, i);
+				v.texcoord = access<vec2>(texcoordBuffer, texcoordStride, i);
+			}
+
+			// Grab index buffer
+			const bool index16 = primitive.indices->component_type == cgltf_component_type_r_16u;
+			const bool index32 = primitive.indices->component_type == cgltf_component_type_r_32u;
+			sfz_assert_hard(index16 || index32);
+			sfz_assert_hard(primitive.indices->type == cgltf_type_scalar);
+			const uint32_t numIndices = uint32_t(primitive.indices->count);
+			const uint8_t* indexBuffer = getBufferStart(primitive.indices);
+			const uint32_t indexStride = getBufferStrideBytes(primitive.indices);
+			
+			// Add indices to list of indices
+			MeshComponent comp;
+			comp.firstIndex = meshOut.indices.size();
+			comp.numIndices = numIndices;
+			if (index16) {
+				for (uint32_t i = 0; i < numIndices; i++) {
+					const uint32_t offsetIndex =
+						offsetToThisComp + access<uint16_t>(indexBuffer, indexStride, i);
+					meshOut.indices.add(offsetIndex);
+				}
+			}
+			else if (index32) {
+				for (uint32_t i = 0; i < numIndices; i++) {
+					const uint32_t offsetIndex =
+						offsetToThisComp + access<uint32_t>(indexBuffer, indexStride, i);
+					meshOut.indices.add(offsetIndex);
+				}
+			}
+			else {
+				sfz_assert_hard(false);
+			}
+
+			// Material
+			const bool hasMaterial = primitive.material != nullptr;
+			comp.materialIdx = 0;
+			if (hasMaterial) comp.materialIdx = uint32_t(primitive.material - data->materials);
+			sfz_assert_hard(comp.materialIdx < meshOut.materials.size());
+
+			// Add component to mesh
+			meshOut.components.add(comp);
+		}
+	}
+
+	// Free cgltf data and return
+	cgltf_free(data);
 	return true;
 }
 
