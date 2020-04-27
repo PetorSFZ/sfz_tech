@@ -152,11 +152,12 @@ zg::Texture2D textureAllocateAndUploadBlocking(
 	// Calculate number of mipmaps if requested
 	uint32_t numMipmaps = 1;
 	if (generateMipmaps) {
-		uint32_t logWidth = uint32_t(log2(image.width));
-		uint32_t logHeight = uint32_t(log2(image.width));
+		uint32_t logWidth = sfz::max(uint32_t(log2(image.width)), 1u);
+		uint32_t logHeight = sfz::max(uint32_t(log2(image.height)), 1u);
 		uint32_t logMin = std::min(logWidth, logHeight);
 		numMipmaps = std::min(logMin, (ZG_MAX_NUM_MIPMAPS - 1));
 	}
+	sfz_assert(numMipmaps != 0);
 
 	// Allocate Texture
 	zg::Texture2D texture = gpuAllocatorTexture.allocateTexture2D(
@@ -165,7 +166,6 @@ zg::Texture2D textureAllocateAndUploadBlocking(
 	if (!texture.valid()) return zg::Texture2D();
 
 	// Generate mipmaps (on CPU)
-	sfz_assert(numMipmaps != 0);
 	Image mipmaps[ZG_MAX_NUM_MIPMAPS - 1];
 	for (uint32_t i = 0; i < (numMipmaps - 1); i++) {
 		
