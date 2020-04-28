@@ -376,6 +376,48 @@ static_assert(sizeof(GameStateHeader) == 64, "GameStateHeader is padded");
 // Game state functions
 // ------------------------------------------------------------------------------------------------
 
+// Calculates the size of a game state in bytes. Can be used to statically allocate the necessary
+// memory to hold a game state
+constexpr uint32_t calcSizeOfGameStateBytes(
+	uint32_t numSingletons,
+	const uint32_t singletonSizes[],
+	uint32_t maxNumEntities,
+	uint32_t numComponents,
+	const uint32_t componentSizes[])
+{
+	uint32_t totalSizeBytes = 0;
+
+	// GameState Header
+	totalSizeBytes += sizeof(GameStateHeader);
+
+	// Singleton registry
+	totalSizeBytes += calcArrayHeaderSizeBytes(sizeof(SingletonRegistryEntry), numSingletons);
+
+	// Singleton structs
+	for (uint32_t i = 0; i < numSingletons; i++) {
+		totalSizeBytes += uint32_t(roundUpAligned(singletonSizes[i], 32));
+	}
+
+	// Component registry (+ 1 for active bit)
+	totalSizeBytes += calcArrayHeaderSizeBytes(sizeof(ComponentRegistryEntry), numComponents + 1);
+
+	// Free entity ids list
+	totalSizeBytes += calcArrayHeaderSizeBytes(sizeof(uint32_t), maxNumEntities);
+
+	// Entity masks
+	totalSizeBytes += calcArrayHeaderSizeBytes(sizeof(ComponentMask), maxNumEntities);
+
+	// Entity generations list
+	totalSizeBytes += calcArrayHeaderSizeBytes(sizeof(uint8_t), maxNumEntities);
+
+	// Component arrays
+	for (uint32_t i = 0; i < numComponents; i++) {
+		totalSizeBytes += calcArrayHeaderSizeBytes(componentSizes[i], maxNumEntities);
+	}
+
+	return totalSizeBytes;
+}
+
 // Creates a game state
 //
 // The resulting state will contain numComponentTypes + 1 types of components. The first type (0)

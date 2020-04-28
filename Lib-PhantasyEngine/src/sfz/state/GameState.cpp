@@ -364,7 +364,7 @@ GameStateContainer createGameState(
 	// Singleton registry
 	ArrayHeader singletonRegistryHeader;
 	singletonRegistryHeader.create<SingletonRegistryEntry>(numSingletonStructs);
-	uint32_t singletonRegistrySizeBytes = singletonRegistryHeader.numBytesNeededForArrayPlusHeader32Byte();
+	uint32_t singletonRegistrySizeBytes = calcArrayHeaderSizeBytes(sizeof(SingletonRegistryEntry), numSingletonStructs);
 	totalSizeBytes += singletonRegistrySizeBytes;
 
 	// Singleton structs
@@ -377,36 +377,32 @@ GameStateContainer createGameState(
 		singleRegistryEntries[i].sizeInBytes = singletonStructSizes[i];
 
 		// Calculate next 32-byte aligned offset and update totalSizeBytes
-		uint32_t bytesBeforePadding = singletonStructSizes[i];
-		uint32_t padding = 32 - (bytesBeforePadding & 0x1F); // bytesBeforePadding % 32
-		if (padding == 32) padding = 0;
-		uint32_t bytesIncludingPadding = bytesBeforePadding + padding;
-		totalSizeBytes += bytesIncludingPadding;
+		totalSizeBytes += uint32_t(roundUpAligned(singletonStructSizes[i], 32));
 	}
 
 	// Components registry (+ 1 for active bit)
 	uint32_t offsetComponentRegistryHeader = totalSizeBytes;
 	ArrayHeader componentRegistryHeader;
 	componentRegistryHeader.create<ComponentRegistryEntry>(numComponentTypes + 1);
-	uint32_t componentRegistrySizeBytes = componentRegistryHeader.numBytesNeededForArrayPlusHeader32Byte();
+	uint32_t componentRegistrySizeBytes = calcArrayHeaderSizeBytes(sizeof(ComponentRegistryEntry), numComponentTypes + 1);
 	totalSizeBytes += componentRegistrySizeBytes;
 
 	// Free entity ids list
 	ArrayHeader freeEntityIdsHeader;
 	freeEntityIdsHeader.create<uint32_t>(maxNumEntities);
-	uint32_t freeEntityIdsSizeBytes = freeEntityIdsHeader.numBytesNeededForArrayPlusHeader32Byte();
+	uint32_t freeEntityIdsSizeBytes = calcArrayHeaderSizeBytes(sizeof(uint32_t), maxNumEntities);
 	totalSizeBytes += freeEntityIdsSizeBytes;
 
 	// Entity masks
 	ArrayHeader masksHeader;
 	masksHeader.create<ComponentMask>(maxNumEntities);
-	uint32_t masksSizeBytes = masksHeader.numBytesNeededForArrayPlusHeader32Byte();
+	uint32_t masksSizeBytes = calcArrayHeaderSizeBytes(sizeof(ComponentMask), maxNumEntities);
 	totalSizeBytes += masksSizeBytes;
 
 	// Entity generations list
 	ArrayHeader generationsHeader;
 	generationsHeader.create<uint8_t>(maxNumEntities);
-	uint32_t generationsSizeBytes = generationsHeader.numBytesNeededForArrayPlusHeader32Byte();
+	uint32_t generationsSizeBytes = calcArrayHeaderSizeBytes(sizeof(uint8_t), maxNumEntities);
 	totalSizeBytes += generationsSizeBytes;
 
 	// Component arrays
@@ -427,9 +423,14 @@ GameStateContainer createGameState(
 		componentRegistryEntries[i + 1] = ComponentRegistryEntry::createSized(totalSizeBytes);
 
 		// Increment total size of ecs system
-		uint32_t componentsSizeBytes = componentsHeader.numBytesNeededForArrayPlusHeader32Byte();
+		uint32_t componentsSizeBytes = calcArrayHeaderSizeBytes(componentSizes[i], maxNumEntities);
 		totalSizeBytes += componentsSizeBytes;
 	}
+
+	// Ensure size calculation is consistent
+	const uint32_t refSizeBytes = calcSizeOfGameStateBytes(
+		numSingletonStructs, singletonStructSizes, maxNumEntities, numComponentTypes, componentSizes);
+	sfz_assert_hard(refSizeBytes == totalSizeBytes);
 
 	// Allocate memory
 	GameStateContainer container = GameStateContainer::createRaw(totalSizeBytes, allocator);

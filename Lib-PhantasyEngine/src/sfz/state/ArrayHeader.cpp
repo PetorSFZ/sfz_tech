@@ -25,6 +25,17 @@
 
 namespace sfz {
 
+// ArrayHeader: Constructor functions
+// ------------------------------------------------------------------------------------------------
+
+void ArrayHeader::createUntyped(uint32_t capacityIn, uint32_t elementSizeIn) noexcept
+{
+	memset(this, 0, sizeof(ArrayHeader));
+	this->size = 0;
+	this->elementSize = elementSizeIn;
+	this->capacity = capacityIn;
+}
+
 // ArrayHeader: Methods
 // ------------------------------------------------------------------------------------------------
 
@@ -59,54 +70,6 @@ bool ArrayHeader::popGetUntyped(uint8_t* dst) noexcept
 	this->size -= 1;
 
 	return true;
-}
-
-// ArrayHeader: Memory helpers
-// ------------------------------------------------------------------------------------------------
-
-uint32_t ArrayHeader::numBytesNeededForArrayPart() const noexcept
-{
-	return capacity * elementSize;
-}
-
-uint32_t ArrayHeader::numBytesNeededForArrayPart32Byte() const noexcept
-{
-	uint32_t bytesBeforePadding = numBytesNeededForArrayPart();
-	uint32_t padding = 32 - (bytesBeforePadding & 0x1F); // bytesBeforePadding % 32
-	if (padding == 32) padding = 0;
-	return bytesBeforePadding + padding;
-}
-
-uint32_t ArrayHeader::numBytesNeededForArrayPlusHeader() const noexcept
-{
-	uint32_t arrayPart = numBytesNeededForArrayPart();
-	return arrayPart + sizeof(ArrayHeader);
-}
-
-uint32_t ArrayHeader::numBytesNeededForArrayPlusHeader32Byte() const noexcept
-{
-	uint32_t arrayPart32Byte = numBytesNeededForArrayPart32Byte();
-	return arrayPart32Byte + sizeof(ArrayHeader);
-}
-
-uint8_t* ArrayHeader::firstByteAfterArray() noexcept
-{
-	return dataUntyped() + numBytesNeededForArrayPart();
-}
-
-const uint8_t* ArrayHeader::firstByteAfterArray() const noexcept
-{
-	return dataUntyped() + numBytesNeededForArrayPart();
-}
-
-uint8_t* ArrayHeader::firstByteAfterArray32Byte() noexcept
-{
-	return dataUntyped() + numBytesNeededForArrayPart32Byte();
-}
-
-const uint8_t* ArrayHeader::firstByteAfterArray32Byte() const noexcept
-{
-	return dataUntyped() + numBytesNeededForArrayPart32Byte();
 }
 
 } // namespace sfz

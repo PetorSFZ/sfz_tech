@@ -19,8 +19,7 @@
 
 #pragma once
 
-#include <cstdint>
-#include <cstring>
+#include <skipifzero.hpp>
 
 namespace sfz {
 
@@ -36,10 +35,6 @@ namespace sfz {
 // | ...         |
 // | Element N   |
 // [ First byte after array ]
-//
-// The ArrayHeader has methods for accessing the elements in the array following it in memory. It
-// also has methods for getting a pointer to the first byte after the array, which could be useful
-// if having multiple ArrayHeaders tightly packed in a chunk of memory.
 struct ArrayHeader final {
 
 	// Public members
@@ -75,13 +70,7 @@ struct ArrayHeader final {
 	ArrayHeader(ArrayHeader&&) = delete;
 	ArrayHeader& operator=(ArrayHeader&&) = delete;
 
-	void createUntyped(uint32_t capacityIn, uint32_t elementSizeIn) noexcept
-	{
-		memset(this, 0, sizeof(ArrayHeader));
-		this->size = 0;
-		this->elementSize = elementSizeIn;
-		this->capacity = capacityIn;
-	}
+	void createUntyped(uint32_t capacityIn, uint32_t elementSizeIn) noexcept;
 
 	void createCopy(ArrayHeader& other) noexcept
 	{
@@ -129,21 +118,12 @@ struct ArrayHeader final {
 
 	template<typename T>
 	bool popGet(T& out) noexcept { return popGetUntyped(reinterpret_cast<uint8_t*>(&out)); }
-
-	// Memory helpers
-	// --------------------------------------------------------------------------------------------
-
-	uint32_t numBytesNeededForArrayPart() const noexcept;
-	uint32_t numBytesNeededForArrayPart32Byte() const noexcept;
-	uint32_t numBytesNeededForArrayPlusHeader() const noexcept;
-	uint32_t numBytesNeededForArrayPlusHeader32Byte() const noexcept;
-
-	uint8_t* firstByteAfterArray() noexcept;
-	const uint8_t* firstByteAfterArray() const noexcept;
-
-	uint8_t* firstByteAfterArray32Byte() noexcept;
-	const uint8_t* firstByteAfterArray32Byte() const noexcept;
 };
 static_assert(sizeof(ArrayHeader) == 32, "ArrayHeader is not 32-byte");
+
+constexpr uint32_t calcArrayHeaderSizeBytes(uint32_t componentSize, uint32_t numComponents)
+{
+	return uint32_t(roundUpAligned(sizeof(ArrayHeader) + componentSize * numComponents, 32));
+}
 
 } // namespace sfz
