@@ -29,8 +29,8 @@ namespace sfz {
 // GameStateContainer: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-	GameStateContainer GameStateContainer::createRaw(
-		uint64_t numBytes, sfz::Allocator* allocator) noexcept
+GameStateContainer GameStateContainer::createRaw(
+	uint64_t numBytes, sfz::Allocator* allocator) noexcept
 {
 	sfz_assert(allocator != nullptr);
 	sfz_assert(0 < numBytes);
@@ -40,6 +40,28 @@ namespace sfz {
 	container.mNumBytes = numBytes;
 	container.mGameStateMemoryChunk = static_cast<uint8_t*>(allocator->allocate(sfz_dbg(""), numBytes, 16));
 	memset(container.mGameStateMemoryChunk, 0, numBytes);
+	return container;
+}
+
+GameStateContainer GameStateContainer::create(
+	uint32_t numSingletonStructs,
+	const uint32_t* singletonStructSizes,
+	uint32_t maxNumEntities,
+	uint32_t numComponentTypes,
+	const uint32_t* componentSizes,
+	Allocator* allocator) noexcept
+{
+	uint32_t neededSize = calcSizeOfGameStateBytes(
+		numSingletonStructs, singletonStructSizes, maxNumEntities, numComponentTypes, componentSizes);
+
+	// Allocate memory
+	GameStateContainer container = GameStateContainer::createRaw(neededSize, allocator);
+	GameStateHeader* state = container.getHeader();
+
+	// Initialize memory
+	bool success = createGameState(state, neededSize, numSingletonStructs, singletonStructSizes, maxNumEntities, numComponentTypes, componentSizes);
+	sfz_assert(success);
+
 	return container;
 }
 

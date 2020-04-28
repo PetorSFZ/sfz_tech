@@ -344,17 +344,18 @@ bool GameStateHeader::deleteComponent(Entity entity, uint32_t componentType) noe
 // Game state functions
 // ------------------------------------------------------------------------------------------------
 
-GameStateContainer createGameState(
-	uint32_t numSingletonStructs,
-	const uint32_t* singletonStructSizes,
+bool createGameState(
+	void* dstMemory,
+	uint32_t dstMemorySizeBytes,
+	uint32_t numSingletons,
+	const uint32_t* singletonSizes,
 	uint32_t maxNumEntities,
-	uint32_t numComponentTypes,
-	const uint32_t* componentSizes,
-	Allocator* allocator) noexcept
+	uint32_t numComponents,
+	const uint32_t* componentSizes) noexcept
 {
-	sfz_assert(numSingletonStructs <= 64);
+	sfz_assert(numSingletons <= 64);
 	sfz_assert(maxNumEntities <= GAME_STATE_ECS_MAX_NUM_ENTITIES);
-	sfz_assert(numComponentTypes <= 63); // Not 64 because one is reserved for active bit
+	sfz_assert(numComponents <= 63); // Not 64 because one is reserved for active bit
 
 	uint32_t totalSizeBytes = 0;
 
@@ -363,28 +364,28 @@ GameStateContainer createGameState(
 
 	// Singleton registry
 	ArrayHeader singletonRegistryHeader;
-	singletonRegistryHeader.create<SingletonRegistryEntry>(numSingletonStructs);
-	uint32_t singletonRegistrySizeBytes = calcArrayHeaderSizeBytes(sizeof(SingletonRegistryEntry), numSingletonStructs);
+	singletonRegistryHeader.create<SingletonRegistryEntry>(numSingletons);
+	uint32_t singletonRegistrySizeBytes = calcArrayHeaderSizeBytes(sizeof(SingletonRegistryEntry), numSingletons);
 	totalSizeBytes += singletonRegistrySizeBytes;
 
 	// Singleton structs
 	SingletonRegistryEntry singleRegistryEntries[64] = {};
-	for (uint32_t i = 0; i < numSingletonStructs; i++) {
-		sfz_assert(singletonStructSizes[i] != 0);
+	for (uint32_t i = 0; i < numSingletons; i++) {
+		sfz_assert(singletonSizes[i] != 0);
 
 		// Fill singleton registry
 		singleRegistryEntries[i].offset = totalSizeBytes;
-		singleRegistryEntries[i].sizeInBytes = singletonStructSizes[i];
+		singleRegistryEntries[i].sizeInBytes = singletonSizes[i];
 
-		// Calculate next 32-byte aligned offset and update totalSizeBytes
-		totalSizeBytes += uint32_t(roundUpAligned(singletonStructSizes[i], 32));
+		// Calculate next 16-byte aligned offset and update totalSizeBytes
+		totalSizeBytes += uint32_t(roundUpAligned(singletonSizes[i], 16));
 	}
 
 	// Components registry (+ 1 for active bit)
 	uint32_t offsetComponentRegistryHeader = totalSizeBytes;
 	ArrayHeader componentRegistryHeader;
-	componentRegistryHeader.create<ComponentRegistryEntry>(numComponentTypes + 1);
-	uint32_t componentRegistrySizeBytes = calcArrayHeaderSizeBytes(sizeof(ComponentRegistryEntry), numComponentTypes + 1);
+	componentRegistryHeader.create<ComponentRegistryEntry>(numComponents + 1);
+	uint32_t componentRegistrySizeBytes = calcArrayHeaderSizeBytes(sizeof(ComponentRegistryEntry), numComponents + 1);
 	totalSizeBytes += componentRegistrySizeBytes;
 
 	// Free entity ids list
@@ -409,7 +410,7 @@ GameStateContainer createGameState(
 	ComponentRegistryEntry componentRegistryEntries[64];
 	ArrayHeader componentsArrayHeaders[64];
 	for (auto& entry : componentRegistryEntries) entry = ComponentRegistryEntry::createUnsized();
-	for (uint32_t i = 0; i < numComponentTypes; i++) {
+	for (uint32_t i = 0; i < numComponents; i++) {
 
 		// If the component size is 0, don't create ArrayHeader and don't increment total size
 		if (componentSizes[i] == 0) continue;
@@ -427,21 +428,22 @@ GameStateContainer createGameState(
 		totalSizeBytes += componentsSizeBytes;
 	}
 
-	// Ensure size calculation is consistent
+	// Ensure size calculation is consistent and that allocated memory is big enough
 	const uint32_t refSizeBytes = calcSizeOfGameStateBytes(
-		numSingletonStructs, singletonStructSizes, maxNumEntities, numComponentTypes, componentSizes);
+		numSingletons, singletonSizes, maxNumEntities, numComponents, componentSizes);
 	sfz_assert_hard(refSizeBytes == totalSizeBytes);
+	if (dstMemorySizeBytes < totalSizeBytes) return false;
 
-	// Allocate memory
-	GameStateContainer container = GameStateContainer::createRaw(totalSizeBytes, allocator);
-	GameStateHeader* state = container.getHeader();
+	// Clear destination memory, cast it to GameStateHeader and start filling it in
+	memset(dstMemory, 0, totalSizeBytes);
+	GameStateHeader* state = static_cast<GameStateHeader*>(dstMemory);
 
 	// Set game state header
 	state->magicNumber = GAME_STATE_MAGIC_NUMBER;
 	state->gameStateVersion = GAME_STATE_VERSION;
 	state->stateSizeBytes = totalSizeBytes;
-	state->numSingletons = numSingletonStructs;
-	state->numComponentTypes = numComponentTypes + 1; // + 1 for active bit
+	state->numSingletons = numSingletons;
+	state->numComponentTypes = numComponents + 1; // + 1 for active bit
 	state->maxNumEntities = maxNumEntities;
 	state->currentNumEntities = 0;
 	state->offsetSingletonRegistry = sizeof(GameStateHeader);
@@ -498,7 +500,7 @@ GameStateContainer createGameState(
 		header->createCopy(componentsArrayHeaders[i]);
 	}
 
-	return container;
+	return true;
 }
 
 } // namespace sfz

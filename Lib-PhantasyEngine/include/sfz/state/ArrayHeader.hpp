@@ -43,7 +43,7 @@ struct ArrayHeader final {
 	uint32_t size;
 	uint32_t elementSize;
 	uint32_t capacity;
-	uint8_t ___padding___[20];
+	uint8_t ___padding___[4];
 
 	// Contructor functions
 	// --------------------------------------------------------------------------------------------
@@ -119,11 +119,11 @@ struct ArrayHeader final {
 	template<typename T>
 	bool popGet(T& out) noexcept { return popGetUntyped(reinterpret_cast<uint8_t*>(&out)); }
 };
-static_assert(sizeof(ArrayHeader) == 32, "ArrayHeader is not 32-byte");
+static_assert(sizeof(ArrayHeader) == 16, "ArrayHeader is not 16-byte");
 
 constexpr uint32_t calcArrayHeaderSizeBytes(uint32_t componentSize, uint32_t numComponents)
 {
-	return uint32_t(roundUpAligned(sizeof(ArrayHeader) + componentSize * numComponents, 32));
+	return uint32_t(roundUpAligned(sizeof(ArrayHeader) + componentSize * numComponents, 16));
 }
 
 } // namespace sfz

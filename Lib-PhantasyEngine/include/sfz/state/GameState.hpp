@@ -19,16 +19,13 @@
 
 #pragma once
 
-#include <cstdint>
 #include <type_traits>
 
 #include <skipifzero.hpp>
 
-#include "sfz/Context.hpp"
 #include "sfz/state/ArrayHeader.hpp"
 #include "sfz/state/ComponentMask.hpp"
 #include "sfz/state/Entity.hpp"
-#include "sfz/state/GameStateContainer.hpp"
 
 namespace sfz {
 
@@ -47,7 +44,7 @@ constexpr uint64_t GAME_STATE_MAGIC_NUMBER =
 	uint64_t('E') << 56;
 
 // The current data layout version of the game state
-constexpr uint64_t GAME_STATE_VERSION = 4;
+constexpr uint64_t GAME_STATE_VERSION = 5;
 
 // The maximum number of entities a game state can hold
 //
@@ -183,7 +180,7 @@ struct GameStateHeader {
 	// Offset in bytes to the ArrayHeader of entity generations (uint8_t)
 	uint32_t offsetEntityGenerationsList;
 
-	// Unused padding to ensure header is 32-byte aligned.
+	// Unused padding to ensure header is 16-byte aligned.
 	uint32_t ___PADDING_UNUSED___[1];
 
 	// Singleton state API
@@ -395,7 +392,7 @@ constexpr uint32_t calcSizeOfGameStateBytes(
 
 	// Singleton structs
 	for (uint32_t i = 0; i < numSingletons; i++) {
-		totalSizeBytes += uint32_t(roundUpAligned(singletonSizes[i], 32));
+		totalSizeBytes += uint32_t(roundUpAligned(singletonSizes[i], 16));
 	}
 
 	// Component registry (+ 1 for active bit)
@@ -418,17 +415,21 @@ constexpr uint32_t calcSizeOfGameStateBytes(
 	return totalSizeBytes;
 }
 
-// Creates a game state
+// Creates a game state in the specified destination memory.
+//
+// Returns false and fails if the memory chunk is too small. The required amount of memory can
+// be calculated using the "calcSizeOfGameStateBytes()" function.
 //
 // The resulting state will contain numComponentTypes + 1 types of components. The first type (0)
 // is reserved to signify whether and entity is active or not. If you want data-less component
 // types, i.e. flags, you should specify 0 as the size in the "componentSizes" array.
-GameStateContainer createGameState(
-	uint32_t numSingletonStructs,
-	const uint32_t* singletonStructSizes,
+bool createGameState(
+	void* dstMemory,
+	uint32_t dstMemorySizeBytes,
+	uint32_t numSingletons,
+	const uint32_t* singletonSizes,
 	uint32_t maxNumEntities,
-	uint32_t numComponentTypes,
-	const uint32_t* componentSizes,
-	Allocator* allocator = sfz::getDefaultAllocator()) noexcept;
+	uint32_t numComponents,
+	const uint32_t* componentSizes) noexcept;
 
 } // namespace sfz

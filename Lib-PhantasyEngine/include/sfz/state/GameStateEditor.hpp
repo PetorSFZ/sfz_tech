@@ -73,7 +73,7 @@ public:
 		uint32_t numSingletonInfos,
 		ComponentInfo* componentInfos,
 		uint32_t numComponentInfos,
-		sfz::Allocator* allocator = sfz::getDefaultAllocator());
+		sfz::Allocator* allocator);
 	void swap(GameStateEditor& other) noexcept;
 	void destroy() noexcept;
 
