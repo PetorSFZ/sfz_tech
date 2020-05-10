@@ -164,10 +164,9 @@ bool IniParser::load() noexcept
 			}
 
 			// Insert section
-			Section tmpSection;
+			Section& tmpSection = newSections.add();
 			tmpSection.name.clear();
 			tmpSection.name.appendChars(startPtr + 1, nameLength);
-			newSections.add(tmpSection);
 
 			// Find start of optional comment
 			index += 1; // Next token after ']'

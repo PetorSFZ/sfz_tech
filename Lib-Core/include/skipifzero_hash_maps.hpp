@@ -153,8 +153,8 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	HashMap() noexcept = default;
-	HashMap(const HashMap& other) noexcept { *this = other; }
-	HashMap& operator= (const HashMap& other) noexcept { *this = other.clone(); return *this; }
+	HashMap(const HashMap&) = delete;
+	HashMap& operator= (const HashMap&) = delete;
 	HashMap(HashMap&& other) noexcept { this->swap(other); }
 	HashMap& operator= (HashMap&& other) noexcept { this->swap(other); return *this; }
 	~HashMap() noexcept { this->destroy(); }
@@ -174,9 +174,9 @@ public:
 		this->rehash(capacity, allocDbg);
 	}
 
-	HashMap clone(DbgInfo allocDbg = sfz_dbg("HashMap"), Allocator* allocator = nullptr) const
+	HashMap clone(Allocator* allocator, DbgInfo allocDbg) const
 	{
-		HashMap tmp(mCapacity, allocator != nullptr ? allocator : mAllocator, allocDbg);
+		HashMap tmp(mCapacity, allocator, allocDbg);
 		tmp.mSize = this->mSize;
 		for (uint32_t i = 0; i < mSize; i++) {
 			tmp.mKeys[i] = this->mKeys[i];

@@ -90,42 +90,6 @@ UTEST(Array, fill_constructor)
 	ASSERT_TRUE(twos.allocator() == nullptr);
 }
 
-UTEST(Array, copy_constructors)
-{
-	sfz::StandardAllocator allocator;
-
-	sfz::Array<int> first(0, &allocator, sfz_dbg(""));
-	first.add(3, 3);
-	sfz::Array<int> second;
-
-	ASSERT_TRUE(first.size() == 3);
-	ASSERT_TRUE(first.capacity() == sfz::ARRAY_DYNAMIC_DEFAULT_INITIAL_CAPACITY);
-	ASSERT_TRUE(first.allocator() == &allocator);
-	ASSERT_TRUE(first.data()[0] == 3);
-	ASSERT_TRUE(first.data()[1] == 3);
-	ASSERT_TRUE(first.data()[2] == 3);
-
-	ASSERT_TRUE(second.size() == 0);
-	ASSERT_TRUE(second.capacity() == 0);
-	ASSERT_TRUE(second.data() == nullptr);
-	ASSERT_TRUE(second.allocator() == nullptr);
-
-	second = first;
-	first.destroy();
-
-	ASSERT_TRUE(first.size() == 0);
-	ASSERT_TRUE(first.capacity() == 0);
-	ASSERT_TRUE(first.data() == nullptr);
-	ASSERT_TRUE(first.allocator() == nullptr);
-
-	ASSERT_TRUE(second.size() == 3);
-	ASSERT_TRUE(second.capacity() == sfz::ARRAY_DYNAMIC_DEFAULT_INITIAL_CAPACITY);
-	ASSERT_TRUE(second.allocator() == &allocator);
-	ASSERT_TRUE(second.data()[0] == 3);
-	ASSERT_TRUE(second.data()[1] == 3);
-	ASSERT_TRUE(second.data()[2] == 3);
-}
-
 UTEST(Array, swap_move_constructors)
 {
 	sfz::StandardAllocator allocator;

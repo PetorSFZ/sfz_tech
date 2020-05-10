@@ -51,8 +51,8 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	Array() noexcept = default;
-	Array(const Array& other) noexcept { *this = other.clone(); }
-	Array& operator= (const Array& other) noexcept { *this = other.clone(); return *this; }
+	Array(const Array&) = delete;
+	Array& operator= (const Array&) = delete;
 	Array(Array&& other) noexcept { this->swap(other); }
 	Array& operator= (Array&& other) noexcept { this->swap(other); return *this; }
 	~Array() noexcept { this->destroy(); }
@@ -71,13 +71,6 @@ public:
 		this->destroy();
 		mAllocator = allocator;
 		this->setCapacity(capacity, allocDbg);
-	}
-
-	Array clone(DbgInfo allocDbg = sfz_dbg("Array")) const
-	{
-		Array tmp(mCapacity, mAllocator, allocDbg);
-		tmp.add(mData, mSize);
-		return tmp;
 	}
 
 	void swap(Array& other)

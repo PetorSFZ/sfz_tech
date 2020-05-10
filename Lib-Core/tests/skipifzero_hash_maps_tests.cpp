@@ -74,7 +74,44 @@ UTEST(HashMap, default_constructor)
 	ASSERT_TRUE(m1.placeholders() == 0);
 }
 
-UTEST(HashMap, copy_constructors)
+UTEST(HashMap, swap_and_move_constructors)
+{
+	sfz::StandardAllocator allocator;
+
+	sfz::HashMap<int,int> v1;
+	sfz::HashMap<int,int> v2(1, &allocator, sfz_dbg(""));
+	v2.put(1, 2);
+	v2.put(2, 3);
+	v2.put(3, 4);
+
+	ASSERT_TRUE(v1.size() == 0);
+	ASSERT_TRUE(v1.capacity() == 0);
+	ASSERT_TRUE(v1.placeholders() == 0);
+	ASSERT_TRUE(v2.size() == 3);
+	ASSERT_TRUE(v2.capacity() != 0);
+	ASSERT_TRUE(v1.placeholders() == 0);
+
+	v1.swap(v2);
+
+	ASSERT_TRUE(v1.size() == 3);
+	ASSERT_TRUE(v1.capacity() != 0);
+	ASSERT_TRUE(v1.placeholders() == 0);
+	ASSERT_TRUE(v2.size() == 0);
+	ASSERT_TRUE(v2.capacity() == 0);
+	ASSERT_TRUE(v2.placeholders() == 0);
+
+	v1 = std::move(v2);
+
+	ASSERT_TRUE(v1.size() == 0);
+	ASSERT_TRUE(v1.capacity() == 0);
+	ASSERT_TRUE(v1.placeholders() == 0);
+	ASSERT_TRUE(v2.size() == 3);
+	ASSERT_TRUE(v2.capacity() != 0);
+	ASSERT_TRUE(v2.placeholders() == 0);
+}
+
+
+UTEST(HashMap, clone)
 {
 	sfz::StandardAllocator allocator;
 
@@ -89,7 +126,7 @@ UTEST(HashMap, copy_constructors)
 	ASSERT_TRUE(m1[2] == 3);
 	ASSERT_TRUE(m1[3] == 4);
 
-	auto m2 = m1;
+	auto m2 = m1.clone(&allocator, sfz_dbg(""));
 	ASSERT_TRUE(m2.size() == 3);
 	ASSERT_TRUE(m2.capacity() != 0);
 	ASSERT_TRUE(m2.placeholders() == 0);
@@ -125,42 +162,6 @@ UTEST(HashMap, copy_constructors)
 	ASSERT_TRUE(m2[1] == -1);
 	ASSERT_TRUE(m2[2] == -2);
 	ASSERT_TRUE(m2[3] == -3);
-}
-
-UTEST(HashMap, swap_and_move_constructors)
-{
-	sfz::StandardAllocator allocator;
-
-	sfz::HashMap<int,int> v1;
-	sfz::HashMap<int,int> v2(1, &allocator, sfz_dbg(""));
-	v2.put(1, 2);
-	v2.put(2, 3);
-	v2.put(3, 4);
-
-	ASSERT_TRUE(v1.size() == 0);
-	ASSERT_TRUE(v1.capacity() == 0);
-	ASSERT_TRUE(v1.placeholders() == 0);
-	ASSERT_TRUE(v2.size() == 3);
-	ASSERT_TRUE(v2.capacity() != 0);
-	ASSERT_TRUE(v1.placeholders() == 0);
-
-	v1.swap(v2);
-
-	ASSERT_TRUE(v1.size() == 3);
-	ASSERT_TRUE(v1.capacity() != 0);
-	ASSERT_TRUE(v1.placeholders() == 0);
-	ASSERT_TRUE(v2.size() == 0);
-	ASSERT_TRUE(v2.capacity() == 0);
-	ASSERT_TRUE(v2.placeholders() == 0);
-
-	v1 = std::move(v2);
-
-	ASSERT_TRUE(v1.size() == 0);
-	ASSERT_TRUE(v1.capacity() == 0);
-	ASSERT_TRUE(v1.placeholders() == 0);
-	ASSERT_TRUE(v2.size() == 3);
-	ASSERT_TRUE(v2.capacity() != 0);
-	ASSERT_TRUE(v2.placeholders() == 0);
 }
 
 UTEST(HashMap, rehash)
