@@ -456,9 +456,9 @@ static void realMain(SDL_Window* window) noexcept
 		Vector dir = -origin;
 		Vector up = Vector(0.0f, 1.0f, 0.0f);
 		Matrix viewMatrix;
-		zg::createViewMatrix(viewMatrix.m, &origin.x, &dir.x, &up.x);
+		zgUtilCreateViewMatrix(viewMatrix.m, &origin.x, &dir.x, &up.x);
 		Matrix projMatrix;
-		zg::createPerspectiveProjection(projMatrix.m, vertFovDeg, aspectRatio, 0.01f, 10.0f);
+		zgUtilCreatePerspectiveProjection(projMatrix.m, vertFovDeg, aspectRatio, 0.01f, 10.0f);
 
 		// Measurement ids
 		uint64_t frameMeasurementId = ~0ull;

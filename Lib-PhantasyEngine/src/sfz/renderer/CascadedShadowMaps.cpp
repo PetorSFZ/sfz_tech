@@ -92,12 +92,12 @@ CascadedShadowMapInfo calculateCascadedShadowMapInfo(
 
 		// Create matrices for level
 		info.levelDists[i] = levelDists[i];
-		zg::createViewMatrix(
+		zgUtilCreateViewMatrix(
 			info.viewMatrices[i].data(),
 			lightCamPos.data(),
 			lightDir.data(),
 			lightCamUp.data());
-		zg::createOrthographicProjectionReverse(
+		zgUtilCreateOrthographicProjectionReverse(
 			info.projMatrices[i].data(),
 			worstCaseDim,
 			worstCaseDim,

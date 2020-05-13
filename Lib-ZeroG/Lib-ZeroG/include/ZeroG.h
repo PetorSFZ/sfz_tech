@@ -2580,10 +2580,10 @@ private:
 // HLSL the "float4x4" primitive must be marked "row_major", otherwise the matrix will get
 // transposed during the transfer and you will not get the results you expect.
 //
-// The createViewMatrix() function creates a view matrix similar to the one typically used in OpenGL.
-// In other words, right-handed coordinate system with x to the right, y up and z towards the camera
-// (negative z into the scene). This is the kind of view matrix that is expected for all the
-// projection matrices here.
+// The zgUtilCreateViewMatrix() function creates a view matrix similar to the one typically used
+// in OpenGL. In other words, right-handed coordinate system with x to the right, y up and z
+// towards the camera (negative z into the scene). This is the kind of view matrix that is expected
+// for all the projection matrices here.
 //
 // The are a couple of variants of the projection matrices, normal, "reverse" and "infinite".
 //
@@ -2601,251 +2601,53 @@ private:
 // Setting the far plane to infinity gives you one less thing to think about and simplifies the
 // actual projection matrix a bit.
 //
-// If unsure I would recommend starting out with the basic createPerspectiveProjection() and then
-// switching to createPerspectiveProjectionReverseInfinite() when feeling more confident.
+// If unsure I would recommend starting out with the basic zgUtilCreatePerspectiveProjection() and
+// then switching to zgUtilCreatePerspectiveProjectionReverseInfinite() when feeling more confident.
 
-#ifdef __cplusplus
-
-// TODO: Remove
-#include <string.h>
-#include <cmath>
-
-namespace zg {
-
-inline void createViewMatrix(
+ZG_API void zgUtilCreateViewMatrix(
 	float rowMajorMatrixOut[16],
 	const float origin[3],
 	const float dir[3],
-	const float up[3]) noexcept
-{
-	auto dot = [](const float lhs[3], const float rhs[3]) -> float {
-		return lhs[0] * rhs[0] + lhs[1] * rhs[1] + lhs[2] * rhs[2];
-	};
+	const float up[3]);
 
-	auto normalize = [&](float v[3]) {
-		float length = std::sqrt(dot(v, v));
-		v[0] /= length;
-		v[1] /= length;
-		v[2] /= length;
-	};
-
-	auto cross = [](float out[3], const float lhs[3], const float rhs[3]) {
-		out[0] = lhs[1] * rhs[2] - lhs[2] * rhs[1];
-		out[1] = lhs[2] * rhs[0] - lhs[0] * rhs[2];
-		out[2] = lhs[0] * rhs[1] - lhs[1] * rhs[0];
-	};
-
-	// Z-Axis, away from screen
-	float zAxis[3];
-	memcpy(zAxis, dir, sizeof(float) * 3);
-	normalize(zAxis);
-	zAxis[0] = -zAxis[0];
-	zAxis[1] = -zAxis[1];
-	zAxis[2] = -zAxis[2];
-
-	// X-Axis, to the right
-	float xAxis[3];
-	cross(xAxis, up, zAxis);
-	normalize(xAxis);
-
-	// Y-Axis, up
-	float yAxis[3];
-	cross(yAxis, zAxis, xAxis);
-
-	float matrix[16] = {
-		xAxis[0], xAxis[1], xAxis[2], -dot(xAxis, origin),
-		yAxis[0], yAxis[1], yAxis[2], -dot(yAxis, origin),
-		zAxis[0], zAxis[1], zAxis[2], -dot(zAxis, origin),
-		0.0f,     0.0f,     0.0f,     1.0f
-	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
-}
-
-inline void createPerspectiveProjection(
+ZG_API void zgUtilCreatePerspectiveProjection(
 	float rowMajorMatrixOut[16],
 	float vertFovDegs,
 	float aspect,
 	float nearPlane,
-	float farPlane) noexcept
-{
-	assert(0.0f < vertFovDegs);
-	assert(vertFovDegs < 180.0f);
-	assert(0.0f < aspect);
-	assert(0.0f < nearPlane);
-	assert(nearPlane < farPlane);
+	float farPlane);
 
-	// From: https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh
-	// xScale     0          0              0
-	// 0        yScale       0              0
-	// 0        0        zf/(zn-zf)        -1
-	// 0        0        zn*zf/(zn-zf)      0
-	// where:
-	// yScale = cot(fovY/2)
-	// xScale = yScale / aspect ratio
-	//
-	// Note that D3D uses column major matrices, we use row-major, so above is transposed.
-
-	constexpr float DEG_TO_RAD = 3.14159265358979323846f / 180.0f;
-	const float vertFovRads = vertFovDegs * DEG_TO_RAD;
-	const float yScale = 1.0f / std::tan(vertFovRads * 0.5f);
-	const float xScale = yScale / aspect;
-	float matrix[16] = {
-		xScale, 0.0f, 0.0f, 0.0f,
-		0.0f, yScale, 0.0f, 0.0f,
-		0.0f, 0.0f, farPlane / (nearPlane - farPlane), nearPlane* farPlane / (nearPlane - farPlane),
-		0.0f, 0.0f, -1.0f, 0.0f
-	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
-}
-
-inline void createPerspectiveProjectionInfinite(
+ZG_API void zgUtilCreatePerspectiveProjectionInfinite(
 	float rowMajorMatrixOut[16],
 	float vertFovDegs,
 	float aspect,
-	float nearPlane) noexcept
-{
-	assert(0.0f < vertFovDegs);
-	assert(vertFovDegs < 180.0f);
-	assert(0.0f < aspect);
-	assert(0.0f < nearPlane);
+	float nearPlane);
 
-	// Same as createPerspectiveProjection(), but let far approach infinity
-
-	constexpr float DEG_TO_RAD = 3.14159265358979323846f / 180.0f;
-	const float vertFovRads = vertFovDegs * DEG_TO_RAD;
-	const float yScale = 1.0f / std::tan(vertFovRads * 0.5f);
-	const float xScale = yScale / aspect;
-	float matrix[16] = {
-		xScale, 0.0f, 0.0f, 0.0f,
-		0.0f, yScale, 0.0f, 0.0f,
-		0.0f, 0.0f, -1.0f,-nearPlane,
-		0.0f, 0.0f, -1.0f, 0.0f
-	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
-}
-
-inline void createPerspectiveProjectionReverse(
+ZG_API void zgUtilCreatePerspectiveProjectionReverse(
 	float rowMajorMatrixOut[16],
 	float vertFovDegs,
 	float aspect,
 	float nearPlane,
-	float farPlane) noexcept
-{
-	assert(0.0f < vertFovDegs);
-	assert(vertFovDegs < 180.0f);
-	assert(0.0f < aspect);
-	assert(0.0f < nearPlane);
-	assert(nearPlane < farPlane);
+	float farPlane);
 
-	// http://dev.theomader.com/depth-precision/
-	// "This can be achieved by multiplying the projection matrix with a simple ‘z reversal’ matrix"
-	// 1, 0, 0, 0
-	// 0, 1, 0, 0
-	// 0, 0, -1, 1
-	// 0, 0, 0, 1
-
-	constexpr float DEG_TO_RAD = 3.14159265358979323846f / 180.0f;
-	const float vertFovRads = vertFovDegs * DEG_TO_RAD;
-	const float yScale = 1.0f / std::tan(vertFovRads * 0.5f);
-	const float xScale = yScale / aspect;
-	float matrix[16] = {
-		xScale, 0.0f, 0.0f, 0.0f,
-		0.0f, yScale, 0.0f, 0.0f,
-		0.0f, 0.0f, -(farPlane / (nearPlane - farPlane)) - 1.0f, -(nearPlane * farPlane / (nearPlane - farPlane)),
-		0.0f, 0.0f, -1.0f, 0.0f
-	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
-}
-
-inline void createPerspectiveProjectionReverseInfinite(
+ZG_API void zgUtilCreatePerspectiveProjectionReverseInfinite(
 	float rowMajorMatrixOut[16],
 	float vertFovDegs,
 	float aspect,
-	float nearPlane) noexcept
-{
-	assert(0.0f < vertFovDegs);
-	assert(vertFovDegs < 180.0f);
-	assert(0.0f < aspect);
-	assert(0.0f < nearPlane);
+	float nearPlane);
 
-	// http://dev.theomader.com/depth-precision/
-	// "This can be achieved by multiplying the projection matrix with a simple ‘z reversal’ matrix"
-	// 1, 0, 0, 0
-	// 0, 1, 0, 0
-	// 0, 0, -1, 1
-	// 0, 0, 0, 1
-
-	constexpr float DEG_TO_RAD = 3.14159265358979323846f / 180.0f;
-	const float vertFovRads = vertFovDegs * DEG_TO_RAD;
-	const float yScale = 1.0f / std::tan(vertFovRads * 0.5f);
-	const float xScale = yScale / aspect;
-	float matrix[16] = {
-		xScale, 0.0f, 0.0f, 0.0f,
-		0.0f, yScale, 0.0f, 0.0f,
-		0.0f, 0.0f, 0.0f, nearPlane,
-		0.0f, 0.0f, -1.0f, 0.0f
-	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
-}
-
-inline void createOrthographicProjection(
+ZG_API void zgUtilCreateOrthographicProjection(
 	float rowMajorMatrixOut[16],
 	float width,
 	float height,
 	float nearPlane,
-	float farPlane) noexcept
-{
-	assert(0.0f < width);
-	assert(0.0f < height);
-	assert(0.0f < nearPlane);
-	assert(nearPlane < farPlane);
+	float farPlane);
 
-	// https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixorthorh
-	// 2/w  0    0           0
-	// 0    2/h  0           0
-	// 0    0    1/(zn-zf)   0
-	// 0    0    zn/(zn-zf)  1
-	//
-	// Note that D3D uses column major matrices, we use row-major, so above is transposed.
-
-	float matrix[16] = {
-		2.0f / width, 0.0f, 0.0f, 0.0f,
-		0.0f, 2.0f / height, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f / (nearPlane - farPlane), nearPlane / (nearPlane - farPlane),
-		0.0f, 0.0f, 0.0f, 1.0f
-	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
-}
-
-inline void createOrthographicProjectionReverse(
+ZG_API void zgUtilCreateOrthographicProjectionReverse(
 	float rowMajorMatrixOut[16],
 	float width,
 	float height,
 	float nearPlane,
-	float farPlane) noexcept
-{
-	assert(0.0f < width);
-	assert(0.0f < height);
-	assert(0.0f < nearPlane);
-	assert(nearPlane < farPlane);
-
-	// http://dev.theomader.com/depth-precision/
-	// "This can be achieved by multiplying the projection matrix with a simple ‘z reversal’ matrix"
-	// 1, 0, 0, 0
-	// 0, 1, 0, 0
-	// 0, 0, -1, 1
-	// 0, 0, 0, 1
-
-	float matrix[16] = {
-		2.0f / width, 0.0f, 0.0f, 0.0f,
-		0.0f, 2.0f / height, 0.0f, 0.0f,
-		0.0f, 0.0f, -1.0f / (nearPlane - farPlane), 1.0f - (nearPlane / (nearPlane - farPlane)),
-		0.0f, 0.0f, 0.0f, 1.0f
-	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
-}
-
-} // namespace zg
-#endif
+	float farPlane);
 
 #endif
