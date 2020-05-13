@@ -19,8 +19,7 @@
 
 #pragma once
 
-#include "ZeroG.h"
-#include "ZeroG-cpp.hpp"
+#include <ZeroG.h>
 
 #include "sfz/renderer/DynamicGpuAllocator.hpp"
 #include "sfz/rendering/ImageView.hpp"

@@ -71,35 +71,6 @@ function(linkZeroG linkTarget)
 	target_link_libraries(${linkTarget} ${ZEROG_LIBRARIES})
 endfunction()
 
-# ZeroG-cpp
-# ------------------------------------------------------------------------------------------------
-
-function(addZeroGcpp)
-	message("-- [ZeroG]: Adding ZeroG-cpp targets")
-
-	add_subdirectory(
-		${ZEROG_REPO_ROOT}/Lib-ZeroG-cpp
-		${CMAKE_BINARY_DIR}/Lib-ZeroG-cpp
-	)
-
-	set(ZEROG_CPP_FOUND ${ZEROG_CPP_FOUND} PARENT_SCOPE)
-	set(ZEROG_CPP_INCLUDE_DIRS ${ZEROG_CPP_INCLUDE_DIRS} PARENT_SCOPE)
-	set(ZEROG_CPP_LIBRARIES ${ZEROG_CPP_LIBRARIES} PARENT_SCOPE)
-endfunction()
-
-function(linkZeroGcpp linkTarget)
-	if (NOT ZEROG_FOUND)
-		message(FATAL_ERROR "-- [ZeroG]: Attempting to linkZeroG-cpp(), but ZeroG is not found")
-	endif()
-	if (NOT ZEROG_CPP_FOUND)
-		message(FATAL_ERROR "-- [ZeroG]: Attempting to linkZeroG-cpp(), but ZeroG-cpp is not found")
-	endif()
-	message("-- [ZeroG]: Linking ZeroG-cpp to target: ${linkTarget}")
-
-	target_include_directories(${linkTarget} PUBLIC ${ZEROG_CPP_INCLUDE_DIRS})
-	target_link_libraries(${linkTarget} ${ZEROG_CPP_LIBRARIES})
-endfunction()
-
 # Misc helper functions
 # ------------------------------------------------------------------------------------------------
 

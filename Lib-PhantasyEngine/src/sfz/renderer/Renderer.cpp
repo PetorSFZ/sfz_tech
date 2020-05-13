@@ -26,7 +26,7 @@
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
 
-#include <ZeroG-cpp.hpp>
+#include <ZeroG.h>
 
 #include <ZeroG-ImGui.hpp>
 

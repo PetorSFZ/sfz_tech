@@ -24,8 +24,6 @@
 #include <SDL.h>
 #include <SDL_syswm.h>
 
-#include "ZeroG-cpp.hpp"
-
 #include "SampleCommon.hpp"
 
 #ifdef _WIN32

@@ -53,7 +53,6 @@ endif()
 include(${ZEROG_REPO_ROOT_DIR}/ZeroG.cmake)
 
 addZeroG()
-addZeroGcpp()
 msvcCopyZeroGRuntimeFiles()
 
 # Check platforms

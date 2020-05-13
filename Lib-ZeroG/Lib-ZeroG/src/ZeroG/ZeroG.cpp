@@ -40,19 +40,18 @@ ZG_API uint32_t zgApiLinkedVersion(void)
 	return ZG_COMPILED_API_VERSION;
 }
 
-// Compiled features
+// Backends
 // ------------------------------------------------------------------------------------------------
 
-ZG_API uint64_t zgCompiledFeatures(void)
+ZG_API ZgBackendType zgBackendCompiledType(void)
 {
-	return 0
 #if defined(_WIN32)
-		| uint64_t(ZG_FEATURE_BIT_BACKEND_D3D12)
+	return ZG_BACKEND_D3D12;
+#elif defined(ZG_VULKAN)
+	return ZG_BACKEND_VULKAN;
+#else
+	return ZG_BACKEND_NONE;
 #endif
-#ifdef ZG_VULKAN
-		| uint64_t(ZG_FEATURE_BIT_BACKEND_VULKAN)
-#endif
-	;
 }
 
 // Results
@@ -79,141 +78,115 @@ ZG_API const char* zgResultToString(ZgResult result)
 	return "<UNKNOWN RESULT>";
 }
 
-// Context
+// Buffer
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgBool zgContextAlreadyInitialized(void)
+ZG_API ZgResult zgMemoryHeapBufferCreate(
+	ZgMemoryHeap* memoryHeap,
+	ZgBuffer** bufferOut,
+	const ZgBufferCreateInfo* createInfo)
 {
-	return zg::getBackend() == nullptr ? ZG_FALSE : ZG_TRUE;
+	ZG_ARG_CHECK(createInfo == nullptr, "");
+	ZG_ARG_CHECK((createInfo->offsetInBytes % 65536) != 0, "Buffer must be 64KiB aligned");
+
+	return memoryHeap->bufferCreate(bufferOut, *createInfo);
 }
 
-ZG_API ZgResult zgContextInit(const ZgContextInitSettings* settings)
+ZG_API void zgBufferRelease(
+	ZgBuffer* buffer)
 {
-	// Can't use ZG_ARG_CHECK() here because logger is not yet initialized
-	if (settings == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-	if (zgContextAlreadyInitialized() == ZG_TRUE) return ZG_WARNING_ALREADY_INITIALIZED;
+	if (buffer == nullptr) return;
+	zg::getAllocator()->deleteObject(buffer);
+}
 
-	ZgContext tmpContext;
+ZG_API ZgResult zgBufferMemcpyTo(
+	ZgBuffer* dstBuffer,
+	uint64_t dstBufferOffsetBytes,
+	const void* srcMemory,
+	uint64_t numBytes)
+{
+	return dstBuffer->memcpyTo(dstBufferOffsetBytes, srcMemory, numBytes);
+}
 
-	// Set default logger if none is specified
-	bool usingDefaultLogger = settings->logger.log == nullptr;
-	if (usingDefaultLogger) tmpContext.logger = zg::getDefaultLogger();
-	else tmpContext.logger = settings->logger;
+ZG_API ZgResult zgBufferMemcpyFrom(
+	void* dstMemory,
+	ZgBuffer* srcBuffer,
+	uint64_t srcBufferOffsetBytes,
+	uint64_t numBytes)
+{
+	return srcBuffer->memcpyFrom(srcBufferOffsetBytes, dstMemory, numBytes);
+}
 
-	// Set default allocator if none is specified
-	bool usingDefaultAllocator =
-		settings->allocator.allocate == nullptr || settings->allocator.deallocate == nullptr;
-	if (usingDefaultAllocator) tmpContext.allocator = AllocatorWrapper::createDefaultAllocator();
-	else tmpContext.allocator = AllocatorWrapper::createWrapper(settings->allocator);
+ZG_API ZgResult zgBufferSetDebugName(
+	ZgBuffer* buffer,
+	const char* name)
+{
+	ZG_ARG_CHECK(buffer == nullptr, "");
+	return buffer->setDebugName(name);
+}
 
-	// Set temporary context (without API backend). Required so rest of initialization can allocate
-	// memory and log.
-	zg::setContext(tmpContext);
+// Textures
+// ------------------------------------------------------------------------------------------------
 
-	// Log which logger is used
-	if (usingDefaultLogger) ZG_INFO("zgContextInit(): Using default logger (printf)");
-	else ZG_INFO("zgContextInit(): Using user-provided logger");
+ZG_API ZgResult zgTexture2DGetAllocationInfo(
+	ZgTexture2DAllocationInfo* allocationInfoOut,
+	const ZgTexture2DCreateInfo* createInfo)
+{
+	ZG_ARG_CHECK(allocationInfoOut == nullptr, "");
+	ZG_ARG_CHECK(createInfo == nullptr, "");
+	ZG_ARG_CHECK(createInfo->numMipmaps == 0, "Must specify at least 1 mipmap layer (i.e. the full image)");
+	ZG_ARG_CHECK(createInfo->numMipmaps > ZG_MAX_NUM_MIPMAPS, "Too many mipmaps specified");
+	return zg::getBackend()->texture2DGetAllocationInfo(*allocationInfoOut, *createInfo);
+}
 
-	// Log which allocator is used
-	if (usingDefaultAllocator) ZG_INFO("zgContextInit(): Using default allocator");
-	else ZG_INFO("zgContextInit(): Using user-provided allocator");
-
-	// Create and allocate requested backend api
-	switch (settings->backend) {
-
-	case ZG_BACKEND_NONE:
-		// TODO: Implement null backend
-		ZG_ERROR("zgContextInit(): Null backend not implemented, exiting.");
-		return ZG_WARNING_UNIMPLEMENTED;
-
-#if defined(_WIN32)
-	case ZG_BACKEND_D3D12:
-		{
-			ZG_INFO("zgContextInit(): Attempting to create D3D12 backend...");
-			ZgResult res = zg::createD3D12Backend(&tmpContext.backend, *settings);
-			if (res != ZG_SUCCESS) {
-				ZG_ERROR("zgContextInit(): Could not create D3D12 backend, exiting.");
-				return res;
-			}
-			ZG_INFO("zgContextInit(): Created D3D12 backend");
-		}
-		break;
-#endif
-
-#ifdef ZG_VULKAN
-	case ZG_BACKEND_VULKAN:
-		{
-			ZG_INFO("zgContextInit(): Attempting to create Vulkan backend...");
-			ZgResult res = zg::createVulkanBackend(&tmpContext.backend, *settings);
-			if (res != ZG_SUCCESS) {
-				ZG_ERROR("zgContextInit(): Could not create Vulkan backend, exiting.");
-				return res;
-			}
-			ZG_INFO("zgContextInit(): Created Vulkan backend");
-		}
-		break;
-#endif
-
-	default:
-		return ZG_ERROR_GENERIC;
+ZG_API ZgResult zgMemoryHeapTexture2DCreate(
+	ZgMemoryHeap* memoryHeap,
+	ZgTexture2D** textureOut,
+	const ZgTexture2DCreateInfo* createInfo)
+{
+	ZG_ARG_CHECK(createInfo == nullptr, "");
+	ZG_ARG_CHECK(createInfo->numMipmaps == 0, "Must specify at least 1 mipmap layer (i.e. the full image)");
+	ZG_ARG_CHECK(createInfo->numMipmaps > ZG_MAX_NUM_MIPMAPS, "Too many mipmaps specified");
+	if (createInfo->usage == ZG_TEXTURE_USAGE_DEFAULT) {
+		ZG_ARG_CHECK(createInfo->optimalClearValue != ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED,
+			"May not define optimal clear value for default textures");
 	}
-
-	// Set context
-	zg::setContext(tmpContext);
-	return ZG_SUCCESS;
+	return memoryHeap->texture2DCreate(textureOut, *createInfo);
 }
 
-ZG_API ZgResult zgContextDeinit(void)
+ZG_API void zgTexture2DRelease(
+	ZgTexture2D* texture)
 {
-	if (zgContextAlreadyInitialized() == ZG_FALSE) return ZG_SUCCESS;
-
-	ZgContext& ctx = zg::getContext();
-
-	// Delete backend
-	zg::getAllocator()->deleteObject(ctx.backend);
-
-	// Reset context
-	ctx = {};
-	ctx.allocator = AllocatorWrapper();
-
-	return ZG_SUCCESS;
+	if (texture == nullptr) return;
+	zg::getAllocator()->deleteObject(texture);
 }
 
-ZG_API ZgResult zgContextSwapchainResize(
-	uint32_t width,
-	uint32_t height)
+ZG_API ZgResult zgTexture2DSetDebugName(
+	ZgTexture2D* texture,
+	const char* name)
 {
-	return zg::getBackend()->swapchainResize(width, height);
+	ZG_ARG_CHECK(texture == nullptr, "");
+	ZG_ARG_CHECK(name == nullptr, "");
+	return texture->setDebugName(name);
 }
 
-ZG_API ZgResult zgContextSwapchainSetVsync(
-	ZgBool vsync)
-{
-	return zg::getBackend()->setVsync(vsync != ZG_FALSE);
-}
-
-ZG_API ZgResult zgContextSwapchainBeginFrame(
-	ZgFramebuffer** framebufferOut,
-	ZgProfiler* profiler,
-	uint64_t* measurementIdOut)
-{
-	return zg::getBackend()->swapchainBeginFrame(framebufferOut, profiler, measurementIdOut);
-}
-
-ZG_API ZgResult zgContextSwapchainFinishFrame(
-	ZgProfiler* profiler,
-	uint64_t measurementId)
-{
-	return zg::getBackend()->swapchainFinishFrame(profiler, measurementId);
-}
-
-// Statistics
+// Memory Heap
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgResult zgContextGetStats(ZgStats* statsOut)
+ZG_API ZgResult zgMemoryHeapCreate(
+	ZgMemoryHeap** memoryHeapOut,
+	const ZgMemoryHeapCreateInfo* createInfo)
 {
-	ZG_ARG_CHECK(statsOut == nullptr, "");
-	return zg::getBackend()->getStats(*statsOut);
+	ZG_ARG_CHECK(createInfo == nullptr, "");
+	ZG_ARG_CHECK(createInfo->sizeInBytes == 0, "Can't create an empty memory heap");
+
+	return zg::getBackend()->memoryHeapCreate(memoryHeapOut, *createInfo);
+}
+
+ZG_API ZgResult zgMemoryHeapRelease(
+	ZgMemoryHeap* memoryHeap)
+{
+	return zg::getBackend()->memoryHeapRelease(memoryHeap);
 }
 
 // Pipeline Compute
@@ -329,117 +302,6 @@ ZG_API ZgResult zgPipelineRenderRelease(
 	return zg::getBackend()->pipelineRenderRelease(pipeline);
 }
 
-// Memory Heap
-// ------------------------------------------------------------------------------------------------
-
-ZG_API ZgResult zgMemoryHeapCreate(
-	ZgMemoryHeap** memoryHeapOut,
-	const ZgMemoryHeapCreateInfo* createInfo)
-{
-	ZG_ARG_CHECK(createInfo == nullptr, "");
-	ZG_ARG_CHECK(createInfo->sizeInBytes == 0, "Can't create an empty memory heap");
-
-	return zg::getBackend()->memoryHeapCreate(memoryHeapOut, *createInfo);
-}
-
-ZG_API ZgResult zgMemoryHeapRelease(
-	ZgMemoryHeap* memoryHeap)
-{
-	return zg::getBackend()->memoryHeapRelease(memoryHeap);
-}
-
-// Buffer
-// ------------------------------------------------------------------------------------------------
-
-ZG_API ZgResult zgMemoryHeapBufferCreate(
-	ZgMemoryHeap* memoryHeap,
-	ZgBuffer** bufferOut,
-	const ZgBufferCreateInfo* createInfo)
-{
-	ZG_ARG_CHECK(createInfo == nullptr, "");
-	ZG_ARG_CHECK((createInfo->offsetInBytes % 65536) != 0, "Buffer must be 64KiB aligned");
-
-	return memoryHeap->bufferCreate(bufferOut, *createInfo);
-}
-
-ZG_API void zgBufferRelease(
-	ZgBuffer* buffer)
-{
-	if (buffer == nullptr) return;
-	zg::getAllocator()->deleteObject(buffer);
-}
-
-ZG_API ZgResult zgBufferMemcpyTo(
-	ZgBuffer* dstBuffer,
-	uint64_t dstBufferOffsetBytes,
-	const void* srcMemory,
-	uint64_t numBytes)
-{
-	return dstBuffer->memcpyTo(dstBufferOffsetBytes, srcMemory, numBytes);
-}
-
-ZG_API ZgResult zgBufferMemcpyFrom(
-	void* dstMemory,
-	ZgBuffer* srcBuffer,
-	uint64_t srcBufferOffsetBytes,
-	uint64_t numBytes)
-{
-	return srcBuffer->memcpyFrom(srcBufferOffsetBytes, dstMemory, numBytes);
-}
-
-ZG_API ZgResult zgBufferSetDebugName(
-	ZgBuffer* buffer,
-	const char* name)
-{
-	ZG_ARG_CHECK(buffer == nullptr, "");
-	return buffer->setDebugName(name);
-}
-
-// Textures
-// ------------------------------------------------------------------------------------------------
-
-ZG_API ZgResult zgTexture2DGetAllocationInfo(
-	ZgTexture2DAllocationInfo* allocationInfoOut,
-	const ZgTexture2DCreateInfo* createInfo)
-{
-	ZG_ARG_CHECK(allocationInfoOut == nullptr, "");
-	ZG_ARG_CHECK(createInfo == nullptr, "");
-	ZG_ARG_CHECK(createInfo->numMipmaps == 0, "Must specify at least 1 mipmap layer (i.e. the full image)");
-	ZG_ARG_CHECK(createInfo->numMipmaps > ZG_MAX_NUM_MIPMAPS, "Too many mipmaps specified");
-	return zg::getBackend()->texture2DGetAllocationInfo(*allocationInfoOut, *createInfo);
-}
-
-ZG_API ZgResult zgMemoryHeapTexture2DCreate(
-	ZgMemoryHeap* memoryHeap,
-	ZgTexture2D** textureOut,
-	const ZgTexture2DCreateInfo* createInfo)
-{
-	ZG_ARG_CHECK(createInfo == nullptr, "");
-	ZG_ARG_CHECK(createInfo->numMipmaps == 0, "Must specify at least 1 mipmap layer (i.e. the full image)");
-	ZG_ARG_CHECK(createInfo->numMipmaps > ZG_MAX_NUM_MIPMAPS, "Too many mipmaps specified");
-	if (createInfo->usage == ZG_TEXTURE_USAGE_DEFAULT) {
-		ZG_ARG_CHECK(createInfo->optimalClearValue != ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED,
-			"May not define optimal clear value for default textures");
-	}
-	return memoryHeap->texture2DCreate(textureOut, *createInfo);
-}
-
-ZG_API void zgTexture2DRelease(
-	ZgTexture2D* texture)
-{
-	if (texture == nullptr) return;
-	zg::getAllocator()->deleteObject(texture);
-}
-
-ZG_API ZgResult zgTexture2DSetDebugName(
-	ZgTexture2D* texture,
-	const char* name)
-{
-	ZG_ARG_CHECK(texture == nullptr, "");
-	ZG_ARG_CHECK(name == nullptr, "");
-	return texture->setDebugName(name);
-}
-
 // Framebuffer
 // ------------------------------------------------------------------------------------------------
 
@@ -508,53 +370,31 @@ ZG_API ZgResult zgFenceWaitOnCpuBlocking(
 	return fence->waitOnCpuBlocking();
 }
 
-// Command queue
+// Profiler
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgResult zgCommandQueueGetPresentQueue(
-	ZgCommandQueue** presentQueueOut)
+ZG_API ZgResult zgProfilerCreate(
+	ZgProfiler** profilerOut,
+	const ZgProfilerCreateInfo* createInfo)
 {
-	return zg::getBackend()->getPresentQueue(presentQueueOut);
+	return zg::getBackend()->profilerCreate(profilerOut, *createInfo);
 }
 
-ZG_API ZgResult zgCommandQueueGetCopyQueue(
-	ZgCommandQueue** copyQueueOut)
+ZG_API void zgProfilerRelease(
+	ZgProfiler* profiler)
 {
-	return zg::getBackend()->getCopyQueue(copyQueueOut);
+	if (profiler == nullptr) return;
+	zg::getBackend()->profilerRelease(profiler);
 }
 
-ZG_API ZgResult zgCommandQueueSignalOnGpu(
-	ZgCommandQueue* commandQueue,
-	ZgFence* fenceToSignal)
+ZG_API ZgResult zgProfilerGetMeasurement(
+	ZgProfiler* profiler,
+	uint64_t measurementId,
+	float* measurementMsOut)
 {
-	return commandQueue->signalOnGpu(*fenceToSignal);
-}
-
-ZG_API ZgResult zgCommandQueueWaitOnGpu(
-	ZgCommandQueue* commandQueue,
-	const ZgFence* fence)
-{
-	return commandQueue->waitOnGpu(*fence);
-}
-
-ZG_API ZgResult zgCommandQueueFlush(
-	ZgCommandQueue* commandQueue)
-{
-	return commandQueue->flush();
-}
-
-ZG_API ZgResult zgCommandQueueBeginCommandListRecording(
-	ZgCommandQueue* commandQueue,
-	ZgCommandList** commandListOut)
-{
-	return commandQueue->beginCommandListRecording(commandListOut);
-}
-
-ZG_API ZgResult zgCommandQueueExecuteCommandList(
-	ZgCommandQueue* commandQueue,
-	ZgCommandList* commandList)
-{
-	return commandQueue->executeCommandList(commandList);
+	ZG_ARG_CHECK(profiler == nullptr, "");
+	ZG_ARG_CHECK(measurementMsOut == nullptr, "");
+	return profiler->getMeasurement(measurementId, *measurementMsOut);
 }
 
 // Command list
@@ -769,29 +609,185 @@ ZG_API ZgResult zgCommandListProfileEnd(
 	return commandList->profileEnd(profiler, measurementId);
 }
 
-// Profiler
+// Command queue
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgResult zgProfilerCreate(
-	ZgProfiler** profilerOut,
-	const ZgProfilerCreateInfo* createInfo)
+ZG_API ZgResult zgCommandQueueGetPresentQueue(
+	ZgCommandQueue** presentQueueOut)
 {
-	return zg::getBackend()->profilerCreate(profilerOut, *createInfo);
+	return zg::getBackend()->getPresentQueue(presentQueueOut);
 }
 
-ZG_API void zgProfilerRelease(
-	ZgProfiler* profiler)
+ZG_API ZgResult zgCommandQueueGetCopyQueue(
+	ZgCommandQueue** copyQueueOut)
 {
-	if (profiler == nullptr) return;
-	zg::getBackend()->profilerRelease(profiler);
+	return zg::getBackend()->getCopyQueue(copyQueueOut);
 }
 
-ZG_API ZgResult zgProfilerGetMeasurement(
+ZG_API ZgResult zgCommandQueueSignalOnGpu(
+	ZgCommandQueue* commandQueue,
+	ZgFence* fenceToSignal)
+{
+	return commandQueue->signalOnGpu(*fenceToSignal);
+}
+
+ZG_API ZgResult zgCommandQueueWaitOnGpu(
+	ZgCommandQueue* commandQueue,
+	const ZgFence* fence)
+{
+	return commandQueue->waitOnGpu(*fence);
+}
+
+ZG_API ZgResult zgCommandQueueFlush(
+	ZgCommandQueue* commandQueue)
+{
+	return commandQueue->flush();
+}
+
+ZG_API ZgResult zgCommandQueueBeginCommandListRecording(
+	ZgCommandQueue* commandQueue,
+	ZgCommandList** commandListOut)
+{
+	return commandQueue->beginCommandListRecording(commandListOut);
+}
+
+ZG_API ZgResult zgCommandQueueExecuteCommandList(
+	ZgCommandQueue* commandQueue,
+	ZgCommandList* commandList)
+{
+	return commandQueue->executeCommandList(commandList);
+}
+
+// Context
+// ------------------------------------------------------------------------------------------------
+
+ZG_API ZgBool zgContextAlreadyInitialized(void)
+{
+	return zg::getBackend() == nullptr ? ZG_FALSE : ZG_TRUE;
+}
+
+ZG_API ZgResult zgContextInit(const ZgContextInitSettings* settings)
+{
+	// Can't use ZG_ARG_CHECK() here because logger is not yet initialized
+	if (settings == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
+	if (zgContextAlreadyInitialized() == ZG_TRUE) return ZG_WARNING_ALREADY_INITIALIZED;
+
+	ZgContext tmpContext;
+
+	// Set default logger if none is specified
+	bool usingDefaultLogger = settings->logger.log == nullptr;
+	if (usingDefaultLogger) tmpContext.logger = zg::getDefaultLogger();
+	else tmpContext.logger = settings->logger;
+
+	// Set default allocator if none is specified
+	bool usingDefaultAllocator =
+		settings->allocator.allocate == nullptr || settings->allocator.deallocate == nullptr;
+	if (usingDefaultAllocator) tmpContext.allocator = AllocatorWrapper::createDefaultAllocator();
+	else tmpContext.allocator = AllocatorWrapper::createWrapper(settings->allocator);
+
+	// Set temporary context (without API backend). Required so rest of initialization can allocate
+	// memory and log.
+	zg::setContext(tmpContext);
+
+	// Log which logger is used
+	if (usingDefaultLogger) ZG_INFO("zgContextInit(): Using default logger (printf)");
+	else ZG_INFO("zgContextInit(): Using user-provided logger");
+
+	// Log which allocator is used
+	if (usingDefaultAllocator) ZG_INFO("zgContextInit(): Using default allocator");
+	else ZG_INFO("zgContextInit(): Using user-provided allocator");
+
+	// Create and allocate requested backend api
+	switch (settings->backend) {
+
+	case ZG_BACKEND_NONE:
+		// TODO: Implement null backend
+		ZG_ERROR("zgContextInit(): Null backend not implemented, exiting.");
+		return ZG_WARNING_UNIMPLEMENTED;
+
+#if defined(_WIN32)
+	case ZG_BACKEND_D3D12:
+		{
+			ZG_INFO("zgContextInit(): Attempting to create D3D12 backend...");
+			ZgResult res = zg::createD3D12Backend(&tmpContext.backend, *settings);
+			if (res != ZG_SUCCESS) {
+				ZG_ERROR("zgContextInit(): Could not create D3D12 backend, exiting.");
+				return res;
+			}
+			ZG_INFO("zgContextInit(): Created D3D12 backend");
+		}
+		break;
+#endif
+
+#ifdef ZG_VULKAN
+	case ZG_BACKEND_VULKAN:
+		{
+			ZG_INFO("zgContextInit(): Attempting to create Vulkan backend...");
+			ZgResult res = zg::createVulkanBackend(&tmpContext.backend, *settings);
+			if (res != ZG_SUCCESS) {
+				ZG_ERROR("zgContextInit(): Could not create Vulkan backend, exiting.");
+				return res;
+			}
+			ZG_INFO("zgContextInit(): Created Vulkan backend");
+		}
+		break;
+#endif
+
+	default:
+		return ZG_ERROR_GENERIC;
+	}
+
+	// Set context
+	zg::setContext(tmpContext);
+	return ZG_SUCCESS;
+}
+
+ZG_API ZgResult zgContextDeinit(void)
+{
+	if (zgContextAlreadyInitialized() == ZG_FALSE) return ZG_SUCCESS;
+
+	ZgContext& ctx = zg::getContext();
+
+	// Delete backend
+	zg::getAllocator()->deleteObject(ctx.backend);
+
+	// Reset context
+	ctx = {};
+	ctx.allocator = AllocatorWrapper();
+
+	return ZG_SUCCESS;
+}
+
+ZG_API ZgResult zgContextSwapchainResize(
+	uint32_t width,
+	uint32_t height)
+{
+	return zg::getBackend()->swapchainResize(width, height);
+}
+
+ZG_API ZgResult zgContextSwapchainSetVsync(
+	ZgBool vsync)
+{
+	return zg::getBackend()->setVsync(vsync != ZG_FALSE);
+}
+
+ZG_API ZgResult zgContextSwapchainBeginFrame(
+	ZgFramebuffer** framebufferOut,
 	ZgProfiler* profiler,
-	uint64_t measurementId,
-	float* measurementMsOut)
+	uint64_t* measurementIdOut)
 {
-	ZG_ARG_CHECK(profiler == nullptr, "");
-	ZG_ARG_CHECK(measurementMsOut == nullptr, "");
-	return profiler->getMeasurement(measurementId, *measurementMsOut);
+	return zg::getBackend()->swapchainBeginFrame(framebufferOut, profiler, measurementIdOut);
+}
+
+ZG_API ZgResult zgContextSwapchainFinishFrame(
+	ZgProfiler* profiler,
+	uint64_t measurementId)
+{
+	return zg::getBackend()->swapchainFinishFrame(profiler, measurementId);
+}
+
+ZG_API ZgResult zgContextGetStats(ZgStats* statsOut)
+{
+	ZG_ARG_CHECK(statsOut == nullptr, "");
+	return zg::getBackend()->getStats(*statsOut);
 }

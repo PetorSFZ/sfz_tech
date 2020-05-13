@@ -35,4 +35,3 @@ target_include_directories(ZeroG-Sample3-MinimalCompute PRIVATE
 target_link_libraries(ZeroG-Sample3-MinimalCompute ${SDL2_LIBRARIES} ${ZEROG_SAMPLE_COMMON_LIBRARIES})
 
 linkZeroG(ZeroG-Sample3-MinimalCompute)
-linkZeroGcpp(ZeroG-Sample3-MinimalCompute)

@@ -24,7 +24,7 @@
 #include <skipifzero_hash_maps.hpp>
 #include <skipifzero_strings.hpp>
 
-#include <ZeroG-cpp.hpp>
+#include <ZeroG.h>
 
 #include <ZeroG-ImGui.hpp>
 

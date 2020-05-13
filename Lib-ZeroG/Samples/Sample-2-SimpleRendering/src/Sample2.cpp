@@ -26,8 +26,6 @@
 #include <SDL.h>
 #include <SDL_syswm.h>
 
-#include "ZeroG-cpp.hpp"
-
 #include "Cube.hpp"
 #include "SampleCommon.hpp"
 

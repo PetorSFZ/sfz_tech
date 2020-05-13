@@ -35,4 +35,3 @@ target_include_directories(ZeroG-Sample1-MinimalClearScreen PRIVATE
 target_link_libraries(ZeroG-Sample1-MinimalClearScreen ${SDL2_LIBRARIES} ${ZEROG_SAMPLE_COMMON_LIBRARIES})
 
 linkZeroG(ZeroG-Sample1-MinimalClearScreen)
-linkZeroGcpp(ZeroG-Sample1-MinimalClearScreen)

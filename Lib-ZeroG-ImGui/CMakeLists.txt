@@ -33,10 +33,6 @@ if (NOT ZEROG_FOUND)
 	message(FATAL_ERROR "ZeroG-ImGui requires ZeroG.")
 endif()
 
-if (NOT ZEROG_CPP_FOUND)
-	message(FATAL_ERROR "ZeroG-ImGui requires ZeroG-cpp.")
-endif()
-
 if (NOT IMGUI_FOUND)
 	message(FATAL_ERROR "ZeroG-ImGui requires dear-imgui.")
 endif()
@@ -53,7 +49,6 @@ target_include_directories(ZeroG-ImGui PUBLIC
 	${INCLUDE_DIR}
 	${SFZ_CORE_INCLUDE_DIRS}
 	${ZEROG_INCLUDE_DIRS}
-	${ZEROG_CPP_INCLUDE_DIRS}
 	${IMGUI_INCLUDE_DIRS}
 )
 

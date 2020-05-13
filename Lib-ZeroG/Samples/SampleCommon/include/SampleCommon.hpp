@@ -20,7 +20,6 @@
 
 #include <SDL.h>
 #include <ZeroG.h>
-#include <ZeroG-cpp.hpp>
 
 // Error handling helpers
 // ------------------------------------------------------------------------------------------------

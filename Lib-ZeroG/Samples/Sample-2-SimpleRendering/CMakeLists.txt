@@ -35,4 +35,3 @@ target_include_directories(ZeroG-Sample2-SimpleRendering PRIVATE
 target_link_libraries(ZeroG-Sample2-SimpleRendering ${SDL2_LIBRARIES} ${ZEROG_SAMPLE_COMMON_LIBRARIES})
 
 linkZeroG(ZeroG-Sample2-SimpleRendering)
-linkZeroGcpp(ZeroG-Sample2-SimpleRendering)

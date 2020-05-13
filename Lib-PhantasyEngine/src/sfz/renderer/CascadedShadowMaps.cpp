@@ -19,7 +19,7 @@
 
 #include "sfz/renderer/CascadedShadowMaps.hpp"
 
-#include <ZeroG-cpp.hpp>
+#include <ZeroG.h>
 
 #include "sfz/math/MathSupport.hpp"
 

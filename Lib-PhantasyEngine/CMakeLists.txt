@@ -154,7 +154,6 @@ if (NOT hasParent)
 	set(ZEROG_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../Lib-ZeroG)
 	include(${ZEROG_PATH}/ZeroG.cmake)
 	addZeroG()
-	addZeroGcpp()
 
 	# dear-imgui
 	# ${IMGUI_FOUND}, ${IMGUI_INCLUDE_DIRS}, ${IMGUI_LIBRARIES}
@@ -201,14 +200,6 @@ else()
 
 	if (NOT ZEROG_FOUND)
 		message(FATAL_ERROR "PhantasyEngine requires ZeroG.")
-	endif()
-
-	if (NOT ZEROG_CPP_FOUND)
-		message(FATAL_ERROR "PhantasyEngine requires ZeroG-cpp.")
-	endif()
-
-	if (NOT IMGUI_FOUND)
-		message(FATAL_ERROR "PhantasyEngine requires dear-imgui.")
 	endif()
 
 	if (NOT IMGUI_PLOT_FOUND)
@@ -381,7 +372,6 @@ target_include_directories(PhantasyEngine PUBLIC
 	${SRC_DIR}
 	${SDL2_INCLUDE_DIRS}
 	${ZEROG_INCLUDE_DIRS}
-	${ZEROG_CPP_INCLUDE_DIRS}
 	${SFZ_CORE_INCLUDE_DIRS}
 	${CGLTF_INCLUDE_DIRS}
 	${STB_INCLUDE_DIRS}
@@ -396,7 +386,6 @@ target_include_directories(PhantasyEngine PUBLIC
 target_link_libraries(PhantasyEngine
 	${SDL2_LIBRARIES}
 	${ZEROG_LIBRARIES}
-	${ZEROG_CPP_LIBRARIES}
 	${IMGUI_LIBRARIES}
 	${IMGUI_PLOT_LIBRARIES}
 	${ZEROG_IMGUI_LIBRARIES}

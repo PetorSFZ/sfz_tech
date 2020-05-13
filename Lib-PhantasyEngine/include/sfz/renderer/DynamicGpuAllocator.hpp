@@ -21,7 +21,7 @@
 
 #include <skipifzero.hpp>
 
-#include <ZeroG-cpp.hpp>
+#include <ZeroG.h>
 
 namespace sfz {
 

@@ -22,7 +22,6 @@
 #include <SDL.h>
 
 #include <ZeroG.h>
-#include <ZeroG-cpp.hpp>
 
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>

@@ -21,7 +21,7 @@
 
 #include <skipifzero_arrays.hpp>
 
-#include <ZeroG-cpp.hpp>
+#include <ZeroG.h>
 
 #include "sfz/renderer/BuiltInShaderTypes.hpp"
 #include "sfz/renderer/DynamicGpuAllocator.hpp"
