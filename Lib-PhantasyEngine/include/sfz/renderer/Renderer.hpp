@@ -78,7 +78,7 @@ public:
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
-	RendererState& getStateDummyMode() noexcept;
+	RendererState& directAccessInternalState() noexcept { return *mState; }
 
 	uint64_t currentFrameIdx() const noexcept; // Incremented each frameBegin()
 	vec2_i32 windowResolution() const noexcept;

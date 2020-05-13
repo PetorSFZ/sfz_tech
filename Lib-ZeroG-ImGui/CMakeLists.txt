@@ -59,7 +59,6 @@ target_include_directories(ZeroG-ImGui PUBLIC
 
 target_link_libraries(ZeroG-ImGui
 	${ZEROG_LIBRARIES}
-	${ZEROG_CPP_LIBRARIES}
 	${IMGUI_LIBRARIES}
 )
 

@@ -16,37 +16,32 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
+#ifndef ZEROG_H
+#define ZEROG_H
+#pragma once
+
 // About
 // ------------------------------------------------------------------------------------------------
 
 // This header file contains the ZeroG C-API. If you are using C++ you might also want to link with
 // and use the C++ wrapper static library where appropriate.
 
-// Includes
+// Macros and includes
 // ------------------------------------------------------------------------------------------------
 
-#pragma once
-
-// Include standard integer types
-#ifdef __cplusplus
-#include <cstdint>
-#else
 #include <stdint.h>
-#endif
 
-// This entire header is pure C
 #ifdef __cplusplus
-extern "C" {
+#define ZG_EXTERN_C extern "C"
+#else
+#define ZG_EXTERN_C
 #endif
-
-// Macros
-// ------------------------------------------------------------------------------------------------
 
 #if defined(_WIN32)
 #if defined(ZG_DLL_EXPORT)
-#define ZG_API __declspec(dllexport)
+#define ZG_API ZG_EXTERN_C __declspec(dllexport)
 #else
-#define ZG_API __declspec(dllimport)
+#define ZG_API ZG_EXTERN_C __declspec(dllimport)
 #endif
 #else
 #define ZG_API
@@ -1346,7 +1341,4 @@ ZG_API ZgResult zgProfilerGetMeasurement(
 	uint64_t measurementId,
 	float* measurementMsOut);
 
-// This entire header is pure C
-#ifdef __cplusplus
-} // extern "C"
 #endif

@@ -250,12 +250,6 @@ void Renderer::destroy() noexcept
 // Renderer: Getters
 // ------------------------------------------------------------------------------------------------
 
-RendererState& Renderer::getStateDummyMode() noexcept
-{
-	sfz_assert_hard(mState->dummyMode);
-	return *mState;
-}
-
 uint64_t Renderer::currentFrameIdx() const noexcept
 {
 	return mState->currentFrameIdx;

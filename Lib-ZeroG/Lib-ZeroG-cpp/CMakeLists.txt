@@ -79,24 +79,6 @@ message("  -- CMAKE_CXX_FLAGS_RELEASE: " ${CMAKE_CXX_FLAGS_RELEASE})
 # ZeroG C++ Wrapper
 # ------------------------------------------------------------------------------------------------
 
-set(ZEROG_CPP_INCLUDE_FILES
-	${INCLUDE_DIR}/ZeroG-cpp.hpp
-)
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ZEROG_CPP_INCLUDE_FILES})
-
-set(ZEROG_CPP_SRC_FILES
-	${SRC_DIR}/ZeroG-cpp.cpp
-)
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ZEROG_CPP_SRC_FILES})
-
-add_library(ZeroG-cpp ${ZEROG_CPP_INCLUDE_FILES} ${ZEROG_CPP_SRC_FILES})
-
-target_include_directories(ZeroG-cpp PRIVATE
-	${INCLUDE_DIR}
-	${SRC_DIR}
-	${ZEROG_INCLUDE_DIRS}
-)
-
 # Output variables (Parent scope)
 # ------------------------------------------------------------------------------------------------
 
@@ -106,5 +88,5 @@ get_directory_property(hasParent PARENT_DIRECTORY)
 if(hasParent)
 	set(ZEROG_CPP_FOUND true PARENT_SCOPE)
 	set(ZEROG_CPP_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
-	set(ZEROG_CPP_LIBRARIES ZeroG-cpp ZeroG PARENT_SCOPE)
+	set(ZEROG_CPP_LIBRARIES "" ZeroG PARENT_SCOPE)
 endif()
