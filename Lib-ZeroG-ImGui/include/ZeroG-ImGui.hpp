@@ -29,7 +29,7 @@ namespace zg {
 
 struct ImGuiRenderState;
 
-zg::Result imguiInitRenderState(
+ZgResult imguiInitRenderState(
 	ImGuiRenderState*& stateOut,
 	uint32_t frameLatency,
 	sfz::Allocator* allocator,

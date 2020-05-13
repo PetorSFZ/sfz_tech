@@ -52,7 +52,7 @@ struct CheckZgImpl final {
 	CheckZgImpl() = delete;
 	CheckZgImpl(const char* file, int line) noexcept : file(file), line(line) {}
 
-	bool operator% (zg::Result result) noexcept;
+	bool operator% (ZgResult result) noexcept;
 };
 
 // Initialization helpers

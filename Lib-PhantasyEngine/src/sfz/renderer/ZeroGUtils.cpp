@@ -102,16 +102,16 @@ ZgAllocator createZeroGAllocatorWrapper(sfz::Allocator* sfzAllocator) noexcept
 // Error handling helpers
 // -----------------------------------------------------------------------------------------------
 
-bool CheckZgImpl::operator% (zg::Result result) noexcept
+bool CheckZgImpl::operator% (ZgResult result) noexcept
 {
-	if (zg::isSuccess(result)) return true;
-	if (zg::isWarning(result)) {
+	if (zgIsSuccess(result)) return true;
+	if (zgIsWarning(result)) {
 		sfz::getLogger()->log(file, line, sfz::LogLevel::WARNING, "ZeroG",
-			"zg::Result: %s", zgResultToString((ZgResult)result));
+			"zg::Result: %s", zgResultToString(result));
 	}
 	else {
 		sfz::getLogger()->log(file, line, sfz::LogLevel::ERROR_LVL, "ZeroG",
-			"zg::Result: %s", zgResultToString((ZgResult)result));
+			"zg::Result: %s", zgResultToString(result));
 	}
 	return false;
 }

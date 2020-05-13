@@ -57,16 +57,16 @@ static const char* stripFilePath(const char* file) noexcept
 // Error handling helpers
 // ------------------------------------------------------------------------------------------------
 
-void CheckZgImpl::operator% (zg::Result result) noexcept
+void CheckZgImpl::operator% (ZgResult result) noexcept
 {
-	if (zg::isSuccess(result)) return;
-	if (zg::isWarning(result)) {
+	if (zgIsSuccess(result)) return;
+	if (zgIsWarning(result)) {
 		printf("%s:%i: ZeroG Warning: %s\n",
-			stripFilePath(file), line, zgResultToString((ZgResult)result));
+			stripFilePath(file), line, zgResultToString(result));
 	}
 	else {
 		printf("%s:%i: ZeroG Error: %s\n",
-			stripFilePath(file), line, zgResultToString((ZgResult)result));
+			stripFilePath(file), line, zgResultToString(result));
 		assert(false);
 	}
 }

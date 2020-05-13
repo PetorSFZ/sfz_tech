@@ -143,14 +143,14 @@ float4 PSMain(PSInput input) : SV_TARGET
 // Error handling helpers
 // -----------------------------------------------------------------------------------------------
 
-struct ZgAsserter final { void operator% (zg::Result res) { sfz_assert(zg::isSuccess(res)); }; };
+struct ZgAsserter final { void operator% (ZgResult res) { sfz_assert(zgIsSuccess(res)); }; };
 
 #define ASSERT_ZG ZgAsserter() %
 
 // ImGui Renderer
 // ------------------------------------------------------------------------------------------------
 
-zg::Result imguiInitRenderState(
+ZgResult imguiInitRenderState(
 	ImGuiRenderState*& stateOut,
 	uint32_t frameLatency,
 	sfz::Allocator* allocator,
@@ -165,7 +165,7 @@ zg::Result imguiInitRenderState(
 
 	// Build ImGui pipeline
 	{
-		zg::Result res = zg::PipelineRenderBuilder()
+		ZgResult res = zg::PipelineRenderBuilder()
 			.addVertexAttribute(0, 0, ZG_VERTEX_ATTRIBUTE_F32_2, offsetof(ImGuiVertex, pos))
 			.addVertexAttribute(1, 0, ZG_VERTEX_ATTRIBUTE_F32_2, offsetof(ImGuiVertex, texcoord))
 			.addVertexAttribute(2, 0, ZG_VERTEX_ATTRIBUTE_F32_4, offsetof(ImGuiVertex, color))
@@ -180,7 +180,7 @@ zg::Result imguiInitRenderState(
 			.addVertexShaderSource("VSMain", IMGUI_SHADER_HLSL_SRC)
 			.addPixelShaderSource("PSMain", IMGUI_SHADER_HLSL_SRC)
 			.buildFromSourceHLSL(stateOut->pipeline, ZG_SHADER_MODEL_6_0);
-		if (!zg::isSuccess(res)) return res;
+		if (!zgIsSuccess(res)) return res;
 	}
 
 	// Allocate memory for font texture
@@ -197,22 +197,22 @@ zg::Result imguiInitRenderState(
 	texCreateInfo.sizeInBytes = texAllocInfo.sizeInBytes;
 
 	{
-		zg::Result res = stateOut->fontTextureHeap.create(
+		ZgResult res = stateOut->fontTextureHeap.create(
 			texAllocInfo.sizeInBytes, ZG_MEMORY_TYPE_TEXTURE);
-		if (!zg::isSuccess(res)) return res;
+		if (!zgIsSuccess(res)) return res;
 	}
 
 	{
-		zg::Result res = stateOut->fontTextureHeap.texture2DCreate(stateOut->fontTexture, texCreateInfo);
-		if (!zg::isSuccess(res)) return res;
+		ZgResult res = stateOut->fontTextureHeap.texture2DCreate(stateOut->fontTexture, texCreateInfo);
+		if (!zgIsSuccess(res)) return res;
 	}
 	ASSERT_ZG stateOut->fontTexture.setDebugName("ImGui_FontTexture");
 
 	// Allocate memory for vertex and index buffer
 	const uint64_t uploadHeapNumBytes = (IMGUI_VERTEX_BUFFER_SIZE + IMGUI_INDEX_BUFFER_SIZE) * frameLatency;
 	{
-		zg::Result res = stateOut->uploadHeap.create(uploadHeapNumBytes, ZG_MEMORY_TYPE_UPLOAD);
-		if (!zg::isSuccess(res)) return res;
+		ZgResult res = stateOut->uploadHeap.create(uploadHeapNumBytes, ZG_MEMORY_TYPE_UPLOAD);
+		if (!zgIsSuccess(res)) return res;
 	}
 
 	// Upload font texture to GPU
@@ -256,7 +256,7 @@ zg::Result imguiInitRenderState(
 	stateOut->tmpIndices.init(IMGUI_MAX_NUM_INDICES, allocator, sfz_dbg(""));
 	stateOut->tmpCommands.init(100, allocator, sfz_dbg(""));
 
-	return zg::Result::SUCCESS;
+	return ZG_SUCCESS;
 }
 
 void imguiDestroyRenderState(ImGuiRenderState*& state) noexcept
