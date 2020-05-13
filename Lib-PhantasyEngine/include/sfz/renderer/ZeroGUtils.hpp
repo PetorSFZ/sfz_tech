@@ -58,8 +58,7 @@ struct CheckZgImpl final {
 // Initialization helpers
 // -----------------------------------------------------------------------------------------------
 
-bool initializeZeroG(
-	zg::Context& zgCtx, SDL_Window* window, sfz::Allocator* allocator, bool debugMode, bool vsync) noexcept;
+bool initializeZeroG(SDL_Window* window, sfz::Allocator* allocator, bool debugMode, bool vsync) noexcept;
 
 void* getNativeHandle(SDL_Window* window) noexcept;
 

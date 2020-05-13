@@ -47,7 +47,7 @@ static void realMain(SDL_Window* window) noexcept
 {
 	// Print compiled and linked version of ZeroG
 	printf("Compiled API version of ZeroG: %u, linked version: %u\n\n",
-		zg::Context::compiledApiVersion(), zg::Context::linkedApiVersion());
+		ZG_COMPILED_API_VERSION, zgApiLinkedVersion());
 
 	// Create ZeroG context
 	ZgContextInitSettings initSettings = {};
@@ -61,8 +61,7 @@ static void realMain(SDL_Window* window) noexcept
 	initSettings.width = 512;
 	initSettings.height = 512;
 	initSettings.nativeHandle = getNativeHandle(window);
-	zg::Context zgCtx;
-	CHECK_ZG zgCtx.init(initSettings);
+	CHECK_ZG zgContextInit(&initSettings);
 
 	// Create simply compute pipeline
 	zg::PipelineCompute memcpyPipeline;
@@ -166,6 +165,9 @@ int main(int argc, char* argv[])
 
 	// Runs the real main function
 	realMain(window);
+
+	// Deinitialize ZeroG
+	CHECK_ZG zgContextDeinit();
 
 	// Cleanup SDL2
 	cleanupSdl2(window);

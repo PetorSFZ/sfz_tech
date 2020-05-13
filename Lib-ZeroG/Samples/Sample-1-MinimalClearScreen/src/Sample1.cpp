@@ -47,7 +47,7 @@ static void realMain(SDL_Window* window) noexcept
 {
 	// Print compiled and linked version of ZeroG
 	printf("Compiled API version of ZeroG: %u, linked version: %u\n\n",
-		zg::Context::compiledApiVersion(), zg::Context::linkedApiVersion());
+		ZG_COMPILED_API_VERSION, zgApiLinkedVersion());
 
 	// Create ZeroG context
 	ZgContextInitSettings initSettings = {};
@@ -61,8 +61,7 @@ static void realMain(SDL_Window* window) noexcept
 	initSettings.width = 512;
 	initSettings.height = 512;
 	initSettings.nativeHandle = getNativeHandle(window);
-	zg::Context zgCtx;
-	CHECK_ZG zgCtx.init(initSettings);
+	CHECK_ZG zgContextInit(&initSettings);
 
 	// Get the command queues
 	zg::CommandQueue presentQueue;
@@ -98,11 +97,16 @@ static void realMain(SDL_Window* window) noexcept
 		int width = 0;
 		int height = 0;
 		SDL_GL_GetDrawableSize(window, &width, &height);
-		CHECK_ZG zgCtx.swapchainResize(uint32_t(width), uint32_t(height));
+		CHECK_ZG zgContextSwapchainResize(uint32_t(width), uint32_t(height));
 
 		// Begin frame
 		zg::Framebuffer framebuffer;
-		CHECK_ZG zgCtx.swapchainBeginFrame(framebuffer);
+		CHECK_ZG zgContextSwapchainBeginFrame(
+			&framebuffer.framebuffer, nullptr, nullptr);
+		CHECK_ZG zgFramebufferGetResolution(
+			framebuffer.framebuffer,
+			&framebuffer.width,
+			&framebuffer.height);
 
 		// Get a command list
 		zg::CommandList commandList;
@@ -117,7 +121,7 @@ static void realMain(SDL_Window* window) noexcept
 		CHECK_ZG presentQueue.executeCommandList(commandList);
 
 		// Finish frame
-		CHECK_ZG zgCtx.swapchainFinishFrame();
+		CHECK_ZG zgContextSwapchainFinishFrame(nullptr, 0);
 	}
 
 	// Flush command queue so nothing is running when we start releasing resources
@@ -144,6 +148,9 @@ int main(int argc, char* argv[])
 
 	// Runs the real main function
 	realMain(window);
+
+	// Deinitialize ZeroG
+	CHECK_ZG zgContextDeinit();
 
 	// Cleanup SDL2
 	cleanupSdl2(window);

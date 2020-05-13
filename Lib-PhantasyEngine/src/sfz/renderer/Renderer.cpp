@@ -86,7 +86,7 @@ bool Renderer::init(
 
 	// Initializer ZeroG
 	bool zgInitSuccess =
-		initializeZeroG(mState->zgCtx, window, allocator, debugModeSetting->boolValue(), mState->vsync->boolValue());
+		initializeZeroG(window, allocator, debugModeSetting->boolValue(), mState->vsync->boolValue());
 	if (!zgInitSuccess) {
 		this->destroy();
 		return false;
@@ -243,6 +243,9 @@ void Renderer::destroy() noexcept
 		// Deallocate rest of state
 		sfz::Allocator* allocator = mState->allocator;
 		allocator->deleteObject(mState);
+
+		// Deinitialize ZeroG
+		CHECK_ZG zgContextDeinit();
 	}
 	mState = nullptr;
 }
@@ -497,7 +500,7 @@ void Renderer::frameBegin() noexcept
 		// Note: This is actually safe to call every frame and without first flushing present
 		//       queue, but since we are also resizing other framebuffers created by us we might
 		//       as well protect this call just the same.
-		CHECK_ZG mState->zgCtx.swapchainResize(
+		CHECK_ZG zgContextSwapchainResize(
 			uint32_t(mState->windowRes.x), uint32_t(mState->windowRes.y));
 
 		// Resize static textures
@@ -519,11 +522,16 @@ void Renderer::frameBegin() noexcept
 	}
 
 	// Set vsync settings
-	CHECK_ZG mState->zgCtx.swapchainSetVsync(mState->vsync->boolValue());
+	CHECK_ZG zgContextSwapchainSetVsync(mState->vsync->boolValue() ? ZG_TRUE : ZG_FALSE);
 	
 	// Begin ZeroG frame
 	sfz_assert(!mState->windowFramebuffer.valid());
-	CHECK_ZG mState->zgCtx.swapchainBeginFrame(mState->windowFramebuffer, mState->profiler, frameIds.frameId);
+	CHECK_ZG zgContextSwapchainBeginFrame(
+		&mState->windowFramebuffer.framebuffer, mState->profiler.profiler, &frameIds.frameId);
+	CHECK_ZG zgFramebufferGetResolution(
+		mState->windowFramebuffer.framebuffer,
+		&mState->windowFramebuffer.width,
+		&mState->windowFramebuffer.height);
 
 	// Clear all framebuffers
 	// TODO: Should probably only clear using a specific clear framebuffer stage
@@ -1076,7 +1084,7 @@ void Renderer::frameFinish() noexcept
 
 	// Finish ZeroG frame
 	sfz_assert(mState->windowFramebuffer.valid());
-	CHECK_ZG mState->zgCtx.swapchainFinishFrame(mState->profiler, frameIds.frameId);
+	CHECK_ZG zgContextSwapchainFinishFrame(mState->profiler.profiler, frameIds.frameId);
 	mState->windowFramebuffer.release();
 
 	// Signal that we are done rendering use these resources

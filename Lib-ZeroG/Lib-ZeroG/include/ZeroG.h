@@ -77,35 +77,16 @@
 // ZeroG handles
 // ------------------------------------------------------------------------------------------------
 
-// A handle representing a compute pipeline
-ZG_HANDLE(ZgPipelineCompute);
-
-// A handle representing a render pipeline
-ZG_HANDLE(ZgPipelineRender);
-
-// A handle representing a memory heap (to allocate buffers and textures from)
-ZG_HANDLE(ZgMemoryHeap);
-
-// A handle representing a buffer
 ZG_HANDLE(ZgBuffer);
-
-// A handle representing a 2-dimensional texture
 ZG_HANDLE(ZgTexture2D);
-
-// A handle representing a framebuffer
+ZG_HANDLE(ZgMemoryHeap);
+ZG_HANDLE(ZgPipelineCompute);
+ZG_HANDLE(ZgPipelineRender);
 ZG_HANDLE(ZgFramebuffer);
-
-// A handle representing a fence for synchronizing command queues
 ZG_HANDLE(ZgFence);
-
-// A handle representing a command queue
-ZG_HANDLE(ZgCommandQueue);
-
-// A handle representing a command list
-ZG_HANDLE(ZgCommandList);
-
-// A handle representing a profiler
 ZG_HANDLE(ZgProfiler);
+ZG_HANDLE(ZgCommandList);
+ZG_HANDLE(ZgCommandQueue);
 
 // Bool
 // ------------------------------------------------------------------------------------------------
@@ -2441,102 +2422,6 @@ ZG_STRUCT(ZgStats) {
 // Gets the current statistics of the ZeroG backend. Normally called once (or maybe up to a couple
 // of times) per frame.
 ZG_API ZgResult zgContextGetStats(ZgStats* statsOut);
-
-#ifdef __cplusplus
-namespace zg {
-
-class Context final {
-public:
-
-	Context() = default;
-	Context(const Context&) = delete;
-	Context& operator= (const Context&) = delete;
-	Context(Context&& other) { this->swap(other); }
-	Context& operator= (Context&& other) { this->swap(other); return *this; }
-	~Context() { this->deinit(); }
-
-	[[nodiscard]] ZgResult init(const ZgContextInitSettings& settings)
-	{
-		this->deinit();
-		ZgResult res = zgContextInit(&settings);
-		mInitialized = res == ZG_SUCCESS;
-		return res;
-	}
-
-	void deinit()
-	{
-		if (mInitialized) zgContextDeinit();
-		mInitialized = false;
-	}
-	void swap(Context& other)
-	{
-		std::swap(mInitialized, other.mInitialized);
-	}
-
-	static uint32_t compiledApiVersion() { return ZG_COMPILED_API_VERSION; }
-
-	static uint32_t linkedApiVersion()
-	{
-		return zgApiLinkedVersion();
-	}
-
-	static bool alreadyInitialized()
-	{
-		return zgContextAlreadyInitialized();
-	}
-
-	[[nodiscard]] ZgResult swapchainResize(uint32_t width, uint32_t height)
-	{
-		return zgContextSwapchainResize(width, height);
-	}
-
-	[[nodiscard]] ZgResult swapchainSetVsync(bool vsync)
-	{
-		return zgContextSwapchainSetVsync(vsync ? ZG_TRUE : ZG_FALSE);
-	}
-
-	[[nodiscard]] ZgResult swapchainBeginFrame(Framebuffer& framebufferOut)
-	{
-		if (framebufferOut.valid()) return ZG_ERROR_INVALID_ARGUMENT;
-		ZgResult res = zgContextSwapchainBeginFrame(&framebufferOut.framebuffer, nullptr, nullptr);
-		if (!zgIsSuccess(res)) return res;
-		return zgFramebufferGetResolution(
-			framebufferOut.framebuffer, &framebufferOut.width, &framebufferOut.height);
-	}
-
-	[[nodiscard]] ZgResult swapchainBeginFrame(
-		Framebuffer& framebufferOut, Profiler& profiler, uint64_t& measurementIdOut)
-	{
-		if (framebufferOut.valid()) return ZG_ERROR_INVALID_ARGUMENT;
-		ZgResult res = zgContextSwapchainBeginFrame(
-			&framebufferOut.framebuffer, profiler.profiler, &measurementIdOut);
-		if (!zgIsSuccess(res)) return res;
-		return zgFramebufferGetResolution(
-			framebufferOut.framebuffer, &framebufferOut.width, &framebufferOut.height);
-	}
-
-	[[nodiscard]] ZgResult swapchainFinishFrame()
-	{
-		return zgContextSwapchainFinishFrame(nullptr, 0);
-	}
-
-	[[nodiscard]] ZgResult swapchainFinishFrame(Profiler& profiler, uint64_t measurementId)
-	{
-		return zgContextSwapchainFinishFrame(profiler.profiler, measurementId);
-	}
-
-	[[nodiscard]] ZgResult getStats(ZgStats& statsOut)
-	{
-		return zgContextGetStats(&statsOut);
-	}
-
-private:
-
-	bool mInitialized = false;
-};
-
-} // namespace zg
-#endif
 
 // Transformation and projection matrices
 // ------------------------------------------------------------------------------------------------

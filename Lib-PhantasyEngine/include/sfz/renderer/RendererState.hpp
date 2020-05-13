@@ -237,7 +237,6 @@ struct RendererState final {
 	// --------------------------------------------------------------------------------------------
 
 	sfz::Allocator* allocator = nullptr;
-	zg::Context zgCtx;
 	SDL_Window* window = nullptr;
 
 	// Whether the renderer is in "dummy" mode or not. Dummy mode is used when the renderer is

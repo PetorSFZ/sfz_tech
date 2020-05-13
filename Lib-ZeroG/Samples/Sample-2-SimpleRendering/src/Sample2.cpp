@@ -218,7 +218,7 @@ static void realMain(SDL_Window* window) noexcept
 {
 	// Print compiled and linked version of ZeroG
 	printf("Compiled API version of ZeroG: %u, linked version: %u\n\n",
-		zg::Context::compiledApiVersion(), zg::Context::linkedApiVersion());
+		ZG_COMPILED_API_VERSION, zgApiLinkedVersion());
 
 	// Create ZeroG context
 	ZgContextInitSettings initSettings = {};
@@ -232,8 +232,7 @@ static void realMain(SDL_Window* window) noexcept
 	initSettings.width = 512;
 	initSettings.height = 512;
 	initSettings.nativeHandle = getNativeHandle(window);
-	zg::Context zgCtx;
-	CHECK_ZG zgCtx.init(initSettings);
+	CHECK_ZG zgContextInit(&initSettings);
 
 	// Get the command queues
 	zg::CommandQueue presentQueue;
@@ -444,7 +443,7 @@ static void realMain(SDL_Window* window) noexcept
 		int width = 0;
 		int height = 0;
 		SDL_GL_GetDrawableSize(window, &width, &height);
-		CHECK_ZG zgCtx.swapchainResize(uint32_t(width), uint32_t(height));
+		CHECK_ZG zgContextSwapchainResize(uint32_t(width), uint32_t(height));
 
 		// Create view and projection matrices
 		float vertFovDeg = 40.0f;
@@ -467,7 +466,12 @@ static void realMain(SDL_Window* window) noexcept
 
 		// Begin frame
 		zg::Framebuffer framebuffer;
-		CHECK_ZG zgCtx.swapchainBeginFrame(framebuffer, profiler, frameMeasurementId);
+		CHECK_ZG zgContextSwapchainBeginFrame(
+			&framebuffer.framebuffer, profiler.profiler, &frameMeasurementId);
+		CHECK_ZG zgFramebufferGetResolution(
+			framebuffer.framebuffer,
+			&framebuffer.width,
+			&framebuffer.height);
 
 		// Run compute command list
 		{
@@ -579,7 +583,7 @@ static void realMain(SDL_Window* window) noexcept
 		}
 
 		// Finish frame
-		CHECK_ZG zgCtx.swapchainFinishFrame(profiler, frameMeasurementId);
+		CHECK_ZG zgContextSwapchainFinishFrame(profiler.profiler, frameMeasurementId);
 
 		// Small hack: Flush present queue so we can get measurements
 		CHECK_ZG presentQueue.flush();
@@ -619,6 +623,9 @@ int main(int argc, char* argv[])
 
 	// Runs the real main function
 	realMain(window);
+
+	// Deinitialize ZeroG
+	CHECK_ZG zgContextDeinit();
 
 	// Cleanup SDL2
 	cleanupSdl2(window);

@@ -250,7 +250,7 @@ void RendererUI::renderGeneralTab(RendererState& state) noexcept
 
 	// Get ZeroG stats
 	ZgStats stats = {};
-	CHECK_ZG state.zgCtx.getStats(stats);
+	CHECK_ZG zgContextGetStats(&stats);
 
 	// Print ZeroG statistics
 	ImGui::Text("ZeroG Stats");

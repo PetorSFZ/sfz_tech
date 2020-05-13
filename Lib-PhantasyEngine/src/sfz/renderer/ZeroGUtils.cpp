@@ -119,14 +119,13 @@ bool CheckZgImpl::operator% (ZgResult result) noexcept
 // Initialization helpers
 // -----------------------------------------------------------------------------------------------
 
-bool initializeZeroG(
-	zg::Context& zgCtx, SDL_Window* window, sfz::Allocator* allocator, bool debugMode, bool vsync) noexcept
+bool initializeZeroG(SDL_Window* window, sfz::Allocator* allocator, bool debugMode, bool vsync) noexcept
 {
 	SFZ_INFO("NextGenRenderer", "Initializing ZeroG");
 
 	// Log compiled and linked version of ZeroG
 	SFZ_INFO("NextGenRenderer", "ZeroG compiled API version: %u, linked version: %u",
-		zg::Context::compiledApiVersion(), zg::Context::linkedApiVersion());
+		ZG_COMPILED_API_VERSION, zgApiLinkedVersion());
 
 	// Init settings
 	ZgContextInitSettings initSettings = {};
@@ -140,7 +139,7 @@ bool initializeZeroG(
 	initSettings.d3d12.debugMode = debugMode ? ZG_TRUE : ZG_FALSE;
 
 	// Initialize ZeroG
-	bool initSuccess = CHECK_ZG zgCtx.init(initSettings);
+	bool initSuccess = CHECK_ZG zgContextInit(&initSettings);
 
 	return initSuccess;
 }
