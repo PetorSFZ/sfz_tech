@@ -30,8 +30,6 @@
 
 #include "common/Strings.hpp"
 
-namespace zg {
-
 using time_point = std::chrono::high_resolution_clock::time_point;
 
 // Statics
@@ -80,7 +78,7 @@ static sfz::Array<uint8_t> readBinaryFile(const char* path) noexcept
 	return data;
 }
 
-#define CHECK_SPIRV_CROSS(context) (zg::CheckSpirvCrossImpl(context, __FILE__, __LINE__)) %
+#define CHECK_SPIRV_CROSS(context) (CheckSpirvCrossImpl(context, __FILE__, __LINE__)) %
 
 struct CheckSpirvCrossImpl final {
 	spvc_context ctx = nullptr;
@@ -1827,5 +1825,3 @@ ZgResult createPipelineRenderSourceHLSL(
 		dxcIncludeHandler,
 		device);
 }
-
-} // namespace zg

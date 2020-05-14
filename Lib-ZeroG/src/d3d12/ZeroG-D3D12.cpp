@@ -89,7 +89,7 @@ ZG_API void zgBufferRelease(
 	ZgBuffer* buffer)
 {
 	if (buffer == nullptr) return;
-	zg::getAllocator()->deleteObject(buffer);
+	getAllocator()->deleteObject(buffer);
 }
 
 ZG_API ZgResult zgBufferMemcpyTo(
@@ -129,7 +129,7 @@ ZG_API ZgResult zgTexture2DGetAllocationInfo(
 	ZG_ARG_CHECK(createInfo == nullptr, "");
 	ZG_ARG_CHECK(createInfo->numMipmaps == 0, "Must specify at least 1 mipmap layer (i.e. the full image)");
 	ZG_ARG_CHECK(createInfo->numMipmaps > ZG_MAX_NUM_MIPMAPS, "Too many mipmaps specified");
-	return zg::getBackend()->texture2DGetAllocationInfo(*allocationInfoOut, *createInfo);
+	return getBackend()->texture2DGetAllocationInfo(*allocationInfoOut, *createInfo);
 }
 
 ZG_API ZgResult zgMemoryHeapTexture2DCreate(
@@ -151,7 +151,7 @@ ZG_API void zgTexture2DRelease(
 	ZgTexture2D* texture)
 {
 	if (texture == nullptr) return;
-	zg::getAllocator()->deleteObject(texture);
+	getAllocator()->deleteObject(texture);
 }
 
 ZG_API ZgResult zgTexture2DSetDebugName(
@@ -173,13 +173,13 @@ ZG_API ZgResult zgMemoryHeapCreate(
 	ZG_ARG_CHECK(createInfo == nullptr, "");
 	ZG_ARG_CHECK(createInfo->sizeInBytes == 0, "Can't create an empty memory heap");
 
-	return zg::getBackend()->memoryHeapCreate(memoryHeapOut, *createInfo);
+	return getBackend()->memoryHeapCreate(memoryHeapOut, *createInfo);
 }
 
 ZG_API ZgResult zgMemoryHeapRelease(
 	ZgMemoryHeap* memoryHeap)
 {
-	return zg::getBackend()->memoryHeapRelease(memoryHeap);
+	return getBackend()->memoryHeapRelease(memoryHeap);
 }
 
 // Pipeline Compute
@@ -198,14 +198,14 @@ ZG_API ZgResult zgPipelineComputeCreateFromFileHLSL(
 	ZG_ARG_CHECK(createInfo == nullptr, "");
 	ZG_ARG_CHECK(compileSettings == nullptr, "");
 	
-	return zg::getBackend()->pipelineComputeCreateFromFileHLSL(
+	return getBackend()->pipelineComputeCreateFromFileHLSL(
 		pipelineOut, bindingsSignatureOut, computeSignatureOut, *createInfo, *compileSettings);
 }
 
 ZG_API ZgResult zgPipelineComputeRelease(
 	ZgPipelineCompute* pipeline)
 {
-	return zg::getBackend()->pipelineComputeRelease(pipeline);
+	return getBackend()->pipelineComputeRelease(pipeline);
 }
 
 // Pipeline Render
@@ -231,7 +231,7 @@ ZG_API ZgResult zgPipelineRenderCreateFromFileSPIRV(
 	ZG_ARG_CHECK(createInfo->numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex buffers specified");
 	ZG_ARG_CHECK(createInfo->numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
 
-	return zg::getBackend()->pipelineRenderCreateFromFileSPIRV(
+	return getBackend()->pipelineRenderCreateFromFileSPIRV(
 		pipelineOut, bindingsSignatureOut, renderSignatureOut, *createInfo);
 }
 
@@ -258,7 +258,7 @@ ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 	ZG_ARG_CHECK(createInfo->numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex buffers specified");
 	ZG_ARG_CHECK(createInfo->numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
 
-	return zg::getBackend()->pipelineRenderCreateFromFileHLSL(
+	return getBackend()->pipelineRenderCreateFromFileHLSL(
 		pipelineOut, bindingsSignatureOut, renderSignatureOut, *createInfo, *compileSettings);
 }
 
@@ -285,14 +285,14 @@ ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
 	ZG_ARG_CHECK(createInfo->numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex buffers specified");
 	ZG_ARG_CHECK(createInfo->numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
 
-	return zg::getBackend()->pipelineRenderCreateFromSourceHLSL(
+	return getBackend()->pipelineRenderCreateFromSourceHLSL(
 		pipelineOut, bindingsSignatureOut, renderSignatureOut, *createInfo, *compileSettings);
 }
 
 ZG_API ZgResult zgPipelineRenderRelease(
 	ZgPipelineRender* pipeline)
 {
-	return zg::getBackend()->pipelineRenderRelease(pipeline);
+	return getBackend()->pipelineRenderRelease(pipeline);
 }
 
 // Framebuffer
@@ -305,7 +305,7 @@ ZG_API ZgResult zgFramebufferCreate(
 	ZG_ARG_CHECK(framebufferOut == nullptr, "");
 	ZG_ARG_CHECK(createInfo == nullptr, "");
 	ZG_ARG_CHECK(createInfo->numRenderTargets > ZG_MAX_NUM_RENDER_TARGETS, "Too many render targets");
-	return zg::getBackend()->framebufferCreate(framebufferOut, *createInfo);
+	return getBackend()->framebufferCreate(framebufferOut, *createInfo);
 }
 
 ZG_API void zgFramebufferRelease(
@@ -314,7 +314,7 @@ ZG_API void zgFramebufferRelease(
 	if (framebuffer == nullptr) return;
 	// Done via backend so it can have a chance to check if framebuffer is built-in (i.e. swapchain
 	// framebuffer) before it deallocates it.
-	return zg::getBackend()->framebufferRelease(framebuffer);
+	return getBackend()->framebufferRelease(framebuffer);
 }
 
 ZG_API ZgResult zgFramebufferGetResolution(
@@ -331,14 +331,14 @@ ZG_API ZgResult zgFramebufferGetResolution(
 ZG_API ZgResult zgFenceCreate(
 	ZgFence** fenceOut)
 {
-	return zg::getBackend()->fenceCreate(fenceOut);
+	return getBackend()->fenceCreate(fenceOut);
 }
 
 ZG_API void zgFenceRelease(
 	ZgFence* fence)
 {
 	if (fence == nullptr) return;
-	zg::getAllocator()->deleteObject(fence);
+	getAllocator()->deleteObject(fence);
 }
 
 ZG_API ZgResult zgFenceReset(
@@ -370,14 +370,14 @@ ZG_API ZgResult zgProfilerCreate(
 	ZgProfiler** profilerOut,
 	const ZgProfilerCreateInfo* createInfo)
 {
-	return zg::getBackend()->profilerCreate(profilerOut, *createInfo);
+	return getBackend()->profilerCreate(profilerOut, *createInfo);
 }
 
 ZG_API void zgProfilerRelease(
 	ZgProfiler* profiler)
 {
 	if (profiler == nullptr) return;
-	zg::getBackend()->profilerRelease(profiler);
+	getBackend()->profilerRelease(profiler);
 }
 
 ZG_API ZgResult zgProfilerGetMeasurement(
@@ -608,13 +608,13 @@ ZG_API ZgResult zgCommandListProfileEnd(
 ZG_API ZgResult zgCommandQueueGetPresentQueue(
 	ZgCommandQueue** presentQueueOut)
 {
-	return zg::getBackend()->getPresentQueue(presentQueueOut);
+	return getBackend()->getPresentQueue(presentQueueOut);
 }
 
 ZG_API ZgResult zgCommandQueueGetCopyQueue(
 	ZgCommandQueue** copyQueueOut)
 {
-	return zg::getBackend()->getCopyQueue(copyQueueOut);
+	return getBackend()->getCopyQueue(copyQueueOut);
 }
 
 ZG_API ZgResult zgCommandQueueSignalOnGpu(
@@ -656,7 +656,7 @@ ZG_API ZgResult zgCommandQueueExecuteCommandList(
 
 ZG_API ZgBool zgContextAlreadyInitialized(void)
 {
-	return zg::getBackend() == nullptr ? ZG_FALSE : ZG_TRUE;
+	return getBackend() == nullptr ? ZG_FALSE : ZG_TRUE;
 }
 
 ZG_API ZgResult zgContextInit(const ZgContextInitSettings* settings)
@@ -669,7 +669,7 @@ ZG_API ZgResult zgContextInit(const ZgContextInitSettings* settings)
 
 	// Set default logger if none is specified
 	bool usingDefaultLogger = settings->logger.log == nullptr;
-	if (usingDefaultLogger) tmpContext.logger = zg::getDefaultLogger();
+	if (usingDefaultLogger) tmpContext.logger = getDefaultLogger();
 	else tmpContext.logger = settings->logger;
 
 	// Set default allocator if none is specified
@@ -680,7 +680,7 @@ ZG_API ZgResult zgContextInit(const ZgContextInitSettings* settings)
 
 	// Set temporary context (without API backend). Required so rest of initialization can allocate
 	// memory and log.
-	zg::setContext(tmpContext);
+	setContext(tmpContext);
 
 	// Log which logger is used
 	if (usingDefaultLogger) ZG_INFO("zgContextInit(): Using default logger (printf)");
@@ -702,7 +702,7 @@ ZG_API ZgResult zgContextInit(const ZgContextInitSettings* settings)
 	case ZG_BACKEND_D3D12:
 		{
 			ZG_INFO("zgContextInit(): Attempting to create D3D12 backend...");
-			ZgResult res = zg::createD3D12Backend(&tmpContext.backend, *settings);
+			ZgResult res = createD3D12Backend(&tmpContext.backend, *settings);
 			if (res != ZG_SUCCESS) {
 				ZG_ERROR("zgContextInit(): Could not create D3D12 backend, exiting.");
 				return res;
@@ -717,7 +717,7 @@ ZG_API ZgResult zgContextInit(const ZgContextInitSettings* settings)
 	}
 
 	// Set context
-	zg::setContext(tmpContext);
+	setContext(tmpContext);
 	return ZG_SUCCESS;
 }
 
@@ -725,10 +725,10 @@ ZG_API ZgResult zgContextDeinit(void)
 {
 	if (zgContextAlreadyInitialized() == ZG_FALSE) return ZG_SUCCESS;
 
-	ZgContext& ctx = zg::getContext();
+	ZgContext& ctx = getContext();
 
 	// Delete backend
-	zg::getAllocator()->deleteObject(ctx.backend);
+	getAllocator()->deleteObject(ctx.backend);
 
 	// Reset context
 	ctx = {};
@@ -741,13 +741,13 @@ ZG_API ZgResult zgContextSwapchainResize(
 	uint32_t width,
 	uint32_t height)
 {
-	return zg::getBackend()->swapchainResize(width, height);
+	return getBackend()->swapchainResize(width, height);
 }
 
 ZG_API ZgResult zgContextSwapchainSetVsync(
 	ZgBool vsync)
 {
-	return zg::getBackend()->setVsync(vsync != ZG_FALSE);
+	return getBackend()->setVsync(vsync != ZG_FALSE);
 }
 
 ZG_API ZgResult zgContextSwapchainBeginFrame(
@@ -755,20 +755,20 @@ ZG_API ZgResult zgContextSwapchainBeginFrame(
 	ZgProfiler* profiler,
 	uint64_t* measurementIdOut)
 {
-	return zg::getBackend()->swapchainBeginFrame(framebufferOut, profiler, measurementIdOut);
+	return getBackend()->swapchainBeginFrame(framebufferOut, profiler, measurementIdOut);
 }
 
 ZG_API ZgResult zgContextSwapchainFinishFrame(
 	ZgProfiler* profiler,
 	uint64_t measurementId)
 {
-	return zg::getBackend()->swapchainFinishFrame(profiler, measurementId);
+	return getBackend()->swapchainFinishFrame(profiler, measurementId);
 }
 
 ZG_API ZgResult zgContextGetStats(ZgStats* statsOut)
 {
 	ZG_ARG_CHECK(statsOut == nullptr, "");
-	return zg::getBackend()->getStats(*statsOut);
+	return getBackend()->getStats(*statsOut);
 }
 
 // Transformation and projection matrices

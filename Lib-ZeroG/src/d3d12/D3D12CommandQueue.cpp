@@ -20,8 +20,6 @@
 
 #include "d3d12/D3D12Memory.hpp"
 
-namespace zg {
-
 // D3D12Fence: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
@@ -407,5 +405,3 @@ ZgResult D3D12CommandQueue::executePreCommandListStateChanges(
 
 	return ZG_SUCCESS;
 }
-
-} // namespace zg

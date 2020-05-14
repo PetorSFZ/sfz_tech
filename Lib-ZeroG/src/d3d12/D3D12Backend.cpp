@@ -29,8 +29,6 @@
 #include "d3d12/D3D12Pipelines.hpp"
 #include "d3d12/D3D12Profiler.hpp"
 
-namespace zg {
-
 // Statics
 // ------------------------------------------------------------------------------------------------
 
@@ -966,5 +964,3 @@ ZgResult createD3D12Backend(ZgBackend** backendOut, const ZgContextInitSettings&
 	*backendOut = backend;
 	return ZG_SUCCESS;
 }
-
-} // namespace zg

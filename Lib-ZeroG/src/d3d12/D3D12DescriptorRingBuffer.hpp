@@ -22,8 +22,6 @@
 
 #include "d3d12/D3D12Common.hpp"
 
-namespace zg {
-
 // D3D12DescriptorRingBuffer class
 // ------------------------------------------------------------------------------------------------
 
@@ -78,5 +76,3 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE mHeapStartCpu;
 	D3D12_GPU_DESCRIPTOR_HANDLE mHeapStartGpu;
 };
-
-} // namespace zg

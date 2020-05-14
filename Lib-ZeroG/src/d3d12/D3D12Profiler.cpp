@@ -20,8 +20,6 @@
 
 #include "common/Context.hpp"
 
-namespace zg {
-
 // D3D12Profiler: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
@@ -35,11 +33,11 @@ D3D12Profiler::~D3D12Profiler() noexcept
 		sfz_assert(profilerState.downloadBuffer != nullptr);
 
 		// Deallocate buffer
-		zg::getAllocator()->deleteObject(profilerState.downloadBuffer);
+		getAllocator()->deleteObject(profilerState.downloadBuffer);
 		profilerState.downloadBuffer = nullptr;
 
 		// Deallocate heap
-		zg::getAllocator()->deleteObject(profilerState.downloadHeap);
+		getAllocator()->deleteObject(profilerState.downloadHeap);
 		profilerState.downloadHeap = nullptr;
 	}
 }
@@ -124,7 +122,7 @@ ZgResult d3d12CreateProfiler(
 		ZgBuffer* bufferTmp = nullptr;
 		res = downloadHeap->bufferCreate(&bufferTmp, bufferInfo);
 		if (res != ZG_SUCCESS) {
-			zg::getAllocator()->deleteObject(downloadBuffer);
+			getAllocator()->deleteObject(downloadBuffer);
 			return res;
 		}
 		downloadBuffer = static_cast<D3D12Buffer*>(bufferTmp);
@@ -153,5 +151,3 @@ ZgResult d3d12CreateProfiler(
 	*profilerOut = profiler;
 	return ZG_SUCCESS;
 }
-
-} // namespace zg

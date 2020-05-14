@@ -26,8 +26,6 @@
 #include "d3d12/D3D12Common.hpp"
 #include "d3d12/D3D12Memory.hpp"
 
-namespace zg {
-
 // D3D12Profiler
 // ------------------------------------------------------------------------------------------------
 
@@ -78,5 +76,3 @@ ZgResult d3d12CreateProfiler(
 	D3DX12Residency::ResidencyManager& residencyManager,
 	D3D12Profiler** profilerOut,
 	const ZgProfilerCreateInfo& createInfo) noexcept;
-
-} // namespace zg

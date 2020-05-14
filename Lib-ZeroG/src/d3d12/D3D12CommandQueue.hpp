@@ -30,8 +30,6 @@
 #include "d3d12/D3D12CommandList.hpp"
 #include "d3d12/D3D12DescriptorRingBuffer.hpp"
 
-namespace zg {
-
 // D3D12Fence
 // ------------------------------------------------------------------------------------------------
 
@@ -145,5 +143,3 @@ private:
 	sfz::Array<D3D12CommandList> mCommandListStorage;
 	sfz::RingBuffer<D3D12CommandList*> mCommandListQueue;
 };
-
-} // namespace zg

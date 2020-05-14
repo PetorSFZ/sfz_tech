@@ -92,8 +92,6 @@ struct ZgContext final {
 // Global implicit context accessor
 // ------------------------------------------------------------------------------------------------
 
-namespace zg {
-
 ZgContext& getContext() noexcept;
 
 inline sfz::Allocator* getAllocator() noexcept { return &getContext().allocator; }
@@ -101,5 +99,3 @@ inline ZgLogger& getLogger() noexcept { return getContext().logger; }
 inline ZgBackend* getBackend() noexcept { return getContext().backend; }
 
 void setContext(const ZgContext& context) noexcept;
-
-} // namespace zg

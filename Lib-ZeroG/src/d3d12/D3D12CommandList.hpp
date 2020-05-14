@@ -29,8 +29,6 @@
 #include "d3d12/D3D12Memory.hpp"
 #include "d3d12/D3D12Pipelines.hpp"
 
-namespace zg {
-
 class D3D12CommandQueue;
 
 // PendingState struct
@@ -248,5 +246,3 @@ private:
 	bool mFramebufferSet = false; // Only allow a single framebuffer to be set.
 	D3D12Framebuffer* mFramebuffer = nullptr;
 };
-
-} // namespace zg

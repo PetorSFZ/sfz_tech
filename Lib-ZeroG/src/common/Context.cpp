@@ -21,8 +21,6 @@
 // Global implicit context accessor
 // ------------------------------------------------------------------------------------------------
 
-namespace zg {
-
 static ZgContext implicitContext = {};
 
 ZgContext& getContext() noexcept
@@ -34,5 +32,3 @@ void setContext(const ZgContext& context) noexcept
 {
 	implicitContext = context;
 }
-
-} // namespace zg

@@ -25,8 +25,6 @@
 #include "d3d12/D3D12Memory.hpp"
 #include "d3d12/D3D12Profiler.hpp"
 
-namespace zg {
-
 // Statics
 // ------------------------------------------------------------------------------------------------
 
@@ -1309,5 +1307,3 @@ ZgResult D3D12CommandList::setTextureStateAllMipLevels(
 	
 	return ZG_SUCCESS;
 }
-
-} // namespace zg

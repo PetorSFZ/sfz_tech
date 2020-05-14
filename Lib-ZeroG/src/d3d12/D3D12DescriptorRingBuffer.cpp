@@ -18,8 +18,6 @@
 
 #include "d3d12/D3D12DescriptorRingBuffer.hpp"
 
-namespace zg {
-
 D3D12DescriptorRingBuffer::~D3D12DescriptorRingBuffer() noexcept
 {
 	if (descriptorHeap != nullptr) {
@@ -92,5 +90,3 @@ ZgResult D3D12DescriptorRingBuffer::allocateDescriptorRange(
 
 	return ZG_SUCCESS;
 }
-
-} // namespace zg

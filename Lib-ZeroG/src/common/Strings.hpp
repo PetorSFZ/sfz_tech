@@ -23,8 +23,6 @@
 
 #include <skipifzero.hpp>
 
-namespace zg {
-
 // String helper functions
 // ------------------------------------------------------------------------------------------------
 
@@ -48,5 +46,3 @@ inline void printfAppend(char*& str, uint32_t& bytesLeft, const char* format, ..
 	bytesLeft -= res;
 	str += res;
 }
-
-} // namespace zg

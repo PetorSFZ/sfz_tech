@@ -24,8 +24,6 @@
 #include "common/BackendInterface.hpp"
 #include "d3d12/D3D12Common.hpp"
 
-namespace zg {
-
 // D3D12PipelineBindingsSignature
 // ------------------------------------------------------------------------------------------------
 
@@ -215,5 +213,3 @@ ZgResult createPipelineRenderSourceHLSL(
 	IDxcCompiler& dxcCompiler,
 	IDxcIncludeHandler* dxcIncludeHandler,
 	ID3D12Device3& device) noexcept;
-
-} // namespace zg

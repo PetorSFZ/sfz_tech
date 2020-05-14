@@ -21,12 +21,10 @@
 #include "ZeroG.h"
 #include "Context.hpp"
 
-namespace zg {
-
 // Logging macros
 // ------------------------------------------------------------------------------------------------
 
-#define ZG_LOG(logLevel, format, ...) zg::logWrapper( \
+#define ZG_LOG(logLevel, format, ...) logWrapper( \
 	__FILE__, __LINE__, (logLevel), (format), ##__VA_ARGS__)
 
 #define ZG_NOISE(format, ...) ZG_LOG(ZG_LOG_LEVEL_NOISE, (format), ##__VA_ARGS__)
@@ -46,5 +44,3 @@ void logWrapper(const char* file, int line, ZgLogLevel level, const char* fmt, .
 // ------------------------------------------------------------------------------------------------
 
 ZgLogger getDefaultLogger() noexcept;
-
-} // namespace zg

@@ -24,8 +24,6 @@
 
 #include <skipifzero.hpp>
 
-namespace zg {
-
 // Statics
 // ------------------------------------------------------------------------------------------------
 
@@ -98,5 +96,3 @@ ZgLogger getDefaultLogger() noexcept
 	logger.log = defaultLog;
 	return logger;
 }
-
-} // namespace zg

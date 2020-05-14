@@ -20,8 +20,6 @@
 
 #include "common/Context.hpp"
 
-namespace zg {
-
 // Statics
 // ------------------------------------------------------------------------------------------------
 
@@ -242,5 +240,3 @@ ZgResult createSoftwareDevice(
 
 	return ZG_SUCCESS;
 }
-
-} // namespace zg

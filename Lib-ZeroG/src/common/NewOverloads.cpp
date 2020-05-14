@@ -39,53 +39,53 @@
 
 void* operator new (std::size_t count)
 {
-	sfz::Allocator* allocator = zg::getAllocator();
+	sfz::Allocator* allocator = getAllocator();
 	return allocator->allocate(sfz_dbg("operator new"), count);
 }
 
 void* operator new[] (std::size_t count)
 {
-	sfz::Allocator* allocator = zg::getAllocator();
+	sfz::Allocator* allocator = getAllocator();
 	return allocator->allocate(sfz_dbg("operator new[]"), count);
 }
 
 void* operator new (std::size_t count, std::align_val_t val)
 {
 	sfz_assert(size_t(val) <= 32);
-	sfz::Allocator* allocator = zg::getAllocator();
+	sfz::Allocator* allocator = getAllocator();
 	return allocator->allocate(sfz_dbg("operator new"), count, uint64_t(val));
 }
 
 void* operator new[] (std::size_t count, std::align_val_t val)
 {
 	sfz_assert(size_t(val) <= 32);
-	sfz::Allocator* allocator = zg::getAllocator();
+	sfz::Allocator* allocator = getAllocator();
 	return allocator->allocate(sfz_dbg("operator new[]"), count, uint64_t(val));
 }
 
 void* operator new (std::size_t count, const std::nothrow_t&) noexcept
 {
-	sfz::Allocator* allocator = zg::getAllocator();
+	sfz::Allocator* allocator = getAllocator();
 	return allocator->allocate(sfz_dbg("operator new"), count);
 }
 
 void* operator new[] (std::size_t count, const std::nothrow_t&) noexcept
 {
-	sfz::Allocator* allocator = zg::getAllocator();
+	sfz::Allocator* allocator = getAllocator();
 	return allocator->allocate(sfz_dbg("operator new[]"), count);
 }
 
 void* operator new (std::size_t count, std::align_val_t val, const std::nothrow_t&) noexcept
 {
 	sfz_assert(size_t(val) <= 32);
-	sfz::Allocator* allocator = zg::getAllocator();
+	sfz::Allocator* allocator = getAllocator();
 	return allocator->allocate(sfz_dbg("operator new"), count, uint64_t(val));
 }
 
 void* operator new[] (std::size_t count, std::align_val_t val, const std::nothrow_t&) noexcept
 {
 	sfz_assert(size_t(val) <= 32);
-	sfz::Allocator* allocator = zg::getAllocator();
+	sfz::Allocator* allocator = getAllocator();
 	return allocator->allocate(sfz_dbg("operator new[]"), count, uint64_t(val));
 }
 
@@ -94,7 +94,7 @@ void* operator new[] (std::size_t count, std::align_val_t val, const std::nothro
 
 void operator delete (void* ptr) noexcept
 {
-	AllocatorWrapper& allocator = zg::getContext().allocator;
+	AllocatorWrapper& allocator = getContext().allocator;
 	if (allocator.isInitialized()) {
 		allocator.deallocate(ptr);
 	}
@@ -108,7 +108,7 @@ void operator delete (void* ptr) noexcept
 
 void operator delete[] (void* ptr) noexcept
 {
-	AllocatorWrapper& allocator = zg::getContext().allocator;
+	AllocatorWrapper& allocator = getContext().allocator;
 	if (allocator.isInitialized()) {
 		allocator.deallocate(ptr);
 	}
@@ -123,7 +123,7 @@ void operator delete[] (void* ptr) noexcept
 void operator delete (void* ptr, std::align_val_t val) noexcept
 {
 	sfz_assert(size_t(val) <= 32);
-	AllocatorWrapper& allocator = zg::getContext().allocator;
+	AllocatorWrapper& allocator = getContext().allocator;
 	if (allocator.isInitialized()) {
 		allocator.deallocate(ptr);
 	}
@@ -138,7 +138,7 @@ void operator delete (void* ptr, std::align_val_t val) noexcept
 void operator delete[] (void* ptr, std::align_val_t val) noexcept
 {
 	sfz_assert(size_t(val) <= 32);
-	AllocatorWrapper& allocator = zg::getContext().allocator;
+	AllocatorWrapper& allocator = getContext().allocator;
 	if (allocator.isInitialized()) {
 		allocator.deallocate(ptr);
 	}
@@ -153,7 +153,7 @@ void operator delete[] (void* ptr, std::align_val_t val) noexcept
 void operator delete (void* ptr, std::size_t sz) noexcept
 {
 	(void)sz;
-	AllocatorWrapper& allocator = zg::getContext().allocator;
+	AllocatorWrapper& allocator = getContext().allocator;
 	if (allocator.isInitialized()) {
 		allocator.deallocate(ptr);
 	}
@@ -168,7 +168,7 @@ void operator delete (void* ptr, std::size_t sz) noexcept
 void operator delete[] (void* ptr, std::size_t sz) noexcept
 {
 	(void)sz;
-	AllocatorWrapper& allocator = zg::getContext().allocator;
+	AllocatorWrapper& allocator = getContext().allocator;
 	if (allocator.isInitialized()) {
 		allocator.deallocate(ptr);
 	}
@@ -184,7 +184,7 @@ void operator delete (void* ptr, std::size_t sz, std::align_val_t val) noexcept
 {
 	sfz_assert(size_t(val) <= 32);
 	(void)sz;
-	AllocatorWrapper& allocator = zg::getContext().allocator;
+	AllocatorWrapper& allocator = getContext().allocator;
 	if (allocator.isInitialized()) {
 		allocator.deallocate(ptr);
 	}
@@ -200,7 +200,7 @@ void operator delete[] (void* ptr, std::size_t sz, std::align_val_t val) noexcep
 {
 	sfz_assert(size_t(val) <= 32);
 	(void)sz;
-	AllocatorWrapper& allocator = zg::getContext().allocator;
+	AllocatorWrapper& allocator = getContext().allocator;
 	if (allocator.isInitialized()) {
 		allocator.deallocate(ptr);
 	}

@@ -24,8 +24,6 @@
 #include "common/BackendInterface.hpp"
 #include "d3d12/D3D12Common.hpp"
 
-namespace zg {
-
 // Helper functions
 // ------------------------------------------------------------------------------------------------
 
@@ -178,5 +176,3 @@ public:
 
 	ZgResult setDebugName(const char* name) noexcept override final;
 };
-
-} // namespace zg

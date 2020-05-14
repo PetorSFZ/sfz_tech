@@ -20,8 +20,6 @@
 
 #include "common/ErrorReporting.hpp"
 
-namespace zg {
-
 // Statics
 // ------------------------------------------------------------------------------------------------
 
@@ -407,7 +405,7 @@ ZgResult D3D12Buffer::memcpyFrom(
 
 ZgResult D3D12Buffer::setDebugName(const char* name) noexcept
 {
-	zg::setDebugName(this->resource, name);
+	::setDebugName(this->resource, name);
 	return ZG_SUCCESS;
 }
 
@@ -416,8 +414,6 @@ ZgResult D3D12Buffer::setDebugName(const char* name) noexcept
 
 ZgResult D3D12Texture2D::setDebugName(const char* name) noexcept
 {
-	zg::setDebugName(this->resource, name);
+	::setDebugName(this->resource, name);
 	return ZG_SUCCESS;
 }
-
-} // namespace zg

@@ -23,8 +23,6 @@
 #include "d3d12/D3D12Common.hpp"
 #include "d3d12/D3D12Memory.hpp"
 
-namespace zg {
-
 // D3D12Framebuffer
 // ------------------------------------------------------------------------------------------------
 
@@ -83,5 +81,3 @@ ZgResult createFramebuffer(
 	ID3D12Device3& device,
 	D3D12Framebuffer** framebufferOut,
 	const ZgFramebufferCreateInfo& createInfo) noexcept;
-
-} // namespace zg

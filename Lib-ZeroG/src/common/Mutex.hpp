@@ -24,8 +24,6 @@
 
 #include <skipifzero.hpp>
 
-namespace zg {
-
 // Mutex template
 // ------------------------------------------------------------------------------------------------
 
@@ -125,5 +123,3 @@ private:
 	std::mutex* mMutex = nullptr;
 	T* mData = nullptr;
 };
-
-} // namespace zg

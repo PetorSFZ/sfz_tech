@@ -21,8 +21,6 @@
 #include "common/ErrorReporting.hpp"
 #include "d3d12/D3D12Memory.hpp"
 
-namespace zg {
-
 // D3D12Framebuffer: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
@@ -193,5 +191,3 @@ ZgResult createFramebuffer(
 	*framebufferOut = framebuffer;
 	return ZG_SUCCESS;
 }
-
-} // namespace zg

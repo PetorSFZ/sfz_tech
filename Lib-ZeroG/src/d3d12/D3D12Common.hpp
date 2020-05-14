@@ -63,8 +63,6 @@
 
 #include "common/Logging.hpp"
 
-namespace zg {
-
  using Microsoft::WRL::ComPtr;
 
 using sfz::ArrayLocal;
@@ -119,5 +117,3 @@ ZgResult createSoftwareDevice(
 	ComPtr<IDXGIFactory6>& dxgiFactory,
 	ComPtr<IDXGIAdapter4>& adapterOut,
 	ComPtr<ID3D12Device3>& deviceOut) noexcept;
-
-} // namespace zg

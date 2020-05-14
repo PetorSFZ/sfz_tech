@@ -21,11 +21,7 @@
 #include "ZeroG.h"
 #include "common/BackendInterface.hpp"
 
-namespace zg {
-
 // D3D12 Context
 // ------------------------------------------------------------------------------------------------
 
 ZgResult createD3D12Backend(ZgBackend** backendOut, const ZgContextInitSettings& settings) noexcept;
-
-} // namespace zg
