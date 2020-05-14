@@ -134,7 +134,7 @@ message("  -- CMAKE_CXX_FLAGS_RELEASE: " ${CMAKE_CXX_FLAGS_RELEASE})
 
 # ${SFZ_CORE_FOUND}, ${SFZ_CORE_INCLUDE_DIRS}
 if (NOT SFZ_CORE_FOUND)
-	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../Lib-Core ${CMAKE_BINARY_DIR}/sfz_core)
+	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../Lib-Core ${CMAKE_BINARY_DIR}/sfz_core)
 endif()
 
 # Bundled externals

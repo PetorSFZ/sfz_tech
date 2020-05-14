@@ -38,11 +38,13 @@ target_include_directories(ZeroG-SampleCommon PRIVATE
 	${INCLUDE_DIR}
 	${SRC_DIR}
 	${SDL2_INCLUDE_DIRS}
+	${ZEROG_INCLUDE_DIRS}
 )
 
-target_link_libraries(ZeroG-SampleCommon ${SDL2_LIBRARIES})
-
-linkZeroG(ZeroG-SampleCommon)
+target_link_libraries(ZeroG-SampleCommon
+	${SDL2_LIBRARIES}
+	${ZEROG_LIBRARIES}
+)
 
 # Return variables to parent
 set(ZEROG_SAMPLE_COMMON_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)

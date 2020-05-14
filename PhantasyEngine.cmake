@@ -253,9 +253,7 @@ function(phAddZeroG)
 
 	set(ZEROG_PATH ${SFZ_TECH_ROOT}/Lib-ZeroG)
 	message("-- [PhantasyEngine]: Adding ZeroG from: \"${ZEROG_PATH}\"")
-	include(${ZEROG_PATH}/ZeroG.cmake)
-
-	addZeroG()
+	add_subdirectory(${ZEROG_PATH} ${CMAKE_BINARY_DIR}/ZeroG)
 
 	set(ZEROG_FOUND ${ZEROG_FOUND} PARENT_SCOPE)
 	set(ZEROG_INCLUDE_DIRS ${ZEROG_INCLUDE_DIRS} PARENT_SCOPE)

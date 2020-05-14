@@ -29,9 +29,12 @@ add_executable(ZeroG-Sample1-MinimalClearScreen ${SRC_FILES})
 target_include_directories(ZeroG-Sample1-MinimalClearScreen PRIVATE
 	${SRC_DIR}
 	${SDL2_INCLUDE_DIRS}
+	${ZEROG_INCLUDE_DIRS}
 	${ZEROG_SAMPLE_COMMON_INCLUDE_DIRS}
 )
 
-target_link_libraries(ZeroG-Sample1-MinimalClearScreen ${SDL2_LIBRARIES} ${ZEROG_SAMPLE_COMMON_LIBRARIES})
-
-linkZeroG(ZeroG-Sample1-MinimalClearScreen)
+target_link_libraries(ZeroG-Sample1-MinimalClearScreen
+	${SDL2_LIBRARIES}
+	${ZEROG_LIBRARIES}
+	${ZEROG_SAMPLE_COMMON_LIBRARIES}
+)

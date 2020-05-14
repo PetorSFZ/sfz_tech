@@ -29,9 +29,12 @@ add_executable(ZeroG-Sample3-MinimalCompute ${SRC_FILES})
 target_include_directories(ZeroG-Sample3-MinimalCompute PRIVATE
 	${SRC_DIR}
 	${SDL2_INCLUDE_DIRS}
+	${ZEROG_INCLUDE_DIRS}
 	${ZEROG_SAMPLE_COMMON_INCLUDE_DIRS}
 )
 
-target_link_libraries(ZeroG-Sample3-MinimalCompute ${SDL2_LIBRARIES} ${ZEROG_SAMPLE_COMMON_LIBRARIES})
-
-linkZeroG(ZeroG-Sample3-MinimalCompute)
+target_link_libraries(ZeroG-Sample3-MinimalCompute
+	${SDL2_LIBRARIES}
+	${ZEROG_LIBRARIES}
+	${ZEROG_SAMPLE_COMMON_LIBRARIES}
+)

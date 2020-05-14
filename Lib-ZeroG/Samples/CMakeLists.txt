@@ -50,10 +50,31 @@ endif()
 # ZeroG
 # ------------------------------------------------------------------------------------------------
 
-include(${ZEROG_REPO_ROOT_DIR}/ZeroG.cmake)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_BINARY_DIR}/ZeroG)
 
-addZeroG()
-msvcCopyZeroGRuntimeFiles()
+if(MSVC)
+	if (NOT ZEROG_FOUND)
+		message(FATAL_ERROR "-- [ZeroG]: Attempting to msvcCopyZeroGRuntimeFiles(), but ZeroG is not found")
+	endif()
+
+	message("-- [ZeroG]: Copying following DLLs to binary directory:")
+	foreach(dllPath ${ZEROG_RUNTIME_FILES})
+		message("  -- ${dllPath}")
+	endforeach()
+
+	foreach(dllPath ${ZEROG_RUNTIME_FILES})
+
+		# Do different things depending on if we are generating .sln or using built-in VS CMake
+		if(CMAKE_CONFIGURATION_TYPES)
+			file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+			file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR}/RelWithDebInfo)
+			file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR}/Release)
+		else()
+			file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR})
+		endif()
+
+	endforeach()
+endif()
 
 # Check platforms
 # ------------------------------------------------------------------------------------------------
