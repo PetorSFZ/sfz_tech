@@ -35,6 +35,11 @@ target_include_directories(ZeroG-Sample3-MinimalCompute PRIVATE
 
 target_link_libraries(ZeroG-Sample3-MinimalCompute
 	${SDL2_LIBRARIES}
-	${ZEROG_LIBRARIES}
 	${ZEROG_SAMPLE_COMMON_LIBRARIES}
 )
+
+if (MSVC)
+	target_link_libraries(ZeroG-Sample3-MinimalCompute ${ZEROG_D3D12_LIBRARIES})
+else()
+	target_link_libraries(ZeroG-Sample3-MinimalCompute ${ZEROG_VULKAN_LIBRARIES})
+endif()

@@ -53,7 +53,7 @@ target_include_directories(ZeroG-ImGui PUBLIC
 )
 
 target_link_libraries(ZeroG-ImGui
-	${ZEROG_LIBRARIES}
+	${ZEROG_D3D12_LIBRARIES}
 	${IMGUI_LIBRARIES}
 )
 

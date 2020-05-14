@@ -35,6 +35,11 @@ target_include_directories(ZeroG-Sample2-SimpleRendering PRIVATE
 
 target_link_libraries(ZeroG-Sample2-SimpleRendering
 	${SDL2_LIBRARIES}
-	${ZEROG_LIBRARIES}
 	${ZEROG_SAMPLE_COMMON_LIBRARIES}
 )
+
+if (MSVC)
+	target_link_libraries(ZeroG-Sample2-SimpleRendering ${ZEROG_D3D12_LIBRARIES})
+else()
+	target_link_libraries(ZeroG-Sample2-SimpleRendering ${ZEROG_VULKAN_LIBRARIES})
+endif()

@@ -385,7 +385,7 @@ target_include_directories(PhantasyEngine PUBLIC
 
 target_link_libraries(PhantasyEngine
 	${SDL2_LIBRARIES}
-	${ZEROG_LIBRARIES}
+	${ZEROG_D3D12_LIBRARIES}
 	${IMGUI_LIBRARIES}
 	${IMGUI_PLOT_LIBRARIES}
 	${ZEROG_IMGUI_LIBRARIES}

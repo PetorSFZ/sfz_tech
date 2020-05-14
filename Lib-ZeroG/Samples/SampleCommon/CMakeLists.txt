@@ -43,8 +43,13 @@ target_include_directories(ZeroG-SampleCommon PRIVATE
 
 target_link_libraries(ZeroG-SampleCommon
 	${SDL2_LIBRARIES}
-	${ZEROG_LIBRARIES}
 )
+
+if (MSVC)
+	target_link_libraries(ZeroG-SampleCommon ${ZEROG_D3D12_LIBRARIES})
+else()
+	target_link_libraries(ZeroG-SampleCommon ${ZEROG_VULKAN_LIBRARIES})
+endif()
 
 # Return variables to parent
 set(ZEROG_SAMPLE_COMMON_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)

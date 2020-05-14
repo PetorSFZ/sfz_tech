@@ -35,6 +35,11 @@ target_include_directories(ZeroG-Sample1-MinimalClearScreen PRIVATE
 
 target_link_libraries(ZeroG-Sample1-MinimalClearScreen
 	${SDL2_LIBRARIES}
-	${ZEROG_LIBRARIES}
 	${ZEROG_SAMPLE_COMMON_LIBRARIES}
 )
+
+if (MSVC)
+	target_link_libraries(ZeroG-Sample1-MinimalClearScreen ${ZEROG_D3D12_LIBRARIES})
+else()
+	target_link_libraries(ZeroG-Sample1-MinimalClearScreen ${ZEROG_VULKAN_LIBRARIES})
+endif()

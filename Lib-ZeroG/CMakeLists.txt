@@ -157,90 +157,104 @@ endif()
 # ${SPIRV_CROSS_FOUND}, ${SPIRV_CROSS_INCLUDE_DIRS}, ${SPIRV_CROSS_LIBRARIES}
 add_subdirectory(${EXTERNALS_DIR}/SPIRV-Cross)
 
-# ZeroG C-API
+# ZeroG
 # ------------------------------------------------------------------------------------------------
 
-set(ZEROG_CAPI_INCLUDE_FILES
+set(ZEROG_INCLUDE_FILES
 	${INCLUDE_DIR}/ZeroG.h
 )
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ZEROG_CAPI_INCLUDE_FILES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ZEROG_INCLUDE_FILES})
+
+# Common files
+set(ZEROG_COMMON_FILES
+	${SRC_DIR}/common/BackendInterface.hpp
+	${SRC_DIR}/common/Context.hpp
+	${SRC_DIR}/common/Context.cpp
+	${SRC_DIR}/common/ErrorReporting.hpp
+	${SRC_DIR}/common/Logging.hpp
+	${SRC_DIR}/common/Logging.cpp
+	${SRC_DIR}/common/Mutex.hpp
+	${SRC_DIR}/common/NewOverloads.cpp
+	${SRC_DIR}/common/Strings.hpp
+)
+source_group(TREE ${SRC_DIR} FILES ${ZEROG_COMMON_FILES})
 
 # D3D12 source files
 if (MSVC)
 	set(ZEROG_D3D12_SRC_FILES
-		${SRC_DIR}/ZeroG/d3d12/D3D12Backend.hpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12Backend.cpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12CommandList.hpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12CommandList.cpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12CommandQueue.hpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12CommandQueue.cpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12Common.hpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12Common.cpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12DescriptorRingBuffer.hpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12DescriptorRingBuffer.cpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12Framebuffer.hpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12Framebuffer.cpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12Memory.hpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12Memory.cpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12Pipelines.hpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12Pipelines.cpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12Profiler.hpp
-		${SRC_DIR}/ZeroG/d3d12/D3D12Profiler.cpp
+		${SRC_DIR}/d3d12/D3D12Backend.hpp
+		${SRC_DIR}/d3d12/D3D12Backend.cpp
+		${SRC_DIR}/d3d12/D3D12CommandList.hpp
+		${SRC_DIR}/d3d12/D3D12CommandList.cpp
+		${SRC_DIR}/d3d12/D3D12CommandQueue.hpp
+		${SRC_DIR}/d3d12/D3D12CommandQueue.cpp
+		${SRC_DIR}/d3d12/D3D12Common.hpp
+		${SRC_DIR}/d3d12/D3D12Common.cpp
+		${SRC_DIR}/d3d12/D3D12DescriptorRingBuffer.hpp
+		${SRC_DIR}/d3d12/D3D12DescriptorRingBuffer.cpp
+		${SRC_DIR}/d3d12/D3D12Framebuffer.hpp
+		${SRC_DIR}/d3d12/D3D12Framebuffer.cpp
+		${SRC_DIR}/d3d12/D3D12Memory.hpp
+		${SRC_DIR}/d3d12/D3D12Memory.cpp
+		${SRC_DIR}/d3d12/D3D12Pipelines.hpp
+		${SRC_DIR}/d3d12/D3D12Pipelines.cpp
+		${SRC_DIR}/d3d12/D3D12Profiler.hpp
+		${SRC_DIR}/d3d12/D3D12Profiler.cpp
+		${SRC_DIR}/d3d12/ZeroG-D3D12.cpp
+	)
+	source_group(TREE ${SRC_DIR} FILES ${ZEROG_D3D12_SRC_FILES})
+
+	add_library(ZeroG-D3D12 SHARED
+		${ZEROG_INCLUDE_FILES}
+		${ZEROG_COMMON_FILES}
+		${ZEROG_D3D12_SRC_FILES})
+
+	target_include_directories(ZeroG-D3D12 PRIVATE
+		${INCLUDE_DIR}
+		${SRC_DIR}
+		${SFZ_CORE_INCLUDE_DIRS}
+		${D3DX12_INCLUDE_DIRS}
+		${D3DX12_RESIDENCY_INCLUDE_DIRS}
+		${SPIRV_CROSS_INCLUDE_DIRS}
+	)
+
+	target_link_libraries(ZeroG-D3D12
+		${SPIRV_CROSS_LIBRARIES}
 	)
 endif()
 
 # Vulkan source files
 if (VULKAN_FOUND)
 	set(ZEROG_VULKAN_SRC_FILES
-		${SRC_DIR}/ZeroG/vulkan/VulkanBackend.hpp
-		${SRC_DIR}/ZeroG/vulkan/VulkanBackend.cpp
-		${SRC_DIR}/ZeroG/vulkan/VulkanCommandQueue.hpp
-		${SRC_DIR}/ZeroG/vulkan/VulkanCommandQueue.cpp
-		${SRC_DIR}/ZeroG/vulkan/VulkanCommon.hpp
-		${SRC_DIR}/ZeroG/vulkan/VulkanCommon.cpp
-		${SRC_DIR}/ZeroG/vulkan/VulkanDebug.hpp
-		${SRC_DIR}/ZeroG/vulkan/VulkanDebug.cpp
+		${SRC_DIR}/vulkan/VulkanBackend.hpp
+		${SRC_DIR}/vulkan/VulkanBackend.cpp
+		${SRC_DIR}/vulkan/VulkanCommandQueue.hpp
+		${SRC_DIR}/vulkan/VulkanCommandQueue.cpp
+		${SRC_DIR}/vulkan/VulkanCommon.hpp
+		${SRC_DIR}/vulkan/VulkanCommon.cpp
+		${SRC_DIR}/vulkan/VulkanDebug.hpp
+		${SRC_DIR}/vulkan/VulkanDebug.cpp
+		${SRC_DIR}/vulkan/ZeroG-Vulkan.cpp
 	)
-endif()
+	source_group(TREE ${SRC_DIR} FILES ${ZEROG_VULKAN_SRC_FILES})
 
-set(ZEROG_CAPI_SRC_FILES ${ZEROG_D3D12_SRC_FILES} ${ZEROG_METAL_SRC_FILES} ${ZEROG_VULKAN_SRC_FILES})
+	add_library(ZeroG-Vulkan SHARED
+		${ZEROG_INCLUDE_FILES}
+		${ZEROG_COMMON_FILES}
+		${ZEROG_VULKAN_SRC_FILES})
 
-# Common source files
-set(ZEROG_CAPI_SRC_FILES ${ZEROG_CAPI_SRC_FILES}
-	${SRC_DIR}/ZeroG/util/ErrorReporting.hpp
-	${SRC_DIR}/ZeroG/util/Logging.hpp
-	${SRC_DIR}/ZeroG/util/Logging.cpp
-	${SRC_DIR}/ZeroG/util/Mutex.hpp
-	${SRC_DIR}/ZeroG/util/Strings.hpp
-	${SRC_DIR}/ZeroG/BackendInterface.hpp
-	${SRC_DIR}/ZeroG/Context.hpp
-	${SRC_DIR}/ZeroG/Context.cpp
-	${SRC_DIR}/ZeroG/NewOverloads.cpp
+	target_include_directories(ZeroG-Vulkan PRIVATE
+		${INCLUDE_DIR}
+		${SRC_DIR}
+		${SFZ_CORE_INCLUDE_DIRS}
+		${VULKAN_INCLUDE_DIRS}
+		${SPIRV_CROSS_INCLUDE_DIRS}
+	)
 
-	${SRC_DIR}/ZeroG/ZeroG.cpp
-)
-source_group(TREE ${SRC_DIR} FILES ${ZEROG_CAPI_SRC_FILES})
-
-add_library(ZeroG SHARED ${ZEROG_CAPI_INCLUDE_FILES} ${ZEROG_CAPI_SRC_FILES})
-
-target_include_directories(ZeroG PRIVATE
-	${INCLUDE_DIR}
-	${SRC_DIR}
-	${SFZ_CORE_INCLUDE_DIRS}
-	${D3DX12_INCLUDE_DIRS}
-	${D3DX12_RESIDENCY_INCLUDE_DIRS}
-	${MTLPP_INCLUDE_DIRS}
-	${SPIRV_CROSS_INCLUDE_DIRS}
-)
-
-target_link_libraries(ZeroG
-	${SPIRV_CROSS_LIBRARIES}
-	${MTLPP_LIBRARIES}
-)
-
-if(VULKAN_FOUND)
-	target_include_directories(ZeroG PRIVATE ${VULKAN_INCLUDE_DIRS})
-	target_link_libraries(ZeroG ${VULKAN_LIBRARIES})
+	target_link_libraries(ZeroG-Vulkan
+		${VULKAN_LIBRARIES}
+		${SPIRV_CROSS_LIBRARIES}
+	)
 endif()
 
 # Runtime files (DLLs)
@@ -261,6 +275,7 @@ get_directory_property(hasParent PARENT_DIRECTORY)
 if(hasParent)
 	set(ZEROG_FOUND true PARENT_SCOPE)
 	set(ZEROG_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
-	set(ZEROG_LIBRARIES ZeroG PARENT_SCOPE)
+	set(ZEROG_D3D12_LIBRARIES ZeroG-D3D12 PARENT_SCOPE)
+	set(ZEROG_VULKAN_LIBRARIES ZeroG-Vulkan PARENT_SCOPE)
 	set(ZEROG_RUNTIME_FILES ${RUNTIME_FILES} PARENT_SCOPE)
 endif()
