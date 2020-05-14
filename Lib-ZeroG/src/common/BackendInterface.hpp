@@ -135,20 +135,6 @@ struct ZgBackend {
 		ZgProfiler* profilerIn) noexcept = 0;
 };
 
-// PipelineCompute
-// ------------------------------------------------------------------------------------------------
-
-struct ZgPipelineCompute {
-	virtual ~ZgPipelineCompute() noexcept {}
-};
-
-// PipelineRender
-// ------------------------------------------------------------------------------------------------
-
-struct ZgPipelineRender {
-	virtual ~ZgPipelineRender() noexcept {}
-};
-
 // Memory heap
 // ------------------------------------------------------------------------------------------------
 

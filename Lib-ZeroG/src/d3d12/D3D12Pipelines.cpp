@@ -1066,7 +1066,7 @@ const D3D12UnorderedTextureMapping* D3D12RootSignature::getUnorderedTextureMappi
 // ------------------------------------------------------------------------------------------------
 
 static ZgResult createPipelineComputeInternal(
-	D3D12PipelineCompute** pipelineOut,
+	ZgPipelineCompute** pipelineOut,
 	ZgPipelineBindingsSignature* bindingsSignatureOut,
 	ZgPipelineComputeSignature* computeSignatureOut,
 	const ZgPipelineComputeCreateInfo& createInfo,
@@ -1165,8 +1165,8 @@ static ZgResult createPipelineComputeInternal(
 		compileTimeMs);
 
 	// Allocate pipeline
-	D3D12PipelineCompute* pipeline =
-		getAllocator()->newObject<D3D12PipelineCompute>(sfz_dbg("D3D12PipelineCompute"));
+	ZgPipelineCompute* pipeline =
+		getAllocator()->newObject<ZgPipelineCompute>(sfz_dbg("ZgPipelineCompute"));
 
 	// Store pipeline state
 	pipeline->pipelineState = pipelineState;
@@ -1180,7 +1180,7 @@ static ZgResult createPipelineComputeInternal(
 }
 
 ZgResult createPipelineComputeFileHLSL(
-	D3D12PipelineCompute** pipelineOut,
+	ZgPipelineCompute** pipelineOut,
 	ZgPipelineBindingsSignature* bindingsSignatureOut,
 	ZgPipelineComputeSignature* computeSignatureOut,
 	const ZgPipelineComputeCreateInfo& createInfo,
@@ -1218,7 +1218,7 @@ ZgResult createPipelineComputeFileHLSL(
 // ------------------------------------------------------------------------------------------------
 
 static ZgResult createPipelineRenderInternal(
-	D3D12PipelineRender** pipelineOut,
+	ZgPipelineRender** pipelineOut,
 	ZgPipelineBindingsSignature* bindingsSignatureOut,
 	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo& createInfo,
@@ -1640,8 +1640,8 @@ static ZgResult createPipelineRenderInternal(
 		compileTimeMs);
 
 	// Allocate pipeline
-	D3D12PipelineRender* pipeline =
-		getAllocator()->newObject<D3D12PipelineRender>(sfz_dbg("D3D12PipelineRender"));
+	ZgPipelineRender* pipeline =
+		getAllocator()->newObject<ZgPipelineRender>(sfz_dbg("ZgPipelineRender"));
 
 	// Store pipeline state
 	pipeline->pipelineState = pipelineState;
@@ -1657,7 +1657,7 @@ static ZgResult createPipelineRenderInternal(
 }
 
 ZgResult createPipelineRenderFileSPIRV(
-	D3D12PipelineRender** pipelineOut,
+	ZgPipelineRender** pipelineOut,
 	ZgPipelineBindingsSignature* bindingsSignatureOut,
 	ZgPipelineRenderSignature* renderSignatureOut,
 	ZgPipelineRenderCreateInfo createInfo,
@@ -1734,7 +1734,7 @@ ZgResult createPipelineRenderFileSPIRV(
 }
 
 ZgResult createPipelineRenderFileHLSL(
-	D3D12PipelineRender** pipelineOut,
+	ZgPipelineRender** pipelineOut,
 	ZgPipelineBindingsSignature* bindingsSignatureOut,
 	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo& createInfo,
@@ -1784,7 +1784,7 @@ ZgResult createPipelineRenderFileHLSL(
 }
 
 ZgResult createPipelineRenderSourceHLSL(
-	D3D12PipelineRender** pipelineOut,
+	ZgPipelineRender** pipelineOut,
 	ZgPipelineBindingsSignature* bindingsSignatureOut,
 	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo& createInfo,

@@ -627,9 +627,8 @@ public:
 		}
 
 		// Create pipeline
-		D3D12PipelineCompute* d3d12pipeline = nullptr;
-		ZgResult res = createPipelineComputeFileHLSL(
-			&d3d12pipeline,
+		return createPipelineComputeFileHLSL(
+			pipelineOut,
 			bindingsSignatureOut,
 			computeSignatureOut,
 			createInfo,
@@ -638,10 +637,6 @@ public:
 			*mState->dxcCompiler.Get(),
 			mState->dxcIncludeHandler,
 			*mState->device.Get());
-		if (res != ZG_SUCCESS) return res;
-
-		*pipelineOut = d3d12pipeline;
-		return res;
 	}
 
 	ZgResult pipelineComputeRelease(
@@ -667,9 +662,8 @@ public:
 		}
 		
 		// Create pipeline
-		D3D12PipelineRender* d3d12pipeline = nullptr;
-		ZgResult res = createPipelineRenderFileSPIRV(
-			&d3d12pipeline,
+		return createPipelineRenderFileSPIRV(
+			pipelineOut,
 			bindingsSignatureOut,
 			renderSignatureOut,
 			createInfo,
@@ -677,10 +671,6 @@ public:
 			*mState->dxcCompiler.Get(),
 			mState->dxcIncludeHandler,
 			*mState->device.Get());
-		if (res != ZG_SUCCESS) return res;
-		
-		*pipelineOut = d3d12pipeline;
-		return res;
 	}
 
 	ZgResult pipelineRenderCreateFromFileHLSL(
@@ -697,9 +687,8 @@ public:
 		}
 		
 		// Create pipeline
-		D3D12PipelineRender* d3d12pipeline = nullptr;
-		ZgResult res = createPipelineRenderFileHLSL(
-			&d3d12pipeline,
+		return createPipelineRenderFileHLSL(
+			pipelineOut,
 			bindingsSignatureOut,
 			renderSignatureOut,
 			createInfo,
@@ -708,10 +697,6 @@ public:
 			*mState->dxcCompiler.Get(),
 			mState->dxcIncludeHandler,
 			*mState->device.Get());
-		if (res != ZG_SUCCESS) return res;
-		
-		*pipelineOut = d3d12pipeline;
-		return res;
 	}
 
 	ZgResult pipelineRenderCreateFromSourceHLSL(
@@ -728,9 +713,8 @@ public:
 		}
 		
 		// Create pipeline
-		D3D12PipelineRender* d3d12pipeline = nullptr;
-		ZgResult res = createPipelineRenderSourceHLSL(
-			&d3d12pipeline,
+		return createPipelineRenderSourceHLSL(
+			pipelineOut,
 			bindingsSignatureOut,
 			renderSignatureOut,
 			createInfo,
@@ -739,10 +723,6 @@ public:
 			*mState->dxcCompiler.Get(),
 			mState->dxcIncludeHandler,
 			*mState->device.Get());
-		if (res != ZG_SUCCESS) return res;
-		
-		*pipelineOut = d3d12pipeline;
-		return res;
 	}
 
 	ZgResult pipelineRenderRelease(

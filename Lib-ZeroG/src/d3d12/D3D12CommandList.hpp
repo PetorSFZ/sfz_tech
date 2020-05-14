@@ -241,8 +241,8 @@ private:
 	D3DX12Residency::ResidencyManager* mResidencyManager = nullptr;
 	D3D12DescriptorRingBuffer* mDescriptorBuffer = nullptr;
 	bool mPipelineSet = false; // Only allow a single pipeline per command list
-	D3D12PipelineRender* mBoundPipelineRender = nullptr;
-	D3D12PipelineCompute* mBoundPipelineCompute = nullptr;
+	ZgPipelineRender* mBoundPipelineRender = nullptr;
+	ZgPipelineCompute* mBoundPipelineCompute = nullptr;
 	bool mFramebufferSet = false; // Only allow a single framebuffer to be set.
 	D3D12Framebuffer* mFramebuffer = nullptr;
 };

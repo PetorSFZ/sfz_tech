@@ -130,15 +130,10 @@ struct D3D12RootSignature final {
 // D3D12PipelineCompute
 // ------------------------------------------------------------------------------------------------
 
-class D3D12PipelineCompute final : public ZgPipelineCompute {
-public:
-
-	D3D12PipelineCompute() noexcept {}
-	D3D12PipelineCompute(const D3D12PipelineCompute&) = delete;
-	D3D12PipelineCompute& operator= (const D3D12PipelineCompute&) = delete;
-	D3D12PipelineCompute(D3D12PipelineCompute&&) = delete;
-	D3D12PipelineCompute& operator= (D3D12PipelineCompute&&) = delete;
-	~D3D12PipelineCompute() noexcept {}
+struct ZgPipelineCompute final {
+	ZgPipelineCompute() = default;
+	ZgPipelineCompute(const ZgPipelineCompute&) = delete;
+	ZgPipelineCompute& operator= (const ZgPipelineCompute&) = delete;
 
 	ComPtr<ID3D12PipelineState> pipelineState;
 	D3D12RootSignature rootSignature;
@@ -148,15 +143,10 @@ public:
 // D3D12PipelineRender
 // ------------------------------------------------------------------------------------------------
 
-class D3D12PipelineRender final : public ZgPipelineRender {
-public:
-
-	D3D12PipelineRender() noexcept {}
-	D3D12PipelineRender(const D3D12PipelineRender&) = delete;
-	D3D12PipelineRender& operator= (const D3D12PipelineRender&) = delete;
-	D3D12PipelineRender(D3D12PipelineRender&&) = delete;
-	D3D12PipelineRender& operator= (D3D12PipelineRender&&) = delete;
-	~D3D12PipelineRender() noexcept {}
+struct ZgPipelineRender final {
+	ZgPipelineRender() = default;
+	ZgPipelineRender(const ZgPipelineRender&) = delete;
+	ZgPipelineRender& operator= (const ZgPipelineRender&) = delete;
 
 	ComPtr<ID3D12PipelineState> pipelineState;
 	D3D12RootSignature rootSignature;
@@ -169,7 +159,7 @@ public:
 // ------------------------------------------------------------------------------------------------
 
 ZgResult createPipelineComputeFileHLSL(
-	D3D12PipelineCompute** pipelineOut,
+	ZgPipelineCompute** pipelineOut,
 	ZgPipelineBindingsSignature* bindingsSignatureOut,
 	ZgPipelineComputeSignature* computeSignatureOut,
 	const ZgPipelineComputeCreateInfo& createInfo,
@@ -183,7 +173,7 @@ ZgResult createPipelineComputeFileHLSL(
 // ------------------------------------------------------------------------------------------------
 
 ZgResult createPipelineRenderFileSPIRV(
-	D3D12PipelineRender** pipelineOut,
+	ZgPipelineRender** pipelineOut,
 	ZgPipelineBindingsSignature* bindingsSignatureOut,
 	ZgPipelineRenderSignature* renderSignatureOut,
 	ZgPipelineRenderCreateInfo createInfo,
@@ -193,7 +183,7 @@ ZgResult createPipelineRenderFileSPIRV(
 	ID3D12Device3& device) noexcept;
 
 ZgResult createPipelineRenderFileHLSL(
-	D3D12PipelineRender** pipelineOut,
+	ZgPipelineRender** pipelineOut,
 	ZgPipelineBindingsSignature* bindingsSignatureOut,
 	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo& createInfo,
@@ -204,7 +194,7 @@ ZgResult createPipelineRenderFileHLSL(
 	ID3D12Device3& device) noexcept;
 
 ZgResult createPipelineRenderSourceHLSL(
-	D3D12PipelineRender** pipelineOut,
+	ZgPipelineRender** pipelineOut,
 	ZgPipelineBindingsSignature* bindingsSignatureOut,
 	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo& createInfo,

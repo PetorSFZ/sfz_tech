@@ -608,19 +608,17 @@ ZgResult D3D12CommandList::setPipelineBindings(
 }
 
 ZgResult D3D12CommandList::setPipelineCompute(
-	ZgPipelineCompute* pipelineIn) noexcept
+	ZgPipelineCompute* pipeline) noexcept
 {
-	D3D12PipelineCompute& pipeline = *static_cast<D3D12PipelineCompute*>(pipelineIn);
-
 	// If a pipeline is already set for this command list, return error. We currently only allow a
 	// single pipeline per command list.
 	if (mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 	mPipelineSet = true;
-	mBoundPipelineCompute = &pipeline;
+	mBoundPipelineCompute = pipeline;
 
 	// Set compute pipeline
-	commandList->SetPipelineState(pipeline.pipelineState.Get());
-	commandList->SetComputeRootSignature(pipeline.rootSignature.rootSignature.Get());
+	commandList->SetPipelineState(pipeline->pipelineState.Get());
+	commandList->SetComputeRootSignature(pipeline->rootSignature.rootSignature.Get());
 
 	// Set descriptor heap
 	ID3D12DescriptorHeap* heaps[] = { mDescriptorBuffer->descriptorHeap.Get() };
@@ -674,19 +672,17 @@ ZgResult D3D12CommandList::dispatchCompute(
 }
 
 ZgResult D3D12CommandList::setPipelineRender(
-	ZgPipelineRender* pipelineIn) noexcept
+	ZgPipelineRender* pipeline) noexcept
 {
-	D3D12PipelineRender& pipeline = *static_cast<D3D12PipelineRender*>(pipelineIn);
-	
 	// If a pipeline is already set for this command list, return error. We currently only allow a
 	// single pipeline per command list.
 	if (mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 	mPipelineSet = true;
-	mBoundPipelineRender = &pipeline;
+	mBoundPipelineRender = pipeline;
 
 	// Set render pipeline
-	commandList->SetPipelineState(pipeline.pipelineState.Get());
-	commandList->SetGraphicsRootSignature(pipeline.rootSignature.rootSignature.Get());
+	commandList->SetPipelineState(pipeline->pipelineState.Get());
+	commandList->SetGraphicsRootSignature(pipeline->rootSignature.rootSignature.Get());
 
 	// Set descriptor heap
 	ID3D12DescriptorHeap* heaps[] = { mDescriptorBuffer->descriptorHeap.Get() };
