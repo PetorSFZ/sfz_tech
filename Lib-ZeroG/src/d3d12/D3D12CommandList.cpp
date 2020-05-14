@@ -123,54 +123,50 @@ void ZgCommandList::destroy() noexcept
 // ------------------------------------------------------------------------------------------------
 
 ZgResult ZgCommandList::memcpyBufferToBuffer(
-	ZgBuffer* dstBufferIn,
+	ZgBuffer* dstBuffer,
 	uint64_t dstBufferOffsetBytes,
-	ZgBuffer* srcBufferIn,
+	ZgBuffer* srcBuffer,
 	uint64_t srcBufferOffsetBytes,
 	uint64_t numBytes) noexcept
 {
-	// Cast input to D3D12
-	D3D12Buffer& dstBuffer = *reinterpret_cast<D3D12Buffer*>(dstBufferIn);
-	D3D12Buffer& srcBuffer = *reinterpret_cast<D3D12Buffer*>(srcBufferIn);
-
 	// Current don't allow memcpy:ing to the same buffer.
-	if (dstBuffer.identifier == srcBuffer.identifier) return ZG_ERROR_INVALID_ARGUMENT;
+	if (dstBuffer->identifier == srcBuffer->identifier) return ZG_ERROR_INVALID_ARGUMENT;
 
 	// Wanted resource states
 	D3D12_RESOURCE_STATES dstTargetState = D3D12_RESOURCE_STATE_COPY_DEST;
 	D3D12_RESOURCE_STATES srcTargetState = D3D12_RESOURCE_STATE_COPY_SOURCE;
-	if (srcBuffer.memoryHeap->memoryType == ZG_MEMORY_TYPE_UPLOAD) {
+	if (srcBuffer->memoryHeap->memoryType == ZG_MEMORY_TYPE_UPLOAD) {
 		srcTargetState = D3D12_RESOURCE_STATE_GENERIC_READ;
 	}
 
 	// Set buffer resource states
-	ZgResult res = setBufferState(dstBuffer, dstTargetState);
+	ZgResult res = setBufferState(*dstBuffer, dstTargetState);
 	if (res != ZG_SUCCESS) return res;
-	res = setBufferState(srcBuffer, srcTargetState);
+	res = setBufferState(*srcBuffer, srcTargetState);
 	if (res != ZG_SUCCESS) return res;
 
 	// Check if we should copy entire buffer or just a region of it
 	bool copyEntireBuffer =
-		dstBuffer.sizeBytes == srcBuffer.sizeBytes &&
-		dstBuffer.sizeBytes == numBytes &&
+		dstBuffer->sizeBytes == srcBuffer->sizeBytes &&
+		dstBuffer->sizeBytes == numBytes &&
 		dstBufferOffsetBytes == 0 &&
 		srcBufferOffsetBytes == 0;
 
 	// Add buffers to residency set
-	residencySet->Insert(&srcBuffer.memoryHeap->managedObject);
-	residencySet->Insert(&dstBuffer.memoryHeap->managedObject);
+	residencySet->Insert(&srcBuffer->memoryHeap->managedObject);
+	residencySet->Insert(&dstBuffer->memoryHeap->managedObject);
 
 	// Copy entire buffer
 	if (copyEntireBuffer) {
-		commandList->CopyResource(dstBuffer.resource.Get(), srcBuffer.resource.Get());
+		commandList->CopyResource(dstBuffer->resource.Get(), srcBuffer->resource.Get());
 	}
 
 	// Copy region of buffer
 	else {
 		commandList->CopyBufferRegion(
-			dstBuffer.resource.Get(),
+			dstBuffer->resource.Get(),
 			dstBufferOffsetBytes,
-			srcBuffer.resource.Get(),
+			srcBuffer->resource.Get(),
 			srcBufferOffsetBytes,
 			numBytes);
 	}
@@ -184,9 +180,8 @@ ZgResult ZgCommandList::memcpyToTexture(
 	const ZgImageViewConstCpu& srcImageCpu,
 	ZgBuffer* tempUploadBufferIn) noexcept
 {
-	// Cast input to D3D12
-	D3D12Texture2D& dstTexture = *reinterpret_cast<D3D12Texture2D*>(dstTextureIn);
-	D3D12Buffer& tmpBuffer = *reinterpret_cast<D3D12Buffer*>(tempUploadBufferIn);
+	ZgTexture2D& dstTexture = *dstTextureIn;
+	ZgBuffer& tmpBuffer = *tempUploadBufferIn;
 
 	// Check that mip level is valid
 	if (dstTextureMipLevel >= dstTexture.numMipmaps) return ZG_ERROR_INVALID_ARGUMENT;
@@ -274,32 +269,26 @@ ZgResult ZgCommandList::memcpyToTexture(
 	return ZG_SUCCESS;
 }
 
-ZgResult ZgCommandList::enableQueueTransitionBuffer(ZgBuffer* bufferIn) noexcept
+ZgResult ZgCommandList::enableQueueTransitionBuffer(ZgBuffer* buffer) noexcept
 {
-	// Cast to D3D12
-	D3D12Buffer& buffer = *reinterpret_cast<D3D12Buffer*>(bufferIn);
-
 	// Check that it is a device buffer
-	if (buffer.memoryHeap->memoryType == ZG_MEMORY_TYPE_UPLOAD ||
-		buffer.memoryHeap->memoryType == ZG_MEMORY_TYPE_DOWNLOAD) {
+	if (buffer->memoryHeap->memoryType == ZG_MEMORY_TYPE_UPLOAD ||
+		buffer->memoryHeap->memoryType == ZG_MEMORY_TYPE_DOWNLOAD) {
 		ZG_ERROR("enableQueueTransitionBuffer(): Can't transition upload and download buffers");
 		return ZG_ERROR_INVALID_ARGUMENT;
 	}
 
 	// Set buffer resource state
-	ZgResult res = setBufferState(buffer, D3D12_RESOURCE_STATE_COMMON);
+	ZgResult res = setBufferState(*buffer, D3D12_RESOURCE_STATE_COMMON);
 	if (res != ZG_SUCCESS) return res;
 
 	return ZG_SUCCESS;
 }
 
-ZgResult ZgCommandList::enableQueueTransitionTexture(ZgTexture2D* textureIn) noexcept
+ZgResult ZgCommandList::enableQueueTransitionTexture(ZgTexture2D* texture) noexcept
 {
-	// Cast to D3D12
-	D3D12Texture2D& texture = *reinterpret_cast<D3D12Texture2D*>(textureIn);
-
 	// Set buffer resource state
-	ZgResult res = setTextureStateAllMipLevels(texture, D3D12_RESOURCE_STATE_COMMON);
+	ZgResult res = setTextureStateAllMipLevels(*texture, D3D12_RESOURCE_STATE_COMMON);
 	if (res != ZG_SUCCESS) return res;
 
 	return ZG_SUCCESS;
@@ -412,9 +401,8 @@ ZgResult ZgCommandList::setPipelineBindings(
 			return ZG_WARNING_UNIMPLEMENTED;
 		}
 
-		// Get buffer from binding and cast it to D3D12 buffer
-		D3D12Buffer* buffer =
-			reinterpret_cast<D3D12Buffer*>(bindings.constantBuffers[bindingIdx].buffer);
+		// Get buffer from binding
+		ZgBuffer* buffer = bindings.constantBuffers[bindingIdx].buffer;
 
 		// D3D12 requires that a Constant Buffer View is at least 256 bytes, and a multiple of 256.
 		// Round up constant buffer size to nearest 256 alignment
@@ -469,8 +457,7 @@ ZgResult ZgCommandList::setPipelineBindings(
 
 		// Get binding and buffer
 		const ZgUnorderedBufferBinding& binding = bindings.unorderedBuffers[bindingIdx];
-		D3D12Buffer* buffer =
-			reinterpret_cast<D3D12Buffer*>(binding.buffer);
+		ZgBuffer* buffer = binding.buffer;
 
 		// Create unordered access view
 		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
@@ -517,8 +504,7 @@ ZgResult ZgCommandList::setPipelineBindings(
 
 		// Get binding and texture
 		const ZgUnorderedTextureBinding& binding = bindings.unorderedTextures[bindingIdx];
-		D3D12Texture2D* texture =
-			reinterpret_cast<D3D12Texture2D*>(binding.texture);
+		ZgTexture2D* texture = binding.texture;
 
 		// Create unordered access view
 		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
@@ -555,11 +541,11 @@ ZgResult ZgCommandList::setPipelineBindings(
 
 		// If binding found, get D3D12 texture and its resource and format. Otherwise set default
 		// in order to create null descriptor
-		D3D12Texture2D* texture = nullptr;
+		ZgTexture2D* texture = nullptr;
 		ID3D12Resource* resource = nullptr;
 		DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		if (bindingIdx != ~0u) {
-			texture = reinterpret_cast<D3D12Texture2D*>(bindings.textures[bindingIdx].texture);
+			texture = bindings.textures[bindingIdx].texture;
 			resource = texture->resource.Get();
 			format = texture->format;
 		}
@@ -628,9 +614,8 @@ ZgResult ZgCommandList::setPipelineCompute(
 }
 
 ZgResult ZgCommandList::unorderedBarrierBuffer(
-	ZgBuffer* bufferIn) noexcept
+	ZgBuffer* buffer) noexcept
 {
-	D3D12Buffer* buffer = static_cast<D3D12Buffer*>(bufferIn);
 	D3D12_RESOURCE_BARRIER barrier = {};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -640,9 +625,8 @@ ZgResult ZgCommandList::unorderedBarrierBuffer(
 }
 
 ZgResult ZgCommandList::unorderedBarrierTexture(
-	ZgTexture2D* textureIn) noexcept
+	ZgTexture2D* texture) noexcept
 {
-	D3D12Texture2D* texture = static_cast<D3D12Texture2D*>(textureIn);
 	D3D12_RESOURCE_BARRIER barrier = {};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -758,7 +742,7 @@ ZgResult ZgCommandList::setFramebuffer(
 
 		// Render targets
 		for (uint32_t i = 0; i < framebuffer->numRenderTargets; i++) {
-			D3D12Texture2D* renderTarget = framebuffer->renderTargets[i];
+			ZgTexture2D* renderTarget = framebuffer->renderTargets[i];
 
 			// Set resource state
 			sfz_assert(renderTarget->numMipmaps == 1);
@@ -770,7 +754,7 @@ ZgResult ZgCommandList::setFramebuffer(
 
 		// Depth buffer
 		if (framebuffer->hasDepthBuffer) {
-			D3D12Texture2D* depthBuffer = framebuffer->depthBuffer;
+			ZgTexture2D* depthBuffer = framebuffer->depthBuffer;
 
 			// Set resource state
 			sfz_assert(depthBuffer->numMipmaps == 1);
@@ -930,19 +914,16 @@ ZgResult ZgCommandList::clearDepthBuffer(
 }
 
 ZgResult ZgCommandList::setIndexBuffer(
-	ZgBuffer* indexBufferIn,
+	ZgBuffer* indexBuffer,
 	ZgIndexBufferType type) noexcept
 {
-	// Cast input to D3D12
-	D3D12Buffer& indexBuffer = *reinterpret_cast<D3D12Buffer*>(indexBufferIn);
-
 	// Set buffer resource state
 	ZgResult res;
-	if (indexBuffer.memoryHeap->memoryType == ZG_MEMORY_TYPE_DEVICE) {
-		res = setBufferState(indexBuffer, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+	if (indexBuffer->memoryHeap->memoryType == ZG_MEMORY_TYPE_DEVICE) {
+		res = setBufferState(*indexBuffer, D3D12_RESOURCE_STATE_INDEX_BUFFER);
 	}
-	else if (indexBuffer.memoryHeap->memoryType == ZG_MEMORY_TYPE_UPLOAD) {
-		res = setBufferState(indexBuffer, D3D12_RESOURCE_STATE_GENERIC_READ);
+	else if (indexBuffer->memoryHeap->memoryType == ZG_MEMORY_TYPE_UPLOAD) {
+		res = setBufferState(*indexBuffer, D3D12_RESOURCE_STATE_GENERIC_READ);
 	}
 	else {
 		return ZG_ERROR_INVALID_ARGUMENT;
@@ -951,9 +932,9 @@ ZgResult ZgCommandList::setIndexBuffer(
 
 	// Create index buffer view
 	D3D12_INDEX_BUFFER_VIEW indexBufferView = {};
-	indexBufferView.BufferLocation = indexBuffer.resource->GetGPUVirtualAddress();
-	sfz_assert(indexBuffer.sizeBytes <= uint64_t(UINT32_MAX));
-	indexBufferView.SizeInBytes = uint32_t(indexBuffer.sizeBytes);
+	indexBufferView.BufferLocation = indexBuffer->resource->GetGPUVirtualAddress();
+	sfz_assert(indexBuffer->sizeBytes <= uint64_t(UINT32_MAX));
+	indexBufferView.SizeInBytes = uint32_t(indexBuffer->sizeBytes);
 	indexBufferView.Format = type == ZG_INDEX_BUFFER_TYPE_UINT32 ?
 		DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
 
@@ -961,18 +942,15 @@ ZgResult ZgCommandList::setIndexBuffer(
 	commandList->IASetIndexBuffer(&indexBufferView);
 
 	// Insert into residency set
-	residencySet->Insert(&indexBuffer.memoryHeap->managedObject);
+	residencySet->Insert(&indexBuffer->memoryHeap->managedObject);
 
 	return ZG_SUCCESS;
 }
 
 ZgResult ZgCommandList::setVertexBuffer(
 	uint32_t vertexBufferSlot,
-	ZgBuffer* vertexBufferIn) noexcept
+	ZgBuffer* vertexBuffer) noexcept
 {
-	// Cast input to D3D12
-	D3D12Buffer& vertexBuffer = *reinterpret_cast<D3D12Buffer*>(vertexBufferIn);
-
 	// Need to have a pipeline set to verify vertex buffer binding
 	if (!mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 
@@ -984,11 +962,11 @@ ZgResult ZgCommandList::setVertexBuffer(
 
 	// Set buffer resource state
 	ZgResult res;
-	if (vertexBuffer.memoryHeap->memoryType == ZG_MEMORY_TYPE_DEVICE) {
-		res = setBufferState(vertexBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+	if (vertexBuffer->memoryHeap->memoryType == ZG_MEMORY_TYPE_DEVICE) {
+		res = setBufferState(*vertexBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 	}
-	else if (vertexBuffer.memoryHeap->memoryType == ZG_MEMORY_TYPE_UPLOAD) {
-		res = setBufferState(vertexBuffer, D3D12_RESOURCE_STATE_GENERIC_READ);
+	else if (vertexBuffer->memoryHeap->memoryType == ZG_MEMORY_TYPE_UPLOAD) {
+		res = setBufferState(*vertexBuffer, D3D12_RESOURCE_STATE_GENERIC_READ);
 	}
 	else {
 		return ZG_ERROR_INVALID_ARGUMENT;
@@ -997,15 +975,15 @@ ZgResult ZgCommandList::setVertexBuffer(
 
 	// Create vertex buffer view
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
-	vertexBufferView.BufferLocation = vertexBuffer.resource->GetGPUVirtualAddress();
+	vertexBufferView.BufferLocation = vertexBuffer->resource->GetGPUVirtualAddress();
 	vertexBufferView.StrideInBytes = pipelineInfo.vertexBufferStridesBytes[vertexBufferSlot];
-	vertexBufferView.SizeInBytes = uint32_t(vertexBuffer.sizeBytes);
+	vertexBufferView.SizeInBytes = uint32_t(vertexBuffer->sizeBytes);
 
 	// Set vertex buffer
 	commandList->IASetVertexBuffers(vertexBufferSlot, 1, &vertexBufferView);
 
 	// Insert into residency set
-	residencySet->Insert(&vertexBuffer.memoryHeap->managedObject);
+	residencySet->Insert(&vertexBuffer->memoryHeap->managedObject);
 
 	return ZG_SUCCESS;
 }
@@ -1137,7 +1115,7 @@ ZgResult ZgCommandList::reset() noexcept
 // ------------------------------------------------------------------------------------------------
 
 ZgResult ZgCommandList::getPendingBufferStates(
-	D3D12Buffer& buffer,
+	ZgBuffer& buffer,
 	D3D12_RESOURCE_STATES neededState,
 	PendingBufferState*& pendingStatesOut) noexcept
 {
@@ -1175,7 +1153,7 @@ ZgResult ZgCommandList::getPendingBufferStates(
 }
 
 ZgResult ZgCommandList::setBufferState(
-	D3D12Buffer& buffer, D3D12_RESOURCE_STATES targetState) noexcept
+	ZgBuffer& buffer, D3D12_RESOURCE_STATES targetState) noexcept
 {
 	// Get pending states
 	PendingBufferState* pendingState = nullptr;
@@ -1197,7 +1175,7 @@ ZgResult ZgCommandList::setBufferState(
 }
 
 ZgResult ZgCommandList::getPendingTextureStates(
-	D3D12Texture2D& texture,
+	ZgTexture2D& texture,
 	uint32_t mipLevel,
 	D3D12_RESOURCE_STATES neededState,
 	PendingTextureState*& pendingStatesOut) noexcept
@@ -1240,7 +1218,7 @@ ZgResult ZgCommandList::getPendingTextureStates(
 }
 
 ZgResult ZgCommandList::setTextureState(
-	D3D12Texture2D& texture,
+	ZgTexture2D& texture,
 	uint32_t mipLevel,
 	D3D12_RESOURCE_STATES targetState) noexcept
 {
@@ -1265,7 +1243,7 @@ ZgResult ZgCommandList::setTextureState(
 }
 
 ZgResult ZgCommandList::setTextureStateAllMipLevels(
-	D3D12Texture2D& texture,
+	ZgTexture2D& texture,
 	D3D12_RESOURCE_STATES targetState) noexcept
 {
 	// Get pending states

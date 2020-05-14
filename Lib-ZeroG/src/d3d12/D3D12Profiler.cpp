@@ -103,8 +103,8 @@ ZgResult d3d12CreateProfiler(
 	}
 
 	// Create download buffer
-	D3D12MemoryHeap* downloadHeap = nullptr;
-	D3D12Buffer* downloadBuffer = nullptr;
+	ZgMemoryHeap* downloadHeap = nullptr;
+	ZgBuffer* downloadBuffer = nullptr;
 	{
 		// Create download heap
 		ZgMemoryHeapCreateInfo heapInfo = {};
@@ -125,7 +125,7 @@ ZgResult d3d12CreateProfiler(
 			getAllocator()->deleteObject(downloadBuffer);
 			return res;
 		}
-		downloadBuffer = static_cast<D3D12Buffer*>(bufferTmp);
+		downloadBuffer = bufferTmp;
 	}
 	
 	// Allocate profiler

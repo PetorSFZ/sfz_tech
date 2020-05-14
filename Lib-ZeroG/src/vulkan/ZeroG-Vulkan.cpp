@@ -83,17 +83,16 @@ ZG_API ZgResult zgMemoryHeapBufferCreate(
 	ZgBuffer** bufferOut,
 	const ZgBufferCreateInfo* createInfo)
 {
-	ZG_ARG_CHECK(createInfo == nullptr, "");
-	ZG_ARG_CHECK((createInfo->offsetInBytes % 65536) != 0, "Buffer must be 64KiB aligned");
-
-	return memoryHeap->bufferCreate(bufferOut, *createInfo);
+	(void)memoryHeap;
+	(void)bufferOut;
+	(void)createInfo;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API void zgBufferRelease(
 	ZgBuffer* buffer)
 {
-	if (buffer == nullptr) return;
-	getAllocator()->deleteObject(buffer);
+	(void)buffer;
 }
 
 ZG_API ZgResult zgBufferMemcpyTo(
@@ -102,7 +101,11 @@ ZG_API ZgResult zgBufferMemcpyTo(
 	const void* srcMemory,
 	uint64_t numBytes)
 {
-	return dstBuffer->memcpyTo(dstBufferOffsetBytes, srcMemory, numBytes);
+	(void)dstBuffer;
+	(void)dstBufferOffsetBytes;
+	(void)srcMemory;
+	(void)numBytes;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgBufferMemcpyFrom(
@@ -111,15 +114,20 @@ ZG_API ZgResult zgBufferMemcpyFrom(
 	uint64_t srcBufferOffsetBytes,
 	uint64_t numBytes)
 {
-	return srcBuffer->memcpyFrom(srcBufferOffsetBytes, dstMemory, numBytes);
+	(void)dstMemory;
+	(void)srcBuffer;
+	(void)srcBufferOffsetBytes;
+	(void)numBytes;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgBufferSetDebugName(
 	ZgBuffer* buffer,
 	const char* name)
 {
-	ZG_ARG_CHECK(buffer == nullptr, "");
-	return buffer->setDebugName(name);
+	(void)buffer;
+	(void)name;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 // Textures
@@ -141,30 +149,25 @@ ZG_API ZgResult zgMemoryHeapTexture2DCreate(
 	ZgTexture2D** textureOut,
 	const ZgTexture2DCreateInfo* createInfo)
 {
-	ZG_ARG_CHECK(createInfo == nullptr, "");
-	ZG_ARG_CHECK(createInfo->numMipmaps == 0, "Must specify at least 1 mipmap layer (i.e. the full image)");
-	ZG_ARG_CHECK(createInfo->numMipmaps > ZG_MAX_NUM_MIPMAPS, "Too many mipmaps specified");
-	if (createInfo->usage == ZG_TEXTURE_USAGE_DEFAULT) {
-		ZG_ARG_CHECK(createInfo->optimalClearValue != ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED,
-			"May not define optimal clear value for default textures");
-	}
-	return memoryHeap->texture2DCreate(textureOut, *createInfo);
+	(void)memoryHeap;
+	(void)textureOut;
+	(void)createInfo;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API void zgTexture2DRelease(
 	ZgTexture2D* texture)
 {
-	if (texture == nullptr) return;
-	getAllocator()->deleteObject(texture);
+	(void)texture;
 }
 
 ZG_API ZgResult zgTexture2DSetDebugName(
 	ZgTexture2D* texture,
 	const char* name)
 {
-	ZG_ARG_CHECK(texture == nullptr, "");
-	ZG_ARG_CHECK(name == nullptr, "");
-	return texture->setDebugName(name);
+	(void)texture;
+	(void)name;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 // Memory Heap

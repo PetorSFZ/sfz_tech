@@ -81,18 +81,18 @@ D3D12_RESOURCE_DESC createInfoToResourceDesc(const ZgTexture2DCreateInfo& info) 
 	return desc;
 }
 
-// D3D12MemoryHeap: Constructors & destructors
+// ZgMemoryHeap: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-D3D12MemoryHeap::~D3D12MemoryHeap() noexcept
+ZgMemoryHeap::~ZgMemoryHeap() noexcept
 {
 
 }
 
-// D3D12MemoryHeap: Virtual methods
+// ZgMemoryHeap: Virtual methods
 // ------------------------------------------------------------------------------------------------
 
-ZgResult D3D12MemoryHeap::bufferCreate(
+ZgResult ZgMemoryHeap::bufferCreate(
 	ZgBuffer** bufferOut,
 	const ZgBufferCreateInfo& createInfo) noexcept
 {
@@ -140,7 +140,7 @@ ZgResult D3D12MemoryHeap::bufferCreate(
 	}
 
 	// Allocate buffer
-	D3D12Buffer* buffer = getAllocator()->newObject<D3D12Buffer>(sfz_dbg("D3D12Buffer"));
+	ZgBuffer* buffer = getAllocator()->newObject<ZgBuffer>(sfz_dbg("ZgBuffer"));
 
 	// Copy stuff
 	buffer->identifier = std::atomic_fetch_add(resourceUniqueIdentifierCounter, 1);
@@ -154,7 +154,7 @@ ZgResult D3D12MemoryHeap::bufferCreate(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12MemoryHeap::texture2DCreate(
+ZgResult ZgMemoryHeap::texture2DCreate(
 	ZgTexture2D** textureOut,
 	const ZgTexture2DCreateInfo& createInfo) noexcept
 {
@@ -224,7 +224,7 @@ ZgResult D3D12MemoryHeap::texture2DCreate(
 		subresourceFootprints, numRows, rowSizesInBytes, &totalSizeInBytes);
 
 	// Allocate texture
-	D3D12Texture2D* texture = getAllocator()->newObject<D3D12Texture2D>(sfz_dbg("D3D12Texture2D"));
+	ZgTexture2D* texture = getAllocator()->newObject<ZgTexture2D>(sfz_dbg("ZgTexture2D"));
 
 	// Copy stuff
 	texture->identifier = std::atomic_fetch_add(resourceUniqueIdentifierCounter, 1);
@@ -262,7 +262,7 @@ ZgResult createMemoryHeap(
 	ID3D12Device3& device,
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
 	D3DX12Residency::ResidencyManager& residencyManager,
-	D3D12MemoryHeap** heapOut,
+	ZgMemoryHeap** heapOut,
 	const ZgMemoryHeapCreateInfo& createInfo) noexcept
 {
 	// Create heap
@@ -299,7 +299,7 @@ ZgResult createMemoryHeap(
 	}
 
 	// Allocate memory heap
-	D3D12MemoryHeap* memoryHeap = getAllocator()->newObject<D3D12MemoryHeap>(sfz_dbg("D3D12MemoryHeap"));
+	ZgMemoryHeap* memoryHeap = getAllocator()->newObject<ZgMemoryHeap>(sfz_dbg("ZgMemoryHeap"));
 
 	// Create residency manager object and begin tracking
 	memoryHeap->managedObject.Initialize(heap.Get(), createInfo.sizeInBytes);
@@ -331,15 +331,15 @@ ZgResult createMemoryHeap(
 	return ZG_SUCCESS;
 }
 
-// D3D12Buffer: Virtual methods
+// ZgBuffer: Virtual methods
 // ------------------------------------------------------------------------------------------------
 
-ZgResult D3D12Buffer::memcpyTo(
+ZgResult ZgBuffer::memcpyTo(
 	uint64_t dstBufferOffsetBytes,
 	const void* srcMemory,
 	uint64_t numBytes) noexcept
 {
-	D3D12Buffer& dstBuffer = *this;
+	ZgBuffer& dstBuffer = *this;
 	if (dstBuffer.memoryHeap->memoryType != ZG_MEMORY_TYPE_UPLOAD) return ZG_ERROR_INVALID_ARGUMENT;
 
 	// Not gonna read from buffer
@@ -367,12 +367,12 @@ ZgResult D3D12Buffer::memcpyTo(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12Buffer::memcpyFrom(
+ZgResult ZgBuffer::memcpyFrom(
 	uint64_t srcBufferOffsetBytes,
 	void* dstMemory,
 	uint64_t numBytes) noexcept
 {
-	D3D12Buffer& srcBuffer = *this;
+	ZgBuffer& srcBuffer = *this;
 	if (srcBuffer.memoryHeap->memoryType != ZG_MEMORY_TYPE_DOWNLOAD) return ZG_ERROR_INVALID_ARGUMENT;
 
 	// Specify range which we are going to read from in buffer
@@ -400,19 +400,19 @@ ZgResult D3D12Buffer::memcpyFrom(
 	return ZG_SUCCESS;
 }
 
-// D3D12Buffer: Methods
+// ZgBuffer: Methods
 // ------------------------------------------------------------------------------------------------
 
-ZgResult D3D12Buffer::setDebugName(const char* name) noexcept
+ZgResult ZgBuffer::setDebugName(const char* name) noexcept
 {
 	::setDebugName(this->resource, name);
 	return ZG_SUCCESS;
 }
 
-// D3D12Texture2D: Methods
+// ZgTexture2D: Methods
 // ------------------------------------------------------------------------------------------------
 
-ZgResult D3D12Texture2D::setDebugName(const char* name) noexcept
+ZgResult ZgTexture2D::setDebugName(const char* name) noexcept
 {
 	::setDebugName(this->resource, name);
 	return ZG_SUCCESS;

@@ -51,12 +51,12 @@ ZgResult createFramebuffer(
 	uint32_t width = 0;
 	uint32_t height = 0;
 	if (createInfo.numRenderTargets > 0) {
-		D3D12Texture2D* renderTarget = static_cast<D3D12Texture2D*>(createInfo.renderTargets[0]);
+		ZgTexture2D* renderTarget = createInfo.renderTargets[0];
 		width = renderTarget->width;
 		height = renderTarget->height;
 	}
 	else if (createInfo.depthBuffer != nullptr) {
-		D3D12Texture2D* renderTarget = static_cast<D3D12Texture2D*>(createInfo.depthBuffer);
+		ZgTexture2D* renderTarget = createInfo.depthBuffer;
 		width = renderTarget->width;
 		height = renderTarget->height;
 	}
@@ -70,7 +70,7 @@ ZgResult createFramebuffer(
 	// Check inputs
 	for (uint32_t i = 0; i < createInfo.numRenderTargets; i++) {
 		ZG_ARG_CHECK(createInfo.renderTargets[i] == nullptr, "");
-		D3D12Texture2D* renderTarget = static_cast<D3D12Texture2D*>(createInfo.renderTargets[i]);
+		ZgTexture2D* renderTarget = createInfo.renderTargets[i];
 		ZG_ARG_CHECK(renderTarget->usage != ZG_TEXTURE_USAGE_RENDER_TARGET,
 			"Can only use textures created with the RENDER_TARGET usage flag as render targets");
 		ZG_ARG_CHECK(width != renderTarget->width, "All render targets must be same size");
@@ -78,7 +78,7 @@ ZgResult createFramebuffer(
 		ZG_ARG_CHECK(renderTarget->numMipmaps != 1, "Render targets may not have mipmaps");
 	}
 	if (createInfo.depthBuffer != nullptr) {
-		D3D12Texture2D* depthBuffer = static_cast<D3D12Texture2D*>(createInfo.depthBuffer);
+		ZgTexture2D* depthBuffer = createInfo.depthBuffer;
 		ZG_ARG_CHECK(depthBuffer->usage != ZG_TEXTURE_USAGE_DEPTH_BUFFER,
 			"Can only use textures created with the DEPTH_BUFFER usage flag as depth buffers");
 		ZG_ARG_CHECK(width != depthBuffer->width, "All depth buffers must be same size");
@@ -114,7 +114,7 @@ ZgResult createFramebuffer(
 		for (uint32_t i = 0; i < createInfo.numRenderTargets; i++) {
 
 			// Get texture
-			D3D12Texture2D* texture = reinterpret_cast<D3D12Texture2D*>(createInfo.renderTargets[i]);
+			ZgTexture2D* texture = createInfo.renderTargets[i];
 
 			// Create render target view description
 			D3D12_RENDER_TARGET_VIEW_DESC viewDesc = {};
@@ -137,7 +137,7 @@ ZgResult createFramebuffer(
 	D3D12_CPU_DESCRIPTOR_HANDLE descriptorDSV = {};
 	if (createInfo.depthBuffer != nullptr) {
 
-		D3D12Texture2D* texture = reinterpret_cast<D3D12Texture2D*>(createInfo.depthBuffer);
+		ZgTexture2D* texture = createInfo.depthBuffer;
 		sfz_assert(texture->zgFormat == ZG_TEXTURE_FORMAT_DEPTH_F32);
 		sfz_assert(texture->format == DXGI_FORMAT_D32_FLOAT);
 
@@ -174,14 +174,13 @@ ZgResult createFramebuffer(
 	framebuffer->numRenderTargets = createInfo.numRenderTargets;
 	framebuffer->descriptorHeapRTV = descriptorHeapRTV;
 	for (uint32_t i = 0; i < createInfo.numRenderTargets; i++) {
-		framebuffer->renderTargets[i] =
-			reinterpret_cast<D3D12Texture2D*>(createInfo.renderTargets[i]);
+		framebuffer->renderTargets[i] = createInfo.renderTargets[i];
 		framebuffer->renderTargetDescriptors[i] = descriptorsRTV[i];
 		framebuffer->renderTargetOptimalClearValues[i] = framebuffer->renderTargets[i]->optimalClearValue;
 	}
 
 	framebuffer->hasDepthBuffer = createInfo.depthBuffer != nullptr;
-	framebuffer->depthBuffer = reinterpret_cast<D3D12Texture2D*>(createInfo.depthBuffer);
+	framebuffer->depthBuffer = createInfo.depthBuffer;
 	framebuffer->descriptorHeapDSV = descriptorHeapDSV;
 	framebuffer->depthBufferDescriptor = descriptorDSV;
 	if (framebuffer->depthBuffer != nullptr) {

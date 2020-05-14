@@ -36,7 +36,7 @@
 struct PendingBufferState final {
 
 	// The associated D3D12Buffer
-	D3D12Buffer* buffer = nullptr;
+	ZgBuffer* buffer = nullptr;
 
 	// The state the resource need to be in before the command list is executed
 	D3D12_RESOURCE_STATES neededInitialState = D3D12_RESOURCE_STATE_COMMON;
@@ -48,7 +48,7 @@ struct PendingBufferState final {
 struct PendingTextureState final {
 
 	// The associated D3D12Texture
-	D3D12Texture2D* texture = nullptr;
+	ZgTexture2D* texture = nullptr;
 
 	// The mip level of the associated texture
 	uint32_t mipLevel = ~0u;
@@ -211,25 +211,25 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	ZgResult getPendingBufferStates(
-		D3D12Buffer& buffer,
+		ZgBuffer& buffer,
 		D3D12_RESOURCE_STATES neededState,
 		PendingBufferState*& pendingStatesOut) noexcept;
 	
-	ZgResult setBufferState(D3D12Buffer& buffer, D3D12_RESOURCE_STATES targetState) noexcept;
+	ZgResult setBufferState(ZgBuffer& buffer, D3D12_RESOURCE_STATES targetState) noexcept;
 
 	ZgResult getPendingTextureStates(
-		D3D12Texture2D& texture,
+		ZgTexture2D& texture,
 		uint32_t mipLevel,
 		D3D12_RESOURCE_STATES neededState,
 		PendingTextureState*& pendingStatesOut) noexcept;
 
 	ZgResult setTextureState(
-		D3D12Texture2D& texture,
+		ZgTexture2D& texture,
 		uint32_t mipLevel,
 		D3D12_RESOURCE_STATES targetState) noexcept;
 
 	ZgResult setTextureStateAllMipLevels(
-		D3D12Texture2D& texture,
+		ZgTexture2D& texture,
 		D3D12_RESOURCE_STATES targetState) noexcept;
 
 	// Private members

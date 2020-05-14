@@ -29,31 +29,31 @@
 
 D3D12_RESOURCE_DESC createInfoToResourceDesc(const ZgTexture2DCreateInfo& info) noexcept;
 
-// D3D12 Memory Heap
+// ZgMemoryHeap
 // ------------------------------------------------------------------------------------------------
 
-class D3D12MemoryHeap final : public ZgMemoryHeap {
+struct ZgMemoryHeap final {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	D3D12MemoryHeap() = default;
-	D3D12MemoryHeap(const D3D12MemoryHeap&) = delete;
-	D3D12MemoryHeap& operator= (const D3D12MemoryHeap&) = delete;
-	D3D12MemoryHeap(D3D12MemoryHeap&&) = delete;
-	D3D12MemoryHeap& operator= (D3D12MemoryHeap&&) = delete;
-	~D3D12MemoryHeap() noexcept;
+	ZgMemoryHeap() = default;
+	ZgMemoryHeap(const ZgMemoryHeap&) = delete;
+	ZgMemoryHeap& operator= (const ZgMemoryHeap&) = delete;
+	ZgMemoryHeap(ZgMemoryHeap&&) = delete;
+	ZgMemoryHeap& operator= (ZgMemoryHeap&&) = delete;
+	~ZgMemoryHeap() noexcept;
 
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
 
 	ZgResult bufferCreate(
 		ZgBuffer** bufferOut,
-		const ZgBufferCreateInfo& createInfo) noexcept override final;
+		const ZgBufferCreateInfo& createInfo) noexcept;
 
 	ZgResult texture2DCreate(
 		ZgTexture2D** textureOut,
-		const ZgTexture2DCreateInfo& createInfo) noexcept override final;
+		const ZgTexture2DCreateInfo& createInfo) noexcept;
 
 	// Members
 	// --------------------------------------------------------------------------------------------
@@ -74,24 +74,24 @@ ZgResult createMemoryHeap(
 	ID3D12Device3& device,
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
 	D3DX12Residency::ResidencyManager& residencyManager,
-	D3D12MemoryHeap** heapOut,
+	ZgMemoryHeap** heapOut,
 	const ZgMemoryHeapCreateInfo& createInfo) noexcept;
 
 // D3D12 Buffer
 // ------------------------------------------------------------------------------------------------
 
-class D3D12Buffer final : public ZgBuffer {
+struct ZgBuffer final {
 public:
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	D3D12Buffer() = default;
-	D3D12Buffer(const D3D12Buffer&) = delete;
-	D3D12Buffer& operator= (const D3D12Buffer&) = delete;
-	D3D12Buffer(D3D12Buffer&&) = delete;
-	D3D12Buffer& operator= (D3D12Buffer&&) = delete;
-	~D3D12Buffer() noexcept {}
+	ZgBuffer() = default;
+	ZgBuffer(const ZgBuffer&) = delete;
+	ZgBuffer& operator= (const ZgBuffer&) = delete;
+	ZgBuffer(ZgBuffer&&) = delete;
+	ZgBuffer& operator= (ZgBuffer&&) = delete;
+	~ZgBuffer() noexcept {}
 
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
@@ -99,12 +99,12 @@ public:
 	ZgResult memcpyTo(
 		uint64_t dstBufferOffsetBytes,
 		const void* srcMemory,
-		uint64_t numBytes) noexcept override final;
+		uint64_t numBytes) noexcept;
 
 	ZgResult memcpyFrom(
 		uint64_t srcBufferOffsetBytes,
 		void* dstMemory,
-		uint64_t numBytes) noexcept override final;
+		uint64_t numBytes) noexcept;
 
 	// Members
 	// --------------------------------------------------------------------------------------------
@@ -112,7 +112,7 @@ public:
 	// A unique identifier for this buffer
 	uint64_t identifier = 0;
 
-	D3D12MemoryHeap* memoryHeap = nullptr;
+	ZgMemoryHeap* memoryHeap = nullptr;
 	uint64_t sizeBytes = 0;
 	ComPtr<ID3D12Resource> resource;
 
@@ -125,23 +125,23 @@ public:
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgResult setDebugName(const char* name) noexcept override final;
+	ZgResult setDebugName(const char* name) noexcept;
 };
 
-// D3D12 Texture 2D
+// ZgTexture2D
 // ------------------------------------------------------------------------------------------------
 
-class D3D12Texture2D final : public ZgTexture2D {
+struct ZgTexture2D final {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	D3D12Texture2D() = default;
-	D3D12Texture2D(const D3D12Texture2D&) = delete;
-	D3D12Texture2D& operator= (const D3D12Texture2D&) = delete;
-	D3D12Texture2D(D3D12Texture2D&&) = delete;
-	D3D12Texture2D& operator= (D3D12Texture2D&&) = delete;
-	~D3D12Texture2D() noexcept {}
+	ZgTexture2D() = default;
+	ZgTexture2D(const ZgTexture2D&) = delete;
+	ZgTexture2D& operator= (const ZgTexture2D&) = delete;
+	ZgTexture2D(ZgTexture2D&&) = delete;
+	ZgTexture2D& operator= (ZgTexture2D&&) = delete;
+	~ZgTexture2D() noexcept {}
 
 	// Members
 	// --------------------------------------------------------------------------------------------
@@ -149,7 +149,7 @@ public:
 	// A unique identifier for this texture
 	uint64_t identifier = 0;
 
-	D3D12MemoryHeap* textureHeap = nullptr;
+	ZgMemoryHeap* textureHeap = nullptr;
 	ComPtr<ID3D12Resource> resource;
 	ZgTextureFormat zgFormat = ZG_TEXTURE_FORMAT_UNDEFINED;
 	ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT;
@@ -174,5 +174,5 @@ public:
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgResult setDebugName(const char* name) noexcept override final;
+	ZgResult setDebugName(const char* name) noexcept;
 };

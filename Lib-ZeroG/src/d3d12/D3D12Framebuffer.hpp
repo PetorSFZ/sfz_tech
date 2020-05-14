@@ -56,14 +56,14 @@ public:
 
 	// Render targets
 	uint32_t numRenderTargets = 0;
-	D3D12Texture2D* renderTargets[ZG_MAX_NUM_RENDER_TARGETS] = {};
+	ZgTexture2D* renderTargets[ZG_MAX_NUM_RENDER_TARGETS] = {};
 	ComPtr<ID3D12DescriptorHeap> descriptorHeapRTV;
 	D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDescriptors[ZG_MAX_NUM_RENDER_TARGETS] = {};
 	ZgOptimalClearValue renderTargetOptimalClearValues[ZG_MAX_NUM_RENDER_TARGETS] = {};
 
 	// Depth buffer
 	bool hasDepthBuffer = false;
-	D3D12Texture2D* depthBuffer = nullptr;
+	ZgTexture2D* depthBuffer = nullptr;
 	ComPtr<ID3D12DescriptorHeap> descriptorHeapDSV;
 	D3D12_CPU_DESCRIPTOR_HANDLE depthBufferDescriptor = {};
 	ZgOptimalClearValue depthBufferOptimalClearValue = ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED;

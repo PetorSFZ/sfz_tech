@@ -38,8 +38,8 @@ struct D3D12ProfilerState final {
 
 	ComPtr<ID3D12QueryHeap> queryHeap;
 
-	D3D12MemoryHeap* downloadHeap = nullptr;
-	D3D12Buffer* downloadBuffer = nullptr;
+	ZgMemoryHeap* downloadHeap = nullptr;
+	ZgBuffer* downloadBuffer = nullptr;
 };
 
 struct ZgProfiler final {

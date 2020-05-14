@@ -743,20 +743,19 @@ public:
 			*mState->device.Get(),
 			&mState->resourceUniqueIdentifierCounter,
 			mState->residencyManager,
-			reinterpret_cast<D3D12MemoryHeap**>(memoryHeapOut),
+			memoryHeapOut,
 			createInfo);
 	}
 
 	ZgResult memoryHeapRelease(
-		ZgMemoryHeap* memoryHeapIn) noexcept override final
+		ZgMemoryHeap* memoryHeap) noexcept override final
 	{
 		// TODO: Check if any buffers still exist? Lock?
 
 		// Stop tracking
-		D3D12MemoryHeap* heap = static_cast<D3D12MemoryHeap*>(memoryHeapIn);
-		mState->residencyManager.EndTrackingObject(&heap->managedObject);
+		mState->residencyManager.EndTrackingObject(&memoryHeap->managedObject);
 
-		getAllocator()->deleteObject(heap);
+		getAllocator()->deleteObject(memoryHeap);
 		return ZG_SUCCESS;
 	}
 
