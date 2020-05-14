@@ -24,6 +24,7 @@
 #include "common/ErrorReporting.hpp"
 #include "common/Logging.hpp"
 #include "vulkan/VulkanBackend.hpp"
+#include "vulkan/VulkanCommandQueue.hpp"
 
 #include <cmath>
 #include <cstring>
@@ -404,13 +405,13 @@ ZG_API ZgResult zgCommandListMemcpyBufferToBuffer(
 	uint64_t srcBufferOffsetBytes,
 	uint64_t numBytes)
 {
-	ZG_ARG_CHECK(numBytes == 0, "Can't copy zero bytes");
-	return commandList->memcpyBufferToBuffer(
-		dstBuffer,
-		dstBufferOffsetBytes,
-		srcBuffer,
-		srcBufferOffsetBytes,
-		numBytes);
+	(void)commandList;
+	(void)dstBuffer;
+	(void)dstBufferOffsetBytes;
+	(void)srcBuffer;
+	(void)srcBufferOffsetBytes;
+	(void)numBytes;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListMemcpyToTexture(
@@ -420,30 +421,30 @@ ZG_API ZgResult zgCommandListMemcpyToTexture(
 	const ZgImageViewConstCpu* srcImageCpu,
 	ZgBuffer* tempUploadBuffer)
 {
-	ZG_ARG_CHECK(srcImageCpu->data == nullptr, "");
-	ZG_ARG_CHECK(srcImageCpu->width == 0, "");
-	ZG_ARG_CHECK(srcImageCpu->height == 0, "");
-	ZG_ARG_CHECK(srcImageCpu->pitchInBytes < srcImageCpu->width, "");
-	ZG_ARG_CHECK(dstTextureMipLevel >= ZG_MAX_NUM_MIPMAPS, "Invalid target mip level");
-	return commandList->memcpyToTexture(
-		dstTexture,
-		dstTextureMipLevel,
-		*srcImageCpu,
-		tempUploadBuffer);
+	(void)commandList;
+	(void)dstTexture;
+	(void)dstTextureMipLevel;
+	(void)srcImageCpu;
+	(void)tempUploadBuffer;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListEnableQueueTransitionBuffer(
 	ZgCommandList* commandList,
 	ZgBuffer* buffer)
 {
-	return commandList->enableQueueTransitionBuffer(buffer);
+	(void)commandList;
+	(void)buffer;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListEnableQueueTransitionTexture(
 	ZgCommandList* commandList,
 	ZgTexture2D* texture)
 {
-	return commandList->enableQueueTransitionTexture(texture);
+	(void)commandList;
+	(void)texture;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListSetPushConstant(
@@ -452,42 +453,54 @@ ZG_API ZgResult zgCommandListSetPushConstant(
 	const void* data,
 	uint32_t dataSizeInBytes)
 {
-	ZG_ARG_CHECK(data == nullptr, "");
-	return commandList->setPushConstant(shaderRegister, data, dataSizeInBytes);
+	(void)commandList;
+	(void)shaderRegister;
+	(void)data;
+	(void)dataSizeInBytes;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListSetPipelineBindings(
 	ZgCommandList* commandList,
 	const ZgPipelineBindings* bindings)
 {
-	return commandList->setPipelineBindings(*bindings);
+	(void)commandList;
+	(void)bindings;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListSetPipelineCompute(
 	ZgCommandList* commandList,
 	ZgPipelineCompute* pipeline)
 {
-	return commandList->setPipelineCompute(pipeline);
+	(void)commandList;
+	(void)pipeline;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListUnorderedBarrierBuffer(
 	ZgCommandList* commandList,
 	ZgBuffer* buffer)
 {
-	return commandList->unorderedBarrierBuffer(buffer);
+	(void)commandList;
+	(void)buffer;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListUnorderedBarrierTexture(
 	ZgCommandList* commandList,
 	ZgTexture2D* texture)
 {
-	return commandList->unorderedBarrierTexture(texture);
+	(void)commandList;
+	(void)texture;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListUnorderedBarrierAll(
 	ZgCommandList* commandList)
 {
-	return commandList->unorderedBarrierAll();
+	(void)commandList;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListDispatchCompute(
@@ -496,14 +509,20 @@ ZG_API ZgResult zgCommandListDispatchCompute(
 	uint32_t groupCountY,
 	uint32_t groupCountZ)
 {
-	return commandList->dispatchCompute(groupCountX, groupCountY, groupCountZ);
+	(void)commandList;
+	(void)groupCountX;
+	(void)groupCountY;
+	(void)groupCountZ;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListSetPipelineRender(
 	ZgCommandList* commandList,
 	ZgPipelineRender* pipeline)
 {
-	return commandList->setPipelineRender(pipeline);
+	(void)commandList;
+	(void)pipeline;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListSetFramebuffer(
@@ -512,27 +531,36 @@ ZG_API ZgResult zgCommandListSetFramebuffer(
 	const ZgFramebufferRect* optionalViewport,
 	const ZgFramebufferRect* optionalScissor)
 {
-	return commandList->setFramebuffer(framebuffer, optionalViewport, optionalScissor);
+	(void)commandList;
+	(void)framebuffer;
+	(void)optionalViewport;
+	(void)optionalScissor;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListSetFramebufferViewport(
 	ZgCommandList* commandList,
 	const ZgFramebufferRect* viewport)
 {
-	return commandList->setFramebufferViewport(*viewport);
+	(void)commandList;
+	(void)viewport;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListSetFramebufferScissor(
 	ZgCommandList* commandList,
 	const ZgFramebufferRect* scissor)
 {
-	return commandList->setFramebufferScissor(*scissor);
+	(void)commandList;
+	(void)scissor;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListClearFramebufferOptimal(
 	ZgCommandList* commandList)
 {
-	return commandList->clearFramebufferOptimal();
+	(void)commandList;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListClearRenderTargets(
@@ -542,14 +570,21 @@ ZG_API ZgResult zgCommandListClearRenderTargets(
 	float blue,
 	float alpha)
 {
-	return commandList->clearRenderTargets(red, green, blue, alpha);
+	(void)commandList;
+	(void)red;
+	(void)green;
+	(void)blue;
+	(void)alpha;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListClearDepthBuffer(
 	ZgCommandList* commandList,
 	float depth)
 {
-	return commandList->clearDepthBuffer(depth);
+	(void)commandList;
+	(void)depth;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListSetIndexBuffer(
@@ -557,7 +592,10 @@ ZG_API ZgResult zgCommandListSetIndexBuffer(
 	ZgBuffer* indexBuffer,
 	ZgIndexBufferType type)
 {
-	return commandList->setIndexBuffer(indexBuffer, type);
+	(void)commandList;
+	(void)indexBuffer;
+	(void)type;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListSetVertexBuffer(
@@ -565,8 +603,10 @@ ZG_API ZgResult zgCommandListSetVertexBuffer(
 	uint32_t vertexBufferSlot,
 	ZgBuffer* vertexBuffer)
 {
-	return commandList->setVertexBuffer(
-		vertexBufferSlot, vertexBuffer);
+	(void)commandList;
+	(void)vertexBufferSlot;
+	(void)vertexBuffer;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListDrawTriangles(
@@ -574,8 +614,10 @@ ZG_API ZgResult zgCommandListDrawTriangles(
 	uint32_t startVertexIndex,
 	uint32_t numVertices)
 {
-	ZG_ARG_CHECK((numVertices % 3) != 0, "Odd number of vertices");
-	return commandList->drawTriangles(startVertexIndex, numVertices);
+	(void)commandList;
+	(void)startVertexIndex;
+	(void)numVertices;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListDrawTrianglesIndexed(
@@ -583,7 +625,10 @@ ZG_API ZgResult zgCommandListDrawTrianglesIndexed(
 	uint32_t startIndex,
 	uint32_t numTriangles)
 {
-	return commandList->drawTrianglesIndexed(startIndex, numTriangles);
+	(void)commandList;
+	(void)startIndex;
+	(void)numTriangles;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListProfileBegin(
@@ -591,9 +636,10 @@ ZG_API ZgResult zgCommandListProfileBegin(
 	ZgProfiler* profiler,
 	uint64_t* measurementIdOut)
 {
-	ZG_ARG_CHECK(profiler == nullptr, "");
-	ZG_ARG_CHECK(measurementIdOut == nullptr, "");
-	return commandList->profileBegin(profiler, *measurementIdOut);
+	(void)commandList;
+	(void)profiler;
+	(void)measurementIdOut;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandListProfileEnd(
@@ -601,8 +647,10 @@ ZG_API ZgResult zgCommandListProfileEnd(
 	ZgProfiler* profiler,
 	uint64_t measurementId)
 {
-	ZG_ARG_CHECK(profiler == nullptr, "");
-	return commandList->profileEnd(profiler, measurementId);
+	(void)commandList;
+	(void)profiler;
+	(void)measurementId;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 // Command queue
@@ -624,34 +672,43 @@ ZG_API ZgResult zgCommandQueueSignalOnGpu(
 	ZgCommandQueue* commandQueue,
 	ZgFence* fenceToSignal)
 {
-	return commandQueue->signalOnGpu(*fenceToSignal);
+	(void)commandQueue;
+	(void)fenceToSignal;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandQueueWaitOnGpu(
 	ZgCommandQueue* commandQueue,
 	const ZgFence* fence)
 {
-	return commandQueue->waitOnGpu(*fence);
+	(void)commandQueue;
+	(void)fence;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandQueueFlush(
 	ZgCommandQueue* commandQueue)
 {
-	return commandQueue->flush();
+	(void)commandQueue;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandQueueBeginCommandListRecording(
 	ZgCommandQueue* commandQueue,
 	ZgCommandList** commandListOut)
 {
-	return commandQueue->beginCommandListRecording(commandListOut);
+	(void)commandQueue;
+	(void)commandListOut;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgCommandQueueExecuteCommandList(
 	ZgCommandQueue* commandQueue,
 	ZgCommandList* commandList)
 {
-	return commandQueue->executeCommandList(commandList);
+	(void)commandQueue;
+	(void)commandList;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 // Context

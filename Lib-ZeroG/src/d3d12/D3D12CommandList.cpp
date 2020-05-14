@@ -47,11 +47,11 @@ static uint32_t numBytesPerPixelForFormat(ZgTextureFormat format) noexcept
 	return 0;
 }
 
-// D3D12CommandList: State methods
+// ZgCommandList: State methods
 // ------------------------------------------------------------------------------------------------
 
-void D3D12CommandList::create(
-	D3D12CommandQueue* queueIn,
+void ZgCommandList::create(
+	ZgCommandQueue* queueIn,
 	uint32_t maxNumBuffers,
 	ComPtr<ID3D12Device3> device,
 	D3DX12Residency::ResidencyManager* residencyManager,
@@ -68,7 +68,7 @@ void D3D12CommandList::create(
 	residencySet = residencyManager->CreateResidencySet();
 }
 
-void D3D12CommandList::swap(D3D12CommandList& other) noexcept
+void ZgCommandList::swap(ZgCommandList& other) noexcept
 {
 	std::swap(this->queue, other.queue);
 	std::swap(this->commandAllocator, other.commandAllocator);
@@ -92,7 +92,7 @@ void D3D12CommandList::swap(D3D12CommandList& other) noexcept
 	std::swap(this->mFramebuffer, other.mFramebuffer);
 }
 
-void D3D12CommandList::destroy() noexcept
+void ZgCommandList::destroy() noexcept
 {
 	queue = nullptr;
 	commandAllocator = nullptr;
@@ -122,7 +122,7 @@ void D3D12CommandList::destroy() noexcept
 // D3D12CommandList: Virtual methods
 // ------------------------------------------------------------------------------------------------
 
-ZgResult D3D12CommandList::memcpyBufferToBuffer(
+ZgResult ZgCommandList::memcpyBufferToBuffer(
 	ZgBuffer* dstBufferIn,
 	uint64_t dstBufferOffsetBytes,
 	ZgBuffer* srcBufferIn,
@@ -178,7 +178,7 @@ ZgResult D3D12CommandList::memcpyBufferToBuffer(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::memcpyToTexture(
+ZgResult ZgCommandList::memcpyToTexture(
 	ZgTexture2D* dstTextureIn,
 	uint32_t dstTextureMipLevel,
 	const ZgImageViewConstCpu& srcImageCpu,
@@ -274,7 +274,7 @@ ZgResult D3D12CommandList::memcpyToTexture(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::enableQueueTransitionBuffer(ZgBuffer* bufferIn) noexcept
+ZgResult ZgCommandList::enableQueueTransitionBuffer(ZgBuffer* bufferIn) noexcept
 {
 	// Cast to D3D12
 	D3D12Buffer& buffer = *reinterpret_cast<D3D12Buffer*>(bufferIn);
@@ -293,7 +293,7 @@ ZgResult D3D12CommandList::enableQueueTransitionBuffer(ZgBuffer* bufferIn) noexc
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::enableQueueTransitionTexture(ZgTexture2D* textureIn) noexcept
+ZgResult ZgCommandList::enableQueueTransitionTexture(ZgTexture2D* textureIn) noexcept
 {
 	// Cast to D3D12
 	D3D12Texture2D& texture = *reinterpret_cast<D3D12Texture2D*>(textureIn);
@@ -305,7 +305,7 @@ ZgResult D3D12CommandList::enableQueueTransitionTexture(ZgTexture2D* textureIn) 
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::setPushConstant(
+ZgResult ZgCommandList::setPushConstant(
 	uint32_t shaderRegister,
 	const void* dataPtr,
 	uint32_t dataSizeInBytes) noexcept
@@ -357,7 +357,7 @@ ZgResult D3D12CommandList::setPushConstant(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::setPipelineBindings(
+ZgResult ZgCommandList::setPipelineBindings(
 	const ZgPipelineBindings& bindings) noexcept
 {
 	// Require that a pipeline has been set so we can query its parameters
@@ -607,7 +607,7 @@ ZgResult D3D12CommandList::setPipelineBindings(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::setPipelineCompute(
+ZgResult ZgCommandList::setPipelineCompute(
 	ZgPipelineCompute* pipeline) noexcept
 {
 	// If a pipeline is already set for this command list, return error. We currently only allow a
@@ -627,7 +627,7 @@ ZgResult D3D12CommandList::setPipelineCompute(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::unorderedBarrierBuffer(
+ZgResult ZgCommandList::unorderedBarrierBuffer(
 	ZgBuffer* bufferIn) noexcept
 {
 	D3D12Buffer* buffer = static_cast<D3D12Buffer*>(bufferIn);
@@ -639,7 +639,7 @@ ZgResult D3D12CommandList::unorderedBarrierBuffer(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::unorderedBarrierTexture(
+ZgResult ZgCommandList::unorderedBarrierTexture(
 	ZgTexture2D* textureIn) noexcept
 {
 	D3D12Texture2D* texture = static_cast<D3D12Texture2D*>(textureIn);
@@ -651,7 +651,7 @@ ZgResult D3D12CommandList::unorderedBarrierTexture(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::unorderedBarrierAll() noexcept
+ZgResult ZgCommandList::unorderedBarrierAll() noexcept
 {
 	D3D12_RESOURCE_BARRIER barrier = {};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
@@ -661,7 +661,7 @@ ZgResult D3D12CommandList::unorderedBarrierAll() noexcept
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::dispatchCompute(
+ZgResult ZgCommandList::dispatchCompute(
 	uint32_t groupCountX,
 	uint32_t groupCountY,
 	uint32_t groupCountZ) noexcept
@@ -671,7 +671,7 @@ ZgResult D3D12CommandList::dispatchCompute(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::setPipelineRender(
+ZgResult ZgCommandList::setPipelineRender(
 	ZgPipelineRender* pipeline) noexcept
 {
 	// If a pipeline is already set for this command list, return error. We currently only allow a
@@ -691,7 +691,7 @@ ZgResult D3D12CommandList::setPipelineRender(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::setFramebuffer(
+ZgResult ZgCommandList::setFramebuffer(
 	ZgFramebuffer* framebufferIn,
 	const ZgFramebufferRect* optionalViewport,
 	const ZgFramebufferRect* optionalScissor) noexcept
@@ -794,7 +794,7 @@ ZgResult D3D12CommandList::setFramebuffer(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::setFramebufferViewport(
+ZgResult ZgCommandList::setFramebufferViewport(
 	const ZgFramebufferRect& viewportRect) noexcept
 {
 	// Return error if no framebuffer is set
@@ -816,7 +816,7 @@ ZgResult D3D12CommandList::setFramebufferViewport(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::setFramebufferScissor(
+ZgResult ZgCommandList::setFramebufferScissor(
 	const ZgFramebufferRect& scissor) noexcept
 {
 	// Return error if no framebuffer is set
@@ -847,7 +847,7 @@ ZgResult D3D12CommandList::setFramebufferScissor(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::clearFramebufferOptimal() noexcept
+ZgResult ZgCommandList::clearFramebufferOptimal() noexcept
 {
 	// Return error if no framebuffer is set
 	if (!mFramebufferSet) {
@@ -895,7 +895,7 @@ ZgResult D3D12CommandList::clearFramebufferOptimal() noexcept
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::clearRenderTargets(
+ZgResult ZgCommandList::clearRenderTargets(
 	float red,
 	float green,
 	float blue,
@@ -918,7 +918,7 @@ ZgResult D3D12CommandList::clearRenderTargets(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::clearDepthBuffer(
+ZgResult ZgCommandList::clearDepthBuffer(
 	float depth) noexcept
 {
 	// Return error if no framebuffer is set
@@ -932,7 +932,7 @@ ZgResult D3D12CommandList::clearDepthBuffer(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::setIndexBuffer(
+ZgResult ZgCommandList::setIndexBuffer(
 	ZgBuffer* indexBufferIn,
 	ZgIndexBufferType type) noexcept
 {
@@ -969,7 +969,7 @@ ZgResult D3D12CommandList::setIndexBuffer(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::setVertexBuffer(
+ZgResult ZgCommandList::setVertexBuffer(
 	uint32_t vertexBufferSlot,
 	ZgBuffer* vertexBufferIn) noexcept
 {
@@ -1013,7 +1013,7 @@ ZgResult D3D12CommandList::setVertexBuffer(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::drawTriangles(
+ZgResult ZgCommandList::drawTriangles(
 	uint32_t startVertexIndex,
 	uint32_t numVertices) noexcept
 {	
@@ -1023,7 +1023,7 @@ ZgResult D3D12CommandList::drawTriangles(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::drawTrianglesIndexed(
+ZgResult ZgCommandList::drawTrianglesIndexed(
 	uint32_t startIndex,
 	uint32_t numTriangles) noexcept
 {
@@ -1033,7 +1033,7 @@ ZgResult D3D12CommandList::drawTrianglesIndexed(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::profileBegin(
+ZgResult ZgCommandList::profileBegin(
 	ZgProfiler* profilerIn,
 	uint64_t& measurementIdOut) noexcept
 {
@@ -1058,7 +1058,7 @@ ZgResult D3D12CommandList::profileBegin(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::profileEnd(
+ZgResult ZgCommandList::profileEnd(
 	ZgProfiler* profilerIn,
 	uint64_t measurementId) noexcept
 {
@@ -1115,7 +1115,7 @@ ZgResult D3D12CommandList::profileEnd(
 // D3D12CommandList: Helper methods
 // ------------------------------------------------------------------------------------------------
 
-ZgResult D3D12CommandList::reset() noexcept
+ZgResult ZgCommandList::reset() noexcept
 {
 	if (D3D12_FAIL(commandAllocator->Reset())) {
 		return ZG_ERROR_GENERIC;
@@ -1141,7 +1141,7 @@ ZgResult D3D12CommandList::reset() noexcept
 // D3D12CommandList: Private methods
 // ------------------------------------------------------------------------------------------------
 
-ZgResult D3D12CommandList::getPendingBufferStates(
+ZgResult ZgCommandList::getPendingBufferStates(
 	D3D12Buffer& buffer,
 	D3D12_RESOURCE_STATES neededState,
 	PendingBufferState*& pendingStatesOut) noexcept
@@ -1179,7 +1179,7 @@ ZgResult D3D12CommandList::getPendingBufferStates(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::setBufferState(
+ZgResult ZgCommandList::setBufferState(
 	D3D12Buffer& buffer, D3D12_RESOURCE_STATES targetState) noexcept
 {
 	// Get pending states
@@ -1201,7 +1201,7 @@ ZgResult D3D12CommandList::setBufferState(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::getPendingTextureStates(
+ZgResult ZgCommandList::getPendingTextureStates(
 	D3D12Texture2D& texture,
 	uint32_t mipLevel,
 	D3D12_RESOURCE_STATES neededState,
@@ -1244,7 +1244,7 @@ ZgResult D3D12CommandList::getPendingTextureStates(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::setTextureState(
+ZgResult ZgCommandList::setTextureState(
 	D3D12Texture2D& texture,
 	uint32_t mipLevel,
 	D3D12_RESOURCE_STATES targetState) noexcept
@@ -1269,7 +1269,7 @@ ZgResult D3D12CommandList::setTextureState(
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12CommandList::setTextureStateAllMipLevels(
+ZgResult ZgCommandList::setTextureStateAllMipLevels(
 	D3D12Texture2D& texture,
 	D3D12_RESOURCE_STATES targetState) noexcept
 {

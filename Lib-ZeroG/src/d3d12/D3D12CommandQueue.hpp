@@ -33,8 +33,6 @@
 // D3D12Fence
 // ------------------------------------------------------------------------------------------------
 
-class D3D12CommandQueue;
-
 class D3D12Fence final : public ZgFence {
 public:
 	// Constructors & destructors
@@ -51,7 +49,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	uint64_t fenceValue = 0;
-	D3D12CommandQueue* commandQueue = nullptr;
+	ZgCommandQueue* commandQueue = nullptr;
 
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
@@ -61,21 +59,21 @@ public:
 	ZgResult waitOnCpuBlocking() const noexcept override final;
 };
 
-// D3D12CommandQueue
+// ZgCommandQueue
 // ------------------------------------------------------------------------------------------------
 
-class D3D12CommandQueue final : public ZgCommandQueue {
+struct ZgCommandQueue final {
 public:
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	D3D12CommandQueue() noexcept = default;
-	D3D12CommandQueue(const D3D12CommandQueue&) = delete;
-	D3D12CommandQueue& operator= (const D3D12CommandQueue&) = delete;
-	D3D12CommandQueue(D3D12CommandQueue&&) = delete;
-	D3D12CommandQueue& operator= (D3D12CommandQueue&&) = delete;
-	~D3D12CommandQueue() noexcept;
+	ZgCommandQueue() noexcept = default;
+	ZgCommandQueue(const ZgCommandQueue&) = delete;
+	ZgCommandQueue& operator= (const ZgCommandQueue&) = delete;
+	ZgCommandQueue(ZgCommandQueue&&) = delete;
+	ZgCommandQueue& operator= (ZgCommandQueue&&) = delete;
+	~ZgCommandQueue() noexcept;
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
@@ -91,11 +89,11 @@ public:
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgResult signalOnGpu(ZgFence& fenceToSignal) noexcept override final;
-	ZgResult waitOnGpu(const ZgFence& fence) noexcept override final;
-	ZgResult flush() noexcept override final;
-	ZgResult beginCommandListRecording(ZgCommandList** commandListOut) noexcept override final;
-	ZgResult executeCommandList(ZgCommandList* commandList) noexcept override final;
+	ZgResult signalOnGpu(ZgFence& fenceToSignal) noexcept;
+	ZgResult waitOnGpu(const ZgFence& fence) noexcept;
+	ZgResult flush() noexcept;
+	ZgResult beginCommandListRecording(ZgCommandList** commandListOut) noexcept;
+	ZgResult executeCommandList(ZgCommandList* commandList) noexcept;
 
 	// Synchronization methods
 	// --------------------------------------------------------------------------------------------
@@ -118,7 +116,7 @@ private:
 	ZgResult executeCommandListUnmutexed(ZgCommandList* commandList) noexcept;
 	uint64_t signalOnGpuUnmutexed() noexcept;
 
-	ZgResult createCommandList(D3D12CommandList*& commandListOut) noexcept;
+	ZgResult createCommandList(ZgCommandList*& commandListOut) noexcept;
 
 	ZgResult executePreCommandListStateChanges(
 		sfz::Array<PendingBufferState>& pendingBufferStates,
@@ -140,6 +138,6 @@ private:
 	HANDLE mCommandQueueFenceEvent = nullptr;
 
 	uint32_t mMaxNumBuffersPerCommandList = 0;
-	sfz::Array<D3D12CommandList> mCommandListStorage;
-	sfz::RingBuffer<D3D12CommandList*> mCommandListQueue;
+	sfz::Array<ZgCommandList> mCommandListStorage;
+	sfz::RingBuffer<ZgCommandList*> mCommandListQueue;
 };

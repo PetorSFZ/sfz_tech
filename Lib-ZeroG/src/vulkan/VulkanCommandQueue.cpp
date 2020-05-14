@@ -18,46 +18,42 @@
 
 #include "vulkan/VulkanCommandQueue.hpp"
 
-namespace zg {
-
-// VulkanCommandQueue: Constructors & destructors
+// ZgCommandQueue: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-VulkanCommandQueue::~VulkanCommandQueue() noexcept
+ZgCommandQueue::~ZgCommandQueue() noexcept
 {
 
 }
 
-// VulkanCommandQueue: Virtual methods
+// ZgCommandQueue: Virtual methods
 // ------------------------------------------------------------------------------------------------
 
-ZgResult VulkanCommandQueue::signalOnGpu(ZgFence& fenceToSignal) noexcept
+ZgResult ZgCommandQueue::signalOnGpu(ZgFence& fenceToSignal) noexcept
 {
 	(void)fenceToSignal;
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgResult VulkanCommandQueue::waitOnGpu(const ZgFence& fence) noexcept
+ZgResult ZgCommandQueue::waitOnGpu(const ZgFence& fence) noexcept
 {
 	(void)fence;
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgResult VulkanCommandQueue::flush() noexcept
+ZgResult ZgCommandQueue::flush() noexcept
 {
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgResult VulkanCommandQueue::beginCommandListRecording(ZgCommandList** commandListOut) noexcept
+ZgResult ZgCommandQueue::beginCommandListRecording(ZgCommandList** commandListOut) noexcept
 {
 	(void)commandListOut;
 	return ZG_WARNING_UNIMPLEMENTED;
 }
 
-ZgResult VulkanCommandQueue::executeCommandList(ZgCommandList* commandList) noexcept
+ZgResult ZgCommandQueue::executeCommandList(ZgCommandList* commandList) noexcept
 {
 	(void)commandList;
 	return ZG_WARNING_UNIMPLEMENTED;
 }
-
-} // namespace zg

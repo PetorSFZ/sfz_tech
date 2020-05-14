@@ -64,9 +64,9 @@ struct D3D12BackendState final {
 	D3D12DescriptorRingBuffer globalDescriptorRingBuffer;
 
 	// Command queues
-	D3D12CommandQueue commandQueuePresent;
-	//D3D12CommandQueue commandQueueAsyncCompute;
-	D3D12CommandQueue commandQueueCopy;
+	ZgCommandQueue commandQueuePresent;
+	//ZgCommandQueue commandQueueAsyncCompute;
+	ZgCommandQueue commandQueueCopy;
 	
 	// Swapchain and backbuffers
 	uint32_t width = 0;
@@ -498,8 +498,7 @@ public:
 		// Create barrier to transition back buffer into render target state
 		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 			backBuffer.swapchain.renderTarget.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-		reinterpret_cast<D3D12CommandList*>(barrierCommandList)->
-			commandList->ResourceBarrier(1, &barrier);
+		barrierCommandList->commandList->ResourceBarrier(1, &barrier);
 
 		// Insert profiling begin call if a profiler is specified
 		if (profiler != nullptr) {
@@ -535,8 +534,7 @@ public:
 		// Create barrier to transition back buffer into present state
 		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 			backBuffer.swapchain.renderTarget.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-		reinterpret_cast<D3D12CommandList*>(barrierCommandList)->
-			commandList->ResourceBarrier(1, &barrier);
+		barrierCommandList->commandList->ResourceBarrier(1, &barrier);
 
 		// Finish profiling if a profiler is specified
 		if (profiler != nullptr) {

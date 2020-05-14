@@ -21,32 +21,29 @@
 #include "ZeroG.h"
 #include "common/BackendInterface.hpp"
 
-namespace zg {
-
 // VulkanCommandQueue
 // ------------------------------------------------------------------------------------------------
 
-class VulkanCommandQueue final : public ZgCommandQueue {
+struct ZgCommandQueue final {
 public:
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	VulkanCommandQueue() noexcept = default;
-	VulkanCommandQueue(const VulkanCommandQueue&) = delete;
-	VulkanCommandQueue& operator= (const VulkanCommandQueue&) = delete;
-	VulkanCommandQueue(VulkanCommandQueue&&) = delete;
-	VulkanCommandQueue& operator= (VulkanCommandQueue&&) = delete;
-	~VulkanCommandQueue() noexcept;
+	ZgCommandQueue() noexcept = default;
+	ZgCommandQueue(const ZgCommandQueue&) = delete;
+	ZgCommandQueue& operator= (const ZgCommandQueue&) = delete;
+	ZgCommandQueue(ZgCommandQueue&&) = delete;
+	ZgCommandQueue& operator= (ZgCommandQueue&&) = delete;
+	~ZgCommandQueue() noexcept;
 
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgResult signalOnGpu(ZgFence& fenceToSignal) noexcept override final;
-	ZgResult waitOnGpu(const ZgFence& fence) noexcept override final;
-	ZgResult flush() noexcept override final;
-	ZgResult beginCommandListRecording(ZgCommandList** commandListOut) noexcept override final;
-	ZgResult executeCommandList(ZgCommandList* commandList) noexcept override final;
+	ZgResult signalOnGpu(ZgFence& fenceToSignal) noexcept;
+	ZgResult waitOnGpu(const ZgFence& fence) noexcept;
+	ZgResult flush() noexcept;
+	ZgResult beginCommandListRecording(ZgCommandList** commandListOut) noexcept;
+	ZgResult executeCommandList(ZgCommandList* commandList) noexcept;
 };
 
-} // namespace zg

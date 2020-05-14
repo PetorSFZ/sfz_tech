@@ -24,9 +24,9 @@
 #include "common/ErrorReporting.hpp"
 #include "common/Logging.hpp"
 
-#if defined(_WIN32)
 #include "d3d12/D3D12Backend.hpp"
-#endif
+#include "d3d12/D3D12CommandList.hpp"
+#include "d3d12/D3D12CommandQueue.hpp"
 
 #include <cmath>
 #include <cstring>

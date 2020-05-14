@@ -29,8 +29,6 @@
 #include "d3d12/D3D12Memory.hpp"
 #include "d3d12/D3D12Pipelines.hpp"
 
-class D3D12CommandQueue;
-
 // PendingState struct
 // ------------------------------------------------------------------------------------------------
 
@@ -62,31 +60,31 @@ struct PendingTextureState final {
 	D3D12_RESOURCE_STATES currentState = D3D12_RESOURCE_STATE_COMMON;
 };
 
-// D3D12CommandList
+// ZgCommandList
 // ------------------------------------------------------------------------------------------------
 
-class D3D12CommandList final : public ZgCommandList {
+struct ZgCommandList final {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	D3D12CommandList() = default;
-	D3D12CommandList(const D3D12CommandList&) = delete;
-	D3D12CommandList& operator= (const D3D12CommandList&) = delete;
-	D3D12CommandList(D3D12CommandList&& other) noexcept { swap(other); }
-	D3D12CommandList& operator= (D3D12CommandList&& other) noexcept { swap(other); return *this; }
-	~D3D12CommandList() noexcept { this->destroy(); }
+	ZgCommandList() = default;
+	ZgCommandList(const ZgCommandList&) = delete;
+	ZgCommandList& operator= (const ZgCommandList&) = delete;
+	ZgCommandList(ZgCommandList&& other) noexcept { swap(other); }
+	ZgCommandList& operator= (ZgCommandList&& other) noexcept { swap(other); return *this; }
+	~ZgCommandList() noexcept { this->destroy(); }
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
 	void create(
-		D3D12CommandQueue* queue,
+		ZgCommandQueue* queue,
 		uint32_t maxNumBuffers,
 		ComPtr<ID3D12Device3> device,
 		D3DX12Residency::ResidencyManager* residencyManager,
 		D3D12DescriptorRingBuffer* descriptorBuffer) noexcept;
-	void swap(D3D12CommandList& other) noexcept;
+	void swap(ZgCommandList& other) noexcept;
 	void destroy() noexcept;
 
 	// Virtual methods
@@ -97,90 +95,90 @@ public:
 		uint64_t dstBufferOffsetBytes,
 		ZgBuffer* srcBuffer,
 		uint64_t srcBufferOffsetBytes,
-		uint64_t numBytes) noexcept override final;
+		uint64_t numBytes) noexcept;
 
 	ZgResult memcpyToTexture(
 		ZgTexture2D* dstTexture,
 		uint32_t dstTextureMipLevel,
 		const ZgImageViewConstCpu& srcImageCpu,
-		ZgBuffer* tempUploadBuffer) noexcept override final;
+		ZgBuffer* tempUploadBuffer) noexcept;
 
-	ZgResult enableQueueTransitionBuffer(ZgBuffer* buffer) noexcept override final;
+	ZgResult enableQueueTransitionBuffer(ZgBuffer* buffer) noexcept;
 
-	ZgResult enableQueueTransitionTexture(ZgTexture2D* texture) noexcept override final;
+	ZgResult enableQueueTransitionTexture(ZgTexture2D* texture) noexcept;
 
 	ZgResult setPushConstant(
 		uint32_t shaderRegister,
 		const void* data,
-		uint32_t dataSizeInBytes) noexcept override final;
+		uint32_t dataSizeInBytes) noexcept;
 
 	ZgResult setPipelineBindings(
-		const ZgPipelineBindings& bindings) noexcept override final;
+		const ZgPipelineBindings& bindings) noexcept;
 
 	ZgResult setPipelineCompute(
-		ZgPipelineCompute* pipeline) noexcept override final;
+		ZgPipelineCompute* pipeline) noexcept;
 
 	ZgResult unorderedBarrierBuffer(
-		ZgBuffer* buffer) noexcept override final;
+		ZgBuffer* buffer) noexcept;
 
 	ZgResult unorderedBarrierTexture(
-		ZgTexture2D* texture) noexcept override final;
+		ZgTexture2D* texture) noexcept;
 
-	ZgResult unorderedBarrierAll() noexcept override final;
+	ZgResult unorderedBarrierAll() noexcept;
 
 	ZgResult dispatchCompute(
 		uint32_t groupCountX,
 		uint32_t groupCountY,
-		uint32_t groupCountZ) noexcept override final;
+		uint32_t groupCountZ) noexcept;
 
 	ZgResult setPipelineRender(
-		ZgPipelineRender* pipeline) noexcept override final;
+		ZgPipelineRender* pipeline) noexcept;
 
 	ZgResult setFramebuffer(
 		ZgFramebuffer* framebuffer,
 		const ZgFramebufferRect* optionalViewport,
-		const ZgFramebufferRect* optionalScissor) noexcept override final;
+		const ZgFramebufferRect* optionalScissor) noexcept;
 
 	ZgResult setFramebufferViewport(
-		const ZgFramebufferRect& viewport) noexcept override final;
+		const ZgFramebufferRect& viewport) noexcept;
 
 	ZgResult setFramebufferScissor(
-		const ZgFramebufferRect& scissor) noexcept override final;
+		const ZgFramebufferRect& scissor) noexcept;
 
-	ZgResult clearFramebufferOptimal() noexcept override final;
+	ZgResult clearFramebufferOptimal() noexcept;
 
 	ZgResult clearRenderTargets(
 		float red,
 		float green,
 		float blue,
-		float alpha) noexcept override final;
+		float alpha) noexcept;
 
 	ZgResult clearDepthBuffer(
-		float depth) noexcept override final;
+		float depth) noexcept;
 
 	ZgResult setIndexBuffer(
 		ZgBuffer* indexBuffer,
-		ZgIndexBufferType type) noexcept override final;
+		ZgIndexBufferType type) noexcept;
 
 	ZgResult setVertexBuffer(
 		uint32_t vertexBufferSlot,
-		ZgBuffer* vertexBuffer) noexcept override final;
+		ZgBuffer* vertexBuffer) noexcept;
 
 	ZgResult drawTriangles(
 		uint32_t startVertexIndex,
-		uint32_t numVertices) noexcept override final;
+		uint32_t numVertices) noexcept;
 
 	ZgResult drawTrianglesIndexed(
 		uint32_t startIndex,
-		uint32_t numTriangles) noexcept override final;
+		uint32_t numTriangles) noexcept;
 
 	ZgResult profileBegin(
 		ZgProfiler* profilerIn,
-		uint64_t& measurementIdOut) noexcept override final;
+		uint64_t& measurementIdOut) noexcept;
 
 	ZgResult profileEnd(
 		ZgProfiler* profilerIn,
-		uint64_t measurementId) noexcept override final;
+		uint64_t measurementId) noexcept;
 
 	// Helper methods
 	// --------------------------------------------------------------------------------------------
@@ -190,7 +188,7 @@ public:
 	// Members
 	// --------------------------------------------------------------------------------------------
 
-	D3D12CommandQueue* queue = nullptr;
+	ZgCommandQueue* queue = nullptr;
 	D3D12_COMMAND_LIST_TYPE commandListType;
 	ComPtr<ID3D12CommandAllocator> commandAllocator;
 	ComPtr<ID3D12GraphicsCommandList> commandList;

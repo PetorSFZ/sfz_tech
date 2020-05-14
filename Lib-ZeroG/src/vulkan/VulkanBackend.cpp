@@ -56,8 +56,8 @@ struct VulkanBackendState final {
 
 	Mutex<VulkanSwapchain> swapchain;
 
-	VulkanCommandQueue presentQueue;
-	VulkanCommandQueue copyQueue;
+	ZgCommandQueue presentQueue;
+	ZgCommandQueue copyQueue;
 };
 
 // Statics
