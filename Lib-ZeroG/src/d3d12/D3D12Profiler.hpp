@@ -26,7 +26,7 @@
 #include "d3d12/D3D12Common.hpp"
 #include "d3d12/D3D12Memory.hpp"
 
-// D3D12Profiler
+// ZgProfiler
 // ------------------------------------------------------------------------------------------------
 
 struct D3D12ProfilerState final {
@@ -42,24 +42,24 @@ struct D3D12ProfilerState final {
 	D3D12Buffer* downloadBuffer = nullptr;
 };
 
-class D3D12Profiler final : public ZgProfiler {
+struct ZgProfiler final {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	D3D12Profiler() noexcept = default;
-	D3D12Profiler(const D3D12Profiler&) = delete;
-	D3D12Profiler& operator= (const D3D12Profiler&) = delete;
-	D3D12Profiler(D3D12Profiler&&) = delete;
-	D3D12Profiler& operator= (D3D12Profiler&&) = delete;
-	~D3D12Profiler() noexcept;
+	ZgProfiler() noexcept = default;
+	ZgProfiler(const ZgProfiler&) = delete;
+	ZgProfiler& operator= (const ZgProfiler&) = delete;
+	ZgProfiler(ZgProfiler&&) = delete;
+	ZgProfiler& operator= (ZgProfiler&&) = delete;
+	~ZgProfiler() noexcept;
 
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
 
 	ZgResult getMeasurement(
 		uint64_t measurementId,
-		float& measurementMsOut) noexcept override final;
+		float& measurementMsOut) noexcept;
 
 	// Members
 	// --------------------------------------------------------------------------------------------
@@ -67,12 +67,12 @@ public:
 	Mutex<D3D12ProfilerState> state;
 };
 
-// D3D12Profiler functions
+// ZgProfiler functions
 // ------------------------------------------------------------------------------------------------
 
 ZgResult d3d12CreateProfiler(
 	ID3D12Device3& device,
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
 	D3DX12Residency::ResidencyManager& residencyManager,
-	D3D12Profiler** profilerOut,
+	ZgProfiler** profilerOut,
 	const ZgProfilerCreateInfo& createInfo) noexcept;

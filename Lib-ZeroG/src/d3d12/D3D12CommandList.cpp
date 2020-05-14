@@ -692,22 +692,19 @@ ZgResult ZgCommandList::setPipelineRender(
 }
 
 ZgResult ZgCommandList::setFramebuffer(
-	ZgFramebuffer* framebufferIn,
+	ZgFramebuffer* framebuffer,
 	const ZgFramebufferRect* optionalViewport,
 	const ZgFramebufferRect* optionalScissor) noexcept
 {
-	// Cast input to D3D12
-	D3D12Framebuffer& framebuffer = *static_cast<D3D12Framebuffer*>(framebufferIn);
-
 	// Check arguments
-	ZG_ARG_CHECK(!framebuffer.hasDepthBuffer && framebuffer.numRenderTargets == 0,
+	ZG_ARG_CHECK(!framebuffer->hasDepthBuffer && framebuffer->numRenderTargets == 0,
 		"Can't set a framebuffer with no render targets or depth buffer");
 
 	// If a framebuffer is already set for this command list, return error. We currently only allow
 	// a single framebuffer per command list.
 	if (mFramebufferSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 	mFramebufferSet = true;
-	mFramebuffer = &framebuffer;
+	mFramebuffer = framebuffer;
 
 	// If no viewport is requested, set one that covers entire screen
 	D3D12_VIEWPORT viewport = {};
@@ -715,8 +712,8 @@ ZgResult ZgCommandList::setFramebuffer(
 
 		viewport.TopLeftX = 0;
 		viewport.TopLeftY = 0;
-		viewport.Width = float(framebuffer.width);
-		viewport.Height = float(framebuffer.height);
+		viewport.Width = float(framebuffer->width);
+		viewport.Height = float(framebuffer->height);
 		viewport.MinDepth = 0.0f;
 		viewport.MaxDepth = 1.0f;
 	}
@@ -757,11 +754,11 @@ ZgResult ZgCommandList::setFramebuffer(
 	commandList->RSSetScissorRects(1, &scissorRect);
 
 	// If not swapchain framebuffer, set resource states and insert into residency sets
-	if (!framebuffer.swapchainFramebuffer) {
+	if (!framebuffer->swapchainFramebuffer) {
 
 		// Render targets
-		for (uint32_t i = 0; i < framebuffer.numRenderTargets; i++) {
-			D3D12Texture2D* renderTarget = framebuffer.renderTargets[i];
+		for (uint32_t i = 0; i < framebuffer->numRenderTargets; i++) {
+			D3D12Texture2D* renderTarget = framebuffer->renderTargets[i];
 
 			// Set resource state
 			sfz_assert(renderTarget->numMipmaps == 1);
@@ -772,8 +769,8 @@ ZgResult ZgCommandList::setFramebuffer(
 		}
 
 		// Depth buffer
-		if (framebuffer.hasDepthBuffer) {
-			D3D12Texture2D* depthBuffer = framebuffer.depthBuffer;
+		if (framebuffer->hasDepthBuffer) {
+			D3D12Texture2D* depthBuffer = framebuffer->depthBuffer;
 
 			// Set resource state
 			sfz_assert(depthBuffer->numMipmaps == 1);
@@ -786,10 +783,10 @@ ZgResult ZgCommandList::setFramebuffer(
 
 	// Set framebuffer
 	commandList->OMSetRenderTargets(
-		framebuffer.numRenderTargets,
-		framebuffer.numRenderTargets > 0 ? framebuffer.renderTargetDescriptors : nullptr,
+		framebuffer->numRenderTargets,
+		framebuffer->numRenderTargets > 0 ? framebuffer->renderTargetDescriptors : nullptr,
 		FALSE,
-		framebuffer.hasDepthBuffer ? &framebuffer.depthBufferDescriptor : nullptr);
+		framebuffer->hasDepthBuffer ? &framebuffer->depthBufferDescriptor : nullptr);
 
 	return ZG_SUCCESS;
 }
@@ -1034,7 +1031,7 @@ ZgResult ZgCommandList::drawTrianglesIndexed(
 }
 
 ZgResult ZgCommandList::profileBegin(
-	ZgProfiler* profilerIn,
+	ZgProfiler* profiler,
 	uint64_t& measurementIdOut) noexcept
 {
 	// TODO: This is necessary because we don't get timestamp frequency for other queue types.
@@ -1042,7 +1039,6 @@ ZgResult ZgCommandList::profileBegin(
 	sfz_assert(commandListType == D3D12_COMMAND_LIST_TYPE_DIRECT);
 
 	// Access profilers state through its mutex
-	D3D12Profiler* profiler = static_cast<D3D12Profiler*>(profilerIn);
 	MutexAccessor<D3D12ProfilerState> profilerStateAccessor = profiler->state.access();
 	D3D12ProfilerState& profilerState = profilerStateAccessor.data();
 
@@ -1059,7 +1055,7 @@ ZgResult ZgCommandList::profileBegin(
 }
 
 ZgResult ZgCommandList::profileEnd(
-	ZgProfiler* profilerIn,
+	ZgProfiler* profiler,
 	uint64_t measurementId) noexcept
 {
 	// TODO: This is necessary because we don't get timestamp frequency for other queue types.
@@ -1075,7 +1071,6 @@ ZgResult ZgCommandList::profileEnd(
 	}
 
 	// Access profilers state through its mutex
-	D3D12Profiler* profiler = static_cast<D3D12Profiler*>(profilerIn);
 	MutexAccessor<D3D12ProfilerState> profilerStateAccessor = profiler->state.access();
 	D3D12ProfilerState& state = profilerStateAccessor.data();
 

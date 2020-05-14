@@ -242,5 +242,5 @@ private:
 	ZgPipelineRender* mBoundPipelineRender = nullptr;
 	ZgPipelineCompute* mBoundPipelineCompute = nullptr;
 	bool mFramebufferSet = false; // Only allow a single framebuffer to be set.
-	D3D12Framebuffer* mFramebuffer = nullptr;
+	ZgFramebuffer* mFramebuffer = nullptr;
 };

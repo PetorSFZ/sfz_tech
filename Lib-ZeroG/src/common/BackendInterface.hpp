@@ -179,34 +179,3 @@ struct ZgTexture2D {
 	virtual ZgResult setDebugName(
 		const char* name) noexcept = 0;
 };
-
-// Framebuffer
-// ------------------------------------------------------------------------------------------------
-
-struct ZgFramebuffer {
-	virtual ~ZgFramebuffer() noexcept {}
-
-	virtual ZgResult getResolution(uint32_t& widthOut, uint32_t& heightOut) const noexcept = 0;
-};
-
-// Fence
-// ------------------------------------------------------------------------------------------------
-
-struct ZgFence {
-	virtual ~ZgFence() noexcept {}
-
-	virtual ZgResult reset() noexcept = 0;
-	virtual ZgResult checkIfSignaled(bool& fenceSignaledOut) const noexcept = 0;
-	virtual ZgResult waitOnCpuBlocking() const noexcept = 0;
-};
-
-// Profiler
-// ------------------------------------------------------------------------------------------------
-
-struct ZgProfiler {
-	virtual ~ZgProfiler() noexcept {}
-
-	virtual ZgResult getMeasurement(
-		uint64_t measurementId,
-		float& measurementMsOut) noexcept = 0;
-};

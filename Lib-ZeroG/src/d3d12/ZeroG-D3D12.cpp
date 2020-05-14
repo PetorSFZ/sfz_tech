@@ -27,6 +27,7 @@
 #include "d3d12/D3D12Backend.hpp"
 #include "d3d12/D3D12CommandList.hpp"
 #include "d3d12/D3D12CommandQueue.hpp"
+#include "d3d12/D3D12Profiler.hpp"
 
 #include <cmath>
 #include <cstring>

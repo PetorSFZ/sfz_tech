@@ -306,19 +306,15 @@ ZG_API ZgResult zgFramebufferCreate(
 	ZgFramebuffer** framebufferOut,
 	const ZgFramebufferCreateInfo* createInfo)
 {
-	ZG_ARG_CHECK(framebufferOut == nullptr, "");
-	ZG_ARG_CHECK(createInfo == nullptr, "");
-	ZG_ARG_CHECK(createInfo->numRenderTargets > ZG_MAX_NUM_RENDER_TARGETS, "Too many render targets");
-	return getBackend()->framebufferCreate(framebufferOut, *createInfo);
+	(void)framebufferOut;
+	(void)createInfo;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API void zgFramebufferRelease(
 	ZgFramebuffer* framebuffer)
 {
-	if (framebuffer == nullptr) return;
-	// Done via backend so it can have a chance to check if framebuffer is built-in (i.e. swapchain
-	// framebuffer) before it deallocates it.
-	return getBackend()->framebufferRelease(framebuffer);
+	(void)framebuffer;
 }
 
 ZG_API ZgResult zgFramebufferGetResolution(
@@ -326,7 +322,10 @@ ZG_API ZgResult zgFramebufferGetResolution(
 	uint32_t* widthOut,
 	uint32_t* heightOut)
 {
-	return framebuffer->getResolution(*widthOut, *heightOut);
+	(void)framebuffer;
+	(void)widthOut;
+	(void)heightOut;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 // Fence
@@ -335,36 +334,37 @@ ZG_API ZgResult zgFramebufferGetResolution(
 ZG_API ZgResult zgFenceCreate(
 	ZgFence** fenceOut)
 {
-	return getBackend()->fenceCreate(fenceOut);
+	(void)fenceOut;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API void zgFenceRelease(
 	ZgFence* fence)
 {
-	if (fence == nullptr) return;
-	getAllocator()->deleteObject(fence);
+	(void)fence;
 }
 
 ZG_API ZgResult zgFenceReset(
 	ZgFence* fence)
 {
-	return fence->reset();
+	(void)fence;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgFenceCheckIfSignaled(
 	const ZgFence* fence,
 	ZgBool* fenceSignaledOut)
 {
-	bool fenceSignaled = false;
-	ZgResult res = fence->checkIfSignaled(fenceSignaled);
-	*fenceSignaledOut = fenceSignaled ? ZG_TRUE : ZG_FALSE;
-	return res;
+	(void)fence;
+	(void)fenceSignaledOut;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API ZgResult zgFenceWaitOnCpuBlocking(
 	const ZgFence* fence)
 {
-	return fence->waitOnCpuBlocking();
+	(void)fence;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 // Profiler
@@ -374,14 +374,15 @@ ZG_API ZgResult zgProfilerCreate(
 	ZgProfiler** profilerOut,
 	const ZgProfilerCreateInfo* createInfo)
 {
-	return getBackend()->profilerCreate(profilerOut, *createInfo);
+	(void)profilerOut;
+	(void)createInfo;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 ZG_API void zgProfilerRelease(
 	ZgProfiler* profiler)
 {
-	if (profiler == nullptr) return;
-	getBackend()->profilerRelease(profiler);
+	(void)profiler;
 }
 
 ZG_API ZgResult zgProfilerGetMeasurement(
@@ -389,9 +390,10 @@ ZG_API ZgResult zgProfilerGetMeasurement(
 	uint64_t measurementId,
 	float* measurementMsOut)
 {
-	ZG_ARG_CHECK(profiler == nullptr, "");
-	ZG_ARG_CHECK(measurementMsOut == nullptr, "");
-	return profiler->getMeasurement(measurementId, *measurementMsOut);
+	(void)profiler;
+	(void)measurementId;
+	(void)measurementMsOut;
+	return ZG_WARNING_UNIMPLEMENTED;
 }
 
 // Command list

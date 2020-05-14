@@ -33,17 +33,17 @@
 // D3D12Fence
 // ------------------------------------------------------------------------------------------------
 
-class D3D12Fence final : public ZgFence {
+struct ZgFence final {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	D3D12Fence() noexcept = default;
-	D3D12Fence(const D3D12Fence&) = delete;
-	D3D12Fence& operator= (const D3D12Fence&) = delete;
-	D3D12Fence(D3D12Fence&&) = delete;
-	D3D12Fence& operator= (D3D12Fence&&) = delete;
-	~D3D12Fence() noexcept;
+	ZgFence() noexcept = default;
+	ZgFence(const ZgFence&) = delete;
+	ZgFence& operator= (const ZgFence&) = delete;
+	ZgFence(ZgFence&&) = delete;
+	ZgFence& operator= (ZgFence&&) = delete;
+	~ZgFence() noexcept;
 
 	// Members
 	// --------------------------------------------------------------------------------------------
@@ -54,9 +54,9 @@ public:
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgResult reset() noexcept override final;
-	ZgResult checkIfSignaled(bool& fenceSignaledOut) const noexcept override final;
-	ZgResult waitOnCpuBlocking() const noexcept override final;
+	ZgResult reset() noexcept;
+	ZgResult checkIfSignaled(bool& fenceSignaledOut) const noexcept;
+	ZgResult waitOnCpuBlocking() const noexcept;
 };
 
 // ZgCommandQueue

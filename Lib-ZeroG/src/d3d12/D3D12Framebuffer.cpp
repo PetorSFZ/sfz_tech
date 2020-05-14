@@ -21,30 +21,30 @@
 #include "common/ErrorReporting.hpp"
 #include "d3d12/D3D12Memory.hpp"
 
-// D3D12Framebuffer: Constructors & destructors
+// ZgFramebuffer: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-D3D12Framebuffer::~D3D12Framebuffer() noexcept
+ZgFramebuffer::~ZgFramebuffer() noexcept
 {
 
 }
 
-// D3D12Framebuffer: Virtual methods
+// ZgFramebuffer: Virtual methods
 // ------------------------------------------------------------------------------------------------
 
-ZgResult D3D12Framebuffer::getResolution(uint32_t& widthOut, uint32_t& heightOut) const noexcept
+ZgResult ZgFramebuffer::getResolution(uint32_t& widthOut, uint32_t& heightOut) const noexcept
 {
 	widthOut = this->width;
 	heightOut = this->height;
 	return ZG_SUCCESS;
 }
 
-// D3D12 Framebuffer functions
+// ZgFramebuffer functions
 // ------------------------------------------------------------------------------------------------
 
 ZgResult createFramebuffer(
 	ID3D12Device3& device,
-	D3D12Framebuffer** framebufferOut,
+	ZgFramebuffer** framebufferOut,
 	const ZgFramebufferCreateInfo& createInfo) noexcept
 {
 	// Get dimensions from first available texture
@@ -165,8 +165,8 @@ ZgResult createFramebuffer(
 	}
 
 	// Allocate framebuffer and copy members
-	D3D12Framebuffer* framebuffer =
-		getAllocator()->newObject<D3D12Framebuffer>(sfz_dbg("D3D12Framebuffer"));
+	ZgFramebuffer* framebuffer =
+		getAllocator()->newObject<ZgFramebuffer>(sfz_dbg("ZgFramebuffer"));
 
 	framebuffer->width = width;
 	framebuffer->height = height;

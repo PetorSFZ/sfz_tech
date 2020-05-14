@@ -20,32 +20,32 @@
 
 #include "d3d12/D3D12Memory.hpp"
 
-// D3D12Fence: Constructors & destructors
+// ZgFence: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-D3D12Fence::~D3D12Fence() noexcept
+ZgFence::~ZgFence() noexcept
 {
 
 }
 
-// D3D12Fence: Virtual methods
+// ZgFence: Virtual methods
 // ------------------------------------------------------------------------------------------------
 
-ZgResult D3D12Fence::reset() noexcept
+ZgResult ZgFence::reset() noexcept
 {
 	this->fenceValue = 0;
 	this->commandQueue = nullptr;
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12Fence::checkIfSignaled(bool& fenceSignaledOut) const noexcept
+ZgResult ZgFence::checkIfSignaled(bool& fenceSignaledOut) const noexcept
 {
 	if (this->commandQueue == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
 	fenceSignaledOut = this->commandQueue->isFenceValueDone(this->fenceValue);
 	return ZG_SUCCESS;
 }
 
-ZgResult D3D12Fence::waitOnCpuBlocking() const noexcept
+ZgResult ZgFence::waitOnCpuBlocking() const noexcept
 {
 	if (this->commandQueue == nullptr) return ZG_SUCCESS;
 	this->commandQueue->waitOnCpuInternal(this->fenceValue);
@@ -117,17 +117,15 @@ ZgResult ZgCommandQueue::create(
 // ZgCommandQueue: Virtual methods
 // ------------------------------------------------------------------------------------------------
 
-ZgResult ZgCommandQueue::signalOnGpu(ZgFence& fenceToSignalIn) noexcept
+ZgResult ZgCommandQueue::signalOnGpu(ZgFence& fenceToSignal) noexcept
 {
-	D3D12Fence& fenceToSignal = *static_cast<D3D12Fence*>(&fenceToSignalIn);
 	fenceToSignal.commandQueue = this;
 	fenceToSignal.fenceValue = signalOnGpuUnmutexed();
 	return ZG_SUCCESS;
 }
 
-ZgResult ZgCommandQueue::waitOnGpu(const ZgFence& fenceIn) noexcept
+ZgResult ZgCommandQueue::waitOnGpu(const ZgFence& fence) noexcept
 {
-	const D3D12Fence& fence = *static_cast<const D3D12Fence*>(&fenceIn);
 	if (fence.commandQueue == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
 	CHECK_D3D12 this->mCommandQueue->Wait(
 		fence.commandQueue->mCommandQueueFence.Get(), fence.fenceValue);

@@ -31,17 +31,17 @@ struct SwapchainBacking {
 	ComPtr<ID3D12Resource> depthBuffer;
 };
 
-class D3D12Framebuffer final : public ZgFramebuffer {
+struct ZgFramebuffer final {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	D3D12Framebuffer() noexcept = default;
-	D3D12Framebuffer(const D3D12Framebuffer&) = delete;
-	D3D12Framebuffer& operator= (const D3D12Framebuffer&) = delete;
-	D3D12Framebuffer(D3D12Framebuffer&&) = delete;
-	D3D12Framebuffer& operator= (D3D12Framebuffer&&) = delete;
-	~D3D12Framebuffer() noexcept;
+	ZgFramebuffer() noexcept = default;
+	ZgFramebuffer(const ZgFramebuffer&) = delete;
+	ZgFramebuffer& operator= (const ZgFramebuffer&) = delete;
+	ZgFramebuffer(ZgFramebuffer&&) = delete;
+	ZgFramebuffer& operator= (ZgFramebuffer&&) = delete;
+	~ZgFramebuffer() noexcept;
 
 	// Members
 	// --------------------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ public:
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgResult getResolution(uint32_t& widthOut, uint32_t& heightOut) const noexcept override final;
+	ZgResult getResolution(uint32_t& widthOut, uint32_t& heightOut) const noexcept;
 };
 
 // D3D12 Framebuffer functions
@@ -79,5 +79,5 @@ public:
 
 ZgResult createFramebuffer(
 	ID3D12Device3& device,
-	D3D12Framebuffer** framebufferOut,
+	ZgFramebuffer** framebufferOut,
 	const ZgFramebufferCreateInfo& createInfo) noexcept;

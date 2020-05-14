@@ -20,10 +20,10 @@
 
 #include "common/Context.hpp"
 
-// D3D12Profiler: Constructors & destructors
+// ZgProfiler: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-D3D12Profiler::~D3D12Profiler() noexcept
+ZgProfiler::~ZgProfiler() noexcept
 {
 	MutexAccessor<D3D12ProfilerState> accessor = state.access();
 	D3D12ProfilerState& profilerState = accessor.data();
@@ -42,10 +42,10 @@ D3D12Profiler::~D3D12Profiler() noexcept
 	}
 }
 
-// D3D12Profiler: Virtual methods
+// ZgProfiler: Virtual methods
 // ------------------------------------------------------------------------------------------------
 
-ZgResult D3D12Profiler::getMeasurement(
+ZgResult ZgProfiler::getMeasurement(
 	uint64_t measurementId,
 	float& measurementMsOut) noexcept
 {
@@ -79,14 +79,14 @@ ZgResult D3D12Profiler::getMeasurement(
 	return ZG_SUCCESS;
 }
 
-// D3D12Profiler functions
+// ZgProfiler functions
 // ------------------------------------------------------------------------------------------------
 
 ZgResult d3d12CreateProfiler(
 	ID3D12Device3& device,
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
 	D3DX12Residency::ResidencyManager& residencyManager,
-	D3D12Profiler** profilerOut,
+	ZgProfiler** profilerOut,
 	const ZgProfilerCreateInfo& createInfo) noexcept
 {
 	constexpr uint64_t TIMESTAMPS_PER_MEASUREMENT = 2;
@@ -129,7 +129,7 @@ ZgResult d3d12CreateProfiler(
 	}
 	
 	// Allocate profiler
-	D3D12Profiler* profiler = getAllocator()->newObject<D3D12Profiler>(sfz_dbg("D3D12Profiler"));
+	ZgProfiler* profiler = getAllocator()->newObject<ZgProfiler>(sfz_dbg("ZgProfiler"));
 
 	// Set members
 	{
@@ -138,7 +138,7 @@ ZgResult d3d12CreateProfiler(
 		state.maxNumMeasurements = createInfo.maxNumMeasurements;
 		
 		state.ticksPerSecond.init(
-			createInfo.maxNumMeasurements, getAllocator(), sfz_dbg("D3D12Profiler::ticksPerSecond"));
+			createInfo.maxNumMeasurements, getAllocator(), sfz_dbg("ZgProfiler::ticksPerSecond"));
 		state.ticksPerSecond.add(0ull, createInfo.maxNumMeasurements);
 
 		state.queryHeap = queryHeap;

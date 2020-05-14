@@ -72,7 +72,7 @@ struct D3D12BackendState final {
 	uint32_t width = 0;
 	uint32_t height = 0;
 	ComPtr<IDXGISwapChain4> swapchain;
-	D3D12Framebuffer swapchainFramebuffers[NUM_SWAP_CHAIN_BUFFERS];
+	ZgFramebuffer swapchainFramebuffers[NUM_SWAP_CHAIN_BUFFERS];
 	uint64_t swapchainFenceValues[NUM_SWAP_CHAIN_BUFFERS] = {};
 	int currentBackBufferIdx = 0;
 
@@ -313,7 +313,7 @@ public:
 		// TODO: Unify this with the more general case somehow?
 		for (uint32_t i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
 
-			D3D12Framebuffer& framebuffer = mState->swapchainFramebuffers[i];
+			ZgFramebuffer& framebuffer = mState->swapchainFramebuffers[i];
 			
 			// Mark framebuffer as swapchain framebuffer
 			// TODO: Hacky hack, consider attempting to unify with general use case
@@ -487,7 +487,7 @@ public:
 		std::lock_guard<std::mutex> lock(mContextMutex);
 
 		// Retrieve current back buffer to be rendered to
-		D3D12Framebuffer& backBuffer = mState->swapchainFramebuffers[mState->currentBackBufferIdx];
+		ZgFramebuffer& backBuffer = mState->swapchainFramebuffers[mState->currentBackBufferIdx];
 
 		// Create a small command list to insert the transition barrier for the back buffer
 		ZgCommandList* barrierCommandList = nullptr;
@@ -523,7 +523,7 @@ public:
 		std::lock_guard<std::mutex> lock(mContextMutex);
 
 		// Retrieve current back buffer that has been rendered to
-		D3D12Framebuffer& backBuffer = mState->swapchainFramebuffers[mState->currentBackBufferIdx];
+		ZgFramebuffer& backBuffer = mState->swapchainFramebuffers[mState->currentBackBufferIdx];
 
 		// Create a small command list to insert the transition barrier for the back buffer
 		ZgCommandList* barrierCommandList = nullptr;
@@ -576,7 +576,7 @@ public:
 
 	ZgResult fenceCreate(ZgFence** fenceOut) noexcept override final
 	{
-		*fenceOut = getAllocator()->newObject<D3D12Fence>(sfz_dbg("D3D12Fence"));
+		*fenceOut = getAllocator()->newObject<ZgFence>(sfz_dbg("ZgFenceZgFence"));
 		return ZG_SUCCESS;
 	}
 
@@ -788,14 +788,14 @@ public:
 	{
 		return createFramebuffer(
 			*mState->device.Get(),
-			reinterpret_cast<D3D12Framebuffer**>(framebufferOut),
+			framebufferOut,
 			createInfo);
 	}
 
 	virtual void framebufferRelease(
 		ZgFramebuffer* framebuffer) noexcept override final
 	{
-		if (reinterpret_cast<D3D12Framebuffer*>(framebuffer)->swapchainFramebuffer) return;
+		if (framebuffer->swapchainFramebuffer) return;
 		getAllocator()->deleteObject(framebuffer);
 	}
 
@@ -821,16 +821,12 @@ public:
 		ZgProfiler** profilerOut,
 		const ZgProfilerCreateInfo& createInfo) noexcept override final
 	{
-		D3D12Profiler* profiler = nullptr;
-		ZgResult res = d3d12CreateProfiler(
+		return d3d12CreateProfiler(
 			*mState->device.Get(),
 			&mState->resourceUniqueIdentifierCounter,
 			mState->residencyManager,
-			&profiler,
+			profilerOut,
 			createInfo);
-		if (res != ZG_SUCCESS) return res;
-		*profilerOut = profiler;
-		return ZG_SUCCESS;
 	}
 
 	void profilerRelease(
