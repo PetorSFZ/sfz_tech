@@ -21,7 +21,6 @@
 #include <mutex>
 
 #include "ZeroG.h"
-#include "common/BackendInterface.hpp"
 #include "d3d12/D3D12Common.hpp"
 
 // D3D12PipelineBindingsSignature

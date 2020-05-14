@@ -19,15 +19,469 @@
 #define ZG_DLL_EXPORT
 #include "ZeroG.h"
 
-#include "common/BackendInterface.hpp"
-#include "common/Context.hpp"
-#include "common/ErrorReporting.hpp"
-#include "common/Logging.hpp"
-#include "vulkan/VulkanBackend.hpp"
-#include "vulkan/VulkanCommandQueue.hpp"
+#include <vulkan/vulkan.h>
 
 #include <cmath>
 #include <cstring>
+
+#include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
+
+#include "common/Context.hpp"
+#include "common/ErrorReporting.hpp"
+#include "common/Logging.hpp"
+#include "common/Mutex.hpp"
+#include "common/Strings.hpp"
+
+#include "vulkan/VulkanCommandQueue.hpp"
+#include "vulkan/VulkanCommon.hpp"
+#include "vulkan/VulkanDebug.hpp"
+
+// Vulkan Backend State
+// ------------------------------------------------------------------------------------------------
+
+struct VulkanContext final {
+	VkInstance instance = nullptr; // Externally synchronized
+	VkSurfaceKHR surface = nullptr;
+	VkPhysicalDevice physicalDevice = nullptr;
+	VkPhysicalDeviceProperties physicalDeviceProperties = {};
+	VkDevice device = nullptr;
+};
+
+struct VulkanSwapchain final {
+	uint32_t width = 0;
+	uint32_t height = 0;
+};
+
+struct VulkanBackendState final {
+
+	// Collection of some externally synchronized vulkan state that could roughly be considered
+	// a "context" when grouped together
+	Mutex<VulkanContext> context;
+
+	Mutex<VulkanSwapchain> swapchain;
+
+	ZgCommandQueue presentQueue;
+	ZgCommandQueue copyQueue;
+};
+
+// Vulkan Backend implementation
+// ------------------------------------------------------------------------------------------------
+
+struct ZgBackend final {
+public:
+	// Constructors & destructors
+	// --------------------------------------------------------------------------------------------
+
+	ZgBackend() = default;
+	ZgBackend(const ZgBackend&) = delete;
+	ZgBackend& operator= (const ZgBackend&) = delete;
+	ZgBackend(ZgBackend&&) = delete;
+	ZgBackend& operator= (ZgBackend&&) = delete;
+
+	~ZgBackend() noexcept
+	{
+		// Access context
+		MutexAccessor<VulkanContext> context = mState->context.access();
+
+		// Destroy VkInstance
+		if (context.data().instance != nullptr) {
+			// TODO: Allocation callbacks
+			if (mDebugMode) {
+				auto vkDestroyDebugReportCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)
+					vkGetInstanceProcAddr(context.data().instance, "vkDestroyDebugReportCallbackEXT");
+				vkDestroyDebugReportCallbackEXT(context.data().instance, zg::vulkanDebugCallback, nullptr);
+			}
+			vkDestroyInstance(context.data().instance, nullptr);
+		}
+
+		// Delete remaining state
+		getAllocator()->deleteObject(mState);
+	}
+
+	// State methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgResult init(const ZgContextInitSettings& settings) noexcept
+	{
+		// Initialize members and create state struct
+		mDebugMode = settings.vulkan.debugMode;
+		mState = getAllocator()->newObject<VulkanBackendState>(sfz_dbg("VulkanBackendState"));
+
+		// Log available instance layers and extensions
+		zg::vulkanLogAvailableInstanceLayers();
+		zg::vulkanLogAvailableInstanceExtensions();
+
+		// Application info struct
+		VkApplicationInfo appInfo = {};
+		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+		appInfo.apiVersion = VK_API_VERSION_1_0;
+
+		// Layers and extensions arrays
+		sfz::Array<const char*> layers;
+		layers.init(64, getAllocator(), sfz_dbg("VulkanInit: layers"));
+		sfz::Array<const char*> extensions;
+		extensions.init(64, getAllocator(), sfz_dbg("VulkanInit: extensions"));
+
+		// Debug mode layers and extensions
+		if (mDebugMode) {
+			layers.add("VK_LAYER_LUNARG_standard_validation");
+			layers.add("VK_LAYER_LUNARG_core_validation");
+			layers.add("VK_LAYER_LUNARG_parameter_validation");
+			layers.add("VK_LAYER_LUNARG_object_tracker");
+			extensions.add("VK_EXT_debug_report");
+		}
+
+		// TODO: Add other required layers and extensions
+
+		// pNext can optionally point to a VkDebugReportCallbackCreateInfoEXT in order to create a
+		// debug report callback that is used only during vkCreateInstance() and vkDestroyInstance(),
+		// which can't be covered by a normal persistent debug report callback.
+		void* instanceInfoPNext = nullptr;
+		/*VkDebugReportCallbackCreateInfoEXT createDestroyCallbackInfo = {};
+		if (mDebugMode) {
+			createDestroyCallbackInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+			createDestroyCallbackInfo.flags = VK_DEBUG_REPORT_INFORMATION_BIT_EXT
+				| VK_DEBUG_REPORT_WARNING_BIT_EXT
+				| VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT
+				| VK_DEBUG_REPORT_ERROR_BIT_EXT
+				| VK_DEBUG_REPORT_DEBUG_BIT_EXT;
+			createDestroyCallbackInfo.pfnCallback = &vulkanDebugReportCallback;
+			instanceInfoPNext = &createDestroyCallbackInfo;
+		}*/
+
+		// Instance create info struct
+		VkInstanceCreateInfo instanceInfo = {};
+		instanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+		instanceInfo.pNext = instanceInfoPNext;
+		instanceInfo.flags = 0;
+		instanceInfo.pApplicationInfo = &appInfo;
+		instanceInfo.enabledLayerCount = layers.size();
+		instanceInfo.ppEnabledLayerNames = layers.size() != 0 ? layers.data() : nullptr;
+		instanceInfo.enabledExtensionCount = extensions.size();
+		instanceInfo.ppEnabledExtensionNames = extensions.size() != 0 ? extensions.data() : nullptr;
+
+		// Create Vulkan instance
+		// TODO: Set allocators (if not on macOS/iOS)
+		MutexAccessor<VulkanContext> context = mState->context.access();
+		bool createInstanceSuccess = CHECK_VK vkCreateInstance(
+			&instanceInfo,
+			nullptr,
+			&context.data().instance);
+		if (!createInstanceSuccess) {
+			ZG_ERROR("Failed to create VkInstance");
+			return ZG_ERROR_GENERIC;
+		}
+		ZG_INFO("VkInstance created");
+
+		// Register debug report callback
+		if (mDebugMode) {
+			// Setup callback creation information
+			VkDebugReportCallbackCreateInfoEXT callbackCreateInfo = {};
+			callbackCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+			callbackCreateInfo.flags = VK_DEBUG_REPORT_INFORMATION_BIT_EXT
+				| VK_DEBUG_REPORT_WARNING_BIT_EXT
+				| VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT
+				| VK_DEBUG_REPORT_ERROR_BIT_EXT
+				| VK_DEBUG_REPORT_DEBUG_BIT_EXT;
+			callbackCreateInfo.pfnCallback = &zg::vulkanDebugReportCallback;
+
+			// Register the callback
+			// TODO: Set allocators
+			auto vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)
+				vkGetInstanceProcAddr(context.data().instance, "vkCreateDebugReportCallbackEXT");
+			CHECK_VK vkCreateDebugReportCallbackEXT(
+				context.data().instance, &callbackCreateInfo, nullptr, &zg::vulkanDebugCallback);
+		}
+
+		// TODO: At this point we should create a VkSurface using platform specific code
+
+		// Log available physical devices
+		zg::vulkanLogAvailablePhysicalDevices(context.data().instance, context.data().surface);
+
+		// TODO: Heuristic to choose physical device
+		//       Should probably take DISCRETE_GPU with largest amount of device local memory.
+		const uint32_t physicalDeviceIdx = 0;
+		{
+			constexpr uint32_t MAX_NUM_PHYSICAL_DEVICES = 32;
+
+			// Check how many physical devices there is
+			uint32_t numPhysicalDevices = 0;
+			CHECK_VK vkEnumeratePhysicalDevices(context.data().instance, &numPhysicalDevices, nullptr);
+			sfz_assert(numPhysicalDevices <= MAX_NUM_PHYSICAL_DEVICES);
+			if (numPhysicalDevices > MAX_NUM_PHYSICAL_DEVICES) numPhysicalDevices = MAX_NUM_PHYSICAL_DEVICES;
+
+			// Retrieve physical devices
+			VkPhysicalDevice physicalDevices[MAX_NUM_PHYSICAL_DEVICES] = {};
+			CHECK_VK vkEnumeratePhysicalDevices(context.data().instance, &numPhysicalDevices, physicalDevices);
+
+			// Select the choosen physical device
+			sfz_assert(physicalDeviceIdx < numPhysicalDevices);
+			context.data().physicalDevice = physicalDevices[physicalDeviceIdx];
+
+			// Store physical devices properties for the choosen device
+			vkGetPhysicalDeviceProperties(
+				context.data().physicalDevice, &context.data().physicalDeviceProperties);
+		}
+		ZG_INFO("Using physical device: %u -- %s",
+			physicalDeviceIdx, context.data().physicalDeviceProperties.deviceName);
+
+		// Log available device extensions
+		zg::vulkanLogDeviceExtensions(physicalDeviceIdx,
+			context.data().physicalDevice, context.data().physicalDeviceProperties);
+
+		// Log available queue families
+		zg::vulkanLogQueueFamilies(context.data().physicalDevice, context.data().surface);
+
+		// TODO: Heuristic to choose queue family for present and copy queues
+		//       Should require the correct flags for each queue
+		const uint32_t queueFamilyIdx = 0;
+
+
+		return ZG_SUCCESS;
+	}
+
+	// Context methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgResult swapchainResize(
+		uint32_t width,
+		uint32_t height) noexcept
+	{
+		(void)width;
+		(void)height;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	ZgResult setVsync(
+		bool vsync) noexcept
+	{
+		(void)vsync;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	ZgResult swapchainBeginFrame(
+		ZgFramebuffer** framebufferOut,
+		ZgProfiler* profiler,
+		uint64_t* measurementIdOut) noexcept
+	{
+		(void)framebufferOut;
+		(void)profiler;
+		(void)measurementIdOut;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	ZgResult swapchainFinishFrame(
+		ZgProfiler* profiler,
+		uint64_t measurementId) noexcept
+	{
+		(void)profiler;
+		(void)measurementId;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	ZgResult fenceCreate(ZgFence** fenceOut) noexcept
+	{
+		(void)fenceOut;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	// Stats
+	// --------------------------------------------------------------------------------------------
+
+	ZgResult getStats(ZgStats& statsOut) noexcept
+	{
+		(void)statsOut;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	// Pipeline compute methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgResult pipelineComputeCreateFromFileHLSL(
+		ZgPipelineCompute** pipelineOut,
+		ZgPipelineBindingsSignature* bindingsSignatureOut,
+		ZgPipelineComputeSignature* computeSignatureOut,
+		const ZgPipelineComputeCreateInfo& createInfo,
+		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept
+	{
+		(void)pipelineOut;
+		(void)bindingsSignatureOut;
+		(void)computeSignatureOut;
+		(void)createInfo;
+		(void)compileSettings;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	ZgResult pipelineComputeRelease(
+		ZgPipelineCompute* pipeline) noexcept
+	{
+		(void)pipeline;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	// Pipeline render methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgResult pipelineRenderCreateFromFileSPIRV(
+		ZgPipelineRender** pipelineOut,
+		ZgPipelineBindingsSignature* bindingsSignatureOut,
+		ZgPipelineRenderSignature* renderSignatureOut,
+		const ZgPipelineRenderCreateInfo& createInfo) noexcept
+	{
+		(void)pipelineOut;
+		(void)bindingsSignatureOut;
+		(void)renderSignatureOut;
+		(void)createInfo;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	ZgResult pipelineRenderCreateFromFileHLSL(
+		ZgPipelineRender** pipelineOut,
+		ZgPipelineBindingsSignature* bindingsSignatureOut,
+		ZgPipelineRenderSignature* renderSignatureOut,
+		const ZgPipelineRenderCreateInfo& createInfo,
+		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept
+	{
+		(void)pipelineOut;
+		(void)bindingsSignatureOut;
+		(void)renderSignatureOut;
+		(void)createInfo;
+		(void)compileSettings;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	ZgResult pipelineRenderCreateFromSourceHLSL(
+		ZgPipelineRender** pipelineOut,
+		ZgPipelineBindingsSignature* bindingsSignatureOut,
+		ZgPipelineRenderSignature* renderSignatureOut,
+		const ZgPipelineRenderCreateInfo& createInfo,
+		const ZgPipelineCompileSettingsHLSL& compileSettings) noexcept
+	{
+		(void)pipelineOut;
+		(void)bindingsSignatureOut;
+		(void)renderSignatureOut;
+		(void)createInfo;
+		(void)compileSettings;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	ZgResult pipelineRenderRelease(
+		ZgPipelineRender* pipeline) noexcept
+	{
+		(void)pipeline;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	// Memory methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgResult memoryHeapCreate(
+		ZgMemoryHeap** memoryHeapOut,
+		const ZgMemoryHeapCreateInfo& createInfo) noexcept
+	{
+		(void)memoryHeapOut;
+		(void)createInfo;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	ZgResult memoryHeapRelease(
+		ZgMemoryHeap* memoryHeap) noexcept
+	{
+		(void)memoryHeap;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	// Texture methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgResult texture2DGetAllocationInfo(
+		ZgTexture2DAllocationInfo& allocationInfoOut,
+		const ZgTexture2DCreateInfo& createInfo) noexcept
+	{
+		(void)allocationInfoOut;
+		(void)createInfo;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	// Framebuffer methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgResult framebufferCreate(
+		ZgFramebuffer** framebufferOut,
+		const ZgFramebufferCreateInfo& createInfo) noexcept
+	{
+		(void)framebufferOut;
+		(void)createInfo;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	void framebufferRelease(
+		ZgFramebuffer* framebuffer) noexcept
+	{
+		(void)framebuffer;
+	}
+
+	// CommandQueue methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgResult getPresentQueue(ZgCommandQueue** presentQueueOut) noexcept
+	{
+		*presentQueueOut = &mState->presentQueue;
+		return ZG_SUCCESS;
+	}
+
+	ZgResult getCopyQueue(ZgCommandQueue** copyQueueOut) noexcept
+	{
+		*copyQueueOut = &mState->copyQueue;
+		return ZG_SUCCESS;
+	}
+
+	// Profiler methods
+	// --------------------------------------------------------------------------------------------
+
+	ZgResult profilerCreate(
+		ZgProfiler** profilerOut,
+		const ZgProfilerCreateInfo& createInfo) noexcept
+	{
+		(void)profilerOut;
+		(void)createInfo;
+		return ZG_WARNING_UNIMPLEMENTED;
+	}
+
+	void profilerRelease(
+		ZgProfiler* profilerIn) noexcept
+	{
+		(void)profilerIn;
+	}
+
+	// Private methods
+	// --------------------------------------------------------------------------------------------
+private:
+	bool mDebugMode = false;
+
+	VulkanBackendState* mState = nullptr;
+};
+
+// Vulkan backend
+// ------------------------------------------------------------------------------------------------
+
+ZgResult createVulkanBackend(ZgBackend** backendOut, const ZgContextInitSettings& settings) noexcept
+{
+	// Allocate and create Vulkan backend
+	ZgBackend* backend = getAllocator()->newObject<ZgBackend>(sfz_dbg("ZgBackend"));
+
+	// Initialize backend, return nullptr if init failed
+	ZgResult initRes = backend->init(settings);
+	if (initRes != ZG_SUCCESS)
+	{
+		getAllocator()->deleteObject(backend);
+		return initRes;
+	}
+
+	*backendOut = backend;
+	return ZG_SUCCESS;
+}
 
 // Version information
 // ------------------------------------------------------------------------------------------------
@@ -767,7 +1221,7 @@ ZG_API ZgResult zgContextInit(const ZgContextInitSettings* settings)
 	case ZG_BACKEND_VULKAN:
 		{
 			ZG_INFO("zgContextInit(): Attempting to create Vulkan backend...");
-			ZgResult res = zg::createVulkanBackend(&tmpContext.backend, *settings);
+			ZgResult res = createVulkanBackend(&tmpContext.backend, *settings);
 			if (res != ZG_SUCCESS) {
 				ZG_ERROR("zgContextInit(): Could not create Vulkan backend, exiting.");
 				return res;

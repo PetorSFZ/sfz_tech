@@ -19,7 +19,6 @@
 #pragma once
 
 #include "ZeroG.h"
-#include "common/BackendInterface.hpp"
 #include "d3d12/D3D12Common.hpp"
 #include "d3d12/D3D12Memory.hpp"
 

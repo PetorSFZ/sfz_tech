@@ -21,7 +21,6 @@
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
 
-#include "common/BackendInterface.hpp"
 #include "common/Mutex.hpp"
 #include "d3d12/D3D12Common.hpp"
 #include "d3d12/D3D12Memory.hpp"

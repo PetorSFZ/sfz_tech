@@ -167,7 +167,6 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ZEROG_INCLUDE_FILES})
 
 # Common files
 set(ZEROG_COMMON_FILES
-	${SRC_DIR}/common/BackendInterface.hpp
 	${SRC_DIR}/common/Context.hpp
 	${SRC_DIR}/common/Context.cpp
 	${SRC_DIR}/common/ErrorReporting.hpp
@@ -182,8 +181,6 @@ source_group(TREE ${SRC_DIR} FILES ${ZEROG_COMMON_FILES})
 # D3D12 source files
 if (MSVC)
 	set(ZEROG_D3D12_SRC_FILES
-		${SRC_DIR}/d3d12/D3D12Backend.hpp
-		${SRC_DIR}/d3d12/D3D12Backend.cpp
 		${SRC_DIR}/d3d12/D3D12CommandList.hpp
 		${SRC_DIR}/d3d12/D3D12CommandList.cpp
 		${SRC_DIR}/d3d12/D3D12CommandQueue.hpp
@@ -226,8 +223,6 @@ endif()
 # Vulkan source files
 if (VULKAN_FOUND)
 	set(ZEROG_VULKAN_SRC_FILES
-		${SRC_DIR}/vulkan/VulkanBackend.hpp
-		${SRC_DIR}/vulkan/VulkanBackend.cpp
 		${SRC_DIR}/vulkan/VulkanCommandQueue.hpp
 		${SRC_DIR}/vulkan/VulkanCommandQueue.cpp
 		${SRC_DIR}/vulkan/VulkanCommon.hpp

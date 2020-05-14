@@ -23,10 +23,10 @@
 
 #include "ZeroG.h"
 
-#include "BackendInterface.hpp"
-
 // AllocatorWrapper
 // ------------------------------------------------------------------------------------------------
+
+struct ZgBackend;
 
 // Small wrapper around ZgAllocator (C-API) to convert it to an sfz::Allocator
 class AllocatorWrapper final : public sfz::Allocator {

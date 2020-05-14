@@ -25,7 +25,6 @@
 #include <skipifzero_ring_buffers.hpp>
 
 #include "ZeroG.h"
-#include "common/BackendInterface.hpp"
 #include "d3d12/D3D12Common.hpp"
 #include "d3d12/D3D12CommandList.hpp"
 #include "d3d12/D3D12DescriptorRingBuffer.hpp"

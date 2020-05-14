@@ -19,7 +19,6 @@
 #pragma once
 
 #include "ZeroG.h"
-#include "common/BackendInterface.hpp"
 
 // VulkanCommandQueue
 // ------------------------------------------------------------------------------------------------
