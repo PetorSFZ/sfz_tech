@@ -129,7 +129,6 @@ bool initializeZeroG(SDL_Window* window, sfz::Allocator* allocator, bool debugMo
 
 	// Init settings
 	ZgContextInitSettings initSettings = {};
-	initSettings.backend = ZG_BACKEND_D3D12;
 	initSettings.width = 512;
 	initSettings.height = 512;
 	initSettings.vsync = vsync ? ZG_TRUE : ZG_FALSE;

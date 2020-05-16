@@ -108,7 +108,7 @@ ZG_STRUCT(ZgFramebufferRect) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 20;
+static const uint32_t ZG_COMPILED_API_VERSION = 21;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -2312,9 +2312,11 @@ ZG_STRUCT(ZgContextInitSettingsVulkan) {
 
 // The settings used to create a context and initialize ZeroG
 ZG_STRUCT(ZgContextInitSettings) {
-
-	// [Mandatory] The wanted ZeroG backend
-	ZgBackendType backend;
+	
+	// [Mandatory] Platform specific native handle.
+	//
+	// On Windows, this is a HWND, i.e. native window handle.
+	void* nativeHandle;
 
 	// [Mandatory] The dimensions (in pixels) of the window being rendered to
 	uint32_t width;
@@ -2328,11 +2330,6 @@ ZG_STRUCT(ZgContextInitSettings) {
 
 	// [Optional] The allocator used to allocate CPU memory
 	ZgAllocator allocator;
-
-	// [Mandatory] Platform specific native handle.
-	//
-	// On Windows, this is a HWND, i.e. native window handle.
-	void* nativeHandle;
 
 	// [Optional] D3D12 specific settings
 	ZgContextInitSettingsD3D12 d3d12;

@@ -26,8 +26,6 @@
 // AllocatorWrapper
 // ------------------------------------------------------------------------------------------------
 
-struct ZgBackend;
-
 // Small wrapper around ZgAllocator (C-API) to convert it to an sfz::Allocator
 class AllocatorWrapper final : public sfz::Allocator {
 public:
@@ -86,7 +84,6 @@ private:
 struct ZgContext final {
 	AllocatorWrapper allocator;
 	ZgLogger logger = {};
-	ZgBackend* backend = nullptr;
 };
 
 // Global implicit context accessor
@@ -96,6 +93,5 @@ ZgContext& getContext() noexcept;
 
 inline sfz::Allocator* getAllocator() noexcept { return &getContext().allocator; }
 inline ZgLogger& getLogger() noexcept { return getContext().logger; }
-inline ZgBackend* getBackend() noexcept { return getContext().backend; }
 
 void setContext(const ZgContext& context) noexcept;

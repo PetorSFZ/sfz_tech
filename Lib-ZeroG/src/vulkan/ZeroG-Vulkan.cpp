@@ -483,6 +483,9 @@ ZgResult createVulkanBackend(ZgBackend** backendOut, const ZgContextInitSettings
 	return ZG_SUCCESS;
 }
 
+static ZgBackend* ctxState = nullptr;
+inline ZgBackend* getBackend() { return ctxState; }
+
 // Version information
 // ------------------------------------------------------------------------------------------------
 
@@ -1210,29 +1213,15 @@ ZG_API ZgResult zgContextInit(const ZgContextInitSettings* settings)
 	else ZG_INFO("zgContextInit(): Using user-provided allocator");
 
 	// Create and allocate requested backend api
-	switch (settings->backend) {
-
-	case ZG_BACKEND_NONE:
-		// TODO: Implement null backend
-		ZG_ERROR("zgContextInit(): Null backend not implemented, exiting.");
-		return ZG_WARNING_UNIMPLEMENTED;
-
-#ifdef ZG_VULKAN
-	case ZG_BACKEND_VULKAN:
-		{
-			ZG_INFO("zgContextInit(): Attempting to create Vulkan backend...");
-			ZgResult res = createVulkanBackend(&tmpContext.backend, *settings);
-			if (res != ZG_SUCCESS) {
-				ZG_ERROR("zgContextInit(): Could not create Vulkan backend, exiting.");
-				return res;
-			}
-			ZG_INFO("zgContextInit(): Created Vulkan backend");
+	{
+		ZG_INFO("zgContextInit(): Attempting to create Vulkan backend...");
+		ZgResult res = createVulkanBackend(&ctxState, *settings);
+		if (res != ZG_SUCCESS) {
+			ctxState = nullptr;
+			ZG_ERROR("zgContextInit(): Could not create Vulkan backend, exiting.");
+			return res;
 		}
-		break;
-#endif
-
-	default:
-		return ZG_ERROR_GENERIC;
+		ZG_INFO("zgContextInit(): Created Vulkan backend");
 	}
 
 	// Set context
@@ -1247,7 +1236,7 @@ ZG_API ZgResult zgContextDeinit(void)
 	ZgContext& ctx = getContext();
 
 	// Delete backend
-	getAllocator()->deleteObject(ctx.backend);
+	getAllocator()->deleteObject(ctxState);
 
 	// Reset context
 	ctx = {};
