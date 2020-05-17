@@ -171,16 +171,6 @@ ZgResult createPipelineComputeFileHLSL(
 // D3D12PipelineRender functions
 // ------------------------------------------------------------------------------------------------
 
-ZgResult createPipelineRenderFileSPIRV(
-	ZgPipelineRender** pipelineOut,
-	ZgPipelineBindingsSignature* bindingsSignatureOut,
-	ZgPipelineRenderSignature* renderSignatureOut,
-	ZgPipelineRenderCreateInfo createInfo,
-	IDxcLibrary& dxcLibrary,
-	IDxcCompiler& dxcCompiler,
-	IDxcIncludeHandler* dxcIncludeHandler,
-	ID3D12Device3& device) noexcept;
-
 ZgResult createPipelineRenderFileHLSL(
 	ZgPipelineRender** pipelineOut,
 	ZgPipelineBindingsSignature* bindingsSignatureOut,

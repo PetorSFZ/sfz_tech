@@ -153,10 +153,6 @@ if (MSVC)
 	add_subdirectory(${EXTERNALS_DIR}/D3DX12Residency)
 endif()
 
-# SPIRV-Cross
-# ${SPIRV_CROSS_FOUND}, ${SPIRV_CROSS_INCLUDE_DIRS}, ${SPIRV_CROSS_LIBRARIES}
-add_subdirectory(${EXTERNALS_DIR}/SPIRV-Cross)
-
 # ZeroG
 # ------------------------------------------------------------------------------------------------
 
@@ -212,11 +208,6 @@ if (MSVC)
 		${SFZ_CORE_INCLUDE_DIRS}
 		${D3DX12_INCLUDE_DIRS}
 		${D3DX12_RESIDENCY_INCLUDE_DIRS}
-		${SPIRV_CROSS_INCLUDE_DIRS}
-	)
-
-	target_link_libraries(ZeroG-D3D12
-		${SPIRV_CROSS_LIBRARIES}
 	)
 endif()
 
@@ -243,12 +234,10 @@ if (VULKAN_FOUND)
 		${SRC_DIR}
 		${SFZ_CORE_INCLUDE_DIRS}
 		${VULKAN_INCLUDE_DIRS}
-		${SPIRV_CROSS_INCLUDE_DIRS}
 	)
 
 	target_link_libraries(ZeroG-Vulkan
 		${VULKAN_LIBRARIES}
-		${SPIRV_CROSS_LIBRARIES}
 	)
 endif()
 

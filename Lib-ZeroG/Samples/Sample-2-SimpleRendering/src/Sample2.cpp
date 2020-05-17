@@ -261,12 +261,6 @@ static void realMain(SDL_Window* window) noexcept
 			.setDepthTestEnabled(true)
 			.setDepthFunc(ZG_DEPTH_FUNC_LESS);
 
-		// SPIRV file variant
-		/*CHECK_ZG pipelineBuilder
-			.addVertexShaderPath("VSMain", "res/Sample-2/test_vs.spv")
-			.addPixelShaderPath("PSMain", "res/Sample-2/test_ps.spv")
-			.buildFromFileSPIRV(renderPipeline);*/
-
 		// HLSL file variant
 		CHECK_ZG pipelineBuilder
 			.addVertexShaderPath("VSMain", "res/Sample-2/test.hlsl")

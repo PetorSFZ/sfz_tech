@@ -96,35 +96,6 @@ static ZgContextState* ctxState = nullptr;
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-static ZgResult initializeDxcCompiler() noexcept
-{
-	// Initialize DXC compiler if necessary
-	// TODO: Provide our own allocator
-	// TODO: Mutex
-	if (ctxState->dxcLibrary == nullptr) {
-
-		// Initialize DXC library
-		HRESULT res = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&ctxState->dxcLibrary));
-		if (!SUCCEEDED(res)) return ZG_ERROR_GENERIC;
-
-		// Initialize DXC compiler
-		res = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&ctxState->dxcCompiler));
-		if (!SUCCEEDED(res)) {
-			ctxState->dxcLibrary = nullptr;
-			return ZG_ERROR_GENERIC;
-		}
-
-		// Create include handler
-		res = ctxState->dxcLibrary->CreateIncludeHandler(&ctxState->dxcIncludeHandler);
-		if (!SUCCEEDED(res)) {
-			ctxState->dxcLibrary = nullptr;
-			ctxState->dxcCompiler = nullptr;
-			return ZG_ERROR_GENERIC;
-		}
-	}
-	return ZG_SUCCESS;
-}
-
 static void logDebugMessages(ZgContextState& state) noexcept
 {
 	if (!state.debugMode) return;
@@ -178,6 +149,30 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 	ctxState->height = settings.height;
 	HWND hwnd = (HWND)settings.nativeHandle;
 	if (ctxState->width == 0 || ctxState->height == 0) return ZG_ERROR_INVALID_ARGUMENT;
+
+	// Initialize DXC compiler
+	// TODO: Provide our own allocator
+	sfz_assert(ctxState->dxcLibrary == nullptr);
+	{
+		// Initialize DXC library
+		HRESULT res = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&ctxState->dxcLibrary));
+		if (!SUCCEEDED(res)) return ZG_ERROR_GENERIC;
+
+		// Initialize DXC compiler
+		res = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&ctxState->dxcCompiler));
+		if (!SUCCEEDED(res)) {
+			ctxState->dxcLibrary = nullptr;
+			return ZG_ERROR_GENERIC;
+		}
+
+		// Create include handler
+		res = ctxState->dxcLibrary->CreateIncludeHandler(&ctxState->dxcIncludeHandler);
+		if (!SUCCEEDED(res)) {
+			ctxState->dxcLibrary = nullptr;
+			ctxState->dxcCompiler = nullptr;
+			return ZG_ERROR_GENERIC;
+		}
+	}
 
 	// Enable debug layers in debug mode
 	if (settings.d3d12.debugMode) {
@@ -688,14 +683,6 @@ ZG_API ZgResult zgPipelineComputeCreateFromFileHLSL(
 	ZG_ARG_CHECK(computeSignatureOut == nullptr, "");
 	ZG_ARG_CHECK(createInfo == nullptr, "");
 	ZG_ARG_CHECK(compileSettings == nullptr, "");
-
-	// Initialize DXC compiler if necessary
-	{
-		ZgResult res = initializeDxcCompiler();
-		if (res != ZG_SUCCESS) return res;
-	}
-
-	// Create pipeline
 	return createPipelineComputeFileHLSL(
 		pipelineOut,
 		bindingsSignatureOut,
@@ -717,44 +704,6 @@ ZG_API ZgResult zgPipelineComputeRelease(
 
 // Pipeline Render
 // ------------------------------------------------------------------------------------------------
-
-ZG_API ZgResult zgPipelineRenderCreateFromFileSPIRV(
-	ZgPipelineRender** pipelineOut,
-	ZgPipelineBindingsSignature* bindingsSignatureOut,
-	ZgPipelineRenderSignature* renderSignatureOut,
-	const ZgPipelineRenderCreateInfo* createInfo)
-{
-	ZG_ARG_CHECK(createInfo == nullptr, "");
-	ZG_ARG_CHECK(pipelineOut == nullptr, "");
-	ZG_ARG_CHECK(bindingsSignatureOut == nullptr, "");
-	ZG_ARG_CHECK(renderSignatureOut == nullptr, "");
-	ZG_ARG_CHECK(createInfo->vertexShader == nullptr, "");
-	ZG_ARG_CHECK(createInfo->vertexShaderEntry == nullptr, "");
-	ZG_ARG_CHECK(createInfo->pixelShader == nullptr, "");
-	ZG_ARG_CHECK(createInfo->pixelShaderEntry == nullptr, "");
-	ZG_ARG_CHECK(createInfo->numVertexAttributes == 0, "Must specify at least one vertex attribute");
-	ZG_ARG_CHECK(createInfo->numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex attributes specified");
-	ZG_ARG_CHECK(createInfo->numVertexBufferSlots == 0, "Must specify at least one vertex buffer");
-	ZG_ARG_CHECK(createInfo->numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex buffers specified");
-	ZG_ARG_CHECK(createInfo->numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
-
-	// Initialize DXC compiler if necessary
-	{
-		ZgResult res = initializeDxcCompiler();
-		if (res != ZG_SUCCESS) return res;
-	}
-
-	// Create pipeline
-	return createPipelineRenderFileSPIRV(
-		pipelineOut,
-		bindingsSignatureOut,
-		renderSignatureOut,
-		*createInfo,
-		*ctxState->dxcLibrary.Get(),
-		*ctxState->dxcCompiler.Get(),
-		ctxState->dxcIncludeHandler,
-		*ctxState->device.Get());
-}
 
 ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 	ZgPipelineRender** pipelineOut,
@@ -778,14 +727,6 @@ ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 	ZG_ARG_CHECK(createInfo->numVertexBufferSlots == 0, "Must specify at least one vertex buffer");
 	ZG_ARG_CHECK(createInfo->numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex buffers specified");
 	ZG_ARG_CHECK(createInfo->numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
-
-	// Initialize DXC compiler if necessary
-	{
-		ZgResult res = initializeDxcCompiler();
-		if (res != ZG_SUCCESS) return res;
-	}
-
-	// Create pipeline
 	return createPipelineRenderFileHLSL(
 		pipelineOut,
 		bindingsSignatureOut,
@@ -820,14 +761,6 @@ ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
 	ZG_ARG_CHECK(createInfo->numVertexBufferSlots == 0, "Must specify at least one vertex buffer");
 	ZG_ARG_CHECK(createInfo->numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex buffers specified");
 	ZG_ARG_CHECK(createInfo->numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
-
-	// Initialize DXC compiler if necessary
-	{
-		ZgResult res = initializeDxcCompiler();
-		if (res != ZG_SUCCESS) return res;
-	}
-
-	// Create pipeline
 	return createPipelineRenderSourceHLSL(
 		pipelineOut,
 		bindingsSignatureOut,

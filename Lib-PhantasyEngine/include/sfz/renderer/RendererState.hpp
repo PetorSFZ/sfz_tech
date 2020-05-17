@@ -42,11 +42,6 @@ namespace sfz {
 // Pipeline types
 // ------------------------------------------------------------------------------------------------
 
-enum class PipelineSourceType {
-	SPIRV = 0,
-	HLSL
-};
-
 struct SamplerItem final {
 	uint32_t samplerRegister = ~0u;
 	ZgSampler sampler = {};
@@ -65,7 +60,6 @@ struct PipelineRenderItem final {
 
 	// Parsed information
 	StringID name;
-	PipelineSourceType sourceType = PipelineSourceType::SPIRV;
 	str256 vertexShaderPath;
 	str256 pixelShaderPath;
 	str128 vertexShaderEntry;
@@ -97,7 +91,6 @@ struct PipelineComputeItem final {
 
 	// Parsed information
 	StringID name;
-	PipelineSourceType sourceType = PipelineSourceType::SPIRV;
 	str256 computeShaderPath;
 	str128 computeShaderEntry;
 	ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstRegisters;

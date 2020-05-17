@@ -153,14 +153,6 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		str256 name = CHECK_JSON pipelineNode.accessMap("name").valueStr256();
 		item.name = resStrings.getStringID(name);
 
-		str256 sourceTypeStr = CHECK_JSON pipelineNode.accessMap("source_type").valueStr256();
-		item.sourceType = [&]() {
-			if (sourceTypeStr == "spirv") return PipelineSourceType::SPIRV;
-			if (sourceTypeStr == "hlsl") return PipelineSourceType::HLSL;
-			sfz_assert_hard(false);
-			return PipelineSourceType::SPIRV;
-		}();
-
 		item.vertexShaderPath = CHECK_JSON pipelineNode.accessMap("vertex_shader_path").valueStr256();
 		item.pixelShaderPath = CHECK_JSON pipelineNode.accessMap("pixel_shader_path").valueStr256();
 
@@ -280,14 +272,6 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 
 		str256 name = CHECK_JSON pipelineNode.accessMap("name").valueStr256();
 		item.name = resStrings.getStringID(name);
-
-		str256 sourceTypeStr = CHECK_JSON pipelineNode.accessMap("source_type").valueStr256();
-		item.sourceType = [&]() {
-			if (sourceTypeStr == "spirv") return PipelineSourceType::SPIRV;
-			if (sourceTypeStr == "hlsl") return PipelineSourceType::HLSL;
-			sfz_assert_hard(false);
-			return PipelineSourceType::SPIRV;
-		}();
 
 		item.computeShaderPath = CHECK_JSON pipelineNode.accessMap("compute_shader_path").valueStr256();
 		item.computeShaderEntry.clear();

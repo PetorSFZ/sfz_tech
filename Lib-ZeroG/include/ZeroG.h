@@ -108,7 +108,7 @@ ZG_STRUCT(ZgFramebufferRect) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 21;
+static const uint32_t ZG_COMPILED_API_VERSION = 22;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -1207,12 +1207,6 @@ ZG_STRUCT(ZgPipelineRenderCreateInfo) {
 	ZgDepthTestSettings depthTest;
 };
 
-ZG_API ZgResult zgPipelineRenderCreateFromFileSPIRV(
-	ZgPipelineRender** pipelineOut,
-	ZgPipelineBindingsSignature* bindingsSignatureOut,
-	ZgPipelineRenderSignature* renderSignatureOut,
-	const ZgPipelineRenderCreateInfo* createInfo);
-
 ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 	ZgPipelineRender** pipelineOut,
 	ZgPipelineBindingsSignature* bindingsSignatureOut,
@@ -1247,14 +1241,6 @@ public:
 	~PipelineRender() { this->release(); }
 
 	bool valid() const { return this->pipeline != nullptr; }
-
-	[[nodiscard]] ZgResult createFromFileSPIRV(
-		const ZgPipelineRenderCreateInfo& createInfo)
-	{
-		this->release();
-		return zgPipelineRenderCreateFromFileSPIRV(
-			&this->pipeline, &this->bindingsSignature, &this->renderSignature, &createInfo);
-	}
 
 	[[nodiscard]] ZgResult createFromFileHLSL(
 		const ZgPipelineRenderCreateInfo& createInfo,
@@ -1467,16 +1453,6 @@ public:
 	{
 		createInfo.depthTest.depthFunc = depthFunc;
 		return *this;
-	}
-
-	[[nodiscard]] ZgResult buildFromFileSPIRV(PipelineRender& pipelineOut)
-	{
-		// Set path
-		createInfo.vertexShader = this->vertexShaderPath;
-		createInfo.pixelShader = this->pixelShaderPath;
-
-		// Build pipeline
-		return pipelineOut.createFromFileSPIRV(createInfo);
 	}
 
 	[[nodiscard]] ZgResult buildFromFileHLSL(

@@ -323,19 +323,6 @@ public:
 	// Pipeline render methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgResult pipelineRenderCreateFromFileSPIRV(
-		ZgPipelineRender** pipelineOut,
-		ZgPipelineBindingsSignature* bindingsSignatureOut,
-		ZgPipelineRenderSignature* renderSignatureOut,
-		const ZgPipelineRenderCreateInfo& createInfo) noexcept
-	{
-		(void)pipelineOut;
-		(void)bindingsSignatureOut;
-		(void)renderSignatureOut;
-		(void)createInfo;
-		return ZG_WARNING_UNIMPLEMENTED;
-	}
-
 	ZgResult pipelineRenderCreateFromFileHLSL(
 		ZgPipelineRender** pipelineOut,
 		ZgPipelineBindingsSignature* bindingsSignatureOut,
@@ -674,30 +661,6 @@ ZG_API ZgResult zgPipelineComputeRelease(
 
 // Pipeline Render
 // ------------------------------------------------------------------------------------------------
-
-ZG_API ZgResult zgPipelineRenderCreateFromFileSPIRV(
-	ZgPipelineRender** pipelineOut,
-	ZgPipelineBindingsSignature* bindingsSignatureOut,
-	ZgPipelineRenderSignature* renderSignatureOut,
-	const ZgPipelineRenderCreateInfo* createInfo)
-{
-	ZG_ARG_CHECK(createInfo == nullptr, "");
-	ZG_ARG_CHECK(pipelineOut == nullptr, "");
-	ZG_ARG_CHECK(bindingsSignatureOut == nullptr, "");
-	ZG_ARG_CHECK(renderSignatureOut == nullptr, "");
-	ZG_ARG_CHECK(createInfo->vertexShader == nullptr, "");
-	ZG_ARG_CHECK(createInfo->vertexShaderEntry == nullptr, "");
-	ZG_ARG_CHECK(createInfo->pixelShader == nullptr, "");
-	ZG_ARG_CHECK(createInfo->pixelShaderEntry == nullptr, "");
-	ZG_ARG_CHECK(createInfo->numVertexAttributes == 0, "Must specify at least one vertex attribute");
-	ZG_ARG_CHECK(createInfo->numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex attributes specified");
-	ZG_ARG_CHECK(createInfo->numVertexBufferSlots == 0, "Must specify at least one vertex buffer");
-	ZG_ARG_CHECK(createInfo->numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex buffers specified");
-	ZG_ARG_CHECK(createInfo->numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
-
-	return getBackend()->pipelineRenderCreateFromFileSPIRV(
-		pipelineOut, bindingsSignatureOut, renderSignatureOut, *createInfo);
-}
 
 ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 	ZgPipelineRender** pipelineOut,

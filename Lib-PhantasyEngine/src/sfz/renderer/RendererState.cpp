@@ -158,15 +158,8 @@ bool PipelineRenderItem::buildPipeline() noexcept
 	}
 
 	// Build pipeline
-	bool buildSuccess = false;
 	zg::PipelineRender tmpPipeline;
-	if (sourceType == PipelineSourceType::SPIRV) {
-		buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileSPIRV(tmpPipeline);
-	}
-	else {
-		buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileHLSL(tmpPipeline);
-	}
-
+	bool buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileHLSL(tmpPipeline);
 	if (buildSuccess) {
 		this->pipeline = std::move(tmpPipeline);
 	}
@@ -192,16 +185,8 @@ bool PipelineComputeItem::buildPipeline() noexcept
 	}
 
 	// Build pipeline
-	bool buildSuccess = false;
 	zg::PipelineCompute tmpPipeline;
-	if (sourceType == PipelineSourceType::SPIRV) {
-		sfz_assert_hard(false);
-		//buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileSPIRV(tmpPipeline);
-	}
-	else {
-		buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileHLSL(tmpPipeline, ZG_SHADER_MODEL_6_1);
-	}
-
+	bool buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileHLSL(tmpPipeline, ZG_SHADER_MODEL_6_1);
 	if (buildSuccess) {
 		this->pipeline = std::move(tmpPipeline);
 	}
