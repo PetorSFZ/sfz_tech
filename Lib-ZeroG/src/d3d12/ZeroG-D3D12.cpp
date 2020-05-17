@@ -26,6 +26,7 @@
 #include "common/Context.hpp"
 #include "common/ErrorReporting.hpp"
 #include "common/Logging.hpp"
+#include "common/Matrices.hpp"
 
 #include "d3d12/D3D12CommandList.hpp"
 #include "d3d12/D3D12CommandQueue.hpp"
@@ -36,7 +37,7 @@
 #include "d3d12/D3D12Pipelines.hpp"
 #include "d3d12/D3D12Profiler.hpp"
 
-// Statics
+// Constants
 // ------------------------------------------------------------------------------------------------
 
 constexpr uint32_t NUM_SWAP_CHAIN_BUFFERS = 3;
@@ -57,7 +58,7 @@ struct ZgContextState final {
 	// Device
 	ComPtr<IDXGIAdapter4> dxgiAdapter;
 	ComPtr<ID3D12Device3> device;
-	
+
 	// Debug info queue
 	ComPtr<ID3D12InfoQueue> infoQueue;
 
@@ -74,7 +75,7 @@ struct ZgContextState final {
 	ZgCommandQueue commandQueuePresent;
 	//ZgCommandQueue commandQueueAsyncCompute;
 	ZgCommandQueue commandQueueCopy;
-	
+
 	// Swapchain and backbuffers
 	uint32_t width = 0;
 	uint32_t height = 0;
@@ -379,7 +380,7 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 	// Create swap chain framebuffers (RTVs and DSVs)
 	ctxState->width = 0;
 	ctxState->height = 0;
-	
+
 
 	return ZG_SUCCESS;
 }
@@ -1390,238 +1391,3 @@ ZG_API ZgResult zgContextGetStats(ZgStats* statsOut)
 	return ZG_SUCCESS;
 }
 
-// Transformation and projection matrices
-// ------------------------------------------------------------------------------------------------
-
-ZG_API void zgUtilCreateViewMatrix(
-	float rowMajorMatrixOut[16],
-	const float origin[3],
-	const float dir[3],
-	const float up[3])
-{
-	auto dot = [](const float lhs[3], const float rhs[3]) -> float {
-		return lhs[0] * rhs[0] + lhs[1] * rhs[1] + lhs[2] * rhs[2];
-	};
-
-	auto normalize = [&](float v[3]) {
-		float length = std::sqrt(dot(v, v));
-		v[0] /= length;
-		v[1] /= length;
-		v[2] /= length;
-	};
-
-	auto cross = [](float out[3], const float lhs[3], const float rhs[3]) {
-		out[0] = lhs[1] * rhs[2] - lhs[2] * rhs[1];
-		out[1] = lhs[2] * rhs[0] - lhs[0] * rhs[2];
-		out[2] = lhs[0] * rhs[1] - lhs[1] * rhs[0];
-	};
-
-	// Z-Axis, away from screen
-	float zAxis[3];
-	memcpy(zAxis, dir, sizeof(float) * 3);
-	normalize(zAxis);
-	zAxis[0] = -zAxis[0];
-	zAxis[1] = -zAxis[1];
-	zAxis[2] = -zAxis[2];
-
-	// X-Axis, to the right
-	float xAxis[3];
-	cross(xAxis, up, zAxis);
-	normalize(xAxis);
-
-	// Y-Axis, up
-	float yAxis[3];
-	cross(yAxis, zAxis, xAxis);
-
-	float matrix[16] = {
-		xAxis[0], xAxis[1], xAxis[2], -dot(xAxis, origin),
-		yAxis[0], yAxis[1], yAxis[2], -dot(yAxis, origin),
-		zAxis[0], zAxis[1], zAxis[2], -dot(zAxis, origin),
-		0.0f,     0.0f,     0.0f,     1.0f
-	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
-}
-
-ZG_API void zgUtilCreatePerspectiveProjection(
-	float rowMajorMatrixOut[16],
-	float vertFovDegs,
-	float aspect,
-	float nearPlane,
-	float farPlane)
-{
-	assert(0.0f < vertFovDegs);
-	assert(vertFovDegs < 180.0f);
-	assert(0.0f < aspect);
-	assert(0.0f < nearPlane);
-	assert(nearPlane < farPlane);
-
-	// From: https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh
-	// xScale     0          0              0
-	// 0        yScale       0              0
-	// 0        0        zf/(zn-zf)        -1
-	// 0        0        zn*zf/(zn-zf)      0
-	// where:
-	// yScale = cot(fovY/2)
-	// xScale = yScale / aspect ratio
-	//
-	// Note that D3D uses column major matrices, we use row-major, so above is transposed.
-
-	constexpr float DEG_TO_RAD = 3.14159265358979323846f / 180.0f;
-	const float vertFovRads = vertFovDegs * DEG_TO_RAD;
-	const float yScale = 1.0f / std::tan(vertFovRads * 0.5f);
-	const float xScale = yScale / aspect;
-	float matrix[16] = {
-		xScale, 0.0f, 0.0f, 0.0f,
-		0.0f, yScale, 0.0f, 0.0f,
-		0.0f, 0.0f, farPlane / (nearPlane - farPlane), nearPlane* farPlane / (nearPlane - farPlane),
-		0.0f, 0.0f, -1.0f, 0.0f
-	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
-}
-
-ZG_API void zgUtilCreatePerspectiveProjectionInfinite(
-	float rowMajorMatrixOut[16],
-	float vertFovDegs,
-	float aspect,
-	float nearPlane)
-{
-	assert(0.0f < vertFovDegs);
-	assert(vertFovDegs < 180.0f);
-	assert(0.0f < aspect);
-	assert(0.0f < nearPlane);
-
-	// Same as createPerspectiveProjection(), but let far approach infinity
-
-	constexpr float DEG_TO_RAD = 3.14159265358979323846f / 180.0f;
-	const float vertFovRads = vertFovDegs * DEG_TO_RAD;
-	const float yScale = 1.0f / std::tan(vertFovRads * 0.5f);
-	const float xScale = yScale / aspect;
-	float matrix[16] = {
-		xScale, 0.0f, 0.0f, 0.0f,
-		0.0f, yScale, 0.0f, 0.0f,
-		0.0f, 0.0f, -1.0f,-nearPlane,
-		0.0f, 0.0f, -1.0f, 0.0f
-	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
-}
-
-ZG_API void zgUtilCreatePerspectiveProjectionReverse(
-	float rowMajorMatrixOut[16],
-	float vertFovDegs,
-	float aspect,
-	float nearPlane,
-	float farPlane)
-{
-	assert(0.0f < vertFovDegs);
-	assert(vertFovDegs < 180.0f);
-	assert(0.0f < aspect);
-	assert(0.0f < nearPlane);
-	assert(nearPlane < farPlane);
-
-	// http://dev.theomader.com/depth-precision/
-	// "This can be achieved by multiplying the projection matrix with a simple ‘z reversal’ matrix"
-	// 1, 0, 0, 0
-	// 0, 1, 0, 0
-	// 0, 0, -1, 1
-	// 0, 0, 0, 1
-
-	constexpr float DEG_TO_RAD = 3.14159265358979323846f / 180.0f;
-	const float vertFovRads = vertFovDegs * DEG_TO_RAD;
-	const float yScale = 1.0f / std::tan(vertFovRads * 0.5f);
-	const float xScale = yScale / aspect;
-	float matrix[16] = {
-		xScale, 0.0f, 0.0f, 0.0f,
-		0.0f, yScale, 0.0f, 0.0f,
-		0.0f, 0.0f, -(farPlane / (nearPlane - farPlane)) - 1.0f, -(nearPlane * farPlane / (nearPlane - farPlane)),
-		0.0f, 0.0f, -1.0f, 0.0f
-	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
-}
-
-ZG_API void zgUtilCreatePerspectiveProjectionReverseInfinite(
-	float rowMajorMatrixOut[16],
-	float vertFovDegs,
-	float aspect,
-	float nearPlane)
-{
-	assert(0.0f < vertFovDegs);
-	assert(vertFovDegs < 180.0f);
-	assert(0.0f < aspect);
-	assert(0.0f < nearPlane);
-
-	// http://dev.theomader.com/depth-precision/
-	// "This can be achieved by multiplying the projection matrix with a simple ‘z reversal’ matrix"
-	// 1, 0, 0, 0
-	// 0, 1, 0, 0
-	// 0, 0, -1, 1
-	// 0, 0, 0, 1
-
-	constexpr float DEG_TO_RAD = 3.14159265358979323846f / 180.0f;
-	const float vertFovRads = vertFovDegs * DEG_TO_RAD;
-	const float yScale = 1.0f / std::tan(vertFovRads * 0.5f);
-	const float xScale = yScale / aspect;
-	float matrix[16] = {
-		xScale, 0.0f, 0.0f, 0.0f,
-		0.0f, yScale, 0.0f, 0.0f,
-		0.0f, 0.0f, 0.0f, nearPlane,
-		0.0f, 0.0f, -1.0f, 0.0f
-	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
-}
-
-ZG_API void zgUtilCreateOrthographicProjection(
-	float rowMajorMatrixOut[16],
-	float width,
-	float height,
-	float nearPlane,
-	float farPlane)
-{
-	assert(0.0f < width);
-	assert(0.0f < height);
-	assert(0.0f < nearPlane);
-	assert(nearPlane < farPlane);
-
-	// https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixorthorh
-	// 2/w  0    0           0
-	// 0    2/h  0           0
-	// 0    0    1/(zn-zf)   0
-	// 0    0    zn/(zn-zf)  1
-	//
-	// Note that D3D uses column major matrices, we use row-major, so above is transposed.
-
-	float matrix[16] = {
-		2.0f / width, 0.0f, 0.0f, 0.0f,
-		0.0f, 2.0f / height, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f / (nearPlane - farPlane), nearPlane / (nearPlane - farPlane),
-		0.0f, 0.0f, 0.0f, 1.0f
-	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
-}
-
-ZG_API void zgUtilCreateOrthographicProjectionReverse(
-	float rowMajorMatrixOut[16],
-	float width,
-	float height,
-	float nearPlane,
-	float farPlane)
-{
-	assert(0.0f < width);
-	assert(0.0f < height);
-	assert(0.0f < nearPlane);
-	assert(nearPlane < farPlane);
-
-	// http://dev.theomader.com/depth-precision/
-	// "This can be achieved by multiplying the projection matrix with a simple ‘z reversal’ matrix"
-	// 1, 0, 0, 0
-	// 0, 1, 0, 0
-	// 0, 0, -1, 1
-	// 0, 0, 0, 1
-
-	float matrix[16] = {
-		2.0f / width, 0.0f, 0.0f, 0.0f,
-		0.0f, 2.0f / height, 0.0f, 0.0f,
-		0.0f, 0.0f, -1.0f / (nearPlane - farPlane), 1.0f - (nearPlane / (nearPlane - farPlane)),
-		0.0f, 0.0f, 0.0f, 1.0f
-	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(float) * 16);
-}
