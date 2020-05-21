@@ -69,22 +69,16 @@ static void realMain(SDL_Window* window) noexcept
 	zg::CommandQueue presentQueue;
 	CHECK_ZG zg::CommandQueue::getPresentQueue(presentQueue);
 
-	// Create memory heaps
+	// Create buffers
 	constexpr uint32_t BUFFER_ALIGNMENT = 64 * 1024; // Buffers must be 64KiB aligned
 	constexpr uint32_t NUM_VECS = 1024;
 	constexpr uint32_t NUM_FLOATS = NUM_VECS * 4;
 	constexpr uint32_t BUFFER_SIZE_BYTES = NUM_FLOATS * sizeof(float);
-	zg::MemoryHeap uploadHeap, deviceHeap, downloadHeap;
-	CHECK_ZG uploadHeap.create(BUFFER_SIZE_BYTES, ZG_MEMORY_TYPE_UPLOAD);
-	CHECK_ZG deviceHeap.create(BUFFER_ALIGNMENT * 2, ZG_MEMORY_TYPE_DEVICE);
-	CHECK_ZG downloadHeap.create(BUFFER_SIZE_BYTES, ZG_MEMORY_TYPE_DOWNLOAD);
-
-	// Create buffers
 	zg::Buffer uploadBuffer, deviceBufferSrc, deviceBufferDst, downloadBuffer;
-	CHECK_ZG uploadHeap.bufferCreate(uploadBuffer, 0, BUFFER_SIZE_BYTES);
-	CHECK_ZG deviceHeap.bufferCreate(deviceBufferSrc, 0, BUFFER_SIZE_BYTES);
-	CHECK_ZG deviceHeap.bufferCreate(deviceBufferDst, BUFFER_ALIGNMENT, BUFFER_SIZE_BYTES);
-	CHECK_ZG downloadHeap.bufferCreate(downloadBuffer, 0, BUFFER_SIZE_BYTES);
+	CHECK_ZG uploadBuffer.create(BUFFER_SIZE_BYTES, ZG_MEMORY_TYPE_UPLOAD);
+	CHECK_ZG deviceBufferSrc.create(BUFFER_SIZE_BYTES, ZG_MEMORY_TYPE_DEVICE);
+	CHECK_ZG deviceBufferDst.create(BUFFER_SIZE_BYTES, ZG_MEMORY_TYPE_DEVICE);
+	CHECK_ZG downloadBuffer.create(BUFFER_SIZE_BYTES, ZG_MEMORY_TYPE_DOWNLOAD);
 
 	// Copy data to upload buffer
 	float referenceData[NUM_FLOATS];

@@ -81,7 +81,6 @@ public:
 		ZgCommandQueue* queue,
 		uint32_t maxNumBuffers,
 		ComPtr<ID3D12Device3> device,
-		D3DX12Residency::ResidencyManager* residencyManager,
 		D3D12DescriptorRingBuffer* descriptorBuffer) noexcept;
 	void swap(ZgCommandList& other) noexcept;
 	void destroy() noexcept;
@@ -193,8 +192,6 @@ public:
 	ComPtr<ID3D12GraphicsCommandList> commandList;
 	uint64_t fenceValue = 0;
 
-	D3DX12Residency::ResidencySet* residencySet = nullptr;
-
 	sfz::Array<uint64_t> pendingBufferIdentifiers;
 	sfz::Array<PendingBufferState> pendingBufferStates;
 
@@ -235,7 +232,6 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	ComPtr<ID3D12Device3> mDevice;
-	D3DX12Residency::ResidencyManager* mResidencyManager = nullptr;
 	D3D12DescriptorRingBuffer* mDescriptorBuffer = nullptr;
 	bool mPipelineSet = false; // Only allow a single pipeline per command list
 	ZgPipelineRender* mBoundPipelineRender = nullptr;

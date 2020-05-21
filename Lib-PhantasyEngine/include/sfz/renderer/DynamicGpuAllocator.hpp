@@ -69,8 +69,6 @@ public:
 	// Allocation methods
 	// --------------------------------------------------------------------------------------------
 
-	zg::Buffer allocateBuffer(uint32_t sizeBytes) noexcept;
-
 	zg::Texture2D allocateTexture2D(
 		ZgTextureFormat format,
 		uint32_t width,

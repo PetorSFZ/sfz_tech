@@ -68,9 +68,6 @@ struct ImGuiRenderState final {
 	zg::MemoryHeap fontTextureHeap;
 	zg::Texture2D fontTexture;
 
-	// Memory used to upload ImgGi vertices and indices for a given frame
-	zg::MemoryHeap uploadHeap;
-
 	// Per frame state
 	sfz::Array<ImGuiFrameState> frameStates;
 	ImGuiFrameState& getFrameState(uint64_t idx) { return frameStates[idx % frameStates.size()]; }
@@ -208,19 +205,12 @@ ZgResult imguiInitRenderState(
 	}
 	ASSERT_ZG stateOut->fontTexture.setDebugName("ImGui_FontTexture");
 
-	// Allocate memory for vertex and index buffer
-	const uint64_t uploadHeapNumBytes = (IMGUI_VERTEX_BUFFER_SIZE + IMGUI_INDEX_BUFFER_SIZE) * frameLatency;
-	{
-		ZgResult res = stateOut->uploadHeap.create(uploadHeapNumBytes, ZG_MEMORY_TYPE_UPLOAD);
-		if (!zgIsSuccess(res)) return res;
-	}
-
 	// Upload font texture to GPU
 	{
 		// Utilize vertex and index buffer upload heap to upload font texture
 		// Create temporary upload buffer
 		zg::Buffer tmpUploadBuffer;
-		ASSERT_ZG stateOut->uploadHeap.bufferCreate(tmpUploadBuffer, 0, texAllocInfo.sizeInBytes);
+		ASSERT_ZG tmpUploadBuffer.create(texAllocInfo.sizeInBytes, ZG_MEMORY_TYPE_UPLOAD);
 
 		// Copy to the texture
 		zg::CommandList commandList;
@@ -239,17 +229,14 @@ ZgResult imguiInitRenderState(
 
 		ASSERT_ZG frame.fence.create();
 
-		ASSERT_ZG stateOut->uploadHeap.bufferCreate(
-			frame.uploadVertexBuffer, uploadHeapOffset, IMGUI_VERTEX_BUFFER_SIZE);
+		ASSERT_ZG frame.uploadVertexBuffer.create(IMGUI_VERTEX_BUFFER_SIZE, ZG_MEMORY_TYPE_UPLOAD);
 		uploadHeapOffset += IMGUI_VERTEX_BUFFER_SIZE;
 		ASSERT_ZG frame.uploadVertexBuffer.setDebugName(sfz::str32("ImGui_VertexBuffer_%u", i));
 
-		ASSERT_ZG stateOut->uploadHeap.bufferCreate(
-			frame.uploadIndexBuffer, uploadHeapOffset, IMGUI_INDEX_BUFFER_SIZE);
+		ASSERT_ZG frame.uploadIndexBuffer.create(IMGUI_INDEX_BUFFER_SIZE, ZG_MEMORY_TYPE_UPLOAD);
 		uploadHeapOffset += IMGUI_INDEX_BUFFER_SIZE;
 		ASSERT_ZG frame.uploadIndexBuffer.setDebugName(sfz::str32("ImGui_IndexBuffer_%u", i));
 	}
-	sfz_assert(uploadHeapOffset == uploadHeapNumBytes);
 
 	// TODO: Remove
 	stateOut->tmpVertices.init(IMGUI_MAX_NUM_VERTICES, allocator, sfz_dbg(""));
@@ -264,7 +251,7 @@ void imguiDestroyRenderState(ImGuiRenderState*& state) noexcept
 	sfz_assert(state != nullptr);
 	sfz_assert(state->allocator != nullptr);
 	sfz::Allocator* allocator = state->allocator;
-	allocator->deallocate(state);
+	allocator->deleteObject(state);
 	state = nullptr;
 }
 

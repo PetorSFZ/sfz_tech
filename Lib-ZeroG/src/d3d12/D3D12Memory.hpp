@@ -20,8 +20,11 @@
 
 #include <atomic>
 
+#include <D3D12MemAlloc.h>
+
 #include "ZeroG.h"
 #include "d3d12/D3D12Common.hpp"
+
 
 // Helper functions
 // ------------------------------------------------------------------------------------------------
@@ -41,14 +44,13 @@ public:
 	ZgMemoryHeap& operator= (const ZgMemoryHeap&) = delete;
 	ZgMemoryHeap(ZgMemoryHeap&&) = delete;
 	ZgMemoryHeap& operator= (ZgMemoryHeap&&) = delete;
-	~ZgMemoryHeap() noexcept;
+	~ZgMemoryHeap() noexcept
+	{
+
+	}
 
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
-
-	ZgResult bufferCreate(
-		ZgBuffer** bufferOut,
-		const ZgBufferCreateInfo& createInfo) noexcept;
 
 	ZgResult texture2DCreate(
 		ZgTexture2D** textureOut,
@@ -63,7 +65,6 @@ public:
 	ZgMemoryType memoryType = ZG_MEMORY_TYPE_UNDEFINED;
 	uint64_t sizeBytes = 0;
 	ComPtr<ID3D12Heap> heap;
-	D3DX12Residency::ManagedObject managedObject;
 };
 
 // D3D12 Memory Heap functions
@@ -72,7 +73,6 @@ public:
 ZgResult createMemoryHeap(
 	ID3D12Device3& device,
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
-	D3DX12Residency::ResidencyManager& residencyManager,
 	ZgMemoryHeap** heapOut,
 	const ZgMemoryHeapCreateInfo& createInfo) noexcept;
 
@@ -90,7 +90,13 @@ public:
 	ZgBuffer& operator= (const ZgBuffer&) = delete;
 	ZgBuffer(ZgBuffer&&) = delete;
 	ZgBuffer& operator= (ZgBuffer&&) = delete;
-	~ZgBuffer() noexcept {}
+	~ZgBuffer() noexcept
+	{
+		if (allocation != nullptr) {
+			allocation->Release();
+			allocation = nullptr;
+		}
+	}
 
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
@@ -108,10 +114,12 @@ public:
 	// Members
 	// --------------------------------------------------------------------------------------------
 
+	ZgMemoryType memoryType = ZG_MEMORY_TYPE_UNDEFINED;
+	D3D12MA::Allocation* allocation = nullptr;
+
 	// A unique identifier for this buffer
 	uint64_t identifier = 0;
 
-	ZgMemoryHeap* memoryHeap = nullptr;
 	uint64_t sizeBytes = 0;
 	ComPtr<ID3D12Resource> resource;
 
@@ -126,6 +134,82 @@ public:
 
 	ZgResult setDebugName(const char* name) noexcept;
 };
+
+inline ZgResult createBuffer(
+	ZgBuffer*& bufferOut,
+	const ZgBufferCreateInfo& createInfo,
+	D3D12MA::Allocator* d3d12Allocator,
+	std::atomic_uint64_t* resourceUniqueIdentifierCounter) noexcept
+{
+	D3D12_RESOURCE_STATES initialResourceState = [&]() {
+		switch (createInfo.memoryType) {
+		case ZG_MEMORY_TYPE_UPLOAD: return D3D12_RESOURCE_STATE_GENERIC_READ;
+		case ZG_MEMORY_TYPE_DOWNLOAD: return D3D12_RESOURCE_STATE_COPY_DEST;
+		case ZG_MEMORY_TYPE_DEVICE: return D3D12_RESOURCE_STATE_COMMON;
+		}
+		sfz_assert(false);
+		return D3D12_RESOURCE_STATE_COMMON;
+	}();
+
+	bool allowUav = createInfo.memoryType == ZG_MEMORY_TYPE_DEVICE;
+
+	// Fill resource desc
+	D3D12_RESOURCE_DESC desc = {};
+	desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	desc.Alignment = 0;
+	desc.Width = sfz::roundUpAligned(createInfo.sizeInBytes, 256);
+	desc.Height = 1;
+	desc.DepthOrArraySize = 1;
+	desc.MipLevels = 1;
+	desc.Format = DXGI_FORMAT_UNKNOWN;
+	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Quality = 0;
+	desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	desc.Flags =
+		allowUav ? D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS : D3D12_RESOURCE_FLAGS(0);
+
+	// Fill allocation desc
+	D3D12MA::ALLOCATION_DESC allocationDesc = {};
+	allocationDesc.Flags = D3D12MA::ALLOCATION_FLAG_NONE;// D3D12MA::ALLOCATION_FLAG_COMMITTED; // ALLOCATION_FLAG_WITHIN_BUDGET
+	allocationDesc.HeapType = [&]() {
+		switch (createInfo.memoryType) {
+		case ZG_MEMORY_TYPE_UPLOAD: return D3D12_HEAP_TYPE_UPLOAD;
+		case ZG_MEMORY_TYPE_DOWNLOAD: return D3D12_HEAP_TYPE_READBACK;
+		case ZG_MEMORY_TYPE_DEVICE: return D3D12_HEAP_TYPE_DEFAULT;
+		}
+		sfz_assert_hard(false);
+	}();
+	allocationDesc.ExtraHeapFlags = D3D12_HEAP_FLAG_NONE; // Can be ignored
+	allocationDesc.CustomPool = nullptr;
+
+	ComPtr<ID3D12Resource> resource;
+	D3D12MA::Allocation* allocation = nullptr;
+	HRESULT res = d3d12Allocator->CreateResource(
+		&allocationDesc,
+		&desc,
+		initialResourceState,
+		NULL,
+		&allocation,
+		IID_PPV_ARGS(&resource));
+	if (D3D12_FAIL(res)) {
+		return  ZG_ERROR_GENERIC;
+	}
+
+	// Allocate buffer
+	ZgBuffer* buffer = getAllocator()->newObject<ZgBuffer>(sfz_dbg("ZgBuffer"));
+
+	// Copy stuff
+	buffer->memoryType = createInfo.memoryType;
+	buffer->allocation = allocation;
+	buffer->identifier = std::atomic_fetch_add(resourceUniqueIdentifierCounter, 1);
+	buffer->sizeBytes = sfz::roundUpAligned(createInfo.sizeInBytes, 256);
+	buffer->resource = resource;
+	buffer->lastCommittedState = initialResourceState;
+
+	// Return buffer
+	bufferOut = buffer;
+	return ZG_SUCCESS;
+}
 
 // ZgTexture2D
 // ------------------------------------------------------------------------------------------------

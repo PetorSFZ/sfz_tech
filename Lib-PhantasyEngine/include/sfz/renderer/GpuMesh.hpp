@@ -49,17 +49,13 @@ ShaderMaterial cpuMaterialToShaderMaterial(const Material& cpuMaterial) noexcept
 
 GpuMesh gpuMeshAllocate(
 	const Mesh& cpuMesh,
-	DynamicGpuAllocator& gpuAllocatorDevice,
 	sfz::Allocator* cpuAllocator) noexcept;
 
-void gpuMeshDeallocate(
-	GpuMesh& gpuMesh,
-	DynamicGpuAllocator& gpuAllocatorDevice) noexcept;
+void gpuMeshDeallocate(GpuMesh& gpuMesh) noexcept;
 
 void gpuMeshUploadBlocking(
 	GpuMesh& gpuMesh,
 	const Mesh& cpuMesh,
-	DynamicGpuAllocator& gpuAllocatorUpload,
 	sfz::Allocator* cpuAllocator,
 	zg::CommandQueue& copyQueue) noexcept;
 

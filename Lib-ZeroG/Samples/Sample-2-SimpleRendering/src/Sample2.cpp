@@ -51,43 +51,23 @@ struct Vertex {
 };
 static_assert(sizeof(Vertex) == sizeof(float) * 8, "Vertex is padded");
 
-// A simple helper function that allocates a heap and a buffer that covers the entirety of it.
-// In practice you want to have multiple buffers per heap and use some sort of allocation scheme,
-// but this is good enough for this sample.
-static void allocateMemoryHeapAndBuffer(
-	zg::MemoryHeap& heapOut,
-	zg::Buffer& bufferOut,
-	ZgMemoryType memoryType,
-	uint64_t numBytes) noexcept
-{
-	CHECK_ZG heapOut.create(numBytes, memoryType);
-	CHECK_ZG heapOut.bufferCreate(bufferOut, 0, numBytes);
-}
-
-// A simple helper function that allocates and copies data to a device buffer In practice you will
-// likely want to do something smarter.
 static void createDeviceBufferSimpleBlocking(
 	zg::CommandQueue& copyQueue,
 	zg::Buffer& bufferOut,
-	zg::MemoryHeap& memoryHeapOut,
 	const void* data,
 	uint64_t numBytes,
 	uint64_t bufferSizeBytes = 0) noexcept
 {
 	// Create temporary upload buffer (accessible from CPU)
-	zg::MemoryHeap uploadHeap;
 	zg::Buffer uploadBuffer;
-	allocateMemoryHeapAndBuffer(uploadHeap, uploadBuffer,
-		ZG_MEMORY_TYPE_UPLOAD, bufferSizeBytes != 0 ? bufferSizeBytes : numBytes);
+	CHECK_ZG uploadBuffer.create(bufferSizeBytes != 0 ? bufferSizeBytes : numBytes, ZG_MEMORY_TYPE_UPLOAD);
 
 	// Copy cube vertices to upload buffer
 	CHECK_ZG uploadBuffer.memcpyTo(0, data, numBytes);
 
 	// Create device buffer
-	zg::MemoryHeap deviceHeap;
 	zg::Buffer deviceBuffer;
-	allocateMemoryHeapAndBuffer(deviceHeap, deviceBuffer,
-		ZG_MEMORY_TYPE_DEVICE, bufferSizeBytes != 0 ? bufferSizeBytes : numBytes);
+	CHECK_ZG deviceBuffer.create(bufferSizeBytes != 0 ? bufferSizeBytes : numBytes, ZG_MEMORY_TYPE_DEVICE);
 
 	// Copy to the device buffer
 	zg::CommandList commandList;
@@ -98,7 +78,6 @@ static void createDeviceBufferSimpleBlocking(
 	CHECK_ZG copyQueue.flush();
 
 	bufferOut = std::move(deviceBuffer);
-	memoryHeapOut = std::move(deviceHeap);
 }
 
 using time_point = std::chrono::high_resolution_clock::time_point;
@@ -300,16 +279,14 @@ static void realMain(SDL_Window* window) noexcept
 	}
 
 	zg::Buffer cubeVertexBufferDevice;
-	zg::MemoryHeap cubeVertexMemoryHeapDevice;
 	createDeviceBufferSimpleBlocking(copyQueue, cubeVertexBufferDevice,
-		cubeVertexMemoryHeapDevice, cubeVertices, sizeof(Vertex) * CUBE_NUM_VERTICES);
+		cubeVertices, sizeof(Vertex) * CUBE_NUM_VERTICES);
 	CHECK_ZG cubeVertexBufferDevice.setDebugName("cubeVertexBuffer");
 
 	// Create a index buffer for the cube's vertices
 	zg::Buffer cubeIndexBufferDevice;
-	zg::MemoryHeap cubeIndexMemoryHeapDevice;
 	createDeviceBufferSimpleBlocking(copyQueue, cubeIndexBufferDevice,
-		cubeIndexMemoryHeapDevice, CUBE_INDICES, sizeof(uint32_t) * CUBE_NUM_INDICES);
+		CUBE_INDICES, sizeof(uint32_t) * CUBE_NUM_INDICES);
 	CHECK_ZG cubeIndexBufferDevice.setDebugName("cubeIndexBuffer");
 
 
@@ -317,9 +294,8 @@ static void realMain(SDL_Window* window) noexcept
 	Vector offsets;
 	offsets.x = 0.0f;
 	zg::Buffer constBufferDevice;
-	zg::MemoryHeap constBufferMemoryHeapDevice;
 	createDeviceBufferSimpleBlocking(copyQueue, constBufferDevice,
-		constBufferMemoryHeapDevice, &offsets, sizeof(Vector), 256);
+		&offsets, sizeof(Vector), 256);
 	CHECK_ZG constBufferDevice.setDebugName("constBufferDevice");
 
 
@@ -358,25 +334,11 @@ static void realMain(SDL_Window* window) noexcept
 
 
 		// Create temporary upload buffer (accessible from CPU)
-		zg::MemoryHeap uploadHeapLvl0;
-		zg::Buffer uploadBufferLvl0;
-		allocateMemoryHeapAndBuffer(uploadHeapLvl0, uploadBufferLvl0,
-			ZG_MEMORY_TYPE_UPLOAD, textureAllocInfo.sizeInBytes);
-
-		zg::MemoryHeap uploadHeapLvl1;
-		zg::Buffer uploadBufferLvl1;
-		allocateMemoryHeapAndBuffer(uploadHeapLvl1, uploadBufferLvl1,
-			ZG_MEMORY_TYPE_UPLOAD, textureAllocInfo.sizeInBytes);
-
-		zg::MemoryHeap uploadHeapLvl2;
-		zg::Buffer uploadBufferLvl2;
-		allocateMemoryHeapAndBuffer(uploadHeapLvl2, uploadBufferLvl2,
-			ZG_MEMORY_TYPE_UPLOAD, textureAllocInfo.sizeInBytes);
-
-		zg::MemoryHeap uploadHeapLvl3;
-		zg::Buffer uploadBufferLvl3;
-		allocateMemoryHeapAndBuffer(uploadHeapLvl3, uploadBufferLvl3,
-			ZG_MEMORY_TYPE_UPLOAD, textureAllocInfo.sizeInBytes);
+		zg::Buffer uploadBufferLvl0, uploadBufferLvl1, uploadBufferLvl2, uploadBufferLvl3;
+		CHECK_ZG uploadBufferLvl0.create(textureAllocInfo.sizeInBytes, ZG_MEMORY_TYPE_UPLOAD);
+		CHECK_ZG uploadBufferLvl1.create(textureAllocInfo.sizeInBytes, ZG_MEMORY_TYPE_UPLOAD);
+		CHECK_ZG uploadBufferLvl2.create(textureAllocInfo.sizeInBytes, ZG_MEMORY_TYPE_UPLOAD);
+		CHECK_ZG uploadBufferLvl3.create(textureAllocInfo.sizeInBytes, ZG_MEMORY_TYPE_UPLOAD);
 
 		// Copy to the texture
 		zg::CommandList commandList;

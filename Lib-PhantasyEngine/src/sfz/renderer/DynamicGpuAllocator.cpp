@@ -372,56 +372,6 @@ PageInfo DynamicGpuAllocator::queryPageInfo(uint32_t pageIdx) const noexcept
 // Allocation methods
 // ------------------------------------------------------------------------------------------------
 
-zg::Buffer DynamicGpuAllocator::allocateBuffer(uint32_t sizeBytes) noexcept
-{
-	std::lock_guard<std::mutex> lock(mState->mutex);
-	sfz_assert(mState->memoryType != ZG_MEMORY_TYPE_TEXTURE);
-	sfz_assert(mState->memoryType != ZG_MEMORY_TYPE_FRAMEBUFFER);
-
-	// Get index of page
-	uint32_t pageIdx = findAppropriatePage(mState->pages, sizeBytes);
-
-	// If no appropriate page found, allocate one
-	if (pageIdx == ~0u) {
-		
-		// Get page size
-		// Can potentially be bigger than default size for big resources
-		uint32_t pageSize = sfz::max(mState->pageSize, sizeBytes);
-
-		// Allocate memory page
-		MemoryPage page;
-		bool createSuccess = createMemoryPage(page, pageSize, mState->memoryType, mState->allocator);
-		sfz_assert(createSuccess);
-		if (!createSuccess) return zg::Buffer();
-
-		// Insert memory page into list of pages and set page index
-		pageIdx = mState->pages.size();
-		mState->pages.add(std::move(page));
-	}
-
-	// Allocate buffer
-	MemoryPage& page = mState->pages[pageIdx];
-	zg::Buffer buffer;
-	Block bufferBlock;
-	bool bufferAllocSuccess = pageAllocateItem(page, sizeBytes, bufferBlock,
-		[&](MemoryPage& page, Block allocBlock) {
-		return CHECK_ZG page.heap.bufferCreate(buffer, allocBlock.offset, allocBlock.size);
-	});
-	sfz_assert(bufferAllocSuccess);
-	if (!bufferAllocSuccess) return zg::Buffer();
-
-	// Store entry with information about allocation
-	AllocEntry entry;
-	entry.block = bufferBlock;
-	entry.heapPtr = page.heap.memoryHeap;
-	mState->entries.put(buffer.buffer, entry);
-
-	// Increment total num allocation counter
-	mState->totalNumAllocations += 1;
-
-	return buffer;
-}
-
 zg::Texture2D DynamicGpuAllocator::allocateTexture2D(
 	ZgTextureFormat format,
 	uint32_t width,

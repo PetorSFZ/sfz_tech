@@ -28,17 +28,11 @@ ZgProfiler::~ZgProfiler() noexcept
 	MutexAccessor<D3D12ProfilerState> accessor = state.access();
 	D3D12ProfilerState& profilerState = accessor.data();
 
-	// Deallocate download heap and buffer
-	if (profilerState.downloadHeap != nullptr) {
-		sfz_assert(profilerState.downloadBuffer != nullptr);
-
+	// Deallocate download buffer
+	if (profilerState.downloadBuffer != nullptr) {
 		// Deallocate buffer
 		getAllocator()->deleteObject(profilerState.downloadBuffer);
 		profilerState.downloadBuffer = nullptr;
-
-		// Deallocate heap
-		getAllocator()->deleteObject(profilerState.downloadHeap);
-		profilerState.downloadHeap = nullptr;
 	}
 }
 
@@ -84,8 +78,8 @@ ZgResult ZgProfiler::getMeasurement(
 
 ZgResult d3d12CreateProfiler(
 	ID3D12Device3& device,
+	D3D12MA::Allocator* d3d12allocator,
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
-	D3DX12Residency::ResidencyManager& residencyManager,
 	ZgProfiler** profilerOut,
 	const ZgProfilerCreateInfo& createInfo) noexcept
 {
@@ -103,24 +97,14 @@ ZgResult d3d12CreateProfiler(
 	}
 
 	// Create download buffer
-	ZgMemoryHeap* downloadHeap = nullptr;
 	ZgBuffer* downloadBuffer = nullptr;
 	{
-		// Create download heap
-		ZgMemoryHeapCreateInfo heapInfo = {};
-		heapInfo.sizeInBytes =
-			sizeof(uint64_t) * TIMESTAMPS_PER_MEASUREMENT * createInfo.maxNumMeasurements;
-		heapInfo.memoryType = ZG_MEMORY_TYPE_DOWNLOAD;
-		ZgResult res = createMemoryHeap(
-			device, resourceUniqueIdentifierCounter, residencyManager, &downloadHeap, heapInfo);
-		if (res != ZG_SUCCESS) return res;
-
 		// Create download buffer
 		ZgBufferCreateInfo bufferInfo = {};
-		bufferInfo.offsetInBytes = 0;
-		bufferInfo.sizeInBytes = heapInfo.sizeInBytes;
+		bufferInfo.memoryType = ZG_MEMORY_TYPE_DOWNLOAD;
+		bufferInfo.sizeInBytes = sizeof(uint64_t) * TIMESTAMPS_PER_MEASUREMENT * createInfo.maxNumMeasurements;
 		ZgBuffer* bufferTmp = nullptr;
-		res = downloadHeap->bufferCreate(&bufferTmp, bufferInfo);
+		ZgResult res = createBuffer(bufferTmp, bufferInfo, d3d12allocator, resourceUniqueIdentifierCounter);
 		if (res != ZG_SUCCESS) {
 			getAllocator()->deleteObject(downloadBuffer);
 			return res;
@@ -143,7 +127,6 @@ ZgResult d3d12CreateProfiler(
 
 		state.queryHeap = queryHeap;
 
-		state.downloadHeap = downloadHeap;
 		state.downloadBuffer = downloadBuffer;
 	}
 

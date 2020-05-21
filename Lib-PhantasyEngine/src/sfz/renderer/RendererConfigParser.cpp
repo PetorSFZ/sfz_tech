@@ -582,14 +582,12 @@ bool allocateStageMemory(RendererState& state) noexcept
 					item.shaderRegister = desc.bufferRegister;
 
 					// Allocate upload buffer
-					item.uploadBuffer =
-						state.gpuAllocatorUpload.allocateBuffer(desc.sizeInBytes);
+					CHECK_ZG item.uploadBuffer.create(desc.sizeInBytes, ZG_MEMORY_TYPE_UPLOAD);
 					sfz_assert(item.uploadBuffer.valid());
 					if (!item.uploadBuffer.valid()) success = false;
 
 					// Allocate device buffer
-					item.deviceBuffer =
-						state.gpuAllocatorDevice.allocateBuffer(desc.sizeInBytes);
+					CHECK_ZG item.deviceBuffer.create(desc.sizeInBytes, ZG_MEMORY_TYPE_DEVICE);
 					sfz_assert(item.deviceBuffer.valid());
 					if (!item.deviceBuffer.valid()) success = false;
 				});
@@ -598,32 +596,6 @@ bool allocateStageMemory(RendererState& state) noexcept
 	}
 
 	return success;
-}
-
-bool deallocateStageMemory(RendererState& state) noexcept
-{
-	for (StageGroup& group : state.configurable.presentQueue) {
-		for (Stage& stage : group.stages) {
-			for (PerFrameData<ConstantBufferMemory>& framed : stage.constantBuffers) {
-				framed.destroy([&](ConstantBufferMemory& item) {
-
-					// Deallocate upload buffer
-					sfz_assert(item.uploadBuffer.valid());
-					state.gpuAllocatorUpload.deallocate(item.uploadBuffer);
-					sfz_assert(!item.uploadBuffer.valid());
-
-					// Deallocate device buffer
-					sfz_assert(item.deviceBuffer.valid());
-					state.gpuAllocatorDevice.deallocate(item.deviceBuffer);
-					sfz_assert(!item.deviceBuffer.valid());
-				});
-			}
-
-			stage.constantBuffers.destroy();
-		}
-	}
-
-	return true;
 }
 
 } // namespace sfz

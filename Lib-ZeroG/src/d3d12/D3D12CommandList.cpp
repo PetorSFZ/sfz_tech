@@ -54,7 +54,6 @@ void ZgCommandList::create(
 	ZgCommandQueue* queueIn,
 	uint32_t maxNumBuffers,
 	ComPtr<ID3D12Device3> device,
-	D3DX12Residency::ResidencyManager* residencyManager,
 	D3D12DescriptorRingBuffer* descriptorBuffer) noexcept
 {
 	queue = queueIn;
@@ -64,8 +63,6 @@ void ZgCommandList::create(
 	pendingBufferStates.init(maxNumBuffers, getAllocator(), sfz_dbg("ZeroG - D3D12CommandList - Internal"));
 	pendingTextureIdentifiers.init(maxNumBuffers, getAllocator(), sfz_dbg("ZeroG - D3D12CommandList - Internal"));
 	pendingTextureStates.init(maxNumBuffers, getAllocator(), sfz_dbg("ZeroG - D3D12CommandList - Internal"));
-
-	residencySet = residencyManager->CreateResidencySet();
 }
 
 void ZgCommandList::swap(ZgCommandList& other) noexcept
@@ -75,15 +72,12 @@ void ZgCommandList::swap(ZgCommandList& other) noexcept
 	std::swap(this->commandList, other.commandList);
 	std::swap(this->fenceValue, other.fenceValue);
 
-	std::swap(this->residencySet, other.residencySet);
-
 	this->pendingBufferIdentifiers.swap(other.pendingBufferIdentifiers);
 	this->pendingBufferStates.swap(other.pendingBufferStates);
 	this->pendingTextureIdentifiers.swap(other.pendingTextureIdentifiers);
 	this->pendingTextureStates.swap(other.pendingTextureStates);
 
 	std::swap(this->mDevice, other.mDevice);
-	std::swap(this->mResidencyManager, other.mResidencyManager);
 	std::swap(this->mDescriptorBuffer, other.mDescriptorBuffer);
 	std::swap(this->mPipelineSet, other.mPipelineSet);
 	std::swap(this->mBoundPipelineRender, other.mBoundPipelineRender);
@@ -99,18 +93,12 @@ void ZgCommandList::destroy() noexcept
 	commandList = nullptr;
 	fenceValue = 0;
 
-	if (residencySet != nullptr) {
-		mResidencyManager->DestroyResidencySet(residencySet);
-	}
-	residencySet = nullptr;
-
 	pendingBufferIdentifiers.destroy();
 	pendingBufferStates.destroy();
 	pendingTextureIdentifiers.destroy();
 	pendingTextureStates.destroy();
 
 	mDevice = nullptr;
-	mResidencyManager = nullptr;
 	mDescriptorBuffer = nullptr;
 	mPipelineSet = false;
 	mBoundPipelineRender = nullptr;
@@ -135,7 +123,7 @@ ZgResult ZgCommandList::memcpyBufferToBuffer(
 	// Wanted resource states
 	D3D12_RESOURCE_STATES dstTargetState = D3D12_RESOURCE_STATE_COPY_DEST;
 	D3D12_RESOURCE_STATES srcTargetState = D3D12_RESOURCE_STATE_COPY_SOURCE;
-	if (srcBuffer->memoryHeap->memoryType == ZG_MEMORY_TYPE_UPLOAD) {
+	if (srcBuffer->memoryType == ZG_MEMORY_TYPE_UPLOAD) {
 		srcTargetState = D3D12_RESOURCE_STATE_GENERIC_READ;
 	}
 
@@ -151,10 +139,6 @@ ZgResult ZgCommandList::memcpyBufferToBuffer(
 		dstBuffer->sizeBytes == numBytes &&
 		dstBufferOffsetBytes == 0 &&
 		srcBufferOffsetBytes == 0;
-
-	// Add buffers to residency set
-	residencySet->Insert(&srcBuffer->memoryHeap->managedObject);
-	residencySet->Insert(&dstBuffer->memoryHeap->managedObject);
 
 	// Copy entire buffer
 	if (copyEntireBuffer) {
@@ -200,7 +184,7 @@ ZgResult ZgCommandList::memcpyToTexture(
 	if (srcImageCpu.height != dstTexMipHeight) return ZG_ERROR_INVALID_ARGUMENT;
 	
 	// Check that temp buffer is upload
-	if (tmpBuffer.memoryHeap->memoryType != ZG_MEMORY_TYPE_UPLOAD) return ZG_ERROR_INVALID_ARGUMENT;
+	if (tmpBuffer.memoryType != ZG_MEMORY_TYPE_UPLOAD) return ZG_ERROR_INVALID_ARGUMENT;
 
 	// Check that upload buffer is big enough
 	uint32_t numBytesPerPixel = numBytesPerPixelForFormat(srcImageCpu.format);
@@ -242,10 +226,6 @@ ZgResult ZgCommandList::memcpyToTexture(
 	ZgResult stateRes = setTextureState(dstTexture, dstTextureMipLevel, D3D12_RESOURCE_STATE_COPY_DEST);
 	if (stateRes != ZG_SUCCESS) return stateRes;
 
-	// Insert into residency set
-	residencySet->Insert(&tmpBuffer.memoryHeap->managedObject);
-	residencySet->Insert(&dstTexture.textureHeap->managedObject);
-
 	// Issue copy command
 	D3D12_TEXTURE_COPY_LOCATION tmpCopyLoc = {};
 	tmpCopyLoc.pResource = tmpBuffer.resource.Get();
@@ -272,8 +252,8 @@ ZgResult ZgCommandList::memcpyToTexture(
 ZgResult ZgCommandList::enableQueueTransitionBuffer(ZgBuffer* buffer) noexcept
 {
 	// Check that it is a device buffer
-	if (buffer->memoryHeap->memoryType == ZG_MEMORY_TYPE_UPLOAD ||
-		buffer->memoryHeap->memoryType == ZG_MEMORY_TYPE_DOWNLOAD) {
+	if (buffer->memoryType == ZG_MEMORY_TYPE_UPLOAD ||
+		buffer->memoryType == ZG_MEMORY_TYPE_DOWNLOAD) {
 		ZG_ERROR("enableQueueTransitionBuffer(): Can't transition upload and download buffers");
 		return ZG_ERROR_INVALID_ARGUMENT;
 	}
@@ -425,9 +405,6 @@ ZgResult ZgCommandList::setPipelineBindings(
 
 		// Set buffer resource state
 		setBufferState(*buffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-
-		// Insert into residency set
-		residencySet->Insert(&buffer->memoryHeap->managedObject);
 	}
 
 	// Create unordered resource views and fill (CPU) descriptors for unordered buffers
@@ -472,9 +449,6 @@ ZgResult ZgCommandList::setPipelineBindings(
 
 		// Set buffer resource state
 		setBufferState(*buffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-
-		// Insert into residency set
-		residencySet->Insert(&buffer->memoryHeap->managedObject);
 	}
 
 	// Create unordered access views and fill (CPU) descriptors for unordered textures
@@ -516,9 +490,6 @@ ZgResult ZgCommandList::setPipelineBindings(
 
 		// Set texture resource state
 		setTextureState(*texture, binding.mipLevel, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-
-		// Insert into residency set
-		residencySet->Insert(&texture->textureHeap->managedObject);
 	}
 
 	// Create shader resource views and fill (CPU) descriptors
@@ -574,9 +545,6 @@ ZgResult ZgCommandList::setPipelineBindings(
 			setTextureStateAllMipLevels(
 				*texture,
 				D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-
-			// Insert into residency set
-			residencySet->Insert(&texture->textureHeap->managedObject);
 		}
 	}
 
@@ -747,9 +715,6 @@ ZgResult ZgCommandList::setFramebuffer(
 			// Set resource state
 			sfz_assert(renderTarget->numMipmaps == 1);
 			setTextureState(*renderTarget, 0, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-			// Insert into residency set
-			residencySet->Insert(&renderTarget->textureHeap->managedObject);
 		}
 
 		// Depth buffer
@@ -759,9 +724,6 @@ ZgResult ZgCommandList::setFramebuffer(
 			// Set resource state
 			sfz_assert(depthBuffer->numMipmaps == 1);
 			setTextureState(*depthBuffer, 0, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-
-			// Insert into residency set
-			residencySet->Insert(&depthBuffer->textureHeap->managedObject);
 		}
 	}
 
@@ -919,10 +881,10 @@ ZgResult ZgCommandList::setIndexBuffer(
 {
 	// Set buffer resource state
 	ZgResult res;
-	if (indexBuffer->memoryHeap->memoryType == ZG_MEMORY_TYPE_DEVICE) {
+	if (indexBuffer->memoryType == ZG_MEMORY_TYPE_DEVICE) {
 		res = setBufferState(*indexBuffer, D3D12_RESOURCE_STATE_INDEX_BUFFER);
 	}
-	else if (indexBuffer->memoryHeap->memoryType == ZG_MEMORY_TYPE_UPLOAD) {
+	else if (indexBuffer->memoryType == ZG_MEMORY_TYPE_UPLOAD) {
 		res = setBufferState(*indexBuffer, D3D12_RESOURCE_STATE_GENERIC_READ);
 	}
 	else {
@@ -940,9 +902,6 @@ ZgResult ZgCommandList::setIndexBuffer(
 
 	// Set index buffer
 	commandList->IASetIndexBuffer(&indexBufferView);
-
-	// Insert into residency set
-	residencySet->Insert(&indexBuffer->memoryHeap->managedObject);
 
 	return ZG_SUCCESS;
 }
@@ -962,10 +921,10 @@ ZgResult ZgCommandList::setVertexBuffer(
 
 	// Set buffer resource state
 	ZgResult res;
-	if (vertexBuffer->memoryHeap->memoryType == ZG_MEMORY_TYPE_DEVICE) {
+	if (vertexBuffer->memoryType == ZG_MEMORY_TYPE_DEVICE) {
 		res = setBufferState(*vertexBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 	}
-	else if (vertexBuffer->memoryHeap->memoryType == ZG_MEMORY_TYPE_UPLOAD) {
+	else if (vertexBuffer->memoryType == ZG_MEMORY_TYPE_UPLOAD) {
 		res = setBufferState(*vertexBuffer, D3D12_RESOURCE_STATE_GENERIC_READ);
 	}
 	else {
@@ -981,9 +940,6 @@ ZgResult ZgCommandList::setVertexBuffer(
 
 	// Set vertex buffer
 	commandList->IASetVertexBuffers(vertexBufferSlot, 1, &vertexBufferView);
-
-	// Insert into residency set
-	residencySet->Insert(&vertexBuffer->memoryHeap->managedObject);
 
 	return ZG_SUCCESS;
 }
@@ -1078,9 +1034,6 @@ ZgResult ZgCommandList::profileEnd(
 
 	// Store ticks per second
 	state.ticksPerSecond[queryIdx] = timestampTicksPerSecond;
-	
-	// Insert into residency set
-	residencySet->Insert(&state.downloadHeap->managedObject);
 
 	return ZG_SUCCESS;
 }

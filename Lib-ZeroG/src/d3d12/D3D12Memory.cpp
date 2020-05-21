@@ -81,78 +81,8 @@ D3D12_RESOURCE_DESC createInfoToResourceDesc(const ZgTexture2DCreateInfo& info) 
 	return desc;
 }
 
-// ZgMemoryHeap: Constructors & destructors
-// ------------------------------------------------------------------------------------------------
-
-ZgMemoryHeap::~ZgMemoryHeap() noexcept
-{
-
-}
-
 // ZgMemoryHeap: Virtual methods
 // ------------------------------------------------------------------------------------------------
-
-ZgResult ZgMemoryHeap::bufferCreate(
-	ZgBuffer** bufferOut,
-	const ZgBufferCreateInfo& createInfo) noexcept
-{
-	ZG_ARG_CHECK(this->memoryType == ZG_MEMORY_TYPE_TEXTURE, "Can't allocate buffers from TEXTURE heap");
-	ZG_ARG_CHECK(this->memoryType == ZG_MEMORY_TYPE_FRAMEBUFFER, "Can't allocate buffers from FRAMEBUFFER heap");
-
-	// Create placed resource
-	ComPtr<ID3D12Resource> resource;
-	D3D12_RESOURCE_STATES initialResourceState = [&]() {
-		switch (memoryType) {
-		case ZG_MEMORY_TYPE_UPLOAD: return D3D12_RESOURCE_STATE_GENERIC_READ;
-		case ZG_MEMORY_TYPE_DOWNLOAD: return D3D12_RESOURCE_STATE_COPY_DEST;
-		case ZG_MEMORY_TYPE_DEVICE: return D3D12_RESOURCE_STATE_COMMON;
-		}
-		sfz_assert(false);
-		return D3D12_RESOURCE_STATE_COMMON;
-	}();
-	{
-		bool allowUav = memoryType == ZG_MEMORY_TYPE_DEVICE;
-
-		D3D12_RESOURCE_DESC desc = {};
-		desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-		desc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
-		desc.Width = createInfo.sizeInBytes;
-		desc.Height = 1;
-		desc.DepthOrArraySize = 1;
-		desc.MipLevels = 1;
-		desc.Format = DXGI_FORMAT_UNKNOWN;
-		desc.SampleDesc.Count = 1;
-		desc.SampleDesc.Quality = 0;
-		desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-		desc.Flags =
-			allowUav ? D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS : D3D12_RESOURCE_FLAGS(0);
-
-		// Create placed resource
-		if (D3D12_FAIL(device->CreatePlacedResource(
-			heap.Get(),
-			createInfo.offsetInBytes,
-			&desc,
-			initialResourceState,
-			nullptr,
-			IID_PPV_ARGS(&resource)))) {
-			return ZG_ERROR_GPU_OUT_OF_MEMORY;
-		}
-	}
-
-	// Allocate buffer
-	ZgBuffer* buffer = getAllocator()->newObject<ZgBuffer>(sfz_dbg("ZgBuffer"));
-
-	// Copy stuff
-	buffer->identifier = std::atomic_fetch_add(resourceUniqueIdentifierCounter, 1);
-	buffer->memoryHeap = this;
-	buffer->sizeBytes = createInfo.sizeInBytes;
-	buffer->resource = resource;
-	buffer->lastCommittedState = initialResourceState;
-
-	// Return buffer
-	*bufferOut = buffer;
-	return ZG_SUCCESS;
-}
 
 ZgResult ZgMemoryHeap::texture2DCreate(
 	ZgTexture2D** textureOut,
@@ -261,7 +191,6 @@ ZgResult ZgMemoryHeap::texture2DCreate(
 ZgResult createMemoryHeap(
 	ID3D12Device3& device,
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
-	D3DX12Residency::ResidencyManager& residencyManager,
 	ZgMemoryHeap** heapOut,
 	const ZgMemoryHeapCreateInfo& createInfo) noexcept
 {
@@ -301,10 +230,6 @@ ZgResult createMemoryHeap(
 	// Allocate memory heap
 	ZgMemoryHeap* memoryHeap = getAllocator()->newObject<ZgMemoryHeap>(sfz_dbg("ZgMemoryHeap"));
 
-	// Create residency manager object and begin tracking
-	memoryHeap->managedObject.Initialize(heap.Get(), createInfo.sizeInBytes);
-	residencyManager.BeginTrackingObject(&memoryHeap->managedObject);
-
 	// Copy stuff
 	memoryHeap->device = &device;
 	memoryHeap->resourceUniqueIdentifierCounter = resourceUniqueIdentifierCounter;
@@ -340,7 +265,7 @@ ZgResult ZgBuffer::memcpyTo(
 	uint64_t numBytes) noexcept
 {
 	ZgBuffer& dstBuffer = *this;
-	if (dstBuffer.memoryHeap->memoryType != ZG_MEMORY_TYPE_UPLOAD) return ZG_ERROR_INVALID_ARGUMENT;
+	if (dstBuffer.memoryType != ZG_MEMORY_TYPE_UPLOAD) return ZG_ERROR_INVALID_ARGUMENT;
 
 	// Not gonna read from buffer
 	D3D12_RANGE readRange = {};
@@ -373,7 +298,7 @@ ZgResult ZgBuffer::memcpyFrom(
 	uint64_t numBytes) noexcept
 {
 	ZgBuffer& srcBuffer = *this;
-	if (srcBuffer.memoryHeap->memoryType != ZG_MEMORY_TYPE_DOWNLOAD) return ZG_ERROR_INVALID_ARGUMENT;
+	if (srcBuffer.memoryType != ZG_MEMORY_TYPE_DOWNLOAD) return ZG_ERROR_INVALID_ARGUMENT;
 
 	// Specify range which we are going to read from in buffer
 	D3D12_RANGE readRange = {};

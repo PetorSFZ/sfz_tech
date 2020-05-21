@@ -23,6 +23,8 @@
 #include <cstring>
 #include <mutex>
 
+#include <D3D12MemAlloc.h>
+
 #include "common/Context.hpp"
 #include "common/ErrorReporting.hpp"
 #include "common/Logging.hpp"
@@ -36,6 +38,17 @@
 #include "d3d12/D3D12Memory.hpp"
 #include "d3d12/D3D12Pipelines.hpp"
 #include "d3d12/D3D12Profiler.hpp"
+
+// Implementation notes
+// ------------------------------------------------------------------------------------------------
+
+// D3D12's residency API is not supported, what will happen is instead that the app will likely
+// crash if the memory budget is exceeded. All resources are "resident" always, from MakeResident()
+// docs:
+//
+// "MakeResident is ref - counted, such that Evict must be called the same amount of times as
+// MakeResident before Evict takes effect. Objects that support residency are made resident during
+// creation, so a single Evict call will actually evict the object."
 
 // Constants
 // ------------------------------------------------------------------------------------------------
@@ -59,14 +72,14 @@ struct ZgContextState final {
 	ComPtr<IDXGIAdapter4> dxgiAdapter;
 	ComPtr<ID3D12Device3> device;
 
+	// D3D12 Memory Allocator
+	D3D12MA::Allocator* d3d12Allocator = nullptr;
+
 	// Debug info queue
 	ComPtr<ID3D12InfoQueue> infoQueue;
 
 	// Static stats which don't change
 	ZgStats staticStats = {};
-
-	// Residency manager
-	D3DX12Residency::ResidencyManager residencyManager;
 
 	// Global descriptor ring buffers
 	D3D12DescriptorRingBuffer globalDescriptorRingBuffer;
@@ -96,6 +109,30 @@ static ZgContextState* ctxState = nullptr;
 
 // Statics
 // ------------------------------------------------------------------------------------------------
+
+static void* d3d12MemAllocAllocate(size_t size, size_t alignment, void* userData) noexcept
+{
+	(void)userData;
+	sfz::Allocator* allocator = getAllocator();
+	return allocator->allocate(
+		sfz_dbg("D3D12MemAlloc"), uint64_t(size), sfz::max(uint64_t(alignment), 32));
+}
+
+static void d3d12MemAllocFree(void* memory, void* userData) noexcept
+{
+	(void)userData;
+	sfz::Allocator* allocator = getAllocator();
+	allocator->deallocate(memory);
+}
+
+static D3D12MA::ALLOCATION_CALLBACKS getD3D12MemAllocAllocationCallbacks() noexcept
+{
+	D3D12MA::ALLOCATION_CALLBACKS callbacks = {};
+	callbacks.pAllocate = d3d12MemAllocAllocate;
+	callbacks.pFree = d3d12MemAllocFree;
+	callbacks.pUserData = nullptr;
+	return callbacks;
+}
 
 static void logDebugMessages(ZgContextState& state) noexcept
 {
@@ -220,6 +257,23 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 		if (res != ZG_SUCCESS) return res;
 	}
 
+	// Initialize D3D12 Memory Allocator
+	{
+		D3D12MA::ALLOCATOR_DESC desc = {};
+		desc.Flags = D3D12MA::ALLOCATOR_FLAG_NONE; // D3D12MA::ALLOCATOR_FLAG_SINGLETHREADED;
+		desc.pDevice = ctxState->device.Get();
+		desc.PreferredBlockSize = 0; // 0 == Default, 256 MiB
+		D3D12MA::ALLOCATION_CALLBACKS callbacks = getD3D12MemAllocAllocationCallbacks();
+		desc.pAllocationCallbacks = &callbacks;
+		desc.pAdapter = ctxState->dxgiAdapter.Get();
+
+		sfz_assert(ctxState->d3d12Allocator == nullptr);
+		HRESULT hr = D3D12MA::CreateAllocator(&desc, &ctxState->d3d12Allocator);
+		if (D3D12_FAIL(hr)) {
+			return ZG_ERROR_GENERIC;
+		}
+	}
+
 	// Store some info about device in stats
 	{
 		// Set some information about choosen adapter in static stats
@@ -249,16 +303,6 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 		logDebugMessages(*ctxState);
 	}
 
-	// Create residency manager
-	// Latency: "NumberOfBufferedFrames * NumberOfCommandListSubmissionsPerFrame throughout
-	// the execution of your app."
-	// Hmm. Lets try 128 or something
-	const uint32_t residencyManagerMaxLatency = 128;
-	if (D3D12_FAIL(ctxState->residencyManager.Initialize(
-		ctxState->device.Get(), 0, ctxState->dxgiAdapter.Get(), residencyManagerMaxLatency))) {
-		return ZG_ERROR_GENERIC;
-	}
-
 	// Allocate descriptors
 	const uint32_t NUM_DESCRIPTORS = 1000000;
 	ZG_INFO("Attempting to allocate %u descriptors for the global ring buffer",
@@ -278,7 +322,6 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 	ZgResult res = ctxState->commandQueuePresent.create(
 		D3D12_COMMAND_LIST_TYPE_DIRECT,
 		ctxState->device,
-		&ctxState->residencyManager,
 		&ctxState->globalDescriptorRingBuffer,
 		MAX_NUM_COMMAND_LISTS_SWAPCHAIN_QUEUE,
 		MAX_NUM_BUFFERS_PER_COMMAND_LIST_SWAPCHAIN_QUEUE);
@@ -290,7 +333,6 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 	res = ctxState->commandQueueCopy.create(
 		D3D12_COMMAND_LIST_TYPE_COPY,
 		ctxState->device,
-		&ctxState->residencyManager,
 		&ctxState->globalDescriptorRingBuffer,
 		MAX_NUM_COMMAND_LISTS_COPY_QUEUE,
 		MAX_NUM_BUFFERS_PER_COMMAND_LIST_COPY_QUEUE);
@@ -538,15 +580,12 @@ ZG_API const char* zgResultToString(ZgResult result)
 // Buffer
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgResult zgMemoryHeapBufferCreate(
-	ZgMemoryHeap* memoryHeap,
+ZG_API ZgResult zgBufferCreate(
 	ZgBuffer** bufferOut,
 	const ZgBufferCreateInfo* createInfo)
 {
-	ZG_ARG_CHECK(createInfo == nullptr, "");
-	ZG_ARG_CHECK((createInfo->offsetInBytes % 65536) != 0, "Buffer must be 64KiB aligned");
-
-	return memoryHeap->bufferCreate(bufferOut, *createInfo);
+	return createBuffer(
+		*bufferOut, *createInfo, ctxState->d3d12Allocator, &ctxState->resourceUniqueIdentifierCounter);
 }
 
 ZG_API void zgBufferRelease(
@@ -651,7 +690,6 @@ ZG_API ZgResult zgMemoryHeapCreate(
 	return createMemoryHeap(
 		*ctxState->device.Get(),
 		&ctxState->resourceUniqueIdentifierCounter,
-		ctxState->residencyManager,
 		memoryHeapOut,
 		*createInfo);
 }
@@ -660,10 +698,6 @@ ZG_API ZgResult zgMemoryHeapRelease(
 	ZgMemoryHeap* memoryHeap)
 {
 	// TODO: Check if any buffers still exist? Lock?
-
-	// Stop tracking
-	ctxState->residencyManager.EndTrackingObject(&memoryHeap->managedObject);
-
 	getAllocator()->deleteObject(memoryHeap);
 	return ZG_SUCCESS;
 
@@ -861,8 +895,8 @@ ZG_API ZgResult zgProfilerCreate(
 {
 	return d3d12CreateProfiler(
 		*ctxState->device.Get(),
+		ctxState->d3d12Allocator,
 		&ctxState->resourceUniqueIdentifierCounter,
-		ctxState->residencyManager,
 		profilerOut,
 		*createInfo);
 }
@@ -1224,9 +1258,6 @@ ZG_API ZgResult zgContextDeinit(void)
 			ctxState->dxcIncludeHandler = nullptr;
 		}
 
-		// Destroy residency manager (which apparently has to be done manually...)
-		ctxState->residencyManager.Destroy();
-
 		// Log debug messages
 		logDebugMessages(*ctxState);
 
@@ -1236,6 +1267,9 @@ ZG_API ZgResult zgContextDeinit(void)
 		if (debugMode) {
 			CHECK_D3D12 ctxState->device->QueryInterface(IID_PPV_ARGS(&debugDevice));
 		}
+
+		// Destroy D3D12MemoryAllocator
+		ctxState->d3d12Allocator->Release();
 
 		// Delete most state
 		getAllocator()->deleteObject(ctxState);

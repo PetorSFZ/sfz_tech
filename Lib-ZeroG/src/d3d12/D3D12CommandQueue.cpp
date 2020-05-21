@@ -74,14 +74,12 @@ ZgCommandQueue::~ZgCommandQueue() noexcept
 ZgResult ZgCommandQueue::create(
 	D3D12_COMMAND_LIST_TYPE type,
 	ComPtr<ID3D12Device3>& device,
-	D3DX12Residency::ResidencyManager* residencyManager,
 	D3D12DescriptorRingBuffer* descriptorBuffer,
 	uint32_t maxNumCommandLists,
 	uint32_t maxNumBuffersPerCommandList) noexcept
 {
 	mType = type;
 	mDevice = device;
-	mResidencyManager = residencyManager;
 	mDescriptorBuffer = descriptorBuffer;
 
 	// Create command queue
@@ -207,9 +205,6 @@ ZgResult ZgCommandQueue::beginCommandListRecordingUnmutexed(
 	ZgResult res = commandList->reset();
 	if (res != ZG_SUCCESS) return res;
 
-	// Open command lists residency set
-	CHECK_D3D12 commandList->residencySet->Open();
-
 	// Return command list
 	*commandListOut = commandList;
 	return ZG_SUCCESS;
@@ -222,11 +217,6 @@ ZgResult ZgCommandQueue::executeCommandListUnmutexed(ZgCommandList* commandList)
 		return ZG_ERROR_GENERIC;
 	}
 
-	// Close residency set
-	if (D3D12_FAIL(commandList->residencySet->Close())) {
-		return ZG_ERROR_GENERIC;
-	}
-
 	// Create and execute a quick command list to insert barriers and commit pending states
 	ZgResult res = this->executePreCommandListStateChanges(
 		commandList->pendingBufferStates,
@@ -235,8 +225,7 @@ ZgResult ZgCommandQueue::executeCommandListUnmutexed(ZgCommandList* commandList)
 
 	// Execute command list
 	ID3D12CommandList* commandListPtr = commandList->commandList.Get();
-	HRESULT executeCommandListRes = mResidencyManager->ExecuteCommandLists(
-		mCommandQueue.Get(), &commandListPtr, &commandList->residencySet, 1);
+	mCommandQueue->ExecuteCommandLists(1, &commandListPtr);
 
 	// Signal
 	commandList->fenceValue = this->signalOnGpuUnmutexed();
@@ -244,7 +233,6 @@ ZgResult ZgCommandQueue::executeCommandListUnmutexed(ZgCommandList* commandList)
 	// Add command list to queue
 	mCommandListQueue.add(commandList);
 
-	if (D3D12_FAIL(executeCommandListRes)) return ZG_ERROR_GENERIC;
 	return ZG_SUCCESS;
 }
 
@@ -290,7 +278,6 @@ ZgResult ZgCommandQueue::createCommandList(ZgCommandList*& commandListOut) noexc
 		this,
 		mMaxNumBuffersPerCommandList,
 		mDevice,
-		mResidencyManager,
 		mDescriptorBuffer);
 
 	commandListOut = &commandList;
@@ -305,8 +292,6 @@ ZgResult ZgCommandQueue::executePreCommandListStateChanges(
 	uint32_t numBarriers = 0;
 	constexpr uint32_t MAX_NUM_BARRIERS = 512;
 	CD3DX12_RESOURCE_BARRIER barriers[MAX_NUM_BARRIERS] = {};
-	constexpr uint32_t MAX_NUM_RESIDENCY_OBJECTS = 1024;
-	D3DX12Residency::ManagedObject* residencyObjects[MAX_NUM_RESIDENCY_OBJECTS] = {};
 
 	// Gather buffer barriers
 	for (uint32_t i = 0; i < pendingBufferStates.size(); i++) {
@@ -328,9 +313,6 @@ ZgResult ZgCommandQueue::executePreCommandListStateChanges(
 			state.buffer->resource.Get(),
 			state.buffer->lastCommittedState,
 			state.neededInitialState);
-
-		// Store residency set
-		residencyObjects[numBarriers] = &state.buffer->memoryHeap->managedObject;
 
 		numBarriers += 1;
 	}
@@ -357,9 +339,6 @@ ZgResult ZgCommandQueue::executePreCommandListStateChanges(
 			state.neededInitialState,
 			state.mipLevel);
 
-		// Store residency set
-		residencyObjects[numBarriers] = &state.texture->textureHeap->managedObject;
-
 		numBarriers += 1;
 	}
 
@@ -374,11 +353,6 @@ ZgResult ZgCommandQueue::executePreCommandListStateChanges(
 
 	// Insert barrier call
 	commandList->commandList->ResourceBarrier(numBarriers, barriers);
-
-	// Add all managed objects to residency set
-	for (uint32_t i = 0; i < numBarriers; i++) {
-		commandList->residencySet->Insert(residencyObjects[i]);
-	}
 
 	// Execute barriers
 	res = this->executeCommandListUnmutexed(commandList);

@@ -48,19 +48,6 @@
 // D3DX12 library
 #include "d3dx12.h"
 
-// D3DX12Residency library
-#ifdef NDEBUG
-// Use single threaded D3DX12Residency in debug builds, workaround for:
-// "The Visual Studio Graphics Debugging (VSGD) tools crash when capturing an app that uses this
-// library"
-#define RESIDENCY_SINGLE_THREADED 1
-#else
-#define RESIDENCY_SINGLE_THREADED 0
-#endif
-#pragma warning(push, 0)
-#include "d3dx12Residency.h"
-#pragma warning(pop)
-
 #include "common/Logging.hpp"
 
  using Microsoft::WRL::ComPtr;

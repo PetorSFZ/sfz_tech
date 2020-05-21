@@ -1,3 +1,0 @@
-URL: https://github.com/Microsoft/DirectX-Graphics-Samples
-Commit: 0da8e15d0b211f2ab5abb9ebe3781a7ddd6ff040
-Downloaded: 2020-05-14

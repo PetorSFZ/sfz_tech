@@ -37,7 +37,6 @@ struct D3D12ProfilerState final {
 
 	ComPtr<ID3D12QueryHeap> queryHeap;
 
-	ZgMemoryHeap* downloadHeap = nullptr;
 	ZgBuffer* downloadBuffer = nullptr;
 };
 
@@ -71,7 +70,7 @@ public:
 
 ZgResult d3d12CreateProfiler(
 	ID3D12Device3& device,
+	D3D12MA::Allocator* d3d12allocator,
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
-	D3DX12Residency::ResidencyManager& residencyManager,
 	ZgProfiler** profilerOut,
 	const ZgProfilerCreateInfo& createInfo) noexcept;

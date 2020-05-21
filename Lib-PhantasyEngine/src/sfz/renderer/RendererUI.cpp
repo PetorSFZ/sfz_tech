@@ -303,8 +303,6 @@ void RendererUI::renderGeneralTab(RendererState& state) noexcept
 	};
 
 	const AllocatorNameBundle allocators[]{
-		{ &state.gpuAllocatorUpload, "Upload" },
-		{ &state.gpuAllocatorDevice, "Device" },
 		{ &state.gpuAllocatorTexture, "Texture" },
 		{ &state.gpuAllocatorFramebuffer, "Framebuffer" }
 	};
@@ -1045,8 +1043,8 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 					CHECK_ZG state.presentQueue.flush();
 
 					// Allocate temporary upload buffer
-					zg::Buffer uploadBuffer =
-						state.gpuAllocatorUpload.allocateBuffer(sizeof(ShaderMaterial));
+					zg::Buffer uploadBuffer;
+					CHECK_ZG uploadBuffer.create(sizeof(ShaderMaterial), ZG_MEMORY_TYPE_UPLOAD);
 					sfz_assert(uploadBuffer.valid());
 
 					// Convert new material to shader material
@@ -1063,9 +1061,6 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 						mesh.materialsBuffer, dstOffset, uploadBuffer, 0, sizeof(ShaderMaterial));
 					CHECK_ZG state.presentQueue.executeCommandList(commandList);
 					CHECK_ZG state.presentQueue.flush();
-
-					// Deallocate temporary upload buffer
-					state.gpuAllocatorUpload.deallocate(uploadBuffer);
 				}
 			}
 			ImGui::Unindent(20.0f);

@@ -80,7 +80,6 @@ public:
 	ZgResult create(
 		D3D12_COMMAND_LIST_TYPE type,
 		ComPtr<ID3D12Device3>& device,
-		D3DX12Residency::ResidencyManager* residencyManager,
 		D3D12DescriptorRingBuffer* descriptorBuffer,
 		uint32_t maxNumCommandLists,
 		uint32_t maxNumBuffersPerCommandList) noexcept;
@@ -127,7 +126,6 @@ private:
 	std::mutex mQueueMutex;
 	D3D12_COMMAND_LIST_TYPE mType;
 	ComPtr<ID3D12Device3> mDevice;
-	D3DX12Residency::ResidencyManager* mResidencyManager = nullptr;
 	D3D12DescriptorRingBuffer* mDescriptorBuffer = nullptr;
 	
 	ComPtr<ID3D12CommandQueue> mCommandQueue;

@@ -119,12 +119,8 @@ bool Renderer::init(
 	}
 
 	// Initialize dynamic gpu allocator
-	constexpr uint32_t PAGE_SIZE_UPLOAD = 32 * 1024 * 1024; // 32 MiB
-	constexpr uint32_t PAGE_SIZE_DEVICE = 64 * 1024 * 1024; // 64 MiB
 	constexpr uint32_t PAGE_SIZE_TEXTURE = 64 * 1024 * 1024; // 64 MiB
 	constexpr uint32_t PAGE_SIZE_FRAMEBUFFER = 64 * 1024 * 1024; // 64 MiB
-	mState->gpuAllocatorUpload.init(mState->allocator, ZG_MEMORY_TYPE_UPLOAD, PAGE_SIZE_UPLOAD);
-	mState->gpuAllocatorDevice.init(mState->allocator, ZG_MEMORY_TYPE_DEVICE, PAGE_SIZE_DEVICE);
 	mState->gpuAllocatorTexture.init(mState->allocator, ZG_MEMORY_TYPE_TEXTURE, PAGE_SIZE_TEXTURE);
 	mState->gpuAllocatorFramebuffer.init(mState->allocator, ZG_MEMORY_TYPE_FRAMEBUFFER, PAGE_SIZE_FRAMEBUFFER);
 
@@ -236,10 +232,6 @@ void Renderer::destroy() noexcept
 			item.deallocate(mState->gpuAllocatorFramebuffer);
 		}
 
-		// Deallocate stage memory
-		bool stageDeallocSuccess = deallocateStageMemory(*mState);
-		sfz_assert(stageDeallocSuccess);
-
 		// Deallocate rest of state
 		sfz::Allocator* allocator = mState->allocator;
 		allocator->deleteObject(mState);
@@ -290,7 +282,6 @@ bool Renderer::uploadTextureBlocking(
 	zg::Texture2D texture = textureAllocateAndUploadBlocking(
 		image,
 		mState->gpuAllocatorTexture,
-		mState->gpuAllocatorUpload,
 		mState->allocator,
 		mState->copyQueue,
 		generateMipmaps,
@@ -361,11 +352,11 @@ bool Renderer::uploadMeshBlocking(StringID id, const Mesh& mesh) noexcept
 	if (mState->meshes.get(id) != nullptr) return false;
 
 	// Allocate memory for mesh
-	GpuMesh gpuMesh = gpuMeshAllocate(mesh, mState->gpuAllocatorDevice, mState->allocator);
+	GpuMesh gpuMesh = gpuMeshAllocate(mesh, mState->allocator);
 
 	// Upload memory to mesh
 	gpuMeshUploadBlocking(
-		gpuMesh, mesh, mState->gpuAllocatorUpload, mState->allocator, mState->copyQueue);
+		gpuMesh, mesh, mState->allocator, mState->copyQueue);
 
 	// Set mesh debug name
 	{
@@ -408,7 +399,7 @@ void Renderer::removeMeshGpuBlocking(StringID id) noexcept
 	CHECK_ZG mState->copyQueue.flush();
 
 	// Destroy mesh
-	gpuMeshDeallocate(*mesh, mState->gpuAllocatorDevice);
+	gpuMeshDeallocate(*mesh);
 	mState->meshes.remove(id);
 }
 
@@ -423,7 +414,7 @@ void Renderer::removeAllMeshesGpuBlocking() noexcept
 
 	// Destroy all meshes
 	for (auto pair : mState->meshes) {
-		gpuMeshDeallocate(pair.value, mState->gpuAllocatorDevice);
+		gpuMeshDeallocate(pair.value);
 	}
 	mState->meshes.clear();
 }

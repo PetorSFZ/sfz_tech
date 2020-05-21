@@ -30,6 +30,4 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept;
 
 bool allocateStageMemory(RendererState& state) noexcept;
 
-bool deallocateStageMemory(RendererState& state) noexcept;
-
 } // namespace sfz

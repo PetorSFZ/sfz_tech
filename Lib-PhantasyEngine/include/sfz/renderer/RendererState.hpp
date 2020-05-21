@@ -257,8 +257,6 @@ struct RendererState final {
 	uint64_t lastRetrievedFrameTimeFrameIdx = ~0ull;
 
 	// Dynamic memory allocator
-	DynamicGpuAllocator gpuAllocatorUpload;
-	DynamicGpuAllocator gpuAllocatorDevice;
 	DynamicGpuAllocator gpuAllocatorTexture;
 	DynamicGpuAllocator gpuAllocatorFramebuffer;
 

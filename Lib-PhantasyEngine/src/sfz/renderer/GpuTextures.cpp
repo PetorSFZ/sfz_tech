@@ -135,14 +135,12 @@ ZgTextureFormat toZeroGImageFormat(ImageType imageType) noexcept
 zg::Texture2D textureAllocateAndUploadBlocking(
 	const phConstImageView& image,
 	DynamicGpuAllocator& gpuAllocatorTexture,
-	DynamicGpuAllocator& gpuAllocatorUpload,
 	sfz::Allocator* cpuAllocator,
 	zg::CommandQueue& copyQueue,
 	bool generateMipmaps,
 	uint32_t& numMipmapsOut) noexcept
 {
 	sfz_assert(gpuAllocatorTexture.queryMemoryType() == ZG_MEMORY_TYPE_TEXTURE);
-	sfz_assert(gpuAllocatorUpload.queryMemoryType() == ZG_MEMORY_TYPE_UPLOAD);
 	sfz_assert(isPowerOfTwo(image.width));
 	sfz_assert(isPowerOfTwo(image.height));
 
@@ -194,7 +192,7 @@ zg::Texture2D textureAllocateAndUploadBlocking(
 	for (uint32_t i = 0; i < numMipmaps; i++) {
 		// TODO: Figure out exactly how much memory is needed
 		uint32_t bufferSize = (imageViews[i].pitchInBytes * imageViews[i].height) + 65536;
-		tmpUploadBuffers[i] = gpuAllocatorUpload.allocateBuffer(bufferSize);
+		tmpUploadBuffers[i].create(bufferSize, ZG_MEMORY_TYPE_UPLOAD);
 		sfz_assert(tmpUploadBuffers[i].valid());
 	}
 
@@ -207,11 +205,6 @@ zg::Texture2D textureAllocateAndUploadBlocking(
 	CHECK_ZG commandList.enableQueueTransition(texture);
 	CHECK_ZG copyQueue.executeCommandList(commandList);
 	CHECK_ZG copyQueue.flush();
-
-	// Deallocate temporary upload buffers
-	for (uint32_t i = 0; i < numMipmaps; i++) {
-		gpuAllocatorUpload.deallocate(tmpUploadBuffers[i]);
-	}
 
 	numMipmapsOut = numMipmaps;
 	return std::move(texture);

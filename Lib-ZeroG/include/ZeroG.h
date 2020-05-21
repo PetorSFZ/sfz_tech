@@ -165,18 +165,43 @@ inline ZgBool zgIsError(ZgResult res) { return res < 0 ? ZG_TRUE : ZG_FALSE; }
 // Buffer
 // ------------------------------------------------------------------------------------------------
 
+ZG_ENUM(ZgMemoryType) {
+	ZG_MEMORY_TYPE_UNDEFINED = 0,
+
+	// Memory suitable for uploading data to GPU.
+	// Can not be used as a shader UAV, only as vertex shader input.
+	ZG_MEMORY_TYPE_UPLOAD,
+
+	// Memory suitable for downloading data from GPU.
+	ZG_MEMORY_TYPE_DOWNLOAD,
+
+	// Fastest memory available on GPU.
+	// Can't upload or download directly to this memory from CPU, need to use UPLOAD and DOWNLOAD
+	// as intermediary.
+	ZG_MEMORY_TYPE_DEVICE,
+
+	// Special version of ZG_MEMORY_TYPE_DEVICE that can be used to allocate textures.
+	//
+	// Some GPUs can allocate textures directly from ZG_MEMORY_TYPE_DEVICE, making it unnecessary
+	// to create memory heaps of this type.
+	// TODO: Implement support for this use case.
+	ZG_MEMORY_TYPE_TEXTURE,
+
+	// Special version of ZG_MEMORY_TYPE_DEVICE that can be used to allocate textures that can be
+	// written to as framebuffer targets.
+	//
+	// Some GPUs can allocate framebuffer textures directly from ZG_MEMORY_TYPE_DEVICE, making it
+	// unnecessary to create memory heaps of this type.
+	// TODO: Implement support for this use case.
+	ZG_MEMORY_TYPE_FRAMEBUFFER
+};
+
 ZG_STRUCT(ZgBufferCreateInfo) {
-
-	// The offset from the start of the memory heap to create the buffer at.
-	// Note that the offset must be a multiple of 64KiB (= 2^16 bytes = 65 536 bytes), or 0.
-	uint64_t offsetInBytes;
-
-	// The size in bytes of the buffer
+	ZgMemoryType memoryType;
 	uint64_t sizeInBytes;
 };
 
-ZG_API ZgResult zgMemoryHeapBufferCreate(
-	ZgMemoryHeap* memoryHeap,
+ZG_API ZgResult zgBufferCreate(
 	ZgBuffer** bufferOut,
 	const ZgBufferCreateInfo* createInfo);
 
@@ -214,6 +239,15 @@ public:
 	~Buffer() { this->release(); }
 
 	bool valid() const { return buffer != nullptr; }
+
+	ZgResult create(uint64_t sizeBytes, ZgMemoryType type = ZG_MEMORY_TYPE_DEVICE)
+	{
+		this->release();
+		ZgBufferCreateInfo info = {};
+		info.memoryType = type;
+		info.sizeInBytes = sizeBytes;
+		return zgBufferCreate(&buffer, &info);
+	}
 
 	void swap(Buffer& other)
 	{
@@ -399,37 +433,6 @@ public:
 // Memory Heap
 // ------------------------------------------------------------------------------------------------
 
-ZG_ENUM(ZgMemoryType) {
-	ZG_MEMORY_TYPE_UNDEFINED = 0,
-
-	// Memory suitable for uploading data to GPU.
-	// Can not be used as a shader UAV, only as vertex shader input.
-	ZG_MEMORY_TYPE_UPLOAD,
-
-	// Memory suitable for downloading data from GPU.
-	ZG_MEMORY_TYPE_DOWNLOAD,
-
-	// Fastest memory available on GPU.
-	// Can't upload or download directly to this memory from CPU, need to use UPLOAD and DOWNLOAD
-	// as intermediary.
-	ZG_MEMORY_TYPE_DEVICE,
-
-	// Special version of ZG_MEMORY_TYPE_DEVICE that can be used to allocate textures.
-	//
-	// Some GPUs can allocate textures directly from ZG_MEMORY_TYPE_DEVICE, making it unnecessary
-	// to create memory heaps of this type.
-	// TODO: Implement support for this use case.
-	ZG_MEMORY_TYPE_TEXTURE,
-
-	// Special version of ZG_MEMORY_TYPE_DEVICE that can be used to allocate textures that can be
-	// written to as framebuffer targets.
-	//
-	// Some GPUs can allocate framebuffer textures directly from ZG_MEMORY_TYPE_DEVICE, making it
-	// unnecessary to create memory heaps of this type.
-	// TODO: Implement support for this use case.
-	ZG_MEMORY_TYPE_FRAMEBUFFER
-};
-
 ZG_STRUCT(ZgMemoryHeapCreateInfo) {
 
 	// The size in bytes of the heap
@@ -485,20 +488,6 @@ public:
 	{
 		if (this->memoryHeap != nullptr) zgMemoryHeapRelease(this->memoryHeap);
 		this->memoryHeap = nullptr;
-	}
-
-	[[nodiscard]] ZgResult bufferCreate(Buffer& bufferOut, const ZgBufferCreateInfo& createInfo)
-	{
-		bufferOut.release();
-		return zgMemoryHeapBufferCreate(this->memoryHeap, &bufferOut.buffer, &createInfo);
-	}
-
-	[[nodiscard]] ZgResult bufferCreate(Buffer& bufferOut, uint64_t offset, uint64_t size)
-	{
-		ZgBufferCreateInfo createInfo = {};
-		createInfo.offsetInBytes = offset;
-		createInfo.sizeInBytes = size;
-		return this->bufferCreate(bufferOut, createInfo);
 	}
 
 	[[nodiscard]] ZgResult texture2DCreate(
@@ -604,13 +593,13 @@ ZG_STRUCT(ZgConstantBufferBinding) {
 };
 
 ZG_STRUCT(ZgUnorderedBufferBinding) {
-	
+
 	// Register the unordered buffer is bound to
 	uint32_t unorderedRegister;
 
 	// The first element in the buffer (0 to bind from start of buffer)
 	uint32_t firstElementIdx;
-	
+
 	// The number of elements to bind in the buffer
 	uint32_t numElements;
 
@@ -1599,7 +1588,7 @@ public:
 // ------------------------------------------------------------------------------------------------
 
 ZG_STRUCT(ZgProfilerCreateInfo) {
-	
+
 	// The number of measurements that this profiler can hold. Once this limit has been reached
 	// older measurements will automatically be thrown out to make room for newer ones. In other
 	// words, this should be at least "number of measurements per frame" times "number of frames
@@ -2272,7 +2261,7 @@ ZG_STRUCT(ZgAllocator) {
 // ------------------------------------------------------------------------------------------------
 
 ZG_STRUCT(ZgContextInitSettingsD3D12) {
-	
+
 	// [Optional] Used to enable D3D12 validation.
 	ZgBool debugMode;
 
@@ -2288,7 +2277,7 @@ ZG_STRUCT(ZgContextInitSettingsVulkan) {
 
 // The settings used to create a context and initialize ZeroG
 ZG_STRUCT(ZgContextInitSettings) {
-	
+
 	// [Mandatory] Platform specific native handle.
 	//
 	// On Windows, this is a HWND, i.e. native window handle.
