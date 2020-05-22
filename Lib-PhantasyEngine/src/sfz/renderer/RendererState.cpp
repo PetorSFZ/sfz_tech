@@ -37,8 +37,7 @@ static ZgOptimalClearValue floatToOptimalClearValue(float value) noexcept
 // Static resources
 // ------------------------------------------------------------------------------------------------
 
-void StaticTextureItem::buildTexture(
-	vec2_i32 windowRes, DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept
+void StaticTextureItem::buildTexture(vec2_i32 windowRes) noexcept
 {
 	// Figure out resolution
 	uint32_t width = 0;
@@ -58,20 +57,21 @@ void StaticTextureItem::buildTexture(
 	ZgTextureUsage usage = format == ZG_TEXTURE_FORMAT_DEPTH_F32 ?
 		ZG_TEXTURE_USAGE_DEPTH_BUFFER : ZG_TEXTURE_USAGE_RENDER_TARGET;
 	ZgOptimalClearValue optimalClear = floatToOptimalClearValue(clearValue);
-	this->texture =
-		gpuAllocatorFramebuffer.allocateTexture2D(format, width, height, 1, usage, optimalClear);
-
+	{
+		ZgTexture2DCreateInfo createInfo = {};
+		createInfo.format = format;
+		createInfo.usage = usage;
+		createInfo.optimalClearValue = optimalClear;
+		createInfo.width = width;
+		createInfo.height = height;
+		createInfo.numMipmaps = 1;
+		CHECK_ZG this->texture.create(createInfo);
+	}
+	
 	// Set debug name for texture
 	StringCollection& resStrings = getResourceStrings();
 	str128 debugName("static_tex__%s", resStrings.getString(this->name));
 	CHECK_ZG this->texture.setDebugName(debugName);
-}
-
-void StaticTextureItem::deallocate(DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept
-{
-	if (texture.valid()) {
-		gpuAllocatorFramebuffer.deallocate(texture);
-	}
 }
 
 //  Pipeline types

@@ -189,7 +189,6 @@ if (MSVC)
 		${SRC_DIR}/d3d12/D3D12Framebuffer.hpp
 		${SRC_DIR}/d3d12/D3D12Framebuffer.cpp
 		${SRC_DIR}/d3d12/D3D12Memory.hpp
-		${SRC_DIR}/d3d12/D3D12Memory.cpp
 		${SRC_DIR}/d3d12/D3D12Pipelines.hpp
 		${SRC_DIR}/d3d12/D3D12Pipelines.cpp
 		${SRC_DIR}/d3d12/D3D12Profiler.hpp

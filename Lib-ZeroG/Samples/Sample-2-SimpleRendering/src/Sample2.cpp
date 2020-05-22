@@ -298,11 +298,6 @@ static void realMain(SDL_Window* window) noexcept
 		&offsets, sizeof(Vector), 256);
 	CHECK_ZG constBufferDevice.setDebugName("constBufferDevice");
 
-
-	// Create texture heap
-	zg::MemoryHeap textureHeap;
-	CHECK_ZG textureHeap.create(64 * 1024 * 1024, ZG_MEMORY_TYPE_TEXTURE);// 64 MiB should be enough for anyone
-
 	// Create a texture
 	ZgTexture2DCreateInfo textureCreateInfo = {};
 	textureCreateInfo.format = ZG_TEXTURE_FORMAT_RGBA_U8_UNORM;
@@ -310,14 +305,8 @@ static void realMain(SDL_Window* window) noexcept
 	textureCreateInfo.height = 256;
 	textureCreateInfo.numMipmaps = 4;
 
-	ZgTexture2DAllocationInfo textureAllocInfo = {};
-	CHECK_ZG zg::Texture2D::getAllocationInfo(textureAllocInfo, textureCreateInfo);
-
-	textureCreateInfo.offsetInBytes = 0;
-	textureCreateInfo.sizeInBytes = textureAllocInfo.sizeInBytes;
-
 	zg::Texture2D texture;
-	CHECK_ZG textureHeap.texture2DCreate(texture, textureCreateInfo);
+	CHECK_ZG texture.create(textureCreateInfo);
 	CHECK_ZG texture.setDebugName("cubeTexture");
 
 
@@ -335,10 +324,10 @@ static void realMain(SDL_Window* window) noexcept
 
 		// Create temporary upload buffer (accessible from CPU)
 		zg::Buffer uploadBufferLvl0, uploadBufferLvl1, uploadBufferLvl2, uploadBufferLvl3;
-		CHECK_ZG uploadBufferLvl0.create(textureAllocInfo.sizeInBytes, ZG_MEMORY_TYPE_UPLOAD);
-		CHECK_ZG uploadBufferLvl1.create(textureAllocInfo.sizeInBytes, ZG_MEMORY_TYPE_UPLOAD);
-		CHECK_ZG uploadBufferLvl2.create(textureAllocInfo.sizeInBytes, ZG_MEMORY_TYPE_UPLOAD);
-		CHECK_ZG uploadBufferLvl3.create(textureAllocInfo.sizeInBytes, ZG_MEMORY_TYPE_UPLOAD);
+		CHECK_ZG uploadBufferLvl0.create(texture.sizeInBytes(), ZG_MEMORY_TYPE_UPLOAD);
+		CHECK_ZG uploadBufferLvl1.create(texture.sizeInBytes(), ZG_MEMORY_TYPE_UPLOAD);
+		CHECK_ZG uploadBufferLvl2.create(texture.sizeInBytes(), ZG_MEMORY_TYPE_UPLOAD);
+		CHECK_ZG uploadBufferLvl3.create(texture.sizeInBytes(), ZG_MEMORY_TYPE_UPLOAD);
 
 		// Copy to the texture
 		zg::CommandList commandList;

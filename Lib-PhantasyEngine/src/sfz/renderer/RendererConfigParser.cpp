@@ -499,7 +499,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 
 	// Create static textures
 	for (StaticTextureItem& item : configurable.staticTextures) {
-		item.buildTexture(state.windowRes, state.gpuAllocatorFramebuffer);
+		item.buildTexture(state.windowRes);
 	}
 
 	// Allocate stage memory

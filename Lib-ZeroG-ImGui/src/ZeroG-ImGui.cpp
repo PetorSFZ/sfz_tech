@@ -65,7 +65,6 @@ struct ImGuiRenderState final {
 	zg::PipelineRender pipeline;
 
 	// Font texture
-	zg::MemoryHeap fontTextureHeap;
 	zg::Texture2D fontTexture;
 
 	// Per frame state
@@ -181,26 +180,15 @@ ZgResult imguiInitRenderState(
 	}
 
 	// Allocate memory for font texture
-	sfz_assert_hard(fontTexture.format == ZG_TEXTURE_FORMAT_R_U8_UNORM);
-	ZgTexture2DCreateInfo texCreateInfo = {};
-	texCreateInfo.format = ZG_TEXTURE_FORMAT_R_U8_UNORM;
-	texCreateInfo.width = fontTexture.width;
-	texCreateInfo.height = fontTexture.height;
-	texCreateInfo.numMipmaps = 1; // TODO: Mipmaps
-
-	ZgTexture2DAllocationInfo texAllocInfo = {};
-	ASSERT_ZG zg::Texture2D::getAllocationInfo(texAllocInfo, texCreateInfo);
-	texCreateInfo.offsetInBytes = 0;
-	texCreateInfo.sizeInBytes = texAllocInfo.sizeInBytes;
 
 	{
-		ZgResult res = stateOut->fontTextureHeap.create(
-			texAllocInfo.sizeInBytes, ZG_MEMORY_TYPE_TEXTURE);
-		if (!zgIsSuccess(res)) return res;
-	}
-
-	{
-		ZgResult res = stateOut->fontTextureHeap.texture2DCreate(stateOut->fontTexture, texCreateInfo);
+		sfz_assert_hard(fontTexture.format == ZG_TEXTURE_FORMAT_R_U8_UNORM);
+		ZgTexture2DCreateInfo texCreateInfo = {};
+		texCreateInfo.format = ZG_TEXTURE_FORMAT_R_U8_UNORM;
+		texCreateInfo.width = fontTexture.width;
+		texCreateInfo.height = fontTexture.height;
+		texCreateInfo.numMipmaps = 1; // TODO: Mipmaps
+		ZgResult res = stateOut->fontTexture.create(texCreateInfo);
 		if (!zgIsSuccess(res)) return res;
 	}
 	ASSERT_ZG stateOut->fontTexture.setDebugName("ImGui_FontTexture");
@@ -210,7 +198,7 @@ ZgResult imguiInitRenderState(
 		// Utilize vertex and index buffer upload heap to upload font texture
 		// Create temporary upload buffer
 		zg::Buffer tmpUploadBuffer;
-		ASSERT_ZG tmpUploadBuffer.create(texAllocInfo.sizeInBytes, ZG_MEMORY_TYPE_UPLOAD);
+		ASSERT_ZG tmpUploadBuffer.create(stateOut->fontTexture.sizeInBytes(), ZG_MEMORY_TYPE_UPLOAD);
 
 		// Copy to the texture
 		zg::CommandList commandList;

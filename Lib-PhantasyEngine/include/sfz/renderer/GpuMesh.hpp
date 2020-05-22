@@ -24,7 +24,6 @@
 #include <ZeroG.h>
 
 #include "sfz/renderer/BuiltInShaderTypes.hpp"
-#include "sfz/renderer/DynamicGpuAllocator.hpp"
 #include "sfz/rendering/Mesh.hpp"
 
 namespace sfz {
@@ -50,8 +49,6 @@ ShaderMaterial cpuMaterialToShaderMaterial(const Material& cpuMaterial) noexcept
 GpuMesh gpuMeshAllocate(
 	const Mesh& cpuMesh,
 	sfz::Allocator* cpuAllocator) noexcept;
-
-void gpuMeshDeallocate(GpuMesh& gpuMesh) noexcept;
 
 void gpuMeshUploadBlocking(
 	GpuMesh& gpuMesh,

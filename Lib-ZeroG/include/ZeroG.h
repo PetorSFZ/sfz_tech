@@ -108,7 +108,7 @@ ZG_STRUCT(ZgFramebufferRect) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 22;
+static const uint32_t ZG_COMPILED_API_VERSION = 23;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -166,7 +166,10 @@ inline ZgBool zgIsError(ZgResult res) { return res < 0 ? ZG_TRUE : ZG_FALSE; }
 // ------------------------------------------------------------------------------------------------
 
 ZG_ENUM(ZgMemoryType) {
-	ZG_MEMORY_TYPE_UNDEFINED = 0,
+	// Fastest memory available on GPU.
+	// Can't upload or download directly to this memory from CPU, need to use UPLOAD and DOWNLOAD
+	// as intermediary.
+	ZG_MEMORY_TYPE_DEVICE = 0,
 
 	// Memory suitable for uploading data to GPU.
 	// Can not be used as a shader UAV, only as vertex shader input.
@@ -174,26 +177,6 @@ ZG_ENUM(ZgMemoryType) {
 
 	// Memory suitable for downloading data from GPU.
 	ZG_MEMORY_TYPE_DOWNLOAD,
-
-	// Fastest memory available on GPU.
-	// Can't upload or download directly to this memory from CPU, need to use UPLOAD and DOWNLOAD
-	// as intermediary.
-	ZG_MEMORY_TYPE_DEVICE,
-
-	// Special version of ZG_MEMORY_TYPE_DEVICE that can be used to allocate textures.
-	//
-	// Some GPUs can allocate textures directly from ZG_MEMORY_TYPE_DEVICE, making it unnecessary
-	// to create memory heaps of this type.
-	// TODO: Implement support for this use case.
-	ZG_MEMORY_TYPE_TEXTURE,
-
-	// Special version of ZG_MEMORY_TYPE_DEVICE that can be used to allocate textures that can be
-	// written to as framebuffer targets.
-	//
-	// Some GPUs can allocate framebuffer textures directly from ZG_MEMORY_TYPE_DEVICE, making it
-	// unnecessary to create memory heaps of this type.
-	// TODO: Implement support for this use case.
-	ZG_MEMORY_TYPE_FRAMEBUFFER
 };
 
 ZG_STRUCT(ZgBufferCreateInfo) {
@@ -240,7 +223,7 @@ public:
 
 	bool valid() const { return buffer != nullptr; }
 
-	ZgResult create(uint64_t sizeBytes, ZgMemoryType type = ZG_MEMORY_TYPE_DEVICE)
+	[[nodiscard]] ZgResult create(uint64_t sizeBytes, ZgMemoryType type = ZG_MEMORY_TYPE_DEVICE)
 	{
 		this->release();
 		ZgBufferCreateInfo info = {};
@@ -321,8 +304,6 @@ ZG_STRUCT(ZgTexture2DCreateInfo) {
 	// The format of the texture
 	ZgTextureFormat format;
 
-	// How the texture will be used.
-	//
 	// If the texture is to be used as either a render target or a depth buffer it must be set
 	// here.
 	ZgTextureUsage usage;
@@ -342,40 +323,17 @@ ZG_STRUCT(ZgTexture2DCreateInfo) {
 	// 1 equals no mipmaps, i.e. only a single layer. May not be 0, must be smaller than or equal
 	// to ZG_TEXTURE_2D_MAX_NUM_MIPMAPS.
 	uint32_t numMipmaps;
-
-	// The offset from the start of the texture heap to create the buffer at.
-	// Note that the offset must be a multiple of the alignment of the texture, which can be
-	// acquired by zgTextureHeapTexture2DGetAllocationInfo(). Do not need to be set before calling
-	// this function.
-	uint64_t offsetInBytes;
-
-	// The size in bytes of the texture
-	// Note that this can only be learned by calling zgTexture2DGetAllocationInfo(). Do not need
-	// to be set before calling this function.
-	uint64_t sizeInBytes;
 };
 
-ZG_STRUCT(ZgTexture2DAllocationInfo) {
-
-	// The size of the texture in bytes
-	uint32_t sizeInBytes;
-
-	// The alignment of the texture in bytes
-	uint32_t alignmentInBytes;
-};
-
-// Gets the allocation info of a Texture2D specified by a ZgTexture2DCreateInfo.
-ZG_API ZgResult zgTexture2DGetAllocationInfo(
-	ZgTexture2DAllocationInfo* allocationInfoOut,
-	const ZgTexture2DCreateInfo* createInfo);
-
-ZG_API ZgResult zgMemoryHeapTexture2DCreate(
-	ZgMemoryHeap* memoryHeap,
+ZG_API ZgResult zgTexture2DCreate(
 	ZgTexture2D** textureOut,
 	const ZgTexture2DCreateInfo* createInfo);
 
 ZG_API void zgTexture2DRelease(
 	ZgTexture2D* texture);
+
+ZG_API uint32_t zgTexture2DSizeInBytes(
+	const ZgTexture2D* texture);
 
 ZG_API ZgResult zgTexture2DSetDebugName(
 	ZgTexture2D* texture,
@@ -399,6 +357,17 @@ public:
 
 	bool valid() const { return this->texture != nullptr; }
 
+	[[nodiscard]] ZgResult create(const ZgTexture2DCreateInfo& createInfo)
+	{
+		this->release();
+		ZgResult res = zgTexture2DCreate(&this->texture, &createInfo);
+		if (zgIsSuccess(res)) {
+			this->width = createInfo.width;
+			this->height = createInfo.height;
+		}
+		return res;
+	}
+
 	void swap(Texture2D& other)
 	{
 		std::swap(this->texture, other.texture);
@@ -414,93 +383,11 @@ public:
 		this->height = 0;
 	}
 
-	static [[nodiscard]] ZgResult getAllocationInfo(
-		ZgTexture2DAllocationInfo& allocationInfoOut,
-		const ZgTexture2DCreateInfo& createInfo)
-	{
-		return zgTexture2DGetAllocationInfo(&allocationInfoOut, &createInfo);
-	}
+	uint32_t sizeInBytes() const { return zgTexture2DSizeInBytes(this->texture); }
 
 	[[nodiscard]] ZgResult setDebugName(const char* name)
 	{
 		return zgTexture2DSetDebugName(this->texture, name);
-	}
-};
-
-} // namespace zg
-#endif
-
-// Memory Heap
-// ------------------------------------------------------------------------------------------------
-
-ZG_STRUCT(ZgMemoryHeapCreateInfo) {
-
-	// The size in bytes of the heap
-	uint64_t sizeInBytes;
-
-	// The type of memory
-	ZgMemoryType memoryType;
-};
-
-ZG_API ZgResult zgMemoryHeapCreate(
-	ZgMemoryHeap** memoryHeapOut,
-	const ZgMemoryHeapCreateInfo* createInfo);
-
-ZG_API ZgResult zgMemoryHeapRelease(
-	ZgMemoryHeap* memoryHeap);
-
-#ifdef __cplusplus
-namespace zg {
-
-class MemoryHeap final {
-public:
-	ZgMemoryHeap* memoryHeap = nullptr;
-
-	MemoryHeap() = default;
-	MemoryHeap(const MemoryHeap&) = delete;
-	MemoryHeap& operator= (const MemoryHeap&) = delete;
-	MemoryHeap(MemoryHeap&& o) { this->swap(o); }
-	MemoryHeap& operator= (MemoryHeap&& o) { this->swap(o); return *this; }
-	~MemoryHeap() { this->release(); }
-
-	bool valid() const { return memoryHeap != nullptr; }
-
-	[[nodiscard]] ZgResult create(const ZgMemoryHeapCreateInfo& createInfo)
-	{
-		this->release();
-		return zgMemoryHeapCreate(&this->memoryHeap, &createInfo);
-	}
-
-	[[nodiscard]] ZgResult create(uint64_t sizeInBytes, ZgMemoryType memoryType)
-	{
-		ZgMemoryHeapCreateInfo createInfo = {};
-		createInfo.sizeInBytes = sizeInBytes;
-		createInfo.memoryType = memoryType;
-		return this->create(createInfo);
-	}
-
-	void swap(MemoryHeap& other)
-	{
-		std::swap(this->memoryHeap, other.memoryHeap);
-	}
-
-	void release()
-	{
-		if (this->memoryHeap != nullptr) zgMemoryHeapRelease(this->memoryHeap);
-		this->memoryHeap = nullptr;
-	}
-
-	[[nodiscard]] ZgResult texture2DCreate(
-		Texture2D& textureOut, const ZgTexture2DCreateInfo& createInfo)
-	{
-		textureOut.release();
-		ZgResult res = zgMemoryHeapTexture2DCreate(
-			this->memoryHeap, &textureOut.texture, &createInfo);
-		if (zgIsSuccess(res)) {
-			textureOut.width = createInfo.width;
-			textureOut.height = createInfo.height;
-		}
-		return res;
 	}
 };
 

@@ -115,7 +115,7 @@ static void* d3d12MemAllocAllocate(size_t size, size_t alignment, void* userData
 	(void)userData;
 	sfz::Allocator* allocator = getAllocator();
 	return allocator->allocate(
-		sfz_dbg("D3D12MemAlloc"), uint64_t(size), sfz::max(uint64_t(alignment), 32));
+		sfz_dbg("D3D12MemAlloc"), uint64_t(size), sfz::max(uint32_t(alignment), 32u));
 }
 
 static void d3d12MemAllocFree(void* memory, void* userData) noexcept
@@ -624,40 +624,12 @@ ZG_API ZgResult zgBufferSetDebugName(
 // Textures
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgResult zgTexture2DGetAllocationInfo(
-	ZgTexture2DAllocationInfo* allocationInfoOut,
-	const ZgTexture2DCreateInfo* createInfo)
-{
-	ZG_ARG_CHECK(allocationInfoOut == nullptr, "");
-	ZG_ARG_CHECK(createInfo == nullptr, "");
-	ZG_ARG_CHECK(createInfo->numMipmaps == 0, "Must specify at least 1 mipmap layer (i.e. the full image)");
-	ZG_ARG_CHECK(createInfo->numMipmaps > ZG_MAX_NUM_MIPMAPS, "Too many mipmaps specified");
-
-	// Get resource desc
-	D3D12_RESOURCE_DESC desc = createInfoToResourceDesc(*createInfo);
-
-	// Get allocation info
-	D3D12_RESOURCE_ALLOCATION_INFO allocInfo = ctxState->device->GetResourceAllocationInfo(0, 1, &desc);
-
-	// Return allocation info
-	allocationInfoOut->sizeInBytes = (uint32_t)allocInfo.SizeInBytes;
-	allocationInfoOut->alignmentInBytes = (uint32_t)allocInfo.Alignment;
-	return ZG_SUCCESS;
-}
-
-ZG_API ZgResult zgMemoryHeapTexture2DCreate(
-	ZgMemoryHeap* memoryHeap,
+ZG_API ZgResult zgTexture2DCreate(
 	ZgTexture2D** textureOut,
 	const ZgTexture2DCreateInfo* createInfo)
 {
-	ZG_ARG_CHECK(createInfo == nullptr, "");
-	ZG_ARG_CHECK(createInfo->numMipmaps == 0, "Must specify at least 1 mipmap layer (i.e. the full image)");
-	ZG_ARG_CHECK(createInfo->numMipmaps > ZG_MAX_NUM_MIPMAPS, "Too many mipmaps specified");
-	if (createInfo->usage == ZG_TEXTURE_USAGE_DEFAULT) {
-		ZG_ARG_CHECK(createInfo->optimalClearValue != ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED,
-			"May not define optimal clear value for default textures");
-	}
-	return memoryHeap->texture2DCreate(textureOut, *createInfo);
+	return createTexture(
+		*textureOut, *createInfo, *ctxState->device.Get(), ctxState->d3d12Allocator, &ctxState->resourceUniqueIdentifierCounter);
 }
 
 ZG_API void zgTexture2DRelease(
@@ -667,6 +639,13 @@ ZG_API void zgTexture2DRelease(
 	getAllocator()->deleteObject(texture);
 }
 
+ZG_API uint32_t zgTexture2DSizeInBytes(
+	const ZgTexture2D* texture)
+{
+	if (texture == nullptr) return 0;
+	return uint32_t(texture->totalSizeInBytes);
+}
+
 ZG_API ZgResult zgTexture2DSetDebugName(
 	ZgTexture2D* texture,
 	const char* name)
@@ -674,33 +653,6 @@ ZG_API ZgResult zgTexture2DSetDebugName(
 	ZG_ARG_CHECK(texture == nullptr, "");
 	ZG_ARG_CHECK(name == nullptr, "");
 	return texture->setDebugName(name);
-}
-
-// Memory Heap
-// ------------------------------------------------------------------------------------------------
-
-ZG_API ZgResult zgMemoryHeapCreate(
-	ZgMemoryHeap** memoryHeapOut,
-	const ZgMemoryHeapCreateInfo* createInfo)
-{
-	ZG_ARG_CHECK(createInfo == nullptr, "");
-	ZG_ARG_CHECK(createInfo->sizeInBytes == 0, "Can't create an empty memory heap");
-
-	std::lock_guard<std::mutex> lock(ctxState->contextMutex);
-	return createMemoryHeap(
-		*ctxState->device.Get(),
-		&ctxState->resourceUniqueIdentifierCounter,
-		memoryHeapOut,
-		*createInfo);
-}
-
-ZG_API ZgResult zgMemoryHeapRelease(
-	ZgMemoryHeap* memoryHeap)
-{
-	// TODO: Check if any buffers still exist? Lock?
-	getAllocator()->deleteObject(memoryHeap);
-	return ZG_SUCCESS;
-
 }
 
 // Pipeline Compute

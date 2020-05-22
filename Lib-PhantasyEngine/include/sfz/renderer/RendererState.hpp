@@ -29,7 +29,6 @@
 #include <ZeroG-ImGui.hpp>
 
 #include "sfz/config/GlobalConfig.hpp"
-#include "sfz/renderer/DynamicGpuAllocator.hpp"
 #include "sfz/renderer/GpuMesh.hpp"
 #include "sfz/renderer/RendererUI.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
@@ -119,8 +118,7 @@ struct StaticTextureItem final {
 	vec2_i32 resolutionFixed = vec2_i32(0);
 
 	// Allocation and deallocating the static texture using the parsed information
-	void buildTexture(vec2_i32 windowRes, DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept;
-	void deallocate(DynamicGpuAllocator& gpuAllocatorFramebuffer) noexcept;
+	void buildTexture(vec2_i32 windowRes) noexcept;
 };
 
 // Stage types
@@ -255,10 +253,6 @@ struct RendererState final {
 	PerFrameData<FrameProfilingIDs> frameMeasurementIds;
 	float lastRetrievedFrameTimeMs = 0.0f;
 	uint64_t lastRetrievedFrameTimeFrameIdx = ~0ull;
-
-	// Dynamic memory allocator
-	DynamicGpuAllocator gpuAllocatorTexture;
-	DynamicGpuAllocator gpuAllocatorFramebuffer;
 
 	// GPU resources
 	HashMap<StringID, TextureItem> textures;

@@ -19,9 +19,10 @@
 
 #pragma once
 
+#include <skipifzero.hpp>
+
 #include <ZeroG.h>
 
-#include "sfz/renderer/DynamicGpuAllocator.hpp"
 #include "sfz/rendering/ImageView.hpp"
 
 namespace sfz {
@@ -33,7 +34,6 @@ ZgTextureFormat toZeroGImageFormat(ImageType imageType) noexcept;
 
 zg::Texture2D textureAllocateAndUploadBlocking(
 	const phConstImageView& image,
-	DynamicGpuAllocator& gpuAllocatorTexture,
 	sfz::Allocator* cpuAllocator,
 	zg::CommandQueue& copyQueue,
 	bool generateMipmaps,

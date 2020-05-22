@@ -256,7 +256,6 @@ set(HEADER_FILES
 
 	${INCLUDE_DIR}/sfz/renderer/BuiltInShaderTypes.hpp
 	${INCLUDE_DIR}/sfz/renderer/CascadedShadowMaps.hpp
-	${INCLUDE_DIR}/sfz/renderer/DynamicGpuAllocator.hpp
 	${INCLUDE_DIR}/sfz/renderer/GpuMesh.hpp
 	${INCLUDE_DIR}/sfz/renderer/GpuTextures.hpp
 	${INCLUDE_DIR}/sfz/renderer/Renderer.hpp
@@ -326,7 +325,6 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/memory/DebugAllocator.cpp
 
 	${SRC_DIR}/sfz/renderer/CascadedShadowMaps.cpp
-	${SRC_DIR}/sfz/renderer/DynamicGpuAllocator.cpp
 	${SRC_DIR}/sfz/renderer/GpuMesh.cpp
 	${SRC_DIR}/sfz/renderer/GpuTextures.cpp
 	${SRC_DIR}/sfz/renderer/Renderer.cpp

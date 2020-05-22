@@ -118,12 +118,6 @@ bool Renderer::init(
 		mState->frameMeasurementIds.init(mState->frameLatency);
 	}
 
-	// Initialize dynamic gpu allocator
-	constexpr uint32_t PAGE_SIZE_TEXTURE = 64 * 1024 * 1024; // 64 MiB
-	constexpr uint32_t PAGE_SIZE_FRAMEBUFFER = 64 * 1024 * 1024; // 64 MiB
-	mState->gpuAllocatorTexture.init(mState->allocator, ZG_MEMORY_TYPE_TEXTURE, PAGE_SIZE_TEXTURE);
-	mState->gpuAllocatorFramebuffer.init(mState->allocator, ZG_MEMORY_TYPE_FRAMEBUFFER, PAGE_SIZE_FRAMEBUFFER);
-
 	// Initialize hashmaps for resources
 	mState->textures.init(512, mState->allocator, sfz_dbg(""));
 	mState->meshes.init(512, mState->allocator, sfz_dbg(""));
@@ -227,11 +221,6 @@ void Renderer::destroy() noexcept
 		this->removeAllTexturesGpuBlocking();
 		this->removeAllMeshesGpuBlocking();
 
-		// Destroy static textures
-		for (StaticTextureItem& item : mState->configurable.staticTextures) {
-			item.deallocate(mState->gpuAllocatorFramebuffer);
-		}
-
 		// Deallocate rest of state
 		sfz::Allocator* allocator = mState->allocator;
 		allocator->deleteObject(mState);
@@ -281,7 +270,6 @@ bool Renderer::uploadTextureBlocking(
 	uint32_t numMipmaps = 0;
 	zg::Texture2D texture = textureAllocateAndUploadBlocking(
 		image,
-		mState->gpuAllocatorTexture,
 		mState->allocator,
 		mState->copyQueue,
 		generateMipmaps,
@@ -325,7 +313,6 @@ void Renderer::removeTextureGpuBlocking(StringID id) noexcept
 	CHECK_ZG mState->copyQueue.flush();
 
 	// Destroy texture
-	mState->gpuAllocatorTexture.deallocate(item->texture);
 	mState->textures.remove(id);
 }
 
@@ -339,9 +326,6 @@ void Renderer::removeAllTexturesGpuBlocking() noexcept
 	CHECK_ZG mState->copyQueue.flush();
 
 	// Destroy all textures
-	for (auto pair : mState->textures) {
-		mState->gpuAllocatorTexture.deallocate(pair.value.texture);
-	}
 	mState->textures.clear();
 }
 
@@ -399,7 +383,6 @@ void Renderer::removeMeshGpuBlocking(StringID id) noexcept
 	CHECK_ZG mState->copyQueue.flush();
 
 	// Destroy mesh
-	gpuMeshDeallocate(*mesh);
 	mState->meshes.remove(id);
 }
 
@@ -413,9 +396,6 @@ void Renderer::removeAllMeshesGpuBlocking() noexcept
 	CHECK_ZG mState->copyQueue.flush();
 
 	// Destroy all meshes
-	for (auto pair : mState->meshes) {
-		gpuMeshDeallocate(pair.value);
-	}
 	mState->meshes.clear();
 }
 
@@ -499,8 +479,7 @@ void Renderer::frameBegin() noexcept
 			
 			// Only resize if not fixed resolution
 			if (!item.resolutionIsFixed) {
-				item.deallocate(mState->gpuAllocatorFramebuffer);
-				item.buildTexture(mState->windowRes, mState->gpuAllocatorFramebuffer);
+				item.buildTexture(mState->windowRes);
 			}
 		}
 
