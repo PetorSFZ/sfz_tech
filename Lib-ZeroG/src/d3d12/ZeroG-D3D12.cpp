@@ -595,22 +595,22 @@ ZG_API void zgBufferDestroy(
 	getAllocator()->deleteObject(buffer);
 }
 
-ZG_API ZgResult zgBufferMemcpyTo(
+ZG_API ZgResult zgBufferMemcpyUpload(
 	ZgBuffer* dstBuffer,
 	uint64_t dstBufferOffsetBytes,
 	const void* srcMemory,
 	uint64_t numBytes)
 {
-	return dstBuffer->memcpyTo(dstBufferOffsetBytes, srcMemory, numBytes);
+	return dstBuffer->memcpyUpload(dstBufferOffsetBytes, srcMemory, numBytes);
 }
 
-ZG_API ZgResult zgBufferMemcpyFrom(
+ZG_API ZgResult zgBufferMemcpyDownload(
 	void* dstMemory,
 	ZgBuffer* srcBuffer,
 	uint64_t srcBufferOffsetBytes,
 	uint64_t numBytes)
 {
-	return srcBuffer->memcpyFrom(srcBufferOffsetBytes, dstMemory, numBytes);
+	return srcBuffer->memcpyDownload(srcBufferOffsetBytes, dstMemory, numBytes);
 }
 
 ZG_API ZgResult zgBufferSetDebugName(

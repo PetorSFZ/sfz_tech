@@ -979,7 +979,7 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 					ShaderMaterial shaderMaterial = cpuMaterialToShaderMaterial(material);
 
 					// Memcpy to temporary upload buffer
-					CHECK_ZG uploadBuffer.memcpyTo(0, &shaderMaterial, sizeof(ShaderMaterial));
+					CHECK_ZG uploadBuffer.memcpyUpload(0, &shaderMaterial, sizeof(ShaderMaterial));
 
 					// Replace material in mesh with new material
 					zg::CommandList commandList;

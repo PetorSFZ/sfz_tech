@@ -120,7 +120,7 @@ void gpuMeshUploadBlocking(
 	uint32_t vertexBufferSizeBytes = cpuMesh.vertices.size() * sizeof(Vertex);
 	zg::Buffer vertexUploadBuffer;
 	CHECK_ZG vertexUploadBuffer.create(vertexBufferSizeBytes, ZG_MEMORY_TYPE_UPLOAD);
-	CHECK_ZG vertexUploadBuffer.memcpyTo(0, cpuMesh.vertices.data(), vertexBufferSizeBytes);
+	CHECK_ZG vertexUploadBuffer.memcpyUpload(0, cpuMesh.vertices.data(), vertexBufferSizeBytes);
 	CHECK_ZG commandList.memcpyBufferToBuffer(
 		gpuMesh.vertexBuffer, 0, vertexUploadBuffer, 0, vertexBufferSizeBytes);
 
@@ -128,7 +128,7 @@ void gpuMeshUploadBlocking(
 	uint32_t indexBufferSizeBytes = cpuMesh.indices.size() * sizeof(uint32_t);
 	zg::Buffer indexUploadBuffer;
 	CHECK_ZG indexUploadBuffer.create(indexBufferSizeBytes, ZG_MEMORY_TYPE_UPLOAD);
-	CHECK_ZG indexUploadBuffer.memcpyTo(0, cpuMesh.indices.data(), indexBufferSizeBytes);
+	CHECK_ZG indexUploadBuffer.memcpyUpload(0, cpuMesh.indices.data(), indexBufferSizeBytes);
 	CHECK_ZG commandList.memcpyBufferToBuffer(
 		gpuMesh.indexBuffer, 0, indexUploadBuffer, 0, indexBufferSizeBytes);
 
@@ -145,7 +145,7 @@ void gpuMeshUploadBlocking(
 	uint32_t materialsBufferSizeBytes = cpuMesh.materials.size() * sizeof(ShaderMaterial);
 	zg::Buffer materialsUploadBuffer;
 	CHECK_ZG materialsUploadBuffer.create(materialsBufferSizeBytes, ZG_MEMORY_TYPE_UPLOAD);
-	CHECK_ZG materialsUploadBuffer.memcpyTo(0, gpuMaterials.data(), materialsBufferSizeBytes);
+	CHECK_ZG materialsUploadBuffer.memcpyUpload(0, gpuMaterials.data(), materialsBufferSizeBytes);
 	CHECK_ZG commandList.memcpyBufferToBuffer(
 		gpuMesh.materialsBuffer, 0, materialsUploadBuffer, 0, materialsBufferSizeBytes);
 

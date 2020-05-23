@@ -322,9 +322,9 @@ void imguiRender(
 	ASSERT_ZG imguiFrame.fence.waitOnCpuBlocking();
 
 	// Memcpy vertices and indices to imgui upload buffers
-	ASSERT_ZG imguiFrame.uploadVertexBuffer.memcpyTo(
+	ASSERT_ZG imguiFrame.uploadVertexBuffer.memcpyUpload(
 		0, state->tmpVertices.data(), state->tmpVertices.size() * sizeof(ImGuiVertex));
-	ASSERT_ZG imguiFrame.uploadIndexBuffer.memcpyTo(
+	ASSERT_ZG imguiFrame.uploadIndexBuffer.memcpyUpload(
 		0, state->tmpIndices.data(), state->tmpIndices.size() * sizeof(uint32_t));
 
 	zg::CommandList commandList;

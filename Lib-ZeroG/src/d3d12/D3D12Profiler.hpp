@@ -87,7 +87,7 @@ public:
 		// Download timestamps
 		uint64_t timestamps[2] = {};
 		ZgResult memcpyRes =
-			profilerState.downloadBuffer->memcpyFrom(bufferOffset, timestamps, sizeof(uint64_t) * 2);
+			profilerState.downloadBuffer->memcpyDownload(bufferOffset, timestamps, sizeof(uint64_t) * 2);
 		if (memcpyRes != ZG_SUCCESS) return memcpyRes;
 
 		// Get number of ticks per second when this query was issued

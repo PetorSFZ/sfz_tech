@@ -710,7 +710,7 @@ void Renderer::stageSetConstantBufferUntyped(
 	frame->lastFrameIdxTouched = mState->currentFrameIdx;
 
 	// Copy data to upload buffer
-	CHECK_ZG frame->uploadBuffer.memcpyTo(0, data, numBytes);
+	CHECK_ZG frame->uploadBuffer.memcpyUpload(0, data, numBytes);
 
 	// Issue upload to device buffer
 	CHECK_ZG mState->inputEnabledCommandList().memcpyBufferToBuffer(

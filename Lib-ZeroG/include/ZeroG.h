@@ -100,7 +100,7 @@ ZG_ENUM(ZgBool) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 25;
+static const uint32_t ZG_COMPILED_API_VERSION = 26;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -213,13 +213,13 @@ ZG_API ZgResult zgBufferCreate(
 ZG_API void zgBufferDestroy(
 	ZgBuffer* buffer);
 
-ZG_API ZgResult zgBufferMemcpyTo(
+ZG_API ZgResult zgBufferMemcpyUpload(
 	ZgBuffer* dstBuffer,
 	uint64_t dstBufferOffsetBytes,
 	const void* srcMemory,
 	uint64_t numBytes);
 
-ZG_API ZgResult zgBufferMemcpyFrom(
+ZG_API ZgResult zgBufferMemcpyDownload(
 	void* dstMemory,
 	ZgBuffer* srcBuffer,
 	uint64_t srcBufferOffsetBytes,
@@ -245,14 +245,14 @@ public:
 		return zgBufferCreate(&handle, &info);
 	}
 
-	[[nodiscard]] ZgResult memcpyTo(uint64_t bufferOffsetBytes, const void* srcMemory, uint64_t numBytes)
+	[[nodiscard]] ZgResult memcpyUpload(uint64_t bufferOffsetBytes, const void* srcMemory, uint64_t numBytes)
 	{
-		return zgBufferMemcpyTo(this->handle, bufferOffsetBytes, srcMemory, numBytes);
+		return zgBufferMemcpyUpload(this->handle, bufferOffsetBytes, srcMemory, numBytes);
 	}
 
-	[[nodiscard]] ZgResult memcpyFrom(void* dstMemory, uint64_t srcBufferOffsetBytes, uint64_t numBytes)
+	[[nodiscard]] ZgResult memcpyDownload(void* dstMemory, uint64_t srcBufferOffsetBytes, uint64_t numBytes)
 	{
-		return zgBufferMemcpyFrom(dstMemory, this->handle, srcBufferOffsetBytes, numBytes);
+		return zgBufferMemcpyDownload(dstMemory, this->handle, srcBufferOffsetBytes, numBytes);
 	}
 
 	[[nodiscard]] ZgResult setDebugName(const char* name)

@@ -52,7 +52,7 @@ public:
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgResult memcpyTo(
+	ZgResult memcpyUpload(
 		uint64_t dstBufferOffsetBytes,
 		const void* srcMemory,
 		uint64_t numBytes) noexcept
@@ -85,7 +85,7 @@ public:
 		return ZG_SUCCESS;
 	}
 
-	ZgResult memcpyFrom(
+	ZgResult memcpyDownload(
 		uint64_t srcBufferOffsetBytes,
 		void* dstMemory,
 		uint64_t numBytes) noexcept
