@@ -179,20 +179,14 @@ source_group(TREE ${SRC_DIR} FILES ${ZEROG_COMMON_FILES})
 if (MSVC)
 	set(ZEROG_D3D12_SRC_FILES
 		${SRC_DIR}/d3d12/D3D12CommandList.hpp
-		${SRC_DIR}/d3d12/D3D12CommandList.cpp
 		${SRC_DIR}/d3d12/D3D12CommandQueue.hpp
-		${SRC_DIR}/d3d12/D3D12CommandQueue.cpp
 		${SRC_DIR}/d3d12/D3D12Common.hpp
-		${SRC_DIR}/d3d12/D3D12Common.cpp
 		${SRC_DIR}/d3d12/D3D12DescriptorRingBuffer.hpp
-		${SRC_DIR}/d3d12/D3D12DescriptorRingBuffer.cpp
 		${SRC_DIR}/d3d12/D3D12Framebuffer.hpp
-		${SRC_DIR}/d3d12/D3D12Framebuffer.cpp
 		${SRC_DIR}/d3d12/D3D12Memory.hpp
 		${SRC_DIR}/d3d12/D3D12Pipelines.hpp
 		${SRC_DIR}/d3d12/D3D12Pipelines.cpp
 		${SRC_DIR}/d3d12/D3D12Profiler.hpp
-		${SRC_DIR}/d3d12/D3D12Profiler.cpp
 		${SRC_DIR}/d3d12/ZeroG-D3D12.cpp
 	)
 	source_group(TREE ${SRC_DIR} FILES ${ZEROG_D3D12_SRC_FILES})

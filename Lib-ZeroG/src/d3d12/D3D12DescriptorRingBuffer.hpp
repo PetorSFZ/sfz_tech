@@ -42,7 +42,13 @@ public:
 	D3D12DescriptorRingBuffer& operator= (const D3D12DescriptorRingBuffer&) = delete;
 	D3D12DescriptorRingBuffer(D3D12DescriptorRingBuffer&&) = delete;
 	D3D12DescriptorRingBuffer& operator= (D3D12DescriptorRingBuffer&&) = delete;
-	~D3D12DescriptorRingBuffer() noexcept;
+	~D3D12DescriptorRingBuffer() noexcept
+	{
+		if (descriptorHeap != nullptr) {
+			ID3D12Pageable* heapPagable[1] = { descriptorHeap.Get() };
+			CHECK_D3D12 mDevice->Evict(1, heapPagable);
+		}
+	}
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
@@ -50,7 +56,37 @@ public:
 	ZgResult create(
 		ID3D12Device3& device,
 		D3D12_DESCRIPTOR_HEAP_TYPE type,
-		uint32_t numDescriptors) noexcept;
+		uint32_t numDescriptors) noexcept
+	{
+		mDevice = &device;
+		mNumDescriptors = numDescriptors;
+
+		D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+		desc.Type = type;
+		desc.NumDescriptors = numDescriptors;
+		desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		desc.NodeMask = 0;
+
+		// Create descriptor heap
+		if (D3D12_FAIL(device.CreateDescriptorHeap(&desc, IID_PPV_ARGS(&descriptorHeap)))) {
+			return ZG_ERROR_GPU_OUT_OF_MEMORY;
+		}
+
+		// Make descriptor heap resident
+		ID3D12Pageable* heapPagable[1] = { descriptorHeap.Get() };
+		if (D3D12_FAIL(device.MakeResident(1, heapPagable))) {
+			return ZG_ERROR_GPU_OUT_OF_MEMORY;
+		}
+
+		// Get size of descriptors of this type
+		this->descriptorSize = device.GetDescriptorHandleIncrementSize(type);
+
+		// Get start of heap
+		mHeapStartCpu = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
+		mHeapStartGpu = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
+
+		return ZG_SUCCESS;
+	}
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
@@ -58,7 +94,26 @@ public:
 	ZgResult allocateDescriptorRange(
 		uint32_t numDescriptors,
 		D3D12_CPU_DESCRIPTOR_HANDLE& rangeStartCpu,
-		D3D12_GPU_DESCRIPTOR_HANDLE& rangeStartGpu) noexcept;
+		D3D12_GPU_DESCRIPTOR_HANDLE& rangeStartGpu) noexcept
+	{
+		// Allocate range
+		uint64_t rangeStart = mHeadPointer.fetch_add(numDescriptors);
+
+		// Map range to the ringbuffers allowed indices
+		uint32_t mappedRangeStart = uint32_t(rangeStart % uint64_t(mNumDescriptors));
+
+		// Check if range fits continuously, if not, try again recursively
+		bool rangeIsContinuous = (mappedRangeStart + numDescriptors) <= mNumDescriptors;
+		if (!rangeIsContinuous) {
+			return this->allocateDescriptorRange(numDescriptors, rangeStartCpu, rangeStartGpu);
+		}
+
+		// Return descriptors to the start of the range
+		rangeStartCpu.ptr = mHeapStartCpu.ptr + descriptorSize * mappedRangeStart;
+		rangeStartGpu.ptr = mHeapStartGpu.ptr + descriptorSize * mappedRangeStart;
+
+		return ZG_SUCCESS;
+	}
 
 	// Public members
 	// --------------------------------------------------------------------------------------------

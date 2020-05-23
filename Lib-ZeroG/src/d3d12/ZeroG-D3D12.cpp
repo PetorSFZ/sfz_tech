@@ -1084,7 +1084,22 @@ ZG_API ZgResult zgCommandListProfileEnd(
 	uint64_t measurementId)
 {
 	ZG_ARG_CHECK(profiler == nullptr, "");
-	return commandList->profileEnd(profiler, measurementId);
+
+	// Get command queue timestamp frequency
+	uint64_t timestampTicksPerSecond = 0;
+	if (commandList->commandListType == D3D12_COMMAND_LIST_TYPE_DIRECT) {
+		bool success = D3D12_SUCC(ctxState->commandQueuePresent.commandQueue()->
+			GetTimestampFrequency(&timestampTicksPerSecond));
+		if (!success) return ZG_ERROR_GENERIC;
+	}
+	/*else if (commandList->commandListType == D3D12_COMMAND_LIST_TYPE_COMPUTE) {
+
+	}*/
+	else {
+		return ZG_ERROR_INVALID_ARGUMENT;
+	}
+
+	return commandList->profileEnd(profiler, measurementId, timestampTicksPerSecond);
 }
 
 // Command queue
@@ -1315,7 +1330,14 @@ ZG_API ZgResult zgContextSwapchainFinishFrame(
 
 	// Finish profiling if a profiler is specified
 	if (profiler != nullptr) {
-		ZgResult res = barrierCommandList->profileEnd(profiler, measurementId);
+
+		// Get command queue timestamp frequency
+		uint64_t timestampTicksPerSecond = 0;
+		bool success = D3D12_SUCC(ctxState->commandQueuePresent.commandQueue()->
+			GetTimestampFrequency(&timestampTicksPerSecond));
+		sfz_assert(success);
+
+		ZgResult res = barrierCommandList->profileEnd(profiler, measurementId, timestampTicksPerSecond);
 		sfz_assert(res == ZG_SUCCESS);
 	}
 
