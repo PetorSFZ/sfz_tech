@@ -107,6 +107,8 @@ struct StaticTextureItem final {
 	
 	// The texture
 	zg::Texture2D texture;
+	uint32_t width = 0;
+	uint32_t height = 0;
 
 	// Parsed information
 	StringID name;

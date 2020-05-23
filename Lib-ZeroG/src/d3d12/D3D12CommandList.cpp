@@ -645,8 +645,8 @@ ZgResult ZgCommandList::setPipelineRender(
 
 ZgResult ZgCommandList::setFramebuffer(
 	ZgFramebuffer* framebuffer,
-	const ZgFramebufferRect* optionalViewport,
-	const ZgFramebufferRect* optionalScissor) noexcept
+	const ZgRect* optionalViewport,
+	const ZgRect* optionalScissor) noexcept
 {
 	// Check arguments
 	ZG_ARG_CHECK(!framebuffer->hasDepthBuffer && framebuffer->numRenderTargets == 0,
@@ -738,7 +738,7 @@ ZgResult ZgCommandList::setFramebuffer(
 }
 
 ZgResult ZgCommandList::setFramebufferViewport(
-	const ZgFramebufferRect& viewportRect) noexcept
+	const ZgRect& viewportRect) noexcept
 {
 	// Return error if no framebuffer is set
 	if (!mFramebufferSet) {
@@ -760,7 +760,7 @@ ZgResult ZgCommandList::setFramebufferViewport(
 }
 
 ZgResult ZgCommandList::setFramebufferScissor(
-	const ZgFramebufferRect& scissor) noexcept
+	const ZgRect& scissor) noexcept
 {
 	// Return error if no framebuffer is set
 	if (!mFramebufferSet) {

@@ -91,24 +91,16 @@ ZG_HANDLE(ZgCommandQueue);
 // Bool
 // ------------------------------------------------------------------------------------------------
 
-// The ZeroG bool type.
 ZG_ENUM(ZgBool) {
 	ZG_FALSE = 0,
 	ZG_TRUE = 1
-};
-
-// Framebuffer rectangle
-// ------------------------------------------------------------------------------------------------
-
-ZG_STRUCT(ZgFramebufferRect) {
-	uint32_t topLeftX, topLeftY, width, height;
 };
 
 // Version information
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 23;
+static const uint32_t ZG_COMPILED_API_VERSION = 24;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -162,6 +154,35 @@ inline ZgBool zgIsSuccess(ZgResult res) { return res == ZG_SUCCESS ? ZG_TRUE : Z
 inline ZgBool zgIsWarning(ZgResult res) { return res > 0 ? ZG_TRUE : ZG_FALSE; }
 inline ZgBool zgIsError(ZgResult res) { return res < 0 ? ZG_TRUE : ZG_FALSE; }
 
+// Common C++ Wrapper Stuff
+// ------------------------------------------------------------------------------------------------
+
+#ifdef __cplusplus
+namespace zg {
+
+template<typename HandleT>
+inline void NoOpDestroyFunc(HandleT*) {}
+
+template<typename HandleT, void DestroyFunc(HandleT*) = NoOpDestroyFunc>
+struct ManagedHandle {
+
+	HandleT* handle = nullptr;
+
+	ManagedHandle() noexcept = default;
+	ManagedHandle(const ManagedHandle&) = delete;
+	ManagedHandle& operator= (const ManagedHandle&) = delete;
+	ManagedHandle(ManagedHandle&& other) noexcept { this->swap(other); }
+	ManagedHandle& operator= (ManagedHandle&& other) noexcept { this->swap(other); return *this; }
+	~ManagedHandle() noexcept { this->destroy(); }
+
+	bool valid() const { return handle != nullptr; }
+	void swap(ManagedHandle& other) noexcept { std::swap(this->handle, other.handle); }
+	void destroy() noexcept { if (handle != nullptr) { DestroyFunc(handle); } handle = nullptr; }
+};
+
+} // namespace zg
+#endif
+
 // Buffer
 // ------------------------------------------------------------------------------------------------
 
@@ -188,7 +209,7 @@ ZG_API ZgResult zgBufferCreate(
 	ZgBuffer** bufferOut,
 	const ZgBufferCreateInfo* createInfo);
 
-ZG_API void zgBufferRelease(
+ZG_API void zgBufferDestroy(
 	ZgBuffer* buffer);
 
 ZG_API ZgResult zgBufferMemcpyTo(
@@ -210,54 +231,30 @@ ZG_API ZgResult zgBufferSetDebugName(
 #ifdef __cplusplus
 namespace zg {
 
-class Buffer final {
+class Buffer final : public ManagedHandle<ZgBuffer, zgBufferDestroy> {
 public:
-	ZgBuffer* buffer = nullptr;
-
-	Buffer() = default;
-	Buffer(const Buffer&) = delete;
-	Buffer& operator= (const Buffer&) = delete;
-	Buffer(Buffer&& o) { this->swap(o); }
-	Buffer& operator= (Buffer&& o) { this->swap(o); return *this; }
-	~Buffer() { this->release(); }
-
-	bool valid() const { return buffer != nullptr; }
-
 	[[nodiscard]] ZgResult create(uint64_t sizeBytes, ZgMemoryType type = ZG_MEMORY_TYPE_DEVICE)
 	{
-		this->release();
+		this->destroy();
 		ZgBufferCreateInfo info = {};
 		info.memoryType = type;
 		info.sizeInBytes = sizeBytes;
-		return zgBufferCreate(&buffer, &info);
-	}
-
-	void swap(Buffer& other)
-	{
-		std::swap(this->buffer, other.buffer);
-	}
-
-	void release()
-	{
-		if (this->buffer != nullptr) {
-			zgBufferRelease(this->buffer);
-		}
-		this->buffer = nullptr;
+		return zgBufferCreate(&handle, &info);
 	}
 
 	[[nodiscard]] ZgResult memcpyTo(uint64_t bufferOffsetBytes, const void* srcMemory, uint64_t numBytes)
 	{
-		return zgBufferMemcpyTo(this->buffer, bufferOffsetBytes, srcMemory, numBytes);
+		return zgBufferMemcpyTo(this->handle, bufferOffsetBytes, srcMemory, numBytes);
 	}
 
 	[[nodiscard]] ZgResult memcpyFrom(void* dstMemory, uint64_t srcBufferOffsetBytes, uint64_t numBytes)
 	{
-		return zgBufferMemcpyFrom(dstMemory, this->buffer, srcBufferOffsetBytes, numBytes);
+		return zgBufferMemcpyFrom(dstMemory, this->handle, srcBufferOffsetBytes, numBytes);
 	}
 
 	[[nodiscard]] ZgResult setDebugName(const char* name)
 	{
-		return zgBufferSetDebugName(this->buffer, name);
+		return zgBufferSetDebugName(this->handle, name);
 	}
 };
 
@@ -329,7 +326,7 @@ ZG_API ZgResult zgTexture2DCreate(
 	ZgTexture2D** textureOut,
 	const ZgTexture2DCreateInfo* createInfo);
 
-ZG_API void zgTexture2DRelease(
+ZG_API void zgTexture2DDestroy(
 	ZgTexture2D* texture);
 
 ZG_API uint32_t zgTexture2DSizeInBytes(
@@ -342,52 +339,19 @@ ZG_API ZgResult zgTexture2DSetDebugName(
 #ifdef __cplusplus
 namespace zg {
 
-class Texture2D final {
+class Texture2D final : public ManagedHandle<ZgTexture2D, zgTexture2DDestroy> {
 public:
-	ZgTexture2D* texture = nullptr;
-	uint32_t width = 0;
-	uint32_t height = 0;
-
-	Texture2D() = default;
-	Texture2D(const Texture2D&) = delete;
-	Texture2D& operator= (const Texture2D&) = delete;
-	Texture2D(Texture2D&& o) { this->swap(o); }
-	Texture2D& operator= (Texture2D&& o) { this->swap(o); return *this; }
-	~Texture2D() { this->release(); }
-
-	bool valid() const { return this->texture != nullptr; }
-
 	[[nodiscard]] ZgResult create(const ZgTexture2DCreateInfo& createInfo)
 	{
-		this->release();
-		ZgResult res = zgTexture2DCreate(&this->texture, &createInfo);
-		if (zgIsSuccess(res)) {
-			this->width = createInfo.width;
-			this->height = createInfo.height;
-		}
-		return res;
+		this->destroy();
+		return zgTexture2DCreate(&this->handle, &createInfo);
 	}
 
-	void swap(Texture2D& other)
-	{
-		std::swap(this->texture, other.texture);
-		std::swap(this->width, other.width);
-		std::swap(this->height, other.height);
-	}
-
-	void release()
-	{
-		if (this->texture != nullptr) zgTexture2DRelease(this->texture);
-		this->texture = nullptr;
-		this->width = 0;
-		this->height = 0;
-	}
-
-	uint32_t sizeInBytes() const { return zgTexture2DSizeInBytes(this->texture); }
+	uint32_t sizeInBytes() const { return zgTexture2DSizeInBytes(this->handle); }
 
 	[[nodiscard]] ZgResult setDebugName(const char* name)
 	{
-		return zgTexture2DSetDebugName(this->texture, name);
+		return zgTexture2DSetDebugName(this->handle, name);
 	}
 };
 
@@ -557,7 +521,7 @@ public:
 	{
 		ZgConstantBufferBinding binding = {};
 		binding.bufferRegister = bufferRegister;
-		binding.buffer = buffer.buffer;
+		binding.buffer = buffer.handle;
 		return this->addConstantBuffer(binding);
 	}
 
@@ -590,7 +554,7 @@ public:
 		binding.firstElementIdx = firstElementIdx;
 		binding.numElements = numElements;
 		binding.elementStrideBytes = elementStrideBytes;
-		binding.buffer = buffer.buffer;
+		binding.buffer = buffer.handle;
 		return this->addUnorderedBuffer(binding);
 	}
 
@@ -606,7 +570,7 @@ public:
 	{
 		ZgTextureBinding binding;
 		binding.textureRegister = textureRegister;
-		binding.texture = texture.texture;
+		binding.texture = texture.handle;
 		return this->addTexture(binding);
 	}
 
@@ -626,7 +590,7 @@ public:
 		ZgUnorderedTextureBinding binding = {};
 		binding.unorderedRegister = unorderedRegister;
 		binding.mipLevel = mipLevel;
-		binding.texture = texture.texture;
+		binding.texture = texture.handle;
 		return this->addUnorderedTexture(binding);
 	}
 };
@@ -718,66 +682,48 @@ ZG_STRUCT(ZgPipelineComputeCreateInfo) {
 	ZgSampler samplers[ZG_MAX_NUM_SAMPLERS];
 };
 
-// A struct representing the compute signature of a compute pipeline.
-ZG_STRUCT(ZgPipelineComputeSignature) {
-
-	// The dimensions of the thread group launched by this compute pipeline.
-	uint32_t groupDimX;
-	uint32_t groupDimY;
-	uint32_t groupDimZ;
-};
-
 ZG_API ZgResult zgPipelineComputeCreateFromFileHLSL(
 	ZgPipelineCompute** pipelineOut,
-	ZgPipelineBindingsSignature* bindingsSignatureOut,
-	ZgPipelineComputeSignature* computeSignatureOut,
 	const ZgPipelineComputeCreateInfo* createInfo,
 	const ZgPipelineCompileSettingsHLSL* compileSettings);
 
-ZG_API ZgResult zgPipelineComputeRelease(
+ZG_API void zgPipelineComputeDestroy(
 	ZgPipelineCompute* pipeline);
+
+ZG_API void zgPipelineComputeGetBindingsSignature(
+	const ZgPipelineCompute* pipeline,
+	ZgPipelineBindingsSignature* bindingsSignatureOut);
+
+ZG_API void zgPipelineComputeGetGroupDimensions(
+	const ZgPipelineCompute* pipeline,
+	uint32_t* groupDimXOut,
+	uint32_t* groupDimYOut,
+	uint32_t* groupDimZOut);
 
 #ifdef __cplusplus
 namespace zg {
 
-class PipelineCompute final {
+class PipelineCompute final : public ManagedHandle<ZgPipelineCompute, zgPipelineComputeDestroy> {
 public:
-	ZgPipelineCompute* pipeline = nullptr;
-	ZgPipelineBindingsSignature bindingsSignature = {};
-	ZgPipelineComputeSignature computeSignature = {};
-
-	PipelineCompute() = default;
-	PipelineCompute(const PipelineCompute&) = delete;
-	PipelineCompute& operator= (const PipelineCompute&) = delete;
-	PipelineCompute(PipelineCompute&& o) { this->swap(o); }
-	PipelineCompute& operator= (PipelineCompute&& o) { this->swap(o); return *this; }
-	~PipelineCompute() { this->release(); }
-
-	bool valid() const { return this->pipeline != nullptr; }
-
 	[[nodiscard]] ZgResult createFromFileHLSL(
 		const ZgPipelineComputeCreateInfo& createInfo,
 		const ZgPipelineCompileSettingsHLSL& compileSettings)
 	{
-		this->release();
+		this->destroy();
 		return zgPipelineComputeCreateFromFileHLSL(
-			&this->pipeline, &this->bindingsSignature, &this->computeSignature, &createInfo, &compileSettings);
-
+			&this->handle, &createInfo, &compileSettings);
 	}
 
-	void swap(PipelineCompute& other)
+	ZgPipelineBindingsSignature getBindingsSignature() const
 	{
-		std::swap(this->pipeline, other.pipeline);
-		std::swap(this->bindingsSignature, other.bindingsSignature);
-		std::swap(this->computeSignature, other.computeSignature);
+		ZgPipelineBindingsSignature tmp = {};
+		zgPipelineComputeGetBindingsSignature(this->handle, &tmp);
+		return tmp;
 	}
 
-	void release()
+	void getGroupDims(uint32_t& groupDimXOut, uint32_t& groupDimYOut, uint32_t& groupDimZOut) const
 	{
-		if (this->pipeline != nullptr) zgPipelineComputeRelease(this->pipeline);
-		this->pipeline = nullptr;
-		this->bindingsSignature = {};
-		this->computeSignature = {};
+		zgPipelineComputeGetGroupDimensions(this->handle, &groupDimXOut, &groupDimYOut, &groupDimZOut);
 	}
 };
 
@@ -916,13 +862,14 @@ ZG_STRUCT(ZgVertexAttribute) {
 
 // A struct representing the rendering signature of a render pipeline.
 //
-// In contrast to ZgPipelineBindingsSignature, this specifies render pipeline specific bendings of
-// a render pipeline. I.e. how vertex data is loaded and render targets being written to.
-//
-// Unlike ZgPipelineBindingsSignature, this data can not be inferred by reflection and is specified
-// by the user when creating a pipeline anyway. It is mainly kept and provided in this form to make
-// life a bit simpler for the user.
+// In addition to the contents of ZgPipelineBindingsSignature, this also contains render pipeline
+// specific input (i.e., how vertex data is read and render target information). The additional
+// data cannot be inferred by reflection and is actually specified by the user when creating the
+// pipeline. It's is mainly provided here as a convenience.
 ZG_STRUCT(ZgPipelineRenderSignature) {
+
+	// The bindings signnature
+	ZgPipelineBindingsSignature bindings;
 
 	// The vertex attributes to the vertex shader
 	uint32_t numVertexAttributes;
@@ -1085,70 +1032,49 @@ ZG_STRUCT(ZgPipelineRenderCreateInfo) {
 
 ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 	ZgPipelineRender** pipelineOut,
-	ZgPipelineBindingsSignature* bindingsSignatureOut,
-	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo* createInfo,
 	const ZgPipelineCompileSettingsHLSL* compileSettings);
 
 ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
 	ZgPipelineRender** pipelineOut,
-	ZgPipelineBindingsSignature* bindingsSignatureOut,
-	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo* createInfo,
 	const ZgPipelineCompileSettingsHLSL* compileSettings);
 
-ZG_API ZgResult zgPipelineRenderRelease(
+ZG_API void zgPipelineRenderDestroy(
 	ZgPipelineRender* pipeline);
+
+ZG_API void zgPipelineRenderGetSignature(
+	const ZgPipelineRender* pipeline,
+	ZgPipelineRenderSignature* signatureOut);
 
 #ifdef __cplusplus
 namespace zg {
 
-class PipelineRender final {
+class PipelineRender final : public ManagedHandle<ZgPipelineRender, zgPipelineRenderDestroy> {
 public:
-	ZgPipelineRender* pipeline = nullptr;
-	ZgPipelineBindingsSignature bindingsSignature = {};
-	ZgPipelineRenderSignature renderSignature = {};
-
-	PipelineRender() = default;
-	PipelineRender(const PipelineRender&) = delete;
-	PipelineRender& operator= (const PipelineRender&) = delete;
-	PipelineRender(PipelineRender&& o) { this->swap(o); }
-	PipelineRender& operator= (PipelineRender&& o) { this->swap(o); return *this; }
-	~PipelineRender() { this->release(); }
-
-	bool valid() const { return this->pipeline != nullptr; }
-
 	[[nodiscard]] ZgResult createFromFileHLSL(
 		const ZgPipelineRenderCreateInfo& createInfo,
 		const ZgPipelineCompileSettingsHLSL& compileSettings)
 	{
-		this->release();
+		this->destroy();
 		return zgPipelineRenderCreateFromFileHLSL(
-			&this->pipeline, &this->bindingsSignature, &this->renderSignature, &createInfo, &compileSettings);
+			&this->handle, &createInfo, &compileSettings);
 	}
 
 	[[nodiscard]] ZgResult createFromSourceHLSL(
 		const ZgPipelineRenderCreateInfo& createInfo,
 		const ZgPipelineCompileSettingsHLSL& compileSettings)
 	{
-		this->release();
+		this->destroy();
 		return zgPipelineRenderCreateFromSourceHLSL(
-			&this->pipeline, &this->bindingsSignature, &this->renderSignature, &createInfo, &compileSettings);
+			&this->handle, &createInfo, &compileSettings);
 	}
 
-	void swap(PipelineRender& other)
+	ZgPipelineRenderSignature getSignature() const
 	{
-		std::swap(this->pipeline, other.pipeline);
-		std::swap(this->bindingsSignature, other.bindingsSignature);
-		std::swap(this->renderSignature, other.renderSignature);
-	}
-
-	void release()
-	{
-		if (this->pipeline != nullptr) zgPipelineRenderRelease(this->pipeline);
-		this->pipeline = nullptr;
-		this->bindingsSignature = {};
-		this->renderSignature = {};
+		ZgPipelineRenderSignature tmp = {};
+		zgPipelineRenderGetSignature(this->handle, &tmp);
+		return tmp;
 	}
 };
 
@@ -1388,7 +1314,7 @@ ZG_API ZgResult zgFramebufferCreate(
 
 // No-op if framebuffer is built-in swapchain framebuffer, which is managed and owned by the ZeroG
 // context.
-ZG_API void zgFramebufferRelease(
+ZG_API void zgFramebufferDestroy(
 	ZgFramebuffer* framebuffer);
 
 ZG_API ZgResult zgFramebufferGetResolution(
@@ -1399,42 +1325,17 @@ ZG_API ZgResult zgFramebufferGetResolution(
 #ifdef __cplusplus
 namespace zg {
 
-class Framebuffer final {
+class Framebuffer final : public ManagedHandle<ZgFramebuffer, zgFramebufferDestroy> {
 public:
-	ZgFramebuffer* framebuffer = nullptr;
-	uint32_t width = 0;
-	uint32_t height = 0;
-
-	Framebuffer() = default;
-	Framebuffer(const Framebuffer&) = delete;
-	Framebuffer& operator= (const Framebuffer&) = delete;
-	Framebuffer(Framebuffer&& other) { this->swap(other); }
-	Framebuffer& operator= (Framebuffer&& other) { this->swap(other); return *this; }
-	~Framebuffer() { this->release(); }
-
-	bool valid() const { return this->framebuffer != nullptr; }
-
 	[[nodiscard]] ZgResult create(const ZgFramebufferCreateInfo& createInfo)
 	{
-		this->release();
-		ZgResult res = zgFramebufferCreate(&this->framebuffer, &createInfo);
-		if (!zgIsSuccess(res)) return res;
-		return zgFramebufferGetResolution(this->framebuffer, &this->width, &this->height);
+		this->destroy();
+		return zgFramebufferCreate(&this->handle, &createInfo);
 	}
 
-	void swap(Framebuffer& other)
+	[[nodiscard]] ZgResult getResolution(uint32_t& widthOut, uint32_t& heightOut) const
 	{
-		std::swap(this->framebuffer, other.framebuffer);
-		std::swap(this->width, other.width);
-		std::swap(this->height, other.height);
-	}
-
-	void release()
-	{
-		if (this->framebuffer != nullptr) zgFramebufferRelease(this->framebuffer);
-		this->framebuffer = nullptr;
-		this->width = 0;
-		this->height = 0;
+		return zgFramebufferGetResolution(this->handle, &widthOut, &heightOut);
 	}
 };
 
@@ -1452,13 +1353,13 @@ public:
 		assert(createInfo.numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
 		uint32_t idx = createInfo.numRenderTargets;
 		createInfo.numRenderTargets += 1;
-		createInfo.renderTargets[idx] = renderTarget.texture;
+		createInfo.renderTargets[idx] = renderTarget.handle;
 		return *this;
 	}
 
 	FramebufferBuilder& setDepthBuffer(Texture2D& depthBuffer)
 	{
-		createInfo.depthBuffer = depthBuffer.texture;
+		createInfo.depthBuffer = depthBuffer.handle;
 		return *this;
 	}
 
@@ -1487,7 +1388,7 @@ ZG_API ZgResult zgProfilerCreate(
 	ZgProfiler** profilerOut,
 	const ZgProfilerCreateInfo* createInfo);
 
-ZG_API void zgProfilerRelease(
+ZG_API void zgProfilerDestroy(
 	ZgProfiler* profiler);
 
 // Retrieves the measurement recorded fora given measurement id.
@@ -1505,41 +1406,19 @@ ZG_API ZgResult zgProfilerGetMeasurement(
 #ifdef __cplusplus
 namespace zg {
 
-class Profiler final {
+class Profiler final : public ManagedHandle<ZgProfiler, zgProfilerDestroy> {
 public:
-	ZgProfiler* profiler = nullptr;
-
-	Profiler() = default;
-	Profiler(const Profiler&) = delete;
-	Profiler& operator= (const Profiler&) = delete;
-	Profiler(Profiler&& other) { this->swap(other); }
-	Profiler& operator= (Profiler&& other) { this->swap(other); return *this; }
-	~Profiler() { this->release(); }
-
-	bool valid() const { return this->profiler != nullptr; }
-
 	[[nodiscard]] ZgResult create(const ZgProfilerCreateInfo& createInfo)
 	{
-		this->release();
-		return zgProfilerCreate(&this->profiler, &createInfo);
-	}
-
-	void swap(Profiler& other)
-	{
-		std::swap(this->profiler, other.profiler);
-	}
-
-	void release()
-	{
-		if (this->profiler != nullptr) zgProfilerRelease(this->profiler);
-		this->profiler = nullptr;
+		this->destroy();
+		return zgProfilerCreate(&this->handle, &createInfo);
 	}
 
 	[[nodiscard]] ZgResult getMeasurement(
 		uint64_t measurementId,
 		float& measurementMsOut)
 	{
-		return zgProfilerGetMeasurement(this->profiler, measurementId, &measurementMsOut);
+		return zgProfilerGetMeasurement(this->handle, measurementId, &measurementMsOut);
 	}
 };
 
@@ -1552,7 +1431,7 @@ public:
 ZG_API ZgResult zgFenceCreate(
 	ZgFence** fenceOut);
 
-ZG_API void zgFenceRelease(
+ZG_API void zgFenceDestroy(
 	ZgFence* fence);
 
 // Resets a ZgFence to its initial state.
@@ -1572,45 +1451,23 @@ ZG_API ZgResult zgFenceWaitOnCpuBlocking(
 #ifdef __cplusplus
 namespace zg {
 
-class Fence final {
+class Fence final : public ManagedHandle<ZgFence, zgFenceDestroy> {
 public:
-	ZgFence* fence = nullptr;
-
-	Fence() = default;
-	Fence(const Fence&) = delete;
-	Fence& operator= (const Fence&) = delete;
-	Fence(Fence&& other) { this->swap(other); }
-	Fence& operator= (Fence&& other) { this->swap(other); return *this; }
-	~Fence() { this->release(); }
-
-	bool valid() const { return this->fence != nullptr; }
-
 	[[nodiscard]] ZgResult create()
 	{
-		this->release();
-		return zgFenceCreate(&this->fence);
-	}
-
-	void swap(Fence& other)
-	{
-		std::swap(this->fence, other.fence);
-	}
-
-	void release()
-	{
-		if (this->fence != nullptr) zgFenceRelease(this->fence);
-		this->fence = nullptr;
+		this->destroy();
+		return zgFenceCreate(&this->handle);
 	}
 
 	[[nodiscard]] ZgResult reset()
 	{
-		return zgFenceReset(this->fence);
+		return zgFenceReset(this->handle);
 	}
 
 	[[nodiscard]] ZgResult checkIfSignaled(bool& fenceSignaledOut) const
 	{
 		ZgBool signaled = ZG_FALSE;
-		ZgResult res = zgFenceCheckIfSignaled(this->fence, &signaled);
+		ZgResult res = zgFenceCheckIfSignaled(this->handle, &signaled);
 		fenceSignaledOut = signaled == ZG_FALSE ? false : true;
 		return res;
 	}
@@ -1624,7 +1481,7 @@ public:
 
 	[[nodiscard]] ZgResult waitOnCpuBlocking() const
 	{
-		return zgFenceWaitOnCpuBlocking(this->fence);
+		return zgFenceWaitOnCpuBlocking(this->handle);
 	}
 };
 
@@ -1633,6 +1490,10 @@ public:
 
 // Command list
 // ------------------------------------------------------------------------------------------------
+
+ZG_STRUCT(ZgRect) {
+	uint32_t topLeftX, topLeftY, width, height;
+};
 
 ZG_API ZgResult zgCommandListMemcpyBufferToBuffer(
 	ZgCommandList* commandList,
@@ -1737,18 +1598,18 @@ ZG_API ZgResult zgCommandListSetPipelineRender(
 ZG_API ZgResult zgCommandListSetFramebuffer(
 	ZgCommandList* commandList,
 	ZgFramebuffer* framebuffer,
-	const ZgFramebufferRect* optionalViewport,
-	const ZgFramebufferRect* optionalScissor);
+	const ZgRect* optionalViewport,
+	const ZgRect* optionalScissor);
 
 // Change the viewport for an already set framebuffer
 ZG_API ZgResult zgCommandListSetFramebufferViewport(
 	ZgCommandList* commandList,
-	const ZgFramebufferRect* viewport);
+	const ZgRect* viewport);
 
 // Change the scissor for an already set framebuffer
 ZG_API ZgResult zgCommandListSetFramebufferScissor(
 	ZgCommandList* commandList,
-	const ZgFramebufferRect* scissor);
+	const ZgRect* scissor);
 
 // Clears all render targets and depth buffers in a framebuffer to their optimal clear values, 0
 // if none is specified.
@@ -1808,31 +1669,8 @@ ZG_API ZgResult zgCommandListProfileEnd(
 #ifdef __cplusplus
 namespace zg {
 
-class CommandList final {
+class CommandList final : public ManagedHandle<ZgCommandList> {
 public:
-	ZgCommandList* commandList = nullptr;
-
-	CommandList() = default;
-	CommandList(const CommandList&) = delete;
-	CommandList& operator= (const CommandList&) = delete;
-	CommandList(CommandList&& other) { this->swap(other); }
-	CommandList& operator= (CommandList&& other) { this->swap(other); return *this; }
-	~CommandList() { this->release(); }
-
-	bool valid() const { return commandList != nullptr; }
-
-	void swap(CommandList& other)
-	{
-		std::swap(this->commandList, other.commandList);
-	}
-
-	void release()
-	{
-		// TODO: Currently there is no destruction of command lists as they are owned by the
-		//       CommandQueue.
-		this->commandList = nullptr;
-	}
-
 	[[nodiscard]] ZgResult memcpyBufferToBuffer(
 		Buffer& dstBuffer,
 		uint64_t dstBufferOffsetBytes,
@@ -1841,10 +1679,10 @@ public:
 		uint64_t numBytes)
 	{
 		return zgCommandListMemcpyBufferToBuffer(
-			this->commandList,
-			dstBuffer.buffer,
+			this->handle,
+			dstBuffer.handle,
 			dstBufferOffsetBytes,
-			srcBuffer.buffer,
+			srcBuffer.handle,
 			srcBufferOffsetBytes,
 			numBytes);
 	}
@@ -1856,133 +1694,131 @@ public:
 		Buffer& tempUploadBuffer)
 	{
 		return zgCommandListMemcpyToTexture(
-			this->commandList,
-			dstTexture.texture,
+			this->handle,
+			dstTexture.handle,
 			dstTextureMipLevel,
 			&srcImageCpu,
-			tempUploadBuffer.buffer);
+			tempUploadBuffer.handle);
 	}
 
 	[[nodiscard]] ZgResult enableQueueTransition(Buffer& buffer)
 	{
-		return zgCommandListEnableQueueTransitionBuffer(this->commandList, buffer.buffer);
+		return zgCommandListEnableQueueTransitionBuffer(this->handle, buffer.handle);
 	}
 
 	[[nodiscard]] ZgResult enableQueueTransition(Texture2D& texture)
 	{
-		return zgCommandListEnableQueueTransitionTexture(this->commandList, texture.texture);
+		return zgCommandListEnableQueueTransitionTexture(this->handle, texture.handle);
 	}
 
 	[[nodiscard]] ZgResult setPushConstant(
 		uint32_t shaderRegister, const void* data, uint32_t dataSizeInBytes)
 	{
 		return zgCommandListSetPushConstant(
-			this->commandList, shaderRegister, data, dataSizeInBytes);
+			this->handle, shaderRegister, data, dataSizeInBytes);
 	}
 
 	[[nodiscard]] ZgResult setPipelineBindings(const PipelineBindings& bindings)
 	{
-		return zgCommandListSetPipelineBindings(this->commandList, &bindings.bindings);
+		return zgCommandListSetPipelineBindings(this->handle, &bindings.bindings);
 	}
 
 	[[nodiscard]] ZgResult setPipeline(PipelineCompute& pipeline)
 	{
-		return zgCommandListSetPipelineCompute(this->commandList, pipeline.pipeline);
+		return zgCommandListSetPipelineCompute(this->handle, pipeline.handle);
 	}
 
 	[[nodiscard]] ZgResult unorderedBarrier(Buffer& buffer)
 	{
-		return zgCommandListUnorderedBarrierBuffer(this->commandList, buffer.buffer);
+		return zgCommandListUnorderedBarrierBuffer(this->handle, buffer.handle);
 	}
 
 	[[nodiscard]] ZgResult unorderedBarrier(Texture2D& texture)
 	{
-		return zgCommandListUnorderedBarrierTexture(this->commandList, texture.texture);
+		return zgCommandListUnorderedBarrierTexture(this->handle, texture.handle);
 	}
 
 	[[nodiscard]] ZgResult unorderedBarrier()
 	{
-		return zgCommandListUnorderedBarrierAll(this->commandList);
+		return zgCommandListUnorderedBarrierAll(this->handle);
 	}
 
 	[[nodiscard]] ZgResult dispatchCompute(
 		uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1)
 	{
 		return zgCommandListDispatchCompute(
-			this->commandList, groupCountX, groupCountY, groupCountZ);
+			this->handle, groupCountX, groupCountY, groupCountZ);
 	}
 
 	[[nodiscard]] ZgResult setPipeline(PipelineRender& pipeline)
 	{
-		return zgCommandListSetPipelineRender(this->commandList, pipeline.pipeline);
+		return zgCommandListSetPipelineRender(this->handle, pipeline.handle);
 	}
 
 	[[nodiscard]] ZgResult setFramebuffer(
 		Framebuffer& framebuffer,
-		const ZgFramebufferRect* optionalViewport = nullptr,
-		const ZgFramebufferRect* optionalScissor = nullptr)
+		const ZgRect* optionalViewport = nullptr,
+		const ZgRect* optionalScissor = nullptr)
 	{
 		return zgCommandListSetFramebuffer(
-			this->commandList, framebuffer.framebuffer, optionalViewport, optionalScissor);
+			this->handle, framebuffer.handle, optionalViewport, optionalScissor);
 	}
 
-	[[nodiscard]] ZgResult setFramebufferViewport(
-		const ZgFramebufferRect& viewport)
+	[[nodiscard]] ZgResult setFramebufferViewport(const ZgRect& viewport)
 	{
-		return zgCommandListSetFramebufferViewport(this->commandList, &viewport);
+		return zgCommandListSetFramebufferViewport(this->handle, &viewport);
 	}
 
-	[[nodiscard]] ZgResult setFramebufferScissor(
-		const ZgFramebufferRect& scissor)
+	[[nodiscard]] ZgResult setFramebufferScissor(const ZgRect& scissor)
 	{
-		return zgCommandListSetFramebufferScissor(this->commandList, &scissor);
+		return zgCommandListSetFramebufferScissor(this->handle, &scissor);
 	}
 
 	[[nodiscard]] ZgResult clearFramebufferOptimal()
 	{
-		return zgCommandListClearFramebufferOptimal(this->commandList);
+		return zgCommandListClearFramebufferOptimal(this->handle);
 	}
 
 	[[nodiscard]] ZgResult clearRenderTargets(float red, float green, float blue, float alpha)
 	{
-		return zgCommandListClearRenderTargets(this->commandList, red, green, blue, alpha);
+		return zgCommandListClearRenderTargets(this->handle, red, green, blue, alpha);
 	}
 
 	[[nodiscard]] ZgResult clearDepthBuffer(float depth)
 	{
-		return zgCommandListClearDepthBuffer(this->commandList, depth);
+		return zgCommandListClearDepthBuffer(this->handle, depth);
 	}
 
 	[[nodiscard]] ZgResult setIndexBuffer(Buffer& indexBuffer, ZgIndexBufferType type)
 	{
-		return zgCommandListSetIndexBuffer(this->commandList, indexBuffer.buffer, type);
+		return zgCommandListSetIndexBuffer(this->handle, indexBuffer.handle, type);
 	}
 
 	[[nodiscard]] ZgResult setVertexBuffer(uint32_t vertexBufferSlot, Buffer& vertexBuffer)
 	{
 		return zgCommandListSetVertexBuffer(
-			this->commandList, vertexBufferSlot, vertexBuffer.buffer);
+			this->handle, vertexBufferSlot, vertexBuffer.handle);
 	}
 
 	[[nodiscard]] ZgResult drawTriangles(uint32_t startVertexIndex, uint32_t numVertices)
 	{
-		return zgCommandListDrawTriangles(this->commandList, startVertexIndex, numVertices);
+		return zgCommandListDrawTriangles(this->handle, startVertexIndex, numVertices);
 	}
 
 	[[nodiscard]] ZgResult drawTrianglesIndexed(uint32_t startIndex, uint32_t numTriangles)
 	{
 		return zgCommandListDrawTrianglesIndexed(
-			this->commandList, startIndex, numTriangles);
+			this->handle, startIndex, numTriangles);
 	}
 
 	[[nodiscard]] ZgResult profileBegin(Profiler& profiler, uint64_t& measurementIdOut)
 	{
-		return zgCommandListProfileBegin(this->commandList, profiler.profiler, &measurementIdOut);
+		return zgCommandListProfileBegin(this->handle, profiler.handle, &measurementIdOut);
 	}
 
 	[[nodiscard]] ZgResult profileEnd(Profiler& profiler, uint64_t measurementId)
 	{
-		return zgCommandListProfileEnd(this->commandList, profiler.profiler, measurementId);
+		return zgCommandListProfileEnd(this->handle, profiler.handle, measurementId);
 	}
 };
 
@@ -1992,11 +1828,9 @@ public:
 // Command queue
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgResult zgCommandQueueGetPresentQueue(
-	ZgCommandQueue** presentQueueOut);
+ZG_API ZgCommandQueue* zgCommandQueueGetPresentQueue(void);
 
-ZG_API ZgResult zgCommandQueueGetCopyQueue(
-	ZgCommandQueue** copyQueueOut);
+ZG_API ZgCommandQueue* zgCommandQueueGetCopyQueue(void);
 
 // Enqueues the command queue to signal the ZgFence (from the GPU).
 //
@@ -2027,67 +1861,47 @@ ZG_API ZgResult zgCommandQueueExecuteCommandList(
 #ifdef __cplusplus
 namespace zg {
 
-class CommandQueue final {
+class CommandQueue final : public ManagedHandle<ZgCommandQueue>{
 public:
-	ZgCommandQueue* commandQueue = nullptr;
-
-	CommandQueue() = default;
-	CommandQueue(const CommandQueue&) = delete;
-	CommandQueue& operator= (const CommandQueue&) = delete;
-	CommandQueue(CommandQueue&& other) { this->swap(other); }
-	CommandQueue& operator= (CommandQueue&& other) { this->swap(other); return *this; }
-	~CommandQueue() { this->release(); }
-
-	static [[nodiscard]] ZgResult getPresentQueue(CommandQueue& presentQueueOut)
+	static CommandQueue getPresentQueue()
 	{
-		return zgCommandQueueGetPresentQueue(&presentQueueOut.commandQueue);
+		CommandQueue queue;
+		queue.handle = zgCommandQueueGetPresentQueue();
+		return queue;
 	}
 
-	static [[nodiscard]] ZgResult getCopyQueue(CommandQueue& copyQueueOut)
+	static CommandQueue getCopyQueue()
 	{
-		return zgCommandQueueGetCopyQueue(&copyQueueOut.commandQueue);
-	}
-
-	bool valid() const { return commandQueue != nullptr; }
-
-	void swap(CommandQueue& other)
-	{
-		std::swap(this->commandQueue, other.commandQueue);
-	}
-
-	// TODO: No-op because there currently is no releasing of Command Queues...
-	void release()
-	{
-		// TODO: Currently there is no destruction of command queues as there is only one
-		this->commandQueue = nullptr;
+		CommandQueue queue;
+		queue.handle = zgCommandQueueGetCopyQueue();
+		return queue;
 	}
 
 	[[nodiscard]] ZgResult signalOnGpu(Fence& fenceToSignal)
 	{
-		return zgCommandQueueSignalOnGpu(this->commandQueue, fenceToSignal.fence);
+		return zgCommandQueueSignalOnGpu(this->handle, fenceToSignal.handle);
 	}
 
 	[[nodiscard]] ZgResult waitOnGpu(const Fence& fence)
 	{
-		return zgCommandQueueWaitOnGpu(this->commandQueue, fence.fence);
+		return zgCommandQueueWaitOnGpu(this->handle, fence.handle);
 	}
 
 	[[nodiscard]] ZgResult flush()
 	{
-		return zgCommandQueueFlush(this->commandQueue);
+		return zgCommandQueueFlush(this->handle);
 	}
 
 	[[nodiscard]] ZgResult beginCommandListRecording(CommandList& commandListOut)
 	{
-		if (commandListOut.commandList != nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-		return zgCommandQueueBeginCommandListRecording(
-			this->commandQueue, &commandListOut.commandList);
+		if (commandListOut.valid()) return ZG_ERROR_INVALID_ARGUMENT;
+		return zgCommandQueueBeginCommandListRecording(this->handle, &commandListOut.handle);
 	}
 
 	[[nodiscard]] ZgResult executeCommandList(CommandList& commandList)
 	{
-		ZgResult res = zgCommandQueueExecuteCommandList(this->commandQueue, commandList.commandList);
-		commandList.commandList = nullptr;
+		ZgResult res = zgCommandQueueExecuteCommandList(this->handle, commandList.handle);
+		commandList.destroy();
 		return res;
 	}
 };

@@ -101,14 +101,8 @@ bool Renderer::init(
 	mState->windowRes = vec2_i32(512, 512);
 
 	// Get command queues
-	if (!(CHECK_ZG zg::CommandQueue::getPresentQueue(mState->presentQueue))) {
-		this->destroy();
-		return false;
-	}
-	if (!(CHECK_ZG zg::CommandQueue::getCopyQueue(mState->copyQueue))) {
-		this->destroy();
-		return false;
-	}
+	mState->presentQueue = zg::CommandQueue::getPresentQueue();
+	mState->copyQueue = zg::CommandQueue::getCopyQueue();
 
 	// Initialize profiler
 	{
@@ -497,11 +491,7 @@ void Renderer::frameBegin() noexcept
 	// Begin ZeroG frame
 	sfz_assert(!mState->windowFramebuffer.valid());
 	CHECK_ZG zgContextSwapchainBeginFrame(
-		&mState->windowFramebuffer.framebuffer, mState->profiler.profiler, &frameIds.frameId);
-	CHECK_ZG zgFramebufferGetResolution(
-		mState->windowFramebuffer.framebuffer,
-		&mState->windowFramebuffer.width,
-		&mState->windowFramebuffer.height);
+		&mState->windowFramebuffer.handle, mState->profiler.handle, &frameIds.frameId);
 
 	// Clear all framebuffers
 	// TODO: Should probably only clear using a specific clear framebuffer stage
@@ -649,28 +639,28 @@ void Renderer::stageSetPushConstantUntyped(
 	// In debug mode, validate that the specified shader registers corresponds to a a suitable
 	// push constant in the pipeline
 #ifndef NDEBUG
-	const ZgPipelineBindingsSignature* signature = nullptr;
+	ZgPipelineBindingsSignature signature = {};
 	if (mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING) {
-		signature = &mState->inputEnabled.pipelineRender->pipeline.bindingsSignature;
+		signature = mState->inputEnabled.pipelineRender->pipeline.getSignature().bindings;
 	}
 	else if (mState->inputEnabled.stage->type == StageType::USER_INPUT_COMPUTE) {
-		signature = &mState->inputEnabled.pipelineCompute->pipeline.bindingsSignature;
+		signature = mState->inputEnabled.pipelineCompute->pipeline.getBindingsSignature();
 	}
 	else {
 		sfz_assert(false);
 	}
 	
 	uint32_t bufferIdx = ~0u;
-	for (uint32_t i = 0; i < signature->numConstBuffers; i++) {
-		if (shaderRegister == signature->constBuffers[i].bufferRegister) {
+	for (uint32_t i = 0; i < signature.numConstBuffers; i++) {
+		if (shaderRegister == signature.constBuffers[i].bufferRegister) {
 			bufferIdx = i;
 			break;
 		}
 	}
 	
 	sfz_assert(bufferIdx != ~0u);
-	sfz_assert(signature->constBuffers[bufferIdx].pushConstant == ZG_TRUE);
-	sfz_assert(signature->constBuffers[bufferIdx].sizeInBytes >= numBytes);
+	sfz_assert(signature.constBuffers[bufferIdx].pushConstant == ZG_TRUE);
+	sfz_assert(signature.constBuffers[bufferIdx].sizeInBytes >= numBytes);
 #endif
 
 	CHECK_ZG mState->inputEnabledCommandList().setPushConstant(shaderRegister, data, numBytes);
@@ -686,28 +676,28 @@ void Renderer::stageSetConstantBufferUntyped(
 	// In debug mode, validate that the specified shader registers corresponds to a a suitable
 	// constant buffer in the pipeline
 #ifndef NDEBUG
-	const ZgPipelineBindingsSignature* signature = nullptr;
+	ZgPipelineBindingsSignature signature = {};
 	if (mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING) {
-		signature = &mState->inputEnabled.pipelineRender->pipeline.bindingsSignature;
+		signature = mState->inputEnabled.pipelineRender->pipeline.getSignature().bindings;
 	}
 	else if (mState->inputEnabled.stage->type == StageType::USER_INPUT_COMPUTE) {
-		signature = &mState->inputEnabled.pipelineCompute->pipeline.bindingsSignature;
+		signature = mState->inputEnabled.pipelineCompute->pipeline.getBindingsSignature();
 	}
 	else {
 		sfz_assert(false);
 	}
 
 	uint32_t bufferIdx = ~0u;
-	for (uint32_t i = 0; i < signature->numConstBuffers; i++) {
-		if (shaderRegister == signature->constBuffers[i].bufferRegister) {
+	for (uint32_t i = 0; i < signature.numConstBuffers; i++) {
+		if (shaderRegister == signature.constBuffers[i].bufferRegister) {
 			bufferIdx = i;
 			break;
 		}
 	}
 
 	sfz_assert(bufferIdx != ~0u);
-	sfz_assert(signature->constBuffers[bufferIdx].pushConstant == ZG_FALSE);
-	sfz_assert(signature->constBuffers[bufferIdx].sizeInBytes >= numBytes);
+	sfz_assert(signature.constBuffers[bufferIdx].pushConstant == ZG_FALSE);
+	sfz_assert(signature.constBuffers[bufferIdx].sizeInBytes >= numBytes);
 #endif
 
 	// Find constant buffer
@@ -744,8 +734,8 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 	// Validate some stuff in debug mode
 #ifndef NDEBUG
 	// Validate pipeline vertex input for standard mesh rendering
-	const ZgPipelineRenderSignature& renderSignature =
-		mState->inputEnabled.pipelineRender->pipeline.renderSignature;
+	const ZgPipelineRenderSignature renderSignature =
+		mState->inputEnabled.pipelineRender->pipeline.getSignature();
 	sfz_assert(renderSignature.numVertexAttributes == 3);
 
 	sfz_assert(renderSignature.vertexAttributes[0].location == 0);
@@ -766,8 +756,8 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 	sfz_assert(
 		renderSignature.vertexAttributes[2].offsetToFirstElementInBytes == offsetof(Vertex, texcoord));
 
-	const ZgPipelineBindingsSignature& bindingsSignature =
-		mState->inputEnabled.pipelineRender->pipeline.bindingsSignature;
+	const ZgPipelineBindingsSignature bindingsSignature =
+		mState->inputEnabled.pipelineRender->pipeline.getSignature().bindings;
 
 	// Validate material index push constant
 	if (registers.materialIdxPushConstant != ~0u) {
@@ -914,13 +904,9 @@ vec3_i32 Renderer::stageGetComputeGroupDims() noexcept
 	sfz_assert(inStageInputMode());
 	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_COMPUTE);
 
-	const ZgPipelineComputeSignature& sign =
-		mState->inputEnabled.pipelineCompute->pipeline.computeSignature;
-	vec3_i32 groupDims;
-	groupDims.x = int32_t(sign.groupDimX);
-	groupDims.y = int32_t(sign.groupDimY);
-	groupDims.z = int32_t(sign.groupDimZ);
-	return groupDims;
+	vec3_u32 groupDims;
+	mState->inputEnabled.pipelineCompute->pipeline.getGroupDims(groupDims.x, groupDims.y, groupDims.z);
+	return vec3_i32(groupDims);
 }
 
 void Renderer::stageDispatchCompute(
@@ -1054,8 +1040,8 @@ void Renderer::frameFinish() noexcept
 
 	// Finish ZeroG frame
 	sfz_assert(mState->windowFramebuffer.valid());
-	CHECK_ZG zgContextSwapchainFinishFrame(mState->profiler.profiler, frameIds.frameId);
-	mState->windowFramebuffer.release();
+	CHECK_ZG zgContextSwapchainFinishFrame(mState->profiler.handle, frameIds.frameId);
+	mState->windowFramebuffer.destroy();
 
 	// Signal that we are done rendering use these resources
 	zg::Fence& frameFence = mState->frameFences.data(mState->currentFrameIdx);

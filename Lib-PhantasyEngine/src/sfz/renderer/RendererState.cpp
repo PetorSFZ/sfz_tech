@@ -40,18 +40,20 @@ static ZgOptimalClearValue floatToOptimalClearValue(float value) noexcept
 void StaticTextureItem::buildTexture(vec2_i32 windowRes) noexcept
 {
 	// Figure out resolution
-	uint32_t width = 0;
-	uint32_t height = 0;
+	uint32_t tmpWidth = 0;
+	uint32_t tmpHeight = 0;
 	if (resolutionIsFixed) {
-		width = uint32_t(resolutionFixed.x);
-		height = uint32_t(resolutionFixed.y);
+		tmpWidth = uint32_t(resolutionFixed.x);
+		tmpHeight = uint32_t(resolutionFixed.y);
 	}
 	else {
 		if (resolutionScaleSetting != nullptr) resolutionScale = resolutionScaleSetting->floatValue();
 		vec2 scaled = vec2(windowRes) * resolutionScale;
-		width = uint32_t(std::round(scaled.x));
-		height = uint32_t(std::round(scaled.y));
+		tmpWidth = uint32_t(std::round(scaled.x));
+		tmpHeight = uint32_t(std::round(scaled.y));
 	}
+	this->width = tmpWidth;
+	this->height = tmpHeight;
 
 	// Allocate texture
 	ZgTextureUsage usage = format == ZG_TEXTURE_FORMAT_DEPTH_F32 ?
@@ -67,7 +69,7 @@ void StaticTextureItem::buildTexture(vec2_i32 windowRes) noexcept
 		createInfo.numMipmaps = 1;
 		CHECK_ZG this->texture.create(createInfo);
 	}
-	
+
 	// Set debug name for texture
 	StringCollection& resStrings = getResourceStrings();
 	str128 debugName("static_tex__%s", resStrings.getString(this->name));

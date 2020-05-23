@@ -588,7 +588,7 @@ ZG_API ZgResult zgBufferCreate(
 		*bufferOut, *createInfo, ctxState->d3d12Allocator, &ctxState->resourceUniqueIdentifierCounter);
 }
 
-ZG_API void zgBufferRelease(
+ZG_API void zgBufferDestroy(
 	ZgBuffer* buffer)
 {
 	if (buffer == nullptr) return;
@@ -632,7 +632,7 @@ ZG_API ZgResult zgTexture2DCreate(
 		*textureOut, *createInfo, *ctxState->device.Get(), ctxState->d3d12Allocator, &ctxState->resourceUniqueIdentifierCounter);
 }
 
-ZG_API void zgTexture2DRelease(
+ZG_API void zgTexture2DDestroy(
 	ZgTexture2D* texture)
 {
 	if (texture == nullptr) return;
@@ -660,20 +660,14 @@ ZG_API ZgResult zgTexture2DSetDebugName(
 
 ZG_API ZgResult zgPipelineComputeCreateFromFileHLSL(
 	ZgPipelineCompute** pipelineOut,
-	ZgPipelineBindingsSignature* bindingsSignatureOut,
-	ZgPipelineComputeSignature* computeSignatureOut,
 	const ZgPipelineComputeCreateInfo* createInfo,
 	const ZgPipelineCompileSettingsHLSL* compileSettings)
 {
 	ZG_ARG_CHECK(pipelineOut == nullptr, "");
-	ZG_ARG_CHECK(bindingsSignatureOut == nullptr, "");
-	ZG_ARG_CHECK(computeSignatureOut == nullptr, "");
 	ZG_ARG_CHECK(createInfo == nullptr, "");
 	ZG_ARG_CHECK(compileSettings == nullptr, "");
 	return createPipelineComputeFileHLSL(
 		pipelineOut,
-		bindingsSignatureOut,
-		computeSignatureOut,
 		*createInfo,
 		*compileSettings,
 		*ctxState->dxcLibrary.Get(),
@@ -682,11 +676,28 @@ ZG_API ZgResult zgPipelineComputeCreateFromFileHLSL(
 		*ctxState->device.Get());
 }
 
-ZG_API ZgResult zgPipelineComputeRelease(
+ZG_API void zgPipelineComputeDestroy(
 	ZgPipelineCompute* pipeline)
 {
 	getAllocator()->deleteObject(pipeline);
-	return ZG_SUCCESS;
+}
+
+ZG_API void zgPipelineComputeGetBindingsSignature(
+	const ZgPipelineCompute* pipeline,
+	ZgPipelineBindingsSignature* bindingsSignatureOut)
+{
+	*bindingsSignatureOut = pipeline->bindingsSignature.toZgSignature();
+}
+
+ZG_API void zgPipelineComputeGetGroupDimensions(
+	const ZgPipelineCompute* pipeline,
+	uint32_t* groupDimXOut,
+	uint32_t* groupDimYOut,
+	uint32_t* groupDimZOut)
+{
+	if (groupDimXOut != nullptr) *groupDimXOut = pipeline->groupDimX;
+	if (groupDimYOut != nullptr) *groupDimYOut = pipeline->groupDimY;
+	if (groupDimZOut != nullptr) *groupDimZOut = pipeline->groupDimZ;
 }
 
 // Pipeline Render
@@ -694,16 +705,12 @@ ZG_API ZgResult zgPipelineComputeRelease(
 
 ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 	ZgPipelineRender** pipelineOut,
-	ZgPipelineBindingsSignature* bindingsSignatureOut,
-	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo* createInfo,
 	const ZgPipelineCompileSettingsHLSL* compileSettings)
 {
 	ZG_ARG_CHECK(createInfo == nullptr, "");
 	ZG_ARG_CHECK(compileSettings == nullptr, "");
 	ZG_ARG_CHECK(pipelineOut == nullptr, "");
-	ZG_ARG_CHECK(bindingsSignatureOut == nullptr, "");
-	ZG_ARG_CHECK(renderSignatureOut == nullptr, "");
 	ZG_ARG_CHECK(createInfo->vertexShader == nullptr, "");
 	ZG_ARG_CHECK(createInfo->vertexShaderEntry == nullptr, "");
 	ZG_ARG_CHECK(createInfo->pixelShader == nullptr, "");
@@ -716,8 +723,6 @@ ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 	ZG_ARG_CHECK(createInfo->numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
 	return createPipelineRenderFileHLSL(
 		pipelineOut,
-		bindingsSignatureOut,
-		renderSignatureOut,
 		*createInfo,
 		*compileSettings,
 		*ctxState->dxcLibrary.Get(),
@@ -728,16 +733,12 @@ ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 
 ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
 	ZgPipelineRender** pipelineOut,
-	ZgPipelineBindingsSignature* bindingsSignatureOut,
-	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo* createInfo,
 	const ZgPipelineCompileSettingsHLSL* compileSettings)
 {
 	ZG_ARG_CHECK(createInfo == nullptr, "");
 	ZG_ARG_CHECK(compileSettings == nullptr, "");
 	ZG_ARG_CHECK(pipelineOut == nullptr, "");
-	ZG_ARG_CHECK(bindingsSignatureOut == nullptr, "");
-	ZG_ARG_CHECK(renderSignatureOut == nullptr, "");
 	ZG_ARG_CHECK(createInfo->vertexShader == nullptr, "");
 	ZG_ARG_CHECK(createInfo->vertexShaderEntry == nullptr, "");
 	ZG_ARG_CHECK(createInfo->pixelShader == nullptr, "");
@@ -750,8 +751,6 @@ ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
 	ZG_ARG_CHECK(createInfo->numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
 	return createPipelineRenderSourceHLSL(
 		pipelineOut,
-		bindingsSignatureOut,
-		renderSignatureOut,
 		*createInfo,
 		*compileSettings,
 		*ctxState->dxcLibrary.Get(),
@@ -760,11 +759,17 @@ ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
 		*ctxState->device.Get());
 }
 
-ZG_API ZgResult zgPipelineRenderRelease(
+ZG_API void zgPipelineRenderDestroy(
 	ZgPipelineRender* pipeline)
 {
 	getAllocator()->deleteObject(pipeline);
-	return ZG_SUCCESS;
+}
+
+ZG_API void zgPipelineRenderGetSignature(
+	const ZgPipelineRender* pipeline,
+	ZgPipelineRenderSignature* signatureOut)
+{
+	*signatureOut = pipeline->renderSignature;
 }
 
 // Framebuffer
@@ -783,7 +788,7 @@ ZG_API ZgResult zgFramebufferCreate(
 		*createInfo);
 }
 
-ZG_API void zgFramebufferRelease(
+ZG_API void zgFramebufferDestroy(
 	ZgFramebuffer* framebuffer)
 {
 	if (framebuffer == nullptr) return;
@@ -799,6 +804,38 @@ ZG_API ZgResult zgFramebufferGetResolution(
 	return framebuffer->getResolution(*widthOut, *heightOut);
 }
 
+// Profiler
+// ------------------------------------------------------------------------------------------------
+
+ZG_API ZgResult zgProfilerCreate(
+	ZgProfiler** profilerOut,
+	const ZgProfilerCreateInfo* createInfo)
+{
+	return d3d12CreateProfiler(
+		*ctxState->device.Get(),
+		ctxState->d3d12Allocator,
+		&ctxState->resourceUniqueIdentifierCounter,
+		profilerOut,
+		*createInfo);
+}
+
+ZG_API void zgProfilerDestroy(
+	ZgProfiler* profiler)
+{
+	if (profiler == nullptr) return;
+	getAllocator()->deleteObject(profiler);
+}
+
+ZG_API ZgResult zgProfilerGetMeasurement(
+	ZgProfiler* profiler,
+	uint64_t measurementId,
+	float* measurementMsOut)
+{
+	ZG_ARG_CHECK(profiler == nullptr, "");
+	ZG_ARG_CHECK(measurementMsOut == nullptr, "");
+	return profiler->getMeasurement(measurementId, *measurementMsOut);
+}
+
 // Fence
 // ------------------------------------------------------------------------------------------------
 
@@ -809,7 +846,7 @@ ZG_API ZgResult zgFenceCreate(
 	return ZG_SUCCESS;
 }
 
-ZG_API void zgFenceRelease(
+ZG_API void zgFenceDestroy(
 	ZgFence* fence)
 {
 	if (fence == nullptr) return;
@@ -836,38 +873,6 @@ ZG_API ZgResult zgFenceWaitOnCpuBlocking(
 	const ZgFence* fence)
 {
 	return fence->waitOnCpuBlocking();
-}
-
-// Profiler
-// ------------------------------------------------------------------------------------------------
-
-ZG_API ZgResult zgProfilerCreate(
-	ZgProfiler** profilerOut,
-	const ZgProfilerCreateInfo* createInfo)
-{
-	return d3d12CreateProfiler(
-		*ctxState->device.Get(),
-		ctxState->d3d12Allocator,
-		&ctxState->resourceUniqueIdentifierCounter,
-		profilerOut,
-		*createInfo);
-}
-
-ZG_API void zgProfilerRelease(
-	ZgProfiler* profiler)
-{
-	if (profiler == nullptr) return;
-	getAllocator()->deleteObject(profiler);
-}
-
-ZG_API ZgResult zgProfilerGetMeasurement(
-	ZgProfiler* profiler,
-	uint64_t measurementId,
-	float* measurementMsOut)
-{
-	ZG_ARG_CHECK(profiler == nullptr, "");
-	ZG_ARG_CHECK(measurementMsOut == nullptr, "");
-	return profiler->getMeasurement(measurementId, *measurementMsOut);
 }
 
 // Command list
@@ -986,22 +991,22 @@ ZG_API ZgResult zgCommandListSetPipelineRender(
 ZG_API ZgResult zgCommandListSetFramebuffer(
 	ZgCommandList* commandList,
 	ZgFramebuffer* framebuffer,
-	const ZgFramebufferRect* optionalViewport,
-	const ZgFramebufferRect* optionalScissor)
+	const ZgRect* optionalViewport,
+	const ZgRect* optionalScissor)
 {
 	return commandList->setFramebuffer(framebuffer, optionalViewport, optionalScissor);
 }
 
 ZG_API ZgResult zgCommandListSetFramebufferViewport(
 	ZgCommandList* commandList,
-	const ZgFramebufferRect* viewport)
+	const ZgRect* viewport)
 {
 	return commandList->setFramebufferViewport(*viewport);
 }
 
 ZG_API ZgResult zgCommandListSetFramebufferScissor(
 	ZgCommandList* commandList,
-	const ZgFramebufferRect* scissor)
+	const ZgRect* scissor)
 {
 	return commandList->setFramebufferScissor(*scissor);
 }
@@ -1085,18 +1090,14 @@ ZG_API ZgResult zgCommandListProfileEnd(
 // Command queue
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgResult zgCommandQueueGetPresentQueue(
-	ZgCommandQueue** presentQueueOut)
+ZG_API ZgCommandQueue* zgCommandQueueGetPresentQueue(void)
 {
-	*presentQueueOut = &ctxState->commandQueuePresent;
-	return ZG_SUCCESS;
+	return &ctxState->commandQueuePresent;
 }
 
-ZG_API ZgResult zgCommandQueueGetCopyQueue(
-	ZgCommandQueue** copyQueueOut)
+ZG_API ZgCommandQueue* zgCommandQueueGetCopyQueue(void)
 {
-	*copyQueueOut = &ctxState->commandQueueCopy;
-	return ZG_SUCCESS;
+	return &ctxState->commandQueueCopy;
 }
 
 ZG_API ZgResult zgCommandQueueSignalOnGpu(

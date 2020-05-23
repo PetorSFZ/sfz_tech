@@ -134,14 +134,14 @@ public:
 
 	ZgResult setFramebuffer(
 		ZgFramebuffer* framebuffer,
-		const ZgFramebufferRect* optionalViewport,
-		const ZgFramebufferRect* optionalScissor) noexcept;
+		const ZgRect* optionalViewport,
+		const ZgRect* optionalScissor) noexcept;
 
 	ZgResult setFramebufferViewport(
-		const ZgFramebufferRect& viewport) noexcept;
+		const ZgRect& viewport) noexcept;
 
 	ZgResult setFramebufferScissor(
-		const ZgFramebufferRect& scissor) noexcept;
+		const ZgRect& scissor) noexcept;
 
 	ZgResult clearFramebufferOptimal() noexcept;
 

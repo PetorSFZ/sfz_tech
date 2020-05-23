@@ -435,7 +435,9 @@ static void logPipelineComputeInfo(
 	const ZgPipelineComputeCreateInfo& createInfo,
 	const char* computeShaderName,
 	const ZgPipelineBindingsSignature& bindingsSignature,
-	const ZgPipelineComputeSignature& computeSignature,
+	uint32_t groupDimX,
+	uint32_t groupDimY,
+	uint32_t groupDimZ,
 	float compileTimeMs) noexcept
 {
 	sfz::str4096 tmpStr;
@@ -449,8 +451,7 @@ static void logPipelineComputeInfo(
 	tmpStr.appendf("Compile time: %.2fms\n", compileTimeMs);
 
 	// Print group dim
-	tmpStr.appendf("\nGroup dimensions: %u x %u x %u\n",
-		computeSignature.groupDimX, computeSignature.groupDimY, computeSignature.groupDimZ);
+	tmpStr.appendf("\nGroup dimensions: %u x %u x %u\n", groupDimX, groupDimY, groupDimZ);
 
 	// Print constant buffers
 	if (bindingsSignature.numConstBuffers > 0) {
@@ -935,8 +936,6 @@ const D3D12UnorderedTextureMapping* D3D12RootSignature::getUnorderedTextureMappi
 
 static ZgResult createPipelineComputeInternal(
 	ZgPipelineCompute** pipelineOut,
-	ZgPipelineBindingsSignature* bindingsSignatureOut,
-	ZgPipelineComputeSignature* computeSignatureOut,
 	const ZgPipelineComputeCreateInfo& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	time_point compileStartTime,
@@ -1014,14 +1013,13 @@ static ZgResult createPipelineComputeInternal(
 	}
 
 	// Get thread group dimensions of the compute pipeline
-	computeSignatureOut->groupDimX = 0;
-	computeSignatureOut->groupDimY = 0;
-	computeSignatureOut->groupDimZ = 0;
-	computeReflection->GetThreadGroupSize(
-		&computeSignatureOut->groupDimX, &computeSignatureOut->groupDimY, &computeSignatureOut->groupDimZ);
-	sfz_assert(computeSignatureOut->groupDimX != 0);
-	sfz_assert(computeSignatureOut->groupDimY != 0);
-	sfz_assert(computeSignatureOut->groupDimZ != 0);
+	uint32_t groupDimX = 0;
+	uint32_t groupDimY = 0;
+	uint32_t groupDimZ = 0;
+	computeReflection->GetThreadGroupSize(&groupDimX, &groupDimY, &groupDimZ);
+	sfz_assert(groupDimX != 0);
+	sfz_assert(groupDimY != 0);
+	sfz_assert(groupDimZ != 0);
 
 	// Log information about the pipeline
 	float compileTimeMs = calculateDeltaMillis(compileStartTime);
@@ -1029,7 +1027,9 @@ static ZgResult createPipelineComputeInternal(
 		createInfo,
 		computeShaderName,
 		bindings.toZgSignature(),
-		*computeSignatureOut,
+		groupDimX,
+		groupDimY,
+		groupDimZ,
 		compileTimeMs);
 
 	// Allocate pipeline
@@ -1040,17 +1040,17 @@ static ZgResult createPipelineComputeInternal(
 	pipeline->pipelineState = pipelineState;
 	pipeline->rootSignature = rootSignature;
 	pipeline->bindingsSignature = bindings;
+	pipeline->groupDimX = groupDimX;
+	pipeline->groupDimY = groupDimY;
+	pipeline->groupDimZ = groupDimZ;
 
 	// Return pipeline
 	*pipelineOut = pipeline;
-	*bindingsSignatureOut = bindings.toZgSignature();
 	return ZG_SUCCESS;
 }
 
 ZgResult createPipelineComputeFileHLSL(
 	ZgPipelineCompute** pipelineOut,
-	ZgPipelineBindingsSignature* bindingsSignatureOut,
-	ZgPipelineComputeSignature* computeSignatureOut,
 	const ZgPipelineComputeCreateInfo& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,
@@ -1070,8 +1070,6 @@ ZgResult createPipelineComputeFileHLSL(
 
 	return createPipelineComputeInternal(
 		pipelineOut,
-		bindingsSignatureOut,
-		computeSignatureOut,
 		createInfo,
 		compileSettings,
 		compileStartTime,
@@ -1087,8 +1085,6 @@ ZgResult createPipelineComputeFileHLSL(
 
 static ZgResult createPipelineRenderInternal(
 	ZgPipelineRender** pipelineOut,
-	ZgPipelineBindingsSignature* bindingsSignatureOut,
-	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	time_point compileStartTime,
@@ -1143,7 +1139,8 @@ static ZgResult createPipelineRenderInternal(
 			createInfo.numVertexAttributes, vertexDesc.InputParameters);
 		return ZG_ERROR_INVALID_ARGUMENT;
 	}
-	renderSignatureOut->numVertexAttributes = createInfo.numVertexAttributes;
+	ZgPipelineRenderSignature renderSignature = {};
+	renderSignature.numVertexAttributes = createInfo.numVertexAttributes;
 
 	// Validate vertex attributes
 	for (uint32_t i = 0; i < createInfo.numVertexAttributes; i++) {
@@ -1179,7 +1176,7 @@ static ZgResult createPipelineRenderInternal(
 		}
 
 		// Set vertex attribute in signature
-		renderSignatureOut->vertexAttributes[i] = attrib;
+		renderSignature.vertexAttributes[i] = attrib;
 	}
 
 	// Get pipeline bindings signature
@@ -1360,9 +1357,9 @@ static ZgResult createPipelineRenderInternal(
 	}
 
 	// Copy render target info to signature
-	renderSignatureOut->numRenderTargets = numRenderTargets;
+	renderSignature.numRenderTargets = numRenderTargets;
 	for (uint32_t i = 0; i < numRenderTargets; i++) {
-		renderSignatureOut->renderTargets[i] = createInfo.renderTargets[i];
+		renderSignature.renderTargets[i] = createInfo.renderTargets[i];
 	}
 
 	// Convert ZgVertexAttribute's to D3D12_INPUT_ELEMENT_DESC
@@ -1434,9 +1431,9 @@ static ZgResult createPipelineRenderInternal(
 
 		// Set render target formats
 		D3D12_RT_FORMAT_ARRAY rtvFormats = {};
-		rtvFormats.NumRenderTargets = renderSignatureOut->numRenderTargets;
-		for (uint32_t i = 0; i < renderSignatureOut->numRenderTargets; i++) {
-			rtvFormats.RTFormats[i] = zgToDxgiTextureFormat(renderSignatureOut->renderTargets[i]);
+		rtvFormats.NumRenderTargets = renderSignature.numRenderTargets;
+		for (uint32_t i = 0; i < renderSignature.numRenderTargets; i++) {
+			rtvFormats.RTFormats[i] = zgToDxgiTextureFormat(renderSignature.renderTargets[i]);
 		}
 		stream.rtvFormats = rtvFormats;
 
@@ -1504,7 +1501,7 @@ static ZgResult createPipelineRenderInternal(
 		vertexShaderName,
 		pixelShaderName,
 		bindings.toZgSignature(),
-		*renderSignatureOut,
+		renderSignature,
 		compileTimeMs);
 
 	// Allocate pipeline
@@ -1515,19 +1512,17 @@ static ZgResult createPipelineRenderInternal(
 	pipeline->pipelineState = pipelineState;
 	pipeline->rootSignature = rootSignature;
 	pipeline->bindingsSignature = bindings;
-	pipeline->renderSignature = *renderSignatureOut;
+	pipeline->renderSignature = renderSignature;
+	pipeline->renderSignature.bindings = bindings.toZgSignature();
 	pipeline->createInfo = createInfo;
 
 	// Return pipeline
 	*pipelineOut = pipeline;
-	*bindingsSignatureOut = bindings.toZgSignature();
 	return ZG_SUCCESS;
 }
 
 ZgResult createPipelineRenderFileHLSL(
 	ZgPipelineRender** pipelineOut,
-	ZgPipelineBindingsSignature* bindingsSignatureOut,
-	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,
@@ -1560,8 +1555,6 @@ ZgResult createPipelineRenderFileHLSL(
 
 	return createPipelineRenderInternal(
 		pipelineOut,
-		bindingsSignatureOut,
-		renderSignatureOut,
 		createInfo,
 		compileSettings,
 		compileStartTime,
@@ -1576,8 +1569,6 @@ ZgResult createPipelineRenderFileHLSL(
 
 ZgResult createPipelineRenderSourceHLSL(
 	ZgPipelineRender** pipelineOut,
-	ZgPipelineBindingsSignature* bindingsSignatureOut,
-	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,
@@ -1603,8 +1594,6 @@ ZgResult createPipelineRenderSourceHLSL(
 
 	return createPipelineRenderInternal(
 		pipelineOut,
-		bindingsSignatureOut,
-		renderSignatureOut,
 		createInfo,
 		compileSettings,
 		compileStartTime,

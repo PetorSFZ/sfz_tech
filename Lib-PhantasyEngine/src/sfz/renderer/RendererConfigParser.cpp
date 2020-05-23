@@ -519,7 +519,7 @@ bool allocateStageMemory(RendererState& state) noexcept
 			Stage& stage = group.stages[stageIdx];
 
 			// Grab bindings and nonUserSettableConstBuffers from pipeline
-			ZgPipelineBindingsSignature* bindings = nullptr;
+			ZgPipelineBindingsSignature bindings = {};
 			ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS>* nonUserSettableConstBuffers = nullptr;
 			if (stage.type == StageType::USER_INPUT_RENDERING) {
 
@@ -534,7 +534,7 @@ bool allocateStageMemory(RendererState& state) noexcept
 				sfz_assert(pipelineItem != nullptr);
 
 				// Grab stuff from pipeline item
-				bindings = &pipelineItem->pipeline.bindingsSignature;
+				bindings = pipelineItem->pipeline.getSignature().bindings;
 				nonUserSettableConstBuffers = &pipelineItem->nonUserSettableConstBuffers;
 			}
 			else if (stage.type == StageType::USER_INPUT_COMPUTE) {
@@ -547,24 +547,23 @@ bool allocateStageMemory(RendererState& state) noexcept
 				sfz_assert(pipelineItem != nullptr);
 
 				// Grab stuff from pipeline item
-				bindings = &pipelineItem->pipeline.bindingsSignature;
+				bindings = pipelineItem->pipeline.getBindingsSignature();
 				nonUserSettableConstBuffers = &pipelineItem->nonUserSettableConstBuffers;
 			}
 			else {
 				sfz_assert(false);
 			}
-			sfz_assert(bindings != nullptr);
 			sfz_assert(nonUserSettableConstBuffers != nullptr);
 
 			// Allocate CPU memory for constant buffer data
-			uint32_t numConstantBuffers = bindings->numConstBuffers;
+			uint32_t numConstantBuffers = bindings.numConstBuffers;
 			stage.constantBuffers.init(numConstantBuffers, state.allocator, sfz_dbg(""));
 
 			// Allocate GPU memory for all constant buffers
 			for (uint32_t j = 0; j < numConstantBuffers; j++) {
 
 				// Get constant buffer description, skip if push constant
-				const ZgConstantBufferBindingDesc& desc = bindings->constBuffers[j];
+				const ZgConstantBufferBindingDesc& desc = bindings.constBuffers[j];
 				if (desc.pushConstant == ZG_TRUE) continue;
 
 				// Check if constant buffer is marked as non-user-settable, in that case skip it

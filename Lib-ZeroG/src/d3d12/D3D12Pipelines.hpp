@@ -137,6 +137,9 @@ struct ZgPipelineCompute final {
 	ComPtr<ID3D12PipelineState> pipelineState;
 	D3D12RootSignature rootSignature;
 	D3D12PipelineBindingsSignature bindingsSignature;
+	uint32_t groupDimX = 0;
+	uint32_t groupDimY = 0;
+	uint32_t groupDimZ = 0;
 };
 
 // D3D12PipelineRender
@@ -159,8 +162,6 @@ struct ZgPipelineRender final {
 
 ZgResult createPipelineComputeFileHLSL(
 	ZgPipelineCompute** pipelineOut,
-	ZgPipelineBindingsSignature* bindingsSignatureOut,
-	ZgPipelineComputeSignature* computeSignatureOut,
 	const ZgPipelineComputeCreateInfo& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,
@@ -173,8 +174,6 @@ ZgResult createPipelineComputeFileHLSL(
 
 ZgResult createPipelineRenderFileHLSL(
 	ZgPipelineRender** pipelineOut,
-	ZgPipelineBindingsSignature* bindingsSignatureOut,
-	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,
@@ -184,8 +183,6 @@ ZgResult createPipelineRenderFileHLSL(
 
 ZgResult createPipelineRenderSourceHLSL(
 	ZgPipelineRender** pipelineOut,
-	ZgPipelineBindingsSignature* bindingsSignatureOut,
-	ZgPipelineRenderSignature* renderSignatureOut,
 	const ZgPipelineRenderCreateInfo& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,

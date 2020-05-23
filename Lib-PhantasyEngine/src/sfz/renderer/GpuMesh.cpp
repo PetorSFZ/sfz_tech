@@ -83,17 +83,17 @@ void gpuMeshDeallocate(GpuMesh& gpuMesh) noexcept
 {
 	// Deallocate vertex buffer
 	sfz_assert(gpuMesh.vertexBuffer.valid());
-	gpuMesh.vertexBuffer.release();
+	gpuMesh.vertexBuffer.destroy();
 	sfz_assert(!gpuMesh.vertexBuffer.valid());
 
 	// Deallocate index buffer
 	sfz_assert(gpuMesh.indexBuffer.valid());
-	gpuMesh.indexBuffer.release();
+	gpuMesh.indexBuffer.destroy();
 	sfz_assert(!gpuMesh.indexBuffer.valid());
 
 	// Deallocate materials buffer
 	sfz_assert(gpuMesh.materialsBuffer.valid());
-	gpuMesh.materialsBuffer.release();
+	gpuMesh.materialsBuffer.destroy();
 	sfz_assert(!gpuMesh.materialsBuffer.valid());
 
 	// Destroy remaining CPU memory

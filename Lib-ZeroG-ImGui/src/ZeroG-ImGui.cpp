@@ -349,11 +349,14 @@ void imguiRender(
 		.addTexture(0, state->fontTexture));
 
 	// Retrieve imgui scale factor
+	uint32_t fbWidth = 0;
+	uint32_t fbHeight = 0;
+	ASSERT_ZG framebuffer.getResolution(fbWidth, fbHeight);
 	float imguiScaleFactor = 1.0f;
 	imguiScaleFactor /= scale;
 	float imguiInvScaleFactor = 1.0f / imguiScaleFactor;
-	float imguiWidth = framebuffer.width * imguiScaleFactor;
-	float imguiHeight = framebuffer.height * imguiScaleFactor;
+	float imguiWidth = fbWidth * imguiScaleFactor;
+	float imguiHeight = fbHeight * imguiScaleFactor;
 
 	// Calculate and set ImGui projection matrix
 	sfz::vec4 projMatrix[4] = {
@@ -369,7 +372,7 @@ void imguiRender(
 		const ImGuiCommand& cmd = state->tmpCommands[i];
 		sfz_assert((cmd.numIndices % 3) == 0);
 
-		ZgFramebufferRect scissorRect = {};
+		ZgRect scissorRect = {};
 		scissorRect.topLeftX = uint32_t(cmd.clipRect.x * imguiInvScaleFactor);
 		scissorRect.topLeftY = uint32_t(cmd.clipRect.y * imguiInvScaleFactor);
 		scissorRect.width = uint32_t((cmd.clipRect.z - cmd.clipRect.x) * imguiInvScaleFactor);
