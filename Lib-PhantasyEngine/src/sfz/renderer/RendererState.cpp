@@ -56,11 +56,14 @@ void StaticTextureItem::buildTexture(vec2_i32 windowRes) noexcept
 	this->height = tmpHeight;
 
 	// Allocate texture
-	ZgTextureUsage usage = format == ZG_TEXTURE_FORMAT_DEPTH_F32 ?
+	const bool isDepth = format == ZG_TEXTURE_FORMAT_DEPTH_F32;
+	ZgTextureUsage usage = isDepth ?
 		ZG_TEXTURE_USAGE_DEPTH_BUFFER : ZG_TEXTURE_USAGE_RENDER_TARGET;
 	ZgOptimalClearValue optimalClear = floatToOptimalClearValue(clearValue);
 	{
 		ZgTexture2DCreateInfo createInfo = {};
+		createInfo.committedAllocation = ZG_TRUE;
+		createInfo.allowUnorderedAccess = isDepth ? ZG_FALSE : ZG_TRUE;
 		createInfo.format = format;
 		createInfo.usage = usage;
 		createInfo.optimalClearValue = optimalClear;

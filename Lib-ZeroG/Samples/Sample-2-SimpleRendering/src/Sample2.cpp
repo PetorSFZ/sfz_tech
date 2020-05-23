@@ -209,10 +209,8 @@ static void realMain(SDL_Window* window) noexcept
 	CHECK_ZG zgContextInit(&initSettings);
 
 	// Get the command queues
-	zg::CommandQueue presentQueue;
-	CHECK_ZG zg::CommandQueue::getPresentQueue(presentQueue);
-	zg::CommandQueue copyQueue;
-	CHECK_ZG zg::CommandQueue::getCopyQueue(copyQueue);
+	zg::CommandQueue presentQueue = zg::CommandQueue::getPresentQueue();
+	zg::CommandQueue copyQueue = zg::CommandQueue::getCopyQueue();
 
 	// Create profiler
 	zg::Profiler profiler;
@@ -301,6 +299,7 @@ static void realMain(SDL_Window* window) noexcept
 	// Create a texture
 	ZgTexture2DCreateInfo textureCreateInfo = {};
 	textureCreateInfo.format = ZG_TEXTURE_FORMAT_RGBA_U8_UNORM;
+	textureCreateInfo.allowUnorderedAccess = ZG_TRUE;
 	textureCreateInfo.width = 256;
 	textureCreateInfo.height = 256;
 	textureCreateInfo.numMipmaps = 4;
@@ -407,11 +406,7 @@ static void realMain(SDL_Window* window) noexcept
 		// Begin frame
 		zg::Framebuffer framebuffer;
 		CHECK_ZG zgContextSwapchainBeginFrame(
-			&framebuffer.framebuffer, profiler.profiler, &frameMeasurementId);
-		CHECK_ZG zgFramebufferGetResolution(
-			framebuffer.framebuffer,
-			&framebuffer.width,
-			&framebuffer.height);
+			&framebuffer.handle, profiler.handle, &frameMeasurementId);
 
 		// Run compute command list
 		{
@@ -523,7 +518,7 @@ static void realMain(SDL_Window* window) noexcept
 		}
 
 		// Finish frame
-		CHECK_ZG zgContextSwapchainFinishFrame(profiler.profiler, frameMeasurementId);
+		CHECK_ZG zgContextSwapchainFinishFrame(profiler.handle, frameMeasurementId);
 
 		// Small hack: Flush present queue so we can get measurements
 		CHECK_ZG presentQueue.flush();

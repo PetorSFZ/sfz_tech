@@ -66,8 +66,7 @@ static void realMain(SDL_Window* window) noexcept
 		.buildFromFileHLSL(memcpyPipeline);
 
 	// Get the command queues
-	zg::CommandQueue presentQueue;
-	CHECK_ZG zg::CommandQueue::getPresentQueue(presentQueue);
+	zg::CommandQueue presentQueue = zg::CommandQueue::getPresentQueue();
 
 	// Create buffers
 	constexpr uint32_t BUFFER_ALIGNMENT = 64 * 1024; // Buffers must be 64KiB aligned

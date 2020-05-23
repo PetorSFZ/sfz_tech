@@ -184,7 +184,8 @@ inline ZgResult createBuffer(
 
 	// Fill allocation desc
 	D3D12MA::ALLOCATION_DESC allocationDesc = {};
-	allocationDesc.Flags = D3D12MA::ALLOCATION_FLAG_NONE;// D3D12MA::ALLOCATION_FLAG_COMMITTED; // ALLOCATION_FLAG_WITHIN_BUDGET
+	// TODO: ALLOCATION_FLAG_WITHIN_BUDGET maybe?
+	allocationDesc.Flags = createInfo.committedAllocation ? D3D12MA::ALLOCATION_FLAG_COMMITTED : D3D12MA::ALLOCATION_FLAG_NONE;
 	allocationDesc.HeapType = [&]() {
 		switch (createInfo.memoryType) {
 		case ZG_MEMORY_TYPE_UPLOAD: return D3D12_HEAP_TYPE_UPLOAD;
@@ -314,19 +315,19 @@ inline ZgResult createTexture(
 	desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	desc.Flags = [&]() {
 		switch (createInfo.usage) {
-		case ZG_TEXTURE_USAGE_DEFAULT: return D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-		case ZG_TEXTURE_USAGE_RENDER_TARGET: return D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+		case ZG_TEXTURE_USAGE_DEFAULT: return D3D12_RESOURCE_FLAG_NONE;
+		case ZG_TEXTURE_USAGE_RENDER_TARGET: return D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET ;
 		case ZG_TEXTURE_USAGE_DEPTH_BUFFER: return D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 		}
 		sfz_assert(false);
 		return D3D12_RESOURCE_FLAG_NONE;
-	}();
+	}() | (createInfo.allowUnorderedAccess ? D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS : D3D12_RESOURCE_FLAG_NONE);
 	// TODO: Maybe expose flags:
 	//      * D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS
 
 	// Fill allocation desc
 	D3D12MA::ALLOCATION_DESC allocationDesc = {};
-	allocationDesc.Flags = D3D12MA::ALLOCATION_FLAG_NONE;// D3D12MA::ALLOCATION_FLAG_COMMITTED; // ALLOCATION_FLAG_WITHIN_BUDGET
+	allocationDesc.Flags = createInfo.committedAllocation ? D3D12MA::ALLOCATION_FLAG_COMMITTED : D3D12MA::ALLOCATION_FLAG_NONE;
 	allocationDesc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
 	allocationDesc.ExtraHeapFlags = D3D12_HEAP_FLAG_NONE; // Can be ignored
 	allocationDesc.CustomPool = nullptr;

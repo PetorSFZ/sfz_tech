@@ -100,7 +100,7 @@ ZG_ENUM(ZgBool) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 24;
+static const uint32_t ZG_COMPILED_API_VERSION = 25;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -203,6 +203,7 @@ ZG_ENUM(ZgMemoryType) {
 ZG_STRUCT(ZgBufferCreateInfo) {
 	ZgMemoryType memoryType;
 	uint64_t sizeInBytes;
+	ZgBool committedAllocation;
 };
 
 ZG_API ZgResult zgBufferCreate(
@@ -233,12 +234,14 @@ namespace zg {
 
 class Buffer final : public ManagedHandle<ZgBuffer, zgBufferDestroy> {
 public:
-	[[nodiscard]] ZgResult create(uint64_t sizeBytes, ZgMemoryType type = ZG_MEMORY_TYPE_DEVICE)
+	[[nodiscard]] ZgResult create(
+		uint64_t sizeBytes, ZgMemoryType type = ZG_MEMORY_TYPE_DEVICE, bool committedAllocation = false)
 	{
 		this->destroy();
 		ZgBufferCreateInfo info = {};
 		info.memoryType = type;
 		info.sizeInBytes = sizeBytes;
+		info.committedAllocation = committedAllocation ? ZG_TRUE : ZG_FALSE;
 		return zgBufferCreate(&handle, &info);
 	}
 
@@ -300,6 +303,14 @@ ZG_STRUCT(ZgTexture2DCreateInfo) {
 
 	// The format of the texture
 	ZgTextureFormat format;
+
+	// Whether this should be a committed allocation (VK_KHR_dedicated_allocation in Vulkan) or not.
+	// (Large, such as framebuffers and render targets) committed allocations have better
+	// performance on some GPUs.
+	ZgBool committedAllocation;
+
+	// Whether it should be allowed to access this texture using an unordered view or not.
+	ZgBool allowUnorderedAccess;
 
 	// If the texture is to be used as either a render target or a depth buffer it must be set
 	// here.

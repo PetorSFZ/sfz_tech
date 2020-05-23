@@ -59,8 +59,7 @@ static void realMain(SDL_Window* window) noexcept
 	CHECK_ZG zgContextInit(&initSettings);
 
 	// Get the command queues
-	zg::CommandQueue presentQueue;
-	CHECK_ZG zg::CommandQueue::getPresentQueue(presentQueue);
+	zg::CommandQueue presentQueue = zg::CommandQueue::getPresentQueue();
 
 	// Run our main loop
 	bool running = true;
@@ -97,11 +96,7 @@ static void realMain(SDL_Window* window) noexcept
 		// Begin frame
 		zg::Framebuffer framebuffer;
 		CHECK_ZG zgContextSwapchainBeginFrame(
-			&framebuffer.framebuffer, nullptr, nullptr);
-		CHECK_ZG zgFramebufferGetResolution(
-			framebuffer.framebuffer,
-			&framebuffer.width,
-			&framebuffer.height);
+			&framebuffer.handle, nullptr, nullptr);
 
 		// Get a command list
 		zg::CommandList commandList;
