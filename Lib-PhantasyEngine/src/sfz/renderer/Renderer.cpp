@@ -493,26 +493,6 @@ void Renderer::frameBegin() noexcept
 	CHECK_ZG zgContextSwapchainBeginFrame(
 		&mState->windowFramebuffer.handle, mState->profiler.handle, &frameIds.frameId);
 
-	// Clear all framebuffers
-	// TODO: Should probably only clear using a specific clear framebuffer stage
-	zg::CommandList commandList;
-	CHECK_ZG mState->presentQueue.beginCommandListRecording(commandList);
-	CHECK_ZG commandList.setFramebuffer(mState->windowFramebuffer);
-	CHECK_ZG commandList.clearFramebufferOptimal();
-	CHECK_ZG mState->presentQueue.executeCommandList(commandList);
-
-	// TODO: This is clearly ridiculusly unoptimal, do it some smarter way
-	for (StageGroup& group : mState->configurable.presentQueue) {
-		for (Stage& stage : group.stages) {
-			if (stage.render.framebuffer.valid()) {
-				CHECK_ZG mState->presentQueue.beginCommandListRecording(commandList);
-				CHECK_ZG commandList.setFramebuffer(stage.render.framebuffer);
-				CHECK_ZG commandList.clearFramebufferOptimal();
-				CHECK_ZG mState->presentQueue.executeCommandList(commandList);
-			}
-		}
-	}
-
 	// Set current stage group and stage to first
 	mState->currentStageGroupIdx = 0;
 }
@@ -626,6 +606,18 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 		commandList = &list;
 	}
 	mState->inputEnabled.commandList = commandList;
+}
+
+void Renderer::stageClearRenderTargetsOptimal() noexcept
+{
+	sfz_assert(inStageInputMode());
+	CHECK_ZG mState->inputEnabled.commandList->commandList.clearRenderTargetsOptimal();
+}
+
+void Renderer::stageClearDepthBufferOptimal() noexcept
+{
+	sfz_assert(inStageInputMode());
+	CHECK_ZG mState->inputEnabled.commandList->commandList.clearDepthBufferOptimal();
 }
 
 void Renderer::stageSetPushConstantUntyped(

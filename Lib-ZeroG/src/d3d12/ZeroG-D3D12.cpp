@@ -1011,10 +1011,12 @@ ZG_API ZgResult zgCommandListSetFramebufferScissor(
 	return commandList->setFramebufferScissor(*scissor);
 }
 
-ZG_API ZgResult zgCommandListClearFramebufferOptimal(
-	ZgCommandList* commandList)
+
+ZG_API ZgResult zgCommandListClearRenderTargetOptimal(
+	ZgCommandList* commandList,
+	uint32_t renderTargetIdx)
 {
-	return commandList->clearFramebufferOptimal();
+	return commandList->clearRenderTargetOptimal(renderTargetIdx);
 }
 
 ZG_API ZgResult zgCommandListClearRenderTargets(
@@ -1027,11 +1029,23 @@ ZG_API ZgResult zgCommandListClearRenderTargets(
 	return commandList->clearRenderTargets(red, green, blue, alpha);
 }
 
+ZG_API ZgResult zgCommandListClearRenderTargetsOptimal(
+	ZgCommandList* commandList)
+{
+	return commandList->clearRenderTargetsOptimal();
+}
+
 ZG_API ZgResult zgCommandListClearDepthBuffer(
 	ZgCommandList* commandList,
 	float depth)
 {
 	return commandList->clearDepthBuffer(depth);
+}
+
+ZG_API ZgResult zgCommandListClearDepthBufferOptimal(
+	ZgCommandList* commandList)
+{
+	return commandList->clearDepthBufferOptimal();
 }
 
 ZG_API ZgResult zgCommandListSetIndexBuffer(

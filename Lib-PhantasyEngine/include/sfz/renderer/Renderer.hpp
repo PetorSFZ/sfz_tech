@@ -167,6 +167,10 @@ public:
 	// only accepts input for the specified stage until endStageInput() is called.
 	void stageBeginInput(StringID stageName) noexcept;
 
+	void stageClearRenderTargetsOptimal() noexcept;
+
+	void stageClearDepthBufferOptimal() noexcept;
+
 	// Sets a push constant for the currently input active stage
 	void stageSetPushConstantUntyped(
 		uint32_t shaderRegister, const void* data, uint32_t numBytes) noexcept;

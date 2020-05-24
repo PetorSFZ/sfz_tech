@@ -100,7 +100,7 @@ ZG_ENUM(ZgBool) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 26;
+static const uint32_t ZG_COMPILED_API_VERSION = 27;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -1622,10 +1622,9 @@ ZG_API ZgResult zgCommandListSetFramebufferScissor(
 	ZgCommandList* commandList,
 	const ZgRect* scissor);
 
-// Clears all render targets and depth buffers in a framebuffer to their optimal clear values, 0
-// if none is specified.
-ZG_API ZgResult zgCommandListClearFramebufferOptimal(
-	ZgCommandList* commandList);
+ZG_API ZgResult zgCommandListClearRenderTargetOptimal(
+	ZgCommandList* commandList,
+	uint32_t renderTargetIdx);
 
 ZG_API ZgResult zgCommandListClearRenderTargets(
 	ZgCommandList* commandList,
@@ -1634,9 +1633,15 @@ ZG_API ZgResult zgCommandListClearRenderTargets(
 	float blue,
 	float alpha);
 
+ZG_API ZgResult zgCommandListClearRenderTargetsOptimal(
+	ZgCommandList* commandList);
+
 ZG_API ZgResult zgCommandListClearDepthBuffer(
 	ZgCommandList* commandList,
 	float depth);
+
+ZG_API ZgResult zgCommandListClearDepthBufferOptimal(
+	ZgCommandList* commandList);
 
 ZG_ENUM(ZgIndexBufferType) {
 	ZG_INDEX_BUFFER_TYPE_UINT32 = 0,
@@ -1785,9 +1790,9 @@ public:
 		return zgCommandListSetFramebufferScissor(this->handle, &scissor);
 	}
 
-	[[nodiscard]] ZgResult clearFramebufferOptimal()
+	[[nodiscard]] ZgResult clearRenderTargetOptimal(uint32_t renderTargetIdx)
 	{
-		return zgCommandListClearFramebufferOptimal(this->handle);
+		return zgCommandListClearRenderTargetOptimal(this->handle, renderTargetIdx);
 	}
 
 	[[nodiscard]] ZgResult clearRenderTargets(float red, float green, float blue, float alpha)
@@ -1795,9 +1800,19 @@ public:
 		return zgCommandListClearRenderTargets(this->handle, red, green, blue, alpha);
 	}
 
+	[[nodiscard]] ZgResult clearRenderTargetsOptimal()
+	{
+		return zgCommandListClearRenderTargetsOptimal(this->handle);
+	}
+
 	[[nodiscard]] ZgResult clearDepthBuffer(float depth)
 	{
 		return zgCommandListClearDepthBuffer(this->handle, depth);
+	}
+
+	[[nodiscard]] ZgResult clearDepthBufferOptimal()
+	{
+		return zgCommandListClearDepthBufferOptimal(this->handle);
 	}
 
 	[[nodiscard]] ZgResult setIndexBuffer(Buffer& indexBuffer, ZgIndexBufferType type)

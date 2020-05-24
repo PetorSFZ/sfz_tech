@@ -838,52 +838,25 @@ public:
 		return ZG_SUCCESS;
 	}
 
-	ZgResult clearFramebufferOptimal() noexcept
+	ZgResult clearRenderTargetOptimal(uint32_t renderTargetIdx) noexcept
 	{
-		// Return error if no framebuffer is set
-		if (!mFramebufferSet) {
-			ZG_ERROR("clearFramebufferOptimal(): Must set a framebuffer before you can clear it");
-			return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
-		}
+		if (!mFramebufferSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+		if (mFramebuffer->numRenderTargets <= renderTargetIdx) return ZG_WARNING_GENERIC;
 
 		constexpr float ZEROS[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 		constexpr float ONES[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+		const float* clearColor = [&]() -> const float* {
+			switch (mFramebuffer->renderTargetOptimalClearValues[renderTargetIdx]) {
+			case ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED: return ZEROS;
+			case ZG_OPTIMAL_CLEAR_VALUE_ZERO: return ZEROS;
+			case ZG_OPTIMAL_CLEAR_VALUE_ONE: return ONES;
+			}
+			sfz_assert(false);
+			return nullptr;
+		}();
 
-		// Clear render targets
-		for (uint32_t i = 0; i < mFramebuffer->numRenderTargets; i++) {
-
-			const float* clearColor = [&]() -> const float* {
-				switch (mFramebuffer->renderTargetOptimalClearValues[i]) {
-				case ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED: return ZEROS;
-				case ZG_OPTIMAL_CLEAR_VALUE_ZERO: return ZEROS;
-				case ZG_OPTIMAL_CLEAR_VALUE_ONE: return ONES;
-				}
-				sfz_assert(false);
-				return nullptr;
-			}();
-
-			commandList->ClearRenderTargetView(
-				mFramebuffer->renderTargetDescriptors[i], clearColor, 0, nullptr);
-		}
-
-		// Clear depth buffer
-		if (mFramebuffer->hasDepthBuffer) {
-
-			const float clearDepth = [&]() {
-				switch (mFramebuffer->depthBufferOptimalClearValue) {
-				case ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED: return 0.0f;
-				case ZG_OPTIMAL_CLEAR_VALUE_ZERO: return 0.0f;
-				case ZG_OPTIMAL_CLEAR_VALUE_ONE: return 1.0f;
-				}
-				sfz_assert(false);
-				return 0.0f;
-			}();
-
-			commandList->ClearDepthStencilView(
-				mFramebuffer->depthBufferDescriptor, D3D12_CLEAR_FLAG_DEPTH, clearDepth, 0, 0, nullptr);
-		}
-
-		return ZG_SUCCESS;
+		commandList->ClearRenderTargetView(
+			mFramebuffer->renderTargetDescriptors[renderTargetIdx], clearColor, 0, nullptr);
 	}
 
 	ZgResult clearRenderTargets(
@@ -909,6 +882,22 @@ public:
 		return ZG_SUCCESS;
 	}
 
+	ZgResult clearRenderTargetsOptimal() noexcept
+	{
+		// Return error if no framebuffer is set
+		if (!mFramebufferSet) {
+			ZG_ERROR("clearRenderTargetsOptimal(): Must set a framebuffer before you can clear it");
+			return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+		}
+
+		for (uint32_t i = 0; i < mFramebuffer->numRenderTargets; i++) {
+			ZgResult res = this->clearRenderTargetOptimal(i);
+			if (res != ZG_SUCCESS) return res;
+		}
+		
+		return ZG_SUCCESS;
+	}
+
 	ZgResult clearDepthBuffer(
 		float depth) noexcept
 	{
@@ -919,6 +908,29 @@ public:
 		// Clear depth buffer
 		commandList->ClearDepthStencilView(
 			mFramebuffer->depthBufferDescriptor, D3D12_CLEAR_FLAG_DEPTH, depth, 0, 0, nullptr);
+
+		return ZG_SUCCESS;
+	}
+
+	ZgResult clearDepthBufferOptimal() noexcept
+	{
+		// Return error if no framebuffer is set
+		if (!mFramebufferSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+		if (!mFramebuffer->hasDepthBuffer) return ZG_WARNING_GENERIC;
+
+		const float clearDepth = [&]() {
+			switch (mFramebuffer->depthBufferOptimalClearValue) {
+			case ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED: return 0.0f;
+			case ZG_OPTIMAL_CLEAR_VALUE_ZERO: return 0.0f;
+			case ZG_OPTIMAL_CLEAR_VALUE_ONE: return 1.0f;
+			}
+			sfz_assert(false);
+			return 0.0f;
+		}();
+
+		// Clear depth buffer
+		commandList->ClearDepthStencilView(
+			mFramebuffer->depthBufferDescriptor, D3D12_CLEAR_FLAG_DEPTH, clearDepth, 0, 0, nullptr);
 
 		return ZG_SUCCESS;
 	}
