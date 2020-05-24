@@ -54,36 +54,6 @@
 			]
 		},
 		{
-			"name": "Point Light Shading",
-			"vertex_shader_path": "res_ph/shaders/point_light_shading.hlsl",
-			"pixel_shader_path": "res_ph/shaders/point_light_shading.hlsl",
-			"vertex_shader_entry": "VSMain",
-			"pixel_shader_entry": "PSMain",
-			"standard_vertex_attributes": true,
-			"push_constant_registers": [ 0 ],
-			"culling": {
-				"cull_front_face": false,
-				"front_facing_is_counter_clockwise": true
-			},
-			"wireframe_rendering": false,
-			"blend_mode": "additive_blending",
-			"samplers": [
-				{
-					"register": 0,
-					"sampling_mode": "NEAREST",
-					"wrapping_mode": "CLAMP"
-				},
-				{
-					"register": 1,
-					"sampling_mode": "TRILINEAR",
-					"wrapping_mode": "CLAMP"
-				}
-			],
-			"render_targets": [
-				"RGBA_F16"
-			]
-		},
-		{
 			"name": "Copy Out Shader",
 			"vertex_shader_path": "res_ph/shaders/copy_out_shader.hlsl",
 			"pixel_shader_path": "res_ph/shaders/copy_out_shader.hlsl",
@@ -113,6 +83,24 @@
 		{
 			"name": "Directional Shading",
 			"compute_shader_path": "res_ph/shaders/directional_shading.hlsl",
+			"compute_shader_entry": "CSMain",
+			"push_constant_registers": [ 0 ],
+			"samplers": [
+				{
+					"register": 0,
+					"sampling_mode": "NEAREST",
+					"wrapping_mode": "CLAMP"
+				},
+				{
+					"register": 1,
+					"sampling_mode": "TRILINEAR",
+					"wrapping_mode": "CLAMP"
+				}
+			]
+		},
+		{
+			"name": "Point Light Shading",
+			"compute_shader_path": "res_ph/shaders/point_light_shading.hlsl",
 			"compute_shader_entry": "CSMain",
 			"push_constant_registers": [ 0 ],
 			"samplers": [
@@ -282,11 +270,8 @@
 				},
 				{
 					"stage_name": "Point Light Shading Pass",
-					"stage_type": "USER_INPUT_RENDERING",
-					"render_pipeline": "Point Light Shading",
-					"render_targets": [
-						"LightAccumulation1"
-					],
+					"stage_type": "USER_INPUT_COMPUTE",
+					"compute_pipeline": "Point Light Shading",
 					"bound_textures": [
 						{
 							"register": 0,
@@ -303,6 +288,12 @@
 						{
 							"register": 3,
 							"texture": "GBuffer_depthbuffer"
+						}
+					],
+					"bound_unordered_textures": [
+						{
+							"register": 0,
+							"texture": "LightAccumulation1"
 						}
 					]
 				}

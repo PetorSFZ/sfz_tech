@@ -29,45 +29,41 @@ Texture2D depthTex : register(t3);
 SamplerState nearestSampler : register(s0);
 SamplerState linearSampler : register(s1);
 
-// Vertex shader
+// Unordered textures
 // ------------------------------------------------------------------------------------------------
 
-struct VSInput {
-	float3 position : TEXCOORD0;
-	float3 normal : TEXCOORD1;
-	float2 texcoord : TEXCOORD2;
-};
+RWTexture2D<float4> outputTex : register(u0);
 
-struct VSOutput {
-	float2 texcoord : PARAM_0;
-	float4 position : SV_Position;
-};
-
-VSOutput VSMain(VSInput input)
-{
-	VSOutput output;
-	output.texcoord = input.texcoord;
-	output.position = float4(input.position, 1.0);
-	return output;
-}
-
-// Pixel shader
+// Main
 // ------------------------------------------------------------------------------------------------
 
-struct PSInput {
-	float2 texcoord : PARAM_0;
-};
-
-float4 PSMain(PSInput input) : SV_TARGET
+[numthreads(32, 16, 1)]
+void CSMain(
+	uint3 groupIdx : SV_GroupID, // Index of group
+	uint groupFlatIdx : SV_GroupIndex, // Flattened version of group index
+	uint3 groupThreadIdx : SV_GroupThreadID, // Index of thread within group
+	uint3 dispatchThreadIdx : SV_DispatchThreadID) // Global index of thread
 {
-	// Read values from GBuffer
-	float3 albedo = albedoTex.Sample(linearSampler, input.texcoord).rgb; // Gamma space
-	float2 metallicRoughness = metallicRoughnessTex.Sample(linearSampler, input.texcoord).rg;
+	// Get output texture dimensions
+	uint outputTexWidth = 0;
+	uint outputTexHeight = 0;
+	outputTex.GetDimensions(outputTexWidth, outputTexHeight);
+
+	// Get thread index and exit if out of range
+	uint2 idx = dispatchThreadIdx.xy;
+	if (idx.x >= outputTexWidth || idx.y >= outputTexHeight) return;
+
+	// Calculate a texcoord
+	float2 texcoord = float2(idx) / float2(outputTexWidth, outputTexHeight);
+
+		// Read values from GBuffer
+	float3 albedo = albedoTex.SampleLevel(linearSampler, texcoord, 0).rgb; // Gamma space
+	float2 metallicRoughness = metallicRoughnessTex.SampleLevel(linearSampler, texcoord, 0).rg;
 	float metallic = metallicRoughness.r; // Linear space
 	float roughness = metallicRoughness.g; // Linear space
-	float3 normal = normalTex.Sample(linearSampler, input.texcoord).rgb;
-	float depth = depthTex.Sample(nearestSampler, input.texcoord).r;
-	float3 pos = depthToViewSpacePos(depth, input.texcoord, invProjMatrix);
+	float3 normal = normalTex.SampleLevel(linearSampler, texcoord, 0).rgb;
+	float depth = depthTex.SampleLevel(nearestSampler, texcoord, 0).r;
+	float3 pos = depthToViewSpacePos(depth, texcoord, invProjMatrix);
 
 	// Convert gamma space to linear
 	albedo = linearize(albedo);
@@ -107,5 +103,6 @@ float4 PSMain(PSInput input) : SV_TARGET
 	// No negative output
 	totalOutput = max(totalOutput, float3(0.0, 0.0, 0.0));
 
-	return float4(totalOutput, 1.0);
+	// Write value
+	outputTex[idx] += float4(totalOutput, 1.0);
 }
