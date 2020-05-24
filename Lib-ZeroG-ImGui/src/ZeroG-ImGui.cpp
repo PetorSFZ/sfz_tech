@@ -330,6 +330,9 @@ void imguiRender(
 	zg::CommandList commandList;
 	ASSERT_ZG presentQueue.beginCommandListRecording(commandList);
 
+	// Begin event
+	ASSERT_ZG commandList.beginEvent("ImGui");
+
 	// Start profiling if requested
 	if (profiler != nullptr) {
 		sfz_assert(measurentIdOut != nullptr);
@@ -387,6 +390,9 @@ void imguiRender(
 		sfz_assert(measurentIdOut != nullptr);
 		ASSERT_ZG commandList.profileEnd(*profiler, *measurentIdOut);
 	}
+
+	// End event
+	ASSERT_ZG commandList.endEvent();
 
 	// Execute command list
 	ASSERT_ZG presentQueue.executeCommandList(commandList);

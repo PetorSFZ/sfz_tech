@@ -271,6 +271,7 @@ struct RendererState final {
 	const Setting* vsync = nullptr;
 	const Setting* flushPresentQueueEachFrame = nullptr;
 	const Setting* flushCopyQueueEachFrame = nullptr;
+	const Setting* emitDebugEvents = nullptr;
 
 	// Configurable state
 	RendererConfigurableState configurable;

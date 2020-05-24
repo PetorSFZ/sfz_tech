@@ -155,8 +155,59 @@ public:
 		mFramebuffer = nullptr;
 	}
 
-	// Virtual methods
+	// Methods
 	// --------------------------------------------------------------------------------------------
+
+	ZgResult beginEvent(const char* name, const float* optionalRgbaColor)
+	{
+		// D3D12_EVENT_METADATA defintion
+		constexpr UINT WINPIX_EVENT_PIX3BLOB_VERSION = 2;
+		constexpr UINT D3D12_EVENT_METADATA = WINPIX_EVENT_PIX3BLOB_VERSION;
+
+		// Buffer
+		constexpr UINT64 PIXEventsGraphicsRecordSpaceQwords = 64;
+		UINT64 buffer[PIXEventsGraphicsRecordSpaceQwords] = {};
+		UINT64* destination = buffer;
+
+		// Encode event info (timestamp = 0, PIXEvent_BeginEvent_NoArgs)
+		constexpr uint64_t ENCODE_EVENT_INFO_CONSTANT = uint64_t(2048);
+		*destination++ = ENCODE_EVENT_INFO_CONSTANT;
+
+		// Parse and encode color from optionalRgbaColor
+		sfz_assert(optionalRgbaColor == nullptr);
+		float r = optionalRgbaColor != nullptr ? optionalRgbaColor[0] : 0.0f;
+		float g = optionalRgbaColor != nullptr ? optionalRgbaColor[1] : 0.0f;
+		float b = optionalRgbaColor != nullptr ? optionalRgbaColor[2] : 0.0f;
+		UINT64 color = [](float r, float g, float b) -> UINT64 {
+			BYTE rb = BYTE((r / 255.0f) + 0.5f);
+			BYTE gb = BYTE((g / 255.0f) + 0.5f);
+			BYTE bb = BYTE((b / 255.0f) + 0.5f);
+			return UINT64(0xff000000u | (rb << 16) | (gb << 8) | bb);
+		}(r, g, b);
+		*destination++ = color;
+
+		// Encode string info (alignment = 0, copyChunkSize = 8, isAnsi=true, isShortcut=false)
+		constexpr uint64_t STRING_INFO_CONSTANT = uint64_t(306244774661193728);
+		*destination++ = STRING_INFO_CONSTANT;
+
+		// Copy string
+		constexpr uint32_t STRING_MAX_LEN = 20 * 8;
+		const uint32_t nameLen = uint32_t(strnlen(name, STRING_MAX_LEN));
+		memcpy(destination, name, nameLen);
+		destination += ((nameLen / 8) + 1);
+
+		// Call BeginEvent with our hacked together binary blob
+		UINT sizeBytes = UINT(reinterpret_cast<BYTE*>(destination) - reinterpret_cast<BYTE*>(buffer));
+		commandList->BeginEvent(D3D12_EVENT_METADATA, buffer, sizeBytes);
+		
+		return ZG_SUCCESS;
+	}
+
+	ZgResult endEvent()
+	{
+		commandList->EndEvent();
+		return ZG_SUCCESS;
+	}
 
 	ZgResult memcpyBufferToBuffer(
 		ZgBuffer* dstBuffer,
@@ -857,6 +908,8 @@ public:
 
 		commandList->ClearRenderTargetView(
 			mFramebuffer->renderTargetDescriptors[renderTargetIdx], clearColor, 0, nullptr);
+
+		return ZG_SUCCESS;
 	}
 
 	ZgResult clearRenderTargets(

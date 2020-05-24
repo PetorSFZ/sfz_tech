@@ -878,6 +878,20 @@ ZG_API ZgResult zgFenceWaitOnCpuBlocking(
 // Command list
 // ------------------------------------------------------------------------------------------------
 
+ZG_API ZgResult zgCommandListBeginEvent(
+	ZgCommandList* commandList,
+	const char* name,
+	const float* optionalRgbaColor)
+{
+	return commandList->beginEvent(name, optionalRgbaColor);
+}
+
+ZG_API ZgResult zgCommandListEndEvent(
+	ZgCommandList* commandList)
+{
+	return commandList->endEvent();
+}
+
 ZG_API ZgResult zgCommandListMemcpyBufferToBuffer(
 	ZgCommandList* commandList,
 	ZgBuffer* dstBuffer,
@@ -1301,6 +1315,9 @@ ZG_API ZgResult zgContextSwapchainBeginFrame(
 		ctxState->commandQueuePresent.beginCommandListRecording(&barrierCommandList);
 	if (zgRes != ZG_SUCCESS) return zgRes;
 
+	// Begin Frame event
+	barrierCommandList->beginEvent("Frame", nullptr);
+
 	// Create barrier to transition back buffer into render target state
 	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 		backBuffer.swapchain.renderTarget.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -1354,6 +1371,9 @@ ZG_API ZgResult zgContextSwapchainFinishFrame(
 		ZgResult res = barrierCommandList->profileEnd(profiler, measurementId, timestampTicksPerSecond);
 		sfz_assert(res == ZG_SUCCESS);
 	}
+
+	// End Frame event
+	barrierCommandList->endEvent();
 
 	// Execute command list containing the barrier transition
 	ctxState->commandQueuePresent.executeCommandList(barrierCommandList);

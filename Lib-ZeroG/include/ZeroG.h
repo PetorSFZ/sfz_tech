@@ -100,7 +100,7 @@ ZG_ENUM(ZgBool) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 27;
+static const uint32_t ZG_COMPILED_API_VERSION = 28;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -1506,14 +1506,6 @@ ZG_STRUCT(ZgRect) {
 	uint32_t topLeftX, topLeftY, width, height;
 };
 
-ZG_API ZgResult zgCommandListMemcpyBufferToBuffer(
-	ZgCommandList* commandList,
-	ZgBuffer* dstBuffer,
-	uint64_t dstBufferOffsetBytes,
-	ZgBuffer* srcBuffer,
-	uint64_t srcBufferOffsetBytes,
-	uint64_t numBytes);
-
 ZG_STRUCT(ZgImageViewConstCpu) {
 	ZgTextureFormat format;
 	const void* data;
@@ -1521,6 +1513,22 @@ ZG_STRUCT(ZgImageViewConstCpu) {
 	uint32_t height;
 	uint32_t pitchInBytes;
 };
+
+ZG_API ZgResult zgCommandListBeginEvent(
+	ZgCommandList* commandList,
+	const char* name,
+	const float* optionalRgbaColor);
+
+ZG_API ZgResult zgCommandListEndEvent(
+	ZgCommandList* commandList);
+
+ZG_API ZgResult zgCommandListMemcpyBufferToBuffer(
+	ZgCommandList* commandList,
+	ZgBuffer* dstBuffer,
+	uint64_t dstBufferOffsetBytes,
+	ZgBuffer* srcBuffer,
+	uint64_t srcBufferOffsetBytes,
+	uint64_t numBytes);
 
 // Copies an image from the CPU to a texture on the GPU.
 //
@@ -1687,6 +1695,16 @@ namespace zg {
 
 class CommandList final : public ManagedHandle<ZgCommandList> {
 public:
+	[[nodiscard]] ZgResult beginEvent(const char* name, const float* rgbaColors = nullptr)
+	{
+		return zgCommandListBeginEvent(this->handle, name, rgbaColors);
+	}
+
+	[[nodiscard]] ZgResult endEvent()
+	{
+		return zgCommandListEndEvent(this->handle);
+	}
+
 	[[nodiscard]] ZgResult memcpyBufferToBuffer(
 		Buffer& dstBuffer,
 		uint64_t dstBufferOffsetBytes,

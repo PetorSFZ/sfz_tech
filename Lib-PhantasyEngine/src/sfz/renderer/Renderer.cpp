@@ -83,6 +83,8 @@ bool Renderer::init(
 		cfg.sanitizeBool("Renderer", "flushPresentQueueEachFrame", false, false);
 	mState->flushCopyQueueEachFrame =
 		cfg.sanitizeBool("Renderer", "flushCopyQueueEachFrame", false, false);
+	mState->emitDebugEvents =
+		cfg.sanitizeBool("Renderer", "emitDebugEvents", false, true);
 
 	// Initializer ZeroG
 	bool zgInitSuccess =
@@ -508,6 +510,8 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 	sfz_assert(!inStageInputMode());
 	if (inStageInputMode()) return;
 
+	StringCollection& resStrings = getResourceStrings();
+
 	// Find stage
 	uint32_t stageIdx = mState->findActiveStageIdx(stageName);
 	sfz_assert(stageIdx != ~0u);
@@ -575,6 +579,11 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 
 		// Begin recording command list
 		CHECK_ZG mState->presentQueue.beginCommandListRecording(list.commandList);
+
+		// Add event
+		if (mState->emitDebugEvents->boolValue()) {
+			CHECK_ZG list.commandList.beginEvent(resStrings.getString(stageName));
+		}
 
 		// Set pipeline and framebuffer (if rendering)
 		if (stage.type == StageType::USER_INPUT_RENDERING) {
@@ -980,6 +989,9 @@ bool Renderer::frameProgressNextStageGroup() noexcept
 			CHECK_ZG cmdList.commandList.profileEnd(mState->profiler, groupId->id);
 		}
 
+		if (mState->emitDebugEvents->boolValue()) {
+			CHECK_ZG cmdList.commandList.endEvent();
+		}
 		CHECK_ZG mState->presentQueue.executeCommandList(cmdList.commandList);
 	}
 
@@ -1014,6 +1026,9 @@ void Renderer::frameFinish() noexcept
 			CHECK_ZG cmdList.commandList.profileEnd(mState->profiler, groupId->id);
 		}
 
+		if (mState->emitDebugEvents->boolValue()) {
+			CHECK_ZG cmdList.commandList.endEvent();
+		}
 		CHECK_ZG mState->presentQueue.executeCommandList(cmdList.commandList);
 	}
 
