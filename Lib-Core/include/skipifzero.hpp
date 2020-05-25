@@ -24,6 +24,7 @@
 #include <cmath> // std::sqrt
 #include <cstdint>
 #include <cstdlib> // std::abort()
+#include <cstring> // memcpy()
 #include <new> // placement new
 #include <utility> // std::move, std::forward, std::swap
 
@@ -119,8 +120,34 @@ public:
 	}
 };
 
-// Memory helpers
+// Memory functions
 // ------------------------------------------------------------------------------------------------
+
+// Swaps size bytes of memory between two buffers. Undefined behaviour if the buffers overlap, with
+// the exception that its safe to call if both pointers are the same (i.e. point to the same buffer).
+inline void memswp(void* __restrict a, void* __restrict b, uint64_t size)
+{
+	const uint64_t MEMSWP_TMP_BUFFER_SIZE = 64;
+	uint8_t tmpBuffer[MEMSWP_TMP_BUFFER_SIZE];
+
+	// Swap buffers in temp buffer sized chunks
+	uint64_t bytesLeft = size;
+	while (bytesLeft >= MEMSWP_TMP_BUFFER_SIZE) {
+		memcpy(tmpBuffer, a, MEMSWP_TMP_BUFFER_SIZE);
+		memcpy(a, b, MEMSWP_TMP_BUFFER_SIZE);
+		memcpy(b, tmpBuffer, MEMSWP_TMP_BUFFER_SIZE);
+		a = reinterpret_cast<uint8_t*>(a) + MEMSWP_TMP_BUFFER_SIZE;
+		b = reinterpret_cast<uint8_t*>(b) + MEMSWP_TMP_BUFFER_SIZE;
+		bytesLeft -= MEMSWP_TMP_BUFFER_SIZE;
+	}
+
+	// Swap remaining bytes
+	if (bytesLeft > 0) {
+		memcpy(tmpBuffer, a, bytesLeft);
+		memcpy(a, b, bytesLeft);
+		memcpy(b, tmpBuffer, bytesLeft);
+	}
+}
 
 // Checks whether an uint64_t is a power of two or not
 constexpr bool isPowerOfTwo(uint64_t value)

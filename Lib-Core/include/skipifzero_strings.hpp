@@ -22,7 +22,6 @@
 
 #include <cstdarg>
 #include <cstdio>
-#include <cstring>
 #include <cctype>
 
 #include "skipifzero.hpp"

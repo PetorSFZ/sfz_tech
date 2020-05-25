@@ -800,3 +800,53 @@ UTEST(Math, saturate)
 	ASSERT_TRUE(sfz::saturate(0.2f) == 0.2f);
 	ASSERT_TRUE(sfz::saturate(sfz::vec4(4.0f, -1.0f, 0.2f, 0.4f)) == sfz::vec4(1.0f, 0.0f, 0.2f, 0.4f));
 }
+
+// Memory functions
+// ------------------------------------------------------------------------------------------------
+
+UTEST(Memory, memswp)
+{
+	{
+		constexpr char STR1[] = "HELLO WORLD";
+		constexpr char STR2[] = "FOO_BAR_AND_SUCH";
+		char buffer1[256] = {};
+		char buffer2[256] = {};
+		memcpy(buffer1, STR1, sizeof(STR1));
+		memcpy(buffer2, STR2, sizeof(STR2));
+		ASSERT_TRUE(strncmp(buffer1, STR1, 256) == 0);
+		ASSERT_TRUE(strncmp(buffer2, STR2, 256) == 0);
+		sfz::memswp(buffer1, buffer2, sfz::max(uint32_t(sizeof(STR1)), uint32_t(sizeof(STR2))));
+		ASSERT_TRUE(strncmp(buffer2, STR1, 256) == 0);
+		ASSERT_TRUE(strncmp(buffer1, STR2, 256) == 0);
+		sfz::memswp(buffer1, buffer2, 256);
+		ASSERT_TRUE(strncmp(buffer1, STR1, 256) == 0);
+		ASSERT_TRUE(strncmp(buffer2, STR2, 256) == 0);
+	}
+	
+	{
+		constexpr uint32_t NUM_ELEMS = 217;
+		uint32_t buffer1[NUM_ELEMS];
+		for (uint32_t i = 0; i < NUM_ELEMS; i++) {
+			buffer1[i] = i;
+		}
+		uint32_t buffer2[NUM_ELEMS + 10] = {};
+		for (uint32_t i = 0; i < NUM_ELEMS; i++) {
+			buffer2[i + 5] = i * i;
+		}
+		sfz::memswp(buffer1, buffer2 + 5, sizeof(buffer1));
+		for (uint32_t i = 0; i < NUM_ELEMS; i++) {
+			ASSERT_TRUE(buffer1[i] == (i * i));
+			ASSERT_TRUE(buffer2[i + 5] == i);
+		}
+		ASSERT_TRUE(buffer2[0] == 0);
+		ASSERT_TRUE(buffer2[1] == 0);
+		ASSERT_TRUE(buffer2[2] == 0);
+		ASSERT_TRUE(buffer2[3] == 0);
+		ASSERT_TRUE(buffer2[4] == 0);
+		ASSERT_TRUE(buffer2[NUM_ELEMS + 5 + 0] == 0);
+		ASSERT_TRUE(buffer2[NUM_ELEMS + 5 + 1] == 0);
+		ASSERT_TRUE(buffer2[NUM_ELEMS + 5 + 2] == 0);
+		ASSERT_TRUE(buffer2[NUM_ELEMS + 5 + 3] == 0);
+		ASSERT_TRUE(buffer2[NUM_ELEMS + 5 + 4] == 0);
+	}
+}

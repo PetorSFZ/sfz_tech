@@ -19,7 +19,7 @@ sfz_core is split up into a number of modules (headers). There is a main header 
 
 The modules in sfz_core are:
 
-* `skipifzero.hpp`: (__Mandatory__) Assert macros, Allocator interface, vector primitive, some common math functions.
+* `skipifzero.hpp`: (__Mandatory__) Assert macros, Allocator interface, vector primitive, memory helpers and math functions.
 * `skipifzero_allocators.hpp`: Standard implementations of the allocator interface.
 * `skipifzero_arrays.hpp`: Arrays (replacements for `std::vector`, etc).
 * `skipifzero_hash_maps.hpp`: Hash functions, hash maps (replacements for `std::unordered_map`, etc).
@@ -35,6 +35,7 @@ sfz_core has __no__ dependencies beside the C++ standard library, and even then 
 * `<cmath>`: Needed for `sqrt()`, could be replaced with platform specific intrinsics.
 * `<cstdint>`: Needed for standard sized int types.
 * `<cstdlib>`: Needed for `abort()`.
+* `<cstring>`: Needed for `mempcpy()` and other memory and string related functionality.
 * `<new>`: Needed for placement `new`, which is the only way I know of to properly construct C++ objects in raw memory. Would love to remove this header if I could find another way to accomplish this in a cross-platform manner.
 * `<utility>`: Needed for `std::move()`, `std::forward()` and `std::swap()`. All of which are pretty much necessary in order to use move semantics. Would love to remove this header if I could get ahold of a simple, minimal (<200 lines of code) implementation of above.
 
@@ -43,7 +44,6 @@ In addition, some headers have additional standard library header requirements. 
 * `<atomic>`: Needed for atomic integers.
 * `<cstdarg>`: Needed for `va_list` and related functionality.
 * `<cstdio>`: Needed for `vsnprintf()`.
-* `<cstring>`: Needed for various memory and string related functionality.
 * `<cctype>`: Needed for `tolower()`
 * `<malloc.h>`: (Windows only): Needed for `_aligned_malloc()`.
 
