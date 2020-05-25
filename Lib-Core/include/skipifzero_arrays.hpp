@@ -47,17 +47,10 @@ constexpr uint32_t ARRAY_DYNAMIC_MAX_CAPACITY = uint32_t(UINT32_MAX / ARRAY_DYNA
 template<typename T>
 class Array final {
 public:
-	// Constructors & destructors
-	// --------------------------------------------------------------------------------------------
+	SFZ_DECLARE_DROP_TYPE(Array);
 
-	Array() noexcept = default;
-	Array(const Array&) = delete;
-	Array& operator= (const Array&) = delete;
-	Array(Array&& other) noexcept { this->swap(other); }
-	Array& operator= (Array&& other) noexcept { this->swap(other); return *this; }
-	~Array() noexcept { this->destroy(); }
-
-	explicit Array(uint32_t capacity, Allocator* allocator, DbgInfo allocDbg) noexcept {
+	explicit Array(uint32_t capacity, Allocator* allocator, DbgInfo allocDbg) noexcept
+	{
 		this->init(capacity, allocator, allocDbg);
 	}
 
@@ -71,14 +64,6 @@ public:
 		this->destroy();
 		mAllocator = allocator;
 		this->setCapacity(capacity, allocDbg);
-	}
-
-	void swap(Array& other)
-	{
-		std::swap(this->mSize, other.mSize);
-		std::swap(this->mCapacity, other.mCapacity);
-		std::swap(this->mData, other.mData);
-		std::swap(this->mAllocator, other.mAllocator);
 	}
 
 	// Removes all elements without deallocating memory.

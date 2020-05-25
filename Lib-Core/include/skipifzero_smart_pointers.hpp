@@ -34,12 +34,7 @@ public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	UniquePtr() noexcept = default;
-	UniquePtr(const UniquePtr&) = delete;
-	UniquePtr& operator= (const UniquePtr&) = delete;
-	UniquePtr(UniquePtr&& other) noexcept { this->swap(other); }
-	UniquePtr& operator= (UniquePtr&& other) noexcept { this->swap(other); return *this; }
-	~UniquePtr() noexcept { this->destroy(); }
+	SFZ_DECLARE_DROP_TYPE(UniquePtr);
 
 	// Creates an empty UniquePtr (holding nullptr, no allocator set)
 	UniquePtr(std::nullptr_t) noexcept {};
@@ -55,12 +50,6 @@ public:
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
-
-	void swap(UniquePtr& other) noexcept
-	{
-		std::swap(this->mPtr, other.mPtr);
-		std::swap(this->mAllocator, other.mAllocator);
-	}
 
 	void destroy() noexcept
 	{

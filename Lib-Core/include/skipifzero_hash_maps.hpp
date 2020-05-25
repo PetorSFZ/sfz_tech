@@ -133,7 +133,7 @@ private:
 // when strings are used as keys, then const char* can be used as an alt key type. This removes
 // the need to create a temporary key object (which might need to allocate memory).
 template<typename K, typename V>
-class HashMap {
+class HashMap final {
 public:
 	// Constants and typedefs
 	// --------------------------------------------------------------------------------------------
@@ -151,13 +151,8 @@ public:
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
-
-	HashMap() noexcept = default;
-	HashMap(const HashMap&) = delete;
-	HashMap& operator= (const HashMap&) = delete;
-	HashMap(HashMap&& other) noexcept { this->swap(other); }
-	HashMap& operator= (HashMap&& other) noexcept { this->swap(other); return *this; }
-	~HashMap() noexcept { this->destroy(); }
+	
+	SFZ_DECLARE_DROP_TYPE(HashMap);
 
 	HashMap(uint32_t capacity, Allocator* allocator, DbgInfo allocDbg) noexcept
 	{
@@ -187,19 +182,6 @@ public:
 			tmp.mSlots[i] = this->mSlots[i];
 		}
 		return tmp;
-	}
-
-	// Swaps the contents of two HashMaps, including the allocators.
-	void swap(HashMap& other)
-	{
-		std::swap(this->mSize, other.mSize);
-		std::swap(this->mCapacity, other.mCapacity);
-		std::swap(this->mPlaceholders, other.mPlaceholders);
-		std::swap(this->mAllocation, other.mAllocation);
-		std::swap(this->mSlots, other.mSlots);
-		std::swap(this->mKeys, other.mKeys);
-		std::swap(this->mValues, other.mValues);
-		std::swap(this->mAllocator, other.mAllocator);
 	}
 
 	// Destroys all elements stored in this HashMap, deallocates all memory and removes allocator.

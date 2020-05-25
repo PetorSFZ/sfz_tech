@@ -48,12 +48,7 @@ public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	RingBuffer() noexcept = default;
-	RingBuffer(const RingBuffer&) = delete;
-	RingBuffer& operator= (const RingBuffer&) = delete;
-	RingBuffer(RingBuffer&& other) noexcept { this->swap(other); }
-	RingBuffer& operator= (RingBuffer&& other) noexcept { this->swap(other); return *this; }
-	~RingBuffer() noexcept { this->destroy(); }
+	SFZ_DECLARE_DROP_TYPE(RingBuffer);
 
 	RingBuffer(uint64_t capacity, Allocator* allocator, DbgInfo allocDbg) noexcept
 	{
@@ -73,21 +68,6 @@ public:
 		mCapacity = capacity;
 		mDataPtr = reinterpret_cast<T*>(mAllocator->allocate(
 			allocDbg, mCapacity * sizeof(T), sfz::max(32u, uint32_t(alignof(T)))));
-	}
-
-	void swap(RingBuffer& other)
-	{
-		std::swap(this->mAllocator, other.mAllocator);
-		std::swap(this->mDataPtr, other.mDataPtr);
-		std::swap(this->mCapacity, other.mCapacity);
-		//std::swap(this->mFirstIndex, other.mFirstIndex);
-		//std::swap(this->mLastIndex, other.mLastIndex);
-		uint64_t thisFirstIndexCopy = this->mFirstIndex;
-		uint64_t thisLastIndexCopy = this->mLastIndex;
-		this->mFirstIndex.exchange(other.mFirstIndex);
-		this->mLastIndex.exchange(other.mLastIndex);
-		other.mFirstIndex.exchange(thisFirstIndexCopy);
-		other.mLastIndex.exchange(thisLastIndexCopy);
 	}
 
 	void destroy()

@@ -26,6 +26,7 @@
 #include <cstdlib> // std::abort()
 #include <cstring> // memcpy()
 #include <new> // placement new
+#include <type_traits>
 #include <utility> // std::move, std::forward, std::swap
 
 #ifdef _WIN32
@@ -174,6 +175,46 @@ constexpr uint64_t alignedDiff(uint64_t value, uint64_t alignment)
 {
 	return roundUpAligned(value, alignment) - value;
 }
+
+// DropType
+// ------------------------------------------------------------------------------------------------
+
+// A DropType is a type that is default constructible and move:able, but not copy:able.
+//
+// It must implement "void destroy()", which must destroy all members and reset the state of the
+// type to the same state as if it was default constructed. It should be safe to call destroy()
+// multiple times in a row.
+//
+// The move semantics of DropType's are implemented using sfz::memswp(), which means that all
+// members of a DropType MUST be either trivially copyable (i.e. primitives such as integers,
+// floats and pointers) or DropTypes themselves. This is currently not enforced, be careful.
+//
+// Usage:
+//
+// class SomeType final {
+// public:
+//     SFZ_DECLARE_DROP_TYPE(SomeType);
+//     void destroy() { /* ... */ }
+//     // ...
+// };
+#define SFZ_DECLARE_DROP_TYPE(T) \
+	T() = default; \
+	T(const T&) = delete; \
+	T& operator= (const T&) = delete; \
+	T(T&& other) noexcept { this->swap(other); } \
+	T& operator= (T&& other) noexcept { this->swap(other); return *this; } \
+	void swap(T& other) noexcept { sfz::memswp(this, &other, sizeof(T)); } \
+	~T() noexcept \
+	{ \
+		static_assert(std::is_final_v<T>, "DropType's must be marked final"); \
+		static_assert(!std::is_polymorphic_v<T>, "DropType's may not have any virtual methods"); \
+		static_assert(std::is_default_constructible_v<T>, "DropType's MUST be default constructible"); \
+		static_assert(!std::is_copy_constructible_v<T>, "DropType's MUST NOT be copy constructible"); \
+		static_assert(!std::is_copy_assignable_v<T>, "DropType's MUST NOT be copy assignable"); \
+		static_assert(std::is_move_constructible_v<T>, "DropType's MUST be move constructible"); \
+		static_assert(std::is_move_assignable_v<T>, "DropType's MUST be move assignable"); \
+		this->destroy(); \
+	}
 
 // Alternate type definition
 // ------------------------------------------------------------------------------------------------
