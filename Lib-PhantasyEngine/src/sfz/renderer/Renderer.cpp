@@ -264,7 +264,7 @@ bool Renderer::uploadTextureBlocking(
 	if (mState->textures.get(id) != nullptr) return false;
 
 	uint32_t numMipmaps = 0;
-	zg::Texture2D texture = textureAllocateAndUploadBlocking(
+	zg::Texture texture = textureAllocateAndUploadBlocking(
 		image,
 		mState->allocator,
 		mState->copyQueue,

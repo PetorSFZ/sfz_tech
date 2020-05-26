@@ -132,7 +132,7 @@ ZgTextureFormat toZeroGImageFormat(ImageType imageType) noexcept
 	return ZG_TEXTURE_FORMAT_UNDEFINED;
 }
 
-zg::Texture2D textureAllocateAndUploadBlocking(
+zg::Texture textureAllocateAndUploadBlocking(
 	const phConstImageView& image,
 	sfz::Allocator* cpuAllocator,
 	zg::CommandQueue& copyQueue,
@@ -156,9 +156,9 @@ zg::Texture2D textureAllocateAndUploadBlocking(
 	sfz_assert(numMipmaps != 0);
 
 	// Allocate Texture
-	zg::Texture2D texture;
+	zg::Texture texture;
 	{
-		ZgTexture2DCreateInfo createInfo = {};
+		ZgTextureCreateInfo createInfo = {};
 		createInfo.format = view.format;
 		createInfo.usage = ZG_TEXTURE_USAGE_DEFAULT;
 		createInfo.width = view.width;
@@ -167,7 +167,7 @@ zg::Texture2D textureAllocateAndUploadBlocking(
 		CHECK_ZG texture.create(createInfo);
 	}
 	sfz_assert(texture.valid());
-	if (!texture.valid()) return zg::Texture2D();
+	if (!texture.valid()) return zg::Texture();
 
 	// Generate mipmaps (on CPU)
 	Image mipmaps[ZG_MAX_NUM_MIPMAPS - 1];

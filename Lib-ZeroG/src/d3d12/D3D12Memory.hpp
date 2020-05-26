@@ -226,20 +226,20 @@ inline ZgResult createBuffer(
 	return ZG_SUCCESS;
 }
 
-// ZgTexture2D
+// ZgTexture
 // ------------------------------------------------------------------------------------------------
 
-struct ZgTexture2D final {
+struct ZgTexture final {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	ZgTexture2D() = default;
-	ZgTexture2D(const ZgTexture2D&) = delete;
-	ZgTexture2D& operator= (const ZgTexture2D&) = delete;
-	ZgTexture2D(ZgTexture2D&&) = delete;
-	ZgTexture2D& operator= (ZgTexture2D&&) = delete;
-	~ZgTexture2D() noexcept
+	ZgTexture() = default;
+	ZgTexture(const ZgTexture&) = delete;
+	ZgTexture& operator= (const ZgTexture&) = delete;
+	ZgTexture(ZgTexture&&) = delete;
+	ZgTexture& operator= (ZgTexture&&) = delete;
+	~ZgTexture() noexcept
 	{
 		if (allocation != nullptr) {
 			allocation->Release();
@@ -290,8 +290,8 @@ public:
 // ------------------------------------------------------------------------------------------------
 
 inline ZgResult createTexture(
-	ZgTexture2D*& textureOut,
-	const ZgTexture2DCreateInfo& createInfo,
+	ZgTexture*& textureOut,
+	const ZgTextureCreateInfo& createInfo,
 	ID3D12Device3& device,
 	D3D12MA::Allocator* d3d12Allocator,
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter) noexcept
@@ -356,7 +356,7 @@ inline ZgResult createTexture(
 		subresourceFootprints, numRows, rowSizesInBytes, &totalSizeInBytes);
 
 	// Allocate texture
-	ZgTexture2D* texture = getAllocator()->newObject<ZgTexture2D>(sfz_dbg("ZgTexture2D"));
+	ZgTexture* texture = getAllocator()->newObject<ZgTexture>(sfz_dbg("ZgTexture"));
 
 	// Copy stuff
 	texture->allocation = allocation;

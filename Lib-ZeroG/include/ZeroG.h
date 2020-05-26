@@ -78,7 +78,7 @@
 // ------------------------------------------------------------------------------------------------
 
 ZG_HANDLE(ZgBuffer);
-ZG_HANDLE(ZgTexture2D);
+ZG_HANDLE(ZgTexture);
 ZG_HANDLE(ZgMemoryHeap);
 ZG_HANDLE(ZgPipelineCompute);
 ZG_HANDLE(ZgPipelineRender);
@@ -100,7 +100,7 @@ ZG_ENUM(ZgBool) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 28;
+static const uint32_t ZG_COMPILED_API_VERSION = 29;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -299,7 +299,7 @@ ZG_ENUM(ZgOptimalClearValue) {
 	ZG_OPTIMAL_CLEAR_VALUE_ONE
 };
 
-ZG_STRUCT(ZgTexture2DCreateInfo) {
+ZG_STRUCT(ZgTextureCreateInfo) {
 
 	// The format of the texture
 	ZgTextureFormat format;
@@ -333,36 +333,36 @@ ZG_STRUCT(ZgTexture2DCreateInfo) {
 	uint32_t numMipmaps;
 };
 
-ZG_API ZgResult zgTexture2DCreate(
-	ZgTexture2D** textureOut,
-	const ZgTexture2DCreateInfo* createInfo);
+ZG_API ZgResult zgTextureCreate(
+	ZgTexture** textureOut,
+	const ZgTextureCreateInfo* createInfo);
 
-ZG_API void zgTexture2DDestroy(
-	ZgTexture2D* texture);
+ZG_API void zgTextureDestroy(
+	ZgTexture* texture);
 
-ZG_API uint32_t zgTexture2DSizeInBytes(
-	const ZgTexture2D* texture);
+ZG_API uint32_t zgTextureSizeInBytes(
+	const ZgTexture* texture);
 
-ZG_API ZgResult zgTexture2DSetDebugName(
-	ZgTexture2D* texture,
+ZG_API ZgResult zgTextureSetDebugName(
+	ZgTexture* texture,
 	const char* name);
 
 #ifdef __cplusplus
 namespace zg {
 
-class Texture2D final : public ManagedHandle<ZgTexture2D, zgTexture2DDestroy> {
+class Texture final : public ManagedHandle<ZgTexture, zgTextureDestroy> {
 public:
-	[[nodiscard]] ZgResult create(const ZgTexture2DCreateInfo& createInfo)
+	[[nodiscard]] ZgResult create(const ZgTextureCreateInfo& createInfo)
 	{
 		this->destroy();
-		return zgTexture2DCreate(&this->handle, &createInfo);
+		return zgTextureCreate(&this->handle, &createInfo);
 	}
 
-	uint32_t sizeInBytes() const { return zgTexture2DSizeInBytes(this->handle); }
+	uint32_t sizeInBytes() const { return zgTextureSizeInBytes(this->handle); }
 
 	[[nodiscard]] ZgResult setDebugName(const char* name)
 	{
-		return zgTexture2DSetDebugName(this->handle, name);
+		return zgTextureSetDebugName(this->handle, name);
 	}
 };
 
@@ -474,7 +474,7 @@ ZG_STRUCT(ZgUnorderedBufferBinding) {
 
 ZG_STRUCT(ZgTextureBinding) {
 	uint32_t textureRegister;
-	ZgTexture2D* texture;
+	ZgTexture* texture;
 };
 
 ZG_STRUCT(ZgUnorderedTextureBinding) {
@@ -486,7 +486,7 @@ ZG_STRUCT(ZgUnorderedTextureBinding) {
 	uint32_t mipLevel;
 
 	// The texture to bind as an unordered texture
-	ZgTexture2D* texture;
+	ZgTexture* texture;
 };
 
 ZG_STRUCT(ZgPipelineBindings) {
@@ -577,7 +577,7 @@ public:
 		return *this;
 	}
 
-	PipelineBindings& addTexture(uint32_t textureRegister, Texture2D& texture)
+	PipelineBindings& addTexture(uint32_t textureRegister, Texture& texture)
 	{
 		ZgTextureBinding binding;
 		binding.textureRegister = textureRegister;
@@ -596,7 +596,7 @@ public:
 	PipelineBindings& addUnorderedTexture(
 		uint32_t unorderedRegister,
 		uint32_t mipLevel,
-		Texture2D& texture)
+		Texture& texture)
 	{
 		ZgUnorderedTextureBinding binding = {};
 		binding.unorderedRegister = unorderedRegister;
@@ -1313,10 +1313,10 @@ ZG_STRUCT(ZgFramebufferCreateInfo) {
 
 	// Render targets
 	uint32_t numRenderTargets;
-	ZgTexture2D* renderTargets[ZG_MAX_NUM_RENDER_TARGETS];
+	ZgTexture* renderTargets[ZG_MAX_NUM_RENDER_TARGETS];
 
 	// Depth buffer
-	ZgTexture2D* depthBuffer;
+	ZgTexture* depthBuffer;
 };
 
 ZG_API ZgResult zgFramebufferCreate(
@@ -1359,7 +1359,7 @@ public:
 	FramebufferBuilder& operator= (const FramebufferBuilder&) = default;
 	~FramebufferBuilder() = default;
 
-	FramebufferBuilder& addRenderTarget(Texture2D& renderTarget)
+	FramebufferBuilder& addRenderTarget(Texture& renderTarget)
 	{
 		assert(createInfo.numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
 		uint32_t idx = createInfo.numRenderTargets;
@@ -1368,7 +1368,7 @@ public:
 		return *this;
 	}
 
-	FramebufferBuilder& setDepthBuffer(Texture2D& depthBuffer)
+	FramebufferBuilder& setDepthBuffer(Texture& depthBuffer)
 	{
 		createInfo.depthBuffer = depthBuffer.handle;
 		return *this;
@@ -1539,7 +1539,7 @@ ZG_API ZgResult zgCommandListMemcpyBufferToBuffer(
 // finished executing.
 ZG_API ZgResult zgCommandListMemcpyToTexture(
 	ZgCommandList* commandList,
-	ZgTexture2D* dstTexture,
+	ZgTexture* dstTexture,
 	uint32_t dstTextureMipLevel,
 	const ZgImageViewConstCpu* srcImageCpu,
 	ZgBuffer* tempUploadBuffer);
@@ -1561,7 +1561,7 @@ ZG_API ZgResult zgCommandListEnableQueueTransitionBuffer(
 // See zgCommandListEnableQueueTransitionBuffer()
 ZG_API ZgResult zgCommandListEnableQueueTransitionTexture(
 	ZgCommandList* commandList,
-	ZgTexture2D* texture);
+	ZgTexture* texture);
 
 ZG_API ZgResult zgCommandListSetPushConstant(
 	ZgCommandList* commandList,
@@ -1595,7 +1595,7 @@ ZG_API ZgResult zgCommandListUnorderedBarrierBuffer(
 //  write to the same UAV if you know that it's safe to execute the UAV accesses in any order."
 ZG_API ZgResult zgCommandListUnorderedBarrierTexture(
 	ZgCommandList* commandList,
-	ZgTexture2D* texture);
+	ZgTexture* texture);
 
 // Inserts an UAV barrier for all unordered resources, meaning that all read/writes must finish
 // before any new read/writes start.
@@ -1722,7 +1722,7 @@ public:
 	}
 
 	[[nodiscard]] ZgResult memcpyToTexture(
-		Texture2D& dstTexture,
+		Texture& dstTexture,
 		uint32_t dstTextureMipLevel,
 		const ZgImageViewConstCpu& srcImageCpu,
 		Buffer& tempUploadBuffer)
@@ -1740,7 +1740,7 @@ public:
 		return zgCommandListEnableQueueTransitionBuffer(this->handle, buffer.handle);
 	}
 
-	[[nodiscard]] ZgResult enableQueueTransition(Texture2D& texture)
+	[[nodiscard]] ZgResult enableQueueTransition(Texture& texture)
 	{
 		return zgCommandListEnableQueueTransitionTexture(this->handle, texture.handle);
 	}
@@ -1767,7 +1767,7 @@ public:
 		return zgCommandListUnorderedBarrierBuffer(this->handle, buffer.handle);
 	}
 
-	[[nodiscard]] ZgResult unorderedBarrier(Texture2D& texture)
+	[[nodiscard]] ZgResult unorderedBarrier(Texture& texture)
 	{
 		return zgCommandListUnorderedBarrierTexture(this->handle, texture.handle);
 	}

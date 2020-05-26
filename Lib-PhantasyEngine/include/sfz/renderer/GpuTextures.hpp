@@ -32,7 +32,7 @@ namespace sfz {
 
 ZgTextureFormat toZeroGImageFormat(ImageType imageType) noexcept;
 
-zg::Texture2D textureAllocateAndUploadBlocking(
+zg::Texture textureAllocateAndUploadBlocking(
 	const phConstImageView& image,
 	sfz::Allocator* cpuAllocator,
 	zg::CommandQueue& copyQueue,

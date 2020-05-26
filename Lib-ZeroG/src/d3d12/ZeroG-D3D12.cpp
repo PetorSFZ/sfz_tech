@@ -624,30 +624,30 @@ ZG_API ZgResult zgBufferSetDebugName(
 // Textures
 // ------------------------------------------------------------------------------------------------
 
-ZG_API ZgResult zgTexture2DCreate(
-	ZgTexture2D** textureOut,
-	const ZgTexture2DCreateInfo* createInfo)
+ZG_API ZgResult zgTextureCreate(
+	ZgTexture** textureOut,
+	const ZgTextureCreateInfo* createInfo)
 {
 	return createTexture(
 		*textureOut, *createInfo, *ctxState->device.Get(), ctxState->d3d12Allocator, &ctxState->resourceUniqueIdentifierCounter);
 }
 
-ZG_API void zgTexture2DDestroy(
-	ZgTexture2D* texture)
+ZG_API void zgTextureDestroy(
+	ZgTexture* texture)
 {
 	if (texture == nullptr) return;
 	getAllocator()->deleteObject(texture);
 }
 
-ZG_API uint32_t zgTexture2DSizeInBytes(
-	const ZgTexture2D* texture)
+ZG_API uint32_t zgTextureSizeInBytes(
+	const ZgTexture* texture)
 {
 	if (texture == nullptr) return 0;
 	return uint32_t(texture->totalSizeInBytes);
 }
 
-ZG_API ZgResult zgTexture2DSetDebugName(
-	ZgTexture2D* texture,
+ZG_API ZgResult zgTextureSetDebugName(
+	ZgTexture* texture,
 	const char* name)
 {
 	ZG_ARG_CHECK(texture == nullptr, "");
@@ -911,7 +911,7 @@ ZG_API ZgResult zgCommandListMemcpyBufferToBuffer(
 
 ZG_API ZgResult zgCommandListMemcpyToTexture(
 	ZgCommandList* commandList,
-	ZgTexture2D* dstTexture,
+	ZgTexture* dstTexture,
 	uint32_t dstTextureMipLevel,
 	const ZgImageViewConstCpu* srcImageCpu,
 	ZgBuffer* tempUploadBuffer)
@@ -937,7 +937,7 @@ ZG_API ZgResult zgCommandListEnableQueueTransitionBuffer(
 
 ZG_API ZgResult zgCommandListEnableQueueTransitionTexture(
 	ZgCommandList* commandList,
-	ZgTexture2D* texture)
+	ZgTexture* texture)
 {
 	return commandList->enableQueueTransitionTexture(texture);
 }
@@ -975,7 +975,7 @@ ZG_API ZgResult zgCommandListUnorderedBarrierBuffer(
 
 ZG_API ZgResult zgCommandListUnorderedBarrierTexture(
 	ZgCommandList* commandList,
-	ZgTexture2D* texture)
+	ZgTexture* texture)
 {
 	return commandList->unorderedBarrierTexture(texture);
 }

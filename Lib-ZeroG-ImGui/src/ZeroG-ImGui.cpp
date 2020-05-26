@@ -65,7 +65,7 @@ struct ImGuiRenderState final {
 	zg::PipelineRender pipeline;
 
 	// Font texture
-	zg::Texture2D fontTexture;
+	zg::Texture fontTexture;
 
 	// Per frame state
 	sfz::Array<ImGuiFrameState> frameStates;
@@ -183,7 +183,7 @@ ZgResult imguiInitRenderState(
 
 	{
 		sfz_assert_hard(fontTexture.format == ZG_TEXTURE_FORMAT_R_U8_UNORM);
-		ZgTexture2DCreateInfo texCreateInfo = {};
+		ZgTextureCreateInfo texCreateInfo = {};
 		texCreateInfo.format = ZG_TEXTURE_FORMAT_R_U8_UNORM;
 		texCreateInfo.width = fontTexture.width;
 		texCreateInfo.height = fontTexture.height;

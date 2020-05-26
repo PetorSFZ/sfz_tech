@@ -82,7 +82,7 @@ static void realMain(SDL_Window* window) noexcept
 	// Copy data to upload buffer
 	float referenceData[NUM_FLOATS];
 	for (uint32_t i = 0; i < NUM_FLOATS; i++) referenceData[i] = float(i);
-	CHECK_ZG uploadBuffer.memcpyTo(0, referenceData, BUFFER_SIZE_BYTES);
+	CHECK_ZG uploadBuffer.memcpyUpload(0, referenceData, BUFFER_SIZE_BYTES);
 
 	// Get a command list
 	zg::CommandList commandList;
@@ -112,7 +112,7 @@ static void realMain(SDL_Window* window) noexcept
 
 	// Copy data from download buffer
 	float resultData[NUM_FLOATS] = {};
-	CHECK_ZG downloadBuffer.memcpyFrom(resultData, 0, BUFFER_SIZE_BYTES);
+	CHECK_ZG downloadBuffer.memcpyDownload(resultData, 0, BUFFER_SIZE_BYTES);
 
 	// Compare result data with reference
 	bool success = true;

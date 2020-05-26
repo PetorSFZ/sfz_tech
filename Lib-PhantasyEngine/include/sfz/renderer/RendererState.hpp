@@ -106,7 +106,7 @@ struct PipelineComputeItem final {
 struct StaticTextureItem final {
 	
 	// The texture
-	zg::Texture2D texture;
+	zg::Texture texture;
 	uint32_t width = 0;
 	uint32_t height = 0;
 
@@ -182,7 +182,7 @@ struct StageGroup final {
 // ------------------------------------------------------------------------------------------------
 
 struct TextureItem final {
-	zg::Texture2D texture;
+	zg::Texture texture;
 	ZgTextureFormat format = ZG_TEXTURE_FORMAT_UNDEFINED;
 	uint32_t width = 0;
 	uint32_t height = 0;

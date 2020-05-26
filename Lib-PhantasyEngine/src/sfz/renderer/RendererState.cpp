@@ -61,7 +61,7 @@ void StaticTextureItem::buildTexture(vec2_i32 windowRes) noexcept
 		ZG_TEXTURE_USAGE_DEPTH_BUFFER : ZG_TEXTURE_USAGE_RENDER_TARGET;
 	ZgOptimalClearValue optimalClear = floatToOptimalClearValue(clearValue);
 	{
-		ZgTexture2DCreateInfo createInfo = {};
+		ZgTextureCreateInfo createInfo = {};
 		createInfo.committedAllocation = ZG_TRUE;
 		createInfo.allowUnorderedAccess = isDepth ? ZG_FALSE : ZG_TRUE;
 		createInfo.format = format;

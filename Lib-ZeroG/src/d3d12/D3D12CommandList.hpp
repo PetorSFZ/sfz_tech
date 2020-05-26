@@ -72,7 +72,7 @@ struct PendingBufferState final {
 struct PendingTextureState final {
 
 	// The associated D3D12Texture
-	ZgTexture2D* texture = nullptr;
+	ZgTexture* texture = nullptr;
 
 	// The mip level of the associated texture
 	uint32_t mipLevel = ~0u;
@@ -258,12 +258,12 @@ public:
 	}
 
 	ZgResult memcpyToTexture(
-		ZgTexture2D* dstTextureIn,
+		ZgTexture* dstTextureIn,
 		uint32_t dstTextureMipLevel,
 		const ZgImageViewConstCpu& srcImageCpu,
 		ZgBuffer* tempUploadBufferIn) noexcept
 	{
-		ZgTexture2D& dstTexture = *dstTextureIn;
+		ZgTexture& dstTexture = *dstTextureIn;
 		ZgBuffer& tmpBuffer = *tempUploadBufferIn;
 
 		// Check that mip level is valid
@@ -364,7 +364,7 @@ public:
 		return ZG_SUCCESS;
 	}
 
-	ZgResult enableQueueTransitionTexture(ZgTexture2D* texture) noexcept
+	ZgResult enableQueueTransitionTexture(ZgTexture* texture) noexcept
 	{
 		// Set buffer resource state
 		ZgResult res = setTextureStateAllMipLevels(*texture, D3D12_RESOURCE_STATE_COMMON);
@@ -577,7 +577,7 @@ public:
 
 			// Get binding and texture
 			const ZgUnorderedTextureBinding& binding = bindings.unorderedTextures[bindingIdx];
-			ZgTexture2D* texture = binding.texture;
+			ZgTexture* texture = binding.texture;
 
 			// Create unordered access view
 			D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
@@ -611,7 +611,7 @@ public:
 
 			// If binding found, get D3D12 texture and its resource and format. Otherwise set default
 			// in order to create null descriptor
-			ZgTexture2D* texture = nullptr;
+			ZgTexture* texture = nullptr;
 			ID3D12Resource* resource = nullptr;
 			DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM;
 			if (bindingIdx != ~0u) {
@@ -692,7 +692,7 @@ public:
 	}
 
 	ZgResult unorderedBarrierTexture(
-		ZgTexture2D* texture) noexcept
+		ZgTexture* texture) noexcept
 	{
 		D3D12_RESOURCE_BARRIER barrier = {};
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
@@ -809,7 +809,7 @@ public:
 
 			// Render targets
 			for (uint32_t i = 0; i < framebuffer->numRenderTargets; i++) {
-				ZgTexture2D* renderTarget = framebuffer->renderTargets[i];
+				ZgTexture* renderTarget = framebuffer->renderTargets[i];
 
 				// Set resource state
 				sfz_assert(renderTarget->numMipmaps == 1);
@@ -818,7 +818,7 @@ public:
 
 			// Depth buffer
 			if (framebuffer->hasDepthBuffer) {
-				ZgTexture2D* depthBuffer = framebuffer->depthBuffer;
+				ZgTexture* depthBuffer = framebuffer->depthBuffer;
 
 				// Set resource state
 				sfz_assert(depthBuffer->numMipmaps == 1);
@@ -1252,7 +1252,7 @@ private:
 	}
 
 	ZgResult getPendingTextureStates(
-		ZgTexture2D& texture,
+		ZgTexture& texture,
 		uint32_t mipLevel,
 		D3D12_RESOURCE_STATES neededState,
 		PendingTextureState*& pendingStatesOut) noexcept
@@ -1295,7 +1295,7 @@ private:
 	}
 
 	ZgResult setTextureState(
-		ZgTexture2D& texture,
+		ZgTexture& texture,
 		uint32_t mipLevel,
 		D3D12_RESOURCE_STATES targetState) noexcept
 	{
@@ -1320,7 +1320,7 @@ private:
 	}
 
 	ZgResult setTextureStateAllMipLevels(
-		ZgTexture2D& texture,
+		ZgTexture& texture,
 		D3D12_RESOURCE_STATES targetState) noexcept
 	{
 		// Get pending states

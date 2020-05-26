@@ -63,7 +63,7 @@ static void createDeviceBufferSimpleBlocking(
 	CHECK_ZG uploadBuffer.create(bufferSizeBytes != 0 ? bufferSizeBytes : numBytes, ZG_MEMORY_TYPE_UPLOAD);
 
 	// Copy cube vertices to upload buffer
-	CHECK_ZG uploadBuffer.memcpyTo(0, data, numBytes);
+	CHECK_ZG uploadBuffer.memcpyUpload(0, data, numBytes);
 
 	// Create device buffer
 	zg::Buffer deviceBuffer;
@@ -297,14 +297,14 @@ static void realMain(SDL_Window* window) noexcept
 	CHECK_ZG constBufferDevice.setDebugName("constBufferDevice");
 
 	// Create a texture
-	ZgTexture2DCreateInfo textureCreateInfo = {};
+	ZgTextureCreateInfo textureCreateInfo = {};
 	textureCreateInfo.format = ZG_TEXTURE_FORMAT_RGBA_U8_UNORM;
 	textureCreateInfo.allowUnorderedAccess = ZG_TRUE;
 	textureCreateInfo.width = 256;
 	textureCreateInfo.height = 256;
 	textureCreateInfo.numMipmaps = 4;
 
-	zg::Texture2D texture;
+	zg::Texture texture;
 	CHECK_ZG texture.create(textureCreateInfo);
 	CHECK_ZG texture.setDebugName("cubeTexture");
 
@@ -458,7 +458,8 @@ static void realMain(SDL_Window* window) noexcept
 
 			// Set framebuffer and clear it
 			CHECK_ZG commandList.setFramebuffer(framebuffer);
-			CHECK_ZG commandList.clearFramebufferOptimal();
+			CHECK_ZG commandList.clearRenderTargetsOptimal();
+			CHECK_ZG commandList.clearDepthBufferOptimal();
 
 			// Set pipeline
 			CHECK_ZG commandList.setPipeline(renderPipeline);
