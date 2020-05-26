@@ -135,15 +135,6 @@ public:
 	// in command lists not yet executed.
 	// TODO: Mutex protecting this? How handle changes submitted on different queues simulatenously?
 	D3D12_RESOURCE_STATES lastCommittedState = D3D12_RESOURCE_STATE_COMMON;
-
-	// Methods
-	// --------------------------------------------------------------------------------------------
-
-	ZgResult setDebugName(const char* name) noexcept
-	{
-		::setDebugName(this->resource, name);
-		return ZG_SUCCESS;
-	}
 };
 
 // Buffer functions
@@ -208,6 +199,11 @@ inline ZgResult createBuffer(
 		IID_PPV_ARGS(&resource));
 	if (D3D12_FAIL(res)) {
 		return  ZG_ERROR_GENERIC;
+	}
+
+	// Set debug name if available
+	if (createInfo.debugName != nullptr) {
+		::setDebugName(resource, createInfo.debugName);
 	}
 
 	// Allocate buffer
@@ -354,6 +350,11 @@ inline ZgResult createTexture(
 
 	device.GetCopyableFootprints(&desc, 0, createInfo.numMipmaps, allocation->GetOffset(),
 		subresourceFootprints, numRows, rowSizesInBytes, &totalSizeInBytes);
+
+	// Set debug name if available
+	if (createInfo.debugName != nullptr) {
+		::setDebugName(resource, createInfo.debugName);
+	}
 
 	// Allocate texture
 	ZgTexture* texture = getAllocator()->newObject<ZgTexture>(sfz_dbg("ZgTexture"));

@@ -47,6 +47,7 @@ struct GpuMesh final {
 ShaderMaterial cpuMaterialToShaderMaterial(const Material& cpuMaterial) noexcept;
 
 GpuMesh gpuMeshAllocate(
+	const char* meshName,
 	const Mesh& cpuMesh,
 	sfz::Allocator* cpuAllocator) noexcept;
 

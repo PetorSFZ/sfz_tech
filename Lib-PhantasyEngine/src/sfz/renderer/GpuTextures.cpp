@@ -133,6 +133,7 @@ ZgTextureFormat toZeroGImageFormat(ImageType imageType) noexcept
 }
 
 zg::Texture textureAllocateAndUploadBlocking(
+	const char* debugName,
 	const phConstImageView& image,
 	sfz::Allocator* cpuAllocator,
 	zg::CommandQueue& copyQueue,
@@ -164,6 +165,7 @@ zg::Texture textureAllocateAndUploadBlocking(
 		createInfo.width = view.width;
 		createInfo.height = view.height;
 		createInfo.numMipmaps = numMipmaps;
+		createInfo.debugName = debugName;
 		CHECK_ZG texture.create(createInfo);
 	}
 	sfz_assert(texture.valid());

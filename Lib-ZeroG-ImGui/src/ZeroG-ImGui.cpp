@@ -188,10 +188,10 @@ ZgResult imguiInitRenderState(
 		texCreateInfo.width = fontTexture.width;
 		texCreateInfo.height = fontTexture.height;
 		texCreateInfo.numMipmaps = 1; // TODO: Mipmaps
+		texCreateInfo.debugName = "ImGui_FontTexture";
 		ZgResult res = stateOut->fontTexture.create(texCreateInfo);
 		if (!zgIsSuccess(res)) return res;
 	}
-	ASSERT_ZG stateOut->fontTexture.setDebugName("ImGui_FontTexture");
 
 	// Upload font texture to GPU
 	{
@@ -217,13 +217,13 @@ ZgResult imguiInitRenderState(
 
 		ASSERT_ZG frame.fence.create();
 
-		ASSERT_ZG frame.uploadVertexBuffer.create(IMGUI_VERTEX_BUFFER_SIZE, ZG_MEMORY_TYPE_UPLOAD);
+		ASSERT_ZG frame.uploadVertexBuffer.create(
+			IMGUI_VERTEX_BUFFER_SIZE, ZG_MEMORY_TYPE_UPLOAD, false, sfz::str32("ImGui_VertexBuffer_%u", i));
 		uploadHeapOffset += IMGUI_VERTEX_BUFFER_SIZE;
-		ASSERT_ZG frame.uploadVertexBuffer.setDebugName(sfz::str32("ImGui_VertexBuffer_%u", i));
 
-		ASSERT_ZG frame.uploadIndexBuffer.create(IMGUI_INDEX_BUFFER_SIZE, ZG_MEMORY_TYPE_UPLOAD);
+		ASSERT_ZG frame.uploadIndexBuffer.create(
+			IMGUI_INDEX_BUFFER_SIZE, ZG_MEMORY_TYPE_UPLOAD, false, sfz::str32("ImGui_IndexBuffer_%u", i));
 		uploadHeapOffset += IMGUI_INDEX_BUFFER_SIZE;
-		ASSERT_ZG frame.uploadIndexBuffer.setDebugName(sfz::str32("ImGui_IndexBuffer_%u", i));
 	}
 
 	// TODO: Remove

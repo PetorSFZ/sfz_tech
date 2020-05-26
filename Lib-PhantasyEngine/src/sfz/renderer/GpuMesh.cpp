@@ -45,21 +45,21 @@ ShaderMaterial cpuMaterialToShaderMaterial(const Material& cpuMaterial) noexcept
 }
 
 GpuMesh gpuMeshAllocate(
+	const char* meshName,
 	const Mesh& cpuMesh,
 	sfz::Allocator* cpuAllocator) noexcept
 {
-	static uint32_t counter = 0;
 	GpuMesh gpuMesh;
 
 	// Allocate (GPU) memory for vertices
-	CHECK_ZG gpuMesh.vertexBuffer.create(cpuMesh.vertices.size() * sizeof(Vertex), ZG_MEMORY_TYPE_DEVICE);
+	CHECK_ZG gpuMesh.vertexBuffer.create(
+		cpuMesh.vertices.size() * sizeof(Vertex), ZG_MEMORY_TYPE_DEVICE, false, str256("%s_Vertex_Buffer", meshName));
 	sfz_assert(gpuMesh.vertexBuffer.valid());
-	CHECK_ZG gpuMesh.vertexBuffer.setDebugName(sfz::str128("Vertex_Buffer_%i", counter++));
 
 	// Allocate (GPU) memory for indices
-	CHECK_ZG gpuMesh.indexBuffer.create(cpuMesh.indices.size() * sizeof(uint32_t), ZG_MEMORY_TYPE_DEVICE);
+	CHECK_ZG gpuMesh.indexBuffer.create(
+		cpuMesh.indices.size() * sizeof(uint32_t), ZG_MEMORY_TYPE_DEVICE, false, str256("%s_Index_Buffer", meshName));
 	sfz_assert(gpuMesh.indexBuffer.valid());
-	CHECK_ZG gpuMesh.indexBuffer.setDebugName(sfz::str128("Index_Buffer_%i", counter++));
 
 	// Allocate (CPU) memory for mesh component handles
 	gpuMesh.components.init(cpuMesh.components.size(), cpuAllocator, sfz_dbg("GpuMesh::components"));
@@ -67,10 +67,10 @@ GpuMesh gpuMeshAllocate(
 
 	// Allocate (GPU) memory for materials
 	sfz_assert(cpuMesh.materials.size() <= MAX_NUM_SHADER_MATERIALS);
-	CHECK_ZG gpuMesh.materialsBuffer.create(MAX_NUM_SHADER_MATERIALS * sizeof(ShaderMaterial), ZG_MEMORY_TYPE_DEVICE);
+	CHECK_ZG gpuMesh.materialsBuffer.create(
+		MAX_NUM_SHADER_MATERIALS * sizeof(ShaderMaterial), ZG_MEMORY_TYPE_DEVICE, false, str256("%s_Materials_Buffer", meshName));
 	sfz_assert(gpuMesh.materialsBuffer.valid());
 	gpuMesh.numMaterials = cpuMesh.materials.size();
-	CHECK_ZG gpuMesh.materialsBuffer.setDebugName(sfz::str128("Material_Buffer_%i", counter++));
 
 	// Allocate (CPU) memory for cpu materials
 	gpuMesh.cpuMaterials.init(cpuMesh.materials.size(), cpuAllocator, sfz_dbg("GpuMesh::cpuMaterials"));

@@ -263,19 +263,17 @@ bool Renderer::uploadTextureBlocking(
 	// Error out and return false if texture already exists
 	if (mState->textures.get(id) != nullptr) return false;
 
+	StringCollection& resStrings = getResourceStrings();
+	const char* fileName = stripFilePath(resStrings.getString(id));
 	uint32_t numMipmaps = 0;
 	zg::Texture texture = textureAllocateAndUploadBlocking(
+		fileName,
 		image,
 		mState->allocator,
 		mState->copyQueue,
 		generateMipmaps,
 		numMipmaps);
 	sfz_assert(texture.valid());
-
-	// Set texture debug name
-	StringCollection& resStrings = getResourceStrings();
-	str256 debugName("dyn_tex__%s", stripFilePath(resStrings.getString(id)));
-	CHECK_ZG texture.setDebugName(debugName);
 
 	// Fill texture item with info and store it
 	TextureItem item;
@@ -332,26 +330,13 @@ bool Renderer::uploadMeshBlocking(StringID id, const Mesh& mesh) noexcept
 	if (mState->meshes.get(id) != nullptr) return false;
 
 	// Allocate memory for mesh
-	GpuMesh gpuMesh = gpuMeshAllocate(mesh, mState->allocator);
+	StringCollection& resStrings = getResourceStrings();
+	const char* fileName = stripFilePath(resStrings.getString(id));
+	GpuMesh gpuMesh = gpuMeshAllocate(fileName, mesh, mState->allocator);
 
 	// Upload memory to mesh
 	gpuMeshUploadBlocking(
 		gpuMesh, mesh, mState->allocator, mState->copyQueue);
-
-	// Set mesh debug name
-	{
-		StringCollection& resStrings = getResourceStrings();
-		const char* fileName = stripFilePath(resStrings.getString(id));
-
-		str256 debugName = str256("dyn_mesh_vertices__%s", fileName);
-		CHECK_ZG gpuMesh.vertexBuffer.setDebugName(debugName);
-
-		debugName = str256("dyn_mesh_indidces__%s", fileName);
-		CHECK_ZG gpuMesh.indexBuffer.setDebugName(debugName);
-
-		debugName = str256("dyn_mesh_materials__%s", fileName);
-		CHECK_ZG gpuMesh.materialsBuffer.setDebugName(debugName);
-	}
 
 	// Store mesh
 	mState->meshes.put(id, std::move(gpuMesh));

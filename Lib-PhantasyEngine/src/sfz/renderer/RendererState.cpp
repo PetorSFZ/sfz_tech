@@ -39,6 +39,8 @@ static ZgOptimalClearValue floatToOptimalClearValue(float value) noexcept
 
 void StaticTextureItem::buildTexture(vec2_i32 windowRes) noexcept
 {
+	StringCollection& resStrings = getResourceStrings();
+
 	// Figure out resolution
 	uint32_t tmpWidth = 0;
 	uint32_t tmpHeight = 0;
@@ -70,13 +72,9 @@ void StaticTextureItem::buildTexture(vec2_i32 windowRes) noexcept
 		createInfo.width = width;
 		createInfo.height = height;
 		createInfo.numMipmaps = 1;
+		createInfo.debugName = resStrings.getString(this->name);
 		CHECK_ZG this->texture.create(createInfo);
 	}
-
-	// Set debug name for texture
-	StringCollection& resStrings = getResourceStrings();
-	str128 debugName("static_tex__%s", resStrings.getString(this->name));
-	CHECK_ZG this->texture.setDebugName(debugName);
 }
 
 //  Pipeline types

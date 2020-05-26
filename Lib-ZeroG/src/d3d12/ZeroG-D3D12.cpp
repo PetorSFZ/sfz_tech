@@ -613,14 +613,6 @@ ZG_API ZgResult zgBufferMemcpyDownload(
 	return srcBuffer->memcpyDownload(srcBufferOffsetBytes, dstMemory, numBytes);
 }
 
-ZG_API ZgResult zgBufferSetDebugName(
-	ZgBuffer* buffer,
-	const char* name)
-{
-	ZG_ARG_CHECK(buffer == nullptr, "");
-	return buffer->setDebugName(name);
-}
-
 // Textures
 // ------------------------------------------------------------------------------------------------
 
@@ -644,15 +636,6 @@ ZG_API uint32_t zgTextureSizeInBytes(
 {
 	if (texture == nullptr) return 0;
 	return uint32_t(texture->totalSizeInBytes);
-}
-
-ZG_API ZgResult zgTextureSetDebugName(
-	ZgTexture* texture,
-	const char* name)
-{
-	ZG_ARG_CHECK(texture == nullptr, "");
-	ZG_ARG_CHECK(name == nullptr, "");
-	return texture->setDebugName(name);
 }
 
 // Pipeline Compute

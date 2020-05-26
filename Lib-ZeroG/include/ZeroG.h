@@ -100,7 +100,7 @@ ZG_ENUM(ZgBool) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 29;
+static const uint32_t ZG_COMPILED_API_VERSION = 30;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -204,6 +204,7 @@ ZG_STRUCT(ZgBufferCreateInfo) {
 	ZgMemoryType memoryType;
 	uint64_t sizeInBytes;
 	ZgBool committedAllocation;
+	const char* debugName;
 };
 
 ZG_API ZgResult zgBufferCreate(
@@ -225,23 +226,23 @@ ZG_API ZgResult zgBufferMemcpyDownload(
 	uint64_t srcBufferOffsetBytes,
 	uint64_t numBytes);
 
-ZG_API ZgResult zgBufferSetDebugName(
-	ZgBuffer* buffer,
-	const char* name);
-
 #ifdef __cplusplus
 namespace zg {
 
 class Buffer final : public ManagedHandle<ZgBuffer, zgBufferDestroy> {
 public:
 	[[nodiscard]] ZgResult create(
-		uint64_t sizeBytes, ZgMemoryType type = ZG_MEMORY_TYPE_DEVICE, bool committedAllocation = false)
+		uint64_t sizeBytes,
+		ZgMemoryType type = ZG_MEMORY_TYPE_DEVICE,
+		bool committedAllocation = false,
+		const char* debugName = nullptr)
 	{
 		this->destroy();
 		ZgBufferCreateInfo info = {};
 		info.memoryType = type;
 		info.sizeInBytes = sizeBytes;
 		info.committedAllocation = committedAllocation ? ZG_TRUE : ZG_FALSE;
+		info.debugName = debugName;
 		return zgBufferCreate(&handle, &info);
 	}
 
@@ -253,11 +254,6 @@ public:
 	[[nodiscard]] ZgResult memcpyDownload(void* dstMemory, uint64_t srcBufferOffsetBytes, uint64_t numBytes)
 	{
 		return zgBufferMemcpyDownload(dstMemory, this->handle, srcBufferOffsetBytes, numBytes);
-	}
-
-	[[nodiscard]] ZgResult setDebugName(const char* name)
-	{
-		return zgBufferSetDebugName(this->handle, name);
 	}
 };
 
@@ -331,6 +327,8 @@ ZG_STRUCT(ZgTextureCreateInfo) {
 	// 1 equals no mipmaps, i.e. only a single layer. May not be 0, must be smaller than or equal
 	// to ZG_TEXTURE_2D_MAX_NUM_MIPMAPS.
 	uint32_t numMipmaps;
+
+	const char* debugName = nullptr;
 };
 
 ZG_API ZgResult zgTextureCreate(
@@ -342,10 +340,6 @@ ZG_API void zgTextureDestroy(
 
 ZG_API uint32_t zgTextureSizeInBytes(
 	const ZgTexture* texture);
-
-ZG_API ZgResult zgTextureSetDebugName(
-	ZgTexture* texture,
-	const char* name);
 
 #ifdef __cplusplus
 namespace zg {
@@ -359,11 +353,6 @@ public:
 	}
 
 	uint32_t sizeInBytes() const { return zgTextureSizeInBytes(this->handle); }
-
-	[[nodiscard]] ZgResult setDebugName(const char* name)
-	{
-		return zgTextureSetDebugName(this->handle, name);
-	}
 };
 
 } // namespace zg
