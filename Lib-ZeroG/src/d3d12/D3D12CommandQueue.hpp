@@ -28,6 +28,7 @@
 #include "d3d12/D3D12Common.hpp"
 #include "d3d12/D3D12CommandList.hpp"
 #include "d3d12/D3D12DescriptorRingBuffer.hpp"
+#include "d3d12/D3D12ResourceTracking.hpp"
 
 // Fence
 // ------------------------------------------------------------------------------------------------
@@ -67,9 +68,9 @@ public:
 // ZgCommandQueue
 // ------------------------------------------------------------------------------------------------
 
-struct ZgCommandQueue final {
-public:
+constexpr uint32_t MAX_NUM_COMMAND_LISTS = 1024;
 
+struct ZgCommandQueue final {
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
@@ -96,9 +97,7 @@ public:
 	ZgResult create(
 		D3D12_COMMAND_LIST_TYPE type,
 		ComPtr<ID3D12Device3>& device,
-		D3D12DescriptorRingBuffer* descriptorBuffer,
-		uint32_t maxNumCommandLists,
-		uint32_t maxNumBuffersPerCommandList) noexcept
+		D3D12DescriptorRingBuffer* descriptorBuffer) noexcept
 	{
 		mType = type;
 		mDevice = device;
@@ -125,14 +124,29 @@ public:
 		mCommandQueueFenceEvent = ::CreateEvent(NULL, false, false, NULL);
 
 		// Allocate memory for command lists
-		mMaxNumBuffersPerCommandList = maxNumBuffersPerCommandList;
 		mCommandListStorage.init(
-			maxNumCommandLists, getAllocator(), sfz_dbg("ZeroG - D3D12CommandQueue - CommandListStorage"));
+			MAX_NUM_COMMAND_LISTS, getAllocator(), sfz_dbg("ZeroG - D3D12CommandQueue - CommandListStorage"));
 		mCommandListQueue.create(
-			maxNumCommandLists, getAllocator(), sfz_dbg("ZeroG - D3D12CommandQueue - CommandListQueue"));
+			MAX_NUM_COMMAND_LISTS, getAllocator(), sfz_dbg("ZeroG - D3D12CommandQueue - CommandListQueue"));
 
 		return ZG_SUCCESS;
 	}
+
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	D3D12_COMMAND_LIST_TYPE mType;
+	ComPtr<ID3D12Device3> mDevice;
+	D3D12DescriptorRingBuffer* mDescriptorBuffer = nullptr;
+
+	ComPtr<ID3D12CommandQueue> mCommandQueue;
+
+	ComPtr<ID3D12Fence> mCommandQueueFence;
+	uint64_t mCommandQueueFenceValue = 0;
+	HANDLE mCommandQueueFenceEvent = nullptr;
+
+	sfz::Array<ZgCommandList> mCommandListStorage;
+	sfz::RingBuffer<ZgCommandList*> mCommandListQueue;
 
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
@@ -140,7 +154,7 @@ public:
 	ZgResult signalOnGpu(ZgFence& fenceToSignal) noexcept
 	{
 		fenceToSignal.commandQueue = this;
-		fenceToSignal.fenceValue = signalOnGpuUnmutexed();
+		fenceToSignal.fenceValue = signalOnGpuInternal();
 		return ZG_SUCCESS;
 	}
 
@@ -160,55 +174,6 @@ public:
 	}
 
 	ZgResult beginCommandListRecording(ZgCommandList** commandListOut) noexcept
-	{
-		std::lock_guard<std::mutex> lock(mQueueMutex);
-		return this->beginCommandListRecordingUnmutexed(commandListOut);
-	}
-
-	ZgResult executeCommandList(ZgCommandList* commandList) noexcept
-	{
-		std::lock_guard<std::mutex> lock(mQueueMutex);
-		return this->executeCommandListUnmutexed(commandList);
-	}
-
-	// Synchronization methods
-	// --------------------------------------------------------------------------------------------
-
-	uint64_t signalOnGpuInternal() noexcept
-	{
-		std::lock_guard<std::mutex> lock(mQueueMutex);
-		return signalOnGpuUnmutexed();
-	}
-
-	void waitOnCpuInternal(uint64_t fenceValue) noexcept
-	{
-		// TODO: Kind of bad to only have one event, must have mutex here because of that.
-		std::lock_guard<std::mutex> lock(mQueueMutex);
-
-		if (!isFenceValueDone(fenceValue)) {
-			CHECK_D3D12 mCommandQueueFence->SetEventOnCompletion(
-				fenceValue, mCommandQueueFenceEvent);
-			// TODO: Don't wait forever
-			::WaitForSingleObject(mCommandQueueFenceEvent, INFINITE);
-		}
-	}
-
-	bool isFenceValueDone(uint64_t fenceValue) noexcept
-	{
-		return mCommandQueueFence->GetCompletedValue() >= fenceValue;
-	}
-
-	// Getters
-	// --------------------------------------------------------------------------------------------
-
-	D3D12_COMMAND_LIST_TYPE type() const noexcept { return mType; }
-	ID3D12CommandQueue* commandQueue() noexcept { return mCommandQueue.Get(); }
-
-private:
-	// Private methods
-	// --------------------------------------------------------------------------------------------
-
-	ZgResult beginCommandListRecordingUnmutexed(ZgCommandList** commandListOut) noexcept
 	{
 		ZgCommandList* commandList = nullptr;
 		bool commandListFound = false;
@@ -238,17 +203,32 @@ private:
 		return ZG_SUCCESS;
 	}
 
-	ZgResult executeCommandListUnmutexed(ZgCommandList* commandList) noexcept
+	ZgResult executeCommandList(ZgCommandList* commandList) noexcept
 	{
 		// Close command list
 		if (D3D12_FAIL(commandList->commandList->Close())) {
 			return ZG_ERROR_GENERIC;
 		}
 
+		auto execBarriers = [&](const CD3DX12_RESOURCE_BARRIER* barriers, uint32_t numBarriers) -> ZgResult {
+			// Get command list to execute barriers in
+			ZgCommandList* commandList = nullptr;
+			ZgResult res =
+				this->beginCommandListRecording(&commandList);
+			if (res != ZG_SUCCESS) return res;
+
+			// Insert barrier call
+			commandList->commandList->ResourceBarrier(numBarriers, barriers);
+
+			// Execute barriers
+			return this->executeCommandList(commandList);
+		};
+
 		// Create and execute a quick command list to insert barriers and commit pending states
-		ZgResult res = this->executePreCommandListStateChanges(
-			commandList->pendingBufferStates,
-			commandList->pendingTextureStates);
+		ZgResult res = executePreCommandListStateChanges(
+			commandList->tracking.pendingBufferStates,
+			commandList->tracking.pendingTextureStates,
+			execBarriers);
 		if (res != ZG_SUCCESS) return res;
 
 		// Execute command list
@@ -256,7 +236,7 @@ private:
 		mCommandQueue->ExecuteCommandLists(1, &commandListPtr);
 
 		// Signal
-		commandList->fenceValue = this->signalOnGpuUnmutexed();
+		commandList->fenceValue = this->signalOnGpuInternal();
 
 		// Add command list to queue
 		mCommandListQueue.add(commandList);
@@ -264,18 +244,39 @@ private:
 		return ZG_SUCCESS;
 	}
 
-	uint64_t signalOnGpuUnmutexed() noexcept
+	// Synchronization methods
+	// --------------------------------------------------------------------------------------------
+
+	uint64_t signalOnGpuInternal() noexcept
 	{
 		CHECK_D3D12 mCommandQueue->Signal(mCommandQueueFence.Get(), mCommandQueueFenceValue);
 		return mCommandQueueFenceValue++;
 	}
 
+	void waitOnCpuInternal(uint64_t fenceValue) noexcept
+	{
+		if (!isFenceValueDone(fenceValue)) {
+			CHECK_D3D12 mCommandQueueFence->SetEventOnCompletion(
+				fenceValue, mCommandQueueFenceEvent);
+			// TODO: Don't wait forever
+			::WaitForSingleObject(mCommandQueueFenceEvent, INFINITE);
+		}
+	}
+
+	bool isFenceValueDone(uint64_t fenceValue) noexcept
+	{
+		return mCommandQueueFence->GetCompletedValue() >= fenceValue;
+	}
+
+private:
+	// Private methods
+	// --------------------------------------------------------------------------------------------
+
 	ZgResult createCommandList(ZgCommandList*& commandListOut) noexcept
 	{
 		// Create a new command list in storage
-		mCommandListStorage.add(ZgCommandList());
-
-		ZgCommandList& commandList = mCommandListStorage.last();
+		ZgCommandList& commandList = mCommandListStorage.add();
+		sfz_assert_hard(mCommandListStorage.size() < MAX_NUM_COMMAND_LISTS);
 		commandList.commandListType = this->mType;
 
 		// Create command allocator
@@ -298,127 +299,18 @@ private:
 
 		// Ensure command list is in closed state
 		if (D3D12_FAIL(commandList.commandList->Close())) {
+			mCommandListStorage.pop();
 			return ZG_ERROR_GENERIC;
 		}
 
 		// Initialize command list
 		commandList.create(
-			mMaxNumBuffersPerCommandList,
 			mDevice,
 			mDescriptorBuffer);
 
 		commandListOut = &commandList;
 		return ZG_SUCCESS;
 	}
-
-	ZgResult executePreCommandListStateChanges(
-		sfz::Array<PendingBufferState>& pendingBufferStates,
-		sfz::Array<PendingTextureState>& pendingTextureStates) noexcept
-	{
-		// Temporary storage array for the barriers to insert
-		uint32_t numBarriers = 0;
-		constexpr uint32_t MAX_NUM_BARRIERS = 512;
-		CD3DX12_RESOURCE_BARRIER barriers[MAX_NUM_BARRIERS] = {};
-
-		// Gather buffer barriers
-		for (uint32_t i = 0; i < pendingBufferStates.size(); i++) {
-			const PendingBufferState& state = pendingBufferStates[i];
-
-			// Don't insert barrier if resource already is in correct state
-			if (state.buffer->lastCommittedState == state.neededInitialState) {
-				continue;
-			}
-
-			// Error out if we don't have enough space in our temp array
-			if (numBarriers >= MAX_NUM_BARRIERS) {
-				ZG_ERROR("Internal error, need to insert too many barriers. Fixable, please contact ZeroG devs.");
-				return ZG_ERROR_GENERIC;
-			}
-
-			// Create barrier
-			barriers[numBarriers] = CD3DX12_RESOURCE_BARRIER::Transition(
-				state.buffer->resource.Get(),
-				state.buffer->lastCommittedState,
-				state.neededInitialState);
-
-			numBarriers += 1;
-		}
-
-		// Gather texture barriers
-		for (uint32_t i = 0; i < pendingTextureStates.size(); i++) {
-			const PendingTextureState& state = pendingTextureStates[i];
-
-			// Don't insert barrier if resource already is in correct state
-			if (state.texture->lastCommittedStates[state.mipLevel] == state.neededInitialState) {
-				continue;
-			}
-
-			// Error out if we don't have enough space in our temp array
-			if (numBarriers >= MAX_NUM_BARRIERS) {
-				ZG_ERROR("Internal error, need to insert too many barriers. Fixable, please contact ZeroG devs.");
-				return ZG_ERROR_GENERIC;
-			}
-
-			// Create barrier
-			barriers[numBarriers] = CD3DX12_RESOURCE_BARRIER::Transition(
-				state.texture->resource.Get(),
-				state.texture->lastCommittedStates[state.mipLevel],
-				state.neededInitialState,
-				state.mipLevel);
-
-			numBarriers += 1;
-		}
-
-		// Exit if we do not need to insert any barriers
-		if (numBarriers == 0) return ZG_SUCCESS;
-
-		// Get command list to execute barriers in
-		ZgCommandList* commandList = nullptr;
-		ZgResult res =
-			this->beginCommandListRecordingUnmutexed(reinterpret_cast<ZgCommandList**>(&commandList));
-		if (res != ZG_SUCCESS) return res;
-
-		// Insert barrier call
-		commandList->commandList->ResourceBarrier(numBarriers, barriers);
-
-		// Execute barriers
-		res = this->executeCommandListUnmutexed(commandList);
-		if (res != ZG_SUCCESS) return res;
-
-		// Commit state changes
-#pragma message("WARNING, probably serious race condition")
-	// TODO: This is problematic and we probably need to something smarter. TL;DR, this comitted
-	//       state is shared between all queues. Maybe it is enough to just put a mutex around it,
-	//       but it is not obvious to me that that would be enough.
-		for (uint32_t i = 0; i < pendingBufferStates.size(); i++) {
-			const PendingBufferState& state = pendingBufferStates[i];
-			state.buffer->lastCommittedState = state.currentState;
-		}
-		for (uint32_t i = 0; i < pendingTextureStates.size(); i++) {
-			const PendingTextureState& state = pendingTextureStates[i];
-			state.texture->lastCommittedStates[state.mipLevel] = state.currentState;
-		}
-
-		return ZG_SUCCESS;
-	}
-
-	// Private members
-	// --------------------------------------------------------------------------------------------
-
-	std::mutex mQueueMutex;
-	D3D12_COMMAND_LIST_TYPE mType;
-	ComPtr<ID3D12Device3> mDevice;
-	D3D12DescriptorRingBuffer* mDescriptorBuffer = nullptr;
-	
-	ComPtr<ID3D12CommandQueue> mCommandQueue;
-	
-	ComPtr<ID3D12Fence> mCommandQueueFence;
-	uint64_t mCommandQueueFenceValue = 0;
-	HANDLE mCommandQueueFenceEvent = nullptr;
-
-	uint32_t mMaxNumBuffersPerCommandList = 0;
-	sfz::Array<ZgCommandList> mCommandListStorage;
-	sfz::RingBuffer<ZgCommandList*> mCommandListQueue;
 };
 
 // Fence (continued

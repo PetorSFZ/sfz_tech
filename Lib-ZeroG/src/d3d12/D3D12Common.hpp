@@ -180,7 +180,7 @@ struct CheckD3D12Impl final {
 	}
 };
 
-inline void setDebugName(ComPtr<ID3D12Resource>& resource, const char* name) noexcept
+inline void setDebugName(ID3D12Resource* resource, const char* name) noexcept
 {
 	// Small hack to fix D3D12 bug with debug name shorter than 4 chars
 	char tmpBuffer[256] = {};

@@ -187,6 +187,8 @@ if (MSVC)
 		${SRC_DIR}/d3d12/D3D12Pipelines.hpp
 		${SRC_DIR}/d3d12/D3D12Pipelines.cpp
 		${SRC_DIR}/d3d12/D3D12Profiler.hpp
+		${SRC_DIR}/d3d12/D3D12ResourceTracking.hpp
+		${SRC_DIR}/d3d12/D3D12ResourceTrackingState.hpp
 		${SRC_DIR}/d3d12/ZeroG-D3D12.cpp
 	)
 	source_group(TREE ${SRC_DIR} FILES ${ZEROG_D3D12_SRC_FILES})

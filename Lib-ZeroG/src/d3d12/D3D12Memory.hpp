@@ -22,119 +22,69 @@
 
 #include <D3D12MemAlloc.h>
 
+#include <skipifzero.hpp>
+
 #include "ZeroG.h"
 #include "common/ErrorReporting.hpp"
 #include "d3d12/D3D12Common.hpp"
+#include "d3d12/D3D12ResourceTrackingState.hpp"
 
+// General D3D12 Resource
+// ------------------------------------------------------------------------------------------------
 
-// D3D12 Buffer
+struct ZgResource final {
+	SFZ_DECLARE_DROP_TYPE(ZgResource);
+	
+	void destroy() {
+		if (allocation == nullptr) return;
+		
+		allocation->Release();
+		resource->Release();
+		
+		allocation = nullptr;
+		resource = nullptr;
+	}
+	
+	D3D12MA::Allocation* allocation = nullptr;
+	ID3D12Resource* resource = nullptr;
+};
+
+// Buffer
 // ------------------------------------------------------------------------------------------------
 
 struct ZgBuffer final {
-public:
-
-	// Constructors & destructors
-	// --------------------------------------------------------------------------------------------
-
-	ZgBuffer() = default;
-	ZgBuffer(const ZgBuffer&) = delete;
-	ZgBuffer& operator= (const ZgBuffer&) = delete;
-	ZgBuffer(ZgBuffer&&) = delete;
-	ZgBuffer& operator= (ZgBuffer&&) = delete;
-	~ZgBuffer() noexcept
-	{
-		if (allocation != nullptr) {
-			allocation->Release();
-			allocation = nullptr;
-		}
-	}
-
-	// Virtual methods
-	// --------------------------------------------------------------------------------------------
-
-	ZgResult memcpyUpload(
-		uint64_t dstBufferOffsetBytes,
-		const void* srcMemory,
-		uint64_t numBytes) noexcept
-	{
-		ZgBuffer& dstBuffer = *this;
-		if (dstBuffer.memoryType != ZG_MEMORY_TYPE_UPLOAD) return ZG_ERROR_INVALID_ARGUMENT;
-
-		// Not gonna read from buffer
-		D3D12_RANGE readRange = {};
-		readRange.Begin = 0;
-		readRange.End = 0;
-
-		// Map buffer
-		void* mappedPtr = nullptr;
-		if (D3D12_FAIL(dstBuffer.resource->Map(0, &readRange, &mappedPtr))) {
-			return ZG_ERROR_GENERIC;
-		}
-
-		// Memcpy to buffer
-		memcpy(reinterpret_cast<uint8_t*>(mappedPtr) + dstBufferOffsetBytes, srcMemory, numBytes);
-
-		// The range we memcpy'd to
-		D3D12_RANGE writeRange = {};
-		writeRange.Begin = dstBufferOffsetBytes;
-		writeRange.End = writeRange.Begin + numBytes;
-
-		// Unmap buffer
-		dstBuffer.resource->Unmap(0, &writeRange);
-
-		return ZG_SUCCESS;
-	}
-
-	ZgResult memcpyDownload(
-		uint64_t srcBufferOffsetBytes,
-		void* dstMemory,
-		uint64_t numBytes) noexcept
-	{
-		ZgBuffer& srcBuffer = *this;
-		if (srcBuffer.memoryType != ZG_MEMORY_TYPE_DOWNLOAD) return ZG_ERROR_INVALID_ARGUMENT;
-
-		// Specify range which we are going to read from in buffer
-		D3D12_RANGE readRange = {};
-		readRange.Begin = srcBufferOffsetBytes;
-		readRange.End = srcBufferOffsetBytes + numBytes;
-
-		// Map buffer
-		void* mappedPtr = nullptr;
-		if (D3D12_FAIL(srcBuffer.resource->Map(0, &readRange, &mappedPtr))) {
-			return ZG_ERROR_GENERIC;
-		}
-
-		// Memcpy to buffer
-		memcpy(dstMemory, reinterpret_cast<const uint8_t*>(mappedPtr) + srcBufferOffsetBytes, numBytes);
-
-		// The didn't write anything
-		D3D12_RANGE writeRange = {};
-		writeRange.Begin = 0;
-		writeRange.End = 0;
-
-		// Unmap buffer
-		srcBuffer.resource->Unmap(0, &writeRange);
-
-		return ZG_SUCCESS;
-	}
-
-	// Members
-	// --------------------------------------------------------------------------------------------
+	ZgResource resource;
+	ZgTrackerResourceState tracking;
 
 	ZgMemoryType memoryType = ZG_MEMORY_TYPE_DEVICE;
-	D3D12MA::Allocation* allocation = nullptr;
 
 	// A unique identifier for this buffer
 	uint64_t identifier = 0;
+};
 
-	uint64_t sizeBytes = 0;
-	ComPtr<ID3D12Resource> resource;
+// Texture
+// ------------------------------------------------------------------------------------------------
 
-	// The current resource state of the buffer. Committed because the state has been committed
-	// in a command list which has been executed on a queue. There may be pending state changes
-	// in command lists not yet executed.
-	// TODO: Mutex protecting this? How handle changes submitted on different queues simulatenously?
-	D3D12_RESOURCE_STATES lastCommittedState = D3D12_RESOURCE_STATE_COMMON;
+struct ZgTexture final {
+	ZgResource resource;
+	sfz::ArrayLocal<ZgTrackerResourceState, ZG_MAX_NUM_MIPMAPS> mipTrackings;
+
+	// A unique identifier for this texture
+	uint64_t identifier = 0;
+
+	ZgTextureFormat zgFormat = ZG_TEXTURE_FORMAT_UNDEFINED;
+	ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT;
+	ZgOptimalClearValue optimalClearValue = ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED;
+	DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
+	uint32_t width = 0;
+	uint32_t height = 0;
+	uint32_t numMipmaps = 0;
+
+	// Information from ID3D12Device::GetCopyableFootprints()
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT subresourceFootprints[ZG_MAX_NUM_MIPMAPS] = {};
+	uint32_t numRows[ZG_MAX_NUM_MIPMAPS] = {};
+	uint64_t rowSizesInBytes[ZG_MAX_NUM_MIPMAPS] = {};
+	uint64_t totalSizeInBytes = 0;
 };
 
 // Buffer functions
@@ -188,7 +138,7 @@ inline ZgResult createBuffer(
 	allocationDesc.ExtraHeapFlags = D3D12_HEAP_FLAG_NONE; // Can be ignored
 	allocationDesc.CustomPool = nullptr;
 
-	ComPtr<ID3D12Resource> resource;
+	ID3D12Resource* resource = nullptr;
 	D3D12MA::Allocation* allocation = nullptr;
 	HRESULT res = d3d12Allocator->CreateResource(
 		&allocationDesc,
@@ -210,77 +160,82 @@ inline ZgResult createBuffer(
 	ZgBuffer* buffer = getAllocator()->newObject<ZgBuffer>(sfz_dbg("ZgBuffer"));
 
 	// Copy stuff
+	buffer->resource.resource = resource;
+	buffer->resource.allocation = allocation;
+	buffer->tracking.lastCommittedState = initialResourceState;
 	buffer->memoryType = createInfo.memoryType;
-	buffer->allocation = allocation;
 	buffer->identifier = std::atomic_fetch_add(resourceUniqueIdentifierCounter, 1);
-	buffer->sizeBytes = sfz::roundUpAligned(createInfo.sizeInBytes, 256);
-	buffer->resource = resource;
-	buffer->lastCommittedState = initialResourceState;
 
 	// Return buffer
 	bufferOut = buffer;
 	return ZG_SUCCESS;
 }
 
-// ZgTexture
-// ------------------------------------------------------------------------------------------------
+inline ZgResult bufferMemcpyUpload(
+	ZgBuffer& dstBuffer,
+	uint64_t dstBufferOffsetBytes,
+	const void* srcMemory,
+	uint64_t numBytes) noexcept
+{
+	if (dstBuffer.memoryType != ZG_MEMORY_TYPE_UPLOAD) return ZG_ERROR_INVALID_ARGUMENT;
 
-struct ZgTexture final {
-public:
-	// Constructors & destructors
-	// --------------------------------------------------------------------------------------------
+	// Not gonna read from buffer
+	D3D12_RANGE readRange = {};
+	readRange.Begin = 0;
+	readRange.End = 0;
 
-	ZgTexture() = default;
-	ZgTexture(const ZgTexture&) = delete;
-	ZgTexture& operator= (const ZgTexture&) = delete;
-	ZgTexture(ZgTexture&&) = delete;
-	ZgTexture& operator= (ZgTexture&&) = delete;
-	~ZgTexture() noexcept
-	{
-		if (allocation != nullptr) {
-			allocation->Release();
-			allocation = nullptr;
-		}
+	// Map buffer
+	void* mappedPtr = nullptr;
+	if (D3D12_FAIL(dstBuffer.resource.resource->Map(0, &readRange, &mappedPtr))) {
+		return ZG_ERROR_GENERIC;
 	}
 
-	// Members
-	// --------------------------------------------------------------------------------------------
+	// Memcpy to buffer
+	memcpy(reinterpret_cast<uint8_t*>(mappedPtr) + dstBufferOffsetBytes, srcMemory, numBytes);
 
-	D3D12MA::Allocation* allocation = nullptr;
-	ComPtr<ID3D12Resource> resource;
+	// The range we memcpy'd to
+	D3D12_RANGE writeRange = {};
+	writeRange.Begin = dstBufferOffsetBytes;
+	writeRange.End = writeRange.Begin + numBytes;
 
-	// A unique identifier for this texture
-	uint64_t identifier = 0;
+	// Unmap buffer
+	dstBuffer.resource.resource->Unmap(0, &writeRange);
 
-	ZgTextureFormat zgFormat = ZG_TEXTURE_FORMAT_UNDEFINED;
-	ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT;
-	ZgOptimalClearValue optimalClearValue = ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED;
-	DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
-	uint32_t width = 0;
-	uint32_t height = 0;
-	uint32_t numMipmaps = 0;
+	return ZG_SUCCESS;
+}
 
-	// Information from ID3D12Device::GetCopyableFootprints()
-	D3D12_PLACED_SUBRESOURCE_FOOTPRINT subresourceFootprints[ZG_MAX_NUM_MIPMAPS] = {};
-	uint32_t numRows[ZG_MAX_NUM_MIPMAPS] = {};
-	uint64_t rowSizesInBytes[ZG_MAX_NUM_MIPMAPS] = {};
-	uint64_t totalSizeInBytes = 0;
+inline ZgResult bufferMemcpyDownload(
+	ZgBuffer& srcBuffer,
+	uint64_t srcBufferOffsetBytes,
+	void* dstMemory,
+	uint64_t numBytes) noexcept
+{
+	if (srcBuffer.memoryType != ZG_MEMORY_TYPE_DOWNLOAD) return ZG_ERROR_INVALID_ARGUMENT;
 
-	// The current resource state of the texture. Committed because the state has been committed
-	// in a command list which has been executed on a queue. There may be pending state changes
-	// in command lists not yet executed.
-	// TODO: Mutex protecting this? How handle changes submitted on different queues simulatenously?
-	D3D12_RESOURCE_STATES lastCommittedStates[ZG_MAX_NUM_MIPMAPS] = {};
+	// Specify range which we are going to read from in buffer
+	D3D12_RANGE readRange = {};
+	readRange.Begin = srcBufferOffsetBytes;
+	readRange.End = srcBufferOffsetBytes + numBytes;
 
-	// Methods
-	// --------------------------------------------------------------------------------------------
-
-	ZgResult setDebugName(const char* name) noexcept
-	{
-		::setDebugName(this->resource, name);
-		return ZG_SUCCESS;
+	// Map buffer
+	void* mappedPtr = nullptr;
+	if (D3D12_FAIL(srcBuffer.resource.resource->Map(0, &readRange, &mappedPtr))) {
+		return ZG_ERROR_GENERIC;
 	}
-};
+
+	// Memcpy to buffer
+	memcpy(dstMemory, reinterpret_cast<const uint8_t*>(mappedPtr) + srcBufferOffsetBytes, numBytes);
+
+	// The didn't write anything
+	D3D12_RANGE writeRange = {};
+	writeRange.Begin = 0;
+	writeRange.End = 0;
+
+	// Unmap buffer
+	srcBuffer.resource.resource->Unmap(0, &writeRange);
+
+	return ZG_SUCCESS;
+}
 
 // Texture functions
 // ------------------------------------------------------------------------------------------------
@@ -328,7 +283,7 @@ inline ZgResult createTexture(
 	allocationDesc.ExtraHeapFlags = D3D12_HEAP_FLAG_NONE; // Can be ignored
 	allocationDesc.CustomPool = nullptr;
 
-	ComPtr<ID3D12Resource> resource;
+	ID3D12Resource* resource = nullptr;
 	D3D12MA::Allocation* allocation = nullptr;
 	HRESULT res = d3d12Allocator->CreateResource(
 		&allocationDesc,
@@ -360,8 +315,12 @@ inline ZgResult createTexture(
 	ZgTexture* texture = getAllocator()->newObject<ZgTexture>(sfz_dbg("ZgTexture"));
 
 	// Copy stuff
-	texture->allocation = allocation;
-	texture->resource = resource;
+	texture->resource.allocation = allocation;
+	texture->resource.resource = resource;
+
+	for (uint32_t i = 0; i < createInfo.numMipmaps; i++) {
+		texture->mipTrackings.add().lastCommittedState = D3D12_RESOURCE_STATE_COMMON;
+	}
 	
 	texture->identifier = std::atomic_fetch_add(resourceUniqueIdentifierCounter, 1);
 
@@ -379,10 +338,6 @@ inline ZgResult createTexture(
 		texture->rowSizesInBytes[i] = rowSizesInBytes[i];
 	}
 	texture->totalSizeInBytes = totalSizeInBytes;
-
-	for (uint32_t i = 0; i < createInfo.numMipmaps; i++) {
-		texture->lastCommittedStates[i] = D3D12_RESOURCE_STATE_COMMON;
-	}
 
 	// Return texture
 	textureOut = texture;

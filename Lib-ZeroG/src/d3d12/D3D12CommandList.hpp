@@ -29,6 +29,7 @@
 #include "d3d12/D3D12Memory.hpp"
 #include "d3d12/D3D12Pipelines.hpp"
 #include "d3d12/D3D12Profiler.hpp"
+#include "d3d12/D3D12ResourceTracking.hpp"
 
 // Helpers
 // ------------------------------------------------------------------------------------------------
@@ -52,87 +53,20 @@ inline uint32_t numBytesPerPixelForFormat(ZgTextureFormat format) noexcept
 	return 0;
 }
 
-
-// PendingState struct
-// ------------------------------------------------------------------------------------------------
-
-// Struct representing the pending state for a buffer in a command list
-struct PendingBufferState final {
-
-	// The associated D3D12Buffer
-	ZgBuffer* buffer = nullptr;
-
-	// The state the resource need to be in before the command list is executed
-	D3D12_RESOURCE_STATES neededInitialState = D3D12_RESOURCE_STATE_COMMON;
-
-	// The state the resource is in after the command list is executed
-	D3D12_RESOURCE_STATES currentState = D3D12_RESOURCE_STATE_COMMON;
-};
-
-struct PendingTextureState final {
-
-	// The associated D3D12Texture
-	ZgTexture* texture = nullptr;
-
-	// The mip level of the associated texture
-	uint32_t mipLevel = ~0u;
-
-	// The state the resource need to be in before the command list is executed
-	D3D12_RESOURCE_STATES neededInitialState = D3D12_RESOURCE_STATE_COMMON;
-
-	// The state the resource is in after the command list is executed
-	D3D12_RESOURCE_STATES currentState = D3D12_RESOURCE_STATE_COMMON;
-};
-
 // ZgCommandList
 // ------------------------------------------------------------------------------------------------
 
 struct ZgCommandList final {
-public:
-	// Constructors & destructors
-	// --------------------------------------------------------------------------------------------
-
-	ZgCommandList() = default;
-	ZgCommandList(const ZgCommandList&) = delete;
-	ZgCommandList& operator= (const ZgCommandList&) = delete;
-	ZgCommandList(ZgCommandList&& other) noexcept { swap(other); }
-	ZgCommandList& operator= (ZgCommandList&& other) noexcept { swap(other); return *this; }
-	~ZgCommandList() noexcept { this->destroy(); }
-
-	// State methods
-	// --------------------------------------------------------------------------------------------
+	SFZ_DECLARE_DROP_TYPE(ZgCommandList);
 
 	void create(
-		uint32_t maxNumBuffers,
 		ComPtr<ID3D12Device3> device,
 		D3D12DescriptorRingBuffer* descriptorBuffer) noexcept
 	{
-		mDevice = device;
+		mDevice = device.Get();
 		mDescriptorBuffer = descriptorBuffer;
-		pendingBufferIdentifiers.init(maxNumBuffers, getAllocator(), sfz_dbg("ZeroG - D3D12CommandList - Internal"));
-		pendingBufferStates.init(maxNumBuffers, getAllocator(), sfz_dbg("ZeroG - D3D12CommandList - Internal"));
-		pendingTextureIdentifiers.init(maxNumBuffers, getAllocator(), sfz_dbg("ZeroG - D3D12CommandList - Internal"));
-		pendingTextureStates.init(maxNumBuffers, getAllocator(), sfz_dbg("ZeroG - D3D12CommandList - Internal"));
-	}
 
-	void swap(ZgCommandList& other) noexcept
-	{
-		std::swap(this->commandAllocator, other.commandAllocator);
-		std::swap(this->commandList, other.commandList);
-		std::swap(this->fenceValue, other.fenceValue);
-
-		this->pendingBufferIdentifiers.swap(other.pendingBufferIdentifiers);
-		this->pendingBufferStates.swap(other.pendingBufferStates);
-		this->pendingTextureIdentifiers.swap(other.pendingTextureIdentifiers);
-		this->pendingTextureStates.swap(other.pendingTextureStates);
-
-		std::swap(this->mDevice, other.mDevice);
-		std::swap(this->mDescriptorBuffer, other.mDescriptorBuffer);
-		std::swap(this->mPipelineSet, other.mPipelineSet);
-		std::swap(this->mBoundPipelineRender, other.mBoundPipelineRender);
-		std::swap(this->mBoundPipelineCompute, other.mBoundPipelineCompute);
-		std::swap(this->mFramebufferSet, other.mFramebufferSet);
-		std::swap(this->mFramebuffer, other.mFramebuffer);
+		tracking.init(getAllocator());
 	}
 
 	void destroy() noexcept
@@ -141,10 +75,7 @@ public:
 		commandList = nullptr;
 		fenceValue = 0;
 
-		pendingBufferIdentifiers.destroy();
-		pendingBufferStates.destroy();
-		pendingTextureIdentifiers.destroy();
-		pendingTextureStates.destroy();
+		tracking.destroy();
 
 		mDevice = nullptr;
 		mDescriptorBuffer = nullptr;
@@ -154,6 +85,47 @@ public:
 		mFramebufferSet = false;
 		mFramebuffer = nullptr;
 	}
+
+	ZgResult reset() noexcept
+	{
+		if (D3D12_FAIL(commandAllocator->Reset())) {
+			return ZG_ERROR_GENERIC;
+		}
+		if (D3D12_FAIL(commandList->Reset(commandAllocator.Get(), nullptr))) {
+			return ZG_ERROR_GENERIC;
+		}
+
+		tracking.pendingBufferIdentifiers.clear();
+		tracking.pendingBufferStates.clear();
+
+		tracking.pendingTextureIdentifiers.clear();
+		tracking.pendingTextureStates.clear();
+
+		mPipelineSet = false;
+		mBoundPipelineCompute = nullptr;
+		mBoundPipelineRender = nullptr;
+		mFramebufferSet = false;
+		mFramebuffer = nullptr;
+		return ZG_SUCCESS;
+	}
+
+	// Members
+	// --------------------------------------------------------------------------------------------
+
+	D3D12_COMMAND_LIST_TYPE commandListType;
+	ComPtr<ID3D12CommandAllocator> commandAllocator;
+	ComPtr<ID3D12GraphicsCommandList> commandList;
+	uint64_t fenceValue = 0;
+
+	ZgTrackerCommandListState tracking;
+
+	ID3D12Device3* mDevice = nullptr;
+	D3D12DescriptorRingBuffer* mDescriptorBuffer = nullptr;
+	bool mPipelineSet = false; // Only allow a single pipeline per command list
+	ZgPipelineRender* mBoundPipelineRender = nullptr;
+	ZgPipelineCompute* mBoundPipelineCompute = nullptr;
+	bool mFramebufferSet = false; // Only allow a single framebuffer to be set.
+	ZgFramebuffer* mFramebuffer = nullptr;
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
@@ -227,32 +199,15 @@ public:
 		}
 
 		// Set buffer resource states
-		ZgResult res = setBufferState(*dstBuffer, dstTargetState);
-		if (res != ZG_SUCCESS) return res;
-		res = setBufferState(*srcBuffer, srcTargetState);
-		if (res != ZG_SUCCESS) return res;
+		requireResourceStateBuffer(*this->commandList.Get(), this->tracking, dstBuffer, dstTargetState);
+		requireResourceStateBuffer(*this->commandList.Get(), this->tracking, srcBuffer, srcTargetState);
 
-		// Check if we should copy entire buffer or just a region of it
-		bool copyEntireBuffer =
-			dstBuffer->sizeBytes == srcBuffer->sizeBytes &&
-			dstBuffer->sizeBytes == numBytes &&
-			dstBufferOffsetBytes == 0 &&
-			srcBufferOffsetBytes == 0;
-
-		// Copy entire buffer
-		if (copyEntireBuffer) {
-			commandList->CopyResource(dstBuffer->resource.Get(), srcBuffer->resource.Get());
-		}
-
-		// Copy region of buffer
-		else {
-			commandList->CopyBufferRegion(
-				dstBuffer->resource.Get(),
-				dstBufferOffsetBytes,
-				srcBuffer->resource.Get(),
-				srcBufferOffsetBytes,
-				numBytes);
-		}
+		commandList->CopyBufferRegion(
+			dstBuffer->resource.resource,
+			dstBufferOffsetBytes,
+			srcBuffer->resource.resource,
+			srcBufferOffsetBytes,
+			numBytes);
 
 		return ZG_SUCCESS;
 	}
@@ -291,10 +246,10 @@ public:
 		uint32_t tmpBufferPitch = ((numBytesPerRow + D3D12_TEXTURE_DATA_PITCH_ALIGNMENT - 1) /
 			D3D12_TEXTURE_DATA_PITCH_ALIGNMENT) * D3D12_TEXTURE_DATA_PITCH_ALIGNMENT;
 		uint32_t tmpBufferRequiredSize = tmpBufferPitch * srcImageCpu.height;
-		if (tmpBuffer.sizeBytes < tmpBufferRequiredSize) {
+		if (tmpBuffer.resource.allocation->GetSize() < tmpBufferRequiredSize) {
 			ZG_ERROR("Temporary buffer is too small, it is %u bytes, but %u bytes is required."
 				" The pitch of the upload buffer is required to be %u byte aligned.",
-				tmpBuffer.sizeBytes,
+				uint32_t(tmpBuffer.resource.allocation->GetSize()),
 				tmpBufferRequiredSize,
 				D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
 			return ZG_ERROR_INVALID_ARGUMENT;
@@ -307,7 +262,7 @@ public:
 
 		// Map buffer
 		void* mappedPtr = nullptr;
-		if (D3D12_FAIL(tmpBuffer.resource->Map(0, &readRange, &mappedPtr))) {
+		if (D3D12_FAIL(tmpBuffer.resource.resource->Map(0, &readRange, &mappedPtr))) {
 			return ZG_ERROR_GENERIC;
 		}
 
@@ -319,15 +274,15 @@ public:
 		}
 
 		// Unmap buffer
-		tmpBuffer.resource->Unmap(0, nullptr);
+		tmpBuffer.resource.resource->Unmap(0, nullptr);
 
 		// Set texture resource state
-		ZgResult stateRes = setTextureState(dstTexture, dstTextureMipLevel, D3D12_RESOURCE_STATE_COPY_DEST);
-		if (stateRes != ZG_SUCCESS) return stateRes;
+		requireResourceStateTextureMip(
+			*this->commandList.Get(), this->tracking, &dstTexture, dstTextureMipLevel, D3D12_RESOURCE_STATE_COPY_DEST);
 
 		// Issue copy command
 		D3D12_TEXTURE_COPY_LOCATION tmpCopyLoc = {};
-		tmpCopyLoc.pResource = tmpBuffer.resource.Get();
+		tmpCopyLoc.pResource = tmpBuffer.resource.resource;
 		tmpCopyLoc.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
 		tmpCopyLoc.PlacedFootprint = dstTexture.subresourceFootprints[dstTextureMipLevel];
 
@@ -339,7 +294,7 @@ public:
 		tmpCopyLoc.PlacedFootprint.Offset = 0;
 
 		D3D12_TEXTURE_COPY_LOCATION dstCopyLoc = {};
-		dstCopyLoc.pResource = dstTexture.resource.Get();
+		dstCopyLoc.pResource = dstTexture.resource.resource;
 		dstCopyLoc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
 		dstCopyLoc.SubresourceIndex = dstTextureMipLevel;
 
@@ -358,8 +313,7 @@ public:
 		}
 
 		// Set buffer resource state
-		ZgResult res = setBufferState(*buffer, D3D12_RESOURCE_STATE_COMMON);
-		if (res != ZG_SUCCESS) return res;
+		requireResourceStateBuffer(*this->commandList.Get(), this->tracking, buffer, D3D12_RESOURCE_STATE_COMMON);
 
 		return ZG_SUCCESS;
 	}
@@ -367,9 +321,8 @@ public:
 	ZgResult enableQueueTransitionTexture(ZgTexture* texture) noexcept
 	{
 		// Set buffer resource state
-		ZgResult res = setTextureStateAllMipLevels(*texture, D3D12_RESOURCE_STATE_COMMON);
-		if (res != ZG_SUCCESS) return res;
-
+		requireResourceStateTextureAllMips(
+			*this->commandList.Get(), this->tracking, texture, D3D12_RESOURCE_STATE_COMMON);
 		return ZG_SUCCESS;
 	}
 
@@ -489,21 +442,22 @@ public:
 			uint32_t bufferSize256Aligned = (mapping.sizeInBytes + 255) & 0xFFFFFF00u;
 
 			// Check that buffer is large enough
-			if (buffer->sizeBytes < bufferSize256Aligned) {
+			if (buffer->resource.allocation->GetSize() < bufferSize256Aligned) {
 				ZG_ERROR("Constant buffer at shader register %u requires a buffer that is at"
 					" least %u bytes, specified buffer is %u bytes.",
-					mapping.bufferRegister, bufferSize256Aligned, buffer->sizeBytes);
+					mapping.bufferRegister, bufferSize256Aligned, uint32_t(buffer->resource.allocation->GetSize()));
 				return ZG_ERROR_INVALID_ARGUMENT;
 			}
 
 			// Create constant buffer view
 			D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-			cbvDesc.BufferLocation = buffer->resource->GetGPUVirtualAddress();
+			cbvDesc.BufferLocation = buffer->resource.resource->GetGPUVirtualAddress();
 			cbvDesc.SizeInBytes = bufferSize256Aligned;
 			mDevice->CreateConstantBufferView(&cbvDesc, cpuDescriptor);
 
 			// Set buffer resource state
-			setBufferState(*buffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+			requireResourceStateBuffer(
+				*this->commandList.Get(), this->tracking, buffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 		}
 
 		// Create unordered resource views and fill (CPU) descriptors for unordered buffers
@@ -544,10 +498,11 @@ public:
 			uavDesc.Buffer.StructureByteStride = binding.elementStrideBytes;
 			uavDesc.Buffer.CounterOffsetInBytes = 0; // We don't have a counter
 			uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE; // TODO: This need to be set if RWByteAddressBuffer
-			mDevice->CreateUnorderedAccessView(buffer->resource.Get(), nullptr, &uavDesc, cpuDescriptor);
+			mDevice->CreateUnorderedAccessView(buffer->resource.resource, nullptr, &uavDesc, cpuDescriptor);
 
 			// Set buffer resource state
-			setBufferState(*buffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+			requireResourceStateBuffer(
+				*this->commandList.Get(), this->tracking, buffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		}
 
 		// Create unordered access views and fill (CPU) descriptors for unordered textures
@@ -585,10 +540,11 @@ public:
 			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
 			uavDesc.Texture2D.MipSlice = binding.mipLevel;
 			uavDesc.Texture2D.PlaneSlice = 0;
-			mDevice->CreateUnorderedAccessView(texture->resource.Get(), nullptr, &uavDesc, cpuDescriptor);
+			mDevice->CreateUnorderedAccessView(texture->resource.resource, nullptr, &uavDesc, cpuDescriptor);
 
 			// Set texture resource state
-			setTextureState(*texture, binding.mipLevel, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+			requireResourceStateTextureMip(
+				*this->commandList.Get(), this->tracking, texture, binding.mipLevel, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		}
 
 		// Create shader resource views and fill (CPU) descriptors
@@ -616,7 +572,7 @@ public:
 			DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM;
 			if (bindingIdx != ~0u) {
 				texture = bindings.textures[bindingIdx].texture;
-				resource = texture->resource.Get();
+				resource = texture->resource.resource;
 				format = texture->format;
 			}
 
@@ -641,8 +597,8 @@ public:
 			if (bindingIdx != ~0u) {
 
 				// Set texture resource state
-				setTextureStateAllMipLevels(
-					*texture,
+				requireResourceStateTextureAllMips(
+					*this->commandList.Get(), this->tracking, texture,
 					D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 			}
 		}
@@ -686,7 +642,7 @@ public:
 		D3D12_RESOURCE_BARRIER barrier = {};
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
 		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.UAV.pResource = buffer->resource.Get();
+		barrier.UAV.pResource = buffer->resource.resource;
 		commandList->ResourceBarrier(1, &barrier);
 		return ZG_SUCCESS;
 	}
@@ -697,7 +653,7 @@ public:
 		D3D12_RESOURCE_BARRIER barrier = {};
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
 		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.UAV.pResource = texture->resource.Get();
+		barrier.UAV.pResource = texture->resource.resource;
 		commandList->ResourceBarrier(1, &barrier);
 		return ZG_SUCCESS;
 	}
@@ -813,7 +769,8 @@ public:
 
 				// Set resource state
 				sfz_assert(renderTarget->numMipmaps == 1);
-				setTextureState(*renderTarget, 0, D3D12_RESOURCE_STATE_RENDER_TARGET);
+				requireResourceStateTextureMip(
+					*this->commandList.Get(), this->tracking, renderTarget, 0, D3D12_RESOURCE_STATE_RENDER_TARGET);
 			}
 
 			// Depth buffer
@@ -822,7 +779,8 @@ public:
 
 				// Set resource state
 				sfz_assert(depthBuffer->numMipmaps == 1);
-				setTextureState(*depthBuffer, 0, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+				requireResourceStateTextureMip(
+					*this->commandList.Get(), this->tracking, depthBuffer, 0, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 			}
 		}
 
@@ -993,23 +951,23 @@ public:
 		ZgIndexBufferType type) noexcept
 	{
 		// Set buffer resource state
-		ZgResult res;
 		if (indexBuffer->memoryType == ZG_MEMORY_TYPE_DEVICE) {
-			res = setBufferState(*indexBuffer, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+			requireResourceStateBuffer(
+				*this->commandList.Get(), this->tracking, indexBuffer, D3D12_RESOURCE_STATE_INDEX_BUFFER);
 		}
 		else if (indexBuffer->memoryType == ZG_MEMORY_TYPE_UPLOAD) {
-			res = setBufferState(*indexBuffer, D3D12_RESOURCE_STATE_GENERIC_READ);
+			requireResourceStateBuffer(
+				*this->commandList.Get(), this->tracking, indexBuffer, D3D12_RESOURCE_STATE_GENERIC_READ);
 		}
 		else {
 			return ZG_ERROR_INVALID_ARGUMENT;
 		}
-		if (res != ZG_SUCCESS) return res;
 
 		// Create index buffer view
 		D3D12_INDEX_BUFFER_VIEW indexBufferView = {};
-		indexBufferView.BufferLocation = indexBuffer->resource->GetGPUVirtualAddress();
-		sfz_assert(indexBuffer->sizeBytes <= uint64_t(UINT32_MAX));
-		indexBufferView.SizeInBytes = uint32_t(indexBuffer->sizeBytes);
+		indexBufferView.BufferLocation = indexBuffer->resource.resource->GetGPUVirtualAddress();
+		sfz_assert(indexBuffer->resource.allocation->GetSize() <= uint64_t(UINT32_MAX));
+		indexBufferView.SizeInBytes = uint32_t(indexBuffer->resource.allocation->GetSize());
 		indexBufferView.Format = type == ZG_INDEX_BUFFER_TYPE_UINT32 ?
 			DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
 
@@ -1033,23 +991,23 @@ public:
 		}
 
 		// Set buffer resource state
-		ZgResult res;
 		if (vertexBuffer->memoryType == ZG_MEMORY_TYPE_DEVICE) {
-			res = setBufferState(*vertexBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+			requireResourceStateBuffer(
+				*this->commandList.Get(), this->tracking, vertexBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 		}
 		else if (vertexBuffer->memoryType == ZG_MEMORY_TYPE_UPLOAD) {
-			res = setBufferState(*vertexBuffer, D3D12_RESOURCE_STATE_GENERIC_READ);
+			requireResourceStateBuffer(
+				*this->commandList.Get(), this->tracking, vertexBuffer, D3D12_RESOURCE_STATE_GENERIC_READ);
 		}
 		else {
 			return ZG_ERROR_INVALID_ARGUMENT;
 		}
-		if (res != ZG_SUCCESS) return res;
 
 		// Create vertex buffer view
 		D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
-		vertexBufferView.BufferLocation = vertexBuffer->resource->GetGPUVirtualAddress();
+		vertexBufferView.BufferLocation = vertexBuffer->resource.resource->GetGPUVirtualAddress();
 		vertexBufferView.StrideInBytes = pipelineInfo.vertexBufferStridesBytes[vertexBufferSlot];
-		vertexBufferView.SizeInBytes = uint32_t(vertexBuffer->sizeBytes);
+		vertexBufferView.SizeInBytes = uint32_t(vertexBuffer->resource.allocation->GetSize());
 
 		// Set vertex buffer
 		commandList->IASetVertexBuffers(vertexBufferSlot, 1, &vertexBufferView);
@@ -1135,7 +1093,7 @@ public:
 			D3D12_QUERY_TYPE_TIMESTAMP,
 			timestampBaseIdx,
 			2,
-			state.downloadBuffer->resource.Get(),
+			state.downloadBuffer->resource.resource,
 			bufferOffset);
 
 		// Store ticks per second
@@ -1143,225 +1101,4 @@ public:
 
 		return ZG_SUCCESS;
 	}
-
-	// Helper methods
-	// --------------------------------------------------------------------------------------------
-
-	ZgResult reset() noexcept
-	{
-		if (D3D12_FAIL(commandAllocator->Reset())) {
-			return ZG_ERROR_GENERIC;
-		}
-		if (D3D12_FAIL(commandList->Reset(commandAllocator.Get(), nullptr))) {
-			return ZG_ERROR_GENERIC;
-		}
-
-		pendingBufferIdentifiers.clear();
-		pendingBufferStates.clear();
-
-		pendingTextureIdentifiers.clear();
-		pendingTextureStates.clear();
-
-		mPipelineSet = false;
-		mBoundPipelineCompute = nullptr;
-		mBoundPipelineRender = nullptr;
-		mFramebufferSet = false;
-		mFramebuffer = nullptr;
-		return ZG_SUCCESS;
-	}
-
-	// Members
-	// --------------------------------------------------------------------------------------------
-
-	D3D12_COMMAND_LIST_TYPE commandListType;
-	ComPtr<ID3D12CommandAllocator> commandAllocator;
-	ComPtr<ID3D12GraphicsCommandList> commandList;
-	uint64_t fenceValue = 0;
-
-	sfz::Array<uint64_t> pendingBufferIdentifiers;
-	sfz::Array<PendingBufferState> pendingBufferStates;
-
-	struct TextureMipIdentifier {
-		uint64_t identifier = ~0u;
-		uint32_t mipLevel = ~0u;
-	};
-	sfz::Array<TextureMipIdentifier> pendingTextureIdentifiers;
-	sfz::Array<PendingTextureState> pendingTextureStates;
-
-private:
-	// Private methods
-	// --------------------------------------------------------------------------------------------
-
-	ZgResult getPendingBufferStates(
-		ZgBuffer& buffer,
-		D3D12_RESOURCE_STATES neededState,
-		PendingBufferState*& pendingStatesOut) noexcept
-	{
-		// Try to find index of pending buffer states
-		uint32_t bufferStateIdx = ~0u;
-		for (uint32_t i = 0; i < pendingBufferIdentifiers.size(); i++) {
-			uint64_t identifier = pendingBufferIdentifiers[i];
-			if (identifier == buffer.identifier) {
-				bufferStateIdx = i;
-				break;
-			}
-		}
-
-		// If buffer does not have a pending state, create one
-		if (bufferStateIdx == ~0u) {
-
-			// Check if we have enough space for another pending state
-			if (pendingBufferStates.size() == pendingBufferStates.capacity()) {
-				return ZG_ERROR_GENERIC;
-			}
-
-			// Create pending buffer state
-			bufferStateIdx = pendingBufferStates.size();
-			pendingBufferIdentifiers.add(buffer.identifier);
-			pendingBufferStates.add(PendingBufferState());
-
-			// Set initial pending buffer state
-			pendingBufferStates.last().buffer = &buffer;
-			pendingBufferStates.last().neededInitialState = neededState;
-			pendingBufferStates.last().currentState = neededState;
-		}
-
-		pendingStatesOut = &pendingBufferStates[bufferStateIdx];
-		return ZG_SUCCESS;
-	}
-	
-	ZgResult setBufferState(ZgBuffer& buffer, D3D12_RESOURCE_STATES targetState) noexcept
-	{
-		// Get pending states
-		PendingBufferState* pendingState = nullptr;
-		ZgResult pendingStateRes = getPendingBufferStates(
-			buffer, targetState, pendingState);
-		if (pendingStateRes != ZG_SUCCESS) return pendingStateRes;
-
-		// Change state of buffer if necessary
-		if (pendingState->currentState != targetState) {
-			CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-				buffer.resource.Get(),
-				pendingState->currentState,
-				targetState);
-			commandList->ResourceBarrier(1, &barrier);
-			pendingState->currentState = targetState;
-		}
-
-		return ZG_SUCCESS;
-	}
-
-	ZgResult getPendingTextureStates(
-		ZgTexture& texture,
-		uint32_t mipLevel,
-		D3D12_RESOURCE_STATES neededState,
-		PendingTextureState*& pendingStatesOut) noexcept
-	{
-		// Try to find index of pending buffer states
-		uint32_t textureStateIdx = ~0u;
-		for (uint32_t i = 0; i < pendingTextureIdentifiers.size(); i++) {
-			TextureMipIdentifier identifier = pendingTextureIdentifiers[i];
-			if (identifier.identifier == texture.identifier && identifier.mipLevel == mipLevel) {
-				textureStateIdx = i;
-				break;
-			}
-		}
-
-		// If texture does not have a pending state, create one
-		if (textureStateIdx == ~0u) {
-
-			// Check if we have enough space for another pending state
-			if (pendingTextureStates.size() == pendingTextureStates.capacity()) {
-				return ZG_ERROR_GENERIC;
-			}
-
-			// Create pending buffer state
-			textureStateIdx = pendingTextureStates.size();
-			TextureMipIdentifier identifier;
-			identifier.identifier = texture.identifier;
-			identifier.mipLevel = mipLevel;
-			pendingTextureIdentifiers.add(identifier);
-			pendingTextureStates.add(PendingTextureState());
-
-			// Set initial pending buffer state
-			pendingTextureStates.last().texture = &texture;
-			pendingTextureStates.last().mipLevel = mipLevel;
-			pendingTextureStates.last().neededInitialState = neededState;
-			pendingTextureStates.last().currentState = neededState;
-		}
-
-		pendingStatesOut = &pendingTextureStates[textureStateIdx];
-		return ZG_SUCCESS;
-	}
-
-	ZgResult setTextureState(
-		ZgTexture& texture,
-		uint32_t mipLevel,
-		D3D12_RESOURCE_STATES targetState) noexcept
-	{
-		// Get pending states
-		PendingTextureState* pendingState = nullptr;
-		ZgResult pendingStateRes = getPendingTextureStates(
-			texture, mipLevel, targetState, pendingState);
-		if (pendingStateRes != ZG_SUCCESS) return pendingStateRes;
-
-		// Change state of texture if necessary
-		if (pendingState->currentState != targetState) {
-			CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-				texture.resource.Get(),
-				pendingState->currentState,
-				targetState,
-				mipLevel);
-			commandList->ResourceBarrier(1, &barrier);
-			pendingState->currentState = targetState;
-		}
-
-		return ZG_SUCCESS;
-	}
-
-	ZgResult setTextureStateAllMipLevels(
-		ZgTexture& texture,
-		D3D12_RESOURCE_STATES targetState) noexcept
-	{
-		// Get pending states
-		PendingTextureState* pendingStates[ZG_MAX_NUM_MIPMAPS] = {};
-		for (uint32_t i = 0; i < texture.numMipmaps; i++) {
-			ZgResult pendingStateRes = getPendingTextureStates(
-				texture, i, targetState, pendingStates[i]);
-			if (pendingStateRes != ZG_SUCCESS) return pendingStateRes;
-		}
-
-		// Create all necessary barriers
-		CD3DX12_RESOURCE_BARRIER barriers[ZG_MAX_NUM_MIPMAPS] = {};
-		uint32_t numBarriers = 0;
-		for (uint32_t i = 0; i < texture.numMipmaps; i++) {
-			if (pendingStates[i]->currentState != targetState) {
-				barriers[numBarriers] = CD3DX12_RESOURCE_BARRIER::Transition(
-					texture.resource.Get(),
-					pendingStates[i]->currentState,
-					targetState,
-					i);
-				numBarriers += 1;
-				pendingStates[i]->currentState = targetState;
-			}
-		}
-
-		// Submit barriers
-		if (numBarriers != 0) {
-			commandList->ResourceBarrier(numBarriers, barriers);
-		}
-
-		return ZG_SUCCESS;
-	}
-
-	// Private members
-	// --------------------------------------------------------------------------------------------
-
-	ComPtr<ID3D12Device3> mDevice;
-	D3D12DescriptorRingBuffer* mDescriptorBuffer = nullptr;
-	bool mPipelineSet = false; // Only allow a single pipeline per command list
-	ZgPipelineRender* mBoundPipelineRender = nullptr;
-	ZgPipelineCompute* mBoundPipelineCompute = nullptr;
-	bool mFramebufferSet = false; // Only allow a single framebuffer to be set.
-	ZgFramebuffer* mFramebuffer = nullptr;
 };

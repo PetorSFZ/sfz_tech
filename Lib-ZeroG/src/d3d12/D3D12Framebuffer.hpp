@@ -167,7 +167,7 @@ inline ZgResult createFramebuffer(
 			descriptorsRTV[i] = descriptor;
 
 			// Create render target view for i:th render target
-			device.CreateRenderTargetView(texture->resource.Get(), &viewDesc, descriptor);
+			device.CreateRenderTargetView(texture->resource.resource, &viewDesc, descriptor);
 		}
 	}
 
@@ -200,7 +200,7 @@ inline ZgResult createFramebuffer(
 		dsvViewDesc.Flags = D3D12_DSV_FLAG_NONE;
 		dsvViewDesc.Texture2D.MipSlice = 0; // TODO: Mipmax index
 
-		device.CreateDepthStencilView(texture->resource.Get(), &dsvViewDesc, descriptorDSV);
+		device.CreateDepthStencilView(texture->resource.resource, &dsvViewDesc, descriptorDSV);
 	}
 
 	// Allocate framebuffer and copy members

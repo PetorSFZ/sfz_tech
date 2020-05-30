@@ -317,25 +317,17 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 	}
 
 	// Create command queue
-	const uint32_t MAX_NUM_COMMAND_LISTS_SWAPCHAIN_QUEUE = 256;
-	const uint32_t MAX_NUM_BUFFERS_PER_COMMAND_LIST_SWAPCHAIN_QUEUE = 1024;
 	ZgResult res = ctxState->commandQueuePresent.create(
 		D3D12_COMMAND_LIST_TYPE_DIRECT,
 		ctxState->device,
-		&ctxState->globalDescriptorRingBuffer,
-		MAX_NUM_COMMAND_LISTS_SWAPCHAIN_QUEUE,
-		MAX_NUM_BUFFERS_PER_COMMAND_LIST_SWAPCHAIN_QUEUE);
+		&ctxState->globalDescriptorRingBuffer);
 	if (res != ZG_SUCCESS) return res;
 
 	// Create copy queue
-	const uint32_t MAX_NUM_COMMAND_LISTS_COPY_QUEUE = 128;
-	const uint32_t MAX_NUM_BUFFERS_PER_COMMAND_LIST_COPY_QUEUE = 1024;
 	res = ctxState->commandQueueCopy.create(
 		D3D12_COMMAND_LIST_TYPE_COPY,
 		ctxState->device,
-		&ctxState->globalDescriptorRingBuffer,
-		MAX_NUM_COMMAND_LISTS_COPY_QUEUE,
-		MAX_NUM_BUFFERS_PER_COMMAND_LIST_COPY_QUEUE);
+		&ctxState->globalDescriptorRingBuffer);
 	if (res != ZG_SUCCESS) return res;
 
 
@@ -365,7 +357,7 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 
 		ComPtr<IDXGISwapChain1> tmpSwapChain;
 		if (D3D12_FAIL(dxgiFactory->CreateSwapChainForHwnd(
-			ctxState->commandQueuePresent.commandQueue(), hwnd, &desc, nullptr, nullptr, &tmpSwapChain))) {
+			ctxState->commandQueuePresent.mCommandQueue.Get(), hwnd, &desc, nullptr, nullptr, &tmpSwapChain))) {
 			return ZG_ERROR_NO_SUITABLE_DEVICE;
 		}
 
@@ -422,7 +414,6 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 	// Create swap chain framebuffers (RTVs and DSVs)
 	ctxState->width = 0;
 	ctxState->height = 0;
-
 
 	return ZG_SUCCESS;
 }
@@ -601,7 +592,7 @@ ZG_API ZgResult zgBufferMemcpyUpload(
 	const void* srcMemory,
 	uint64_t numBytes)
 {
-	return dstBuffer->memcpyUpload(dstBufferOffsetBytes, srcMemory, numBytes);
+	return bufferMemcpyUpload(*dstBuffer, dstBufferOffsetBytes, srcMemory, numBytes);
 }
 
 ZG_API ZgResult zgBufferMemcpyDownload(
@@ -610,7 +601,7 @@ ZG_API ZgResult zgBufferMemcpyDownload(
 	uint64_t srcBufferOffsetBytes,
 	uint64_t numBytes)
 {
-	return srcBuffer->memcpyDownload(srcBufferOffsetBytes, dstMemory, numBytes);
+	return bufferMemcpyDownload(*srcBuffer, srcBufferOffsetBytes, dstMemory, numBytes);
 }
 
 // Textures
@@ -1099,7 +1090,7 @@ ZG_API ZgResult zgCommandListProfileEnd(
 	// Get command queue timestamp frequency
 	uint64_t timestampTicksPerSecond = 0;
 	if (commandList->commandListType == D3D12_COMMAND_LIST_TYPE_DIRECT) {
-		bool success = D3D12_SUCC(ctxState->commandQueuePresent.commandQueue()->
+		bool success = D3D12_SUCC(ctxState->commandQueuePresent.mCommandQueue.Get()->
 			GetTimestampFrequency(&timestampTicksPerSecond));
 		if (!success) return ZG_ERROR_GENERIC;
 	}
@@ -1347,7 +1338,7 @@ ZG_API ZgResult zgContextSwapchainFinishFrame(
 
 		// Get command queue timestamp frequency
 		uint64_t timestampTicksPerSecond = 0;
-		bool success = D3D12_SUCC(ctxState->commandQueuePresent.commandQueue()->
+		bool success = D3D12_SUCC(ctxState->commandQueuePresent.mCommandQueue->
 			GetTimestampFrequency(&timestampTicksPerSecond));
 		sfz_assert(success);
 
