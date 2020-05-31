@@ -203,7 +203,7 @@ struct ZgCommandQueue final {
 		return ZG_SUCCESS;
 	}
 
-	ZgResult executeCommandList(ZgCommandList* commandList) noexcept
+	ZgResult executeCommandList(ZgCommandList* commandList, bool barrierList = false) noexcept
 	{
 		// Close command list
 		if (D3D12_FAIL(commandList->commandList->Close())) {
@@ -221,22 +221,19 @@ struct ZgCommandQueue final {
 			commandList->commandList->ResourceBarrier(numBarriers, barriers);
 
 			// Execute barriers
-			return this->executeCommandList(commandList);
+			return this->executeCommandList(commandList, true);
 		};
 
-		// Create and execute a quick command list to insert barriers and commit pending states
-		ZgResult res = executePreCommandListStateChanges(
-			commandList->tracking.pendingBufferStates,
-			commandList->tracking.pendingTextureStates,
-			execBarriers);
-		if (res != ZG_SUCCESS) return res;
-
 		// Execute command list
-		ID3D12CommandList* commandListPtr = commandList->commandList.Get();
-		mCommandQueue->ExecuteCommandLists(1, &commandListPtr);
+		ID3D12CommandList* cmdLists[1] = {};
+		ZgTrackerCommandListState* cmdListStates[1] = {};
+		cmdLists[0] = commandList->commandList.Get();
+		cmdListStates[0] = &commandList->tracking;
+		executeCommandLists(*mCommandQueue.Get(), cmdLists, cmdListStates, 1, execBarriers, barrierList);
 
 		// Signal
-		commandList->fenceValue = this->signalOnGpuInternal();
+		uint64_t fenceValue = this->signalOnGpuInternal();
+		commandList->fenceValue = fenceValue;
 
 		// Add command list to queue
 		mCommandListQueue.add(commandList);

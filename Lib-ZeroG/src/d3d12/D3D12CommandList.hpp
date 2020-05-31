@@ -95,12 +95,6 @@ struct ZgCommandList final {
 			return ZG_ERROR_GENERIC;
 		}
 
-		tracking.pendingBufferIdentifiers.clear();
-		tracking.pendingBufferStates.clear();
-
-		tracking.pendingTextureIdentifiers.clear();
-		tracking.pendingTextureStates.clear();
-
 		mPipelineSet = false;
 		mBoundPipelineCompute = nullptr;
 		mBoundPipelineRender = nullptr;

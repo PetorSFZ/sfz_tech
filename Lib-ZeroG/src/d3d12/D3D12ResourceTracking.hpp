@@ -186,84 +186,95 @@ inline void requireResourceStateTextureAllMips(
 }
 
 template<typename ExecBarriersFunc>
-ZgResult executePreCommandListStateChanges(
-	sfz::Array<PendingBufferState>& pendingBufferStates,
-	sfz::Array<PendingTextureState>& pendingTextureStates,
-	ExecBarriersFunc execBarriers) noexcept
+inline void executeCommandLists(
+	ID3D12CommandQueue& queue,
+	ID3D12CommandList* const* cmdLists,
+	ZgTrackerCommandListState* const* cmdListStates,
+	uint32_t numCmdLists,
+	ExecBarriersFunc execBarriers,
+	bool isBarrierList) noexcept
 {
-	// Temporary storage array for the barriers to insert
-	uint32_t numBarriers = 0;
-	constexpr uint32_t MAX_NUM_BARRIERS = 512;
-	CD3DX12_RESOURCE_BARRIER barriers[MAX_NUM_BARRIERS] = {};
+	sfz_assert_hard(numCmdLists == 1);
+	ZgTrackerCommandListState& tracking = *cmdListStates[0];
 
-	// Gather buffer barriers
-	for (uint32_t i = 0; i < pendingBufferStates.size(); i++) {
-		const PendingBufferState& state = pendingBufferStates[i];
+	// No need for state tracking if this is a barrier only command list
+	if (!isBarrierList) {
 
-		// Don't insert barrier if resource already is in correct state
-		if (state.buffer->tracking.lastCommittedState == state.neededInitialState) {
-			continue;
+		// Temporary storage array for the barriers to insert
+		uint32_t numBarriers = 0;
+		constexpr uint32_t MAX_NUM_BARRIERS = 512;
+		CD3DX12_RESOURCE_BARRIER barriers[MAX_NUM_BARRIERS] = {};
+
+		// Gather buffer barriers
+		for (uint32_t i = 0; i < tracking.pendingBufferStates.size(); i++) {
+			const PendingBufferState& state = tracking.pendingBufferStates[i];
+
+			// Don't insert barrier if resource already is in correct state
+			if (state.buffer->tracking.lastCommittedState == state.neededInitialState) {
+				continue;
+			}
+
+			// Create barrier
+			sfz_assert_hard(numBarriers < MAX_NUM_BARRIERS);
+			barriers[numBarriers] = CD3DX12_RESOURCE_BARRIER::Transition(
+				state.buffer->resource.resource,
+				state.buffer->tracking.lastCommittedState,
+				state.neededInitialState);
+
+			numBarriers += 1;
 		}
 
-		// Error out if we don't have enough space in our temp array
-		if (numBarriers >= MAX_NUM_BARRIERS) {
-			ZG_ERROR("Internal error, need to insert too many barriers. Fixable, please contact ZeroG devs.");
-			return ZG_ERROR_GENERIC;
+		// Gather texture barriers
+		for (uint32_t i = 0; i < tracking.pendingTextureStates.size(); i++) {
+			const PendingTextureState& state = tracking.pendingTextureStates[i];
+
+			// Don't insert barrier if resource already is in correct state
+			if (state.texture->mipTrackings[state.mipLevel].lastCommittedState == state.neededInitialState) {
+				continue;
+			}
+
+			// Create barrier
+			sfz_assert_hard(numBarriers < MAX_NUM_BARRIERS);
+			barriers[numBarriers] = CD3DX12_RESOURCE_BARRIER::Transition(
+				state.texture->resource.resource,
+				state.texture->mipTrackings[state.mipLevel].lastCommittedState,
+				state.neededInitialState,
+				state.mipLevel);
+
+			numBarriers += 1;
 		}
 
-		// Create barrier
-		barriers[numBarriers] = CD3DX12_RESOURCE_BARRIER::Transition(
-			state.buffer->resource.resource,
-			state.buffer->tracking.lastCommittedState,
-			state.neededInitialState);
-
-		numBarriers += 1;
-	}
-
-	// Gather texture barriers
-	for (uint32_t i = 0; i < pendingTextureStates.size(); i++) {
-		const PendingTextureState& state = pendingTextureStates[i];
-
-		// Don't insert barrier if resource already is in correct state
-		if (state.texture->mipTrackings[state.mipLevel].lastCommittedState == state.neededInitialState){
-			continue;
+		// Create small command list and execute barriers in it
+		if (numBarriers != 0) {
+			execBarriers(barriers, numBarriers);
 		}
 
-		// Error out if we don't have enough space in our temp array
-		if (numBarriers >= MAX_NUM_BARRIERS) {
-			ZG_ERROR("Internal error, need to insert too many barriers. Fixable, please contact ZeroG devs.");
-			return ZG_ERROR_GENERIC;
-		}
-
-		// Create barrier
-		barriers[numBarriers] = CD3DX12_RESOURCE_BARRIER::Transition(
-			state.texture->resource.resource,
-			state.texture->mipTrackings[state.mipLevel].lastCommittedState,
-			state.neededInitialState,
-			state.mipLevel);
-
-		numBarriers += 1;
-	}
-
-	// Exit if we do not need to insert any barriers
-	if (numBarriers == 0) return ZG_SUCCESS;
-
-	// Create small command list and execute barriers in it
-	execBarriers(barriers, numBarriers);
-
-	// Commit state changes
+		// Commit state changes
 #pragma message("WARNING, probably serious race condition")
 	// TODO: This is problematic and we probably need to something smarter. TL;DR, this comitted
 	//       state is shared between all queues. Maybe it is enough to just put a mutex around it,
 	//       but it is not obvious to me that that would be enough.
-	for (uint32_t i = 0; i < pendingBufferStates.size(); i++) {
-		const PendingBufferState& state = pendingBufferStates[i];
-		state.buffer->tracking.lastCommittedState = state.currentState;
-	}
-	for (uint32_t i = 0; i < pendingTextureStates.size(); i++) {
-		const PendingTextureState& state = pendingTextureStates[i];
-		state.texture->mipTrackings[state.mipLevel].lastCommittedState = state.currentState;
+		for (uint32_t i = 0; i < tracking.pendingBufferStates.size(); i++) {
+			const PendingBufferState& state = tracking.pendingBufferStates[i];
+			state.buffer->tracking.lastCommittedState = state.currentState;
+		}
+		for (uint32_t i = 0; i < tracking.pendingTextureStates.size(); i++) {
+			const PendingTextureState& state = tracking.pendingTextureStates[i];
+			state.texture->mipTrackings[state.mipLevel].lastCommittedState = state.currentState;
+		}
 	}
 
-	return ZG_SUCCESS;
+	else {
+		// Can only be one command list if we are just executing barriers
+		sfz_assert_hard(numCmdLists == 1);
+	}
+
+	// Execute command lists
+	queue.ExecuteCommandLists(numCmdLists, cmdLists);
+
+	// Clear tracking state
+	tracking.pendingBufferIdentifiers.clear();
+	tracking.pendingBufferStates.clear();
+	tracking.pendingTextureIdentifiers.clear();
+	tracking.pendingTextureStates.clear();
 }
