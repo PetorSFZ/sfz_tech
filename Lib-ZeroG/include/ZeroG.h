@@ -100,7 +100,7 @@ ZG_ENUM(ZgBool) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 30;
+static const uint32_t ZG_COMPILED_API_VERSION = 31;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -1998,6 +1998,9 @@ ZG_STRUCT(ZgContextInitSettingsD3D12) {
 
 	// [Optional] Used to enable D3D12 validation.
 	ZgBool debugMode;
+
+	// [Optional] Used to enable GPU based debug mode (slow)
+	ZgBool debugModeGpuBased;
 
 	// [Optional]
 	ZgBool useSoftwareRenderer;

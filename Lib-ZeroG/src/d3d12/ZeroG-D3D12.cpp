@@ -223,9 +223,13 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 
 		// Enable debug layer and GPU based validation
 		debugInterface->EnableDebugLayer();
-		debugInterface->SetEnableGPUBasedValidation(TRUE);
-
 		ZG_INFO("D3D12 debug mode enabled");
+
+		// Enable GPU based debug mode if requested
+		if (settings.d3d12.debugModeGpuBased) {
+			debugInterface->SetEnableGPUBasedValidation(TRUE);
+			ZG_INFO("D3D12 GPU based debug mode enabled");
+		}
 	}
 
 	// Create DXGI factory
