@@ -128,7 +128,7 @@
 		},
 		{
 			"name": "GBuffer_metallic_roughness",
-			"format": "RGBA_U8_UNORM",
+			"format": "RG_U8_UNORM",
 			"clear_value": 0.0,
 			"resolution_scale": 1.0,
 			"resolution_scale_setting": "internalResolutionScale"

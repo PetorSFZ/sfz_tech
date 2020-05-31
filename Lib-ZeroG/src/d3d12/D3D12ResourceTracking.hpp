@@ -88,40 +88,44 @@ inline void requireResourceStateTextureAllMips(
 	ZgTexture* texture,
 	D3D12_RESOURCE_STATES requiredState)
 {
-	// Get pending states, create if they do not exist
-	PendingTextureState* pendingStates[ZG_MAX_NUM_MIPMAPS] = {};
+	// Create pending states if they do not exist
+	// Note: Can NOT store pointers here, hash map can be resized
+	for (uint32_t i = 0; i < texture->numMipmaps; i++) {
+		if (cmdListState.pendingTextureMips.get(TextureMip(texture, i)) == nullptr) {
+			PendingTextureState& pendingState = cmdListState.pendingTextureMips.put(
+				TextureMip(texture, i), PendingTextureState());
+			pendingState.texture = texture;
+			pendingState.mipLevel = i;
+			pendingState.neededInitialState = requiredState;
+			pendingState.currentState = requiredState;
+		}
+	}
+
+	// Get pointers to pending states
+	sfz::ArrayLocal<PendingTextureState*, ZG_MAX_NUM_MIPMAPS> pendingStates;
 	for (uint32_t i = 0; i < texture->numMipmaps; i++) {
 		PendingTextureState* pendingState =
 			cmdListState.pendingTextureMips.get(TextureMip(texture, i));
-		if (pendingState == nullptr) {
-			pendingState = &cmdListState.pendingTextureMips.put(
-				TextureMip(texture, i), PendingTextureState());
-			pendingState->texture = texture;
-			pendingState->mipLevel = i;
-			pendingState->neededInitialState = requiredState;
-			pendingState->currentState = requiredState;
-		}
-		pendingStates[i] = pendingState;
+		sfz_assert_hard(pendingState != nullptr);
+		pendingStates.add(pendingState);
 	}
 
 	// Create all necessary barriers
-	CD3DX12_RESOURCE_BARRIER barriers[ZG_MAX_NUM_MIPMAPS] = {};
-	uint32_t numBarriers = 0;
+	sfz::ArrayLocal<CD3DX12_RESOURCE_BARRIER, ZG_MAX_NUM_MIPMAPS> barriers;
 	for (uint32_t i = 0; i < texture->numMipmaps; i++) {
 		if (pendingStates[i]->currentState != requiredState) {
-			barriers[numBarriers] = CD3DX12_RESOURCE_BARRIER::Transition(
+			barriers.add(CD3DX12_RESOURCE_BARRIER::Transition(
 				texture->resource.resource,
 				pendingStates[i]->currentState,
 				requiredState,
-				i);
-			numBarriers += 1;
+				i));
 			pendingStates[i]->currentState = requiredState;
 		}
 	}
 
 	// Submit barriers
-	if (numBarriers != 0) {
-		cmdList.ResourceBarrier(numBarriers, barriers);
+	if (!barriers.isEmpty()) {
+		cmdList.ResourceBarrier(barriers.size(), barriers.data());
 	}
 }
 
