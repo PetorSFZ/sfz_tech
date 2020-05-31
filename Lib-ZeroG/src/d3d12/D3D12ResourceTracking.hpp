@@ -31,39 +31,23 @@ inline void requireResourceStateBuffer(
 	ZgBuffer* buffer,
 	D3D12_RESOURCE_STATES requiredState)
 {
-	// Try to find index of pending buffer states
-	uint32_t bufferStateIdx = ~0u;
-	for (uint32_t i = 0; i < cmdListState.pendingBufferIdentifiers.size(); i++) {
-		uint64_t identifier = cmdListState.pendingBufferIdentifiers[i];
-		if (identifier == buffer->identifier) {
-			bufferStateIdx = i;
-			break;
-		}
+	// Try to get pending buffer state, create it if it does not exist
+	PendingBufferState* pendingState = cmdListState.pendingBuffers.get(buffer);
+	if (pendingState == nullptr) {
+		pendingState = &cmdListState.pendingBuffers.put(buffer, PendingBufferState());
+		pendingState->buffer = buffer;
+		pendingState->neededInitialState = requiredState;
+		pendingState->currentState = requiredState;
 	}
-
-	// If buffer does not have a pending state, create one
-	if (bufferStateIdx == ~0u) {
-		// Create pending buffer state
-		bufferStateIdx = cmdListState.pendingBufferStates.size();
-		cmdListState.pendingBufferIdentifiers.add(buffer->identifier);
-		cmdListState.pendingBufferStates.add(PendingBufferState());
-
-		// Set initial pending buffer state
-		cmdListState.pendingBufferStates.last().buffer = buffer;
-		cmdListState.pendingBufferStates.last().neededInitialState = requiredState;
-		cmdListState.pendingBufferStates.last().currentState = requiredState;
-	}
-
-	PendingBufferState& pendingState = cmdListState.pendingBufferStates[bufferStateIdx];
 
 	// Change state of buffer if necessary
-	if (pendingState.currentState != requiredState) {
+	if (pendingState->currentState != requiredState) {
 		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 			buffer->resource.resource,
-			pendingState.currentState,
+			pendingState->currentState,
 			requiredState);
 		cmdList.ResourceBarrier(1, &barrier);
-		pendingState.currentState = requiredState;
+		pendingState->currentState = requiredState;
 	}
 }
 
@@ -74,45 +58,27 @@ inline void requireResourceStateTextureMip(
 	uint32_t mipLevel,
 	D3D12_RESOURCE_STATES requiredState)
 {
-	// Try to find index of pending buffer states
-	uint32_t textureStateIdx = ~0u;
-	for (uint32_t i = 0; i < cmdListState.pendingTextureIdentifiers.size(); i++) {
-		ZgTrackerCommandListState::TextureMipIdentifier identifier = cmdListState.pendingTextureIdentifiers[i];
-		if (identifier.identifier == texture->identifier && identifier.mipLevel == mipLevel) {
-			textureStateIdx = i;
-			break;
-		}
+	// Try to get pending texture mip state, create it if it does not exist
+	PendingTextureState* pendingState =
+		cmdListState.pendingTextureMips.get(TextureMip(texture, mipLevel));
+	if (pendingState == nullptr) {
+		pendingState = &cmdListState.pendingTextureMips.put(
+			TextureMip(texture, mipLevel), PendingTextureState());
+		pendingState->texture = texture;
+		pendingState->mipLevel = mipLevel;
+		pendingState->neededInitialState = requiredState;
+		pendingState->currentState = requiredState;
 	}
-
-	// If texture does not have a pending state, create one
-	if (textureStateIdx == ~0u) {
-
-		// Create pending buffer state
-		textureStateIdx = cmdListState.pendingTextureStates.size();
-		ZgTrackerCommandListState::TextureMipIdentifier identifier;
-		identifier.identifier = texture->identifier;
-		identifier.mipLevel = mipLevel;
-		cmdListState.pendingTextureIdentifiers.add(identifier);
-		cmdListState.pendingTextureStates.add(PendingTextureState());
-
-		// Set initial pending buffer state
-		cmdListState.pendingTextureStates.last().texture = texture;
-		cmdListState.pendingTextureStates.last().mipLevel = mipLevel;
-		cmdListState.pendingTextureStates.last().neededInitialState = requiredState;
-		cmdListState.pendingTextureStates.last().currentState = requiredState;
-	}
-
-	PendingTextureState& pendingState = cmdListState.pendingTextureStates[textureStateIdx];
 
 	// Change state of texture if necessary
-	if (pendingState.currentState != requiredState) {
+	if (pendingState->currentState != requiredState) {
 		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 			texture->resource.resource,
-			pendingState.currentState,
+			pendingState->currentState,
 			requiredState,
 			mipLevel);
 		cmdList.ResourceBarrier(1, &barrier);
-		pendingState.currentState = requiredState;
+		pendingState->currentState = requiredState;
 	}
 }
 
@@ -122,46 +88,20 @@ inline void requireResourceStateTextureAllMips(
 	ZgTexture* texture,
 	D3D12_RESOURCE_STATES requiredState)
 {
-	// Get pending states
-	uint32_t pendingStatesIndices[ZG_MAX_NUM_MIPMAPS] = {};
-	for (uint32_t mipLevel = 0; mipLevel < texture->numMipmaps; mipLevel++) {
-
-		// Try to find index of pending buffer states
-		uint32_t textureStateIdx = ~0u;
-		for (uint32_t i = 0; i < cmdListState.pendingTextureIdentifiers.size(); i++) {
-			ZgTrackerCommandListState::TextureMipIdentifier identifier = cmdListState.pendingTextureIdentifiers[i];
-			if (identifier.identifier == texture->identifier && identifier.mipLevel == mipLevel) {
-				textureStateIdx = i;
-				break;
-			}
-		}
-
-		// If texture does not have a pending state, create one
-		if (textureStateIdx == ~0u) {
-
-			// Create pending buffer state
-			textureStateIdx = cmdListState.pendingTextureStates.size();
-			ZgTrackerCommandListState::TextureMipIdentifier identifier;
-			identifier.identifier = texture->identifier;
-			identifier.mipLevel = mipLevel;
-			cmdListState.pendingTextureIdentifiers.add(identifier);
-			cmdListState.pendingTextureStates.add(PendingTextureState());
-
-			// Set initial pending buffer state
-			cmdListState.pendingTextureStates.last().texture = texture;
-			cmdListState.pendingTextureStates.last().mipLevel = mipLevel;
-			cmdListState.pendingTextureStates.last().neededInitialState = requiredState;
-			cmdListState.pendingTextureStates.last().currentState = requiredState;
-		}
-
-		// We can NOT store pointers here, array might increase size and invalidate pointers
-		pendingStatesIndices[mipLevel] = textureStateIdx;
-	}
-
-	// Grab pointers to pending states
+	// Get pending states, create if they do not exist
 	PendingTextureState* pendingStates[ZG_MAX_NUM_MIPMAPS] = {};
 	for (uint32_t i = 0; i < texture->numMipmaps; i++) {
-		pendingStates[i] = &cmdListState.pendingTextureStates[pendingStatesIndices[i]];
+		PendingTextureState* pendingState =
+			cmdListState.pendingTextureMips.get(TextureMip(texture, i));
+		if (pendingState == nullptr) {
+			pendingState = &cmdListState.pendingTextureMips.put(
+				TextureMip(texture, i), PendingTextureState());
+			pendingState->texture = texture;
+			pendingState->mipLevel = i;
+			pendingState->neededInitialState = requiredState;
+			pendingState->currentState = requiredState;
+		}
+		pendingStates[i] = pendingState;
 	}
 
 	// Create all necessary barriers
@@ -206,8 +146,9 @@ inline void executeCommandLists(
 		CD3DX12_RESOURCE_BARRIER barriers[MAX_NUM_BARRIERS] = {};
 
 		// Gather buffer barriers
-		for (uint32_t i = 0; i < tracking.pendingBufferStates.size(); i++) {
-			const PendingBufferState& state = tracking.pendingBufferStates[i];
+		const PendingBufferState* pendingBuffers = tracking.pendingBuffers.values();
+		for (uint32_t i = 0; i < tracking.pendingBuffers.size(); i++) {
+			const PendingBufferState& state = pendingBuffers[i];
 
 			// Don't insert barrier if resource already is in correct state
 			if (state.buffer->tracking.lastCommittedState == state.neededInitialState) {
@@ -225,8 +166,9 @@ inline void executeCommandLists(
 		}
 
 		// Gather texture barriers
-		for (uint32_t i = 0; i < tracking.pendingTextureStates.size(); i++) {
-			const PendingTextureState& state = tracking.pendingTextureStates[i];
+		const PendingTextureState* pendingTextures = tracking.pendingTextureMips.values();
+		for (uint32_t i = 0; i < tracking.pendingTextureMips.size(); i++) {
+			const PendingTextureState& state = pendingTextures[i];
 
 			// Don't insert barrier if resource already is in correct state
 			if (state.texture->mipTrackings[state.mipLevel].lastCommittedState == state.neededInitialState) {
@@ -254,12 +196,12 @@ inline void executeCommandLists(
 	// TODO: This is problematic and we probably need to something smarter. TL;DR, this comitted
 	//       state is shared between all queues. Maybe it is enough to just put a mutex around it,
 	//       but it is not obvious to me that that would be enough.
-		for (uint32_t i = 0; i < tracking.pendingBufferStates.size(); i++) {
-			const PendingBufferState& state = tracking.pendingBufferStates[i];
+		for (uint32_t i = 0; i < tracking.pendingBuffers.size(); i++) {
+			const PendingBufferState& state = pendingBuffers[i];
 			state.buffer->tracking.lastCommittedState = state.currentState;
 		}
-		for (uint32_t i = 0; i < tracking.pendingTextureStates.size(); i++) {
-			const PendingTextureState& state = tracking.pendingTextureStates[i];
+		for (uint32_t i = 0; i < tracking.pendingTextureMips.size(); i++) {
+			const PendingTextureState& state = pendingTextures[i];
 			state.texture->mipTrackings[state.mipLevel].lastCommittedState = state.currentState;
 		}
 	}
@@ -273,8 +215,6 @@ inline void executeCommandLists(
 	queue.ExecuteCommandLists(numCmdLists, cmdLists);
 
 	// Clear tracking state
-	tracking.pendingBufferIdentifiers.clear();
-	tracking.pendingBufferStates.clear();
-	tracking.pendingTextureIdentifiers.clear();
-	tracking.pendingTextureStates.clear();
+	tracking.pendingBuffers.clear();
+	tracking.pendingTextureMips.clear();
 }

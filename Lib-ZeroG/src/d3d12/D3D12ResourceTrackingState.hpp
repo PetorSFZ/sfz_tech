@@ -18,6 +18,10 @@
 
 #pragma once
 
+#include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
+#include <skipifzero_hash_maps.hpp>
+
 #include "ZeroG.h"
 #include "d3d12/D3D12Common.hpp"
 
@@ -66,32 +70,46 @@ struct PendingTextureState final {
 	D3D12_RESOURCE_STATES currentState = D3D12_RESOURCE_STATE_COMMON;
 };
 
+struct TextureMip {
+	ZgTexture* tex = nullptr;
+	uint32_t mipLevel = ~0u;
+
+	TextureMip() = default;
+	TextureMip(const TextureMip&) = default;
+	TextureMip& operator= (const TextureMip&) = default;
+
+	TextureMip(ZgTexture* tex, uint32_t mipLevel) : tex(tex), mipLevel(mipLevel) {}
+
+	bool operator== (TextureMip other) const { return this->tex == other.tex && this->mipLevel == other.mipLevel; }
+	bool operator!= (TextureMip other) const { return !(*this == other); }
+};
+
+namespace sfz {
+	inline uint64_t hash(const TextureMip& val)
+	{
+		// hash_combine algorithm from boost
+		uint64_t hash = 0;
+		hash ^= sfz::hash(val.tex) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		hash ^= sfz::hash(val.mipLevel) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		return hash;
+	}
+}
+
 struct ZgTrackerCommandListState final {
 	SFZ_DECLARE_DROP_TYPE(ZgTrackerCommandListState);
 
 	void init(sfz::Allocator* allocator)
 	{
-		pendingBufferIdentifiers.init(64, allocator, sfz_dbg("ZgTrackerCommandListState"));
-		pendingBufferStates.init(64, allocator, sfz_dbg("ZgTrackerCommandListState"));
-		pendingTextureIdentifiers.init(64, allocator, sfz_dbg("ZgTrackerCommandListState"));
-		pendingTextureStates.init(64, allocator, sfz_dbg("ZgTrackerCommandListState"));
+		pendingBuffers.init(64, allocator, sfz_dbg("ZgTrackerCommandListState"));
+		pendingTextureMips.init(64, allocator, sfz_dbg("ZgTrackerCommandListState"));
 	}
 
 	void destroy()
 	{
-		this->pendingBufferIdentifiers.destroy();
-		this->pendingBufferStates.destroy();
-		this->pendingTextureIdentifiers.destroy();
-		this->pendingTextureStates.destroy();
+		this->pendingBuffers.destroy();
+		this->pendingTextureMips.destroy();
 	}
 
-	sfz::Array<uint64_t> pendingBufferIdentifiers;
-	sfz::Array<PendingBufferState> pendingBufferStates;
-
-	struct TextureMipIdentifier {
-		uint64_t identifier = ~0u;
-		uint32_t mipLevel = ~0u;
-	};
-	sfz::Array<TextureMipIdentifier> pendingTextureIdentifiers;
-	sfz::Array<PendingTextureState> pendingTextureStates;
+	sfz::HashMap<ZgBuffer*, PendingBufferState> pendingBuffers;
+	sfz::HashMap<TextureMip, PendingTextureState> pendingTextureMips;
 };
