@@ -1006,8 +1006,9 @@ void Renderer::frameFinish() noexcept
 
 	zg::CommandList& cmdList = mState->groupCmdList;
 	
-	// Execute remaining stuff if command list is valid
+	// End last stage group
 	if (cmdList.valid()) {
+
 		// Insert profile end call
 		StringID groupName = mState->configurable.presentQueue[mState->currentStageGroupIdx].groupName;
 		GroupProfilingID* groupId = frameIds.groupIds.find([&](const GroupProfilingID& e) {
@@ -1021,22 +1022,29 @@ void Renderer::frameFinish() noexcept
 		if (mState->emitDebugEvents->boolValue()) {
 			CHECK_ZG cmdList.endEvent();
 		}
+	}
 
-		// Execute command list
-		// TODO: We should probably execute all of the frame's command lists simulatenously instead of
-		//       one by one
-		CHECK_ZG mState->presentQueue.executeCommandList(cmdList);
+	// If no command list, start one just to finish the frame
+	else {
+		CHECK_ZG mState->presentQueue.beginCommandListRecording(cmdList);
+		CHECK_ZG cmdList.setFramebuffer(mState->windowFramebuffer);
 	}
 
 	// Render ImGui
 	zg::imguiRender(
 		mState->imguiRenderState,
 		mState->currentFrameIdx,
-		mState->presentQueue,
-		mState->windowFramebuffer,
+		cmdList,
+		uint32_t(mState->windowRes.x),
+		uint32_t(mState->windowRes.y),
 		mState->imguiScaleSetting->floatValue(),
 		&mState->profiler,
 		&frameIds.imguiId);
+
+	// Execute command list
+	// TODO: We should probably execute all of the frame's command lists simulatenously instead of
+	//       one by one
+	CHECK_ZG mState->presentQueue.executeCommandList(cmdList);
 
 	// Finish ZeroG frame
 	sfz_assert(mState->windowFramebuffer.valid());

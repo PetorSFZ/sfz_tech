@@ -41,10 +41,11 @@ void imguiDestroyRenderState(ImGuiRenderState*& state) noexcept;
 void imguiRender(
 	ImGuiRenderState* state,
 	uint64_t frameIdx,
-	zg::CommandQueue& presentQueue,
-	zg::Framebuffer& framebuffer,
+	zg::CommandList& cmdList,
+	uint32_t fbWidth,
+	uint32_t fbHeight,
 	float scale,
 	zg::Profiler* profiler = nullptr,
-	uint64_t* measurentIdOut = nullptr) noexcept;
+	uint64_t* measurmentIdOut = nullptr) noexcept;
 
 } // namespace zg

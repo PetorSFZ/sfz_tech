@@ -53,7 +53,6 @@ static_assert(sizeof(ImGuiCommand) == sizeof(uint32_t) * 8, "ImguiCommand is pad
 // ------------------------------------------------------------------------------------------------
 
 struct ImGuiFrameState final {
-	zg::Fence fence;
 	zg::Buffer uploadVertexBuffer;
 	zg::Buffer uploadIndexBuffer;
 };
@@ -215,8 +214,6 @@ ZgResult imguiInitRenderState(
 	for (uint32_t i = 0; i < frameLatency; i++) {
 		ImGuiFrameState& frame = stateOut->frameStates.add();
 
-		ASSERT_ZG frame.fence.create();
-
 		ASSERT_ZG frame.uploadVertexBuffer.create(
 			IMGUI_VERTEX_BUFFER_SIZE, ZG_MEMORY_TYPE_UPLOAD, false, sfz::str32("ImGui_VertexBuffer_%u", i));
 		uploadHeapOffset += IMGUI_VERTEX_BUFFER_SIZE;
@@ -246,11 +243,12 @@ void imguiDestroyRenderState(ImGuiRenderState*& state) noexcept
 void imguiRender(
 	ImGuiRenderState* state,
 	uint64_t frameIdx,
-	zg::CommandQueue& presentQueue,
-	zg::Framebuffer& framebuffer,
+	zg::CommandList& cmdList,
+	uint32_t fbWidth,
+	uint32_t fbHeight,
 	float scale,
 	zg::Profiler* profiler,
-	uint64_t* measurentIdOut) noexcept
+	uint64_t* measurmentIdOut) noexcept
 {
 	// Generate ImGui draw lists and get the draw data
 	ImGui::Render();
@@ -316,10 +314,9 @@ void imguiRender(
 	sfz_assert_hard(state->tmpVertices.size() < IMGUI_MAX_NUM_VERTICES);
 	sfz_assert_hard(state->tmpIndices.size() < IMGUI_MAX_NUM_INDICES);
 
-	// Get current frame's resources and then wait until they are available (i.e. the frame they
-	// are part of has finished rendering).
+	// Get current frame's resources, assume they are available now (i.e., caller must have
+	// specified correct frame latency which THEY are syncing on.
 	ImGuiFrameState& imguiFrame = state->getFrameState(frameIdx);
-	ASSERT_ZG imguiFrame.fence.waitOnCpuBlocking();
 
 	// Memcpy vertices and indices to imgui upload buffers
 	ASSERT_ZG imguiFrame.uploadVertexBuffer.memcpyUpload(
@@ -327,34 +324,25 @@ void imguiRender(
 	ASSERT_ZG imguiFrame.uploadIndexBuffer.memcpyUpload(
 		0, state->tmpIndices.data(), state->tmpIndices.size() * sizeof(uint32_t));
 
-	zg::CommandList commandList;
-	ASSERT_ZG presentQueue.beginCommandListRecording(commandList);
-
 	// Begin event
-	ASSERT_ZG commandList.beginEvent("ImGui");
+	ASSERT_ZG cmdList.beginEvent("ImGui");
 
 	// Start profiling if requested
 	if (profiler != nullptr) {
-		sfz_assert(measurentIdOut != nullptr);
-		ASSERT_ZG commandList.profileBegin(*profiler, *measurentIdOut);
+		sfz_assert(measurmentIdOut != nullptr);
+		ASSERT_ZG cmdList.profileBegin(*profiler, *measurmentIdOut);
 	}
 
-	// Set framebuffer
-	ASSERT_ZG commandList.setFramebuffer(framebuffer);
-
 	// Set ImGui pipeline
-	ASSERT_ZG commandList.setPipeline(state->pipeline);
-	ASSERT_ZG commandList.setIndexBuffer(imguiFrame.uploadIndexBuffer, ZG_INDEX_BUFFER_TYPE_UINT32);
-	ASSERT_ZG commandList.setVertexBuffer(0, imguiFrame.uploadVertexBuffer);
+	ASSERT_ZG cmdList.setPipeline(state->pipeline);
+	ASSERT_ZG cmdList.setIndexBuffer(imguiFrame.uploadIndexBuffer, ZG_INDEX_BUFFER_TYPE_UINT32);
+	ASSERT_ZG cmdList.setVertexBuffer(0, imguiFrame.uploadVertexBuffer);
 
 	// Bind pipeline parameters
-	ASSERT_ZG commandList.setPipelineBindings(zg::PipelineBindings()
+	ASSERT_ZG cmdList.setPipelineBindings(zg::PipelineBindings()
 		.addTexture(0, state->fontTexture));
 
 	// Retrieve imgui scale factor
-	uint32_t fbWidth = 0;
-	uint32_t fbHeight = 0;
-	ASSERT_ZG framebuffer.getResolution(fbWidth, fbHeight);
 	float imguiScaleFactor = 1.0f;
 	imguiScaleFactor /= scale;
 	float imguiInvScaleFactor = 1.0f / imguiScaleFactor;
@@ -368,7 +356,7 @@ void imguiRender(
 		sfz::vec4(0.0f, 0.0f, 0.5f, 0.5f),
 		sfz::vec4(0.0f, 0.0f, 0.0f, 1.0f)
 	};
-	ASSERT_ZG commandList.setPushConstant(0, &projMatrix, sizeof(float) * 16);
+	ASSERT_ZG cmdList.setPushConstant(0, &projMatrix, sizeof(float) * 16);
 
 	// Render ImGui commands
 	for (uint32_t i = 0; i < state->tmpCommands.size(); i++) {
@@ -380,25 +368,19 @@ void imguiRender(
 		scissorRect.topLeftY = uint32_t(cmd.clipRect.y * imguiInvScaleFactor);
 		scissorRect.width = uint32_t((cmd.clipRect.z - cmd.clipRect.x) * imguiInvScaleFactor);
 		scissorRect.height = uint32_t((cmd.clipRect.w - cmd.clipRect.y) * imguiInvScaleFactor);
-		ASSERT_ZG commandList.setFramebufferScissor(scissorRect);
+		ASSERT_ZG cmdList.setFramebufferScissor(scissorRect);
 
-		ASSERT_ZG commandList.drawTrianglesIndexed(cmd.idxBufferOffset, cmd.numIndices / 3);
+		ASSERT_ZG cmdList.drawTrianglesIndexed(cmd.idxBufferOffset, cmd.numIndices / 3);
 	}
 
 	// End profiling if requested
 	if (profiler != nullptr) {
-		sfz_assert(measurentIdOut != nullptr);
-		ASSERT_ZG commandList.profileEnd(*profiler, *measurentIdOut);
+		sfz_assert(measurmentIdOut != nullptr);
+		ASSERT_ZG cmdList.profileEnd(*profiler, *measurmentIdOut);
 	}
 
 	// End event
-	ASSERT_ZG commandList.endEvent();
-
-	// Execute command list
-	ASSERT_ZG presentQueue.executeCommandList(commandList);
-
-	// Signal that we have finished rendering this ImGui frame
-	ASSERT_ZG presentQueue.signalOnGpu(imguiFrame.fence);
+	ASSERT_ZG cmdList.endEvent();
 }
 
 } // namespace zg
