@@ -276,6 +276,25 @@ inline ZgResult createTexture(
 	// TODO: Maybe expose flags:
 	//      * D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS
 
+	// Optimal clear value
+	D3D12_CLEAR_VALUE clearValue = {};
+	D3D12_CLEAR_VALUE* optimalClearValue = nullptr;
+	if (createInfo.optimalClearValue != ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED) {
+		float value = (createInfo.optimalClearValue == ZG_OPTIMAL_CLEAR_VALUE_ZERO) ? 0.0f : 1.0f;
+		clearValue.Format = desc.Format;
+		if (createInfo.usage == ZG_TEXTURE_USAGE_RENDER_TARGET) {
+			clearValue.Color[0] = value;
+			clearValue.Color[1] = value;
+			clearValue.Color[2] = value;
+			clearValue.Color[3] = value;
+		}
+		else if (createInfo.usage == ZG_TEXTURE_USAGE_DEPTH_BUFFER) {
+			clearValue.DepthStencil.Depth = value;
+			clearValue.DepthStencil.Stencil = 0;
+		}
+		optimalClearValue = &clearValue;
+	}
+
 	// Fill allocation desc
 	D3D12MA::ALLOCATION_DESC allocationDesc = {};
 	allocationDesc.Flags = createInfo.committedAllocation ? D3D12MA::ALLOCATION_FLAG_COMMITTED : D3D12MA::ALLOCATION_FLAG_NONE;
@@ -289,7 +308,7 @@ inline ZgResult createTexture(
 		&allocationDesc,
 		&desc,
 		D3D12_RESOURCE_STATE_COMMON,
-		NULL,
+		optimalClearValue,
 		&allocation,
 		IID_PPV_ARGS(&resource));
 	if (D3D12_FAIL(res)) {
