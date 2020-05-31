@@ -951,6 +951,12 @@ void Renderer::stageEndInput() noexcept
 	sfz_assert(inStageInputMode());
 	if (!inStageInputMode()) return;
 
+	// Insert compute barrier
+	if (mState->inputEnabled.stage->type == StageType::USER_INPUT_COMPUTE) {
+		// TODO: This is a bit too harsh
+		CHECK_ZG mState->groupCmdList.unorderedBarrier();
+	}
+
 	// Insert event end call
 	if (mState->emitDebugEvents->boolValue()) {
 		CHECK_ZG mState->groupCmdList.endEvent();
