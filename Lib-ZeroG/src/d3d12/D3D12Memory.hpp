@@ -57,6 +57,7 @@ struct ZgBuffer final {
 	ZgTrackerResourceState tracking;
 
 	ZgMemoryType memoryType = ZG_MEMORY_TYPE_DEVICE;
+	uint64_t sizeBytes = 0;
 
 	// A unique identifier for this buffer
 	uint64_t identifier = 0;
@@ -164,6 +165,7 @@ inline ZgResult createBuffer(
 	buffer->resource.allocation = allocation;
 	buffer->tracking.lastCommittedState = initialResourceState;
 	buffer->memoryType = createInfo.memoryType;
+	buffer->sizeBytes = createInfo.sizeInBytes;
 	buffer->identifier = std::atomic_fetch_add(resourceUniqueIdentifierCounter, 1);
 
 	// Return buffer

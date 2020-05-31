@@ -960,8 +960,7 @@ struct ZgCommandList final {
 		// Create index buffer view
 		D3D12_INDEX_BUFFER_VIEW indexBufferView = {};
 		indexBufferView.BufferLocation = indexBuffer->resource.resource->GetGPUVirtualAddress();
-		sfz_assert(indexBuffer->resource.allocation->GetSize() <= uint64_t(UINT32_MAX));
-		indexBufferView.SizeInBytes = uint32_t(indexBuffer->resource.allocation->GetSize());
+		indexBufferView.SizeInBytes = uint32_t(indexBuffer->sizeBytes);
 		indexBufferView.Format = type == ZG_INDEX_BUFFER_TYPE_UINT32 ?
 			DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
 
@@ -1001,7 +1000,7 @@ struct ZgCommandList final {
 		D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
 		vertexBufferView.BufferLocation = vertexBuffer->resource.resource->GetGPUVirtualAddress();
 		vertexBufferView.StrideInBytes = pipelineInfo.vertexBufferStridesBytes[vertexBufferSlot];
-		vertexBufferView.SizeInBytes = uint32_t(vertexBuffer->resource.allocation->GetSize());
+		vertexBufferView.SizeInBytes = uint32_t(vertexBuffer->sizeBytes);
 
 		// Set vertex buffer
 		commandList->IASetVertexBuffers(vertexBufferSlot, 1, &vertexBufferView);
