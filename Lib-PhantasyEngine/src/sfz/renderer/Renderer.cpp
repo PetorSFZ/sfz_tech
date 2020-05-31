@@ -495,16 +495,17 @@ bool Renderer::inStageInputMode() const noexcept
 	return mState->inputEnabled.inInputMode;
 }
 
-void Renderer::stageBeginInput(StringID stageName) noexcept
+void Renderer::stageBeginInput(const char* stageName) noexcept
 {
 	// Ensure no stage is currently set to accept input
 	sfz_assert(!inStageInputMode());
 	if (inStageInputMode()) return;
 
 	StringCollection& resStrings = getResourceStrings();
+	StringID stageNameID = resStrings.getStringID(stageName);
 
 	// Find stage
-	uint32_t stageIdx = mState->findActiveStageIdx(stageName);
+	uint32_t stageIdx = mState->findActiveStageIdx(stageNameID);
 	sfz_assert(stageIdx != ~0u);
 	if (stageIdx == ~0u) return;
 
@@ -561,63 +562,60 @@ void Renderer::stageBeginInput(StringID stageName) noexcept
 	mState->inputEnabled.stageIdx = stageIdx;
 	mState->inputEnabled.stage = &stage;
 
-	// Get command list for this stage, if it has not yet been created, create it.
-	StageCommandList* commandList = mState->getStageCommandList(stageName);
-	if (commandList == nullptr) {
+	// If group's command list has not yet been created, create it
+	zg::CommandList& cmdList = mState->groupCmdList;
+	if (!cmdList.valid()) {
 
-		StageCommandList& list = mState->groupCommandLists.add();
-		list.stageName = stageName;
+		// Begin command list
+		CHECK_ZG mState->presentQueue.beginCommandListRecording(cmdList);
 
-		// Begin recording command list
-		CHECK_ZG mState->presentQueue.beginCommandListRecording(list.commandList);
+		// Since first usage of this group, insert call to profile begin
+		FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
+		sfz_assert(frameIds.groupIds.size() <= mState->currentStageGroupIdx);
+		GroupProfilingID& groupId = frameIds.groupIds.add();
+		groupId.groupName =
+			mState->configurable.presentQueue[mState->currentStageGroupIdx].groupName;
+		CHECK_ZG cmdList.profileBegin(mState->profiler, groupId.id);
 
 		// Add event
 		if (mState->emitDebugEvents->boolValue()) {
-			CHECK_ZG list.commandList.beginEvent(resStrings.getString(stageName));
+			CHECK_ZG cmdList.beginEvent(resStrings.getString(groupId.groupName));
 		}
+	}
 
-		// Set pipeline and framebuffer (if rendering)
-		if (stage.type == StageType::USER_INPUT_RENDERING) {
-			CHECK_ZG list.commandList.setPipeline(mState->inputEnabled.pipelineRender->pipeline);
-			if (stage.render.defaultFramebuffer) {
-				CHECK_ZG list.commandList.setFramebuffer(mState->windowFramebuffer);
-			}
-			else {
-				CHECK_ZG list.commandList.setFramebuffer(stage.render.framebuffer);
-			}
-		}
-		else if (stage.type == StageType::USER_INPUT_COMPUTE) {
-			CHECK_ZG list.commandList.setPipeline(mState->inputEnabled.pipelineCompute->pipeline);
+	// Add event
+	if (mState->emitDebugEvents->boolValue()) {
+		CHECK_ZG cmdList.beginEvent(stageName);
+	}
+
+	// Set pipeline and framebuffer (if rendering)
+	if (stage.type == StageType::USER_INPUT_RENDERING) {
+		CHECK_ZG cmdList.setPipeline(mState->inputEnabled.pipelineRender->pipeline);
+		if (stage.render.defaultFramebuffer) {
+			CHECK_ZG cmdList.setFramebuffer(mState->windowFramebuffer);
 		}
 		else {
-			sfz_assert(false);
+			CHECK_ZG cmdList.setFramebuffer(stage.render.framebuffer);
 		}
-
-		// If first command list created, insert call to profile begin
-		if (mState->groupCommandLists.size() == 1) {
-			FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
-			sfz_assert(frameIds.groupIds.size() <= mState->currentStageGroupIdx);
-			GroupProfilingID& groupId = frameIds.groupIds.add();
-			groupId.groupName =
-				mState->configurable.presentQueue[mState->currentStageGroupIdx].groupName;
-			CHECK_ZG list.commandList.profileBegin(mState->profiler, groupId.id);
-		}
-
-		commandList = &list;
 	}
-	mState->inputEnabled.commandList = commandList;
+	else if (stage.type == StageType::USER_INPUT_COMPUTE) {
+		CHECK_ZG cmdList.setPipeline(mState->inputEnabled.pipelineCompute->pipeline);
+	}
+	else {
+		sfz_assert(false);
+	}
 }
 
 void Renderer::stageClearRenderTargetsOptimal() noexcept
 {
 	sfz_assert(inStageInputMode());
-	CHECK_ZG mState->inputEnabled.commandList->commandList.clearRenderTargetsOptimal();
+	CHECK_ZG mState->groupCmdList.clearRenderTargetsOptimal();
 }
 
 void Renderer::stageClearDepthBufferOptimal() noexcept
 {
 	sfz_assert(inStageInputMode());
-	CHECK_ZG mState->inputEnabled.commandList->commandList.clearDepthBufferOptimal();
+	CHECK_ZG mState->groupCmdList.clearDepthBufferOptimal();
 }
 
 void Renderer::stageSetPushConstantUntyped(
@@ -655,7 +653,7 @@ void Renderer::stageSetPushConstantUntyped(
 	sfz_assert(signature.constBuffers[bufferIdx].sizeInBytes >= numBytes);
 #endif
 
-	CHECK_ZG mState->inputEnabledCommandList().setPushConstant(shaderRegister, data, numBytes);
+	CHECK_ZG mState->groupCmdList.setPushConstant(shaderRegister, data, numBytes);
 }
 
 void Renderer::stageSetConstantBufferUntyped(
@@ -705,7 +703,7 @@ void Renderer::stageSetConstantBufferUntyped(
 	CHECK_ZG frame->uploadBuffer.memcpyUpload(0, data, numBytes);
 
 	// Issue upload to device buffer
-	CHECK_ZG mState->inputEnabledCommandList().memcpyBufferToBuffer(
+	CHECK_ZG mState->groupCmdList.memcpyBufferToBuffer(
 		frame->deviceBuffer, 0, frame->uploadBuffer, 0, numBytes);
 }
 
@@ -804,11 +802,11 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 
 	// Set vertex buffer
 	sfz_assert(meshPtr->vertexBuffer.valid());
-	CHECK_ZG mState->inputEnabledCommandList().setVertexBuffer(0, meshPtr->vertexBuffer);
+	CHECK_ZG mState->groupCmdList.setVertexBuffer(0, meshPtr->vertexBuffer);
 
 	// Set index buffer
 	sfz_assert(meshPtr->indexBuffer.valid());
-	CHECK_ZG mState->inputEnabledCommandList().setIndexBuffer(
+	CHECK_ZG mState->groupCmdList.setIndexBuffer(
 		meshPtr->indexBuffer, ZG_INDEX_BUFFER_TYPE_UINT32);
 
 	// Set common pipeline bindings that are same for all components
@@ -857,7 +855,7 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 		if (registers.materialIdxPushConstant != ~0u) {
 			sfz::vec4_u32 tmp = sfz::vec4_u32(0u);
 			tmp.x = comp.materialIdx;
-			CHECK_ZG mState->inputEnabledCommandList().setPushConstant(
+			CHECK_ZG mState->groupCmdList.setPushConstant(
 				registers.materialIdxPushConstant, &tmp, sizeof(sfz::vec4_u32 ));
 		}
 
@@ -881,12 +879,12 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 		bindTexture(registers.emissive, material.emissiveTex);
 
 		// Set pipeline bindings
-		CHECK_ZG mState->inputEnabledCommandList().setPipelineBindings(bindings);
+		CHECK_ZG mState->groupCmdList.setPipelineBindings(bindings);
 
 		// Issue draw command
 		sfz_assert(comp.numIndices != 0);
 		sfz_assert((comp.numIndices % 3) == 0);
-		CHECK_ZG mState->inputEnabledCommandList().drawTrianglesIndexed(
+		CHECK_ZG mState->groupCmdList.drawTrianglesIndexed(
 			comp.firstIndex, comp.numIndices / 3);
 	}
 }
@@ -941,10 +939,10 @@ void Renderer::stageDispatchCompute(
 	}
 
 	// Set pipeline bindings
-	CHECK_ZG mState->inputEnabledCommandList().setPipelineBindings(commonBindings);
+	CHECK_ZG mState->groupCmdList.setPipelineBindings(commonBindings);
 
 	// Issue dispatch
-	CHECK_ZG mState->inputEnabledCommandList().dispatchCompute(groupCountX, groupCountY, groupCountZ);
+	CHECK_ZG mState->groupCmdList.dispatchCompute(groupCountX, groupCountY, groupCountZ);
 }
 
 void Renderer::stageEndInput() noexcept
@@ -952,6 +950,11 @@ void Renderer::stageEndInput() noexcept
 	// Ensure a stage was set to accept input
 	sfz_assert(inStageInputMode());
 	if (!inStageInputMode()) return;
+
+	// Insert event end call
+	if (mState->emitDebugEvents->boolValue()) {
+		CHECK_ZG mState->groupCmdList.endEvent();
+	}
 
 	// Clear currently active stage info
 	mState->inputEnabled = {};
@@ -963,31 +966,26 @@ bool Renderer::frameProgressNextStageGroup() noexcept
 
 	FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
 
-	// Execute command lists
-	// TODO: This should be a single "executeCommandLists()" call when that is implemented in ZeroG.
-	for (uint32_t groupIdx = 0; groupIdx < mState->groupCommandLists.size(); groupIdx++) {
-		StageCommandList& cmdList = mState->groupCommandLists[groupIdx];
+	zg::CommandList& cmdList = mState->groupCmdList;
 
-		// If last command list to be executed, insert profile end call
-		if ((groupIdx + 1) == mState->groupCommandLists.size()) {
-			StringID groupName =
-				mState->configurable.presentQueue[mState->currentStageGroupIdx].groupName;
-			GroupProfilingID* groupId = frameIds.groupIds.find([&](const GroupProfilingID& e) {
-				return e.groupName == groupName;
-			});
-			sfz_assert(groupId != nullptr);
-			sfz_assert(groupId->id != ~0ull);
-			CHECK_ZG cmdList.commandList.profileEnd(mState->profiler, groupId->id);
-		}
+	// Insert profile end call
+	StringID groupName = mState->configurable.presentQueue[mState->currentStageGroupIdx].groupName;
+	GroupProfilingID* groupId = frameIds.groupIds.find([&](const GroupProfilingID& e) {
+		return e.groupName == groupName;
+	});
+	sfz_assert(groupId != nullptr);
+	sfz_assert(groupId->id != ~0ull);
+	CHECK_ZG cmdList.profileEnd(mState->profiler, groupId->id);
 
-		if (mState->emitDebugEvents->boolValue()) {
-			CHECK_ZG cmdList.commandList.endEvent();
-		}
-		CHECK_ZG mState->presentQueue.executeCommandList(cmdList.commandList);
+	// Insert event end call
+	if (mState->emitDebugEvents->boolValue()) {
+		CHECK_ZG cmdList.endEvent();
 	}
 
-	// Release command lists
-	mState->groupCommandLists.clear();
+	// Execute command list
+	// TODO: We should probably execute all of the frame's command lists simulatenously instead of
+	//       one by one
+	CHECK_ZG mState->presentQueue.executeCommandList(cmdList);
 
 	// Move to next stage group
 	mState->currentStageGroupIdx += 1;
@@ -1000,31 +998,29 @@ void Renderer::frameFinish() noexcept
 {
 	FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
 
-	// Execute command lists
-	// TODO: This should be a single "executeCommandLists()" call when that is implemented in ZeroG.
-	for (uint32_t groupIdx = 0; groupIdx < mState->groupCommandLists.size(); groupIdx++) {
-		StageCommandList& cmdList = mState->groupCommandLists[groupIdx];
+	zg::CommandList& cmdList = mState->groupCmdList;
+	
+	// Execute remaining stuff if command list is valid
+	if (cmdList.valid()) {
+		// Insert profile end call
+		StringID groupName = mState->configurable.presentQueue[mState->currentStageGroupIdx].groupName;
+		GroupProfilingID* groupId = frameIds.groupIds.find([&](const GroupProfilingID& e) {
+			return e.groupName == groupName;
+			});
+		sfz_assert(groupId != nullptr);
+		sfz_assert(groupId->id != ~0ull);
+		CHECK_ZG cmdList.profileEnd(mState->profiler, groupId->id);
 
-		// If last command list to be executed, insert profile end call
-		if ((groupIdx + 1) == mState->groupCommandLists.size()) {
-			StringID groupName =
-				mState->configurable.presentQueue[mState->currentStageGroupIdx].groupName;
-			GroupProfilingID* groupId = frameIds.groupIds.find([&](const GroupProfilingID& e) {
-				return e.groupName == groupName;
-				});
-			sfz_assert(groupId != nullptr);
-			sfz_assert(groupId->id != ~0ull);
-			CHECK_ZG cmdList.commandList.profileEnd(mState->profiler, groupId->id);
-		}
-
+		// Insert event end call
 		if (mState->emitDebugEvents->boolValue()) {
-			CHECK_ZG cmdList.commandList.endEvent();
+			CHECK_ZG cmdList.endEvent();
 		}
-		CHECK_ZG mState->presentQueue.executeCommandList(cmdList.commandList);
-	}
 
-	// Release command lists
-	mState->groupCommandLists.clear();
+		// Execute command list
+		// TODO: We should probably execute all of the frame's command lists simulatenously instead of
+		//       one by one
+		CHECK_ZG mState->presentQueue.executeCommandList(cmdList);
+	}
 
 	// Render ImGui
 	zg::imguiRender(

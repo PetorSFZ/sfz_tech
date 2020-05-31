@@ -79,11 +79,11 @@ struct ZgCommandList final {
 
 		mDevice = nullptr;
 		mDescriptorBuffer = nullptr;
-		mPipelineSet = false;
-		mBoundPipelineRender = nullptr;
-		mBoundPipelineCompute = nullptr;
-		mFramebufferSet = false;
-		mFramebuffer = nullptr;
+		
+		boundPipelineRender = nullptr;
+		boundPipelineCompute = nullptr;
+		boundFramebuffer = nullptr;
+
 	}
 
 	ZgResult reset() noexcept
@@ -94,12 +94,16 @@ struct ZgCommandList final {
 		if (D3D12_FAIL(commandList->Reset(commandAllocator.Get(), nullptr))) {
 			return ZG_ERROR_GENERIC;
 		}
+		boundPipelineRender = nullptr;
+		boundPipelineCompute = nullptr;
+		boundFramebuffer = nullptr;
 
-		mPipelineSet = false;
-		mBoundPipelineCompute = nullptr;
-		mBoundPipelineRender = nullptr;
-		mFramebufferSet = false;
-		mFramebuffer = nullptr;
+		// Set descriptor heap
+		if (commandListType != D3D12_COMMAND_LIST_TYPE_COPY) {
+			ID3D12DescriptorHeap* heaps[] = { mDescriptorBuffer->descriptorHeap.Get() };
+			commandList->SetDescriptorHeaps(1, heaps);
+		}
+
 		return ZG_SUCCESS;
 	}
 
@@ -115,11 +119,12 @@ struct ZgCommandList final {
 
 	ID3D12Device3* mDevice = nullptr;
 	D3D12DescriptorRingBuffer* mDescriptorBuffer = nullptr;
-	bool mPipelineSet = false; // Only allow a single pipeline per command list
-	ZgPipelineRender* mBoundPipelineRender = nullptr;
-	ZgPipelineCompute* mBoundPipelineCompute = nullptr;
-	bool mFramebufferSet = false; // Only allow a single framebuffer to be set.
-	ZgFramebuffer* mFramebuffer = nullptr;
+
+	ZgPipelineRender* boundPipelineRender = nullptr;
+	ZgPipelineCompute* boundPipelineCompute = nullptr;
+	ZgFramebuffer* boundFramebuffer = nullptr;
+	bool hasBoundPipeline() const { return boundPipelineRender != nullptr || boundPipelineCompute != nullptr; }
+	bool hasBoundFramebuffer() const { return boundFramebuffer != nullptr; }
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
@@ -325,13 +330,12 @@ struct ZgCommandList final {
 		const void* dataPtr,
 		uint32_t dataSizeInBytes) noexcept
 	{
-		// Require that a pipeline has been set so we can query its parameters
-		if (!mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+		sfz_assert(hasBoundPipeline());
 
 		// Get root signature
 		const D3D12RootSignature* rootSignaturePtr = nullptr;
-		if (mBoundPipelineRender != nullptr) rootSignaturePtr = &mBoundPipelineRender->rootSignature;
-		else if (mBoundPipelineCompute != nullptr) rootSignaturePtr = &mBoundPipelineCompute->rootSignature;
+		if (boundPipelineRender != nullptr) rootSignaturePtr = &boundPipelineRender->rootSignature;
+		else if (boundPipelineCompute != nullptr) rootSignaturePtr = &boundPipelineCompute->rootSignature;
 		else return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 
 		// Linear search to find push constant maping
@@ -348,7 +352,7 @@ struct ZgCommandList final {
 		}
 
 		// Set push constant
-		if (mBoundPipelineRender != nullptr) {
+		if (boundPipelineRender != nullptr) {
 			if (mapping.sizeInBytes == 4) {
 				uint32_t data = *reinterpret_cast<const uint32_t*>(dataPtr);
 				commandList->SetGraphicsRoot32BitConstant(mapping.parameterIndex, data, 0);
@@ -375,13 +379,12 @@ struct ZgCommandList final {
 	ZgResult setPipelineBindings(
 		const ZgPipelineBindings& bindings) noexcept
 	{
-		// Require that a pipeline has been set so we can query its parameters
-		if (!mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+		sfz_assert(hasBoundPipeline());
 
 		// Get root signature
 		const D3D12RootSignature* rootSignaturePtr = nullptr;
-		if (mBoundPipelineRender != nullptr) rootSignaturePtr = &mBoundPipelineRender->rootSignature;
-		else if (mBoundPipelineCompute != nullptr) rootSignaturePtr = &mBoundPipelineCompute->rootSignature;
+		if (boundPipelineRender != nullptr) rootSignaturePtr = &boundPipelineRender->rootSignature;
+		else if (boundPipelineCompute != nullptr) rootSignaturePtr = &boundPipelineCompute->rootSignature;
 		else return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 
 		const uint32_t numConstantBuffers = rootSignaturePtr->constBuffers.size();
@@ -598,7 +601,7 @@ struct ZgCommandList final {
 		}
 
 		// Set descriptor table to root signature
-		if (mBoundPipelineRender != nullptr) {
+		if (boundPipelineRender != nullptr) {
 			commandList->SetGraphicsRootDescriptorTable(
 				rootSignaturePtr->dynamicBuffersParameterIndex, rangeStartGpu);
 		}
@@ -613,19 +616,12 @@ struct ZgCommandList final {
 	ZgResult setPipelineCompute(
 		ZgPipelineCompute* pipeline) noexcept
 	{
-		// If a pipeline is already set for this command list, return error. We currently only allow a
-		// single pipeline per command list.
-		if (mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
-		mPipelineSet = true;
-		mBoundPipelineCompute = pipeline;
+		boundPipelineCompute = pipeline;
+		boundPipelineRender = nullptr;
 
 		// Set compute pipeline
 		commandList->SetPipelineState(pipeline->pipelineState.Get());
 		commandList->SetComputeRootSignature(pipeline->rootSignature.rootSignature.Get());
-
-		// Set descriptor heap
-		ID3D12DescriptorHeap* heaps[] = { mDescriptorBuffer->descriptorHeap.Get() };
-		commandList->SetDescriptorHeaps(1, heaps);
 
 		return ZG_SUCCESS;
 	}
@@ -667,7 +663,7 @@ struct ZgCommandList final {
 		uint32_t groupCountY,
 		uint32_t groupCountZ) noexcept
 	{
-		if (!mPipelineSet || mBoundPipelineCompute == nullptr) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+		if (boundPipelineCompute == nullptr) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 		commandList->Dispatch(groupCountX, groupCountY, groupCountZ);
 		return ZG_SUCCESS;
 	}
@@ -675,19 +671,12 @@ struct ZgCommandList final {
 	ZgResult setPipelineRender(
 		ZgPipelineRender* pipeline) noexcept
 	{
-		// If a pipeline is already set for this command list, return error. We currently only allow a
-		// single pipeline per command list.
-		if (mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
-		mPipelineSet = true;
-		mBoundPipelineRender = pipeline;
+		boundPipelineRender = pipeline;
+		boundPipelineCompute = nullptr;
 
 		// Set render pipeline
 		commandList->SetPipelineState(pipeline->pipelineState.Get());
 		commandList->SetGraphicsRootSignature(pipeline->rootSignature.rootSignature.Get());
-
-		// Set descriptor heap
-		ID3D12DescriptorHeap* heaps[] = { mDescriptorBuffer->descriptorHeap.Get() };
-		commandList->SetDescriptorHeaps(1, heaps);
 
 		return ZG_SUCCESS;
 	}
@@ -701,11 +690,7 @@ struct ZgCommandList final {
 		ZG_ARG_CHECK(!framebuffer->hasDepthBuffer && framebuffer->numRenderTargets == 0,
 			"Can't set a framebuffer with no render targets or depth buffer");
 
-		// If a framebuffer is already set for this command list, return error. We currently only allow
-		// a single framebuffer per command list.
-		if (mFramebufferSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
-		mFramebufferSet = true;
-		mFramebuffer = framebuffer;
+		boundFramebuffer = framebuffer;
 
 		// If no viewport is requested, set one that covers entire screen
 		D3D12_VIEWPORT viewport = {};
@@ -792,7 +777,7 @@ struct ZgCommandList final {
 		const ZgRect& viewportRect) noexcept
 	{
 		// Return error if no framebuffer is set
-		if (!mFramebufferSet) {
+		if (!hasBoundFramebuffer()) {
 			ZG_ERROR("setFramebufferViewport(): Must set a framebuffer before you can change viewport");
 			return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 		}
@@ -814,7 +799,7 @@ struct ZgCommandList final {
 		const ZgRect& scissor) noexcept
 	{
 		// Return error if no framebuffer is set
-		if (!mFramebufferSet) {
+		if (!hasBoundFramebuffer()) {
 			ZG_ERROR("setFramebufferScissor(): Must set a framebuffer before you can change scissor");
 			return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 		}
@@ -843,13 +828,13 @@ struct ZgCommandList final {
 
 	ZgResult clearRenderTargetOptimal(uint32_t renderTargetIdx) noexcept
 	{
-		if (!mFramebufferSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
-		if (mFramebuffer->numRenderTargets <= renderTargetIdx) return ZG_WARNING_GENERIC;
+		if (!hasBoundFramebuffer()) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+		if (boundFramebuffer->numRenderTargets <= renderTargetIdx) return ZG_WARNING_GENERIC;
 
 		constexpr float ZEROS[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 		constexpr float ONES[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 		const float* clearColor = [&]() -> const float* {
-			switch (mFramebuffer->renderTargetOptimalClearValues[renderTargetIdx]) {
+			switch (boundFramebuffer->renderTargetOptimalClearValues[renderTargetIdx]) {
 			case ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED: return ZEROS;
 			case ZG_OPTIMAL_CLEAR_VALUE_ZERO: return ZEROS;
 			case ZG_OPTIMAL_CLEAR_VALUE_ONE: return ONES;
@@ -859,7 +844,7 @@ struct ZgCommandList final {
 		}();
 
 		commandList->ClearRenderTargetView(
-			mFramebuffer->renderTargetDescriptors[renderTargetIdx], clearColor, 0, nullptr);
+			boundFramebuffer->renderTargetDescriptors[renderTargetIdx], clearColor, 0, nullptr);
 
 		return ZG_SUCCESS;
 	}
@@ -871,17 +856,17 @@ struct ZgCommandList final {
 		float alpha) noexcept
 	{
 		// Return error if no framebuffer is set
-		if (!mFramebufferSet) {
+		if (!hasBoundFramebuffer()) {
 			ZG_ERROR("clearRenderTargets(): Must set a framebuffer before you can clear its render targets");
 			return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 		}
-		if (mFramebuffer->numRenderTargets == 0) return ZG_WARNING_GENERIC;
+		if (boundFramebuffer->numRenderTargets == 0) return ZG_WARNING_GENERIC;
 
 		// Clear render targets
 		float clearColor[4] = { red, green, blue, alpha };
-		for (uint32_t i = 0; i < mFramebuffer->numRenderTargets; i++) {
+		for (uint32_t i = 0; i < boundFramebuffer->numRenderTargets; i++) {
 			commandList->ClearRenderTargetView(
-				mFramebuffer->renderTargetDescriptors[i], clearColor, 0, nullptr);
+				boundFramebuffer->renderTargetDescriptors[i], clearColor, 0, nullptr);
 		}
 
 		return ZG_SUCCESS;
@@ -890,12 +875,12 @@ struct ZgCommandList final {
 	ZgResult clearRenderTargetsOptimal() noexcept
 	{
 		// Return error if no framebuffer is set
-		if (!mFramebufferSet) {
+		if (!hasBoundFramebuffer()) {
 			ZG_ERROR("clearRenderTargetsOptimal(): Must set a framebuffer before you can clear it");
 			return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 		}
 
-		for (uint32_t i = 0; i < mFramebuffer->numRenderTargets; i++) {
+		for (uint32_t i = 0; i < boundFramebuffer->numRenderTargets; i++) {
 			ZgResult res = this->clearRenderTargetOptimal(i);
 			if (res != ZG_SUCCESS) return res;
 		}
@@ -907,12 +892,12 @@ struct ZgCommandList final {
 		float depth) noexcept
 	{
 		// Return error if no framebuffer is set
-		if (!mFramebufferSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
-		if (!mFramebuffer->hasDepthBuffer) return ZG_WARNING_GENERIC;
+		if (!hasBoundFramebuffer()) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+		if (!boundFramebuffer->hasDepthBuffer) return ZG_WARNING_GENERIC;
 
 		// Clear depth buffer
 		commandList->ClearDepthStencilView(
-			mFramebuffer->depthBufferDescriptor, D3D12_CLEAR_FLAG_DEPTH, depth, 0, 0, nullptr);
+			boundFramebuffer->depthBufferDescriptor, D3D12_CLEAR_FLAG_DEPTH, depth, 0, 0, nullptr);
 
 		return ZG_SUCCESS;
 	}
@@ -920,11 +905,11 @@ struct ZgCommandList final {
 	ZgResult clearDepthBufferOptimal() noexcept
 	{
 		// Return error if no framebuffer is set
-		if (!mFramebufferSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
-		if (!mFramebuffer->hasDepthBuffer) return ZG_WARNING_GENERIC;
+		if (!hasBoundFramebuffer()) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+		if (!boundFramebuffer->hasDepthBuffer) return ZG_WARNING_GENERIC;
 
 		const float clearDepth = [&]() {
-			switch (mFramebuffer->depthBufferOptimalClearValue) {
+			switch (boundFramebuffer->depthBufferOptimalClearValue) {
 			case ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED: return 0.0f;
 			case ZG_OPTIMAL_CLEAR_VALUE_ZERO: return 0.0f;
 			case ZG_OPTIMAL_CLEAR_VALUE_ONE: return 1.0f;
@@ -935,7 +920,7 @@ struct ZgCommandList final {
 
 		// Clear depth buffer
 		commandList->ClearDepthStencilView(
-			mFramebuffer->depthBufferDescriptor, D3D12_CLEAR_FLAG_DEPTH, clearDepth, 0, 0, nullptr);
+			boundFramebuffer->depthBufferDescriptor, D3D12_CLEAR_FLAG_DEPTH, clearDepth, 0, 0, nullptr);
 
 		return ZG_SUCCESS;
 	}
@@ -975,10 +960,10 @@ struct ZgCommandList final {
 		ZgBuffer* vertexBuffer) noexcept
 	{
 		// Need to have a pipeline set to verify vertex buffer binding
-		if (!mPipelineSet) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
+		if (boundPipelineRender == nullptr) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 
 		// Check that the vertex buffer slot is not out of bounds for the bound pipeline
-		const ZgPipelineRenderCreateInfo& pipelineInfo = mBoundPipelineRender->createInfo;
+		const ZgPipelineRenderCreateInfo& pipelineInfo = boundPipelineRender->createInfo;
 		if (pipelineInfo.numVertexBufferSlots <= vertexBufferSlot) {
 			return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 		}

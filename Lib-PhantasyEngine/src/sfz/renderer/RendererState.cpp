@@ -250,22 +250,6 @@ uint32_t RendererState::findActiveStageIdx(StringID stageName) const noexcept
 	return uint32_t(stage - stages.data());
 }
 
-StageCommandList* RendererState::getStageCommandList(StringID stageName) noexcept
-{
-	sfz_assert(stageName != StringID::invalid());
-	StageCommandList* list = groupCommandLists.find([&](const StageCommandList& e) {
-		return e.stageName == stageName;
-	});
-	return list;
-}
-
-zg::CommandList& RendererState::inputEnabledCommandList() noexcept
-{
-	sfz_assert(inputEnabled.inInputMode);
-	sfz_assert(inputEnabled.commandList);
-	return inputEnabled.commandList->commandList;
-}
-
 uint32_t RendererState::findPipelineRenderIdx(StringID pipelineName) const noexcept
 {
 	sfz_assert(pipelineName != StringID::invalid());

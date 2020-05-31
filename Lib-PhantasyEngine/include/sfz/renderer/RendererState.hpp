@@ -192,11 +192,6 @@ struct TextureItem final {
 // RendererState
 // ------------------------------------------------------------------------------------------------
 
-struct StageCommandList final {
-	StringID stageName;
-	zg::CommandList commandList;
-};
-
 struct GroupProfilingID final {
 	StringID groupName = StringID::invalid();
 	uint64_t id = ~0ull;
@@ -278,7 +273,7 @@ struct RendererState final {
 
 	// The currently active stage group
 	uint32_t currentStageGroupIdx = 0;
-	ArrayLocal<StageCommandList, 32> groupCommandLists;
+	zg::CommandList groupCmdList;
 
 	// The current input-enabled stage
 	struct {
@@ -287,7 +282,6 @@ struct RendererState final {
 		Stage* stage = nullptr;
 		PipelineRenderItem* pipelineRender = nullptr;
 		PipelineComputeItem* pipelineCompute = nullptr;
-		StageCommandList* commandList = nullptr;
 	} inputEnabled;
 
 	// Helper methods
@@ -297,10 +291,6 @@ struct RendererState final {
 	// current set index to the next stage barrier). Returns ~0u if stage is not among the current
 	// active set.
 	uint32_t findActiveStageIdx(StringID stageName) const noexcept;
-
-	StageCommandList* getStageCommandList(StringID stageName) noexcept;
-	
-	zg::CommandList& inputEnabledCommandList() noexcept;
 
 	// Finds the index of the specified pipeline. Returns ~0u if it does not exist.
 	uint32_t findPipelineRenderIdx(StringID pipelineName) const noexcept;

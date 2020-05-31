@@ -165,7 +165,7 @@ public:
 	// Note that this does not mean that stages are executing sequentially (they might be executing
 	// simulatenously if there are no stage barriers between them), it just means that the renderer
 	// only accepts input for the specified stage until endStageInput() is called.
-	void stageBeginInput(StringID stageName) noexcept;
+	void stageBeginInput(const char* stageName) noexcept;
 
 	void stageClearRenderTargetsOptimal() noexcept;
 
