@@ -279,14 +279,11 @@ static void realMain(SDL_Window* window) noexcept
 	zg::Buffer cubeVertexBufferDevice;
 	createDeviceBufferSimpleBlocking(copyQueue, cubeVertexBufferDevice,
 		cubeVertices, sizeof(Vertex) * CUBE_NUM_VERTICES);
-	CHECK_ZG cubeVertexBufferDevice.setDebugName("cubeVertexBuffer");
 
 	// Create a index buffer for the cube's vertices
 	zg::Buffer cubeIndexBufferDevice;
 	createDeviceBufferSimpleBlocking(copyQueue, cubeIndexBufferDevice,
 		CUBE_INDICES, sizeof(uint32_t) * CUBE_NUM_INDICES);
-	CHECK_ZG cubeIndexBufferDevice.setDebugName("cubeIndexBuffer");
-
 
 	// Create a constant buffer
 	Vector offsets;
@@ -294,7 +291,6 @@ static void realMain(SDL_Window* window) noexcept
 	zg::Buffer constBufferDevice;
 	createDeviceBufferSimpleBlocking(copyQueue, constBufferDevice,
 		&offsets, sizeof(Vector), 256);
-	CHECK_ZG constBufferDevice.setDebugName("constBufferDevice");
 
 	// Create a texture
 	ZgTextureCreateInfo textureCreateInfo = {};
@@ -306,8 +302,6 @@ static void realMain(SDL_Window* window) noexcept
 
 	zg::Texture texture;
 	CHECK_ZG texture.create(textureCreateInfo);
-	CHECK_ZG texture.setDebugName("cubeTexture");
-
 
 	// Fill texture with some random data
 	{
@@ -488,7 +482,7 @@ static void realMain(SDL_Window* window) noexcept
 				CHECK_ZG commandList.setPushConstant(0, &transforms, sizeof(Transforms));
 
 				// Draw cube
-				CHECK_ZG commandList.drawTrianglesIndexed(0, CUBE_NUM_INDICES / 3);
+				CHECK_ZG commandList.drawTrianglesIndexed(0, CUBE_NUM_INDICES);
 			};
 
 			// Set Cube's vertex and index buffer
