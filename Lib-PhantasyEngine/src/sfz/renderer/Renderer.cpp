@@ -970,28 +970,29 @@ bool Renderer::frameProgressNextStageGroup() noexcept
 {
 	sfz_assert(!inStageInputMode());
 
-	FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
-
 	zg::CommandList& cmdList = mState->groupCmdList;
+	if (cmdList.valid()) {
+		FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
 
-	// Insert profile end call
-	StringID groupName = mState->configurable.presentStageGroups[mState->currentStageGroupIdx].groupName;
-	GroupProfilingID* groupId = frameIds.groupIds.find([&](const GroupProfilingID& e) {
-		return e.groupName == groupName;
-	});
-	sfz_assert(groupId != nullptr);
-	sfz_assert(groupId->id != ~0ull);
-	CHECK_ZG cmdList.profileEnd(mState->profiler, groupId->id);
+		// Insert profile end call
+		StringID groupName = mState->configurable.presentStageGroups[mState->currentStageGroupIdx].groupName;
+		GroupProfilingID* groupId = frameIds.groupIds.find([&](const GroupProfilingID& e) {
+			return e.groupName == groupName;
+		});
+		sfz_assert(groupId != nullptr);
+		sfz_assert(groupId->id != ~0ull);
+		CHECK_ZG cmdList.profileEnd(mState->profiler, groupId->id);
 
-	// Insert event end call
-	if (mState->emitDebugEvents->boolValue()) {
-		CHECK_ZG cmdList.endEvent();
+		// Insert event end call
+		if (mState->emitDebugEvents->boolValue()) {
+			CHECK_ZG cmdList.endEvent();
+		}
+
+		// Execute command list
+		// TODO: We should probably execute all of the frame's command lists simulatenously instead of
+		//       one by one
+		CHECK_ZG mState->presentQueue.executeCommandList(cmdList);
 	}
-
-	// Execute command list
-	// TODO: We should probably execute all of the frame's command lists simulatenously instead of
-	//       one by one
-	CHECK_ZG mState->presentQueue.executeCommandList(cmdList);
 
 	// Move to next stage group
 	mState->currentStageGroupIdx += 1;
@@ -1013,7 +1014,7 @@ void Renderer::frameFinish() noexcept
 		StringID groupName = mState->configurable.presentStageGroups[mState->currentStageGroupIdx].groupName;
 		GroupProfilingID* groupId = frameIds.groupIds.find([&](const GroupProfilingID& e) {
 			return e.groupName == groupName;
-			});
+		});
 		sfz_assert(groupId != nullptr);
 		sfz_assert(groupId->id != ~0ull);
 		CHECK_ZG cmdList.profileEnd(mState->profiler, groupId->id);
