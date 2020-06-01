@@ -424,6 +424,29 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		}
 	}
 
+
+	// Streaming buffers
+	JsonNode streamingBuffersNode = root.accessMap("streaming_buffers");
+	if (streamingBuffersNode.isValid()) {
+
+		const uint32_t numStreamingBuffers = streamingBuffersNode.arrayLength();
+		configurable.streamingBuffers.init(numStreamingBuffers * 2, state.allocator, sfz_dbg(""));
+		for (uint32_t bufferIdx = 0; bufferIdx < numStreamingBuffers; bufferIdx++) {
+
+			JsonNode bufferNode = streamingBuffersNode.accessArray(bufferIdx);
+			StreamingBufferItem item;
+			item.name =
+				resStrings.getStringID(CHECK_JSON bufferNode.accessMap("name").valueStr256());
+			item.elementSizeBytes =
+				uint32_t(CHECK_JSON bufferNode.accessMap("element_size_bytes").valueInt());
+			item.maxNumElements =
+				uint32_t(CHECK_JSON bufferNode.accessMap("max_num_elements").valueInt());
+			item.committedAllocation = CHECK_JSON bufferNode.accessMap("committed_allocation").valueBool();
+			configurable.streamingBuffers.put(item.name, std::move(item));
+		}
+	}
+
+
 	// Present queue
 	{
 		StringID defaultId = resStrings.getStringID("default");
@@ -545,6 +568,12 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	// Create static textures
 	for (StaticTextureItem& item : configurable.staticTextures) {
 		item.buildTexture(state.windowRes);
+	}
+
+	// Create streaming buffers
+	for (auto pair : configurable.streamingBuffers) {
+		StreamingBufferItem& item = pair.value;
+		item.buildBuffer(state.frameLatency);
 	}
 
 	// Allocate stage memory

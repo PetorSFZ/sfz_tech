@@ -167,6 +167,17 @@ public:
 	// only accepts input for the specified stage until endStageInput() is called.
 	void stageBeginInput(const char* stageName) noexcept;
 
+	// Uploads data to a streaming buffer
+	void stageUploadToStreamingBufferUntyped(
+		const char* bufferName, const void* data, uint32_t elementSize, uint32_t numElements) noexcept;
+
+	template<typename T>
+	void stageUploadToStreamingBuffer(
+		const char* bufferName, const T* data, uint32_t numElements) noexcept
+	{
+		stageUploadToStreamingBufferUntyped(bufferName, data, sizeof(T), numElements);
+	}
+
 	void stageClearRenderTargetsOptimal() noexcept;
 
 	void stageClearDepthBufferOptimal() noexcept;
@@ -202,6 +213,12 @@ public:
 	//
 	// The specified registers will get data if available
 	void stageDrawMesh(StringID meshId, const MeshRegisters& registers) noexcept;
+
+	void stageSetVertexBuffer(const char* streamingBufferName) noexcept;
+	void stageSetIndexBuffer(const char* streamingBufferName, bool u32Buffer) noexcept;
+
+	void stageDrawTriangles(uint32_t startVertex, uint32_t numVertices) noexcept;
+	void stageDrawTrianglesIndexed(uint32_t firstIndex, uint32_t numIndices) noexcept;
 
 	// Gets the group dimensions of the compute pipeline associated with the currently active stage.
 	vec3_i32 stageGetComputeGroupDims() noexcept;

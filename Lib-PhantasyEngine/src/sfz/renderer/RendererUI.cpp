@@ -198,9 +198,15 @@ void RendererUI::render(RendererState& state) noexcept
 			ImGui::EndTabItem();
 		}
 
-		if (ImGui::BeginTabItem("Static Resources")) {
+		if (ImGui::BeginTabItem("Static Textures")) {
 			ImGui::Spacing();
-			this->renderStaticResourcesTab(state.configurable);
+			this->renderStaticTexturesTab(state.configurable);
+			ImGui::EndTabItem();
+		}
+
+		if (ImGui::BeginTabItem("Streaming Buffers")) {
+			ImGui::Spacing();
+			this->renderStreamingBuffersTab(state.configurable);
 			ImGui::EndTabItem();
 		}
 
@@ -733,7 +739,7 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 	}
 }
 
-void RendererUI::renderStaticResourcesTab(RendererConfigurableState& state) noexcept
+void RendererUI::renderStaticTexturesTab(RendererConfigurableState& state) noexcept
 {
 	StringCollection& resStrings = getResourceStrings();
 
@@ -779,6 +785,33 @@ void RendererUI::renderStaticResourcesTab(RendererConfigurableState& state) noex
 
 		ImGui::Unindent(20.0f);
 		ImGui::Spacing();
+		ImGui::Spacing();
+	}
+}
+
+void RendererUI::renderStreamingBuffersTab(RendererConfigurableState& state) noexcept
+{
+	sfz::StringCollection& resStrings = sfz::getResourceStrings();
+
+	constexpr float offset = 220.0f;
+
+	for (auto itemItr : state.streamingBuffers) {
+		const StreamingBufferItem& item = itemItr.value;
+
+		ImGui::Text("\"%s\"", resStrings.getString(itemItr.key));
+
+		ImGui::Indent(20.0f);
+		alignedEdit("Element size", offset, [&](const char*) {
+			ImGui::Text("%u bytes", item.elementSizeBytes);
+		});
+		alignedEdit("Max num elements", offset, [&](const char*) {
+			ImGui::Text("%u", item.maxNumElements);
+		});
+		alignedEdit("Committed allocation", offset, [&](const char*) {
+			ImGui::Text("%s", item.committedAllocation ? "TRUE" : "FALSE");
+		});
+
+		ImGui::Unindent(20.0f);
 		ImGui::Spacing();
 	}
 }

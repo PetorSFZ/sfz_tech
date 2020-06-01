@@ -34,7 +34,7 @@ static ZgOptimalClearValue floatToOptimalClearValue(float value) noexcept
 	return ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED;
 }
 
-// Static resources
+// Static textures
 // ------------------------------------------------------------------------------------------------
 
 void StaticTextureItem::buildTexture(vec2_i32 windowRes) noexcept
@@ -75,6 +75,25 @@ void StaticTextureItem::buildTexture(vec2_i32 windowRes) noexcept
 		createInfo.debugName = resStrings.getString(this->name);
 		CHECK_ZG this->texture.create(createInfo);
 	}
+}
+
+// Streaming buffers
+// ------------------------------------------------------------------------------------------------
+
+void StreamingBufferItem::buildBuffer(uint32_t frameLatency)
+{
+	const uint64_t sizeBytes = this->elementSizeBytes * this->maxNumElements;
+	const char* nameStr = getResourceStrings().getString(this->name);
+	uint32_t frameIdx = 0;
+	this->data.init(frameLatency, [&](StreamingBufferMemory& memory) {
+		str256 uploadDebugName("%s_upload_%u", nameStr, frameIdx);
+		str256 deviceDebugName("%s_device_%u", nameStr, frameIdx);
+		frameIdx += 1;
+		CHECK_ZG memory.uploadBuffer.create(
+			sizeBytes, ZG_MEMORY_TYPE_UPLOAD, committedAllocation, uploadDebugName.str());
+		CHECK_ZG memory.deviceBuffer.create(
+			sizeBytes, ZG_MEMORY_TYPE_DEVICE, committedAllocation, deviceDebugName.str());
+	});
 }
 
 //  Pipeline types

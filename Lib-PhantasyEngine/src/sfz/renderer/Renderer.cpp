@@ -606,6 +606,37 @@ void Renderer::stageBeginInput(const char* stageName) noexcept
 	}
 }
 
+void Renderer::stageUploadToStreamingBufferUntyped(
+	const char* bufferName, const void* data, uint32_t elementSize, uint32_t numElements) noexcept
+{
+	sfz_assert(inStageInputMode());
+	
+	// Get streaming buffer item
+	StringCollection& resStrings = getResourceStrings();
+	StringID bufferID = resStrings.getStringID(bufferName);
+	StreamingBufferItem* item = mState->configurable.streamingBuffers.get(bufferID);
+	sfz_assert(item != nullptr);
+
+	// Calculate number of bytes to copy to streaming buffer
+	const uint32_t numBytes = elementSize * numElements;
+	sfz_assert(numBytes < (item->elementSizeBytes * item->maxNumElements));
+	sfz_assert(elementSize == item->elementSizeBytes); // TODO: Might want to remove this assert
+
+	// Grab this frame's memory
+	StreamingBufferMemory& memory = item->data.data(mState->currentFrameIdx);
+
+	// Only allowed to upload to streaming buffer once per frame
+	sfz_assert(memory.lastFrameIdxTouched < mState->currentFrameIdx);
+	memory.lastFrameIdxTouched = mState->currentFrameIdx;
+
+	// Memcpy to upload buffer
+	CHECK_ZG memory.uploadBuffer.memcpyUpload(0, data, numBytes);
+
+	// Schedule memcpy from upload buffer to device buffer
+	CHECK_ZG mState->groupCmdList.memcpyBufferToBuffer(
+		memory.deviceBuffer, 0, memory.uploadBuffer, 0, numBytes);
+}
+
 void Renderer::stageClearRenderTargetsOptimal() noexcept
 {
 	sfz_assert(inStageInputMode());
@@ -887,6 +918,57 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 		CHECK_ZG mState->groupCmdList.drawTrianglesIndexed(
 			comp.firstIndex, comp.numIndices);
 	}
+}
+
+void Renderer::stageSetVertexBuffer(const char* streamingBufferName) noexcept
+{
+	sfz_assert(inStageInputMode());
+	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
+
+	// Get streaming buffer item
+	StringCollection& resStrings = getResourceStrings();
+	StringID bufferID = resStrings.getStringID(streamingBufferName);
+	StreamingBufferItem* item = mState->configurable.streamingBuffers.get(bufferID);
+	sfz_assert(item != nullptr);
+
+	// Grab this frame's memory
+	StreamingBufferMemory& memory = item->data.data(mState->currentFrameIdx);
+
+	// Set vertex buffer
+	CHECK_ZG mState->groupCmdList.setVertexBuffer(0, memory.deviceBuffer);
+}
+
+void Renderer::stageSetIndexBuffer(const char* streamingBufferName, bool u32Buffer) noexcept
+{
+	sfz_assert(inStageInputMode());
+	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
+
+	// Get streaming buffer item
+	StringCollection& resStrings = getResourceStrings();
+	StringID bufferID = resStrings.getStringID(streamingBufferName);
+	StreamingBufferItem* item = mState->configurable.streamingBuffers.get(bufferID);
+	sfz_assert(item != nullptr);
+
+	// Grab this frame's memory
+	StreamingBufferMemory& memory = item->data.data(mState->currentFrameIdx);
+
+	// Set index buffer
+	CHECK_ZG mState->groupCmdList.setIndexBuffer(
+		memory.deviceBuffer, u32Buffer ? ZG_INDEX_BUFFER_TYPE_UINT32 : ZG_INDEX_BUFFER_TYPE_UINT16);
+}
+
+void Renderer::stageDrawTriangles(uint32_t startVertex, uint32_t numVertices) noexcept
+{
+	sfz_assert(inStageInputMode());
+	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
+	CHECK_ZG mState->groupCmdList.drawTriangles(startVertex, numVertices);
+}
+
+void Renderer::stageDrawTrianglesIndexed(uint32_t firstIndex, uint32_t numIndices) noexcept
+{
+	sfz_assert(inStageInputMode());
+	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
+	CHECK_ZG mState->groupCmdList.drawTrianglesIndexed(firstIndex, numIndices);
 }
 
 vec3_i32 Renderer::stageGetComputeGroupDims() noexcept
