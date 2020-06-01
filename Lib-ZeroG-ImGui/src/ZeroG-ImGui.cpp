@@ -262,7 +262,7 @@ void imguiRender(
 	// Convert draw data
 	for (int i = 0; i < drawData.CmdListsCount; i++) {
 
-		const ImDrawList& cmdList = *drawData.CmdLists[i];
+		const ImDrawList& imCmdList = *drawData.CmdLists[i];
 
 		// indexOffset is the offset to offset all indices with
 		const uint32_t indexOffset = state->tmpVertices.size();
@@ -271,8 +271,8 @@ void imguiRender(
 		uint32_t indexBufferOffset = state->tmpIndices.size();
 
 		// Convert vertices and add to global list
-		for (int j = 0; j < cmdList.VtxBuffer.size(); j++) {
-			const ImDrawVert& imguiVertex = cmdList.VtxBuffer[j];
+		for (int j = 0; j < imCmdList.VtxBuffer.size(); j++) {
+			const ImDrawVert& imguiVertex = imCmdList.VtxBuffer[j];
 
 			ImGuiVertex convertedVertex;
 			convertedVertex.pos = vec2(imguiVertex.pos.x, imguiVertex.pos.y);
@@ -290,13 +290,13 @@ void imguiRender(
 		}
 
 		// Fix indices and add to global list
-		for (int j = 0; j < cmdList.IdxBuffer.size(); j++) {
-			state->tmpIndices.add(cmdList.IdxBuffer[j] + indexOffset);
+		for (int j = 0; j < imCmdList.IdxBuffer.size(); j++) {
+			state->tmpIndices.add(imCmdList.IdxBuffer[j] + indexOffset);
 		}
 
 		// Create new commands
-		for (int j = 0; j < cmdList.CmdBuffer.Size; j++) {
-			const ImDrawCmd& inCmd = cmdList.CmdBuffer[j];
+		for (int j = 0; j < imCmdList.CmdBuffer.Size; j++) {
+			const ImDrawCmd& inCmd = imCmdList.CmdBuffer[j];
 
 			ImGuiCommand cmd;
 			cmd.idxBufferOffset = indexBufferOffset;

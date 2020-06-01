@@ -165,9 +165,9 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	configurable.renderPipelines.init(numRenderPipelines, state.allocator, sfz_dbg(""));
 
 	// Parse information about each render pipeline
-	for (uint32_t i = 0; i < numRenderPipelines; i++) {
+	for (uint32_t pipelineIdx = 0; pipelineIdx < numRenderPipelines; pipelineIdx++) {
 
-		JsonNode pipelineNode = renderPipelinesNode.accessArray(i);
+		JsonNode pipelineNode = renderPipelinesNode.accessArray(pipelineIdx);
 		configurable.renderPipelines.add(PipelineRenderItem());
 		PipelineRenderItem& item = configurable.renderPipelines.last();
 
