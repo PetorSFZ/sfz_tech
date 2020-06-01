@@ -100,7 +100,7 @@ ZG_ENUM(ZgBool) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 31;
+static const uint32_t ZG_COMPILED_API_VERSION = 32;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -1663,7 +1663,7 @@ ZG_API ZgResult zgCommandListDrawTriangles(
 ZG_API ZgResult zgCommandListDrawTrianglesIndexed(
 	ZgCommandList* commandList,
 	uint32_t startIndex,
-	uint32_t numTriangles);
+	uint32_t numIndices);
 
 // Begins profiling operations from this point until zgCommandListProfileEnd() is called.
 //

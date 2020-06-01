@@ -370,7 +370,7 @@ void imguiRender(
 		scissorRect.height = uint32_t((cmd.clipRect.w - cmd.clipRect.y) * imguiInvScaleFactor);
 		ASSERT_ZG cmdList.setFramebufferScissor(scissorRect);
 
-		ASSERT_ZG cmdList.drawTrianglesIndexed(cmd.idxBufferOffset, cmd.numIndices / 3);
+		ASSERT_ZG cmdList.drawTrianglesIndexed(cmd.idxBufferOffset, cmd.numIndices);
 	}
 
 	// End profiling if requested

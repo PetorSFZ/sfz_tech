@@ -885,7 +885,7 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 		sfz_assert(comp.numIndices != 0);
 		sfz_assert((comp.numIndices % 3) == 0);
 		CHECK_ZG mState->groupCmdList.drawTrianglesIndexed(
-			comp.firstIndex, comp.numIndices / 3);
+			comp.firstIndex, comp.numIndices);
 	}
 }
 

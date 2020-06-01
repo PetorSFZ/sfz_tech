@@ -1069,9 +1069,10 @@ ZG_API ZgResult zgCommandListDrawTriangles(
 ZG_API ZgResult zgCommandListDrawTrianglesIndexed(
 	ZgCommandList* commandList,
 	uint32_t startIndex,
-	uint32_t numTriangles)
+	uint32_t numIndices)
 {
-	return commandList->drawTrianglesIndexed(startIndex, numTriangles);
+	ZG_ARG_CHECK((numIndices % 3) != 0, "Odd number of indices");
+	return commandList->drawTrianglesIndexed(startIndex, numIndices);
 }
 
 ZG_API ZgResult zgCommandListProfileBegin(

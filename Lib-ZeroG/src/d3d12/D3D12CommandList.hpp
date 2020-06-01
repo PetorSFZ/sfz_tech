@@ -1005,11 +1005,11 @@ struct ZgCommandList final {
 
 	ZgResult drawTrianglesIndexed(
 		uint32_t startIndex,
-		uint32_t numTriangles) noexcept
+		uint32_t numIndices) noexcept
 	{
 		// Draw triangles indexed
 		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		commandList->DrawIndexedInstanced(numTriangles * 3, 1, startIndex, 0, 0);
+		commandList->DrawIndexedInstanced(numIndices, 1, startIndex, 0, 0);
 		return ZG_SUCCESS;
 	}
 
