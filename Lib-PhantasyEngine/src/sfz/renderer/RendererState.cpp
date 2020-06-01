@@ -89,7 +89,7 @@ bool PipelineRenderItem::buildPipeline() noexcept
 		.addPixelShaderPath(pixelShaderEntry, pixelShaderPath);
 	
 	// Set vertex attributes
-	if (standardVertexAttributes) {
+	if (inputLayout.standardVertexLayout) {
 		pipelineBuilder
 			.addVertexBufferInfo(0, sizeof(Vertex))
 			.addVertexAttribute(0, 0, ZG_VERTEX_ATTRIBUTE_F32_3, offsetof(Vertex, pos))
@@ -97,8 +97,10 @@ bool PipelineRenderItem::buildPipeline() noexcept
 			.addVertexAttribute(2, 0, ZG_VERTEX_ATTRIBUTE_F32_2, offsetof(Vertex, texcoord));
 	}
 	else {
-		// TODO: Not yet implemented
-		sfz_assert_hard(false);
+		pipelineBuilder.addVertexBufferInfo(0, inputLayout.vertexSizeBytes);
+		for (const ZgVertexAttribute& attribute : inputLayout.attributes) {
+			pipelineBuilder.addVertexAttribute(attribute);
+		}
 	}
 
 	// Set push constants

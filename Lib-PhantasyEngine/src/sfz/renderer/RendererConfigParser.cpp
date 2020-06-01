@@ -50,6 +50,27 @@ struct CheckJsonImpl final {
 	}
 };
 
+static ZgVertexAttributeType attributeTypeFromString(const str256& str) noexcept
+{
+	if (str == "F32") return ZG_VERTEX_ATTRIBUTE_F32;
+	if (str == "F32_2") return ZG_VERTEX_ATTRIBUTE_F32_2;
+	if (str == "F32_3") return ZG_VERTEX_ATTRIBUTE_F32_3;
+	if (str == "F32_4") return ZG_VERTEX_ATTRIBUTE_F32_4;
+
+	if (str == "S32") return ZG_VERTEX_ATTRIBUTE_S32;
+	if (str == "S32_2") return ZG_VERTEX_ATTRIBUTE_S32_2;
+	if (str == "S32_3") return ZG_VERTEX_ATTRIBUTE_S32_3;
+	if (str == "S32_4") return ZG_VERTEX_ATTRIBUTE_S32_4;
+
+	if (str == "U32") return ZG_VERTEX_ATTRIBUTE_U32;
+	if (str == "U32_2") return ZG_VERTEX_ATTRIBUTE_U32_2;
+	if (str == "U32_3") return ZG_VERTEX_ATTRIBUTE_U32_3;
+	if (str == "U32_4") return ZG_VERTEX_ATTRIBUTE_U32_4;
+
+	sfz_assert(false);
+	return ZG_VERTEX_ATTRIBUTE_UNDEFINED;
+}
+
 static ZgSamplingMode samplingModeFromString(const str256& str) noexcept
 {
 	if (str == "NEAREST") return ZG_SAMPLING_MODE_NEAREST;
@@ -163,8 +184,32 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		item.pixelShaderEntry.appendf("%s",
 			(CHECK_JSON pipelineNode.accessMap("pixel_shader_entry").valueStr256()).str());
 
-		item.standardVertexAttributes =
-			CHECK_JSON pipelineNode.accessMap("standard_vertex_attributes").valueBool();
+		// Input layout
+		JsonNode inputLayoutNode = pipelineNode.accessMap("input_layout");
+		{
+			item.inputLayout.standardVertexLayout =
+				CHECK_JSON inputLayoutNode.accessMap("standard_vertex_layout").valueBool();
+
+			// If non-standard layout, parse it
+			if (!item.inputLayout.standardVertexLayout) {
+
+				item.inputLayout.vertexSizeBytes =
+					uint32_t(CHECK_JSON inputLayoutNode.accessMap("vertex_size_bytes").valueInt());
+
+				JsonNode attributesNode = inputLayoutNode.accessMap("attributes");
+				const uint32_t numAttributes = attributesNode.arrayLength();
+				for (uint32_t i = 0; i < numAttributes; i++) {
+					JsonNode attribNode = attributesNode.accessArray(i);
+					ZgVertexAttribute& attrib = item.inputLayout.attributes.add();
+					attrib.location = uint32_t(CHECK_JSON attribNode.accessMap("location").valueInt());
+					attrib.vertexBufferSlot = 0;
+					attrib.type =
+						attributeTypeFromString(CHECK_JSON attribNode.accessMap("type").valueStr256());
+					attrib.offsetToFirstElementInBytes =
+						uint32_t(CHECK_JSON attribNode.accessMap("offset_in_struct_bytes").valueInt());
+				}
+			}
+		}
 
 		// Push constants registers if specified
 		JsonNode pushConstantsNode = pipelineNode.accessMap("push_constant_registers");

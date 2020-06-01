@@ -6,7 +6,9 @@
 			"pixel_shader_path": "res_ph/shaders/gbuffer_gen.hlsl",
 			"vertex_shader_entry": "VSMain",
 			"pixel_shader_entry": "PSMain",
-			"standard_vertex_attributes": true,
+			"input_layout": {
+				"standard_vertex_layout": true
+			},
 			"push_constant_registers": [ 0, 1, 2 ],
 			"depth_func": "GREATER",
 			"culling": {
@@ -37,7 +39,9 @@
 			"pixel_shader_path": "res_ph/shaders/shadow_map_gen.hlsl",
 			"vertex_shader_entry": "VSMain",
 			"pixel_shader_entry": "PSMain",
-			"standard_vertex_attributes": true,
+			"input_layout": {
+				"standard_vertex_layout": true
+			},
 			"push_constant_registers": [ 0, 1 ],
 			"depth_func": "GREATER",
 			"culling": {
@@ -59,7 +63,9 @@
 			"pixel_shader_path": "res_ph/shaders/copy_out_shader.hlsl",
 			"vertex_shader_entry": "VSMain",
 			"pixel_shader_entry": "PSMain",
-			"standard_vertex_attributes": true,
+			"input_layout": {
+				"standard_vertex_layout": true
+			},
 			"push_constant_registers": [ 0 ],
 			"culling": {
 				"cull_front_face": false,

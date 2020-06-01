@@ -52,6 +52,12 @@ enum class PipelineBlendMode {
 	ADDITIVE_BLENDING
 };
 
+struct VertexInputLayout final {
+	bool standardVertexLayout = false;
+	uint32_t vertexSizeBytes = 0;
+	ArrayLocal<ZgVertexAttribute, ZG_MAX_NUM_VERTEX_ATTRIBUTES> attributes;
+};
+
 struct PipelineRenderItem final {
 
 	// The pipeline
@@ -63,7 +69,7 @@ struct PipelineRenderItem final {
 	str256 pixelShaderPath;
 	str128 vertexShaderEntry;
 	str128 pixelShaderEntry;
-	bool standardVertexAttributes = false;
+	VertexInputLayout inputLayout;
 	ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstRegisters;
 	ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS> nonUserSettableConstBuffers;
 	ArrayLocal<SamplerItem, ZG_MAX_NUM_SAMPLERS> samplers;
