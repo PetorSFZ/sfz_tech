@@ -215,8 +215,8 @@ struct RendererConfigurableState final {
 	// Static resources
 	Array<StaticTextureItem> staticTextures;
 
-	// Present Queue
-	Array<StageGroup> presentQueue;
+	// Present stage groups
+	Array<StageGroup> presentStageGroups;
 };
 
 struct RendererState final {

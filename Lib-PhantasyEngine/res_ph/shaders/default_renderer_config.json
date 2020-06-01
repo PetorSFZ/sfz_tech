@@ -184,7 +184,7 @@
 		}
 	],
 
-	"present_queue": [
+	"present_stage_groups": [
 		{
 			"group_name": "GBuffer + Cascaded Shadows",
 			"stages": [

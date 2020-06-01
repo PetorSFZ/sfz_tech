@@ -244,7 +244,7 @@ void Stage::rebuildFramebuffer(Array<StaticTextureItem>& staticTextures) noexcep
 uint32_t RendererState::findActiveStageIdx(StringID stageName) const noexcept
 {
 	sfz_assert(stageName != StringID::invalid());
-	const Array<Stage>& stages = configurable.presentQueue[currentStageGroupIdx].stages;
+	const Array<Stage>& stages = configurable.presentStageGroups[currentStageGroupIdx].stages;
 	const Stage* stage = stages.find([&](const Stage& e) { return e.name == stageName; });
 	if (stage == nullptr) return ~0u;
 	return uint32_t(stage - stages.data());

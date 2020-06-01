@@ -169,7 +169,7 @@ bool Renderer::loadConfiguration(const char* jsonConfigPath) noexcept
 	stats.createCategory("gpu", 300, 66.7f, "ms", "frame", 20.0f,
 		StatsVisualizationType::FIRST_INDIVIDUALLY_REST_ADDED);
 	stats.createLabel("gpu", "frametime", vec4(1.0f, 0.0f, 0.0f, 1.0f), 0.0f);
-	for (const StageGroup& group : mState->configurable.presentQueue) {
+	for (const StageGroup& group : mState->configurable.presentStageGroups) {
 		const char* label = resStrings.getString(group.groupName);
 		stats.createLabel("gpu", label);
 	}
@@ -471,7 +471,7 @@ void Renderer::frameBegin() noexcept
 		}
 
 		// Rebuild all stages' framebuffer objects
-		for (StageGroup& group : mState->configurable.presentQueue) {
+		for (StageGroup& group : mState->configurable.presentStageGroups) {
 			for (Stage& stage : group.stages) {
 				stage.rebuildFramebuffer(mState->configurable.staticTextures);
 			}
@@ -509,7 +509,7 @@ void Renderer::stageBeginInput(const char* stageName) noexcept
 	sfz_assert(stageIdx != ~0u);
 	if (stageIdx == ~0u) return;
 
-	Stage& stage = mState->configurable.presentQueue[mState->currentStageGroupIdx].stages[stageIdx];
+	Stage& stage = mState->configurable.presentStageGroups[mState->currentStageGroupIdx].stages[stageIdx];
 
 	if (stage.type == StageType::USER_INPUT_RENDERING) {
 	
@@ -574,7 +574,7 @@ void Renderer::stageBeginInput(const char* stageName) noexcept
 		sfz_assert(frameIds.groupIds.size() <= mState->currentStageGroupIdx);
 		GroupProfilingID& groupId = frameIds.groupIds.add();
 		groupId.groupName =
-			mState->configurable.presentQueue[mState->currentStageGroupIdx].groupName;
+			mState->configurable.presentStageGroups[mState->currentStageGroupIdx].groupName;
 		CHECK_ZG cmdList.profileBegin(mState->profiler, groupId.id);
 
 		// Add event
@@ -975,7 +975,7 @@ bool Renderer::frameProgressNextStageGroup() noexcept
 	zg::CommandList& cmdList = mState->groupCmdList;
 
 	// Insert profile end call
-	StringID groupName = mState->configurable.presentQueue[mState->currentStageGroupIdx].groupName;
+	StringID groupName = mState->configurable.presentStageGroups[mState->currentStageGroupIdx].groupName;
 	GroupProfilingID* groupId = frameIds.groupIds.find([&](const GroupProfilingID& e) {
 		return e.groupName == groupName;
 	});
@@ -995,7 +995,7 @@ bool Renderer::frameProgressNextStageGroup() noexcept
 
 	// Move to next stage group
 	mState->currentStageGroupIdx += 1;
-	sfz_assert(mState->currentStageGroupIdx < mState->configurable.presentQueue.size());
+	sfz_assert(mState->currentStageGroupIdx < mState->configurable.presentStageGroups.size());
 	
 	return true;
 }
@@ -1010,7 +1010,7 @@ void Renderer::frameFinish() noexcept
 	if (cmdList.valid()) {
 
 		// Insert profile end call
-		StringID groupName = mState->configurable.presentQueue[mState->currentStageGroupIdx].groupName;
+		StringID groupName = mState->configurable.presentStageGroups[mState->currentStageGroupIdx].groupName;
 		GroupProfilingID* groupId = frameIds.groupIds.find([&](const GroupProfilingID& e) {
 			return e.groupName == groupName;
 			});

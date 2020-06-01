@@ -55,7 +55,7 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	void renderGeneralTab(RendererState& state) noexcept;
-	void renderPresentQueueTab(RendererConfigurableState& state) noexcept;
+	void renderPresentStageGroupsTab(RendererConfigurableState& state) noexcept;
 	void renderPipelinesTab(RendererState& state) noexcept;
 	void renderStaticResourcesTab(RendererConfigurableState& state) noexcept;
 	void renderTexturesTab(RendererState& state) noexcept;

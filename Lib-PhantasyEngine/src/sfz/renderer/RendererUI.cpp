@@ -186,9 +186,9 @@ void RendererUI::render(RendererState& state) noexcept
 			ImGui::EndTabItem();
 		}
 
-		if (ImGui::BeginTabItem("Present Queue")) {
+		if (ImGui::BeginTabItem("Present Stage Groups")) {
 			ImGui::Spacing();
-			this->renderPresentQueueTab(state.configurable);
+			this->renderPresentStageGroupsTab(state.configurable);
 			ImGui::EndTabItem();
 		}
 
@@ -284,13 +284,13 @@ void RendererUI::renderGeneralTab(RendererState& state) noexcept
 	ImGui::Unindent(20.0f);
 }
 
-void RendererUI::renderPresentQueueTab(RendererConfigurableState& state) noexcept
+void RendererUI::renderPresentStageGroupsTab(RendererConfigurableState& state) noexcept
 {
 	// Get global collection of resource strings in order to get strings from StringIDs
 	sfz::StringCollection& resStrings = sfz::getResourceStrings();
 
-	for (uint32_t groupIdx = 0; groupIdx < state.presentQueue.size(); groupIdx++) {
-		const StageGroup& group = state.presentQueue[groupIdx];
+	for (uint32_t groupIdx = 0; groupIdx < state.presentStageGroups.size(); groupIdx++) {
+		const StageGroup& group = state.presentStageGroups[groupIdx];
 		const char* groupName = resStrings.getString(group.groupName);
 
 		// Collapsing header with group name

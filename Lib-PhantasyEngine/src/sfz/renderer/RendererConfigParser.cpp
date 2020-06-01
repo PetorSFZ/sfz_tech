@@ -383,18 +383,18 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	{
 		StringID defaultId = resStrings.getStringID("default");
 
-		JsonNode presentQueueNode = root.accessMap("present_queue");
-		const uint32_t numGroups = presentQueueNode.arrayLength();
+		JsonNode presentGroupsNode = root.accessMap("present_stage_groups");
+		const uint32_t numGroups = presentGroupsNode.arrayLength();
 		
 		// Allocate memory for stage groups
-		configurable.presentQueue.init(numGroups, state.allocator, sfz_dbg(""));
+		configurable.presentStageGroups.init(numGroups, state.allocator, sfz_dbg(""));
 
 		// Parse stage groups
 		for (uint32_t groupIdx = 0; groupIdx < numGroups; groupIdx++) {
-			JsonNode groupNode = presentQueueNode.accessArray(groupIdx);
+			JsonNode groupNode = presentGroupsNode.accessArray(groupIdx);
 
 			// Create group and read its name
-			StageGroup& group = configurable.presentQueue.add();
+			StageGroup& group = configurable.presentStageGroups.add();
 			group.groupName =
 				resStrings.getStringID(CHECK_JSON groupNode.accessMap("group_name").valueStr256());
 
@@ -512,8 +512,8 @@ bool allocateStageMemory(RendererState& state) noexcept
 {
 	bool success = true;
 
-	for (uint32_t groupIdx = 0; groupIdx < state.configurable.presentQueue.size(); groupIdx++) {
-		StageGroup& group = state.configurable.presentQueue[groupIdx];
+	for (uint32_t groupIdx = 0; groupIdx < state.configurable.presentStageGroups.size(); groupIdx++) {
+		StageGroup& group = state.configurable.presentStageGroups[groupIdx];
 
 		for (uint32_t stageIdx = 0; stageIdx < group.stages.size(); stageIdx++) {
 			Stage& stage = group.stages[stageIdx];
