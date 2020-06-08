@@ -744,7 +744,7 @@ void RendererUI::renderStaticTexturesTab(RendererConfigurableState& state) noexc
 	StringCollection& resStrings = getResourceStrings();
 
 	for (uint32_t i = 0; i < state.staticTextures.size(); i++) {
-		const StaticTextureItem& texItem = state.staticTextures[i];
+		const StaticTextureItem& texItem = state.staticTextures.values()[i];
 
 		// Texture name
 		ImGui::Text("Texture %u - \"%s\" - %s - %ux%u", i,

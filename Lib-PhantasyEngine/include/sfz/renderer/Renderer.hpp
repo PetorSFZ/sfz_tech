@@ -20,9 +20,12 @@
 #pragma once
 
 #include <skipifzero.hpp>
+#include <skipifzero_arrays.hpp>
+#include <skipifzero_hash_maps.hpp>
 
 #include <sfz/strings/StringID.hpp>
 
+#include "sfz/Context.hpp"
 #include "sfz/rendering/Mesh.hpp"
 #include "sfz/rendering/ImageView.hpp"
 
@@ -43,6 +46,35 @@ struct MeshRegisters final {
 	uint32_t normal = ~0u;
 	uint32_t occlusion = ~0u;
 	uint32_t emissive = ~0u;
+};
+
+constexpr uint32_t RENDERER_MAX_NUM_CONST_BUFFERS = 16;
+constexpr uint32_t RENDERER_MAX_NUM_UNORDERED_BUFFERS = 16;
+constexpr uint32_t RENDERER_MAX_NUM_TEXTURES = 16;
+constexpr uint32_t RENDERER_MAX_NUM_UNORDERED_TEXTURES = 16;
+
+struct Binding final {
+	StringID resourceID;
+	uint32_t shaderRegister = ~0u;
+};
+
+struct PipelineBindings final {
+	ArrayLocal<Binding, RENDERER_MAX_NUM_CONST_BUFFERS> constBuffers;
+	ArrayLocal<Binding, RENDERER_MAX_NUM_UNORDERED_BUFFERS> unorderedBuffers;
+	ArrayLocal<Binding, RENDERER_MAX_NUM_TEXTURES> textures;
+	ArrayLocal<Binding, RENDERER_MAX_NUM_UNORDERED_TEXTURES> unorderedTextures;
+
+	PipelineBindings& addConstBuffer(const char* name, uint32_t shaderRegister)
+	{
+		constBuffers.add({ getResourceStrings().getStringID(name), shaderRegister });
+		return *this;
+	}
+
+	PipelineBindings& addTexture(const char* name, uint32_t shaderRegister)
+	{
+		textures.add({ getResourceStrings().getStringID(name), shaderRegister });
+		return *this;
+	}
 };
 
 // Renderer
@@ -213,6 +245,8 @@ public:
 	//
 	// The specified registers will get data if available
 	void stageDrawMesh(StringID meshId, const MeshRegisters& registers) noexcept;
+
+	void stageSetBindings(const PipelineBindings& bindings) noexcept;
 
 	void stageSetVertexBuffer(const char* streamingBufferName) noexcept;
 	void stageSetIndexBuffer(const char* streamingBufferName, bool u32Buffer) noexcept;

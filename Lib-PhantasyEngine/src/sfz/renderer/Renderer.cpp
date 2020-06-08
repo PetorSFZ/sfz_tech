@@ -23,14 +23,10 @@
 
 #include <SDL.h>
 
-#include <skipifzero.hpp>
-#include <skipifzero_arrays.hpp>
-
 #include <ZeroG.h>
 
 #include <ZeroG-ImGui.hpp>
 
-#include "sfz/Context.hpp"
 #include "sfz/debug/ProfilingStats.hpp"
 #include "sfz/Logging.hpp"
 #include "sfz/config/GlobalConfig.hpp"
@@ -430,7 +426,8 @@ void Renderer::frameBegin() noexcept
 	
 	// Check if any texture scale setting has changed, necessating a resolution change
 	if (!resolutionChanged) {
-		for (StaticTextureItem& item : mState->configurable.staticTextures) {
+		for (auto pair : mState->configurable.staticTextures) {
+			StaticTextureItem& item = pair.value;
 			if (!item.resolutionIsFixed && item.resolutionScaleSetting != nullptr) {
 				if (item.resolutionScale != item.resolutionScaleSetting->floatValue()) {
 					resolutionChanged = true;
@@ -462,7 +459,8 @@ void Renderer::frameBegin() noexcept
 			uint32_t(mState->windowRes.x), uint32_t(mState->windowRes.y));
 
 		// Resize static textures
-		for (StaticTextureItem& item : mState->configurable.staticTextures) {
+		for (auto pair : mState->configurable.staticTextures) {
+			StaticTextureItem& item = pair.value;
 			
 			// Only resize if not fixed resolution
 			if (!item.resolutionIsFixed) {
@@ -619,6 +617,7 @@ void Renderer::stageUploadToStreamingBufferUntyped(
 
 	// Calculate number of bytes to copy to streaming buffer
 	const uint32_t numBytes = elementSize * numElements;
+	sfz_assert(numBytes != 0);
 	sfz_assert(numBytes < (item->elementSizeBytes * item->maxNumElements));
 	sfz_assert(elementSize == item->elementSizeBytes); // TODO: Might want to remove this assert
 
@@ -858,20 +857,14 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 
 	// Bound textures
 	for (const BoundTexture& boundTex : mState->inputEnabled.stage->boundTextures) {
-		StaticTextureItem* texItem =
-			mState->configurable.staticTextures.find([&](const StaticTextureItem& e) {
-				return e.name == boundTex.textureName;
-			});
+		StaticTextureItem* texItem = mState->configurable.staticTextures.get(boundTex.textureName);
 		sfz_assert(texItem != nullptr);
 		commonBindings.addTexture(boundTex.textureRegister, texItem->texture);
 	}
 
 	// Bound unordered textures
 	for (const BoundTexture& boundTex : mState->inputEnabled.stage->boundUnorderedTextures) {
-		StaticTextureItem* texItem =
-			mState->configurable.staticTextures.find([&](const StaticTextureItem& e) {
-				return e.name == boundTex.textureName;
-			});
+		StaticTextureItem* texItem = mState->configurable.staticTextures.get(boundTex.textureName);
 		sfz_assert(texItem != nullptr);
 		commonBindings.addUnorderedTexture(boundTex.textureRegister, 0, texItem->texture);
 	}
@@ -918,6 +911,51 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 		CHECK_ZG mState->groupCmdList.drawTrianglesIndexed(
 			comp.firstIndex, comp.numIndices);
 	}
+}
+
+void Renderer::stageSetBindings(const PipelineBindings& bindings) noexcept
+{
+	// TODO: Verify bindings in debug mode
+
+	zg::PipelineBindings zgBindings;
+	
+	// Constant buffers
+	for (const Binding& binding : bindings.constBuffers) {
+		
+		// Grab streaming buffer
+		StreamingBufferItem* item =
+			mState->configurable.streamingBuffers.get(binding.resourceID);
+		sfz_assert(item != nullptr);
+		zg::Buffer& buffer = item->data.data(mState->currentFrameIdx).deviceBuffer;
+
+		sfz_assert(binding.shaderRegister != ~0u);
+		zgBindings.addConstantBuffer(binding.shaderRegister, buffer);
+	}
+
+	// Textures
+	for (const Binding& binding : bindings.textures) {
+
+		TextureItem* dynItem = mState->textures.get(binding.resourceID);
+		StaticTextureItem* staticItem = mState->configurable.staticTextures.get(binding.resourceID);
+		sfz_assert(dynItem != nullptr || staticItem != nullptr);
+		sfz_assert(!(dynItem == nullptr && staticItem == nullptr));
+
+		zg::Texture* tex = nullptr;
+		if (dynItem != nullptr) tex = &dynItem->texture;
+		else if (staticItem != nullptr) tex = &staticItem->texture;
+		sfz_assert(tex != nullptr);
+
+		sfz_assert(binding.shaderRegister != ~0u);
+		zgBindings.addTexture(binding.shaderRegister, *tex);
+	}
+
+	// TODO: Unordered buffers
+	sfz_assert(bindings.unorderedBuffers.size() == 0);
+
+	// TODO: Unordered textures
+	sfz_assert(bindings.unorderedTextures.size() == 0);
+
+	CHECK_ZG mState->groupCmdList.setPipelineBindings(zgBindings);
 }
 
 void Renderer::stageSetVertexBuffer(const char* streamingBufferName) noexcept
@@ -1002,20 +1040,14 @@ void Renderer::stageDispatchCompute(
 
 	// Bound textures
 	for (const BoundTexture& boundTex : mState->inputEnabled.stage->boundTextures) {
-		StaticTextureItem* texItem =
-			mState->configurable.staticTextures.find([&](const StaticTextureItem& e) {
-				return e.name == boundTex.textureName;
-			});
+		StaticTextureItem* texItem = mState->configurable.staticTextures.get(boundTex.textureName);
 		sfz_assert(texItem != nullptr);
 		commonBindings.addTexture(boundTex.textureRegister, texItem->texture);
 	}
 
 	// Bound unordered textures
 	for (const BoundTexture& boundTex : mState->inputEnabled.stage->boundUnorderedTextures) {
-		StaticTextureItem* texItem =
-			mState->configurable.staticTextures.find([&](const StaticTextureItem& e) {
-				return e.name == boundTex.textureName;
-			});
+		StaticTextureItem* texItem = mState->configurable.staticTextures.get(boundTex.textureName);
 		sfz_assert(texItem != nullptr);
 		commonBindings.addUnorderedTexture(boundTex.textureRegister, 0, texItem->texture);
 	}

@@ -220,7 +220,7 @@ bool PipelineComputeItem::buildPipeline() noexcept
 // Stage: Helper methods
 // ------------------------------------------------------------------------------------------------
 
-void Stage::rebuildFramebuffer(Array<StaticTextureItem>& staticTextures) noexcept
+void Stage::rebuildFramebuffer(HashMap<StringID, StaticTextureItem>& staticTextures) noexcept
 {
 	if (type != StageType::USER_INPUT_RENDERING) return;
 
@@ -235,20 +235,14 @@ void Stage::rebuildFramebuffer(Array<StaticTextureItem>& staticTextures) noexcep
 
 			for (StringID renderTargetName : render.renderTargetNames) {
 				sfz_assert(renderTargetName != defaultId);
-				StaticTextureItem* renderTarget =
-					staticTextures.find([&](const StaticTextureItem& e) {
-						return e.name == renderTargetName;
-					});
+				StaticTextureItem* renderTarget = staticTextures.get(renderTargetName);
 				sfz_assert(renderTarget != nullptr);
 				fbBuilder.addRenderTarget(renderTarget->texture);
 			}
 
 			if (render.depthBufferName != StringID::invalid()) {
 				sfz_assert(render.depthBufferName != defaultId);
-				StaticTextureItem* depthBuffer =
-					staticTextures.find([&](const StaticTextureItem& e) {
-						return e.name == render.depthBufferName;
-					});
+				StaticTextureItem* depthBuffer = staticTextures.get(render.depthBufferName);
 				sfz_assert(depthBuffer != nullptr);
 				fbBuilder.setDepthBuffer(depthBuffer->texture);
 			}

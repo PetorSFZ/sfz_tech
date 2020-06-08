@@ -195,7 +195,7 @@ struct Stage final {
 	ArrayLocal<BoundTexture, ZG_MAX_NUM_TEXTURES> boundTextures;
 	ArrayLocal<BoundTexture, ZG_MAX_NUM_UNORDERED_TEXTURES> boundUnorderedTextures;
 
-	void rebuildFramebuffer(Array<StaticTextureItem>& staticTextures) noexcept;
+	void rebuildFramebuffer(HashMap<StringID, StaticTextureItem>& staticTextures) noexcept;
 };
 
 struct StageGroup final {
@@ -238,7 +238,7 @@ struct RendererConfigurableState final {
 	Array<PipelineComputeItem> computePipelines;
 
 	// Static textures
-	Array<StaticTextureItem> staticTextures;
+	HashMap<StringID, StaticTextureItem> staticTextures;
 
 	// Streaming buffers
 	HashMap<StringID, StreamingBufferItem> streamingBuffers;

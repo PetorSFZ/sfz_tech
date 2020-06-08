@@ -375,8 +375,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		for (uint32_t i = 0; i < numStaticTextures; i++) {
 			
 			JsonNode texNode = staticTexturesNode.accessArray(i);
-			configurable.staticTextures.add(StaticTextureItem());
-			StaticTextureItem& texItem = configurable.staticTextures.last();
+			StaticTextureItem texItem = {};
 
 			// Name
 			str256 name = CHECK_JSON texNode.accessMap("name").valueStr256();
@@ -421,6 +420,8 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 					texItem.resolutionScale = CHECK_JSON texNode.accessMap("resolution_scale").valueFloat();
 				}
 			}
+
+			configurable.staticTextures.put(texItem.name, std::move(texItem));
 		}
 	}
 
@@ -566,7 +567,8 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	}
 
 	// Create static textures
-	for (StaticTextureItem& item : configurable.staticTextures) {
+	for (auto pair : configurable.staticTextures) {
+		StaticTextureItem& item = pair.value;
 		item.buildTexture(state.windowRes);
 	}
 
