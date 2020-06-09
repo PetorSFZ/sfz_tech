@@ -199,6 +199,8 @@ public:
 	// only accepts input for the specified stage until endStageInput() is called.
 	void stageBeginInput(const char* stageName) noexcept;
 
+	vec2_u32 stageGetFramebufferDims() const noexcept;
+
 	// Uploads data to a streaming buffer
 	void stageUploadToStreamingBufferUntyped(
 		const char* bufferName, const void* data, uint32_t elementSize, uint32_t numElements) noexcept;

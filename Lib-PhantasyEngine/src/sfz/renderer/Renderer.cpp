@@ -604,6 +604,20 @@ void Renderer::stageBeginInput(const char* stageName) noexcept
 	}
 }
 
+vec2_u32 Renderer::stageGetFramebufferDims() const noexcept
+{
+	sfz_assert(inStageInputMode());
+	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
+	if (mState->inputEnabled.stage->render.defaultFramebuffer) {
+		return vec2_u32(mState->windowRes);
+	}
+	else {
+		vec2_u32 dims = vec2_u32(0u);
+		CHECK_ZG mState->inputEnabled.stage->render.framebuffer.getResolution(dims.x, dims.y);
+		return dims;
+	}
+}
+
 void Renderer::stageUploadToStreamingBufferUntyped(
 	const char* bufferName, const void* data, uint32_t elementSize, uint32_t numElements) noexcept
 {
