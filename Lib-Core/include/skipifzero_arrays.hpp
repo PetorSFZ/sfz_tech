@@ -190,6 +190,11 @@ public:
 	template<typename F> T* find(F func) { return findImpl(mData, func); }
 	template<typename F> const T* find(F func) const { return findImpl(mData, func); }
 
+	// Finds the last element that satisfies the given function.
+	// Function should have signature: bool func(const T& element)
+	template<typename F> T* findLast(F func) { return findLastImpl(mData, func); }
+	template<typename F> const T* findLast(F func) const { return findLastImpl(mData, func); }
+
 	// Sorts the elements in the array, same sort of comparator as std::sort().
 	void sort() { sortImpl([](const T& lhs, const T& rhs) { return lhs < rhs; }); }
 	template<typename F> void sort(F compareFunc) { sortImpl<F>(compareFunc); }
@@ -252,6 +257,13 @@ private:
 	T* findImpl(T* data, F func) const
 	{
 		for (uint32_t i = 0; i < mSize; ++i) if (func(data[i])) return &data[i];
+		return nullptr;
+	}
+
+	template<typename F>
+	T* findLastImpl(T* data, F func) const
+	{
+		for (uint32_t i = mSize; i > 0; i--) if (func(data[i - 1])) return &data[i - 1];
 		return nullptr;
 	}
 
@@ -399,6 +411,11 @@ public:
 	template<typename F> T* find(F func) { return findImpl(mData, func); }
 	template<typename F> const T* find(F func) const { return findImpl(mData, func); }
 
+	// Finds the last element that satisfies the given function.
+	// Function should have signature: bool func(const T& element)
+	template<typename F> T* findLast(F func) { return findLastImpl(mData, func); }
+	template<typename F> const T* findLast(F func) const { return findLastImpl(mData, func); }
+
 	// Sorts the elements in the array, same sort of comparator as std::sort().
 	void sort() { sortImpl([](const T& lhs, const T& rhs) { return lhs < rhs; }); }
 	template<typename F> void sort(F compareFunc) { sortImpl<F>(compareFunc); }
@@ -455,6 +472,20 @@ private:
 	const T* findImpl(const T* data, F func) const
 	{
 		for (uint32_t i = 0; i < mSize; ++i) if (func(data[i])) return &data[i];
+		return nullptr;
+	}
+
+	template<typename F>
+	T* findLastImpl(T* data, F func)
+	{
+		for (uint32_t i = mSize; i > 0; i--) if (func(data[i - 1])) return &data[i - 1];
+		return nullptr;
+	}
+
+	template<typename F>
+	const T* findLastImpl(const T* data, F func) const
+	{
+		for (uint32_t i = mSize; i > 0; i--) if (func(data[i - 1])) return &data[i - 1];
 		return nullptr;
 	}
 

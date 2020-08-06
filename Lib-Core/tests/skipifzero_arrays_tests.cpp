@@ -436,6 +436,41 @@ UTEST(Array, find)
 	}
 }
 
+UTEST(Array, findLast)
+{
+	sfz::StandardAllocator allocator;
+
+	sfz::Array<int> v(0, &allocator, sfz_dbg(""));
+	const int vals[] = { 1, 2, 3, 4 };
+	v.add(vals, 4);
+
+	int* ptr = v.findLast([](int) { return false; });
+	ASSERT_TRUE(ptr == nullptr);
+
+	ptr = v.findLast([](int) { return true; });
+	ASSERT_TRUE(ptr != nullptr);
+	ASSERT_TRUE(*ptr == 4);
+
+	ptr = v.findLast([](int param) { return param == 2; });
+	ASSERT_TRUE(ptr != nullptr);
+	ASSERT_TRUE(*ptr == 2);
+
+	{
+		const sfz::Array<int>& vc = v;
+
+		const int* ptr2 = vc.findLast([](int) { return false; });
+		ASSERT_TRUE(ptr2 == nullptr);
+
+		ptr2 = vc.findLast([](int) { return true; });
+		ASSERT_TRUE(ptr2 != nullptr);
+		ASSERT_TRUE(*ptr2 == 4);
+
+		ptr2 = vc.findLast([](int param) { return param == 2; });
+		ASSERT_TRUE(ptr2 != nullptr);
+		ASSERT_TRUE(*ptr2 == 2);
+	}
+}
+
 UTEST(Array, sort)
 {
 	sfz::StandardAllocator allocator;
@@ -860,6 +895,39 @@ UTEST(ArrayLocal, find)
 		ASSERT_TRUE(*ptr2 == 1);
 
 		ptr2 = vc.find([](int param) { return param == 2; });
+		ASSERT_TRUE(ptr2 != nullptr);
+		ASSERT_TRUE(*ptr2 == 2);
+	}
+}
+
+UTEST(ArrayLocal, findLast)
+{
+	sfz::ArrayLocal<int, 15> v;
+	const int vals[] = { 1, 2, 3, 4 };
+	v.add(vals, 4);
+
+	int* ptr = v.findLast([](int) { return false; });
+	ASSERT_TRUE(ptr == nullptr);
+
+	ptr = v.findLast([](int) { return true; });
+	ASSERT_TRUE(ptr != nullptr);
+	ASSERT_TRUE(*ptr == 4);
+
+	ptr = v.findLast([](int param) { return param == 2; });
+	ASSERT_TRUE(ptr != nullptr);
+	ASSERT_TRUE(*ptr == 2);
+
+	{
+		const sfz::ArrayLocal<int, 15>& vc = v;
+
+		const int* ptr2 = vc.findLast([](int) { return false; });
+		ASSERT_TRUE(ptr2 == nullptr);
+
+		ptr2 = vc.findLast([](int) { return true; });
+		ASSERT_TRUE(ptr2 != nullptr);
+		ASSERT_TRUE(*ptr2 == 4);
+
+		ptr2 = vc.findLast([](int param) { return param == 2; });
 		ASSERT_TRUE(ptr2 != nullptr);
 		ASSERT_TRUE(*ptr2 == 2);
 	}
