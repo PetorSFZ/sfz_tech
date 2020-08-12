@@ -51,13 +51,20 @@ struct StringLocal final {
 
 	// Constructs a StringLocal with printf syntax. If the string is larger than the capacity then
 	// only what fits will be stored. The resulting string is guaranteed to be null-terminated.
-	explicit StringLocal(const char* format, ...) noexcept
+	StringLocal(const char* format, ...) noexcept
 	{
 		this->clear();
 		va_list args;
 		va_start(args, format);
 		this->vappendf(format, args);
 		va_end(args);
+	}
+
+	StringLocal& operator= (const char* str) noexcept
+	{
+		this->clear();
+		this->appendf(str);
+		return *this;
 	}
 
 	// Public methods

@@ -46,6 +46,13 @@ UTEST(StringLocal, implicit_conversion_operators)
 	sfz::str96 str("Hello");
 	const char* contents = str;
 	ASSERT_TRUE(str == contents);
+
+	sfz::str96 str2 = "Hello2";
+	ASSERT_TRUE(str2 == "Hello2");
+
+	sfz::str96 str3;
+	str3 = "Hello3";
+	ASSERT_TRUE(str3 == "Hello3");
 }
 
 UTEST(StringLocal, appendf)
