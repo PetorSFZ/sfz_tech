@@ -85,4 +85,28 @@ private:
 	uint64_t mNumPaddingBytes = 0;
 };
 
+// ArenaEasyAllocator
+// ------------------------------------------------------------------------------------------------
+
+// A convenience class around ArenaAllocator that makes it simpler to use.
+//
+// * Owns the ArenaAllocator and its memory, reducing the amount of setup needed
+// * The ArenaAllocator itself is allocated on the heap, ensuring that it never changes location
+//   until it's destroyed.
+// * Move semantics of the "EasyArenaAllocator" (since the allocator itself is on the heap).
+// * Single allocation for both the arena allocator and the memory it handles.
+class ArenaEasyAllocator final {
+public:
+	SFZ_DECLARE_DROP_TYPE(ArenaEasyAllocator);
+
+	void init(Allocator* allocator, uint64_t memorySizeBytes, DbgInfo info);
+	void destroy();
+
+	ArenaAllocator* getArena();
+
+private:
+	Allocator* mAllocator = nullptr;
+	void* mMemoryBlock = nullptr;
+};
+
 } // namespace sfz

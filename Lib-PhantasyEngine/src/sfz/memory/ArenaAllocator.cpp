@@ -84,4 +84,35 @@ void* ArenaAllocator::allocate(DbgInfo dbg, uint64_t size, uint64_t alignment) n
 	return ptr;
 }
 
+// ArenaEasyAllocator
+// ------------------------------------------------------------------------------------------------
+
+void ArenaEasyAllocator::init(Allocator* allocator, uint64_t memorySizeBytes, DbgInfo info)
+{
+	this->destroy();
+	mAllocator = allocator;
+	uint64_t arenaSize = roundUpAligned(sizeof(ArenaAllocator), 32);
+	uint64_t blockPlusAllocatorBytes = arenaSize + memorySizeBytes;
+	mMemoryBlock = allocator->allocate(info, blockPlusAllocatorBytes);
+	
+	void* startOfArenaMem = reinterpret_cast<uint8_t*>(mMemoryBlock) + arenaSize;
+	new (mMemoryBlock) ArenaAllocator();
+	getArena()->init(startOfArenaMem, memorySizeBytes);
+}
+
+void ArenaEasyAllocator::destroy()
+{
+	if(mMemoryBlock != nullptr) {
+		getArena()->destroy();
+		mAllocator->deallocate(mMemoryBlock);
+		mAllocator = nullptr;
+		mMemoryBlock = nullptr;
+	}
+}
+
+ArenaAllocator* ArenaEasyAllocator::getArena()
+{
+	return reinterpret_cast<ArenaAllocator*>(mMemoryBlock);
+}
+
 } // namespace sfz
