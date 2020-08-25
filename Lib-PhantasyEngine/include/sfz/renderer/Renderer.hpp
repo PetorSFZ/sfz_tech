@@ -72,7 +72,12 @@ struct PipelineBindings final {
 
 	PipelineBindings& addTexture(const char* name, uint32_t shaderRegister)
 	{
-		textures.add({ getResourceStrings().getStringID(name), shaderRegister });
+		return addTexture(getResourceStrings().getStringID(name), shaderRegister);
+	}
+
+	PipelineBindings& addTexture(StringID id, uint32_t shaderRegister)
+	{
+		textures.add({ id, shaderRegister });
 		return *this;
 	}
 };
