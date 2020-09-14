@@ -207,6 +207,7 @@ public:
 	void clear()
 	{
 		if (mSize == 0) return;
+		sfz_assert(mSize <= mCapacity);
 
 		// Call destructors for all active keys and values
 		for (uint32_t i = 0; i < mSize; i++) {
@@ -518,6 +519,7 @@ public:
 	void clear()
 	{
 		if (mSize == 0) return;
+		sfz_assert(mSize <= Capacity);
 
 		// Call destructors for all active keys and values
 		for (uint32_t i = 0; i < mSize; i++) {

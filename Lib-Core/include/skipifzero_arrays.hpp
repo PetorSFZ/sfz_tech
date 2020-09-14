@@ -67,7 +67,7 @@ public:
 	}
 
 	// Removes all elements without deallocating memory.
-	void clear() { for (uint32_t i = 0; i < mSize; i++) mData[i].~T(); mSize = 0; }
+	void clear() { sfz_assert(mSize <= mCapacity); for (uint32_t i = 0; i < mSize; i++) mData[i].~T(); mSize = 0; }
 
 	// Destroys all elements, deallocates memory and removes allocator.
 	void destroy()
@@ -327,7 +327,7 @@ public:
 		std::swap(this->mSize, other.mSize);
 	}
 
-	void clear() { for (uint32_t i = 0; i < mSize; i++) mData[i] = {}; mSize = 0; }
+	void clear() { sfz_assert(mSize <= Capacity); for (uint32_t i = 0; i < mSize; i++) mData[i] = {}; mSize = 0; }
 	void setSize(uint32_t size) { sfz_assert(size <= Capacity); mSize = size; }
 
 	// Getters
