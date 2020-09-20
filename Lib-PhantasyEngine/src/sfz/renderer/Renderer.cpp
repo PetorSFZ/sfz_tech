@@ -160,13 +160,12 @@ bool Renderer::loadConfiguration(const char* jsonConfigPath) noexcept
 	}
 
 	// Initialize profiling stats
-	StringCollection& resStrings = getResourceStrings();
 	ProfilingStats& stats = getProfilingStats();
 	stats.createCategory("gpu", 300, 66.7f, "ms", "frame", 20.0f,
 		StatsVisualizationType::FIRST_INDIVIDUALLY_REST_ADDED);
 	stats.createLabel("gpu", "frametime", vec4(1.0f, 0.0f, 0.0f, 1.0f), 0.0f);
 	for (const StageGroup& group : mState->configurable.presentStageGroups) {
-		const char* label = resStrings.getString(group.groupName);
+		const char* label = group.groupName.str();
 		stats.createLabel("gpu", label);
 	}
 	stats.createLabel("gpu", "imgui");
@@ -265,8 +264,7 @@ bool Renderer::uploadTextureBlocking(
 	// Error out and return false if texture already exists
 	if (mState->textures.get(id) != nullptr) return false;
 
-	StringCollection& resStrings = getResourceStrings();
-	const char* fileName = stripFilePath(resStrings.getString(id));
+	const char* fileName = stripFilePath(id.str());
 	uint32_t numMipmaps = 0;
 	zg::Texture texture = textureAllocateAndUploadBlocking(
 		fileName,
@@ -332,8 +330,7 @@ bool Renderer::uploadMeshBlocking(strID id, const Mesh& mesh) noexcept
 	if (mState->meshes.get(id) != nullptr) return false;
 
 	// Allocate memory for mesh
-	StringCollection& resStrings = getResourceStrings();
-	const char* fileName = stripFilePath(resStrings.getString(id));
+	const char* fileName = stripFilePath(id.str());
 	GpuMesh gpuMesh = gpuMeshAllocate(fileName, mesh, mState->allocator);
 
 	// Upload memory to mesh
@@ -395,7 +392,6 @@ void Renderer::frameBegin() noexcept
 
 	// Get frame profiling data for frame that was previously rendered using these resources
 	ProfilingStats& stats = getProfilingStats();
-	StringCollection& resStrings = getResourceStrings();
 	FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
 	if (frameIds.frameId != ~0ull) {
 		CHECK_ZG mState->profiler.getMeasurement(frameIds.frameId, mState->lastRetrievedFrameTimeMs);
@@ -407,7 +403,7 @@ void Renderer::frameBegin() noexcept
 		uint64_t frameIdx = mState->lastRetrievedFrameTimeFrameIdx;
 		float groupTimeMs = 0.0f;
 		CHECK_ZG mState->profiler.getMeasurement(groupId.id, groupTimeMs);
-		const char* label = resStrings.getString(groupId.groupName);
+		const char* label = groupId.groupName.str();
 		stats.addSample("gpu", label, frameIdx, groupTimeMs);
 	}
 	if (frameIds.imguiId != ~0ull) {
@@ -499,8 +495,7 @@ void Renderer::stageBeginInput(const char* stageName) noexcept
 	sfz_assert(!inStageInputMode());
 	if (inStageInputMode()) return;
 
-	StringCollection& resStrings = getResourceStrings();
-	strID stageNameID = resStrings.getStringID(stageName);
+	strID stageNameID = strID(stageName);
 
 	// Find stage
 	uint32_t stageIdx = mState->findActiveStageIdx(stageNameID);
@@ -577,7 +572,7 @@ void Renderer::stageBeginInput(const char* stageName) noexcept
 
 		// Add event
 		if (mState->emitDebugEvents->boolValue()) {
-			CHECK_ZG cmdList.beginEvent(resStrings.getString(groupId.groupName));
+			CHECK_ZG cmdList.beginEvent(groupId.groupName.str());
 		}
 	}
 
@@ -624,8 +619,7 @@ void Renderer::stageUploadToStreamingBufferUntyped(
 	sfz_assert(inStageInputMode());
 	
 	// Get streaming buffer item
-	StringCollection& resStrings = getResourceStrings();
-	strID bufferID = resStrings.getStringID(bufferName);
+	strID bufferID = strID(bufferName);
 	StreamingBufferItem* item = mState->configurable.streamingBuffers.get(bufferID);
 	sfz_assert(item != nullptr);
 
@@ -978,8 +972,7 @@ void Renderer::stageSetVertexBuffer(const char* streamingBufferName) noexcept
 	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
 
 	// Get streaming buffer item
-	StringCollection& resStrings = getResourceStrings();
-	strID bufferID = resStrings.getStringID(streamingBufferName);
+	strID bufferID = strID(streamingBufferName);
 	StreamingBufferItem* item = mState->configurable.streamingBuffers.get(bufferID);
 	sfz_assert(item != nullptr);
 
@@ -996,8 +989,7 @@ void Renderer::stageSetIndexBuffer(const char* streamingBufferName, bool u32Buff
 	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
 
 	// Get streaming buffer item
-	StringCollection& resStrings = getResourceStrings();
-	strID bufferID = resStrings.getStringID(streamingBufferName);
+	strID bufferID = strID(streamingBufferName);
 	StreamingBufferItem* item = mState->configurable.streamingBuffers.get(bufferID);
 	sfz_assert(item != nullptr);
 

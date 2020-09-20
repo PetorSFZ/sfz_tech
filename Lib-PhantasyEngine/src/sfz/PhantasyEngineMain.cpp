@@ -40,6 +40,7 @@
 #include <skipifzero_allocators.hpp>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_smart_pointers.hpp>
+#define SFZ_STR_ID_IMPLEMENTATION
 #include <skipifzero_strings.hpp>
 
 #include "sfz/Context.hpp"
@@ -71,7 +72,6 @@ static sfz::TerminalLogger terminalLogger;
 static sfz::GlobalConfig globalConfig;
 static sfz::Renderer renderer;
 static sfz::AudioEngine audioEngine;
-static sfz::StringCollection stringCollection;
 static sfz::ProfilingStats profilingStats;
 
 static void setupContext() noexcept
@@ -81,6 +81,9 @@ static void setupContext() noexcept
 	// Set sfz standard allocator
 	sfz::Allocator* allocator = &standardAllocator;
 	context->defaultAllocator = allocator;
+
+	// String storage
+	sfz::strStorage = allocator->newObject<sfz::StringStorage>(sfz_dbg(""), 4096, allocator);
 
 	// Set terminal logger
 	terminalLogger.init(256, allocator);
@@ -94,10 +97,6 @@ static void setupContext() noexcept
 
 	// Set audio engine
 	context->audioEngine = &audioEngine;
-
-	// Resource strings
-	stringCollection.createStringCollection(4096, allocator);
-	context->resourceStrings = &stringCollection;
 
 	// Profiling stats
 	profilingStats.init(allocator);
@@ -206,6 +205,9 @@ static void quit(GameLoopState& gameLoopState) noexcept
 
 	// Call the cleanup callback
 	gameLoopState.cleanupCallback(); 
+
+	SFZ_INFO("PhantasyEngine", "Destroying string ID storage");
+	sfz::getDefaultAllocator()->deleteObject(sfz::strStorage);
 
 	// Exit program on Emscripten
 #ifdef __EMSCRIPTEN__

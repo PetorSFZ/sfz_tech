@@ -29,7 +29,6 @@ class GlobalConfig;
 class Renderer;
 class AudioEngine;
 class ProfilingStats;
-class StringCollection;
 
 // PhantasyEngine global context
 // ------------------------------------------------------------------------------------------------
@@ -66,17 +65,6 @@ struct Context final {
 	// The audio engine.
 	AudioEngine* audioEngine = nullptr;
 
-	// The registered resource strings.
-	//
-	// Comparing and storing strings when refering to specific assets (meshes, textures, etc)
-	// becomes expensive in the long run. A solution is to hash each string and use the hash
-	// instead. This works under the assumption that we have no hash collisions. See StringID for
-	// more information.
-	//
-	// Because we don't want any collisions globally in the game we store the datastructure keeping
-	// track of the strings and their hash in the global context.
-	StringCollection* resourceStrings = nullptr;
-
 	// Global profiling stats.
 	ProfilingStats* profilingStats = nullptr;
 };
@@ -102,7 +90,6 @@ inline LoggingInterface* getLogger() { return getContext()->logger; }
 inline GlobalConfig& getGlobalConfig() { return *getContext()->config; }
 inline Renderer& getRenderer() { return *getContext()->renderer; }
 inline AudioEngine& getAudioEngine() { return *getContext()->audioEngine; }
-inline StringCollection& getResourceStrings() { return *getContext()->resourceStrings; }
 inline ProfilingStats& getProfilingStats() { return *getContext()->profilingStats; }
 
 } // namespace sfz

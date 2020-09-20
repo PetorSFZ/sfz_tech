@@ -19,8 +19,7 @@
 #pragma once
 
 #include <skipifzero.hpp>
-
-#include "sfz/strings/StringID.hpp"
+#include <skipifzero_strings.hpp>
 
 namespace sfz {
 

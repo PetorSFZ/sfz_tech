@@ -187,7 +187,6 @@ bool loadAssetsFromGltf(
 	}
 
 	str320 basePath = calculateBasePath(gltfPath);
-	StringCollection& resStrings = getResourceStrings();
 
 	// Load textures
 	{
@@ -199,7 +198,7 @@ bool loadAssetsFromGltf(
 
 			// Create global path (path relative to game executable)
 			const str320 globalPath("%s%s", basePath, image.uri);
-			strID globalPathId = resStrings.getStringID(globalPath);
+			strID globalPathId = strID(globalPath);
 
 			// Check if texture is already loaded, skip it if it is
 			if (checkIfTextureIsLoaded != nullptr) {
@@ -240,7 +239,7 @@ bool loadAssetsFromGltf(
 
 				// Create global path (path relative to game executable)
 				const str320 globalPath("%s%s", basePath, view.texture->image->uri);
-				return resStrings.getStringID(globalPath);
+				return strID(globalPath);
 			};
 
 			phMat.albedoTex = lookupTexture(pbr.base_color_texture);

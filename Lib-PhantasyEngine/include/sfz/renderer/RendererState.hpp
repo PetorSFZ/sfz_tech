@@ -32,7 +32,6 @@
 #include "sfz/renderer/GpuMesh.hpp"
 #include "sfz/renderer/RendererUI.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
-#include "sfz/strings/StringID.hpp"
 
 struct SDL_Window;
 

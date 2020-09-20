@@ -39,8 +39,6 @@ static ZgOptimalClearValue floatToOptimalClearValue(float value) noexcept
 
 void StaticTextureItem::buildTexture(vec2_i32 windowRes) noexcept
 {
-	StringCollection& resStrings = getResourceStrings();
-
 	// Figure out resolution
 	uint32_t tmpWidth = 0;
 	uint32_t tmpHeight = 0;
@@ -72,7 +70,7 @@ void StaticTextureItem::buildTexture(vec2_i32 windowRes) noexcept
 		createInfo.width = width;
 		createInfo.height = height;
 		createInfo.numMipmaps = 1;
-		createInfo.debugName = resStrings.getString(this->name);
+		createInfo.debugName = this->name.str();
 		CHECK_ZG this->texture.create(createInfo);
 	}
 }
@@ -83,7 +81,7 @@ void StaticTextureItem::buildTexture(vec2_i32 windowRes) noexcept
 void StreamingBufferItem::buildBuffer(uint32_t frameLatency)
 {
 	const uint64_t sizeBytes = this->elementSizeBytes * this->maxNumElements;
-	const char* nameStr = getResourceStrings().getString(this->name);
+	const char* nameStr = this->name.str();
 	uint32_t frameIdx = 0;
 	this->data.init(frameLatency, [&](StreamingBufferMemory& memory) {
 		str256 uploadDebugName("%s_upload_%u", nameStr, frameIdx);
@@ -224,8 +222,7 @@ void Stage::rebuildFramebuffer(HashMap<strID, StaticTextureItem>& staticTextures
 {
 	if (type != StageType::USER_INPUT_RENDERING) return;
 
-	StringCollection& resStrings = getResourceStrings();
-	strID defaultId = resStrings.getStringID("default");
+	strID defaultId = strID("default");
 
 	// Create framebuffer
 	if (!render.defaultFramebuffer) {

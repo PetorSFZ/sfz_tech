@@ -136,7 +136,6 @@ static PipelineBlendMode blendModeFromString(const str256& str) noexcept
 bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 {
 	// Get resource strings and global config
-	sfz::StringCollection& resStrings = getResourceStrings();
 	GlobalConfig& cfg = getGlobalConfig();
 
 	RendererConfigurableState& configurable = state.configurable;
@@ -172,7 +171,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		PipelineRenderItem& item = configurable.renderPipelines.last();
 
 		str256 name = CHECK_JSON pipelineNode.accessMap("name").valueStr256();
-		item.name = resStrings.getStringID(name);
+		item.name = strID(name);
 
 		item.vertexShaderPath = CHECK_JSON pipelineNode.accessMap("vertex_shader_path").valueStr256();
 		item.pixelShaderPath = CHECK_JSON pipelineNode.accessMap("pixel_shader_path").valueStr256();
@@ -316,7 +315,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		PipelineComputeItem& item = configurable.computePipelines.last();
 
 		str256 name = CHECK_JSON pipelineNode.accessMap("name").valueStr256();
-		item.name = resStrings.getStringID(name);
+		item.name = strID(name);
 
 		item.computeShaderPath = CHECK_JSON pipelineNode.accessMap("compute_shader_path").valueStr256();
 		item.computeShaderEntry.clear();
@@ -380,7 +379,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			// Name
 			str256 name = CHECK_JSON texNode.accessMap("name").valueStr256();
 			sfz_assert(name != "default");
-			texItem.name = resStrings.getStringID(name);
+			texItem.name = strID(name);
 
 			// Format and clear value
 			texItem.format = textureFormatFromString(
@@ -436,8 +435,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 
 			JsonNode bufferNode = streamingBuffersNode.accessArray(bufferIdx);
 			StreamingBufferItem item;
-			item.name =
-				resStrings.getStringID(CHECK_JSON bufferNode.accessMap("name").valueStr256());
+			item.name = strID(CHECK_JSON bufferNode.accessMap("name").valueStr256());
 			item.elementSizeBytes =
 				uint32_t(CHECK_JSON bufferNode.accessMap("element_size_bytes").valueInt());
 			item.maxNumElements =
@@ -450,7 +448,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 
 	// Present queue
 	{
-		strID defaultId = resStrings.getStringID("default");
+		strID defaultId = strID("default");
 
 		JsonNode presentGroupsNode = root.accessMap("present_stage_groups");
 		const uint32_t numGroups = presentGroupsNode.arrayLength();
@@ -464,8 +462,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 
 			// Create group and read its name
 			StageGroup& group = configurable.presentStageGroups.add();
-			group.groupName =
-				resStrings.getStringID(CHECK_JSON groupNode.accessMap("group_name").valueStr256());
+			group.groupName = strID(CHECK_JSON groupNode.accessMap("group_name").valueStr256());
 
 			// Get number of stages and allocate memory for them
 			JsonNode stages = groupNode.accessMap("stages");
@@ -478,7 +475,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 				Stage& stage = group.stages.add();
 
 				str256 stageName = CHECK_JSON stageNode.accessMap("stage_name").valueStr256();
-				stage.name = resStrings.getStringID(stageName);
+				stage.name = strID(stageName);
 
 				str256 stageType = CHECK_JSON stageNode.accessMap("stage_type").valueStr256();
 				if (stageType == "USER_INPUT_RENDERING") stage.type = StageType::USER_INPUT_RENDERING;
@@ -488,7 +485,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 				if (stage.type == StageType::USER_INPUT_RENDERING) {
 					str256 renderPipelineName =
 						CHECK_JSON stageNode.accessMap("render_pipeline").valueStr256();
-					stage.render.pipelineName = resStrings.getStringID(renderPipelineName);
+					stage.render.pipelineName = strID(renderPipelineName);
 
 					if (stageNode.accessMap("render_targets").isValid()) {
 						JsonNode renderTargetsNode = stageNode.accessMap("render_targets");
@@ -496,14 +493,14 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 						for (uint32_t i = 0; i < numRenderTargets; i++) {
 							str256 renderTargetName =
 								CHECK_JSON renderTargetsNode.accessArray(i).valueStr256();
-							stage.render.renderTargetNames.add(resStrings.getStringID(renderTargetName));
+							stage.render.renderTargetNames.add(strID(renderTargetName));
 						}
 					}
 
 					if (stageNode.accessMap("depth_buffer").isValid()) {
 						str256 depthBufferName =
 							CHECK_JSON stageNode.accessMap("depth_buffer").valueStr256();
-						stage.render.depthBufferName = resStrings.getStringID(depthBufferName);
+						stage.render.depthBufferName = strID(depthBufferName);
 					}
 
 					stage.render.defaultFramebuffer =
@@ -514,7 +511,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 				else if (stage.type == StageType::USER_INPUT_COMPUTE) {
 					str256 computePipelineName =
 						CHECK_JSON stageNode.accessMap("compute_pipeline").valueStr256();
-					stage.compute.pipelineName = resStrings.getStringID(computePipelineName);
+					stage.compute.pipelineName = strID(computePipelineName);
 				}
 				else {
 					sfz_assert(false);
@@ -530,7 +527,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 						BoundTexture boundTex;
 						boundTex.textureRegister = CHECK_JSON texNode.accessMap("register").valueInt();
 						str256 texName = CHECK_JSON texNode.accessMap("texture").valueStr256();
-						boundTex.textureName = resStrings.getStringID(texName);
+						boundTex.textureName = strID(texName);
 						stage.boundTextures.add(boundTex);
 					}
 				}
@@ -545,7 +542,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 						BoundTexture boundTex;
 						boundTex.textureRegister = CHECK_JSON texNode.accessMap("register").valueInt();
 						str256 texName = CHECK_JSON texNode.accessMap("texture").valueStr256();
-						boundTex.textureName = resStrings.getStringID(texName);
+						boundTex.textureName = strID(texName);
 						stage.boundUnorderedTextures.add(boundTex);
 					}
 				}

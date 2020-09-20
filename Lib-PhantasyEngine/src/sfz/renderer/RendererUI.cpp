@@ -292,12 +292,9 @@ void RendererUI::renderGeneralTab(RendererState& state) noexcept
 
 void RendererUI::renderPresentStageGroupsTab(RendererConfigurableState& state) noexcept
 {
-	// Get global collection of resource strings in order to get strings from StringIDs
-	sfz::StringCollection& resStrings = sfz::getResourceStrings();
-
 	for (uint32_t groupIdx = 0; groupIdx < state.presentStageGroups.size(); groupIdx++) {
 		const StageGroup& group = state.presentStageGroups[groupIdx];
-		const char* groupName = resStrings.getString(group.groupName);
+		const char* groupName = group.groupName.str();
 
 		// Collapsing header with group name
 		const bool collapsingHeaderOpen =
@@ -309,7 +306,7 @@ void RendererUI::renderPresentStageGroupsTab(RendererConfigurableState& state) n
 			const Stage& stage = group.stages[stageIdx];
 
 			// Stage name
-			ImGui::Text("Stage %u - \"%s\"", stageIdx, resStrings.getString(stage.name));
+			ImGui::Text("Stage %u - \"%s\"", stageIdx, stage.name.str());
 			ImGui::Indent(20.0f);
 
 			// Stage type
@@ -318,7 +315,7 @@ void RendererUI::renderPresentStageGroupsTab(RendererConfigurableState& state) n
 			if (stage.type == StageType::USER_INPUT_RENDERING) {
 
 				// Pipeline name
-				ImGui::Text("Render Pipeline: \"%s\"", resStrings.getString(stage.render.pipelineName));
+				ImGui::Text("Render Pipeline: \"%s\"", stage.render.pipelineName.str());
 
 				if (stage.render.defaultFramebuffer) {
 					ImGui::Text("Framebuffer: \"default\"");
@@ -331,7 +328,7 @@ void RendererUI::renderPresentStageGroupsTab(RendererConfigurableState& state) n
 						for (uint32_t i = 0; i < stage.render.renderTargetNames.size(); i++) {
 							strID renderTarget = stage.render.renderTargetNames[i];
 							ImGui::Text("- Render target %u: \"%s\"",
-								i, resStrings.getString(renderTarget));
+								i, renderTarget.str());
 						}
 						ImGui::Unindent(20.0f);
 					}
@@ -339,14 +336,14 @@ void RendererUI::renderPresentStageGroupsTab(RendererConfigurableState& state) n
 					// Depth buffer
 					if (stage.render.depthBufferName.isValid()) {
 						ImGui::Text("Depth buffer: \"%s\"",
-							resStrings.getString(stage.render.depthBufferName));
+							stage.render.depthBufferName.str());
 					}
 				}
 			}
 			else if (stage.type == StageType::USER_INPUT_COMPUTE) {
 				
 				// Pipeline name
-				ImGui::Text("Compute Pipeline: \"%s\"", resStrings.getString(stage.compute.pipelineName));
+				ImGui::Text("Compute Pipeline: \"%s\"", stage.compute.pipelineName.str());
 			}
 			else {
 				sfz_assert(false);
@@ -359,7 +356,7 @@ void RendererUI::renderPresentStageGroupsTab(RendererConfigurableState& state) n
 				for (const BoundTexture& boundTex : stage.boundTextures) {
 					ImGui::Text("- Register: %u  --  Texture: \"%s\"",
 						boundTex.textureRegister,
-						resStrings.getString(boundTex.textureName));
+						boundTex.textureName.str());
 				}
 				ImGui::Unindent(20.0f);
 			}
@@ -371,7 +368,7 @@ void RendererUI::renderPresentStageGroupsTab(RendererConfigurableState& state) n
 				for (const BoundTexture& boundTex : stage.boundUnorderedTextures) {
 					ImGui::Text("- Register: %u  --  Texture: \"%s\"",
 						boundTex.textureRegister,
-						resStrings.getString(boundTex.textureName));
+						boundTex.textureName.str());
 				}
 				ImGui::Unindent(20.0f);
 			}
@@ -385,9 +382,6 @@ void RendererUI::renderPresentStageGroupsTab(RendererConfigurableState& state) n
 
 void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 {
-	// Get global collection of resource strings in order to get strings from StringIDs
-	StringCollection& resStrings = getResourceStrings();
-
 	RendererConfigurableState& configurable = state.configurable;
 
 	// Render pipelines
@@ -408,7 +402,7 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 			bool success = pipeline.buildPipeline();
 			if (!success) {
 				SFZ_WARNING("Renderer", "Failed to rebuild pipeline: \"%s\"",
-					resStrings.getString(pipeline.name));
+					pipeline.name.str());
 			}
 		}
 	}
@@ -417,7 +411,7 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 	for (uint32_t i = 0; i < configurable.renderPipelines.size(); i++) {
 		PipelineRenderItem& pipeline = configurable.renderPipelines[i];
 		const ZgPipelineRenderSignature signature = pipeline.pipeline.getSignature();
-		const char* name = resStrings.getString(pipeline.name);
+		const char* name = pipeline.name.str();
 
 		// Reload button
 		if (ImGui::Button(str64("Reload##__render_%u", i), vec2(80.0f, 0.0f))) {
@@ -615,8 +609,7 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 			PipelineComputeItem& pipeline = configurable.computePipelines[i];
 			bool success = pipeline.buildPipeline();
 			if (!success) {
-				SFZ_WARNING("Renderer", "Failed to rebuild pipeline: \"%s\"",
-					resStrings.getString(pipeline.name));
+				SFZ_WARNING("Renderer", "Failed to rebuild pipeline: \"%s\"", pipeline.name.str());
 			}
 		}
 	}
@@ -625,7 +618,7 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 	for (uint32_t pipelineIdx = 0; pipelineIdx < configurable.computePipelines.size(); pipelineIdx++) {
 		PipelineComputeItem& pipeline = configurable.computePipelines[pipelineIdx];
 		const ZgPipelineBindingsSignature& bindingsSignature = pipeline.pipeline.getBindingsSignature();
-		const char* name = resStrings.getString(pipeline.name);
+		const char* name = pipeline.name.str();
 
 		// Reload button
 		if (ImGui::Button(str64("Reload##__compute_%u", pipelineIdx), vec2(80.0f, 0.0f))) {
@@ -741,14 +734,12 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 
 void RendererUI::renderStaticTexturesTab(RendererConfigurableState& state) noexcept
 {
-	StringCollection& resStrings = getResourceStrings();
-
 	for (uint32_t i = 0; i < state.staticTextures.size(); i++) {
 		const StaticTextureItem& texItem = state.staticTextures.values()[i];
 
 		// Texture name
 		ImGui::Text("Texture %u - \"%s\" - %s - %ux%u", i,
-			resStrings.getString(texItem.name),
+			texItem.name.str(),
 			textureFormatToString(texItem.format),
 			texItem.width,
 			texItem.height);
@@ -791,14 +782,12 @@ void RendererUI::renderStaticTexturesTab(RendererConfigurableState& state) noexc
 
 void RendererUI::renderStreamingBuffersTab(RendererConfigurableState& state) noexcept
 {
-	sfz::StringCollection& resStrings = sfz::getResourceStrings();
-
 	constexpr float offset = 220.0f;
 
 	for (auto itemItr : state.streamingBuffers) {
 		const StreamingBufferItem& item = itemItr.value;
 
-		ImGui::Text("\"%s\"", resStrings.getString(itemItr.key));
+		ImGui::Text("\"%s\"", itemItr.key.str());
 
 		ImGui::Indent(20.0f);
 		alignedEdit("Element size", offset, [&](const char*) {
@@ -818,15 +807,12 @@ void RendererUI::renderStreamingBuffersTab(RendererConfigurableState& state) noe
 
 void RendererUI::renderTexturesTab(RendererState& state) noexcept
 {
-	// Get global collection of resource strings in order to get strings from StringIDs
-	sfz::StringCollection& resStrings = sfz::getResourceStrings();
-
 	constexpr float offset = 150.0f;
 
 	for (auto itemItr : state.textures) {
 		const TextureItem& item = itemItr.value;
 
-		ImGui::Text("\"%s\"", resStrings.getString(itemItr.key));
+		ImGui::Text("\"%s\"", itemItr.key.str());
 		if (!item.texture.valid()) {
 			ImGui::SameLine();
 			ImGui::Text("-- NOT VALID");
@@ -850,9 +836,6 @@ void RendererUI::renderTexturesTab(RendererState& state) noexcept
 
 void RendererUI::renderMeshesTab(RendererState& state) noexcept
 {
-	// Get global collection of resource strings in order to get strings from StringIDs
-	sfz::StringCollection& resStrings = sfz::getResourceStrings();
-
 	for (auto itemItr : state.meshes) {
 		GpuMesh& mesh = itemItr.value;
 
@@ -863,7 +846,7 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 		if (!mesh.materialsBuffer.valid()) meshValid = false;
 
 		// Mesh name
-		ImGui::Text("\"%s\"", resStrings.getString(itemItr.key));
+		ImGui::Text("\"%s\"", itemItr.key.str());
 		if (!meshValid) {
 			ImGui::SameLine();
 			ImGui::Text("-- NOT VALID");
@@ -895,7 +878,7 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 		auto textureToComboStr = [&](strID strId) {
 			str128 texStr;
 			if (!strId.isValid()) texStr.appendf("NO TEXTURE");
-			else texStr= str128("%s", resStrings.getString(strId));
+			else texStr= str128("%s", strId.str());
 			return texStr;
 		};
 

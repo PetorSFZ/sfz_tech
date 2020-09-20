@@ -24,7 +24,6 @@
 #include "sfz/Logging.hpp"
 #include "sfz/config/GlobalConfig.hpp"
 #include "sfz/debug/ProfilingStats.hpp"
-#include "sfz/strings/StringID.hpp"
 #include "sfz/util/StandardLogger.hpp"
 
 UTEST_STATE();
@@ -33,7 +32,6 @@ UTEST_STATE();
 static sfz::StandardAllocator standardAllocator;
 static sfz::Context phantasyEngineContext;
 static sfz::GlobalConfig globalConfig;
-static sfz::StringCollection stringCollection;
 static sfz::ProfilingStats profilingStats;
 
 static void setupContext() noexcept
@@ -49,10 +47,6 @@ static void setupContext() noexcept
 
 	// Set global config
 	context->config = &globalConfig;
-
-	// Resource strings
-	stringCollection.createStringCollection(4096, allocator);
-	context->resourceStrings = &stringCollection;
 
 	// Profiling stats
 	profilingStats.init(allocator);

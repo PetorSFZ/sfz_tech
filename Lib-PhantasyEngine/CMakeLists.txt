@@ -285,7 +285,6 @@ set(HEADER_FILES
 	${INCLUDE_DIR}/sfz/state/GameStateEditor.hpp
 
 	${INCLUDE_DIR}/sfz/strings/DynString.hpp
-	${INCLUDE_DIR}/sfz/strings/StringID.hpp
 
 	${INCLUDE_DIR}/sfz/util/Enumerate.hpp
 	${INCLUDE_DIR}/sfz/util/FixedTimeUpdateHelpers.hpp
@@ -347,7 +346,6 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/state/GameStateEditor.cpp
 
 	${SRC_DIR}/sfz/strings/DynString.cpp
-	${SRC_DIR}/sfz/strings/StringID.cpp
 
 	${SRC_DIR}/sfz/util/GltfLoader.cpp
 	${SRC_DIR}/sfz/util/GltfWriter.cpp
@@ -411,7 +409,6 @@ if(NOT hasParent OR PHANTASY_ENGINE_BUILD_TESTS)
 		${TESTS_DIR}/sfz/memory/ArenaAllocator_Tests.cpp
 
 		${TESTS_DIR}/sfz/strings/DynString_Tests.cpp
-		${TESTS_DIR}/sfz/strings/StringID_Tests.cpp
 
 		${TESTS_DIR}/sfz/util/Enumerate_Tests.cpp
 		${TESTS_DIR}/sfz/util/IniParser_Tests.cpp

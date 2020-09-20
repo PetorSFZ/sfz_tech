@@ -22,8 +22,7 @@
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_hash_maps.hpp>
-
-#include <sfz/strings/StringID.hpp>
+#include <skipifzero_strings.hpp>
 
 #include "sfz/Context.hpp"
 #include "sfz/rendering/Mesh.hpp"
@@ -66,13 +65,13 @@ struct PipelineBindings final {
 
 	PipelineBindings& addConstBuffer(const char* name, uint32_t shaderRegister)
 	{
-		constBuffers.add({ getResourceStrings().getStringID(name), shaderRegister });
+		constBuffers.add({ strID(name), shaderRegister });
 		return *this;
 	}
 
 	PipelineBindings& addTexture(const char* name, uint32_t shaderRegister)
 	{
-		return addTexture(getResourceStrings().getStringID(name), shaderRegister);
+		return addTexture(strID(name), shaderRegister);
 	}
 
 	PipelineBindings& addTexture(strID id, uint32_t shaderRegister)
