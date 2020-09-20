@@ -329,7 +329,7 @@ void RendererUI::renderPresentStageGroupsTab(RendererConfigurableState& state) n
 						ImGui::Text("Render targets:");
 						ImGui::Indent(20.0f);
 						for (uint32_t i = 0; i < stage.render.renderTargetNames.size(); i++) {
-							StringID renderTarget = stage.render.renderTargetNames[i];
+							strID renderTarget = stage.render.renderTargetNames[i];
 							ImGui::Text("- Render target %u: \"%s\"",
 								i, resStrings.getString(renderTarget));
 						}
@@ -337,7 +337,7 @@ void RendererUI::renderPresentStageGroupsTab(RendererConfigurableState& state) n
 					}
 
 					// Depth buffer
-					if (stage.render.depthBufferName != StringID::invalid()) {
+					if (stage.render.depthBufferName.isValid()) {
 						ImGui::Text("Depth buffer: \"%s\"",
 							resStrings.getString(stage.render.depthBufferName));
 					}
@@ -892,30 +892,30 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 		auto f32ToU8 = [](vec4 v) { return vec4_u8(v * 255.0f); };
 
 		// Lambda for converting texture index to combo string label
-		auto textureToComboStr = [&](StringID strId) {
+		auto textureToComboStr = [&](strID strId) {
 			str128 texStr;
-			if (strId == StringID::invalid()) texStr.appendf("NO TEXTURE");
+			if (!strId.isValid()) texStr.appendf("NO TEXTURE");
 			else texStr= str128("%s", resStrings.getString(strId));
 			return texStr;
 		};
 
 		// Lambda for creating a combo box to select texture
-		auto textureComboBox = [&](const char* comboName, StringID& texId, bool& updateMesh) {
+		auto textureComboBox = [&](const char* comboName, strID& texId, bool& updateMesh) {
 			str128 selectedTexStr = textureToComboStr(texId);
 			if (ImGui::BeginCombo(comboName, selectedTexStr)) {
 
 				// Special case for no texture (~0)
 				{
-					bool isSelected = texId == StringID::invalid();
+					bool isSelected = !texId.isValid();
 					if (ImGui::Selectable("NO TEXTURE", isSelected)) {
-						texId = StringID::invalid();
+						texId = STR_ID_INVALID;
 						updateMesh = true;
 					}
 				}
 
 				// Existing textures
 				for (auto itemItr : state.textures) {
-					StringID id = itemItr.key;
+					strID id = itemItr.key;
 
 					// Convert index to string and check if it is selected
 					str128 texStr = textureToComboStr(id);

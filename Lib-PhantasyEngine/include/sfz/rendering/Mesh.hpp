@@ -27,7 +27,7 @@
 namespace sfz {
 
 using sfz::Array;
-using sfz::StringID;
+using sfz::strID;
 using sfz::vec2;
 using sfz::vec3;
 using sfz::vec4_u8;
@@ -62,11 +62,11 @@ struct Material final {
 	uint8_t metallic = 255; // Linear space
 	vec3 emissive = vec3(1.0f); // Linear space, can be higher than 1.0
 	
-	StringID albedoTex = StringID::invalid();
-	StringID metallicRoughnessTex = StringID::invalid();
-	StringID normalTex = StringID::invalid();
-	StringID occlusionTex = StringID::invalid();
-	StringID emissiveTex = StringID::invalid();
+	strID albedoTex;
+	strID metallicRoughnessTex;
+	strID normalTex;
+	strID occlusionTex;
+	strID emissiveTex;
 };
 
 // Mesh component

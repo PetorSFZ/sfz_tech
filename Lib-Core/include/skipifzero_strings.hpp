@@ -28,6 +28,25 @@
 
 namespace sfz {
 
+// strID
+// ------------------------------------------------------------------------------------------------
+
+// A string id represents the hash of a string. Used to cheaply compare strings (e.g. in a hash map).
+struct strID final {
+	uint64_t id = 0; // 0 is reserved for invalid hashes
+
+	constexpr strID() = default;
+	constexpr explicit strID(uint64_t hashId) : id(hashId) {}
+
+	bool isValid() const { return id != 0; }
+	bool operator== (strID o) const { return this->id == o.id; }
+	bool operator!= (strID o) const { return this->id != o.id; }
+	operator uint64_t() const { return id; }
+};
+static_assert(sizeof(strID) == sizeof(uint64_t), "strID is padded");
+
+constexpr strID STR_ID_INVALID = strID();
+
 // StringLocal
 // ------------------------------------------------------------------------------------------------
 
@@ -189,6 +208,8 @@ constexpr uint64_t hashBytesFNV1a(const uint8_t* bytes, uint64_t numBytes)
 
 // Hash strings with FNV-1a by default
 constexpr uint64_t hash(const char* str) { return hashStringFNV1a(str); }
+
+constexpr uint64_t hash(strID str) { return str.id; }
 
 template<uint16_t N>
 constexpr uint64_t hash(const StringLocal<N>& str) { return hashStringFNV1a(str); }

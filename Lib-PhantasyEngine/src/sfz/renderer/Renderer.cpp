@@ -260,7 +260,7 @@ void Renderer::renderImguiUI() noexcept
 // ------------------------------------------------------------------------------------------------
 
 bool Renderer::uploadTextureBlocking(
-	StringID id, const phConstImageView& image, bool generateMipmaps) noexcept
+	strID id, const phConstImageView& image, bool generateMipmaps) noexcept
 {
 	// Error out and return false if texture already exists
 	if (mState->textures.get(id) != nullptr) return false;
@@ -289,13 +289,13 @@ bool Renderer::uploadTextureBlocking(
 	return true;
 }
 
-bool Renderer::textureLoaded(StringID id) const noexcept
+bool Renderer::textureLoaded(strID id) const noexcept
 {
 	const sfz::TextureItem* item = mState->textures.get(id);
 	return item != nullptr;
 }
 
-void Renderer::removeTextureGpuBlocking(StringID id) noexcept
+void Renderer::removeTextureGpuBlocking(strID id) noexcept
 {
 	// Ensure not between frameBegin() and frameFinish()
 	sfz_assert(!mState->windowFramebuffer.valid());
@@ -325,10 +325,10 @@ void Renderer::removeAllTexturesGpuBlocking() noexcept
 	mState->textures.clear();
 }
 
-bool Renderer::uploadMeshBlocking(StringID id, const Mesh& mesh) noexcept
+bool Renderer::uploadMeshBlocking(strID id, const Mesh& mesh) noexcept
 {
 	// Error out and return false if mesh already exists
-	sfz_assert(id != StringID::invalid());
+	sfz_assert(id.isValid());
 	if (mState->meshes.get(id) != nullptr) return false;
 
 	// Allocate memory for mesh
@@ -346,13 +346,13 @@ bool Renderer::uploadMeshBlocking(StringID id, const Mesh& mesh) noexcept
 	return true;
 }
 
-bool Renderer::meshLoaded(StringID id) const noexcept
+bool Renderer::meshLoaded(strID id) const noexcept
 {
 	const sfz::GpuMesh* mesh = mState->meshes.get(id);
 	return mesh != nullptr;
 }
 
-void Renderer::removeMeshGpuBlocking(StringID id) noexcept
+void Renderer::removeMeshGpuBlocking(strID id) noexcept
 {
 	// Ensure not between frameBegin() and frameFinish()
 	sfz_assert(!mState->windowFramebuffer.valid());
@@ -500,7 +500,7 @@ void Renderer::stageBeginInput(const char* stageName) noexcept
 	if (inStageInputMode()) return;
 
 	StringCollection& resStrings = getResourceStrings();
-	StringID stageNameID = resStrings.getStringID(stageName);
+	strID stageNameID = resStrings.getStringID(stageName);
 
 	// Find stage
 	uint32_t stageIdx = mState->findActiveStageIdx(stageNameID);
@@ -625,7 +625,7 @@ void Renderer::stageUploadToStreamingBufferUntyped(
 	
 	// Get streaming buffer item
 	StringCollection& resStrings = getResourceStrings();
-	StringID bufferID = resStrings.getStringID(bufferName);
+	strID bufferID = resStrings.getStringID(bufferName);
 	StreamingBufferItem* item = mState->configurable.streamingBuffers.get(bufferID);
 	sfz_assert(item != nullptr);
 
@@ -751,9 +751,9 @@ void Renderer::stageSetConstantBufferUntyped(
 		frame->deviceBuffer, 0, frame->uploadBuffer, 0, numBytes);
 }
 
-void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) noexcept
+void Renderer::stageDrawMesh(strID meshId, const MeshRegisters& registers) noexcept
 {
-	sfz_assert(meshId != StringID::invalid());
+	sfz_assert(meshId.isValid());
 	sfz_assert(inStageInputMode());
 	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
 
@@ -899,8 +899,8 @@ void Renderer::stageDrawMesh(StringID meshId, const MeshRegisters& registers) no
 
 		// Create texture bindings
 		zg::PipelineBindings bindings = commonBindings;
-		auto bindTexture = [&](uint32_t texRegister, StringID texID) {
-			if (texRegister != ~0u && texID != StringID::invalid()) {
+		auto bindTexture = [&](uint32_t texRegister, strID texID) {
+			if (texRegister != ~0u && texID.isValid()) {
 
 				// Find texture
 				TextureItem* texItem = mState->textures.get(texID);
@@ -979,7 +979,7 @@ void Renderer::stageSetVertexBuffer(const char* streamingBufferName) noexcept
 
 	// Get streaming buffer item
 	StringCollection& resStrings = getResourceStrings();
-	StringID bufferID = resStrings.getStringID(streamingBufferName);
+	strID bufferID = resStrings.getStringID(streamingBufferName);
 	StreamingBufferItem* item = mState->configurable.streamingBuffers.get(bufferID);
 	sfz_assert(item != nullptr);
 
@@ -997,7 +997,7 @@ void Renderer::stageSetIndexBuffer(const char* streamingBufferName, bool u32Buff
 
 	// Get streaming buffer item
 	StringCollection& resStrings = getResourceStrings();
-	StringID bufferID = resStrings.getStringID(streamingBufferName);
+	strID bufferID = resStrings.getStringID(streamingBufferName);
 	StreamingBufferItem* item = mState->configurable.streamingBuffers.get(bufferID);
 	sfz_assert(item != nullptr);
 
@@ -1103,7 +1103,7 @@ bool Renderer::frameProgressNextStageGroup() noexcept
 		FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
 
 		// Insert profile end call
-		StringID groupName = mState->configurable.presentStageGroups[mState->currentStageGroupIdx].groupName;
+		strID groupName = mState->configurable.presentStageGroups[mState->currentStageGroupIdx].groupName;
 		GroupProfilingID* groupId = frameIds.groupIds.find([&](const GroupProfilingID& e) {
 			return e.groupName == groupName;
 		});
@@ -1139,7 +1139,7 @@ void Renderer::frameFinish() noexcept
 	if (cmdList.valid()) {
 
 		// Insert profile end call
-		StringID groupName = mState->configurable.presentStageGroups[mState->currentStageGroupIdx].groupName;
+		strID groupName = mState->configurable.presentStageGroups[mState->currentStageGroupIdx].groupName;
 		GroupProfilingID* groupId = frameIds.groupIds.find([&](const GroupProfilingID& e) {
 			return e.groupName == groupName;
 		});

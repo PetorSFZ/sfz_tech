@@ -450,7 +450,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 
 	// Present queue
 	{
-		StringID defaultId = resStrings.getStringID("default");
+		strID defaultId = resStrings.getStringID("default");
 
 		JsonNode presentGroupsNode = root.accessMap("present_stage_groups");
 		const uint32_t numGroups = presentGroupsNode.arrayLength();

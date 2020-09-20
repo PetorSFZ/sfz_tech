@@ -34,7 +34,7 @@ namespace sfz {
 
 struct StringCollectionImpl final {
 	Allocator* allocator;
-	HashMap<StringID, DynString> strings;
+	HashMap<strID, DynString> strings;
 };
 
 // StringCollection: Constructors & destructors
@@ -92,16 +92,14 @@ uint32_t StringCollection::numStringsHeld() const noexcept
 	return mImpl->strings.size();
 }
 
-StringID StringCollection::getStringID(const char* string) noexcept
+strID StringCollection::getStringID(const char* string) noexcept
 {
 	sfz_assert(mImpl != nullptr);
 
 	// Hash string
-	StringID strId;
+	strID strId;
 	strId.id = sfz::hash(string);
-
-	// Fix special case where the real hash is equal to STRING_ID_INVALID_HASH by incrementing it.
-	if (strId.id == STRING_ID_INVALID_HASH) strId.id++;
+	sfz_assert_hard(strId.isValid());
 
 	// Add string to HashMap if it does not exist
 	DynString* strPtr = mImpl->strings.get(strId);
@@ -119,7 +117,7 @@ StringID StringCollection::getStringID(const char* string) noexcept
 	return strId;
 }
 
-const char* StringCollection::getString(StringID id) const noexcept
+const char* StringCollection::getString(strID id) const noexcept
 {
 	sfz_assert(mImpl != nullptr);
 	DynString* strPtr = mImpl->strings.get(id);

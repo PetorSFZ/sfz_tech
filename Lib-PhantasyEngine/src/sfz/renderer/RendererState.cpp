@@ -220,27 +220,27 @@ bool PipelineComputeItem::buildPipeline() noexcept
 // Stage: Helper methods
 // ------------------------------------------------------------------------------------------------
 
-void Stage::rebuildFramebuffer(HashMap<StringID, StaticTextureItem>& staticTextures) noexcept
+void Stage::rebuildFramebuffer(HashMap<strID, StaticTextureItem>& staticTextures) noexcept
 {
 	if (type != StageType::USER_INPUT_RENDERING) return;
 
 	StringCollection& resStrings = getResourceStrings();
-	StringID defaultId = resStrings.getStringID("default");
+	strID defaultId = resStrings.getStringID("default");
 
 	// Create framebuffer
 	if (!render.defaultFramebuffer) {
 
-		if (!render.renderTargetNames.isEmpty() || render.depthBufferName != StringID::invalid()) {
+		if (!render.renderTargetNames.isEmpty() || render.depthBufferName.isValid()) {
 			zg::FramebufferBuilder fbBuilder;
 
-			for (StringID renderTargetName : render.renderTargetNames) {
+			for (strID renderTargetName : render.renderTargetNames) {
 				sfz_assert(renderTargetName != defaultId);
 				StaticTextureItem* renderTarget = staticTextures.get(renderTargetName);
 				sfz_assert(renderTarget != nullptr);
 				fbBuilder.addRenderTarget(renderTarget->texture);
 			}
 
-			if (render.depthBufferName != StringID::invalid()) {
+			if (render.depthBufferName.isValid()) {
 				sfz_assert(render.depthBufferName != defaultId);
 				StaticTextureItem* depthBuffer = staticTextures.get(render.depthBufferName);
 				sfz_assert(depthBuffer != nullptr);
@@ -256,18 +256,18 @@ void Stage::rebuildFramebuffer(HashMap<StringID, StaticTextureItem>& staticTextu
 // RendererState: Helper methods
 // ------------------------------------------------------------------------------------------------
 
-uint32_t RendererState::findActiveStageIdx(StringID stageName) const noexcept
+uint32_t RendererState::findActiveStageIdx(strID stageName) const noexcept
 {
-	sfz_assert(stageName != StringID::invalid());
+	sfz_assert(stageName.isValid());
 	const Array<Stage>& stages = configurable.presentStageGroups[currentStageGroupIdx].stages;
 	const Stage* stage = stages.find([&](const Stage& e) { return e.name == stageName; });
 	if (stage == nullptr) return ~0u;
 	return uint32_t(stage - stages.data());
 }
 
-uint32_t RendererState::findPipelineRenderIdx(StringID pipelineName) const noexcept
+uint32_t RendererState::findPipelineRenderIdx(strID pipelineName) const noexcept
 {
-	sfz_assert(pipelineName != StringID::invalid());
+	sfz_assert(pipelineName.isValid());
 	uint32_t numPipelines = this->configurable.renderPipelines.size();
 	for (uint32_t i = 0; i < numPipelines; i++) {
 		const PipelineRenderItem& item = this->configurable.renderPipelines[i];
@@ -276,9 +276,9 @@ uint32_t RendererState::findPipelineRenderIdx(StringID pipelineName) const noexc
 	return ~0u;
 }
 
-uint32_t RendererState::findPipelineComputeIdx(StringID pipelineName) const noexcept
+uint32_t RendererState::findPipelineComputeIdx(strID pipelineName) const noexcept
 {
-	sfz_assert(pipelineName != StringID::invalid());
+	sfz_assert(pipelineName.isValid());
 	uint32_t numPipelines = this->configurable.computePipelines.size();
 	for (uint32_t i = 0; i < numPipelines; i++) {
 		const PipelineComputeItem& item = this->configurable.computePipelines[i];

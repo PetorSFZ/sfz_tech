@@ -34,9 +34,9 @@ UTEST(StringID, testing_string_collection)
 	StringCollection collection(32, getDefaultAllocator());
 	ASSERT_TRUE(collection.numStringsHeld() == 0);
 
-	StringID id1 = collection.getStringID("Hello");
+	strID id1 = collection.getStringID("Hello");
 	ASSERT_TRUE(collection.numStringsHeld() == 1);
-	StringID id2 = collection.getStringID("World");
+	strID id2 = collection.getStringID("World");
 	ASSERT_TRUE(collection.numStringsHeld() == 2);
 
 	ASSERT_TRUE(id1 == id1);
@@ -47,7 +47,7 @@ UTEST(StringID, testing_string_collection)
 	ASSERT_TRUE(std::strcmp("Hello", collection.getString(id1)) == 0);
 	ASSERT_TRUE(std::strcmp("World", collection.getString(id2)) == 0);
 
-	StringID badId;
+	strID badId;
 	badId.id = id1.id + id2.id;
 	ASSERT_TRUE(collection.getString(badId) == nullptr);
 	ASSERT_TRUE(collection.numStringsHeld() == 2);
@@ -58,12 +58,12 @@ UTEST(StringID, ensuring_we_always_get_same_has_for_same_string)
 	StringCollection collection(32, getDefaultAllocator());
 	ASSERT_TRUE(collection.numStringsHeld() == 0);
 
-	StringID helloWorldId = collection.getStringID("Hello World!");
+	strID helloWorldId = collection.getStringID("Hello World!");
 	constexpr uint64_t HELLO_WORLD_HASH = 10092224619179044402ull;
 	ASSERT_TRUE(helloWorldId.id == HELLO_WORLD_HASH);
 
 	// Ensure we get same string id both times
-	StringID helloWorldId2 = collection.getStringID("Hello World!");
+	strID helloWorldId2 = collection.getStringID("Hello World!");
 	ASSERT_TRUE(helloWorldId == helloWorldId2);
 	ASSERT_TRUE(collection.numStringsHeld() == 1);
 }

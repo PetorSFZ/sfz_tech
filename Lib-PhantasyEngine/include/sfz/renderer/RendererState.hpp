@@ -64,7 +64,7 @@ struct PipelineRenderItem final {
 	zg::PipelineRender pipeline;
 
 	// Parsed information
-	StringID name;
+	strID name;
 	str256 vertexShaderPath;
 	str256 pixelShaderPath;
 	str128 vertexShaderEntry;
@@ -95,7 +95,7 @@ struct PipelineComputeItem final {
 	zg::PipelineCompute pipeline;
 
 	// Parsed information
-	StringID name;
+	strID name;
 	str256 computeShaderPath;
 	str128 computeShaderEntry;
 	ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstRegisters;
@@ -117,7 +117,7 @@ struct StaticTextureItem final {
 	uint32_t height = 0;
 
 	// Parsed information
-	StringID name;
+	strID name;
 	ZgTextureFormat format = ZG_TEXTURE_FORMAT_UNDEFINED;
 	float clearValue = 0.0f;
 	bool resolutionIsFixed = false;
@@ -139,7 +139,7 @@ struct StreamingBufferMemory final {
 };
 
 struct StreamingBufferItem final {
-	StringID name;
+	strID name;
 	uint32_t elementSizeBytes = 0;
 	uint32_t maxNumElements = 0;
 	bool committedAllocation = false;
@@ -172,7 +172,7 @@ struct ConstantBufferMemory final {
 
 struct BoundTexture final {
 	uint32_t textureRegister = ~0u;
-	StringID textureName = StringID::invalid();
+	strID textureName;
 };
 
 struct Stage final {
@@ -180,26 +180,26 @@ struct Stage final {
 	Array<PerFrameData<ConstantBufferMemory>> constantBuffers;
 
 	// Parsed information
-	StringID name;
+	strID name;
 	StageType type;
 	struct {
 		zg::Framebuffer framebuffer;
-		StringID pipelineName;
-		ArrayLocal<StringID, ZG_MAX_NUM_RENDER_TARGETS> renderTargetNames;
-		StringID depthBufferName;
+		strID pipelineName;
+		ArrayLocal<strID, ZG_MAX_NUM_RENDER_TARGETS> renderTargetNames;
+		strID depthBufferName;
 		bool defaultFramebuffer = false;
 	} render;
 	struct {
-		StringID pipelineName;
+		strID pipelineName;
 	} compute;
 	ArrayLocal<BoundTexture, ZG_MAX_NUM_TEXTURES> boundTextures;
 	ArrayLocal<BoundTexture, ZG_MAX_NUM_UNORDERED_TEXTURES> boundUnorderedTextures;
 
-	void rebuildFramebuffer(HashMap<StringID, StaticTextureItem>& staticTextures) noexcept;
+	void rebuildFramebuffer(HashMap<strID, StaticTextureItem>& staticTextures) noexcept;
 };
 
 struct StageGroup final {
-	StringID groupName = StringID::invalid();
+	strID groupName;
 	Array<Stage> stages;
 };
 
@@ -218,7 +218,7 @@ struct TextureItem final {
 // ------------------------------------------------------------------------------------------------
 
 struct GroupProfilingID final {
-	StringID groupName = StringID::invalid();
+	strID groupName;
 	uint64_t id = ~0ull;
 };
 
@@ -238,10 +238,10 @@ struct RendererConfigurableState final {
 	Array<PipelineComputeItem> computePipelines;
 
 	// Static textures
-	HashMap<StringID, StaticTextureItem> staticTextures;
+	HashMap<strID, StaticTextureItem> staticTextures;
 
 	// Streaming buffers
-	HashMap<StringID, StreamingBufferItem> streamingBuffers;
+	HashMap<strID, StreamingBufferItem> streamingBuffers;
 
 	// Present stage groups
 	Array<StageGroup> presentStageGroups;
@@ -280,8 +280,8 @@ struct RendererState final {
 	uint64_t lastRetrievedFrameTimeFrameIdx = ~0ull;
 
 	// GPU resources
-	HashMap<StringID, TextureItem> textures;
-	HashMap<StringID, GpuMesh> meshes;
+	HashMap<strID, TextureItem> textures;
+	HashMap<strID, GpuMesh> meshes;
 
 	// UI
 	RendererUI ui;
@@ -318,11 +318,11 @@ struct RendererState final {
 	// Finds the index of the specified stage among the current actives ones (i.e. the ones from the
 	// current set index to the next stage barrier). Returns ~0u if stage is not among the current
 	// active set.
-	uint32_t findActiveStageIdx(StringID stageName) const noexcept;
+	uint32_t findActiveStageIdx(strID stageName) const noexcept;
 
 	// Finds the index of the specified pipeline. Returns ~0u if it does not exist.
-	uint32_t findPipelineRenderIdx(StringID pipelineName) const noexcept;
-	uint32_t findPipelineComputeIdx(StringID pipelineName) const noexcept;
+	uint32_t findPipelineRenderIdx(strID pipelineName) const noexcept;
+	uint32_t findPipelineComputeIdx(strID pipelineName) const noexcept;
 
 	// Finds the current constant buffer's memory for the current input stage given its shader
 	// register.

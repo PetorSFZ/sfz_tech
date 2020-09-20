@@ -36,11 +36,11 @@ ShaderMaterial cpuMaterialToShaderMaterial(const Material& cpuMaterial) noexcept
 	dst.emissive.xyz = cpuMaterial.emissive;
 	dst.roughness = float(cpuMaterial.roughness) * (1.0f / 255.0f);
 	dst.metallic = float(cpuMaterial.metallic) * (1.0f / 255.0f);
-	dst.hasAlbedoTex = cpuMaterial.albedoTex != StringID::invalid() ? 1 : 0;
-	dst.hasMetallicRoughnessTex = cpuMaterial.metallicRoughnessTex != StringID::invalid() ? 1 : 0;
-	dst.hasNormalTex = cpuMaterial.normalTex != StringID::invalid() ? 1 : 0;
-	dst.hasOcclusionTex = cpuMaterial.occlusionTex != StringID::invalid() ? 1 : 0;
-	dst.hasEmissiveTex = cpuMaterial.emissiveTex != StringID::invalid() ? 1 : 0;
+	dst.hasAlbedoTex = cpuMaterial.albedoTex.isValid() ? 1 : 0;
+	dst.hasMetallicRoughnessTex = cpuMaterial.metallicRoughnessTex.isValid() ? 1 : 0;
+	dst.hasNormalTex = cpuMaterial.normalTex.isValid() ? 1 : 0;
+	dst.hasOcclusionTex = cpuMaterial.occlusionTex.isValid() ? 1 : 0;
+	dst.hasEmissiveTex = cpuMaterial.emissiveTex.isValid() ? 1 : 0;
 	return dst;
 }
 

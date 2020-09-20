@@ -18,53 +18,10 @@
 
 #pragma once
 
-#include <cstddef>
-#include <functional> // std::hash
-
 #include <skipifzero.hpp>
+#include <skipifzero_strings.hpp>
 
 namespace sfz {
-
-using std::uint64_t;
-using std::size_t;
-
-// StringID struct
-// ------------------------------------------------------------------------------------------------
-
-// Hash value reserved for invalid StringID's.
-//
-// Since sfz::hash(string) can actually return this value normally, those hashes are mapped to
-// "STRING_ID_INVALID_HASH + 1".
-constexpr uint64_t STRING_ID_INVALID_HASH = 0;
-
-/// Struct representing the hash of a string. Used to be able to use strings equality comparisons
-/// in contexts where actually comparing strings each time would be to expensive. StringIDs should
-/// always be created by a StringCollection.
-struct StringID final {
-	uint64_t id = STRING_ID_INVALID_HASH;
-
-	// Explicitly creates an invalid StringID.
-	static StringID invalid() noexcept { return StringID(STRING_ID_INVALID_HASH); }
-
-	// Conversion to and from uint64_t
-	constexpr explicit StringID(uint64_t hashId) noexcept : id{hashId} {}
-	operator uint64_t() const noexcept { return id; }
-
-	StringID() noexcept = default;
-	StringID(const StringID&) noexcept = default;
-	StringID& operator= (const StringID&) noexcept = default;
-};
-static_assert(sizeof(StringID) == sizeof(uint64_t), "StringID is padded");
-
-inline bool operator== (const StringID& lhs, const StringID& rhs) noexcept
-{
-	return lhs.id == rhs.id;
-}
-
-inline bool operator!= (const StringID& lhs, const StringID& rhs) noexcept
-{
-	return lhs.id != rhs.id;
-}
 
 // StringCollection class
 // ------------------------------------------------------------------------------------------------
@@ -111,27 +68,15 @@ public:
 	/// This method is fairly expensive to call, so the StringID should be kept and reused.
 	/// If a string collision occurs (i.e., two strings have the same hash) this method will call
 	/// sfz::error() and exit the program.
-	StringID getStringID(const char* string) noexcept;
+	strID getStringID(const char* string) noexcept;
 
 	/// Returns the string associated with the given StringID. Returns nullptr if no such string
 	/// exists. The pointer is owned by the StringCollection, but it is safe to store it as long
 	/// as this StringCollection is not destroy():ed.
-	const char* getString(StringID id) const noexcept;
+	const char* getString(strID id) const noexcept;
 
 private:
 	StringCollectionImpl* mImpl = nullptr;
 };
 
 } // namespace sfz
-
-// Specialization of std::hash for StringID
-// ------------------------------------------------------------------------------------------------
-
-namespace std {
-
-template<>
-struct hash<sfz::StringID> {
-	inline size_t operator() (const sfz::StringID& str) const noexcept { return size_t(str.id); }
-};
-
-} // namespace std

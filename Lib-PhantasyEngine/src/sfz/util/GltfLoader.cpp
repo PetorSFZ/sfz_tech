@@ -158,7 +158,7 @@ bool loadAssetsFromGltf(
 	Mesh& meshOut,
 	Array<ImageAndPath>& texturesOut,
 	sfz::Allocator* allocator,
-	bool (*checkIfTextureIsLoaded)(StringID id, void* userPtr),
+	bool (*checkIfTextureIsLoaded)(strID id, void* userPtr),
 	void* userPtr) noexcept
 {
 	cgltf_options cgltfOptions = {};
@@ -199,7 +199,7 @@ bool loadAssetsFromGltf(
 
 			// Create global path (path relative to game executable)
 			const str320 globalPath("%s%s", basePath, image.uri);
-			StringID globalPathId = resStrings.getStringID(globalPath);
+			strID globalPathId = resStrings.getStringID(globalPath);
 
 			// Check if texture is already loaded, skip it if it is
 			if (checkIfTextureIsLoaded != nullptr) {
@@ -234,8 +234,8 @@ bool loadAssetsFromGltf(
 			phMat.metallic = toU8(pbr.metallic_factor);
 			phMat.emissive = vec3(material.emissive_factor);
 				
-			auto lookupTexture = [&](cgltf_texture_view& view) -> StringID {
-				if (view.texture == nullptr) return StringID();
+			auto lookupTexture = [&](cgltf_texture_view& view) -> strID {
+				if (view.texture == nullptr) return strID();
 				sfz_assert(!view.has_transform);
 
 				// Create global path (path relative to game executable)

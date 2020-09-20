@@ -54,7 +54,7 @@ constexpr uint32_t RENDERER_MAX_NUM_TEXTURES = 16;
 constexpr uint32_t RENDERER_MAX_NUM_UNORDERED_TEXTURES = 16;
 
 struct Binding final {
-	StringID resourceID;
+	strID resourceID;
 	uint32_t shaderRegister = ~0u;
 };
 
@@ -75,7 +75,7 @@ struct PipelineBindings final {
 		return addTexture(getResourceStrings().getStringID(name), shaderRegister);
 	}
 
-	PipelineBindings& addTexture(StringID id, uint32_t shaderRegister)
+	PipelineBindings& addTexture(strID id, uint32_t shaderRegister)
 	{
 		textures.add({ id, shaderRegister });
 		return *this;
@@ -140,10 +140,10 @@ public:
 	//
 	// Returns whether succesful or not
 	bool uploadTextureBlocking(
-		StringID id, const phConstImageView& image, bool generateMipmaps) noexcept;
+		strID id, const phConstImageView& image, bool generateMipmaps) noexcept;
 
 	// Check if a texture is loaded or not
-	bool textureLoaded(StringID id) const noexcept;
+	bool textureLoaded(strID id) const noexcept;
 
 	// Removes a texture from the renderer, will flush rendering.
 	//
@@ -152,7 +152,7 @@ public:
 	// cause frame stutter.
 	//
 	// WARNING: This must NOT be called between frameBegin() and frameFinish().
-	void removeTextureGpuBlocking(StringID id) noexcept;
+	void removeTextureGpuBlocking(strID id) noexcept;
 
 	// Removes all textures from the renderer, will flush rendering.
 	//
@@ -167,10 +167,10 @@ public:
 	// directory in the same directory as the executable.
 	//
 	// Returns whether succesful or not.
-	bool uploadMeshBlocking(StringID id, const Mesh& mesh) noexcept;
+	bool uploadMeshBlocking(strID id, const Mesh& mesh) noexcept;
 
 	// Check if a mesh is loaded or not
-	bool meshLoaded(StringID id) const noexcept;
+	bool meshLoaded(strID id) const noexcept;
 
 	// Removes a mesh from the renderer, will flush rendering.
 	//
@@ -179,7 +179,7 @@ public:
 	// cause frame stutter.
 	//
 	// WARNING: This must NOT be called between frameBegin() and frameFinish().
-	void removeMeshGpuBlocking(StringID id) noexcept;
+	void removeMeshGpuBlocking(strID id) noexcept;
 
 	// Removes all meshes from the renderer, will flush rendering.
 	//
@@ -251,7 +251,7 @@ public:
 	// Draws a mesh in the currently input active stage
 	//
 	// The specified registers will get data if available
-	void stageDrawMesh(StringID meshId, const MeshRegisters& registers) noexcept;
+	void stageDrawMesh(strID meshId, const MeshRegisters& registers) noexcept;
 
 	void stageSetBindings(const PipelineBindings& bindings) noexcept;
 
