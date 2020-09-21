@@ -216,146 +216,129 @@ endif()
 # ------------------------------------------------------------------------------------------------
 
 # Directories
-set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/res_ph)
 
-set(HEADER_FILES
-	${INCLUDE_DIR}/sfz/audio/AudioEngine.hpp
-
-	${INCLUDE_DIR}/sfz/config/GlobalConfig.hpp
-	${INCLUDE_DIR}/sfz/config/Setting.hpp
-
-	${INCLUDE_DIR}/sfz/debug/Console.hpp
-	${INCLUDE_DIR}/sfz/debug/ProfilingStats.hpp
-
-	${INCLUDE_DIR}/sfz/geometry/AABB.hpp
-	${INCLUDE_DIR}/sfz/geometry/AABB.inl
-	${INCLUDE_DIR}/sfz/geometry/AABB2D.hpp
-	${INCLUDE_DIR}/sfz/geometry/Circle.hpp
-	${INCLUDE_DIR}/sfz/geometry/Intersection.hpp
-	${INCLUDE_DIR}/sfz/geometry/Intersection.inl
-	${INCLUDE_DIR}/sfz/geometry/OBB.hpp
-	${INCLUDE_DIR}/sfz/geometry/OBB.inl
-	${INCLUDE_DIR}/sfz/geometry/Plane.hpp
-	${INCLUDE_DIR}/sfz/geometry/Plane.inl
-	${INCLUDE_DIR}/sfz/geometry/Sphere.hpp
-
-	${INCLUDE_DIR}/sfz/math/MathPrimitiveToStrings.hpp
-
-	${INCLUDE_DIR}/sfz/memory/ArenaAllocator.hpp
-	${INCLUDE_DIR}/sfz/memory/DebugAllocator.hpp
-
-	${INCLUDE_DIR}/sfz/renderer/BuiltInShaderTypes.hpp
-	${INCLUDE_DIR}/sfz/renderer/CascadedShadowMaps.hpp
-	${INCLUDE_DIR}/sfz/renderer/GpuMesh.hpp
-	${INCLUDE_DIR}/sfz/renderer/GpuTextures.hpp
-	${INCLUDE_DIR}/sfz/renderer/Renderer.hpp
-	${INCLUDE_DIR}/sfz/renderer/RendererConfigParser.hpp
-	${INCLUDE_DIR}/sfz/renderer/RendererState.hpp
-	${INCLUDE_DIR}/sfz/renderer/RendererUI.hpp
-	${INCLUDE_DIR}/sfz/renderer/ZeroGUtils.hpp
-
-	${INCLUDE_DIR}/sfz/rendering/FullscreenTriangle.hpp
-	${INCLUDE_DIR}/sfz/rendering/HSV.hpp
-	${INCLUDE_DIR}/sfz/rendering/Image.hpp
-	${INCLUDE_DIR}/sfz/rendering/ImguiSupport.hpp
-	${INCLUDE_DIR}/sfz/rendering/Mesh.hpp
-	${INCLUDE_DIR}/sfz/rendering/SphereLight.hpp
-
-	${INCLUDE_DIR}/sfz/sdl/ButtonState.hpp
-	${INCLUDE_DIR}/sfz/sdl/GameController.hpp
-	${INCLUDE_DIR}/sfz/sdl/Mouse.hpp
-	${INCLUDE_DIR}/sfz/sdl/SDLAllocator.hpp
-
-	${INCLUDE_DIR}/sfz/state/ArrayHeader.hpp
-	${INCLUDE_DIR}/sfz/state/ComponentMask.hpp
-	${INCLUDE_DIR}/sfz/state/Entity.hpp
-	${INCLUDE_DIR}/sfz/state/GameState.hpp
-	${INCLUDE_DIR}/sfz/state/GameStateContainer.hpp
-	${INCLUDE_DIR}/sfz/state/GameStateEditor.hpp
-
-	${INCLUDE_DIR}/sfz/strings/DynString.hpp
-
-	${INCLUDE_DIR}/sfz/util/Enumerate.hpp
-	${INCLUDE_DIR}/sfz/util/FixedTimeUpdateHelpers.hpp
-	${INCLUDE_DIR}/sfz/util/GltfLoader.hpp
-	${INCLUDE_DIR}/sfz/util/GltfWriter.hpp
-	${INCLUDE_DIR}/sfz/util/IniParser.hpp
-	${INCLUDE_DIR}/sfz/util/IO.hpp
-	${INCLUDE_DIR}/sfz/util/JsonParser.hpp
-	${INCLUDE_DIR}/sfz/util/LoggingInterface.hpp
-	${INCLUDE_DIR}/sfz/util/RandomColors.hpp
-	${INCLUDE_DIR}/sfz/util/StandardLogger.hpp
-	${INCLUDE_DIR}/sfz/util/TerminalLogger.hpp
-
-	${INCLUDE_DIR}/sfz/Context.hpp
-	${INCLUDE_DIR}/sfz/CudaCompatibility.hpp
-	${INCLUDE_DIR}/sfz/Logging.hpp
-	${INCLUDE_DIR}/sfz/PhantasyEngineMain.hpp
-	${INCLUDE_DIR}/sfz/PopWarnings.hpp
-	${INCLUDE_DIR}/sfz/PushWarnings.hpp
-	${INCLUDE_DIR}/sfz/SimdIntrinsics.hpp
-)
-source_group(TREE ${INCLUDE_DIR} FILES ${HEADER_FILES})
-
 set(SRC_FILES
+	${SRC_DIR}/sfz/audio/AudioEngine.hpp
 	${SRC_DIR}/sfz/audio/AudioEngine.cpp
 
+	${SRC_DIR}/sfz/config/GlobalConfig.hpp
 	${SRC_DIR}/sfz/config/GlobalConfig.cpp
+	${SRC_DIR}/sfz/config/Setting.hpp
 	${SRC_DIR}/sfz/config/Setting.cpp
 
+	${SRC_DIR}/sfz/debug/Console.hpp
 	${SRC_DIR}/sfz/debug/Console.cpp
+	${SRC_DIR}/sfz/debug/ProfilingStats.hpp
 	${SRC_DIR}/sfz/debug/ProfilingStats.cpp
 
+	${SRC_DIR}/sfz/geometry/AABB.hpp
+	${SRC_DIR}/sfz/geometry/AABB.inl
+	${SRC_DIR}/sfz/geometry/AABB2D.hpp
+	${SRC_DIR}/sfz/geometry/Circle.hpp
+	${SRC_DIR}/sfz/geometry/Intersection.hpp
+	${SRC_DIR}/sfz/geometry/Intersection.inl
+	${SRC_DIR}/sfz/geometry/OBB.hpp
+	${SRC_DIR}/sfz/geometry/OBB.inl
+	${SRC_DIR}/sfz/geometry/Plane.hpp
+	${SRC_DIR}/sfz/geometry/Plane.inl
+	${SRC_DIR}/sfz/geometry/Sphere.hpp
+
+	${SRC_DIR}/sfz/math/MathPrimitiveToStrings.hpp
 	${SRC_DIR}/sfz/math/MathPrimitiveToStrings.cpp
 
+	${SRC_DIR}/sfz/memory/ArenaAllocator.hpp
 	${SRC_DIR}/sfz/memory/ArenaAllocator.cpp
+	${SRC_DIR}/sfz/memory/DebugAllocator.hpp
 	${SRC_DIR}/sfz/memory/DebugAllocator.cpp
 
+	${SRC_DIR}/sfz/renderer/BuiltInShaderTypes.hpp
+	${SRC_DIR}/sfz/renderer/CascadedShadowMaps.hpp
 	${SRC_DIR}/sfz/renderer/CascadedShadowMaps.cpp
+	${SRC_DIR}/sfz/renderer/GpuMesh.hpp
 	${SRC_DIR}/sfz/renderer/GpuMesh.cpp
+	${SRC_DIR}/sfz/renderer/GpuTextures.hpp
 	${SRC_DIR}/sfz/renderer/GpuTextures.cpp
+	${SRC_DIR}/sfz/renderer/Renderer.hpp
 	${SRC_DIR}/sfz/renderer/Renderer.cpp
+	${SRC_DIR}/sfz/renderer/RendererConfigParser.hpp
 	${SRC_DIR}/sfz/renderer/RendererConfigParser.cpp
+	${SRC_DIR}/sfz/renderer/RendererState.hpp
 	${SRC_DIR}/sfz/renderer/RendererState.cpp
+	${SRC_DIR}/sfz/renderer/RendererUI.hpp
 	${SRC_DIR}/sfz/renderer/RendererUI.cpp
+	${SRC_DIR}/sfz/renderer/ZeroGUtils.hpp
 	${SRC_DIR}/sfz/renderer/ZeroGUtils.cpp
 
+	${SRC_DIR}/sfz/rendering/FullscreenTriangle.hpp
 	${SRC_DIR}/sfz/rendering/FullscreenTriangle.cpp
+	${SRC_DIR}/sfz/rendering/HSV.hpp
+	${SRC_DIR}/sfz/rendering/Image.hpp
 	${SRC_DIR}/sfz/rendering/Image.cpp
+	${SRC_DIR}/sfz/rendering/ImguiSupport.hpp
 	${SRC_DIR}/sfz/rendering/ImguiSupport.cpp
+	${SRC_DIR}/sfz/rendering/Mesh.hpp
+	${SRC_DIR}/sfz/rendering/SphereLight.hpp
 
+	${SRC_DIR}/sfz/sdl/ButtonState.hpp
+	${SRC_DIR}/sfz/sdl/GameController.hpp
 	${SRC_DIR}/sfz/sdl/GameController.cpp
+	${SRC_DIR}/sfz/sdl/Mouse.hpp
 	${SRC_DIR}/sfz/sdl/Mouse.cpp
+	${SRC_DIR}/sfz/sdl/SDLAllocator.hpp
 	${SRC_DIR}/sfz/sdl/SDLAllocator.cpp
 
+	${SRC_DIR}/sfz/state/ArrayHeader.hpp
 	${SRC_DIR}/sfz/state/ArrayHeader.cpp
+	${SRC_DIR}/sfz/state/ComponentMask.hpp
+	${SRC_DIR}/sfz/state/Entity.hpp
+	${SRC_DIR}/sfz/state/GameState.hpp
 	${SRC_DIR}/sfz/state/GameState.cpp
+	${SRC_DIR}/sfz/state/GameStateContainer.hpp
 	${SRC_DIR}/sfz/state/GameStateContainer.cpp
+	${SRC_DIR}/sfz/state/GameStateEditor.hpp
 	${SRC_DIR}/sfz/state/GameStateEditor.cpp
 
+	${SRC_DIR}/sfz/strings/DynString.hpp
 	${SRC_DIR}/sfz/strings/DynString.cpp
 
+	${SRC_DIR}/sfz/util/Enumerate.hpp
+	${SRC_DIR}/sfz/util/FixedTimeUpdateHelpers.hpp
+	${SRC_DIR}/sfz/util/GltfLoader.hpp
 	${SRC_DIR}/sfz/util/GltfLoader.cpp
+	${SRC_DIR}/sfz/util/GltfWriter.hpp
 	${SRC_DIR}/sfz/util/GltfWriter.cpp
+	${SRC_DIR}/sfz/util/IniParser.hpp
 	${SRC_DIR}/sfz/util/IniParser.cpp
+	${SRC_DIR}/sfz/util/IO.hpp
 	${SRC_DIR}/sfz/util/IO.cpp
+	${SRC_DIR}/sfz/util/JsonParser.hpp
 	${SRC_DIR}/sfz/util/JsonParser.cpp
+	${SRC_DIR}/sfz/util/LoggingInterface.hpp
+	${SRC_DIR}/sfz/util/RandomColors.hpp
 	${SRC_DIR}/sfz/util/RandomColors.cpp
+	${SRC_DIR}/sfz/util/StandardLogger.hpp
 	${SRC_DIR}/sfz/util/StandardLogger.cpp
+	${SRC_DIR}/sfz/util/TerminalLogger.hpp
 	${SRC_DIR}/sfz/util/TerminalLogger.cpp
 
+	${SRC_DIR}/sfz/Context.hpp
 	${SRC_DIR}/sfz/Context.cpp
+	${SRC_DIR}/sfz/CudaCompatibility.hpp
+	${SRC_DIR}/sfz/Logging.hpp
+	${SRC_DIR}/sfz/PhantasyEngineMain.hpp
 	${SRC_DIR}/sfz/PhantasyEngineMain.cpp
+	${SRC_DIR}/sfz/PopWarnings.hpp
+	${SRC_DIR}/sfz/PushWarnings.hpp
+	${SRC_DIR}/sfz/SimdIntrinsics.hpp
 )
 source_group(TREE ${SRC_DIR} FILES ${SRC_FILES})
 
-add_library(PhantasyEngine ${HEADER_FILES} ${SRC_FILES})
+add_library(PhantasyEngine ${SRC_FILES})
 
 target_include_directories(PhantasyEngine PUBLIC
-	${INCLUDE_DIR}
 	${SRC_DIR}
 	${SDL2_INCLUDE_DIRS}
 	${ZEROG_INCLUDE_DIRS}
@@ -409,7 +392,7 @@ if(NOT hasParent OR PHANTASY_ENGINE_BUILD_TESTS)
 
 	add_executable(PhantasyEngineTests ${TEST_FILES})
 	target_include_directories(PhantasyEngineTests PRIVATE
-		${INCLUDE_DIR}
+		${SRC_DIR}
 		${SFZ_CORE_HEADERS_INCLUDE_DIRS}
 		${UTESTH_INCLUDE_DIRS}
 	)
@@ -422,7 +405,7 @@ endif()
 
 if (hasParent)
 	set(PHANTASY_ENGINE_FOUND true PARENT_SCOPE)
-	set(PHANTASY_ENGINE_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
+	set(PHANTASY_ENGINE_INCLUDE_DIRS ${SRC_DIR} PARENT_SCOPE)
 	set(PHANTASY_ENGINE_LIBRARIES PhantasyEngine PARENT_SCOPE)
 	set(PHANTASY_ENGINE_RUNTIME_DIR ${RESOURCES_DIR} PARENT_SCOPE)
 endif()

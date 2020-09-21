@@ -39,16 +39,16 @@ Lib-Core/build_visualstudio/
 Lib-Core/build_xcode_macos/
 Lib-Core/build_xcode_ios/
 
-Lib-PhantasyEngine/build/
-Lib-PhantasyEngine/build_emscripten_debug/
-Lib-PhantasyEngine/build_emscripten_release/
-Lib-PhantasyEngine/build_make_debug/
-Lib-PhantasyEngine/build_make_release/
-Lib-PhantasyEngine/build_vs2017/
-Lib-PhantasyEngine/build_vs2019/
-Lib-PhantasyEngine/build_visualstudio/
-Lib-PhantasyEngine/build_xcode_macos/
-Lib-PhantasyEngine/build_xcode_ios/
+Lib-Engine/build/
+Lib-Engine/build_emscripten_debug/
+Lib-Engine/build_emscripten_release/
+Lib-Engine/build_make_debug/
+Lib-Engine/build_make_release/
+Lib-Engine/build_vs2017/
+Lib-Engine/build_vs2019/
+Lib-Engine/build_visualstudio/
+Lib-Engine/build_xcode_macos/
+Lib-Engine/build_xcode_ios/
 
 Lib-ZeroG/Samples/build_vs2017/
 Lib-ZeroG/Samples/build_vs2019/

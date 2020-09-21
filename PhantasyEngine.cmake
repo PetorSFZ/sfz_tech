@@ -336,7 +336,7 @@ function(phAddPhantasyEngineTargets)
 
 	# Adding engine
 	add_subdirectory(
-		${SFZ_TECH_ROOT}/Lib-PhantasyEngine
+		${SFZ_TECH_ROOT}/Lib-Engine
 		${CMAKE_BINARY_DIR}/PhantasyEngine
 	)
 	set(PHANTASY_ENGINE_FOUND ${PHANTASY_ENGINE_FOUND} PARENT_SCOPE)

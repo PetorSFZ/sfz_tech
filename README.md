@@ -9,7 +9,7 @@ That said, just because the projects are in the same repository does NOT mean th
 ## Projects
 
 * [Lib-Core](https://github.com/PetorSFZ/sfz_tech/tree/master/Lib-Core) - A small, compact, no-dependency, header-only, math and containers library.
-* [Lib-PhantasyEngine](https://github.com/PetorSFZ/sfz_tech/tree/master/Lib-PhantasyEngine) - A lightweight, barebones, DIY game engine.
+* [Lib-Engine](https://github.com/PetorSFZ/sfz_tech/tree/master/Lib-Engine) - A lightweight, barebones, DIY game engine.
 * [Lib-ZeroG](https://github.com/PetorSFZ/sfz_tech/tree/master/Lib-ZeroG) - `ZeroG` is a (somewhat higher-level) GPU API implemented on top modern low-level GPU API's, such as D3D12 and Vulkan.
 * [Lib-ZeroG-ImGui](https://github.com/PetorSFZ/sfz_tech/tree/master/Lib-ZeroG-ImGui) - `ZeroG-ImGui` is a `ZeroG` based `ImGui` renderer.
 
