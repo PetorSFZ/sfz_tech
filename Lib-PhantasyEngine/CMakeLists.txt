@@ -246,7 +246,6 @@ set(HEADER_FILES
 	${INCLUDE_DIR}/sfz/math/MathSupport.hpp
 	${INCLUDE_DIR}/sfz/math/MathSupport.inl
 	${INCLUDE_DIR}/sfz/math/Quaternion.hpp
-	${INCLUDE_DIR}/sfz/math/Quaternion.inl
 
 	${INCLUDE_DIR}/sfz/memory/ArenaAllocator.hpp
 	${INCLUDE_DIR}/sfz/memory/DebugAllocator.hpp

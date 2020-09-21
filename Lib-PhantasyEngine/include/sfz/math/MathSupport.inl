@@ -30,7 +30,7 @@ SFZ_CUDA_CALL vec3 rotateTowardsRad(vec3 inDir, vec3 targetDir, float angleRads)
 	sfz_assert(angleRads < PI);
 	vec3 axis = cross(inDir, targetDir);
 	sfz_assert(!eqf(axis, vec3(0.0f)));
-	Quaternion rotQuat = Quaternion::rotationRad(axis, angleRads);
+	quat rotQuat = quat::rotationRad(axis, angleRads);
 	vec3 newDir = rotate(rotQuat, inDir);
 	return newDir;
 }

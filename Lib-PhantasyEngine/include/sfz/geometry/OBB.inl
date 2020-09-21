@@ -96,7 +96,7 @@ inline OBB OBB::transformOBB(const mat34& transform) const noexcept
 	return OBB(newPos, newAxes, newHalfExt * 2.0f);
 }
 
-inline OBB OBB::transformOBB(Quaternion quaternion) const noexcept
+inline OBB OBB::transformOBB(quat quaternion) const noexcept
 {
 	sfz_assert(eqf(length(quaternion), 1.0f));
 	OBB tmp = *this;

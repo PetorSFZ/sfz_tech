@@ -99,7 +99,7 @@ UTEST(OBB, transform_obb)
 	ASSERT_TRUE(eqf(obb3.yAxis(), vec3(1.0f, 0.0f, 0.0f)));
 	ASSERT_TRUE(eqf(obb3.zAxis(), vec3(0.0f, -1.0f, 0.0f)));
 
-	Quaternion q = Quaternion::fromRotationMatrix(mat34(rot3));
+	quat q = quat::fromRotationMatrix(mat34(rot3));
 	OBB obb4 = identityObb.transformOBB(q);
 	ASSERT_TRUE(eqf(obb4.halfExtents, identityObb.halfExtents));
 	ASSERT_TRUE(eqf(obb4.center, identityObb.center));

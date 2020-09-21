@@ -67,7 +67,7 @@ struct OBB final {
 	OBBCorners corners() const noexcept;
 	void corners(vec3* arrayOut) const noexcept;
 	OBB transformOBB(const mat34& transform) const noexcept;
-	OBB transformOBB(Quaternion quaternion) const noexcept;
+	OBB transformOBB(quat quaternion) const noexcept;
 
 	// Getters/setters
 	// --------------------------------------------------------------------------------------------
