@@ -18,7 +18,8 @@
 
 #pragma once
 
-#include "sfz/math/Matrix.hpp"
+#include <skipifzero.hpp>
+#include <skipifzero_math.hpp>
 
 namespace sfz {
 

@@ -17,9 +17,8 @@
 // 3. This notice may not be removed or altered from any source distribution.
 
 #include <skipifzero.hpp>
+#include <skipifzero_math.hpp>
 #include <skipifzero_strings.hpp>
-
-#include "sfz/math/Matrix.hpp"
 
 namespace sfz {
 

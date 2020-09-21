@@ -25,6 +25,7 @@
 #include <vector>
 
 #include <skipifzero.hpp>
+#include <skipifzero_math.hpp>
 
 #include "sfz/geometry/AABB.hpp"
 #include "sfz/geometry/AABB2D.hpp"
@@ -33,8 +34,6 @@
 #include "sfz/geometry/OBB.hpp"
 #include "sfz/geometry/Plane.hpp"
 #include "sfz/geometry/Sphere.hpp"
-
-#include "sfz/math/Matrix.hpp"
 
 UTEST(Intersection, signed_distance_to_plane)
 {

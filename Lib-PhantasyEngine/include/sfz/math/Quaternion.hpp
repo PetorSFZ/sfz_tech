@@ -21,8 +21,8 @@
 #include <algorithm>
 
 #include <skipifzero.hpp>
+#include <skipifzero_math.hpp>
 
-#include "sfz/math/Matrix.hpp"
 #include "sfz/CudaCompatibility.hpp"
 
 namespace sfz {

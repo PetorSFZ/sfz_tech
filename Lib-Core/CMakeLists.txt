@@ -104,11 +104,13 @@ set(TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 set(INCLUDE_FILES
 	${INCLUDE_DIR}/skipifzero.hpp
 	${INCLUDE_DIR}/skipifzero_allocators.hpp
+	${INCLUDE_DIR}/skipifzero_arrays.hpp
 	${INCLUDE_DIR}/skipifzero_hash_maps.hpp
+	${INCLUDE_DIR}/skipifzero_math.hpp
 	${INCLUDE_DIR}/skipifzero_ring_buffers.hpp
 	${INCLUDE_DIR}/skipifzero_smart_pointers.hpp
 	${INCLUDE_DIR}/skipifzero_strings.hpp
-	${INCLUDE_DIR}/skipifzero_arrays.hpp
+	
 )
 source_group(TREE ${INCLUDE_DIR} FILES ${INCLUDE_FILES})
 

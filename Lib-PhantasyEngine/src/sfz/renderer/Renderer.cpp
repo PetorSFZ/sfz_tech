@@ -23,6 +23,9 @@
 
 #include <SDL.h>
 
+#include <skipifzero.hpp>
+#include <skipifzero_math.hpp>
+
 #include <ZeroG.h>
 
 #include <ZeroG-ImGui.hpp>
@@ -30,7 +33,6 @@
 #include "sfz/debug/ProfilingStats.hpp"
 #include "sfz/Logging.hpp"
 #include "sfz/config/GlobalConfig.hpp"
-#include "sfz/math/Matrix.hpp"
 #include "sfz/renderer/GpuTextures.hpp"
 #include "sfz/renderer/RendererConfigParser.hpp"
 #include "sfz/renderer/RendererState.hpp"

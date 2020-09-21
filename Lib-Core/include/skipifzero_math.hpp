@@ -16,9 +16,11 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
+#ifndef SKIPIFZERO_MATH_HPP
+#define SKIPIFZERO_MATH_HPP
 #pragma once
 
-#include <skipifzero.hpp>
+#include "skipifzero.hpp"
 
 namespace sfz {
 
@@ -346,3 +348,5 @@ constexpr Mat<T,4,4> inverse(const Mat<T,4,4>& m)
 }
 
 } // namespace sfz
+
+#endif

@@ -19,9 +19,9 @@
 #pragma once
 
 #include <skipifzero.hpp>
+#include <skipifzero_math.hpp>
 
 #include "sfz/math/MathSupport.hpp"
-#include "sfz/math/Matrix.hpp"
 #include "sfz/math/Quaternion.hpp"
 #include "sfz/geometry/AABB.hpp"
 

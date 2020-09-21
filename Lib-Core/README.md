@@ -23,6 +23,7 @@ The modules in sfz_core are:
 * `skipifzero_allocators.hpp`: Standard implementations of the allocator interface.
 * `skipifzero_arrays.hpp`: Arrays (replacements for `std::vector`, etc).
 * `skipifzero_hash_maps.hpp`: Hash functions, hash maps (replacements for `std::unordered_map`, etc).
+* `skipifzero_math.hpp`: Linear algebra math primitives and functions.
 * `skipifzero_ring_buffers.hpp`: Ring buffers (replacements for `std::deque` and such)
 * `skipifzero_smart_pointers.hpp`: Smart pointers (replacements for `std::unique_ptr`, etc)
 * `skipifzero_strings.hpp`: Strings (replacements for `std::string`, etc).

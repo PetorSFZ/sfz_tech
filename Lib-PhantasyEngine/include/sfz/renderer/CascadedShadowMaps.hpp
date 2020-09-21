@@ -20,13 +20,9 @@
 #pragma once
 
 #include <skipifzero.hpp>
-
-#include <sfz/math/Matrix.hpp>
+#include <skipifzero_math.hpp>
 
 namespace sfz {
-
-using sfz::mat4;
-using sfz::vec3;
 
 // Cascaded shadow map calculator
 // ------------------------------------------------------------------------------------------------

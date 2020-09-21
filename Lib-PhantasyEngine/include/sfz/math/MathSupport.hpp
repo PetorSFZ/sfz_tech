@@ -21,10 +21,10 @@
 #include <algorithm>
 
 #include <skipifzero.hpp>
+#include <skipifzero_math.hpp>
 
 #include "sfz/CudaCompatibility.hpp"
 #include "sfz/SimdIntrinsics.hpp"
-#include "sfz/math/Matrix.hpp"
 #include "sfz/math/Quaternion.hpp"
 
 // Stop defining min and max, stupid Windows.h.
