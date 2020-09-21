@@ -27,7 +27,6 @@
 
 #include "sfz/math/MathPrimitiveToStrings.hpp"
 #include "sfz/math/MathSupport.hpp"
-#include "sfz/math/ProjectionMatrices.hpp"
 
 #include <type_traits>
 

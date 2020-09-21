@@ -245,7 +245,6 @@ set(HEADER_FILES
 	${INCLUDE_DIR}/sfz/math/MathPrimitiveToStrings.hpp
 	${INCLUDE_DIR}/sfz/math/MathSupport.hpp
 	${INCLUDE_DIR}/sfz/math/MathSupport.inl
-	${INCLUDE_DIR}/sfz/math/ProjectionMatrices.hpp
 	${INCLUDE_DIR}/sfz/math/Quaternion.hpp
 	${INCLUDE_DIR}/sfz/math/Quaternion.inl
 
@@ -316,7 +315,6 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/debug/ProfilingStats.cpp
 
 	${SRC_DIR}/sfz/math/MathPrimitiveToStrings.cpp
-	${SRC_DIR}/sfz/math/ProjectionMatrices.cpp
 
 	${SRC_DIR}/sfz/memory/ArenaAllocator.cpp
 	${SRC_DIR}/sfz/memory/DebugAllocator.cpp
