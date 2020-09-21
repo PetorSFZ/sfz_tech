@@ -246,7 +246,6 @@ set(HEADER_FILES
 	${INCLUDE_DIR}/sfz/math/MathSupport.hpp
 	${INCLUDE_DIR}/sfz/math/MathSupport.inl
 	${INCLUDE_DIR}/sfz/math/Matrix.hpp
-	${INCLUDE_DIR}/sfz/math/Matrix.inl
 	${INCLUDE_DIR}/sfz/math/ProjectionMatrices.hpp
 	${INCLUDE_DIR}/sfz/math/Quaternion.hpp
 	${INCLUDE_DIR}/sfz/math/Quaternion.inl

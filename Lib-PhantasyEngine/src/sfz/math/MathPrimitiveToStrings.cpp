@@ -169,7 +169,7 @@ void toStringImpl(const Matrix<float,H,W>& matrix, str256& string, bool rowBreak
 	str96 tmp;
 	for (uint32_t y = 0; y < H; y++) {
 		tmp.clear();
-		toString(matrix.rows[y], tmp, numDecimals);
+		toString(matrix.row(y), tmp, numDecimals);
 		string.appendf("%s", tmp.str());
 		if (y < (H-1)) {
 			if (rowBreak) {

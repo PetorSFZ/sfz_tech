@@ -62,7 +62,7 @@ inline bool pointInside(const OBB& box, const vec3& point) noexcept
 	const vec3 distToPoint = point - box.center;
 	float dist;
 	for (uint32_t i = 0; i < 3; i++) {
-		dist = dot(distToPoint, box.rotation.rows[i]);
+		dist = dot(distToPoint, box.rotation.row(i));
 		if (dist > box.halfExtents[i]) return false;
 		if (dist < -box.halfExtents[i]) return false;
 	}
@@ -116,7 +116,7 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 	mat3 R;
 	for (uint32_t i = 0; i < 3; i++) {
 		for (uint32_t j = 0; j < 3; j++) {
-			R.set(i, j, dot(aU.rows[i], bU.rows[j]));
+			R.at(i, j) = dot(aU.row(i), bU.row(j));
 		}
 	}
 
@@ -125,13 +125,13 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 	mat3 AbsR;
 	for (uint32_t i = 0; i < 3; i++) {
 		for (uint32_t j = 0; j < 3; j++) {
-			AbsR.set(i, j, std::abs(R.at(i, j)) + EPSILON);
+			AbsR.at(i, j) = std::abs(R.at(i, j)) + EPSILON;
 		}
 	}
 
 	// Calculate translation vector from a to b and bring it into a's frame of reference
 	vec3 t = b.center - a.center;
-	t = vec3{dot(t, aU.rows[0]), dot(t, aU.rows[1]), dot(t, aU.rows[2])};
+	t = vec3{dot(t, aU.row(0)), dot(t, aU.row(1)), dot(t, aU.row(2))};
 
 	float ra, rb;
 
@@ -366,10 +366,10 @@ inline vec3 closestPoint(const OBB& obb, const vec3& point) noexcept
 
 	float dist;
 	for (uint32_t i = 0; i < 3; i++) {
-		dist = dot(distToPoint, obb.rotation.rows[i]);
+		dist = dot(distToPoint, obb.rotation.row(i));
 		if (dist > obb.halfExtents[i]) dist = obb.halfExtents[i];
 		if (dist < -obb.halfExtents[i]) dist = -obb.halfExtents[i];
-		res += (dist * obb.rotation.rows[i]);
+		res += (dist * obb.rotation.row(i));
 	}
 
 	return res;

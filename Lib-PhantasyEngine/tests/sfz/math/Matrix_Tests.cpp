@@ -44,13 +44,6 @@ UTEST(Matrix, matrix_general_definition)
 		ASSERT_TRUE(m1.at(0, 2) == 3.0f);
 		ASSERT_TRUE(m1.at(0, 3) == 4.0f);
 
-		Matrix<float,4,1> m2(arr1);
-		ASSERT_TRUE(m2.at(0, 0) == 1.0f);
-		ASSERT_TRUE(m2.at(1, 0) == 2.0f);
-		ASSERT_TRUE(m2.at(2, 0) == 3.0f);
-		ASSERT_TRUE(m2.at(3, 0) == 4.0f);
-		ASSERT_TRUE(m2.columnAt(0) == vec4(1.0f, 2.0f, 3.0f, 4.0f));
-
 		const float arr2[] = {6.0f, 5.0f, 4.0f,
 		                      3.0f, 2.0f, 1.0f};
 		Matrix<float,2,3> m3(arr2);
@@ -60,9 +53,9 @@ UTEST(Matrix, matrix_general_definition)
 		ASSERT_TRUE(m3.at(1, 0) == 3.0f);
 		ASSERT_TRUE(m3.at(1, 1) == 2.0f);
 		ASSERT_TRUE(m3.at(1, 2) == 1.0f);
-		ASSERT_TRUE(m3.columnAt(0) == vec2(6.0f, 3.0f));
-		ASSERT_TRUE(m3.columnAt(1) == vec2(5.0f, 2.0f));
-		ASSERT_TRUE(m3.columnAt(2) == vec2(4.0f, 1.0f));
+		ASSERT_TRUE(m3.column(0) == vec2(6.0f, 3.0f));
+		ASSERT_TRUE(m3.column(1) == vec2(5.0f, 2.0f));
+		ASSERT_TRUE(m3.column(2) == vec2(4.0f, 1.0f));
 	}
 }
 
@@ -77,14 +70,10 @@ UTEST(Matrix, matrix_2x2_specialization)
 		ASSERT_TRUE(m1.at(0, 1) == 2.0f);
 		ASSERT_TRUE(m1.at(1, 0) == 3.0f);
 		ASSERT_TRUE(m1.at(1, 1) == 4.0f);
-		ASSERT_TRUE(m1.e00 == 1.0f);
-		ASSERT_TRUE(m1.e01 == 2.0f);
-		ASSERT_TRUE(m1.e10 == 3.0f);
-		ASSERT_TRUE(m1.e11 == 4.0f);
-		ASSERT_TRUE(m1.rows[0] == vec2(1.0f, 2.0f));
-		ASSERT_TRUE(m1.rows[1] == vec2(3.0f, 4.0f));
-		ASSERT_TRUE(m1.columnAt(0) == vec2(1.0f, 3.0f));
-		ASSERT_TRUE(m1.columnAt(1) == vec2(2.0f, 4.0f));
+		ASSERT_TRUE(m1.row(0) == vec2(1.0f, 2.0f));
+		ASSERT_TRUE(m1.row(1) == vec2(3.0f, 4.0f));
+		ASSERT_TRUE(m1.column(0) == vec2(1.0f, 3.0f));
+		ASSERT_TRUE(m1.column(1) == vec2(2.0f, 4.0f));
 	}
 	// Individual element constructor
 	{
@@ -94,14 +83,10 @@ UTEST(Matrix, matrix_2x2_specialization)
 		ASSERT_TRUE(m1.at(0, 1) == 2.0f);
 		ASSERT_TRUE(m1.at(1, 0) == 3.0f);
 		ASSERT_TRUE(m1.at(1, 1) == 4.0f);
-		ASSERT_TRUE(m1.e00 == 1.0f);
-		ASSERT_TRUE(m1.e01 == 2.0f);
-		ASSERT_TRUE(m1.e10 == 3.0f);
-		ASSERT_TRUE(m1.e11 == 4.0f);
-		ASSERT_TRUE(m1.rows[0] == vec2(1.0f, 2.0f));
-		ASSERT_TRUE(m1.rows[1] == vec2(3.0f, 4.0f));
-		ASSERT_TRUE(m1.columnAt(0) == vec2(1.0f, 3.0f));
-		ASSERT_TRUE(m1.columnAt(1) == vec2(2.0f, 4.0f));
+		ASSERT_TRUE(m1.row(0) == vec2(1.0f, 2.0f));
+		ASSERT_TRUE(m1.row(1) == vec2(3.0f, 4.0f));
+		ASSERT_TRUE(m1.column(0) == vec2(1.0f, 3.0f));
+		ASSERT_TRUE(m1.column(1) == vec2(2.0f, 4.0f));
 	}
 	// Row constructor
 	{
@@ -111,14 +96,10 @@ UTEST(Matrix, matrix_2x2_specialization)
 		ASSERT_TRUE(m1.at(0, 1) == 2.0f);
 		ASSERT_TRUE(m1.at(1, 0) == 3.0f);
 		ASSERT_TRUE(m1.at(1, 1) == 4.0f);
-		ASSERT_TRUE(m1.e00 == 1.0f);
-		ASSERT_TRUE(m1.e01 == 2.0f);
-		ASSERT_TRUE(m1.e10 == 3.0f);
-		ASSERT_TRUE(m1.e11 == 4.0f);
-		ASSERT_TRUE(m1.rows[0] == vec2(1.0f, 2.0f));
-		ASSERT_TRUE(m1.rows[1] == vec2(3.0f, 4.0f));
-		ASSERT_TRUE(m1.columnAt(0) == vec2(1.0f, 3.0f));
-		ASSERT_TRUE(m1.columnAt(1) == vec2(2.0f, 4.0f));
+		ASSERT_TRUE(m1.row(0) == vec2(1.0f, 2.0f));
+		ASSERT_TRUE(m1.row(1) == vec2(3.0f, 4.0f));
+		ASSERT_TRUE(m1.column(0) == vec2(1.0f, 3.0f));
+		ASSERT_TRUE(m1.column(1) == vec2(2.0f, 4.0f));
 	}
 	// fill() constructor function
 	{
@@ -175,21 +156,12 @@ UTEST(Matrix, matrix_3x3_specialization)
 		ASSERT_TRUE(m1.at(2, 0) == 7.0f);
 		ASSERT_TRUE(m1.at(2, 1) == 8.0f);
 		ASSERT_TRUE(m1.at(2, 2) == 9.0f);
-		ASSERT_TRUE(m1.e00 == 1.0f);
-		ASSERT_TRUE(m1.e01 == 2.0f);
-		ASSERT_TRUE(m1.e02 == 3.0f);
-		ASSERT_TRUE(m1.e10 == 4.0f);
-		ASSERT_TRUE(m1.e11 == 5.0f);
-		ASSERT_TRUE(m1.e12 == 6.0f);
-		ASSERT_TRUE(m1.e20 == 7.0f);
-		ASSERT_TRUE(m1.e21 == 8.0f);
-		ASSERT_TRUE(m1.e22 == 9.0f);
-		ASSERT_TRUE(m1.rows[0] == vec3(1.0f, 2.0f, 3.0f));
-		ASSERT_TRUE(m1.rows[1] == vec3(4.0f, 5.0f, 6.0f));
-		ASSERT_TRUE(m1.rows[2] == vec3(7.0f, 8.0f, 9.0f));
-		ASSERT_TRUE(m1.columnAt(0) == vec3(1.0f, 4.0f, 7.0f));
-		ASSERT_TRUE(m1.columnAt(1) == vec3(2.0f, 5.0f, 8.0f));
-		ASSERT_TRUE(m1.columnAt(2) == vec3(3.0f, 6.0f, 9.0f));
+		ASSERT_TRUE(m1.row(0) == vec3(1.0f, 2.0f, 3.0f));
+		ASSERT_TRUE(m1.row(1) == vec3(4.0f, 5.0f, 6.0f));
+		ASSERT_TRUE(m1.row(2) == vec3(7.0f, 8.0f, 9.0f));
+		ASSERT_TRUE(m1.column(0) == vec3(1.0f, 4.0f, 7.0f));
+		ASSERT_TRUE(m1.column(1) == vec3(2.0f, 5.0f, 8.0f));
+		ASSERT_TRUE(m1.column(2) == vec3(3.0f, 6.0f, 9.0f));
 	}
 	// Individual element constructor
 	{
@@ -205,21 +177,12 @@ UTEST(Matrix, matrix_3x3_specialization)
 		ASSERT_TRUE(m1.at(2, 0) == 7.0f);
 		ASSERT_TRUE(m1.at(2, 1) == 8.0f);
 		ASSERT_TRUE(m1.at(2, 2) == 9.0f);
-		ASSERT_TRUE(m1.e00 == 1.0f);
-		ASSERT_TRUE(m1.e01 == 2.0f);
-		ASSERT_TRUE(m1.e02 == 3.0f);
-		ASSERT_TRUE(m1.e10 == 4.0f);
-		ASSERT_TRUE(m1.e11 == 5.0f);
-		ASSERT_TRUE(m1.e12 == 6.0f);
-		ASSERT_TRUE(m1.e20 == 7.0f);
-		ASSERT_TRUE(m1.e21 == 8.0f);
-		ASSERT_TRUE(m1.e22 == 9.0f);
-		ASSERT_TRUE(m1.rows[0] == vec3(1.0f, 2.0f, 3.0f));
-		ASSERT_TRUE(m1.rows[1] == vec3(4.0f, 5.0f, 6.0f));
-		ASSERT_TRUE(m1.rows[2] == vec3(7.0f, 8.0f, 9.0f));
-		ASSERT_TRUE(m1.columnAt(0) == vec3(1.0f, 4.0f, 7.0f));
-		ASSERT_TRUE(m1.columnAt(1) == vec3(2.0f, 5.0f, 8.0f));
-		ASSERT_TRUE(m1.columnAt(2) == vec3(3.0f, 6.0f, 9.0f));
+		ASSERT_TRUE(m1.row(0) == vec3(1.0f, 2.0f, 3.0f));
+		ASSERT_TRUE(m1.row(1) == vec3(4.0f, 5.0f, 6.0f));
+		ASSERT_TRUE(m1.row(2) == vec3(7.0f, 8.0f, 9.0f));
+		ASSERT_TRUE(m1.column(0) == vec3(1.0f, 4.0f, 7.0f));
+		ASSERT_TRUE(m1.column(1) == vec3(2.0f, 5.0f, 8.0f));
+		ASSERT_TRUE(m1.column(2) == vec3(3.0f, 6.0f, 9.0f));
 	}
 	// Row constructor
 	{
@@ -235,21 +198,12 @@ UTEST(Matrix, matrix_3x3_specialization)
 		ASSERT_TRUE(m1.at(2, 0) == 7.0f);
 		ASSERT_TRUE(m1.at(2, 1) == 8.0f);
 		ASSERT_TRUE(m1.at(2, 2) == 9.0f);
-		ASSERT_TRUE(m1.e00 == 1.0f);
-		ASSERT_TRUE(m1.e01 == 2.0f);
-		ASSERT_TRUE(m1.e02 == 3.0f);
-		ASSERT_TRUE(m1.e10 == 4.0f);
-		ASSERT_TRUE(m1.e11 == 5.0f);
-		ASSERT_TRUE(m1.e12 == 6.0f);
-		ASSERT_TRUE(m1.e20 == 7.0f);
-		ASSERT_TRUE(m1.e21 == 8.0f);
-		ASSERT_TRUE(m1.e22 == 9.0f);
-		ASSERT_TRUE(m1.rows[0] == vec3(1.0f, 2.0f, 3.0f));
-		ASSERT_TRUE(m1.rows[1] == vec3(4.0f, 5.0f, 6.0f));
-		ASSERT_TRUE(m1.rows[2] == vec3(7.0f, 8.0f, 9.0f));
-		ASSERT_TRUE(m1.columnAt(0) == vec3(1.0f, 4.0f, 7.0f));
-		ASSERT_TRUE(m1.columnAt(1) == vec3(2.0f, 5.0f, 8.0f));
-		ASSERT_TRUE(m1.columnAt(2) == vec3(3.0f, 6.0f, 9.0f));
+		ASSERT_TRUE(m1.row(0) == vec3(1.0f, 2.0f, 3.0f));
+		ASSERT_TRUE(m1.row(1) == vec3(4.0f, 5.0f, 6.0f));
+		ASSERT_TRUE(m1.row(2) == vec3(7.0f, 8.0f, 9.0f));
+		ASSERT_TRUE(m1.column(0) == vec3(1.0f, 4.0f, 7.0f));
+		ASSERT_TRUE(m1.column(1) == vec3(2.0f, 5.0f, 8.0f));
+		ASSERT_TRUE(m1.column(2) == vec3(3.0f, 6.0f, 9.0f));
 	}
 	// 3x4 matrix constructor
 	{
@@ -353,9 +307,9 @@ UTEST(Matrix, matrix_3x3_specialization)
 		ASSERT_TRUE(eqf(rot * startPoint, vec3(0.0f, 1.0, 0.0f)));
 
 		mat33 xRot90 = mat33::rotation3(vec3(1.0f, 0.0f, 0.0f), PI/2.0f);
-		ASSERT_TRUE(eqf(xRot90.row0, vec3(1.0f, 0.0f, 0.0f)));
-		ASSERT_TRUE(eqf(xRot90.row1, vec3(0.0f, 0.0f, -1.0f)));
-		ASSERT_TRUE(eqf(xRot90.row2, vec3(0.0f, 1.0f, 0.0f)));
+		ASSERT_TRUE(eqf(xRot90.row(0), vec3(1.0f, 0.0f, 0.0f)));
+		ASSERT_TRUE(eqf(xRot90.row(1), vec3(0.0f, 0.0f, -1.0f)));
+		ASSERT_TRUE(eqf(xRot90.row(2), vec3(0.0f, 1.0f, 0.0f)));
 
 		vec3 v = xRot90 * vec3(1.0f);
 		ASSERT_TRUE(eqf(v, vec3(1.0f, -1.0f, 1.0f)));
@@ -382,25 +336,13 @@ UTEST(Matrix, matrix_3x4_specialization)
 		ASSERT_TRUE(m1.at(2, 1) == 10.0f);
 		ASSERT_TRUE(m1.at(2, 2) == 11.0f);
 		ASSERT_TRUE(m1.at(2, 3) == 12.0f);
-		ASSERT_TRUE(m1.e00 == 1.0f);
-		ASSERT_TRUE(m1.e01 == 2.0f);
-		ASSERT_TRUE(m1.e02 == 3.0f);
-		ASSERT_TRUE(m1.e03 == 4.0f);
-		ASSERT_TRUE(m1.e10 == 5.0f);
-		ASSERT_TRUE(m1.e11 == 6.0f);
-		ASSERT_TRUE(m1.e12 == 7.0f);
-		ASSERT_TRUE(m1.e13 == 8.0f);
-		ASSERT_TRUE(m1.e20 == 9.0f);
-		ASSERT_TRUE(m1.e21 == 10.0f);
-		ASSERT_TRUE(m1.e22 == 11.0f);
-		ASSERT_TRUE(m1.e23 == 12.0f);
-		ASSERT_TRUE(m1.rows[0] == vec4(1.0f, 2.0f, 3.0f, 4.0f));
-		ASSERT_TRUE(m1.rows[1] == vec4(5.0f, 6.0f, 7.0f, 8.0f));
-		ASSERT_TRUE(m1.rows[2] == vec4(9.0f, 10.0f, 11.0f, 12.0f));
-		ASSERT_TRUE(m1.columnAt(0) == vec3(1.0f, 5.0f, 9.0f));
-		ASSERT_TRUE(m1.columnAt(1) == vec3(2.0f, 6.0f, 10.0f));
-		ASSERT_TRUE(m1.columnAt(2) == vec3(3.0f, 7.0f, 11.0f));
-		ASSERT_TRUE(m1.columnAt(3) == vec3(4.0f, 8.0f, 12.0f));
+		ASSERT_TRUE(m1.row(0) == vec4(1.0f, 2.0f, 3.0f, 4.0f));
+		ASSERT_TRUE(m1.row(1) == vec4(5.0f, 6.0f, 7.0f, 8.0f));
+		ASSERT_TRUE(m1.row(2) == vec4(9.0f, 10.0f, 11.0f, 12.0f));
+		ASSERT_TRUE(m1.column(0) == vec3(1.0f, 5.0f, 9.0f));
+		ASSERT_TRUE(m1.column(1) == vec3(2.0f, 6.0f, 10.0f));
+		ASSERT_TRUE(m1.column(2) == vec3(3.0f, 7.0f, 11.0f));
+		ASSERT_TRUE(m1.column(3) == vec3(4.0f, 8.0f, 12.0f));
 	}
 	// Individual element constructor
 	{
@@ -419,25 +361,13 @@ UTEST(Matrix, matrix_3x4_specialization)
 		ASSERT_TRUE(m1.at(2, 1) == 10.0f);
 		ASSERT_TRUE(m1.at(2, 2) == 11.0f);
 		ASSERT_TRUE(m1.at(2, 3) == 12.0f);
-		ASSERT_TRUE(m1.e00 == 1.0f);
-		ASSERT_TRUE(m1.e01 == 2.0f);
-		ASSERT_TRUE(m1.e02 == 3.0f);
-		ASSERT_TRUE(m1.e03 == 4.0f);
-		ASSERT_TRUE(m1.e10 == 5.0f);
-		ASSERT_TRUE(m1.e11 == 6.0f);
-		ASSERT_TRUE(m1.e12 == 7.0f);
-		ASSERT_TRUE(m1.e13 == 8.0f);
-		ASSERT_TRUE(m1.e20 == 9.0f);
-		ASSERT_TRUE(m1.e21 == 10.0f);
-		ASSERT_TRUE(m1.e22 == 11.0f);
-		ASSERT_TRUE(m1.e23 == 12.0f);
-		ASSERT_TRUE(m1.rows[0] == vec4(1.0f, 2.0f, 3.0f, 4.0f));
-		ASSERT_TRUE(m1.rows[1] == vec4(5.0f, 6.0f, 7.0f, 8.0f));
-		ASSERT_TRUE(m1.rows[2] == vec4(9.0f, 10.0f, 11.0f, 12.0f));
-		ASSERT_TRUE(m1.columnAt(0) == vec3(1.0f, 5.0f, 9.0f));
-		ASSERT_TRUE(m1.columnAt(1) == vec3(2.0f, 6.0f, 10.0f));
-		ASSERT_TRUE(m1.columnAt(2) == vec3(3.0f, 7.0f, 11.0f));
-		ASSERT_TRUE(m1.columnAt(3) == vec3(4.0f, 8.0f, 12.0f));
+		ASSERT_TRUE(m1.row(0) == vec4(1.0f, 2.0f, 3.0f, 4.0f));
+		ASSERT_TRUE(m1.row(1) == vec4(5.0f, 6.0f, 7.0f, 8.0f));
+		ASSERT_TRUE(m1.row(2) == vec4(9.0f, 10.0f, 11.0f, 12.0f));
+		ASSERT_TRUE(m1.column(0) == vec3(1.0f, 5.0f, 9.0f));
+		ASSERT_TRUE(m1.column(1) == vec3(2.0f, 6.0f, 10.0f));
+		ASSERT_TRUE(m1.column(2) == vec3(3.0f, 7.0f, 11.0f));
+		ASSERT_TRUE(m1.column(3) == vec3(4.0f, 8.0f, 12.0f));
 	}
 	// Row constructor
 	{
@@ -456,25 +386,13 @@ UTEST(Matrix, matrix_3x4_specialization)
 		ASSERT_TRUE(m1.at(2, 1) == 10.0f);
 		ASSERT_TRUE(m1.at(2, 2) == 11.0f);
 		ASSERT_TRUE(m1.at(2, 3) == 12.0f);
-		ASSERT_TRUE(m1.e00 == 1.0f);
-		ASSERT_TRUE(m1.e01 == 2.0f);
-		ASSERT_TRUE(m1.e02 == 3.0f);
-		ASSERT_TRUE(m1.e03 == 4.0f);
-		ASSERT_TRUE(m1.e10 == 5.0f);
-		ASSERT_TRUE(m1.e11 == 6.0f);
-		ASSERT_TRUE(m1.e12 == 7.0f);
-		ASSERT_TRUE(m1.e13 == 8.0f);
-		ASSERT_TRUE(m1.e20 == 9.0f);
-		ASSERT_TRUE(m1.e21 == 10.0f);
-		ASSERT_TRUE(m1.e22 == 11.0f);
-		ASSERT_TRUE(m1.e23 == 12.0f);
-		ASSERT_TRUE(m1.rows[0] == vec4(1.0f, 2.0f, 3.0f, 4.0f));
-		ASSERT_TRUE(m1.rows[1] == vec4(5.0f, 6.0f, 7.0f, 8.0f));
-		ASSERT_TRUE(m1.rows[2] == vec4(9.0f, 10.0f, 11.0f, 12.0f));
-		ASSERT_TRUE(m1.columnAt(0) == vec3(1.0f, 5.0f, 9.0f));
-		ASSERT_TRUE(m1.columnAt(1) == vec3(2.0f, 6.0f, 10.0f));
-		ASSERT_TRUE(m1.columnAt(2) == vec3(3.0f, 7.0f, 11.0f));
-		ASSERT_TRUE(m1.columnAt(3) == vec3(4.0f, 8.0f, 12.0f));
+		ASSERT_TRUE(m1.row(0) == vec4(1.0f, 2.0f, 3.0f, 4.0f));
+		ASSERT_TRUE(m1.row(1) == vec4(5.0f, 6.0f, 7.0f, 8.0f));
+		ASSERT_TRUE(m1.row(2) == vec4(9.0f, 10.0f, 11.0f, 12.0f));
+		ASSERT_TRUE(m1.column(0) == vec3(1.0f, 5.0f, 9.0f));
+		ASSERT_TRUE(m1.column(1) == vec3(2.0f, 6.0f, 10.0f));
+		ASSERT_TRUE(m1.column(2) == vec3(3.0f, 7.0f, 11.0f));
+		ASSERT_TRUE(m1.column(3) == vec3(4.0f, 8.0f, 12.0f));
 	}
 	// 3x3 matrix constructor
 	{
@@ -599,9 +517,9 @@ UTEST(Matrix, matrix_3x4_specialization)
 		ASSERT_TRUE(eqf(transformPoint(rot, startPoint), vec3(0.0f, 1.0, 0.0f)));
 
 		mat34 xRot90 = mat34::rotation3(vec3(1.0f, 0.0f, 0.0f), PI/2.0f);
-		ASSERT_TRUE(eqf(xRot90.row0, vec4(1.0f, 0.0f, 0.0f, 0.0f)));
-		ASSERT_TRUE(eqf(xRot90.row1, vec4(0.0f, 0.0f, -1.0f, 0.0f)));
-		ASSERT_TRUE(eqf(xRot90.row2, vec4(0.0f, 1.0f, 0.0f, 0.0f)));
+		ASSERT_TRUE(eqf(xRot90.row(0), vec4(1.0f, 0.0f, 0.0f, 0.0f)));
+		ASSERT_TRUE(eqf(xRot90.row(1), vec4(0.0f, 0.0f, -1.0f, 0.0f)));
+		ASSERT_TRUE(eqf(xRot90.row(2), vec4(0.0f, 1.0f, 0.0f, 0.0f)));
 
 		vec3 v = transformPoint(xRot90, vec3(1.0f));
 		ASSERT_TRUE(eqf(v, vec3(1.0f, -1.0f, 1.0f)));
@@ -659,31 +577,14 @@ UTEST(Matrix, matrix_4x4_specialization)
 		ASSERT_TRUE(m1.at(3, 1) == 14.0f);
 		ASSERT_TRUE(m1.at(3, 2) == 15.0f);
 		ASSERT_TRUE(m1.at(3, 3) == 16.0f);
-		ASSERT_TRUE(m1.e00 == 1.0f);
-		ASSERT_TRUE(m1.e01 == 2.0f);
-		ASSERT_TRUE(m1.e02 == 3.0f);
-		ASSERT_TRUE(m1.e03 == 4.0f);
-		ASSERT_TRUE(m1.e10 == 5.0f);
-		ASSERT_TRUE(m1.e11 == 6.0f);
-		ASSERT_TRUE(m1.e12 == 7.0f);
-		ASSERT_TRUE(m1.e13 == 8.0f);
-		ASSERT_TRUE(m1.e20 == 9.0f);
-		ASSERT_TRUE(m1.e21 == 10.0f);
-		ASSERT_TRUE(m1.e22 == 11.0f);
-		ASSERT_TRUE(m1.e23 == 12.0f);
-		ASSERT_TRUE(m1.e30 == 13.0f);
-		ASSERT_TRUE(m1.e31 == 14.0f);
-		ASSERT_TRUE(m1.e32 == 15.0f);
-		ASSERT_TRUE(m1.e33 == 16.0f);
-		ASSERT_TRUE(m1.rows[0] == vec4(1.0f, 2.0f, 3.0f, 4.0f));
-		ASSERT_TRUE(m1.rows[1] == vec4(5.0f, 6.0f, 7.0f, 8.0f));
-		ASSERT_TRUE(m1.rows[2] == vec4(9.0f, 10.0f, 11.0f, 12.0f));
-		ASSERT_TRUE(m1.rows[3] == vec4(13.0f, 14.0f, 15.0f, 16.0f));
-		ASSERT_TRUE(m1.columnAt(0) == vec4(1.0f, 5.0f, 9.0f, 13.0f));
-		ASSERT_TRUE(m1.columnAt(1) == vec4(2.0f, 6.0f, 10.0f, 14.0f));
-		ASSERT_TRUE(m1.columnAt(2) == vec4(3.0f, 7.0f, 11.0f, 15.0f));
-		ASSERT_TRUE(m1.columnAt(3) == vec4(4.0f, 8.0f, 12.0f, 16.0f));
-		ASSERT_TRUE(m1.row012 == mat34(arr1));
+		ASSERT_TRUE(m1.row(0) == vec4(1.0f, 2.0f, 3.0f, 4.0f));
+		ASSERT_TRUE(m1.row(1) == vec4(5.0f, 6.0f, 7.0f, 8.0f));
+		ASSERT_TRUE(m1.row(2) == vec4(9.0f, 10.0f, 11.0f, 12.0f));
+		ASSERT_TRUE(m1.row(3) == vec4(13.0f, 14.0f, 15.0f, 16.0f));
+		ASSERT_TRUE(m1.column(0) == vec4(1.0f, 5.0f, 9.0f, 13.0f));
+		ASSERT_TRUE(m1.column(1) == vec4(2.0f, 6.0f, 10.0f, 14.0f));
+		ASSERT_TRUE(m1.column(2) == vec4(3.0f, 7.0f, 11.0f, 15.0f));
+		ASSERT_TRUE(m1.column(3) == vec4(4.0f, 8.0f, 12.0f, 16.0f));
 	}
 	// Individual element constructor
 	{
@@ -707,30 +608,14 @@ UTEST(Matrix, matrix_4x4_specialization)
 		ASSERT_TRUE(m1.at(3, 1) == 14.0f);
 		ASSERT_TRUE(m1.at(3, 2) == 15.0f);
 		ASSERT_TRUE(m1.at(3, 3) == 16.0f);
-		ASSERT_TRUE(m1.e00 == 1.0f);
-		ASSERT_TRUE(m1.e01 == 2.0f);
-		ASSERT_TRUE(m1.e02 == 3.0f);
-		ASSERT_TRUE(m1.e03 == 4.0f);
-		ASSERT_TRUE(m1.e10 == 5.0f);
-		ASSERT_TRUE(m1.e11 == 6.0f);
-		ASSERT_TRUE(m1.e12 == 7.0f);
-		ASSERT_TRUE(m1.e13 == 8.0f);
-		ASSERT_TRUE(m1.e20 == 9.0f);
-		ASSERT_TRUE(m1.e21 == 10.0f);
-		ASSERT_TRUE(m1.e22 == 11.0f);
-		ASSERT_TRUE(m1.e23 == 12.0f);
-		ASSERT_TRUE(m1.e30 == 13.0f);
-		ASSERT_TRUE(m1.e31 == 14.0f);
-		ASSERT_TRUE(m1.e32 == 15.0f);
-		ASSERT_TRUE(m1.e33 == 16.0f);
-		ASSERT_TRUE(m1.rows[0] == vec4(1.0f, 2.0f, 3.0f, 4.0f));
-		ASSERT_TRUE(m1.rows[1] == vec4(5.0f, 6.0f, 7.0f, 8.0f));
-		ASSERT_TRUE(m1.rows[2] == vec4(9.0f, 10.0f, 11.0f, 12.0f));
-		ASSERT_TRUE(m1.rows[3] == vec4(13.0f, 14.0f, 15.0f, 16.0f));
-		ASSERT_TRUE(m1.columnAt(0) == vec4(1.0f, 5.0f, 9.0f, 13.0f));
-		ASSERT_TRUE(m1.columnAt(1) == vec4(2.0f, 6.0f, 10.0f, 14.0f));
-		ASSERT_TRUE(m1.columnAt(2) == vec4(3.0f, 7.0f, 11.0f, 15.0f));
-		ASSERT_TRUE(m1.columnAt(3) == vec4(4.0f, 8.0f, 12.0f, 16.0f));
+		ASSERT_TRUE(m1.row(0) == vec4(1.0f, 2.0f, 3.0f, 4.0f));
+		ASSERT_TRUE(m1.row(1) == vec4(5.0f, 6.0f, 7.0f, 8.0f));
+		ASSERT_TRUE(m1.row(2) == vec4(9.0f, 10.0f, 11.0f, 12.0f));
+		ASSERT_TRUE(m1.row(3) == vec4(13.0f, 14.0f, 15.0f, 16.0f));
+		ASSERT_TRUE(m1.column(0) == vec4(1.0f, 5.0f, 9.0f, 13.0f));
+		ASSERT_TRUE(m1.column(1) == vec4(2.0f, 6.0f, 10.0f, 14.0f));
+		ASSERT_TRUE(m1.column(2) == vec4(3.0f, 7.0f, 11.0f, 15.0f));
+		ASSERT_TRUE(m1.column(3) == vec4(4.0f, 8.0f, 12.0f, 16.0f));
 	}
 	// Row constructor
 	{
@@ -754,30 +639,14 @@ UTEST(Matrix, matrix_4x4_specialization)
 		ASSERT_TRUE(m1.at(3, 1) == 14.0f);
 		ASSERT_TRUE(m1.at(3, 2) == 15.0f);
 		ASSERT_TRUE(m1.at(3, 3) == 16.0f);
-		ASSERT_TRUE(m1.e00 == 1.0f);
-		ASSERT_TRUE(m1.e01 == 2.0f);
-		ASSERT_TRUE(m1.e02 == 3.0f);
-		ASSERT_TRUE(m1.e03 == 4.0f);
-		ASSERT_TRUE(m1.e10 == 5.0f);
-		ASSERT_TRUE(m1.e11 == 6.0f);
-		ASSERT_TRUE(m1.e12 == 7.0f);
-		ASSERT_TRUE(m1.e13 == 8.0f);
-		ASSERT_TRUE(m1.e20 == 9.0f);
-		ASSERT_TRUE(m1.e21 == 10.0f);
-		ASSERT_TRUE(m1.e22 == 11.0f);
-		ASSERT_TRUE(m1.e23 == 12.0f);
-		ASSERT_TRUE(m1.e30 == 13.0f);
-		ASSERT_TRUE(m1.e31 == 14.0f);
-		ASSERT_TRUE(m1.e32 == 15.0f);
-		ASSERT_TRUE(m1.e33 == 16.0f);
-		ASSERT_TRUE(m1.rows[0] == vec4(1.0f, 2.0f, 3.0f, 4.0f));
-		ASSERT_TRUE(m1.rows[1] == vec4(5.0f, 6.0f, 7.0f, 8.0f));
-		ASSERT_TRUE(m1.rows[2] == vec4(9.0f, 10.0f, 11.0f, 12.0f));
-		ASSERT_TRUE(m1.rows[3] == vec4(13.0f, 14.0f, 15.0f, 16.0f));
-		ASSERT_TRUE(m1.columnAt(0) == vec4(1.0f, 5.0f, 9.0f, 13.0f));
-		ASSERT_TRUE(m1.columnAt(1) == vec4(2.0f, 6.0f, 10.0f, 14.0f));
-		ASSERT_TRUE(m1.columnAt(2) == vec4(3.0f, 7.0f, 11.0f, 15.0f));
-		ASSERT_TRUE(m1.columnAt(3) == vec4(4.0f, 8.0f, 12.0f, 16.0f));
+		ASSERT_TRUE(m1.row(0) == vec4(1.0f, 2.0f, 3.0f, 4.0f));
+		ASSERT_TRUE(m1.row(1) == vec4(5.0f, 6.0f, 7.0f, 8.0f));
+		ASSERT_TRUE(m1.row(2) == vec4(9.0f, 10.0f, 11.0f, 12.0f));
+		ASSERT_TRUE(m1.row(3) == vec4(13.0f, 14.0f, 15.0f, 16.0f));
+		ASSERT_TRUE(m1.column(0) == vec4(1.0f, 5.0f, 9.0f, 13.0f));
+		ASSERT_TRUE(m1.column(1) == vec4(2.0f, 6.0f, 10.0f, 14.0f));
+		ASSERT_TRUE(m1.column(2) == vec4(3.0f, 7.0f, 11.0f, 15.0f));
+		ASSERT_TRUE(m1.column(3) == vec4(4.0f, 8.0f, 12.0f, 16.0f));
 	}
 	// 3x3 matrix constructor
 	{
@@ -802,7 +671,7 @@ UTEST(Matrix, matrix_4x4_specialization)
 		ASSERT_TRUE(m2.at(3, 2) == 0.0f);
 		ASSERT_TRUE(m2.at(3, 3) == 1.0f);
 	}
-	// 4x3 matrix constructor
+	// 3x4 matrix constructor
 	{
 		mat34 m1(1.0f, 2.0f, 3.0f, 4.0f,
 		         5.0f, 6.0f, 7.0f, 8.0f,
@@ -824,7 +693,6 @@ UTEST(Matrix, matrix_4x4_specialization)
 		ASSERT_TRUE(m2.at(3, 1) == 0.0f);
 		ASSERT_TRUE(m2.at(3, 2) == 0.0f);
 		ASSERT_TRUE(m2.at(3, 3) == 1.0f);
-		ASSERT_TRUE(m2.row012 == m1);
 	}
 	// fill() constructor function
 	{
@@ -930,10 +798,10 @@ UTEST(Matrix, matrix_4x4_specialization)
 		ASSERT_TRUE(eqf(rot * startPoint, vec4(0.0f, 1.0, 0.0f, 1.0f)));
 
 		mat44 xRot90 = mat44::rotation3(vec3(1.0f, 0.0f, 0.0f), PI/2.0f);
-		ASSERT_TRUE(eqf(xRot90.row0, vec4(1.0f, 0.0f, 0.0f, 0.0f)));
-		ASSERT_TRUE(eqf(xRot90.row1, vec4(0.0f, 0.0f, -1.0f, 0.0f)));
-		ASSERT_TRUE(eqf(xRot90.row2, vec4(0.0f, 1.0f, 0.0f, 0.0f)));
-		ASSERT_TRUE(eqf(xRot90.row3, vec4(0.0f, 0.0f, 0.0f, 1.0f)));
+		ASSERT_TRUE(eqf(xRot90.row(0), vec4(1.0f, 0.0f, 0.0f, 0.0f)));
+		ASSERT_TRUE(eqf(xRot90.row(1), vec4(0.0f, 0.0f, -1.0f, 0.0f)));
+		ASSERT_TRUE(eqf(xRot90.row(2), vec4(0.0f, 1.0f, 0.0f, 0.0f)));
+		ASSERT_TRUE(eqf(xRot90.row(3), vec4(0.0f, 0.0f, 0.0f, 1.0f)));
 
 		vec4 v = xRot90 * vec4(1.0f);
 		ASSERT_TRUE(eqf(v, vec4(1.0f, -1.0f, 1.0f, 1.0f)));
@@ -1285,10 +1153,10 @@ UTEST(Matrix, transpose)
 	         9.0f, 10.0f, 11.0f, 12.0f,
 	         13.0f, 14.0f, 15.0f, 16.0f);
 	mat44 m3transp = transpose(m3);
-	ASSERT_TRUE(eqf(m3transp.row0, vec4(1.0f, 5.0f, 9.0f, 13.0f)));
-	ASSERT_TRUE(eqf(m3transp.row1, vec4(2.0f, 6.0f, 10.0f, 14.0f)));
-	ASSERT_TRUE(eqf(m3transp.row2, vec4(3.0f, 7.0f, 11.0f, 15.0f)));
-	ASSERT_TRUE(eqf(m3transp.row3, vec4(4.0f, 8.0f, 12.0f, 16.0f)));
+	ASSERT_TRUE(eqf(m3transp.row(0), vec4(1.0f, 5.0f, 9.0f, 13.0f)));
+	ASSERT_TRUE(eqf(m3transp.row(1), vec4(2.0f, 6.0f, 10.0f, 14.0f)));
+	ASSERT_TRUE(eqf(m3transp.row(2), vec4(3.0f, 7.0f, 11.0f, 15.0f)));
+	ASSERT_TRUE(eqf(m3transp.row(3), vec4(4.0f, 8.0f, 12.0f, 16.0f)));
 }
 
 UTEST(Matrix, transforming_3d_vector_with_3x4_and_4x4_matrix)
@@ -1389,8 +1257,8 @@ UTEST(Matrix, inverse)
 	mat22 m1Inv(2.0f, -1.0f,
 	            -1.0f, 1.0f);
 	mat22 m1CalcInv = inverse(m1);
-	ASSERT_TRUE(eqf(m1CalcInv.row0, m1Inv.row0));
-	ASSERT_TRUE(eqf(m1CalcInv.row1, m1Inv.row1));
+	ASSERT_TRUE(eqf(m1CalcInv.row(0), m1Inv.row(0)));
+	ASSERT_TRUE(eqf(m1CalcInv.row(1), m1Inv.row(1)));
 
 	mat33 m3(1.0f, 1.0f, 1.0f,
 	         1.0f, 1.0f, 2.0f,
@@ -1399,9 +1267,9 @@ UTEST(Matrix, inverse)
 	            1.0f, -2.0f, 1.0f,
 	            -1.0f, 1.0f, 0.0f);
 	mat33 m3CalcInv = inverse(m3);
-	ASSERT_TRUE(eqf(m3CalcInv.row0, m3Inv.row0));
-	ASSERT_TRUE(eqf(m3CalcInv.row1, m3Inv.row1));
-	ASSERT_TRUE(eqf(m3CalcInv.row2, m3Inv.row2));
+	ASSERT_TRUE(eqf(m3CalcInv.row(0), m3Inv.row(0)));
+	ASSERT_TRUE(eqf(m3CalcInv.row(1), m3Inv.row(1)));
+	ASSERT_TRUE(eqf(m3CalcInv.row(2), m3Inv.row(2)));
 
 	mat44 m5(1.0f, 1.0f, 1.0f, 1.0f,
 	         1.0f, 1.0f, 2.0f, 3.0f,
@@ -1412,10 +1280,10 @@ UTEST(Matrix, inverse)
 	            -3.0f, 3.0f, -2.0f, 2.0f,
 	            1.0f, -1.0f, 1.0f, -1.0f);
 	mat44 m5CalcInv = inverse(m5);
-	ASSERT_TRUE(eqf(m5CalcInv.row0, m5Inv.row0));
-	ASSERT_TRUE(eqf(m5CalcInv.row1, m5Inv.row1));
-	ASSERT_TRUE(eqf(m5CalcInv.row2, m5Inv.row2));
-	ASSERT_TRUE(eqf(m5CalcInv.row3, m5Inv.row3));
+	ASSERT_TRUE(eqf(m5CalcInv.row(0), m5Inv.row(0)));
+	ASSERT_TRUE(eqf(m5CalcInv.row(1), m5Inv.row(1)));
+	ASSERT_TRUE(eqf(m5CalcInv.row(2), m5Inv.row(2)));
+	ASSERT_TRUE(eqf(m5CalcInv.row(3), m5Inv.row(3)));
 }
 
 UTEST(Matrix, matrix_is_proper_pod)

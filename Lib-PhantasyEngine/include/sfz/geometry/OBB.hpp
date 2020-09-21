@@ -82,15 +82,15 @@ struct OBB final {
 	void setYExtent(float newYExtent) noexcept;
 	void setZExtent(float newZExtent) noexcept;
 
-	vec3& axis(uint32_t idx) noexcept { return rotation.rows[idx]; }
-	const vec3& axis(uint32_t idx) const noexcept { return rotation.rows[idx]; }
+	vec3& axis(uint32_t idx) noexcept { return rotation.row(idx); }
+	const vec3& axis(uint32_t idx) const noexcept { return rotation.row(idx); }
 
-	vec3& xAxis() noexcept { return rotation.row0; }
-	const vec3& xAxis() const noexcept { return rotation.row0; }
-	vec3& yAxis() noexcept { return rotation.row1; }
-	const vec3& yAxis() const noexcept { return rotation.row1; }
-	vec3& zAxis() noexcept { return rotation.row2; }
-	const vec3& zAxis() const noexcept { return rotation.row2; }
+	vec3& xAxis() noexcept { return rotation.row(0); }
+	const vec3& xAxis() const noexcept { return rotation.row(0); }
+	vec3& yAxis() noexcept { return rotation.row(1); }
+	const vec3& yAxis() const noexcept { return rotation.row(1); }
+	vec3& zAxis() noexcept { return rotation.row(2); }
+	const vec3& zAxis() const noexcept { return rotation.row(2); }
 
 	// Helper methods
 	// --------------------------------------------------------------------------------------------

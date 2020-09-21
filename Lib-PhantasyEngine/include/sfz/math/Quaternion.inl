@@ -84,7 +84,10 @@ SFZ_CUDA_CALL Quaternion Quaternion::fromEuler(vec3 anglesDeg) noexcept
 SFZ_CUDA_CALL Quaternion Quaternion::fromRotationMatrix(const mat33& m) noexcept
 {
 	// Algorithm from page 205 of Game Engine Architecture 2nd Edition
-	float trace = m.e00 + m.e11 + m.e22;
+	const vec3& e0 = m.row(0);
+	const vec3& e1 = m.row(1);
+	const vec3& e2 = m.row(2);
+	float trace = e0[0] + e1[1] + e2[2];
 
 	Quaternion tmp;
 
@@ -94,15 +97,15 @@ SFZ_CUDA_CALL Quaternion Quaternion::fromRotationMatrix(const mat33& m) noexcept
 		tmp.w = s * 0.5f;
 
 		float t = 0.5f / s;
-		tmp.x = (m.e21 - m.e12) * t;
-		tmp.y = (m.e02 - m.e20) * t;
-		tmp.z = (m.e10 - m.e01) * t;
+		tmp.x = (e2[1] - e1[2]) * t;
+		tmp.y = (e0[2] - e2[0]) * t;
+		tmp.z = (e1[0] - e0[1]) * t;
 	}
 	else {
 		// Diagonal is negative
 		int i = 0;
-		if (m.e11 > m.e00) i = 1;
-		if (m.e22 > m.at(i, i)) i = 2;
+		if (e1[1] > e0[0]) i = 1;
+		if (e2[2] > m.at(i, i)) i = 2;
 
 		constexpr int NEXT[3] = { 1, 2, 0 };
 		int j = NEXT[i];
@@ -124,9 +127,9 @@ SFZ_CUDA_CALL Quaternion Quaternion::fromRotationMatrix(const mat33& m) noexcept
 SFZ_CUDA_CALL Quaternion Quaternion::fromRotationMatrix(const mat34& rotMatrix) noexcept
 {
 	mat33 tmpMat;
-	tmpMat.row0 = rotMatrix.row0.xyz;
-	tmpMat.row1 = rotMatrix.row1.xyz;
-	tmpMat.row2 = rotMatrix.row2.xyz;
+	tmpMat.row(0) = rotMatrix.row(0).xyz;
+	tmpMat.row(1) = rotMatrix.row(1).xyz;
+	tmpMat.row(2) = rotMatrix.row(2).xyz;
 	return Quaternion::fromRotationMatrix(tmpMat);
 }
 

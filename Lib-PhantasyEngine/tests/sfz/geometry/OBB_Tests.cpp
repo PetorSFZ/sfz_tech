@@ -76,7 +76,7 @@ UTEST(OBB, transform_obb)
 	ASSERT_TRUE(eqf(transformDir(rot3, vec3(0.0f, 1.0f, 0.0f)), vec3(1.0f, 0.0f, 0.0f)));
 	ASSERT_TRUE(eqf(transformDir(rot3, vec3(0.0f, 0.0f, 1.0f)), vec3(0.0f, -1.0f, 0.0f)));
 
-	OBB obb1 = identityObb.transformOBB(rot3.row012);
+	OBB obb1 = identityObb.transformOBB(mat34(rot3));
 	ASSERT_TRUE(eqf(obb1.halfExtents, identityObb.halfExtents));
 	ASSERT_TRUE(eqf(obb1.center, identityObb.center));
 	ASSERT_TRUE(eqf(obb1.xAxis(), vec3(0.0f, 0.0f, -1.0f)));
@@ -84,7 +84,7 @@ UTEST(OBB, transform_obb)
 	ASSERT_TRUE(eqf(obb1.zAxis(), vec3(0.0f, -1.0f, 0.0f)));
 
 	mat4 scaleRot = rot3 * mat44::scaling3(4.0f, 5.0f, 6.0f);
-	OBB obb2 = identityObb.transformOBB(scaleRot.row012);
+	OBB obb2 = identityObb.transformOBB(mat34(scaleRot));
 	ASSERT_TRUE(eqf(obb2.halfExtents, vec3(2.0f, 2.5f, 3.0f), 0.01f));
 	ASSERT_TRUE(eqf(obb2.center, identityObb.center));
 	ASSERT_TRUE(eqf(obb2.xAxis(), vec3(0.0f, 0.0f, -1.0f)));
@@ -92,14 +92,14 @@ UTEST(OBB, transform_obb)
 	ASSERT_TRUE(eqf(obb2.zAxis(), vec3(0.0f, -1.0f, 0.0f)));
 
 	mat4 rotTranslScale = mat44::translation3(vec3(1.0f, 2.0f, 3.0f)) * scaleRot;
-	OBB obb3 = identityObb.transformOBB(rotTranslScale.row012);
+	OBB obb3 = identityObb.transformOBB(mat34(rotTranslScale));
 	ASSERT_TRUE(eqf(obb3.halfExtents, vec3(2.0f, 2.5f, 3.0f), 0.01f));
 	ASSERT_TRUE(eqf(obb3.center, vec3(1.0f, 2.0f, 3.0f)));
 	ASSERT_TRUE(eqf(obb3.xAxis(), vec3(0.0f, 0.0f, -1.0f)));
 	ASSERT_TRUE(eqf(obb3.yAxis(), vec3(1.0f, 0.0f, 0.0f)));
 	ASSERT_TRUE(eqf(obb3.zAxis(), vec3(0.0f, -1.0f, 0.0f)));
 
-	Quaternion q = Quaternion::fromRotationMatrix(rot3.row012);
+	Quaternion q = Quaternion::fromRotationMatrix(mat34(rot3));
 	OBB obb4 = identityObb.transformOBB(q);
 	ASSERT_TRUE(eqf(obb4.halfExtents, identityObb.halfExtents));
 	ASSERT_TRUE(eqf(obb4.center, identityObb.center));
