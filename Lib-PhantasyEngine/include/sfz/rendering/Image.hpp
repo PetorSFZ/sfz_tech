@@ -21,8 +21,7 @@
 
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
-
-#include "sfz/rendering/ImageView.hpp"
+#include <skipifzero_image_view.hpp>
 
 namespace sfz {
 
@@ -39,10 +38,10 @@ struct Image final {
 	static Image allocate(
 		int32_t width, int32_t height, ImageType type, Allocator* allocator) noexcept;
 
-	inline phImageView toImageView() noexcept;
-	inline phConstImageView toImageView() const noexcept;
-	operator phImageView() noexcept { return this->toImageView(); }
-	operator phConstImageView() const noexcept { return this->toImageView(); }
+	inline ImageView toImageView() noexcept;
+	inline ImageViewConst toImageView() const noexcept;
+	operator ImageView() noexcept { return this->toImageView(); }
+	operator ImageViewConst() const noexcept { return this->toImageView(); }
 };
 
 // Image functions
@@ -70,9 +69,9 @@ bool saveImagePng(const Image& image, const char* path) noexcept;
 // Image struct implementation
 // ------------------------------------------------------------------------------------------------
 
-inline phImageView Image::toImageView() noexcept
+inline ImageView Image::toImageView() noexcept
 {
-	phImageView tmp;
+	ImageView tmp;
 	tmp.rawData = this->rawData.data();
 	tmp.type = this->type;
 	tmp.width = this->width;
@@ -80,9 +79,9 @@ inline phImageView Image::toImageView() noexcept
 	return tmp;
 }
 
-inline phConstImageView Image::toImageView() const noexcept
+inline ImageViewConst Image::toImageView() const noexcept
 {
-	phConstImageView tmp;
+	ImageViewConst tmp;
 	tmp.rawData = this->rawData.data();
 	tmp.type = this->type;
 	tmp.width = this->width;

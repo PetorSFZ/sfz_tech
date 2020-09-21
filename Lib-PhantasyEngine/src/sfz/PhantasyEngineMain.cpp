@@ -481,7 +481,7 @@ int main(int argc, char* argv[])
 
 	// Initialize ImGui
 	SFZ_INFO("PhantasyEngine", "Initializing Imgui");
-	phImageView imguiFontTexView = initializeImgui(sfz::getDefaultAllocator());
+	sfz::ImageView imguiFontTexView = initializeImgui(sfz::getDefaultAllocator());
 
 	// Initialize renderer
 	SFZ_INFO("PhantasyEngine", "Initializing renderer");

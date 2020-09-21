@@ -106,6 +106,7 @@ set(INCLUDE_FILES
 	${INCLUDE_DIR}/skipifzero_allocators.hpp
 	${INCLUDE_DIR}/skipifzero_arrays.hpp
 	${INCLUDE_DIR}/skipifzero_hash_maps.hpp
+	${INCLUDE_DIR}/skipifzero_image_view.hpp
 	${INCLUDE_DIR}/skipifzero_math.hpp
 	${INCLUDE_DIR}/skipifzero_ring_buffers.hpp
 	${INCLUDE_DIR}/skipifzero_smart_pointers.hpp

@@ -22,11 +22,11 @@
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_hash_maps.hpp>
+#include <skipifzero_image_view.hpp>
 #include <skipifzero_strings.hpp>
 
 #include "sfz/Context.hpp"
 #include "sfz/rendering/Mesh.hpp"
-#include "sfz/rendering/ImageView.hpp"
 
 // Forward declarations
 struct SDL_Window;
@@ -104,7 +104,7 @@ public:
 	bool active() const noexcept { return mState != nullptr; }
 	bool init(
 		SDL_Window* window,
-		const phConstImageView& fontTexture,
+		const ImageViewConst& fontTexture,
 		sfz::Allocator* allocator) noexcept;
 	bool loadConfiguration(const char* jsonConfigPath) noexcept;
 	void loadDummyConfiguration() noexcept;
@@ -139,7 +139,7 @@ public:
 	//
 	// Returns whether succesful or not
 	bool uploadTextureBlocking(
-		strID id, const phConstImageView& image, bool generateMipmaps) noexcept;
+		strID id, const ImageViewConst& image, bool generateMipmaps) noexcept;
 
 	// Check if a texture is loaded or not
 	bool textureLoaded(strID id) const noexcept;

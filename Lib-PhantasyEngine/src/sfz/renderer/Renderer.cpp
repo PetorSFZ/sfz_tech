@@ -63,7 +63,7 @@ static const char* stripFilePath(const char* file) noexcept
 
 bool Renderer::init(
 	SDL_Window* window,
-	const phConstImageView& fontTexture,
+	const ImageViewConst& fontTexture,
 	sfz::Allocator* allocator) noexcept
 {
 	this->destroy();
@@ -261,7 +261,7 @@ void Renderer::renderImguiUI() noexcept
 // ------------------------------------------------------------------------------------------------
 
 bool Renderer::uploadTextureBlocking(
-	strID id, const phConstImageView& image, bool generateMipmaps) noexcept
+	strID id, const ImageViewConst& image, bool generateMipmaps) noexcept
 {
 	// Error out and return false if texture already exists
 	if (mState->textures.get(id) != nullptr) return false;

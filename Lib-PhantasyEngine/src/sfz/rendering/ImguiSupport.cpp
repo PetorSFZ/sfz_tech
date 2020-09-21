@@ -48,7 +48,7 @@ struct ImGuiState final {
 
 static ImGuiState* imguiState = nullptr;
 
-phImageView initializeImgui(Allocator* allocator) noexcept
+ImageView initializeImgui(Allocator* allocator) noexcept
 {
 	// Replace Imgui allocators with sfz::Allocator
 	ImGui::SetAllocatorFunctions(imguiAllocFunc, imguiFreeFunc, allocator);
@@ -189,7 +189,7 @@ phImageView initializeImgui(Allocator* allocator) noexcept
 		io.Fonts->AddFontFromFileTTF(SECONDARY_FONT_PATH, FONT_SIZE_PIXELS, &fontConfig);
 
 	// Rasterize default font and return view
-	phImageView fontTexView;
+	ImageView fontTexView;
 	io.Fonts->GetTexDataAsAlpha8(&fontTexView.rawData, &fontTexView.width, &fontTexView.height);
 	fontTexView.type = ImageType::R_U8;
 	return fontTexView;

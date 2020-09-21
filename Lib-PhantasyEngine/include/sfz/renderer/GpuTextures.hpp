@@ -20,10 +20,9 @@
 #pragma once
 
 #include <skipifzero.hpp>
+#include <skipifzero_image_view.hpp>
 
 #include <ZeroG.h>
-
-#include "sfz/rendering/ImageView.hpp"
 
 namespace sfz {
 
@@ -34,7 +33,7 @@ ZgTextureFormat toZeroGImageFormat(ImageType imageType) noexcept;
 
 zg::Texture textureAllocateAndUploadBlocking(
 	const char* debugName,
-	const phConstImageView& image,
+	const ImageViewConst& image,
 	sfz::Allocator* cpuAllocator,
 	zg::CommandQueue& copyQueue,
 	bool generateMipmaps,

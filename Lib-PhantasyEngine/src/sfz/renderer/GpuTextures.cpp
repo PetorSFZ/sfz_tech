@@ -47,7 +47,7 @@ static uint32_t sizeOfElement(ImageType imageType) noexcept
 	return 0;
 }
 
-static ZgImageViewConstCpu toZeroGImageView(const phConstImageView& phView) noexcept
+static ZgImageViewConstCpu toZeroGImageView(const ImageViewConst& phView) noexcept
 {
 	ZgImageViewConstCpu zgView = {};
 	zgView.format = toZeroGImageFormat(phView.type);
@@ -60,7 +60,7 @@ static ZgImageViewConstCpu toZeroGImageView(const phConstImageView& phView) noex
 
 template<typename T, typename Averager>
 void generateMipmapSpecific(
-	const phConstImageView& prevLevel, Image& currLevel, Averager averager) noexcept
+	const ImageViewConst& prevLevel, Image& currLevel, Averager averager) noexcept
 {
 	const T* srcImg = reinterpret_cast<const T*>(prevLevel.rawData);
 	T* dstImg = reinterpret_cast<T*>(currLevel.rawData.data());
@@ -83,7 +83,7 @@ void generateMipmapSpecific(
 // b) We should probably do something smarter than naive averaging
 // c) We should not read from previous level, but from the original level when calculating a
 //    specific level.
-static void generateMipmap(const phConstImageView& prevLevel, Image& currLevel) noexcept
+static void generateMipmap(const ImageViewConst& prevLevel, Image& currLevel) noexcept
 {
 	sfz_assert(prevLevel.type == currLevel.type);
 	switch (currLevel.type) {
@@ -134,7 +134,7 @@ ZgTextureFormat toZeroGImageFormat(ImageType imageType) noexcept
 
 zg::Texture textureAllocateAndUploadBlocking(
 	const char* debugName,
-	const phConstImageView& image,
+	const ImageViewConst& image,
 	sfz::Allocator* cpuAllocator,
 	zg::CommandQueue& copyQueue,
 	bool generateMipmaps,
@@ -176,7 +176,7 @@ zg::Texture textureAllocateAndUploadBlocking(
 	for (uint32_t i = 0; i < (numMipmaps - 1); i++) {
 		
 		// Get previous mipmap level
-		phConstImageView prevLevel;
+		ImageViewConst prevLevel;
 		if (i == 0) prevLevel = image;
 		else prevLevel = mipmaps[i - 1];
 

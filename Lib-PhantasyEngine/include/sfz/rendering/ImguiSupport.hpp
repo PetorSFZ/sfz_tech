@@ -30,7 +30,7 @@
 namespace sfz {
 
 // Initializes imgui, returns font image view to be sent to renderers initImgui() function.
-phImageView initializeImgui(Allocator* allocator) noexcept;
+ImageView initializeImgui(Allocator* allocator) noexcept;
 
 void deinitializeImgui() noexcept;
 
