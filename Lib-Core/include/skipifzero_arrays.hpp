@@ -522,6 +522,27 @@ private:
 	uint32_t mPadding[3] = {};
 };
 
+template<typename T> using Arr4 = ArrayLocal<T, 4>;
+template<typename T> using Arr5 = ArrayLocal<T, 5>;
+template<typename T> using Arr6 = ArrayLocal<T, 6>;
+template<typename T> using Arr8 = ArrayLocal<T, 8>;
+template<typename T> using Arr10 = ArrayLocal<T, 10>;
+template<typename T> using Arr12 = ArrayLocal<T, 12>;
+template<typename T> using Arr16 = ArrayLocal<T, 16>;
+template<typename T> using Arr20 = ArrayLocal<T, 20>;
+template<typename T> using Arr24 = ArrayLocal<T, 24>;
+template<typename T> using Arr32 = ArrayLocal<T, 32>;
+template<typename T> using Arr40 = ArrayLocal<T, 40>;
+template<typename T> using Arr48 = ArrayLocal<T, 48>;
+template<typename T> using Arr64 = ArrayLocal<T, 64>;
+template<typename T> using Arr80 = ArrayLocal<T, 80>;
+template<typename T> using Arr96 = ArrayLocal<T, 96>;
+template<typename T> using Arr128 = ArrayLocal<T, 128>;
+template<typename T> using Arr192 = ArrayLocal<T, 192>;
+template<typename T> using Arr256 = ArrayLocal<T, 256>;
+template<typename T> using Arr320 = ArrayLocal<T, 320>;
+template<typename T> using Arr512 = ArrayLocal<T, 512>;
+
 } // namespace sfz
 
 #endif

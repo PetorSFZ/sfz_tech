@@ -750,6 +750,27 @@ private:
 	uint32_t mPadding[2] = {};
 };
 
+template<typename K, typename V> using Map4 = HashMapLocal<K, V, 4>;
+template<typename K, typename V> using Map5 = HashMapLocal<K, V, 5>;
+template<typename K, typename V> using Map6 = HashMapLocal<K, V, 6>;
+template<typename K, typename V> using Map8 = HashMapLocal<K, V, 8>;
+template<typename K, typename V> using Map10 = HashMapLocal<K, V, 10>;
+template<typename K, typename V> using Map12 = HashMapLocal<K, V, 12>;
+template<typename K, typename V> using Map16 = HashMapLocal<K, V, 16>;
+template<typename K, typename V> using Map20 = HashMapLocal<K, V, 20>;
+template<typename K, typename V> using Map24 = HashMapLocal<K, V, 24>;
+template<typename K, typename V> using Map32 = HashMapLocal<K, V, 32>;
+template<typename K, typename V> using Map40 = HashMapLocal<K, V, 40>;
+template<typename K, typename V> using Map48 = HashMapLocal<K, V, 48>;
+template<typename K, typename V> using Map64 = HashMapLocal<K, V, 64>;
+template<typename K, typename V> using Map80 = HashMapLocal<K, V, 80>;
+template<typename K, typename V> using Map96 = HashMapLocal<K, V, 96>;
+template<typename K, typename V> using Map128 = HashMapLocal<K, V, 128>;
+template<typename K, typename V> using Map192 = HashMapLocal<K, V, 192>;
+template<typename K, typename V> using Map256 = HashMapLocal<K, V, 256>;
+template<typename K, typename V> using Map320 = HashMapLocal<K, V, 320>;
+template<typename K, typename V> using Map512 = HashMapLocal<K, V, 512>;
+
 } // namespace sfz
 
 #endif
