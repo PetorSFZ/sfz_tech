@@ -22,7 +22,8 @@
 #undef near
 #undef far
 
-#include "sfz/math/Quaternion.hpp"
+#include <skipifzero_math.hpp>
+
 #include "sfz/math/MathSupport.hpp"
 
 using namespace sfz;

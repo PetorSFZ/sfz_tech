@@ -25,7 +25,6 @@
 
 #include "sfz/CudaCompatibility.hpp"
 #include "sfz/SimdIntrinsics.hpp"
-#include "sfz/math/Quaternion.hpp"
 
 // Stop defining min and max, stupid Windows.h.
 #undef min
