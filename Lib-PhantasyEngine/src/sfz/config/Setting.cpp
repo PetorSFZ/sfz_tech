@@ -21,8 +21,6 @@
 
 #include <skipifzero.hpp>
 
-#include <sfz/math/MathSupport.hpp>
-
 namespace sfz {
 
 // SettingValue

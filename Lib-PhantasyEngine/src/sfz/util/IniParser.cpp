@@ -22,9 +22,9 @@
 #include <cctype> // std::tolower()
 
 #include <skipifzero.hpp>
+#include <skipifzero_math.hpp>
 
 #include "sfz/Logging.hpp"
-#include "sfz/math/MathSupport.hpp"
 #include "sfz/util/IO.hpp"
 
 namespace sfz {

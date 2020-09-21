@@ -21,9 +21,10 @@
 
 #include <SDL.h>
 
+#include <skipifzero_math.hpp>
+
 #include "sfz/Context.hpp"
 #include "sfz/config/GlobalConfig.hpp"
-#include "sfz/math/MathSupport.hpp"
 
 namespace sfz {
 

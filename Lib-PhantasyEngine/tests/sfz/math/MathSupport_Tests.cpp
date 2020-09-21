@@ -22,7 +22,7 @@
 #undef near
 #undef far
 
-#include "sfz/math/MathSupport.hpp"
+#include <skipifzero_math.hpp>
 
 using namespace sfz;
 

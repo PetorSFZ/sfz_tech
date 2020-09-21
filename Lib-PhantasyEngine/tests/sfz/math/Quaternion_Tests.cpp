@@ -24,8 +24,6 @@
 
 #include <skipifzero_math.hpp>
 
-#include "sfz/math/MathSupport.hpp"
-
 using namespace sfz;
 
 static bool eqf(quat q1, quat q2, float eps = EQF_EPS) noexcept

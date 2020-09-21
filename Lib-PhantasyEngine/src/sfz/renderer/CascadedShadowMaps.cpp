@@ -19,9 +19,9 @@
 
 #include "sfz/renderer/CascadedShadowMaps.hpp"
 
-#include <ZeroG.h>
+#include <skipifzero_math.hpp>
 
-#include "sfz/math/MathSupport.hpp"
+#include <ZeroG.h>
 
 namespace sfz {
 

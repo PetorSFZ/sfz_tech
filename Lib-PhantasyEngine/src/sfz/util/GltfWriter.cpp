@@ -20,10 +20,10 @@
 
 #include <cfloat>
 
+#include <skipifzero_math.hpp>
 #include <skipifzero_strings.hpp>
 
 #include <sfz/Logging.hpp>
-#include <sfz/math/MathSupport.hpp>
 #include <sfz/util/IO.hpp>
 
 namespace sfz {

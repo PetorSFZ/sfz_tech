@@ -22,7 +22,8 @@
 #undef near
 #undef far
 
-#include "sfz/math/MathSupport.hpp"
+#include <skipifzero_math.hpp>
+
 #include "sfz/util/IniParser.hpp"
 #include "sfz/util/IO.hpp"
 

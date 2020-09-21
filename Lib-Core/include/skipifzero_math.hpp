@@ -569,6 +569,68 @@ Quat<T> lerp(Quat<T> q0, Quat<T> q1, T t)
 	return tmp;
 }
 
+// rotateTowards()
+// ------------------------------------------------------------------------------------------------
+
+// Rotates a vector towards another vector by a given amount of radians. Both the input and the
+// target vector must be normalized. In addition, they must not be the same vector or point in
+// exact opposite directions.
+//
+// The variants marked "ClampSafe" handle annoying edge cases. If the angle specified is greater
+// than the angle between the two vectors then the target vector will be returned. The input
+// vectors are no longer assumed to be normalized. And if they happen to be invalid (i.e. the same
+// vector or pointing in exact opposite directions) a sane default will be given.
+
+inline vec3 rotateTowardsRad(vec3 inDir, vec3 targetDir, float angleRads)
+{
+	sfz_assert(eqf(length(inDir), 1.0f));
+	sfz_assert(eqf(length(targetDir), 1.0f));
+	sfz_assert(dot(inDir, targetDir) >= -0.99f);
+	sfz_assert(angleRads >= 0.0f);
+	sfz_assert(angleRads < PI);
+	vec3 axis = cross(inDir, targetDir);
+	sfz_assert(!eqf(axis, vec3(0.0f)));
+	quat rotQuat = quat::rotationRad(axis, angleRads);
+	vec3 newDir = rotate(rotQuat, inDir);
+	return newDir;
+}
+
+inline vec3 rotateTowardsRadClampSafe(vec3 inDir, vec3 targetDir, float angleRads)
+{
+	sfz_assert(angleRads >= 0.0f);
+	sfz_assert(angleRads < PI);
+
+	vec3 inDirNorm = normalizeSafe(inDir);
+	vec3 targetDirNorm = normalizeSafe(targetDir);
+	sfz_assert(!eqf(inDirNorm, vec3(0.0f)));
+	sfz_assert(!eqf(targetDirNorm, vec3(0.0f)));
+
+	// Case where vectors are the same, just return the target dir
+	if (eqf(inDirNorm, targetDirNorm)) return targetDirNorm;
+
+	// Case where vectors are exact opposite, slightly nudge input a bit
+	if (eqf(inDirNorm, -targetDirNorm)) {
+		inDirNorm = normalize(inDir + (vec3(1.0f) - inDirNorm) * 0.025f);
+		sfz_assert(!eqf(inDirNorm, -targetDirNorm));
+	}
+
+	// Case where angle is larger than the angle between the vectors
+	if (angleRads >= acos(dot(inDirNorm, targetDirNorm))) return targetDirNorm;
+
+	// At this point all annoying cases should be handled, just run the normal routine
+	return rotateTowardsRad(inDirNorm, targetDirNorm, angleRads);
+}
+
+inline vec3 rotateTowardsDeg(vec3 inDir, vec3 targetDir, float angleDegs)
+{
+	return rotateTowardsRad(inDir, targetDir, DEG_TO_RAD * angleDegs);
+}
+
+inline vec3 rotateTowardsDegClampSafe(vec3 inDir, vec3 targetDir, float angleDegs)
+{
+	return rotateTowardsRadClampSafe(inDir, targetDir, DEG_TO_RAD * angleDegs);
+}
+
 } // namespace sfz
 
 #endif

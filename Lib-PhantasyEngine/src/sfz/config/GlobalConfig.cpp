@@ -19,11 +19,11 @@
 
 #include "sfz/config/GlobalConfig.hpp"
 
+#include <skipifzero_math.hpp>
 #include <skipifzero_smart_pointers.hpp>
 
 #include "sfz/Context.hpp"
 #include "sfz/Logging.hpp"
-#include "sfz/math/MathSupport.hpp"
 #include "sfz/util/IniParser.hpp"
 
 namespace sfz {
