@@ -162,7 +162,7 @@ str256 toString(const mat44& matrix, bool rowBreak, uint32_t numDecimals) noexce
 }
 
 template<uint32_t H, uint32_t W>
-void toStringImpl(const Matrix<float,H,W>& matrix, str256& string, bool rowBreak, uint32_t numDecimals) noexcept
+void toStringImpl(const Mat<float,H,W>& matrix, str256& string, bool rowBreak, uint32_t numDecimals) noexcept
 {
 	string.clear();
 	string.appendf("[");
