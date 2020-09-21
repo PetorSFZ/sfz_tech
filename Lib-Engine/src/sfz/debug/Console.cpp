@@ -67,7 +67,7 @@ struct ConsoleState final {
 	str96 logTagFilter;
 
 	// Injected windows
-	ArrayLocal<str96, 32> injectedWindowNames;
+	Arr32<str96> injectedWindowNames;
 };
 
 // Statics

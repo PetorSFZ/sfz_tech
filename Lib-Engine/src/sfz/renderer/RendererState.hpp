@@ -224,7 +224,7 @@ struct GroupProfilingID final {
 struct FrameProfilingIDs final {
 	uint64_t frameId = ~0ull;
 	uint64_t imguiId = ~0ull;
-	ArrayLocal<GroupProfilingID, 64> groupIds;
+	Arr64<GroupProfilingID> groupIds;
 };
 
 struct RendererConfigurableState final {
