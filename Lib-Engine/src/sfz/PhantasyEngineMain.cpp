@@ -109,6 +109,8 @@ static void setupContext() noexcept
 // Statics
 // ------------------------------------------------------------------------------------------------
 
+static_assert(sfz::MAX_NUM_SCANCODES == SDL_NUM_SCANCODES, "Mismatch");
+
 static const char* basePath() noexcept
 {
 	static const char* path = []() {
@@ -168,7 +170,9 @@ struct GameLoopState final {
 	sfz::QuitFunc* quitFunc = nullptr;
 
 	// Input structs for updateable
-	sfz::UserInput userInput;
+	sfz::Array<SDL_Event> events;
+	SDL_TouchID touchInputDeviceID = 0;
+	sfz::RawInputState rawFrameInput;
 
 	// Window settings
 	sfz::Setting* windowWidth = nullptr;
@@ -198,7 +202,11 @@ static void quit(GameLoopState& gameLoopState) noexcept
 	sfz::getAudioEngine().destroy();
 
 	SFZ_INFO("PhantasyEngine", "Closing SDL controllers");
-	gameLoopState.userInput.controllers.clear();
+	for (sfz::GamepadState& gpd : gameLoopState.rawFrameInput.gamepads) {
+		SDL_GameControllerClose(gpd.controller);
+		gpd.controller = nullptr;
+	}
+	gameLoopState.rawFrameInput.gamepads.clear();
 
 	SFZ_INFO("PhantasyEngine", "Destroying SDL Window");
 	SDL_DestroyWindow(gameLoopState.window);
@@ -215,19 +223,68 @@ static void quit(GameLoopState& gameLoopState) noexcept
 #endif
 }
 
-static void initControllers(sfz::HashMap<int32_t, sfz::GameController>& controllers) noexcept
+static bool initController(int deviceIdx, sfz::GamepadState& stateOut)
 {
-	controllers.clear();
+	if (!SDL_IsGameController(deviceIdx)) return false;
 
+	// Open controller
+	stateOut.controller = SDL_GameControllerOpen(deviceIdx);
+	if (stateOut.controller == nullptr) {
+		SFZ_ERROR("PhantasyEngine", "Could not open GameController at device index %i, error: %s",
+			deviceIdx, SDL_GetError());
+		return false;
+	}
+
+	// Get JoystickID
+	SDL_Joystick* joystick = SDL_GameControllerGetJoystick(stateOut.controller);
+	if (joystick == nullptr) {
+		SFZ_ERROR("PhantasyEngine",
+			"Could not retrieve SDL_Joystick* from SDL_GameController, error: %s", SDL_GetError());
+		SDL_GameControllerClose(stateOut.controller);
+		stateOut.controller = nullptr;
+		return false;
+	}
+	SDL_JoystickID id = SDL_JoystickInstanceID(joystick);
+	if (id < 0) {
+		SFZ_ERROR("PhantasyEngine",
+			"Could not retrieve JoystickID from SDL_GameController, error: %s", SDL_GetError());
+		SDL_GameControllerClose(stateOut.controller);
+		stateOut.controller = nullptr;
+		return false;
+	}
+	stateOut.id = id;
+
+	// Log about gamepad we have connected
+	SFZ_INFO("PhantasyEngine", "Connected gamepad with name \"%s\", JoystickID: %i",
+		SDL_GameControllerName(stateOut.controller), stateOut.id);
+
+	return true;
+}
+
+static void initControllers(sfz::RawInputState& input) noexcept
+{
+	// Close existing game controllers if any
+	for (sfz::GamepadState& state : input.gamepads) {
+		if (state.controller != nullptr) {
+			SDL_GameControllerClose(state.controller);
+			state.controller = nullptr;
+		}
+	}
+	input.gamepads.clear();
+
+	// Open new gamepads
 	int numJoysticks = SDL_NumJoysticks();
-	for (int i = 0; i < numJoysticks; ++i) {
-		if (!SDL_IsGameController(i)) continue;
+	for (int deviceIdx = 0; deviceIdx < numJoysticks; deviceIdx++) {
+		if (!SDL_IsGameController(deviceIdx)) continue;
+		if (input.gamepads.isFull()) {
+			SFZ_ERROR("PhantasyEngine", "Too many gamepads attached (>6), skipping this one.");
+			continue;
+		}
 
-		sfz::GameController c(i);
-		if (c.id() == -1) continue;
-		if (controllers.get(c.id()) != nullptr) continue;
-		
-		controllers.put(c.id(), std::move(c));
+		sfz::GamepadState state;
+		if (initController(deviceIdx, state)) {
+			input.gamepads.add(state);
+		}
 	}
 }
 
@@ -245,7 +302,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	state.prevPerfCounterTickValue = perfCounterTickValue;
 
 	// Remove old events
-	state.userInput.events.clear();
+	state.events.clear();
 
 	// Check window status
 	uint32_t currentWindowFlags = SDL_GetWindowFlags(state.window);
@@ -255,51 +312,53 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	bool shouldBeMaximized = state.maximized->boolValue();
 
 	// Process SDL events
-	SDL_Event event;
-	while (SDL_PollEvent(&event) != 0) {
-		switch (event.type) {
+	{
+		SDL_Event event = {};
+		while (SDL_PollEvent(&event) != 0) {
+			switch (event.type) {
 
-		// Quitting
-		case SDL_QUIT:
-			SFZ_INFO("PhantasyEngine", "SDL_QUIT event received, quitting.");
-			quit(state);
-			return;
+				// Quitting
+			case SDL_QUIT:
+				SFZ_INFO("PhantasyEngine", "SDL_QUIT event received, quitting.");
+				quit(state);
+				return;
 
-		// Window events
-		case SDL_WINDOWEVENT:
-			switch (event.window.event) {
-			case SDL_WINDOWEVENT_MAXIMIZED:
-				state.maximized->setBool(true);
-				isMaximized = true;
-				shouldBeMaximized = true;
-				break;
-			case SDL_WINDOWEVENT_RESIZED:
-				if (!isFullscreen && !isMaximized) {
-					state.windowWidth->setInt(event.window.data1);
-					state.windowHeight->setInt(event.window.data2);
+				// Window events
+			case SDL_WINDOWEVENT:
+				switch (event.window.event) {
+				case SDL_WINDOWEVENT_MAXIMIZED:
+					state.maximized->setBool(true);
+					isMaximized = true;
+					shouldBeMaximized = true;
+					break;
+				case SDL_WINDOWEVENT_RESIZED:
+					if (!isFullscreen && !isMaximized) {
+						state.windowWidth->setInt(event.window.data1);
+						state.windowHeight->setInt(event.window.data2);
+					}
+					break;
+				case SDL_WINDOWEVENT_RESTORED:
+					state.maximized->setBool(false);
+					isMaximized = false;
+					shouldBeMaximized = false;
+					state.fullscreen->setBool(false);
+					isFullscreen = false;
+					shouldBeFullscreen = false;
+					break;
+				default:
+					// Do nothing.
+					break;
 				}
+
+				// Still add event to user input
+				state.events.add(event);
 				break;
-			case SDL_WINDOWEVENT_RESTORED:
-				state.maximized->setBool(false);
-				isMaximized = false;
-				shouldBeMaximized = false;
-				state.fullscreen->setBool(false);
-				isFullscreen = false;
-				shouldBeFullscreen = false;
-				break;
+
+				// All other events
 			default:
-				// Do nothing.
+				state.events.add(event);
 				break;
 			}
-
-			// Still add event to user input
-			state.userInput.events.add(event);
-			break;
-
-		// All other events
-		default:
-			state.userInput.events.add(event);
-			break;
 		}
 	}
 
@@ -336,14 +395,167 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 		}
 	}
 
-	// Updates controllers
-	sfz::sdl::update(state.userInput.controllers, state.userInput.events);
+	// Update frame input
+	{
+		// Window dimensions
+		int windowWidth = -1;
+		int windowHeight = -1;
+		SDL_GetWindowSize(state.window, &windowWidth, &windowHeight);
+		state.rawFrameInput.windowDims =
+			sfz::vec2_u32(uint32_t(windowWidth), uint32_t(windowHeight));
 
-	// Updates mouse
-	int windowWidth = -1;
-	int windowHeight = -1;
-	SDL_GetWindowSize(state.window, &windowWidth, &windowHeight);
-	state.userInput.rawMouse.update(windowWidth, windowHeight, state.userInput.events);
+
+		// Keyboard
+		{
+			sfz::KeyboardState& kb = state.rawFrameInput.kb;
+			memset(kb.scancodes, 0, sfz::MAX_NUM_SCANCODES * sizeof(uint8_t));
+			int numKeys = 0;
+			const uint8_t* kbState = SDL_GetKeyboardState(&numKeys);
+			memcpy(kb.scancodes, kbState, numKeys * sizeof(uint8_t));
+		}
+
+		// Mouse
+		{
+			sfz::MouseState& mouse = state.rawFrameInput.mouse;
+			mouse.windowDims = state.rawFrameInput.windowDims;
+			
+			int x = 0;
+			int y = 0;
+			uint32_t buttonState = SDL_GetMouseState(&x, &y);
+			sfz_assert(uint32_t(y) < mouse.windowDims.y);
+			mouse.pos = sfz::vec2_u32(uint32_t(x), mouse.windowDims.y - uint32_t(y) - 1);
+			
+			uint32_t buttonState2 = SDL_GetRelativeMouseState(&mouse.delta.x, &mouse.delta.y);
+			sfz_assert(buttonState == buttonState2);
+			mouse.delta.y = -mouse.delta.y;
+			
+			mouse.wheel = sfz::vec2_i32(0);
+			for (const SDL_Event& event : state.events) {
+				if (event.type == SDL_MOUSEWHEEL) {
+					sfz::vec2_i32 delta = sfz::vec2_i32(event.wheel.x, event.wheel.y);
+					if (event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED) delta = -delta;
+					mouse.wheel += delta;
+				}
+			}
+
+			mouse.left = ((SDL_BUTTON(SDL_BUTTON_LEFT) & buttonState) == SDL_BUTTON_LEFT) ? uint8_t(1) : uint8_t(0);
+			mouse.middle = ((SDL_BUTTON(SDL_BUTTON_MIDDLE) & buttonState) == SDL_BUTTON_MIDDLE) ? uint8_t(1) : uint8_t(0);
+			mouse.right = ((SDL_BUTTON(SDL_BUTTON_RIGHT) & buttonState) == SDL_BUTTON_RIGHT) ? uint8_t(1) : uint8_t(0);
+		}
+
+		// Gamepads
+		{
+			// Check if any gamepads got connected/disconnected
+			for (const SDL_Event& event : state.events) {
+				if (event.type == SDL_CONTROLLERDEVICEADDED) {
+					if (state.rawFrameInput.gamepads.isFull()) {
+						SFZ_ERROR("PhantasyEngine",
+							"Too many gamepads attached (>6), skipping this one.");
+						continue;
+					}
+					sfz::GamepadState gpdState;
+					if (initController(event.cdevice.which, gpdState)) {
+						state.rawFrameInput.gamepads.add(gpdState);
+					}
+				}
+				else if (event.type == SDL_CONTROLLERDEVICEREMOVED) {
+					for (uint32_t gpdIdx = 0; gpdIdx < state.rawFrameInput.gamepads.size(); gpdIdx++) {
+						const sfz::GamepadState& gpd = state.rawFrameInput.gamepads[gpdIdx];
+						if (gpd.id == event.cdevice.which) {
+							SDL_GameControllerClose(gpd.controller);
+							state.rawFrameInput.gamepads.remove(gpdIdx);
+							break;
+						}
+					}
+
+				}
+			}
+
+			for (sfz::GamepadState& gpd : state.rawFrameInput.gamepads) {
+
+				// We cheat a bit here. The range of a stick axis is [-32768, 32767], with the
+				// deadzone somewhere within ~8000 of 0. However, it could also be that the gamepad
+				// is not perfectly calibrated and that the actual max is slightly below what SDL2
+				// allows for.
+				//
+				// Thus, we reduce the amount needed to hit max by about ~300 units (slightly less
+				// than 1% of total range). This way we should hopefully never end up in the
+				// unfortunate scenario where a gamepad is physically incapable of capping out.
+				constexpr float AXIS_MAX = float(SDL_JOYSTICK_AXIS_MAX - 300);
+
+				int16_t leftX = SDL_GameControllerGetAxis(gpd.controller, SDL_CONTROLLER_AXIS_LEFTX);
+				int16_t leftY = SDL_GameControllerGetAxis(gpd.controller, SDL_CONTROLLER_AXIS_LEFTY);
+				gpd.leftStick = sfz::vec2(float(leftX), -float(leftY)) / sfz::vec2(AXIS_MAX);
+				gpd.leftStick = sfz::clamp(gpd.leftStick, -1.0f, 1.0f);
+
+				int16_t rightX = SDL_GameControllerGetAxis(gpd.controller, SDL_CONTROLLER_AXIS_RIGHTX);
+				int16_t rightY = SDL_GameControllerGetAxis(gpd.controller, SDL_CONTROLLER_AXIS_RIGHTY);
+				gpd.rightStick = sfz::vec2(float(rightX), -float(rightY)) / sfz::vec2(AXIS_MAX);
+				gpd.rightStick = sfz::clamp(gpd.rightStick, -1.0f, 1.0f);
+
+				int16_t leftTrigger = SDL_GameControllerGetAxis(gpd.controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT);
+				gpd.lt = sfz::clamp(float(leftTrigger) / AXIS_MAX, 0.0f, 1.0f);
+
+				int16_t rightTrigger = SDL_GameControllerGetAxis(gpd.controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
+				gpd.rt = sfz::clamp(float(rightTrigger) / AXIS_MAX, 0.0f, 1.0f);
+
+				gpd.a = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_A);
+				gpd.b = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_B);
+				gpd.x = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_X);
+				gpd.y = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_Y);
+				
+				gpd.back = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_BACK);
+				gpd.start = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_START);
+
+				gpd.ls = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_LEFTSTICK);
+				gpd.rs = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_RIGHTSTICK);
+				
+				gpd.lb = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
+				gpd.rb= SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
+				
+				gpd.up = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_DPAD_UP);
+				gpd.down = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN);
+				gpd.left = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_DPAD_LEFT);
+				gpd.right = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_DPAD_RIGHT);
+			}
+		}
+
+		// Touch inputs
+		{
+			sfz::Arr8<sfz::TouchState>& touches = state.rawFrameInput.touches;
+
+			// Find touch input device we are using
+			const int numTouchDevices = SDL_GetNumTouchDevices();
+			for (int touchDeviceIdx = 0; touchDeviceIdx < numTouchDevices; touchDeviceIdx++) {
+				SDL_TouchID touchID = SDL_GetTouchDevice(touchDeviceIdx);
+				sfz_assert(touchID != 0); // 0 if invalid
+
+				// We don't care about emulated touch inputs by mouse
+				if (touchID == SDL_MOUSE_TOUCHID) continue;
+
+				// We only support "direct" touches (abs position relative to window) for now
+				SDL_TouchDeviceType type = SDL_GetTouchDeviceType(touchID);
+				if (type != SDL_TOUCH_DEVICE_DIRECT) continue;
+
+				state.touchInputDeviceID = touchID;
+				break;
+			}
+
+			// Get current touch inputs from touch device
+			touches.clear();
+			if (state.touchInputDeviceID != 0) {
+				const int numFingers = SDL_GetNumTouchFingers(state.touchInputDeviceID);
+				for (int fingerIdx = 0; fingerIdx < numFingers; fingerIdx++) {
+					SDL_Finger* finger = SDL_GetTouchFinger(state.touchInputDeviceID, fingerIdx);
+					if (touches.isFull()) break;
+					sfz::TouchState& touch = touches.add();
+					touch.id = finger->id;
+					touch.pos = sfz::clamp(sfz::vec2(finger->x, 1.0f - finger->y), 0.0f, 1.0f);
+					touch.pressure = finger->pressure;
+				}
+			}
+		}
+	}
 
 	// Add last frame's CPU frametime to the global profiling stats.
 	sfz::getProfilingStats().addSample(
@@ -367,12 +579,14 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	// Call user's update func
 	sfz::UpdateOp op = state.updateFunc(
 		deltaSecs,
-		&state.userInput,
+		state.events.data(),
+		state.events.size(),
+		&state.rawFrameInput,
 		state.userPtr);
 
 	// Handle operation returned
 	if (op == sfz::UpdateOp::QUIT) quit(state);
-	if (op == sfz::UpdateOp::REINIT_CONTROLLERS) initControllers(state.userInput.controllers);
+	if (op == sfz::UpdateOp::REINIT_CONTROLLERS) initControllers(state.rawFrameInput);
 }
 
 // Implementation function
@@ -530,15 +744,14 @@ int main(int argc, char* argv[])
 		gameLoopState.updateFunc = options.updateFunc;
 		gameLoopState.quitFunc = options.quitFunc;
 
-		gameLoopState.userInput.events.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
-		gameLoopState.userInput.controllers.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
-
+		gameLoopState.events.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
+		
 		gameLoopState.prevPerfCounterTickValue = SDL_GetPerformanceCounter();
 		gameLoopState.perfCounterTicksPerSec = SDL_GetPerformanceFrequency();
 
 		// Initialize controllers
 		SDL_GameControllerEventState(SDL_ENABLE);
-		initControllers(gameLoopState.userInput.controllers);
+		initControllers(gameLoopState.rawFrameInput);
 
 		// Get settings
 		gameLoopState.windowWidth = cfg.getSetting("Window", "width");

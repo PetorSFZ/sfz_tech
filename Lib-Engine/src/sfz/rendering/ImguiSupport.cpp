@@ -204,9 +204,9 @@ void deinitializeImgui() noexcept
 
 void updateImgui(
 	vec2_i32 windowResolution,
-	const sdl::Mouse* rawMouse,
-	const Array<SDL_Event>* keyboardEvents,
-	const sdl::GameControllerState* controller) noexcept
+	const RawInputState& rawInputState,
+	const SDL_Event* keyboardEvents,
+	uint32_t numKeyboardEvents) noexcept
 {
 	// Note, these should actually be freed using SDL_FreeCursor(). But I don't think it matters
 	// that much.
@@ -246,30 +246,28 @@ void updateImgui(
 	vec2 imguiDims = vec2(windowResolution) * scaleFactor;
 	io.DisplaySize = imguiDims;
 
-	// Update mouse if available
-	if (rawMouse != nullptr) {
-		sdl::Mouse imguiMouse = rawMouse->scaleMouse(imguiDims * 0.5f, imguiDims);
-		io.MousePos.x = imguiMouse.position.x;
-		io.MousePos.y = imguiDims.y - imguiMouse.position.y;
-
-		io.MouseDown[0] = imguiMouse.leftButton != sdl::ButtonState::NOT_PRESSED;
-		io.MouseDown[1] = imguiMouse.rightButton != sdl::ButtonState::NOT_PRESSED;
-		io.MouseDown[2] = imguiMouse.middleButton != sdl::ButtonState::NOT_PRESSED;
-
-		if (invertedScrollSetting->boolValue()) {
-			io.MouseWheel = -imguiMouse.wheel.y;
-		}
-		else {
-			io.MouseWheel = imguiMouse.wheel.y;
-		}
-	}
-	else {
+	// Update mouse
+	{
 		io.MousePos.x = -FLT_MAX;
 		io.MousePos.y = -FLT_MAX;
 		io.MouseDown[0] = false;
 		io.MouseDown[1] = false;
 		io.MouseDown[2] = false;
 		io.MouseWheel = 0.0f;
+
+		const sfz::MouseState& mouse = rawInputState.mouse;
+		io.MousePos.x = float(mouse.pos.x) / float(mouse.windowDims.x) * imguiDims.x;
+		io.MousePos.y = (float(mouse.windowDims.y - mouse.pos.y - 1) / float(mouse.windowDims.y)) * imguiDims.y;
+		io.MouseDown[0] = mouse.left != 0;
+		io.MouseDown[1] = mouse.middle != 0;
+		io.MouseDown[2] = mouse.right != 0;
+
+		if (invertedScrollSetting->boolValue()) {
+			io.MouseWheel = float(-mouse.wheel.y);
+		}
+		else {
+			io.MouseWheel = float(mouse.wheel.y);
+		}
 	}
 
 	// Update mouse cursor
@@ -291,7 +289,8 @@ void updateImgui(
 	}
 
 	// Keyboard events
-	for (const SDL_Event& event : *keyboardEvents) {
+	for (uint32_t eventIdx = 0; eventIdx < numKeyboardEvents; eventIdx++) {
+		const SDL_Event& event = keyboardEvents[eventIdx];
 		switch (event.type) {
 		case SDL_TEXTINPUT:
 			io.AddInputCharactersUTF8(event.text.text);
@@ -309,50 +308,47 @@ void updateImgui(
 	}
 
 	// Controller input
-	if (controller != nullptr) {
-		const sdl::GameControllerState& c = *controller;
-
-		auto buttonToImgui = [](const sdl::ButtonState& button) -> float {
-			if (button != sdl::ButtonState::NOT_PRESSED) return 1.0f;
-			else return 0.0f;
-		};
+	const sfz::GamepadState* activeGamepad =
+		rawInputState.gamepads.isEmpty() ? nullptr : &rawInputState.gamepads.first();
+	if (activeGamepad != nullptr) {
+		const sfz::GamepadState& gpd = *activeGamepad;
 
 		// press button, tweak value // e.g. Circle button
-		io.NavInputs[ImGuiNavInput_Activate] = buttonToImgui(c.a);
+		io.NavInputs[ImGuiNavInput_Activate] = float(gpd.a);
 
 		// close menu/popup/child, lose selection // e.g. Cross button
-		io.NavInputs[ImGuiNavInput_Cancel] = buttonToImgui(c.b);
+		io.NavInputs[ImGuiNavInput_Cancel] = float(gpd.b);
 
 		// text input // e.g. Triangle button
-		io.NavInputs[ImGuiNavInput_Input] = buttonToImgui(c.y);
+		io.NavInputs[ImGuiNavInput_Input] = float(gpd.y);
 
 		// access menu, focus, move, resize // e.g. Square button
-		io.NavInputs[ImGuiNavInput_Menu] = buttonToImgui(c.x);
+		io.NavInputs[ImGuiNavInput_Menu] = float(gpd.x);
 
 		// move / tweak / resize window (w/ PadMenu) // e.g. D-pad Left/Right/Up/Down
-		io.NavInputs[ImGuiNavInput_DpadUp] = buttonToImgui(c.padUp);
-		io.NavInputs[ImGuiNavInput_DpadDown] = buttonToImgui(c.padDown);
-		io.NavInputs[ImGuiNavInput_DpadLeft] = buttonToImgui(c.padLeft);
-		io.NavInputs[ImGuiNavInput_DpadRight] = buttonToImgui(c.padRight);
+		io.NavInputs[ImGuiNavInput_DpadUp] = float(gpd.up);
+		io.NavInputs[ImGuiNavInput_DpadDown] = float(gpd.down);
+		io.NavInputs[ImGuiNavInput_DpadLeft] = float(gpd.left);
+		io.NavInputs[ImGuiNavInput_DpadRight] = float(gpd.right);
 
 		// scroll / move window (w/ PadMenu) // e.g. Left Analog Stick Left/Right/Up/Down
-		vec2 leftStick = c.leftStick;
+		vec2 leftStick = gpd.leftStick;
 		io.NavInputs[ImGuiNavInput_LStickUp] = sfz::max(leftStick.y, 0.0f);
 		io.NavInputs[ImGuiNavInput_LStickDown] = sfz::abs(sfz::min(leftStick.y, 0.0f));
 		io.NavInputs[ImGuiNavInput_LStickLeft] = sfz::abs(sfz::min(leftStick.x, 0.0f));
 		io.NavInputs[ImGuiNavInput_LStickRight] = sfz::max(leftStick.x, 0.0f);
 
 		// next window (w/ PadMenu) // e.g. L1 or L2 (PS4), LB or LT (Xbox), L or ZL (Switch)
-		io.NavInputs[ImGuiNavInput_FocusPrev] = buttonToImgui(c.leftShoulder);
+		io.NavInputs[ImGuiNavInput_FocusPrev] = float(gpd.lb);
 
 		// prev window (w/ PadMenu) // e.g. R1 or R2 (PS4), RB or RT (Xbox), R or ZL (Switch)
-		io.NavInputs[ImGuiNavInput_FocusNext] = buttonToImgui(c.rightShoulder);
+		io.NavInputs[ImGuiNavInput_FocusNext] = float(gpd.rb);
 
 		// slower tweaks // e.g. L1 or L2 (PS4), LB or LT (Xbox), L or ZL (Switch)
-		io.NavInputs[ImGuiNavInput_TweakSlow] = c.leftTrigger;
+		io.NavInputs[ImGuiNavInput_TweakSlow] = gpd.lt;
 
 		// faster tweaks // e.g. R1 or R2 (PS4), RB or RT (Xbox), R or ZL (Switch)*
-		io.NavInputs[ImGuiNavInput_TweakFast] = c.rightTrigger;
+		io.NavInputs[ImGuiNavInput_TweakFast] = gpd.rt;
 	}
 }
 

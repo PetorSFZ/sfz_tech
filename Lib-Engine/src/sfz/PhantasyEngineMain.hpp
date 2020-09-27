@@ -22,17 +22,10 @@
 #include <SDL.h>
 
 #include <skipifzero.hpp>
-#include <skipifzero_arrays.hpp>
-#include <skipifzero_hash_maps.hpp>
 
-#include "sfz/sdl/GameController.hpp"
-#include "sfz/sdl/Mouse.hpp"
+#include "sfz/input/RawInputState.hpp"
 
 namespace sfz {
-
-using sdl::GameController;
-using sdl::GameControllerState;
-using sdl::Mouse;
 
 // Structs
 // ------------------------------------------------------------------------------------------------
@@ -41,16 +34,6 @@ enum class UpdateOp : uint32_t {
 	NO_OP = 0,
 	QUIT,
 	REINIT_CONTROLLERS
-};
-
-struct UserInput final {
-
-	// SDL events
-	Array<SDL_Event> events;
-
-	// Processed controller and mouse input
-	HashMap<int32_t, GameController> controllers;
-	Mouse rawMouse;
 };
 
 enum class IniLocation {
@@ -66,7 +49,9 @@ enum class IniLocation {
 using InitFunc = void(void* userPtr);
 using UpdateFunc = UpdateOp(
 	float deltaSecs,
-	const UserInput* input,
+	const SDL_Event* events,
+	uint32_t numEvents,
+	const RawInputState* rawFrameInput,
 	void* userPtr);
 using QuitFunc = void(void* userPtr);
 

@@ -246,6 +246,8 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/geometry/Plane.inl
 	${SRC_DIR}/sfz/geometry/Sphere.hpp
 
+	${SRC_DIR}/sfz/input/RawInputState.hpp
+
 	${SRC_DIR}/sfz/math/MathPrimitiveToStrings.hpp
 	${SRC_DIR}/sfz/math/MathPrimitiveToStrings.cpp
 
@@ -282,11 +284,6 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/rendering/Mesh.hpp
 	${SRC_DIR}/sfz/rendering/SphereLight.hpp
 
-	${SRC_DIR}/sfz/sdl/ButtonState.hpp
-	${SRC_DIR}/sfz/sdl/GameController.hpp
-	${SRC_DIR}/sfz/sdl/GameController.cpp
-	${SRC_DIR}/sfz/sdl/Mouse.hpp
-	${SRC_DIR}/sfz/sdl/Mouse.cpp
 	${SRC_DIR}/sfz/sdl/SDLAllocator.hpp
 	${SRC_DIR}/sfz/sdl/SDLAllocator.cpp
 

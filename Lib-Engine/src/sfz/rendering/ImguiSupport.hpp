@@ -23,9 +23,9 @@
 
 #include <skipifzero_arrays.hpp>
 
+#include "sfz/input/RawInputState.hpp"
 #include "sfz/renderer/Renderer.hpp"
-#include "sfz/sdl/Mouse.hpp"
-#include "sfz/sdl/GameController.hpp"
+#include "sfz/PhantasyEngineMain.hpp"
 
 namespace sfz {
 
@@ -36,9 +36,9 @@ void deinitializeImgui() noexcept;
 
 void updateImgui(
 	vec2_i32 windowResolution,
-	const sdl::Mouse* rawMouse,
-	const Array<SDL_Event>* keyboardEvents,
-	const sdl::GameControllerState* controller) noexcept;
+	const RawInputState& rawInputState,
+	const SDL_Event* keyboardEvents,
+	uint32_t numKeyboardEvents) noexcept;
 
 // The fonts initialized with Imgui
 ImFont* imguiFontDefault() noexcept;
