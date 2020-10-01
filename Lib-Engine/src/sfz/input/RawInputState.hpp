@@ -50,8 +50,31 @@ struct MouseState final {
 	uint8_t right = 0;
 };
 
+constexpr uint32_t GPD_NONE = 0;
+
+constexpr uint32_t GPD_A = 1;
+constexpr uint32_t GPD_B = 2;
+constexpr uint32_t GPD_X = 3;
+constexpr uint32_t GPD_Y = 4;
+
+constexpr uint32_t GPD_BACK = 5;
+constexpr uint32_t GPD_START = 6;
+
+constexpr uint32_t GPD_LS = 7; // Left stick click
+constexpr uint32_t GPD_RS = 8; // Right stick click
+
+constexpr uint32_t GPD_LB = 9; // Left shoulder button
+constexpr uint32_t GPD_RB = 10; // Right shoulder button
+
+constexpr uint32_t GPD_DPAD_UP = 11;
+constexpr uint32_t GPD_DPAD_DOWN = 12;
+constexpr uint32_t GPD_DPAD_LEFT = 13;
+constexpr uint32_t GPD_DPAD_RIGHT = 14;
+
+constexpr uint32_t GPD_MAX_NUM_BUTTONS = 15;
+
 // The approximate dead zone (as specified by SDL2) for gamepad sticks.
-constexpr float GAMEPAD_STICK_APPROX_DEADZONE = float(8000) / float(INT16_MAX);
+constexpr float GPD_STICK_APPROX_DEADZONE = float(8000) / float(INT16_MAX);
 
 struct GamepadState final {
 
@@ -72,24 +95,8 @@ struct GamepadState final {
 	float lt = 0.0f;
 	float rt = 0.0f;
 
-	uint8_t a = 0;
-	uint8_t b = 0;
-	uint8_t x = 0;
-	uint8_t y = 0;
-
-	uint8_t back = 0;
-	uint8_t start = 0;
-
-	uint8_t ls = 0; // Left stick click
-	uint8_t rs = 0; // Right stick click
-	
-	uint8_t lb = 0; // Left shoulder button
-	uint8_t rb = 0; // Right shoulder button
-
-	uint8_t up = 0; // Dpad up
-	uint8_t down = 0; // Dpad down
-	uint8_t left = 0; // Dpad left
-	uint8_t right = 0; // Dpad right
+	// Array indexed with constants above. 1 if button is pressed, 0 otherwise.
+	uint8_t buttons[GPD_MAX_NUM_BUTTONS] = {};
 };
 
 struct TouchState final {

@@ -314,22 +314,22 @@ void updateImgui(
 		const sfz::GamepadState& gpd = *activeGamepad;
 
 		// press button, tweak value // e.g. Circle button
-		io.NavInputs[ImGuiNavInput_Activate] = float(gpd.a);
+		io.NavInputs[ImGuiNavInput_Activate] = float(gpd.buttons[GPD_A]);
 
 		// close menu/popup/child, lose selection // e.g. Cross button
-		io.NavInputs[ImGuiNavInput_Cancel] = float(gpd.b);
+		io.NavInputs[ImGuiNavInput_Cancel] = float(gpd.buttons[GPD_B]);
 
 		// text input // e.g. Triangle button
-		io.NavInputs[ImGuiNavInput_Input] = float(gpd.y);
+		io.NavInputs[ImGuiNavInput_Input] = float(gpd.buttons[GPD_Y]);
 
 		// access menu, focus, move, resize // e.g. Square button
-		io.NavInputs[ImGuiNavInput_Menu] = float(gpd.x);
+		io.NavInputs[ImGuiNavInput_Menu] = float(gpd.buttons[GPD_X]);
 
 		// move / tweak / resize window (w/ PadMenu) // e.g. D-pad Left/Right/Up/Down
-		io.NavInputs[ImGuiNavInput_DpadUp] = float(gpd.up);
-		io.NavInputs[ImGuiNavInput_DpadDown] = float(gpd.down);
-		io.NavInputs[ImGuiNavInput_DpadLeft] = float(gpd.left);
-		io.NavInputs[ImGuiNavInput_DpadRight] = float(gpd.right);
+		io.NavInputs[ImGuiNavInput_DpadUp] = float(gpd.buttons[GPD_DPAD_UP]);
+		io.NavInputs[ImGuiNavInput_DpadDown] = float(gpd.buttons[GPD_DPAD_DOWN]);
+		io.NavInputs[ImGuiNavInput_DpadLeft] = float(gpd.buttons[GPD_DPAD_LEFT]);
+		io.NavInputs[ImGuiNavInput_DpadRight] = float(gpd.buttons[GPD_DPAD_RIGHT]);
 
 		// scroll / move window (w/ PadMenu) // e.g. Left Analog Stick Left/Right/Up/Down
 		vec2 leftStick = gpd.leftStick;
@@ -339,10 +339,10 @@ void updateImgui(
 		io.NavInputs[ImGuiNavInput_LStickRight] = sfz::max(leftStick.x, 0.0f);
 
 		// next window (w/ PadMenu) // e.g. L1 or L2 (PS4), LB or LT (Xbox), L or ZL (Switch)
-		io.NavInputs[ImGuiNavInput_FocusPrev] = float(gpd.lb);
+		io.NavInputs[ImGuiNavInput_FocusPrev] = float(gpd.buttons[GPD_LB]);
 
 		// prev window (w/ PadMenu) // e.g. R1 or R2 (PS4), RB or RT (Xbox), R or ZL (Switch)
-		io.NavInputs[ImGuiNavInput_FocusNext] = float(gpd.rb);
+		io.NavInputs[ImGuiNavInput_FocusNext] = float(gpd.buttons[GPD_RB]);
 
 		// slower tweaks // e.g. L1 or L2 (PS4), LB or LT (Xbox), L or ZL (Switch)
 		io.NavInputs[ImGuiNavInput_TweakSlow] = gpd.lt;
