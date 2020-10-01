@@ -66,12 +66,15 @@ constexpr uint32_t GPD_RS = 8; // Right stick click
 constexpr uint32_t GPD_LB = 9; // Left shoulder button
 constexpr uint32_t GPD_RB = 10; // Right shoulder button
 
-constexpr uint32_t GPD_DPAD_UP = 11;
-constexpr uint32_t GPD_DPAD_DOWN = 12;
-constexpr uint32_t GPD_DPAD_LEFT = 13;
-constexpr uint32_t GPD_DPAD_RIGHT = 14;
+constexpr uint32_t GPD_LT = 11; // Left trigger button (sort of hack, also available as analog)
+constexpr uint32_t GPD_RT = 12; // Right trigger button (sort of hack, also available as analog)
 
-constexpr uint32_t GPD_MAX_NUM_BUTTONS = 15;
+constexpr uint32_t GPD_DPAD_UP = 13;
+constexpr uint32_t GPD_DPAD_DOWN = 14;
+constexpr uint32_t GPD_DPAD_LEFT = 15;
+constexpr uint32_t GPD_DPAD_RIGHT = 16;
+
+constexpr uint32_t GPD_MAX_NUM_BUTTONS = 17;
 
 // The approximate dead zone (as specified by SDL2) for gamepad sticks.
 constexpr float GPD_STICK_APPROX_DEADZONE = float(8000) / float(INT16_MAX);

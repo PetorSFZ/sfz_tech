@@ -516,6 +516,9 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 				gpd.buttons[sfz::GPD_LB] = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
 				gpd.buttons[sfz::GPD_RB] = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
 				
+				gpd.buttons[sfz::GPD_LT] = gpd.lt >= 0.75f ? uint8_t(1) : uint8_t(0);
+				gpd.buttons[sfz::GPD_RT] = gpd.rt >= 0.75f ? uint8_t(1) : uint8_t(0);
+
 				gpd.buttons[sfz::GPD_DPAD_UP] = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_DPAD_UP);
 				gpd.buttons[sfz::GPD_DPAD_DOWN] = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN);
 				gpd.buttons[sfz::GPD_DPAD_LEFT] = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_DPAD_LEFT);
