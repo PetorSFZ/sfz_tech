@@ -510,9 +510,30 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 				gpd.buttons[sfz::GPD_BACK] = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_BACK);
 				gpd.buttons[sfz::GPD_START] = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_START);
 
-				gpd.buttons[sfz::GPD_LS] = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_LEFTSTICK);
-				gpd.buttons[sfz::GPD_RS] = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_RIGHTSTICK);
+				gpd.buttons[sfz::GPD_LS_CLICK] = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_LEFTSTICK);
+				if (sfz::length(gpd.leftStick) > 0.75f) {
+					if (abs(leftY) >= abs(leftX)) {
+						gpd.buttons[sfz::GPD_LS_UP] = leftY > 0 ? 1 : 0;
+						gpd.buttons[sfz::GPD_LS_DOWN] = leftY < 0 ? 1 : 0;
+					}
+					else {
+						gpd.buttons[sfz::GPD_LS_LEFT] = leftX < 0 ? 1 : 0;
+						gpd.buttons[sfz::GPD_LS_RIGHT] = leftX > 0 ? 1 : 0;
+					}
+				}
 				
+				gpd.buttons[sfz::GPD_RS_CLICK] = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_RIGHTSTICK);
+				if (sfz::length(gpd.rightStick) > 0.75f) {
+					if (abs(rightY) >= abs(rightX)) {
+						gpd.buttons[sfz::GPD_RS_UP] = rightY < 0 ? 1 : 0;
+						gpd.buttons[sfz::GPD_RS_DOWN] = rightY > 0 ? 1 : 0;
+					}
+					else {
+						gpd.buttons[sfz::GPD_RS_LEFT] = rightX < 0 ? 1 : 0;
+						gpd.buttons[sfz::GPD_RS_RIGHT] = rightX > 0 ? 1 : 0;
+					}
+				}
+
 				gpd.buttons[sfz::GPD_LB] = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
 				gpd.buttons[sfz::GPD_RB] = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
 				

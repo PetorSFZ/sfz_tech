@@ -60,21 +60,30 @@ constexpr uint32_t GPD_Y = 4;
 constexpr uint32_t GPD_BACK = 5;
 constexpr uint32_t GPD_START = 6;
 
-constexpr uint32_t GPD_LS = 7; // Left stick click
-constexpr uint32_t GPD_RS = 8; // Right stick click
+constexpr uint32_t GPD_LS_CLICK = 7; // Left stick click
+constexpr uint32_t GPD_LS_UP = 8; // Left stick up (sort of hack, also available as analog)
+constexpr uint32_t GPD_LS_DOWN = 9; // Left stick down (sort of hack, also available as analog)
+constexpr uint32_t GPD_LS_LEFT = 10; // Left stick left (sort of hack, also available as analog)
+constexpr uint32_t GPD_LS_RIGHT = 11; // Left stick right (sort of hack, also available as analog)
 
-constexpr uint32_t GPD_LB = 9; // Left shoulder button
-constexpr uint32_t GPD_RB = 10; // Right shoulder button
+constexpr uint32_t GPD_RS_CLICK = 12; // Right stick click
+constexpr uint32_t GPD_RS_UP = 13; // Right stick up (sort of hack, also available as analog)
+constexpr uint32_t GPD_RS_DOWN = 14; // Right stick down (sort of hack, also available as analog)
+constexpr uint32_t GPD_RS_LEFT = 15; // Right stick left (sort of hack, also available as analog)
+constexpr uint32_t GPD_RS_RIGHT = 16; // Right stick right (sort of hack, also available as analog)
 
-constexpr uint32_t GPD_LT = 11; // Left trigger button (sort of hack, also available as analog)
-constexpr uint32_t GPD_RT = 12; // Right trigger button (sort of hack, also available as analog)
+constexpr uint32_t GPD_LB = 17; // Left shoulder button
+constexpr uint32_t GPD_RB = 18; // Right shoulder button
 
-constexpr uint32_t GPD_DPAD_UP = 13;
-constexpr uint32_t GPD_DPAD_DOWN = 14;
-constexpr uint32_t GPD_DPAD_LEFT = 15;
-constexpr uint32_t GPD_DPAD_RIGHT = 16;
+constexpr uint32_t GPD_LT = 19; // Left trigger button (sort of hack, also available as analog)
+constexpr uint32_t GPD_RT = 20; // Right trigger button (sort of hack, also available as analog)
 
-constexpr uint32_t GPD_MAX_NUM_BUTTONS = 17;
+constexpr uint32_t GPD_DPAD_UP = 21;
+constexpr uint32_t GPD_DPAD_DOWN = 22;
+constexpr uint32_t GPD_DPAD_LEFT = 23;
+constexpr uint32_t GPD_DPAD_RIGHT = 24;
+
+constexpr uint32_t GPD_MAX_NUM_BUTTONS = 25;
 
 // The approximate dead zone (as specified by SDL2) for gamepad sticks.
 constexpr float GPD_STICK_APPROX_DEADZONE = float(8000) / float(INT16_MAX);
