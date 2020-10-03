@@ -50,10 +50,12 @@
 #endif
 
 #if defined(_MSC_VER)
-typedef __int64 int64_t;
-typedef unsigned __int64 uint64_t;
+typedef __int64 utest_int64_t;
+typedef unsigned __int64 utest_uint64_t;
 #else
 #include <stdint.h>
+typedef int64_t utest_int64_t;
+typedef uint64_t utest_uint64_t;
 #endif
 
 #include <stddef.h>
@@ -99,6 +101,9 @@ typedef unsigned __int64 uint64_t;
 #include <sys/syscall.h>
 #include <unistd.h>
 #endif
+#else // Other libc implementations
+#include <time.h>
+#define UTEST_USE_CLOCKGETTIME
 #endif
 
 #elif defined(__APPLE__)
@@ -110,10 +115,24 @@ typedef unsigned __int64 uint64_t;
 #define UTEST_PRIu64 "I64u"
 #define UTEST_INLINE __forceinline
 
+#if defined(__cplusplus)
+#define UTEST_C_FUNC extern "C"
+#else
+#define UTEST_C_FUNC
+#endif
+
+#if defined(_WIN64)
+#define UTEST_SYMBOL_PREFIX
+#else
+#define UTEST_SYMBOL_PREFIX "_"
+#endif
+
 #pragma section(".CRT$XCU", read)
 #define UTEST_INITIALIZER(f)                                                   \
   static void __cdecl f(void);                                                 \
-  __declspec(allocate(".CRT$XCU")) void(__cdecl * f##_)(void) = f;             \
+  __pragma(comment(linker, "/include:" UTEST_SYMBOL_PREFIX #f "_"));           \
+  UTEST_C_FUNC __declspec(allocate(".CRT$XCU")) void(__cdecl * f##_)(void) =   \
+      f;                                                                       \
   static void __cdecl f(void)
 #else
 #if defined(__linux__)
@@ -172,25 +191,31 @@ typedef unsigned __int64 uint64_t;
 #define UTEST_COLOUR_OUTPUT() (isatty(STDOUT_FILENO))
 #endif
 
-static UTEST_INLINE int64_t utest_ns(void) {
+static UTEST_INLINE utest_int64_t utest_ns(void) {
 #ifdef _MSC_VER
   LARGE_INTEGER counter;
   LARGE_INTEGER frequency;
   QueryPerformanceCounter(&counter);
   QueryPerformanceFrequency(&frequency);
-  return UTEST_CAST(int64_t,
+  return UTEST_CAST(utest_int64_t,
                     (counter.QuadPart * 1000000000) / frequency.QuadPart);
+#elif defined(__linux) && defined(__STRICT_ANSI__)
+  return UTEST_CAST(utest_int64_t, clock()) * 1000000000 / CLOCKS_PER_SEC;
 #elif defined(__linux)
   struct timespec ts;
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
+  timespec_get(&ts, TIME_UTC);
+#else
   const clockid_t cid = CLOCK_REALTIME;
 #if defined(UTEST_USE_CLOCKGETTIME)
   clock_gettime(cid, &ts);
 #else
   syscall(SYS_clock_gettime, cid, &ts);
 #endif
-  return UTEST_CAST(int64_t, ts.tv_sec) * 1000 * 1000 * 1000 + ts.tv_nsec;
+#endif
+  return UTEST_CAST(utest_int64_t, ts.tv_sec) * 1000 * 1000 * 1000 + ts.tv_nsec;
 #elif __APPLE__
-  return UTEST_CAST(int64_t, mach_absolute_time());
+  return UTEST_CAST(utest_int64_t, mach_absolute_time());
 #endif
 }
 
@@ -295,6 +320,11 @@ UTEST_WEAK UTEST_OVERLOADABLE void utest_type_printer(long unsigned int i) {
   UTEST_PRINTF("%lu", i);
 }
 
+UTEST_WEAK UTEST_OVERLOADABLE void utest_type_printer(const void *p);
+UTEST_WEAK UTEST_OVERLOADABLE void utest_type_printer(const void *p) {
+  UTEST_PRINTF("%p", p);
+}
+
 /*
    long long is a c++11 extension
 */
@@ -324,7 +354,11 @@ utest_type_printer(long long unsigned int i) {
 #endif
 #elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
 #define utest_type_printer(val)                                                \
-  UTEST_PRINTF(_Generic((val), int                                             \
+  UTEST_PRINTF(_Generic((val), signed char                                     \
+                        : "%d", unsigned char                                  \
+                        : "%u", short                                          \
+                        : "%d", unsigned short                                 \
+                        : "%u", int                                            \
                         : "%d", long                                           \
                         : "%ld", long long                                     \
                         : "%lld", unsigned                                     \
@@ -347,9 +381,32 @@ utest_type_printer(long long unsigned int i) {
 #endif
 
 #if defined(__cplusplus) && (__cplusplus >= 201103L)
-#define UTEST_TYPEOF(x) decltype(x)
+#define UTEST_AUTO(x) auto
+#elif !defined(__cplusplus)
+
+#if defined(__clang__)
+/* clang-format off */
+/* had to disable clang-format here because it malforms the pragmas */
+#define UTEST_AUTO(x)                                                          \
+  _Pragma("clang diagnostic push")                                             \
+      _Pragma("clang diagnostic ignored \"-Wgnu-auto-type\"") __auto_type      \
+          _Pragma("clang diagnostic pop")
+/* clang-format on */
 #else
-#define UTEST_TYPEOF(x) typeof(x)
+#define UTEST_AUTO(x) __auto_type
+#endif
+
+#else
+#define UTEST_AUTO(x) typeof(x + 0)
+#endif
+
+#if defined(__clang__)
+#define UTEST_STRNCMP(x, y, size)                                              \
+  _Pragma("clang diagnostic push")                                             \
+      _Pragma("clang diagnostic ignored \"-Wdisabled-macro-expansion\"")       \
+          strncmp(x, y, size) _Pragma("clang diagnostic pop")
+#else
+#define UTEST_STRNCMP(x, y, size) strncmp(x, y, size)
 #endif
 
 #if defined(__clang__)
@@ -358,10 +415,12 @@ utest_type_printer(long long unsigned int i) {
     _Pragma("clang diagnostic push")                                           \
         _Pragma("clang diagnostic ignored \"-Wlanguage-extension-token\"")     \
             _Pragma("clang diagnostic ignored \"-Wc++98-compat-pedantic\"")    \
-                UTEST_TYPEOF(y) xEval = (x);                                   \
-    UTEST_TYPEOF(y) yEval = (y);                                               \
-    _Pragma("clang diagnostic pop") if (!((xEval)cond(yEval))) {               \
-      UTEST_PRINTF("%s:%u: Failure\n", __FILE__, __LINE__);                    \
+                _Pragma("clang diagnostic ignored \"-Wfloat-equal\"")          \
+                    UTEST_AUTO(x) xEval = (x);                                 \
+    UTEST_AUTO(y) yEval = (y);                                                 \
+    if (!((xEval)cond(yEval))) {                                               \
+      _Pragma("clang diagnostic pop")                                          \
+          UTEST_PRINTF("%s:%u: Failure\n", __FILE__, __LINE__);                \
       UTEST_PRINTF("  Expected : ");                                           \
       utest_type_printer(xEval);                                               \
       UTEST_PRINTF("\n");                                                      \
@@ -374,8 +433,8 @@ utest_type_printer(long long unsigned int i) {
 #elif defined(__GNUC__)
 #define UTEST_EXPECT(x, y, cond)                                               \
   {                                                                            \
-    UTEST_TYPEOF(y) xEval = (x);                                               \
-    UTEST_TYPEOF(y) yEval = (y);                                               \
+    UTEST_AUTO(x) xEval = (x);                                                 \
+    UTEST_AUTO(y) yEval = (y);                                                 \
     if (!((xEval)cond(yEval))) {                                               \
       UTEST_PRINTF("%s:%u: Failure\n", __FILE__, __LINE__);                    \
       UTEST_PRINTF("  Expected : ");                                           \
@@ -436,16 +495,34 @@ utest_type_printer(long long unsigned int i) {
     *utest_result = 1;                                                         \
   }
 
+#define EXPECT_STRNEQ(x, y)                                                    \
+  if (0 != UTEST_STRNCMP(x, y, strlen(x))) {                                   \
+    UTEST_PRINTF("%s:%u: Failure\n", __FILE__, __LINE__);                      \
+    UTEST_PRINTF("  Expected : \"%s\"\n", x);                                  \
+    UTEST_PRINTF("    Actual : \"%s\"\n", y);                                  \
+    *utest_result = 1;                                                         \
+  }
+
+#define EXPECT_STRNNE(x, y)                                                    \
+  if (0 == UTEST_STRNCMP(x, y, strlen(x))) {                                   \
+    UTEST_PRINTF("%s:%u: Failure\n", __FILE__, __LINE__);                      \
+    UTEST_PRINTF("  Expected : \"%s\"\n", x);                                  \
+    UTEST_PRINTF("    Actual : \"%s\"\n", y);                                  \
+    *utest_result = 1;                                                         \
+  }
+
 #if defined(__clang__)
 #define UTEST_ASSERT(x, y, cond)                                               \
   {                                                                            \
     _Pragma("clang diagnostic push")                                           \
         _Pragma("clang diagnostic ignored \"-Wlanguage-extension-token\"")     \
             _Pragma("clang diagnostic ignored \"-Wc++98-compat-pedantic\"")    \
-                UTEST_TYPEOF(y) xEval = (x);                                   \
-    UTEST_TYPEOF(y) yEval = (y);                                               \
-    _Pragma("clang diagnostic pop") if (!((xEval)cond(yEval))) {               \
-      UTEST_PRINTF("%s:%u: Failure\n", __FILE__, __LINE__);                    \
+                _Pragma("clang diagnostic ignored \"-Wfloat-equal\"")          \
+                    UTEST_AUTO(x) xEval = (x);                                 \
+    UTEST_AUTO(y) yEval = (y);                                                 \
+    if (!((xEval)cond(yEval))) {                                               \
+      _Pragma("clang diagnostic pop")                                          \
+          UTEST_PRINTF("%s:%u: Failure\n", __FILE__, __LINE__);                \
       UTEST_PRINTF("  Expected : ");                                           \
       utest_type_printer(xEval);                                               \
       UTEST_PRINTF("\n");                                                      \
@@ -459,8 +536,8 @@ utest_type_printer(long long unsigned int i) {
 #elif defined(__GNUC__)
 #define UTEST_ASSERT(x, y, cond)                                               \
   {                                                                            \
-    UTEST_TYPEOF(y) xEval = (x);                                               \
-    UTEST_TYPEOF(y) yEval = (y);                                               \
+    UTEST_AUTO(x) xEval = (x);                                                 \
+    UTEST_AUTO(y) yEval = (y);                                                 \
     if (!((xEval)cond(yEval))) {                                               \
       UTEST_PRINTF("%s:%u: Failure\n", __FILE__, __LINE__);                    \
       UTEST_PRINTF("  Expected : ");                                           \
@@ -510,7 +587,6 @@ utest_type_printer(long long unsigned int i) {
 #define ASSERT_GE(x, y) UTEST_ASSERT(x, y, >=)
 
 #define ASSERT_STREQ(x, y)                                                     \
-  EXPECT_STREQ(x, y);                                                          \
   if (0 != strcmp(x, y)) {                                                     \
     UTEST_PRINTF("%s:%u: Failure\n", __FILE__, __LINE__);                      \
     UTEST_PRINTF("  Expected : \"%s\"\n", x);                                  \
@@ -520,8 +596,25 @@ utest_type_printer(long long unsigned int i) {
   }
 
 #define ASSERT_STRNE(x, y)                                                     \
-  EXPECT_STRNE(x, y);                                                          \
   if (0 == strcmp(x, y)) {                                                     \
+    UTEST_PRINTF("%s:%u: Failure\n", __FILE__, __LINE__);                      \
+    UTEST_PRINTF("  Expected : \"%s\"\n", x);                                  \
+    UTEST_PRINTF("    Actual : \"%s\"\n", y);                                  \
+    *utest_result = 1;                                                         \
+    return;                                                                    \
+  }
+
+#define ASSERT_STRNEQ(x, y)                                                    \
+  if (0 != UTEST_STRNCMP(x, y, strlen(x))) {                                   \
+    UTEST_PRINTF("%s:%u: Failure\n", __FILE__, __LINE__);                      \
+    UTEST_PRINTF("  Expected : \"%s\"\n", x);                                  \
+    UTEST_PRINTF("    Actual : \"%s\"\n", y);                                  \
+    *utest_result = 1;                                                         \
+    return;                                                                    \
+  }
+
+#define ASSERT_STRNNE(x, y)                                                    \
+  if (0 == UTEST_STRNCMP(x, y, strlen(x))) {                                   \
     UTEST_PRINTF("%s:%u: Failure\n", __FILE__, __LINE__);                      \
     UTEST_PRINTF("  Expected : \"%s\"\n", x);                                  \
     UTEST_PRINTF("    Actual : \"%s\"\n", y);                                  \
@@ -618,7 +711,7 @@ utest_type_printer(long long unsigned int i) {
   }                                                                            \
   UTEST_INITIALIZER(utest_register_##FIXTURE##_##NAME##_##INDEX) {             \
     size_t i;                                                                  \
-    uint64_t iUp;                                                              \
+    utest_uint64_t iUp;                                                        \
     for (i = 0; i < (INDEX); i++) {                                            \
       const size_t index = utest_state.tests_length++;                         \
       const char *name_part = #FIXTURE "." #NAME;                              \
@@ -632,7 +725,7 @@ utest_type_printer(long long unsigned int i) {
       utest_state.tests[index].func = &utest_i_##FIXTURE##_##NAME##_##INDEX;   \
       utest_state.tests[index].index = i;                                      \
       utest_state.tests[index].name = name;                                    \
-      iUp = UTEST_CAST(uint64_t, i);                                           \
+      iUp = UTEST_CAST(utest_uint64_t, i);                                     \
       UTEST_SNPRINTF(name, name_size, "%s/%" UTEST_PRIu64, name_part, iUp);    \
     }                                                                          \
   }                                                                            \
@@ -737,12 +830,12 @@ static UTEST_INLINE FILE *utest_fopen(const char *filename, const char *mode) {
 
 UTEST_WEAK int utest_main(int argc, const char *const argv[]);
 UTEST_WEAK int utest_main(int argc, const char *const argv[]) {
-  uint64_t failed = 0;
+  utest_uint64_t failed = 0;
   size_t index = 0;
   size_t *failed_testcases = UTEST_NULL;
   size_t failed_testcases_length = 0;
   const char *filter = UTEST_NULL;
-  uint64_t ran_tests = 0;
+  utest_uint64_t ran_tests = 0;
 
   enum colours { RESET, GREEN, RED };
 
@@ -784,7 +877,7 @@ UTEST_WEAK int utest_main(int argc, const char *const argv[]) {
       for (index = 0; index < utest_state.tests_length; index++) {
         UTEST_PRINTF("%s\n", utest_state.tests[index].name);
       }
-      /* When printing the test list, don't actually run the tests */
+      /* when printing the test list, don't actually run the tests */
       return 0;
     }
   }
@@ -798,21 +891,21 @@ UTEST_WEAK int utest_main(int argc, const char *const argv[]) {
   }
 
   printf("%s[==========]%s Running %" UTEST_PRIu64 " test cases.\n",
-         colours[GREEN], colours[RESET], UTEST_CAST(uint64_t, ran_tests));
+         colours[GREEN], colours[RESET], UTEST_CAST(utest_uint64_t, ran_tests));
 
   if (utest_state.output) {
     fprintf(utest_state.output, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
     fprintf(utest_state.output,
             "<testsuites tests=\"%" UTEST_PRIu64 "\" name=\"All\">\n",
-            UTEST_CAST(uint64_t, ran_tests));
+            UTEST_CAST(utest_uint64_t, ran_tests));
     fprintf(utest_state.output,
             "<testsuite name=\"Tests\" tests=\"%" UTEST_PRIu64 "\">\n",
-            UTEST_CAST(uint64_t, ran_tests));
+            UTEST_CAST(utest_uint64_t, ran_tests));
   }
 
   for (index = 0; index < utest_state.tests_length; index++) {
     int result = 0;
-    int64_t ns = 0;
+    utest_int64_t ns = 0;
 
     if (utest_should_filter_test(filter, utest_state.tests[index].name)) {
       continue;
