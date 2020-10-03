@@ -134,7 +134,7 @@ bool setSDLAllocator(sfz::Allocator* allocator) noexcept
 
 	// Allow 2 previous allocations on Windows, 3 previous on iOS, probably a bug?
 #if defined(_WIN32)
-	const int MAX_NUM_SDL_ALLOCATIONS = 0;
+	const int MAX_NUM_SDL_ALLOCATIONS = 2;
 #elif defined(SFZ_IOS)
 	const int MAX_NUM_SDL_ALLOCATIONS = 3;
 #else
