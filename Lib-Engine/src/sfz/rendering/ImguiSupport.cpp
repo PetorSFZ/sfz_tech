@@ -131,6 +131,9 @@ ImageView initializeImgui(Allocator* allocator) noexcept
 
 	ImGuiIO& io = ImGui::GetIO();
 
+	// Disable automatic saving/loading imgui state
+	io.IniFilename = nullptr;
+
 	// Enable GamePad navigation
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
