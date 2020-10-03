@@ -111,6 +111,21 @@ struct GamepadState final {
 	uint8_t buttons[GPD_MAX_NUM_BUTTONS] = {};
 };
 
+inline vec2 applyDeadzone(vec2 stick, float deadzone)
+{
+	if (deadzone <= 0.0f) return stick;
+	sfz_assert(deadzone < 1.0f);
+	const float stickLen = sfz::length(stick);
+	if (stickLen >= deadzone) {
+		const float scale = 1.0f / (1.0f - deadzone);
+		const float adjustedLen = sfz::min(sfz::max(0.0f, stickLen - deadzone) * scale, 1.0f);
+		const vec2 dir = stick * (1.0f / stickLen);
+		const vec2 adjustedStick = dir * adjustedLen;
+		return adjustedStick;
+	}
+	return vec2(0.0f);
+}
+
 struct TouchState final {
 	int64_t id = -1;
 	vec2 pos = vec2(0.0f); // Range [0, 1]
