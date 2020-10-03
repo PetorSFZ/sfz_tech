@@ -793,6 +793,38 @@ UTEST(Math, clamp)
 	ASSERT_TRUE(sfz::clamp(sfz::vec4_i32(-2, 0, 2, 4), sfz::vec4_i32(0, -1, -1, 5), sfz::vec4_i32(1, 1, 1, 6)) == sfz::vec4_i32(0, 0, 1, 5));
 }
 
+UTEST(Math, sgn)
+{
+	{
+		ASSERT_TRUE(sfz::sgn(0.0f) == 1.0f);
+		ASSERT_TRUE(sfz::sgn(-4.0f) == -1.0f);
+		ASSERT_TRUE(sfz::sgn(0) == 1);
+		ASSERT_TRUE(sfz::sgn(-4) == -1);
+	}
+
+	{
+		ASSERT_TRUE(sfz::sgn(sfz::vec2(5.0f, -5.0f)) == sfz::vec2(1.0f, -1.0f));
+		ASSERT_TRUE(sfz::sgn(sfz::vec2(-5.0f, 5.0)) == sfz::vec2(-1.0f, 1.0f));
+		ASSERT_TRUE(sfz::sgn(sfz::vec2_i32(6, -2)) == sfz::vec2_i32(1, -1));
+		ASSERT_TRUE(sfz::sgn(sfz::vec2_i32(-7, 1)) == sfz::vec2_i32(-1, 1));
+	}
+
+	{
+		ASSERT_TRUE(sfz::sgn(sfz::vec3(5.0f, -5.0f, -2.0f)) == sfz::vec3(1.0f, -1.0f, -1.0f));
+		ASSERT_TRUE(sfz::sgn(sfz::vec3(-5.0f, 5.0, 29.0f)) == sfz::vec3(-1.0f, 1.0f, 1.0f));
+		ASSERT_TRUE(sfz::sgn(sfz::vec3_i32(6, -2, 2)) == sfz::vec3_i32(1, -1, 1));
+		ASSERT_TRUE(sfz::sgn(sfz::vec3_i32(-7, 1, 2)) == sfz::vec3_i32(-1, 1, 1));
+	}
+
+	{
+		ASSERT_TRUE(sfz::sgn(sfz::vec4(5.0f, -5.0f, -2.0f, 3.0f)) == sfz::vec4(1.0f, -1.0f, -1.0f, 1.0f));
+		ASSERT_TRUE(sfz::sgn(sfz::vec4(-5.0f, 5.0, 29.0f, -9.0f)) == sfz::vec4(-1.0f, 1.0f, 1.0f, -1.0f));
+		ASSERT_TRUE(sfz::sgn(sfz::vec4_i32(6, -2, 2, -7)) == sfz::vec4_i32(1, -1, 1, -1));
+		ASSERT_TRUE(sfz::sgn(sfz::vec4_i32(-7, 1, 2, -4)) == sfz::vec4_i32(-1, 1, 1, -1));
+	}
+
+}
+
 UTEST(Math, saturate)
 {
 	ASSERT_TRUE(sfz::saturate(4.0f) == 1.0f);

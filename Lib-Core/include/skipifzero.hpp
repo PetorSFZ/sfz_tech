@@ -529,6 +529,11 @@ constexpr ArgT clamp(const ArgT& val, const LimitT& minVal, const LimitT& maxVal
 	return sfz::max(minVal, sfz::min(val, maxVal));
 }
 
+template<typename T> constexpr T sgn(T v) { return v < T(0) ? T(-1) : T(1); }
+template<typename T> constexpr Vec<T,2> sgn(Vec<T,2> v) { return Vec<T,2> (sgn(v.x), sgn(v.y)); }
+template<typename T> constexpr Vec<T,3> sgn(Vec<T,3> v) { return Vec<T,3> (sgn(v.x), sgn(v.y), sgn(v.z)); }
+template<typename T> constexpr Vec<T,4> sgn(Vec<T,4> v) { return Vec<T,4> (sgn(v.x), sgn(v.y), sgn(v.z), sgn(v.w)); }
+
 constexpr float saturate(float v) { return sfz::clamp(v, 0.0f, 1.0f); }
 constexpr int32_t saturate(int32_t v) { return sfz::clamp(v, 0, 255); }
 constexpr uint32_t saturate(uint32_t v) { return sfz::clamp(v, 0u, 255u); }
