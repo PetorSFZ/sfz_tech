@@ -332,7 +332,7 @@ void updateImgui(
 		io.NavInputs[ImGuiNavInput_DpadRight] = float(gpd.buttons[GPD_DPAD_RIGHT]);
 
 		// scroll / move window (w/ PadMenu) // e.g. Left Analog Stick Left/Right/Up/Down
-		vec2 leftStick = gpd.leftStick;
+		vec2 leftStick = sfz::applyDeadzone(gpd.leftStick, sfz::GPD_STICK_APPROX_DEADZONE);
 		io.NavInputs[ImGuiNavInput_LStickUp] = sfz::max(leftStick.y, 0.0f);
 		io.NavInputs[ImGuiNavInput_LStickDown] = sfz::abs(sfz::min(leftStick.y, 0.0f));
 		io.NavInputs[ImGuiNavInput_LStickLeft] = sfz::abs(sfz::min(leftStick.x, 0.0f));
