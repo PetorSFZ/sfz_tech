@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -24,16 +24,10 @@
 
 #include <skipifzero_allocators.hpp>
 
-#include "sfz/Context.hpp"
-#include "sfz/Logging.hpp"
-#include "sfz/memory/ArenaAllocator.hpp"
-
-using namespace sfz;
-
-UTEST(ArenaAllocator, stack_based_memory)
+UTEST(AllocatorArena, stack_based_memory)
 {
 	// Create default-constructed arena without memory
-	ArenaAllocator arena;
+	sfz::AllocatorArena arena;
 	ASSERT_TRUE(arena.capacity() == 0);
 	ASSERT_TRUE(arena.numBytesAllocated() == 0);
 	ASSERT_TRUE(arena.numPaddingBytes() == 0);
@@ -67,7 +61,6 @@ UTEST(ArenaAllocator, stack_based_memory)
 	ASSERT_TRUE(arena.numPaddingBytes() == 0);
 	ASSERT_TRUE(fourth == (uint32_t*)&memoryHeap[12]);
 
-	SFZ_INFO("ArenaAllocator Tests", "The warning below is expected, ignore");
 	void* fifth = arena.allocate(sfz_dbg(""), 1, 1);
 	ASSERT_TRUE(arena.numBytesAllocated() == 16);
 	ASSERT_TRUE(arena.numPaddingBytes() == 0);

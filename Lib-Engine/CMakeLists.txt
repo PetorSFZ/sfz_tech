@@ -251,8 +251,6 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/math/MathPrimitiveToStrings.hpp
 	${SRC_DIR}/sfz/math/MathPrimitiveToStrings.cpp
 
-	${SRC_DIR}/sfz/memory/ArenaAllocator.hpp
-	${SRC_DIR}/sfz/memory/ArenaAllocator.cpp
 	${SRC_DIR}/sfz/memory/DebugAllocator.hpp
 	${SRC_DIR}/sfz/memory/DebugAllocator.cpp
 
@@ -376,8 +374,6 @@ if(NOT hasParent OR PHANTASY_ENGINE_BUILD_TESTS)
 		${TESTS_DIR}/sfz/math/Quaternion_Tests.cpp
 
 		${TESTS_DIR}/sfz/rendering/HSV_Tests.cpp
-
-		${TESTS_DIR}/sfz/memory/ArenaAllocator_Tests.cpp
 
 		${TESTS_DIR}/sfz/strings/DynString_Tests.cpp
 

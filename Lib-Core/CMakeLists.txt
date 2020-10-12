@@ -125,6 +125,7 @@ if(NOT hasParent OR SFZ_CORE_BUILD_TESTS)
 
 	set(TEST_FILES
 		${TESTS_DIR}/LibCoreHeadersTestsMain.cpp
+		${TESTS_DIR}/skipifzero_allocators_tests.cpp
 		${TESTS_DIR}/skipifzero_arrays_tests.cpp
 		${TESTS_DIR}/skipifzero_hash_maps_tests.cpp
 		${TESTS_DIR}/skipifzero_ring_buffers_tests.cpp
