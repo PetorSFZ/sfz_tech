@@ -516,12 +516,52 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 			ImGui::Text("Samplers (%u):", pipeline.samplers.size());
 			ImGui::Indent(20.0f);
 			for (uint32_t j = 0; j < pipeline.samplers.size(); j++) {
-				const SamplerItem& item = pipeline.samplers[j];
-				ImGui::Text("- Register: %u -- Sampling: %s -- Wrapping: %s",
-					item.samplerRegister,
-					samplingModeToString(item.sampler.samplingMode),
-					wrappingModeToString(item.sampler.wrappingModeU));
-
+				SamplerItem& item = pipeline.samplers[j];
+				ImGui::Text("- Register: %u", item.samplerRegister);
+				ImGui::Indent(20.0f);
+				constexpr float samplerXOffset = 260.0f;
+				alignedEdit(" - Sampling Mode", samplerXOffset, [&](const char* name) {
+					ImGui::SetNextItemWidth(150.0f);
+					if (ImGui::BeginCombo(str128("##%s", name).str(), samplingModeToString(item.sampler.samplingMode))) {
+						if (ImGui::Selectable(samplingModeToString(ZG_SAMPLING_MODE_NEAREST), item.sampler.samplingMode == ZG_SAMPLING_MODE_NEAREST)) {
+							item.sampler.samplingMode = ZG_SAMPLING_MODE_NEAREST;
+						}
+						if (ImGui::Selectable(samplingModeToString(ZG_SAMPLING_MODE_TRILINEAR), item.sampler.samplingMode == ZG_SAMPLING_MODE_TRILINEAR)) {
+							item.sampler.samplingMode = ZG_SAMPLING_MODE_TRILINEAR;
+						}
+						if (ImGui::Selectable(samplingModeToString(ZG_SAMPLING_MODE_ANISOTROPIC), item.sampler.samplingMode == ZG_SAMPLING_MODE_ANISOTROPIC)) {
+							item.sampler.samplingMode = ZG_SAMPLING_MODE_ANISOTROPIC;
+						}
+						ImGui::EndCombo();
+					}
+					
+					
+				});
+				alignedEdit(" - Wrapping Mode U", samplerXOffset, [&](const char* name) {
+					ImGui::SetNextItemWidth(150.0f);
+					if (ImGui::BeginCombo(str128("##%s", name).str(), wrappingModeToString(item.sampler.wrappingModeU))) {
+						if (ImGui::Selectable(wrappingModeToString(ZG_WRAPPING_MODE_CLAMP), item.sampler.wrappingModeU == ZG_WRAPPING_MODE_CLAMP)) {
+							item.sampler.wrappingModeU = ZG_WRAPPING_MODE_CLAMP;
+						}
+						if (ImGui::Selectable(wrappingModeToString(ZG_WRAPPING_MODE_REPEAT), item.sampler.wrappingModeU == ZG_WRAPPING_MODE_REPEAT)) {
+							item.sampler.wrappingModeU = ZG_WRAPPING_MODE_REPEAT;
+						}
+						ImGui::EndCombo();
+					}
+				});
+				alignedEdit(" - Wrapping Mode V", samplerXOffset, [&](const char* name) {
+					ImGui::SetNextItemWidth(150.0f);
+					if (ImGui::BeginCombo(str128("##%s", name).str(), wrappingModeToString(item.sampler.wrappingModeV))) {
+						if (ImGui::Selectable(wrappingModeToString(ZG_WRAPPING_MODE_CLAMP), item.sampler.wrappingModeV == ZG_WRAPPING_MODE_CLAMP)) {
+							item.sampler.wrappingModeV = ZG_WRAPPING_MODE_CLAMP;
+						}
+						if (ImGui::Selectable(wrappingModeToString(ZG_WRAPPING_MODE_REPEAT), item.sampler.wrappingModeV == ZG_WRAPPING_MODE_REPEAT)) {
+							item.sampler.wrappingModeV = ZG_WRAPPING_MODE_REPEAT;
+						}
+						ImGui::EndCombo();
+					}
+				});
+				ImGui::Unindent(20.0f);
 			}
 			ImGui::Unindent(20.0f);
 		}
@@ -536,9 +576,15 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 		}
 		ImGui::Unindent(20.0f);
 
+		constexpr float xOffset = 300.0f;
+
 		// Print depth test
 		ImGui::Spacing();
-		ImGui::Text("Depth Test: %s", pipeline.depthTest ? "ENABLED" : "DISABLED");
+		alignedEdit("Depth Test", xOffset, [&](const char* name) {
+			ImGui::Checkbox(str128("##%s", name).str(), &pipeline.depthTest);
+			ImGui::SameLine();
+			ImGui::Text(" - %s", pipeline.depthTest ? "ENABLED" : "DISABLED");
+		});
 		if (pipeline.depthTest) {
 			ImGui::Indent(20.0f);
 			ImGui::Text("Depth function: %s", depthFuncToString(pipeline.depthFunc));
@@ -547,7 +593,11 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 
 		// Print culling info
 		ImGui::Spacing();
-		ImGui::Text("Culling: %s", pipeline.cullingEnabled ? "ENABLED" : "DISABLED");
+		alignedEdit("Culling", xOffset, [&](const char* name) {
+			ImGui::Checkbox(str128("##%s", name).str(), &pipeline.cullingEnabled);
+			ImGui::SameLine();
+			ImGui::Text(" - %s", pipeline.cullingEnabled ? "ENABLED" : "DISABLED");
+		});
 		if (pipeline.cullingEnabled) {
 			ImGui::Indent(20.0f);
 			ImGui::Text("Cull Front Face: %s", pipeline.cullFrontFacing ? "YES" : "NO");
@@ -559,7 +609,6 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 		ImGui::Spacing();
 		ImGui::Text("Depth Bias");
 		ImGui::Indent(20.0f);
-		constexpr float xOffset = 300.0f;
 		alignedEdit("Bias", xOffset, [&](const char* name) {
 			ImGui::SetNextItemWidth(165.0f);
 			ImGui::InputInt(str128("%s##render_%u", name, i), &pipeline.depthBias);
@@ -576,8 +625,12 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 
 		// Print wireframe rendering mode
 		ImGui::Spacing();
-		ImGui::Text("Wireframe Rendering: %s",
-			pipeline.wireframeRenderingEnabled ? "ENABLED" : "DISABLED");
+		alignedEdit("Wireframe Rendering", xOffset, [&](const char* name) {
+			ImGui::Checkbox(str128("##%s", name).str(), &pipeline.wireframeRenderingEnabled);
+			ImGui::SameLine();
+			ImGui::Text(" - %s", pipeline.wireframeRenderingEnabled ? "ENABLED" : "DISABLED");
+		});
+		
 
 		// Print blend mode
 		ImGui::Spacing();
