@@ -98,7 +98,7 @@ static void baseDraw(
 	}
 }
 
-// Context
+// ZeroUI Context + initialization
 // ------------------------------------------------------------------------------------------------
 
 static Context* globalCtx = nullptr;
@@ -107,52 +107,6 @@ Context& ctx()
 {
 	return *globalCtx;
 }
-
-// Widget
-// ------------------------------------------------------------------------------------------------
-
-void WidgetBase::incrementTimers(float deltaSecs)
-{
-	timeSinceFocusStartedSecs += deltaSecs;
-	timeSinceFocusEndedSecs += deltaSecs;
-	timeSinceActivationSecs += deltaSecs;
-}
-
-void WidgetBase::setFocused()
-{
-	if (!focused) {
-		timeSinceFocusStartedSecs = 0.0f;
-	}
-	focused = true;
-}
-
-void WidgetBase::setUnfocused()
-{
-	if (focused) {
-		timeSinceFocusEndedSecs = 0.0f;
-	}
-	focused = false;
-}
-
-void WidgetBase::setActivated()
-{
-	timeSinceActivationSecs = 0.0f;
-	activated = true;
-}
-
-void defaultPassthroughDrawFunc(
-	const WidgetCmd* cmd,
-	AttributeSet* attributes,
-	const mat34& transform,
-	float lagSinceSurfaceEndSecs)
-{
-	for (const WidgetCmd& child : cmd->children) {
-		child.draw(attributes, transform, lagSinceSurfaceEndSecs);
-	}
-}
-
-// Initialization functions
-// ------------------------------------------------------------------------------------------------
 
 void initZeroUI(sfz::Allocator* allocator, uint32_t surfaceTmpMemoryBytes, uint32_t oversampleFonts)
 {
@@ -204,10 +158,84 @@ void deinitZeroUI()
 	globalCtx = nullptr;
 }
 
+// Fonts
+// ------------------------------------------------------------------------------------------------
+
 void setFontTextureHandle(uint64_t handle)
 {
 	sfz_assert(globalCtx != nullptr);
 	internalDrawSetFontHandle(handle);
+}
+
+bool registerFont(const char* name, const char* path, float size, bool defaultFont)
+{
+	strID nameID = strID(name);
+	bool success = internalDrawAddFont(name, nameID, path, size);
+	if (defaultFont) {
+		sfz_assert_hard(success);
+		ctx().defaultAttributes.put(strID("default_font"), nameID);
+	}
+	return success;
+}
+
+// Attributes
+// ------------------------------------------------------------------------------------------------
+
+void registerDefaultAttribute(const char* attribName, const char* value)
+{
+	strID attribID = strID(attribName);
+	sfz_assert(ctx().defaultAttributes.get(attribID) == nullptr);
+	ctx().defaultAttributes.put(attribID, strID(value));
+}
+
+void registerDefaultAttribute(const char* attribName, Attribute attribute)
+{
+	strID attribID = strID(attribName);
+	sfz_assert(ctx().defaultAttributes.get(attribID) == nullptr);
+	ctx().defaultAttributes.put(attribID, attribute);
+}
+
+// Widget
+// ------------------------------------------------------------------------------------------------
+
+void WidgetBase::incrementTimers(float deltaSecs)
+{
+	timeSinceFocusStartedSecs += deltaSecs;
+	timeSinceFocusEndedSecs += deltaSecs;
+	timeSinceActivationSecs += deltaSecs;
+}
+
+void WidgetBase::setFocused()
+{
+	if (!focused) {
+		timeSinceFocusStartedSecs = 0.0f;
+	}
+	focused = true;
+}
+
+void WidgetBase::setUnfocused()
+{
+	if (focused) {
+		timeSinceFocusEndedSecs = 0.0f;
+	}
+	focused = false;
+}
+
+void WidgetBase::setActivated()
+{
+	timeSinceActivationSecs = 0.0f;
+	activated = true;
+}
+
+void defaultPassthroughDrawFunc(
+	const WidgetCmd* cmd,
+	AttributeSet* attributes,
+	const mat34& transform,
+	float lagSinceSurfaceEndSecs)
+{
+	for (const WidgetCmd& child : cmd->children) {
+		child.draw(attributes, transform, lagSinceSurfaceEndSecs);
+	}
 }
 
 void registerWidget(const char* name, const WidgetDesc& desc)
@@ -226,6 +254,9 @@ void registerWidget(const char* name, const WidgetDesc& desc)
 	type.archetypeStack.init(64, ctx().heapAllocator, sfz_dbg(""));
 }
 
+// Archetypes
+// ------------------------------------------------------------------------------------------------
+
 void registerArchetype(const char* widgetName, const char* archetypeName, DrawFunc* drawFunc)
 {
 	strID widgetID = strID(widgetName);
@@ -237,29 +268,23 @@ void registerArchetype(const char* widgetName, const char* archetypeName, DrawFu
 	archetype.drawFunc = drawFunc;
 }
 
-void registerDefaultAttribute(const char* attribName, const char* value)
+void pushArchetype(const char* widgetName, const char* archetypeName)
 {
-	strID attribID = strID(attribName);
-	sfz_assert(ctx().defaultAttributes.get(attribID) == nullptr);
-	ctx().defaultAttributes.put(attribID, strID(value));
+	strID widgetID = strID(widgetName);
+	WidgetType* type = ctx().widgetTypes.get(widgetID);
+	sfz_assert(type != nullptr);
+	strID archetypeID = strID(archetypeName);
+	sfz_assert(type->archetypes.get(archetypeID) != nullptr);
+	type->archetypeStack.add(archetypeID);
 }
 
-void registerDefaultAttribute(const char* attribName, Attribute attribute)
+void popArchetype(const char* widgetName)
 {
-	strID attribID = strID(attribName);
-	sfz_assert(ctx().defaultAttributes.get(attribID) == nullptr);
-	ctx().defaultAttributes.put(attribID, attribute);
-}
-
-bool registerFont(const char* name, const char* path, float size, bool defaultFont)
-{
-	strID nameID = strID(name);
-	bool success = internalDrawAddFont(name, nameID, path, size);
-	if (defaultFont) {
-		sfz_assert_hard(success);
-		ctx().defaultAttributes.put(strID("default_font"), nameID);
-	}
-	return success;
+	strID widgetID = strID(widgetName);
+	WidgetType* type = ctx().widgetTypes.get(widgetID);
+	sfz_assert(type != nullptr);
+	sfz_assert(type->archetypeStack.size() > 1);
+	type->archetypeStack.pop();
 }
 
 // Input & rendering functions
@@ -452,28 +477,6 @@ ImageViewConst getFontTexture()
 RenderDataView getRenderData()
 {
 	return internalDrawGetRenderDataView();
-}
-
-// Archetypes
-// ------------------------------------------------------------------------------------------------
-
-void pushArchetype(const char* widgetName, const char* archetypeName)
-{
-	strID widgetID = strID(widgetName);
-	WidgetType* type = ctx().widgetTypes.get(widgetID);
-	sfz_assert(type != nullptr);
-	strID archetypeID = strID(archetypeName);
-	sfz_assert(type->archetypes.get(archetypeID) != nullptr);
-	type->archetypeStack.add(archetypeID);
-}
-
-void popArchetype(const char* widgetName)
-{
-	strID widgetID = strID(widgetName);
-	WidgetType* type = ctx().widgetTypes.get(widgetID);
-	sfz_assert(type != nullptr);
-	sfz_assert(type->archetypeStack.size() > 1);
-	type->archetypeStack.pop();
 }
 
 // Base container widget
