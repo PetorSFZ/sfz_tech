@@ -280,6 +280,7 @@ endfunction()
 # cgltf: ${CGLTF_FOUND}, ${CGLTF_INCLUDE_DIRS}
 # stb: ${STB_FOUND}, ${STB_INCLUDE_DIRS}
 # dear-imgui: ${IMGUI_FOUND}, ${IMGUI_INCLUDE_DIRS}, ${IMGUI_LIBRARIES}
+# fontstash: ${FONTSTASH_FOUND}, ${FONTSTASH_INCLUDE_DIRS}
 # imgui_plot: ${IMGUI_PLOT_FOUND}, ${IMGUI_PLOT_INCLUDE_DIRS}, ${IMGUI_PLOT_LIBRARIES}
 # nativefiledialog: ${NATIVEFILEDIALOG_FOUND}, ${NATIVEFILEDIALOG_INCLUDE_DIRS}, ${NATIVEFILEDIALOG_LIBRARIES}
 # sajson: ${SAJSON_FOUND}, ${SAJSON_INCLUDE_DIRS}
@@ -301,6 +302,11 @@ function(phAddBundledExternals)
 	set(IMGUI_FOUND ${IMGUI_FOUND} PARENT_SCOPE)
 	set(IMGUI_INCLUDE_DIRS ${IMGUI_INCLUDE_DIRS} PARENT_SCOPE)
 	set(IMGUI_LIBRARIES ${IMGUI_LIBRARIES} PARENT_SCOPE)
+
+	message("-- [PhantasyEngine]: Adding fontstash target")
+	add_subdirectory(${SFZ_TECH_ROOT}/externals/fontstash ${CMAKE_BINARY_DIR}/fontstash)
+	set(FONTSTASH_FOUND ${FONTSTASH_FOUND} PARENT_SCOPE)
+	set(FONTSTASH_INCLUDE_DIRS ${FONTSTASH_INCLUDE_DIRS} PARENT_SCOPE)
 
 	message("-- [PhantasyEngine]: Adding imgui_plot target")
 	add_subdirectory(${SFZ_TECH_ROOT}/externals/imgui-plot ${CMAKE_BINARY_DIR}/imgui-plot)
