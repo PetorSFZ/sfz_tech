@@ -276,6 +276,20 @@ function(phAddZeroGImGui)
 
 endfunction()
 
+# Adds sfz_tech's ZeroUI, the following variables will be set:
+# ${ZEROUI_FOUND}, ${ZEROUI_INCLUDE_DIRS} and ${ZEROUI_LIBRARIES}
+function(phAddZeroUI)
+
+	set(ZEROUI_PATH ${SFZ_TECH_ROOT}/Lib-ZeroUI)
+	message("-- [PhantasyEngine]: Adding ZeroUI from: \"${ZEROUI_PATH}\"")
+	add_subdirectory(${ZEROUI_PATH} ${CMAKE_BINARY_DIR}/ZeroUI)
+
+	set(ZEROUI_FOUND ${ZEROUI_FOUND} PARENT_SCOPE)
+	set(ZEROUI_INCLUDE_DIRS ${ZEROUI_INCLUDE_DIRS} PARENT_SCOPE)
+	set(ZEROUI_LIBRARIES ${ZEROUI_LIBRARIES} PARENT_SCOPE)
+
+endfunction()
+
 # Adds the remaining bundled externals
 # cgltf: ${CGLTF_FOUND}, ${CGLTF_INCLUDE_DIRS}
 # stb: ${STB_FOUND}, ${STB_INCLUDE_DIRS}
