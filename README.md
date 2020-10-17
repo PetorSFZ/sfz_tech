@@ -1,5 +1,7 @@
 # sfz_tech
 
+__sfz_tech uses [git-lfs](https://git-lfs.github.com/), don't forget to install it before cloning this repo.__
+
 `sfz_tech` is the mega repository for all of [skipifzero](http://www.skipifzero.com/)'s (i.e. Peter "PetorSFZ" Hillerström's) base technology. In other words, everything that is not an actual application or product. This includes various helper libraries, a game engine, a graphics API, and a number of third-party dependencies used by these technologies.
 
 Why a mega repository? Well, simply because it makes it way easier for me to version things. Instead of having one version number for each individual project, I have one for all projects combined. If I make a breaking change in one project, I have to fix all incompatibilities with all other projects in the repo. My projects which then depend on one or several projects in this repo just have to keep track of one version number instead of several.
