@@ -78,7 +78,10 @@ void CSMain(
 
 	// Pixel's position and normal
 	float3 p = pos;
-	float3 n = normalize(normal);
+	float3 n = float3(0.0, 0.0, -1.0); // Normal towards camera if none specified
+	if (!(normal.x == 0.0 && normal.y == 0.0 && normal.z == 0.0)) {
+		n = normalize(normal);
+	}
 
 	float3 v = normalize(-p); // to view
 	float nDotV = dot(n, v);
