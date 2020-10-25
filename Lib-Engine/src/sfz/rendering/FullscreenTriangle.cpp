@@ -31,9 +31,9 @@ using sfz::vec3;
 // ------------------------------------------------------------------------------------------------
 
 static constexpr Vertex TRIANGLE_VERTICES[] = {
-	Vertex(vec3(-1.0f, -1.0f, 0.5f), vec3(0.0f), vec2(0.0f, 1.0f)), // Bottom left
-	Vertex(vec3(3.0f, -1.0f, 0.5f), vec3(0.0f), vec2(2.0f, 1.0f)), // Bottom right
-	Vertex(vec3(-1.0f, 3.0f, 0.5f), vec3(0.0f), vec2(0.0f, -1.0f)), // Top lef
+	Vertex(vec3(-1.0f, -1.0f, 0.0f), vec3(0.0f), vec2(0.0f, 1.0f)), // Bottom left
+	Vertex(vec3(3.0f, -1.0f, 0.0f), vec3(0.0f), vec2(2.0f, 1.0f)), // Bottom right
+	Vertex(vec3(-1.0f, 3.0f, 0.0f), vec3(0.0f), vec2(0.0f, -1.0f)), // Top lef
 };
 static constexpr uint32_t NUM_TRIANGLE_VERTICES = 3;
 
@@ -45,13 +45,18 @@ static constexpr uint32_t NUM_TRIANGLE_INDICES = 3;
 // Function that returns a mesh containing a "fullscreen" triangle
 // ------------------------------------------------------------------------------------------------
 
-sfz::Mesh createFullscreenTriangle(sfz::Allocator* allocator) noexcept
+sfz::Mesh createFullscreenTriangle(sfz::Allocator* allocator, float clipSpaceDepth)
 {
 	sfz::Mesh mesh;
 
 	// Vertices
 	mesh.vertices.init(NUM_TRIANGLE_VERTICES, allocator, sfz_dbg(""));
 	mesh.vertices.add(TRIANGLE_VERTICES, NUM_TRIANGLE_VERTICES);
+
+	// Set clip space depth
+	for (Vertex& v : mesh.vertices) {
+		v.pos.z = clipSpaceDepth;
+	}
 
 	// Indices
 	mesh.indices.init(NUM_TRIANGLE_INDICES, allocator, sfz_dbg(""));
