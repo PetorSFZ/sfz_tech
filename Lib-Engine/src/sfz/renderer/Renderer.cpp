@@ -1017,6 +1017,36 @@ void Renderer::stageDrawTrianglesIndexed(uint32_t firstIndex, uint32_t numIndice
 	CHECK_ZG mState->groupCmdList.drawTrianglesIndexed(firstIndex, numIndices);
 }
 
+void Renderer::stageUnorderedBarrierAll() noexcept
+{
+	sfz_assert(inStageInputMode());
+	CHECK_ZG mState->groupCmdList.unorderedBarrier();
+}
+
+void Renderer::stageUnorderedBarrierStaticBuffer(const char* staticBufferName) noexcept
+{
+	sfz_assert(inStageInputMode());
+	
+	// Get static buffer item
+	strID bufferID = strID(staticBufferName);
+	StaticBufferItem* item = mState->configurable.staticBuffers.get(bufferID);
+	sfz_assert(item != nullptr);
+
+	CHECK_ZG mState->groupCmdList.unorderedBarrier(item->buffer);
+}
+
+void Renderer::stageUnorderedBarrierStaticTexture(const char* staticBufferName) noexcept
+{
+	sfz_assert(inStageInputMode());
+
+	// Get static texture item
+	strID textureID = strID(staticBufferName);
+	StaticTextureItem* item = mState->configurable.staticTextures.get(textureID);
+	sfz_assert(item != nullptr);
+
+	CHECK_ZG mState->groupCmdList.unorderedBarrier(item->texture);
+}
+
 vec3_i32 Renderer::stageGetComputeGroupDims() noexcept
 {
 	sfz_assert(inStageInputMode());

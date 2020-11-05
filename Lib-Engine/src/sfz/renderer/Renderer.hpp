@@ -260,6 +260,12 @@ public:
 	void stageDrawTriangles(uint32_t startVertex, uint32_t numVertices) noexcept;
 	void stageDrawTrianglesIndexed(uint32_t firstIndex, uint32_t numIndices) noexcept;
 
+	// Inserts an unordered barrier. Basically says that all writes to an unordered resource (or
+	// all of them) must be finished before the resource is read from again.
+	void stageUnorderedBarrierAll() noexcept;
+	void stageUnorderedBarrierStaticBuffer(const char* staticBufferName) noexcept;
+	void stageUnorderedBarrierStaticTexture(const char* staticBufferName) noexcept;
+
 	// Gets the group dimensions of the compute pipeline associated with the currently active stage.
 	vec3_i32 stageGetComputeGroupDims() noexcept;
 
