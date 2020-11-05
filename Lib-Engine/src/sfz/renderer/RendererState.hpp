@@ -128,6 +128,22 @@ struct StaticTextureItem final {
 	void buildTexture(vec2_i32 windowRes) noexcept;
 };
 
+// Static buffers
+// ------------------------------------------------------------------------------------------------
+
+struct StaticBufferItem final {
+
+	// The buffer
+	zg::Buffer buffer;
+	uint32_t elementSizeBytes = 0;
+	uint32_t maxNumElements = 0;
+
+	// Parsed information
+	strID name;
+
+	void buildBuffer() noexcept;
+};
+
 // Streaming buffers
 // ------------------------------------------------------------------------------------------------
 
@@ -174,6 +190,11 @@ struct BoundTexture final {
 	strID textureName;
 };
 
+struct BoundBuffer final {
+	uint32_t bufferRegister = ~0u;
+	strID bufferName;
+};
+
 struct Stage final {
 
 	Array<PerFrameData<ConstantBufferMemory>> constantBuffers;
@@ -193,6 +214,7 @@ struct Stage final {
 	} compute;
 	ArrayLocal<BoundTexture, ZG_MAX_NUM_TEXTURES> boundTextures;
 	ArrayLocal<BoundTexture, ZG_MAX_NUM_UNORDERED_TEXTURES> boundUnorderedTextures;
+	ArrayLocal<BoundBuffer, ZG_MAX_NUM_UNORDERED_BUFFERS> boundUnorderedBuffers;
 
 	void rebuildFramebuffer(HashMap<strID, StaticTextureItem>& staticTextures) noexcept;
 };
@@ -238,6 +260,9 @@ struct RendererConfigurableState final {
 
 	// Static textures
 	HashMap<strID, StaticTextureItem> staticTextures;
+
+	// Static buffers
+	HashMap<strID, StaticBufferItem> staticBuffers;
 
 	// Streaming buffers
 	HashMap<strID, StreamingBufferItem> streamingBuffers;

@@ -425,6 +425,31 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	}
 
 
+	// Static buffers
+	{
+		// Get number of static buffers to create and allocate memory for their handles
+		JsonNode staticBuffersNode = root.accessMap("static_buffers");
+		const uint32_t numStaticBuffers = staticBuffersNode.arrayLength();
+		configurable.staticBuffers.init(numStaticBuffers, state.allocator, sfz_dbg(""));
+
+		// Parse information about each static buffer
+		for (uint32_t i = 0; i < numStaticBuffers; i++) {
+
+			JsonNode bufNode = staticBuffersNode.accessArray(i);
+			StaticBufferItem bufItem = {};
+			str256 name = CHECK_JSON bufNode.accessMap("name").valueStr256();
+			sfz_assert(name != "default");
+			bufItem.name = strID(name);
+			bufItem.elementSizeBytes =
+				uint32_t(CHECK_JSON bufNode.accessMap("element_size_bytes").valueInt());
+			bufItem.maxNumElements =
+				uint32_t(CHECK_JSON bufNode.accessMap("max_num_elements").valueInt());
+
+			configurable.staticBuffers.put(bufItem.name, std::move(bufItem));
+		}
+	}
+
+
 	// Streaming buffers
 	JsonNode streamingBuffersNode = root.accessMap("streaming_buffers");
 	if (streamingBuffersNode.isValid()) {
@@ -546,6 +571,21 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 						stage.boundUnorderedTextures.add(boundTex);
 					}
 				}
+
+				// Bound unordered buffers
+				if (stageNode.accessMap("bound_unordered_buffers").isValid()) {
+					JsonNode boundBufsNode = stageNode.accessMap("bound_unordered_buffers");
+					uint32_t numBoundBuffers = boundBufsNode.arrayLength();
+
+					for (uint32_t i = 0; i < numBoundBuffers; i++) {
+						JsonNode bufNode = boundBufsNode.accessArray(i);
+						BoundBuffer boundBuf;
+						boundBuf.bufferRegister = CHECK_JSON bufNode.accessMap("register").valueInt();
+						str256 bufName = CHECK_JSON bufNode.accessMap("buffer").valueStr256();
+						boundBuf.bufferName = strID(bufName);
+						stage.boundUnorderedBuffers.add(boundBuf);
+					}
+				}
 			}
 		}
 	}
@@ -567,6 +607,12 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	for (auto pair : configurable.staticTextures) {
 		StaticTextureItem& item = pair.value;
 		item.buildTexture(state.windowRes);
+	}
+
+	// Create static buffers
+	for (auto pair : configurable.staticBuffers) {
+		StaticBufferItem& item = pair.value;
+		item.buildBuffer();
 	}
 
 	// Create streaming buffers

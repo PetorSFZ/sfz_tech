@@ -879,6 +879,14 @@ void Renderer::stageDrawMesh(strID meshId, const MeshRegisters& registers) noexc
 		commonBindings.addUnorderedTexture(boundTex.textureRegister, 0, texItem->texture);
 	}
 
+	// Bound unordered buffers
+	for (const BoundBuffer& boundBuf : mState->inputEnabled.stage->boundUnorderedBuffers) {
+		StaticBufferItem* bufItem = mState->configurable.staticBuffers.get(boundBuf.bufferName);
+		sfz_assert(bufItem != nullptr);
+		commonBindings.addUnorderedBuffer(
+			boundBuf.bufferRegister, bufItem->maxNumElements, bufItem->elementSizeBytes, bufItem->buffer);
+	}
+
 	// Draw all mesh components
 	for (MeshComponent& comp : meshPtr->components) {
 
@@ -1088,6 +1096,14 @@ void Renderer::stageDispatchCompute(
 		StaticTextureItem* texItem = mState->configurable.staticTextures.get(boundTex.textureName);
 		sfz_assert(texItem != nullptr);
 		commonBindings.addUnorderedTexture(boundTex.textureRegister, 0, texItem->texture);
+	}
+
+	// Bound unordered buffers
+	for (const BoundBuffer& boundBuf : mState->inputEnabled.stage->boundUnorderedBuffers) {
+		StaticBufferItem* bufItem = mState->configurable.staticBuffers.get(boundBuf.bufferName);
+		sfz_assert(bufItem != nullptr);
+		commonBindings.addUnorderedBuffer(
+			boundBuf.bufferRegister, bufItem->maxNumElements, bufItem->elementSizeBytes, bufItem->buffer);
 	}
 
 	// Set pipeline bindings

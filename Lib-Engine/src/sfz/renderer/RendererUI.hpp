@@ -57,7 +57,7 @@ private:
 	void renderGeneralTab(RendererState& state) noexcept;
 	void renderPresentStageGroupsTab(RendererConfigurableState& state) noexcept;
 	void renderPipelinesTab(RendererState& state) noexcept;
-	void renderStaticTexturesTab(RendererConfigurableState& state) noexcept;
+	void renderStaticMemoryTab(RendererConfigurableState& state) noexcept;
 	void renderStreamingBuffersTab(RendererConfigurableState& state) noexcept;
 	void renderTexturesTab(RendererState& state) noexcept;
 	void renderMeshesTab(RendererState& state) noexcept;
