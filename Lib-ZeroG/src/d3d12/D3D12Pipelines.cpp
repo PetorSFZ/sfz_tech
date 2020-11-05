@@ -749,6 +749,9 @@ static ZgResult createRootSignature(
 		rootSignatureOut.pushConstants.add(mapping);
 	}
 
+	// The offset into the dynamic table
+	uint32_t currentTableOffset = 0;
+
 	// Add dynamic constant buffers(non-push constants) mappings
 	uint32_t dynamicConstBuffersFirstRegister = ~0u; // TODO: THIS IS PROBABLY BAD
 	for (const ZgConstantBufferBindingDesc& cbuffer : bindings.constBuffers) {
@@ -761,44 +764,78 @@ static ZgResult createRootSignature(
 		// Add to constant buffer mappings
 		D3D12ConstantBufferMapping mapping;
 		mapping.bufferRegister = cbuffer.bufferRegister;
-		mapping.tableOffset = rootSignatureOut.constBuffers.size();
+		mapping.tableOffset = currentTableOffset;
 		mapping.sizeInBytes = cbuffer.sizeInBytes;
 		rootSignatureOut.constBuffers.add(mapping);
+
+		// Increment table offset
+		currentTableOffset += 1;
 	}
 
-	// Add unordered buffer mappings
-	uint32_t dynamicUnorderedBuffersFirstRegister = ~0u; // TODO: THIS IS PROBABLY BAD
+	// Note: Both unordered textures and buffers uses the same unordered register range. This means
+	//       that we need to combine them so that we get the registers in the right order in the range.
+	struct UnorderedBindingDesc {
+		bool isBuffer = false;
+		uint32_t unorderedRegister = 0;
+	};
+
+	constexpr uint32_t MAX_NUM_UNORDERED_RESOURCES =
+		ZG_MAX_NUM_UNORDERED_BUFFERS + ZG_MAX_NUM_UNORDERED_TEXTURES;
+	ArrayLocal<UnorderedBindingDesc, MAX_NUM_UNORDERED_RESOURCES> unorderedResources;
+
 	for (const ZgUnorderedBufferBindingDesc& buffer : bindings.unorderedBuffers) {
-
-		if (dynamicUnorderedBuffersFirstRegister == ~0u) {
-			dynamicUnorderedBuffersFirstRegister = buffer.unorderedRegister;
-		}
-
-		// Add to unordered buffer mappings
-		D3D12UnorderedBufferMapping mapping;
-		mapping.unorderedRegister = buffer.unorderedRegister;
-		mapping.tableOffset =
-			rootSignatureOut.constBuffers.size() +
-			rootSignatureOut.unorderedBuffers.size();
-		rootSignatureOut.unorderedBuffers.add(mapping);
+		UnorderedBindingDesc desc;
+		desc.isBuffer = true;
+		desc.unorderedRegister = buffer.unorderedRegister;
+		unorderedResources.add(desc);
+	}
+	for (const ZgUnorderedTextureBindingDesc& texture : bindings.unorderedTextures) {
+		UnorderedBindingDesc desc;
+		desc.isBuffer = false;
+		desc.unorderedRegister = texture.unorderedRegister;
+		unorderedResources.add(desc);
 	}
 
-	// Add unordered texture mappings
-	// Actually sort of an unordered buffer, so lets pretend it is
-	for (const ZgUnorderedTextureBindingDesc& texture : bindings.unorderedTextures) {
+	// Ensure all unordered resources are sorted by the registers
+	unorderedResources.sort([](const auto& lhs, const auto& rhs) {
+		return lhs.unorderedRegister < rhs.unorderedRegister;
+	});
 
-		if (dynamicUnorderedBuffersFirstRegister == ~0u) {
-			dynamicUnorderedBuffersFirstRegister = texture.unorderedRegister;
+
+	// The first and last unordered register used
+	uint32_t firstDynamicUnorderedRegister = UINT32_MAX;
+	uint32_t lastDynamicUnorderedRegister = 0;
+
+	// Add unordered resources
+	for (const UnorderedBindingDesc& desc : unorderedResources) {
+
+		firstDynamicUnorderedRegister = sfz::min(firstDynamicUnorderedRegister, desc.unorderedRegister);
+		lastDynamicUnorderedRegister = sfz::max(lastDynamicUnorderedRegister, desc.unorderedRegister);
+
+		// Add to unordered buffer/texture mappings
+		if (desc.isBuffer) {
+			D3D12UnorderedBufferMapping mapping;
+			mapping.unorderedRegister = desc.unorderedRegister;
+			mapping.tableOffset = currentTableOffset;
+			rootSignatureOut.unorderedBuffers.add(mapping);
+		}
+		else {
+			// Add to unordered texture mappings
+			D3D12UnorderedTextureMapping mapping;
+			mapping.unorderedRegister = desc.unorderedRegister;
+			mapping.tableOffset = currentTableOffset;
+			rootSignatureOut.unorderedTextures.add(mapping);
 		}
 
-		// Add to unordered texture mappings
-		D3D12UnorderedTextureMapping mapping;
-		mapping.unorderedRegister = texture.unorderedRegister;
-		mapping.tableOffset =
-			rootSignatureOut.constBuffers.size() +
-			rootSignatureOut.unorderedBuffers.size() +
-			rootSignatureOut.unorderedTextures.size();
-		rootSignatureOut.unorderedTextures.add(mapping);
+		// Increment table offset
+		currentTableOffset += 1;
+	}
+
+	// Sort of assume we have a coherent range
+	// TODO: Can probably be removed, but make sure that's fine first or if we need to make some logic changes
+	const uint32_t numUnorderedRegisters = lastDynamicUnorderedRegister - firstDynamicUnorderedRegister + 1;
+	if (!rootSignatureOut.unorderedBuffers.isEmpty() || !rootSignatureOut.unorderedTextures.isEmpty()) {
+		sfz_assert(numUnorderedRegisters == rootSignatureOut.unorderedBuffers.size() + rootSignatureOut.unorderedTextures.size());
 	}
 
 	// Add texture mappings
@@ -811,12 +848,11 @@ static ZgResult createRootSignature(
 		// Add to texture mappings
 		D3D12TextureMapping mapping;
 		mapping.textureRegister = texDesc.textureRegister;
-		mapping.tableOffset =
-			rootSignatureOut.constBuffers.size() +
-			rootSignatureOut.unorderedBuffers.size() +
-			rootSignatureOut.unorderedTextures.size() +
-			rootSignatureOut.textures.size();
+		mapping.tableOffset = currentTableOffset;
 		rootSignatureOut.textures.add(mapping);
+
+		// Increment table offset
+		currentTableOffset += 1;
 	}
 
 	// Add dynamic table parameter if we need to
@@ -842,8 +878,8 @@ static ZgResult createRootSignature(
 		if (!rootSignatureOut.unorderedBuffers.isEmpty() || !rootSignatureOut.unorderedTextures.isEmpty()) {
 			CD3DX12_DESCRIPTOR_RANGE1 range;
 			range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV,
-				rootSignatureOut.unorderedBuffers.size() + rootSignatureOut.unorderedTextures.size(),
-				dynamicUnorderedBuffersFirstRegister);
+				numUnorderedRegisters,
+				firstDynamicUnorderedRegister);
 			ranges.add(std::move(range));
 		}
 		if (!rootSignatureOut.textures.isEmpty()) {
