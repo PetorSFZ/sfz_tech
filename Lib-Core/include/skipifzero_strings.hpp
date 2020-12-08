@@ -268,7 +268,7 @@ struct StringLocal final {
 		mRawStr[newLen] = '\0';
 	}
 
-	bool endsWith(const char* ending)
+	bool endsWith(const char* ending) const
 	{
 		const uint32_t len = this->size();
 		const uint32_t endingLen = uint32_t(strnlen(ending, N));
