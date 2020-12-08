@@ -323,6 +323,7 @@ UTEST(RingBuffer, state_methods)
 }
 
 #ifndef __EMSCRIPTEN__
+#ifdef NDEBUG
 UTEST(RingBuffer, multi_threading)
 {
 	sfz::StandardAllocator allocator;
@@ -518,4 +519,5 @@ UTEST(RingBuffer, multi_threading)
 		}
 	}
 }
+#endif
 #endif

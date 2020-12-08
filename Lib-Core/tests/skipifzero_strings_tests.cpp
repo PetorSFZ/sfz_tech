@@ -88,6 +88,43 @@ UTEST(StringLocal, comparison_operators)
 	ASSERT_TRUE(str > "aaa");
 }
 
+UTEST(StringLocal, trim)
+{
+	sfz::str96 str1 = "\n\t  \tcool\n \t ";
+	str1.trim();
+	ASSERT_TRUE(str1 == "cool");
+
+	sfz::str96 str2 = "foo\n \t ";
+	str2.trim();
+	ASSERT_TRUE(str2 == "foo");
+
+	sfz::str96 str3 = "\n\t  \tbar";
+	str3.trim();
+	ASSERT_TRUE(str3 == "bar");
+
+	sfz::str96 str4 = "";
+	str4.trim();
+	ASSERT_TRUE(str4 == "");
+
+	sfz::str96 str5 = "\n\t  \t";
+	str5.trim();
+	ASSERT_TRUE(str5 == "");
+}
+
+UTEST(StringLocal, ends_with)
+{
+	sfz::str96 str1 = "";
+	ASSERT_TRUE(str1.endsWith(""));
+	ASSERT_TRUE(!str1.endsWith("a"));
+	ASSERT_TRUE(!str1.endsWith(" "));
+
+	sfz::str96 str2 = "cool.png";
+	ASSERT_TRUE(str2.endsWith(""));
+	ASSERT_TRUE(!str2.endsWith("a"));
+	ASSERT_TRUE(str2.endsWith(".png"));
+	ASSERT_TRUE(str2.endsWith("cool.png"));
+}
+
 // String hashing tests
 // ------------------------------------------------------------------------------------------------
 

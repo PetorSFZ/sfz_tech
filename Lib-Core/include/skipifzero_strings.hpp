@@ -232,6 +232,57 @@ struct StringLocal final {
 		}
 	}
 
+	void trim()
+	{
+		const uint32_t len = this->size();
+		if (len == 0) return;
+
+		uint32_t firstNonWhitespace = 0;
+		bool nonWhitespaceFound = false;
+		for (uint32_t i = 0; i < len; i++) {
+			char c = mRawStr[i];
+			if (!(c == ' ' || c == '\t' || c == '\n')) {
+				nonWhitespaceFound = true;
+				firstNonWhitespace = i;
+				break;
+			}
+		}
+
+		if (!nonWhitespaceFound) {
+			this->clear();
+			return;
+		}
+
+		uint32_t lastNonWhitespace = len - 1;
+		for (uint32_t i = len; i > 0; i--) {
+			char c = mRawStr[i - 1];
+			if (!(c == ' ' || c == '\t' || c == '\n')) {
+				lastNonWhitespace = i - 1;
+				break;
+			}
+		}
+
+		const uint32_t newLen = lastNonWhitespace - firstNonWhitespace + 1;
+		if (newLen == len) return;
+		memmove(mRawStr, mRawStr + firstNonWhitespace, newLen);
+		mRawStr[newLen] = '\0';
+	}
+
+	bool endsWith(const char* ending)
+	{
+		const uint32_t len = this->size();
+		const uint32_t endingLen = uint32_t(strnlen(ending, N));
+		if (endingLen > len) return false;
+
+		uint32_t endingIdx = 0;
+		for (uint32_t i = len - endingLen; i < len; i++) {
+			if (ending[endingIdx] != mRawStr[i]) return false;
+			endingIdx += 1;
+		}
+
+		return true;
+	}
+
 	// Operators
 	// --------------------------------------------------------------------------------------------
 
