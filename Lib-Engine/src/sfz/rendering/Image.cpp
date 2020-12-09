@@ -60,11 +60,11 @@ static void sfz_free_wrapper(void* ptr);
 // C allocation wrapper for stb_image
 // ------------------------------------------------------------------------------------------------
 
-static sfz::Allocator* static_allocator = nullptr;
+static sfz::Allocator* staticAllocator = nullptr;
 
 static void* sfz_malloc_wrapper(size_t size)
 {
-	return static_allocator->allocate(sfz_dbg("stb_image"), size, 32);
+	return staticAllocator->allocate(sfz_dbg("stb_image"), size, 32);
 }
 
 static void* sfz_realloc_sized_wrapper(void* ptr, size_t oldSize, size_t newSize)
@@ -77,7 +77,7 @@ static void* sfz_realloc_sized_wrapper(void* ptr, size_t oldSize, size_t newSize
 
 static void sfz_free_wrapper(void* ptr)
 {
-	static_allocator->deallocate(ptr);
+	staticAllocator->deallocate(ptr);
 }
 
 namespace sfz {
@@ -104,6 +104,17 @@ static void padRgb(Array<uint8_t>& dst, const uint8_t* src, int32_t w, int32_t h
 			dst[dstOffs + x * 4 + 1] = src[srcOffs + x * 3 + 1];
 			dst[dstOffs + x * 4 + 2] = src[srcOffs + x * 3 + 2];
 			dst[dstOffs + x * 4 + 3] = uint8_t(0xFF);
+		}
+	}
+}
+
+static void padRgbFloat(vec4* dstImg, const vec3* srcImg, int32_t w, int32_t h) noexcept
+{
+	for (int32_t y = 0; y < h; y++) {
+		vec4* dstRow = dstImg + w * y;
+		const vec3* srcRow = srcImg + w * y;
+		for (int32_t x = 0; x < w; x++) {
+			dstRow[x] = vec4(srcRow[x], 1.0f);
 		}
 	}
 }
@@ -142,7 +153,7 @@ Image Image::allocate(int32_t width, int32_t height, ImageType type, Allocator* 
 
 void setLoadImageAllocator(Allocator* allocator)
 {
-	static_allocator = allocator;
+	staticAllocator = allocator;
 }
 
 Image loadImage(const char* basePath, const char* fileName) noexcept
@@ -152,7 +163,7 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 		SFZ_WARNING("PhantasyEngine", "Invalid path to image");
 		return Image();
 	}
-	if (static_allocator == nullptr) {
+	if (staticAllocator == nullptr) {
 		SFZ_WARNING("PhantasyEngine",
 			"Allocator not specified, call setLoadImageAllocator() first");
 		return Image();
@@ -161,9 +172,20 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 	// Concatenate path
 	str320 path("%s%s", basePath, fileName);
 
-	// Loading image
-	int width, height, numChannels;
-	uint8_t* img = stbi_load(path, &width, &height, &numChannels, 0);
+	// Load image
+	const bool isHDR = path.endsWith(".hdr");
+	int width = 0, height = 0, numChannels = 0;
+	int channelSize = 0;
+	uint8_t* img = nullptr;
+	if (isHDR) {
+		float* floatImg = stbi_loadf(path, &width, &height, &numChannels, 0);
+		img = reinterpret_cast<uint8_t*>(floatImg);
+		channelSize = sizeof(float);
+	}
+	else {
+		img = stbi_load(path, &width, &height, &numChannels, 0);
+		channelSize = sizeof(uint8_t);
+	}
 
 	// Error checking
 	if (img == nullptr) {
@@ -179,38 +201,45 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 	}
 
 	// Create image from data
+	const uint32_t numBytes = uint32_t(width * height * numChannels * channelSize);
 	Image tmp;
-	tmp.rawData.init(uint32_t(width * height * numChannels), static_allocator, sfz_dbg(""));
+	tmp.rawData.init(numBytes, staticAllocator, sfz_dbg(""));
 	tmp.width = width;
 	tmp.height = height;
-	switch (numChannels) {
-	case 1:
-		tmp.rawData.add(img, uint32_t(width * height * numChannels));
-		tmp.type = ImageType::R_U8;
-		tmp.bytesPerPixel = 1;
-		break;
-
-	case 2:
-		tmp.rawData.add(img, uint32_t(width * height * numChannels));
-		tmp.type = ImageType::RG_U8;
-		tmp.bytesPerPixel = 2;
-		break;
-
-	case 3:
-		padRgb(tmp.rawData, img, width, height);
-		tmp.type = ImageType::RGBA_U8;
-		tmp.bytesPerPixel = 4;
-		break;
-
-	case 4:
-		tmp.rawData.add(img, uint32_t(width * height * numChannels));
-		tmp.type = ImageType::RGBA_U8;
-		tmp.bytesPerPixel = 4;
-		break;
-
-	default:
-		// Should never happen
-		sfz_assert_hard(false);
+	tmp.bytesPerPixel = numChannels * channelSize;
+	if (isHDR) {
+		sfz_assert_hard(numChannels == 3);
+		tmp.rawData.add(uint8_t(0), uint32_t(width * height * sizeof(vec4)));
+		padRgbFloat(
+			reinterpret_cast<vec4*>(tmp.rawData.data()),
+			reinterpret_cast<const vec3*>(img),
+			width,
+			height);
+		tmp.type = ImageType::RGBA_F32;
+		tmp.bytesPerPixel = 4 * channelSize;
+	}
+	else {
+		switch (numChannels) {
+		case 1:
+			tmp.rawData.add(img, numBytes);
+			tmp.type = ImageType::R_U8;
+			break;
+		case 2:
+			tmp.rawData.add(img, numBytes);
+			tmp.type = ImageType::RG_U8;
+			break;
+		case 3:
+			padRgb(tmp.rawData, img, width, height);
+			tmp.type = ImageType::RGBA_U8;
+			tmp.bytesPerPixel = 4 * channelSize;
+			break;
+		case 4:
+			tmp.rawData.add(img, numBytes);
+			tmp.type = ImageType::RGBA_U8;
+			break;
+		default:
+			sfz_assert_hard(false);
+		}
 	}
 
 	// Free temp memory used by stb_image and return image

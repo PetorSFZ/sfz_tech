@@ -81,7 +81,6 @@ void StaticTextureItem::buildTexture(vec2_i32 windowRes) noexcept
 void StaticBufferItem::buildBuffer() noexcept
 {
 	const uint64_t sizeBytes = this->elementSizeBytes * this->maxNumElements;
-	const char* nameStr = this->name.str();
 	CHECK_ZG this->buffer.create(sizeBytes, ZG_MEMORY_TYPE_DEVICE, false, this->name.str());
 }
 

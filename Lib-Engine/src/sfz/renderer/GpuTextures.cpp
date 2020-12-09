@@ -64,16 +64,18 @@ void generateMipmapSpecific(
 {
 	const T* srcImg = reinterpret_cast<const T*>(prevLevel.rawData);
 	T* dstImg = reinterpret_cast<T*>(currLevel.rawData.data());
+
 	for (int32_t y = 0; y < currLevel.height; y++) {
+		T* dstRow = dstImg + y * currLevel.width;
+		const T* srcRow0 = srcImg + ((y * 2) + 0) * prevLevel.width;
+		const T* srcRow1 = srcImg + ((y * 2) + 1) * prevLevel.width;
+
 		for (int32_t x = 0; x < currLevel.width; x++) {
-
-			T* dstPixelPtr = dstImg + y * currLevel.width + x;
-			const T* srcPixelPtrRow0 = srcImg + ((y * 2) + 0) * prevLevel.width + (x * 2);
-			const T* srcPixelPtrRow1 = srcImg + ((y * 2) + 1) * prevLevel.width + (x * 2);
-
-			*dstPixelPtr = averager(
-				srcPixelPtrRow0[0], srcPixelPtrRow0[1],
-				srcPixelPtrRow1[0], srcPixelPtrRow1[1]);
+			const T* srcPixelRow0 = srcRow0 + (x * 2);
+			const T* srcPixelRow1 = srcRow1 + (x * 2);
+			dstRow[x] = averager(
+				srcPixelRow0[0], srcPixelRow0[1],
+				srcPixelRow1[0], srcPixelRow1[1]);
 		}
 	}
 }
@@ -102,11 +104,16 @@ static void generateMipmap(const ImageViewConst& prevLevel, Image& currLevel) no
 			return vec4_u8((vec4_u32(a) + vec4_u32(b) + vec4_u32(c) + vec4_u32(d)) / 4u);
 		});
 		break;
+
+	case ImageType::RGBA_F32:
+		generateMipmapSpecific<vec4>(prevLevel, currLevel, [](vec4 a, vec4 b, vec4 c, vec4 d) {
+			return (a + b + c + d) * (1.0f / 4.0f);
+		});
+		break;
 	
 	case ImageType::UNDEFINED:
 	case ImageType::R_F32:
 	case ImageType::RG_F32:
-	case ImageType::RGBA_F32:
 	default:
 		sfz_assert_hard(false);
 		break;
