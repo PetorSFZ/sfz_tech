@@ -55,6 +55,7 @@ constexpr uint32_t RENDERER_MAX_NUM_UNORDERED_TEXTURES = 16;
 struct Binding final {
 	strID resourceID;
 	uint32_t shaderRegister = ~0u;
+	uint32_t mipLevel = 0; // Only used for unordered textures
 };
 
 struct PipelineBindings final {
@@ -65,7 +66,21 @@ struct PipelineBindings final {
 
 	PipelineBindings& addConstBuffer(const char* name, uint32_t shaderRegister)
 	{
-		constBuffers.add({ strID(name), shaderRegister });
+		return addConstBuffer(strID(name), shaderRegister);
+	}
+	PipelineBindings& addConstBuffer(strID id, uint32_t shaderRegister)
+	{
+		constBuffers.add({ id, shaderRegister });
+		return *this;
+	}
+
+	PipelineBindings& addUnorderedBuffer(const char* name, uint32_t shaderRegister)
+	{
+		return addUnorderedBuffer(strID(name), shaderRegister);
+	}
+	PipelineBindings& addUnorderedBuffer(strID id, uint32_t shaderRegister)
+	{
+		unorderedBuffers.add({ id, shaderRegister });
 		return *this;
 	}
 
@@ -73,10 +88,19 @@ struct PipelineBindings final {
 	{
 		return addTexture(strID(name), shaderRegister);
 	}
-
 	PipelineBindings& addTexture(strID id, uint32_t shaderRegister)
 	{
 		textures.add({ id, shaderRegister });
+		return *this;
+	}
+
+	PipelineBindings& addUnorderedTexture(const char* name, uint32_t shaderRegister, uint32_t mipLevel)
+	{
+		return addUnorderedTexture(strID(name), shaderRegister, mipLevel);
+	}
+	PipelineBindings& addUnorderedTexture(strID id, uint32_t shaderRegister, uint32_t mipLevel)
+	{
+		unorderedTextures.add({ id, shaderRegister, mipLevel });
 		return *this;
 	}
 };
@@ -271,6 +295,8 @@ public:
 
 	// Runs a compute pipeline with the specified number of groups.
 	void stageDispatchCompute(
+		uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) noexcept;
+	void stageDispatchComputeNoAutoBindings(
 		uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) noexcept;
 
 	// Ends user-input for the specified stage.

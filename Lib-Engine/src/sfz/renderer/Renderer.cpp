@@ -970,8 +970,21 @@ void Renderer::stageSetBindings(const PipelineBindings& bindings) noexcept
 	// TODO: Unordered buffers
 	sfz_assert(bindings.unorderedBuffers.size() == 0);
 
-	// TODO: Unordered textures
-	sfz_assert(bindings.unorderedTextures.size() == 0);
+	for (const Binding& binding : bindings.unorderedTextures) {
+		
+		TextureItem* dynItem = mState->textures.get(binding.resourceID);
+		StaticTextureItem* staticItem = mState->configurable.staticTextures.get(binding.resourceID);
+		sfz_assert(dynItem != nullptr || staticItem != nullptr);
+		sfz_assert(!(dynItem == nullptr && staticItem == nullptr));
+
+		zg::Texture* tex = nullptr;
+		if (dynItem != nullptr) tex = &dynItem->texture;
+		else if (staticItem != nullptr) tex = &staticItem->texture;
+		sfz_assert(tex != nullptr);
+
+		sfz_assert(binding.shaderRegister != ~0u);
+		zgBindings.addUnorderedTexture(binding.shaderRegister, binding.mipLevel, *tex);
+	}
 
 	CHECK_ZG mState->groupCmdList.setPipelineBindings(zgBindings);
 }
@@ -1108,6 +1121,19 @@ void Renderer::stageDispatchCompute(
 
 	// Set pipeline bindings
 	CHECK_ZG mState->groupCmdList.setPipelineBindings(commonBindings);
+
+	// Issue dispatch
+	CHECK_ZG mState->groupCmdList.dispatchCompute(groupCountX, groupCountY, groupCountZ);
+}
+
+void Renderer::stageDispatchComputeNoAutoBindings(
+	uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) noexcept
+{
+	sfz_assert(inStageInputMode());
+	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_COMPUTE);
+	sfz_assert(groupCountX > 0);
+	sfz_assert(groupCountY > 0);
+	sfz_assert(groupCountZ > 0);
 
 	// Issue dispatch
 	CHECK_ZG mState->groupCmdList.dispatchCompute(groupCountX, groupCountY, groupCountZ);

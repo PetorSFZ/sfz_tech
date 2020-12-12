@@ -769,12 +769,52 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 			ImGui::Text("Samplers (%u):", pipeline.samplers.size());
 			ImGui::Indent(20.0f);
 			for (uint32_t j = 0; j < pipeline.samplers.size(); j++) {
-				const SamplerItem& item = pipeline.samplers[j];
-				ImGui::Text("- Register: %u -- Sampling: %s -- Wrapping: %s",
-					item.samplerRegister,
-					samplingModeToString(item.sampler.samplingMode),
-					wrappingModeToString(item.sampler.wrappingModeU));
-
+				SamplerItem& item = pipeline.samplers[j];
+				ImGui::Text("- Register: %u", item.samplerRegister);
+				ImGui::Indent(20.0f);
+				constexpr float samplerXOffset = 260.0f;
+				alignedEdit(" - Sampling Mode", samplerXOffset, [&](const char* name) {
+					ImGui::SetNextItemWidth(150.0f);
+					if (ImGui::BeginCombo(str128("##%s", name).str(), samplingModeToString(item.sampler.samplingMode))) {
+						if (ImGui::Selectable(samplingModeToString(ZG_SAMPLING_MODE_NEAREST), item.sampler.samplingMode == ZG_SAMPLING_MODE_NEAREST)) {
+							item.sampler.samplingMode = ZG_SAMPLING_MODE_NEAREST;
+						}
+						if (ImGui::Selectable(samplingModeToString(ZG_SAMPLING_MODE_TRILINEAR), item.sampler.samplingMode == ZG_SAMPLING_MODE_TRILINEAR)) {
+							item.sampler.samplingMode = ZG_SAMPLING_MODE_TRILINEAR;
+						}
+						if (ImGui::Selectable(samplingModeToString(ZG_SAMPLING_MODE_ANISOTROPIC), item.sampler.samplingMode == ZG_SAMPLING_MODE_ANISOTROPIC)) {
+							item.sampler.samplingMode = ZG_SAMPLING_MODE_ANISOTROPIC;
+						}
+						ImGui::EndCombo();
+					}
+					
+					
+				});
+				alignedEdit(" - Wrapping Mode U", samplerXOffset, [&](const char* name) {
+					ImGui::SetNextItemWidth(150.0f);
+					if (ImGui::BeginCombo(str128("##%s", name).str(), wrappingModeToString(item.sampler.wrappingModeU))) {
+						if (ImGui::Selectable(wrappingModeToString(ZG_WRAPPING_MODE_CLAMP), item.sampler.wrappingModeU == ZG_WRAPPING_MODE_CLAMP)) {
+							item.sampler.wrappingModeU = ZG_WRAPPING_MODE_CLAMP;
+						}
+						if (ImGui::Selectable(wrappingModeToString(ZG_WRAPPING_MODE_REPEAT), item.sampler.wrappingModeU == ZG_WRAPPING_MODE_REPEAT)) {
+							item.sampler.wrappingModeU = ZG_WRAPPING_MODE_REPEAT;
+						}
+						ImGui::EndCombo();
+					}
+				});
+				alignedEdit(" - Wrapping Mode V", samplerXOffset, [&](const char* name) {
+					ImGui::SetNextItemWidth(150.0f);
+					if (ImGui::BeginCombo(str128("##%s", name).str(), wrappingModeToString(item.sampler.wrappingModeV))) {
+						if (ImGui::Selectable(wrappingModeToString(ZG_WRAPPING_MODE_CLAMP), item.sampler.wrappingModeV == ZG_WRAPPING_MODE_CLAMP)) {
+							item.sampler.wrappingModeV = ZG_WRAPPING_MODE_CLAMP;
+						}
+						if (ImGui::Selectable(wrappingModeToString(ZG_WRAPPING_MODE_REPEAT), item.sampler.wrappingModeV == ZG_WRAPPING_MODE_REPEAT)) {
+							item.sampler.wrappingModeV = ZG_WRAPPING_MODE_REPEAT;
+						}
+						ImGui::EndCombo();
+					}
+				});
+				ImGui::Unindent(20.0f);
 			}
 			ImGui::Unindent(20.0f);
 		}
