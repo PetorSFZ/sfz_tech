@@ -667,8 +667,8 @@ void Console::render() noexcept
 
 	// Render console windows
 	renderLogWindow(*mState);
-	renderPerformanceWindow(*mState, false);
 	renderConfigWindow(*mState);
+	renderPerformanceWindow(*mState, false);
 	getRenderer().renderImguiUI();
 	getAudioEngine().renderDebugUI();
 
@@ -683,12 +683,12 @@ void Console::render() noexcept
 		ImGui::DockBuilderSetNodeSize(dockSpaceId, ImGui::GetMainViewport()->Size);
 
 		ImGuiID dockMain = dockSpaceId;
-		ImGuiID dockLeft = ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Left, 0.6f, NULL, &dockMain);
-		//ImGuiID dockBottom = ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Down, 0.5f, NULL, &dockMain);
+		ImGuiID dockLeft = ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Left, 0.5f, NULL, &dockMain);
+		ImGuiID dockBottom = ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Down, 0.5f, NULL, &dockMain);
 
-		ImGui::DockBuilderDockWindow("Log", dockLeft);
-		ImGui::DockBuilderDockWindow("Performance", dockLeft);
+		ImGui::DockBuilderDockWindow("Log", dockBottom);
 		ImGui::DockBuilderDockWindow("Config", dockLeft);
+		ImGui::DockBuilderDockWindow("Performance", dockLeft);
 		ImGui::DockBuilderDockWindow("Renderer", dockLeft);
 		ImGui::DockBuilderDockWindow("Audio", dockLeft);
 
