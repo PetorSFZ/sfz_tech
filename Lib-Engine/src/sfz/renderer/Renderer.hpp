@@ -274,7 +274,7 @@ public:
 	// Draws a mesh in the currently input active stage
 	//
 	// The specified registers will get data if available
-	void stageDrawMesh(strID meshId, const MeshRegisters& registers) noexcept;
+	void stageDrawMesh(strID meshId, const MeshRegisters& registers, bool skipBindings = false) noexcept;
 
 	void stageSetBindings(const PipelineBindings& bindings) noexcept;
 
