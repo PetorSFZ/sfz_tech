@@ -967,9 +967,35 @@ void Renderer::stageSetBindings(const PipelineBindings& bindings) noexcept
 		zgBindings.addTexture(binding.shaderRegister, *tex);
 	}
 
-	// TODO: Unordered buffers
-	sfz_assert(bindings.unorderedBuffers.size() == 0);
+	// Unordered buffers
+	for (const Binding& binding : bindings.unorderedBuffers) {
 
+		StreamingBufferItem* streamingItem =
+			mState->configurable.streamingBuffers.get(binding.resourceID);
+		StaticBufferItem* staticItem =
+			mState->configurable.staticBuffers.get(binding.resourceID);
+		sfz_assert(streamingItem != nullptr || staticItem != nullptr);
+		sfz_assert(!(streamingItem != nullptr && staticItem != nullptr));
+
+		zg::Buffer* buffer = nullptr;
+		uint32_t elementSizeBytes = 0;
+		uint32_t maxNumElements = 0;
+		if (streamingItem != nullptr) {
+			buffer = &streamingItem->data.data(mState->currentFrameIdx).deviceBuffer;
+			elementSizeBytes = streamingItem->maxNumElements * streamingItem->elementSizeBytes;
+			maxNumElements = streamingItem->maxNumElements * streamingItem->maxNumElements;
+		}
+		else if (staticItem != nullptr) {
+			buffer = &staticItem->buffer;
+			elementSizeBytes = staticItem->elementSizeBytes;
+			maxNumElements = staticItem->maxNumElements;
+		}
+
+		sfz_assert(binding.shaderRegister != ~0u);
+		zgBindings.addUnorderedBuffer(binding.shaderRegister, maxNumElements, elementSizeBytes, *buffer);
+	}
+
+	// Unordered textures
 	for (const Binding& binding : bindings.unorderedTextures) {
 		
 		TextureItem* dynItem = mState->textures.get(binding.resourceID);
