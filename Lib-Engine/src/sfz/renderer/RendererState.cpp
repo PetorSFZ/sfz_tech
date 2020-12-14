@@ -54,6 +54,9 @@ void StaticTextureItem::buildTexture(vec2_i32 windowRes) noexcept
 	}
 	this->width = tmpWidth;
 	this->height = tmpHeight;
+	
+	sfz_assert(numMipmaps > 0);
+	sfz_assert(numMipmaps <= ZG_MAX_NUM_MIPMAPS);
 
 	// Allocate texture
 	const bool isDepth = format == ZG_TEXTURE_FORMAT_DEPTH_F32;
@@ -69,7 +72,7 @@ void StaticTextureItem::buildTexture(vec2_i32 windowRes) noexcept
 		createInfo.optimalClearValue = optimalClear;
 		createInfo.width = width;
 		createInfo.height = height;
-		createInfo.numMipmaps = 1;
+		createInfo.numMipmaps = numMipmaps;
 		createInfo.debugName = this->name.str();
 		CHECK_ZG this->texture.create(createInfo);
 	}

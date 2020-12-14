@@ -841,30 +841,38 @@ void RendererUI::renderStaticMemoryTab(RendererConfigurableState& state) noexcep
 
 			constexpr float offset = 220.0f;
 
+			// Mipmaps
+			sfz_assert(texItem.numMipmaps != 0);
+			if (texItem.numMipmaps > 1) {
+				alignedEdit(" - Num mipmaps", offset, [&](const char*) {
+					ImGui::Text("%u", texItem.numMipmaps);
+				});
+			}
+
 			// Clear value
 			if (texItem.clearValue != 0.0f) {
 				alignedEdit(" - Clear", offset, [&](const char*) {
 					ImGui::Text("%.1f", texItem.clearValue);
-					});
+				});
 			}
 
 			// Resolution type
 			if (texItem.resolutionIsFixed) {
 				alignedEdit(" - Fixed resolution", offset, [&](const char*) {
 					ImGui::Text("%i x %i", texItem.resolutionFixed.x, texItem.resolutionFixed.y);
-					});
+				});
 			}
 			else {
 				if (texItem.resolutionScaleSetting != nullptr) {
 					alignedEdit(" - Resolution scale", offset, [&](const char*) {
 						ImGui::Text("%.2f  --  Setting: \"%s\"",
 							texItem.resolutionScale, texItem.resolutionScaleSetting->key().str());
-						});
+					});
 				}
 				else {
 					alignedEdit(" - Resolution scale", offset, [&](const char*) {
 						ImGui::Text("%.2f", texItem.resolutionScale);
-						});
+					});
 				}
 			}
 

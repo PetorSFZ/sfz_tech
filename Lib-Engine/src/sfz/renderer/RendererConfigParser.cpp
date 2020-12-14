@@ -391,6 +391,13 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			sfz_assert(clearValue == 0.0f || clearValue == 1.0f);
 			texItem.clearValue = clearValue;
 
+			// Num mipmaps
+			if (texNode.accessMap("num_mipmaps").isValid()) {
+				texItem.numMipmaps = uint32_t(CHECK_JSON texNode.accessMap("num_mipmaps").valueInt());
+				sfz_assert(texItem.numMipmaps > 0);
+				sfz_assert(texItem.numMipmaps <= ZG_MAX_NUM_MIPMAPS);
+			}
+
 			// Resolution type
 			texItem.resolutionIsFixed = !(texNode.accessMap("resolution_scale").isValid() ||
 				texNode.accessMap("resolution_scale_setting").isValid());

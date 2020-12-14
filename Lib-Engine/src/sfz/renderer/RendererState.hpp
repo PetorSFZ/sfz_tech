@@ -114,6 +114,7 @@ struct StaticTextureItem final {
 	zg::Texture texture;
 	uint32_t width = 0;
 	uint32_t height = 0;
+	uint32_t numMipmaps = 1;
 
 	// Parsed information
 	strID name;
