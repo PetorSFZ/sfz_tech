@@ -261,8 +261,6 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/renderer/GpuMesh.cpp
 	${SRC_DIR}/sfz/renderer/GpuTextures.hpp
 	${SRC_DIR}/sfz/renderer/GpuTextures.cpp
-	${SRC_DIR}/sfz/renderer/PbrLUTs.hpp
-	${SRC_DIR}/sfz/renderer/PbrLUTs.cpp
 	${SRC_DIR}/sfz/renderer/Renderer.hpp
 	${SRC_DIR}/sfz/renderer/Renderer.cpp
 	${SRC_DIR}/sfz/renderer/RendererConfigParser.hpp
