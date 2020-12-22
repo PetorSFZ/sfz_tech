@@ -62,6 +62,7 @@ struct ZgContextState final {
 
 	std::mutex contextMutex; // Access to the context is synchronized
 	bool debugMode = false;
+	bool dredAutoBreadcrumbs = false;
 
 	// DXC compiler DLLs, lazily loaded if needed
 	ComPtr<IDxcLibrary> dxcLibrary;
@@ -176,6 +177,22 @@ static void logDebugMessages(ZgContextState& state) noexcept
 	state.infoQueue->ClearStoredMessages();
 }
 
+// Not actually a static, forward declared in D3D12Common.hpp and called by the CHECK_D3D12 macros.
+void dredCallback(HRESULT res)
+{
+	// Handle DRED errors
+	if (ctxState->dredAutoBreadcrumbs && res == DXGI_ERROR_DEVICE_REMOVED) {
+		ComPtr<ID3D12DeviceRemovedExtendedData> dred;
+		CHECK_D3D12 ctxState->device->QueryInterface(IID_PPV_ARGS(&dred));
+		D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT dredAutoBreadcrumbsOutput = {};
+		D3D12_DRED_PAGE_FAULT_OUTPUT dredPageFaultOutput = {};
+		CHECK_D3D12 dred->GetAutoBreadcrumbsOutput(&dredAutoBreadcrumbsOutput);
+		CHECK_D3D12 dred->GetPageFaultAllocationOutput(&dredPageFaultOutput);
+		// TODO: Process and log DRED somehow??? For now, can at least open debugger here.
+		sfz_assert(false);
+	}
+}
+
 static ZgResult init(const ZgContextInitSettings& settings) noexcept
 {
 	// Initialize members
@@ -230,6 +247,20 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 			debugInterface->SetEnableGPUBasedValidation(TRUE);
 			ZG_INFO("D3D12 GPU based debug mode enabled");
 		}
+	}
+
+	// Enable DRED Auto-Breadcrumbs if requested
+	ComPtr<ID3D12DeviceRemovedExtendedDataSettings> dredSettings;
+	if (settings.d3d12.enableDredAutoBreadcrumbs) {
+		if (D3D12_FAIL(D3D12GetDebugInterface(IID_PPV_ARGS(&dredSettings)))) {
+			return ZG_ERROR_GENERIC;
+		}
+
+		// Turn on auto-breadcrumbs and page fault reporting.
+		dredSettings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+		dredSettings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+
+		ctxState->dredAutoBreadcrumbs = true;
 	}
 
 	// Create DXGI factory

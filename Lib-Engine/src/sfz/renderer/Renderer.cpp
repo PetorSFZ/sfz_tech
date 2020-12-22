@@ -73,10 +73,6 @@ bool Renderer::init(
 
 	// Settings
 	GlobalConfig& cfg = getGlobalConfig();
-	Setting* debugModeSetting =
-		cfg.sanitizeBool("Renderer", "OnStartupZeroG_DebugMode", true, false);
-	Setting* debugModeGpuBasedSetting =
-		cfg.sanitizeBool("Renderer", "OnStartupZeroG_DebugModeGpuBased", true, false);
 	mState->vsync =
 		cfg.sanitizeBool("Renderer", "vsync", true, false);
 	mState->flushPresentQueueEachFrame =
@@ -90,8 +86,6 @@ bool Renderer::init(
 	bool zgInitSuccess = initializeZeroG(
 		window,
 		allocator,
-		debugModeSetting->boolValue(),
-		debugModeGpuBasedSetting->boolValue(),
 		mState->vsync->boolValue());
 	if (!zgInitSuccess) {
 		this->destroy();

@@ -155,6 +155,8 @@ inline bool utf8ToWide(WCHAR* wideOut, uint32_t numWideChars, const char* utf8In
 #define D3D12_FAIL(result) \
 	(!CheckD3D12Impl(__FILE__, __LINE__).succeeded((result)))
 
+void dredCallback(HRESULT res);
+
 struct CheckD3D12Impl final {
 	const char* file = nullptr;
 	int line = 0;
@@ -166,6 +168,7 @@ struct CheckD3D12Impl final {
 	HRESULT operator% (HRESULT result) noexcept
 	{
 		if (SUCCEEDED(result)) return result;
+		dredCallback(result);
 		logWrapper(file, line, ZG_LOG_LEVEL_ERROR,
 			"D3D12 error: %s\n", resultToString(result));
 		return result;
@@ -174,6 +177,7 @@ struct CheckD3D12Impl final {
 	bool succeeded(HRESULT result) noexcept
 	{
 		if (SUCCEEDED(result)) return true;
+		dredCallback(result);
 		logWrapper(file, line, ZG_LOG_LEVEL_ERROR,
 			"D3D12 error: %s\n", resultToString(result));
 		return false;

@@ -61,8 +61,6 @@ struct CheckZgImpl final {
 bool initializeZeroG(
 	SDL_Window* window,
 	sfz::Allocator* allocator,
-	bool debugMode,
-	bool debugModeGpuBased,
 	bool vsync) noexcept;
 
 void* getNativeHandle(SDL_Window* window) noexcept;

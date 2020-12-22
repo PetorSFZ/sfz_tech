@@ -21,6 +21,7 @@
 
 #include <SDL_syswm.h>
 
+#include "sfz/config/GlobalConfig.hpp"
 #include <sfz/Logging.hpp>
 
 namespace sfz {
@@ -122,8 +123,6 @@ bool CheckZgImpl::operator% (ZgResult result) noexcept
 bool initializeZeroG(
 	SDL_Window* window,
 	sfz::Allocator* allocator,
-	bool debugMode,
-	bool debugModeGpuBased,
 	bool vsync) noexcept
 {
 	SFZ_INFO("GenRenderer", "Initializing ZeroG");
@@ -131,6 +130,16 @@ bool initializeZeroG(
 	// Log compiled and linked version of ZeroG
 	SFZ_INFO("GenRenderer", "ZeroG compiled API version: %u, linked version: %u",
 		ZG_COMPILED_API_VERSION, zgApiLinkedVersion());
+
+	GlobalConfig& cfg = getGlobalConfig();
+	Setting* debugModeSetting =
+		cfg.sanitizeBool("Renderer", "OnStartupZeroG_DebugMode", true, false);
+	Setting* debugModeGpuBasedSetting =
+		cfg.sanitizeBool("Renderer", "OnStartupZeroG_DebugModeGpuBased", true, false);
+	Setting* softwareRendererSetting =
+		cfg.sanitizeBool("Renderer", "OnStartupZeroG_SoftwareRenderer", true, false);
+	Setting* d3d12DredAutoSetting =
+		cfg.sanitizeBool("Renderer", "OnStartupZeroG_DredAutoBreadcrumbs", true, false);
 
 	// Init settings
 	ZgContextInitSettings initSettings = {};
@@ -140,8 +149,10 @@ bool initializeZeroG(
 	initSettings.logger = getPhantasyEngineZeroGLogger();
 	initSettings.allocator = createZeroGAllocatorWrapper(allocator);
 	initSettings.nativeHandle = getNativeHandle(window);
-	initSettings.d3d12.debugMode = debugMode ? ZG_TRUE : ZG_FALSE;
-	initSettings.d3d12.debugModeGpuBased = debugModeGpuBased ? ZG_TRUE : ZG_FALSE;
+	initSettings.d3d12.debugMode = debugModeSetting->boolValue() ? ZG_TRUE : ZG_FALSE;
+	initSettings.d3d12.debugModeGpuBased = debugModeGpuBasedSetting->boolValue() ? ZG_TRUE : ZG_FALSE;
+	initSettings.d3d12.useSoftwareRenderer = softwareRendererSetting->boolValue() ? ZG_TRUE : ZG_FALSE;
+	initSettings.d3d12.enableDredAutoBreadcrumbs = d3d12DredAutoSetting->boolValue() ? ZG_TRUE : ZG_FALSE;
 
 	// Initialize ZeroG
 	bool initSuccess = CHECK_ZG zgContextInit(&initSettings);

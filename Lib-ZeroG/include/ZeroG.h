@@ -100,7 +100,7 @@ ZG_ENUM(ZgBool) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 32;
+static const uint32_t ZG_COMPILED_API_VERSION = 33;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -2004,6 +2004,10 @@ ZG_STRUCT(ZgContextInitSettingsD3D12) {
 
 	// [Optional]
 	ZgBool useSoftwareRenderer;
+
+	// [Optional] Enable DRED (Device Removed Extended Data) Auto-Breadcrumbs
+	// See: https://docs.microsoft.com/en-us/windows/win32/direct3d12/use-dred
+	ZgBool enableDredAutoBreadcrumbs;
 };
 
 ZG_STRUCT(ZgContextInitSettingsVulkan) {
