@@ -145,11 +145,11 @@ public:
 		
 		// Calculate offsets, allocate memory and clear it
 		const uint32_t alignment = 32;
-		const uint32_t slotsOffset = roundUpAligned(sizeof(T) * capacity, alignment);
+		const uint32_t slotsOffset = uint32_t(roundUpAligned(sizeof(T) * capacity, alignment));
 		const uint32_t freeIndicesOffset =
-			slotsOffset + roundUpAligned(sizeof(PoolSlot) * capacity, alignment);
+			slotsOffset + uint32_t(roundUpAligned(sizeof(PoolSlot) * capacity, alignment));
 		const uint32_t numBytesNeeded =
-			freeIndicesOffset + roundUpAligned(sizeof(uint32_t) * capacity, alignment);
+			freeIndicesOffset + uint32_t(roundUpAligned(sizeof(uint32_t) * capacity, alignment));
 		uint8_t* memory = reinterpret_cast<uint8_t*>(
 			allocator->allocate(allocDbg, numBytesNeeded, alignment));
 		memset(memory, 0, numBytesNeeded);
