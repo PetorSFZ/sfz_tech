@@ -135,7 +135,6 @@ public:
 
 	void init(uint32_t capacity, Allocator* allocator, DbgInfo allocDbg)
 	{
-		static_assert(std::is_trivially_destructible_v<T>, "Pool values must be trivially destructible");
 		sfz_assert(capacity != 0); // We don't support resize, so this wouldn't make sense.
 		sfz_assert(capacity <= POOL_MAX_CAPACITY);
 		sfz_assert(alignof(T) <= 32);
