@@ -25,6 +25,7 @@ The modules in sfz_core are:
 * `skipifzero_hash_maps.hpp`: Hash functions, hash maps (replacements for `std::unordered_map`, etc).
 * `skipifzero_image_view.hpp`: Types used to specify the view of an image.
 * `skipifzero_math.hpp`: Linear algebra math primitives and functions.
+* `skipifzero_pool.hpp`: Datastructure which is somewhat of a mix between an array, an allocator and the entity allocation part of an ECS system.
 * `skipifzero_ring_buffers.hpp`: Ring buffers (replacements for `std::deque` and such)
 * `skipifzero_smart_pointers.hpp`: Smart pointers (replacements for `std::unique_ptr`, etc)
 * `skipifzero_strings.hpp`: Strings (replacements for `std::string`, etc).
