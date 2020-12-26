@@ -131,7 +131,6 @@ public:
 		const ImageViewConst& fontTexture,
 		sfz::Allocator* allocator) noexcept;
 	bool loadConfiguration(const char* jsonConfigPath) noexcept;
-	void loadDummyConfiguration() noexcept;
 	void swap(Renderer& other) noexcept;
 	void destroy() noexcept;
 

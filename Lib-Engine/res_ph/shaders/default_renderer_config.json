@@ -190,6 +190,9 @@
 		}
 	],
 
+	"static_buffers": [
+	],
+
 	"present_stage_groups": [
 		{
 			"group_name": "GBuffer + Cascaded Shadows",
