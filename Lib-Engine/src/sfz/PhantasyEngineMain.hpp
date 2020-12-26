@@ -66,6 +66,9 @@ struct InitOptions final {
 	// Location of Ini file
 	IniLocation iniLocation = IniLocation::NEXT_TO_EXECUTABLE;
 
+	// Maximum number of each type of resource
+	uint32_t maxNumResources = 4096;
+
 	// User specified pointer which will be passed as an argument to the specified functions.
 	void* userPtr = nullptr;
 

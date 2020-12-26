@@ -125,26 +125,27 @@ bool initializeZeroG(
 	sfz::Allocator* allocator,
 	bool vsync) noexcept
 {
-	SFZ_INFO("GenRenderer", "Initializing ZeroG");
-
 	// Log compiled and linked version of ZeroG
-	SFZ_INFO("GenRenderer", "ZeroG compiled API version: %u, linked version: %u",
+	SFZ_INFO("ZeroG", "ZeroG compiled API version: %u, linked version: %u",
 		ZG_COMPILED_API_VERSION, zgApiLinkedVersion());
 
 	GlobalConfig& cfg = getGlobalConfig();
 	Setting* debugModeSetting =
-		cfg.sanitizeBool("Renderer", "OnStartupZeroG_DebugMode", true, false);
+		cfg.sanitizeBool("ZeroG", "OnStartup_DebugMode", true, false);
 	Setting* debugModeGpuBasedSetting =
-		cfg.sanitizeBool("Renderer", "OnStartupZeroG_DebugModeGpuBased", true, false);
+		cfg.sanitizeBool("ZeroG", "OnStartup_DebugModeGpuBased", true, false);
 	Setting* softwareRendererSetting =
-		cfg.sanitizeBool("Renderer", "OnStartupZeroG_SoftwareRenderer", true, false);
+		cfg.sanitizeBool("ZeroG", "OnStartup_SoftwareRenderer", true, false);
 	Setting* d3d12DredAutoSetting =
-		cfg.sanitizeBool("Renderer", "OnStartupZeroG_DredAutoBreadcrumbs", true, false);
+		cfg.sanitizeBool("ZeroG", "OnStartup_DredAutoBreadcrumbs", true, false);
+
+	int w = 0, h = 0;
+	SDL_GL_GetDrawableSize(window, &w, &h);
 
 	// Init settings
 	ZgContextInitSettings initSettings = {};
-	initSettings.width = 512;
-	initSettings.height = 512;
+	initSettings.width = uint32_t(w);
+	initSettings.height = uint32_t(h);
 	initSettings.vsync = vsync ? ZG_TRUE : ZG_FALSE;
 	initSettings.logger = getPhantasyEngineZeroGLogger();
 	initSettings.allocator = createZeroGAllocatorWrapper(allocator);

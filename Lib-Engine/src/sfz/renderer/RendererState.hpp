@@ -225,17 +225,6 @@ struct StageGroup final {
 	Array<Stage> stages;
 };
 
-// Texture plus info
-// ------------------------------------------------------------------------------------------------
-
-struct TextureItem final {
-	zg::Texture texture;
-	ZgTextureFormat format = ZG_TEXTURE_FORMAT_UNDEFINED;
-	uint32_t width = 0;
-	uint32_t height = 0;
-	uint32_t numMipmaps = 0;
-};
-
 // RendererState
 // ------------------------------------------------------------------------------------------------
 
@@ -305,7 +294,6 @@ struct RendererState final {
 	uint64_t lastRetrievedFrameTimeFrameIdx = ~0ull;
 
 	// GPU resources
-	HashMap<strID, TextureItem> textures;
 	HashMap<strID, GpuMesh> meshes;
 
 	// UI

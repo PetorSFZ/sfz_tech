@@ -1,5 +1,4 @@
 // Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
-//               For other contributors see Contributors.txt
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -19,47 +18,53 @@
 
 #pragma once
 
+#include <skipifzero.hpp>
+#include <skipifzero_image_view.hpp>
+#include <skipifzero_pool.hpp>
+#include <skipifzero_strings.hpp>
+
+#include <ZeroG.h>
+
 namespace sfz {
 
-// RendererUI class
+// Resource Items
 // ------------------------------------------------------------------------------------------------
 
-struct RendererState;
-struct RendererConfigurableState;
+struct TextureItem final {
+	zg::Texture texture;
+	ZgTextureFormat format = ZG_TEXTURE_FORMAT_UNDEFINED;
+	uint32_t width = 0;
+	uint32_t height = 0;
+	uint32_t numMipmaps = 0;
+};
 
-class RendererUI final {
+// ResourceManager
+// ------------------------------------------------------------------------------------------------
+
+struct ResourceManagerState;
+
+class ResourceManager final {
 public:
-	// Constructors & destructors
-	// --------------------------------------------------------------------------------------------
-
-	RendererUI() noexcept = default;
-	RendererUI(const RendererUI&) = delete;
-	RendererUI& operator= (const RendererUI&) = delete;
-	RendererUI(RendererUI&& other) noexcept { this->swap(other); }
-	RendererUI& operator= (RendererUI&& other) noexcept { this->swap(other); return *this; }
-	~RendererUI() noexcept { this->destroy(); }
-
-	// State methods
-	// --------------------------------------------------------------------------------------------
-
-	void swap(RendererUI& other) noexcept;
+	SFZ_DECLARE_DROP_TYPE(ResourceManager);
+	void init(uint32_t maxNumResources, Allocator* allocator);
 	void destroy() noexcept;
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	void render(RendererState& state) noexcept;
+	void renderDebugUI();
 
-private:
-	// Private methods
+	// Texture methods
 	// --------------------------------------------------------------------------------------------
 
-	void renderGeneralTab(RendererState& state) noexcept;
-	void renderPresentStageGroupsTab(RendererConfigurableState& state) noexcept;
-	void renderPipelinesTab(RendererState& state) noexcept;
-	void renderStaticMemoryTab(RendererConfigurableState& state) noexcept;
-	void renderStreamingBuffersTab(RendererConfigurableState& state) noexcept;
-	void renderMeshesTab(RendererState& state) noexcept;
+	PoolHandle getTextureHandle(const char* name) const;
+	PoolHandle getTextureHandle(strID name) const;
+	TextureItem* getTexture(PoolHandle handle);
+	PoolHandle addTexture(strID name, TextureItem&& item);
+	void removeTexture(strID name);
+
+private:
+	ResourceManagerState* mState = nullptr;
 };
 
 } // namespace sfz

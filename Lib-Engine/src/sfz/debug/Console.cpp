@@ -34,6 +34,7 @@
 #include "sfz/config/GlobalConfig.hpp"
 #include "sfz/debug/ProfilingStats.hpp"
 #include "sfz/renderer/Renderer.hpp"
+#include "sfz/resources/ResourceManager.hpp"
 #include "sfz/util/IO.hpp"
 #include "sfz/util/TerminalLogger.hpp"
 
@@ -669,6 +670,7 @@ void Console::render() noexcept
 	renderLogWindow(*mState);
 	renderConfigWindow(*mState);
 	renderPerformanceWindow(*mState, false);
+	getResourceManager().renderDebugUI();
 	getRenderer().renderImguiUI();
 	getAudioEngine().renderDebugUI();
 
@@ -689,6 +691,7 @@ void Console::render() noexcept
 		ImGui::DockBuilderDockWindow("Log", dockBottom);
 		ImGui::DockBuilderDockWindow("Config", dockLeft);
 		ImGui::DockBuilderDockWindow("Performance", dockLeft);
+		ImGui::DockBuilderDockWindow("Resources", dockLeft);
 		ImGui::DockBuilderDockWindow("Renderer", dockLeft);
 		ImGui::DockBuilderDockWindow("Audio", dockLeft);
 

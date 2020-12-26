@@ -177,11 +177,6 @@ public:
 	// WARNING: This must NOT be called between frameBegin() and frameFinish().
 	void removeTextureGpuBlocking(strID id) noexcept;
 
-	// Removes all textures from the renderer, will flush rendering.
-	//
-	// WARNING: This must NOT be called between frameBegin() and frameFinish().
-	void removeAllTexturesGpuBlocking() noexcept;
-
 	// Uploads a mesh to the renderer, blocks until done.
 	//
 	// The "id" is a unique string identifier for this mesh. This should normally be, assuming the

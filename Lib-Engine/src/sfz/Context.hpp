@@ -26,6 +26,7 @@ namespace sfz {
 class Allocator;
 class LoggingInterface;
 class GlobalConfig;
+class ResourceManager;
 class Renderer;
 class AudioEngine;
 class ProfilingStats;
@@ -59,6 +60,9 @@ struct Context final {
 	// The global config system which keeps track of key/value pair of settings.
 	GlobalConfig* config = nullptr;
 
+	// The resource manager.
+	ResourceManager* resources = nullptr;
+
 	// The renderer.
 	Renderer* renderer = nullptr;
 
@@ -89,6 +93,7 @@ inline Allocator* getDefaultAllocator() { return getContext()->defaultAllocator;
 inline LoggingInterface* getLogger() { return getContext()->logger; }
 inline GlobalConfig& getGlobalConfig() { return *getContext()->config; }
 inline Renderer& getRenderer() { return *getContext()->renderer; }
+inline ResourceManager& getResourceManager() { return *getContext()->resources; }
 inline AudioEngine& getAudioEngine() { return *getContext()->audioEngine; }
 inline ProfilingStats& getProfilingStats() { return *getContext()->profilingStats; }
 

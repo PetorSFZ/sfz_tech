@@ -32,10 +32,6 @@
 
 #include <SDL.h>
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#endif
-
 #include <skipifzero.hpp>
 #include <skipifzero_allocators.hpp>
 #include <skipifzero_arrays.hpp>
@@ -48,8 +44,10 @@
 #include "sfz/audio/AudioEngine.hpp"
 #include "sfz/config/GlobalConfig.hpp"
 #include "sfz/debug/ProfilingStats.hpp"
+#include "sfz/renderer/ZeroGUtils.hpp"
 #include "sfz/rendering/Image.hpp"
 #include "sfz/rendering/ImguiSupport.hpp"
+#include "sfz/resources/ResourceManager.hpp"
 #include "sfz/sdl/SDLAllocator.hpp"
 #include "sfz/util/IO.hpp"
 #include "sfz/util/TerminalLogger.hpp"
@@ -70,6 +68,7 @@ static sfz::StandardAllocator standardAllocator;
 static sfz::Context phantasyEngineContext;
 static sfz::TerminalLogger terminalLogger;
 static sfz::GlobalConfig globalConfig;
+static sfz::ResourceManager resourceManager;
 static sfz::Renderer renderer;
 static sfz::AudioEngine audioEngine;
 static sfz::ProfilingStats profilingStats;
@@ -91,6 +90,9 @@ static void setupContext() noexcept
 
 	// Set global config
 	context->config = &globalConfig;
+
+	// Set resource manager
+	context->resources = &resourceManager;
 
 	// Set renderer
 	context->renderer = &renderer;
@@ -147,7 +149,7 @@ static void logSDL2Version() noexcept
 	SFZ_INFO("SDL2", "Compiled version: %u.%u.%u",
 		uint32_t(version.major), uint32_t(version.minor), uint32_t(version.patch));
 
-	// Log SDL2 compiled version
+	// Log SDL2 linked version
 	SDL_GetVersion(&version);
 	SFZ_INFO("SDL2", "Linked version: %u.%u.%u",
 		uint32_t(version.major), uint32_t(version.minor), uint32_t(version.patch));
@@ -158,7 +160,6 @@ static void logSDL2Version() noexcept
 
 struct GameLoopState final {
 	SDL_Window* window = nullptr;
-	void(*cleanupCallback)(void) = nullptr;
 	bool quit = false;
 
 	uint64_t prevPerfCounterTickValue = 0;
@@ -185,43 +186,6 @@ struct GameLoopState final {
 
 // Static helper functions
 // ------------------------------------------------------------------------------------------------
-
-static void quit(GameLoopState& gameLoopState) noexcept
-{
-	gameLoopState.quit = true; // Exit infinite while loop (on some platforms)
-
-	SFZ_INFO("PhantasyEngine", "Calling user quit func");
-	if (gameLoopState.quitFunc) {
-		gameLoopState.quitFunc(gameLoopState.userPtr);
-	}
-
-	SFZ_INFO("PhantasyEngine", "Destroying renderer");
-	sfz::getRenderer().destroy(); // Destroy the current renderer
-
-	SFZ_INFO("PhantasyEngine", "Destroying audio engine");
-	sfz::getAudioEngine().destroy();
-
-	SFZ_INFO("PhantasyEngine", "Closing SDL controllers");
-	for (sfz::GamepadState& gpd : gameLoopState.rawFrameInput.gamepads) {
-		SDL_GameControllerClose(gpd.controller);
-		gpd.controller = nullptr;
-	}
-	gameLoopState.rawFrameInput.gamepads.clear();
-
-	SFZ_INFO("PhantasyEngine", "Destroying SDL Window");
-	SDL_DestroyWindow(gameLoopState.window);
-
-	// Call the cleanup callback
-	gameLoopState.cleanupCallback(); 
-
-	SFZ_INFO("PhantasyEngine", "Destroying string ID storage");
-	sfz::getDefaultAllocator()->deleteObject(sfz::strStorage);
-
-	// Exit program on Emscripten
-#ifdef __EMSCRIPTEN__
-	emscripten_cancel_main_loop();
-#endif
-}
 
 static bool initController(int deviceIdx, sfz::GamepadState& stateOut)
 {
@@ -320,7 +284,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 				// Quitting
 			case SDL_QUIT:
 				SFZ_INFO("PhantasyEngine", "SDL_QUIT event received, quitting.");
-				quit(state);
+				state.quit = true;
 				return;
 
 				// Window events
@@ -403,7 +367,6 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 		SDL_GetWindowSize(state.window, &windowWidth, &windowHeight);
 		state.rawFrameInput.windowDims =
 			sfz::vec2_u32(uint32_t(windowWidth), uint32_t(windowHeight));
-
 
 		// Keyboard
 		{
@@ -612,7 +575,10 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 		state.userPtr);
 
 	// Handle operation returned
-	if (op == sfz::UpdateOp::QUIT) quit(state);
+	if (op == sfz::UpdateOp::QUIT) {
+		state.quit = true;
+		return;
+	}
 	if (op == sfz::UpdateOp::REINIT_CONTROLLERS) initControllers(state.rawFrameInput);
 }
 
@@ -680,13 +646,7 @@ int main(int argc, char* argv[])
 	sfz::getProfilingStats().createLabel("default", "gpu_frametime", sfz::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
 	// Init SDL2
-	uint32_t sdlInitFlags =
-#ifdef __EMSCRIPTEN__
-	SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO;
-#else
-	SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER;
-#endif
-	if (SDL_Init(sdlInitFlags) < 0) {
+	if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) {
 		SFZ_ERROR("PhantasyEngine", "SDL_Init() failed: %s", SDL_GetError());
 		return EXIT_FAILURE;
 	}
@@ -720,6 +680,22 @@ int main(int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 
+	// Initialize ZeroG
+	SFZ_INFO("PhantasyEngine", "Initializing ZeroG");
+	bool zgInitSuccess = sfz::initializeZeroG(
+		window,
+		sfz::getDefaultAllocator(),
+		cfg.sanitizeBool("Renderer", "vsync", true, false));
+	if (!zgInitSuccess) {
+		SFZ_ERROR("PhantasyEngine", "Failed to initialize ZeroG");
+		SDL_Quit();
+		return EXIT_FAILURE;
+	}
+
+	// Initialize resource manager
+	SFZ_INFO("PhantasyEngine", "Initializing resource manager");
+	sfz::getResourceManager().init(options.maxNumResources, sfz::getDefaultAllocator());
+
 	// Initialize ImGui
 	SFZ_INFO("PhantasyEngine", "Initializing Imgui");
 	sfz::ImageView imguiFontTexView = initializeImgui(sfz::getDefaultAllocator());
@@ -742,76 +718,82 @@ int main(int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 
-	// Start game loop
-	SFZ_INFO("PhantasyEngine", "Starting game loop");
-	{
-		// Initialize game loop state
-		GameLoopState gameLoopState = {};
-		gameLoopState.window = window;
-		gameLoopState.cleanupCallback = []() {
-			// Store global settings
-			SFZ_INFO("PhantasyEngine", "Saving global config to file");
-			sfz::GlobalConfig& cfg = sfz::getGlobalConfig();
-			if (!cfg.save()) {
-				SFZ_WARNING("PhantasyEngine", "Failed to write ini file");
-			}
-			cfg.destroy();
+	// Initialize game loop state
+	GameLoopState gameLoopState = {};
+	gameLoopState.window = window;
 
-			// Deinitializing Imgui
-			SFZ_INFO("PhantasyEngine", "Deinitializing Imgui");
-			sfz::deinitializeImgui();
+	gameLoopState.userPtr = options.userPtr;
+	gameLoopState.initFunc = options.initFunc;
+	gameLoopState.updateFunc = options.updateFunc;
+	gameLoopState.quitFunc = options.quitFunc;
 
-			// Cleanup SDL2
-			SFZ_INFO("PhantasyEngine", "Cleaning up SDL2");
-			SDL_Quit();
-		};
-
-		gameLoopState.userPtr = options.userPtr;
-		gameLoopState.initFunc = options.initFunc;
-		gameLoopState.updateFunc = options.updateFunc;
-		gameLoopState.quitFunc = options.quitFunc;
-
-		gameLoopState.events.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
+	gameLoopState.events.init(0, sfz::getDefaultAllocator(), sfz_dbg(""));
 		
-		gameLoopState.prevPerfCounterTickValue = SDL_GetPerformanceCounter();
-		gameLoopState.perfCounterTicksPerSec = SDL_GetPerformanceFrequency();
+	gameLoopState.prevPerfCounterTickValue = SDL_GetPerformanceCounter();
+	gameLoopState.perfCounterTicksPerSec = SDL_GetPerformanceFrequency();
 
-		// Initialize controllers
-		SDL_GameControllerEventState(SDL_ENABLE);
-		initControllers(gameLoopState.rawFrameInput);
+	// Initialize controllers
+	SDL_GameControllerEventState(SDL_ENABLE);
+	initControllers(gameLoopState.rawFrameInput);
 
-		// Get settings
-		gameLoopState.windowWidth = cfg.getSetting("Window", "width");
-		sfz_assert(gameLoopState.windowWidth != nullptr);
-		gameLoopState.windowHeight = cfg.getSetting("Window", "height");
-		sfz_assert(gameLoopState.windowHeight != nullptr);
-		gameLoopState.fullscreen = cfg.getSetting("Window", "fullscreen");
-		sfz_assert(gameLoopState.fullscreen != nullptr);
-		gameLoopState.maximized = cfg.getSetting("Window", "maximized");
+	// Get settings
+	gameLoopState.windowWidth = cfg.getSetting("Window", "width");
+	sfz_assert(gameLoopState.windowWidth != nullptr);
+	gameLoopState.windowHeight = cfg.getSetting("Window", "height");
+	sfz_assert(gameLoopState.windowHeight != nullptr);
+	gameLoopState.fullscreen = cfg.getSetting("Window", "fullscreen");
+	sfz_assert(gameLoopState.fullscreen != nullptr);
+	gameLoopState.maximized = cfg.getSetting("Window", "maximized");
 
-		// Call users init function
-		if (gameLoopState.initFunc) {
-			gameLoopState.initFunc(gameLoopState.userPtr);
-		}
-		sfz::getProfilingStats().createLabel("default", "16.67 ms", sfz::vec4(0.5f, 0.5f, 0.7f, 1.0f), 16.67f);
+	// Call users init function
+	if (gameLoopState.initFunc) {
+		gameLoopState.initFunc(gameLoopState.userPtr);
+	}
+	sfz::getProfilingStats().createLabel("default", "16.67 ms", sfz::vec4(0.5f, 0.5f, 0.7f, 1.0f), 16.67f);
 
-		// Start the game loop
-#ifdef __EMSCRIPTEN__
-	// https://kripken.github.io/emscripten-site/docs/api_reference/emscripten.h.html#browser-execution-environment
-	// Setting 0 or a negative value as the fps will instead use the browser’s requestAnimationFrame
-	// mechanism to call the main loop function. This is HIGHLY recommended if you are doing
-	// rendering, as the browser’s requestAnimationFrame will make sure you render at a proper
-	// smooth rate that lines up properly with the browser and monitor.
-		emscripten_set_main_loop_arg(gameLoopIteration, &gameLoopState, 0, true);
-#else
-		while (!gameLoopState.quit) {
-			gameLoopIteration(&gameLoopState);
-		}
-#endif
+	// Start the game loop
+	SFZ_INFO("PhantasyEngine", "Starting game loop");
+	while (!gameLoopState.quit) {
+		gameLoopIteration(&gameLoopState);
 	}
 
-	// DEAD ZONE
-	// Don't place any code after the game loop, it will never be called on some platforms.
+	// Store global settings
+	SFZ_INFO("PhantasyEngine", "Saving global config to file");
+	if (!cfg.save()) {
+		SFZ_WARNING("PhantasyEngine", "Failed to write ini file");
+	}
+	cfg.destroy();
+
+	SFZ_INFO("PhantasyEngine", "Deinitializing Imgui");
+	sfz::deinitializeImgui();
+
+	SFZ_INFO("PhantasyEngine", "Destroying renderer");
+	sfz::getRenderer().destroy();
+
+	SFZ_INFO("PhantasyEngine", "Destroying resource manager");
+	sfz::getResourceManager().destroy();
+
+	SFZ_INFO("PhantasyEngine", "Deinitializing ZeroG");
+	CHECK_ZG zgContextDeinit();
+
+	SFZ_INFO("PhantasyEngine", "Destroying audio engine");
+	sfz::getAudioEngine().destroy();
+
+	SFZ_INFO("PhantasyEngine", "Closing SDL controllers");
+	for (sfz::GamepadState& gpd : gameLoopState.rawFrameInput.gamepads) {
+		SDL_GameControllerClose(gpd.controller);
+		gpd.controller = nullptr;
+	}
+	gameLoopState.rawFrameInput.gamepads.clear();
+
+	SFZ_INFO("PhantasyEngine", "Destroying SDL Window");
+	SDL_DestroyWindow(gameLoopState.window);
+
+	SFZ_INFO("PhantasyEngine", "Cleaning up SDL2");
+	SDL_Quit();
+
+	SFZ_INFO("PhantasyEngine", "Destroying string ID storage");
+	sfz::getDefaultAllocator()->deleteObject(sfz::strStorage);
 
 	return EXIT_SUCCESS;
 }

@@ -269,6 +269,7 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/renderer/RendererState.cpp
 	${SRC_DIR}/sfz/renderer/RendererUI.hpp
 	${SRC_DIR}/sfz/renderer/RendererUI.cpp
+	${SRC_DIR}/sfz/renderer/RenderingEnumsToFromString.hpp
 	${SRC_DIR}/sfz/renderer/ZeroGUtils.hpp
 	${SRC_DIR}/sfz/renderer/ZeroGUtils.cpp
 
@@ -281,6 +282,11 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/rendering/ImguiSupport.cpp
 	${SRC_DIR}/sfz/rendering/Mesh.hpp
 	${SRC_DIR}/sfz/rendering/SphereLight.hpp
+
+	${SRC_DIR}/sfz/resources/ResourceManager.hpp
+	${SRC_DIR}/sfz/resources/ResourceManager.cpp
+	${SRC_DIR}/sfz/resources/ResourceManagerState.hpp
+	${SRC_DIR}/sfz/resources/ResourceManagerUI.hpp
 
 	${SRC_DIR}/sfz/sdl/SDLAllocator.hpp
 	${SRC_DIR}/sfz/sdl/SDLAllocator.cpp
@@ -305,6 +311,7 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/util/GltfLoader.cpp
 	${SRC_DIR}/sfz/util/GltfWriter.hpp
 	${SRC_DIR}/sfz/util/GltfWriter.cpp
+	${SRC_DIR}/sfz/util/ImGuiHelpers.hpp
 	${SRC_DIR}/sfz/util/IniParser.hpp
 	${SRC_DIR}/sfz/util/IniParser.cpp
 	${SRC_DIR}/sfz/util/IO.hpp

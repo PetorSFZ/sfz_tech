@@ -26,7 +26,9 @@
 #include "sfz/Context.hpp"
 #include "sfz/Logging.hpp"
 #include "sfz/renderer/RendererState.hpp"
+#include "sfz/renderer/RenderingEnumsToFromString.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
+#include "sfz/util/ImGuiHelpers.hpp"
 
 namespace sfz {
 
@@ -34,14 +36,6 @@ using sfz::str64;
 
 // Statics
 // ------------------------------------------------------------------------------------------------
-
-template<typename Fun>
-static void alignedEdit(const char* name, float xOffset, Fun editor) noexcept
-{
-	ImGui::Text("%s", name);
-	ImGui::SameLine(xOffset);
-	editor(sfz::str96("##%s_invisible", name).str());
-}
 
 static float toGiB(uint64_t bytes) noexcept
 {
@@ -56,99 +50,6 @@ static const char* toString(StageType type) noexcept
 	}
 	sfz_assert(false);
 	return "<ERROR>";
-}
-
-static const char* textureFormatToString(ZgTextureFormat format) noexcept
-{
-	switch (format) {
-	case ZG_TEXTURE_FORMAT_UNDEFINED: return "UNDEFINED";
-
-	case ZG_TEXTURE_FORMAT_R_U8_UNORM: return "R_U8_UNORM";
-	case ZG_TEXTURE_FORMAT_RG_U8_UNORM: return "RG_U8_UNORM";
-	case ZG_TEXTURE_FORMAT_RGBA_U8_UNORM: return "RGBA_U8_UNORM";
-
-	case ZG_TEXTURE_FORMAT_R_F16: return "R_F16";
-	case ZG_TEXTURE_FORMAT_RG_F16: return "RG_F16";
-	case ZG_TEXTURE_FORMAT_RGBA_F16: return "RGBA_F16";
-
-	case ZG_TEXTURE_FORMAT_R_F32: return "R_F32";
-	case ZG_TEXTURE_FORMAT_RG_F32: return "RG_F32";
-	case ZG_TEXTURE_FORMAT_RGBA_F32: return "RGBA_F32";
-
-	case ZG_TEXTURE_FORMAT_DEPTH_F32: return "DEPTH_F32";
-	}
-	sfz_assert(false);
-	return "";
-}
-
-static const char* vertexAttributeTypeToString(ZgVertexAttributeType type) noexcept
-{
-	switch (type) {
-	case ZG_VERTEX_ATTRIBUTE_F32: return "ZG_VERTEX_ATTRIBUTE_F32";
-	case ZG_VERTEX_ATTRIBUTE_F32_2: return "ZG_VERTEX_ATTRIBUTE_F32_2";
-	case ZG_VERTEX_ATTRIBUTE_F32_3: return "ZG_VERTEX_ATTRIBUTE_F32_3";
-	case ZG_VERTEX_ATTRIBUTE_F32_4: return "ZG_VERTEX_ATTRIBUTE_F32_4";
-
-	case ZG_VERTEX_ATTRIBUTE_S32: return "ZG_VERTEX_ATTRIBUTE_S32";
-	case ZG_VERTEX_ATTRIBUTE_S32_2: return "ZG_VERTEX_ATTRIBUTE_S32_2";
-	case ZG_VERTEX_ATTRIBUTE_S32_3: return "ZG_VERTEX_ATTRIBUTE_S32_3";
-	case ZG_VERTEX_ATTRIBUTE_S32_4: return "ZG_VERTEX_ATTRIBUTE_S32_4";
-
-	case ZG_VERTEX_ATTRIBUTE_U32: return "ZG_VERTEX_ATTRIBUTE_U32";
-	case ZG_VERTEX_ATTRIBUTE_U32_2: return "ZG_VERTEX_ATTRIBUTE_U32_2";
-	case ZG_VERTEX_ATTRIBUTE_U32_3: return "ZG_VERTEX_ATTRIBUTE_U32_3";
-	case ZG_VERTEX_ATTRIBUTE_U32_4: return "ZG_VERTEX_ATTRIBUTE_U32_4";
-
-	default: break;
-	}
-	sfz_assert(false);
-	return "";
-}
-
-static const char* samplingModeToString(ZgSamplingMode mode) noexcept
-{
-	switch (mode) {
-	case ZG_SAMPLING_MODE_NEAREST: return "NEAREST";
-	case ZG_SAMPLING_MODE_TRILINEAR: return "TRILINEAR";
-	case ZG_SAMPLING_MODE_ANISOTROPIC: return "ANISOTROPIC";
-	}
-	sfz_assert(false);
-	return "UNDEFINED";
-}
-
-static const char* wrappingModeToString(ZgWrappingMode mode) noexcept
-{
-	switch (mode) {
-	case ZG_WRAPPING_MODE_CLAMP: return "CLAMP";
-	case ZG_WRAPPING_MODE_REPEAT: return "REPEAT";
-	}
-	sfz_assert(false);
-	return "UNDEFINED";
-}
-
-static const char* depthFuncToString(ZgDepthFunc func) noexcept
-{
-	switch (func) {
-	case ZG_DEPTH_FUNC_LESS: return "LESS";
-	case ZG_DEPTH_FUNC_LESS_EQUAL: return "LESS_EQUAL";
-	case ZG_DEPTH_FUNC_EQUAL: return "EQUAL";
-	case ZG_DEPTH_FUNC_NOT_EQUAL: return "NOT_EQUAL";
-	case ZG_DEPTH_FUNC_GREATER: return "GREATER";
-	case ZG_DEPTH_FUNC_GREATER_EQUAL: return "GREATER_EQUAL";
-	}
-	sfz_assert(false);
-	return "";
-}
-
-static const char* blendModeToString(PipelineBlendMode mode) noexcept
-{
-	switch (mode) {
-	case PipelineBlendMode::NO_BLENDING: return "no_blending";
-	case PipelineBlendMode::ALPHA_BLENDING: return "alpha_blending";
-	case PipelineBlendMode::ADDITIVE_BLENDING: return "additive_blending";
-	}
-	sfz_assert(false);
-	return "";
 }
 
 // RendererUI: State methods
@@ -207,12 +108,6 @@ void RendererUI::render(RendererState& state) noexcept
 		if (ImGui::BeginTabItem("Streaming Buffers")) {
 			ImGui::Spacing();
 			this->renderStreamingBuffersTab(state.configurable);
-			ImGui::EndTabItem();
-		}
-
-		if (ImGui::BeginTabItem("Textures")) {
-			ImGui::Spacing();
-			this->renderTexturesTab(state);
 			ImGui::EndTabItem();
 		}
 
@@ -922,35 +817,6 @@ void RendererUI::renderStreamingBuffersTab(RendererConfigurableState& state) noe
 	}
 }
 
-void RendererUI::renderTexturesTab(RendererState& state) noexcept
-{
-	constexpr float offset = 150.0f;
-
-	for (auto itemItr : state.textures) {
-		const TextureItem& item = itemItr.value;
-
-		ImGui::Text("\"%s\"", itemItr.key.str());
-		if (!item.texture.valid()) {
-			ImGui::SameLine();
-			ImGui::Text("-- NOT VALID");
-		}
-
-		ImGui::Indent(20.0f);
-		alignedEdit("Format", offset, [&](const char*) {
-			ImGui::Text("%s", textureFormatToString(item.format));
-		});
-		alignedEdit("Resolution", offset, [&](const char*) {
-			ImGui::Text("%u x %u", item.width, item.height);
-		});
-		alignedEdit("Mipmaps", offset, [&](const char*) {
-			ImGui::Text("%u", item.numMipmaps);
-		});
-
-		ImGui::Unindent(20.0f);
-		ImGui::Spacing();
-	}
-}
-
 void RendererUI::renderMeshesTab(RendererState& state) noexcept
 {
 	for (auto itemItr : state.meshes) {
@@ -1001,8 +867,11 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 
 		// Lambda for creating a combo box to select texture
 		auto textureComboBox = [&](const char* comboName, strID& texId, bool& updateMesh) {
+			(void)updateMesh;
+			(void)comboName;
 			str128 selectedTexStr = textureToComboStr(texId);
-			if (ImGui::BeginCombo(comboName, selectedTexStr)) {
+			ImGui::Text("%s", textureToComboStr(texId));
+			/*if (ImGui::BeginCombo(comboName, selectedTexStr)) {
 
 				// Special case for no texture (~0)
 				{
@@ -1028,7 +897,7 @@ void RendererUI::renderMeshesTab(RendererState& state) noexcept
 					}
 				}
 				ImGui::EndCombo();
-			}
+			}*/
 		};
 
 		// Materials

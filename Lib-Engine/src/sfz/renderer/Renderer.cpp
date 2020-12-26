@@ -37,6 +37,7 @@
 #include "sfz/renderer/RendererConfigParser.hpp"
 #include "sfz/renderer/RendererState.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
+#include "sfz/resources/ResourceManager.hpp"
 
 namespace sfz {
 
@@ -82,23 +83,14 @@ bool Renderer::init(
 	mState->emitDebugEvents =
 		cfg.sanitizeBool("Renderer", "emitDebugEvents", false, true);
 
-	// Initializer ZeroG
-	bool zgInitSuccess = initializeZeroG(
-		window,
-		allocator,
-		mState->vsync->boolValue());
-	if (!zgInitSuccess) {
-		this->destroy();
-		return false;
-	}
-
 	// Initialize fences
 	mState->frameFences.init(mState->frameLatency, [](zg::Fence& fence) {
 		CHECK_ZG fence.create();
 	});
 
-	// Set window resolution to default value (512x512)
-	mState->windowRes = vec2_i32(512, 512);
+	// Get window resolution
+	mState->windowRes;
+	SDL_GL_GetDrawableSize(window, &mState->windowRes.x, &mState->windowRes.y);
 
 	// Get command queues
 	mState->presentQueue = zg::CommandQueue::getPresentQueue();
@@ -113,7 +105,6 @@ bool Renderer::init(
 	}
 
 	// Initialize hashmaps for resources
-	mState->textures.init(512, mState->allocator, sfz_dbg(""));
 	mState->meshes.init(512, mState->allocator, sfz_dbg(""));
 
 	// Initialize ImGui rendering state
@@ -211,15 +202,11 @@ void Renderer::destroy() noexcept
 		mState->imguiRenderState = nullptr;
 
 		// Destroy all textures and meshes
-		this->removeAllTexturesGpuBlocking();
 		this->removeAllMeshesGpuBlocking();
 
 		// Deallocate rest of state
 		sfz::Allocator* allocator = mState->allocator;
 		allocator->deleteObject(mState);
-
-		// Deinitialize ZeroG
-		CHECK_ZG zgContextDeinit();
 	}
 	mState = nullptr;
 }
@@ -258,7 +245,8 @@ bool Renderer::uploadTextureBlocking(
 	strID id, const ImageViewConst& image, bool generateMipmaps) noexcept
 {
 	// Error out and return false if texture already exists
-	if (mState->textures.get(id) != nullptr) return false;
+	ResourceManager& resources = getResourceManager();
+	if (resources.getTextureHandle(id) != NULL_HANDLE) return false;
 
 	const char* fileName = stripFilePath(id.str());
 	uint32_t numMipmaps = 0;
@@ -278,15 +266,15 @@ bool Renderer::uploadTextureBlocking(
 	item.width = image.width;
 	item.height = image.height;
 	item.numMipmaps = numMipmaps;
-	mState->textures.put(id, std::move(item));
+	resources.addTexture(id, std::move(item));
 
 	return true;
 }
 
 bool Renderer::textureLoaded(strID id) const noexcept
 {
-	const sfz::TextureItem* item = mState->textures.get(id);
-	return item != nullptr;
+	ResourceManager& resources = getResourceManager();
+	return resources.getTextureHandle(id) != NULL_HANDLE;
 }
 
 void Renderer::removeTextureGpuBlocking(strID id) noexcept
@@ -294,29 +282,8 @@ void Renderer::removeTextureGpuBlocking(strID id) noexcept
 	// Ensure not between frameBegin() and frameFinish()
 	sfz_assert(!mState->windowFramebuffer.valid());
 
-	// Return if texture is not loaded in first place
-	sfz::TextureItem* item = mState->textures.get(id);
-	if (item == nullptr) return;
-
-	// Ensure all GPU operations in progress are finished
-	CHECK_ZG mState->presentQueue.flush();
-	CHECK_ZG mState->copyQueue.flush();
-
-	// Destroy texture
-	mState->textures.remove(id);
-}
-
-void Renderer::removeAllTexturesGpuBlocking() noexcept
-{
-	// Ensure not between frameBegin() and frameFinish()
-	sfz_assert(!mState->windowFramebuffer.valid());
-
-	// Ensure all GPU operations in progress are finished
-	CHECK_ZG mState->presentQueue.flush();
-	CHECK_ZG mState->copyQueue.flush();
-
-	// Destroy all textures
-	mState->textures.clear();
+	ResourceManager& resources = getResourceManager();
+	resources.removeTexture(id);
 }
 
 bool Renderer::uploadMeshBlocking(strID id, const Mesh& mesh) noexcept
@@ -884,6 +851,7 @@ void Renderer::stageDrawMesh(strID meshId, const MeshRegisters& registers, bool 
 	}
 
 	// Draw all mesh components
+	ResourceManager& resources = getResourceManager();
 	for (MeshComponent& comp : meshPtr->components) {
 
 		if (!skipBindings) {
@@ -904,7 +872,7 @@ void Renderer::stageDrawMesh(strID meshId, const MeshRegisters& registers, bool 
 				if (texRegister != ~0u && texID.isValid()) {
 
 					// Find texture
-					TextureItem* texItem = mState->textures.get(texID);
+					TextureItem* texItem = resources.getTexture(resources.getTextureHandle(texID));
 					sfz_assert(texItem != nullptr);
 
 					// Bind texture
@@ -958,9 +926,10 @@ void Renderer::stageSetBindings(const PipelineBindings& bindings) noexcept
 	}
 
 	// Textures
+	ResourceManager& resources = getResourceManager();
 	for (const Binding& binding : bindings.textures) {
 
-		TextureItem* dynItem = mState->textures.get(binding.resourceID);
+		TextureItem* dynItem = resources.getTexture(resources.getTextureHandle(binding.resourceID));
 		StaticTextureItem* staticItem = mState->configurable.staticTextures.get(binding.resourceID);
 		sfz_assert(dynItem != nullptr || staticItem != nullptr);
 		sfz_assert(!(dynItem == nullptr && staticItem == nullptr));
@@ -1005,7 +974,7 @@ void Renderer::stageSetBindings(const PipelineBindings& bindings) noexcept
 	// Unordered textures
 	for (const Binding& binding : bindings.unorderedTextures) {
 		
-		TextureItem* dynItem = mState->textures.get(binding.resourceID);
+		TextureItem* dynItem = resources.getTexture(resources.getTextureHandle(binding.resourceID));
 		StaticTextureItem* staticItem = mState->configurable.staticTextures.get(binding.resourceID);
 		sfz_assert(dynItem != nullptr || staticItem != nullptr);
 		sfz_assert(!(dynItem == nullptr && staticItem == nullptr));
