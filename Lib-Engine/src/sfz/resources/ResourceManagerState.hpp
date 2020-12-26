@@ -37,6 +37,9 @@ struct ResourceManagerState final {
 
 	HashMap<strID, PoolHandle> textureHandles;
 	Pool<TextureItem> textures;
+
+	HashMap<strID, PoolHandle> meshHandles;
+	Pool<MeshItem> meshes;
 };
 
 } // namespace sfz

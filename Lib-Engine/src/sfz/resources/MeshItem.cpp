@@ -17,7 +17,7 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/renderer/GpuMesh.hpp"
+#include "sfz/resources/MeshItem.hpp"
 
 #include <skipifzero.hpp>
 #include <skipifzero_strings.hpp>
@@ -44,12 +44,12 @@ ShaderMaterial cpuMaterialToShaderMaterial(const Material& cpuMaterial) noexcept
 	return dst;
 }
 
-GpuMesh gpuMeshAllocate(
+MeshItem meshItemAllocate(
 	const char* meshName,
 	const Mesh& cpuMesh,
 	sfz::Allocator* cpuAllocator) noexcept
 {
-	GpuMesh gpuMesh;
+	MeshItem gpuMesh;
 
 	// Allocate (GPU) memory for vertices
 	CHECK_ZG gpuMesh.vertexBuffer.create(
@@ -79,30 +79,8 @@ GpuMesh gpuMeshAllocate(
 	return gpuMesh;
 }
 
-void gpuMeshDeallocate(GpuMesh& gpuMesh) noexcept
-{
-	// Deallocate vertex buffer
-	sfz_assert(gpuMesh.vertexBuffer.valid());
-	gpuMesh.vertexBuffer.destroy();
-	sfz_assert(!gpuMesh.vertexBuffer.valid());
-
-	// Deallocate index buffer
-	sfz_assert(gpuMesh.indexBuffer.valid());
-	gpuMesh.indexBuffer.destroy();
-	sfz_assert(!gpuMesh.indexBuffer.valid());
-
-	// Deallocate materials buffer
-	sfz_assert(gpuMesh.materialsBuffer.valid());
-	gpuMesh.materialsBuffer.destroy();
-	sfz_assert(!gpuMesh.materialsBuffer.valid());
-
-	// Destroy remaining CPU memory
-	gpuMesh.components.destroy();
-	gpuMesh.cpuMaterials.destroy();
-}
-
-void gpuMeshUploadBlocking(
-	GpuMesh& gpuMesh,
+void meshItemUploadBlocking(
+	MeshItem& gpuMesh,
 	const Mesh& cpuMesh,
 	sfz::Allocator* cpuAllocator,
 	zg::CommandQueue& copyQueue) noexcept

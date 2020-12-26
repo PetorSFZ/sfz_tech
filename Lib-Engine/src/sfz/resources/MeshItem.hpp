@@ -19,24 +19,42 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
-#include <skipifzero_image_view.hpp>
+#include <skipifzero_arrays.hpp>
 
 #include <ZeroG.h>
 
+#include "sfz/renderer/BuiltInShaderTypes.hpp"
+#include "sfz/rendering/Mesh.hpp"
+
 namespace sfz {
 
-// Texture functions
+// MeshItem
 // ------------------------------------------------------------------------------------------------
 
-ZgTextureFormat toZeroGImageFormat(ImageType imageType) noexcept;
+struct MeshItem final {
+	bool enabled = true;
+	zg::Buffer vertexBuffer;
+	zg::Buffer indexBuffer;
+	zg::Buffer materialsBuffer;
+	uint32_t numMaterials = 0;
+	Array<MeshComponent> components;
+	Array<Material> cpuMaterials;
+};
 
-zg::Texture textureAllocateAndUploadBlocking(
-	const char* debugName,
-	const ImageViewConst& image,
+// GpuMesh functions
+// ------------------------------------------------------------------------------------------------
+
+ShaderMaterial cpuMaterialToShaderMaterial(const Material& cpuMaterial) noexcept;
+
+MeshItem meshItemAllocate(
+	const char* meshName,
+	const Mesh& cpuMesh,
+	sfz::Allocator* cpuAllocator) noexcept;
+
+void meshItemUploadBlocking(
+	MeshItem& gpuMesh,
+	const Mesh& cpuMesh,
 	sfz::Allocator* cpuAllocator,
-	zg::CommandQueue& copyQueue,
-	bool generateMipmaps,
-	uint32_t& numMipmapsOut) noexcept;
+	zg::CommandQueue& copyQueue) noexcept;
 
 } // namespace sfz

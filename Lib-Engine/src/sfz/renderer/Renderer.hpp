@@ -199,11 +199,6 @@ public:
 	// WARNING: This must NOT be called between frameBegin() and frameFinish().
 	void removeMeshGpuBlocking(strID id) noexcept;
 
-	// Removes all meshes from the renderer, will flush rendering.
-	//
-	// WARNING: This must NOT be called between frameBegin() and frameFinish().
-	void removeAllMeshesGpuBlocking() noexcept;
-
 	// Stage methods
 	// --------------------------------------------------------------------------------------------
 

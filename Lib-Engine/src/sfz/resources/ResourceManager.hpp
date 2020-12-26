@@ -25,18 +25,10 @@
 
 #include <ZeroG.h>
 
+#include "sfz/resources/MeshItem.hpp"
+#include "sfz/resources/TextureItem.hpp"
+
 namespace sfz {
-
-// Resource Items
-// ------------------------------------------------------------------------------------------------
-
-struct TextureItem final {
-	zg::Texture texture;
-	ZgTextureFormat format = ZG_TEXTURE_FORMAT_UNDEFINED;
-	uint32_t width = 0;
-	uint32_t height = 0;
-	uint32_t numMipmaps = 0;
-};
 
 // ResourceManager
 // ------------------------------------------------------------------------------------------------
@@ -62,6 +54,15 @@ public:
 	TextureItem* getTexture(PoolHandle handle);
 	PoolHandle addTexture(strID name, TextureItem&& item);
 	void removeTexture(strID name);
+
+	// Mesh methods
+	// --------------------------------------------------------------------------------------------
+
+	PoolHandle getMeshHandle(const char* name) const;
+	PoolHandle getMeshHandle(strID name) const;
+	MeshItem* getMesh(PoolHandle handle);
+	PoolHandle addMesh(strID name, MeshItem&& item);
+	void removeMesh(strID name);
 
 private:
 	ResourceManagerState* mState = nullptr;

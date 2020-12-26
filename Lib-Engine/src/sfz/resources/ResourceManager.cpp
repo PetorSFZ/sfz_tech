@@ -35,6 +35,9 @@ void ResourceManager::init(uint32_t maxNumResources, Allocator* allocator)
 
 	mState->textureHandles.init(maxNumResources, allocator, sfz_dbg(""));
 	mState->textures.init(maxNumResources, allocator, sfz_dbg(""));
+
+	mState->meshHandles.init(maxNumResources, allocator, sfz_dbg(""));
+	mState->meshes.init(maxNumResources, allocator, sfz_dbg(""));
 }
 
 void ResourceManager::destroy() noexcept
@@ -98,6 +101,48 @@ void ResourceManager::removeTexture(strID name)
 	if (handle == NULL_HANDLE) return;
 	mState->textureHandles.remove(name);
 	mState->textures.deallocate(handle);
+}
+
+// ResourceManager: Mesh methods
+// ------------------------------------------------------------------------------------------------
+
+PoolHandle ResourceManager::getMeshHandle(const char* name) const
+{
+	return this->getMeshHandle(strID(name));
+}
+
+PoolHandle ResourceManager::getMeshHandle(strID name) const
+{
+	const PoolHandle* handle = mState->meshHandles.get(name);
+	if (handle == nullptr) return NULL_HANDLE;
+	return *handle;
+}
+
+MeshItem* ResourceManager::getMesh(PoolHandle handle)
+{
+	return mState->meshes.get(handle);
+}
+
+PoolHandle ResourceManager::addMesh(strID name, MeshItem&& item)
+{
+	sfz_assert(mState->meshHandles.get(name) == nullptr);
+	PoolHandle handle = mState->meshes.allocate(std::move(item));
+	mState->meshHandles.put(name, handle);
+	sfz_assert(mState->meshHandles.size() == mState->meshes.numAllocated());
+	return handle;
+}
+
+void ResourceManager::removeMesh(strID name)
+{
+	// TODO: Currently blocking, can probably be made async if we just add it to a list of meshes
+	//       to remove and then remove it in a frame or two.
+	CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
+	CHECK_ZG zg::CommandQueue::getCopyQueue().flush();
+
+	PoolHandle handle = this->getMeshHandle(name);
+	if (handle == NULL_HANDLE) return;
+	mState->meshHandles.remove(name);
+	mState->meshes.deallocate(handle);
 }
 
 } // namespace sfz

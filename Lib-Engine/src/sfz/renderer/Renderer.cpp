@@ -33,11 +33,11 @@
 #include "sfz/debug/ProfilingStats.hpp"
 #include "sfz/Logging.hpp"
 #include "sfz/config/GlobalConfig.hpp"
-#include "sfz/renderer/GpuTextures.hpp"
 #include "sfz/renderer/RendererConfigParser.hpp"
 #include "sfz/renderer/RendererState.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
 #include "sfz/resources/ResourceManager.hpp"
+#include "sfz/resources/TextureItem.hpp"
 
 namespace sfz {
 
@@ -103,9 +103,6 @@ bool Renderer::init(
 		CHECK_ZG mState->profiler.create(createInfo);
 		mState->frameMeasurementIds.init(mState->frameLatency);
 	}
-
-	// Initialize hashmaps for resources
-	mState->meshes.init(512, mState->allocator, sfz_dbg(""));
 
 	// Initialize ImGui rendering state
 	mState->imguiScaleSetting =
@@ -201,9 +198,6 @@ void Renderer::destroy() noexcept
 		zg::imguiDestroyRenderState(mState->imguiRenderState);
 		mState->imguiRenderState = nullptr;
 
-		// Destroy all textures and meshes
-		this->removeAllMeshesGpuBlocking();
-
 		// Deallocate rest of state
 		sfz::Allocator* allocator = mState->allocator;
 		allocator->deleteObject(mState);
@@ -289,27 +283,28 @@ void Renderer::removeTextureGpuBlocking(strID id) noexcept
 bool Renderer::uploadMeshBlocking(strID id, const Mesh& mesh) noexcept
 {
 	// Error out and return false if mesh already exists
+	ResourceManager& resources = getResourceManager();
 	sfz_assert(id.isValid());
-	if (mState->meshes.get(id) != nullptr) return false;
+	if (resources.getMeshHandle(id) != NULL_HANDLE) return false;
 
 	// Allocate memory for mesh
 	const char* fileName = stripFilePath(id.str());
-	GpuMesh gpuMesh = gpuMeshAllocate(fileName, mesh, mState->allocator);
+	MeshItem gpuMesh = meshItemAllocate(fileName, mesh, mState->allocator);
 
 	// Upload memory to mesh
-	gpuMeshUploadBlocking(
+	meshItemUploadBlocking(
 		gpuMesh, mesh, mState->allocator, mState->copyQueue);
 
 	// Store mesh
-	mState->meshes.put(id, std::move(gpuMesh));
+	resources.addMesh(id, std::move(gpuMesh));
 
 	return true;
 }
 
 bool Renderer::meshLoaded(strID id) const noexcept
 {
-	const sfz::GpuMesh* mesh = mState->meshes.get(id);
-	return mesh != nullptr;
+	ResourceManager& resources = getResourceManager();
+	return resources.getMeshHandle(id) != NULL_HANDLE;
 }
 
 void Renderer::removeMeshGpuBlocking(strID id) noexcept
@@ -317,29 +312,8 @@ void Renderer::removeMeshGpuBlocking(strID id) noexcept
 	// Ensure not between frameBegin() and frameFinish()
 	sfz_assert(!mState->windowFramebuffer.valid());
 
-	// Return if mesh is not loaded in first place
-	sfz::GpuMesh* mesh = mState->meshes.get(id);
-	if (mesh == nullptr) return;
-
-	// Ensure all GPU operations in progress are finished
-	CHECK_ZG mState->presentQueue.flush();
-	CHECK_ZG mState->copyQueue.flush();
-
-	// Destroy mesh
-	mState->meshes.remove(id);
-}
-
-void Renderer::removeAllMeshesGpuBlocking() noexcept
-{
-	// Ensure not between frameBegin() and frameFinish()
-	sfz_assert(!mState->windowFramebuffer.valid());
-
-	// Ensure all GPU operations in progress are finished
-	CHECK_ZG mState->presentQueue.flush();
-	CHECK_ZG mState->copyQueue.flush();
-
-	// Destroy all meshes
-	mState->meshes.clear();
+	ResourceManager& resources = getResourceManager();
+	resources.removeMesh(id);
 }
 
 // Renderer: Methods
@@ -715,7 +689,8 @@ void Renderer::stageDrawMesh(strID meshId, const MeshRegisters& registers, bool 
 	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
 
 	// Find mesh
-	GpuMesh* meshPtr = mState->meshes.get(meshId);
+	ResourceManager& resources = getResourceManager();
+	MeshItem* meshPtr = resources.getMesh(resources.getMeshHandle(meshId));
 	sfz_assert(meshPtr != nullptr);
 	if (meshPtr == nullptr) return;
 
@@ -851,7 +826,6 @@ void Renderer::stageDrawMesh(strID meshId, const MeshRegisters& registers, bool 
 	}
 
 	// Draw all mesh components
-	ResourceManager& resources = getResourceManager();
 	for (MeshComponent& comp : meshPtr->components) {
 
 		if (!skipBindings) {

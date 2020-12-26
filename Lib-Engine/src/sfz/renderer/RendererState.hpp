@@ -29,7 +29,7 @@
 #include <ZeroG-ImGui.hpp>
 
 #include "sfz/config/GlobalConfig.hpp"
-#include "sfz/renderer/GpuMesh.hpp"
+#include "sfz/resources/MeshItem.hpp"
 #include "sfz/renderer/RendererUI.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
 
@@ -292,9 +292,6 @@ struct RendererState final {
 	PerFrameData<FrameProfilingIDs> frameMeasurementIds;
 	float lastRetrievedFrameTimeMs = 0.0f;
 	uint64_t lastRetrievedFrameTimeFrameIdx = ~0ull;
-
-	// GPU resources
-	HashMap<strID, GpuMesh> meshes;
 
 	// UI
 	RendererUI ui;

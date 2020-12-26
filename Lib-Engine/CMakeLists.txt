@@ -257,10 +257,6 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/renderer/BuiltInShaderTypes.hpp
 	${SRC_DIR}/sfz/renderer/CascadedShadowMaps.hpp
 	${SRC_DIR}/sfz/renderer/CascadedShadowMaps.cpp
-	${SRC_DIR}/sfz/renderer/GpuMesh.hpp
-	${SRC_DIR}/sfz/renderer/GpuMesh.cpp
-	${SRC_DIR}/sfz/renderer/GpuTextures.hpp
-	${SRC_DIR}/sfz/renderer/GpuTextures.cpp
 	${SRC_DIR}/sfz/renderer/Renderer.hpp
 	${SRC_DIR}/sfz/renderer/Renderer.cpp
 	${SRC_DIR}/sfz/renderer/RendererConfigParser.hpp
@@ -283,10 +279,14 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/rendering/Mesh.hpp
 	${SRC_DIR}/sfz/rendering/SphereLight.hpp
 
+	${SRC_DIR}/sfz/resources/MeshItem.hpp
+	${SRC_DIR}/sfz/resources/MeshItem.cpp
 	${SRC_DIR}/sfz/resources/ResourceManager.hpp
 	${SRC_DIR}/sfz/resources/ResourceManager.cpp
 	${SRC_DIR}/sfz/resources/ResourceManagerState.hpp
 	${SRC_DIR}/sfz/resources/ResourceManagerUI.hpp
+	${SRC_DIR}/sfz/resources/TextureItem.hpp
+	${SRC_DIR}/sfz/resources/TextureItem.cpp
 
 	${SRC_DIR}/sfz/sdl/SDLAllocator.hpp
 	${SRC_DIR}/sfz/sdl/SDLAllocator.cpp
