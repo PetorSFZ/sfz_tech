@@ -198,8 +198,6 @@ struct BoundBuffer final {
 
 struct Stage final {
 
-	Array<PerFrameData<ConstantBufferMemory>> constantBuffers;
-
 	// Parsed information
 	strID name;
 	StageType type;
@@ -333,12 +331,6 @@ struct RendererState final {
 	// Finds the index of the specified pipeline. Returns ~0u if it does not exist.
 	uint32_t findPipelineRenderIdx(strID pipelineName) const noexcept;
 	uint32_t findPipelineComputeIdx(strID pipelineName) const noexcept;
-
-	// Finds the current constant buffer's memory for the current input stage given its shader
-	// register.
-	//
-	// Returns nullptr if not found
-	ConstantBufferMemory* findConstantBufferInCurrentInputStage(uint32_t shaderRegister) noexcept;
 };
 
 } // namespace sfz

@@ -193,6 +193,21 @@
 	"static_buffers": [
 	],
 
+	"streaming_buffers": [
+		{
+			"name": "Directional Light Const Buffer",
+			"element_size_bytes": 1,
+			"max_num_elements": 256,
+			"committed_allocation": false
+		},
+		{
+			"name": "Point Lights Buffer",
+			"element_size_bytes": 1,
+			"max_num_elements": 4112,
+			"committed_allocation": false
+		}
+	],
+
 	"present_stage_groups": [
 		{
 			"group_name": "GBuffer + Cascaded Shadows",
@@ -235,76 +250,12 @@
 				{
 					"stage_name": "Directional Shading Pass",
 					"stage_type": "USER_INPUT_COMPUTE",
-					"compute_pipeline": "Directional Shading",
-					"bound_textures": [
-						{
-							"register": 0,
-							"texture": "GBuffer_albedo"
-						},
-						{
-							"register": 1,
-							"texture": "GBuffer_metallic_roughness"
-						},
-						{
-							"register": 2,
-							"texture": "GBuffer_emissive"
-						},
-						{
-							"register": 3,
-							"texture": "GBuffer_normal"
-						},
-						{
-							"register": 4,
-							"texture": "GBuffer_depthbuffer"
-						},
-						{
-							"register": 5,
-							"texture": "ShadowMapCascaded1"
-						},
-						{
-							"register": 6,
-							"texture": "ShadowMapCascaded2"
-						},
-						{
-							"register": 7,
-							"texture": "ShadowMapCascaded3"
-						}
-					],
-					"bound_unordered_textures": [
-						{
-							"register": 0,
-							"texture": "LightAccumulation1"
-						}
-					]
+					"compute_pipeline": "Directional Shading"
 				},
 				{
 					"stage_name": "Point Light Shading Pass",
 					"stage_type": "USER_INPUT_COMPUTE",
-					"compute_pipeline": "Point Light Shading",
-					"bound_textures": [
-						{
-							"register": 0,
-							"texture": "GBuffer_albedo"
-						},
-						{
-							"register": 1,
-							"texture": "GBuffer_metallic_roughness"
-						},
-						{
-							"register": 2,
-							"texture": "GBuffer_normal"
-						},
-						{
-							"register": 3,
-							"texture": "GBuffer_depthbuffer"
-						}
-					],
-					"bound_unordered_textures": [
-						{
-							"register": 0,
-							"texture": "LightAccumulation1"
-						}
-					]
+					"compute_pipeline": "Point Light Shading"
 				}
 			]
 		},

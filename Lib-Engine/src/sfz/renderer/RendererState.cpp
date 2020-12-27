@@ -296,18 +296,4 @@ uint32_t RendererState::findPipelineComputeIdx(strID pipelineName) const noexcep
 	return ~0u;
 }
 
-ConstantBufferMemory* RendererState::findConstantBufferInCurrentInputStage(
-	uint32_t shaderRegister) noexcept
-{
-	// Find constant buffer
-	PerFrameData<ConstantBufferMemory>* data = inputEnabled.stage->constantBuffers.find(
-		[&](PerFrameData<ConstantBufferMemory>& item) {
-		return item.data(0).shaderRegister == shaderRegister;
-	});
-	if (data == nullptr) return nullptr;
-
-	// Get this frame's data
-	return &data->data(currentFrameIdx);
-}
-
 } // namespace sfz

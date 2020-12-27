@@ -245,21 +245,6 @@ public:
 			shaderRegister, &data, sizeof(T));
 	}
 
-	// Sets a constant buffer for the currently input active stage.
-	//
-	// You are only allowed to set a given constant buffer for a stage once per frame. This
-	// limitation currently exists because multiple buffer are allocated for each constant buffer
-	// internally in order to allow CPU->GPU uploading while rendering previous frames.
-	void stageSetConstantBufferUntyped(
-		uint32_t shaderRegister, const void* data, uint32_t numBytes) noexcept;
-
-	template<typename T>
-	void stageSetConstantBuffer(uint32_t shaderRegister, const T& data) noexcept
-	{
-		stageSetConstantBufferUntyped(
-			shaderRegister, &data, sizeof(T));
-	}
-
 	// Draws a mesh in the currently input active stage
 	//
 	// The specified registers will get data if available
@@ -283,8 +268,6 @@ public:
 	vec3_i32 stageGetComputeGroupDims() noexcept;
 
 	// Runs a compute pipeline with the specified number of groups.
-	void stageDispatchCompute(
-		uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) noexcept;
 	void stageDispatchComputeNoAutoBindings(
 		uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) noexcept;
 

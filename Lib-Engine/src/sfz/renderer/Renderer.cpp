@@ -607,57 +607,6 @@ void Renderer::stageSetPushConstantUntyped(
 	CHECK_ZG mState->groupCmdList.setPushConstant(shaderRegister, data, numBytes);
 }
 
-void Renderer::stageSetConstantBufferUntyped(
-	uint32_t shaderRegister, const void* data, uint32_t numBytes) noexcept
-{
-	sfz_assert(inStageInputMode());
-	sfz_assert(data != nullptr);
-	sfz_assert(numBytes > 0);
-
-	// In debug mode, validate that the specified shader registers corresponds to a a suitable
-	// constant buffer in the pipeline
-#ifndef NDEBUG
-	ZgPipelineBindingsSignature signature = {};
-	if (mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING) {
-		signature = mState->inputEnabled.pipelineRender->pipeline.getSignature().bindings;
-	}
-	else if (mState->inputEnabled.stage->type == StageType::USER_INPUT_COMPUTE) {
-		signature = mState->inputEnabled.pipelineCompute->pipeline.getBindingsSignature();
-	}
-	else {
-		sfz_assert(false);
-	}
-
-	uint32_t bufferIdx = ~0u;
-	for (uint32_t i = 0; i < signature.numConstBuffers; i++) {
-		if (shaderRegister == signature.constBuffers[i].bufferRegister) {
-			bufferIdx = i;
-			break;
-		}
-	}
-
-	sfz_assert(bufferIdx != ~0u);
-	sfz_assert(signature.constBuffers[bufferIdx].pushConstant == ZG_FALSE);
-	sfz_assert(signature.constBuffers[bufferIdx].sizeInBytes >= numBytes);
-#endif
-
-	// Find constant buffer
-	ConstantBufferMemory* frame =
-		mState->findConstantBufferInCurrentInputStage(shaderRegister);
-	sfz_assert(frame != nullptr);
-
-	// Ensure that we can only set constant buffer once per frame
-	sfz_assert(frame->lastFrameIdxTouched != mState->currentFrameIdx);
-	frame->lastFrameIdxTouched = mState->currentFrameIdx;
-
-	// Copy data to upload buffer
-	CHECK_ZG frame->uploadBuffer.memcpyUpload(0, data, numBytes);
-
-	// Issue upload to device buffer
-	CHECK_ZG mState->groupCmdList.memcpyBufferToBuffer(
-		frame->deviceBuffer, 0, frame->uploadBuffer, 0, numBytes);
-}
-
 void Renderer::stageDrawMesh(strID meshId, const MeshRegisters& registers, bool skipBindings) noexcept
 {
 	sfz_assert(meshId.isValid());
@@ -769,13 +718,6 @@ void Renderer::stageDrawMesh(strID meshId, const MeshRegisters& registers, bool 
 		if (registers.materialsArray != ~0u) {
 			sfz_assert(meshPtr->materialsBuffer.valid());
 			commonBindings.addConstantBuffer(registers.materialsArray, meshPtr->materialsBuffer);
-		}
-
-		// User-specified constant buffers
-		for (PerFrameData<ConstantBufferMemory>& framed : mState->inputEnabled.stage->constantBuffers) {
-			ConstantBufferMemory& frame = framed.data(mState->currentFrameIdx);
-			sfz_assert(frame.lastFrameIdxTouched == mState->currentFrameIdx);
-			commonBindings.addConstantBuffer(frame.shaderRegister, frame.deviceBuffer);
 		}
 
 		// Bound textures
@@ -1028,54 +970,6 @@ vec3_i32 Renderer::stageGetComputeGroupDims() noexcept
 	vec3_u32 groupDims;
 	mState->inputEnabled.pipelineCompute->pipeline.getGroupDims(groupDims.x, groupDims.y, groupDims.z);
 	return vec3_i32(groupDims);
-}
-
-void Renderer::stageDispatchCompute(
-	uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) noexcept
-{
-	sfz_assert(inStageInputMode());
-	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_COMPUTE);
-	sfz_assert(groupCountX > 0);
-	sfz_assert(groupCountY > 0);
-	sfz_assert(groupCountZ > 0);
-
-	// Set common pipeline bindings that are same for all components
-	zg::PipelineBindings commonBindings;
-
-	// User-specified constant buffers
-	for (PerFrameData<ConstantBufferMemory>& framed : mState->inputEnabled.stage->constantBuffers) {
-		ConstantBufferMemory& frame = framed.data(mState->currentFrameIdx);
-		sfz_assert(frame.lastFrameIdxTouched == mState->currentFrameIdx);
-		commonBindings.addConstantBuffer(frame.shaderRegister, frame.deviceBuffer);
-	}
-
-	// Bound textures
-	for (const BoundTexture& boundTex : mState->inputEnabled.stage->boundTextures) {
-		StaticTextureItem* texItem = mState->configurable.staticTextures.get(boundTex.textureName);
-		sfz_assert(texItem != nullptr);
-		commonBindings.addTexture(boundTex.textureRegister, texItem->texture);
-	}
-
-	// Bound unordered textures
-	for (const BoundTexture& boundTex : mState->inputEnabled.stage->boundUnorderedTextures) {
-		StaticTextureItem* texItem = mState->configurable.staticTextures.get(boundTex.textureName);
-		sfz_assert(texItem != nullptr);
-		commonBindings.addUnorderedTexture(boundTex.textureRegister, 0, texItem->texture);
-	}
-
-	// Bound unordered buffers
-	for (const BoundBuffer& boundBuf : mState->inputEnabled.stage->boundUnorderedBuffers) {
-		StaticBufferItem* bufItem = mState->configurable.staticBuffers.get(boundBuf.bufferName);
-		sfz_assert(bufItem != nullptr);
-		commonBindings.addUnorderedBuffer(
-			boundBuf.bufferRegister, bufItem->maxNumElements, bufItem->elementSizeBytes, bufItem->buffer);
-	}
-
-	// Set pipeline bindings
-	CHECK_ZG mState->groupCmdList.setPipelineBindings(commonBindings);
-
-	// Issue dispatch
-	CHECK_ZG mState->groupCmdList.dispatchCompute(groupCountX, groupCountY, groupCountZ);
 }
 
 void Renderer::stageDispatchComputeNoAutoBindings(
