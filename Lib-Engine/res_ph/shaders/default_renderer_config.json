@@ -269,13 +269,7 @@
 					"render_targets": [
 						"default"
 					],
-					"depth_buffer": "default",
-					"bound_textures": [
-						{
-							"register": 0,
-							"texture": "LightAccumulation1"
-						}
-					]
+					"depth_buffer": "default"
 				}
 			]
 		}

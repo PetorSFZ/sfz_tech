@@ -25,6 +25,8 @@
 #include <skipifzero_image_view.hpp>
 #include <skipifzero_strings.hpp>
 
+#include <ZeroG.h>
+
 #include "sfz/Context.hpp"
 #include "sfz/rendering/Mesh.hpp"
 
@@ -37,23 +39,24 @@ namespace sfz {
 // Helper structs
 // ------------------------------------------------------------------------------------------------
 
-struct MeshRegisters final {
-	uint32_t materialIdxPushConstant = ~0u;
-	uint32_t materialsArray = ~0u;
-	uint32_t albedo = ~0u;
-	uint32_t metallicRoughness = ~0u;
-	uint32_t normal = ~0u;
-	uint32_t occlusion = ~0u;
-	uint32_t emissive = ~0u;
-};
-
 constexpr uint32_t RENDERER_MAX_NUM_CONST_BUFFERS = 16;
 constexpr uint32_t RENDERER_MAX_NUM_UNORDERED_BUFFERS = 16;
 constexpr uint32_t RENDERER_MAX_NUM_TEXTURES = 16;
 constexpr uint32_t RENDERER_MAX_NUM_UNORDERED_TEXTURES = 16;
 
+enum class BindingResourceType {
+	ID = 0,
+	RAW_BUFFER = 1,
+	RAW_TEXTURE = 2
+};
+
 struct Binding final {
-	strID resourceID;
+	BindingResourceType type = BindingResourceType::ID;
+	union {
+		strID resourceID;
+		ZgBuffer* rawBuffer;
+		ZgTexture* rawTexture;
+	} resource;
 	uint32_t shaderRegister = ~0u;
 	uint32_t mipLevel = 0; // Only used for unordered textures
 };
@@ -70,7 +73,17 @@ struct PipelineBindings final {
 	}
 	PipelineBindings& addConstBuffer(strID id, uint32_t shaderRegister)
 	{
-		constBuffers.add({ id, shaderRegister });
+		Binding& binding = constBuffers.add();
+		binding.resource.resourceID = id;
+		binding.shaderRegister = shaderRegister;
+		return *this;
+	}
+	PipelineBindings& addConstBuffer(zg::Buffer& buffer, uint32_t shaderRegister)
+	{
+		Binding& binding = constBuffers.add();
+		binding.type = BindingResourceType::RAW_BUFFER;
+		binding.resource.rawBuffer = buffer.handle;
+		binding.shaderRegister = shaderRegister;
 		return *this;
 	}
 
@@ -80,7 +93,9 @@ struct PipelineBindings final {
 	}
 	PipelineBindings& addUnorderedBuffer(strID id, uint32_t shaderRegister)
 	{
-		unorderedBuffers.add({ id, shaderRegister });
+		Binding& binding = unorderedBuffers.add();
+		binding.resource.resourceID = id;
+		binding.shaderRegister = shaderRegister;
 		return *this;
 	}
 
@@ -90,7 +105,9 @@ struct PipelineBindings final {
 	}
 	PipelineBindings& addTexture(strID id, uint32_t shaderRegister)
 	{
-		textures.add({ id, shaderRegister });
+		Binding& binding = textures.add();
+		binding.resource.resourceID = id;
+		binding.shaderRegister = shaderRegister;
 		return *this;
 	}
 
@@ -100,7 +117,10 @@ struct PipelineBindings final {
 	}
 	PipelineBindings& addUnorderedTexture(strID id, uint32_t shaderRegister, uint32_t mipLevel)
 	{
-		unorderedTextures.add({ id, shaderRegister, mipLevel });
+		Binding& binding = unorderedTextures.add();
+		binding.resource.resourceID = id;
+		binding.shaderRegister = shaderRegister;
+		binding.mipLevel = mipLevel;
 		return *this;
 	}
 };
@@ -245,15 +265,13 @@ public:
 			shaderRegister, &data, sizeof(T));
 	}
 
-	// Draws a mesh in the currently input active stage
-	//
-	// The specified registers will get data if available
-	void stageDrawMesh(strID meshId, const MeshRegisters& registers, bool skipBindings = false) noexcept;
-
 	void stageSetBindings(const PipelineBindings& bindings) noexcept;
 
 	void stageSetVertexBuffer(const char* streamingBufferName) noexcept;
 	void stageSetIndexBuffer(const char* streamingBufferName, bool u32Buffer) noexcept;
+
+	void stageSetIndexBuffer(zg::Buffer& buffer, ZgIndexBufferType indexBufferType) noexcept;
+	void stageSetVertexBuffer(uint32_t slot, zg::Buffer& buffer) noexcept;
 
 	void stageDrawTriangles(uint32_t startVertex, uint32_t numVertices) noexcept;
 	void stageDrawTrianglesIndexed(uint32_t firstIndex, uint32_t numIndices) noexcept;

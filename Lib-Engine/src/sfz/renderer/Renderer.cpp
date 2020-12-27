@@ -607,188 +607,6 @@ void Renderer::stageSetPushConstantUntyped(
 	CHECK_ZG mState->groupCmdList.setPushConstant(shaderRegister, data, numBytes);
 }
 
-void Renderer::stageDrawMesh(strID meshId, const MeshRegisters& registers, bool skipBindings) noexcept
-{
-	sfz_assert(meshId.isValid());
-	sfz_assert(inStageInputMode());
-	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
-
-	// Find mesh
-	ResourceManager& resources = getResourceManager();
-	MeshItem* meshPtr = resources.getMesh(resources.getMeshHandle(meshId));
-	sfz_assert(meshPtr != nullptr);
-	if (meshPtr == nullptr) return;
-
-	// If mesh is not enabled, skip rendering it
-	if (!meshPtr->enabled) return;
-
-	// Validate some stuff in debug mode
-#ifndef NDEBUG
-	// Validate pipeline vertex input for standard mesh rendering
-	const ZgPipelineRenderSignature renderSignature =
-		mState->inputEnabled.pipelineRender->pipeline.getSignature();
-	sfz_assert(renderSignature.numVertexAttributes == 3);
-
-	sfz_assert(renderSignature.vertexAttributes[0].location == 0);
-	sfz_assert(renderSignature.vertexAttributes[0].vertexBufferSlot == 0);
-	sfz_assert(renderSignature.vertexAttributes[0].type == ZG_VERTEX_ATTRIBUTE_F32_3);
-	sfz_assert(
-		renderSignature.vertexAttributes[0].offsetToFirstElementInBytes == offsetof(Vertex, pos));
-
-	sfz_assert(renderSignature.vertexAttributes[1].location == 1);
-	sfz_assert(renderSignature.vertexAttributes[1].vertexBufferSlot == 0);
-	sfz_assert(renderSignature.vertexAttributes[1].type == ZG_VERTEX_ATTRIBUTE_F32_3);
-	sfz_assert(
-		renderSignature.vertexAttributes[1].offsetToFirstElementInBytes == offsetof(Vertex, normal));
-
-	sfz_assert(renderSignature.vertexAttributes[2].location == 2);
-	sfz_assert(renderSignature.vertexAttributes[2].vertexBufferSlot == 0);
-	sfz_assert(renderSignature.vertexAttributes[2].type == ZG_VERTEX_ATTRIBUTE_F32_2);
-	sfz_assert(
-		renderSignature.vertexAttributes[2].offsetToFirstElementInBytes == offsetof(Vertex, texcoord));
-
-	const ZgPipelineBindingsSignature bindingsSignature =
-		mState->inputEnabled.pipelineRender->pipeline.getSignature().bindings;
-
-	// Validate material index push constant
-	if (registers.materialIdxPushConstant != ~0u) {
-		bool found = false;
-		for (uint32_t i = 0; i < bindingsSignature.numConstBuffers; i++) {
-			const ZgConstantBufferBindingDesc& desc = bindingsSignature.constBuffers[i];
-			if (desc.bufferRegister == registers.materialIdxPushConstant) {
-				found = true;
-				sfz_assert(desc.pushConstant == ZG_TRUE);
-				break;
-			}
-		}
-		sfz_assert(found);
-	}
-
-	// Validate materials array
-	if (registers.materialsArray != ~0u) {
-		bool found = false;
-		for (uint32_t i = 0; i < bindingsSignature.numConstBuffers; i++) {
-			const ZgConstantBufferBindingDesc& desc = bindingsSignature.constBuffers[i];
-			if (desc.bufferRegister == registers.materialsArray) {
-				found = true;
-				sfz_assert(desc.pushConstant == ZG_FALSE);
-				sfz_assert(desc.sizeInBytes >= meshPtr->numMaterials * sizeof(ShaderMaterial));
-				sfz_assert(desc.sizeInBytes == sizeof(ForwardShaderMaterialsBuffer));
-				break;
-			}
-		}
-		sfz_assert(found);
-	}
-
-	// Validate texture bindings
-	auto assertTextureRegister = [&](uint32_t texRegister) {
-		if (texRegister == ~0u) return;
-		bool found = false;
-		for (uint32_t i = 0; i < bindingsSignature.numTextures; i++) {
-			const ZgTextureBindingDesc& desc = bindingsSignature.textures[i];
-			if (desc.textureRegister == texRegister) {
-				found = true;
-				break;
-			}
-		}
-		sfz_assert(found);
-	};
-
-	assertTextureRegister(registers.albedo);
-	assertTextureRegister(registers.metallicRoughness);
-	assertTextureRegister(registers.normal);
-	assertTextureRegister(registers.occlusion);
-	assertTextureRegister(registers.emissive);
-#endif
-
-	// Set vertex buffer
-	sfz_assert(meshPtr->vertexBuffer.valid());
-	CHECK_ZG mState->groupCmdList.setVertexBuffer(0, meshPtr->vertexBuffer);
-
-	// Set index buffer
-	sfz_assert(meshPtr->indexBuffer.valid());
-	CHECK_ZG mState->groupCmdList.setIndexBuffer(
-		meshPtr->indexBuffer, ZG_INDEX_BUFFER_TYPE_UINT32);
-
-	// Set common pipeline bindings that are same for all components
-	zg::PipelineBindings commonBindings;
-
-	if (!skipBindings) {
-		// Create materials array binding
-		if (registers.materialsArray != ~0u) {
-			sfz_assert(meshPtr->materialsBuffer.valid());
-			commonBindings.addConstantBuffer(registers.materialsArray, meshPtr->materialsBuffer);
-		}
-
-		// Bound textures
-		for (const BoundTexture& boundTex : mState->inputEnabled.stage->boundTextures) {
-			StaticTextureItem* texItem = mState->configurable.staticTextures.get(boundTex.textureName);
-			sfz_assert(texItem != nullptr);
-			commonBindings.addTexture(boundTex.textureRegister, texItem->texture);
-		}
-
-		// Bound unordered textures
-		for (const BoundTexture& boundTex : mState->inputEnabled.stage->boundUnorderedTextures) {
-			StaticTextureItem* texItem = mState->configurable.staticTextures.get(boundTex.textureName);
-			sfz_assert(texItem != nullptr);
-			commonBindings.addUnorderedTexture(boundTex.textureRegister, 0, texItem->texture);
-		}
-
-		// Bound unordered buffers
-		for (const BoundBuffer& boundBuf : mState->inputEnabled.stage->boundUnorderedBuffers) {
-			StaticBufferItem* bufItem = mState->configurable.staticBuffers.get(boundBuf.bufferName);
-			sfz_assert(bufItem != nullptr);
-			commonBindings.addUnorderedBuffer(
-				boundBuf.bufferRegister, bufItem->maxNumElements, bufItem->elementSizeBytes, bufItem->buffer);
-		}
-	}
-
-	// Draw all mesh components
-	for (MeshComponent& comp : meshPtr->components) {
-
-		if (!skipBindings) {
-			sfz_assert(comp.materialIdx < meshPtr->cpuMaterials.size());
-			const Material& material = meshPtr->cpuMaterials[comp.materialIdx];
-
-			// Set material index push constant
-			if (registers.materialIdxPushConstant != ~0u) {
-				sfz::vec4_u32 tmp = sfz::vec4_u32(0u);
-				tmp.x = comp.materialIdx;
-				CHECK_ZG mState->groupCmdList.setPushConstant(
-					registers.materialIdxPushConstant, &tmp, sizeof(sfz::vec4_u32));
-			}
-
-			// Create texture bindings
-			zg::PipelineBindings bindings = commonBindings;
-			auto bindTexture = [&](uint32_t texRegister, strID texID) {
-				if (texRegister != ~0u && texID.isValid()) {
-
-					// Find texture
-					TextureItem* texItem = resources.getTexture(resources.getTextureHandle(texID));
-					sfz_assert(texItem != nullptr);
-
-					// Bind texture
-					bindings.addTexture(texRegister, texItem->texture);
-				}
-			};
-			bindTexture(registers.albedo, material.albedoTex);
-			bindTexture(registers.metallicRoughness, material.metallicRoughnessTex);
-			bindTexture(registers.normal, material.normalTex);
-			bindTexture(registers.occlusion, material.occlusionTex);
-			bindTexture(registers.emissive, material.emissiveTex);
-
-			// Set pipeline bindings
-			CHECK_ZG mState->groupCmdList.setPipelineBindings(bindings);
-		}
-		
-		// Issue draw command
-		sfz_assert(comp.numIndices != 0);
-		sfz_assert((comp.numIndices % 3) == 0);
-		CHECK_ZG mState->groupCmdList.drawTrianglesIndexed(
-			comp.firstIndex, comp.numIndices);
-	}
-}
-
 void Renderer::stageSetBindings(const PipelineBindings& bindings) noexcept
 {
 	// TODO: Verify bindings in debug mode
@@ -798,31 +616,41 @@ void Renderer::stageSetBindings(const PipelineBindings& bindings) noexcept
 	// Constant buffers
 	for (const Binding& binding : bindings.constBuffers) {
 		
-		StreamingBufferItem* streamingItem =
-			mState->configurable.streamingBuffers.get(binding.resourceID);
-		StaticBufferItem* staticItem =
-			mState->configurable.staticBuffers.get(binding.resourceID);
-		sfz_assert(streamingItem != nullptr || staticItem != nullptr);
-		sfz_assert(!(streamingItem != nullptr && staticItem != nullptr));
+		ZgBuffer* buffer = nullptr;
+		if (binding.type == BindingResourceType::ID) {
+			StreamingBufferItem* streamingItem =
+				mState->configurable.streamingBuffers.get(binding.resource.resourceID);
+			StaticBufferItem* staticItem =
+				mState->configurable.staticBuffers.get(binding.resource.resourceID);
+			sfz_assert(streamingItem != nullptr || staticItem != nullptr);
+			sfz_assert(!(streamingItem != nullptr && staticItem != nullptr));
 
-		zg::Buffer* buffer = nullptr;
-		if (streamingItem != nullptr) {
-			buffer = &streamingItem->data.data(mState->currentFrameIdx).deviceBuffer;
+			if (streamingItem != nullptr) {
+				buffer = streamingItem->data.data(mState->currentFrameIdx).deviceBuffer.handle;
+			}
+			else if (staticItem != nullptr) {
+				buffer = staticItem->buffer.handle;
+			}
 		}
-		else if (staticItem != nullptr) {
-			buffer = &staticItem->buffer;
+		else if (binding.type == BindingResourceType::RAW_BUFFER) {
+			buffer = binding.resource.rawBuffer;
 		}
+		sfz_assert(buffer != nullptr);
 
 		sfz_assert(binding.shaderRegister != ~0u);
-		zgBindings.addConstantBuffer(binding.shaderRegister, *buffer);
+		ZgConstantBufferBinding cbufferBinding = {};
+		cbufferBinding.buffer = buffer;
+		cbufferBinding.bufferRegister = binding.shaderRegister;
+		zgBindings.addConstantBuffer(cbufferBinding);
 	}
 
 	// Textures
 	ResourceManager& resources = getResourceManager();
 	for (const Binding& binding : bindings.textures) {
+		sfz_assert(binding.type == BindingResourceType::ID);
 
-		TextureItem* dynItem = resources.getTexture(resources.getTextureHandle(binding.resourceID));
-		StaticTextureItem* staticItem = mState->configurable.staticTextures.get(binding.resourceID);
+		TextureItem* dynItem = resources.getTexture(resources.getTextureHandle(binding.resource.resourceID));
+		StaticTextureItem* staticItem = mState->configurable.staticTextures.get(binding.resource.resourceID);
 		sfz_assert(dynItem != nullptr || staticItem != nullptr);
 		sfz_assert(!(dynItem == nullptr && staticItem == nullptr));
 
@@ -837,11 +665,12 @@ void Renderer::stageSetBindings(const PipelineBindings& bindings) noexcept
 
 	// Unordered buffers
 	for (const Binding& binding : bindings.unorderedBuffers) {
+		sfz_assert(binding.type == BindingResourceType::ID);
 
 		StreamingBufferItem* streamingItem =
-			mState->configurable.streamingBuffers.get(binding.resourceID);
+			mState->configurable.streamingBuffers.get(binding.resource.resourceID);
 		StaticBufferItem* staticItem =
-			mState->configurable.staticBuffers.get(binding.resourceID);
+			mState->configurable.staticBuffers.get(binding.resource.resourceID);
 		sfz_assert(streamingItem != nullptr || staticItem != nullptr);
 		sfz_assert(!(streamingItem != nullptr && staticItem != nullptr));
 
@@ -865,9 +694,10 @@ void Renderer::stageSetBindings(const PipelineBindings& bindings) noexcept
 
 	// Unordered textures
 	for (const Binding& binding : bindings.unorderedTextures) {
-		
-		TextureItem* dynItem = resources.getTexture(resources.getTextureHandle(binding.resourceID));
-		StaticTextureItem* staticItem = mState->configurable.staticTextures.get(binding.resourceID);
+		sfz_assert(binding.type == BindingResourceType::ID);
+
+		TextureItem* dynItem = resources.getTexture(resources.getTextureHandle(binding.resource.resourceID));
+		StaticTextureItem* staticItem = mState->configurable.staticTextures.get(binding.resource.resourceID);
 		sfz_assert(dynItem != nullptr || staticItem != nullptr);
 		sfz_assert(!(dynItem == nullptr && staticItem == nullptr));
 
@@ -916,6 +746,20 @@ void Renderer::stageSetIndexBuffer(const char* streamingBufferName, bool u32Buff
 	// Set index buffer
 	CHECK_ZG mState->groupCmdList.setIndexBuffer(
 		memory.deviceBuffer, u32Buffer ? ZG_INDEX_BUFFER_TYPE_UINT32 : ZG_INDEX_BUFFER_TYPE_UINT16);
+}
+
+void Renderer::stageSetIndexBuffer(zg::Buffer& buffer, ZgIndexBufferType indexBufferType) noexcept
+{
+	sfz_assert(inStageInputMode());
+	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
+	CHECK_ZG mState->groupCmdList.setIndexBuffer(buffer, indexBufferType);
+}
+
+void Renderer::stageSetVertexBuffer(uint32_t slot, zg::Buffer& buffer) noexcept
+{
+	sfz_assert(inStageInputMode());
+	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
+	CHECK_ZG mState->groupCmdList.setVertexBuffer(slot, buffer);
 }
 
 void Renderer::stageDrawTriangles(uint32_t startVertex, uint32_t numVertices) noexcept
