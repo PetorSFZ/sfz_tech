@@ -539,7 +539,7 @@ void Renderer::stageUploadToStreamingBufferUntyped(
 	// Calculate number of bytes to copy to streaming buffer
 	const uint32_t numBytes = elementSize * numElements;
 	sfz_assert(numBytes != 0);
-	sfz_assert(numBytes < (item->elementSizeBytes * item->maxNumElements));
+	sfz_assert(numBytes <= (item->elementSizeBytes * item->maxNumElements));
 	sfz_assert(elementSize == item->elementSizeBytes); // TODO: Might want to remove this assert
 
 	// Grab this frame's memory
