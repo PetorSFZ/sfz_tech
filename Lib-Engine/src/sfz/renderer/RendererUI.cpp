@@ -87,12 +87,6 @@ void RendererUI::render(RendererState& state) noexcept
 			ImGui::EndTabItem();
 		}
 
-		if (ImGui::BeginTabItem("Present Stage Groups")) {
-			ImGui::Spacing();
-			this->renderPresentStageGroupsTab(state.configurable);
-			ImGui::EndTabItem();
-		}
-
 		if (ImGui::BeginTabItem("Pipelines")) {
 			ImGui::Spacing();
 			this->renderPipelinesTab(state);
@@ -177,96 +171,6 @@ void RendererUI::renderGeneralTab(RendererState& state) noexcept
 	});
 
 	ImGui::Unindent(20.0f);
-}
-
-void RendererUI::renderPresentStageGroupsTab(RendererConfigurableState& state) noexcept
-{
-	for (uint32_t groupIdx = 0; groupIdx < state.presentStageGroups.size(); groupIdx++) {
-		const StageGroup& group = state.presentStageGroups[groupIdx];
-		const char* groupName = group.groupName.str();
-
-		// Collapsing header with group name
-		const bool collapsingHeaderOpen =
-			ImGui::CollapsingHeader(str256("Stage Group %u - \"%s\"", groupIdx, groupName));
-		if (!collapsingHeaderOpen) continue;
-
-		ImGui::Indent(20.0f);
-		for (uint32_t stageIdx = 0; stageIdx < group.stages.size(); stageIdx++) {
-			const Stage& stage = group.stages[stageIdx];
-
-			// Stage name
-			ImGui::Text("Stage %u - \"%s\"", stageIdx, stage.name.str());
-			ImGui::Indent(20.0f);
-
-			// Stage type
-			ImGui::Text("Type: %s", toString(stage.type));
-
-			if (stage.type == StageType::USER_INPUT_RENDERING) {
-
-				// Pipeline name
-				ImGui::Text("Render Pipeline: \"%s\"", stage.render.pipelineName.str());
-
-				if (stage.render.defaultFramebuffer) {
-					ImGui::Text("Framebuffer: \"default\"");
-				}
-				else {
-					// Render targets
-					if (!stage.render.renderTargetNames.isEmpty()) {
-						ImGui::Text("Render targets:");
-						ImGui::Indent(20.0f);
-						for (uint32_t i = 0; i < stage.render.renderTargetNames.size(); i++) {
-							strID renderTarget = stage.render.renderTargetNames[i];
-							ImGui::Text("- Render target %u: \"%s\"",
-								i, renderTarget.str());
-						}
-						ImGui::Unindent(20.0f);
-					}
-
-					// Depth buffer
-					if (stage.render.depthBufferName.isValid()) {
-						ImGui::Text("Depth buffer: \"%s\"",
-							stage.render.depthBufferName.str());
-					}
-				}
-			}
-			else if (stage.type == StageType::USER_INPUT_COMPUTE) {
-				
-				// Pipeline name
-				ImGui::Text("Compute Pipeline: \"%s\"", stage.compute.pipelineName.str());
-			}
-			else {
-				sfz_assert(false);
-			}
-
-			// Bound textures
-			if (!stage.boundTextures.isEmpty()) {
-				ImGui::Text("Bound textures:");
-				ImGui::Indent(20.0f);
-				for (const BoundTexture& boundTex : stage.boundTextures) {
-					ImGui::Text("- Register: %u  --  Texture: \"%s\"",
-						boundTex.textureRegister,
-						boundTex.textureName.str());
-				}
-				ImGui::Unindent(20.0f);
-			}
-
-			// Bound unordered textures
-			if (!stage.boundUnorderedTextures.isEmpty()) {
-				ImGui::Text("Bound unordered textures:");
-				ImGui::Indent(20.0f);
-				for (const BoundTexture& boundTex : stage.boundUnorderedTextures) {
-					ImGui::Text("- Register: %u  --  Texture: \"%s\"",
-						boundTex.textureRegister,
-						boundTex.textureName.str());
-				}
-				ImGui::Unindent(20.0f);
-			}
-
-			ImGui::Unindent(20.0f);
-			ImGui::Spacing();
-		}
-		ImGui::Unindent(20.0f);
-	}
 }
 
 void RendererUI::renderPipelinesTab(RendererState& state) noexcept

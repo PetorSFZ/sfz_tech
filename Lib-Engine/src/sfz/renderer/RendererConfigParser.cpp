@@ -548,51 +548,6 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 				else {
 					sfz_assert(false);
 				}
-
-				// Bound textures
-				if (stageNode.accessMap("bound_textures").isValid()) {
-					JsonNode boundTexsNode = stageNode.accessMap("bound_textures");
-					uint32_t numBoundTextures = boundTexsNode.arrayLength();
-
-					for (uint32_t i = 0; i < numBoundTextures; i++) {
-						JsonNode texNode = boundTexsNode.accessArray(i);
-						BoundTexture boundTex;
-						boundTex.textureRegister = CHECK_JSON texNode.accessMap("register").valueInt();
-						str256 texName = CHECK_JSON texNode.accessMap("texture").valueStr256();
-						boundTex.textureName = strID(texName);
-						stage.boundTextures.add(boundTex);
-					}
-				}
-
-				// Bound unordered textures
-				if (stageNode.accessMap("bound_unordered_textures").isValid()) {
-					JsonNode boundTexsNode = stageNode.accessMap("bound_unordered_textures");
-					uint32_t numBoundTextures = boundTexsNode.arrayLength();
-
-					for (uint32_t i = 0; i < numBoundTextures; i++) {
-						JsonNode texNode = boundTexsNode.accessArray(i);
-						BoundTexture boundTex;
-						boundTex.textureRegister = CHECK_JSON texNode.accessMap("register").valueInt();
-						str256 texName = CHECK_JSON texNode.accessMap("texture").valueStr256();
-						boundTex.textureName = strID(texName);
-						stage.boundUnorderedTextures.add(boundTex);
-					}
-				}
-
-				// Bound unordered buffers
-				if (stageNode.accessMap("bound_unordered_buffers").isValid()) {
-					JsonNode boundBufsNode = stageNode.accessMap("bound_unordered_buffers");
-					uint32_t numBoundBuffers = boundBufsNode.arrayLength();
-
-					for (uint32_t i = 0; i < numBoundBuffers; i++) {
-						JsonNode bufNode = boundBufsNode.accessArray(i);
-						BoundBuffer boundBuf;
-						boundBuf.bufferRegister = CHECK_JSON bufNode.accessMap("register").valueInt();
-						str256 bufName = CHECK_JSON bufNode.accessMap("buffer").valueStr256();
-						boundBuf.bufferName = strID(bufName);
-						stage.boundUnorderedBuffers.add(boundBuf);
-					}
-				}
 			}
 		}
 	}

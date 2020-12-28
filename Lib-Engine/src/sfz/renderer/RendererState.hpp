@@ -211,9 +211,6 @@ struct Stage final {
 	struct {
 		strID pipelineName;
 	} compute;
-	ArrayLocal<BoundTexture, ZG_MAX_NUM_TEXTURES> boundTextures;
-	ArrayLocal<BoundTexture, ZG_MAX_NUM_UNORDERED_TEXTURES> boundUnorderedTextures;
-	ArrayLocal<BoundBuffer, ZG_MAX_NUM_UNORDERED_BUFFERS> boundUnorderedBuffers;
 
 	void rebuildFramebuffer(HashMap<strID, StaticTextureItem>& staticTextures) noexcept;
 };
