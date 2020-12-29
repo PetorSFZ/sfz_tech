@@ -125,6 +125,42 @@ UTEST(StringLocal, ends_with)
 	ASSERT_TRUE(str2.endsWith("cool.png"));
 }
 
+UTEST(StringLocal, contains)
+{
+	sfz::str96 str1 = "";
+	ASSERT_TRUE(str1.contains(""));
+	ASSERT_TRUE(!str1.contains(" "));
+	ASSERT_TRUE(!str1.contains("\n"));
+	ASSERT_TRUE(!str1.contains("\t"));
+	ASSERT_TRUE(!str1.contains("a"));
+	ASSERT_TRUE(!str1.contains("B"));
+
+	sfz::str96 str2 = "cool\t\n";
+	ASSERT_TRUE(str2.contains("cool\t\n"));
+	ASSERT_TRUE(!str2.contains(" cool\t\n"));
+	ASSERT_TRUE(str2.contains("cool"));
+	ASSERT_TRUE(str2.contains("\t\n"));
+	ASSERT_TRUE(str2.contains(""));
+}
+
+UTEST(StringLocal, is_part_of)
+{
+	sfz::str96 str1 = "";
+	ASSERT_TRUE(str1.isPartOf(""));
+	ASSERT_TRUE(str1.isPartOf(" "));
+	ASSERT_TRUE(str1.isPartOf("\n"));
+	ASSERT_TRUE(str1.isPartOf("\t"));
+	ASSERT_TRUE(str1.isPartOf("a"));
+	ASSERT_TRUE(str1.isPartOf("B"));
+
+	sfz::str96 str2 = "cool\t\n";
+	ASSERT_TRUE(str2.isPartOf("cool\t\n"));
+	ASSERT_TRUE(str2.isPartOf(" cool\t\n"));
+	ASSERT_TRUE(!str2.isPartOf("cool"));
+	ASSERT_TRUE(!str2.isPartOf("\t\n"));
+	ASSERT_TRUE(!str2.isPartOf(""));
+}
+
 // String hashing tests
 // ------------------------------------------------------------------------------------------------
 

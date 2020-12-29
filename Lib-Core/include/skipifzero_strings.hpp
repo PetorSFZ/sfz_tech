@@ -283,6 +283,18 @@ struct StringLocal final {
 		return true;
 	}
 
+	bool contains(const char* substring) const
+	{
+		if (substring == nullptr) return false;
+		return strstr(mRawStr, substring) != nullptr;
+	}
+
+	bool isPartOf(const char* superstring) const
+	{
+		if (superstring == nullptr) return false;
+		return strstr(superstring, mRawStr) != nullptr;
+	}
+
 	// Operators
 	// --------------------------------------------------------------------------------------------
 
