@@ -17,12 +17,13 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/resources/TextureItem.hpp"
+#include "sfz/resources/TextureResource.hpp"
 
 #include <algorithm>
 
 #include <skipifzero.hpp>
 
+#include "sfz/config/Setting.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
 #include "sfz/rendering/Image.hpp"
 
@@ -120,68 +121,56 @@ static void generateMipmap(const ImageViewConst& prevLevel, Image& currLevel) no
 	};
 }
 
-// Texture functions
+// TextureResource
 // ------------------------------------------------------------------------------------------------
 
-ZgTextureFormat toZeroGImageFormat(ImageType imageType) noexcept
+ZgResult TextureResource::build(vec2_u32 screenRes)
 {
-	switch (imageType) {
-	case ImageType::UNDEFINED: return ZG_TEXTURE_FORMAT_UNDEFINED;
-	case ImageType::R_U8: return ZG_TEXTURE_FORMAT_R_U8_UNORM;
-	case ImageType::RG_U8: return ZG_TEXTURE_FORMAT_RG_U8_UNORM;
-	case ImageType::RGBA_U8: return ZG_TEXTURE_FORMAT_RGBA_U8_UNORM;
-
-	case ImageType::R_F32: return ZG_TEXTURE_FORMAT_R_F32;
-	case ImageType::RG_F32: return ZG_TEXTURE_FORMAT_RG_F32;
-	case ImageType::RGBA_F32: return ZG_TEXTURE_FORMAT_RGBA_F32;
+	// Set resolution and resolution scale if screen relative
+	if (screenRelativeResolution) {
+		if (this->resolutionScaleSetting != nullptr) {
+			this->resolutionScale = resolutionScaleSetting->floatValue();
+		}
+		vec2 scaledRes = vec2(screenRes) * this->resolutionScale;
+		this->res.x = uint32_t(std::round(scaledRes.x));
+		this->res.y = uint32_t(std::round(scaledRes.y));
 	}
-	sfz_assert(false);
-	return ZG_TEXTURE_FORMAT_UNDEFINED;
+
+	sfz_assert(res.x > 0);
+	sfz_assert(res.y > 0);
+	sfz_assert(numMipmaps > 0);
+	sfz_assert(numMipmaps <= ZG_MAX_NUM_MIPMAPS);
+
+	ZgTextureCreateInfo desc = {};
+	desc.format = format;
+	desc.committedAllocation = committedAllocation ? ZG_TRUE : ZG_FALSE;
+	desc.allowUnorderedAccess = (usage == ZG_TEXTURE_USAGE_DEPTH_BUFFER) ? ZG_FALSE : ZG_TRUE;
+	desc.usage = usage;
+	desc.optimalClearValue = optimalClearValue;
+	desc.width = res.x;
+	desc.height = res.y;
+	desc.numMipmaps = numMipmaps;
+	desc.debugName = name.str();
+	return texture.create(desc);
 }
 
-zg::Texture textureAllocateAndUploadBlocking(
-	const char* debugName,
+void TextureResource::uploadBlocking(
 	const ImageViewConst& image,
 	sfz::Allocator* cpuAllocator,
-	zg::CommandQueue& copyQueue,
-	bool generateMipmaps,
-	uint32_t& numMipmapsOut) noexcept
+	zg::CommandQueue& copyQueue)
 {
-	sfz_assert(isPowerOfTwo(image.width));
-	sfz_assert(isPowerOfTwo(image.height));
-
+	sfz_assert(texture.valid());
+	sfz_assert(image.width == res.x);
+	sfz_assert(image.height == res.y);
+	
 	// Convert to ZeroG Image View
 	ZgImageViewConstCpu view = toZeroGImageView(image);
-
-	// Calculate number of mipmaps if requested
-	uint32_t numMipmaps = 1;
-	if (generateMipmaps) {
-		uint32_t logWidth = sfz::max(uint32_t(log2(image.width)), 1u);
-		uint32_t logHeight = sfz::max(uint32_t(log2(image.height)), 1u);
-		uint32_t logMin = std::min(logWidth, logHeight);
-		numMipmaps = std::min(logMin, (ZG_MAX_NUM_MIPMAPS - 1));
-	}
-	sfz_assert(numMipmaps != 0);
-
-	// Allocate Texture
-	zg::Texture texture;
-	{
-		ZgTextureCreateInfo createInfo = {};
-		createInfo.format = view.format;
-		createInfo.usage = ZG_TEXTURE_USAGE_DEFAULT;
-		createInfo.width = view.width;
-		createInfo.height = view.height;
-		createInfo.numMipmaps = numMipmaps;
-		createInfo.debugName = debugName;
-		CHECK_ZG texture.create(createInfo);
-	}
-	sfz_assert(texture.valid());
-	if (!texture.valid()) return zg::Texture();
+	sfz_assert(format == view.format);
 
 	// Generate mipmaps (on CPU)
 	Image mipmaps[ZG_MAX_NUM_MIPMAPS - 1];
 	for (uint32_t i = 0; i < (numMipmaps - 1); i++) {
-		
+
 		// Get previous mipmap level
 		ImageViewConst prevLevel;
 		if (i == 0) prevLevel = image;
@@ -220,9 +209,106 @@ zg::Texture textureAllocateAndUploadBlocking(
 	CHECK_ZG commandList.enableQueueTransition(texture);
 	CHECK_ZG copyQueue.executeCommandList(commandList);
 	CHECK_ZG copyQueue.flush();
+}
 
-	numMipmapsOut = numMipmaps;
-	return std::move(texture);
+TextureResource TextureResource::createFixedSize(
+	const char* name,
+	const ImageViewConst& image,
+	bool allocateMipmaps,
+	ZgTextureUsage usage,
+	bool committedAllocation)
+{
+	sfz_assert(isPowerOfTwo(image.width));
+	sfz_assert(isPowerOfTwo(image.height));
+
+	// Calculate number of mipmaps if requested
+	uint32_t numMipmaps = 1;
+	if (allocateMipmaps) {
+		uint32_t logWidth = sfz::max(uint32_t(log2(image.width)), 1u);
+		uint32_t logHeight = sfz::max(uint32_t(log2(image.height)), 1u);
+		uint32_t logMin = std::min(logWidth, logHeight);
+		numMipmaps = std::min(logMin, (ZG_MAX_NUM_MIPMAPS - 1));
+	}
+	sfz_assert(numMipmaps != 0);
+
+	return TextureResource::createFixedSize(
+		name,
+		toZeroGImageFormat(image.type),
+		vec2_u32(image.width, image.height),
+		numMipmaps,
+		usage,
+		committedAllocation);
+}
+
+TextureResource TextureResource::createFixedSize(
+	const char* name,
+	ZgTextureFormat format,
+	vec2_u32 res,
+	uint32_t numMipmaps,
+	ZgTextureUsage usage,
+	bool committedAllocation)
+{
+	sfz_assert(res.x > 0);
+	sfz_assert(res.y > 0);
+	sfz_assert(numMipmaps > 0);
+	sfz_assert(numMipmaps <= ZG_MAX_NUM_MIPMAPS);
+
+	TextureResource resource;
+	resource.name = strID(name);
+	resource.format = format;
+	resource.res = res;
+	resource.numMipmaps = numMipmaps;
+	resource.committedAllocation = committedAllocation;
+	resource.usage = usage;
+
+	CHECK_ZG resource.build(vec2_u32(0u));
+
+	return resource;
+}
+
+TextureResource TextureResource::createScreenRelative(
+	const char* name,
+	ZgTextureFormat format,
+	vec2_u32 screenRes,
+	float scale,
+	Setting* scaleSetting,
+	ZgTextureUsage usage,
+	bool committedAllocation)
+{
+	TextureResource resource;
+	resource.name = strID(name);
+	resource.format = format;
+	resource.numMipmaps = 1;
+	resource.committedAllocation = committedAllocation;
+	resource.usage = usage;
+	resource.optimalClearValue = ZG_OPTIMAL_CLEAR_VALUE_ZERO;
+
+	resource.screenRelativeResolution = true;
+	resource.resolutionScale = scale;
+	resource.resolutionScaleSetting = scaleSetting;
+	
+	CHECK_ZG resource.build(screenRes);
+	
+	return resource;
+}
+
+// Texture functions
+// ------------------------------------------------------------------------------------------------
+
+ZgTextureFormat toZeroGImageFormat(ImageType imageType) noexcept
+{
+	switch (imageType) {
+	case ImageType::UNDEFINED: return ZG_TEXTURE_FORMAT_UNDEFINED;
+	case ImageType::R_U8: return ZG_TEXTURE_FORMAT_R_U8_UNORM;
+	case ImageType::RG_U8: return ZG_TEXTURE_FORMAT_RG_U8_UNORM;
+	case ImageType::RGBA_U8: return ZG_TEXTURE_FORMAT_RGBA_U8_UNORM;
+
+	case ImageType::R_F32: return ZG_TEXTURE_FORMAT_R_F32;
+	case ImageType::RG_F32: return ZG_TEXTURE_FORMAT_RG_F32;
+	case ImageType::RGBA_F32: return ZG_TEXTURE_FORMAT_RGBA_F32;
+	}
+	sfz_assert(false);
+	return ZG_TEXTURE_FORMAT_UNDEFINED;
 }
 
 } // namespace sfz

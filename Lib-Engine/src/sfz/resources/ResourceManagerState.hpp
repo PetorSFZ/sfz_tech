@@ -36,7 +36,7 @@ struct ResourceManagerState final {
 	Allocator* allocator = nullptr;
 
 	HashMap<strID, PoolHandle> textureHandles;
-	Pool<TextureItem> textures;
+	Pool<TextureResource> textures;
 
 	HashMap<strID, PoolHandle> meshHandles;
 	Pool<MeshItem> meshes;

@@ -18,11 +18,11 @@
 
 #pragma once
 
-#include "sfz/resources/ResourceManagerState.hpp"
-
 #include <imgui.h>
 
 #include "sfz/renderer/RenderingEnumsToFromString.hpp"
+#include "sfz/resources/ResourceManagerState.hpp"
+#include "sfz/resources/TextureResource.hpp"
 #include "sfz/util/ImGuiHelpers.hpp"
 
 namespace sfz {
@@ -32,27 +32,71 @@ namespace sfz {
 
 inline void renderTexturesTab(ResourceManagerState& state)
 {
-	constexpr float offset = 150.0f;
+	constexpr float offset = 200.0f;
+	constexpr float offset2 = 220.0f;
+	constexpr vec4 normalTextColor = vec4(1.0f);
+	constexpr vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	static str128 filter;
 
-	for (auto itemItr : state.textureHandles) {
-		const TextureItem& item = state.textures[itemItr.value];
+	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
+	ImGui::InputText("Filter", filter.mRawStr, filter.capacity());
+	ImGui::PopStyleColor();
+	filter.toLower();
 
-		ImGui::Text("\"%s\"", itemItr.key.str());
-		if (!item.texture.valid()) {
-			ImGui::SameLine();
-			ImGui::Text("-- NOT VALID");
+	const bool filterMode = filter != "";
+
+	for (HashMapPair<strID, PoolHandle> itemItr : state.textureHandles) {
+		const char* name = itemItr.key.str();
+		const TextureResource& resource = state.textures[itemItr.value];
+
+		str320 lowerCaseName = name;
+		lowerCaseName.toLower();
+		if (!filter.isPartOf(name)) continue;
+
+		if (filterMode) {
+			imguiRenderFilteredText(name, filter.str(), normalTextColor, filterTextColor);
+		}
+		else {
+			if (!ImGui::CollapsingHeader(name)) continue;
 		}
 
 		ImGui::Indent(20.0f);
+
 		alignedEdit("Format", offset, [&](const char*) {
-			ImGui::Text("%s", textureFormatToString(item.format));
+			ImGui::Text("%s", textureFormatToString(resource.format));
 		});
 		alignedEdit("Resolution", offset, [&](const char*) {
-			ImGui::Text("%u x %u", item.width, item.height);
+			ImGui::Text("%u x %u", resource.res.x, resource.res.y);
 		});
 		alignedEdit("Mipmaps", offset, [&](const char*) {
-			ImGui::Text("%u", item.numMipmaps);
+			ImGui::Text("%u", resource.numMipmaps);
 		});
+		alignedEdit("Committed alloc", offset, [&](const char*) {
+			ImGui::Text("%s", resource.committedAllocation ? "TRUE" : "FALSE");
+		});
+		
+		if (resource.usage != ZG_TEXTURE_USAGE_DEFAULT) {
+			alignedEdit("Usage", offset, [&](const char*) {
+				ImGui::Text("%s", usageToString(resource.usage));
+			});
+			alignedEdit("Clear value", offset, [&](const char*) {
+				ImGui::Text("%s", clearValueToString(resource.optimalClearValue));
+			});
+		}
+
+		if (resource.screenRelativeResolution) {
+			ImGui::Text("Screen relative resolution");
+			ImGui::Indent(20.0f);
+			alignedEdit("Fixed scale", offset2, [&](const char*) {
+				ImGui::Text("%.2f", resource.resolutionScale);
+			});
+			alignedEdit("Scale setting", offset2, [&](const char*) {
+				ImGui::Text("%s.%s",
+					resource.resolutionScaleSetting->section().str(),
+					resource.resolutionScaleSetting->key().str());
+			});
+			ImGui::Unindent(20.0f);
+		}
 
 		ImGui::Unindent(20.0f);
 		ImGui::Spacing();

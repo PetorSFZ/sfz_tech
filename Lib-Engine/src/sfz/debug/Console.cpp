@@ -35,6 +35,7 @@
 #include "sfz/debug/ProfilingStats.hpp"
 #include "sfz/renderer/Renderer.hpp"
 #include "sfz/resources/ResourceManager.hpp"
+#include "sfz/util/ImGuiHelpers.hpp"
 #include "sfz/util/IO.hpp"
 #include "sfz/util/TerminalLogger.hpp"
 
@@ -73,64 +74,6 @@ struct ConsoleState final {
 
 // Statics
 // ------------------------------------------------------------------------------------------------
-
-static void imguiPrintText(const char* str, vec4 color, const char* strEnd = nullptr) noexcept
-{
-	ImGui::PushStyleColor(ImGuiCol_Text, color);
-	ImGui::TextUnformatted(str, strEnd);
-	ImGui::PopStyleColor();
-}
-
-static void renderFilteredText(
-	const char* str,
-	const char* filter,
-	vec4 stringColor,
-	vec4 filterColor) noexcept
-{
-	str128 lowerStackStr("%s", str);
-	lowerStackStr.toLower();
-
-	const char* currStr = str;
-	const char* currLowerStr = lowerStackStr.str();
-	const size_t filterLen = strlen(filter);
-
-	if (filterLen == 0) {
-		imguiPrintText(str, stringColor);
-		return;
-	}
-
-	while (true) {
-
-		const char* nextLower = strstr(currLowerStr, filter);
-
-		// Substring found
-		if (nextLower != nullptr) {
-
-			// Render part of string until next filter
-			if (nextLower != currLowerStr) {
-				size_t len = nextLower - currLowerStr;
-				imguiPrintText(currStr, stringColor, currStr + len);
-				currStr += len;
-				currLowerStr +=len;
-			}
-
-			// Render filter
-			else {
-				imguiPrintText(currStr, filterColor, currStr + filterLen);
-				currStr += filterLen;
-				currLowerStr += filterLen;
-			}
-
-			ImGui::SameLine(0.0f, 2.0f);
-		}
-
-		// If no more substrings can be found it is time to render the rest of the string
-		else {
-			imguiPrintText(currStr, stringColor);
-			return;
-		}
-	}
-}
 
 static bool anyContainsFilter(const Array<Setting*>& settings, const char* filter) noexcept
 {
@@ -404,7 +347,7 @@ static void renderLogWindow(ConsoleState& state) noexcept
 
 		// Print tag and messagess
 		ImGui::Separator();
-		renderFilteredText(message.tag, state.logTagFilter, messageColor, filterTextColor);
+		imguiRenderFilteredText(message.tag, state.logTagFilter, messageColor, filterTextColor);
 		ImGui::NextColumn();
 		ImGui::PushStyleColor(ImGuiCol_Text, messageColor);
 		ImGui::TextWrapped("%s", message.message.str()); ImGui::NextColumn();
@@ -503,8 +446,8 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 		ImGui::Columns(1);
 		if (filterMode) {
 			ImGui::Separator();
-			renderFilteredText(sectionKey, state.configFilterString,
-				vec4(1.0f), filterTextColor);
+			imguiRenderFilteredText(
+				sectionKey, state.configFilterString, vec4(1.0f), filterTextColor);
 		}
 		else {
 			if (ImGui::CollapsingHeader(sectionKey)) continue;
@@ -536,8 +479,8 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 
 			// Render setting key
 			if (filterMode) {
-				renderFilteredText(setting->key(), state.configFilterString,
-					vec4(1.0f), filterTextColor);
+				imguiRenderFilteredText(
+					setting->key(), state.configFilterString, vec4(1.0f), filterTextColor);
 			}
 			else {
 				ImGui::TextUnformatted(setting->key().str());

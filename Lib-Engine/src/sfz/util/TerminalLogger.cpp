@@ -19,29 +19,13 @@
 
 #include "sfz/util/TerminalLogger.hpp"
 
+#include "sfz/util/IO.hpp"
+
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
 
 namespace sfz {
-
-// Statics
-// ------------------------------------------------------------------------------------------------
-
-static const char* stripFilePath(const char* file) noexcept
-{
-	const char* strippedFile1 = std::strrchr(file, '\\');
-	const char* strippedFile2 = std::strrchr(file, '/');
-	if (strippedFile1 == nullptr && strippedFile2 == nullptr) {
-		return file;
-	}
-	else if (strippedFile2 == nullptr) {
-		return strippedFile1 + 1;
-	}
-	else {
-		return strippedFile2 + 1;
-	}
-}
 
 // TerminalLogger: Methods
 // ------------------------------------------------------------------------------------------------
@@ -73,7 +57,7 @@ void TerminalLogger::log(
 	...) noexcept
 {
 	// Strip path from file
-	const char* strippedFile = stripFilePath(file);
+	const char* strippedFile = getFileNameFromPath(file);
 
 	// Remove oldest item
 	if (mMessages.size() == mMessages.capacity()) {

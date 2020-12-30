@@ -18,7 +18,15 @@
 
 #pragma once
 
+#include <skipifzero.hpp>
+#include <skipifzero_strings.hpp>
+
+#include <imgui.h>
+
 namespace sfz {
+
+// Alignment helpers
+// ------------------------------------------------------------------------------------------------
 
 template<typename Func>
 inline void alignedEdit(const char* name, float xOffset, Func editor)
@@ -26,6 +34,67 @@ inline void alignedEdit(const char* name, float xOffset, Func editor)
 	ImGui::Text("%s", name);
 	ImGui::SameLine(xOffset);
 	editor(sfz::str96("##%s_invisible", name).str());
+}
+
+// Filtered text helpers
+// ------------------------------------------------------------------------------------------------
+
+inline void imguiPrintText(const char* str, vec4 color, const char* strEnd = nullptr)
+{
+	ImGui::PushStyleColor(ImGuiCol_Text, color);
+	ImGui::TextUnformatted(str, strEnd);
+	ImGui::PopStyleColor();
+}
+
+inline void imguiRenderFilteredText(
+	const char* str,
+	const char* filter,
+	vec4 stringColor,
+	vec4 filterColor)
+{
+	str320 lowerStackStr("%s", str);
+	lowerStackStr.toLower();
+
+	const char* currStr = str;
+	const char* currLowerStr = lowerStackStr.str();
+	const size_t filterLen = strlen(filter);
+
+	if (filterLen == 0) {
+		imguiPrintText(str, stringColor);
+		return;
+	}
+
+	while (true) {
+
+		const char* nextLower = strstr(currLowerStr, filter);
+
+		// Substring found
+		if (nextLower != nullptr) {
+
+			// Render part of string until next filter
+			if (nextLower != currLowerStr) {
+				size_t len = nextLower - currLowerStr;
+				imguiPrintText(currStr, stringColor, currStr + len);
+				currStr += len;
+				currLowerStr += len;
+			}
+
+			// Render filter
+			else {
+				imguiPrintText(currStr, filterColor, currStr + filterLen);
+				currStr += filterLen;
+				currLowerStr += filterLen;
+			}
+
+			ImGui::SameLine(0.0f, 2.0f);
+		}
+
+		// If no more substrings can be found it is time to render the rest of the string
+		else {
+			imguiPrintText(currStr, stringColor);
+			return;
+		}
+	}
 }
 
 } // namespace sfz

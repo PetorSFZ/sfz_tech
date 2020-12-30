@@ -26,9 +26,10 @@
 #include <ZeroG.h>
 
 #include "sfz/resources/MeshItem.hpp"
-#include "sfz/resources/TextureItem.hpp"
 
 namespace sfz {
+
+struct TextureResource;
 
 // ResourceManager
 // ------------------------------------------------------------------------------------------------
@@ -51,8 +52,8 @@ public:
 
 	PoolHandle getTextureHandle(const char* name) const;
 	PoolHandle getTextureHandle(strID name) const;
-	TextureItem* getTexture(PoolHandle handle);
-	PoolHandle addTexture(strID name, TextureItem&& item);
+	TextureResource* getTexture(PoolHandle handle);
+	PoolHandle addTexture(strID name, TextureResource&& resource);
 	void removeTexture(strID name);
 
 	// Mesh methods

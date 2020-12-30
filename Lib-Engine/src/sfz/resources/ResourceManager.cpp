@@ -21,6 +21,7 @@
 #include "sfz/renderer/ZeroGUtils.hpp"
 #include "sfz/resources/ResourceManagerState.hpp"
 #include "sfz/resources/ResourceManagerUI.hpp"
+#include "sfz/resources/TextureResource.hpp"
 
 namespace sfz {
 
@@ -76,15 +77,15 @@ PoolHandle ResourceManager::getTextureHandle(strID name) const
 	return *handle;
 }
 
-TextureItem* ResourceManager::getTexture(PoolHandle handle)
+TextureResource* ResourceManager::getTexture(PoolHandle handle)
 {
 	return mState->textures.get(handle);
 }
 
-PoolHandle ResourceManager::addTexture(strID name, TextureItem&& item)
+PoolHandle ResourceManager::addTexture(strID name, TextureResource&& resource)
 {
 	sfz_assert(mState->textureHandles.get(name) == nullptr);
-	PoolHandle handle = mState->textures.allocate(std::move(item));
+	PoolHandle handle = mState->textures.allocate(std::move(resource));
 	mState->textureHandles.put(name, handle);
 	sfz_assert(mState->textureHandles.size() == mState->textures.numAllocated());
 	return handle;

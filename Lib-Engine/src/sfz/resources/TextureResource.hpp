@@ -21,33 +21,67 @@
 
 #include <skipifzero.hpp>
 #include <skipifzero_image_view.hpp>
+#include <skipifzero_strings.hpp>
 
 #include <ZeroG.h>
 
 namespace sfz {
 
-// TextureItem
+class Setting;
+
+// TextureResource
 // ------------------------------------------------------------------------------------------------
 
-struct TextureItem final {
+struct TextureResource final {
+	strID name;
+
 	zg::Texture texture;
 	ZgTextureFormat format = ZG_TEXTURE_FORMAT_UNDEFINED;
-	uint32_t width = 0;
-	uint32_t height = 0;
-	uint32_t numMipmaps = 0;
+	vec2_u32 res = vec2_u32(0u);
+	uint32_t numMipmaps = 1;
+	bool committedAllocation = false;
+	ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT;
+	ZgOptimalClearValue optimalClearValue = ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED;
+
+	bool screenRelativeResolution = false;
+	float resolutionScale = 1.0f;
+	Setting* resolutionScaleSetting = nullptr;
+
+	[[nodiscard]] ZgResult build(vec2_u32 screenRes);
+
+	void uploadBlocking(
+		const ImageViewConst& image,
+		sfz::Allocator* cpuAllocator,
+		zg::CommandQueue& copyQueue);
+
+	static TextureResource createFixedSize(
+		const char* name,
+		const ImageViewConst& image,
+		bool allocateMipmaps = true,
+		ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT,
+		bool committedAllocation = false);
+
+	static TextureResource createFixedSize(
+		const char* name,
+		ZgTextureFormat format,
+		vec2_u32 res,
+		uint32_t numMipmaps = 1,
+		ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT,
+		bool committedAllocation = false);
+
+	static TextureResource createScreenRelative(
+		const char* name,
+		ZgTextureFormat format,
+		vec2_u32 screenRes,
+		float scale,
+		Setting* scaleSetting = nullptr,
+		ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT,
+		bool committedAllocation = false);
 };
 
 // Texture functions
 // ------------------------------------------------------------------------------------------------
 
 ZgTextureFormat toZeroGImageFormat(ImageType imageType) noexcept;
-
-zg::Texture textureAllocateAndUploadBlocking(
-	const char* debugName,
-	const ImageViewConst& image,
-	sfz::Allocator* cpuAllocator,
-	zg::CommandQueue& copyQueue,
-	bool generateMipmaps,
-	uint32_t& numMipmapsOut) noexcept;
 
 } // namespace sfz

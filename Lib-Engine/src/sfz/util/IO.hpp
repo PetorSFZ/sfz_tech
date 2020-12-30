@@ -29,53 +29,57 @@ namespace sfz {
 // Paths
 // ------------------------------------------------------------------------------------------------
 
-/// Returns path to MyDocuments on Windows, user root (~) on Unix. The string itself is owned by
-/// this function and should not be deallocated or modified. Guaranteed to end with path separator.
+// Returns path to MyDocuments on Windows, user root (~) on Unix. The string itself is owned by
+// this function and should not be deallocated or modified. Guaranteed to end with path separator.
 const char* myDocumentsPath() noexcept;
 
-/// Returns path to where game folders with saves should be placed. The string itself is owned by
-/// this function and should not be deallocated or modified. Guaranteed to end with path separator.
+// Returns path to where game folders with saves should be placed. The string itself is owned by
+// this function and should not be deallocated or modified. Guaranteed to end with path separator.
 const char* gameBaseFolderPath() noexcept;
+
+// Returns the filename given a path.
+const char* getFileNameFromPath(const char* path) noexcept;
 
 // IO functions
 // ------------------------------------------------------------------------------------------------
 
-/// Returns whether a given file exists or not.
+// Returns whether a given file exists or not.
 bool fileExists(const char* path) noexcept;
 
-/// Returns whether a given directory exists or not.
+// Returns whether a given directory exists or not.
 bool directoryExists(const char* path) noexcept;
 
-/// Attempts to create a file and returns whether successful or not.
+// Attempts to create a file and returns whether successful or not.
 bool createFile(const char* path) noexcept;
 
-/// Attempts to create a directory and returns whether successful or not.
+// Attempts to create a directory and returns whether successful or not.
 bool createDirectory(const char* path) noexcept;
 
-/// Attempts to delete a given file and returns whether successful or not.
+// Attempts to delete a given file and returns whether successful or not.
 bool deleteFile(const char* path) noexcept;
 
-/// Attempts to delete a given directory, will ONLY work if directory is empty.
+// Attempts to delete a given directory, will ONLY work if directory is empty.
 bool deleteDirectory(const char* path) noexcept;
 
-/// Attempts to copy file from source to destination.
+// Attempts to copy file from source to destination.
 bool copyFile(const char* srcPath, const char* dstPath) noexcept;
 
-/// Returns size of file in bytes, negative value if error.
+// Returns size of file in bytes, negative value if error.
 int64_t sizeofFile(const char* path) noexcept;
 
-/// Reads binary file to pre-allocated memory.
-/// \return 0 on success, -1 on error, -2 if file was larger than pre-allocated memory
+// Reads binary file to pre-allocated memory.
+// \return 0 on success, -1 on error, -2 if file was larger than pre-allocated memory
 int32_t readBinaryFile(const char* path, uint8_t* dataOut, size_t maxNumBytes) noexcept;
 
-/// Reads binary file, returns empty Array if error.
-Array<uint8_t> readBinaryFile(const char* path,
-                                 Allocator* allocator = getDefaultAllocator()) noexcept;
+// Reads binary file, returns empty Array if error.
+Array<uint8_t> readBinaryFile(
+	const char* path,
+	Allocator* allocator = getDefaultAllocator()) noexcept;
 
-/// Reads text file, returns empty string if error.
+// Reads text file, returns empty string if error.
 DynString readTextFile(const char* path, Allocator* allocator = getDefaultAllocator()) noexcept;
 
-/// Writes memory to binary file, returns whether successful or not.
+// Writes memory to binary file, returns whether successful or not.
 bool writeBinaryFile(const char* path, const uint8_t* data, size_t numBytes) noexcept;
 
 // Writes string to file, returns whether succesful or not. If numChars is zero (default) all chars

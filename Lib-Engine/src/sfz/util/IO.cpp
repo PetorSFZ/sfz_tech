@@ -143,6 +143,21 @@ const char* gameBaseFolderPath() noexcept
 	return path;
 }
 
+const char* getFileNameFromPath(const char* path) noexcept
+{
+	const char* strippedFile1 = std::strrchr(path, '\\');
+	const char* strippedFile2 = std::strrchr(path, '/');
+	if (strippedFile1 == nullptr && strippedFile2 == nullptr) {
+		return path;
+	}
+	else if (strippedFile2 == nullptr) {
+		return strippedFile1 + 1;
+	}
+	else {
+		return strippedFile2 + 1;
+	}
+}
+
 // IO functions
 // ------------------------------------------------------------------------------------------------
 

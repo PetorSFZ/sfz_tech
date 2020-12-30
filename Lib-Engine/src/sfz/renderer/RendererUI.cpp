@@ -42,16 +42,6 @@ static float toGiB(uint64_t bytes) noexcept
 	return float(bytes) / (1024.0f * 1024.0f * 1024.0f);
 }
 
-static const char* toString(StageType type) noexcept
-{
-	switch (type) {
-	case StageType::USER_INPUT_RENDERING: return "USER_INPUT_RENDERING";
-	case StageType::USER_INPUT_COMPUTE: return "USER_INPUT_COMPUTE";
-	}
-	sfz_assert(false);
-	return "<ERROR>";
-}
-
 // RendererUI: State methods
 // ------------------------------------------------------------------------------------------------
 

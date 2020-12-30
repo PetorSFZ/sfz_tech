@@ -37,27 +37,10 @@
 #include "sfz/renderer/RendererState.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
 #include "sfz/resources/ResourceManager.hpp"
-#include "sfz/resources/TextureItem.hpp"
+#include "sfz/resources/TextureResource.hpp"
+#include "sfz/util/IO.hpp"
 
 namespace sfz {
-
-// Statics
-// ------------------------------------------------------------------------------------------------
-
-static const char* stripFilePath(const char* file) noexcept
-{
-	const char* strippedFile1 = std::strrchr(file, '\\');
-	const char* strippedFile2 = std::strrchr(file, '/');
-	if (strippedFile1 == nullptr && strippedFile2 == nullptr) {
-		return file;
-	}
-	else if (strippedFile2 == nullptr) {
-		return strippedFile1 + 1;
-	}
-	else {
-		return strippedFile2 + 1;
-	}
-}
 
 // Renderer: State methods
 // ------------------------------------------------------------------------------------------------
@@ -218,25 +201,13 @@ bool Renderer::uploadTextureBlocking(
 	ResourceManager& resources = getResourceManager();
 	if (resources.getTextureHandle(id) != NULL_HANDLE) return false;
 
-	const char* fileName = stripFilePath(id.str());
-	uint32_t numMipmaps = 0;
-	zg::Texture texture = textureAllocateAndUploadBlocking(
-		fileName,
-		image,
-		mState->allocator,
-		mState->copyQueue,
-		generateMipmaps,
-		numMipmaps);
-	sfz_assert(texture.valid());
-
-	// Fill texture item with info and store it
-	TextureItem item;
-	item.texture = std::move(texture);
-	item.format = toZeroGImageFormat(image.type);
-	item.width = image.width;
-	item.height = image.height;
-	item.numMipmaps = numMipmaps;
-	resources.addTexture(id, std::move(item));
+	// Create resource and upload blocking
+	TextureResource resource = TextureResource::createFixedSize(id.str(), image, generateMipmaps);
+	sfz_assert(resource.texture.valid());
+	resource.uploadBlocking(image, mState->allocator, mState->copyQueue);
+	
+	// Add to resource manager
+	resources.addTexture(id, std::move(resource));
 
 	return true;
 }
@@ -264,7 +235,7 @@ bool Renderer::uploadMeshBlocking(strID id, const Mesh& mesh) noexcept
 	if (resources.getMeshHandle(id) != NULL_HANDLE) return false;
 
 	// Allocate memory for mesh
-	const char* fileName = stripFilePath(id.str());
+	const char* fileName = getFileNameFromPath(id.str());
 	MeshItem gpuMesh = meshItemAllocate(fileName, mesh, mState->allocator);
 
 	// Upload memory to mesh
@@ -649,7 +620,7 @@ void Renderer::stageSetBindings(const PipelineBindings& bindings) noexcept
 	for (const Binding& binding : bindings.textures) {
 		sfz_assert(binding.type == BindingResourceType::ID);
 
-		TextureItem* dynItem = resources.getTexture(resources.getTextureHandle(binding.resource.resourceID));
+		TextureResource* dynItem = resources.getTexture(resources.getTextureHandle(binding.resource.resourceID));
 		StaticTextureItem* staticItem = mState->configurable.staticTextures.get(binding.resource.resourceID);
 		sfz_assert(dynItem != nullptr || staticItem != nullptr);
 		sfz_assert(!(dynItem == nullptr && staticItem == nullptr));
@@ -696,7 +667,7 @@ void Renderer::stageSetBindings(const PipelineBindings& bindings) noexcept
 	for (const Binding& binding : bindings.unorderedTextures) {
 		sfz_assert(binding.type == BindingResourceType::ID);
 
-		TextureItem* dynItem = resources.getTexture(resources.getTextureHandle(binding.resource.resourceID));
+		TextureResource* dynItem = resources.getTexture(resources.getTextureHandle(binding.resource.resourceID));
 		StaticTextureItem* staticItem = mState->configurable.staticTextures.get(binding.resource.resourceID);
 		sfz_assert(dynItem != nullptr || staticItem != nullptr);
 		sfz_assert(!(dynItem == nullptr && staticItem == nullptr));

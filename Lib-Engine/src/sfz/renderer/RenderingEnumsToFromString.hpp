@@ -49,6 +49,28 @@ inline const char* textureFormatToString(ZgTextureFormat format)
 	return "";
 }
 
+inline const char* usageToString(ZgTextureUsage usage)
+{
+	switch (usage) {
+	case ZG_TEXTURE_USAGE_DEFAULT: return "DEFAULT";
+	case ZG_TEXTURE_USAGE_RENDER_TARGET: return "RENDER_TARGET";
+	case ZG_TEXTURE_USAGE_DEPTH_BUFFER: return "DEPTH_BUFFER";
+	}
+	sfz_assert(false);
+	return "";
+}
+
+inline const char* clearValueToString(ZgOptimalClearValue clearValue)
+{
+	switch (clearValue) {
+	case ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED: return "UNDEFINED";
+	case ZG_OPTIMAL_CLEAR_VALUE_ZERO: return "ZERO";
+	case ZG_OPTIMAL_CLEAR_VALUE_ONE: return "ONE";
+	}
+	sfz_assert(false);
+	return "";
+}
+
 inline const char* vertexAttributeTypeToString(ZgVertexAttributeType type)
 {
 	switch (type) {
