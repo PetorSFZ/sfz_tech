@@ -362,76 +362,6 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		}
 	}
 
-
-	// Static textures
-	{
-		// Get number of static textures to create and allocate memory for their handles
-		JsonNode staticTexturesNode = root.accessMap("static_textures");
-		uint32_t numStaticTextures = staticTexturesNode.arrayLength();
-		configurable.staticTextures.init(numStaticTextures, state.allocator, sfz_dbg(""));
-
-		// Parse information about each static texture
-		for (uint32_t i = 0; i < numStaticTextures; i++) {
-			
-			JsonNode texNode = staticTexturesNode.accessArray(i);
-			StaticTextureItem texItem = {};
-
-			// Name
-			str256 name = CHECK_JSON texNode.accessMap("name").valueStr256();
-			sfz_assert(name != "default");
-			texItem.name = strID(name);
-
-			// Format and clear value
-			texItem.format = textureFormatFromString(
-				CHECK_JSON texNode.accessMap("format").valueStr256());
-			float clearValue = 0.0f;
-			if (texNode.accessMap("clear_value").isValid()) {
-				clearValue = CHECK_JSON texNode.accessMap("clear_value").valueFloat();
-			}
-			sfz_assert(clearValue == 0.0f || clearValue == 1.0f);
-			texItem.clearValue = clearValue;
-
-			// Num mipmaps
-			if (texNode.accessMap("num_mipmaps").isValid()) {
-				texItem.numMipmaps = uint32_t(CHECK_JSON texNode.accessMap("num_mipmaps").valueInt());
-				sfz_assert(texItem.numMipmaps > 0);
-				sfz_assert(texItem.numMipmaps <= ZG_MAX_NUM_MIPMAPS);
-			}
-
-			// Resolution type
-			texItem.resolutionIsFixed = !(texNode.accessMap("resolution_scale").isValid() ||
-				texNode.accessMap("resolution_scale_setting").isValid());
-
-			// Resolution
-			if (texItem.resolutionIsFixed) {
-				texItem.resolutionFixed.x = CHECK_JSON texNode.accessMap("resolution_fixed_width").valueInt();
-				texItem.resolutionFixed.y = CHECK_JSON texNode.accessMap("resolution_fixed_height").valueInt();
-			}
-			else {
-				bool hasSetting = texNode.accessMap("resolution_scale_setting").isValid();
-				if (hasSetting) {
-					str256 settingKey = CHECK_JSON texNode.accessMap("resolution_scale_setting").valueStr256();
-
-					// Default value
-					float defaultScale = 1.0f;
-					if (texNode.accessMap("resolution_scale").isValid()) {
-						defaultScale = CHECK_JSON texNode.accessMap("resolution_scale").valueFloat();
-					}
-					texItem.resolutionScaleSetting =
-						cfg.sanitizeFloat("Renderer", settingKey, false, defaultScale, 0.1f, 4.0f);
-					texItem.resolutionScale = texItem.resolutionScaleSetting->floatValue();
-				}
-				else {
-					texItem.resolutionScaleSetting = nullptr;
-					texItem.resolutionScale = CHECK_JSON texNode.accessMap("resolution_scale").valueFloat();
-				}
-			}
-
-			configurable.staticTextures.put(texItem.name, std::move(texItem));
-		}
-	}
-
-
 	// Static buffers
 	{
 		// Get number of static buffers to create and allocate memory for their handles
@@ -517,33 +447,12 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 				if (stage.type == StageType::USER_INPUT_RENDERING) {
 					str256 renderPipelineName =
 						CHECK_JSON stageNode.accessMap("render_pipeline").valueStr256();
-					stage.render.pipelineName = strID(renderPipelineName);
-
-					if (stageNode.accessMap("render_targets").isValid()) {
-						JsonNode renderTargetsNode = stageNode.accessMap("render_targets");
-						uint32_t numRenderTargets = renderTargetsNode.arrayLength();
-						for (uint32_t i = 0; i < numRenderTargets; i++) {
-							str256 renderTargetName =
-								CHECK_JSON renderTargetsNode.accessArray(i).valueStr256();
-							stage.render.renderTargetNames.add(strID(renderTargetName));
-						}
-					}
-
-					if (stageNode.accessMap("depth_buffer").isValid()) {
-						str256 depthBufferName =
-							CHECK_JSON stageNode.accessMap("depth_buffer").valueStr256();
-						stage.render.depthBufferName = strID(depthBufferName);
-					}
-
-					stage.render.defaultFramebuffer =
-						stage.render.renderTargetNames.size() == 1 &&
-						stage.render.renderTargetNames[0] == defaultId &&
-						stage.render.depthBufferName == defaultId;
+					stage.pipelineName = strID(renderPipelineName);
 				}
 				else if (stage.type == StageType::USER_INPUT_COMPUTE) {
 					str256 computePipelineName =
 						CHECK_JSON stageNode.accessMap("compute_pipeline").valueStr256();
-					stage.compute.pipelineName = strID(computePipelineName);
+					stage.pipelineName = strID(computePipelineName);
 				}
 				else {
 					sfz_assert(false);
@@ -563,12 +472,6 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		if (!item.buildPipeline()) {
 			success = false;
 		}
-	}
-
-	// Create static textures
-	for (auto pair : configurable.staticTextures) {
-		StaticTextureItem& item = pair.value;
-		item.buildTexture(state.windowRes);
 	}
 
 	// Create static buffers
@@ -604,14 +507,11 @@ bool allocateStageMemory(RendererState& state) noexcept
 			ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS>* nonUserSettableConstBuffers = nullptr;
 			if (stage.type == StageType::USER_INPUT_RENDERING) {
 
-				// Create framebuffer
-				stage.rebuildFramebuffer(state.configurable.staticTextures);
-
 				// Find pipeline
 				PipelineRenderItem* pipelineItem =
 					state.configurable.renderPipelines.find([&](const PipelineRenderItem& item) {
-						return item.name == stage.render.pipelineName;
-					});
+						return item.name == stage.pipelineName;
+				});
 				sfz_assert(pipelineItem != nullptr);
 
 				// Grab stuff from pipeline item
@@ -623,7 +523,7 @@ bool allocateStageMemory(RendererState& state) noexcept
 				// Find pipeline
 				PipelineComputeItem* pipelineItem =
 					state.configurable.computePipelines.find([&](const PipelineComputeItem& item) {
-						return item.name == stage.compute.pipelineName;
+						return item.name == stage.pipelineName;
 					});
 				sfz_assert(pipelineItem != nullptr);
 

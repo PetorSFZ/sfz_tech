@@ -36,6 +36,7 @@
 #include "sfz/renderer/RendererConfigParser.hpp"
 #include "sfz/renderer/RendererState.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
+#include "sfz/resources/FramebufferResource.hpp"
 #include "sfz/resources/ResourceManager.hpp"
 #include "sfz/resources/TextureResource.hpp"
 #include "sfz/util/IO.hpp"
@@ -303,19 +304,6 @@ void Renderer::frameBegin() noexcept
 	int32_t newResY = 0;
 	SDL_GL_GetDrawableSize(mState->window, &newResX, &newResY);
 	bool resolutionChanged = newResX != mState->windowRes.x || newResY != mState->windowRes.y;
-	
-	// Check if any texture scale setting has changed, necessating a resolution change
-	if (!resolutionChanged) {
-		for (auto pair : mState->configurable.staticTextures) {
-			StaticTextureItem& item = pair.value;
-			if (!item.resolutionIsFixed && item.resolutionScaleSetting != nullptr) {
-				if (item.resolutionScale != item.resolutionScaleSetting->floatValue()) {
-					resolutionChanged = true;
-					break;
-				}
-			}
-		}
-	}
 
 	// If resolution has changed, resize swapchain and framebuffers
 	if (resolutionChanged) {
@@ -338,22 +326,8 @@ void Renderer::frameBegin() noexcept
 		CHECK_ZG zgContextSwapchainResize(
 			uint32_t(mState->windowRes.x), uint32_t(mState->windowRes.y));
 
-		// Resize static textures
-		for (auto pair : mState->configurable.staticTextures) {
-			StaticTextureItem& item = pair.value;
-			
-			// Only resize if not fixed resolution
-			if (!item.resolutionIsFixed) {
-				item.buildTexture(mState->windowRes);
-			}
-		}
-
-		// Rebuild all stages' framebuffer objects
-		for (StageGroup& group : mState->configurable.presentStageGroups) {
-			for (Stage& stage : group.stages) {
-				stage.rebuildFramebuffer(mState->configurable.staticTextures);
-			}
-		}
+		ResourceManager& resources = getResourceManager();
+		resources.updateResolution(vec2_u32(newResX, newResY));
 	}
 
 	// Set vsync settings
@@ -391,7 +365,7 @@ void Renderer::stageBeginInput(const char* stageName) noexcept
 	if (stage.type == StageType::USER_INPUT_RENDERING) {
 	
 		// Find render pipeline
-		uint32_t pipelineIdx = mState->findPipelineRenderIdx(stage.render.pipelineName);
+		uint32_t pipelineIdx = mState->findPipelineRenderIdx(stage.pipelineName);
 		sfz_assert(pipelineIdx != ~0u);
 		if (pipelineIdx == ~0u) return;
 		sfz_assert(pipelineIdx < mState->configurable.renderPipelines.size());
@@ -401,25 +375,11 @@ void Renderer::stageBeginInput(const char* stageName) noexcept
 
 		// Store pipeline in input enabled
 		mState->inputEnabled.pipelineRender = &pipelineItem;
-
-		// In debug mode, validate that the pipeline's render targets matches the framebuffer
-#ifndef NDEBUG
-		if (stage.render.defaultFramebuffer) {
-			sfz_assert(pipelineItem.renderTargets.size() == 1);
-			sfz_assert(pipelineItem.renderTargets[0] == ZG_TEXTURE_FORMAT_RGBA_U8_UNORM);
-		}
-		else {
-			sfz_assert(pipelineItem.renderTargets.size() == stage.render.renderTargetNames.size());
-			/*for (uint32_t i = 0; i < stage.renderTargetNames.size(); i++) {
-				sfz_assert(pipelineItem.renderTargets[i] == fbItem->renderTargetItems[i].format);
-			}*/
-		}
-#endif
 	}
 	else if (stage.type == StageType::USER_INPUT_COMPUTE) {
 
 		// Find compute pipeline
-		uint32_t pipelineIdx = mState->findPipelineComputeIdx(stage.compute.pipelineName);
+		uint32_t pipelineIdx = mState->findPipelineComputeIdx(stage.pipelineName);
 		sfz_assert(pipelineIdx != ~0u);
 		if (pipelineIdx == ~0u) return;
 		sfz_assert(pipelineIdx < mState->configurable.computePipelines.size());
@@ -465,15 +425,9 @@ void Renderer::stageBeginInput(const char* stageName) noexcept
 		CHECK_ZG cmdList.beginEvent(stageName);
 	}
 
-	// Set pipeline and framebuffer (if rendering)
+	// Set pipeline
 	if (stage.type == StageType::USER_INPUT_RENDERING) {
 		CHECK_ZG cmdList.setPipeline(mState->inputEnabled.pipelineRender->pipeline);
-		if (stage.render.defaultFramebuffer) {
-			CHECK_ZG cmdList.setFramebuffer(mState->windowFramebuffer);
-		}
-		else {
-			CHECK_ZG cmdList.setFramebuffer(stage.render.framebuffer);
-		}
 	}
 	else if (stage.type == StageType::USER_INPUT_COMPUTE) {
 		CHECK_ZG cmdList.setPipeline(mState->inputEnabled.pipelineCompute->pipeline);
@@ -483,18 +437,22 @@ void Renderer::stageBeginInput(const char* stageName) noexcept
 	}
 }
 
-vec2_u32 Renderer::stageGetFramebufferDims() const noexcept
+void Renderer::stageSetFramebuffer(const char* framebufferName) noexcept
 {
 	sfz_assert(inStageInputMode());
 	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
-	if (mState->inputEnabled.stage->render.defaultFramebuffer) {
-		return vec2_u32(mState->windowRes);
-	}
-	else {
-		vec2_u32 dims = vec2_u32(0u);
-		CHECK_ZG mState->inputEnabled.stage->render.framebuffer.getResolution(dims.x, dims.y);
-		return dims;
-	}
+
+	ResourceManager& resources = getResourceManager();
+	FramebufferResource* fb = resources.getFramebuffer(resources.getFramebufferHandle(framebufferName));
+	sfz_assert(fb != nullptr);
+	CHECK_ZG mState->groupCmdList.setFramebuffer(fb->framebuffer);
+}
+
+void Renderer::stageSetFramebufferDefault() noexcept
+{
+	sfz_assert(inStageInputMode());
+	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
+	CHECK_ZG mState->groupCmdList.setFramebuffer(mState->windowFramebuffer);
 }
 
 void Renderer::stageUploadToStreamingBufferUntyped(
@@ -620,18 +578,11 @@ void Renderer::stageSetBindings(const PipelineBindings& bindings) noexcept
 	for (const Binding& binding : bindings.textures) {
 		sfz_assert(binding.type == BindingResourceType::ID);
 
-		TextureResource* dynItem = resources.getTexture(resources.getTextureHandle(binding.resource.resourceID));
-		StaticTextureItem* staticItem = mState->configurable.staticTextures.get(binding.resource.resourceID);
-		sfz_assert(dynItem != nullptr || staticItem != nullptr);
-		sfz_assert(!(dynItem == nullptr && staticItem == nullptr));
-
-		zg::Texture* tex = nullptr;
-		if (dynItem != nullptr) tex = &dynItem->texture;
-		else if (staticItem != nullptr) tex = &staticItem->texture;
+		TextureResource* tex =
+			resources.getTexture(resources.getTextureHandle(binding.resource.resourceID));
 		sfz_assert(tex != nullptr);
-
 		sfz_assert(binding.shaderRegister != ~0u);
-		zgBindings.addTexture(binding.shaderRegister, *tex);
+		zgBindings.addTexture(binding.shaderRegister, tex->texture);
 	}
 
 	// Unordered buffers
@@ -667,18 +618,11 @@ void Renderer::stageSetBindings(const PipelineBindings& bindings) noexcept
 	for (const Binding& binding : bindings.unorderedTextures) {
 		sfz_assert(binding.type == BindingResourceType::ID);
 
-		TextureResource* dynItem = resources.getTexture(resources.getTextureHandle(binding.resource.resourceID));
-		StaticTextureItem* staticItem = mState->configurable.staticTextures.get(binding.resource.resourceID);
-		sfz_assert(dynItem != nullptr || staticItem != nullptr);
-		sfz_assert(!(dynItem == nullptr && staticItem == nullptr));
-
-		zg::Texture* tex = nullptr;
-		if (dynItem != nullptr) tex = &dynItem->texture;
-		else if (staticItem != nullptr) tex = &staticItem->texture;
+		TextureResource* tex =
+			resources.getTexture(resources.getTextureHandle(binding.resource.resourceID));
 		sfz_assert(tex != nullptr);
-
 		sfz_assert(binding.shaderRegister != ~0u);
-		zgBindings.addUnorderedTexture(binding.shaderRegister, binding.mipLevel, *tex);
+		zgBindings.addUnorderedTexture(binding.shaderRegister, binding.mipLevel, tex->texture);
 	}
 
 	CHECK_ZG mState->groupCmdList.setPipelineBindings(zgBindings);
@@ -765,16 +709,13 @@ void Renderer::stageUnorderedBarrierStaticBuffer(const char* staticBufferName) n
 	CHECK_ZG mState->groupCmdList.unorderedBarrier(item->buffer);
 }
 
-void Renderer::stageUnorderedBarrierStaticTexture(const char* staticBufferName) noexcept
+void Renderer::stageUnorderedBarrierTexture(const char* textureName) noexcept
 {
 	sfz_assert(inStageInputMode());
-
-	// Get static texture item
-	strID textureID = strID(staticBufferName);
-	StaticTextureItem* item = mState->configurable.staticTextures.get(textureID);
-	sfz_assert(item != nullptr);
-
-	CHECK_ZG mState->groupCmdList.unorderedBarrier(item->texture);
+	ResourceManager& resources = getResourceManager();
+	TextureResource* tex = resources.getTexture(resources.getTextureHandle(textureName));
+	sfz_assert(tex != nullptr);
+	CHECK_ZG mState->groupCmdList.unorderedBarrier(tex->texture);
 }
 
 vec3_i32 Renderer::stageGetComputeGroupDims() noexcept

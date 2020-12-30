@@ -66,6 +66,27 @@ void ResourceManager::renderDebugUI()
 	resourceManagerUI(*mState);
 }
 
+void ResourceManager::updateResolution(vec2_u32 screenRes)
+{
+	// Update screen relative textures
+	for (HashMapPair<strID, PoolHandle> itemItr : mState->textureHandles) {
+		const char* name = itemItr.key.str();
+		TextureResource& resource = mState->textures[itemItr.value];
+		if (resource.screenRelativeResolution) {
+			CHECK_ZG resource.build(screenRes);
+		}
+	}
+
+	// Update screen relative framebuffers
+	for (HashMapPair<strID, PoolHandle> itemItr : mState->framebufferHandles) {
+		const char* name = itemItr.key.str();
+		FramebufferResource& resource = mState->framebuffers[itemItr.value];
+		if (resource.screenRelativeResolution) {
+			CHECK_ZG resource.build(screenRes);
+		}
+	}
+}
+
 // ResourceManager: Texture methods
 // ------------------------------------------------------------------------------------------------
 

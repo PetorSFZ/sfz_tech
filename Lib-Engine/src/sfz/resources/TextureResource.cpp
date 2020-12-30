@@ -266,6 +266,8 @@ TextureResource TextureResource::createFixedSize(
 	resource.numMipmaps = numMipmaps;
 	resource.committedAllocation = committedAllocation;
 	resource.usage = usage;
+	resource.optimalClearValue =
+		usage != ZG_TEXTURE_USAGE_DEFAULT ? ZG_OPTIMAL_CLEAR_VALUE_ZERO : ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED;
 
 	CHECK_ZG resource.build(vec2_u32(0u));
 

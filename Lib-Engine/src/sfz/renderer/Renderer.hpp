@@ -236,7 +236,8 @@ public:
 	// only accepts input for the specified stage until endStageInput() is called.
 	void stageBeginInput(const char* stageName) noexcept;
 
-	vec2_u32 stageGetFramebufferDims() const noexcept;
+	void stageSetFramebuffer(const char* framebufferName) noexcept;
+	void stageSetFramebufferDefault() noexcept;
 
 	// Uploads data to a streaming buffer
 	void stageUploadToStreamingBufferUntyped(
@@ -279,8 +280,8 @@ public:
 	// Inserts an unordered barrier. Basically says that all writes to an unordered resource (or
 	// all of them) must be finished before the resource is read from again.
 	void stageUnorderedBarrierAll() noexcept;
-	void stageUnorderedBarrierStaticBuffer(const char* staticBufferName) noexcept;
-	void stageUnorderedBarrierStaticTexture(const char* staticBufferName) noexcept;
+	void stageUnorderedBarrierStaticBuffer(const char* bufferName) noexcept;
+	void stageUnorderedBarrierTexture(const char* textureName) noexcept;
 
 	// Gets the group dimensions of the compute pipeline associated with the currently active stage.
 	vec3_i32 stageGetComputeGroupDims() noexcept;

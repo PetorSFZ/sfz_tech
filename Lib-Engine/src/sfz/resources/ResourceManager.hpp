@@ -48,6 +48,9 @@ public:
 
 	void renderDebugUI();
 
+	// Updates all resources that depend on screen resolution
+	void updateResolution(vec2_u32 screenRes);
+
 	// Texture methods
 	// --------------------------------------------------------------------------------------------
 

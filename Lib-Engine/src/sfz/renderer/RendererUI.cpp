@@ -610,61 +610,6 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 
 void RendererUI::renderStaticMemoryTab(RendererConfigurableState& state) noexcept
 {
-	if (ImGui::CollapsingHeader("Static Textures")) {
-		for (uint32_t i = 0; i < state.staticTextures.size(); i++) {
-			const StaticTextureItem& texItem = state.staticTextures.values()[i];
-
-			// Texture name
-			ImGui::Text("Texture %u - \"%s\" - %s - %ux%u", i,
-				texItem.name.str(),
-				textureFormatToString(texItem.format),
-				texItem.width,
-				texItem.height);
-			ImGui::Indent(20.0f);
-
-			constexpr float offset = 220.0f;
-
-			// Mipmaps
-			sfz_assert(texItem.numMipmaps != 0);
-			if (texItem.numMipmaps > 1) {
-				alignedEdit(" - Num mipmaps", offset, [&](const char*) {
-					ImGui::Text("%u", texItem.numMipmaps);
-				});
-			}
-
-			// Clear value
-			if (texItem.clearValue != 0.0f) {
-				alignedEdit(" - Clear", offset, [&](const char*) {
-					ImGui::Text("%.1f", texItem.clearValue);
-				});
-			}
-
-			// Resolution type
-			if (texItem.resolutionIsFixed) {
-				alignedEdit(" - Fixed resolution", offset, [&](const char*) {
-					ImGui::Text("%i x %i", texItem.resolutionFixed.x, texItem.resolutionFixed.y);
-				});
-			}
-			else {
-				if (texItem.resolutionScaleSetting != nullptr) {
-					alignedEdit(" - Resolution scale", offset, [&](const char*) {
-						ImGui::Text("%.2f  --  Setting: \"%s\"",
-							texItem.resolutionScale, texItem.resolutionScaleSetting->key().str());
-					});
-				}
-				else {
-					alignedEdit(" - Resolution scale", offset, [&](const char*) {
-						ImGui::Text("%.2f", texItem.resolutionScale);
-					});
-				}
-			}
-
-			ImGui::Unindent(20.0f);
-			ImGui::Spacing();
-			ImGui::Spacing();
-		}
-	}
-
 	if (ImGui::CollapsingHeader("Static Buffers")) {
 		for (uint32_t i = 0; i < state.staticBuffers.size(); i++) {
 			const StaticBufferItem& bufItem = state.staticBuffers.values()[i];

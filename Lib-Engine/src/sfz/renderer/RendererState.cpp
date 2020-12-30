@@ -23,61 +23,6 @@
 
 namespace sfz {
 
-// Statics
-// ------------------------------------------------------------------------------------------------
-
-static ZgOptimalClearValue floatToOptimalClearValue(float value) noexcept
-{
-	if (value == 0.0f) return ZG_OPTIMAL_CLEAR_VALUE_ZERO;
-	if (value == 1.0f) return ZG_OPTIMAL_CLEAR_VALUE_ONE;
-	sfz_assert(false);
-	return ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED;
-}
-
-// Static textures
-// ------------------------------------------------------------------------------------------------
-
-void StaticTextureItem::buildTexture(vec2_i32 windowRes) noexcept
-{
-	// Figure out resolution
-	uint32_t tmpWidth = 0;
-	uint32_t tmpHeight = 0;
-	if (resolutionIsFixed) {
-		tmpWidth = uint32_t(resolutionFixed.x);
-		tmpHeight = uint32_t(resolutionFixed.y);
-	}
-	else {
-		if (resolutionScaleSetting != nullptr) resolutionScale = resolutionScaleSetting->floatValue();
-		vec2 scaled = vec2(windowRes) * resolutionScale;
-		tmpWidth = uint32_t(std::round(scaled.x));
-		tmpHeight = uint32_t(std::round(scaled.y));
-	}
-	this->width = tmpWidth;
-	this->height = tmpHeight;
-	
-	sfz_assert(numMipmaps > 0);
-	sfz_assert(numMipmaps <= ZG_MAX_NUM_MIPMAPS);
-
-	// Allocate texture
-	const bool isDepth = format == ZG_TEXTURE_FORMAT_DEPTH_F32;
-	ZgTextureUsage usage = isDepth ?
-		ZG_TEXTURE_USAGE_DEPTH_BUFFER : ZG_TEXTURE_USAGE_RENDER_TARGET;
-	ZgOptimalClearValue optimalClear = floatToOptimalClearValue(clearValue);
-	{
-		ZgTextureCreateInfo createInfo = {};
-		createInfo.committedAllocation = ZG_TRUE;
-		createInfo.allowUnorderedAccess = isDepth ? ZG_FALSE : ZG_TRUE;
-		createInfo.format = format;
-		createInfo.usage = usage;
-		createInfo.optimalClearValue = optimalClear;
-		createInfo.width = width;
-		createInfo.height = height;
-		createInfo.numMipmaps = numMipmaps;
-		createInfo.debugName = this->name.str();
-		CHECK_ZG this->texture.create(createInfo);
-	}
-}
-
 // Static buffers
 // ------------------------------------------------------------------------------------------------
 
@@ -225,41 +170,6 @@ bool PipelineComputeItem::buildPipeline() noexcept
 		this->pipeline = std::move(tmpPipeline);
 	}
 	return buildSuccess;
-}
-
-// Stage: Helper methods
-// ------------------------------------------------------------------------------------------------
-
-void Stage::rebuildFramebuffer(HashMap<strID, StaticTextureItem>& staticTextures) noexcept
-{
-	if (type != StageType::USER_INPUT_RENDERING) return;
-
-	strID defaultId = strID("default");
-
-	// Create framebuffer
-	if (!render.defaultFramebuffer) {
-
-		if (!render.renderTargetNames.isEmpty() || render.depthBufferName.isValid()) {
-			zg::FramebufferBuilder fbBuilder;
-
-			for (strID renderTargetName : render.renderTargetNames) {
-				sfz_assert(renderTargetName != defaultId);
-				StaticTextureItem* renderTarget = staticTextures.get(renderTargetName);
-				sfz_assert(renderTarget != nullptr);
-				fbBuilder.addRenderTarget(renderTarget->texture);
-			}
-
-			if (render.depthBufferName.isValid()) {
-				sfz_assert(render.depthBufferName != defaultId);
-				StaticTextureItem* depthBuffer = staticTextures.get(render.depthBufferName);
-				sfz_assert(depthBuffer != nullptr);
-				fbBuilder.setDepthBuffer(depthBuffer->texture);
-			}
-
-			bool fbSuccess = CHECK_ZG fbBuilder.build(render.framebuffer);
-			sfz_assert(fbSuccess);
-		}
-	}
 }
 
 // RendererState: Helper methods

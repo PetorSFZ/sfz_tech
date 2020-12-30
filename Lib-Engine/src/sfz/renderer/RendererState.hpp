@@ -105,30 +105,6 @@ struct PipelineComputeItem final {
 	bool buildPipeline() noexcept;
 };
 
-// Static textures
-// ------------------------------------------------------------------------------------------------
-
-struct StaticTextureItem final {
-	
-	// The texture
-	zg::Texture texture;
-	uint32_t width = 0;
-	uint32_t height = 0;
-	uint32_t numMipmaps = 1;
-
-	// Parsed information
-	strID name;
-	ZgTextureFormat format = ZG_TEXTURE_FORMAT_UNDEFINED;
-	float clearValue = 0.0f;
-	bool resolutionIsFixed = false;
-	float resolutionScale = 1.0f;
-	Setting* resolutionScaleSetting = nullptr;
-	vec2_i32 resolutionFixed = vec2_i32(0);
-
-	// Allocation and deallocating the static texture using the parsed information
-	void buildTexture(vec2_i32 windowRes) noexcept;
-};
-
 // Static buffers
 // ------------------------------------------------------------------------------------------------
 
@@ -201,18 +177,7 @@ struct Stage final {
 	// Parsed information
 	strID name;
 	StageType type;
-	struct {
-		zg::Framebuffer framebuffer;
-		strID pipelineName;
-		ArrayLocal<strID, ZG_MAX_NUM_RENDER_TARGETS> renderTargetNames;
-		strID depthBufferName;
-		bool defaultFramebuffer = false;
-	} render;
-	struct {
-		strID pipelineName;
-	} compute;
-
-	void rebuildFramebuffer(HashMap<strID, StaticTextureItem>& staticTextures) noexcept;
+	strID pipelineName;
 };
 
 struct StageGroup final {
@@ -242,9 +207,6 @@ struct RendererConfigurableState final {
 	// Pipelines
 	Array<PipelineRenderItem> renderPipelines;
 	Array<PipelineComputeItem> computePipelines;
-
-	// Static textures
-	HashMap<strID, StaticTextureItem> staticTextures;
 
 	// Static buffers
 	HashMap<strID, StaticBufferItem> staticBuffers;
