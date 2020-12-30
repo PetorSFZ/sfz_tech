@@ -39,7 +39,7 @@ inline void renderTexturesTab(ResourceManagerState& state)
 	static str128 filter;
 
 	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
-	ImGui::InputText("Filter", filter.mRawStr, filter.capacity());
+	ImGui::InputText("Filter##TexturesTab", filter.mRawStr, filter.capacity());
 	ImGui::PopStyleColor();
 	filter.toLower();
 
@@ -51,7 +51,7 @@ inline void renderTexturesTab(ResourceManagerState& state)
 
 		str320 lowerCaseName = name;
 		lowerCaseName.toLower();
-		if (!filter.isPartOf(name)) continue;
+		if (!filter.isPartOf(lowerCaseName.str())) continue;
 
 		if (filterMode) {
 			imguiRenderFilteredText(name, filter.str(), normalTextColor, filterTextColor);
@@ -100,6 +100,39 @@ inline void renderTexturesTab(ResourceManagerState& state)
 
 		ImGui::Unindent(20.0f);
 		ImGui::Spacing();
+	}
+}
+
+inline void renderFramebuffersTab(ResourceManagerState& state)
+{
+	constexpr float offset = 200.0f;
+	constexpr float offset2 = 220.0f;
+	constexpr vec4 normalTextColor = vec4(1.0f);
+	constexpr vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	static str128 filter;
+
+	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
+	ImGui::InputText("Filter##FramebuffersTab", filter.mRawStr, filter.capacity());
+	ImGui::PopStyleColor();
+	filter.toLower();
+
+	const bool filterMode = filter != "";
+
+	for (HashMapPair<strID, PoolHandle> itemItr : state.framebufferHandles) {
+		const char* name = itemItr.key.str();
+		const FramebufferResource& resource = state.framebuffers[itemItr.value];
+
+		str320 lowerCaseName = name;
+		lowerCaseName.toLower();
+		if (!filter.isPartOf(lowerCaseName.str())) continue;
+
+		if (filterMode) {
+			imguiRenderFilteredText(name, filter.str(), normalTextColor, filterTextColor);
+		}
+		else {
+			if (!ImGui::CollapsingHeader(name)) continue;
+		}
+
 	}
 }
 
@@ -304,6 +337,12 @@ inline void resourceManagerUI(ResourceManagerState& state)
 		if (ImGui::BeginTabItem("Textures")) {
 			ImGui::Spacing();
 			renderTexturesTab(state);
+			ImGui::EndTabItem();
+		}
+
+		if (ImGui::BeginTabItem("Framebuffers")) {
+			ImGui::Spacing();
+			renderFramebuffersTab(state);
 			ImGui::EndTabItem();
 		}
 

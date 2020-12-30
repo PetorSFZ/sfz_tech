@@ -279,6 +279,8 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/rendering/Mesh.hpp
 	${SRC_DIR}/sfz/rendering/SphereLight.hpp
 
+	${SRC_DIR}/sfz/resources/FramebufferResource.hpp
+	${SRC_DIR}/sfz/resources/FramebufferResource.cpp
 	${SRC_DIR}/sfz/resources/MeshItem.hpp
 	${SRC_DIR}/sfz/resources/MeshItem.cpp
 	${SRC_DIR}/sfz/resources/ResourceManager.hpp

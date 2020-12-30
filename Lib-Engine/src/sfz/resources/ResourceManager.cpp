@@ -19,6 +19,7 @@
 #include "sfz/resources/ResourceManager.hpp"
 
 #include "sfz/renderer/ZeroGUtils.hpp"
+#include "sfz/resources/FramebufferResource.hpp"
 #include "sfz/resources/ResourceManagerState.hpp"
 #include "sfz/resources/ResourceManagerUI.hpp"
 #include "sfz/resources/TextureResource.hpp"
@@ -36,6 +37,9 @@ void ResourceManager::init(uint32_t maxNumResources, Allocator* allocator)
 
 	mState->textureHandles.init(maxNumResources, allocator, sfz_dbg(""));
 	mState->textures.init(maxNumResources, allocator, sfz_dbg(""));
+
+	mState->framebufferHandles.init(maxNumResources, allocator, sfz_dbg(""));
+	mState->framebuffers.init(maxNumResources, allocator, sfz_dbg(""));
 
 	mState->meshHandles.init(maxNumResources, allocator, sfz_dbg(""));
 	mState->meshes.init(maxNumResources, allocator, sfz_dbg(""));
@@ -102,6 +106,47 @@ void ResourceManager::removeTexture(strID name)
 	if (handle == NULL_HANDLE) return;
 	mState->textureHandles.remove(name);
 	mState->textures.deallocate(handle);
+}
+
+// ResourceManager: Framebuffer methods
+// ------------------------------------------------------------------------------------------------
+
+PoolHandle ResourceManager::getFramebufferHandle(const char* name) const
+{
+	return this->getFramebufferHandle(strID(name));
+}
+
+PoolHandle ResourceManager::getFramebufferHandle(strID name) const
+{
+	const PoolHandle* handle = mState->framebufferHandles.get(name);
+	if (handle == nullptr) return NULL_HANDLE;
+	return *handle;
+}
+
+FramebufferResource* ResourceManager::getFramebuffer(PoolHandle handle)
+{
+	return mState->framebuffers.get(handle);
+}
+
+PoolHandle ResourceManager::addFramebuffer(strID name, FramebufferResource&& resource)
+{
+	sfz_assert(mState->framebufferHandles.get(name) == nullptr);
+	PoolHandle handle = mState->framebuffers.allocate(std::move(resource));
+	mState->framebufferHandles.put(name, handle);
+	sfz_assert(mState->framebufferHandles.size() == mState->framebuffers.numAllocated());
+	return handle;
+}
+
+void ResourceManager::removeFramebuffer(strID name)
+{
+	// TODO: Currently blocking, can probably be made async.
+	CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
+	CHECK_ZG zg::CommandQueue::getCopyQueue().flush();
+
+	PoolHandle handle = this->getFramebufferHandle(name);
+	if (handle == NULL_HANDLE) return;
+	mState->framebufferHandles.remove(name);
+	mState->framebuffers.deallocate(handle);
 }
 
 // ResourceManager: Mesh methods

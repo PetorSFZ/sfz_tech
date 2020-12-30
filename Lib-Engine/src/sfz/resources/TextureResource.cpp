@@ -127,14 +127,20 @@ static void generateMipmap(const ImageViewConst& prevLevel, Image& currLevel) no
 ZgResult TextureResource::build(vec2_u32 screenRes)
 {
 	// Set resolution and resolution scale if screen relative
+	vec2_u32 newRes = vec2_u32(0u);
 	if (screenRelativeResolution) {
 		if (this->resolutionScaleSetting != nullptr) {
 			this->resolutionScale = resolutionScaleSetting->floatValue();
 		}
 		vec2 scaledRes = vec2(screenRes) * this->resolutionScale;
-		this->res.x = uint32_t(std::round(scaledRes.x));
-		this->res.y = uint32_t(std::round(scaledRes.y));
+		newRes.x = uint32_t(std::round(scaledRes.x));
+		newRes.y = uint32_t(std::round(scaledRes.y));
 	}
+	else {
+		newRes = this->res;
+	}
+	if (this->texture.valid() && this->res == newRes) return ZG_SUCCESS;
+	this->res = newRes;
 
 	sfz_assert(res.x > 0);
 	sfz_assert(res.y > 0);

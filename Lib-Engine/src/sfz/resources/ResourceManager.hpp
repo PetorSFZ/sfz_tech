@@ -29,6 +29,7 @@
 
 namespace sfz {
 
+struct FramebufferResource;
 struct TextureResource;
 
 // ResourceManager
@@ -55,6 +56,15 @@ public:
 	TextureResource* getTexture(PoolHandle handle);
 	PoolHandle addTexture(strID name, TextureResource&& resource);
 	void removeTexture(strID name);
+
+	// Framebuffer methods
+	// --------------------------------------------------------------------------------------------
+
+	PoolHandle getFramebufferHandle(const char* name) const;
+	PoolHandle getFramebufferHandle(strID name) const;
+	FramebufferResource* getFramebuffer(PoolHandle handle);
+	PoolHandle addFramebuffer(strID name, FramebufferResource&& resource);
+	void removeFramebuffer(strID name);
 
 	// Mesh methods
 	// --------------------------------------------------------------------------------------------
