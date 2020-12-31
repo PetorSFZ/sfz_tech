@@ -57,7 +57,7 @@ public:
 	PoolHandle getTextureHandle(const char* name) const;
 	PoolHandle getTextureHandle(strID name) const;
 	TextureResource* getTexture(PoolHandle handle);
-	PoolHandle addTexture(strID name, TextureResource&& resource);
+	PoolHandle addTexture(TextureResource&& resource);
 	void removeTexture(strID name);
 
 	// Framebuffer methods
@@ -66,7 +66,7 @@ public:
 	PoolHandle getFramebufferHandle(const char* name) const;
 	PoolHandle getFramebufferHandle(strID name) const;
 	FramebufferResource* getFramebuffer(PoolHandle handle);
-	PoolHandle addFramebuffer(strID name, FramebufferResource&& resource);
+	PoolHandle addFramebuffer(FramebufferResource&& resource);
 	void removeFramebuffer(strID name);
 
 	// Mesh methods

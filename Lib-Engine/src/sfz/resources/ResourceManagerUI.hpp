@@ -133,6 +133,48 @@ inline void renderFramebuffersTab(ResourceManagerState& state)
 			if (!ImGui::CollapsingHeader(name)) continue;
 		}
 
+		ImGui::Indent(20.0f);
+
+		alignedEdit("Resolution", offset, [&](const char*) {
+			ImGui::Text("%u x %u", resource.res.x, resource.res.y);
+		});
+
+		if (resource.screenRelativeResolution) {
+			ImGui::Text("Screen relative resolution");
+			ImGui::Indent(20.0f);
+			alignedEdit("Fixed scale", offset2, [&](const char*) {
+				ImGui::Text("%.2f", resource.resolutionScale);
+			});
+			alignedEdit("Scale setting", offset2, [&](const char*) {
+				ImGui::Text("%s.%s",
+					resource.resolutionScaleSetting->section().str(),
+					resource.resolutionScaleSetting->key().str());
+			});
+			ImGui::Unindent(20.0f);
+		}
+
+		if (!resource.renderTargetNames.isEmpty()) {
+			ImGui::Spacing();
+			for (uint32_t i = 0; i < resource.renderTargetNames.size(); i++) {
+				strID name = resource.renderTargetNames[i];
+				const TextureResource* renderTarget = state.textures.get(*state.textureHandles.get(name));
+				sfz_assert(renderTarget != nullptr);
+				alignedEdit(str64("Render target %u", i).str(), offset, [&](const char*) {
+					ImGui::Text("%s  --  %s", name.str(), textureFormatToString(renderTarget->format));
+				});
+			}
+		}
+		
+		if (resource.depthBufferName.isValid()) {
+			ImGui::Spacing();
+			alignedEdit("Depth buffer", offset, [&](const char*) {
+				ImGui::Text("%s", resource.depthBufferName.str());
+			});
+		}
+
+		ImGui::Unindent(20.0f);
+		ImGui::Spacing();
+		ImGui::Spacing();
 	}
 }
 

@@ -107,8 +107,10 @@ TextureResource* ResourceManager::getTexture(PoolHandle handle)
 	return mState->textures.get(handle);
 }
 
-PoolHandle ResourceManager::addTexture(strID name, TextureResource&& resource)
+PoolHandle ResourceManager::addTexture(TextureResource&& resource)
 {
+	strID name = resource.name;
+	sfz_assert(name.isValid());
 	sfz_assert(mState->textureHandles.get(name) == nullptr);
 	PoolHandle handle = mState->textures.allocate(std::move(resource));
 	mState->textureHandles.put(name, handle);
@@ -149,8 +151,10 @@ FramebufferResource* ResourceManager::getFramebuffer(PoolHandle handle)
 	return mState->framebuffers.get(handle);
 }
 
-PoolHandle ResourceManager::addFramebuffer(strID name, FramebufferResource&& resource)
+PoolHandle ResourceManager::addFramebuffer(FramebufferResource&& resource)
 {
+	strID name = resource.name;
+	sfz_assert(name.isValid());
 	sfz_assert(mState->framebufferHandles.get(name) == nullptr);
 	PoolHandle handle = mState->framebuffers.allocate(std::move(resource));
 	mState->framebufferHandles.put(name, handle);

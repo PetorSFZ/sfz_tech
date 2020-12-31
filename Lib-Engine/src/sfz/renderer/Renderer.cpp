@@ -208,7 +208,7 @@ bool Renderer::uploadTextureBlocking(
 	resource.uploadBlocking(image, mState->allocator, mState->copyQueue);
 	
 	// Add to resource manager
-	resources.addTexture(id, std::move(resource));
+	resources.addTexture(std::move(resource));
 
 	return true;
 }
