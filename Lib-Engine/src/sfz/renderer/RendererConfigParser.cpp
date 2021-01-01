@@ -425,58 +425,6 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		}
 	}
 
-	// Allocate stage memory
-	if (!allocateStageMemory(state)) success = false;
-
-	return success;
-}
-
-bool allocateStageMemory(RendererState& state) noexcept
-{
-	bool success = true;
-
-	for (uint32_t groupIdx = 0; groupIdx < state.configurable.presentStageGroups.size(); groupIdx++) {
-		StageGroup& group = state.configurable.presentStageGroups[groupIdx];
-
-		for (uint32_t stageIdx = 0; stageIdx < group.stages.size(); stageIdx++) {
-			Stage& stage = group.stages[stageIdx];
-
-			// Grab bindings and nonUserSettableConstBuffers from pipeline
-			ZgPipelineBindingsSignature bindings = {};
-			ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS>* nonUserSettableConstBuffers = nullptr;
-			if (stage.type == StageType::USER_INPUT_RENDERING) {
-
-				// Find pipeline
-				PipelineRenderItem* pipelineItem =
-					state.configurable.renderPipelines.find([&](const PipelineRenderItem& item) {
-						return item.name == stage.pipelineName;
-				});
-				sfz_assert(pipelineItem != nullptr);
-
-				// Grab stuff from pipeline item
-				bindings = pipelineItem->pipeline.getSignature().bindings;
-				nonUserSettableConstBuffers = &pipelineItem->nonUserSettableConstBuffers;
-			}
-			else if (stage.type == StageType::USER_INPUT_COMPUTE) {
-
-				// Find pipeline
-				PipelineComputeItem* pipelineItem =
-					state.configurable.computePipelines.find([&](const PipelineComputeItem& item) {
-						return item.name == stage.pipelineName;
-					});
-				sfz_assert(pipelineItem != nullptr);
-
-				// Grab stuff from pipeline item
-				bindings = pipelineItem->pipeline.getBindingsSignature();
-				nonUserSettableConstBuffers = &pipelineItem->nonUserSettableConstBuffers;
-			}
-			else {
-				sfz_assert(false);
-			}
-			sfz_assert(nonUserSettableConstBuffers != nullptr);
-		}
-	}
-
 	return success;
 }
 

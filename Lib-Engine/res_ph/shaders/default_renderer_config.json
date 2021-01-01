@@ -124,24 +124,6 @@
 		}
 	],
 
-	"static_buffers": [
-	],
-
-	"streaming_buffers": [
-		{
-			"name": "Directional Light Const Buffer",
-			"element_size_bytes": 1,
-			"max_num_elements": 256,
-			"committed_allocation": false
-		},
-		{
-			"name": "Point Lights Buffer",
-			"element_size_bytes": 1,
-			"max_num_elements": 4112,
-			"committed_allocation": false
-		}
-	],
-
 	"present_stage_groups": [
 		{
 			"group_name": "GBuffer + Cascaded Shadows",
