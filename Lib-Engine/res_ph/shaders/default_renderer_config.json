@@ -124,72 +124,6 @@
 		}
 	],
 
-	"static_textures": [
-		{
-			"name": "GBuffer_albedo",
-			"format": "RGBA_U8_UNORM",
-			"clear_value": 0.0,
-			"resolution_scale": 1.0,
-			"resolution_scale_setting": "internalResolutionScale"
-		},
-		{
-			"name": "GBuffer_metallic_roughness",
-			"format": "RG_U8_UNORM",
-			"clear_value": 0.0,
-			"resolution_scale": 1.0,
-			"resolution_scale_setting": "internalResolutionScale"
-		},
-		{
-			"name": "GBuffer_emissive",
-			"format": "RGBA_U8_UNORM",
-			"clear_value": 0.0,
-			"resolution_scale": 1.0,
-			"resolution_scale_setting": "internalResolutionScale"
-		},
-		{
-			"name": "GBuffer_normal",
-			"format": "RGBA_F16",
-			"clear_value": 0.0,
-			"resolution_scale": 1.0,
-			"resolution_scale_setting": "internalResolutionScale"
-		},
-		{
-			"name": "GBuffer_depthbuffer",
-			"format": "DEPTH_F32",
-			"clear_value": 0.0,
-			"resolution_scale": 1.0,
-			"resolution_scale_setting": "internalResolutionScale"
-		},
-		{
-			"name": "LightAccumulation1",
-			"format": "RGBA_F16",
-			"clear_value": 0.0,
-			"resolution_scale": 1.0,
-			"resolution_scale_setting": "internalResolutionScale"
-		},
-		{
-			"name": "ShadowMapCascaded1",
-			"format": "DEPTH_F32",
-			"clear_value": 0.0,
-			"resolution_fixed_width": 2048,
-			"resolution_fixed_height": 2048
-		},
-		{
-			"name": "ShadowMapCascaded2",
-			"format": "DEPTH_F32",
-			"clear_value": 0.0,
-			"resolution_fixed_width": 2048,
-			"resolution_fixed_height": 2048
-		},
-		{
-			"name": "ShadowMapCascaded3",
-			"format": "DEPTH_F32",
-			"clear_value": 0.0,
-			"resolution_fixed_width": 1024,
-			"resolution_fixed_height": 1024
-		}
-	],
-
 	"static_buffers": [
 	],
 
@@ -215,32 +149,22 @@
 				{
 					"stage_name": "GBuffer Pass",
 					"stage_type": "USER_INPUT_RENDERING",
-					"render_pipeline": "GBuffer Generation",
-					"render_targets": [
-						"GBuffer_albedo",
-						"GBuffer_metallic_roughness",
-						"GBuffer_emissive",
-						"GBuffer_normal"
-					],
-					"depth_buffer": "GBuffer_depthbuffer"
+					"render_pipeline": "GBuffer Generation"
 				},
 				{
 					"stage_name": "Directional Shadow Map Pass 1",
 					"stage_type": "USER_INPUT_RENDERING",
-					"render_pipeline": "Shadow Map Generation",
-					"depth_buffer": "ShadowMapCascaded1"
+					"render_pipeline": "Shadow Map Generation"
 				},
 				{
 					"stage_name": "Directional Shadow Map Pass 2",
 					"stage_type": "USER_INPUT_RENDERING",
-					"render_pipeline": "Shadow Map Generation",
-					"depth_buffer": "ShadowMapCascaded2"
+					"render_pipeline": "Shadow Map Generation"
 				},
 				{
 					"stage_name": "Directional Shadow Map Pass 3",
 					"stage_type": "USER_INPUT_RENDERING",
-					"render_pipeline": "Shadow Map Generation",
-					"depth_buffer": "ShadowMapCascaded3"
+					"render_pipeline": "Shadow Map Generation"
 				}
 			]
 		},
@@ -265,11 +189,7 @@
 				{
 					"stage_name": "Copy Out Pass",
 					"stage_type": "USER_INPUT_RENDERING",
-					"render_pipeline": "Copy Out Shader",
-					"render_targets": [
-						"default"
-					],
-					"depth_buffer": "default"
+					"render_pipeline": "Copy Out Shader"
 				}
 			]
 		}
