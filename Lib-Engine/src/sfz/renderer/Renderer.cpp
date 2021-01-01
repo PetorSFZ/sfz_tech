@@ -236,15 +236,14 @@ bool Renderer::uploadMeshBlocking(strID id, const Mesh& mesh) noexcept
 	if (resources.getMeshHandle(id) != NULL_HANDLE) return false;
 
 	// Allocate memory for mesh
-	const char* fileName = getFileNameFromPath(id.str());
-	MeshItem gpuMesh = meshItemAllocate(fileName, mesh, mState->allocator);
+	MeshResource gpuMesh = meshResourceAllocate(id.str(), mesh, mState->allocator);
 
 	// Upload memory to mesh
-	meshItemUploadBlocking(
+	meshResourceUploadBlocking(
 		gpuMesh, mesh, mState->allocator, mState->copyQueue);
 
 	// Store mesh
-	resources.addMesh(id, std::move(gpuMesh));
+	resources.addMesh(std::move(gpuMesh));
 
 	return true;
 }

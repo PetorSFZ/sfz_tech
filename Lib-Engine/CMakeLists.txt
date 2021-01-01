@@ -281,8 +281,8 @@ set(SRC_FILES
 
 	${SRC_DIR}/sfz/resources/FramebufferResource.hpp
 	${SRC_DIR}/sfz/resources/FramebufferResource.cpp
-	${SRC_DIR}/sfz/resources/MeshItem.hpp
-	${SRC_DIR}/sfz/resources/MeshItem.cpp
+	${SRC_DIR}/sfz/resources/MeshResource.hpp
+	${SRC_DIR}/sfz/resources/MeshResource.cpp
 	${SRC_DIR}/sfz/resources/ResourceManager.hpp
 	${SRC_DIR}/sfz/resources/ResourceManager.cpp
 	${SRC_DIR}/sfz/resources/ResourceManagerState.hpp

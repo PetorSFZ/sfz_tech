@@ -28,11 +28,11 @@
 
 namespace sfz {
 
-// MeshItem
+// MeshResource
 // ------------------------------------------------------------------------------------------------
 
-struct MeshItem final {
-	bool enabled = true;
+struct MeshResource final {
+	strID name;
 	zg::Buffer vertexBuffer;
 	zg::Buffer indexBuffer;
 	zg::Buffer materialsBuffer;
@@ -46,13 +46,13 @@ struct MeshItem final {
 
 ShaderMaterial cpuMaterialToShaderMaterial(const Material& cpuMaterial) noexcept;
 
-MeshItem meshItemAllocate(
+MeshResource meshResourceAllocate(
 	const char* meshName,
 	const Mesh& cpuMesh,
 	sfz::Allocator* cpuAllocator) noexcept;
 
-void meshItemUploadBlocking(
-	MeshItem& gpuMesh,
+void meshResourceUploadBlocking(
+	MeshResource& gpuMesh,
 	const Mesh& cpuMesh,
 	sfz::Allocator* cpuAllocator,
 	zg::CommandQueue& copyQueue) noexcept;

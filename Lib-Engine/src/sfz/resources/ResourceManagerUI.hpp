@@ -181,7 +181,7 @@ inline void renderFramebuffersTab(ResourceManagerState& state)
 inline void renderMeshesTab(ResourceManagerState& state)
 {
 	for (auto itemItr : state.meshHandles) {
-		MeshItem& mesh = state.meshes[itemItr.value];
+		MeshResource& mesh = state.meshes[itemItr.value];
 
 		// Check if mesh is valid
 		bool meshValid = true;
@@ -196,7 +196,6 @@ inline void renderMeshesTab(ResourceManagerState& state)
 			ImGui::Text("-- NOT VALID");
 		}
 		ImGui::SameLine();
-		ImGui::Checkbox(str64("##mesh_%llu_enabled", itemItr.key), &mesh.enabled);
 
 		// Components
 		ImGui::Indent(20.0f);

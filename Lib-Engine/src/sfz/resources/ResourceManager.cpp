@@ -189,15 +189,17 @@ PoolHandle ResourceManager::getMeshHandle(strID name) const
 	return *handle;
 }
 
-MeshItem* ResourceManager::getMesh(PoolHandle handle)
+MeshResource* ResourceManager::getMesh(PoolHandle handle)
 {
 	return mState->meshes.get(handle);
 }
 
-PoolHandle ResourceManager::addMesh(strID name, MeshItem&& item)
+PoolHandle ResourceManager::addMesh(MeshResource&& resource)
 {
+	strID name = resource.name;
+	sfz_assert(name.isValid());
 	sfz_assert(mState->meshHandles.get(name) == nullptr);
-	PoolHandle handle = mState->meshes.allocate(std::move(item));
+	PoolHandle handle = mState->meshes.allocate(std::move(resource));
 	mState->meshHandles.put(name, handle);
 	sfz_assert(mState->meshHandles.size() == mState->meshes.numAllocated());
 	return handle;

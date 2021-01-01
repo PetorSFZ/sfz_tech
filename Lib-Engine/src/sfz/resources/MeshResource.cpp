@@ -17,7 +17,7 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/resources/MeshItem.hpp"
+#include "sfz/resources/MeshResource.hpp"
 
 #include <skipifzero.hpp>
 #include <skipifzero_strings.hpp>
@@ -44,12 +44,14 @@ ShaderMaterial cpuMaterialToShaderMaterial(const Material& cpuMaterial) noexcept
 	return dst;
 }
 
-MeshItem meshItemAllocate(
+MeshResource meshResourceAllocate(
 	const char* meshName,
 	const Mesh& cpuMesh,
 	sfz::Allocator* cpuAllocator) noexcept
 {
-	MeshItem gpuMesh;
+	MeshResource gpuMesh;
+
+	gpuMesh.name = strID(meshName);
 
 	// Allocate (GPU) memory for vertices
 	CHECK_ZG gpuMesh.vertexBuffer.create(
@@ -79,8 +81,8 @@ MeshItem meshItemAllocate(
 	return gpuMesh;
 }
 
-void meshItemUploadBlocking(
-	MeshItem& gpuMesh,
+void meshResourceUploadBlocking(
+	MeshResource& gpuMesh,
 	const Mesh& cpuMesh,
 	sfz::Allocator* cpuAllocator,
 	zg::CommandQueue& copyQueue) noexcept

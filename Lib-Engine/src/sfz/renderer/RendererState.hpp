@@ -29,7 +29,7 @@
 #include <ZeroG-ImGui.hpp>
 
 #include "sfz/config/GlobalConfig.hpp"
-#include "sfz/resources/MeshItem.hpp"
+#include "sfz/resources/MeshResource.hpp"
 #include "sfz/renderer/RendererUI.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
 

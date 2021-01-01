@@ -24,6 +24,7 @@
 #include <skipifzero_strings.hpp>
 
 #include "sfz/resources/FramebufferResource.hpp"
+#include "sfz/resources/MeshResource.hpp"
 #include "sfz/resources/ResourceManager.hpp"
 #include "sfz/resources/TextureResource.hpp"
 
@@ -44,7 +45,7 @@ struct ResourceManagerState final {
 	Pool<FramebufferResource> framebuffers;
 
 	HashMap<strID, PoolHandle> meshHandles;
-	Pool<MeshItem> meshes;
+	Pool<MeshResource> meshes;
 };
 
 } // namespace sfz

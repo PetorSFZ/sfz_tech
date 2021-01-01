@@ -25,11 +25,10 @@
 
 #include <ZeroG.h>
 
-#include "sfz/resources/MeshItem.hpp"
-
 namespace sfz {
 
 struct FramebufferResource;
+struct MeshResource;
 struct TextureResource;
 
 // ResourceManager
@@ -74,8 +73,8 @@ public:
 
 	PoolHandle getMeshHandle(const char* name) const;
 	PoolHandle getMeshHandle(strID name) const;
-	MeshItem* getMesh(PoolHandle handle);
-	PoolHandle addMesh(strID name, MeshItem&& item);
+	MeshResource* getMesh(PoolHandle handle);
+	PoolHandle addMesh(MeshResource&& resource);
 	void removeMesh(strID name);
 
 private:
