@@ -30,6 +30,50 @@ namespace sfz {
 // Helper functions
 // ------------------------------------------------------------------------------------------------
 
+inline void renderBuffersTab(ResourceManagerState& state)
+{
+	constexpr float offset = 200.0f;
+	constexpr float offset2 = 220.0f;
+	constexpr vec4 normalTextColor = vec4(1.0f);
+	constexpr vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	static str128 filter;
+
+	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
+	ImGui::InputText("Filter##BuffersTab", filter.mRawStr, filter.capacity());
+	ImGui::PopStyleColor();
+	filter.toLower();
+
+	const bool filterMode = filter != "";
+
+	for (HashMapPair<strID, PoolHandle> itemItr : state.bufferHandles) {
+		const char* name = itemItr.key.str();
+		const BufferResource& resource = state.buffers[itemItr.value];
+
+		str320 lowerCaseName = name;
+		lowerCaseName.toLower();
+		if (!filter.isPartOf(lowerCaseName.str())) continue;
+
+		if (filterMode) {
+			imguiRenderFilteredText(name, filter.str(), normalTextColor, filterTextColor);
+		}
+		else {
+			if (!ImGui::CollapsingHeader(name)) continue;
+		}
+
+		ImGui::Indent(20.0f);
+		alignedEdit("Type", offset, [&](const char*) {
+			ImGui::Text("%s", resource.type == BufferResourceType::STATIC ? "STATIC" : "STREAMING");
+		});
+		alignedEdit("Element size", offset, [&](const char*) {
+			ImGui::Text("%u bytes", resource.elementSizeBytes);
+		});
+		alignedEdit("Max num elements", offset, [&](const char*) {
+			ImGui::Text("%u", resource.maxNumElements);
+		});
+		ImGui::Unindent(20.0f);
+	}
+}
+
 inline void renderTexturesTab(ResourceManagerState& state)
 {
 	constexpr float offset = 200.0f;
@@ -156,11 +200,12 @@ inline void renderFramebuffersTab(ResourceManagerState& state)
 		if (!resource.renderTargetNames.isEmpty()) {
 			ImGui::Spacing();
 			for (uint32_t i = 0; i < resource.renderTargetNames.size(); i++) {
-				strID name = resource.renderTargetNames[i];
-				const TextureResource* renderTarget = state.textures.get(*state.textureHandles.get(name));
+				strID renderTargetName = resource.renderTargetNames[i];
+				const TextureResource* renderTarget =
+					state.textures.get(*state.textureHandles.get(renderTargetName));
 				sfz_assert(renderTarget != nullptr);
 				alignedEdit(str64("Render target %u", i).str(), offset, [&](const char*) {
-					ImGui::Text("%s  --  %s", name.str(), textureFormatToString(renderTarget->format));
+					ImGui::Text("%s  --  %s", renderTargetName.str(), textureFormatToString(renderTarget->format));
 				});
 			}
 		}
@@ -195,7 +240,6 @@ inline void renderMeshesTab(ResourceManagerState& state)
 			ImGui::SameLine();
 			ImGui::Text("-- NOT VALID");
 		}
-		ImGui::SameLine();
 
 		// Components
 		ImGui::Indent(20.0f);
@@ -374,6 +418,12 @@ inline void resourceManagerUI(ResourceManagerState& state)
 	}
 
 	if (ImGui::BeginTabBar("ResourcesTabBar", ImGuiTabBarFlags_None)) {
+
+		if (ImGui::BeginTabItem("Buffers")) {
+			ImGui::Spacing();
+			renderBuffersTab(state);
+			ImGui::EndTabItem();
+		}
 
 		if (ImGui::BeginTabItem("Textures")) {
 			ImGui::Spacing();

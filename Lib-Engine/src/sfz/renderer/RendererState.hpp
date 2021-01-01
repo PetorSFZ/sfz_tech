@@ -105,41 +105,6 @@ struct PipelineComputeItem final {
 	bool buildPipeline() noexcept;
 };
 
-// Static buffers
-// ------------------------------------------------------------------------------------------------
-
-struct StaticBufferItem final {
-
-	// The buffer
-	zg::Buffer buffer;
-	uint32_t elementSizeBytes = 0;
-	uint32_t maxNumElements = 0;
-
-	// Parsed information
-	strID name;
-
-	void buildBuffer() noexcept;
-};
-
-// Streaming buffers
-// ------------------------------------------------------------------------------------------------
-
-struct StreamingBufferMemory final {
-	uint64_t lastFrameIdxTouched = 0;
-	zg::Buffer uploadBuffer;
-	zg::Buffer deviceBuffer;
-};
-
-struct StreamingBufferItem final {
-	strID name;
-	uint32_t elementSizeBytes = 0;
-	uint32_t maxNumElements = 0;
-	bool committedAllocation = false;
-	PerFrameData<StreamingBufferMemory> data;
-
-	void buildBuffer(uint32_t frameLatency);
-};
-
 // Stage types
 // ------------------------------------------------------------------------------------------------
 
@@ -207,12 +172,6 @@ struct RendererConfigurableState final {
 	// Pipelines
 	Array<PipelineRenderItem> renderPipelines;
 	Array<PipelineComputeItem> computePipelines;
-
-	// Static buffers
-	HashMap<strID, StaticBufferItem> staticBuffers;
-
-	// Streaming buffers
-	HashMap<strID, StreamingBufferItem> streamingBuffers;
 
 	// Present stage groups
 	Array<StageGroup> presentStageGroups;

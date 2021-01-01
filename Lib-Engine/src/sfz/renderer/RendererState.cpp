@@ -23,34 +23,6 @@
 
 namespace sfz {
 
-// Static buffers
-// ------------------------------------------------------------------------------------------------
-
-void StaticBufferItem::buildBuffer() noexcept
-{
-	const uint64_t sizeBytes = this->elementSizeBytes * this->maxNumElements;
-	CHECK_ZG this->buffer.create(sizeBytes, ZG_MEMORY_TYPE_DEVICE, false, this->name.str());
-}
-
-// Streaming buffers
-// ------------------------------------------------------------------------------------------------
-
-void StreamingBufferItem::buildBuffer(uint32_t frameLatency)
-{
-	const uint64_t sizeBytes = this->elementSizeBytes * this->maxNumElements;
-	const char* nameStr = this->name.str();
-	uint32_t frameIdx = 0;
-	this->data.init(frameLatency, [&](StreamingBufferMemory& memory) {
-		str256 uploadDebugName("%s_upload_%u", nameStr, frameIdx);
-		str256 deviceDebugName("%s_device_%u", nameStr, frameIdx);
-		frameIdx += 1;
-		CHECK_ZG memory.uploadBuffer.create(
-			sizeBytes, ZG_MEMORY_TYPE_UPLOAD, committedAllocation, uploadDebugName.str());
-		CHECK_ZG memory.deviceBuffer.create(
-			sizeBytes, ZG_MEMORY_TYPE_DEVICE, committedAllocation, deviceDebugName.str());
-	});
-}
-
 //  Pipeline types
 // ------------------------------------------------------------------------------------------------
 

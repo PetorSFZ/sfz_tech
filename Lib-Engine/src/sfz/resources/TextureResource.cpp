@@ -166,8 +166,8 @@ void TextureResource::uploadBlocking(
 	zg::CommandQueue& copyQueue)
 {
 	sfz_assert(texture.valid());
-	sfz_assert(image.width == res.x);
-	sfz_assert(image.height == res.y);
+	sfz_assert(uint32_t(image.width) == res.x);
+	sfz_assert(uint32_t(image.height) == res.y);
 	
 	// Convert to ZeroG Image View
 	ZgImageViewConstCpu view = toZeroGImageView(image);

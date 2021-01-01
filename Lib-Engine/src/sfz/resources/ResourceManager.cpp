@@ -35,6 +35,9 @@ void ResourceManager::init(uint32_t maxNumResources, Allocator* allocator)
 	mState = allocator->newObject<ResourceManagerState>(sfz_dbg(""));
 	mState->allocator = allocator;
 
+	mState->bufferHandles.init(maxNumResources, allocator, sfz_dbg(""));
+	mState->buffers.init(maxNumResources, allocator, sfz_dbg(""));
+
 	mState->textureHandles.init(maxNumResources, allocator, sfz_dbg(""));
 	mState->textures.init(maxNumResources, allocator, sfz_dbg(""));
 
@@ -70,7 +73,6 @@ void ResourceManager::updateResolution(vec2_u32 screenRes)
 {
 	// Update screen relative textures
 	for (HashMapPair<strID, PoolHandle> itemItr : mState->textureHandles) {
-		const char* name = itemItr.key.str();
 		TextureResource& resource = mState->textures[itemItr.value];
 		if (resource.screenRelativeResolution) {
 			CHECK_ZG resource.build(screenRes);
@@ -79,12 +81,54 @@ void ResourceManager::updateResolution(vec2_u32 screenRes)
 
 	// Update screen relative framebuffers
 	for (HashMapPair<strID, PoolHandle> itemItr : mState->framebufferHandles) {
-		const char* name = itemItr.key.str();
 		FramebufferResource& resource = mState->framebuffers[itemItr.value];
 		if (resource.screenRelativeResolution) {
 			CHECK_ZG resource.build(screenRes);
 		}
 	}
+}
+
+// ResourceManager: Buffer methods
+// ------------------------------------------------------------------------------------------------
+
+PoolHandle ResourceManager::getBufferHandle(const char* name) const
+{
+	return this->getBufferHandle(strID(name));
+}
+
+PoolHandle ResourceManager::getBufferHandle(strID name) const
+{
+	const PoolHandle* handle = mState->bufferHandles.get(name);
+	if (handle == nullptr) return NULL_HANDLE;
+	return *handle;
+}
+
+BufferResource* ResourceManager::getBuffer(PoolHandle handle)
+{
+	return mState->buffers.get(handle);
+}
+
+PoolHandle ResourceManager::addBuffer(BufferResource&& resource)
+{
+	strID name = resource.name;
+	sfz_assert(name.isValid());
+	sfz_assert(mState->bufferHandles.get(name) == nullptr);
+	PoolHandle handle = mState->buffers.allocate(std::move(resource));
+	mState->bufferHandles.put(name, handle);
+	sfz_assert(mState->bufferHandles.size() == mState->buffers.numAllocated());
+	return handle;
+}
+
+void ResourceManager::removeBuffer(strID name)
+{
+	// TODO: Currently blocking, can probably be made async.
+	CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
+	CHECK_ZG zg::CommandQueue::getCopyQueue().flush();
+
+	PoolHandle handle = this->getBufferHandle(name);
+	if (handle == NULL_HANDLE) return;
+	mState->bufferHandles.remove(name);
+	mState->buffers.deallocate(handle);
 }
 
 // ResourceManager: Texture methods

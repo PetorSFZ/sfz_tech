@@ -80,17 +80,17 @@ ZgResult FramebufferResource::build(vec2_u32 screenRes)
 // FramebufferResourceBuilder
 // ------------------------------------------------------------------------------------------------
 
-FramebufferResourceBuilder& FramebufferResourceBuilder::setName(const char* name)
+FramebufferResourceBuilder& FramebufferResourceBuilder::setName(const char* nameIn)
 {
-	this->name = str128("%s", name);
+	this->name = str128("%s", nameIn);
 	return *this;
 }
 
-FramebufferResourceBuilder& FramebufferResourceBuilder::setFixedRes(vec2_u32 res)
+FramebufferResourceBuilder& FramebufferResourceBuilder::setFixedRes(vec2_u32 resIn)
 {
-	sfz_assert(res.x > 0);
-	sfz_assert(res.y > 0);
-	this->res = res;
+	sfz_assert(resIn.x > 0);
+	sfz_assert(resIn.y > 0);
+	this->res = resIn;
 	this->screenRelativeResolution = false;
 	this->resolutionScale = 1.0f;
 	this->resolutionScaleSetting = nullptr;

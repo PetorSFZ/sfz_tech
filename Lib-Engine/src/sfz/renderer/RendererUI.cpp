@@ -83,18 +83,6 @@ void RendererUI::render(RendererState& state) noexcept
 			ImGui::EndTabItem();
 		}
 
-		if (ImGui::BeginTabItem("Static Memory")) {
-			ImGui::Spacing();
-			this->renderStaticMemoryTab(state.configurable);
-			ImGui::EndTabItem();
-		}
-
-		if (ImGui::BeginTabItem("Streaming Buffers")) {
-			ImGui::Spacing();
-			this->renderStreamingBuffersTab(state.configurable);
-			ImGui::EndTabItem();
-		}
-
 		ImGui::EndTabBar();
 	}
 
@@ -603,48 +591,6 @@ void RendererUI::renderPipelinesTab(RendererState& state) noexcept
 		}
 
 		ImGui::Unindent(20.0f);
-		ImGui::Unindent(20.0f);
-		ImGui::Spacing();
-	}
-}
-
-void RendererUI::renderStaticMemoryTab(RendererConfigurableState& state) noexcept
-{
-	if (ImGui::CollapsingHeader("Static Buffers")) {
-		for (uint32_t i = 0; i < state.staticBuffers.size(); i++) {
-			const StaticBufferItem& bufItem = state.staticBuffers.values()[i];
-
-			ImGui::Text("Buffer %u - \"%s\" - %u bytes x %u elements",
-				i,
-				bufItem.name.str(),
-				bufItem.elementSizeBytes,
-				bufItem.maxNumElements);
-			ImGui::Spacing();
-			ImGui::Spacing();
-		}
-	}
-}
-
-void RendererUI::renderStreamingBuffersTab(RendererConfigurableState& state) noexcept
-{
-	constexpr float offset = 220.0f;
-
-	for (auto itemItr : state.streamingBuffers) {
-		const StreamingBufferItem& item = itemItr.value;
-
-		ImGui::Text("\"%s\"", itemItr.key.str());
-
-		ImGui::Indent(20.0f);
-		alignedEdit("Element size", offset, [&](const char*) {
-			ImGui::Text("%u bytes", item.elementSizeBytes);
-		});
-		alignedEdit("Max num elements", offset, [&](const char*) {
-			ImGui::Text("%u", item.maxNumElements);
-		});
-		alignedEdit("Committed allocation", offset, [&](const char*) {
-			ImGui::Text("%s", item.committedAllocation ? "TRUE" : "FALSE");
-		});
-
 		ImGui::Unindent(20.0f);
 		ImGui::Spacing();
 	}

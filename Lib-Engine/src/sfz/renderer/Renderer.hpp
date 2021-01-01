@@ -268,8 +268,8 @@ public:
 
 	void stageSetBindings(const PipelineBindings& bindings) noexcept;
 
-	void stageSetVertexBuffer(const char* streamingBufferName) noexcept;
-	void stageSetIndexBuffer(const char* streamingBufferName, bool u32Buffer) noexcept;
+	void stageSetVertexBuffer(const char* bufferName) noexcept;
+	void stageSetIndexBuffer(const char* bufferName, bool u32Buffer) noexcept;
 
 	void stageSetIndexBuffer(zg::Buffer& buffer, ZgIndexBufferType indexBufferType) noexcept;
 	void stageSetVertexBuffer(uint32_t slot, zg::Buffer& buffer) noexcept;
@@ -280,7 +280,7 @@ public:
 	// Inserts an unordered barrier. Basically says that all writes to an unordered resource (or
 	// all of them) must be finished before the resource is read from again.
 	void stageUnorderedBarrierAll() noexcept;
-	void stageUnorderedBarrierStaticBuffer(const char* bufferName) noexcept;
+	void stageUnorderedBarrierBuffer(const char* bufferName) noexcept;
 	void stageUnorderedBarrierTexture(const char* textureName) noexcept;
 
 	// Gets the group dimensions of the compute pipeline associated with the currently active stage.

@@ -1,4 +1,5 @@
 // Copyright (c) Peter Hillerström (skipifzero.com, peter@hstroem.se)
+//               For other contributors see Contributors.txt
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -19,37 +20,50 @@
 #pragma once
 
 #include <skipifzero.hpp>
-#include <skipifzero_hash_maps.hpp>
-#include <skipifzero_pool.hpp>
 #include <skipifzero_strings.hpp>
 
-#include "sfz/resources/BufferResource.hpp"
-#include "sfz/resources/FramebufferResource.hpp"
-#include "sfz/resources/MeshResource.hpp"
-#include "sfz/resources/ResourceManager.hpp"
-#include "sfz/resources/TextureResource.hpp"
+#include <ZeroG.h>
+
+#include "sfz/renderer/ZeroGUtils.hpp"
 
 namespace sfz {
 
-// ResourceManagerState
+// BufferResource
 // ------------------------------------------------------------------------------------------------
 
-// This is the internal state of the Resource Manager. If you are just using the ResourceManager
-// you probably shouldn't be accessing this directly.
-struct ResourceManagerState final {
-	Allocator* allocator = nullptr;
+enum class BufferResourceType : uint32_t {
+	STATIC = 0,
+	STREAMING = 1
+};
 
-	HashMap<strID, PoolHandle> bufferHandles;
-	Pool<BufferResource> buffers;
+struct StaticBufferMemory final {
+	zg::Buffer buffer;
+};
 
-	HashMap<strID, PoolHandle> textureHandles;
-	Pool<TextureResource> textures;
+struct StreamingBufferMemory final {
+	uint64_t lastFrameIdxTouched = 0;
+	zg::Buffer uploadBuffer;
+	zg::Buffer deviceBuffer;
+};
 
-	HashMap<strID, PoolHandle> framebufferHandles;
-	Pool<FramebufferResource> framebuffers;
+struct BufferResource final {
+	strID name;
+	uint32_t elementSizeBytes = 0;
+	uint32_t maxNumElements = 0;
+	BufferResourceType type = BufferResourceType::STATIC;
+	StaticBufferMemory staticMem;
+	PerFrameData<StreamingBufferMemory> streamingMem;
+	
+	static BufferResource createStatic(
+		const char* name,
+		uint32_t elementSize,
+		uint32_t maxNumElements);
 
-	HashMap<strID, PoolHandle> meshHandles;
-	Pool<MeshResource> meshes;
+	static BufferResource createStreaming(
+		const char* name,
+		uint32_t elementSize,
+		uint32_t maxNumElements,
+		uint32_t frameLatency);
 };
 
 } // namespace sfz

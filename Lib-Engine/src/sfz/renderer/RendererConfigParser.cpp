@@ -135,9 +135,6 @@ static PipelineBlendMode blendModeFromString(const str256& str) noexcept
 
 bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 {
-	// Get resource strings and global config
-	GlobalConfig& cfg = getGlobalConfig();
-
 	RendererConfigurableState& configurable = state.configurable;
 
 	// Attempt to parse JSON file containing game common
@@ -362,52 +359,6 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		}
 	}
 
-	// Static buffers
-	{
-		// Get number of static buffers to create and allocate memory for their handles
-		JsonNode staticBuffersNode = root.accessMap("static_buffers");
-		const uint32_t numStaticBuffers = staticBuffersNode.arrayLength();
-		configurable.staticBuffers.init(numStaticBuffers, state.allocator, sfz_dbg(""));
-
-		// Parse information about each static buffer
-		for (uint32_t i = 0; i < numStaticBuffers; i++) {
-
-			JsonNode bufNode = staticBuffersNode.accessArray(i);
-			StaticBufferItem bufItem = {};
-			str256 name = CHECK_JSON bufNode.accessMap("name").valueStr256();
-			sfz_assert(name != "default");
-			bufItem.name = strID(name);
-			bufItem.elementSizeBytes =
-				uint32_t(CHECK_JSON bufNode.accessMap("element_size_bytes").valueInt());
-			bufItem.maxNumElements =
-				uint32_t(CHECK_JSON bufNode.accessMap("max_num_elements").valueInt());
-
-			configurable.staticBuffers.put(bufItem.name, std::move(bufItem));
-		}
-	}
-
-
-	// Streaming buffers
-	JsonNode streamingBuffersNode = root.accessMap("streaming_buffers");
-	if (streamingBuffersNode.isValid()) {
-
-		const uint32_t numStreamingBuffers = streamingBuffersNode.arrayLength();
-		configurable.streamingBuffers.init(numStreamingBuffers * 2, state.allocator, sfz_dbg(""));
-		for (uint32_t bufferIdx = 0; bufferIdx < numStreamingBuffers; bufferIdx++) {
-
-			JsonNode bufferNode = streamingBuffersNode.accessArray(bufferIdx);
-			StreamingBufferItem item;
-			item.name = strID(CHECK_JSON bufferNode.accessMap("name").valueStr256());
-			item.elementSizeBytes =
-				uint32_t(CHECK_JSON bufferNode.accessMap("element_size_bytes").valueInt());
-			item.maxNumElements =
-				uint32_t(CHECK_JSON bufferNode.accessMap("max_num_elements").valueInt());
-			item.committedAllocation = CHECK_JSON bufferNode.accessMap("committed_allocation").valueBool();
-			configurable.streamingBuffers.put(item.name, std::move(item));
-		}
-	}
-
-
 	// Present queue
 	{
 		strID defaultId = strID("default");
@@ -472,18 +423,6 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		if (!item.buildPipeline()) {
 			success = false;
 		}
-	}
-
-	// Create static buffers
-	for (auto pair : configurable.staticBuffers) {
-		StaticBufferItem& item = pair.value;
-		item.buildBuffer();
-	}
-
-	// Create streaming buffers
-	for (auto pair : configurable.streamingBuffers) {
-		StreamingBufferItem& item = pair.value;
-		item.buildBuffer(state.frameLatency);
 	}
 
 	// Allocate stage memory

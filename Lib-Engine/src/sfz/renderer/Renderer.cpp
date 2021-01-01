@@ -36,6 +36,7 @@
 #include "sfz/renderer/RendererConfigParser.hpp"
 #include "sfz/renderer/RendererState.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
+#include "sfz/resources/BufferResource.hpp"
 #include "sfz/resources/FramebufferResource.hpp"
 #include "sfz/resources/ResourceManager.hpp"
 #include "sfz/resources/TextureResource.hpp"
@@ -459,19 +460,20 @@ void Renderer::stageUploadToStreamingBufferUntyped(
 {
 	sfz_assert(inStageInputMode());
 	
-	// Get streaming buffer item
-	strID bufferID = strID(bufferName);
-	StreamingBufferItem* item = mState->configurable.streamingBuffers.get(bufferID);
-	sfz_assert(item != nullptr);
+	// Get streaming buffer
+	ResourceManager& resources = getResourceManager();
+	BufferResource* resource = resources.getBuffer(resources.getBufferHandle(bufferName));
+	sfz_assert(resource != nullptr);
+	sfz_assert(resource->type == BufferResourceType::STREAMING);
 
 	// Calculate number of bytes to copy to streaming buffer
 	const uint32_t numBytes = elementSize * numElements;
 	sfz_assert(numBytes != 0);
-	sfz_assert(numBytes <= (item->elementSizeBytes * item->maxNumElements));
-	sfz_assert(elementSize == item->elementSizeBytes); // TODO: Might want to remove this assert
+	sfz_assert(numBytes <= (resource->elementSizeBytes * resource->maxNumElements));
+	sfz_assert(elementSize == resource->elementSizeBytes); // TODO: Might want to remove this assert
 
 	// Grab this frame's memory
-	StreamingBufferMemory& memory = item->data.data(mState->currentFrameIdx);
+	StreamingBufferMemory& memory = resource->streamingMem.data(mState->currentFrameIdx);
 
 	// Only allowed to upload to streaming buffer once per frame
 	sfz_assert(memory.lastFrameIdxTouched < mState->currentFrameIdx);
@@ -537,8 +539,7 @@ void Renderer::stageSetPushConstantUntyped(
 
 void Renderer::stageSetBindings(const PipelineBindings& bindings) noexcept
 {
-	// TODO: Verify bindings in debug mode
-
+	ResourceManager& resources = getResourceManager();
 	zg::PipelineBindings zgBindings;
 	
 	// Constant buffers
@@ -546,18 +547,19 @@ void Renderer::stageSetBindings(const PipelineBindings& bindings) noexcept
 		
 		ZgBuffer* buffer = nullptr;
 		if (binding.type == BindingResourceType::ID) {
-			StreamingBufferItem* streamingItem =
-				mState->configurable.streamingBuffers.get(binding.resource.resourceID);
-			StaticBufferItem* staticItem =
-				mState->configurable.staticBuffers.get(binding.resource.resourceID);
-			sfz_assert(streamingItem != nullptr || staticItem != nullptr);
-			sfz_assert(!(streamingItem != nullptr && staticItem != nullptr));
+			
+			BufferResource* resource =
+				resources.getBuffer(resources.getBufferHandle(binding.resource.resourceID));
+			sfz_assert(resource != nullptr);
 
-			if (streamingItem != nullptr) {
-				buffer = streamingItem->data.data(mState->currentFrameIdx).deviceBuffer.handle;
+			if (resource->type == BufferResourceType::STATIC) {
+				buffer = resource->staticMem.buffer.handle;
 			}
-			else if (staticItem != nullptr) {
-				buffer = staticItem->buffer.handle;
+			else if (resource->type == BufferResourceType::STREAMING) {
+				buffer = resource->streamingMem.data(mState->currentFrameIdx).deviceBuffer.handle;
+			}
+			else {
+				sfz_assert(false);
 			}
 		}
 		else if (binding.type == BindingResourceType::RAW_BUFFER) {
@@ -573,7 +575,6 @@ void Renderer::stageSetBindings(const PipelineBindings& bindings) noexcept
 	}
 
 	// Textures
-	ResourceManager& resources = getResourceManager();
 	for (const Binding& binding : bindings.textures) {
 		sfz_assert(binding.type == BindingResourceType::ID);
 
@@ -588,29 +589,24 @@ void Renderer::stageSetBindings(const PipelineBindings& bindings) noexcept
 	for (const Binding& binding : bindings.unorderedBuffers) {
 		sfz_assert(binding.type == BindingResourceType::ID);
 
-		StreamingBufferItem* streamingItem =
-			mState->configurable.streamingBuffers.get(binding.resource.resourceID);
-		StaticBufferItem* staticItem =
-			mState->configurable.staticBuffers.get(binding.resource.resourceID);
-		sfz_assert(streamingItem != nullptr || staticItem != nullptr);
-		sfz_assert(!(streamingItem != nullptr && staticItem != nullptr));
+		BufferResource* resource =
+			resources.getBuffer(resources.getBufferHandle(binding.resource.resourceID));
+		sfz_assert(resource != nullptr);
 
 		zg::Buffer* buffer = nullptr;
-		uint32_t elementSizeBytes = 0;
-		uint32_t maxNumElements = 0;
-		if (streamingItem != nullptr) {
-			buffer = &streamingItem->data.data(mState->currentFrameIdx).deviceBuffer;
-			elementSizeBytes = streamingItem->maxNumElements * streamingItem->elementSizeBytes;
-			maxNumElements = streamingItem->maxNumElements * streamingItem->maxNumElements;
+		if (resource->type == BufferResourceType::STATIC) {
+			buffer = &resource->staticMem.buffer;
 		}
-		else if (staticItem != nullptr) {
-			buffer = &staticItem->buffer;
-			elementSizeBytes = staticItem->elementSizeBytes;
-			maxNumElements = staticItem->maxNumElements;
+		else if (resource->type == BufferResourceType::STREAMING) {
+			buffer = &resource->streamingMem.data(mState->currentFrameIdx).deviceBuffer;
+		}
+		else {
+			sfz_assert(false);
 		}
 
 		sfz_assert(binding.shaderRegister != ~0u);
-		zgBindings.addUnorderedBuffer(binding.shaderRegister, maxNumElements, elementSizeBytes, *buffer);
+		zgBindings.addUnorderedBuffer(
+			binding.shaderRegister, resource->maxNumElements, resource->elementSizeBytes, *buffer);
 	}
 
 	// Unordered textures
@@ -627,39 +623,57 @@ void Renderer::stageSetBindings(const PipelineBindings& bindings) noexcept
 	CHECK_ZG mState->groupCmdList.setPipelineBindings(zgBindings);
 }
 
-void Renderer::stageSetVertexBuffer(const char* streamingBufferName) noexcept
+void Renderer::stageSetVertexBuffer(const char* bufferName) noexcept
 {
 	sfz_assert(inStageInputMode());
 	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
+	ResourceManager& resources = getResourceManager();
 
-	// Get streaming buffer item
-	strID bufferID = strID(streamingBufferName);
-	StreamingBufferItem* item = mState->configurable.streamingBuffers.get(bufferID);
-	sfz_assert(item != nullptr);
+	// Grab buffer
+	BufferResource* resource =
+		resources.getBuffer(resources.getBufferHandle(bufferName));
+	sfz_assert(resource != nullptr);
 
-	// Grab this frame's memory
-	StreamingBufferMemory& memory = item->data.data(mState->currentFrameIdx);
+	zg::Buffer* buffer = nullptr;
+	if (resource->type == BufferResourceType::STATIC) {
+		buffer = &resource->staticMem.buffer;
+	}
+	else if (resource->type == BufferResourceType::STREAMING) {
+		buffer = &resource->streamingMem.data(mState->currentFrameIdx).deviceBuffer;
+	}
+	else {
+		sfz_assert(false);
+	}
 
 	// Set vertex buffer
-	CHECK_ZG mState->groupCmdList.setVertexBuffer(0, memory.deviceBuffer);
+	CHECK_ZG mState->groupCmdList.setVertexBuffer(0, *buffer);
 }
 
-void Renderer::stageSetIndexBuffer(const char* streamingBufferName, bool u32Buffer) noexcept
+void Renderer::stageSetIndexBuffer(const char* bufferName, bool u32Buffer) noexcept
 {
 	sfz_assert(inStageInputMode());
 	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
+	ResourceManager& resources = getResourceManager();
 
-	// Get streaming buffer item
-	strID bufferID = strID(streamingBufferName);
-	StreamingBufferItem* item = mState->configurable.streamingBuffers.get(bufferID);
-	sfz_assert(item != nullptr);
+	// Grab buffer
+	BufferResource* resource =
+		resources.getBuffer(resources.getBufferHandle(bufferName));
+	sfz_assert(resource != nullptr);
 
-	// Grab this frame's memory
-	StreamingBufferMemory& memory = item->data.data(mState->currentFrameIdx);
+	zg::Buffer* buffer = nullptr;
+	if (resource->type == BufferResourceType::STATIC) {
+		buffer = &resource->staticMem.buffer;
+	}
+	else if (resource->type == BufferResourceType::STREAMING) {
+		buffer = &resource->streamingMem.data(mState->currentFrameIdx).deviceBuffer;
+	}
+	else {
+		sfz_assert(false);
+	}
 
 	// Set index buffer
 	CHECK_ZG mState->groupCmdList.setIndexBuffer(
-		memory.deviceBuffer, u32Buffer ? ZG_INDEX_BUFFER_TYPE_UINT32 : ZG_INDEX_BUFFER_TYPE_UINT16);
+		*buffer, u32Buffer ? ZG_INDEX_BUFFER_TYPE_UINT32 : ZG_INDEX_BUFFER_TYPE_UINT16);
 }
 
 void Renderer::stageSetIndexBuffer(zg::Buffer& buffer, ZgIndexBufferType indexBufferType) noexcept
@@ -696,16 +710,28 @@ void Renderer::stageUnorderedBarrierAll() noexcept
 	CHECK_ZG mState->groupCmdList.unorderedBarrier();
 }
 
-void Renderer::stageUnorderedBarrierStaticBuffer(const char* staticBufferName) noexcept
+void Renderer::stageUnorderedBarrierBuffer(const char* bufferName) noexcept
 {
 	sfz_assert(inStageInputMode());
-	
-	// Get static buffer item
-	strID bufferID = strID(staticBufferName);
-	StaticBufferItem* item = mState->configurable.staticBuffers.get(bufferID);
-	sfz_assert(item != nullptr);
+	ResourceManager& resources = getResourceManager();
 
-	CHECK_ZG mState->groupCmdList.unorderedBarrier(item->buffer);
+	// Grab buffer
+	BufferResource* resource =
+		resources.getBuffer(resources.getBufferHandle(bufferName));
+	sfz_assert(resource != nullptr);
+
+	zg::Buffer* buffer = nullptr;
+	if (resource->type == BufferResourceType::STATIC) {
+		buffer = &resource->staticMem.buffer;
+	}
+	else if (resource->type == BufferResourceType::STREAMING) {
+		buffer = &resource->streamingMem.data(mState->currentFrameIdx).deviceBuffer;
+	}
+	else {
+		sfz_assert(false);
+	}
+
+	CHECK_ZG mState->groupCmdList.unorderedBarrier(*buffer);
 }
 
 void Renderer::stageUnorderedBarrierTexture(const char* textureName) noexcept

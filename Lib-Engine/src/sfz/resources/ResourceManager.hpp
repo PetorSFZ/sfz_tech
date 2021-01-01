@@ -19,14 +19,12 @@
 #pragma once
 
 #include <skipifzero.hpp>
-#include <skipifzero_image_view.hpp>
 #include <skipifzero_pool.hpp>
 #include <skipifzero_strings.hpp>
 
-#include <ZeroG.h>
-
 namespace sfz {
 
+struct BufferResource;
 struct FramebufferResource;
 struct MeshResource;
 struct TextureResource;
@@ -49,6 +47,15 @@ public:
 
 	// Updates all resources that depend on screen resolution
 	void updateResolution(vec2_u32 screenRes);
+
+	// Buffer methods
+	// --------------------------------------------------------------------------------------------
+
+	PoolHandle getBufferHandle(const char* name) const;
+	PoolHandle getBufferHandle(strID name) const;
+	BufferResource* getBuffer(PoolHandle handle);
+	PoolHandle addBuffer(BufferResource&& resource);
+	void removeBuffer(strID name);
 
 	// Texture methods
 	// --------------------------------------------------------------------------------------------

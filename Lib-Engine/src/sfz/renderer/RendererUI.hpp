@@ -56,8 +56,6 @@ private:
 
 	void renderGeneralTab(RendererState& state) noexcept;
 	void renderPipelinesTab(RendererState& state) noexcept;
-	void renderStaticMemoryTab(RendererConfigurableState& state) noexcept;
-	void renderStreamingBuffersTab(RendererConfigurableState& state) noexcept;
 };
 
 } // namespace sfz
