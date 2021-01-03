@@ -2,8 +2,7 @@
 	"render_pipelines": [
 		{
 			"name": "GBuffer Generation",
-			"vertex_shader_path": "res_ph/shaders/gbuffer_gen.hlsl",
-			"pixel_shader_path": "res_ph/shaders/gbuffer_gen.hlsl",
+			"path": "res_ph/shaders/gbuffer_gen.hlsl",
 			"vertex_shader_entry": "VSMain",
 			"pixel_shader_entry": "PSMain",
 			"input_layout": {
@@ -28,15 +27,11 @@
 				"RG_U8_UNORM",
 				"RGBA_U8_UNORM",
 				"RGBA_F16"
-			],
-			"non_user_settable_constant_buffers": [
-				3
 			]
 		},
 		{
 			"name": "Shadow Map Generation",
-			"vertex_shader_path": "res_ph/shaders/shadow_map_gen.hlsl",
-			"pixel_shader_path": "res_ph/shaders/shadow_map_gen.hlsl",
+			"path": "res_ph/shaders/shadow_map_gen.hlsl",
 			"vertex_shader_entry": "VSMain",
 			"pixel_shader_entry": "PSMain",
 			"input_layout": {
@@ -59,8 +54,7 @@
 		},
 		{
 			"name": "Copy Out Shader",
-			"vertex_shader_path": "res_ph/shaders/copy_out_shader.hlsl",
-			"pixel_shader_path": "res_ph/shaders/copy_out_shader.hlsl",
+			"path": "res_ph/shaders/copy_out_shader.hlsl",
 			"vertex_shader_entry": "VSMain",
 			"pixel_shader_entry": "PSMain",
 			"input_layout": {
@@ -88,7 +82,7 @@
 	"compute_pipelines": [
 		{
 			"name": "Directional Shading",
-			"compute_shader_path": "res_ph/shaders/directional_shading.hlsl",
+			"path": "res_ph/shaders/directional_shading.hlsl",
 			"compute_shader_entry": "CSMain",
 			"push_constant_registers": [ 0 ],
 			"samplers": [
@@ -106,7 +100,7 @@
 		},
 		{
 			"name": "Point Light Shading",
-			"compute_shader_path": "res_ph/shaders/point_light_shading.hlsl",
+			"path": "res_ph/shaders/point_light_shading.hlsl",
 			"compute_shader_entry": "CSMain",
 			"push_constant_registers": [ 0 ],
 			"samplers": [
