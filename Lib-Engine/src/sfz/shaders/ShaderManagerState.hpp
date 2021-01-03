@@ -17,22 +17,24 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "sfz/renderer/RendererState.hpp"
+#pragma once
 
-#include "sfz/Context.hpp"
+#include <skipifzero.hpp>
+#include <skipifzero_hash_maps.hpp>
+#include <skipifzero_pool.hpp>
+
+#include "sfz/shaders/ShaderManager.hpp"
 
 namespace sfz {
 
-// RendererState: Helper methods
+// ShaderManagerState
 // ------------------------------------------------------------------------------------------------
 
-uint32_t RendererState::findActiveStageIdx(strID stageName) const noexcept
-{
-	sfz_assert(stageName.isValid());
-	const Array<Stage>& stages = configurable.presentStageGroups[currentStageGroupIdx].stages;
-	const Stage* stage = stages.find([&](const Stage& e) { return e.name == stageName; });
-	if (stage == nullptr) return ~0u;
-	return uint32_t(stage - stages.data());
-}
+struct ShaderManagerState final {
+	Allocator* allocator = nullptr;
+
+	HashMap<strID, PoolHandle> shaderHandles;
+	Pool<Shader> shaders;
+};
 
 } // namespace sfz

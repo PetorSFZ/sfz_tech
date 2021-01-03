@@ -69,6 +69,9 @@ struct InitOptions final {
 	// Maximum number of each type of resource
 	uint32_t maxNumResources = 4096;
 
+	// Maximum number of shaders
+	uint32_t maxNumShaders = 256;
+
 	// User specified pointer which will be passed as an argument to the specified functions.
 	void* userPtr = nullptr;
 

@@ -32,78 +32,11 @@
 #include "sfz/resources/MeshResource.hpp"
 #include "sfz/renderer/RendererUI.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
+#include "sfz/shaders/ShaderManager.hpp"
 
 struct SDL_Window;
 
 namespace sfz {
-
-// Pipeline types
-// ------------------------------------------------------------------------------------------------
-
-struct SamplerItem final {
-	uint32_t samplerRegister = ~0u;
-	ZgSampler sampler = {};
-};
-
-enum class PipelineBlendMode {
-	NO_BLENDING = 0,
-	ALPHA_BLENDING,
-	ADDITIVE_BLENDING
-};
-
-struct VertexInputLayout final {
-	bool standardVertexLayout = false;
-	uint32_t vertexSizeBytes = 0;
-	ArrayLocal<ZgVertexAttribute, ZG_MAX_NUM_VERTEX_ATTRIBUTES> attributes;
-};
-
-struct PipelineRenderItem final {
-
-	// The pipeline
-	zg::PipelineRender pipeline;
-
-	// Parsed information
-	strID name;
-	str256 vertexShaderPath;
-	str256 pixelShaderPath;
-	str128 vertexShaderEntry;
-	str128 pixelShaderEntry;
-	VertexInputLayout inputLayout;
-	ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstRegisters;
-	ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS> nonUserSettableConstBuffers;
-	ArrayLocal<SamplerItem, ZG_MAX_NUM_SAMPLERS> samplers;
-	ArrayLocal<ZgTextureFormat, ZG_MAX_NUM_RENDER_TARGETS> renderTargets;
-	bool depthTest = false;
-	ZgDepthFunc depthFunc = ZG_DEPTH_FUNC_LESS;
-	bool cullingEnabled = false;
-	bool cullFrontFacing = false;
-	bool frontFacingIsCounterClockwise = false;
-	int32_t depthBias = 0;
-	float depthBiasSlopeScaled = 0.0f;
-	float depthBiasClamp = 0.0f;
-	bool wireframeRenderingEnabled = false;
-	PipelineBlendMode blendMode = PipelineBlendMode::NO_BLENDING;
-
-	// Method for building pipeline given the parsed information
-	bool buildPipeline() noexcept;
-};
-
-struct PipelineComputeItem final {
-
-	// The pipeline
-	zg::PipelineCompute pipeline;
-
-	// Parsed information
-	strID name;
-	str256 computeShaderPath;
-	str128 computeShaderEntry;
-	ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstRegisters;
-	ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS> nonUserSettableConstBuffers;
-	ArrayLocal<SamplerItem, ZG_MAX_NUM_SAMPLERS> samplers;
-
-	// Method for building pipeline given the parsed information
-	bool buildPipeline() noexcept;
-};
 
 // Stage types
 // ------------------------------------------------------------------------------------------------
@@ -169,10 +102,6 @@ struct RendererConfigurableState final {
 	// Path to current configuration
 	str320 configPath;
 
-	// Pipelines
-	Array<PipelineRenderItem> renderPipelines;
-	Array<PipelineComputeItem> computePipelines;
-
 	// Present stage groups
 	Array<StageGroup> presentStageGroups;
 };
@@ -234,8 +163,6 @@ struct RendererState final {
 		bool inInputMode = false;
 		uint32_t stageIdx = ~0u;
 		Stage* stage = nullptr;
-		PipelineRenderItem* pipelineRender = nullptr;
-		PipelineComputeItem* pipelineCompute = nullptr;
 	} inputEnabled;
 
 	// Helper methods
@@ -245,10 +172,6 @@ struct RendererState final {
 	// current set index to the next stage barrier). Returns ~0u if stage is not among the current
 	// active set.
 	uint32_t findActiveStageIdx(strID stageName) const noexcept;
-
-	// Finds the index of the specified pipeline. Returns ~0u if it does not exist.
-	uint32_t findPipelineRenderIdx(strID pipelineName) const noexcept;
-	uint32_t findPipelineComputeIdx(strID pipelineName) const noexcept;
 };
 
 } // namespace sfz

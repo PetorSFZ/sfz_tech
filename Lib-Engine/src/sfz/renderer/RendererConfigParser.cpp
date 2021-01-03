@@ -23,6 +23,7 @@
 #include "sfz/Logging.hpp"
 #include "sfz/renderer/RendererState.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
+#include "sfz/shaders/ShaderManager.hpp"
 #include "sfz/util/JsonParser.hpp"
 
 namespace sfz {
@@ -43,7 +44,7 @@ struct CheckJsonImpl final {
 	template<typename T>
 	T operator% (const sfz::JsonNodeValue<T>& valuePair) noexcept {
 		if (!valuePair.exists) {
-			SFZ_ERROR("NextGenRenderer", "Key did not exist in JSON file: %s:%i", file, line);
+			SFZ_ERROR("Renderer", "Key did not exist in JSON file: %s:%i", file, line);
 			sfz_assert(false);
 		}
 		return std::move(valuePair.value);
@@ -152,51 +153,47 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	configurable.configPath.clear();
 	configurable.configPath.appendf("%s", configPath);
 
+	ShaderManager& shaders = getShaderManager();
 
 	// Render pipelines
-
-	// Get number of render pipelines to load and allocate memory for them
 	JsonNode renderPipelinesNode = root.accessMap("render_pipelines");
 	uint32_t numRenderPipelines = renderPipelinesNode.arrayLength();
-	configurable.renderPipelines.init(numRenderPipelines, state.allocator, sfz_dbg(""));
-
-	// Parse information about each render pipeline
 	for (uint32_t pipelineIdx = 0; pipelineIdx < numRenderPipelines; pipelineIdx++) {
 
 		JsonNode pipelineNode = renderPipelinesNode.accessArray(pipelineIdx);
-		configurable.renderPipelines.add(PipelineRenderItem());
-		PipelineRenderItem& item = configurable.renderPipelines.last();
+		Shader shader = {};
+		shader.type = ShaderType::RENDER;
 
 		str256 name = CHECK_JSON pipelineNode.accessMap("name").valueStr256();
-		item.name = strID(name);
+		shader.name = strID(name);
 
-		item.vertexShaderPath = CHECK_JSON pipelineNode.accessMap("vertex_shader_path").valueStr256();
-		item.pixelShaderPath = CHECK_JSON pipelineNode.accessMap("pixel_shader_path").valueStr256();
+		shader.shaderPath =
+			CHECK_JSON pipelineNode.accessMap("path").valueStr256();
 
-		item.vertexShaderEntry.clear();
-		item.vertexShaderEntry.appendf("%s",
+		shader.render.vertexShaderEntry.clear();
+		shader.render.vertexShaderEntry.appendf("%s",
 			(CHECK_JSON pipelineNode.accessMap("vertex_shader_entry").valueStr256()).str());
-		item.pixelShaderEntry.clear();
-		item.pixelShaderEntry.appendf("%s",
+		shader.render.pixelShaderEntry.clear();
+		shader.render.pixelShaderEntry.appendf("%s",
 			(CHECK_JSON pipelineNode.accessMap("pixel_shader_entry").valueStr256()).str());
 
 		// Input layout
 		JsonNode inputLayoutNode = pipelineNode.accessMap("input_layout");
 		{
-			item.inputLayout.standardVertexLayout =
+			shader.render.inputLayout.standardVertexLayout =
 				CHECK_JSON inputLayoutNode.accessMap("standard_vertex_layout").valueBool();
 
 			// If non-standard layout, parse it
-			if (!item.inputLayout.standardVertexLayout) {
+			if (!shader.render.inputLayout.standardVertexLayout) {
 
-				item.inputLayout.vertexSizeBytes =
+				shader.render.inputLayout.vertexSizeBytes =
 					uint32_t(CHECK_JSON inputLayoutNode.accessMap("vertex_size_bytes").valueInt());
 
 				JsonNode attributesNode = inputLayoutNode.accessMap("attributes");
 				const uint32_t numAttributes = attributesNode.arrayLength();
 				for (uint32_t i = 0; i < numAttributes; i++) {
 					JsonNode attribNode = attributesNode.accessArray(i);
-					ZgVertexAttribute& attrib = item.inputLayout.attributes.add();
+					ZgVertexAttribute& attrib = shader.render.inputLayout.attributes.add();
 					attrib.location = uint32_t(CHECK_JSON attribNode.accessMap("location").valueInt());
 					attrib.vertexBufferSlot = 0;
 					attrib.type =
@@ -212,20 +209,8 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		if (pushConstantsNode.isValid()) {
 			uint32_t numPushConstants = pushConstantsNode.arrayLength();
 			for (uint32_t j = 0; j < numPushConstants; j++) {
-				item.pushConstRegisters.add(
+				shader.pushConstRegisters.add(
 					(uint32_t)(CHECK_JSON pushConstantsNode.accessArray(j).valueInt()));
-			}
-		}
-		
-		// Constant buffers which are not user settable
-		// I.e., constant buffers which should not have memory allocated for them
-		JsonNode nonUserSettableCBsNode =
-			pipelineNode.accessMap("non_user_settable_constant_buffers");
-		if (nonUserSettableCBsNode.isValid()) {
-			uint32_t numNonUserSettableConstantBuffers = nonUserSettableCBsNode.arrayLength();
-			for (uint32_t j = 0; j < numNonUserSettableConstantBuffers; j++) {
-				item.nonUserSettableConstBuffers.add(
-					(uint32_t)(CHECK_JSON nonUserSettableCBsNode.accessArray(j).valueInt()));
 			}
 		}
 
@@ -235,7 +220,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			uint32_t numSamplers = samplersNode.arrayLength();
 			for (uint32_t j = 0; j < numSamplers; j++) {
 				JsonNode node = samplersNode.accessArray(j);
-				SamplerItem& sampler = item.samplers.add();
+				SamplerItem& sampler = shader.samplers.add();
 				sampler.samplerRegister = CHECK_JSON node.accessMap("register").valueInt();
 				sampler.sampler.samplingMode = samplingModeFromString(
 					CHECK_JSON node.accessMap("sampling_mode").valueStr256());
@@ -251,72 +236,73 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		sfz_assert(renderTargetsNode.isValid());
 		uint32_t numRenderTargets = renderTargetsNode.arrayLength();
 		for (uint32_t j = 0; j < numRenderTargets; j++) {
-			item.renderTargets.add(
+			shader.render.renderTargets.add(
 				textureFormatFromString(CHECK_JSON renderTargetsNode.accessArray(j).valueStr256()));
 		}
 
 		// Depth test and function if specified
 		JsonNode depthFuncNode = pipelineNode.accessMap("depth_func");
 		if (depthFuncNode.isValid()) {
-			item.depthTest = true;
-			item.depthFunc = depthFuncFromString(CHECK_JSON depthFuncNode.valueStr256());
+			shader.render.depthTest = true;
+			shader.render.depthFunc = depthFuncFromString(CHECK_JSON depthFuncNode.valueStr256());
 		}
 
 		// Culling
 		JsonNode cullingNode = pipelineNode.accessMap("culling");
 		if (cullingNode.isValid()) {
-			item.cullingEnabled = true;
-			item.cullFrontFacing = CHECK_JSON cullingNode.accessMap("cull_front_face").valueBool();
-			item.frontFacingIsCounterClockwise =
+			shader.render.cullingEnabled = true;
+			shader.render.cullFrontFacing = CHECK_JSON cullingNode.accessMap("cull_front_face").valueBool();
+			shader.render.frontFacingIsCounterClockwise =
 				CHECK_JSON cullingNode.accessMap("front_facing_is_counter_clockwise").valueBool();
 		}
 
 		// Depth bias
 		JsonNode depthBiasNode = pipelineNode.accessMap("depth_bias");
-		item.depthBias = 0;
-		item.depthBiasSlopeScaled = 0.0f;
-		item.depthBiasClamp = 0.0f;
+		shader.render.depthBias = 0;
+		shader.render.depthBiasSlopeScaled = 0.0f;
+		shader.render.depthBiasClamp = 0.0f;
 		if (depthBiasNode.isValid()) {
-			item.depthBias = CHECK_JSON depthBiasNode.accessMap("bias").valueInt();
-			item.depthBiasSlopeScaled = CHECK_JSON depthBiasNode.accessMap("bias_slope_scaled").valueFloat();
-			item.depthBiasClamp = CHECK_JSON depthBiasNode.accessMap("bias_clamp").valueFloat();
+			shader.render.depthBias = CHECK_JSON depthBiasNode.accessMap("bias").valueInt();
+			shader.render.depthBiasSlopeScaled = CHECK_JSON depthBiasNode.accessMap("bias_slope_scaled").valueFloat();
+			shader.render.depthBiasClamp = CHECK_JSON depthBiasNode.accessMap("bias_clamp").valueFloat();
 		}
 
 		// Wireframe rendering
 		JsonNode wireframeNode = pipelineNode.accessMap("wireframe_rendering");
 		if (wireframeNode.isValid()) {
-			item.wireframeRenderingEnabled = CHECK_JSON wireframeNode.valueBool();
+			shader.render.wireframeRenderingEnabled = CHECK_JSON wireframeNode.valueBool();
 		}
 
 		// Alpha blending
 		JsonNode blendModeNode = pipelineNode.accessMap("blend_mode");
-		item.blendMode = PipelineBlendMode::NO_BLENDING;
+		shader.render.blendMode = PipelineBlendMode::NO_BLENDING;
 		if (blendModeNode.isValid()) {
-			item.blendMode = blendModeFromString(CHECK_JSON blendModeNode.valueStr256());
+			shader.render.blendMode = blendModeFromString(CHECK_JSON blendModeNode.valueStr256());
 		}
+
+		bool buildSuccess = shader.build();
+		sfz_assert(buildSuccess);
+		shaders.addShader(std::move(shader));
 	}
 
 
 	// Compute pipelines
-
-	// Get number of compute pipelines to load and allocate memory for them
 	JsonNode computePipelinesNode = root.accessMap("compute_pipelines");
 	uint32_t numComputePipelines = computePipelinesNode.arrayLength();
-	configurable.computePipelines.init(numComputePipelines, state.allocator, sfz_dbg(""));
-
-	// Parse information about each compute pipeline
 	for (uint32_t i = 0; i < numComputePipelines; i++) {
 		
 		JsonNode pipelineNode = computePipelinesNode.accessArray(i);
-		configurable.computePipelines.add(PipelineComputeItem());
-		PipelineComputeItem& item = configurable.computePipelines.last();
+		Shader shader = {};
+		shader.type = ShaderType::COMPUTE;
 
 		str256 name = CHECK_JSON pipelineNode.accessMap("name").valueStr256();
-		item.name = strID(name);
+		shader.name = strID(name);
 
-		item.computeShaderPath = CHECK_JSON pipelineNode.accessMap("compute_shader_path").valueStr256();
-		item.computeShaderEntry.clear();
-		item.computeShaderEntry.appendf("%s",
+		shader.shaderPath =
+			CHECK_JSON pipelineNode.accessMap("path").valueStr256();
+
+		shader.compute.computeShaderEntry.clear();
+		shader.compute.computeShaderEntry.appendf("%s",
 			(CHECK_JSON pipelineNode.accessMap("compute_shader_entry").valueStr256()).str());
 
 		// Push constants registers if specified
@@ -324,20 +310,8 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		if (pushConstantsNode.isValid()) {
 			uint32_t numPushConstants = pushConstantsNode.arrayLength();
 			for (uint32_t j = 0; j < numPushConstants; j++) {
-				item.pushConstRegisters.add(
+				shader.pushConstRegisters.add(
 					(uint32_t)(CHECK_JSON pushConstantsNode.accessArray(j).valueInt()));
-			}
-		}
-		
-		// Constant buffers which are not user settable
-		// I.e., constant buffers which should not have memory allocated for them
-		JsonNode nonUserSettableCBsNode =
-			pipelineNode.accessMap("non_user_settable_constant_buffers");
-		if (nonUserSettableCBsNode.isValid()) {
-			uint32_t numNonUserSettableConstantBuffers = nonUserSettableCBsNode.arrayLength();
-			for (uint32_t j = 0; j < numNonUserSettableConstantBuffers; j++) {
-				item.nonUserSettableConstBuffers.add(
-					(uint32_t)(CHECK_JSON nonUserSettableCBsNode.accessArray(j).valueInt()));
 			}
 		}
 
@@ -347,7 +321,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			uint32_t numSamplers = samplersNode.arrayLength();
 			for (uint32_t j = 0; j < numSamplers; j++) {
 				JsonNode node = samplersNode.accessArray(j);
-				SamplerItem& sampler = item.samplers.add();
+				SamplerItem& sampler = shader.samplers.add();
 				sampler.samplerRegister = CHECK_JSON node.accessMap("register").valueInt();
 				sampler.sampler.samplingMode = samplingModeFromString(
 					CHECK_JSON node.accessMap("sampling_mode").valueStr256());
@@ -357,6 +331,10 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 				sampler.sampler.mipLodBias = 0.0f;
 			}
 		}
+
+		bool buildSuccess = shader.build();
+		sfz_assert(buildSuccess);
+		shaders.addShader(std::move(shader));
 	}
 
 	// Present queue
@@ -412,20 +390,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		}
 	}
 
-	// Builds pipelines
-	bool success = true;
-	for (PipelineRenderItem& item : configurable.renderPipelines) {
-		if (!item.buildPipeline()) {
-			success = false;
-		}
-	}
-	for (PipelineComputeItem& item : configurable.computePipelines) {
-		if (!item.buildPipeline()) {
-			success = false;
-		}
-	}
-
-	return success;
+	return true;
 }
 
 } // namespace sfz

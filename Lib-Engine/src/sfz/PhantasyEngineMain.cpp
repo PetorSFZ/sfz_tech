@@ -49,6 +49,7 @@
 #include "sfz/rendering/ImguiSupport.hpp"
 #include "sfz/resources/ResourceManager.hpp"
 #include "sfz/sdl/SDLAllocator.hpp"
+#include "sfz/shaders/ShaderManager.hpp"
 #include "sfz/util/IO.hpp"
 #include "sfz/util/TerminalLogger.hpp"
 
@@ -69,6 +70,7 @@ static sfz::Context phantasyEngineContext;
 static sfz::TerminalLogger terminalLogger;
 static sfz::GlobalConfig globalConfig;
 static sfz::ResourceManager resourceManager;
+static sfz::ShaderManager shaderManager;
 static sfz::Renderer renderer;
 static sfz::AudioEngine audioEngine;
 static sfz::ProfilingStats profilingStats;
@@ -93,6 +95,9 @@ static void setupContext() noexcept
 
 	// Set resource manager
 	context->resources = &resourceManager;
+
+	// Set shader manager
+	context->shaders = &shaderManager;
 
 	// Set renderer
 	context->renderer = &renderer;
@@ -696,6 +701,10 @@ int main(int argc, char* argv[])
 	SFZ_INFO("PhantasyEngine", "Initializing resource manager");
 	sfz::getResourceManager().init(options.maxNumResources, sfz::getDefaultAllocator());
 
+	// Initialize shader manager
+	SFZ_INFO("PhantasyEngine", "Initializing shader manager");
+	sfz::getShaderManager().init(options.maxNumShaders, sfz::getDefaultAllocator());
+
 	// Initialize ImGui
 	SFZ_INFO("PhantasyEngine", "Initializing Imgui");
 	sfz::ImageView imguiFontTexView = initializeImgui(sfz::getDefaultAllocator());
@@ -772,6 +781,9 @@ int main(int argc, char* argv[])
 
 	SFZ_INFO("PhantasyEngine", "Destroying resource manager");
 	sfz::getResourceManager().destroy();
+
+	SFZ_INFO("PhantasyEngine", "Destroying shader manager");
+	sfz::getShaderManager().destroy();
 
 	SFZ_INFO("PhantasyEngine", "Deinitializing ZeroG");
 	CHECK_ZG zgContextDeinit();

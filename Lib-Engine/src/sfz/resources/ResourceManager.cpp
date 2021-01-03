@@ -29,7 +29,7 @@ namespace sfz {
 // ResourceManager: State methods
 // ------------------------------------------------------------------------------------------------
 
-void ResourceManager::init(uint32_t maxNumResources, Allocator* allocator)
+void ResourceManager::init(uint32_t maxNumResources, Allocator* allocator) noexcept
 {
 	sfz_assert(mState == nullptr);
 	mState = allocator->newObject<ResourceManagerState>(sfz_dbg(""));

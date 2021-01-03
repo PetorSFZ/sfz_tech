@@ -407,7 +407,7 @@ inline void renderMeshesTab(ResourceManagerState& state)
 	}
 }
 
-// ResourceManagerState
+// ResourceManagerUI
 // ------------------------------------------------------------------------------------------------
 
 inline void resourceManagerUI(ResourceManagerState& state)

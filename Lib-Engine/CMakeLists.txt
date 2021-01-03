@@ -295,6 +295,11 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/sdl/SDLAllocator.hpp
 	${SRC_DIR}/sfz/sdl/SDLAllocator.cpp
 
+	${SRC_DIR}/sfz/shaders/ShaderManager.hpp
+	${SRC_DIR}/sfz/shaders/ShaderManager.cpp
+	${SRC_DIR}/sfz/shaders/ShaderManagerState.hpp
+	${SRC_DIR}/sfz/shaders/ShaderManagerUI.hpp
+
 	${SRC_DIR}/sfz/state/ArrayHeader.hpp
 	${SRC_DIR}/sfz/state/ArrayHeader.cpp
 	${SRC_DIR}/sfz/state/ComponentMask.hpp

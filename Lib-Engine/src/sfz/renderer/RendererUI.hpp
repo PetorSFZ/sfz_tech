@@ -49,13 +49,6 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	void render(RendererState& state) noexcept;
-
-private:
-	// Private methods
-	// --------------------------------------------------------------------------------------------
-
-	void renderGeneralTab(RendererState& state) noexcept;
-	void renderPipelinesTab(RendererState& state) noexcept;
 };
 
 } // namespace sfz

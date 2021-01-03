@@ -35,6 +35,7 @@
 #include "sfz/debug/ProfilingStats.hpp"
 #include "sfz/renderer/Renderer.hpp"
 #include "sfz/resources/ResourceManager.hpp"
+#include "sfz/shaders/ShaderManager.hpp"
 #include "sfz/util/ImGuiHelpers.hpp"
 #include "sfz/util/IO.hpp"
 #include "sfz/util/TerminalLogger.hpp"
@@ -614,6 +615,7 @@ void Console::render() noexcept
 	renderConfigWindow(*mState);
 	renderPerformanceWindow(*mState, false);
 	getResourceManager().renderDebugUI();
+	getShaderManager().renderDebugUI();
 	getRenderer().renderImguiUI();
 	getAudioEngine().renderDebugUI();
 
@@ -635,6 +637,7 @@ void Console::render() noexcept
 		ImGui::DockBuilderDockWindow("Config", dockLeft);
 		ImGui::DockBuilderDockWindow("Performance", dockLeft);
 		ImGui::DockBuilderDockWindow("Resources", dockLeft);
+		ImGui::DockBuilderDockWindow("Shaders", dockLeft);
 		ImGui::DockBuilderDockWindow("Renderer", dockLeft);
 		ImGui::DockBuilderDockWindow("Audio", dockLeft);
 

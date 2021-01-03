@@ -37,7 +37,7 @@ struct ResourceManagerState;
 class ResourceManager final {
 public:
 	SFZ_DECLARE_DROP_TYPE(ResourceManager);
-	void init(uint32_t maxNumResources, Allocator* allocator);
+	void init(uint32_t maxNumResources, Allocator* allocator) noexcept;
 	void destroy() noexcept;
 
 	// Methods

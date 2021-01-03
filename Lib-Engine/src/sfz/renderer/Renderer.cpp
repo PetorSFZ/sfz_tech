@@ -361,38 +361,9 @@ void Renderer::stageBeginInput(const char* stageName) noexcept
 	if (stageIdx == ~0u) return;
 
 	Stage& stage = mState->configurable.presentStageGroups[mState->currentStageGroupIdx].stages[stageIdx];
-
-	if (stage.type == StageType::USER_INPUT_RENDERING) {
-	
-		// Find render pipeline
-		uint32_t pipelineIdx = mState->findPipelineRenderIdx(stage.pipelineName);
-		sfz_assert(pipelineIdx != ~0u);
-		if (pipelineIdx == ~0u) return;
-		sfz_assert(pipelineIdx < mState->configurable.renderPipelines.size());
-		PipelineRenderItem& pipelineItem = mState->configurable.renderPipelines[pipelineIdx];
-		sfz_assert(pipelineItem.pipeline.valid());
-		if (!pipelineItem.pipeline.valid()) return;
-
-		// Store pipeline in input enabled
-		mState->inputEnabled.pipelineRender = &pipelineItem;
-	}
-	else if (stage.type == StageType::USER_INPUT_COMPUTE) {
-
-		// Find compute pipeline
-		uint32_t pipelineIdx = mState->findPipelineComputeIdx(stage.pipelineName);
-		sfz_assert(pipelineIdx != ~0u);
-		if (pipelineIdx == ~0u) return;
-		sfz_assert(pipelineIdx < mState->configurable.computePipelines.size());
-		PipelineComputeItem& pipelineItem = mState->configurable.computePipelines[pipelineIdx];
-		sfz_assert(pipelineItem.pipeline.valid());
-		if (!pipelineItem.pipeline.valid()) return;
-
-		// Store pipeline in input enabled
-		mState->inputEnabled.pipelineCompute = &pipelineItem;
-	}
-	else {
-		sfz_assert(false);
-	}
+	ShaderManager& shaders = getShaderManager();
+	Shader* shader = shaders.getShader(shaders.getShaderHandle(stage.pipelineName));
+	sfz_assert(shader != nullptr);
 
 	// Set currently active stage
 	mState->inputEnabled.inInputMode = true;
@@ -427,10 +398,14 @@ void Renderer::stageBeginInput(const char* stageName) noexcept
 
 	// Set pipeline
 	if (stage.type == StageType::USER_INPUT_RENDERING) {
-		CHECK_ZG cmdList.setPipeline(mState->inputEnabled.pipelineRender->pipeline);
+		sfz_assert(shader->type == ShaderType::RENDER);
+		sfz_assert(shader->render.pipeline.valid());
+		CHECK_ZG cmdList.setPipeline(shader->render.pipeline);
 	}
 	else if (stage.type == StageType::USER_INPUT_COMPUTE) {
-		CHECK_ZG cmdList.setPipeline(mState->inputEnabled.pipelineCompute->pipeline);
+		sfz_assert(shader->type == ShaderType::COMPUTE);
+		sfz_assert(shader->compute.pipeline.valid());
+		CHECK_ZG cmdList.setPipeline(shader->compute.pipeline);
 	}
 	else {
 		sfz_assert(false);
@@ -510,12 +485,18 @@ void Renderer::stageSetPushConstantUntyped(
 	// In debug mode, validate that the specified shader registers corresponds to a a suitable
 	// push constant in the pipeline
 #ifndef NDEBUG
+	ShaderManager& shaders = getShaderManager();
+	Shader* shader = shaders.getShader(shaders.getShaderHandle(mState->inputEnabled.stage->pipelineName));
+	sfz_assert(shader != nullptr);
+
 	ZgPipelineBindingsSignature signature = {};
 	if (mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING) {
-		signature = mState->inputEnabled.pipelineRender->pipeline.getSignature().bindings;
+		sfz_assert(shader->type == ShaderType::RENDER);
+		signature = shader->render.pipeline.getSignature().bindings;
 	}
 	else if (mState->inputEnabled.stage->type == StageType::USER_INPUT_COMPUTE) {
-		signature = mState->inputEnabled.pipelineCompute->pipeline.getBindingsSignature();
+		sfz_assert(shader->type == ShaderType::COMPUTE);
+		signature = shader->compute.pipeline.getBindingsSignature();
 	}
 	else {
 		sfz_assert(false);
@@ -748,8 +729,13 @@ vec3_i32 Renderer::stageGetComputeGroupDims() noexcept
 	sfz_assert(inStageInputMode());
 	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_COMPUTE);
 
+	ShaderManager& shaders = getShaderManager();
+	Shader* shader = shaders.getShader(shaders.getShaderHandle(mState->inputEnabled.stage->pipelineName));
+	sfz_assert(shader != nullptr);
+	sfz_assert(shader->type == ShaderType::COMPUTE);
+
 	vec3_u32 groupDims;
-	mState->inputEnabled.pipelineCompute->pipeline.getGroupDims(groupDims.x, groupDims.y, groupDims.z);
+	shader->compute.pipeline.getGroupDims(groupDims.x, groupDims.y, groupDims.z);
 	return vec3_i32(groupDims);
 }
 
