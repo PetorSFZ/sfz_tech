@@ -30,8 +30,12 @@ namespace sfz {
 
 struct VoxelMaterial final {
 	strID name;
+	vec4_u8 originalColor = vec4_u8(uint8_t(0)); // Gamma space
 
-	vec4_u8 albedo = vec4_u8(uint8_t(0));
+	vec3 albedo = vec3(1.0f, 0.0f, 0.0f); // Gamma space, usually same as original color
+	float roughness = 1.0f; // Linear space
+	vec3 emissive = vec3(0.0f); // Linear space, unclamped range.
+	float metallic = 0.0f; // Linear space, but typically only 0.0 or 1.0 is valid.
 };
 
 // VoxelModelResource

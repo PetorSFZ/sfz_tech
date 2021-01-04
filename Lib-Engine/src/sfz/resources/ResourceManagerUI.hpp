@@ -414,7 +414,7 @@ inline void renderVoxelModelsTab(ResourceManagerState& state)
 	static str128 filter;
 
 	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
-	ImGui::InputText("Filter##TexturesTab", filter.mRawStr, filter.capacity());
+	ImGui::InputText("Filter##VoxelModelsTab", filter.mRawStr, filter.capacity());
 	ImGui::PopStyleColor();
 	filter.toLower();
 
@@ -444,6 +444,86 @@ inline void renderVoxelModelsTab(ResourceManagerState& state)
 		alignedEdit("Num colors", offset, [&](const char*) {
 			ImGui::Text("%u", resource.palette.size());
 		});
+
+		ImGui::Unindent(20.0f);
+	}
+}
+
+inline void renderVoxelMaterialsTab(ResourceManagerState& state)
+{
+	constexpr float offset = 200.0f;
+	constexpr vec4 normalTextColor = vec4(1.0f);
+	constexpr vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	static str128 filter;
+
+	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
+	ImGui::InputText("Filter##VoxelMaterialsTab", filter.mRawStr, filter.capacity());
+	ImGui::PopStyleColor();
+	filter.toLower();
+
+	const bool filterMode = filter != "";
+
+	for (HashMapPair<strID, PoolHandle> itemItr : state.voxelMaterialHandles) {
+		const uint32_t idx = itemItr.value.idx();
+		VoxelMaterial& material = state.voxelMaterials[itemItr.value];
+		str320 nameExt = str320("%s - [%u %u %u]",
+			itemItr.key.str(),
+			uint32_t(material.originalColor.x),
+			uint32_t(material.originalColor.y),
+			uint32_t(material.originalColor.z));
+
+		str320 lowerCaseName = nameExt;
+		lowerCaseName.toLower();
+		if (!filter.isPartOf(lowerCaseName.str())) continue;
+
+		if (filterMode) {
+			imguiRenderFilteredText(nameExt.str(), filter.str(), normalTextColor, filterTextColor);
+		}
+		else {
+			if (!ImGui::CollapsingHeader(nameExt.str())) continue;
+		}
+
+		ImGui::Indent(20.0f);
+
+		alignedEdit("Original color", offset, [&](const char* name) {
+			str64 orignalColorStr = str64("%u %u %u", 
+				uint32_t(material.originalColor.x),
+				uint32_t(material.originalColor.y),
+				uint32_t(material.originalColor.z));
+			ImGui::InputText(
+				str128("##%s%u", name, idx),
+				orignalColorStr.mRawStr,
+				orignalColorStr.capacity(),
+				ImGuiInputTextFlags_ReadOnly);
+		});
+
+		bool materialModified = false;
+
+		alignedEdit("Albedo", offset, [&](const char* name) {
+			bool edited = ImGui::ColorEdit3(str128("##%s%u", name, idx), material.albedo.data(), 0);
+			materialModified = materialModified || edited;
+		});
+
+		alignedEdit("Roughness", offset, [&](const char* name) {
+			bool edited = ImGui::InputFloat(str128("##%s%u", name, idx), &material.roughness);
+			material.roughness = clamp(material.roughness, 0.0f, 1.0f);
+			materialModified = materialModified || edited;
+		});
+
+		alignedEdit("Metallic", offset, [&](const char* name) {
+			bool edited = ImGui::InputFloat(str128("##%s%u", name, idx), &material.metallic);
+			material.metallic = clamp(material.metallic, 0.0f, 1.0f);
+			materialModified = materialModified || edited;
+		});
+
+		alignedEdit("Emissive", offset, [&](const char* name) {
+			bool edited = ImGui::ColorEdit3(str128("##%s%u", name, idx), material.emissive.data(), ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR);
+			materialModified = materialModified || edited;
+		});
+
+		if (materialModified) {
+			// TODO: Here we want to update buffers on GPU and such
+		}
 
 		ImGui::Unindent(20.0f);
 	}
@@ -488,6 +568,12 @@ inline void resourceManagerUI(ResourceManagerState& state)
 		if (ImGui::BeginTabItem("Voxel Models")) {
 			ImGui::Spacing();
 			renderVoxelModelsTab(state);
+			ImGui::EndTabItem();
+		}
+
+		if (ImGui::BeginTabItem("Voxel Materials")) {
+			ImGui::Spacing();
+			renderVoxelMaterialsTab(state);
 			ImGui::EndTabItem();
 		}
 

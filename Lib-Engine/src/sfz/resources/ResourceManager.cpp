@@ -51,6 +51,10 @@ void ResourceManager::init(uint32_t maxNumResources, Allocator* allocator) noexc
 	mState->voxelModelHandles.init(maxNumResources, allocator, sfz_dbg(""));
 	mState->voxelModels.init(maxNumResources, allocator, sfz_dbg(""));
 
+	mState->voxelMaterialHandles.init(maxNumResources, allocator, sfz_dbg(""));
+	mState->voxelMaterialColors.init(maxNumResources, allocator, sfz_dbg(""));
+	mState->voxelMaterials.init(maxNumResources, allocator, sfz_dbg(""));
+
 	// Sets allocator for opengametools
 	// TODO: Might want to place somewhere else
 	setOpenGameToolsAllocator(allocator);
@@ -312,6 +316,59 @@ void ResourceManager::removeVoxelModel(strID name)
 	if (handle == NULL_HANDLE) return;
 	mState->voxelModelHandles.remove(name);
 	mState->voxelModels.deallocate(handle);
+}
+
+// ResourceManager: VoxelMaterial methods
+// ------------------------------------------------------------------------------------------------
+
+PoolHandle ResourceManager::getVoxelMaterialHandle(const char* name) const
+{
+	return this->getVoxelMaterialHandle(strID(name));
+}
+
+PoolHandle ResourceManager::getVoxelMaterialHandle(strID name) const
+{
+	const PoolHandle* handle = mState->voxelMaterialHandles.get(name);
+	if (handle == nullptr) return NULL_HANDLE;
+	return *handle;
+}
+
+PoolHandle ResourceManager::getVoxelMaterialHandle(vec4_u8 color) const
+{
+	const PoolHandle* handle = mState->voxelMaterialColors.get(color);
+	if (handle == nullptr) return NULL_HANDLE;
+	return *handle;
+}
+
+VoxelMaterial* ResourceManager::getVoxelMaterial(PoolHandle handle)
+{
+	return mState->voxelMaterials.get(handle);
+}
+
+PoolHandle ResourceManager::addVoxelMaterial(VoxelMaterial&& resource)
+{
+	strID name = resource.name;
+	vec4_u8 originalColor = resource.originalColor;
+	sfz_assert(name.isValid());
+	sfz_assert(mState->voxelMaterialHandles.get(name) == nullptr);
+	sfz_assert(mState->voxelMaterialColors.get(originalColor) == nullptr);
+	PoolHandle handle = mState->voxelMaterials.allocate(std::move(resource));
+	mState->voxelMaterialHandles.put(name, handle);
+	mState->voxelMaterialColors.put(originalColor, handle);
+	sfz_assert(mState->voxelMaterialHandles.size() == mState->voxelMaterials.numAllocated());
+	sfz_assert(mState->voxelMaterialColors.size() == mState->voxelMaterials.numAllocated());
+	return handle;
+}
+
+void ResourceManager::removeVoxelMaterial(strID name)
+{
+	PoolHandle handle = this->getVoxelMaterialHandle(name);
+	if (handle == NULL_HANDLE) return;
+	VoxelMaterial material = mState->voxelMaterials[handle];
+	sfz_assert(handle == this->getVoxelMaterialHandle(material.originalColor));
+	mState->voxelMaterialHandles.remove(name);
+	mState->voxelMaterialColors.remove(material.originalColor);
+	mState->voxelMaterials.deallocate(handle);
 }
 
 } // namespace sfz
