@@ -138,6 +138,10 @@ if (NOT hasParent)
 	# ${NATIVEFILEDIALOG_FOUND}, ${NATIVEFILEDIALOG_INCLUDE_DIRS}, ${NATIVEFILEDIALOG_LIBRARIES}
 	add_subdirectory(${EXTERNALS_DIR}/nativefiledialog ${CMAKE_BINARY_DIR}/nativefiledialog)
 
+	# opengametools
+	# ${OGT_FOUND}, ${OGT_INCLUDE_DIRS}
+	add_subdirectory(${EXTERNALS_DIR}/opengametools ${CMAKE_BINARY_DIR}/opengametools)
+
 	# sajson
 	# ${SAJSON_FOUND}, ${SAJSON_INCLUDE_DIRS}
 	add_subdirectory(${EXTERNALS_DIR}/sajson ${CMAKE_BINARY_DIR}/sajson)
@@ -184,6 +188,10 @@ else()
 
 	if (NOT NATIVEFILEDIALOG_FOUND)
 		message(FATAL_ERROR "PhantasyEngine requires nativefiledialog.")
+	endif()
+
+	if (NOT OGT_FOUND)
+		message(FATAL_ERROR "PhantasyEngine requires opengametools")
 	endif()
 
 	if (NOT SAJSON_FOUND)
@@ -360,6 +368,7 @@ target_include_directories(PhantasyEngine PUBLIC
 	${IMGUI_PLOT_INCLUDE_DIRS}
 	${ZEROG_IMGUI_INCLUDE_DIRS}
 	${NATIVEFILEDIALOG_INCLUDE_DIRS}
+	${OGT_INCLUDE_DIRS}
 	${SAJSON_INCLUDE_DIRS}
 	${SOLOUD_INCLUDE_DIRS}
 )

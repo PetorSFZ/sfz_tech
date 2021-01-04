@@ -297,6 +297,7 @@ endfunction()
 # fontstash: ${FONTSTASH_FOUND}, ${FONTSTASH_INCLUDE_DIRS}
 # imgui_plot: ${IMGUI_PLOT_FOUND}, ${IMGUI_PLOT_INCLUDE_DIRS}, ${IMGUI_PLOT_LIBRARIES}
 # nativefiledialog: ${NATIVEFILEDIALOG_FOUND}, ${NATIVEFILEDIALOG_INCLUDE_DIRS}, ${NATIVEFILEDIALOG_LIBRARIES}
+# opengametools: ${OGT_FOUND}, ${OGT_INCLUDE_DIRS}}
 # sajson: ${SAJSON_FOUND}, ${SAJSON_INCLUDE_DIRS}
 # soloud: ${SOLOUD_FOUND}, ${SOLOUD_INCLUDE_DIRS}, ${SOLOUD_LIBRARIES}
 function(phAddBundledExternals)
@@ -333,6 +334,11 @@ function(phAddBundledExternals)
 	set(NATIVEFILEDIALOG_FOUND ${NATIVEFILEDIALOG_FOUND} PARENT_SCOPE)
 	set(NATIVEFILEDIALOG_INCLUDE_DIRS ${NATIVEFILEDIALOG_INCLUDE_DIRS} PARENT_SCOPE)
 	set(NATIVEFILEDIALOG_LIBRARIES ${NATIVEFILEDIALOG_LIBRARIES} PARENT_SCOPE)
+
+	message("-- [PhantasyEngine]: Adding opengametools target")
+	add_subdirectory(${SFZ_TECH_ROOT}/externals/opengametools ${CMAKE_BINARY_DIR}/opengametools)
+	set(OGT_FOUND ${OGT_FOUND} PARENT_SCOPE)
+	set(OGT_INCLUDE_DIRS ${OGT_INCLUDE_DIRS} PARENT_SCOPE)
 
 	message("-- [PhantasyEngine]: Adding sajson target")
 	add_subdirectory(${SFZ_TECH_ROOT}/externals/sajson ${CMAKE_BINARY_DIR}/sajson)
@@ -387,6 +393,7 @@ function(phLinkBundledExternals linkTarget)
 		${IMGUI_INCLUDE_DIRS}
 		${IMGUI_PLOT_INCLUDE_DIRS}
 		${NATIVEFILEDIALOG_INCLUDE_DIRS}
+		${OGT_INCLUDE_DIRS}
 		${SAJSON_INCLUDE_DIRS}
 		${SOLOUD_INCLUDE_DIRS}
 		${TINYGLTF_INCLUDE_DIRS}
