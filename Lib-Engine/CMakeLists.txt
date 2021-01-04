@@ -299,6 +299,8 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/resources/ResourceManagerUI.hpp
 	${SRC_DIR}/sfz/resources/TextureResource.hpp
 	${SRC_DIR}/sfz/resources/TextureResource.cpp
+	${SRC_DIR}/sfz/resources/VoxelResources.hpp
+	${SRC_DIR}/sfz/resources/VoxelResources.cpp
 
 	${SRC_DIR}/sfz/sdl/SDLAllocator.hpp
 	${SRC_DIR}/sfz/sdl/SDLAllocator.cpp

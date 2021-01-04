@@ -22,7 +22,6 @@
 
 #include "sfz/renderer/RenderingEnumsToFromString.hpp"
 #include "sfz/resources/ResourceManagerState.hpp"
-#include "sfz/resources/TextureResource.hpp"
 #include "sfz/util/ImGuiHelpers.hpp"
 
 namespace sfz {
@@ -407,6 +406,49 @@ inline void renderMeshesTab(ResourceManagerState& state)
 	}
 }
 
+inline void renderVoxelModelsTab(ResourceManagerState& state)
+{
+	constexpr float offset = 200.0f;
+	constexpr vec4 normalTextColor = vec4(1.0f);
+	constexpr vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	static str128 filter;
+
+	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
+	ImGui::InputText("Filter##TexturesTab", filter.mRawStr, filter.capacity());
+	ImGui::PopStyleColor();
+	filter.toLower();
+
+	const bool filterMode = filter != "";
+
+	for (HashMapPair<strID, PoolHandle> itemItr : state.voxelModelHandles) {
+		const char* name = itemItr.key.str();
+		const VoxelModelResource& resource = state.voxelModels[itemItr.value];
+
+		str320 lowerCaseName = name;
+		lowerCaseName.toLower();
+		if (!filter.isPartOf(lowerCaseName.str())) continue;
+
+		if (filterMode) {
+			imguiRenderFilteredText(name, filter.str(), normalTextColor, filterTextColor);
+		}
+		else {
+			if (!ImGui::CollapsingHeader(name)) continue;
+		}
+
+		ImGui::Indent(20.0f);
+
+		alignedEdit("Dims", offset, [&](const char*) {
+			ImGui::Text("%u x %u x %u", resource.dims.x, resource.dims.y, resource.dims.z);
+		});
+
+		alignedEdit("Num colors", offset, [&](const char*) {
+			ImGui::Text("%u", resource.palette.size());
+		});
+
+		ImGui::Unindent(20.0f);
+	}
+}
+
 // ResourceManagerUI
 // ------------------------------------------------------------------------------------------------
 
@@ -440,6 +482,12 @@ inline void resourceManagerUI(ResourceManagerState& state)
 		if (ImGui::BeginTabItem("Meshes")) {
 			ImGui::Spacing();
 			renderMeshesTab(state);
+			ImGui::EndTabItem();
+		}
+
+		if (ImGui::BeginTabItem("Voxel Models")) {
+			ImGui::Spacing();
+			renderVoxelModelsTab(state);
 			ImGui::EndTabItem();
 		}
 

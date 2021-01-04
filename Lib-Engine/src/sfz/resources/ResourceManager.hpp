@@ -28,6 +28,7 @@ struct BufferResource;
 struct FramebufferResource;
 struct MeshResource;
 struct TextureResource;
+struct VoxelModelResource;
 
 // ResourceManager
 // ------------------------------------------------------------------------------------------------
@@ -83,6 +84,15 @@ public:
 	MeshResource* getMesh(PoolHandle handle);
 	PoolHandle addMesh(MeshResource&& resource);
 	void removeMesh(strID name);
+
+	// VoxelModel methods
+	// --------------------------------------------------------------------------------------------
+
+	PoolHandle getVoxelModelHandle(const char* name) const;
+	PoolHandle getVoxelModelHandle(strID name) const;
+	VoxelModelResource* getVoxelModel(PoolHandle handle);
+	PoolHandle addVoxelModel(VoxelModelResource&& resource);
+	void removeVoxelModel(strID name);
 
 private:
 	ResourceManagerState* mState = nullptr;

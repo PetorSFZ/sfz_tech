@@ -23,6 +23,7 @@
 #include "sfz/resources/ResourceManagerState.hpp"
 #include "sfz/resources/ResourceManagerUI.hpp"
 #include "sfz/resources/TextureResource.hpp"
+#include "sfz/resources/VoxelResources.hpp"
 
 namespace sfz {
 
@@ -46,6 +47,13 @@ void ResourceManager::init(uint32_t maxNumResources, Allocator* allocator) noexc
 
 	mState->meshHandles.init(maxNumResources, allocator, sfz_dbg(""));
 	mState->meshes.init(maxNumResources, allocator, sfz_dbg(""));
+
+	mState->voxelModelHandles.init(maxNumResources, allocator, sfz_dbg(""));
+	mState->voxelModels.init(maxNumResources, allocator, sfz_dbg(""));
+
+	// Sets allocator for opengametools
+	// TODO: Might want to place somewhere else
+	setOpenGameToolsAllocator(allocator);
 }
 
 void ResourceManager::destroy() noexcept
@@ -265,6 +273,45 @@ void ResourceManager::removeMesh(strID name)
 	if (handle == NULL_HANDLE) return;
 	mState->meshHandles.remove(name);
 	mState->meshes.deallocate(handle);
+}
+
+// ResourceManager: VoxelModel methods
+// ------------------------------------------------------------------------------------------------
+
+PoolHandle ResourceManager::getVoxelModelHandle(const char* name) const
+{
+	return this->getVoxelModelHandle(strID(name));
+}
+
+PoolHandle ResourceManager::getVoxelModelHandle(strID name) const
+{
+	const PoolHandle* handle = mState->voxelModelHandles.get(name);
+	if (handle == nullptr) return NULL_HANDLE;
+	return *handle;
+}
+
+VoxelModelResource* ResourceManager::getVoxelModel(PoolHandle handle)
+{
+	return mState->voxelModels.get(handle);
+}
+
+PoolHandle ResourceManager::addVoxelModel(VoxelModelResource&& resource)
+{
+	strID name = resource.name;
+	sfz_assert(name.isValid());
+	sfz_assert(mState->voxelModelHandles.get(name) == nullptr);
+	PoolHandle handle = mState->voxelModels.allocate(std::move(resource));
+	mState->voxelModelHandles.put(name, handle);
+	sfz_assert(mState->voxelModelHandles.size() == mState->voxelModels.numAllocated());
+	return handle;
+}
+
+void ResourceManager::removeVoxelModel(strID name)
+{
+	PoolHandle handle = this->getVoxelModelHandle(name);
+	if (handle == NULL_HANDLE) return;
+	mState->voxelModelHandles.remove(name);
+	mState->voxelModels.deallocate(handle);
 }
 
 } // namespace sfz
