@@ -305,7 +305,7 @@ void Renderer::frameBegin() noexcept
 	SDL_GL_GetDrawableSize(mState->window, &newResX, &newResY);
 	bool resolutionChanged = newResX != mState->windowRes.x || newResY != mState->windowRes.y;
 
-	// If resolution has changed, resize swapchain and framebuffers
+	// If resolution has changed, resize swapchain
 	if (resolutionChanged) {
 
 		SFZ_INFO("Renderer",
@@ -325,10 +325,11 @@ void Renderer::frameBegin() noexcept
 		//       as well protect this call just the same.
 		CHECK_ZG zgContextSwapchainResize(
 			uint32_t(mState->windowRes.x), uint32_t(mState->windowRes.y));
-
-		ResourceManager& resources = getResourceManager();
-		resources.updateResolution(vec2_u32(newResX, newResY));
 	}
+
+	// Update resources with current resolution
+	ResourceManager& resources = getResourceManager();
+	resources.updateResolution(vec2_u32(newResX, newResY));
 
 	// Set vsync settings
 	CHECK_ZG zgContextSwapchainSetVsync(mState->vsync->boolValue() ? ZG_TRUE : ZG_FALSE);

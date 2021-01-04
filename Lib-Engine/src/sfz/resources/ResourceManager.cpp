@@ -72,18 +72,23 @@ void ResourceManager::renderDebugUI()
 void ResourceManager::updateResolution(vec2_u32 screenRes)
 {
 	// Update screen relative textures
+	bool texturesRebuilt = false;
 	for (HashMapPair<strID, PoolHandle> itemItr : mState->textureHandles) {
 		TextureResource& resource = mState->textures[itemItr.value];
 		if (resource.screenRelativeResolution) {
-			CHECK_ZG resource.build(screenRes);
+			bool texRebuilt = false;
+			CHECK_ZG resource.build(screenRes, &texRebuilt);
+			texturesRebuilt = texturesRebuilt || texRebuilt;
 		}
 	}
 
 	// Update screen relative framebuffers
-	for (HashMapPair<strID, PoolHandle> itemItr : mState->framebufferHandles) {
-		FramebufferResource& resource = mState->framebuffers[itemItr.value];
-		if (resource.screenRelativeResolution) {
-			CHECK_ZG resource.build(screenRes);
+	if (texturesRebuilt) {
+		for (HashMapPair<strID, PoolHandle> itemItr : mState->framebufferHandles) {
+			FramebufferResource& resource = mState->framebuffers[itemItr.value];
+			if (resource.screenRelativeResolution) {
+				CHECK_ZG resource.build(screenRes);
+			}
 		}
 	}
 }

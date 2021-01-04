@@ -53,23 +53,6 @@ enum class StageType {
 	USER_INPUT_COMPUTE
 };
 
-struct ConstantBufferMemory final {
-	uint64_t lastFrameIdxTouched = 0;
-	uint32_t shaderRegister = ~0u;
-	zg::Buffer uploadBuffer;
-	zg::Buffer deviceBuffer;
-};
-
-struct BoundTexture final {
-	uint32_t textureRegister = ~0u;
-	strID textureName;
-};
-
-struct BoundBuffer final {
-	uint32_t bufferRegister = ~0u;
-	strID bufferName;
-};
-
 struct Stage final {
 
 	// Parsed information
@@ -113,11 +96,6 @@ struct RendererState final {
 
 	sfz::Allocator* allocator = nullptr;
 	SDL_Window* window = nullptr;
-
-	// Whether the renderer is in "dummy" mode or not. Dummy mode is used when the renderer is
-	// bypassed by the application so that it can render using ZeroG directly. The renderer still
-	// owns "the ZeroG swapbuffer" and ImGui rendering.
-	bool dummyMode = false;
 
 	// The current index of the frame, increments at every frameBegin()
 	uint64_t currentFrameIdx = 0;
