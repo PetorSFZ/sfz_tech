@@ -1169,12 +1169,14 @@ static ZgResult createPipelineRenderInternal(
 	CHECK_D3D12 pixelReflection->GetDesc(&pixelDesc);
 
 	// Validate that the user has specified correct number of vertex attributes
-	if (createInfo.numVertexAttributes != vertexDesc.InputParameters) {
+	// TODO: This doesn't seem to work. InputParameter also counts compiler generated inputs, such
+	//       as SV_VertexID.
+	/*if (createInfo.numVertexAttributes != vertexDesc.InputParameters) {
 		ZG_ERROR("Invalid ZgPipelineRenderingCreateInfo. It specifies %u vertex"
 			" attributes, shader reflection finds %u",
 			createInfo.numVertexAttributes, vertexDesc.InputParameters);
 		return ZG_ERROR_INVALID_ARGUMENT;
-	}
+	}*/
 	ZgPipelineRenderSignature renderSignature = {};
 	renderSignature.numVertexAttributes = createInfo.numVertexAttributes;
 
