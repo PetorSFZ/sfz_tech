@@ -83,6 +83,11 @@ bool Shader::build() noexcept
 				.setCullingEnabled(true)
 				.setCullMode(render.cullFrontFacing, render.frontFacingIsCounterClockwise);
 		}
+		else {
+			pipelineBuilder
+				.setCullingEnabled(false)
+				.setCullMode(false, render.frontFacingIsCounterClockwise);
+		}
 
 		// Depth bias
 		pipelineBuilder

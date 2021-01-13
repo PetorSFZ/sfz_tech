@@ -631,7 +631,7 @@ void Renderer::stageSetVertexBuffer(const char* bufferName) noexcept
 	CHECK_ZG mState->groupCmdList.setVertexBuffer(0, *buffer);
 }
 
-void Renderer::stageSetIndexBuffer(const char* bufferName, bool u32Buffer) noexcept
+void Renderer::stageSetIndexBuffer(const char* bufferName, ZgIndexBufferType indexBufferType) noexcept
 {
 	sfz_assert(inStageInputMode());
 	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
@@ -654,8 +654,7 @@ void Renderer::stageSetIndexBuffer(const char* bufferName, bool u32Buffer) noexc
 	}
 
 	// Set index buffer
-	CHECK_ZG mState->groupCmdList.setIndexBuffer(
-		*buffer, u32Buffer ? ZG_INDEX_BUFFER_TYPE_UINT32 : ZG_INDEX_BUFFER_TYPE_UINT16);
+	CHECK_ZG mState->groupCmdList.setIndexBuffer(*buffer, indexBufferType);
 }
 
 void Renderer::stageSetIndexBuffer(zg::Buffer& buffer, ZgIndexBufferType indexBufferType) noexcept

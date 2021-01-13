@@ -269,9 +269,11 @@ public:
 	void stageSetBindings(const PipelineBindings& bindings) noexcept;
 
 	void stageSetVertexBuffer(const char* bufferName) noexcept;
-	void stageSetIndexBuffer(const char* bufferName, bool u32Buffer) noexcept;
+	void stageSetIndexBuffer(
+		const char* bufferName, ZgIndexBufferType indexBufferType = ZG_INDEX_BUFFER_TYPE_UINT32) noexcept;
 
-	void stageSetIndexBuffer(zg::Buffer& buffer, ZgIndexBufferType indexBufferType) noexcept;
+	void stageSetIndexBuffer(zg::Buffer& buffer,
+		ZgIndexBufferType indexBufferType = ZG_INDEX_BUFFER_TYPE_UINT32) noexcept;
 	void stageSetVertexBuffer(uint32_t slot, zg::Buffer& buffer) noexcept;
 
 	void stageDrawTriangles(uint32_t startVertex, uint32_t numVertices) noexcept;

@@ -255,6 +255,9 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			shader.render.frontFacingIsCounterClockwise =
 				CHECK_JSON cullingNode.accessMap("front_facing_is_counter_clockwise").valueBool();
 		}
+		else {
+			shader.render.frontFacingIsCounterClockwise = true;
+		}
 
 		// Depth bias
 		JsonNode depthBiasNode = pipelineNode.accessMap("depth_bias");

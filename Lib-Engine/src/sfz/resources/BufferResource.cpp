@@ -24,6 +24,36 @@ namespace sfz {
 // BufferResource
 // ------------------------------------------------------------------------------------------------
 
+void BufferResource::uploadBlockingUntyped(
+	const void* data,
+	uint32_t elementSizeIn,
+	uint32_t numElements,
+	zg::CommandQueue& copyQueue)
+{
+	const uint64_t bufferSizeBytes = this->maxNumElements * this->elementSizeBytes;
+	const uint64_t numBytes = elementSizeIn * numElements;
+	sfz_assert(numBytes <= bufferSizeBytes);
+	sfz_assert(elementSizeIn == this->elementSizeBytes);
+	sfz_assert_hard(this->type == BufferResourceType::STATIC);
+
+	// Allocate temporary upload buffer
+	zg::Buffer tmpUploadBuffer;
+	str320 debugName = str320("%s__tmp_upload", this->name.str());
+	CHECK_ZG tmpUploadBuffer.create(numBytes, ZG_MEMORY_TYPE_UPLOAD, false, debugName.str());
+	sfz_assert(tmpUploadBuffer.valid());
+
+	// Copy data to temporary upload buffer
+	CHECK_ZG tmpUploadBuffer.memcpyUpload(0, data, numBytes);
+
+	// Copy data to GPU
+	zg::CommandList cmdList;
+	CHECK_ZG copyQueue.beginCommandListRecording(cmdList);
+	CHECK_ZG cmdList.memcpyBufferToBuffer(staticMem.buffer, 0, tmpUploadBuffer, 0, numBytes);
+	CHECK_ZG cmdList.enableQueueTransition(staticMem.buffer);
+	CHECK_ZG copyQueue.executeCommandList(cmdList);
+	CHECK_ZG copyQueue.flush();
+}
+
 BufferResource BufferResource::createStatic(
 	const char* name,
 	uint32_t elementSize,

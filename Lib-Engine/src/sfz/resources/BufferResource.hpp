@@ -54,6 +54,21 @@ struct BufferResource final {
 	StaticBufferMemory staticMem;
 	PerFrameData<StreamingBufferMemory> streamingMem;
 	
+	template<typename T>
+	void uploadBlocking(
+		const T* data,
+		uint32_t numElements,
+		zg::CommandQueue& copyQueue)
+	{
+		uploadBlockingUntyped((const T*)data, sizeof(T), numElements, copyQueue);
+	}
+
+	void uploadBlockingUntyped(
+		const void* data,
+		uint32_t elementSize,
+		uint32_t numElements,
+		zg::CommandQueue& copyQueue);
+
 	static BufferResource createStatic(
 		const char* name,
 		uint32_t elementSize,
