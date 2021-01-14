@@ -63,11 +63,26 @@ inline void renderBuffersTab(ResourceManagerState& state)
 		alignedEdit("Type", offset, [&](const char*) {
 			ImGui::Text("%s", resource.type == BufferResourceType::STATIC ? "STATIC" : "STREAMING");
 		});
-		alignedEdit("Element size", offset, [&](const char*) {
-			ImGui::Text("%u bytes", resource.elementSizeBytes);
-		});
-		alignedEdit("Max num elements", offset, [&](const char*) {
-			ImGui::Text("%u", resource.maxNumElements);
+		alignedEdit("Size", offset, [&](const char*) {
+			const uint32_t numElements = resource.maxNumElements;
+			const uint32_t elementSize = resource.elementSizeBytes;
+			const uint32_t numBytes = elementSize * numElements;
+			float scaledSize = 0.0f;
+			const char* ending = "";
+			if (numBytes < 1024) {
+				scaledSize = float(numBytes);
+				ending = "bytes";
+			}
+			else if (numBytes < (1024 * 1024)) {
+				scaledSize = float(numBytes) / 1024.0f;
+				ending = "KiB";
+			}
+			else {
+				scaledSize = float(numBytes) / (1024.0f * 1024.0f);
+				ending = "MiB";
+			}
+			ImGui::Text("%u elements x %u bytes = %.2f %s",
+				numElements, elementSize, scaledSize, ending);
 		});
 		ImGui::Unindent(20.0f);
 	}
