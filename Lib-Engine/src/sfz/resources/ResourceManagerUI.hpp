@@ -460,6 +460,12 @@ inline void renderVoxelModelsTab(ResourceManagerState& state)
 			ImGui::Text("%u", resource.palette.size());
 		});
 
+		if (resource.userHandle != NULL_HANDLE) {
+			alignedEdit("User handle", offset, [&](const char*) {
+				ImGui::Text("%u @ v%u", resource.userHandle.idx(), resource.userHandle.version());
+			});
+		}
+
 		ImGui::Unindent(20.0f);
 	}
 }

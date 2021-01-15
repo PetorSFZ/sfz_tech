@@ -21,6 +21,7 @@
 
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
+#include <skipifzero_pool.hpp>
 #include <skipifzero_strings.hpp>
 
 namespace sfz {
@@ -52,6 +53,10 @@ struct VoxelModelResource final {
 	vec3_u32 dims = vec3_u32(0u);
 	Array<uint8_t> voxels;
 	Arr256<vec4_u8> palette;
+
+	// A user defined handle that can be used to refer to e.g. an application specific GPU buffer
+	// with data needed to render this model.
+	PoolHandle userHandle = NULL_HANDLE;
 
 	uint8_t& accessVoxel(vec3_u32 coord)
 	{
