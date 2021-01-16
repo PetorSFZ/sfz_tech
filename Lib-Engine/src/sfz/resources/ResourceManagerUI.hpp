@@ -456,6 +456,10 @@ inline void renderVoxelModelsTab(ResourceManagerState& state)
 			ImGui::Text("%u x %u x %u", resource.dims.x, resource.dims.y, resource.dims.z);
 		});
 
+		alignedEdit("Num voxels", offset, [&](const char*) {
+			ImGui::Text("%u", resource.numVoxels);
+		});
+
 		alignedEdit("Num colors", offset, [&](const char*) {
 			ImGui::Text("%u", resource.palette.size());
 		});
@@ -470,7 +474,7 @@ inline void renderVoxelModelsTab(ResourceManagerState& state)
 	}
 }
 
-inline void renderVoxelMaterialsTab(ResourceManagerState& state)
+inline void renderVoxelMaterialsTab(ResourceManager& resources, ResourceManagerState& state)
 {
 	constexpr float offset = 200.0f;
 	constexpr vec4 normalTextColor = vec4(1.0f);
@@ -496,6 +500,14 @@ inline void renderVoxelMaterialsTab(ResourceManagerState& state)
 		str320 lowerCaseName = nameExt;
 		lowerCaseName.toLower();
 		if (!filter.isPartOf(lowerCaseName.str())) continue;
+
+		{
+			vec4 color;
+			color.xyz = clamp((vec3(material.originalColor.xyz)) * (1.0f / 255.0f), 0.0f, 1.0f);
+			color.w = 1.0f;
+			ImGui::ColorButton(str320("##%s", nameExt.str()).str(), color, ImGuiColorEditFlags_NoLabel);
+			ImGui::SameLine();
+		}
 
 		if (filterMode) {
 			imguiRenderFilteredText(nameExt.str(), filter.str(), normalTextColor, filterTextColor);
@@ -543,7 +555,7 @@ inline void renderVoxelMaterialsTab(ResourceManagerState& state)
 		});
 
 		if (materialModified) {
-			// TODO: Here we want to update buffers on GPU and such
+			resources.syncVoxelMaterialsToGpuBlocking();
 		}
 
 		ImGui::Unindent(20.0f);
@@ -553,7 +565,7 @@ inline void renderVoxelMaterialsTab(ResourceManagerState& state)
 // ResourceManagerUI
 // ------------------------------------------------------------------------------------------------
 
-inline void resourceManagerUI(ResourceManagerState& state)
+inline void resourceManagerUI(ResourceManager& resources, ResourceManagerState& state)
 {
 	if (!ImGui::Begin("Resources", nullptr, ImGuiWindowFlags_NoFocusOnAppearing)) {
 		ImGui::End();
@@ -594,7 +606,7 @@ inline void resourceManagerUI(ResourceManagerState& state)
 
 		if (ImGui::BeginTabItem("Voxel Materials")) {
 			ImGui::Spacing();
-			renderVoxelMaterialsTab(state);
+			renderVoxelMaterialsTab(resources, state);
 			ImGui::EndTabItem();
 		}
 

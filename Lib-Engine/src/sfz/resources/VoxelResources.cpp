@@ -46,10 +46,6 @@ static void ogtVoxFreeWrapper(void* mem)
 	voxAllocator->deallocate(mem);
 }
 
-// VoxelMaterial
-// ------------------------------------------------------------------------------------------------
-
-
 // VoxelModel
 // ------------------------------------------------------------------------------------------------
 
@@ -86,10 +82,12 @@ VoxelModelResource VoxelModelResource::load(const char* path, Allocator* allocat
 	resource.voxels.init(numVoxels, allocator, sfz_dbg(""));
 	resource.voxels.add(model.voxel_data, numVoxels);
 	
-	// Find highest voxel value
+	// Find highest voxel value and number of non-empty voxels
 	uint32_t highestVoxelVal = 0;
+	resource.numVoxels = 0;
 	for (uint8_t voxel : resource.voxels) {
 		highestVoxelVal = sfz::max(highestVoxelVal, uint32_t(voxel));
+		if (voxel != uint8_t(0)) resource.numVoxels += 1;
 	}
 
 	// Copy palette to voxel model

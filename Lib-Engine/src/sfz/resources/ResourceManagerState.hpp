@@ -58,7 +58,8 @@ struct ResourceManagerState final {
 	HashMap<strID, PoolHandle> voxelMaterialHandles;
 	HashMap<vec4_u8, PoolHandle> voxelMaterialColors;
 	Pool<VoxelMaterial> voxelMaterials;
-
+	Array<ShaderVoxelMaterial> voxelMaterialShaderBufferCpu;
+	PoolHandle voxelMaterialShaderBufferHandle = NULL_HANDLE;
 };
 
 } // namespace sfz

@@ -39,6 +39,14 @@ struct VoxelMaterial final {
 	float metallic = 0.0f; // Linear space, but typically only 0.0 or 1.0 is valid.
 };
 
+struct ShaderVoxelMaterial final {
+	vec3 albedo = vec3(1.0f, 0.0f, 0.0f);
+	float roughness = 1.0f;
+	vec3 emissive = vec3(0.0f); 
+	float metallic = 0.0f;
+};
+static_assert(sizeof(ShaderVoxelMaterial) == sizeof(float) * 8, "ShaderVoxelMaterial is padded");
+
 // VoxelModelResource
 // ------------------------------------------------------------------------------------------------
 
@@ -51,6 +59,7 @@ struct VoxelModelResource final {
 	strID name;
 
 	vec3_u32 dims = vec3_u32(0u);
+	uint32_t numVoxels = 0; // The number of non-empty voxels in the voxels array, NOT the size of the voxels array.
 	Array<uint8_t> voxels;
 	Arr256<vec4_u8> palette;
 

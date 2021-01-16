@@ -54,10 +54,16 @@ void ResourceManager::init(uint32_t maxNumResources, Allocator* allocator) noexc
 	mState->voxelMaterialHandles.init(maxNumResources, allocator, sfz_dbg(""));
 	mState->voxelMaterialColors.init(maxNumResources, allocator, sfz_dbg(""));
 	mState->voxelMaterials.init(maxNumResources, allocator, sfz_dbg(""));
+	mState->voxelMaterialShaderBufferCpu.init(maxNumResources, allocator, sfz_dbg(""));
 
 	// Sets allocator for opengametools
 	// TODO: Might want to place somewhere else
 	setOpenGameToolsAllocator(allocator);
+
+	// Create voxel shader material buffer
+	mState->voxelMaterialShaderBufferCpu.add(ShaderVoxelMaterial{}, maxNumResources);
+	mState->voxelMaterialShaderBufferHandle = addBuffer(BufferResource::createStatic(
+		"voxel_material_buffer", sizeof(ShaderVoxelMaterial), maxNumResources));
 }
 
 void ResourceManager::destroy() noexcept
@@ -78,7 +84,7 @@ void ResourceManager::destroy() noexcept
 
 void ResourceManager::renderDebugUI()
 {
-	resourceManagerUI(*mState);
+	resourceManagerUI(*this, *mState);
 }
 
 void ResourceManager::updateResolution(vec2_u32 screenRes)
@@ -369,6 +375,37 @@ void ResourceManager::removeVoxelMaterial(strID name)
 	mState->voxelMaterialHandles.remove(name);
 	mState->voxelMaterialColors.remove(material.originalColor);
 	mState->voxelMaterials.deallocate(handle);
+}
+
+void ResourceManager::syncVoxelMaterialsToGpuBlocking()
+{
+	// Flush present queue
+	zg::CommandQueue presentQueue = zg::CommandQueue::getPresentQueue();
+	CHECK_ZG presentQueue.flush();
+
+	BufferResource* buffer = getBuffer(mState->voxelMaterialShaderBufferHandle);
+	sfz_assert(buffer != nullptr);
+
+	Array<ShaderVoxelMaterial>& cpu = mState->voxelMaterialShaderBufferCpu;
+	Pool<VoxelMaterial>& pool = mState->voxelMaterials;
+	sfz_assert(cpu.size() >= pool.arraySize());
+	for (uint32_t i = 0; i < pool.arraySize(); i++) {
+		const VoxelMaterial& src = pool.data()[i];
+		ShaderVoxelMaterial& dst = cpu[i];
+		dst.albedo = src.albedo;
+		dst.roughness = src.roughness;
+		dst.emissive = src.emissive;
+		dst.metallic = src.metallic;
+	}
+
+	// Note: We are doing this using the present queue because the copy queue can't change the
+	//       resource state of the buffer. Plus, the buffer may be in use on the present queue.
+	buffer->uploadBlocking<ShaderVoxelMaterial>(cpu.data(), pool.arraySize(), presentQueue);
+}
+
+PoolHandle ResourceManager::getVoxelMaterialShaderBufferHandle() const
+{
+	return mState->voxelMaterialShaderBufferHandle;
 }
 
 } // namespace sfz

@@ -104,6 +104,8 @@ public:
 	VoxelMaterial* getVoxelMaterial(PoolHandle handle);
 	PoolHandle addVoxelMaterial(VoxelMaterial&& resource);
 	void removeVoxelMaterial(strID name);
+	void syncVoxelMaterialsToGpuBlocking();
+	PoolHandle getVoxelMaterialShaderBufferHandle() const;
 
 private:
 	ResourceManagerState* mState = nullptr;

@@ -585,7 +585,7 @@ inline vec3 rotateTowardsRad(vec3 inDir, vec3 targetDir, float angleRads)
 {
 	sfz_assert(eqf(length(inDir), 1.0f));
 	sfz_assert(eqf(length(targetDir), 1.0f));
-	sfz_assert(dot(inDir, targetDir) >= -0.99f);
+	sfz_assert(dot(inDir, targetDir) >= -0.9999f);
 	sfz_assert(angleRads >= 0.0f);
 	sfz_assert(angleRads < PI);
 	vec3 axis = cross(inDir, targetDir);
