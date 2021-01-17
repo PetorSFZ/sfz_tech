@@ -276,6 +276,9 @@ public:
 		ZgIndexBufferType indexBufferType = ZG_INDEX_BUFFER_TYPE_UINT32) noexcept;
 	void stageSetVertexBuffer(uint32_t slot, zg::Buffer& buffer) noexcept;
 
+	void stageSetIndexBuffer(PoolHandle handle, ZgIndexBufferType = ZG_INDEX_BUFFER_TYPE_UINT32);
+	void stageSetVertexBuffer(uint32_t slot, PoolHandle handle);
+
 	void stageDrawTriangles(uint32_t startVertex, uint32_t numVertices) noexcept;
 	void stageDrawTrianglesIndexed(uint32_t firstIndex, uint32_t numIndices) noexcept;
 

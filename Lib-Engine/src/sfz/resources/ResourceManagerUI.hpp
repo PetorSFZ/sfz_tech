@@ -244,9 +244,9 @@ inline void renderMeshesTab(ResourceManagerState& state)
 
 		// Check if mesh is valid
 		bool meshValid = true;
-		if (!mesh.vertexBuffer.valid()) meshValid = false;
-		if (!mesh.indexBuffer.valid()) meshValid = false;
-		if (!mesh.materialsBuffer.valid()) meshValid = false;
+		if (mesh.vertexBuffer == NULL_HANDLE) meshValid = false;
+		if (mesh.indexBuffer == NULL_HANDLE) meshValid = false;
+		if (mesh.materialsBuffer == NULL_HANDLE) meshValid = false;
 
 		// Mesh name
 		ImGui::Text("\"%s\"", itemItr.key.str());
@@ -403,12 +403,17 @@ inline void renderMeshesTab(ResourceManagerState& state)
 					// Memcpy to temporary upload buffer
 					CHECK_ZG uploadBuffer.memcpyUpload(0, &shaderMaterial, sizeof(ShaderMaterial));
 
+					// Grab materials buffer
+					BufferResource* materialBufferResource = state.buffers.get(mesh.materialsBuffer);
+					sfz_assert(materialBufferResource->type == BufferResourceType::STATIC);
+					zg::Buffer& materialsBuffer = materialBufferResource->staticMem.buffer;
+
 					// Replace material in mesh with new material
 					zg::CommandList commandList;
 					CHECK_ZG presentQueue.beginCommandListRecording(commandList);
 					uint64_t dstOffset = sizeof(ShaderMaterial) * i;
 					CHECK_ZG commandList.memcpyBufferToBuffer(
-						mesh.materialsBuffer, dstOffset, uploadBuffer, 0, sizeof(ShaderMaterial));
+						materialsBuffer, dstOffset, uploadBuffer, 0, sizeof(ShaderMaterial));
 					CHECK_ZG presentQueue.executeCommandList(commandList);
 					CHECK_ZG presentQueue.flush();
 				}

@@ -19,7 +19,9 @@
 
 #pragma once
 
+#include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
+#include <skipifzero_pool.hpp>
 
 #include <ZeroG.h>
 
@@ -33,9 +35,9 @@ namespace sfz {
 
 struct MeshResource final {
 	strID name;
-	zg::Buffer vertexBuffer;
-	zg::Buffer indexBuffer;
-	zg::Buffer materialsBuffer;
+	PoolHandle vertexBuffer = NULL_HANDLE;
+	PoolHandle indexBuffer = NULL_HANDLE;
+	PoolHandle materialsBuffer = NULL_HANDLE;
 	uint32_t numMaterials = 0;
 	Array<MeshComponent> components;
 	Array<Material> cpuMaterials;

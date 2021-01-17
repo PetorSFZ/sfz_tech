@@ -671,6 +671,56 @@ void Renderer::stageSetVertexBuffer(uint32_t slot, zg::Buffer& buffer) noexcept
 	CHECK_ZG mState->groupCmdList.setVertexBuffer(slot, buffer);
 }
 
+void Renderer::stageSetIndexBuffer(PoolHandle handle, ZgIndexBufferType indexBufferType)
+{
+	sfz_assert(inStageInputMode());
+	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
+	ResourceManager& resources = getResourceManager();
+
+	// Grab buffer
+	BufferResource* resource = resources.getBuffer(handle);
+	sfz_assert(resource != nullptr);
+
+	zg::Buffer* buffer = nullptr;
+	if (resource->type == BufferResourceType::STATIC) {
+		buffer = &resource->staticMem.buffer;
+	}
+	else if (resource->type == BufferResourceType::STREAMING) {
+		buffer = &resource->streamingMem.data(mState->currentFrameIdx).deviceBuffer;
+	}
+	else {
+		sfz_assert(false);
+	}
+
+	// Set index buffer
+	CHECK_ZG mState->groupCmdList.setIndexBuffer(*buffer, indexBufferType);
+}
+
+void Renderer::stageSetVertexBuffer(uint32_t slot, PoolHandle handle)
+{
+	sfz_assert(inStageInputMode());
+	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
+	ResourceManager& resources = getResourceManager();
+
+	// Grab buffer
+	BufferResource* resource = resources.getBuffer(handle);
+	sfz_assert(resource != nullptr);
+
+	zg::Buffer* buffer = nullptr;
+	if (resource->type == BufferResourceType::STATIC) {
+		buffer = &resource->staticMem.buffer;
+	}
+	else if (resource->type == BufferResourceType::STREAMING) {
+		buffer = &resource->streamingMem.data(mState->currentFrameIdx).deviceBuffer;
+	}
+	else {
+		sfz_assert(false);
+	}
+
+	// Set vertex buffer
+	CHECK_ZG mState->groupCmdList.setVertexBuffer(slot, *buffer);
+}
+
 void Renderer::stageDrawTriangles(uint32_t startVertex, uint32_t numVertices) noexcept
 {
 	sfz_assert(inStageInputMode());
