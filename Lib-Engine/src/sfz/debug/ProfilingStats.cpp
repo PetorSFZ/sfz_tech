@@ -107,6 +107,20 @@ const char* const* ProfilingStats::labels(const char* category) const noexcept
 	return cat->labelStrings.data();
 }
 
+bool ProfilingStats::categoryExists(const char* category, const char* label) const noexcept
+{
+	const StatsCategory* cat = mState->categories.get(category);
+	return cat != nullptr;
+}
+
+bool ProfilingStats::labelExists(const char* category, const char* label) const noexcept
+{
+	const StatsCategory* cat = mState->categories.get(category);
+	if (cat == nullptr) return false;
+	const StatsLabel* lab = cat->labels.get(label);
+	return lab != nullptr;
+}
+
 uint32_t ProfilingStats::numSamples(const char* category) const noexcept
 {
 	const StatsCategory* cat = mState->categories.get(category);
