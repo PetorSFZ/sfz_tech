@@ -251,7 +251,6 @@ void imguiRender(
 	uint64_t* measurmentIdOut) noexcept
 {
 	// Generate ImGui draw lists and get the draw data
-	ImGui::Render();
 	ImDrawData& drawData = *ImGui::GetDrawData();
 
 	// Clear old temp data

@@ -23,6 +23,8 @@
 
 #include <SDL.h>
 
+#include <imgui.h>
+
 #include <skipifzero.hpp>
 #include <skipifzero_math.hpp>
 
@@ -393,25 +395,42 @@ void Renderer::frameFinish()
 {
 	FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
 
-	zg::CommandList cmdList;
-	CHECK_ZG mState->presentQueue.beginCommandListRecording(cmdList);
-	CHECK_ZG cmdList.setFramebuffer(mState->windowFramebuffer);
+	// This is a workaround for a particularly nasty bug. For some reason the D3D12 validation fails
+	// with "device removed" and some invalid access, but its really hard to get it to tell exactly
+	// what goes wrong. After a lot of investigation the conclusion is that we sometimes fail when
+	// we don't have any imgui content on screen and execute the "empty" command list below. Can be
+	// reproduced by:
+	//
+	//  zg::CommandList cmdList;
+	//  CHECK_ZG mState->presentQueue.beginCommandListRecording(cmdList);
+	//  CHECK_ZG cmdList.setFramebuffer(mState->windowFramebuffer);
+	//  CHECK_ZG mState->presentQueue.executeCommandList(cmdList);
+	//
+	// I suspect something is slightly wrong with ZeroG's resource transitions for the default
+	// framebuffer (special case versus non-default framebuffers), but I don't know what. The fix
+	// below is simple enough that I don't feel justified spending time on it, but above information
+	// is a start if it turns up again.
+	ImGui::Render();
+	ImDrawData& imguiDrawData = *ImGui::GetDrawData();
+	if (imguiDrawData.CmdListsCount > 0) {
+		zg::CommandList cmdList;
+		CHECK_ZG mState->presentQueue.beginCommandListRecording(cmdList);
+		CHECK_ZG cmdList.setFramebuffer(mState->windowFramebuffer);
 
-	// Render ImGui
-	zg::imguiRender(
-		mState->imguiRenderState,
-		mState->currentFrameIdx,
-		cmdList,
-		uint32_t(mState->windowRes.x),
-		uint32_t(mState->windowRes.y),
-		mState->imguiScaleSetting->floatValue(),
-		&mState->profiler,
-		&frameIds.imguiId);
+		// Render ImGui
+		zg::imguiRender(
+			mState->imguiRenderState,
+			mState->currentFrameIdx,
+			cmdList,
+			uint32_t(mState->windowRes.x),
+			uint32_t(mState->windowRes.y),
+			mState->imguiScaleSetting->floatValue(),
+			&mState->profiler,
+			&frameIds.imguiId);
 
-	// Execute command list
-	// TODO: We should probably execute all of the frame's command lists simulatenously instead of
-	//       one by one
-	CHECK_ZG mState->presentQueue.executeCommandList(cmdList);
+		// Execute command list
+		CHECK_ZG mState->presentQueue.executeCommandList(cmdList);
+	}
 
 	// Finish ZeroG frame
 	sfz_assert(mState->windowFramebuffer.valid());
