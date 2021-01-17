@@ -38,34 +38,6 @@ struct SDL_Window;
 
 namespace sfz {
 
-// Stage types
-// ------------------------------------------------------------------------------------------------
-
-// The type of stage
-enum class StageType {
-
-	// A rendering pass (i.e. rendering pipeline) where all the draw calls are provided by the user
-	// through code.
-	USER_INPUT_RENDERING,
-
-	// A compute pass (i.e. compute pipeline) where all the dispatches are provided by the user
-	// through code
-	USER_INPUT_COMPUTE
-};
-
-struct Stage final {
-
-	// Parsed information
-	strID name;
-	StageType type;
-	strID pipelineName;
-};
-
-struct StageGroup final {
-	strID groupName;
-	Array<Stage> stages;
-};
-
 // RendererState
 // ------------------------------------------------------------------------------------------------
 
@@ -78,15 +50,6 @@ struct FrameProfilingIDs final {
 	uint64_t frameId = ~0ull;
 	uint64_t imguiId = ~0ull;
 	Arr64<GroupProfilingID> groupIds;
-};
-
-struct RendererConfigurableState final {
-
-	// Path to current configuration
-	str320 configPath;
-
-	// Present stage groups
-	Array<StageGroup> presentStageGroups;
 };
 
 struct RendererState final {
@@ -129,27 +92,8 @@ struct RendererState final {
 	const Setting* flushCopyQueueEachFrame = nullptr;
 	const Setting* emitDebugEvents = nullptr;
 
-	// Configurable state
-	RendererConfigurableState configurable;
-
-	// The currently active stage group
-	uint32_t currentStageGroupIdx = 0;
-	zg::CommandList groupCmdList;
-
-	// The current input-enabled stage
-	struct {
-		bool inInputMode = false;
-		uint32_t stageIdx = ~0u;
-		Stage* stage = nullptr;
-	} inputEnabled;
-
-	// Helper methods
-	// --------------------------------------------------------------------------------------------
-
-	// Finds the index of the specified stage among the current actives ones (i.e. the ones from the
-	// current set index to the next stage barrier). Returns ~0u if stage is not among the current
-	// active set.
-	uint32_t findActiveStageIdx(strID stageName) const noexcept;
+	// Path to current configuration
+	str320 configPath;
 };
 
 } // namespace sfz

@@ -70,7 +70,7 @@ public:
 	uint32_t numLabels(const char* category) const noexcept;
 	const char* const* labels(const char* category) const noexcept;
 
-	bool categoryExists(const char* category, const char* label) const noexcept;
+	bool categoryExists(const char* category) const noexcept;
 	bool labelExists(const char* category, const char* label) const noexcept;
 
 	uint32_t numSamples(const char* category) const noexcept;

@@ -37,95 +37,6 @@ struct phContext;
 
 namespace sfz {
 
-// Helper structs
-// ------------------------------------------------------------------------------------------------
-
-constexpr uint32_t RENDERER_MAX_NUM_CONST_BUFFERS = 16;
-constexpr uint32_t RENDERER_MAX_NUM_UNORDERED_BUFFERS = 16;
-constexpr uint32_t RENDERER_MAX_NUM_TEXTURES = 16;
-constexpr uint32_t RENDERER_MAX_NUM_UNORDERED_TEXTURES = 16;
-
-enum class BindingResourceType {
-	ID = 0,
-	RAW_BUFFER = 1,
-	RAW_TEXTURE = 2
-};
-
-struct Binding final {
-	BindingResourceType type = BindingResourceType::ID;
-	union {
-		strID resourceID;
-		ZgBuffer* rawBuffer;
-		ZgTexture* rawTexture;
-	} resource;
-	uint32_t shaderRegister = ~0u;
-	uint32_t mipLevel = 0; // Only used for unordered textures
-};
-
-struct PipelineBindings final {
-	ArrayLocal<Binding, RENDERER_MAX_NUM_CONST_BUFFERS> constBuffers;
-	ArrayLocal<Binding, RENDERER_MAX_NUM_UNORDERED_BUFFERS> unorderedBuffers;
-	ArrayLocal<Binding, RENDERER_MAX_NUM_TEXTURES> textures;
-	ArrayLocal<Binding, RENDERER_MAX_NUM_UNORDERED_TEXTURES> unorderedTextures;
-
-	PipelineBindings& addConstBuffer(const char* name, uint32_t shaderRegister)
-	{
-		return addConstBuffer(strID(name), shaderRegister);
-	}
-	PipelineBindings& addConstBuffer(strID id, uint32_t shaderRegister)
-	{
-		Binding& binding = constBuffers.add();
-		binding.resource.resourceID = id;
-		binding.shaderRegister = shaderRegister;
-		return *this;
-	}
-	PipelineBindings& addConstBuffer(zg::Buffer& buffer, uint32_t shaderRegister)
-	{
-		Binding& binding = constBuffers.add();
-		binding.type = BindingResourceType::RAW_BUFFER;
-		binding.resource.rawBuffer = buffer.handle;
-		binding.shaderRegister = shaderRegister;
-		return *this;
-	}
-
-	PipelineBindings& addUnorderedBuffer(const char* name, uint32_t shaderRegister)
-	{
-		return addUnorderedBuffer(strID(name), shaderRegister);
-	}
-	PipelineBindings& addUnorderedBuffer(strID id, uint32_t shaderRegister)
-	{
-		Binding& binding = unorderedBuffers.add();
-		binding.resource.resourceID = id;
-		binding.shaderRegister = shaderRegister;
-		return *this;
-	}
-
-	PipelineBindings& addTexture(const char* name, uint32_t shaderRegister)
-	{
-		return addTexture(strID(name), shaderRegister);
-	}
-	PipelineBindings& addTexture(strID id, uint32_t shaderRegister)
-	{
-		Binding& binding = textures.add();
-		binding.resource.resourceID = id;
-		binding.shaderRegister = shaderRegister;
-		return *this;
-	}
-
-	PipelineBindings& addUnorderedTexture(const char* name, uint32_t shaderRegister, uint32_t mipLevel)
-	{
-		return addUnorderedTexture(strID(name), shaderRegister, mipLevel);
-	}
-	PipelineBindings& addUnorderedTexture(strID id, uint32_t shaderRegister, uint32_t mipLevel)
-	{
-		Binding& binding = unorderedTextures.add();
-		binding.resource.resourceID = id;
-		binding.shaderRegister = shaderRegister;
-		binding.mipLevel = mipLevel;
-		return *this;
-	}
-};
-
 // Renderer
 // ------------------------------------------------------------------------------------------------
 
@@ -170,12 +81,6 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	void renderImguiUI() noexcept;
-
-	// High level command list methods
-	// --------------------------------------------------------------------------------------------
-
-	HighLevelCmdList beginCommandList(const char* cmdListName);
-	void executeCommandList(HighLevelCmdList cmdList);
 
 	// Resource methods
 	// --------------------------------------------------------------------------------------------
@@ -225,96 +130,20 @@ public:
 	// WARNING: This must NOT be called between frameBegin() and frameFinish().
 	void removeMeshGpuBlocking(strID id) noexcept;
 
-	// Stage methods
+	// Render methods
 	// --------------------------------------------------------------------------------------------
 
 	// Begins the frame, must be called before any other stage methods are called for a given frame.
-	void frameBegin() noexcept;
+	void frameBegin();
 
-	// Returns whether in stage input mode (stageBeginInput(), stageEndInput()) or not. Mainly
-	// used to internally validate state, but might be useful for users of renderer in some
-	// contexts.
-	bool inStageInputMode() const noexcept;
-
-	// Enables the specified stage for input through the renderer's interface.
-	//
-	// Note that this does not mean that stages are executing sequentially (they might be executing
-	// simulatenously if there are no stage barriers between them), it just means that the renderer
-	// only accepts input for the specified stage until endStageInput() is called.
-	void stageBeginInput(const char* stageName) noexcept;
-
-	void stageSetFramebuffer(const char* framebufferName) noexcept;
-	void stageSetFramebufferDefault() noexcept;
-
-	// Uploads data to a streaming buffer
-	void stageUploadToStreamingBufferUntyped(
-		const char* bufferName, const void* data, uint32_t elementSize, uint32_t numElements) noexcept;
-
-	template<typename T>
-	void stageUploadToStreamingBuffer(
-		const char* bufferName, const T* data, uint32_t numElements) noexcept
-	{
-		stageUploadToStreamingBufferUntyped(bufferName, data, sizeof(T), numElements);
-	}
-
-	void stageClearRenderTargetsOptimal() noexcept;
-
-	void stageClearDepthBufferOptimal() noexcept;
-
-	// Sets a push constant for the currently input active stage
-	void stageSetPushConstantUntyped(
-		uint32_t shaderRegister, const void* data, uint32_t numBytes) noexcept;
-
-	template<typename T>
-	void stageSetPushConstant(uint32_t shaderRegister, const T& data) noexcept
-	{
-		static_assert(sizeof(T) <= 128);
-		stageSetPushConstantUntyped(
-			shaderRegister, &data, sizeof(T));
-	}
-
-	void stageSetBindings(const PipelineBindings& bindings) noexcept;
-
-	void stageSetVertexBuffer(const char* bufferName) noexcept;
-	void stageSetIndexBuffer(
-		const char* bufferName, ZgIndexBufferType indexBufferType = ZG_INDEX_BUFFER_TYPE_UINT32) noexcept;
-
-	void stageSetIndexBuffer(zg::Buffer& buffer,
-		ZgIndexBufferType indexBufferType = ZG_INDEX_BUFFER_TYPE_UINT32) noexcept;
-	void stageSetVertexBuffer(uint32_t slot, zg::Buffer& buffer) noexcept;
-
-	void stageSetIndexBuffer(PoolHandle handle, ZgIndexBufferType = ZG_INDEX_BUFFER_TYPE_UINT32);
-	void stageSetVertexBuffer(uint32_t slot, PoolHandle handle);
-
-	void stageDrawTriangles(uint32_t startVertex, uint32_t numVertices) noexcept;
-	void stageDrawTrianglesIndexed(uint32_t firstIndex, uint32_t numIndices) noexcept;
-
-	// Inserts an unordered barrier. Basically says that all writes to an unordered resource (or
-	// all of them) must be finished before the resource is read from again.
-	void stageUnorderedBarrierAll() noexcept;
-	void stageUnorderedBarrierBuffer(const char* bufferName) noexcept;
-	void stageUnorderedBarrierTexture(const char* textureName) noexcept;
-
-	// Gets the group dimensions of the compute pipeline associated with the currently active stage.
-	vec3_i32 stageGetComputeGroupDims() noexcept;
-
-	// Runs a compute pipeline with the specified number of groups.
-	void stageDispatchComputeNoAutoBindings(
-		uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) noexcept;
-
-	// Ends user-input for the specified stage.
-	void stageEndInput() noexcept;
-
-	// Progress to the next stage group
-	bool frameProgressNextStageGroup() noexcept;
+	// Command list methods
+	HighLevelCmdList beginCommandList(const char* cmdListName);
+	void executeCommandList(HighLevelCmdList cmdList);
 
 	// Finished the frame, no additional stage methods may be called after this.
-	void frameFinish() noexcept;
+	void frameFinish();
 
-	// Private members
-	// --------------------------------------------------------------------------------------------
 private:
-
 	RendererState* mState = nullptr;
 };
 

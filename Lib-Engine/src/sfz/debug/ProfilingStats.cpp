@@ -107,7 +107,7 @@ const char* const* ProfilingStats::labels(const char* category) const noexcept
 	return cat->labelStrings.data();
 }
 
-bool ProfilingStats::categoryExists(const char* category, const char* label) const noexcept
+bool ProfilingStats::categoryExists(const char* category) const noexcept
 {
 	const StatsCategory* cat = mState->categories.get(category);
 	return cat != nullptr;

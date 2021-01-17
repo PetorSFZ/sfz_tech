@@ -136,8 +136,6 @@ static PipelineBlendMode blendModeFromString(const str256& str) noexcept
 
 bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 {
-	RendererConfigurableState& configurable = state.configurable;
-
 	// Attempt to parse JSON file containing game common
 	ParsedJson json = ParsedJson::parseFile(configPath, state.allocator);
 	if (!json.isValid()) {
@@ -150,8 +148,8 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 	if (!root.accessMap("render_pipelines").isValid()) return false;
 
 	// Store path to configuration
-	configurable.configPath.clear();
-	configurable.configPath.appendf("%s", configPath);
+	state.configPath.clear();
+	state.configPath.appendf("%s", configPath);
 
 	ShaderManager& shaders = getShaderManager();
 
@@ -338,59 +336,6 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		bool buildSuccess = shader.build();
 		sfz_assert(buildSuccess);
 		shaders.addShader(std::move(shader));
-	}
-
-	// Present queue
-	{
-		strID defaultId = strID("default");
-
-		JsonNode presentGroupsNode = root.accessMap("present_stage_groups");
-		const uint32_t numGroups = presentGroupsNode.arrayLength();
-		
-		// Allocate memory for stage groups
-		configurable.presentStageGroups.init(numGroups, state.allocator, sfz_dbg(""));
-
-		// Parse stage groups
-		for (uint32_t groupIdx = 0; groupIdx < numGroups; groupIdx++) {
-			JsonNode groupNode = presentGroupsNode.accessArray(groupIdx);
-
-			// Create group and read its name
-			StageGroup& group = configurable.presentStageGroups.add();
-			group.groupName = strID(CHECK_JSON groupNode.accessMap("group_name").valueStr256());
-
-			// Get number of stages and allocate memory for them
-			JsonNode stages = groupNode.accessMap("stages");
-			const uint32_t numStages = stages.arrayLength();
-			group.stages.init(numStages, state.allocator, sfz_dbg(""));
-
-			// Stages
-			for (uint32_t stageIdx = 0; stageIdx < numStages; stageIdx++) {
-				JsonNode stageNode = stages.accessArray(stageIdx);
-				Stage& stage = group.stages.add();
-
-				str256 stageName = CHECK_JSON stageNode.accessMap("stage_name").valueStr256();
-				stage.name = strID(stageName);
-
-				str256 stageType = CHECK_JSON stageNode.accessMap("stage_type").valueStr256();
-				if (stageType == "USER_INPUT_RENDERING") stage.type = StageType::USER_INPUT_RENDERING;
-				else if (stageType == "USER_INPUT_COMPUTE") stage.type = StageType::USER_INPUT_COMPUTE;
-				else return false;
-
-				if (stage.type == StageType::USER_INPUT_RENDERING) {
-					str256 renderPipelineName =
-						CHECK_JSON stageNode.accessMap("render_pipeline").valueStr256();
-					stage.pipelineName = strID(renderPipelineName);
-				}
-				else if (stage.type == StageType::USER_INPUT_COMPUTE) {
-					str256 computePipelineName =
-						CHECK_JSON stageNode.accessMap("compute_pipeline").valueStr256();
-					stage.pipelineName = strID(computePipelineName);
-				}
-				else {
-					sfz_assert(false);
-				}
-			}
-		}
 	}
 
 	return true;

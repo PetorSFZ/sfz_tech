@@ -133,10 +133,6 @@ bool Renderer::loadConfiguration(const char* jsonConfigPath) noexcept
 	stats.createCategory("gpu", 300, 66.7f, "ms", "frame", 20.0f,
 		StatsVisualizationType::FIRST_INDIVIDUALLY_REST_ADDED);
 	stats.createLabel("gpu", "frametime", vec4(1.0f, 0.0f, 0.0f, 1.0f), 0.0f);
-	for (const StageGroup& group : mState->configurable.presentStageGroups) {
-		const char* label = group.groupName.str();
-		stats.createLabel("gpu", label);
-	}
 	stats.createLabel("gpu", "imgui");
 
 	return true;
@@ -191,62 +187,6 @@ void Renderer::frameTimeMs(uint64_t& frameIdxOut, float& frameTimeMsOut) const n
 void Renderer::renderImguiUI() noexcept
 {
 	mState->ui.render(*mState);
-}
-
-// High level command list methods
-// --------------------------------------------------------------------------------------------
-
-HighLevelCmdList Renderer::beginCommandList(const char* cmdListName)
-{
-	// Create profiling stats label if it doesn't exist
-	ProfilingStats& stats = getProfilingStats();
-	if (!stats.labelExists("gpu", cmdListName)) {
-		stats.createLabel("gpu", cmdListName);
-	}
-
-	// Begin ZeroG command list on present queue
-	zg::CommandList zgCmdList;
-	CHECK_ZG mState->presentQueue.beginCommandListRecording(zgCmdList);
-
-	// Add event
-	if (mState->emitDebugEvents->boolValue()) {
-		CHECK_ZG zgCmdList.beginEvent(cmdListName);
-	}
-
-	// Insert call to profile begin
-	FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
-	GroupProfilingID& groupId = frameIds.groupIds.add();
-	groupId.groupName = strID(cmdListName);
-	CHECK_ZG zgCmdList.profileBegin(mState->profiler, groupId.id);
-
-	// Create high level command list
-	HighLevelCmdList cmdList;
-	cmdList.init(cmdListName, mState->currentFrameIdx, std::move(zgCmdList), &mState->windowFramebuffer);
-
-	return cmdList;
-}
-
-void Renderer::executeCommandList(HighLevelCmdList cmdList)
-{
-	sfz_assert(cmdList.mCmdList.valid());
-
-	// Insert profile end call
-	FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
-	strID cmdListName = cmdList.mName;
-	GroupProfilingID* groupId = frameIds.groupIds.find([&](const GroupProfilingID& e) {
-		return e.groupName == cmdListName;
-	});
-	sfz_assert(groupId != nullptr);
-	sfz_assert(groupId->id != ~0ull);
-	CHECK_ZG cmdList.mCmdList.profileEnd(mState->profiler, groupId->id);
-
-	// Insert event end call
-	if (mState->emitDebugEvents->boolValue()) {
-		CHECK_ZG cmdList.mCmdList.endEvent();
-	}
-
-	// Execute command list
-	CHECK_ZG mState->presentQueue.executeCommandList(cmdList.mCmdList);
 }
 
 // Renderer: Resource methods
@@ -320,10 +260,10 @@ void Renderer::removeMeshGpuBlocking(strID id) noexcept
 	resources.removeMesh(id);
 }
 
-// Renderer: Methods
+// Renderer: Render methods
 // ------------------------------------------------------------------------------------------------
 
-void Renderer::frameBegin() noexcept
+void Renderer::frameBegin()
 {
 	// Increment frame index
 	mState->currentFrameIdx += 1;
@@ -394,555 +334,68 @@ void Renderer::frameBegin() noexcept
 	sfz_assert(!mState->windowFramebuffer.valid());
 	CHECK_ZG zgContextSwapchainBeginFrame(
 		&mState->windowFramebuffer.handle, mState->profiler.handle, &frameIds.frameId);
-
-	// Set current stage group and stage to first
-	mState->currentStageGroupIdx = 0;
 }
 
-bool Renderer::inStageInputMode() const noexcept
+HighLevelCmdList Renderer::beginCommandList(const char* cmdListName)
 {
-	return mState->inputEnabled.inInputMode;
-}
-
-void Renderer::stageBeginInput(const char* stageName) noexcept
-{
-	// Ensure no stage is currently set to accept input
-	sfz_assert(!inStageInputMode());
-	if (inStageInputMode()) return;
-
-	strID stageNameID = strID(stageName);
-
-	// Find stage
-	uint32_t stageIdx = mState->findActiveStageIdx(stageNameID);
-	sfz_assert(stageIdx != ~0u);
-	if (stageIdx == ~0u) return;
-
-	Stage& stage = mState->configurable.presentStageGroups[mState->currentStageGroupIdx].stages[stageIdx];
-	ShaderManager& shaders = getShaderManager();
-	Shader* shader = shaders.getShader(shaders.getShaderHandle(stage.pipelineName));
-	sfz_assert(shader != nullptr);
-
-	// Set currently active stage
-	mState->inputEnabled.inInputMode = true;
-	mState->inputEnabled.stageIdx = stageIdx;
-	mState->inputEnabled.stage = &stage;
-
-	// If group's command list has not yet been created, create it
-	zg::CommandList& cmdList = mState->groupCmdList;
-	if (!cmdList.valid()) {
-
-		// Begin command list
-		CHECK_ZG mState->presentQueue.beginCommandListRecording(cmdList);
-
-		// Since first usage of this group, insert call to profile begin
-		FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
-		sfz_assert(frameIds.groupIds.size() <= mState->currentStageGroupIdx);
-		GroupProfilingID& groupId = frameIds.groupIds.add();
-		groupId.groupName =
-			mState->configurable.presentStageGroups[mState->currentStageGroupIdx].groupName;
-		CHECK_ZG cmdList.profileBegin(mState->profiler, groupId.id);
-
-		// Add event
-		if (mState->emitDebugEvents->boolValue()) {
-			CHECK_ZG cmdList.beginEvent(groupId.groupName.str());
-		}
+	// Create profiling stats label if it doesn't exist
+	ProfilingStats& stats = getProfilingStats();
+	if (!stats.labelExists("gpu", cmdListName)) {
+		stats.createLabel("gpu", cmdListName);
 	}
+
+	// Begin ZeroG command list on present queue
+	zg::CommandList zgCmdList;
+	CHECK_ZG mState->presentQueue.beginCommandListRecording(zgCmdList);
 
 	// Add event
 	if (mState->emitDebugEvents->boolValue()) {
-		CHECK_ZG cmdList.beginEvent(stageName);
+		CHECK_ZG zgCmdList.beginEvent(cmdListName);
 	}
 
-	// Set pipeline
-	if (stage.type == StageType::USER_INPUT_RENDERING) {
-		sfz_assert(shader->type == ShaderType::RENDER);
-		sfz_assert(shader->render.pipeline.valid());
-		CHECK_ZG cmdList.setPipeline(shader->render.pipeline);
-	}
-	else if (stage.type == StageType::USER_INPUT_COMPUTE) {
-		sfz_assert(shader->type == ShaderType::COMPUTE);
-		sfz_assert(shader->compute.pipeline.valid());
-		CHECK_ZG cmdList.setPipeline(shader->compute.pipeline);
-	}
-	else {
-		sfz_assert(false);
-	}
+	// Insert call to profile begin
+	FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
+	GroupProfilingID& groupId = frameIds.groupIds.add();
+	groupId.groupName = strID(cmdListName);
+	CHECK_ZG zgCmdList.profileBegin(mState->profiler, groupId.id);
+
+	// Create high level command list
+	HighLevelCmdList cmdList;
+	cmdList.init(cmdListName, mState->currentFrameIdx, std::move(zgCmdList), &mState->windowFramebuffer);
+
+	return cmdList;
 }
 
-void Renderer::stageSetFramebuffer(const char* framebufferName) noexcept
+void Renderer::executeCommandList(HighLevelCmdList cmdList)
 {
-	sfz_assert(inStageInputMode());
-	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
+	sfz_assert(cmdList.mCmdList.valid());
 
-	ResourceManager& resources = getResourceManager();
-	FramebufferResource* fb = resources.getFramebuffer(resources.getFramebufferHandle(framebufferName));
-	sfz_assert(fb != nullptr);
-	CHECK_ZG mState->groupCmdList.setFramebuffer(fb->framebuffer);
-}
-
-void Renderer::stageSetFramebufferDefault() noexcept
-{
-	sfz_assert(inStageInputMode());
-	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
-	CHECK_ZG mState->groupCmdList.setFramebuffer(mState->windowFramebuffer);
-}
-
-void Renderer::stageUploadToStreamingBufferUntyped(
-	const char* bufferName, const void* data, uint32_t elementSize, uint32_t numElements) noexcept
-{
-	sfz_assert(inStageInputMode());
-	
-	// Get streaming buffer
-	ResourceManager& resources = getResourceManager();
-	BufferResource* resource = resources.getBuffer(resources.getBufferHandle(bufferName));
-	sfz_assert(resource != nullptr);
-	sfz_assert(resource->type == BufferResourceType::STREAMING);
-
-	// Calculate number of bytes to copy to streaming buffer
-	const uint32_t numBytes = elementSize * numElements;
-	sfz_assert(numBytes != 0);
-	sfz_assert(numBytes <= (resource->elementSizeBytes * resource->maxNumElements));
-	sfz_assert(elementSize == resource->elementSizeBytes); // TODO: Might want to remove this assert
-
-	// Grab this frame's memory
-	StreamingBufferMemory& memory = resource->streamingMem.data(mState->currentFrameIdx);
-
-	// Only allowed to upload to streaming buffer once per frame
-	sfz_assert(memory.lastFrameIdxTouched < mState->currentFrameIdx);
-	memory.lastFrameIdxTouched = mState->currentFrameIdx;
-
-	// Memcpy to upload buffer
-	CHECK_ZG memory.uploadBuffer.memcpyUpload(0, data, numBytes);
-
-	// Schedule memcpy from upload buffer to device buffer
-	CHECK_ZG mState->groupCmdList.memcpyBufferToBuffer(
-		memory.deviceBuffer, 0, memory.uploadBuffer, 0, numBytes);
-}
-
-void Renderer::stageClearRenderTargetsOptimal() noexcept
-{
-	sfz_assert(inStageInputMode());
-	CHECK_ZG mState->groupCmdList.clearRenderTargetsOptimal();
-}
-
-void Renderer::stageClearDepthBufferOptimal() noexcept
-{
-	sfz_assert(inStageInputMode());
-	CHECK_ZG mState->groupCmdList.clearDepthBufferOptimal();
-}
-
-void Renderer::stageSetPushConstantUntyped(
-	uint32_t shaderRegister, const void* data, uint32_t numBytes) noexcept
-{
-	sfz_assert(inStageInputMode());
-	sfz_assert(data != nullptr);
-	sfz_assert(numBytes > 0);
-	sfz_assert(numBytes <= 128);
-
-	// In debug mode, validate that the specified shader registers corresponds to a a suitable
-	// push constant in the pipeline
-#ifndef NDEBUG
-	ShaderManager& shaders = getShaderManager();
-	Shader* shader = shaders.getShader(shaders.getShaderHandle(mState->inputEnabled.stage->pipelineName));
-	sfz_assert(shader != nullptr);
-
-	ZgPipelineBindingsSignature signature = {};
-	if (mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING) {
-		sfz_assert(shader->type == ShaderType::RENDER);
-		signature = shader->render.pipeline.getSignature().bindings;
-	}
-	else if (mState->inputEnabled.stage->type == StageType::USER_INPUT_COMPUTE) {
-		sfz_assert(shader->type == ShaderType::COMPUTE);
-		signature = shader->compute.pipeline.getBindingsSignature();
-	}
-	else {
-		sfz_assert(false);
-	}
-	
-	uint32_t bufferIdx = ~0u;
-	for (uint32_t i = 0; i < signature.numConstBuffers; i++) {
-		if (shaderRegister == signature.constBuffers[i].bufferRegister) {
-			bufferIdx = i;
-			break;
-		}
-	}
-	
-	sfz_assert(bufferIdx != ~0u);
-	sfz_assert(signature.constBuffers[bufferIdx].pushConstant == ZG_TRUE);
-	sfz_assert(signature.constBuffers[bufferIdx].sizeInBytes >= numBytes);
-#endif
-
-	CHECK_ZG mState->groupCmdList.setPushConstant(shaderRegister, data, numBytes);
-}
-
-void Renderer::stageSetBindings(const PipelineBindings& bindings) noexcept
-{
-	ResourceManager& resources = getResourceManager();
-	zg::PipelineBindings zgBindings;
-	
-	// Constant buffers
-	for (const Binding& binding : bindings.constBuffers) {
-		
-		ZgBuffer* buffer = nullptr;
-		if (binding.type == BindingResourceType::ID) {
-			
-			BufferResource* resource =
-				resources.getBuffer(resources.getBufferHandle(binding.resource.resourceID));
-			sfz_assert(resource != nullptr);
-
-			if (resource->type == BufferResourceType::STATIC) {
-				buffer = resource->staticMem.buffer.handle;
-			}
-			else if (resource->type == BufferResourceType::STREAMING) {
-				buffer = resource->streamingMem.data(mState->currentFrameIdx).deviceBuffer.handle;
-			}
-			else {
-				sfz_assert(false);
-			}
-		}
-		else if (binding.type == BindingResourceType::RAW_BUFFER) {
-			buffer = binding.resource.rawBuffer;
-		}
-		sfz_assert(buffer != nullptr);
-
-		sfz_assert(binding.shaderRegister != ~0u);
-		ZgConstantBufferBinding cbufferBinding = {};
-		cbufferBinding.buffer = buffer;
-		cbufferBinding.bufferRegister = binding.shaderRegister;
-		zgBindings.addConstantBuffer(cbufferBinding);
-	}
-
-	// Textures
-	for (const Binding& binding : bindings.textures) {
-		sfz_assert(binding.type == BindingResourceType::ID);
-
-		TextureResource* tex =
-			resources.getTexture(resources.getTextureHandle(binding.resource.resourceID));
-		sfz_assert(tex != nullptr);
-		sfz_assert(binding.shaderRegister != ~0u);
-		zgBindings.addTexture(binding.shaderRegister, tex->texture);
-	}
-
-	// Unordered buffers
-	for (const Binding& binding : bindings.unorderedBuffers) {
-		sfz_assert(binding.type == BindingResourceType::ID);
-
-		BufferResource* resource =
-			resources.getBuffer(resources.getBufferHandle(binding.resource.resourceID));
-		sfz_assert(resource != nullptr);
-
-		zg::Buffer* buffer = nullptr;
-		if (resource->type == BufferResourceType::STATIC) {
-			buffer = &resource->staticMem.buffer;
-		}
-		else if (resource->type == BufferResourceType::STREAMING) {
-			buffer = &resource->streamingMem.data(mState->currentFrameIdx).deviceBuffer;
-		}
-		else {
-			sfz_assert(false);
-		}
-
-		sfz_assert(binding.shaderRegister != ~0u);
-		zgBindings.addUnorderedBuffer(
-			binding.shaderRegister, resource->maxNumElements, resource->elementSizeBytes, *buffer);
-	}
-
-	// Unordered textures
-	for (const Binding& binding : bindings.unorderedTextures) {
-		sfz_assert(binding.type == BindingResourceType::ID);
-
-		TextureResource* tex =
-			resources.getTexture(resources.getTextureHandle(binding.resource.resourceID));
-		sfz_assert(tex != nullptr);
-		sfz_assert(binding.shaderRegister != ~0u);
-		zgBindings.addUnorderedTexture(binding.shaderRegister, binding.mipLevel, tex->texture);
-	}
-
-	CHECK_ZG mState->groupCmdList.setPipelineBindings(zgBindings);
-}
-
-void Renderer::stageSetVertexBuffer(const char* bufferName) noexcept
-{
-	sfz_assert(inStageInputMode());
-	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
-	ResourceManager& resources = getResourceManager();
-
-	// Grab buffer
-	BufferResource* resource =
-		resources.getBuffer(resources.getBufferHandle(bufferName));
-	sfz_assert(resource != nullptr);
-
-	zg::Buffer* buffer = nullptr;
-	if (resource->type == BufferResourceType::STATIC) {
-		buffer = &resource->staticMem.buffer;
-	}
-	else if (resource->type == BufferResourceType::STREAMING) {
-		buffer = &resource->streamingMem.data(mState->currentFrameIdx).deviceBuffer;
-	}
-	else {
-		sfz_assert(false);
-	}
-
-	// Set vertex buffer
-	CHECK_ZG mState->groupCmdList.setVertexBuffer(0, *buffer);
-}
-
-void Renderer::stageSetIndexBuffer(const char* bufferName, ZgIndexBufferType indexBufferType) noexcept
-{
-	sfz_assert(inStageInputMode());
-	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
-	ResourceManager& resources = getResourceManager();
-
-	// Grab buffer
-	BufferResource* resource =
-		resources.getBuffer(resources.getBufferHandle(bufferName));
-	sfz_assert(resource != nullptr);
-
-	zg::Buffer* buffer = nullptr;
-	if (resource->type == BufferResourceType::STATIC) {
-		buffer = &resource->staticMem.buffer;
-	}
-	else if (resource->type == BufferResourceType::STREAMING) {
-		buffer = &resource->streamingMem.data(mState->currentFrameIdx).deviceBuffer;
-	}
-	else {
-		sfz_assert(false);
-	}
-
-	// Set index buffer
-	CHECK_ZG mState->groupCmdList.setIndexBuffer(*buffer, indexBufferType);
-}
-
-void Renderer::stageSetIndexBuffer(zg::Buffer& buffer, ZgIndexBufferType indexBufferType) noexcept
-{
-	sfz_assert(inStageInputMode());
-	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
-	CHECK_ZG mState->groupCmdList.setIndexBuffer(buffer, indexBufferType);
-}
-
-void Renderer::stageSetVertexBuffer(uint32_t slot, zg::Buffer& buffer) noexcept
-{
-	sfz_assert(inStageInputMode());
-	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
-	CHECK_ZG mState->groupCmdList.setVertexBuffer(slot, buffer);
-}
-
-void Renderer::stageSetIndexBuffer(PoolHandle handle, ZgIndexBufferType indexBufferType)
-{
-	sfz_assert(inStageInputMode());
-	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
-	ResourceManager& resources = getResourceManager();
-
-	// Grab buffer
-	BufferResource* resource = resources.getBuffer(handle);
-	sfz_assert(resource != nullptr);
-
-	zg::Buffer* buffer = nullptr;
-	if (resource->type == BufferResourceType::STATIC) {
-		buffer = &resource->staticMem.buffer;
-	}
-	else if (resource->type == BufferResourceType::STREAMING) {
-		buffer = &resource->streamingMem.data(mState->currentFrameIdx).deviceBuffer;
-	}
-	else {
-		sfz_assert(false);
-	}
-
-	// Set index buffer
-	CHECK_ZG mState->groupCmdList.setIndexBuffer(*buffer, indexBufferType);
-}
-
-void Renderer::stageSetVertexBuffer(uint32_t slot, PoolHandle handle)
-{
-	sfz_assert(inStageInputMode());
-	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
-	ResourceManager& resources = getResourceManager();
-
-	// Grab buffer
-	BufferResource* resource = resources.getBuffer(handle);
-	sfz_assert(resource != nullptr);
-
-	zg::Buffer* buffer = nullptr;
-	if (resource->type == BufferResourceType::STATIC) {
-		buffer = &resource->staticMem.buffer;
-	}
-	else if (resource->type == BufferResourceType::STREAMING) {
-		buffer = &resource->streamingMem.data(mState->currentFrameIdx).deviceBuffer;
-	}
-	else {
-		sfz_assert(false);
-	}
-
-	// Set vertex buffer
-	CHECK_ZG mState->groupCmdList.setVertexBuffer(slot, *buffer);
-}
-
-void Renderer::stageDrawTriangles(uint32_t startVertex, uint32_t numVertices) noexcept
-{
-	sfz_assert(inStageInputMode());
-	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
-	CHECK_ZG mState->groupCmdList.drawTriangles(startVertex, numVertices);
-}
-
-void Renderer::stageDrawTrianglesIndexed(uint32_t firstIndex, uint32_t numIndices) noexcept
-{
-	sfz_assert(inStageInputMode());
-	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_RENDERING);
-	CHECK_ZG mState->groupCmdList.drawTrianglesIndexed(firstIndex, numIndices);
-}
-
-void Renderer::stageUnorderedBarrierAll() noexcept
-{
-	sfz_assert(inStageInputMode());
-	CHECK_ZG mState->groupCmdList.unorderedBarrier();
-}
-
-void Renderer::stageUnorderedBarrierBuffer(const char* bufferName) noexcept
-{
-	sfz_assert(inStageInputMode());
-	ResourceManager& resources = getResourceManager();
-
-	// Grab buffer
-	BufferResource* resource =
-		resources.getBuffer(resources.getBufferHandle(bufferName));
-	sfz_assert(resource != nullptr);
-
-	zg::Buffer* buffer = nullptr;
-	if (resource->type == BufferResourceType::STATIC) {
-		buffer = &resource->staticMem.buffer;
-	}
-	else if (resource->type == BufferResourceType::STREAMING) {
-		buffer = &resource->streamingMem.data(mState->currentFrameIdx).deviceBuffer;
-	}
-	else {
-		sfz_assert(false);
-	}
-
-	CHECK_ZG mState->groupCmdList.unorderedBarrier(*buffer);
-}
-
-void Renderer::stageUnorderedBarrierTexture(const char* textureName) noexcept
-{
-	sfz_assert(inStageInputMode());
-	ResourceManager& resources = getResourceManager();
-	TextureResource* tex = resources.getTexture(resources.getTextureHandle(textureName));
-	sfz_assert(tex != nullptr);
-	CHECK_ZG mState->groupCmdList.unorderedBarrier(tex->texture);
-}
-
-vec3_i32 Renderer::stageGetComputeGroupDims() noexcept
-{
-	sfz_assert(inStageInputMode());
-	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_COMPUTE);
-
-	ShaderManager& shaders = getShaderManager();
-	Shader* shader = shaders.getShader(shaders.getShaderHandle(mState->inputEnabled.stage->pipelineName));
-	sfz_assert(shader != nullptr);
-	sfz_assert(shader->type == ShaderType::COMPUTE);
-
-	vec3_u32 groupDims;
-	shader->compute.pipeline.getGroupDims(groupDims.x, groupDims.y, groupDims.z);
-	return vec3_i32(groupDims);
-}
-
-void Renderer::stageDispatchComputeNoAutoBindings(
-	uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) noexcept
-{
-	sfz_assert(inStageInputMode());
-	sfz_assert(mState->inputEnabled.stage->type == StageType::USER_INPUT_COMPUTE);
-	sfz_assert(groupCountX > 0);
-	sfz_assert(groupCountY > 0);
-	sfz_assert(groupCountZ > 0);
-
-	// Issue dispatch
-	CHECK_ZG mState->groupCmdList.dispatchCompute(groupCountX, groupCountY, groupCountZ);
-}
-
-void Renderer::stageEndInput() noexcept
-{
-	// Ensure a stage was set to accept input
-	sfz_assert(inStageInputMode());
-	if (!inStageInputMode()) return;
-
-	// Insert compute barrier
-	if (mState->inputEnabled.stage->type == StageType::USER_INPUT_COMPUTE) {
-		// TODO: This is a bit too harsh
-		CHECK_ZG mState->groupCmdList.unorderedBarrier();
-	}
+	// Insert profile end call
+	FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
+	strID cmdListName = cmdList.mName;
+	GroupProfilingID* groupId = frameIds.groupIds.find([&](const GroupProfilingID& e) {
+		return e.groupName == cmdListName;
+	});
+	sfz_assert(groupId != nullptr);
+	sfz_assert(groupId->id != ~0ull);
+	CHECK_ZG cmdList.mCmdList.profileEnd(mState->profiler, groupId->id);
 
 	// Insert event end call
 	if (mState->emitDebugEvents->boolValue()) {
-		CHECK_ZG mState->groupCmdList.endEvent();
+		CHECK_ZG cmdList.mCmdList.endEvent();
 	}
 
-	// Clear currently active stage info
-	mState->inputEnabled = {};
+	// Execute command list
+	CHECK_ZG mState->presentQueue.executeCommandList(cmdList.mCmdList);
 }
 
-bool Renderer::frameProgressNextStageGroup() noexcept
-{
-	sfz_assert(!inStageInputMode());
-
-	zg::CommandList& cmdList = mState->groupCmdList;
-	if (cmdList.valid()) {
-		FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
-
-		// Insert profile end call
-		strID groupName = mState->configurable.presentStageGroups[mState->currentStageGroupIdx].groupName;
-		GroupProfilingID* groupId = frameIds.groupIds.find([&](const GroupProfilingID& e) {
-			return e.groupName == groupName;
-		});
-		sfz_assert(groupId != nullptr);
-		sfz_assert(groupId->id != ~0ull);
-		CHECK_ZG cmdList.profileEnd(mState->profiler, groupId->id);
-
-		// Insert event end call
-		if (mState->emitDebugEvents->boolValue()) {
-			CHECK_ZG cmdList.endEvent();
-		}
-
-		// Execute command list
-		// TODO: We should probably execute all of the frame's command lists simulatenously instead of
-		//       one by one
-		CHECK_ZG mState->presentQueue.executeCommandList(cmdList);
-	}
-
-	// Move to next stage group
-	mState->currentStageGroupIdx += 1;
-	sfz_assert(mState->currentStageGroupIdx < mState->configurable.presentStageGroups.size());
-	
-	return true;
-}
-
-void Renderer::frameFinish() noexcept
+void Renderer::frameFinish()
 {
 	FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
 
-	zg::CommandList& cmdList = mState->groupCmdList;
-	
-	// End last stage group
-	if (cmdList.valid()) {
-
-		// Insert profile end call
-		strID groupName = mState->configurable.presentStageGroups[mState->currentStageGroupIdx].groupName;
-		GroupProfilingID* groupId = frameIds.groupIds.find([&](const GroupProfilingID& e) {
-			return e.groupName == groupName;
-		});
-		sfz_assert(groupId != nullptr);
-		sfz_assert(groupId->id != ~0ull);
-		CHECK_ZG cmdList.profileEnd(mState->profiler, groupId->id);
-
-		// Insert event end call
-		if (mState->emitDebugEvents->boolValue()) {
-			CHECK_ZG cmdList.endEvent();
-		}
-	}
-
-	// If no command list, start one just to finish the frame
-	else {
-		CHECK_ZG mState->presentQueue.beginCommandListRecording(cmdList);
-		CHECK_ZG cmdList.setFramebuffer(mState->windowFramebuffer);
-	}
+	zg::CommandList cmdList;
+	CHECK_ZG mState->presentQueue.beginCommandListRecording(cmdList);
+	CHECK_ZG cmdList.setFramebuffer(mState->windowFramebuffer);
 
 	// Render ImGui
 	zg::imguiRender(
