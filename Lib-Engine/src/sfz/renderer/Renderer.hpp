@@ -28,6 +28,7 @@
 #include <ZeroG.h>
 
 #include "sfz/Context.hpp"
+#include "sfz/renderer/HighLevelCmdList.hpp"
 #include "sfz/rendering/Mesh.hpp"
 
 // Forward declarations
@@ -169,6 +170,12 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	void renderImguiUI() noexcept;
+
+	// High level command list methods
+	// --------------------------------------------------------------------------------------------
+
+	HighLevelCmdList beginCommandList(const char* cmdListName);
+	void executeCommandList(HighLevelCmdList cmdList);
 
 	// Resource methods
 	// --------------------------------------------------------------------------------------------

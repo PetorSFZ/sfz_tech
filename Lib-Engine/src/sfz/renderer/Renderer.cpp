@@ -193,6 +193,62 @@ void Renderer::renderImguiUI() noexcept
 	mState->ui.render(*mState);
 }
 
+// High level command list methods
+// --------------------------------------------------------------------------------------------
+
+HighLevelCmdList Renderer::beginCommandList(const char* cmdListName)
+{
+	// Create profiling stats label if it doesn't exist
+	ProfilingStats& stats = getProfilingStats();
+	if (!stats.labelExists("gpu", cmdListName)) {
+		stats.createLabel("gpu", cmdListName);
+	}
+
+	// Begin ZeroG command list on present queue
+	zg::CommandList zgCmdList;
+	CHECK_ZG mState->presentQueue.beginCommandListRecording(zgCmdList);
+
+	// Add event
+	if (mState->emitDebugEvents->boolValue()) {
+		CHECK_ZG zgCmdList.beginEvent(cmdListName);
+	}
+
+	// Insert call to profile begin
+	FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
+	GroupProfilingID& groupId = frameIds.groupIds.add();
+	groupId.groupName = strID(cmdListName);
+	CHECK_ZG zgCmdList.profileBegin(mState->profiler, groupId.id);
+
+	// Create high level command list
+	HighLevelCmdList cmdList;
+	cmdList.init(cmdListName, mState->currentFrameIdx, std::move(zgCmdList), &mState->windowFramebuffer);
+
+	return cmdList;
+}
+
+void Renderer::executeCommandList(HighLevelCmdList cmdList)
+{
+	sfz_assert(cmdList.mCmdList.valid());
+
+	// Insert profile end call
+	FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
+	strID cmdListName = cmdList.mName;
+	GroupProfilingID* groupId = frameIds.groupIds.find([&](const GroupProfilingID& e) {
+		return e.groupName == cmdListName;
+	});
+	sfz_assert(groupId != nullptr);
+	sfz_assert(groupId->id != ~0ull);
+	CHECK_ZG cmdList.mCmdList.profileEnd(mState->profiler, groupId->id);
+
+	// Insert event end call
+	if (mState->emitDebugEvents->boolValue()) {
+		CHECK_ZG cmdList.mCmdList.endEvent();
+	}
+
+	// Execute command list
+	CHECK_ZG mState->presentQueue.executeCommandList(cmdList.mCmdList);
+}
+
 // Renderer: Resource methods
 // ------------------------------------------------------------------------------------------------
 

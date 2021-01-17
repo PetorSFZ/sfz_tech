@@ -265,6 +265,8 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/renderer/BuiltInShaderTypes.hpp
 	${SRC_DIR}/sfz/renderer/CascadedShadowMaps.hpp
 	${SRC_DIR}/sfz/renderer/CascadedShadowMaps.cpp
+	${SRC_DIR}/sfz/renderer/HighLevelCmdList.hpp
+	${SRC_DIR}/sfz/renderer/HighLevelCmdList.cpp
 	${SRC_DIR}/sfz/renderer/Renderer.hpp
 	${SRC_DIR}/sfz/renderer/Renderer.cpp
 	${SRC_DIR}/sfz/renderer/RendererConfigParser.hpp
