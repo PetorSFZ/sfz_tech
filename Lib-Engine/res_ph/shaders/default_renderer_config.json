@@ -116,58 +116,5 @@
 				}
 			]
 		}
-	],
-
-	"present_stage_groups": [
-		{
-			"group_name": "GBuffer + Cascaded Shadows",
-			"stages": [
-				{
-					"stage_name": "GBuffer Pass",
-					"stage_type": "USER_INPUT_RENDERING",
-					"render_pipeline": "GBuffer Generation"
-				},
-				{
-					"stage_name": "Directional Shadow Map Pass 1",
-					"stage_type": "USER_INPUT_RENDERING",
-					"render_pipeline": "Shadow Map Generation"
-				},
-				{
-					"stage_name": "Directional Shadow Map Pass 2",
-					"stage_type": "USER_INPUT_RENDERING",
-					"render_pipeline": "Shadow Map Generation"
-				},
-				{
-					"stage_name": "Directional Shadow Map Pass 3",
-					"stage_type": "USER_INPUT_RENDERING",
-					"render_pipeline": "Shadow Map Generation"
-				}
-			]
-		},
-		{
-			"group_name": "Shading",
-			"stages": [
-				{
-					"stage_name": "Directional Shading Pass",
-					"stage_type": "USER_INPUT_COMPUTE",
-					"compute_pipeline": "Directional Shading"
-				},
-				{
-					"stage_name": "Point Light Shading Pass",
-					"stage_type": "USER_INPUT_COMPUTE",
-					"compute_pipeline": "Point Light Shading"
-				}
-			]
-		},
-		{
-			"group_name": "Copy Out",
-			"stages": [
-				{
-					"stage_name": "Copy Out Pass",
-					"stage_type": "USER_INPUT_RENDERING",
-					"render_pipeline": "Copy Out Shader"
-				}
-			]
-		}
 	]
 }
