@@ -1432,9 +1432,9 @@ static ZgResult createPipelineRenderInternal(
 		// Essentially tokens are sent to Device->CreatePipelineState(), it does not matter
 		// what order the tokens are sent in. For this reason we create our own struct with
 		// the tokens we care about.
-		struct PipelineStateStream {
+		struct PipelineStateStreamNoInputLayout {
 			CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE rootSignature;
-			CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT inputLayout;
+			
 			CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY primitiveTopology;
 			CD3DX12_PIPELINE_STATE_STREAM_VS vertexShader;
 			CD3DX12_PIPELINE_STATE_STREAM_PS pixelShader;
@@ -1444,16 +1444,15 @@ static ZgResult createPipelineRenderInternal(
 			CD3DX12_PIPELINE_STATE_STREAM_BLEND_DESC blending;
 			CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL1 depthStencil;
 		};
+		
+		struct PipelineStateStream {
+			PipelineStateStreamNoInputLayout stream;
+			CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT inputLayout;
+		};
 
 		// Create our token stream and set root signature
-		PipelineStateStream stream = {};
+		PipelineStateStreamNoInputLayout stream = {};
 		stream.rootSignature = rootSignature.rootSignature.Get();
-
-		// Set input layout
-		D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = {};
-		inputLayoutDesc.pInputElementDescs = attributes.data();
-		inputLayoutDesc.NumElements = attributes.size();
-		stream.inputLayout = inputLayoutDesc;
 
 		// Set primitive topology
 		// We only allow triangles for now
@@ -1523,12 +1522,30 @@ static ZgResult createPipelineRenderInternal(
 		depthStencilDesc.DepthBoundsTestEnable = FALSE;
 		stream.depthStencil = CD3DX12_DEPTH_STENCIL_DESC1(depthStencilDesc);
 
-		// Create pipeline state
-		D3D12_PIPELINE_STATE_STREAM_DESC streamDesc = {};
-		streamDesc.pPipelineStateSubobjectStream = &stream;
-		streamDesc.SizeInBytes = sizeof(PipelineStateStream);
-		if (D3D12_FAIL(device.CreatePipelineState(&streamDesc, IID_PPV_ARGS(&pipelineState)))) {
-			return ZG_ERROR_GENERIC;
+		// Create pipeline state, different paths depending on if there is an input layout or not.
+		if (!attributes.isEmpty()) {
+			PipelineStateStream inputLayoutStream = {};
+			inputLayoutStream.stream = stream;
+
+			D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = {};
+			inputLayoutDesc.pInputElementDescs = attributes.data();
+			inputLayoutDesc.NumElements = attributes.size();
+			inputLayoutStream.inputLayout = inputLayoutDesc;
+
+			D3D12_PIPELINE_STATE_STREAM_DESC streamDesc = {};
+			streamDesc.pPipelineStateSubobjectStream = &inputLayoutStream;
+			streamDesc.SizeInBytes = sizeof(PipelineStateStream);
+			if (D3D12_FAIL(device.CreatePipelineState(&streamDesc, IID_PPV_ARGS(&pipelineState)))) {
+				return ZG_ERROR_GENERIC;
+			}
+		}
+		else {
+			D3D12_PIPELINE_STATE_STREAM_DESC streamDesc = {};
+			streamDesc.pPipelineStateSubobjectStream = &stream;
+			streamDesc.SizeInBytes = sizeof(PipelineStateStreamNoInputLayout);
+			if (D3D12_FAIL(device.CreatePipelineState(&streamDesc, IID_PPV_ARGS(&pipelineState)))) {
+				return ZG_ERROR_GENERIC;
+			}
 		}
 	}
 
