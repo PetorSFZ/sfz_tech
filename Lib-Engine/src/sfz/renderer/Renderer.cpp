@@ -294,6 +294,7 @@ void Renderer::frameBegin()
 		float imguiTimeMs = 0.0f;
 		CHECK_ZG mState->profiler.getMeasurement(frameIds.imguiId, imguiTimeMs);
 		stats.addSample("gpu", "imgui", frameIdx, imguiTimeMs);
+		frameIds.imguiId = ~0ull;
 	}
 	frameIds.groupIds.clear();
 
