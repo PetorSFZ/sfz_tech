@@ -47,7 +47,8 @@ struct TextureResource final {
 	float resolutionScale = 1.0f;
 	Setting* resolutionScaleSetting = nullptr;
 
-	[[nodiscard]] ZgResult build(vec2_u32 screenRes, bool* rebuilt = nullptr);
+	bool needRebuild(vec2_u32 screenRes) const;
+	[[nodiscard]] ZgResult build(vec2_u32 screenRes);
 
 	void uploadBlocking(
 		const ImageViewConst& image,

@@ -18,6 +18,7 @@
 
 #include "sfz/resources/ResourceManager.hpp"
 
+#include "sfz/Logging.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
 #include "sfz/resources/FramebufferResource.hpp"
 #include "sfz/resources/ResourceManagerState.hpp"
@@ -89,19 +90,32 @@ void ResourceManager::renderDebugUI()
 
 void ResourceManager::updateResolution(vec2_u32 screenRes)
 {
-	// Update screen relative textures
-	bool texturesRebuilt = false;
+	// Check if any textures need rebuilding
+	bool anyTexNeedRebuild = false;
 	for (HashMapPair<strID, PoolHandle> itemItr : mState->textureHandles) {
-		TextureResource& resource = mState->textures[itemItr.value];
-		if (resource.screenRelativeResolution) {
-			bool texRebuilt = false;
-			CHECK_ZG resource.build(screenRes, &texRebuilt);
-			texturesRebuilt = texturesRebuilt || texRebuilt;
-		}
+		const TextureResource& resource = mState->textures[itemItr.value];
+		anyTexNeedRebuild = anyTexNeedRebuild || resource.needRebuild(screenRes);
 	}
 
-	// Update screen relative framebuffers
-	if (texturesRebuilt) {
+	// Update textures if they need rebuilding
+	if (anyTexNeedRebuild) {
+		SFZ_INFO("Resources", "Rebuilding textures, screenRes = %u x %u", screenRes.x, screenRes.y);
+
+		// Flush present and copy queue to ensure the textures aren't in use
+		zg::CommandQueue presentQueue = zg::CommandQueue::getPresentQueue();
+		zg::CommandQueue copyQueue = zg::CommandQueue::getCopyQueue();
+		CHECK_ZG presentQueue.flush();
+		CHECK_ZG copyQueue.flush();
+
+		// Rebuild textures
+		for (HashMapPair<strID, PoolHandle> itemItr : mState->textureHandles) {
+			TextureResource& resource = mState->textures[itemItr.value];
+			if (resource.screenRelativeResolution) {
+				CHECK_ZG resource.build(screenRes);
+			}
+		}
+
+		// Rebuild framebuffers
 		for (HashMapPair<strID, PoolHandle> itemItr : mState->framebufferHandles) {
 			FramebufferResource& resource = mState->framebuffers[itemItr.value];
 			if (resource.screenRelativeResolution) {
