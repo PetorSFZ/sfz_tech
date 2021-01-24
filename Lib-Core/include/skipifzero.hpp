@@ -278,6 +278,8 @@ struct Vec<T,2> final {
 	constexpr Vec& operator*= (Vec o) { x *= o.x; y *= o.y; return *this; }
 	constexpr Vec& operator/= (T s) { x /= s; y /= s; return *this; }
 	constexpr Vec& operator/= (Vec o) { x /= o.x; y /= o.y; return *this; }
+	constexpr Vec& operator%= (T s) { x %= s; y %= s; return *this; }
+	constexpr Vec& operator%= (Vec o) { x %= o.x; y %= o.y; return *this; }
 
 	constexpr Vec operator+ (Vec o) const { return Vec(*this) += o; }
 	constexpr Vec operator- (Vec o) const { return Vec(*this) -= o; }
@@ -286,6 +288,8 @@ struct Vec<T,2> final {
 	constexpr Vec operator* (T s) const { return Vec(*this) *= s; }
 	constexpr Vec operator/ (Vec o) const { return Vec(*this) /= o; }
 	constexpr Vec operator/ (T s) const { return Vec(*this) /= s; }
+	constexpr Vec operator% (Vec o) const { return Vec(*this) %= o; }
+	constexpr Vec operator% (T s) const { return Vec(*this) %= s; }
 
 	constexpr bool operator== (Vec o) const { return x == o.x && y == o.y; }
 	constexpr bool operator!= (Vec o) const { return !(*this == o); }
@@ -330,6 +334,8 @@ struct Vec<T,3> final {
 	constexpr Vec& operator*= (Vec o) { x *= o.x; y *= o.y; z *= o.z; return *this; }
 	constexpr Vec& operator/= (T s) { x /= s; y /= s; z /= s; return *this; }
 	constexpr Vec& operator/= (Vec o) { x /= o.x; y /= o.y; z /= o.z; return *this; }
+	constexpr Vec& operator%= (T s) { x %= s; y %= s; z %= s; return *this; }
+	constexpr Vec& operator%= (Vec o) { x %= o.x; y %= o.y; z %= o.z; return *this; }
 
 	constexpr Vec operator+ (Vec o) const { return Vec(*this) += o; }
 	constexpr Vec operator- (Vec o) const { return Vec(*this) -= o; }
@@ -338,6 +344,8 @@ struct Vec<T,3> final {
 	constexpr Vec operator* (T s) const { return Vec(*this) *= s; }
 	constexpr Vec operator/ (Vec o) const { return Vec(*this) /= o; }
 	constexpr Vec operator/ (T s) const { return Vec(*this) /= s; }
+	constexpr Vec operator% (Vec o) const { return Vec(*this) %= o; }
+	constexpr Vec operator% (T s) const { return Vec(*this) %= s; }
 
 	constexpr bool operator== (Vec o) const { return x == o.x && y == o.y && z == o.z; }
 	constexpr bool operator!= (Vec o) const { return !(*this == o); }
@@ -388,6 +396,8 @@ struct alignas(sizeof(T) * 4) Vec<T,4> final {
 	constexpr Vec& operator*= (Vec o) { x *= o.x; y *= o.y; z *= o.z; w *= o.w; return *this; }
 	constexpr Vec& operator/= (T s) { x /= s; y /= s; z /= s; w /= s; return *this; }
 	constexpr Vec& operator/= (Vec o) { x /= o.x; y /= o.y; z /= o.z; w /= o.w; return *this; }
+	constexpr Vec& operator%= (T s) { x %= s; y %= s; z %= s; w %= s; return *this; }
+	constexpr Vec& operator%= (Vec o) { x %= o.x; y %= o.y; z %= o.z; w %= o.w; return *this; }
 
 	constexpr Vec operator+ (Vec o) const { return Vec(*this) += o; }
 	constexpr Vec operator- (Vec o) const { return Vec(*this) -= o; }
@@ -396,6 +406,8 @@ struct alignas(sizeof(T) * 4) Vec<T,4> final {
 	constexpr Vec operator* (T s) const { return Vec(*this) *= s; }
 	constexpr Vec operator/ (Vec o) const { return Vec(*this) /= o; }
 	constexpr Vec operator/ (T s) const { return Vec(*this) /= s; }
+	constexpr Vec operator% (Vec o) const { return Vec(*this) %= o; }
+	constexpr Vec operator% (T s) const { return Vec(*this) %= s; }
 
 	constexpr bool operator== (Vec o) const { return x == o.x && y == o.y && z == o.z && w == o.w; }
 	constexpr bool operator!= (Vec o) const { return !(*this == o); }
@@ -416,6 +428,9 @@ constexpr Vec<T,N> operator* (T s, Vec<T,N> v) { return v * s; }
 
 template<typename T, uint32_t N>
 constexpr Vec<T,N> operator/ (T s, Vec<T,N> v) { return Vec<T,N>(s) / v; }
+
+template<typename T, uint32_t N>
+constexpr Vec<T,N> operator% (T s, Vec<T,N> v) { return Vec<T,N>(s) % v; }
 
 template<typename T>
 constexpr T dot(Vec<T,2> l, Vec<T,2> r) { return l.x * r.x + l.y * r.y; }
