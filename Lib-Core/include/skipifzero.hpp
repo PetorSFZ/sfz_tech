@@ -21,7 +21,7 @@
 #pragma once
 
 #include <cassert>
-#include <cmath> // std::sqrt
+#include <cmath> // std::sqrt, std::fmodf
 #include <cstdint>
 #include <cstdlib> // std::abort()
 #include <cstring> // memcpy()
@@ -561,6 +561,14 @@ constexpr float lerp(float v0, float v1, float t) { return (1.0f - t) * v0 + t *
 constexpr vec2 lerp(vec2 v0, vec2 v1, float t) { return (1.0f - t) * v0 + t * v1; }
 constexpr vec3 lerp(vec3 v0, vec3 v1, float t) { return (1.0f - t) * v0 + t * v1; }
 constexpr vec4 lerp(vec4 v0, vec4 v1, float t) { return (1.0f - t) * v0 + t * v1; }
+
+inline float fmod(float n, float dnm) { return std::fmodf(n, dnm); }
+inline vec2 fmod(vec2 n, float dnm) { return vec2(fmod(n.x, dnm), fmod(n.y, dnm)); }
+inline vec2 fmod(vec2 n, vec2 dnm) { return vec2(fmod(n.x, dnm.x), fmod(n.y, dnm.y)); }
+inline vec3 fmod(vec3 n, float dnm) { return vec3(fmod(n.x, dnm), fmod(n.y, dnm), fmod(n.z, dnm)); }
+inline vec3 fmod(vec3 n, vec3 dnm) { return vec3(fmod(n.x, dnm.x), fmod(n.y, dnm.y), fmod(n.z, dnm.z)); }
+inline vec4 fmod(vec4 n, float dnm) { return vec4(fmod(n.x, dnm), fmod(n.y, dnm), fmod(n.z, dnm), fmod(n.w, dnm)); }
+inline vec4 fmod(vec4 n, vec4 dnm) { return vec4(fmod(n.x, dnm.x), fmod(n.y, dnm.y), fmod(n.z, dnm.z), fmod(n.w, dnm.w)); }
 
 } // namespace sfz
 
