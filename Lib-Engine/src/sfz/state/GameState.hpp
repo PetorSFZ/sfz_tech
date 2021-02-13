@@ -196,7 +196,7 @@ struct GameStateHeader {
 	template<typename T>
 	T& singleton(uint32_t singletonIndex) noexcept
 	{
-		static_assert(std::is_trivially_copyable<T>::value, "Game state singletons must be trivially copyable");
+		//static_assert(std::is_trivially_copyable<T>::value, "Game state singletons must be trivially copyable");
 		static_assert(std::is_trivially_destructible<T>::value, "Game state singletons must be trivially destructible");
 		uint32_t singletonSize = 0;
 		T* singleton = (T*)singletonUntyped(singletonIndex, singletonSize);
@@ -206,7 +206,7 @@ struct GameStateHeader {
 	template<typename T>
 	const T& singleton(uint32_t singletonIndex) const noexcept
 	{
-		static_assert(std::is_trivially_copyable<T>::value, "Game state singletons must be trivially copyable");
+		//static_assert(std::is_trivially_copyable<T>::value, "Game state singletons must be trivially copyable");
 		static_assert(std::is_trivially_destructible<T>::value, "Game state singletons must be trivially destructible");
 		uint32_t singletonSize = 0;
 		const T* singleton = (const T*)singletonUntyped(singletonIndex, singletonSize);
