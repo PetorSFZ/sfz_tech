@@ -33,7 +33,15 @@ inline void alignedEdit(const char* name, float xOffset, Func editor)
 {
 	ImGui::Text("%s", name);
 	ImGui::SameLine(xOffset);
-	editor(sfz::str96("##%s_invisible", name).str());
+	editor(str96("##%s_invisible", name).str());
+}
+
+template<typename Fun>
+static void alignedEdit(const char* name, const char* unique, uint32_t idx, float xOffset, Fun editor)
+{
+	ImGui::Text("%s:", name);
+	ImGui::SameLine(xOffset);
+	editor(str192("##%u_%s_%s", idx, name, unique).str());
 }
 
 // Filtered text helpers
