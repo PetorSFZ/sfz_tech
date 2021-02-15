@@ -25,9 +25,9 @@
 #include <vector>
 
 #include <skipifzero.hpp>
+#include <skipifzero_geometry.hpp>
 #include <skipifzero_math.hpp>
 
-#include "sfz/geometry/AABB.hpp"
 #include "sfz/geometry/AABB2D.hpp"
 #include "sfz/geometry/Circle.hpp"
 #include "sfz/geometry/Intersection.hpp"

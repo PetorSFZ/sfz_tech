@@ -19,9 +19,8 @@
 #pragma once
 
 #include <skipifzero.hpp>
+#include <skipifzero_geometry.hpp>
 #include <skipifzero_math.hpp>
-
-#include "sfz/geometry/AABB.hpp"
 
 namespace sfz {
 

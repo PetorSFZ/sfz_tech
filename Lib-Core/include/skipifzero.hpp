@@ -459,29 +459,9 @@ inline vec2 normalizeSafe(vec2 v) { float tmp = length(v); return tmp == 0.0f ? 
 inline vec3 normalizeSafe(vec3 v) { float tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
 inline vec4 normalizeSafe(vec4 v) { float tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
 
-template<typename T, uint32_t N>
-constexpr T elemSum(Vec<T,N> v)
-{
-	T sum = T(0);
-	for (uint32_t i = 0; i < N; i++) sum += v[i];
-	return sum;
-}
-
-template<typename T, uint32_t N>
-constexpr T elemMax(Vec<T,N> v)
-{
-	T m = v[0];
-	for (uint32_t i = 1; i < N; i++) m = sfz::max(m, v[i]);
-	return m;
-}
-
-template<typename T, uint32_t N>
-constexpr T elemMin(Vec<T,N> v)
-{
-	T m = v[0];
-	for (uint32_t i = 1; i < N; i++) m = sfz::min(m, v[i]);
-	return m;
-}
+template<typename T> constexpr T elemSum(Vec<T,2> v) { return v.x + v.y; }
+template<typename T> constexpr T elemSum(Vec<T,3> v) { return v.x + v.y + v.z; }
+template<typename T> constexpr T elemSum(Vec<T,4> v) { return v.x + v.y + v.z + v.w; }
 
 // Math functions
 // ------------------------------------------------------------------------------------------------
@@ -538,6 +518,14 @@ constexpr Vec<T,N> max(Vec<T,N> l, Vec<T,N> r)
 template<typename T, uint32_t N> constexpr Vec<T,N> max(Vec<T,N> l, T r) { return sfz::max(l, Vec<T,N>(r)); }
 template<typename T, uint32_t N> constexpr Vec<T,N> max(T l, Vec<T,N> r) { return sfz::max(r, l); }
 
+template<typename T> constexpr T elemMax(Vec<T,2> v) { return sfz::max(v.x, v.y); }
+template<typename T> constexpr T elemMax(Vec<T,3> v) { return sfz::max(sfz::max(v.x, v.y), v.z); }
+template<typename T> constexpr T elemMax(Vec<T,4> v) { return sfz::max(sfz::max(sfz::max(v.x, v.y), v.z), v.w); }
+
+template<typename T> constexpr T elemMin(Vec<T,2> v) { return sfz::min(v.x, v.y); }
+template<typename T> constexpr T elemMin(Vec<T,3> v) { return sfz::min(sfz::min(v.x, v.y), v.z); }
+template<typename T> constexpr T elemMin(Vec<T,4> v) { return sfz::min(sfz::min(sfz::min(v.x, v.y), v.z), v.w); }
+
 template<typename ArgT, typename LimitT>
 constexpr ArgT clamp(const ArgT& val, const LimitT& minVal, const LimitT& maxVal)
 {
@@ -569,6 +557,21 @@ inline vec3 fmod(vec3 n, float dnm) { return vec3(fmod(n.x, dnm), fmod(n.y, dnm)
 inline vec3 fmod(vec3 n, vec3 dnm) { return vec3(fmod(n.x, dnm.x), fmod(n.y, dnm.y), fmod(n.z, dnm.z)); }
 inline vec4 fmod(vec4 n, float dnm) { return vec4(fmod(n.x, dnm), fmod(n.y, dnm), fmod(n.z, dnm), fmod(n.w, dnm)); }
 inline vec4 fmod(vec4 n, vec4 dnm) { return vec4(fmod(n.x, dnm.x), fmod(n.y, dnm.y), fmod(n.z, dnm.z), fmod(n.w, dnm.w)); }
+
+inline float floor(float v) { return std::floorf(v); }
+inline vec2 floor(vec2 v) { return vec2(floor(v.x), floor(v.y)); }
+inline vec3 floor(vec3 v) { return vec3(floor(v.x), floor(v.y), floor(v.z)); }
+inline vec4 floor(vec4 v) { return vec4(floor(v.x), floor(v.y), floor(v.z), floor(v.w)); }
+
+inline float ceil(float v) { return std::ceilf(v); }
+inline vec2 ceil(vec2 v) { return vec2(ceil(v.x), ceil(v.y)); }
+inline vec3 ceil(vec3 v) { return vec3(ceil(v.x), ceil(v.y), ceil(v.z)); }
+inline vec4 ceil(vec4 v) { return vec4(ceil(v.x), ceil(v.y), ceil(v.z), ceil(v.w)); }
+
+inline float round(float v) { return std::roundf(v); }
+inline vec2 round(vec2 v) { return vec2(round(v.x), round(v.y)); }
+inline vec3 round(vec3 v) { return vec3(round(v.x), round(v.y), round(v.z)); }
+inline vec4 round(vec4 v) { return vec4(round(v.x), round(v.y), round(v.z), round(v.w)); }
 
 } // namespace sfz
 

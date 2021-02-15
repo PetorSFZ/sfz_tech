@@ -105,6 +105,7 @@ set(INCLUDE_FILES
 	${INCLUDE_DIR}/skipifzero.hpp
 	${INCLUDE_DIR}/skipifzero_allocators.hpp
 	${INCLUDE_DIR}/skipifzero_arrays.hpp
+	${INCLUDE_DIR}/skipifzero_geometry.hpp
 	${INCLUDE_DIR}/skipifzero_hash_maps.hpp
 	${INCLUDE_DIR}/skipifzero_image_view.hpp
 	${INCLUDE_DIR}/skipifzero_math.hpp
@@ -127,6 +128,7 @@ if(NOT hasParent OR SFZ_CORE_BUILD_TESTS)
 	set(TEST_FILES
 		${TESTS_DIR}/LibCoreHeadersTestsMain.cpp
 		${TESTS_DIR}/skipifzero_allocators_tests.cpp
+		${TESTS_DIR}/skipifzero_geometry_tests.cpp
 		${TESTS_DIR}/skipifzero_arrays_tests.cpp
 		${TESTS_DIR}/skipifzero_hash_maps_tests.cpp
 		${TESTS_DIR}/skipifzero_pool_tests.cpp

@@ -251,11 +251,11 @@ inline bool intersects(const Plane& plane, const AABB& aabb) noexcept
 	// SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 
 	// Projected radius on line towards closest point on plane
-	float projectedRadius = aabb.halfXExtent() * std::abs(plane.normal()[0])
-	                      + aabb.halfYExtent() * std::abs(plane.normal()[1])
-	                      + aabb.halfZExtent() * std::abs(plane.normal()[2]);
+	float projectedRadius = aabb.halfDimX() * std::abs(plane.normal()[0])
+	                      + aabb.halfDimY() * std::abs(plane.normal()[1])
+	                      + aabb.halfDimZ() * std::abs(plane.normal()[2]);
 
-	return detail::intersectsPlane(plane, aabb.position(), projectedRadius);
+	return detail::intersectsPlane(plane, aabb.pos(), projectedRadius);
 }
 
 inline bool intersects(const AABB& aabb, const Plane& plane) noexcept
@@ -268,22 +268,22 @@ inline bool abovePlane(const Plane& plane, const AABB& aabb) noexcept
 	// Modified SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 
 	// Projected radius on line towards closest point on plane
-	float projectedRadius = aabb.halfXExtent() * std::abs(plane.normal()[0])
-	                      + aabb.halfYExtent() * std::abs(plane.normal()[1])
-	                      + aabb.halfZExtent() * std::abs(plane.normal()[2]);
+	float projectedRadius = aabb.halfDimX() * std::abs(plane.normal()[0])
+	                      + aabb.halfDimY() * std::abs(plane.normal()[1])
+	                      + aabb.halfDimZ() * std::abs(plane.normal()[2]);
 
-	return detail::abovePlane(plane, aabb.position(), projectedRadius);
+	return detail::abovePlane(plane, aabb.pos(), projectedRadius);
 }
 
 inline bool belowPlane(const Plane& plane, const AABB& aabb) noexcept
 {
 	// Modified SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 	// Projected radius on line towards closest point on plane
-	float projectedRadius = aabb.halfXExtent() * std::abs(plane.normal()[0])
-	                      + aabb.halfYExtent() * std::abs(plane.normal()[1])
-	                      + aabb.halfZExtent() * std::abs(plane.normal()[2]);
+	float projectedRadius = aabb.halfDimX() * std::abs(plane.normal()[0])
+	                      + aabb.halfDimY() * std::abs(plane.normal()[1])
+	                      + aabb.halfDimZ() * std::abs(plane.normal()[2]);
 
-	return detail::belowPlane(plane, aabb.position(), projectedRadius);
+	return detail::belowPlane(plane, aabb.pos(), projectedRadius);
 }
 
 // Plane & OBB tests

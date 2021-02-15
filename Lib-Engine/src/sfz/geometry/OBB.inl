@@ -45,9 +45,9 @@ inline OBB::OBB(vec3 center, vec3 xAxis, vec3 yAxis, vec3 zAxis,
 
 inline OBB::OBB(const AABB& aabb) noexcept
 :
-	OBB(aabb.position(),
+	OBB(aabb.pos(),
 		vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f),
-		aabb.extents())
+		aabb.dims())
 { }
 
 // Member functions

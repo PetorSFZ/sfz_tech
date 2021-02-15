@@ -46,7 +46,7 @@ UTEST(OBB, constructors)
 	{
 		vec3 pos = vec3(1.0f, 2.0f, 3.0f);
 		vec3 ext = vec3(4.0f, 5.0f, 6.0f);
-		AABB aabb = AABB(pos, ext.x, ext.y, ext.z);
+		AABB aabb = AABB::fromPosDims(pos, ext);
 		OBB obb = OBB(aabb);
 		ASSERT_TRUE(eqf(obb.center, pos));
 		ASSERT_TRUE(eqf(obb.xAxis(), vec3(1.0f, 0.0f, 0.0f)));
@@ -58,7 +58,7 @@ UTEST(OBB, constructors)
 
 UTEST(OBB, transform_obb)
 {
-	OBB identityObb = OBB(AABB(vec3(0.0f), 1.0f, 1.0f, 1.0f));
+	OBB identityObb = OBB(AABB::fromPosDims(vec3(0.0f), vec3(1.0f)));
 	ASSERT_TRUE(eqf(identityObb.center, vec3(0.0f)));
 	ASSERT_TRUE(eqf(identityObb.xAxis(), vec3(1.0f, 0.0f, 0.0f)));
 	ASSERT_TRUE(eqf(identityObb.yAxis(), vec3(0.0f, 1.0f, 0.0f)));

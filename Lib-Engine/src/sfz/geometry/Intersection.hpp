@@ -18,7 +18,8 @@
 
 #pragma once
 
-#include "sfz/geometry/AABB.hpp"
+#include <skipifzero_geometry.hpp>
+
 #include "sfz/geometry/AABB2D.hpp"
 #include "sfz/geometry/Circle.hpp"
 #include "sfz/geometry/OBB.hpp"

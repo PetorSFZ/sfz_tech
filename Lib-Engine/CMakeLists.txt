@@ -242,8 +242,6 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/debug/ProfilingStats.hpp
 	${SRC_DIR}/sfz/debug/ProfilingStats.cpp
 
-	${SRC_DIR}/sfz/geometry/AABB.hpp
-	${SRC_DIR}/sfz/geometry/AABB.inl
 	${SRC_DIR}/sfz/geometry/AABB2D.hpp
 	${SRC_DIR}/sfz/geometry/Circle.hpp
 	${SRC_DIR}/sfz/geometry/Intersection.hpp
