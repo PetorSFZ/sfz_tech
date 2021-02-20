@@ -20,8 +20,6 @@
 #define SKIPIFZERO_GEOMETRY_HPP
 #pragma once
 
-#include <cfloat>
-
 #include "skipifzero.hpp"
 
 namespace sfz {
@@ -29,14 +27,16 @@ namespace sfz {
 // Ray
 // ------------------------------------------------------------------------------------------------
 
+constexpr float RAY_DEFAULT_MAX_DIST = 1'000'000.0f; // FLT_MAX causes issues in some algorithms
+
 struct Ray final {
 	vec3 origin = vec3(0.0f);
 	float minDist = 0.0f;
 	vec3 dir = vec3(0.0f);
-	float maxDist = FLT_MAX;
+	float maxDist = RAY_DEFAULT_MAX_DIST;
 
 	Ray() = default;
-	Ray(vec3 origin, vec3 dir, float minDist = 0.0f, float maxDist = FLT_MAX)
+	Ray(vec3 origin, vec3 dir, float minDist = 0.0f, float maxDist = RAY_DEFAULT_MAX_DIST)
 		: origin(origin), dir(dir), minDist(minDist), maxDist(maxDist) { sfz_assert(eqf(length(dir), 1.0f)); }
 };
 static_assert(sizeof(Ray) == sizeof(float) * 8, "Ray is padded");
@@ -76,10 +76,10 @@ constexpr void rayVsAABB(vec3 origin, vec3 invDir, const AABB& aabb, float& tMin
 
 constexpr bool rayVsAABB(const Ray& ray, const AABB& aabb, float& tMinOut, float& tMaxOut)
 {
-	const vec3 origin = ray.origin + ray.dir * ray.minDist;
+	const vec3 origin = ray.origin;
 	const vec3 invDir = 1.0f / ray.dir;
 	rayVsAABB(origin, invDir, aabb, tMinOut, tMaxOut);
-	return tMaxOut > 0.0f && tMinOut < tMaxOut;
+	return tMinOut < tMaxOut && ray.minDist <= tMaxOut && tMaxOut <= ray.maxDist;
 }
 
 } // namespace sfz
