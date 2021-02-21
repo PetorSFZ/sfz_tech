@@ -27,22 +27,22 @@ namespace sfz {
 // Ray
 // ------------------------------------------------------------------------------------------------
 
-constexpr float RAY_DEFAULT_MAX_DIST = 1'000'000.0f; // FLT_MAX causes issues in some algorithms
+constexpr float RAY_MAX_DIST = 1'000'000.0f; // FLT_MAX causes issues in some algorithms
 
 struct Ray final {
 	vec3 origin = vec3(0.0f);
 	vec3 dir = vec3(0.0f);
-	float maxDist = RAY_DEFAULT_MAX_DIST;
+	float maxDist = RAY_MAX_DIST;
 
 	Ray() = default;
-	Ray(vec3 origin, vec3 dir, float maxDist = RAY_DEFAULT_MAX_DIST)
+	Ray(vec3 origin, vec3 dir, float maxDist = RAY_MAX_DIST)
 		: origin(origin), dir(dir), maxDist(maxDist)
 	{
 		sfz_assert(eqf(length(dir), 1.0f));
-		sfz_assert(maxDist > 0.0f);
+		sfz_assert(0.0f < maxDist && maxDist <= RAY_MAX_DIST);
 	}
 
-	static Ray createOffset(vec3 origin, vec3 dir, float minDist, float maxDist = RAY_DEFAULT_MAX_DIST)
+	static Ray createOffset(vec3 origin, vec3 dir, float minDist, float maxDist = RAY_MAX_DIST)
 	{
 		return Ray(origin + dir * minDist, dir, maxDist);
 	}
@@ -86,7 +86,7 @@ constexpr void rayVsAABB(vec3 origin, vec3 invDir, const AABB& aabb, float& tMin
 inline float rayVsAABB(const Ray& ray, const AABB& aabb, float* tMinOut = nullptr, float* tMaxOut = nullptr)
 {
 	const vec3 origin = ray.origin;
-	const vec3 invDir = 1.0f / ray.dir;
+	const vec3 invDir = divSafe(vec3(1.0f), ray.dir);
 	float tMin, tMax;
 	rayVsAABB(origin, invDir, aabb, tMin, tMax);
 	if (tMinOut != nullptr) *tMinOut = tMin;

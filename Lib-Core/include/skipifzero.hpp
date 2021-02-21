@@ -463,6 +463,11 @@ template<typename T> constexpr T elemSum(Vec<T,2> v) { return v.x + v.y; }
 template<typename T> constexpr T elemSum(Vec<T,3> v) { return v.x + v.y + v.z; }
 template<typename T> constexpr T elemSum(Vec<T,4> v) { return v.x + v.y + v.z + v.w; }
 
+constexpr float divSafe(float n, float d, float eps = 0.000'000'1f) { return d == 0.0f ? n / eps : n / d; }
+constexpr vec2 divSafe(vec2 n, vec2 d, float eps = 0.000'000'1f) { return vec2(divSafe(n.x, d.x, eps), divSafe(n.y, d.y, eps)); }
+constexpr vec3 divSafe(vec3 n, vec3 d, float eps = 0.000'000'1f) { return vec3(divSafe(n.x, d.x, eps), divSafe(n.y, d.y, eps), divSafe(n.z, d.z, eps)); }
+constexpr vec4 divSafe(vec4 n, vec4 d, float eps = 0.000'000'1f) { return vec4(divSafe(n.x, d.x, eps), divSafe(n.y, d.y, eps), divSafe(n.z, d.z, eps), divSafe(n.w, d.w, eps)); }
+
 // Math functions
 // ------------------------------------------------------------------------------------------------
 
