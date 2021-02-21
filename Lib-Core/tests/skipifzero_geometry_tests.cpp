@@ -93,7 +93,7 @@ UTEST(AABB, ray_vs_aabb)
 			float tMin = sfz::RAY_MAX_DIST;
 			float tMax = -sfz::RAY_MAX_DIST;
 			const float t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
-			ASSERT_TRUE(eqf(t, -1.0f));
+			ASSERT_TRUE(eqf(t, 0.0f));
 			ASSERT_TRUE(eqf(tMin, 0.0f));
 			ASSERT_TRUE(eqf(tMax, 0.0f));
 		}

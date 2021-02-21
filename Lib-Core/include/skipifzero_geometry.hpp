@@ -91,7 +91,7 @@ inline float rayVsAABB(const Ray& ray, const AABB& aabb, float* tMinOut = nullpt
 	rayVsAABB(origin, invDir, aabb, tMin, tMax);
 	if (tMinOut != nullptr) *tMinOut = tMin;
 	if (tMaxOut != nullptr) *tMaxOut = tMax;
-	const bool hit = tMin < tMax && 0.0f <= tMax && tMin <= ray.maxDist;
+	const bool hit = tMin <= tMax && 0.0f <= tMax && tMin <= ray.maxDist;
 	return hit ? sfz::max(0.0f, tMin) : -1.0f;
 }
 
