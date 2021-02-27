@@ -304,6 +304,10 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/sdl/SDLAllocator.hpp
 	${SRC_DIR}/sfz/sdl/SDLAllocator.cpp
 
+	${SRC_DIR}/sfz/serialization/DeserializerVisitor.hpp
+	${SRC_DIR}/sfz/serialization/FullyVisitableExtension.hpp
+	${SRC_DIR}/sfz/serialization/SerializationTypes.hpp
+
 	${SRC_DIR}/sfz/shaders/ShaderManager.hpp
 	${SRC_DIR}/sfz/shaders/ShaderManager.cpp
 	${SRC_DIR}/sfz/shaders/ShaderManagerState.hpp

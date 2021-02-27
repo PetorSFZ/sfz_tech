@@ -346,9 +346,44 @@ JsonNodeValue<double> JsonNode::valueDouble() const noexcept
 	return tmp;
 }
 
+JsonNodeValue<str32> JsonNode::valueStr32() const noexcept
+{
+	JsonNodeValue<str32> tmp;
+	tmp.exists = this->value(tmp.value.mRawStr, tmp.value.capacity());
+	return tmp;
+}
+
+JsonNodeValue<str64> JsonNode::valueStr64() const noexcept
+{
+	JsonNodeValue<str64> tmp;
+	tmp.exists = this->value(tmp.value.mRawStr, tmp.value.capacity());
+	return tmp;
+}
+
+JsonNodeValue<str96> JsonNode::valueStr96() const noexcept
+{
+	JsonNodeValue<str96> tmp;
+	tmp.exists = this->value(tmp.value.mRawStr, tmp.value.capacity());
+	return tmp;
+}
+
+JsonNodeValue<str128> JsonNode::valueStr128() const noexcept
+{
+	JsonNodeValue<str128> tmp;
+	tmp.exists = this->value(tmp.value.mRawStr, tmp.value.capacity());
+	return tmp;
+}
+
 JsonNodeValue<str256> JsonNode::valueStr256() const noexcept
 {
 	JsonNodeValue<str256> tmp;
+	tmp.exists = this->value(tmp.value.mRawStr, tmp.value.capacity());
+	return tmp;
+}
+
+JsonNodeValue<str320> JsonNode::valueStr320() const noexcept
+{
+	JsonNodeValue<str320> tmp;
 	tmp.exists = this->value(tmp.value.mRawStr, tmp.value.capacity());
 	return tmp;
 }

@@ -300,6 +300,7 @@ endfunction()
 # opengametools: ${OGT_FOUND}, ${OGT_INCLUDE_DIRS}}
 # sajson: ${SAJSON_FOUND}, ${SAJSON_INCLUDE_DIRS}
 # soloud: ${SOLOUD_FOUND}, ${SOLOUD_INCLUDE_DIRS}, ${SOLOUD_LIBRARIES}
+# visit_struct: ${VISIT_STRUCT_FOUND}, ${VISIT_STRUCT_INCLUDE_DIRS}
 function(phAddBundledExternals)
 
 	message("-- [PhantasyEngine]: Adding cgltf target")
@@ -351,6 +352,11 @@ function(phAddBundledExternals)
 	set(SOLOUD_INCLUDE_DIRS ${SOLOUD_INCLUDE_DIRS} PARENT_SCOPE)
 	set(SOLOUD_LIBRARIES ${SOLOUD_LIBRARIES} PARENT_SCOPE)
 
+	message("-- [PhantasyEngine]: Adding visit_struct target")
+	add_subdirectory(${SFZ_TECH_ROOT}/externals/visit_struct ${CMAKE_BINARY_DIR}/visit_struct)
+	set(VISIT_STRUCT_FOUND ${VISIT_STRUCT_FOUND} PARENT_SCOPE)
+	set(VISIT_STRUCT_INCLUDE_DIRS ${VISIT_STRUCT_INCLUDE_DIRS} PARENT_SCOPE)
+
 endfunction()
 
 # PhantasyEngine targets
@@ -397,6 +403,7 @@ function(phLinkBundledExternals linkTarget)
 		${SAJSON_INCLUDE_DIRS}
 		${SOLOUD_INCLUDE_DIRS}
 		${TINYGLTF_INCLUDE_DIRS}
+		${VISIT_STRUCT_INCLUDE_DIRS}
 	)
 	target_link_libraries(${linkTarget}
 		${IMGUI_LIBRARIES}

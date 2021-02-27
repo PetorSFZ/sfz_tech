@@ -123,7 +123,12 @@ public:
 	JsonNodeValue<int32_t> valueInt() const noexcept;
 	JsonNodeValue<float> valueFloat() const noexcept;
 	JsonNodeValue<double> valueDouble() const noexcept;
+	JsonNodeValue<str32> valueStr32() const noexcept;
+	JsonNodeValue<str64> valueStr64() const noexcept;
+	JsonNodeValue<str96> valueStr96() const noexcept;
+	JsonNodeValue<str128> valueStr128() const noexcept;
 	JsonNodeValue<str256> valueStr256() const noexcept;
+	JsonNodeValue<str320> valueStr320() const noexcept;
 
 private:
 	// Private members
