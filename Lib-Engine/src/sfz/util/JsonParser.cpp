@@ -109,6 +109,14 @@ JsonNode JsonNode::createFromImplDefined(const void* implDefined) noexcept
 // JsonNode: State methods
 // ------------------------------------------------------------------------------------------------
 
+JsonNode JsonNode::copy() const noexcept
+{
+	JsonNode tmp = {};
+	tmp.mActive = true;
+	memcpy(tmp.mImpl, this->mImpl, sizeof(mImpl));
+	return tmp;
+}
+
 void JsonNode::swap(JsonNode& other) noexcept
 {
 	std::swap(this->mImpl, other.mImpl);

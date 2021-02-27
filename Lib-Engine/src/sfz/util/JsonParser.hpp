@@ -81,6 +81,7 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
+	JsonNode copy() const noexcept;
 	void swap(JsonNode& other) noexcept;
 	void destroy() noexcept;
 
