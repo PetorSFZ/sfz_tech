@@ -223,6 +223,13 @@ struct StringLocal final {
 		this->mRawStr[len + numChars] = '\0';
 	}
 
+	void removeChars(uint32_t numChars)
+	{
+		const uint32_t len = this->size();
+		const uint32_t numToRemove = sfz::min(numChars, len);
+		this->mRawStr[len - numToRemove] = '\0';
+	}
+
 	void toLower()
 	{
 		char* c = mRawStr;
