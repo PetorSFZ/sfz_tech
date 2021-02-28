@@ -415,12 +415,17 @@ struct DeserializerVisitor final {
 		appendErrorPath(name);
 		DeserializerVisitor deserializer;
 		deserializer.allocator = this->allocator;
-		deserializer.parentNode = this->parentNode.accessMap(name);
-		deserializer.success = this->success;
-		deserializer.optional = this->optional;
-		deserializer.errorPath = this->errorPath;
-		visit_struct::for_each(valOut, deserializer);
-		this->success = this->optional || (this->success && deserializer.success);
+		deserializer.parentNode = accessMapChecked(name);
+		if (deserializer.parentNode.isValid()) {
+			deserializer.success = this->success;
+			deserializer.optional = this->optional;
+			deserializer.errorPath = this->errorPath;
+			visit_struct::for_each(valOut, deserializer);
+			this->success = this->optional || (this->success && deserializer.success);
+		}
+		else {
+			this->success == this->optional || false;
+		}
 		restoreErrorPath(name);
 	}
 };
