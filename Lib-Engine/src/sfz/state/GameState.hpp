@@ -24,7 +24,7 @@
 #include <skipifzero.hpp>
 
 #include "sfz/state/ArrayHeader.hpp"
-#include "sfz/state/ComponentMask.hpp"
+#include "sfz/state/CompMask.hpp"
 #include "sfz/state/Entity.hpp"
 
 namespace sfz {
@@ -151,7 +151,7 @@ struct GameStateHeader {
 	uint32_t numSingletons;
 
 	// The number of component types in the ECS system. This includes data-less flags, such as the
-	// first (0th) ComponentMask bit which is reserved for whether an entity is active or not.
+	// first (0th) CompMask bit which is reserved for whether an entity is active or not.
 	uint32_t numComponentTypes;
 
 	// The maximum number of entities allowed in the ECS system.
@@ -235,8 +235,8 @@ struct GameStateHeader {
 
 	// Returns pointer to the contiguous array of ComponentMask.
 	// Complexity: O(1)
-	ComponentMask* componentMasks() noexcept;
-	const ComponentMask* componentMasks() const noexcept;
+	CompMask* componentMasks() noexcept;
+	const CompMask* componentMasks() const noexcept;
 
 	// Returns pointer to the contiguous array of entity generations (uint8_t). If the generation()
 	// of an entity does not match the generation at index id() in this list then the entity is
@@ -402,7 +402,7 @@ constexpr uint32_t calcSizeOfGameStateBytes(
 	totalSizeBytes += calcArrayHeaderSizeBytes(sizeof(uint32_t), maxNumEntities);
 
 	// Entity masks
-	totalSizeBytes += calcArrayHeaderSizeBytes(sizeof(ComponentMask), maxNumEntities);
+	totalSizeBytes += calcArrayHeaderSizeBytes(sizeof(CompMask), maxNumEntities);
 
 	// Entity generations list
 	totalSizeBytes += calcArrayHeaderSizeBytes(sizeof(uint8_t), maxNumEntities);

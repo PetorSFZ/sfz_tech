@@ -31,7 +31,7 @@ namespace sfz {
 // Not all bits need to have associated component data, some can be used as pure data-less flag.
 // One such data-less flag is the first bit (0:th), which just indicates if the given entity exists
 // or not.
-struct ComponentMask final {
+struct CompMask final {
 
 	// Members
 	// --------------------------------------------------------------------------------------------
@@ -42,53 +42,53 @@ struct ComponentMask final {
 	// Constructor methods
 	// --------------------------------------------------------------------------------------------
 
-	static constexpr ComponentMask fromRawValue(uint64_t bits) noexcept { return { bits }; }
-	static constexpr ComponentMask empty() noexcept { return ComponentMask::fromRawValue(0); }
-	static constexpr ComponentMask fromType(uint32_t componentType) noexcept
+	static constexpr CompMask fromRawValue(uint64_t bits) { return { bits }; }
+	static constexpr CompMask empty() { return CompMask::fromRawValue(0); }
+	static constexpr CompMask fromType(uint32_t componentType)
 	{
-		return ComponentMask::fromRawValue(uint64_t(1) << uint64_t(componentType));
+		return CompMask::fromRawValue(uint64_t(1) << uint64_t(componentType));
 	}
-	static constexpr ComponentMask activeMask() noexcept
+	static constexpr CompMask activeMask()
 	{
-		return ComponentMask::fromRawValue(1);
+		return CompMask::fromRawValue(1);
 	}
 
 	// Operators
 	// --------------------------------------------------------------------------------------------
 
-	constexpr bool operator== (const ComponentMask& o) const noexcept { return rawMask == o.rawMask; }
-	constexpr bool operator!= (const ComponentMask& o) const noexcept { return rawMask != o.rawMask; }
-	constexpr ComponentMask operator& (const ComponentMask& o) const noexcept { return { rawMask & o.rawMask }; }
-	constexpr ComponentMask operator| (const ComponentMask& o) const noexcept { return { rawMask | o.rawMask }; }
-	constexpr ComponentMask operator~ () const noexcept { return { ~rawMask }; }
+	constexpr bool operator== (const CompMask& o) const { return rawMask == o.rawMask; }
+	constexpr bool operator!= (const CompMask& o) const { return rawMask != o.rawMask; }
+	constexpr CompMask operator& (const CompMask& o) const { return { rawMask & o.rawMask }; }
+	constexpr CompMask operator| (const CompMask& o) const { return { rawMask | o.rawMask }; }
+	constexpr CompMask operator~ () const { return { ~rawMask }; }
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
 	// Checks whether this mask contains the specified component type or not, somewhat slow.
 	// Prefer to build a mask with all bits you want to check, then you fulfills() with it instead.
-	constexpr bool hasComponentType(uint32_t componentType) const noexcept
+	constexpr bool hasComponentType(uint32_t componentType) const
 	{
-		return this->fulfills(ComponentMask::fromType(componentType));
+		return this->fulfills(CompMask::fromType(componentType));
 	}
 
 	// Sets the specified bit of this mask to the specified value.
-	constexpr void setComponentType(uint32_t componentType, bool value) noexcept
+	constexpr void setComponentType(uint32_t componentType, bool value)
 	{
-		if (value) this->rawMask |= ComponentMask::fromType(componentType).rawMask;
-		else this->rawMask &= ~ComponentMask::fromType(componentType).rawMask;
+		if (value) this->rawMask |= CompMask::fromType(componentType).rawMask;
+		else this->rawMask &= ~CompMask::fromType(componentType).rawMask;
 	}
 
 	// Checks whether this mask has all the components in the specified parameter mask
-	constexpr bool fulfills(const ComponentMask& constraints) const noexcept
+	constexpr bool fulfills(const CompMask& constraints) const
 	{
 		return (this->rawMask & constraints.rawMask) == constraints.rawMask;
 	}
 
 	// Checks whether the entity associated with this mask is active or not (i.e. whether the 0:th
 	// bit is set or not)
-	constexpr bool active() const noexcept { return this->fulfills(ComponentMask::activeMask()); }
+	constexpr bool active() const { return this->fulfills(CompMask::activeMask()); }
 };
-static_assert(sizeof(ComponentMask) == 8, "ComponentMask is padded");
+static_assert(sizeof(CompMask) == 8, "ComponentMask is padded");
 
 } // namespace sfz

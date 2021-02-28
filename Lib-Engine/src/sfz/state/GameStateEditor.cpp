@@ -313,7 +313,7 @@ static uint8_t binaryStringToByte(const char* binaryStr) noexcept
 	return *bytePtr;
 }
 
-static void initializeComponentMaskEditor(str32 buffers[8], ComponentMask initialMask) noexcept
+static void initializeComponentMaskEditor(str32 buffers[8], CompMask initialMask) noexcept
 {
 	for (uint64_t i = 0; i < 8; i++) {
 		uint8_t byte = uint8_t((initialMask.rawMask >> (i * 8)) & uint64_t(0xFF));
@@ -329,7 +329,7 @@ static int imguiOnlyBinaryFilter(ImGuiInputTextCallbackData* data) noexcept
 	return isBinaryChar ? 0 : 1;
 }
 
-static void componentMaskVisualizer(ComponentMask mask) noexcept
+static void componentMaskVisualizer(CompMask mask) noexcept
 {
 	const int32_t NUM_BITS_PER_FIELD = 8;
 	const int32_t NUM_FIELDS = 4;
@@ -367,7 +367,7 @@ static void componentMaskVisualizer(ComponentMask mask) noexcept
 static bool componentMaskEditor(
 	const char* identifier,
 	str32 buffers[8],
-	ComponentMask& mask) noexcept
+	CompMask& mask) noexcept
 {
 	const int32_t NUM_BITS_PER_FIELD = 8;
 	const int32_t NUM_FIELDS = 4;
@@ -594,7 +594,7 @@ void GameStateEditor::destroy() noexcept
 	}
 	mNumSingletonInfos = 0;
 	mNumComponentInfos = 0;
-	mFilterMask = ComponentMask::activeMask();
+	mFilterMask = CompMask::activeMask();
 	for (uint32_t i = 0; i < 8; i++) {
 		mFilterMaskEditBuffers[i].clear();
 		mFilterMaskEditBuffers[i].appendf("");
@@ -718,7 +718,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 	sfz_assert(state->numComponentTypes == mNumComponentInfos);
 
 	// Get some stuff from the game state
-	ComponentMask* masks = state->componentMasks();
+	CompMask* masks = state->componentMasks();
 	const uint8_t* generations = state->entityGenerations();
 
 	// Currently selected entities component mask
@@ -802,7 +802,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 	if (selectedEntityExists) {
 
 		// Currently selected entities component mask
-		ComponentMask& mask = masks[mCurrentSelectedEntityId];
+		CompMask& mask = masks[mCurrentSelectedEntityId];
 		componentMaskVisualizer(mask);
 
 		ImGui::Spacing();

@@ -74,8 +74,8 @@ Entity GameStateHeader::createEntity() noexcept
 
 	// Set component mask
 	ArrayHeader* componentMasks = this->componentMasksArray();
-	ComponentMask& mask = componentMasks->at<ComponentMask>(freeEntityId);
-	mask = ComponentMask::activeMask();
+	CompMask& mask = componentMasks->at<CompMask>(freeEntityId);
+	mask = CompMask::activeMask();
 
 	// Get generation
 	uint8_t* generations = this->entityGenerations();
@@ -97,7 +97,7 @@ bool GameStateHeader::deleteEntity(uint32_t entityId) noexcept
 
 	// Get mask
 	ArrayHeader* componentMasks = this->componentMasksArray();
-	ComponentMask& mask = componentMasks->at<ComponentMask>(entityId);
+	CompMask& mask = componentMasks->at<CompMask>(entityId);
 
 	// Get generations
 	uint8_t* generations = this->entityGenerations();
@@ -122,7 +122,7 @@ bool GameStateHeader::deleteEntity(uint32_t entityId) noexcept
 	}
 
 	// Clear mask
-	mask = ComponentMask::empty();
+	mask = CompMask::empty();
 
 	// Increment generation
 	generation += 1;
@@ -144,8 +144,8 @@ Entity GameStateHeader::cloneEntity(Entity entity) noexcept
 	if (entityId >= this->maxNumEntities) return Entity::invalid();
 
 	// Get mask, exit if entity does not exist
-	ComponentMask* masks = this->componentMasks();
-	ComponentMask mask = masks[entityId];
+	CompMask* masks = this->componentMasks();
+	CompMask mask = masks[entityId];
 	if (!mask.active()) return Entity::invalid();
 
 	// Get generation, exit if entity has wrong generation
@@ -163,7 +163,7 @@ Entity GameStateHeader::cloneEntity(Entity entity) noexcept
 
 	// Copy components
 	for (uint32_t i = 1; i < this->numComponentTypes; i++) {
-		if (!mask.fulfills(ComponentMask::fromType(i))) continue;
+		if (!mask.fulfills(CompMask::fromType(i))) continue;
 
 		// Get components array
 		uint32_t componentSize = 0;
@@ -181,14 +181,14 @@ Entity GameStateHeader::cloneEntity(Entity entity) noexcept
 	return newEntity;
 }
 
-ComponentMask* GameStateHeader::componentMasks() noexcept
+CompMask* GameStateHeader::componentMasks() noexcept
 {
-	return componentMasksArray()->data<ComponentMask>();
+	return componentMasksArray()->data<CompMask>();
 }
 
-const ComponentMask* GameStateHeader::componentMasks() const noexcept
+const CompMask* GameStateHeader::componentMasks() const noexcept
 {
-	return componentMasksArray()->data<ComponentMask>();
+	return componentMasksArray()->data<CompMask>();
 }
 
 uint8_t* GameStateHeader::entityGenerations() noexcept
@@ -221,8 +221,8 @@ bool GameStateHeader::checkEntityValid(Entity entity) const noexcept
 	if (entityId >= this->maxNumEntities) return false;
 
 	// Check if active
-	const ComponentMask* masks = componentMasks();
-	ComponentMask mask = masks[entityId];
+	const CompMask* masks = componentMasks();
+	CompMask mask = masks[entityId];
 	if (!mask.active()) return false;
 
 	// Check if correct generation
@@ -274,7 +274,7 @@ bool GameStateHeader::addComponentUntyped(
 	if (componentType >= this->numComponentTypes) return false;
 
 	// Return false if mask is not active
-	ComponentMask& mask = this->componentMasks()[entityId];
+	CompMask& mask = this->componentMasks()[entityId];
 	if (!mask.active()) return false;
 
 	// Get components array, return false if component type does not have data
@@ -303,7 +303,7 @@ bool GameStateHeader::setComponentUnsized(
 	if (componentType >= this->numComponentTypes) return false;
 
 	// Return false if mask is not active
-	ComponentMask& mask = this->componentMasks()[entityId];
+	CompMask& mask = this->componentMasks()[entityId];
 	if (!mask.active()) return false;
 
 	// Get components array, return false if component type have data
@@ -324,7 +324,7 @@ bool GameStateHeader::deleteComponent(Entity entity, uint32_t componentType) noe
 	if (!checkGeneration(entity)) return false;
 
 	// Return false if mask is not active
-	ComponentMask& mask = this->componentMasks()[entityId];
+	CompMask& mask = this->componentMasks()[entityId];
 	if (!mask.active()) return false;
 
 	// Get components array, forward to setComponentUnsized() if component type does not have data
@@ -396,8 +396,8 @@ bool createGameState(
 
 	// Entity masks
 	ArrayHeader masksHeader;
-	masksHeader.create<ComponentMask>(maxNumEntities);
-	uint32_t masksSizeBytes = calcArrayHeaderSizeBytes(sizeof(ComponentMask), maxNumEntities);
+	masksHeader.create<CompMask>(maxNumEntities);
+	uint32_t masksSizeBytes = calcArrayHeaderSizeBytes(sizeof(CompMask), maxNumEntities);
 	totalSizeBytes += masksSizeBytes;
 
 	// Entity generations list

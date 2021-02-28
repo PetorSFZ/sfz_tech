@@ -114,7 +114,7 @@ private:
 	ReducedComponentInfo mComponentInfos[64] = {};
 	uint32_t mNumSingletonInfos = 0;
 	uint32_t mNumComponentInfos = 0;
-	ComponentMask mFilterMask = ComponentMask::activeMask();
+	CompMask mFilterMask = CompMask::activeMask();
 	str32 mFilterMaskEditBuffers[8];
 	bool mCompactEntityList = false;
 	uint32_t mCurrentSelectedEntityId = 0;

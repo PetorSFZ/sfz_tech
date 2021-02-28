@@ -315,7 +315,7 @@ set(SRC_FILES
 
 	${SRC_DIR}/sfz/state/ArrayHeader.hpp
 	${SRC_DIR}/sfz/state/ArrayHeader.cpp
-	${SRC_DIR}/sfz/state/ComponentMask.hpp
+	${SRC_DIR}/sfz/state/CompMask.hpp
 	${SRC_DIR}/sfz/state/Entity.hpp
 	${SRC_DIR}/sfz/state/GameState.hpp
 	${SRC_DIR}/sfz/state/GameState.cpp
