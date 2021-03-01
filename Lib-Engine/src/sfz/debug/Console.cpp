@@ -52,11 +52,12 @@ struct ConsoleState final {
 	// Console settings
 	bool active = false;
 	bool imguiFirstRun = false;
-	
+	Setting* imguiScale = nullptr;
+
 	// Performance
-	Setting* showInGamePreview = nullptr;
-	Setting* inGamePreviewWidth = nullptr;
-	Setting* inGamePreviewHeight = nullptr;
+	Setting* showInGamePerf = nullptr;
+	Setting* inGamePerfWidth = nullptr;
+	Setting* inGamePerfHeight = nullptr;
 	str64 categoryStr = str64("default");
 	ArrayLocal<Array<float>, PROFILING_STATS_MAX_NUM_LABELS> processedValues;
 
@@ -66,6 +67,9 @@ struct ConsoleState final {
 	Array<Setting*> cfgSectionSettings;
 
 	// Log
+	Setting* showInGameLog = nullptr;
+	Setting* inGameLogWidth = nullptr;
+	Setting* inGameLogHeight = nullptr;
 	Setting* logMinLevelSetting = nullptr;
 	str96 logTagFilter;
 
@@ -89,7 +93,8 @@ static bool anyContainsFilter(const Array<Setting*>& settings, const char* filte
 static void timeToString(str96& stringOut, time_t timestamp) noexcept
 {
 	std::tm* tmPtr = std::localtime(&timestamp);
-	size_t res = std::strftime(stringOut.mRawStr, stringOut.capacity(), "%Y-%m-%d %H:%M:%S", tmPtr);
+	//size_t res = std::strftime(stringOut.mRawStr, stringOut.capacity(), "%Y-%m-%d %H:%M:%S", tmPtr);
+	size_t res = std::strftime(stringOut.mRawStr, stringOut.capacity(), "%H:%M:%S", tmPtr);
 	if (res == 0) {
 		stringOut.clear();
 		stringOut.appendf("INVALID TIME");
@@ -179,7 +184,7 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 
 		// Calculate window size
 		vec2 windowSize =
-			vec2(float(state.inGamePreviewWidth->intValue()), float(state.inGamePreviewHeight->intValue()));
+			vec2(float(state.inGamePerfWidth->intValue()), float(state.inGamePerfHeight->intValue()));
 		ImGui::SetNextWindowSize(windowSize, ImGuiCond_Always);
 		ImGui::SetNextWindowPos(vec2(0.0f), ImGuiCond_Always);
 
@@ -272,11 +277,99 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 	}
 }
 
-static void renderLogWindow(ConsoleState& state) noexcept
+static void renderLogWindow(ConsoleState& state, vec2 imguiWindowRes, bool isPreview) noexcept
 {
-	const vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	TerminalLogger& logger = *reinterpret_cast<TerminalLogger*>(getLogger());
+	constexpr vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	str96 timeStr;
+
+	auto getMessageColor = [](LogLevel level) -> vec4 {
+		switch (level) {
+		case LogLevel::INFO_NOISY: return vec4(0.6f, 0.6f, 0.8f, 1.0f);
+		case LogLevel::INFO: return vec4(0.8f, 0.8f, 0.8f, 1.0f);
+		case LogLevel::WARNING: return vec4(1.0f, 1.0f, 0.0f, 1.0f);
+		case LogLevel::ERROR_LVL: return vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		}
+		sfz_assert(false);
+		return vec4(1.0f);
+	};
+
+	if (isPreview) {
+
+		// Find how many active messages there are
+		constexpr uint64_t MAX_AGE_SECS = 8;
+		const time_t now = std::time(nullptr);
+		const uint32_t numMessages = logger.numMessages();
+		uint32_t numActiveMessages = 0;
+		for (uint32_t i = 0; i < numMessages; i++) {
+			// Reverse order, newest first
+			const TerminalMessageItem& msg = logger.getMessage(numMessages - i - 1);
+			const uint64_t age = now - msg.timestamp;
+			if (age > MAX_AGE_SECS) {
+				break;
+			}
+			numActiveMessages = i + 1;
+		}
+
+		// Exit if no active messages
+		if (numActiveMessages == 0) return;
+
+		// Calculate window size
+		const vec2 windowSize =
+			vec2(float(state.inGameLogWidth->intValue()), float(state.inGameLogHeight->intValue()));
+		ImGui::SetNextWindowSize(windowSize, ImGuiCond_Always);
+		ImGui::SetNextWindowPos(imguiWindowRes - windowSize - vec2(5.0f), ImGuiCond_Always);
+
+		// Begin window
+		ImGuiWindowFlags windowFlags = 0;
+		windowFlags |= ImGuiWindowFlags_NoTitleBar;
+		windowFlags |= ImGuiWindowFlags_NoResize;
+		windowFlags |= ImGuiWindowFlags_NoMove;
+		windowFlags |= ImGuiWindowFlags_NoScrollbar;
+		windowFlags |= ImGuiWindowFlags_NoCollapse;
+		//windowFlags |= ImGuiWindowFlags_NoBackground;
+		windowFlags |= ImGuiWindowFlags_NoMouseInputs;
+		windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
+		windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+		windowFlags |= ImGuiWindowFlags_NoNav;
+		windowFlags |= ImGuiWindowFlags_NoInputs;
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, vec4(0.05f, 0.05f, 0.05f, 0.6f));
+		ImGui::PushStyleColor(ImGuiCol_Border, vec4(0.0f, 0.0f, 0.0f, 0.0f));
+		ImGui::Begin("Log Preview", nullptr, windowFlags);
+
+		for (uint32_t i = 0; i < numActiveMessages; i++) {
+			// Reverse order, newest first
+			const TerminalMessageItem& msg = logger.getMessage(numMessages - i - 1);
+
+			// Skip if log level is too low
+			if (int32_t(msg.level) < state.logMinLevelSetting->intValue()) continue;
+
+			// Print message header
+			const vec4 messageColor = getMessageColor(msg.level);
+			timeToString(timeStr, msg.timestamp);
+			imguiPrintText(str64("%s  - ", timeStr.str()), messageColor);
+			ImGui::SameLine();
+			imguiRenderFilteredText(msg.tag, state.logTagFilter, messageColor, filterTextColor);
+			ImGui::SameLine();
+			imguiPrintText(str96(" -  %s:%i", msg.file.str(), msg.lineNumber), messageColor);
+
+			ImGui::Spacing();
+
+			// Print message
+			ImGui::PushStyleColor(ImGuiCol_Text, messageColor);
+			ImGui::TextWrapped("%s", msg.message.str());
+			ImGui::PopStyleColor();
+
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
+		}
+
+		ImGui::End();
+		ImGui::PopStyleColor();
+		ImGui::PopStyleColor();
+		return;
+	}
 
 	ImGui::SetNextWindowPos(vec2(0.0f, 130.0f), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(vec2(800, 800), ImGuiCond_FirstUseEver);
@@ -333,42 +426,25 @@ static void renderLogWindow(ConsoleState& state) noexcept
 			if (!tagFilter) continue;
 		}
 
-		// Get color of message
-		vec4 messageColor = vec4(0.0f);
-		switch (message.level) {
-		case LogLevel::INFO_NOISY: messageColor = vec4(0.6f, 0.6f, 0.8f, 1.0f); break;
-		case LogLevel::INFO: messageColor = vec4(0.8f, 0.8f, 0.8f, 1.0f); break;
-		case LogLevel::WARNING: messageColor = vec4(1.0f, 1.0f, 0.0f, 1.0f); break;
-		case LogLevel::ERROR_LVL: messageColor = vec4(1.0f, 0.0f, 0.0f, 1.0f); break;
-		}
-
-		// Create columns
-		ImGui::Columns(2);
-		ImGui::SetColumnWidth(0, 200.0f);
-
-		// Print tag and messagess
-		ImGui::Separator();
+		// Print message header
+		const vec4 messageColor = getMessageColor(message.level);
+		timeToString(timeStr, message.timestamp);
+		imguiPrintText(str64("%s  - ", timeStr.str()), messageColor);
+		ImGui::SameLine();
 		imguiRenderFilteredText(message.tag, state.logTagFilter, messageColor, filterTextColor);
-		ImGui::NextColumn();
+		ImGui::SameLine();
+		imguiPrintText(str96(" -  %s:%i", message.file.str(), message.lineNumber), messageColor);
+
+		ImGui::Spacing();
+
+		// Print message
 		ImGui::PushStyleColor(ImGuiCol_Text, messageColor);
-		ImGui::TextWrapped("%s", message.message.str()); ImGui::NextColumn();
+		ImGui::TextWrapped("%s", message.message.str());
 		ImGui::PopStyleColor();
 
-		// Restore to 1 column
-		ImGui::Columns(1);
-
-		// Tooltip with timestamp, file and explicit warning level
-		if (ImGui::IsItemHovered()) {
-
-			// Get time string
-			timeToString(timeStr, message.timestamp);
-
-			// Print tooltip
-			ImGui::BeginTooltip();
-			ImGui::Text("%s -- %s -- %s:%i",
-				toString(message.level), timeStr.str(), message.file.str(), message.lineNumber);
-			ImGui::EndTooltip();
-		}
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
 	}
 
 	// Show last message by default
@@ -550,10 +626,14 @@ void Console::init(Allocator* allocator, uint32_t numWindowsToDock, const char* 
 
 	// Pick out console settings
 	GlobalConfig& cfg = getGlobalConfig();
-	mState->showInGamePreview =
-		cfg.sanitizeBool("Console", "showInGamePreview", true, BoolBounds(false));
-	mState->inGamePreviewWidth = cfg.sanitizeInt("Console", "inGamePreviewWidth", true, IntBounds(1200, 700, 1500, 50));
-	mState->inGamePreviewHeight = cfg.sanitizeInt("Console", "inGamePreviewHeight", true, IntBounds(150, 100, 500, 25));
+	mState->imguiScale = cfg.getSetting("Imgui", "scale");
+	mState->showInGamePerf =
+		cfg.sanitizeBool("Console", "showInPerfPreview", true, BoolBounds(false));
+	mState->inGamePerfWidth = cfg.sanitizeInt("Console", "inGamePerfWidth", true, IntBounds(1200, 700, 1500, 50));
+	mState->inGamePerfHeight = cfg.sanitizeInt("Console", "inGamePerfHeight", true, IntBounds(150, 100, 500, 25));
+	mState->showInGameLog = cfg.sanitizeBool("Console", "showInGameLog", true, true);
+	mState->inGameLogWidth = cfg.sanitizeInt("Console", "inGameLogWidth", true, IntBounds(1000, 700, 1500, 50));
+	mState->inGameLogHeight = cfg.sanitizeInt("Console", "inGameLogHeight", true, IntBounds(1000, 400, 2000, 50));
 	mState->logMinLevelSetting = cfg.sanitizeInt("Console", "logMinLevel", false, IntBounds(0, 0, 3));
 
 	// Global Config
@@ -592,11 +672,16 @@ bool Console::active() noexcept
 	return mState->active;
 }
 
-void Console::render() noexcept
+void Console::render(vec2_i32 windowRes) noexcept
 {
-	// Render in-game console preview
-	if (!mState->active && mState->showInGamePreview->boolValue()) {
+	const vec2 imguiWindowRes = vec2(windowRes) / mState->imguiScale->floatValue();
+
+	// Render in-game previews
+	if (!mState->active && mState->showInGamePerf->boolValue()) {
 		renderPerformanceWindow(*mState, true);
+	}
+	if (!mState->active && mState->showInGameLog->boolValue()) {
+		renderLogWindow(*mState, imguiWindowRes, true);
 	}
 
 	// Return if console should not be rendered
@@ -611,7 +696,7 @@ void Console::render() noexcept
 	}
 
 	// Render console windows
-	renderLogWindow(*mState);
+	renderLogWindow(*mState, imguiWindowRes, false);
 	renderConfigWindow(*mState);
 	renderPerformanceWindow(*mState, false);
 	getResourceManager().renderDebugUI();
