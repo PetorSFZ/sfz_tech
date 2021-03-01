@@ -633,7 +633,7 @@ void Console::init(Allocator* allocator, uint32_t numWindowsToDock, const char* 
 	mState->inGamePerfHeight = cfg.sanitizeInt("Console", "inGamePerfHeight", true, IntBounds(150, 100, 500, 25));
 	mState->showInGameLog = cfg.sanitizeBool("Console", "showInGameLog", true, true);
 	mState->inGameLogWidth = cfg.sanitizeInt("Console", "inGameLogWidth", true, IntBounds(1000, 700, 1500, 50));
-	mState->inGameLogHeight = cfg.sanitizeInt("Console", "inGameLogHeight", true, IntBounds(1000, 400, 2000, 50));
+	mState->inGameLogHeight = cfg.sanitizeInt("Console", "inGameLogHeight", true, IntBounds(600, 400, 2000, 50));
 	mState->logMinLevelSetting = cfg.sanitizeInt("Console", "logMinLevel", false, IntBounds(0, 0, 3));
 
 	// Global Config
