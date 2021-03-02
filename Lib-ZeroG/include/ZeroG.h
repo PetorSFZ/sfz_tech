@@ -794,7 +794,8 @@ public:
 		ZgPipelineCompileSettingsHLSL compileSettings = {};
 		compileSettings.shaderModel = model;
 		compileSettings.dxcCompilerFlags[0] = "-Zi";
-		compileSettings.dxcCompilerFlags[1] = "-O3";
+		compileSettings.dxcCompilerFlags[1] = "-Qembed_debug";
+		compileSettings.dxcCompilerFlags[2] = "-O3";
 
 		// Build pipeline
 		return pipelineOut.createFromFileHLSL(createInfo, compileSettings);
@@ -1268,7 +1269,8 @@ public:
 		ZgPipelineCompileSettingsHLSL compileSettings = {};
 		compileSettings.shaderModel = model;
 		compileSettings.dxcCompilerFlags[0] = "-Zi";
-		compileSettings.dxcCompilerFlags[1] = "-O3";
+		compileSettings.dxcCompilerFlags[1] = "-Qembed_debug";
+		compileSettings.dxcCompilerFlags[2] = "-O3";
 
 		// Build pipeline
 		return pipelineOut.createFromFileHLSL(createInfo, compileSettings);
@@ -1285,7 +1287,8 @@ public:
 		ZgPipelineCompileSettingsHLSL compileSettings = {};
 		compileSettings.shaderModel = model;
 		compileSettings.dxcCompilerFlags[0] = "-Zi";
-		compileSettings.dxcCompilerFlags[1] = "-O3";
+		compileSettings.dxcCompilerFlags[1] = "-Qembed_debug";
+		compileSettings.dxcCompilerFlags[2] = "-O3";
 
 		// Build pipeline
 		return pipelineOut.createFromSourceHLSL(createInfo, compileSettings);
