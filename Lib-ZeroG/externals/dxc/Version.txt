@@ -1,0 +1,4 @@
+URL: https://github.com/Microsoft/DirectXShaderCompiler
+Version: Release October 2020
+Commit: b640fa4ba4afb8eb9f15b4a34ab5187c7d94de97
+Downloaded: 2021-03-03

@@ -151,6 +151,10 @@ if (MSVC)
 	# D3DX12
 	# ${D3DX12_FOUND}, ${D3DX12_INCLUDE_DIRS}
 	add_subdirectory(${EXTERNALS_DIR}/D3DX12)
+
+	# dxc
+	# ${DXC_FOUND}, ${DXC_INCLUDE_DIRS}, ${DXC_LIBRARIES}, ${DXC_RUNTIME_FILES}
+	add_subdirectory(${EXTERNALS_DIR}/dxc)
 endif()
 
 # ZeroG
@@ -204,10 +208,12 @@ if (MSVC)
 		${SFZ_CORE_INCLUDE_DIRS}
 		${D3D12_MEMORY_ALLOCATOR_INCLUDE_DIRS}
 		${D3DX12_INCLUDE_DIRS}
+		${DXC_INCLUDE_DIRS}
 	)
 
 	target_link_libraries(ZeroG-D3D12
 		${D3D12_MEMORY_ALLOCATOR_LIBRARIES}
+		${DXC_LIBRARIES}
 	)
 endif()
 
@@ -245,9 +251,7 @@ endif()
 # ------------------------------------------------------------------------------------------------
 
 if (MSVC)
-	set(RUNTIME_FILES
-		"C:\\Program\ Files\ (x86)\\Windows\ Kits\\10\\Redist\\D3D\\x64\\dxcompiler.dll"
-		"C:\\Program\ Files\ (x86)\\Windows\ Kits\\10\\Redist\\D3D\\x64\\dxil.dll")
+	set(RUNTIME_FILES ${DXC_RUNTIME_FILES})
 endif()
 
 # Output variables (Parent scope)
