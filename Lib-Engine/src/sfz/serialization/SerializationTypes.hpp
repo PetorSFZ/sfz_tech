@@ -22,22 +22,47 @@
 
 namespace sfz {
 
-// Opt serializable
+// OptVal serializable
 // ------------------------------------------------------------------------------------------------
 
-// The opt type specifies that the member is optional in the serialized representation.
+// The OptVal type specifies that the member is optional in the serialized representation.
+//
+// It has two different states:
+// Valid: Whether the value held is valid to get() or not.
+// Default: Whether the value held is the "default" value or not. Default value implies that there
+//          is no need to serialize it, as the value is the same as what you would get if nothing
+//          was specified in the serialized representation.
+//
+// Example:
+//     struct Foo {
+//         OptVal<int> val1; // Not valid and not default until something is read from serialized.
+//         OptVal<int> val2 = 3; // Valid and default, unless something is read from serialized
+//                               // then it is no longer default.
+//     };
 template<typename T>
-struct Opt final {
-	T val;
-	Opt() = default;
-	Opt(const T& valIn) : val(valIn) {}
-	Opt(T&& valIn) : val(std::move(valIn)) {}
-	Opt& operator= (const T& valIn) { this->val = valIn; return *this; }
-	Opt& operator= (T&& valIn) { this->val = std::move(valIn); return *this; }
-	operator T&() { return val; }
-	operator const T&() const { return val; }
-	T& operator() () { return val; }
-	const T& operator() () const { return val; }
+class OptVal final {
+public:
+	OptVal() = default;
+	OptVal(const T& val) { set(val); mDefault = true; }
+	OptVal(T&& val) { set(std::move(val)); mDefault = true; }
+
+	bool valid() const { return mValid; }
+	bool isDefault() const { return mDefault; }
+
+	T& get() { sfz_assert(mValid); return mVal; }
+	const T& get() const { sfz_assert(mValid); return mVal; }
+
+	void set(const T& val) { mValid = true; mDefault = false; mVal = val; }
+	void set(T&& val) { mValid = true; mDefault = false; mVal = std::move(val); }
+
+	void unset() { this->mValid = false; this->mDefault = false; this->mVal = {}; }
+
+	void setDefault(bool defaultVal) { this->mDefault = defaultVal; }
+	
+private:
+	T mVal = {};
+	bool mValid = false;
+	bool mDefault = false;
 };
 
 } // namespace sfz

@@ -37,7 +37,7 @@ struct DeserializerVisitor final {
 	Allocator* allocator = nullptr;
 	JsonNode parentNode;
 	bool success = true;
-	bool optional = false;
+	bool errorMessagesEnabled = true;
 	str320* errorPath = nullptr; // Point to an empty str320 to get better debug output
 
 	void appendErrorPath(const char* name)
@@ -71,18 +71,20 @@ struct DeserializerVisitor final {
 
 	void printErrorMessage(const char* name, const char* message)
 	{
-		if (errorPath != nullptr) {
-			SFZ_ERROR("Deserializer", "\"%s\": %s", errorPath->str(), message);
-		}
-		else {
-			SFZ_ERROR("Deserializer", "Node \"%s\": %s", name, message);
+		if (errorMessagesEnabled) {
+			if (errorPath != nullptr) {
+				SFZ_ERROR("Deserializer", "\"%s\": %s", errorPath->str(), message);
+			}
+			else {
+				SFZ_ERROR("Deserializer", "Node \"%s\": %s", name, message);
+			}
 		}
 	}
 
 	JsonNode accessMapChecked(const char* name) 
 	{
 		JsonNode child = parentNode.accessMap(name);
-		if (parentNode.isValid() && !child.isValid() && !this->optional) {
+		if (parentNode.isValid() && !child.isValid()) {
 			printErrorMessage(name, "Node is invalid");
 			this->success = false;
 		}
@@ -95,10 +97,10 @@ struct DeserializerVisitor final {
 		if (valuePair.exists) {
 			valOut = valuePair.value;
 		}
-		else if (!this->optional) {
+		else {
 			printErrorMessage(name, "Failed to extract value from node.");
 		}
-		this->success = this->optional || (this->success && valuePair.exists);
+		this->success = this->success && valuePair.exists;
 	}
 
 	void operator() (const char* name, bool& valOut)
@@ -106,7 +108,7 @@ struct DeserializerVisitor final {
 		appendErrorPath(name);
 		JsonNode child = accessMapChecked(name);
 		if (child.isValid()) extractValue(name, child.valueBool(), valOut);
-		else this->success = this->optional || false;
+		else this->success = false;
 		restoreErrorPath(name);
 	}
 
@@ -115,7 +117,7 @@ struct DeserializerVisitor final {
 		appendErrorPath(name);
 		JsonNode child = accessMapChecked(name);
 		if (child.isValid()) extractValue(name, child.valueInt(), valOut);
-		else this->success = this->optional || false;
+		else this->success = false;
 		restoreErrorPath(name);
 	}
 
@@ -124,7 +126,7 @@ struct DeserializerVisitor final {
 		appendErrorPath(name);
 		JsonNode child = accessMapChecked(name);
 		if (child.isValid()) extractValue(name, child.valueFloat(), valOut);
-		else this->success = this->optional || false;
+		else this->success = false;
 		restoreErrorPath(name);
 	}
 
@@ -139,11 +141,11 @@ struct DeserializerVisitor final {
 			}
 			else {
 				printErrorMessage(name, "Failed, vec2_i32 must be of form [x, y]");
-				this->success = this->optional || false;
+				this->success = false;
 			}
 		}
 		else {
-			this->success = this->optional || false;
+			this->success = false;
 		}
 		restoreErrorPath(name);
 	}
@@ -160,11 +162,11 @@ struct DeserializerVisitor final {
 			}
 			else {
 				printErrorMessage(name, "Failed, vec3_i32 must be of form [x, y, z]");
-				this->success = this->optional || false;
+				this->success = false;
 			}
 		}
 		else {
-			this->success = this->optional || false;
+			this->success = false;
 		}
 		restoreErrorPath(name);
 	}
@@ -182,11 +184,11 @@ struct DeserializerVisitor final {
 			}
 			else {
 				printErrorMessage(name, "Failed, vec4_i32 must be of form [x, y, z, w]");
-				this->success = this->optional || false;
+				this->success = false;
 			}
 		}
 		else {
-			this->success = this->optional || false;
+			this->success = false;
 		}
 		restoreErrorPath(name);
 	}
@@ -202,11 +204,11 @@ struct DeserializerVisitor final {
 			}
 			else {
 				printErrorMessage(name, "Failed, vec2 must be of form [x, y]");
-				this->success = this->optional || false;
+				this->success = false;
 			}
 		}
 		else {
-			this->success = this->optional || false;
+			this->success = false;
 		}
 		restoreErrorPath(name);
 	}
@@ -223,11 +225,11 @@ struct DeserializerVisitor final {
 			}
 			else {
 				printErrorMessage(name, "Failed, vec3 must be of form [x, y, z]");
-				this->success = this->optional || false;
+				this->success = false;
 			}
 		}
 		else {
-			this->success = this->optional || false;
+			this->success = false;
 		}
 		restoreErrorPath(name);
 	}
@@ -245,11 +247,11 @@ struct DeserializerVisitor final {
 			}
 			else {
 				printErrorMessage(name, "Failed, vec4 must be of form [x, y, z, w]");
-				this->success = this->optional || false;
+				this->success = false;
 			}
 		}
 		else {
-			this->success = this->optional || false;
+			this->success = false;
 		}
 		restoreErrorPath(name);
 	}
@@ -264,7 +266,7 @@ struct DeserializerVisitor final {
 			if (this->success) valOut = strID(tmpStr);
 		}
 		else {
-			this->success = this->optional || false;
+			this->success = false;
 		}
 		restoreErrorPath(name);
 	}
@@ -274,7 +276,7 @@ struct DeserializerVisitor final {
 		appendErrorPath(name);
 		JsonNode child = accessMapChecked(name);
 		if (child.isValid()) extractValue(name, child.valueStr32(), valOut);
-		else this->success = this->optional || false;
+		else this->success = false;
 		restoreErrorPath(name);
 	}
 
@@ -283,7 +285,7 @@ struct DeserializerVisitor final {
 		appendErrorPath(name);
 		JsonNode child = accessMapChecked(name);
 		if (child.isValid()) extractValue(name, child.valueStr64(), valOut);
-		else this->success = this->optional || false;
+		else this->success = false;
 		restoreErrorPath(name);
 	}
 
@@ -292,7 +294,7 @@ struct DeserializerVisitor final {
 		appendErrorPath(name);
 		JsonNode child = accessMapChecked(name);
 		if (child.isValid()) extractValue(name, child.valueStr96(), valOut);
-		else this->success = this->optional || false;
+		else this->success = false;
 		restoreErrorPath(name);
 	}
 
@@ -301,7 +303,7 @@ struct DeserializerVisitor final {
 		appendErrorPath(name);
 		JsonNode child = accessMapChecked(name);
 		if (child.isValid()) extractValue(name, child.valueStr128(), valOut);
-		else this->success = this->optional || false;
+		else this->success = false;
 		restoreErrorPath(name);
 	}
 
@@ -310,7 +312,7 @@ struct DeserializerVisitor final {
 		appendErrorPath(name);
 		JsonNode child = accessMapChecked(name);
 		if (child.isValid()) extractValue(name, child.valueStr256(), valOut);
-		else this->success = this->optional || false;
+		else this->success = false;
 		restoreErrorPath(name);
 	}
 
@@ -319,21 +321,26 @@ struct DeserializerVisitor final {
 		appendErrorPath(name);
 		JsonNode child = accessMapChecked(name);
 		if (child.isValid()) extractValue(name, child.valueStr320(), valOut);
-		else this->success = this->optional || false;
+		else this->success = false;
 		restoreErrorPath(name);
 	}
 
+
 	template<typename T>
-	void operator() (const char* name, Opt<T>& valOut)
+	void operator() (const char* name, OptVal<T>& valOut)
 	{
 		DeserializerVisitor deserializer;
 		deserializer.allocator = allocator;
 		deserializer.parentNode = this->parentNode.copy();
 		deserializer.success = true;
-		deserializer.optional = true;
+		deserializer.errorMessagesEnabled = false;
 		deserializer.errorPath = this->errorPath;
-		deserializer(name, valOut.val);
-		this->success = this->optional || (this->success && deserializer.success);
+		T val = {};
+		deserializer(name, val);
+		if (deserializer.success) {
+			valOut.set(std::move(val));
+		}
+		// this->success = this->success && true;
 	}
 
 	template<typename T>
@@ -352,19 +359,19 @@ struct DeserializerVisitor final {
 					deserializer.allocator = this->allocator;
 					deserializer.parentNode = child.accessArray(i);
 					deserializer.success = this->success;
-					deserializer.optional = this->optional;
+					deserializer.errorMessagesEnabled = this->errorMessagesEnabled;
 					deserializer.errorPath = this->errorPath;
 					visit_struct::for_each(val, deserializer);
-					this->success = this->optional || (this->success && deserializer.success);
+					this->success = this->success && deserializer.success;
 					restoreErrorPathArray(i);
 				}
 			}
 			else {
-				this->success = this->optional || false;
+				this->success = false;
 			}
 		}
 		else {
-			this->success = this->optional || false;
+			this->success = false;
 		}
 		restoreErrorPath(name);
 	}
@@ -386,7 +393,7 @@ struct DeserializerVisitor final {
 						deserializer.allocator = this->allocator;
 						deserializer.parentNode = child.accessArray(i);
 						deserializer.success = this->success;
-						deserializer.optional = this->optional;
+						deserializer.errorMessagesEnabled = this->errorMessagesEnabled;
 						deserializer.errorPath = this->errorPath;
 						visit_struct::for_each(val, deserializer);
 						this->success = this->optional || (this->success && deserializer.success);
@@ -396,15 +403,15 @@ struct DeserializerVisitor final {
 				else {
 					printErrorMessage(name, str128("Json array is too big (%u) for local array (%u)",
 						len, valOut.capacity()).str());
-					this->success = this->optional || false;
+					this->success = false;
 				}
 			}
 			else {
-				this->success = this->optional || false;
+				this->success = false;
 			}
 		}
 		else {
-			this->success = this->optional || false;
+			this->success = false;
 		}
 		restoreErrorPath(name);
 	}
@@ -418,13 +425,13 @@ struct DeserializerVisitor final {
 		deserializer.parentNode = accessMapChecked(name);
 		if (deserializer.parentNode.isValid()) {
 			deserializer.success = this->success;
-			deserializer.optional = this->optional;
+			deserializer.errorMessagesEnabled = this->errorMessagesEnabled;
 			deserializer.errorPath = this->errorPath;
 			visit_struct::for_each(valOut, deserializer);
-			this->success = this->optional || (this->success && deserializer.success);
+			this->success = this->success && deserializer.success;
 		}
 		else {
-			this->success == this->optional || false;
+			this->success = false;
 		}
 		restoreErrorPath(name);
 	}
