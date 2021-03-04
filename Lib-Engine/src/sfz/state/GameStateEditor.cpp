@@ -765,14 +765,14 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 	// New entity button
 	if (ImGui::Button("New", sfz::vec2(136.0f, 0))) {
 		Entity entity = state->createEntity();
-		if (entity != Entity::invalid()) mCurrentSelectedEntityId = entity.id();
+		if (entity != NULL_ENTITY) mCurrentSelectedEntityId = entity.id();
 	}
 
 	// Clone entity button
 	if (ImGui::Button("Clone", sfz::vec2(136.0f, 0))) {
 		uint8_t gen = state->entityGenerations()[mCurrentSelectedEntityId];
 		Entity entity = state->cloneEntity(Entity::create(mCurrentSelectedEntityId, gen));
-		if (entity != Entity::invalid()) mCurrentSelectedEntityId = entity.id();
+		if (entity != NULL_ENTITY) mCurrentSelectedEntityId = entity.id();
 	}
 
 	// Delete entity button

@@ -50,12 +50,17 @@ constexpr uint32_t ENTITY_GENERATION_PART_MASK = ~ENTITY_ID_PART_MASK;
 // to the pool of free IDs to hand out, but the generation is incremented. By comparing the
 // generation of an Entity with the one stored in the ECS system it is possible to check if it is
 // the same Entity or if it has been destroyed and the ID reused for another one.
+//
+// Note that generation 0 is reserved as invalid, meaning an entity with the raw value "0" is
+// always considered invalid. For this reason we consider this entity (id 0, gen 0) the "null"
+// entity. It is used as an error code or for yet uninitialized entities. Use the constant
+// NULL_ENTITY (specified below) for clarity.
 struct Entity final {
 
 	// Members
 	// --------------------------------------------------------------------------------------------
 
-	uint32_t rawBits = ~0u;
+	uint32_t rawBits = 0;
 
 	// Construtors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -73,12 +78,6 @@ struct Entity final {
 		return tmp;
 	}
 
-	// Returns an invalid entity (all bits set to 1, i.e. ~0)
-	static Entity invalid() noexcept
-	{
-		return Entity();
-	}
-
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
@@ -92,5 +91,8 @@ struct Entity final {
 	bool operator!= (Entity other) const noexcept { return this->rawBits != other.rawBits; }
 };
 static_assert(sizeof(Entity) == 4, "Entity is padded");
+
+// A "null" handle typically used as an error type or for uninitialized entities.
+constexpr Entity NULL_ENTITY = {};
 
 } // namespace sfz

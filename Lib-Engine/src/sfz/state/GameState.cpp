@@ -63,11 +63,11 @@ Entity GameStateHeader::createEntity() noexcept
 {
 	// Get free entity from free entities list
 	ArrayHeader* freeEntitiesList = this->freeEntityIdsListArray();
-	uint32_t freeEntityId = ~0u;
+	uint32_t freeEntityId = 0;
 	bool freeEntityAvailable = freeEntitiesList->popGet(freeEntityId);
 
 	// Return Entity::invalid() if no free entity id is available
-	if (!freeEntityAvailable) return Entity::invalid();
+	if (!freeEntityAvailable) return NULL_ENTITY;
 
 	// Increment number of entities
 	currentNumEntities += 1;
@@ -124,8 +124,9 @@ bool GameStateHeader::deleteEntity(uint32_t entityId) noexcept
 	// Clear mask
 	mask = CompMask::empty();
 
-	// Increment generation
+	// Increment generation, skip 0 as it is reserved for invalid.
 	generation += 1;
+	if (generation == 0) generation = 1;
 
 	// Add entity id back to free entities list
 	ArrayHeader* freeEntityIdsList = this->freeEntityIdsListArray();
@@ -141,21 +142,21 @@ Entity GameStateHeader::cloneEntity(Entity entity) noexcept
 	uint8_t entityGeneration = entity.generation();
 
 	// If id is out of range, return invalid entity
-	if (entityId >= this->maxNumEntities) return Entity::invalid();
+	if (entityId >= this->maxNumEntities) return NULL_ENTITY;
 
 	// Get mask, exit if entity does not exist
 	CompMask* masks = this->componentMasks();
 	CompMask mask = masks[entityId];
-	if (!mask.active()) return Entity::invalid();
+	if (!mask.active()) return NULL_ENTITY;
 
 	// Get generation, exit if entity has wrong generation
 	uint8_t* generations = this->entityGenerations();
 	uint8_t expectedGeneration = generations[entityId];
-	if (entityGeneration != expectedGeneration) return Entity::invalid();
+	if (entityGeneration != expectedGeneration) return NULL_ENTITY;
 
 	// Create entity, exit out on failure
 	Entity newEntity = this->createEntity();
-	if (newEntity == Entity::invalid()) return Entity::invalid();
+	if (newEntity == NULL_ENTITY) return NULL_ENTITY;
 
 	// Copy mask
 	uint32_t newEntityId = newEntity.id();
@@ -210,8 +211,10 @@ uint8_t GameStateHeader::getGeneration(uint32_t entityId) const noexcept
 
 bool GameStateHeader::checkGeneration(Entity entity) const noexcept
 {
+	uint8_t generation = entity.generation();
+	if (generation == 0) return false;
 	uint8_t expectedGeneration = this->getGeneration(entity.id());
-	return expectedGeneration == entity.generation();
+	return expectedGeneration == generation;
 }
 
 bool GameStateHeader::checkEntityValid(Entity entity) const noexcept
@@ -485,13 +488,12 @@ bool createGameState(
 	state->componentMasksArray()->createCopy(masksHeader);
 	state->componentMasksArray()->size = masksHeader.capacity;
 
-	// Set entity generations header and fill with zeroes
+	// Set entity generations header and fill with ones
 	ArrayHeader* generations = state->entityGenerationsListArray();
 	generations->createCopy(generationsHeader);
-
-	// Small hack, start entity 0 at generation 1. To reduce risk of default constructed entities
-	// (entity 0, generation 0) pointing at something valid.
-	generations->at<uint8_t>(0) += 1;
+	for (uint32_t i = 0; i < maxNumEntities; i++) {
+		generations->at<uint8_t>(i) = 1;
+	}
 
 	// Set component types array headers (i = 1 because first is active bit, which has no data)
 	for (uint32_t i = 1; i < state->numComponentTypes; i++) {

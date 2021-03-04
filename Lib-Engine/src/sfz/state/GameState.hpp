@@ -44,7 +44,7 @@ constexpr uint64_t GAME_STATE_MAGIC_NUMBER =
 	uint64_t('E') << 56;
 
 // The current data layout version of the game state
-constexpr uint64_t GAME_STATE_VERSION = 5;
+constexpr uint64_t GAME_STATE_VERSION = 6;
 
 // The maximum number of entities a game state can hold
 //
@@ -240,7 +240,7 @@ struct GameStateHeader {
 
 	// Returns pointer to the contiguous array of entity generations (uint8_t). If the generation()
 	// of an entity does not match the generation at index id() in this list then the entity is
-	// invalid (i.e. a "dangling pointer entity").
+	// invalid (i.e. a "dangling pointer entity"). Generation "0" is reserved as invalid.
 	// Complexity: O(1)
 	uint8_t* entityGenerations() noexcept;
 	const uint8_t* entityGenerations() const noexcept;
