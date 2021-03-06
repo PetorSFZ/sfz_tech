@@ -62,6 +62,9 @@ struct InitOptions final {
 
 	// You can set this if you want another window name than your app name
 	const char* windowNameOverride = nullptr;
+	
+	// Whether you want to append build time to window title
+	bool appendBuildTimeToWindowTitle = false;
 
 	// Location of Ini file
 	IniLocation iniLocation = IniLocation::NEXT_TO_EXECUTABLE;
