@@ -41,7 +41,7 @@ static void alignedEdit(const char* name, const char* unique, uint32_t idx, floa
 {
 	ImGui::Text("%s:", name);
 	ImGui::SameLine(xOffset);
-	editor(str192("##%u_%s_%s", idx, name, unique).str());
+	editor(str256("##%u_%s_%s", idx, name, unique).str());
 }
 
 // Filtered text helpers
