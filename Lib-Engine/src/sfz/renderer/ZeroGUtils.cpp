@@ -46,7 +46,7 @@ static void zeroGLog(
 	(void)userPtr;
 	sfz::LogLevel errorLevel = [&]() {
 		switch (level) {
-		case ZG_LOG_LEVEL_NOISE: return sfz::LogLevel::INFO_NOISY;
+		case ZG_LOG_LEVEL_NOISE: return sfz::LogLevel::NOISE;
 		case ZG_LOG_LEVEL_INFO: return sfz::LogLevel::INFO;
 		case ZG_LOG_LEVEL_WARNING: return sfz::LogLevel::WARNING;
 		case ZG_LOG_LEVEL_ERROR: return sfz::LogLevel::ERROR_LVL;

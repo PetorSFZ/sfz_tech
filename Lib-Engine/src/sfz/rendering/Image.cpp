@@ -243,7 +243,7 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 	}
 
 	// Free temp memory used by stb_image and return image
-	SFZ_INFO_NOISY("PhantasyEngine", "Image \"%s\" loaded succesfully", path.str());
+	SFZ_NOISE("PhantasyEngine", "Image \"%s\" loaded succesfully", path.str());
 	stbi_image_free(img);
 	return tmp;
 }

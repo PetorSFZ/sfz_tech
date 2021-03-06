@@ -26,14 +26,14 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 enum class LogLevel : uint32_t {
-	INFO_NOISY = 0, // Extra detailed info that is not normally useful
+	NOISE = 0, // Extra detailed info that is not normally useful
 	INFO,
 	WARNING,
 	ERROR_LVL // ERROR is macro defined on Windows, so we append _LVL
 };
 
 constexpr const char* LOG_LEVEL_STRINGS[] = {
-	"INFO_NOISY",
+	"NOISE",
 	"INFO",
 	"WARNING",
 	"ERROR"

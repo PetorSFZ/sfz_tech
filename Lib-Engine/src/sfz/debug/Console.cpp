@@ -285,7 +285,7 @@ static void renderLogWindow(ConsoleState& state, vec2 imguiWindowRes, bool isPre
 
 	auto getMessageColor = [](LogLevel level) -> vec4 {
 		switch (level) {
-		case LogLevel::INFO_NOISY: return vec4(0.6f, 0.6f, 0.8f, 1.0f);
+		case LogLevel::NOISE: return vec4(0.6f, 0.6f, 0.8f, 1.0f);
 		case LogLevel::INFO: return vec4(0.8f, 0.8f, 0.8f, 1.0f);
 		case LogLevel::WARNING: return vec4(1.0f, 1.0f, 0.0f, 1.0f);
 		case LogLevel::ERROR_LVL: return vec4(1.0f, 0.0f, 0.0f, 1.0f);
@@ -347,11 +347,11 @@ static void renderLogWindow(ConsoleState& state, vec2 imguiWindowRes, bool isPre
 			// Print message header
 			const vec4 messageColor = getMessageColor(msg.level);
 			timeToString(timeStr, msg.timestamp);
-			imguiPrintText(str64("%s  - ", timeStr.str()), messageColor);
+			imguiPrintText(str64("[%s] - [", timeStr.str()), messageColor);
 			ImGui::SameLine();
 			imguiRenderFilteredText(msg.tag, state.logTagFilter, messageColor, filterTextColor);
 			ImGui::SameLine();
-			imguiPrintText(str96(" -  %s:%i", msg.file.str(), msg.lineNumber), messageColor);
+			imguiPrintText(str96("] - [%s:%i]", msg.file.str(), msg.lineNumber), messageColor);
 
 			ImGui::Spacing();
 
@@ -429,11 +429,11 @@ static void renderLogWindow(ConsoleState& state, vec2 imguiWindowRes, bool isPre
 		// Print message header
 		const vec4 messageColor = getMessageColor(message.level);
 		timeToString(timeStr, message.timestamp);
-		imguiPrintText(str64("%s  - ", timeStr.str()), messageColor);
+		imguiPrintText(str64("[%s] - [", timeStr.str()), messageColor);
 		ImGui::SameLine();
 		imguiRenderFilteredText(message.tag, state.logTagFilter, messageColor, filterTextColor);
 		ImGui::SameLine();
-		imguiPrintText(str96(" -  %s:%i", message.file.str(), message.lineNumber), messageColor);
+		imguiPrintText(str96("] - [%s:%i]", message.file.str(), message.lineNumber), messageColor);
 
 		ImGui::Spacing();
 

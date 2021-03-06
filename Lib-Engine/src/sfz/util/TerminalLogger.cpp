@@ -25,6 +25,14 @@
 #include <cstdio>
 #include <cstring>
 
+#ifdef _WIN32
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#undef near
+#undef far
+#endif
+
 namespace sfz {
 
 // TerminalLogger: Methods
@@ -87,12 +95,34 @@ void TerminalLogger::log(
 	bool printToTerminal = true;
 	if (printToTerminal) {
 
-		// Skip noise messages for now
-		// TODO: Setting for this as well
-		if (level == LogLevel::INFO_NOISY) return;
+		// Set terminal color
+#ifdef _WIN32
+		static HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+		if (consoleHandle != INVALID_HANDLE_VALUE) {
+			if (level == LogLevel::INFO) {
+				SetConsoleTextAttribute(consoleHandle, FOREGROUND_GREEN);
+			}
+			else if (level == LogLevel::WARNING) {
+				SetConsoleTextAttribute(consoleHandle, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+			}
+			else if (level == LogLevel::ERROR_LVL) {
+				SetConsoleTextAttribute(consoleHandle, FOREGROUND_RED | FOREGROUND_INTENSITY);
+			}
+		}
+#endif
+
+		// Get time string
+		std::tm* tmPtr = std::localtime(&item.timestamp);
+		sfz::str32 timeStr;
+		size_t res = std::strftime(timeStr.mRawStr, timeStr.capacity(), "%H:%M:%S", tmPtr);
+		if (res == 0) {
+			timeStr.clear();
+			timeStr.appendf("INVALID TIME");
+		}
 
 		// Print log level, tag, file and line number.
-		printf("[%s] -- [%s] -- [%s:%i]:\n", toString(level), tag, strippedFile, line);
+		printf("[%s] - [%s] - [%s] - [%s:%i]\n",
+			timeStr.str(), toString(level), tag, strippedFile, line);
 
 		// Print message
 		printf("%s", item.message.str());
@@ -101,6 +131,13 @@ void TerminalLogger::log(
 
 		// Flush stdout
 		fflush(stdout);
+
+		// Restore terminal color
+#ifdef _WIN32
+		if (consoleHandle != INVALID_HANDLE_VALUE) {
+			SetConsoleTextAttribute(consoleHandle, 7);
+		}
+#endif
 	}
 };
 

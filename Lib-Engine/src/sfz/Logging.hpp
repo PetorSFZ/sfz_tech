@@ -29,7 +29,7 @@
 #define SFZ_LOG(logLevel, tag, format, ...) sfz::getLogger()->log( \
 	__FILE__, __LINE__, (logLevel), (tag), (format), ##__VA_ARGS__)
 
-#define SFZ_INFO_NOISY(tag, format, ...) SFZ_LOG(sfz::LogLevel::INFO_NOISY, (tag), (format), ##__VA_ARGS__)
+#define SFZ_NOISE(tag, format, ...) SFZ_LOG(sfz::LogLevel::NOISE, (tag), (format), ##__VA_ARGS__)
 
 #define SFZ_INFO(tag, format, ...) SFZ_LOG(sfz::LogLevel::INFO, (tag), (format), ##__VA_ARGS__)
 

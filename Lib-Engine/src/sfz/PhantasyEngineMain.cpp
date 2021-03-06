@@ -677,7 +677,7 @@ int main(int argc, char* argv[])
 		}
 		SFZ_INFO("PhantasyEngine", "Build time: %s\nCurrent time: %s", BUILD_TIME, timeStr.str());
 	}
-	
+
 	// Set SDL allocators
 	if (!sfz::sdl::setSDLAllocator(sfz::getDefaultAllocator())) return EXIT_FAILURE;
 
