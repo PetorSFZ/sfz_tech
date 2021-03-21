@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <ctime>
+
 #include <skipifzero.hpp>
 
 #include <skipifzero_arrays.hpp>
@@ -39,6 +41,11 @@ const char* gameBaseFolderPath() noexcept;
 
 // Returns the filename given a path.
 const char* getFileNameFromPath(const char* path) noexcept;
+
+// Filewatch related IO functions
+// ------------------------------------------------------------------------------------------------
+
+time_t fileLastModifiedDate(const char* path) noexcept;
 
 // IO functions
 // ------------------------------------------------------------------------------------------------

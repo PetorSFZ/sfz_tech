@@ -328,8 +328,6 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/strings/DynString.cpp
 
 	${SRC_DIR}/sfz/util/Enumerate.hpp
-	${SRC_DIR}/sfz/util/FileWatch.hpp
-	${SRC_DIR}/sfz/util/FileWatch.cpp
 	${SRC_DIR}/sfz/util/FixedTimeUpdateHelpers.hpp
 	${SRC_DIR}/sfz/util/GltfLoader.hpp
 	${SRC_DIR}/sfz/util/GltfLoader.cpp

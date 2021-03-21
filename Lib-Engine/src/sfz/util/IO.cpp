@@ -35,6 +35,9 @@
 #include <windows.h>
 #include <shlobj.h>
 #include <direct.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+static_assert(sizeof(time_t) == sizeof(__time64_t), "");
 
 #elif defined(__APPLE__)
 #include <sys/stat.h>
@@ -156,6 +159,41 @@ const char* getFileNameFromPath(const char* path) noexcept
 	else {
 		return strippedFile2 + 1;
 	}
+}
+
+// Filewatch related IO functions
+// ------------------------------------------------------------------------------------------------
+
+time_t fileLastModifiedDate(const char* path) noexcept
+{
+#ifdef _WIN32
+	// struct _stat64i32
+	// {
+	//	_dev_t         st_dev;
+	//	_ino_t         st_ino;
+	//	unsigned short st_mode;
+	//	short          st_nlink;
+	//	short          st_uid;
+	//	short          st_gid;
+	//	_dev_t         st_rdev;
+	//	_off_t         st_size;
+	//	__time64_t     st_atime;
+	//	__time64_t     st_mtime;
+	//	__time64_t     st_ctime;
+	//};
+	struct _stat64i32 buffer = {};
+	int res = _stat(path, &buffer);
+	if (res < 0) {
+		SFZ_ERROR("IO", "Couldn't _stat(%s), errno: %s", path, strerror(errno));
+		return time_t(0);
+	}
+	sfz_assert(res == 0);
+	return buffer.st_mtime;
+#else
+	SFZ_ERROR("IO", "NOT IMPLEMENTED");
+	sfz_assert(false);
+	return time_t(0);
+#endif
 }
 
 // IO functions
