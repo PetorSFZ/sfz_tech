@@ -70,6 +70,7 @@ struct ConsoleState final {
 	Setting* showInGameLog = nullptr;
 	Setting* inGameLogWidth = nullptr;
 	Setting* inGameLogHeight = nullptr;
+	Setting* inGameLogMaxAgeSecs = nullptr;
 	Setting* logMinLevelSetting = nullptr;
 	str96 logTagFilter;
 
@@ -277,7 +278,7 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 	}
 }
 
-static void renderLogWindow(ConsoleState& state, vec2 imguiWindowRes, bool isPreview) noexcept
+static void renderLogWindow(ConsoleState& state, vec2 imguiWindowRes, bool isPreview, float maxAgeSecs = 6.0f) noexcept
 {
 	TerminalLogger& logger = *reinterpret_cast<TerminalLogger*>(getLogger());
 	constexpr vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
@@ -297,15 +298,14 @@ static void renderLogWindow(ConsoleState& state, vec2 imguiWindowRes, bool isPre
 	if (isPreview) {
 
 		// Find how many active messages there are
-		constexpr uint64_t MAX_AGE_SECS = 8;
 		const time_t now = std::time(nullptr);
 		const uint32_t numMessages = logger.numMessages();
 		uint32_t numActiveMessages = 0;
 		for (uint32_t i = 0; i < numMessages; i++) {
 			// Reverse order, newest first
 			const TerminalMessageItem& msg = logger.getMessage(numMessages - i - 1);
-			const uint64_t age = now - msg.timestamp;
-			if (age > MAX_AGE_SECS) {
+			const float age = float(now - msg.timestamp);
+			if (age > maxAgeSecs) {
 				break;
 			}
 			numActiveMessages = i + 1;
@@ -634,6 +634,7 @@ void Console::init(Allocator* allocator, uint32_t numWindowsToDock, const char* 
 	mState->showInGameLog = cfg.sanitizeBool("Console", "showInGameLog", true, true);
 	mState->inGameLogWidth = cfg.sanitizeInt("Console", "inGameLogWidth", true, IntBounds(1000, 700, 1500, 50));
 	mState->inGameLogHeight = cfg.sanitizeInt("Console", "inGameLogHeight", true, IntBounds(600, 400, 2000, 50));
+	mState->inGameLogMaxAgeSecs = cfg.sanitizeFloat("Console", "inGameLogMaxAgeSecs", false, 5.0f, 0.1f, 20.0f);
 	mState->logMinLevelSetting = cfg.sanitizeInt("Console", "logMinLevel", false, IntBounds(0, 0, 3));
 
 	// Global Config
@@ -681,7 +682,7 @@ void Console::render(vec2_i32 windowRes) noexcept
 		renderPerformanceWindow(*mState, true);
 	}
 	if (!mState->active && mState->showInGameLog->boolValue()) {
-		renderLogWindow(*mState, imguiWindowRes, true);
+		renderLogWindow(*mState, imguiWindowRes, true, mState->inGameLogMaxAgeSecs->floatValue());
 	}
 
 	// Return if console should not be rendered
