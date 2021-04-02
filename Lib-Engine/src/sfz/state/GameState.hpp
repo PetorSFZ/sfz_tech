@@ -409,7 +409,9 @@ constexpr uint32_t calcSizeOfGameStateBytes(
 
 	// Component arrays
 	for (uint32_t i = 0; i < numComponents; i++) {
-		totalSizeBytes += calcArrayHeaderSizeBytes(componentSizes[i], maxNumEntities);
+		if (componentSizes[i] > 0) {
+			totalSizeBytes += calcArrayHeaderSizeBytes(componentSizes[i], maxNumEntities);
+		}
 	}
 
 	return totalSizeBytes;
