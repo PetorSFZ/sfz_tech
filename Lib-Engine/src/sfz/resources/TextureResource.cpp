@@ -132,7 +132,7 @@ bool TextureResource::needRebuild(vec2_u32 screenRes) const
 	if (screenRelativeResolution) {
 		float resScale = this->resolutionScale;
 		if (this->resolutionScaleSetting != nullptr) {
-			resScale = resolutionScaleSetting->floatValue();
+			resScale = resolutionScaleSetting->floatValue() * this->resScaleSettingScale;
 		}
 		vec2 scaledRes = vec2(screenRes) * resScale;
 		newRes.x = uint32_t(std::round(scaledRes.x));
@@ -151,7 +151,7 @@ ZgResult TextureResource::build(vec2_u32 screenRes)
 	vec2_u32 newRes = vec2_u32(0u);
 	if (screenRelativeResolution) {
 		if (this->resolutionScaleSetting != nullptr) {
-			this->resolutionScale = resolutionScaleSetting->floatValue();
+			this->resolutionScale = resolutionScaleSetting->floatValue() * this->resScaleSettingScale;
 		}
 		vec2 scaledRes = vec2(screenRes) * this->resolutionScale;
 		newRes.x = uint32_t(std::round(scaledRes.x));
@@ -173,7 +173,8 @@ ZgResult TextureResource::build(vec2_u32 screenRes)
 	desc.committedAllocation = committedAllocation ? ZG_TRUE : ZG_FALSE;
 	desc.allowUnorderedAccess = (usage == ZG_TEXTURE_USAGE_DEPTH_BUFFER) ? ZG_FALSE : ZG_TRUE;
 	desc.usage = usage;
-	desc.optimalClearValue = optimalClearValue;
+	desc.optimalClearValue =
+		(usage == ZG_TEXTURE_USAGE_DEFAULT) ? ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED : optimalClearValue;
 	desc.width = res.x;
 	desc.height = res.y;
 	desc.numMipmaps = numMipmaps;
@@ -302,7 +303,8 @@ TextureResource TextureResource::createScreenRelative(
 	float scale,
 	Setting* scaleSetting,
 	ZgTextureUsage usage,
-	bool committedAllocation)
+	bool committedAllocation,
+	float resScaleSettingScale)
 {
 	TextureResource resource;
 	resource.name = strID(name);
@@ -315,6 +317,7 @@ TextureResource TextureResource::createScreenRelative(
 	resource.screenRelativeResolution = true;
 	resource.resolutionScale = scale;
 	resource.resolutionScaleSetting = scaleSetting;
+	resource.resScaleSettingScale = resScaleSettingScale;
 	
 	CHECK_ZG resource.build(screenRes);
 	

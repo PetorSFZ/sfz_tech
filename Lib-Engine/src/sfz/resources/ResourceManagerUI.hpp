@@ -91,7 +91,7 @@ inline void renderBuffersTab(ResourceManagerState& state)
 inline void renderTexturesTab(ResourceManagerState& state)
 {
 	constexpr float offset = 200.0f;
-	constexpr float offset2 = 220.0f;
+	constexpr float offset2 = 240.0f;
 	constexpr vec4 normalTextColor = vec4(1.0f);
 	constexpr vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	static str128 filter;
@@ -153,6 +153,11 @@ inline void renderTexturesTab(ResourceManagerState& state)
 					resource.resolutionScaleSetting->section().str(),
 					resource.resolutionScaleSetting->key().str());
 			});
+			if (resource.resScaleSettingScale != 1.0f) {
+				alignedEdit("Scale setting scale", offset2, [&](const char*) {
+					ImGui::Text("%.2f", resource.resScaleSettingScale);
+				});
+			}
 			ImGui::Unindent(20.0f);
 		}
 

@@ -46,6 +46,7 @@ struct TextureResource final {
 	bool screenRelativeResolution = false;
 	float resolutionScale = 1.0f;
 	Setting* resolutionScaleSetting = nullptr;
+	float resScaleSettingScale = 1.0f; // Amount to scale versus value in setting
 
 	bool needRebuild(vec2_u32 screenRes) const;
 	[[nodiscard]] ZgResult build(vec2_u32 screenRes);
@@ -77,7 +78,8 @@ struct TextureResource final {
 		float scale,
 		Setting* scaleSetting = nullptr,
 		ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT,
-		bool committedAllocation = false);
+		bool committedAllocation = false,
+		float resScaleSettingScale = 1.0f);
 };
 
 // Texture functions
