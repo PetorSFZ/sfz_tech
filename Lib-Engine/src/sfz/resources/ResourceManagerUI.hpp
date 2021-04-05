@@ -559,8 +559,13 @@ inline void renderVoxelMaterialsTab(ResourceManager& resources, ResourceManagerS
 			materialModified = materialModified || edited;
 		});
 
-		alignedEdit("Emissive", offset, [&](const char* name) {
-			bool edited = ImGui::ColorEdit3(str128("##%s%u", name, idx), material.emissive.data(), ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR);
+		alignedEdit("Emissive (color)", offset, [&](const char* name) {
+			bool edited = ImGui::ColorEdit3(str128("##%s%u", name, idx), material.emissiveColor.data());
+			materialModified = materialModified || edited;
+		});
+
+		alignedEdit("Emissive (strength)", offset, [&](const char* name) {
+			bool edited = ImGui::InputFloat(str128("##%s%u", name, idx), &material.emissiveStrength);
 			materialModified = materialModified || edited;
 		});
 

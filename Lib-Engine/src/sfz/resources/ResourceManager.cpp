@@ -408,8 +408,13 @@ void ResourceManager::syncVoxelMaterialsToGpuBlocking()
 		ShaderVoxelMaterial& dst = cpu[i];
 		dst.albedo = src.albedo;
 		dst.roughness = src.roughness;
-		dst.emissive = src.emissive;
 		dst.metallic = src.metallic;
+
+		const vec3 emissiveColorLinear = vec3(
+			powf(src.emissiveColor.x, 2.2f),
+			powf(src.emissiveColor.y, 2.2f),
+			powf(src.emissiveColor.z, 2.2f));
+		dst.emissive = emissiveColorLinear * src.emissiveStrength;
 	}
 
 	// Note: We are doing this using the present queue because the copy queue can't change the

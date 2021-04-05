@@ -35,14 +35,15 @@ struct VoxelMaterial final {
 
 	vec3 albedo = vec3(1.0f, 0.0f, 0.0f); // Gamma space, usually same as original color
 	float roughness = 1.0f; // Linear space
-	vec3 emissive = vec3(0.0f); // Linear space, unclamped range.
+	vec3 emissiveColor = vec3(0.0f); // Gamma space, samma range as albeddo
+	float emissiveStrength = 1.0f; // Linear strength of emissive color
 	float metallic = 0.0f; // Linear space, but typically only 0.0 or 1.0 is valid.
 };
 
 struct ShaderVoxelMaterial final {
 	vec3 albedo = vec3(1.0f, 0.0f, 0.0f);
 	float roughness = 1.0f;
-	vec3 emissive = vec3(0.0f); 
+	vec3 emissive = vec3(0.0f); // Linear unclamped range, linearize(emissiveColor) * emissiveStrength
 	float metallic = 0.0f;
 };
 static_assert(sizeof(ShaderVoxelMaterial) == sizeof(float) * 8, "ShaderVoxelMaterial is padded");
