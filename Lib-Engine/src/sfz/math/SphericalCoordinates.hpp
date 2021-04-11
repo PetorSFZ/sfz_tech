@@ -40,8 +40,9 @@ inline const SphericalCoord toSpherical(vec3 v)
 	SphericalCoord coord = {};
 	coord.r = length(v);
 	if (coord.r == 0.0f) return coord;
-	coord.phi = (atan2(v.y, v.x) + PI) * sfz::RAD_TO_DEG; // Range [0, 360)
-	if (coord.phi >= 360.0f) coord.phi -= 360.0f;
+	coord.phi = atan2(v.y, v.x) * sfz::RAD_TO_DEG; // Range [-180, 180]
+	if (coord.phi < 0.0f) coord.phi += 360.0f; // Move into range [0, 360]
+	if (coord.phi >= 360.0f) coord.phi -= 360.0f; // Move into range [0, 360)
 	coord.theta = acos(v.z / coord.r) * sfz::RAD_TO_DEG; // Range [0, 180]
 	coord.theta = sfz::clamp(coord.theta, 0.0f, 180.0f);
 	return coord;
