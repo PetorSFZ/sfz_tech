@@ -476,9 +476,9 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 				}
 			}
 
-			mouse.left = ((SDL_BUTTON(SDL_BUTTON_LEFT) & buttonState) == SDL_BUTTON_LEFT) ? uint8_t(1) : uint8_t(0);
-			mouse.middle = ((SDL_BUTTON(SDL_BUTTON_MIDDLE) & buttonState) == SDL_BUTTON_MIDDLE) ? uint8_t(1) : uint8_t(0);
-			mouse.right = ((SDL_BUTTON(SDL_BUTTON_RIGHT) & buttonState) == SDL_BUTTON_RIGHT) ? uint8_t(1) : uint8_t(0);
+			mouse.left = ((SDL_BUTTON(SDL_BUTTON_LEFT) & buttonState) == SDL_BUTTON(SDL_BUTTON_LEFT)) ? uint8_t(1) : uint8_t(0);
+			mouse.middle = ((SDL_BUTTON(SDL_BUTTON_MIDDLE) & buttonState) == SDL_BUTTON(SDL_BUTTON_MIDDLE)) ? uint8_t(1) : uint8_t(0);
+			mouse.right = ((SDL_BUTTON(SDL_BUTTON_RIGHT) & buttonState) == SDL_BUTTON(SDL_BUTTON_RIGHT)) ? uint8_t(1) : uint8_t(0);
 		}
 
 		// Gamepads
