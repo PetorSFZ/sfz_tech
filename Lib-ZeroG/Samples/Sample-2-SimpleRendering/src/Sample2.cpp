@@ -36,6 +36,19 @@
 #include <direct.h>
 #endif
 
+// D3D12 Agility SDK exports
+// ------------------------------------------------------------------------------------------------
+
+#ifdef _WIN32
+
+// The version of the Agility SDK we are using, see https://devblogs.microsoft.com/directx/directx12agility/
+extern "C" { _declspec(dllexport) extern const uint32_t D3D12SDKVersion = 4; }
+
+// Specifies that D3D12Core.dll will be available in a directory called D3D12 next to the exe.
+extern "C" { _declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\\"; }
+
+#endif
+
 // Settings
 // ------------------------------------------------------------------------------------------------
 
