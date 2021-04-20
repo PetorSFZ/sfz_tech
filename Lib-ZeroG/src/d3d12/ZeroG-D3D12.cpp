@@ -23,6 +23,9 @@
 #include <cstring>
 #include <mutex>
 
+// Must be first so we don't accidentally include system d3d12.h
+#include "d3d12/D3D12Common.hpp"
+
 #include <D3D12MemAlloc.h>
 
 #include "common/Context.hpp"
@@ -32,7 +35,6 @@
 
 #include "d3d12/D3D12CommandList.hpp"
 #include "d3d12/D3D12CommandQueue.hpp"
-#include "d3d12/D3D12Common.hpp"
 #include "d3d12/D3D12DescriptorRingBuffer.hpp"
 #include "d3d12/D3D12Framebuffer.hpp"
 #include "d3d12/D3D12Memory.hpp"
@@ -90,6 +92,9 @@ struct ZgContextState final {
 
 	// Debug info queue
 	ComPtr<ID3D12InfoQueue> infoQueue;
+
+	// Feature support
+	ZgFeatureSupport featureSupport = {};
 
 	// Static stats which don't change
 	ZgStats staticStats = {};
@@ -327,12 +332,35 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 		DXGI_ADAPTER_DESC1 desc;
 		CHECK_D3D12 ctxState->dxgiAdapter->GetDesc1(&desc);
 		snprintf(
-			ctxState->staticStats.deviceDescription,
-			sizeof(ctxState->staticStats.deviceDescription),
+			ctxState->featureSupport.deviceDescription,
+			sizeof(ctxState->featureSupport.deviceDescription),
 			"%S", desc.Description);
 		ctxState->staticStats.dedicatedGpuMemoryBytes = desc.DedicatedVideoMemory;
 		ctxState->staticStats.dedicatedCpuMemoryBytes = desc.DedicatedSystemMemory;
 		ctxState->staticStats.sharedCpuMemoryBytes = desc.SharedSystemMemory;
+	}
+
+	// Feature support
+	{
+		D3D12_FEATURE_DATA_SHADER_MODEL shaderModel = {};
+		// "before calling the function initialize the HighestShaderModel field to the highest
+		// shader model that your application understands."
+		shaderModel.HighestShaderModel = D3D_SHADER_MODEL_6_6;
+		CHECK_D3D12 ctxState->device->CheckFeatureSupport(
+			D3D12_FEATURE_SHADER_MODEL, &shaderModel, sizeof(D3D12_FEATURE_DATA_SHADER_MODEL));
+		ctxState->featureSupport.shaderModel = [](D3D_SHADER_MODEL model) {
+			switch (model) {
+			case D3D_SHADER_MODEL_5_1: return ZG_SHADER_MODEL_UNDEFINED;
+			case D3D_SHADER_MODEL_6_0: return ZG_SHADER_MODEL_6_0;
+			case D3D_SHADER_MODEL_6_1: return ZG_SHADER_MODEL_6_1;
+			case D3D_SHADER_MODEL_6_2: return ZG_SHADER_MODEL_6_2;
+			case D3D_SHADER_MODEL_6_3: return ZG_SHADER_MODEL_6_3;
+			case D3D_SHADER_MODEL_6_4: return ZG_SHADER_MODEL_6_4;
+			case D3D_SHADER_MODEL_6_5: return ZG_SHADER_MODEL_6_5;
+			case D3D_SHADER_MODEL_6_6: return ZG_SHADER_MODEL_6_6;
+			}
+			return ZG_SHADER_MODEL_UNDEFINED;
+		}(shaderModel.HighestShaderModel);
 	}
 
 	// Enable debug message in debug mode
@@ -1452,3 +1480,9 @@ ZG_API ZgResult zgContextGetStats(ZgStats* statsOut)
 	return ZG_SUCCESS;
 }
 
+ZG_API ZgResult zgContextGetFeatureSupport(ZgFeatureSupport* featureSupportOut)
+{
+	ZG_ARG_CHECK(featureSupportOut == nullptr, "");
+	*featureSupportOut = ctxState->featureSupport;
+	return ZG_SUCCESS;
+}

@@ -83,6 +83,41 @@ void RendererUI::render(RendererState& state) noexcept
 	ImGui::Spacing();
 
 
+	ZgFeatureSupport features = {};
+	CHECK_ZG zgContextGetFeatureSupport(&features);
+
+	// Print ZeroG  feature support
+	ImGui::Text("ZeroG Feature Support");
+	ImGui::Spacing();
+	ImGui::Indent(20.0f);
+
+	constexpr float featuresOffset = 240.0f;
+	alignedEdit("Device", featuresOffset, [&](const char*) {
+		ImGui::TextUnformatted(features.deviceDescription);
+	});
+
+	alignedEdit("Shader Model", featuresOffset, [&](const char*) {
+		const char* model = [](ZgShaderModel shaderModel) {
+			switch (shaderModel) {
+			case ZG_SHADER_MODEL_6_0: return "6.0";
+			case ZG_SHADER_MODEL_6_1: return "6.1";
+			case ZG_SHADER_MODEL_6_2: return "6.2";
+			case ZG_SHADER_MODEL_6_3: return "6.3";
+			case ZG_SHADER_MODEL_6_4: return "6.4";
+			case ZG_SHADER_MODEL_6_5: return "6.5";
+			case ZG_SHADER_MODEL_6_6: return "6.6";
+			}
+			return "UNDEFINED";
+		}(features.shaderModel);
+		
+		ImGui::TextUnformatted(model);
+	});
+
+	ImGui::Unindent(20.0f);
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
 	// Get ZeroG stats
 	ZgStats stats = {};
 	CHECK_ZG zgContextGetStats(&stats);
@@ -93,9 +128,6 @@ void RendererUI::render(RendererState& state) noexcept
 	ImGui::Indent(20.0f);
 
 	constexpr float statsValueOffset = 240.0f;
-	alignedEdit("Device", statsValueOffset, [&](const char*) {
-		ImGui::TextUnformatted(stats.deviceDescription);
-	});
 	ImGui::Spacing();
 	alignedEdit("Dedicated GPU Memory", statsValueOffset, [&](const char*) {
 		ImGui::Text("%.2f GiB", toGiB(stats.dedicatedGpuMemoryBytes));

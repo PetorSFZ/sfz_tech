@@ -100,7 +100,7 @@ ZG_ENUM(ZgBool) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 33;
+static const uint32_t ZG_COMPILED_API_VERSION = 34;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -328,7 +328,7 @@ ZG_STRUCT(ZgTextureCreateInfo) {
 	// to ZG_TEXTURE_2D_MAX_NUM_MIPMAPS.
 	uint32_t numMipmaps;
 
-	const char* debugName = nullptr;
+	const char* debugName;
 };
 
 ZG_API ZgResult zgTextureCreate(
@@ -607,7 +607,10 @@ ZG_ENUM(ZgShaderModel) {
 	ZG_SHADER_MODEL_6_0,
 	ZG_SHADER_MODEL_6_1,
 	ZG_SHADER_MODEL_6_2,
-	ZG_SHADER_MODEL_6_3
+	ZG_SHADER_MODEL_6_3,
+	ZG_SHADER_MODEL_6_4,
+	ZG_SHADER_MODEL_6_5,
+	ZG_SHADER_MODEL_6_6
 };
 
 // The maximum number of compiler flags allowed to the DXC shader compiler
@@ -2096,9 +2099,6 @@ ZG_API ZgResult zgContextSwapchainFinishFrame(
 // A struct containing general statistics
 ZG_STRUCT(ZgStats) {
 
-	// Text description (i.e. name) of the device in use
-	char deviceDescription[128];
-
 	// Total amount of dedicated GPU memory (in bytes) available on the GPU
 	uint64_t dedicatedGpuMemoryBytes;
 
@@ -2128,6 +2128,17 @@ ZG_STRUCT(ZgStats) {
 // Gets the current statistics of the ZeroG backend. Normally called once (or maybe up to a couple
 // of times) per frame.
 ZG_API ZgResult zgContextGetStats(ZgStats* statsOut);
+
+ZG_STRUCT(ZgFeatureSupport) {
+
+	// Text description (i.e. name) of the device in use
+	char deviceDescription[128];
+
+	// Highest supported shader model level (on D3D12 backend)
+	ZgShaderModel shaderModel;
+};
+
+ZG_API ZgResult zgContextGetFeatureSupport(ZgFeatureSupport* featureSupportOut);
 
 // Transformation and projection matrices
 // ------------------------------------------------------------------------------------------------

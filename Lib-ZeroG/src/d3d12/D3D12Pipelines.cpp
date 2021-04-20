@@ -188,6 +188,9 @@ static ZgResult compileHlslShader(
 			case ZG_SHADER_MODEL_6_1: return L"vs_6_1";
 			case ZG_SHADER_MODEL_6_2: return L"vs_6_2";
 			case ZG_SHADER_MODEL_6_3: return L"vs_6_3";
+			case ZG_SHADER_MODEL_6_4: return L"vs_6_4";
+			case ZG_SHADER_MODEL_6_5: return L"vs_6_5";
+			case ZG_SHADER_MODEL_6_6: return L"vs_6_6";
 			case ZG_SHADER_MODEL_UNDEFINED:
 			default:
 				sfz_assert_hard(false);
@@ -200,6 +203,9 @@ static ZgResult compileHlslShader(
 			case ZG_SHADER_MODEL_6_1: return L"ps_6_1";
 			case ZG_SHADER_MODEL_6_2: return L"ps_6_2";
 			case ZG_SHADER_MODEL_6_3: return L"ps_6_3";
+			case ZG_SHADER_MODEL_6_4: return L"ps_6_4";
+			case ZG_SHADER_MODEL_6_5: return L"ps_6_5";
+			case ZG_SHADER_MODEL_6_6: return L"ps_6_6";
 			case ZG_SHADER_MODEL_UNDEFINED:
 			default:
 				sfz_assert_hard(false);
@@ -212,6 +218,9 @@ static ZgResult compileHlslShader(
 			case ZG_SHADER_MODEL_6_1: return L"cs_6_1";
 			case ZG_SHADER_MODEL_6_2: return L"cs_6_2";
 			case ZG_SHADER_MODEL_6_3: return L"cs_6_3";
+			case ZG_SHADER_MODEL_6_4: return L"cs_6_4";
+			case ZG_SHADER_MODEL_6_5: return L"cs_6_5";
+			case ZG_SHADER_MODEL_6_6: return L"cs_6_6";
 			case ZG_SHADER_MODEL_UNDEFINED:
 			default:
 				sfz_assert_hard(false);
