@@ -11,7 +11,8 @@ if(WIN32)
 
 	set(DLLs
 		${CMAKE_CURRENT_SOURCE_DIR}/lib/x64/dxcompiler.dll
-		${CMAKE_CURRENT_SOURCE_DIR}/lib/x64/dxil.dll)
+		${CMAKE_CURRENT_SOURCE_DIR}/lib/x64/dxil.dll
+		${CMAKE_CURRENT_SOURCE_DIR}/lib/x64/dxc.exe)
 
 	set(DXC_FOUND true PARENT_SCOPE)
 	set(DXC_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
