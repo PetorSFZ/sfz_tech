@@ -248,7 +248,7 @@ function(phAddSfzCore)
 endfunction()
 
 # Adds sfz_tech's ZeroG, the following variables will be set:
-# ${ZEROG_FOUND}, ${ZEROG_INCLUDE_DIRS}, ${ZEROG_D3D12_LIBRARIES} and ${ZEROG_RUNTIME_FILES}
+# ${ZEROG_FOUND}, ${ZEROG_INCLUDE_DIRS}, ${ZEROG_D3D12_LIBRARIES}, ${ZEROG_RUNTIME_FILES} and ${ZEROG_D3D12_AGILITY_SDK_FILES}
 function(phAddZeroG)
 
 	set(ZEROG_PATH ${SFZ_TECH_ROOT}/Lib-ZeroG)
@@ -259,6 +259,7 @@ function(phAddZeroG)
 	set(ZEROG_INCLUDE_DIRS ${ZEROG_INCLUDE_DIRS} PARENT_SCOPE)
 	set(ZEROG_D3D12_LIBRARIES ${ZEROG_D3D12_LIBRARIES} PARENT_SCOPE)
 	set(ZEROG_RUNTIME_FILES ${ZEROG_RUNTIME_FILES} PARENT_SCOPE)
+	set(ZEROG_D3D12_AGILITY_SDK_FILES ${ZEROG_D3D12_AGILITY_SDK_FILES} PARENT_SCOPE)
 
 endfunction()
 
@@ -466,6 +467,29 @@ function(phMsvcCopyRuntimeDLLs)
 				file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR}/Release)
 			else()
 				file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR})
+			endif()
+
+		endforeach()
+
+	endif()
+endfunction()
+
+function(phMsvcCopyD3D12AgilitySDK)
+	if(MSVC)
+		message("-- [PhantasyEngine]: Copying D3D12 Agility SDK to binary directory:")
+		foreach(dllPath ${ZEROG_D3D12_AGILITY_SDK_FILES})
+			message("  -- ${dllPath}")
+		endforeach()
+
+		foreach(dllPath ${ZEROG_D3D12_AGILITY_SDK_FILES})
+
+			# Do different things depending on if we are generating .sln or using built-in VS CMake
+			if(CMAKE_CONFIGURATION_TYPES)
+				file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR}/Debug/D3D12)
+				file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR}/RelWithDebInfo/D3D12)
+				file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR}/Release/D3D12)
+			else()
+				file(COPY ${dllPath} DESTINATION ${CMAKE_BINARY_DIR}/D3D12)
 			endif()
 
 		endforeach()

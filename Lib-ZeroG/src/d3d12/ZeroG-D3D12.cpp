@@ -50,6 +50,18 @@
 // MakeResident before Evict takes effect. Objects that support residency are made resident during
 // creation, so a single Evict call will actually evict the object."
 
+// D3D12 Agility SDK exports
+// ------------------------------------------------------------------------------------------------
+
+// Note: It seems this is not enough and must also be in the exe file of the application using
+//       ZeroG. A bit annoying, but don't have a good solution to it for now.
+
+// The version of the Agility SDK we are using, see https://devblogs.microsoft.com/directx/directx12agility/
+extern "C" { _declspec(dllexport) extern const UINT D3D12SDKVersion = 4; }
+
+// Specifies that D3D12Core.dll will be available in a directory called D3D12 next to the exe.
+extern "C" { _declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\\"; }
+
 // Constants
 // ------------------------------------------------------------------------------------------------
 

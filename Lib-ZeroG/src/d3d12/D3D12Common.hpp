@@ -30,20 +30,19 @@
 //#include <Winerror.h>
 
 // D3D12 headers
-#include <d3d12.h>
+#include <D3D12AgilitySDK/d3d12.h>
 #pragma comment (lib, "d3d12.lib")
 #include <dxgi1_6.h>
 #pragma comment (lib, "dxgi.lib")
 //#pragma comment (lib, "dxguid.lib")
-#include <d3d12shader.h>
+#include <D3D12AgilitySDK/d3d12shader.h>
 
 // DXGI Debug
 //#include <dxgidebug.h>
 //#pragma comment (lib, "dxguid.lib")
 
 // DXC compiler
-#include <dxcapi.h>
-#pragma comment (lib, "dxcompiler.lib")
+#include <dxc/dxcapi.h>
 
 // D3DX12 library
 #include "d3dx12.h"
