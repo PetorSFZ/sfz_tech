@@ -91,12 +91,12 @@ void RendererUI::render(RendererState& state) noexcept
 	ImGui::Spacing();
 	ImGui::Indent(20.0f);
 
-	constexpr float featuresOffset = 240.0f;
+	constexpr float featuresOffset = 315.0f;
 	alignedEdit("Device", featuresOffset, [&](const char*) {
 		ImGui::TextUnformatted(features.deviceDescription);
 	});
 
-	alignedEdit("Shader Model", featuresOffset, [&](const char*) {
+	alignedEdit("Shader model", featuresOffset, [&](const char*) {
 		const char* model = [](ZgShaderModel shaderModel) {
 			switch (shaderModel) {
 			case ZG_SHADER_MODEL_6_0: return "6.0";
@@ -111,6 +111,54 @@ void RendererUI::render(RendererState& state) noexcept
 		}(features.shaderModel);
 		
 		ImGui::TextUnformatted(model);
+	});
+
+	alignedEdit("Resource binding tier", featuresOffset, [&](const char*) {
+		ImGui::TextUnformatted(features.resourceBindingTier);
+	});
+
+	alignedEdit("Resource heap tier", featuresOffset, [&](const char*) {
+		ImGui::TextUnformatted(features.resourceHeapTier);
+	});
+
+	alignedEdit("Wave ops support", featuresOffset, [&](const char*) {
+		ImGui::TextUnformatted(features.waveOps != ZG_FALSE ? "True" : "False");
+	});
+
+	alignedEdit("Wave lane count", featuresOffset, [&](const char*) {
+		ImGui::Text("%u min, %u max", features.waveMinLaneCount, features.waveMaxLaneCount);
+	});
+
+	alignedEdit("GPU total lanes/threads count", featuresOffset, [&](const char*) {
+		ImGui::Text("%u", features.gpuTotalLaneCount);
+	});
+
+	alignedEdit("Shader 16-bit ops support", featuresOffset, [&](const char*) {
+		ImGui::TextUnformatted(features.shader16bitOps != ZG_FALSE ? "True" : "False");
+	});
+
+	alignedEdit("Raytracing support", featuresOffset, [&](const char*) {
+		ImGui::TextUnformatted(features.raytracing != ZG_FALSE ? "True" : "False");
+	});
+
+	alignedEdit("Raytracing tier", featuresOffset, [&](const char*) {
+		ImGui::TextUnformatted(features.raytracingTier);
+	});
+
+	alignedEdit("Variable shading rate support", featuresOffset, [&](const char*) {
+		ImGui::TextUnformatted(features.variableShadingRate != ZG_FALSE ? "True" : "False");
+	});
+
+	alignedEdit("Variable shading rate tier", featuresOffset, [&](const char*) {
+		ImGui::TextUnformatted(features.variableShadingRateTier);
+	});
+
+	alignedEdit("Variable shading rate tile size", featuresOffset, [&](const char*) {
+		ImGui::Text("%ux%u", features.variableShadingRateTileSize, features.variableShadingRateTileSize);
+	});
+
+	alignedEdit("Mesh shaders support", featuresOffset, [&](const char*) {
+		ImGui::TextUnformatted(features.meshShaders != ZG_FALSE ? "True" : "False");
 	});
 
 	ImGui::Unindent(20.0f);

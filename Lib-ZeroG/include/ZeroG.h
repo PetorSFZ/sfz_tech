@@ -100,7 +100,7 @@ ZG_ENUM(ZgBool) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 34;
+static const uint32_t ZG_COMPILED_API_VERSION = 35;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -2134,8 +2134,45 @@ ZG_STRUCT(ZgFeatureSupport) {
 	// Text description (i.e. name) of the device in use
 	char deviceDescription[128];
 
-	// Highest supported shader model level (on D3D12 backend)
+	// D3D12: Highest supported shader model level
 	ZgShaderModel shaderModel;
+
+	// D3D12: Resource Binding Tier
+	// See: https://docs.microsoft.com/en-us/windows/win32/direct3d12/hardware-support
+	char resourceBindingTier[8];
+
+	// D3D12: Resource Heap Tier
+	// See: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_resource_heap_tier
+	char resourceHeapTier[8];
+
+	// D3D12: Whether wave operations (i.e. "shuffle" in CUDA, reading other threads memory in
+	//        same wavefront) is supported.
+	ZgBool waveOps;
+
+	// D3D12: Minimum and maximum amount of lanes/threads per wave (wavefront, warp).
+	uint32_t waveMinLaneCount;
+	uint32_t waveMaxLaneCount;
+
+	// D3D12: Total number of lanes, or threads, of the GPU.
+	uint32_t gpuTotalLaneCount;
+
+	// D3D12: Whether 16-bit operations are natively supported in shaders
+	ZgBool shader16bitOps;
+
+	// D3D12: Whether raytracing is supported and at what tier
+	ZgBool raytracing;
+	char raytracingTier[16];
+
+	// D3D12: Whether variable shading rate is supported and at what tier.
+	ZgBool variableShadingRate;
+	char variableShadingRateTier[8];
+
+	// D3D12: Variable shading rate tile size for Tier 2.
+	// See: https://docs.microsoft.com/en-us/windows/win32/direct3d12/vrs
+	uint32_t variableShadingRateTileSize;
+
+	// D3D12: Whether mesh shaders are supported
+	ZgBool meshShaders;
 };
 
 ZG_API ZgResult zgContextGetFeatureSupport(ZgFeatureSupport* featureSupportOut);

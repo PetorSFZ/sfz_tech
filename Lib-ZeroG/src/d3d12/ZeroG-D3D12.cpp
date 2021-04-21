@@ -347,7 +347,7 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 		// shader model that your application understands."
 		shaderModel.HighestShaderModel = D3D_SHADER_MODEL_6_6;
 		CHECK_D3D12 ctxState->device->CheckFeatureSupport(
-			D3D12_FEATURE_SHADER_MODEL, &shaderModel, sizeof(D3D12_FEATURE_DATA_SHADER_MODEL));
+			D3D12_FEATURE_SHADER_MODEL, &shaderModel, sizeof(shaderModel));
 		ctxState->featureSupport.shaderModel = [](D3D_SHADER_MODEL model) {
 			switch (model) {
 			case D3D_SHADER_MODEL_5_1: return ZG_SHADER_MODEL_UNDEFINED;
@@ -361,6 +361,97 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 			}
 			return ZG_SHADER_MODEL_UNDEFINED;
 		}(shaderModel.HighestShaderModel);
+
+		D3D12_FEATURE_DATA_D3D12_OPTIONS options = {};
+		CHECK_D3D12 ctxState->device->CheckFeatureSupport(
+			D3D12_FEATURE_D3D12_OPTIONS, &options, sizeof(options));
+
+		const char* resourceBindingTier = [](D3D12_RESOURCE_BINDING_TIER tier) {
+			switch (tier) {
+			case D3D12_RESOURCE_BINDING_TIER_1: return "Tier 1";
+			case D3D12_RESOURCE_BINDING_TIER_2: return "Tier 2";
+			case D3D12_RESOURCE_BINDING_TIER_3: return "Tier 3";
+			}
+			return "";
+		}(options.ResourceBindingTier);
+		snprintf(
+			ctxState->featureSupport.resourceBindingTier, 
+			sizeof(ctxState->featureSupport.resourceBindingTier),
+			"%s", resourceBindingTier);
+
+		const char* resourceHeapTier = [](D3D12_RESOURCE_HEAP_TIER tier) {
+			switch (tier) {
+			case D3D12_RESOURCE_HEAP_TIER_1: return "Tier 1";
+			case D3D12_RESOURCE_HEAP_TIER_2: return "Tier 2";
+			}
+			return "";
+		}(options.ResourceHeapTier);
+		snprintf(
+			ctxState->featureSupport.resourceHeapTier,
+			sizeof(ctxState->featureSupport.resourceHeapTier),
+			"%s", resourceHeapTier);
+
+		D3D12_FEATURE_DATA_D3D12_OPTIONS1 options1 = {};
+		CHECK_D3D12 ctxState->device->CheckFeatureSupport(
+			D3D12_FEATURE_D3D12_OPTIONS1, &options1, sizeof(options1));
+
+		ctxState->featureSupport.waveOps = options1.WaveOps ? ZG_TRUE : ZG_FALSE;
+		ctxState->featureSupport.waveMinLaneCount = options1.WaveLaneCountMin;
+		ctxState->featureSupport.waveMaxLaneCount = options1.WaveLaneCountMax;
+		ctxState->featureSupport.gpuTotalLaneCount = options1.TotalLaneCount;
+
+		D3D12_FEATURE_DATA_D3D12_OPTIONS4 options4 = {};
+		CHECK_D3D12 ctxState->device->CheckFeatureSupport(
+			D3D12_FEATURE_D3D12_OPTIONS4, &options4, sizeof(options4));
+
+		ctxState->featureSupport.shader16bitOps =
+			options4.Native16BitShaderOpsSupported ? ZG_TRUE : ZG_FALSE;
+
+		D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5 = {};
+		CHECK_D3D12 ctxState->device->CheckFeatureSupport(
+			D3D12_FEATURE_D3D12_OPTIONS5, &options5, sizeof(options5));
+
+		ctxState->featureSupport.raytracing =
+			options5.RaytracingTier != D3D12_RAYTRACING_TIER_NOT_SUPPORTED ? ZG_TRUE : ZG_FALSE;
+		const char* raytracingTier = [](D3D12_RAYTRACING_TIER tier) {
+			switch (tier) {
+			case D3D12_RAYTRACING_TIER_NOT_SUPPORTED: return "None";
+			case D3D12_RAYTRACING_TIER_1_0: return "Tier 1.0";
+			case D3D12_RAYTRACING_TIER_1_1: return "Tier 1.1";
+			}
+			return "";
+		}(options5.RaytracingTier);
+		snprintf(
+			ctxState->featureSupport.raytracingTier,
+			sizeof(ctxState->featureSupport.raytracingTier),
+			"%s", raytracingTier);
+
+		D3D12_FEATURE_DATA_D3D12_OPTIONS6 options6 = {};
+		CHECK_D3D12 ctxState->device->CheckFeatureSupport(
+			D3D12_FEATURE_D3D12_OPTIONS6, &options6, sizeof(options6));
+
+		ctxState->featureSupport.variableShadingRate =
+			options6.VariableShadingRateTier != D3D12_VARIABLE_SHADING_RATE_TIER_NOT_SUPPORTED ? ZG_TRUE : ZG_FALSE;
+		const char* vrsTier = [](D3D12_VARIABLE_SHADING_RATE_TIER tier) {
+			switch (tier) {
+			case D3D12_VARIABLE_SHADING_RATE_TIER_NOT_SUPPORTED: return "None";
+			case D3D12_VARIABLE_SHADING_RATE_TIER_1: return "Tier 1";
+			case D3D12_VARIABLE_SHADING_RATE_TIER_2: return "Tier 2";
+			}
+			return "";
+		}(options6.VariableShadingRateTier);
+		snprintf(
+			ctxState->featureSupport.variableShadingRateTier,
+			sizeof(ctxState->featureSupport.variableShadingRateTier),
+			"%s", vrsTier);
+		ctxState->featureSupport.variableShadingRateTileSize = options6.ShadingRateImageTileSize;
+
+		D3D12_FEATURE_DATA_D3D12_OPTIONS7 options7 = {};
+		CHECK_D3D12 ctxState->device->CheckFeatureSupport(
+			D3D12_FEATURE_D3D12_OPTIONS7, &options7, sizeof(options7));
+
+		ctxState->featureSupport.meshShaders =
+			options7.MeshShaderTier != D3D12_MESH_SHADER_TIER_NOT_SUPPORTED ? ZG_TRUE : ZG_FALSE;
 	}
 
 	// Enable debug message in debug mode
