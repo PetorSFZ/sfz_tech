@@ -12,11 +12,6 @@
 *.gch
 *.pch
 
-# Executables
-*.exe
-*.out
-*.app
-
 # CMake files
 CMakeCache.txt
 CMakeFiles
