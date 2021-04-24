@@ -100,7 +100,7 @@ ZG_ENUM(ZgBool) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 35;
+static const uint32_t ZG_COMPILED_API_VERSION = 36;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -2144,6 +2144,11 @@ ZG_STRUCT(ZgFeatureSupport) {
 	// D3D12: Resource Heap Tier
 	// See: https://docs.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_resource_heap_tier
 	char resourceHeapTier[8];
+
+	// D3D12: Whether shader dynamic resources are supported or not. These are required to be
+	//        supported if the device supports both shader model 6.6 and resource binding tier 3.
+	// See: https://github.com/microsoft/DirectX-Specs/blob/master/d3d/HLSL_SM_6_6_DynamicResources.md
+	ZgBool shaderDynamicResources;
 
 	// D3D12: Whether wave operations (i.e. "shuffle" in CUDA, reading other threads memory in
 	//        same wavefront) is supported.

@@ -391,6 +391,11 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 			sizeof(ctxState->featureSupport.resourceHeapTier),
 			"%s", resourceHeapTier);
 
+		// Note: Might need to update these if more tiers or shading models are added
+		ctxState->featureSupport.shaderDynamicResources =
+			shaderModel.HighestShaderModel == D3D_SHADER_MODEL_6_6 &&
+			options.ResourceBindingTier == D3D12_RESOURCE_BINDING_TIER_3;
+
 		D3D12_FEATURE_DATA_D3D12_OPTIONS1 options1 = {};
 		CHECK_D3D12 ctxState->device->CheckFeatureSupport(
 			D3D12_FEATURE_D3D12_OPTIONS1, &options1, sizeof(options1));

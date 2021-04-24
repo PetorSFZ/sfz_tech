@@ -91,7 +91,7 @@ void RendererUI::render(RendererState& state) noexcept
 	ImGui::Spacing();
 	ImGui::Indent(20.0f);
 
-	constexpr float featuresOffset = 315.0f;
+	constexpr float featuresOffset = 320.0f;
 	alignedEdit("Device", featuresOffset, [&](const char*) {
 		ImGui::TextUnformatted(features.deviceDescription);
 	});
@@ -119,6 +119,10 @@ void RendererUI::render(RendererState& state) noexcept
 
 	alignedEdit("Resource heap tier", featuresOffset, [&](const char*) {
 		ImGui::TextUnformatted(features.resourceHeapTier);
+	});
+
+	alignedEdit("Shader dynamic resources support", featuresOffset, [&](const char*) {
+		ImGui::TextUnformatted(features.shaderDynamicResources != ZG_FALSE ? "True" : "False");
 	});
 
 	alignedEdit("Wave ops support", featuresOffset, [&](const char*) {
