@@ -311,7 +311,7 @@ public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	ArrayLocal() { static_assert(sizeof(ArrayLocal) == (sizeof(T) * Capacity + 16), ""); }
+	ArrayLocal() = default;
 	ArrayLocal(const ArrayLocal&) = default;
 	ArrayLocal& operator= (const ArrayLocal&) = default;
 	ArrayLocal(ArrayLocal&& other) noexcept { this->swap(other); }
