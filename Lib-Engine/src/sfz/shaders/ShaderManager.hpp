@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <ctime>
+
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_pool.hpp>
@@ -84,6 +86,7 @@ struct ShaderCompute final {
 
 struct Shader final {
 	strID name;
+	time_t lastModified = 0;
 	ShaderType type = ShaderType::RENDER;
 	str192 shaderPath;
 	ShaderRender render;
@@ -108,6 +111,7 @@ public:
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
+	void update();
 	void renderDebugUI();
 
 	PoolHandle getShaderHandle(const char* name) const;

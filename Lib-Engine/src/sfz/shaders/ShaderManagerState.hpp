@@ -35,6 +35,8 @@ struct ShaderManagerState final {
 
 	HashMap<strID, PoolHandle> shaderHandles;
 	Pool<Shader> shaders;
+	
+	Setting* shaderFileWatchEnabled;
 };
 
 } // namespace sfz

@@ -19,10 +19,12 @@
 
 #include "sfz/shaders/ShaderManager.hpp"
 
+#include "sfz/config/GlobalConfig.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
 #include "sfz/rendering/Mesh.hpp"
 #include "sfz/shaders/ShaderManagerState.hpp"
 #include "sfz/shaders/ShaderManagerUI.hpp"
+#include "sfz/util/IO.hpp"
 
 namespace sfz {
 
@@ -123,6 +125,7 @@ bool Shader::build() noexcept
 		buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileHLSL(tmpPipeline);
 		if (buildSuccess) {
 			this->render.pipeline = std::move(tmpPipeline);
+			this->lastModified = sfz::fileLastModifiedDate(this->shaderPath);
 		}
 	}
 	else if (this->type == ShaderType::COMPUTE) {
@@ -147,6 +150,7 @@ bool Shader::build() noexcept
 		buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileHLSL(tmpPipeline, ZG_SHADER_MODEL_6_1);
 		if (buildSuccess) {
 			this->compute.pipeline = std::move(tmpPipeline);
+			this->lastModified = sfz::fileLastModifiedDate(this->shaderPath);
 		}
 		return buildSuccess;
 	}
@@ -168,6 +172,9 @@ void ShaderManager::init(uint32_t maxNumShaders, Allocator* allocator) noexcept
 
 	mState->shaderHandles.init(maxNumShaders, allocator, sfz_dbg(""));
 	mState->shaders.init(maxNumShaders, allocator, sfz_dbg(""));
+
+	GlobalConfig& cfg = getGlobalConfig();
+	mState->shaderFileWatchEnabled = cfg.sanitizeBool("Resources", "shaderFileWatchEnabled", true, false);
 }
 
 void ShaderManager::destroy() noexcept
@@ -185,6 +192,31 @@ void ShaderManager::destroy() noexcept
 
 // ShaderManager: Methods
 // ------------------------------------------------------------------------------------------------
+
+void ShaderManager::update()
+{
+	// Nothing to do (for now) if shader file watch is disabled. In future we could potentially have
+	// async shader loading which could be updated here.
+	if (!mState->shaderFileWatchEnabled->boolValue()) return;
+
+	for (auto pair : mState->shaderHandles) {
+		Shader& shader = mState->shaders[pair.value];
+
+		time_t newLastModified = sfz::fileLastModifiedDate(shader.shaderPath);
+		if (shader.lastModified < newLastModified) {
+			
+			// Flush present queue to ensure shader is not in use
+			CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
+			
+			// Attempt to rebuild shader. Note: No need to check return value
+			shader.build();
+
+			// Technically superfluous, but keeps us from attempting to recompile broken shaders
+			// each frame.
+			shader.lastModified = newLastModified;
+		}
+	}
+}
 
 void ShaderManager::renderDebugUI()
 {

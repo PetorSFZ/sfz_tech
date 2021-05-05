@@ -326,6 +326,10 @@ void Renderer::frameBegin()
 			uint32_t(mState->windowRes.x), uint32_t(mState->windowRes.y));
 	}
 
+	// Update shaders
+	ShaderManager& shaders = getShaderManager();
+	shaders.update();
+
 	// Update resources with current resolution
 	ResourceManager& resources = getResourceManager();
 	resources.updateResolution(vec2_u32(newResX, newResY));
