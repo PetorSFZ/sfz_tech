@@ -52,6 +52,7 @@ struct ResourceManagerState final {
 	HashMap<strID, PoolHandle> meshHandles;
 	Pool<MeshResource> meshes;
 
+	Setting* voxelModelFileWatch = nullptr;
 	HashMap<strID, PoolHandle> voxelModelHandles;
 	Pool<VoxelModelResource> voxelModels;
 

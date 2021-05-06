@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <ctime>
+
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_pool.hpp>
@@ -58,6 +60,8 @@ static_assert(sizeof(ShaderVoxelMaterial) == sizeof(float) * 8, "ShaderVoxelMate
 // color palette.
 struct VoxelModelResource final {
 	strID name;
+	time_t lastModifiedDate = 0;
+	str256 path;
 
 	vec3_u32 dims = vec3_u32(0u);
 	uint32_t numVoxels = 0; // The number of non-empty voxels in the voxels array, NOT the size of the voxels array.
@@ -67,6 +71,7 @@ struct VoxelModelResource final {
 	// A user defined handle that can be used to refer to e.g. an application specific GPU buffer
 	// with data needed to render this model.
 	PoolHandle userHandle = NULL_HANDLE;
+	time_t userHandleModifiedDate = 0;
 
 	uint8_t& accessVoxel(vec3_u32 coord)
 	{
@@ -82,6 +87,9 @@ struct VoxelModelResource final {
 	{
 		return const_cast<VoxelModelResource*>(this)->accessVoxel(coord);
 	}
+
+	// Loads the resource from the stored path.
+	bool build(Allocator* allocator);
 
 	static VoxelModelResource load(const char* path, Allocator* allocator);
 };

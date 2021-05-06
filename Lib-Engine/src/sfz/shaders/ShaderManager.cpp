@@ -174,7 +174,7 @@ void ShaderManager::init(uint32_t maxNumShaders, Allocator* allocator) noexcept
 	mState->shaders.init(maxNumShaders, allocator, sfz_dbg(""));
 
 	GlobalConfig& cfg = getGlobalConfig();
-	mState->shaderFileWatchEnabled = cfg.sanitizeBool("Resources", "shaderFileWatchEnabled", true, false);
+	mState->shaderFileWatchEnabled = cfg.sanitizeBool("Resources", "shaderFileWatch", true, false);
 }
 
 void ShaderManager::destroy() noexcept

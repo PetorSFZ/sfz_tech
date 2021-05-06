@@ -25,6 +25,7 @@
 #include "sfz/resources/ResourceManagerUI.hpp"
 #include "sfz/resources/TextureResource.hpp"
 #include "sfz/resources/VoxelResources.hpp"
+#include "sfz/util/IO.hpp"
 
 namespace sfz {
 
@@ -49,6 +50,8 @@ void ResourceManager::init(uint32_t maxNumResources, Allocator* allocator) noexc
 	mState->meshHandles.init(maxNumResources, allocator, sfz_dbg(""));
 	mState->meshes.init(maxNumResources, allocator, sfz_dbg(""));
 
+	GlobalConfig& cfg = getGlobalConfig();
+	mState->voxelModelFileWatch = cfg.sanitizeBool("Resources", "voxelModelFileWatch", true, false);
 	mState->voxelModelHandles.init(maxNumResources, allocator, sfz_dbg(""));
 	mState->voxelModels.init(maxNumResources, allocator, sfz_dbg(""));
 
@@ -123,6 +126,22 @@ void ResourceManager::updateResolution(vec2_u32 screenRes)
 			}
 		}
 	}
+}
+
+bool ResourceManager::updateVoxelModels()
+{
+	bool updated = false;
+	if (mState->voxelModelFileWatch->boolValue()) {
+		for (HashMapPair<strID, PoolHandle> itemItr : mState->voxelModelHandles) {
+			VoxelModelResource& resource = mState->voxelModels[itemItr.value];
+			const time_t newLastModifiedDate = sfz::fileLastModifiedDate(resource.path.str());
+			if (resource.lastModifiedDate < newLastModifiedDate) {
+				resource.build(mState->allocator);
+				updated = true;
+			}
+		}
+	}
+	return updated;
 }
 
 // ResourceManager: Buffer methods

@@ -50,6 +50,10 @@ public:
 	// Updates all resources that depend on screen resolution
 	void updateResolution(vec2_u32 screenRes);
 
+	// Updates all voxel models, returns whether any model was updated. Not required to call,
+	// mainly used during development when file watching .vox files.
+	bool updateVoxelModels();
+
 	// Buffer methods
 	// --------------------------------------------------------------------------------------------
 

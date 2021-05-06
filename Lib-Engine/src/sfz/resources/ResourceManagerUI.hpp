@@ -462,6 +462,10 @@ inline void renderVoxelModelsTab(ResourceManagerState& state)
 
 		ImGui::Indent(20.0f);
 
+		alignedEdit("Path", offset, [&](const char*) {
+			ImGui::Text("\"%s\"", resource.path.str());
+		});
+
 		alignedEdit("Dims", offset, [&](const char*) {
 			ImGui::Text("%u x %u x %u", resource.dims.x, resource.dims.y, resource.dims.z);
 		});

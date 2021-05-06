@@ -49,25 +49,25 @@ static void ogtVoxFreeWrapper(void* mem)
 // VoxelModel
 // ------------------------------------------------------------------------------------------------
 
-VoxelModelResource VoxelModelResource::load(const char* path, Allocator* allocator)
+bool VoxelModelResource::build(Allocator* allocator)
 {
-	VoxelModelResource resource;
-	resource.name = strID(path);
-
 	// Load file
-	Array<uint8_t> file = readBinaryFile(path, allocator);
+	Array<uint8_t> file = readBinaryFile(this->path, allocator);
 	if (file.size() == 0) {
-		SFZ_ERROR("VoxelModelResource", "Failed to load file: \"%s\"", path);
-		return resource;
+		SFZ_ERROR("VoxelModelResource", "Failed to load file: \"%s\"", path.str());
+		return false;
 	}
 
 	// Parse file
 	const uint32_t readFlags = 0; // k_read_scene_flags_groups
 	const ogt_vox_scene* scene = ogt_vox_read_scene_with_flags(file.data(), file.size(), readFlags);
 	if (scene == nullptr) {
-		SFZ_ERROR("VoxelModelResource", "Failed to parse file: \"%s\"", path);
-		return resource;
+		SFZ_ERROR("VoxelModelResource", "Failed to parse file: \"%s\"", path.str());
+		return false;
 	}
+
+	// Store last modified date
+	this->lastModifiedDate = fileLastModifiedDate(path);
 
 	// Some assumptions
 	sfz_assert(scene->num_models == 1);
@@ -77,29 +77,51 @@ VoxelModelResource VoxelModelResource::load(const char* path, Allocator* allocat
 	const ogt_vox_model& model = *scene->models[0];
 
 	// Copy voxels to voxel model
-	resource.dims = vec3_u32(model.size_x, model.size_y, model.size_z);
+	this->dims = vec3_u32(model.size_x, model.size_y, model.size_z);
 	const uint32_t numVoxels = model.size_x * model.size_y * model.size_z;
-	resource.voxels.init(numVoxels, allocator, sfz_dbg(""));
-	resource.voxels.add(model.voxel_data, numVoxels);
-	
+	this->voxels.init(numVoxels, allocator, sfz_dbg(""));
+	this->voxels.add(model.voxel_data, numVoxels);
+
 	// Find highest voxel value and number of non-empty voxels
 	uint32_t highestVoxelVal = 0;
-	resource.numVoxels = 0;
-	for (uint8_t voxel : resource.voxels) {
+	this->numVoxels = 0;
+	bool materialUsed[256] = {};
+	for (uint8_t voxel : this->voxels) {
+		materialUsed[voxel] = true;
 		highestVoxelVal = sfz::max(highestVoxelVal, uint32_t(voxel));
-		if (voxel != uint8_t(0)) resource.numVoxels += 1;
+		if (voxel != uint8_t(0)) this->numVoxels += 1;
 	}
 
-	// Copy palette to voxel model
+	// Copy palette to voxel model, remove materials which are not used by voxel model
+	this->palette.clear();
 	for (uint32_t i = 0; i <= highestVoxelVal; i++) {
-		ogt_vox_rgba color = scene->palette.color[i];
-		vec4_u8& dst = resource.palette.add();
-		dst.x = color.r;
-		dst.y = color.g;
-		dst.z = color.b;
-		dst.w = color.a;
+		vec4_u8& dst = this->palette.add();
+		if (materialUsed[i]) {
+			ogt_vox_rgba color = scene->palette.color[i];
+			dst.x = color.r;
+			dst.y = color.g;
+			dst.z = color.b;
+			dst.w = color.a;
+		}
+		else {
+			dst.x = 75;
+			dst.y = 75;
+			dst.z = 75;
+			dst.w = 255; // Unsure about this one
+		}
 	}
 
+	return true;
+}
+
+VoxelModelResource VoxelModelResource::load(const char* path, Allocator* allocator)
+{
+	VoxelModelResource resource;
+	resource.name = strID(path);
+	resource.path = path;
+
+	bool success = resource.build(allocator);
+	(void)success; // We do not need to look at error code here, errors are logged inside build().
 	return resource;
 }
 
