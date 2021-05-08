@@ -779,7 +779,7 @@ int main(int argc, char* argv[])
 	bool zgInitSuccess = sfz::initializeZeroG(
 		window,
 		sfz::getDefaultAllocator(),
-		cfg.sanitizeBool("Renderer", "vsync", true, false));
+		cfg.sanitizeBool("Renderer", "vsync", true, true));
 	if (!zgInitSuccess) {
 		SFZ_ERROR("PhantasyEngine", "Failed to initialize ZeroG");
 		SDL_Quit();

@@ -634,7 +634,7 @@ void Console::init(Allocator* allocator, uint32_t numWindowsToDock, const char* 
 	mState->showInGameLog = cfg.sanitizeBool("Console", "showInGameLog", true, true);
 	mState->inGameLogWidth = cfg.sanitizeInt("Console", "inGameLogWidth", true, IntBounds(1000, 700, 1500, 50));
 	mState->inGameLogHeight = cfg.sanitizeInt("Console", "inGameLogHeight", true, IntBounds(600, 400, 2000, 50));
-	mState->inGameLogMaxAgeSecs = cfg.sanitizeFloat("Console", "inGameLogMaxAgeSecs", false, 5.0f, 0.1f, 20.0f);
+	mState->inGameLogMaxAgeSecs = cfg.sanitizeFloat("Console", "inGameLogMaxAgeSecs", false, 2.0f, 0.1f, 10.0f);
 	mState->logMinLevelSetting = cfg.sanitizeInt("Console", "logMinLevel", false, IntBounds(0, 0, 3));
 
 	// Global Config
