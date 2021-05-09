@@ -64,8 +64,7 @@ struct ShaderRender final {
 	str64 pixelShaderEntry;
 	VertexInputLayout inputLayout;
 	ArrayLocal<ZgTextureFormat, ZG_MAX_NUM_RENDER_TARGETS> renderTargets;
-	bool depthTest = false;
-	ZgDepthFunc depthFunc = ZG_DEPTH_FUNC_LESS;
+	ZgComparisonFunc depthFunc = ZG_COMPARISON_FUNC_NONE;
 	bool cullingEnabled = false;
 	bool cullFrontFacing = false;
 	bool frontFacingIsCounterClockwise = false;

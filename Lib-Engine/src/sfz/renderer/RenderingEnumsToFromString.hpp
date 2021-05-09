@@ -116,15 +116,16 @@ inline const char* wrappingModeToString(ZgWrappingMode mode)
 	return "UNDEFINED";
 }
 
-inline const char* depthFuncToString(ZgDepthFunc func)
+inline const char* comparisonFuncToString(ZgComparisonFunc func)
 {
 	switch (func) {
-	case ZG_DEPTH_FUNC_LESS: return "LESS";
-	case ZG_DEPTH_FUNC_LESS_EQUAL: return "LESS_EQUAL";
-	case ZG_DEPTH_FUNC_EQUAL: return "EQUAL";
-	case ZG_DEPTH_FUNC_NOT_EQUAL: return "NOT_EQUAL";
-	case ZG_DEPTH_FUNC_GREATER: return "GREATER";
-	case ZG_DEPTH_FUNC_GREATER_EQUAL: return "GREATER_EQUAL";
+	case ZG_COMPARISON_FUNC_NONE: return "NONE";
+	case ZG_COMPARISON_FUNC_LESS: return "LESS";
+	case ZG_COMPARISON_FUNC_LESS_EQUAL: return "LESS_EQUAL";
+	case ZG_COMPARISON_FUNC_EQUAL: return "EQUAL";
+	case ZG_COMPARISON_FUNC_NOT_EQUAL: return "NOT_EQUAL";
+	case ZG_COMPARISON_FUNC_GREATER: return "GREATER";
+	case ZG_COMPARISON_FUNC_GREATER_EQUAL: return "GREATER_EQUAL";
 	}
 	sfz_assert(false);
 	return "";

@@ -171,7 +171,6 @@ ZgResult imguiInitRenderState(
 			.setCullingEnabled(false)
 			.setBlendingEnabled(true)
 			.setBlendFuncColor(ZG_BLEND_FUNC_ADD, ZG_BLEND_FACTOR_SRC_ALPHA, ZG_BLEND_FACTOR_SRC_INV_ALPHA)
-			.setDepthTestEnabled(false)
 			.addVertexShaderSource("VSMain", IMGUI_SHADER_HLSL_SRC)
 			.addPixelShaderSource("PSMain", IMGUI_SHADER_HLSL_SRC)
 			.buildFromSourceHLSL(stateOut->pipeline, ZG_SHADER_MODEL_6_0);

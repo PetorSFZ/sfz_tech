@@ -100,7 +100,7 @@ ZG_ENUM(ZgBool) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 36;
+static const uint32_t ZG_COMPILED_API_VERSION = 37;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -646,6 +646,16 @@ ZG_ENUM(ZgWrappingMode) {
 	ZG_WRAPPING_MODE_REPEAT, // D3D12_TEXTURE_ADDRESS_MODE_WRAP
 };
 
+ZG_ENUM(ZgComparisonFunc) {
+	ZG_COMPARISON_FUNC_NONE = 0,
+	ZG_COMPARISON_FUNC_LESS,
+	ZG_COMPARISON_FUNC_LESS_EQUAL,
+	ZG_COMPARISON_FUNC_EQUAL,
+	ZG_COMPARISON_FUNC_NOT_EQUAL,
+	ZG_COMPARISON_FUNC_GREATER,
+	ZG_COMPARISON_FUNC_GREATER_EQUAL
+};
+
 // A struct defining a texture sampler
 ZG_STRUCT(ZgSampler) {
 
@@ -660,6 +670,15 @@ ZG_STRUCT(ZgSampler) {
 	// and the lod bias is -1, then level 1 will be used instead. Level 0 is the highest resolution
 	// texture.
 	float mipLodBias;
+
+	// Comparison func, mainly used to access hardware 2x2 PCF for shadow maps. If this is specified
+	// to be anything but NONE the sampler turns into a comparison sampler.
+	//
+	// For D3D12 this means that the sampler should be specified as a "SamplerComparisonState"
+	// instead of "SamplerState" in HLSL. It also modifies the sampling mode to a "comparison"
+	// sampling mode. E.g. ZG_SAMPLING_MODE_NEAREST gives D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT
+	// instead of D3D12_FILTER_MIN_MAG_MIP_POINT.
+	ZgComparisonFunc comparisonFunc;
 };
 
 ZG_STRUCT(ZgPipelineComputeCreateInfo) {
@@ -963,27 +982,6 @@ ZG_STRUCT(ZgBlendSettings) {
 	ZgBlendFactor dstValAlpha;
 };
 
-ZG_ENUM(ZgDepthFunc) {
-	ZG_DEPTH_FUNC_LESS = 0,
-	ZG_DEPTH_FUNC_LESS_EQUAL,
-	ZG_DEPTH_FUNC_EQUAL,
-	ZG_DEPTH_FUNC_NOT_EQUAL,
-	ZG_DEPTH_FUNC_GREATER,
-	ZG_DEPTH_FUNC_GREATER_EQUAL
-};
-
-ZG_STRUCT(ZgDepthTestSettings) {
-
-	// Whether to enable to the depth test or not
-	ZgBool depthTestEnabled;
-
-	// What function to use for the depth test.
-	//
-	// Default is ZG_DEPTH_FUNC_LESS (0), i.e. pixels with a depth value less than what is stored
-	// in the depth buffer is kept (in a "standard" 0 is near, 1 is furthest away depth buffer).
-	ZgDepthFunc depthFunc;
-};
-
 // The common information required to create a render pipeline
 ZG_STRUCT(ZgPipelineRenderCreateInfo) {
 
@@ -1030,8 +1028,8 @@ ZG_STRUCT(ZgPipelineRenderCreateInfo) {
 	// Blend test settings
 	ZgBlendSettings blending;
 
-	// Depth test settings
-	ZgDepthTestSettings depthTest;
+	// Depth test settings, default is no depth test (ZG_COMPARISON_FUNC_NONE).
+	ZgComparisonFunc depthFunc;
 };
 
 ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
@@ -1249,15 +1247,9 @@ public:
 		return *this;
 	}
 
-	PipelineRenderBuilder& setDepthTestEnabled(bool depthTestEnabled)
+	PipelineRenderBuilder& setDepthFunc(ZgComparisonFunc depthFunc)
 	{
-		createInfo.depthTest.depthTestEnabled = depthTestEnabled ? ZG_TRUE : ZG_FALSE;
-		return *this;
-	}
-
-	PipelineRenderBuilder& setDepthFunc(ZgDepthFunc depthFunc)
-	{
-		createInfo.depthTest.depthFunc = depthFunc;
+		createInfo.depthFunc = depthFunc;
 		return *this;
 	}
 

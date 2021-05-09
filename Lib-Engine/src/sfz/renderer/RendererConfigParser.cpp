@@ -89,16 +89,17 @@ static ZgWrappingMode wrappingModeFromString(const str256& str) noexcept
 	return ZG_WRAPPING_MODE_UNDEFINED;
 }
 
-static ZgDepthFunc depthFuncFromString(const str256& str) noexcept
+static ZgComparisonFunc comparisonFuncFromString(const str256& str) noexcept
 {
-	if (str == "LESS") return ZG_DEPTH_FUNC_LESS;
-	if (str == "LESS_EQUAL") return ZG_DEPTH_FUNC_LESS_EQUAL;
-	if (str == "EQUAL") return ZG_DEPTH_FUNC_EQUAL;
-	if (str == "NOT_EQUAL") return ZG_DEPTH_FUNC_NOT_EQUAL;
-	if (str == "GREATER") return ZG_DEPTH_FUNC_GREATER;
-	if (str == "GREATER_EQUAL") return ZG_DEPTH_FUNC_GREATER_EQUAL;
+	if (str == "NONE") return ZG_COMPARISON_FUNC_NONE;
+	if (str == "LESS") return ZG_COMPARISON_FUNC_LESS;
+	if (str == "LESS_EQUAL") return ZG_COMPARISON_FUNC_LESS_EQUAL;
+	if (str == "EQUAL") return ZG_COMPARISON_FUNC_EQUAL;
+	if (str == "NOT_EQUAL") return ZG_COMPARISON_FUNC_NOT_EQUAL;
+	if (str == "GREATER") return ZG_COMPARISON_FUNC_GREATER;
+	if (str == "GREATER_EQUAL") return ZG_COMPARISON_FUNC_GREATER_EQUAL;
 	sfz_assert(false);
-	return ZG_DEPTH_FUNC_LESS;
+	return ZG_COMPARISON_FUNC_NONE;
 }
 
 static ZgTextureFormat textureFormatFromString(const str256& str) noexcept
@@ -226,6 +227,10 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 					CHECK_JSON node.accessMap("wrapping_mode").valueStr256());
 				sampler.sampler.wrappingModeV = sampler.sampler.wrappingModeU;
 				sampler.sampler.mipLodBias = 0.0f;
+				if (node.accessMap("comparison_func").isValid()) {
+					sampler.sampler.comparisonFunc = comparisonFuncFromString(
+						CHECK_JSON node.accessMap("comparison_func").valueStr256());
+				}
 			}
 		}
 
@@ -241,8 +246,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		// Depth test and function if specified
 		JsonNode depthFuncNode = pipelineNode.accessMap("depth_func");
 		if (depthFuncNode.isValid()) {
-			shader.render.depthTest = true;
-			shader.render.depthFunc = depthFuncFromString(CHECK_JSON depthFuncNode.valueStr256());
+			shader.render.depthFunc = comparisonFuncFromString(CHECK_JSON depthFuncNode.valueStr256());
 		}
 
 		// Culling
@@ -330,6 +334,10 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 					CHECK_JSON node.accessMap("wrapping_mode").valueStr256());
 				sampler.sampler.wrappingModeV = sampler.sampler.wrappingModeU;
 				sampler.sampler.mipLodBias = 0.0f;
+				if (node.accessMap("comparison_func").isValid()) {
+					sampler.sampler.comparisonFunc = comparisonFuncFromString(
+						CHECK_JSON node.accessMap("comparison_func").valueStr256());
+				}
 			}
 		}
 

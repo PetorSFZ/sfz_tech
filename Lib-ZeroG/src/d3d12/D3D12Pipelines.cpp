@@ -295,18 +295,19 @@ static D3D12_CULL_MODE toD3D12CullMode(
 	else return D3D12_CULL_MODE_FRONT;
 }
 
-static D3D12_COMPARISON_FUNC toD3D12ComparsionFunc(ZgDepthFunc func) noexcept
+static D3D12_COMPARISON_FUNC toD3D12ComparsionFunc(ZgComparisonFunc func) noexcept
 {
 	switch (func) {
-	case ZG_DEPTH_FUNC_LESS: return D3D12_COMPARISON_FUNC_LESS;
-	case ZG_DEPTH_FUNC_LESS_EQUAL: return D3D12_COMPARISON_FUNC_LESS_EQUAL;
-	case ZG_DEPTH_FUNC_EQUAL: return D3D12_COMPARISON_FUNC_EQUAL;
-	case ZG_DEPTH_FUNC_NOT_EQUAL: return D3D12_COMPARISON_FUNC_NOT_EQUAL;
-	case ZG_DEPTH_FUNC_GREATER: return D3D12_COMPARISON_FUNC_GREATER;
-	case ZG_DEPTH_FUNC_GREATER_EQUAL: return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
+	case ZG_COMPARISON_FUNC_NONE: return D3D12_COMPARISON_FUNC(0);
+	case ZG_COMPARISON_FUNC_LESS: return D3D12_COMPARISON_FUNC_LESS;
+	case ZG_COMPARISON_FUNC_LESS_EQUAL: return D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	case ZG_COMPARISON_FUNC_EQUAL: return D3D12_COMPARISON_FUNC_EQUAL;
+	case ZG_COMPARISON_FUNC_NOT_EQUAL: return D3D12_COMPARISON_FUNC_NOT_EQUAL;
+	case ZG_COMPARISON_FUNC_GREATER: return D3D12_COMPARISON_FUNC_GREATER;
+	case ZG_COMPARISON_FUNC_GREATER_EQUAL: return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
 	}
 	sfz_assert(false);
-	return D3D12_COMPARISON_FUNC_LESS;
+	return D3D12_COMPARISON_FUNC(0);
 }
 
 static D3D12_BLEND_OP toD3D12BlendOp(ZgBlendFunc func) noexcept
@@ -915,7 +916,19 @@ static ZgResult createRootSignature(
 		samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 		samplerDesc.MipLODBias = zgSampler.mipLodBias;
 		samplerDesc.MaxAnisotropy = 16;
-		//samplerDesc.ComparisonFunc;
+		samplerDesc.ComparisonFunc = toD3D12ComparsionFunc(zgSampler.comparisonFunc);
+		if (samplerDesc.ComparisonFunc != 0) {
+			if (zgSampler.samplingMode == ZG_SAMPLING_MODE_NEAREST) {
+				samplerDesc.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
+			}
+			else if (zgSampler.samplingMode == ZG_SAMPLING_MODE_TRILINEAR) {
+				samplerDesc.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+			}
+			else {
+				ZG_ERROR("Sampler has a comparison function set, but sampling mode is not nearest or trilinear.");
+				return ZG_ERROR_SHADER_COMPILE_ERROR;
+			}
+		}
 		samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
 		samplerDesc.MinLOD = 0.0f;
 		samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
@@ -1524,9 +1537,9 @@ static ZgResult createPipelineRenderInternal(
 		// Set depth and stencil state
 		D3D12_DEPTH_STENCIL_DESC1 depthStencilDesc = {};
 		depthStencilDesc.DepthEnable =
-			(createInfo.depthTest.depthTestEnabled == ZG_FALSE) ? FALSE : TRUE; FALSE;
+			(createInfo.depthFunc != ZG_COMPARISON_FUNC_NONE) ? TRUE : FALSE;
 		depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-		depthStencilDesc.DepthFunc = toD3D12ComparsionFunc(createInfo.depthTest.depthFunc);
+		depthStencilDesc.DepthFunc = toD3D12ComparsionFunc(createInfo.depthFunc);
 		depthStencilDesc.StencilEnable = FALSE;
 		depthStencilDesc.DepthBoundsTestEnable = FALSE;
 		stream.depthStencil = CD3DX12_DEPTH_STENCIL_DESC1(depthStencilDesc);

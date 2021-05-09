@@ -213,7 +213,7 @@ inline void shaderManagerUI(ShaderManagerState& state)
 				ImGui::Text("- Register: %u", item.samplerRegister);
 				ImGui::Indent(20.0f);
 				constexpr float samplerXOffset = 260.0f;
-				alignedEdit(" - Sampling Mode", samplerXOffset, [&](const char* name) {
+				alignedEdit(" - Sampling Mode", "sampler", j, samplerXOffset, [&](const char* name) {
 					ImGui::SetNextItemWidth(150.0f);
 					if (ImGui::BeginCombo(str128("##%u%s", idx, name).str(), samplingModeToString(item.sampler.samplingMode))) {
 						if (ImGui::Selectable(samplingModeToString(ZG_SAMPLING_MODE_NEAREST), item.sampler.samplingMode == ZG_SAMPLING_MODE_NEAREST)) {
@@ -230,7 +230,7 @@ inline void shaderManagerUI(ShaderManagerState& state)
 					
 					
 				});
-				alignedEdit(" - Wrapping Mode U", samplerXOffset, [&](const char* name) {
+				alignedEdit(" - Wrapping Mode U", "sampler", j, samplerXOffset, [&](const char* name) {
 					ImGui::SetNextItemWidth(150.0f);
 					if (ImGui::BeginCombo(str128("##%u%s", idx, name).str(), wrappingModeToString(item.sampler.wrappingModeU))) {
 						if (ImGui::Selectable(wrappingModeToString(ZG_WRAPPING_MODE_CLAMP), item.sampler.wrappingModeU == ZG_WRAPPING_MODE_CLAMP)) {
@@ -242,7 +242,7 @@ inline void shaderManagerUI(ShaderManagerState& state)
 						ImGui::EndCombo();
 					}
 				});
-				alignedEdit(" - Wrapping Mode V", samplerXOffset, [&](const char* name) {
+				alignedEdit(" - Wrapping Mode V", "sampler", j, samplerXOffset, [&](const char* name) {
 					ImGui::SetNextItemWidth(150.0f);
 					if (ImGui::BeginCombo(str128("##%u%s", idx, name).str(), wrappingModeToString(item.sampler.wrappingModeV))) {
 						if (ImGui::Selectable(wrappingModeToString(ZG_WRAPPING_MODE_CLAMP), item.sampler.wrappingModeV == ZG_WRAPPING_MODE_CLAMP)) {
@@ -277,16 +277,9 @@ inline void shaderManagerUI(ShaderManagerState& state)
 
 			// Print depth test
 			ImGui::Spacing();
-			alignedEdit("Depth Test", xOffset, [&](const char* name) {
-				ImGui::Checkbox(str128("##%s", name).str(), &render.depthTest);
-				ImGui::SameLine();
-				ImGui::Text(" - %s", render.depthTest ? "ENABLED" : "DISABLED");
+			alignedEdit("Depth function", xOffset, [&](const char* name) {
+				ImGui::Text("%s", comparisonFuncToString(render.depthFunc));
 			});
-			if (render.depthTest) {
-				ImGui::Indent(20.0f);
-				ImGui::Text("Depth function: %s", depthFuncToString(render.depthFunc));
-				ImGui::Unindent(20.0f);
-			}
 
 			// Print culling info
 			ImGui::Spacing();

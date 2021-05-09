@@ -73,11 +73,7 @@ bool Shader::build() noexcept
 		}
 
 		// Depth test
-		if (render.depthTest) {
-			pipelineBuilder
-				.setDepthTestEnabled(true)
-				.setDepthFunc(render.depthFunc);
-		}
+		pipelineBuilder.setDepthFunc(render.depthFunc);
 
 		// Culling
 		if (render.cullingEnabled) {
