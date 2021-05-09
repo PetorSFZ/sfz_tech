@@ -138,6 +138,10 @@ bool TextureResource::needRebuild(vec2_u32 screenRes) const
 		newRes.x = uint32_t(std::round(scaledRes.x));
 		newRes.y = uint32_t(std::round(scaledRes.y));
 	}
+	else if (settingControlledRes) {
+		sfz_assert(0 < controlledResSetting->intValue() && controlledResSetting->intValue() <= 16384);
+		newRes = vec2_u32(uint32_t(controlledResSetting->intValue()));
+	}
 	else {
 		newRes = this->res;
 	}
@@ -156,6 +160,10 @@ ZgResult TextureResource::build(vec2_u32 screenRes)
 		vec2 scaledRes = vec2(screenRes) * this->resolutionScale;
 		newRes.x = uint32_t(std::round(scaledRes.x));
 		newRes.y = uint32_t(std::round(scaledRes.y));
+	}
+	else if (settingControlledRes) {
+		sfz_assert(0 < controlledResSetting->intValue() && controlledResSetting->intValue() <= 16384);
+		newRes = vec2_u32(uint32_t(controlledResSetting->intValue()));
 	}
 	else {
 		newRes = this->res;
@@ -321,6 +329,36 @@ TextureResource TextureResource::createScreenRelative(
 	
 	CHECK_ZG resource.build(screenRes);
 	
+	return resource;
+}
+
+TextureResource TextureResource::createSettingControlled(
+	const char* name,
+	ZgTextureFormat format,
+	Setting* resSetting,
+	uint32_t numMipmaps,
+	ZgTextureUsage usage,
+	bool committedAllocation)
+{
+	sfz_assert(0 < resSetting->intValue() && resSetting->intValue() <= 16384);
+	sfz_assert(numMipmaps > 0);
+	sfz_assert(numMipmaps <= ZG_MAX_NUM_MIPMAPS);
+
+	TextureResource resource;
+	resource.name = strID(name);
+	resource.format = format;
+	resource.res = vec2_u32(uint32_t(resSetting->intValue()));
+	resource.numMipmaps = numMipmaps;
+	resource.committedAllocation = committedAllocation;
+	resource.usage = usage;
+	resource.optimalClearValue =
+		usage != ZG_TEXTURE_USAGE_DEFAULT ? ZG_OPTIMAL_CLEAR_VALUE_ZERO : ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED;
+
+	resource.settingControlledRes = true;
+	resource.controlledResSetting = resSetting;
+
+	CHECK_ZG resource.build(vec2_u32(0u));
+
 	return resource;
 }
 

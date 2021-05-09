@@ -161,6 +161,17 @@ inline void renderTexturesTab(ResourceManagerState& state)
 			ImGui::Unindent(20.0f);
 		}
 
+		if (resource.settingControlledRes) {
+			ImGui::Text("Setting controlled resolution");
+			ImGui::Indent(20.0f);
+			alignedEdit("Res setting", offset2, [&](const char*) {
+				ImGui::Text("%s.%s",
+					resource.controlledResSetting->section().str(),
+					resource.controlledResSetting->key().str());
+			});
+			ImGui::Unindent(20.0f);
+		}
+
 		ImGui::Unindent(20.0f);
 		ImGui::Spacing();
 	}
@@ -212,6 +223,17 @@ inline void renderFramebuffersTab(ResourceManagerState& state)
 				ImGui::Text("%s.%s",
 					resource.resolutionScaleSetting->section().str(),
 					resource.resolutionScaleSetting->key().str());
+			});
+			ImGui::Unindent(20.0f);
+		}
+
+		if (resource.settingControlledRes) {
+			ImGui::Text("Setting controlled resolution");
+			ImGui::Indent(20.0f);
+			alignedEdit("Res setting", offset2, [&](const char*) {
+				ImGui::Text("%s.%s",
+					resource.controlledResSetting->section().str(),
+					resource.controlledResSetting->key().str());
 			});
 			ImGui::Unindent(20.0f);
 		}

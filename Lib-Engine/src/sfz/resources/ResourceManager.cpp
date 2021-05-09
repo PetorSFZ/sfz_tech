@@ -113,7 +113,7 @@ void ResourceManager::updateResolution(vec2_u32 screenRes)
 		// Rebuild textures
 		for (HashMapPair<strID, PoolHandle> itemItr : mState->textureHandles) {
 			TextureResource& resource = mState->textures[itemItr.value];
-			if (resource.screenRelativeResolution) {
+			if (resource.screenRelativeResolution || resource.settingControlledRes) {
 				CHECK_ZG resource.build(screenRes);
 			}
 		}
@@ -121,7 +121,7 @@ void ResourceManager::updateResolution(vec2_u32 screenRes)
 		// Rebuild framebuffers
 		for (HashMapPair<strID, PoolHandle> itemItr : mState->framebufferHandles) {
 			FramebufferResource& resource = mState->framebuffers[itemItr.value];
-			if (resource.screenRelativeResolution) {
+			if (resource.screenRelativeResolution || resource.controlledResSetting) {
 				CHECK_ZG resource.build(screenRes);
 			}
 		}

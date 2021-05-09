@@ -47,6 +47,9 @@ ZgResult FramebufferResource::build(vec2_u32 screenRes)
 		this->res.x = uint32_t(std::round(scaledRes.x));
 		this->res.y = uint32_t(std::round(scaledRes.y));
 	}
+	else if (settingControlledRes) {
+		this->res = vec2_u32(uint32_t(controlledResSetting->intValue()));
+	}
 
 	zg::FramebufferBuilder fbBuilder;
 
@@ -112,6 +115,13 @@ FramebufferResourceBuilder& FramebufferResourceBuilder::setScreenRelativeRes(Set
 	return *this;
 }
 
+FramebufferResourceBuilder& FramebufferResourceBuilder::setSettingControlledRes(Setting* resSetting)
+{
+	this->settingControlledRes = true;
+	this->controlledResSetting = resSetting;
+	return *this;
+}
+
 FramebufferResourceBuilder& FramebufferResourceBuilder::addRenderTarget(const char* textureName)
 {
 	return this->addRenderTarget(strID(textureName));
@@ -144,6 +154,8 @@ FramebufferResource FramebufferResourceBuilder::build(vec2_u32 screenRes)
 	resource.screenRelativeResolution = this->screenRelativeResolution;
 	resource.resolutionScale = this->resolutionScale;
 	resource.resolutionScaleSetting = this->resolutionScaleSetting;
+	resource.settingControlledRes = this->settingControlledRes;
+	resource.controlledResSetting = this->controlledResSetting;
 	CHECK_ZG resource.build(screenRes);
 	return resource;
 }

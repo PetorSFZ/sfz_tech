@@ -43,10 +43,15 @@ struct TextureResource final {
 	ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT;
 	ZgOptimalClearValue optimalClearValue = ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED;
 
+	// Whether resolution should be scaled relative screen resolution
 	bool screenRelativeResolution = false;
 	float resolutionScale = 1.0f;
 	Setting* resolutionScaleSetting = nullptr;
 	float resScaleSettingScale = 1.0f; // Amount to scale versus value in setting
+
+	// Whether resolution is directly controlled by a setting
+	bool settingControlledRes = false;
+	Setting* controlledResSetting = nullptr;
 
 	bool needRebuild(vec2_u32 screenRes) const;
 	[[nodiscard]] ZgResult build(vec2_u32 screenRes);
@@ -80,6 +85,14 @@ struct TextureResource final {
 		ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT,
 		bool committedAllocation = false,
 		float resScaleSettingScale = 1.0f);
+
+	static TextureResource createSettingControlled(
+		const char* name,
+		ZgTextureFormat format,
+		Setting* resSetting,
+		uint32_t numMipmaps = 1,
+		ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT,
+		bool committedAllocation = false);
 };
 
 // Texture functions
