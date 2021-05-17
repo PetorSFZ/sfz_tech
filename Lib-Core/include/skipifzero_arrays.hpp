@@ -219,7 +219,7 @@ private:
 		uint32_t newSize = mSize + elementsToAdd;
 		if (newSize <= mCapacity) return;
 		uint32_t newCapacity = (mCapacity == 0) ? ARRAY_DYNAMIC_DEFAULT_INITIAL_CAPACITY :
-			uint32_t(mCapacity * ARRAY_DYNAMIC_GROW_RATE);
+			sfz::max(uint32_t(mCapacity * ARRAY_DYNAMIC_GROW_RATE), newSize);
 		setCapacity(newCapacity);
 	}
 
