@@ -184,8 +184,11 @@ struct StringLocal final {
 
 	StringLocal& operator= (const char* str) noexcept
 	{
-		this->clear();
-		this->appendf(str);
+		// Note: Do nothing if: str128 tmp = "tmp"; tmp = tmp.str();
+		if (str != mRawStr) {
+			this->clear();
+			this->appendf(str);
+		}
 		return *this;
 	}
 
