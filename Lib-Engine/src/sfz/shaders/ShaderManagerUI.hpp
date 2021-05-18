@@ -277,7 +277,7 @@ inline void shaderManagerUI(ShaderManagerState& state)
 
 			// Print depth test
 			ImGui::Spacing();
-			alignedEdit("Depth function", xOffset, [&](const char* name) {
+			alignedEdit("Depth function", xOffset, [&](const char*) {
 				ImGui::Text("%s", comparisonFuncToString(render.depthFunc));
 			});
 

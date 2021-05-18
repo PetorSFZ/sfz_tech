@@ -78,9 +78,9 @@ bool VoxelModelResource::build(Allocator* allocator)
 
 	// Copy voxels to voxel model
 	this->dims = vec3_u32(model.size_x, model.size_y, model.size_z);
-	const uint32_t numVoxels = model.size_x * model.size_y * model.size_z;
-	this->voxels.init(numVoxels, allocator, sfz_dbg(""));
-	this->voxels.add(model.voxel_data, numVoxels);
+	const uint32_t maxNumVoxels = model.size_x * model.size_y * model.size_z;
+	this->voxels.init(maxNumVoxels, allocator, sfz_dbg(""));
+	this->voxels.add(model.voxel_data, maxNumVoxels);
 
 	// Find highest voxel value and number of non-empty voxels
 	uint32_t highestVoxelVal = 0;
