@@ -41,6 +41,15 @@ enum class ShaderType : uint32_t {
 struct SamplerItem final {
 	uint32_t samplerRegister = ~0u;
 	ZgSampler sampler = {};
+
+	SamplerItem() = default;
+	SamplerItem(uint32_t samplerRegisterIn, ZgSamplingMode sampling, ZgWrappingMode wrapping)
+	{
+		samplerRegister = samplerRegisterIn;
+		sampler.samplingMode = sampling;
+		sampler.wrappingModeU = wrapping;
+		sampler.wrappingModeV = wrapping;
+	}
 };
 
 enum class PipelineBlendMode  : uint32_t {
@@ -60,8 +69,8 @@ struct ShaderRender final {
 	zg::PipelineRender pipeline;
 
 	// Parsed information
-	str64 vertexShaderEntry;
-	str64 pixelShaderEntry;
+	str32 vertexShaderEntry = "VSMain";
+	str32 pixelShaderEntry = "PSMain";
 	VertexInputLayout inputLayout;
 	ArrayLocal<ZgTextureFormat, ZG_MAX_NUM_RENDER_TARGETS> renderTargets;
 	ZgComparisonFunc depthFunc = ZG_COMPARISON_FUNC_NONE;
@@ -80,7 +89,7 @@ struct ShaderCompute final {
 	zg::PipelineCompute pipeline;
 
 	// Parsed information
-	str64 computeShaderEntry;
+	str32 computeShaderEntry = "CSMain";
 };
 
 struct Shader final {

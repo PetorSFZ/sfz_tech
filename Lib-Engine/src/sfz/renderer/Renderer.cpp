@@ -112,6 +112,13 @@ bool Renderer::init(
 		return false;
 	}
 
+	// Initialize profiling stats
+	ProfilingStats& stats = getProfilingStats();
+	stats.createCategory("gpu", 300, 66.7f, "ms", "frame", 20.0f,
+		StatsVisualizationType::FIRST_INDIVIDUALLY_REST_ADDED);
+	stats.createLabel("gpu", "frametime", vec4(1.0f, 0.0f, 0.0f, 1.0f), 0.0f);
+	stats.createLabel("gpu", "imgui");
+
 	return true;
 }
 
@@ -129,13 +136,6 @@ bool Renderer::loadConfiguration(const char* jsonConfigPath) noexcept
 		this->destroy();
 		return false;
 	}
-
-	// Initialize profiling stats
-	ProfilingStats& stats = getProfilingStats();
-	stats.createCategory("gpu", 300, 66.7f, "ms", "frame", 20.0f,
-		StatsVisualizationType::FIRST_INDIVIDUALLY_REST_ADDED);
-	stats.createLabel("gpu", "frametime", vec4(1.0f, 0.0f, 0.0f, 1.0f), 0.0f);
-	stats.createLabel("gpu", "imgui");
 
 	return true;
 }
