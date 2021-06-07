@@ -285,7 +285,6 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/rendering/ImguiSupport.hpp
 	${SRC_DIR}/sfz/rendering/ImguiSupport.cpp
 	${SRC_DIR}/sfz/rendering/Mesh.hpp
-	${SRC_DIR}/sfz/rendering/SphereLight.hpp
 
 	${SRC_DIR}/sfz/resources/BufferResource.hpp
 	${SRC_DIR}/sfz/resources/BufferResource.cpp
