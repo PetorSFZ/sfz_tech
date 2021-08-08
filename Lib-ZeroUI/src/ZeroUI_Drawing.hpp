@@ -38,7 +38,7 @@ using sfz::strID;
 // These functions are used to initialize and handle communication with the drawing module, these
 // are automatically called by ZeroUI and should not be called manually by the user.
 
-void internalDrawInit(sfz::Allocator* allocator, uint32_t fontOversampling);
+void internalDrawInit(SfzAllocator* allocator, uint32_t fontOversampling);
 void internalDrawDeinit();
 void internalDrawSetFontHandle(uint64_t handle);
 

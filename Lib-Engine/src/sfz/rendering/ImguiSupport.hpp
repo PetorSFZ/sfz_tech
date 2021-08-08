@@ -21,6 +21,7 @@
 
 #include <imgui.h>
 
+#include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
 
 #include "sfz/input/RawInputState.hpp"
@@ -30,7 +31,7 @@
 namespace sfz {
 
 // Initializes imgui, returns font image view to be sent to renderers initImgui() function.
-ImageView initializeImgui(Allocator* allocator) noexcept;
+ImageView initializeImgui(SfzAllocator* allocator) noexcept;
 
 void deinitializeImgui() noexcept;
 

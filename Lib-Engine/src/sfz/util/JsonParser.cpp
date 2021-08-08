@@ -394,7 +394,7 @@ JsonNodeValue<str320> JsonNode::valueStr320() const noexcept
 // ------------------------------------------------------------------------------------------------
 
 struct ParsedJsonImpl {
-	sfz::Allocator* allocator = nullptr;
+	SfzAllocator* allocator = nullptr;
 
 	char* jsonStringCopy = nullptr;
 	sajson::mutable_string_view jsongStringView;
@@ -409,7 +409,7 @@ struct ParsedJsonImpl {
 // ------------------------------------------------------------------------------------------------
 
 ParsedJson ParsedJson::parseString(
-	const char* jsonString, sfz::Allocator* allocator, bool allowCppComments) noexcept
+	const char* jsonString, SfzAllocator* allocator, bool allowCppComments) noexcept
 {
 	// Ensure json string is not nullptr
 	if (jsonString == nullptr) {
@@ -431,7 +431,7 @@ ParsedJson ParsedJson::parseString(
 		return ParsedJson();
 	}
 	impl.jsonStringCopy = reinterpret_cast<char*>(
-		allocator->allocate(sfz_dbg(""), jsonStringLen + 1, 32));
+		allocator->alloc(sfz_dbg(""), jsonStringLen + 1, 32));
 
 	// Copy string and strip Cpp comments if specified, also modify length of string
 	if (allowCppComments) {
@@ -453,7 +453,7 @@ ParsedJson ParsedJson::parseString(
 	const uint64_t SIZE_FACTOR = 4;
 	uint64_t allocationSize = SIZE_FACTOR * jsonStringLen;
 	impl.astMemory =
-		reinterpret_cast<size_t*>(allocator->allocate(sfz_dbg(""), allocationSize, 32));
+		reinterpret_cast<size_t*>(allocator->alloc(sfz_dbg(""), allocationSize, 32));
 	impl.astAllocation = sajson::bounded_allocation(impl.astMemory, allocationSize / sizeof(size_t));
 
 	// Parse json string
@@ -470,7 +470,7 @@ ParsedJson ParsedJson::parseString(
 }
 
 ParsedJson ParsedJson::parseFile(
-	const char* jsonPath, sfz::Allocator* allocator, bool allowCppComments) noexcept
+	const char* jsonPath, SfzAllocator* allocator, bool allowCppComments) noexcept
 {
 	sfz::DynString jsonString = sfz::readTextFile(jsonPath, allocator);
 	if (jsonString.size() == 0) {
@@ -491,7 +491,7 @@ void ParsedJson::swap(ParsedJson& other) noexcept
 void ParsedJson::destroy() noexcept
 {
 	if (mImpl == nullptr) return;
-	sfz::Allocator* allocator = mImpl->allocator;
+	SfzAllocator* allocator = mImpl->allocator;
 
 	// Deallocate sajson document
 	if (mImpl->doc != nullptr) {
@@ -500,12 +500,12 @@ void ParsedJson::destroy() noexcept
 
 	// Deallocate json string copy
 	if (mImpl->jsonStringCopy != nullptr) {
-		allocator->deallocate(mImpl->jsonStringCopy);
+		allocator->dealloc(mImpl->jsonStringCopy);
 	}
 
 	// Deallocate sajson ast
 	if (mImpl->astMemory != nullptr) {
-		allocator->deallocate(mImpl->astMemory);
+		allocator->dealloc(mImpl->astMemory);
 	}
 
 	// Deallocate implementation

@@ -49,7 +49,7 @@ class Array final {
 public:
 	SFZ_DECLARE_DROP_TYPE(Array);
 
-	explicit Array(uint32_t capacity, Allocator* allocator, SfzDbgInfo allocDbg) noexcept
+	explicit Array(uint32_t capacity, SfzAllocator* allocator, SfzDbgInfo allocDbg) noexcept
 	{
 		this->init(capacity, allocator, allocDbg);
 	}
@@ -59,7 +59,7 @@ public:
 
 	// Initializes with specified parameters. Guaranteed to only set allocator and not allocate
 	// memory if a capacity of 0 is requested.
-	void init(uint32_t capacity, Allocator* allocator, SfzDbgInfo allocDbg)
+	void init(uint32_t capacity, SfzAllocator* allocator, SfzDbgInfo allocDbg)
 	{
 		this->destroy();
 		mAllocator = allocator;
@@ -73,7 +73,7 @@ public:
 	void destroy()
 	{
 		this->clear();
-		if (mData != nullptr) mAllocator->deallocate(mData);
+		if (mData != nullptr) mAllocator->dealloc(mData);
 		mCapacity = 0;
 		mData = nullptr;
 		mAllocator = nullptr;
@@ -93,13 +93,13 @@ public:
 		sfz_assert_hard(capacity < ARRAY_DYNAMIC_MAX_CAPACITY);
 
 		// Allocate memory and move/copy over elements from old memory
-		T* newAllocation = capacity == 0 ? nullptr : (T*)mAllocator->allocate(
+		T* newAllocation = capacity == 0 ? nullptr : (T*)mAllocator->alloc(
 			allocDbg, capacity * sizeof(T), alignof(T) < 32 ? 32 : alignof(T));
 		for (uint32_t i = 0; i < mSize; i++) new(newAllocation + i) T(std::move(mData[i]));
 
 		// Destroy old memory and replace state with new memory and values
 		uint32_t sizeBackup = mSize;
-		Allocator* allocatorBackup = mAllocator;
+		SfzAllocator* allocatorBackup = mAllocator;
 		this->destroy();
 		mSize = sizeBackup;
 		mCapacity = capacity;
@@ -115,7 +115,7 @@ public:
 	uint32_t capacity() const { return mCapacity; }
 	const T* data() const { return mData; }
 	T* data() { return mData; }
-	Allocator* allocator() const { return mAllocator; }
+	SfzAllocator* allocator() const { return mAllocator; }
 
 	bool isEmpty() const { return mSize == 0; }
 
@@ -297,7 +297,7 @@ private:
 
 	uint32_t mSize = 0, mCapacity = 0;
 	T* mData = nullptr;
-	Allocator* mAllocator = nullptr;
+	SfzAllocator* mAllocator = nullptr;
 };
 
 // ArrayLocal

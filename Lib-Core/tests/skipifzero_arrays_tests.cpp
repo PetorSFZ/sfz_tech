@@ -54,7 +54,7 @@ UTEST(Array, default_constructor)
 
 UTEST(Array, init_with_0_does_not_allocate)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::Array<float> v;
 	v.init(0, &allocator, sfz_dbg(""));
@@ -72,7 +72,7 @@ UTEST(Array, init_with_0_does_not_allocate)
 
 UTEST(Array, fill_constructor)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::Array<int> twos(0, &allocator, sfz_dbg(""));
 	twos.add(2, 8);
@@ -92,7 +92,7 @@ UTEST(Array, fill_constructor)
 
 UTEST(Array, swap_move_constructors)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::Array<int> v1;
 	sfz::Array<int> v2(32, &allocator, sfz_dbg(""));
@@ -141,7 +141,7 @@ UTEST(Array, swap_move_constructors)
 
 UTEST(Array, access_operator)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::Array<int> v(4, &allocator, sfz_dbg(""));
 	v.hackSetSize(4);
@@ -159,7 +159,7 @@ UTEST(Array, access_operator)
 
 UTEST(Array, iterators)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::Array<int> v(4, &allocator, sfz_dbg(""));
 	v.hackSetSize(4);
@@ -177,7 +177,7 @@ UTEST(Array, iterators)
 
 UTEST(Array, add)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::Array<int> v(2, &allocator, sfz_dbg(""));
 	ASSERT_TRUE(v.size() == 0);
@@ -242,7 +242,7 @@ UTEST(Array, add)
 
 UTEST(Array, insert)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::Array<int> v(2, &allocator, sfz_dbg(""));
 	ASSERT_TRUE(v.size() == 0);
@@ -284,7 +284,7 @@ UTEST(Array, insert)
 
 UTEST(Array, remove)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	// Basic test
 	{
@@ -354,7 +354,7 @@ UTEST(Array, remove)
 
 UTEST(Array, removeQuickSwap)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 	sfz::Array<int> v(0, &allocator, sfz_dbg(""));
 	const int vals[] = {1, 2, 3, 4, 5, 6};
 	v.add(vals, 6);
@@ -376,7 +376,7 @@ UTEST(Array, removeQuickSwap)
 
 UTEST(Array, findElement)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::Array<int> v(0, &allocator, sfz_dbg(""));
 	const int vals[] = {1, 2, 2, 4};
@@ -403,7 +403,7 @@ UTEST(Array, findElement)
 
 UTEST(Array, find)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::Array<int> v(0, &allocator, sfz_dbg(""));
 	const int vals[] = {1, 2, 3, 4};
@@ -438,7 +438,7 @@ UTEST(Array, find)
 
 UTEST(Array, findLast)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::Array<int> v(0, &allocator, sfz_dbg(""));
 	const int vals[] = { 1, 2, 3, 4 };
@@ -473,7 +473,7 @@ UTEST(Array, findLast)
 
 UTEST(Array, sort)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::Array<int> v(0, &allocator, sfz_dbg(""));
 	const int vals[] = { 7, 1, 0, 2, 9, -1, -2, -2, 10, 11, 9, 0 };

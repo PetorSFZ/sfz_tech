@@ -31,7 +31,7 @@
 
 UTEST(Pool, init)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	// Default constructed
 	{
@@ -73,7 +73,7 @@ UTEST(Pool, init)
 
 UTEST(Pool, allocating_and_deallocating)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	// Allocating to full capacity linearly
 	{

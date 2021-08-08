@@ -34,7 +34,7 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 struct DeserializerVisitor final {
-	Allocator* allocator = nullptr;
+	SfzAllocator* allocator = nullptr;
 	JsonNode parentNode;
 	bool success = true;
 	bool errorMessagesEnabled = true;
@@ -358,7 +358,7 @@ struct DeserializerVisitor final {
 // ------------------------------------------------------------------------------------------------
 
 template<typename T>
-bool deserialize(T& valOut, const char* jsonPath, sfz::Allocator* allocator)
+bool deserialize(T& valOut, const char* jsonPath, SfzAllocator* allocator)
 {
 	static_assert(visit_struct::traits::is_visitable<T>::value, "Can only deserialize visitable types");
 

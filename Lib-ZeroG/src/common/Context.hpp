@@ -23,66 +23,11 @@
 
 #include "ZeroG.h"
 
-// AllocatorWrapper
-// ------------------------------------------------------------------------------------------------
-
-// Small wrapper around ZgAllocator (C-API) to convert it to an sfz::Allocator
-class AllocatorWrapper final : public sfz::Allocator {
-public:
-
-	static AllocatorWrapper createDefaultAllocator() {
-		AllocatorWrapper tmp;
-		tmp.mInited = true;
-		tmp.mHasUserDefinedAllocator = false;
-		return tmp;
-	}
-
-	static AllocatorWrapper createWrapper(ZgAllocator zgAllocator) {
-		AllocatorWrapper tmp;
-		tmp.mInited = true;
-		tmp.mHasUserDefinedAllocator = true;
-		tmp.mZgAllocator = zgAllocator;
-		return tmp;
-	}
-
-	bool isInitialized() const { return mInited; }
-
-	void* allocate(SfzDbgInfo dbg, uint64_t size, uint64_t alignment) noexcept override final
-	{
-		sfz_assert(mInited);
-		if (mHasUserDefinedAllocator) {
-			return mZgAllocator.allocate(
-				mZgAllocator.userPtr, uint32_t(size), dbg.staticMsg, dbg.file, dbg.line);
-		}
-		else {
-			return mStandardAllocator.allocate(dbg, size, alignment);
-		}
-	}
-
-	void deallocate(void* pointer) noexcept override final
-	{
-		sfz_assert(mInited);
-		if (pointer == nullptr) return;
-		if (mHasUserDefinedAllocator) {
-			mZgAllocator.deallocate(mZgAllocator.userPtr, pointer);
-		}
-		else {
-			mStandardAllocator.deallocate(pointer);
-		}
-	}
-
-private:
-	bool mInited = false;
-	bool mHasUserDefinedAllocator = false;
-	ZgAllocator mZgAllocator = {};
-	sfz::StandardAllocator mStandardAllocator;
-};
-
 // Context definition
 // ------------------------------------------------------------------------------------------------
 
 struct ZgContext final {
-	AllocatorWrapper allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 	ZgLogger logger = {};
 };
 
@@ -91,7 +36,7 @@ struct ZgContext final {
 
 ZgContext& getContext() noexcept;
 
-inline sfz::Allocator* getAllocator() noexcept { return &getContext().allocator; }
+inline SfzAllocator* getAllocator() noexcept { return &getContext().allocator; }
 inline ZgLogger& getLogger() noexcept { return getContext().logger; }
 
 void setContext(const ZgContext& context) noexcept;

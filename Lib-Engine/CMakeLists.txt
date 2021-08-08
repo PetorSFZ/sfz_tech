@@ -258,9 +258,6 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/math/MathPrimitiveToStrings.cpp
 	${SRC_DIR}/sfz/math/SphericalCoordinates.hpp
 
-	${SRC_DIR}/sfz/memory/DebugAllocator.hpp
-	${SRC_DIR}/sfz/memory/DebugAllocator.cpp
-
 	${SRC_DIR}/sfz/renderer/BuiltInShaderTypes.hpp
 	${SRC_DIR}/sfz/renderer/CascadedShadowMaps.hpp
 	${SRC_DIR}/sfz/renderer/CascadedShadowMaps.cpp

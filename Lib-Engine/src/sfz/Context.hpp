@@ -18,12 +18,13 @@
 
 #pragma once
 
+struct SfzAllocator;
+
 namespace sfz {
 
 // Forward declarations
 // ------------------------------------------------------------------------------------------------
 
-class Allocator;
 class LoggingInterface;
 class GlobalConfig;
 class ResourceManager;
@@ -53,7 +54,7 @@ struct Context final {
 	// The default allocator that is retrieved when "getDefaultAllocator()" is called. This should
 	// be set in the beginning of the program, and may then NEVER be changed. I.e. is must remain
 	// valid for the remaining duration of the program.
-	Allocator* defaultAllocator = nullptr;
+	SfzAllocator* defaultAllocator = nullptr;
 
 	// The current logger used, see "sfz/Logging.hpp" for logging macros which use it.
 	LoggingInterface* logger = nullptr;
@@ -93,7 +94,7 @@ void setContext(Context* context) noexcept;
 // Convenience getters
 // ------------------------------------------------------------------------------------------------
 
-inline Allocator* getDefaultAllocator() { return getContext()->defaultAllocator; }
+inline SfzAllocator* getDefaultAllocator() { return getContext()->defaultAllocator; }
 inline LoggingInterface* getLogger() { return getContext()->logger; }
 inline GlobalConfig& getGlobalConfig() { return *getContext()->config; }
 inline ResourceManager& getResourceManager() { return *getContext()->resources; }

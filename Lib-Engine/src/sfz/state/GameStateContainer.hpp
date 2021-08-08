@@ -44,20 +44,20 @@ public:
 	GameStateContainer& operator= (GameStateContainer&& other) noexcept { this->swap(other); return *this; }
 	~GameStateContainer() noexcept { this->destroy(); }
 
-	static GameStateContainer createRaw(uint64_t numBytes, Allocator* allocator) noexcept;
+	static GameStateContainer createRaw(uint64_t numBytes, SfzAllocator* allocator) noexcept;
 	static GameStateContainer create(
 		uint32_t numSingletonStructs,
 		const uint32_t* singletonStructSizes,
 		uint32_t maxNumEntities,
 		uint32_t numComponentTypes,
 		const uint32_t* componentSizes,
-		Allocator* allocator) noexcept;
+		SfzAllocator* allocator) noexcept;
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
 	void cloneTo(GameStateContainer& state) noexcept;
-	GameStateContainer clone(Allocator* allocator = sfz::getDefaultAllocator()) noexcept;
+	GameStateContainer clone(SfzAllocator* allocator = sfz::getDefaultAllocator()) noexcept;
 	void swap(GameStateContainer& other) noexcept;
 	void destroy() noexcept;
 
@@ -70,7 +70,7 @@ public:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 private:
-	Allocator* mAllocator = nullptr;
+	SfzAllocator* mAllocator = nullptr;
 	uint8_t* mGameStateMemoryChunk = nullptr;
 	uint64_t mNumBytes = 0;
 };

@@ -30,7 +30,7 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 GameStateContainer GameStateContainer::createRaw(
-	uint64_t numBytes, sfz::Allocator* allocator) noexcept
+	uint64_t numBytes, SfzAllocator* allocator) noexcept
 {
 	sfz_assert(allocator != nullptr);
 	sfz_assert(0 < numBytes);
@@ -38,7 +38,7 @@ GameStateContainer GameStateContainer::createRaw(
 	GameStateContainer container;
 	container.mAllocator = allocator;
 	container.mNumBytes = numBytes;
-	container.mGameStateMemoryChunk = static_cast<uint8_t*>(allocator->allocate(sfz_dbg(""), numBytes, 16));
+	container.mGameStateMemoryChunk = static_cast<uint8_t*>(allocator->alloc(sfz_dbg(""), numBytes, 16));
 	memset(container.mGameStateMemoryChunk, 0, numBytes);
 	return container;
 }
@@ -49,7 +49,7 @@ GameStateContainer GameStateContainer::create(
 	uint32_t maxNumEntities,
 	uint32_t numComponentTypes,
 	const uint32_t* componentSizes,
-	Allocator* allocator) noexcept
+	SfzAllocator* allocator) noexcept
 {
 	uint32_t neededSize = calcSizeOfGameStateBytes(
 		numSingletonStructs, singletonStructSizes, maxNumEntities, numComponentTypes, componentSizes);
@@ -76,7 +76,7 @@ void GameStateContainer::cloneTo(GameStateContainer& state) noexcept
 	std::memcpy(state.mGameStateMemoryChunk, this->mGameStateMemoryChunk, this->mNumBytes);
 }
 
-GameStateContainer GameStateContainer::clone(Allocator* allocator) noexcept
+GameStateContainer GameStateContainer::clone(SfzAllocator* allocator) noexcept
 {
 	sfz_assert(this->mGameStateMemoryChunk != nullptr);
 	sfz_assert(this->mNumBytes != 0);
@@ -85,7 +85,7 @@ GameStateContainer GameStateContainer::clone(Allocator* allocator) noexcept
 	GameStateContainer container;
 	container.mAllocator = allocator;
 	container.mNumBytes = this->mNumBytes;
-	container.mGameStateMemoryChunk = static_cast<uint8_t*>(allocator->allocate(sfz_dbg(""), mNumBytes, 32));
+	container.mGameStateMemoryChunk = static_cast<uint8_t*>(allocator->alloc(sfz_dbg(""), mNumBytes, 32));
 	this->cloneTo(container);
 	return container;
 }
@@ -100,7 +100,7 @@ void GameStateContainer::swap(GameStateContainer& other) noexcept
 void GameStateContainer::destroy() noexcept
 {
 	if (this->mGameStateMemoryChunk != nullptr) {
-		this->mAllocator->deallocate(this->mGameStateMemoryChunk);
+		this->mAllocator->dealloc(this->mGameStateMemoryChunk);
 	}
 	this->mAllocator = nullptr;
 	this->mGameStateMemoryChunk = nullptr;

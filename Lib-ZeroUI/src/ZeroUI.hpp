@@ -70,7 +70,7 @@ using sfz::vec4;
 // Forward declare Context
 struct Context;
 
-void initZeroUI(sfz::Allocator* allocator, uint32_t surfaceTmpMemoryBytes, uint32_t oversampleFonts = 1);
+void initZeroUI(SfzAllocator* allocator, uint32_t surfaceTmpMemoryBytes, uint32_t oversampleFonts = 1);
 void deinitZeroUI();
 
 // Fonts

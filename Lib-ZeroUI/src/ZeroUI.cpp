@@ -110,7 +110,7 @@ Context& ctx()
 	return *globalCtx;
 }
 
-void initZeroUI(sfz::Allocator* allocator, uint32_t surfaceTmpMemoryBytes, uint32_t oversampleFonts)
+void initZeroUI(SfzAllocator* allocator, uint32_t surfaceTmpMemoryBytes, uint32_t oversampleFonts)
 {
 	sfz_assert(globalCtx == nullptr);
 
@@ -152,7 +152,7 @@ void initZeroUI(sfz::Allocator* allocator, uint32_t surfaceTmpMemoryBytes, uint3
 void deinitZeroUI()
 {
 	sfz_assert(globalCtx != nullptr);
-	sfz::Allocator* allocator = ctx().heapAllocator;
+	SfzAllocator* allocator = ctx().heapAllocator;
 
 	internalDrawDeinit();
 
@@ -425,7 +425,7 @@ void surfaceEnd()
 	// valid.
 
 	// Setup stack to traverse
-	sfz::AllocatorArena* arena = surface.arena.getArena();
+	SfzAllocator* arena = surface.arena.getArena();
 	sfz::Array<WidgetCmd*> stack;
 	stack.init(surface.cmdParentStack.size(), arena, sfz_dbg(""));
 	stack.add(&surface.cmdRoot);
@@ -436,7 +436,7 @@ void surfaceEnd()
 
 		// Allocate memory for copy of widget data and then copy to it.
 		uint32_t sizeOfWidgetData = cmd->sizeOfWidgetData();
-		void* copy = arena->allocate(sfz_dbg(""), sizeOfWidgetData);
+		void* copy = arena->alloc(sfz_dbg(""), sizeOfWidgetData);
 		memcpy(copy, cmd->dataPtr, sizeOfWidgetData);
 		cmd->dataPtr = copy;
 

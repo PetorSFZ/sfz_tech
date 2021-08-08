@@ -98,7 +98,7 @@ namespace sfz {
 struct ZgTrackerCommandListState final {
 	SFZ_DECLARE_DROP_TYPE(ZgTrackerCommandListState);
 
-	void init(sfz::Allocator* allocator)
+	void init(SfzAllocator* allocator)
 	{
 		pendingBuffers.init(64, allocator, sfz_dbg("ZgTrackerCommandListState"));
 		pendingTextureMips.init(64, allocator, sfz_dbg("ZgTrackerCommandListState"));

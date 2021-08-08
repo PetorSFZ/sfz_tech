@@ -166,9 +166,9 @@ public:
 	~ParsedJson() noexcept { this->destroy(); }
 
 	static ParsedJson parseString(
-		const char* jsonString, sfz::Allocator* allocator, bool allowCppComments = true) noexcept;
+		const char* jsonString, SfzAllocator* allocator, bool allowCppComments = true) noexcept;
 	static ParsedJson parseFile(
-		const char* jsonPath, sfz::Allocator* allocator, bool allowCppComments = true) noexcept;
+		const char* jsonPath, SfzAllocator* allocator, bool allowCppComments = true) noexcept;
 
 	// State methods
 	// ---------------------------------------------------------------------------------------------

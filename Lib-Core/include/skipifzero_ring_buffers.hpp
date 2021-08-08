@@ -50,7 +50,7 @@ public:
 
 	SFZ_DECLARE_DROP_TYPE(RingBuffer);
 
-	RingBuffer(uint64_t capacity, Allocator* allocator, SfzDbgInfo allocDbg) noexcept
+	RingBuffer(uint64_t capacity, SfzAllocator* allocator, SfzDbgInfo allocDbg) noexcept
 	{
 		this->create(capacity, allocator, allocDbg);
 	}
@@ -58,7 +58,7 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void create(uint64_t capacity, Allocator* allocator, SfzDbgInfo allocDbg)
+	void create(uint64_t capacity, SfzAllocator* allocator, SfzDbgInfo allocDbg)
 	{
 		this->destroy();
 		if (capacity == 0) return;
@@ -66,7 +66,7 @@ public:
 		// Allocate memory
 		mAllocator = allocator;
 		mCapacity = capacity;
-		mDataPtr = reinterpret_cast<T*>(mAllocator->allocate(
+		mDataPtr = reinterpret_cast<T*>(mAllocator->alloc(
 			allocDbg, mCapacity * sizeof(T), sfz::max(32u, uint32_t(alignof(T)))));
 	}
 
@@ -74,7 +74,7 @@ public:
 	{
 		if (mDataPtr == nullptr) return;
 		this->clear();
-		mAllocator->deallocate(mDataPtr);
+		mAllocator->dealloc(mDataPtr);
 		mAllocator = nullptr;
 		mDataPtr = nullptr;
 		mCapacity = 0;
@@ -94,7 +94,7 @@ public:
 
 	uint64_t size() const { return mLastIndex - mFirstIndex; }
 	uint64_t capacity() const { return mCapacity; }
-	Allocator* allocator() const { return mAllocator; }
+	SfzAllocator* allocator() const { return mAllocator; }
 
 	// Access element in range [0, size), undefined if index is not valid.
 	T& operator[] (uint64_t index) { sfz_assert(index < size()); return mDataPtr[mapIndex(mFirstIndex + index)]; }
@@ -222,7 +222,7 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	Allocator* mAllocator = nullptr;
+	SfzAllocator* mAllocator = nullptr;
 	T* mDataPtr = nullptr;
 	uint64_t mCapacity = 0;
 	std::atomic_uint64_t mFirstIndex{BASE_IDX};

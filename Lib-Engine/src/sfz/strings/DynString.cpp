@@ -29,7 +29,7 @@ namespace sfz {
 // DynString: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-DynString::DynString(const char* string, uint32_t capacity, Allocator* allocator) noexcept
+DynString::DynString(const char* string, uint32_t capacity, SfzAllocator* allocator) noexcept
 {
 	// Special case when string is nullptr
 	if (string == nullptr) {

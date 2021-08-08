@@ -93,4 +93,34 @@ sfz_struct(SfzDbgInfo) {
 #define sfz_dbg(staticMsg) SfzDbgInfo{staticMsg, __FILE__, __LINE__}
 
 
+// Allocator
+// ------------------------------------------------------------------------------------------------
+
+// Allocates size bytes aligned to align, returns null on failure.
+typedef void* SfzAllocFunc(void* implData, SfzDbgInfo dbg, u64 size, u64 align);
+
+// Deallocates memory previously allocated with the same allocator. Deallocating null is required
+// to be safe and no-op. Attempting to deallocate memory allocated with another allocator is
+// potentially catastrophic undefined behavior.
+typedef void SfzDeallocFunc(void* implData, void* ptr);
+
+// A memory allocator.
+// * Typically a few allocators are created and then kept alive for the remaining duration of
+//   the program.
+// * Typically, pointers to allocators (Allocator*) are passed around and stored.
+// * It is the responsibility of the creator of the allocator instance to ensure that all users
+//   that have been provided a pointer have freed all their memory and are done using the allocator
+//   before the allocator itself is removed. Often this means that an allocator need to be kept
+//   alive for the remaining lifetime of the program.
+sfz_struct(SfzAllocator) {
+	void* implData;
+	SfzAllocFunc* allocFunc;
+	SfzDeallocFunc* deallocFunc;
+
+#ifdef __cplusplus
+	void* alloc(SfzDbgInfo dbg, u64 size, u64 align = 32) { return allocFunc(implData, dbg, size, align); }
+	void dealloc(void* ptr) { return deallocFunc(implData, ptr); }
+#endif
+};
+
 #endif // SFZ_H

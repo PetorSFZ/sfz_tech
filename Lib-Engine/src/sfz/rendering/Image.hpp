@@ -36,7 +36,7 @@ struct Image final {
 	int32_t bytesPerPixel = -1;
 
 	static Image allocate(
-		int32_t width, int32_t height, ImageType type, Allocator* allocator) noexcept;
+		int32_t width, int32_t height, ImageType type, SfzAllocator* allocator) noexcept;
 
 	inline ImageView toImageView() noexcept;
 	inline ImageViewConst toImageView() const noexcept;
@@ -50,7 +50,7 @@ struct Image final {
 /// Sets the allocator used for stb_image and the output image from loadImage().
 /// This function should ONLY be called if no loadImage() calls is under process, otherwise
 /// dangerous race conditions can happen.
-void setLoadImageAllocator(Allocator* allocator);
+void setLoadImageAllocator(SfzAllocator* allocator);
 
 /// Loads an image using stb_image.
 ///
@@ -61,7 +61,7 @@ Image loadImage(const char* basePath, const char* fileName) noexcept;
 // Flips an image vertically, i.e. the top row will be the bottom row, etc.
 //
 // Allocates a temporary buffer of the same width as the image
-void flipVertically(Image& image, Allocator* allocator) noexcept;
+void flipVertically(Image& image, SfzAllocator* allocator) noexcept;
 
 // Saves to file using stb_image_write
 bool saveImagePng(const Image& image, const char* path) noexcept;

@@ -489,7 +489,7 @@ void GameStateEditor::init(
 	uint32_t numSingletonInfos,
 	ComponentInfo* componentInfos,
 	uint32_t numComponentInfos,
-	sfz::Allocator* allocator)
+	SfzAllocator* allocator)
 {
 	this->destroy();
 

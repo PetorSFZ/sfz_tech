@@ -38,7 +38,7 @@ namespace sfz {
 // This is the internal state of the Resource Manager. If you are just using the ResourceManager
 // you probably shouldn't be accessing this directly.
 struct ResourceManagerState final {
-	Allocator* allocator = nullptr;
+	SfzAllocator* allocator = nullptr;
 
 	HashMap<strID, PoolHandle> bufferHandles;
 	Pool<BufferResource> buffers;

@@ -37,7 +37,7 @@ using namespace sfz;
 
 UTEST(RingBuffer, constructors)
 {
-	StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	// Default constructor
 	{
@@ -73,7 +73,7 @@ UTEST(RingBuffer, constructors)
 
 UTEST(RingBuffer, adding_and_accessing_elements)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	// Capacity == 0
 	{
@@ -285,7 +285,7 @@ UTEST(RingBuffer, adding_and_accessing_elements)
 
 UTEST(RingBuffer, state_methods)
 {
-	StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	// swap() and move constructors
 	{

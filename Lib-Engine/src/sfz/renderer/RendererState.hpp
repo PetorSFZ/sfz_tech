@@ -57,7 +57,7 @@ struct RendererState final {
 	// Members
 	// --------------------------------------------------------------------------------------------
 
-	sfz::Allocator* allocator = nullptr;
+	SfzAllocator* allocator = nullptr;
 	SDL_Window* window = nullptr;
 
 	// The current index of the frame, increments at every frameBegin()

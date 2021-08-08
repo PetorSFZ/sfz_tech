@@ -40,9 +40,9 @@ namespace sdl {
 #ifndef __EMSCRIPTEN__
 
 struct BridgeState final {
-	sfz::Allocator* allocator = nullptr;
+	SfzAllocator* allocator = nullptr;
 
-	// Hack because sfz::Allocators don't have realloc
+	// Hack because SfzAllocators don't have realloc
 	sfz::HashMap<void*, size_t> allocatedSizes =
 		sfz::HashMap<void*, size_t>(0, sfz::getDefaultAllocator(), sfz_dbg("SDL Realloc()"));
 };
@@ -53,7 +53,7 @@ static SDL_free_func oldSdlFree = nullptr;
 
 static void* SDLCALL mallocBridge(size_t size)
 {
-	void* ptr = bridgeState->allocator->allocate(sfz_dbg("SDL"), size, 32);
+	void* ptr = bridgeState->allocator->alloc(sfz_dbg("SDL"), size, 32);
 	if (ptr != nullptr) {
 		bridgeState->allocatedSizes.put(ptr, size);
 	}
@@ -66,7 +66,7 @@ static void* SDLCALL mallocBridge(size_t size)
 static void* SDLCALL callocBridge(size_t nmemb, size_t size)
 {
 	size_t numBytes = nmemb * size;
-	void* ptr = bridgeState->allocator->allocate(sfz_dbg("SDL"), numBytes, 32);
+	void* ptr = bridgeState->allocator->alloc(sfz_dbg("SDL"), numBytes, 32);
 	if (ptr != nullptr) {
 		bridgeState->allocatedSizes.put(ptr, numBytes);
 	}
@@ -100,7 +100,7 @@ static void* SDLCALL reallocBridge(void* mem, size_t size)
 
 	// Deallocate old memory
 	bridgeState->allocatedSizes.remove(mem);
-	bridgeState->allocator->deallocate(mem);
+	bridgeState->allocator->dealloc(mem);
 
 	// Return pointer to new memory
 	return newPtr;
@@ -110,7 +110,7 @@ static void SDLCALL freeBridge(void* mem)
 {
 	bool success = bridgeState->allocatedSizes.remove(mem);
 	if (success) {
-		bridgeState->allocator->deallocate(mem);
+		bridgeState->allocator->dealloc(mem);
 		return;
 	}
 
@@ -124,7 +124,7 @@ static void SDLCALL freeBridge(void* mem)
 // Function to set SDL allocators
 // ------------------------------------------------------------------------------------------------
 
-bool setSDLAllocator(sfz::Allocator* allocator) noexcept
+bool setSDLAllocator(SfzAllocator* allocator) noexcept
 {
 #ifdef __EMSCRIPTEN__
 	// Emscripten does not seem to support this for now. No big deal probably.

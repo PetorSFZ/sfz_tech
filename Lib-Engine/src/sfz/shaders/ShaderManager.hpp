@@ -113,7 +113,7 @@ struct ShaderManagerState;
 class ShaderManager final {
 public:
 	SFZ_DECLARE_DROP_TYPE(ShaderManager);
-	void init(uint32_t maxNumShaders, Allocator* allocator) noexcept;
+	void init(uint32_t maxNumShaders, SfzAllocator* allocator) noexcept;
 	void destroy() noexcept;
 
 	// Methods

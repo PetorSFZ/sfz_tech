@@ -130,7 +130,7 @@ struct Surface final {
 		sfz_assert(!cmdParentStack.isEmpty());
 	}
 
-	void init(uint32_t surfaceTmpMemoryBytes,  sfz::Allocator* allocator)
+	void init(uint32_t surfaceTmpMemoryBytes,  SfzAllocator* allocator)
 	{
 		arena.init(allocator, surfaceTmpMemoryBytes, sfz_dbg(""));
 		this->clear();
@@ -140,7 +140,7 @@ struct Surface final {
 	{
 		cmdRoot.children.destroy();
 		cmdParentStack.destroy();
-		arena.getArena()->reset();
+		arena.resetArena();
 		cmdParentStack.init(64, arena.getArena(), sfz_dbg(""));
 
 		transform = mat34::identity();
@@ -151,7 +151,7 @@ struct Surface final {
 
 struct Context final {
 
-	sfz::Allocator* heapAllocator = nullptr;
+	SfzAllocator* heapAllocator = nullptr;
 	strID defaultID;
 
 	// Widgets

@@ -38,7 +38,7 @@ namespace sfz {
 // TerminalLogger: Methods
 // ------------------------------------------------------------------------------------------------
 
-void TerminalLogger::init(uint32_t numHistoryItems, Allocator* allocator) noexcept
+void TerminalLogger::init(uint32_t numHistoryItems, SfzAllocator* allocator) noexcept
 {
 	mMessages.create(numHistoryItems, allocator, sfz_dbg(""));
 }

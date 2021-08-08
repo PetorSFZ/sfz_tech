@@ -133,16 +133,16 @@ static ZgContextState* ctxState = nullptr;
 static void* d3d12MemAllocAllocate(size_t size, size_t alignment, void* userData) noexcept
 {
 	(void)userData;
-	sfz::Allocator* allocator = getAllocator();
-	return allocator->allocate(
+	SfzAllocator* allocator = getAllocator();
+	return allocator->alloc(
 		sfz_dbg("D3D12MemAlloc"), uint64_t(size), sfz::max(uint32_t(alignment), 32u));
 }
 
 static void d3d12MemAllocFree(void* memory, void* userData) noexcept
 {
 	(void)userData;
-	sfz::Allocator* allocator = getAllocator();
-	allocator->deallocate(memory);
+	SfzAllocator* allocator = getAllocator();
+	allocator->dealloc(memory);
 }
 
 static D3D12MA::ALLOCATION_CALLBACKS getD3D12MemAllocAllocationCallbacks() noexcept
@@ -158,7 +158,7 @@ static void logDebugMessages(ZgContextState& state) noexcept
 {
 	if (!state.debugMode) return;
 
-	sfz::Allocator* allocator = getAllocator();
+	SfzAllocator* allocator = getAllocator();
 
 	// Log D3D12 messages in debug mode
 	uint64_t numMessages = state.infoQueue->GetNumStoredMessages();
@@ -170,7 +170,7 @@ static void logDebugMessages(ZgContextState& state) noexcept
 
 		// Allocate space and get the message
 		D3D12_MESSAGE* message =
-			(D3D12_MESSAGE*)allocator->allocate(sfz_dbg("D3D12_MESSAGE"), messageLength);
+			(D3D12_MESSAGE*)allocator->alloc(sfz_dbg("D3D12_MESSAGE"), messageLength);
 		CHECK_D3D12 state.infoQueue->GetMessage(0, message, &messageLength);
 
 		// Log message
@@ -189,7 +189,7 @@ static void logDebugMessages(ZgContextState& state) noexcept
 		}
 
 		// Deallocate message
-		allocator->deallocate(message);
+		allocator->dealloc(message);
 	}
 
 	// Clear stored messages
@@ -1342,11 +1342,10 @@ ZG_API ZgResult zgContextInit(const ZgContextInitSettings* settings)
 	if (usingDefaultLogger) tmpContext.logger = getDefaultLogger();
 	else tmpContext.logger = settings->logger;
 
-	// Set default allocator if none is specified
-	bool usingDefaultAllocator =
-		settings->allocator.allocate == nullptr || settings->allocator.deallocate == nullptr;
-	if (usingDefaultAllocator) tmpContext.allocator = AllocatorWrapper::createDefaultAllocator();
-	else tmpContext.allocator = AllocatorWrapper::createWrapper(settings->allocator);
+	// Set allocator if specified, otherwise standard allocator
+	bool usingDefaultAllocator = settings->allocator == nullptr;
+	if (usingDefaultAllocator) tmpContext.allocator = sfz::createStandardAllocator();
+	else tmpContext.allocator = *settings->allocator; 
 
 	// Set temporary context (without API backend). Required so rest of initialization can allocate
 	// memory and log.
@@ -1424,7 +1423,7 @@ ZG_API ZgResult zgContextDeinit(void)
 
 	// Reset context
 	ctx = {};
-	ctx.allocator = AllocatorWrapper();
+	ctx.allocator = sfz::createStandardAllocator();
 
 	return ZG_SUCCESS;
 }

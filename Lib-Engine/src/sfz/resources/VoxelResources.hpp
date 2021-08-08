@@ -89,14 +89,14 @@ struct VoxelModelResource final {
 	}
 
 	// Loads the resource from the stored path.
-	bool build(Allocator* allocator);
+	bool build(SfzAllocator* allocator);
 
-	static VoxelModelResource load(const char* path, Allocator* allocator);
+	static VoxelModelResource load(const char* path, SfzAllocator* allocator);
 };
 
 // OpenGameTools allocator
 // ------------------------------------------------------------------------------------------------
 
-void setOpenGameToolsAllocator(Allocator* allocator);
+void setOpenGameToolsAllocator(SfzAllocator* allocator);
 
 } // namespace sfz

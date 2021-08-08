@@ -57,7 +57,7 @@ struct StatsCategory final {
 };
 
 struct ProfilingStatsState final {
-	Allocator* allocator = nullptr;
+	SfzAllocator* allocator = nullptr;
 	HashMapLocal<str32, StatsCategory, PROFILING_STATS_MAX_NUM_CATEGORIES> categories;
 	ArrayLocal<str32, PROFILING_STATS_MAX_NUM_CATEGORIES> categoryStringBackings;
 	ArrayLocal<const char*, PROFILING_STATS_MAX_NUM_CATEGORIES> categoryStrings;
@@ -66,7 +66,7 @@ struct ProfilingStatsState final {
 // ProfilingStats: State methods
 // ------------------------------------------------------------------------------------------------
 
-void ProfilingStats::init(Allocator* allocator) noexcept
+void ProfilingStats::init(SfzAllocator* allocator) noexcept
 {
 	this->destroy();
 	mState = sfz_new<ProfilingStatsState>(allocator, sfz_dbg("ProfilingStatsState"));
@@ -76,7 +76,7 @@ void ProfilingStats::init(Allocator* allocator) noexcept
 void ProfilingStats::destroy() noexcept
 {
 	if (mState == nullptr) return;
-	Allocator* allocator = mState->allocator;
+	SfzAllocator* allocator = mState->allocator;
 	sfz_delete(allocator, mState);
 	mState = nullptr;
 }

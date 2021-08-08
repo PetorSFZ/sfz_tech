@@ -31,27 +31,27 @@ namespace sfz {
 
 static void* imguiAllocFunc(size_t size, void* userData) noexcept
 {
-	Allocator* allocator = reinterpret_cast<Allocator*>(userData);
-	return allocator->allocate(sfz_dbg("Imgui"), size, 32);
+	SfzAllocator* allocator = reinterpret_cast<SfzAllocator*>(userData);
+	return allocator->alloc(sfz_dbg("Imgui"), size, 32);
 }
 
 static void imguiFreeFunc(void* ptr, void* userData) noexcept
 {
-	Allocator* allocator = reinterpret_cast<Allocator*>(userData);
-	allocator->deallocate(ptr);
+	SfzAllocator* allocator = reinterpret_cast<SfzAllocator*>(userData);
+	allocator->dealloc(ptr);
 }
 
 struct ImGuiState final {
-	Allocator* allocator = nullptr;
+	SfzAllocator* allocator = nullptr;
 	ImFont* defaultFont = nullptr;
 	ImFont* monospaceFont = nullptr;
 };
 
 static ImGuiState* imguiState = nullptr;
 
-ImageView initializeImgui(Allocator* allocator) noexcept
+ImageView initializeImgui(SfzAllocator* allocator) noexcept
 {
-	// Replace Imgui allocators with sfz::Allocator
+	// Replace Imgui allocators with SfzAllocator
 	ImGui::SetAllocatorFunctions(imguiAllocFunc, imguiFreeFunc, allocator);
 
 	// Allocate imgui state
@@ -202,7 +202,7 @@ ImageView initializeImgui(Allocator* allocator) noexcept
 void deinitializeImgui() noexcept
 {
 	ImGui::DestroyContext();
-	Allocator* allocator = imguiState->allocator;
+	SfzAllocator* allocator = imguiState->allocator;
 	sfz_delete(allocator, imguiState);
 }
 

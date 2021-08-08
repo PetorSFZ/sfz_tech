@@ -33,10 +33,6 @@ namespace sfz {
 
 ZgLogger getPhantasyEngineZeroGLogger() noexcept;
 
-// ZeroG sfz::Allocator wrapper
-// -----------------------------------------------------------------------------------------------
-
-ZgAllocator createZeroGAllocatorWrapper(sfz::Allocator* allocator) noexcept;
 
 // Error handling helpers
 // -----------------------------------------------------------------------------------------------
@@ -60,7 +56,7 @@ struct CheckZgImpl final {
 
 bool initializeZeroG(
 	SDL_Window* window,
-	sfz::Allocator* allocator,
+	SfzAllocator* allocator,
 	bool vsync) noexcept;
 
 void* getNativeHandle(SDL_Window* window) noexcept;

@@ -31,10 +31,10 @@
 
 // Constructs a new object of type T, similar to operator new. Guarantees 32-byte alignment.
 template<typename T, typename... Args>
-T* sfz_new(sfz::Allocator* allocator, SfzDbgInfo dbg, Args&&... args) noexcept
+T* sfz_new(SfzAllocator* allocator, SfzDbgInfo dbg, Args&&... args) noexcept
 {
 	// Allocate memory (minimum 32-byte alignment), return nullptr on failure
-	void* memPtr = allocator->allocate(dbg, sizeof(T), alignof(T) < 32 ? 32 : alignof(T));
+	void* memPtr = allocator->alloc(dbg, sizeof(T), alignof(T) < 32 ? 32 : alignof(T));
 	if (memPtr == nullptr) return nullptr;
 
 	// Creates object (placement new), terminates program if constructor throws exception.
@@ -43,11 +43,11 @@ T* sfz_new(sfz::Allocator* allocator, SfzDbgInfo dbg, Args&&... args) noexcept
 
 // Deconstructs a C++ object created using sfz_new.
 template<typename T>
-void sfz_delete(sfz::Allocator* allocator, T*& pointer) noexcept
+void sfz_delete(SfzAllocator* allocator, T*& pointer) noexcept
 {
 	if (pointer == nullptr) return;
 	pointer->~T(); // Call destructor, will terminate program if it throws exception.
-	allocator->deallocate(pointer);
+	allocator->dealloc(pointer);
 	pointer = nullptr; // Set callers pointer to nullptr, an attempt to avoid dangling pointers.
 }
 
@@ -56,7 +56,7 @@ void sfz_delete(sfz::Allocator* allocator, T*& pointer) noexcept
 
 namespace sfz {
 
-// Simple replacement for std::unique_ptr using sfz::Allocator
+// Simple replacement for std::unique_ptr using SfzAllocator
 template<typename T>
 class UniquePtr final {
 public:
@@ -71,7 +71,7 @@ public:
 	// Creates a UniquePtr with the specified object and allocator
 	// This UniquePtr takes ownership of the specified object, thus the object in question must
 	// be allocated by the sfzCore allocator specified so it can be properly destroyed.
-	UniquePtr(T* object, Allocator* allocator) noexcept : mPtr(object), mAllocator(allocator) { }
+	UniquePtr(T* object, SfzAllocator* allocator) noexcept : mPtr(object), mAllocator(allocator) { }
 
 	// Casts another pointer and takes ownership
 	template<typename T2>
@@ -92,7 +92,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	T* get() const noexcept { return mPtr; }
-	Allocator* allocator() const noexcept { return mAllocator; }
+	SfzAllocator* allocator() const noexcept { return mAllocator; }
 
 	// Caller takes ownership of the internal pointer
 	T* take() noexcept
@@ -130,12 +130,12 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	T* mPtr = nullptr;
-	Allocator* mAllocator = nullptr;
+	SfzAllocator* mAllocator = nullptr;
 };
 
 // Constructs a new object of type T with the specified allocator and returns it in a UniquePtr
 template<typename T, typename... Args>
-UniquePtr<T> makeUnique(Allocator* allocator, SfzDbgInfo dbg, Args&&... args) noexcept
+UniquePtr<T> makeUnique(SfzAllocator* allocator, SfzDbgInfo dbg, Args&&... args) noexcept
 {
 	return UniquePtr<T>(sfz_new<T>(allocator, dbg, std::forward<Args>(args)...), allocator);
 }

@@ -48,7 +48,7 @@ namespace sfz {
 
 struct ConsoleState final {
 
-	Allocator* allocator = nullptr;
+	SfzAllocator* allocator = nullptr;
 
 	// Console settings
 	bool active = false;
@@ -610,7 +610,7 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 // Console: State methods
 // ------------------------------------------------------------------------------------------------
 
-void Console::init(Allocator* allocator, uint32_t numWindowsToDock, const char* const* windowNames) noexcept
+void Console::init(SfzAllocator* allocator, uint32_t numWindowsToDock, const char* const* windowNames) noexcept
 {
 	// Allocate ConsoleState and set allocator
 	this->destroy();
@@ -656,7 +656,7 @@ void Console::swap(Console& other) noexcept
 void Console::destroy() noexcept
 {
 	if (mState == nullptr) return;
-	sfz::Allocator* allocator = mState->allocator;
+	SfzAllocator* allocator = mState->allocator;
 	sfz_delete(allocator, mState);
 	mState = nullptr;
 }

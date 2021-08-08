@@ -59,7 +59,7 @@ struct ImGuiFrameState final {
 };
 
 struct ImGuiRenderState final {
-	sfz::Allocator* allocator = nullptr;
+	SfzAllocator* allocator = nullptr;
 
 	// Pipeline used to render ImGui
 	zg::PipelineRender pipeline;
@@ -149,7 +149,7 @@ struct ZgAsserter final { void operator% (ZgResult res) { sfz_assert(zgIsSuccess
 ZgResult imguiInitRenderState(
 	ImGuiRenderState*& stateOut,
 	uint32_t frameLatency,
-	sfz::Allocator* allocator,
+	SfzAllocator* allocator,
 	zg::CommandQueue& copyQueue,
 	const ZgImageViewConstCpu& fontTexture) noexcept
 {
@@ -235,7 +235,7 @@ void imguiDestroyRenderState(ImGuiRenderState*& state) noexcept
 {
 	sfz_assert(state != nullptr);
 	sfz_assert(state->allocator != nullptr);
-	sfz::Allocator* allocator = state->allocator;
+	SfzAllocator* allocator = state->allocator;
 	sfz_delete(allocator, state);
 	state = nullptr;
 }

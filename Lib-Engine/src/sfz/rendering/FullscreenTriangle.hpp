@@ -29,6 +29,6 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 // Counter-clock-wise triangle winding
-sfz::Mesh createFullscreenTriangle(sfz::Allocator* allocator, float clipSpaceDepth = 0.5f);
+sfz::Mesh createFullscreenTriangle(SfzAllocator* allocator, float clipSpaceDepth = 0.5f);
 
 } // namespace sfz

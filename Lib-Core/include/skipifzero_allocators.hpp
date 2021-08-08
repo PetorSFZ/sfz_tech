@@ -31,37 +31,40 @@ namespace sfz {
 // StandardAllocator
 // ------------------------------------------------------------------------------------------------
 
-class StandardAllocator final : public Allocator {
-public:
-	void* allocate(SfzDbgInfo dbg, uint64_t size, uint64_t alignment) noexcept override final
-	{
-		(void)dbg;
-		sfz_assert(isPowerOfTwo(alignment));
-
+inline void* sfzStandardAlloc(void*, SfzDbgInfo, u64 size, u64 align)
+{
+	if (align < 32) align = 32;
 #ifdef _WIN32
-		return _aligned_malloc(size, alignment);
+	return _aligned_malloc(size, align);
 #else
-		void* ptr = nullptr;
-		posix_memalign(&ptr, alignment, size);
-		return ptr;
+	void* ptr = nullptr;
+	posix_memalign(&ptr, align, size);
+	return ptr;
 #endif
-	}
+}
 
-	void deallocate(void* pointer) noexcept override final
-	{
-		if (pointer == nullptr) return;
+inline void sfzStandardDealloc(void*, void* ptr)
+{
+	if (ptr == nullptr) return;
 #ifdef _WIN32
-		_aligned_free(pointer);
+	_aligned_free(ptr);
 #else
-		free(pointer);
+	free(ptr);
 #endif
-	}
-};
+}
 
-// AllocatorArena
+inline SfzAllocator createStandardAllocator()
+{
+	SfzAllocator alloc = {};
+	alloc.allocFunc = sfzStandardAlloc;
+	alloc.deallocFunc = sfzStandardDealloc;
+	return alloc;
+}
+
+// Arena allocator
 // ------------------------------------------------------------------------------------------------
 
-// An Arena Allocator that allocates memory from a chunk of memory. It has an offset to the
+// An arena allocator that allocates memory from a chunk of memory. It has an offset to the
 // beginning of this chunk, each allocation increments the offset. Extremely fast and efficient
 // allocations.
 //
@@ -74,119 +77,114 @@ public:
 // the end of it. Extremely fast temporary allocations, and no need to indvidually deallocate all of
 // them. See more: https://en.wikipedia.org/wiki/Region-based_memory_management
 //
-// Prefer to use an ArenaHeap (see below) rather than creating an AllocatorArena yourself.
-class AllocatorArena final : public Allocator {
-public:
-	AllocatorArena() noexcept = default;
-	AllocatorArena(const AllocatorArena&) = delete;
-	AllocatorArena& operator= (const AllocatorArena&) = delete;
-	AllocatorArena(AllocatorArena&&) = delete;
-	AllocatorArena& operator= (AllocatorArena&&) = delete;
-	~AllocatorArena() noexcept { this->destroy(); }
+// Prefer to use an ArenaHeap to avoid edge-cases and ensure you use the arena correctly.
 
-	void init(void* memory, uint64_t memorySizeBytes) noexcept
+struct AllocatorArenaState final {
+	u8* memory = nullptr;
+	u64 memorySizeBytes = 0;
+	u64 currentOffsetBytes = 0;
+	u64 numPaddingBytes = 0;
+
+	void init(void* memoryIn, u64 memorySizeBytesIn)
 	{
-		sfz_assert(memory != nullptr);
-		sfz_assert(isAligned(memory, 32));
-
-		this->destroy();
-		mMemory = reinterpret_cast<uint8_t*>(memory);
-		mMemorySizeBytes = memorySizeBytes;
+		sfz_assert(memoryIn != nullptr);
+		sfz_assert(isAligned(memoryIn, 32));
+		this->memory = reinterpret_cast<u8*>(memoryIn);
+		this->memorySizeBytes = memorySizeBytesIn;
+		this->currentOffsetBytes = 0;
+		this->numPaddingBytes = 0;
 	}
 
-	void destroy() noexcept
+	void reset()
 	{
-		mMemory = nullptr;
-		mMemorySizeBytes = 0;
-		this->reset();
+		currentOffsetBytes = 0;
+		numPaddingBytes = 0;
 	}
-
-	// Resets this arena allocator, "deallocating" everything that has been allocated from it.
-	// This simply means moving the internal offset back to the beginning of the memory chunk.
-	void reset() noexcept
-	{
-		mCurrentOffsetBytes = 0;
-		mNumPaddingBytes = 0;
-	}
-
-	uint64_t capacity() const noexcept { return mMemorySizeBytes; }
-	uint64_t numBytesAllocated() const noexcept { return mCurrentOffsetBytes; }
-	uint64_t numPaddingBytes() const noexcept { return mNumPaddingBytes; }
-
-	void* allocate(SfzDbgInfo dbg, uint64_t size, uint64_t alignment = 32) noexcept override final
-	{
-		(void)dbg;
-		sfz_assert(isPowerOfTwo(alignment));
-
-		// Get next suitable offset for allocation
-		uint64_t padding = 0;
-		if (!isAligned(mMemory + mCurrentOffsetBytes, alignment)) {
-
-			// Calculate padding
-			uint64_t alignmentOffset = uint64_t(mMemory + mCurrentOffsetBytes) & (alignment - 1);
-			padding = alignment - alignmentOffset;
-			sfz_assert(isAligned(mMemory + mCurrentOffsetBytes + padding, alignment));
-		}
-
-		// Check if there is enough space left
-		if ((mCurrentOffsetBytes + size + padding) > mMemorySizeBytes) return nullptr;
-
-		// Allocate memory from arena and return pointer
-		uint8_t* ptr = mMemory + mCurrentOffsetBytes + padding;
-		mCurrentOffsetBytes += padding + size;
-		mNumPaddingBytes += padding;
-		return ptr;
-	}
-
-	void deallocate(void*) noexcept override final { /* no-op */ }
-
-private:
-	uint8_t* mMemory = nullptr;
-	uint64_t mMemorySizeBytes = 0;
-	uint64_t mCurrentOffsetBytes = 0;
-	uint64_t mNumPaddingBytes = 0;
 };
 
-// A convenience class creating and owning an AllocatorArena and a heap for it to use.
+inline void* sfzArenaAlloc(void* rawArenaState, SfzDbgInfo, u64 size, u64 align)
+{
+	AllocatorArenaState& state = *reinterpret_cast<AllocatorArenaState*>(rawArenaState);
+	sfz_assert(isPowerOfTwo(align));
+
+	// Get next suitable offset for allocation
+	u64 padding = 0;
+	if (!isAligned(state.memory + state.currentOffsetBytes, align)) {
+
+		// Calculate padding
+		u64 alignmentOffset = u64(state.memory + state.currentOffsetBytes) & (align - 1);
+		padding = align - alignmentOffset;
+		sfz_assert(isAligned(state.memory + state.currentOffsetBytes + padding, align));
+	}
+
+	// Check if there is enough space left
+	if ((state.currentOffsetBytes + size + padding) > state.memorySizeBytes) return nullptr;
+
+	// Allocate memory from arena and return pointer
+	u8* ptr = state.memory + state.currentOffsetBytes + padding;
+	state.currentOffsetBytes += padding + size;
+	state.numPaddingBytes += padding;
+	return ptr;
+}
+
+inline void sfzArenaDealloc(void*, void*) { /* no op */ }
+
+// A convenience class creating and owning an arena allocator and a heap for it to use.
 //
-// This class makes it substantially simpler to use an AlloctorArena safely, as the allocator
+// This class makes it substantially simpler to use an arena allocator safely, as the allocator
 // and its memory heap will always keep the same locations in memory. The handle (ArenaHeap) can
 // easily be moved around like any drop type until it is destroyed.
 class ArenaHeap final {
 public:
 	SFZ_DECLARE_DROP_TYPE(ArenaHeap);
 
-	void init(Allocator* allocator, uint64_t memorySizeBytes, SfzDbgInfo info)
+	void init(SfzAllocator* allocator, u64 memorySizeBytes, SfzDbgInfo info)
 	{
 		this->destroy();
 		mAllocator = allocator;
-		uint64_t arenaSize = roundUpAligned(sizeof(AllocatorArena), 32);
-		uint64_t blockPlusAllocatorBytes = arenaSize + memorySizeBytes;
-		mMemoryBlock = allocator->allocate(info, blockPlusAllocatorBytes, 32);
+		u64 arenaSize = roundUpAligned(sizeof(SfzAllocator) + sizeof(AllocatorArenaState), 32);
+		u64 blockPlusAllocatorBytes = arenaSize + memorySizeBytes;
+		mMemoryBlock = reinterpret_cast<u8*>(allocator->alloc(info, blockPlusAllocatorBytes, 32));
 
-		void* startOfArenaMem = reinterpret_cast<uint8_t*>(mMemoryBlock) + arenaSize;
-		new (mMemoryBlock) AllocatorArena();
-		getArena()->init(startOfArenaMem, memorySizeBytes);
+		SfzAllocator* allocMem = getArena();
+		AllocatorArenaState* arenaState = getState();
+
+		allocMem->allocFunc = sfzArenaAlloc;
+		allocMem->deallocFunc = sfzArenaDealloc;
+		allocMem->implData = arenaState;
+
+		*arenaState = {};
+		arenaState->memory = mMemoryBlock + arenaSize;
+		arenaState->memorySizeBytes = memorySizeBytes;
 	}
 
 	void destroy()
 	{
 		if (mMemoryBlock != nullptr) {
-			getArena()->destroy();
-			mAllocator->deallocate(mMemoryBlock);
+			mAllocator->dealloc(mMemoryBlock);
 			mAllocator = nullptr;
 			mMemoryBlock = nullptr;
 		}
 	}
 
-	AllocatorArena* getArena()
+	void resetArena()
 	{
-		return reinterpret_cast<AllocatorArena*>(mMemoryBlock);
+		getState()->reset();
+	}
+
+	SfzAllocator* getArena()
+	{
+		return reinterpret_cast<SfzAllocator*>(mMemoryBlock);
+	}
+
+	AllocatorArenaState* getState()
+	{
+		return reinterpret_cast<AllocatorArenaState*>(mMemoryBlock + sizeof(SfzAllocator));
 	}
 
 private:
-	Allocator* mAllocator = nullptr;
-	void* mMemoryBlock = nullptr;
+	SfzAllocator* mAllocator = nullptr;
+	u8* mMemoryBlock = nullptr;
 };
 
 } // namespace sfz

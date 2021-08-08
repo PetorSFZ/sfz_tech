@@ -70,7 +70,7 @@ struct RenderData final {
 	sfz::Array<uint16_t> indices;
 	sfz::Array<RenderCmd> renderCmds;
 
-	void init(sfz::Allocator* allocator)
+	void init(SfzAllocator* allocator)
 	{
 		vertices.init(4096, allocator, sfz_dbg(""));
 		indices.init(4096, allocator, sfz_dbg(""));
@@ -110,7 +110,7 @@ struct RenderData final {
 
 struct DrawingCtx final {
 
-	sfz::Allocator* allocator = nullptr;
+	SfzAllocator* allocator = nullptr;
 
 	FONScontext* fontstashCtx = nullptr;
 	sfz::HashMap<strID, FontInfo> fonts;
@@ -142,7 +142,7 @@ static int fontstashRenderCreate(void*, int width, int height)
 	const uint32_t oversample = drawingCtx.fontOversampling;
 	sfz_assert(drawingCtx.fontstashImageView.rawData == nullptr);
 	drawingCtx.fontstashImageView.rawData = reinterpret_cast<uint8_t*>(
-		drawingCtx.allocator->allocate(sfz_dbg(""), width * height * oversample * oversample));
+		drawingCtx.allocator->alloc(sfz_dbg(""), width * height * oversample * oversample));
 	drawingCtx.fontstashImageView.type = sfz::ImageType::R_U8;
 	drawingCtx.fontstashImageView.width = width * oversample;
 	drawingCtx.fontstashImageView.height = height * oversample;
@@ -246,7 +246,7 @@ static void fontstashRenderDelete(void*)
 // Initialization and internal interface
 // ------------------------------------------------------------------------------------------------
 
-void internalDrawInit(sfz::Allocator* allocator, uint32_t fontOversampling)
+void internalDrawInit(SfzAllocator* allocator, uint32_t fontOversampling)
 {
 	drawingCtx.allocator = allocator;
 
@@ -277,7 +277,7 @@ void internalDrawDeinit()
 {
 	fonsDeleteInternal(drawingCtx.fontstashCtx);
 	if (drawingCtx.fontstashImageView.rawData != nullptr) {
-		drawingCtx.allocator->deallocate(drawingCtx.fontstashImageView.rawData);
+		drawingCtx.allocator->dealloc(drawingCtx.fontstashImageView.rawData);
 		drawingCtx.fontstashImageView.rawData = nullptr;
 	}
 	drawingCtx.fontstashImageView = {};

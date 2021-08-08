@@ -58,7 +58,7 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void init(Allocator* allocator) noexcept;
+	void init(SfzAllocator* allocator) noexcept;
 	void destroy() noexcept;
 
 	// Getters

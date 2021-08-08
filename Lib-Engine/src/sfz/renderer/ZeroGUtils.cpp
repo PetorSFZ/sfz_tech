@@ -75,31 +75,6 @@ ZgLogger getPhantasyEngineZeroGLogger() noexcept
 	};
 }
 
-// ZeroG sfz::Allocator wrapper
-// -----------------------------------------------------------------------------------------------
-
-static void* zgSfzAllocate(
-	void* userPtr, uint32_t size, const char* name, const char* file, uint32_t line)
-{
-	sfz::Allocator* allocator = reinterpret_cast<sfz::Allocator*>(userPtr);
-	return allocator->allocate(SfzDbgInfo{ name, file, line }, size, 32);
-}
-
-static void zgSfzDeallocate(void* userPtr, void* allocation)
-{
-	sfz::Allocator* allocator = reinterpret_cast<sfz::Allocator*>(userPtr);
-	allocator->deallocate(allocation);
-}
-
-ZgAllocator createZeroGAllocatorWrapper(sfz::Allocator* sfzAllocator) noexcept
-{
-	ZgAllocator zgAllocator = {};
-	zgAllocator.allocate = zgSfzAllocate;
-	zgAllocator.deallocate = zgSfzDeallocate;
-	zgAllocator.userPtr = sfzAllocator;
-	return zgAllocator;
-}
-
 // Error handling helpers
 // -----------------------------------------------------------------------------------------------
 
@@ -122,7 +97,7 @@ bool CheckZgImpl::operator% (ZgResult result) noexcept
 
 bool initializeZeroG(
 	SDL_Window* window,
-	sfz::Allocator* allocator,
+	SfzAllocator* allocator,
 	bool vsync) noexcept
 {
 	// Log compiled and linked version of ZeroG
@@ -148,7 +123,7 @@ bool initializeZeroG(
 	initSettings.height = uint32_t(h);
 	initSettings.vsync = vsync ? ZG_TRUE : ZG_FALSE;
 	initSettings.logger = getPhantasyEngineZeroGLogger();
-	initSettings.allocator = createZeroGAllocatorWrapper(allocator);
+	initSettings.allocator = allocator;
 	initSettings.nativeHandle = getNativeHandle(window);
 	initSettings.d3d12.debugMode = debugModeSetting->boolValue() ? ZG_TRUE : ZG_FALSE;
 	initSettings.d3d12.debugModeGpuBased = debugModeGpuBasedSetting->boolValue() ? ZG_TRUE : ZG_FALSE;

@@ -44,7 +44,7 @@ bool loadAssetsFromGltf(
 	const char* gltfPath,
 	Mesh& meshOut,
 	Array<ImageAndPath>& texturesOut,
-	sfz::Allocator* allocator,
+	SfzAllocator* allocator,
 	bool (*checkIfTextureIsLoaded)(strID id, void* userPtr),
 	void* userPtr) noexcept;
 

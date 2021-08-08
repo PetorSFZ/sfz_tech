@@ -192,7 +192,7 @@ ZgResult TextureResource::build(vec2_u32 screenRes)
 
 void TextureResource::uploadBlocking(
 	const ImageViewConst& image,
-	sfz::Allocator* cpuAllocator,
+	SfzAllocator* cpuAllocator,
 	zg::CommandQueue& copyQueue)
 {
 	sfz_assert(texture.valid());

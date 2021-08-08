@@ -76,7 +76,7 @@ UTEST(HashMap, default_constructor)
 
 UTEST(HashMap, swap_and_move_constructors)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::HashMap<int,int> v1;
 	sfz::HashMap<int,int> v2(1, &allocator, sfz_dbg(""));
@@ -113,7 +113,7 @@ UTEST(HashMap, swap_and_move_constructors)
 
 UTEST(HashMap, clone)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::HashMap<int,int> m1(1, &allocator, sfz_dbg(""));
 	ASSERT_TRUE(m1.put(1, 2) == 2);
@@ -166,7 +166,7 @@ UTEST(HashMap, clone)
 
 UTEST(HashMap, rehash)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::HashMap<int,int> m1(0, &allocator, sfz_dbg(""));
 	ASSERT_TRUE(m1.capacity() == 0);
@@ -201,7 +201,7 @@ UTEST(HashMap, rehash)
 
 UTEST(HashMap, rehashing_in_put)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::HashMap<int, int> m1(0, &allocator, sfz_dbg(""));
 	ASSERT_TRUE(m1.size() == 0);
@@ -220,7 +220,7 @@ UTEST(HashMap, rehashing_in_put)
 
 UTEST(HashMap, adding_and_retrieving_elements)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::HashMap<int, int> m1(0, &allocator, sfz_dbg(""));
 
@@ -266,7 +266,7 @@ namespace sfz {
 
 UTEST(HashMap, hashing_conflicts)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::HashMap<ZeroHashInteger, int> m(0, &allocator, sfz_dbg(""));
 	ASSERT_TRUE(m.size() == 0);
@@ -323,7 +323,7 @@ UTEST(HashMap, hashing_conflicts)
 
 UTEST(HashMap, access_operator)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::HashMap<int, int> m(1, &allocator, sfz_dbg(""));
 	ASSERT_TRUE(m.size() == 0);
@@ -347,7 +347,7 @@ UTEST(HashMap, access_operator)
 
 UTEST(HashMap, empty_hashmap)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	// Iterating
 	{
@@ -411,7 +411,7 @@ UTEST(HashMap, empty_hashmap)
 
 UTEST(HashMap, hashmap_with_strings)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	// const char*
 	{
@@ -502,7 +502,7 @@ namespace sfz {
 
 UTEST(HashMap, perfect_forwarding_in_put)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::HashMap<MoveTestStruct, MoveTestStruct> m(0, &allocator, sfz_dbg(""));
 

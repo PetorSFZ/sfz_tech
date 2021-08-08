@@ -57,7 +57,7 @@ using std::uint8_t;
 // ------------------------------------------------------------------------------------------------
 
 template<typename T>
-static Array<T> readFileInternal(const char* path, bool binaryMode, Allocator* allocator) noexcept
+static Array<T> readFileInternal(const char* path, bool binaryMode, SfzAllocator* allocator) noexcept
 {
 	// Open file
 	if (path == nullptr) return Array<T>();
@@ -104,7 +104,7 @@ const char* myDocumentsPath() noexcept
 {
 	static const char* path = []() {
 #ifdef _WIN32
-		char* tmp = static_cast<char*>(getDefaultAllocator()->allocate(sfz_dbg("sfz::myDocumentsPath()"), MAX_PATH + 2, 32));
+		char* tmp = static_cast<char*>(getDefaultAllocator()->alloc(sfz_dbg("sfz::myDocumentsPath()"), MAX_PATH + 2, 32));
 		HRESULT result = SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, tmp);
 		if (result != S_OK) SFZ_ERROR_AND_EXIT("sfzCore", "%s", "Could not retrieve MyDocuments path.");
 
@@ -135,7 +135,7 @@ const char* gameBaseFolderPath() noexcept
 	static const char* path = []() {
 		const char* myDocuments = myDocumentsPath();
 		size_t len = std::strlen(myDocuments);
-		char* tmp = static_cast<char*>(getDefaultAllocator()->allocate(sfz_dbg("sfz::gameBaseFolderPath()"), len + 32, 32));
+		char* tmp = static_cast<char*>(getDefaultAllocator()->alloc(sfz_dbg("sfz::gameBaseFolderPath()"), len + 32, 32));
 #ifdef __APPLE__
 		std::snprintf(tmp, len + 32, "%s%s", myDocuments, "Library/Application Support/");
 #else
@@ -323,12 +323,12 @@ int32_t readBinaryFile(const char* path, uint8_t* dataOut, size_t maxNumBytes) n
 	return 0;
 }
 
-Array<uint8_t> readBinaryFile(const char* path, Allocator* allocator) noexcept
+Array<uint8_t> readBinaryFile(const char* path, SfzAllocator* allocator) noexcept
 {
 	return readFileInternal<uint8_t>(path, true, allocator);
 }
 
-DynString readTextFile(const char* path, Allocator* allocator) noexcept
+DynString readTextFile(const char* path, SfzAllocator* allocator) noexcept
 {
 	Array<char> strData = readFileInternal<char>(path, false, allocator);
 	if (strData.size() == 0 || strData[strData.size() - 1] != '\0') {

@@ -154,7 +154,7 @@ public:
 	
 	SFZ_DECLARE_DROP_TYPE(HashMap);
 
-	HashMap(uint32_t capacity, Allocator* allocator, SfzDbgInfo allocDbg) noexcept
+	HashMap(uint32_t capacity, SfzAllocator* allocator, SfzDbgInfo allocDbg) noexcept
 	{
 		this->init(capacity, allocator, allocDbg);
 	}
@@ -162,14 +162,14 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void init(uint32_t capacity, Allocator* allocator, SfzDbgInfo allocDbg)
+	void init(uint32_t capacity, SfzAllocator* allocator, SfzDbgInfo allocDbg)
 	{
 		this->destroy();
 		mAllocator = allocator;
 		this->rehash(capacity, allocDbg);
 	}
 
-	HashMap clone(Allocator* allocator, SfzDbgInfo allocDbg) const
+	HashMap clone(SfzAllocator* allocator, SfzDbgInfo allocDbg) const
 	{
 		HashMap tmp(mCapacity, allocator, allocDbg);
 		tmp.mSize = this->mSize;
@@ -193,7 +193,7 @@ public:
 		this->clear();
 
 		// Deallocate memory
-		mAllocator->deallocate(mAllocation);
+		mAllocator->dealloc(mAllocation);
 		mCapacity = 0;
 		mPlaceholders = 0;
 		mAllocation = nullptr;
@@ -244,7 +244,7 @@ public:
 		uint64_t allocSize = sizeOfSlots + sizeOfKeys + sizeOfValues;
 
 		// Allocate and clear memory for new hash map
-		tmp.mAllocation = static_cast<uint8_t*>(mAllocator->allocate(allocDbg, allocSize, ALIGNMENT));
+		tmp.mAllocation = static_cast<uint8_t*>(mAllocator->alloc(allocDbg, allocSize, ALIGNMENT));
 		std::memset(tmp.mAllocation, 0, allocSize);
 		tmp.mAllocator = mAllocator;
 		tmp.mSlots = reinterpret_cast<HashMapSlot*>(tmp.mAllocation);
@@ -273,7 +273,7 @@ public:
 	uint32_t size() const { return mSize; }
 	uint32_t capacity() const { return mCapacity; }
 	uint32_t placeholders() const { return mPlaceholders; }
-	Allocator* allocator() const { return mAllocator; }
+	SfzAllocator* allocator() const { return mAllocator; }
 
 	// Returns pointer to the element associated with the given key, or nullptr if no such element
 	// exists. The pointer is valid until the HashMap is rehashed. This method will never cause a
@@ -478,7 +478,7 @@ private:
 	HashMapSlot* mSlots = nullptr;
 	K* mKeys = nullptr;
 	V* mValues = nullptr;
-	Allocator* mAllocator = nullptr;
+	SfzAllocator* mAllocator = nullptr;
 };
 
 // HashMapLocal

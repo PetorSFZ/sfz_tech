@@ -54,7 +54,7 @@ public:
 	/// \param string a null-terminated string or nullptr
 	/// \param capacity the capacity of the internal Array
 	explicit DynString(const char* string, uint32_t capacity = 0,
-	                   Allocator* allocator = getDefaultAllocator()) noexcept;
+	                   SfzAllocator* allocator = getDefaultAllocator()) noexcept;
 
 	// Getters
 	// --------------------------------------------------------------------------------------------
@@ -67,7 +67,7 @@ public:
 	uint32_t size() const noexcept;
 	uint32_t capacity() const noexcept { return mString.capacity(); }
 
-	Allocator* allocator() const noexcept { return mString.allocator(); }
+	SfzAllocator* allocator() const noexcept { return mString.allocator(); }
 
 	const Array<char>& internalArray() const noexcept { return mString; }
 	Array<char>& internalArray() noexcept { return mString; }

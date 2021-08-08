@@ -26,7 +26,7 @@ namespace sdl {
 // Function to set SDL allocators
 // ------------------------------------------------------------------------------------------------
 
-bool setSDLAllocator(sfz::Allocator* allocator) noexcept;
+bool setSDLAllocator(SfzAllocator* allocator) noexcept;
 
 } // namespace sdl
 } // namespace sfz

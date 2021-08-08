@@ -31,7 +31,7 @@ namespace sfz {
 
 struct AudioEngineState final {
 
-	Allocator* allocator = nullptr;
+	SfzAllocator* allocator = nullptr;
 
 	SoLoud::Soloud soloud;
 };
@@ -39,7 +39,7 @@ struct AudioEngineState final {
 // AudioEngine:: State methods
 // ------------------------------------------------------------------------------------------------
 
-bool AudioEngine::init(Allocator* allocator) noexcept
+bool AudioEngine::init(SfzAllocator* allocator) noexcept
 {
 	this->destroy();
 	mState = sfz_new<AudioEngineState>(allocator, sfz_dbg(""));
@@ -63,7 +63,7 @@ void AudioEngine::destroy() noexcept
 	// Deinitialize SoLoud
 	mState->soloud.deinit();
 
-	Allocator* allocator = mState->allocator;
+	SfzAllocator* allocator = mState->allocator;
 	sfz_delete(allocator, mState);
 	mState = nullptr;
 }

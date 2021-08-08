@@ -43,7 +43,7 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void init(Allocator* allocator, uint32_t numWindowsToDock, const char* const* windowNames) noexcept;
+	void init(SfzAllocator* allocator, uint32_t numWindowsToDock, const char* const* windowNames) noexcept;
 	void swap(Console& other) noexcept;
 	void destroy() noexcept;
 

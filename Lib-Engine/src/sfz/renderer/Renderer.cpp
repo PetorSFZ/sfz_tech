@@ -53,7 +53,7 @@ namespace sfz {
 bool Renderer::init(
 	SDL_Window* window,
 	const ImageViewConst& fontTexture,
-	sfz::Allocator* allocator) noexcept
+	SfzAllocator* allocator) noexcept
 {
 	this->destroy();
 	mState = sfz_new<RendererState>(allocator, sfz_dbg("RendererState"));
@@ -159,7 +159,7 @@ void Renderer::destroy() noexcept
 		mState->imguiRenderState = nullptr;
 
 		// Deallocate rest of state
-		sfz::Allocator* allocator = mState->allocator;
+		SfzAllocator* allocator = mState->allocator;
 		sfz_delete(allocator, mState);
 	}
 	mState = nullptr;

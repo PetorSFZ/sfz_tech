@@ -178,7 +178,6 @@ set(ZEROG_COMMON_FILES
 	${SRC_DIR}/common/Logging.cpp
 	${SRC_DIR}/common/Matrices.hpp
 	${SRC_DIR}/common/Mutex.hpp
-	${SRC_DIR}/common/NewOverloads.cpp
 	${SRC_DIR}/common/Strings.hpp
 )
 source_group(TREE ${SRC_DIR} FILES ${ZEROG_COMMON_FILES})

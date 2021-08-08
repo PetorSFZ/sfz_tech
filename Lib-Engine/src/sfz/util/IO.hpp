@@ -81,10 +81,10 @@ int32_t readBinaryFile(const char* path, uint8_t* dataOut, size_t maxNumBytes) n
 // Reads binary file, returns empty Array if error.
 Array<uint8_t> readBinaryFile(
 	const char* path,
-	Allocator* allocator = getDefaultAllocator()) noexcept;
+	SfzAllocator* allocator = getDefaultAllocator()) noexcept;
 
 // Reads text file, returns empty string if error.
-DynString readTextFile(const char* path, Allocator* allocator = getDefaultAllocator()) noexcept;
+DynString readTextFile(const char* path, SfzAllocator* allocator = getDefaultAllocator()) noexcept;
 
 // Writes memory to binary file, returns whether successful or not.
 bool writeBinaryFile(const char* path, const uint8_t* data, size_t numBytes) noexcept;

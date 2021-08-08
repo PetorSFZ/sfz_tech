@@ -50,7 +50,7 @@ ShaderMaterial cpuMaterialToShaderMaterial(const Material& cpuMaterial) noexcept
 MeshResource meshResourceAllocate(
 	const char* meshName,
 	const Mesh& cpuMesh,
-	sfz::Allocator* cpuAllocator) noexcept
+	SfzAllocator* cpuAllocator) noexcept
 {
 	ResourceManager& resources = getResourceManager();
 
@@ -82,7 +82,7 @@ MeshResource meshResourceAllocate(
 void meshResourceUploadBlocking(
 	MeshResource& gpuMesh,
 	const Mesh& cpuMesh,
-	sfz::Allocator* cpuAllocator,
+	SfzAllocator* cpuAllocator,
 	zg::CommandQueue& copyQueue) noexcept
 {
 	ResourceManager& resources = getResourceManager();

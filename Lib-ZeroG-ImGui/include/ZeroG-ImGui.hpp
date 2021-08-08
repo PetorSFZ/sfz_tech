@@ -32,7 +32,7 @@ struct ImGuiRenderState;
 ZgResult imguiInitRenderState(
 	ImGuiRenderState*& stateOut,
 	uint32_t frameLatency,
-	sfz::Allocator* allocator,
+	SfzAllocator* allocator,
 	zg::CommandQueue& copyQueue,
 	const ZgImageViewConstCpu& fontTexture) noexcept;
 

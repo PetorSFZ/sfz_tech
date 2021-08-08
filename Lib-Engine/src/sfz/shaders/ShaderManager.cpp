@@ -162,7 +162,7 @@ bool Shader::build() noexcept
 // ShaderManager
 // ------------------------------------------------------------------------------------------------
 
-void ShaderManager::init(uint32_t maxNumShaders, Allocator* allocator) noexcept
+void ShaderManager::init(uint32_t maxNumShaders, SfzAllocator* allocator) noexcept
 {
 	sfz_assert(mState == nullptr);
 	mState = sfz_new<ShaderManagerState>(allocator, sfz_dbg(""));
@@ -183,7 +183,7 @@ void ShaderManager::destroy() noexcept
 	CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
 	CHECK_ZG zg::CommandQueue::getCopyQueue().flush();
 
-	Allocator* allocator = mState->allocator;
+	SfzAllocator* allocator = mState->allocator;
 	sfz_delete(allocator, mState);
 	mState = nullptr;
 }

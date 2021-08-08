@@ -37,7 +37,7 @@ struct Section final {
 };
 
 struct GlobalConfigImpl final {
-	Allocator* allocator = nullptr;
+	SfzAllocator* allocator = nullptr;
 	IniParser ini;
 	Array<Section> sections;
 	bool loaded = false; // Can only be loaded once... for now
@@ -46,7 +46,7 @@ struct GlobalConfigImpl final {
 // GlobalConfig: Methods
 // ------------------------------------------------------------------------------------------------
 
-void GlobalConfig::init(const char* basePath, const char* fileName, Allocator* allocator) noexcept
+void GlobalConfig::init(const char* basePath, const char* fileName, SfzAllocator* allocator) noexcept
 {
 	if (mImpl != nullptr) this->destroy();
 	mImpl = sfz_new<GlobalConfigImpl>(allocator, sfz_dbg("GlobalConfigImpl"));
@@ -63,7 +63,7 @@ void GlobalConfig::init(const char* basePath, const char* fileName, Allocator* a
 void GlobalConfig::destroy() noexcept
 {
 	if (mImpl == nullptr) return;
-	Allocator* allocator = mImpl->allocator;
+	SfzAllocator* allocator = mImpl->allocator;
 	sfz_delete(allocator, mImpl);
 	mImpl = nullptr;
 }

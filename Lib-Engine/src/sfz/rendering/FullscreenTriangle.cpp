@@ -45,7 +45,7 @@ static constexpr uint32_t NUM_TRIANGLE_INDICES = 3;
 // Function that returns a mesh containing a "fullscreen" triangle
 // ------------------------------------------------------------------------------------------------
 
-sfz::Mesh createFullscreenTriangle(sfz::Allocator* allocator, float clipSpaceDepth)
+sfz::Mesh createFullscreenTriangle(SfzAllocator* allocator, float clipSpaceDepth)
 {
 	sfz::Mesh mesh;
 

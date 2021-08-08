@@ -29,7 +29,7 @@
 
 namespace sfz {
 
-using sfz::Allocator;
+
 using sfz::LogLevel;
 using sfz::RingBuffer;
 using sfz::str32;
@@ -67,7 +67,7 @@ public:
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	void init(uint32_t numHistoryItems, Allocator* allocator) noexcept;
+	void init(uint32_t numHistoryItems, SfzAllocator* allocator) noexcept;
 
 	// Returns current number of messages
 	uint32_t numMessages() const noexcept;

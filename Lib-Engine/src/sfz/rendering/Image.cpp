@@ -60,11 +60,11 @@ static void sfz_free_wrapper(void* ptr);
 // C allocation wrapper for stb_image
 // ------------------------------------------------------------------------------------------------
 
-static sfz::Allocator* staticAllocator = nullptr;
+static SfzAllocator* staticAllocator = nullptr;
 
 static void* sfz_malloc_wrapper(size_t size)
 {
-	return staticAllocator->allocate(sfz_dbg("stb_image"), size, 32);
+	return staticAllocator->alloc(sfz_dbg("stb_image"), size, 32);
 }
 
 static void* sfz_realloc_sized_wrapper(void* ptr, size_t oldSize, size_t newSize)
@@ -77,7 +77,7 @@ static void* sfz_realloc_sized_wrapper(void* ptr, size_t oldSize, size_t newSize
 
 static void sfz_free_wrapper(void* ptr)
 {
-	staticAllocator->deallocate(ptr);
+	staticAllocator->dealloc(ptr);
 }
 
 namespace sfz {
@@ -138,7 +138,7 @@ static uint32_t sizeOfElement(ImageType imageType) noexcept
 // Implementations of functions from header
 // ------------------------------------------------------------------------------------------------
 
-Image Image::allocate(int32_t width, int32_t height, ImageType type, Allocator* allocator) noexcept
+Image Image::allocate(int32_t width, int32_t height, ImageType type, SfzAllocator* allocator) noexcept
 {
 	Image image;
 	image.type = type;
@@ -151,7 +151,7 @@ Image Image::allocate(int32_t width, int32_t height, ImageType type, Allocator* 
 	return image;
 }
 
-void setLoadImageAllocator(Allocator* allocator)
+void setLoadImageAllocator(SfzAllocator* allocator)
 {
 	staticAllocator = allocator;
 }
@@ -248,13 +248,13 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 	return tmp;
 }
 
-void flipVertically(Image& image, Allocator* allocator) noexcept
+void flipVertically(Image& image, SfzAllocator* allocator) noexcept
 {
 	sfz_assert(image.rawData.data() != nullptr);
 	sfz_assert((image.height % 2) == 0);
 
 	int32_t pitch = image.width * image.bytesPerPixel;
-	uint8_t* buffer = (uint8_t*)allocator->allocate(sfz_dbg(""), uint64_t(pitch), 32);
+	uint8_t* buffer = (uint8_t*)allocator->alloc(sfz_dbg(""), uint64_t(pitch), 32);
 
 	for (int32_t i = 0; i < (image.height / 2); i++) {
 		uint8_t* begin = image.rawData.data() + i * pitch;
@@ -265,7 +265,7 @@ void flipVertically(Image& image, Allocator* allocator) noexcept
 		std::memcpy(end, buffer, pitch);
 	}
 
-	allocator->deallocate(buffer);
+	allocator->dealloc(buffer);
 }
 
 bool saveImagePng(const Image& image, const char* path) noexcept

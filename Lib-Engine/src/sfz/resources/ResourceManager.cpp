@@ -34,7 +34,7 @@ namespace sfz {
 // ResourceManager: State methods
 // ------------------------------------------------------------------------------------------------
 
-void ResourceManager::init(uint32_t maxNumResources, Allocator* allocator) noexcept
+void ResourceManager::init(uint32_t maxNumResources, SfzAllocator* allocator) noexcept
 {
 	sfz_assert(mState == nullptr);
 	mState = sfz_new<ResourceManagerState>(allocator, sfz_dbg(""));
@@ -80,7 +80,7 @@ void ResourceManager::destroy() noexcept
 	CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
 	CHECK_ZG zg::CommandQueue::getCopyQueue().flush();
 	
-	Allocator* allocator = mState->allocator;
+	SfzAllocator* allocator = mState->allocator;
 	sfz_delete(allocator, mState);
 	mState = nullptr;
 }

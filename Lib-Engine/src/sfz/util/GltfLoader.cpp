@@ -73,17 +73,17 @@ static vec4_u8 toU8(vec4 val) noexcept
 
 static void* cgltfAlloc(void* userPtr, cgltf_size size) noexcept
 {
-	sfz::Allocator* allocator = static_cast<sfz::Allocator*>(userPtr);
-	return allocator->allocate(sfz_dbg("cgltf"), uint64_t(size));
+	SfzAllocator* allocator = static_cast<SfzAllocator*>(userPtr);
+	return allocator->alloc(sfz_dbg("cgltf"), uint64_t(size));
 }
 
 static void cgltfFree(void* userPtr, void* ptr) noexcept
 {
-	sfz::Allocator* allocator = static_cast<sfz::Allocator*>(userPtr);
-	allocator->deallocate(ptr);
+	SfzAllocator* allocator = static_cast<SfzAllocator*>(userPtr);
+	allocator->dealloc(ptr);
 }
 
-static cgltf_memory_options sfzToCgltfAllocator(sfz::Allocator* allocator) noexcept
+static cgltf_memory_options sfzToCgltfAllocator(SfzAllocator* allocator) noexcept
 {
 	cgltf_memory_options memOptions = {};
 	memOptions.alloc = cgltfAlloc;
@@ -157,7 +157,7 @@ bool loadAssetsFromGltf(
 	const char* gltfPath,
 	Mesh& meshOut,
 	Array<ImageAndPath>& texturesOut,
-	sfz::Allocator* allocator,
+	SfzAllocator* allocator,
 	bool (*checkIfTextureIsLoaded)(strID id, void* userPtr),
 	void* userPtr) noexcept
 {

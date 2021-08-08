@@ -29,7 +29,7 @@
 UTEST_STATE();
 
 // This is the global PhantasyEngine context, a pointer to it will be set using setContext().
-static sfz::StandardAllocator standardAllocator;
+static SfzAllocator standardAllocator = sfz::createStandardAllocator();
 static sfz::Context phantasyEngineContext;
 static sfz::GlobalConfig globalConfig;
 static sfz::ProfilingStats profilingStats;
@@ -39,7 +39,7 @@ static void setupContext() noexcept
 	sfz::Context* context = &phantasyEngineContext;
 
 	// Set standard allocator
-	sfz::Allocator* allocator = &standardAllocator;
+	SfzAllocator* allocator = &standardAllocator;
 	context->defaultAllocator = allocator;
 
 	// Set standard logger

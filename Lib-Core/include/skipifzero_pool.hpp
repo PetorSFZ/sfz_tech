@@ -125,7 +125,7 @@ class Pool final {
 public:
 	SFZ_DECLARE_DROP_TYPE(Pool);
 
-	explicit Pool(uint32_t capacity, Allocator* allocator, SfzDbgInfo allocDbg) noexcept
+	explicit Pool(uint32_t capacity, SfzAllocator* allocator, SfzDbgInfo allocDbg) noexcept
 	{
 		this->init(capacity, allocator, allocDbg);
 	}
@@ -133,7 +133,7 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void init(uint32_t capacity, Allocator* allocator, SfzDbgInfo allocDbg)
+	void init(uint32_t capacity, SfzAllocator* allocator, SfzDbgInfo allocDbg)
 	{
 		sfz_assert(capacity != 0); // We don't support resize, so this wouldn't make sense.
 		sfz_assert(capacity <= POOL_MAX_CAPACITY);
@@ -150,7 +150,7 @@ public:
 		const uint32_t numBytesNeeded =
 			freeIndicesOffset + uint32_t(roundUpAligned(sizeof(uint32_t) * capacity, alignment));
 		uint8_t* memory = reinterpret_cast<uint8_t*>(
-			allocator->allocate(allocDbg, numBytesNeeded, alignment));
+			allocator->alloc(allocDbg, numBytesNeeded, alignment));
 		memset(memory, 0, numBytesNeeded);
 
 		// Set members
@@ -170,7 +170,7 @@ public:
 					mData[i].~T();
 				}
 			}
-			mAllocator->deallocate(mData);
+			mAllocator->dealloc(mData);
 		}
 		mNumAllocated = 0;
 		mArraySize = 0;
@@ -191,7 +191,7 @@ public:
 	const T* data() const { return mData; }
 	T* data() { return mData; }
 	const PoolSlot* slots() const { return mSlots; }
-	Allocator* allocator() const { return mAllocator; }
+	SfzAllocator* allocator() const { return mAllocator; }
 
 	PoolSlot getSlot(uint32_t idx) const { sfz_assert(idx < mArraySize); return mSlots[idx]; }
 	uint8_t getVersion(uint32_t idx) const { sfz_assert(idx < mArraySize); return mSlots[idx].version(); }
@@ -327,7 +327,7 @@ private:
 	T* mData = nullptr;
 	PoolSlot* mSlots = nullptr;
 	uint32_t* mFreeIndices = nullptr;
-	Allocator* mAllocator = nullptr;
+	SfzAllocator* mAllocator = nullptr;
 };
 
 } // namespace sfz

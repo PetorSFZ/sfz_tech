@@ -39,17 +39,11 @@
 #include <utility> // std::swap()
 #endif
 
-#ifdef __cplusplus
-#define ZG_EXTERN_C extern "C"
-#else
-#define ZG_EXTERN_C
-#endif
-
 #if defined(_WIN32)
 #if defined(ZG_DLL_EXPORT)
-#define ZG_API ZG_EXTERN_C __declspec(dllexport)
+#define ZG_API SFZ_EXTERN_C __declspec(dllexport)
 #else
-#define ZG_API ZG_EXTERN_C __declspec(dllimport)
+#define ZG_API SFZ_EXTERN_C __declspec(dllimport)
 #endif
 #else
 #define ZG_API
@@ -61,17 +55,7 @@
 	struct name; \
 	typedef struct name name
 
-// Macro to simplify the creation of C structs. In C you have to typedef the struct to its name in
-// order to not have to write out struct each time you use it. This macro is used to enable us to
-// only specify the struct name once, at the top of the struct declaration, while still getting the
-// typedef done.
-#define ZG_STRUCT(name) \
-	struct name; \
-	typedef struct name name; \
-	struct name
-
-// Macro to simplify the creation of C enums. Similar to ZG_STRUCT(), except all ZeroG enums have
-// the type int32_t.
+// Macro to simplify the creation of C enums. All ZeroG enums have the type int32_t.
 #define ZG_ENUM(name) \
 	typedef int32_t name; \
 	enum name ## Enum
@@ -102,7 +86,7 @@ ZG_ENUM(ZgBool) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 37;
+static const uint32_t ZG_COMPILED_API_VERSION = 38;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -202,7 +186,7 @@ ZG_ENUM(ZgMemoryType) {
 	ZG_MEMORY_TYPE_DOWNLOAD,
 };
 
-ZG_STRUCT(ZgBufferCreateInfo) {
+sfz_struct(ZgBufferCreateInfo) {
 	ZgMemoryType memoryType;
 	uint64_t sizeInBytes;
 	ZgBool committedAllocation;
@@ -297,7 +281,7 @@ ZG_ENUM(ZgOptimalClearValue) {
 	ZG_OPTIMAL_CLEAR_VALUE_ONE
 };
 
-ZG_STRUCT(ZgTextureCreateInfo) {
+sfz_struct(ZgTextureCreateInfo) {
 
 	// The format of the texture
 	ZgTextureFormat format;
@@ -378,7 +362,7 @@ static const uint32_t ZG_MAX_NUM_UNORDERED_TEXTURES = 16;
 // The maximum number of samplers allowed on a single pipeline.
 static const uint32_t ZG_MAX_NUM_SAMPLERS = 8;
 
-ZG_STRUCT(ZgConstantBufferBindingDesc) {
+sfz_struct(ZgConstantBufferBindingDesc) {
 
 	// Which register this buffer corresponds to in the shader. In D3D12 this is the "register"
 	// keyword, i.e. a value of 0 would mean "register(b0)".
@@ -398,20 +382,20 @@ ZG_STRUCT(ZgConstantBufferBindingDesc) {
 	ZgBool pushConstant;
 };
 
-ZG_STRUCT(ZgUnorderedBufferBindingDesc) {
+sfz_struct(ZgUnorderedBufferBindingDesc) {
 
 	// Which register this buffer corresponds to in the shader.In D3D12 this is the "register"
 	// keyword, i.e. a value of 0 would mean "register(u0)".
 	uint32_t unorderedRegister;
 };
 
-ZG_STRUCT(ZgTextureBindingDesc) {
+sfz_struct(ZgTextureBindingDesc) {
 
 	// Which register this texture corresponds to in the shader.
 	uint32_t textureRegister;
 };
 
-ZG_STRUCT(ZgUnorderedTextureBindingDesc) {
+sfz_struct(ZgUnorderedTextureBindingDesc) {
 
 	// Which register this texture corresponds to in the shader.
 	uint32_t unorderedRegister;
@@ -421,7 +405,7 @@ ZG_STRUCT(ZgUnorderedTextureBindingDesc) {
 //
 // The signature contains all information necessary to know how to bind input and output to a
 // pipeline. This information is inferred by performing reflection on the shaders being compiled.
-ZG_STRUCT(ZgPipelineBindingsSignature) {
+sfz_struct(ZgPipelineBindingsSignature) {
 
 	// The constant buffers
 	uint32_t numConstBuffers;
@@ -440,12 +424,12 @@ ZG_STRUCT(ZgPipelineBindingsSignature) {
 	ZgUnorderedTextureBindingDesc unorderedTextures[ZG_MAX_NUM_UNORDERED_TEXTURES];
 };
 
-ZG_STRUCT(ZgConstantBufferBinding) {
+sfz_struct(ZgConstantBufferBinding) {
 	uint32_t bufferRegister;
 	ZgBuffer* buffer;
 };
 
-ZG_STRUCT(ZgUnorderedBufferBinding) {
+sfz_struct(ZgUnorderedBufferBinding) {
 
 	// Register the unordered buffer is bound to
 	uint32_t unorderedRegister;
@@ -463,12 +447,12 @@ ZG_STRUCT(ZgUnorderedBufferBinding) {
 	ZgBuffer* buffer;
 };
 
-ZG_STRUCT(ZgTextureBinding) {
+sfz_struct(ZgTextureBinding) {
 	uint32_t textureRegister;
 	ZgTexture* texture;
 };
 
-ZG_STRUCT(ZgUnorderedTextureBinding) {
+sfz_struct(ZgUnorderedTextureBinding) {
 
 	// Register the unordered texture is bound to
 	uint32_t unorderedRegister;
@@ -480,7 +464,7 @@ ZG_STRUCT(ZgUnorderedTextureBinding) {
 	ZgTexture* texture;
 };
 
-ZG_STRUCT(ZgPipelineBindings) {
+sfz_struct(ZgPipelineBindings) {
 
 	// The constant buffers to bind
 	uint32_t numConstantBuffers;
@@ -619,7 +603,7 @@ ZG_ENUM(ZgShaderModel) {
 static const uint32_t ZG_MAX_NUM_DXC_COMPILER_FLAGS = 8;
 
 // Compile settings to the HLSL compiler
-ZG_STRUCT(ZgPipelineCompileSettingsHLSL) {
+sfz_struct(ZgPipelineCompileSettingsHLSL) {
 
 	// Which shader model to target when compiling the HLSL file
 	ZgShaderModel shaderModel;
@@ -659,7 +643,7 @@ ZG_ENUM(ZgComparisonFunc) {
 };
 
 // A struct defining a texture sampler
-ZG_STRUCT(ZgSampler) {
+sfz_struct(ZgSampler) {
 
 	// The sampling mode of the sampler
 	ZgSamplingMode samplingMode;
@@ -683,7 +667,7 @@ ZG_STRUCT(ZgSampler) {
 	ZgComparisonFunc comparisonFunc;
 };
 
-ZG_STRUCT(ZgPipelineComputeCreateInfo) {
+sfz_struct(ZgPipelineComputeCreateInfo) {
 
 	// Path to the shader source or the source directly depending on what create function is called.
 	const char* computeShader;
@@ -859,7 +843,7 @@ ZG_ENUM(ZgVertexAttributeType) {
 };
 
 // A struct defining a vertex attribute
-ZG_STRUCT(ZgVertexAttribute) {
+sfz_struct(ZgVertexAttribute) {
 	// The location of the attribute in the vertex input.
 	//
 	// For HLSL the semantic name need to be "TEXCOORD<attributeLocation>"
@@ -891,7 +875,7 @@ ZG_STRUCT(ZgVertexAttribute) {
 // specific input (i.e., how vertex data is read and render target information). The additional
 // data cannot be inferred by reflection and is actually specified by the user when creating the
 // pipeline. It's is mainly provided here as a convenience.
-ZG_STRUCT(ZgPipelineRenderSignature) {
+sfz_struct(ZgPipelineRenderSignature) {
 
 	// The bindings signnature
 	ZgPipelineBindingsSignature bindings;
@@ -908,7 +892,7 @@ ZG_STRUCT(ZgPipelineRenderSignature) {
 // Pipeline Render
 // ------------------------------------------------------------------------------------------------
 
-ZG_STRUCT(ZgRasterizerSettings) {
+sfz_struct(ZgRasterizerSettings) {
 
 	// Renders in wireframe mode instead of solid mode, i.e. only lines between vertices.
 	ZgBool wireframeMode;
@@ -964,7 +948,7 @@ ZG_ENUM(ZgBlendFactor) {
 	ZG_BLEND_FACTOR_DST_INV_ALPHA,
 };
 
-ZG_STRUCT(ZgBlendSettings) {
+sfz_struct(ZgBlendSettings) {
 
 	// Whether to enable blending or not
 	ZgBool blendingEnabled;
@@ -985,7 +969,7 @@ ZG_STRUCT(ZgBlendSettings) {
 };
 
 // The common information required to create a render pipeline
-ZG_STRUCT(ZgPipelineRenderCreateInfo) {
+sfz_struct(ZgPipelineRenderCreateInfo) {
 
 	// Path to the shader source or the source directly depending on what create function is called.
 	const char* vertexShader;
@@ -1298,7 +1282,7 @@ public:
 // Framebuffer
 // ------------------------------------------------------------------------------------------------
 
-ZG_STRUCT(ZgFramebufferCreateInfo) {
+sfz_struct(ZgFramebufferCreateInfo) {
 
 	// Render targets
 	uint32_t numRenderTargets;
@@ -1375,7 +1359,7 @@ public:
 // Profiler
 // ------------------------------------------------------------------------------------------------
 
-ZG_STRUCT(ZgProfilerCreateInfo) {
+sfz_struct(ZgProfilerCreateInfo) {
 
 	// The number of measurements that this profiler can hold. Once this limit has been reached
 	// older measurements will automatically be thrown out to make room for newer ones. In other
@@ -1491,11 +1475,11 @@ public:
 // Command list
 // ------------------------------------------------------------------------------------------------
 
-ZG_STRUCT(ZgRect) {
+sfz_struct(ZgRect) {
 	uint32_t topLeftX, topLeftY, width, height;
 };
 
-ZG_STRUCT(ZgImageViewConstCpu) {
+sfz_struct(ZgImageViewConstCpu) {
 	ZgTextureFormat format;
 	const void* data;
 	uint32_t width;
@@ -1959,7 +1943,7 @@ ZG_ENUM(ZgLogLevel) {
 //
 // If no custom logger is wanted leave all fields zero in this struct. Normal printf() will then be
 // used for logging instead.
-ZG_STRUCT(ZgLogger) {
+sfz_struct(ZgLogger) {
 
 	// Function pointer to user-specified log function.
 	void(*log)(void* userPtr, const char* file, int line, ZgLogLevel level, const char* message);
@@ -1968,33 +1952,10 @@ ZG_STRUCT(ZgLogger) {
 	void* userPtr;
 };
 
-// Memory allocator interface
-// ------------------------------------------------------------------------------------------------
-
-// Allocator interface for CPU allocations inside ZeroG.
-//
-// A few restrictions is placed on custom allocators:
-// * They must be thread-safe. I.e. it must be okay to call it simulatenously from multiple threads.
-// * All allocations must be at least 32-byte aligned.
-//
-// If no custom allocator is required, just leave all fields zero in this struct.
-ZG_STRUCT(ZgAllocator) {
-
-	// Function pointer to allocate function. The allocation created must be 32-byte aligned. name,
-	// file and line is (statically allocated) debug information related to the allocation.
-	void* (*allocate)(void* userPtr, uint32_t size, const char* name, const char* file, uint32_t line);
-
-	// Function pointer to deallocate function.
-	void (*deallocate)(void* userPtr, void* allocation);
-
-	// User specified pointer that is provided to each allocate/free call.
-	void* userPtr;
-};
-
 // Context
 // ------------------------------------------------------------------------------------------------
 
-ZG_STRUCT(ZgContextInitSettingsD3D12) {
+sfz_struct(ZgContextInitSettingsD3D12) {
 
 	// [Optional] Used to enable D3D12 validation.
 	ZgBool debugMode;
@@ -2010,14 +1971,14 @@ ZG_STRUCT(ZgContextInitSettingsD3D12) {
 	ZgBool enableDredAutoBreadcrumbs;
 };
 
-ZG_STRUCT(ZgContextInitSettingsVulkan) {
+sfz_struct(ZgContextInitSettingsVulkan) {
 
 	// [Optional] Used to enable Vulkan debug layers
 	ZgBool debugMode;
 };
 
 // The settings used to create a context and initialize ZeroG
-ZG_STRUCT(ZgContextInitSettings) {
+sfz_struct(ZgContextInitSettings) {
 
 	// [Mandatory] Platform specific native handle.
 	//
@@ -2034,8 +1995,11 @@ ZG_STRUCT(ZgContextInitSettings) {
 	// [Optional] The logger used for logging
 	ZgLogger logger;
 
-	// [Optional] The allocator used to allocate CPU memory
-	ZgAllocator allocator;
+	// [Optional] The allocator used to allocate CPU memory.
+	//
+	// Need to be kept alive for the remaining duration of the program if specified. MUST be
+	// thread-safe.
+	SfzAllocator* allocator;
 
 	// [Optional] D3D12 specific settings
 	ZgContextInitSettingsD3D12 d3d12;
@@ -2091,7 +2055,7 @@ ZG_API ZgResult zgContextSwapchainFinishFrame(
 	uint64_t measurementId);
 
 // A struct containing general statistics
-ZG_STRUCT(ZgStats) {
+sfz_struct(ZgStats) {
 
 	// Total amount of dedicated GPU memory (in bytes) available on the GPU
 	uint64_t dedicatedGpuMemoryBytes;
@@ -2123,7 +2087,7 @@ ZG_STRUCT(ZgStats) {
 // of times) per frame.
 ZG_API ZgResult zgContextGetStats(ZgStats* statsOut);
 
-ZG_STRUCT(ZgFeatureSupport) {
+sfz_struct(ZgFeatureSupport) {
 
 	// Text description (i.e. name) of the device in use
 	char deviceDescription[128];

@@ -34,22 +34,22 @@ namespace sfz {
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-static Allocator* voxAllocator = nullptr;
+static SfzAllocator* voxAllocator = nullptr;
 
 static void* ogtVoxMallocWrapper(size_t size)
 {
-	return voxAllocator->allocate(sfz_dbg("opengametools"), uint64_t(size));
+	return voxAllocator->alloc(sfz_dbg("opengametools"), uint64_t(size));
 }
 
 static void ogtVoxFreeWrapper(void* mem)
 {
-	voxAllocator->deallocate(mem);
+	voxAllocator->dealloc(mem);
 }
 
 // VoxelModel
 // ------------------------------------------------------------------------------------------------
 
-bool VoxelModelResource::build(Allocator* allocator)
+bool VoxelModelResource::build(SfzAllocator* allocator)
 {
 	// Load file
 	Array<uint8_t> file = readBinaryFile(this->path, allocator);
@@ -114,7 +114,7 @@ bool VoxelModelResource::build(Allocator* allocator)
 	return true;
 }
 
-VoxelModelResource VoxelModelResource::load(const char* path, Allocator* allocator)
+VoxelModelResource VoxelModelResource::load(const char* path, SfzAllocator* allocator)
 {
 	VoxelModelResource resource;
 	resource.name = strID(path);
@@ -128,7 +128,7 @@ VoxelModelResource VoxelModelResource::load(const char* path, Allocator* allocat
 // OpenGameTools allocator
 // ------------------------------------------------------------------------------------------------
 
-void setOpenGameToolsAllocator(Allocator* allocator)
+void setOpenGameToolsAllocator(SfzAllocator* allocator)
 {
 	sfz_assert(voxAllocator == nullptr);
 	voxAllocator = allocator;

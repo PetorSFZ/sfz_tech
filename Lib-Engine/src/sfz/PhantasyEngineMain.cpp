@@ -135,7 +135,7 @@ constexpr char BUILD_TIME[] = {
 // ------------------------------------------------------------------------------------------------
 
 // This is the global PhantasyEngine context, a pointer to it will be set using setContext().
-static sfz::StandardAllocator standardAllocator;
+static SfzAllocator standardAllocator = sfz::createStandardAllocator();
 static sfz::Context phantasyEngineContext;
 static sfz::TerminalLogger terminalLogger;
 static sfz::GlobalConfig globalConfig;
@@ -150,7 +150,8 @@ static void setupContext() noexcept
 	sfz::Context* context = &phantasyEngineContext;
 
 	// Set sfz standard allocator
-	sfz::Allocator* allocator = &standardAllocator;
+	standardAllocator = sfz::createStandardAllocator();
+	SfzAllocator* allocator = &standardAllocator;
 	context->defaultAllocator = allocator;
 
 	// String storage
@@ -197,7 +198,7 @@ static const char* basePath() noexcept
 		}
 		size_t len = std::strlen(tmp);
 		char* res = static_cast<char*>(
-			sfz::getDefaultAllocator()->allocate(sfz_dbg("sfz::basePath()"), len + 1, 32));
+			sfz::getDefaultAllocator()->alloc(sfz_dbg("sfz::basePath()"), len + 1, 32));
 		std::strcpy(res, tmp);
 		SDL_free((void*)tmp);
 		return res;
@@ -796,7 +797,7 @@ int main(int argc, char* argv[])
 
 	// Initialize ImGui
 	SFZ_INFO("PhantasyEngine", "Initializing Imgui");
-	sfz::ImageView imguiFontTexView = initializeImgui(sfz::getDefaultAllocator());
+	sfz::ImageView imguiFontTexView = sfz::initializeImgui(sfz::getDefaultAllocator());
 
 	// Initialize renderer
 	SFZ_INFO("PhantasyEngine", "Initializing renderer");

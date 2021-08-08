@@ -61,7 +61,7 @@ public:
 	bool init(
 		SDL_Window* window,
 		const ImageViewConst& fontTexture,
-		sfz::Allocator* allocator) noexcept;
+		SfzAllocator* allocator) noexcept;
 	bool loadConfiguration(const char* jsonConfigPath) noexcept;
 	void swap(Renderer& other) noexcept;
 	void destroy() noexcept;

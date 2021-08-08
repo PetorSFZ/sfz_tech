@@ -65,7 +65,7 @@ public:
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	void init(const char* basePath, const char* fileName, Allocator* allocator) noexcept;
+	void init(const char* basePath, const char* fileName, SfzAllocator* allocator) noexcept;
 	void destroy() noexcept;
 
 	void load() noexcept;

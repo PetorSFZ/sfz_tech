@@ -51,7 +51,7 @@ public:
 
 UTEST(UniquePtr, basic_tests)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 	int flag = 0;
 
 	struct TestClass {
@@ -95,7 +95,7 @@ UTEST(UniquePtr, basic_tests)
 
 UTEST(UniquePtr, make_unique)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	struct Foo {
 		int a, b;
@@ -108,7 +108,7 @@ UTEST(UniquePtr, make_unique)
 
 UTEST(UniquePtr, cast_take)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::UniquePtr<Derived> derived = sfz::makeUnique<Derived>(&allocator, sfz_dbg(""), 3);
 	ASSERT_TRUE(derived->val == 3);
@@ -121,7 +121,7 @@ UTEST(UniquePtr, cast_take)
 
 UTEST(UniquePtr, cast_constructor)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	sfz::UniquePtr<Base> ptr = sfz::makeUnique<Derived>(&allocator, sfz_dbg(""), 3);
 	ASSERT_TRUE(ptr->val == 3);

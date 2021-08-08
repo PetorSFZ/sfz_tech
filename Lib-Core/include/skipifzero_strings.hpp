@@ -97,10 +97,10 @@ constexpr uint64_t hash(strID str) { return str.id; }
 #ifdef SFZ_STR_ID_IMPLEMENTATION
 
 struct StringStorage final {
-	Allocator* allocator = nullptr;
+	SfzAllocator* allocator = nullptr;
 	HashMap<strID, char*> strs;
 
-	StringStorage(uint32_t initialCapacity, Allocator* allocator)
+	StringStorage(uint32_t initialCapacity, SfzAllocator* allocator)
 	{
 		this->allocator = allocator;
 		this->strs.init(initialCapacity, allocator, sfz_dbg(""));
@@ -113,7 +113,7 @@ struct StringStorage final {
 	{
 		for (auto pair : strs) {
 			char* str = pair.value;
-			allocator->deallocate(str);
+			allocator->dealloc(str);
 		}
 		strs.destroy();
 		allocator = nullptr;
@@ -132,7 +132,7 @@ strID::strID(const char* str)
 	char** storedStr = strStorage->strs.get(strID(id));
 	if (storedStr == nullptr) {
 		uint32_t strLen = uint32_t(strlen(str));
-		char* newStr = reinterpret_cast<char*>(strStorage->allocator->allocate(sfz_dbg(""), strLen + 1));
+		char* newStr = reinterpret_cast<char*>(strStorage->allocator->alloc(sfz_dbg(""), strLen + 1));
 		memcpy(newStr, str, strLen);
 		newStr[strLen] = '\0';
 		storedStr = &strStorage->strs.put(strID(id), newStr);

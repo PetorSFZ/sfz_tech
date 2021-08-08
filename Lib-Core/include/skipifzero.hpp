@@ -53,35 +53,6 @@ namespace sfz {
 
 #define sfz_assert_hard(cond) do { if (!(cond)) { assert(cond); abort(); } } while(0)
 
-// Allocator Interface
-// ------------------------------------------------------------------------------------------------
-
-// The Allocator interface.
-//
-// * Allocators are instance based and can therefore be decided at runtime.
-// * Typically classes should not own or create allocators, only keep simple pointers (Allocator*).
-// * Typically allocator pointers should be moved/copied when a class is moved/copied.
-// * Typically equality operators (==, !=) should ignore allocator pointers.
-// * It is the responsibility of the creator of the allocator instance to ensure that all users
-//   that have been provided a pointer have freed all their memory and are done using the allocator
-//   before the allocator itself is removed. Often this means that an allocator need to be kept
-//   alive for the remaining lifetime of the program.
-// * All virtual methods are marked noexcept, meaning an allocator may never throw exceptions.
-class Allocator {
-public:
-	virtual ~Allocator() noexcept {}
-
-	// Allocates memory with the specified byte alignment, returns nullptr on failure.
-	virtual void* allocate(
-		SfzDbgInfo dbg, uint64_t size, uint64_t alignment = 32) noexcept = 0;
-
-	// Deallocates memory previously allocated with this instance.
-	//
-	// Deallocating nullptr is required to be a no-op. Deallocating pointers not allocated by this
-	// instance is undefined behavior, and may result in catastrophic failure.
-	virtual void deallocate(void* pointer) noexcept = 0;
-};
-
 // Memory functions
 // ------------------------------------------------------------------------------------------------
 

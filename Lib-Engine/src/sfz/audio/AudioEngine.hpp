@@ -44,7 +44,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	bool active() const noexcept { return mState != nullptr; }
-	bool init(Allocator* allocator) noexcept;
+	bool init(SfzAllocator* allocator) noexcept;
 	void swap(AudioEngine& other) noexcept;
 	void destroy() noexcept;
 
