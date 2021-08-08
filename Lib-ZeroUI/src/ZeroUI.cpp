@@ -21,6 +21,8 @@
 #include "ZeroUI_Drawing.hpp"
 #include "ZeroUI_CoreWidgets.hpp"
 
+#include "skipifzero_new.hpp"
+
 namespace zui {
 
 // Statics
@@ -112,7 +114,7 @@ void initZeroUI(sfz::Allocator* allocator, uint32_t surfaceTmpMemoryBytes, uint3
 {
 	sfz_assert(globalCtx == nullptr);
 
-	globalCtx = allocator->newObject<Context>(sfz_dbg(""));
+	globalCtx = sfz_new<Context>(allocator, sfz_dbg(""));
 	ctx().heapAllocator = allocator;
 	ctx().defaultID = strID("default");
 
@@ -154,7 +156,7 @@ void deinitZeroUI()
 
 	internalDrawDeinit();
 
-	allocator->deleteObject(globalCtx);
+	sfz_delete(allocator, globalCtx);
 	globalCtx = nullptr;
 }
 
@@ -341,7 +343,7 @@ void surfaceBegin(const SurfaceDesc& desc)
 	// Setup default base container for surface as root
 	{
 		surface.cmdRoot.widgetID = BASE_CON_ID;
-		surface.cmdRoot.dataPtr = surface.arena.getArena()->newObject<BaseContainerData>(sfz_dbg(""));
+		surface.cmdRoot.dataPtr = sfz_new<BaseContainerData>(surface.arena.getArena(), sfz_dbg(""));
 		surface.cmdRoot.archetypeDrawFunc = baseDraw;
 		surface.pushMakeParent(&surface.cmdRoot);
 		WidgetCmd& root = surface.getCurrentParent();

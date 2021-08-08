@@ -18,6 +18,8 @@
 
 #include "sfz/resources/ResourceManager.hpp"
 
+#include <skipifzero_new.hpp>
+
 #include "sfz/Logging.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
 #include "sfz/resources/FramebufferResource.hpp"
@@ -35,7 +37,7 @@ namespace sfz {
 void ResourceManager::init(uint32_t maxNumResources, Allocator* allocator) noexcept
 {
 	sfz_assert(mState == nullptr);
-	mState = allocator->newObject<ResourceManagerState>(sfz_dbg(""));
+	mState = sfz_new<ResourceManagerState>(allocator, sfz_dbg(""));
 	mState->allocator = allocator;
 
 	mState->bufferHandles.init(maxNumResources, allocator, sfz_dbg(""));
@@ -79,7 +81,7 @@ void ResourceManager::destroy() noexcept
 	CHECK_ZG zg::CommandQueue::getCopyQueue().flush();
 	
 	Allocator* allocator = mState->allocator;
-	allocator->deleteObject(mState);
+	sfz_delete(allocator, mState);
 	mState = nullptr;
 }
 

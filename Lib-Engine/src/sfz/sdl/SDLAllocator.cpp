@@ -26,6 +26,7 @@
 
 #include <skipifzero.hpp>
 #include <skipifzero_hash_maps.hpp>
+#include <skipifzero_new.hpp>
 
 #include <sfz/Logging.hpp>
 
@@ -157,7 +158,7 @@ bool setSDLAllocator(sfz::Allocator* allocator) noexcept
 	setBefore = true;
 
 	// Allocate state
-	bridgeState = allocator->newObject<BridgeState>(sfz_dbg(""));
+	bridgeState = sfz_new<BridgeState>(allocator, sfz_dbg(""));
 
 	// Set allocator
 	bridgeState->allocator = allocator;

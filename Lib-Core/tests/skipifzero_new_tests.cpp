@@ -23,7 +23,7 @@
 #undef far
 
 #include "skipifzero_allocators.hpp"
-#include "skipifzero_smart_pointers.hpp"
+#include "skipifzero_new.hpp"
 
 class Base {
 public:
@@ -69,8 +69,8 @@ UTEST(UniquePtr, basic_tests)
 
 	sfz::UniquePtr<TestClass> ptr = nullptr;
 	ASSERT_TRUE(ptr == nullptr);
-	ptr = sfz::UniquePtr<TestClass>(
-		allocator.newObject<TestClass>(sfz_dbg(""), &flag), &allocator);
+	ptr = sfz::UniquePtr<TestClass>(sfz_new<TestClass>(&allocator, sfz_dbg(""), &flag), &allocator);
+		
 	ASSERT_TRUE(ptr.get() != nullptr);
 	ASSERT_TRUE(ptr != nullptr);
 	ASSERT_TRUE(ptr.get()->flagPtr == &flag);

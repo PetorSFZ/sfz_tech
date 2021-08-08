@@ -23,6 +23,7 @@
 #include <ctime>
 
 #include <skipifzero_arrays.hpp>
+#include <skipifzero_new.hpp>
 #include <skipifzero_strings.hpp>
 
 #include <imgui.h>
@@ -613,7 +614,7 @@ void Console::init(Allocator* allocator, uint32_t numWindowsToDock, const char* 
 {
 	// Allocate ConsoleState and set allocator
 	this->destroy();
-	mState = allocator->newObject<ConsoleState>(sfz_dbg("ConsoleState"));
+	mState = sfz_new<ConsoleState>(allocator, sfz_dbg("ConsoleState"));
 	mState->allocator = allocator;
 
 	// Check if this is first run of imgui or not. I.e., whether imgui.ini existed or not.
@@ -656,7 +657,7 @@ void Console::destroy() noexcept
 {
 	if (mState == nullptr) return;
 	sfz::Allocator* allocator = mState->allocator;
-	allocator->deleteObject(mState);
+	sfz_delete(allocator, mState);
 	mState = nullptr;
 }
 

@@ -25,7 +25,6 @@
 #include <cstdint>
 #include <cstdlib> // std::abort()
 #include <cstring> // memcpy()
-#include <new> // placement new
 #include <type_traits>
 #include <utility> // std::move, std::forward, std::swap
 
@@ -81,28 +80,6 @@ public:
 	// Deallocating nullptr is required to be a no-op. Deallocating pointers not allocated by this
 	// instance is undefined behavior, and may result in catastrophic failure.
 	virtual void deallocate(void* pointer) noexcept = 0;
-
-	// Constructs a new object of type T, similar to operator new. Guarantees 32-byte alignment.
-	template<typename T, typename... Args>
-	T* newObject(SfzDbgInfo dbg, Args&&... args) noexcept
-	{
-		// Allocate memory (minimum 32-byte alignment), return nullptr on failure
-		void* memPtr = this->allocate(dbg, sizeof(T), alignof(T) < 32 ? 32 : alignof(T));
-		if (memPtr == nullptr) return nullptr;
-
-		// Creates object (placement new), terminates program if constructor throws exception.
-		return new(memPtr) T(std::forward<Args>(args)...);
-	}
-
-	// Deletes an object created with this allocator, similar to operator delete.
-	template<typename T>
-	void deleteObject(T*& pointer) noexcept
-	{
-		if (pointer == nullptr) return;
-		pointer->~T(); // Call destructor, will terminate program if it throws exception.
-		this->deallocate(pointer);
-		pointer = nullptr; // Set callers pointer to nullptr, an attempt to avoid dangling pointers.
-	}
 };
 
 // Memory functions

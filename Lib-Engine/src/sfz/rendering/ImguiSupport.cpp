@@ -22,6 +22,7 @@
 #include <SDL.h>
 
 #include <skipifzero_math.hpp>
+#include <skipifzero_new.hpp>
 
 #include "sfz/Context.hpp"
 #include "sfz/config/GlobalConfig.hpp"
@@ -54,7 +55,7 @@ ImageView initializeImgui(Allocator* allocator) noexcept
 	ImGui::SetAllocatorFunctions(imguiAllocFunc, imguiFreeFunc, allocator);
 
 	// Allocate imgui state
-	imguiState = allocator->newObject<ImGuiState>(sfz_dbg("ImGuiState"));
+	imguiState = sfz_new<ImGuiState>(allocator, sfz_dbg("ImGuiState"));
 	imguiState->allocator = allocator;
 
 	// Create Imgui context
@@ -202,7 +203,7 @@ void deinitializeImgui() noexcept
 {
 	ImGui::DestroyContext();
 	Allocator* allocator = imguiState->allocator;
-	allocator->deleteObject(imguiState);
+	sfz_delete(allocator, imguiState);
 }
 
 void updateImgui(

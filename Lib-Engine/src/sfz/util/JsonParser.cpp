@@ -23,6 +23,8 @@
 #include <cstring>
 #include <type_traits>
 
+#include <skipifzero_new.hpp>
+
 #include <sfz/PushWarnings.hpp>
 #define SAJSON_NO_STD_STRING
 #include "sajson.h"
@@ -417,14 +419,14 @@ ParsedJson ParsedJson::parseString(
 
 	// Allocate implementation
 	ParsedJson parsedJson;
-	parsedJson.mImpl = allocator->newObject<ParsedJsonImpl>(sfz_dbg(""));
+	parsedJson.mImpl = sfz_new<ParsedJsonImpl>(allocator, sfz_dbg(""));
 	ParsedJsonImpl& impl = *parsedJson.mImpl;
 	impl.allocator = allocator;
 
 	// Calculate length of string and allocate memory for it
 	uint64_t jsonStringLen = std::strlen(jsonString);
 	if (jsonStringLen == 0) {
-		allocator->deleteObject(parsedJson.mImpl);
+		sfz_delete(allocator, parsedJson.mImpl);
 		SFZ_ERROR("JSON", "JSON string must be longer than 0");
 		return ParsedJson();
 	}
@@ -455,8 +457,8 @@ ParsedJson ParsedJson::parseString(
 	impl.astAllocation = sajson::bounded_allocation(impl.astMemory, allocationSize / sizeof(size_t));
 
 	// Parse json string
-	impl.doc = allocator->newObject<sajson::document>(
-		sfz_dbg("sajson::document") ,sajson::parse(impl.astAllocation, impl.jsongStringView));
+	impl.doc = sfz_new<sajson::document>(allocator, sfz_dbg("sajson::document"), 
+		sajson::parse(impl.astAllocation, impl.jsongStringView));
 	if (!impl.doc->is_valid()) {
 		SFZ_ERROR("JSON", "Json parse failed at %i:%i: %s",
 			(int)impl.doc->get_error_line(), (int)impl.doc->get_error_column(), impl.doc->get_error_message_as_cstring());
@@ -493,7 +495,7 @@ void ParsedJson::destroy() noexcept
 
 	// Deallocate sajson document
 	if (mImpl->doc != nullptr) {
-		allocator->deleteObject(mImpl->doc);
+		sfz_delete(allocator, mImpl->doc);
 	}
 
 	// Deallocate json string copy
@@ -507,7 +509,7 @@ void ParsedJson::destroy() noexcept
 	}
 
 	// Deallocate implementation
-	allocator->deleteObject(mImpl);
+	sfz_delete(allocator, mImpl);
 	mImpl = nullptr;
 }
 

@@ -21,7 +21,7 @@
 
 #include "sfz/state/GameState.hpp"
 
-#include <skipifzero_smart_pointers.hpp>
+#include <skipifzero_new.hpp>
 #include <skipifzero_strings.hpp>
 
 namespace sfz {

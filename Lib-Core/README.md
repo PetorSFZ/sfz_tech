@@ -30,9 +30,9 @@ The modules in sfz_core are:
 * `skipifzero_hash_maps.hpp`: Hash functions, hash maps (replacements for `std::unordered_map`, etc).
 * `skipifzero_image_view.hpp`: Types used to specify the view of an image.
 * `skipifzero_math.hpp`: Linear algebra math primitives and functions.
+* `skipifzero_new.hpp`: new/delete operators and smart pointers using sfz allocators.
 * `skipifzero_pool.hpp`: Datastructure which is somewhat of a mix between an array, an allocator and the entity allocation part of an ECS system.
-* `skipifzero_ring_buffers.hpp`: Ring buffers (replacements for `std::deque` and such)
-* `skipifzero_smart_pointers.hpp`: Smart pointers (replacements for `std::unique_ptr`, etc)
+* `skipifzero_ring_buffers.hpp`: Ring buffers (replacements for `std::deque` and such).
 * `skipifzero_strings.hpp`: Strings (replacements for `std::string`, etc).
 
 ## (No) dependencies
@@ -45,7 +45,6 @@ sfz_core has __no__ dependencies beside the C++ standard library, and even then 
 * `<cstdint>`: Needed for standard sized int types.
 * `<cstdlib>`: Needed for `abort()`.
 * `<cstring>`: Needed for `mempcpy()` and other memory and string related functionality.
-* `<new>`: Needed for placement `new`, which is the only way I know of to properly construct C++ objects in raw memory. Would love to remove this header if I could find another way to accomplish this in a cross-platform manner.
 * `<type_traits>`: Needed to enforce a number of constraints on types using `static_assert()`.
 * `<utility>`: Needed for `std::move()`, `std::forward()` and `std::swap()`. All of which are pretty much necessary in order to use move semantics. Would love to remove this header if I could get ahold of a simple, minimal (<200 lines of code) implementation of above.
 
@@ -56,6 +55,7 @@ In addition, some headers have additional standard library header requirements. 
 * `<cstdio>`: Needed for `vsnprintf()`.
 * `<cctype>`: Needed for `tolower()`
 * `<malloc.h>`: (Windows only): Needed for `_aligned_malloc()`.
+* `<new>`: Needed for placement `new`, which AFAIK is the only way to properly construct C++ objects in raw memory.
 
 ## Building and running tests
 

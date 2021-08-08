@@ -20,7 +20,7 @@
 #include "sfz/config/GlobalConfig.hpp"
 
 #include <skipifzero_math.hpp>
-#include <skipifzero_smart_pointers.hpp>
+#include <skipifzero_new.hpp>
 
 #include "sfz/Context.hpp"
 #include "sfz/Logging.hpp"
@@ -49,7 +49,7 @@ struct GlobalConfigImpl final {
 void GlobalConfig::init(const char* basePath, const char* fileName, Allocator* allocator) noexcept
 {
 	if (mImpl != nullptr) this->destroy();
-	mImpl = allocator->newObject<GlobalConfigImpl>(sfz_dbg("GlobalConfigImpl"));
+	mImpl = sfz_new<GlobalConfigImpl>(allocator, sfz_dbg("GlobalConfigImpl"));
 	mImpl->allocator = allocator;
 
 	// Initialize IniParser with path
@@ -64,7 +64,7 @@ void GlobalConfig::destroy() noexcept
 {
 	if (mImpl == nullptr) return;
 	Allocator* allocator = mImpl->allocator;
-	allocator->deleteObject(mImpl);
+	sfz_delete(allocator, mImpl);
 	mImpl = nullptr;
 }
 

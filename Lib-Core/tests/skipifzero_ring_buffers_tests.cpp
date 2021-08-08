@@ -27,7 +27,7 @@
 
 #include "skipifzero.hpp"
 #include "skipifzero_allocators.hpp"
-#include "skipifzero_smart_pointers.hpp"
+#include "skipifzero_new.hpp"
 
 #define private public
 #include "skipifzero_ring_buffers.hpp"

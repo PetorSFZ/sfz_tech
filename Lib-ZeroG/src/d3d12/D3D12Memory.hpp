@@ -23,6 +23,7 @@
 #include <D3D12MemAlloc.h>
 
 #include <skipifzero.hpp>
+#include <skipifzero_new.hpp>
 
 #include "ZeroG.h"
 #include "common/ErrorReporting.hpp"
@@ -158,7 +159,7 @@ inline ZgResult createBuffer(
 	}
 
 	// Allocate buffer
-	ZgBuffer* buffer = getAllocator()->newObject<ZgBuffer>(sfz_dbg("ZgBuffer"));
+	ZgBuffer* buffer = sfz_new<ZgBuffer>(getAllocator(), sfz_dbg("ZgBuffer"));
 
 	// Copy stuff
 	buffer->resource.resource = resource;
@@ -333,7 +334,7 @@ inline ZgResult createTexture(
 	}
 
 	// Allocate texture
-	ZgTexture* texture = getAllocator()->newObject<ZgTexture>(sfz_dbg("ZgTexture"));
+	ZgTexture* texture = sfz_new<ZgTexture>(getAllocator(), sfz_dbg("ZgTexture"));
 
 	// Copy stuff
 	texture->resource.allocation = allocation;

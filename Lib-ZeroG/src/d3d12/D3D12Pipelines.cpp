@@ -20,6 +20,7 @@
 
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
+#include <skipifzero_new.hpp>
 #include <skipifzero_strings.hpp>
 
 #include <algorithm>
@@ -1091,8 +1092,7 @@ static ZgResult createPipelineComputeInternal(
 		compileTimeMs);
 
 	// Allocate pipeline
-	ZgPipelineCompute* pipeline =
-		getAllocator()->newObject<ZgPipelineCompute>(sfz_dbg("ZgPipelineCompute"));
+	ZgPipelineCompute* pipeline = sfz_new<ZgPipelineCompute>(getAllocator(), sfz_dbg("ZgPipelineCompute"));
 
 	// Store pipeline state
 	pipeline->pipelineState = pipelineState;
@@ -1583,7 +1583,7 @@ static ZgResult createPipelineRenderInternal(
 
 	// Allocate pipeline
 	ZgPipelineRender* pipeline =
-		getAllocator()->newObject<ZgPipelineRender>(sfz_dbg("ZgPipelineRender"));
+		sfz_new<ZgPipelineRender>(getAllocator(), sfz_dbg("ZgPipelineRender"));
 
 	// Store pipeline state
 	pipeline->pipelineState = pipelineState;

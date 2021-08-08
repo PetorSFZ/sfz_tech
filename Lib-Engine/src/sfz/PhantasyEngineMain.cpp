@@ -35,7 +35,7 @@
 #include <skipifzero.hpp>
 #include <skipifzero_allocators.hpp>
 #include <skipifzero_arrays.hpp>
-#include <skipifzero_smart_pointers.hpp>
+#include <skipifzero_new.hpp>
 #define SFZ_STR_ID_IMPLEMENTATION
 #include <skipifzero_strings.hpp>
 
@@ -154,7 +154,7 @@ static void setupContext() noexcept
 	context->defaultAllocator = allocator;
 
 	// String storage
-	sfz::strStorage = allocator->newObject<sfz::StringStorage>(sfz_dbg(""), 4096, allocator);
+	sfz::strStorage = sfz_new<sfz::StringStorage>(allocator, sfz_dbg(""), 4096, allocator);
 
 	// Set terminal logger
 	terminalLogger.init(256, allocator);
@@ -894,7 +894,7 @@ int main(int argc, char* argv[])
 	SDL_Quit();
 
 	SFZ_INFO("PhantasyEngine", "Destroying string ID storage");
-	sfz::getDefaultAllocator()->deleteObject(sfz::strStorage);
+	sfz_delete(sfz::getDefaultAllocator(), sfz::strStorage);
 
 	return EXIT_SUCCESS;
 }

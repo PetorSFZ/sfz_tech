@@ -19,6 +19,7 @@
 #include "ZeroG-ImGui.hpp"
 
 #include <skipifzero_arrays.hpp>
+#include <skipifzero_new.hpp>
 #include <skipifzero_strings.hpp>
 
 #include <imgui.h>
@@ -155,7 +156,7 @@ ZgResult imguiInitRenderState(
 	sfz_assert(stateOut == nullptr);
 
 	// Allocate state
-	stateOut = allocator->newObject<ImGuiRenderState>(sfz_dbg("ImGuiRenderState"));
+	stateOut = sfz_new<ImGuiRenderState>(allocator, sfz_dbg("ImGuiRenderState"));
 	stateOut->allocator = allocator;
 
 	// Build ImGui pipeline
@@ -235,7 +236,7 @@ void imguiDestroyRenderState(ImGuiRenderState*& state) noexcept
 	sfz_assert(state != nullptr);
 	sfz_assert(state->allocator != nullptr);
 	sfz::Allocator* allocator = state->allocator;
-	allocator->deleteObject(state);
+	sfz_delete(allocator, state);
 	state = nullptr;
 }
 

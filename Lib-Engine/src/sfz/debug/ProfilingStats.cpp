@@ -24,6 +24,7 @@
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_hash_maps.hpp>
+#include <skipifzero_new.hpp>
 #include <skipifzero_strings.hpp>
 
 #include "sfz/util/RandomColors.hpp"
@@ -68,7 +69,7 @@ struct ProfilingStatsState final {
 void ProfilingStats::init(Allocator* allocator) noexcept
 {
 	this->destroy();
-	mState = allocator->newObject<ProfilingStatsState>(sfz_dbg("ProfilingStatsState"));
+	mState = sfz_new<ProfilingStatsState>(allocator, sfz_dbg("ProfilingStatsState"));
 	mState->allocator = allocator;
 }
 
@@ -76,7 +77,7 @@ void ProfilingStats::destroy() noexcept
 {
 	if (mState == nullptr) return;
 	Allocator* allocator = mState->allocator;
-	allocator->deleteObject(mState);
+	sfz_delete(allocator, mState);
 	mState = nullptr;
 }
 

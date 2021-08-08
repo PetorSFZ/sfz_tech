@@ -23,6 +23,8 @@
 #include <cstring>
 #include <mutex>
 
+#include <skipifzero_new.hpp>
+
 // Must be first so we don't accidentally include system d3d12.h
 #include "d3d12/D3D12Common.hpp"
 
@@ -213,7 +215,7 @@ void dredCallback(HRESULT res)
 static ZgResult init(const ZgContextInitSettings& settings) noexcept
 {
 	// Initialize members
-	ctxState = getAllocator()->newObject<ZgContextState>(sfz_dbg("ZgContextState"));
+	ctxState = sfz_new<ZgContextState>(getAllocator(), sfz_dbg("ZgContextState"));
 	ctxState->debugMode = settings.d3d12.debugMode;
 
 	// Initialize part of state
@@ -754,7 +756,7 @@ ZG_API void zgBufferDestroy(
 	ZgBuffer* buffer)
 {
 	if (buffer == nullptr) return;
-	getAllocator()->deleteObject(buffer);
+	sfz_delete(getAllocator(), buffer);
 }
 
 ZG_API ZgResult zgBufferMemcpyUpload(
@@ -790,7 +792,7 @@ ZG_API void zgTextureDestroy(
 	ZgTexture* texture)
 {
 	if (texture == nullptr) return;
-	getAllocator()->deleteObject(texture);
+	sfz_delete(getAllocator(), texture);
 }
 
 ZG_API uint32_t zgTextureSizeInBytes(
@@ -824,7 +826,7 @@ ZG_API ZgResult zgPipelineComputeCreateFromFileHLSL(
 ZG_API void zgPipelineComputeDestroy(
 	ZgPipelineCompute* pipeline)
 {
-	getAllocator()->deleteObject(pipeline);
+	sfz_delete(getAllocator(), pipeline);
 }
 
 ZG_API void zgPipelineComputeGetBindingsSignature(
@@ -903,7 +905,7 @@ ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
 ZG_API void zgPipelineRenderDestroy(
 	ZgPipelineRender* pipeline)
 {
-	getAllocator()->deleteObject(pipeline);
+	sfz_delete(getAllocator(), pipeline);
 }
 
 ZG_API void zgPipelineRenderGetSignature(
@@ -934,7 +936,7 @@ ZG_API void zgFramebufferDestroy(
 {
 	if (framebuffer == nullptr) return;
 	if (framebuffer->swapchainFramebuffer) return;
-	getAllocator()->deleteObject(framebuffer);
+	sfz_delete(getAllocator(), framebuffer);
 }
 
 ZG_API ZgResult zgFramebufferGetResolution(
@@ -964,7 +966,7 @@ ZG_API void zgProfilerDestroy(
 	ZgProfiler* profiler)
 {
 	if (profiler == nullptr) return;
-	getAllocator()->deleteObject(profiler);
+	sfz_delete(getAllocator(), profiler);
 }
 
 ZG_API ZgResult zgProfilerGetMeasurement(
@@ -983,7 +985,7 @@ ZG_API ZgResult zgProfilerGetMeasurement(
 ZG_API ZgResult zgFenceCreate(
 	ZgFence** fenceOut)
 {
-	*fenceOut = getAllocator()->newObject<ZgFence>(sfz_dbg("ZgFence"));
+	*fenceOut = sfz_new<ZgFence>(getAllocator(), sfz_dbg("ZgFence"));
 	return ZG_SUCCESS;
 }
 
@@ -991,7 +993,7 @@ ZG_API void zgFenceDestroy(
 	ZgFence* fence)
 {
 	if (fence == nullptr) return;
-	getAllocator()->deleteObject(fence);
+	sfz_delete(getAllocator(), fence);
 }
 
 ZG_API ZgResult zgFenceReset(
@@ -1365,7 +1367,7 @@ ZG_API ZgResult zgContextInit(const ZgContextInitSettings* settings)
 		swapchainResize(*ctxState, settings->width, settings->height);
 		if (initRes != ZG_SUCCESS)
 		{
-			getAllocator()->deleteObject(ctxState);
+			sfz_delete(getAllocator(), ctxState);
 			ctxState = nullptr;
 			ZG_ERROR("zgContextInit(): Could not create D3D12 backend, exiting.");
 			return initRes;
@@ -1410,7 +1412,7 @@ ZG_API ZgResult zgContextDeinit(void)
 		ctxState->d3d12Allocator->Release();
 
 		// Delete most state
-		getAllocator()->deleteObject(ctxState);
+		sfz_delete(getAllocator(), ctxState);
 		ctxState = nullptr;
 
 		// Report live objects

@@ -20,6 +20,7 @@
 
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
+#include <skipifzero_new.hpp>
 
 #include "common/Mutex.hpp"
 #include "d3d12/D3D12Common.hpp"
@@ -58,7 +59,7 @@ public:
 		// Deallocate download buffer
 		if (profilerState.downloadBuffer != nullptr) {
 			// Deallocate buffer
-			getAllocator()->deleteObject(profilerState.downloadBuffer);
+			sfz_delete(getAllocator(), profilerState.downloadBuffer);
 			profilerState.downloadBuffer = nullptr;
 		}
 	}
@@ -139,14 +140,14 @@ inline ZgResult d3d12CreateProfiler(
 		ZgBuffer* bufferTmp = nullptr;
 		ZgResult res = createBuffer(bufferTmp, bufferInfo, d3d12allocator, resourceUniqueIdentifierCounter);
 		if (res != ZG_SUCCESS) {
-			getAllocator()->deleteObject(downloadBuffer);
+			sfz_delete(getAllocator(), downloadBuffer);
 			return res;
 		}
 		downloadBuffer = bufferTmp;
 	}
 
 	// Allocate profiler
-	ZgProfiler* profiler = getAllocator()->newObject<ZgProfiler>(sfz_dbg("ZgProfiler"));
+	ZgProfiler* profiler = sfz_new<ZgProfiler>(getAllocator(), sfz_dbg("ZgProfiler"));
 
 	// Set members
 	{

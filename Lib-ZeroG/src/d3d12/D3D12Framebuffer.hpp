@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <skipifzero_new.hpp>
+
 #include "ZeroG.h"
 #include "d3d12/D3D12Common.hpp"
 #include "d3d12/D3D12Memory.hpp"
@@ -204,8 +206,7 @@ inline ZgResult createFramebuffer(
 	}
 
 	// Allocate framebuffer and copy members
-	ZgFramebuffer* framebuffer =
-		getAllocator()->newObject<ZgFramebuffer>(sfz_dbg("ZgFramebuffer"));
+	ZgFramebuffer* framebuffer = sfz_new<ZgFramebuffer>(getAllocator(), sfz_dbg("ZgFramebuffer"));
 
 	framebuffer->width = width;
 	framebuffer->height = height;

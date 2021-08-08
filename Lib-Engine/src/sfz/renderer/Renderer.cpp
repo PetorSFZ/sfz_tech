@@ -27,6 +27,7 @@
 
 #include <skipifzero.hpp>
 #include <skipifzero_math.hpp>
+#include <skipifzero_new.hpp>
 
 #include <ZeroG.h>
 
@@ -55,7 +56,7 @@ bool Renderer::init(
 	sfz::Allocator* allocator) noexcept
 {
 	this->destroy();
-	mState = allocator->newObject<RendererState>(sfz_dbg("RendererState"));
+	mState = sfz_new<RendererState>(allocator, sfz_dbg("RendererState"));
 	mState->allocator = allocator;
 	mState->window = window;
 
@@ -159,7 +160,7 @@ void Renderer::destroy() noexcept
 
 		// Deallocate rest of state
 		sfz::Allocator* allocator = mState->allocator;
-		allocator->deleteObject(mState);
+		sfz_delete(allocator, mState);
 	}
 	mState = nullptr;
 }

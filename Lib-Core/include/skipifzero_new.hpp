@@ -16,16 +16,45 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#ifndef SKIPIFZERO_SMART_POINTERS_HPP
-#define SKIPIFZERO_SMART_POINTERS_HPP
+#ifndef SKIPIFZERO_NEW_HPP
+#define SKIPIFZERO_NEW_HPP
 #pragma once
 
+#include <new> // placement new
+#include <utility> // std::move, std::forward, std::swap
+
+#include "sfz.h"
 #include "skipifzero.hpp"
 
-namespace sfz {
+// "new" and "delete" functions using sfz allocators
+// ------------------------------------------------------------------------------------------------
+
+// Constructs a new object of type T, similar to operator new. Guarantees 32-byte alignment.
+template<typename T, typename... Args>
+T* sfz_new(sfz::Allocator* allocator, SfzDbgInfo dbg, Args&&... args) noexcept
+{
+	// Allocate memory (minimum 32-byte alignment), return nullptr on failure
+	void* memPtr = allocator->allocate(dbg, sizeof(T), alignof(T) < 32 ? 32 : alignof(T));
+	if (memPtr == nullptr) return nullptr;
+
+	// Creates object (placement new), terminates program if constructor throws exception.
+	return new(memPtr) T(std::forward<Args>(args)...);
+}
+
+// Deconstructs a C++ object created using sfz_new.
+template<typename T>
+void sfz_delete(sfz::Allocator* allocator, T*& pointer) noexcept
+{
+	if (pointer == nullptr) return;
+	pointer->~T(); // Call destructor, will terminate program if it throws exception.
+	allocator->deallocate(pointer);
+	pointer = nullptr; // Set callers pointer to nullptr, an attempt to avoid dangling pointers.
+}
 
 // UniquePtr
 // ------------------------------------------------------------------------------------------------
+
+namespace sfz {
 
 // Simple replacement for std::unique_ptr using sfz::Allocator
 template<typename T>
@@ -54,7 +83,7 @@ public:
 	void destroy() noexcept
 	{
 		if (mPtr == nullptr) return;
-		mAllocator->deleteObject<T>(mPtr);
+		sfz_delete<T>(mAllocator, mPtr);
 		mPtr = nullptr;
 		mAllocator = nullptr;
 	}
@@ -108,8 +137,7 @@ private:
 template<typename T, typename... Args>
 UniquePtr<T> makeUnique(Allocator* allocator, SfzDbgInfo dbg, Args&&... args) noexcept
 {
-	return UniquePtr<T>(
-		allocator->newObject<T>(dbg, std::forward<Args>(args)...), allocator);
+	return UniquePtr<T>(sfz_new<T>(allocator, dbg, std::forward<Args>(args)...), allocator);
 }
 
 } // namespace sfz

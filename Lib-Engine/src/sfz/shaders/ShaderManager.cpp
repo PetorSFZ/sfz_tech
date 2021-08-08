@@ -19,6 +19,8 @@
 
 #include "sfz/shaders/ShaderManager.hpp"
 
+#include <skipifzero_new.hpp>
+
 #include "sfz/config/GlobalConfig.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
 #include "sfz/rendering/Mesh.hpp"
@@ -163,7 +165,7 @@ bool Shader::build() noexcept
 void ShaderManager::init(uint32_t maxNumShaders, Allocator* allocator) noexcept
 {
 	sfz_assert(mState == nullptr);
-	mState = allocator->newObject<ShaderManagerState>(sfz_dbg(""));
+	mState = sfz_new<ShaderManagerState>(allocator, sfz_dbg(""));
 	mState->allocator = allocator;
 
 	mState->shaderHandles.init(maxNumShaders, allocator, sfz_dbg(""));
@@ -182,7 +184,7 @@ void ShaderManager::destroy() noexcept
 	CHECK_ZG zg::CommandQueue::getCopyQueue().flush();
 
 	Allocator* allocator = mState->allocator;
-	allocator->deleteObject(mState);
+	sfz_delete(allocator, mState);
 	mState = nullptr;
 }
 
