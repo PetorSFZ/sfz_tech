@@ -50,7 +50,7 @@ public:
 
 	SFZ_DECLARE_DROP_TYPE(RingBuffer);
 
-	RingBuffer(uint64_t capacity, Allocator* allocator, DbgInfo allocDbg) noexcept
+	RingBuffer(uint64_t capacity, Allocator* allocator, SfzDbgInfo allocDbg) noexcept
 	{
 		this->create(capacity, allocator, allocDbg);
 	}
@@ -58,7 +58,7 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void create(uint64_t capacity, Allocator* allocator, DbgInfo allocDbg)
+	void create(uint64_t capacity, Allocator* allocator, SfzDbgInfo allocDbg)
 	{
 		this->destroy();
 		if (capacity == 0) return;

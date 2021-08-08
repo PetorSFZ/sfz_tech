@@ -29,6 +29,8 @@
 #include <type_traits>
 #include <utility> // std::move, std::forward, std::swap
 
+#include "sfz.h"
+
 #ifdef _WIN32
 #pragma warning(disable : 4127) // conditional expression is constant
 #pragma warning(disable : 4201) // nonstandard extension: nameless struct/union
@@ -52,24 +54,6 @@ namespace sfz {
 
 #define sfz_assert_hard(cond) do { if (!(cond)) { assert(cond); abort(); } } while(0)
 
-// Debug information
-// ------------------------------------------------------------------------------------------------
-
-// Tiny struct that contains debug information, i.e. file, line number and a message.
-// Note that the message MUST be a compile-time constant, it may NOT be dynamically allocated.
-struct DbgInfo final {
-	const char* staticMsg = ""; // MUST be a compile-time constant, pointer must always be valid.
-	const char* file = "";
-	uint32_t line = 0;
-	DbgInfo() noexcept = default;
-	DbgInfo(const char* staticMsg, const char* file, uint32_t line) noexcept :
-		staticMsg(staticMsg), file(file), line(line) {}
-};
-
-// Tiny macro that creates a DbgInfo struct with current file and line number. Message must be a
-// compile time constant, i.e. string must be valid for the remaining duration of the program.
-#define sfz_dbg(staticMsg) sfz::DbgInfo(staticMsg, __FILE__, __LINE__)
-
 // Allocator Interface
 // ------------------------------------------------------------------------------------------------
 
@@ -90,7 +74,7 @@ public:
 
 	// Allocates memory with the specified byte alignment, returns nullptr on failure.
 	virtual void* allocate(
-		DbgInfo dbg, uint64_t size, uint64_t alignment = 32) noexcept = 0;
+		SfzDbgInfo dbg, uint64_t size, uint64_t alignment = 32) noexcept = 0;
 
 	// Deallocates memory previously allocated with this instance.
 	//
@@ -100,7 +84,7 @@ public:
 
 	// Constructs a new object of type T, similar to operator new. Guarantees 32-byte alignment.
 	template<typename T, typename... Args>
-	T* newObject(DbgInfo dbg, Args&&... args) noexcept
+	T* newObject(SfzDbgInfo dbg, Args&&... args) noexcept
 	{
 		// Allocate memory (minimum 32-byte alignment), return nullptr on failure
 		void* memPtr = this->allocate(dbg, sizeof(T), alignof(T) < 32 ? 32 : alignof(T));

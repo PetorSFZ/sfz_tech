@@ -154,7 +154,7 @@ public:
 	
 	SFZ_DECLARE_DROP_TYPE(HashMap);
 
-	HashMap(uint32_t capacity, Allocator* allocator, DbgInfo allocDbg) noexcept
+	HashMap(uint32_t capacity, Allocator* allocator, SfzDbgInfo allocDbg) noexcept
 	{
 		this->init(capacity, allocator, allocDbg);
 	}
@@ -162,14 +162,14 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void init(uint32_t capacity, Allocator* allocator, DbgInfo allocDbg)
+	void init(uint32_t capacity, Allocator* allocator, SfzDbgInfo allocDbg)
 	{
 		this->destroy();
 		mAllocator = allocator;
 		this->rehash(capacity, allocDbg);
 	}
 
-	HashMap clone(Allocator* allocator, DbgInfo allocDbg) const
+	HashMap clone(Allocator* allocator, SfzDbgInfo allocDbg) const
 	{
 		HashMap tmp(mCapacity, allocator, allocDbg);
 		tmp.mSize = this->mSize;
@@ -224,7 +224,7 @@ public:
 	}
 
 	// Rehashes this HashMap to the specified capacity. All old pointers and references are invalidated.
-	void rehash(uint32_t newCapacity, DbgInfo allocDbg)
+	void rehash(uint32_t newCapacity, SfzDbgInfo allocDbg)
 	{
 		if (newCapacity == 0) return;
 		if (newCapacity < MIN_CAPACITY) newCapacity = MIN_CAPACITY;

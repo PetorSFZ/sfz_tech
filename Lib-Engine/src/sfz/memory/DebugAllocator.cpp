@@ -63,7 +63,7 @@ DebugAllocator::~DebugAllocator() noexcept
 // DebugAllocator: Overriden Allocator methods
 // ------------------------------------------------------------------------------------------------
 
-void* DebugAllocator::allocate(DbgInfo dbg, uint64_t size, uint64_t alignment) noexcept
+void* DebugAllocator::allocate(SfzDbgInfo dbg, uint64_t size, uint64_t alignment) noexcept
 {
 	// Allocate memory
 #ifdef _WIN32

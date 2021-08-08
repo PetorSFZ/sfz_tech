@@ -8,6 +8,7 @@ Main features:
 * Compact
 * Simple to read
 * Modular, easy to include in your project
+* C-compatible subset
 * No dependencies beside standard library
 * No exceptions
 * No RTTI
@@ -15,10 +16,13 @@ Main features:
 
 ## Modular
 
-sfz_core is split up into a number of modules (headers). There is a main header (`skipifzero.hpp`), this header is mandatory and included by all other headers in this library. However, the other headers are not allowed to depend on each other. This means that you can pick and choose which headers you want to use.
+sfz_core is split up into a number of modules (headers). There are two main headers (`sfz.h` and `skipifzero.hpp`), other modules are allowed to include these headers. Otherwise, modules are not allowed to depend on other modules. It's a completely flat dependency graph. This means that you can pick and choose which headers you want to use.
+
+There are two sets of headers, a C-compatible set (prefixed with `sfz_` and ends with `.h`) and a C++ one (`skipifzero_` and `.hpp`). The C++ set is a superset of the C one, particularly `sfz.h` is included by `skipifzero.hpp`.
 
 The modules in sfz_core are:
 
+* `sfz.h`: (__Mandatory__) Core structures and helpers. Can be used in both C and C++.
 * `skipifzero.hpp`: (__Mandatory__) Assert macros, Allocator interface, vector primitive, memory helpers and math functions.
 * `skipifzero_allocators.hpp`: Standard implementations of the allocator interface.
 * `skipifzero_arrays.hpp`: Arrays (replacements for `std::vector`, etc).
@@ -33,7 +37,7 @@ The modules in sfz_core are:
 
 ## (No) dependencies
 
-sfz_core has __no__ dependencies beside the C++ standard library, and even then it tries to minimize usage. Currently the following standard headers are __mandatory__:
+sfz_core has __no__ dependencies beside the C++ standard library, and even then it tries to minimize usage. `sfz.h` doesn't depend on the standard library, for `skipifzero.hpp` following standard headers are __mandatory__:
 
 * `<cassert>`: Needed for `assert()`, which `sfz_assert()` is a wrapper around. Could potentially be replaced with platform specific intrinsics, such as `__debugbreak()`, but at least `__debugbreak()` does not always fire for me, unlike `assert()`.
 * `<cfloat>`: Needed for `FLT_MAX`.

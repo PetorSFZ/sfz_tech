@@ -82,7 +82,7 @@ static void* zgSfzAllocate(
 	void* userPtr, uint32_t size, const char* name, const char* file, uint32_t line)
 {
 	sfz::Allocator* allocator = reinterpret_cast<sfz::Allocator*>(userPtr);
-	return allocator->allocate(sfz::DbgInfo(name, file, line), size, 32);
+	return allocator->allocate(SfzDbgInfo{ name, file, line }, size, 32);
 }
 
 static void zgSfzDeallocate(void* userPtr, void* allocation)

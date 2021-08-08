@@ -32,6 +32,8 @@
 
 #include <stdint.h>
 
+#include <sfz.h>
+
 #ifdef __cplusplus
 #include <assert.h>
 #include <utility> // std::swap()

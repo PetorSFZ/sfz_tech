@@ -47,7 +47,7 @@ public:
 
 	bool isInitialized() const { return mInited; }
 
-	void* allocate(sfz::DbgInfo dbg, uint64_t size, uint64_t alignment) noexcept override final
+	void* allocate(SfzDbgInfo dbg, uint64_t size, uint64_t alignment) noexcept override final
 	{
 		sfz_assert(mInited);
 		if (mHasUserDefinedAllocator) {

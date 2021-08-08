@@ -33,7 +33,7 @@ namespace sfz {
 
 class StandardAllocator final : public Allocator {
 public:
-	void* allocate(DbgInfo dbg, uint64_t size, uint64_t alignment) noexcept override final
+	void* allocate(SfzDbgInfo dbg, uint64_t size, uint64_t alignment) noexcept override final
 	{
 		(void)dbg;
 		sfz_assert(isPowerOfTwo(alignment));
@@ -113,7 +113,7 @@ public:
 	uint64_t numBytesAllocated() const noexcept { return mCurrentOffsetBytes; }
 	uint64_t numPaddingBytes() const noexcept { return mNumPaddingBytes; }
 
-	void* allocate(DbgInfo dbg, uint64_t size, uint64_t alignment = 32) noexcept override final
+	void* allocate(SfzDbgInfo dbg, uint64_t size, uint64_t alignment = 32) noexcept override final
 	{
 		(void)dbg;
 		sfz_assert(isPowerOfTwo(alignment));
@@ -156,7 +156,7 @@ class ArenaHeap final {
 public:
 	SFZ_DECLARE_DROP_TYPE(ArenaHeap);
 
-	void init(Allocator* allocator, uint64_t memorySizeBytes, DbgInfo info)
+	void init(Allocator* allocator, uint64_t memorySizeBytes, SfzDbgInfo info)
 	{
 		this->destroy();
 		mAllocator = allocator;

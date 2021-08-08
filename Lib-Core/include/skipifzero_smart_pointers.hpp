@@ -106,7 +106,7 @@ private:
 
 // Constructs a new object of type T with the specified allocator and returns it in a UniquePtr
 template<typename T, typename... Args>
-UniquePtr<T> makeUnique(Allocator* allocator, DbgInfo dbg, Args&&... args) noexcept
+UniquePtr<T> makeUnique(Allocator* allocator, SfzDbgInfo dbg, Args&&... args) noexcept
 {
 	return UniquePtr<T>(
 		allocator->newObject<T>(dbg, std::forward<Args>(args)...), allocator);

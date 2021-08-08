@@ -76,7 +76,7 @@ public:
 	// Overriden Allocator methods
 	// --------------------------------------------------------------------------------------------
 
-	void* allocate(DbgInfo dbg, uint64_t size, uint64_t alignment) noexcept override final;
+	void* allocate(SfzDbgInfo dbg, uint64_t size, uint64_t alignment) noexcept override final;
 	void deallocate(void* pointer) noexcept override final;
 
 	// Methods

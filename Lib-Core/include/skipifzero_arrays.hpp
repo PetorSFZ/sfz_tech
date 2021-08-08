@@ -49,7 +49,7 @@ class Array final {
 public:
 	SFZ_DECLARE_DROP_TYPE(Array);
 
-	explicit Array(uint32_t capacity, Allocator* allocator, DbgInfo allocDbg) noexcept
+	explicit Array(uint32_t capacity, Allocator* allocator, SfzDbgInfo allocDbg) noexcept
 	{
 		this->init(capacity, allocator, allocDbg);
 	}
@@ -59,7 +59,7 @@ public:
 
 	// Initializes with specified parameters. Guaranteed to only set allocator and not allocate
 	// memory if a capacity of 0 is requested.
-	void init(uint32_t capacity, Allocator* allocator, DbgInfo allocDbg)
+	void init(uint32_t capacity, Allocator* allocator, SfzDbgInfo allocDbg)
 	{
 		this->destroy();
 		mAllocator = allocator;
@@ -84,7 +84,7 @@ public:
 	void hackSetSize(uint32_t size) { mSize = (size <= mCapacity) ? size : mCapacity; }
 
 	// Sets the capacity, allocating memory and moving elements if necessary.
-	void setCapacity(uint32_t capacity, DbgInfo allocDbg = sfz_dbg("Array"))
+	void setCapacity(uint32_t capacity, SfzDbgInfo allocDbg = sfz_dbg("Array"))
 	{
 		if (mSize > capacity) capacity = mSize;
 		if (mCapacity == capacity) return;

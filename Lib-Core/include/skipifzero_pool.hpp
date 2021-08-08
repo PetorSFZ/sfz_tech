@@ -125,7 +125,7 @@ class Pool final {
 public:
 	SFZ_DECLARE_DROP_TYPE(Pool);
 
-	explicit Pool(uint32_t capacity, Allocator* allocator, DbgInfo allocDbg) noexcept
+	explicit Pool(uint32_t capacity, Allocator* allocator, SfzDbgInfo allocDbg) noexcept
 	{
 		this->init(capacity, allocator, allocDbg);
 	}
@@ -133,7 +133,7 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void init(uint32_t capacity, Allocator* allocator, DbgInfo allocDbg)
+	void init(uint32_t capacity, Allocator* allocator, SfzDbgInfo allocDbg)
 	{
 		sfz_assert(capacity != 0); // We don't support resize, so this wouldn't make sense.
 		sfz_assert(capacity <= POOL_MAX_CAPACITY);
