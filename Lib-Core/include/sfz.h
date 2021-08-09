@@ -97,6 +97,36 @@ sfz_constant f32 F32_EPS = 1.192092896e-7f; // Smallest val where (1.0f + F32_EP
 sfz_constant f64 F64_EPS = 2.2204460492503131e-16; // Smallest val where (1.0 + F64_EPS != 1.0)
 
 
+// Assert macro
+// ------------------------------------------------------------------------------------------------
+
+// Assert macros. Lots of magic here to avoid including assert.h or other headers.
+//
+// sfz_assert() => No-op when NDEBUG is defined (i.e. in release builds)
+// sfz_assert_hard() => ALways runs, even in release builds.
+
+#if defined(_MSC_VER)
+
+#ifdef _DLL
+SFZ_EXTERN_C __declspec(dllimport) __declspec(noreturn) void __cdecl abort(void);
+#else
+SFZ_EXTERN_C __declspec(noreturn) void __cdecl abort(void);
+#endif
+SFZ_EXTERN_C void __cdecl __debugbreak(void);
+
+#ifndef NDEBUG
+#define sfz_assert(cond) do { if (!(cond)) { __debugbreak(); abort(); } } while(0)
+#else
+#define sfz_assert(cond) do { (void)sizeof(cond); } while(0)
+#endif
+
+#define sfz_assert_hard(cond) do { if (!(cond)) { __debugbreak(); abort(); } } while(0)
+
+#else
+#error "Not implemented for this compiler"
+#endif
+
+
 // Debug information
 // ------------------------------------------------------------------------------------------------
 

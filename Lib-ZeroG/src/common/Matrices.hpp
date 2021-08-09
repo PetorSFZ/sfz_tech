@@ -82,11 +82,11 @@ ZG_API void zgUtilCreatePerspectiveProjection(
 	f32 nearPlane,
 	f32 farPlane)
 {
-	assert(0.0f < vertFovDegs);
-	assert(vertFovDegs < 180.0f);
-	assert(0.0f < aspect);
-	assert(0.0f < nearPlane);
-	assert(nearPlane < farPlane);
+	sfz_assert(0.0f < vertFovDegs);
+	sfz_assert(vertFovDegs < 180.0f);
+	sfz_assert(0.0f < aspect);
+	sfz_assert(0.0f < nearPlane);
+	sfz_assert(nearPlane < farPlane);
 
 	// From: https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixperspectivefovrh
 	// xScale     0          0              0
@@ -118,10 +118,10 @@ ZG_API void zgUtilCreatePerspectiveProjectionInfinite(
 	f32 aspect,
 	f32 nearPlane)
 {
-	assert(0.0f < vertFovDegs);
-	assert(vertFovDegs < 180.0f);
-	assert(0.0f < aspect);
-	assert(0.0f < nearPlane);
+	sfz_assert(0.0f < vertFovDegs);
+	sfz_assert(vertFovDegs < 180.0f);
+	sfz_assert(0.0f < aspect);
+	sfz_assert(0.0f < nearPlane);
 
 	// Same as createPerspectiveProjection(), but let far approach infinity
 
@@ -145,11 +145,11 @@ ZG_API void zgUtilCreatePerspectiveProjectionReverse(
 	f32 nearPlane,
 	f32 farPlane)
 {
-	assert(0.0f < vertFovDegs);
-	assert(vertFovDegs < 180.0f);
-	assert(0.0f < aspect);
-	assert(0.0f < nearPlane);
-	assert(nearPlane < farPlane);
+	sfz_assert(0.0f < vertFovDegs);
+	sfz_assert(vertFovDegs < 180.0f);
+	sfz_assert(0.0f < aspect);
+	sfz_assert(0.0f < nearPlane);
+	sfz_assert(nearPlane < farPlane);
 
 	// http://dev.theomader.com/depth-precision/
 	// "This can be achieved by multiplying the projection matrix with a simple ‘z reversal’ matrix"
@@ -177,10 +177,10 @@ ZG_API void zgUtilCreatePerspectiveProjectionReverseInfinite(
 	f32 aspect,
 	f32 nearPlane)
 {
-	assert(0.0f < vertFovDegs);
-	assert(vertFovDegs < 180.0f);
-	assert(0.0f < aspect);
-	assert(0.0f < nearPlane);
+	sfz_assert(0.0f < vertFovDegs);
+	sfz_assert(vertFovDegs < 180.0f);
+	sfz_assert(0.0f < aspect);
+	sfz_assert(0.0f < nearPlane);
 
 	// http://dev.theomader.com/depth-precision/
 	// "This can be achieved by multiplying the projection matrix with a simple ‘z reversal’ matrix"
@@ -209,10 +209,10 @@ ZG_API void zgUtilCreateOrthographicProjection(
 	f32 nearPlane,
 	f32 farPlane)
 {
-	assert(0.0f < width);
-	assert(0.0f < height);
-	assert(0.0f < nearPlane);
-	assert(nearPlane < farPlane);
+	sfz_assert(0.0f < width);
+	sfz_assert(0.0f < height);
+	sfz_assert(0.0f < nearPlane);
+	sfz_assert(nearPlane < farPlane);
 
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixorthorh
 	// 2/w  0    0           0
@@ -238,10 +238,10 @@ ZG_API void zgUtilCreateOrthographicProjectionReverse(
 	f32 nearPlane,
 	f32 farPlane)
 {
-	assert(0.0f < width);
-	assert(0.0f < height);
-	assert(0.0f < nearPlane);
-	assert(nearPlane < farPlane);
+	sfz_assert(0.0f < width);
+	sfz_assert(0.0f < height);
+	sfz_assert(0.0f < nearPlane);
+	sfz_assert(nearPlane < farPlane);
 
 	// http://dev.theomader.com/depth-precision/
 	// "This can be achieved by multiplying the projection matrix with a simple ‘z reversal’ matrix"

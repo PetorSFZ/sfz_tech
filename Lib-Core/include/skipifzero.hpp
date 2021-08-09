@@ -20,9 +20,7 @@
 #define SKIPIFZERO_HPP
 #pragma once
 
-#include <cassert>
 #include <cmath> // std::sqrt, std::fmodf
-#include <cstdlib> // std::abort()
 #include <cstring> // memcpy()
 #include <type_traits>
 #include <utility> // std::move, std::forward, std::swap
@@ -40,17 +38,6 @@
 #endif
 
 namespace sfz {
-
-// Assert macros
-// ------------------------------------------------------------------------------------------------
-
-#ifndef NDEBUG
-#define sfz_assert(cond) do { if (!(cond)) { assert(cond); } } while(0)
-#else
-#define sfz_assert(cond) do { (void)sizeof(cond); } while(0)
-#endif
-
-#define sfz_assert_hard(cond) do { if (!(cond)) { assert(cond); abort(); } } while(0)
 
 // Memory functions
 // ------------------------------------------------------------------------------------------------

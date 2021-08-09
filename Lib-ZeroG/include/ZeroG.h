@@ -32,10 +32,6 @@
 
 #include <sfz.h>
 
-#ifdef __cplusplus
-#include <assert.h>
-#endif
-
 #if defined(_WIN32)
 #if defined(ZG_DLL_EXPORT)
 #define ZG_API SFZ_EXTERN_C __declspec(dllexport)
@@ -494,7 +490,7 @@ public:
 
 	PipelineBindings& addConstantBuffer(ZgConstantBufferBinding binding)
 	{
-		assert(bindings.numConstantBuffers < ZG_MAX_NUM_CONSTANT_BUFFERS);
+		sfz_assert(bindings.numConstantBuffers < ZG_MAX_NUM_CONSTANT_BUFFERS);
 		bindings.constantBuffers[bindings.numConstantBuffers] = binding;
 		bindings.numConstantBuffers += 1;
 		return *this;
@@ -510,7 +506,7 @@ public:
 
 	PipelineBindings& addUnorderedBuffer(ZgUnorderedBufferBinding binding)
 	{
-		assert(bindings.numUnorderedBuffers < ZG_MAX_NUM_UNORDERED_BUFFERS);
+		sfz_assert(bindings.numUnorderedBuffers < ZG_MAX_NUM_UNORDERED_BUFFERS);
 		bindings.unorderedBuffers[bindings.numUnorderedBuffers] = binding;
 		bindings.numUnorderedBuffers += 1;
 		return *this;
@@ -543,7 +539,7 @@ public:
 
 	PipelineBindings& addTexture(ZgTextureBinding binding)
 	{
-		assert(bindings.numTextures < ZG_MAX_NUM_TEXTURES);
+		sfz_assert(bindings.numTextures < ZG_MAX_NUM_TEXTURES);
 		bindings.textures[bindings.numTextures] = binding;
 		bindings.numTextures += 1;
 		return *this;
@@ -559,7 +555,7 @@ public:
 
 	PipelineBindings& addUnorderedTexture(ZgUnorderedTextureBinding binding)
 	{
-		assert(bindings.numUnorderedTextures < ZG_MAX_NUM_UNORDERED_TEXTURES);
+		sfz_assert(bindings.numUnorderedTextures < ZG_MAX_NUM_UNORDERED_TEXTURES);
 		bindings.unorderedTextures[bindings.numUnorderedTextures] = binding;
 		bindings.numUnorderedTextures += 1;
 		return *this;
@@ -759,7 +755,7 @@ public:
 
 	PipelineComputeBuilder& addPushConstant(u32 constantBufferRegister)
 	{
-		assert(createInfo.numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
+		sfz_assert(createInfo.numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
 		createInfo.pushConstantRegisters[createInfo.numPushConstants] = constantBufferRegister;
 		createInfo.numPushConstants += 1;
 		return *this;
@@ -767,8 +763,8 @@ public:
 
 	PipelineComputeBuilder& addSampler(u32 samplerRegister, ZgSampler sampler)
 	{
-		assert(samplerRegister == createInfo.numSamplers);
-		assert(createInfo.numSamplers < ZG_MAX_NUM_SAMPLERS);
+		sfz_assert(samplerRegister == createInfo.numSamplers);
+		sfz_assert(createInfo.numSamplers < ZG_MAX_NUM_SAMPLERS);
 		createInfo.samplers[samplerRegister] = sampler;
 		createInfo.numSamplers += 1;
 		return *this;
@@ -1106,7 +1102,7 @@ public:
 
 	PipelineRenderBuilder& addVertexAttribute(ZgVertexAttribute attribute)
 	{
-		assert(createInfo.numVertexAttributes < ZG_MAX_NUM_VERTEX_ATTRIBUTES);
+		sfz_assert(createInfo.numVertexAttributes < ZG_MAX_NUM_VERTEX_ATTRIBUTES);
 		createInfo.vertexAttributes[createInfo.numVertexAttributes] = attribute;
 		createInfo.numVertexAttributes += 1;
 		return *this;
@@ -1129,8 +1125,8 @@ public:
 	PipelineRenderBuilder& addVertexBufferInfo(
 		u32 slot, u32 vertexBufferStrideBytes)
 	{
-		assert(slot == createInfo.numVertexBufferSlots);
-		assert(createInfo.numVertexBufferSlots < ZG_MAX_NUM_VERTEX_ATTRIBUTES);
+		sfz_assert(slot == createInfo.numVertexBufferSlots);
+		sfz_assert(createInfo.numVertexBufferSlots < ZG_MAX_NUM_VERTEX_ATTRIBUTES);
 		createInfo.vertexBufferStridesBytes[slot] = vertexBufferStrideBytes;
 		createInfo.numVertexBufferSlots += 1;
 		return *this;
@@ -1138,7 +1134,7 @@ public:
 
 	PipelineRenderBuilder& addPushConstant(u32 constantBufferRegister)
 	{
-		assert(createInfo.numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
+		sfz_assert(createInfo.numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
 		createInfo.pushConstantRegisters[createInfo.numPushConstants] = constantBufferRegister;
 		createInfo.numPushConstants += 1;
 		return *this;
@@ -1146,8 +1142,8 @@ public:
 
 	PipelineRenderBuilder& addSampler(u32 samplerRegister, ZgSampler sampler)
 	{
-		assert(samplerRegister == createInfo.numSamplers);
-		assert(createInfo.numSamplers < ZG_MAX_NUM_SAMPLERS);
+		sfz_assert(samplerRegister == createInfo.numSamplers);
+		sfz_assert(createInfo.numSamplers < ZG_MAX_NUM_SAMPLERS);
 		createInfo.samplers[samplerRegister] = sampler;
 		createInfo.numSamplers += 1;
 		return *this;
@@ -1170,7 +1166,7 @@ public:
 
 	PipelineRenderBuilder& addRenderTarget(ZgTextureFormat format)
 	{
-		assert(createInfo.numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
+		sfz_assert(createInfo.numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
 		createInfo.renderTargets[createInfo.numRenderTargets] = format;
 		createInfo.numRenderTargets += 1;
 		return *this;
@@ -1331,7 +1327,7 @@ public:
 
 	FramebufferBuilder& addRenderTarget(Texture& renderTarget)
 	{
-		assert(createInfo.numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
+		sfz_assert(createInfo.numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
 		u32 idx = createInfo.numRenderTargets;
 		createInfo.numRenderTargets += 1;
 		createInfo.renderTargets[idx] = renderTarget.handle;
