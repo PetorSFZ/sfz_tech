@@ -20,6 +20,8 @@
 #define SKIPIFZERO_ARRAYS_HPP
 #pragma once
 
+#include <new>
+
 #include "skipifzero.hpp"
 
 namespace sfz {
@@ -95,7 +97,7 @@ public:
 		// Allocate memory and move/copy over elements from old memory
 		T* newAllocation = capacity == 0 ? nullptr : (T*)mAllocator->alloc(
 			allocDbg, capacity * sizeof(T), alignof(T) < 32 ? 32 : alignof(T));
-		for (u32 i = 0; i < mSize; i++) new(newAllocation + i) T(std::move(mData[i]));
+		for (u32 i = 0; i < mSize; i++) new(newAllocation + i) T(sfz_move(mData[i]));
 
 		// Destroy old memory and replace state with new memory and values
 		u32 sizeBackup = mSize;
@@ -133,7 +135,7 @@ public:
 
 	// Copy element numCopies times to the back of this array. Increases capacity if needed.
 	void add(const T& value, u32 numCopies = 1) { addImpl<const T&>(value, numCopies); }
-	void add(T&& value) { addImpl<T>(std::move(value), 1); }
+	void add(T&& value) { addImpl<T>(sfz_move(value), 1); }
 
 	// Copy numElements elements to the back of this array. Increases capacity if needed.
 	void add(const T* ptr, u32 numElements)
@@ -155,9 +157,9 @@ public:
 	{
 		sfz_assert(mSize > 0);
 		mSize -= 1;
-		T tmp = std::move(mData[mSize]);
+		T tmp = sfz_move(mData[mSize]);
 		mData[mSize].~T();
-		return std::move(tmp);
+		return sfz_move(tmp);
 	}
 
 	// Remove numElements elements starting at the specified position.
@@ -171,7 +173,7 @@ public:
 		// Move the elements after the removed elements
 		u32 numElementsToMove = mSize - pos - numElements;
 		for (u32 i = 0; i < numElementsToMove; i++) {
-			new (mData + pos + i) T(std::move(mData[pos + i + numElements]));
+			new (mData + pos + i) T(sfz_move(mData[pos + i + numElements]));
 			mData[pos + i + numElements].~T();
 		}
 		mSize -= numElements;
@@ -179,7 +181,7 @@ public:
 
 	// Removes element at given position by swapping it with the last element in array.
 	// O(1) operation unlike remove(), but obviously does not maintain internal array order.
-	void removeQuickSwap(u32 pos) { sfz_assert(pos < mSize); std::swap(mData[pos], last()); remove(mSize - 1); }
+	void removeQuickSwap(u32 pos) { sfz_assert(pos < mSize); sfz::swap(mData[pos], last()); remove(mSize - 1); }
 
 	// Finds the first instance of the given element, nullptr if not found.
 	T* findElement(const T& ref) { return findImpl(mData, [&](const T& e) { return e == ref; }); }
@@ -229,7 +231,7 @@ private:
 		// Perfect forwarding: const reference: ForwardT == const T&, rvalue: ForwardT == T
 		// std::forward<ForwardT>(value) will then return the correct version of value
 		this->growIfNeeded(numCopies);
-		for(u32 i = 0; i < numCopies; i++) new (mData + mSize + i) T(std::forward<ForwardT>(value));
+		for(u32 i = 0; i < numCopies; i++) new (mData + mSize + i) T(sfz_forward(value));
 		mSize += numCopies;
 	}
 
@@ -244,7 +246,7 @@ private:
 		u32 numElementsToMove = (mSize - pos);
 		for (u32 i = numElementsToMove; i > 0; i--) {
 			u32 offs = i - 1;
-			new (dstPtr + offs) T(std::move(srcPtr[offs]));
+			new (dstPtr + offs) T(sfz_move(srcPtr[offs]));
 			srcPtr[offs].~T();
 		}
 
@@ -323,8 +325,8 @@ public:
 
 	void swap(ArrayLocal& other)
 	{
-		for (u32 i = 0; i < Capacity; i++) std::swap(this->mData[i], other.mData[i]);
-		std::swap(this->mSize, other.mSize);
+		for (u32 i = 0; i < Capacity; i++) sfz::swap(this->mData[i], other.mData[i]);
+		sfz::swap(this->mSize, other.mSize);
 	}
 
 	void clear() { sfz_assert(mSize <= Capacity); for (u32 i = 0; i < mSize; i++) mData[i] = {}; mSize = 0; }
@@ -355,7 +357,7 @@ public:
 
 	// Copy element numCopies times to the back of this array.
 	void add(const T& value, u32 numCopies = 1) { addImpl<const T&>(value, numCopies); }
-	void add(T&& value) { addImpl<T>(std::move(value), 1); }
+	void add(T&& value) { addImpl<T>(sfz_move(value), 1); }
 
 	// Copy numElements elements to the back of this array.
 	void add(const T* ptr, u32 numElements)
@@ -377,9 +379,9 @@ public:
 	{
 		sfz_assert(mSize > 0);
 		mSize -= 1;
-		T tmp = std::move(mData[mSize]);
+		T tmp = sfz_move(mData[mSize]);
 		mData[mSize].~T();
-		return std::move(tmp);
+		return sfz_move(tmp);
 	}
 
 	// Remove numElements elements starting at the specified position.
@@ -393,14 +395,14 @@ public:
 		// Move the elements after the removed elements
 		u32 numElementsToMove = mSize - pos - numElements;
 		for (u32 i = 0; i < numElementsToMove; i++) {
-			mData[pos + i] = std::move(mData[pos + i + numElements]);
+			mData[pos + i] = sfz_move(mData[pos + i + numElements]);
 		}
 		mSize -= numElements;
 	}
 
 	// Removes element at given position by swapping it with the last element in array.
 	// O(1) operation unlike remove(), but obviously does not maintain internal array order.
-	void removeQuickSwap(u32 pos) { sfz_assert(pos < mSize); std::swap(mData[pos], last()); remove(mSize - 1); }
+	void removeQuickSwap(u32 pos) { sfz_assert(pos < mSize); sfz::swap(mData[pos], last()); remove(mSize - 1); }
 
 	// Finds the first instance of the given element, nullptr if not found.
 	T* findElement(const T& ref) { return findImpl(mData, [&](const T& e) { return e == ref; }); }
@@ -441,7 +443,7 @@ private:
 		// Perfect forwarding: const reference: ForwardT == const T&, rvalue: ForwardT == T
 		// std::forward<ForwardT>(value) will then return the correct version of value
 		sfz_assert((mSize + numCopies) <= Capacity);
-		for(u32 i = 0; i < numCopies; i++) mData[mSize + i] = std::forward<ForwardT>(value);
+		for(u32 i = 0; i < numCopies; i++) mData[mSize + i] = sfz_forward(value);
 		mSize += numCopies;
 	}
 
@@ -454,7 +456,7 @@ private:
 		T* dstPtr = mData + pos + numElements;
 		T* srcPtr = mData + pos;
 		u32 numElementsToMove = (mSize - pos);
-		for (u32 i = numElementsToMove; i > 0; i--) dstPtr[i - 1] = std::move(srcPtr[i - 1]);
+		for (u32 i = numElementsToMove; i > 0; i--) dstPtr[i - 1] = sfz_move(srcPtr[i - 1]);
 
 		// Insert elements
 		for (u32 i = 0; i < numElements; ++i) mData[pos + i] = ptr[i];

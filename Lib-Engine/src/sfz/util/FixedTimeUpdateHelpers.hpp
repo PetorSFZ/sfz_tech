@@ -29,13 +29,13 @@ namespace sfz {
 class FixedTimeStepper final {
 public:
 	// The current accumulated (and unused) time
-	float accumulatorSecs = 0.0f;
+	f32 accumulatorSecs = 0.0f;
 
 	// The length of a tick in seconds
-	float tickTimeSecs = 1.0f / 100.0f;
+	f32 tickTimeSecs = 1.0f / 100.0f;
 
 	template<typename F>
-	u32 runTickUpdates(float deltaTimeSecs, F tickUpdateFunc) noexcept
+	u32 runTickUpdates(f32 deltaTimeSecs, F tickUpdateFunc) noexcept
 	{
 		u32 numTicksRan = 0;
 		accumulatorSecs += deltaTimeSecs;

@@ -82,11 +82,11 @@ public:
 
 	/// Calls snprintf() on the internal string, overwriting the content.
 	/// \return number of chars written
-	int32_t printf(const char* format, ...) noexcept;
+	i32 printf(const char* format, ...) noexcept;
 
 	/// Calls snprintf() on the remaining part of the internal string, effectively appending to it.
 	/// \return number of chars written
-	int32_t printfAppend(const char* format, ...) noexcept;
+	i32 printfAppend(const char* format, ...) noexcept;
 
 	// Operators
 	// --------------------------------------------------------------------------------------------

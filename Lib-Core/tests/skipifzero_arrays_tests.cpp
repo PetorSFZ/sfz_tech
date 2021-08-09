@@ -22,6 +22,8 @@
 #undef near
 #undef far
 
+#include <utility>
+
 #include "skipifzero.hpp"
 #include "skipifzero_allocators.hpp"
 #include "skipifzero_arrays.hpp"
@@ -40,7 +42,7 @@ public:
 	Uncopiable(Uncopiable&& other) { this->swap(other); }
 	Uncopiable& operator= (Uncopiable&& other) { this->swap(other); return *this; }
 
-	void swap(Uncopiable& other) { std::swap(this->val, other.val); }
+	void swap(Uncopiable& other) { sfz::swap(this->val, other.val); }
 };
 
 UTEST(Array, default_constructor)

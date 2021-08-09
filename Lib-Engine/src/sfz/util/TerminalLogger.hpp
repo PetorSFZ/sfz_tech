@@ -42,7 +42,7 @@ using std::time_t;
 
 struct TerminalMessageItem final {
 	str64 file;
-	int32_t lineNumber;
+	i32 lineNumber;
 	time_t timestamp;
 	LogLevel level;
 	str32 tag;

@@ -47,7 +47,7 @@ struct CheckJsonImpl final {
 			SFZ_ERROR("Renderer", "Key did not exist in JSON file: %s:%i", file, line);
 			sfz_assert(false);
 		}
-		return std::move(valuePair.value);
+		return valuePair.value;
 	}
 };
 
@@ -287,7 +287,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 
 		bool buildSuccess = shader.build();
 		sfz_assert(buildSuccess);
-		shaders.addShader(std::move(shader));
+		shaders.addShader(sfz_move(shader));
 	}
 
 
@@ -343,7 +343,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 
 		bool buildSuccess = shader.build();
 		sfz_assert(buildSuccess);
-		shaders.addShader(std::move(shader));
+		shaders.addShader(sfz_move(shader));
 	}
 
 	return true;

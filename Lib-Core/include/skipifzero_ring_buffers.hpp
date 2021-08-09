@@ -21,6 +21,7 @@
 #pragma once
 
 #include <atomic>
+#include <new>
 
 #include "skipifzero.hpp"
 
@@ -112,7 +113,7 @@ public:
 	// Adds an element to the end of the RingBuffer (i.e. last, high index). Returns true if
 	// element was successfully inserted, false if RingBuffer is full or has no capacity.
 	bool add(const T& value) { return this->addInternal<const T&>(value); }
-	bool add(T&& value) { return this->addInternal<T>(std::move(value)); }
+	bool add(T&& value) { return this->addInternal<T>(sfz_move(value)); }
 	bool add() { return this->addInternal<T>(T()); }
 
 	// Removes the element at the beginning of the RingBuffer (i.e. first, low index). Returns true
@@ -123,7 +124,7 @@ public:
 	// Adds an element to the beginning of the RingBuffer (i.e. first, low index). Returns true if
 	// element was successfully inserted, false if RingBuffer is full or has no capacity.
 	bool addFirst(const T& value) { return this->addFirstInternal<const T&>(value); }
-	bool addFirst(T&& value) { return this->addFirstInternal<T>(std::move(value)); }
+	bool addFirst(T&& value) { return this->addFirstInternal<T>(sfz_move(value)); }
 	bool addFirst() { return this->addFirstInternal<T>(T()); }
 
 	// Removes the element at the end of the RingBuffer (i.e. last, high index). Returns true if
@@ -156,7 +157,7 @@ private:
 		// Add element to buffer
 		// Perfect forwarding: const reference: PerfectT == const T&, rvalue: PerfectT == T
 		// std::forward<PerfectT>(value) will then return the correct version of value
-		new (mDataPtr + lastArrayIndex) T(std::forward<PerfectT>(value));
+		new (mDataPtr + lastArrayIndex) T(sfz_forward(value));
 		mLastIndex += 1; // Must increment after element creation, due to multi-threading
 		return true;
 	}
@@ -180,7 +181,7 @@ private:
 		// Perfect forwarding: const reference: PerfectT == const T&, rvalue: PerfectT == T
 		// std::forward<PerfectT>(value) will then return the correct version of value
 		firstArrayIndex = mapIndex(mFirstIndex - 1);
-		new (mDataPtr + firstArrayIndex) T(std::forward<PerfectT>(value));
+		new (mDataPtr + firstArrayIndex) T(sfz_forward(value));
 		mFirstIndex -= 1; // Must decrement after element creation, due to multi-threading
 		return true;
 	}
@@ -192,7 +193,7 @@ private:
 
 		// Move out element and call destructor.
 		u64 firstArrayIndex = mapIndex(mFirstIndex);
-		if (out != nullptr) *out = std::move(mDataPtr[firstArrayIndex]);
+		if (out != nullptr) *out = sfz_move(mDataPtr[firstArrayIndex]);
 		mDataPtr[firstArrayIndex].~T();
 
 		// Increment index (after destructor called, because multi-threading)
@@ -210,7 +211,7 @@ private:
 		u64 lastArrayIndex = mapIndex(mLastIndex - 1);
 
 		// Move out element and call destructor.
-		if (out != nullptr) *out = std::move(mDataPtr[lastArrayIndex]);
+		if (out != nullptr) *out = sfz_move(mDataPtr[lastArrayIndex]);
 		mDataPtr[lastArrayIndex].~T();
 
 		// Decrement index (after destructor called, because multi-threading)

@@ -48,7 +48,7 @@ enum class IniLocation {
 
 using InitFunc = void(void* userPtr);
 using UpdateFunc = UpdateOp(
-	float deltaSecs,
+	f32 deltaSecs,
 	const SDL_Event* events,
 	u32 numEvents,
 	const RawInputState* rawFrameInput,

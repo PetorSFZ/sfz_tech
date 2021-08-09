@@ -120,7 +120,7 @@ struct RenderCmd final {
 
 struct RenderDataView final {
 	const Vertex* vertices = nullptr;
-	const uint16_t* indices = nullptr;
+	const u16* indices = nullptr;
 	const RenderCmd* commands = nullptr;
 	u32 numVertices = 0;
 	u32 numIndices = 0;
@@ -211,8 +211,8 @@ void registerDefaultAttribute(const char* attribName, Attribute attribute);
 // (x,y) we could interpret is as being in the center of the object (H_CENTER, V_CENTER), or maybe
 // in the lower-left corner of the object (LEFT, BOTTOM).
 
-enum class HAlign : int16_t { LEFT = -1, CENTER = 0, RIGHT = 1 };
-enum class VAlign : int16_t { BOTTOM = -1, CENTER = 0, TOP = 1 };
+enum class HAlign : i16 { LEFT = -1, CENTER = 0, RIGHT = 1 };
+enum class VAlign : i16 { BOTTOM = -1, CENTER = 0, TOP = 1 };
 
 constexpr HAlign LEFT = HAlign::LEFT;
 constexpr HAlign H_CENTER = HAlign::CENTER;

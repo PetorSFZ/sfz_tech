@@ -21,7 +21,6 @@
 #pragma once
 
 #include <new> // placement new
-#include <utility> // std::move, std::forward, std::swap
 
 #include "sfz.h"
 #include "skipifzero.hpp"
@@ -38,7 +37,7 @@ T* sfz_new(SfzAllocator* allocator, SfzDbgInfo dbg, Args&&... args) noexcept
 	if (memPtr == nullptr) return nullptr;
 
 	// Creates object (placement new), terminates program if constructor throws exception.
-	return new(memPtr) T(std::forward<Args>(args)...);
+	return new(memPtr) T(sfz_forward(args)...);
 }
 
 // Deconstructs a C++ object created using sfz_new.
@@ -60,9 +59,6 @@ namespace sfz {
 template<typename T>
 class UniquePtr final {
 public:
-	// Constructors & destructors
-	// --------------------------------------------------------------------------------------------
-
 	SFZ_DECLARE_DROP_TYPE(UniquePtr);
 
 	// Creates an empty UniquePtr (holding nullptr, no allocator set)
@@ -77,9 +73,6 @@ public:
 	template<typename T2>
 	UniquePtr(UniquePtr<T2>&& subclassPtr) noexcept { *this = subclassPtr.template castTake<T>(); }
 
-	// State methods
-	// --------------------------------------------------------------------------------------------
-
 	void destroy() noexcept
 	{
 		if (mPtr == nullptr) return;
@@ -87,9 +80,6 @@ public:
 		mPtr = nullptr;
 		mAllocator = nullptr;
 	}
-
-	// Methods
-	// --------------------------------------------------------------------------------------------
 
 	T* get() const noexcept { return mPtr; }
 	SfzAllocator* allocator() const noexcept { return mAllocator; }
@@ -113,9 +103,6 @@ public:
 		return tmp;
 	}
 
-	// Operators
-	// --------------------------------------------------------------------------------------------
-
 	T& operator* () const noexcept { return *mPtr; }
 	T* operator-> () const noexcept { return mPtr; }
 
@@ -126,9 +113,6 @@ public:
 	bool operator!= (std::nullptr_t) const noexcept { return this->mPtr != nullptr; }
 
 private:
-	// Private members
-	// --------------------------------------------------------------------------------------------
-
 	T* mPtr = nullptr;
 	SfzAllocator* mAllocator = nullptr;
 };
@@ -137,7 +121,7 @@ private:
 template<typename T, typename... Args>
 UniquePtr<T> makeUnique(SfzAllocator* allocator, SfzDbgInfo dbg, Args&&... args) noexcept
 {
-	return UniquePtr<T>(sfz_new<T>(allocator, dbg, std::forward<Args>(args)...), allocator);
+	return UniquePtr<T>(sfz_new<T>(allocator, dbg, sfz_forward(args)...), allocator);
 }
 
 } // namespace sfz

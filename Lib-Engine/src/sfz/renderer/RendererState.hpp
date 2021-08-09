@@ -76,7 +76,7 @@ struct RendererState final {
 	// Profiler
 	zg::Profiler profiler;
 	PerFrameData<FrameProfilingIDs> frameMeasurementIds;
-	float lastRetrievedFrameTimeMs = 0.0f;
+	f32 lastRetrievedFrameTimeMs = 0.0f;
 	u64 lastRetrievedFrameTimeFrameIdx = ~0ull;
 
 	// UI

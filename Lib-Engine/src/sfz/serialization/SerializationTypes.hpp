@@ -44,7 +44,7 @@ class OptVal final {
 public:
 	OptVal() = default;
 	OptVal(const T& val) { set(val); mDefault = true; }
-	OptVal(T&& val) { set(std::move(val)); mDefault = true; }
+	OptVal(T&& val) { set(sfz_move(val)); mDefault = true; }
 
 	bool valid() const { return mValid; }
 	bool isDefault() const { return mDefault; }
@@ -53,7 +53,7 @@ public:
 	const T& get() const { sfz_assert(mValid); return mVal; }
 
 	void set(const T& val) { mValid = true; mDefault = false; mVal = val; }
-	void set(T&& val) { mValid = true; mDefault = false; mVal = std::move(val); }
+	void set(T&& val) { mValid = true; mDefault = false; mVal = sfz_move(val); }
 
 	void unset() { this->mValid = false; this->mDefault = false; this->mVal = {}; }
 

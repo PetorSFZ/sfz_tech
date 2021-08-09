@@ -53,7 +53,7 @@ bool AudioEngine::init(SfzAllocator* allocator) noexcept
 
 void AudioEngine::swap(AudioEngine& other) noexcept
 {
-	std::swap(this->mState, other.mState);
+	sfz::swap(this->mState, other.mState);
 }
 
 void AudioEngine::destroy() noexcept

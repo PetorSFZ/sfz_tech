@@ -45,9 +45,9 @@ struct TextureResource final {
 
 	// Whether resolution should be scaled relative screen resolution
 	bool screenRelativeResolution = false;
-	float resolutionScale = 1.0f;
+	f32 resolutionScale = 1.0f;
 	Setting* resolutionScaleSetting = nullptr;
-	float resScaleSettingScale = 1.0f; // Amount to scale versus value in setting
+	f32 resScaleSettingScale = 1.0f; // Amount to scale versus value in setting
 
 	// Whether resolution is directly controlled by a setting
 	bool settingControlledRes = false;
@@ -80,11 +80,11 @@ struct TextureResource final {
 		const char* name,
 		ZgTextureFormat format,
 		i32x2 screenRes,
-		float scale,
+		f32 scale,
 		Setting* scaleSetting = nullptr,
 		ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT,
 		bool committedAllocation = false,
-		float resScaleSettingScale = 1.0f);
+		f32 resScaleSettingScale = 1.0f);
 
 	static TextureResource createSettingControlled(
 		const char* name,

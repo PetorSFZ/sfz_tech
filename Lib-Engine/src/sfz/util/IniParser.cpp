@@ -275,7 +275,7 @@ bool IniParser::load() noexcept
 			else {
 				item.type = ItemType::NUMBER;
 				item.i = std::atoi(startPtr + index);
-				item.f = (float)std::atof(startPtr + index);
+				item.f = (f32)std::atof(startPtr + index);
 				int floatToint = (int)item.f;
 				if (item.i != floatToint) {
 					printLoadError(mPath, line.lineNumber, "Invalid value.");
@@ -316,7 +316,7 @@ bool IniParser::load() noexcept
 	}
 
 	// Swap the new parse tree with the old one and return
-	mSections = std::move(newSections);
+	mSections = sfz_move(newSections);
 	return true;
 }
 
@@ -352,7 +352,7 @@ bool IniParser::save() noexcept
 			// Print items content to string
 			switch (item.type) {
 			case ItemType::NUMBER:
-				if (sfz::eqf(std::round(item.f), item.f)) {
+				if (sfz::eqf(::roundf(item.f), item.f)) {
 					str.printfAppend("%s=%i", item.str.str(), item.i);
 				} else {
 					str.printfAppend("%s=%f", item.str.str(), item.f);
@@ -396,7 +396,7 @@ bool IniParser::save() noexcept
 // IniParser: Getters
 // ------------------------------------------------------------------------------------------------
 
-const int32_t* IniParser::getInt(const char* section, const char* key) const noexcept
+const i32* IniParser::getInt(const char* section, const char* key) const noexcept
 {
 	// Attempt to find item, return nullptr if it doesn't exist
 	const Item* itemPtr = this->findItem(section, key);
@@ -407,7 +407,7 @@ const int32_t* IniParser::getInt(const char* section, const char* key) const noe
 	return &itemPtr->i;
 }
 
-const float* IniParser::getFloat(const char* section, const char* key) const noexcept
+const f32* IniParser::getFloat(const char* section, const char* key) const noexcept
 {
 	// Attempt to find item, return nullptr if it doesn't exist
 	const Item* itemPtr = this->findItem(section, key);
@@ -432,20 +432,20 @@ const bool* IniParser::getBool(const char* section, const char* key) const noexc
 // IniParser: Setters
 // ------------------------------------------------------------------------------------------------
 
-void IniParser::setInt(const char* section, const char* key, int32_t value) noexcept
+void IniParser::setInt(const char* section, const char* key, i32 value) noexcept
 {
 	Item* itemPtr = this->findItemEnsureExists(section, key);
 	itemPtr->type = ItemType::NUMBER;
 	itemPtr->i = value;
-	itemPtr->f = static_cast<float>(value);
+	itemPtr->f = static_cast<f32>(value);
 }
 
-void IniParser::setFloat(const char* section, const char* key, float value) noexcept
+void IniParser::setFloat(const char* section, const char* key, f32 value) noexcept
 {
 	Item* itemPtr = this->findItemEnsureExists(section, key);
 	itemPtr->type = ItemType::NUMBER;
 	itemPtr->f = value;
-	itemPtr->i = static_cast<int32_t>(std::round(value));
+	itemPtr->i = static_cast<i32>(::roundf(value));
 }
 
 void IniParser::setBool(const char* section, const char* key, bool value) noexcept
@@ -458,8 +458,8 @@ void IniParser::setBool(const char* section, const char* key, bool value) noexce
 // IniParser: Sanitizers
 // ------------------------------------------------------------------------------------------------
 
-int32_t IniParser::sanitizeInt(const char* section, const char* key,
-                               int32_t defaultValue, int32_t minValue, int32_t maxValue) noexcept
+i32 IniParser::sanitizeInt(const char* section, const char* key,
+                               i32 defaultValue, i32 minValue, i32 maxValue) noexcept
 {
 	sfz_assert(minValue <= maxValue);
 	const Item* itemPtr = this->findItem(section, key);
@@ -468,7 +468,7 @@ int32_t IniParser::sanitizeInt(const char* section, const char* key,
 		itemPtr = this->findItem(section, key);
 	}
 
-	int32_t value = itemPtr->i;
+	i32 value = itemPtr->i;
 	if (value > maxValue) {
 		value = maxValue;
 		this->setInt(section, key, value);
@@ -480,8 +480,8 @@ int32_t IniParser::sanitizeInt(const char* section, const char* key,
 	return value;
 }
 
-float IniParser::sanitizeFloat(const char* section, const char* key,
-                               float defaultValue, float minValue, float maxValue) noexcept
+f32 IniParser::sanitizeFloat(const char* section, const char* key,
+                               f32 defaultValue, f32 minValue, f32 maxValue) noexcept
 {
 	sfz_assert(minValue <= maxValue);
 	const Item* itemPtr = this->findItem(section, key);
@@ -490,7 +490,7 @@ float IniParser::sanitizeFloat(const char* section, const char* key,
 		itemPtr = this->findItem(section, key);
 	}
 
-	float value = itemPtr->f;
+	f32 value = itemPtr->f;
 	if (value > maxValue) {
 		value = maxValue;
 		this->setFloat(section, key, value);
@@ -536,7 +536,7 @@ const char* IniParser::ItemAccessor::getKey() const noexcept
 	return mIniParser->mSections[mSectionIndex].items[mKeyIndex].str.str();
 }
 
-const int32_t* IniParser::ItemAccessor::getInt() const noexcept
+const i32* IniParser::ItemAccessor::getInt() const noexcept
 {
 	const Item& item = mIniParser->mSections[mSectionIndex].items[mKeyIndex];
 	if (item.type == ItemType::NUMBER) {
@@ -545,7 +545,7 @@ const int32_t* IniParser::ItemAccessor::getInt() const noexcept
 	return nullptr;
 }
 
-const float* IniParser::ItemAccessor::getFloat() const noexcept
+const f32* IniParser::ItemAccessor::getFloat() const noexcept
 {
 	const Item& item = mIniParser->mSections[mSectionIndex].items[mKeyIndex];
 	if (item.type == ItemType::NUMBER) {

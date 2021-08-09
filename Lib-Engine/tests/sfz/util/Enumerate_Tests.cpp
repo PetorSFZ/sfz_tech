@@ -56,17 +56,17 @@ struct Counting {
 	}
 	Counting(Counting&& other) noexcept
 	{
-		std::swap(this->payload, other.payload);
-		std::swap(this->copyCounter, other.copyCounter);
-		std::swap(this->moveCounter, other.moveCounter);
+		sfz::swap(this->payload, other.payload);
+		sfz::swap(this->copyCounter, other.copyCounter);
+		sfz::swap(this->moveCounter, other.moveCounter);
 		this->moveCounter += 1;
 		other.moveCounter += 1;
 	}
 	Counting& operator= (Counting&& other) noexcept
 	{
-		std::swap(this->payload, other.payload);
-		std::swap(this->copyCounter, other.copyCounter);
-		std::swap(this->moveCounter, other.moveCounter);
+		sfz::swap(this->payload, other.payload);
+		sfz::swap(this->copyCounter, other.copyCounter);
+		sfz::swap(this->moveCounter, other.moveCounter);
 		this->moveCounter += 1;
 		other.moveCounter += 1;
 		return *this;

@@ -29,7 +29,7 @@ struct Circle final {
 	// --------------------------------------------------------------------------------------------
 
 	f32x2 pos;
-	float radius;
+	f32 radius;
 
 	// Constructors and destructors
 	// --------------------------------------------------------------------------------------------
@@ -39,13 +39,13 @@ struct Circle final {
 	Circle& operator= (const Circle&) noexcept = default;
 	~Circle() noexcept = default;
 
-	inline Circle(f32x2 centerPos, float radius) noexcept
+	inline Circle(f32x2 centerPos, f32 radius) noexcept
 	:
 		pos(centerPos),
 		radius(radius)
 	{ }
 
-	inline Circle(float centerX, float centerY, float radius) noexcept
+	inline Circle(f32 centerX, f32 centerY, f32 radius) noexcept
 	:
 		pos(centerX, centerY),
 		radius(radius)
@@ -54,8 +54,8 @@ struct Circle final {
 	// Public getters
 	// --------------------------------------------------------------------------------------------
 
-	inline float x() const noexcept { return pos.x; }
-	inline float y() const noexcept { return pos.y; }
+	inline f32 x() const noexcept { return pos.x; }
+	inline f32 y() const noexcept { return pos.y; }
 
 	// Comparison operators
 	// --------------------------------------------------------------------------------------------

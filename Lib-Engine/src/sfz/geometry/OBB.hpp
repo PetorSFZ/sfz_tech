@@ -55,7 +55,7 @@ struct OBB final {
 	OBB(f32x3 center, f32x3 xAxis, f32x3 yAxis, f32x3 zAxis, f32x3 extents) noexcept;
 	OBB(f32x3 center, const f32x3 axes[3], f32x3 extents) noexcept;
 	OBB(f32x3 center, f32x3 xAxis, f32x3 yAxis, f32x3 zAxis,
-		float xExtent, float yExtent, float zExtent) noexcept;
+		f32 xExtent, f32 yExtent, f32 zExtent) noexcept;
 	explicit OBB(const AABB& aabb) noexcept;
 
 	// Member functions
@@ -70,14 +70,14 @@ struct OBB final {
 	// --------------------------------------------------------------------------------------------
 
 	f32x3 extents() const noexcept { return halfExtents * 2.0f; }
-	float xExtent() const noexcept { return halfExtents.x * 2.0f; }
-	float yExtent() const noexcept { return halfExtents.y * 2.0f; }
-	float zExtent() const noexcept { return halfExtents.z * 2.0f; }
+	f32 xExtent() const noexcept { return halfExtents.x * 2.0f; }
+	f32 yExtent() const noexcept { return halfExtents.y * 2.0f; }
+	f32 zExtent() const noexcept { return halfExtents.z * 2.0f; }
 
 	void setExtents(const f32x3& newExtents) noexcept;
-	void setXExtent(float newXExtent) noexcept;
-	void setYExtent(float newYExtent) noexcept;
-	void setZExtent(float newZExtent) noexcept;
+	void setXExtent(f32 newXExtent) noexcept;
+	void setYExtent(f32 newYExtent) noexcept;
+	void setZExtent(f32 newZExtent) noexcept;
 
 	f32x3& axis(u32 idx) noexcept { return rotation.row(idx); }
 	const f32x3& axis(u32 idx) const noexcept { return rotation.row(idx); }

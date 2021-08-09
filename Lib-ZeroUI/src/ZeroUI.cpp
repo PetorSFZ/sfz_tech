@@ -297,7 +297,7 @@ void clearSurfaces()
 	// Recycle in use surfaces and then clear list
 	for (Surface& surface : ctx().surfaces) {
 		surface.clear();
-		ctx().recycledSurfaces.add(std::move(surface));
+		ctx().recycledSurfaces.add(sfz_move(surface));
 	}
 	ctx().surfaces.clear();
 }
@@ -309,7 +309,7 @@ void clearSurface(const char* name)
 	});
 	if (surface != nullptr) {
 		surface->clear();
-		ctx().recycledSurfaces.add(std::move(*surface));
+		ctx().recycledSurfaces.add(sfz_move(*surface));
 		ctx().surfaces.removeQuickSwap(u32(surface - ctx().surfaces.data()));
 	}
 }

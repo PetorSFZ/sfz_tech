@@ -68,7 +68,7 @@ sfz::Mesh createFullscreenTriangle(SfzAllocator* allocator, f32 clipSpaceDepth)
 	comp.firstIndex = 0;
 	comp.numIndices = NUM_TRIANGLE_INDICES;
 	mesh.components.init(1, allocator, sfz_dbg(""));
-	mesh.components.add(std::move(comp));
+	mesh.components.add(sfz_move(comp));
 
 	// Material
 	mesh.materials.init(1, allocator, sfz_dbg(""));

@@ -92,9 +92,9 @@ GameStateContainer GameStateContainer::clone(SfzAllocator* allocator) noexcept
 
 void GameStateContainer::swap(GameStateContainer& other) noexcept
 {
-	std::swap(this->mAllocator, other.mAllocator);
-	std::swap(this->mGameStateMemoryChunk, other.mGameStateMemoryChunk);
-	std::swap(this->mNumBytes, other.mNumBytes);
+	sfz::swap(this->mAllocator, other.mAllocator);
+	sfz::swap(this->mGameStateMemoryChunk, other.mGameStateMemoryChunk);
+	sfz::swap(this->mNumBytes, other.mNumBytes);
 }
 
 void GameStateContainer::destroy() noexcept

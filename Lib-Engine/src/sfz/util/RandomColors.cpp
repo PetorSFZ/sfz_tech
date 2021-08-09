@@ -25,15 +25,15 @@ namespace sfz {
 // Random color generator
 // ------------------------------------------------------------------------------------------------
 
-f32x3 getRandomColor(u32 idx, float sat, float val, float startNoise)
+f32x3 getRandomColor(u32 idx, f32 sat, f32 val, f32 startNoise)
 {
 	// Inspired by: https://martin.ankerl.com/2009/12/09/how-to-create-random-colors-programmatically/
-	constexpr float GOLDEN_RATIO = 1.61803f;
-	constexpr float HUE_DIFF = 360.0f * (1.0f / GOLDEN_RATIO);
+	constexpr f32 GOLDEN_RATIO = 1.61803f;
+	constexpr f32 HUE_DIFF = 360.0f * (1.0f / GOLDEN_RATIO);
 	sfz_assert(0.0f <= sat && sat <= 1.0f);
 	sfz_assert(0.0f <= val && val <= 1.0f);
 
-	float hue = float(idx) * HUE_DIFF + startNoise;
+	f32 hue = f32(idx) * HUE_DIFF + startNoise;
 	hue = fmodf(hue, 360.0f);
 	const f32x3 hsv = f32x3(hue, sat, val);
 	

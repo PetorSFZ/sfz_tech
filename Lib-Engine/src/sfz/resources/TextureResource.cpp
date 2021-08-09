@@ -40,9 +40,9 @@ static u32 sizeOfElement(ImageType imageType) noexcept
 	case ImageType::RG_U8: return 2 * sizeof(u8);
 	case ImageType::RGBA_U8: return 4 * sizeof(u8);
 
-	case ImageType::R_F32: return 1 * sizeof(float);
-	case ImageType::RG_F32: return 2 * sizeof(float);
-	case ImageType::RGBA_F32: return 4 * sizeof(float);
+	case ImageType::R_F32: return 1 * sizeof(f32);
+	case ImageType::RG_F32: return 2 * sizeof(f32);
+	case ImageType::RGBA_F32: return 4 * sizeof(f32);
 	}
 	sfz_assert(false);
 	return 0;
@@ -66,12 +66,12 @@ void generateMipmapSpecific(
 	const T* srcImg = reinterpret_cast<const T*>(prevLevel.rawData);
 	T* dstImg = reinterpret_cast<T*>(currLevel.rawData.data());
 
-	for (int32_t y = 0; y < currLevel.height; y++) {
+	for (i32 y = 0; y < currLevel.height; y++) {
 		T* dstRow = dstImg + y * currLevel.width;
 		const T* srcRow0 = srcImg + ((y * 2) + 0) * prevLevel.width;
 		const T* srcRow1 = srcImg + ((y * 2) + 1) * prevLevel.width;
 
-		for (int32_t x = 0; x < currLevel.width; x++) {
+		for (i32 x = 0; x < currLevel.width; x++) {
 			const T* srcPixelRow0 = srcRow0 + (x * 2);
 			const T* srcPixelRow1 = srcRow1 + (x * 2);
 			dstRow[x] = averager(
@@ -130,13 +130,13 @@ bool TextureResource::needRebuild(i32x2 screenRes) const
 
 	i32x2 newRes = i32x2(0);
 	if (screenRelativeResolution) {
-		float resScale = this->resolutionScale;
+		f32 resScale = this->resolutionScale;
 		if (this->resolutionScaleSetting != nullptr) {
 			resScale = resolutionScaleSetting->floatValue() * this->resScaleSettingScale;
 		}
 		f32x2 scaledRes = f32x2(screenRes) * resScale;
-		newRes.x = u32(std::round(scaledRes.x));
-		newRes.y = u32(std::round(scaledRes.y));
+		newRes.x = u32(::roundf(scaledRes.x));
+		newRes.y = u32(::roundf(scaledRes.y));
 	}
 	else if (settingControlledRes) {
 		sfz_assert(0 < controlledResSetting->intValue() && controlledResSetting->intValue() <= 16384);
@@ -158,8 +158,8 @@ ZgResult TextureResource::build(i32x2 screenRes)
 			this->resolutionScale = resolutionScaleSetting->floatValue() * this->resScaleSettingScale;
 		}
 		f32x2 scaledRes = f32x2(screenRes) * this->resolutionScale;
-		newRes.x = u32(std::round(scaledRes.x));
-		newRes.y = u32(std::round(scaledRes.y));
+		newRes.x = u32(::roundf(scaledRes.x));
+		newRes.y = u32(::roundf(scaledRes.y));
 	}
 	else if (settingControlledRes) {
 		sfz_assert(0 < controlledResSetting->intValue() && controlledResSetting->intValue() <= 16384);
@@ -308,11 +308,11 @@ TextureResource TextureResource::createScreenRelative(
 	const char* name,
 	ZgTextureFormat format,
 	i32x2 screenRes,
-	float scale,
+	f32 scale,
 	Setting* scaleSetting,
 	ZgTextureUsage usage,
 	bool committedAllocation,
-	float resScaleSettingScale)
+	f32 resScaleSettingScale)
 {
 	TextureResource resource;
 	resource.name = strID(name);

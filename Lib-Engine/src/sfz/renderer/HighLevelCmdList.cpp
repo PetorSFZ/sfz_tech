@@ -38,7 +38,7 @@ void HighLevelCmdList::init(
 	this->destroy();
 	mName = strID(cmdListName);
 	mCurrFrameIdx = currFrameIdx;
-	mCmdList = std::move(cmdList);
+	mCmdList = sfz_move(cmdList);
 	mResources = &sfz::getResourceManager();
 	mShaders = &sfz::getShaderManager();
 	mDefaultFB = defaultFB;

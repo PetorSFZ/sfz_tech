@@ -72,8 +72,8 @@ UTEST(HSV, hsv_to_rgb)
 {
 	// If saturation and value is 0, rgb should be 0 regardless of hue value
 	{
-		constexpr uint32_t NUM_SAMPLES = 10;
-		for (uint32_t i = 1; i <= NUM_SAMPLES; i++) {
+		constexpr u32 NUM_SAMPLES = 10;
+		for (u32 i = 1; i <= NUM_SAMPLES; i++) {
 			const f32 hue = 360.0f * (f32(i) / f32(NUM_SAMPLES));
 			sfz::f32x3 rgb = sfz::hsvToRGB(sfz::f32x3(hue, 0.0f, 0.0f));
 			ASSERT_TRUE(sfz::eqf(rgb, sfz::f32x3(0.0f)));
@@ -82,8 +82,8 @@ UTEST(HSV, hsv_to_rgb)
 
 	// If saturation = 0 and value = 1, then rgb should be 1 regardless value
 	{
-		constexpr uint32_t NUM_SAMPLES = 10;
-		for (uint32_t i = 1; i <= NUM_SAMPLES; i++) {
+		constexpr u32 NUM_SAMPLES = 10;
+		for (u32 i = 1; i <= NUM_SAMPLES; i++) {
 			const f32 hue = 360.0f * (f32(i) / f32(NUM_SAMPLES));
 			sfz::f32x3 rgb = sfz::hsvToRGB(sfz::f32x3(hue, 0.0f, 1.0f));
 			ASSERT_TRUE(sfz::eqf(rgb, sfz::f32x3(1.0f)));
@@ -123,14 +123,14 @@ UTEST(HSV, hsv_to_rgb)
 UTEST(HSV, rgb_to_hsv_and_back)
 {
 	// Evenly distributed samples over rgb
-	constexpr uint32_t NUM_SAMPLES = 16;
-	for (uint32_t x = 1; x <= NUM_SAMPLES; x++) {
+	constexpr u32 NUM_SAMPLES = 16;
+	for (u32 x = 1; x <= NUM_SAMPLES; x++) {
 		const f32 xVal = f32(x) / f32(NUM_SAMPLES);
 
-		for (uint32_t y = 1; y <= NUM_SAMPLES; y++) {
+		for (u32 y = 1; y <= NUM_SAMPLES; y++) {
 			const f32 yVal = f32(y) / f32(NUM_SAMPLES);
 			
-			for (uint32_t z = 1; z <= NUM_SAMPLES; z++) {
+			for (u32 z = 1; z <= NUM_SAMPLES; z++) {
 				const f32 zVal = f32(z) / f32(NUM_SAMPLES);
 				
 				sfz::f32x3 rgbOriginal = sfz::f32x3(xVal, yVal, zVal);
@@ -146,14 +146,14 @@ UTEST(HSV, rgb_to_hsv_and_back)
 UTEST(HSV, hsv_to_rgb_and_back)
 {
 	// Evenly distributed samples over hsv
-	constexpr uint32_t NUM_SAMPLES = 16;
-	for (uint32_t x = 1; x <= (NUM_SAMPLES * 2); x++) {
+	constexpr u32 NUM_SAMPLES = 16;
+	for (u32 x = 1; x <= (NUM_SAMPLES * 2); x++) {
 		const f32 xVal = 359.9f * (f32(x) / f32(NUM_SAMPLES * 2));
 
-		for (uint32_t y = 1; y <= NUM_SAMPLES; y++) {
+		for (u32 y = 1; y <= NUM_SAMPLES; y++) {
 			const f32 yVal = f32(y) / f32(NUM_SAMPLES);
 
-			for (uint32_t z = 1; z <= NUM_SAMPLES; z++) {
+			for (u32 z = 1; z <= NUM_SAMPLES; z++) {
 				const f32 zVal = f32(z) / f32(NUM_SAMPLES);
 
 				sfz::f32x3 hsvOriginal = sfz::f32x3(xVal, yVal, zVal);

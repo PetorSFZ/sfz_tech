@@ -57,7 +57,7 @@ UTEST(Quaternion, constructors)
 		f32 angle = 60.0f;
 		f32 halfAngleRad = (angle * DEG_TO_RAD) / 2.0f;
 		f32x3 axis = normalize(f32x3(0.25f, 1.0f, 1.2f));
-		quat rot1(std::sin(halfAngleRad) * axis, std::cos(halfAngleRad));
+		quat rot1(::sinf(halfAngleRad) * axis, ::cosf(halfAngleRad));
 		quat rot2 = quat::rotationDeg(axis, angle);
 		ASSERT_TRUE(eqf(rot1, rot2));
 		ASSERT_TRUE(eqf(rot2.rotationAxis(), normalize(f32x3(0.25f, 1.0f, 1.2f))));
@@ -159,7 +159,7 @@ UTEST(Quaternion, quaternion_functions)
 	// rotate()
 	{
 		f32 halfAngle1 = (90.0f * DEG_TO_RAD) / 2.0f;
-		quat rot1(std::sin(halfAngle1) * f32x3(0.0f, 1.0f, 0.0f), std::cos(halfAngle1));
+		quat rot1(::sinf(halfAngle1) * f32x3(0.0f, 1.0f, 0.0f), ::cosf(halfAngle1));
 		f32x3 p = rotate(rot1, f32x3(1.0f, 0.0f, 0.0f));
 		ASSERT_TRUE(eqf(p, f32x3(0.0f, 0.0f, -1.0f)));
 		mat33 rot1mat = rot1.toMat33();

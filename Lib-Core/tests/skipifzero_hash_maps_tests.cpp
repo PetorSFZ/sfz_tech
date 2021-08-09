@@ -22,6 +22,8 @@
 #undef near
 #undef far
 
+#include <utility>
+
 #include "skipifzero.hpp"
 #include "skipifzero_allocators.hpp"
 #include "skipifzero_hash_maps.hpp"

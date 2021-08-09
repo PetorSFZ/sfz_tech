@@ -35,7 +35,7 @@ public:
 	inline Plane() noexcept = default;
 
 	/// dot(normal, x) - d = 0
-	inline Plane(const f32x3& normal, float d) noexcept;
+	inline Plane(const f32x3& normal, f32 d) noexcept;
 	/// dot(normal, x - position) = 0
 	inline Plane(const f32x3& normal, const f32x3& position) noexcept;
 
@@ -43,20 +43,20 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	/// Returns the signed distance to the plane. Positive if above, negative if below.
-	inline float signedDistance(const f32x3& point) const noexcept;
+	inline f32 signedDistance(const f32x3& point) const noexcept;
 
 	// Public getters/setters
 	// --------------------------------------------------------------------------------------------
 
 	inline const f32x3& normal() const noexcept { return mNormal; }
-	inline float d() const noexcept { return mD; }
+	inline f32 d() const noexcept { return mD; }
 
 private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
 	f32x3 mNormal;
-	float mD;
+	f32 mD;
 };
 
 } // namespace sfz

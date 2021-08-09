@@ -320,8 +320,8 @@ static str320 calculateBasePath(const char* path) noexcept
 static str96 getFileName(const char* path) noexcept
 {
 	str96 tmp;
-	int32_t len = int32_t(strlen(path));
-	for (int32_t i = len; i > 0; i--) {
+	i32 len = i32(strlen(path));
+	for (i32 i = len; i > 0; i--) {
 		char c = path[i-1];
 		if (c == '\\' || c == '/') {
 			tmp.printf("%s", path + i);
@@ -335,7 +335,7 @@ static str96 stripFileEnding(const str96& fileName) noexcept
 {
 	str96 tmp = fileName;
 
-	for (int32_t i = int32_t(fileName.size()) - 1; i >= 0; i--) {
+	for (i32 i = i32(fileName.size()) - 1; i >= 0; i--) {
 		const char c = fileName.str[i];
 		if (c == '.') {
 			tmp.str[i] = '\0';
@@ -365,7 +365,7 @@ static void writeMaterials(DynString& gltf, const Array<phMaterial>& materials) 
 	gltf.printfAppend("%s", "\t\"materials\": [\n");
 
 	auto u8tof32 = [](u8 val) {
-		return float(val) * (1.0f / 255.0f);
+		return f32(val) * (1.0f / 255.0f);
 	};
 
 	for (u32 i = 0; i < materials.size(); i++) {

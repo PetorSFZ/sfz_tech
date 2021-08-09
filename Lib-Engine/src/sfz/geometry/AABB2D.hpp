@@ -44,7 +44,7 @@ struct AABB2D final {
 		max(centerPos + (dimensions * 0.5f))
 	{ }
 
-	inline AABB2D(float centerX, float centerY, float width, float height) noexcept
+	inline AABB2D(f32 centerX, f32 centerY, f32 width, f32 height) noexcept
 	:
 		min(f32x2(centerX - (width * 0.5f), centerY - (height * 0.5f))),
 		max(f32x2(centerX + (width * 0.5f), centerY + (height * 0.5f)))
@@ -54,11 +54,11 @@ struct AABB2D final {
 	// --------------------------------------------------------------------------------------------
 
 	inline f32x2 position() const noexcept { return (min + max) * 0.5f; }
-	inline float x() const noexcept { return (min.x + max.x) * 0.5f; }
-	inline float y() const noexcept { return (min.y + max.y) * 0.5f; }
+	inline f32 x() const noexcept { return (min.x + max.x) * 0.5f; }
+	inline f32 y() const noexcept { return (min.y + max.y) * 0.5f; }
 	inline f32x2 dimensions() const noexcept { return max - min; }
-	inline float width() const noexcept { return max.x - min.x; }
-	inline float height() const noexcept { return max.y - min.y; }
+	inline f32 width() const noexcept { return max.x - min.x; }
+	inline f32 height() const noexcept { return max.y - min.y; }
 
 	// Comparison operators
 	// --------------------------------------------------------------------------------------------

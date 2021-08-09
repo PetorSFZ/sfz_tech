@@ -44,8 +44,8 @@ ZgResult FramebufferResource::build(i32x2 screenRes)
 			this->resolutionScale = resolutionScaleSetting->floatValue();
 		}
 		f32x2 scaledRes = f32x2(screenRes) * this->resolutionScale;
-		this->res.x = u32(std::round(scaledRes.x));
-		this->res.y = u32(std::round(scaledRes.y));
+		this->res.x = u32(::roundf(scaledRes.x));
+		this->res.y = u32(::roundf(scaledRes.y));
 	}
 	else if (settingControlledRes) {
 		this->res = i32x2(controlledResSetting->intValue());
@@ -100,7 +100,7 @@ FramebufferResourceBuilder& FramebufferResourceBuilder::setFixedRes(i32x2 resIn)
 	return *this;
 }
 
-FramebufferResourceBuilder& FramebufferResourceBuilder::setScreenRelativeRes(float scale)
+FramebufferResourceBuilder& FramebufferResourceBuilder::setScreenRelativeRes(f32 scale)
 {
 	this->screenRelativeResolution = true;
 	this->resolutionScale = scale;

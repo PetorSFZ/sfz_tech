@@ -145,8 +145,8 @@ struct Mat final {
 	{
 		static_assert(H >= 3 && W >= 3, "Only for 3x3 matrices and larger");
 		Vec<T,3> r = normalize(axis);
-		T c = cos(angleRad);
-		T s = sin(angleRad);
+		T c = (T)cos(angleRad);
+		T s = (T)sin(angleRad);
 		T cm1 = T(1) - c;
 		// Matrix by Goldman, page 71 of Real-Time Rendering.
 		return Mat(Mat<T,3,3>(
@@ -385,7 +385,7 @@ struct Quat final {
 	{
 		const T halfAngleRad = angleRad * T(0.5);
 		const Vec<T,3> normalizedAxis = normalize(axis);
-		return Quat(sin(halfAngleRad) * normalizedAxis, cos(halfAngleRad));
+		return Quat(sinf(halfAngleRad) * normalizedAxis, cosf(halfAngleRad));
 	}
 
 	// Constructs a Quaternion from Euler angles. The rotation around the z axis is performed first,
@@ -394,12 +394,12 @@ struct Quat final {
 	{
 		const T DEG_ANGLE_TO_RAD_HALF_ANGLE = (T(3.14159265358979323846f) / T(180.0f)) / T(2.0f);
 
-		T cosZ = cos(zDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
-		T sinZ = sin(zDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
-		T cosY = cos(yDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
-		T sinY = sin(yDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
-		T cosX = cos(xDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
-		T sinX = sin(xDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+		T cosZ = (T)cos(zDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+		T sinZ = (T)sin(zDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+		T cosY = (T)cos(yDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+		T sinY = (T)sin(yDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+		T cosX = (T)cos(xDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+		T sinX = (T)sin(xDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
 
 		Quat tmp;
 		tmp.x = cosZ * sinX * cosY - sinZ * cosX * sinY;
@@ -420,7 +420,7 @@ struct Quat final {
 
 		// Check the diagonal
 		if (trace > T(0)) {
-			T s = std::sqrt(trace + T(1));
+			T s = (T)sqrt(trace + T(1));
 			tmp.w = s * T(0.5);
 
 			T t = T(0.5) / s;
@@ -438,7 +438,7 @@ struct Quat final {
 			int j = NEXT[i];
 			int k = NEXT[j];
 
-			T s = sqrt((m.at(i, j) - (m.at(j, j) + m.at(k, k))) + T(1));
+			T s = (T)sqrt((m.at(i, j) - (m.at(j, j) + m.at(k, k))) + T(1));
 			tmp.vector[i] = s * T(0.5);
 
 			T t = (s != T(0.0)) ? (T(0.5) / s) : s;
@@ -460,7 +460,7 @@ struct Quat final {
 	T rotationAngleDeg() const
 	{
 		const T RAD_ANGLE_TO_DEG_NON_HALF_ANGLE = (T(180) / T(3.14159265358979323846)) * T(2);
-		T halfAngleRad = acos(this->w);
+		T halfAngleRad = (T)acos(this->w);
 		return halfAngleRad * RAD_ANGLE_TO_DEG_NON_HALF_ANGLE;
 	}
 
@@ -470,9 +470,9 @@ struct Quat final {
 	{
 		const T RAD_ANGLE_TO_DEG = T(180) / T(3.14159265358979323846);
 		Vec<T,3> tmp;
-		tmp.x = atan2(T(2) * (w * x + y * z), T(1) - T(2) * (x * x + y * y)) * RAD_ANGLE_TO_DEG;
-		tmp.y = asin(sfz::min(sfz::max(2.0f * (w * y - z * x), -T(1)), T(1))) * RAD_ANGLE_TO_DEG;
-		tmp.z = atan2(T(2) * (w * z + x * y), T(1) - T(2) * (y * y + z * z)) * RAD_ANGLE_TO_DEG;
+		tmp.x = atan2f(T(2) * (w * x + y * z), T(1) - T(2) * (x * x + y * y)) * RAD_ANGLE_TO_DEG;
+		tmp.y = asinf(sfz::min(sfz::max(2.0f * (w * y - z * x), -T(1)), T(1))) * RAD_ANGLE_TO_DEG;
+		tmp.z = atan2f(T(2) * (w * z + x * y), T(1) - T(2) * (y * y + z * z)) * RAD_ANGLE_TO_DEG;
 		return tmp;
 	}
 

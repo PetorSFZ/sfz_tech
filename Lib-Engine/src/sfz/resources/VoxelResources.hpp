@@ -36,19 +36,19 @@ struct VoxelMaterial final {
 	u8x4 originalColor = u8x4(u8(0)); // Gamma space
 
 	f32x3 albedo = f32x3(1.0f, 0.0f, 0.0f); // Gamma space, usually same as original color
-	float roughness = 1.0f; // Linear space
+	f32 roughness = 1.0f; // Linear space
 	f32x3 emissiveColor = f32x3(0.0f); // Gamma space, samma range as albeddo
-	float emissiveStrength = 1.0f; // Linear strength of emissive color
-	float metallic = 0.0f; // Linear space, but typically only 0.0 or 1.0 is valid.
+	f32 emissiveStrength = 1.0f; // Linear strength of emissive color
+	f32 metallic = 0.0f; // Linear space, but typically only 0.0 or 1.0 is valid.
 };
 
 struct ShaderVoxelMaterial final {
 	f32x3 albedo = f32x3(1.0f, 0.0f, 0.0f);
-	float roughness = 1.0f;
+	f32 roughness = 1.0f;
 	f32x3 emissive = f32x3(0.0f); // Linear unclamped range, linearize(emissiveColor) * emissiveStrength
-	float metallic = 0.0f;
+	f32 metallic = 0.0f;
 };
-static_assert(sizeof(ShaderVoxelMaterial) == sizeof(float) * 8, "ShaderVoxelMaterial is padded");
+static_assert(sizeof(ShaderVoxelMaterial) == sizeof(f32) * 8, "ShaderVoxelMaterial is padded");
 
 // VoxelModelResource
 // ------------------------------------------------------------------------------------------------

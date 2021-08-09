@@ -749,7 +749,7 @@ static ZgResult createRootSignature(
 		sfz_assert(cbuffer.sizeInBytes <= 1024);
 		parameter.InitAsConstants(
 			cbuffer.sizeInBytes / 4, cbuffer.bufferRegister, 0, D3D12_SHADER_VISIBILITY_ALL);
-		parameters.add(std::move(parameter));
+		parameters.add(sfz_move(parameter));
 		sfz_assert(!parameters.isFull());
 
 		// Add to push constants mappings
@@ -884,26 +884,26 @@ static ZgResult createRootSignature(
 			CD3DX12_DESCRIPTOR_RANGE1 range;
 			range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV,
 				rootSignatureOut.constBuffers.size(), dynamicConstBuffersFirstRegister);
-			ranges.add(std::move(range));
+			ranges.add(sfz_move(range));
 		}
 		if (!rootSignatureOut.unorderedBuffers.isEmpty() || !rootSignatureOut.unorderedTextures.isEmpty()) {
 			CD3DX12_DESCRIPTOR_RANGE1 range;
 			range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV,
 				numUnorderedRegisters,
 				firstDynamicUnorderedRegister);
-			ranges.add(std::move(range));
+			ranges.add(sfz_move(range));
 		}
 		if (!rootSignatureOut.textures.isEmpty()) {
 			CD3DX12_DESCRIPTOR_RANGE1 range;
 			range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
 				rootSignatureOut.textures.size(), dynamicTexturesFirstRegister);
-			ranges.add(std::move(range));
+			ranges.add(sfz_move(range));
 		}
 
 		// Create dynamic table parameter
 		CD3DX12_ROOT_PARAMETER1 parameter;
 		parameter.InitAsDescriptorTable(ranges.size(), ranges.data());
-		parameters.add(std::move(parameter));
+		parameters.add(sfz_move(parameter));
 	}
 
 	// Add static samplers

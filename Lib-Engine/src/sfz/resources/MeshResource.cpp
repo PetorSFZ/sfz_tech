@@ -37,8 +37,8 @@ ShaderMaterial cpuMaterialToShaderMaterial(const Material& cpuMaterial) noexcept
 	ShaderMaterial dst;
 	dst.albedo = f32x4(cpuMaterial.albedo) * (1.0f / 255.0f);
 	dst.emissive.xyz = cpuMaterial.emissive;
-	dst.roughness = float(cpuMaterial.roughness) * (1.0f / 255.0f);
-	dst.metallic = float(cpuMaterial.metallic) * (1.0f / 255.0f);
+	dst.roughness = f32(cpuMaterial.roughness) * (1.0f / 255.0f);
+	dst.metallic = f32(cpuMaterial.metallic) * (1.0f / 255.0f);
 	dst.hasAlbedoTex = cpuMaterial.albedoTex.isValid() ? 1 : 0;
 	dst.hasMetallicRoughnessTex = cpuMaterial.metallicRoughnessTex.isValid() ? 1 : 0;
 	dst.hasNormalTex = cpuMaterial.normalTex.isValid() ? 1 : 0;

@@ -102,7 +102,7 @@ UTEST(IO, read_text_file)
 {
 	const char* fpath = stupidFileName;
 	const char* strToWrite = "Hello World!\nHello World 2!\nHello World 3!";
-	size_t strToWriteLen = std::strlen(strToWrite);
+	size_t strToWriteLen = strlen(strToWrite);
 
 	bool fileExists = sfz::fileExists(fpath);
 	if (fileExists) {
@@ -116,7 +116,7 @@ UTEST(IO, read_text_file)
 
 	sfz::DynString fileStr = sfz::readTextFile(fpath);
 	ASSERT_TRUE(fileStr.size() == strToWriteLen);
-	ASSERT_TRUE(fileStr.size() == std::strlen(fileStr.str()));
+	ASSERT_TRUE(fileStr.size() == strlen(fileStr.str()));
 	ASSERT_TRUE(fileStr == strToWrite);
 
 	ASSERT_TRUE(sfz::deleteFile(fpath));
@@ -147,7 +147,7 @@ UTEST(IO, write_text_file)
 
 	sfz::DynString fileStr = sfz::readTextFile(fpath);
 	ASSERT_TRUE(fileStr.size() == strToWrite.size());
-	ASSERT_TRUE(fileStr.size() == std::strlen(fileStr.str()));
+	ASSERT_TRUE(fileStr.size() == strlen(fileStr.str()));
 	ASSERT_TRUE(fileStr == strToWrite.str());
 
 	ASSERT_TRUE(sfz::deleteFile(fpath));
@@ -158,7 +158,7 @@ UTEST(IO, write_text_file)
 
 	fileStr = sfz::readTextFile(fpath);
 	ASSERT_TRUE(fileStr.size() == 13);
-	ASSERT_TRUE(fileStr.size() == std::strlen(fileStr.str()));
+	ASSERT_TRUE(fileStr.size() == strlen(fileStr.str()));
 	ASSERT_TRUE(fileStr == "Hello World!\n");
 
 	ASSERT_TRUE(sfz::deleteFile(fpath));

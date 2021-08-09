@@ -62,23 +62,23 @@ u32 DynString::size() const noexcept
 // DynString: Public methods
 // ------------------------------------------------------------------------------------------------
 
-int32_t DynString::printf(const char* format, ...) noexcept
+i32 DynString::printf(const char* format, ...) noexcept
 {
 	va_list args;
 	va_start(args, format);
-	int32_t res = std::vsnprintf(mString.data(), mString.capacity(), format, args);
+	i32 res = std::vsnprintf(mString.data(), mString.capacity(), format, args);
 	va_end(args);
 	sfz_assert(res >= 0);
 	mString.hackSetSize(static_cast<u32>(res) + 1); // +1 for null-terminator
 	return res;
 }
 
-int32_t DynString::printfAppend(const char* format, ...) noexcept
+i32 DynString::printfAppend(const char* format, ...) noexcept
 {
 	va_list args;
 	va_start(args, format);
 	u32 len = this->size();
-	int32_t res = std::vsnprintf(mString.data() + len, mString.capacity() - len, format, args);
+	i32 res = std::vsnprintf(mString.data() + len, mString.capacity() - len, format, args);
 	va_end(args);
 	sfz_assert(res >= 0);
 	mString.hackSetSize(len + static_cast<u32>(res) + 1); // +1 for null-terminator

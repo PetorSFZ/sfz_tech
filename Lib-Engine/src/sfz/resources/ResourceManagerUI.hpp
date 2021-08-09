@@ -31,8 +31,8 @@ namespace sfz {
 
 inline void renderBuffersTab(ResourceManagerState& state)
 {
-	constexpr float offset = 200.0f;
-	constexpr float offset2 = 220.0f;
+	constexpr f32 offset = 200.0f;
+	constexpr f32 offset2 = 220.0f;
 	constexpr f32x4 normalTextColor = f32x4(1.0f);
 	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
 	static str128 filter;
@@ -67,18 +67,18 @@ inline void renderBuffersTab(ResourceManagerState& state)
 			const u32 numElements = resource.maxNumElements;
 			const u32 elementSize = resource.elementSizeBytes;
 			const u32 numBytes = elementSize * numElements;
-			float scaledSize = 0.0f;
+			f32 scaledSize = 0.0f;
 			const char* ending = "";
 			if (numBytes < 1024) {
-				scaledSize = float(numBytes);
+				scaledSize = f32(numBytes);
 				ending = "bytes";
 			}
 			else if (numBytes < (1024 * 1024)) {
-				scaledSize = float(numBytes) / 1024.0f;
+				scaledSize = f32(numBytes) / 1024.0f;
 				ending = "KiB";
 			}
 			else {
-				scaledSize = float(numBytes) / (1024.0f * 1024.0f);
+				scaledSize = f32(numBytes) / (1024.0f * 1024.0f);
 				ending = "MiB";
 			}
 			ImGui::Text("%u elements x %u bytes = %.2f %s",
@@ -90,8 +90,8 @@ inline void renderBuffersTab(ResourceManagerState& state)
 
 inline void renderTexturesTab(ResourceManagerState& state)
 {
-	constexpr float offset = 200.0f;
-	constexpr float offset2 = 240.0f;
+	constexpr f32 offset = 200.0f;
+	constexpr f32 offset2 = 240.0f;
 	constexpr f32x4 normalTextColor = f32x4(1.0f);
 	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
 	static str128 filter;
@@ -179,8 +179,8 @@ inline void renderTexturesTab(ResourceManagerState& state)
 
 inline void renderFramebuffersTab(ResourceManagerState& state)
 {
-	constexpr float offset = 200.0f;
-	constexpr float offset2 = 220.0f;
+	constexpr f32 offset = 200.0f;
+	constexpr f32 offset2 = 220.0f;
 	constexpr f32x4 normalTextColor = f32x4(1.0f);
 	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
 	static str128 filter;
@@ -290,7 +290,7 @@ inline void renderMeshesTab(ResourceManagerState& state)
 			for (u32 i = 0; i < mesh.components.size(); i++) {
 
 				const MeshComponent& comp = mesh.components[i];
-				constexpr float offset = 250.0f;
+				constexpr f32 offset = 250.0f;
 				ImGui::Text("Component %u -- Material Index: %u -- NumIndices: %u",
 					i, comp.materialIdx, comp.numIndices);
 			}
@@ -357,7 +357,7 @@ inline void renderMeshesTab(ResourceManagerState& state)
 				if (ImGui::CollapsingHeader(str64("Material %u##%llu", i, itemItr.key))) {
 
 					ImGui::Indent(20.0f);
-					constexpr float offset = 310.0f;
+					constexpr f32 offset = 310.0f;
 
 					// Albedo
 					f32x4 colorFloat = u8ToF32(material.albedo);
@@ -455,7 +455,7 @@ inline void renderMeshesTab(ResourceManagerState& state)
 
 inline void renderVoxelModelsTab(ResourceManagerState& state)
 {
-	constexpr float offset = 200.0f;
+	constexpr f32 offset = 200.0f;
 	constexpr f32x4 normalTextColor = f32x4(1.0f);
 	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
 	static str128 filter;
@@ -512,7 +512,7 @@ inline void renderVoxelModelsTab(ResourceManagerState& state)
 
 inline void renderVoxelMaterialsTab(ResourceManager& resources, ResourceManagerState& state)
 {
-	constexpr float offset = 200.0f;
+	constexpr f32 offset = 200.0f;
 	constexpr f32x4 normalTextColor = f32x4(1.0f);
 	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
 	static str128 filter;

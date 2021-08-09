@@ -121,8 +121,8 @@ JsonNode JsonNode::copy() const noexcept
 
 void JsonNode::swap(JsonNode& other) noexcept
 {
-	std::swap(this->mImpl, other.mImpl);
-	std::swap(this->mActive, other.mActive);
+	sfz::memswp(this->mImpl, other.mImpl, sizeof(mImpl));
+	sfz::swap(this->mActive, other.mActive);
 }
 
 void JsonNode::destroy() noexcept
@@ -234,7 +234,7 @@ bool JsonNode::value(bool& valueOut) const noexcept
 	return true;
 }
 
-bool JsonNode::value(int32_t& valueOut) const noexcept
+bool JsonNode::value(i32& valueOut) const noexcept
 {
 	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
@@ -247,7 +247,7 @@ bool JsonNode::value(int32_t& valueOut) const noexcept
 	return true;
 }
 
-bool JsonNode::value(float& valueOut) const noexcept
+bool JsonNode::value(f32& valueOut) const noexcept
 {
 	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
@@ -258,10 +258,10 @@ bool JsonNode::value(float& valueOut) const noexcept
 
 	// Return value
 	if (t == JsonNodeType::FLOATING_POINT) {
-		valueOut = (float)value.get_double_value();
+		valueOut = (f32)value.get_double_value();
 	}
 	else {
-		valueOut = (float)value.get_integer_value();
+		valueOut = (f32)value.get_integer_value();
 	}
 	return true;
 }
@@ -324,17 +324,17 @@ JsonNodeValue<bool> JsonNode::valueBool() const noexcept
 	return tmp;
 }
 
-JsonNodeValue<int32_t> JsonNode::valueInt() const noexcept
+JsonNodeValue<i32> JsonNode::valueInt() const noexcept
 {
-	JsonNodeValue<int32_t> tmp;
+	JsonNodeValue<i32> tmp;
 	tmp.value = 0; // Default-value
 	tmp.exists = this->value(tmp.value);
 	return tmp;
 }
 
-JsonNodeValue<float> JsonNode::valueFloat() const noexcept
+JsonNodeValue<f32> JsonNode::valueFloat() const noexcept
 {
-	JsonNodeValue<float> tmp;
+	JsonNodeValue<f32> tmp;
 	tmp.value = 0.0f; // Default-value
 	tmp.exists = this->value(tmp.value);
 	return tmp;
@@ -485,7 +485,7 @@ ParsedJson ParsedJson::parseFile(
 
 void ParsedJson::swap(ParsedJson& other) noexcept
 {
-	std::swap(this->mImpl, other.mImpl);
+	sfz::swap(this->mImpl, other.mImpl);
 }
 
 void ParsedJson::destroy() noexcept

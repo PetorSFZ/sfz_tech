@@ -3,7 +3,7 @@ namespace sfz {
 // Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-inline Plane::Plane(const f32x3& normal, float d) noexcept
+inline Plane::Plane(const f32x3& normal, f32 d) noexcept
 :
 	mNormal(normal),
 	mD{d}
@@ -22,7 +22,7 @@ inline Plane::Plane(const f32x3& normal, const f32x3& position) noexcept
 // Public member functions
 // ------------------------------------------------------------------------------------------------
 
-inline float Plane::signedDistance(const f32x3& point) const noexcept
+inline f32 Plane::signedDistance(const f32x3& point) const noexcept
 {
 	return dot(mNormal, point) - mD; // mNormal MUST be normalized.
 }

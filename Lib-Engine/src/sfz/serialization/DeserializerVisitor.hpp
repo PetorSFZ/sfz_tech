@@ -106,13 +106,13 @@ struct DeserializerVisitor final {
 		extractValue(node.valueBool(), valOut);
 	}
 
-	void deserialize(const JsonNode& node, int32_t& valOut)
+	void deserialize(const JsonNode& node, i32& valOut)
 	{
 		if (!ensureNodeIsValid(node)) return;
 		extractValue(node.valueInt(), valOut);
 	}
 
-	void deserialize(const JsonNode& node, float& valOut)
+	void deserialize(const JsonNode& node, f32& valOut)
 	{
 		if (!ensureNodeIsValid(node)) return;
 		extractValue(node.valueFloat(), valOut);
@@ -259,7 +259,7 @@ struct DeserializerVisitor final {
 		T val = {};
 		deserializer.deserialize(node, val);
 		if (deserializer.success) {
-			valOut.set(std::move(val));
+			valOut.set(sfz_move(val));
 		}
 	}
 

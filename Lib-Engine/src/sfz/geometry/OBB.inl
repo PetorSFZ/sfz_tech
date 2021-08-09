@@ -38,7 +38,7 @@ inline OBB::OBB(f32x3 center, const f32x3 axes[3], f32x3 extents) noexcept
 { }
 
 inline OBB::OBB(f32x3 center, f32x3 xAxis, f32x3 yAxis, f32x3 zAxis,
-	float xExtent, float yExtent, float zExtent) noexcept
+	f32 xExtent, f32 yExtent, f32 zExtent) noexcept
 :
 	OBB(center, xAxis, yAxis, zAxis, f32x3(xExtent, yExtent, zExtent))
 { }
@@ -115,19 +115,19 @@ inline void OBB::setExtents(const f32x3& newExtents) noexcept
 	ensureCorrectExtents();
 }
 
-inline void OBB::setXExtent(float newXExtent) noexcept
+inline void OBB::setXExtent(f32 newXExtent) noexcept
 {
 	halfExtents[0] = newXExtent * 0.5f;
 	ensureCorrectExtents();
 }
 
-inline void OBB::setYExtent(float newYExtent) noexcept
+inline void OBB::setYExtent(f32 newYExtent) noexcept
 {
 	halfExtents[1] = newYExtent * 0.5f;
 	ensureCorrectExtents();
 }
 
-inline void OBB::setZExtent(float newZExtent) noexcept
+inline void OBB::setZExtent(f32 newZExtent) noexcept
 {
 	halfExtents[2] = newZExtent * 0.5f;
 	ensureCorrectExtents();

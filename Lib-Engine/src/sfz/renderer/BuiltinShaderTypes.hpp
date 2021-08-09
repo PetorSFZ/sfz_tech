@@ -36,13 +36,13 @@ using sfz::f32x4;
 struct ShaderMaterial final {
 	f32x4 albedo = f32x4(1.0f);
 	f32x4 emissive = f32x4(1.0f); // Alpha ignored
-	float roughness = 1.0f;
-	float metallic = 1.0f;
-	int32_t hasAlbedoTex = 0;
-	int32_t hasMetallicRoughnessTex = 0;
-	int32_t hasNormalTex = 0;
-	int32_t hasOcclusionTex = 0;
-	int32_t hasEmissiveTex = 0;
+	f32 roughness = 1.0f;
+	f32 metallic = 1.0f;
+	i32 hasAlbedoTex = 0;
+	i32 hasMetallicRoughnessTex = 0;
+	i32 hasNormalTex = 0;
+	i32 hasOcclusionTex = 0;
+	i32 hasEmissiveTex = 0;
 	u32 ___PADDING___ = 0;
 };
 static_assert(sizeof(ShaderMaterial) == sizeof(u32) * 16, "ShaderMaterial is padded");
@@ -52,7 +52,7 @@ static_assert(sizeof(ShaderMaterial) == sizeof(u32) * 16, "ShaderMaterial is pad
 
 struct ShaderPointLight final {
 	f32x3 posVS = f32x3(0.0f);
-	float range = 0.0f;
+	f32 range = 0.0f;
 	f32x3 strength = f32x3(0.0f);
 	u32 ___PADDING___ = 0;
 };
@@ -63,9 +63,9 @@ static_assert(sizeof(ShaderPointLight) == sizeof(u32) * 8);
 
 struct DirectionalLight final {
 	f32x3 lightDirVS = f32x3(0.0f, -1.0f, 0.0);
-	float ___PADDING0___ = 0.0f;
+	f32 ___PADDING0___ = 0.0f;
 	f32x3 strength = f32x3(0.0f);
-	float ___PADDING1___ = 0.0f;
+	f32 ___PADDING1___ = 0.0f;
 };
 static_assert(sizeof(DirectionalLight) == sizeof(u32) * 8);
 

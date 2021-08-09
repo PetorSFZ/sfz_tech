@@ -22,6 +22,8 @@
 #undef near
 #undef far
 
+#include <utility>
+
 #include "skipifzero_allocators.hpp"
 #include "skipifzero_new.hpp"
 

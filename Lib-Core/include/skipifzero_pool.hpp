@@ -20,6 +20,8 @@
 #define SKIPIFZERO_POOL_HPP
 #pragma once
 
+#include <new>
+
 #include "skipifzero.hpp"
 
 namespace sfz {
@@ -228,15 +230,15 @@ public:
 
 	PoolHandle allocate() { return allocateImpl<T>({}); }
 	PoolHandle allocate(const T& value) { return allocateImpl<const T&>(value); }
-	PoolHandle allocate(T&& value) { return allocateImpl<T>(std::move(value)); }
+	PoolHandle allocate(T&& value) { return allocateImpl<T>(sfz_move(value)); }
 
 	void deallocate(PoolHandle handle) { return deallocateImpl<T>(handle, {}); }
 	void deallocate(PoolHandle handle, const T& emptyValue) { return deallocateImpl<const T&>(handle, emptyValue); }
-	void deallocate(PoolHandle handle, T&& emptyValue) { return deallocateImpl<T>(handle, std::move(emptyValue)); }
+	void deallocate(PoolHandle handle, T&& emptyValue) { return deallocateImpl<T>(handle, sfz_move(emptyValue)); }
 
 	void deallocate(u32 idx) { return deallocateImpl<T>(idx, {}); }
 	void deallocate(u32 idx, const T& emptyValue) { return deallocateImpl<const T&>(idx, emptyValue); }
-	void deallocate(u32 idx, T&& emptyValue) { return deallocateImpl<T>(idx, std::move(emptyValue)); }
+	void deallocate(u32 idx, T&& emptyValue) { return deallocateImpl<T>(idx, sfz_move(emptyValue)); }
 
 private:
 	// Private methods
@@ -260,7 +262,7 @@ private:
 			// If we are reusing a slot the memory should already be constructed, therefore we
 			// should use move/copy assignment in order to make sure we don't skip running a
 			// destructor.
-			mData[idx] = std::forward<ForwardT>(value);
+			mData[idx] = sfz_forward(value);
 		}
 		else {
 			idx = mArraySize;
@@ -268,7 +270,7 @@ private:
 
 			// First time we are using this slot, memory is uninitialized and need to be
 			// initialized before usage. Therefore use placement new move/copy constructor.
-			new (mData + idx) T(std::forward<ForwardT>(value));
+			new (mData + idx) T(sfz_forward(value));
 		}
 
 		// Update number of allocated
@@ -295,7 +297,7 @@ private:
 		const u32 idx = handle.idx();
 		sfz_assert(idx < mArraySize);
 		sfz_assert(handle.version() == getVersion(idx));
-		deallocateImpl<ForwardT>(idx, std::forward<ForwardT>(emptyValue));
+		deallocateImpl<ForwardT>(idx, sfz_forward(emptyValue));
 	}
 
 	template<typename ForwardT>
@@ -309,7 +311,7 @@ private:
 
 		// Set version and empty value
 		slot.bits = slot.version(); // Remove active bit
-		mData[idx] = std::forward<ForwardT>(emptyValue);
+		mData[idx] = sfz_forward(emptyValue);
 		mNumAllocated -= 1;
 
 		// Store the new hole in free indices

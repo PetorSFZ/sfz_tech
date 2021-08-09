@@ -19,8 +19,6 @@
 
 #include "sfz/renderer/Renderer.hpp"
 
-#include <utility> // std::swap()
-
 #include <SDL.h>
 
 #include <imgui.h>
@@ -143,7 +141,7 @@ bool Renderer::loadConfiguration(const char* jsonConfigPath) noexcept
 
 void Renderer::swap(Renderer& other) noexcept
 {
-	std::swap(this->mState, other.mState);
+	sfz::swap(this->mState, other.mState);
 }
 
 void Renderer::destroy() noexcept
@@ -178,7 +176,7 @@ i32x2 Renderer::windowResolution() const noexcept
 	return mState->windowRes;
 }
 
-void Renderer::frameTimeMs(u64& frameIdxOut, float& frameTimeMsOut) const noexcept
+void Renderer::frameTimeMs(u64& frameIdxOut, f32& frameTimeMsOut) const noexcept
 {
 	frameIdxOut = mState->lastRetrievedFrameTimeFrameIdx;
 	frameTimeMsOut = mState->lastRetrievedFrameTimeMs;
@@ -208,7 +206,7 @@ bool Renderer::uploadTextureBlocking(
 	resource.uploadBlocking(image, mState->allocator, mState->copyQueue);
 	
 	// Add to resource manager
-	resources.addTexture(std::move(resource));
+	resources.addTexture(sfz_move(resource));
 
 	return true;
 }
@@ -243,7 +241,7 @@ bool Renderer::uploadMeshBlocking(strID id, const Mesh& mesh) noexcept
 		gpuMesh, mesh, mState->allocator, mState->copyQueue);
 
 	// Store mesh
-	resources.addMesh(std::move(gpuMesh));
+	resources.addMesh(sfz_move(gpuMesh));
 
 	return true;
 }
@@ -285,14 +283,14 @@ void Renderer::frameBegin()
 	}
 	for (const GroupProfilingID& groupId : frameIds.groupIds) {
 		u64 frameIdx = mState->lastRetrievedFrameTimeFrameIdx;
-		float groupTimeMs = 0.0f;
+		f32 groupTimeMs = 0.0f;
 		CHECK_ZG mState->profiler.getMeasurement(groupId.id, groupTimeMs);
 		const char* label = groupId.groupName.str();
 		stats.addSample("gpu", label, frameIdx, groupTimeMs);
 	}
 	if (frameIds.imguiId != ~0ull) {
 		u64 frameIdx = mState->lastRetrievedFrameTimeFrameIdx;
-		float imguiTimeMs = 0.0f;
+		f32 imguiTimeMs = 0.0f;
 		CHECK_ZG mState->profiler.getMeasurement(frameIds.imguiId, imguiTimeMs);
 		stats.addSample("gpu", "imgui", frameIdx, imguiTimeMs);
 		frameIds.imguiId = ~0ull;
@@ -300,8 +298,8 @@ void Renderer::frameBegin()
 	frameIds.groupIds.clear();
 
 	// Query drawable width and height from SDL
-	int32_t newResX = 0;
-	int32_t newResY = 0;
+	i32 newResX = 0;
+	i32 newResY = 0;
 	SDL_GL_GetDrawableSize(mState->window, &newResX, &newResY);
 	bool resolutionChanged = newResX != mState->windowRes.x || newResY != mState->windowRes.y;
 
@@ -369,7 +367,7 @@ HighLevelCmdList Renderer::beginCommandList(const char* cmdListName)
 
 	// Create high level command list
 	HighLevelCmdList cmdList;
-	cmdList.init(cmdListName, mState->currentFrameIdx, std::move(zgCmdList), &mState->windowFramebuffer);
+	cmdList.init(cmdListName, mState->currentFrameIdx, sfz_move(zgCmdList), &mState->windowFramebuffer);
 
 	return cmdList;
 }

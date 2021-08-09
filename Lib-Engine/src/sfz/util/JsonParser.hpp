@@ -113,15 +113,15 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	bool value(bool& valueOut) const noexcept;
-	bool value(int32_t& valueOut) const noexcept;
-	bool value(float& valueOut) const noexcept;
+	bool value(i32& valueOut) const noexcept;
+	bool value(f32& valueOut) const noexcept;
 	bool value(double& valueOut) const noexcept;
 	bool value(char* strOut, u32 strCapacity) const noexcept;
 	u32 stringLength() const noexcept; // Returns 0 if not a string
 
 	JsonNodeValue<bool> valueBool() const noexcept;
-	JsonNodeValue<int32_t> valueInt() const noexcept;
-	JsonNodeValue<float> valueFloat() const noexcept;
+	JsonNodeValue<i32> valueInt() const noexcept;
+	JsonNodeValue<f32> valueFloat() const noexcept;
 	JsonNodeValue<double> valueDouble() const noexcept;
 	JsonNodeValue<str32> valueStr32() const noexcept;
 	JsonNodeValue<str64> valueStr64() const noexcept;

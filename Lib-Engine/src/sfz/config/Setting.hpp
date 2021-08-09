@@ -39,17 +39,17 @@ enum class ValueType : u32 {
 // ------------------------------------------------------------------------------------------------
 
 struct IntBounds final {
-	int32_t defaultValue;
-	int32_t minValue;
-	int32_t maxValue;
-	int32_t step;
+	i32 defaultValue;
+	i32 minValue;
+	i32 maxValue;
+	i32 step;
 
 	IntBounds() noexcept = default;
 	explicit IntBounds(
-		int32_t defaultValue,
-		int32_t minValue = INT32_MIN,
-		int32_t maxValue = INT32_MAX,
-		int32_t step = 1) noexcept
+		i32 defaultValue,
+		i32 minValue = I32_MIN,
+		i32 maxValue = I32_MAX,
+		i32 step = 1) noexcept
 	:
 		defaultValue(defaultValue),
 		minValue(minValue),
@@ -59,15 +59,15 @@ struct IntBounds final {
 };
 
 struct FloatBounds final {
-	float defaultValue;
-	float minValue;
-	float maxValue;
+	f32 defaultValue;
+	f32 minValue;
+	f32 maxValue;
 
 	FloatBounds() noexcept = default;
 	explicit FloatBounds(
-		float defaultValue,
-		float minValue = -F32_MAX,
-		float maxValue = F32_MAX) noexcept
+		f32 defaultValue,
+		f32 minValue = -F32_MAX,
+		f32 maxValue = F32_MAX) noexcept
 	:
 		defaultValue(defaultValue),
 		minValue(minValue),
@@ -86,11 +86,11 @@ struct BoolBounds final {
 // ------------------------------------------------------------------------------------------------
 
 struct IntValue final {
-	int32_t value;
+	i32 value;
 	IntBounds bounds;
 
 	IntValue() noexcept = default;
-	explicit IntValue(int32_t value, const IntBounds& bounds = IntBounds(0)) noexcept
+	explicit IntValue(i32 value, const IntBounds& bounds = IntBounds(0)) noexcept
 	:
 		value(value),
 		bounds(bounds)
@@ -98,11 +98,11 @@ struct IntValue final {
 };
 
 struct FloatValue final {
-	float value;
+	f32 value;
 	FloatBounds bounds;
 
 	FloatValue() noexcept = default;
-	explicit FloatValue(float value, const FloatBounds& bounds = FloatBounds(0.0f)) noexcept
+	explicit FloatValue(f32 value, const FloatBounds& bounds = FloatBounds(0.0f)) noexcept
 	:
 		value(value),
 		bounds(bounds)
@@ -138,12 +138,12 @@ struct SettingValue final {
 	SettingValue& operator= (const SettingValue&) noexcept = default;
 
 	static SettingValue createInt(
-		int32_t value = 0,
+		i32 value = 0,
 		bool writeToFile = true,
 		const IntBounds& bounds = IntBounds(0));
 
 	static SettingValue createFloat(
-		float value = 0.0f,
+		f32 value = 0.0f,
 		bool writeToFile = true,
 		const FloatBounds& bounds = FloatBounds(0.0f));
 
@@ -178,8 +178,8 @@ public:
 	const SettingValue& value() const noexcept { return mValue; }
 	ValueType type() const noexcept { return mValue.type; }
 
-	int32_t intValue() const noexcept;
-	float floatValue() const noexcept;
+	i32 intValue() const noexcept;
+	f32 floatValue() const noexcept;
 	bool boolValue() const noexcept;
 
 	const IntBounds& intBounds() const noexcept;
@@ -191,8 +191,8 @@ public:
 
 	// Sets the value of this Setting. The value might be clamped by the bounds of this Setting.
 	// Returns false and does nothing if the Setting is of another type.
-	bool setInt(int32_t value) noexcept;
-	bool setFloat(float value) noexcept;
+	bool setInt(i32 value) noexcept;
+	bool setFloat(f32 value) noexcept;
 	bool setBool(bool value) noexcept;
 
 	// Sets whether to save setting to file or not

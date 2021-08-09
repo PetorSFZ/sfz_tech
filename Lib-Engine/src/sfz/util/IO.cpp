@@ -90,7 +90,7 @@ static Array<T> readFileInternal(const char* path, bool binaryMode, SfzAllocator
 	temp.hackSetSize(u32(currOffs));
 
 	std::fclose(file);
-	return std::move(temp);
+	return sfz_move(temp);
 }
 
 // Paths
@@ -292,7 +292,7 @@ int64_t sizeofFile(const char* path) noexcept
 	return size;
 }
 
-int32_t readBinaryFile(const char* path, u8* dataOut, size_t maxNumBytes) noexcept
+i32 readBinaryFile(const char* path, u8* dataOut, size_t maxNumBytes) noexcept
 {
 	// Open file
 	std::FILE* file = std::fopen(path, "rb");

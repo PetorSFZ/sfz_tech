@@ -20,9 +20,8 @@
 #define SKIPIFZERO_HPP
 #pragma once
 
-#include <cmath> // std::sqrt, std::fmodf
-#include <cstring> // memcpy()
-#include <utility> // std::move, std::forward, std::swap
+#include <math.h> // std::sqrt, std::fmodf
+#include <string.h> // memcpy()
 
 #include "sfz.h"
 
@@ -37,6 +36,39 @@
 #endif
 
 namespace sfz {
+
+// std::move() and std::forward() replacements
+// ------------------------------------------------------------------------------------------------
+
+// std::move() and std::forward() requires including a relatively expensive header (<utility>), and
+// are fairly complex in their standard implementations. This is a significantly cheaper
+// implementation that works for many use-cases.
+//
+// See: https://www.foonathan.net/2020/09/move-forward/
+
+// Implementation of std::remove_reference_t
+// See: https://en.cppreference.com/w/cpp/types/remove_reference
+template<typename T> struct remove_ref { typedef T type; };
+template<typename T> struct remove_ref<T&> { typedef T type; };
+template<typename T> struct remove_ref<T&&> { typedef T type; };
+template<typename T> using remove_ref_t = typename remove_ref<T>::type;
+
+#define sfz_move(obj) static_cast<sfz::remove_ref_t<decltype(obj)>&&>(obj)
+#define sfz_forward(...) static_cast<decltype(__VA_ARGS__)&&>(__VA_ARGS__)
+
+// std::swap replacement
+// ------------------------------------------------------------------------------------------------
+
+// std::swap() is similarly to std::move() and std::forward() hidden in relatively expensive
+// headers (<utility>), so we have our own simple implementation instead.
+
+template<typename T>
+void swap(T& lhs, T& rhs)
+{
+	T tmp = sfz_move(lhs);
+	lhs = sfz_move(rhs);
+	rhs = sfz_move(tmp);
+}
 
 // Memory functions
 // ------------------------------------------------------------------------------------------------
@@ -349,9 +381,9 @@ constexpr Vec<T,3> cross(Vec<T,3> l, Vec<T,3> r)
 	return Vec<T,3>(l.y * r.z - l.z * r.y, l.z * r.x - l.x * r.z, l.x * r.y - l.y * r.x);
 }
 
-inline f32 length(f32x2 v) { return std::sqrt(dot(v, v)); }
-inline f32 length(f32x3 v) { return std::sqrt(dot(v, v)); }
-inline f32 length(f32x4 v) { return std::sqrt(dot(v, v)); }
+inline f32 length(f32x2 v) { return ::sqrtf(dot(v, v)); }
+inline f32 length(f32x3 v) { return ::sqrtf(dot(v, v)); }
+inline f32 length(f32x4 v) { return ::sqrtf(dot(v, v)); }
 
 inline f32x2 normalize(f32x2 v) { return v * (1.0f / length(v)); }
 inline f32x3 normalize(f32x3 v) { return v * (1.0f / length(v)); }
@@ -457,7 +489,7 @@ constexpr f32x2 lerp(f32x2 v0, f32x2 v1, f32 t) { return (1.0f - t) * v0 + t * v
 constexpr f32x3 lerp(f32x3 v0, f32x3 v1, f32 t) { return (1.0f - t) * v0 + t * v1; }
 constexpr f32x4 lerp(f32x4 v0, f32x4 v1, f32 t) { return (1.0f - t) * v0 + t * v1; }
 
-inline f32 fmod(f32 n, f32 dnm) { return std::fmodf(n, dnm); }
+inline f32 fmod(f32 n, f32 dnm) { return ::fmodf(n, dnm); }
 inline f32x2 fmod(f32x2 n, f32 dnm) { return f32x2(fmod(n.x, dnm), fmod(n.y, dnm)); }
 inline f32x2 fmod(f32x2 n, f32x2 dnm) { return f32x2(fmod(n.x, dnm.x), fmod(n.y, dnm.y)); }
 inline f32x3 fmod(f32x3 n, f32 dnm) { return f32x3(fmod(n.x, dnm), fmod(n.y, dnm), fmod(n.z, dnm)); }
@@ -465,17 +497,17 @@ inline f32x3 fmod(f32x3 n, f32x3 dnm) { return f32x3(fmod(n.x, dnm.x), fmod(n.y,
 inline f32x4 fmod(f32x4 n, f32 dnm) { return f32x4(fmod(n.x, dnm), fmod(n.y, dnm), fmod(n.z, dnm), fmod(n.w, dnm)); }
 inline f32x4 fmod(f32x4 n, f32x4 dnm) { return f32x4(fmod(n.x, dnm.x), fmod(n.y, dnm.y), fmod(n.z, dnm.z), fmod(n.w, dnm.w)); }
 
-inline f32 floor(f32 v) { return std::floorf(v); }
+inline f32 floor(f32 v) { return ::floorf(v); }
 inline f32x2 floor(f32x2 v) { return f32x2(floor(v.x), floor(v.y)); }
 inline f32x3 floor(f32x3 v) { return f32x3(floor(v.x), floor(v.y), floor(v.z)); }
 inline f32x4 floor(f32x4 v) { return f32x4(floor(v.x), floor(v.y), floor(v.z), floor(v.w)); }
 
-inline f32 ceil(f32 v) { return std::ceilf(v); }
+inline f32 ceil(f32 v) { return ::ceilf(v); }
 inline f32x2 ceil(f32x2 v) { return f32x2(ceil(v.x), ceil(v.y)); }
 inline f32x3 ceil(f32x3 v) { return f32x3(ceil(v.x), ceil(v.y), ceil(v.z)); }
 inline f32x4 ceil(f32x4 v) { return f32x4(ceil(v.x), ceil(v.y), ceil(v.z), ceil(v.w)); }
 
-inline f32 round(f32 v) { return std::roundf(v); }
+inline f32 round(f32 v) { return ::roundf(v); }
 inline f32x2 round(f32x2 v) { return f32x2(round(v.x), round(v.y)); }
 inline f32x3 round(f32x3 v) { return f32x3(round(v.x), round(v.y), round(v.z)); }
 inline f32x4 round(f32x4 v) { return f32x4(round(v.x), round(v.y), round(v.z), round(v.w)); }

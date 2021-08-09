@@ -28,7 +28,7 @@ struct Sphere final {
 	// --------------------------------------------------------------------------------------------
 
 	f32x3 position;
-	float radius;
+	f32 radius;
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -37,7 +37,7 @@ struct Sphere final {
 	Sphere(const Sphere&) noexcept = default;
 	Sphere& operator= (const Sphere&) noexcept = default;
 	
-	inline Sphere(const f32x3& position, float radius) noexcept
+	inline Sphere(const f32x3& position, f32 radius) noexcept
 	:
 		position(position),
 		radius(radius)

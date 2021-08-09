@@ -42,7 +42,7 @@ struct FramebufferResource final {
 
 	// Whether resolution should be scaled relative screen resolution
 	bool screenRelativeResolution = false;
-	float resolutionScale = 1.0f;
+	f32 resolutionScale = 1.0f;
 	Setting* resolutionScaleSetting = nullptr;
 
 	// Whether resolution is directly controlled by a setting
@@ -62,7 +62,7 @@ struct FramebufferResourceBuilder final {
 	i32x2 res = i32x2(0);
 
 	bool screenRelativeResolution = false;
-	float resolutionScale = 1.0f;
+	f32 resolutionScale = 1.0f;
 	Setting* resolutionScaleSetting = nullptr;
 
 	bool settingControlledRes = false;
@@ -73,7 +73,7 @@ struct FramebufferResourceBuilder final {
 
 	FramebufferResourceBuilder& setName(const char* name);
 	FramebufferResourceBuilder& setFixedRes(i32x2 res);
-	FramebufferResourceBuilder& setScreenRelativeRes(float scale);
+	FramebufferResourceBuilder& setScreenRelativeRes(f32 scale);
 	FramebufferResourceBuilder& setScreenRelativeRes(Setting* scaleSetting);
 	FramebufferResourceBuilder& setSettingControlledRes(Setting* resSetting);
 	FramebufferResourceBuilder& addRenderTarget(const char* textureName);

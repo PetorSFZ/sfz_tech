@@ -38,7 +38,7 @@ inline void shaderManagerUI(ShaderManagerState& state)
 		return;
 	}
 
-	constexpr float offset = 150.0f;
+	constexpr f32 offset = 150.0f;
 	constexpr f32x4 normalTextColor = f32x4(1.0f);
 	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
 	static str128 filter;
@@ -212,7 +212,7 @@ inline void shaderManagerUI(ShaderManagerState& state)
 				SamplerItem& item = shader.samplers[j];
 				ImGui::Text("- Register: %u", item.samplerRegister);
 				ImGui::Indent(20.0f);
-				constexpr float samplerXOffset = 260.0f;
+				constexpr f32 samplerXOffset = 260.0f;
 				alignedEdit(" - Sampling Mode", "sampler", j, samplerXOffset, [&](const char* name) {
 					ImGui::SetNextItemWidth(150.0f);
 					if (ImGui::BeginCombo(str128("##%u%s", idx, name).str(), samplingModeToString(item.sampler.samplingMode))) {
@@ -273,7 +273,7 @@ inline void shaderManagerUI(ShaderManagerState& state)
 			}
 			ImGui::Unindent(20.0f);
 
-			constexpr float xOffset = 300.0f;
+			constexpr f32 xOffset = 300.0f;
 
 			// Print depth test
 			ImGui::Spacing();

@@ -19,8 +19,6 @@
 
 #include "sfz/renderer/RendererUI.hpp"
 
-#include <utility> // std::swap()
-
 #include <imgui.h>
 
 #include "sfz/Context.hpp"
@@ -37,9 +35,9 @@ using sfz::str64;
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-static float toGiB(u64 bytes) noexcept
+static f32 toGiB(u64 bytes) noexcept
 {
-	return float(bytes) / (1024.0f * 1024.0f * 1024.0f);
+	return f32(bytes) / (1024.0f * 1024.0f * 1024.0f);
 }
 
 // RendererUI: State methods
@@ -67,7 +65,7 @@ void RendererUI::render(RendererState& state) noexcept
 		return;
 	}
 
-	constexpr float offset = 250.0f;
+	constexpr f32 offset = 250.0f;
 	alignedEdit("Config path", offset, [&](const char*) {
 		ImGui::Text("\"%s\"", state.configPath.str());
 	});
@@ -91,7 +89,7 @@ void RendererUI::render(RendererState& state) noexcept
 	ImGui::Spacing();
 	ImGui::Indent(20.0f);
 
-	constexpr float featuresOffset = 320.0f;
+	constexpr f32 featuresOffset = 320.0f;
 	alignedEdit("Device", featuresOffset, [&](const char*) {
 		ImGui::TextUnformatted(features.deviceDescription);
 	});
@@ -179,7 +177,7 @@ void RendererUI::render(RendererState& state) noexcept
 	ImGui::Spacing();
 	ImGui::Indent(20.0f);
 
-	constexpr float statsValueOffset = 240.0f;
+	constexpr f32 statsValueOffset = 240.0f;
 	ImGui::Spacing();
 	alignedEdit("Dedicated GPU Memory", statsValueOffset, [&](const char*) {
 		ImGui::Text("%.2f GiB", toGiB(stats.dedicatedGpuMemoryBytes));

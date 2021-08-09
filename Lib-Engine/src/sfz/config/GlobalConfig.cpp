@@ -109,9 +109,9 @@ void GlobalConfig::load() noexcept
 
 		// Get value of setting
 		if (item.getFloat() != nullptr) {
-			float floatVal = *item.getFloat();
-			int32_t intVal = *item.getInt();
-			if (eqf(floatVal, float(intVal))) {
+			f32 floatVal = *item.getFloat();
+			i32 intVal = *item.getInt();
+			if (eqf(floatVal, f32(intVal))) {
 				setting.create(SettingValue::createInt(intVal, true, IntBounds(0)));
 			}
 			else {
@@ -289,13 +289,13 @@ Setting* GlobalConfig::sanitizeInt(
 	Setting* setting = this->createSetting(section, key, &created);
 
 	// Store previous value
-	int32_t previousValue = 0;
+	i32 previousValue = 0;
 	switch (setting->type()) {
 	case ValueType::INT:
 		previousValue = setting->intValue();
 		break;
 	case ValueType::FLOAT:
-		previousValue = int32_t(std::round(setting->floatValue()));
+		previousValue = i32(::roundf(setting->floatValue()));
 		break;
 	case ValueType::BOOL:
 		previousValue = setting->boolValue() ? 1 : 0;
@@ -329,10 +329,10 @@ Setting* GlobalConfig::sanitizeFloat(
 	Setting* setting = this->createSetting(section, key, &created);
 
 	// Store previous value
-	float previousValue = 0.0f;
+	f32 previousValue = 0.0f;
 	switch (setting->type()) {
 	case ValueType::INT:
-		previousValue = float(setting->intValue());
+		previousValue = f32(setting->intValue());
 		break;
 	case ValueType::FLOAT:
 		previousValue = setting->floatValue();
@@ -403,10 +403,10 @@ Setting* GlobalConfig::sanitizeBool(
 Setting* GlobalConfig::sanitizeInt(
 	const char* section, const char* key,
 	bool writeToFile,
-	int32_t defaultValue,
-	int32_t minValue,
-	int32_t maxValue,
-	int32_t step) noexcept
+	i32 defaultValue,
+	i32 minValue,
+	i32 maxValue,
+	i32 step) noexcept
 {
 	return this->sanitizeInt(section, key, writeToFile,
 		IntBounds(defaultValue, minValue, maxValue, step));
@@ -415,9 +415,9 @@ Setting* GlobalConfig::sanitizeInt(
 Setting* GlobalConfig::sanitizeFloat(
 	const char* section, const char* key,
 	bool writeToFile,
-	float defaultValue,
-	float minValue,
-	float maxValue) noexcept
+	f32 defaultValue,
+	f32 minValue,
+	f32 maxValue) noexcept
 {
 	return this->sanitizeFloat(section, key, writeToFile,
 		FloatBounds(defaultValue, minValue, maxValue));

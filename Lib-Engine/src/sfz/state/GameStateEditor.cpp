@@ -332,15 +332,15 @@ static int imguiOnlyBinaryFilter(ImGuiInputTextCallbackData* data) noexcept
 
 static void componentMaskVisualizer(CompMask mask) noexcept
 {
-	const int32_t NUM_BITS_PER_FIELD = 8;
-	const int32_t NUM_FIELDS = 4;
-	const int32_t NUM_ROWS = 2;
+	const i32 NUM_BITS_PER_FIELD = 8;
+	const i32 NUM_FIELDS = 4;
+	const i32 NUM_ROWS = 2;
 	static_assert(NUM_BITS_PER_FIELD * NUM_FIELDS * NUM_ROWS == 64, "Think again");
 
-	for (int32_t rowIdx = 0; rowIdx < NUM_ROWS; rowIdx++) {
-		for (int32_t fieldIdx = NUM_FIELDS - 1; fieldIdx >= 0; fieldIdx--) {
+	for (i32 rowIdx = 0; rowIdx < NUM_ROWS; rowIdx++) {
+		for (i32 fieldIdx = NUM_FIELDS - 1; fieldIdx >= 0; fieldIdx--) {
 
-			int32_t byteIdx = rowIdx * NUM_FIELDS + fieldIdx;
+			i32 byteIdx = rowIdx * NUM_FIELDS + fieldIdx;
 			u8 byte = u8((mask.rawMask >> (byteIdx * 8)) & u64(0xFF));
 			const char* byteBinaryStr = byteToBinaryString(byte);
 
@@ -370,17 +370,17 @@ static bool componentMaskEditor(
 	str32 buffers[8],
 	CompMask& mask) noexcept
 {
-	const int32_t NUM_BITS_PER_FIELD = 8;
-	const int32_t NUM_FIELDS = 4;
-	const int32_t NUM_ROWS = 2;
+	const i32 NUM_BITS_PER_FIELD = 8;
+	const i32 NUM_FIELDS = 4;
+	const i32 NUM_ROWS = 2;
 	static_assert(NUM_BITS_PER_FIELD * NUM_FIELDS * NUM_ROWS == 64, "Think again");
 
 	bool bitsModified = false;
 
-	for (int32_t rowIdx = 0; rowIdx < NUM_ROWS; rowIdx++) {
-		for (int32_t fieldIdx = NUM_FIELDS - 1; fieldIdx >= 0; fieldIdx--) {
+	for (i32 rowIdx = 0; rowIdx < NUM_ROWS; rowIdx++) {
+		for (i32 fieldIdx = NUM_FIELDS - 1; fieldIdx >= 0; fieldIdx--) {
 
-			int32_t byteIdx = rowIdx * NUM_FIELDS + fieldIdx;
+			i32 byteIdx = rowIdx * NUM_FIELDS + fieldIdx;
 			u64 shiftOffset = 8 * byteIdx;
 
 			ImGuiInputTextFlags inputFlags = 0;
@@ -524,7 +524,7 @@ void GameStateEditor::init(
 		target.singletonName.clear();
 		target.singletonName.appendf("%02u - %s", info.singletonIndex, info.singletonName.str());
 		target.singletonEditor = info.singletonEditor;
-		target.userPtr = std::move(info.userPtr); // Steal it!
+		target.userPtr = sfz_move(info.userPtr); // Steal it!
 	}
 
 	mNumSingletonInfos = numSingletonInfos;
@@ -556,7 +556,7 @@ void GameStateEditor::init(
 		target.componentName.clear();
 		target.componentName.appendf("%02u - %s", info.componentType, info.componentName.str());
 		target.componentEditor = info.componentEditor;
-		target.userPtr = std::move(info.userPtr); // Steal it!
+		target.userPtr = sfz_move(info.userPtr); // Steal it!
 	}
 
 	// Number of component types should be equal to numComponentInfos + 1
@@ -570,19 +570,19 @@ void GameStateEditor::init(
 
 void GameStateEditor::swap(GameStateEditor& other) noexcept
 {
-	std::swap(this->mWindowName, other.mWindowName);
+	sfz::swap(this->mWindowName, other.mWindowName);
 	for (u32 i = 0; i < 64; i++) {
-		std::swap(this->mSingletonInfos[i], other.mSingletonInfos[i]);
-		std::swap(this->mComponentInfos[i], other.mComponentInfos[i]);
+		sfz::swap(this->mSingletonInfos[i], other.mSingletonInfos[i]);
+		sfz::swap(this->mComponentInfos[i], other.mComponentInfos[i]);
 	}
-	std::swap(this->mNumSingletonInfos, other.mNumSingletonInfos);
-	std::swap(this->mNumComponentInfos, other.mNumComponentInfos);
-	std::swap(this->mFilterMask, other.mFilterMask);
+	sfz::swap(this->mNumSingletonInfos, other.mNumSingletonInfos);
+	sfz::swap(this->mNumComponentInfos, other.mNumComponentInfos);
+	sfz::swap(this->mFilterMask, other.mFilterMask);
 	for (u32 i = 0; i < 8; i++) {
-		std::swap(this->mFilterMaskEditBuffers[i], other.mFilterMaskEditBuffers[i]);
+		sfz::swap(this->mFilterMaskEditBuffers[i], other.mFilterMaskEditBuffers[i]);
 	}
-	std::swap(this->mCompactEntityList, other.mCompactEntityList);
-	std::swap(this->mCurrentSelectedEntityId, other.mCurrentSelectedEntityId);
+	sfz::swap(this->mCompactEntityList, other.mCompactEntityList);
+	sfz::swap(this->mCurrentSelectedEntityId, other.mCurrentSelectedEntityId);
 }
 
 void GameStateEditor::destroy() noexcept
@@ -792,7 +792,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 	ImGui::EndGroup();
 
 	// Calculate width of content to the right of entities column
-	const float rhsContentWidth = ImGui::GetWindowWidth() - 171;
+	const f32 rhsContentWidth = ImGui::GetWindowWidth() - 171;
 
 	ImGui::SameLine();
 	ImGui::BeginGroup();
@@ -904,7 +904,7 @@ void GameStateEditor::renderInfoViewer(GameStateHeader* state) noexcept
 	ImGui::Text("GameStateHeader");
 	ImGui::Spacing();
 
-	const float valueXOffset = 200;
+	const f32 valueXOffset = 200;
 
 	u64 magicNumberString[2];
 	magicNumberString[0] = state->magicNumber;
@@ -919,10 +919,10 @@ void GameStateEditor::renderInfoViewer(GameStateHeader* state) noexcept
 	ImGui::Text("%" PRIu64 " (compiled version: %" PRIu64 ")", state->gameStateVersion, GAME_STATE_VERSION);
 	ImGui::Text("stateSize:"); ImGui::SameLine(valueXOffset);
 	if (state->stateSizeBytes < 1048576) {
-		ImGui::Text("%.2f KiB", float(state->stateSizeBytes) / 1024.0f);
+		ImGui::Text("%.2f KiB", f32(state->stateSizeBytes) / 1024.0f);
 	}
 	else {
-		ImGui::Text("%.2f MiB", float(state->stateSizeBytes) / (1024.0f * 1024.0f));
+		ImGui::Text("%.2f MiB", f32(state->stateSizeBytes) / (1024.0f * 1024.0f));
 	}
 	ImGui::Text("numSingletons:"); ImGui::SameLine(valueXOffset); ImGui::Text("%u", state->numSingletons);
 	ImGui::Text("numComponentTypes:"); ImGui::SameLine(valueXOffset); ImGui::Text("%u", state->numComponentTypes);

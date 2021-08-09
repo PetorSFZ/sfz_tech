@@ -171,7 +171,7 @@ PoolHandle ResourceManager::addBuffer(BufferResource&& resource)
 	strID name = resource.name;
 	sfz_assert(name.isValid());
 	sfz_assert(mState->bufferHandles.get(name) == nullptr);
-	PoolHandle handle = mState->buffers.allocate(std::move(resource));
+	PoolHandle handle = mState->buffers.allocate(sfz_move(resource));
 	mState->bufferHandles.put(name, handle);
 	sfz_assert(mState->bufferHandles.size() == mState->buffers.numAllocated());
 	return handle;
@@ -214,7 +214,7 @@ PoolHandle ResourceManager::addTexture(TextureResource&& resource)
 	strID name = resource.name;
 	sfz_assert(name.isValid());
 	sfz_assert(mState->textureHandles.get(name) == nullptr);
-	PoolHandle handle = mState->textures.allocate(std::move(resource));
+	PoolHandle handle = mState->textures.allocate(sfz_move(resource));
 	mState->textureHandles.put(name, handle);
 	sfz_assert(mState->textureHandles.size() == mState->textures.numAllocated());
 	return handle;
@@ -258,7 +258,7 @@ PoolHandle ResourceManager::addFramebuffer(FramebufferResource&& resource)
 	strID name = resource.name;
 	sfz_assert(name.isValid());
 	sfz_assert(mState->framebufferHandles.get(name) == nullptr);
-	PoolHandle handle = mState->framebuffers.allocate(std::move(resource));
+	PoolHandle handle = mState->framebuffers.allocate(sfz_move(resource));
 	mState->framebufferHandles.put(name, handle);
 	sfz_assert(mState->framebufferHandles.size() == mState->framebuffers.numAllocated());
 	return handle;
@@ -301,7 +301,7 @@ PoolHandle ResourceManager::addMesh(MeshResource&& resource)
 	strID name = resource.name;
 	sfz_assert(name.isValid());
 	sfz_assert(mState->meshHandles.get(name) == nullptr);
-	PoolHandle handle = mState->meshes.allocate(std::move(resource));
+	PoolHandle handle = mState->meshes.allocate(sfz_move(resource));
 	mState->meshHandles.put(name, handle);
 	sfz_assert(mState->meshHandles.size() == mState->meshes.numAllocated());
 	return handle;
@@ -345,7 +345,7 @@ PoolHandle ResourceManager::addVoxelModel(VoxelModelResource&& resource)
 	strID name = resource.name;
 	sfz_assert(name.isValid());
 	sfz_assert(mState->voxelModelHandles.get(name) == nullptr);
-	PoolHandle handle = mState->voxelModels.allocate(std::move(resource));
+	PoolHandle handle = mState->voxelModels.allocate(sfz_move(resource));
 	mState->voxelModelHandles.put(name, handle);
 	sfz_assert(mState->voxelModelHandles.size() == mState->voxelModels.numAllocated());
 	return handle;
@@ -393,7 +393,7 @@ PoolHandle ResourceManager::addVoxelMaterial(VoxelMaterial&& resource)
 	sfz_assert(name.isValid());
 	sfz_assert(mState->voxelMaterialHandles.get(name) == nullptr);
 	sfz_assert(mState->voxelMaterialColors.get(originalColor) == nullptr);
-	PoolHandle handle = mState->voxelMaterials.allocate(std::move(resource));
+	PoolHandle handle = mState->voxelMaterials.allocate(sfz_move(resource));
 	mState->voxelMaterialHandles.put(name, handle);
 	mState->voxelMaterialColors.put(originalColor, handle);
 	sfz_assert(mState->voxelMaterialHandles.size() == mState->voxelMaterials.numAllocated());

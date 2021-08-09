@@ -27,7 +27,7 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 SettingValue SettingValue::createInt(
-	int32_t value,
+	i32 value,
 	bool writeToFile,
 	const IntBounds& bounds)
 {
@@ -40,7 +40,7 @@ SettingValue SettingValue::createInt(
 }
 
 SettingValue SettingValue::createFloat(
-	float value,
+	f32 value,
 	bool writeToFile,
 	const FloatBounds& bounds)
 {
@@ -79,13 +79,13 @@ Setting::Setting(const char* section, const char* key) noexcept
 // Setting: Getters
 // ------------------------------------------------------------------------------------------------
 
-int32_t Setting::intValue() const noexcept
+i32 Setting::intValue() const noexcept
 {
 	sfz_assert(this->type() == ValueType::INT);
 	return mValue.i.value;
 }
 
-float Setting::floatValue() const noexcept
+f32 Setting::floatValue() const noexcept
 {
 	sfz_assert(this->type() == ValueType::FLOAT);
 	return mValue.f.value;
@@ -118,7 +118,7 @@ const BoolBounds& Setting::boolBounds() const noexcept
 // Setting: Setters
 // ------------------------------------------------------------------------------------------------
 
-bool Setting::setInt(int32_t value) noexcept
+bool Setting::setInt(i32 value) noexcept
 {
 	if (this->type() != ValueType::INT) return false;
 
@@ -126,16 +126,16 @@ bool Setting::setInt(int32_t value) noexcept
 	value = sfz::clamp(value, mValue.i.bounds.minValue, mValue.i.bounds.maxValue);
 
 	// Ensure value is of a valid step
-	int64_t diff = int64_t(value) - int64_t(mValue.i.bounds.minValue);
-	double stepsFractions = double(diff) / double(mValue.i.bounds.step);
-	int64_t steps = int64_t(std::round(stepsFractions));
-	value = int32_t(int64_t(mValue.i.bounds.minValue) + steps * int64_t(mValue.i.bounds.step));
+	i64 diff = i64(value) - i64(mValue.i.bounds.minValue);
+	f64 stepsFractions = f64(diff) / f64(mValue.i.bounds.step);
+	i64 steps = i64(::round(stepsFractions));
+	value = i32(i64(mValue.i.bounds.minValue) + steps * i64(mValue.i.bounds.step));
 	mValue.i.value = sfz::clamp(value, mValue.i.bounds.minValue, mValue.i.bounds.maxValue);
 
 	return true;
 }
 
-bool Setting::setFloat(float value) noexcept
+bool Setting::setFloat(f32 value) noexcept
 {
 	if (this->type() != ValueType::FLOAT) return false;
 	mValue.f.value = sfz::clamp(value, mValue.f.bounds.minValue, mValue.f.bounds.maxValue);
@@ -159,18 +159,18 @@ bool Setting::create(const SettingValue& value) noexcept
 	switch (value.type) {
 	case ValueType::INT:
 		{
-			int32_t val = value.i.value;
+			i32 val = value.i.value;
 			const IntBounds& bounds = value.i.bounds;
 			if (bounds.minValue >= bounds.maxValue) return false;
 			if (val < bounds.minValue || bounds.maxValue < val) return false;
 			if (bounds.defaultValue < bounds.minValue || bounds.maxValue < bounds.defaultValue)
 				return false;
 
-			int64_t diff = int64_t(val) - int64_t(bounds.minValue);
-			if((diff % int64_t(bounds.step)) != 0) return false;
+			i64 diff = i64(val) - i64(bounds.minValue);
+			if((diff % i64(bounds.step)) != 0) return false;
 
-			diff = int64_t(bounds.defaultValue) - int64_t(bounds.minValue);
-			if((diff % int64_t(bounds.step)) != 0) return false;
+			diff = i64(bounds.defaultValue) - i64(bounds.minValue);
+			if((diff % i64(bounds.step)) != 0) return false;
 
 			mValue = value;
 			return true;
@@ -178,7 +178,7 @@ bool Setting::create(const SettingValue& value) noexcept
 		break;
 	case ValueType::FLOAT:
 		{
-			float val = value.f.value;
+			f32 val = value.f.value;
 			const FloatBounds& bounds = value.f.bounds;
 			if (bounds.minValue >= bounds.maxValue) return false;
 			if (val < bounds.minValue || bounds.maxValue < val) return false;

@@ -86,13 +86,13 @@ constexpr u32 GPD_DPAD_RIGHT = 24;
 constexpr u32 GPD_MAX_NUM_BUTTONS = 25;
 
 // The approximate dead zone (as specified by SDL2) for gamepad sticks.
-constexpr float GPD_STICK_APPROX_DEADZONE = float(8000) / float(INT16_MAX);
+constexpr f32 GPD_STICK_APPROX_DEADZONE = f32(8000) / f32(INT16_MAX);
 
 struct GamepadState final {
 
 	// Unique ID for this gamepad. Starts at 0, -1 is invalid. If the gamepad is disconnected
 	// and reconnected it will get a new id. Corresponds to SDL_JoystickInstanceID().
-	int32_t id = -1;
+	i32 id = -1;
 
 	// Pointer to the SDL_GameController this state corresponds to. Mainly available for rumble
 	// purposes, you are not generally supposed to look at this.
@@ -104,21 +104,21 @@ struct GamepadState final {
 	f32x2 leftStick = f32x2(0.0f);
 	f32x2 rightStick = f32x2(0.0f);
 
-	float lt = 0.0f;
-	float rt = 0.0f;
+	f32 lt = 0.0f;
+	f32 rt = 0.0f;
 
 	// Array indexed with constants above. 1 if button is pressed, 0 otherwise.
 	u8 buttons[GPD_MAX_NUM_BUTTONS] = {};
 };
 
-inline f32x2 applyDeadzone(f32x2 stick, float deadzone)
+inline f32x2 applyDeadzone(f32x2 stick, f32 deadzone)
 {
 	if (deadzone <= 0.0f) return stick;
 	sfz_assert(deadzone < 1.0f);
-	const float stickLen = sfz::length(stick);
+	const f32 stickLen = sfz::length(stick);
 	if (stickLen >= deadzone) {
-		const float scale = 1.0f / (1.0f - deadzone);
-		const float adjustedLen = sfz::min(sfz::max(0.0f, stickLen - deadzone) * scale, 1.0f);
+		const f32 scale = 1.0f / (1.0f - deadzone);
+		const f32 adjustedLen = sfz::min(sfz::max(0.0f, stickLen - deadzone) * scale, 1.0f);
 		const f32x2 dir = stick * (1.0f / stickLen);
 		const f32x2 adjustedStick = dir * adjustedLen;
 		return adjustedStick;
@@ -129,7 +129,7 @@ inline f32x2 applyDeadzone(f32x2 stick, float deadzone)
 struct TouchState final {
 	int64_t id = -1;
 	f32x2 pos = f32x2(0.0f); // Range [0, 1]
-	float pressure = 0.0f; // Range [0, 1]. Haven't found anything that activates it, avoid using?
+	f32 pressure = 0.0f; // Range [0, 1]. Haven't found anything that activates it, avoid using?
 };
 
 struct RawInputState final {

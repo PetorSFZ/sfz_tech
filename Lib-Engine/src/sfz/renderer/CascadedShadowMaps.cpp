@@ -32,14 +32,14 @@ CascadedShadowMapInfo calculateCascadedShadowMapInfo(
 	f32x3 camPos,
 	f32x3 camDir,
 	f32x3 camUp,
-	float camVertFovDegs,
-	float camAspect,
-	float camNear,
+	f32 camVertFovDegs,
+	f32 camAspect,
+	f32 camNear,
 	mat4 camRealViewMatrix,
 	f32x3 lightDir,
-	float shadowHeightDist,
+	f32 shadowHeightDist,
 	u32 numLevels,
-	const float* levelDists) noexcept
+	const f32* levelDists) noexcept
 {
 	sfz_assert(!sfz::eqf(camDir, f32x3(0.0f)));
 	sfz_assert(!sfz::eqf(camUp, f32x3(0.0f)));
@@ -60,7 +60,7 @@ CascadedShadowMapInfo calculateCascadedShadowMapInfo(
 	mat4 invViewMatrix = sfz::inverse(camRealViewMatrix);
 
 	// Calculate largest aspect ratio so we can pretend view frustrum has same width and height
-	float largestFovRads = 0.0f;
+	f32 largestFovRads = 0.0f;
 	if (camAspect <= 1.0f) largestFovRads = camVertFovDegs * sfz::DEG_TO_RAD;
 	else largestFovRads = camVertFovDegs * camAspect * sfz::DEG_TO_RAD;
 
@@ -71,17 +71,17 @@ CascadedShadowMapInfo calculateCascadedShadowMapInfo(
 	for (u32 i = 0; i < numLevels; i++) {
 
 		// Find mid point (of view frustrum) in the area covered by this cascaded level
-		float prevDist = i == 0 ? camNear : levelDists[i - 1];
-		float distToMid = prevDist + (levelDists[i] - prevDist) * 0.5f;
+		f32 prevDist = i == 0 ? camNear : levelDists[i - 1];
+		f32 distToMid = prevDist + (levelDists[i] - prevDist) * 0.5f;
 		f32x3 midPoint = camPos + camDir * distToMid;
 
 		// Find size of view frustrum at maximum distance for this level
-		float largestHeight = 2.0f * levelDists[i] * std::tan(largestFovRads * 0.5f);
+		f32 largestHeight = 2.0f * levelDists[i] * ::tanf(largestFovRads * 0.5f);
 
 		// The light can be oriented many different ways compared to view frustrum, we can calculate
 		// the worst case by using pythagoras and assuming the diagonal through the volume
-		float worstCaseDim = std::sqrtf(largestHeight * largestHeight + largestHeight * largestHeight);
-		worstCaseDim = std::sqrt(worstCaseDim * worstCaseDim + largestHeight * largestHeight);
+		f32 worstCaseDim = ::sqrtf(largestHeight * largestHeight + largestHeight * largestHeight);
+		worstCaseDim = ::sqrtf(worstCaseDim * worstCaseDim + largestHeight * largestHeight);
 
 		// Calculate lights camera position
 		f32x3 lightCamPos = midPoint + -lightDir * shadowHeightDist;

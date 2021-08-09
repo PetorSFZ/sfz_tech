@@ -34,16 +34,16 @@ namespace sfz {
 
 struct StatsLabel final {
 	f32x4 color = f32x4(1.0f);
-	float defaultValue = 0.0f;
-	Array<float> samples;
+	f32 defaultValue = 0.0f;
+	Array<f32> samples;
 };
 
 struct StatsCategory final {
 	u32 numSamples = 0;
-	float sampleOutlierMax = F32_MAX;
+	f32 sampleOutlierMax = F32_MAX;
 	str16 sampleUnit;
 	str16 idxUnit;
-	float smallestPlotMax = 0.0f;
+	f32 smallestPlotMax = 0.0f;
 	StatsVisualizationType visualizationType = StatsVisualizationType::INDIVIDUALLY;
 
 	HashMapLocal<str32, StatsLabel, PROFILING_STATS_MAX_NUM_LABELS> labels;
@@ -51,7 +51,7 @@ struct StatsCategory final {
 	ArrayLocal<const char*, PROFILING_STATS_MAX_NUM_LABELS> labelStrings;
 
 	Array<u64> indices;
-	Array<float> indicesAsFloat;
+	Array<f32> indicesAsFloat;
 };
 
 struct ProfilingStatsState final {
@@ -134,7 +134,7 @@ const u64* ProfilingStats::sampleIndices(const char* category) const noexcept
 	return cat->indices.data();
 }
 
-const float* ProfilingStats::sampleIndicesFloat(const char* category) const noexcept
+const f32* ProfilingStats::sampleIndicesFloat(const char* category) const noexcept
 {
 	const StatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
@@ -155,7 +155,7 @@ const char* ProfilingStats::idxUnit(const char* category) const noexcept
 	return cat->idxUnit;
 }
 
-float ProfilingStats::smallestPlotMax(const char* category) const noexcept
+f32 ProfilingStats::smallestPlotMax(const char* category) const noexcept
 {
 	const StatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
@@ -169,7 +169,7 @@ StatsVisualizationType ProfilingStats::visualizationType(const char* category) c
 	return cat->visualizationType;
 }
 
-const float* ProfilingStats::samples(const char* category, const char* label) const noexcept
+const f32* ProfilingStats::samples(const char* category, const char* label) const noexcept
 {
 	const StatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
@@ -197,7 +197,7 @@ LabelStats ProfilingStats::stats(const char* category, const char* label) const 
 	// Calculate number of valid samples, total, min, max and average of the valid samples
 	LabelStats stats;
 	u32 numValidSamples = 0;
-	float total = 0.0f;
+	f32 total = 0.0f;
 	stats.min = F32_MAX;
 	stats.max = -F32_MAX;
 	for (u32 i = cat->numSamples; i > 0; i--) {
@@ -209,26 +209,26 @@ LabelStats ProfilingStats::stats(const char* category, const char* label) const 
 		numValidSamples += 1;
 
 		// Update total, min and max
-		float sample = lab->samples[i - 1];
+		f32 sample = lab->samples[i - 1];
 		total += sample;
 		stats.min = sfz::min(stats.min, sample);
 		stats.max = sfz::max(stats.max, sample);
 	}
-	stats.avg = numValidSamples != 0 ? total / float(numValidSamples) : 0.0f;
+	stats.avg = numValidSamples != 0 ? total / f32(numValidSamples) : 0.0f;
 	
 	// Fix min and max if not set
 	if (stats.min == F32_MAX) stats.min = lab->defaultValue;
 	if (stats.max == -F32_MAX) stats.max = lab->defaultValue;
 
 	// Calculate standard deviation
-	float varianceSum = 0.0f;
+	f32 varianceSum = 0.0f;
 	for (u32 i = cat->numSamples; i > 0; i--) {
 		u64 idx = cat->indices[i - 1];
 		if (idx == 0) break;
-		float sample = lab->samples[i - 1];
+		f32 sample = lab->samples[i - 1];
 		varianceSum += ((sample - stats.avg) * (sample - stats.avg));
 	}
-	stats.std = numValidSamples != 0 ? std::sqrtf(varianceSum / float(numValidSamples)) : 0.0f;
+	stats.std = numValidSamples != 0 ? ::sqrtf(varianceSum / f32(numValidSamples)) : 0.0f;
 
 	return stats;
 }
@@ -239,10 +239,10 @@ LabelStats ProfilingStats::stats(const char* category, const char* label) const 
 void ProfilingStats::createCategory(
 	const char* category,
 	u32 numSamples,
-	float sampleOutlierMax,
+	f32 sampleOutlierMax,
 	const char* sampleUnit,
 	const char* idxUnit,
-	float smallestPlotMax,
+	f32 smallestPlotMax,
 	StatsVisualizationType visualizationType) noexcept
 {
 	sfz_assert(mState->categories.get(category) == nullptr);
@@ -263,12 +263,12 @@ void ProfilingStats::createCategory(
 	mState->categoryStringBackings.add(str32("%s", category));
 	mState->categoryStrings.add(mState->categoryStringBackings.last());
 
-	// Add indices (0), fudge float variant so it has negative values until last one
+	// Add indices (0), fudge f32 variant so it has negative values until last one
 	cat.indices.init(cat.numSamples, mState->allocator, sfz_dbg(""));
 	cat.indices.add(0ull, cat.numSamples);
 	cat.indicesAsFloat.init(cat.numSamples, mState->allocator, sfz_dbg(""));
 	for (u32 i = 0; i < cat.numSamples; i++) {
-		float val = -(float(cat.numSamples) - float(i) - 1.0f);
+		f32 val = -(f32(cat.numSamples) - f32(i) - 1.0f);
 		cat.indicesAsFloat.add(val);
 	}
 	sfz_assert(cat.indices.capacity() == cat.numSamples);
@@ -279,7 +279,7 @@ void ProfilingStats::createLabel(
 	const char* category,
 	const char* label,
 	f32x4 color,
-	float defaultValue) noexcept
+	f32 defaultValue) noexcept
 {
 	sfz_assert(strnlen(label, 33) < 32);
 
@@ -307,7 +307,7 @@ void ProfilingStats::createLabel(
 }
 
 void ProfilingStats::addSample(
-	const char* category, const char* label, u64 sampleIdx, float sample) noexcept
+	const char* category, const char* label, u64 sampleIdx, f32 sample) noexcept
 {
 	StatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
@@ -344,7 +344,7 @@ void ProfilingStats::addSample(
 		sfz_assert(cat->indices.size() == cat->numSamples);
 
 		cat->indicesAsFloat.remove(0, 1);
-		cat->indicesAsFloat.add(float(sampleIdx));
+		cat->indicesAsFloat.add(f32(sampleIdx));
 		sfz_assert(cat->indicesAsFloat.size() == cat->numSamples);
 		
 		// Remove first sample and add default one last for all labels

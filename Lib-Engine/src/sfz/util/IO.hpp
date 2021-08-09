@@ -76,7 +76,7 @@ int64_t sizeofFile(const char* path) noexcept;
 
 // Reads binary file to pre-allocated memory.
 // \return 0 on success, -1 on error, -2 if file was larger than pre-allocated memory
-int32_t readBinaryFile(const char* path, u8* dataOut, size_t maxNumBytes) noexcept;
+i32 readBinaryFile(const char* path, u8* dataOut, size_t maxNumBytes) noexcept;
 
 // Reads binary file, returns empty Array if error.
 Array<u8> readBinaryFile(

@@ -70,7 +70,7 @@ static void* sfz_malloc_wrapper(size_t size)
 static void* sfz_realloc_sized_wrapper(void* ptr, size_t oldSize, size_t newSize)
 {
 	void* newMem = sfz_malloc_wrapper(newSize);
-	std::memcpy(newMem, ptr, oldSize);
+	memcpy(newMem, ptr, oldSize);
 	sfz_free_wrapper(ptr);
 	return newMem;
 }
@@ -147,7 +147,7 @@ Image Image::allocate(i32 width, i32 height, ImageType type, SfzAllocator* alloc
 	image.bytesPerPixel = sizeOfElement(type);
 	image.rawData.init(width * height * image.bytesPerPixel, allocator, sfz_dbg(""));
 	image.rawData.hackSetSize(image.rawData.capacity());
-	std::memset(image.rawData.data(), 0, image.rawData.size());
+	memset(image.rawData.data(), 0, image.rawData.size());
 	return image;
 }
 
@@ -260,9 +260,9 @@ void flipVertically(Image& image, SfzAllocator* allocator) noexcept
 		u8* begin = image.rawData.data() + i * pitch;
 		u8* end = image.rawData.data() + (image.height - i - 1) * pitch;
 
-		std::memcpy(buffer, begin, pitch);
-		std::memcpy(begin, end, pitch);
-		std::memcpy(end, buffer, pitch);
+		memcpy(buffer, begin, pitch);
+		memcpy(begin, end, pitch);
+		memcpy(end, buffer, pitch);
 	}
 
 	allocator->dealloc(buffer);

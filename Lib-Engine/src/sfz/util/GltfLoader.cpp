@@ -56,9 +56,9 @@ static str320 calculateBasePath(const char* path) noexcept
 	return str;
 }
 
-static u8 toU8(float val) noexcept
+static u8 toU8(f32 val) noexcept
 {
-	return u8(std::roundf(val * 255.0f));
+	return u8(::roundf(val * 255.0f));
 }
 
 static u8x4 toU8(f32x4 val) noexcept
@@ -213,7 +213,7 @@ bool loadAssetsFromGltf(
 				SFZ_ERROR("cgltf", "Could not load texture: \"%s\"", globalPath.str());
 				return false;
 			}
-			texturesOut.add(std::move(pack));
+			texturesOut.add(sfz_move(pack));
 		}
 	}
 

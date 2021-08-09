@@ -117,17 +117,17 @@ public:
 	Setting* sanitizeInt(
 		const char* section, const char* key,
 		bool writeToFile = true,
-		int32_t defaultValue = 0,
-		int32_t minValue = I32_MIN,
-		int32_t maxValue = I32_MAX,
-		int32_t step = 1) noexcept;
+		i32 defaultValue = 0,
+		i32 minValue = I32_MIN,
+		i32 maxValue = I32_MAX,
+		i32 step = 1) noexcept;
 
 	Setting* sanitizeFloat(
 		const char* section, const char* key,
 		bool writeToFile = true,
-		float defaultValue = 0.0f,
-		float minValue = -F32_MAX,
-		float maxValue = F32_MAX) noexcept;
+		f32 defaultValue = 0.0f,
+		f32 minValue = -F32_MAX,
+		f32 maxValue = F32_MAX) noexcept;
 
 	Setting* sanitizeBool(
 		const char* section, const char* key,

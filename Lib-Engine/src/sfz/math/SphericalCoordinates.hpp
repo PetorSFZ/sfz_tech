@@ -26,13 +26,13 @@ namespace sfz {
 struct SphericalCoord final {
 
 	// Distance from center ("length of vector"), range [0, inf]
-	float r;
+	f32 r;
 
 	// Rotation around z-axis in degrees, range [0, 360)
-	float phi;
+	f32 phi;
 
 	// "Vertical" rotation angle in degrees, range [0, 180]
-	float theta;
+	f32 theta;
 };
 
 inline const SphericalCoord toSpherical(f32x3 v)
@@ -40,22 +40,22 @@ inline const SphericalCoord toSpherical(f32x3 v)
 	SphericalCoord coord = {};
 	coord.r = length(v);
 	if (coord.r == 0.0f) return coord;
-	coord.phi = atan2(v.y, v.x) * sfz::RAD_TO_DEG; // Range [-180, 180]
+	coord.phi = atan2f(v.y, v.x) * sfz::RAD_TO_DEG; // Range [-180, 180]
 	if (coord.phi < 0.0f) coord.phi += 360.0f; // Move into range [0, 360]
 	if (coord.phi >= 360.0f) coord.phi -= 360.0f; // Move into range [0, 360)
-	coord.theta = acos(v.z / coord.r) * sfz::RAD_TO_DEG; // Range [0, 180]
+	coord.theta = acosf(v.z / coord.r) * sfz::RAD_TO_DEG; // Range [0, 180]
 	coord.theta = sfz::clamp(coord.theta, 0.0f, 180.0f);
 	return coord;
 }
 
 inline const f32x3 fromSpherical(SphericalCoord c)
 {
-	const float thetaRads = c.theta * sfz::DEG_TO_RAD;
-	const float phiRads = c.phi * sfz::DEG_TO_RAD;
+	const f32 thetaRads = c.theta * sfz::DEG_TO_RAD;
+	const f32 phiRads = c.phi * sfz::DEG_TO_RAD;
 	f32x3 v;
-	v.x = c.r * sin(thetaRads) * cos(phiRads);
-	v.y = c.r * sin(thetaRads) * sin(phiRads);
-	v.z = c.r * cos(thetaRads);
+	v.x = c.r * sinf(thetaRads) * cosf(phiRads);
+	v.y = c.r * sinf(thetaRads) * sinf(phiRads);
+	v.z = c.r * cosf(thetaRads);
 	return v;
 }
 

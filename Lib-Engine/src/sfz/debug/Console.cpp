@@ -60,7 +60,7 @@ struct ConsoleState final {
 	Setting* inGamePerfWidth = nullptr;
 	Setting* inGamePerfHeight = nullptr;
 	str64 categoryStr = str64("default");
-	ArrayLocal<Array<float>, PROFILING_STATS_MAX_NUM_LABELS> processedValues;
+	ArrayLocal<Array<f32>, PROFILING_STATS_MAX_NUM_LABELS> processedValues;
 
 	// Global Config
 	str32 configFilterString;
@@ -118,19 +118,19 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 
 	// Retrieve sample arrays, colors and stats for each label in the selected category
 	// Also get the worst max
-	ArrayLocal<const float*, PROFILING_STATS_MAX_NUM_LABELS> valuesList;
+	ArrayLocal<const f32*, PROFILING_STATS_MAX_NUM_LABELS> valuesList;
 	ArrayLocal<ImU32, PROFILING_STATS_MAX_NUM_LABELS> colorsList;
 	ArrayLocal<LabelStats, PROFILING_STATS_MAX_NUM_LABELS> labelStats;
-	float worstMax = -F32_MAX;
+	f32 worstMax = -F32_MAX;
 	u32 longestLabelStr = 0;
 	for (u32 i = 0; i < numLabels; i++) {
 
 		// Get samples
 		const char* label = labelStrs[i];
-		const float* samples = stats.samples(state.categoryStr, label);
+		const f32* samples = stats.samples(state.categoryStr, label);
 
 		// Process samples and copy them to temp array, add temp array to valuesList
-		Array<float>& processed = state.processedValues[i];
+		Array<f32>& processed = state.processedValues[i];
 		processed.ensureCapacity(numSamples);
 		processed.clear();
 		processed.add(samples, numSamples);
@@ -150,9 +150,9 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 	// Combine samples if requested
 	if (visType == StatsVisualizationType::FIRST_INDIVIDUALLY_REST_ADDED) {
 		for (u32 i = 1; i < numLabels; i++) {
-			Array<float>& targetVals = state.processedValues[i];
+			Array<f32>& targetVals = state.processedValues[i];
 			for (u32 j = i + 1; j < numLabels; j++) {
-				const Array<float>& readVals = state.processedValues[j];
+				const Array<f32>& readVals = state.processedValues[j];
 				for (u32 k = 0; k < numSamples; k++) {
 					targetVals[k] += readVals[k];
 				}
@@ -169,7 +169,7 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 	conf.values.colors = colorsList.data();
 
 	conf.scale.min = 0.0f;
-	const float smallestPlotMax = stats.smallestPlotMax(state.categoryStr);
+	const f32 smallestPlotMax = stats.smallestPlotMax(state.categoryStr);
 	conf.scale.max = sfz::max(worstMax, smallestPlotMax);
 
 	conf.tooltip.show = true;
@@ -186,7 +186,7 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 
 		// Calculate window size
 		f32x2 windowSize =
-			f32x2(float(state.inGamePerfWidth->intValue()), float(state.inGamePerfHeight->intValue()));
+			f32x2(f32(state.inGamePerfWidth->intValue()), f32(state.inGamePerfHeight->intValue()));
 		ImGui::SetNextWindowSize(windowSize, ImGuiCond_Always);
 		ImGui::SetNextWindowPos(f32x2(0.0f), ImGuiCond_Always);
 
@@ -279,7 +279,7 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 	}
 }
 
-static void renderLogWindow(ConsoleState& state, f32x2 imguiWindowRes, bool isPreview, float maxAgeSecs = 6.0f) noexcept
+static void renderLogWindow(ConsoleState& state, f32x2 imguiWindowRes, bool isPreview, f32 maxAgeSecs = 6.0f) noexcept
 {
 	TerminalLogger& logger = *reinterpret_cast<TerminalLogger*>(getLogger());
 	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
@@ -305,7 +305,7 @@ static void renderLogWindow(ConsoleState& state, f32x2 imguiWindowRes, bool isPr
 		for (u32 i = 0; i < numMessages; i++) {
 			// Reverse order, newest first
 			const TerminalMessageItem& msg = logger.getMessage(numMessages - i - 1);
-			const float age = float(now - msg.timestamp);
+			const f32 age = f32(now - msg.timestamp);
 			if (age > maxAgeSecs) {
 				break;
 			}
@@ -317,7 +317,7 @@ static void renderLogWindow(ConsoleState& state, f32x2 imguiWindowRes, bool isPr
 
 		// Calculate window size
 		const f32x2 windowSize =
-			f32x2(float(state.inGameLogWidth->intValue()), float(state.inGameLogHeight->intValue()));
+			f32x2(f32(state.inGameLogWidth->intValue()), f32(state.inGameLogHeight->intValue()));
 		ImGui::SetNextWindowSize(windowSize, ImGuiCond_Always);
 		ImGui::SetNextWindowPos(imguiWindowRes - windowSize - f32x2(5.0f), ImGuiCond_Always);
 
@@ -343,7 +343,7 @@ static void renderLogWindow(ConsoleState& state, f32x2 imguiWindowRes, bool isPr
 			const TerminalMessageItem& msg = logger.getMessage(numMessages - i - 1);
 
 			// Skip if log level is too low
-			if (int32_t(msg.level) < state.logMinLevelSetting->intValue()) continue;
+			if (i32(msg.level) < state.logMinLevelSetting->intValue()) continue;
 
 			// Print message header
 			const f32x4 messageColor = getMessageColor(msg.level);
@@ -417,7 +417,7 @@ static void renderLogWindow(ConsoleState& state, f32x2 imguiWindowRes, bool isPr
 		const TerminalMessageItem& message = logger.getMessage(numLogMessages - i - 1);
 
 		// Skip if log level is too low
-		if (int32_t(message.level) < state.logMinLevelSetting->intValue()) continue;
+		if (i32(message.level) < state.logMinLevelSetting->intValue()) continue;
 
 		// Skip section if nothing matches when filtering
 		if (tagFilterMode) {
@@ -495,7 +495,7 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 
 	// Start columns
 	ImGui::Columns(3);
-	float windowWidth = ImGui::GetWindowSize().x;
+	f32 windowWidth = ImGui::GetWindowSize().x;
 	ImGui::SetColumnWidth(0, 55.0f);
 	ImGui::SetColumnWidth(1, windowWidth - 275.0f);
 	ImGui::SetColumnWidth(2, 200.0f);
@@ -572,7 +572,7 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 			switch (setting->type()) {
 			case ValueType::INT:
 				{
-					int32_t i = setting->intValue();
+					i32 i = setting->intValue();
 					if (ImGui::InputInt(tmpStr, &i, setting->value().i.bounds.step)) {
 						setting->setInt(i);
 					}
@@ -580,7 +580,7 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 				break;
 			case ValueType::FLOAT:
 				{
-					float f = setting->floatValue();
+					f32 f = setting->floatValue();
 					if (ImGui::InputFloat(tmpStr, &f, 0.25f, 0.0f, "%.4f")) {
 						setting->setFloat(f);
 					}
@@ -622,7 +622,7 @@ void Console::init(SfzAllocator* allocator, u32 numWindowsToDock, const char* co
 
 	// Initialize some temp arrays with allocators
 	for (u32 i = 0; i < mState->processedValues.capacity(); i++) {
-		mState->processedValues.add(Array<float>(0, allocator, sfz_dbg("")));
+		mState->processedValues.add(Array<f32>(0, allocator, sfz_dbg("")));
 	}
 
 	// Pick out console settings
@@ -650,7 +650,7 @@ void Console::init(SfzAllocator* allocator, u32 numWindowsToDock, const char* co
 
 void Console::swap(Console& other) noexcept
 {
-	std::swap(this->mState, other.mState);
+	sfz::swap(this->mState, other.mState);
 }
 
 void Console::destroy() noexcept

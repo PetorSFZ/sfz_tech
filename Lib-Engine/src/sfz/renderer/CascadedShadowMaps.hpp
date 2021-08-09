@@ -35,7 +35,7 @@ struct CascadedShadowMapInfo final {
 	u32 numLevels = 0;
 
 	// Maximum distance each shadow map level is valid for (same as input to function)
-	float levelDists[MAX_NUM_CASCADED_SHADOW_MAP_LEVELS] = {};
+	f32 levelDists[MAX_NUM_CASCADED_SHADOW_MAP_LEVELS] = {};
 
 	// View matrices for the levels shadow map camera
 	mat4 viewMatrices[MAX_NUM_CASCADED_SHADOW_MAP_LEVELS] = {};
@@ -50,7 +50,7 @@ struct CascadedShadowMapInfo final {
 	// float4 tmp = mul(lightMatrix, float4(viewSpacePos, 1.0));
 	// tmp.xyz /= tmp.w;
 	// tmp.y = 1.0 - tmp.y;
-	// float lightDepth = shadowMap.Sample(sampler, tmp.xy).r;
+	// f32 lightDepth = shadowMap.Sample(sampler, tmp.xy).r;
 	// // compare lightDepth and tmp.z here
 	mat4 lightMatrices[MAX_NUM_CASCADED_SHADOW_MAP_LEVELS] = {};
 };
@@ -74,13 +74,13 @@ CascadedShadowMapInfo calculateCascadedShadowMapInfo(
 	f32x3 camPos,
 	f32x3 camDir,
 	f32x3 camUp,
-	float camVertFovDegs,
-	float camAspect,
-	float camNear,
+	f32 camVertFovDegs,
+	f32 camAspect,
+	f32 camNear,
 	mat4 camRealViewMatrix,
 	f32x3 lightDir,
-	float shadowHeightDist,
+	f32 shadowHeightDist,
 	u32 numLevels,
-	const float* levelDists) noexcept;
+	const f32* levelDists) noexcept;
 
 } // namespace sfz

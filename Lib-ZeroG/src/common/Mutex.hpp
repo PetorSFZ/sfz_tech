@@ -19,7 +19,6 @@
 #pragma once
 
 #include <mutex>
-#include <utility> // std::swap
 
 #include <skipifzero.hpp>
 
@@ -46,7 +45,7 @@ public:
 	~Mutex() noexcept = default;
 
 	Mutex(const T& defaultValue) noexcept : mData(defaultValue) { }
-	Mutex(T&& defaultValue) noexcept : mData(std::move(defaultValue)) { }
+	Mutex(T&& defaultValue) noexcept : mData(sfz_move(defaultValue)) { }
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
@@ -97,8 +96,8 @@ public:
 
 	void swap(MutexAccessor& other) noexcept
 	{
-		std::swap(this->mMutex, other.mMutex);
-		std::swap(this->mData, other.mData);
+		sfz::swap(this->mMutex, other.mMutex);
+		sfz::swap(this->mData, other.mData);
 	}
 
 	void destroy() noexcept

@@ -23,24 +23,24 @@ namespace sfz {
 
 namespace detail {
 
-inline bool intersectsPlane(const Plane& plane, const f32x3& position, float projectedRadius) noexcept
+inline bool intersectsPlane(const Plane& plane, const f32x3& position, f32 projectedRadius) noexcept
 {
 	// Part of plane SAT algorithm from Real-Time Collision Detection
-	float dist = plane.signedDistance(position);
+	f32 dist = plane.signedDistance(position);
 	return std::abs(dist) <= projectedRadius;
 }
 
-inline bool abovePlane(const Plane& plane, const f32x3& position, float projectedRadius) noexcept
+inline bool abovePlane(const Plane& plane, const f32x3& position, f32 projectedRadius) noexcept
 {
 	// Part of plane SAT algorithm from Real-Time Collision Detection
-	float dist = plane.signedDistance(position);
+	f32 dist = plane.signedDistance(position);
 	return dist >= (-projectedRadius);
 }
 
-inline bool belowPlane(const Plane& plane, const f32x3& position, float projectedRadius) noexcept
+inline bool belowPlane(const Plane& plane, const f32x3& position, f32 projectedRadius) noexcept
 {
 	// Part of plane SAT algorithm from Real-Time Collision Detection
-	float dist = plane.signedDistance(position);
+	f32 dist = plane.signedDistance(position);
 	return dist <= projectedRadius;
 }
 
@@ -60,7 +60,7 @@ inline bool pointInside(const OBB& box, const f32x3& point) noexcept
 {
 	// Modified closest point algorithm from Real-Time Collision Detection (Section 5.1.4)
 	const f32x3 distToPoint = point - box.center;
-	float dist;
+	f32 dist;
 	for (u32 i = 0; i < 3; i++) {
 		dist = dot(distToPoint, box.rotation.row(i));
 		if (dist > box.halfExtents[i]) return false;
@@ -121,7 +121,7 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 	}
 
 	// Compute common subexpressions, epsilon term to counteract arithmetic errors
-	const float EPSILON = 0.00001f;
+	const f32 EPSILON = 0.00001f;
 	mat3 AbsR;
 	for (u32 i = 0; i < 3; i++) {
 		for (u32 j = 0; j < 3; j++) {
@@ -133,7 +133,7 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 	f32x3 t = b.center - a.center;
 	t = f32x3{dot(t, aU.row(0)), dot(t, aU.row(1)), dot(t, aU.row(2))};
 
-	float ra, rb;
+	f32 ra, rb;
 
 	// Test axes L = aU[0], aU[1], aU[2]
 	for (u32 i = 0; i < 3; i++) {
@@ -201,9 +201,9 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 inline bool intersects(const Sphere& sphereA, const Sphere& sphereB) noexcept
 {
 	const f32x3 distVec = sphereA.position - sphereB.position;
-	const float squaredDist = dot(distVec, distVec);
-	const float radiusSum = sphereA.radius + sphereB.radius;
-	const float squaredRadiusSum = radiusSum * radiusSum;
+	const f32 squaredDist = dot(distVec, distVec);
+	const f32 radiusSum = sphereA.radius + sphereB.radius;
+	const f32 squaredRadiusSum = radiusSum * radiusSum;
 	return squaredDist <= squaredRadiusSum;
 }
 
@@ -212,8 +212,8 @@ inline bool overlaps(const Circle& lhs, const Circle& rhs) noexcept
 	// If the length between the center of the two circles is less than or equal to the the sum of
 	// the circle's radiuses they overlap. Both sides of the equation is squared to avoid somewhat
 	// expensive sqrt() function.
-	float distSquared = dot(lhs.pos - rhs.pos, lhs.pos - rhs.pos);
-	float radiusSum = lhs.radius + rhs.radius;
+	f32 distSquared = dot(lhs.pos - rhs.pos, lhs.pos - rhs.pos);
+	f32 radiusSum = lhs.radius + rhs.radius;
 	return distSquared <= (radiusSum * radiusSum);
 }
 
@@ -251,7 +251,7 @@ inline bool intersects(const Plane& plane, const AABB& aabb) noexcept
 	// SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 
 	// Projected radius on line towards closest point on plane
-	float projectedRadius = aabb.halfDimX() * std::abs(plane.normal()[0])
+	f32 projectedRadius = aabb.halfDimX() * std::abs(plane.normal()[0])
 	                      + aabb.halfDimY() * std::abs(plane.normal()[1])
 	                      + aabb.halfDimZ() * std::abs(plane.normal()[2]);
 
@@ -268,7 +268,7 @@ inline bool abovePlane(const Plane& plane, const AABB& aabb) noexcept
 	// Modified SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 
 	// Projected radius on line towards closest point on plane
-	float projectedRadius = aabb.halfDimX() * std::abs(plane.normal()[0])
+	f32 projectedRadius = aabb.halfDimX() * std::abs(plane.normal()[0])
 	                      + aabb.halfDimY() * std::abs(plane.normal()[1])
 	                      + aabb.halfDimZ() * std::abs(plane.normal()[2]);
 
@@ -279,7 +279,7 @@ inline bool belowPlane(const Plane& plane, const AABB& aabb) noexcept
 {
 	// Modified SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 	// Projected radius on line towards closest point on plane
-	float projectedRadius = aabb.halfDimX() * std::abs(plane.normal()[0])
+	f32 projectedRadius = aabb.halfDimX() * std::abs(plane.normal()[0])
 	                      + aabb.halfDimY() * std::abs(plane.normal()[1])
 	                      + aabb.halfDimZ() * std::abs(plane.normal()[2]);
 
@@ -293,7 +293,7 @@ inline bool intersects(const Plane& plane, const OBB& obb) noexcept
 {
 	// SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 	// Projected radius on line towards closest point on plane
-	float projectedRadius = obb.halfExtents.x * std::abs(dot(plane.normal(), obb.xAxis()))
+	f32 projectedRadius = obb.halfExtents.x * std::abs(dot(plane.normal(), obb.xAxis()))
 	                      + obb.halfExtents.y * std::abs(dot(plane.normal(), obb.yAxis()))
 	                      + obb.halfExtents.z * std::abs(dot(plane.normal(), obb.zAxis()));
 
@@ -309,7 +309,7 @@ inline bool abovePlane(const Plane& plane, const OBB& obb) noexcept
 {
 	// Modified SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 	// Projected radius on line towards closest point on plane
-	float projectedRadius = obb.halfExtents.x * std::abs(dot(plane.normal(), obb.xAxis()))
+	f32 projectedRadius = obb.halfExtents.x * std::abs(dot(plane.normal(), obb.xAxis()))
 	                      + obb.halfExtents.y * std::abs(dot(plane.normal(), obb.yAxis()))
 	                      + obb.halfExtents.z * std::abs(dot(plane.normal(), obb.zAxis()));
 
@@ -320,7 +320,7 @@ inline bool belowPlane(const Plane& plane, const OBB& obb) noexcept
 {
 	// Modified SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 	// Projected radius on line towards closest point on plane
-	float projectedRadius = obb.halfExtents.x * std::abs(dot(plane.normal(), obb.xAxis()))
+	f32 projectedRadius = obb.halfExtents.x * std::abs(dot(plane.normal(), obb.xAxis()))
 	                      + obb.halfExtents.y * std::abs(dot(plane.normal(), obb.yAxis()))
 	                      + obb.halfExtents.z * std::abs(dot(plane.normal(), obb.zAxis()));
 
@@ -364,7 +364,7 @@ inline f32x3 closestPoint(const OBB& obb, const f32x3& point) noexcept
 	const f32x3 distToPoint = point - obb.center;
 	f32x3 res = obb.center;
 
-	float dist;
+	f32 dist;
 	for (u32 i = 0; i < 3; i++) {
 		dist = dot(distToPoint, obb.rotation.row(i));
 		if (dist > obb.halfExtents[i]) dist = obb.halfExtents[i];

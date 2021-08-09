@@ -338,7 +338,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 
 	// Calculate delta since previous iteration
 	u64 perfCounterTickValue = SDL_GetPerformanceCounter();
-	float deltaSecs = float(double(perfCounterTickValue - state.prevPerfCounterTickValue) / double(state.perfCounterTicksPerSec));
+	f32 deltaSecs = f32(double(perfCounterTickValue - state.prevPerfCounterTickValue) / double(state.perfCounterTicksPerSec));
 	state.prevPerfCounterTickValue = perfCounterTickValue;
 
 	// Remove old events
@@ -520,23 +520,23 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 				// Thus, we reduce the amount needed to hit max by about ~300 units (slightly less
 				// than 1% of total range). This way we should hopefully never end up in the
 				// unfortunate scenario where a gamepad is physically incapable of capping out.
-				constexpr float AXIS_MAX = float(SDL_JOYSTICK_AXIS_MAX - 300);
+				constexpr f32 AXIS_MAX = f32(SDL_JOYSTICK_AXIS_MAX - 300);
 
 				int16_t leftX = SDL_GameControllerGetAxis(gpd.controller, SDL_CONTROLLER_AXIS_LEFTX);
 				int16_t leftY = SDL_GameControllerGetAxis(gpd.controller, SDL_CONTROLLER_AXIS_LEFTY);
-				gpd.leftStick = sfz::f32x2(float(leftX), -float(leftY)) / sfz::f32x2(AXIS_MAX);
+				gpd.leftStick = sfz::f32x2(f32(leftX), -f32(leftY)) / sfz::f32x2(AXIS_MAX);
 				gpd.leftStick = sfz::clamp(gpd.leftStick, -1.0f, 1.0f);
 
 				int16_t rightX = SDL_GameControllerGetAxis(gpd.controller, SDL_CONTROLLER_AXIS_RIGHTX);
 				int16_t rightY = SDL_GameControllerGetAxis(gpd.controller, SDL_CONTROLLER_AXIS_RIGHTY);
-				gpd.rightStick = sfz::f32x2(float(rightX), -float(rightY)) / sfz::f32x2(AXIS_MAX);
+				gpd.rightStick = sfz::f32x2(f32(rightX), -f32(rightY)) / sfz::f32x2(AXIS_MAX);
 				gpd.rightStick = sfz::clamp(gpd.rightStick, -1.0f, 1.0f);
 
 				int16_t leftTrigger = SDL_GameControllerGetAxis(gpd.controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT);
-				gpd.lt = sfz::clamp(float(leftTrigger) / AXIS_MAX, 0.0f, 1.0f);
+				gpd.lt = sfz::clamp(f32(leftTrigger) / AXIS_MAX, 0.0f, 1.0f);
 
 				int16_t rightTrigger = SDL_GameControllerGetAxis(gpd.controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
-				gpd.rt = sfz::clamp(float(rightTrigger) / AXIS_MAX, 0.0f, 1.0f);
+				gpd.rt = sfz::clamp(f32(rightTrigger) / AXIS_MAX, 0.0f, 1.0f);
 
 				// Clear previous button states
 				for (u32 i = 0; i < sfz::GPD_MAX_NUM_BUTTONS; i++) gpd.buttons[i] = 0;
@@ -630,7 +630,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	// Add last finished GPU frame's frametime to the global profiling stats
 	{
 		u64 frameIdx = ~0u;
-		float gpuFrameTimeMs = 0.0f;
+		f32 gpuFrameTimeMs = 0.0f;
 		sfz::getRenderer().frameTimeMs(frameIdx, gpuFrameTimeMs);
 		if (frameIdx != ~0ull) {
 			sfz::getProfilingStats().addSample(

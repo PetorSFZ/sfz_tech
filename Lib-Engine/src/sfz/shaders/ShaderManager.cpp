@@ -122,7 +122,7 @@ bool Shader::build() noexcept
 		zg::PipelineRender tmpPipeline;
 		buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileHLSL(tmpPipeline);
 		if (buildSuccess) {
-			this->render.pipeline = std::move(tmpPipeline);
+			this->render.pipeline = sfz_move(tmpPipeline);
 			this->lastModified = sfz::fileLastModifiedDate(this->shaderPath);
 		}
 	}
@@ -147,7 +147,7 @@ bool Shader::build() noexcept
 		zg::PipelineCompute tmpPipeline;
 		buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileHLSL(tmpPipeline, ZG_SHADER_MODEL_6_1);
 		if (buildSuccess) {
-			this->compute.pipeline = std::move(tmpPipeline);
+			this->compute.pipeline = sfz_move(tmpPipeline);
 			this->lastModified = sfz::fileLastModifiedDate(this->shaderPath);
 		}
 		return buildSuccess;
@@ -243,7 +243,7 @@ PoolHandle ShaderManager::addShader(Shader&& shader)
 	strID name = shader.name;
 	sfz_assert(name.isValid());
 	sfz_assert(mState->shaderHandles.get(name) == nullptr);
-	PoolHandle handle = mState->shaders.allocate(std::move(shader));
+	PoolHandle handle = mState->shaders.allocate(sfz_move(shader));
 	mState->shaderHandles.put(name, handle);
 	sfz_assert(mState->shaderHandles.size() == mState->shaders.numAllocated());
 	return handle;

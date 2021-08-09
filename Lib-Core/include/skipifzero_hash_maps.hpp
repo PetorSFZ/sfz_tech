@@ -20,6 +20,8 @@
 #define SKIPIFZERO_HASH_MAPS_HPP
 #pragma once
 
+#include <new>
+
 #include "skipifzero.hpp"
 
 namespace sfz {
@@ -216,7 +218,7 @@ public:
 		}
 
 		// Clear all slots
-		std::memset(mSlots, 0, roundUpAligned(mCapacity * sizeof(HashMapSlot), ALIGNMENT));
+		memset(mSlots, 0, roundUpAligned(mCapacity * sizeof(HashMapSlot), ALIGNMENT));
 
 		// Set size to 0
 		mSize = 0;
@@ -245,7 +247,7 @@ public:
 
 		// Allocate and clear memory for new hash map
 		tmp.mAllocation = static_cast<u8*>(mAllocator->alloc(allocDbg, allocSize, ALIGNMENT));
-		std::memset(tmp.mAllocation, 0, allocSize);
+		memset(tmp.mAllocation, 0, allocSize);
 		tmp.mAllocator = mAllocator;
 		tmp.mSlots = reinterpret_cast<HashMapSlot*>(tmp.mAllocation);
 		tmp.mKeys = reinterpret_cast<K*>(tmp.mAllocation + sizeOfSlots);
@@ -256,7 +258,7 @@ public:
 		// Iterate over all pairs of objects in this HashMap and move them to the new one
 		if (this->mAllocation != nullptr) {
 			for (u32 i = 0; i < mSize; i++) {
-				tmp.put(std::move(mKeys[i]), std::move(mValues[i]));
+				tmp.put(sfz_move(mKeys[i]), sfz_move(mValues[i]));
 			}
 		}
 
@@ -303,9 +305,9 @@ public:
 	// At this point only ref2 is guaranteed to be valid, as the second call might have triggered
 	// a rehash.
 	V& put(const K& key, const V& value) { return this->putInternal<const K&, const V&>(key, value); }
-	V& put(const K& key, V&& value) { return this->putInternal<const K&, V>(key, std::move(value)); }
+	V& put(const K& key, V&& value) { return this->putInternal<const K&, V>(key, sfz_move(value)); }
 	V& put(const AltK& key, const V& value) { return this->putInternal<const AltK&, const V&>(key, value); }
-	V& put(const AltK& key, V&& value) { return this->putInternal<const AltK&, V>(key, std::move(value)); }
+	V& put(const AltK& key, V&& value) { return this->putInternal<const AltK&, V>(key, sfz_move(value)); }
 
 	// Attempts to remove the element associated with the given key. Returns false if this
 	// HashMap contains no such element. Guaranteed to not rehash.
@@ -369,9 +371,9 @@ private:
 		u32 idx2 = slot2.index();
 		sfz_assert(idx1 < mSize);
 		sfz_assert(idx2 < mSize);
-		std::swap(mSlots[slotIdx1], mSlots[slotIdx2]);
-		std::swap(mKeys[idx1], mKeys[idx2]);
-		std::swap(mValues[idx1], mValues[idx2]);
+		sfz::swap(mSlots[slotIdx1], mSlots[slotIdx2]);
+		sfz::swap(mKeys[idx1], mKeys[idx2]);
+		sfz::swap(mValues[idx1], mValues[idx2]);
 	}
 
 	template<typename KT>
@@ -414,7 +416,7 @@ private:
 			HashMapSlot slot = mSlots[occupiedSlotIdx];
 			u32 idx = slot.index();
 			sfz_assert(idx < mSize);
-			mValues[idx] = std::forward<VT>(value);
+			mValues[idx] = sfz_forward(value);
 			return mValues[idx];
 		}
 
@@ -432,7 +434,7 @@ private:
 		// Perfect forwarding: const reference: VT == const V&, rvalue: VT == V
 		// std::forward<VT>(value) will then return the correct version of value
 		new (mKeys + nextFreeIdx) K(key);
-		new (mValues + nextFreeIdx) V(std::forward<VT>(value));
+		new (mValues + nextFreeIdx) V(sfz_forward(value));
 		return mValues[nextFreeIdx];
 	}
 
@@ -508,12 +510,12 @@ public:
 	void swap(HashMapLocal& other)
 	{
 		for (u32 i = 0; i < Capacity; i++) {
-			std::swap(this->mSlots[i], other.mSlots[i]);
-			std::swap(this->mKeys[i], other.mKeys[i]);
-			std::swap(this->mValues[i], other.mValues[i]);
+			sfz::swap(this->mSlots[i], other.mSlots[i]);
+			sfz::swap(this->mKeys[i], other.mKeys[i]);
+			sfz::swap(this->mValues[i], other.mValues[i]);
 		}
-		std::swap(this->mSize, other.mSize);
-		std::swap(this->mPlaceholders, other.mPlaceholders);
+		sfz::swap(this->mSize, other.mSize);
+		sfz::swap(this->mPlaceholders, other.mPlaceholders);
 	}
 
 	void clear()
@@ -528,7 +530,7 @@ public:
 		}
 
 		// Clear all slots
-		std::memset(mSlots, 0, roundUpAligned(Capacity * sizeof(HashMapSlot), 32));
+		memset(mSlots, 0, roundUpAligned(Capacity * sizeof(HashMapSlot), 32));
 
 		// Set size to 0
 		mSize = 0;
@@ -559,9 +561,9 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	V& put(const K& key, const V& value) { return this->putInternal<const K&, const V&>(key, value); }
-	V& put(const K& key, V&& value) { return this->putInternal<const K&, V>(key, std::move(value)); }
+	V& put(const K& key, V&& value) { return this->putInternal<const K&, V>(key, sfz_move(value)); }
 	V& put(const AltK& key, const V& value) { return this->putInternal<const AltK&, const V&>(key, value); }
-	V& put(const AltK& key, V&& value) { return this->putInternal<const AltK&, V>(key, std::move(value)); }
+	V& put(const AltK& key, V&& value) { return this->putInternal<const AltK&, V>(key, sfz_move(value)); }
 
 	bool remove(const K& key) { return this->removeInternal<K>(key); }
 	bool remove(const AltK& key) { return this->removeInternal<AltK>(key); }
@@ -623,9 +625,9 @@ private:
 		u32 idx2 = slot2.index();
 		sfz_assert(idx1 < mSize);
 		sfz_assert(idx2 < mSize);
-		std::swap(mSlots[slotIdx1], mSlots[slotIdx2]);
-		std::swap(mKeys[idx1], mKeys[idx2]);
-		std::swap(mValues[idx1], mValues[idx2]);
+		sfz::swap(mSlots[slotIdx1], mSlots[slotIdx2]);
+		sfz::swap(mKeys[idx1], mKeys[idx2]);
+		sfz::swap(mValues[idx1], mValues[idx2]);
 	}
 
 	template<typename KT>
@@ -682,7 +684,7 @@ private:
 			HashMapSlot slot = mSlots[occupiedSlotIdx];
 			u32 idx = slot.index();
 			sfz_assert(idx < mSize);
-			mValues[idx] = std::forward<VT>(value);
+			mValues[idx] = sfz_forward(value);
 			return mValues[idx];
 		}
 
@@ -701,7 +703,7 @@ private:
 		// Perfect forwarding: const reference: VT == const V&, rvalue: VT == V
 		// std::forward<VT>(value) will then return the correct version of value
 		mKeys[nextFreeIdx] = K(key);
-		mValues[nextFreeIdx] = std::forward<VT>(value);
+		mValues[nextFreeIdx] = sfz_forward(value);
 		return mValues[nextFreeIdx];
 	}
 

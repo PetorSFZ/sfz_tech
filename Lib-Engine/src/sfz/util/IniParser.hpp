@@ -65,12 +65,12 @@ public:
 	/// Returns a pointer to the internal value of the specified section and key. This pointer
 	/// should not be saved and should be immediately dereferenced. Returns nullpointer if value
 	/// does not exist or if it is not of int type.
-	const int32_t* getInt(const char* section, const char* key) const noexcept;
+	const i32* getInt(const char* section, const char* key) const noexcept;
 
 	/// Returns a pointer to the internal value of the specified section and key. This pointer
 	/// should not be saved and should be immediately dereferenced. Returns nullpointer if value
-	/// does not exist or if it is not of float type.
-	const float* getFloat(const char* section, const char* key) const noexcept;
+	/// does not exist or if it is not of f32 type.
+	const f32* getFloat(const char* section, const char* key) const noexcept;
 
 	/// Returns a pointer to the internal value of the specified section and key. This pointer
 	/// should not be saved and should be immediately dereferenced. Returns nullpointer if value
@@ -83,12 +83,12 @@ public:
 	/// Sets the key in specified section to the given value. Creates the section and or key if
 	/// they do not already exist. Eventual previous values will be overwritten and the type of
 	/// the key might be altered.
-	void setInt(const char* section, const char* key, int32_t value) noexcept;
+	void setInt(const char* section, const char* key, i32 value) noexcept;
 
 	/// Sets the key in specified section to the given value. Creates the section and or key if
 	/// they do not already exist. Eventual previous values will be overwritten and the type of
 	/// the key might be altered.
-	void setFloat(const char* section, const char* key, float value) noexcept;
+	void setFloat(const char* section, const char* key, f32 value) noexcept;
 
 	/// Sets the key in specified section to the given value. Creates the section and or key if
 	/// they do not already exist. Eventual previous values will be overwritten and the type of
@@ -100,17 +100,17 @@ public:
 
 	/// Sanitizing int getter. Ensures that the the item exists and is inside the specified
 	/// interval.
-	int32_t sanitizeInt(const char* section, const char* key,
-	                    int32_t defaultValue = 0,
-	                    int32_t minValue = numeric_limits<int32_t>::min(),
-	                    int32_t maxValue = numeric_limits<int32_t>::max()) noexcept;
+	i32 sanitizeInt(const char* section, const char* key,
+	                    i32 defaultValue = 0,
+	                    i32 minValue = numeric_limits<i32>::min(),
+	                    i32 maxValue = numeric_limits<i32>::max()) noexcept;
 
-	/// Sanitizing float getter. Ensures that the the item exists and is inside the specified
+	/// Sanitizing f32 getter. Ensures that the the item exists and is inside the specified
 	/// interval.
-	float sanitizeFloat(const char* section, const char* key,
-	                    float defaultValue = 0.0f,
-	                    float minValue = numeric_limits<float>::min(),
-	                    float maxValue = numeric_limits<float>::max()) noexcept;
+	f32 sanitizeFloat(const char* section, const char* key,
+	                    f32 defaultValue = 0.0f,
+	                    f32 minValue = numeric_limits<f32>::min(),
+	                    f32 maxValue = numeric_limits<f32>::max()) noexcept;
 
 	/// Sanitizing bool getter. Ensures that the the item exists.
 	bool sanitizeBool(const char* section, const char* key,
@@ -127,8 +127,8 @@ public:
 
 		const char* getSection() const noexcept;
 		const char* getKey() const noexcept;
-		const int32_t* getInt() const noexcept;
-		const float* getFloat() const noexcept;
+		const i32* getInt() const noexcept;
+		const f32* getFloat() const noexcept;
 		const bool* getBool() const noexcept;
 
 	private:
@@ -163,7 +163,7 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	enum class ItemType : u32 {
-		NUMBER, // int and/or float
+		NUMBER, // int and/or f32
 		BOOL,
 		COMMENT_OWN_ROW,
 		COMMENT_APPEND_PREVIOUS_ROW, // Appends a comment to the previous row
@@ -172,7 +172,7 @@ private:
 	struct Item final {
 		ItemType type;
 		union {
-			struct { int32_t i; float f; };
+			struct { i32 i; f32 f; };
 			bool b;
 		};
 		str192 str; // Name or comment depending on ItemType
