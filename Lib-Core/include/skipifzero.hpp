@@ -228,7 +228,6 @@ struct Vec<T,2> final {
 
 using vec2 =     Vec<f32, 2>;  static_assert(sizeof(vec2) == sizeof(f32) * 2, "");
 using vec2_i32 = Vec<i32, 2>;  static_assert(sizeof(vec2_i32) == sizeof(i32) * 2, "");
-using vec2_u32 = Vec<u32, 2>;  static_assert(sizeof(vec2_u32) == sizeof(u32) * 2, "");
 using vec2_u8 =  Vec<u8, 2>;   static_assert(sizeof(vec2_u8) == sizeof(u8) * 2, "");
 
 template<typename T>
@@ -284,7 +283,6 @@ struct Vec<T,3> final {
 
 using vec3 =     Vec<f32, 3>;  static_assert(sizeof(vec3) == sizeof(f32) * 3, "");
 using vec3_i32 = Vec<i32, 3>;  static_assert(sizeof(vec3_i32) == sizeof(i32) * 3, "");
-using vec3_u32 = Vec<u32, 3>;  static_assert(sizeof(vec3_u32) == sizeof(u32) * 3, "");
 using vec3_u8 =  Vec<u8, 3>;   static_assert(sizeof(vec3_u8) == sizeof(u8) * 3, "");
 
 template<typename T>
@@ -346,12 +344,10 @@ struct alignas(sizeof(T) * 4) Vec<T,4> final {
 
 using vec4 =     Vec<f32, 4>;  static_assert(sizeof(vec4) == sizeof(f32) * 4, "");
 using vec4_i32 = Vec<i32, 4>;  static_assert(sizeof(vec4_i32) == sizeof(i32) * 4, "");
-using vec4_u32 = Vec<u32, 4>;  static_assert(sizeof(vec4_u32) == sizeof(u32) * 4, "");
 using vec4_u8 =  Vec<u8, 4>;   static_assert(sizeof(vec4_u8) == sizeof(u8) * 4, "");
 
 static_assert(alignof(vec4) == 16, "");
 static_assert(alignof(vec4_i32) == 16, "");
-static_assert(alignof(vec4_u32) == 16, "");
 static_assert(alignof(vec4_u8) == 4, "");
 
 template<typename T, u32 N>

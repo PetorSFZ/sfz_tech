@@ -41,14 +41,6 @@ void toString(const vec2_i32& vector, str96& string) noexcept;
 void toString(const vec3_i32& vector, str96& string) noexcept;
 void toString(const vec4_i32& vector, str96& string) noexcept;
 
-str96 toString(const vec2_u32& vector) noexcept;
-str96 toString(const vec3_u32& vector) noexcept;
-str96 toString(const vec4_u32& vector) noexcept;
-
-void toString(const vec2_u32& vector, str96& string) noexcept;
-void toString(const vec3_u32& vector, str96& string) noexcept;
-void toString(const vec4_u32& vector, str96& string) noexcept;
-
 // Matrix toString()
 // ------------------------------------------------------------------------------------------------
 

@@ -77,7 +77,7 @@ bool VoxelModelResource::build(SfzAllocator* allocator)
 	const ogt_vox_model& model = *scene->models[0];
 
 	// Copy voxels to voxel model
-	this->dims = vec3_u32(model.size_x, model.size_y, model.size_z);
+	this->dims = vec3_i32(model.size_x, model.size_y, model.size_z);
 	const u32 maxNumVoxels = model.size_x * model.size_y * model.size_z;
 	this->voxels.init(maxNumVoxels, allocator, sfz_dbg(""));
 	this->voxels.add(model.voxel_data, maxNumVoxels);

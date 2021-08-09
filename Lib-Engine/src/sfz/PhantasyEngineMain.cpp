@@ -442,7 +442,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 		int windowHeight = -1;
 		SDL_GetWindowSize(state.window, &windowWidth, &windowHeight);
 		state.rawFrameInput.windowDims =
-			sfz::vec2_u32(u32(windowWidth), u32(windowHeight));
+			sfz::vec2_i32(windowWidth, windowHeight);
 
 		// Keyboard
 		{
@@ -461,8 +461,8 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 			int x = 0;
 			int y = 0;
 			u32 buttonState = SDL_GetMouseState(&x, &y);
-			sfz_assert(u32(y) < mouse.windowDims.y);
-			mouse.pos = sfz::vec2_u32(u32(x), mouse.windowDims.y - u32(y) - 1);
+			sfz_assert(y < mouse.windowDims.y);
+			mouse.pos = sfz::vec2_i32(x, mouse.windowDims.y - y - 1);
 			
 			u32 buttonState2 = SDL_GetRelativeMouseState(&mouse.delta.x, &mouse.delta.y);
 			sfz_assert(buttonState == buttonState2);

@@ -37,7 +37,7 @@ struct TextureResource final {
 
 	zg::Texture texture;
 	ZgTextureFormat format = ZG_TEXTURE_FORMAT_UNDEFINED;
-	vec2_u32 res = vec2_u32(0u);
+	vec2_i32 res = vec2_i32(0);
 	u32 numMipmaps = 1;
 	bool committedAllocation = false;
 	ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT;
@@ -53,8 +53,8 @@ struct TextureResource final {
 	bool settingControlledRes = false;
 	Setting* controlledResSetting = nullptr;
 
-	bool needRebuild(vec2_u32 screenRes) const;
-	[[nodiscard]] ZgResult build(vec2_u32 screenRes);
+	bool needRebuild(vec2_i32 screenRes) const;
+	[[nodiscard]] ZgResult build(vec2_i32 screenRes);
 
 	void uploadBlocking(
 		const ImageViewConst& image,
@@ -71,7 +71,7 @@ struct TextureResource final {
 	static TextureResource createFixedSize(
 		const char* name,
 		ZgTextureFormat format,
-		vec2_u32 res,
+		vec2_i32 res,
 		u32 numMipmaps = 1,
 		ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT,
 		bool committedAllocation = false);
@@ -79,7 +79,7 @@ struct TextureResource final {
 	static TextureResource createScreenRelative(
 		const char* name,
 		ZgTextureFormat format,
-		vec2_u32 screenRes,
+		vec2_i32 screenRes,
 		float scale,
 		Setting* scaleSetting = nullptr,
 		ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT,

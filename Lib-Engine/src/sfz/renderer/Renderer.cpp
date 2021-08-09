@@ -333,7 +333,7 @@ void Renderer::frameBegin()
 
 	// Update resources with current resolution
 	ResourceManager& resources = getResourceManager();
-	resources.updateResolution(vec2_u32(newResX, newResY));
+	resources.updateResolution(vec2_i32(newResX, newResY));
 
 	// Set vsync settings
 	CHECK_ZG zgContextSwapchainSetVsync(mState->vsync->boolValue() ? ZG_TRUE : ZG_FALSE);

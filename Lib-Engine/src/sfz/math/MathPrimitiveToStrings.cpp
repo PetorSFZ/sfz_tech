@@ -101,42 +101,6 @@ void toString(const vec4_i32& vector, str96& string) noexcept
 	string.appendf("[%i, %i, %i, %i]", vector.x, vector.y, vector.z, vector.w);
 }
 
-str96 toString(const vec2_u32& vector) noexcept
-{
-	str96 tmp;
-	toString(vector, tmp);
-	return tmp;
-}
-
-str96 toString(const vec3_u32& vector) noexcept
-{
-	str96 tmp;
-	toString(vector, tmp);
-	return tmp;
-}
-
-str96 toString(const vec4_u32& vector) noexcept
-{
-	str96 tmp;
-	toString(vector, tmp);
-	return tmp;
-}
-
-void toString(const vec2_u32& vector, str96& string) noexcept
-{
-	string.appendf("[%u, %u]", vector.x, vector.y);
-}
-
-void toString(const vec3_u32& vector, str96& string) noexcept
-{
-	string.appendf("[%u, %u, %u]", vector.x, vector.y, vector.z);
-}
-
-void toString(const vec4_u32& vector, str96& string) noexcept
-{
-	string.appendf("[%u, %u, %u, %u]", vector.x, vector.y, vector.z, vector.w);
-}
-
 // Matrix toString()
 // ------------------------------------------------------------------------------------------------
 

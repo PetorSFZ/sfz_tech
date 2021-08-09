@@ -41,8 +41,8 @@ struct KeyboardState final {
 };
 
 struct MouseState final {
-	vec2_u32 windowDims = vec2_u32(0u); // Position and delta is in range [0, windowDims]
-	vec2_u32 pos = vec2_u32(0u); // [0, 0] in bottom left corner
+	vec2_i32 windowDims = vec2_i32(0); // Position and delta is in range [0, windowDims]
+	vec2_i32 pos = vec2_i32(0); // [0, 0] in bottom left corner
 	vec2_i32 delta = vec2_i32(0); // Delta mouse has moved since last frame
 	vec2_i32 wheel = vec2_i32(0); // Pos-y "up", neg-y "down", but can vary with touchpads
 	u8 left = 0;
@@ -133,7 +133,7 @@ struct TouchState final {
 };
 
 struct RawInputState final {
-	vec2_u32 windowDims = vec2_u32(0u);
+	vec2_i32 windowDims = vec2_i32(0);
 	KeyboardState kb;
 	MouseState mouse;
 	Arr6<GamepadState> gamepads;

@@ -63,7 +63,7 @@ struct VoxelModelResource final {
 	time_t lastModifiedDate = 0;
 	str256 path;
 
-	vec3_u32 dims = vec3_u32(0u);
+	vec3_i32 dims = vec3_i32(0);
 	u32 numVoxels = 0; // The number of non-empty voxels in the voxels array, NOT the size of the voxels array.
 	Array<u8> voxels;
 	Arr256<vec4_u8> palette;
@@ -73,17 +73,17 @@ struct VoxelModelResource final {
 	PoolHandle userHandle = NULL_HANDLE;
 	time_t userHandleModifiedDate = 0;
 
-	u8& accessVoxel(vec3_u32 coord)
+	u8& accessVoxel(vec3_i32 coord)
 	{
-		sfz_assert(coord.x < dims.x);
-		sfz_assert(coord.y < dims.y);
-		sfz_assert(coord.z < dims.z);
-		u32 idx = coord.x + (coord.y * dims.x) + (coord.z * dims.x * dims.y);
+		sfz_assert(0 <= coord.x && coord.x < dims.x);
+		sfz_assert(0 <= coord.y && coord.y < dims.y);
+		sfz_assert(0 <= coord.z && coord.z < dims.z);
+		u32 idx = u32(coord.x + (coord.y * dims.x) + (coord.z * dims.x * dims.y));
 		sfz_assert(idx < voxels.size());
 		return voxels[idx];
 	}
 
-	u8 accessVoxel(vec3_u32 coord) const
+	u8 accessVoxel(vec3_i32 coord) const
 	{
 		return const_cast<VoxelModelResource*>(this)->accessVoxel(coord);
 	}

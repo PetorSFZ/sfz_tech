@@ -354,8 +354,8 @@ void surfaceBegin(const SurfaceDesc& desc)
 	}
 
 	// Get size of surface on framebuffer
-	vec2_u32 dimsOnFB = desc.dimsOnFB;
-	if (dimsOnFB == vec2_u32(0u)) dimsOnFB = desc.fbDims;
+	vec2_i32 dimsOnFB = desc.dimsOnFB;
+	if (dimsOnFB == vec2_i32(0)) dimsOnFB = desc.fbDims;
 
 	// Get internal size of surface
 	if (sfz::eqf(desc.dims, vec2(0.0f))) {

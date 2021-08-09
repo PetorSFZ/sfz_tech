@@ -49,7 +49,7 @@ using sfz::mat34;
 using sfz::str48;
 using sfz::strID;
 using sfz::vec2;
-using sfz::vec2_u32;
+using sfz::vec2_i32;
 using sfz::vec3;
 using sfz::vec4;
 
@@ -437,16 +437,16 @@ struct SurfaceDesc final {
 
 	// Input
 	Input input;
-	vec2_u32 fbDims = vec2_u32(0u);
+	vec2_i32 fbDims = vec2_i32(0);
 	f32 deltaTimeSecs = 0.0f;
 
 	// Position on framebuffer, default aligned to bottom left corner of framebuffer
-	vec2_u32 posOnFB = vec2_u32(0u);
+	vec2_i32 posOnFB = vec2_i32(0);
 	HAlign halignOnFB = HAlign::LEFT;
 	VAlign valignOnFB = VAlign::BOTTOM;
 
 	// Size on framebuffer, 0 == entire framebuffer
-	vec2_u32 dimsOnFB = vec2_u32(0u);
+	vec2_i32 dimsOnFB = vec2_i32(0);
 
 	// Coordinate system of the surface which things will be drawn upon. E.g., vec2(100.0f, 100.0f),
 	// means that you will be using "percentages" of the total size of the surface when specifying

@@ -93,7 +93,7 @@ void ResourceManager::renderDebugUI()
 	resourceManagerUI(*this, *mState);
 }
 
-void ResourceManager::updateResolution(vec2_u32 screenRes)
+void ResourceManager::updateResolution(vec2_i32 screenRes)
 {
 	// Check if any textures need rebuilding
 	bool anyTexNeedRebuild = false;

@@ -30,7 +30,7 @@ namespace sfz {
 // FramebufferResource
 // ------------------------------------------------------------------------------------------------
 
-ZgResult FramebufferResource::build(vec2_u32 screenRes)
+ZgResult FramebufferResource::build(vec2_i32 screenRes)
 {
 	CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
 	CHECK_ZG zg::CommandQueue::getCopyQueue().flush();
@@ -48,7 +48,7 @@ ZgResult FramebufferResource::build(vec2_u32 screenRes)
 		this->res.y = u32(std::round(scaledRes.y));
 	}
 	else if (settingControlledRes) {
-		this->res = vec2_u32(u32(controlledResSetting->intValue()));
+		this->res = vec2_i32(controlledResSetting->intValue());
 	}
 
 	zg::FramebufferBuilder fbBuilder;
@@ -89,7 +89,7 @@ FramebufferResourceBuilder& FramebufferResourceBuilder::setName(const char* name
 	return *this;
 }
 
-FramebufferResourceBuilder& FramebufferResourceBuilder::setFixedRes(vec2_u32 resIn)
+FramebufferResourceBuilder& FramebufferResourceBuilder::setFixedRes(vec2_i32 resIn)
 {
 	sfz_assert(resIn.x > 0);
 	sfz_assert(resIn.y > 0);
@@ -144,7 +144,7 @@ FramebufferResourceBuilder& FramebufferResourceBuilder::setDepthBuffer(strID tex
 	return *this;
 }
 
-FramebufferResource FramebufferResourceBuilder::build(vec2_u32 screenRes)
+FramebufferResource FramebufferResourceBuilder::build(vec2_i32 screenRes)
 {
 	FramebufferResource resource;
 	resource.name = strID(this->name);

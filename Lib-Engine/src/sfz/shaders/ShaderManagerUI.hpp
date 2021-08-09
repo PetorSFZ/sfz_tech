@@ -123,10 +123,10 @@ inline void shaderManagerUI(ShaderManagerState& state)
 
 		// Group dimensions for compute shaders
 		if (shader.type == ShaderType::COMPUTE) {
-			vec3_u32 groupDims = vec3_u32(0u);
-			shader.compute.pipeline.getGroupDims(groupDims.x, groupDims.y, groupDims.z);
+			u32 x = 0, y = 0, z = 0;
+			shader.compute.pipeline.getGroupDims(x, y, z);
 			alignedEdit("Group dims", offset, [&](const char*) {
-				ImGui::Text("%u x %u x %u", groupDims.x, groupDims.y, groupDims.z);
+				ImGui::Text("%u x %u x %u", x, y, z);
 			});
 		}
 
