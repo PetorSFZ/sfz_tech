@@ -48,7 +48,7 @@ public:
 	void renderDebugUI();
 
 	// Updates all resources that depend on screen resolution
-	void updateResolution(vec2_i32 screenRes);
+	void updateResolution(i32x2 screenRes);
 
 	// Updates all voxel models, returns whether any model was updated. Not required to call,
 	// mainly used during development when file watching .vox files.
@@ -104,7 +104,7 @@ public:
 
 	PoolHandle getVoxelMaterialHandle(const char* name) const;
 	PoolHandle getVoxelMaterialHandle(strID name) const;
-	PoolHandle getVoxelMaterialHandle(vec4_u8 color) const;
+	PoolHandle getVoxelMaterialHandle(u8x4 color) const;
 	VoxelMaterial* getVoxelMaterial(PoolHandle handle);
 	PoolHandle addVoxelMaterial(VoxelMaterial&& resource);
 	void removeVoxelMaterial(strID name);

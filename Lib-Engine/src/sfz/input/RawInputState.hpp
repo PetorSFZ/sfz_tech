@@ -41,10 +41,10 @@ struct KeyboardState final {
 };
 
 struct MouseState final {
-	vec2_i32 windowDims = vec2_i32(0); // Position and delta is in range [0, windowDims]
-	vec2_i32 pos = vec2_i32(0); // [0, 0] in bottom left corner
-	vec2_i32 delta = vec2_i32(0); // Delta mouse has moved since last frame
-	vec2_i32 wheel = vec2_i32(0); // Pos-y "up", neg-y "down", but can vary with touchpads
+	i32x2 windowDims = i32x2(0); // Position and delta is in range [0, windowDims]
+	i32x2 pos = i32x2(0); // [0, 0] in bottom left corner
+	i32x2 delta = i32x2(0); // Delta mouse has moved since last frame
+	i32x2 wheel = i32x2(0); // Pos-y "up", neg-y "down", but can vary with touchpads
 	u8 left = 0;
 	u8 middle = 0;
 	u8 right = 0;
@@ -101,8 +101,8 @@ struct GamepadState final {
 	// Sticks are in range [-1, 1]. Do not however that no deadzone has been applied. Stick's
 	// neutral should be somewhere in the range ~[-0.24, 0.24], but this will vary from gamepad to
 	// gamepad.
-	vec2 leftStick = vec2(0.0f);
-	vec2 rightStick = vec2(0.0f);
+	f32x2 leftStick = f32x2(0.0f);
+	f32x2 rightStick = f32x2(0.0f);
 
 	float lt = 0.0f;
 	float rt = 0.0f;
@@ -111,7 +111,7 @@ struct GamepadState final {
 	u8 buttons[GPD_MAX_NUM_BUTTONS] = {};
 };
 
-inline vec2 applyDeadzone(vec2 stick, float deadzone)
+inline f32x2 applyDeadzone(f32x2 stick, float deadzone)
 {
 	if (deadzone <= 0.0f) return stick;
 	sfz_assert(deadzone < 1.0f);
@@ -119,21 +119,21 @@ inline vec2 applyDeadzone(vec2 stick, float deadzone)
 	if (stickLen >= deadzone) {
 		const float scale = 1.0f / (1.0f - deadzone);
 		const float adjustedLen = sfz::min(sfz::max(0.0f, stickLen - deadzone) * scale, 1.0f);
-		const vec2 dir = stick * (1.0f / stickLen);
-		const vec2 adjustedStick = dir * adjustedLen;
+		const f32x2 dir = stick * (1.0f / stickLen);
+		const f32x2 adjustedStick = dir * adjustedLen;
 		return adjustedStick;
 	}
-	return vec2(0.0f);
+	return f32x2(0.0f);
 }
 
 struct TouchState final {
 	int64_t id = -1;
-	vec2 pos = vec2(0.0f); // Range [0, 1]
+	f32x2 pos = f32x2(0.0f); // Range [0, 1]
 	float pressure = 0.0f; // Range [0, 1]. Haven't found anything that activates it, avoid using?
 };
 
 struct RawInputState final {
-	vec2_i32 windowDims = vec2_i32(0);
+	i32x2 windowDims = i32x2(0);
 	KeyboardState kb;
 	MouseState mouse;
 	Arr6<GamepadState> gamepads;

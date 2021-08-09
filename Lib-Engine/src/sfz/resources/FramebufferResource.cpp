@@ -30,7 +30,7 @@ namespace sfz {
 // FramebufferResource
 // ------------------------------------------------------------------------------------------------
 
-ZgResult FramebufferResource::build(vec2_i32 screenRes)
+ZgResult FramebufferResource::build(i32x2 screenRes)
 {
 	CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
 	CHECK_ZG zg::CommandQueue::getCopyQueue().flush();
@@ -43,12 +43,12 @@ ZgResult FramebufferResource::build(vec2_i32 screenRes)
 		if (this->resolutionScaleSetting != nullptr) {
 			this->resolutionScale = resolutionScaleSetting->floatValue();
 		}
-		vec2 scaledRes = vec2(screenRes) * this->resolutionScale;
+		f32x2 scaledRes = f32x2(screenRes) * this->resolutionScale;
 		this->res.x = u32(std::round(scaledRes.x));
 		this->res.y = u32(std::round(scaledRes.y));
 	}
 	else if (settingControlledRes) {
-		this->res = vec2_i32(controlledResSetting->intValue());
+		this->res = i32x2(controlledResSetting->intValue());
 	}
 
 	zg::FramebufferBuilder fbBuilder;
@@ -89,7 +89,7 @@ FramebufferResourceBuilder& FramebufferResourceBuilder::setName(const char* name
 	return *this;
 }
 
-FramebufferResourceBuilder& FramebufferResourceBuilder::setFixedRes(vec2_i32 resIn)
+FramebufferResourceBuilder& FramebufferResourceBuilder::setFixedRes(i32x2 resIn)
 {
 	sfz_assert(resIn.x > 0);
 	sfz_assert(resIn.y > 0);
@@ -144,7 +144,7 @@ FramebufferResourceBuilder& FramebufferResourceBuilder::setDepthBuffer(strID tex
 	return *this;
 }
 
-FramebufferResource FramebufferResourceBuilder::build(vec2_i32 screenRes)
+FramebufferResource FramebufferResourceBuilder::build(i32x2 screenRes)
 {
 	FramebufferResource resource;
 	resource.name = strID(this->name);

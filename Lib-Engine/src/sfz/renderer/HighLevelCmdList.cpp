@@ -257,13 +257,13 @@ void HighLevelCmdList::drawTrianglesIndexed(u32 firstIndex, u32 numIndices)
 	CHECK_ZG mCmdList.drawTrianglesIndexed(firstIndex, numIndices);
 }
 
-vec3_i32 HighLevelCmdList::getComputeGroupDims() const
+i32x3 HighLevelCmdList::getComputeGroupDims() const
 {
 	sfz_assert(mBoundShader != nullptr);
 	sfz_assert(mBoundShader->type == ShaderType::COMPUTE);
 	u32 x = 0, y = 0, z = 0;
 	mBoundShader->compute.pipeline.getGroupDims(x, y, z);
-	return vec3_i32(x, y, z);
+	return i32x3(x, y, z);
 }
 
 void HighLevelCmdList::dispatchCompute(i32 groupCountX, i32 groupCountY, i32 groupCountZ)

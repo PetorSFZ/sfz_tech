@@ -27,7 +27,7 @@
 
 using sfz::AABB;
 using sfz::Ray;
-using sfz::vec3;
+using sfz::f32x3;
 using sfz::eqf;
 
 // AABB tests
@@ -36,10 +36,10 @@ using sfz::eqf;
 UTEST(AABB, ray_vs_aabb)
 {
 	{
-		AABB aabb = AABB::fromPosDims(vec3(0.0f), vec3(1.0f));
+		AABB aabb = AABB::fromPosDims(f32x3(0.0f), f32x3(1.0f));
 
 		{
-			Ray ray = Ray(vec3(0.0f), vec3(1.0f, 0.0f, 0.0f));
+			Ray ray = Ray(f32x3(0.0f), f32x3(1.0f, 0.0f, 0.0f));
 			f32 tMin = sfz::RAY_MAX_DIST;
 			f32 tMax = -sfz::RAY_MAX_DIST;
 			const f32 t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
@@ -49,7 +49,7 @@ UTEST(AABB, ray_vs_aabb)
 		}
 
 		{
-			Ray ray = Ray(vec3(0.0f, 2.0f, 0.0f), vec3(0.0f, -1.0f, 0.0f));
+			Ray ray = Ray(f32x3(0.0f, 2.0f, 0.0f), f32x3(0.0f, -1.0f, 0.0f));
 			f32 tMin = sfz::RAY_MAX_DIST;
 			f32 tMax = -sfz::RAY_MAX_DIST;
 			const f32 t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
@@ -59,7 +59,7 @@ UTEST(AABB, ray_vs_aabb)
 		}
 
 		{
-			Ray ray = Ray(vec3(0.0f, 2.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+			Ray ray = Ray(f32x3(0.0f, 2.0f, 0.0f), f32x3(0.0f, 1.0f, 0.0f));
 			f32 tMin = sfz::RAY_MAX_DIST;
 			f32 tMax = -sfz::RAY_MAX_DIST;
 			const f32 t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
@@ -69,7 +69,7 @@ UTEST(AABB, ray_vs_aabb)
 		}
 
 		{
-			Ray ray = Ray(vec3(-1.0f, 0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), 0.49999f);
+			Ray ray = Ray(f32x3(-1.0f, 0.0f, 0.0f), f32x3(1.0f, 0.0f, 0.0f), 0.49999f);
 			f32 tMin = sfz::RAY_MAX_DIST;
 			f32 tMax = -sfz::RAY_MAX_DIST;
 			const f32 t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
@@ -79,7 +79,7 @@ UTEST(AABB, ray_vs_aabb)
 		}
 
 		{
-			Ray ray = Ray(vec3(-1.0f, 0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), 1.0f);
+			Ray ray = Ray(f32x3(-1.0f, 0.0f, 0.0f), f32x3(1.0f, 0.0f, 0.0f), 1.0f);
 			f32 tMin = sfz::RAY_MAX_DIST;
 			f32 tMax = -sfz::RAY_MAX_DIST;
 			const f32 t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
@@ -89,7 +89,7 @@ UTEST(AABB, ray_vs_aabb)
 		}
 
 		{
-			Ray ray = Ray(aabb.max, vec3(0.0f, 0.0f, -1.0f));
+			Ray ray = Ray(aabb.max, f32x3(0.0f, 0.0f, -1.0f));
 			f32 tMin = sfz::RAY_MAX_DIST;
 			f32 tMax = -sfz::RAY_MAX_DIST;
 			const f32 t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
@@ -100,10 +100,10 @@ UTEST(AABB, ray_vs_aabb)
 	}
 
 	{
-		AABB aabb = AABB::fromPosDims(vec3(1.0f), vec3(2.0f));
+		AABB aabb = AABB::fromPosDims(f32x3(1.0f), f32x3(2.0f));
 
 		{
-			Ray ray = Ray(vec3(0.0f), sfz::normalize(vec3(1.0f)));
+			Ray ray = Ray(f32x3(0.0f), sfz::normalize(f32x3(1.0f)));
 			f32 tMin = sfz::RAY_MAX_DIST;
 			f32 tMax = -sfz::RAY_MAX_DIST;
 			const f32 t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
@@ -113,7 +113,7 @@ UTEST(AABB, ray_vs_aabb)
 		}
 
 		{
-			Ray ray = Ray(vec3(2.0f), sfz::normalize(vec3(-1.0f)));
+			Ray ray = Ray(f32x3(2.0f), sfz::normalize(f32x3(-1.0f)));
 			f32 tMin = sfz::RAY_MAX_DIST;
 			f32 tMax = -sfz::RAY_MAX_DIST;
 			const f32 t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
@@ -123,7 +123,7 @@ UTEST(AABB, ray_vs_aabb)
 		}
 
 		{
-			Ray ray = Ray(vec3(2.0f, 2.0f, 4.0f - 0.00001f), sfz::normalize(vec3(-1.0f)));
+			Ray ray = Ray(f32x3(2.0f, 2.0f, 4.0f - 0.00001f), sfz::normalize(f32x3(-1.0f)));
 			f32 tMin = sfz::RAY_MAX_DIST;
 			f32 tMax = -sfz::RAY_MAX_DIST;
 			const f32 t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
@@ -133,7 +133,7 @@ UTEST(AABB, ray_vs_aabb)
 		}
 
 		{
-			Ray ray = Ray(vec3(2.0f, 2.0f, 4.0f + 0.00001f), sfz::normalize(vec3(-1.0f)));
+			Ray ray = Ray(f32x3(2.0f, 2.0f, 4.0f + 0.00001f), sfz::normalize(f32x3(-1.0f)));
 			f32 tMin = sfz::RAY_MAX_DIST;
 			f32 tMax = -sfz::RAY_MAX_DIST;
 			const f32 t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);

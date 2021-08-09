@@ -42,7 +42,7 @@ void listEnd();
 
 struct TreeBaseData final {
 	WidgetBase base;
-	vec2 entryDims = vec2(-F32_MAX);
+	f32x2 entryDims = f32x2(-F32_MAX);
 	f32 entryContWidth = -F32_MAX;
 	f32 entryVertSpacing = -F32_MAX;
 	f32 horizSpacing = -F32_MAX;
@@ -57,9 +57,9 @@ struct TreeEntryData final {
 	bool enabled = true;
 };
 
-void treeBegin(TreeBaseData* data, vec2 entryDims, f32 entryVertSpacing = 0.0f, f32 horizSpacing = 0.0f);
-void treeBegin(strID id, vec2 entryDims, f32 entryVertSpacing = 0.0f, f32 horizSpacing = 0.0f);
-void treeBegin(const char* id, vec2 entryDims, f32 entryVertSpacing = 0.0f, f32 horizSpacing = 0.0f);
+void treeBegin(TreeBaseData* data, f32x2 entryDims, f32 entryVertSpacing = 0.0f, f32 horizSpacing = 0.0f);
+void treeBegin(strID id, f32x2 entryDims, f32 entryVertSpacing = 0.0f, f32 horizSpacing = 0.0f);
+void treeBegin(const char* id, f32x2 entryDims, f32 entryVertSpacing = 0.0f, f32 horizSpacing = 0.0f);
 void treeEnd();
 
 bool treeCollapsableBegin(TreeEntryData* data, const char* text, bool enabled = true);
@@ -88,12 +88,12 @@ void textfmt(const char* id, const char* format, ...);
 
 struct RectData final {
 	WidgetBase base = {};
-	vec4 linearColor = vec4(1.0f);
+	f32x4 linearColor = f32x4(1.0f);
 };
 
-void rect(RectData* data, vec4 linearColor = vec4(1.0f));
-void rect(strID id, vec4 linearColor = vec4(1.0f));
-void rect(const char* id, vec4 linearColor = vec4(1.0f));
+void rect(RectData* data, f32x4 linearColor = f32x4(1.0f));
+void rect(strID id, f32x4 linearColor = f32x4(1.0f));
+void rect(const char* id, f32x4 linearColor = f32x4(1.0f));
 
 // Image
 // ------------------------------------------------------------------------------------------------

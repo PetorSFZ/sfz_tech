@@ -311,21 +311,21 @@ UTEST(Array, remove)
 
 	// Bug where memmove was passed numElements instead of numBytes
 	{
-		using sfz::vec2_i32;
-		sfz::Array<vec2_i32> v(0, &allocator, sfz_dbg(""));
-		const vec2_i32 vals[] = {vec2_i32(1), vec2_i32(2), vec2_i32(3), vec2_i32(4)};
+		using sfz::i32x2;
+		sfz::Array<i32x2> v(0, &allocator, sfz_dbg(""));
+		const i32x2 vals[] = {i32x2(1), i32x2(2), i32x2(3), i32x2(4)};
 		v.add(vals, 4);
 
 		ASSERT_TRUE(v.size() == 4);
-		ASSERT_TRUE(v[0] == vec2_i32(1));
-		ASSERT_TRUE(v[1] == vec2_i32(2));
-		ASSERT_TRUE(v[2] == vec2_i32(3));
-		ASSERT_TRUE(v[3] == vec2_i32(4));
+		ASSERT_TRUE(v[0] == i32x2(1));
+		ASSERT_TRUE(v[1] == i32x2(2));
+		ASSERT_TRUE(v[2] == i32x2(3));
+		ASSERT_TRUE(v[3] == i32x2(4));
 
 		v.remove(1, 2);
 		ASSERT_TRUE(v.size() == 2);
-		ASSERT_TRUE(v[0] == vec2_i32(1));
-		ASSERT_TRUE(v[1] == vec2_i32(4));
+		ASSERT_TRUE(v[0] == i32x2(1));
+		ASSERT_TRUE(v[1] == i32x2(4));
 	}
 
 	// Bug where not enough elements are moved
@@ -560,11 +560,11 @@ UTEST(ArrayLocal, default_constructor)
 	ASSERT_TRUE((uintptr_t)eightArray.data() == (uintptr_t)&eightArray);
 	ASSERT_TRUE(sfz::isAligned(eightArray.data(), 64));
 
-	sfz::ArrayLocal<sfz::vec4, 8> vecs;
+	sfz::ArrayLocal<sfz::f32x4, 8> vecs;
 	ASSERT_TRUE(vecs.size() == 0);
 	ASSERT_TRUE(vecs.capacity() == 8);
 	ASSERT_TRUE((uintptr_t)vecs.data() == (uintptr_t)&vecs);
-	ASSERT_TRUE(sfz::isAligned(vecs.data(), alignof(sfz::vec4)));
+	ASSERT_TRUE(sfz::isAligned(vecs.data(), alignof(sfz::f32x4)));
 }
 
 UTEST(ArrayLocal, fill_constructor)
@@ -780,21 +780,21 @@ UTEST(ArrayLocal, remove)
 
 	// Bug where memmove was passed numElements instead of numBytes
 	{
-		using sfz::vec2_i32;
-		sfz::ArrayLocal<vec2_i32, 7> v;
-		const vec2_i32 vals[] = {vec2_i32(1), vec2_i32(2), vec2_i32(3), vec2_i32(4)};
+		using sfz::i32x2;
+		sfz::ArrayLocal<i32x2, 7> v;
+		const i32x2 vals[] = {i32x2(1), i32x2(2), i32x2(3), i32x2(4)};
 		v.add(vals, 4);
 
 		ASSERT_TRUE(v.size() == 4);
-		ASSERT_TRUE(v[0] == vec2_i32(1));
-		ASSERT_TRUE(v[1] == vec2_i32(2));
-		ASSERT_TRUE(v[2] == vec2_i32(3));
-		ASSERT_TRUE(v[3] == vec2_i32(4));
+		ASSERT_TRUE(v[0] == i32x2(1));
+		ASSERT_TRUE(v[1] == i32x2(2));
+		ASSERT_TRUE(v[2] == i32x2(3));
+		ASSERT_TRUE(v[3] == i32x2(4));
 
 		v.remove(1, 2);
 		ASSERT_TRUE(v.size() == 2);
-		ASSERT_TRUE(v[0] == vec2_i32(1));
-		ASSERT_TRUE(v[1] == vec2_i32(4));
+		ASSERT_TRUE(v[0] == i32x2(1));
+		ASSERT_TRUE(v[1] == i32x2(4));
 	}
 
 	// Bug where not enough elements are moved

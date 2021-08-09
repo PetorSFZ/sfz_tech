@@ -26,18 +26,18 @@
 
 namespace zg {
 
-using sfz::vec2;
-using sfz::vec3;
-using sfz::vec4;
+using sfz::f32x2;
+using sfz::f32x3;
+using sfz::f32x4;
 
 // Helper structs
 // ------------------------------------------------------------------------------------------------
 
 // TODO: Remove
 struct ImGuiVertex final {
-	vec2 pos;
-	vec2 texcoord;
-	vec4 color;
+	f32x2 pos;
+	f32x2 texcoord;
+	f32x4 color;
 };
 static_assert(sizeof(ImGuiVertex) == 32, "ImGuiVertex is padded");
 
@@ -46,7 +46,7 @@ struct ImGuiCommand {
 	u32 idxBufferOffset = 0;
 	u32 numIndices = 0;
 	u32 padding[2];
-	sfz::vec4 clipRect = sfz::vec4(0.0f);
+	sfz::f32x4 clipRect = sfz::f32x4(0.0f);
 };
 static_assert(sizeof(ImGuiCommand) == sizeof(u32) * 8, "ImguiCommand is padded");
 
@@ -274,10 +274,10 @@ void imguiRender(
 			const ImDrawVert& imguiVertex = imCmdList.VtxBuffer[j];
 
 			ImGuiVertex convertedVertex;
-			convertedVertex.pos = vec2(imguiVertex.pos.x, imguiVertex.pos.y);
-			convertedVertex.texcoord = vec2(imguiVertex.uv.x, imguiVertex.uv.y);
+			convertedVertex.pos = f32x2(imguiVertex.pos.x, imguiVertex.pos.y);
+			convertedVertex.texcoord = f32x2(imguiVertex.uv.x, imguiVertex.uv.y);
 			convertedVertex.color = [&]() {
-				vec4 color;
+				f32x4 color;
 				color.x = f32(imguiVertex.col & 0xFFu) * (1.0f / 255.0f);
 				color.y = f32((imguiVertex.col >> 8u) & 0xFFu)* (1.0f / 255.0f);
 				color.z = f32((imguiVertex.col >> 16u) & 0xFFu)* (1.0f / 255.0f);
@@ -349,11 +349,11 @@ void imguiRender(
 	f32 imguiHeight = fbHeight * imguiScaleFactor;
 
 	// Calculate and set ImGui projection matrix
-	sfz::vec4 projMatrix[4] = {
-		sfz::vec4(2.0f / imguiWidth, 0.0f, 0.0f, -1.0f),
-		sfz::vec4(0.0f, 2.0f / -imguiHeight, 0.0f, 1.0f),
-		sfz::vec4(0.0f, 0.0f, 0.5f, 0.5f),
-		sfz::vec4(0.0f, 0.0f, 0.0f, 1.0f)
+	sfz::f32x4 projMatrix[4] = {
+		sfz::f32x4(2.0f / imguiWidth, 0.0f, 0.0f, -1.0f),
+		sfz::f32x4(0.0f, 2.0f / -imguiHeight, 0.0f, 1.0f),
+		sfz::f32x4(0.0f, 0.0f, 0.5f, 0.5f),
+		sfz::f32x4(0.0f, 0.0f, 0.0f, 1.0f)
 	};
 	ASSERT_ZG cmdList.setPushConstant(0, &projMatrix, sizeof(f32) * 16);
 

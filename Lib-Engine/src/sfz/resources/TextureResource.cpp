@@ -96,18 +96,18 @@ static void generateMipmap(const ImageViewConst& prevLevel, Image& currLevel) no
 		});
 		break;
 	case ImageType::RG_U8:
-		generateMipmapSpecific<vec2_u8>(prevLevel, currLevel, [](vec2_u8 a, vec2_u8 b, vec2_u8 c, vec2_u8 d) {
-			return vec2_u8((vec2_i32(a) + vec2_i32(b) + vec2_i32(c) + vec2_i32(d)) / 4u);
+		generateMipmapSpecific<u8x2>(prevLevel, currLevel, [](u8x2 a, u8x2 b, u8x2 c, u8x2 d) {
+			return u8x2((i32x2(a) + i32x2(b) + i32x2(c) + i32x2(d)) / 4u);
 		});
 		break;
 	case ImageType::RGBA_U8:
-		generateMipmapSpecific<vec4_u8>(prevLevel, currLevel, [](vec4_u8 a, vec4_u8 b, vec4_u8 c, vec4_u8 d) {
-			return vec4_u8((vec4_i32(a) + vec4_i32(b) + vec4_i32(c) + vec4_i32(d)) / 4u);
+		generateMipmapSpecific<u8x4>(prevLevel, currLevel, [](u8x4 a, u8x4 b, u8x4 c, u8x4 d) {
+			return u8x4((i32x4(a) + i32x4(b) + i32x4(c) + i32x4(d)) / 4u);
 		});
 		break;
 
 	case ImageType::RGBA_F32:
-		generateMipmapSpecific<vec4>(prevLevel, currLevel, [](vec4 a, vec4 b, vec4 c, vec4 d) {
+		generateMipmapSpecific<f32x4>(prevLevel, currLevel, [](f32x4 a, f32x4 b, f32x4 c, f32x4 d) {
 			return (a + b + c + d) * (1.0f / 4.0f);
 		});
 		break;
@@ -124,23 +124,23 @@ static void generateMipmap(const ImageViewConst& prevLevel, Image& currLevel) no
 // TextureResource
 // ------------------------------------------------------------------------------------------------
 
-bool TextureResource::needRebuild(vec2_i32 screenRes) const
+bool TextureResource::needRebuild(i32x2 screenRes) const
 {
 	if (!this->texture.valid()) return true;
 
-	vec2_i32 newRes = vec2_i32(0);
+	i32x2 newRes = i32x2(0);
 	if (screenRelativeResolution) {
 		float resScale = this->resolutionScale;
 		if (this->resolutionScaleSetting != nullptr) {
 			resScale = resolutionScaleSetting->floatValue() * this->resScaleSettingScale;
 		}
-		vec2 scaledRes = vec2(screenRes) * resScale;
+		f32x2 scaledRes = f32x2(screenRes) * resScale;
 		newRes.x = u32(std::round(scaledRes.x));
 		newRes.y = u32(std::round(scaledRes.y));
 	}
 	else if (settingControlledRes) {
 		sfz_assert(0 < controlledResSetting->intValue() && controlledResSetting->intValue() <= 16384);
-		newRes = vec2_i32(controlledResSetting->intValue());
+		newRes = i32x2(controlledResSetting->intValue());
 	}
 	else {
 		newRes = this->res;
@@ -149,21 +149,21 @@ bool TextureResource::needRebuild(vec2_i32 screenRes) const
 	return newRes != this->res;
 }
 
-ZgResult TextureResource::build(vec2_i32 screenRes)
+ZgResult TextureResource::build(i32x2 screenRes)
 {
 	// Set resolution and resolution scale if screen relative
-	vec2_i32 newRes = vec2_i32(0);
+	i32x2 newRes = i32x2(0);
 	if (screenRelativeResolution) {
 		if (this->resolutionScaleSetting != nullptr) {
 			this->resolutionScale = resolutionScaleSetting->floatValue() * this->resScaleSettingScale;
 		}
-		vec2 scaledRes = vec2(screenRes) * this->resolutionScale;
+		f32x2 scaledRes = f32x2(screenRes) * this->resolutionScale;
 		newRes.x = u32(std::round(scaledRes.x));
 		newRes.y = u32(std::round(scaledRes.y));
 	}
 	else if (settingControlledRes) {
 		sfz_assert(0 < controlledResSetting->intValue() && controlledResSetting->intValue() <= 16384);
-		newRes = vec2_i32(controlledResSetting->intValue());
+		newRes = i32x2(controlledResSetting->intValue());
 	}
 	else {
 		newRes = this->res;
@@ -270,7 +270,7 @@ TextureResource TextureResource::createFixedSize(
 	return TextureResource::createFixedSize(
 		name,
 		toZeroGImageFormat(image.type),
-		vec2_i32(image.width, image.height),
+		i32x2(image.width, image.height),
 		numMipmaps,
 		usage,
 		committedAllocation);
@@ -279,7 +279,7 @@ TextureResource TextureResource::createFixedSize(
 TextureResource TextureResource::createFixedSize(
 	const char* name,
 	ZgTextureFormat format,
-	vec2_i32 res,
+	i32x2 res,
 	u32 numMipmaps,
 	ZgTextureUsage usage,
 	bool committedAllocation)
@@ -299,7 +299,7 @@ TextureResource TextureResource::createFixedSize(
 	resource.optimalClearValue =
 		usage != ZG_TEXTURE_USAGE_DEFAULT ? ZG_OPTIMAL_CLEAR_VALUE_ZERO : ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED;
 
-	CHECK_ZG resource.build(vec2_i32(0));
+	CHECK_ZG resource.build(i32x2(0));
 
 	return resource;
 }
@@ -307,7 +307,7 @@ TextureResource TextureResource::createFixedSize(
 TextureResource TextureResource::createScreenRelative(
 	const char* name,
 	ZgTextureFormat format,
-	vec2_i32 screenRes,
+	i32x2 screenRes,
 	float scale,
 	Setting* scaleSetting,
 	ZgTextureUsage usage,
@@ -347,7 +347,7 @@ TextureResource TextureResource::createSettingControlled(
 	TextureResource resource;
 	resource.name = strID(name);
 	resource.format = format;
-	resource.res = vec2_i32(resSetting->intValue());
+	resource.res = i32x2(resSetting->intValue());
 	resource.numMipmaps = numMipmaps;
 	resource.committedAllocation = committedAllocation;
 	resource.usage = usage;
@@ -357,7 +357,7 @@ TextureResource TextureResource::createSettingControlled(
 	resource.settingControlledRes = true;
 	resource.controlledResSetting = resSetting;
 
-	CHECK_ZG resource.build(vec2_i32(0));
+	CHECK_ZG resource.build(i32x2(0));
 
 	return resource;
 }

@@ -77,7 +77,7 @@ bool VoxelModelResource::build(SfzAllocator* allocator)
 	const ogt_vox_model& model = *scene->models[0];
 
 	// Copy voxels to voxel model
-	this->dims = vec3_i32(model.size_x, model.size_y, model.size_z);
+	this->dims = i32x3(model.size_x, model.size_y, model.size_z);
 	const u32 maxNumVoxels = model.size_x * model.size_y * model.size_z;
 	this->voxels.init(maxNumVoxels, allocator, sfz_dbg(""));
 	this->voxels.add(model.voxel_data, maxNumVoxels);
@@ -95,7 +95,7 @@ bool VoxelModelResource::build(SfzAllocator* allocator)
 	// Copy palette to voxel model, remove materials which are not used by voxel model
 	this->palette.clear();
 	for (u32 i = 0; i <= highestVoxelVal; i++) {
-		vec4_u8& dst = this->palette.add();
+		u8x4& dst = this->palette.add();
 		if (materialUsed[i]) {
 			ogt_vox_rgba color = scene->palette.color[i];
 			dst.x = color.r;

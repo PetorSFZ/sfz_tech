@@ -49,9 +49,9 @@ constexpr strID BASE_CON_ID = strID(sfz::hash(BASE_CON_NAME));
 // Helper functions
 // ------------------------------------------------------------------------------------------------
 
-inline vec2 calcCenterPos(vec2 pos, Align align, vec2 dims)
+inline f32x2 calcCenterPos(f32x2 pos, Align align, f32x2 dims)
 {
-	return pos - vec2(f32(align.halign), f32(align.valign)) * 0.5f * dims;
+	return pos - f32x2(f32(align.halign), f32(align.valign)) * 0.5f * dims;
 }
 
 // Context
@@ -93,7 +93,7 @@ struct WidgetCmd final {
 	u32 sizeOfWidgetData() const;
 	WidgetBase* getBase();
 	void getNextWidgetBox(strID childID, Box* boxOut);
-	void handlePointerInput(vec2 pointerPosSS);
+	void handlePointerInput(f32x2 pointerPosSS);
 	void handleMoveInput(Input* input, bool* moveActive);
 	void draw(AttributeSet* attributes, const mat34& surfaceTransform, f32 lagSinceSurfaceEndSecs) const;
 };
@@ -107,7 +107,7 @@ struct Surface final {
 	// Transforms
 	mat34 transform = mat34::identity();
 	mat34 inputTransform = mat34::identity();
-	vec2 pointerPosSS = vec2(-F32_MAX); // SS = Surface Space
+	f32x2 pointerPosSS = f32x2(-F32_MAX); // SS = Surface Space
 
 	// Commands
 	WidgetCmd cmdRoot;
@@ -145,7 +145,7 @@ struct Surface final {
 
 		transform = mat34::identity();
 		inputTransform = mat34::identity();
-		pointerPosSS = vec2(-F32_MAX);
+		pointerPosSS = f32x2(-F32_MAX);
 	}
 };
 
@@ -227,7 +227,7 @@ inline void WidgetCmd::getNextWidgetBox(strID childID, Box* boxOut)
 	type->getNextWidgetBoxFunc(this, childID, boxOut);
 }
 
-inline void WidgetCmd::handlePointerInput(vec2 pointerPosSS)
+inline void WidgetCmd::handlePointerInput(f32x2 pointerPosSS)
 {
 	WidgetType* type = ctx().widgetTypes.get(strID(widgetID));
 	sfz_assert(type != nullptr);

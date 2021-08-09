@@ -520,7 +520,7 @@ struct Quat final {
 	constexpr bool operator!= (Quat o) const { return !(*this == o); }
 };
 
-using quat = Quat<f32>; static_assert(sizeof(quat) == sizeof(vec4), "");
+using quat = Quat<f32>; static_assert(sizeof(quat) == sizeof(f32x4), "");
 
 template<typename T>
 constexpr Quat<T> operator* (T scalar, Quat<T> q) { return q *= scalar; }
@@ -581,36 +581,36 @@ Quat<T> lerp(Quat<T> q0, Quat<T> q1, T t)
 // vectors are no longer assumed to be normalized. And if they happen to be invalid (i.e. the same
 // vector or pointing in exact opposite directions) a sane default will be given.
 
-inline vec3 rotateTowardsRad(vec3 inDir, vec3 targetDir, f32 angleRads)
+inline f32x3 rotateTowardsRad(f32x3 inDir, f32x3 targetDir, f32 angleRads)
 {
 	sfz_assert(eqf(length(inDir), 1.0f));
 	sfz_assert(eqf(length(targetDir), 1.0f));
 	sfz_assert(dot(inDir, targetDir) >= -0.9999f);
 	sfz_assert(angleRads >= 0.0f);
 	sfz_assert(angleRads < PI);
-	vec3 axis = cross(inDir, targetDir);
-	sfz_assert(!eqf(axis, vec3(0.0f)));
+	f32x3 axis = cross(inDir, targetDir);
+	sfz_assert(!eqf(axis, f32x3(0.0f)));
 	quat rotQuat = quat::rotationRad(axis, angleRads);
-	vec3 newDir = rotate(rotQuat, inDir);
+	f32x3 newDir = rotate(rotQuat, inDir);
 	return newDir;
 }
 
-inline vec3 rotateTowardsRadClampSafe(vec3 inDir, vec3 targetDir, f32 angleRads)
+inline f32x3 rotateTowardsRadClampSafe(f32x3 inDir, f32x3 targetDir, f32 angleRads)
 {
 	sfz_assert(angleRads >= 0.0f);
 	sfz_assert(angleRads < PI);
 
-	vec3 inDirNorm = normalizeSafe(inDir);
-	vec3 targetDirNorm = normalizeSafe(targetDir);
-	sfz_assert(!eqf(inDirNorm, vec3(0.0f)));
-	sfz_assert(!eqf(targetDirNorm, vec3(0.0f)));
+	f32x3 inDirNorm = normalizeSafe(inDir);
+	f32x3 targetDirNorm = normalizeSafe(targetDir);
+	sfz_assert(!eqf(inDirNorm, f32x3(0.0f)));
+	sfz_assert(!eqf(targetDirNorm, f32x3(0.0f)));
 
 	// Case where vectors are the same, just return the target dir
 	if (eqf(inDirNorm, targetDirNorm)) return targetDirNorm;
 
 	// Case where vectors are exact opposite, slightly nudge input a bit
 	if (eqf(inDirNorm, -targetDirNorm)) {
-		inDirNorm = normalize(inDir + (vec3(1.0f) - inDirNorm) * 0.025f);
+		inDirNorm = normalize(inDir + (f32x3(1.0f) - inDirNorm) * 0.025f);
 		sfz_assert(!eqf(inDirNorm, -targetDirNorm));
 	}
 
@@ -621,12 +621,12 @@ inline vec3 rotateTowardsRadClampSafe(vec3 inDir, vec3 targetDir, f32 angleRads)
 	return rotateTowardsRad(inDirNorm, targetDirNorm, angleRads);
 }
 
-inline vec3 rotateTowardsDeg(vec3 inDir, vec3 targetDir, f32 angleDegs)
+inline f32x3 rotateTowardsDeg(f32x3 inDir, f32x3 targetDir, f32 angleDegs)
 {
 	return rotateTowardsRad(inDir, targetDir, DEG_TO_RAD * angleDegs);
 }
 
-inline vec3 rotateTowardsDegClampSafe(vec3 inDir, vec3 targetDir, f32 angleDegs)
+inline f32x3 rotateTowardsDegClampSafe(f32x3 inDir, f32x3 targetDir, f32 angleDegs)
 {
 	return rotateTowardsRadClampSafe(inDir, targetDir, DEG_TO_RAD * angleDegs);
 }

@@ -33,8 +33,8 @@ inline void renderBuffersTab(ResourceManagerState& state)
 {
 	constexpr float offset = 200.0f;
 	constexpr float offset2 = 220.0f;
-	constexpr vec4 normalTextColor = vec4(1.0f);
-	constexpr vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	constexpr f32x4 normalTextColor = f32x4(1.0f);
+	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
 	static str128 filter;
 
 	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
@@ -92,8 +92,8 @@ inline void renderTexturesTab(ResourceManagerState& state)
 {
 	constexpr float offset = 200.0f;
 	constexpr float offset2 = 240.0f;
-	constexpr vec4 normalTextColor = vec4(1.0f);
-	constexpr vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	constexpr f32x4 normalTextColor = f32x4(1.0f);
+	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
 	static str128 filter;
 
 	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
@@ -181,8 +181,8 @@ inline void renderFramebuffersTab(ResourceManagerState& state)
 {
 	constexpr float offset = 200.0f;
 	constexpr float offset2 = 220.0f;
-	constexpr vec4 normalTextColor = vec4(1.0f);
-	constexpr vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	constexpr f32x4 normalTextColor = f32x4(1.0f);
+	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
 	static str128 filter;
 
 	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
@@ -298,9 +298,9 @@ inline void renderMeshesTab(ResourceManagerState& state)
 		}
 		ImGui::Unindent(20.0f);
 
-		// Lambdas for converting vec4_u8 to vec4_f32 and back
-		auto u8ToF32 = [](vec4_u8 v) { return vec4(v) * (1.0f / 255.0f); };
-		auto f32ToU8 = [](vec4 v) { return vec4_u8(v * 255.0f); };
+		// Lambdas for converting u8x4 to vec4_f32 and back
+		auto u8ToF32 = [](u8x4 v) { return f32x4(v) * (1.0f / 255.0f); };
+		auto f32ToU8 = [](f32x4 v) { return u8x4(v * 255.0f); };
 
 		// Lambda for converting texture index to combo string label
 		auto textureToComboStr = [&](strID strId) {
@@ -360,7 +360,7 @@ inline void renderMeshesTab(ResourceManagerState& state)
 					constexpr float offset = 310.0f;
 
 					// Albedo
-					vec4 colorFloat = u8ToF32(material.albedo);
+					f32x4 colorFloat = u8ToF32(material.albedo);
 					alignedEdit("Albedo Factor", offset, [&](const char* name) {
 						if (ImGui::ColorEdit4(str128("%s##%u_%llu", name, i, itemItr.key), colorFloat.data(),
 							ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_Float)) {
@@ -384,8 +384,8 @@ inline void renderMeshesTab(ResourceManagerState& state)
 					});
 
 					// Metallic & roughness
-					vec4_u8 metallicRoughnessU8(material.metallic, material.roughness, 0, 0);
-					vec4 metallicRoughness = u8ToF32(metallicRoughnessU8);
+					u8x4 metallicRoughnessU8(material.metallic, material.roughness, 0, 0);
+					f32x4 metallicRoughness = u8ToF32(metallicRoughnessU8);
 					alignedEdit("Metallic Roughness Factors", offset, [&](const char* name) {
 						if (ImGui::SliderFloat2(str128("%s##%u_%llu", name, i, itemItr.key), metallicRoughness.data(), 0.0f, 1.0f)) {
 							metallicRoughnessU8 = f32ToU8(metallicRoughness);
@@ -456,8 +456,8 @@ inline void renderMeshesTab(ResourceManagerState& state)
 inline void renderVoxelModelsTab(ResourceManagerState& state)
 {
 	constexpr float offset = 200.0f;
-	constexpr vec4 normalTextColor = vec4(1.0f);
-	constexpr vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	constexpr f32x4 normalTextColor = f32x4(1.0f);
+	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
 	static str128 filter;
 
 	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
@@ -513,8 +513,8 @@ inline void renderVoxelModelsTab(ResourceManagerState& state)
 inline void renderVoxelMaterialsTab(ResourceManager& resources, ResourceManagerState& state)
 {
 	constexpr float offset = 200.0f;
-	constexpr vec4 normalTextColor = vec4(1.0f);
-	constexpr vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	constexpr f32x4 normalTextColor = f32x4(1.0f);
+	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
 	static str128 filter;
 
 	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
@@ -538,8 +538,8 @@ inline void renderVoxelMaterialsTab(ResourceManager& resources, ResourceManagerS
 		if (!filter.isPartOf(lowerCaseName.str())) continue;
 
 		{
-			vec4 color;
-			color.xyz = clamp((vec3(material.originalColor.xyz)) * (1.0f / 255.0f), 0.0f, 1.0f);
+			f32x4 color;
+			color.xyz = clamp((f32x3(material.originalColor.xyz)) * (1.0f / 255.0f), 0.0f, 1.0f);
 			color.w = 1.0f;
 			ImGui::ColorButton(str320("##%s", nameExt.str()).str(), color, ImGuiColorEditFlags_NoLabel);
 			ImGui::SameLine();

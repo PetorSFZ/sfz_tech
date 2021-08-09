@@ -35,27 +35,27 @@ public:
 	inline Plane() noexcept = default;
 
 	/// dot(normal, x) - d = 0
-	inline Plane(const vec3& normal, float d) noexcept;
+	inline Plane(const f32x3& normal, float d) noexcept;
 	/// dot(normal, x - position) = 0
-	inline Plane(const vec3& normal, const vec3& position) noexcept;
+	inline Plane(const f32x3& normal, const f32x3& position) noexcept;
 
 	// Public member functions
 	// --------------------------------------------------------------------------------------------
 
 	/// Returns the signed distance to the plane. Positive if above, negative if below.
-	inline float signedDistance(const vec3& point) const noexcept;
+	inline float signedDistance(const f32x3& point) const noexcept;
 
 	// Public getters/setters
 	// --------------------------------------------------------------------------------------------
 
-	inline const vec3& normal() const noexcept { return mNormal; }
+	inline const f32x3& normal() const noexcept { return mNormal; }
 	inline float d() const noexcept { return mD; }
 
 private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	vec3 mNormal;
+	f32x3 mNormal;
 	float mD;
 };
 

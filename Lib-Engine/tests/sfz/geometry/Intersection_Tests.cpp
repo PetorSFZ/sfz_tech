@@ -39,38 +39,38 @@ UTEST(Intersection, signed_distance_to_plane)
 {
 	using namespace sfz;
 
-	Plane p{vec3{0.0f, 1.0f, 0.0f}, vec3{2.0f, 1.0f, 0.0f}};
+	Plane p{f32x3{0.0f, 1.0f, 0.0f}, f32x3{2.0f, 1.0f, 0.0f}};
 
-	ASSERT_TRUE(eqf(p.signedDistance(vec3{2.0f, 3.0f, 0.0f}), 2.0f));
-	ASSERT_TRUE(eqf(p.signedDistance(vec3{0.0f, 3.0f, 0.0f}), 2.0f));
-	ASSERT_TRUE(eqf(p.signedDistance(vec3{2.0f, 0.0f, 0.0f}), -1.0f));
+	ASSERT_TRUE(eqf(p.signedDistance(f32x3{2.0f, 3.0f, 0.0f}), 2.0f));
+	ASSERT_TRUE(eqf(p.signedDistance(f32x3{0.0f, 3.0f, 0.0f}), 2.0f));
+	ASSERT_TRUE(eqf(p.signedDistance(f32x3{2.0f, 0.0f, 0.0f}), -1.0f));
 }
 
 UTEST(Intersection, point_inside_aabb_test)
 {
 	using namespace sfz;
 
-	AABB box{vec3{-1,-1,-1}, vec3{1,1,1}};
+	AABB box{f32x3{-1,-1,-1}, f32x3{1,1,1}};
 
-	ASSERT_TRUE(pointInside(box, vec3{0,0,0}));
-	ASSERT_TRUE(!pointInside(box, vec3{-2,0,0}));
+	ASSERT_TRUE(pointInside(box, f32x3{0,0,0}));
+	ASSERT_TRUE(!pointInside(box, f32x3{-2,0,0}));
 }
 
 UTEST(Intersection, aabb_vs_aabb_test)
 {
 	using namespace sfz;
 
-	AABB boxMid{vec3{-1.0f, -1.0f, -1.0f}, vec3{1.0f, 1.0f, 1.0f}};
-	AABB boxMidSmall{vec3{-0.5f, -0.5f, -0.5f}, vec3{0.5f, 0.5f, 0.5f}};
+	AABB boxMid{f32x3{-1.0f, -1.0f, -1.0f}, f32x3{1.0f, 1.0f, 1.0f}};
+	AABB boxMidSmall{f32x3{-0.5f, -0.5f, -0.5f}, f32x3{0.5f, 0.5f, 0.5f}};
 
-	AABB boxFrontSmall{vec3{-0.5f, -0.5f, 0.75f}, vec3{0.5f, 0.5f, 1.75f}};
-	AABB boxBackSmall{vec3{-0.5f, -0.5f, -1.75f}, vec3{0.5f, 0.5f, -0.75f}};
+	AABB boxFrontSmall{f32x3{-0.5f, -0.5f, 0.75f}, f32x3{0.5f, 0.5f, 1.75f}};
+	AABB boxBackSmall{f32x3{-0.5f, -0.5f, -1.75f}, f32x3{0.5f, 0.5f, -0.75f}};
 
-	AABB boxUpSmall{vec3{-0.5f, 0.75f, -0.5f}, vec3{0.5f, 1.75f, 0.5f}};
-	AABB boxDownSmall{vec3{-0.5f, -1.75f, -0.5f}, vec3{0.5f, -0.75f, 0.5f}};
+	AABB boxUpSmall{f32x3{-0.5f, 0.75f, -0.5f}, f32x3{0.5f, 1.75f, 0.5f}};
+	AABB boxDownSmall{f32x3{-0.5f, -1.75f, -0.5f}, f32x3{0.5f, -0.75f, 0.5f}};
 
-	AABB boxLeftSmall{vec3{-1.75f, -0.5f, -0.5f}, vec3{-0.75f, 0.5f, 0.5f}};
-	AABB boxRightSMall{vec3{0.75f, -0.5f, -0.5f}, vec3{1.75f, 0.5f, 0.5f}};
+	AABB boxLeftSmall{f32x3{-1.75f, -0.5f, -0.5f}, f32x3{-0.75f, 0.5f, 0.5f}};
+	AABB boxRightSMall{f32x3{0.75f, -0.5f, -0.5f}, f32x3{1.75f, 0.5f, 0.5f}};
 
 	std::vector<AABB*> smallSurroundingBoxes;
 	smallSurroundingBoxes.push_back(&boxFrontSmall);
@@ -102,21 +102,21 @@ UTEST(Intersection, obb_vs_obb_test)
 {
 	using namespace sfz;
 
-	const vec3 axisAlignedAxes[3] = {
-		vec3(1.0f, 0.0f, 0.0f),
-		vec3(0.0f, 1.0f, 0.0f),
-		vec3(0.0f, 0.0f, 1.0f)
+	const f32x3 axisAlignedAxes[3] = {
+		f32x3(1.0f, 0.0f, 0.0f),
+		f32x3(0.0f, 1.0f, 0.0f),
+		f32x3(0.0f, 0.0f, 1.0f)
 	};
-	vec3 smallExts{1.0f, 1.0f, 1.0f};
-	vec3 bigExts{2.0f, 2.0f, 2.0f};
+	f32x3 smallExts{1.0f, 1.0f, 1.0f};
+	f32x3 bigExts{2.0f, 2.0f, 2.0f};
 
-	OBB midSmallAA{vec3{0.0f, 0.0f, 0.0f}, axisAlignedAxes, smallExts};
-	OBB midSmallLeftAA{vec3{-1.0f, 0.0f, 0.0f}, axisAlignedAxes, smallExts};
-	OBB midSmallRightAA{vec3{1.0f, 0.0f, 0.0f}, axisAlignedAxes, smallExts};
-	OBB midSmallDownAA{vec3{0.0f, -1.0f, 0.0f}, axisAlignedAxes, smallExts};
-	OBB midSmallUpAA{vec3{0.0f, 1.0f, 0.0f}, axisAlignedAxes, smallExts};
-	OBB midSmallBackAA{vec3{0.0f, 0.0f, -1.0f}, axisAlignedAxes, smallExts};
-	OBB midSmallFrontAA{vec3{0.0f, 0.0f, 1.0f}, axisAlignedAxes, smallExts};
+	OBB midSmallAA{f32x3{0.0f, 0.0f, 0.0f}, axisAlignedAxes, smallExts};
+	OBB midSmallLeftAA{f32x3{-1.0f, 0.0f, 0.0f}, axisAlignedAxes, smallExts};
+	OBB midSmallRightAA{f32x3{1.0f, 0.0f, 0.0f}, axisAlignedAxes, smallExts};
+	OBB midSmallDownAA{f32x3{0.0f, -1.0f, 0.0f}, axisAlignedAxes, smallExts};
+	OBB midSmallUpAA{f32x3{0.0f, 1.0f, 0.0f}, axisAlignedAxes, smallExts};
+	OBB midSmallBackAA{f32x3{0.0f, 0.0f, -1.0f}, axisAlignedAxes, smallExts};
+	OBB midSmallFrontAA{f32x3{0.0f, 0.0f, 1.0f}, axisAlignedAxes, smallExts};
 	std::vector<OBB*> smallSurroundingAABoxes;
 	smallSurroundingAABoxes.push_back(&midSmallLeftAA);
 	smallSurroundingAABoxes.push_back(&midSmallRightAA);
@@ -125,13 +125,13 @@ UTEST(Intersection, obb_vs_obb_test)
 	smallSurroundingAABoxes.push_back(&midSmallBackAA);
 	smallSurroundingAABoxes.push_back(&midSmallFrontAA);
 
-	OBB midAA{vec3{0.0f, 0.0f, 0.0f}, axisAlignedAxes, bigExts};
-	OBB midLeftAA{vec3{-1.0f, 0.0f, 0.0f}, axisAlignedAxes, bigExts};
-	OBB midRightAA{vec3{1.0f, 0.0f, 0.0f}, axisAlignedAxes, bigExts};
-	OBB midDownAA{vec3{0.0f, -1.0f, 0.0f}, axisAlignedAxes, bigExts};
-	OBB midUpAA{vec3{0.0f, 1.0f, 0.0f}, axisAlignedAxes, bigExts};
-	OBB midBackAA{vec3{0.0f, 0.0f, -1.0f}, axisAlignedAxes, bigExts};
-	OBB midFrontAA{vec3{0.0f, 0.0f, 1.0f}, axisAlignedAxes, bigExts};
+	OBB midAA{f32x3{0.0f, 0.0f, 0.0f}, axisAlignedAxes, bigExts};
+	OBB midLeftAA{f32x3{-1.0f, 0.0f, 0.0f}, axisAlignedAxes, bigExts};
+	OBB midRightAA{f32x3{1.0f, 0.0f, 0.0f}, axisAlignedAxes, bigExts};
+	OBB midDownAA{f32x3{0.0f, -1.0f, 0.0f}, axisAlignedAxes, bigExts};
+	OBB midUpAA{f32x3{0.0f, 1.0f, 0.0f}, axisAlignedAxes, bigExts};
+	OBB midBackAA{f32x3{0.0f, 0.0f, -1.0f}, axisAlignedAxes, bigExts};
+	OBB midFrontAA{f32x3{0.0f, 0.0f, 1.0f}, axisAlignedAxes, bigExts};
 	std::vector<OBB*> surroundingAABoxes;
 	surroundingAABoxes.push_back(&midLeftAA);
 	surroundingAABoxes.push_back(&midRightAA);
@@ -158,8 +158,8 @@ UTEST(Intersection, obb_vs_obb_test)
 	ASSERT_TRUE(!intersects(midBackAA, midSmallFrontAA));
 
 	// Non-trivial edge case
-	OBB nonTrivial1st = OBB(vec3(0.0f), axisAlignedAxes, vec3(2.0f));
-	OBB nonTrivial2nd = OBB(vec3(2.0f), axisAlignedAxes, vec3(2.0f));
+	OBB nonTrivial1st = OBB(f32x3(0.0f), axisAlignedAxes, f32x3(2.0f));
+	OBB nonTrivial2nd = OBB(f32x3(2.0f), axisAlignedAxes, f32x3(2.0f));
 	nonTrivial2nd = nonTrivial2nd.transformOBB(quat::fromEuler(45.0f, 45.0f, 45.0f));
 
 	ASSERT_TRUE(!intersects(nonTrivial1st, nonTrivial2nd));
@@ -169,9 +169,9 @@ UTEST(Intersection, sphere_vs_sphere_test)
 {
 	using namespace sfz;
 
-	Sphere mid{vec3{0.0f, 0.0f, 0.0f}, 0.5f};
-	Sphere midBig{vec3{0.0f, 0.0f, 0.0f}, 1.0f};
-	Sphere aBitOff{vec3{-1.1f, 0.0f, 0.0f}, 0.5f};
+	Sphere mid{f32x3{0.0f, 0.0f, 0.0f}, 0.5f};
+	Sphere midBig{f32x3{0.0f, 0.0f, 0.0f}, 1.0f};
+	Sphere aBitOff{f32x3{-1.1f, 0.0f, 0.0f}, 0.5f};
 
 	ASSERT_TRUE(intersects(mid, midBig));
 	ASSERT_TRUE(intersects(midBig, aBitOff));
@@ -182,9 +182,9 @@ UTEST(Intersection, circle_vs_circle_test)
 {
 	using namespace sfz;
 
-	Circle mid{vec2{0.0f}, 1.0f};
-	Circle midBig{vec2{0.0f}, 2.0f};
-	Circle left{vec2{-2.1f, 0.0f}, 1.0f};
+	Circle mid{f32x2{0.0f}, 1.0f};
+	Circle midBig{f32x2{0.0f}, 2.0f};
+	Circle left{f32x2{-2.1f, 0.0f}, 1.0f};
 
 	ASSERT_TRUE(overlaps(mid, midBig));
 	ASSERT_TRUE(!overlaps(mid, left));
@@ -195,9 +195,9 @@ UTEST(Intersection, aabb2d_vs_aabb2d_test)
 {
 	using namespace sfz;
 
-	AABB2D mid{vec2{0.0f}, vec2{2.0f}};
-	AABB2D midBig{vec2{0.0f}, vec2{4.0f}};
-	AABB2D left{vec2{-2.1f, 0.0f}, vec2{2.0f}};
+	AABB2D mid{f32x2{0.0f}, f32x2{2.0f}};
+	AABB2D midBig{f32x2{0.0f}, f32x2{4.0f}};
+	AABB2D left{f32x2{-2.1f, 0.0f}, f32x2{2.0f}};
 
 	ASSERT_TRUE(overlaps(mid, midBig));
 	ASSERT_TRUE(!overlaps(mid, left));
@@ -208,13 +208,13 @@ UTEST(Intersection, aabb2d_vs_circle_test)
 {
 	using namespace sfz;
 
-	AABB2D rMid{vec2{0.0f}, vec2{2.0f}};
-	AABB2D rMidBig{vec2{0.0f}, vec2{4.0f}};
-	AABB2D rLeft{vec2{-2.1f, 0.0f}, vec2{2.0f}};
+	AABB2D rMid{f32x2{0.0f}, f32x2{2.0f}};
+	AABB2D rMidBig{f32x2{0.0f}, f32x2{4.0f}};
+	AABB2D rLeft{f32x2{-2.1f, 0.0f}, f32x2{2.0f}};
 
-	Circle cMid{vec2{0.0f}, 1.0f};
-	Circle cMidBig{vec2{0.0f}, 2.0f};
-	Circle cLeft{vec2{-2.1f, 0.0f}, 1.0f};
+	Circle cMid{f32x2{0.0f}, 1.0f};
+	Circle cMidBig{f32x2{0.0f}, 2.0f};
+	Circle cLeft{f32x2{-2.1f, 0.0f}, 1.0f};
 
 	ASSERT_TRUE(overlaps(rMid, cMid));
 	ASSERT_TRUE(overlaps(rMid, cMidBig));
@@ -245,9 +245,9 @@ UTEST(Intersection, plane_vs_aabb_test)
 {
 	using namespace sfz;
 
-	Plane p1{vec3{0.0f, 1.0f, 0.0f}, vec3{0.0f, 0.5f, 0.0f}};
-	Plane p2{vec3{0.0f, 1.0f, 0.0f}, vec3{0.0f, 1.5f, 0.0f}};
-	AABB aabb{vec3{1.0f, 1.0f, 1.0f}, vec3{3.0f, 3.0f, 3.0f}};
+	Plane p1{f32x3{0.0f, 1.0f, 0.0f}, f32x3{0.0f, 0.5f, 0.0f}};
+	Plane p2{f32x3{0.0f, 1.0f, 0.0f}, f32x3{0.0f, 1.5f, 0.0f}};
+	AABB aabb{f32x3{1.0f, 1.0f, 1.0f}, f32x3{3.0f, 3.0f, 3.0f}};
 
 	ASSERT_TRUE(!intersects(p1, aabb));
 	ASSERT_TRUE(intersects(p2, aabb));
@@ -257,9 +257,9 @@ UTEST(Intersection, plane_vs_obb_test)
 {
 	using namespace sfz;
 
-	Plane p1{vec3{0.0f, 1.0f, 0.0f}, vec3{0.0f, 0.5f, 0.0f}};
-	Plane p2{vec3{0.0f, 1.0f, 0.0f}, vec3{0.0f, 1.5f, 0.0f}};
-	OBB obb{AABB{vec3{1.0f, 1.0f, 1.0f}, vec3{3.0f, 3.0f, 3.0f}}};
+	Plane p1{f32x3{0.0f, 1.0f, 0.0f}, f32x3{0.0f, 0.5f, 0.0f}};
+	Plane p2{f32x3{0.0f, 1.0f, 0.0f}, f32x3{0.0f, 1.5f, 0.0f}};
+	OBB obb{AABB{f32x3{1.0f, 1.0f, 1.0f}, f32x3{3.0f, 3.0f, 3.0f}}};
 
 	ASSERT_TRUE(!intersects(p1, obb));
 	ASSERT_TRUE(intersects(p2, obb));

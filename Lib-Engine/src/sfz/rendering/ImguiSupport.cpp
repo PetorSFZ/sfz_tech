@@ -66,11 +66,11 @@ ImageView initializeImgui(SfzAllocator* allocator) noexcept
 	ImGui::StyleColorsDark(&style);
 
 	style.Alpha = 1.0f;
-	style.WindowPadding = vec2(12.0f);
+	style.WindowPadding = f32x2(12.0f);
 	style.WindowRounding = 4.0f;
-	style.FramePadding = vec2(8.0f, 5.0f);
-	style.ItemSpacing = vec2(12.0f, 8.0f);
-	style.ItemInnerSpacing = vec2(6.0f);
+	style.FramePadding = f32x2(8.0f, 5.0f);
+	style.ItemSpacing = f32x2(12.0f, 8.0f);
+	style.ItemInnerSpacing = f32x2(6.0f);
 	style.IndentSpacing = 30.0f;
 	style.ScrollbarSize = 12.0f;
 	style.ScrollbarRounding = 5.0f;
@@ -79,7 +79,7 @@ ImageView initializeImgui(SfzAllocator* allocator) noexcept
 
 	//style.Colors[ImGuiCol_Text];
 	//style.Colors[ImGuiCol_TextDisabled];
-	style.Colors[ImGuiCol_WindowBg] = vec4(0.05f, 0.05f, 0.05f, 0.75f);
+	style.Colors[ImGuiCol_WindowBg] = f32x4(0.05f, 0.05f, 0.05f, 0.75f);
 	//style.Colors[ImGuiCol_ChildBg];               // Background of child windows
 	//style.Colors[ImGuiCol_PopupBg];               // Background of popups, menus, tooltips windows
 	//style.Colors[ImGuiCol_Border];
@@ -152,8 +152,8 @@ ImageView initializeImgui(SfzAllocator* allocator) noexcept
 	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 
 	// Disable draw function and set all window sizes to 1 (will be set proper in update)
-	io.DisplaySize = vec2(1.0f);
-	io.DisplayFramebufferScale = vec2(1.0f);
+	io.DisplaySize = f32x2(1.0f);
+	io.DisplayFramebufferScale = f32x2(1.0f);
 
 	// Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
 	io.KeyMap[ImGuiKey_Tab] = SDLK_TAB;
@@ -186,7 +186,7 @@ ImageView initializeImgui(SfzAllocator* allocator) noexcept
 	ImFontConfig fontConfig;
 	fontConfig.OversampleH = 4;
 	fontConfig.OversampleV = 4;
-	fontConfig.GlyphExtraSpacing = vec2(1.0f);
+	fontConfig.GlyphExtraSpacing = f32x2(1.0f);
 	imguiState->defaultFont =
 		io.Fonts->AddFontFromFileTTF(DEFAULT_FONT_PATH, FONT_SIZE_PIXELS, &fontConfig);
 	imguiState->monospaceFont =
@@ -207,7 +207,7 @@ void deinitializeImgui() noexcept
 }
 
 void updateImgui(
-	vec2_i32 windowResolution,
+	i32x2 windowResolution,
 	const RawInputState& rawInputState,
 	const SDL_Event* keyboardEvents,
 	u32 numKeyboardEvents) noexcept
@@ -247,7 +247,7 @@ void updateImgui(
 	f32 scaleFactor = 1.0f / imguiScaleSetting->floatValue();
 
 	// Set display dimensions
-	vec2 imguiDims = vec2(windowResolution) * scaleFactor;
+	f32x2 imguiDims = f32x2(windowResolution) * scaleFactor;
 	io.DisplaySize = imguiDims;
 
 	// Update mouse
@@ -336,7 +336,7 @@ void updateImgui(
 		io.NavInputs[ImGuiNavInput_DpadRight] = f32(gpd.buttons[GPD_DPAD_RIGHT]);
 
 		// scroll / move window (w/ PadMenu) // e.g. Left Analog Stick Left/Right/Up/Down
-		vec2 leftStick = sfz::applyDeadzone(gpd.leftStick, sfz::GPD_STICK_APPROX_DEADZONE);
+		f32x2 leftStick = sfz::applyDeadzone(gpd.leftStick, sfz::GPD_STICK_APPROX_DEADZONE);
 		io.NavInputs[ImGuiNavInput_LStickUp] = sfz::max(leftStick.y, 0.0f);
 		io.NavInputs[ImGuiNavInput_LStickDown] = sfz::abs(sfz::min(leftStick.y, 0.0f));
 		io.NavInputs[ImGuiNavInput_LStickLeft] = sfz::abs(sfz::min(leftStick.x, 0.0f));

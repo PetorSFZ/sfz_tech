@@ -23,19 +23,19 @@
 
 namespace sfz {
 
-using sfz::vec3;
-using sfz::vec4;
+using sfz::f32x3;
+using sfz::f32x4;
 
 // ShaderMaterial type
 // ------------------------------------------------------------------------------------------------
 
 // TODO: A lot of opportunity for optimization here.
-// TODO: Replace vec4 with vec4_u8 for albedo and emissive?
+// TODO: Replace f32x4 with u8x4 for albedo and emissive?
 // TODO: Replace all integers with a bitset?
 // TODO: Replace roughness and metallic with u8 primitive?
 struct ShaderMaterial final {
-	vec4 albedo = vec4(1.0f);
-	vec4 emissive = vec4(1.0f); // Alpha ignored
+	f32x4 albedo = f32x4(1.0f);
+	f32x4 emissive = f32x4(1.0f); // Alpha ignored
 	float roughness = 1.0f;
 	float metallic = 1.0f;
 	int32_t hasAlbedoTex = 0;
@@ -51,9 +51,9 @@ static_assert(sizeof(ShaderMaterial) == sizeof(u32) * 16, "ShaderMaterial is pad
 // ------------------------------------------------------------------------------------------------
 
 struct ShaderPointLight final {
-	vec3 posVS = vec3(0.0f);
+	f32x3 posVS = f32x3(0.0f);
 	float range = 0.0f;
-	vec3 strength = vec3(0.0f);
+	f32x3 strength = f32x3(0.0f);
 	u32 ___PADDING___ = 0;
 };
 static_assert(sizeof(ShaderPointLight) == sizeof(u32) * 8);
@@ -62,9 +62,9 @@ static_assert(sizeof(ShaderPointLight) == sizeof(u32) * 8);
 // ------------------------------------------------------------------------------------------------
 
 struct DirectionalLight final {
-	vec3 lightDirVS = vec3(0.0f, -1.0f, 0.0);
+	f32x3 lightDirVS = f32x3(0.0f, -1.0f, 0.0);
 	float ___PADDING0___ = 0.0f;
-	vec3 strength = vec3(0.0f);
+	f32x3 strength = f32x3(0.0f);
 	float ___PADDING1___ = 0.0f;
 };
 static_assert(sizeof(DirectionalLight) == sizeof(u32) * 8);

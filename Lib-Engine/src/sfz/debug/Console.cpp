@@ -137,7 +137,7 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 		valuesList.add(processed.data());
 
 		// Get color and stats
-		vec4 color = stats.color(state.categoryStr, label);
+		f32x4 color = stats.color(state.categoryStr, label);
 		colorsList.add(ImGui::GetColorU32(color));
 		LabelStats labelStat = stats.stats(state.categoryStr, label);
 		labelStats.add(labelStat);
@@ -185,10 +185,10 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 	if (isPreview) {
 
 		// Calculate window size
-		vec2 windowSize =
-			vec2(float(state.inGamePerfWidth->intValue()), float(state.inGamePerfHeight->intValue()));
+		f32x2 windowSize =
+			f32x2(float(state.inGamePerfWidth->intValue()), float(state.inGamePerfHeight->intValue()));
 		ImGui::SetNextWindowSize(windowSize, ImGuiCond_Always);
-		ImGui::SetNextWindowPos(vec2(0.0f), ImGuiCond_Always);
+		ImGui::SetNextWindowPos(f32x2(0.0f), ImGuiCond_Always);
 
 		// Begin window
 		ImGuiWindowFlags windowFlags = 0;
@@ -203,8 +203,8 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 		windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
 		windowFlags |= ImGuiWindowFlags_NoNav;
 		windowFlags |= ImGuiWindowFlags_NoInputs;
-		ImGui::PushStyleColor(ImGuiCol_WindowBg, vec4(0.05f, 0.05f, 0.05f, 0.3f));
-		ImGui::PushStyleColor(ImGuiCol_Border, vec4(0.0f, 0.0f, 0.0f, 0.0f));
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, f32x4(0.05f, 0.05f, 0.05f, 0.3f));
+		ImGui::PushStyleColor(ImGuiCol_Border, f32x4(0.0f, 0.0f, 0.0f, 0.0f));
 		ImGui::Begin("Console Preview", nullptr, windowFlags);
 
 		// Render performance numbers
@@ -220,9 +220,9 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 		ImGui::EndGroup();
 
 		// Render plot
-		const vec2 infoDims = ImGui::GetItemRectMax();
+		const f32x2 infoDims = ImGui::GetItemRectMax();
 		ImGui::SameLine();
-		vec2 plotDims = vec2(ImGui::GetWindowSize()) - vec2(infoDims.x + 10.0f, 20.0f);
+		f32x2 plotDims = f32x2(ImGui::GetWindowSize()) - f32x2(infoDims.x + 10.0f, 20.0f);
 		conf.frame_size = plotDims;
 		conf.line_thickness = 1.0f;
 		ImGui::Plot("##PerformanceGraph", conf);
@@ -259,7 +259,7 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 		}
 
 		// Render plot
-		vec2 plotDims = vec2(ImGui::GetWindowSize().y, 360);
+		f32x2 plotDims = f32x2(ImGui::GetWindowSize().y, 360);
 		conf.frame_size = plotDims;
 		conf.line_thickness = 1.0f;
 		ImGui::Plot("##PerformanceGraph", conf);
@@ -279,21 +279,21 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 	}
 }
 
-static void renderLogWindow(ConsoleState& state, vec2 imguiWindowRes, bool isPreview, float maxAgeSecs = 6.0f) noexcept
+static void renderLogWindow(ConsoleState& state, f32x2 imguiWindowRes, bool isPreview, float maxAgeSecs = 6.0f) noexcept
 {
 	TerminalLogger& logger = *reinterpret_cast<TerminalLogger*>(getLogger());
-	constexpr vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
 	str96 timeStr;
 
-	auto getMessageColor = [](LogLevel level) -> vec4 {
+	auto getMessageColor = [](LogLevel level) -> f32x4 {
 		switch (level) {
-		case LogLevel::NOISE: return vec4(0.6f, 0.6f, 0.8f, 1.0f);
-		case LogLevel::INFO: return vec4(0.8f, 0.8f, 0.8f, 1.0f);
-		case LogLevel::WARNING: return vec4(1.0f, 1.0f, 0.0f, 1.0f);
-		case LogLevel::ERROR_LVL: return vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		case LogLevel::NOISE: return f32x4(0.6f, 0.6f, 0.8f, 1.0f);
+		case LogLevel::INFO: return f32x4(0.8f, 0.8f, 0.8f, 1.0f);
+		case LogLevel::WARNING: return f32x4(1.0f, 1.0f, 0.0f, 1.0f);
+		case LogLevel::ERROR_LVL: return f32x4(1.0f, 0.0f, 0.0f, 1.0f);
 		}
 		sfz_assert(false);
-		return vec4(1.0f);
+		return f32x4(1.0f);
 	};
 
 	if (isPreview) {
@@ -316,10 +316,10 @@ static void renderLogWindow(ConsoleState& state, vec2 imguiWindowRes, bool isPre
 		if (numActiveMessages == 0) return;
 
 		// Calculate window size
-		const vec2 windowSize =
-			vec2(float(state.inGameLogWidth->intValue()), float(state.inGameLogHeight->intValue()));
+		const f32x2 windowSize =
+			f32x2(float(state.inGameLogWidth->intValue()), float(state.inGameLogHeight->intValue()));
 		ImGui::SetNextWindowSize(windowSize, ImGuiCond_Always);
-		ImGui::SetNextWindowPos(imguiWindowRes - windowSize - vec2(5.0f), ImGuiCond_Always);
+		ImGui::SetNextWindowPos(imguiWindowRes - windowSize - f32x2(5.0f), ImGuiCond_Always);
 
 		// Begin window
 		ImGuiWindowFlags windowFlags = 0;
@@ -334,8 +334,8 @@ static void renderLogWindow(ConsoleState& state, vec2 imguiWindowRes, bool isPre
 		windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
 		windowFlags |= ImGuiWindowFlags_NoNav;
 		windowFlags |= ImGuiWindowFlags_NoInputs;
-		ImGui::PushStyleColor(ImGuiCol_WindowBg, vec4(0.05f, 0.05f, 0.05f, 0.6f));
-		ImGui::PushStyleColor(ImGuiCol_Border, vec4(0.0f, 0.0f, 0.0f, 0.0f));
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, f32x4(0.05f, 0.05f, 0.05f, 0.6f));
+		ImGui::PushStyleColor(ImGuiCol_Border, f32x4(0.0f, 0.0f, 0.0f, 0.0f));
 		ImGui::Begin("Log Preview", nullptr, windowFlags);
 
 		for (u32 i = 0; i < numActiveMessages; i++) {
@@ -346,7 +346,7 @@ static void renderLogWindow(ConsoleState& state, vec2 imguiWindowRes, bool isPre
 			if (int32_t(msg.level) < state.logMinLevelSetting->intValue()) continue;
 
 			// Print message header
-			const vec4 messageColor = getMessageColor(msg.level);
+			const f32x4 messageColor = getMessageColor(msg.level);
 			timeToString(timeStr, msg.timestamp);
 			imguiPrintText(str64("[%s] - [", timeStr.str()), messageColor);
 			ImGui::SameLine();
@@ -372,8 +372,8 @@ static void renderLogWindow(ConsoleState& state, vec2 imguiWindowRes, bool isPre
 		return;
 	}
 
-	ImGui::SetNextWindowPos(vec2(0.0f, 130.0f), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowSize(vec2(800, 800), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(f32x2(0.0f, 130.0f), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(f32x2(800, 800), ImGuiCond_FirstUseEver);
 
 	// Set window flags
 	ImGuiWindowFlags logWindowFlags = 0;
@@ -428,7 +428,7 @@ static void renderLogWindow(ConsoleState& state, vec2 imguiWindowRes, bool isPre
 		}
 
 		// Print message header
-		const vec4 messageColor = getMessageColor(message.level);
+		const f32x4 messageColor = getMessageColor(message.level);
 		timeToString(timeStr, message.timestamp);
 		imguiPrintText(str64("[%s] - [", timeStr.str()), messageColor);
 		ImGui::SameLine();
@@ -460,7 +460,7 @@ static void renderLogWindow(ConsoleState& state, vec2 imguiWindowRes, bool isPre
 
 static void renderConfigWindow(ConsoleState& state) noexcept
 {
-	const vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	const f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
 	str256 tmpStr;
 
 	// Get Global Config sections
@@ -469,8 +469,8 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 	cfg.getSections(state.cfgSections);
 
 	// Set window size
-	ImGui::SetNextWindowPos(vec2(300.0f * 1.25f + 17.0f, 0.0f), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowSize(vec2(400.0f, 0.0f), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(f32x2(300.0f * 1.25f + 17.0f, 0.0f), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(f32x2(400.0f, 0.0f), ImGuiCond_FirstUseEver);
 
 	// Set window flags
 	ImGuiWindowFlags configWindowFlags = 0;
@@ -525,7 +525,7 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 		if (filterMode) {
 			ImGui::Separator();
 			imguiRenderFilteredText(
-				sectionKey, state.configFilterString, vec4(1.0f), filterTextColor);
+				sectionKey, state.configFilterString, f32x4(1.0f), filterTextColor);
 		}
 		else {
 			if (ImGui::CollapsingHeader(sectionKey)) continue;
@@ -558,7 +558,7 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 			// Render setting key
 			if (filterMode) {
 				imguiRenderFilteredText(
-					setting->key(), state.configFilterString, vec4(1.0f), filterTextColor);
+					setting->key(), state.configFilterString, f32x4(1.0f), filterTextColor);
 			}
 			else {
 				ImGui::TextUnformatted(setting->key().str());
@@ -674,9 +674,9 @@ bool Console::active() noexcept
 	return mState->active;
 }
 
-void Console::render(vec2_i32 windowRes) noexcept
+void Console::render(i32x2 windowRes) noexcept
 {
-	const vec2 imguiWindowRes = vec2(windowRes) / mState->imguiScale->floatValue();
+	const f32x2 imguiWindowRes = f32x2(windowRes) / mState->imguiScale->floatValue();
 
 	// Render in-game previews
 	if (!mState->active && mState->showInGamePerf->boolValue()) {

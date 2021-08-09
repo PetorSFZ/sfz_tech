@@ -82,7 +82,7 @@ public:
 	StatsVisualizationType visualizationType(const char* category) const noexcept;
 
 	const float* samples(const char* category, const char* label) const noexcept;
-	vec4 color(const char* category, const char* label) const noexcept;
+	f32x4 color(const char* category, const char* label) const noexcept;
 	LabelStats stats(const char* category, const char* label) const noexcept;
 
 	// Methods
@@ -100,7 +100,7 @@ public:
 	void createLabel(
 		const char* category,
 		const char* label,
-		vec4 color = vec4(-1.0f),
+		f32x4 color = f32x4(-1.0f),
 		float defaultValue = 0.0f) noexcept;
 
 	void addSample(

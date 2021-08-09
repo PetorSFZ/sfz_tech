@@ -21,7 +21,7 @@ namespace sfz {
 // Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-inline OBB::OBB(vec3 center, vec3 xAxis, vec3 yAxis, vec3 zAxis, vec3 extents) noexcept
+inline OBB::OBB(f32x3 center, f32x3 xAxis, f32x3 yAxis, f32x3 zAxis, f32x3 extents) noexcept
 {
 	this->center = center;
 	this->xAxis() = xAxis;
@@ -32,21 +32,21 @@ inline OBB::OBB(vec3 center, vec3 xAxis, vec3 yAxis, vec3 zAxis, vec3 extents) n
 	ensureCorrectExtents();
 }
 
-inline OBB::OBB(vec3 center, const vec3 axes[3], vec3 extents) noexcept
+inline OBB::OBB(f32x3 center, const f32x3 axes[3], f32x3 extents) noexcept
 :
 	OBB(center, axes[0], axes[1], axes[2], extents)
 { }
 
-inline OBB::OBB(vec3 center, vec3 xAxis, vec3 yAxis, vec3 zAxis,
+inline OBB::OBB(f32x3 center, f32x3 xAxis, f32x3 yAxis, f32x3 zAxis,
 	float xExtent, float yExtent, float zExtent) noexcept
 :
-	OBB(center, xAxis, yAxis, zAxis, vec3(xExtent, yExtent, zExtent))
+	OBB(center, xAxis, yAxis, zAxis, f32x3(xExtent, yExtent, zExtent))
 { }
 
 inline OBB::OBB(const AABB& aabb) noexcept
 :
 	OBB(aabb.pos(),
-		vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f),
+		f32x3(1.0f, 0.0f, 0.0f), f32x3(0.0f, 1.0f, 0.0f), f32x3(0.0f, 0.0f, 1.0f),
 		aabb.dims())
 { }
 
@@ -60,11 +60,11 @@ inline OBBCorners OBB::corners() const noexcept
 	return tmp;
 }
 
-inline void OBB::corners(vec3* arrayOut) const noexcept
+inline void OBB::corners(f32x3* arrayOut) const noexcept
 {
-	vec3 halfXExtVec = xAxis() * halfExtents[0];
-	vec3 halfYExtVec = yAxis() * halfExtents[1];
-	vec3 halfZExtVec = zAxis() * halfExtents[2];
+	f32x3 halfXExtVec = xAxis() * halfExtents[0];
+	f32x3 halfYExtVec = yAxis() * halfExtents[1];
+	f32x3 halfZExtVec = zAxis() * halfExtents[2];
 	arrayOut[0] = center - halfXExtVec - halfYExtVec - halfZExtVec; // Back-bottom-left
 	arrayOut[1] = center - halfXExtVec - halfYExtVec + halfZExtVec; // Front-bottom-left
 	arrayOut[2] = center - halfXExtVec + halfYExtVec - halfZExtVec; // Back-top-left
@@ -77,18 +77,18 @@ inline void OBB::corners(vec3* arrayOut) const noexcept
 
 inline OBB OBB::transformOBB(const mat34& transform) const noexcept
 {
-	const vec3 newPos = transformPoint(transform, center);
+	const f32x3 newPos = transformPoint(transform, center);
 
-	const vec3 xAxisHalfExt = xAxis() * halfExtents.x;
-	const vec3 yAxisHalfExt = yAxis() * halfExtents.y;
-	const vec3 zAxisHalfExt = zAxis() * halfExtents.z;
-	const vec3 newXAxisHalfExt = transformDir(transform, xAxisHalfExt);
-	const vec3 newYAxisHalfExt = transformDir(transform, yAxisHalfExt);
-	const vec3 newZAxisHalfExt = transformDir(transform, zAxisHalfExt);
+	const f32x3 xAxisHalfExt = xAxis() * halfExtents.x;
+	const f32x3 yAxisHalfExt = yAxis() * halfExtents.y;
+	const f32x3 zAxisHalfExt = zAxis() * halfExtents.z;
+	const f32x3 newXAxisHalfExt = transformDir(transform, xAxisHalfExt);
+	const f32x3 newYAxisHalfExt = transformDir(transform, yAxisHalfExt);
+	const f32x3 newZAxisHalfExt = transformDir(transform, zAxisHalfExt);
 
-	const vec3 newHalfExt =
-		vec3(length(newXAxisHalfExt), length(newYAxisHalfExt), length(newZAxisHalfExt));
-	vec3 newAxes[3];
+	const f32x3 newHalfExt =
+		f32x3(length(newXAxisHalfExt), length(newYAxisHalfExt), length(newZAxisHalfExt));
+	f32x3 newAxes[3];
 	newAxes[0] = newXAxisHalfExt / newHalfExt.x;
 	newAxes[1] = newYAxisHalfExt / newHalfExt.y;
 	newAxes[2] = newZAxisHalfExt / newHalfExt.z;
@@ -109,7 +109,7 @@ inline OBB OBB::transformOBB(quat quaternion) const noexcept
 // Getters/setters
 // ------------------------------------------------------------------------------------------------
 
-inline void OBB::setExtents(const vec3& newExtents) noexcept
+inline void OBB::setExtents(const f32x3& newExtents) noexcept
 {
 	halfExtents = newExtents * 0.5f;
 	ensureCorrectExtents();

@@ -31,12 +31,12 @@ namespace sfz {
 // Point inside primitive tests
 // ------------------------------------------------------------------------------------------------
 
-inline bool pointInside(const AABB& box, const vec3& point) noexcept;
-inline bool pointInside(const OBB& box, const vec3& point) noexcept;
-inline bool pointInside(const Sphere& sphere, const vec3& point) noexcept;
+inline bool pointInside(const AABB& box, const f32x3& point) noexcept;
+inline bool pointInside(const OBB& box, const f32x3& point) noexcept;
+inline bool pointInside(const Sphere& sphere, const f32x3& point) noexcept;
 
-inline bool pointInside(const Circle& circle, vec2 point) noexcept;
-inline bool pointInside(const AABB2D& rect, vec2 point) noexcept;
+inline bool pointInside(const Circle& circle, f32x2 point) noexcept;
+inline bool pointInside(const AABB2D& rect, f32x2 point) noexcept;
 
 // Primitive vs primitive tests (same type)
 // ------------------------------------------------------------------------------------------------
@@ -87,10 +87,10 @@ inline bool belowPlane(const Plane& plane, const Sphere& sphere) noexcept;
 // Closest point tests
 // ------------------------------------------------------------------------------------------------
 
-inline vec3 closestPoint(const AABB& aabb, const vec3& point) noexcept;
-inline vec3 closestPoint(const OBB& obb, const vec3& point) noexcept;
-inline vec3 closestPoint(const Plane& plane, const vec3& point) noexcept;
-inline vec3 closestPoint(const Sphere& sphere, const vec3& point) noexcept;
+inline f32x3 closestPoint(const AABB& aabb, const f32x3& point) noexcept;
+inline f32x3 closestPoint(const OBB& obb, const f32x3& point) noexcept;
+inline f32x3 closestPoint(const Plane& plane, const f32x3& point) noexcept;
+inline f32x3 closestPoint(const Sphere& sphere, const f32x3& point) noexcept;
 
 } // namespace sfz
 

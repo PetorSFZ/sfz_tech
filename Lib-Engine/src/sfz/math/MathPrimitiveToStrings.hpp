@@ -25,21 +25,21 @@ namespace sfz {
 // Vector toString()
 // ------------------------------------------------------------------------------------------------
 
-str96 toString(const vec2& vector, u32 numDecimals = 2) noexcept;
-str96 toString(const vec3& vector, u32 numDecimals = 2) noexcept;
-str96 toString(const vec4& vector, u32 numDecimals = 2) noexcept;
+str96 toString(const f32x2& vector, u32 numDecimals = 2) noexcept;
+str96 toString(const f32x3& vector, u32 numDecimals = 2) noexcept;
+str96 toString(const f32x4& vector, u32 numDecimals = 2) noexcept;
 
-void toString(const vec2& vector, str96& string, u32 numDecimals = 2) noexcept;
-void toString(const vec3& vector, str96& string, u32 numDecimals = 2) noexcept;
-void toString(const vec4& vector, str96& string, u32 numDecimals = 2) noexcept;
+void toString(const f32x2& vector, str96& string, u32 numDecimals = 2) noexcept;
+void toString(const f32x3& vector, str96& string, u32 numDecimals = 2) noexcept;
+void toString(const f32x4& vector, str96& string, u32 numDecimals = 2) noexcept;
 
-str96 toString(const vec2_i32& vector) noexcept;
-str96 toString(const vec3_i32& vector) noexcept;
-str96 toString(const vec4_i32& vector) noexcept;
+str96 toString(const i32x2& vector) noexcept;
+str96 toString(const i32x3& vector) noexcept;
+str96 toString(const i32x4& vector) noexcept;
 
-void toString(const vec2_i32& vector, str96& string) noexcept;
-void toString(const vec3_i32& vector, str96& string) noexcept;
-void toString(const vec4_i32& vector, str96& string) noexcept;
+void toString(const i32x2& vector, str96& string) noexcept;
+void toString(const i32x3& vector, str96& string) noexcept;
+void toString(const i32x4& vector, str96& string) noexcept;
 
 // Matrix toString()
 // ------------------------------------------------------------------------------------------------

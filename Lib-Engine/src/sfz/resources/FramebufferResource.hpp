@@ -38,7 +38,7 @@ struct FramebufferResource final {
 	zg::Framebuffer framebuffer;
 	ArrayLocal<strID, ZG_MAX_NUM_RENDER_TARGETS> renderTargetNames;
 	strID depthBufferName;
-	vec2_i32 res = vec2_i32(0);
+	i32x2 res = i32x2(0);
 
 	// Whether resolution should be scaled relative screen resolution
 	bool screenRelativeResolution = false;
@@ -49,7 +49,7 @@ struct FramebufferResource final {
 	bool settingControlledRes = false;
 	Setting* controlledResSetting = nullptr;
 
-	[[nodiscard]] ZgResult build(vec2_i32 screenRes);
+	[[nodiscard]] ZgResult build(i32x2 screenRes);
 };
 
 // FramebufferResourceBuilder
@@ -59,7 +59,7 @@ struct FramebufferResourceBuilder final {
 	str128 name;
 	ArrayLocal<strID, ZG_MAX_NUM_RENDER_TARGETS> renderTargetNames;
 	strID depthBufferName;
-	vec2_i32 res = vec2_i32(0);
+	i32x2 res = i32x2(0);
 
 	bool screenRelativeResolution = false;
 	float resolutionScale = 1.0f;
@@ -72,7 +72,7 @@ struct FramebufferResourceBuilder final {
 	FramebufferResourceBuilder(const char* name) : name("%s", name) {}
 
 	FramebufferResourceBuilder& setName(const char* name);
-	FramebufferResourceBuilder& setFixedRes(vec2_i32 res);
+	FramebufferResourceBuilder& setFixedRes(i32x2 res);
 	FramebufferResourceBuilder& setScreenRelativeRes(float scale);
 	FramebufferResourceBuilder& setScreenRelativeRes(Setting* scaleSetting);
 	FramebufferResourceBuilder& setSettingControlledRes(Setting* resSetting);
@@ -80,7 +80,7 @@ struct FramebufferResourceBuilder final {
 	FramebufferResourceBuilder& addRenderTarget(strID textureName);
 	FramebufferResourceBuilder& setDepthBuffer(const char* textureName);
 	FramebufferResourceBuilder& setDepthBuffer(strID textureName);
-	FramebufferResource build(vec2_i32 screenRes);
+	FramebufferResource build(i32x2 screenRes);
 };
 
 } // namespace sfz

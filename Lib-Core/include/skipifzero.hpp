@@ -172,7 +172,7 @@ struct AltType final {
 //
 // Functions very similar to GLSL vectors. Swizzling is not supported, but it is possible to access
 // vector elements in different ways thanks to the union + nameless struct trick. E.g., you can
-// access the last two elements of a vec3 with v.yz.
+// access the last two elements of a f32x3 with v.yz.
 //
 // There are typedefs available for the primary primitives meant to be used. You should normally
 // only use these typedefs and not the template explicitly, unless you have a very specific use-case
@@ -226,9 +226,9 @@ struct Vec<T,2> final {
 	constexpr bool operator!= (Vec o) const { return !(*this == o); }
 };
 
-using vec2 =     Vec<f32, 2>;  static_assert(sizeof(vec2) == sizeof(f32) * 2, "");
-using vec2_i32 = Vec<i32, 2>;  static_assert(sizeof(vec2_i32) == sizeof(i32) * 2, "");
-using vec2_u8 =  Vec<u8, 2>;   static_assert(sizeof(vec2_u8) == sizeof(u8) * 2, "");
+using f32x2 = Vec<f32, 2>;  static_assert(sizeof(f32x2) == sizeof(f32) * 2, "");
+using i32x2 = Vec<i32, 2>;  static_assert(sizeof(i32x2) == sizeof(i32) * 2, "");
+using u8x2 =  Vec<u8, 2>;   static_assert(sizeof(u8x2) == sizeof(u8) * 2, "");
 
 template<typename T>
 struct Vec<T,3> final {
@@ -281,9 +281,8 @@ struct Vec<T,3> final {
 	constexpr bool operator!= (Vec o) const { return !(*this == o); }
 };
 
-using vec3 =     Vec<f32, 3>;  static_assert(sizeof(vec3) == sizeof(f32) * 3, "");
-using vec3_i32 = Vec<i32, 3>;  static_assert(sizeof(vec3_i32) == sizeof(i32) * 3, "");
-using vec3_u8 =  Vec<u8, 3>;   static_assert(sizeof(vec3_u8) == sizeof(u8) * 3, "");
+using f32x3 = Vec<f32, 3>;  static_assert(sizeof(f32x3) == sizeof(f32) * 3, "");
+using i32x3 = Vec<i32, 3>;  static_assert(sizeof(i32x3) == sizeof(i32) * 3, "");
 
 template<typename T>
 struct alignas(sizeof(T) * 4) Vec<T,4> final {
@@ -342,13 +341,13 @@ struct alignas(sizeof(T) * 4) Vec<T,4> final {
 	constexpr bool operator!= (Vec o) const { return !(*this == o); }
 };
 
-using vec4 =     Vec<f32, 4>;  static_assert(sizeof(vec4) == sizeof(f32) * 4, "");
-using vec4_i32 = Vec<i32, 4>;  static_assert(sizeof(vec4_i32) == sizeof(i32) * 4, "");
-using vec4_u8 =  Vec<u8, 4>;   static_assert(sizeof(vec4_u8) == sizeof(u8) * 4, "");
+using f32x4 = Vec<f32, 4>;  static_assert(sizeof(f32x4) == sizeof(f32) * 4, "");
+using i32x4 = Vec<i32, 4>;  static_assert(sizeof(i32x4) == sizeof(i32) * 4, "");
+using u8x4 =  Vec<u8, 4>;   static_assert(sizeof(u8x4) == sizeof(u8) * 4, "");
 
-static_assert(alignof(vec4) == 16, "");
-static_assert(alignof(vec4_i32) == 16, "");
-static_assert(alignof(vec4_u8) == 4, "");
+static_assert(alignof(f32x4) == 16, "");
+static_assert(alignof(i32x4) == 16, "");
+static_assert(alignof(u8x4) == 4, "");
 
 template<typename T, u32 N>
 constexpr Vec<T,N> operator* (T s, Vec<T,N> v) { return v * s; }
@@ -374,26 +373,26 @@ constexpr Vec<T,3> cross(Vec<T,3> l, Vec<T,3> r)
 	return Vec<T,3>(l.y * r.z - l.z * r.y, l.z * r.x - l.x * r.z, l.x * r.y - l.y * r.x);
 }
 
-inline f32 length(vec2 v) { return std::sqrt(dot(v, v)); }
-inline f32 length(vec3 v) { return std::sqrt(dot(v, v)); }
-inline f32 length(vec4 v) { return std::sqrt(dot(v, v)); }
+inline f32 length(f32x2 v) { return std::sqrt(dot(v, v)); }
+inline f32 length(f32x3 v) { return std::sqrt(dot(v, v)); }
+inline f32 length(f32x4 v) { return std::sqrt(dot(v, v)); }
 
-inline vec2 normalize(vec2 v) { return v * (1.0f / length(v)); }
-inline vec3 normalize(vec3 v) { return v * (1.0f / length(v)); }
-inline vec4 normalize(vec4 v) { return v * (1.0f / length(v)); }
+inline f32x2 normalize(f32x2 v) { return v * (1.0f / length(v)); }
+inline f32x3 normalize(f32x3 v) { return v * (1.0f / length(v)); }
+inline f32x4 normalize(f32x4 v) { return v * (1.0f / length(v)); }
 
-inline vec2 normalizeSafe(vec2 v) { f32 tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
-inline vec3 normalizeSafe(vec3 v) { f32 tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
-inline vec4 normalizeSafe(vec4 v) { f32 tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
+inline f32x2 normalizeSafe(f32x2 v) { f32 tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
+inline f32x3 normalizeSafe(f32x3 v) { f32 tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
+inline f32x4 normalizeSafe(f32x4 v) { f32 tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
 
 template<typename T> constexpr T elemSum(Vec<T,2> v) { return v.x + v.y; }
 template<typename T> constexpr T elemSum(Vec<T,3> v) { return v.x + v.y + v.z; }
 template<typename T> constexpr T elemSum(Vec<T,4> v) { return v.x + v.y + v.z + v.w; }
 
 constexpr f32 divSafe(f32 n, f32 d, f32 eps = 0.000'000'1f) { return d == 0.0f ? n / eps : n / d; }
-constexpr vec2 divSafe(vec2 n, vec2 d, f32 eps = 0.000'000'1f) { return vec2(divSafe(n.x, d.x, eps), divSafe(n.y, d.y, eps)); }
-constexpr vec3 divSafe(vec3 n, vec3 d, f32 eps = 0.000'000'1f) { return vec3(divSafe(n.x, d.x, eps), divSafe(n.y, d.y, eps), divSafe(n.z, d.z, eps)); }
-constexpr vec4 divSafe(vec4 n, vec4 d, f32 eps = 0.000'000'1f) { return vec4(divSafe(n.x, d.x, eps), divSafe(n.y, d.y, eps), divSafe(n.z, d.z, eps), divSafe(n.w, d.w, eps)); }
+constexpr f32x2 divSafe(f32x2 n, f32x2 d, f32 eps = 0.000'000'1f) { return f32x2(divSafe(n.x, d.x, eps), divSafe(n.y, d.y, eps)); }
+constexpr f32x3 divSafe(f32x3 n, f32x3 d, f32 eps = 0.000'000'1f) { return f32x3(divSafe(n.x, d.x, eps), divSafe(n.y, d.y, eps), divSafe(n.z, d.z, eps)); }
+constexpr f32x4 divSafe(f32x4 n, f32x4 d, f32 eps = 0.000'000'1f) { return f32x4(divSafe(n.x, d.x, eps), divSafe(n.y, d.y, eps), divSafe(n.z, d.z, eps), divSafe(n.w, d.w, eps)); }
 
 // Math functions
 // ------------------------------------------------------------------------------------------------
@@ -404,19 +403,19 @@ constexpr f32 RAD_TO_DEG = 180.0f / PI;
 
 constexpr f32 EQF_EPS = 0.001f;
 constexpr bool eqf(f32 l, f32 r, f32 eps = EQF_EPS) { return (l <= (r + eps)) && (l >= (r - eps)); }
-constexpr bool eqf(vec2 l, vec2 r, f32 eps = EQF_EPS) { return eqf(l.x, r.x, eps) && eqf(l.y, r.y, eps); }
-constexpr bool eqf(vec3 l, vec3 r, f32 eps = EQF_EPS) { return eqf(l.xy, r.xy, eps) && eqf(l.z, r.z, eps); }
-constexpr bool eqf(vec4 l, vec4 r, f32 eps = EQF_EPS) { return eqf(l.xyz, r.xyz, eps) && eqf(l.w, r.w, eps); }
+constexpr bool eqf(f32x2 l, f32x2 r, f32 eps = EQF_EPS) { return eqf(l.x, r.x, eps) && eqf(l.y, r.y, eps); }
+constexpr bool eqf(f32x3 l, f32x3 r, f32 eps = EQF_EPS) { return eqf(l.xy, r.xy, eps) && eqf(l.z, r.z, eps); }
+constexpr bool eqf(f32x4 l, f32x4 r, f32 eps = EQF_EPS) { return eqf(l.xyz, r.xyz, eps) && eqf(l.w, r.w, eps); }
 
 constexpr f32 abs(f32 v) { return v >= 0.0f ? v : -v; }
-constexpr vec2 abs(vec2 v) { return vec2(sfz::abs(v.x), sfz::abs(v.y)); }
-constexpr vec3 abs(vec3 v) { return vec3(sfz::abs(v.xy), sfz::abs(v.z)); }
-constexpr vec4 abs(vec4 v) { return vec4(sfz::abs(v.xyz), sfz::abs(v.w)); }
+constexpr f32x2 abs(f32x2 v) { return f32x2(sfz::abs(v.x), sfz::abs(v.y)); }
+constexpr f32x3 abs(f32x3 v) { return f32x3(sfz::abs(v.xy), sfz::abs(v.z)); }
+constexpr f32x4 abs(f32x4 v) { return f32x4(sfz::abs(v.xyz), sfz::abs(v.w)); }
 
 constexpr i32 abs(i32 v) { return v >= 0 ? v : -v; }
-constexpr vec2_i32 abs(vec2_i32 v) { return vec2_i32(sfz::abs(v.x), sfz::abs(v.y)); }
-constexpr vec3_i32 abs(vec3_i32 v) { return vec3_i32(sfz::abs(v.xy),sfz::abs(v.z)); }
-constexpr vec4_i32 abs(vec4_i32 v) { return vec4_i32(sfz::abs(v.xyz), sfz::abs(v.w)); }
+constexpr i32x2 abs(i32x2 v) { return i32x2(sfz::abs(v.x), sfz::abs(v.y)); }
+constexpr i32x3 abs(i32x3 v) { return i32x3(sfz::abs(v.xy),sfz::abs(v.z)); }
+constexpr i32x4 abs(i32x4 v) { return i32x4(sfz::abs(v.xyz), sfz::abs(v.w)); }
 
 constexpr f32 min(f32 l, f32 r) { return (l < r) ? l : r; }
 constexpr i32 min(i32 l, i32 r) { return (l < r) ? l : r; }
@@ -478,32 +477,32 @@ template<typename T> constexpr Vec<T,3> saturate(Vec<T,3> v) { return Vec<T,3>(s
 template<typename T> constexpr Vec<T,4> saturate(Vec<T,4> v) { return Vec<T,4>(sfz::saturate(v.xyz), sfz::saturate(v.w)); }
 
 constexpr f32 lerp(f32 v0, f32 v1, f32 t) { return (1.0f - t) * v0 + t * v1; }
-constexpr vec2 lerp(vec2 v0, vec2 v1, f32 t) { return (1.0f - t) * v0 + t * v1; }
-constexpr vec3 lerp(vec3 v0, vec3 v1, f32 t) { return (1.0f - t) * v0 + t * v1; }
-constexpr vec4 lerp(vec4 v0, vec4 v1, f32 t) { return (1.0f - t) * v0 + t * v1; }
+constexpr f32x2 lerp(f32x2 v0, f32x2 v1, f32 t) { return (1.0f - t) * v0 + t * v1; }
+constexpr f32x3 lerp(f32x3 v0, f32x3 v1, f32 t) { return (1.0f - t) * v0 + t * v1; }
+constexpr f32x4 lerp(f32x4 v0, f32x4 v1, f32 t) { return (1.0f - t) * v0 + t * v1; }
 
 inline f32 fmod(f32 n, f32 dnm) { return std::fmodf(n, dnm); }
-inline vec2 fmod(vec2 n, f32 dnm) { return vec2(fmod(n.x, dnm), fmod(n.y, dnm)); }
-inline vec2 fmod(vec2 n, vec2 dnm) { return vec2(fmod(n.x, dnm.x), fmod(n.y, dnm.y)); }
-inline vec3 fmod(vec3 n, f32 dnm) { return vec3(fmod(n.x, dnm), fmod(n.y, dnm), fmod(n.z, dnm)); }
-inline vec3 fmod(vec3 n, vec3 dnm) { return vec3(fmod(n.x, dnm.x), fmod(n.y, dnm.y), fmod(n.z, dnm.z)); }
-inline vec4 fmod(vec4 n, f32 dnm) { return vec4(fmod(n.x, dnm), fmod(n.y, dnm), fmod(n.z, dnm), fmod(n.w, dnm)); }
-inline vec4 fmod(vec4 n, vec4 dnm) { return vec4(fmod(n.x, dnm.x), fmod(n.y, dnm.y), fmod(n.z, dnm.z), fmod(n.w, dnm.w)); }
+inline f32x2 fmod(f32x2 n, f32 dnm) { return f32x2(fmod(n.x, dnm), fmod(n.y, dnm)); }
+inline f32x2 fmod(f32x2 n, f32x2 dnm) { return f32x2(fmod(n.x, dnm.x), fmod(n.y, dnm.y)); }
+inline f32x3 fmod(f32x3 n, f32 dnm) { return f32x3(fmod(n.x, dnm), fmod(n.y, dnm), fmod(n.z, dnm)); }
+inline f32x3 fmod(f32x3 n, f32x3 dnm) { return f32x3(fmod(n.x, dnm.x), fmod(n.y, dnm.y), fmod(n.z, dnm.z)); }
+inline f32x4 fmod(f32x4 n, f32 dnm) { return f32x4(fmod(n.x, dnm), fmod(n.y, dnm), fmod(n.z, dnm), fmod(n.w, dnm)); }
+inline f32x4 fmod(f32x4 n, f32x4 dnm) { return f32x4(fmod(n.x, dnm.x), fmod(n.y, dnm.y), fmod(n.z, dnm.z), fmod(n.w, dnm.w)); }
 
 inline f32 floor(f32 v) { return std::floorf(v); }
-inline vec2 floor(vec2 v) { return vec2(floor(v.x), floor(v.y)); }
-inline vec3 floor(vec3 v) { return vec3(floor(v.x), floor(v.y), floor(v.z)); }
-inline vec4 floor(vec4 v) { return vec4(floor(v.x), floor(v.y), floor(v.z), floor(v.w)); }
+inline f32x2 floor(f32x2 v) { return f32x2(floor(v.x), floor(v.y)); }
+inline f32x3 floor(f32x3 v) { return f32x3(floor(v.x), floor(v.y), floor(v.z)); }
+inline f32x4 floor(f32x4 v) { return f32x4(floor(v.x), floor(v.y), floor(v.z), floor(v.w)); }
 
 inline f32 ceil(f32 v) { return std::ceilf(v); }
-inline vec2 ceil(vec2 v) { return vec2(ceil(v.x), ceil(v.y)); }
-inline vec3 ceil(vec3 v) { return vec3(ceil(v.x), ceil(v.y), ceil(v.z)); }
-inline vec4 ceil(vec4 v) { return vec4(ceil(v.x), ceil(v.y), ceil(v.z), ceil(v.w)); }
+inline f32x2 ceil(f32x2 v) { return f32x2(ceil(v.x), ceil(v.y)); }
+inline f32x3 ceil(f32x3 v) { return f32x3(ceil(v.x), ceil(v.y), ceil(v.z)); }
+inline f32x4 ceil(f32x4 v) { return f32x4(ceil(v.x), ceil(v.y), ceil(v.z), ceil(v.w)); }
 
 inline f32 round(f32 v) { return std::roundf(v); }
-inline vec2 round(vec2 v) { return vec2(round(v.x), round(v.y)); }
-inline vec3 round(vec3 v) { return vec3(round(v.x), round(v.y), round(v.z)); }
-inline vec4 round(vec4 v) { return vec4(round(v.x), round(v.y), round(v.z), round(v.w)); }
+inline f32x2 round(f32x2 v) { return f32x2(round(v.x), round(v.y)); }
+inline f32x3 round(f32x3 v) { return f32x3(round(v.x), round(v.y), round(v.z)); }
+inline f32x4 round(f32x4 v) { return f32x4(round(v.x), round(v.y), round(v.z), round(v.w)); }
 
 } // namespace sfz
 

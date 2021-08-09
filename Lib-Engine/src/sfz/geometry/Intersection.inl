@@ -23,21 +23,21 @@ namespace sfz {
 
 namespace detail {
 
-inline bool intersectsPlane(const Plane& plane, const vec3& position, float projectedRadius) noexcept
+inline bool intersectsPlane(const Plane& plane, const f32x3& position, float projectedRadius) noexcept
 {
 	// Part of plane SAT algorithm from Real-Time Collision Detection
 	float dist = plane.signedDistance(position);
 	return std::abs(dist) <= projectedRadius;
 }
 
-inline bool abovePlane(const Plane& plane, const vec3& position, float projectedRadius) noexcept
+inline bool abovePlane(const Plane& plane, const f32x3& position, float projectedRadius) noexcept
 {
 	// Part of plane SAT algorithm from Real-Time Collision Detection
 	float dist = plane.signedDistance(position);
 	return dist >= (-projectedRadius);
 }
 
-inline bool belowPlane(const Plane& plane, const vec3& position, float projectedRadius) noexcept
+inline bool belowPlane(const Plane& plane, const f32x3& position, float projectedRadius) noexcept
 {
 	// Part of plane SAT algorithm from Real-Time Collision Detection
 	float dist = plane.signedDistance(position);
@@ -49,17 +49,17 @@ inline bool belowPlane(const Plane& plane, const vec3& position, float projected
 // Point inside primitive tests
 // ------------------------------------------------------------------------------------------------
 
-inline bool pointInside(const AABB& box, const vec3& point) noexcept
+inline bool pointInside(const AABB& box, const f32x3& point) noexcept
 {
 	return box.min[0] < point[0] && point[0] < box.max[0] &&
 	       box.min[1] < point[1] && point[1] < box.max[1] &&
 	       box.min[2] < point[2] && point[2] < box.max[2];
 }
 
-inline bool pointInside(const OBB& box, const vec3& point) noexcept
+inline bool pointInside(const OBB& box, const f32x3& point) noexcept
 {
 	// Modified closest point algorithm from Real-Time Collision Detection (Section 5.1.4)
-	const vec3 distToPoint = point - box.center;
+	const f32x3 distToPoint = point - box.center;
 	float dist;
 	for (u32 i = 0; i < 3; i++) {
 		dist = dot(distToPoint, box.rotation.row(i));
@@ -69,22 +69,22 @@ inline bool pointInside(const OBB& box, const vec3& point) noexcept
 	return true;
 }
 
-inline bool pointInside(const Sphere& sphere, const vec3& point) noexcept
+inline bool pointInside(const Sphere& sphere, const f32x3& point) noexcept
 {
-	const vec3 distToPoint = point - sphere.position;
+	const f32x3 distToPoint = point - sphere.position;
 	return dot(distToPoint, distToPoint) < (sphere.radius * sphere.radius);
 }
 
-inline bool pointInside(const Circle& circle, vec2 point) noexcept
+inline bool pointInside(const Circle& circle, f32x2 point) noexcept
 {
 	// If the length from the circles center to the specified point is shorter than or equal to
 	// the radius then the Circle overlaps the point. Both sides of the equation is squared to
 	// avoid somewhat expensive sqrt() function.
-	vec2 dist = point - circle.pos;
+	f32x2 dist = point - circle.pos;
 	return dot(dist, dist) <= (circle.radius*circle.radius);
 }
 
-inline bool pointInside(const AABB2D& rect, vec2 point) noexcept
+inline bool pointInside(const AABB2D& rect, f32x2 point) noexcept
 {
 	return rect.min.x <= point.x && point.x <= rect.max.x &&
 	       rect.min.y <= point.y && point.y <= rect.max.y;
@@ -108,9 +108,9 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 	// (chapter 4.4.1 OBB-OBB Intersection)
 
 	const auto& aU = a.rotation;
-	const vec3& aE = a.halfExtents;
+	const f32x3& aE = a.halfExtents;
 	const auto& bU = b.rotation;
-	const vec3& bE = b.halfExtents;
+	const f32x3& bE = b.halfExtents;
 
 	// Compute the rotation matrix from b to a
 	mat3 R;
@@ -130,8 +130,8 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 	}
 
 	// Calculate translation vector from a to b and bring it into a's frame of reference
-	vec3 t = b.center - a.center;
-	t = vec3{dot(t, aU.row(0)), dot(t, aU.row(1)), dot(t, aU.row(2))};
+	f32x3 t = b.center - a.center;
+	t = f32x3{dot(t, aU.row(0)), dot(t, aU.row(1)), dot(t, aU.row(2))};
 
 	float ra, rb;
 
@@ -200,7 +200,7 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 
 inline bool intersects(const Sphere& sphereA, const Sphere& sphereB) noexcept
 {
-	const vec3 distVec = sphereA.position - sphereB.position;
+	const f32x3 distVec = sphereA.position - sphereB.position;
 	const float squaredDist = dot(distVec, distVec);
 	const float radiusSum = sphereA.radius + sphereB.radius;
 	const float squaredRadiusSum = radiusSum * radiusSum;
@@ -233,7 +233,7 @@ inline bool overlaps(const Circle& circle, const AABB2D& rect) noexcept
 	// If the length between the center of the circle and the closest point on the rectangle is
 	// less than or equal to the circles radius they overlap. Both sides of the equation is
 	// squared to avoid somewhat expensive sqrt() function.
-	vec2 e = max(rect.min - circle.pos, 0.0f);
+	f32x2 e = max(rect.min - circle.pos, 0.0f);
 	e += max(circle.pos - rect.max, 0.0f);
 	return dot(e, e) <= circle.radius * circle.radius;
 }
@@ -353,16 +353,16 @@ inline bool belowPlane(const Plane& plane, const Sphere& sphere) noexcept
 // Closest point tests
 // ------------------------------------------------------------------------------------------------
 
-inline vec3 closestPoint(const AABB& aabb, const vec3& point) noexcept
+inline f32x3 closestPoint(const AABB& aabb, const f32x3& point) noexcept
 {
 	return min(max(point, aabb.min), aabb.max);
 }
 
-inline vec3 closestPoint(const OBB& obb, const vec3& point) noexcept
+inline f32x3 closestPoint(const OBB& obb, const f32x3& point) noexcept
 {
 	// Algorithm from Real-Time Collision Detection (Section 5.1.4)
-	const vec3 distToPoint = point - obb.center;
-	vec3 res = obb.center;
+	const f32x3 distToPoint = point - obb.center;
+	f32x3 res = obb.center;
 
 	float dist;
 	for (u32 i = 0; i < 3; i++) {
@@ -375,15 +375,15 @@ inline vec3 closestPoint(const OBB& obb, const vec3& point) noexcept
 	return res;
 }
 
-inline vec3 closestPoint(const Plane& plane, const vec3& point) noexcept
+inline f32x3 closestPoint(const Plane& plane, const f32x3& point) noexcept
 {
 	return point - plane.signedDistance(point) * plane.normal();
 }
 
-inline vec3 closestPoint(const Sphere& sphere, const vec3& point) noexcept
+inline f32x3 closestPoint(const Sphere& sphere, const f32x3& point) noexcept
 {
-	const vec3 distToPoint = point - sphere.position;
-	vec3 res = point;
+	const f32x3 distToPoint = point - sphere.position;
+	f32x3 res = point;
 	if (dot(distToPoint, distToPoint) > (sphere.radius * sphere.radius)) {
 		res = sphere.position + normalize(distToPoint) * sphere.radius;
 	}

@@ -27,7 +27,7 @@ struct Sphere final {
 	// Members
 	// --------------------------------------------------------------------------------------------
 
-	vec3 position;
+	f32x3 position;
 	float radius;
 
 	// Constructors & destructors
@@ -37,7 +37,7 @@ struct Sphere final {
 	Sphere(const Sphere&) noexcept = default;
 	Sphere& operator= (const Sphere&) noexcept = default;
 	
-	inline Sphere(const vec3& position, float radius) noexcept
+	inline Sphere(const f32x3& position, float radius) noexcept
 	:
 		position(position),
 		radius(radius)

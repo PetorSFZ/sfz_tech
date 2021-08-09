@@ -36,7 +36,7 @@ ImageView initializeImgui(SfzAllocator* allocator) noexcept;
 void deinitializeImgui() noexcept;
 
 void updateImgui(
-	vec2_i32 windowResolution,
+	i32x2 windowResolution,
 	const RawInputState& rawInputState,
 	const SDL_Event* keyboardEvents,
 	u32 numKeyboardEvents) noexcept;

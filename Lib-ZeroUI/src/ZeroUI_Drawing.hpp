@@ -70,28 +70,28 @@ f32 drawTextFmtCentered(
 	const mat34& transform,
 	strID fontID,
 	f32 size,
-	vec4 color,
+	f32x4 color,
 	const char* text);
 
 void drawImage(
 	const mat34& transform,
-	vec2 dims,
+	f32x2 dims,
 	u64 imageHandle,
 	bool isAlphaTexture = false);
 
 void drawRect(
 	const mat34& transform,
-	vec2 dims,
-	vec4 color);
+	f32x2 dims,
+	f32x4 color);
 
 void drawBorder(
 	const mat34& transform,
-	vec2 dims,
+	f32x2 dims,
 	f32 thickness,
-	vec4 color);
+	f32x4 color);
 
 // TODO: This might be a tiny bit broken
 f32 drawTextFmt(
-	vec2 pos, HAlign halign, VAlign valign, strID fontID, f32 size, vec4 color, const char* format, ...);
+	f32x2 pos, HAlign halign, VAlign valign, strID fontID, f32 size, f32x4 color, const char* format, ...);
 
 } // namespace zui

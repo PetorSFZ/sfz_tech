@@ -35,7 +35,7 @@ struct SphericalCoord final {
 	float theta;
 };
 
-inline const SphericalCoord toSpherical(vec3 v)
+inline const SphericalCoord toSpherical(f32x3 v)
 {
 	SphericalCoord coord = {};
 	coord.r = length(v);
@@ -48,11 +48,11 @@ inline const SphericalCoord toSpherical(vec3 v)
 	return coord;
 }
 
-inline const vec3 fromSpherical(SphericalCoord c)
+inline const f32x3 fromSpherical(SphericalCoord c)
 {
 	const float thetaRads = c.theta * sfz::DEG_TO_RAD;
 	const float phiRads = c.phi * sfz::DEG_TO_RAD;
-	vec3 v;
+	f32x3 v;
 	v.x = c.r * sin(thetaRads) * cos(phiRads);
 	v.y = c.r * sin(thetaRads) * sin(phiRads);
 	v.z = c.r * cos(thetaRads);

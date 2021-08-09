@@ -54,7 +54,7 @@ public:
 	void toggleActive() noexcept;
 	bool active() noexcept;
 
-	void render(vec2_i32 windowRes) noexcept;
+	void render(i32x2 windowRes) noexcept;
 
 private:
 	// Private members

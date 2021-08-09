@@ -72,7 +72,7 @@ public:
 	RendererState& directAccessInternalState() noexcept { return *mState; }
 
 	u64 currentFrameIdx() const noexcept; // Incremented each frameBegin()
-	vec2_i32 windowResolution() const noexcept;
+	i32x2 windowResolution() const noexcept;
 
 	// Returns the latest frame time retrieved and which frame idx it was related to.
 	void frameTimeMs(u64& frameIdxOut, float& frameTimeMsOut) const noexcept;

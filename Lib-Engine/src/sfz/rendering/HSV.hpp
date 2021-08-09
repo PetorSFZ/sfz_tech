@@ -32,7 +32,7 @@ namespace sfz {
 //    Saturation (g): [0, 1]
 //    Value (b): [0, 1]
 
-inline vec3 rgbToHSV(vec3 rgb)
+inline f32x3 rgbToHSV(f32x3 rgb)
 {
 	const f32 r = rgb.x;
 	const f32 g = rgb.y;
@@ -69,10 +69,10 @@ inline vec3 rgbToHSV(vec3 rgb)
 
 	if (hue < 0.0f) hue += 360.0f;
 
-	return vec3(hue, sat, val);
+	return f32x3(hue, sat, val);
 }
 
-inline vec3 hsvToRGB(vec3 hsv)
+inline f32x3 hsvToRGB(f32x3 hsv)
 {
 	const f32 hue = hsv.x;
 	const f32 sat = hsv.y;
@@ -84,27 +84,27 @@ inline vec3 hsvToRGB(vec3 hsv)
 	const f32 chroma = val * sat;
 	const f32 X = chroma * (1.0f - sfz::abs(fmodf(hue / 60.0f, 2) - 1.0f));
 
-	vec3 rgb;
+	f32x3 rgb;
 	if (hue < 60.0f) {
-		rgb = vec3(chroma, X, 0.0f);
+		rgb = f32x3(chroma, X, 0.0f);
 	}
 	else if (hue < 120.0f) {
-		rgb = vec3(X, chroma, 0.0f);
+		rgb = f32x3(X, chroma, 0.0f);
 	}
 	else if (hue < 180.0f) {
-		rgb = vec3(0.0f, chroma, X);
+		rgb = f32x3(0.0f, chroma, X);
 	}
 	else if (hue < 240.0f) {
-		rgb = vec3(0.0f, X, chroma);
+		rgb = f32x3(0.0f, X, chroma);
 	}
 	else if (hue < 300.0f) {
-		rgb = vec3(X, 0.0f, chroma);
+		rgb = f32x3(X, 0.0f, chroma);
 	}
 	else if (hue <= 360.0f) {
-		rgb = vec3(chroma, 0.0f, X);
+		rgb = f32x3(chroma, 0.0f, X);
 	}
 
-	rgb += vec3(val - chroma);
+	rgb += f32x3(val - chroma);
 	return rgb;
 }
 

@@ -27,42 +27,42 @@
 UTEST(HSV, rgb_to_hsv)
 {
 	{
-		constexpr sfz::vec3 rgb = sfz::vec3(219.0f, 122.0f, 124.0f) * (1.0f / 255.0f);
-		constexpr sfz::vec3 expectedHsv = sfz::vec3(359.0f, 44.0f, 86.0f) * sfz::vec3(1.0f, 0.01f, 0.01f);
-		sfz::vec3 hsv = sfz::rgbToHSV(rgb);
+		constexpr sfz::f32x3 rgb = sfz::f32x3(219.0f, 122.0f, 124.0f) * (1.0f / 255.0f);
+		constexpr sfz::f32x3 expectedHsv = sfz::f32x3(359.0f, 44.0f, 86.0f) * sfz::f32x3(1.0f, 0.01f, 0.01f);
+		sfz::f32x3 hsv = sfz::rgbToHSV(rgb);
 		ASSERT_TRUE(sfz::eqf(hsv.x, expectedHsv.x, 1.0f));
 		ASSERT_TRUE(sfz::eqf(expectedHsv.yz, hsv.yz, 0.05f));
 	}
 
 	{
-		constexpr sfz::vec3 rgb = sfz::vec3(16.0f, 79.0f, 15.0f) * (1.0f / 255.0f);
-		constexpr sfz::vec3 expectedHsv = sfz::vec3(119.0f, 80.0f, 31.0f) * sfz::vec3(1.0f, 0.01f, 0.01f);
-		sfz::vec3 hsv = sfz::rgbToHSV(rgb);
+		constexpr sfz::f32x3 rgb = sfz::f32x3(16.0f, 79.0f, 15.0f) * (1.0f / 255.0f);
+		constexpr sfz::f32x3 expectedHsv = sfz::f32x3(119.0f, 80.0f, 31.0f) * sfz::f32x3(1.0f, 0.01f, 0.01f);
+		sfz::f32x3 hsv = sfz::rgbToHSV(rgb);
 		ASSERT_TRUE(sfz::eqf(hsv.x, expectedHsv.x, 1.0f));
 		ASSERT_TRUE(sfz::eqf(expectedHsv.yz, hsv.yz, 0.05f));
 	}
 
 	{
-		constexpr sfz::vec3 rgb = sfz::vec3(226.0f, 149.0f, 210.0f) * (1.0f / 255.0f);
-		constexpr sfz::vec3 expectedHsv = sfz::vec3(313.0f, 34.0f, 89.0f) * sfz::vec3(1.0f, 0.01f, 0.01f);
+		constexpr sfz::f32x3 rgb = sfz::f32x3(226.0f, 149.0f, 210.0f) * (1.0f / 255.0f);
+		constexpr sfz::f32x3 expectedHsv = sfz::f32x3(313.0f, 34.0f, 89.0f) * sfz::f32x3(1.0f, 0.01f, 0.01f);
 
-		sfz::vec3 hsv = sfz::rgbToHSV(rgb);
+		sfz::f32x3 hsv = sfz::rgbToHSV(rgb);
 		ASSERT_TRUE(sfz::eqf(hsv.x, expectedHsv.x, 1.0f));
 		ASSERT_TRUE(sfz::eqf(expectedHsv.yz, hsv.yz, 0.05f));
 	}
 
 	{
-		constexpr sfz::vec3 rgb = sfz::vec3(34.0f, 63.0f, 5.0f) * (1.0f / 255.0f);
-		constexpr sfz::vec3 expectedHsv = sfz::vec3(90.0f, 92.0f, 25.0f) * sfz::vec3(1.0f, 0.01f, 0.01f);
-		sfz::vec3 hsv = sfz::rgbToHSV(rgb);
+		constexpr sfz::f32x3 rgb = sfz::f32x3(34.0f, 63.0f, 5.0f) * (1.0f / 255.0f);
+		constexpr sfz::f32x3 expectedHsv = sfz::f32x3(90.0f, 92.0f, 25.0f) * sfz::f32x3(1.0f, 0.01f, 0.01f);
+		sfz::f32x3 hsv = sfz::rgbToHSV(rgb);
 		ASSERT_TRUE(sfz::eqf(hsv.x, expectedHsv.x, 1.0f));
 		ASSERT_TRUE(sfz::eqf(expectedHsv.yz, hsv.yz, 0.05f));
 	}
 
 	{
-		constexpr sfz::vec3 rgb = sfz::vec3(26.0f, 51.0f, 77.0f) * (1.0f / 255.0f);
-		constexpr sfz::vec3 expectedHsv = sfz::vec3(211.0f, 66.0f, 30.0f) * sfz::vec3(1.0f, 0.01f, 0.01f);
-		sfz::vec3 hsv = sfz::rgbToHSV(rgb);
+		constexpr sfz::f32x3 rgb = sfz::f32x3(26.0f, 51.0f, 77.0f) * (1.0f / 255.0f);
+		constexpr sfz::f32x3 expectedHsv = sfz::f32x3(211.0f, 66.0f, 30.0f) * sfz::f32x3(1.0f, 0.01f, 0.01f);
+		sfz::f32x3 hsv = sfz::rgbToHSV(rgb);
 		ASSERT_TRUE(sfz::eqf(hsv.x, expectedHsv.x, 1.0f));
 		ASSERT_TRUE(sfz::eqf(expectedHsv.yz, hsv.yz, 0.05f));
 	}
@@ -75,8 +75,8 @@ UTEST(HSV, hsv_to_rgb)
 		constexpr uint32_t NUM_SAMPLES = 10;
 		for (uint32_t i = 1; i <= NUM_SAMPLES; i++) {
 			const f32 hue = 360.0f * (f32(i) / f32(NUM_SAMPLES));
-			sfz::vec3 rgb = sfz::hsvToRGB(sfz::vec3(hue, 0.0f, 0.0f));
-			ASSERT_TRUE(sfz::eqf(rgb, sfz::vec3(0.0f)));
+			sfz::f32x3 rgb = sfz::hsvToRGB(sfz::f32x3(hue, 0.0f, 0.0f));
+			ASSERT_TRUE(sfz::eqf(rgb, sfz::f32x3(0.0f)));
 		}
 	}
 
@@ -85,36 +85,36 @@ UTEST(HSV, hsv_to_rgb)
 		constexpr uint32_t NUM_SAMPLES = 10;
 		for (uint32_t i = 1; i <= NUM_SAMPLES; i++) {
 			const f32 hue = 360.0f * (f32(i) / f32(NUM_SAMPLES));
-			sfz::vec3 rgb = sfz::hsvToRGB(sfz::vec3(hue, 0.0f, 1.0f));
-			ASSERT_TRUE(sfz::eqf(rgb, sfz::vec3(1.0f)));
+			sfz::f32x3 rgb = sfz::hsvToRGB(sfz::f32x3(hue, 0.0f, 1.0f));
+			ASSERT_TRUE(sfz::eqf(rgb, sfz::f32x3(1.0f)));
 		}
 	}
 
 	{
-		constexpr sfz::vec3 hsv = sfz::vec3(359.0f, 44.0f, 86.0f) * sfz::vec3(1.0f, 0.01f, 0.01f);
-		constexpr sfz::vec3 expectedRgb = sfz::vec3(219.0f, 122.0f, 124.0f) * (1.0f / 255.0f);
-		sfz::vec3 rgb = sfz::hsvToRGB(hsv);
+		constexpr sfz::f32x3 hsv = sfz::f32x3(359.0f, 44.0f, 86.0f) * sfz::f32x3(1.0f, 0.01f, 0.01f);
+		constexpr sfz::f32x3 expectedRgb = sfz::f32x3(219.0f, 122.0f, 124.0f) * (1.0f / 255.0f);
+		sfz::f32x3 rgb = sfz::hsvToRGB(hsv);
 		ASSERT_TRUE(sfz::eqf(expectedRgb, rgb, 0.01f));
 	}
 
 	{
-		constexpr sfz::vec3 hsv = sfz::vec3(119.0f, 80.0f, 31.0f) * sfz::vec3(1.0f, 0.01f, 0.01f);
-		constexpr sfz::vec3 expectedRgb = sfz::vec3(16.0f, 79.0f, 15.0f) * (1.0f / 255.0f);
-		sfz::vec3 rgb = sfz::hsvToRGB(hsv);
+		constexpr sfz::f32x3 hsv = sfz::f32x3(119.0f, 80.0f, 31.0f) * sfz::f32x3(1.0f, 0.01f, 0.01f);
+		constexpr sfz::f32x3 expectedRgb = sfz::f32x3(16.0f, 79.0f, 15.0f) * (1.0f / 255.0f);
+		sfz::f32x3 rgb = sfz::hsvToRGB(hsv);
 		ASSERT_TRUE(sfz::eqf(expectedRgb, rgb, 0.01f));
 	}
 
 	{
-		constexpr sfz::vec3 hsv = sfz::vec3(313.0f, 34.0f, 89.0f) * sfz::vec3(1.0f, 0.01f, 0.01f);
-		constexpr sfz::vec3 expectedRgb = sfz::vec3(226.0f, 149.0f, 210.0f) * (1.0f / 255.0f);
-		sfz::vec3 rgb = sfz::hsvToRGB(hsv);
+		constexpr sfz::f32x3 hsv = sfz::f32x3(313.0f, 34.0f, 89.0f) * sfz::f32x3(1.0f, 0.01f, 0.01f);
+		constexpr sfz::f32x3 expectedRgb = sfz::f32x3(226.0f, 149.0f, 210.0f) * (1.0f / 255.0f);
+		sfz::f32x3 rgb = sfz::hsvToRGB(hsv);
 		ASSERT_TRUE(sfz::eqf(expectedRgb, rgb, 0.01f));
 	}
 
 	{
-		constexpr sfz::vec3 hsv = sfz::vec3(90.0f, 92.0f, 25.0f) * sfz::vec3(1.0f, 0.01f, 0.01f);
-		constexpr sfz::vec3 expectedRgb = sfz::vec3(34.0f, 63.0f, 5.0f) * (1.0f / 255.0f);
-		sfz::vec3 rgb = sfz::hsvToRGB(hsv);
+		constexpr sfz::f32x3 hsv = sfz::f32x3(90.0f, 92.0f, 25.0f) * sfz::f32x3(1.0f, 0.01f, 0.01f);
+		constexpr sfz::f32x3 expectedRgb = sfz::f32x3(34.0f, 63.0f, 5.0f) * (1.0f / 255.0f);
+		sfz::f32x3 rgb = sfz::hsvToRGB(hsv);
 		ASSERT_TRUE(sfz::eqf(expectedRgb, rgb, 0.01f));
 	}
 }
@@ -133,9 +133,9 @@ UTEST(HSV, rgb_to_hsv_and_back)
 			for (uint32_t z = 1; z <= NUM_SAMPLES; z++) {
 				const f32 zVal = f32(z) / f32(NUM_SAMPLES);
 				
-				sfz::vec3 rgbOriginal = sfz::vec3(xVal, yVal, zVal);
-				sfz::vec3 hsv = sfz::rgbToHSV(rgbOriginal);
-				sfz::vec3 rgb = sfz::hsvToRGB(hsv);
+				sfz::f32x3 rgbOriginal = sfz::f32x3(xVal, yVal, zVal);
+				sfz::f32x3 hsv = sfz::rgbToHSV(rgbOriginal);
+				sfz::f32x3 rgb = sfz::hsvToRGB(hsv);
 
 				ASSERT_TRUE(sfz::eqf(rgbOriginal, rgb));
 			}
@@ -156,9 +156,9 @@ UTEST(HSV, hsv_to_rgb_and_back)
 			for (uint32_t z = 1; z <= NUM_SAMPLES; z++) {
 				const f32 zVal = f32(z) / f32(NUM_SAMPLES);
 
-				sfz::vec3 hsvOriginal = sfz::vec3(xVal, yVal, zVal);
-				sfz::vec3 rgb = sfz::hsvToRGB(hsvOriginal);
-				sfz::vec3 hsv = sfz::rgbToHSV(rgb);
+				sfz::f32x3 hsvOriginal = sfz::f32x3(xVal, yVal, zVal);
+				sfz::f32x3 rgb = sfz::hsvToRGB(hsvOriginal);
+				sfz::f32x3 hsv = sfz::rgbToHSV(rgb);
 
 				ASSERT_TRUE(sfz::eqf(hsvOriginal, hsv));
 			}

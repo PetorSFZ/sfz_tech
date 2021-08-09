@@ -37,13 +37,13 @@ static void baseGetNextWidgetBox(WidgetCmd* cmd, strID childID, Box* boxOut)
 {
 	(void)childID;
 	BaseContainerData& data = *cmd->data<BaseContainerData>();
-	vec2 bottomLeftPos = data.base.box.min;
-	vec2 centerPos = calcCenterPos(data.nextPos, data.nextAlign, data.nextDims);
-	vec2 nextPos = bottomLeftPos + centerPos;
+	f32x2 bottomLeftPos = data.base.box.min;
+	f32x2 centerPos = calcCenterPos(data.nextPos, data.nextAlign, data.nextDims);
+	f32x2 nextPos = bottomLeftPos + centerPos;
 	*boxOut = Box(nextPos, data.nextDims);
 }
 
-static void baseHandlePointerInput(WidgetCmd* cmd, vec2 pointerPosSS)
+static void baseHandlePointerInput(WidgetCmd* cmd, f32x2 pointerPosSS)
 {
 	for (WidgetCmd& child : cmd->children) {
 		child.handlePointerInput(pointerPosSS);
@@ -354,20 +354,20 @@ void surfaceBegin(const SurfaceDesc& desc)
 	}
 
 	// Get size of surface on framebuffer
-	vec2_i32 dimsOnFB = desc.dimsOnFB;
-	if (dimsOnFB == vec2_i32(0)) dimsOnFB = desc.fbDims;
+	i32x2 dimsOnFB = desc.dimsOnFB;
+	if (dimsOnFB == i32x2(0)) dimsOnFB = desc.fbDims;
 
 	// Get internal size of surface
-	if (sfz::eqf(desc.dims, vec2(0.0f))) {
-		surface.desc.dims = vec2(dimsOnFB);
+	if (sfz::eqf(desc.dims, f32x2(0.0f))) {
+		surface.desc.dims = f32x2(dimsOnFB);
 	}
 	
 	// Calculate transform
-	const vec3 fbToClipScale = vec3(2.0f / vec2(desc.fbDims), 1.0f);
-	const vec3 fbToClipTransl = vec3(-1.0f, -1.0f, 0.0f);
+	const f32x3 fbToClipScale = f32x3(2.0f / f32x2(desc.fbDims), 1.0f);
+	const f32x3 fbToClipTransl = f32x3(-1.0f, -1.0f, 0.0f);
 	const mat4 fbToClip = mat4::translation3(fbToClipTransl) * mat4::scaling3(fbToClipScale);
 
-	vec2 halfOffset = vec2(0.0f);
+	f32x2 halfOffset = f32x2(0.0f);
 	if (desc.halignOnFB == HAlign::LEFT) halfOffset.x = 0.0f;
 	else if (desc.halignOnFB == HAlign::CENTER) halfOffset.x = -0.5f * f32(dimsOnFB.x);
 	else if (desc.halignOnFB == HAlign::RIGHT) halfOffset.x = -1.0f * f32(dimsOnFB.x);
@@ -378,8 +378,8 @@ void surfaceBegin(const SurfaceDesc& desc)
 	else if (desc.valignOnFB == VAlign::TOP) halfOffset.y = -1.0f * f32(dimsOnFB.y);
 	else sfz_assert_hard(false);
 
-	const vec3 surfToFbScale = vec3((1.0f / surface.desc.dims) * vec2(dimsOnFB), 1.0f);
-	const vec3 surfToFbTransl = vec3(vec2(desc.posOnFB) + halfOffset, 0.0f);
+	const f32x3 surfToFbScale = f32x3((1.0f / surface.desc.dims) * f32x2(dimsOnFB), 1.0f);
+	const f32x3 surfToFbTransl = f32x3(f32x2(desc.posOnFB) + halfOffset, 0.0f);
 	const mat4 surfToFb = mat4::translation3(surfToFbTransl) * mat4::scaling3(surfToFbScale);
 
 	surface.transform = mat34(fbToClip * surfToFb);
@@ -387,10 +387,10 @@ void surfaceBegin(const SurfaceDesc& desc)
 	// Input transform
 	const mat4 fbToSurf = sfz::inverse(surfToFb);
 	surface.inputTransform = mat34(fbToSurf);
-	surface.pointerPosSS = sfz::transformPoint(fbToSurf, vec3(surface.desc.input.pointerPos, 0.0f)).xy;
+	surface.pointerPosSS = sfz::transformPoint(fbToSurf, f32x3(surface.desc.input.pointerPos, 0.0f)).xy;
 }
 
-vec2 surfaceGetDims()
+f32x2 surfaceGetDims()
 {
 	sfz_assert(ctx().activeSurface != nullptr);
 	Surface& surface = *ctx().activeSurface;
@@ -541,10 +541,10 @@ void baseAttribute(strID id, Attribute attrib)
 
 void baseSetPos(f32 x, f32 y)
 {
-	baseSetPos(vec2(x, y));
+	baseSetPos(f32x2(x, y));
 }
 
-void baseSetPos(vec2 pos)
+void baseSetPos(f32x2 pos)
 {
 	WidgetCmd& parent = ctx().activeSurface->getCurrentParent();
 	sfz_assert(parent.widgetID == BASE_CON_ID);
@@ -565,10 +565,10 @@ void baseSetAlign(Align align)
 
 void baseSetDims(f32 width, f32 height)
 {
-	baseSetDims(vec2(width, height));
+	baseSetDims(f32x2(width, height));
 }
 
-void baseSetDims(vec2 dims)
+void baseSetDims(f32x2 dims)
 {
 	WidgetCmd& parent = ctx().activeSurface->getCurrentParent();
 	sfz_assert(parent.widgetID == BASE_CON_ID);
@@ -577,10 +577,10 @@ void baseSetDims(vec2 dims)
 
 void baseSet(f32 x, f32 y, f32 width, f32 height)
 {
-	baseSet(vec2(x, y), vec2(width, height));
+	baseSet(f32x2(x, y), f32x2(width, height));
 }
 
-void baseSet(vec2 pos, vec2 dims)
+void baseSet(f32x2 pos, f32x2 dims)
 {
 	baseSetPos(pos);
 	baseSetAlign(H_CENTER, V_CENTER);
@@ -589,10 +589,10 @@ void baseSet(vec2 pos, vec2 dims)
 
 void baseSet(f32 x, f32 y, HAlign halign, VAlign valign, f32 width, f32 height)
 {
-	baseSet(vec2(x, y), Align(halign, valign), vec2(width, height));
+	baseSet(f32x2(x, y), Align(halign, valign), f32x2(width, height));
 }
 
-void baseSet(vec2 pos, Align align, vec2 dims)
+void baseSet(f32x2 pos, Align align, f32x2 dims)
 {
 	baseSetPos(pos);
 	baseSetAlign(align);

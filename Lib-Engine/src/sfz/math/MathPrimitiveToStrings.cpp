@@ -23,80 +23,80 @@ namespace sfz {
 // Vector toString()
 // ------------------------------------------------------------------------------------------------
 
-str96 toString(const vec2& vector, u32 numDecimals) noexcept
+str96 toString(const f32x2& vector, u32 numDecimals) noexcept
 {
 	str96 tmp;
 	toString(vector, tmp, numDecimals);
 	return tmp;
 }
 
-str96 toString(const vec3& vector, u32 numDecimals) noexcept
+str96 toString(const f32x3& vector, u32 numDecimals) noexcept
 {
 	str96 tmp;
 	toString(vector, tmp, numDecimals);
 	return tmp;
 }
 
-str96 toString(const vec4& vector, u32 numDecimals) noexcept
+str96 toString(const f32x4& vector, u32 numDecimals) noexcept
 {
 	str96 tmp;
 	toString(vector, tmp, numDecimals);
 	return tmp;
 }
 
-void toString(const vec2& vector, str96& string, u32 numDecimals) noexcept
+void toString(const f32x2& vector, str96& string, u32 numDecimals) noexcept
 {
 	str32 formatStr;
 	formatStr.appendf("[%%.%uf, %%.%uf]", numDecimals, numDecimals);
 	string.appendf(formatStr.str(), vector.x, vector.y);
 }
 
-void toString(const vec3& vector, str96& string, u32 numDecimals) noexcept
+void toString(const f32x3& vector, str96& string, u32 numDecimals) noexcept
 {
 	str32 formatStr;
 	formatStr.appendf("[%%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals);
 	string.appendf(formatStr.str(), vector.x, vector.y, vector.z);
 }
 
-void toString(const vec4& vector, str96& string, u32 numDecimals) noexcept
+void toString(const f32x4& vector, str96& string, u32 numDecimals) noexcept
 {
 	str32 formatStr;
 	formatStr.appendf("[%%.%uf, %%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals, numDecimals);
 	string.appendf(formatStr.str(), vector.x, vector.y, vector.z, vector.w);
 }
 
-str96 toString(const vec2_i32& vector) noexcept
+str96 toString(const i32x2& vector) noexcept
 {
 	str96 tmp;
 	toString(vector, tmp);
 	return tmp;
 }
 
-str96 toString(const vec3_i32& vector) noexcept
+str96 toString(const i32x3& vector) noexcept
 {
 	str96 tmp;
 	toString(vector, tmp);
 	return tmp;
 }
 
-str96 toString(const vec4_i32& vector) noexcept
+str96 toString(const i32x4& vector) noexcept
 {
 	str96 tmp;
 	toString(vector, tmp);
 	return tmp;
 }
 
-void toString(const vec2_i32& vector, str96& string) noexcept
+void toString(const i32x2& vector, str96& string) noexcept
 {
 	string.appendf("[%i, %i]", vector.x, vector.y);
 }
 
-void toString(const vec3_i32& vector, str96& string) noexcept
+void toString(const i32x3& vector, str96& string) noexcept
 {
 	string.appendf("[%i, %i, %i]", vector.x, vector.y, vector.z);
 }
 
-void toString(const vec4_i32& vector, str96& string) noexcept
+void toString(const i32x4& vector, str96& string) noexcept
 {
 	string.appendf("[%i, %i, %i, %i]", vector.x, vector.y, vector.z, vector.w);
 }

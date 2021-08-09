@@ -33,7 +33,7 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 struct StatsLabel final {
-	vec4 color = vec4(1.0f);
+	f32x4 color = f32x4(1.0f);
 	float defaultValue = 0.0f;
 	Array<float> samples;
 };
@@ -178,7 +178,7 @@ const float* ProfilingStats::samples(const char* category, const char* label) co
 	return lab->samples.data();
 }
 
-vec4 ProfilingStats::color(const char* category, const char* label) const noexcept
+f32x4 ProfilingStats::color(const char* category, const char* label) const noexcept
 {
 	const StatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
@@ -278,7 +278,7 @@ void ProfilingStats::createCategory(
 void ProfilingStats::createLabel(
 	const char* category,
 	const char* label,
-	vec4 color,
+	f32x4 color,
 	float defaultValue) noexcept
 {
 	sfz_assert(strnlen(label, 33) < 32);
@@ -295,7 +295,7 @@ void ProfilingStats::createLabel(
 
 	// If no color specified, get random color
 	if (elemMax(color) < 0.0f) {
-		lab.color = vec4(getRandomColor(cat->labels.size() - 1), 1.0f);
+		lab.color = f32x4(getRandomColor(cat->labels.size() - 1), 1.0f);
 	}
 	else {
 		lab.color = color;

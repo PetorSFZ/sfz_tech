@@ -108,13 +108,13 @@ static void padRgb(Array<u8>& dst, const u8* src, i32 w, i32 h) noexcept
 	}
 }
 
-static void padRgbFloat(vec4* dstImg, const vec3* srcImg, i32 w, i32 h) noexcept
+static void padRgbFloat(f32x4* dstImg, const f32x3* srcImg, i32 w, i32 h) noexcept
 {
 	for (i32 y = 0; y < h; y++) {
-		vec4* dstRow = dstImg + w * y;
-		const vec3* srcRow = srcImg + w * y;
+		f32x4* dstRow = dstImg + w * y;
+		const f32x3* srcRow = srcImg + w * y;
 		for (i32 x = 0; x < w; x++) {
-			dstRow[x] = vec4(srcRow[x], 1.0f);
+			dstRow[x] = f32x4(srcRow[x], 1.0f);
 		}
 	}
 }
@@ -209,10 +209,10 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 	tmp.bytesPerPixel = numChannels * channelSize;
 	if (isHDR) {
 		sfz_assert_hard(numChannels == 3);
-		tmp.rawData.add(u8(0), u32(width * height * sizeof(vec4)));
+		tmp.rawData.add(u8(0), u32(width * height * sizeof(f32x4)));
 		padRgbFloat(
-			reinterpret_cast<vec4*>(tmp.rawData.data()),
-			reinterpret_cast<const vec3*>(img),
+			reinterpret_cast<f32x4*>(tmp.rawData.data()),
+			reinterpret_cast<const f32x3*>(img),
 			width,
 			height);
 		tmp.type = ImageType::RGBA_F32;

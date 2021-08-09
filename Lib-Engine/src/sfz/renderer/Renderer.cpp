@@ -117,7 +117,7 @@ bool Renderer::init(
 	ProfilingStats& stats = getProfilingStats();
 	stats.createCategory("gpu", 300, 66.7f, "ms", "frame", 20.0f,
 		StatsVisualizationType::FIRST_INDIVIDUALLY_REST_ADDED);
-	stats.createLabel("gpu", "frametime", vec4(1.0f, 0.0f, 0.0f, 1.0f), 0.0f);
+	stats.createLabel("gpu", "frametime", f32x4(1.0f, 0.0f, 0.0f, 1.0f), 0.0f);
 	stats.createLabel("gpu", "imgui");
 
 	return true;
@@ -173,7 +173,7 @@ u64 Renderer::currentFrameIdx() const noexcept
 	return mState->currentFrameIdx;
 }
 
-vec2_i32 Renderer::windowResolution() const noexcept
+i32x2 Renderer::windowResolution() const noexcept
 {
 	return mState->windowRes;
 }
@@ -333,7 +333,7 @@ void Renderer::frameBegin()
 
 	// Update resources with current resolution
 	ResourceManager& resources = getResourceManager();
-	resources.updateResolution(vec2_i32(newResX, newResY));
+	resources.updateResolution(i32x2(newResX, newResY));
 
 	// Set vsync settings
 	CHECK_ZG zgContextSwapchainSetVsync(mState->vsync->boolValue() ? ZG_TRUE : ZG_FALSE);

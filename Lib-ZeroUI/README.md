@@ -19,7 +19,7 @@ If gamepad support is not important to you, you are probably a billion times bet
 ## Quick example
 
 ```cpp
-zui::treeBegin("tree_list_id", vec2(22.5f, 5.0f), 0.0f, 5.0f);
+zui::treeBegin("tree_list_id", f32x2(22.5f, 5.0f), 0.0f, 5.0f);
 
 if (zui::treeCollapsableBegin("entry1_id", "Entry 1")) {
     zui::listBegin("entry1_list_id", 5.0f);

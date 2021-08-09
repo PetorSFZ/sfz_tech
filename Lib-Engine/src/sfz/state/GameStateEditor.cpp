@@ -615,7 +615,7 @@ void GameStateEditor::destroy() noexcept
 void GameStateEditor::render(GameStateHeader* state) noexcept
 {
 	// Begin window
-	ImGui::SetNextWindowSize(sfz::vec2(720.0f, 750.0f), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(sfz::f32x2(720.0f, 750.0f), ImGuiCond_FirstUseEver);
 	ImGuiWindowFlags windowFlags = 0;
 	//windowFlags |= ImGuiWindowFlags_NoResize;
 	//windowFlags |= ImGuiWindowFlags_NoScrollbar;
@@ -712,7 +712,7 @@ void GameStateEditor::renderSingletonEditor(GameStateHeader* state) noexcept
 
 void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 {
-	const sfz::vec4 INACTIVE_TEXT_COLOR = sfz::vec4(0.35f, 0.35f, 0.35f, 1.0f);
+	const sfz::f32x4 INACTIVE_TEXT_COLOR = sfz::f32x4(0.35f, 0.35f, 0.35f, 1.0f);
 
 	// We need component info for each component type in ECS
 	sfz_assert(state->numComponentTypes == mNumComponentInfos);
@@ -736,7 +736,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 	ImGui::BeginGroup();
 
 	// Entities list
-	if (ImGui::ListBoxHeader("##Entities", vec2(136.0f, ImGui::GetWindowHeight() - 320.0f))) {
+	if (ImGui::ListBoxHeader("##Entities", f32x2(136.0f, ImGui::GetWindowHeight() - 320.0f))) {
 		for (u32 entityId = 0; entityId < state->maxNumEntities; entityId++) {
 
 			// Check if entity fulfills filter mask
@@ -763,20 +763,20 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 	}
 
 	// New entity button
-	if (ImGui::Button("New", sfz::vec2(136.0f, 0))) {
+	if (ImGui::Button("New", sfz::f32x2(136.0f, 0))) {
 		Entity entity = state->createEntity();
 		if (entity != NULL_ENTITY) mCurrentSelectedEntityId = entity.id();
 	}
 
 	// Clone entity button
-	if (ImGui::Button("Clone", sfz::vec2(136.0f, 0))) {
+	if (ImGui::Button("Clone", sfz::f32x2(136.0f, 0))) {
 		u8 gen = state->entityGenerations()[mCurrentSelectedEntityId];
 		Entity entity = state->cloneEntity(Entity::create(mCurrentSelectedEntityId, gen));
 		if (entity != NULL_ENTITY) mCurrentSelectedEntityId = entity.id();
 	}
 
 	// Delete entity button
-	if (ImGui::Button("Delete", sfz::vec2(136.0f, 0))) {
+	if (ImGui::Button("Delete", sfz::f32x2(136.0f, 0))) {
 		state->deleteEntity(mCurrentSelectedEntityId);
 
 		// Select previous active entity
@@ -812,7 +812,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 		// Create child window stretching the remaining content area
 		ImGui::BeginChild(
 			"ComponentsChild",
-			vec2(rhsContentWidth, ImGui::GetWindowHeight() - 290.0f),
+			f32x2(rhsContentWidth, ImGui::GetWindowHeight() - 290.0f),
 			false,
 			ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
@@ -938,14 +938,14 @@ void GameStateEditor::renderInfoViewer(GameStateHeader* state) noexcept
 	ImGui::Spacing();
 
 	// Save to file button
-	if (ImGui::Button("Save to file (.phstate)", sfz::vec2(280, 0))) {
+	if (ImGui::Button("Save to file (.phstate)", sfz::f32x2(280, 0))) {
 		saveDialog(state);
 	}
 
 	ImGui::Spacing();
 
 	// Load from file button
-	if (ImGui::Button("Load from file (.phstate)", sfz::vec2(280, 0))) {
+	if (ImGui::Button("Load from file (.phstate)", sfz::f32x2(280, 0))) {
 		loadDialog(state);
 	}
 #endif

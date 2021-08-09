@@ -28,7 +28,7 @@ struct Circle final {
 	// Public members
 	// --------------------------------------------------------------------------------------------
 
-	vec2 pos;
+	f32x2 pos;
 	float radius;
 
 	// Constructors and destructors
@@ -39,7 +39,7 @@ struct Circle final {
 	Circle& operator= (const Circle&) noexcept = default;
 	~Circle() noexcept = default;
 
-	inline Circle(vec2 centerPos, float radius) noexcept
+	inline Circle(f32x2 centerPos, float radius) noexcept
 	:
 		pos(centerPos),
 		radius(radius)

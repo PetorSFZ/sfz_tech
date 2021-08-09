@@ -24,7 +24,7 @@
 
 namespace zui {
 
-using sfz::vec4;
+using sfz::f32x4;
 using sfz::mat44;
 
 // Attributes
@@ -54,7 +54,7 @@ static WidgetBase* commonGetBase(void* widgetData)
 	return &reinterpret_cast<T*>(widgetData)->base;
 }
 
-static void noPointerInput(WidgetCmd* cmd, vec2 pointerPosSS)
+static void noPointerInput(WidgetCmd* cmd, f32x2 pointerPosSS)
 {
 	(void)cmd;
 	(void)pointerPosSS;
@@ -92,12 +92,12 @@ static void listGetNextWidgetBox(WidgetCmd* cmd, strID childID, Box* boxOut)
 {
 	(void)childID;
 	ListData& data = *cmd->data<ListData>();
-	vec2 nextPos = vec2(data.base.box.center().x, data.currPosY);
+	f32x2 nextPos = f32x2(data.base.box.center().x, data.currPosY);
 	data.currPosY -= (data.widgetHeight + data.vertSpacing);
 	*boxOut = Box(nextPos.x, nextPos.y, data.base.box.dims().x, data.widgetHeight);
 }
 
-static void listHandlePointerInput(WidgetCmd* cmd, vec2 pointerPosSS)
+static void listHandlePointerInput(WidgetCmd* cmd, f32x2 pointerPosSS)
 {
 	for (WidgetCmd& child : cmd->children) {
 		child.handlePointerInput(pointerPosSS);
@@ -187,12 +187,12 @@ static void treeBaseGetNextWidgetBox(WidgetCmd * cmd, strID childID, Box* boxOut
 	sfz_assert(childID == TREE_ENTRY_ID);
 
 	TreeBaseData& data = *cmd->data<TreeBaseData>();
-	vec2 nextPos = vec2(data.base.box.min.x + data.entryDims.x * 0.5f, data.currPosY);
+	f32x2 nextPos = f32x2(data.base.box.min.x + data.entryDims.x * 0.5f, data.currPosY);
 	data.currPosY -= (data.entryDims.y + data.entryVertSpacing);
 	*boxOut = Box(nextPos, data.entryDims);
 }
 
-static void treeBaseHandlePointerInput(WidgetCmd* cmd, vec2 pointerPosSS)
+static void treeBaseHandlePointerInput(WidgetCmd* cmd, f32x2 pointerPosSS)
 {
 	for (WidgetCmd& child : cmd->children) {
 		child.handlePointerInput(pointerPosSS);
@@ -223,7 +223,7 @@ static void treeBaseHandleMoveInput(WidgetCmd* cmd, Input* input, bool* moveActi
 	}
 }
 
-void treeBegin(TreeBaseData* data, vec2 entryDims, f32 entryVertSpacing, f32 horizSpacing)
+void treeBegin(TreeBaseData* data, f32x2 entryDims, f32 entryVertSpacing, f32 horizSpacing)
 {
 	Surface& surface = *ctx().activeSurface;
 
@@ -261,12 +261,12 @@ void treeBegin(TreeBaseData* data, vec2 entryDims, f32 entryVertSpacing, f32 hor
 	surface.pushMakeParent(&parent.children.last());
 }
 
-void treeBegin(strID id, vec2 entryDims, f32 entryVertSpacing, f32 horizSpacing)
+void treeBegin(strID id, f32x2 entryDims, f32 entryVertSpacing, f32 horizSpacing)
 {
 	treeBegin(ctx().getWidgetData<TreeBaseData>(id), entryDims, entryVertSpacing, horizSpacing);
 }
 
-void treeBegin(const char* id, vec2 entryDims, f32 entryVertSpacing, f32 horizSpacing)
+void treeBegin(const char* id, f32x2 entryDims, f32 entryVertSpacing, f32 horizSpacing)
 {
 	treeBegin(ctx().getWidgetData<TreeBaseData>(id), entryDims, entryVertSpacing, horizSpacing);
 }
@@ -294,20 +294,20 @@ static void treeEntryGetNextWidgetBox(WidgetCmd* cmd, strID childID, Box* boxOut
 	TreeBaseData& treeData = *parent.data<TreeBaseData>();
 
 	// Grab information from the tree base parent
-	const vec2 basePos = treeData.base.box.center();
-	const vec2 baseDims = treeData.base.box.dims();
+	const f32x2 basePos = treeData.base.box.center();
+	const f32x2 baseDims = treeData.base.box.dims();
 	const f32 baseMinX = treeData.base.box.min.x;
 	const f32 entryWidth = treeData.entryDims.x;
 	const f32 contWidth = treeData.entryContWidth;
 	const f32 horizSpacing = treeData.horizSpacing;
 	sfz_assert(sfz::eqf(entryWidth + contWidth + horizSpacing, baseDims.x));
 
-	const vec2 nextPos = vec2(baseMinX + entryWidth + horizSpacing + contWidth * 0.5f, basePos.y);
-	const vec2 nextDims = vec2(contWidth, baseDims.y);
+	const f32x2 nextPos = f32x2(baseMinX + entryWidth + horizSpacing + contWidth * 0.5f, basePos.y);
+	const f32x2 nextDims = f32x2(contWidth, baseDims.y);
 	*boxOut = Box(nextPos, nextDims);
 }
 
-static void treeEntryHandlePointerInput(WidgetCmd* cmd, vec2 pointerPosSS)
+static void treeEntryHandlePointerInput(WidgetCmd* cmd, f32x2 pointerPosSS)
 {
 	TreeEntryData& data = *cmd->data<TreeEntryData>();
 	if (data.enabled && data.base.box.pointInside(pointerPosSS)) {
@@ -365,15 +365,15 @@ static void treeEntryDrawDefault(
 
 	// Check attributes
 	strID defaultFontID = attributes->get(DEFAULT_FONT_ATTRIB_ID)->as<strID>();
-	vec4 fontColor = attributes->get(FONT_COLOR)->as<vec4>();
-	vec4 baseColor = attributes->get(BASE_COLOR)->as<vec4>();
-	vec4 focusColor = attributes->get(FOCUS_COLOR)->as<vec4>();
-	vec4 activateColor = attributes->get(ACTIVATE_COLOR)->as<vec4>();
+	f32x4 fontColor = attributes->get(FONT_COLOR)->as<f32x4>();
+	f32x4 baseColor = attributes->get(BASE_COLOR)->as<f32x4>();
+	f32x4 focusColor = attributes->get(FOCUS_COLOR)->as<f32x4>();
+	f32x4 activateColor = attributes->get(ACTIVATE_COLOR)->as<f32x4>();
 	f32 textScaling = attributes->get(BUTTON_TEXT_SCALING)->as<f32>();
 	f32 borderWidth = attributes->get(BUTTON_BORDER_WIDTH)->as<f32>();
-	vec4 disabledColor = attributes->get(BUTTON_DISABLED_COLOR)->as<vec4>();
+	f32x4 disabledColor = attributes->get(BUTTON_DISABLED_COLOR)->as<f32x4>();
 
-	vec4 color = baseColor;
+	f32x4 color = baseColor;
 	if (data.base.focused) {
 		color = focusColor;
 	}
@@ -393,7 +393,7 @@ static void treeEntryDrawDefault(
 	}
 
 	mat34 transform =
-		mul(surfaceTransform, mat34::translation3(vec3(data.base.box.center(), 0.0f)));
+		mul(surfaceTransform, mat34::translation3(f32x3(data.base.box.center(), 0.0f)));
 	drawBorder(transform, data.base.box.dims(), borderWidth, color);
 	f32 textSize = data.base.box.height() * textScaling;
 	drawTextFmtCentered(transform, defaultFontID, textSize, baseColor, data.text.str());
@@ -539,10 +539,10 @@ static void textfmtDrawDefault(
 
 	// Check attributes
 	strID defaultFontID = attributes->get(DEFAULT_FONT_ATTRIB_ID)->as<strID>();
-	vec4 fontColor = attributes->get(FONT_COLOR)->as<vec4>();
+	f32x4 fontColor = attributes->get(FONT_COLOR)->as<f32x4>();
 
 	mat34 transform =
-		mul(surfaceTransform, mat34::translation3(vec3(data.base.box.center(), 0.0f)));
+		mul(surfaceTransform, mat34::translation3(f32x3(data.base.box.center(), 0.0f)));
 	f32 fontSize = data.base.box.height();
 	drawTextFmtCentered(transform, defaultFontID, fontSize, fontColor, data.text.str());
 }
@@ -615,11 +615,11 @@ static void rectDrawDefault(
 	(void)lagSinceSurfaceEndSecs;
 	const RectData& data = *cmd->data<RectData>();
 	mat34 transform =
-		mul(surfaceTransform, mat34::translation3(vec3(data.base.box.center(), 0.0f)));
+		mul(surfaceTransform, mat34::translation3(f32x3(data.base.box.center(), 0.0f)));
 	drawRect(transform, data.base.box.dims(), data.linearColor);
 }
 
-void rect(RectData* data, vec4 linearColor)
+void rect(RectData* data, f32x4 linearColor)
 {
 	// Store data
 	data->linearColor = linearColor;
@@ -631,13 +631,13 @@ void rect(RectData* data, vec4 linearColor)
 	data->base.activated = false;
 }
 
-void rect(strID id, vec4 linearColor)
+void rect(strID id, f32x4 linearColor)
 {
 	RectData* data = ctx().getWidgetData<RectData>(id);
 	rect(data, linearColor);
 }
 
-void rect(const char* id, vec4 linearColor)
+void rect(const char* id, f32x4 linearColor)
 {
 	RectData* data = ctx().getWidgetData<RectData>(id);
 	rect(data, linearColor);
@@ -659,7 +659,7 @@ static void imageDrawDefault(
 	(void)lagSinceSurfaceEndSecs;
 	const ImageData& data = *cmd->data<ImageData>();
 	mat34 transform =
-		mul(surfaceTransform, mat34::translation3(vec3(data.base.box.center(), 0.0f)));
+		mul(surfaceTransform, mat34::translation3(f32x3(data.base.box.center(), 0.0f)));
 	drawImage(transform, data.base.box.dims(), data.imageHandle);
 }
 
@@ -708,7 +708,7 @@ void image(const char* id, const char* imageHandleID)
 static constexpr char BUTTON_NAME[] = "button";
 constexpr strID BUTTON_ID = strID(sfz::hash(BUTTON_NAME));
 
-static void buttonHandlePointerInput(WidgetCmd* cmd, vec2 pointerPosSS)
+static void buttonHandlePointerInput(WidgetCmd* cmd, f32x2 pointerPosSS)
 {
 	ButtonData& data = *cmd->data<ButtonData>();
 	if (data.enabled && data.base.box.pointInside(pointerPosSS)) {
@@ -747,15 +747,15 @@ static void buttonDrawDefault(
 
 	// Check attributes
 	strID defaultFontID = attributes->get(DEFAULT_FONT_ATTRIB_ID)->as<strID>();
-	vec4 fontColor = attributes->get(FONT_COLOR)->as<vec4>();
-	vec4 baseColor = attributes->get(BASE_COLOR)->as<vec4>();
-	vec4 focusColor = attributes->get(FOCUS_COLOR)->as<vec4>();
-	vec4 activateColor = attributes->get(ACTIVATE_COLOR)->as<vec4>();
+	f32x4 fontColor = attributes->get(FONT_COLOR)->as<f32x4>();
+	f32x4 baseColor = attributes->get(BASE_COLOR)->as<f32x4>();
+	f32x4 focusColor = attributes->get(FOCUS_COLOR)->as<f32x4>();
+	f32x4 activateColor = attributes->get(ACTIVATE_COLOR)->as<f32x4>();
 	f32 textScaling = attributes->get(BUTTON_TEXT_SCALING)->as<f32>();
 	f32 borderWidth = attributes->get(BUTTON_BORDER_WIDTH)->as<f32>();
-	vec4 disabledColor = attributes->get(BUTTON_DISABLED_COLOR)->as<vec4>();
+	f32x4 disabledColor = attributes->get(BUTTON_DISABLED_COLOR)->as<f32x4>();
 
-	vec4 color = baseColor;
+	f32x4 color = baseColor;
 	if (data.base.focused) {
 		color = focusColor;
 	}
@@ -775,7 +775,7 @@ static void buttonDrawDefault(
 	}
 
 	mat34 transform =
-		mul(surfaceTransform, mat34::translation3(vec3(data.base.box.center(), 0.0f)));
+		mul(surfaceTransform, mat34::translation3(f32x3(data.base.box.center(), 0.0f)));
 	drawBorder(transform, data.base.box.dims(), borderWidth, color);
 	f32 textSize = data.base.box.height() * textScaling;
 	drawTextFmtCentered(transform, defaultFontID, textSize, baseColor, data.text.str());
@@ -826,14 +826,14 @@ void internalCoreWidgetsInit()
 {
 	// Register attributes
 	{
-		registerDefaultAttribute("font_color", vec4(1.0f));
-		registerDefaultAttribute("base_color", vec4(1.0f));
-		registerDefaultAttribute("focus_color", vec4(0.8f, 0.3f, 0.3f, 1.0f));
-		registerDefaultAttribute("activate_color", vec4(1.0f, 0.0f, 0.0f, 1.0f));
+		registerDefaultAttribute("font_color", f32x4(1.0f));
+		registerDefaultAttribute("base_color", f32x4(1.0f));
+		registerDefaultAttribute("focus_color", f32x4(0.8f, 0.3f, 0.3f, 1.0f));
+		registerDefaultAttribute("activate_color", f32x4(1.0f, 0.0f, 0.0f, 1.0f));
 
 		registerDefaultAttribute("button_text_scaling", 1.0f);
 		registerDefaultAttribute("button_border_width", 1.0f);
-		registerDefaultAttribute("button_disabled_color", vec4(0.2f, 0.2f, 0.2f, 0.5f));
+		registerDefaultAttribute("button_disabled_color", f32x4(0.2f, 0.2f, 0.2f, 0.5f));
 	}
 
 	// List container

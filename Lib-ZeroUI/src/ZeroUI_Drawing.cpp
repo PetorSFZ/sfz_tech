@@ -121,10 +121,10 @@ struct DrawingCtx final {
 
 	bool fontDummyDontRender = false;
 	sfz::str4096 fontTmpStr;
-	vec2 fontPos = vec2(0.0f);
+	f32x2 fontPos = f32x2(0.0f);
 	f32 fontSurfaceSize = 0.0f;
 	f32 fontAtlasSize = 0.0f;
-	vec4 fontColor = vec4(1.0f);
+	f32x4 fontColor = f32x4(1.0f);
 	mat34 fontTransform = mat34::identity();
 
 	bool imgFlipY = true;
@@ -212,12 +212,12 @@ static void fontstashRenderDraw(
 
 	sfz_assert((nverts % 2) == 0);
 	for (int i = 0; i < nverts; i++) {
-		vec2 pos = vec2(verts[i * 2], verts[i * 2 + 1]) * scale + drawingCtx.fontPos;
+		f32x2 pos = f32x2(verts[i * 2], verts[i * 2 + 1]) * scale + drawingCtx.fontPos;
 		f32 texcoordX = tcoords[i*2];
 		f32 texcoordY = tcoords[i*2 + 1];
 		Vertex v;
-		v.pos = vec3(pos, 0.0f);
-		v.texcoord = vec2(texcoordX, texcoordY);
+		v.pos = f32x3(pos, 0.0f);
+		v.texcoord = f32x2(texcoordX, texcoordY);
 		v.colorLinear = drawingCtx.fontColor.xyz;
 		v.alphaLinear = drawingCtx.fontColor.w;
 		drawingCtx.renderData.vertices.add(v);
@@ -381,7 +381,7 @@ f32 drawTextFmtCentered(
 	const mat34& transform,
 	strID fontID,
 	f32 size,
-	vec4 color,
+	f32x4 color,
 	const char* text)
 {
 	// Set font
@@ -395,7 +395,7 @@ f32 drawTextFmtCentered(
 	fonsSetSize(drawingCtx.fontstashCtx, drawingCtx.fontAtlasSize);
 
 	// Set center position
-	drawingCtx.fontPos = vec2(0.0f);
+	drawingCtx.fontPos = f32x2(0.0f);
 	fonsSetAlign(drawingCtx.fontstashCtx, FONS_ALIGN_CENTER | FONS_ALIGN_MIDDLE);
 
 	// Set color
@@ -412,35 +412,35 @@ f32 drawTextFmtCentered(
 
 void drawImage(
 	const mat34& transform,
-	vec2 dims,
+	f32x2 dims,
 	u64 imageHandle,
 	bool isAlphaTexture)
 {
-	const vec2 halfDims = dims * 0.5f;
+	const f32x2 halfDims = dims * 0.5f;
 
 	// Bottom left
 	Vertex verts[4];
-	verts[0].pos = vec3(-halfDims.x, -halfDims.y, 0.0f);
-	verts[0].texcoord = drawingCtx.imgFlipY ? vec2(0.0f, 1.0f) : vec2(0.0f, 0.0f);
-	verts[0].colorLinear = vec3(1.0f);
+	verts[0].pos = f32x3(-halfDims.x, -halfDims.y, 0.0f);
+	verts[0].texcoord = drawingCtx.imgFlipY ? f32x2(0.0f, 1.0f) : f32x2(0.0f, 0.0f);
+	verts[0].colorLinear = f32x3(1.0f);
 	verts[0].alphaLinear = 1.0f;
 
 	// Bottom right
-	verts[1].pos = vec3(halfDims.x, -halfDims.y, 0.0f);
-	verts[1].texcoord = drawingCtx.imgFlipY ? vec2(1.0f, 1.0f) : vec2(1.0f, 0.0f);
-	verts[1].colorLinear = vec3(1.0f);
+	verts[1].pos = f32x3(halfDims.x, -halfDims.y, 0.0f);
+	verts[1].texcoord = drawingCtx.imgFlipY ? f32x2(1.0f, 1.0f) : f32x2(1.0f, 0.0f);
+	verts[1].colorLinear = f32x3(1.0f);
 	verts[1].alphaLinear = 1.0f;
 
 	// Top left
-	verts[2].pos = vec3(-halfDims.x, halfDims.y, 0.0f);
-	verts[2].texcoord = drawingCtx.imgFlipY ? vec2(0.0f, 0.0f) : vec2(0.0f, 1.0f);
-	verts[2].colorLinear = vec3(1.0f);
+	verts[2].pos = f32x3(-halfDims.x, halfDims.y, 0.0f);
+	verts[2].texcoord = drawingCtx.imgFlipY ? f32x2(0.0f, 0.0f) : f32x2(0.0f, 1.0f);
+	verts[2].colorLinear = f32x3(1.0f);
 	verts[2].alphaLinear = 1.0f;
 
 	// Top right
-	verts[3].pos = vec3(halfDims.x, halfDims.y, 0.0f);
-	verts[3].texcoord = drawingCtx.imgFlipY ? vec2(1.0f, 0.0f) : vec2(1.0f, 1.0f);
-	verts[3].colorLinear = vec3(1.0f);
+	verts[3].pos = f32x3(halfDims.x, halfDims.y, 0.0f);
+	verts[3].texcoord = drawingCtx.imgFlipY ? f32x2(1.0f, 0.0f) : f32x2(1.0f, 1.0f);
+	verts[3].colorLinear = f32x3(1.0f);
 	verts[3].alphaLinear = 1.0f;
 
 	const u32 indices[6] = {
@@ -453,33 +453,33 @@ void drawImage(
 
 void drawRect(
 	const mat34& transform,
-	vec2 dims,
-	vec4 color)
+	f32x2 dims,
+	f32x4 color)
 {
-	const vec2 halfDims = dims * 0.5f;
+	const f32x2 halfDims = dims * 0.5f;
 
 	// Bottom left
 	Vertex verts[4];
-	verts[0].pos = vec3(-halfDims.x, -halfDims.y, 0.0f);
-	verts[0].texcoord = vec2(0.0f, 0.0f);
+	verts[0].pos = f32x3(-halfDims.x, -halfDims.y, 0.0f);
+	verts[0].texcoord = f32x2(0.0f, 0.0f);
 	verts[0].colorLinear = color.xyz;
 	verts[0].alphaLinear = color.w;
 
 	// Bottom right
-	verts[1].pos = vec3(halfDims.x, -halfDims.y, 0.0f);
-	verts[1].texcoord = vec2(1.0f, 0.0f);
+	verts[1].pos = f32x3(halfDims.x, -halfDims.y, 0.0f);
+	verts[1].texcoord = f32x2(1.0f, 0.0f);
 	verts[1].colorLinear = color.xyz;
 	verts[1].alphaLinear = color.w;
 
 	// Top left
-	verts[2].pos = vec3(-halfDims.x, halfDims.y, 0.0f);
-	verts[2].texcoord = vec2(0.0f, 1.0f);
+	verts[2].pos = f32x3(-halfDims.x, halfDims.y, 0.0f);
+	verts[2].texcoord = f32x2(0.0f, 1.0f);
 	verts[2].colorLinear = color.xyz;
 	verts[2].alphaLinear = color.w;
 
 	// Top right
-	verts[3].pos = vec3(halfDims.x, halfDims.y, 0.0f);
-	verts[3].texcoord = vec2(1.0f, 1.0f);
+	verts[3].pos = f32x3(halfDims.x, halfDims.y, 0.0f);
+	verts[3].texcoord = f32x2(1.0f, 1.0f);
 	verts[3].colorLinear = color.xyz;
 	verts[3].alphaLinear = color.w;
 
@@ -493,21 +493,21 @@ void drawRect(
 
 void drawBorder(
 	const mat34& transform,
-	vec2 dims,
+	f32x2 dims,
 	f32 thickness,
-	vec4 color)
+	f32x4 color)
 {
-	const vec2 halfDims = dims * 0.5f;
-	const vec2 cornerBottomLeft = -halfDims;
-	const vec2 cornerBottomRight = vec2(halfDims.x, -halfDims.y);
-	const vec2 cornerTopLeft = vec2(-halfDims.x, halfDims.y);
-	const vec2 cornerTopRight = halfDims;
+	const f32x2 halfDims = dims * 0.5f;
+	const f32x2 cornerBottomLeft = -halfDims;
+	const f32x2 cornerBottomRight = f32x2(halfDims.x, -halfDims.y);
+	const f32x2 cornerTopLeft = f32x2(-halfDims.x, halfDims.y);
+	const f32x2 cornerTopRight = halfDims;
 
-	auto createVertex = [&](vec2 pos) -> Vertex {
+	auto createVertex = [&](f32x2 pos) -> Vertex {
 		Vertex v;
-		v.pos = vec3(pos, 0.0f);
-		vec2 interp = saturate((pos - cornerBottomLeft) / (cornerTopRight - cornerBottomLeft));
-		v.texcoord = vec2(sfz::lerp(0.0f, 1.0f, interp.x), sfz::lerp(0.0f, 1.0f, interp.y));
+		v.pos = f32x3(pos, 0.0f);
+		f32x2 interp = saturate((pos - cornerBottomLeft) / (cornerTopRight - cornerBottomLeft));
+		v.texcoord = f32x2(sfz::lerp(0.0f, 1.0f, interp.x), sfz::lerp(0.0f, 1.0f, interp.y));
 		v.colorLinear = color.xyz;
 		v.alphaLinear = color.w;
 		return v;
@@ -526,10 +526,10 @@ void drawBorder(
 
 	// Top line
 	{
-		const vec2 bottomLeft = vec2(-halfDims.x, halfDims.y - thickness);
-		const vec2 bottomRight = vec2(halfDims.x, halfDims.y - thickness);
-		const vec2 topLeft = vec2(-halfDims.x, halfDims.y);
-		const vec2 topRight = vec2(halfDims.x, halfDims.y);
+		const f32x2 bottomLeft = f32x2(-halfDims.x, halfDims.y - thickness);
+		const f32x2 bottomRight = f32x2(halfDims.x, halfDims.y - thickness);
+		const f32x2 topLeft = f32x2(-halfDims.x, halfDims.y);
+		const f32x2 topRight = f32x2(halfDims.x, halfDims.y);
 
 		verts.add() = createVertex(bottomLeft);
 		verts.add() = createVertex(bottomRight);
@@ -541,10 +541,10 @@ void drawBorder(
 
 	// Bottom line
 	{
-		const vec2 bottomLeft = vec2(-halfDims.x, -halfDims.y);
-		const vec2 bottomRight = vec2(halfDims.x, -halfDims.y);
-		const vec2 topLeft = vec2(-halfDims.x, -halfDims.y + thickness);
-		const vec2 topRight = vec2(halfDims.x, -halfDims.y + thickness);
+		const f32x2 bottomLeft = f32x2(-halfDims.x, -halfDims.y);
+		const f32x2 bottomRight = f32x2(halfDims.x, -halfDims.y);
+		const f32x2 topLeft = f32x2(-halfDims.x, -halfDims.y + thickness);
+		const f32x2 topRight = f32x2(halfDims.x, -halfDims.y + thickness);
 
 		verts.add() = createVertex(bottomLeft);
 		verts.add() = createVertex(bottomRight);
@@ -556,10 +556,10 @@ void drawBorder(
 
 	// Left line
 	{
-		const vec2 bottomLeft = vec2(-halfDims.x, -halfDims.y + thickness);
-		const vec2 bottomRight = vec2(-halfDims.x + thickness, -halfDims.y + thickness);
-		const vec2 topLeft = vec2(-halfDims.x, halfDims.y - thickness);
-		const vec2 topRight = vec2(-halfDims.x + thickness, halfDims.y - thickness);
+		const f32x2 bottomLeft = f32x2(-halfDims.x, -halfDims.y + thickness);
+		const f32x2 bottomRight = f32x2(-halfDims.x + thickness, -halfDims.y + thickness);
+		const f32x2 topLeft = f32x2(-halfDims.x, halfDims.y - thickness);
+		const f32x2 topRight = f32x2(-halfDims.x + thickness, halfDims.y - thickness);
 
 		verts.add() = createVertex(bottomLeft);
 		verts.add() = createVertex(bottomRight);
@@ -571,10 +571,10 @@ void drawBorder(
 
 	// Right line
 	{
-		const vec2 bottomLeft = vec2(halfDims.x - thickness, -halfDims.y + thickness);
-		const vec2 bottomRight = vec2(halfDims.x, -halfDims.y + thickness);
-		const vec2 topLeft = vec2(halfDims.x - thickness, halfDims.y - thickness);
-		const vec2 topRight = vec2(halfDims.x, halfDims.y - thickness);
+		const f32x2 bottomLeft = f32x2(halfDims.x - thickness, -halfDims.y + thickness);
+		const f32x2 bottomRight = f32x2(halfDims.x, -halfDims.y + thickness);
+		const f32x2 topLeft = f32x2(halfDims.x - thickness, halfDims.y - thickness);
+		const f32x2 topRight = f32x2(halfDims.x, halfDims.y - thickness);
 
 		verts.add() = createVertex(bottomLeft);
 		verts.add() = createVertex(bottomRight);
@@ -588,7 +588,7 @@ void drawBorder(
 }
 
 f32 drawTextFmt(
-	vec2 pos, HAlign halign, VAlign valign, strID fontID, f32 size, vec4 color, const char* format, ...)
+	f32x2 pos, HAlign halign, VAlign valign, strID fontID, f32 size, f32x4 color, const char* format, ...)
 {
 	// Resolve formated string
 	drawingCtx.fontTmpStr.clear();

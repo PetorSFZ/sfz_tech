@@ -71,14 +71,14 @@ struct CascadedShadowMapInfo final {
 //             will never overlap, so the area for the first level is levelDists[0] - camNear, for
 //             second level levelDists[1] - levelDists[0], etc.
 CascadedShadowMapInfo calculateCascadedShadowMapInfo(
-	vec3 camPos,
-	vec3 camDir,
-	vec3 camUp,
+	f32x3 camPos,
+	f32x3 camDir,
+	f32x3 camUp,
 	float camVertFovDegs,
 	float camAspect,
 	float camNear,
 	mat4 camRealViewMatrix,
-	vec3 lightDir,
+	f32x3 lightDir,
 	float shadowHeightDist,
 	u32 numLevels,
 	const float* levelDists) noexcept;

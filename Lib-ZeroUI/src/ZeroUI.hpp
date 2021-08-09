@@ -48,10 +48,10 @@ using sfz::ImageViewConst;
 using sfz::mat34;
 using sfz::str48;
 using sfz::strID;
-using sfz::vec2;
-using sfz::vec2_i32;
-using sfz::vec3;
-using sfz::vec4;
+using sfz::f32x2;
+using sfz::i32x2;
+using sfz::f32x3;
+using sfz::f32x4;
 
 // ZeroUI Context + initialization
 // ------------------------------------------------------------------------------------------------
@@ -94,9 +94,9 @@ bool registerFont(const char* name, const char* path, f32 size, bool defaultFont
 // hooked up into your engine.
 
 struct Vertex final {
-	vec3 pos; // Position, world or view space depending on what surface it is rendered to
-	vec2 texcoord;
-	vec3 colorLinear; // Color in linear space, i.e. NOT sRGB. (Note: This will likely change to sRGB in future)
+	f32x3 pos; // Position, world or view space depending on what surface it is rendered to
+	f32x2 texcoord;
+	f32x3 colorLinear; // Color in linear space, i.e. NOT sRGB. (Note: This will likely change to sRGB in future)
 	f32 alphaLinear;
 };
 static_assert(sizeof(Vertex) == 36, "ZeroUI::Vertex is padded");
@@ -155,7 +155,7 @@ constexpr bool isMoveAction(InputAction a) { return InputAction::UP <= a && a <=
 
 struct Input final {
 	InputAction action = InputAction::NONE;
-	vec2 pointerPos = vec2(-F32_MAX); // In screen pixel dimensions, (0,0) in lower-left corner, pos-y up.
+	f32x2 pointerPos = f32x2(-F32_MAX); // In screen pixel dimensions, (0,0) in lower-left corner, pos-y up.
 };
 
 // Attributes
@@ -235,19 +235,19 @@ struct Align final {
 // A simple 2D dimensional bounding box (AABB) used to specify what space a given widget takes up.
 
 struct Box final {
-	vec2 min = vec2(0.0f);
-	vec2 max = vec2(0.0f);
+	f32x2 min = f32x2(0.0f);
+	f32x2 max = f32x2(0.0f);
 
 	constexpr Box() = default;
-	constexpr Box(vec2 center, vec2 dims) : min(center - dims * 0.5f), max(center + dims * 0.5f) { }
-	constexpr Box(f32 x, f32 y, f32 w, f32 h) : Box(vec2(x, y), vec2(w, h)) { }
+	constexpr Box(f32x2 center, f32x2 dims) : min(center - dims * 0.5f), max(center + dims * 0.5f) { }
+	constexpr Box(f32 x, f32 y, f32 w, f32 h) : Box(f32x2(x, y), f32x2(w, h)) { }
 
-	constexpr vec2 center() const { return (min + max) * 0.5f; }
-	constexpr vec2 dims() const { return max - min; }
+	constexpr f32x2 center() const { return (min + max) * 0.5f; }
+	constexpr f32x2 dims() const { return max - min; }
 	constexpr f32 width() const { return max.x - min.x; }
 	constexpr f32 height() const{ return max.y - min.y; }
 
-	constexpr bool pointInside(vec2 p) const
+	constexpr bool pointInside(f32x2 p) const
 	{
 		return min.x <= p.x && p.x <= max.x && min.y <= p.y && p.y <= max.y;
 	}
@@ -325,7 +325,7 @@ using GetNextWidgetBoxFunc = void(WidgetCmd* cmd, strID childID, Box* boxOut);
 // Handle mouse/touch input. Typically things should be setFocused() if the pointer is overlapping the
 // widget's box, otherwise setUnfocused(). MUST call all children's corresponding handle pointer input
 // function.
-using HandlePointerInputFunc = void(WidgetCmd* cmd, vec2 pointerPosSS);
+using HandlePointerInputFunc = void(WidgetCmd* cmd, f32x2 pointerPosSS);
 
 // Handle move input (i.e. gamepad or keyboard). This is probably the most complicated part of the
 // logic, so it deserves some extra explanation.
@@ -437,21 +437,21 @@ struct SurfaceDesc final {
 
 	// Input
 	Input input;
-	vec2_i32 fbDims = vec2_i32(0);
+	i32x2 fbDims = i32x2(0);
 	f32 deltaTimeSecs = 0.0f;
 
 	// Position on framebuffer, default aligned to bottom left corner of framebuffer
-	vec2_i32 posOnFB = vec2_i32(0);
+	i32x2 posOnFB = i32x2(0);
 	HAlign halignOnFB = HAlign::LEFT;
 	VAlign valignOnFB = VAlign::BOTTOM;
 
 	// Size on framebuffer, 0 == entire framebuffer
-	vec2_i32 dimsOnFB = vec2_i32(0);
+	i32x2 dimsOnFB = i32x2(0);
 
-	// Coordinate system of the surface which things will be drawn upon. E.g., vec2(100.0f, 100.0f),
+	// Coordinate system of the surface which things will be drawn upon. E.g., f32x2(100.0f, 100.0f),
 	// means that you will be using "percentages" of the total size of the surface when specifying
 	// sizes. 0.0f == same as dimsFB.
-	vec2 dims = vec2(0.0f);
+	f32x2 dims = f32x2(0.0f);
 };
 
 // Clears all current surfaces. Not strictly necessary if you only use one surface with the same
@@ -465,7 +465,7 @@ void clearSurface(const char* name);
 void surfaceBegin(const SurfaceDesc& desc);
 
 // Returns dimensions of current surface
-vec2 surfaceGetDims();
+f32x2 surfaceGetDims();
 
 // Stops accepting input to the current surface and performs some logic updates.
 void surfaceEnd();
@@ -494,9 +494,9 @@ RenderDataView getRenderData();
 struct BaseContainerData final {
 	WidgetBase base;
 	sfz::Map16<strID, Attribute> newValues;
-	vec2 nextPos = vec2(0.0f);
+	f32x2 nextPos = f32x2(0.0f);
 	Align nextAlign;
-	vec2 nextDims = vec2(0.0f);
+	f32x2 nextDims = f32x2(0.0f);
 };
 
 void baseBegin(BaseContainerData* data);
@@ -508,16 +508,16 @@ void baseAttribute(const char* id, const char* value);
 void baseAttribute(strID id, Attribute attrib);
 
 void baseSetPos(f32 x, f32 y);
-void baseSetPos(vec2 pos);
+void baseSetPos(f32x2 pos);
 void baseSetAlign(HAlign halign, VAlign valign);
 void baseSetAlign(Align align);
 void baseSetDims(f32 width, f32 height);
-void baseSetDims(vec2 dims);
+void baseSetDims(f32x2 dims);
 
 void baseSet(f32 x, f32 y, f32 width, f32 height);
-void baseSet(vec2 pos, vec2 dims);
+void baseSet(f32x2 pos, f32x2 dims);
 void baseSet(f32 x, f32 y, HAlign halign, VAlign valign, f32 width, f32 height);
-void baseSet(vec2 pos, Align align, vec2 dims);
+void baseSet(f32x2 pos, Align align, f32x2 dims);
 
 void baseEnd();
 

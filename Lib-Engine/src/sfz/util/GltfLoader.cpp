@@ -61,9 +61,9 @@ static u8 toU8(float val) noexcept
 	return u8(std::roundf(val * 255.0f));
 }
 
-static vec4_u8 toU8(vec4 val) noexcept
+static u8x4 toU8(f32x4 val) noexcept
 {
-	vec4_u8 tmp;
+	u8x4 tmp;
 	tmp.x = toU8(val.x);
 	tmp.y = toU8(val.y);
 	tmp.z = toU8(val.z);
@@ -228,10 +228,10 @@ bool loadAssetsFromGltf(
 			cgltf_pbr_metallic_roughness& pbr = material.pbr_metallic_roughness;
 
 			Material& phMat = meshOut.materials.add();
-			phMat.albedo = toU8(vec4(pbr.base_color_factor));
+			phMat.albedo = toU8(f32x4(pbr.base_color_factor));
 			phMat.roughness = toU8(pbr.roughness_factor);
 			phMat.metallic = toU8(pbr.metallic_factor);
-			phMat.emissive = vec3(material.emissive_factor);
+			phMat.emissive = f32x3(material.emissive_factor);
 				
 			auto lookupTexture = [&](cgltf_texture_view& view) -> strID {
 				if (view.texture == nullptr) return strID();
@@ -253,7 +253,7 @@ bool loadAssetsFromGltf(
 	// Add single default material if no materials
 	if (meshOut.materials.size() == 0) {
 		sfz::Material& defaultMaterial = meshOut.materials.add();
-		defaultMaterial.emissive = vec3(1.0, 0.0, 0.0);
+		defaultMaterial.emissive = f32x3(1.0, 0.0, 0.0);
 	}
 
 	// Load all meshes inside file and store them in a single mesh
@@ -306,9 +306,9 @@ bool loadAssetsFromGltf(
 			const u32 offsetToThisComp = meshOut.vertices.size();
 			for (u32 i = 0; i < numVertices; i++) {
 				Vertex& v = meshOut.vertices.add();
-				v.pos = access<vec3>(posBuffer, posStride, i);
-				v.normal = access<vec3>(normalBuffer, normalStride, i);
-				v.texcoord = access<vec2>(texcoordBuffer, texcoordStride, i);
+				v.pos = access<f32x3>(posBuffer, posStride, i);
+				v.normal = access<f32x3>(normalBuffer, normalStride, i);
+				v.texcoord = access<f32x2>(texcoordBuffer, texcoordStride, i);
 			}
 
 			// Grab index buffer

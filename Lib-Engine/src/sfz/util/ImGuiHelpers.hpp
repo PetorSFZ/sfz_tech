@@ -47,7 +47,7 @@ static void alignedEdit(const char* name, const char* unique, u32 idx, float xOf
 // Filtered text helpers
 // ------------------------------------------------------------------------------------------------
 
-inline void imguiPrintText(const char* str, vec4 color, const char* strEnd = nullptr)
+inline void imguiPrintText(const char* str, f32x4 color, const char* strEnd = nullptr)
 {
 	ImGui::PushStyleColor(ImGuiCol_Text, color);
 	ImGui::TextUnformatted(str, strEnd);
@@ -57,8 +57,8 @@ inline void imguiPrintText(const char* str, vec4 color, const char* strEnd = nul
 inline void imguiRenderFilteredText(
 	const char* str,
 	const char* filter,
-	vec4 stringColor,
-	vec4 filterColor)
+	f32x4 stringColor,
+	f32x4 filterColor)
 {
 	str320 lowerStackStr("%s", str);
 	lowerStackStr.toLower();

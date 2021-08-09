@@ -57,7 +57,7 @@ struct ResourceManagerState final {
 	Pool<VoxelModelResource> voxelModels;
 
 	HashMap<strID, PoolHandle> voxelMaterialHandles;
-	HashMap<vec4_u8, PoolHandle> voxelMaterialColors;
+	HashMap<u8x4, PoolHandle> voxelMaterialColors;
 	Pool<VoxelMaterial> voxelMaterials;
 	Array<ShaderVoxelMaterial> voxelMaterialShaderBufferCpu;
 	PoolHandle voxelMaterialShaderBufferHandle = NULL_HANDLE;

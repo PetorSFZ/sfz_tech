@@ -35,7 +35,7 @@ namespace sfz {
 ShaderMaterial cpuMaterialToShaderMaterial(const Material& cpuMaterial) noexcept
 {
 	ShaderMaterial dst;
-	dst.albedo = vec4(cpuMaterial.albedo) * (1.0f / 255.0f);
+	dst.albedo = f32x4(cpuMaterial.albedo) * (1.0f / 255.0f);
 	dst.emissive.xyz = cpuMaterial.emissive;
 	dst.roughness = float(cpuMaterial.roughness) * (1.0f / 255.0f);
 	dst.metallic = float(cpuMaterial.metallic) * (1.0f / 255.0f);

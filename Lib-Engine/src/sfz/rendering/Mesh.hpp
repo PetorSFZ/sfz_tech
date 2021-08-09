@@ -27,20 +27,20 @@ namespace sfz {
 
 using sfz::Array;
 using sfz::strID;
-using sfz::vec2;
-using sfz::vec3;
-using sfz::vec4_u8;
+using sfz::f32x2;
+using sfz::f32x3;
+using sfz::u8x4;
 
 // Vertex struct
 // ------------------------------------------------------------------------------------------------
 
 struct Vertex {
-	vec3 pos = vec3(0.0f);
-	vec3 normal = vec3(0.0f);
-	vec2 texcoord = vec2(0.0f);
+	f32x3 pos = f32x3(0.0f);
+	f32x3 normal = f32x3(0.0f);
+	f32x2 texcoord = f32x2(0.0f);
 
 	constexpr Vertex() noexcept = default;
-	constexpr Vertex(vec3 pos, vec3 normal, vec2 texcoord) : pos(pos), normal(normal), texcoord(texcoord) {}
+	constexpr Vertex(f32x3 pos, f32x3 normal, f32x2 texcoord) : pos(pos), normal(normal), texcoord(texcoord) {}
 	constexpr Vertex(const Vertex&) noexcept = default;
 	constexpr Vertex& operator= (const Vertex&) noexcept = default;
 };
@@ -56,10 +56,10 @@ static_assert(sizeof(Vertex) == sizeof(f32) * 8);
 // but the texture is optional. If a texture is available the value read from it should be
 // multiplied by the factor (same as in glTF).
 struct Material final {
-	vec4_u8 albedo = vec4_u8(255, 255, 255, 255); // Gamma space
+	u8x4 albedo = u8x4(255, 255, 255, 255); // Gamma space
 	u8 roughness = 255; // Linear space
 	u8 metallic = 255; // Linear space
-	vec3 emissive = vec3(1.0f); // Linear space, can be higher than 1.0
+	f32x3 emissive = f32x3(1.0f); // Linear space, can be higher than 1.0
 	
 	strID albedoTex;
 	strID metallicRoughnessTex;

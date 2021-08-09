@@ -93,7 +93,7 @@ void ResourceManager::renderDebugUI()
 	resourceManagerUI(*this, *mState);
 }
 
-void ResourceManager::updateResolution(vec2_i32 screenRes)
+void ResourceManager::updateResolution(i32x2 screenRes)
 {
 	// Check if any textures need rebuilding
 	bool anyTexNeedRebuild = false;
@@ -374,7 +374,7 @@ PoolHandle ResourceManager::getVoxelMaterialHandle(strID name) const
 	return *handle;
 }
 
-PoolHandle ResourceManager::getVoxelMaterialHandle(vec4_u8 color) const
+PoolHandle ResourceManager::getVoxelMaterialHandle(u8x4 color) const
 {
 	const PoolHandle* handle = mState->voxelMaterialColors.get(color);
 	if (handle == nullptr) return NULL_HANDLE;
@@ -389,7 +389,7 @@ VoxelMaterial* ResourceManager::getVoxelMaterial(PoolHandle handle)
 PoolHandle ResourceManager::addVoxelMaterial(VoxelMaterial&& resource)
 {
 	strID name = resource.name;
-	vec4_u8 originalColor = resource.originalColor;
+	u8x4 originalColor = resource.originalColor;
 	sfz_assert(name.isValid());
 	sfz_assert(mState->voxelMaterialHandles.get(name) == nullptr);
 	sfz_assert(mState->voxelMaterialColors.get(originalColor) == nullptr);
@@ -431,7 +431,7 @@ void ResourceManager::syncVoxelMaterialsToGpuBlocking()
 		dst.roughness = src.roughness;
 		dst.metallic = src.metallic;
 
-		const vec3 emissiveColorLinear = vec3(
+		const f32x3 emissiveColorLinear = f32x3(
 			powf(src.emissiveColor.x, 2.2f),
 			powf(src.emissiveColor.y, 2.2f),
 			powf(src.emissiveColor.z, 2.2f));

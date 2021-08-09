@@ -136,11 +136,11 @@ public:
 	void drawTriangles(u32 startVertex, u32 numVertices);
 	void drawTrianglesIndexed(u32 firstIndex, u32 numIndices);
 
-	vec3_i32 getComputeGroupDims() const;
+	i32x3 getComputeGroupDims() const;
 
 	void dispatchCompute(i32 groupCountX, i32 groupCountY = 1, i32 groupCountZ = 1);
-	void dispatchCompute(vec3_i32 groupCount) { dispatchCompute(groupCount.x, groupCount.y, groupCount.z); }
-	void dispatchCompute(vec2_i32 groupCount) { dispatchCompute(groupCount.x, groupCount.y, 1u); }
+	void dispatchCompute(i32x3 groupCount) { dispatchCompute(groupCount.x, groupCount.y, groupCount.z); }
+	void dispatchCompute(i32x2 groupCount) { dispatchCompute(groupCount.x, groupCount.y, 1u); }
 
 	void unorderedBarrierAll();
 	void unorderedBarrierBuffer(const char* name) { unorderedBarrierBuffer(strID(name)); }

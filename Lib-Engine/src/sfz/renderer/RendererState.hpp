@@ -68,7 +68,7 @@ struct RendererState final {
 	u32 frameLatency = 2;
 	PerFrameData<zg::Fence> frameFences;
 
-	vec2_i32 windowRes = vec2_i32(0);
+	i32x2 windowRes = i32x2(0);
 	zg::Framebuffer windowFramebuffer;
 	zg::CommandQueue presentQueue;
 	zg::CommandQueue copyQueue;

@@ -40,7 +40,7 @@ UTEST(Quaternion, constructors)
 	}
 	// (v,w) constructor
 	{
-		quat q(vec3(4.0f, 3.0f, 2.0f), 1.0f);
+		quat q(f32x3(4.0f, 3.0f, 2.0f), 1.0f);
 		ASSERT_TRUE(eqf(q, quat(4.0f, 3.0f, 2.0f, 1.0f)));
 	}
 	// identity() constructor function
@@ -56,27 +56,27 @@ UTEST(Quaternion, constructors)
 	{
 		f32 angle = 60.0f;
 		f32 halfAngleRad = (angle * DEG_TO_RAD) / 2.0f;
-		vec3 axis = normalize(vec3(0.25f, 1.0f, 1.2f));
+		f32x3 axis = normalize(f32x3(0.25f, 1.0f, 1.2f));
 		quat rot1(std::sin(halfAngleRad) * axis, std::cos(halfAngleRad));
 		quat rot2 = quat::rotationDeg(axis, angle);
 		ASSERT_TRUE(eqf(rot1, rot2));
-		ASSERT_TRUE(eqf(rot2.rotationAxis(), normalize(vec3(0.25f, 1.0f, 1.2f))));
+		ASSERT_TRUE(eqf(rot2.rotationAxis(), normalize(f32x3(0.25f, 1.0f, 1.2f))));
 		ASSERT_TRUE(eqf(rot2.rotationAngleDeg(), angle));
 	}
 	// fromEuler() constructor function
 	{
 		ASSERT_TRUE(eqf(quat::fromEuler(0.0f, 0.0f, 0.0f), quat::identity()));
-		ASSERT_TRUE(eqf(quat::fromEuler(90.0f, 0.0f, 0.0f), quat::rotationDeg(vec3(1.0f, 0.0f, 0.0f), 90.0f)));
-		ASSERT_TRUE(eqf(quat::fromEuler(0.0f, 90.0f, 0.0f), quat::rotationDeg(vec3(0.0f, 1.0f, 0.0f), 90.0f)));
-		ASSERT_TRUE(eqf(quat::fromEuler(0.0f, 0.0f, 90.0f), quat::rotationDeg(vec3(0.0f, 0.0f, 1.0f), 90.0f)));
-		vec3 angles(20.0f, 30.0f, 40.0f);
+		ASSERT_TRUE(eqf(quat::fromEuler(90.0f, 0.0f, 0.0f), quat::rotationDeg(f32x3(1.0f, 0.0f, 0.0f), 90.0f)));
+		ASSERT_TRUE(eqf(quat::fromEuler(0.0f, 90.0f, 0.0f), quat::rotationDeg(f32x3(0.0f, 1.0f, 0.0f), 90.0f)));
+		ASSERT_TRUE(eqf(quat::fromEuler(0.0f, 0.0f, 90.0f), quat::rotationDeg(f32x3(0.0f, 0.0f, 1.0f), 90.0f)));
+		f32x3 angles(20.0f, 30.0f, 40.0f);
 		ASSERT_TRUE(eqf(quat::fromEuler(angles).toEuler(), angles));
 	}
 	// fromRotationMatrix() constructor function
 	{
 		f32 angleDeg1 = 60.0f;
 		f32 angleRad1 = angleDeg1 * DEG_TO_RAD;
-		vec3 axis = normalize(vec3(0.25f, 1.0f, 1.2f));
+		f32x3 axis = normalize(f32x3(0.25f, 1.0f, 1.2f));
 
 		quat rotQuat1 = quat::rotationDeg(axis, angleDeg1);
 		mat34 rotMat1 = mat34::rotation3(axis, angleRad1);
@@ -159,24 +159,24 @@ UTEST(Quaternion, quaternion_functions)
 	// rotate()
 	{
 		f32 halfAngle1 = (90.0f * DEG_TO_RAD) / 2.0f;
-		quat rot1(std::sin(halfAngle1) * vec3(0.0f, 1.0f, 0.0f), std::cos(halfAngle1));
-		vec3 p = rotate(rot1, vec3(1.0f, 0.0f, 0.0f));
-		ASSERT_TRUE(eqf(p, vec3(0.0f, 0.0f, -1.0f)));
+		quat rot1(std::sin(halfAngle1) * f32x3(0.0f, 1.0f, 0.0f), std::cos(halfAngle1));
+		f32x3 p = rotate(rot1, f32x3(1.0f, 0.0f, 0.0f));
+		ASSERT_TRUE(eqf(p, f32x3(0.0f, 0.0f, -1.0f)));
 		mat33 rot1mat = rot1.toMat33();
-		ASSERT_TRUE(eqf(rot1mat * vec3(1.0f, 0.0f, 0.0f), vec3 (0.0f, 0.0f, -1.0f)));
+		ASSERT_TRUE(eqf(rot1mat * f32x3(1.0f, 0.0f, 0.0f), f32x3 (0.0f, 0.0f, -1.0f)));
 
-		quat rot2 = quat::rotationDeg(vec3(0.0f, 0.0f, 1.0f), 90.0f);
-		vec3 p2 = rotate(rot2, vec3(1.0f, 0.0f, 0.0f));
-		ASSERT_TRUE(eqf(p2, vec3(0.0f, 1.0f, 0.0f)));
+		quat rot2 = quat::rotationDeg(f32x3(0.0f, 0.0f, 1.0f), 90.0f);
+		f32x3 p2 = rotate(rot2, f32x3(1.0f, 0.0f, 0.0f));
+		ASSERT_TRUE(eqf(p2, f32x3(0.0f, 1.0f, 0.0f)));
 		mat33 rot2mat = rot2.toMat33();
-		ASSERT_TRUE(eqf(rot2mat * vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f)));
+		ASSERT_TRUE(eqf(rot2mat * f32x3(1.0f, 0.0f, 0.0f), f32x3(0.0f, 1.0f, 0.0f)));
 	}
 }
 
 UTEST(Quaternion, lerp)
 {
-	quat q1 = quat::rotationDeg(vec3(1.0f, 1.0f, 1.0f), 0.0f);
-	quat q2 = quat::rotationDeg(vec3(1.0f, 1.0f, 1.0f), 90.0f);
-	quat q3 = quat::rotationDeg(vec3(1.0f, 1.0f, 1.0f), 45.0f);
+	quat q1 = quat::rotationDeg(f32x3(1.0f, 1.0f, 1.0f), 0.0f);
+	quat q2 = quat::rotationDeg(f32x3(1.0f, 1.0f, 1.0f), 90.0f);
+	quat q3 = quat::rotationDeg(f32x3(1.0f, 1.0f, 1.0f), 45.0f);
 	ASSERT_TRUE(eqf(lerp(q1, q2, 0.5f).vector, q3.vector));
 }

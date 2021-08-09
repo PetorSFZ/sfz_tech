@@ -118,7 +118,7 @@ struct DeserializerVisitor final {
 		extractValue(node.valueFloat(), valOut);
 	}
 
-	void deserialize(const JsonNode& node, vec2_i32& valOut)
+	void deserialize(const JsonNode& node, i32x2& valOut)
 	{
 		if (!ensureNodeIsValid(node)) return;
 		if (node.type() == JsonNodeType::ARRAY && node.arrayLength() == 2) {
@@ -126,12 +126,12 @@ struct DeserializerVisitor final {
 			extractValue(node.accessArray(1).valueInt(), valOut.y);
 		}
 		else {
-			printErrorMessage("Failed, vec2_i32 must be of form [x, y]");
+			printErrorMessage("Failed, i32x2 must be of form [x, y]");
 			this->success = false;
 		}
 	}
 
-	void deserialize(const JsonNode& node, vec3_i32& valOut)
+	void deserialize(const JsonNode& node, i32x3& valOut)
 	{
 		if (!ensureNodeIsValid(node)) return;
 		if (node.type() == JsonNodeType::ARRAY && node.arrayLength() == 3) {
@@ -140,12 +140,12 @@ struct DeserializerVisitor final {
 			extractValue(node.accessArray(2).valueInt(), valOut.z);
 		}
 		else {
-			printErrorMessage("Failed, vec3_i32 must be of form [x, y, z]");
+			printErrorMessage("Failed, i32x3 must be of form [x, y, z]");
 			this->success = false;
 		}
 	}
 
-	void deserialize(const JsonNode& node, vec4_i32& valOut)
+	void deserialize(const JsonNode& node, i32x4& valOut)
 	{
 		if (!ensureNodeIsValid(node)) return;
 		if (node.type() == JsonNodeType::ARRAY && node.arrayLength() == 4) {
@@ -155,12 +155,12 @@ struct DeserializerVisitor final {
 			extractValue(node.accessArray(3).valueInt(), valOut.w);
 		}
 		else {
-			printErrorMessage("Failed, vec4_i32 must be of form [x, y, z, w]");
+			printErrorMessage("Failed, i32x4 must be of form [x, y, z, w]");
 			this->success = false;
 		}
 	}
 
-	void deserialize(const JsonNode& node, vec2& valOut)
+	void deserialize(const JsonNode& node, f32x2& valOut)
 	{
 		if (!ensureNodeIsValid(node)) return;
 		if (node.type() == JsonNodeType::ARRAY && node.arrayLength() == 2) {
@@ -168,12 +168,12 @@ struct DeserializerVisitor final {
 			extractValue(node.accessArray(1).valueFloat(), valOut.y);
 		}
 		else {
-			printErrorMessage("Failed, vec2 must be of form [x, y]");
+			printErrorMessage("Failed, f32x2 must be of form [x, y]");
 			this->success = false;
 		}
 	}
 
-	void deserialize(const JsonNode& node, vec3& valOut)
+	void deserialize(const JsonNode& node, f32x3& valOut)
 	{
 		if (!ensureNodeIsValid(node)) return;
 		if (node.type() == JsonNodeType::ARRAY && node.arrayLength() == 3) {
@@ -182,12 +182,12 @@ struct DeserializerVisitor final {
 			extractValue(node.accessArray(2).valueFloat(), valOut.z);
 		}
 		else {
-			printErrorMessage("Failed, vec3 must be of form [x, y, z]");
+			printErrorMessage("Failed, f32x3 must be of form [x, y, z]");
 			this->success = false;
 		}
 	}
 
-	void deserialize(const JsonNode& node, vec4& valOut)
+	void deserialize(const JsonNode& node, f32x4& valOut)
 	{
 		if (!ensureNodeIsValid(node)) return;
 		if (node.type() == JsonNodeType::ARRAY && node.arrayLength() == 4) {
@@ -197,7 +197,7 @@ struct DeserializerVisitor final {
 			extractValue(node.accessArray(3).valueFloat(), valOut.w);
 		}
 		else {
-			printErrorMessage("Failed, vec4 must be of form [x, y, z, w]");
+			printErrorMessage("Failed, f32x4 must be of form [x, y, z, w]");
 			this->success = false;
 		}
 	}

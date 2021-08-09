@@ -33,19 +33,19 @@ namespace sfz {
 
 struct VoxelMaterial final {
 	strID name;
-	vec4_u8 originalColor = vec4_u8(u8(0)); // Gamma space
+	u8x4 originalColor = u8x4(u8(0)); // Gamma space
 
-	vec3 albedo = vec3(1.0f, 0.0f, 0.0f); // Gamma space, usually same as original color
+	f32x3 albedo = f32x3(1.0f, 0.0f, 0.0f); // Gamma space, usually same as original color
 	float roughness = 1.0f; // Linear space
-	vec3 emissiveColor = vec3(0.0f); // Gamma space, samma range as albeddo
+	f32x3 emissiveColor = f32x3(0.0f); // Gamma space, samma range as albeddo
 	float emissiveStrength = 1.0f; // Linear strength of emissive color
 	float metallic = 0.0f; // Linear space, but typically only 0.0 or 1.0 is valid.
 };
 
 struct ShaderVoxelMaterial final {
-	vec3 albedo = vec3(1.0f, 0.0f, 0.0f);
+	f32x3 albedo = f32x3(1.0f, 0.0f, 0.0f);
 	float roughness = 1.0f;
-	vec3 emissive = vec3(0.0f); // Linear unclamped range, linearize(emissiveColor) * emissiveStrength
+	f32x3 emissive = f32x3(0.0f); // Linear unclamped range, linearize(emissiveColor) * emissiveStrength
 	float metallic = 0.0f;
 };
 static_assert(sizeof(ShaderVoxelMaterial) == sizeof(float) * 8, "ShaderVoxelMaterial is padded");
@@ -63,17 +63,17 @@ struct VoxelModelResource final {
 	time_t lastModifiedDate = 0;
 	str256 path;
 
-	vec3_i32 dims = vec3_i32(0);
+	i32x3 dims = i32x3(0);
 	u32 numVoxels = 0; // The number of non-empty voxels in the voxels array, NOT the size of the voxels array.
 	Array<u8> voxels;
-	Arr256<vec4_u8> palette;
+	Arr256<u8x4> palette;
 
 	// A user defined handle that can be used to refer to e.g. an application specific GPU buffer
 	// with data needed to render this model.
 	PoolHandle userHandle = NULL_HANDLE;
 	time_t userHandleModifiedDate = 0;
 
-	u8& accessVoxel(vec3_i32 coord)
+	u8& accessVoxel(i32x3 coord)
 	{
 		sfz_assert(0 <= coord.x && coord.x < dims.x);
 		sfz_assert(0 <= coord.y && coord.y < dims.y);
@@ -83,7 +83,7 @@ struct VoxelModelResource final {
 		return voxels[idx];
 	}
 
-	u8 accessVoxel(vec3_i32 coord) const
+	u8 accessVoxel(i32x3 coord) const
 	{
 		return const_cast<VoxelModelResource*>(this)->accessVoxel(coord);
 	}

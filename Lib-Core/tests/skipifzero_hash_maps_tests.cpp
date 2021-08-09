@@ -34,9 +34,9 @@ UTEST(Hashing, vec_hashing)
 {
 	// vec2_s32
 	{
-		sfz::vec2_i32 v1(2, 100);
-		sfz::vec2_i32 v2(-1, -10);
-		sfz::vec2_i32 v3(0, 14);
+		sfz::i32x2 v1(2, 100);
+		sfz::i32x2 v2(-1, -10);
+		sfz::i32x2 v3(0, 14);
 
 		ASSERT_TRUE(sfz::hash(v1) != sfz::hash(v2));
 		ASSERT_TRUE(sfz::hash(v2) != sfz::hash(v3));
@@ -44,9 +44,9 @@ UTEST(Hashing, vec_hashing)
 
 	// vec3_s32
 	{
-		sfz::vec3_i32 v1(2, 100, 32);
-		sfz::vec3_i32 v2(-1, 0, -10);
-		sfz::vec3_i32 v3(0, -9, 14);
+		sfz::i32x3 v1(2, 100, 32);
+		sfz::i32x3 v2(-1, 0, -10);
+		sfz::i32x3 v3(0, -9, 14);
 
 		ASSERT_TRUE(sfz::hash(v1) != sfz::hash(v2));
 		ASSERT_TRUE(sfz::hash(v2) != sfz::hash(v3));
@@ -54,9 +54,9 @@ UTEST(Hashing, vec_hashing)
 
 	// vec4_s32
 	{
-		sfz::vec4_i32 v1(2, 100, 32, 1);
-		sfz::vec4_i32 v2(-1, 0, -10, 9);
-		sfz::vec4_i32 v3(0, -9, 14, 1337);
+		sfz::i32x4 v1(2, 100, 32, 1);
+		sfz::i32x4 v2(-1, 0, -10, 9);
+		sfz::i32x4 v3(0, -9, 14, 1337);
 
 		ASSERT_TRUE(sfz::hash(v1) != sfz::hash(v2));
 		ASSERT_TRUE(sfz::hash(v2) != sfz::hash(v3));
@@ -584,12 +584,12 @@ UTEST(HashMapLocal, default_constructor)
 	ASSERT_TRUE(m1.capacity() == 16);
 	ASSERT_TRUE(m1.placeholders() == 0);
 
-	sfz::HashMapLocal<int, sfz::vec4, 8> m2;
+	sfz::HashMapLocal<int, sfz::f32x4, 8> m2;
 	ASSERT_TRUE(m2.size() == 0);
 	ASSERT_TRUE(m2.capacity() == 8);
 	ASSERT_TRUE(m2.placeholders() == 0);
 
-	sfz::HashMapLocal<sfz::vec4_i32, sfz::vec4, 8> m3;
+	sfz::HashMapLocal<sfz::i32x4, sfz::f32x4, 8> m3;
 	ASSERT_TRUE(m3.size() == 0);
 	ASSERT_TRUE(m3.capacity() == 8);
 	ASSERT_TRUE(m3.placeholders() == 0);

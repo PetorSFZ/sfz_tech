@@ -39,8 +39,8 @@ inline void shaderManagerUI(ShaderManagerState& state)
 	}
 
 	constexpr float offset = 150.0f;
-	constexpr vec4 normalTextColor = vec4(1.0f);
-	constexpr vec4 filterTextColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	constexpr f32x4 normalTextColor = f32x4(1.0f);
+	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
 	static str128 filter;
 
 	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
@@ -52,7 +52,7 @@ inline void shaderManagerUI(ShaderManagerState& state)
 
 	// Reload all button
 	ImGui::SameLine(ImGui::GetWindowWidth() - 130.0f);
-	if (ImGui::Button("Reload All##__shaders", vec2(120.0f, 0.0f))) {
+	if (ImGui::Button("Reload All##__shaders", f32x2(120.0f, 0.0f))) {
 
 		SFZ_INFO("Shaders", "Reloading all shaders...");
 
@@ -79,7 +79,7 @@ inline void shaderManagerUI(ShaderManagerState& state)
 		if (!filter.isPartOf(lowerCaseName.str())) continue;
 
 		// Reload button
-		if (ImGui::Button(str64("Reload##__shader%u", idx), vec2(80.0f, 0.0f))) {
+		if (ImGui::Button(str64("Reload##__shader%u", idx), f32x2(80.0f, 0.0f))) {
 
 			CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
 

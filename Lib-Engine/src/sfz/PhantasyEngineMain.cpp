@@ -442,7 +442,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 		int windowHeight = -1;
 		SDL_GetWindowSize(state.window, &windowWidth, &windowHeight);
 		state.rawFrameInput.windowDims =
-			sfz::vec2_i32(windowWidth, windowHeight);
+			sfz::i32x2(windowWidth, windowHeight);
 
 		// Keyboard
 		{
@@ -462,16 +462,16 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 			int y = 0;
 			u32 buttonState = SDL_GetMouseState(&x, &y);
 			sfz_assert(y < mouse.windowDims.y);
-			mouse.pos = sfz::vec2_i32(x, mouse.windowDims.y - y - 1);
+			mouse.pos = sfz::i32x2(x, mouse.windowDims.y - y - 1);
 			
 			u32 buttonState2 = SDL_GetRelativeMouseState(&mouse.delta.x, &mouse.delta.y);
 			sfz_assert(buttonState == buttonState2);
 			mouse.delta.y = -mouse.delta.y;
 			
-			mouse.wheel = sfz::vec2_i32(0);
+			mouse.wheel = sfz::i32x2(0);
 			for (const SDL_Event& event : state.events) {
 				if (event.type == SDL_MOUSEWHEEL) {
-					sfz::vec2_i32 delta = sfz::vec2_i32(event.wheel.x, event.wheel.y);
+					sfz::i32x2 delta = sfz::i32x2(event.wheel.x, event.wheel.y);
 					if (event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED) delta = -delta;
 					mouse.wheel += delta;
 				}
@@ -524,12 +524,12 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 
 				int16_t leftX = SDL_GameControllerGetAxis(gpd.controller, SDL_CONTROLLER_AXIS_LEFTX);
 				int16_t leftY = SDL_GameControllerGetAxis(gpd.controller, SDL_CONTROLLER_AXIS_LEFTY);
-				gpd.leftStick = sfz::vec2(float(leftX), -float(leftY)) / sfz::vec2(AXIS_MAX);
+				gpd.leftStick = sfz::f32x2(float(leftX), -float(leftY)) / sfz::f32x2(AXIS_MAX);
 				gpd.leftStick = sfz::clamp(gpd.leftStick, -1.0f, 1.0f);
 
 				int16_t rightX = SDL_GameControllerGetAxis(gpd.controller, SDL_CONTROLLER_AXIS_RIGHTX);
 				int16_t rightY = SDL_GameControllerGetAxis(gpd.controller, SDL_CONTROLLER_AXIS_RIGHTY);
-				gpd.rightStick = sfz::vec2(float(rightX), -float(rightY)) / sfz::vec2(AXIS_MAX);
+				gpd.rightStick = sfz::f32x2(float(rightX), -float(rightY)) / sfz::f32x2(AXIS_MAX);
 				gpd.rightStick = sfz::clamp(gpd.rightStick, -1.0f, 1.0f);
 
 				int16_t leftTrigger = SDL_GameControllerGetAxis(gpd.controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT);
@@ -616,7 +616,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 					if (touches.isFull()) break;
 					sfz::TouchState& touch = touches.add();
 					touch.id = finger->id;
-					touch.pos = sfz::clamp(sfz::vec2(finger->x, 1.0f - finger->y), 0.0f, 1.0f);
+					touch.pos = sfz::clamp(sfz::f32x2(finger->x, 1.0f - finger->y), 0.0f, 1.0f);
 					touch.pressure = finger->pressure;
 				}
 			}
@@ -731,8 +731,8 @@ int main(int argc, char* argv[])
 
 	// Init default category of profiling stats
 	sfz::getProfilingStats().createCategory("default", 300, 66.7f, "ms", "frame", 25.0f); // 300 = 60 fps * 5 seconds
-	sfz::getProfilingStats().createLabel("default", "cpu_frametime", sfz:: vec4(1.0f, 0.0f, 0.0f, 1.0f));
-	sfz::getProfilingStats().createLabel("default", "gpu_frametime", sfz::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+	sfz::getProfilingStats().createLabel("default", "cpu_frametime", sfz:: f32x4(1.0f, 0.0f, 0.0f, 1.0f));
+	sfz::getProfilingStats().createLabel("default", "gpu_frametime", sfz::f32x4(0.0f, 1.0f, 0.0f, 1.0f));
 
 	// Init SDL2
 	if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0) {
@@ -848,7 +848,7 @@ int main(int argc, char* argv[])
 	if (gameLoopState.initFunc) {
 		gameLoopState.initFunc(gameLoopState.userPtr);
 	}
-	sfz::getProfilingStats().createLabel("default", "16.67 ms", sfz::vec4(0.5f, 0.5f, 0.7f, 1.0f), 16.67f);
+	sfz::getProfilingStats().createLabel("default", "16.67 ms", sfz::f32x4(0.5f, 0.5f, 0.7f, 1.0f), 16.67f);
 
 	// Start the game loop
 	SFZ_INFO("PhantasyEngine", "Starting game loop");

@@ -31,8 +31,8 @@ namespace sfz {
 using sfz::DynString;
 using sfz::str96;
 using sfz::str320;
-using sfz::vec2;
-using sfz::vec3;
+using sfz::f32x2;
+using sfz::f32x3;
 
 // Statics (input processing)
 // ------------------------------------------------------------------------------------------------
@@ -91,8 +91,8 @@ static Array<MeshComponent> componentsFromMesh(const phConstMeshView& mesh) noex
 struct SplitMesh {
 	Array<phVertex> vertices;
 	Array<MeshComponent> components;
-	vec3 posMin = vec3(F32_MAX);
-	vec3 posMax = vec3(-F32_MAX);
+	f32x3 posMin = f32x3(F32_MAX);
+	f32x3 posMax = f32x3(-F32_MAX);
 };
 
 // Pick out all meshes from the assets and split them into components
@@ -127,8 +127,8 @@ static Array<SplitMesh> splitMeshes(
 			splitMesh.posMax = sfz::max(splitMesh.posMax, v.pos);
 			splitMesh.posMin = sfz::min(splitMesh.posMin, v.pos);
 		}
-		//splitMesh.posMax += vec3(0.1f);
-		//splitMesh.posMin -= vec3(0.1f);
+		//splitMesh.posMax += f32x3(0.1f);
+		//splitMesh.posMin -= f32x3(0.1f);
 
 		splitMeshes.add(splitMesh);
 	}
@@ -259,21 +259,21 @@ static BinaryData createBinaryMeshData(const ProcessedAssets& processedAssets) n
 		// Positions
 		offsets.posOffset = data.combinedBinaryData.size();
 		for (const phVertex& v : mesh.vertices) {
-			data.combinedBinaryData.add(reinterpret_cast<const u8*>(&v.pos), sizeof(vec3));
+			data.combinedBinaryData.add(reinterpret_cast<const u8*>(&v.pos), sizeof(f32x3));
 		}
 		offsets.posNumBytes = data.combinedBinaryData.size() - offsets.posOffset;
 
 		// Normals
 		offsets.normalOffset = data.combinedBinaryData.size();
 		for (const phVertex& v : mesh.vertices) {
-			data.combinedBinaryData.add(reinterpret_cast<const u8*>(&v.normal), sizeof(vec3));
+			data.combinedBinaryData.add(reinterpret_cast<const u8*>(&v.normal), sizeof(f32x3));
 		}
 		offsets.normalNumBytes = data.combinedBinaryData.size() - offsets.normalOffset;
 
 		// Texcoord
 		offsets.texcoordOffset = data.combinedBinaryData.size();
 		for (const phVertex& v : mesh.vertices) {
-			data.combinedBinaryData.add(reinterpret_cast<const u8*>(&v.texcoord), sizeof(vec2));
+			data.combinedBinaryData.add(reinterpret_cast<const u8*>(&v.texcoord), sizeof(f32x2));
 		}
 		offsets.texcoordNumBytes = data.combinedBinaryData.size() - offsets.texcoordOffset;
 
@@ -531,7 +531,7 @@ static bool writeMeshes(
 		gltf.printfAppend("%s", "\t\t\t\"buffer\": 0,\n");
 		gltf.printfAppend("\t\t\t\"byteOffset\": %u,\n", offsets.posOffset);
 		gltf.printfAppend("\t\t\t\"byteLength\": %u,\n", offsets.posNumBytes);
-		gltf.printfAppend("\t\t\t\"byteStride\": %u,\n", u32(sizeof(vec3)));
+		gltf.printfAppend("\t\t\t\"byteStride\": %u,\n", u32(sizeof(f32x3)));
 		gltf.printfAppend("%s", "\t\t\t\"target\": 34962\n"); // ARRAY_BUFFER
 		gltf.printfAppend("%s", "\t\t},\n");
 
@@ -540,7 +540,7 @@ static bool writeMeshes(
 		gltf.printfAppend("%s", "\t\t\t\"buffer\": 0,\n");
 		gltf.printfAppend("\t\t\t\"byteOffset\": %u,\n", offsets.normalOffset);
 		gltf.printfAppend("\t\t\t\"byteLength\": %u,\n", offsets.normalNumBytes);
-		gltf.printfAppend("\t\t\t\"byteStride\": %u,\n", u32(sizeof(vec3)));
+		gltf.printfAppend("\t\t\t\"byteStride\": %u,\n", u32(sizeof(f32x3)));
 		gltf.printfAppend("%s", "\t\t\t\"target\": 34962\n"); // ARRAY_BUFFER
 		gltf.printfAppend("%s", "\t\t},\n");
 
@@ -549,7 +549,7 @@ static bool writeMeshes(
 		gltf.printfAppend("%s", "\t\t\t\"buffer\": 0,\n");
 		gltf.printfAppend("\t\t\t\"byteOffset\": %u,\n", offsets.texcoordOffset);
 		gltf.printfAppend("\t\t\t\"byteLength\": %u,\n", offsets.texcoordNumBytes);
-		gltf.printfAppend("\t\t\t\"byteStride\": %u,\n", u32(sizeof(vec2)));
+		gltf.printfAppend("\t\t\t\"byteStride\": %u,\n", u32(sizeof(f32x2)));
 		gltf.printfAppend("%s", "\t\t\t\"target\": 34962\n"); // ARRAY_BUFFER
 		gltf.printfAppend("%s", "\t\t},\n");
 
@@ -586,7 +586,7 @@ static bool writeMeshes(
 		gltf.printfAppend("%s", "\t\t\t\"byteOffset\": 0,\n");
 		gltf.printfAppend("%s", "\t\t\t\"componentType\": 5126,\n"); // FLOAT
 		gltf.printfAppend("%s", "\t\t\t\"type\": \"VEC3\",\n");
-		gltf.printfAppend("\t\t\t\"count\": %u,\n", offsets.posNumBytes / sizeof(vec3));
+		gltf.printfAppend("\t\t\t\"count\": %u,\n", offsets.posNumBytes / sizeof(f32x3));
 		gltf.printfAppend("%s", "\t\t\t\"min\": [\n");
 		gltf.printfAppend("\t\t\t\t%.18f,\n", splitMesh.posMin.x);
 		gltf.printfAppend("\t\t\t\t%.18f,\n", splitMesh.posMin.y);
@@ -606,7 +606,7 @@ static bool writeMeshes(
 		gltf.printfAppend("%s", "\t\t\t\"byteOffset\": 0,\n");
 		gltf.printfAppend("%s", "\t\t\t\"componentType\": 5126,\n"); // FLOAT
 		gltf.printfAppend("%s", "\t\t\t\"type\": \"VEC3\",\n");
-		gltf.printfAppend("\t\t\t\"count\": %u\n", offsets.normalNumBytes / sizeof(vec3));
+		gltf.printfAppend("\t\t\t\"count\": %u\n", offsets.normalNumBytes / sizeof(f32x3));
 		gltf.printfAppend("%s", "\t\t},\n");
 		bufferViewIdx += 1;
 
@@ -616,7 +616,7 @@ static bool writeMeshes(
 		gltf.printfAppend("%s", "\t\t\t\"byteOffset\": 0,\n");
 		gltf.printfAppend("%s", "\t\t\t\"componentType\": 5126,\n"); // FLOAT
 		gltf.printfAppend("%s", "\t\t\t\"type\": \"VEC2\",\n");
-		gltf.printfAppend("\t\t\t\"count\": %u\n", offsets.texcoordNumBytes / sizeof(vec2));
+		gltf.printfAppend("\t\t\t\"count\": %u\n", offsets.texcoordNumBytes / sizeof(f32x2));
 		gltf.printfAppend("%s", "\t\t},\n");
 		bufferViewIdx += 1;
 
