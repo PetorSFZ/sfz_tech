@@ -37,7 +37,7 @@ inline void alignedEdit(const char* name, float xOffset, Func editor)
 }
 
 template<typename Fun>
-static void alignedEdit(const char* name, const char* unique, uint32_t idx, float xOffset, Fun editor)
+static void alignedEdit(const char* name, const char* unique, u32 idx, float xOffset, Fun editor)
 {
 	ImGui::Text("%s:", name);
 	ImGui::SameLine(xOffset);

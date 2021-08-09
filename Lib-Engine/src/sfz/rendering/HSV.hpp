@@ -34,19 +34,19 @@ namespace sfz {
 
 inline vec3 rgbToHSV(vec3 rgb)
 {
-	const float r = rgb.x;
-	const float g = rgb.y;
-	const float b = rgb.z;
+	const f32 r = rgb.x;
+	const f32 g = rgb.y;
+	const f32 b = rgb.z;
 	sfz_assert(0.0f <= r && r <= 1.0f);
 	sfz_assert(0.0f <= g && g <= 1.0f);
 	sfz_assert(0.0f <= b && b <= 1.0f);
 	
-	const float xMax = sfz::elemMax(rgb);
-	const float xMin = sfz::elemMin(rgb);
-	const float chroma = xMax - xMin;
+	const f32 xMax = sfz::elemMax(rgb);
+	const f32 xMin = sfz::elemMin(rgb);
+	const f32 chroma = xMax - xMin;
 
-	float hue = 0.0f;
-	const float val = xMax;
+	f32 hue = 0.0f;
+	const f32 val = xMax;
 	if (chroma > 0.0f) {
 		if (val == r) {
 			hue = 60.0f * ((g - b) / chroma);
@@ -62,7 +62,7 @@ inline vec3 rgbToHSV(vec3 rgb)
 		}
 	}
 
-	float sat = 0.0f;
+	f32 sat = 0.0f;
 	if (val > 0.0f) {
 		sat = chroma / val;
 	}
@@ -74,15 +74,15 @@ inline vec3 rgbToHSV(vec3 rgb)
 
 inline vec3 hsvToRGB(vec3 hsv)
 {
-	const float hue = hsv.x;
-	const float sat = hsv.y;
-	const float val = hsv.z;
+	const f32 hue = hsv.x;
+	const f32 sat = hsv.y;
+	const f32 val = hsv.z;
 	sfz_assert(0.0f <= hue && hue <= 360.0f);
 	sfz_assert(0.0f <= sat && sat <= 1.0f);
 	sfz_assert(0.0f <= val && val <= 1.0f);
 
-	const float chroma = val * sat;
-	const float X = chroma * (1.0f - sfz::abs(fmodf(hue / 60.0f, 2) - 1.0f));
+	const f32 chroma = val * sat;
+	const f32 X = chroma * (1.0f - sfz::abs(fmodf(hue / 60.0f, 2) - 1.0f));
 
 	vec3 rgb;
 	if (hue < 60.0f) {

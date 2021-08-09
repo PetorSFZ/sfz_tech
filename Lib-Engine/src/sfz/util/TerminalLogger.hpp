@@ -19,7 +19,6 @@
 
 #pragma once
 
-#include <cstdint>
 #include <ctime>
 
 #include <skipifzero_strings.hpp>
@@ -67,13 +66,13 @@ public:
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	void init(uint32_t numHistoryItems, SfzAllocator* allocator) noexcept;
+	void init(u32 numHistoryItems, SfzAllocator* allocator) noexcept;
 
 	// Returns current number of messages
-	uint32_t numMessages() const noexcept;
+	u32 numMessages() const noexcept;
 
 	// Returns message
-	const TerminalMessageItem& getMessage(uint32_t index) const noexcept;
+	const TerminalMessageItem& getMessage(u32 index) const noexcept;
 
 	void clearMessages() noexcept { mMessages.clear(); }
 

@@ -136,7 +136,7 @@ inline const char* resultToString(HRESULT result) noexcept
 // Helper functions
 // ------------------------------------------------------------------------------------------------
 
-inline bool utf8ToWide(WCHAR* wideOut, uint32_t numWideChars, const char* utf8In) noexcept
+inline bool utf8ToWide(WCHAR* wideOut, u32 numWideChars, const char* utf8In) noexcept
 {
 	// TODO: Unsure if 6th paramter should be num chars or num bytes =/
 	int res = MultiByteToWideChar(CP_UTF8, 0, utf8In, -1, wideOut, numWideChars);
@@ -203,7 +203,7 @@ inline void setDebugName(ID3D12Resource* resource, const char* name) noexcept
 
 inline void d3d12LogAvailableDevices(ComPtr<IDXGIFactory6>& dxgiFactory) noexcept
 {
-	for (uint32_t i = 0; true; i++) {
+	for (u32 i = 0; true; i++) {
 
 		// Get adapter, exit loop if no more adapters
 		ComPtr<IDXGIAdapter1> adapter;
@@ -221,9 +221,9 @@ inline void d3d12LogAvailableDevices(ComPtr<IDXGIFactory6>& dxgiFactory) noexcep
 			"Shared system memory: %.2f GiB",
 			i,
 			desc.Description,
-			uint32_t(desc.VendorId),
-			uint32_t(desc.DeviceId),
-			uint32_t(desc.Revision),
+			u32(desc.VendorId),
+			u32(desc.DeviceId),
+			u32(desc.Revision),
 			double(desc.DedicatedVideoMemory) / (1024.0 * 1024.0 * 1024.0),
 			double(desc.DedicatedSystemMemory) / (1024.0 * 1024.0 * 1024.0),
 			double(desc.SharedSystemMemory) / (1024.0 * 1024.0 * 1024.0));
@@ -263,7 +263,7 @@ inline ZgResult createSoftwareDevice(
 	// Find software adapter
 	bool foundPixAdapter = false;
 	ComPtr<IDXGIAdapter1> adapter;
-	for (uint32_t i = 0; true; i++) {
+	for (u32 i = 0; true; i++) {
 
 		// Get adapter, exit loop if no more adapters
 		if (dxgiFactory->EnumAdapters1(i, &adapter) == DXGI_ERROR_NOT_FOUND) {

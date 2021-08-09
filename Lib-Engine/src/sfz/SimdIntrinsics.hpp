@@ -31,10 +31,10 @@ namespace sfz {
 /// Each parameter should be a number in the interval [0, 3], which specifies which slot to copy
 /// parameters from.
 #define SFZ_SHUFFLE_PS_PARAM(e0, e1, e2, e3) \
-	(uint32_t(e0) | (uint32_t(e1) << 2u) | (uint32_t(e2) << 4u) | (uint32_t(e3) << 6u))
+	(u32(e0) | (u32(e1) << 2u) | (u32(e2) << 4u) | (u32(e3) << 6u))
 
 /// Replicates the specified element in all slots in the resulting vector
-template<uint32_t element>
+template<u32 element>
 inline __m128 replicatePs(__m128 v) noexcept
 {
 	return _mm_shuffle_ps(v, v, SFZ_SHUFFLE_PS_PARAM(element, element, element, element));

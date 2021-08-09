@@ -55,7 +55,7 @@ inline void requireResourceStateTextureMip(
 	ID3D12GraphicsCommandList& cmdList,
 	ZgTrackerCommandListState& cmdListState,
 	ZgTexture* texture,
-	uint32_t mipLevel,
+	u32 mipLevel,
 	D3D12_RESOURCE_STATES requiredState)
 {
 	// Try to get pending texture mip state, create it if it does not exist
@@ -90,7 +90,7 @@ inline void requireResourceStateTextureAllMips(
 {
 	// Create pending states if they do not exist
 	// Note: Can NOT store pointers here, hash map can be resized
-	for (uint32_t i = 0; i < texture->numMipmaps; i++) {
+	for (u32 i = 0; i < texture->numMipmaps; i++) {
 		if (cmdListState.pendingTextureMips.get(TextureMip(texture, i)) == nullptr) {
 			PendingTextureState& pendingState = cmdListState.pendingTextureMips.put(
 				TextureMip(texture, i), PendingTextureState());
@@ -103,7 +103,7 @@ inline void requireResourceStateTextureAllMips(
 
 	// Get pointers to pending states
 	sfz::ArrayLocal<PendingTextureState*, ZG_MAX_NUM_MIPMAPS> pendingStates;
-	for (uint32_t i = 0; i < texture->numMipmaps; i++) {
+	for (u32 i = 0; i < texture->numMipmaps; i++) {
 		PendingTextureState* pendingState =
 			cmdListState.pendingTextureMips.get(TextureMip(texture, i));
 		sfz_assert_hard(pendingState != nullptr);
@@ -112,7 +112,7 @@ inline void requireResourceStateTextureAllMips(
 
 	// Create all necessary barriers
 	sfz::ArrayLocal<CD3DX12_RESOURCE_BARRIER, ZG_MAX_NUM_MIPMAPS> barriers;
-	for (uint32_t i = 0; i < texture->numMipmaps; i++) {
+	for (u32 i = 0; i < texture->numMipmaps; i++) {
 		if (pendingStates[i]->currentState != requiredState) {
 			barriers.add(CD3DX12_RESOURCE_BARRIER::Transition(
 				texture->resource.resource,
@@ -134,7 +134,7 @@ inline void executeCommandLists(
 	ID3D12CommandQueue& queue,
 	ID3D12CommandList* const* cmdLists,
 	ZgTrackerCommandListState* const* cmdListStates,
-	uint32_t numCmdLists,
+	u32 numCmdLists,
 	ExecBarriersFunc execBarriers,
 	bool isBarrierList) noexcept
 {
@@ -145,13 +145,13 @@ inline void executeCommandLists(
 	if (!isBarrierList) {
 
 		// Temporary storage array for the barriers to insert
-		uint32_t numBarriers = 0;
-		constexpr uint32_t MAX_NUM_BARRIERS = 512;
+		u32 numBarriers = 0;
+		constexpr u32 MAX_NUM_BARRIERS = 512;
 		CD3DX12_RESOURCE_BARRIER barriers[MAX_NUM_BARRIERS] = {};
 
 		// Gather buffer barriers
 		const PendingBufferState* pendingBuffers = tracking.pendingBuffers.values();
-		for (uint32_t i = 0; i < tracking.pendingBuffers.size(); i++) {
+		for (u32 i = 0; i < tracking.pendingBuffers.size(); i++) {
 			const PendingBufferState& state = pendingBuffers[i];
 
 			// Don't insert barrier if resource already is in correct state
@@ -171,7 +171,7 @@ inline void executeCommandLists(
 
 		// Gather texture barriers
 		const PendingTextureState* pendingTextures = tracking.pendingTextureMips.values();
-		for (uint32_t i = 0; i < tracking.pendingTextureMips.size(); i++) {
+		for (u32 i = 0; i < tracking.pendingTextureMips.size(); i++) {
 			const PendingTextureState& state = pendingTextures[i];
 
 			// Don't insert barrier if resource already is in correct state
@@ -200,11 +200,11 @@ inline void executeCommandLists(
 	// TODO: This is problematic and we probably need to something smarter. TL;DR, this comitted
 	//       state is shared between all queues. Maybe it is enough to just put a mutex around it,
 	//       but it is not obvious to me that that would be enough.
-		for (uint32_t i = 0; i < tracking.pendingBuffers.size(); i++) {
+		for (u32 i = 0; i < tracking.pendingBuffers.size(); i++) {
 			const PendingBufferState& state = pendingBuffers[i];
 			state.buffer->tracking.lastCommittedState = state.currentState;
 		}
-		for (uint32_t i = 0; i < tracking.pendingTextureMips.size(); i++) {
+		for (u32 i = 0; i < tracking.pendingTextureMips.size(); i++) {
 			const PendingTextureState& state = pendingTextures[i];
 			state.texture->mipTrackings[state.mipLevel].lastCommittedState = state.currentState;
 		}

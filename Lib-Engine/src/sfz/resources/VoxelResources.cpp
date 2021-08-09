@@ -38,7 +38,7 @@ static SfzAllocator* voxAllocator = nullptr;
 
 static void* ogtVoxMallocWrapper(size_t size)
 {
-	return voxAllocator->alloc(sfz_dbg("opengametools"), uint64_t(size));
+	return voxAllocator->alloc(sfz_dbg("opengametools"), u64(size));
 }
 
 static void ogtVoxFreeWrapper(void* mem)
@@ -52,14 +52,14 @@ static void ogtVoxFreeWrapper(void* mem)
 bool VoxelModelResource::build(SfzAllocator* allocator)
 {
 	// Load file
-	Array<uint8_t> file = readBinaryFile(this->path, allocator);
+	Array<u8> file = readBinaryFile(this->path, allocator);
 	if (file.size() == 0) {
 		SFZ_ERROR("VoxelModelResource", "Failed to load file: \"%s\"", path.str());
 		return false;
 	}
 
 	// Parse file
-	const uint32_t readFlags = 0; // k_read_scene_flags_groups
+	const u32 readFlags = 0; // k_read_scene_flags_groups
 	const ogt_vox_scene* scene = ogt_vox_read_scene_with_flags(file.data(), file.size(), readFlags);
 	if (scene == nullptr) {
 		SFZ_ERROR("VoxelModelResource", "Failed to parse file: \"%s\"", path.str());
@@ -78,23 +78,23 @@ bool VoxelModelResource::build(SfzAllocator* allocator)
 
 	// Copy voxels to voxel model
 	this->dims = vec3_u32(model.size_x, model.size_y, model.size_z);
-	const uint32_t maxNumVoxels = model.size_x * model.size_y * model.size_z;
+	const u32 maxNumVoxels = model.size_x * model.size_y * model.size_z;
 	this->voxels.init(maxNumVoxels, allocator, sfz_dbg(""));
 	this->voxels.add(model.voxel_data, maxNumVoxels);
 
 	// Find highest voxel value and number of non-empty voxels
-	uint32_t highestVoxelVal = 0;
+	u32 highestVoxelVal = 0;
 	this->numVoxels = 0;
 	bool materialUsed[256] = {};
-	for (uint8_t voxel : this->voxels) {
+	for (u8 voxel : this->voxels) {
 		materialUsed[voxel] = true;
-		highestVoxelVal = sfz::max(highestVoxelVal, uint32_t(voxel));
-		if (voxel != uint8_t(0)) this->numVoxels += 1;
+		highestVoxelVal = sfz::max(highestVoxelVal, u32(voxel));
+		if (voxel != u8(0)) this->numVoxels += 1;
 	}
 
 	// Copy palette to voxel model, remove materials which are not used by voxel model
 	this->palette.clear();
-	for (uint32_t i = 0; i <= highestVoxelVal; i++) {
+	for (u32 i = 0; i <= highestVoxelVal; i++) {
 		vec4_u8& dst = this->palette.add();
 		if (materialUsed[i]) {
 			ogt_vox_rgba color = scene->palette.color[i];

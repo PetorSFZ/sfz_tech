@@ -30,13 +30,10 @@
 // Macros and includes
 // ------------------------------------------------------------------------------------------------
 
-#include <stdint.h>
-
 #include <sfz.h>
 
 #ifdef __cplusplus
 #include <assert.h>
-#include <utility> // std::swap()
 #endif
 
 #if defined(_WIN32)
@@ -55,9 +52,9 @@
 	struct name; \
 	typedef struct name name
 
-// Macro to simplify the creation of C enums. All ZeroG enums have the type int32_t.
+// Macro to simplify the creation of C enums. All ZeroG enums have the type i32.
 #define ZG_ENUM(name) \
-	typedef int32_t name; \
+	typedef i32 name; \
 	enum name ## Enum
 
 // ZeroG handles
@@ -86,13 +83,13 @@ ZG_ENUM(ZgBool) {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const uint32_t ZG_COMPILED_API_VERSION = 38;
+static const u32 ZG_COMPILED_API_VERSION = 38;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
 // As long as the DLL has the same API version as the version you compiled with it should be
 // compatible.
-ZG_API uint32_t zgApiLinkedVersion(void);
+ZG_API u32 zgApiLinkedVersion(void);
 
 // Backends
 // ------------------------------------------------------------------------------------------------
@@ -162,7 +159,7 @@ struct ManagedHandle {
 	~ManagedHandle() noexcept { this->destroy(); }
 
 	bool valid() const { return handle != nullptr; }
-	void swap(ManagedHandle& other) noexcept { std::swap(this->handle, other.handle); }
+	void swap(ManagedHandle& o) noexcept { HandleT* tmp = this->handle; this->handle = o.handle; o.handle = tmp; }
 	void destroy() noexcept { if (handle != nullptr) { DestroyFunc(handle); } handle = nullptr; }
 };
 
@@ -188,7 +185,7 @@ ZG_ENUM(ZgMemoryType) {
 
 sfz_struct(ZgBufferCreateInfo) {
 	ZgMemoryType memoryType;
-	uint64_t sizeInBytes;
+	u64 sizeInBytes;
 	ZgBool committedAllocation;
 	const char* debugName;
 };
@@ -202,15 +199,15 @@ ZG_API void zgBufferDestroy(
 
 ZG_API ZgResult zgBufferMemcpyUpload(
 	ZgBuffer* dstBuffer,
-	uint64_t dstBufferOffsetBytes,
+	u64 dstBufferOffsetBytes,
 	const void* srcMemory,
-	uint64_t numBytes);
+	u64 numBytes);
 
 ZG_API ZgResult zgBufferMemcpyDownload(
 	void* dstMemory,
 	ZgBuffer* srcBuffer,
-	uint64_t srcBufferOffsetBytes,
-	uint64_t numBytes);
+	u64 srcBufferOffsetBytes,
+	u64 numBytes);
 
 #ifdef __cplusplus
 namespace zg {
@@ -218,7 +215,7 @@ namespace zg {
 class Buffer final : public ManagedHandle<ZgBuffer, zgBufferDestroy> {
 public:
 	[[nodiscard]] ZgResult create(
-		uint64_t sizeBytes,
+		u64 sizeBytes,
 		ZgMemoryType type = ZG_MEMORY_TYPE_DEVICE,
 		bool committedAllocation = false,
 		const char* debugName = nullptr)
@@ -232,12 +229,12 @@ public:
 		return zgBufferCreate(&handle, &info);
 	}
 
-	[[nodiscard]] ZgResult memcpyUpload(uint64_t bufferOffsetBytes, const void* srcMemory, uint64_t numBytes)
+	[[nodiscard]] ZgResult memcpyUpload(u64 bufferOffsetBytes, const void* srcMemory, u64 numBytes)
 	{
 		return zgBufferMemcpyUpload(this->handle, bufferOffsetBytes, srcMemory, numBytes);
 	}
 
-	[[nodiscard]] ZgResult memcpyDownload(void* dstMemory, uint64_t srcBufferOffsetBytes, uint64_t numBytes)
+	[[nodiscard]] ZgResult memcpyDownload(void* dstMemory, u64 srcBufferOffsetBytes, u64 numBytes)
 	{
 		return zgBufferMemcpyDownload(dstMemory, this->handle, srcBufferOffsetBytes, numBytes);
 	}
@@ -249,7 +246,7 @@ public:
 // Textures
 // ------------------------------------------------------------------------------------------------
 
-static const uint32_t ZG_MAX_NUM_MIPMAPS = 12;
+static const u32 ZG_MAX_NUM_MIPMAPS = 12;
 
 ZG_ENUM(ZgTextureFormat) {
 	ZG_TEXTURE_FORMAT_UNDEFINED = 0,
@@ -305,14 +302,14 @@ sfz_struct(ZgTextureCreateInfo) {
 	ZgOptimalClearValue optimalClearValue;
 
 	// The dimensions of the texture
-	uint32_t width;
-	uint32_t height;
+	u32 width;
+	u32 height;
 
 	// The number of mipmaps
 	//
 	// 1 equals no mipmaps, i.e. only a single layer. May not be 0, must be smaller than or equal
 	// to ZG_TEXTURE_2D_MAX_NUM_MIPMAPS.
-	uint32_t numMipmaps;
+	u32 numMipmaps;
 
 	const char* debugName;
 };
@@ -324,7 +321,7 @@ ZG_API ZgResult zgTextureCreate(
 ZG_API void zgTextureDestroy(
 	ZgTexture* texture);
 
-ZG_API uint32_t zgTextureSizeInBytes(
+ZG_API u32 zgTextureSizeInBytes(
 	const ZgTexture* texture);
 
 #ifdef __cplusplus
@@ -338,7 +335,7 @@ public:
 		return zgTextureCreate(&this->handle, &createInfo);
 	}
 
-	uint32_t sizeInBytes() const { return zgTextureSizeInBytes(this->handle); }
+	u32 sizeInBytes() const { return zgTextureSizeInBytes(this->handle); }
 };
 
 } // namespace zg
@@ -348,28 +345,28 @@ public:
 // ------------------------------------------------------------------------------------------------
 
 // The maximum number of constant buffers allowed on a single pipeline.
-static const uint32_t ZG_MAX_NUM_CONSTANT_BUFFERS = 16;
+static const u32 ZG_MAX_NUM_CONSTANT_BUFFERS = 16;
 
 // The maximum number of unordered buffers allowed on a single pipeline.
-static const uint32_t ZG_MAX_NUM_UNORDERED_BUFFERS = 16;
+static const u32 ZG_MAX_NUM_UNORDERED_BUFFERS = 16;
 
 // The maximum number of textures allowed on a single pipeline.
-static const uint32_t ZG_MAX_NUM_TEXTURES = 16;
+static const u32 ZG_MAX_NUM_TEXTURES = 16;
 
 // The maximum number of unordered textures on a single pipeline.
-static const uint32_t ZG_MAX_NUM_UNORDERED_TEXTURES = 16;
+static const u32 ZG_MAX_NUM_UNORDERED_TEXTURES = 16;
 
 // The maximum number of samplers allowed on a single pipeline.
-static const uint32_t ZG_MAX_NUM_SAMPLERS = 8;
+static const u32 ZG_MAX_NUM_SAMPLERS = 8;
 
 sfz_struct(ZgConstantBufferBindingDesc) {
 
 	// Which register this buffer corresponds to in the shader. In D3D12 this is the "register"
 	// keyword, i.e. a value of 0 would mean "register(b0)".
-	uint32_t bufferRegister;
+	u32 bufferRegister;
 
 	// Size of the buffer in bytes
-	uint32_t sizeInBytes;
+	u32 sizeInBytes;
 
 	// Whether the buffer is a push constant or not
 	//
@@ -386,19 +383,19 @@ sfz_struct(ZgUnorderedBufferBindingDesc) {
 
 	// Which register this buffer corresponds to in the shader.In D3D12 this is the "register"
 	// keyword, i.e. a value of 0 would mean "register(u0)".
-	uint32_t unorderedRegister;
+	u32 unorderedRegister;
 };
 
 sfz_struct(ZgTextureBindingDesc) {
 
 	// Which register this texture corresponds to in the shader.
-	uint32_t textureRegister;
+	u32 textureRegister;
 };
 
 sfz_struct(ZgUnorderedTextureBindingDesc) {
 
 	// Which register this texture corresponds to in the shader.
-	uint32_t unorderedRegister;
+	u32 unorderedRegister;
 };
 
 // A struct representing the signature of a pipeline, indicating what resources can be bound to it.
@@ -408,57 +405,57 @@ sfz_struct(ZgUnorderedTextureBindingDesc) {
 sfz_struct(ZgPipelineBindingsSignature) {
 
 	// The constant buffers
-	uint32_t numConstBuffers;
+	u32 numConstBuffers;
 	ZgConstantBufferBindingDesc constBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
 
 	// The unordered buffers
-	uint32_t numUnorderedBuffers;
+	u32 numUnorderedBuffers;
 	ZgUnorderedBufferBindingDesc unorderedBuffers[ZG_MAX_NUM_UNORDERED_BUFFERS];
 
 	// The textures
-	uint32_t numTextures;
+	u32 numTextures;
 	ZgTextureBindingDesc textures[ZG_MAX_NUM_TEXTURES];
 
 	// The unordered textures
-	uint32_t numUnorderedTextures;
+	u32 numUnorderedTextures;
 	ZgUnorderedTextureBindingDesc unorderedTextures[ZG_MAX_NUM_UNORDERED_TEXTURES];
 };
 
 sfz_struct(ZgConstantBufferBinding) {
-	uint32_t bufferRegister;
+	u32 bufferRegister;
 	ZgBuffer* buffer;
 };
 
 sfz_struct(ZgUnorderedBufferBinding) {
 
 	// Register the unordered buffer is bound to
-	uint32_t unorderedRegister;
+	u32 unorderedRegister;
 
 	// The first element in the buffer (0 to bind from start of buffer)
-	uint32_t firstElementIdx;
+	u32 firstElementIdx;
 
 	// The number of elements to bind in the buffer
-	uint32_t numElements;
+	u32 numElements;
 
 	// The stride (size most of the time) between elements in the buffer in bytes
-	uint32_t elementStrideBytes;
+	u32 elementStrideBytes;
 
 	// The buffer to bind as an unordered buffer
 	ZgBuffer* buffer;
 };
 
 sfz_struct(ZgTextureBinding) {
-	uint32_t textureRegister;
+	u32 textureRegister;
 	ZgTexture* texture;
 };
 
 sfz_struct(ZgUnorderedTextureBinding) {
 
 	// Register the unordered texture is bound to
-	uint32_t unorderedRegister;
+	u32 unorderedRegister;
 
 	// The mip level to bind
-	uint32_t mipLevel;
+	u32 mipLevel;
 
 	// The texture to bind as an unordered texture
 	ZgTexture* texture;
@@ -467,19 +464,19 @@ sfz_struct(ZgUnorderedTextureBinding) {
 sfz_struct(ZgPipelineBindings) {
 
 	// The constant buffers to bind
-	uint32_t numConstantBuffers;
+	u32 numConstantBuffers;
 	ZgConstantBufferBinding constantBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
 
 	// The unordered buffers to bind
-	uint32_t numUnorderedBuffers;
+	u32 numUnorderedBuffers;
 	ZgUnorderedBufferBinding unorderedBuffers[ZG_MAX_NUM_UNORDERED_BUFFERS];
 
 	// The textures to bind
-	uint32_t numTextures;
+	u32 numTextures;
 	ZgTextureBinding textures[ZG_MAX_NUM_TEXTURES];
 
 	// The unordered textures to bind
-	uint32_t numUnorderedTextures;
+	u32 numUnorderedTextures;
 	ZgUnorderedTextureBinding unorderedTextures[ZG_MAX_NUM_UNORDERED_TEXTURES];
 };
 
@@ -503,7 +500,7 @@ public:
 		return *this;
 	}
 
-	PipelineBindings& addConstantBuffer(uint32_t bufferRegister, Buffer& buffer)
+	PipelineBindings& addConstantBuffer(u32 bufferRegister, Buffer& buffer)
 	{
 		ZgConstantBufferBinding binding = {};
 		binding.bufferRegister = bufferRegister;
@@ -520,19 +517,19 @@ public:
 	}
 
 	PipelineBindings& addUnorderedBuffer(
-		uint32_t unorderedRegister,
-		uint32_t numElements,
-		uint32_t elementStrideBytes,
+		u32 unorderedRegister,
+		u32 numElements,
+		u32 elementStrideBytes,
 		Buffer& buffer)
 	{
 		return this->addUnorderedBuffer(unorderedRegister, 0, numElements, elementStrideBytes, buffer);
 	}
 
 	PipelineBindings& addUnorderedBuffer(
-		uint32_t unorderedRegister,
-		uint32_t firstElementIdx,
-		uint32_t numElements,
-		uint32_t elementStrideBytes,
+		u32 unorderedRegister,
+		u32 firstElementIdx,
+		u32 numElements,
+		u32 elementStrideBytes,
 		Buffer& buffer)
 	{
 		ZgUnorderedBufferBinding binding = {};
@@ -552,7 +549,7 @@ public:
 		return *this;
 	}
 
-	PipelineBindings& addTexture(uint32_t textureRegister, Texture& texture)
+	PipelineBindings& addTexture(u32 textureRegister, Texture& texture)
 	{
 		ZgTextureBinding binding;
 		binding.textureRegister = textureRegister;
@@ -569,8 +566,8 @@ public:
 	}
 
 	PipelineBindings& addUnorderedTexture(
-		uint32_t unorderedRegister,
-		uint32_t mipLevel,
+		u32 unorderedRegister,
+		u32 mipLevel,
 		Texture& texture)
 	{
 		ZgUnorderedTextureBinding binding = {};
@@ -600,7 +597,7 @@ ZG_ENUM(ZgShaderModel) {
 };
 
 // The maximum number of compiler flags allowed to the DXC shader compiler
-static const uint32_t ZG_MAX_NUM_DXC_COMPILER_FLAGS = 8;
+static const u32 ZG_MAX_NUM_DXC_COMPILER_FLAGS = 8;
 
 // Compile settings to the HLSL compiler
 sfz_struct(ZgPipelineCompileSettingsHLSL) {
@@ -655,7 +652,7 @@ sfz_struct(ZgSampler) {
 	// Offset from the calculated mipmap level. E.g., if mipmap level 2 is calculated in the shader
 	// and the lod bias is -1, then level 1 will be used instead. Level 0 is the highest resolution
 	// texture.
-	float mipLodBias;
+	f32 mipLodBias;
 
 	// Comparison func, mainly used to access hardware 2x2 PCF for shadow maps. If this is specified
 	// to be anything but NONE the sampler turns into a comparison sampler.
@@ -678,15 +675,15 @@ sfz_struct(ZgPipelineComputeCreateInfo) {
 	// A list of constant buffer registers which should be declared as push constants. This is an
 	// optimization, however it can lead to worse performance if used improperly. Can be left empty
 	// if unsure.
-	uint32_t numPushConstants;
-	uint32_t pushConstantRegisters[ZG_MAX_NUM_CONSTANT_BUFFERS];
+	u32 numPushConstants;
+	u32 pushConstantRegisters[ZG_MAX_NUM_CONSTANT_BUFFERS];
 
 	// A list of samplers used by the pipeline
 	//
 	// Note: For D3D12 the first sampler in the array (0th) corresponds with the 0th sampler
 	//       register, etc. E.g. meaning if you have three samplers, they need to have the
 	//       registers 0, 1, 2.
-	uint32_t numSamplers;
+	u32 numSamplers;
 	ZgSampler samplers[ZG_MAX_NUM_SAMPLERS];
 };
 
@@ -704,9 +701,9 @@ ZG_API void zgPipelineComputeGetBindingsSignature(
 
 ZG_API void zgPipelineComputeGetGroupDimensions(
 	const ZgPipelineCompute* pipeline,
-	uint32_t* groupDimXOut,
-	uint32_t* groupDimYOut,
-	uint32_t* groupDimZOut);
+	u32* groupDimXOut,
+	u32* groupDimYOut,
+	u32* groupDimZOut);
 
 #ifdef __cplusplus
 namespace zg {
@@ -729,7 +726,7 @@ public:
 		return tmp;
 	}
 
-	void getGroupDims(uint32_t& groupDimXOut, uint32_t& groupDimYOut, uint32_t& groupDimZOut) const
+	void getGroupDims(u32& groupDimXOut, u32& groupDimYOut, u32& groupDimZOut) const
 	{
 		zgPipelineComputeGetGroupDimensions(this->handle, &groupDimXOut, &groupDimYOut, &groupDimZOut);
 	}
@@ -760,7 +757,7 @@ public:
 		return *this;
 	}
 
-	PipelineComputeBuilder& addPushConstant(uint32_t constantBufferRegister)
+	PipelineComputeBuilder& addPushConstant(u32 constantBufferRegister)
 	{
 		assert(createInfo.numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
 		createInfo.pushConstantRegisters[createInfo.numPushConstants] = constantBufferRegister;
@@ -768,7 +765,7 @@ public:
 		return *this;
 	}
 
-	PipelineComputeBuilder& addSampler(uint32_t samplerRegister, ZgSampler sampler)
+	PipelineComputeBuilder& addSampler(u32 samplerRegister, ZgSampler sampler)
 	{
 		assert(samplerRegister == createInfo.numSamplers);
 		assert(createInfo.numSamplers < ZG_MAX_NUM_SAMPLERS);
@@ -778,11 +775,11 @@ public:
 	}
 
 	PipelineComputeBuilder& addSampler(
-		uint32_t samplerRegister,
+		u32 samplerRegister,
 		ZgSamplingMode samplingMode,
 		ZgWrappingMode wrappingModeU = ZG_WRAPPING_MODE_CLAMP,
 		ZgWrappingMode wrappingModeV = ZG_WRAPPING_MODE_CLAMP,
-		float mipLodBias = 0.0f)
+		f32 mipLodBias = 0.0f)
 	{
 		ZgSampler sampler = {};
 		sampler.samplingMode = samplingMode;
@@ -817,10 +814,10 @@ public:
 // ------------------------------------------------------------------------------------------------
 
 // The maximum number of vertex attributes allowed as input to a vertex shader
-static const uint32_t ZG_MAX_NUM_VERTEX_ATTRIBUTES = 8;
+static const u32 ZG_MAX_NUM_VERTEX_ATTRIBUTES = 8;
 
 // The maximum number of render targets allowed on a single pipeline
-static const uint32_t ZG_MAX_NUM_RENDER_TARGETS = 8;
+static const u32 ZG_MAX_NUM_RENDER_TARGETS = 8;
 
 // The type of data contained in a vertex
 ZG_ENUM(ZgVertexAttributeType) {
@@ -849,10 +846,10 @@ sfz_struct(ZgVertexAttribute) {
 	// For HLSL the semantic name need to be "TEXCOORD<attributeLocation>"
 	// E.g.:
 	// struct VSInput {
-	//     float3 position : TEXCOORD0;
-	//     float3 normal : TEXCOORD1;
+	//     f323 position : TEXCOORD0;
+	//     f323 normal : TEXCOORD1;
 	// }
-	uint32_t location;
+	u32 location;
 
 	// Which vertex buffer slot the attribute should be read from.
 	//
@@ -860,13 +857,13 @@ sfz_struct(ZgVertexAttribute) {
 	// of a vertex struct of some kind), this parameter should typically be 0.
 	//
 	// This corresponds to the "vertexBufferSlot" parameter in zgCommandListSetVertexBuffer().
-	uint32_t vertexBufferSlot;
+	u32 vertexBufferSlot;
 
 	// The data type
 	ZgVertexAttributeType type;
 
 	// Offset in bytes from start of buffer to the first element of this type.
-	uint32_t offsetToFirstElementInBytes;
+	u32 offsetToFirstElementInBytes;
 };
 
 // A struct representing the rendering signature of a render pipeline.
@@ -881,11 +878,11 @@ sfz_struct(ZgPipelineRenderSignature) {
 	ZgPipelineBindingsSignature bindings;
 
 	// The vertex attributes to the vertex shader
-	uint32_t numVertexAttributes;
+	u32 numVertexAttributes;
 	ZgVertexAttribute vertexAttributes[ZG_MAX_NUM_VERTEX_ATTRIBUTES];
 
 	// Render targets
-	uint32_t numRenderTargets;
+	u32 numRenderTargets;
 	ZgTextureFormat renderTargets[ZG_MAX_NUM_RENDER_TARGETS];
 };
 
@@ -913,17 +910,17 @@ sfz_struct(ZgRasterizerSettings) {
 	// Depth bias added to each pixel.
 	//
 	// For D3D12, see: https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-output-merger-stage-depth-bias
-	int32_t depthBias;
+	i32 depthBias;
 
 	// Depth bias for each pixel's slope.
 	//
 	// For D3D12, see: https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-output-merger-stage-depth-bias
-	float depthBiasSlopeScaled;
+	f32 depthBiasSlopeScaled;
 
 	// The max depth bias for a pixel.
 	//
 	// For D3D12, see: https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-output-merger-stage-depth-bias
-	float depthBiasClamp;
+	f32 depthBiasClamp;
 };
 
 ZG_ENUM(ZgBlendFunc) {
@@ -980,32 +977,32 @@ sfz_struct(ZgPipelineRenderCreateInfo) {
 	const char* pixelShaderEntry;
 
 	// The vertex attributes to the vertex shader
-	uint32_t numVertexAttributes;
+	u32 numVertexAttributes;
 	ZgVertexAttribute vertexAttributes[ZG_MAX_NUM_VERTEX_ATTRIBUTES];
 
 	// The number of vertex buffer slots used by the vertex attributes
 	//
 	// If only one buffer is used (i.e. array of vertex struct) then numVertexBufferSlots should be
 	// 1 and vertexBufferStrides[0] should be sizeof(Vertex) stored in your buffer.
-	uint32_t numVertexBufferSlots;
-	uint32_t vertexBufferStridesBytes[ZG_MAX_NUM_VERTEX_ATTRIBUTES];
+	u32 numVertexBufferSlots;
+	u32 vertexBufferStridesBytes[ZG_MAX_NUM_VERTEX_ATTRIBUTES];
 
 	// A list of constant buffer registers which should be declared as push constants. This is an
 	// optimization, however it can lead to worse performance if used improperly. Can be left empty
 	// if unsure.
-	uint32_t numPushConstants;
-	uint32_t pushConstantRegisters[ZG_MAX_NUM_CONSTANT_BUFFERS];
+	u32 numPushConstants;
+	u32 pushConstantRegisters[ZG_MAX_NUM_CONSTANT_BUFFERS];
 
 	// A list of samplers used by the pipeline
 	//
 	// Note: For D3D12 the first sampler in the array (0th) corresponds with the 0th sampler
 	//       register, etc. E.g. meaning if you have three samplers, they need to have the
 	//       registers 0, 1, 2.
-	uint32_t numSamplers;
+	u32 numSamplers;
 	ZgSampler samplers[ZG_MAX_NUM_SAMPLERS];
 
 	// A list of render targets used by the pipeline
-	uint32_t numRenderTargets;
+	u32 numRenderTargets;
 	ZgTextureFormat renderTargets[ZG_MAX_NUM_RENDER_TARGETS];
 
 	// Rasterizer settings
@@ -1116,10 +1113,10 @@ public:
 	}
 
 	PipelineRenderBuilder& addVertexAttribute(
-		uint32_t location,
-		uint32_t vertexBufferSlot,
+		u32 location,
+		u32 vertexBufferSlot,
 		ZgVertexAttributeType type,
-		uint32_t offsetInBuffer)
+		u32 offsetInBuffer)
 	{
 		ZgVertexAttribute attribute = {};
 		attribute.location = location;
@@ -1130,7 +1127,7 @@ public:
 	}
 
 	PipelineRenderBuilder& addVertexBufferInfo(
-		uint32_t slot, uint32_t vertexBufferStrideBytes)
+		u32 slot, u32 vertexBufferStrideBytes)
 	{
 		assert(slot == createInfo.numVertexBufferSlots);
 		assert(createInfo.numVertexBufferSlots < ZG_MAX_NUM_VERTEX_ATTRIBUTES);
@@ -1139,7 +1136,7 @@ public:
 		return *this;
 	}
 
-	PipelineRenderBuilder& addPushConstant(uint32_t constantBufferRegister)
+	PipelineRenderBuilder& addPushConstant(u32 constantBufferRegister)
 	{
 		assert(createInfo.numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
 		createInfo.pushConstantRegisters[createInfo.numPushConstants] = constantBufferRegister;
@@ -1147,7 +1144,7 @@ public:
 		return *this;
 	}
 
-	PipelineRenderBuilder& addSampler(uint32_t samplerRegister, ZgSampler sampler)
+	PipelineRenderBuilder& addSampler(u32 samplerRegister, ZgSampler sampler)
 	{
 		assert(samplerRegister == createInfo.numSamplers);
 		assert(createInfo.numSamplers < ZG_MAX_NUM_SAMPLERS);
@@ -1157,11 +1154,11 @@ public:
 	}
 
 	PipelineRenderBuilder& addSampler(
-		uint32_t samplerRegister,
+		u32 samplerRegister,
 		ZgSamplingMode samplingMode,
 		ZgWrappingMode wrappingModeU = ZG_WRAPPING_MODE_CLAMP,
 		ZgWrappingMode wrappingModeV = ZG_WRAPPING_MODE_CLAMP,
-		float mipLodBias = 0.0f)
+		f32 mipLodBias = 0.0f)
 	{
 		ZgSampler sampler = {};
 		sampler.samplingMode = samplingMode;
@@ -1201,7 +1198,7 @@ public:
 	}
 
 	PipelineRenderBuilder& setDepthBias(
-		int32_t bias, float biasSlopeScaled, float biasClamp = 0.0f)
+		i32 bias, f32 biasSlopeScaled, f32 biasClamp = 0.0f)
 	{
 		createInfo.rasterizer.depthBias = bias;
 		createInfo.rasterizer.depthBiasSlopeScaled = biasSlopeScaled;
@@ -1285,7 +1282,7 @@ public:
 sfz_struct(ZgFramebufferCreateInfo) {
 
 	// Render targets
-	uint32_t numRenderTargets;
+	u32 numRenderTargets;
 	ZgTexture* renderTargets[ZG_MAX_NUM_RENDER_TARGETS];
 
 	// Depth buffer
@@ -1303,8 +1300,8 @@ ZG_API void zgFramebufferDestroy(
 
 ZG_API ZgResult zgFramebufferGetResolution(
 	const ZgFramebuffer* framebuffer,
-	uint32_t* widthOut,
-	uint32_t* heightOut);
+	u32* widthOut,
+	u32* heightOut);
 
 #ifdef __cplusplus
 namespace zg {
@@ -1317,7 +1314,7 @@ public:
 		return zgFramebufferCreate(&this->handle, &createInfo);
 	}
 
-	[[nodiscard]] ZgResult getResolution(uint32_t& widthOut, uint32_t& heightOut) const
+	[[nodiscard]] ZgResult getResolution(u32& widthOut, u32& heightOut) const
 	{
 		return zgFramebufferGetResolution(this->handle, &widthOut, &heightOut);
 	}
@@ -1335,7 +1332,7 @@ public:
 	FramebufferBuilder& addRenderTarget(Texture& renderTarget)
 	{
 		assert(createInfo.numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
-		uint32_t idx = createInfo.numRenderTargets;
+		u32 idx = createInfo.numRenderTargets;
 		createInfo.numRenderTargets += 1;
 		createInfo.renderTargets[idx] = renderTarget.handle;
 		return *this;
@@ -1365,7 +1362,7 @@ sfz_struct(ZgProfilerCreateInfo) {
 	// older measurements will automatically be thrown out to make room for newer ones. In other
 	// words, this should be at least "number of measurements per frame" times "number of frames
 	// before syncing".
-	uint32_t maxNumMeasurements;
+	u32 maxNumMeasurements;
 };
 
 ZG_API ZgResult zgProfilerCreate(
@@ -1384,8 +1381,8 @@ ZG_API void zgProfilerDestroy(
 //       out and replaced with a newer one.
 ZG_API ZgResult zgProfilerGetMeasurement(
 	ZgProfiler* profiler,
-	uint64_t measurementId,
-	float* measurementMsOut);
+	u64 measurementId,
+	f32* measurementMsOut);
 
 #ifdef __cplusplus
 namespace zg {
@@ -1399,8 +1396,8 @@ public:
 	}
 
 	[[nodiscard]] ZgResult getMeasurement(
-		uint64_t measurementId,
-		float& measurementMsOut)
+		u64 measurementId,
+		f32& measurementMsOut)
 	{
 		return zgProfilerGetMeasurement(this->handle, measurementId, &measurementMsOut);
 	}
@@ -1476,21 +1473,21 @@ public:
 // ------------------------------------------------------------------------------------------------
 
 sfz_struct(ZgRect) {
-	uint32_t topLeftX, topLeftY, width, height;
+	u32 topLeftX, topLeftY, width, height;
 };
 
 sfz_struct(ZgImageViewConstCpu) {
 	ZgTextureFormat format;
 	const void* data;
-	uint32_t width;
-	uint32_t height;
-	uint32_t pitchInBytes;
+	u32 width;
+	u32 height;
+	u32 pitchInBytes;
 };
 
 ZG_API ZgResult zgCommandListBeginEvent(
 	ZgCommandList* commandList,
 	const char* name,
-	const float* optionalRgbaColor);
+	const f32* optionalRgbaColor);
 
 ZG_API ZgResult zgCommandListEndEvent(
 	ZgCommandList* commandList);
@@ -1498,10 +1495,10 @@ ZG_API ZgResult zgCommandListEndEvent(
 ZG_API ZgResult zgCommandListMemcpyBufferToBuffer(
 	ZgCommandList* commandList,
 	ZgBuffer* dstBuffer,
-	uint64_t dstBufferOffsetBytes,
+	u64 dstBufferOffsetBytes,
 	ZgBuffer* srcBuffer,
-	uint64_t srcBufferOffsetBytes,
-	uint64_t numBytes);
+	u64 srcBufferOffsetBytes,
+	u64 numBytes);
 
 // Copies an image from the CPU to a texture on the GPU.
 //
@@ -1513,7 +1510,7 @@ ZG_API ZgResult zgCommandListMemcpyBufferToBuffer(
 ZG_API ZgResult zgCommandListMemcpyToTexture(
 	ZgCommandList* commandList,
 	ZgTexture* dstTexture,
-	uint32_t dstTextureMipLevel,
+	u32 dstTextureMipLevel,
 	const ZgImageViewConstCpu* srcImageCpu,
 	ZgBuffer* tempUploadBuffer);
 
@@ -1538,9 +1535,9 @@ ZG_API ZgResult zgCommandListEnableQueueTransitionTexture(
 
 ZG_API ZgResult zgCommandListSetPushConstant(
 	ZgCommandList* commandList,
-	uint32_t shaderRegister,
+	u32 shaderRegister,
 	const void* data,
-	uint32_t dataSizeInBytes);
+	u32 dataSizeInBytes);
 
 ZG_API ZgResult zgCommandListSetPipelineBindings(
 	ZgCommandList* commandList,
@@ -1578,9 +1575,9 @@ ZG_API ZgResult zgCommandListUnorderedBarrierAll(
 
 ZG_API ZgResult zgCommandListDispatchCompute(
 	ZgCommandList* commandList,
-	uint32_t groupCountX,
-	uint32_t groupCountY,
-	uint32_t groupCountZ);
+	u32 groupCountX,
+	u32 groupCountY,
+	u32 groupCountZ);
 
 ZG_API ZgResult zgCommandListSetPipelineRender(
 	ZgCommandList* commandList,
@@ -1605,21 +1602,21 @@ ZG_API ZgResult zgCommandListSetFramebufferScissor(
 
 ZG_API ZgResult zgCommandListClearRenderTargetOptimal(
 	ZgCommandList* commandList,
-	uint32_t renderTargetIdx);
+	u32 renderTargetIdx);
 
 ZG_API ZgResult zgCommandListClearRenderTargets(
 	ZgCommandList* commandList,
-	float red,
-	float green,
-	float blue,
-	float alpha);
+	f32 red,
+	f32 green,
+	f32 blue,
+	f32 alpha);
 
 ZG_API ZgResult zgCommandListClearRenderTargetsOptimal(
 	ZgCommandList* commandList);
 
 ZG_API ZgResult zgCommandListClearDepthBuffer(
 	ZgCommandList* commandList,
-	float depth);
+	f32 depth);
 
 ZG_API ZgResult zgCommandListClearDepthBufferOptimal(
 	ZgCommandList* commandList);
@@ -1636,18 +1633,18 @@ ZG_API ZgResult zgCommandListSetIndexBuffer(
 
 ZG_API ZgResult zgCommandListSetVertexBuffer(
 	ZgCommandList* commandList,
-	uint32_t vertexBufferSlot,
+	u32 vertexBufferSlot,
 	ZgBuffer* vertexBuffer);
 
 ZG_API ZgResult zgCommandListDrawTriangles(
 	ZgCommandList* commandList,
-	uint32_t startVertexIndex,
-	uint32_t numVertices);
+	u32 startVertexIndex,
+	u32 numVertices);
 
 ZG_API ZgResult zgCommandListDrawTrianglesIndexed(
 	ZgCommandList* commandList,
-	uint32_t startIndex,
-	uint32_t numIndices);
+	u32 startIndex,
+	u32 numIndices);
 
 // Begins profiling operations from this point until zgCommandListProfileEnd() is called.
 //
@@ -1656,19 +1653,19 @@ ZG_API ZgResult zgCommandListDrawTrianglesIndexed(
 ZG_API ZgResult zgCommandListProfileBegin(
 	ZgCommandList* commandList,
 	ZgProfiler* profiler,
-	uint64_t* measurementIdOut);
+	u64* measurementIdOut);
 
 ZG_API ZgResult zgCommandListProfileEnd(
 	ZgCommandList* commandList,
 	ZgProfiler* profiler,
-	uint64_t measurementId);
+	u64 measurementId);
 
 #ifdef __cplusplus
 namespace zg {
 
 class CommandList final : public ManagedHandle<ZgCommandList> {
 public:
-	[[nodiscard]] ZgResult beginEvent(const char* name, const float* rgbaColors = nullptr)
+	[[nodiscard]] ZgResult beginEvent(const char* name, const f32* rgbaColors = nullptr)
 	{
 		return zgCommandListBeginEvent(this->handle, name, rgbaColors);
 	}
@@ -1680,10 +1677,10 @@ public:
 
 	[[nodiscard]] ZgResult memcpyBufferToBuffer(
 		Buffer& dstBuffer,
-		uint64_t dstBufferOffsetBytes,
+		u64 dstBufferOffsetBytes,
 		Buffer& srcBuffer,
-		uint64_t srcBufferOffsetBytes,
-		uint64_t numBytes)
+		u64 srcBufferOffsetBytes,
+		u64 numBytes)
 	{
 		return zgCommandListMemcpyBufferToBuffer(
 			this->handle,
@@ -1696,7 +1693,7 @@ public:
 
 	[[nodiscard]] ZgResult memcpyToTexture(
 		Texture& dstTexture,
-		uint32_t dstTextureMipLevel,
+		u32 dstTextureMipLevel,
 		const ZgImageViewConstCpu& srcImageCpu,
 		Buffer& tempUploadBuffer)
 	{
@@ -1719,7 +1716,7 @@ public:
 	}
 
 	[[nodiscard]] ZgResult setPushConstant(
-		uint32_t shaderRegister, const void* data, uint32_t dataSizeInBytes)
+		u32 shaderRegister, const void* data, u32 dataSizeInBytes)
 	{
 		return zgCommandListSetPushConstant(
 			this->handle, shaderRegister, data, dataSizeInBytes);
@@ -1751,7 +1748,7 @@ public:
 	}
 
 	[[nodiscard]] ZgResult dispatchCompute(
-		uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1)
+		u32 groupCountX, u32 groupCountY = 1, u32 groupCountZ = 1)
 	{
 		return zgCommandListDispatchCompute(
 			this->handle, groupCountX, groupCountY, groupCountZ);
@@ -1781,12 +1778,12 @@ public:
 		return zgCommandListSetFramebufferScissor(this->handle, &scissor);
 	}
 
-	[[nodiscard]] ZgResult clearRenderTargetOptimal(uint32_t renderTargetIdx)
+	[[nodiscard]] ZgResult clearRenderTargetOptimal(u32 renderTargetIdx)
 	{
 		return zgCommandListClearRenderTargetOptimal(this->handle, renderTargetIdx);
 	}
 
-	[[nodiscard]] ZgResult clearRenderTargets(float red, float green, float blue, float alpha)
+	[[nodiscard]] ZgResult clearRenderTargets(f32 red, f32 green, f32 blue, f32 alpha)
 	{
 		return zgCommandListClearRenderTargets(this->handle, red, green, blue, alpha);
 	}
@@ -1796,7 +1793,7 @@ public:
 		return zgCommandListClearRenderTargetsOptimal(this->handle);
 	}
 
-	[[nodiscard]] ZgResult clearDepthBuffer(float depth)
+	[[nodiscard]] ZgResult clearDepthBuffer(f32 depth)
 	{
 		return zgCommandListClearDepthBuffer(this->handle, depth);
 	}
@@ -1811,29 +1808,29 @@ public:
 		return zgCommandListSetIndexBuffer(this->handle, indexBuffer.handle, type);
 	}
 
-	[[nodiscard]] ZgResult setVertexBuffer(uint32_t vertexBufferSlot, Buffer& vertexBuffer)
+	[[nodiscard]] ZgResult setVertexBuffer(u32 vertexBufferSlot, Buffer& vertexBuffer)
 	{
 		return zgCommandListSetVertexBuffer(
 			this->handle, vertexBufferSlot, vertexBuffer.handle);
 	}
 
-	[[nodiscard]] ZgResult drawTriangles(uint32_t startVertexIndex, uint32_t numVertices)
+	[[nodiscard]] ZgResult drawTriangles(u32 startVertexIndex, u32 numVertices)
 	{
 		return zgCommandListDrawTriangles(this->handle, startVertexIndex, numVertices);
 	}
 
-	[[nodiscard]] ZgResult drawTrianglesIndexed(uint32_t startIndex, uint32_t numTriangles)
+	[[nodiscard]] ZgResult drawTrianglesIndexed(u32 startIndex, u32 numTriangles)
 	{
 		return zgCommandListDrawTrianglesIndexed(
 			this->handle, startIndex, numTriangles);
 	}
 
-	[[nodiscard]] ZgResult profileBegin(Profiler& profiler, uint64_t& measurementIdOut)
+	[[nodiscard]] ZgResult profileBegin(Profiler& profiler, u64& measurementIdOut)
 	{
 		return zgCommandListProfileBegin(this->handle, profiler.handle, &measurementIdOut);
 	}
 
-	[[nodiscard]] ZgResult profileEnd(Profiler& profiler, uint64_t measurementId)
+	[[nodiscard]] ZgResult profileEnd(Profiler& profiler, u64 measurementId)
 	{
 		return zgCommandListProfileEnd(this->handle, profiler.handle, measurementId);
 	}
@@ -1986,8 +1983,8 @@ sfz_struct(ZgContextInitSettings) {
 	void* nativeHandle;
 
 	// [Mandatory] The dimensions (in pixels) of the window being rendered to
-	uint32_t width;
-	uint32_t height;
+	u32 width;
+	u32 height;
 
 	// [Optional] Whether VSync should be enabled or not
 	ZgBool vsync;
@@ -2028,8 +2025,8 @@ ZG_API ZgResult zgContextDeinit(void);
 // Note: MUST be called before zgContextSwapchainBeginFrame() or after zgContextSwapchainFinishFrame(),
 //       may NOT be called in-between.
 ZG_API ZgResult zgContextSwapchainResize(
-	uint32_t width,
-	uint32_t height);
+	u32 width,
+	u32 height);
 
 // Sets whether VSync should be enabled or not. Should be cheap and safe to call every frame if
 // wanted.
@@ -2046,41 +2043,41 @@ ZG_API ZgResult zgContextSwapchainSetVsync(
 ZG_API ZgResult zgContextSwapchainBeginFrame(
 	ZgFramebuffer** framebufferOut,
 	ZgProfiler* profiler,
-	uint64_t* measurementIdOut);
+	u64* measurementIdOut);
 
 // Only specify profiler if you specified one to the begin frame call. Otherwise send in nullptr
 // and 0.
 ZG_API ZgResult zgContextSwapchainFinishFrame(
 	ZgProfiler* profiler,
-	uint64_t measurementId);
+	u64 measurementId);
 
 // A struct containing general statistics
 sfz_struct(ZgStats) {
 
 	// Total amount of dedicated GPU memory (in bytes) available on the GPU
-	uint64_t dedicatedGpuMemoryBytes;
+	u64 dedicatedGpuMemoryBytes;
 
 	// Total amount of dedicated CPU memory (in bytes) for this GPU. I.e. CPU memory dedicated for
 	// the GPU and not directly usable by the CPU.
-	uint64_t dedicatedCpuMemoryBytes;
+	u64 dedicatedCpuMemoryBytes;
 
 	// Total amount of shared CPU memory (in bytes) for this GPU. I.e. CPU memory shared between
 	// the CPU and GPU.
-	uint64_t sharedCpuMemoryBytes;
+	u64 sharedCpuMemoryBytes;
 
 	// The amount of "fast local" memory provided to the application by the OS. If more memory is
 	// used then stuttering and swapping could occur among other things.
-	uint64_t memoryBudgetBytes;
+	u64 memoryBudgetBytes;
 
 	// The amount of "fast local" memory used by the application. This will correspond to GPU
 	// memory on a device with dedicated GPU memory.
-	uint64_t memoryUsageBytes;
+	u64 memoryUsageBytes;
 
 	// The amount of "non-local" memory provided to the application by the OS.
-	uint64_t nonLocalBugetBytes;
+	u64 nonLocalBugetBytes;
 
 	// The amount of "non-local" memory used by the application.
-	uint64_t nonLocalUsageBytes;
+	u64 nonLocalUsageBytes;
 };
 
 // Gets the current statistics of the ZeroG backend. Normally called once (or maybe up to a couple
@@ -2113,11 +2110,11 @@ sfz_struct(ZgFeatureSupport) {
 	ZgBool waveOps;
 
 	// D3D12: Minimum and maximum amount of lanes/threads per wave (wavefront, warp).
-	uint32_t waveMinLaneCount;
-	uint32_t waveMaxLaneCount;
+	u32 waveMinLaneCount;
+	u32 waveMaxLaneCount;
 
 	// D3D12: Total number of lanes, or threads, of the GPU.
-	uint32_t gpuTotalLaneCount;
+	u32 gpuTotalLaneCount;
 
 	// D3D12: Whether 16-bit operations are natively supported in shaders
 	ZgBool shader16bitOps;
@@ -2132,7 +2129,7 @@ sfz_struct(ZgFeatureSupport) {
 
 	// D3D12: Variable shading rate tile size for Tier 2.
 	// See: https://docs.microsoft.com/en-us/windows/win32/direct3d12/vrs
-	uint32_t variableShadingRateTileSize;
+	u32 variableShadingRateTileSize;
 
 	// D3D12: Whether mesh shaders are supported
 	ZgBool meshShaders;
@@ -2152,7 +2149,7 @@ ZG_API ZgResult zgContextGetFeatureSupport(ZgFeatureSupport* featureSupportOut);
 // cases.
 //
 // All matrices returned are 4x4 row-major matrices (i.e. column vectors). If passed directly into
-// HLSL the "float4x4" primitive must be marked "row_major", otherwise the matrix will get
+// HLSL the "f324x4" primitive must be marked "row_major", otherwise the matrix will get
 // transposed during the transfer and you will not get the results you expect.
 //
 // The zgUtilCreateViewMatrix() function creates a view matrix similar to the one typically used
@@ -2180,49 +2177,49 @@ ZG_API ZgResult zgContextGetFeatureSupport(ZgFeatureSupport* featureSupportOut);
 // then switching to zgUtilCreatePerspectiveProjectionReverseInfinite() when feeling more confident.
 
 ZG_API void zgUtilCreateViewMatrix(
-	float rowMajorMatrixOut[16],
-	const float origin[3],
-	const float dir[3],
-	const float up[3]);
+	f32 rowMajorMatrixOut[16],
+	const f32 origin[3],
+	const f32 dir[3],
+	const f32 up[3]);
 
 ZG_API void zgUtilCreatePerspectiveProjection(
-	float rowMajorMatrixOut[16],
-	float vertFovDegs,
-	float aspect,
-	float nearPlane,
-	float farPlane);
+	f32 rowMajorMatrixOut[16],
+	f32 vertFovDegs,
+	f32 aspect,
+	f32 nearPlane,
+	f32 farPlane);
 
 ZG_API void zgUtilCreatePerspectiveProjectionInfinite(
-	float rowMajorMatrixOut[16],
-	float vertFovDegs,
-	float aspect,
-	float nearPlane);
+	f32 rowMajorMatrixOut[16],
+	f32 vertFovDegs,
+	f32 aspect,
+	f32 nearPlane);
 
 ZG_API void zgUtilCreatePerspectiveProjectionReverse(
-	float rowMajorMatrixOut[16],
-	float vertFovDegs,
-	float aspect,
-	float nearPlane,
-	float farPlane);
+	f32 rowMajorMatrixOut[16],
+	f32 vertFovDegs,
+	f32 aspect,
+	f32 nearPlane,
+	f32 farPlane);
 
 ZG_API void zgUtilCreatePerspectiveProjectionReverseInfinite(
-	float rowMajorMatrixOut[16],
-	float vertFovDegs,
-	float aspect,
-	float nearPlane);
+	f32 rowMajorMatrixOut[16],
+	f32 vertFovDegs,
+	f32 aspect,
+	f32 nearPlane);
 
 ZG_API void zgUtilCreateOrthographicProjection(
-	float rowMajorMatrixOut[16],
-	float width,
-	float height,
-	float nearPlane,
-	float farPlane);
+	f32 rowMajorMatrixOut[16],
+	f32 width,
+	f32 height,
+	f32 nearPlane,
+	f32 farPlane);
 
 ZG_API void zgUtilCreateOrthographicProjectionReverse(
-	float rowMajorMatrixOut[16],
-	float width,
-	float height,
-	float nearPlane,
-	float farPlane);
+	f32 rowMajorMatrixOut[16],
+	f32 width,
+	f32 height,
+	f32 nearPlane,
+	f32 farPlane);
 
 #endif

@@ -65,7 +65,7 @@ void* getNativeHandle(SDL_Window* window) noexcept;
 // PerFrameData template
 // -----------------------------------------------------------------------------------------------
 
-constexpr uint64_t MAX_NUM_FRAME_LATENCY = 3;
+constexpr u64 MAX_NUM_FRAME_LATENCY = 3;
 
 // A template used to signify that a given set of resources are frame-specific.
 //
@@ -87,27 +87,27 @@ public:
 	~PerFrameData() noexcept { this->destroy(); }
 
 	template<typename InitFun>
-	void init(uint32_t latency, InitFun initFun)
+	void init(u32 latency, InitFun initFun)
 	{
 		sfz_assert(mData.isEmpty());
-		for (uint32_t i = 0; i < latency; i++) {
+		for (u32 i = 0; i < latency; i++) {
 			initFun(mData.add());
 		}
 	}
-	void init(uint32_t latency) { this->init(latency, [](T&) {}); }
+	void init(u32 latency) { this->init(latency, [](T&) {}); }
 
 	template<typename DeinitFun>
 	void destroy(DeinitFun deinitFun)
 	{
-		for (uint32_t i = 0; i < mData.size(); i++) {
+		for (u32 i = 0; i < mData.size(); i++) {
 			deinitFun(mData[i]);
 		}
 		mData.clear();
 	}
 	void destroy() { this->destroy([](T&) {}); }
 
-	T& data(uint64_t frameIdx) { return mData[frameIdx % mData.size()]; }
-	const T& data(uint64_t frameIdx) const { return mData[frameIdx % mData.size()]; }
+	T& data(u64 frameIdx) { return mData[frameIdx % mData.size()]; }
+	const T& data(u64 frameIdx) const { return mData[frameIdx % mData.size()]; }
 
 private:
 	ArrayLocal<T, MAX_NUM_FRAME_LATENCY> mData;

@@ -31,7 +31,7 @@ namespace sfz {
 
 void HighLevelCmdList::init(
 	const char* cmdListName,
-	uint64_t currFrameIdx,
+	u64 currFrameIdx,
 	zg::CommandList cmdList,
 	zg::Framebuffer* defaultFB)
 {
@@ -93,7 +93,7 @@ void HighLevelCmdList::clearDepthBufferOptimal()
 	CHECK_ZG mCmdList.clearDepthBufferOptimal();
 }
 
-void HighLevelCmdList::setPushConstantUntyped(uint32_t reg, const void* data, uint32_t numBytes)
+void HighLevelCmdList::setPushConstantUntyped(u32 reg, const void* data, u32 numBytes)
 {
 	sfz_assert(numBytes > 0);
 	sfz_assert(numBytes <= 128);
@@ -178,7 +178,7 @@ void HighLevelCmdList::setBindings(const Bindings& bindings)
 }
 
 void HighLevelCmdList::uploadToStreamingBufferUntyped(
-	PoolHandle handle, const void* data, uint32_t elementSize, uint32_t numElements)
+	PoolHandle handle, const void* data, u32 elementSize, u32 numElements)
 {
 	// Get streaming buffer
 	BufferResource* resource = mResources->getBuffer(handle);
@@ -186,7 +186,7 @@ void HighLevelCmdList::uploadToStreamingBufferUntyped(
 	sfz_assert(resource->type == BufferResourceType::STREAMING);
 
 	// Calculate number of bytes to copy to streaming buffer
-	const uint32_t numBytes = elementSize * numElements;
+	const u32 numBytes = elementSize * numElements;
 	sfz_assert(numBytes != 0);
 	sfz_assert(numBytes <= (resource->elementSizeBytes * resource->maxNumElements));
 	sfz_assert(elementSize == resource->elementSizeBytes); // TODO: Might want to remove this assert
@@ -205,7 +205,7 @@ void HighLevelCmdList::uploadToStreamingBufferUntyped(
 	CHECK_ZG mCmdList.memcpyBufferToBuffer(memory.deviceBuffer, 0, memory.uploadBuffer, 0, numBytes);
 }
 
-void HighLevelCmdList::setVertexBuffer(uint32_t slot, PoolHandle handle)
+void HighLevelCmdList::setVertexBuffer(u32 slot, PoolHandle handle)
 {
 	BufferResource* resource = mResources->getBuffer(handle);
 	sfz_assert(resource != nullptr);
@@ -243,14 +243,14 @@ void HighLevelCmdList::setIndexBuffer(PoolHandle handle, ZgIndexBufferType index
 	CHECK_ZG mCmdList.setIndexBuffer(*buffer, indexType);
 }
 
-void HighLevelCmdList::drawTriangles(uint32_t startVertex, uint32_t numVertices)
+void HighLevelCmdList::drawTriangles(u32 startVertex, u32 numVertices)
 {
 	sfz_assert(mBoundShader != nullptr);
 	sfz_assert(mBoundShader->type == ShaderType::RENDER);
 	CHECK_ZG mCmdList.drawTriangles(startVertex, numVertices);
 }
 
-void HighLevelCmdList::drawTrianglesIndexed(uint32_t firstIndex, uint32_t numIndices)
+void HighLevelCmdList::drawTrianglesIndexed(u32 firstIndex, u32 numIndices)
 {
 	sfz_assert(mBoundShader != nullptr);
 	sfz_assert(mBoundShader->type == ShaderType::RENDER);
@@ -266,7 +266,7 @@ vec3_u32 HighLevelCmdList::getComputeGroupDims() const
 	return groupDims;
 }
 
-void HighLevelCmdList::dispatchCompute(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+void HighLevelCmdList::dispatchCompute(u32 groupCountX, u32 groupCountY, u32 groupCountZ)
 {
 	sfz_assert(mBoundShader != nullptr);
 	sfz_assert(mBoundShader->type == ShaderType::COMPUTE);

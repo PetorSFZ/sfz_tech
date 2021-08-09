@@ -223,12 +223,12 @@ static void logSDL2Version() noexcept
 	// Log SDL2 compiled version
 	SDL_VERSION(&version);
 	SFZ_INFO("SDL2", "Compiled version: %u.%u.%u",
-		uint32_t(version.major), uint32_t(version.minor), uint32_t(version.patch));
+		u32(version.major), u32(version.minor), u32(version.patch));
 
 	// Log SDL2 linked version
 	SDL_GetVersion(&version);
 	SFZ_INFO("SDL2", "Linked version: %u.%u.%u",
-		uint32_t(version.major), uint32_t(version.minor), uint32_t(version.patch));
+		u32(version.major), u32(version.minor), u32(version.patch));
 }
 
 // GameLoopState
@@ -238,8 +238,8 @@ struct GameLoopState final {
 	SDL_Window* window = nullptr;
 	bool quit = false;
 
-	uint64_t prevPerfCounterTickValue = 0;
-	uint64_t perfCounterTicksPerSec = 0;
+	u64 prevPerfCounterTickValue = 0;
+	u64 perfCounterTicksPerSec = 0;
 
 	void* userPtr = nullptr;
 	sfz::InitFunc* initFunc = nullptr;
@@ -337,7 +337,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	GameLoopState& state = *static_cast<GameLoopState*>(gameLoopStatePtr);
 
 	// Calculate delta since previous iteration
-	uint64_t perfCounterTickValue = SDL_GetPerformanceCounter();
+	u64 perfCounterTickValue = SDL_GetPerformanceCounter();
 	float deltaSecs = float(double(perfCounterTickValue - state.prevPerfCounterTickValue) / double(state.perfCounterTicksPerSec));
 	state.prevPerfCounterTickValue = perfCounterTickValue;
 
@@ -345,7 +345,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	state.events.clear();
 
 	// Check window status
-	uint32_t currentWindowFlags = SDL_GetWindowFlags(state.window);
+	u32 currentWindowFlags = SDL_GetWindowFlags(state.window);
 	bool isFullscreen = (currentWindowFlags & SDL_WINDOW_FULLSCREEN_DESKTOP) != 0;
 	bool isMaximized = (currentWindowFlags & SDL_WINDOW_MAXIMIZED) != 0;
 	bool shouldBeFullscreen = state.fullscreen->boolValue();
@@ -425,7 +425,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 
 	// Set fullscreen
 	if (isFullscreen != shouldBeFullscreen) {
-		uint32_t fullscreenFlags = shouldBeFullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
+		u32 fullscreenFlags = shouldBeFullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
 		if (SDL_SetWindowFullscreen(state.window, fullscreenFlags) < 0) {
 			SFZ_ERROR("PhantasyEngine", "SDL_SetWindowFullscreen() failed: %s", SDL_GetError());
 		}
@@ -442,15 +442,15 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 		int windowHeight = -1;
 		SDL_GetWindowSize(state.window, &windowWidth, &windowHeight);
 		state.rawFrameInput.windowDims =
-			sfz::vec2_u32(uint32_t(windowWidth), uint32_t(windowHeight));
+			sfz::vec2_u32(u32(windowWidth), u32(windowHeight));
 
 		// Keyboard
 		{
 			sfz::KeyboardState& kb = state.rawFrameInput.kb;
-			memset(kb.scancodes, 0, sfz::MAX_NUM_SCANCODES * sizeof(uint8_t));
+			memset(kb.scancodes, 0, sfz::MAX_NUM_SCANCODES * sizeof(u8));
 			int numKeys = 0;
-			const uint8_t* kbState = SDL_GetKeyboardState(&numKeys);
-			memcpy(kb.scancodes, kbState, numKeys * sizeof(uint8_t));
+			const u8* kbState = SDL_GetKeyboardState(&numKeys);
+			memcpy(kb.scancodes, kbState, numKeys * sizeof(u8));
 		}
 
 		// Mouse
@@ -460,11 +460,11 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 			
 			int x = 0;
 			int y = 0;
-			uint32_t buttonState = SDL_GetMouseState(&x, &y);
-			sfz_assert(uint32_t(y) < mouse.windowDims.y);
-			mouse.pos = sfz::vec2_u32(uint32_t(x), mouse.windowDims.y - uint32_t(y) - 1);
+			u32 buttonState = SDL_GetMouseState(&x, &y);
+			sfz_assert(u32(y) < mouse.windowDims.y);
+			mouse.pos = sfz::vec2_u32(u32(x), mouse.windowDims.y - u32(y) - 1);
 			
-			uint32_t buttonState2 = SDL_GetRelativeMouseState(&mouse.delta.x, &mouse.delta.y);
+			u32 buttonState2 = SDL_GetRelativeMouseState(&mouse.delta.x, &mouse.delta.y);
 			sfz_assert(buttonState == buttonState2);
 			mouse.delta.y = -mouse.delta.y;
 			
@@ -477,9 +477,9 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 				}
 			}
 
-			mouse.left = ((SDL_BUTTON(SDL_BUTTON_LEFT) & buttonState) == SDL_BUTTON(SDL_BUTTON_LEFT)) ? uint8_t(1) : uint8_t(0);
-			mouse.middle = ((SDL_BUTTON(SDL_BUTTON_MIDDLE) & buttonState) == SDL_BUTTON(SDL_BUTTON_MIDDLE)) ? uint8_t(1) : uint8_t(0);
-			mouse.right = ((SDL_BUTTON(SDL_BUTTON_RIGHT) & buttonState) == SDL_BUTTON(SDL_BUTTON_RIGHT)) ? uint8_t(1) : uint8_t(0);
+			mouse.left = ((SDL_BUTTON(SDL_BUTTON_LEFT) & buttonState) == SDL_BUTTON(SDL_BUTTON_LEFT)) ? u8(1) : u8(0);
+			mouse.middle = ((SDL_BUTTON(SDL_BUTTON_MIDDLE) & buttonState) == SDL_BUTTON(SDL_BUTTON_MIDDLE)) ? u8(1) : u8(0);
+			mouse.right = ((SDL_BUTTON(SDL_BUTTON_RIGHT) & buttonState) == SDL_BUTTON(SDL_BUTTON_RIGHT)) ? u8(1) : u8(0);
 		}
 
 		// Gamepads
@@ -498,7 +498,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 					}
 				}
 				else if (event.type == SDL_CONTROLLERDEVICEREMOVED) {
-					for (uint32_t gpdIdx = 0; gpdIdx < state.rawFrameInput.gamepads.size(); gpdIdx++) {
+					for (u32 gpdIdx = 0; gpdIdx < state.rawFrameInput.gamepads.size(); gpdIdx++) {
 						const sfz::GamepadState& gpd = state.rawFrameInput.gamepads[gpdIdx];
 						if (gpd.id == event.cdevice.which) {
 							SDL_GameControllerClose(gpd.controller);
@@ -539,7 +539,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 				gpd.rt = sfz::clamp(float(rightTrigger) / AXIS_MAX, 0.0f, 1.0f);
 
 				// Clear previous button states
-				for (uint32_t i = 0; i < sfz::GPD_MAX_NUM_BUTTONS; i++) gpd.buttons[i] = 0;
+				for (u32 i = 0; i < sfz::GPD_MAX_NUM_BUTTONS; i++) gpd.buttons[i] = 0;
 
 				gpd.buttons[sfz::GPD_A] = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_A);
 				gpd.buttons[sfz::GPD_B] = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_B);
@@ -576,8 +576,8 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 				gpd.buttons[sfz::GPD_LB] = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
 				gpd.buttons[sfz::GPD_RB] = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
 				
-				gpd.buttons[sfz::GPD_LT] = gpd.lt >= 0.75f ? uint8_t(1) : uint8_t(0);
-				gpd.buttons[sfz::GPD_RT] = gpd.rt >= 0.75f ? uint8_t(1) : uint8_t(0);
+				gpd.buttons[sfz::GPD_LT] = gpd.lt >= 0.75f ? u8(1) : u8(0);
+				gpd.buttons[sfz::GPD_RT] = gpd.rt >= 0.75f ? u8(1) : u8(0);
 
 				gpd.buttons[sfz::GPD_DPAD_UP] = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_DPAD_UP);
 				gpd.buttons[sfz::GPD_DPAD_DOWN] = SDL_GameControllerGetButton(gpd.controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN);
@@ -629,7 +629,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 
 	// Add last finished GPU frame's frametime to the global profiling stats
 	{
-		uint64_t frameIdx = ~0u;
+		u64 frameIdx = ~0u;
 		float gpuFrameTimeMs = 0.0f;
 		sfz::getRenderer().frameTimeMs(frameIdx, gpuFrameTimeMs);
 		if (frameIdx != ~0ull) {
@@ -755,7 +755,7 @@ int main(int argc, char* argv[])
 	// Create SDL_Window
 	SDL_Window* window = nullptr;
 	{
-		uint32_t windowFlags =
+		u32 windowFlags =
 			SDL_WINDOW_RESIZABLE |
 			SDL_WINDOW_ALLOW_HIGHDPI |
 			(fullscreen->boolValue() ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0) |

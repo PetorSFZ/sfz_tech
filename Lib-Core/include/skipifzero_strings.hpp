@@ -37,62 +37,62 @@ namespace sfz {
 
 // FNV-1a hash function, based on public domain reference code by "chongo <Landon Curt Noll> /\oo/\"
 // See http://isthe.com/chongo/tech/comp/fnv/
-constexpr uint64_t hashStringFNV1a(const char* str)
+constexpr u64 hashStringFNV1a(const char* str)
 {
-	constexpr uint64_t FNV_64_MAGIC_PRIME = uint64_t(0x100000001B3);
+	constexpr u64 FNV_64_MAGIC_PRIME = u64(0x100000001B3);
 
 	// Set initial value to FNV-0 hash of "chongo <Landon Curt Noll> /\../\"
-	uint64_t tmp = uint64_t(0xCBF29CE484222325);
+	u64 tmp = u64(0xCBF29CE484222325);
 
 	// Hash all bytes in string
 	while (char c = *str++) {
-		tmp ^= uint64_t(c); // Xor bottom with current byte
+		tmp ^= u64(c); // Xor bottom with current byte
 		tmp *= FNV_64_MAGIC_PRIME; // Multiply with FNV magic prime
 	}
 	return tmp;
 }
 
 // Alternate version of hashStringFNV1a() which hashes a number of raw bytes (i.e. not a string)
-constexpr uint64_t hashBytesFNV1a(const uint8_t* bytes, uint64_t numBytes)
+constexpr u64 hashBytesFNV1a(const u8* bytes, u64 numBytes)
 {
-	constexpr uint64_t FNV_64_MAGIC_PRIME = uint64_t(0x100000001B3);
+	constexpr u64 FNV_64_MAGIC_PRIME = u64(0x100000001B3);
 
 	// Set initial value to FNV-0 hash of "chongo <Landon Curt Noll> /\../\"
-	uint64_t tmp = uint64_t(0xCBF29CE484222325);
+	u64 tmp = u64(0xCBF29CE484222325);
 
 	// Hash all bytes
-	for (uint64_t i = 0; i < numBytes; i++) {
-		tmp ^= uint64_t(bytes[i]); // Xor bottom with current byte
+	for (u64 i = 0; i < numBytes; i++) {
+		tmp ^= u64(bytes[i]); // Xor bottom with current byte
 		tmp *= FNV_64_MAGIC_PRIME; // Multiply with FNV magic prime
 	}
 	return tmp;
 }
 
 // Hash strings with FNV-1a by default
-constexpr uint64_t hash(const char* str) { return hashStringFNV1a(str); }
+constexpr u64 hash(const char* str) { return hashStringFNV1a(str); }
 
 // strID
 // ------------------------------------------------------------------------------------------------
 
 // A string id represents the hash of a string. Used to cheaply compare strings (e.g. in a hash map).
 struct strID final {
-	uint64_t id = 0; // 0 is reserved for invalid hashes
+	u64 id = 0; // 0 is reserved for invalid hashes
 
 	constexpr strID() = default;
-	constexpr explicit strID(uint64_t hashId) : id(hashId) {}
+	constexpr explicit strID(u64 hashId) : id(hashId) {}
 	strID(const char* str);
 
 	bool isValid() const { return id != 0; }
 	const char* str() const;
 	bool operator== (strID o) const { return this->id == o.id; }
 	bool operator!= (strID o) const { return this->id != o.id; }
-	operator uint64_t() const { return id; }
+	operator u64() const { return id; }
 };
-static_assert(sizeof(strID) == sizeof(uint64_t), "strID is padded");
+static_assert(sizeof(strID) == sizeof(u64), "strID is padded");
 
 constexpr strID STR_ID_INVALID = strID();
 
-constexpr uint64_t hash(strID str) { return str.id; }
+constexpr u64 hash(strID str) { return str.id; }
 
 #ifdef SFZ_STR_ID_IMPLEMENTATION
 
@@ -100,7 +100,7 @@ struct StringStorage final {
 	SfzAllocator* allocator = nullptr;
 	HashMap<strID, char*> strs;
 
-	StringStorage(uint32_t initialCapacity, SfzAllocator* allocator)
+	StringStorage(u32 initialCapacity, SfzAllocator* allocator)
 	{
 		this->allocator = allocator;
 		this->strs.init(initialCapacity, allocator, sfz_dbg(""));
@@ -131,7 +131,7 @@ strID::strID(const char* str)
 	// Add string to storage and check for collisions
 	char** storedStr = strStorage->strs.get(strID(id));
 	if (storedStr == nullptr) {
-		uint32_t strLen = uint32_t(strlen(str));
+		u32 strLen = u32(strlen(str));
 		char* newStr = reinterpret_cast<char*>(strStorage->allocator->alloc(sfz_dbg(""), strLen + 1));
 		memcpy(newStr, str, strLen);
 		newStr[strLen] = '\0';
@@ -153,7 +153,7 @@ const char* strID::str() const
 // StringLocal
 // ------------------------------------------------------------------------------------------------
 
-template<uint16_t N>
+template<u16 N>
 struct StringLocal final {
 
 	// Public members
@@ -195,8 +195,8 @@ struct StringLocal final {
 	// Public methods
 	// --------------------------------------------------------------------------------------------
 
-	uint32_t size() const { return uint32_t(strnlen(this->mRawStr, N)); }
-	uint32_t capacity() const { return N; }
+	u32 size() const { return u32(strnlen(this->mRawStr, N)); }
+	u32 capacity() const { return N; }
 	const char* str() const { return mRawStr; }
 
 	void clear() { mRawStr[0] = '\0'; }
@@ -211,25 +211,25 @@ struct StringLocal final {
 
 	void vappendf(const char* format, va_list args)
 	{
-		uint32_t len = this->size();
-		uint32_t capacityLeft = this->capacity() - len;
+		u32 len = this->size();
+		u32 capacityLeft = this->capacity() - len;
 		int numWritten = vsnprintf(this->mRawStr + len, capacityLeft, format, args);
 		sfz_assert(numWritten >= 0);
 	}
 
-	void appendChars(const char* chars, uint32_t numChars)
+	void appendChars(const char* chars, u32 numChars)
 	{
-		uint32_t len = this->size();
-		uint32_t capacityLeft = this->capacity() - len;
+		u32 len = this->size();
+		u32 capacityLeft = this->capacity() - len;
 		sfz_assert(numChars < capacityLeft);
 		strncpy(this->mRawStr + len, chars, size_t(numChars));
 		this->mRawStr[len + numChars] = '\0';
 	}
 
-	void removeChars(uint32_t numChars)
+	void removeChars(u32 numChars)
 	{
-		const uint32_t len = this->size();
-		const uint32_t numToRemove = sfz::min(numChars, len);
+		const u32 len = this->size();
+		const u32 numToRemove = sfz::min(numChars, len);
 		this->mRawStr[len - numToRemove] = '\0';
 	}
 
@@ -244,12 +244,12 @@ struct StringLocal final {
 
 	void trim()
 	{
-		const uint32_t len = this->size();
+		const u32 len = this->size();
 		if (len == 0) return;
 
-		uint32_t firstNonWhitespace = 0;
+		u32 firstNonWhitespace = 0;
 		bool nonWhitespaceFound = false;
-		for (uint32_t i = 0; i < len; i++) {
+		for (u32 i = 0; i < len; i++) {
 			char c = mRawStr[i];
 			if (!(c == ' ' || c == '\t' || c == '\n')) {
 				nonWhitespaceFound = true;
@@ -263,8 +263,8 @@ struct StringLocal final {
 			return;
 		}
 
-		uint32_t lastNonWhitespace = len - 1;
-		for (uint32_t i = len; i > 0; i--) {
+		u32 lastNonWhitespace = len - 1;
+		for (u32 i = len; i > 0; i--) {
 			char c = mRawStr[i - 1];
 			if (!(c == ' ' || c == '\t' || c == '\n')) {
 				lastNonWhitespace = i - 1;
@@ -272,7 +272,7 @@ struct StringLocal final {
 			}
 		}
 
-		const uint32_t newLen = lastNonWhitespace - firstNonWhitespace + 1;
+		const u32 newLen = lastNonWhitespace - firstNonWhitespace + 1;
 		if (newLen == len) return;
 		memmove(mRawStr, mRawStr + firstNonWhitespace, newLen);
 		mRawStr[newLen] = '\0';
@@ -280,12 +280,12 @@ struct StringLocal final {
 
 	bool endsWith(const char* ending) const
 	{
-		const uint32_t len = this->size();
-		const uint32_t endingLen = uint32_t(strnlen(ending, N));
+		const u32 len = this->size();
+		const u32 endingLen = u32(strnlen(ending, N));
 		if (endingLen > len) return false;
 
-		uint32_t endingIdx = 0;
-		for (uint32_t i = len - endingLen; i < len; i++) {
+		u32 endingIdx = 0;
+		for (u32 i = len - endingLen; i < len; i++) {
 			if (ending[endingIdx] != mRawStr[i]) return false;
 			endingIdx += 1;
 		}
@@ -340,11 +340,11 @@ using str1024 = StringLocal<1024>;
 using str2048 = StringLocal<2048>;
 using str4096 = StringLocal<4096>;
 
-template<uint16_t N>
-constexpr uint64_t hash(const StringLocal<N>& str) { return sfz::hash(str.str()); }
+template<u16 N>
+constexpr u64 hash(const StringLocal<N>& str) { return sfz::hash(str.str()); }
 
 // const char* is an alternate type to StringLocal
-template<uint16_t N>
+template<u16 N>
 struct AltType<StringLocal<N>> final {
 	using AltT = const char*;
 };

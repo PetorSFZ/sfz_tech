@@ -26,7 +26,7 @@
 
 using namespace sfz;
 
-static bool eqf(quat q1, quat q2, float eps = EQF_EPS) noexcept
+static bool eqf(quat q1, quat q2, f32 eps = EQF_EPS) noexcept
 {
 	return sfz::eqf(q1.vector, q2.vector, eps);
 }
@@ -54,8 +54,8 @@ UTEST(Quaternion, constructors)
 	}
 	// rotation() constructor function
 	{
-		float angle = 60.0f;
-		float halfAngleRad = (angle * DEG_TO_RAD) / 2.0f;
+		f32 angle = 60.0f;
+		f32 halfAngleRad = (angle * DEG_TO_RAD) / 2.0f;
 		vec3 axis = normalize(vec3(0.25f, 1.0f, 1.2f));
 		quat rot1(std::sin(halfAngleRad) * axis, std::cos(halfAngleRad));
 		quat rot2 = quat::rotationDeg(axis, angle);
@@ -74,8 +74,8 @@ UTEST(Quaternion, constructors)
 	}
 	// fromRotationMatrix() constructor function
 	{
-		float angleDeg1 = 60.0f;
-		float angleRad1 = angleDeg1 * DEG_TO_RAD;
+		f32 angleDeg1 = 60.0f;
+		f32 angleRad1 = angleDeg1 * DEG_TO_RAD;
 		vec3 axis = normalize(vec3(0.25f, 1.0f, 1.2f));
 
 		quat rotQuat1 = quat::rotationDeg(axis, angleDeg1);
@@ -83,8 +83,8 @@ UTEST(Quaternion, constructors)
 		quat rotQuat2 = quat::fromRotationMatrix(rotMat1);
 		ASSERT_TRUE(eqf(rotQuat1, rotQuat2));
 
-		float angleDeg2 = 190.0f;
-		float angleRad2 = angleDeg2 * DEG_TO_RAD;
+		f32 angleDeg2 = 190.0f;
+		f32 angleRad2 = angleDeg2 * DEG_TO_RAD;
 
 		quat rotQuat3 = quat::rotationDeg(axis, angleDeg2);
 		mat34 rotMat2 = mat34::rotation3(axis, angleRad2);
@@ -158,7 +158,7 @@ UTEST(Quaternion, quaternion_functions)
 	}
 	// rotate()
 	{
-		float halfAngle1 = (90.0f * DEG_TO_RAD) / 2.0f;
+		f32 halfAngle1 = (90.0f * DEG_TO_RAD) / 2.0f;
 		quat rot1(std::sin(halfAngle1) * vec3(0.0f, 1.0f, 0.0f), std::cos(halfAngle1));
 		vec3 p = rotate(rot1, vec3(1.0f, 0.0f, 0.0f));
 		ASSERT_TRUE(eqf(p, vec3(0.0f, 0.0f, -1.0f)));

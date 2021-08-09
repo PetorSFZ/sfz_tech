@@ -73,16 +73,16 @@ namespace zui {
 // storage.progressNextFrame();
 
 struct WidgetOffset final {
-	uint32_t offset = ~0u;
-	uint32_t widgetSize = 0;
+	u32 offset = ~0u;
+	u32 widgetSize = 0;
 };
 
-template<uint32_t MAX_NUM_WIDGETS, uint32_t NUM_BYTES>
+template<u32 MAX_NUM_WIDGETS, u32 NUM_BYTES>
 struct UIStorageFrame final {
 
-	uint64_t FRAME_CANARY_SIZEOF = sizeof(UIStorageFrame<MAX_NUM_WIDGETS, NUM_BYTES>);
+	u64 FRAME_CANARY_SIZEOF = sizeof(UIStorageFrame<MAX_NUM_WIDGETS, NUM_BYTES>);
 	sfz::HashMapLocal<sfz::strID, WidgetOffset, MAX_NUM_WIDGETS> offsets;
-	sfz::ArrayLocal<uint8_t, NUM_BYTES> bytes;
+	sfz::ArrayLocal<u8, NUM_BYTES> bytes;
 
 	void clear()
 	{
@@ -92,12 +92,12 @@ struct UIStorageFrame final {
 	}
 };
 
-template<uint32_t MAX_NUM_WIDGETS, uint32_t NUM_BYTES>
+template<u32 MAX_NUM_WIDGETS, u32 NUM_BYTES>
 struct UIStorage final {
 
-	uint64_t STORAGE_CANARY_SIZEOF = sizeof(UIStorage<MAX_NUM_WIDGETS, NUM_BYTES>);
+	u64 STORAGE_CANARY_SIZEOF = sizeof(UIStorage<MAX_NUM_WIDGETS, NUM_BYTES>);
 	UIStorageFrame<MAX_NUM_WIDGETS, NUM_BYTES> frame1, frame2;
-	uint32_t frameIdx = 0;
+	u32 frameIdx = 0;
 	
 	UIStorageFrame<MAX_NUM_WIDGETS, NUM_BYTES>& prev()
 	{
@@ -131,8 +131,8 @@ struct UIStorage final {
 	}
 };
 
-template<uint32_t MAX_NUM_WIDGETS, uint32_t MAX_NUM_BYTES>
-inline void* storageGetWidgetData(void* userPtr, strID id, uint32_t sizeBytes, zui::InitWidgetFunc* initFunc)
+template<u32 MAX_NUM_WIDGETS, u32 MAX_NUM_BYTES>
+inline void* storageGetWidgetData(void* userPtr, strID id, u32 sizeBytes, zui::InitWidgetFunc* initFunc)
 {
 	UIStorage<MAX_NUM_WIDGETS, MAX_NUM_BYTES>& storage =
 		*reinterpret_cast<UIStorage<MAX_NUM_WIDGETS, MAX_NUM_BYTES>*>(userPtr);\
@@ -149,12 +149,12 @@ inline void* storageGetWidgetData(void* userPtr, strID id, uint32_t sizeBytes, z
 	if (offset == nullptr) {
 
 		// Allocate memory for widget data and register the offsets
-		uint32_t alignedSize = uint32_t(sfz::roundUpAligned(sizeBytes, 16));
+		u32 alignedSize = u32(sfz::roundUpAligned(sizeBytes, 16));
 		WidgetOffset dataOffset;
 		dataOffset.offset = frame.bytes.size();
 		dataOffset.widgetSize = sizeBytes;
 		sfz_assert((dataOffset.offset + alignedSize) <= MAX_NUM_BYTES);
-		frame.bytes.add(uint8_t(0), alignedSize);
+		frame.bytes.add(u8(0), alignedSize);
 		offset = &frame.offsets.put(id, dataOffset);
 
 		// Copy widget data if available in last frame, otherwise initialize it

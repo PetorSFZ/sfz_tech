@@ -25,7 +25,7 @@ namespace sfz {
 // Random color generator
 // ------------------------------------------------------------------------------------------------
 
-vec3 getRandomColor(uint32_t idx, float sat, float val, float startNoise)
+vec3 getRandomColor(u32 idx, float sat, float val, float startNoise)
 {
 	// Inspired by: https://martin.ankerl.com/2009/12/09/how-to-create-random-colors-programmatically/
 	constexpr float GOLDEN_RATIO = 1.61803f;

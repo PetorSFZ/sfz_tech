@@ -19,8 +19,6 @@
 
 #pragma once
 
-#include <cfloat>
-
 #include <skipifzero_strings.hpp>
 
 namespace sfz {
@@ -31,7 +29,7 @@ using sfz::str48;
 // Value type enum
 // ------------------------------------------------------------------------------------------------
 
-enum class ValueType : uint32_t {
+enum class ValueType : u32 {
 	INT = 0,
 	FLOAT = 1,
 	BOOL = 2,
@@ -68,8 +66,8 @@ struct FloatBounds final {
 	FloatBounds() noexcept = default;
 	explicit FloatBounds(
 		float defaultValue,
-		float minValue = -FLT_MAX,
-		float maxValue = FLT_MAX) noexcept
+		float minValue = -F32_MAX,
+		float maxValue = F32_MAX) noexcept
 	:
 		defaultValue(defaultValue),
 		minValue(minValue),

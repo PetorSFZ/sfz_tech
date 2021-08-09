@@ -38,17 +38,17 @@ namespace sfz {
 // TerminalLogger: Methods
 // ------------------------------------------------------------------------------------------------
 
-void TerminalLogger::init(uint32_t numHistoryItems, SfzAllocator* allocator) noexcept
+void TerminalLogger::init(u32 numHistoryItems, SfzAllocator* allocator) noexcept
 {
 	mMessages.create(numHistoryItems, allocator, sfz_dbg(""));
 }
 
-uint32_t TerminalLogger::numMessages() const noexcept
+u32 TerminalLogger::numMessages() const noexcept
 {
-	return uint32_t(mMessages.size());
+	return u32(mMessages.size());
 }
 
-const TerminalMessageItem& TerminalLogger::getMessage(uint32_t index) const noexcept
+const TerminalMessageItem& TerminalLogger::getMessage(u32 index) const noexcept
 {
 	return mMessages[index];
 }

@@ -62,7 +62,7 @@ namespace zui {
 
 struct FontInfo final {
 	int fontIdx = FONS_INVALID;
-	float atlasSize = 0.0f;
+	f32 atlasSize = 0.0f;
 };
 
 struct RenderData final {
@@ -114,16 +114,16 @@ struct DrawingCtx final {
 
 	FONScontext* fontstashCtx = nullptr;
 	sfz::HashMap<strID, FontInfo> fonts;
-	uint32_t fontOversampling = 1;
+	u32 fontOversampling = 1;
 	sfz::ImageView fontstashImageView;
 	bool fontstashImageUpdated = false;
-	uint64_t fontUserHandle = 0;
+	u64 fontUserHandle = 0;
 
 	bool fontDummyDontRender = false;
 	sfz::str4096 fontTmpStr;
 	vec2 fontPos = vec2(0.0f);
-	float fontSurfaceSize = 0.0f;
-	float fontAtlasSize = 0.0f;
+	f32 fontSurfaceSize = 0.0f;
+	f32 fontAtlasSize = 0.0f;
 	vec4 fontColor = vec4(1.0f);
 	mat34 fontTransform = mat34::identity();
 
@@ -139,9 +139,9 @@ static DrawingCtx drawingCtx = {};
 
 static int fontstashRenderCreate(void*, int width, int height)
 {
-	const uint32_t oversample = drawingCtx.fontOversampling;
+	const u32 oversample = drawingCtx.fontOversampling;
 	sfz_assert(drawingCtx.fontstashImageView.rawData == nullptr);
-	drawingCtx.fontstashImageView.rawData = reinterpret_cast<uint8_t*>(
+	drawingCtx.fontstashImageView.rawData = reinterpret_cast<u8*>(
 		drawingCtx.allocator->alloc(sfz_dbg(""), width * height * oversample * oversample));
 	drawingCtx.fontstashImageView.type = sfz::ImageType::R_U8;
 	drawingCtx.fontstashImageView.width = width * oversample;
@@ -160,31 +160,31 @@ static int fontstashRenderResize(void*, int width, int height)
 static void fontstashRenderUpdate(void*, int* rect, const unsigned char* data)
 {
 	(void)rect;
-	/*const uint32_t startX = uint32_t(rect[0]);
-	const uint32_t startY = uint32_t(rect[1]);
-	const uint32_t endX = uint32_t(rect[2]);
-	const uint32_t endY = uint32_t(rect[3]);
-	const uint32_t w = uint32_t(rect[2] - rect[0]);
-	const uint32_t h = uint32_t(rect[3] - rect[1]);
+	/*const u32 startX = u32(rect[0]);
+	const u32 startY = u32(rect[1]);
+	const u32 endX = u32(rect[2]);
+	const u32 endY = u32(rect[3]);
+	const u32 w = u32(rect[2] - rect[0]);
+	const u32 h = u32(rect[3] - rect[1]);
 	phImageView imgView = ctx.fontStashImage.toImageView();
-	for (uint32_t y = startY; y < endY; y++) {
-		uint8_t* dstRow = imgView.rowPtr<uint8_t>(y) + startX;
-		//const uint8_t* srcRow = data + ((y - startY) * w);
-		const uint8_t* srcRow = data + (y * w) + startX;
-		for (uint32_t x = 0; x < w; x++) {
+	for (u32 y = startY; y < endY; y++) {
+		u8* dstRow = imgView.rowPtr<u8>(y) + startX;
+		//const u8* srcRow = data + ((y - startY) * w);
+		const u8* srcRow = data + (y * w) + startX;
+		for (u32 x = 0; x < w; x++) {
 			dstRow[x] = srcRow[x];
 		}
 	}*/
-	const uint32_t oversample = drawingCtx.fontOversampling;
-	const uint32_t w = drawingCtx.fontstashImageView.width;
-	const uint32_t h = drawingCtx.fontstashImageView.height;
-	for (uint32_t y = 0; y < h; y += oversample) {
-		const uint8_t* srcRowPtr = data + (y / oversample) * (w / oversample);
-		for (uint32_t y2 = 0; y2 < oversample; y2++) {
-			uint8_t* dstRowPtr = drawingCtx.fontstashImageView.rowPtr<uint8_t>(y + y2);
-			for (uint32_t x = 0; x < w; x += oversample) {
-				uint8_t val = srcRowPtr[x / oversample];
-				for (uint32_t xi = 0; xi < oversample; xi++) {
+	const u32 oversample = drawingCtx.fontOversampling;
+	const u32 w = drawingCtx.fontstashImageView.width;
+	const u32 h = drawingCtx.fontstashImageView.height;
+	for (u32 y = 0; y < h; y += oversample) {
+		const u8* srcRowPtr = data + (y / oversample) * (w / oversample);
+		for (u32 y2 = 0; y2 < oversample; y2++) {
+			u8* dstRowPtr = drawingCtx.fontstashImageView.rowPtr<u8>(y + y2);
+			for (u32 x = 0; x < w; x += oversample) {
+				u8 val = srcRowPtr[x / oversample];
+				for (u32 xi = 0; xi < oversample; xi++) {
 					dstRowPtr[x + xi] = val;
 				}
 			}
@@ -196,8 +196,8 @@ static void fontstashRenderUpdate(void*, int* rect, const unsigned char* data)
 
 static void fontstashRenderDraw(
 	void*,
-	const float* verts,
-	const float* tcoords,
+	const f32* verts,
+	const f32* tcoords,
 	const unsigned int* colors,
 	int nverts)
 {
@@ -205,16 +205,16 @@ static void fontstashRenderDraw(
 	if (drawingCtx.fontDummyDontRender) return;
 	sfz_assert(drawingCtx.fontUserHandle != 0);
 
-	const float scale = drawingCtx.fontSurfaceSize / drawingCtx.fontAtlasSize;
+	const f32 scale = drawingCtx.fontSurfaceSize / drawingCtx.fontAtlasSize;
 
-	const uint32_t startVertex = drawingCtx.renderData.vertices.size();
-	const uint32_t startIndex = drawingCtx.renderData.indices.size();
+	const u32 startVertex = drawingCtx.renderData.vertices.size();
+	const u32 startIndex = drawingCtx.renderData.indices.size();
 
 	sfz_assert((nverts % 2) == 0);
 	for (int i = 0; i < nverts; i++) {
 		vec2 pos = vec2(verts[i * 2], verts[i * 2 + 1]) * scale + drawingCtx.fontPos;
-		float texcoordX = tcoords[i*2];
-		float texcoordY = tcoords[i*2 + 1];
+		f32 texcoordX = tcoords[i*2];
+		f32 texcoordY = tcoords[i*2 + 1];
 		Vertex v;
 		v.pos = vec3(pos, 0.0f);
 		v.texcoord = vec2(texcoordX, texcoordY);
@@ -224,7 +224,7 @@ static void fontstashRenderDraw(
 	}
 
 	// Generate indices
-	for (uint32_t i = startVertex; i < drawingCtx.renderData.vertices.size(); i++) {
+	for (u32 i = startVertex; i < drawingCtx.renderData.vertices.size(); i++) {
 		sfz_assert(i < UINT16_MAX);
 		drawingCtx.renderData.indices.add(uint16_t(i));
 	}
@@ -246,7 +246,7 @@ static void fontstashRenderDelete(void*)
 // Initialization and internal interface
 // ------------------------------------------------------------------------------------------------
 
-void internalDrawInit(SfzAllocator* allocator, uint32_t fontOversampling)
+void internalDrawInit(SfzAllocator* allocator, u32 fontOversampling)
 {
 	drawingCtx.allocator = allocator;
 
@@ -286,13 +286,13 @@ void internalDrawDeinit()
 	drawingCtx.allocator = nullptr;
 }
 
-void internalDrawSetFontHandle(uint64_t handle)
+void internalDrawSetFontHandle(u64 handle)
 {
 	sfz_assert(handle != 0);
 	drawingCtx.fontUserHandle = handle;
 }
 
-bool internalDrawAddFont(const char* name, strID nameID, const char* path, float atlasSize)
+bool internalDrawAddFont(const char* name, strID nameID, const char* path, f32 atlasSize)
 {
 	if (drawingCtx.fonts.get(nameID) != nullptr) {
 		sfz_assert(false); // Font already registered
@@ -350,20 +350,20 @@ RenderDataView internalDrawGetRenderDataView()
 void drawAddCommand(
 	const mat34& transform,
 	const Vertex* vertices,
-	uint32_t numVertices,
-	const uint32_t* indices,
-	uint32_t numIndices,
-	uint64_t imageHandle,
+	u32 numVertices,
+	const u32* indices,
+	u32 numIndices,
+	u64 imageHandle,
 	bool isAlphaTexture)
 {
 	RenderData& data = drawingCtx.renderData;
 
 	// Add vertices and indices
-	const uint32_t startIndex = data.indices.size();
-	const uint32_t startVertex = data.vertices.size();
+	const u32 startIndex = data.indices.size();
+	const u32 startVertex = data.vertices.size();
 	data.vertices.add(vertices, numVertices);
-	for (uint32_t i = 0; i < numIndices; i++) {
-		uint32_t idx = startVertex + indices[i];
+	for (u32 i = 0; i < numIndices; i++) {
+		u32 idx = startVertex + indices[i];
 		sfz_assert(idx < UINT16_MAX);
 		drawingCtx.renderData.indices.add(uint16_t(idx));
 	}
@@ -377,10 +377,10 @@ void drawAddCommand(
 	cmd.isAlphaTexture = isAlphaTexture;
 }
 
-float drawTextFmtCentered(
+f32 drawTextFmtCentered(
 	const mat34& transform,
 	strID fontID,
-	float size,
+	f32 size,
 	vec4 color,
 	const char* text)
 {
@@ -403,17 +403,17 @@ float drawTextFmtCentered(
 
 	// Draw string
 	drawingCtx.fontTransform = transform;
-	float width = fonsDrawText(drawingCtx.fontstashCtx, 0.0f, 0.0f, text, nullptr);
+	f32 width = fonsDrawText(drawingCtx.fontstashCtx, 0.0f, 0.0f, text, nullptr);
 
 	// Scale string width and return
-	const float scale = drawingCtx.fontSurfaceSize / drawingCtx.fontAtlasSize;
+	const f32 scale = drawingCtx.fontSurfaceSize / drawingCtx.fontAtlasSize;
 	return width * scale;
 }
 
 void drawImage(
 	const mat34& transform,
 	vec2 dims,
-	uint64_t imageHandle,
+	u64 imageHandle,
 	bool isAlphaTexture)
 {
 	const vec2 halfDims = dims * 0.5f;
@@ -443,7 +443,7 @@ void drawImage(
 	verts[3].colorLinear = vec3(1.0f);
 	verts[3].alphaLinear = 1.0f;
 
-	const uint32_t indices[6] = {
+	const u32 indices[6] = {
 		0, 1, 2,
 		1, 3, 2
 	};
@@ -483,7 +483,7 @@ void drawRect(
 	verts[3].colorLinear = color.xyz;
 	verts[3].alphaLinear = color.w;
 
-	const uint32_t indices[6] = {
+	const u32 indices[6] = {
 		0, 1, 2,
 		1, 3, 2
 	};
@@ -494,7 +494,7 @@ void drawRect(
 void drawBorder(
 	const mat34& transform,
 	vec2 dims,
-	float thickness,
+	f32 thickness,
 	vec4 color)
 {
 	const vec2 halfDims = dims * 0.5f;
@@ -513,12 +513,12 @@ void drawBorder(
 		return v;
 	};
 
-	constexpr uint32_t MAX_NUM_VERTICES = 16;
-	constexpr uint32_t MAX_NUM_INDICES = 24;
+	constexpr u32 MAX_NUM_VERTICES = 16;
+	constexpr u32 MAX_NUM_INDICES = 24;
 	sfz::ArrayLocal<Vertex, MAX_NUM_VERTICES> verts;
-	sfz::ArrayLocal<uint32_t, MAX_NUM_INDICES> indices;
+	sfz::ArrayLocal<u32, MAX_NUM_INDICES> indices;
 
-	auto addTriangleIndices = [&](uint32_t base, uint32_t idx0, uint32_t idx1, uint32_t idx2) {
+	auto addTriangleIndices = [&](u32 base, u32 idx0, u32 idx1, u32 idx2) {
 		indices.add(base + idx0);
 		indices.add(base + idx1);
 		indices.add(base + idx2);
@@ -587,8 +587,8 @@ void drawBorder(
 	drawAddCommand(transform, verts.data(), verts.size(), indices.data(), indices.size(), false);
 }
 
-float drawTextFmt(
-	vec2 pos, HAlign halign, VAlign valign, strID fontID, float size, vec4 color, const char* format, ...)
+f32 drawTextFmt(
+	vec2 pos, HAlign halign, VAlign valign, strID fontID, f32 size, vec4 color, const char* format, ...)
 {
 	// Resolve formated string
 	drawingCtx.fontTmpStr.clear();
@@ -623,10 +623,10 @@ float drawTextFmt(
 	drawingCtx.fontColor = color;
 
 	// Draw string
-	float width = fonsDrawText(drawingCtx.fontstashCtx, 0.0f, 0.0f, drawingCtx.fontTmpStr.str(), nullptr);
+	f32 width = fonsDrawText(drawingCtx.fontstashCtx, 0.0f, 0.0f, drawingCtx.fontTmpStr.str(), nullptr);
 
 	// Scale string width and return
-	const float scale = drawingCtx.fontSurfaceSize / drawingCtx.fontAtlasSize;
+	const f32 scale = drawingCtx.fontSurfaceSize / drawingCtx.fontAtlasSize;
 	return width * scale;
 }
 

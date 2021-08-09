@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <cstdint>
+#include <sfz.h>
 
 namespace sfz {
 
@@ -37,16 +37,16 @@ struct CompMask final {
 	// --------------------------------------------------------------------------------------------
 
 	// The raw 64-bit mask.
-	uint64_t rawMask;
+	u64 rawMask;
 
 	// Constructor methods
 	// --------------------------------------------------------------------------------------------
 
-	static constexpr CompMask fromRawValue(uint64_t bits) { return { bits }; }
+	static constexpr CompMask fromRawValue(u64 bits) { return { bits }; }
 	static constexpr CompMask empty() { return CompMask::fromRawValue(0); }
-	static constexpr CompMask fromType(uint32_t componentType)
+	static constexpr CompMask fromType(u32 componentType)
 	{
-		return CompMask::fromRawValue(uint64_t(1) << uint64_t(componentType));
+		return CompMask::fromRawValue(u64(1) << u64(componentType));
 	}
 	static constexpr CompMask activeMask()
 	{
@@ -67,13 +67,13 @@ struct CompMask final {
 
 	// Checks whether this mask contains the specified component type or not, somewhat slow.
 	// Prefer to build a mask with all bits you want to check, then you fulfills() with it instead.
-	constexpr bool hasComponentType(uint32_t componentType) const
+	constexpr bool hasComponentType(u32 componentType) const
 	{
 		return this->fulfills(CompMask::fromType(componentType));
 	}
 
 	// Sets the specified bit of this mask to the specified value.
-	constexpr void setComponentType(uint32_t componentType, bool value)
+	constexpr void setComponentType(u32 componentType, bool value)
 	{
 		if (value) this->rawMask |= CompMask::fromType(componentType).rawMask;
 		else this->rawMask &= ~CompMask::fromType(componentType).rawMask;

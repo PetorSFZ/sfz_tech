@@ -58,10 +58,10 @@ struct ZgBuffer final {
 	ZgTrackerResourceState tracking;
 
 	ZgMemoryType memoryType = ZG_MEMORY_TYPE_DEVICE;
-	uint64_t sizeBytes = 0;
+	u64 sizeBytes = 0;
 
 	// A unique identifier for this buffer
-	uint64_t identifier = 0;
+	u64 identifier = 0;
 };
 
 // Texture
@@ -72,21 +72,21 @@ struct ZgTexture final {
 	sfz::ArrayLocal<ZgTrackerResourceState, ZG_MAX_NUM_MIPMAPS> mipTrackings;
 
 	// A unique identifier for this texture
-	uint64_t identifier = 0;
+	u64 identifier = 0;
 
 	ZgTextureFormat zgFormat = ZG_TEXTURE_FORMAT_UNDEFINED;
 	ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT;
 	ZgOptimalClearValue optimalClearValue = ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED;
 	DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
-	uint32_t width = 0;
-	uint32_t height = 0;
-	uint32_t numMipmaps = 0;
+	u32 width = 0;
+	u32 height = 0;
+	u32 numMipmaps = 0;
 
 	// Information from ID3D12Device::GetCopyableFootprints()
 	D3D12_PLACED_SUBRESOURCE_FOOTPRINT subresourceFootprints[ZG_MAX_NUM_MIPMAPS] = {};
-	uint32_t numRows[ZG_MAX_NUM_MIPMAPS] = {};
-	uint64_t rowSizesInBytes[ZG_MAX_NUM_MIPMAPS] = {};
-	uint64_t totalSizeInBytes = 0;
+	u32 numRows[ZG_MAX_NUM_MIPMAPS] = {};
+	u64 rowSizesInBytes[ZG_MAX_NUM_MIPMAPS] = {};
+	u64 totalSizeInBytes = 0;
 };
 
 // Buffer functions
@@ -176,9 +176,9 @@ inline ZgResult createBuffer(
 
 inline ZgResult bufferMemcpyUpload(
 	ZgBuffer& dstBuffer,
-	uint64_t dstBufferOffsetBytes,
+	u64 dstBufferOffsetBytes,
 	const void* srcMemory,
-	uint64_t numBytes) noexcept
+	u64 numBytes) noexcept
 {
 	if (dstBuffer.memoryType != ZG_MEMORY_TYPE_UPLOAD) return ZG_ERROR_INVALID_ARGUMENT;
 
@@ -194,7 +194,7 @@ inline ZgResult bufferMemcpyUpload(
 	}
 
 	// Memcpy to buffer
-	memcpy(reinterpret_cast<uint8_t*>(mappedPtr) + dstBufferOffsetBytes, srcMemory, numBytes);
+	memcpy(reinterpret_cast<u8*>(mappedPtr) + dstBufferOffsetBytes, srcMemory, numBytes);
 
 	// The range we memcpy'd to
 	D3D12_RANGE writeRange = {};
@@ -209,9 +209,9 @@ inline ZgResult bufferMemcpyUpload(
 
 inline ZgResult bufferMemcpyDownload(
 	ZgBuffer& srcBuffer,
-	uint64_t srcBufferOffsetBytes,
+	u64 srcBufferOffsetBytes,
 	void* dstMemory,
-	uint64_t numBytes) noexcept
+	u64 numBytes) noexcept
 {
 	if (srcBuffer.memoryType != ZG_MEMORY_TYPE_DOWNLOAD) return ZG_ERROR_INVALID_ARGUMENT;
 
@@ -227,7 +227,7 @@ inline ZgResult bufferMemcpyDownload(
 	}
 
 	// Memcpy to buffer
-	memcpy(dstMemory, reinterpret_cast<const uint8_t*>(mappedPtr) + srcBufferOffsetBytes, numBytes);
+	memcpy(dstMemory, reinterpret_cast<const u8*>(mappedPtr) + srcBufferOffsetBytes, numBytes);
 
 	// The didn't write anything
 	D3D12_RANGE writeRange = {};
@@ -262,7 +262,7 @@ inline ZgResult createTexture(
 	desc.Width = createInfo.width;
 	desc.Height = createInfo.height;
 	desc.DepthOrArraySize = 1;
-	desc.MipLevels = (uint16_t)createInfo.numMipmaps;
+	desc.MipLevels = (u16)createInfo.numMipmaps;
 	desc.Format = zgToDxgiTextureFormat(createInfo.format);
 	desc.SampleDesc.Count = 1;
 	desc.SampleDesc.Quality = 0;
@@ -283,7 +283,7 @@ inline ZgResult createTexture(
 	D3D12_CLEAR_VALUE clearValue = {};
 	D3D12_CLEAR_VALUE* optimalClearValue = nullptr;
 	if (createInfo.optimalClearValue != ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED) {
-		float value = (createInfo.optimalClearValue == ZG_OPTIMAL_CLEAR_VALUE_ZERO) ? 0.0f : 1.0f;
+		f32 value = (createInfo.optimalClearValue == ZG_OPTIMAL_CLEAR_VALUE_ZERO) ? 0.0f : 1.0f;
 		clearValue.Format = desc.Format;
 		if (createInfo.usage == ZG_TEXTURE_USAGE_RENDER_TARGET) {
 			clearValue.Color[0] = value;
@@ -321,9 +321,9 @@ inline ZgResult createTexture(
 	// Get the subresource footprint for the texture
 	// TODO: One for each mipmap level?
 	D3D12_PLACED_SUBRESOURCE_FOOTPRINT subresourceFootprints[ZG_MAX_NUM_MIPMAPS] = {};
-	uint32_t numRows[ZG_MAX_NUM_MIPMAPS] = {};
-	uint64_t rowSizesInBytes[ZG_MAX_NUM_MIPMAPS] = {};
-	uint64_t totalSizeInBytes = 0;
+	u32 numRows[ZG_MAX_NUM_MIPMAPS] = {};
+	u64 rowSizesInBytes[ZG_MAX_NUM_MIPMAPS] = {};
+	u64 totalSizeInBytes = 0;
 
 	device.GetCopyableFootprints(&desc, 0, createInfo.numMipmaps, allocation->GetOffset(),
 		subresourceFootprints, numRows, rowSizesInBytes, &totalSizeInBytes);
@@ -340,7 +340,7 @@ inline ZgResult createTexture(
 	texture->resource.allocation = allocation;
 	texture->resource.resource = resource;
 
-	for (uint32_t i = 0; i < createInfo.numMipmaps; i++) {
+	for (u32 i = 0; i < createInfo.numMipmaps; i++) {
 		texture->mipTrackings.add().lastCommittedState = D3D12_RESOURCE_STATE_COMMON;
 	}
 	
@@ -354,7 +354,7 @@ inline ZgResult createTexture(
 	texture->height = createInfo.height;
 	texture->numMipmaps = createInfo.numMipmaps;
 
-	for (uint32_t i = 0; i < createInfo.numMipmaps; i++) {
+	for (u32 i = 0; i < createInfo.numMipmaps; i++) {
 		texture->subresourceFootprints[i] = subresourceFootprints[i];
 		texture->numRows[i] = numRows[i];
 		texture->rowSizesInBytes[i] = rowSizesInBytes[i];

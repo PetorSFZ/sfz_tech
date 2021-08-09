@@ -109,8 +109,8 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 	ProfilingStats& stats = getProfilingStats();
 
 	// Get information about the selected category from the stats
-	const uint32_t numLabels = stats.numLabels(state.categoryStr);
-	const uint32_t numSamples = stats.numSamples(state.categoryStr);
+	const u32 numLabels = stats.numLabels(state.categoryStr);
+	const u32 numSamples = stats.numSamples(state.categoryStr);
 	const char* const* labelStrs = stats.labels(state.categoryStr);
 	const char* idxUnit = stats.idxUnit(state.categoryStr);
 	const char* sampleUnit = stats.sampleUnit(state.categoryStr);
@@ -121,9 +121,9 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 	ArrayLocal<const float*, PROFILING_STATS_MAX_NUM_LABELS> valuesList;
 	ArrayLocal<ImU32, PROFILING_STATS_MAX_NUM_LABELS> colorsList;
 	ArrayLocal<LabelStats, PROFILING_STATS_MAX_NUM_LABELS> labelStats;
-	float worstMax = FLT_MIN;
-	uint32_t longestLabelStr = 0;
-	for (uint32_t i = 0; i < numLabels; i++) {
+	float worstMax = -F32_MAX;
+	u32 longestLabelStr = 0;
+	for (u32 i = 0; i < numLabels; i++) {
 
 		// Get samples
 		const char* label = labelStrs[i];
@@ -144,16 +144,16 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 
 		// Calculate worst max from stats and longest label string
 		worstMax = sfz::max(worstMax, labelStat.max);
-		longestLabelStr = sfz::max(longestLabelStr, uint32_t(strnlen(label, 33)));
+		longestLabelStr = sfz::max(longestLabelStr, u32(strnlen(label, 33)));
 	}
 
 	// Combine samples if requested
 	if (visType == StatsVisualizationType::FIRST_INDIVIDUALLY_REST_ADDED) {
-		for (uint32_t i = 1; i < numLabels; i++) {
+		for (u32 i = 1; i < numLabels; i++) {
 			Array<float>& targetVals = state.processedValues[i];
-			for (uint32_t j = i + 1; j < numLabels; j++) {
+			for (u32 j = i + 1; j < numLabels; j++) {
 				const Array<float>& readVals = state.processedValues[j];
-				for (uint32_t k = 0; k < numSamples; k++) {
+				for (u32 k = 0; k < numSamples; k++) {
 					targetVals[k] += readVals[k];
 				}
 			}
@@ -210,7 +210,7 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 		// Render performance numbers
 		ImGui::SetNextItemWidth(800.0f);
 		ImGui::BeginGroup();
-		for (uint32_t i = 0; i < numLabels; i++) {
+		for (u32 i = 0; i < numLabels; i++) {
 			ImGui::PushStyleColor(ImGuiCol_Text, colorsList[i]);
 			str64 format("%%-%us  avg %%5.1f %%s   max %%5.1f %%s", longestLabelStr);
 			ImGui::Text(format.str(),
@@ -246,9 +246,9 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 
 		// Tab bar
 		if (ImGui::BeginTabBar("PerformanceTabBar")) {
-			const uint32_t numCategories = stats.numCategories();
+			const u32 numCategories = stats.numCategories();
 			const char* const* categories = stats.categories();
-			for (uint32_t i = 0; i < numCategories; i++) {
+			for (u32 i = 0; i < numCategories; i++) {
 				if (ImGui::BeginTabItem(str96("%s##PerfBar", categories[i]))) {
 					state.categoryStr.clear();
 					state.categoryStr.appendf("%s", categories[i]);
@@ -265,7 +265,7 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 		ImGui::Plot("##PerformanceGraph", conf);
 
 		// Render performance numbers
-		for (uint32_t i = 0; i < numLabels; i++) {
+		for (u32 i = 0; i < numLabels; i++) {
 			ImGui::PushStyleColor(ImGuiCol_Text, colorsList[i]);
 			str64 format("%%-%us  avg %%5.1f %%s   max %%5.1f %%s", longestLabelStr);
 			ImGui::Text(format.str(),
@@ -300,9 +300,9 @@ static void renderLogWindow(ConsoleState& state, vec2 imguiWindowRes, bool isPre
 
 		// Find how many active messages there are
 		const time_t now = std::time(nullptr);
-		const uint32_t numMessages = logger.numMessages();
-		uint32_t numActiveMessages = 0;
-		for (uint32_t i = 0; i < numMessages; i++) {
+		const u32 numMessages = logger.numMessages();
+		u32 numActiveMessages = 0;
+		for (u32 i = 0; i < numMessages; i++) {
 			// Reverse order, newest first
 			const TerminalMessageItem& msg = logger.getMessage(numMessages - i - 1);
 			const float age = float(now - msg.timestamp);
@@ -338,7 +338,7 @@ static void renderLogWindow(ConsoleState& state, vec2 imguiWindowRes, bool isPre
 		ImGui::PushStyleColor(ImGuiCol_Border, vec4(0.0f, 0.0f, 0.0f, 0.0f));
 		ImGui::Begin("Log Preview", nullptr, windowFlags);
 
-		for (uint32_t i = 0; i < numActiveMessages; i++) {
+		for (u32 i = 0; i < numActiveMessages; i++) {
 			// Reverse order, newest first
 			const TerminalMessageItem& msg = logger.getMessage(numMessages - i - 1);
 
@@ -411,8 +411,8 @@ static void renderLogWindow(ConsoleState& state, vec2 imguiWindowRes, bool isPre
 
 	// Print all messages
 	ImGui::BeginChild("LogItems");
-	uint32_t numLogMessages = logger.numMessages();
-	for (uint32_t i = 0; i < numLogMessages; i++) {
+	u32 numLogMessages = logger.numMessages();
+	for (u32 i = 0; i < numLogMessages; i++) {
 		// Reverse order, newest first
 		const TerminalMessageItem& message = logger.getMessage(numLogMessages - i - 1);
 
@@ -610,7 +610,7 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 // Console: State methods
 // ------------------------------------------------------------------------------------------------
 
-void Console::init(SfzAllocator* allocator, uint32_t numWindowsToDock, const char* const* windowNames) noexcept
+void Console::init(SfzAllocator* allocator, u32 numWindowsToDock, const char* const* windowNames) noexcept
 {
 	// Allocate ConsoleState and set allocator
 	this->destroy();
@@ -621,7 +621,7 @@ void Console::init(SfzAllocator* allocator, uint32_t numWindowsToDock, const cha
 	mState->imguiFirstRun = !fileExists("imgui.ini");
 
 	// Initialize some temp arrays with allocators
-	for (uint32_t i = 0; i < mState->processedValues.capacity(); i++) {
+	for (u32 i = 0; i < mState->processedValues.capacity(); i++) {
 		mState->processedValues.add(Array<float>(0, allocator, sfz_dbg("")));
 	}
 
@@ -643,7 +643,7 @@ void Console::init(SfzAllocator* allocator, uint32_t numWindowsToDock, const cha
 	mState->cfgSectionSettings.init(64, allocator, sfz_dbg("ConsoleState member"));
 
 	// Injected window names
-	for (uint32_t i = 0; i < numWindowsToDock; i++) {
+	for (u32 i = 0; i < numWindowsToDock; i++) {
 		mState->injectedWindowNames.add(str96("%s", windowNames[i]));
 	}
 }
@@ -728,7 +728,7 @@ void Console::render(vec2_i32 windowRes) noexcept
 		ImGui::DockBuilderDockWindow("Renderer", dockLeft);
 		ImGui::DockBuilderDockWindow("Audio", dockLeft);
 
-		for (uint32_t i = 0; i < mState->injectedWindowNames.size(); i++) {
+		for (u32 i = 0; i < mState->injectedWindowNames.size(); i++) {
 			const char* windowName = mState->injectedWindowNames[i].str();
 			ImGui::DockBuilderDockWindow(windowName, dockLeft);
 		}

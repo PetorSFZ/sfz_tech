@@ -22,7 +22,6 @@
 
 #include <cassert>
 #include <cmath> // std::sqrt, std::fmodf
-#include <cstdint>
 #include <cstdlib> // std::abort()
 #include <cstring> // memcpy()
 #include <type_traits>
@@ -58,19 +57,19 @@ namespace sfz {
 
 // Swaps size bytes of memory between two buffers. Undefined behaviour if the buffers overlap, with
 // the exception that its safe to call if both pointers are the same (i.e. point to the same buffer).
-inline void memswp(void* __restrict a, void* __restrict b, uint64_t size)
+inline void memswp(void* __restrict a, void* __restrict b, u64 size)
 {
-	const uint64_t MEMSWP_TMP_BUFFER_SIZE = 64;
-	uint8_t tmpBuffer[MEMSWP_TMP_BUFFER_SIZE];
+	const u64 MEMSWP_TMP_BUFFER_SIZE = 64;
+	u8 tmpBuffer[MEMSWP_TMP_BUFFER_SIZE];
 
 	// Swap buffers in temp buffer sized chunks
-	uint64_t bytesLeft = size;
+	u64 bytesLeft = size;
 	while (bytesLeft >= MEMSWP_TMP_BUFFER_SIZE) {
 		memcpy(tmpBuffer, a, MEMSWP_TMP_BUFFER_SIZE);
 		memcpy(a, b, MEMSWP_TMP_BUFFER_SIZE);
 		memcpy(b, tmpBuffer, MEMSWP_TMP_BUFFER_SIZE);
-		a = reinterpret_cast<uint8_t*>(a) + MEMSWP_TMP_BUFFER_SIZE;
-		b = reinterpret_cast<uint8_t*>(b) + MEMSWP_TMP_BUFFER_SIZE;
+		a = reinterpret_cast<u8*>(a) + MEMSWP_TMP_BUFFER_SIZE;
+		b = reinterpret_cast<u8*>(b) + MEMSWP_TMP_BUFFER_SIZE;
 		bytesLeft -= MEMSWP_TMP_BUFFER_SIZE;
 	}
 
@@ -82,28 +81,28 @@ inline void memswp(void* __restrict a, void* __restrict b, uint64_t size)
 	}
 }
 
-// Checks whether an uint64_t is a power of two or not
-constexpr bool isPowerOfTwo(uint64_t value)
+// Checks whether an u64 is a power of two or not
+constexpr bool isPowerOfTwo(u64 value)
 {
 	// See https://graphics.stanford.edu/~seander/bithacks.html#DetermineIfPowerOf2
 	return value != 0 && (value & (value - 1)) == 0;
 }
 
 // Checks whether a pointer is aligned to a given byte aligment
-inline bool isAligned(const void* pointer, uint64_t alignment) noexcept
+inline bool isAligned(const void* pointer, u64 alignment) noexcept
 {
 	sfz_assert(isPowerOfTwo(alignment));
 	return ((uintptr_t)pointer & (alignment - 1)) == 0;
 }
 
 // Rounds up a given value so that it is evenly divisible by the given alignment
-constexpr uint64_t roundUpAligned(uint64_t value, uint64_t alignment)
+constexpr u64 roundUpAligned(u64 value, u64 alignment)
 {
 	return ((value + alignment - 1) / alignment) * alignment;
 }
 
 // Gives the offset needed to make the given value evenly divisible by the given alignment
-constexpr uint64_t alignedDiff(uint64_t value, uint64_t alignment)
+constexpr u64 alignedDiff(u64 value, u64 alignment)
 {
 	return roundUpAligned(value, alignment) - value;
 }
@@ -179,7 +178,7 @@ struct AltType final {
 // only use these typedefs and not the template explicitly, unless you have a very specific use-case
 // which requires it.
 
-template<typename T, uint32_t N>
+template<typename T, u32 N>
 struct Vec final { static_assert(N != N, "Only 2, 3 and 4-dimensional vectors supported."); };
 
 template<typename T>
@@ -201,8 +200,8 @@ struct Vec<T,2> final {
 
 	constexpr T* data() noexcept { return &x; }
 	constexpr const T* data() const noexcept { return &x; }
-	constexpr T& operator[] (uint32_t idx) { sfz_assert(idx < 2); return data()[idx]; }
-	constexpr T operator[] (uint32_t idx) const { sfz_assert(idx < 2); return data()[idx]; }
+	constexpr T& operator[] (u32 idx) { sfz_assert(idx < 2); return data()[idx]; }
+	constexpr T operator[] (u32 idx) const { sfz_assert(idx < 2); return data()[idx]; }
 
 	constexpr Vec& operator+= (Vec o) { x += o.x; y += o.y; return *this; }
 	constexpr Vec& operator-= (Vec o) { x -= o.x; y -= o.y; return *this; }
@@ -227,10 +226,10 @@ struct Vec<T,2> final {
 	constexpr bool operator!= (Vec o) const { return !(*this == o); }
 };
 
-using vec2 = Vec<float, 2>;         static_assert(sizeof(vec2) == sizeof(float) * 2, "");
-using vec2_i32 = Vec<int32_t, 2>;   static_assert(sizeof(vec2_i32) == sizeof(int32_t) * 2, "");
-using vec2_u32 = Vec<uint32_t, 2>;  static_assert(sizeof(vec2_u32) == sizeof(uint32_t) * 2, "");
-using vec2_u8 = Vec<uint8_t, 2>;    static_assert(sizeof(vec2_u8) == sizeof(uint8_t) * 2, "");
+using vec2 =     Vec<f32, 2>;  static_assert(sizeof(vec2) == sizeof(f32) * 2, "");
+using vec2_i32 = Vec<i32, 2>;  static_assert(sizeof(vec2_i32) == sizeof(i32) * 2, "");
+using vec2_u32 = Vec<u32, 2>;  static_assert(sizeof(vec2_u32) == sizeof(u32) * 2, "");
+using vec2_u8 =  Vec<u8, 2>;   static_assert(sizeof(vec2_u8) == sizeof(u8) * 2, "");
 
 template<typename T>
 struct Vec<T,3> final {
@@ -257,8 +256,8 @@ struct Vec<T,3> final {
 
 	constexpr T* data() { return &x; }
 	constexpr const T* data() const { return &x; }
-	constexpr T& operator[] (uint32_t idx) { sfz_assert(idx < 3); return data()[idx]; }
-	constexpr T operator[] (uint32_t idx) const { sfz_assert(idx < 3); return data()[idx]; }
+	constexpr T& operator[] (u32 idx) { sfz_assert(idx < 3); return data()[idx]; }
+	constexpr T operator[] (u32 idx) const { sfz_assert(idx < 3); return data()[idx]; }
 
 	constexpr Vec& operator+= (Vec o) { x += o.x; y += o.y; z += o.z; return *this; }
 	constexpr Vec& operator-= (Vec o) { x -= o.x; y -= o.y; z -= o.z; return *this; }
@@ -283,10 +282,10 @@ struct Vec<T,3> final {
 	constexpr bool operator!= (Vec o) const { return !(*this == o); }
 };
 
-using vec3 = Vec<float, 3>;         static_assert(sizeof(vec3) == sizeof(float) * 3, "");
-using vec3_i32 = Vec<int32_t, 3>;   static_assert(sizeof(vec3_i32) == sizeof(int32_t) * 3, "");
-using vec3_u32 = Vec<uint32_t, 3>;  static_assert(sizeof(vec3_u32) == sizeof(uint32_t) * 3, "");
-using vec3_u8 = Vec<uint8_t, 3>;    static_assert(sizeof(vec3_u8) == sizeof(uint8_t) * 3, "");
+using vec3 =     Vec<f32, 3>;  static_assert(sizeof(vec3) == sizeof(f32) * 3, "");
+using vec3_i32 = Vec<i32, 3>;  static_assert(sizeof(vec3_i32) == sizeof(i32) * 3, "");
+using vec3_u32 = Vec<u32, 3>;  static_assert(sizeof(vec3_u32) == sizeof(u32) * 3, "");
+using vec3_u8 =  Vec<u8, 3>;   static_assert(sizeof(vec3_u8) == sizeof(u8) * 3, "");
 
 template<typename T>
 struct alignas(sizeof(T) * 4) Vec<T,4> final {
@@ -319,8 +318,8 @@ struct alignas(sizeof(T) * 4) Vec<T,4> final {
 
 	constexpr T* data() noexcept { return &x; }
 	constexpr const T* data() const noexcept { return &x; }
-	constexpr T& operator[] (uint32_t idx) { sfz_assert(idx < 4); return data()[idx]; }
-	constexpr T operator[] (uint32_t idx) const { sfz_assert(idx < 4); return data()[idx]; }
+	constexpr T& operator[] (u32 idx) { sfz_assert(idx < 4); return data()[idx]; }
+	constexpr T operator[] (u32 idx) const { sfz_assert(idx < 4); return data()[idx]; }
 
 	constexpr Vec& operator+= (Vec o) { x += o.x; y += o.y; z += o.z; w += o.w; return *this; }
 	constexpr Vec& operator-= (Vec o) { x -= o.x; y -= o.y; z -= o.z; w -= o.w; return *this; }
@@ -345,23 +344,23 @@ struct alignas(sizeof(T) * 4) Vec<T,4> final {
 	constexpr bool operator!= (Vec o) const { return !(*this == o); }
 };
 
-using vec4 = Vec<float, 4>;         static_assert(sizeof(vec4) == sizeof(float) * 4, "");
-using vec4_i32 = Vec<int32_t, 4>;   static_assert(sizeof(vec4_i32) == sizeof(int32_t) * 4, "");
-using vec4_u32 = Vec<uint32_t, 4>;  static_assert(sizeof(vec4_u32) == sizeof(uint32_t) * 4, "");
-using vec4_u8 = Vec<uint8_t, 4>;    static_assert(sizeof(vec4_u8) == sizeof(uint8_t) * 4, "");
+using vec4 =     Vec<f32, 4>;  static_assert(sizeof(vec4) == sizeof(f32) * 4, "");
+using vec4_i32 = Vec<i32, 4>;  static_assert(sizeof(vec4_i32) == sizeof(i32) * 4, "");
+using vec4_u32 = Vec<u32, 4>;  static_assert(sizeof(vec4_u32) == sizeof(u32) * 4, "");
+using vec4_u8 =  Vec<u8, 4>;   static_assert(sizeof(vec4_u8) == sizeof(u8) * 4, "");
 
 static_assert(alignof(vec4) == 16, "");
 static_assert(alignof(vec4_i32) == 16, "");
 static_assert(alignof(vec4_u32) == 16, "");
 static_assert(alignof(vec4_u8) == 4, "");
 
-template<typename T, uint32_t N>
+template<typename T, u32 N>
 constexpr Vec<T,N> operator* (T s, Vec<T,N> v) { return v * s; }
 
-template<typename T, uint32_t N>
+template<typename T, u32 N>
 constexpr Vec<T,N> operator/ (T s, Vec<T,N> v) { return Vec<T,N>(s) / v; }
 
-template<typename T, uint32_t N>
+template<typename T, u32 N>
 constexpr Vec<T,N> operator% (T s, Vec<T,N> v) { return Vec<T,N>(s) % v; }
 
 template<typename T>
@@ -379,81 +378,81 @@ constexpr Vec<T,3> cross(Vec<T,3> l, Vec<T,3> r)
 	return Vec<T,3>(l.y * r.z - l.z * r.y, l.z * r.x - l.x * r.z, l.x * r.y - l.y * r.x);
 }
 
-inline float length(vec2 v) { return std::sqrt(dot(v, v)); }
-inline float length(vec3 v) { return std::sqrt(dot(v, v)); }
-inline float length(vec4 v) { return std::sqrt(dot(v, v)); }
+inline f32 length(vec2 v) { return std::sqrt(dot(v, v)); }
+inline f32 length(vec3 v) { return std::sqrt(dot(v, v)); }
+inline f32 length(vec4 v) { return std::sqrt(dot(v, v)); }
 
 inline vec2 normalize(vec2 v) { return v * (1.0f / length(v)); }
 inline vec3 normalize(vec3 v) { return v * (1.0f / length(v)); }
 inline vec4 normalize(vec4 v) { return v * (1.0f / length(v)); }
 
-inline vec2 normalizeSafe(vec2 v) { float tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
-inline vec3 normalizeSafe(vec3 v) { float tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
-inline vec4 normalizeSafe(vec4 v) { float tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
+inline vec2 normalizeSafe(vec2 v) { f32 tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
+inline vec3 normalizeSafe(vec3 v) { f32 tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
+inline vec4 normalizeSafe(vec4 v) { f32 tmp = length(v); return tmp == 0.0f ? v : v * (1.0f / tmp); }
 
 template<typename T> constexpr T elemSum(Vec<T,2> v) { return v.x + v.y; }
 template<typename T> constexpr T elemSum(Vec<T,3> v) { return v.x + v.y + v.z; }
 template<typename T> constexpr T elemSum(Vec<T,4> v) { return v.x + v.y + v.z + v.w; }
 
-constexpr float divSafe(float n, float d, float eps = 0.000'000'1f) { return d == 0.0f ? n / eps : n / d; }
-constexpr vec2 divSafe(vec2 n, vec2 d, float eps = 0.000'000'1f) { return vec2(divSafe(n.x, d.x, eps), divSafe(n.y, d.y, eps)); }
-constexpr vec3 divSafe(vec3 n, vec3 d, float eps = 0.000'000'1f) { return vec3(divSafe(n.x, d.x, eps), divSafe(n.y, d.y, eps), divSafe(n.z, d.z, eps)); }
-constexpr vec4 divSafe(vec4 n, vec4 d, float eps = 0.000'000'1f) { return vec4(divSafe(n.x, d.x, eps), divSafe(n.y, d.y, eps), divSafe(n.z, d.z, eps), divSafe(n.w, d.w, eps)); }
+constexpr f32 divSafe(f32 n, f32 d, f32 eps = 0.000'000'1f) { return d == 0.0f ? n / eps : n / d; }
+constexpr vec2 divSafe(vec2 n, vec2 d, f32 eps = 0.000'000'1f) { return vec2(divSafe(n.x, d.x, eps), divSafe(n.y, d.y, eps)); }
+constexpr vec3 divSafe(vec3 n, vec3 d, f32 eps = 0.000'000'1f) { return vec3(divSafe(n.x, d.x, eps), divSafe(n.y, d.y, eps), divSafe(n.z, d.z, eps)); }
+constexpr vec4 divSafe(vec4 n, vec4 d, f32 eps = 0.000'000'1f) { return vec4(divSafe(n.x, d.x, eps), divSafe(n.y, d.y, eps), divSafe(n.z, d.z, eps), divSafe(n.w, d.w, eps)); }
 
 // Math functions
 // ------------------------------------------------------------------------------------------------
 
-constexpr float PI = 3.14159265358979323846f;
-constexpr float DEG_TO_RAD = PI / 180.0f;
-constexpr float RAD_TO_DEG = 180.0f / PI;
+constexpr f32 PI = 3.14159265358979323846f;
+constexpr f32 DEG_TO_RAD = PI / 180.0f;
+constexpr f32 RAD_TO_DEG = 180.0f / PI;
 
-constexpr float EQF_EPS = 0.001f;
-constexpr bool eqf(float l, float r, float eps = EQF_EPS) { return (l <= (r + eps)) && (l >= (r - eps)); }
-constexpr bool eqf(vec2 l, vec2 r, float eps = EQF_EPS) { return eqf(l.x, r.x, eps) && eqf(l.y, r.y, eps); }
-constexpr bool eqf(vec3 l, vec3 r, float eps = EQF_EPS) { return eqf(l.xy, r.xy, eps) && eqf(l.z, r.z, eps); }
-constexpr bool eqf(vec4 l, vec4 r, float eps = EQF_EPS) { return eqf(l.xyz, r.xyz, eps) && eqf(l.w, r.w, eps); }
+constexpr f32 EQF_EPS = 0.001f;
+constexpr bool eqf(f32 l, f32 r, f32 eps = EQF_EPS) { return (l <= (r + eps)) && (l >= (r - eps)); }
+constexpr bool eqf(vec2 l, vec2 r, f32 eps = EQF_EPS) { return eqf(l.x, r.x, eps) && eqf(l.y, r.y, eps); }
+constexpr bool eqf(vec3 l, vec3 r, f32 eps = EQF_EPS) { return eqf(l.xy, r.xy, eps) && eqf(l.z, r.z, eps); }
+constexpr bool eqf(vec4 l, vec4 r, f32 eps = EQF_EPS) { return eqf(l.xyz, r.xyz, eps) && eqf(l.w, r.w, eps); }
 
-constexpr float abs(float v) { return v >= 0.0f ? v : -v; }
+constexpr f32 abs(f32 v) { return v >= 0.0f ? v : -v; }
 constexpr vec2 abs(vec2 v) { return vec2(sfz::abs(v.x), sfz::abs(v.y)); }
 constexpr vec3 abs(vec3 v) { return vec3(sfz::abs(v.xy), sfz::abs(v.z)); }
 constexpr vec4 abs(vec4 v) { return vec4(sfz::abs(v.xyz), sfz::abs(v.w)); }
 
-constexpr int32_t abs(int32_t v) { return v >= 0 ? v : -v; }
+constexpr i32 abs(i32 v) { return v >= 0 ? v : -v; }
 constexpr vec2_i32 abs(vec2_i32 v) { return vec2_i32(sfz::abs(v.x), sfz::abs(v.y)); }
 constexpr vec3_i32 abs(vec3_i32 v) { return vec3_i32(sfz::abs(v.xy),sfz::abs(v.z)); }
 constexpr vec4_i32 abs(vec4_i32 v) { return vec4_i32(sfz::abs(v.xyz), sfz::abs(v.w)); }
 
-constexpr float min(float l, float r) { return (l < r) ? l : r; }
-constexpr int32_t min(int32_t l, int32_t r) { return (l < r) ? l : r; }
-constexpr uint32_t min(uint32_t l, uint32_t r) { return (l < r) ? l : r; }
-constexpr uint8_t min(uint8_t l, uint8_t r) { return (l < r) ? l : r; }
+constexpr f32 min(f32 l, f32 r) { return (l < r) ? l : r; }
+constexpr i32 min(i32 l, i32 r) { return (l < r) ? l : r; }
+constexpr u32 min(u32 l, u32 r) { return (l < r) ? l : r; }
+constexpr u8 min(u8 l, u8 r) { return (l < r) ? l : r; }
 
-template<typename T, uint32_t N>
+template<typename T, u32 N>
 constexpr Vec<T,N> min(Vec<T,N> l, Vec<T,N> r)
 {
 	Vec<T,N> tmp;
-	for (uint32_t i = 0; i < N; i++) tmp[i] = sfz::min(l[i], r[i]);
+	for (u32 i = 0; i < N; i++) tmp[i] = sfz::min(l[i], r[i]);
 	return tmp;
 }
 
-template<typename T, uint32_t N> constexpr Vec<T,N> min(Vec<T,N> l, T r) { return sfz::min(l, Vec<T,N>(r)); }
-template<typename T, uint32_t N> constexpr Vec<T,N> min(T l, Vec<T,N> r) { return sfz::min(r, l); }
+template<typename T, u32 N> constexpr Vec<T,N> min(Vec<T,N> l, T r) { return sfz::min(l, Vec<T,N>(r)); }
+template<typename T, u32 N> constexpr Vec<T,N> min(T l, Vec<T,N> r) { return sfz::min(r, l); }
 
-constexpr float max(float l, float r) { return (l < r) ? r : l; }
-constexpr int32_t max(int32_t l, int32_t r) { return (l < r) ? r : l; }
-constexpr uint32_t max(uint32_t l, uint32_t r) { return (l < r) ? r : l; }
-constexpr uint8_t max(uint8_t l, uint8_t r) { return (l < r) ? r : l; }
+constexpr f32 max(f32 l, f32 r) { return (l < r) ? r : l; }
+constexpr i32 max(i32 l, i32 r) { return (l < r) ? r : l; }
+constexpr u32 max(u32 l, u32 r) { return (l < r) ? r : l; }
+constexpr u8 max(u8 l, u8 r) { return (l < r) ? r : l; }
 
-template<typename T, uint32_t N>
+template<typename T, u32 N>
 constexpr Vec<T,N> max(Vec<T,N> l, Vec<T,N> r)
 {
 	Vec<T,N> tmp;
-	for (uint32_t i = 0; i < N; i++) tmp[i] = sfz::max(l[i], r[i]);
+	for (u32 i = 0; i < N; i++) tmp[i] = sfz::max(l[i], r[i]);
 	return tmp;
 }
 
-template<typename T, uint32_t N> constexpr Vec<T,N> max(Vec<T,N> l, T r) { return sfz::max(l, Vec<T,N>(r)); }
-template<typename T, uint32_t N> constexpr Vec<T,N> max(T l, Vec<T,N> r) { return sfz::max(r, l); }
+template<typename T, u32 N> constexpr Vec<T,N> max(Vec<T,N> l, T r) { return sfz::max(l, Vec<T,N>(r)); }
+template<typename T, u32 N> constexpr Vec<T,N> max(T l, Vec<T,N> r) { return sfz::max(r, l); }
 
 template<typename T> constexpr T elemMax(Vec<T,2> v) { return sfz::max(v.x, v.y); }
 template<typename T> constexpr T elemMax(Vec<T,3> v) { return sfz::max(sfz::max(v.x, v.y), v.z); }
@@ -474,38 +473,38 @@ template<typename T> constexpr Vec<T,2> sgn(Vec<T,2> v) { return Vec<T,2> (sgn(v
 template<typename T> constexpr Vec<T,3> sgn(Vec<T,3> v) { return Vec<T,3> (sgn(v.x), sgn(v.y), sgn(v.z)); }
 template<typename T> constexpr Vec<T,4> sgn(Vec<T,4> v) { return Vec<T,4> (sgn(v.x), sgn(v.y), sgn(v.z), sgn(v.w)); }
 
-constexpr float saturate(float v) { return sfz::clamp(v, 0.0f, 1.0f); }
-constexpr int32_t saturate(int32_t v) { return sfz::clamp(v, 0, 255); }
-constexpr uint32_t saturate(uint32_t v) { return sfz::clamp(v, 0u, 255u); }
+constexpr f32 saturate(f32 v) { return sfz::clamp(v, 0.0f, 1.0f); }
+constexpr i32 saturate(i32 v) { return sfz::clamp(v, 0, 255); }
+constexpr u32 saturate(u32 v) { return sfz::clamp(v, 0u, 255u); }
 
 template<typename T> constexpr Vec<T,2> saturate(Vec<T,2> v) { return Vec<T,2>(sfz::saturate(v.x), sfz::saturate(v.y)); }
 template<typename T> constexpr Vec<T,3> saturate(Vec<T,3> v) { return Vec<T,3>(sfz::saturate(v.xy), sfz::saturate(v.z)); }
 template<typename T> constexpr Vec<T,4> saturate(Vec<T,4> v) { return Vec<T,4>(sfz::saturate(v.xyz), sfz::saturate(v.w)); }
 
-constexpr float lerp(float v0, float v1, float t) { return (1.0f - t) * v0 + t * v1; }
-constexpr vec2 lerp(vec2 v0, vec2 v1, float t) { return (1.0f - t) * v0 + t * v1; }
-constexpr vec3 lerp(vec3 v0, vec3 v1, float t) { return (1.0f - t) * v0 + t * v1; }
-constexpr vec4 lerp(vec4 v0, vec4 v1, float t) { return (1.0f - t) * v0 + t * v1; }
+constexpr f32 lerp(f32 v0, f32 v1, f32 t) { return (1.0f - t) * v0 + t * v1; }
+constexpr vec2 lerp(vec2 v0, vec2 v1, f32 t) { return (1.0f - t) * v0 + t * v1; }
+constexpr vec3 lerp(vec3 v0, vec3 v1, f32 t) { return (1.0f - t) * v0 + t * v1; }
+constexpr vec4 lerp(vec4 v0, vec4 v1, f32 t) { return (1.0f - t) * v0 + t * v1; }
 
-inline float fmod(float n, float dnm) { return std::fmodf(n, dnm); }
-inline vec2 fmod(vec2 n, float dnm) { return vec2(fmod(n.x, dnm), fmod(n.y, dnm)); }
+inline f32 fmod(f32 n, f32 dnm) { return std::fmodf(n, dnm); }
+inline vec2 fmod(vec2 n, f32 dnm) { return vec2(fmod(n.x, dnm), fmod(n.y, dnm)); }
 inline vec2 fmod(vec2 n, vec2 dnm) { return vec2(fmod(n.x, dnm.x), fmod(n.y, dnm.y)); }
-inline vec3 fmod(vec3 n, float dnm) { return vec3(fmod(n.x, dnm), fmod(n.y, dnm), fmod(n.z, dnm)); }
+inline vec3 fmod(vec3 n, f32 dnm) { return vec3(fmod(n.x, dnm), fmod(n.y, dnm), fmod(n.z, dnm)); }
 inline vec3 fmod(vec3 n, vec3 dnm) { return vec3(fmod(n.x, dnm.x), fmod(n.y, dnm.y), fmod(n.z, dnm.z)); }
-inline vec4 fmod(vec4 n, float dnm) { return vec4(fmod(n.x, dnm), fmod(n.y, dnm), fmod(n.z, dnm), fmod(n.w, dnm)); }
+inline vec4 fmod(vec4 n, f32 dnm) { return vec4(fmod(n.x, dnm), fmod(n.y, dnm), fmod(n.z, dnm), fmod(n.w, dnm)); }
 inline vec4 fmod(vec4 n, vec4 dnm) { return vec4(fmod(n.x, dnm.x), fmod(n.y, dnm.y), fmod(n.z, dnm.z), fmod(n.w, dnm.w)); }
 
-inline float floor(float v) { return std::floorf(v); }
+inline f32 floor(f32 v) { return std::floorf(v); }
 inline vec2 floor(vec2 v) { return vec2(floor(v.x), floor(v.y)); }
 inline vec3 floor(vec3 v) { return vec3(floor(v.x), floor(v.y), floor(v.z)); }
 inline vec4 floor(vec4 v) { return vec4(floor(v.x), floor(v.y), floor(v.z), floor(v.w)); }
 
-inline float ceil(float v) { return std::ceilf(v); }
+inline f32 ceil(f32 v) { return std::ceilf(v); }
 inline vec2 ceil(vec2 v) { return vec2(ceil(v.x), ceil(v.y)); }
 inline vec3 ceil(vec3 v) { return vec3(ceil(v.x), ceil(v.y), ceil(v.z)); }
 inline vec4 ceil(vec4 v) { return vec4(ceil(v.x), ceil(v.y), ceil(v.z), ceil(v.w)); }
 
-inline float round(float v) { return std::roundf(v); }
+inline f32 round(f32 v) { return std::roundf(v); }
 inline vec2 round(vec2 v) { return vec2(round(v.x), round(v.y)); }
 inline vec3 round(vec3 v) { return vec3(round(v.x), round(v.y), round(v.z)); }
 inline vec4 round(vec4 v) { return vec4(round(v.x), round(v.y), round(v.z), round(v.w)); }

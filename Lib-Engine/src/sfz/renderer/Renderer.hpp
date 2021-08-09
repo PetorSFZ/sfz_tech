@@ -71,11 +71,11 @@ public:
 
 	RendererState& directAccessInternalState() noexcept { return *mState; }
 
-	uint64_t currentFrameIdx() const noexcept; // Incremented each frameBegin()
+	u64 currentFrameIdx() const noexcept; // Incremented each frameBegin()
 	vec2_i32 windowResolution() const noexcept;
 
 	// Returns the latest frame time retrieved and which frame idx it was related to.
-	void frameTimeMs(uint64_t& frameIdxOut, float& frameTimeMsOut) const noexcept;
+	void frameTimeMs(u64& frameIdxOut, float& frameTimeMsOut) const noexcept;
 
 	// ImGui UI methods
 	// --------------------------------------------------------------------------------------------

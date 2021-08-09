@@ -76,10 +76,10 @@ int64_t sizeofFile(const char* path) noexcept;
 
 // Reads binary file to pre-allocated memory.
 // \return 0 on success, -1 on error, -2 if file was larger than pre-allocated memory
-int32_t readBinaryFile(const char* path, uint8_t* dataOut, size_t maxNumBytes) noexcept;
+int32_t readBinaryFile(const char* path, u8* dataOut, size_t maxNumBytes) noexcept;
 
 // Reads binary file, returns empty Array if error.
-Array<uint8_t> readBinaryFile(
+Array<u8> readBinaryFile(
 	const char* path,
 	SfzAllocator* allocator = getDefaultAllocator()) noexcept;
 
@@ -87,7 +87,7 @@ Array<uint8_t> readBinaryFile(
 DynString readTextFile(const char* path, SfzAllocator* allocator = getDefaultAllocator()) noexcept;
 
 // Writes memory to binary file, returns whether successful or not.
-bool writeBinaryFile(const char* path, const uint8_t* data, size_t numBytes) noexcept;
+bool writeBinaryFile(const char* path, const u8* data, size_t numBytes) noexcept;
 
 // Writes string to file, returns whether succesful or not. If numChars is zero (default) all chars
 // until the null-terminator will be written.

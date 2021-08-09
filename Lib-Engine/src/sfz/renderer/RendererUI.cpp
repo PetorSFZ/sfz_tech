@@ -37,7 +37,7 @@ using sfz::str64;
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-static float toGiB(uint64_t bytes) noexcept
+static float toGiB(u64 bytes) noexcept
 {
 	return float(bytes) / (1024.0f * 1024.0f * 1024.0f);
 }

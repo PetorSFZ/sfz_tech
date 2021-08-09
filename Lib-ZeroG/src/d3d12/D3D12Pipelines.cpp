@@ -34,42 +34,42 @@ using time_point = std::chrono::high_resolution_clock::time_point;
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-static float calculateDeltaMillis(time_point& previousTime) noexcept
+static f32 calculateDeltaMillis(time_point& previousTime) noexcept
 {
 	time_point currentTime = std::chrono::high_resolution_clock::now();
 
-	using FloatMS = std::chrono::duration<float, std::milli>;
-	float delta = std::chrono::duration_cast<FloatMS>(currentTime - previousTime).count();
+	using FloatMS = std::chrono::duration<f32, std::milli>;
+	f32 delta = std::chrono::duration_cast<FloatMS>(currentTime - previousTime).count();
 
 	previousTime = currentTime;
 	return delta;
 }
 
-static sfz::Array<uint8_t> readBinaryFile(const char* path) noexcept
+static sfz::Array<u8> readBinaryFile(const char* path) noexcept
 {
 	// Open file
 	std::FILE* file = std::fopen(path, "rb");
-	if (file == NULL) return sfz::Array<uint8_t>();
+	if (file == NULL) return sfz::Array<u8>();
 
 	// Get size of file
 	std::fseek(file, 0, SEEK_END);
-	int64_t size = std::ftell(file);
+	i64 size = std::ftell(file);
 	if (size <= 0) {
 		std::fclose(file);
-		return sfz::Array<uint8_t>();
+		return sfz::Array<u8>();
 	}
 	std::fseek(file, 0, SEEK_SET);
 
 	// Allocate memory for file
-	sfz::Array<uint8_t> data;
-	data.init(uint32_t(size), getAllocator(), sfz_dbg("binary file"));
-	data.hackSetSize(uint32_t(size));
+	sfz::Array<u8> data;
+	data.init(u32(size), getAllocator(), sfz_dbg("binary file"));
+	data.hackSetSize(u32(size));
 
 	// Read file
 	size_t bytesRead = std::fread(data.data(), 1, data.size(), file);
 	if (bytesRead != size_t(size)) {
 		std::fclose(file);
-		return sfz::Array<uint8_t>();
+		return sfz::Array<u8>();
 	}
 
 	// Close file and return data
@@ -77,13 +77,13 @@ static sfz::Array<uint8_t> readBinaryFile(const char* path) noexcept
 	return data;
 }
 
-static bool relativeToAbsolute(char* pathOut, uint32_t pathOutSize, const char* pathIn) noexcept
+static bool relativeToAbsolute(char* pathOut, u32 pathOutSize, const char* pathIn) noexcept
 {
 	DWORD res = GetFullPathNameA(pathIn, pathOutSize, pathOut, NULL);
 	return res > 0;
 }
 
-static bool fixPath(WCHAR* pathOut, uint32_t pathOutNumChars, const char* utf8In) noexcept
+static bool fixPath(WCHAR* pathOut, u32 pathOutNumChars, const char* utf8In) noexcept
 {
 	char absolutePath[MAX_PATH] = { 0 };
 	if (!relativeToAbsolute(absolutePath, MAX_PATH, utf8In)) return false;
@@ -93,10 +93,10 @@ static bool fixPath(WCHAR* pathOut, uint32_t pathOutNumChars, const char* utf8In
 
 // DFCC_DXIL enum constant from DxilContainer/DxilContainer.h in DirectXShaderCompiler
 #define DXIL_FOURCC(ch0, ch1, ch2, ch3) ( \
-	(uint32_t)(uint8_t)(ch0)        | (uint32_t)(uint8_t)(ch1) << 8  | \
-	(uint32_t)(uint8_t)(ch2) << 16  | (uint32_t)(uint8_t)(ch3) << 24   \
+	(u32)(u8)(ch0)        | (u32)(u8)(ch1) << 8  | \
+	(u32)(u8)(ch2) << 16  | (u32)(u8)(ch3) << 24   \
 )
-static constexpr uint32_t DFCC_DXIL = DXIL_FOURCC('D', 'X', 'I', 'L');
+static constexpr u32 DFCC_DXIL = DXIL_FOURCC('D', 'X', 'I', 'L');
 
 static HRESULT getShaderReflection(
 	ComPtr<IDxcBlob>& blob, ComPtr<ID3D12ShaderReflection>& reflectionOut) noexcept
@@ -110,7 +110,7 @@ static HRESULT getShaderReflection(
 	if (!SUCCEEDED(res)) return res;
 
 	// Attempt to wrangle out the ID3D12ShaderReflection from it
-	uint32_t shaderIdx = 0;
+	u32 shaderIdx = 0;
 	res = dxcReflection->FindFirstPartKind(DFCC_DXIL, &shaderIdx);
 	if (!SUCCEEDED(res)) return res;
 	res = dxcReflection->GetPartReflection(shaderIdx, IID_PPV_ARGS(&reflectionOut));
@@ -132,7 +132,7 @@ static ZgResult dxcCreateHlslBlobFromFile(
 	}
 
 	// Create an encoding blob from file
-	uint32_t CODE_PAGE = CP_UTF8;
+	u32 CODE_PAGE = CP_UTF8;
 	if (D3D12_FAIL(dxcLibrary.CreateBlobFromFile(
 		shaderFilePathWide, &CODE_PAGE, &blobOut))) {
 		return ZG_ERROR_SHADER_COMPILE_ERROR;
@@ -147,9 +147,9 @@ static ZgResult dxcCreateHlslBlobFromSource(
 	ComPtr<IDxcBlobEncoding>& blobOut) noexcept
 {
 	// Create an encoding blob from memory
-	uint32_t CODE_PAGE = CP_UTF8;
+	u32 CODE_PAGE = CP_UTF8;
 	if (D3D12_FAIL(dxcLibrary.CreateBlobWithEncodingFromPinned(
-		source, uint32_t(std::strlen(source)), CODE_PAGE, &blobOut))) {
+		source, u32(std::strlen(source)), CODE_PAGE, &blobOut))) {
 		return ZG_ERROR_SHADER_COMPILE_ERROR;
 	}
 
@@ -236,8 +236,8 @@ static ZgResult compileHlslShader(
 	WCHAR argsContainer[ZG_MAX_NUM_DXC_COMPILER_FLAGS][32] = {};
 	LPCWSTR args[ZG_MAX_NUM_DXC_COMPILER_FLAGS] = {};
 
-	uint32_t numArgs = 0;
-	for (uint32_t i = 0; i < ZG_MAX_NUM_DXC_COMPILER_FLAGS; i++) {
+	u32 numArgs = 0;
+	for (u32 i = 0; i < ZG_MAX_NUM_DXC_COMPILER_FLAGS; i++) {
 		if (compileSettings.dxcCompilerFlags[i] == nullptr) continue;
 		utf8ToWide(argsContainer[numArgs], 32, compileSettings.dxcCompilerFlags[i]);
 		args[numArgs] = argsContainer[numArgs];
@@ -446,10 +446,10 @@ static void logPipelineComputeInfo(
 	const ZgPipelineComputeCreateInfo& createInfo,
 	const char* computeShaderName,
 	const ZgPipelineBindingsSignature& bindingsSignature,
-	uint32_t groupDimX,
-	uint32_t groupDimY,
-	uint32_t groupDimZ,
-	float compileTimeMs) noexcept
+	u32 groupDimX,
+	u32 groupDimY,
+	u32 groupDimZ,
+	f32 compileTimeMs) noexcept
 {
 	sfz::str4096 tmpStr;
 
@@ -467,7 +467,7 @@ static void logPipelineComputeInfo(
 	// Print constant buffers
 	if (bindingsSignature.numConstBuffers > 0) {
 		tmpStr.appendf("\nConstant buffers (%u):\n", bindingsSignature.numConstBuffers);
-		for (uint32_t i = 0; i < bindingsSignature.numConstBuffers; i++) {
+		for (u32 i = 0; i < bindingsSignature.numConstBuffers; i++) {
 			const ZgConstantBufferBindingDesc& cbuffer = bindingsSignature.constBuffers[i];
 			tmpStr.appendf(" - Register: %u -- Size: %u bytes -- Push constant: %s\n",
 				cbuffer.bufferRegister,
@@ -479,7 +479,7 @@ static void logPipelineComputeInfo(
 	// Print unordered buffers
 	if (bindingsSignature.numUnorderedBuffers > 0) {
 		tmpStr.appendf("\nUnordered buffers (%u):\n", bindingsSignature.numUnorderedBuffers);
-		for (uint32_t i = 0; i < bindingsSignature.numUnorderedBuffers; i++) {
+		for (u32 i = 0; i < bindingsSignature.numUnorderedBuffers; i++) {
 			const ZgUnorderedBufferBindingDesc& buffer = bindingsSignature.unorderedBuffers[i];
 			tmpStr.appendf(" - Register: %u\n", buffer.unorderedRegister);
 		}
@@ -488,7 +488,7 @@ static void logPipelineComputeInfo(
 	// Print textures
 	if (bindingsSignature.numTextures > 0) {
 		tmpStr.appendf("\nTextures (%u):\n", bindingsSignature.numTextures);
-		for (uint32_t i = 0; i < bindingsSignature.numTextures; i++) {
+		for (u32 i = 0; i < bindingsSignature.numTextures; i++) {
 			const ZgTextureBindingDesc& texture = bindingsSignature.textures[i];
 			tmpStr.appendf(" - Register: %u\n", texture.textureRegister);
 		}
@@ -497,7 +497,7 @@ static void logPipelineComputeInfo(
 	// Print unordered textures
 	if (bindingsSignature.numUnorderedTextures > 0) {
 		tmpStr.appendf("\nUnordered textures (%u):\n", bindingsSignature.numUnorderedTextures);
-		for (uint32_t i = 0; i < bindingsSignature.numUnorderedTextures; i++) {
+		for (u32 i = 0; i < bindingsSignature.numUnorderedTextures; i++) {
 			const ZgUnorderedTextureBindingDesc& texture = bindingsSignature.unorderedTextures[i];
 			tmpStr.appendf(" - Register: %u\n", texture.unorderedRegister);
 		}
@@ -513,7 +513,7 @@ static void logPipelineRenderInfo(
 	const char* pixelShaderName,
 	const ZgPipelineBindingsSignature& bindingsSignature,
 	const ZgPipelineRenderSignature& renderSignature,
-	float compileTimeMs) noexcept
+	f32 compileTimeMs) noexcept
 {
 	sfz::str4096 tmpStr;
 
@@ -530,7 +530,7 @@ static void logPipelineRenderInfo(
 	// Print vertex attributes
 	if (renderSignature.numVertexAttributes > 0) {
 		tmpStr.appendf("\nVertex attributes (%u):\n", renderSignature.numVertexAttributes);
-		for (uint32_t i = 0; i < renderSignature.numVertexAttributes; i++) {
+		for (u32 i = 0; i < renderSignature.numVertexAttributes; i++) {
 			const ZgVertexAttribute& attrib = renderSignature.vertexAttributes[i];
 			tmpStr.appendf(" - Location: %u -- Type: %s\n",
 				attrib.location,
@@ -541,7 +541,7 @@ static void logPipelineRenderInfo(
 	// Print constant buffers
 	if (bindingsSignature.numConstBuffers > 0) {
 		tmpStr.appendf("\nConstant buffers (%u):\n", bindingsSignature.numConstBuffers);
-		for (uint32_t i = 0; i < bindingsSignature.numConstBuffers; i++) {
+		for (u32 i = 0; i < bindingsSignature.numConstBuffers; i++) {
 			const ZgConstantBufferBindingDesc& cbuffer = bindingsSignature.constBuffers[i];
 			tmpStr.appendf(" - Register: %u -- Size: %u bytes -- Push constant: %s\n",
 				cbuffer.bufferRegister,
@@ -553,7 +553,7 @@ static void logPipelineRenderInfo(
 	// Print unordered buffers
 	if (bindingsSignature.numUnorderedBuffers > 0) {
 		tmpStr.appendf("\nUnordered buffers (%u):\n", bindingsSignature.numUnorderedBuffers);
-		for (uint32_t i = 0; i < bindingsSignature.numUnorderedBuffers; i++) {
+		for (u32 i = 0; i < bindingsSignature.numUnorderedBuffers; i++) {
 			const ZgUnorderedBufferBindingDesc& buffer = bindingsSignature.unorderedBuffers[i];
 			tmpStr.appendf(" - Register: %u\n", buffer.unorderedRegister);
 		}
@@ -562,7 +562,7 @@ static void logPipelineRenderInfo(
 	// Print textures
 	if (bindingsSignature.numTextures > 0) {
 		tmpStr.appendf("\nTextures (%u):\n", bindingsSignature.numTextures);
-		for (uint32_t i = 0; i < bindingsSignature.numTextures; i++) {
+		for (u32 i = 0; i < bindingsSignature.numTextures; i++) {
 			const ZgTextureBindingDesc& texture = bindingsSignature.textures[i];
 			tmpStr.appendf(" - Register: %u\n", texture.textureRegister);
 		}
@@ -571,7 +571,7 @@ static void logPipelineRenderInfo(
 	// Print unordered textures
 	if (bindingsSignature.numUnorderedTextures > 0) {
 		tmpStr.appendf("\nUnordered textures (%u):\n", bindingsSignature.numUnorderedTextures);
-		for (uint32_t i = 0; i < bindingsSignature.numUnorderedTextures; i++) {
+		for (u32 i = 0; i < bindingsSignature.numUnorderedTextures; i++) {
 			const ZgUnorderedTextureBindingDesc& texture = bindingsSignature.unorderedTextures[i];
 			tmpStr.appendf(" - Register: %u\n", texture.unorderedRegister);
 		}
@@ -583,7 +583,7 @@ static void logPipelineRenderInfo(
 
 static ZgResult bindingsFromReflection(
 	const ComPtr<ID3D12ShaderReflection>& reflection,
-	const sfz::ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS>& pushConstantRegisters,
+	const sfz::ArrayLocal<u32, ZG_MAX_NUM_CONSTANT_BUFFERS>& pushConstantRegisters,
 	D3D12PipelineBindingsSignature& bindingsOut) noexcept
 {
 	// Get shader description from reflection
@@ -591,7 +591,7 @@ static ZgResult bindingsFromReflection(
 	CHECK_D3D12 reflection->GetDesc(&shaderDesc);
 
 	// Go through all bound resources
-	for (uint32_t i = 0; i < shaderDesc.BoundResources; i++) {
+	for (u32 i = 0; i < shaderDesc.BoundResources; i++) {
 
 		// Get resource desc
 		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
@@ -731,17 +731,17 @@ static ZgResult createRootSignature(
 
 	// Root signature parameters
 	// We know that we can't have more than 64 root parameters as maximum (i.e. 64 words)
-	constexpr uint32_t MAX_NUM_ROOT_PARAMETERS = 64;
+	constexpr u32 MAX_NUM_ROOT_PARAMETERS = 64;
 	ArrayLocal<CD3DX12_ROOT_PARAMETER1, MAX_NUM_ROOT_PARAMETERS> parameters;
 
 	// Add push constants
-	for (uint32_t i = 0; i < bindings.constBuffers.size(); i++) {
+	for (u32 i = 0; i < bindings.constBuffers.size(); i++) {
 		const ZgConstantBufferBindingDesc& cbuffer = bindings.constBuffers[i];
 		if (cbuffer.pushConstant == ZG_FALSE) continue;
 
 		// Get parameter index for the push constant
 		sfz_assert(!parameters.isFull());
-		uint32_t parameterIndex = parameters.size();
+		u32 parameterIndex = parameters.size();
 
 		// Create root parameter
 		CD3DX12_ROOT_PARAMETER1 parameter;
@@ -761,10 +761,10 @@ static ZgResult createRootSignature(
 	}
 
 	// The offset into the dynamic table
-	uint32_t currentTableOffset = 0;
+	u32 currentTableOffset = 0;
 
 	// Add dynamic constant buffers(non-push constants) mappings
-	uint32_t dynamicConstBuffersFirstRegister = ~0u; // TODO: THIS IS PROBABLY BAD
+	u32 dynamicConstBuffersFirstRegister = ~0u; // TODO: THIS IS PROBABLY BAD
 	for (const ZgConstantBufferBindingDesc& cbuffer : bindings.constBuffers) {
 		if (cbuffer.pushConstant == ZG_TRUE) continue;
 
@@ -787,10 +787,10 @@ static ZgResult createRootSignature(
 	//       that we need to combine them so that we get the registers in the right order in the range.
 	struct UnorderedBindingDesc {
 		bool isBuffer = false;
-		uint32_t unorderedRegister = 0;
+		u32 unorderedRegister = 0;
 	};
 
-	constexpr uint32_t MAX_NUM_UNORDERED_RESOURCES =
+	constexpr u32 MAX_NUM_UNORDERED_RESOURCES =
 		ZG_MAX_NUM_UNORDERED_BUFFERS + ZG_MAX_NUM_UNORDERED_TEXTURES;
 	ArrayLocal<UnorderedBindingDesc, MAX_NUM_UNORDERED_RESOURCES> unorderedResources;
 
@@ -814,8 +814,8 @@ static ZgResult createRootSignature(
 
 
 	// The first and last unordered register used
-	uint32_t firstDynamicUnorderedRegister = UINT32_MAX;
-	uint32_t lastDynamicUnorderedRegister = 0;
+	u32 firstDynamicUnorderedRegister = U32_MAX;
+	u32 lastDynamicUnorderedRegister = 0;
 
 	// Add unordered resources
 	for (const UnorderedBindingDesc& desc : unorderedResources) {
@@ -844,13 +844,13 @@ static ZgResult createRootSignature(
 
 	// Sort of assume we have a coherent range
 	// TODO: Can probably be removed, but make sure that's fine first or if we need to make some logic changes
-	const uint32_t numUnorderedRegisters = lastDynamicUnorderedRegister - firstDynamicUnorderedRegister + 1;
+	const u32 numUnorderedRegisters = lastDynamicUnorderedRegister - firstDynamicUnorderedRegister + 1;
 	if (!rootSignatureOut.unorderedBuffers.isEmpty() || !rootSignatureOut.unorderedTextures.isEmpty()) {
 		sfz_assert(numUnorderedRegisters == rootSignatureOut.unorderedBuffers.size() + rootSignatureOut.unorderedTextures.size());
 	}
 
 	// Add texture mappings
-	uint32_t dynamicTexturesFirstRegister = ~0u; // TODO: THIS IS PROBABLY BAD
+	u32 dynamicTexturesFirstRegister = ~0u; // TODO: THIS IS PROBABLY BAD
 	for (const ZgTextureBindingDesc& texDesc : bindings.textures) {
 		if (dynamicTexturesFirstRegister == ~0u) {
 			dynamicTexturesFirstRegister = texDesc.textureRegister;
@@ -878,7 +878,7 @@ static ZgResult createRootSignature(
 
 		// TODO: Currently using the assumption that the shader register range is continuous,
 		//       which is probably not at all reasonable in practice
-		constexpr uint32_t MAX_NUM_RANGES = 3; // CBVs, UAVs and SRVs
+		constexpr u32 MAX_NUM_RANGES = 3; // CBVs, UAVs and SRVs
 		ArrayLocal<CD3DX12_DESCRIPTOR_RANGE1, MAX_NUM_RANGES> ranges;
 		if (!rootSignatureOut.constBuffers.isEmpty()) {
 			CD3DX12_DESCRIPTOR_RANGE1 range;
@@ -965,27 +965,27 @@ static ZgResult createRootSignature(
 // D3D12RootSignature
 // ------------------------------------------------------------------------------------------------
 
-const D3D12PushConstantMapping* D3D12RootSignature::getPushConstantMapping(uint32_t bufferRegister) const noexcept
+const D3D12PushConstantMapping* D3D12RootSignature::getPushConstantMapping(u32 bufferRegister) const noexcept
 {
 	return pushConstants.find([&](const auto& e) { return e.bufferRegister == bufferRegister; });
 }
 
-const D3D12ConstantBufferMapping* D3D12RootSignature::getConstBufferMapping(uint32_t bufferRegister) const noexcept
+const D3D12ConstantBufferMapping* D3D12RootSignature::getConstBufferMapping(u32 bufferRegister) const noexcept
 {
 	return constBuffers.find([&](const auto& e) { return e.bufferRegister == bufferRegister; });
 }
 
-const D3D12TextureMapping* D3D12RootSignature::getTextureMapping(uint32_t textureRegister) const noexcept
+const D3D12TextureMapping* D3D12RootSignature::getTextureMapping(u32 textureRegister) const noexcept
 {
 	return textures.find([&](const auto& e) { return e.textureRegister == textureRegister; });
 }
 
-const D3D12UnorderedBufferMapping* D3D12RootSignature::getUnorderedBufferMapping(uint32_t unorderedRegister) const noexcept
+const D3D12UnorderedBufferMapping* D3D12RootSignature::getUnorderedBufferMapping(u32 unorderedRegister) const noexcept
 {
 	return unorderedBuffers.find([&](const auto& e) { return e.unorderedRegister == unorderedRegister; });
 }
 
-const D3D12UnorderedTextureMapping* D3D12RootSignature::getUnorderedTextureMapping(uint32_t unorderedRegister) const noexcept
+const D3D12UnorderedTextureMapping* D3D12RootSignature::getUnorderedTextureMapping(u32 unorderedRegister) const noexcept
 {
 	return unorderedTextures.find([&](const auto& e) { return e.unorderedRegister == unorderedRegister; });
 }
@@ -1026,7 +1026,7 @@ static ZgResult createPipelineComputeInternal(
 	// Get pipeline bindings signature
 	D3D12PipelineBindingsSignature bindings = {};
 	{
-		sfz::ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstantRegisters;
+		sfz::ArrayLocal<u32, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstantRegisters;
 		pushConstantRegisters.add(createInfo.pushConstantRegisters, createInfo.numPushConstants);
 
 		ZgResult bindingsRes = bindingsFromReflection(
@@ -1072,16 +1072,16 @@ static ZgResult createPipelineComputeInternal(
 	}
 
 	// Get thread group dimensions of the compute pipeline
-	uint32_t groupDimX = 0;
-	uint32_t groupDimY = 0;
-	uint32_t groupDimZ = 0;
+	u32 groupDimX = 0;
+	u32 groupDimY = 0;
+	u32 groupDimZ = 0;
 	computeReflection->GetThreadGroupSize(&groupDimX, &groupDimY, &groupDimZ);
 	sfz_assert(groupDimX != 0);
 	sfz_assert(groupDimY != 0);
 	sfz_assert(groupDimZ != 0);
 
 	// Log information about the pipeline
-	float compileTimeMs = calculateDeltaMillis(compileStartTime);
+	f32 compileTimeMs = calculateDeltaMillis(compileStartTime);
 	logPipelineComputeInfo(
 		createInfo,
 		computeShaderName,
@@ -1203,7 +1203,7 @@ static ZgResult createPipelineRenderInternal(
 	renderSignature.numVertexAttributes = createInfo.numVertexAttributes;
 
 	// Validate vertex attributes
-	for (uint32_t i = 0; i < createInfo.numVertexAttributes; i++) {
+	for (u32 i = 0; i < createInfo.numVertexAttributes; i++) {
 
 		const ZgVertexAttribute& attrib = createInfo.vertexAttributes[i];
 
@@ -1242,7 +1242,7 @@ static ZgResult createPipelineRenderInternal(
 	// Get pipeline bindings signature
 	D3D12PipelineBindingsSignature bindings = {};
 	{
-		sfz::ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstantRegisters;
+		sfz::ArrayLocal<u32, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstantRegisters;
 		pushConstantRegisters.add(createInfo.pushConstantRegisters, createInfo.numPushConstants);
 
 		ZgResult vertexBindingsRes = bindingsFromReflection(
@@ -1361,7 +1361,7 @@ static ZgResult createPipelineRenderInternal(
 	// Check that all necessary sampler data is available
 	ArrayLocal<bool, ZG_MAX_NUM_SAMPLERS> samplerSet;
 	samplerSet.add(false, ZG_MAX_NUM_SAMPLERS);
-	for (uint32_t i = 0; i < vertexDesc.BoundResources; i++) {
+	for (u32 i = 0; i < vertexDesc.BoundResources; i++) {
 		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
 		CHECK_D3D12 vertexReflection->GetResourceBindingDesc(i, &resDesc);
 
@@ -1380,7 +1380,7 @@ static ZgResult createPipelineRenderInternal(
 		// Mark sampler as found
 		samplerSet[resDesc.BindPoint] = true;
 	}
-	for (uint32_t i = 0; i < pixelDesc.BoundResources; i++) {
+	for (u32 i = 0; i < pixelDesc.BoundResources; i++) {
 		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
 		CHECK_D3D12 pixelReflection->GetResourceBindingDesc(i, &resDesc);
 
@@ -1399,7 +1399,7 @@ static ZgResult createPipelineRenderInternal(
 		// Mark sampler as found
 		samplerSet[resDesc.BindPoint] = true;
 	}
-	for (uint32_t i = 0; i < createInfo.numSamplers; i++) {
+	for (u32 i = 0; i < createInfo.numSamplers; i++) {
 		if (!samplerSet[i]) {
 			ZG_ERROR(
 				"%u samplers were specified, however sampler %u is not used by the pipeline",
@@ -1409,7 +1409,7 @@ static ZgResult createPipelineRenderInternal(
 	}
 
 	// Check that the correct number of render targets is specified
-	const uint32_t numRenderTargets = pixelDesc.OutputParameters;
+	const u32 numRenderTargets = pixelDesc.OutputParameters;
 	if (numRenderTargets != createInfo.numRenderTargets) {
 		ZG_ERROR("%u render targets were specified, however %u is used by the pipeline",
 			createInfo.numRenderTargets, numRenderTargets);
@@ -1418,14 +1418,14 @@ static ZgResult createPipelineRenderInternal(
 
 	// Copy render target info to signature
 	renderSignature.numRenderTargets = numRenderTargets;
-	for (uint32_t i = 0; i < numRenderTargets; i++) {
+	for (u32 i = 0; i < numRenderTargets; i++) {
 		renderSignature.renderTargets[i] = createInfo.renderTargets[i];
 	}
 
 	// Convert ZgVertexAttribute's to D3D12_INPUT_ELEMENT_DESC
 	// This is the "input layout"
 	ArrayLocal<D3D12_INPUT_ELEMENT_DESC, ZG_MAX_NUM_VERTEX_ATTRIBUTES> attributes;
-	for (uint32_t i = 0; i < createInfo.numVertexAttributes; i++) {
+	for (u32 i = 0; i < createInfo.numVertexAttributes; i++) {
 
 		const ZgVertexAttribute& attribute = createInfo.vertexAttributes[i];
 		D3D12_INPUT_ELEMENT_DESC desc = {};
@@ -1491,7 +1491,7 @@ static ZgResult createPipelineRenderInternal(
 		// Set render target formats
 		D3D12_RT_FORMAT_ARRAY rtvFormats = {};
 		rtvFormats.NumRenderTargets = renderSignature.numRenderTargets;
-		for (uint32_t i = 0; i < renderSignature.numRenderTargets; i++) {
+		for (u32 i = 0; i < renderSignature.numRenderTargets; i++) {
 			rtvFormats.RTFormats[i] = zgToDxgiTextureFormat(renderSignature.renderTargets[i]);
 		}
 		stream.rtvFormats = rtvFormats;
@@ -1572,7 +1572,7 @@ static ZgResult createPipelineRenderInternal(
 	}
 
 	// Log information about the pipeline
-	float compileTimeMs = calculateDeltaMillis(compileStartTime);
+	f32 compileTimeMs = calculateDeltaMillis(compileStartTime);
 	logPipelineRenderInfo(
 		createInfo,
 		vertexShaderName,

@@ -18,8 +18,9 @@
 
 #pragma once
 
-#include <cstdint>
 #include <utility>
+
+#include <sfz.h>
 
 namespace sfz {
 
@@ -28,7 +29,7 @@ namespace sfz {
 
 template<typename T>
 struct IndexedElement final {
-	uint64_t idx;
+	u64 idx;
 	T element;
 };
 
@@ -36,7 +37,7 @@ template<typename IteratorT>
 struct EnumerateIterator final {
 	using T = decltype(*std::declval<IteratorT>());
 
-	uint64_t idx;
+	u64 idx;
 	IteratorT iterator;
 
 	bool operator!= (const EnumerateIterator& other) const { return iterator != other.iterator; }
@@ -60,7 +61,7 @@ struct EnumerateIterable final {
 /// test, see Enumerate_Tests.cpp).
 ///
 /// ExampleUsage:
-/// Array<uint32_t> elements = /* ... */
+/// Array<u32> elements = /* ... */
 /// for (auto e : sfz::enumerate(elements)) {
 /// 	// Access index with e.idx, element with e.element.
 /// }

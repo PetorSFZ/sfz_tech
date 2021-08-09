@@ -18,8 +18,6 @@
 
 #pragma once
 
-#include <cfloat>
-
 #include <skipifzero.hpp>
 #include <skipifzero_hash_maps.hpp>
 #include <skipifzero_image_view.hpp>
@@ -70,7 +68,7 @@ using sfz::vec4;
 // Forward declare Context
 struct Context;
 
-void initZeroUI(SfzAllocator* allocator, uint32_t surfaceTmpMemoryBytes, uint32_t oversampleFonts = 1);
+void initZeroUI(SfzAllocator* allocator, u32 surfaceTmpMemoryBytes, u32 oversampleFonts = 1);
 void deinitZeroUI();
 
 // Fonts
@@ -81,13 +79,13 @@ void deinitZeroUI();
 // You must provide ZeroUI with fonts (at least 1) and select which font is your default font. The
 // default font will be available as an attribute in the attribute set with the id "default_font".
 //
-// You must also provide ZeroUI with an engine specific texture handle (uint64_t) so ZeroUI can
+// You must also provide ZeroUI with an engine specific texture handle (u64) so ZeroUI can
 // request that the font texture is bound and sampled from in your engine integration. You must
 // also call "hasFontTextureUpdate()" and "getFontTexture()" each frame to check if the font atlas
 // has been updated and need to be re-uploaded to the GPU (which you are responsible for).
 
-void setFontTextureHandle(uint64_t handle);
-bool registerFont(const char* name, const char* path, float size, bool defaultFont = false);
+void setFontTextureHandle(u64 handle);
+bool registerFont(const char* name, const char* path, f32 size, bool defaultFont = false);
 
 // RenderDataView
 // ------------------------------------------------------------------------------------------------
@@ -99,20 +97,20 @@ struct Vertex final {
 	vec3 pos; // Position, world or view space depending on what surface it is rendered to
 	vec2 texcoord;
 	vec3 colorLinear; // Color in linear space, i.e. NOT sRGB. (Note: This will likely change to sRGB in future)
-	float alphaLinear;
+	f32 alphaLinear;
 };
 static_assert(sizeof(Vertex) == 36, "ZeroUI::Vertex is padded");
 
 struct RenderCmd final {
-	uint32_t startIndex = 0;
-	uint32_t numIndices = 0;
+	u32 startIndex = 0;
+	u32 numIndices = 0;
 	mat34 transform = mat34::identity();
 
 	// Engine specific handle to image that should be bound and sampled from. When rendering text
 	// this will be set to the handle specified by setFontTextureHandle(). Note that we assume
 	// that 0 is an invalid handle, if it's a valid handle in your engine you need to manage that
 	// somehow.
-	uint64_t imageHandle = 0; 
+	u64 imageHandle = 0; 
 
 	// How the texture should be interpreted. For an alpha texture it is assumed that the alpha
 	// is stored in the red channel. This is mainly used to sample from the font atlas when
@@ -124,9 +122,9 @@ struct RenderDataView final {
 	const Vertex* vertices = nullptr;
 	const uint16_t* indices = nullptr;
 	const RenderCmd* commands = nullptr;
-	uint32_t numVertices = 0;
-	uint32_t numIndices = 0;
-	uint32_t numCommands = 0;
+	u32 numVertices = 0;
+	u32 numIndices = 0;
+	u32 numCommands = 0;
 };
 
 // Input
@@ -142,7 +140,7 @@ struct RenderDataView final {
 // pointerPos is the position of the mouse cursor (or finger touching the screen), it is only read
 // if the input action is POINTER_MOVE.
 
-enum class InputAction : uint8_t {
+enum class InputAction : u8 {
 	NONE = 0,
 	UP = 1,
 	DOWN = 2,
@@ -157,7 +155,7 @@ constexpr bool isMoveAction(InputAction a) { return InputAction::UP <= a && a <=
 
 struct Input final {
 	InputAction action = InputAction::NONE;
-	vec2 pointerPos = vec2(-FLT_MAX); // In screen pixel dimensions, (0,0) in lower-left corner, pos-y up.
+	vec2 pointerPos = vec2(-F32_MAX); // In screen pixel dimensions, (0,0) in lower-left corner, pos-y up.
 };
 
 // Attributes
@@ -175,8 +173,8 @@ struct Input final {
 
 struct alignas(16) Attribute final {
 	
-	uint8_t bytes[31] = {};
-	uint8_t size = 0;
+	u8 bytes[31] = {};
+	u8 size = 0;
 
 	Attribute() = default;
 	template<typename T> Attribute(const T& val) { size = sizeof(T); as<T>() = val; }
@@ -242,12 +240,12 @@ struct Box final {
 
 	constexpr Box() = default;
 	constexpr Box(vec2 center, vec2 dims) : min(center - dims * 0.5f), max(center + dims * 0.5f) { }
-	constexpr Box(float x, float y, float w, float h) : Box(vec2(x, y), vec2(w, h)) { }
+	constexpr Box(f32 x, f32 y, f32 w, f32 h) : Box(vec2(x, y), vec2(w, h)) { }
 
 	constexpr vec2 center() const { return (min + max) * 0.5f; }
 	constexpr vec2 dims() const { return max - min; }
-	constexpr float width() const { return max.x - min.x; }
-	constexpr float height() const{ return max.y - min.y; }
+	constexpr f32 width() const { return max.x - min.x; }
+	constexpr f32 height() const{ return max.y - min.y; }
 
 	constexpr bool pointInside(vec2 p) const
 	{
@@ -301,14 +299,14 @@ struct Box final {
 
 struct WidgetBase final {
 	Box box; // The location and size of the widget on the surface
-	float timeSinceFocusStartedSecs = FLT_MAX;
-	float timeSinceFocusEndedSecs = FLT_MAX;
-	float timeSinceActivationSecs = FLT_MAX;
+	f32 timeSinceFocusStartedSecs = F32_MAX;
+	f32 timeSinceFocusEndedSecs = F32_MAX;
+	f32 timeSinceActivationSecs = F32_MAX;
 	bool focused = false;
 	bool activated = false;
-	uint8_t ___PADDING___[2] = {};
+	u8 ___PADDING___[2] = {};
 
-	void incrementTimers(float deltaSecs);
+	void incrementTimers(f32 deltaSecs);
 	void setFocused();
 	void setUnfocused();
 	void setActivated();
@@ -356,18 +354,18 @@ using DrawFunc = void(
 	const WidgetCmd* cmd,
 	AttributeSet* attributes,
 	const mat34& surfaceTransform, // Note: Should normally not be modified by container widgets.
-	float lagSinceSurfaceEndSecs);
+	f32 lagSinceSurfaceEndSecs);
 
 // Default draw function which is just a pass through, only useful for containers.
 void defaultPassthroughDrawFunc(
 	const WidgetCmd* cmd,
 	AttributeSet* attributes,
 	const mat34& surfaceTransform,
-	float lagSinceSurfaceEndSecs);
+	f32 lagSinceSurfaceEndSecs);
 
 // The description of a widget with all the necessary functions.
 struct WidgetDesc final {
-	uint32_t widgetDataSizeBytes = 0;
+	u32 widgetDataSizeBytes = 0;
 	GetWidgetBaseFunc* getWidgetBaseFunc = nullptr;
 	GetNextWidgetBoxFunc* getNextWidgetBoxFunc = nullptr;
 	HandlePointerInputFunc* handlePointerInputFunc = nullptr;
@@ -425,7 +423,7 @@ void popArchetype(const char* widgetName);
 // Functions used when automatically allocating widget data structs. See ZeroUI_Storage.hpp for a
 // default implementation.
 using InitWidgetFunc = void(void* widgetData);
-using GetWidgetDataFunc = void* (void* userPtr, strID id, uint32_t sizeBytes, InitWidgetFunc* initFunc);
+using GetWidgetDataFunc = void* (void* userPtr, strID id, u32 sizeBytes, InitWidgetFunc* initFunc);
 
 struct SurfaceDesc final {
 
@@ -440,7 +438,7 @@ struct SurfaceDesc final {
 	// Input
 	Input input;
 	vec2_u32 fbDims = vec2_u32(0u);
-	float deltaTimeSecs = 0.0f;
+	f32 deltaTimeSecs = 0.0f;
 
 	// Position on framebuffer, default aligned to bottom left corner of framebuffer
 	vec2_u32 posOnFB = vec2_u32(0u);
@@ -473,7 +471,7 @@ vec2 surfaceGetDims();
 void surfaceEnd();
 
 // Renders the currently active surfaces
-void render(float lagSinceSurfaceEndSecs);
+void render(f32 lagSinceSurfaceEndSecs);
 
 // Font texture communication, should be called after rendering.
 bool hasFontTextureUpdate();
@@ -509,16 +507,16 @@ void baseAttribute(const char* id, Attribute attrib);
 void baseAttribute(const char* id, const char* value);
 void baseAttribute(strID id, Attribute attrib);
 
-void baseSetPos(float x, float y);
+void baseSetPos(f32 x, f32 y);
 void baseSetPos(vec2 pos);
 void baseSetAlign(HAlign halign, VAlign valign);
 void baseSetAlign(Align align);
-void baseSetDims(float width, float height);
+void baseSetDims(f32 width, f32 height);
 void baseSetDims(vec2 dims);
 
-void baseSet(float x, float y, float width, float height);
+void baseSet(f32 x, f32 y, f32 width, f32 height);
 void baseSet(vec2 pos, vec2 dims);
-void baseSet(float x, float y, HAlign halign, VAlign valign, float width, float height);
+void baseSet(f32 x, f32 y, HAlign halign, VAlign valign, f32 width, f32 height);
 void baseSet(vec2 pos, Align align, vec2 dims);
 
 void baseEnd();

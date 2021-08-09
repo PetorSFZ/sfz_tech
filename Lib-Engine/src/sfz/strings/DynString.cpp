@@ -29,7 +29,7 @@ namespace sfz {
 // DynString: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-DynString::DynString(const char* string, uint32_t capacity, SfzAllocator* allocator) noexcept
+DynString::DynString(const char* string, u32 capacity, SfzAllocator* allocator) noexcept
 {
 	// Special case when string is nullptr
 	if (string == nullptr) {
@@ -39,11 +39,11 @@ DynString::DynString(const char* string, uint32_t capacity, SfzAllocator* alloca
 
 	// Check if string length is larger than requested capacity
 	size_t length = std::strlen(string) + 1; // +1 for null-terminator
-	if (capacity < length) capacity = uint32_t(length);
+	if (capacity < length) capacity = u32(length);
 
 	// Set allocator and allocate memory
 	mString.init(capacity, allocator, sfz_dbg("DynString"));
-	mString.hackSetSize(uint32_t(length));
+	mString.hackSetSize(u32(length));
 
 	// Copy string to internal Array
 	std::strcpy(mString.data(), string);
@@ -52,9 +52,9 @@ DynString::DynString(const char* string, uint32_t capacity, SfzAllocator* alloca
 // DynString: Getters
 // ------------------------------------------------------------------------------------------------
 
-uint32_t DynString::size() const noexcept
+u32 DynString::size() const noexcept
 {
-	uint32_t tmp = mString.size();
+	u32 tmp = mString.size();
 	if (tmp == 0) return 0;
 	return tmp - 1; // Remove null-terminator
 }
@@ -69,7 +69,7 @@ int32_t DynString::printf(const char* format, ...) noexcept
 	int32_t res = std::vsnprintf(mString.data(), mString.capacity(), format, args);
 	va_end(args);
 	sfz_assert(res >= 0);
-	mString.hackSetSize(static_cast<uint32_t>(res) + 1); // +1 for null-terminator
+	mString.hackSetSize(static_cast<u32>(res) + 1); // +1 for null-terminator
 	return res;
 }
 
@@ -77,11 +77,11 @@ int32_t DynString::printfAppend(const char* format, ...) noexcept
 {
 	va_list args;
 	va_start(args, format);
-	uint32_t len = this->size();
+	u32 len = this->size();
 	int32_t res = std::vsnprintf(mString.data() + len, mString.capacity() - len, format, args);
 	va_end(args);
 	sfz_assert(res >= 0);
-	mString.hackSetSize(len + static_cast<uint32_t>(res) + 1); // +1 for null-terminator
+	mString.hackSetSize(len + static_cast<u32>(res) + 1); // +1 for null-terminator
 	return res;
 }
 

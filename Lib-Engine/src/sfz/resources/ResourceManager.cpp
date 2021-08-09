@@ -34,7 +34,7 @@ namespace sfz {
 // ResourceManager: State methods
 // ------------------------------------------------------------------------------------------------
 
-void ResourceManager::init(uint32_t maxNumResources, SfzAllocator* allocator) noexcept
+void ResourceManager::init(u32 maxNumResources, SfzAllocator* allocator) noexcept
 {
 	sfz_assert(mState == nullptr);
 	mState = sfz_new<ResourceManagerState>(allocator, sfz_dbg(""));
@@ -424,7 +424,7 @@ void ResourceManager::syncVoxelMaterialsToGpuBlocking()
 	Array<ShaderVoxelMaterial>& cpu = mState->voxelMaterialShaderBufferCpu;
 	Pool<VoxelMaterial>& pool = mState->voxelMaterials;
 	sfz_assert(cpu.size() >= pool.arraySize());
-	for (uint32_t i = 0; i < pool.arraySize(); i++) {
+	for (u32 i = 0; i < pool.arraySize(); i++) {
 		const VoxelMaterial& src = pool.data()[i];
 		ShaderVoxelMaterial& dst = cpu[i];
 		dst.albedo = src.albedo;

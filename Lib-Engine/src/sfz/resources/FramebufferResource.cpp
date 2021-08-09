@@ -44,11 +44,11 @@ ZgResult FramebufferResource::build(vec2_u32 screenRes)
 			this->resolutionScale = resolutionScaleSetting->floatValue();
 		}
 		vec2 scaledRes = vec2(screenRes) * this->resolutionScale;
-		this->res.x = uint32_t(std::round(scaledRes.x));
-		this->res.y = uint32_t(std::round(scaledRes.y));
+		this->res.x = u32(std::round(scaledRes.x));
+		this->res.y = u32(std::round(scaledRes.y));
 	}
 	else if (settingControlledRes) {
-		this->res = vec2_u32(uint32_t(controlledResSetting->intValue()));
+		this->res = vec2_u32(u32(controlledResSetting->intValue()));
 	}
 
 	zg::FramebufferBuilder fbBuilder;

@@ -34,33 +34,33 @@ UTEST(AllocatorArena, stack_based_memory)
 	arena.deallocFunc = sfz::sfzArenaDealloc;
 
 	// Initialize arena with memory
-	constexpr uint64_t MEMORY_HEAP_SIZE = sizeof(uint32_t) * 4;
-	alignas(32) uint8_t memoryHeap[MEMORY_HEAP_SIZE];
+	constexpr u64 MEMORY_HEAP_SIZE = sizeof(u32) * 4;
+	alignas(32) u8 memoryHeap[MEMORY_HEAP_SIZE];
 	state.memory = memoryHeap;
 	state.memorySizeBytes = MEMORY_HEAP_SIZE;
 	ASSERT_TRUE(state.currentOffsetBytes == 0);
 	ASSERT_TRUE(state.numPaddingBytes == 0);
 
 	// Do some allocations
-	uint32_t* first = (uint32_t*)arena.alloc(sfz_dbg(""), sizeof(uint32_t), sizeof(uint32_t));
+	u32* first = (u32*)arena.alloc(sfz_dbg(""), sizeof(u32), sizeof(u32));
 	ASSERT_TRUE(state.currentOffsetBytes == 4);
 	ASSERT_TRUE(state.numPaddingBytes == 0);
-	ASSERT_TRUE(first == (uint32_t*)&memoryHeap[0]);
+	ASSERT_TRUE(first == (u32*)&memoryHeap[0]);
 
-	uint32_t* second = (uint32_t*)arena.alloc(sfz_dbg(""), sizeof(uint32_t), sizeof(uint32_t));
+	u32* second = (u32*)arena.alloc(sfz_dbg(""), sizeof(u32), sizeof(u32));
 	ASSERT_TRUE(state.currentOffsetBytes == 8);
 	ASSERT_TRUE(state.numPaddingBytes == 0);
-	ASSERT_TRUE(second == (uint32_t*)&memoryHeap[4]);
+	ASSERT_TRUE(second == (u32*)&memoryHeap[4]);
 
-	uint32_t* third = (uint32_t*)arena.alloc(sfz_dbg(""), sizeof(uint32_t), sizeof(uint32_t));
+	u32* third = (u32*)arena.alloc(sfz_dbg(""), sizeof(u32), sizeof(u32));
 	ASSERT_TRUE(state.currentOffsetBytes == 12);
 	ASSERT_TRUE(state.numPaddingBytes == 0);
-	ASSERT_TRUE(third == (uint32_t*)&memoryHeap[8]);
+	ASSERT_TRUE(third == (u32*)&memoryHeap[8]);
 
-	uint32_t* fourth = (uint32_t*)arena.alloc(sfz_dbg(""), sizeof(uint32_t), sizeof(uint32_t));
+	u32* fourth = (u32*)arena.alloc(sfz_dbg(""), sizeof(u32), sizeof(u32));
 	ASSERT_TRUE(state.currentOffsetBytes == 16);
 	ASSERT_TRUE(state.numPaddingBytes == 0);
-	ASSERT_TRUE(fourth == (uint32_t*)&memoryHeap[12]);
+	ASSERT_TRUE(fourth == (u32*)&memoryHeap[12]);
 
 	void* fifth = arena.alloc(sfz_dbg(""), 1, 1);
 	ASSERT_TRUE(state.currentOffsetBytes == 16);
@@ -71,13 +71,13 @@ UTEST(AllocatorArena, stack_based_memory)
 	state.reset();
 
 	// Allocations with larger alignment requirements
-	uint32_t* first2 = (uint32_t*)arena.alloc(sfz_dbg(""), sizeof(uint32_t), sizeof(uint32_t));
+	u32* first2 = (u32*)arena.alloc(sfz_dbg(""), sizeof(u32), sizeof(u32));
 	ASSERT_TRUE(state.currentOffsetBytes == 4);
 	ASSERT_TRUE(state.numPaddingBytes == 0);
-	ASSERT_TRUE(first2 == (uint32_t*)&memoryHeap[0]);
+	ASSERT_TRUE(first2 == (u32*)&memoryHeap[0]);
 
-	uint32_t* largeAligned = (uint32_t*)arena.alloc(sfz_dbg(""), sizeof(uint32_t), 8);
+	u32* largeAligned = (u32*)arena.alloc(sfz_dbg(""), sizeof(u32), 8);
 	ASSERT_TRUE(state.currentOffsetBytes == 12);
 	ASSERT_TRUE(state.numPaddingBytes == 4);
-	ASSERT_TRUE(largeAligned == (uint32_t*)&memoryHeap[8]);
+	ASSERT_TRUE(largeAligned == (u32*)&memoryHeap[8]);
 }

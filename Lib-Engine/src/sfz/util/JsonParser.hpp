@@ -30,7 +30,7 @@ using sfz::str256;
 // ------------------------------------------------------------------------------------------------
 
 // The different types of nodes
-enum class JsonNodeType : uint32_t {
+enum class JsonNodeType : u32 {
 	// Undefined node, not valid to do any operations on
 	NONE = 0,
 
@@ -49,7 +49,7 @@ enum class JsonNodeType : uint32_t {
 // ------------------------------------------------------------------------------------------------
 
 // Size of the implementation of JsonNode in bytes
-constexpr uint32_t JSON_NODE_IMPL_SIZE = 32;
+constexpr u32 JSON_NODE_IMPL_SIZE = 32;
 
 // Minimal helper struct that contains a value and whether the value existed or not
 //
@@ -98,16 +98,16 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	// Returns the number of objects in a map, returns 0 if not a map node
-	uint32_t mapNumObjects() const noexcept;
+	u32 mapNumObjects() const noexcept;
 
 	// Accesses a node in a map, returns NONE on invalid access or if not map
 	JsonNode accessMap(const char* nodeName) const noexcept;
 
 	// Length of the array, returns 0 if not an array node
-	uint32_t arrayLength() const noexcept;
+	u32 arrayLength() const noexcept;
 
 	// Accesses a node in the array, returns NONE on invalid access or if not array
-	JsonNode accessArray(uint32_t index) const noexcept;
+	JsonNode accessArray(u32 index) const noexcept;
 
 	// Methods (leaf nodes)
 	// --------------------------------------------------------------------------------------------
@@ -116,8 +116,8 @@ public:
 	bool value(int32_t& valueOut) const noexcept;
 	bool value(float& valueOut) const noexcept;
 	bool value(double& valueOut) const noexcept;
-	bool value(char* strOut, uint32_t strCapacity) const noexcept;
-	uint32_t stringLength() const noexcept; // Returns 0 if not a string
+	bool value(char* strOut, u32 strCapacity) const noexcept;
+	u32 stringLength() const noexcept; // Returns 0 if not a string
 
 	JsonNodeValue<bool> valueBool() const noexcept;
 	JsonNodeValue<int32_t> valueInt() const noexcept;
@@ -134,7 +134,7 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	alignas(8) uint8_t mImpl[JSON_NODE_IMPL_SIZE] = {};
+	alignas(8) u8 mImpl[JSON_NODE_IMPL_SIZE] = {};
 	bool mActive = false;
 };
 

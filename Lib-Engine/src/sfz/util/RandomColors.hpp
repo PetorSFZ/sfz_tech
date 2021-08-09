@@ -25,6 +25,6 @@ namespace sfz {
 // Random color generator
 // ------------------------------------------------------------------------------------------------
 
-vec3 getRandomColor(uint32_t idx, float sat = 0.5f, float val = 0.95f, float startNoise = 0.0f);
+vec3 getRandomColor(u32 idx, float sat = 0.5f, float val = 0.95f, float startNoise = 0.0f);
 
 } // namespace sfz

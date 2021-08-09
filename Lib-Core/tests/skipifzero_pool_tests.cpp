@@ -35,7 +35,7 @@ UTEST(Pool, init)
 
 	// Default constructed
 	{
-		sfz::Pool<uint64_t> pool;
+		sfz::Pool<u64> pool;
 		ASSERT_TRUE(pool.numAllocated() == 0);
 		ASSERT_TRUE(pool.numHoles() == 0);
 		ASSERT_TRUE(pool.arraySize() == 0);
@@ -47,7 +47,7 @@ UTEST(Pool, init)
 
 	// Init method
 	{
-		sfz::Pool<uint64_t> pool;
+		sfz::Pool<u64> pool;
 		pool.init(42, &allocator, sfz_dbg(""));
 		ASSERT_TRUE(pool.numAllocated() == 0);
 		ASSERT_TRUE(pool.numHoles() == 0);
@@ -60,7 +60,7 @@ UTEST(Pool, init)
 
 	// Init constructor
 	{
-		sfz::Pool<uint64_t> pool = sfz::Pool<uint64_t>(13, &allocator, sfz_dbg(""));
+		sfz::Pool<u64> pool = sfz::Pool<u64>(13, &allocator, sfz_dbg(""));
 		ASSERT_TRUE(pool.numAllocated() == 0);
 		ASSERT_TRUE(pool.numHoles() == 0);
 		ASSERT_TRUE(pool.arraySize() == 0);
@@ -77,16 +77,16 @@ UTEST(Pool, allocating_and_deallocating)
 
 	// Allocating to full capacity linearly
 	{
-		constexpr uint32_t CAPACITY = 64;
-		sfz::Pool<uint32_t> pool;
+		constexpr u32 CAPACITY = 64;
+		sfz::Pool<u32> pool;
 		pool.init(CAPACITY, &allocator, sfz_dbg(""));
 
-		for (uint32_t i = 0; i < CAPACITY; i++) {
+		for (u32 i = 0; i < CAPACITY; i++) {
 			sfz::PoolHandle handle = pool.allocate();
-			uint32_t& val = pool[handle];
+			u32& val = pool[handle];
 			val = i;
 			ASSERT_TRUE(handle.idx() == i);
-			ASSERT_TRUE(handle.version() == uint8_t(1));
+			ASSERT_TRUE(handle.version() == u8(1));
 			ASSERT_TRUE(pool.numAllocated() == (i + 1));
 			ASSERT_TRUE(pool.numHoles() == 0);
 			ASSERT_TRUE(pool.slotIsActive(handle.idx()));
@@ -98,15 +98,15 @@ UTEST(Pool, allocating_and_deallocating)
 
 	// Allocating and deallocating a single slot until version wraps around
 	{
-		constexpr uint32_t CAPACITY = 4;
-		sfz::Pool<uint32_t> pool;
+		constexpr u32 CAPACITY = 4;
+		sfz::Pool<u32> pool;
 		pool.init(CAPACITY, &allocator, sfz_dbg(""));
 
-		for (uint32_t i = 1; i <= 127; i++) {
+		for (u32 i = 1; i <= 127; i++) {
 			sfz::PoolHandle handle = pool.allocate();
 			ASSERT_TRUE(pool.handleIsValid(handle));
 			ASSERT_TRUE(handle.idx() == 0);
-			ASSERT_TRUE(handle.version() == uint8_t(i));
+			ASSERT_TRUE(handle.version() == u8(i));
 			ASSERT_TRUE(pool.numAllocated() == 1);
 			ASSERT_TRUE(pool.numHoles() == 0);
 			ASSERT_TRUE(pool.arraySize() == 1);
@@ -125,7 +125,7 @@ UTEST(Pool, allocating_and_deallocating)
 		sfz::PoolHandle handle = pool.allocate();
 		ASSERT_TRUE(pool.handleIsValid(handle));
 		ASSERT_TRUE(handle.idx() == 0);
-		ASSERT_TRUE(handle.version() == uint8_t(1));
+		ASSERT_TRUE(handle.version() == u8(1));
 		ASSERT_TRUE(pool.numAllocated() == 1);
 		ASSERT_TRUE(pool.numHoles() == 0);
 		ASSERT_TRUE(pool.arraySize() == 1);
@@ -138,16 +138,16 @@ UTEST(Pool, allocating_and_deallocating)
 		ASSERT_TRUE(pool.numHoles() == 1);
 		ASSERT_TRUE(pool.arraySize() == 1);
 		ASSERT_TRUE(!pool.slotIsActive(handle.idx()));
-		ASSERT_TRUE(pool.data()[handle.idx()] == uint8_t(0));
+		ASSERT_TRUE(pool.data()[handle.idx()] == u8(0));
 	}
 
 	// Allocate full, deallocate full, and then allocate full again
 	{
-		constexpr uint32_t CAPACITY = 64;
-		sfz::Pool<uint32_t> pool;
+		constexpr u32 CAPACITY = 64;
+		sfz::Pool<u32> pool;
 		pool.init(CAPACITY, &allocator, sfz_dbg(""));
 
-		for (uint32_t i = 0; i < CAPACITY; i++) {
+		for (u32 i = 0; i < CAPACITY; i++) {
 			sfz::PoolHandle handle = pool.allocate();
 			pool[handle] = i;
 		}
@@ -155,7 +155,7 @@ UTEST(Pool, allocating_and_deallocating)
 		ASSERT_TRUE(pool.numHoles() == 0);
 		ASSERT_TRUE(pool.arraySize() == CAPACITY);
 
-		for (uint32_t i = 0; i < CAPACITY; i++) {
+		for (u32 i = 0; i < CAPACITY; i++) {
 			sfz::PoolHandle handle = sfz::PoolHandle(i, 1);
 			ASSERT_TRUE(pool.handleIsValid(handle));
 			ASSERT_TRUE(*pool.get(handle) == i);
@@ -165,7 +165,7 @@ UTEST(Pool, allocating_and_deallocating)
 		ASSERT_TRUE(pool.numHoles() == CAPACITY);
 		ASSERT_TRUE(pool.arraySize() == CAPACITY);
 
-		for (uint32_t i = 0; i < CAPACITY; i++) {
+		for (u32 i = 0; i < CAPACITY; i++) {
 			sfz::PoolHandle handle = pool.allocate(42 + i);
 			ASSERT_TRUE(pool[handle] == (42 + i));
 			ASSERT_TRUE(handle.idx() == (CAPACITY - i - 1));

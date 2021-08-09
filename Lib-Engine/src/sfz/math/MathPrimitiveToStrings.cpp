@@ -23,42 +23,42 @@ namespace sfz {
 // Vector toString()
 // ------------------------------------------------------------------------------------------------
 
-str96 toString(const vec2& vector, uint32_t numDecimals) noexcept
+str96 toString(const vec2& vector, u32 numDecimals) noexcept
 {
 	str96 tmp;
 	toString(vector, tmp, numDecimals);
 	return tmp;
 }
 
-str96 toString(const vec3& vector, uint32_t numDecimals) noexcept
+str96 toString(const vec3& vector, u32 numDecimals) noexcept
 {
 	str96 tmp;
 	toString(vector, tmp, numDecimals);
 	return tmp;
 }
 
-str96 toString(const vec4& vector, uint32_t numDecimals) noexcept
+str96 toString(const vec4& vector, u32 numDecimals) noexcept
 {
 	str96 tmp;
 	toString(vector, tmp, numDecimals);
 	return tmp;
 }
 
-void toString(const vec2& vector, str96& string, uint32_t numDecimals) noexcept
+void toString(const vec2& vector, str96& string, u32 numDecimals) noexcept
 {
 	str32 formatStr;
 	formatStr.appendf("[%%.%uf, %%.%uf]", numDecimals, numDecimals);
 	string.appendf(formatStr.str(), vector.x, vector.y);
 }
 
-void toString(const vec3& vector, str96& string, uint32_t numDecimals) noexcept
+void toString(const vec3& vector, str96& string, u32 numDecimals) noexcept
 {
 	str32 formatStr;
 	formatStr.appendf("[%%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals);
 	string.appendf(formatStr.str(), vector.x, vector.y, vector.z);
 }
 
-void toString(const vec4& vector, str96& string, uint32_t numDecimals) noexcept
+void toString(const vec4& vector, str96& string, u32 numDecimals) noexcept
 {
 	str32 formatStr;
 	formatStr.appendf("[%%.%uf, %%.%uf, %%.%uf, %%.%uf]", numDecimals, numDecimals, numDecimals, numDecimals);
@@ -140,34 +140,34 @@ void toString(const vec4_u32& vector, str96& string) noexcept
 // Matrix toString()
 // ------------------------------------------------------------------------------------------------
 
-str256 toString(const mat22& matrix, bool rowBreak, uint32_t numDecimals) noexcept
+str256 toString(const mat22& matrix, bool rowBreak, u32 numDecimals) noexcept
 {
 	str256 tmp;
 	toString(matrix, tmp, rowBreak, numDecimals);
 	return tmp;
 }
 
-str256 toString(const mat33& matrix, bool rowBreak, uint32_t numDecimals) noexcept
+str256 toString(const mat33& matrix, bool rowBreak, u32 numDecimals) noexcept
 {
 	str256 tmp;
 	toString(matrix, tmp, rowBreak, numDecimals);
 	return tmp;
 }
 
-str256 toString(const mat44& matrix, bool rowBreak, uint32_t numDecimals) noexcept
+str256 toString(const mat44& matrix, bool rowBreak, u32 numDecimals) noexcept
 {
 	str256 tmp;
 	toString(matrix, tmp, rowBreak, numDecimals);
 	return tmp;
 }
 
-template<uint32_t H, uint32_t W>
-void toStringImpl(const Mat<float,H,W>& matrix, str256& string, bool rowBreak, uint32_t numDecimals) noexcept
+template<u32 H, u32 W>
+void toStringImpl(const Mat<float,H,W>& matrix, str256& string, bool rowBreak, u32 numDecimals) noexcept
 {
 	string.clear();
 	string.appendf("[");
 	str96 tmp;
-	for (uint32_t y = 0; y < H; y++) {
+	for (u32 y = 0; y < H; y++) {
 		tmp.clear();
 		toString(matrix.row(y), tmp, numDecimals);
 		string.appendf("%s", tmp.str());
@@ -182,17 +182,17 @@ void toStringImpl(const Mat<float,H,W>& matrix, str256& string, bool rowBreak, u
 	string.appendf("]");
 }
 
-void toString(const mat22& matrix, str256& string, bool rowBreak, uint32_t numDecimals) noexcept
+void toString(const mat22& matrix, str256& string, bool rowBreak, u32 numDecimals) noexcept
 {
 	toStringImpl(matrix, string, rowBreak, numDecimals);
 }
 
-void toString(const mat33& matrix, str256& string, bool rowBreak, uint32_t numDecimals) noexcept
+void toString(const mat33& matrix, str256& string, bool rowBreak, u32 numDecimals) noexcept
 {
 	toStringImpl(matrix, string, rowBreak, numDecimals);
 }
 
-void toString(const mat44& matrix, str256& string, bool rowBreak, uint32_t numDecimals) noexcept
+void toString(const mat44& matrix, str256& string, bool rowBreak, u32 numDecimals) noexcept
 {
 	toStringImpl(matrix, string, rowBreak, numDecimals);
 }

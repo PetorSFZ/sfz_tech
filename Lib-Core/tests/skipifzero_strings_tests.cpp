@@ -168,33 +168,33 @@ UTEST(Hashing, fnv1a_hash_string)
 {
 	// Test values taken from public domain reference code by "chongo <Landon Curt Noll> /\oo/\"
 	// See http://isthe.com/chongo/tech/comp/fnv/
-	ASSERT_TRUE(sfz::hashStringFNV1a("") == uint64_t(0xcbf29ce484222325));
-	ASSERT_TRUE(sfz::hashStringFNV1a("a") == uint64_t(0xaf63dc4c8601ec8c));
-	ASSERT_TRUE(sfz::hashStringFNV1a("b") == uint64_t(0xaf63df4c8601f1a5));
-	ASSERT_TRUE(sfz::hashStringFNV1a("c") == uint64_t(0xaf63de4c8601eff2));
-	ASSERT_TRUE(sfz::hashStringFNV1a("foo") == uint64_t(0xdcb27518fed9d577));
-	ASSERT_TRUE(sfz::hashStringFNV1a("foobar") == uint64_t(0x85944171f73967e8));
-	ASSERT_TRUE(sfz::hashStringFNV1a("chongo was here!\n") == uint64_t(0x46810940eff5f915));
+	ASSERT_TRUE(sfz::hashStringFNV1a("") == u64(0xcbf29ce484222325));
+	ASSERT_TRUE(sfz::hashStringFNV1a("a") == u64(0xaf63dc4c8601ec8c));
+	ASSERT_TRUE(sfz::hashStringFNV1a("b") == u64(0xaf63df4c8601f1a5));
+	ASSERT_TRUE(sfz::hashStringFNV1a("c") == u64(0xaf63de4c8601eff2));
+	ASSERT_TRUE(sfz::hashStringFNV1a("foo") == u64(0xdcb27518fed9d577));
+	ASSERT_TRUE(sfz::hashStringFNV1a("foobar") == u64(0x85944171f73967e8));
+	ASSERT_TRUE(sfz::hashStringFNV1a("chongo was here!\n") == u64(0x46810940eff5f915));
 
 	// Assumes sfz::hash() is a wrapper around hashStringFNV1a()
-	ASSERT_TRUE(sfz::hash("") == uint64_t(0xcbf29ce484222325));
-	ASSERT_TRUE(sfz::hash("a") == uint64_t(0xaf63dc4c8601ec8c));
-	ASSERT_TRUE(sfz::hash("b") == uint64_t(0xaf63df4c8601f1a5));
-	ASSERT_TRUE(sfz::hash("c") == uint64_t(0xaf63de4c8601eff2));
-	ASSERT_TRUE(sfz::hash("foo") == uint64_t(0xdcb27518fed9d577));
-	ASSERT_TRUE(sfz::hash("foobar") == uint64_t(0x85944171f73967e8));
-	ASSERT_TRUE(sfz::hash("chongo was here!\n") == uint64_t(0x46810940eff5f915));
+	ASSERT_TRUE(sfz::hash("") == u64(0xcbf29ce484222325));
+	ASSERT_TRUE(sfz::hash("a") == u64(0xaf63dc4c8601ec8c));
+	ASSERT_TRUE(sfz::hash("b") == u64(0xaf63df4c8601f1a5));
+	ASSERT_TRUE(sfz::hash("c") == u64(0xaf63de4c8601eff2));
+	ASSERT_TRUE(sfz::hash("foo") == u64(0xdcb27518fed9d577));
+	ASSERT_TRUE(sfz::hash("foobar") == u64(0x85944171f73967e8));
+	ASSERT_TRUE(sfz::hash("chongo was here!\n") == u64(0x46810940eff5f915));
 }
 
 UTEST(Hashing, fnv1a_hash_bytes)
 {
 	// Test values taken from public domain reference code by "chongo <Landon Curt Noll> /\oo/\"
 	// See http://isthe.com/chongo/tech/comp/fnv/
-	ASSERT_TRUE(sfz::hashBytesFNV1a((const uint8_t*)"", strlen("")) == uint64_t(0xcbf29ce484222325));
-	ASSERT_TRUE(sfz::hashBytesFNV1a((const uint8_t*)"a", strlen("a")) == uint64_t(0xaf63dc4c8601ec8c));
-	ASSERT_TRUE(sfz::hashBytesFNV1a((const uint8_t*)"b", strlen("b")) == uint64_t(0xaf63df4c8601f1a5));
-	ASSERT_TRUE(sfz::hashBytesFNV1a((const uint8_t*)"c", strlen("c")) == uint64_t(0xaf63de4c8601eff2));
-	ASSERT_TRUE(sfz::hashBytesFNV1a((const uint8_t*)"foo", strlen("foo")) == uint64_t(0xdcb27518fed9d577));
-	ASSERT_TRUE(sfz::hashBytesFNV1a((const uint8_t*)"foobar", strlen("foobar")) == uint64_t(0x85944171f73967e8));
-	ASSERT_TRUE(sfz::hashBytesFNV1a((const uint8_t*)"chongo was here!\n", strlen("chongo was here!\n")) == uint64_t(0x46810940eff5f915));
+	ASSERT_TRUE(sfz::hashBytesFNV1a((const u8*)"", strlen("")) == u64(0xcbf29ce484222325));
+	ASSERT_TRUE(sfz::hashBytesFNV1a((const u8*)"a", strlen("a")) == u64(0xaf63dc4c8601ec8c));
+	ASSERT_TRUE(sfz::hashBytesFNV1a((const u8*)"b", strlen("b")) == u64(0xaf63df4c8601f1a5));
+	ASSERT_TRUE(sfz::hashBytesFNV1a((const u8*)"c", strlen("c")) == u64(0xaf63de4c8601eff2));
+	ASSERT_TRUE(sfz::hashBytesFNV1a((const u8*)"foo", strlen("foo")) == u64(0xdcb27518fed9d577));
+	ASSERT_TRUE(sfz::hashBytesFNV1a((const u8*)"foobar", strlen("foobar")) == u64(0x85944171f73967e8));
+	ASSERT_TRUE(sfz::hashBytesFNV1a((const u8*)"chongo was here!\n", strlen("chongo was here!\n")) == u64(0x46810940eff5f915));
 }

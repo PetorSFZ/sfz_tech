@@ -32,13 +32,13 @@ namespace sfz {
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-static uint32_t sizeOfElement(ImageType imageType) noexcept
+static u32 sizeOfElement(ImageType imageType) noexcept
 {
 	switch (imageType) {
 	case ImageType::UNDEFINED: return 0;
-	case ImageType::R_U8: return 1 * sizeof(uint8_t);
-	case ImageType::RG_U8: return 2 * sizeof(uint8_t);
-	case ImageType::RGBA_U8: return 4 * sizeof(uint8_t);
+	case ImageType::R_U8: return 1 * sizeof(u8);
+	case ImageType::RG_U8: return 2 * sizeof(u8);
+	case ImageType::RGBA_U8: return 4 * sizeof(u8);
 
 	case ImageType::R_F32: return 1 * sizeof(float);
 	case ImageType::RG_F32: return 2 * sizeof(float);
@@ -91,8 +91,8 @@ static void generateMipmap(const ImageViewConst& prevLevel, Image& currLevel) no
 	sfz_assert(prevLevel.type == currLevel.type);
 	switch (currLevel.type) {
 	case ImageType::R_U8:
-		generateMipmapSpecific<uint8_t>(prevLevel, currLevel, [](uint8_t a, uint8_t b, uint8_t c, uint8_t d) {
-			return uint8_t((uint32_t(a) + uint32_t(b) + uint32_t(c) + uint32_t(d)) / 4u);
+		generateMipmapSpecific<u8>(prevLevel, currLevel, [](u8 a, u8 b, u8 c, u8 d) {
+			return u8((u32(a) + u32(b) + u32(c) + u32(d)) / 4u);
 		});
 		break;
 	case ImageType::RG_U8:
@@ -135,12 +135,12 @@ bool TextureResource::needRebuild(vec2_u32 screenRes) const
 			resScale = resolutionScaleSetting->floatValue() * this->resScaleSettingScale;
 		}
 		vec2 scaledRes = vec2(screenRes) * resScale;
-		newRes.x = uint32_t(std::round(scaledRes.x));
-		newRes.y = uint32_t(std::round(scaledRes.y));
+		newRes.x = u32(std::round(scaledRes.x));
+		newRes.y = u32(std::round(scaledRes.y));
 	}
 	else if (settingControlledRes) {
 		sfz_assert(0 < controlledResSetting->intValue() && controlledResSetting->intValue() <= 16384);
-		newRes = vec2_u32(uint32_t(controlledResSetting->intValue()));
+		newRes = vec2_u32(u32(controlledResSetting->intValue()));
 	}
 	else {
 		newRes = this->res;
@@ -158,12 +158,12 @@ ZgResult TextureResource::build(vec2_u32 screenRes)
 			this->resolutionScale = resolutionScaleSetting->floatValue() * this->resScaleSettingScale;
 		}
 		vec2 scaledRes = vec2(screenRes) * this->resolutionScale;
-		newRes.x = uint32_t(std::round(scaledRes.x));
-		newRes.y = uint32_t(std::round(scaledRes.y));
+		newRes.x = u32(std::round(scaledRes.x));
+		newRes.y = u32(std::round(scaledRes.y));
 	}
 	else if (settingControlledRes) {
 		sfz_assert(0 < controlledResSetting->intValue() && controlledResSetting->intValue() <= 16384);
-		newRes = vec2_u32(uint32_t(controlledResSetting->intValue()));
+		newRes = vec2_u32(u32(controlledResSetting->intValue()));
 	}
 	else {
 		newRes = this->res;
@@ -196,8 +196,8 @@ void TextureResource::uploadBlocking(
 	zg::CommandQueue& copyQueue)
 {
 	sfz_assert(texture.valid());
-	sfz_assert(uint32_t(image.width) == res.x);
-	sfz_assert(uint32_t(image.height) == res.y);
+	sfz_assert(u32(image.width) == res.x);
+	sfz_assert(u32(image.height) == res.y);
 	
 	// Convert to ZeroG Image View
 	ZgImageViewConstCpu view = toZeroGImageView(image);
@@ -205,7 +205,7 @@ void TextureResource::uploadBlocking(
 
 	// Generate mipmaps (on CPU)
 	Image mipmaps[ZG_MAX_NUM_MIPMAPS - 1];
-	for (uint32_t i = 0; i < (numMipmaps - 1); i++) {
+	for (u32 i = 0; i < (numMipmaps - 1); i++) {
 
 		// Get previous mipmap level
 		ImageViewConst prevLevel;
@@ -223,15 +223,15 @@ void TextureResource::uploadBlocking(
 	// Create image views
 	ZgImageViewConstCpu imageViews[ZG_MAX_NUM_MIPMAPS] = {};
 	imageViews[0] = view;
-	for (uint32_t i = 0; i < (numMipmaps - 1); i++) {
+	for (u32 i = 0; i < (numMipmaps - 1); i++) {
 		imageViews[i + 1] = toZeroGImageView(mipmaps[i]);
 	}
 
 	// Allocate temporary upload buffers
 	zg::Buffer tmpUploadBuffers[ZG_MAX_NUM_MIPMAPS];
-	for (uint32_t i = 0; i < numMipmaps; i++) {
+	for (u32 i = 0; i < numMipmaps; i++) {
 		// TODO: Figure out exactly how much memory is needed
-		uint32_t bufferSize = (imageViews[i].pitchInBytes * imageViews[i].height) + 65536;
+		u32 bufferSize = (imageViews[i].pitchInBytes * imageViews[i].height) + 65536;
 		CHECK_ZG tmpUploadBuffers[i].create(bufferSize, ZG_MEMORY_TYPE_UPLOAD);
 		sfz_assert(tmpUploadBuffers[i].valid());
 	}
@@ -239,7 +239,7 @@ void TextureResource::uploadBlocking(
 	// Copy texture to GPU
 	zg::CommandList commandList;
 	CHECK_ZG copyQueue.beginCommandListRecording(commandList);
-	for (uint32_t i = 0; i < numMipmaps; i++) {
+	for (u32 i = 0; i < numMipmaps; i++) {
 		CHECK_ZG commandList.memcpyToTexture(texture, i, imageViews[i], tmpUploadBuffers[i]);
 	}
 	CHECK_ZG commandList.enableQueueTransition(texture);
@@ -258,11 +258,11 @@ TextureResource TextureResource::createFixedSize(
 	sfz_assert(isPowerOfTwo(image.height));
 
 	// Calculate number of mipmaps if requested
-	uint32_t numMipmaps = 1;
+	u32 numMipmaps = 1;
 	if (allocateMipmaps) {
-		uint32_t logWidth = sfz::max(uint32_t(log2(image.width)), 1u);
-		uint32_t logHeight = sfz::max(uint32_t(log2(image.height)), 1u);
-		uint32_t logMin = std::min(logWidth, logHeight);
+		u32 logWidth = sfz::max(u32(log2(image.width)), 1u);
+		u32 logHeight = sfz::max(u32(log2(image.height)), 1u);
+		u32 logMin = std::min(logWidth, logHeight);
 		numMipmaps = std::min(logMin, (ZG_MAX_NUM_MIPMAPS - 1));
 	}
 	sfz_assert(numMipmaps != 0);
@@ -280,7 +280,7 @@ TextureResource TextureResource::createFixedSize(
 	const char* name,
 	ZgTextureFormat format,
 	vec2_u32 res,
-	uint32_t numMipmaps,
+	u32 numMipmaps,
 	ZgTextureUsage usage,
 	bool committedAllocation)
 {
@@ -336,7 +336,7 @@ TextureResource TextureResource::createSettingControlled(
 	const char* name,
 	ZgTextureFormat format,
 	Setting* resSetting,
-	uint32_t numMipmaps,
+	u32 numMipmaps,
 	ZgTextureUsage usage,
 	bool committedAllocation)
 {
@@ -347,7 +347,7 @@ TextureResource TextureResource::createSettingControlled(
 	TextureResource resource;
 	resource.name = strID(name);
 	resource.format = format;
-	resource.res = vec2_u32(uint32_t(resSetting->intValue()));
+	resource.res = vec2_u32(u32(resSetting->intValue()));
 	resource.numMipmaps = numMipmaps;
 	resource.committedAllocation = committedAllocation;
 	resource.usage = usage;

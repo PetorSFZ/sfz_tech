@@ -45,7 +45,7 @@ public:
 
 UTEST(Array, default_constructor)
 {
-	sfz::Array<float> floatArray;
+	sfz::Array<f32> floatArray;
 	ASSERT_TRUE(floatArray.size() == 0);
 	ASSERT_TRUE(floatArray.capacity() == 0);
 	ASSERT_TRUE(floatArray.data() == nullptr);
@@ -56,7 +56,7 @@ UTEST(Array, init_with_0_does_not_allocate)
 {
 	SfzAllocator allocator = sfz::createStandardAllocator();
 
-	sfz::Array<float> v;
+	sfz::Array<f32> v;
 	v.init(0, &allocator, sfz_dbg(""));
 	ASSERT_TRUE(v.size() == 0);
 	ASSERT_TRUE(v.capacity() == 0);
@@ -77,7 +77,7 @@ UTEST(Array, fill_constructor)
 	sfz::Array<int> twos(0, &allocator, sfz_dbg(""));
 	twos.add(2, 8);
 
-	for (uint32_t i = 0; i < 8; ++i) {
+	for (u32 i = 0; i < 8; ++i) {
 		ASSERT_TRUE(twos.data()[i] == 2);
 	}
 	ASSERT_TRUE(twos.size() == 8);
@@ -548,13 +548,13 @@ UTEST(Array, sort)
 
 UTEST(ArrayLocal, default_constructor)
 {
-	alignas(32) sfz::ArrayLocal<float, 5> fiveArray;
+	alignas(32) sfz::ArrayLocal<f32, 5> fiveArray;
 	ASSERT_TRUE(fiveArray.size() == 0);
 	ASSERT_TRUE(fiveArray.capacity() == 5);
 	ASSERT_TRUE((uintptr_t)fiveArray.data() == (uintptr_t)&fiveArray);
 	ASSERT_TRUE(sfz::isAligned(fiveArray.data(), 32));
 
-	alignas(64) sfz::ArrayLocal<float, 8> eightArray;
+	alignas(64) sfz::ArrayLocal<f32, 8> eightArray;
 	ASSERT_TRUE(eightArray.size() == 0);
 	ASSERT_TRUE(eightArray.capacity() == 8);
 	ASSERT_TRUE((uintptr_t)eightArray.data() == (uintptr_t)&eightArray);
@@ -575,7 +575,7 @@ UTEST(ArrayLocal, fill_constructor)
 	ASSERT_TRUE(twos.size() == 0);
 	twos.add(2, 8);
 	ASSERT_TRUE(twos.size() == 8);
-	for (uint32_t i = 0; i < 8; i++) {
+	for (u32 i = 0; i < 8; i++) {
 		ASSERT_TRUE(twos.data()[i] == 2);
 	}
 

@@ -51,7 +51,7 @@ constexpr strID BASE_CON_ID = strID(sfz::hash(BASE_CON_NAME));
 
 inline vec2 calcCenterPos(vec2 pos, Align align, vec2 dims)
 {
-	return pos - vec2(float(align.halign), float(align.valign)) * 0.5f * dims;
+	return pos - vec2(f32(align.halign), f32(align.valign)) * 0.5f * dims;
 }
 
 // Context
@@ -62,7 +62,7 @@ struct WidgetArchetype final {
 };
 
 struct WidgetType {
-	uint32_t widgetDataSizeBytes = 0;
+	u32 widgetDataSizeBytes = 0;
 	GetWidgetBaseFunc* getBaseFunc = nullptr;
 	GetNextWidgetBoxFunc* getNextWidgetBoxFunc = nullptr;
 	HandlePointerInputFunc* handlePointerInputFunc = nullptr;
@@ -90,12 +90,12 @@ struct WidgetCmd final {
 
 	template<typename T> T* data() { return (T*)dataPtr; }
 	template<typename T> const T* data() const { return (const T*)dataPtr; }
-	uint32_t sizeOfWidgetData() const;
+	u32 sizeOfWidgetData() const;
 	WidgetBase* getBase();
 	void getNextWidgetBox(strID childID, Box* boxOut);
 	void handlePointerInput(vec2 pointerPosSS);
 	void handleMoveInput(Input* input, bool* moveActive);
-	void draw(AttributeSet* attributes, const mat34& surfaceTransform, float lagSinceSurfaceEndSecs) const;
+	void draw(AttributeSet* attributes, const mat34& surfaceTransform, f32 lagSinceSurfaceEndSecs) const;
 };
 
 struct Surface final {
@@ -107,7 +107,7 @@ struct Surface final {
 	// Transforms
 	mat34 transform = mat34::identity();
 	mat34 inputTransform = mat34::identity();
-	vec2 pointerPosSS = vec2(-FLT_MAX); // SS = Surface Space
+	vec2 pointerPosSS = vec2(-F32_MAX); // SS = Surface Space
 
 	// Commands
 	WidgetCmd cmdRoot;
@@ -117,7 +117,7 @@ struct Surface final {
 		sfz_assert(!cmdParentStack.isEmpty());
 		return *cmdParentStack.last();
 	}
-	void pushMakeParent(WidgetCmd* cmd, uint32_t numChildrenHint = 64)
+	void pushMakeParent(WidgetCmd* cmd, u32 numChildrenHint = 64)
 	{
 		sfz_assert(cmd->children.allocator() == nullptr);
 		sfz_assert(cmd->children.isEmpty());
@@ -130,7 +130,7 @@ struct Surface final {
 		sfz_assert(!cmdParentStack.isEmpty());
 	}
 
-	void init(uint32_t surfaceTmpMemoryBytes,  SfzAllocator* allocator)
+	void init(u32 surfaceTmpMemoryBytes,  SfzAllocator* allocator)
 	{
 		arena.init(allocator, surfaceTmpMemoryBytes, sfz_dbg(""));
 		this->clear();
@@ -145,7 +145,7 @@ struct Surface final {
 
 		transform = mat34::identity();
 		inputTransform = mat34::identity();
-		pointerPosSS = vec2(-FLT_MAX);
+		pointerPosSS = vec2(-F32_MAX);
 	}
 };
 
@@ -161,7 +161,7 @@ struct Context final {
 	Surface* activeSurface = nullptr;
 	sfz::Array<Surface> surfaces;
 	sfz::Array<Surface> recycledSurfaces;
-	uint32_t surfaceTmpMemoryBytes = 0;
+	u32 surfaceTmpMemoryBytes = 0;
 	void createNewSurface()
 	{
 		sfz_assert(activeSurface == nullptr);
@@ -203,7 +203,7 @@ inline WidgetCmd::WidgetCmd(strID id, void* ptr)
 	sfz_assert(archetypeDrawFunc != nullptr);
 }
 
-inline uint32_t WidgetCmd::sizeOfWidgetData() const
+inline u32 WidgetCmd::sizeOfWidgetData() const
 {
 	WidgetType* type = ctx().widgetTypes.get(strID(widgetID));
 	sfz_assert(type != nullptr);
@@ -243,7 +243,7 @@ inline void WidgetCmd::handleMoveInput(Input* input, bool* moveActive)
 	type->handleMoveInputFunc(this, input, moveActive);
 }
 
-inline void WidgetCmd::draw(AttributeSet* attributes, const mat34& surfaceTransform, float lagSinceSurfaceEndSecs) const
+inline void WidgetCmd::draw(AttributeSet* attributes, const mat34& surfaceTransform, f32 lagSinceSurfaceEndSecs) const
 {
 	archetypeDrawFunc(this, attributes, surfaceTransform, lagSinceSurfaceEndSecs);
 }

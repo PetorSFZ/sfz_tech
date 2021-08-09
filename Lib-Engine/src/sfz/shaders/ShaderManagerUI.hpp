@@ -71,7 +71,7 @@ inline void shaderManagerUI(ShaderManagerState& state)
 
 	for (HashMapPair<strID, PoolHandle> itemItr : state.shaderHandles) {
 		const char* name = itemItr.key.str();
-		const uint32_t idx = itemItr.value.idx();
+		const u32 idx = itemItr.value.idx();
 		Shader& shader = state.shaders[itemItr.value];
 
 		str320 lowerCaseName = name;
@@ -138,7 +138,7 @@ inline void shaderManagerUI(ShaderManagerState& state)
 			ImGui::Spacing();
 			ImGui::Text("Vertex attributes (%u):", signature.numVertexAttributes);
 			ImGui::Indent(20.0f);
-			for (uint32_t j = 0; j < signature.numVertexAttributes; j++) {
+			for (u32 j = 0; j < signature.numVertexAttributes; j++) {
 				const ZgVertexAttribute& attrib = signature.vertexAttributes[j];
 				ImGui::Text("- Location: %u -- Type: %s",
 					attrib.location, vertexAttributeTypeToString(attrib.type));
@@ -160,7 +160,7 @@ inline void shaderManagerUI(ShaderManagerState& state)
 			ImGui::Spacing();
 			ImGui::Text("Constant buffers (%u):", bindings.numConstBuffers);
 			ImGui::Indent(20.0f);
-			for (uint32_t j = 0; j < bindings.numConstBuffers; j++) {
+			for (u32 j = 0; j < bindings.numConstBuffers; j++) {
 				const ZgConstantBufferBindingDesc& cbuffer = bindings.constBuffers[j];
 				ImGui::Text("- Register: %u -- Size: %u bytes -- Push constant: %s",
 					cbuffer.bufferRegister,
@@ -174,7 +174,7 @@ inline void shaderManagerUI(ShaderManagerState& state)
 		if (bindings.numTextures > 0) {
 			ImGui::Spacing();
 			ImGui::Text("Textures (%u):  ", bindings.numTextures);
-			for (uint32_t j = 0; j < bindings.numTextures; j++) {
+			for (u32 j = 0; j < bindings.numTextures; j++) {
 				const ZgTextureBindingDesc& texture = bindings.textures[j];
 				ImGui::SameLine();
 				ImGui::Text("%u, ", texture.textureRegister);
@@ -185,7 +185,7 @@ inline void shaderManagerUI(ShaderManagerState& state)
 		if (bindings.numUnorderedBuffers > 0) {
 			ImGui::Spacing();
 			ImGui::Text("Unordered buffers (%u):  ", bindings.numUnorderedBuffers);
-			for (uint32_t j = 0; j < bindings.numUnorderedBuffers; j++) {
+			for (u32 j = 0; j < bindings.numUnorderedBuffers; j++) {
 				const ZgUnorderedBufferBindingDesc& buffer = bindings.unorderedBuffers[j];
 				ImGui::SameLine();
 				ImGui::Text("%u, ", buffer.unorderedRegister);
@@ -196,7 +196,7 @@ inline void shaderManagerUI(ShaderManagerState& state)
 		if (bindings.numUnorderedTextures > 0) {
 			ImGui::Spacing();
 			ImGui::Text("Unordered textures (%u):  ", bindings.numUnorderedTextures);
-			for (uint32_t j = 0; j < bindings.numUnorderedTextures; j++) {
+			for (u32 j = 0; j < bindings.numUnorderedTextures; j++) {
 				const ZgUnorderedTextureBindingDesc& texture = bindings.unorderedTextures[j];
 				ImGui::SameLine();
 				ImGui::Text("%u, ", texture.unorderedRegister);
@@ -208,7 +208,7 @@ inline void shaderManagerUI(ShaderManagerState& state)
 			ImGui::Spacing();
 			ImGui::Text("Samplers (%u):", shader.samplers.size());
 			ImGui::Indent(20.0f);
-			for (uint32_t j = 0; j < shader.samplers.size(); j++) {
+			for (u32 j = 0; j < shader.samplers.size(); j++) {
 				SamplerItem& item = shader.samplers[j];
 				ImGui::Text("- Register: %u", item.samplerRegister);
 				ImGui::Indent(20.0f);
@@ -267,7 +267,7 @@ inline void shaderManagerUI(ShaderManagerState& state)
 			ImGui::Spacing();
 			ImGui::Text("Render Targets (%u):", render.renderTargets.size());
 			ImGui::Indent(20.0f);
-			for (uint32_t j = 0; j < render.renderTargets.size(); j++) {
+			for (u32 j = 0; j < render.renderTargets.size(); j++) {
 				ImGui::Text("- Render Target: %u -- %s",
 					j, textureFormatToString(render.renderTargets[j]));
 			}

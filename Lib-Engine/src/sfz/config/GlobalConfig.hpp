@@ -118,16 +118,16 @@ public:
 		const char* section, const char* key,
 		bool writeToFile = true,
 		int32_t defaultValue = 0,
-		int32_t minValue = INT32_MIN,
-		int32_t maxValue = INT32_MAX,
+		int32_t minValue = I32_MIN,
+		int32_t maxValue = I32_MAX,
 		int32_t step = 1) noexcept;
 
 	Setting* sanitizeFloat(
 		const char* section, const char* key,
 		bool writeToFile = true,
 		float defaultValue = 0.0f,
-		float minValue = FLT_MIN,
-		float maxValue = FLT_MAX) noexcept;
+		float minValue = -F32_MAX,
+		float maxValue = F32_MAX) noexcept;
 
 	Setting* sanitizeBool(
 		const char* section, const char* key,

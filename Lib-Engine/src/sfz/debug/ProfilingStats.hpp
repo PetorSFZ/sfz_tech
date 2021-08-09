@@ -26,8 +26,8 @@ namespace sfz {
 // ProfilingStats
 // ------------------------------------------------------------------------------------------------
 
-constexpr uint32_t PROFILING_STATS_MAX_NUM_CATEGORIES = 8;
-constexpr uint32_t PROFILING_STATS_MAX_NUM_LABELS = 80;
+constexpr u32 PROFILING_STATS_MAX_NUM_CATEGORIES = 8;
+constexpr u32 PROFILING_STATS_MAX_NUM_LABELS = 80;
 
 struct LabelStats final {
 	float avg = 0.0f;
@@ -36,7 +36,7 @@ struct LabelStats final {
 	float max = 0.0f;
 };
 
-enum class StatsVisualizationType : uint32_t {
+enum class StatsVisualizationType : u32 {
 	INDIVIDUALLY,
 	FIRST_INDIVIDUALLY_REST_ADDED
 };
@@ -64,17 +64,17 @@ public:
 	// Getters
 	// --------------------------------------------------------------------------------------------
 	
-	uint32_t numCategories() const noexcept;
+	u32 numCategories() const noexcept;
 	const char* const* categories() const noexcept;
 
-	uint32_t numLabels(const char* category) const noexcept;
+	u32 numLabels(const char* category) const noexcept;
 	const char* const* labels(const char* category) const noexcept;
 
 	bool categoryExists(const char* category) const noexcept;
 	bool labelExists(const char* category, const char* label) const noexcept;
 
-	uint32_t numSamples(const char* category) const noexcept;
-	const uint64_t* sampleIndices(const char* category) const noexcept;
+	u32 numSamples(const char* category) const noexcept;
+	const u64* sampleIndices(const char* category) const noexcept;
 	const float* sampleIndicesFloat(const char* category) const noexcept;
 	const char* sampleUnit(const char* category) const noexcept;
 	const char* idxUnit(const char* category) const noexcept;
@@ -90,7 +90,7 @@ public:
 
 	void createCategory(
 		const char* category,
-		uint32_t numSamples,
+		u32 numSamples,
 		float sampleOutlierMax,
 		const char* sampleUnit,
 		const char* idxUnit,
@@ -104,7 +104,7 @@ public:
 		float defaultValue = 0.0f) noexcept;
 
 	void addSample(
-		const char* category, const char* label, uint64_t sampleIdx, float sample) noexcept;
+		const char* category, const char* label, u64 sampleIdx, float sample) noexcept;
 
 private:
 	ProfilingStatsState* mState = nullptr;

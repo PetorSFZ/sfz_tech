@@ -31,10 +31,10 @@
 
 struct D3D12ProfilerState final {
 
-	uint64_t nextMeasurementId = 0;
-	uint32_t maxNumMeasurements = 0;
+	u64 nextMeasurementId = 0;
+	u32 maxNumMeasurements = 0;
 
-	sfz::Array<uint64_t> ticksPerSecond;
+	sfz::Array<u64> ticksPerSecond;
 
 	ComPtr<ID3D12QueryHeap> queryHeap;
 
@@ -68,8 +68,8 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	ZgResult getMeasurement(
-		uint64_t measurementId,
-		float& measurementMsOut) noexcept
+		u64 measurementId,
+		f32& measurementMsOut) noexcept
 	{
 		MutexAccessor<D3D12ProfilerState> accessor = state.access();
 		D3D12ProfilerState& profilerState = accessor.data();
@@ -81,21 +81,21 @@ public:
 		if (!validMeasurementId) return ZG_ERROR_INVALID_ARGUMENT;
 
 		// Get query idx
-		uint32_t queryIdx = measurementId % profilerState.maxNumMeasurements;
-		uint32_t timestampBaseIdx = queryIdx * 2;
-		uint64_t bufferOffset = timestampBaseIdx * sizeof(uint64_t);
+		u32 queryIdx = measurementId % profilerState.maxNumMeasurements;
+		u32 timestampBaseIdx = queryIdx * 2;
+		u64 bufferOffset = timestampBaseIdx * sizeof(u64);
 
 		// Download timestamps
-		uint64_t timestamps[2] = {};
+		u64 timestamps[2] = {};
 		ZgResult memcpyRes =
-			bufferMemcpyDownload(*profilerState.downloadBuffer, bufferOffset, timestamps, sizeof(uint64_t) * 2);
+			bufferMemcpyDownload(*profilerState.downloadBuffer, bufferOffset, timestamps, sizeof(u64) * 2);
 		if (memcpyRes != ZG_SUCCESS) return memcpyRes;
 
 		// Get number of ticks per second when this query was issued
-		uint64_t ticksPerSecond = profilerState.ticksPerSecond[queryIdx];
+		u64 ticksPerSecond = profilerState.ticksPerSecond[queryIdx];
 
 		// Calculate time between timestamps in ms
-		float diffSeconds = float(timestamps[1] - timestamps[0]) / float(ticksPerSecond);
+		f32 diffSeconds = f32(timestamps[1] - timestamps[0]) / f32(ticksPerSecond);
 		measurementMsOut = diffSeconds * 1000.0f;
 
 		return ZG_SUCCESS;
@@ -117,7 +117,7 @@ inline ZgResult d3d12CreateProfiler(
 	ZgProfiler** profilerOut,
 	const ZgProfilerCreateInfo& createInfo) noexcept
 {
-	constexpr uint64_t TIMESTAMPS_PER_MEASUREMENT = 2;
+	constexpr u64 TIMESTAMPS_PER_MEASUREMENT = 2;
 
 	// Create query heap
 	ComPtr<ID3D12QueryHeap> queryHeap;
@@ -136,7 +136,7 @@ inline ZgResult d3d12CreateProfiler(
 		// Create download buffer
 		ZgBufferCreateInfo bufferInfo = {};
 		bufferInfo.memoryType = ZG_MEMORY_TYPE_DOWNLOAD;
-		bufferInfo.sizeInBytes = sizeof(uint64_t) * TIMESTAMPS_PER_MEASUREMENT * createInfo.maxNumMeasurements;
+		bufferInfo.sizeInBytes = sizeof(u64) * TIMESTAMPS_PER_MEASUREMENT * createInfo.maxNumMeasurements;
 		ZgBuffer* bufferTmp = nullptr;
 		ZgResult res = createBuffer(bufferTmp, bufferInfo, d3d12allocator, resourceUniqueIdentifierCounter);
 		if (res != ZG_SUCCESS) {

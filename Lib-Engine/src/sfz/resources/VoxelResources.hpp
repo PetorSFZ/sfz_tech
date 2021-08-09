@@ -33,7 +33,7 @@ namespace sfz {
 
 struct VoxelMaterial final {
 	strID name;
-	vec4_u8 originalColor = vec4_u8(uint8_t(0)); // Gamma space
+	vec4_u8 originalColor = vec4_u8(u8(0)); // Gamma space
 
 	vec3 albedo = vec3(1.0f, 0.0f, 0.0f); // Gamma space, usually same as original color
 	float roughness = 1.0f; // Linear space
@@ -55,7 +55,7 @@ static_assert(sizeof(ShaderVoxelMaterial) == sizeof(float) * 8, "ShaderVoxelMate
 
 // A simple dense voxel model.
 //
-// Stores 1 byte (uint8_t) per voxel. See accessVoxel() for an example of how to access a specific
+// Stores 1 byte (u8) per voxel. See accessVoxel() for an example of how to access a specific
 // voxel. The value 0 is reserved for unused voxels. Other values are used to index into the
 // color palette.
 struct VoxelModelResource final {
@@ -64,8 +64,8 @@ struct VoxelModelResource final {
 	str256 path;
 
 	vec3_u32 dims = vec3_u32(0u);
-	uint32_t numVoxels = 0; // The number of non-empty voxels in the voxels array, NOT the size of the voxels array.
-	Array<uint8_t> voxels;
+	u32 numVoxels = 0; // The number of non-empty voxels in the voxels array, NOT the size of the voxels array.
+	Array<u8> voxels;
 	Arr256<vec4_u8> palette;
 
 	// A user defined handle that can be used to refer to e.g. an application specific GPU buffer
@@ -73,17 +73,17 @@ struct VoxelModelResource final {
 	PoolHandle userHandle = NULL_HANDLE;
 	time_t userHandleModifiedDate = 0;
 
-	uint8_t& accessVoxel(vec3_u32 coord)
+	u8& accessVoxel(vec3_u32 coord)
 	{
 		sfz_assert(coord.x < dims.x);
 		sfz_assert(coord.y < dims.y);
 		sfz_assert(coord.z < dims.z);
-		uint32_t idx = coord.x + (coord.y * dims.x) + (coord.z * dims.x * dims.y);
+		u32 idx = coord.x + (coord.y * dims.x) + (coord.z * dims.x * dims.y);
 		sfz_assert(idx < voxels.size());
 		return voxels[idx];
 	}
 
-	uint8_t accessVoxel(vec3_u32 coord) const
+	u8 accessVoxel(vec3_u32 coord) const
 	{
 		return const_cast<VoxelModelResource*>(this)->accessVoxel(coord);
 	}

@@ -35,17 +35,17 @@ static constexpr Vertex TRIANGLE_VERTICES[] = {
 	Vertex(vec3(3.0f, -1.0f, 0.0f), vec3(0.0f), vec2(2.0f, 1.0f)), // Bottom right
 	Vertex(vec3(-1.0f, 3.0f, 0.0f), vec3(0.0f), vec2(0.0f, -1.0f)), // Top lef
 };
-static constexpr uint32_t NUM_TRIANGLE_VERTICES = 3;
+static constexpr u32 NUM_TRIANGLE_VERTICES = 3;
 
-static constexpr uint32_t TRIANGLE_INDICES[] = {
+static constexpr u32 TRIANGLE_INDICES[] = {
 	0, 1, 2
 };
-static constexpr uint32_t NUM_TRIANGLE_INDICES = 3;
+static constexpr u32 NUM_TRIANGLE_INDICES = 3;
 
 // Function that returns a mesh containing a "fullscreen" triangle
 // ------------------------------------------------------------------------------------------------
 
-sfz::Mesh createFullscreenTriangle(SfzAllocator* allocator, float clipSpaceDepth)
+sfz::Mesh createFullscreenTriangle(SfzAllocator* allocator, f32 clipSpaceDepth)
 {
 	sfz::Mesh mesh;
 

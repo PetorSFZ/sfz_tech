@@ -300,24 +300,24 @@ static const char* byteToBinaryStringLookupTable[256] = {
 	"11111111",
 };
 
-static sfz::HashMap<str32, uint8_t>* binaryStringToByteLookupMap = nullptr;
+static sfz::HashMap<str32, u8>* binaryStringToByteLookupMap = nullptr;
 
-static const char* byteToBinaryString(uint8_t byte) noexcept
+static const char* byteToBinaryString(u8 byte) noexcept
 {
 	return byteToBinaryStringLookupTable[byte];
 }
 
-static uint8_t binaryStringToByte(const char* binaryStr) noexcept
+static u8 binaryStringToByte(const char* binaryStr) noexcept
 {
-	const uint8_t* bytePtr = binaryStringToByteLookupMap->get(binaryStr);
+	const u8* bytePtr = binaryStringToByteLookupMap->get(binaryStr);
 	if (bytePtr == nullptr) return 0;
 	return *bytePtr;
 }
 
 static void initializeComponentMaskEditor(str32 buffers[8], CompMask initialMask) noexcept
 {
-	for (uint64_t i = 0; i < 8; i++) {
-		uint8_t byte = uint8_t((initialMask.rawMask >> (i * 8)) & uint64_t(0xFF));
+	for (u64 i = 0; i < 8; i++) {
+		u8 byte = u8((initialMask.rawMask >> (i * 8)) & u64(0xFF));
 		const char* byteBinaryStr = byteToBinaryString(byte);
 		buffers[i].clear();
 		buffers[i].appendf("%s", byteBinaryStr);
@@ -341,7 +341,7 @@ static void componentMaskVisualizer(CompMask mask) noexcept
 		for (int32_t fieldIdx = NUM_FIELDS - 1; fieldIdx >= 0; fieldIdx--) {
 
 			int32_t byteIdx = rowIdx * NUM_FIELDS + fieldIdx;
-			uint8_t byte = uint8_t((mask.rawMask >> (byteIdx * 8)) & uint64_t(0xFF));
+			u8 byte = u8((mask.rawMask >> (byteIdx * 8)) & u64(0xFF));
 			const char* byteBinaryStr = byteToBinaryString(byte);
 
 			ImGui::Text("%s", byteBinaryStr);
@@ -349,17 +349,17 @@ static void componentMaskVisualizer(CompMask mask) noexcept
 		}
 
 		if(rowIdx == 0) {
-			uint32_t byte0 = uint32_t(mask.rawMask & 0xFF);
-			uint32_t byte1 = uint32_t((mask.rawMask >> 8) & 0xFF);
-			uint32_t byte2 = uint32_t((mask.rawMask >> 16) & 0xFF);
-			uint32_t byte3 = uint32_t((mask.rawMask >> 24) & 0xFF);
+			u32 byte0 = u32(mask.rawMask & 0xFF);
+			u32 byte1 = u32((mask.rawMask >> 8) & 0xFF);
+			u32 byte2 = u32((mask.rawMask >> 16) & 0xFF);
+			u32 byte3 = u32((mask.rawMask >> 24) & 0xFF);
 			ImGui::Text("[%02X %02X %02X %02X]", byte3, byte2, byte1, byte0);
 		}
 		else {
-			uint32_t byte4 = uint32_t((mask.rawMask >> 32) & 0xFF);
-			uint32_t byte5 = uint32_t((mask.rawMask >> 40) & 0xFF);
-			uint32_t byte6 = uint32_t((mask.rawMask >> 48) & 0xFF);
-			uint32_t byte7 = uint32_t((mask.rawMask >> 56) & 0xFF);
+			u32 byte4 = u32((mask.rawMask >> 32) & 0xFF);
+			u32 byte5 = u32((mask.rawMask >> 40) & 0xFF);
+			u32 byte6 = u32((mask.rawMask >> 48) & 0xFF);
+			u32 byte7 = u32((mask.rawMask >> 56) & 0xFF);
 			ImGui::Text("[%02X %02X %02X %02X]", byte7, byte6, byte5, byte4);
 		}
 	}
@@ -381,7 +381,7 @@ static bool componentMaskEditor(
 		for (int32_t fieldIdx = NUM_FIELDS - 1; fieldIdx >= 0; fieldIdx--) {
 
 			int32_t byteIdx = rowIdx * NUM_FIELDS + fieldIdx;
-			uint64_t shiftOffset = 8 * byteIdx;
+			u64 shiftOffset = 8 * byteIdx;
 
 			ImGuiInputTextFlags inputFlags = 0;
 			inputFlags |= ImGuiInputTextFlags_EnterReturnsTrue;
@@ -397,10 +397,10 @@ static bool componentMaskEditor(
 			ImGui::PopItemWidth();
 
 			if (modified) {
-				const uint8_t modifiedByte = binaryStringToByte(buffers[byteIdx]);
-				const uint64_t keepMask = ~(uint64_t(0xFF) << shiftOffset);
-				const uint64_t insertByte = uint64_t(modifiedByte) << shiftOffset;
-				const uint64_t modifiedMask = (mask.rawMask & keepMask) | insertByte;
+				const u8 modifiedByte = binaryStringToByte(buffers[byteIdx]);
+				const u64 keepMask = ~(u64(0xFF) << shiftOffset);
+				const u64 insertByte = u64(modifiedByte) << shiftOffset;
+				const u64 modifiedMask = (mask.rawMask & keepMask) | insertByte;
 				mask.rawMask = modifiedMask;
 				bitsModified = true;
 			}
@@ -409,17 +409,17 @@ static bool componentMaskEditor(
 		}
 
 		if(rowIdx == 0) {
-			uint32_t byte0 = uint32_t(mask.rawMask & 0xFF);
-			uint32_t byte1 = uint32_t((mask.rawMask >> 8) & 0xFF);
-			uint32_t byte2 = uint32_t((mask.rawMask >> 16) & 0xFF);
-			uint32_t byte3 = uint32_t((mask.rawMask >> 24) & 0xFF);
+			u32 byte0 = u32(mask.rawMask & 0xFF);
+			u32 byte1 = u32((mask.rawMask >> 8) & 0xFF);
+			u32 byte2 = u32((mask.rawMask >> 16) & 0xFF);
+			u32 byte3 = u32((mask.rawMask >> 24) & 0xFF);
 			ImGui::Text("[%02X %02X %02X %02X]", byte3, byte2, byte1, byte0);
 		}
 		else {
-			uint32_t byte4 = uint32_t((mask.rawMask >> 32) & 0xFF);
-			uint32_t byte5 = uint32_t((mask.rawMask >> 40) & 0xFF);
-			uint32_t byte6 = uint32_t((mask.rawMask >> 48) & 0xFF);
-			uint32_t byte7 = uint32_t((mask.rawMask >> 56) & 0xFF);
+			u32 byte4 = u32((mask.rawMask >> 32) & 0xFF);
+			u32 byte5 = u32((mask.rawMask >> 40) & 0xFF);
+			u32 byte6 = u32((mask.rawMask >> 48) & 0xFF);
+			u32 byte7 = u32((mask.rawMask >> 56) & 0xFF);
 			ImGui::Text("[%02X %02X %02X %02X]", byte7, byte6, byte5, byte4);
 		}
 	}
@@ -436,7 +436,7 @@ static void saveDialog(const GameStateHeader* state) noexcept
 
 	// Write game state to file if file dialog was succesful
 	if (result == NFD_OKAY) {
-		bool success =  sfz::writeBinaryFile(path, (const uint8_t*)state, state->stateSizeBytes);
+		bool success =  sfz::writeBinaryFile(path, (const u8*)state, state->stateSizeBytes);
 		if (success) {
 			SFZ_INFO("PhantasyEngine", "Wrote game state to \"%s\"", path);
 		}
@@ -459,7 +459,7 @@ static void loadDialog(GameStateHeader* state) noexcept
 
 	// Load game state from file if file dialog was succesful
 	if (result == NFD_OKAY) {
-		sfz::Array<uint8_t> binary = sfz::readBinaryFile(path);
+		sfz::Array<u8> binary = sfz::readBinaryFile(path);
 		if (binary.size() == 0) {
 			SFZ_ERROR("PhantasyEngine", "Could not read game state from \"%s\"", path);
 		}
@@ -486,9 +486,9 @@ static void loadDialog(GameStateHeader* state) noexcept
 void GameStateEditor::init(
 	const char* windowName,
 	SingletonInfo* singletonInfos,
-	uint32_t numSingletonInfos,
+	u32 numSingletonInfos,
 	ComponentInfo* componentInfos,
-	uint32_t numComponentInfos,
+	u32 numComponentInfos,
 	SfzAllocator* allocator)
 {
 	this->destroy();
@@ -496,10 +496,10 @@ void GameStateEditor::init(
 	// Initialize binary string to byte lookup map
 	if (binaryStringToByteLookupMap == nullptr)
 	{
-		binaryStringToByteLookupMap = sfz_new<sfz::HashMap<str32, uint8_t>>(allocator, sfz_dbg(""));
+		binaryStringToByteLookupMap = sfz_new<sfz::HashMap<str32, u8>>(allocator, sfz_dbg(""));
 		binaryStringToByteLookupMap->init(512, allocator, sfz_dbg(""));
-		for (uint32_t i = 0; i < 256; i++) {
-			binaryStringToByteLookupMap->put(byteToBinaryStringLookupTable[i], uint8_t(i));
+		for (u32 i = 0; i < 256; i++) {
+			binaryStringToByteLookupMap->put(byteToBinaryStringLookupTable[i], u8(i));
 		}
 	}
 
@@ -512,7 +512,7 @@ void GameStateEditor::init(
 	bool singletonInfoSet[64] = {};
 
 	// Set rest of singleton infos
-	for (uint32_t i = 0; i < numSingletonInfos; i++) {
+	for (u32 i = 0; i < numSingletonInfos; i++) {
 		SingletonInfo& info = singletonInfos[i];
 		sfz_assert(info.singletonIndex < 64);
 
@@ -530,7 +530,7 @@ void GameStateEditor::init(
 	mNumSingletonInfos = numSingletonInfos;
 
 	// Ensure that they are all set
-	for (uint32_t i = 0; i < mNumSingletonInfos; i++) {
+	for (u32 i = 0; i < mNumSingletonInfos; i++) {
 		sfz_assert(singletonInfoSet[i]);
 	}
 
@@ -543,7 +543,7 @@ void GameStateEditor::init(
 	mComponentInfos[0].componentName.appendf("00 - Active bit");
 
 	// Set rest of component infos
-	for (uint32_t i = 0; i < numComponentInfos; i++) {
+	for (u32 i = 0; i < numComponentInfos; i++) {
 		ComponentInfo& info = componentInfos[i];
 		sfz_assert(info.componentType != 0);
 		sfz_assert(info.componentType < 64);
@@ -563,7 +563,7 @@ void GameStateEditor::init(
 	mNumComponentInfos = numComponentInfos + 1;
 
 	// Ensure that they are all set
-	for (uint32_t i = 0; i < mNumComponentInfos; i++) {
+	for (u32 i = 0; i < mNumComponentInfos; i++) {
 		sfz_assert(componentInfoSet[i]);
 	}
 }
@@ -571,14 +571,14 @@ void GameStateEditor::init(
 void GameStateEditor::swap(GameStateEditor& other) noexcept
 {
 	std::swap(this->mWindowName, other.mWindowName);
-	for (uint32_t i = 0; i < 64; i++) {
+	for (u32 i = 0; i < 64; i++) {
 		std::swap(this->mSingletonInfos[i], other.mSingletonInfos[i]);
 		std::swap(this->mComponentInfos[i], other.mComponentInfos[i]);
 	}
 	std::swap(this->mNumSingletonInfos, other.mNumSingletonInfos);
 	std::swap(this->mNumComponentInfos, other.mNumComponentInfos);
 	std::swap(this->mFilterMask, other.mFilterMask);
-	for (uint32_t i = 0; i < 8; i++) {
+	for (u32 i = 0; i < 8; i++) {
 		std::swap(this->mFilterMaskEditBuffers[i], other.mFilterMaskEditBuffers[i]);
 	}
 	std::swap(this->mCompactEntityList, other.mCompactEntityList);
@@ -588,14 +588,14 @@ void GameStateEditor::swap(GameStateEditor& other) noexcept
 void GameStateEditor::destroy() noexcept
 {
 	mWindowName.clear();
-	for (uint32_t i = 0; i < 64; i++) {
+	for (u32 i = 0; i < 64; i++) {
 		this->mSingletonInfos[i] = ReducedSingletonInfo();
 		this->mComponentInfos[i] = ReducedComponentInfo();
 	}
 	mNumSingletonInfos = 0;
 	mNumComponentInfos = 0;
 	mFilterMask = CompMask::activeMask();
-	for (uint32_t i = 0; i < 8; i++) {
+	for (u32 i = 0; i < 8; i++) {
 		mFilterMaskEditBuffers[i].clear();
 		mFilterMaskEditBuffers[i].appendf("");
 	}
@@ -688,7 +688,7 @@ void GameStateEditor::render(GameStateHeader* state) noexcept
 void GameStateEditor::renderSingletonEditor(GameStateHeader* state) noexcept
 {
 	// Render singleton editors
-	for (uint32_t i = 0; i < mNumSingletonInfos; i++) {
+	for (u32 i = 0; i < mNumSingletonInfos; i++) {
 		const ReducedSingletonInfo& info = mSingletonInfos[i];
 
 		if (ImGui::CollapsingHeader(info.singletonName, ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -699,7 +699,7 @@ void GameStateEditor::renderSingletonEditor(GameStateHeader* state) noexcept
 				ImGui::Text("<No editor specified>");
 			}
 			else {
-				uint32_t singletonSizeOut = 0;
+				u32 singletonSizeOut = 0;
 				info.singletonEditor(
 					info.userPtr.get(),
 					state->singletonUntyped(i, singletonSizeOut),
@@ -719,7 +719,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 
 	// Get some stuff from the game state
 	CompMask* masks = state->componentMasks();
-	const uint8_t* generations = state->entityGenerations();
+	const u8* generations = state->entityGenerations();
 
 	// Currently selected entities component mask
 	ImGui::BeginGroup();
@@ -737,7 +737,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 
 	// Entities list
 	if (ImGui::ListBoxHeader("##Entities", vec2(136.0f, ImGui::GetWindowHeight() - 320.0f))) {
-		for (uint32_t entityId = 0; entityId < state->maxNumEntities; entityId++) {
+		for (u32 entityId = 0; entityId < state->maxNumEntities; entityId++) {
 
 			// Check if entity fulfills filter mask
 			bool fulfillsFilter = masks[entityId].fulfills(mFilterMask);
@@ -770,7 +770,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 
 	// Clone entity button
 	if (ImGui::Button("Clone", sfz::vec2(136.0f, 0))) {
-		uint8_t gen = state->entityGenerations()[mCurrentSelectedEntityId];
+		u8 gen = state->entityGenerations()[mCurrentSelectedEntityId];
 		Entity entity = state->cloneEntity(Entity::create(mCurrentSelectedEntityId, gen));
 		if (entity != NULL_ENTITY) mCurrentSelectedEntityId = entity.id();
 	}
@@ -782,7 +782,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 		// Select previous active entity
 		for (int64_t i = int64_t(mCurrentSelectedEntityId) - 1; i >= 0; i--) {
 			if (masks[i].active()) {
-				mCurrentSelectedEntityId = uint32_t(i);
+				mCurrentSelectedEntityId = u32(i);
 				break;
 			}
 		}
@@ -816,12 +816,12 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 			false,
 			ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
-		for (uint32_t i = 0; i < mNumComponentInfos; i++) {
+		for (u32 i = 0; i < mNumComponentInfos; i++) {
 			const ReducedComponentInfo& info = mComponentInfos[i];
 
 			// Get component size and components array
-			uint32_t componentSize = 0;
-			uint8_t* components = state->componentsUntyped(i, componentSize);
+			u32 componentSize = 0;
+			u8* components = state->componentsUntyped(i, componentSize);
 			bool unsizedComponent = componentSize == 0;
 
 			// Check if entity has this component
@@ -833,7 +833,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 				bool checkboxBool = entityHasComponent;
 				if (ImGui::Checkbox(sfz::str96("##%s", info.componentName.str()), &checkboxBool)) {
 					if (i != 0) {
-						uint8_t entityGen = state->getGeneration(mCurrentSelectedEntityId);
+						u8 entityGen = state->getGeneration(mCurrentSelectedEntityId);
 						Entity entity = Entity::create(mCurrentSelectedEntityId, entityGen);
 						state->setComponentUnsized(entity, i, checkboxBool);
 					}
@@ -856,7 +856,7 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 						mask.setComponentType(i, checkboxBool);
 					}
 					else {
-						uint8_t entityGen = state->getGeneration(mCurrentSelectedEntityId);
+						u8 entityGen = state->getGeneration(mCurrentSelectedEntityId);
 						Entity entity = Entity::create(mCurrentSelectedEntityId, entityGen);
 						state->deleteComponent(entity, i);
 					}
@@ -906,10 +906,10 @@ void GameStateEditor::renderInfoViewer(GameStateHeader* state) noexcept
 
 	const float valueXOffset = 200;
 
-	uint64_t magicNumberString[2];
+	u64 magicNumberString[2];
 	magicNumberString[0] = state->magicNumber;
 	magicNumberString[1] = 0;
-	uint64_t realMagicNumberString[2];
+	u64 realMagicNumberString[2];
 	realMagicNumberString[0] = GAME_STATE_MAGIC_NUMBER;
 	realMagicNumberString[1] = 0;
 	ImGui::Text("magicNumber:"); ImGui::SameLine(valueXOffset);

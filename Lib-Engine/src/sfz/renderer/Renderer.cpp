@@ -101,7 +101,7 @@ bool Renderer::init(
 	zgFontTextureView.data = fontTexture.rawData;
 	zgFontTextureView.width = fontTexture.width;
 	zgFontTextureView.height = fontTexture.height;
-	zgFontTextureView.pitchInBytes = fontTexture.width * sizeof(uint8_t);
+	zgFontTextureView.pitchInBytes = fontTexture.width * sizeof(u8);
 	bool imguiInitSuccess = CHECK_ZG zg::imguiInitRenderState(
 		mState->imguiRenderState,
 		mState->frameLatency,
@@ -168,7 +168,7 @@ void Renderer::destroy() noexcept
 // Renderer: Getters
 // ------------------------------------------------------------------------------------------------
 
-uint64_t Renderer::currentFrameIdx() const noexcept
+u64 Renderer::currentFrameIdx() const noexcept
 {
 	return mState->currentFrameIdx;
 }
@@ -178,7 +178,7 @@ vec2_i32 Renderer::windowResolution() const noexcept
 	return mState->windowRes;
 }
 
-void Renderer::frameTimeMs(uint64_t& frameIdxOut, float& frameTimeMsOut) const noexcept
+void Renderer::frameTimeMs(u64& frameIdxOut, float& frameTimeMsOut) const noexcept
 {
 	frameIdxOut = mState->lastRetrievedFrameTimeFrameIdx;
 	frameTimeMsOut = mState->lastRetrievedFrameTimeMs;
@@ -284,14 +284,14 @@ void Renderer::frameBegin()
 			mState->lastRetrievedFrameTimeFrameIdx, mState->lastRetrievedFrameTimeMs);
 	}
 	for (const GroupProfilingID& groupId : frameIds.groupIds) {
-		uint64_t frameIdx = mState->lastRetrievedFrameTimeFrameIdx;
+		u64 frameIdx = mState->lastRetrievedFrameTimeFrameIdx;
 		float groupTimeMs = 0.0f;
 		CHECK_ZG mState->profiler.getMeasurement(groupId.id, groupTimeMs);
 		const char* label = groupId.groupName.str();
 		stats.addSample("gpu", label, frameIdx, groupTimeMs);
 	}
 	if (frameIds.imguiId != ~0ull) {
-		uint64_t frameIdx = mState->lastRetrievedFrameTimeFrameIdx;
+		u64 frameIdx = mState->lastRetrievedFrameTimeFrameIdx;
 		float imguiTimeMs = 0.0f;
 		CHECK_ZG mState->profiler.getMeasurement(frameIds.imguiId, imguiTimeMs);
 		stats.addSample("gpu", "imgui", frameIdx, imguiTimeMs);
@@ -324,7 +324,7 @@ void Renderer::frameBegin()
 		//       queue, but since we are also resizing other framebuffers created by us we might
 		//       as well protect this call just the same.
 		CHECK_ZG zgContextSwapchainResize(
-			uint32_t(mState->windowRes.x), uint32_t(mState->windowRes.y));
+			u32(mState->windowRes.x), u32(mState->windowRes.y));
 	}
 
 	// Update shaders
@@ -428,8 +428,8 @@ void Renderer::frameFinish()
 			mState->imguiRenderState,
 			mState->currentFrameIdx,
 			cmdList,
-			uint32_t(mState->windowRes.x),
-			uint32_t(mState->windowRes.y),
+			u32(mState->windowRes.x),
+			u32(mState->windowRes.y),
 			mState->imguiScaleSetting->floatValue(),
 			&mState->profiler,
 			&frameIds.imguiId);

@@ -34,20 +34,20 @@
 // Helpers
 // ------------------------------------------------------------------------------------------------
 
-inline uint32_t numBytesPerPixelForFormat(ZgTextureFormat format) noexcept
+inline u32 numBytesPerPixelForFormat(ZgTextureFormat format) noexcept
 {
 	switch (format) {
-	case ZG_TEXTURE_FORMAT_R_U8_UNORM: return 1 * sizeof(uint8_t);
-	case ZG_TEXTURE_FORMAT_RG_U8_UNORM: return 2 * sizeof(uint8_t);
-	case ZG_TEXTURE_FORMAT_RGBA_U8_UNORM: return 4 * sizeof(uint8_t);
+	case ZG_TEXTURE_FORMAT_R_U8_UNORM: return 1 * sizeof(u8);
+	case ZG_TEXTURE_FORMAT_RG_U8_UNORM: return 2 * sizeof(u8);
+	case ZG_TEXTURE_FORMAT_RGBA_U8_UNORM: return 4 * sizeof(u8);
 
-	case ZG_TEXTURE_FORMAT_R_F16: return 1 * sizeof(uint16_t);
-	case ZG_TEXTURE_FORMAT_RG_F16: return 2 * sizeof(uint16_t);
-	case ZG_TEXTURE_FORMAT_RGBA_F16: return 4 * sizeof(uint16_t);
+	case ZG_TEXTURE_FORMAT_R_F16: return 1 * sizeof(u16);
+	case ZG_TEXTURE_FORMAT_RG_F16: return 2 * sizeof(u16);
+	case ZG_TEXTURE_FORMAT_RGBA_F16: return 4 * sizeof(u16);
 
-	case ZG_TEXTURE_FORMAT_R_F32: return 1 * sizeof(float);
-	case ZG_TEXTURE_FORMAT_RG_F32: return 2 * sizeof(float);
-	case ZG_TEXTURE_FORMAT_RGBA_F32: return 4 * sizeof(float);
+	case ZG_TEXTURE_FORMAT_R_F32: return 1 * sizeof(f32);
+	case ZG_TEXTURE_FORMAT_RG_F32: return 2 * sizeof(f32);
+	case ZG_TEXTURE_FORMAT_RGBA_F32: return 4 * sizeof(f32);
 	}
 	sfz_assert(false);
 	return 0;
@@ -113,7 +113,7 @@ struct ZgCommandList final {
 	D3D12_COMMAND_LIST_TYPE commandListType;
 	ComPtr<ID3D12CommandAllocator> commandAllocator;
 	ComPtr<ID3D12GraphicsCommandList> commandList;
-	uint64_t fenceValue = 0;
+	u64 fenceValue = 0;
 
 	ZgTrackerCommandListState tracking;
 
@@ -129,7 +129,7 @@ struct ZgCommandList final {
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgResult beginEvent(const char* name, const float* optionalRgbaColor)
+	ZgResult beginEvent(const char* name, const f32* optionalRgbaColor)
 	{
 		// D3D12_EVENT_METADATA defintion
 		constexpr UINT WINPIX_EVENT_PIX3BLOB_VERSION = 2;
@@ -141,15 +141,15 @@ struct ZgCommandList final {
 		UINT64* destination = buffer;
 
 		// Encode event info (timestamp = 0, PIXEvent_BeginEvent_NoArgs)
-		constexpr uint64_t ENCODE_EVENT_INFO_CONSTANT = uint64_t(2048);
+		constexpr u64 ENCODE_EVENT_INFO_CONSTANT = u64(2048);
 		*destination++ = ENCODE_EVENT_INFO_CONSTANT;
 
 		// Parse and encode color from optionalRgbaColor
 		sfz_assert(optionalRgbaColor == nullptr);
-		float r = optionalRgbaColor != nullptr ? optionalRgbaColor[0] : 0.0f;
-		float g = optionalRgbaColor != nullptr ? optionalRgbaColor[1] : 0.0f;
-		float b = optionalRgbaColor != nullptr ? optionalRgbaColor[2] : 0.0f;
-		UINT64 color = [](float r, float g, float b) -> UINT64 {
+		f32 r = optionalRgbaColor != nullptr ? optionalRgbaColor[0] : 0.0f;
+		f32 g = optionalRgbaColor != nullptr ? optionalRgbaColor[1] : 0.0f;
+		f32 b = optionalRgbaColor != nullptr ? optionalRgbaColor[2] : 0.0f;
+		UINT64 color = [](f32 r, f32 g, f32 b) -> UINT64 {
 			BYTE rb = BYTE((r / 255.0f) + 0.5f);
 			BYTE gb = BYTE((g / 255.0f) + 0.5f);
 			BYTE bb = BYTE((b / 255.0f) + 0.5f);
@@ -158,12 +158,12 @@ struct ZgCommandList final {
 		*destination++ = color;
 
 		// Encode string info (alignment = 0, copyChunkSize = 8, isAnsi=true, isShortcut=false)
-		constexpr uint64_t STRING_INFO_CONSTANT = uint64_t(306244774661193728);
+		constexpr u64 STRING_INFO_CONSTANT = u64(306244774661193728);
 		*destination++ = STRING_INFO_CONSTANT;
 
 		// Copy string
-		constexpr uint32_t STRING_MAX_LEN = 20 * 8;
-		const uint32_t nameLen = uint32_t(strnlen(name, STRING_MAX_LEN));
+		constexpr u32 STRING_MAX_LEN = 20 * 8;
+		const u32 nameLen = u32(strnlen(name, STRING_MAX_LEN));
 		memcpy(destination, name, nameLen);
 		destination += ((nameLen / 8) + 1);
 
@@ -182,10 +182,10 @@ struct ZgCommandList final {
 
 	ZgResult memcpyBufferToBuffer(
 		ZgBuffer* dstBuffer,
-		uint64_t dstBufferOffsetBytes,
+		u64 dstBufferOffsetBytes,
 		ZgBuffer* srcBuffer,
-		uint64_t srcBufferOffsetBytes,
-		uint64_t numBytes) noexcept
+		u64 srcBufferOffsetBytes,
+		u64 numBytes) noexcept
 	{
 		// Current don't allow memcpy:ing to the same buffer.
 		if (dstBuffer->identifier == srcBuffer->identifier) return ZG_ERROR_INVALID_ARGUMENT;
@@ -213,7 +213,7 @@ struct ZgCommandList final {
 
 	ZgResult memcpyToTexture(
 		ZgTexture* dstTextureIn,
-		uint32_t dstTextureMipLevel,
+		u32 dstTextureMipLevel,
 		const ZgImageViewConstCpu& srcImageCpu,
 		ZgBuffer* tempUploadBufferIn) noexcept
 	{
@@ -224,9 +224,9 @@ struct ZgCommandList final {
 		if (dstTextureMipLevel >= dstTexture.numMipmaps) return ZG_ERROR_INVALID_ARGUMENT;
 
 		// Calculate width and height of this mip level
-		uint32_t dstTexMipWidth = dstTexture.width;
-		uint32_t dstTexMipHeight = dstTexture.height;
-		for (uint32_t i = 0; i < dstTextureMipLevel; i++) {
+		u32 dstTexMipWidth = dstTexture.width;
+		u32 dstTexMipHeight = dstTexture.height;
+		for (u32 i = 0; i < dstTextureMipLevel; i++) {
 			dstTexMipWidth /= 2;
 			dstTexMipHeight /= 2;
 		}
@@ -240,15 +240,15 @@ struct ZgCommandList final {
 		if (tmpBuffer.memoryType != ZG_MEMORY_TYPE_UPLOAD) return ZG_ERROR_INVALID_ARGUMENT;
 
 		// Check that upload buffer is big enough
-		uint32_t numBytesPerPixel = numBytesPerPixelForFormat(srcImageCpu.format);
-		uint32_t numBytesPerRow = srcImageCpu.width * numBytesPerPixel;
-		uint32_t tmpBufferPitch = ((numBytesPerRow + D3D12_TEXTURE_DATA_PITCH_ALIGNMENT - 1) /
+		u32 numBytesPerPixel = numBytesPerPixelForFormat(srcImageCpu.format);
+		u32 numBytesPerRow = srcImageCpu.width * numBytesPerPixel;
+		u32 tmpBufferPitch = ((numBytesPerRow + D3D12_TEXTURE_DATA_PITCH_ALIGNMENT - 1) /
 			D3D12_TEXTURE_DATA_PITCH_ALIGNMENT) * D3D12_TEXTURE_DATA_PITCH_ALIGNMENT;
-		uint32_t tmpBufferRequiredSize = tmpBufferPitch * srcImageCpu.height;
+		u32 tmpBufferRequiredSize = tmpBufferPitch * srcImageCpu.height;
 		if (tmpBuffer.resource.allocation->GetSize() < tmpBufferRequiredSize) {
 			ZG_ERROR("Temporary buffer is too small, it is %u bytes, but %u bytes is required."
 				" The pitch of the upload buffer is required to be %u byte aligned.",
-				uint32_t(tmpBuffer.resource.allocation->GetSize()),
+				u32(tmpBuffer.resource.allocation->GetSize()),
 				tmpBufferRequiredSize,
 				D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
 			return ZG_ERROR_INVALID_ARGUMENT;
@@ -266,9 +266,9 @@ struct ZgCommandList final {
 		}
 
 		// Memcpy cpu image to tmp buffer
-		for (uint32_t y = 0; y < srcImageCpu.height; y++) {
-			const uint8_t* rowPtr = ((const uint8_t*)srcImageCpu.data) + srcImageCpu.pitchInBytes * y;
-			uint8_t* dstPtr = reinterpret_cast<uint8_t*>(mappedPtr) + tmpBufferPitch * y;
+		for (u32 y = 0; y < srcImageCpu.height; y++) {
+			const u8* rowPtr = ((const u8*)srcImageCpu.data) + srcImageCpu.pitchInBytes * y;
+			u8* dstPtr = reinterpret_cast<u8*>(mappedPtr) + tmpBufferPitch * y;
 			memcpy(dstPtr, rowPtr, numBytesPerRow);
 		}
 
@@ -326,9 +326,9 @@ struct ZgCommandList final {
 	}
 
 	ZgResult setPushConstant(
-		uint32_t shaderRegister,
+		u32 shaderRegister,
 		const void* dataPtr,
-		uint32_t dataSizeInBytes) noexcept
+		u32 dataSizeInBytes) noexcept
 	{
 		sfz_assert(hasBoundPipeline());
 
@@ -354,7 +354,7 @@ struct ZgCommandList final {
 		// Set push constant
 		if (boundPipelineRender != nullptr) {
 			if (mapping.sizeInBytes == 4) {
-				uint32_t data = *reinterpret_cast<const uint32_t*>(dataPtr);
+				u32 data = *reinterpret_cast<const u32*>(dataPtr);
 				commandList->SetGraphicsRoot32BitConstant(mapping.parameterIndex, data, 0);
 			}
 			else {
@@ -364,7 +364,7 @@ struct ZgCommandList final {
 		}
 		else {
 			if (mapping.sizeInBytes == 4) {
-				uint32_t data = *reinterpret_cast<const uint32_t*>(dataPtr);
+				u32 data = *reinterpret_cast<const u32*>(dataPtr);
 				commandList->SetComputeRoot32BitConstant(mapping.parameterIndex, data, 0);
 			}
 			else {
@@ -387,10 +387,10 @@ struct ZgCommandList final {
 		else if (boundPipelineCompute != nullptr) rootSignaturePtr = &boundPipelineCompute->rootSignature;
 		else return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 
-		const uint32_t numConstantBuffers = rootSignaturePtr->constBuffers.size();
-		const uint32_t numUnorderedBuffers = rootSignaturePtr->unorderedBuffers.size();
-		const uint32_t numUnorderedTextures = rootSignaturePtr->unorderedTextures.size();
-		const uint32_t numTextures = rootSignaturePtr->textures.size();
+		const u32 numConstantBuffers = rootSignaturePtr->constBuffers.size();
+		const u32 numUnorderedBuffers = rootSignaturePtr->unorderedBuffers.size();
+		const u32 numUnorderedTextures = rootSignaturePtr->unorderedTextures.size();
+		const u32 numTextures = rootSignaturePtr->textures.size();
 
 		// If no bindings specified, do nothing.
 		if (bindings.numConstantBuffers == 0 &&
@@ -414,8 +414,8 @@ struct ZgCommandList final {
 				rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
 
 			// Linear search to find matching argument among the bindings
-			uint32_t bindingIdx = ~0u;
-			for (uint32_t j = 0; j < bindings.numConstantBuffers; j++) {
+			u32 bindingIdx = ~0u;
+			for (u32 j = 0; j < bindings.numConstantBuffers; j++) {
 				const ZgConstantBufferBinding& binding = bindings.constantBuffers[j];
 				if (binding.bufferRegister == mapping.bufferRegister) {
 					bindingIdx = j;
@@ -436,13 +436,13 @@ struct ZgCommandList final {
 			// D3D12 requires that a Constant Buffer View is at least 256 bytes, and a multiple of 256.
 			// Round up constant buffer size to nearest 256 alignment
 			sfz_assert(mapping.sizeInBytes != 0);
-			uint32_t bufferSize256Aligned = (mapping.sizeInBytes + 255) & 0xFFFFFF00u;
+			u32 bufferSize256Aligned = (mapping.sizeInBytes + 255) & 0xFFFFFF00u;
 
 			// Check that buffer is large enough
 			if (buffer->resource.allocation->GetSize() < bufferSize256Aligned) {
 				ZG_ERROR("Constant buffer at shader register %u requires a buffer that is at"
 					" least %u bytes, specified buffer is %u bytes.",
-					mapping.bufferRegister, bufferSize256Aligned, uint32_t(buffer->resource.allocation->GetSize()));
+					mapping.bufferRegister, bufferSize256Aligned, u32(buffer->resource.allocation->GetSize()));
 				return ZG_ERROR_INVALID_ARGUMENT;
 			}
 
@@ -466,8 +466,8 @@ struct ZgCommandList final {
 				rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
 
 			// Linear search to find matching argument among the bindings
-			uint32_t bindingIdx = ~0u;
-			for (uint32_t j = 0; j < bindings.numUnorderedBuffers; j++) {
+			u32 bindingIdx = ~0u;
+			for (u32 j = 0; j < bindings.numUnorderedBuffers; j++) {
 				const ZgUnorderedBufferBinding& binding = bindings.unorderedBuffers[j];
 				if (binding.unorderedRegister == mapping.unorderedRegister) {
 					bindingIdx = j;
@@ -511,8 +511,8 @@ struct ZgCommandList final {
 				rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
 
 			// Linear search to find matching argument among the bindings
-			uint32_t bindingIdx = ~0u;
-			for (uint32_t j = 0; j < bindings.numUnorderedTextures; j++) {
+			u32 bindingIdx = ~0u;
+			for (u32 j = 0; j < bindings.numUnorderedTextures; j++) {
 				const ZgUnorderedTextureBinding& binding = bindings.unorderedTextures[j];
 				if (binding.unorderedRegister == mapping.unorderedRegister) {
 					bindingIdx = j;
@@ -553,8 +553,8 @@ struct ZgCommandList final {
 				rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
 
 			// Linear search to find matching argument among the bindings
-			uint32_t bindingIdx = ~0u;
-			for (uint32_t j = 0; j < bindings.numTextures; j++) {
+			u32 bindingIdx = ~0u;
+			for (u32 j = 0; j < bindings.numTextures; j++) {
 				const ZgTextureBinding& binding = bindings.textures[j];
 				if (binding.textureRegister == mapping.textureRegister) {
 					bindingIdx = j;
@@ -585,7 +585,7 @@ struct ZgCommandList final {
 			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 			srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 			srvDesc.Texture2D.MostDetailedMip = 0;
-			srvDesc.Texture2D.MipLevels = (uint32_t)-1; // All mip-levels from most detailed and downwards
+			srvDesc.Texture2D.MipLevels = (u32)-1; // All mip-levels from most detailed and downwards
 			srvDesc.Texture2D.PlaneSlice = 0;
 			srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 			mDevice->CreateShaderResourceView(resource, &srvDesc, cpuDescriptor);
@@ -659,9 +659,9 @@ struct ZgCommandList final {
 	}
 
 	ZgResult dispatchCompute(
-		uint32_t groupCountX,
-		uint32_t groupCountY,
-		uint32_t groupCountZ) noexcept
+		u32 groupCountX,
+		u32 groupCountY,
+		u32 groupCountZ) noexcept
 	{
 		if (boundPipelineCompute == nullptr) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 		commandList->Dispatch(groupCountX, groupCountY, groupCountZ);
@@ -698,18 +698,18 @@ struct ZgCommandList final {
 
 			viewport.TopLeftX = 0;
 			viewport.TopLeftY = 0;
-			viewport.Width = float(framebuffer->width);
-			viewport.Height = float(framebuffer->height);
+			viewport.Width = f32(framebuffer->width);
+			viewport.Height = f32(framebuffer->height);
 			viewport.MinDepth = 0.0f;
 			viewport.MaxDepth = 1.0f;
 		}
 
 		// Otherwise do what the user explicitly requested
 		else {
-			viewport.TopLeftX = float(optionalViewport->topLeftX);
-			viewport.TopLeftY = float(optionalViewport->topLeftY);
-			viewport.Width = float(optionalViewport->width);
-			viewport.Height = float(optionalViewport->height);
+			viewport.TopLeftX = f32(optionalViewport->topLeftX);
+			viewport.TopLeftY = f32(optionalViewport->topLeftY);
+			viewport.Width = f32(optionalViewport->width);
+			viewport.Height = f32(optionalViewport->height);
 			viewport.MinDepth = 0.0f;
 			viewport.MaxDepth = 1.0f;
 		}
@@ -743,7 +743,7 @@ struct ZgCommandList final {
 		if (!framebuffer->swapchainFramebuffer) {
 
 			// Render targets
-			for (uint32_t i = 0; i < framebuffer->numRenderTargets; i++) {
+			for (u32 i = 0; i < framebuffer->numRenderTargets; i++) {
 				ZgTexture* renderTarget = framebuffer->renderTargets[i];
 
 				// Set resource state
@@ -784,10 +784,10 @@ struct ZgCommandList final {
 
 		// Set viewport
 		D3D12_VIEWPORT viewport = {};
-		viewport.TopLeftX = float(viewportRect.topLeftX);
-		viewport.TopLeftY = float(viewportRect.topLeftY);
-		viewport.Width = float(viewportRect.width);
-		viewport.Height = float(viewportRect.height);
+		viewport.TopLeftX = f32(viewportRect.topLeftX);
+		viewport.TopLeftY = f32(viewportRect.topLeftY);
+		viewport.Width = f32(viewportRect.width);
+		viewport.Height = f32(viewportRect.height);
 		viewport.MinDepth = 0.0f;
 		viewport.MaxDepth = 1.0f;
 		commandList->RSSetViewports(1, &viewport);
@@ -826,14 +826,14 @@ struct ZgCommandList final {
 		return ZG_SUCCESS;
 	}
 
-	ZgResult clearRenderTargetOptimal(uint32_t renderTargetIdx) noexcept
+	ZgResult clearRenderTargetOptimal(u32 renderTargetIdx) noexcept
 	{
 		if (!hasBoundFramebuffer()) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 		if (boundFramebuffer->numRenderTargets <= renderTargetIdx) return ZG_WARNING_GENERIC;
 
-		constexpr float ZEROS[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-		constexpr float ONES[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-		const float* clearColor = [&]() -> const float* {
+		constexpr f32 ZEROS[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+		constexpr f32 ONES[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+		const f32* clearColor = [&]() -> const f32* {
 			switch (boundFramebuffer->renderTargetOptimalClearValues[renderTargetIdx]) {
 			case ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED: return ZEROS;
 			case ZG_OPTIMAL_CLEAR_VALUE_ZERO: return ZEROS;
@@ -850,10 +850,10 @@ struct ZgCommandList final {
 	}
 
 	ZgResult clearRenderTargets(
-		float red,
-		float green,
-		float blue,
-		float alpha) noexcept
+		f32 red,
+		f32 green,
+		f32 blue,
+		f32 alpha) noexcept
 	{
 		// Return error if no framebuffer is set
 		if (!hasBoundFramebuffer()) {
@@ -863,8 +863,8 @@ struct ZgCommandList final {
 		if (boundFramebuffer->numRenderTargets == 0) return ZG_WARNING_GENERIC;
 
 		// Clear render targets
-		float clearColor[4] = { red, green, blue, alpha };
-		for (uint32_t i = 0; i < boundFramebuffer->numRenderTargets; i++) {
+		f32 clearColor[4] = { red, green, blue, alpha };
+		for (u32 i = 0; i < boundFramebuffer->numRenderTargets; i++) {
 			commandList->ClearRenderTargetView(
 				boundFramebuffer->renderTargetDescriptors[i], clearColor, 0, nullptr);
 		}
@@ -880,7 +880,7 @@ struct ZgCommandList final {
 			return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 		}
 
-		for (uint32_t i = 0; i < boundFramebuffer->numRenderTargets; i++) {
+		for (u32 i = 0; i < boundFramebuffer->numRenderTargets; i++) {
 			ZgResult res = this->clearRenderTargetOptimal(i);
 			if (res != ZG_SUCCESS) return res;
 		}
@@ -889,7 +889,7 @@ struct ZgCommandList final {
 	}
 
 	ZgResult clearDepthBuffer(
-		float depth) noexcept
+		f32 depth) noexcept
 	{
 		// Return error if no framebuffer is set
 		if (!hasBoundFramebuffer()) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
@@ -908,7 +908,7 @@ struct ZgCommandList final {
 		if (!hasBoundFramebuffer()) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 		if (!boundFramebuffer->hasDepthBuffer) return ZG_WARNING_GENERIC;
 
-		const float clearDepth = [&]() {
+		const f32 clearDepth = [&]() {
 			switch (boundFramebuffer->depthBufferOptimalClearValue) {
 			case ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED: return 0.0f;
 			case ZG_OPTIMAL_CLEAR_VALUE_ZERO: return 0.0f;
@@ -945,7 +945,7 @@ struct ZgCommandList final {
 		// Create index buffer view
 		D3D12_INDEX_BUFFER_VIEW indexBufferView = {};
 		indexBufferView.BufferLocation = indexBuffer->resource.resource->GetGPUVirtualAddress();
-		indexBufferView.SizeInBytes = uint32_t(indexBuffer->sizeBytes);
+		indexBufferView.SizeInBytes = u32(indexBuffer->sizeBytes);
 		indexBufferView.Format = type == ZG_INDEX_BUFFER_TYPE_UINT32 ?
 			DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
 
@@ -956,7 +956,7 @@ struct ZgCommandList final {
 	}
 
 	ZgResult setVertexBuffer(
-		uint32_t vertexBufferSlot,
+		u32 vertexBufferSlot,
 		ZgBuffer* vertexBuffer) noexcept
 	{
 		// Need to have a pipeline set to verify vertex buffer binding
@@ -985,7 +985,7 @@ struct ZgCommandList final {
 		D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
 		vertexBufferView.BufferLocation = vertexBuffer->resource.resource->GetGPUVirtualAddress();
 		vertexBufferView.StrideInBytes = pipelineInfo.vertexBufferStridesBytes[vertexBufferSlot];
-		vertexBufferView.SizeInBytes = uint32_t(vertexBuffer->sizeBytes);
+		vertexBufferView.SizeInBytes = u32(vertexBuffer->sizeBytes);
 
 		// Set vertex buffer
 		commandList->IASetVertexBuffers(vertexBufferSlot, 1, &vertexBufferView);
@@ -994,8 +994,8 @@ struct ZgCommandList final {
 	}
 
 	ZgResult drawTriangles(
-		uint32_t startVertexIndex,
-		uint32_t numVertices) noexcept
+		u32 startVertexIndex,
+		u32 numVertices) noexcept
 	{
 		// Draw triangles
 		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -1004,8 +1004,8 @@ struct ZgCommandList final {
 	}
 
 	ZgResult drawTrianglesIndexed(
-		uint32_t startIndex,
-		uint32_t numIndices) noexcept
+		u32 startIndex,
+		u32 numIndices) noexcept
 	{
 		// Draw triangles indexed
 		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -1015,7 +1015,7 @@ struct ZgCommandList final {
 
 	ZgResult profileBegin(
 		ZgProfiler* profiler,
-		uint64_t& measurementIdOut) noexcept
+		u64& measurementIdOut) noexcept
 	{
 		// TODO: This is necessary because we don't get timestamp frequency for other queue types.
 		//       Besides, timestamp queries only work on present and compute queues in the first place.
@@ -1026,11 +1026,11 @@ struct ZgCommandList final {
 		D3D12ProfilerState& profilerState = profilerStateAccessor.data();
 
 		// Get next measurement id and calculate query idx
-		uint64_t measurementId = profilerState.nextMeasurementId;
+		u64 measurementId = profilerState.nextMeasurementId;
 		measurementIdOut = measurementId;
 		profilerState.nextMeasurementId += 1;
-		uint32_t queryIdx = measurementId % profilerState.maxNumMeasurements;
-		uint32_t timestampIdx = queryIdx * 2;
+		u32 queryIdx = measurementId % profilerState.maxNumMeasurements;
+		u32 timestampIdx = queryIdx * 2;
 
 		// Start timestamp query
 		commandList->EndQuery(profilerState.queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, timestampIdx);
@@ -1039,8 +1039,8 @@ struct ZgCommandList final {
 
 	ZgResult profileEnd(
 		ZgProfiler* profiler,
-		uint64_t measurementId,
-		uint64_t timestampTicksPerSecond) noexcept
+		u64 measurementId,
+		u64 timestampTicksPerSecond) noexcept
 	{
 		// TODO: This is necessary because we don't get timestamp frequency for other queue types.
 		//       Besides, timestamp queries only work on present and compute queues in the first place.
@@ -1057,15 +1057,15 @@ struct ZgCommandList final {
 		if (!validMeasurementId) return ZG_ERROR_INVALID_ARGUMENT;
 
 		// Get query idx
-		uint32_t queryIdx = measurementId % state.maxNumMeasurements;
-		uint32_t timestampBaseIdx = queryIdx * 2;
-		uint32_t timestampIdx = timestampBaseIdx + 1;
+		u32 queryIdx = measurementId % state.maxNumMeasurements;
+		u32 timestampBaseIdx = queryIdx * 2;
+		u32 timestampIdx = timestampBaseIdx + 1;
 
 		// End timestamp query
 		commandList->EndQuery(state.queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, timestampIdx);
 
 		// Resolve query
-		uint64_t bufferOffset = timestampBaseIdx * sizeof(uint64_t);
+		u64 bufferOffset = timestampBaseIdx * sizeof(u64);
 		commandList->ResolveQueryData(
 			state.queryHeap.Get(),
 			D3D12_QUERY_TYPE_TIMESTAMP,

@@ -44,7 +44,7 @@ struct Vertex {
 	constexpr Vertex(const Vertex&) noexcept = default;
 	constexpr Vertex& operator= (const Vertex&) noexcept = default;
 };
-static_assert(sizeof(Vertex) == sizeof(float) * 8);
+static_assert(sizeof(Vertex) == sizeof(f32) * 8);
 
 // Material struct
 // ------------------------------------------------------------------------------------------------
@@ -57,8 +57,8 @@ static_assert(sizeof(Vertex) == sizeof(float) * 8);
 // multiplied by the factor (same as in glTF).
 struct Material final {
 	vec4_u8 albedo = vec4_u8(255, 255, 255, 255); // Gamma space
-	uint8_t roughness = 255; // Linear space
-	uint8_t metallic = 255; // Linear space
+	u8 roughness = 255; // Linear space
+	u8 metallic = 255; // Linear space
 	vec3 emissive = vec3(1.0f); // Linear space, can be higher than 1.0
 	
 	strID albedoTex;
@@ -72,9 +72,9 @@ struct Material final {
 // ------------------------------------------------------------------------------------------------
 
 struct MeshComponent final {
-	uint32_t materialIdx = ~0u;
-	uint32_t firstIndex = ~0u;
-	uint32_t numIndices = 0;
+	u32 materialIdx = ~0u;
+	u32 firstIndex = ~0u;
+	u32 numIndices = 0;
 };
 
 // Mesh
@@ -82,7 +82,7 @@ struct MeshComponent final {
 
 struct Mesh final {
 	Array<Vertex> vertices;
-	Array<uint32_t> indices;
+	Array<u32> indices;
 	Array<Material> materials;
 	Array<MeshComponent> components;
 };

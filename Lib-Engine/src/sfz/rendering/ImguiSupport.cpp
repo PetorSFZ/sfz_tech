@@ -179,7 +179,7 @@ ImageView initializeImgui(SfzAllocator* allocator) noexcept
 	io.KeyMap[ImGuiKey_Z] = SDLK_z;
 
 	// Add font
-	const float FONT_SIZE_PIXELS = 16.0f;
+	const f32 FONT_SIZE_PIXELS = 16.0f;
 	//const char* DEFAULT_FONT_PATH = "res_ph/fonts/source_sans_pro/SourceSansPro-Regular.ttf";
 	const char* DEFAULT_FONT_PATH = "res_ph/fonts/source_code_pro/SourceCodePro-Regular.ttf";
 	const char* SECONDARY_FONT_PATH = "res_ph/fonts/source_code_pro/SourceCodePro-Regular.ttf";
@@ -210,7 +210,7 @@ void updateImgui(
 	vec2_i32 windowResolution,
 	const RawInputState& rawInputState,
 	const SDL_Event* keyboardEvents,
-	uint32_t numKeyboardEvents) noexcept
+	u32 numKeyboardEvents) noexcept
 {
 	// Note, these should actually be freed using SDL_FreeCursor(). But I don't think it matters
 	// that much.
@@ -244,7 +244,7 @@ void updateImgui(
 	sfz::GlobalConfig& cfg = sfz::getGlobalConfig();
 	const sfz::Setting* imguiScaleSetting =
 		cfg.sanitizeFloat("Imgui", "scale", true, sfz::FloatBounds(2.0f, 1.0f, 3.0f));
-	float scaleFactor = 1.0f / imguiScaleSetting->floatValue();
+	f32 scaleFactor = 1.0f / imguiScaleSetting->floatValue();
 
 	// Set display dimensions
 	vec2 imguiDims = vec2(windowResolution) * scaleFactor;
@@ -252,25 +252,25 @@ void updateImgui(
 
 	// Update mouse
 	{
-		io.MousePos.x = -FLT_MAX;
-		io.MousePos.y = -FLT_MAX;
+		io.MousePos.x = -F32_MAX;
+		io.MousePos.y = -F32_MAX;
 		io.MouseDown[0] = false;
 		io.MouseDown[1] = false;
 		io.MouseDown[2] = false;
 		io.MouseWheel = 0.0f;
 
 		const sfz::MouseState& mouse = rawInputState.mouse;
-		io.MousePos.x = float(mouse.pos.x) / float(mouse.windowDims.x) * imguiDims.x;
-		io.MousePos.y = (float(mouse.windowDims.y - mouse.pos.y - 1) / float(mouse.windowDims.y)) * imguiDims.y;
+		io.MousePos.x = f32(mouse.pos.x) / f32(mouse.windowDims.x) * imguiDims.x;
+		io.MousePos.y = (f32(mouse.windowDims.y - mouse.pos.y - 1) / f32(mouse.windowDims.y)) * imguiDims.y;
 		io.MouseDown[0] = mouse.left != 0;
 		io.MouseDown[1] = mouse.middle != 0;
 		io.MouseDown[2] = mouse.right != 0;
 
 		if (invertedScrollSetting->boolValue()) {
-			io.MouseWheel = float(-mouse.wheel.y);
+			io.MouseWheel = f32(-mouse.wheel.y);
 		}
 		else {
-			io.MouseWheel = float(mouse.wheel.y);
+			io.MouseWheel = f32(mouse.wheel.y);
 		}
 	}
 
@@ -293,7 +293,7 @@ void updateImgui(
 	}
 
 	// Keyboard events
-	for (uint32_t eventIdx = 0; eventIdx < numKeyboardEvents; eventIdx++) {
+	for (u32 eventIdx = 0; eventIdx < numKeyboardEvents; eventIdx++) {
 		const SDL_Event& event = keyboardEvents[eventIdx];
 		switch (event.type) {
 		case SDL_TEXTINPUT:
@@ -318,22 +318,22 @@ void updateImgui(
 		const sfz::GamepadState& gpd = *activeGamepad;
 
 		// press button, tweak value // e.g. Circle button
-		io.NavInputs[ImGuiNavInput_Activate] = float(gpd.buttons[GPD_A]);
+		io.NavInputs[ImGuiNavInput_Activate] = f32(gpd.buttons[GPD_A]);
 
 		// close menu/popup/child, lose selection // e.g. Cross button
-		io.NavInputs[ImGuiNavInput_Cancel] = float(gpd.buttons[GPD_B]);
+		io.NavInputs[ImGuiNavInput_Cancel] = f32(gpd.buttons[GPD_B]);
 
 		// text input // e.g. Triangle button
-		io.NavInputs[ImGuiNavInput_Input] = float(gpd.buttons[GPD_Y]);
+		io.NavInputs[ImGuiNavInput_Input] = f32(gpd.buttons[GPD_Y]);
 
 		// access menu, focus, move, resize // e.g. Square button
-		io.NavInputs[ImGuiNavInput_Menu] = float(gpd.buttons[GPD_X]);
+		io.NavInputs[ImGuiNavInput_Menu] = f32(gpd.buttons[GPD_X]);
 
 		// move / tweak / resize window (w/ PadMenu) // e.g. D-pad Left/Right/Up/Down
-		io.NavInputs[ImGuiNavInput_DpadUp] = float(gpd.buttons[GPD_DPAD_UP]);
-		io.NavInputs[ImGuiNavInput_DpadDown] = float(gpd.buttons[GPD_DPAD_DOWN]);
-		io.NavInputs[ImGuiNavInput_DpadLeft] = float(gpd.buttons[GPD_DPAD_LEFT]);
-		io.NavInputs[ImGuiNavInput_DpadRight] = float(gpd.buttons[GPD_DPAD_RIGHT]);
+		io.NavInputs[ImGuiNavInput_DpadUp] = f32(gpd.buttons[GPD_DPAD_UP]);
+		io.NavInputs[ImGuiNavInput_DpadDown] = f32(gpd.buttons[GPD_DPAD_DOWN]);
+		io.NavInputs[ImGuiNavInput_DpadLeft] = f32(gpd.buttons[GPD_DPAD_LEFT]);
+		io.NavInputs[ImGuiNavInput_DpadRight] = f32(gpd.buttons[GPD_DPAD_RIGHT]);
 
 		// scroll / move window (w/ PadMenu) // e.g. Left Analog Stick Left/Right/Up/Down
 		vec2 leftStick = sfz::applyDeadzone(gpd.leftStick, sfz::GPD_STICK_APPROX_DEADZONE);
@@ -343,10 +343,10 @@ void updateImgui(
 		io.NavInputs[ImGuiNavInput_LStickRight] = sfz::max(leftStick.x, 0.0f);
 
 		// next window (w/ PadMenu) // e.g. L1 or L2 (PS4), LB or LT (Xbox), L or ZL (Switch)
-		io.NavInputs[ImGuiNavInput_FocusPrev] = float(gpd.buttons[GPD_LB]);
+		io.NavInputs[ImGuiNavInput_FocusPrev] = f32(gpd.buttons[GPD_LB]);
 
 		// prev window (w/ PadMenu) // e.g. R1 or R2 (PS4), RB or RT (Xbox), R or ZL (Switch)
-		io.NavInputs[ImGuiNavInput_FocusNext] = float(gpd.buttons[GPD_RB]);
+		io.NavInputs[ImGuiNavInput_FocusNext] = f32(gpd.buttons[GPD_RB]);
 
 		// slower tweaks // e.g. L1 or L2 (PS4), LB or LT (Xbox), L or ZL (Switch)
 		io.NavInputs[ImGuiNavInput_TweakSlow] = gpd.lt;

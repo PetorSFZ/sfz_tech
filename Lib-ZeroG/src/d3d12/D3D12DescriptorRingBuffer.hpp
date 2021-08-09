@@ -56,7 +56,7 @@ public:
 	ZgResult create(
 		ID3D12Device3& device,
 		D3D12_DESCRIPTOR_HEAP_TYPE type,
-		uint32_t numDescriptors) noexcept
+		u32 numDescriptors) noexcept
 	{
 		mDevice = &device;
 		mNumDescriptors = numDescriptors;
@@ -92,15 +92,15 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	ZgResult allocateDescriptorRange(
-		uint32_t numDescriptors,
+		u32 numDescriptors,
 		D3D12_CPU_DESCRIPTOR_HANDLE& rangeStartCpu,
 		D3D12_GPU_DESCRIPTOR_HANDLE& rangeStartGpu) noexcept
 	{
 		// Allocate range
-		uint64_t rangeStart = mHeadPointer.fetch_add(numDescriptors);
+		u64 rangeStart = mHeadPointer.fetch_add(numDescriptors);
 
 		// Map range to the ringbuffers allowed indices
-		uint32_t mappedRangeStart = uint32_t(rangeStart % uint64_t(mNumDescriptors));
+		u32 mappedRangeStart = u32(rangeStart % u64(mNumDescriptors));
 
 		// Check if range fits continuously, if not, try again recursively
 		bool rangeIsContinuous = (mappedRangeStart + numDescriptors) <= mNumDescriptors;
@@ -119,7 +119,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 	
 	ComPtr<ID3D12DescriptorHeap> descriptorHeap;
-	uint32_t descriptorSize;
+	u32 descriptorSize;
 
 private:
 	// Private members
@@ -127,7 +127,7 @@ private:
 
 	ID3D12Device3* mDevice = nullptr;
 	std::atomic_uint64_t mHeadPointer = 0;
-	uint32_t mNumDescriptors = 0;
+	u32 mNumDescriptors = 0;
 	D3D12_CPU_DESCRIPTOR_HANDLE mHeapStartCpu;
 	D3D12_GPU_DESCRIPTOR_HANDLE mHeapStartGpu;
 };

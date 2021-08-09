@@ -61,7 +61,7 @@ inline bool pointInside(const OBB& box, const vec3& point) noexcept
 	// Modified closest point algorithm from Real-Time Collision Detection (Section 5.1.4)
 	const vec3 distToPoint = point - box.center;
 	float dist;
-	for (uint32_t i = 0; i < 3; i++) {
+	for (u32 i = 0; i < 3; i++) {
 		dist = dot(distToPoint, box.rotation.row(i));
 		if (dist > box.halfExtents[i]) return false;
 		if (dist < -box.halfExtents[i]) return false;
@@ -114,8 +114,8 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 
 	// Compute the rotation matrix from b to a
 	mat3 R;
-	for (uint32_t i = 0; i < 3; i++) {
-		for (uint32_t j = 0; j < 3; j++) {
+	for (u32 i = 0; i < 3; i++) {
+		for (u32 j = 0; j < 3; j++) {
 			R.at(i, j) = dot(aU.row(i), bU.row(j));
 		}
 	}
@@ -123,8 +123,8 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 	// Compute common subexpressions, epsilon term to counteract arithmetic errors
 	const float EPSILON = 0.00001f;
 	mat3 AbsR;
-	for (uint32_t i = 0; i < 3; i++) {
-		for (uint32_t j = 0; j < 3; j++) {
+	for (u32 i = 0; i < 3; i++) {
+		for (u32 j = 0; j < 3; j++) {
 			AbsR.at(i, j) = std::abs(R.at(i, j)) + EPSILON;
 		}
 	}
@@ -136,14 +136,14 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 	float ra, rb;
 
 	// Test axes L = aU[0], aU[1], aU[2]
-	for (uint32_t i = 0; i < 3; i++) {
+	for (u32 i = 0; i < 3; i++) {
 		ra = aE[i];
 		rb = bE[0]*AbsR.at(i,0) + bE[1]*AbsR.at(i,1) + bE[2]*AbsR.at(i,2);
 		if (std::abs(t[i]) > ra + rb) return false;
 	}
 
 	// Test axes L = bU[0], bU[1], bU[2]
-	for (uint32_t i = 0; i < 3; i++) {
+	for (u32 i = 0; i < 3; i++) {
 		ra = aE[0]*AbsR.at(0,i) + aE[1]*AbsR.at(1,i) + aE[2]*AbsR.at(2,i);
 		rb = bE[i];
 		if (std::abs(t[0]*R.at(0,i) + t[1]*R.at(1,i) + t[2]*R.at(2,i)) > ra + rb) return false;
@@ -365,7 +365,7 @@ inline vec3 closestPoint(const OBB& obb, const vec3& point) noexcept
 	vec3 res = obb.center;
 
 	float dist;
-	for (uint32_t i = 0; i < 3; i++) {
+	for (u32 i = 0; i < 3; i++) {
 		dist = dot(distToPoint, obb.rotation.row(i));
 		if (dist > obb.halfExtents[i]) dist = obb.halfExtents[i];
 		if (dist < -obb.halfExtents[i]) dist = -obb.halfExtents[i];

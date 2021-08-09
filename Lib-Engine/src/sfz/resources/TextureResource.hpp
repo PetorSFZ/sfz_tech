@@ -38,7 +38,7 @@ struct TextureResource final {
 	zg::Texture texture;
 	ZgTextureFormat format = ZG_TEXTURE_FORMAT_UNDEFINED;
 	vec2_u32 res = vec2_u32(0u);
-	uint32_t numMipmaps = 1;
+	u32 numMipmaps = 1;
 	bool committedAllocation = false;
 	ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT;
 	ZgOptimalClearValue optimalClearValue = ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED;
@@ -72,7 +72,7 @@ struct TextureResource final {
 		const char* name,
 		ZgTextureFormat format,
 		vec2_u32 res,
-		uint32_t numMipmaps = 1,
+		u32 numMipmaps = 1,
 		ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT,
 		bool committedAllocation = false);
 
@@ -90,7 +90,7 @@ struct TextureResource final {
 		const char* name,
 		ZgTextureFormat format,
 		Setting* resSetting,
-		uint32_t numMipmaps = 1,
+		u32 numMipmaps = 1,
 		ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT,
 		bool committedAllocation = false);
 };

@@ -37,7 +37,7 @@ static bool isWhitespace(char c) noexcept
 	return c == ' ' || c == '\t';
 }
 
-static void printLoadError(const DynString& path, uint32_t line, const char* message) noexcept
+static void printLoadError(const DynString& path, u32 line, const char* message) noexcept
 {
 	SFZ_ERROR("sfzCore", "Failed to load \"%s\" at line %u: %s\n", path.str(), line, message);
 }
@@ -71,19 +71,19 @@ bool IniParser::load() noexcept
 
 	// Retrieve line information
 	struct LineInfo final {
-		uint32_t lineNumber = uint32_t(~0);
-		uint32_t startIndex = uint32_t(~0);
-		uint32_t length = uint32_t(~0);
+		u32 lineNumber = u32(~0);
+		u32 startIndex = u32(~0);
+		u32 length = u32(~0);
 	};
 	Array<LineInfo> lines(256, getDefaultAllocator(), sfz_dbg(""));
 	{
 		LineInfo tmp;
 		tmp.lineNumber = 1;
-		for (uint32_t i = 0; i < fileContents.size(); i++) {
+		for (u32 i = 0; i < fileContents.size(); i++) {
 			char c = fileContents.str()[i];
 
 			// Special case when line has not yet started
-			if (tmp.startIndex == uint32_t(~0)) {
+			if (tmp.startIndex == u32(~0)) {
 
 				// Trim whitespace in beginning of line
 				if (isWhitespace(c)) continue;
@@ -106,8 +106,8 @@ bool IniParser::load() noexcept
 			if (c == '\n') {
 				lines.add(tmp);
 				tmp.lineNumber += 1;
-				tmp.startIndex = uint32_t(~0);
-				tmp.length = uint32_t(~0);
+				tmp.startIndex = u32(~0);
+				tmp.length = u32(~0);
 				continue;
 			}
 
@@ -134,7 +134,7 @@ bool IniParser::load() noexcept
 			Item comment;
 			comment.type = ItemType::COMMENT_OWN_ROW;
 			comment.str.clear();
-			comment.str.appendChars(startPtr + 1, min(uint32_t(191), line.length - 1));
+			comment.str.appendChars(startPtr + 1, min(u32(191), line.length - 1));
 			newSections.last().items.add(comment);
 			continue;
 		}
@@ -143,7 +143,7 @@ bool IniParser::load() noexcept
 		else if (firstChar == '[') {
 
 			// Find length of section name
-			uint32_t index = 1;
+			u32 index = 1;
 			bool foundEndToken = false;
 			while (index < line.length) {
 				if (startPtr[index] == ']') {
@@ -152,7 +152,7 @@ bool IniParser::load() noexcept
 				}
 				index += 1;
 			}
-			uint32_t nameLength = index - 1;
+			u32 nameLength = index - 1;
 
 			if (!foundEndToken) {
 				printLoadError(mPath, line.lineNumber, "Missing ']'.");
@@ -187,7 +187,7 @@ bool IniParser::load() noexcept
 
 			// Add optional comment if it exists
 			if (foundCommentStart) {
-				uint32_t commentLength = line.length - index;
+				u32 commentLength = line.length - index;
 
 				if (commentLength > 191) {
 					printLoadError(mPath, line.lineNumber, "Too long comment, please split into multiple rows.");
@@ -206,8 +206,8 @@ bool IniParser::load() noexcept
 		else {
 
 			// Find name-value separator
-			uint32_t index = 0;
-			uint32_t lastNameCharIndex = 0;
+			u32 index = 0;
+			u32 lastNameCharIndex = 0;
 			bool separatorFound = false;
 			while (index < line.length) {
 				char c = startPtr[index];
@@ -231,7 +231,7 @@ bool IniParser::load() noexcept
 				return false;
 			}
 
-			uint32_t nameLength = lastNameCharIndex + 1;
+			u32 nameLength = lastNameCharIndex + 1;
 			if (nameLength > 191) {
 				printLoadError(mPath, line.lineNumber, "Too long item name.");
 				return false;
@@ -243,7 +243,7 @@ bool IniParser::load() noexcept
 			item.str.appendChars(startPtr, nameLength);
 
 			// Find first char of value
-			uint32_t valueIndex = uint32_t(~0);
+			u32 valueIndex = u32(~0);
 			while (index < line.length) {
 				if (!isWhitespace(startPtr[index])) {
 					valueIndex = index;
@@ -252,7 +252,7 @@ bool IniParser::load() noexcept
 				index += 1;
 			}
 
-			if (valueIndex == uint32_t(~0)) {
+			if (valueIndex == u32(~0)) {
 				printLoadError(mPath, line.lineNumber, "No value.");
 				return false;
 			}
@@ -299,7 +299,7 @@ bool IniParser::load() noexcept
 
 			// Add optional comment if it exists
 			if (foundCommentStart) {
-				uint32_t commentLength = line.length - index;
+				u32 commentLength = line.length - index;
 
 				if (commentLength > 191) {
 					printLoadError(mPath, line.lineNumber, "Too long comment, please split into multiple rows.");
@@ -326,7 +326,7 @@ bool IniParser::save() noexcept
 	deleteFile(mPath.str());
 
 	// Calculate upper bound for the memory requirements of the string representation
-	uint32_t memoryReqs = 0;
+	u32 memoryReqs = 0;
 	for (auto& sect : mSections) {
 		memoryReqs += 200;
 		memoryReqs += sect.items.size() * 200;
@@ -334,7 +334,7 @@ bool IniParser::save() noexcept
 
 	// Create string representation from parse tree
 	DynString str("", memoryReqs);
-	for (uint32_t sectIndex = 0; sectIndex < mSections.size(); sectIndex++) {
+	for (u32 sectIndex = 0; sectIndex < mSections.size(); sectIndex++) {
 		Section& section = mSections[sectIndex];
 
 		// Print section header
@@ -346,7 +346,7 @@ bool IniParser::save() noexcept
 			str.printfAppend("\n");
 		}
 
-		for (uint32_t i = 0; i < section.items.size(); i++) {
+		for (u32 i = 0; i < section.items.size(); i++) {
 			Item& item = section.items[i];
 
 			// Print items content to string
@@ -384,7 +384,7 @@ bool IniParser::save() noexcept
 	}
 
 	// Write string to file
-	bool success = sfz::writeBinaryFile(mPath.str(), reinterpret_cast<const uint8_t*>(str.str()), str.size());
+	bool success = sfz::writeBinaryFile(mPath.str(), reinterpret_cast<const u8*>(str.str()), str.size());
 	if (!success) {
 		SFZ_ERROR("sfzCore", "Failed to write ini file \"%s\"", mPath.str());
 		return false;
@@ -515,7 +515,7 @@ bool IniParser::sanitizeBool(const char* section, const char* key, bool defaultV
 // IniParser: Iterators (ItemAccessor)
 // ------------------------------------------------------------------------------------------------
 
-IniParser::ItemAccessor::ItemAccessor(IniParser& iniParser, uint32_t sectionIndex, uint32_t keyIndex) noexcept
+IniParser::ItemAccessor::ItemAccessor(IniParser& iniParser, u32 sectionIndex, u32 keyIndex) noexcept
 :
 	mIniParser(&iniParser),
 	mSectionIndex(sectionIndex),
@@ -566,7 +566,7 @@ const bool* IniParser::ItemAccessor::getBool() const noexcept
 // IniParser: Iterators (Iterator)
 // ------------------------------------------------------------------------------------------------
 
-IniParser::Iterator::Iterator(IniParser& iniParser, uint32_t sectionIndex, uint32_t keyIndex) noexcept
+IniParser::Iterator::Iterator(IniParser& iniParser, u32 sectionIndex, u32 keyIndex) noexcept
 :
 	mIniParser(&iniParser),
 	mSectionIndex(sectionIndex),
@@ -576,8 +576,8 @@ IniParser::Iterator::Iterator(IniParser& iniParser, uint32_t sectionIndex, uint3
 IniParser::Iterator& IniParser::Iterator::operator++ () noexcept
 {
 	// Go through IniParser until we find next item
-	uint32_t& s = mSectionIndex;
-	uint32_t& k = mKeyIndex;
+	u32& s = mSectionIndex;
+	u32& k = mKeyIndex;
 	k++;
 	while (s < mIniParser->mSections.size()) {
 		const Section& sect = mIniParser->mSections[s];
@@ -595,8 +595,8 @@ IniParser::Iterator& IniParser::Iterator::operator++ () noexcept
 	}
 
 	// Did not find any more items, set to end
-	s = uint32_t(~0);
-	k = uint32_t(~0);
+	s = u32(~0);
+	k = u32(~0);
 	return *this;
 }
 
@@ -648,7 +648,7 @@ IniParser::Iterator IniParser::begin() noexcept
 
 IniParser::Iterator IniParser::end() noexcept
 {
-	return Iterator(*this, uint32_t(~0), uint32_t(~0));
+	return Iterator(*this, u32(~0), u32(~0));
 }
 
 // IniParser: Private methods

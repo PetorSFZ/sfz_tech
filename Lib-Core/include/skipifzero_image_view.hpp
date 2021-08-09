@@ -27,7 +27,7 @@ namespace sfz {
 // Image type enum
 // ------------------------------------------------------------------------------------------------
 
-enum class ImageType : uint32_t {
+enum class ImageType : u32 {
 	UNDEFINED = 0,
 
 	R_U8 = 1,
@@ -43,35 +43,35 @@ enum class ImageType : uint32_t {
 // ------------------------------------------------------------------------------------------------
 
 struct ImageView {
-	uint8_t* rawData = nullptr;
+	u8* rawData = nullptr;
 	ImageType type = ImageType::UNDEFINED;
-	int32_t width = 0;
-	int32_t height = 0;
+	i32 width = 0;
+	i32 height = 0;
 
 	template<typename T>
-	T* rowPtr(int32_t y) noexcept
+	T* rowPtr(i32 y) noexcept
 	{
 		return reinterpret_cast<T*>(rawData) + width * y;
 	}
 
 	template<typename T>
-	T* at(int32_t x, int32_t y) noexcept { return this->rowPtr<T>(y) + x; }
+	T* at(i32 x, i32 y) noexcept { return this->rowPtr<T>(y) + x; }
 };
 
 struct ImageViewConst {
-	const uint8_t* rawData = nullptr;
+	const u8* rawData = nullptr;
 	ImageType type = ImageType::UNDEFINED;
-	int32_t width = 0;
-	int32_t height = 0;
+	i32 width = 0;
+	i32 height = 0;
 
 	template<typename T>
-	const T* rowPtr(int32_t y) noexcept
+	const T* rowPtr(i32 y) noexcept
 	{
 		return reinterpret_cast<const T*>(rawData) + width * y;
 	}
 
 	template<typename T>
-	const T* at(int32_t x, int32_t y) noexcept { return this->rowPtr<T>(y) + x; }
+	const T* at(i32 x, i32 y) noexcept { return this->rowPtr<T>(y) + x; }
 
 	// Implicit conversion from ImageView
 	ImageViewConst() noexcept = default;

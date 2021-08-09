@@ -26,12 +26,12 @@ namespace sfz {
 
 void BufferResource::uploadBlockingUntyped(
 	const void* data,
-	uint32_t elementSizeIn,
-	uint32_t numElements,
+	u32 elementSizeIn,
+	u32 numElements,
 	zg::CommandQueue& copyQueue)
 {
-	const uint64_t bufferSizeBytes = this->maxNumElements * this->elementSizeBytes;
-	const uint64_t numBytes = elementSizeIn * numElements;
+	const u64 bufferSizeBytes = this->maxNumElements * this->elementSizeBytes;
+	const u64 numBytes = elementSizeIn * numElements;
 	sfz_assert(numBytes <= bufferSizeBytes);
 	sfz_assert(elementSizeIn == this->elementSizeBytes);
 	sfz_assert_hard(this->type == BufferResourceType::STATIC);
@@ -56,8 +56,8 @@ void BufferResource::uploadBlockingUntyped(
 
 BufferResource BufferResource::createStatic(
 	const char* name,
-	uint32_t elementSize,
-	uint32_t maxNumElements)
+	u32 elementSize,
+	u32 maxNumElements)
 {
 	sfz_assert(elementSize > 0);
 	sfz_assert(maxNumElements > 0);
@@ -73,9 +73,9 @@ BufferResource BufferResource::createStatic(
 
 BufferResource BufferResource::createStreaming(
 	const char* name,
-	uint32_t elementSize,
-	uint32_t maxNumElements,
-	uint32_t frameLatency)
+	u32 elementSize,
+	u32 maxNumElements,
+	u32 frameLatency)
 {
 	sfz_assert(elementSize > 0);
 	sfz_assert(maxNumElements > 0);
@@ -85,9 +85,9 @@ BufferResource BufferResource::createStreaming(
 	resource.maxNumElements = maxNumElements;
 	resource.type = BufferResourceType::STREAMING;
 
-	const uint64_t sizeBytes = elementSize * maxNumElements;
+	const u64 sizeBytes = elementSize * maxNumElements;
 	const bool committedAllocation = false;
-	uint32_t frameIdx = 0;
+	u32 frameIdx = 0;
 	resource.streamingMem.init(frameLatency, [&](StreamingBufferMemory& memory) {
 		str256 uploadDebugName("%s_upload_%u", name, frameIdx);
 		str256 deviceDebugName("%s_device_%u", name, frameIdx);

@@ -36,7 +36,7 @@ namespace sfz {
 // row-vectors. When two indices are used the first one is always used to specify row (i.e.
 // y-direction) and the second one is used to specify column (i.e. x-direction).
 
-template<typename T, uint32_t H, uint32_t W>
+template<typename T, u32 H, u32 W>
 struct Mat final {
 
 	Vec<T,W> rows[H];
@@ -44,27 +44,27 @@ struct Mat final {
 	constexpr T* data() { return rows[0].data(); }
 	constexpr const T* data() const { return rows[0].data(); }
 
-	Vec<T,W>& row(uint32_t y) { sfz_assert(y < H); return rows[y]; }
-	const Vec<T,W>& row(uint32_t y) const { sfz_assert(y < H); return rows[y]; }
+	Vec<T,W>& row(u32 y) { sfz_assert(y < H); return rows[y]; }
+	const Vec<T,W>& row(u32 y) const { sfz_assert(y < H); return rows[y]; }
 
-	Vec<T,H> column(uint32_t x) const
+	Vec<T,H> column(u32 x) const
 	{
 		sfz_assert(x < W);
 		Vec<T,H> column;
-		for (uint32_t y = 0; y < H; y++) column[y] = this->at(y, x);
+		for (u32 y = 0; y < H; y++) column[y] = this->at(y, x);
 		return column;
 	}
-	void setColumn(uint32_t x, Vec<T,H> col) { for (uint32_t y = 0; y < H; y++) at(y, x) = col[y]; }
+	void setColumn(u32 x, Vec<T,H> col) { for (u32 y = 0; y < H; y++) at(y, x) = col[y]; }
 
-	constexpr T& at(uint32_t y, uint32_t x) { return row(y)[x]; }
-	constexpr T at(uint32_t y, uint32_t x) const { return row(y)[x]; }
+	constexpr T& at(u32 y, u32 x) { return row(y)[x]; }
+	constexpr T at(u32 y, u32 x) const { return row(y)[x]; }
 
 	constexpr Mat() noexcept = default;
 	constexpr Mat(const Mat&) noexcept = default;
 	constexpr Mat& operator= (const Mat&) noexcept = default;
 	~Mat() noexcept = default;
 
-	constexpr explicit Mat(const T* ptr) { for (uint32_t i = 0; i < (H * W); i++) data()[i] = ptr[i]; }
+	constexpr explicit Mat(const T* ptr) { for (u32 i = 0; i < (H * W); i++) data()[i] = ptr[i]; }
 
 	constexpr Mat(T e00, T e01, T e10, T e11) : Mat(Vec<T,2>(e00, e01), Vec<T,2>(e10, e11)) {}
 	constexpr Mat(Vec<T,2> row0, Vec<T,2> row1)
@@ -99,25 +99,25 @@ struct Mat final {
 
 	// Constructs Matrix from one of difference size. Will add "identity" matrix if target is
 	// bigger, and remove components from source if target is smaller.
-	template<uint32_t OH, uint32_t OW>
+	template<u32 OH, u32 OW>
 	constexpr explicit Mat(const Mat<T,OH,OW>& o)
 	{
 		*this = Mat::identity();
-		for (uint32_t y = 0, commonHeight = min(H, OH); y < commonHeight; y++) {
-			for (uint32_t x = 0, commonWidth = min(W, OW); x < commonWidth; x++) {
+		for (u32 y = 0, commonHeight = min(H, OH); y < commonHeight; y++) {
+			for (u32 x = 0, commonWidth = min(W, OW); x < commonWidth; x++) {
 				this->at(y, x) = o.at(y, x);
 			}
 		}
 	}
 
-	static constexpr Mat fill(T v) { Mat m; for (uint32_t i = 0; i < (H * W); i++) m.data()[i] = v; return m; }
+	static constexpr Mat fill(T v) { Mat m; for (u32 i = 0; i < (H * W); i++) m.data()[i] = v; return m; }
 
 	static constexpr Mat identity()
 	{
 		static_assert(W >= H, "Can't create identity for tall matrices");
 		Mat tmp;
-		uint32_t oneIdx = 0;
-		for (uint32_t rowIdx = 0; rowIdx < H; rowIdx++) {
+		u32 oneIdx = 0;
+		for (u32 rowIdx = 0; rowIdx < H; rowIdx++) {
 			tmp.row(rowIdx) = Vec<T,W>(T(0));
 			tmp.row(rowIdx)[oneIdx] = T(1);
 			oneIdx += 1;
@@ -161,9 +161,9 @@ struct Mat final {
 		return Mat(Mat<T,3,4>(T(1), T(0), T(0), t.x, T(0), T(1), T(0), t.y, T(0), T(0), T(1), t.z));
 	}
 
-	constexpr Mat& operator+= (const Mat& o) { for (uint32_t y = 0; y < H; y++) { row(y) += o.row(y); } return *this; }
-	constexpr Mat& operator-= (const Mat& o) { for (uint32_t y = 0; y < H; y++) { row(y) -= o.row(y); } return *this; }
-	constexpr Mat& operator*= (T s) { for (uint32_t y = 0; y < H; y++) { row(y) *= s; } return *this; }
+	constexpr Mat& operator+= (const Mat& o) { for (u32 y = 0; y < H; y++) { row(y) += o.row(y); } return *this; }
+	constexpr Mat& operator-= (const Mat& o) { for (u32 y = 0; y < H; y++) { row(y) -= o.row(y); } return *this; }
+	constexpr Mat& operator*= (T s) { for (u32 y = 0; y < H; y++) { row(y) *= s; } return *this; }
 	constexpr Mat& operator*= (const Mat& o) { return (*this = *this * o);}
 
 	constexpr Mat operator+ (const Mat& o) const { return (Mat(*this) += o); }
@@ -174,56 +174,56 @@ struct Mat final {
 	constexpr Vec<T,H> operator* (const Vec<T,W>& v) const
 	{
 		Vec<T,H> res;
-		for (uint32_t y = 0; y < H; y++) res[y] = dot(row(y), v);
+		for (u32 y = 0; y < H; y++) res[y] = dot(row(y), v);
 		return res;
 	}
 
 	constexpr bool operator== (const Mat& o) const
 	{
-		for (uint32_t y = 0; y < H; y++) if (row(y) != o.row(y)) return false;
+		for (u32 y = 0; y < H; y++) if (row(y) != o.row(y)) return false;
 		return true;
 	}
 	constexpr bool operator!= (const Mat& o) const { return !(*this == o); }
 };
 
-using mat22 = Mat<float,2,2>; static_assert(sizeof(mat22) == sizeof(float) * 4, "");
-using mat33 = Mat<float,3,3>; static_assert(sizeof(mat33) == sizeof(float) * 9, "");
-using mat34 = Mat<float,3,4>; static_assert(sizeof(mat34) == sizeof(float) * 12, "");
-using mat44 = Mat<float,4,4>; static_assert(sizeof(mat44) == sizeof(float) * 16, "");
+using mat22 = Mat<f32,2,2>; static_assert(sizeof(mat22) == sizeof(f32) * 4, "");
+using mat33 = Mat<f32,3,3>; static_assert(sizeof(mat33) == sizeof(f32) * 9, "");
+using mat34 = Mat<f32,3,4>; static_assert(sizeof(mat34) == sizeof(f32) * 12, "");
+using mat44 = Mat<f32,4,4>; static_assert(sizeof(mat44) == sizeof(f32) * 16, "");
 
 using mat2 = mat22;
 using mat3 = mat33;
 using mat4 = mat44;
 
-template<typename T, uint32_t H, uint32_t W>
+template<typename T, u32 H, u32 W>
 constexpr Mat<T,H,W> operator* (T lhs, const Mat<T,H,W>& rhs) { return rhs * lhs; }
 
-template<typename T, uint32_t H, uint32_t S, uint32_t W>
+template<typename T, u32 H, u32 S, u32 W>
 constexpr Mat<T,H,W> operator* (const Mat<T,H,S>& lhs, const Mat<T,S,W>& rhs)
 {
 	Mat<T,H,W> res;
-	for (uint32_t y = 0; y < H; y++) {
-		for (uint32_t x = 0; x < W; x++) {
+	for (u32 y = 0; y < H; y++) {
+		for (u32 x = 0; x < W; x++) {
 			res.at(y, x) = dot(lhs.row(y), rhs.column(x));
 		}
 	}
 	return res;
 }
 
-template<typename T, uint32_t H, uint32_t W>
+template<typename T, u32 H, u32 W>
 constexpr Mat<T,H,W> elemMult(const Mat<T,H,W>& lhs, const Mat<T,H,W>& rhs)
 {
 	Mat<T,H,W> res;
-	for (uint32_t y = 0; y < H; y++) res.row(y) = lhs.row(y) * rhs.row(y);
+	for (u32 y = 0; y < H; y++) res.row(y) = lhs.row(y) * rhs.row(y);
 	return res;
 }
 
-template<typename T, uint32_t H, uint32_t W>
+template<typename T, u32 H, u32 W>
 constexpr Mat<T,W,H> transpose(const Mat<T,H,W>& m)
 {
 	Mat<T,W,H> res;
-	for (uint32_t y = 0; y < H; y++) {
-		for (uint32_t x = 0; x < W; x++) {
+	for (u32 y = 0; y < H; y++) {
+		for (u32 x = 0; x < W; x++) {
 			res.at(x, y) = m.at(y, x);
 		}
 	}
@@ -520,7 +520,7 @@ struct Quat final {
 	constexpr bool operator!= (Quat o) const { return !(*this == o); }
 };
 
-using quat = Quat<float>; static_assert(sizeof(quat) == sizeof(vec4), "");
+using quat = Quat<f32>; static_assert(sizeof(quat) == sizeof(vec4), "");
 
 template<typename T>
 constexpr Quat<T> operator* (T scalar, Quat<T> q) { return q *= scalar; }
@@ -528,7 +528,7 @@ constexpr Quat<T> operator* (T scalar, Quat<T> q) { return q *= scalar; }
 // Calculates the length (norm) of the Quaternion. A unit Quaternion has length 1. If the
 // Quaternions are used for rotations they should always be unit.
 template<typename T>
-float length(Quat<T> q) { return length(q.vector); }
+f32 length(Quat<T> q) { return length(q.vector); }
 
 // Normalizes the Quaternion into a unit Quaternion by dividing each component by the length.
 template<typename T>
@@ -581,7 +581,7 @@ Quat<T> lerp(Quat<T> q0, Quat<T> q1, T t)
 // vectors are no longer assumed to be normalized. And if they happen to be invalid (i.e. the same
 // vector or pointing in exact opposite directions) a sane default will be given.
 
-inline vec3 rotateTowardsRad(vec3 inDir, vec3 targetDir, float angleRads)
+inline vec3 rotateTowardsRad(vec3 inDir, vec3 targetDir, f32 angleRads)
 {
 	sfz_assert(eqf(length(inDir), 1.0f));
 	sfz_assert(eqf(length(targetDir), 1.0f));
@@ -595,7 +595,7 @@ inline vec3 rotateTowardsRad(vec3 inDir, vec3 targetDir, float angleRads)
 	return newDir;
 }
 
-inline vec3 rotateTowardsRadClampSafe(vec3 inDir, vec3 targetDir, float angleRads)
+inline vec3 rotateTowardsRadClampSafe(vec3 inDir, vec3 targetDir, f32 angleRads)
 {
 	sfz_assert(angleRads >= 0.0f);
 	sfz_assert(angleRads < PI);
@@ -621,12 +621,12 @@ inline vec3 rotateTowardsRadClampSafe(vec3 inDir, vec3 targetDir, float angleRad
 	return rotateTowardsRad(inDirNorm, targetDirNorm, angleRads);
 }
 
-inline vec3 rotateTowardsDeg(vec3 inDir, vec3 targetDir, float angleDegs)
+inline vec3 rotateTowardsDeg(vec3 inDir, vec3 targetDir, f32 angleDegs)
 {
 	return rotateTowardsRad(inDir, targetDir, DEG_TO_RAD * angleDegs);
 }
 
-inline vec3 rotateTowardsDegClampSafe(vec3 inDir, vec3 targetDir, float angleDegs)
+inline vec3 rotateTowardsDegClampSafe(vec3 inDir, vec3 targetDir, f32 angleDegs)
 {
 	return rotateTowardsRadClampSafe(inDir, targetDir, DEG_TO_RAD * angleDegs);
 }

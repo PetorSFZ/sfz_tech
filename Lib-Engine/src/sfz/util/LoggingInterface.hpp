@@ -18,14 +18,14 @@
 
 #pragma once
 
-#include <cstdint>
+#include <sfz.h>
 
 namespace sfz {
 
 // LogLevel enum
 // ------------------------------------------------------------------------------------------------
 
-enum class LogLevel : uint32_t {
+enum class LogLevel : u32 {
 	NOISE = 0, // Extra detailed info that is not normally useful
 	INFO,
 	WARNING,
@@ -41,14 +41,14 @@ constexpr const char* LOG_LEVEL_STRINGS[] = {
 
 inline const char* toString(LogLevel level) noexcept
 {
-	return LOG_LEVEL_STRINGS[uint32_t(level)];
+	return LOG_LEVEL_STRINGS[u32(level)];
 }
 
 // Comparison operators, used to compare severity of log levels
-inline bool operator< (LogLevel l, LogLevel r) noexcept { return uint32_t(l) < uint32_t(r); }
-inline bool operator> (LogLevel l, LogLevel r) noexcept { return uint32_t(l) > uint32_t(r); }
-inline bool operator<= (LogLevel l, LogLevel r) noexcept { return uint32_t(l) <= uint32_t(r); }
-inline bool operator>= (LogLevel l, LogLevel r) noexcept { return uint32_t(l) >= uint32_t(r); }
+inline bool operator< (LogLevel l, LogLevel r) noexcept { return u32(l) < u32(r); }
+inline bool operator> (LogLevel l, LogLevel r) noexcept { return u32(l) > u32(r); }
+inline bool operator<= (LogLevel l, LogLevel r) noexcept { return u32(l) <= u32(r); }
+inline bool operator>= (LogLevel l, LogLevel r) noexcept { return u32(l) >= u32(r); }
 
 // Logging interface
 // ------------------------------------------------------------------------------------------------

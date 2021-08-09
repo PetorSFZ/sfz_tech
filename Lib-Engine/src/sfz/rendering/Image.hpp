@@ -29,14 +29,14 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 struct Image final {
-	Array<uint8_t> rawData;
+	Array<u8> rawData;
 	ImageType type = ImageType::UNDEFINED;
-	int32_t width = -1;
-	int32_t height = -1;
-	int32_t bytesPerPixel = -1;
+	i32 width = -1;
+	i32 height = -1;
+	i32 bytesPerPixel = -1;
 
 	static Image allocate(
-		int32_t width, int32_t height, ImageType type, SfzAllocator* allocator) noexcept;
+		i32 width, i32 height, ImageType type, SfzAllocator* allocator) noexcept;
 
 	inline ImageView toImageView() noexcept;
 	inline ImageViewConst toImageView() const noexcept;

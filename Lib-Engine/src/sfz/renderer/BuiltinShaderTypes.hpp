@@ -43,9 +43,9 @@ struct ShaderMaterial final {
 	int32_t hasNormalTex = 0;
 	int32_t hasOcclusionTex = 0;
 	int32_t hasEmissiveTex = 0;
-	uint32_t ___PADDING___ = 0;
+	u32 ___PADDING___ = 0;
 };
-static_assert(sizeof(ShaderMaterial) == sizeof(uint32_t) * 16, "ShaderMaterial is padded");
+static_assert(sizeof(ShaderMaterial) == sizeof(u32) * 16, "ShaderMaterial is padded");
 
 // ShaderPointLight type
 // ------------------------------------------------------------------------------------------------
@@ -54,9 +54,9 @@ struct ShaderPointLight final {
 	vec3 posVS = vec3(0.0f);
 	float range = 0.0f;
 	vec3 strength = vec3(0.0f);
-	uint32_t ___PADDING___ = 0;
+	u32 ___PADDING___ = 0;
 };
-static_assert(sizeof(ShaderPointLight) == sizeof(uint32_t) * 8);
+static_assert(sizeof(ShaderPointLight) == sizeof(u32) * 8);
 
 // DirectionalLight type
 // ------------------------------------------------------------------------------------------------
@@ -67,12 +67,12 @@ struct DirectionalLight final {
 	vec3 strength = vec3(0.0f);
 	float ___PADDING1___ = 0.0f;
 };
-static_assert(sizeof(DirectionalLight) == sizeof(uint32_t) * 8);
+static_assert(sizeof(DirectionalLight) == sizeof(u32) * 8);
 
 // ForwardShader specific limits
 // ------------------------------------------------------------------------------------------------
 
-constexpr uint32_t MAX_NUM_SHADER_MATERIALS = 128;
+constexpr u32 MAX_NUM_SHADER_MATERIALS = 128;
 
 struct ForwardShaderMaterialsBuffer final {
 	ShaderMaterial materials[MAX_NUM_SHADER_MATERIALS];
@@ -80,15 +80,15 @@ struct ForwardShaderMaterialsBuffer final {
 static_assert(
 	sizeof(ForwardShaderMaterialsBuffer) == sizeof(ShaderMaterial) * MAX_NUM_SHADER_MATERIALS);
 
-constexpr uint32_t MAX_NUM_SHADER_POINT_LIGHTS = 128;
+constexpr u32 MAX_NUM_SHADER_POINT_LIGHTS = 128;
 
 struct ForwardShaderPointLightsBuffer final {
-	uint32_t numPointLights = 0;
-	uint32_t ___padding___[3] = {};
+	u32 numPointLights = 0;
+	u32 ___padding___[3] = {};
 	ShaderPointLight pointLights[MAX_NUM_SHADER_POINT_LIGHTS];
 };
 static_assert(
 	sizeof(ForwardShaderPointLightsBuffer) ==
-	(sizeof(ShaderPointLight) * MAX_NUM_SHADER_POINT_LIGHTS + sizeof(uint32_t) * 4));
+	(sizeof(ShaderPointLight) * MAX_NUM_SHADER_POINT_LIGHTS + sizeof(u32) * 4));
 
 } // namespace sfz

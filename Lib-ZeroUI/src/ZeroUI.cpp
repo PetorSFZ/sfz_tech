@@ -53,13 +53,13 @@ static void baseHandlePointerInput(WidgetCmd* cmd, vec2 pointerPosSS)
 static void baseHandleMoveInput(WidgetCmd* cmd, Input* input, bool* moveActive)
 {
 	if (input->action == InputAction::UP) {
-		for (uint32_t cmdIdx = cmd->children.size(); cmdIdx > 0; cmdIdx--) {
+		for (u32 cmdIdx = cmd->children.size(); cmdIdx > 0; cmdIdx--) {
 			WidgetCmd& child = cmd->children[cmdIdx - 1];
 			child.handleMoveInput(input, moveActive);
 		}
 	}
 	else {
-		for (uint32_t cmdIdx = 0; cmdIdx < cmd->children.size(); cmdIdx++) {
+		for (u32 cmdIdx = 0; cmdIdx < cmd->children.size(); cmdIdx++) {
 			WidgetCmd& child = cmd->children[cmdIdx];
 			child.handleMoveInput(input, moveActive);
 		}
@@ -70,7 +70,7 @@ static void baseDraw(
 	const WidgetCmd* cmd,
 	AttributeSet* attributes,
 	const mat34& surfaceTransform,
-	float lagSinceSurfaceEndSecs)
+	f32 lagSinceSurfaceEndSecs)
 {
 	const BaseContainerData& data = *cmd->data<BaseContainerData>();
 
@@ -110,7 +110,7 @@ Context& ctx()
 	return *globalCtx;
 }
 
-void initZeroUI(SfzAllocator* allocator, uint32_t surfaceTmpMemoryBytes, uint32_t oversampleFonts)
+void initZeroUI(SfzAllocator* allocator, u32 surfaceTmpMemoryBytes, u32 oversampleFonts)
 {
 	sfz_assert(globalCtx == nullptr);
 
@@ -163,13 +163,13 @@ void deinitZeroUI()
 // Fonts
 // ------------------------------------------------------------------------------------------------
 
-void setFontTextureHandle(uint64_t handle)
+void setFontTextureHandle(u64 handle)
 {
 	sfz_assert(globalCtx != nullptr);
 	internalDrawSetFontHandle(handle);
 }
 
-bool registerFont(const char* name, const char* path, float size, bool defaultFont)
+bool registerFont(const char* name, const char* path, f32 size, bool defaultFont)
 {
 	strID nameID = strID(name);
 	bool success = internalDrawAddFont(name, nameID, path, size);
@@ -200,7 +200,7 @@ void registerDefaultAttribute(const char* attribName, Attribute attribute)
 // Widget
 // ------------------------------------------------------------------------------------------------
 
-void WidgetBase::incrementTimers(float deltaSecs)
+void WidgetBase::incrementTimers(f32 deltaSecs)
 {
 	timeSinceFocusStartedSecs += deltaSecs;
 	timeSinceFocusEndedSecs += deltaSecs;
@@ -233,7 +233,7 @@ void defaultPassthroughDrawFunc(
 	const WidgetCmd* cmd,
 	AttributeSet* attributes,
 	const mat34& transform,
-	float lagSinceSurfaceEndSecs)
+	f32 lagSinceSurfaceEndSecs)
 {
 	for (const WidgetCmd& child : cmd->children) {
 		child.draw(attributes, transform, lagSinceSurfaceEndSecs);
@@ -310,7 +310,7 @@ void clearSurface(const char* name)
 	if (surface != nullptr) {
 		surface->clear();
 		ctx().recycledSurfaces.add(std::move(*surface));
-		ctx().surfaces.removeQuickSwap(uint32_t(surface - ctx().surfaces.data()));
+		ctx().surfaces.removeQuickSwap(u32(surface - ctx().surfaces.data()));
 	}
 }
 
@@ -369,13 +369,13 @@ void surfaceBegin(const SurfaceDesc& desc)
 
 	vec2 halfOffset = vec2(0.0f);
 	if (desc.halignOnFB == HAlign::LEFT) halfOffset.x = 0.0f;
-	else if (desc.halignOnFB == HAlign::CENTER) halfOffset.x = -0.5f * float(dimsOnFB.x);
-	else if (desc.halignOnFB == HAlign::RIGHT) halfOffset.x = -1.0f * float(dimsOnFB.x);
+	else if (desc.halignOnFB == HAlign::CENTER) halfOffset.x = -0.5f * f32(dimsOnFB.x);
+	else if (desc.halignOnFB == HAlign::RIGHT) halfOffset.x = -1.0f * f32(dimsOnFB.x);
 	else sfz_assert_hard(false);
 
 	if (desc.valignOnFB == VAlign::BOTTOM) halfOffset.y = 0.0f;
-	else if (desc.valignOnFB == VAlign::CENTER) halfOffset.y = -0.5f * float(dimsOnFB.y);
-	else if (desc.valignOnFB == VAlign::TOP) halfOffset.y = -1.0f * float(dimsOnFB.y);
+	else if (desc.valignOnFB == VAlign::CENTER) halfOffset.y = -0.5f * f32(dimsOnFB.y);
+	else if (desc.valignOnFB == VAlign::TOP) halfOffset.y = -1.0f * f32(dimsOnFB.y);
 	else sfz_assert_hard(false);
 
 	const vec3 surfToFbScale = vec3((1.0f / surface.desc.dims) * vec2(dimsOnFB), 1.0f);
@@ -435,24 +435,24 @@ void surfaceEnd()
 		WidgetCmd* cmd = stack.pop();
 
 		// Allocate memory for copy of widget data and then copy to it.
-		uint32_t sizeOfWidgetData = cmd->sizeOfWidgetData();
+		u32 sizeOfWidgetData = cmd->sizeOfWidgetData();
 		void* copy = arena->alloc(sfz_dbg(""), sizeOfWidgetData);
 		memcpy(copy, cmd->dataPtr, sizeOfWidgetData);
 		cmd->dataPtr = copy;
 
 		// Add childrens to stack
-		for (uint32_t i = cmd->children.size(); i > 0; i--) {
+		for (u32 i = cmd->children.size(); i > 0; i--) {
 			stack.add(&cmd->children[i - 1]);
 		}
 	}
 }
 
-void render(float lagSinceSurfaceEndSecs)
+void render(f32 lagSinceSurfaceEndSecs)
 {
 	// Clear render data
 	internalDrawClearRenderData();
 
-	for (uint32_t surfaceIdx = 0; surfaceIdx < ctx().surfaces.size(); surfaceIdx++) {
+	for (u32 surfaceIdx = 0; surfaceIdx < ctx().surfaces.size(); surfaceIdx++) {
 		Surface& surface = ctx().surfaces[surfaceIdx];
 
 		// Clear attribute set and set defaults
@@ -539,7 +539,7 @@ void baseAttribute(strID id, Attribute attrib)
 	sfz_assert(data.newValues.size() <= data.newValues.capacity());
 }
 
-void baseSetPos(float x, float y)
+void baseSetPos(f32 x, f32 y)
 {
 	baseSetPos(vec2(x, y));
 }
@@ -563,7 +563,7 @@ void baseSetAlign(Align align)
 	parent.data<BaseContainerData>()->nextAlign = align;
 }
 
-void baseSetDims(float width, float height)
+void baseSetDims(f32 width, f32 height)
 {
 	baseSetDims(vec2(width, height));
 }
@@ -575,7 +575,7 @@ void baseSetDims(vec2 dims)
 	parent.data<BaseContainerData>()->nextDims = dims;
 }
 
-void baseSet(float x, float y, float width, float height)
+void baseSet(f32 x, f32 y, f32 width, f32 height)
 {
 	baseSet(vec2(x, y), vec2(width, height));
 }
@@ -587,7 +587,7 @@ void baseSet(vec2 pos, vec2 dims)
 	baseSetDims(dims);
 }
 
-void baseSet(float x, float y, HAlign halign, VAlign valign, float width, float height)
+void baseSet(f32 x, f32 y, HAlign halign, VAlign valign, f32 width, f32 height)
 {
 	baseSet(vec2(x, y), Align(halign, valign), vec2(width, height));
 }

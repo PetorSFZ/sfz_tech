@@ -38,7 +38,7 @@ static str320 calculateBasePath(const char* path) noexcept
 
 	// Go through path until the path separator is found
 	bool success = false;
-	for (uint32_t i = str.size() - 1; i > 0; i--) {
+	for (u32 i = str.size() - 1; i > 0; i--) {
 		const char c = str.str()[i - 1];
 		if (c == '\\' || c == '/') {
 			str.mRawStr[i] = '\0';
@@ -56,9 +56,9 @@ static str320 calculateBasePath(const char* path) noexcept
 	return str;
 }
 
-static uint8_t toU8(float val) noexcept
+static u8 toU8(float val) noexcept
 {
-	return uint8_t(std::roundf(val * 255.0f));
+	return u8(std::roundf(val * 255.0f));
 }
 
 static vec4_u8 toU8(vec4 val) noexcept
@@ -74,7 +74,7 @@ static vec4_u8 toU8(vec4 val) noexcept
 static void* cgltfAlloc(void* userPtr, cgltf_size size) noexcept
 {
 	SfzAllocator* allocator = static_cast<SfzAllocator*>(userPtr);
-	return allocator->alloc(sfz_dbg("cgltf"), uint64_t(size));
+	return allocator->alloc(sfz_dbg("cgltf"), u64(size));
 }
 
 static void cgltfFree(void* userPtr, void* ptr) noexcept
@@ -113,27 +113,27 @@ static const char* toString(cgltf_result res) noexcept
 static cgltf_attribute* findAttributeByName(cgltf_primitive& primitive, const char* nameIn)
 {
 	str64 name = str64("%s", nameIn);
-	const uint32_t numAttributes = uint32_t(primitive.attributes_count);
-	for (uint32_t i = 0; i < numAttributes; i++) {
+	const u32 numAttributes = u32(primitive.attributes_count);
+	for (u32 i = 0; i < numAttributes; i++) {
 		cgltf_attribute& attribute = primitive.attributes[i];
 		if (name == attribute.name) return &attribute;
 	}
 	return nullptr;
 }
 
-static const uint8_t* getBufferStart(cgltf_accessor* accessor)
+static const u8* getBufferStart(cgltf_accessor* accessor)
 {
 	// Start of buffer is offset both by the buffer_view's offset and the accessor's offset
-	const uint32_t accessorOffset = uint32_t(accessor->offset);
-	const uint32_t bufferViewOffset = uint32_t(accessor->buffer_view->offset);
-	const uint8_t* buffer = static_cast<const uint8_t*>(accessor->buffer_view->buffer->data);
+	const u32 accessorOffset = u32(accessor->offset);
+	const u32 bufferViewOffset = u32(accessor->buffer_view->offset);
+	const u8* buffer = static_cast<const u8*>(accessor->buffer_view->buffer->data);
 	return buffer + accessorOffset + bufferViewOffset;
 }
 
-static uint32_t getBufferStrideBytes(cgltf_accessor* accessor)
+static u32 getBufferStrideBytes(cgltf_accessor* accessor)
 {
-	const uint32_t accessorStrideBytes = uint32_t(accessor->stride);
-	const uint32_t bufferViewStrideBytes = uint32_t(accessor->buffer_view->stride);
+	const u32 accessorStrideBytes = u32(accessor->stride);
+	const u32 bufferViewStrideBytes = u32(accessor->buffer_view->stride);
 	if (bufferViewStrideBytes == 0) {
 		// If buffer_view's stride is 0, then the stride is determined by the accessor
 		sfz_assert(accessorStrideBytes != 0);
@@ -145,7 +145,7 @@ static uint32_t getBufferStrideBytes(cgltf_accessor* accessor)
 }
 
 template<typename T>
-static T access(const uint8_t* buffer, uint32_t strideBytes, uint32_t idx)
+static T access(const u8* buffer, u32 strideBytes, u32 idx)
 {
 	return *reinterpret_cast<const T*>(buffer + strideBytes * idx);
 }
@@ -190,9 +190,9 @@ bool loadAssetsFromGltf(
 
 	// Load textures
 	{
-		const uint32_t numTextures = uint32_t(data->textures_count);
+		const u32 numTextures = u32(data->textures_count);
 		texturesOut.init(numTextures, allocator, sfz_dbg(""));
-		for (uint32_t texIdx = 0; texIdx < numTextures; texIdx++) {
+		for (u32 texIdx = 0; texIdx < numTextures; texIdx++) {
 			cgltf_texture& texture = data->textures[texIdx];
 			cgltf_image& image = *texture.image;
 
@@ -219,9 +219,9 @@ bool loadAssetsFromGltf(
 
 	// Add materials
 	{
-		const uint32_t numMaterials = uint32_t(data->materials_count);
+		const u32 numMaterials = u32(data->materials_count);
 		meshOut.materials.init(numMaterials, allocator, sfz_dbg(""));
-		for (uint32_t matIdx = 0; matIdx < numMaterials; matIdx++) {
+		for (u32 matIdx = 0; matIdx < numMaterials; matIdx++) {
 			cgltf_material& material = data->materials[matIdx];
 
 			sfz_assert(material.has_pbr_metallic_roughness);
@@ -258,12 +258,12 @@ bool loadAssetsFromGltf(
 
 	// Load all meshes inside file and store them in a single mesh
 	{
-		const uint32_t numMeshes = uint32_t(data->meshes_count);
-		const uint32_t numVertexGuess = numMeshes * 256;
+		const u32 numMeshes = u32(data->meshes_count);
+		const u32 numVertexGuess = numMeshes * 256;
 		meshOut.vertices.init(numVertexGuess, allocator, sfz_dbg(""));
 		meshOut.indices.init(numVertexGuess * 2, allocator, sfz_dbg(""));
 		meshOut.components.init(numMeshes, allocator, sfz_dbg(""));
-		for (uint32_t meshIdx = 0; meshIdx < numMeshes; meshIdx++) {
+		for (u32 meshIdx = 0; meshIdx < numMeshes; meshIdx++) {
 			cgltf_mesh& mesh = data->meshes[meshIdx];
 
 			// TODO: For now, stupidly assume each mesh only have one triangle primitive
@@ -292,19 +292,19 @@ bool loadAssetsFromGltf(
 			sfz_assert_hard(texcoordAttrib->data->type == cgltf_type_vec2);
 			sfz_assert(posAttrib->data->count == normalAttrib->data->count);
 			sfz_assert(posAttrib->data->count == texcoordAttrib->data->count);
-			const uint32_t numVertices = uint32_t(posAttrib->data->count);
+			const u32 numVertices = u32(posAttrib->data->count);
 
 			// Grab data pointers and strides
-			const uint8_t* posBuffer = getBufferStart(posAttrib->data);
-			const uint32_t posStride = getBufferStrideBytes(posAttrib->data);
-			const uint8_t* normalBuffer = getBufferStart(normalAttrib->data);
-			const uint32_t normalStride = getBufferStrideBytes(normalAttrib->data);
-			const uint8_t* texcoordBuffer = getBufferStart(texcoordAttrib->data);
-			const uint32_t texcoordStride = getBufferStrideBytes(texcoordAttrib->data);
+			const u8* posBuffer = getBufferStart(posAttrib->data);
+			const u32 posStride = getBufferStrideBytes(posAttrib->data);
+			const u8* normalBuffer = getBufferStart(normalAttrib->data);
+			const u32 normalStride = getBufferStrideBytes(normalAttrib->data);
+			const u8* texcoordBuffer = getBufferStart(texcoordAttrib->data);
+			const u32 texcoordStride = getBufferStrideBytes(texcoordAttrib->data);
 
 			// Add vertices to list of vertices
-			const uint32_t offsetToThisComp = meshOut.vertices.size();
-			for (uint32_t i = 0; i < numVertices; i++) {
+			const u32 offsetToThisComp = meshOut.vertices.size();
+			for (u32 i = 0; i < numVertices; i++) {
 				Vertex& v = meshOut.vertices.add();
 				v.pos = access<vec3>(posBuffer, posStride, i);
 				v.normal = access<vec3>(normalBuffer, normalStride, i);
@@ -316,25 +316,25 @@ bool loadAssetsFromGltf(
 			const bool index32 = primitive.indices->component_type == cgltf_component_type_r_32u;
 			sfz_assert_hard(index16 || index32);
 			sfz_assert_hard(primitive.indices->type == cgltf_type_scalar);
-			const uint32_t numIndices = uint32_t(primitive.indices->count);
-			const uint8_t* indexBuffer = getBufferStart(primitive.indices);
-			const uint32_t indexStride = getBufferStrideBytes(primitive.indices);
+			const u32 numIndices = u32(primitive.indices->count);
+			const u8* indexBuffer = getBufferStart(primitive.indices);
+			const u32 indexStride = getBufferStrideBytes(primitive.indices);
 			
 			// Add indices to list of indices
 			MeshComponent comp;
 			comp.firstIndex = meshOut.indices.size();
 			comp.numIndices = numIndices;
 			if (index16) {
-				for (uint32_t i = 0; i < numIndices; i++) {
-					const uint32_t offsetIndex =
-						offsetToThisComp + access<uint16_t>(indexBuffer, indexStride, i);
+				for (u32 i = 0; i < numIndices; i++) {
+					const u32 offsetIndex =
+						offsetToThisComp + access<u16>(indexBuffer, indexStride, i);
 					meshOut.indices.add(offsetIndex);
 				}
 			}
 			else if (index32) {
-				for (uint32_t i = 0; i < numIndices; i++) {
-					const uint32_t offsetIndex =
-						offsetToThisComp + access<uint32_t>(indexBuffer, indexStride, i);
+				for (u32 i = 0; i < numIndices; i++) {
+					const u32 offsetIndex =
+						offsetToThisComp + access<u32>(indexBuffer, indexStride, i);
 					meshOut.indices.add(offsetIndex);
 				}
 			}
@@ -345,7 +345,7 @@ bool loadAssetsFromGltf(
 			// Material
 			const bool hasMaterial = primitive.material != nullptr;
 			comp.materialIdx = 0;
-			if (hasMaterial) comp.materialIdx = uint32_t(primitive.material - data->materials);
+			if (hasMaterial) comp.materialIdx = u32(primitive.material - data->materials);
 			sfz_assert_hard(comp.materialIdx < meshOut.materials.size());
 
 			// Add component to mesh

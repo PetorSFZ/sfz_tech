@@ -25,13 +25,13 @@ namespace sfz {
 // Vector toString()
 // ------------------------------------------------------------------------------------------------
 
-str96 toString(const vec2& vector, uint32_t numDecimals = 2) noexcept;
-str96 toString(const vec3& vector, uint32_t numDecimals = 2) noexcept;
-str96 toString(const vec4& vector, uint32_t numDecimals = 2) noexcept;
+str96 toString(const vec2& vector, u32 numDecimals = 2) noexcept;
+str96 toString(const vec3& vector, u32 numDecimals = 2) noexcept;
+str96 toString(const vec4& vector, u32 numDecimals = 2) noexcept;
 
-void toString(const vec2& vector, str96& string, uint32_t numDecimals = 2) noexcept;
-void toString(const vec3& vector, str96& string, uint32_t numDecimals = 2) noexcept;
-void toString(const vec4& vector, str96& string, uint32_t numDecimals = 2) noexcept;
+void toString(const vec2& vector, str96& string, u32 numDecimals = 2) noexcept;
+void toString(const vec3& vector, str96& string, u32 numDecimals = 2) noexcept;
+void toString(const vec4& vector, str96& string, u32 numDecimals = 2) noexcept;
 
 str96 toString(const vec2_i32& vector) noexcept;
 str96 toString(const vec3_i32& vector) noexcept;
@@ -52,12 +52,12 @@ void toString(const vec4_u32& vector, str96& string) noexcept;
 // Matrix toString()
 // ------------------------------------------------------------------------------------------------
 
-str256 toString(const mat22& matrix, bool rowBreak = false, uint32_t numDecimals = 2) noexcept;
-str256 toString(const mat33& matrix, bool rowBreak = false, uint32_t numDecimals = 2) noexcept;
-str256 toString(const mat44& matrix, bool rowBreak = false, uint32_t numDecimals = 2) noexcept;
+str256 toString(const mat22& matrix, bool rowBreak = false, u32 numDecimals = 2) noexcept;
+str256 toString(const mat33& matrix, bool rowBreak = false, u32 numDecimals = 2) noexcept;
+str256 toString(const mat44& matrix, bool rowBreak = false, u32 numDecimals = 2) noexcept;
 
-void toString(const mat22& matrix, str256& string, bool rowBreak = false, uint32_t numDecimals = 2) noexcept;
-void toString(const mat33& matrix, str256& string, bool rowBreak = false, uint32_t numDecimals = 2) noexcept;
-void toString(const mat44& matrix, str256& string, bool rowBreak = false, uint32_t numDecimals = 2) noexcept;
+void toString(const mat22& matrix, str256& string, bool rowBreak = false, u32 numDecimals = 2) noexcept;
+void toString(const mat33& matrix, str256& string, bool rowBreak = false, u32 numDecimals = 2) noexcept;
+void toString(const mat44& matrix, str256& string, bool rowBreak = false, u32 numDecimals = 2) noexcept;
 
 } // namespace sfz

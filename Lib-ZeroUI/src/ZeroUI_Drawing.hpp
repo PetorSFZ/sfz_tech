@@ -38,11 +38,11 @@ using sfz::strID;
 // These functions are used to initialize and handle communication with the drawing module, these
 // are automatically called by ZeroUI and should not be called manually by the user.
 
-void internalDrawInit(SfzAllocator* allocator, uint32_t fontOversampling);
+void internalDrawInit(SfzAllocator* allocator, u32 fontOversampling);
 void internalDrawDeinit();
-void internalDrawSetFontHandle(uint64_t handle);
+void internalDrawSetFontHandle(u64 handle);
 
-bool internalDrawAddFont(const char* name, strID nameID, const char* path, float atlasSize);
+bool internalDrawAddFont(const char* name, strID nameID, const char* path, f32 atlasSize);
 bool internalDrawFontTextureUpdated();
 ImageViewConst internalDrawGetFontTexture();
 
@@ -60,23 +60,23 @@ RenderDataView internalDrawGetRenderDataView();
 void drawAddCommand(
 	const mat34& transform,
 	const Vertex* vertices,
-	uint32_t numVertices,
-	const uint32_t* indices,
-	uint32_t numIndices,
-	uint64_t imageHandle = 0,
+	u32 numVertices,
+	const u32* indices,
+	u32 numIndices,
+	u64 imageHandle = 0,
 	bool isAlphaTexture = false);
 
-float drawTextFmtCentered(
+f32 drawTextFmtCentered(
 	const mat34& transform,
 	strID fontID,
-	float size,
+	f32 size,
 	vec4 color,
 	const char* text);
 
 void drawImage(
 	const mat34& transform,
 	vec2 dims,
-	uint64_t imageHandle,
+	u64 imageHandle,
 	bool isAlphaTexture = false);
 
 void drawRect(
@@ -87,11 +87,11 @@ void drawRect(
 void drawBorder(
 	const mat34& transform,
 	vec2 dims,
-	float thickness,
+	f32 thickness,
 	vec4 color);
 
 // TODO: This might be a tiny bit broken
-float drawTextFmt(
-	vec2 pos, HAlign halign, VAlign valign, strID fontID, float size, vec4 color, const char* format, ...);
+f32 drawTextFmt(
+	vec2 pos, HAlign halign, VAlign valign, strID fontID, f32 size, vec4 color, const char* format, ...);
 
 } // namespace zui

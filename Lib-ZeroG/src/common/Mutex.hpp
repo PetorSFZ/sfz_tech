@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include <cstdint>
 #include <mutex>
 #include <utility> // std::swap
 

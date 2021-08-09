@@ -26,13 +26,13 @@ namespace sfz {
 // Entity constants
 // ------------------------------------------------------------------------------------------------
 
-constexpr uint32_t ENTITY_ID_NUM_BITS = 24;
-constexpr uint32_t ENTITY_ID_MAX = (1 << ENTITY_ID_NUM_BITS) - 1; // 2^24 - 1
-constexpr uint32_t ENTITY_ID_PART_MASK = ENTITY_ID_MAX;
+constexpr u32 ENTITY_ID_NUM_BITS = 24;
+constexpr u32 ENTITY_ID_MAX = (1 << ENTITY_ID_NUM_BITS) - 1; // 2^24 - 1
+constexpr u32 ENTITY_ID_PART_MASK = ENTITY_ID_MAX;
 
-constexpr uint32_t ENTITY_GENERATION_NUM_BITS = 32 - ENTITY_ID_NUM_BITS;
-constexpr uint32_t ENTITY_GENERATION_MAX = (1 << ENTITY_GENERATION_NUM_BITS) - 1;
-constexpr uint32_t ENTITY_GENERATION_PART_MASK = ~ENTITY_ID_PART_MASK;
+constexpr u32 ENTITY_GENERATION_NUM_BITS = 32 - ENTITY_ID_NUM_BITS;
+constexpr u32 ENTITY_GENERATION_MAX = (1 << ENTITY_GENERATION_NUM_BITS) - 1;
+constexpr u32 ENTITY_GENERATION_PART_MASK = ~ENTITY_ID_PART_MASK;
 
 // Entity
 // ------------------------------------------------------------------------------------------------
@@ -60,7 +60,7 @@ struct Entity final {
 	// Members
 	// --------------------------------------------------------------------------------------------
 
-	uint32_t rawBits = 0;
+	u32 rawBits = 0;
 
 	// Construtors & destructors
 	// --------------------------------------------------------------------------------------------
@@ -70,19 +70,19 @@ struct Entity final {
 	Entity& operator= (const Entity&) noexcept = default;
 	~Entity() noexcept = default;
 
-	static Entity create(uint32_t id, uint8_t generation) noexcept
+	static Entity create(u32 id, u8 generation) noexcept
 	{
 		sfz_assert(id == (id & ENTITY_ID_PART_MASK));
 		Entity tmp;
-		tmp.rawBits = (uint32_t(generation) << ENTITY_ID_NUM_BITS) | (id & ENTITY_ID_PART_MASK);
+		tmp.rawBits = (u32(generation) << ENTITY_ID_NUM_BITS) | (id & ENTITY_ID_PART_MASK);
 		return tmp;
 	}
 
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
-	uint32_t id() const noexcept { return rawBits & ENTITY_ID_PART_MASK; }
-	uint8_t generation() const noexcept { return uint8_t((rawBits & ENTITY_GENERATION_PART_MASK) >> ENTITY_ID_NUM_BITS); }
+	u32 id() const noexcept { return rawBits & ENTITY_ID_PART_MASK; }
+	u8 generation() const noexcept { return u8((rawBits & ENTITY_GENERATION_PART_MASK) >> ENTITY_ID_NUM_BITS); }
 
 	// Operators
 	// --------------------------------------------------------------------------------------------

@@ -32,7 +32,7 @@ namespace sfz {
 // A RingBuffer (circular buffer, double ended queue).
 //
 // Implemented using "infinite" indexes, i.e. under the assumption that the read/write indices can
-// become infinitely large. Since they are uint64_t, this is of course not the case. In practice
+// become infinitely large. Since they are u64, this is of course not the case. In practice
 // this should never become a problem, as it would take several years of runtime to overflow if you
 // move many billions of elements per second through the buffer.
 //
@@ -43,14 +43,14 @@ namespace sfz {
 template<typename T>
 class RingBuffer final {
 public:
-	static constexpr uint64_t BASE_IDX = (UINT64_MAX >> uint64_t(1)) + uint64_t(1);
+	static constexpr u64 BASE_IDX = (UINT64_MAX >> u64(1)) + u64(1);
 
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
 	SFZ_DECLARE_DROP_TYPE(RingBuffer);
 
-	RingBuffer(uint64_t capacity, SfzAllocator* allocator, SfzDbgInfo allocDbg) noexcept
+	RingBuffer(u64 capacity, SfzAllocator* allocator, SfzDbgInfo allocDbg) noexcept
 	{
 		this->create(capacity, allocator, allocDbg);
 	}
@@ -58,7 +58,7 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void create(uint64_t capacity, SfzAllocator* allocator, SfzDbgInfo allocDbg)
+	void create(u64 capacity, SfzAllocator* allocator, SfzDbgInfo allocDbg)
 	{
 		this->destroy();
 		if (capacity == 0) return;
@@ -67,7 +67,7 @@ public:
 		mAllocator = allocator;
 		mCapacity = capacity;
 		mDataPtr = reinterpret_cast<T*>(mAllocator->alloc(
-			allocDbg, mCapacity * sizeof(T), sfz::max(32u, uint32_t(alignof(T)))));
+			allocDbg, mCapacity * sizeof(T), sfz::max(32u, u32(alignof(T)))));
 	}
 
 	void destroy()
@@ -82,7 +82,7 @@ public:
 
 	void clear()
 	{
-		for (uint64_t i = mFirstIndex, len = mLastIndex; i < len; i++) {
+		for (u64 i = mFirstIndex, len = mLastIndex; i < len; i++) {
 			mDataPtr[mapIndex(i)].~T();
 		}
 		mFirstIndex = BASE_IDX;
@@ -92,13 +92,13 @@ public:
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
-	uint64_t size() const { return mLastIndex - mFirstIndex; }
-	uint64_t capacity() const { return mCapacity; }
+	u64 size() const { return mLastIndex - mFirstIndex; }
+	u64 capacity() const { return mCapacity; }
 	SfzAllocator* allocator() const { return mAllocator; }
 
 	// Access element in range [0, size), undefined if index is not valid.
-	T& operator[] (uint64_t index) { sfz_assert(index < size()); return mDataPtr[mapIndex(mFirstIndex + index)]; }
-	const T& operator[] (uint64_t index) const { sfz_assert(index < size()); return mDataPtr[mapIndex(mFirstIndex + index)]; }
+	T& operator[] (u64 index) { sfz_assert(index < size()); return mDataPtr[mapIndex(mFirstIndex + index)]; }
+	const T& operator[] (u64 index) const { sfz_assert(index < size()); return mDataPtr[mapIndex(mFirstIndex + index)]; }
 
 	// Accesses the first (first inserted, low index) or last (last inserted, high index) element.
 	T& first() { sfz_assert(mCapacity != 0); return mDataPtr[mapIndex(mFirstIndex)]; }
@@ -136,7 +136,7 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	// Maps an "infinite" index into an index into the data array
-	uint64_t mapIndex(uint64_t index) const { return index % mCapacity; }
+	u64 mapIndex(u64 index) const { return index % mCapacity; }
 
 	template<typename PerfectT>
 	bool addInternal(PerfectT&& value)
@@ -144,8 +144,8 @@ private:
 		if (mCapacity == 0) return false;
 
 		// Map indices
-		uint64_t firstArrayIndex = mapIndex(mFirstIndex);
-		uint64_t lastArrayIndex = mapIndex(mLastIndex);
+		u64 firstArrayIndex = mapIndex(mFirstIndex);
+		u64 lastArrayIndex = mapIndex(mLastIndex);
 
 		// Don't insert if buffer is full
 		if (firstArrayIndex == lastArrayIndex) {
@@ -167,8 +167,8 @@ private:
 		if (mCapacity == 0) return false;
 
 		// Map indices
-		uint64_t firstArrayIndex = mapIndex(mFirstIndex);
-		uint64_t lastArrayIndex = mapIndex(mLastIndex);
+		u64 firstArrayIndex = mapIndex(mFirstIndex);
+		u64 lastArrayIndex = mapIndex(mLastIndex);
 
 		// Don't insert if buffer is full
 		if (firstArrayIndex == lastArrayIndex) {
@@ -191,7 +191,7 @@ private:
 		if (mFirstIndex == mLastIndex) return false;
 
 		// Move out element and call destructor.
-		uint64_t firstArrayIndex = mapIndex(mFirstIndex);
+		u64 firstArrayIndex = mapIndex(mFirstIndex);
 		if (out != nullptr) *out = std::move(mDataPtr[firstArrayIndex]);
 		mDataPtr[firstArrayIndex].~T();
 
@@ -207,7 +207,7 @@ private:
 		if (mFirstIndex == mLastIndex) return false;
 
 		// Map index to array
-		uint64_t lastArrayIndex = mapIndex(mLastIndex - 1);
+		u64 lastArrayIndex = mapIndex(mLastIndex - 1);
 
 		// Move out element and call destructor.
 		if (out != nullptr) *out = std::move(mDataPtr[lastArrayIndex]);
@@ -224,7 +224,7 @@ private:
 
 	SfzAllocator* mAllocator = nullptr;
 	T* mDataPtr = nullptr;
-	uint64_t mCapacity = 0;
+	u64 mCapacity = 0;
 	std::atomic_uint64_t mFirstIndex{BASE_IDX};
 	std::atomic_uint64_t mLastIndex{BASE_IDX};
 };

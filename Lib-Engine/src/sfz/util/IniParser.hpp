@@ -18,9 +18,9 @@
 
 #pragma once
 
-#include <cstdint>
 #include <limits>
 
+#include <sfz.h>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_strings.hpp>
 
@@ -28,9 +28,7 @@
 
 namespace sfz {
 
-using std::int32_t;
 using std::numeric_limits;
-using std::uint32_t;
 
 // IniParser class
 // ------------------------------------------------------------------------------------------------
@@ -123,7 +121,7 @@ public:
 
 	class ItemAccessor final {
 	public:
-		ItemAccessor(IniParser& iniParser, uint32_t sectionIndex, uint32_t keyIndex) noexcept;
+		ItemAccessor(IniParser& iniParser, u32 sectionIndex, u32 keyIndex) noexcept;
 		ItemAccessor(const ItemAccessor&) noexcept = default;
 		ItemAccessor& operator= (const ItemAccessor&) noexcept = default;
 
@@ -135,13 +133,13 @@ public:
 
 	private:
 		IniParser* mIniParser = nullptr;
-		uint32_t mSectionIndex = uint32_t(~0);
-		uint32_t mKeyIndex = uint32_t(~0);
+		u32 mSectionIndex = u32(~0);
+		u32 mKeyIndex = u32(~0);
 	};
 
 	class Iterator final {
 	public:
-		Iterator(IniParser& iniParser, uint32_t sectionIndex, uint32_t keyIndex) noexcept;
+		Iterator(IniParser& iniParser, u32 sectionIndex, u32 keyIndex) noexcept;
 		Iterator(const Iterator&) noexcept = default;
 		Iterator& operator= (const Iterator&) noexcept = default;
 
@@ -153,8 +151,8 @@ public:
 
 	private:
 		IniParser* mIniParser = nullptr;
-		uint32_t mSectionIndex = uint32_t(~0);
-		uint32_t mKeyIndex = uint32_t(~0);
+		u32 mSectionIndex = u32(~0);
+		u32 mKeyIndex = u32(~0);
 	};
 
 	Iterator begin() noexcept;
@@ -164,7 +162,7 @@ private:
 	// Private helper classes
 	// --------------------------------------------------------------------------------------------
 
-	enum class ItemType : uint32_t {
+	enum class ItemType : u32 {
 		NUMBER, // int and/or float
 		BOOL,
 		COMMENT_OWN_ROW,

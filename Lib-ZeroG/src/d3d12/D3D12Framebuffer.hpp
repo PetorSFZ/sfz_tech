@@ -52,11 +52,11 @@ public:
 	SwapchainBacking swapchain;
 
 	// Dimensions
-	uint32_t width = 0;
-	uint32_t height = 0;
+	u32 width = 0;
+	u32 height = 0;
 
 	// Render targets
-	uint32_t numRenderTargets = 0;
+	u32 numRenderTargets = 0;
 	ZgTexture* renderTargets[ZG_MAX_NUM_RENDER_TARGETS] = {};
 	ComPtr<ID3D12DescriptorHeap> descriptorHeapRTV;
 	D3D12_CPU_DESCRIPTOR_HANDLE renderTargetDescriptors[ZG_MAX_NUM_RENDER_TARGETS] = {};
@@ -72,7 +72,7 @@ public:
 	// Virtual methods
 	// --------------------------------------------------------------------------------------------
 
-	ZgResult getResolution(uint32_t& widthOut, uint32_t& heightOut) const noexcept
+	ZgResult getResolution(u32& widthOut, u32& heightOut) const noexcept
 	{
 		widthOut = this->width;
 		heightOut = this->height;
@@ -89,8 +89,8 @@ inline ZgResult createFramebuffer(
 	const ZgFramebufferCreateInfo& createInfo) noexcept
 {
 	// Get dimensions from first available texture
-	uint32_t width = 0;
-	uint32_t height = 0;
+	u32 width = 0;
+	u32 height = 0;
 	if (createInfo.numRenderTargets > 0) {
 		ZgTexture* renderTarget = createInfo.renderTargets[0];
 		width = renderTarget->width;
@@ -109,7 +109,7 @@ inline ZgResult createFramebuffer(
 	sfz_assert(height != 0);
 
 	// Check inputs
-	for (uint32_t i = 0; i < createInfo.numRenderTargets; i++) {
+	for (u32 i = 0; i < createInfo.numRenderTargets; i++) {
 		ZG_ARG_CHECK(createInfo.renderTargets[i] == nullptr, "");
 		ZgTexture* renderTarget = createInfo.renderTargets[i];
 		ZG_ARG_CHECK(renderTarget->usage != ZG_TEXTURE_USAGE_RENDER_TARGET,
@@ -144,7 +144,7 @@ inline ZgResult createFramebuffer(
 		}
 
 		// Get size of descriptor
-		uint32_t descriptorSizeRTV =
+		u32 descriptorSizeRTV =
 			device.GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 		// Get first descriptor in heap
@@ -152,7 +152,7 @@ inline ZgResult createFramebuffer(
 			descriptorHeapRTV->GetCPUDescriptorHandleForHeapStart();
 
 		// Create render target views (RTVs) for render targets
-		for (uint32_t i = 0; i < createInfo.numRenderTargets; i++) {
+		for (u32 i = 0; i < createInfo.numRenderTargets; i++) {
 
 			// Get texture
 			ZgTexture* texture = createInfo.renderTargets[i];
@@ -213,7 +213,7 @@ inline ZgResult createFramebuffer(
 
 	framebuffer->numRenderTargets = createInfo.numRenderTargets;
 	framebuffer->descriptorHeapRTV = descriptorHeapRTV;
-	for (uint32_t i = 0; i < createInfo.numRenderTargets; i++) {
+	for (u32 i = 0; i < createInfo.numRenderTargets; i++) {
 		framebuffer->renderTargets[i] = createInfo.renderTargets[i];
 		framebuffer->renderTargetDescriptors[i] = descriptorsRTV[i];
 		framebuffer->renderTargetOptimalClearValues[i] = framebuffer->renderTargets[i]->optimalClearValue;

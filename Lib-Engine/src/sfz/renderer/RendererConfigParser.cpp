@@ -156,8 +156,8 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 
 	// Render pipelines
 	JsonNode renderPipelinesNode = root.accessMap("render_pipelines");
-	uint32_t numRenderPipelines = renderPipelinesNode.arrayLength();
-	for (uint32_t pipelineIdx = 0; pipelineIdx < numRenderPipelines; pipelineIdx++) {
+	u32 numRenderPipelines = renderPipelinesNode.arrayLength();
+	for (u32 pipelineIdx = 0; pipelineIdx < numRenderPipelines; pipelineIdx++) {
 
 		JsonNode pipelineNode = renderPipelinesNode.accessArray(pipelineIdx);
 		Shader shader = {};
@@ -186,19 +186,19 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 			if (!shader.render.inputLayout.standardVertexLayout) {
 
 				shader.render.inputLayout.vertexSizeBytes =
-					uint32_t(CHECK_JSON inputLayoutNode.accessMap("vertex_size_bytes").valueInt());
+					u32(CHECK_JSON inputLayoutNode.accessMap("vertex_size_bytes").valueInt());
 
 				JsonNode attributesNode = inputLayoutNode.accessMap("attributes");
-				const uint32_t numAttributes = attributesNode.arrayLength();
-				for (uint32_t i = 0; i < numAttributes; i++) {
+				const u32 numAttributes = attributesNode.arrayLength();
+				for (u32 i = 0; i < numAttributes; i++) {
 					JsonNode attribNode = attributesNode.accessArray(i);
 					ZgVertexAttribute& attrib = shader.render.inputLayout.attributes.add();
-					attrib.location = uint32_t(CHECK_JSON attribNode.accessMap("location").valueInt());
+					attrib.location = u32(CHECK_JSON attribNode.accessMap("location").valueInt());
 					attrib.vertexBufferSlot = 0;
 					attrib.type =
 						attributeTypeFromString(CHECK_JSON attribNode.accessMap("type").valueStr256());
 					attrib.offsetToFirstElementInBytes =
-						uint32_t(CHECK_JSON attribNode.accessMap("offset_in_struct_bytes").valueInt());
+						u32(CHECK_JSON attribNode.accessMap("offset_in_struct_bytes").valueInt());
 				}
 			}
 		}
@@ -206,18 +206,18 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		// Push constants registers if specified
 		JsonNode pushConstantsNode = pipelineNode.accessMap("push_constant_registers");
 		if (pushConstantsNode.isValid()) {
-			uint32_t numPushConstants = pushConstantsNode.arrayLength();
-			for (uint32_t j = 0; j < numPushConstants; j++) {
+			u32 numPushConstants = pushConstantsNode.arrayLength();
+			for (u32 j = 0; j < numPushConstants; j++) {
 				shader.pushConstRegisters.add(
-					(uint32_t)(CHECK_JSON pushConstantsNode.accessArray(j).valueInt()));
+					(u32)(CHECK_JSON pushConstantsNode.accessArray(j).valueInt()));
 			}
 		}
 
 		// Samplers
 		JsonNode samplersNode = pipelineNode.accessMap("samplers");
 		if (samplersNode.isValid()) {
-			uint32_t numSamplers = samplersNode.arrayLength();
-			for (uint32_t j = 0; j < numSamplers; j++) {
+			u32 numSamplers = samplersNode.arrayLength();
+			for (u32 j = 0; j < numSamplers; j++) {
 				JsonNode node = samplersNode.accessArray(j);
 				SamplerItem& sampler = shader.samplers.add();
 				sampler.samplerRegister = CHECK_JSON node.accessMap("register").valueInt();
@@ -237,8 +237,8 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		// Render targets
 		JsonNode renderTargetsNode = pipelineNode.accessMap("render_targets");
 		sfz_assert(renderTargetsNode.isValid());
-		uint32_t numRenderTargets = renderTargetsNode.arrayLength();
-		for (uint32_t j = 0; j < numRenderTargets; j++) {
+		u32 numRenderTargets = renderTargetsNode.arrayLength();
+		for (u32 j = 0; j < numRenderTargets; j++) {
 			shader.render.renderTargets.add(
 				textureFormatFromString(CHECK_JSON renderTargetsNode.accessArray(j).valueStr256()));
 		}
@@ -293,8 +293,8 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 
 	// Compute pipelines
 	JsonNode computePipelinesNode = root.accessMap("compute_pipelines");
-	uint32_t numComputePipelines = computePipelinesNode.arrayLength();
-	for (uint32_t i = 0; i < numComputePipelines; i++) {
+	u32 numComputePipelines = computePipelinesNode.arrayLength();
+	for (u32 i = 0; i < numComputePipelines; i++) {
 		
 		JsonNode pipelineNode = computePipelinesNode.accessArray(i);
 		Shader shader = {};
@@ -313,18 +313,18 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		// Push constants registers if specified
 		JsonNode pushConstantsNode = pipelineNode.accessMap("push_constant_registers");
 		if (pushConstantsNode.isValid()) {
-			uint32_t numPushConstants = pushConstantsNode.arrayLength();
-			for (uint32_t j = 0; j < numPushConstants; j++) {
+			u32 numPushConstants = pushConstantsNode.arrayLength();
+			for (u32 j = 0; j < numPushConstants; j++) {
 				shader.pushConstRegisters.add(
-					(uint32_t)(CHECK_JSON pushConstantsNode.accessArray(j).valueInt()));
+					(u32)(CHECK_JSON pushConstantsNode.accessArray(j).valueInt()));
 			}
 		}
 
 		// Samplers
 		JsonNode samplersNode = pipelineNode.accessMap("samplers");
 		if (samplersNode.isValid()) {
-			uint32_t numSamplers = samplersNode.arrayLength();
-			for (uint32_t j = 0; j < numSamplers; j++) {
+			u32 numSamplers = samplersNode.arrayLength();
+			for (u32 j = 0; j < numSamplers; j++) {
 				JsonNode node = samplersNode.accessArray(j);
 				SamplerItem& sampler = shader.samplers.add();
 				sampler.samplerRegister = CHECK_JSON node.accessMap("register").valueInt();

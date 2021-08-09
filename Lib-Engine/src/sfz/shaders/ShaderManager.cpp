@@ -59,18 +59,18 @@ bool Shader::build() noexcept
 		}
 
 		// Set push constants
-		for (uint32_t i = 0; i < pushConstRegisters.size(); i++) {
+		for (u32 i = 0; i < pushConstRegisters.size(); i++) {
 			pipelineBuilder.addPushConstant(pushConstRegisters[i]);
 		}
 
 		// Samplers
-		for (uint32_t i = 0; i < samplers.size(); i++) {
+		for (u32 i = 0; i < samplers.size(); i++) {
 			SamplerItem& sampler = samplers[i];
 			pipelineBuilder.addSampler(sampler.samplerRegister, sampler.sampler);
 		}
 
 		// Render targets
-		for (uint32_t i = 0; i < render.renderTargets.size(); i++) {
+		for (u32 i = 0; i < render.renderTargets.size(); i++) {
 			pipelineBuilder.addRenderTarget(render.renderTargets[i]);
 		}
 
@@ -133,12 +133,12 @@ bool Shader::build() noexcept
 			.addComputeShaderPath(compute.computeShaderEntry, shaderPath);
 
 		// Set push constants
-		for (uint32_t i = 0; i < pushConstRegisters.size(); i++) {
+		for (u32 i = 0; i < pushConstRegisters.size(); i++) {
 			pipelineBuilder.addPushConstant(pushConstRegisters[i]);
 		}
 
 		// Samplers
-		for (uint32_t i = 0; i < samplers.size(); i++) {
+		for (u32 i = 0; i < samplers.size(); i++) {
 			SamplerItem& sampler = samplers[i];
 			pipelineBuilder.addSampler(sampler.samplerRegister, sampler.sampler);
 		}
@@ -162,7 +162,7 @@ bool Shader::build() noexcept
 // ShaderManager
 // ------------------------------------------------------------------------------------------------
 
-void ShaderManager::init(uint32_t maxNumShaders, SfzAllocator* allocator) noexcept
+void ShaderManager::init(u32 maxNumShaders, SfzAllocator* allocator) noexcept
 {
 	sfz_assert(mState == nullptr);
 	mState = sfz_new<ShaderManagerState>(allocator, sfz_dbg(""));

@@ -28,7 +28,7 @@ namespace sfz {
 // ArrayHeader: Constructor functions
 // ------------------------------------------------------------------------------------------------
 
-void ArrayHeader::createUntyped(uint32_t capacityIn, uint32_t elementSizeIn) noexcept
+void ArrayHeader::createUntyped(u32 capacityIn, u32 elementSizeIn) noexcept
 {
 	memset(this, 0, sizeof(ArrayHeader));
 	this->size = 0;
@@ -39,13 +39,13 @@ void ArrayHeader::createUntyped(uint32_t capacityIn, uint32_t elementSizeIn) noe
 // ArrayHeader: Methods
 // ------------------------------------------------------------------------------------------------
 
-void ArrayHeader::addUntyped(const uint8_t* data, uint32_t numBytes) noexcept
+void ArrayHeader::addUntyped(const u8* data, u32 numBytes) noexcept
 {
 	sfz_assert(numBytes == this->elementSize);
 	sfz_assert(this->size < this->capacity);
 
 	// Add element to array and increment size
-	uint8_t* dstPtr = atUntyped(this->size);
+	u8* dstPtr = atUntyped(this->size);
 	memcpy(dstPtr, data, numBytes);
 	this->size += 1;
 }
@@ -55,16 +55,16 @@ void ArrayHeader::pop() noexcept
 	sfz_assert(0 < this->size);
 
 	// Clear element and decrement size pointer
-	uint8_t* dstPtr = atUntyped(this->size - 1);
+	u8* dstPtr = atUntyped(this->size - 1);
 	memset(dstPtr, 0, this->elementSize);
 	this->size -= 1;
 }
 
-bool ArrayHeader::popGetUntyped(uint8_t* dst) noexcept
+bool ArrayHeader::popGetUntyped(u8* dst) noexcept
 {
 	if (0 == this->size) return false;
 
-	uint8_t* src = atUntyped(this->size - 1);
+	u8* src = atUntyped(this->size - 1);
 	memcpy(dst, src, this->elementSize);
 	memset(src, 0, this->elementSize);
 	this->size -= 1;

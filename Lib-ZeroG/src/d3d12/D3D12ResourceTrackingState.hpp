@@ -61,7 +61,7 @@ struct PendingTextureState final {
 	ZgTexture* texture = nullptr;
 
 	// The mip level of the associated texture
-	uint32_t mipLevel = ~0u;
+	u32 mipLevel = ~0u;
 
 	// The state the resource need to be in before the command list is executed
 	D3D12_RESOURCE_STATES neededInitialState = D3D12_RESOURCE_STATE_COMMON;
@@ -72,23 +72,23 @@ struct PendingTextureState final {
 
 struct TextureMip {
 	ZgTexture* tex = nullptr;
-	uint32_t mipLevel = ~0u;
+	u32 mipLevel = ~0u;
 
 	TextureMip() = default;
 	TextureMip(const TextureMip&) = default;
 	TextureMip& operator= (const TextureMip&) = default;
 
-	TextureMip(ZgTexture* tex, uint32_t mipLevel) : tex(tex), mipLevel(mipLevel) {}
+	TextureMip(ZgTexture* tex, u32 mipLevel) : tex(tex), mipLevel(mipLevel) {}
 
 	bool operator== (TextureMip other) const { return this->tex == other.tex && this->mipLevel == other.mipLevel; }
 	bool operator!= (TextureMip other) const { return !(*this == other); }
 };
 
 namespace sfz {
-	inline uint64_t hash(const TextureMip& val)
+	inline u64 hash(const TextureMip& val)
 	{
 		// hash_combine algorithm from boost
-		uint64_t hash = 0;
+		u64 hash = 0;
 		hash ^= sfz::hash(val.tex) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
 		hash ^= sfz::hash(val.mipLevel) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
 		return hash;

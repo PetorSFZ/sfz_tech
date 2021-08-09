@@ -30,21 +30,21 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 struct SingletonInfo final {
-	uint32_t singletonIndex = ~0u;
+	u32 singletonIndex = ~0u;
 	str80 singletonName;
 	void(*singletonEditor)(
-		uint8_t* userPtr, uint8_t* singletonData, GameStateHeader* state) = nullptr;
-	sfz::UniquePtr<uint8_t> userPtr;
+		u8* userPtr, u8* singletonData, GameStateHeader* state) = nullptr;
+	sfz::UniquePtr<u8> userPtr;
 	// ^^^ Above is a bit of a hack. User ptr  may NOT have a non-trival destructor (i.e. must
 	// be POD) because the destructor will never be called.
 };
 
 struct ComponentInfo final {
-	uint32_t componentType = ~0u;
+	u32 componentType = ~0u;
 	str80 componentName;
 	void(*componentEditor)(
-		uint8_t* userPtr, uint8_t* componentData, GameStateHeader* state, uint32_t entity) = nullptr;
-	sfz::UniquePtr<uint8_t> userPtr;
+		u8* userPtr, u8* componentData, GameStateHeader* state, u32 entity) = nullptr;
+	sfz::UniquePtr<u8> userPtr;
 	// ^^^ Above is a bit of a hack. User ptr  may NOT have a non-trival destructor (i.e. must
 	// be POD) because the destructor will never be called.
 };
@@ -70,9 +70,9 @@ public:
 	void init(
 		const char* windowName,
 		SingletonInfo* singletonInfos,
-		uint32_t numSingletonInfos,
+		u32 numSingletonInfos,
 		ComponentInfo* componentInfos,
-		uint32_t numComponentInfos,
+		u32 numComponentInfos,
 		SfzAllocator* allocator);
 	void swap(GameStateEditor& other) noexcept;
 	void destroy() noexcept;
@@ -98,26 +98,26 @@ private:
 	struct ReducedSingletonInfo final {
 		str80 singletonName;
 		void(*singletonEditor)(
-			uint8_t* userPtr, uint8_t* singletonData, GameStateHeader* state) = nullptr;
-		sfz::UniquePtr<uint8_t> userPtr;
+			u8* userPtr, u8* singletonData, GameStateHeader* state) = nullptr;
+		sfz::UniquePtr<u8> userPtr;
 	};
 
 	struct ReducedComponentInfo {
 		str80 componentName;
 		void(*componentEditor)(
-			uint8_t* userPtr, uint8_t* componentData, GameStateHeader* state, uint32_t entity) = nullptr;
-		sfz::UniquePtr<uint8_t> userPtr;
+			u8* userPtr, u8* componentData, GameStateHeader* state, u32 entity) = nullptr;
+		sfz::UniquePtr<u8> userPtr;
 	};
 
 	str80 mWindowName;
 	ReducedSingletonInfo mSingletonInfos[64] = {};
 	ReducedComponentInfo mComponentInfos[64] = {};
-	uint32_t mNumSingletonInfos = 0;
-	uint32_t mNumComponentInfos = 0;
+	u32 mNumSingletonInfos = 0;
+	u32 mNumComponentInfos = 0;
 	CompMask mFilterMask = CompMask::activeMask();
 	str32 mFilterMaskEditBuffers[8];
 	bool mCompactEntityList = false;
-	uint32_t mCurrentSelectedEntityId = 0;
+	u32 mCurrentSelectedEntityId = 0;
 };
 
 } // namespace sfz

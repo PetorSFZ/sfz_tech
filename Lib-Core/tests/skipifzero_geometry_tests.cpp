@@ -40,9 +40,9 @@ UTEST(AABB, ray_vs_aabb)
 
 		{
 			Ray ray = Ray(vec3(0.0f), vec3(1.0f, 0.0f, 0.0f));
-			float tMin = sfz::RAY_MAX_DIST;
-			float tMax = -sfz::RAY_MAX_DIST;
-			const float t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
+			f32 tMin = sfz::RAY_MAX_DIST;
+			f32 tMax = -sfz::RAY_MAX_DIST;
+			const f32 t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
 			ASSERT_TRUE(eqf(t, 0.0f));
 			ASSERT_TRUE(eqf(tMin, -0.5f));
 			ASSERT_TRUE(eqf(tMax, 0.5f));
@@ -50,9 +50,9 @@ UTEST(AABB, ray_vs_aabb)
 
 		{
 			Ray ray = Ray(vec3(0.0f, 2.0f, 0.0f), vec3(0.0f, -1.0f, 0.0f));
-			float tMin = sfz::RAY_MAX_DIST;
-			float tMax = -sfz::RAY_MAX_DIST;
-			const float t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
+			f32 tMin = sfz::RAY_MAX_DIST;
+			f32 tMax = -sfz::RAY_MAX_DIST;
+			const f32 t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
 			ASSERT_TRUE(eqf(t, 1.5f));
 			ASSERT_TRUE(eqf(tMin, 1.5f));
 			ASSERT_TRUE(eqf(tMax, 2.5f));
@@ -60,9 +60,9 @@ UTEST(AABB, ray_vs_aabb)
 
 		{
 			Ray ray = Ray(vec3(0.0f, 2.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-			float tMin = sfz::RAY_MAX_DIST;
-			float tMax = -sfz::RAY_MAX_DIST;
-			const float t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
+			f32 tMin = sfz::RAY_MAX_DIST;
+			f32 tMax = -sfz::RAY_MAX_DIST;
+			const f32 t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
 			ASSERT_TRUE(eqf(t, -1.0f));
 			ASSERT_TRUE(eqf(tMax, -1.5f));
 			ASSERT_TRUE(eqf(tMin, -2.5f));
@@ -70,9 +70,9 @@ UTEST(AABB, ray_vs_aabb)
 
 		{
 			Ray ray = Ray(vec3(-1.0f, 0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), 0.49999f);
-			float tMin = sfz::RAY_MAX_DIST;
-			float tMax = -sfz::RAY_MAX_DIST;
-			const float t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
+			f32 tMin = sfz::RAY_MAX_DIST;
+			f32 tMax = -sfz::RAY_MAX_DIST;
+			const f32 t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
 			ASSERT_TRUE(eqf(t, -1.0f));
 			ASSERT_TRUE(eqf(tMin, 0.5f));
 			ASSERT_TRUE(eqf(tMax, 1.5f));
@@ -80,9 +80,9 @@ UTEST(AABB, ray_vs_aabb)
 
 		{
 			Ray ray = Ray(vec3(-1.0f, 0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), 1.0f);
-			float tMin = sfz::RAY_MAX_DIST;
-			float tMax = -sfz::RAY_MAX_DIST;
-			const float t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
+			f32 tMin = sfz::RAY_MAX_DIST;
+			f32 tMax = -sfz::RAY_MAX_DIST;
+			const f32 t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
 			ASSERT_TRUE(eqf(t, 0.5f));
 			ASSERT_TRUE(eqf(tMin, 0.5f));
 			ASSERT_TRUE(eqf(tMax, 1.5f));
@@ -90,9 +90,9 @@ UTEST(AABB, ray_vs_aabb)
 
 		{
 			Ray ray = Ray(aabb.max, vec3(0.0f, 0.0f, -1.0f));
-			float tMin = sfz::RAY_MAX_DIST;
-			float tMax = -sfz::RAY_MAX_DIST;
-			const float t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
+			f32 tMin = sfz::RAY_MAX_DIST;
+			f32 tMax = -sfz::RAY_MAX_DIST;
+			const f32 t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
 			ASSERT_TRUE(eqf(t, 0.0f));
 			ASSERT_TRUE(eqf(tMin, 0.0f));
 			ASSERT_TRUE(eqf(tMax, 0.0f));
@@ -104,9 +104,9 @@ UTEST(AABB, ray_vs_aabb)
 
 		{
 			Ray ray = Ray(vec3(0.0f), sfz::normalize(vec3(1.0f)));
-			float tMin = sfz::RAY_MAX_DIST;
-			float tMax = -sfz::RAY_MAX_DIST;
-			const float t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
+			f32 tMin = sfz::RAY_MAX_DIST;
+			f32 tMax = -sfz::RAY_MAX_DIST;
+			const f32 t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
 			ASSERT_TRUE(eqf(t, 0.0f));
 			ASSERT_TRUE(eqf(tMin, 0.0f));
 			ASSERT_TRUE(eqf(tMax, 3.46410161f));
@@ -114,9 +114,9 @@ UTEST(AABB, ray_vs_aabb)
 
 		{
 			Ray ray = Ray(vec3(2.0f), sfz::normalize(vec3(-1.0f)));
-			float tMin = sfz::RAY_MAX_DIST;
-			float tMax = -sfz::RAY_MAX_DIST;
-			const float t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
+			f32 tMin = sfz::RAY_MAX_DIST;
+			f32 tMax = -sfz::RAY_MAX_DIST;
+			const f32 t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
 			ASSERT_TRUE(eqf(t, 0.0f));
 			ASSERT_TRUE(eqf(tMin, 0.0f));
 			ASSERT_TRUE(eqf(tMax, 3.46410161f));
@@ -124,9 +124,9 @@ UTEST(AABB, ray_vs_aabb)
 
 		{
 			Ray ray = Ray(vec3(2.0f, 2.0f, 4.0f - 0.00001f), sfz::normalize(vec3(-1.0f)));
-			float tMin = sfz::RAY_MAX_DIST;
-			float tMax = -sfz::RAY_MAX_DIST;
-			const float t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
+			f32 tMin = sfz::RAY_MAX_DIST;
+			f32 tMax = -sfz::RAY_MAX_DIST;
+			const f32 t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
 			ASSERT_TRUE(eqf(t, 3.46410161f));
 			ASSERT_TRUE(eqf(tMin, 3.46410161f, 0.01f));
 			ASSERT_TRUE(eqf(tMax, 3.46410161f, 0.01f));
@@ -134,9 +134,9 @@ UTEST(AABB, ray_vs_aabb)
 
 		{
 			Ray ray = Ray(vec3(2.0f, 2.0f, 4.0f + 0.00001f), sfz::normalize(vec3(-1.0f)));
-			float tMin = sfz::RAY_MAX_DIST;
-			float tMax = -sfz::RAY_MAX_DIST;
-			const float t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
+			f32 tMin = sfz::RAY_MAX_DIST;
+			f32 tMax = -sfz::RAY_MAX_DIST;
+			const f32 t = sfz::rayVsAABB(ray, aabb, &tMin, &tMax);
 			ASSERT_TRUE(eqf(t, -1.0f));
 			ASSERT_TRUE(eqf(tMin, 3.46410161f, 0.01f));
 			ASSERT_TRUE(eqf(tMax, 3.46410161f, 0.01f));

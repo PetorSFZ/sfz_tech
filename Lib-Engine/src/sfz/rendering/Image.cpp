@@ -87,49 +87,49 @@ using sfz::str320;
 // Static helper functions
 // ------------------------------------------------------------------------------------------------
 
-static void padRgb(Array<uint8_t>& dst, const uint8_t* src, int32_t w, int32_t h) noexcept
+static void padRgb(Array<u8>& dst, const u8* src, i32 w, i32 h) noexcept
 {
-	const int32_t srcPitch = w * 3;
-	const int32_t dstPitch = w * 4;
+	const i32 srcPitch = w * 3;
+	const i32 dstPitch = w * 4;
 
 	dst.ensureCapacity(h * dstPitch);
 	dst.hackSetSize(h * dstPitch);
 
-	for (int32_t y = 0; y < h; y++) {
-		int32_t srcOffs = y * srcPitch;
-		int32_t dstOffs = y * dstPitch;
+	for (i32 y = 0; y < h; y++) {
+		i32 srcOffs = y * srcPitch;
+		i32 dstOffs = y * dstPitch;
 
-		for (int32_t x = 0; x < w; x++) {
+		for (i32 x = 0; x < w; x++) {
 			dst[dstOffs + x * 4] = src[srcOffs + x * 3];
 			dst[dstOffs + x * 4 + 1] = src[srcOffs + x * 3 + 1];
 			dst[dstOffs + x * 4 + 2] = src[srcOffs + x * 3 + 2];
-			dst[dstOffs + x * 4 + 3] = uint8_t(0xFF);
+			dst[dstOffs + x * 4 + 3] = u8(0xFF);
 		}
 	}
 }
 
-static void padRgbFloat(vec4* dstImg, const vec3* srcImg, int32_t w, int32_t h) noexcept
+static void padRgbFloat(vec4* dstImg, const vec3* srcImg, i32 w, i32 h) noexcept
 {
-	for (int32_t y = 0; y < h; y++) {
+	for (i32 y = 0; y < h; y++) {
 		vec4* dstRow = dstImg + w * y;
 		const vec3* srcRow = srcImg + w * y;
-		for (int32_t x = 0; x < w; x++) {
+		for (i32 x = 0; x < w; x++) {
 			dstRow[x] = vec4(srcRow[x], 1.0f);
 		}
 	}
 }
 
-static uint32_t sizeOfElement(ImageType imageType) noexcept
+static u32 sizeOfElement(ImageType imageType) noexcept
 {
 	switch (imageType) {
 	case ImageType::UNDEFINED: return 0;
-	case ImageType::R_U8: return 1 * sizeof(uint8_t);
-	case ImageType::RG_U8: return 2 * sizeof(uint8_t);
-	case ImageType::RGBA_U8: return 4 * sizeof(uint8_t);
+	case ImageType::R_U8: return 1 * sizeof(u8);
+	case ImageType::RG_U8: return 2 * sizeof(u8);
+	case ImageType::RGBA_U8: return 4 * sizeof(u8);
 
-	case ImageType::R_F32: return 1 * sizeof(float);
-	case ImageType::RG_F32: return 2 * sizeof(float);
-	case ImageType::RGBA_F32: return 4 * sizeof(float);
+	case ImageType::R_F32: return 1 * sizeof(f32);
+	case ImageType::RG_F32: return 2 * sizeof(f32);
+	case ImageType::RGBA_F32: return 4 * sizeof(f32);
 	}
 	sfz_assert(false);
 	return 0;
@@ -138,7 +138,7 @@ static uint32_t sizeOfElement(ImageType imageType) noexcept
 // Implementations of functions from header
 // ------------------------------------------------------------------------------------------------
 
-Image Image::allocate(int32_t width, int32_t height, ImageType type, SfzAllocator* allocator) noexcept
+Image Image::allocate(i32 width, i32 height, ImageType type, SfzAllocator* allocator) noexcept
 {
 	Image image;
 	image.type = type;
@@ -176,15 +176,15 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 	const bool isHDR = path.endsWith(".hdr");
 	int width = 0, height = 0, numChannels = 0;
 	int channelSize = 0;
-	uint8_t* img = nullptr;
+	u8* img = nullptr;
 	if (isHDR) {
-		float* floatImg = stbi_loadf(path, &width, &height, &numChannels, 0);
-		img = reinterpret_cast<uint8_t*>(floatImg);
-		channelSize = sizeof(float);
+		f32* floatImg = stbi_loadf(path, &width, &height, &numChannels, 0);
+		img = reinterpret_cast<u8*>(floatImg);
+		channelSize = sizeof(f32);
 	}
 	else {
 		img = stbi_load(path, &width, &height, &numChannels, 0);
-		channelSize = sizeof(uint8_t);
+		channelSize = sizeof(u8);
 	}
 
 	// Error checking
@@ -201,7 +201,7 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 	}
 
 	// Create image from data
-	const uint32_t numBytes = uint32_t(width * height * numChannels * channelSize);
+	const u32 numBytes = u32(width * height * numChannels * channelSize);
 	Image tmp;
 	tmp.rawData.init(numBytes, staticAllocator, sfz_dbg(""));
 	tmp.width = width;
@@ -209,7 +209,7 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 	tmp.bytesPerPixel = numChannels * channelSize;
 	if (isHDR) {
 		sfz_assert_hard(numChannels == 3);
-		tmp.rawData.add(uint8_t(0), uint32_t(width * height * sizeof(vec4)));
+		tmp.rawData.add(u8(0), u32(width * height * sizeof(vec4)));
 		padRgbFloat(
 			reinterpret_cast<vec4*>(tmp.rawData.data()),
 			reinterpret_cast<const vec3*>(img),
@@ -253,12 +253,12 @@ void flipVertically(Image& image, SfzAllocator* allocator) noexcept
 	sfz_assert(image.rawData.data() != nullptr);
 	sfz_assert((image.height % 2) == 0);
 
-	int32_t pitch = image.width * image.bytesPerPixel;
-	uint8_t* buffer = (uint8_t*)allocator->alloc(sfz_dbg(""), uint64_t(pitch), 32);
+	i32 pitch = image.width * image.bytesPerPixel;
+	u8* buffer = (u8*)allocator->alloc(sfz_dbg(""), u64(pitch), 32);
 
-	for (int32_t i = 0; i < (image.height / 2); i++) {
-		uint8_t* begin = image.rawData.data() + i * pitch;
-		uint8_t* end = image.rawData.data() + (image.height - i - 1) * pitch;
+	for (i32 i = 0; i < (image.height / 2); i++) {
+		u8* begin = image.rawData.data() + i * pitch;
+		u8* end = image.rawData.data() + (image.height - i - 1) * pitch;
 
 		std::memcpy(buffer, begin, pitch);
 		std::memcpy(begin, end, pitch);

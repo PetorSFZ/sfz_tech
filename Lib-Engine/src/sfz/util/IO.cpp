@@ -24,7 +24,6 @@
 
 #include <cstdlib>
 #include <cstdio> // fopen, fwrite, BUFSIZ
-#include <cstdint>
 #include <cstring>
 
 #include "sfz/PushWarnings.hpp"
@@ -50,9 +49,6 @@ static_assert(sizeof(time_t) == sizeof(__time64_t), "");
 
 namespace sfz {
 
-using std::size_t;
-using std::uint8_t;
-
 // Statics
 // ------------------------------------------------------------------------------------------------
 
@@ -74,16 +70,16 @@ static Array<T> readFileInternal(const char* path, bool binaryMode, SfzAllocator
 	}
 
 	// Create array with enough capacity to fit file
-	Array<T> temp(uint32_t(size + 1), allocator, sfz_dbg("readFileInternal()"));
+	Array<T> temp(u32(size + 1), allocator, sfz_dbg("readFileInternal()"));
 
 	// Read the file into the array
-	uint8_t buffer[BUFSIZ];
+	u8 buffer[BUFSIZ];
 	size_t readSize;
 	size_t currOffs = 0;
 	while ((readSize = std::fread(buffer, 1, BUFSIZ, file)) > 0) {
 
 		// Ensure array has space.
-		temp.ensureCapacity(uint32_t(currOffs + readSize));
+		temp.ensureCapacity(u32(currOffs + readSize));
 
 		// Copy chunk into array
 		std::memcpy(temp.data() + currOffs, buffer, readSize);
@@ -91,7 +87,7 @@ static Array<T> readFileInternal(const char* path, bool binaryMode, SfzAllocator
 	}
 
 	// Set size of array
-	temp.hackSetSize(uint32_t(currOffs));
+	temp.hackSetSize(u32(currOffs));
 
 	std::fclose(file);
 	return std::move(temp);
@@ -265,7 +261,7 @@ bool deleteDirectory(const char* path) noexcept
 
 bool copyFile(const char* srcPath, const char* dstPath) noexcept
 {
-	uint8_t buffer[BUFSIZ];
+	u8 buffer[BUFSIZ];
 
 	std::FILE* source = std::fopen(srcPath, "rb");
 	if (source == NULL) return false;
@@ -296,14 +292,14 @@ int64_t sizeofFile(const char* path) noexcept
 	return size;
 }
 
-int32_t readBinaryFile(const char* path, uint8_t* dataOut, size_t maxNumBytes) noexcept
+int32_t readBinaryFile(const char* path, u8* dataOut, size_t maxNumBytes) noexcept
 {
 	// Open file
 	std::FILE* file = std::fopen(path, "rb");
 	if (file == NULL) return -1;
 
 	// Read the file into memory
-	uint8_t buffer[BUFSIZ];
+	u8 buffer[BUFSIZ];
 	size_t readSize;
 	size_t currOffs = 0;
 	while ((readSize = std::fread(buffer, 1, BUFSIZ, file)) > 0) {
@@ -323,9 +319,9 @@ int32_t readBinaryFile(const char* path, uint8_t* dataOut, size_t maxNumBytes) n
 	return 0;
 }
 
-Array<uint8_t> readBinaryFile(const char* path, SfzAllocator* allocator) noexcept
+Array<u8> readBinaryFile(const char* path, SfzAllocator* allocator) noexcept
 {
-	return readFileInternal<uint8_t>(path, true, allocator);
+	return readFileInternal<u8>(path, true, allocator);
 }
 
 DynString readTextFile(const char* path, SfzAllocator* allocator) noexcept
@@ -344,7 +340,7 @@ DynString readTextFile(const char* path, SfzAllocator* allocator) noexcept
 	return tmp;
 }
 
-bool writeBinaryFile(const char* path, const uint8_t* data, size_t numBytes) noexcept
+bool writeBinaryFile(const char* path, const u8* data, size_t numBytes) noexcept
 {
 	// Open file
 	if (path == nullptr) return false;

@@ -33,17 +33,17 @@ namespace sfz {
 // Shader
 // ------------------------------------------------------------------------------------------------
 
-enum class ShaderType : uint32_t {
+enum class ShaderType : u32 {
 	RENDER = 0,
 	COMPUTE = 1
 };
 
 struct SamplerItem final {
-	uint32_t samplerRegister = ~0u;
+	u32 samplerRegister = ~0u;
 	ZgSampler sampler = {};
 
 	SamplerItem() = default;
-	SamplerItem(uint32_t samplerRegisterIn, ZgSamplingMode sampling, ZgWrappingMode wrapping)
+	SamplerItem(u32 samplerRegisterIn, ZgSamplingMode sampling, ZgWrappingMode wrapping)
 	{
 		samplerRegister = samplerRegisterIn;
 		sampler.samplingMode = sampling;
@@ -52,7 +52,7 @@ struct SamplerItem final {
 	}
 };
 
-enum class PipelineBlendMode  : uint32_t {
+enum class PipelineBlendMode  : u32 {
 	NO_BLENDING = 0,
 	ALPHA_BLENDING,
 	ADDITIVE_BLENDING
@@ -60,7 +60,7 @@ enum class PipelineBlendMode  : uint32_t {
 
 struct VertexInputLayout final {
 	bool standardVertexLayout = false;
-	uint32_t vertexSizeBytes = 0;
+	u32 vertexSizeBytes = 0;
 	ArrayLocal<ZgVertexAttribute, ZG_MAX_NUM_VERTEX_ATTRIBUTES> attributes;
 };
 
@@ -99,7 +99,7 @@ struct Shader final {
 	str192 shaderPath;
 	ShaderRender render;
 	ShaderCompute compute;
-	ArrayLocal<uint32_t, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstRegisters;
+	ArrayLocal<u32, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstRegisters;
 	ArrayLocal<SamplerItem, ZG_MAX_NUM_SAMPLERS> samplers;
 
 	bool build() noexcept;
@@ -113,7 +113,7 @@ struct ShaderManagerState;
 class ShaderManager final {
 public:
 	SFZ_DECLARE_DROP_TYPE(ShaderManager);
-	void init(uint32_t maxNumShaders, SfzAllocator* allocator) noexcept;
+	void init(u32 maxNumShaders, SfzAllocator* allocator) noexcept;
 	void destroy() noexcept;
 
 	// Methods

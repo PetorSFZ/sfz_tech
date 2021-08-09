@@ -30,7 +30,7 @@ namespace sfz {
 // Structs
 // ------------------------------------------------------------------------------------------------
 
-enum class UpdateOp : uint32_t {
+enum class UpdateOp : u32 {
 	NO_OP = 0,
 	QUIT,
 	REINIT_CONTROLLERS
@@ -50,7 +50,7 @@ using InitFunc = void(void* userPtr);
 using UpdateFunc = UpdateOp(
 	float deltaSecs,
 	const SDL_Event* events,
-	uint32_t numEvents,
+	u32 numEvents,
 	const RawInputState* rawFrameInput,
 	void* userPtr);
 using QuitFunc = void(void* userPtr);
@@ -70,10 +70,10 @@ struct InitOptions final {
 	IniLocation iniLocation = IniLocation::NEXT_TO_EXECUTABLE;
 
 	// Maximum number of each type of resource
-	uint32_t maxNumResources = 4096;
+	u32 maxNumResources = 4096;
 
 	// Maximum number of shaders
-	uint32_t maxNumShaders = 256;
+	u32 maxNumShaders = 256;
 
 	// User specified pointer which will be passed as an argument to the specified functions.
 	void* userPtr = nullptr;

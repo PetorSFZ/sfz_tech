@@ -38,7 +38,7 @@ CascadedShadowMapInfo calculateCascadedShadowMapInfo(
 	mat4 camRealViewMatrix,
 	vec3 lightDir,
 	float shadowHeightDist,
-	uint32_t numLevels,
+	u32 numLevels,
 	const float* levelDists) noexcept
 {
 	sfz_assert(!sfz::eqf(camDir, vec3(0.0f)));
@@ -52,7 +52,7 @@ CascadedShadowMapInfo calculateCascadedShadowMapInfo(
 	sfz_assert(0 < numLevels);
 	sfz_assert(numLevels <= MAX_NUM_CASCADED_SHADOW_MAP_LEVELS);
 	sfz_assert(camNear < levelDists[0]);
-	for (uint32_t i = 1; i < numLevels; i++) {
+	for (u32 i = 1; i < numLevels; i++) {
 		sfz_assert(levelDists[i - 1] < levelDists[i]);
 	}
 
@@ -68,7 +68,7 @@ CascadedShadowMapInfo calculateCascadedShadowMapInfo(
 	CascadedShadowMapInfo info;
 	info.numLevels = numLevels;
 
-	for (uint32_t i = 0; i < numLevels; i++) {
+	for (u32 i = 0; i < numLevels; i++) {
 
 		// Find mid point (of view frustrum) in the area covered by this cascaded level
 		float prevDist = i == 0 ? camNear : levelDists[i - 1];

@@ -49,22 +49,22 @@ struct D3D12PipelineBindingsSignature final {
 	{
 		ZgPipelineBindingsSignature signature = {};
 		
-		for (uint32_t i = 0; i < constBuffers.size(); i++) {
+		for (u32 i = 0; i < constBuffers.size(); i++) {
 			signature.constBuffers[i] = constBuffers[i];
 		}
 		signature.numConstBuffers = constBuffers.size();
 
-		for (uint32_t i = 0; i < unorderedBuffers.size(); i++) {
+		for (u32 i = 0; i < unorderedBuffers.size(); i++) {
 			signature.unorderedBuffers[i] = unorderedBuffers[i];
 		}
 		signature.numUnorderedBuffers = unorderedBuffers.size();
 
-		for (uint32_t i = 0; i < textures.size(); i++) {
+		for (u32 i = 0; i < textures.size(); i++) {
 			signature.textures[i] = textures[i];
 		}
 		signature.numTextures = textures.size();
 
-		for (uint32_t i = 0; i < unorderedTextures.size(); i++) {
+		for (u32 i = 0; i < unorderedTextures.size(); i++) {
 			signature.unorderedTextures[i] = unorderedTextures[i];
 		}
 		signature.numUnorderedTextures = unorderedTextures.size();
@@ -84,46 +84,46 @@ struct D3D12PipelineBindingsSignature final {
 // containing a descriptor pointing to a table with all SRVs, UAVs and CBVs.
 
 struct D3D12PushConstantMapping final {
-	uint32_t bufferRegister = ~0u;
-	uint32_t parameterIndex = ~0u;
-	uint32_t sizeInBytes = ~0u;
+	u32 bufferRegister = ~0u;
+	u32 parameterIndex = ~0u;
+	u32 sizeInBytes = ~0u;
 };
 
 struct D3D12ConstantBufferMapping final {
-	uint32_t bufferRegister = ~0u;
-	uint32_t tableOffset = ~0u;
-	uint32_t sizeInBytes = ~0u;
+	u32 bufferRegister = ~0u;
+	u32 tableOffset = ~0u;
+	u32 sizeInBytes = ~0u;
 };
 
 struct D3D12TextureMapping final {
-	uint32_t textureRegister = ~0u;
-	uint32_t tableOffset = ~0u;
+	u32 textureRegister = ~0u;
+	u32 tableOffset = ~0u;
 };
 
 struct D3D12UnorderedBufferMapping final {
-	uint32_t unorderedRegister = ~0u;
-	uint32_t tableOffset = ~0u;
+	u32 unorderedRegister = ~0u;
+	u32 tableOffset = ~0u;
 };
 
 struct D3D12UnorderedTextureMapping final {
-	uint32_t unorderedRegister = ~0u;
-	uint32_t tableOffset = ~0u;
+	u32 unorderedRegister = ~0u;
+	u32 tableOffset = ~0u;
 };
 
 struct D3D12RootSignature final {
 	ComPtr<ID3D12RootSignature> rootSignature;
-	uint32_t dynamicBuffersParameterIndex = ~0u;
+	u32 dynamicBuffersParameterIndex = ~0u;
 	ArrayLocal<D3D12PushConstantMapping, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstants;
 	ArrayLocal<D3D12ConstantBufferMapping, ZG_MAX_NUM_CONSTANT_BUFFERS> constBuffers;
 	ArrayLocal<D3D12TextureMapping, ZG_MAX_NUM_TEXTURES> textures;
 	ArrayLocal<D3D12UnorderedBufferMapping, ZG_MAX_NUM_UNORDERED_BUFFERS> unorderedBuffers;
 	ArrayLocal<D3D12UnorderedTextureMapping, ZG_MAX_NUM_UNORDERED_TEXTURES> unorderedTextures;
 
-	const D3D12PushConstantMapping* getPushConstantMapping(uint32_t bufferRegister) const noexcept;
-	const D3D12ConstantBufferMapping* getConstBufferMapping(uint32_t bufferRegister) const noexcept;
-	const D3D12TextureMapping* getTextureMapping(uint32_t textureRegister) const noexcept;
-	const D3D12UnorderedBufferMapping* getUnorderedBufferMapping(uint32_t unorderedRegister) const noexcept;
-	const D3D12UnorderedTextureMapping* getUnorderedTextureMapping(uint32_t unorderedRegister) const noexcept;
+	const D3D12PushConstantMapping* getPushConstantMapping(u32 bufferRegister) const noexcept;
+	const D3D12ConstantBufferMapping* getConstBufferMapping(u32 bufferRegister) const noexcept;
+	const D3D12TextureMapping* getTextureMapping(u32 textureRegister) const noexcept;
+	const D3D12UnorderedBufferMapping* getUnorderedBufferMapping(u32 unorderedRegister) const noexcept;
+	const D3D12UnorderedTextureMapping* getUnorderedTextureMapping(u32 unorderedRegister) const noexcept;
 };
 
 // D3D12PipelineCompute
@@ -137,9 +137,9 @@ struct ZgPipelineCompute final {
 	ComPtr<ID3D12PipelineState> pipelineState;
 	D3D12RootSignature rootSignature;
 	D3D12PipelineBindingsSignature bindingsSignature;
-	uint32_t groupDimX = 0;
-	uint32_t groupDimY = 0;
-	uint32_t groupDimZ = 0;
+	u32 groupDimX = 0;
+	u32 groupDimY = 0;
+	u32 groupDimZ = 0;
 };
 
 // D3D12PipelineRender

@@ -443,7 +443,7 @@ UTEST(Vec, arithmetic_operators)
 UTEST(Vec, length_of_vectors)
 {
 	sfz::vec2 v1(2.0f, 0.0f);
-	float v2Arr[] = { -2.0f, 2.0f, 2.0f, -2.0f };
+	f32 v2Arr[] = { -2.0f, 2.0f, 2.0f, -2.0f };
 	sfz::vec4 v2(v2Arr);
 
 	ASSERT_TRUE(sfz::eqf(sfz::length(v1), 2.0f));
@@ -630,7 +630,7 @@ UTEST(Vec, is_proper_pod)
 
 UTEST(Math, eqf)
 {
-	// float
+	// f32
 	{
 		ASSERT_TRUE(sfz::eqf(2.0f, 2.0f + (sfz::EQF_EPS * 0.95f)));
 		ASSERT_TRUE(!sfz::eqf(2.0f, 2.0f + (sfz::EQF_EPS * 1.05f)));
@@ -847,7 +847,7 @@ UTEST(Memory, memswp)
 		memcpy(buffer2, STR2, sizeof(STR2));
 		ASSERT_TRUE(strncmp(buffer1, STR1, 256) == 0);
 		ASSERT_TRUE(strncmp(buffer2, STR2, 256) == 0);
-		sfz::memswp(buffer1, buffer2, sfz::max(uint32_t(sizeof(STR1)), uint32_t(sizeof(STR2))));
+		sfz::memswp(buffer1, buffer2, sfz::max(u32(sizeof(STR1)), u32(sizeof(STR2))));
 		ASSERT_TRUE(strncmp(buffer2, STR1, 256) == 0);
 		ASSERT_TRUE(strncmp(buffer1, STR2, 256) == 0);
 		sfz::memswp(buffer1, buffer2, 256);
@@ -856,17 +856,17 @@ UTEST(Memory, memswp)
 	}
 	
 	{
-		constexpr uint32_t NUM_ELEMS = 217;
-		uint32_t buffer1[NUM_ELEMS];
-		for (uint32_t i = 0; i < NUM_ELEMS; i++) {
+		constexpr u32 NUM_ELEMS = 217;
+		u32 buffer1[NUM_ELEMS];
+		for (u32 i = 0; i < NUM_ELEMS; i++) {
 			buffer1[i] = i;
 		}
-		uint32_t buffer2[NUM_ELEMS + 10] = {};
-		for (uint32_t i = 0; i < NUM_ELEMS; i++) {
+		u32 buffer2[NUM_ELEMS + 10] = {};
+		for (u32 i = 0; i < NUM_ELEMS; i++) {
 			buffer2[i + 5] = i * i;
 		}
 		sfz::memswp(buffer1, buffer2 + 5, sizeof(buffer1));
-		for (uint32_t i = 0; i < NUM_ELEMS; i++) {
+		for (u32 i = 0; i < NUM_ELEMS; i++) {
 			ASSERT_TRUE(buffer1[i] == (i * i));
 			ASSERT_TRUE(buffer2[i + 5] == i);
 		}

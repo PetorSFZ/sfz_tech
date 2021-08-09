@@ -30,7 +30,7 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 GameStateContainer GameStateContainer::createRaw(
-	uint64_t numBytes, SfzAllocator* allocator) noexcept
+	u64 numBytes, SfzAllocator* allocator) noexcept
 {
 	sfz_assert(allocator != nullptr);
 	sfz_assert(0 < numBytes);
@@ -38,20 +38,20 @@ GameStateContainer GameStateContainer::createRaw(
 	GameStateContainer container;
 	container.mAllocator = allocator;
 	container.mNumBytes = numBytes;
-	container.mGameStateMemoryChunk = static_cast<uint8_t*>(allocator->alloc(sfz_dbg(""), numBytes, 16));
+	container.mGameStateMemoryChunk = static_cast<u8*>(allocator->alloc(sfz_dbg(""), numBytes, 16));
 	memset(container.mGameStateMemoryChunk, 0, numBytes);
 	return container;
 }
 
 GameStateContainer GameStateContainer::create(
-	uint32_t numSingletonStructs,
-	const uint32_t* singletonStructSizes,
-	uint32_t maxNumEntities,
-	uint32_t numComponentTypes,
-	const uint32_t* componentSizes,
+	u32 numSingletonStructs,
+	const u32* singletonStructSizes,
+	u32 maxNumEntities,
+	u32 numComponentTypes,
+	const u32* componentSizes,
 	SfzAllocator* allocator) noexcept
 {
-	uint32_t neededSize = calcSizeOfGameStateBytes(
+	u32 neededSize = calcSizeOfGameStateBytes(
 		numSingletonStructs, singletonStructSizes, maxNumEntities, numComponentTypes, componentSizes);
 
 	// Allocate memory
@@ -85,7 +85,7 @@ GameStateContainer GameStateContainer::clone(SfzAllocator* allocator) noexcept
 	GameStateContainer container;
 	container.mAllocator = allocator;
 	container.mNumBytes = this->mNumBytes;
-	container.mGameStateMemoryChunk = static_cast<uint8_t*>(allocator->alloc(sfz_dbg(""), mNumBytes, 32));
+	container.mGameStateMemoryChunk = static_cast<u8*>(allocator->alloc(sfz_dbg(""), mNumBytes, 32));
 	this->cloneTo(container);
 	return container;
 }

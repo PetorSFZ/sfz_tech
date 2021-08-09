@@ -45,20 +45,20 @@ struct DeserializerVisitor final {
 		if (errorPath != nullptr) errorPath->appendf(".%s", name);
 	}
 
-	void appendErrorPathArray(uint32_t idx)
+	void appendErrorPathArray(u32 idx)
 	{
 		if (errorPath != nullptr) errorPath->appendf("[%u]", idx);
 	}
 
 	void restoreErrorPath(const char* name)
 	{
-		if (errorPath != nullptr) errorPath->removeChars(uint32_t(strnlen(name, 100)) + 1);
+		if (errorPath != nullptr) errorPath->removeChars(u32(strnlen(name, 100)) + 1);
 	}
 
-	void restoreErrorPathArray(uint32_t idx)
+	void restoreErrorPathArray(u32 idx)
 	{
 		sfz_assert(idx < 10'000'000);
-		uint32_t numDigits = 0;
+		u32 numDigits = 0;
 		if (idx < 10) numDigits = 1;
 		else if (idx < 100) numDigits = 2;
 		else if (idx < 1'000) numDigits = 3;
@@ -269,9 +269,9 @@ struct DeserializerVisitor final {
 		if (!ensureNodeIsValid(node)) return;
 
 		if (node.type() == JsonNodeType::ARRAY) {
-			const uint32_t len = node.arrayLength();
+			const u32 len = node.arrayLength();
 			valOut.init(len, this->allocator, sfz_dbg(""));
-			for (uint32_t i = 0; i < len; i++) {
+			for (u32 i = 0; i < len; i++) {
 				appendErrorPathArray(i);
 				DeserializerVisitor deserializer;
 				deserializer.allocator = this->allocator;
@@ -291,16 +291,16 @@ struct DeserializerVisitor final {
 		}
 	}
 
-	template<typename T, uint32_t N>
+	template<typename T, u32 N>
 	void deserialize(const JsonNode& node, ArrayLocal<T,N>& valOut)
 	{
 		if (!ensureNodeIsValid(node)) return;
 
 		if (node.type() == JsonNodeType::ARRAY) {
-			const uint32_t len = child.arrayLength();
+			const u32 len = child.arrayLength();
 			if (len <= valOut.capacity()) {
 				valOut.clear();
-				for (uint32_t i = 0; i < len; i++) {
+				for (u32 i = 0; i < len; i++) {
 					appendErrorPathArray(i);
 					DeserializerVisitor deserializer;
 					deserializer.allocator = this->allocator;

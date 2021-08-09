@@ -39,7 +39,7 @@ void updateImgui(
 	vec2_i32 windowResolution,
 	const RawInputState& rawInputState,
 	const SDL_Event* keyboardEvents,
-	uint32_t numKeyboardEvents) noexcept;
+	u32 numKeyboardEvents) noexcept;
 
 // The fonts initialized with Imgui
 ImFont* imguiFontDefault() noexcept;

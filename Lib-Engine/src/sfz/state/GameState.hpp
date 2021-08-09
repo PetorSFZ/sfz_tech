@@ -33,24 +33,24 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 // Magic number in beginning of all Phantasy Engine game states.
-constexpr uint64_t GAME_STATE_MAGIC_NUMBER =
-	uint64_t('P') << 0 |
-	uint64_t('H') << 8 |
-	uint64_t('E') << 16 |
-	uint64_t('S') << 24 |
-	uint64_t('T') << 32 |
-	uint64_t('A') << 40 |
-	uint64_t('T') << 48 |
-	uint64_t('E') << 56;
+constexpr u64 GAME_STATE_MAGIC_NUMBER =
+	u64('P') << 0 |
+	u64('H') << 8 |
+	u64('E') << 16 |
+	u64('S') << 24 |
+	u64('T') << 32 |
+	u64('A') << 40 |
+	u64('T') << 48 |
+	u64('E') << 56;
 
 // The current data layout version of the game state
-constexpr uint64_t GAME_STATE_VERSION = 6;
+constexpr u64 GAME_STATE_VERSION = 6;
 
 // The maximum number of entities a game state can hold
 //
 // One less than the maximum id of an entity (ENTITY_ID_MAX), we reserve all bits set to 1 (~0,
 // the default-value when constructing an Entity) as an error code.
-constexpr uint32_t GAME_STATE_ECS_MAX_NUM_ENTITIES = ENTITY_ID_MAX - 1;
+constexpr u32 GAME_STATE_ECS_MAX_NUM_ENTITIES = ENTITY_ID_MAX - 1;
 
 // SingletonRegistryEntry struct
 // ------------------------------------------------------------------------------------------------
@@ -58,10 +58,10 @@ constexpr uint32_t GAME_STATE_ECS_MAX_NUM_ENTITIES = ENTITY_ID_MAX - 1;
 struct SingletonRegistryEntry final {
 
 	// The offset in bytes to the singleton struct
-	uint32_t offset;
+	u32 offset;
 
 	// The size in bytes of the singleton struct
-	uint32_t sizeInBytes;
+	u32 sizeInBytes;
 };
 
 // ComponentRegistryEntry struct
@@ -69,14 +69,14 @@ struct SingletonRegistryEntry final {
 
 struct ComponentRegistryEntry final {
 
-	// The offset in bytes to the ArrayHeader of components for the specific type, ~0 (UINT32_MAX)
+	// The offset in bytes to the ArrayHeader of components for the specific type, ~0 (U32_MAX)
 	// if there is no associated data with the given component type.
-	uint32_t offset;
+	u32 offset;
 
 	// Returns whether the component type has associated data or not.
 	bool componentTypeHasData() const noexcept { return offset != ~0u; }
 
-	static ComponentRegistryEntry createSized(uint32_t offset) noexcept { return { offset }; }
+	static ComponentRegistryEntry createSized(u32 offset) noexcept { return { offset }; }
 	static ComponentRegistryEntry createUnsized() noexcept { return { ~0u }; }
 };
 static_assert(sizeof(ComponentRegistryEntry) == 4, "ComponentRegistryEntry is padded");
@@ -137,78 +137,78 @@ struct GameStateHeader {
 	// Magic number in beginning of the game state. Should spell out "PHESTATE" if viewed in a hex
 	// editor. Can be used to check if a binary file seems to be a game state dumped to file.
 	// See: https://en.wikipedia.org/wiki/File_format#Magic_number
-	uint64_t magicNumber;
+	u64 magicNumber;
 
 	// The version of the game state, this number should increment each time a change is made to
 	// the data layout of the system.
-	uint64_t gameStateVersion;
+	u64 gameStateVersion;
 
 	// The size of the game state in bytes. This is the number of bytes to copy if you want to copy
 	// the entire state using memcpy(). E.g. "memcpy(dst, stateHeader, stateHeader->stateSizeBytes)".
-	uint64_t stateSizeBytes;
+	u64 stateSizeBytes;
 
 	// The number of singleton structs in the game state.
-	uint32_t numSingletons;
+	u32 numSingletons;
 
 	// The number of component types in the ECS system. This includes data-less flags, such as the
 	// first (0th) CompMask bit which is reserved for whether an entity is active or not.
-	uint32_t numComponentTypes;
+	u32 numComponentTypes;
 
 	// The maximum number of entities allowed in the ECS system.
-	uint32_t maxNumEntities;
+	u32 maxNumEntities;
 
 	// The current number of entities in this ECS system. It is NOT safe to use this as the upper
 	// bound when iterating over all entities as the currently existing entities are not guaranteed
 	// to be contiguously packed.
-	uint32_t currentNumEntities;
+	u32 currentNumEntities;
 
 	// Offset in bytes to the ArrayHeader of SingletonRegistryEntry which in turn contains the
 	// offsets to the singleton structs, and the sizes of them.
-	uint32_t offsetSingletonRegistry;
+	u32 offsetSingletonRegistry;
 
 	// Offset in bytes to the ArrayHeader of ComponentRegistryEntry which in turn contains the
 	// offsets to the ArrayHeaders for the various component types
-	uint32_t offsetComponentRegistry;
+	u32 offsetComponentRegistry;
 
-	// Offset in bytes to the ArrayHeader of free entity ids (uint32_t)
-	uint32_t offsetFreeEntityIdsList;
+	// Offset in bytes to the ArrayHeader of free entity ids (u32)
+	u32 offsetFreeEntityIdsList;
 
 	// Offset in bytes to the ArrayHeader of ComponentMask, each entity is its own index into this
 	// array of masks.
-	uint32_t offsetComponentMasks;
+	u32 offsetComponentMasks;
 
-	// Offset in bytes to the ArrayHeader of entity generations (uint8_t)
-	uint32_t offsetEntityGenerationsList;
+	// Offset in bytes to the ArrayHeader of entity generations (u8)
+	u32 offsetEntityGenerationsList;
 
 	// Unused padding to ensure header is 16-byte aligned.
-	uint32_t ___PADDING_UNUSED___[1];
+	u32 ___PADDING_UNUSED___[1];
 
 	// Singleton state API
 	// --------------------------------------------------------------------------------------------
 
 	// Returns a pointer to the singleton at the given index. Returns nullptr if the singleton
 	// does not exist. The second parameter returns the size of the singleton in bytes.
-	uint8_t* singletonUntyped(uint32_t singletonIndex, uint32_t& singletonSizeBytesOut) noexcept;
-	const uint8_t* singletonUntyped(uint32_t singletonIndex, uint32_t& singletonSizeBytesOut) const noexcept;
+	u8* singletonUntyped(u32 singletonIndex, u32& singletonSizeBytesOut) noexcept;
+	const u8* singletonUntyped(u32 singletonIndex, u32& singletonSizeBytesOut) const noexcept;
 
 	// Returns typed reference to the singleton at the given index. Undefined behavior (likely
 	// segfault) if singleton does not exist. The requested type T must be of the correct size.
 	template<typename T>
-	T& singleton(uint32_t singletonIndex) noexcept
+	T& singleton(u32 singletonIndex) noexcept
 	{
 		//static_assert(std::is_trivially_copyable<T>::value, "Game state singletons must be trivially copyable");
 		static_assert(std::is_trivially_destructible<T>::value, "Game state singletons must be trivially destructible");
-		uint32_t singletonSize = 0;
+		u32 singletonSize = 0;
 		T* singleton = (T*)singletonUntyped(singletonIndex, singletonSize);
 		sfz_assert(sizeof(T) == singletonSize);
 		return *singleton;
 	}
 	template<typename T>
-	const T& singleton(uint32_t singletonIndex) const noexcept
+	const T& singleton(u32 singletonIndex) const noexcept
 	{
 		//static_assert(std::is_trivially_copyable<T>::value, "Game state singletons must be trivially copyable");
 		static_assert(std::is_trivially_destructible<T>::value, "Game state singletons must be trivially destructible");
-		uint32_t singletonSize = 0;
+		u32 singletonSize = 0;
 		const T* singleton = (const T*)singletonUntyped(singletonIndex, singletonSize);
 		sfz_assert(sizeof(T) == singletonSize);
 		return *singleton;
@@ -227,7 +227,7 @@ struct GameStateHeader {
 	// successful or not.
 	// Complexity: O(K) where K is number of component types
 	bool deleteEntity(Entity entity) noexcept;
-	bool deleteEntity(uint32_t entityId) noexcept;
+	bool deleteEntity(u32 entityId) noexcept;
 
 	// Clones a given entity and all its components. Returns Entity::invalid() on failure.
 	// Complexity: O(K) where K is number of component types
@@ -238,18 +238,18 @@ struct GameStateHeader {
 	CompMask* componentMasks() noexcept;
 	const CompMask* componentMasks() const noexcept;
 
-	// Returns pointer to the contiguous array of entity generations (uint8_t). If the generation()
+	// Returns pointer to the contiguous array of entity generations (u8). If the generation()
 	// of an entity does not match the generation at index id() in this list then the entity is
 	// invalid (i.e. a "dangling pointer entity"). Generation "0" is reserved as invalid.
 	// Complexity: O(1)
-	uint8_t* entityGenerations() noexcept;
-	const uint8_t* entityGenerations() const noexcept;
+	u8* entityGenerations() noexcept;
+	const u8* entityGenerations() const noexcept;
 
 	// Returns the current generation for the specified entity id. Convenience function around
 	// entityGenerations(), which should be preferred if multiple entities ids generations are to be
 	// looked up.
 	// Complexity: O(1)
-	uint8_t getGeneration(uint32_t entityId) const noexcept;
+	u8 getGeneration(u32 entityId) const noexcept;
 
 	// Checks whether a given entity is valid or not by comparing its generation with the internal
 	// one stored in the ECS system.
@@ -267,28 +267,28 @@ struct GameStateHeader {
 	// nullptr if the component type does not have associated data or does not exist. The second
 	// parameter returns the size of each component in bytes.
 	// Complexity: O(1)
-	uint8_t* componentsUntyped(uint32_t componentType, uint32_t& componentSizeBytesOut) noexcept;
-	const uint8_t* componentsUntyped(uint32_t componentType, uint32_t& componentSizeBytesOut) const noexcept;
+	u8* componentsUntyped(u32 componentType, u32& componentSizeBytesOut) noexcept;
+	const u8* componentsUntyped(u32 componentType, u32& componentSizeBytesOut) const noexcept;
 
 	// Returns typed pointer to the contiguous array of components of a given component type.
 	// See getComponentArrayUntyped(), the requested type (T) must be of the correct size.
 	// Complexity: O(1)
 	template<typename T>
-	T* components(uint32_t componentType) noexcept
+	T* components(u32 componentType) noexcept
 	{
 		static_assert(std::is_trivially_copyable<T>::value, "ECS components must be trivially copyable");
 		static_assert(std::is_trivially_destructible<T>::value, "ECS components must be trivially destructible");
-		uint32_t componentSize = 0;
+		u32 componentSize = 0;
 		T* components = (T*)componentsUntyped(componentType, componentSize);
 		sfz_assert(sizeof(T) == componentSize);
 		return components;
 	}
 	template<typename T>
-	const T* components(uint32_t componentType) const noexcept
+	const T* components(u32 componentType) const noexcept
 	{
 		static_assert(std::is_trivially_copyable<T>::value, "ECS components must be trivially copyable");
 		static_assert(std::is_trivially_destructible<T>::value, "ECS components must be trivially destructible");
-		uint32_t componentSize = 0;
+		u32 componentSize = 0;
 		const T* components = (const T*)componentsUntyped(componentType, componentSize);
 		sfz_assert(sizeof(T) == componentSize);
 		return components;
@@ -297,25 +297,25 @@ struct GameStateHeader {
 	// Adds a component to an entity. Returns whether succesful or not.
 	// Complexity: O(1)
 	bool addComponentUntyped(
-		Entity entity, uint32_t componentType, const uint8_t* data, uint32_t dataSize) noexcept;
+		Entity entity, u32 componentType, const u8* data, u32 dataSize) noexcept;
 
 	// Adds a (typed) component to an entity. Returns whether succesful or not.
 	// Complexity: O(1)
 	template<typename T>
-	bool addComponent(Entity entity, uint32_t componentType, const T& component) noexcept
+	bool addComponent(Entity entity, u32 componentType, const T& component) noexcept
 	{
 		static_assert(std::is_trivially_copyable<T>::value, "ECS components must be trivially copyable");
 		static_assert(std::is_trivially_destructible<T>::value, "ECS components must be trivially destructible");
-		return addComponentUntyped(entity, componentType, (const uint8_t*)&component, sizeof(T));
+		return addComponentUntyped(entity, componentType, (const u8*)&component, sizeof(T));
 	}
 
 	// Sets the value (i.e. flag) of an unsized component. Returns whether succesful or not.
 	// Complexity: O(1)
-	bool setComponentUnsized(Entity entity, uint32_t componentType, bool value) noexcept;
+	bool setComponentUnsized(Entity entity, u32 componentType, bool value) noexcept;
 
 	// Delets a component from an entity. Returns whether succesful or not.
 	// Complexity: O(1)
-	bool deleteComponent(Entity entity, uint32_t componentType) noexcept;
+	bool deleteComponent(Entity entity, u32 componentType) noexcept;
 
 	// Accessing arrays
 	// --------------------------------------------------------------------------------------------
@@ -338,13 +338,13 @@ struct GameStateHeader {
 	// Helper methods
 	// --------------------------------------------------------------------------------------------
 
-	ArrayHeader* arrayAt(uint32_t offset) noexcept
+	ArrayHeader* arrayAt(u32 offset) noexcept
 	{
-		return reinterpret_cast<ArrayHeader*>(reinterpret_cast<uint8_t*>(this) + offset);
+		return reinterpret_cast<ArrayHeader*>(reinterpret_cast<u8*>(this) + offset);
 	}
-	const ArrayHeader* arrayAt(uint32_t offset) const noexcept
+	const ArrayHeader* arrayAt(u32 offset) const noexcept
 	{
-		return reinterpret_cast<const ArrayHeader*>(reinterpret_cast<const uint8_t*>(this) + offset);
+		return reinterpret_cast<const ArrayHeader*>(reinterpret_cast<const u8*>(this) + offset);
 	}
 
 	// Constructors & destructors tricks
@@ -375,14 +375,14 @@ static_assert(sizeof(GameStateHeader) == 64, "GameStateHeader is padded");
 
 // Calculates the size of a game state in bytes. Can be used to statically allocate the necessary
 // memory to hold a game state
-constexpr uint32_t calcSizeOfGameStateBytes(
-	uint32_t numSingletons,
-	const uint32_t singletonSizes[],
-	uint32_t maxNumEntities,
-	uint32_t numComponents,
-	const uint32_t componentSizes[])
+constexpr u32 calcSizeOfGameStateBytes(
+	u32 numSingletons,
+	const u32 singletonSizes[],
+	u32 maxNumEntities,
+	u32 numComponents,
+	const u32 componentSizes[])
 {
-	uint32_t totalSizeBytes = 0;
+	u32 totalSizeBytes = 0;
 
 	// GameState Header
 	totalSizeBytes += sizeof(GameStateHeader);
@@ -391,24 +391,24 @@ constexpr uint32_t calcSizeOfGameStateBytes(
 	totalSizeBytes += calcArrayHeaderSizeBytes(sizeof(SingletonRegistryEntry), numSingletons);
 
 	// Singleton structs
-	for (uint32_t i = 0; i < numSingletons; i++) {
-		totalSizeBytes += uint32_t(roundUpAligned(singletonSizes[i], 16));
+	for (u32 i = 0; i < numSingletons; i++) {
+		totalSizeBytes += u32(roundUpAligned(singletonSizes[i], 16));
 	}
 
 	// Component registry (+ 1 for active bit)
 	totalSizeBytes += calcArrayHeaderSizeBytes(sizeof(ComponentRegistryEntry), numComponents + 1);
 
 	// Free entity ids list
-	totalSizeBytes += calcArrayHeaderSizeBytes(sizeof(uint32_t), maxNumEntities);
+	totalSizeBytes += calcArrayHeaderSizeBytes(sizeof(u32), maxNumEntities);
 
 	// Entity masks
 	totalSizeBytes += calcArrayHeaderSizeBytes(sizeof(CompMask), maxNumEntities);
 
 	// Entity generations list
-	totalSizeBytes += calcArrayHeaderSizeBytes(sizeof(uint8_t), maxNumEntities);
+	totalSizeBytes += calcArrayHeaderSizeBytes(sizeof(u8), maxNumEntities);
 
 	// Component arrays
-	for (uint32_t i = 0; i < numComponents; i++) {
+	for (u32 i = 0; i < numComponents; i++) {
 		if (componentSizes[i] > 0) {
 			totalSizeBytes += calcArrayHeaderSizeBytes(componentSizes[i], maxNumEntities);
 		}
@@ -427,11 +427,11 @@ constexpr uint32_t calcSizeOfGameStateBytes(
 // types, i.e. flags, you should specify 0 as the size in the "componentSizes" array.
 bool createGameState(
 	void* dstMemory,
-	uint32_t dstMemorySizeBytes,
-	uint32_t numSingletons,
-	const uint32_t* singletonSizes,
-	uint32_t maxNumEntities,
-	uint32_t numComponents,
-	const uint32_t* componentSizes) noexcept;
+	u32 dstMemorySizeBytes,
+	u32 numSingletons,
+	const u32* singletonSizes,
+	u32 maxNumEntities,
+	u32 numComponents,
+	const u32* componentSizes) noexcept;
 
 } // namespace sfz

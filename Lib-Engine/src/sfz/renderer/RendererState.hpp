@@ -43,12 +43,12 @@ namespace sfz {
 
 struct GroupProfilingID final {
 	strID groupName;
-	uint64_t id = ~0ull;
+	u64 id = ~0ull;
 };
 
 struct FrameProfilingIDs final {
-	uint64_t frameId = ~0ull;
-	uint64_t imguiId = ~0ull;
+	u64 frameId = ~0ull;
+	u64 imguiId = ~0ull;
 	Arr64<GroupProfilingID> groupIds;
 };
 
@@ -61,11 +61,11 @@ struct RendererState final {
 	SDL_Window* window = nullptr;
 
 	// The current index of the frame, increments at every frameBegin()
-	uint64_t currentFrameIdx = 0;
+	u64 currentFrameIdx = 0;
 
 	// Synchronization primitives to make sure we have finished rendering using a given set of
 	//" PerFrameData" resources so we can start uploading new data to them.
-	uint32_t frameLatency = 2;
+	u32 frameLatency = 2;
 	PerFrameData<zg::Fence> frameFences;
 
 	vec2_i32 windowRes = vec2_i32(0);
@@ -77,7 +77,7 @@ struct RendererState final {
 	zg::Profiler profiler;
 	PerFrameData<FrameProfilingIDs> frameMeasurementIds;
 	float lastRetrievedFrameTimeMs = 0.0f;
-	uint64_t lastRetrievedFrameTimeFrameIdx = ~0ull;
+	u64 lastRetrievedFrameTimeFrameIdx = ~0ull;
 
 	// UI
 	RendererUI ui;

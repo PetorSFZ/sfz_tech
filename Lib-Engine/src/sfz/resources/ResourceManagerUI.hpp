@@ -64,9 +64,9 @@ inline void renderBuffersTab(ResourceManagerState& state)
 			ImGui::Text("%s", resource.type == BufferResourceType::STATIC ? "STATIC" : "STREAMING");
 		});
 		alignedEdit("Size", offset, [&](const char*) {
-			const uint32_t numElements = resource.maxNumElements;
-			const uint32_t elementSize = resource.elementSizeBytes;
-			const uint32_t numBytes = elementSize * numElements;
+			const u32 numElements = resource.maxNumElements;
+			const u32 elementSize = resource.elementSizeBytes;
+			const u32 numBytes = elementSize * numElements;
 			float scaledSize = 0.0f;
 			const char* ending = "";
 			if (numBytes < 1024) {
@@ -240,7 +240,7 @@ inline void renderFramebuffersTab(ResourceManagerState& state)
 
 		if (!resource.renderTargetNames.isEmpty()) {
 			ImGui::Spacing();
-			for (uint32_t i = 0; i < resource.renderTargetNames.size(); i++) {
+			for (u32 i = 0; i < resource.renderTargetNames.size(); i++) {
 				strID renderTargetName = resource.renderTargetNames[i];
 				const TextureResource* renderTarget =
 					state.textures.get(*state.textureHandles.get(renderTargetName));
@@ -287,7 +287,7 @@ inline void renderMeshesTab(ResourceManagerState& state)
 		if (ImGui::CollapsingHeader(str64("Components (%u):##%llu", mesh.components.size(), itemItr.key))) {
 
 			ImGui::Indent(20.0f);
-			for (uint32_t i = 0; i < mesh.components.size(); i++) {
+			for (u32 i = 0; i < mesh.components.size(); i++) {
 
 				const MeshComponent& comp = mesh.components[i];
 				constexpr float offset = 250.0f;
@@ -349,7 +349,7 @@ inline void renderMeshesTab(ResourceManagerState& state)
 		if (ImGui::CollapsingHeader(str64("Materials (%u):##%llu", mesh.cpuMaterials.size(), itemItr.key))) {
 
 			ImGui::Indent(20.0f);
-			for (uint32_t i = 0; i < mesh.cpuMaterials.size(); i++) {
+			for (u32 i = 0; i < mesh.cpuMaterials.size(); i++) {
 				Material& material = mesh.cpuMaterials[i];
 
 				// Edit CPU material
@@ -438,7 +438,7 @@ inline void renderMeshesTab(ResourceManagerState& state)
 					// Replace material in mesh with new material
 					zg::CommandList commandList;
 					CHECK_ZG presentQueue.beginCommandListRecording(commandList);
-					uint64_t dstOffset = sizeof(ShaderMaterial) * i;
+					u64 dstOffset = sizeof(ShaderMaterial) * i;
 					CHECK_ZG commandList.memcpyBufferToBuffer(
 						materialsBuffer, dstOffset, uploadBuffer, 0, sizeof(ShaderMaterial));
 					CHECK_ZG presentQueue.executeCommandList(commandList);
@@ -525,13 +525,13 @@ inline void renderVoxelMaterialsTab(ResourceManager& resources, ResourceManagerS
 	const bool filterMode = filter != "";
 
 	for (HashMapPair<strID, PoolHandle> itemItr : state.voxelMaterialHandles) {
-		const uint32_t idx = itemItr.value.idx();
+		const u32 idx = itemItr.value.idx();
 		VoxelMaterial& material = state.voxelMaterials[itemItr.value];
 		str320 nameExt = str320("%s - [%u %u %u]",
 			itemItr.key.str(),
-			uint32_t(material.originalColor.x),
-			uint32_t(material.originalColor.y),
-			uint32_t(material.originalColor.z));
+			u32(material.originalColor.x),
+			u32(material.originalColor.y),
+			u32(material.originalColor.z));
 
 		str320 lowerCaseName = nameExt;
 		lowerCaseName.toLower();
@@ -556,9 +556,9 @@ inline void renderVoxelMaterialsTab(ResourceManager& resources, ResourceManagerS
 
 		alignedEdit("Original color", offset, [&](const char* name) {
 			str64 orignalColorStr = str64("%u %u %u", 
-				uint32_t(material.originalColor.x),
-				uint32_t(material.originalColor.y),
-				uint32_t(material.originalColor.z));
+				u32(material.originalColor.x),
+				u32(material.originalColor.y),
+				u32(material.originalColor.z));
 			ImGui::InputText(
 				str128("##%s%u", name, idx),
 				orignalColorStr.mRawStr,

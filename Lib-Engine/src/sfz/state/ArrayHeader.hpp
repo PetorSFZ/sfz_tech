@@ -40,10 +40,10 @@ struct ArrayHeader final {
 	// Public members
 	// --------------------------------------------------------------------------------------------
 
-	uint32_t size;
-	uint32_t elementSize;
-	uint32_t capacity;
-	uint8_t ___padding___[4];
+	u32 size;
+	u32 elementSize;
+	u32 capacity;
+	u8 ___padding___[4];
 
 	// Contructor functions
 	// --------------------------------------------------------------------------------------------
@@ -70,7 +70,7 @@ struct ArrayHeader final {
 	ArrayHeader(ArrayHeader&&) = delete;
 	ArrayHeader& operator=(ArrayHeader&&) = delete;
 
-	void createUntyped(uint32_t capacityIn, uint32_t elementSizeIn) noexcept;
+	void createUntyped(u32 capacityIn, u32 elementSizeIn) noexcept;
 
 	void createCopy(ArrayHeader& other) noexcept
 	{
@@ -78,16 +78,16 @@ struct ArrayHeader final {
 	}
 
 	template<typename T>
-	void create(uint32_t capacity) noexcept { return this->createUntyped(capacity, sizeof(T)); }
+	void create(u32 capacity) noexcept { return this->createUntyped(capacity, sizeof(T)); }
 
 	// Untyped accessors
 	// --------------------------------------------------------------------------------------------
 
-	uint8_t* dataUntyped() noexcept { return ((uint8_t*)this) + sizeof(ArrayHeader); }
-	const uint8_t* dataUntyped() const noexcept { return ((const uint8_t*)this) + sizeof(ArrayHeader); }
+	u8* dataUntyped() noexcept { return ((u8*)this) + sizeof(ArrayHeader); }
+	const u8* dataUntyped() const noexcept { return ((const u8*)this) + sizeof(ArrayHeader); }
 
-	uint8_t* atUntyped(uint32_t index) noexcept { return dataUntyped() + index * elementSize; }
-	const uint8_t* atUntyped(uint32_t index) const noexcept { return dataUntyped() + index * elementSize; }
+	u8* atUntyped(u32 index) noexcept { return dataUntyped() + index * elementSize; }
+	const u8* atUntyped(u32 index) const noexcept { return dataUntyped() + index * elementSize; }
 
 	// Typed accessors
 	// --------------------------------------------------------------------------------------------
@@ -99,31 +99,31 @@ struct ArrayHeader final {
 	const T* data() const noexcept { return (const T*)this->dataUntyped(); }
 
 	template<typename T>
-	T& at(uint32_t index) noexcept { return this->data<T>()[index]; }
+	T& at(u32 index) noexcept { return this->data<T>()[index]; }
 
 	template<typename T>
-	const T& at(uint32_t index) const noexcept { return this->data<T>()[index]; }
+	const T& at(u32 index) const noexcept { return this->data<T>()[index]; }
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	void addUntyped(const uint8_t* data, uint32_t numBytes) noexcept;
+	void addUntyped(const u8* data, u32 numBytes) noexcept;
 	
 	template<typename T>
-	void add(const T& data) noexcept { addUntyped((const uint8_t*)&data, sizeof(T)); }
+	void add(const T& data) noexcept { addUntyped((const u8*)&data, sizeof(T)); }
 
 	void pop() noexcept;
 
-	bool popGetUntyped(uint8_t* dst) noexcept;
+	bool popGetUntyped(u8* dst) noexcept;
 
 	template<typename T>
-	bool popGet(T& out) noexcept { return popGetUntyped(reinterpret_cast<uint8_t*>(&out)); }
+	bool popGet(T& out) noexcept { return popGetUntyped(reinterpret_cast<u8*>(&out)); }
 };
 static_assert(sizeof(ArrayHeader) == 16, "ArrayHeader is not 16-byte");
 
-constexpr uint32_t calcArrayHeaderSizeBytes(uint32_t componentSize, uint32_t numComponents)
+constexpr u32 calcArrayHeaderSizeBytes(u32 componentSize, u32 numComponents)
 {
-	return uint32_t(roundUpAligned(sizeof(ArrayHeader) + componentSize * numComponents, 16));
+	return u32(roundUpAligned(sizeof(ArrayHeader) + componentSize * numComponents, 16));
 }
 
 } // namespace sfz

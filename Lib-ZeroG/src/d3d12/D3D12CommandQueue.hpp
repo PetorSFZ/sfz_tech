@@ -48,7 +48,7 @@ public:
 	// Members
 	// --------------------------------------------------------------------------------------------
 
-	uint64_t fenceValue = 0;
+	u64 fenceValue = 0;
 	ZgCommandQueue* commandQueue = nullptr;
 
 	// Virtual methods
@@ -68,7 +68,7 @@ public:
 // ZgCommandQueue
 // ------------------------------------------------------------------------------------------------
 
-constexpr uint32_t MAX_NUM_COMMAND_LISTS = 1024;
+constexpr u32 MAX_NUM_COMMAND_LISTS = 1024;
 
 struct ZgCommandQueue final {
 	// Constructors & destructors
@@ -142,7 +142,7 @@ struct ZgCommandQueue final {
 	ComPtr<ID3D12CommandQueue> mCommandQueue;
 
 	ComPtr<ID3D12Fence> mCommandQueueFence;
-	uint64_t mCommandQueueFenceValue = 0;
+	u64 mCommandQueueFenceValue = 0;
 	HANDLE mCommandQueueFenceEvent = nullptr;
 
 	sfz::Array<ZgCommandList> mCommandListStorage;
@@ -168,7 +168,7 @@ struct ZgCommandQueue final {
 
 	ZgResult flush() noexcept
 	{
-		uint64_t fenceValue = this->signalOnGpuInternal();
+		u64 fenceValue = this->signalOnGpuInternal();
 		this->waitOnCpuInternal(fenceValue);
 		return ZG_SUCCESS;
 	}
@@ -179,7 +179,7 @@ struct ZgCommandQueue final {
 		bool commandListFound = false;
 
 		// If command lists available in queue, attempt to get one of them
-		uint64_t queueSize = mCommandListQueue.size();
+		u64 queueSize = mCommandListQueue.size();
 		if (queueSize != 0) {
 			if (isFenceValueDone(mCommandListQueue.first()->fenceValue)) {
 				mCommandListQueue.pop(commandList);
@@ -210,7 +210,7 @@ struct ZgCommandQueue final {
 			return ZG_ERROR_GENERIC;
 		}
 
-		auto execBarriers = [&](const CD3DX12_RESOURCE_BARRIER* barriers, uint32_t numBarriers) -> ZgResult {
+		auto execBarriers = [&](const CD3DX12_RESOURCE_BARRIER* barriers, u32 numBarriers) -> ZgResult {
 			// Get command list to execute barriers in
 			ZgCommandList* commandList = nullptr;
 			ZgResult res =
@@ -232,7 +232,7 @@ struct ZgCommandQueue final {
 		executeCommandLists(*mCommandQueue.Get(), cmdLists, cmdListStates, 1, execBarriers, barrierList);
 
 		// Signal
-		uint64_t fenceValue = this->signalOnGpuInternal();
+		u64 fenceValue = this->signalOnGpuInternal();
 		commandList->fenceValue = fenceValue;
 
 		// Add command list to queue
@@ -244,13 +244,13 @@ struct ZgCommandQueue final {
 	// Synchronization methods
 	// --------------------------------------------------------------------------------------------
 
-	uint64_t signalOnGpuInternal() noexcept
+	u64 signalOnGpuInternal() noexcept
 	{
 		CHECK_D3D12 mCommandQueue->Signal(mCommandQueueFence.Get(), mCommandQueueFenceValue);
 		return mCommandQueueFenceValue++;
 	}
 
-	void waitOnCpuInternal(uint64_t fenceValue) noexcept
+	void waitOnCpuInternal(u64 fenceValue) noexcept
 	{
 		if (!isFenceValueDone(fenceValue)) {
 			CHECK_D3D12 mCommandQueueFence->SetEventOnCompletion(
@@ -260,7 +260,7 @@ struct ZgCommandQueue final {
 		}
 	}
 
-	bool isFenceValueDone(uint64_t fenceValue) noexcept
+	bool isFenceValueDone(u64 fenceValue) noexcept
 	{
 		return mCommandQueueFence->GetCompletedValue() >= fenceValue;
 	}

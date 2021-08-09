@@ -27,14 +27,14 @@
 // ------------------------------------------------------------------------------------------------
 
 // Usage:
-// constexpr uint32_t STRING_SIZE = 128;
+// constexpr u32 STRING_SIZE = 128;
 // char originalString[STRING_SIZE] = {};
 // char* tmpStr = originalString;
 // tmpStr[0] = '\0';
-// uint32_t bytesLeft = STRING_SIZE;
+// u32 bytesLeft = STRING_SIZE;
 // printfAppend(tmpStr, bytesLeft, "text");
 // printfAppend(tmpStr, bytesLeft, "more text");
-inline void printfAppend(char*& str, uint32_t& bytesLeft, const char* format, ...) noexcept
+inline void printfAppend(char*& str, u32& bytesLeft, const char* format, ...) noexcept
 {
 	va_list args;
 	va_start(args, format);

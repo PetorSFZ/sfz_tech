@@ -25,9 +25,6 @@
 
 namespace sfz {
 
-using std::int32_t;
-using std::uint32_t;
-
 // DynString class
 // ------------------------------------------------------------------------------------------------
 
@@ -53,7 +50,7 @@ public:
 	/// internal capacity will be set to the specified capacity.
 	/// \param string a null-terminated string or nullptr
 	/// \param capacity the capacity of the internal Array
-	explicit DynString(const char* string, uint32_t capacity = 0,
+	explicit DynString(const char* string, u32 capacity = 0,
 	                   SfzAllocator* allocator = getDefaultAllocator()) noexcept;
 
 	// Getters
@@ -64,8 +61,8 @@ public:
 
 	/// Returns length of the internal string minus the null-terminator. If the size of the
 	/// internal Array is non-zero then this method will return Array.size() - 1.
-	uint32_t size() const noexcept;
-	uint32_t capacity() const noexcept { return mString.capacity(); }
+	u32 size() const noexcept;
+	u32 capacity() const noexcept { return mString.capacity(); }
 
 	SfzAllocator* allocator() const noexcept { return mString.allocator(); }
 
@@ -76,7 +73,7 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	void swap(DynString& other) noexcept { mString.swap(other.mString); }
-	void setCapacity(uint32_t capacity) noexcept { mString.setCapacity(capacity); }
+	void setCapacity(u32 capacity) noexcept { mString.setCapacity(capacity); }
 	void clear() noexcept { mString.clear(); }
 	void destroy() noexcept { mString.destroy(); }
 

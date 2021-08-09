@@ -74,7 +74,7 @@ UTEST(HSV, hsv_to_rgb)
 	{
 		constexpr uint32_t NUM_SAMPLES = 10;
 		for (uint32_t i = 1; i <= NUM_SAMPLES; i++) {
-			const float hue = 360.0f * (float(i) / float(NUM_SAMPLES));
+			const f32 hue = 360.0f * (f32(i) / f32(NUM_SAMPLES));
 			sfz::vec3 rgb = sfz::hsvToRGB(sfz::vec3(hue, 0.0f, 0.0f));
 			ASSERT_TRUE(sfz::eqf(rgb, sfz::vec3(0.0f)));
 		}
@@ -84,7 +84,7 @@ UTEST(HSV, hsv_to_rgb)
 	{
 		constexpr uint32_t NUM_SAMPLES = 10;
 		for (uint32_t i = 1; i <= NUM_SAMPLES; i++) {
-			const float hue = 360.0f * (float(i) / float(NUM_SAMPLES));
+			const f32 hue = 360.0f * (f32(i) / f32(NUM_SAMPLES));
 			sfz::vec3 rgb = sfz::hsvToRGB(sfz::vec3(hue, 0.0f, 1.0f));
 			ASSERT_TRUE(sfz::eqf(rgb, sfz::vec3(1.0f)));
 		}
@@ -125,13 +125,13 @@ UTEST(HSV, rgb_to_hsv_and_back)
 	// Evenly distributed samples over rgb
 	constexpr uint32_t NUM_SAMPLES = 16;
 	for (uint32_t x = 1; x <= NUM_SAMPLES; x++) {
-		const float xVal = float(x) / float(NUM_SAMPLES);
+		const f32 xVal = f32(x) / f32(NUM_SAMPLES);
 
 		for (uint32_t y = 1; y <= NUM_SAMPLES; y++) {
-			const float yVal = float(y) / float(NUM_SAMPLES);
+			const f32 yVal = f32(y) / f32(NUM_SAMPLES);
 			
 			for (uint32_t z = 1; z <= NUM_SAMPLES; z++) {
-				const float zVal = float(z) / float(NUM_SAMPLES);
+				const f32 zVal = f32(z) / f32(NUM_SAMPLES);
 				
 				sfz::vec3 rgbOriginal = sfz::vec3(xVal, yVal, zVal);
 				sfz::vec3 hsv = sfz::rgbToHSV(rgbOriginal);
@@ -148,13 +148,13 @@ UTEST(HSV, hsv_to_rgb_and_back)
 	// Evenly distributed samples over hsv
 	constexpr uint32_t NUM_SAMPLES = 16;
 	for (uint32_t x = 1; x <= (NUM_SAMPLES * 2); x++) {
-		const float xVal = 359.9f * (float(x) / float(NUM_SAMPLES * 2));
+		const f32 xVal = 359.9f * (f32(x) / f32(NUM_SAMPLES * 2));
 
 		for (uint32_t y = 1; y <= NUM_SAMPLES; y++) {
-			const float yVal = float(y) / float(NUM_SAMPLES);
+			const f32 yVal = f32(y) / f32(NUM_SAMPLES);
 
 			for (uint32_t z = 1; z <= NUM_SAMPLES; z++) {
-				const float zVal = float(z) / float(NUM_SAMPLES);
+				const f32 zVal = f32(z) / f32(NUM_SAMPLES);
 
 				sfz::vec3 hsvOriginal = sfz::vec3(xVal, yVal, zVal);
 				sfz::vec3 rgb = sfz::hsvToRGB(hsvOriginal);

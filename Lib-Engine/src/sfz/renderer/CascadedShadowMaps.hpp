@@ -27,12 +27,12 @@ namespace sfz {
 // Cascaded shadow map calculator
 // ------------------------------------------------------------------------------------------------
 
-constexpr uint32_t MAX_NUM_CASCADED_SHADOW_MAP_LEVELS = 4;
+constexpr u32 MAX_NUM_CASCADED_SHADOW_MAP_LEVELS = 4;
 
 struct CascadedShadowMapInfo final {
 
 	// Number of cascaded shadow map levels (same as input to function)
-	uint32_t numLevels = 0;
+	u32 numLevels = 0;
 
 	// Maximum distance each shadow map level is valid for (same as input to function)
 	float levelDists[MAX_NUM_CASCADED_SHADOW_MAP_LEVELS] = {};
@@ -80,7 +80,7 @@ CascadedShadowMapInfo calculateCascadedShadowMapInfo(
 	mat4 camRealViewMatrix,
 	vec3 lightDir,
 	float shadowHeightDist,
-	uint32_t numLevels,
+	u32 numLevels,
 	const float* levelDists) noexcept;
 
 } // namespace sfz

@@ -27,22 +27,22 @@ namespace sfz {
 // sfz::hash
 // ------------------------------------------------------------------------------------------------
 
-constexpr uint64_t hash(uint8_t value) { return uint64_t(value); }
-constexpr uint64_t hash(uint16_t value) { return uint64_t(value); }
-constexpr uint64_t hash(uint32_t value) { return uint64_t(value); }
-constexpr uint64_t hash(uint64_t value) { return uint64_t(value); }
+constexpr u64 hash(u8 value) { return u64(value); }
+constexpr u64 hash(u16 value) { return u64(value); }
+constexpr u64 hash(u32 value) { return u64(value); }
+constexpr u64 hash(u64 value) { return u64(value); }
 
-constexpr uint64_t hash(int16_t value) { return uint64_t(value); }
-constexpr uint64_t hash(int32_t value) { return uint64_t(value); }
-constexpr uint64_t hash(int64_t value) { return uint64_t(value); }
+constexpr u64 hash(i16 value) { return u64(value); }
+constexpr u64 hash(i32 value) { return u64(value); }
+constexpr u64 hash(i64 value) { return u64(value); }
 
-constexpr uint64_t hash(const void* value) { return uint64_t(uintptr_t(value)); }
+constexpr u64 hash(const void* value) { return u64(uintptr_t(value)); }
 
-template<typename T, uint32_t N>
-constexpr uint64_t hash(Vec<T,N> v)
+template<typename T, u32 N>
+constexpr u64 hash(Vec<T,N> v)
 {
-	uint64_t hash = 0;
-	for (uint32_t i = 0; i < N; i++) {
+	u64 hash = 0;
+	for (u32 i = 0; i < N; i++) {
 		// hash_combine algorithm from boost
 		hash ^= sfz::hash(v[i]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
 	}
@@ -53,7 +53,7 @@ constexpr uint64_t hash(Vec<T,N> v)
 // ------------------------------------------------------------------------------------------------
 
 // The state of a slot in a HashMap
-enum class HashMapSlotState : uint32_t {
+enum class HashMapSlotState : u32 {
 	EMPTY = 0, // No key/value pair associated with slot
 	PLACEHOLDER = 1, // Key/value pair was associated, but subsequently removed
 	OCCUPIED = 2 // Key/value pair associated with slot
@@ -67,18 +67,18 @@ public:
 	HashMapSlot(const HashMapSlot&) noexcept = default;
 	HashMapSlot& operator= (const HashMapSlot&) noexcept = default;
 
-	HashMapSlot(HashMapSlotState state, uint32_t index) noexcept
+	HashMapSlot(HashMapSlotState state, u32 index) noexcept
 	{
-		mSlot = ((uint32_t(state) & 0x03u) << 30u) | (index & 0x3FFFFFFFu);
+		mSlot = ((u32(state) & 0x03u) << 30u) | (index & 0x3FFFFFFFu);
 	}
 
 	HashMapSlotState state() const { return HashMapSlotState((mSlot >> 30u) & 0x03u); }
-	uint32_t index() const { return mSlot & 0x3FFFFFFFu; }
+	u32 index() const { return mSlot & 0x3FFFFFFFu; }
 
 private:
-	uint32_t mSlot = 0u;
+	u32 mSlot = 0u;
 };
-static_assert(sizeof(HashMapSlot) == sizeof(uint32_t), "");
+static_assert(sizeof(HashMapSlot) == sizeof(u32), "");
 
 // Simple container used for hash map iterators.
 template<typename K, typename V>
@@ -93,7 +93,7 @@ struct HashMapPair final {
 template<typename MapT, typename K, typename V>
 class HashMapItr final {
 public:
-	HashMapItr(MapT& map, uint32_t idx) noexcept : mMap(&map), mIdx(idx) { }
+	HashMapItr(MapT& map, u32 idx) noexcept : mMap(&map), mIdx(idx) { }
 	HashMapItr(const HashMapItr&) noexcept = default;
 	HashMapItr& operator= (const HashMapItr&) noexcept = default;
 
@@ -107,7 +107,7 @@ public:
 
 private:
 	MapT* mMap;
-	uint32_t mIdx;
+	u32 mIdx;
 };
 
 // HashMap
@@ -140,11 +140,11 @@ public:
 
 	using AltK = typename sfz::AltType<K>::AltT;
 
-	static constexpr uint32_t ALIGNMENT = 32;
-	static constexpr uint32_t MIN_CAPACITY = 64;
-	static constexpr uint32_t MAX_CAPACITY = (1 << 30) - 1; // 2 bits reserved for info
-	static constexpr float MAX_OCCUPIED_REHASH_FACTOR = 0.80f;
-	static constexpr float GROW_RATE = 1.75f;
+	static constexpr u32 ALIGNMENT = 32;
+	static constexpr u32 MIN_CAPACITY = 64;
+	static constexpr u32 MAX_CAPACITY = (1 << 30) - 1; // 2 bits reserved for info
+	static constexpr f32 MAX_OCCUPIED_REHASH_FACTOR = 0.80f;
+	static constexpr f32 GROW_RATE = 1.75f;
 
 	static_assert(alignof(K) <= ALIGNMENT, "");
 	static_assert(alignof(V) <= ALIGNMENT, "");
@@ -154,7 +154,7 @@ public:
 	
 	SFZ_DECLARE_DROP_TYPE(HashMap);
 
-	HashMap(uint32_t capacity, SfzAllocator* allocator, SfzDbgInfo allocDbg) noexcept
+	HashMap(u32 capacity, SfzAllocator* allocator, SfzDbgInfo allocDbg) noexcept
 	{
 		this->init(capacity, allocator, allocDbg);
 	}
@@ -162,7 +162,7 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void init(uint32_t capacity, SfzAllocator* allocator, SfzDbgInfo allocDbg)
+	void init(u32 capacity, SfzAllocator* allocator, SfzDbgInfo allocDbg)
 	{
 		this->destroy();
 		mAllocator = allocator;
@@ -173,12 +173,12 @@ public:
 	{
 		HashMap tmp(mCapacity, allocator, allocDbg);
 		tmp.mSize = this->mSize;
-		for (uint32_t i = 0; i < mSize; i++) {
+		for (u32 i = 0; i < mSize; i++) {
 			tmp.mKeys[i] = this->mKeys[i];
 			tmp.mValues[i] = this->mValues[i];
 		}
 		tmp.mPlaceholders = this->mPlaceholders;
-		for (uint32_t i = 0; i < mCapacity; i++) {
+		for (u32 i = 0; i < mCapacity; i++) {
 			tmp.mSlots[i] = this->mSlots[i];
 		}
 		return tmp;
@@ -210,7 +210,7 @@ public:
 		sfz_assert(mSize <= mCapacity);
 
 		// Call destructors for all active keys and values
-		for (uint32_t i = 0; i < mSize; i++) {
+		for (u32 i = 0; i < mSize; i++) {
 			mKeys[i].~K();
 			mValues[i].~V();
 		}
@@ -224,7 +224,7 @@ public:
 	}
 
 	// Rehashes this HashMap to the specified capacity. All old pointers and references are invalidated.
-	void rehash(uint32_t newCapacity, SfzDbgInfo allocDbg)
+	void rehash(u32 newCapacity, SfzDbgInfo allocDbg)
 	{
 		if (newCapacity == 0) return;
 		if (newCapacity < MIN_CAPACITY) newCapacity = MIN_CAPACITY;
@@ -238,13 +238,13 @@ public:
 		// Create new hash map and calculate size of its arrays
 		HashMap tmp;
 		tmp.mCapacity = newCapacity;
-		uint64_t sizeOfSlots = roundUpAligned(tmp.mCapacity * sizeof(HashMapSlot), ALIGNMENT);
-		uint64_t sizeOfKeys = roundUpAligned(sizeof(K) * tmp.mCapacity, ALIGNMENT);
-		uint64_t sizeOfValues = roundUpAligned(sizeof(V) * tmp.mCapacity, ALIGNMENT);
-		uint64_t allocSize = sizeOfSlots + sizeOfKeys + sizeOfValues;
+		u64 sizeOfSlots = roundUpAligned(tmp.mCapacity * sizeof(HashMapSlot), ALIGNMENT);
+		u64 sizeOfKeys = roundUpAligned(sizeof(K) * tmp.mCapacity, ALIGNMENT);
+		u64 sizeOfValues = roundUpAligned(sizeof(V) * tmp.mCapacity, ALIGNMENT);
+		u64 allocSize = sizeOfSlots + sizeOfKeys + sizeOfValues;
 
 		// Allocate and clear memory for new hash map
-		tmp.mAllocation = static_cast<uint8_t*>(mAllocator->alloc(allocDbg, allocSize, ALIGNMENT));
+		tmp.mAllocation = static_cast<u8*>(mAllocator->alloc(allocDbg, allocSize, ALIGNMENT));
 		std::memset(tmp.mAllocation, 0, allocSize);
 		tmp.mAllocator = mAllocator;
 		tmp.mSlots = reinterpret_cast<HashMapSlot*>(tmp.mAllocation);
@@ -255,7 +255,7 @@ public:
 
 		// Iterate over all pairs of objects in this HashMap and move them to the new one
 		if (this->mAllocation != nullptr) {
-			for (uint32_t i = 0; i < mSize; i++) {
+			for (u32 i = 0; i < mSize; i++) {
 				tmp.put(std::move(mKeys[i]), std::move(mValues[i]));
 			}
 		}
@@ -270,9 +270,9 @@ public:
 	const K* keys() const { return mKeys; }
 	V* values() { return mValues; }
 	const V* values() const { return mValues; }
-	uint32_t size() const { return mSize; }
-	uint32_t capacity() const { return mCapacity; }
-	uint32_t placeholders() const { return mPlaceholders; }
+	u32 size() const { return mSize; }
+	u32 capacity() const { return mCapacity; }
+	u32 placeholders() const { return mPlaceholders; }
 	SfzAllocator* allocator() const { return mAllocator; }
 
 	// Returns pointer to the element associated with the given key, or nullptr if no such element
@@ -331,15 +331,15 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	template<typename KT>
-	void findSlot(const KT& key, uint32_t& firstFreeSlotIdx, uint32_t& occupiedSlotIdx) const
+	void findSlot(const KT& key, u32& firstFreeSlotIdx, u32& occupiedSlotIdx) const
 	{
 		firstFreeSlotIdx = ~0u;
 		occupiedSlotIdx = ~0u;
 
 		// Search for the element using linear probing
-		const uint32_t baseIndex = mCapacity != 0 ? uint32_t(sfz::hash(key) % uint64_t(mCapacity)) : 0;
-		for (uint32_t i = 0; i < mCapacity; i++) {
-			const uint32_t slotIdx = (baseIndex + i) % mCapacity;
+		const u32 baseIndex = mCapacity != 0 ? u32(sfz::hash(key) % u64(mCapacity)) : 0;
+		for (u32 i = 0; i < mCapacity; i++) {
+			const u32 slotIdx = (baseIndex + i) % mCapacity;
 			HashMapSlot slot = mSlots[slotIdx];
 			HashMapSlotState state = slot.state();
 
@@ -357,7 +357,7 @@ private:
 	}
 
 	// Swaps the position of two key/value pairs in the internal arrays and updates their slots
-	void swapElements(uint32_t slotIdx1, uint32_t slotIdx2)
+	void swapElements(u32 slotIdx1, u32 slotIdx2)
 	{
 		sfz_assert(slotIdx1 < mCapacity);
 		sfz_assert(slotIdx2 < mCapacity);
@@ -365,8 +365,8 @@ private:
 		HashMapSlot slot2 = mSlots[slotIdx2];
 		sfz_assert(slot1.state() == HashMapSlotState::OCCUPIED);
 		sfz_assert(slot2.state() == HashMapSlotState::OCCUPIED);
-		uint32_t idx1 = slot1.index();
-		uint32_t idx2 = slot2.index();
+		u32 idx1 = slot1.index();
+		u32 idx2 = slot2.index();
 		sfz_assert(idx1 < mSize);
 		sfz_assert(idx2 < mSize);
 		std::swap(mSlots[slotIdx1], mSlots[slotIdx2]);
@@ -378,8 +378,8 @@ private:
 	V* getInternal(const KT& key) const
 	{
 		// Finds slots
-		uint32_t firstFreeSlotIdx = ~0u;
-		uint32_t occupiedSlotIdx = ~0u;
+		u32 firstFreeSlotIdx = ~0u;
+		u32 occupiedSlotIdx = ~0u;
 		this->findSlot<KT>(key, firstFreeSlotIdx, occupiedSlotIdx);
 
 		// Return nullptr if map does not contain element
@@ -389,7 +389,7 @@ private:
 		sfz_assert(occupiedSlotIdx < mCapacity);
 		HashMapSlot slot = mSlots[occupiedSlotIdx];
 		sfz_assert(slot.state() == HashMapSlotState::OCCUPIED);
-		uint32_t idx = slot.index();
+		u32 idx = slot.index();
 		sfz_assert(idx < mSize);
 		return mValues + idx;
 	}
@@ -398,28 +398,28 @@ private:
 	V& putInternal(const KT& key, VT&& value)
 	{
 		// Rehash if necessary
-		uint32_t maxNumOccupied = uint32_t(mCapacity * MAX_OCCUPIED_REHASH_FACTOR);
+		u32 maxNumOccupied = u32(mCapacity * MAX_OCCUPIED_REHASH_FACTOR);
 		if ((mSize + mPlaceholders) >= maxNumOccupied) {
-			this->rehash(uint32_t((mCapacity + 1) * GROW_RATE), sfz_dbg("HashMap"));
+			this->rehash(u32((mCapacity + 1) * GROW_RATE), sfz_dbg("HashMap"));
 		}
 
 		// Finds slots
-		uint32_t firstFreeSlotIdx = ~0u;
-		uint32_t occupiedSlotIdx = ~0u;
+		u32 firstFreeSlotIdx = ~0u;
+		u32 occupiedSlotIdx = ~0u;
 		this->findSlot<KT>(key, firstFreeSlotIdx, occupiedSlotIdx);
 
 		// If map contains key, replace value and return
 		if (occupiedSlotIdx != ~0u) {
 			sfz_assert(occupiedSlotIdx < mCapacity);
 			HashMapSlot slot = mSlots[occupiedSlotIdx];
-			uint32_t idx = slot.index();
+			u32 idx = slot.index();
 			sfz_assert(idx < mSize);
 			mValues[idx] = std::forward<VT>(value);
 			return mValues[idx];
 		}
 
 		// Calculate next index
-		uint32_t nextFreeIdx = mSize;
+		u32 nextFreeIdx = mSize;
 		mSize += 1;
 
 		// Check if previous slot was placeholder and then create new slot
@@ -440,25 +440,25 @@ private:
 	bool removeInternal(const KT& key)
 	{
 		// Finds slots
-		uint32_t firstFreeSlotIdx = ~0u;
-		uint32_t occupiedSlotIdx = ~0u;
+		u32 firstFreeSlotIdx = ~0u;
+		u32 occupiedSlotIdx = ~0u;
 		this->findSlot<KT>(key, firstFreeSlotIdx, occupiedSlotIdx);
 
 		// Return false if map does not contain element
 		if (occupiedSlotIdx == ~0u) return false;
 
 		// Swap the key/value pair with the last key/value pair in the arrays
-		uint32_t lastSlotIdx = ~0u;
+		u32 lastSlotIdx = ~0u;
 		{
 			sfz_assert(mSize > 0);
-			uint32_t unused = ~0u;
+			u32 unused = ~0u;
 			this->findSlot<K>(mKeys[mSize - 1], unused, lastSlotIdx);
 			sfz_assert(lastSlotIdx != ~0u);
 		}
 		this->swapElements(occupiedSlotIdx, lastSlotIdx);
 
 		// Remove the element
-		uint32_t idx = mSlots[occupiedSlotIdx].index();
+		u32 idx = mSlots[occupiedSlotIdx].index();
 		sfz_assert(idx < mSize);
 		mSlots[occupiedSlotIdx] = HashMapSlot(HashMapSlotState::PLACEHOLDER, ~0u);
 		mKeys[idx].~K();
@@ -473,8 +473,8 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	uint32_t mSize = 0, mCapacity = 0, mPlaceholders = 0;
-	uint8_t* mAllocation = nullptr;
+	u32 mSize = 0, mCapacity = 0, mPlaceholders = 0;
+	u8* mAllocation = nullptr;
 	HashMapSlot* mSlots = nullptr;
 	K* mKeys = nullptr;
 	V* mValues = nullptr;
@@ -484,7 +484,7 @@ private:
 // HashMapLocal
 // ------------------------------------------------------------------------------------------------
 
-template<typename K, typename V, uint32_t Capacity>
+template<typename K, typename V, u32 Capacity>
 class HashMapLocal {
 public:
 	using AltK = typename sfz::AltType<K>::AltT;
@@ -507,7 +507,7 @@ public:
 
 	void swap(HashMapLocal& other)
 	{
-		for (uint32_t i = 0; i < Capacity; i++) {
+		for (u32 i = 0; i < Capacity; i++) {
 			std::swap(this->mSlots[i], other.mSlots[i]);
 			std::swap(this->mKeys[i], other.mKeys[i]);
 			std::swap(this->mValues[i], other.mValues[i]);
@@ -522,7 +522,7 @@ public:
 		sfz_assert(mSize <= Capacity);
 
 		// Call destructors for all active keys and values
-		for (uint32_t i = 0; i < mSize; i++) {
+		for (u32 i = 0; i < mSize; i++) {
 			mKeys[i] = K();
 			mValues[i] = V();
 		}
@@ -541,9 +541,9 @@ public:
 	const K* keys() const { return mKeys; }
 	V* values() { return mValues; }
 	const V* values() const { return mValues; }
-	uint32_t size() const { return mSize; }
-	uint32_t capacity() const { return Capacity; }
-	uint32_t placeholders() const { return mPlaceholders; }
+	u32 size() const { return mSize; }
+	u32 capacity() const { return Capacity; }
+	u32 placeholders() const { return mPlaceholders; }
 
 	V* get(const K& key) { return this->getInternal<K>(key); }
 	const V* get(const K& key) const { return this->getInternal<K>(key); }
@@ -585,15 +585,15 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	template<typename KT>
-	void findSlot(const KT& key, uint32_t& firstFreeSlotIdx, uint32_t& occupiedSlotIdx) const
+	void findSlot(const KT& key, u32& firstFreeSlotIdx, u32& occupiedSlotIdx) const
 	{
 		firstFreeSlotIdx = ~0u;
 		occupiedSlotIdx = ~0u;
 
 		// Search for the element using linear probing
-		const uint32_t baseIndex = Capacity != 0 ? uint32_t(sfz::hash(key) % uint64_t(Capacity)) : 0;
-		for (uint32_t i = 0; i < Capacity; i++) {
-			const uint32_t slotIdx = (baseIndex + i) % Capacity;
+		const u32 baseIndex = Capacity != 0 ? u32(sfz::hash(key) % u64(Capacity)) : 0;
+		for (u32 i = 0; i < Capacity; i++) {
+			const u32 slotIdx = (baseIndex + i) % Capacity;
 			HashMapSlot slot = mSlots[slotIdx];
 			HashMapSlotState state = slot.state();
 
@@ -611,7 +611,7 @@ private:
 	}
 
 	// Swaps the position of two key/value pairs in the internal arrays and updates their slots
-	void swapElements(uint32_t slotIdx1, uint32_t slotIdx2)
+	void swapElements(u32 slotIdx1, u32 slotIdx2)
 	{
 		sfz_assert(slotIdx1 < Capacity);
 		sfz_assert(slotIdx2 < Capacity);
@@ -619,8 +619,8 @@ private:
 		HashMapSlot slot2 = mSlots[slotIdx2];
 		sfz_assert(slot1.state() == HashMapSlotState::OCCUPIED);
 		sfz_assert(slot2.state() == HashMapSlotState::OCCUPIED);
-		uint32_t idx1 = slot1.index();
-		uint32_t idx2 = slot2.index();
+		u32 idx1 = slot1.index();
+		u32 idx2 = slot2.index();
 		sfz_assert(idx1 < mSize);
 		sfz_assert(idx2 < mSize);
 		std::swap(mSlots[slotIdx1], mSlots[slotIdx2]);
@@ -632,8 +632,8 @@ private:
 	V* getInternal(const KT& key)
 	{
 		// Finds slots
-		uint32_t firstFreeSlotIdx = ~0u;
-		uint32_t occupiedSlotIdx = ~0u;
+		u32 firstFreeSlotIdx = ~0u;
+		u32 occupiedSlotIdx = ~0u;
 		this->findSlot<KT>(key, firstFreeSlotIdx, occupiedSlotIdx);
 
 		// Return nullptr if map does not contain element
@@ -643,7 +643,7 @@ private:
 		sfz_assert(occupiedSlotIdx < Capacity);
 		HashMapSlot slot = mSlots[occupiedSlotIdx];
 		sfz_assert(slot.state() == HashMapSlotState::OCCUPIED);
-		uint32_t idx = slot.index();
+		u32 idx = slot.index();
 		sfz_assert(idx < mSize);
 		return mValues + idx;
 	}
@@ -652,8 +652,8 @@ private:
 	const V* getInternal(const KT& key) const
 	{
 		// Finds slots
-		uint32_t firstFreeSlotIdx = ~0u;
-		uint32_t occupiedSlotIdx = ~0u;
+		u32 firstFreeSlotIdx = ~0u;
+		u32 occupiedSlotIdx = ~0u;
 		this->findSlot<KT>(key, firstFreeSlotIdx, occupiedSlotIdx);
 
 		// Return nullptr if map does not contain element
@@ -663,7 +663,7 @@ private:
 		sfz_assert(occupiedSlotIdx < Capacity);
 		HashMapSlot slot = mSlots[occupiedSlotIdx];
 		sfz_assert(slot.state() == HashMapSlotState::OCCUPIED);
-		uint32_t idx = slot.index();
+		u32 idx = slot.index();
 		sfz_assert(idx < mSize);
 		return mValues + idx;
 	}
@@ -672,15 +672,15 @@ private:
 	V& putInternal(const KT& key, VT&& value)
 	{
 		// Finds slots
-		uint32_t firstFreeSlotIdx = ~0u;
-		uint32_t occupiedSlotIdx = ~0u;
+		u32 firstFreeSlotIdx = ~0u;
+		u32 occupiedSlotIdx = ~0u;
 		this->findSlot<KT>(key, firstFreeSlotIdx, occupiedSlotIdx);
 
 		// If map contains key, replace value and return
 		if (occupiedSlotIdx != ~0u) {
 			sfz_assert(occupiedSlotIdx < Capacity);
 			HashMapSlot slot = mSlots[occupiedSlotIdx];
-			uint32_t idx = slot.index();
+			u32 idx = slot.index();
 			sfz_assert(idx < mSize);
 			mValues[idx] = std::forward<VT>(value);
 			return mValues[idx];
@@ -688,7 +688,7 @@ private:
 
 		// Calculate next index
 		sfz_assert_hard(mSize < Capacity);
-		uint32_t nextFreeIdx = mSize;
+		u32 nextFreeIdx = mSize;
 		mSize += 1;
 
 		// Check if previous slot was placeholder and then create new slot
@@ -709,25 +709,25 @@ private:
 	bool removeInternal(const KT& key)
 	{
 		// Finds slots
-		uint32_t firstFreeSlotIdx = ~0u;
-		uint32_t occupiedSlotIdx = ~0u;
+		u32 firstFreeSlotIdx = ~0u;
+		u32 occupiedSlotIdx = ~0u;
 		this->findSlot<KT>(key, firstFreeSlotIdx, occupiedSlotIdx);
 
 		// Return false if map does not contain element
 		if (occupiedSlotIdx == ~0u) return false;
 
 		// Swap the key/value pair with the last key/value pair in the arrays
-		uint32_t lastSlotIdx = ~0u;
+		u32 lastSlotIdx = ~0u;
 		{
 			sfz_assert(mSize > 0);
-			uint32_t unused = ~0u;
+			u32 unused = ~0u;
 			this->findSlot<K>(mKeys[mSize - 1], unused, lastSlotIdx);
 			sfz_assert(lastSlotIdx != ~0u);
 		}
 		this->swapElements(occupiedSlotIdx, lastSlotIdx);
 
 		// Remove the element
-		uint32_t idx = mSlots[occupiedSlotIdx].index();
+		u32 idx = mSlots[occupiedSlotIdx].index();
 		sfz_assert(idx < mSize);
 		mSlots[occupiedSlotIdx] = HashMapSlot(HashMapSlotState::PLACEHOLDER, ~0u);
 		mKeys[idx] = K();
@@ -745,9 +745,9 @@ private:
 	HashMapSlot mSlots[Capacity];
 	K mKeys[Capacity];
 	V mValues[Capacity];
-	uint32_t mSize = 0;
-	uint32_t mPlaceholders = 0;
-	uint32_t mPadding[2] = {};
+	u32 mSize = 0;
+	u32 mPlaceholders = 0;
+	u32 mPadding[2] = {};
 };
 
 template<typename K, typename V> using Map4 = HashMapLocal<K, V, 4>;

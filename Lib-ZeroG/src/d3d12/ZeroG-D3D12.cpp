@@ -69,7 +69,7 @@ extern "C" { _declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\
 // Constants
 // ------------------------------------------------------------------------------------------------
 
-constexpr uint32_t NUM_SWAP_CHAIN_BUFFERS = 3;
+constexpr u32 NUM_SWAP_CHAIN_BUFFERS = 3;
 
 // D3D12 Context State
 // ------------------------------------------------------------------------------------------------
@@ -110,11 +110,11 @@ struct ZgContextState final {
 	ZgCommandQueue commandQueueCopy;
 
 	// Swapchain and backbuffers
-	uint32_t width = 0;
-	uint32_t height = 0;
+	u32 width = 0;
+	u32 height = 0;
 	ComPtr<IDXGISwapChain4> swapchain;
 	ZgFramebuffer swapchainFramebuffers[NUM_SWAP_CHAIN_BUFFERS];
-	uint64_t swapchainFenceValues[NUM_SWAP_CHAIN_BUFFERS] = {};
+	u64 swapchainFenceValues[NUM_SWAP_CHAIN_BUFFERS] = {};
 	int currentBackBufferIdx = 0;
 
 	// Vsync settings
@@ -135,7 +135,7 @@ static void* d3d12MemAllocAllocate(size_t size, size_t alignment, void* userData
 	(void)userData;
 	SfzAllocator* allocator = getAllocator();
 	return allocator->alloc(
-		sfz_dbg("D3D12MemAlloc"), uint64_t(size), sfz::max(uint32_t(alignment), 32u));
+		sfz_dbg("D3D12MemAlloc"), u64(size), sfz::max(u32(alignment), 32u));
 }
 
 static void d3d12MemAllocFree(void* memory, void* userData) noexcept
@@ -161,8 +161,8 @@ static void logDebugMessages(ZgContextState& state) noexcept
 	SfzAllocator* allocator = getAllocator();
 
 	// Log D3D12 messages in debug mode
-	uint64_t numMessages = state.infoQueue->GetNumStoredMessages();
-	for (uint64_t i = 0; i < numMessages; i++) {
+	u64 numMessages = state.infoQueue->GetNumStoredMessages();
+	for (u64 i = 0; i < numMessages; i++) {
 
 		// Get the size of the message
 		SIZE_T messageLength = 0;
@@ -477,7 +477,7 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 	}
 
 	// Allocate descriptors
-	const uint32_t NUM_DESCRIPTORS = 1000000;
+	const u32 NUM_DESCRIPTORS = 1000000;
 	ZG_INFO("Attempting to allocate %u descriptors for the global ring buffer",
 		NUM_DESCRIPTORS);
 	{
@@ -545,7 +545,7 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 	// Perform early hacky initializiation of the D3D12 framebuffers to prepare them for
 	// swapchain use
 	// TODO: Unify this with the more general case somehow?
-	for (uint32_t i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
+	for (u32 i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
 
 		ZgFramebuffer& framebuffer = ctxState->swapchainFramebuffers[i];
 
@@ -591,7 +591,7 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 	return ZG_SUCCESS;
 }
 
-static ZgResult swapchainResize(ZgContextState& state, uint32_t width, uint32_t height) noexcept
+static ZgResult swapchainResize(ZgContextState& state, u32 width, u32 height) noexcept
 {
 	if (state.width == width && state.height == height) return ZG_SUCCESS;
 	std::lock_guard<std::mutex> lock(state.contextMutex);
@@ -630,7 +630,7 @@ static ZgResult swapchainResize(ZgContextState& state, uint32_t width, uint32_t 
 	state.currentBackBufferIdx = state.swapchain->GetCurrentBackBufferIndex();
 
 	// Create render target views (RTVs) for swap chain
-	for (uint32_t i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
+	for (u32 i = 0; i < NUM_SWAP_CHAIN_BUFFERS; i++) {
 
 		// Get i:th back buffer from swap chain
 		ComPtr<ID3D12Resource> backBufferRtv;
@@ -704,7 +704,7 @@ static ZgResult swapchainResize(ZgContextState& state, uint32_t width, uint32_t 
 // Version information
 // ------------------------------------------------------------------------------------------------
 
-ZG_API uint32_t zgApiLinkedVersion(void)
+ZG_API u32 zgApiLinkedVersion(void)
 {
 	return ZG_COMPILED_API_VERSION;
 }
@@ -761,9 +761,9 @@ ZG_API void zgBufferDestroy(
 
 ZG_API ZgResult zgBufferMemcpyUpload(
 	ZgBuffer* dstBuffer,
-	uint64_t dstBufferOffsetBytes,
+	u64 dstBufferOffsetBytes,
 	const void* srcMemory,
-	uint64_t numBytes)
+	u64 numBytes)
 {
 	return bufferMemcpyUpload(*dstBuffer, dstBufferOffsetBytes, srcMemory, numBytes);
 }
@@ -771,8 +771,8 @@ ZG_API ZgResult zgBufferMemcpyUpload(
 ZG_API ZgResult zgBufferMemcpyDownload(
 	void* dstMemory,
 	ZgBuffer* srcBuffer,
-	uint64_t srcBufferOffsetBytes,
-	uint64_t numBytes)
+	u64 srcBufferOffsetBytes,
+	u64 numBytes)
 {
 	return bufferMemcpyDownload(*srcBuffer, srcBufferOffsetBytes, dstMemory, numBytes);
 }
@@ -795,11 +795,11 @@ ZG_API void zgTextureDestroy(
 	sfz_delete(getAllocator(), texture);
 }
 
-ZG_API uint32_t zgTextureSizeInBytes(
+ZG_API u32 zgTextureSizeInBytes(
 	const ZgTexture* texture)
 {
 	if (texture == nullptr) return 0;
-	return uint32_t(texture->totalSizeInBytes);
+	return u32(texture->totalSizeInBytes);
 }
 
 // Pipeline Compute
@@ -838,9 +838,9 @@ ZG_API void zgPipelineComputeGetBindingsSignature(
 
 ZG_API void zgPipelineComputeGetGroupDimensions(
 	const ZgPipelineCompute* pipeline,
-	uint32_t* groupDimXOut,
-	uint32_t* groupDimYOut,
-	uint32_t* groupDimZOut)
+	u32* groupDimXOut,
+	u32* groupDimYOut,
+	u32* groupDimZOut)
 {
 	if (groupDimXOut != nullptr) *groupDimXOut = pipeline->groupDimX;
 	if (groupDimYOut != nullptr) *groupDimYOut = pipeline->groupDimY;
@@ -941,8 +941,8 @@ ZG_API void zgFramebufferDestroy(
 
 ZG_API ZgResult zgFramebufferGetResolution(
 	const ZgFramebuffer* framebuffer,
-	uint32_t* widthOut,
-	uint32_t* heightOut)
+	u32* widthOut,
+	u32* heightOut)
 {
 	return framebuffer->getResolution(*widthOut, *heightOut);
 }
@@ -971,8 +971,8 @@ ZG_API void zgProfilerDestroy(
 
 ZG_API ZgResult zgProfilerGetMeasurement(
 	ZgProfiler* profiler,
-	uint64_t measurementId,
-	float* measurementMsOut)
+	u64 measurementId,
+	f32* measurementMsOut)
 {
 	ZG_ARG_CHECK(profiler == nullptr, "");
 	ZG_ARG_CHECK(measurementMsOut == nullptr, "");
@@ -1024,7 +1024,7 @@ ZG_API ZgResult zgFenceWaitOnCpuBlocking(
 ZG_API ZgResult zgCommandListBeginEvent(
 	ZgCommandList* commandList,
 	const char* name,
-	const float* optionalRgbaColor)
+	const f32* optionalRgbaColor)
 {
 	return commandList->beginEvent(name, optionalRgbaColor);
 }
@@ -1038,10 +1038,10 @@ ZG_API ZgResult zgCommandListEndEvent(
 ZG_API ZgResult zgCommandListMemcpyBufferToBuffer(
 	ZgCommandList* commandList,
 	ZgBuffer* dstBuffer,
-	uint64_t dstBufferOffsetBytes,
+	u64 dstBufferOffsetBytes,
 	ZgBuffer* srcBuffer,
-	uint64_t srcBufferOffsetBytes,
-	uint64_t numBytes)
+	u64 srcBufferOffsetBytes,
+	u64 numBytes)
 {
 	ZG_ARG_CHECK(numBytes == 0, "Can't copy zero bytes");
 	return commandList->memcpyBufferToBuffer(
@@ -1055,7 +1055,7 @@ ZG_API ZgResult zgCommandListMemcpyBufferToBuffer(
 ZG_API ZgResult zgCommandListMemcpyToTexture(
 	ZgCommandList* commandList,
 	ZgTexture* dstTexture,
-	uint32_t dstTextureMipLevel,
+	u32 dstTextureMipLevel,
 	const ZgImageViewConstCpu* srcImageCpu,
 	ZgBuffer* tempUploadBuffer)
 {
@@ -1087,9 +1087,9 @@ ZG_API ZgResult zgCommandListEnableQueueTransitionTexture(
 
 ZG_API ZgResult zgCommandListSetPushConstant(
 	ZgCommandList* commandList,
-	uint32_t shaderRegister,
+	u32 shaderRegister,
 	const void* data,
-	uint32_t dataSizeInBytes)
+	u32 dataSizeInBytes)
 {
 	ZG_ARG_CHECK(data == nullptr, "");
 	return commandList->setPushConstant(shaderRegister, data, dataSizeInBytes);
@@ -1131,9 +1131,9 @@ ZG_API ZgResult zgCommandListUnorderedBarrierAll(
 
 ZG_API ZgResult zgCommandListDispatchCompute(
 	ZgCommandList* commandList,
-	uint32_t groupCountX,
-	uint32_t groupCountY,
-	uint32_t groupCountZ)
+	u32 groupCountX,
+	u32 groupCountY,
+	u32 groupCountZ)
 {
 	return commandList->dispatchCompute(groupCountX, groupCountY, groupCountZ);
 }
@@ -1171,17 +1171,17 @@ ZG_API ZgResult zgCommandListSetFramebufferScissor(
 
 ZG_API ZgResult zgCommandListClearRenderTargetOptimal(
 	ZgCommandList* commandList,
-	uint32_t renderTargetIdx)
+	u32 renderTargetIdx)
 {
 	return commandList->clearRenderTargetOptimal(renderTargetIdx);
 }
 
 ZG_API ZgResult zgCommandListClearRenderTargets(
 	ZgCommandList* commandList,
-	float red,
-	float green,
-	float blue,
-	float alpha)
+	f32 red,
+	f32 green,
+	f32 blue,
+	f32 alpha)
 {
 	return commandList->clearRenderTargets(red, green, blue, alpha);
 }
@@ -1194,7 +1194,7 @@ ZG_API ZgResult zgCommandListClearRenderTargetsOptimal(
 
 ZG_API ZgResult zgCommandListClearDepthBuffer(
 	ZgCommandList* commandList,
-	float depth)
+	f32 depth)
 {
 	return commandList->clearDepthBuffer(depth);
 }
@@ -1215,7 +1215,7 @@ ZG_API ZgResult zgCommandListSetIndexBuffer(
 
 ZG_API ZgResult zgCommandListSetVertexBuffer(
 	ZgCommandList* commandList,
-	uint32_t vertexBufferSlot,
+	u32 vertexBufferSlot,
 	ZgBuffer* vertexBuffer)
 {
 	return commandList->setVertexBuffer(
@@ -1224,8 +1224,8 @@ ZG_API ZgResult zgCommandListSetVertexBuffer(
 
 ZG_API ZgResult zgCommandListDrawTriangles(
 	ZgCommandList* commandList,
-	uint32_t startVertexIndex,
-	uint32_t numVertices)
+	u32 startVertexIndex,
+	u32 numVertices)
 {
 	ZG_ARG_CHECK((numVertices % 3) != 0, "Odd number of vertices");
 	return commandList->drawTriangles(startVertexIndex, numVertices);
@@ -1233,8 +1233,8 @@ ZG_API ZgResult zgCommandListDrawTriangles(
 
 ZG_API ZgResult zgCommandListDrawTrianglesIndexed(
 	ZgCommandList* commandList,
-	uint32_t startIndex,
-	uint32_t numIndices)
+	u32 startIndex,
+	u32 numIndices)
 {
 	ZG_ARG_CHECK((numIndices % 3) != 0, "Odd number of indices");
 	return commandList->drawTrianglesIndexed(startIndex, numIndices);
@@ -1243,7 +1243,7 @@ ZG_API ZgResult zgCommandListDrawTrianglesIndexed(
 ZG_API ZgResult zgCommandListProfileBegin(
 	ZgCommandList* commandList,
 	ZgProfiler* profiler,
-	uint64_t* measurementIdOut)
+	u64* measurementIdOut)
 {
 	ZG_ARG_CHECK(profiler == nullptr, "");
 	ZG_ARG_CHECK(measurementIdOut == nullptr, "");
@@ -1253,12 +1253,12 @@ ZG_API ZgResult zgCommandListProfileBegin(
 ZG_API ZgResult zgCommandListProfileEnd(
 	ZgCommandList* commandList,
 	ZgProfiler* profiler,
-	uint64_t measurementId)
+	u64 measurementId)
 {
 	ZG_ARG_CHECK(profiler == nullptr, "");
 
 	// Get command queue timestamp frequency
-	uint64_t timestampTicksPerSecond = 0;
+	u64 timestampTicksPerSecond = 0;
 	if (commandList->commandListType == D3D12_COMMAND_LIST_TYPE_DIRECT) {
 		bool success = D3D12_SUCC(ctxState->commandQueuePresent.mCommandQueue.Get()->
 			GetTimestampFrequency(&timestampTicksPerSecond));
@@ -1429,8 +1429,8 @@ ZG_API ZgResult zgContextDeinit(void)
 }
 
 ZG_API ZgResult zgContextSwapchainResize(
-	uint32_t width,
-	uint32_t height)
+	u32 width,
+	u32 height)
 {
 	return swapchainResize(*ctxState, width, height);
 }
@@ -1445,7 +1445,7 @@ ZG_API ZgResult zgContextSwapchainSetVsync(
 ZG_API ZgResult zgContextSwapchainBeginFrame(
 	ZgFramebuffer** framebufferOut,
 	ZgProfiler* profiler,
-	uint64_t* measurementIdOut)
+	u64* measurementIdOut)
 {
 	std::lock_guard<std::mutex> lock(ctxState->contextMutex);
 
@@ -1484,7 +1484,7 @@ ZG_API ZgResult zgContextSwapchainBeginFrame(
 
 ZG_API ZgResult zgContextSwapchainFinishFrame(
 	ZgProfiler* profiler,
-	uint64_t measurementId)
+	u64 measurementId)
 {
 	std::lock_guard<std::mutex> lock(ctxState->contextMutex);
 
@@ -1506,7 +1506,7 @@ ZG_API ZgResult zgContextSwapchainFinishFrame(
 	if (profiler != nullptr) {
 
 		// Get command queue timestamp frequency
-		uint64_t timestampTicksPerSecond = 0;
+		u64 timestampTicksPerSecond = 0;
 		bool success = D3D12_SUCC(ctxState->commandQueuePresent.mCommandQueue->
 			GetTimestampFrequency(&timestampTicksPerSecond));
 		sfz_assert(success);
@@ -1543,7 +1543,7 @@ ZG_API ZgResult zgContextSwapchainFinishFrame(
 	ctxState->currentBackBufferIdx = ctxState->swapchain->GetCurrentBackBufferIndex();
 
 	// Wait for the next back buffer to finish rendering so it's safe to use
-	uint64_t nextBackBufferFenceValue = ctxState->swapchainFenceValues[ctxState->currentBackBufferIdx];
+	u64 nextBackBufferFenceValue = ctxState->swapchainFenceValues[ctxState->currentBackBufferIdx];
 	ctxState->commandQueuePresent.waitOnCpuInternal(nextBackBufferFenceValue);
 
 	logDebugMessages(*ctxState);

@@ -62,7 +62,7 @@ MeshResource meshResourceAllocate(
 	gpuMesh.vertexBuffer = resources.addBuffer(BufferResource::createStatic(
 		str320("%s__Vertex_Buffer", meshName).str(), sizeof(Vertex), cpuMesh.vertices.size()));
 	gpuMesh.indexBuffer = resources.addBuffer(BufferResource::createStatic(
-		str320("%s__Index_Buffer", meshName).str(), sizeof(uint32_t), cpuMesh.indices.size()));
+		str320("%s__Index_Buffer", meshName).str(), sizeof(u32), cpuMesh.indices.size()));
 	gpuMesh.materialsBuffer = resources.addBuffer(BufferResource::createStatic(
 		str320("%s__Materials_Buffer", meshName).str(), sizeof(ShaderMaterial), MAX_NUM_SHADER_MATERIALS));
 
@@ -109,7 +109,7 @@ void meshResourceUploadBlocking(
 	CHECK_ZG copyQueue.beginCommandListRecording(commandList);
 
 	// Allocate vertex upload buffer, memcpy data to it and queue upload command
-	uint32_t vertexBufferSizeBytes = cpuMesh.vertices.size() * sizeof(Vertex);
+	u32 vertexBufferSizeBytes = cpuMesh.vertices.size() * sizeof(Vertex);
 	zg::Buffer vertexUploadBuffer;
 	CHECK_ZG vertexUploadBuffer.create(vertexBufferSizeBytes, ZG_MEMORY_TYPE_UPLOAD);
 	CHECK_ZG vertexUploadBuffer.memcpyUpload(0, cpuMesh.vertices.data(), vertexBufferSizeBytes);
@@ -117,7 +117,7 @@ void meshResourceUploadBlocking(
 		vertexBuffer, 0, vertexUploadBuffer, 0, vertexBufferSizeBytes);
 
 	// Allocate index upload buffer, memcpy data to it and queue upload command
-	uint32_t indexBufferSizeBytes = cpuMesh.indices.size() * sizeof(uint32_t);
+	u32 indexBufferSizeBytes = cpuMesh.indices.size() * sizeof(u32);
 	zg::Buffer indexUploadBuffer;
 	CHECK_ZG indexUploadBuffer.create(indexBufferSizeBytes, ZG_MEMORY_TYPE_UPLOAD);
 	CHECK_ZG indexUploadBuffer.memcpyUpload(0, cpuMesh.indices.data(), indexBufferSizeBytes);
@@ -129,12 +129,12 @@ void meshResourceUploadBlocking(
 	Array<ShaderMaterial> gpuMaterials;
 	gpuMaterials.init(cpuMesh.materials.size(), cpuAllocator, sfz_dbg("gpuMaterials"));
 	gpuMaterials.add(ShaderMaterial(), cpuMesh.materials.size());
-	for (uint32_t i = 0; i < cpuMesh.materials.size(); i++) {
+	for (u32 i = 0; i < cpuMesh.materials.size(); i++) {
 		gpuMaterials[i] = cpuMaterialToShaderMaterial(cpuMesh.materials[i]);
 	}
 
 	// Allocate temporary materials upload buffer, memcpy data to it and queue upload command
-	uint32_t materialsBufferSizeBytes = cpuMesh.materials.size() * sizeof(ShaderMaterial);
+	u32 materialsBufferSizeBytes = cpuMesh.materials.size() * sizeof(ShaderMaterial);
 	zg::Buffer materialsUploadBuffer;
 	CHECK_ZG materialsUploadBuffer.create(materialsBufferSizeBytes, ZG_MEMORY_TYPE_UPLOAD);
 	CHECK_ZG materialsUploadBuffer.memcpyUpload(0, gpuMaterials.data(), materialsBufferSizeBytes);
@@ -143,8 +143,8 @@ void meshResourceUploadBlocking(
 
 	// Copy components
 	sfz_assert(cpuMesh.components.size() == gpuMesh.components.size());
-	uint32_t totalNumIndices = 0;
-	for (uint32_t i = 0; i < cpuMesh.components.size(); i++) {
+	u32 totalNumIndices = 0;
+	for (u32 i = 0; i < cpuMesh.components.size(); i++) {
 		gpuMesh.components[i] = cpuMesh.components[i];
 		totalNumIndices += gpuMesh.components[i].numIndices;
 	}
@@ -152,7 +152,7 @@ void meshResourceUploadBlocking(
 
 	// Copy cpu materials
 	sfz_assert(gpuMesh.cpuMaterials.size() == cpuMesh.materials.size());
-	for (uint32_t i = 0; i < gpuMesh.cpuMaterials.size(); i++) {
+	for (u32 i = 0; i < gpuMesh.cpuMaterials.size(); i++) {
 		gpuMesh.cpuMaterials[i] = cpuMesh.materials[i];
 	}
 	

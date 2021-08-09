@@ -44,13 +44,13 @@ public:
 	GameStateContainer& operator= (GameStateContainer&& other) noexcept { this->swap(other); return *this; }
 	~GameStateContainer() noexcept { this->destroy(); }
 
-	static GameStateContainer createRaw(uint64_t numBytes, SfzAllocator* allocator) noexcept;
+	static GameStateContainer createRaw(u64 numBytes, SfzAllocator* allocator) noexcept;
 	static GameStateContainer create(
-		uint32_t numSingletonStructs,
-		const uint32_t* singletonStructSizes,
-		uint32_t maxNumEntities,
-		uint32_t numComponentTypes,
-		const uint32_t* componentSizes,
+		u32 numSingletonStructs,
+		const u32* singletonStructSizes,
+		u32 maxNumEntities,
+		u32 numComponentTypes,
+		const u32* componentSizes,
 		SfzAllocator* allocator) noexcept;
 
 	// State methods
@@ -71,8 +71,8 @@ public:
 	// --------------------------------------------------------------------------------------------
 private:
 	SfzAllocator* mAllocator = nullptr;
-	uint8_t* mGameStateMemoryChunk = nullptr;
-	uint64_t mNumBytes = 0;
+	u8* mGameStateMemoryChunk = nullptr;
+	u64 mNumBytes = 0;
 };
 
 } // namespace sfz

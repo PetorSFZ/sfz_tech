@@ -33,11 +33,11 @@ namespace sfz {
 // RawInputState
 // ------------------------------------------------------------------------------------------------
 
-constexpr uint32_t MAX_NUM_SCANCODES = 512;
+constexpr u32 MAX_NUM_SCANCODES = 512;
 
 struct KeyboardState final {
 	// Array indexed with SDL_SCANCODE's. 1 if key is pressed, 0 otherwise.
-	uint8_t scancodes[MAX_NUM_SCANCODES] = {};
+	u8 scancodes[MAX_NUM_SCANCODES] = {};
 };
 
 struct MouseState final {
@@ -45,45 +45,45 @@ struct MouseState final {
 	vec2_u32 pos = vec2_u32(0u); // [0, 0] in bottom left corner
 	vec2_i32 delta = vec2_i32(0); // Delta mouse has moved since last frame
 	vec2_i32 wheel = vec2_i32(0); // Pos-y "up", neg-y "down", but can vary with touchpads
-	uint8_t left = 0;
-	uint8_t middle = 0;
-	uint8_t right = 0;
+	u8 left = 0;
+	u8 middle = 0;
+	u8 right = 0;
 };
 
-constexpr uint32_t GPD_NONE = 0;
+constexpr u32 GPD_NONE = 0;
 
-constexpr uint32_t GPD_A = 1;
-constexpr uint32_t GPD_B = 2;
-constexpr uint32_t GPD_X = 3;
-constexpr uint32_t GPD_Y = 4;
+constexpr u32 GPD_A = 1;
+constexpr u32 GPD_B = 2;
+constexpr u32 GPD_X = 3;
+constexpr u32 GPD_Y = 4;
 
-constexpr uint32_t GPD_BACK = 5;
-constexpr uint32_t GPD_START = 6;
+constexpr u32 GPD_BACK = 5;
+constexpr u32 GPD_START = 6;
 
-constexpr uint32_t GPD_LS_CLICK = 7; // Left stick click
-constexpr uint32_t GPD_LS_UP = 8; // Left stick up (sort of hack, also available as analog)
-constexpr uint32_t GPD_LS_DOWN = 9; // Left stick down (sort of hack, also available as analog)
-constexpr uint32_t GPD_LS_LEFT = 10; // Left stick left (sort of hack, also available as analog)
-constexpr uint32_t GPD_LS_RIGHT = 11; // Left stick right (sort of hack, also available as analog)
+constexpr u32 GPD_LS_CLICK = 7; // Left stick click
+constexpr u32 GPD_LS_UP = 8; // Left stick up (sort of hack, also available as analog)
+constexpr u32 GPD_LS_DOWN = 9; // Left stick down (sort of hack, also available as analog)
+constexpr u32 GPD_LS_LEFT = 10; // Left stick left (sort of hack, also available as analog)
+constexpr u32 GPD_LS_RIGHT = 11; // Left stick right (sort of hack, also available as analog)
 
-constexpr uint32_t GPD_RS_CLICK = 12; // Right stick click
-constexpr uint32_t GPD_RS_UP = 13; // Right stick up (sort of hack, also available as analog)
-constexpr uint32_t GPD_RS_DOWN = 14; // Right stick down (sort of hack, also available as analog)
-constexpr uint32_t GPD_RS_LEFT = 15; // Right stick left (sort of hack, also available as analog)
-constexpr uint32_t GPD_RS_RIGHT = 16; // Right stick right (sort of hack, also available as analog)
+constexpr u32 GPD_RS_CLICK = 12; // Right stick click
+constexpr u32 GPD_RS_UP = 13; // Right stick up (sort of hack, also available as analog)
+constexpr u32 GPD_RS_DOWN = 14; // Right stick down (sort of hack, also available as analog)
+constexpr u32 GPD_RS_LEFT = 15; // Right stick left (sort of hack, also available as analog)
+constexpr u32 GPD_RS_RIGHT = 16; // Right stick right (sort of hack, also available as analog)
 
-constexpr uint32_t GPD_LB = 17; // Left shoulder button
-constexpr uint32_t GPD_RB = 18; // Right shoulder button
+constexpr u32 GPD_LB = 17; // Left shoulder button
+constexpr u32 GPD_RB = 18; // Right shoulder button
 
-constexpr uint32_t GPD_LT = 19; // Left trigger button (sort of hack, also available as analog)
-constexpr uint32_t GPD_RT = 20; // Right trigger button (sort of hack, also available as analog)
+constexpr u32 GPD_LT = 19; // Left trigger button (sort of hack, also available as analog)
+constexpr u32 GPD_RT = 20; // Right trigger button (sort of hack, also available as analog)
 
-constexpr uint32_t GPD_DPAD_UP = 21;
-constexpr uint32_t GPD_DPAD_DOWN = 22;
-constexpr uint32_t GPD_DPAD_LEFT = 23;
-constexpr uint32_t GPD_DPAD_RIGHT = 24;
+constexpr u32 GPD_DPAD_UP = 21;
+constexpr u32 GPD_DPAD_DOWN = 22;
+constexpr u32 GPD_DPAD_LEFT = 23;
+constexpr u32 GPD_DPAD_RIGHT = 24;
 
-constexpr uint32_t GPD_MAX_NUM_BUTTONS = 25;
+constexpr u32 GPD_MAX_NUM_BUTTONS = 25;
 
 // The approximate dead zone (as specified by SDL2) for gamepad sticks.
 constexpr float GPD_STICK_APPROX_DEADZONE = float(8000) / float(INT16_MAX);
@@ -108,7 +108,7 @@ struct GamepadState final {
 	float rt = 0.0f;
 
 	// Array indexed with constants above. 1 if button is pressed, 0 otherwise.
-	uint8_t buttons[GPD_MAX_NUM_BUTTONS] = {};
+	u8 buttons[GPD_MAX_NUM_BUTTONS] = {};
 };
 
 inline vec2 applyDeadzone(vec2 stick, float deadzone)

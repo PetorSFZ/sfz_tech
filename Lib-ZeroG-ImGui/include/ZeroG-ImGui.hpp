@@ -31,7 +31,7 @@ struct ImGuiRenderState;
 
 ZgResult imguiInitRenderState(
 	ImGuiRenderState*& stateOut,
-	uint32_t frameLatency,
+	u32 frameLatency,
 	SfzAllocator* allocator,
 	zg::CommandQueue& copyQueue,
 	const ZgImageViewConstCpu& fontTexture) noexcept;
@@ -40,12 +40,12 @@ void imguiDestroyRenderState(ImGuiRenderState*& state) noexcept;
 
 void imguiRender(
 	ImGuiRenderState* state,
-	uint64_t frameIdx,
+	u64 frameIdx,
 	zg::CommandList& cmdList,
-	uint32_t fbWidth,
-	uint32_t fbHeight,
-	float scale,
+	u32 fbWidth,
+	u32 fbHeight,
+	f32 scale,
 	zg::Profiler* profiler = nullptr,
-	uint64_t* measurmentIdOut = nullptr) noexcept;
+	u64* measurmentIdOut = nullptr) noexcept;
 
 } // namespace zg

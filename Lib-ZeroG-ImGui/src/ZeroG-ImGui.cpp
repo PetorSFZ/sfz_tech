@@ -43,12 +43,12 @@ static_assert(sizeof(ImGuiVertex) == 32, "ImGuiVertex is padded");
 
 // TODO: Remove
 struct ImGuiCommand {
-	uint32_t idxBufferOffset = 0;
-	uint32_t numIndices = 0;
-	uint32_t padding[2];
+	u32 idxBufferOffset = 0;
+	u32 numIndices = 0;
+	u32 padding[2];
 	sfz::vec4 clipRect = sfz::vec4(0.0f);
 };
-static_assert(sizeof(ImGuiCommand) == sizeof(uint32_t) * 8, "ImguiCommand is padded");
+static_assert(sizeof(ImGuiCommand) == sizeof(u32) * 8, "ImguiCommand is padded");
 
 // ImGui Renderer
 // ------------------------------------------------------------------------------------------------
@@ -69,22 +69,22 @@ struct ImGuiRenderState final {
 
 	// Per frame state
 	sfz::Array<ImGuiFrameState> frameStates;
-	ImGuiFrameState& getFrameState(uint64_t idx) { return frameStates[idx % frameStates.size()]; }
+	ImGuiFrameState& getFrameState(u64 idx) { return frameStates[idx % frameStates.size()]; }
 
 	// Temp arrays
 	// TODO: Remove
 	sfz::Array<ImGuiVertex> tmpVertices;
-	sfz::Array<uint32_t> tmpIndices;
+	sfz::Array<u32> tmpIndices;
 	sfz::Array<ImGuiCommand> tmpCommands;
 };
 
 // Constants
 // ------------------------------------------------------------------------------------------------
 
-constexpr uint32_t IMGUI_MAX_NUM_VERTICES = 65536;
-constexpr uint32_t IMGUI_MAX_NUM_INDICES = 65536;
-constexpr uint64_t IMGUI_VERTEX_BUFFER_SIZE = IMGUI_MAX_NUM_VERTICES * sizeof(ImGuiVertex);
-constexpr uint64_t IMGUI_INDEX_BUFFER_SIZE = IMGUI_MAX_NUM_INDICES * sizeof(uint32_t);
+constexpr u32 IMGUI_MAX_NUM_VERTICES = 65536;
+constexpr u32 IMGUI_MAX_NUM_INDICES = 65536;
+constexpr u64 IMGUI_VERTEX_BUFFER_SIZE = IMGUI_MAX_NUM_VERTICES * sizeof(ImGuiVertex);
+constexpr u64 IMGUI_INDEX_BUFFER_SIZE = IMGUI_MAX_NUM_INDICES * sizeof(u32);
 
 // Shader source
 // ------------------------------------------------------------------------------------------------
@@ -148,7 +148,7 @@ struct ZgAsserter final { void operator% (ZgResult res) { sfz_assert(zgIsSuccess
 
 ZgResult imguiInitRenderState(
 	ImGuiRenderState*& stateOut,
-	uint32_t frameLatency,
+	u32 frameLatency,
 	SfzAllocator* allocator,
 	zg::CommandQueue& copyQueue,
 	const ZgImageViewConstCpu& fontTexture) noexcept
@@ -209,9 +209,9 @@ ZgResult imguiInitRenderState(
 	}
 
 	// Actually create the vertex and index buffers
-	uint64_t uploadHeapOffset = 0;
+	u64 uploadHeapOffset = 0;
 	stateOut->frameStates.init(frameLatency, allocator, sfz_dbg(""));
-	for (uint32_t i = 0; i < frameLatency; i++) {
+	for (u32 i = 0; i < frameLatency; i++) {
 		ImGuiFrameState& frame = stateOut->frameStates.add();
 
 		ASSERT_ZG frame.uploadVertexBuffer.create(
@@ -242,13 +242,13 @@ void imguiDestroyRenderState(ImGuiRenderState*& state) noexcept
 
 void imguiRender(
 	ImGuiRenderState* state,
-	uint64_t frameIdx,
+	u64 frameIdx,
 	zg::CommandList& cmdList,
-	uint32_t fbWidth,
-	uint32_t fbHeight,
-	float scale,
+	u32 fbWidth,
+	u32 fbHeight,
+	f32 scale,
 	zg::Profiler* profiler,
-	uint64_t* measurmentIdOut) noexcept
+	u64* measurmentIdOut) noexcept
 {
 	// Generate ImGui draw lists and get the draw data
 	ImDrawData& drawData = *ImGui::GetDrawData();
@@ -264,10 +264,10 @@ void imguiRender(
 		const ImDrawList& imCmdList = *drawData.CmdLists[i];
 
 		// indexOffset is the offset to offset all indices with
-		const uint32_t indexOffset = state->tmpVertices.size();
+		const u32 indexOffset = state->tmpVertices.size();
 
 		// indexBufferOffset is the offset to where the indices start
-		uint32_t indexBufferOffset = state->tmpIndices.size();
+		u32 indexBufferOffset = state->tmpIndices.size();
 
 		// Convert vertices and add to global list
 		for (int j = 0; j < imCmdList.VtxBuffer.size(); j++) {
@@ -278,10 +278,10 @@ void imguiRender(
 			convertedVertex.texcoord = vec2(imguiVertex.uv.x, imguiVertex.uv.y);
 			convertedVertex.color = [&]() {
 				vec4 color;
-				color.x = float(imguiVertex.col & 0xFFu) * (1.0f / 255.0f);
-				color.y = float((imguiVertex.col >> 8u) & 0xFFu)* (1.0f / 255.0f);
-				color.z = float((imguiVertex.col >> 16u) & 0xFFu)* (1.0f / 255.0f);
-				color.w = float((imguiVertex.col >> 24u) & 0xFFu)* (1.0f / 255.0f);
+				color.x = f32(imguiVertex.col & 0xFFu) * (1.0f / 255.0f);
+				color.y = f32((imguiVertex.col >> 8u) & 0xFFu)* (1.0f / 255.0f);
+				color.z = f32((imguiVertex.col >> 16u) & 0xFFu)* (1.0f / 255.0f);
+				color.w = f32((imguiVertex.col >> 24u) & 0xFFu)* (1.0f / 255.0f);
 				return color;
 			}();
 
@@ -321,7 +321,7 @@ void imguiRender(
 	ASSERT_ZG imguiFrame.uploadVertexBuffer.memcpyUpload(
 		0, state->tmpVertices.data(), state->tmpVertices.size() * sizeof(ImGuiVertex));
 	ASSERT_ZG imguiFrame.uploadIndexBuffer.memcpyUpload(
-		0, state->tmpIndices.data(), state->tmpIndices.size() * sizeof(uint32_t));
+		0, state->tmpIndices.data(), state->tmpIndices.size() * sizeof(u32));
 
 	// Begin event
 	ASSERT_ZG cmdList.beginEvent("ImGui");
@@ -342,11 +342,11 @@ void imguiRender(
 		.addTexture(0, state->fontTexture));
 
 	// Retrieve imgui scale factor
-	float imguiScaleFactor = 1.0f;
+	f32 imguiScaleFactor = 1.0f;
 	imguiScaleFactor /= scale;
-	float imguiInvScaleFactor = 1.0f / imguiScaleFactor;
-	float imguiWidth = fbWidth * imguiScaleFactor;
-	float imguiHeight = fbHeight * imguiScaleFactor;
+	f32 imguiInvScaleFactor = 1.0f / imguiScaleFactor;
+	f32 imguiWidth = fbWidth * imguiScaleFactor;
+	f32 imguiHeight = fbHeight * imguiScaleFactor;
 
 	// Calculate and set ImGui projection matrix
 	sfz::vec4 projMatrix[4] = {
@@ -355,18 +355,18 @@ void imguiRender(
 		sfz::vec4(0.0f, 0.0f, 0.5f, 0.5f),
 		sfz::vec4(0.0f, 0.0f, 0.0f, 1.0f)
 	};
-	ASSERT_ZG cmdList.setPushConstant(0, &projMatrix, sizeof(float) * 16);
+	ASSERT_ZG cmdList.setPushConstant(0, &projMatrix, sizeof(f32) * 16);
 
 	// Render ImGui commands
-	for (uint32_t i = 0; i < state->tmpCommands.size(); i++) {
+	for (u32 i = 0; i < state->tmpCommands.size(); i++) {
 		const ImGuiCommand& cmd = state->tmpCommands[i];
 		sfz_assert((cmd.numIndices % 3) == 0);
 
 		ZgRect scissorRect = {};
-		scissorRect.topLeftX = uint32_t(cmd.clipRect.x * imguiInvScaleFactor);
-		scissorRect.topLeftY = uint32_t(cmd.clipRect.y * imguiInvScaleFactor);
-		scissorRect.width = uint32_t((cmd.clipRect.z - cmd.clipRect.x) * imguiInvScaleFactor);
-		scissorRect.height = uint32_t((cmd.clipRect.w - cmd.clipRect.y) * imguiInvScaleFactor);
+		scissorRect.topLeftX = u32(cmd.clipRect.x * imguiInvScaleFactor);
+		scissorRect.topLeftY = u32(cmd.clipRect.y * imguiInvScaleFactor);
+		scissorRect.width = u32((cmd.clipRect.z - cmd.clipRect.x) * imguiInvScaleFactor);
+		scissorRect.height = u32((cmd.clipRect.w - cmd.clipRect.y) * imguiInvScaleFactor);
 		ASSERT_ZG cmdList.setFramebufferScissor(scissorRect);
 
 		ASSERT_ZG cmdList.drawTrianglesIndexed(cmd.idxBufferOffset, cmd.numIndices);

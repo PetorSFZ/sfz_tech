@@ -27,27 +27,27 @@ namespace sfz {
 // Ray
 // ------------------------------------------------------------------------------------------------
 
-constexpr float RAY_MAX_DIST = 1'000'000.0f; // FLT_MAX causes issues in some algorithms
+constexpr f32 RAY_MAX_DIST = 1'000'000.0f; // F32_MAX causes issues in some algorithms
 
 struct Ray final {
 	vec3 origin = vec3(0.0f);
 	vec3 dir = vec3(0.0f);
-	float maxDist = RAY_MAX_DIST;
+	f32 maxDist = RAY_MAX_DIST;
 
 	Ray() = default;
-	Ray(vec3 origin, vec3 dir, float maxDist = RAY_MAX_DIST)
+	Ray(vec3 origin, vec3 dir, f32 maxDist = RAY_MAX_DIST)
 		: origin(origin), dir(dir), maxDist(maxDist)
 	{
 		sfz_assert(eqf(length(dir), 1.0f));
 		sfz_assert(0.0f < maxDist && maxDist <= RAY_MAX_DIST);
 	}
 
-	static Ray createOffset(vec3 origin, vec3 dir, float minDist, float maxDist = RAY_MAX_DIST)
+	static Ray createOffset(vec3 origin, vec3 dir, f32 minDist, f32 maxDist = RAY_MAX_DIST)
 	{
 		return Ray(origin + dir * minDist, dir, maxDist);
 	}
 };
-static_assert(sizeof(Ray) == sizeof(float) * 7, "Ray is padded");
+static_assert(sizeof(Ray) == sizeof(f32) * 7, "Ray is padded");
 
 // AABB
 // ------------------------------------------------------------------------------------------------
@@ -60,11 +60,11 @@ struct AABB final {
 
 	constexpr vec3 pos() const { return (this->min + this->max) * 0.5f; }
 	constexpr vec3 dims() const { return this->max - this->min; }
-	constexpr float halfDimX() const { return (this->max.x - this->min.x) * 0.5f; }
-	constexpr float halfDimY() const { return (this->max.y - this->min.y) * 0.5f; }
-	constexpr float halfDimZ() const { return (this->max.z - this->min.z) * 0.5f; }
+	constexpr f32 halfDimX() const { return (this->max.x - this->min.x) * 0.5f; }
+	constexpr f32 halfDimY() const { return (this->max.y - this->min.y) * 0.5f; }
+	constexpr f32 halfDimZ() const { return (this->max.z - this->min.z) * 0.5f; }
 };
-static_assert(sizeof(AABB) == sizeof(float) * 6, "AABB is padded");
+static_assert(sizeof(AABB) == sizeof(f32) * 6, "AABB is padded");
 
 // Ray VS AABB intersection test
 // ------------------------------------------------------------------------------------------------
@@ -74,7 +74,7 @@ static_assert(sizeof(AABB) == sizeof(float) * 6, "AABB is padded");
 // 2 versions, a "low-level" version that is a good buildig block for algorithms that do a lot of
 // tests and a high-level version with some convenience features.
 
-constexpr void rayVsAABB(vec3 origin, vec3 invDir, const AABB& aabb, float& tMinOut, float& tMaxOut)
+constexpr void rayVsAABB(vec3 origin, vec3 invDir, const AABB& aabb, f32& tMinOut, f32& tMaxOut)
 {
 	const vec3 t0 = (aabb.min - origin) * invDir;
 	const vec3 t1 = (aabb.max - origin) * invDir;
@@ -83,11 +83,11 @@ constexpr void rayVsAABB(vec3 origin, vec3 invDir, const AABB& aabb, float& tMin
 }
 
 // Returns distance to closest intersection with AABB, negative number on no hit
-inline float rayVsAABB(const Ray& ray, const AABB& aabb, float* tMinOut = nullptr, float* tMaxOut = nullptr)
+inline f32 rayVsAABB(const Ray& ray, const AABB& aabb, f32* tMinOut = nullptr, f32* tMaxOut = nullptr)
 {
 	const vec3 origin = ray.origin;
 	const vec3 invDir = divSafe(vec3(1.0f), ray.dir);
-	float tMin, tMax;
+	f32 tMin, tMax;
 	rayVsAABB(origin, invDir, aabb, tMin, tMax);
 	if (tMinOut != nullptr) *tMinOut = tMin;
 	if (tMaxOut != nullptr) *tMaxOut = tMax;

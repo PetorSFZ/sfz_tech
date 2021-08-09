@@ -17,7 +17,7 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include <cstdint>
+#include <sfz.h>
 
 namespace sfz {
 
@@ -35,9 +35,9 @@ public:
 	float tickTimeSecs = 1.0f / 100.0f;
 
 	template<typename F>
-	uint32_t runTickUpdates(float deltaTimeSecs, F tickUpdateFunc) noexcept
+	u32 runTickUpdates(float deltaTimeSecs, F tickUpdateFunc) noexcept
 	{
-		uint32_t numTicksRan = 0;
+		u32 numTicksRan = 0;
 		accumulatorSecs += deltaTimeSecs;
 		while (accumulatorSecs > tickTimeSecs) {
 			tickUpdateFunc(tickTimeSecs);

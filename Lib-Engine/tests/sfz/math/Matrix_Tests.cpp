@@ -35,16 +35,16 @@ UTEST(Matrix, matrix_general_definition)
 {
 	// Array pointer constructor
 	{
-		const float arr1[] = {1.0f, 2.0f, 3.0f, 4.0f};
-		Mat<float,1,4> m1(arr1);
+		const f32 arr1[] = {1.0f, 2.0f, 3.0f, 4.0f};
+		Mat<f32,1,4> m1(arr1);
 		ASSERT_TRUE(m1.at(0, 0) == 1.0f);
 		ASSERT_TRUE(m1.at(0, 1) == 2.0f);
 		ASSERT_TRUE(m1.at(0, 2) == 3.0f);
 		ASSERT_TRUE(m1.at(0, 3) == 4.0f);
 
-		const float arr2[] = {6.0f, 5.0f, 4.0f,
+		const f32 arr2[] = {6.0f, 5.0f, 4.0f,
 		                      3.0f, 2.0f, 1.0f};
-		Mat<float,2,3> m3(arr2);
+		Mat<f32,2,3> m3(arr2);
 		ASSERT_TRUE(m3.at(0, 0) == 6.0f);
 		ASSERT_TRUE(m3.at(0, 1) == 5.0f);
 		ASSERT_TRUE(m3.at(0, 2) == 4.0f);
@@ -61,7 +61,7 @@ UTEST(Matrix, matrix_2x2_specialization)
 {
 	// Array pointer constructor
 	{
-		const float arr1[] = {1.0f, 2.0f,
+		const f32 arr1[] = {1.0f, 2.0f,
 		                      3.0f, 4.0f};
 		mat22 m1(arr1);
 		ASSERT_TRUE(m1.at(0, 0) == 1.0f);
@@ -141,7 +141,7 @@ UTEST(Matrix, matrix_3x3_specialization)
 {
 	// Array pointer constructor
 	{
-		const float arr1[] = {1.0f, 2.0f, 3.0f,
+		const f32 arr1[] = {1.0f, 2.0f, 3.0f,
 		                      4.0f, 5.0f, 6.0f,
 		                      7.0f, 8.0f, 9.0f};
 		mat33 m1(arr1);
@@ -318,7 +318,7 @@ UTEST(Matrix, matrix_3x4_specialization)
 {
 	// Array pointer constructor
 	{
-		const float arr1[] = {1.0f, 2.0f, 3.0f, 4.0f,
+		const f32 arr1[] = {1.0f, 2.0f, 3.0f, 4.0f,
 		                      5.0f, 6.0f, 7.0f, 8.0f,
 		                      9.0f, 10.0f, 11.0f, 12.0f};
 		mat34 m1(arr1);
@@ -554,7 +554,7 @@ UTEST(Matrix, matrix_4x4_specialization)
 {
 	// Array pointer constructor
 	{
-		const float arr1[] = {1.0f, 2.0f, 3.0f, 4.0f,
+		const f32 arr1[] = {1.0f, 2.0f, 3.0f, 4.0f,
 		                      5.0f, 6.0f, 7.0f, 8.0f,
 		                      9.0f, 10.0f, 11.0f, 12.0f,
 		                      13.0f, 14.0f, 15.0f, 16.0f};
@@ -934,13 +934,13 @@ UTEST(Matrix, arithmetic_operators)
 			3.0f, 4.0f);
 		mat22 m2(0.0f, 1.0f,
 			0.0f, 0.0f);
-		float m3arr[] = { 1.0f, 2.0f, 3.0f,
+		f32 m3arr[] = { 1.0f, 2.0f, 3.0f,
 			4.0f, 5.0f, 6.0f };
-		Mat<float, 2, 3> m3(m3arr);
-		float m4arr[] = { 1.0f, 0.0f,
+		Mat<f32, 2, 3> m3(m3arr);
+		f32 m4arr[] = { 1.0f, 0.0f,
 			0.0f, 1.0f,
 			0.0f, 0.0f };
-		Mat<float, 3, 2> m4(m4arr);
+		Mat<f32, 3, 2> m4(m4arr);
 
 		auto res1 = m1 + m2;
 		ASSERT_TRUE(eqf(res1.at(0, 0), 1.0f));
@@ -962,13 +962,13 @@ UTEST(Matrix, arithmetic_operators)
 			3.0f, 4.0f);
 		mat22 m2(0.0f, 1.0f,
 			0.0f, 0.0f);
-		float m3arr[] = { 1.0f, 2.0f, 3.0f,
+		f32 m3arr[] = { 1.0f, 2.0f, 3.0f,
 			4.0f, 5.0f, 6.0f };
-		Mat<float, 2, 3> m3(m3arr);
-		float m4arr[] = { 1.0f, 0.0f,
+		Mat<f32, 2, 3> m3(m3arr);
+		f32 m4arr[] = { 1.0f, 0.0f,
 			0.0f, 1.0f,
 			0.0f, 0.0f };
-		Mat<float, 3, 2> m4(m4arr);
+		Mat<f32, 3, 2> m4(m4arr);
 
 		auto res1 = m1 - m2;
 		auto res2 = m2 - m1;
@@ -991,13 +991,13 @@ UTEST(Matrix, arithmetic_operators)
 			3.0f, 4.0f);
 		mat22 m2(0.0f, 1.0f,
 			0.0f, 0.0f);
-		float m3arr[] = { 1.0f, 2.0f, 3.0f,
+		f32 m3arr[] = { 1.0f, 2.0f, 3.0f,
 			4.0f, 5.0f, 6.0f };
-		Mat<float, 2, 3> m3(m3arr);
-		float m4arr[] = { 1.0f, 0.0f,
+		Mat<f32, 2, 3> m3(m3arr);
+		f32 m4arr[] = { 1.0f, 0.0f,
 			0.0f, 1.0f,
 			0.0f, 0.0f };
-		Mat<float, 3, 2> m4(m4arr);
+		Mat<f32, 3, 2> m4(m4arr);
 
 		auto res1 = -m1;
 
@@ -1012,13 +1012,13 @@ UTEST(Matrix, arithmetic_operators)
 			3.0f, 4.0f);
 		mat22 m2(0.0f, 1.0f,
 			0.0f, 0.0f);
-		float m3arr[] = { 1.0f, 2.0f, 3.0f,
+		f32 m3arr[] = { 1.0f, 2.0f, 3.0f,
 			4.0f, 5.0f, 6.0f };
-		Mat<float, 2, 3> m3(m3arr);
-		float m4arr[] = { 1.0f, 0.0f,
+		Mat<f32, 2, 3> m3(m3arr);
+		f32 m4arr[] = { 1.0f, 0.0f,
 			0.0f, 1.0f,
 			0.0f, 0.0f };
-		Mat<float, 3, 2> m4(m4arr);
+		Mat<f32, 3, 2> m4(m4arr);
 
 		auto res1 = m1*m2;
 		ASSERT_TRUE(eqf(res1.at(0, 0), 0.0f));
@@ -1044,13 +1044,13 @@ UTEST(Matrix, arithmetic_operators)
 			3.0f, 4.0f);
 		mat22 m2(0.0f, 1.0f,
 			0.0f, 0.0f);
-		float m3arr[] = { 1.0f, 2.0f, 3.0f,
+		f32 m3arr[] = { 1.0f, 2.0f, 3.0f,
 			4.0f, 5.0f, 6.0f };
-		Mat<float, 2, 3> m3(m3arr);
-		float m4arr[] = { 1.0f, 0.0f,
+		Mat<f32, 2, 3> m3(m3arr);
+		f32 m4arr[] = { 1.0f, 0.0f,
 			0.0f, 1.0f,
 			0.0f, 0.0f };
-		Mat<float, 3, 2> m4(m4arr);
+		Mat<f32, 3, 2> m4(m4arr);
 
 		vec2 v1(1.0f, -2.0f);
 
@@ -1074,13 +1074,13 @@ UTEST(Matrix, arithmetic_operators)
 			3.0f, 4.0f);
 		mat22 m2(0.0f, 1.0f,
 			0.0f, 0.0f);
-		float m3arr[] = { 1.0f, 2.0f, 3.0f,
+		f32 m3arr[] = { 1.0f, 2.0f, 3.0f,
 			4.0f, 5.0f, 6.0f };
-		Mat<float, 2, 3> m3(m3arr);
-		float m4arr[] = { 1.0f, 0.0f,
+		Mat<f32, 2, 3> m3(m3arr);
+		f32 m4arr[] = { 1.0f, 0.0f,
 			0.0f, 1.0f,
 			0.0f, 0.0f };
-		Mat<float, 3, 2> m4(m4arr);
+		Mat<f32, 3, 2> m4(m4arr);
 
 		auto res1 = m1 * 2.0f;
 		ASSERT_TRUE(eqf(res1.at(0, 0), 2.0f));
@@ -1134,11 +1134,11 @@ UTEST(Matrix, element_wise_multiplication)
 
 UTEST(Matrix, transpose)
 {
-	float arr[] ={1.0f, 2.0f, 3.0f,
+	f32 arr[] ={1.0f, 2.0f, 3.0f,
 		4.0f, 5.0f, 6.0f};
-	Mat<float, 2, 3> m1(arr);
+	Mat<f32, 2, 3> m1(arr);
 
-	Mat<float, 3, 2> m2 = transpose(m1);
+	Mat<f32, 3, 2> m2 = transpose(m1);
 	ASSERT_TRUE(eqf(m2.at(0, 0), 1.0f));
 	ASSERT_TRUE(eqf(m2.at(0, 1), 4.0f));
 	ASSERT_TRUE(eqf(m2.at(1, 0), 2.0f));

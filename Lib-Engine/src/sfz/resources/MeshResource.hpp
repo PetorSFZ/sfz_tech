@@ -38,7 +38,7 @@ struct MeshResource final {
 	PoolHandle vertexBuffer = NULL_HANDLE;
 	PoolHandle indexBuffer = NULL_HANDLE;
 	PoolHandle materialsBuffer = NULL_HANDLE;
-	uint32_t numMaterials = 0;
+	u32 numMaterials = 0;
 	Array<MeshComponent> components;
 	Array<Material> cpuMaterials;
 };

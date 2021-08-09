@@ -41,24 +41,24 @@ namespace sfz {
 static_assert(JSON_NODE_IMPL_SIZE >= sizeof(sajson::value), "JsonNode is too small");
 //static_assert(std::is_trivially_copyable<sajson::value>::value, "sajson::value is not memcpy:able");
 
-static const sajson::value& castToSajsonValue(const uint8_t* memory) noexcept
+static const sajson::value& castToSajsonValue(const u8* memory) noexcept
 {
 	return *reinterpret_cast<const sajson::value*>(memory);
 }
 
-static uint64_t copyStripCppComments(char* dst, const char* src, uint64_t srcLen) noexcept
+static u64 copyStripCppComments(char* dst, const char* src, u64 srcLen) noexcept
 {
 	sfz_assert(srcLen > 0);
 
 	// The total number of bytes in the new string, excluding null-terminator
-	uint64_t totalNumBytes = 0;
+	u64 totalNumBytes = 0;
 
 	const char* currSrc = src;
 	const char* nextComment = std::strstr(src, "//");
 	while (nextComment != nullptr) {
 
 		// Copy part until comment
-		uint64_t numBytesToCopy = nextComment - currSrc;
+		u64 numBytesToCopy = nextComment - currSrc;
 		std::memcpy(dst + totalNumBytes, currSrc, numBytesToCopy);
 		totalNumBytes += numBytesToCopy;
 
@@ -84,7 +84,7 @@ static uint64_t copyStripCppComments(char* dst, const char* src, uint64_t srcLen
 
 	// Copy the remainder of the string
 	sfz_assert(currSrc <= (src + srcLen));
-	uint64_t remainderNumBytes = (src + srcLen) - currSrc;
+	u64 remainderNumBytes = (src + srcLen) - currSrc;
 	if (remainderNumBytes != 0) {
 		std::memcpy(dst + totalNumBytes, currSrc, remainderNumBytes);
 	}
@@ -160,7 +160,7 @@ JsonNodeType JsonNode::type() const noexcept
 // JsonNode: Methods (non-leaf nodes)
 // ------------------------------------------------------------------------------------------------
 
-uint32_t JsonNode::mapNumObjects() const noexcept
+u32 JsonNode::mapNumObjects() const noexcept
 {
 	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
@@ -169,7 +169,7 @@ uint32_t JsonNode::mapNumObjects() const noexcept
 	if (this->type() != JsonNodeType::MAP) return 0;
 
 	// Return number of objects
-	return (uint32_t)value.get_length();
+	return (u32)value.get_length();
 }
 
 JsonNode JsonNode::accessMap(const char* nodeName) const noexcept
@@ -191,7 +191,7 @@ JsonNode JsonNode::accessMap(const char* nodeName) const noexcept
 	return JsonNode::createFromImplDefined(&elementValue);
 }
 
-uint32_t JsonNode::arrayLength() const noexcept
+u32 JsonNode::arrayLength() const noexcept
 {
 	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
@@ -199,10 +199,10 @@ uint32_t JsonNode::arrayLength() const noexcept
 	// Return 0 if node is of wrong type
 	if (this->type() != JsonNodeType::ARRAY) return 0;
 
-	return (uint32_t)value.get_length();
+	return (u32)value.get_length();
 }
 
-JsonNode JsonNode::accessArray(uint32_t index) const noexcept
+JsonNode JsonNode::accessArray(u32 index) const noexcept
 {
 	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
@@ -211,7 +211,7 @@ JsonNode JsonNode::accessArray(uint32_t index) const noexcept
 	if (this->type() != JsonNodeType::ARRAY) return JsonNode();
 
 	// Return NONE if out of range
-	if (index >= (uint32_t)value.get_length()) return JsonNode();
+	if (index >= (u32)value.get_length()) return JsonNode();
 
 	// Return array element
 	sajson::value elementValue = value.get_array_element(index);
@@ -285,7 +285,7 @@ bool JsonNode::value(double& valueOut) const noexcept
 	return true;
 }
 
-bool JsonNode::value(char* strOut, uint32_t strCapacity) const noexcept
+bool JsonNode::value(char* strOut, u32 strCapacity) const noexcept
 {
 	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
@@ -294,7 +294,7 @@ bool JsonNode::value(char* strOut, uint32_t strCapacity) const noexcept
 	if (this->type() != JsonNodeType::STRING) return false;
 
 	// Check that capacity is enough
-	uint32_t strLen = (uint32_t)value.get_string_length();
+	u32 strLen = (u32)value.get_string_length();
 	if (strLen >= strCapacity) return false; // >= so we guarantee space for null-terminator
 
 	// Copy out string
@@ -303,7 +303,7 @@ bool JsonNode::value(char* strOut, uint32_t strCapacity) const noexcept
 	return true;
 }
 
-uint32_t JsonNode::stringLength() const noexcept
+u32 JsonNode::stringLength() const noexcept
 {
 	sfz_assert(this->mActive);
 	const sajson::value& value = castToSajsonValue(mImpl);
@@ -312,7 +312,7 @@ uint32_t JsonNode::stringLength() const noexcept
 	if (this->type() != JsonNodeType::STRING) return 0;
 
 	// Return string length
-	uint32_t strLen = (uint32_t)value.get_string_length();
+	u32 strLen = (u32)value.get_string_length();
 	return strLen;
 }
 
@@ -424,7 +424,7 @@ ParsedJson ParsedJson::parseString(
 	impl.allocator = allocator;
 
 	// Calculate length of string and allocate memory for it
-	uint64_t jsonStringLen = std::strlen(jsonString);
+	u64 jsonStringLen = std::strlen(jsonString);
 	if (jsonStringLen == 0) {
 		sfz_delete(allocator, parsedJson.mImpl);
 		SFZ_ERROR("JSON", "JSON string must be longer than 0");
@@ -450,8 +450,8 @@ ParsedJson ParsedJson::parseString(
 
 	// Allocate memory for ast
 	// Assume a constant factor times the json string itself is enough memory for the AST
-	const uint64_t SIZE_FACTOR = 4;
-	uint64_t allocationSize = SIZE_FACTOR * jsonStringLen;
+	const u64 SIZE_FACTOR = 4;
+	u64 allocationSize = SIZE_FACTOR * jsonStringLen;
 	impl.astMemory =
 		reinterpret_cast<size_t*>(allocator->alloc(sfz_dbg(""), allocationSize, 32));
 	impl.astAllocation = sajson::bounded_allocation(impl.astMemory, allocationSize / sizeof(size_t));

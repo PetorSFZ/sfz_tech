@@ -27,14 +27,14 @@ namespace zui {
 
 struct ListData final {
 	WidgetBase base = {};
-	float widgetHeight = -FLT_MAX;
-	float vertSpacing = -FLT_MAX;
-	float currPosY = -FLT_MAX;
+	f32 widgetHeight = -F32_MAX;
+	f32 vertSpacing = -F32_MAX;
+	f32 currPosY = -F32_MAX;
 };
 
-void listBegin(ListData* data, float widgetHeight, float vertSpacing = 0.0f);
-void listBegin(strID id, float widgetHeight, float vertSpacing = 0.0f);
-void listBegin(const char* id, float widgetHeight, float vertSpacing = 0.0f);
+void listBegin(ListData* data, f32 widgetHeight, f32 vertSpacing = 0.0f);
+void listBegin(strID id, f32 widgetHeight, f32 vertSpacing = 0.0f);
+void listBegin(const char* id, f32 widgetHeight, f32 vertSpacing = 0.0f);
 void listEnd();
 
 // Tree
@@ -42,12 +42,12 @@ void listEnd();
 
 struct TreeBaseData final {
 	WidgetBase base;
-	vec2 entryDims = vec2(-FLT_MAX);
-	float entryContWidth = -FLT_MAX;
-	float entryVertSpacing = -FLT_MAX;
-	float horizSpacing = -FLT_MAX;
-	float currPosY = -FLT_MAX;
-	uint32_t activatedEntryIdx = ~0u;
+	vec2 entryDims = vec2(-F32_MAX);
+	f32 entryContWidth = -F32_MAX;
+	f32 entryVertSpacing = -F32_MAX;
+	f32 horizSpacing = -F32_MAX;
+	f32 currPosY = -F32_MAX;
+	u32 activatedEntryIdx = ~0u;
 };
 
 struct TreeEntryData final {
@@ -57,9 +57,9 @@ struct TreeEntryData final {
 	bool enabled = true;
 };
 
-void treeBegin(TreeBaseData* data, vec2 entryDims, float entryVertSpacing = 0.0f, float horizSpacing = 0.0f);
-void treeBegin(strID id, vec2 entryDims, float entryVertSpacing = 0.0f, float horizSpacing = 0.0f);
-void treeBegin(const char* id, vec2 entryDims, float entryVertSpacing = 0.0f, float horizSpacing = 0.0f);
+void treeBegin(TreeBaseData* data, vec2 entryDims, f32 entryVertSpacing = 0.0f, f32 horizSpacing = 0.0f);
+void treeBegin(strID id, vec2 entryDims, f32 entryVertSpacing = 0.0f, f32 horizSpacing = 0.0f);
+void treeBegin(const char* id, vec2 entryDims, f32 entryVertSpacing = 0.0f, f32 horizSpacing = 0.0f);
 void treeEnd();
 
 bool treeCollapsableBegin(TreeEntryData* data, const char* text, bool enabled = true);
@@ -100,12 +100,12 @@ void rect(const char* id, vec4 linearColor = vec4(1.0f));
 
 struct ImageData final {
 	WidgetBase base = {};
-	uint64_t imageHandle = 0;
+	u64 imageHandle = 0;
 };
 
-void image(ImageData* data, uint64_t imageHandle);
-void image(strID id, uint64_t imageHandle);
-void image(const char* id, uint64_t imageHandle);
+void image(ImageData* data, u64 imageHandle);
+void image(strID id, u64 imageHandle);
+void image(const char* id, u64 imageHandle);
 
 void image(ImageData* data, const char* imageHandleID);
 void image(strID id, const char* imageHandleID);

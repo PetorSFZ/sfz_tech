@@ -209,7 +209,7 @@ UTEST(HashMap, rehashing_in_put)
 
 	for (int i = 0; i < 256; ++i) {
 		ASSERT_TRUE(m1.put(i, i + 1) == (i + 1));
-		ASSERT_TRUE(m1.size() == uint32_t(i+1));
+		ASSERT_TRUE(m1.size() == u32(i+1));
 	}
 
 	for (int i = 0; i < 256; ++i) {
@@ -261,7 +261,7 @@ struct ZeroHashInteger {
 };
 
 namespace sfz {
-	constexpr uint64_t hash(ZeroHashInteger) noexcept { return 0; }
+	constexpr u64 hash(ZeroHashInteger) noexcept { return 0; }
 }
 
 UTEST(HashMap, hashing_conflicts)
@@ -273,7 +273,7 @@ UTEST(HashMap, hashing_conflicts)
 	ASSERT_TRUE(m.capacity() == 0);
 	ASSERT_TRUE(m.placeholders() == 0);
 
-	uint32_t sizeCount = 0;
+	u32 sizeCount = 0;
 	for (int i = -140; i <= 140; ++i) {
 		m.put(i, i - 1337);
 		sizeCount += 1;
@@ -302,7 +302,7 @@ UTEST(HashMap, hashing_conflicts)
 	}
 
 	// Iterators
-	uint32_t numPairs = 0;
+	u32 numPairs = 0;
 	for (auto pair : m) {
 		numPairs += 1;
 		ASSERT_TRUE(m[pair.key] == pair.value);
@@ -329,7 +329,7 @@ UTEST(HashMap, access_operator)
 	ASSERT_TRUE(m.size() == 0);
 	ASSERT_TRUE(m.capacity() != 0);
 
-	uint32_t sizeCount = 0;
+	u32 sizeCount = 0;
 	for (int i = -256; i <= 256; ++i) {
 		m.put(i, i - 1337);
 		sizeCount += 1;
@@ -415,7 +415,7 @@ UTEST(HashMap, hashmap_with_strings)
 
 	// const char*
 	{
-		sfz::HashMap<const char*, uint32_t> m(0, &allocator, sfz_dbg(""));
+		sfz::HashMap<const char*, u32> m(0, &allocator, sfz_dbg(""));
 		const char* strFoo = "foo";
 		const char* strBar = "bar";
 		const char* strCar = "car";
@@ -431,10 +431,10 @@ UTEST(HashMap, hashmap_with_strings)
 	}
 	// LocalString
 	{
-		sfz::HashMap<sfz::str96,uint32_t> m(0, &allocator, sfz_dbg(""));
+		sfz::HashMap<sfz::str96,u32> m(0, &allocator, sfz_dbg(""));
 
-		const uint32_t NUM_TESTS = 100;
-		for (uint32_t i = 0; i < NUM_TESTS; i++) {
+		const u32 NUM_TESTS = 100;
+		for (u32 i = 0; i < NUM_TESTS; i++) {
 			sfz::str96 tmp;
 			tmp.appendf("str%u", i);
 			m.put(tmp, i);
@@ -443,14 +443,14 @@ UTEST(HashMap, hashmap_with_strings)
 		ASSERT_TRUE(m.size() == NUM_TESTS);
 		ASSERT_TRUE(m.capacity() >= m.size());
 
-		for (uint32_t i = 0; i < NUM_TESTS; i++) {
+		for (u32 i = 0; i < NUM_TESTS; i++) {
 			sfz::str96 tmp;
 			tmp.appendf("str%u", i);
-			uint32_t* ptr = m.get(tmp);
+			u32* ptr = m.get(tmp);
 			ASSERT_TRUE(ptr != nullptr);
 			ASSERT_TRUE(*ptr == i);
 
-			uint32_t* ptr2 = m.get(tmp.str()); // alt key variant
+			u32* ptr2 = m.get(tmp.str()); // alt key variant
 			ASSERT_TRUE(ptr2 != nullptr);
 			ASSERT_TRUE(*ptr2 == i);
 			ASSERT_TRUE(*ptr2 == *ptr);
@@ -497,7 +497,7 @@ struct MoveTestStruct {
 };
 
 namespace sfz {
-	constexpr uint64_t hash(const MoveTestStruct& val) noexcept { return uint64_t(val.value); }
+	constexpr u64 hash(const MoveTestStruct& val) noexcept { return u64(val.value); }
 }
 
 UTEST(HashMap, perfect_forwarding_in_put)
@@ -718,7 +718,7 @@ UTEST(HashMapLocal, hashing_conflicts)
 	ASSERT_TRUE(m.capacity() == 320);
 	ASSERT_TRUE(m.placeholders() == 0);
 
-	uint32_t sizeCount = 0;
+	u32 sizeCount = 0;
 	for (int i = -140; i <= 140; ++i) {
 		m.put(i, i - 1337);
 		sizeCount += 1;
@@ -747,7 +747,7 @@ UTEST(HashMapLocal, hashing_conflicts)
 	}
 
 	// Iterators
-	uint32_t numPairs = 0;
+	u32 numPairs = 0;
 	for (auto pair : m) {
 		numPairs += 1;
 		ASSERT_TRUE(m[pair.key] == pair.value);
@@ -772,7 +772,7 @@ UTEST(HashMapLocal, access_operator)
 	ASSERT_TRUE(m.size() == 0);
 	ASSERT_TRUE(m.capacity() != 0);
 
-	uint32_t sizeCount = 0;
+	u32 sizeCount = 0;
 	for (int i = -256; i < 256; ++i) {
 		m.put(i, i - 1337);
 		sizeCount += 1;
@@ -854,7 +854,7 @@ UTEST(HashMapLocal, hashmap_with_strings)
 {
 	// const char*
 	{
-		sfz::HashMapLocal<const char*, uint32_t, 14> m;
+		sfz::HashMapLocal<const char*, u32, 14> m;
 		const char* strFoo = "foo";
 		const char* strBar = "bar";
 		const char* strCar = "car";
@@ -870,10 +870,10 @@ UTEST(HashMapLocal, hashmap_with_strings)
 	}
 	// LocalString
 	{
-		sfz::HashMapLocal<sfz::str96,uint32_t, 101> m;
+		sfz::HashMapLocal<sfz::str96,u32, 101> m;
 
-		const uint32_t NUM_TESTS = 100;
-		for (uint32_t i = 0; i < NUM_TESTS; i++) {
+		const u32 NUM_TESTS = 100;
+		for (u32 i = 0; i < NUM_TESTS; i++) {
 			sfz::str96 tmp;
 			tmp.appendf("str%u", i);
 			m.put(tmp, i);
@@ -882,14 +882,14 @@ UTEST(HashMapLocal, hashmap_with_strings)
 		ASSERT_TRUE(m.size() == NUM_TESTS);
 		ASSERT_TRUE(m.capacity() >= m.size());
 
-		for (uint32_t i = 0; i < NUM_TESTS; i++) {
+		for (u32 i = 0; i < NUM_TESTS; i++) {
 			sfz::str96 tmp;
 			tmp.appendf("str%u", i);
-			uint32_t* ptr = m.get(tmp);
+			u32* ptr = m.get(tmp);
 			ASSERT_TRUE(ptr != nullptr);
 			ASSERT_TRUE(*ptr == i);
 
-			uint32_t* ptr2 = m.get(tmp.str()); // alt key variant
+			u32* ptr2 = m.get(tmp.str()); // alt key variant
 			ASSERT_TRUE(ptr2 != nullptr);
 			ASSERT_TRUE(*ptr2 == i);
 			ASSERT_TRUE(*ptr2 == *ptr);

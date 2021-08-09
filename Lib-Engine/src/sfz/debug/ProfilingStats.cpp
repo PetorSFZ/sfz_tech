@@ -19,8 +19,6 @@
 
 #include "sfz/debug/ProfilingStats.hpp"
 
-#include <cfloat>
-
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_hash_maps.hpp>
@@ -41,8 +39,8 @@ struct StatsLabel final {
 };
 
 struct StatsCategory final {
-	uint32_t numSamples = 0;
-	float sampleOutlierMax = FLT_MAX;
+	u32 numSamples = 0;
+	float sampleOutlierMax = F32_MAX;
 	str16 sampleUnit;
 	str16 idxUnit;
 	float smallestPlotMax = 0.0f;
@@ -52,7 +50,7 @@ struct StatsCategory final {
 	ArrayLocal<str32, PROFILING_STATS_MAX_NUM_LABELS> labelStringBackings;
 	ArrayLocal<const char*, PROFILING_STATS_MAX_NUM_LABELS> labelStrings;
 
-	Array<uint64_t> indices;
+	Array<u64> indices;
 	Array<float> indicesAsFloat;
 };
 
@@ -84,7 +82,7 @@ void ProfilingStats::destroy() noexcept
 // ProfilingStats: Getters
 // ------------------------------------------------------------------------------------------------
 
-uint32_t ProfilingStats::numCategories() const noexcept
+u32 ProfilingStats::numCategories() const noexcept
 {
 	return mState->categoryStrings.size();
 }
@@ -94,7 +92,7 @@ const char* const* ProfilingStats::categories() const noexcept
 	return mState->categoryStrings.data();
 }
 
-uint32_t ProfilingStats::numLabels(const char* category) const noexcept
+u32 ProfilingStats::numLabels(const char* category) const noexcept
 {
 	const StatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
@@ -122,14 +120,14 @@ bool ProfilingStats::labelExists(const char* category, const char* label) const 
 	return lab != nullptr;
 }
 
-uint32_t ProfilingStats::numSamples(const char* category) const noexcept
+u32 ProfilingStats::numSamples(const char* category) const noexcept
 {
 	const StatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
 	return cat->numSamples;
 }
 
-const uint64_t* ProfilingStats::sampleIndices(const char* category) const noexcept
+const u64* ProfilingStats::sampleIndices(const char* category) const noexcept
 {
 	const StatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
@@ -198,15 +196,15 @@ LabelStats ProfilingStats::stats(const char* category, const char* label) const 
 
 	// Calculate number of valid samples, total, min, max and average of the valid samples
 	LabelStats stats;
-	uint32_t numValidSamples = 0;
+	u32 numValidSamples = 0;
 	float total = 0.0f;
-	stats.min = FLT_MAX;
-	stats.max = -FLT_MAX;
-	for (uint32_t i = cat->numSamples; i > 0; i--) {
+	stats.min = F32_MAX;
+	stats.max = -F32_MAX;
+	for (u32 i = cat->numSamples; i > 0; i--) {
 		
 		// Get index and check that it is valid (i.e. not 0, which is default)
 		// TODO: Maybe bitset that marks each sample that has been set?
-		uint64_t idx = cat->indices[i - 1];
+		u64 idx = cat->indices[i - 1];
 		if (idx == 0) break;
 		numValidSamples += 1;
 
@@ -219,13 +217,13 @@ LabelStats ProfilingStats::stats(const char* category, const char* label) const 
 	stats.avg = numValidSamples != 0 ? total / float(numValidSamples) : 0.0f;
 	
 	// Fix min and max if not set
-	if (stats.min == FLT_MAX) stats.min = lab->defaultValue;
-	if (stats.max == -FLT_MAX) stats.max = lab->defaultValue;
+	if (stats.min == F32_MAX) stats.min = lab->defaultValue;
+	if (stats.max == -F32_MAX) stats.max = lab->defaultValue;
 
 	// Calculate standard deviation
 	float varianceSum = 0.0f;
-	for (uint32_t i = cat->numSamples; i > 0; i--) {
-		uint64_t idx = cat->indices[i - 1];
+	for (u32 i = cat->numSamples; i > 0; i--) {
+		u64 idx = cat->indices[i - 1];
 		if (idx == 0) break;
 		float sample = lab->samples[i - 1];
 		varianceSum += ((sample - stats.avg) * (sample - stats.avg));
@@ -240,7 +238,7 @@ LabelStats ProfilingStats::stats(const char* category, const char* label) const 
 
 void ProfilingStats::createCategory(
 	const char* category,
-	uint32_t numSamples,
+	u32 numSamples,
 	float sampleOutlierMax,
 	const char* sampleUnit,
 	const char* idxUnit,
@@ -269,7 +267,7 @@ void ProfilingStats::createCategory(
 	cat.indices.init(cat.numSamples, mState->allocator, sfz_dbg(""));
 	cat.indices.add(0ull, cat.numSamples);
 	cat.indicesAsFloat.init(cat.numSamples, mState->allocator, sfz_dbg(""));
-	for (uint32_t i = 0; i < cat.numSamples; i++) {
+	for (u32 i = 0; i < cat.numSamples; i++) {
 		float val = -(float(cat.numSamples) - float(i) - 1.0f);
 		cat.indicesAsFloat.add(val);
 	}
@@ -309,7 +307,7 @@ void ProfilingStats::createLabel(
 }
 
 void ProfilingStats::addSample(
-	const char* category, const char* label, uint64_t sampleIdx, float sample) noexcept
+	const char* category, const char* label, u64 sampleIdx, float sample) noexcept
 {
 	StatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
@@ -321,9 +319,9 @@ void ProfilingStats::addSample(
 
 	// Find latest matching idx
 	sfz_assert(sampleIdx >= cat->indices.first());
-	uint32_t insertLoc = ~0u;
-	for (uint32_t i = cat->numSamples; i > 0; i--) {
-		uint64_t idx = cat->indices[i - 1];
+	u32 insertLoc = ~0u;
+	for (u32 i = cat->numSamples; i > 0; i--) {
+		u64 idx = cat->indices[i - 1];
 		if (idx == sampleIdx) {
 			insertLoc = (i - 1);
 			break;

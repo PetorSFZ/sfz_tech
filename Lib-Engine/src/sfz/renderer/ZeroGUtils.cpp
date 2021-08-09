@@ -119,8 +119,8 @@ bool initializeZeroG(
 
 	// Init settings
 	ZgContextInitSettings initSettings = {};
-	initSettings.width = uint32_t(w);
-	initSettings.height = uint32_t(h);
+	initSettings.width = u32(w);
+	initSettings.height = u32(h);
 	initSettings.vsync = vsync ? ZG_TRUE : ZG_FALSE;
 	initSettings.logger = getPhantasyEngineZeroGLogger();
 	initSettings.allocator = allocator;

@@ -40,9 +40,7 @@ The modules in sfz_core are:
 sfz_core has __no__ dependencies beside the C++ standard library, and even then it tries to minimize usage. `sfz.h` doesn't depend on the standard library, for `skipifzero.hpp` following standard headers are __mandatory__:
 
 * `<cassert>`: Needed for `assert()`, which `sfz_assert()` is a wrapper around. Could potentially be replaced with platform specific intrinsics, such as `__debugbreak()`, but at least `__debugbreak()` does not always fire for me, unlike `assert()`.
-* `<cfloat>`: Needed for `FLT_MAX`.
 * `<cmath>`: Needed for `sqrt()`, could be replaced with platform specific intrinsics.
-* `<cstdint>`: Needed for standard sized int types.
 * `<cstdlib>`: Needed for `abort()`.
 * `<cstring>`: Needed for `mempcpy()` and other memory and string related functionality.
 * `<type_traits>`: Needed to enforce a number of constraints on types using `static_assert()`.
