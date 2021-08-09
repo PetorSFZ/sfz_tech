@@ -22,7 +22,6 @@
 
 #include <cmath> // std::sqrt, std::fmodf
 #include <cstring> // memcpy()
-#include <type_traits>
 #include <utility> // std::move, std::forward, std::swap
 
 #include "sfz.h"
@@ -122,17 +121,7 @@ constexpr u64 alignedDiff(u64 value, u64 alignment)
 	T(T&& other) noexcept { this->swap(other); } \
 	T& operator= (T&& other) noexcept { this->swap(other); return *this; } \
 	void swap(T& other) noexcept { sfz::memswp(this, &other, sizeof(T)); } \
-	~T() noexcept \
-	{ \
-		static_assert(std::is_final_v<T>, "DropType's must be marked final"); \
-		static_assert(!std::is_polymorphic_v<T>, "DropType's may not have any virtual methods"); \
-		static_assert(std::is_default_constructible_v<T>, "DropType's MUST be default constructible"); \
-		static_assert(!std::is_copy_constructible_v<T>, "DropType's MUST NOT be copy constructible"); \
-		static_assert(!std::is_copy_assignable_v<T>, "DropType's MUST NOT be copy assignable"); \
-		static_assert(std::is_move_constructible_v<T>, "DropType's MUST be move constructible"); \
-		static_assert(std::is_move_assignable_v<T>, "DropType's MUST be move assignable"); \
-		this->destroy(); \
-	}
+	~T() noexcept { this->destroy(); }
 
 // Alternate type definition
 // ------------------------------------------------------------------------------------------------

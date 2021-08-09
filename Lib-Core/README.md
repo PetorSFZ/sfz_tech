@@ -41,7 +41,6 @@ sfz_core has __no__ dependencies beside the C++ standard library, and even then 
 
 * `<cmath>`: Needed for `sqrt()`, could be replaced with platform specific intrinsics.
 * `<cstring>`: Needed for `mempcpy()` and other memory and string related functionality.
-* `<type_traits>`: Needed to enforce a number of constraints on types using `static_assert()`.
 * `<utility>`: Needed for `std::move()`, `std::forward()` and `std::swap()`. All of which are pretty much necessary in order to use move semantics. Would love to remove this header if I could get ahold of a simple, minimal (<200 lines of code) implementation of above.
 
 In addition, some headers have additional standard library header requirements. These __optional__ standard headers are:
