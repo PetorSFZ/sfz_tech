@@ -154,7 +154,7 @@ struct ZgPipelineRender final {
 	D3D12RootSignature rootSignature;
 	D3D12PipelineBindingsSignature bindingsSignature;
 	ZgPipelineRenderSignature renderSignature = {};
-	ZgPipelineRenderCreateInfo createInfo = {}; // The info used to create the pipeline 
+	ZgPipelineRenderDesc createInfo = {}; // The info used to create the pipeline 
 };
 
 // D3D12PipelineCompute functions
@@ -162,7 +162,7 @@ struct ZgPipelineRender final {
 
 ZgResult createPipelineComputeFileHLSL(
 	ZgPipelineCompute** pipelineOut,
-	const ZgPipelineComputeCreateInfo& createInfo,
+	const ZgPipelineComputeDesc& desc,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
@@ -174,7 +174,7 @@ ZgResult createPipelineComputeFileHLSL(
 
 ZgResult createPipelineRenderFileHLSL(
 	ZgPipelineRender** pipelineOut,
-	const ZgPipelineRenderCreateInfo& createInfo,
+	const ZgPipelineRenderDesc& desc,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
@@ -183,7 +183,7 @@ ZgResult createPipelineRenderFileHLSL(
 
 ZgResult createPipelineRenderSourceHLSL(
 	ZgPipelineRender** pipelineOut,
-	const ZgPipelineRenderCreateInfo& createInfo,
+	const ZgPipelineRenderDesc& desc,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,

@@ -86,7 +86,7 @@ public:
 inline ZgResult createFramebuffer(
 	ID3D12Device3& device,
 	ZgFramebuffer** framebufferOut,
-	const ZgFramebufferCreateInfo& createInfo) noexcept
+	const ZgFramebufferDesc& createInfo) noexcept
 {
 	// Get dimensions from first available texture
 	u32 width = 0;

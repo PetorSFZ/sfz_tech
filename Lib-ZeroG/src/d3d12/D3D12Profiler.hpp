@@ -115,7 +115,7 @@ inline ZgResult d3d12CreateProfiler(
 	D3D12MA::Allocator* d3d12allocator,
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter,
 	ZgProfiler** profilerOut,
-	const ZgProfilerCreateInfo& createInfo) noexcept
+	const ZgProfilerDesc& createInfo) noexcept
 {
 	constexpr u64 TIMESTAMPS_PER_MEASUREMENT = 2;
 
@@ -134,11 +134,11 @@ inline ZgResult d3d12CreateProfiler(
 	ZgBuffer* downloadBuffer = nullptr;
 	{
 		// Create download buffer
-		ZgBufferCreateInfo bufferInfo = {};
-		bufferInfo.memoryType = ZG_MEMORY_TYPE_DOWNLOAD;
-		bufferInfo.sizeInBytes = sizeof(u64) * TIMESTAMPS_PER_MEASUREMENT * createInfo.maxNumMeasurements;
+		ZgBufferDesc bufferDesc = {};
+		bufferDesc.memoryType = ZG_MEMORY_TYPE_DOWNLOAD;
+		bufferDesc.sizeInBytes = sizeof(u64) * TIMESTAMPS_PER_MEASUREMENT * createInfo.maxNumMeasurements;
 		ZgBuffer* bufferTmp = nullptr;
-		ZgResult res = createBuffer(bufferTmp, bufferInfo, d3d12allocator, resourceUniqueIdentifierCounter);
+		ZgResult res = createBuffer(bufferTmp, bufferDesc, d3d12allocator, resourceUniqueIdentifierCounter);
 		if (res != ZG_SUCCESS) {
 			sfz_delete(getAllocator(), downloadBuffer);
 			return res;

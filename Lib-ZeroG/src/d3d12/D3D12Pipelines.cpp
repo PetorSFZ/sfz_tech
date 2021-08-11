@@ -443,7 +443,7 @@ static D3D12_TEXTURE_ADDRESS_MODE wrappingModeToD3D12(ZgWrappingMode wrappingMod
 }
 
 static void logPipelineComputeInfo(
-	const ZgPipelineComputeCreateInfo& createInfo,
+	const ZgPipelineComputeDesc& createInfo,
 	const char* computeShaderName,
 	const ZgPipelineBindingsSignature& bindingsSignature,
 	u32 groupDimX,
@@ -508,7 +508,7 @@ static void logPipelineComputeInfo(
 }
 
 static void logPipelineRenderInfo(
-	const ZgPipelineRenderCreateInfo& createInfo,
+	const ZgPipelineRenderDesc& createInfo,
 	const char* vertexShaderName,
 	const char* pixelShaderName,
 	const ZgPipelineBindingsSignature& bindingsSignature,
@@ -995,7 +995,7 @@ const D3D12UnorderedTextureMapping* D3D12RootSignature::getUnorderedTextureMappi
 
 static ZgResult createPipelineComputeInternal(
 	ZgPipelineCompute** pipelineOut,
-	const ZgPipelineComputeCreateInfo& createInfo,
+	const ZgPipelineComputeDesc& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	time_point compileStartTime,
 	const ComPtr<IDxcBlobEncoding>& encodingBlob,
@@ -1109,7 +1109,7 @@ static ZgResult createPipelineComputeInternal(
 
 ZgResult createPipelineComputeFileHLSL(
 	ZgPipelineCompute** pipelineOut,
-	const ZgPipelineComputeCreateInfo& createInfo,
+	const ZgPipelineComputeDesc& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
@@ -1143,7 +1143,7 @@ ZgResult createPipelineComputeFileHLSL(
 
 static ZgResult createPipelineRenderInternal(
 	ZgPipelineRender** pipelineOut,
-	const ZgPipelineRenderCreateInfo& createInfo,
+	const ZgPipelineRenderDesc& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	time_point compileStartTime,
 	const ComPtr<IDxcBlobEncoding>& vertexEncodingBlob,
@@ -1600,7 +1600,7 @@ static ZgResult createPipelineRenderInternal(
 
 ZgResult createPipelineRenderFileHLSL(
 	ZgPipelineRender** pipelineOut,
-	const ZgPipelineRenderCreateInfo& createInfo,
+	const ZgPipelineRenderDesc& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
@@ -1646,7 +1646,7 @@ ZgResult createPipelineRenderFileHLSL(
 
 ZgResult createPipelineRenderSourceHLSL(
 	ZgPipelineRender** pipelineOut,
-	const ZgPipelineRenderCreateInfo& createInfo,
+	const ZgPipelineRenderDesc& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,

@@ -176,7 +176,7 @@ ZgResult TextureResource::build(i32x2 screenRes)
 	sfz_assert(numMipmaps > 0);
 	sfz_assert(numMipmaps <= ZG_MAX_NUM_MIPMAPS);
 
-	ZgTextureCreateInfo desc = {};
+	ZgTextureDesc desc = {};
 	desc.format = format;
 	desc.committedAllocation = committedAllocation ? ZG_TRUE : ZG_FALSE;
 	desc.allowUnorderedAccess = (usage == ZG_TEXTURE_USAGE_DEPTH_BUFFER) ? ZG_FALSE : ZG_TRUE;

@@ -182,13 +182,13 @@ ZgResult imguiInitRenderState(
 
 	{
 		sfz_assert_hard(fontTexture.format == ZG_TEXTURE_FORMAT_R_U8_UNORM);
-		ZgTextureCreateInfo texCreateInfo = {};
-		texCreateInfo.format = ZG_TEXTURE_FORMAT_R_U8_UNORM;
-		texCreateInfo.width = fontTexture.width;
-		texCreateInfo.height = fontTexture.height;
-		texCreateInfo.numMipmaps = 1; // TODO: Mipmaps
-		texCreateInfo.debugName = "ImGui_FontTexture";
-		ZgResult res = stateOut->fontTexture.create(texCreateInfo);
+		ZgTextureDesc desc = {};
+		desc.format = ZG_TEXTURE_FORMAT_R_U8_UNORM;
+		desc.width = fontTexture.width;
+		desc.height = fontTexture.height;
+		desc.numMipmaps = 1; // TODO: Mipmaps
+		desc.debugName = "ImGui_FontTexture";
+		ZgResult res = stateOut->fontTexture.create(desc);
 		if (!zgIsSuccess(res)) return res;
 	}
 

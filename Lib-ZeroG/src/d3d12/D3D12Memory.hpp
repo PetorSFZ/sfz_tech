@@ -94,7 +94,7 @@ struct ZgTexture final {
 
 inline ZgResult createBuffer(
 	ZgBuffer*& bufferOut,
-	const ZgBufferCreateInfo& createInfo,
+	const ZgBufferDesc& createInfo,
 	D3D12MA::Allocator* d3d12Allocator,
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter) noexcept
 {
@@ -245,7 +245,7 @@ inline ZgResult bufferMemcpyDownload(
 
 inline ZgResult createTexture(
 	ZgTexture*& textureOut,
-	const ZgTextureCreateInfo& createInfo,
+	const ZgTextureDesc& createInfo,
 	ID3D12Device3& device,
 	D3D12MA::Allocator* d3d12Allocator,
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter) noexcept

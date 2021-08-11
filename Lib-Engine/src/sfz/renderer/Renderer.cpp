@@ -84,9 +84,9 @@ bool Renderer::init(
 
 	// Initialize profiler
 	{
-		ZgProfilerCreateInfo createInfo = {};
-		createInfo.maxNumMeasurements = 1024;
-		CHECK_ZG mState->profiler.create(createInfo);
+		ZgProfilerDesc desc = {};
+		desc.maxNumMeasurements = 1024;
+		CHECK_ZG mState->profiler.create(desc);
 		mState->frameMeasurementIds.init(mState->frameLatency);
 	}
 

@@ -963,7 +963,7 @@ struct ZgCommandList final {
 		if (boundPipelineRender == nullptr) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 
 		// Check that the vertex buffer slot is not out of bounds for the bound pipeline
-		const ZgPipelineRenderCreateInfo& pipelineInfo = boundPipelineRender->createInfo;
+		const ZgPipelineRenderDesc& pipelineInfo = boundPipelineRender->createInfo;
 		if (pipelineInfo.numVertexBufferSlots <= vertexBufferSlot) {
 			return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 		}

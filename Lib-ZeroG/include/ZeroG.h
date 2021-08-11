@@ -179,7 +179,7 @@ typedef enum {
 	ZG_MEMORY_TYPE_FORCE_I32 = I32_MAX
 } ZgMemoryType;
 
-sfz_struct(ZgBufferCreateInfo) {
+sfz_struct(ZgBufferDesc) {
 	ZgMemoryType memoryType;
 	u64 sizeInBytes;
 	ZgBool committedAllocation;
@@ -188,7 +188,7 @@ sfz_struct(ZgBufferCreateInfo) {
 
 ZG_API ZgResult zgBufferCreate(
 	ZgBuffer** bufferOut,
-	const ZgBufferCreateInfo* createInfo);
+	const ZgBufferDesc* desc);
 
 ZG_API void zgBufferDestroy(
 	ZgBuffer* buffer);
@@ -217,12 +217,12 @@ public:
 		const char* debugName = nullptr)
 	{
 		this->destroy();
-		ZgBufferCreateInfo info = {};
-		info.memoryType = type;
-		info.sizeInBytes = sizeBytes;
-		info.committedAllocation = committedAllocation ? ZG_TRUE : ZG_FALSE;
-		info.debugName = debugName;
-		return zgBufferCreate(&handle, &info);
+		ZgBufferDesc desc = {};
+		desc.memoryType = type;
+		desc.sizeInBytes = sizeBytes;
+		desc.committedAllocation = committedAllocation ? ZG_TRUE : ZG_FALSE;
+		desc.debugName = debugName;
+		return zgBufferCreate(&handle, &desc);
 	}
 
 	ZgResult memcpyUpload(u64 bufferOffsetBytes, const void* srcMemory, u64 numBytes)
@@ -278,7 +278,7 @@ typedef enum {
 	ZG_OPTIMAL_CLEAR_VALUE_FORCE_I32 = I32_MAX
 } ZgOptimalClearValue;
 
-sfz_struct(ZgTextureCreateInfo) {
+sfz_struct(ZgTextureDesc) {
 
 	// The format of the texture
 	ZgTextureFormat format;
@@ -316,7 +316,7 @@ sfz_struct(ZgTextureCreateInfo) {
 
 ZG_API ZgResult zgTextureCreate(
 	ZgTexture** textureOut,
-	const ZgTextureCreateInfo* createInfo);
+	const ZgTextureDesc* desc);
 
 ZG_API void zgTextureDestroy(
 	ZgTexture* texture);
@@ -329,10 +329,10 @@ namespace zg {
 
 class Texture final : public ManagedHandle<ZgTexture, zgTextureDestroy> {
 public:
-	ZgResult create(const ZgTextureCreateInfo& createInfo)
+	ZgResult create(const ZgTextureDesc& desc)
 	{
 		this->destroy();
-		return zgTextureCreate(&this->handle, &createInfo);
+		return zgTextureCreate(&this->handle, &desc);
 	}
 
 	u32 sizeInBytes() const { return zgTextureSizeInBytes(this->handle); }
@@ -670,7 +670,7 @@ sfz_struct(ZgSampler) {
 	ZgComparisonFunc comparisonFunc;
 };
 
-sfz_struct(ZgPipelineComputeCreateInfo) {
+sfz_struct(ZgPipelineComputeDesc) {
 
 	// Path to the shader source or the source directly depending on what create function is called.
 	const char* computeShader;
@@ -695,7 +695,7 @@ sfz_struct(ZgPipelineComputeCreateInfo) {
 
 ZG_API ZgResult zgPipelineComputeCreateFromFileHLSL(
 	ZgPipelineCompute** pipelineOut,
-	const ZgPipelineComputeCreateInfo* createInfo,
+	const ZgPipelineComputeDesc* desc,
 	const ZgPipelineCompileSettingsHLSL* compileSettings);
 
 ZG_API void zgPipelineComputeDestroy(
@@ -717,12 +717,12 @@ namespace zg {
 class PipelineCompute final : public ManagedHandle<ZgPipelineCompute, zgPipelineComputeDestroy> {
 public:
 	ZgResult createFromFileHLSL(
-		const ZgPipelineComputeCreateInfo& createInfo,
+		const ZgPipelineComputeDesc& desc,
 		const ZgPipelineCompileSettingsHLSL& compileSettings)
 	{
 		this->destroy();
 		return zgPipelineComputeCreateFromFileHLSL(
-			&this->handle, &createInfo, &compileSettings);
+			&this->handle, &desc, &compileSettings);
 	}
 
 	ZgPipelineBindingsSignature getBindingsSignature() const
@@ -740,7 +740,7 @@ public:
 
 class PipelineComputeBuilder final {
 public:
-	ZgPipelineComputeCreateInfo createInfo = {};
+	ZgPipelineComputeDesc desc = {};
 	const char* computeShaderPath = nullptr;
 	const char* computeShaderSrc = nullptr;
 
@@ -751,32 +751,32 @@ public:
 
 	PipelineComputeBuilder& addComputeShaderPath(const char* entry, const char* path)
 	{
-		createInfo.computeShaderEntry = entry;
+		desc.computeShaderEntry = entry;
 		computeShaderPath = path;
 		return *this;
 	}
 
 	PipelineComputeBuilder& addComputeShaderSource(const char* entry, const char* src)
 	{
-		createInfo.computeShaderEntry = entry;
+		desc.computeShaderEntry = entry;
 		computeShaderSrc = src;
 		return *this;
 	}
 
 	PipelineComputeBuilder& addPushConstant(u32 constantBufferRegister)
 	{
-		sfz_assert(createInfo.numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
-		createInfo.pushConstantRegisters[createInfo.numPushConstants] = constantBufferRegister;
-		createInfo.numPushConstants += 1;
+		sfz_assert(desc.numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
+		desc.pushConstantRegisters[desc.numPushConstants] = constantBufferRegister;
+		desc.numPushConstants += 1;
 		return *this;
 	}
 
 	PipelineComputeBuilder& addSampler(u32 samplerRegister, ZgSampler sampler)
 	{
-		sfz_assert(samplerRegister == createInfo.numSamplers);
-		sfz_assert(createInfo.numSamplers < ZG_MAX_NUM_SAMPLERS);
-		createInfo.samplers[samplerRegister] = sampler;
-		createInfo.numSamplers += 1;
+		sfz_assert(samplerRegister == desc.numSamplers);
+		sfz_assert(desc.numSamplers < ZG_MAX_NUM_SAMPLERS);
+		desc.samplers[samplerRegister] = sampler;
+		desc.numSamplers += 1;
 		return *this;
 	}
 
@@ -799,7 +799,7 @@ public:
 		PipelineCompute& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0)
 	{
 		// Set path
-		createInfo.computeShader = this->computeShaderPath;
+		desc.computeShader = this->computeShaderPath;
 
 		// Create compile settings
 		ZgPipelineCompileSettingsHLSL compileSettings = {};
@@ -809,7 +809,7 @@ public:
 		compileSettings.dxcCompilerFlags[2] = "-O3";
 
 		// Build pipeline
-		return pipelineOut.createFromFileHLSL(createInfo, compileSettings);
+		return pipelineOut.createFromFileHLSL(desc, compileSettings);
 	}
 };
 
@@ -976,7 +976,7 @@ sfz_struct(ZgBlendSettings) {
 };
 
 // The common information required to create a render pipeline
-sfz_struct(ZgPipelineRenderCreateInfo) {
+sfz_struct(ZgPipelineRenderDesc) {
 
 	// Path to the shader source or the source directly depending on what create function is called.
 	const char* vertexShader;
@@ -1027,12 +1027,12 @@ sfz_struct(ZgPipelineRenderCreateInfo) {
 
 ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 	ZgPipelineRender** pipelineOut,
-	const ZgPipelineRenderCreateInfo* createInfo,
+	const ZgPipelineRenderDesc* desc,
 	const ZgPipelineCompileSettingsHLSL* compileSettings);
 
 ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
 	ZgPipelineRender** pipelineOut,
-	const ZgPipelineRenderCreateInfo* createInfo,
+	const ZgPipelineRenderDesc* desc,
 	const ZgPipelineCompileSettingsHLSL* compileSettings);
 
 ZG_API void zgPipelineRenderDestroy(
@@ -1048,21 +1048,21 @@ namespace zg {
 class PipelineRender final : public ManagedHandle<ZgPipelineRender, zgPipelineRenderDestroy> {
 public:
 	ZgResult createFromFileHLSL(
-		const ZgPipelineRenderCreateInfo& createInfo,
+		const ZgPipelineRenderDesc& desc,
 		const ZgPipelineCompileSettingsHLSL& compileSettings)
 	{
 		this->destroy();
 		return zgPipelineRenderCreateFromFileHLSL(
-			&this->handle, &createInfo, &compileSettings);
+			&this->handle, &desc, &compileSettings);
 	}
 
 	ZgResult createFromSourceHLSL(
-		const ZgPipelineRenderCreateInfo& createInfo,
+		const ZgPipelineRenderDesc& desc,
 		const ZgPipelineCompileSettingsHLSL& compileSettings)
 	{
 		this->destroy();
 		return zgPipelineRenderCreateFromSourceHLSL(
-			&this->handle, &createInfo, &compileSettings);
+			&this->handle, &desc, &compileSettings);
 	}
 
 	ZgPipelineRenderSignature getSignature() const
@@ -1075,7 +1075,7 @@ public:
 
 class PipelineRenderBuilder final {
 public:
-	ZgPipelineRenderCreateInfo createInfo = {};
+	ZgPipelineRenderDesc desc = {};
 	const char* vertexShaderPath = nullptr;
 	const char* pixelShaderPath = nullptr;
 	const char* vertexShaderSrc = nullptr;
@@ -1088,37 +1088,37 @@ public:
 
 	PipelineRenderBuilder& addVertexShaderPath(const char* entry, const char* path)
 	{
-		createInfo.vertexShaderEntry = entry;
+		desc.vertexShaderEntry = entry;
 		vertexShaderPath = path;
 		return *this;
 	}
 
 	PipelineRenderBuilder& addPixelShaderPath(const char* entry, const char* path)
 	{
-		createInfo.pixelShaderEntry = entry;
+		desc.pixelShaderEntry = entry;
 		pixelShaderPath = path;
 		return *this;
 	}
 
 	PipelineRenderBuilder& addVertexShaderSource(const char* entry, const char* src)
 	{
-		createInfo.vertexShaderEntry = entry;
+		desc.vertexShaderEntry = entry;
 		vertexShaderSrc = src;
 		return *this;
 	}
 
 	PipelineRenderBuilder& addPixelShaderSource(const char* entry, const char* src)
 	{
-		createInfo.pixelShaderEntry = entry;
+		desc.pixelShaderEntry = entry;
 		pixelShaderSrc = src;
 		return *this;
 	}
 
 	PipelineRenderBuilder& addVertexAttribute(ZgVertexAttribute attribute)
 	{
-		sfz_assert(createInfo.numVertexAttributes < ZG_MAX_NUM_VERTEX_ATTRIBUTES);
-		createInfo.vertexAttributes[createInfo.numVertexAttributes] = attribute;
-		createInfo.numVertexAttributes += 1;
+		sfz_assert(desc.numVertexAttributes < ZG_MAX_NUM_VERTEX_ATTRIBUTES);
+		desc.vertexAttributes[desc.numVertexAttributes] = attribute;
+		desc.numVertexAttributes += 1;
 		return *this;
 	}
 
@@ -1139,27 +1139,27 @@ public:
 	PipelineRenderBuilder& addVertexBufferInfo(
 		u32 slot, u32 vertexBufferStrideBytes)
 	{
-		sfz_assert(slot == createInfo.numVertexBufferSlots);
-		sfz_assert(createInfo.numVertexBufferSlots < ZG_MAX_NUM_VERTEX_ATTRIBUTES);
-		createInfo.vertexBufferStridesBytes[slot] = vertexBufferStrideBytes;
-		createInfo.numVertexBufferSlots += 1;
+		sfz_assert(slot == desc.numVertexBufferSlots);
+		sfz_assert(desc.numVertexBufferSlots < ZG_MAX_NUM_VERTEX_ATTRIBUTES);
+		desc.vertexBufferStridesBytes[slot] = vertexBufferStrideBytes;
+		desc.numVertexBufferSlots += 1;
 		return *this;
 	}
 
 	PipelineRenderBuilder& addPushConstant(u32 constantBufferRegister)
 	{
-		sfz_assert(createInfo.numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
-		createInfo.pushConstantRegisters[createInfo.numPushConstants] = constantBufferRegister;
-		createInfo.numPushConstants += 1;
+		sfz_assert(desc.numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
+		desc.pushConstantRegisters[desc.numPushConstants] = constantBufferRegister;
+		desc.numPushConstants += 1;
 		return *this;
 	}
 
 	PipelineRenderBuilder& addSampler(u32 samplerRegister, ZgSampler sampler)
 	{
-		sfz_assert(samplerRegister == createInfo.numSamplers);
-		sfz_assert(createInfo.numSamplers < ZG_MAX_NUM_SAMPLERS);
-		createInfo.samplers[samplerRegister] = sampler;
-		createInfo.numSamplers += 1;
+		sfz_assert(samplerRegister == desc.numSamplers);
+		sfz_assert(desc.numSamplers < ZG_MAX_NUM_SAMPLERS);
+		desc.samplers[samplerRegister] = sampler;
+		desc.numSamplers += 1;
 		return *this;
 	}
 
@@ -1180,29 +1180,29 @@ public:
 
 	PipelineRenderBuilder& addRenderTarget(ZgTextureFormat format)
 	{
-		sfz_assert(createInfo.numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
-		createInfo.renderTargets[createInfo.numRenderTargets] = format;
-		createInfo.numRenderTargets += 1;
+		sfz_assert(desc.numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
+		desc.renderTargets[desc.numRenderTargets] = format;
+		desc.numRenderTargets += 1;
 		return *this;
 	}
 
 	PipelineRenderBuilder& setWireframeRendering(bool wireframeEnabled)
 	{
-		createInfo.rasterizer.wireframeMode = wireframeEnabled ? ZG_TRUE : ZG_FALSE;
+		desc.rasterizer.wireframeMode = wireframeEnabled ? ZG_TRUE : ZG_FALSE;
 		return *this;
 	}
 
 	PipelineRenderBuilder& setCullingEnabled(bool cullingEnabled)
 	{
-		createInfo.rasterizer.cullingEnabled = cullingEnabled ? ZG_TRUE : ZG_FALSE;
+		desc.rasterizer.cullingEnabled = cullingEnabled ? ZG_TRUE : ZG_FALSE;
 		return *this;
 	}
 
 	PipelineRenderBuilder& setCullMode(
 		bool cullFrontFacing, bool fontFacingIsCounterClockwise = false)
 	{
-		createInfo.rasterizer.cullFrontFacing = cullFrontFacing ? ZG_TRUE : ZG_FALSE;
-		createInfo.rasterizer.frontFacingIsCounterClockwise =
+		desc.rasterizer.cullFrontFacing = cullFrontFacing ? ZG_TRUE : ZG_FALSE;
+		desc.rasterizer.frontFacingIsCounterClockwise =
 			fontFacingIsCounterClockwise ? ZG_TRUE : ZG_FALSE;
 		return *this;
 	}
@@ -1210,39 +1210,39 @@ public:
 	PipelineRenderBuilder& setDepthBias(
 		i32 bias, f32 biasSlopeScaled, f32 biasClamp = 0.0f)
 	{
-		createInfo.rasterizer.depthBias = bias;
-		createInfo.rasterizer.depthBiasSlopeScaled = biasSlopeScaled;
-		createInfo.rasterizer.depthBiasClamp = biasClamp;
+		desc.rasterizer.depthBias = bias;
+		desc.rasterizer.depthBiasSlopeScaled = biasSlopeScaled;
+		desc.rasterizer.depthBiasClamp = biasClamp;
 		return *this;
 	}
 
 	PipelineRenderBuilder& setBlendingEnabled(bool blendingEnabled)
 	{
-		createInfo.blending.blendingEnabled = blendingEnabled ? ZG_TRUE : ZG_FALSE;
+		desc.blending.blendingEnabled = blendingEnabled ? ZG_TRUE : ZG_FALSE;
 		return *this;
 	}
 
 	PipelineRenderBuilder& setBlendFuncColor(
 		ZgBlendFunc func, ZgBlendFactor srcFactor, ZgBlendFactor dstFactor)
 	{
-		createInfo.blending.blendFuncColor = func;
-		createInfo.blending.srcValColor = srcFactor;
-		createInfo.blending.dstValColor = dstFactor;
+		desc.blending.blendFuncColor = func;
+		desc.blending.srcValColor = srcFactor;
+		desc.blending.dstValColor = dstFactor;
 		return *this;
 	}
 
 	PipelineRenderBuilder& setBlendFuncAlpha(
 		ZgBlendFunc func, ZgBlendFactor srcFactor, ZgBlendFactor dstFactor)
 	{
-		createInfo.blending.blendFuncAlpha = func;
-		createInfo.blending.srcValAlpha = srcFactor;
-		createInfo.blending.dstValAlpha = dstFactor;
+		desc.blending.blendFuncAlpha = func;
+		desc.blending.srcValAlpha = srcFactor;
+		desc.blending.dstValAlpha = dstFactor;
 		return *this;
 	}
 
 	PipelineRenderBuilder& setDepthFunc(ZgComparisonFunc depthFunc)
 	{
-		createInfo.depthFunc = depthFunc;
+		desc.depthFunc = depthFunc;
 		return *this;
 	}
 
@@ -1250,8 +1250,8 @@ public:
 		PipelineRender& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0)
 	{
 		// Set path
-		createInfo.vertexShader = this->vertexShaderPath;
-		createInfo.pixelShader = this->pixelShaderPath;
+		desc.vertexShader = this->vertexShaderPath;
+		desc.pixelShader = this->pixelShaderPath;
 
 		// Create compile settings
 		ZgPipelineCompileSettingsHLSL compileSettings = {};
@@ -1261,15 +1261,15 @@ public:
 		compileSettings.dxcCompilerFlags[2] = "-O3";
 
 		// Build pipeline
-		return pipelineOut.createFromFileHLSL(createInfo, compileSettings);
+		return pipelineOut.createFromFileHLSL(desc, compileSettings);
 	}
 
 	ZgResult buildFromSourceHLSL(
 		PipelineRender& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0)
 	{
 		// Set source
-		createInfo.vertexShader = this->vertexShaderSrc;
-		createInfo.pixelShader = this->pixelShaderSrc;
+		desc.vertexShader = this->vertexShaderSrc;
+		desc.pixelShader = this->pixelShaderSrc;
 
 		// Create compile settings
 		ZgPipelineCompileSettingsHLSL compileSettings = {};
@@ -1279,7 +1279,7 @@ public:
 		compileSettings.dxcCompilerFlags[2] = "-O3";
 
 		// Build pipeline
-		return pipelineOut.createFromSourceHLSL(createInfo, compileSettings);
+		return pipelineOut.createFromSourceHLSL(desc, compileSettings);
 	}
 };
 
@@ -1289,7 +1289,7 @@ public:
 // Framebuffer
 // ------------------------------------------------------------------------------------------------
 
-sfz_struct(ZgFramebufferCreateInfo) {
+sfz_struct(ZgFramebufferDesc) {
 
 	// Render targets
 	u32 numRenderTargets;
@@ -1301,7 +1301,7 @@ sfz_struct(ZgFramebufferCreateInfo) {
 
 ZG_API ZgResult zgFramebufferCreate(
 	ZgFramebuffer** framebufferOut,
-	const ZgFramebufferCreateInfo* createInfo);
+	const ZgFramebufferDesc* desc);
 
 // No-op if framebuffer is built-in swapchain framebuffer, which is managed and owned by the ZeroG
 // context.
@@ -1318,10 +1318,10 @@ namespace zg {
 
 class Framebuffer final : public ManagedHandle<ZgFramebuffer, zgFramebufferDestroy> {
 public:
-	ZgResult create(const ZgFramebufferCreateInfo& createInfo)
+	ZgResult create(const ZgFramebufferDesc& desc)
 	{
 		this->destroy();
-		return zgFramebufferCreate(&this->handle, &createInfo);
+		return zgFramebufferCreate(&this->handle, &desc);
 	}
 
 	ZgResult getResolution(u32& widthOut, u32& heightOut) const
@@ -1332,7 +1332,7 @@ public:
 
 class FramebufferBuilder final {
 public:
-	ZgFramebufferCreateInfo createInfo = {};
+	ZgFramebufferDesc desc = {};
 
 	FramebufferBuilder() = default;
 	FramebufferBuilder(const FramebufferBuilder&) = default;
@@ -1341,22 +1341,22 @@ public:
 
 	FramebufferBuilder& addRenderTarget(Texture& renderTarget)
 	{
-		sfz_assert(createInfo.numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
-		u32 idx = createInfo.numRenderTargets;
-		createInfo.numRenderTargets += 1;
-		createInfo.renderTargets[idx] = renderTarget.handle;
+		sfz_assert(desc.numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
+		u32 idx = desc.numRenderTargets;
+		desc.numRenderTargets += 1;
+		desc.renderTargets[idx] = renderTarget.handle;
 		return *this;
 	}
 
 	FramebufferBuilder& setDepthBuffer(Texture& depthBuffer)
 	{
-		createInfo.depthBuffer = depthBuffer.handle;
+		desc.depthBuffer = depthBuffer.handle;
 		return *this;
 	}
 
 	ZgResult build(Framebuffer& framebufferOut)
 	{
-		return framebufferOut.create(this->createInfo);
+		return framebufferOut.create(this->desc);
 	}
 };
 
@@ -1366,7 +1366,7 @@ public:
 // Profiler
 // ------------------------------------------------------------------------------------------------
 
-sfz_struct(ZgProfilerCreateInfo) {
+sfz_struct(ZgProfilerDesc) {
 
 	// The number of measurements that this profiler can hold. Once this limit has been reached
 	// older measurements will automatically be thrown out to make room for newer ones. In other
@@ -1377,7 +1377,7 @@ sfz_struct(ZgProfilerCreateInfo) {
 
 ZG_API ZgResult zgProfilerCreate(
 	ZgProfiler** profilerOut,
-	const ZgProfilerCreateInfo* createInfo);
+	const ZgProfilerDesc* desc);
 
 ZG_API void zgProfilerDestroy(
 	ZgProfiler* profiler);
@@ -1399,10 +1399,10 @@ namespace zg {
 
 class Profiler final : public ManagedHandle<ZgProfiler, zgProfilerDestroy> {
 public:
-	ZgResult create(const ZgProfilerCreateInfo& createInfo)
+	ZgResult create(const ZgProfilerDesc& desc)
 	{
 		this->destroy();
-		return zgProfilerCreate(&this->handle, &createInfo);
+		return zgProfilerCreate(&this->handle, &desc);
 	}
 
 	ZgResult getMeasurement(

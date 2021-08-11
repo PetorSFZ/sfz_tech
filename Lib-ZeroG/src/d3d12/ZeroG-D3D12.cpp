@@ -746,10 +746,10 @@ ZG_API const char* zgResultToString(ZgResult result)
 
 ZG_API ZgResult zgBufferCreate(
 	ZgBuffer** bufferOut,
-	const ZgBufferCreateInfo* createInfo)
+	const ZgBufferDesc* desc)
 {
 	return createBuffer(
-		*bufferOut, *createInfo, ctxState->d3d12Allocator, &ctxState->resourceUniqueIdentifierCounter);
+		*bufferOut, *desc, ctxState->d3d12Allocator, &ctxState->resourceUniqueIdentifierCounter);
 }
 
 ZG_API void zgBufferDestroy(
@@ -782,10 +782,10 @@ ZG_API ZgResult zgBufferMemcpyDownload(
 
 ZG_API ZgResult zgTextureCreate(
 	ZgTexture** textureOut,
-	const ZgTextureCreateInfo* createInfo)
+	const ZgTextureDesc* desc)
 {
 	return createTexture(
-		*textureOut, *createInfo, *ctxState->device.Get(), ctxState->d3d12Allocator, &ctxState->resourceUniqueIdentifierCounter);
+		*textureOut, *desc, *ctxState->device.Get(), ctxState->d3d12Allocator, &ctxState->resourceUniqueIdentifierCounter);
 }
 
 ZG_API void zgTextureDestroy(
@@ -807,15 +807,15 @@ ZG_API u32 zgTextureSizeInBytes(
 
 ZG_API ZgResult zgPipelineComputeCreateFromFileHLSL(
 	ZgPipelineCompute** pipelineOut,
-	const ZgPipelineComputeCreateInfo* createInfo,
+	const ZgPipelineComputeDesc* desc,
 	const ZgPipelineCompileSettingsHLSL* compileSettings)
 {
 	ZG_ARG_CHECK(pipelineOut == nullptr, "");
-	ZG_ARG_CHECK(createInfo == nullptr, "");
+	ZG_ARG_CHECK(desc == nullptr, "");
 	ZG_ARG_CHECK(compileSettings == nullptr, "");
 	return createPipelineComputeFileHLSL(
 		pipelineOut,
-		*createInfo,
+		*desc,
 		*compileSettings,
 		*ctxState->dxcLibrary.Get(),
 		*ctxState->dxcCompiler.Get(),
@@ -852,7 +852,7 @@ ZG_API void zgPipelineComputeGetGroupDimensions(
 
 ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 	ZgPipelineRender** pipelineOut,
-	const ZgPipelineRenderCreateInfo* createInfo,
+	const ZgPipelineRenderDesc* createInfo,
 	const ZgPipelineCompileSettingsHLSL* compileSettings)
 {
 	ZG_ARG_CHECK(createInfo == nullptr, "");
@@ -878,7 +878,7 @@ ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 
 ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
 	ZgPipelineRender** pipelineOut,
-	const ZgPipelineRenderCreateInfo* createInfo,
+	const ZgPipelineRenderDesc* createInfo,
 	const ZgPipelineCompileSettingsHLSL* compileSettings)
 {
 	ZG_ARG_CHECK(createInfo == nullptr, "");
@@ -920,15 +920,15 @@ ZG_API void zgPipelineRenderGetSignature(
 
 ZG_API ZgResult zgFramebufferCreate(
 	ZgFramebuffer** framebufferOut,
-	const ZgFramebufferCreateInfo* createInfo)
+	const ZgFramebufferDesc* desc)
 {
 	ZG_ARG_CHECK(framebufferOut == nullptr, "");
-	ZG_ARG_CHECK(createInfo == nullptr, "");
-	ZG_ARG_CHECK(createInfo->numRenderTargets > ZG_MAX_NUM_RENDER_TARGETS, "Too many render targets");
+	ZG_ARG_CHECK(desc == nullptr, "");
+	ZG_ARG_CHECK(desc->numRenderTargets > ZG_MAX_NUM_RENDER_TARGETS, "Too many render targets");
 	return createFramebuffer(
 		*ctxState->device.Get(),
 		framebufferOut,
-		*createInfo);
+		*desc);
 }
 
 ZG_API void zgFramebufferDestroy(
@@ -952,14 +952,14 @@ ZG_API ZgResult zgFramebufferGetResolution(
 
 ZG_API ZgResult zgProfilerCreate(
 	ZgProfiler** profilerOut,
-	const ZgProfilerCreateInfo* createInfo)
+	const ZgProfilerDesc* desc)
 {
 	return d3d12CreateProfiler(
 		*ctxState->device.Get(),
 		ctxState->d3d12Allocator,
 		&ctxState->resourceUniqueIdentifierCounter,
 		profilerOut,
-		*createInfo);
+		*desc);
 }
 
 ZG_API void zgProfilerDestroy(
