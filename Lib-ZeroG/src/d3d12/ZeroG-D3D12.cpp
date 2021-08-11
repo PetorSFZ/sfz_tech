@@ -610,7 +610,7 @@ static ZgResult swapchainResize(ZgContextState& state, u32 width, u32 height) no
 	state.height = height;
 
 	// Flush command queue so its safe to resize back buffers
-	state.commandQueuePresent.flush();
+	[[maybe_unused]] ZgResult flushRes = state.commandQueuePresent.flush();
 
 	if (!initialCreation) {
 		// Release previous back buffers
@@ -1363,12 +1363,18 @@ ZG_API ZgResult zgContextInit(const ZgContextInitSettings* settings)
 	{
 		// Initialize backend, return nullptr if init failed
 		ZgResult initRes = init(*settings);
-		swapchainResize(*ctxState, settings->width, settings->height);
-		if (initRes != ZG_SUCCESS)
-		{
+		if (initRes != ZG_SUCCESS) {
 			sfz_delete(getAllocator(), ctxState);
 			ctxState = nullptr;
 			ZG_ERROR("zgContextInit(): Could not create D3D12 backend, exiting.");
+			return initRes;
+		}
+
+		initRes = swapchainResize(*ctxState, settings->width, settings->height);
+		if (initRes != ZG_SUCCESS) {
+			sfz_delete(getAllocator(), ctxState);
+			ctxState = nullptr;
+			ZG_ERROR("zgContextInit(): Could not create D3D12 swapchain, exiting.");
 			return initRes;
 		}
 	}
@@ -1387,8 +1393,8 @@ ZG_API ZgResult zgContextDeinit(void)
 	// Delete context
 	{
 		// Flush command queues
-		ctxState->commandQueuePresent.flush();
-		ctxState->commandQueueCopy.flush();
+		[[maybe_unused]] ZgResult flushRes1 = ctxState->commandQueuePresent.flush();
+		[[maybe_unused]] ZgResult flushRes2 = ctxState->commandQueueCopy.flush();
 
 		// Release include handler
 		// TODO: Probably correct...?
@@ -1459,7 +1465,7 @@ ZG_API ZgResult zgContextSwapchainBeginFrame(
 	if (zgRes != ZG_SUCCESS) return zgRes;
 
 	// Begin Frame event
-	barrierCommandList->beginEvent("Frame", nullptr);
+	[[maybe_unused]] ZgResult ignore1 = barrierCommandList->beginEvent("Frame", nullptr);
 
 	// Create barrier to transition back buffer into render target state
 	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -1473,7 +1479,7 @@ ZG_API ZgResult zgContextSwapchainBeginFrame(
 	}
 
 	// Execute command list containing the barrier transition
-	ctxState->commandQueuePresent.executeCommandList(barrierCommandList);
+	[[maybe_unused]] ZgResult ignore2 = ctxState->commandQueuePresent.executeCommandList(barrierCommandList);
 
 	// Return backbuffer
 	*framebufferOut = &backBuffer;
@@ -1516,10 +1522,10 @@ ZG_API ZgResult zgContextSwapchainFinishFrame(
 	}
 
 	// End Frame event
-	barrierCommandList->endEvent();
+	[[maybe_unused]] ZgResult ignore3 = barrierCommandList->endEvent();
 
 	// Execute command list containing the barrier transition
-	ctxState->commandQueuePresent.executeCommandList(barrierCommandList);
+	[[maybe_unused]] ZgResult ignore4 = ctxState->commandQueuePresent.executeCommandList(barrierCommandList);
 
 	// Signal the graphics present queue
 	ctxState->swapchainFenceValues[ctxState->currentBackBufferIdx] =

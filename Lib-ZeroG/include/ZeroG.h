@@ -101,7 +101,7 @@ ZG_API ZgBackendType zgBackendCompiledType(void);
 // ------------------------------------------------------------------------------------------------
 
 // The results, 0 is success, negative values are errors and positive values are warnings.
-typedef enum {
+typedef enum SFZ_NODISCARD {
 	// Success (0)
 	ZG_SUCCESS = 0,
 
@@ -210,7 +210,7 @@ namespace zg {
 
 class Buffer final : public ManagedHandle<ZgBuffer, zgBufferDestroy> {
 public:
-	[[nodiscard]] ZgResult create(
+	ZgResult create(
 		u64 sizeBytes,
 		ZgMemoryType type = ZG_MEMORY_TYPE_DEVICE,
 		bool committedAllocation = false,
@@ -225,12 +225,12 @@ public:
 		return zgBufferCreate(&handle, &info);
 	}
 
-	[[nodiscard]] ZgResult memcpyUpload(u64 bufferOffsetBytes, const void* srcMemory, u64 numBytes)
+	ZgResult memcpyUpload(u64 bufferOffsetBytes, const void* srcMemory, u64 numBytes)
 	{
 		return zgBufferMemcpyUpload(this->handle, bufferOffsetBytes, srcMemory, numBytes);
 	}
 
-	[[nodiscard]] ZgResult memcpyDownload(void* dstMemory, u64 srcBufferOffsetBytes, u64 numBytes)
+	ZgResult memcpyDownload(void* dstMemory, u64 srcBufferOffsetBytes, u64 numBytes)
 	{
 		return zgBufferMemcpyDownload(dstMemory, this->handle, srcBufferOffsetBytes, numBytes);
 	}
@@ -329,7 +329,7 @@ namespace zg {
 
 class Texture final : public ManagedHandle<ZgTexture, zgTextureDestroy> {
 public:
-	[[nodiscard]] ZgResult create(const ZgTextureCreateInfo& createInfo)
+	ZgResult create(const ZgTextureCreateInfo& createInfo)
 	{
 		this->destroy();
 		return zgTextureCreate(&this->handle, &createInfo);
@@ -716,7 +716,7 @@ namespace zg {
 
 class PipelineCompute final : public ManagedHandle<ZgPipelineCompute, zgPipelineComputeDestroy> {
 public:
-	[[nodiscard]] ZgResult createFromFileHLSL(
+	ZgResult createFromFileHLSL(
 		const ZgPipelineComputeCreateInfo& createInfo,
 		const ZgPipelineCompileSettingsHLSL& compileSettings)
 	{
@@ -795,7 +795,7 @@ public:
 		return addSampler(samplerRegister, sampler);
 	}
 
-	[[nodiscard]] ZgResult buildFromFileHLSL(
+	ZgResult buildFromFileHLSL(
 		PipelineCompute& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0)
 	{
 		// Set path
@@ -1047,7 +1047,7 @@ namespace zg {
 
 class PipelineRender final : public ManagedHandle<ZgPipelineRender, zgPipelineRenderDestroy> {
 public:
-	[[nodiscard]] ZgResult createFromFileHLSL(
+	ZgResult createFromFileHLSL(
 		const ZgPipelineRenderCreateInfo& createInfo,
 		const ZgPipelineCompileSettingsHLSL& compileSettings)
 	{
@@ -1056,7 +1056,7 @@ public:
 			&this->handle, &createInfo, &compileSettings);
 	}
 
-	[[nodiscard]] ZgResult createFromSourceHLSL(
+	ZgResult createFromSourceHLSL(
 		const ZgPipelineRenderCreateInfo& createInfo,
 		const ZgPipelineCompileSettingsHLSL& compileSettings)
 	{
@@ -1246,7 +1246,7 @@ public:
 		return *this;
 	}
 
-	[[nodiscard]] ZgResult buildFromFileHLSL(
+	ZgResult buildFromFileHLSL(
 		PipelineRender& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0)
 	{
 		// Set path
@@ -1264,7 +1264,7 @@ public:
 		return pipelineOut.createFromFileHLSL(createInfo, compileSettings);
 	}
 
-	[[nodiscard]] ZgResult buildFromSourceHLSL(
+	ZgResult buildFromSourceHLSL(
 		PipelineRender& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0)
 	{
 		// Set source
@@ -1318,13 +1318,13 @@ namespace zg {
 
 class Framebuffer final : public ManagedHandle<ZgFramebuffer, zgFramebufferDestroy> {
 public:
-	[[nodiscard]] ZgResult create(const ZgFramebufferCreateInfo& createInfo)
+	ZgResult create(const ZgFramebufferCreateInfo& createInfo)
 	{
 		this->destroy();
 		return zgFramebufferCreate(&this->handle, &createInfo);
 	}
 
-	[[nodiscard]] ZgResult getResolution(u32& widthOut, u32& heightOut) const
+	ZgResult getResolution(u32& widthOut, u32& heightOut) const
 	{
 		return zgFramebufferGetResolution(this->handle, &widthOut, &heightOut);
 	}
@@ -1354,7 +1354,7 @@ public:
 		return *this;
 	}
 
-	[[nodiscard]] ZgResult build(Framebuffer& framebufferOut)
+	ZgResult build(Framebuffer& framebufferOut)
 	{
 		return framebufferOut.create(this->createInfo);
 	}
@@ -1399,13 +1399,13 @@ namespace zg {
 
 class Profiler final : public ManagedHandle<ZgProfiler, zgProfilerDestroy> {
 public:
-	[[nodiscard]] ZgResult create(const ZgProfilerCreateInfo& createInfo)
+	ZgResult create(const ZgProfilerCreateInfo& createInfo)
 	{
 		this->destroy();
 		return zgProfilerCreate(&this->handle, &createInfo);
 	}
 
-	[[nodiscard]] ZgResult getMeasurement(
+	ZgResult getMeasurement(
 		u64 measurementId,
 		f32& measurementMsOut)
 	{
@@ -1444,18 +1444,18 @@ namespace zg {
 
 class Fence final : public ManagedHandle<ZgFence, zgFenceDestroy> {
 public:
-	[[nodiscard]] ZgResult create()
+	ZgResult create()
 	{
 		this->destroy();
 		return zgFenceCreate(&this->handle);
 	}
 
-	[[nodiscard]] ZgResult reset()
+	ZgResult reset()
 	{
 		return zgFenceReset(this->handle);
 	}
 
-	[[nodiscard]] ZgResult checkIfSignaled(bool& fenceSignaledOut) const
+	ZgResult checkIfSignaled(bool& fenceSignaledOut) const
 	{
 		ZgBool signaled = ZG_FALSE;
 		ZgResult res = zgFenceCheckIfSignaled(this->handle, &signaled);
@@ -1470,7 +1470,7 @@ public:
 		return signaled;
 	}
 
-	[[nodiscard]] ZgResult waitOnCpuBlocking() const
+	ZgResult waitOnCpuBlocking() const
 	{
 		return zgFenceWaitOnCpuBlocking(this->handle);
 	}
@@ -1676,17 +1676,17 @@ namespace zg {
 
 class CommandList final : public ManagedHandle<ZgCommandList> {
 public:
-	[[nodiscard]] ZgResult beginEvent(const char* name, const f32* rgbaColors = nullptr)
+	ZgResult beginEvent(const char* name, const f32* rgbaColors = nullptr)
 	{
 		return zgCommandListBeginEvent(this->handle, name, rgbaColors);
 	}
 
-	[[nodiscard]] ZgResult endEvent()
+	ZgResult endEvent()
 	{
 		return zgCommandListEndEvent(this->handle);
 	}
 
-	[[nodiscard]] ZgResult memcpyBufferToBuffer(
+	ZgResult memcpyBufferToBuffer(
 		Buffer& dstBuffer,
 		u64 dstBufferOffsetBytes,
 		Buffer& srcBuffer,
@@ -1702,7 +1702,7 @@ public:
 			numBytes);
 	}
 
-	[[nodiscard]] ZgResult memcpyToTexture(
+	ZgResult memcpyToTexture(
 		Texture& dstTexture,
 		u32 dstTextureMipLevel,
 		const ZgImageViewConstCpu& srcImageCpu,
@@ -1716,61 +1716,61 @@ public:
 			tempUploadBuffer.handle);
 	}
 
-	[[nodiscard]] ZgResult enableQueueTransition(Buffer& buffer)
+	ZgResult enableQueueTransition(Buffer& buffer)
 	{
 		return zgCommandListEnableQueueTransitionBuffer(this->handle, buffer.handle);
 	}
 
-	[[nodiscard]] ZgResult enableQueueTransition(Texture& texture)
+	ZgResult enableQueueTransition(Texture& texture)
 	{
 		return zgCommandListEnableQueueTransitionTexture(this->handle, texture.handle);
 	}
 
-	[[nodiscard]] ZgResult setPushConstant(
+	ZgResult setPushConstant(
 		u32 shaderRegister, const void* data, u32 dataSizeInBytes)
 	{
 		return zgCommandListSetPushConstant(
 			this->handle, shaderRegister, data, dataSizeInBytes);
 	}
 
-	[[nodiscard]] ZgResult setPipelineBindings(const PipelineBindings& bindings)
+	ZgResult setPipelineBindings(const PipelineBindings& bindings)
 	{
 		return zgCommandListSetPipelineBindings(this->handle, &bindings.bindings);
 	}
 
-	[[nodiscard]] ZgResult setPipeline(PipelineCompute& pipeline)
+	ZgResult setPipeline(PipelineCompute& pipeline)
 	{
 		return zgCommandListSetPipelineCompute(this->handle, pipeline.handle);
 	}
 
-	[[nodiscard]] ZgResult unorderedBarrier(Buffer& buffer)
+	ZgResult unorderedBarrier(Buffer& buffer)
 	{
 		return zgCommandListUnorderedBarrierBuffer(this->handle, buffer.handle);
 	}
 
-	[[nodiscard]] ZgResult unorderedBarrier(Texture& texture)
+	ZgResult unorderedBarrier(Texture& texture)
 	{
 		return zgCommandListUnorderedBarrierTexture(this->handle, texture.handle);
 	}
 
-	[[nodiscard]] ZgResult unorderedBarrier()
+	ZgResult unorderedBarrier()
 	{
 		return zgCommandListUnorderedBarrierAll(this->handle);
 	}
 
-	[[nodiscard]] ZgResult dispatchCompute(
+	ZgResult dispatchCompute(
 		u32 groupCountX, u32 groupCountY = 1, u32 groupCountZ = 1)
 	{
 		return zgCommandListDispatchCompute(
 			this->handle, groupCountX, groupCountY, groupCountZ);
 	}
 
-	[[nodiscard]] ZgResult setPipeline(PipelineRender& pipeline)
+	ZgResult setPipeline(PipelineRender& pipeline)
 	{
 		return zgCommandListSetPipelineRender(this->handle, pipeline.handle);
 	}
 
-	[[nodiscard]] ZgResult setFramebuffer(
+	ZgResult setFramebuffer(
 		Framebuffer& framebuffer,
 		const ZgRect* optionalViewport = nullptr,
 		const ZgRect* optionalScissor = nullptr)
@@ -1779,69 +1779,69 @@ public:
 			this->handle, framebuffer.handle, optionalViewport, optionalScissor);
 	}
 
-	[[nodiscard]] ZgResult setFramebufferViewport(const ZgRect& viewport)
+	ZgResult setFramebufferViewport(const ZgRect& viewport)
 	{
 		return zgCommandListSetFramebufferViewport(this->handle, &viewport);
 	}
 
-	[[nodiscard]] ZgResult setFramebufferScissor(const ZgRect& scissor)
+	ZgResult setFramebufferScissor(const ZgRect& scissor)
 	{
 		return zgCommandListSetFramebufferScissor(this->handle, &scissor);
 	}
 
-	[[nodiscard]] ZgResult clearRenderTargetOptimal(u32 renderTargetIdx)
+	ZgResult clearRenderTargetOptimal(u32 renderTargetIdx)
 	{
 		return zgCommandListClearRenderTargetOptimal(this->handle, renderTargetIdx);
 	}
 
-	[[nodiscard]] ZgResult clearRenderTargets(f32 red, f32 green, f32 blue, f32 alpha)
+	ZgResult clearRenderTargets(f32 red, f32 green, f32 blue, f32 alpha)
 	{
 		return zgCommandListClearRenderTargets(this->handle, red, green, blue, alpha);
 	}
 
-	[[nodiscard]] ZgResult clearRenderTargetsOptimal()
+	ZgResult clearRenderTargetsOptimal()
 	{
 		return zgCommandListClearRenderTargetsOptimal(this->handle);
 	}
 
-	[[nodiscard]] ZgResult clearDepthBuffer(f32 depth)
+	ZgResult clearDepthBuffer(f32 depth)
 	{
 		return zgCommandListClearDepthBuffer(this->handle, depth);
 	}
 
-	[[nodiscard]] ZgResult clearDepthBufferOptimal()
+	ZgResult clearDepthBufferOptimal()
 	{
 		return zgCommandListClearDepthBufferOptimal(this->handle);
 	}
 
-	[[nodiscard]] ZgResult setIndexBuffer(Buffer& indexBuffer, ZgIndexBufferType type)
+	ZgResult setIndexBuffer(Buffer& indexBuffer, ZgIndexBufferType type)
 	{
 		return zgCommandListSetIndexBuffer(this->handle, indexBuffer.handle, type);
 	}
 
-	[[nodiscard]] ZgResult setVertexBuffer(u32 vertexBufferSlot, Buffer& vertexBuffer)
+	ZgResult setVertexBuffer(u32 vertexBufferSlot, Buffer& vertexBuffer)
 	{
 		return zgCommandListSetVertexBuffer(
 			this->handle, vertexBufferSlot, vertexBuffer.handle);
 	}
 
-	[[nodiscard]] ZgResult drawTriangles(u32 startVertexIndex, u32 numVertices)
+	ZgResult drawTriangles(u32 startVertexIndex, u32 numVertices)
 	{
 		return zgCommandListDrawTriangles(this->handle, startVertexIndex, numVertices);
 	}
 
-	[[nodiscard]] ZgResult drawTrianglesIndexed(u32 startIndex, u32 numTriangles)
+	ZgResult drawTrianglesIndexed(u32 startIndex, u32 numTriangles)
 	{
 		return zgCommandListDrawTrianglesIndexed(
 			this->handle, startIndex, numTriangles);
 	}
 
-	[[nodiscard]] ZgResult profileBegin(Profiler& profiler, u64& measurementIdOut)
+	ZgResult profileBegin(Profiler& profiler, u64& measurementIdOut)
 	{
 		return zgCommandListProfileBegin(this->handle, profiler.handle, &measurementIdOut);
 	}
 
-	[[nodiscard]] ZgResult profileEnd(Profiler& profiler, u64 measurementId)
+	ZgResult profileEnd(Profiler& profiler, u64 measurementId)
 	{
 		return zgCommandListProfileEnd(this->handle, profiler.handle, measurementId);
 	}
@@ -1902,28 +1902,28 @@ public:
 		return queue;
 	}
 
-	[[nodiscard]] ZgResult signalOnGpu(Fence& fenceToSignal)
+	ZgResult signalOnGpu(Fence& fenceToSignal)
 	{
 		return zgCommandQueueSignalOnGpu(this->handle, fenceToSignal.handle);
 	}
 
-	[[nodiscard]] ZgResult waitOnGpu(const Fence& fence)
+	ZgResult waitOnGpu(const Fence& fence)
 	{
 		return zgCommandQueueWaitOnGpu(this->handle, fence.handle);
 	}
 
-	[[nodiscard]] ZgResult flush()
+	ZgResult flush()
 	{
 		return zgCommandQueueFlush(this->handle);
 	}
 
-	[[nodiscard]] ZgResult beginCommandListRecording(CommandList& commandListOut)
+	ZgResult beginCommandListRecording(CommandList& commandListOut)
 	{
 		if (commandListOut.valid()) return ZG_ERROR_INVALID_ARGUMENT;
 		return zgCommandQueueBeginCommandListRecording(this->handle, &commandListOut.handle);
 	}
 
-	[[nodiscard]] ZgResult executeCommandList(CommandList& commandList)
+	ZgResult executeCommandList(CommandList& commandList)
 	{
 		ZgResult res = zgCommandQueueExecuteCommandList(this->handle, commandList.handle);
 		commandList.destroy();

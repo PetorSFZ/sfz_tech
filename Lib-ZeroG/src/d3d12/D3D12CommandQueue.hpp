@@ -82,7 +82,7 @@ struct ZgCommandQueue final {
 	~ZgCommandQueue() noexcept
 	{
 		// Flush queue
-		this->flush();
+		[[maybe_unused]] ZgResult res = this->flush();
 
 		// Check that all command lists have been returned
 		sfz_assert(mCommandListStorage.size() == mCommandListQueue.size());

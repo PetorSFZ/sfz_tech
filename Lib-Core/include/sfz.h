@@ -29,6 +29,12 @@
 #endif
 
 #ifdef __cplusplus
+#define SFZ_NODISCARD [[nodiscard]]
+#else
+#define SFZ_NODISCARD
+#endif
+
+#ifdef __cplusplus
 #define sfz_struct(name) struct name final
 #else
 #define sfz_struct(name) \

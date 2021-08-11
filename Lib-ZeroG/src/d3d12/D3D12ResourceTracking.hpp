@@ -192,7 +192,7 @@ inline void executeCommandLists(
 
 		// Create small command list and execute barriers in it
 		if (numBarriers != 0) {
-			execBarriers(barriers, numBarriers);
+			[[maybe_unused]] ZgResult ignore = execBarriers(barriers, numBarriers);
 		}
 
 		// Commit state changes
