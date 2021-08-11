@@ -26,48 +26,6 @@
 
 namespace sfz {
 
-// PoolHandle
-// ------------------------------------------------------------------------------------------------
-
-constexpr u32 POOL_HANDLE_INDEX_NUM_BITS = 24;
-constexpr u32 POOL_MAX_CAPACITY = 1u << POOL_HANDLE_INDEX_NUM_BITS;
-constexpr u32 POOL_HANDLE_INDEX_MASK = 0x00FFFFFFu; // 24 bits index
-constexpr u32 POOL_HANDLE_VERSION_MASK = 0x7F000000u; // 7 bits version (1 bit reserved for active)
-
-// A handle to an allocated slot in a Pool.
-//
-// A handle consists of an index (into the Pool's value array) and a version (version of the slot
-// indexed in the Pool). If the version is not the same as what is stored in the Pool it means that
-// the handle is stale and no longer valid.
-//
-// A version can be in the range [1, 127]. "0" is reserved as invalid. The 8th bit is reserved to
-// store the active bit inside the Pool (unused in handles), see PoolSlot.
-struct PoolHandle final {
-	u32 bits = 0;
-
-	u32 idx() const { return bits & POOL_HANDLE_INDEX_MASK; }
-	u8 version() const { return u8((bits & POOL_HANDLE_VERSION_MASK) >> POOL_HANDLE_INDEX_NUM_BITS); }
-	
-	constexpr PoolHandle(u32 idx, u8 version)
-	{
-		sfz_assert((idx & POOL_HANDLE_INDEX_MASK) == idx);
-		sfz_assert((version & u8(0x7F)) == version);
-		bits = (u32(version) << POOL_HANDLE_INDEX_NUM_BITS) | idx;
-	}
-
-	constexpr PoolHandle() noexcept = default;
-	constexpr PoolHandle(const PoolHandle&) noexcept = default;
-	constexpr PoolHandle& operator= (const PoolHandle&) noexcept = default;
-	~PoolHandle() noexcept = default;
-
-	constexpr bool operator== (PoolHandle other) const { return this->bits == other.bits; }
-	constexpr bool operator!= (PoolHandle other) const { return this->bits != other.bits; }
-};
-static_assert(sizeof(PoolHandle) == 4, "PoolHandle is padded");
-
-// A "null" handle typically used as an error type or for uninitialized handles.
-constexpr PoolHandle NULL_HANDLE = {};
-
 // PoolSlot
 // ------------------------------------------------------------------------------------------------
 
@@ -90,6 +48,8 @@ static_assert(sizeof(PoolSlot) == 1, "PoolSlot is padded");
 
 // Pool
 // ------------------------------------------------------------------------------------------------
+
+constexpr u32 POOL_MAX_CAPACITY = 1u << SFZ_HANDLE_INDEX_NUM_BITS;
 
 // An sfz::Pool is a datastructure that is somewhat a mix between an array, an allocator and the
 // entity allocation part of an ECS system. Basically, it's an array from which you allocate
@@ -199,7 +159,7 @@ public:
 	u8 getVersion(u32 idx) const { sfz_assert(idx < mArraySize); return mSlots[idx].version(); }
 	bool slotIsActive(u32 idx) const { sfz_assert(idx < mArraySize); return mSlots[idx].active(); }
 
-	bool handleIsValid(PoolHandle handle) const
+	bool handleIsValid(SfzHandle handle) const
 	{
 		const u32 idx = handle.idx();
 		if (idx >= mArraySize) return false;
@@ -210,7 +170,7 @@ public:
 		return true;
 	}
 
-	T* get(PoolHandle handle)
+	T* get(SfzHandle handle)
 	{
 		const u8 version = handle.version();
 		const u32 idx = handle.idx();
@@ -220,21 +180,21 @@ public:
 		if (!slot.active()) return nullptr;
 		return &mData[idx];
 	}
-	const T* get(PoolHandle handle) const { return const_cast<Pool<T>*>(this)->get(handle); }
+	const T* get(SfzHandle handle) const { return const_cast<Pool<T>*>(this)->get(handle); }
 
-	T& operator[] (PoolHandle handle) { T* v = get(handle); sfz_assert(v != nullptr); return *v; }
-	const T& operator[] (PoolHandle handle) const { return (*const_cast<Pool<T>*>(this))[handle]; }
+	T& operator[] (SfzHandle handle) { T* v = get(handle); sfz_assert(v != nullptr); return *v; }
+	const T& operator[] (SfzHandle handle) const { return (*const_cast<Pool<T>*>(this))[handle]; }
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	PoolHandle allocate() { return allocateImpl<T>({}); }
-	PoolHandle allocate(const T& value) { return allocateImpl<const T&>(value); }
-	PoolHandle allocate(T&& value) { return allocateImpl<T>(sfz_move(value)); }
+	SfzHandle allocate() { return allocateImpl<T>({}); }
+	SfzHandle allocate(const T& value) { return allocateImpl<const T&>(value); }
+	SfzHandle allocate(T&& value) { return allocateImpl<T>(sfz_move(value)); }
 
-	void deallocate(PoolHandle handle) { return deallocateImpl<T>(handle, {}); }
-	void deallocate(PoolHandle handle, const T& emptyValue) { return deallocateImpl<const T&>(handle, emptyValue); }
-	void deallocate(PoolHandle handle, T&& emptyValue) { return deallocateImpl<T>(handle, sfz_move(emptyValue)); }
+	void deallocate(SfzHandle handle) { return deallocateImpl<T>(handle, {}); }
+	void deallocate(SfzHandle handle, const T& emptyValue) { return deallocateImpl<const T&>(handle, emptyValue); }
+	void deallocate(SfzHandle handle, T&& emptyValue) { return deallocateImpl<T>(handle, sfz_move(emptyValue)); }
 
 	void deallocate(u32 idx) { return deallocateImpl<T>(idx, {}); }
 	void deallocate(u32 idx, const T& emptyValue) { return deallocateImpl<const T&>(idx, emptyValue); }
@@ -248,7 +208,7 @@ private:
 	// std::forward<ForwardT>(value) will then return the correct version of value
 
 	template<typename ForwardT>
-	PoolHandle allocateImpl(ForwardT&& value)
+	SfzHandle allocateImpl(ForwardT&& value)
 	{
 		sfz_assert(mNumAllocated < mCapacity);
 
@@ -287,12 +247,12 @@ private:
 		slot.bits = POOL_SLOT_ACTIVE_BIT_MASK | newVersion;
 
 		// Create and return handle
-		PoolHandle handle = PoolHandle(idx, newVersion);
+		SfzHandle handle = SfzHandle(idx, newVersion);
 		return handle;
 	}
 	
 	template<typename ForwardT>
-	void deallocateImpl(PoolHandle handle, ForwardT&& emptyValue)
+	void deallocateImpl(SfzHandle handle, ForwardT&& emptyValue)
 	{
 		const u32 idx = handle.idx();
 		sfz_assert(idx < mArraySize);

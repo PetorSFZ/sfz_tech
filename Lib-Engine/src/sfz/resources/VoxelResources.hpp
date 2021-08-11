@@ -70,7 +70,7 @@ struct VoxelModelResource final {
 
 	// A user defined handle that can be used to refer to e.g. an application specific GPU buffer
 	// with data needed to render this model.
-	PoolHandle userHandle = NULL_HANDLE;
+	SfzHandle userHandle = SFZ_NULL_HANDLE;
 	time_t userHandleModifiedDate = 0;
 
 	u8& accessVoxel(i32x3 coord)

@@ -58,7 +58,7 @@ void HighLevelCmdList::destroy() noexcept
 // HighLevelCmdList: Methods
 // ------------------------------------------------------------------------------------------------
 
-void HighLevelCmdList::setShader(PoolHandle handle)
+void HighLevelCmdList::setShader(SfzHandle handle)
 {
 	mBoundShader = mShaders->getShader(handle);
 	sfz_assert(mBoundShader != nullptr);
@@ -71,7 +71,7 @@ void HighLevelCmdList::setShader(PoolHandle handle)
 	}
 }
 
-void HighLevelCmdList::setFramebuffer(PoolHandle handle)
+void HighLevelCmdList::setFramebuffer(SfzHandle handle)
 {
 	FramebufferResource* fb = mResources->getFramebuffer(handle);
 	sfz_assert(fb != nullptr);
@@ -178,7 +178,7 @@ void HighLevelCmdList::setBindings(const Bindings& bindings)
 }
 
 void HighLevelCmdList::uploadToStreamingBufferUntyped(
-	PoolHandle handle, const void* data, u32 elementSize, u32 numElements)
+	SfzHandle handle, const void* data, u32 elementSize, u32 numElements)
 {
 	// Get streaming buffer
 	BufferResource* resource = mResources->getBuffer(handle);
@@ -205,7 +205,7 @@ void HighLevelCmdList::uploadToStreamingBufferUntyped(
 	CHECK_ZG mCmdList.memcpyBufferToBuffer(memory.deviceBuffer, 0, memory.uploadBuffer, 0, numBytes);
 }
 
-void HighLevelCmdList::setVertexBuffer(u32 slot, PoolHandle handle)
+void HighLevelCmdList::setVertexBuffer(u32 slot, SfzHandle handle)
 {
 	BufferResource* resource = mResources->getBuffer(handle);
 	sfz_assert(resource != nullptr);
@@ -224,7 +224,7 @@ void HighLevelCmdList::setVertexBuffer(u32 slot, PoolHandle handle)
 	CHECK_ZG mCmdList.setVertexBuffer(slot, *buffer);
 }
 
-void HighLevelCmdList::setIndexBuffer(PoolHandle handle, ZgIndexBufferType indexType)
+void HighLevelCmdList::setIndexBuffer(SfzHandle handle, ZgIndexBufferType indexType)
 {
 	BufferResource* resource = mResources->getBuffer(handle);
 	sfz_assert(resource != nullptr);
@@ -281,7 +281,7 @@ void HighLevelCmdList::unorderedBarrierAll()
 	CHECK_ZG mCmdList.unorderedBarrier();
 }
 
-void HighLevelCmdList::unorderedBarrierBuffer(PoolHandle handle)
+void HighLevelCmdList::unorderedBarrierBuffer(SfzHandle handle)
 {
 	BufferResource* resource = mResources->getBuffer(handle);
 	sfz_assert(resource != nullptr);
@@ -300,7 +300,7 @@ void HighLevelCmdList::unorderedBarrierBuffer(PoolHandle handle)
 	CHECK_ZG mCmdList.unorderedBarrier(*buffer);
 }
 
-void HighLevelCmdList::unorderedBarrierTexture(PoolHandle handle)
+void HighLevelCmdList::unorderedBarrierTexture(SfzHandle handle)
 {
 	TextureResource* resource = mResources->getTexture(handle);
 	sfz_assert(resource != nullptr);

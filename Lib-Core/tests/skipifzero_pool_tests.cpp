@@ -82,7 +82,7 @@ UTEST(Pool, allocating_and_deallocating)
 		pool.init(CAPACITY, &allocator, sfz_dbg(""));
 
 		for (u32 i = 0; i < CAPACITY; i++) {
-			sfz::PoolHandle handle = pool.allocate();
+			SfzHandle handle = pool.allocate();
 			u32& val = pool[handle];
 			val = i;
 			ASSERT_TRUE(handle.idx() == i);
@@ -103,7 +103,7 @@ UTEST(Pool, allocating_and_deallocating)
 		pool.init(CAPACITY, &allocator, sfz_dbg(""));
 
 		for (u32 i = 1; i <= 127; i++) {
-			sfz::PoolHandle handle = pool.allocate();
+			SfzHandle handle = pool.allocate();
 			ASSERT_TRUE(pool.handleIsValid(handle));
 			ASSERT_TRUE(handle.idx() == 0);
 			ASSERT_TRUE(handle.version() == u8(i));
@@ -122,7 +122,7 @@ UTEST(Pool, allocating_and_deallocating)
 			ASSERT_TRUE(pool.data()[handle.idx()] == i);
 		}
 
-		sfz::PoolHandle handle = pool.allocate();
+		SfzHandle handle = pool.allocate();
 		ASSERT_TRUE(pool.handleIsValid(handle));
 		ASSERT_TRUE(handle.idx() == 0);
 		ASSERT_TRUE(handle.version() == u8(1));
@@ -148,7 +148,7 @@ UTEST(Pool, allocating_and_deallocating)
 		pool.init(CAPACITY, &allocator, sfz_dbg(""));
 
 		for (u32 i = 0; i < CAPACITY; i++) {
-			sfz::PoolHandle handle = pool.allocate();
+			SfzHandle handle = pool.allocate();
 			pool[handle] = i;
 		}
 		ASSERT_TRUE(pool.numAllocated() == CAPACITY);
@@ -156,7 +156,7 @@ UTEST(Pool, allocating_and_deallocating)
 		ASSERT_TRUE(pool.arraySize() == CAPACITY);
 
 		for (u32 i = 0; i < CAPACITY; i++) {
-			sfz::PoolHandle handle = sfz::PoolHandle(i, 1);
+			SfzHandle handle = SfzHandle(i, 1);
 			ASSERT_TRUE(pool.handleIsValid(handle));
 			ASSERT_TRUE(*pool.get(handle) == i);
 			pool.deallocate(i);
@@ -166,7 +166,7 @@ UTEST(Pool, allocating_and_deallocating)
 		ASSERT_TRUE(pool.arraySize() == CAPACITY);
 
 		for (u32 i = 0; i < CAPACITY; i++) {
-			sfz::PoolHandle handle = pool.allocate(42 + i);
+			SfzHandle handle = pool.allocate(42 + i);
 			ASSERT_TRUE(pool[handle] == (42 + i));
 			ASSERT_TRUE(handle.idx() == (CAPACITY - i - 1));
 			ASSERT_TRUE(handle.version() == 2);

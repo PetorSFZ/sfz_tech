@@ -179,4 +179,45 @@ sfz_struct(SfzAllocator) {
 #endif
 };
 
+
+// Handle
+// ------------------------------------------------------------------------------------------------
+
+// A handle used to represent objects in various datastructures.
+//
+// A handle can store up to 16 777 216 (2^24) different indices. The remaining 8 bits are used to
+// store lightweight metadata. 7 bits are used for version, which is typically used to find invalid
+// handles when an index is reused. The last bit is reserved for internal datastructure usage, and
+// should be ignored by users receiving handles.
+//
+// A version can be in the range [1, 127]. Zero (0) is reserved as invalid. As a consequence, a
+// value of 0 (for all the 32 raw bits) is used to represent null.
+
+sfz_constant u32 SFZ_HANDLE_INDEX_NUM_BITS = 24;
+sfz_constant u32 SFZ_HANDLE_INDEX_MASK = 0x00FFFFFFu; // 24 bits index
+sfz_constant u32 SFZ_HANDLE_VERSION_MASK = 0x7F000000u; // 7 bits version (1 bit reserved for internal usage)
+
+sfz_struct(SfzHandle) {
+	u32 bits;
+
+#ifdef __cplusplus
+	u32 idx() const { return bits & SFZ_HANDLE_INDEX_MASK; }
+	u8 version() const { return u8((bits & SFZ_HANDLE_VERSION_MASK) >> SFZ_HANDLE_INDEX_NUM_BITS); }
+	
+	SfzHandle() = default;
+	constexpr SfzHandle(u32 idx, u8 version)
+		: bits((u32(version) << SFZ_HANDLE_INDEX_NUM_BITS) | idx)
+	{
+		sfz_assert((idx & SFZ_HANDLE_INDEX_MASK) == idx);
+		sfz_assert((version & u8(0x7F)) == version);
+		sfz_assert(version != 0);
+	}
+
+	constexpr bool operator== (SfzHandle other) const { return this->bits == other.bits; }
+	constexpr bool operator!= (SfzHandle other) const { return this->bits != other.bits; }
+#endif
+};
+
+sfz_constant SfzHandle SFZ_NULL_HANDLE = {};
+
 #endif // SFZ_H

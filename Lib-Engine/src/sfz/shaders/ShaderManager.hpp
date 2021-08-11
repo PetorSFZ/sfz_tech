@@ -122,10 +122,10 @@ public:
 	void update();
 	void renderDebugUI();
 
-	PoolHandle getShaderHandle(const char* name) const;
-	PoolHandle getShaderHandle(strID name) const;
-	Shader* getShader(PoolHandle handle);
-	PoolHandle addShader(Shader&& shader);
+	SfzHandle getShaderHandle(const char* name) const;
+	SfzHandle getShaderHandle(strID name) const;
+	Shader* getShader(SfzHandle handle);
+	SfzHandle addShader(Shader&& shader);
 	void removeShader(strID name);
 
 private:

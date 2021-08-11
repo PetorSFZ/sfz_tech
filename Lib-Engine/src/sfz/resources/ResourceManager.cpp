@@ -97,7 +97,7 @@ void ResourceManager::updateResolution(i32x2 screenRes)
 {
 	// Check if any textures need rebuilding
 	bool anyTexNeedRebuild = false;
-	for (HashMapPair<strID, PoolHandle> itemItr : mState->textureHandles) {
+	for (HashMapPair<strID, SfzHandle> itemItr : mState->textureHandles) {
 		const TextureResource& resource = mState->textures[itemItr.value];
 		anyTexNeedRebuild = anyTexNeedRebuild || resource.needRebuild(screenRes);
 	}
@@ -113,7 +113,7 @@ void ResourceManager::updateResolution(i32x2 screenRes)
 		CHECK_ZG copyQueue.flush();
 
 		// Rebuild textures
-		for (HashMapPair<strID, PoolHandle> itemItr : mState->textureHandles) {
+		for (HashMapPair<strID, SfzHandle> itemItr : mState->textureHandles) {
 			TextureResource& resource = mState->textures[itemItr.value];
 			if (resource.screenRelativeResolution || resource.settingControlledRes) {
 				CHECK_ZG resource.build(screenRes);
@@ -121,7 +121,7 @@ void ResourceManager::updateResolution(i32x2 screenRes)
 		}
 
 		// Rebuild framebuffers
-		for (HashMapPair<strID, PoolHandle> itemItr : mState->framebufferHandles) {
+		for (HashMapPair<strID, SfzHandle> itemItr : mState->framebufferHandles) {
 			FramebufferResource& resource = mState->framebuffers[itemItr.value];
 			if (resource.screenRelativeResolution || resource.controlledResSetting) {
 				CHECK_ZG resource.build(screenRes);
@@ -134,7 +134,7 @@ bool ResourceManager::updateVoxelModels()
 {
 	bool updated = false;
 	if (mState->voxelModelFileWatch->boolValue()) {
-		for (HashMapPair<strID, PoolHandle> itemItr : mState->voxelModelHandles) {
+		for (HashMapPair<strID, SfzHandle> itemItr : mState->voxelModelHandles) {
 			VoxelModelResource& resource = mState->voxelModels[itemItr.value];
 			const time_t newLastModifiedDate = sfz::fileLastModifiedDate(resource.path.str());
 			if (resource.lastModifiedDate < newLastModifiedDate) {
@@ -149,29 +149,29 @@ bool ResourceManager::updateVoxelModels()
 // ResourceManager: Buffer methods
 // ------------------------------------------------------------------------------------------------
 
-PoolHandle ResourceManager::getBufferHandle(const char* name) const
+SfzHandle ResourceManager::getBufferHandle(const char* name) const
 {
 	return this->getBufferHandle(strID(name));
 }
 
-PoolHandle ResourceManager::getBufferHandle(strID name) const
+SfzHandle ResourceManager::getBufferHandle(strID name) const
 {
-	const PoolHandle* handle = mState->bufferHandles.get(name);
-	if (handle == nullptr) return NULL_HANDLE;
+	const SfzHandle* handle = mState->bufferHandles.get(name);
+	if (handle == nullptr) return SFZ_NULL_HANDLE;
 	return *handle;
 }
 
-BufferResource* ResourceManager::getBuffer(PoolHandle handle)
+BufferResource* ResourceManager::getBuffer(SfzHandle handle)
 {
 	return mState->buffers.get(handle);
 }
 
-PoolHandle ResourceManager::addBuffer(BufferResource&& resource)
+SfzHandle ResourceManager::addBuffer(BufferResource&& resource)
 {
 	strID name = resource.name;
 	sfz_assert(name.isValid());
 	sfz_assert(mState->bufferHandles.get(name) == nullptr);
-	PoolHandle handle = mState->buffers.allocate(sfz_move(resource));
+	SfzHandle handle = mState->buffers.allocate(sfz_move(resource));
 	mState->bufferHandles.put(name, handle);
 	sfz_assert(mState->bufferHandles.size() == mState->buffers.numAllocated());
 	return handle;
@@ -183,8 +183,8 @@ void ResourceManager::removeBuffer(strID name)
 	CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
 	CHECK_ZG zg::CommandQueue::getCopyQueue().flush();
 
-	PoolHandle handle = this->getBufferHandle(name);
-	if (handle == NULL_HANDLE) return;
+	SfzHandle handle = this->getBufferHandle(name);
+	if (handle == SFZ_NULL_HANDLE) return;
 	mState->bufferHandles.remove(name);
 	mState->buffers.deallocate(handle);
 }
@@ -192,29 +192,29 @@ void ResourceManager::removeBuffer(strID name)
 // ResourceManager: Texture methods
 // ------------------------------------------------------------------------------------------------
 
-PoolHandle ResourceManager::getTextureHandle(const char* name) const
+SfzHandle ResourceManager::getTextureHandle(const char* name) const
 {
 	return this->getTextureHandle(strID(name));
 }
 
-PoolHandle ResourceManager::getTextureHandle(strID name) const
+SfzHandle ResourceManager::getTextureHandle(strID name) const
 {
-	const PoolHandle* handle = mState->textureHandles.get(name);
-	if (handle == nullptr) return NULL_HANDLE;
+	const SfzHandle* handle = mState->textureHandles.get(name);
+	if (handle == nullptr) return SFZ_NULL_HANDLE;
 	return *handle;
 }
 
-TextureResource* ResourceManager::getTexture(PoolHandle handle)
+TextureResource* ResourceManager::getTexture(SfzHandle handle)
 {
 	return mState->textures.get(handle);
 }
 
-PoolHandle ResourceManager::addTexture(TextureResource&& resource)
+SfzHandle ResourceManager::addTexture(TextureResource&& resource)
 {
 	strID name = resource.name;
 	sfz_assert(name.isValid());
 	sfz_assert(mState->textureHandles.get(name) == nullptr);
-	PoolHandle handle = mState->textures.allocate(sfz_move(resource));
+	SfzHandle handle = mState->textures.allocate(sfz_move(resource));
 	mState->textureHandles.put(name, handle);
 	sfz_assert(mState->textureHandles.size() == mState->textures.numAllocated());
 	return handle;
@@ -227,8 +227,8 @@ void ResourceManager::removeTexture(strID name)
 	CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
 	CHECK_ZG zg::CommandQueue::getCopyQueue().flush();
 
-	PoolHandle handle = this->getTextureHandle(name);
-	if (handle == NULL_HANDLE) return;
+	SfzHandle handle = this->getTextureHandle(name);
+	if (handle == SFZ_NULL_HANDLE) return;
 	mState->textureHandles.remove(name);
 	mState->textures.deallocate(handle);
 }
@@ -236,29 +236,29 @@ void ResourceManager::removeTexture(strID name)
 // ResourceManager: Framebuffer methods
 // ------------------------------------------------------------------------------------------------
 
-PoolHandle ResourceManager::getFramebufferHandle(const char* name) const
+SfzHandle ResourceManager::getFramebufferHandle(const char* name) const
 {
 	return this->getFramebufferHandle(strID(name));
 }
 
-PoolHandle ResourceManager::getFramebufferHandle(strID name) const
+SfzHandle ResourceManager::getFramebufferHandle(strID name) const
 {
-	const PoolHandle* handle = mState->framebufferHandles.get(name);
-	if (handle == nullptr) return NULL_HANDLE;
+	const SfzHandle* handle = mState->framebufferHandles.get(name);
+	if (handle == nullptr) return SFZ_NULL_HANDLE;
 	return *handle;
 }
 
-FramebufferResource* ResourceManager::getFramebuffer(PoolHandle handle)
+FramebufferResource* ResourceManager::getFramebuffer(SfzHandle handle)
 {
 	return mState->framebuffers.get(handle);
 }
 
-PoolHandle ResourceManager::addFramebuffer(FramebufferResource&& resource)
+SfzHandle ResourceManager::addFramebuffer(FramebufferResource&& resource)
 {
 	strID name = resource.name;
 	sfz_assert(name.isValid());
 	sfz_assert(mState->framebufferHandles.get(name) == nullptr);
-	PoolHandle handle = mState->framebuffers.allocate(sfz_move(resource));
+	SfzHandle handle = mState->framebuffers.allocate(sfz_move(resource));
 	mState->framebufferHandles.put(name, handle);
 	sfz_assert(mState->framebufferHandles.size() == mState->framebuffers.numAllocated());
 	return handle;
@@ -270,8 +270,8 @@ void ResourceManager::removeFramebuffer(strID name)
 	CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
 	CHECK_ZG zg::CommandQueue::getCopyQueue().flush();
 
-	PoolHandle handle = this->getFramebufferHandle(name);
-	if (handle == NULL_HANDLE) return;
+	SfzHandle handle = this->getFramebufferHandle(name);
+	if (handle == SFZ_NULL_HANDLE) return;
 	mState->framebufferHandles.remove(name);
 	mState->framebuffers.deallocate(handle);
 }
@@ -279,29 +279,29 @@ void ResourceManager::removeFramebuffer(strID name)
 // ResourceManager: Mesh methods
 // ------------------------------------------------------------------------------------------------
 
-PoolHandle ResourceManager::getMeshHandle(const char* name) const
+SfzHandle ResourceManager::getMeshHandle(const char* name) const
 {
 	return this->getMeshHandle(strID(name));
 }
 
-PoolHandle ResourceManager::getMeshHandle(strID name) const
+SfzHandle ResourceManager::getMeshHandle(strID name) const
 {
-	const PoolHandle* handle = mState->meshHandles.get(name);
-	if (handle == nullptr) return NULL_HANDLE;
+	const SfzHandle* handle = mState->meshHandles.get(name);
+	if (handle == nullptr) return SFZ_NULL_HANDLE;
 	return *handle;
 }
 
-MeshResource* ResourceManager::getMesh(PoolHandle handle)
+MeshResource* ResourceManager::getMesh(SfzHandle handle)
 {
 	return mState->meshes.get(handle);
 }
 
-PoolHandle ResourceManager::addMesh(MeshResource&& resource)
+SfzHandle ResourceManager::addMesh(MeshResource&& resource)
 {
 	strID name = resource.name;
 	sfz_assert(name.isValid());
 	sfz_assert(mState->meshHandles.get(name) == nullptr);
-	PoolHandle handle = mState->meshes.allocate(sfz_move(resource));
+	SfzHandle handle = mState->meshes.allocate(sfz_move(resource));
 	mState->meshHandles.put(name, handle);
 	sfz_assert(mState->meshHandles.size() == mState->meshes.numAllocated());
 	return handle;
@@ -314,8 +314,8 @@ void ResourceManager::removeMesh(strID name)
 	CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
 	CHECK_ZG zg::CommandQueue::getCopyQueue().flush();
 
-	PoolHandle handle = this->getMeshHandle(name);
-	if (handle == NULL_HANDLE) return;
+	SfzHandle handle = this->getMeshHandle(name);
+	if (handle == SFZ_NULL_HANDLE) return;
 	mState->meshHandles.remove(name);
 	mState->meshes.deallocate(handle);
 }
@@ -323,29 +323,29 @@ void ResourceManager::removeMesh(strID name)
 // ResourceManager: VoxelModel methods
 // ------------------------------------------------------------------------------------------------
 
-PoolHandle ResourceManager::getVoxelModelHandle(const char* name) const
+SfzHandle ResourceManager::getVoxelModelHandle(const char* name) const
 {
 	return this->getVoxelModelHandle(strID(name));
 }
 
-PoolHandle ResourceManager::getVoxelModelHandle(strID name) const
+SfzHandle ResourceManager::getVoxelModelHandle(strID name) const
 {
-	const PoolHandle* handle = mState->voxelModelHandles.get(name);
-	if (handle == nullptr) return NULL_HANDLE;
+	const SfzHandle* handle = mState->voxelModelHandles.get(name);
+	if (handle == nullptr) return SFZ_NULL_HANDLE;
 	return *handle;
 }
 
-VoxelModelResource* ResourceManager::getVoxelModel(PoolHandle handle)
+VoxelModelResource* ResourceManager::getVoxelModel(SfzHandle handle)
 {
 	return mState->voxelModels.get(handle);
 }
 
-PoolHandle ResourceManager::addVoxelModel(VoxelModelResource&& resource)
+SfzHandle ResourceManager::addVoxelModel(VoxelModelResource&& resource)
 {
 	strID name = resource.name;
 	sfz_assert(name.isValid());
 	sfz_assert(mState->voxelModelHandles.get(name) == nullptr);
-	PoolHandle handle = mState->voxelModels.allocate(sfz_move(resource));
+	SfzHandle handle = mState->voxelModels.allocate(sfz_move(resource));
 	mState->voxelModelHandles.put(name, handle);
 	sfz_assert(mState->voxelModelHandles.size() == mState->voxelModels.numAllocated());
 	return handle;
@@ -353,8 +353,8 @@ PoolHandle ResourceManager::addVoxelModel(VoxelModelResource&& resource)
 
 void ResourceManager::removeVoxelModel(strID name)
 {
-	PoolHandle handle = this->getVoxelModelHandle(name);
-	if (handle == NULL_HANDLE) return;
+	SfzHandle handle = this->getVoxelModelHandle(name);
+	if (handle == SFZ_NULL_HANDLE) return;
 	mState->voxelModelHandles.remove(name);
 	mState->voxelModels.deallocate(handle);
 }
@@ -362,38 +362,38 @@ void ResourceManager::removeVoxelModel(strID name)
 // ResourceManager: VoxelMaterial methods
 // ------------------------------------------------------------------------------------------------
 
-PoolHandle ResourceManager::getVoxelMaterialHandle(const char* name) const
+SfzHandle ResourceManager::getVoxelMaterialHandle(const char* name) const
 {
 	return this->getVoxelMaterialHandle(strID(name));
 }
 
-PoolHandle ResourceManager::getVoxelMaterialHandle(strID name) const
+SfzHandle ResourceManager::getVoxelMaterialHandle(strID name) const
 {
-	const PoolHandle* handle = mState->voxelMaterialHandles.get(name);
-	if (handle == nullptr) return NULL_HANDLE;
+	const SfzHandle* handle = mState->voxelMaterialHandles.get(name);
+	if (handle == nullptr) return SFZ_NULL_HANDLE;
 	return *handle;
 }
 
-PoolHandle ResourceManager::getVoxelMaterialHandle(u8x4 color) const
+SfzHandle ResourceManager::getVoxelMaterialHandle(u8x4 color) const
 {
-	const PoolHandle* handle = mState->voxelMaterialColors.get(color);
-	if (handle == nullptr) return NULL_HANDLE;
+	const SfzHandle* handle = mState->voxelMaterialColors.get(color);
+	if (handle == nullptr) return SFZ_NULL_HANDLE;
 	return *handle;
 }
 
-VoxelMaterial* ResourceManager::getVoxelMaterial(PoolHandle handle)
+VoxelMaterial* ResourceManager::getVoxelMaterial(SfzHandle handle)
 {
 	return mState->voxelMaterials.get(handle);
 }
 
-PoolHandle ResourceManager::addVoxelMaterial(VoxelMaterial&& resource)
+SfzHandle ResourceManager::addVoxelMaterial(VoxelMaterial&& resource)
 {
 	strID name = resource.name;
 	u8x4 originalColor = resource.originalColor;
 	sfz_assert(name.isValid());
 	sfz_assert(mState->voxelMaterialHandles.get(name) == nullptr);
 	sfz_assert(mState->voxelMaterialColors.get(originalColor) == nullptr);
-	PoolHandle handle = mState->voxelMaterials.allocate(sfz_move(resource));
+	SfzHandle handle = mState->voxelMaterials.allocate(sfz_move(resource));
 	mState->voxelMaterialHandles.put(name, handle);
 	mState->voxelMaterialColors.put(originalColor, handle);
 	sfz_assert(mState->voxelMaterialHandles.size() == mState->voxelMaterials.numAllocated());
@@ -403,8 +403,8 @@ PoolHandle ResourceManager::addVoxelMaterial(VoxelMaterial&& resource)
 
 void ResourceManager::removeVoxelMaterial(strID name)
 {
-	PoolHandle handle = this->getVoxelMaterialHandle(name);
-	if (handle == NULL_HANDLE) return;
+	SfzHandle handle = this->getVoxelMaterialHandle(name);
+	if (handle == SFZ_NULL_HANDLE) return;
 	VoxelMaterial material = mState->voxelMaterials[handle];
 	sfz_assert(handle == this->getVoxelMaterialHandle(material.originalColor));
 	mState->voxelMaterialHandles.remove(name);
@@ -443,7 +443,7 @@ void ResourceManager::syncVoxelMaterialsToGpuBlocking()
 	buffer->uploadBlocking<ShaderVoxelMaterial>(cpu.data(), pool.arraySize(), presentQueue);
 }
 
-PoolHandle ResourceManager::getVoxelMaterialShaderBufferHandle() const
+SfzHandle ResourceManager::getVoxelMaterialShaderBufferHandle() const
 {
 	return mState->voxelMaterialShaderBufferHandle;
 }

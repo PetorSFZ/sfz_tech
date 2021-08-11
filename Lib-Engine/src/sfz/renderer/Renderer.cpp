@@ -198,7 +198,7 @@ bool Renderer::uploadTextureBlocking(
 {
 	// Error out and return false if texture already exists
 	ResourceManager& resources = getResourceManager();
-	if (resources.getTextureHandle(id) != NULL_HANDLE) return false;
+	if (resources.getTextureHandle(id) != SFZ_NULL_HANDLE) return false;
 
 	// Create resource and upload blocking
 	TextureResource resource = TextureResource::createFixedSize(id.str(), image, generateMipmaps);
@@ -214,7 +214,7 @@ bool Renderer::uploadTextureBlocking(
 bool Renderer::textureLoaded(strID id) const noexcept
 {
 	ResourceManager& resources = getResourceManager();
-	return resources.getTextureHandle(id) != NULL_HANDLE;
+	return resources.getTextureHandle(id) != SFZ_NULL_HANDLE;
 }
 
 void Renderer::removeTextureGpuBlocking(strID id) noexcept
@@ -231,7 +231,7 @@ bool Renderer::uploadMeshBlocking(strID id, const Mesh& mesh) noexcept
 	// Error out and return false if mesh already exists
 	ResourceManager& resources = getResourceManager();
 	sfz_assert(id.isValid());
-	if (resources.getMeshHandle(id) != NULL_HANDLE) return false;
+	if (resources.getMeshHandle(id) != SFZ_NULL_HANDLE) return false;
 
 	// Allocate memory for mesh
 	MeshResource gpuMesh = meshResourceAllocate(id.str(), mesh, mState->allocator);
@@ -249,7 +249,7 @@ bool Renderer::uploadMeshBlocking(strID id, const Mesh& mesh) noexcept
 bool Renderer::meshLoaded(strID id) const noexcept
 {
 	ResourceManager& resources = getResourceManager();
-	return resources.getMeshHandle(id) != NULL_HANDLE;
+	return resources.getMeshHandle(id) != SFZ_NULL_HANDLE;
 }
 
 void Renderer::removeMeshGpuBlocking(strID id) noexcept

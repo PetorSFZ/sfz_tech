@@ -35,9 +35,9 @@ namespace sfz {
 
 struct MeshResource final {
 	strID name;
-	PoolHandle vertexBuffer = NULL_HANDLE;
-	PoolHandle indexBuffer = NULL_HANDLE;
-	PoolHandle materialsBuffer = NULL_HANDLE;
+	SfzHandle vertexBuffer = SFZ_NULL_HANDLE;
+	SfzHandle indexBuffer = SFZ_NULL_HANDLE;
+	SfzHandle materialsBuffer = SFZ_NULL_HANDLE;
 	u32 numMaterials = 0;
 	Array<MeshComponent> components;
 	Array<Material> cpuMaterials;

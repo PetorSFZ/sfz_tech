@@ -44,7 +44,7 @@ inline void renderBuffersTab(ResourceManagerState& state)
 
 	const bool filterMode = filter != "";
 
-	for (HashMapPair<strID, PoolHandle> itemItr : state.bufferHandles) {
+	for (HashMapPair<strID, SfzHandle> itemItr : state.bufferHandles) {
 		const char* name = itemItr.key.str();
 		const BufferResource& resource = state.buffers[itemItr.value];
 
@@ -103,7 +103,7 @@ inline void renderTexturesTab(ResourceManagerState& state)
 
 	const bool filterMode = filter != "";
 
-	for (HashMapPair<strID, PoolHandle> itemItr : state.textureHandles) {
+	for (HashMapPair<strID, SfzHandle> itemItr : state.textureHandles) {
 		const char* name = itemItr.key.str();
 		const TextureResource& resource = state.textures[itemItr.value];
 
@@ -192,7 +192,7 @@ inline void renderFramebuffersTab(ResourceManagerState& state)
 
 	const bool filterMode = filter != "";
 
-	for (HashMapPair<strID, PoolHandle> itemItr : state.framebufferHandles) {
+	for (HashMapPair<strID, SfzHandle> itemItr : state.framebufferHandles) {
 		const char* name = itemItr.key.str();
 		const FramebufferResource& resource = state.framebuffers[itemItr.value];
 
@@ -271,9 +271,9 @@ inline void renderMeshesTab(ResourceManagerState& state)
 
 		// Check if mesh is valid
 		bool meshValid = true;
-		if (mesh.vertexBuffer == NULL_HANDLE) meshValid = false;
-		if (mesh.indexBuffer == NULL_HANDLE) meshValid = false;
-		if (mesh.materialsBuffer == NULL_HANDLE) meshValid = false;
+		if (mesh.vertexBuffer == SFZ_NULL_HANDLE) meshValid = false;
+		if (mesh.indexBuffer == SFZ_NULL_HANDLE) meshValid = false;
+		if (mesh.materialsBuffer == SFZ_NULL_HANDLE) meshValid = false;
 
 		// Mesh name
 		ImGui::Text("\"%s\"", itemItr.key.str());
@@ -467,7 +467,7 @@ inline void renderVoxelModelsTab(ResourceManagerState& state)
 
 	const bool filterMode = filter != "";
 
-	for (HashMapPair<strID, PoolHandle> itemItr : state.voxelModelHandles) {
+	for (HashMapPair<strID, SfzHandle> itemItr : state.voxelModelHandles) {
 		const char* name = itemItr.key.str();
 		const VoxelModelResource& resource = state.voxelModels[itemItr.value];
 
@@ -500,7 +500,7 @@ inline void renderVoxelModelsTab(ResourceManagerState& state)
 			ImGui::Text("%u", resource.palette.size());
 		});
 
-		if (resource.userHandle != NULL_HANDLE) {
+		if (resource.userHandle != SFZ_NULL_HANDLE) {
 			alignedEdit("User handle", offset, [&](const char*) {
 				ImGui::Text("%u @ v%u", resource.userHandle.idx(), resource.userHandle.version());
 			});
@@ -524,7 +524,7 @@ inline void renderVoxelMaterialsTab(ResourceManager& resources, ResourceManagerS
 
 	const bool filterMode = filter != "";
 
-	for (HashMapPair<strID, PoolHandle> itemItr : state.voxelMaterialHandles) {
+	for (HashMapPair<strID, SfzHandle> itemItr : state.voxelMaterialHandles) {
 		const u32 idx = itemItr.value.idx();
 		VoxelMaterial& material = state.voxelMaterials[itemItr.value];
 		str320 nameExt = str320("%s - [%u %u %u]",

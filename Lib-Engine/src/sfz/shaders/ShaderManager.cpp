@@ -221,29 +221,29 @@ void ShaderManager::renderDebugUI()
 	shaderManagerUI(*mState);
 }
 
-PoolHandle ShaderManager::getShaderHandle(const char* name) const
+SfzHandle ShaderManager::getShaderHandle(const char* name) const
 {
 	return this->getShaderHandle(strID(name));
 }
 
-PoolHandle ShaderManager::getShaderHandle(strID name) const
+SfzHandle ShaderManager::getShaderHandle(strID name) const
 {
-	const PoolHandle* handle = mState->shaderHandles.get(name);
-	if (handle == nullptr) return NULL_HANDLE;
+	const SfzHandle* handle = mState->shaderHandles.get(name);
+	if (handle == nullptr) return SFZ_NULL_HANDLE;
 	return *handle;
 }
 
-Shader* ShaderManager::getShader(PoolHandle handle)
+Shader* ShaderManager::getShader(SfzHandle handle)
 {
 	return mState->shaders.get(handle);
 }
 
-PoolHandle ShaderManager::addShader(Shader&& shader)
+SfzHandle ShaderManager::addShader(Shader&& shader)
 {
 	strID name = shader.name;
 	sfz_assert(name.isValid());
 	sfz_assert(mState->shaderHandles.get(name) == nullptr);
-	PoolHandle handle = mState->shaders.allocate(sfz_move(shader));
+	SfzHandle handle = mState->shaders.allocate(sfz_move(shader));
 	mState->shaderHandles.put(name, handle);
 	sfz_assert(mState->shaderHandles.size() == mState->shaders.numAllocated());
 	return handle;
@@ -255,8 +255,8 @@ void ShaderManager::removeShader(strID name)
 	CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
 	CHECK_ZG zg::CommandQueue::getCopyQueue().flush();
 
-	PoolHandle handle = this->getShaderHandle(name);
-	if (handle == NULL_HANDLE) return;
+	SfzHandle handle = this->getShaderHandle(name);
+	if (handle == SFZ_NULL_HANDLE) return;
 	mState->shaderHandles.remove(name);
 	mState->shaders.deallocate(handle);
 }

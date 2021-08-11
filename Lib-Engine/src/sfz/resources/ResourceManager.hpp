@@ -57,59 +57,59 @@ public:
 	// Buffer methods
 	// --------------------------------------------------------------------------------------------
 
-	PoolHandle getBufferHandle(const char* name) const;
-	PoolHandle getBufferHandle(strID name) const;
-	BufferResource* getBuffer(PoolHandle handle);
-	PoolHandle addBuffer(BufferResource&& resource);
+	SfzHandle getBufferHandle(const char* name) const;
+	SfzHandle getBufferHandle(strID name) const;
+	BufferResource* getBuffer(SfzHandle handle);
+	SfzHandle addBuffer(BufferResource&& resource);
 	void removeBuffer(strID name);
 
 	// Texture methods
 	// --------------------------------------------------------------------------------------------
 
-	PoolHandle getTextureHandle(const char* name) const;
-	PoolHandle getTextureHandle(strID name) const;
-	TextureResource* getTexture(PoolHandle handle);
-	PoolHandle addTexture(TextureResource&& resource);
+	SfzHandle getTextureHandle(const char* name) const;
+	SfzHandle getTextureHandle(strID name) const;
+	TextureResource* getTexture(SfzHandle handle);
+	SfzHandle addTexture(TextureResource&& resource);
 	void removeTexture(strID name);
 
 	// Framebuffer methods
 	// --------------------------------------------------------------------------------------------
 
-	PoolHandle getFramebufferHandle(const char* name) const;
-	PoolHandle getFramebufferHandle(strID name) const;
-	FramebufferResource* getFramebuffer(PoolHandle handle);
-	PoolHandle addFramebuffer(FramebufferResource&& resource);
+	SfzHandle getFramebufferHandle(const char* name) const;
+	SfzHandle getFramebufferHandle(strID name) const;
+	FramebufferResource* getFramebuffer(SfzHandle handle);
+	SfzHandle addFramebuffer(FramebufferResource&& resource);
 	void removeFramebuffer(strID name);
 
 	// Mesh methods
 	// --------------------------------------------------------------------------------------------
 
-	PoolHandle getMeshHandle(const char* name) const;
-	PoolHandle getMeshHandle(strID name) const;
-	MeshResource* getMesh(PoolHandle handle);
-	PoolHandle addMesh(MeshResource&& resource);
+	SfzHandle getMeshHandle(const char* name) const;
+	SfzHandle getMeshHandle(strID name) const;
+	MeshResource* getMesh(SfzHandle handle);
+	SfzHandle addMesh(MeshResource&& resource);
 	void removeMesh(strID name);
 
 	// VoxelModel methods
 	// --------------------------------------------------------------------------------------------
 
-	PoolHandle getVoxelModelHandle(const char* name) const;
-	PoolHandle getVoxelModelHandle(strID name) const;
-	VoxelModelResource* getVoxelModel(PoolHandle handle);
-	PoolHandle addVoxelModel(VoxelModelResource&& resource);
+	SfzHandle getVoxelModelHandle(const char* name) const;
+	SfzHandle getVoxelModelHandle(strID name) const;
+	VoxelModelResource* getVoxelModel(SfzHandle handle);
+	SfzHandle addVoxelModel(VoxelModelResource&& resource);
 	void removeVoxelModel(strID name);
 
 	// VoxelMaterial methods
 	// --------------------------------------------------------------------------------------------
 
-	PoolHandle getVoxelMaterialHandle(const char* name) const;
-	PoolHandle getVoxelMaterialHandle(strID name) const;
-	PoolHandle getVoxelMaterialHandle(u8x4 color) const;
-	VoxelMaterial* getVoxelMaterial(PoolHandle handle);
-	PoolHandle addVoxelMaterial(VoxelMaterial&& resource);
+	SfzHandle getVoxelMaterialHandle(const char* name) const;
+	SfzHandle getVoxelMaterialHandle(strID name) const;
+	SfzHandle getVoxelMaterialHandle(u8x4 color) const;
+	VoxelMaterial* getVoxelMaterial(SfzHandle handle);
+	SfzHandle addVoxelMaterial(VoxelMaterial&& resource);
 	void removeVoxelMaterial(strID name);
 	void syncVoxelMaterialsToGpuBlocking();
-	PoolHandle getVoxelMaterialShaderBufferHandle() const;
+	SfzHandle getVoxelMaterialShaderBufferHandle() const;
 
 private:
 	ResourceManagerState* mState = nullptr;

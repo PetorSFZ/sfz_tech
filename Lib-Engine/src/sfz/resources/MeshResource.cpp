@@ -86,9 +86,9 @@ void meshResourceUploadBlocking(
 	zg::CommandQueue& copyQueue) noexcept
 {
 	ResourceManager& resources = getResourceManager();
-	sfz_assert(gpuMesh.vertexBuffer != NULL_HANDLE);
-	sfz_assert(gpuMesh.indexBuffer != NULL_HANDLE);
-	sfz_assert(gpuMesh.materialsBuffer != NULL_HANDLE);
+	sfz_assert(gpuMesh.vertexBuffer != SFZ_NULL_HANDLE);
+	sfz_assert(gpuMesh.indexBuffer != SFZ_NULL_HANDLE);
+	sfz_assert(gpuMesh.materialsBuffer != SFZ_NULL_HANDLE);
 	sfz_assert(gpuMesh.components.size() == cpuMesh.components.size());
 	
 	// Grab gpu buffers

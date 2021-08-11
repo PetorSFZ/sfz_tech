@@ -40,27 +40,27 @@ namespace sfz {
 struct ResourceManagerState final {
 	SfzAllocator* allocator = nullptr;
 
-	HashMap<strID, PoolHandle> bufferHandles;
+	HashMap<strID, SfzHandle> bufferHandles;
 	Pool<BufferResource> buffers;
 
-	HashMap<strID, PoolHandle> textureHandles;
+	HashMap<strID, SfzHandle> textureHandles;
 	Pool<TextureResource> textures;
 
-	HashMap<strID, PoolHandle> framebufferHandles;
+	HashMap<strID, SfzHandle> framebufferHandles;
 	Pool<FramebufferResource> framebuffers;
 
-	HashMap<strID, PoolHandle> meshHandles;
+	HashMap<strID, SfzHandle> meshHandles;
 	Pool<MeshResource> meshes;
 
 	Setting* voxelModelFileWatch = nullptr;
-	HashMap<strID, PoolHandle> voxelModelHandles;
+	HashMap<strID, SfzHandle> voxelModelHandles;
 	Pool<VoxelModelResource> voxelModels;
 
-	HashMap<strID, PoolHandle> voxelMaterialHandles;
-	HashMap<u8x4, PoolHandle> voxelMaterialColors;
+	HashMap<strID, SfzHandle> voxelMaterialHandles;
+	HashMap<u8x4, SfzHandle> voxelMaterialColors;
 	Pool<VoxelMaterial> voxelMaterials;
 	Array<ShaderVoxelMaterial> voxelMaterialShaderBufferCpu;
-	PoolHandle voxelMaterialShaderBufferHandle = NULL_HANDLE;
+	SfzHandle voxelMaterialShaderBufferHandle = SFZ_NULL_HANDLE;
 };
 
 } // namespace sfz

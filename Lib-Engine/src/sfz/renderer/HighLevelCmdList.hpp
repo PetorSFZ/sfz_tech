@@ -36,12 +36,12 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 struct BindingHL final {
-	PoolHandle handle = NULL_HANDLE;
+	SfzHandle handle = SFZ_NULL_HANDLE;
 	u32 reg = ~0u;
 	u32 mipLevel = 0; // Only used for unordered textures
 
 	BindingHL() = default;
-	BindingHL(PoolHandle handle, u32 reg, u32 mipLevel = 0) : handle(handle), reg(reg), mipLevel(mipLevel) {}
+	BindingHL(SfzHandle handle, u32 reg, u32 mipLevel = 0) : handle(handle), reg(reg), mipLevel(mipLevel) {}
 };
 
 struct Bindings final {
@@ -53,19 +53,19 @@ struct Bindings final {
 
 	Bindings& addConstBuffer(const char* name, u32 reg) { return addConstBuffer(strID(name), reg); }
 	Bindings& addConstBuffer(strID name, u32 reg) { return addConstBuffer(res->getBufferHandle(name), reg); }
-	Bindings& addConstBuffer(PoolHandle handle, u32 reg) { constBuffers.add(BindingHL(handle, reg)); return *this; }
+	Bindings& addConstBuffer(SfzHandle handle, u32 reg) { constBuffers.add(BindingHL(handle, reg)); return *this; }
 
 	Bindings& addUnorderedBuffer(const char* name, u32 reg) { return addUnorderedBuffer(strID(name), reg); }
 	Bindings& addUnorderedBuffer(strID name, u32 reg) { return addUnorderedBuffer(res->getBufferHandle(name), reg); }
-	Bindings& addUnorderedBuffer(PoolHandle handle, u32 reg) { unorderedBuffers.add(BindingHL(handle, reg)); return *this; }
+	Bindings& addUnorderedBuffer(SfzHandle handle, u32 reg) { unorderedBuffers.add(BindingHL(handle, reg)); return *this; }
 
 	Bindings& addTexture(const char* name, u32 reg) { return addTexture(strID(name), reg); }
 	Bindings& addTexture(strID name, u32 reg) { return addTexture(res->getTextureHandle(name), reg); }
-	Bindings& addTexture(PoolHandle handle, u32 reg) { textures.add(BindingHL(handle, reg)); return *this; }
+	Bindings& addTexture(SfzHandle handle, u32 reg) { textures.add(BindingHL(handle, reg)); return *this; }
 
 	Bindings& addUnorderedTexture(const char* name, u32 reg, u32 mip) { return addUnorderedTexture(strID(name), reg, mip); }
 	Bindings& addUnorderedTexture(strID name, u32 reg, u32 mip) { return addUnorderedTexture(res->getTextureHandle(name), reg, mip); }
-	Bindings& addUnorderedTexture(PoolHandle handle, u32 reg, u32 mip) { unorderedTextures.add(BindingHL(handle, reg, mip)); return *this; }
+	Bindings& addUnorderedTexture(SfzHandle handle, u32 reg, u32 mip) { unorderedTextures.add(BindingHL(handle, reg, mip)); return *this; }
 };
 
 // HighLevelCmdList
@@ -87,11 +87,11 @@ public:
 
 	void setShader(const char* name) { setShader(strID(name)); }
 	void setShader(strID name) { setShader(mShaders->getShaderHandle(name)); }
-	void setShader(PoolHandle handle);
+	void setShader(SfzHandle handle);
 
 	void setFramebuffer(const char* name) { setFramebuffer(strID(name)); }
 	void setFramebuffer(strID name) { setFramebuffer(mResources->getFramebufferHandle(name)); }
-	void setFramebuffer(PoolHandle handle);
+	void setFramebuffer(SfzHandle handle);
 	void setFramebufferDefault(); // Sets the default framebuffer
 
 	void clearRenderTargetsOptimal();
@@ -108,7 +108,7 @@ public:
 	void setBindings(const Bindings& bindings);
 
 	void uploadToStreamingBufferUntyped(
-		PoolHandle handle, const void* data, u32 elementSize, u32 numElements);
+		SfzHandle handle, const void* data, u32 elementSize, u32 numElements);
 	template<typename T>
 	void uploadToStreamingBuffer(const char* name, const T* data, u32 numElements)
 	{
@@ -120,18 +120,18 @@ public:
 		uploadToStreamingBuffer<T>(mResources->getBufferHandle(name), data, numElements);
 	}
 	template<typename T>
-	void uploadToStreamingBuffer(PoolHandle handle, const T* data, u32 numElements)
+	void uploadToStreamingBuffer(SfzHandle handle, const T* data, u32 numElements)
 	{
 		uploadToStreamingBufferUntyped(handle, data, sizeof(T), numElements);
 	}
 
 	void setVertexBuffer(u32 slot, const char* name) { setVertexBuffer(slot, strID(name)); }
 	void setVertexBuffer(u32 slot, strID name) { setVertexBuffer(slot, mResources->getBufferHandle(name)); }
-	void setVertexBuffer(u32 slot, PoolHandle handle);
+	void setVertexBuffer(u32 slot, SfzHandle handle);
 
 	void setIndexBuffer(const char* name, ZgIndexBufferType indexType = ZG_INDEX_BUFFER_TYPE_UINT32) { setIndexBuffer(strID(name), indexType); }
 	void setIndexBuffer(strID name, ZgIndexBufferType indexType = ZG_INDEX_BUFFER_TYPE_UINT32) { setIndexBuffer(mResources->getBufferHandle(name), indexType); }
-	void setIndexBuffer(PoolHandle handle, ZgIndexBufferType indexType = ZG_INDEX_BUFFER_TYPE_UINT32);
+	void setIndexBuffer(SfzHandle handle, ZgIndexBufferType indexType = ZG_INDEX_BUFFER_TYPE_UINT32);
 
 	void drawTriangles(u32 startVertex, u32 numVertices);
 	void drawTrianglesIndexed(u32 firstIndex, u32 numIndices);
@@ -145,10 +145,10 @@ public:
 	void unorderedBarrierAll();
 	void unorderedBarrierBuffer(const char* name) { unorderedBarrierBuffer(strID(name)); }
 	void unorderedBarrierBuffer(strID name) { unorderedBarrierBuffer(mResources->getBufferHandle(name)); }
-	void unorderedBarrierBuffer(PoolHandle handle);
+	void unorderedBarrierBuffer(SfzHandle handle);
 	void unorderedBarrierTexture(const char* name) { unorderedBarrierTexture(strID(name)); }
 	void unorderedBarrierTexture(strID name) { unorderedBarrierTexture(mResources->getTextureHandle(name)); }
-	void unorderedBarrierTexture(PoolHandle handle);
+	void unorderedBarrierTexture(SfzHandle handle);
 
 private:
 	friend class Renderer;

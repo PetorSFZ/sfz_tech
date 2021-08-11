@@ -60,7 +60,7 @@ inline void shaderManagerUI(ShaderManagerState& state)
 		CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
 
 		// Rebuild shaders
-		for (HashMapPair<strID, PoolHandle> itemItr : state.shaderHandles) {
+		for (HashMapPair<strID, SfzHandle> itemItr : state.shaderHandles) {
 			Shader& shader = state.shaders[itemItr.value];
 			bool success = shader.build();
 			if (!success) {
@@ -69,7 +69,7 @@ inline void shaderManagerUI(ShaderManagerState& state)
 		}
 	}
 
-	for (HashMapPair<strID, PoolHandle> itemItr : state.shaderHandles) {
+	for (HashMapPair<strID, SfzHandle> itemItr : state.shaderHandles) {
 		const char* name = itemItr.key.str();
 		const u32 idx = itemItr.value.idx();
 		Shader& shader = state.shaders[itemItr.value];
