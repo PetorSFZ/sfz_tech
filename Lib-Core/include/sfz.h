@@ -82,19 +82,19 @@ static_assert(sizeof(f64) == 8, "f64 is wrong size");
 
 #endif
 
-sfz_constant i8 I8_MIN = i8(-128);
-sfz_constant i8 I8_MAX = i8(127);
-sfz_constant i16 I16_MIN = i16(-32768);
-sfz_constant i16 I16_MAX = i16(32767);
-sfz_constant i32 I32_MIN = i32(-2147483648);
-sfz_constant i32 I32_MAX = i32(2147483647);
-sfz_constant i64 I64_MIN = i64(-9223372036854775808i64);
-sfz_constant i64 I64_MAX = i64(9223372036854775807i64);
+sfz_constant i8 I8_MIN = -128;
+sfz_constant i8 I8_MAX = 127;
+sfz_constant i16 I16_MIN = -32768;
+sfz_constant i16 I16_MAX = 32767;
+sfz_constant i32 I32_MIN = -2147483647 - 1;
+sfz_constant i32 I32_MAX = 2147483647;
+sfz_constant i64 I64_MIN = -9223372036854775807 - 1;
+sfz_constant i64 I64_MAX = 9223372036854775807;
 
-sfz_constant u8 U8_MAX = u8(0xFF);
-sfz_constant u16 U16_MAX = u16(0xFFFF);
-sfz_constant u32 U32_MAX = u32(0xFFFFFFFF);
-sfz_constant u64 U64_MAX = u64(0xFFFFFFFFFFFFFFFF);
+sfz_constant u8 U8_MAX = 0xFF;
+sfz_constant u16 U16_MAX = 0xFFFF;
+sfz_constant u32 U32_MAX = 0xFFFFFFFF;
+sfz_constant u64 U64_MAX = 0xFFFFFFFFFFFFFFFF;
 
 sfz_constant f32 F32_MAX = 3.402823466e+38f;
 sfz_constant f64 F64_MAX = 1.7976931348623158e+308;
