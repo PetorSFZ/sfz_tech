@@ -48,11 +48,6 @@
 	struct name; \
 	typedef struct name name
 
-// Macro to simplify the creation of C enums. All ZeroG enums have the type i32.
-#define ZG_ENUM(name) \
-	typedef i32 name; \
-	enum name ## Enum
-
 // ZeroG handles
 // ------------------------------------------------------------------------------------------------
 
@@ -70,10 +65,11 @@ ZG_HANDLE(ZgCommandQueue);
 // Bool
 // ------------------------------------------------------------------------------------------------
 
-ZG_ENUM(ZgBool) {
+typedef enum {
 	ZG_FALSE = 0,
-	ZG_TRUE = 1
-};
+	ZG_TRUE = 1,
+	ZG_BOOL_FORCE_I32 = I32_MAX
+} ZgBool;
 
 // Version information
 // ------------------------------------------------------------------------------------------------
@@ -91,11 +87,12 @@ ZG_API u32 zgApiLinkedVersion(void);
 // ------------------------------------------------------------------------------------------------
 
 // The various backends supported by ZeroG
-ZG_ENUM(ZgBackendType) {
+typedef enum {
 	ZG_BACKEND_NONE = 0,
 	ZG_BACKEND_D3D12,
-	ZG_BACKEND_VULKAN
-};
+	ZG_BACKEND_VULKAN,
+	ZG_BACKEND_FORCE_I32 = I32_MAX
+} ZgBackendType;
 
 // Returns the backend compiled into this API
 ZG_API ZgBackendType zgBackendCompiledType(void);
@@ -104,8 +101,7 @@ ZG_API ZgBackendType zgBackendCompiledType(void);
 // ------------------------------------------------------------------------------------------------
 
 // The results, 0 is success, negative values are errors and positive values are warnings.
-ZG_ENUM(ZgResult) {
-
+typedef enum {
 	// Success (0)
 	ZG_SUCCESS = 0,
 
@@ -122,8 +118,10 @@ ZG_ENUM(ZgResult) {
 	ZG_ERROR_INVALID_ARGUMENT = -5,
 	ZG_ERROR_SHADER_COMPILE_ERROR = -6,
 	ZG_ERROR_OUT_OF_COMMAND_LISTS = -7,
-	ZG_ERROR_INVALID_COMMAND_LIST_STATE = -8
-};
+	ZG_ERROR_INVALID_COMMAND_LIST_STATE = -8,
+
+	ZG_RESULT_FORCE_I32 = I32_MAX
+} ZgResult;
 
 // Returns a string representation of the given ZeroG result. The string is statically allocated
 // and must NOT be freed by the user.
@@ -165,7 +163,7 @@ struct ManagedHandle {
 // Buffer
 // ------------------------------------------------------------------------------------------------
 
-ZG_ENUM(ZgMemoryType) {
+typedef enum {
 	// Fastest memory available on GPU.
 	// Can't upload or download directly to this memory from CPU, need to use UPLOAD and DOWNLOAD
 	// as intermediary.
@@ -177,7 +175,9 @@ ZG_ENUM(ZgMemoryType) {
 
 	// Memory suitable for downloading data from GPU.
 	ZG_MEMORY_TYPE_DOWNLOAD,
-};
+
+	ZG_MEMORY_TYPE_FORCE_I32 = I32_MAX
+} ZgMemoryType;
 
 sfz_struct(ZgBufferCreateInfo) {
 	ZgMemoryType memoryType;
@@ -244,7 +244,7 @@ public:
 
 static const u32 ZG_MAX_NUM_MIPMAPS = 12;
 
-ZG_ENUM(ZgTextureFormat) {
+typedef enum {
 	ZG_TEXTURE_FORMAT_UNDEFINED = 0,
 
 	ZG_TEXTURE_FORMAT_R_U8_UNORM, // Normalized between [0, 1]
@@ -259,20 +259,24 @@ ZG_ENUM(ZgTextureFormat) {
 	ZG_TEXTURE_FORMAT_RG_F32,
 	ZG_TEXTURE_FORMAT_RGBA_F32,
 
-	ZG_TEXTURE_FORMAT_DEPTH_F32
-};
+	ZG_TEXTURE_FORMAT_DEPTH_F32,
 
-ZG_ENUM(ZgTextureUsage) {
+	ZG_TEXTURE_FORMAT_FORCE_I32 = I32_MAX
+} ZgTextureFormat;
+
+typedef enum {
 	ZG_TEXTURE_USAGE_DEFAULT = 0,
 	ZG_TEXTURE_USAGE_RENDER_TARGET,
-	ZG_TEXTURE_USAGE_DEPTH_BUFFER
-};
+	ZG_TEXTURE_USAGE_DEPTH_BUFFER,
+	ZG_TEXTURE_USAGE_FORCE_I32 = I32_MAX
+} ZgTextureUsage;
 
-ZG_ENUM(ZgOptimalClearValue) {
+typedef enum {
 	ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED = 0,
 	ZG_OPTIMAL_CLEAR_VALUE_ZERO,
-	ZG_OPTIMAL_CLEAR_VALUE_ONE
-};
+	ZG_OPTIMAL_CLEAR_VALUE_ONE,
+	ZG_OPTIMAL_CLEAR_VALUE_FORCE_I32 = I32_MAX
+} ZgOptimalClearValue;
 
 sfz_struct(ZgTextureCreateInfo) {
 
@@ -581,7 +585,7 @@ public:
 // ------------------------------------------------------------------------------------------------
 
 // Enum representing various shader model versions
-ZG_ENUM(ZgShaderModel) {
+typedef enum {
 	ZG_SHADER_MODEL_UNDEFINED = 0,
 	ZG_SHADER_MODEL_6_0,
 	ZG_SHADER_MODEL_6_1,
@@ -589,8 +593,9 @@ ZG_ENUM(ZgShaderModel) {
 	ZG_SHADER_MODEL_6_3,
 	ZG_SHADER_MODEL_6_4,
 	ZG_SHADER_MODEL_6_5,
-	ZG_SHADER_MODEL_6_6
-};
+	ZG_SHADER_MODEL_6_6,
+	ZG_SHADER_MODEL_FORCE_I32 = I32_MAX
+} ZgShaderModel;
 
 // The maximum number of compiler flags allowed to the DXC shader compiler
 static const u32 ZG_MAX_NUM_DXC_COMPILER_FLAGS = 8;
@@ -609,31 +614,36 @@ sfz_struct(ZgPipelineCompileSettingsHLSL) {
 // ------------------------------------------------------------------------------------------------
 
 // Sample mode of a sampler
-ZG_ENUM(ZgSamplingMode) {
+typedef enum {
 	ZG_SAMPLING_MODE_UNDEFINED = 0,
 
 	ZG_SAMPLING_MODE_NEAREST, // D3D12_FILTER_MIN_MAG_MIP_POINT
 	ZG_SAMPLING_MODE_TRILINEAR, // D3D12_FILTER_MIN_MAG_MIP_LINEAR
 	ZG_SAMPLING_MODE_ANISOTROPIC, // D3D12_FILTER_ANISOTROPIC
-};
+
+	ZG_SAMPLING_MODE_FORCE_I32 = I32_MAX
+} ZgSamplingMode;
 
 // Wrapping mode of a sampler
-ZG_ENUM(ZgWrappingMode) {
+typedef enum {
 	ZG_WRAPPING_MODE_UNDEFINED = 0,
 
 	ZG_WRAPPING_MODE_CLAMP, // D3D12_TEXTURE_ADDRESS_MODE_CLAMP
 	ZG_WRAPPING_MODE_REPEAT, // D3D12_TEXTURE_ADDRESS_MODE_WRAP
-};
 
-ZG_ENUM(ZgComparisonFunc) {
+	ZG_WRAPPING_MODE_FORCE_I32 = I32_MAX
+} ZgWrappingMode;
+
+typedef enum {
 	ZG_COMPARISON_FUNC_NONE = 0,
 	ZG_COMPARISON_FUNC_LESS,
 	ZG_COMPARISON_FUNC_LESS_EQUAL,
 	ZG_COMPARISON_FUNC_EQUAL,
 	ZG_COMPARISON_FUNC_NOT_EQUAL,
 	ZG_COMPARISON_FUNC_GREATER,
-	ZG_COMPARISON_FUNC_GREATER_EQUAL
-};
+	ZG_COMPARISON_FUNC_GREATER_EQUAL,
+	ZG_COMPARISON_FUNC_FORCE_I32 = I32_MAX
+} ZgComparisonFunc;
 
 // A struct defining a texture sampler
 sfz_struct(ZgSampler) {
@@ -816,7 +826,7 @@ static const u32 ZG_MAX_NUM_VERTEX_ATTRIBUTES = 8;
 static const u32 ZG_MAX_NUM_RENDER_TARGETS = 8;
 
 // The type of data contained in a vertex
-ZG_ENUM(ZgVertexAttributeType) {
+typedef enum {
 	ZG_VERTEX_ATTRIBUTE_UNDEFINED = 0,
 
 	ZG_VERTEX_ATTRIBUTE_F32,
@@ -833,7 +843,9 @@ ZG_ENUM(ZgVertexAttributeType) {
 	ZG_VERTEX_ATTRIBUTE_U32_2,
 	ZG_VERTEX_ATTRIBUTE_U32_3,
 	ZG_VERTEX_ATTRIBUTE_U32_4,
-};
+
+	ZG_VERTEX_ATTRIBUTE_FORCE_I32 = I32_MAX
+} ZgVertexAttributeType;
 
 // A struct defining a vertex attribute
 sfz_struct(ZgVertexAttribute) {
@@ -919,16 +931,17 @@ sfz_struct(ZgRasterizerSettings) {
 	f32 depthBiasClamp;
 };
 
-ZG_ENUM(ZgBlendFunc) {
+typedef enum {
 	ZG_BLEND_FUNC_ADD = 0,
 	ZG_BLEND_FUNC_DST_SUB_SRC, // dst - src
 	ZG_BLEND_FUNC_SRC_SUB_DST, // src - dst
 	ZG_BLEND_FUNC_MIN,
-	ZG_BLEND_FUNC_MAX
-};
+	ZG_BLEND_FUNC_MAX,
+	ZG_BLEND_FUNC_FORCE_I32 = I32_MAX
+} ZgBlendFunc;
 
 // See: https://docs.microsoft.com/en-us/windows/desktop/api/d3d12/ne-d3d12-d3d12_blend
-ZG_ENUM(ZgBlendFactor) {
+typedef enum {
 	ZG_BLEND_FACTOR_ZERO = 0,
 	ZG_BLEND_FACTOR_ONE,
 	ZG_BLEND_FACTOR_SRC_COLOR,
@@ -939,7 +952,8 @@ ZG_ENUM(ZgBlendFactor) {
 	ZG_BLEND_FACTOR_DST_INV_COLOR,
 	ZG_BLEND_FACTOR_DST_ALPHA,
 	ZG_BLEND_FACTOR_DST_INV_ALPHA,
-};
+	ZG_BLEND_FACTOR_FORCE_I32 = I32_MAX
+} ZgBlendFactor;
 
 sfz_struct(ZgBlendSettings) {
 
@@ -1617,10 +1631,11 @@ ZG_API ZgResult zgCommandListClearDepthBuffer(
 ZG_API ZgResult zgCommandListClearDepthBufferOptimal(
 	ZgCommandList* commandList);
 
-ZG_ENUM(ZgIndexBufferType) {
+typedef enum {
 	ZG_INDEX_BUFFER_TYPE_UINT32 = 0,
-	ZG_INDEX_BUFFER_TYPE_UINT16
-};
+	ZG_INDEX_BUFFER_TYPE_UINT16,
+	ZG_INDEX_BUFFER_TYPE_FORCE_I32 = I32_MAX
+} ZgIndexBufferType;
 
 ZG_API ZgResult zgCommandListSetIndexBuffer(
 	ZgCommandList* commandList,
@@ -1922,12 +1937,13 @@ public:
 // Logging interface
 // ------------------------------------------------------------------------------------------------
 
-ZG_ENUM(ZgLogLevel) {
+typedef enum {
 	ZG_LOG_LEVEL_NOISE = 0,
 	ZG_LOG_LEVEL_INFO,
 	ZG_LOG_LEVEL_WARNING,
-	ZG_LOG_LEVEL_ERROR
-};
+	ZG_LOG_LEVEL_ERROR,
+	ZG_LOG_LEVEL_FORCE_I32 = I32_MAX
+} ZgLogLevel;
 
 // Logger used for logging inside ZeroG.
 //

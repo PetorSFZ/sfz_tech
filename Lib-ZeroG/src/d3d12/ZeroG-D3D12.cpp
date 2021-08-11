@@ -395,8 +395,8 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 
 		// Note: Might need to update these if more tiers or shading models are added
 		ctxState->featureSupport.shaderDynamicResources =
-			shaderModel.HighestShaderModel == D3D_SHADER_MODEL_6_6 &&
-			options.ResourceBindingTier == D3D12_RESOURCE_BINDING_TIER_3;
+			(shaderModel.HighestShaderModel == D3D_SHADER_MODEL_6_6 &&
+			options.ResourceBindingTier == D3D12_RESOURCE_BINDING_TIER_3) ? ZG_TRUE : ZG_FALSE;
 
 		D3D12_FEATURE_DATA_D3D12_OPTIONS1 options1 = {};
 		CHECK_D3D12 ctxState->device->CheckFeatureSupport(
