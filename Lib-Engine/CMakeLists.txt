@@ -328,8 +328,6 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/util/FixedTimeUpdateHelpers.hpp
 	${SRC_DIR}/sfz/util/GltfLoader.hpp
 	${SRC_DIR}/sfz/util/GltfLoader.cpp
-	${SRC_DIR}/sfz/util/GltfWriter.hpp
-	${SRC_DIR}/sfz/util/GltfWriter.cpp
 	${SRC_DIR}/sfz/util/ImGuiHelpers.hpp
 	${SRC_DIR}/sfz/util/IniParser.hpp
 	${SRC_DIR}/sfz/util/IniParser.cpp
@@ -347,13 +345,11 @@ set(SRC_FILES
 
 	${SRC_DIR}/sfz/Context.hpp
 	${SRC_DIR}/sfz/Context.cpp
-	${SRC_DIR}/sfz/CudaCompatibility.hpp
 	${SRC_DIR}/sfz/Logging.hpp
 	${SRC_DIR}/sfz/PhantasyEngineMain.hpp
 	${SRC_DIR}/sfz/PhantasyEngineMain.cpp
 	${SRC_DIR}/sfz/PopWarnings.hpp
 	${SRC_DIR}/sfz/PushWarnings.hpp
-	${SRC_DIR}/sfz/SimdIntrinsics.hpp
 )
 source_group(TREE ${SRC_DIR} FILES ${SRC_FILES})
 

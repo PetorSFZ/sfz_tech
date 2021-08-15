@@ -150,6 +150,7 @@ public:
 	u32 numHoles() const { return mArraySize - mNumAllocated; }
 	u32 arraySize() const { return mArraySize; }
 	u32 capacity() const { return mCapacity; }
+	bool isFull() const { return mNumAllocated >= mCapacity; }
 	const T* data() const { return mData; }
 	T* data() { return mData; }
 	const PoolSlot* slots() const { return mSlots; }

@@ -220,4 +220,17 @@ sfz_struct(SfzHandle) {
 
 sfz_constant SfzHandle SFZ_NULL_HANDLE = {};
 
+#ifdef __cplusplus
+#define SFZ_TYPED_HANDLE(name) \
+struct name final { \
+	SfzHandle h; \
+	bool operator== (name other) const { return this->h == other.h; } \
+	bool operator!= (name other) const { return this->h != other.h; } \
+	bool operator== (SfzHandle other) const { return this->h == other; } \
+	bool operator!= (SfzHandle other) const { return this->h != other; } \
+};
+#else
+#define SFZ_TYPED_HANDLE(name) typedef struct { SfzHandle h; } name;
+#endif
+
 #endif // SFZ_H
