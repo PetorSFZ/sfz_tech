@@ -50,6 +50,70 @@ void sfz_delete(SfzAllocator* allocator, T*& pointer) noexcept
 	pointer = nullptr; // Set callers pointer to nullptr, an attempt to avoid dangling pointers.
 }
 
+// DeferPtr
+// ------------------------------------------------------------------------------------------------
+
+namespace sfz {
+
+template<typename T>
+using DeferPtrDestroyFunc = void(T*);
+
+// Simple replacement for std::unique_ptr using SfzAllocator
+template<typename T>
+class DeferPtr final {
+public:
+	SFZ_DECLARE_DROP_TYPE(DeferPtr);
+
+	DeferPtr(std::nullptr_t) noexcept {};
+	DeferPtr(T* object, DeferPtrDestroyFunc<T>* destroyFunc) { this->init(object, destroyFunc); }
+
+	void init(T* object, DeferPtrDestroyFunc<T>* destroyFunc)
+	{
+		sfz_assert(object != nullptr);
+		sfz_assert(destroyFunc != nullptr);
+		this->destroy();
+		mPtr = object;
+		mDestroyFunc = destroyFunc;
+	}
+
+	void destroy() noexcept
+	{
+		if (mPtr == nullptr) return;
+		mDestroyFunc(mPtr);
+		mPtr = nullptr;
+		mDestroyFunc = nullptr;
+	}
+
+	T* get() const { return mPtr; }
+	
+	// Caller takes ownership of the internal pointer
+	T* take() noexcept
+	{
+		T* tmp = mPtr;
+		mPtr = nullptr;
+		mDestroyFunc = nullptr;
+		return tmp;
+	}
+
+	operator T*() { return mPtr; }
+	operator const T*() const { return mPtr; }
+
+	T& operator* () const { return *mPtr; }
+	T* operator-> () const { return mPtr; }
+
+	bool operator== (const DeferPtr& other) const { return this->mPtr == other.mPtr; }
+	bool operator!= (const DeferPtr& other) const { return !(*this == other); }
+
+	bool operator== (std::nullptr_t) const { return this->mPtr == nullptr; }
+	bool operator!= (std::nullptr_t) const { return this->mPtr != nullptr; }
+
+private:
+	T* mPtr = nullptr;
+	DeferPtrDestroyFunc<T>* mDestroyFunc = nullptr;
+};
+
+} // namespace sfz
+
 // UniquePtr
 // ------------------------------------------------------------------------------------------------
 
