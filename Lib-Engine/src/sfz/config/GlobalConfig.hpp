@@ -68,6 +68,9 @@ public:
 	void init(const char* basePath, const char* fileName, SfzAllocator* allocator) noexcept;
 	void destroy() noexcept;
 
+	// Set global config to not save to ini file when asked to, mainly used for debug purposes.
+	void setNoSaveConfigMode();
+
 	void load() noexcept;
 	bool save() noexcept;
 

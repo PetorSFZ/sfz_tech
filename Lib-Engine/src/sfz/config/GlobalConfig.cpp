@@ -41,6 +41,7 @@ struct GlobalConfigImpl final {
 	IniParser ini;
 	Array<Section> sections;
 	bool loaded = false; // Can only be loaded once... for now
+	bool noSaveMode = false;
 };
 
 // GlobalConfig: Methods
@@ -66,6 +67,11 @@ void GlobalConfig::destroy() noexcept
 	SfzAllocator* allocator = mImpl->allocator;
 	sfz_delete(allocator, mImpl);
 	mImpl = nullptr;
+}
+
+void GlobalConfig::setNoSaveConfigMode()
+{
+	mImpl->noSaveMode = true;
 }
 
 void GlobalConfig::load() noexcept
@@ -131,6 +137,8 @@ bool GlobalConfig::save() noexcept
 {
 	sfz_assert(mImpl != nullptr);
 	IniParser& ini = mImpl->ini;
+
+	if (mImpl->noSaveMode) return false;
 
 	// Update internal ini with the current values of the setting
 	for (auto& section : mImpl->sections) {
