@@ -645,6 +645,7 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 	// Call user's update func
 	sfz::UpdateOp op = state.updateFunc(
 		deltaSecs,
+		state.window,
 		state.events.data(),
 		state.events.size(),
 		&state.rawFrameInput,
@@ -846,7 +847,7 @@ int main(int argc, char* argv[])
 
 	// Call users init function
 	if (gameLoopState.initFunc) {
-		gameLoopState.initFunc(gameLoopState.userPtr);
+		gameLoopState.initFunc(window, gameLoopState.userPtr);
 	}
 	sfz::getProfilingStats().createLabel("default", "16.67 ms", sfz::f32x4(0.5f, 0.5f, 0.7f, 1.0f), 16.67f);
 

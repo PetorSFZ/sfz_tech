@@ -46,9 +46,10 @@ enum class IniLocation {
 	MY_GAMES_DIR
 };
 
-using InitFunc = void(void* userPtr);
+using InitFunc = void(SDL_Window* window, void* userPtr);
 using UpdateFunc = UpdateOp(
 	f32 deltaSecs,
+	SDL_Window* window,
 	const SDL_Event* events,
 	u32 numEvents,
 	const RawInputState* rawFrameInput,
