@@ -293,7 +293,7 @@ using f32x3 = Vec<f32, 3>;  static_assert(sizeof(f32x3) == sizeof(f32) * 3, "");
 using i32x3 = Vec<i32, 3>;  static_assert(sizeof(i32x3) == sizeof(i32) * 3, "");
 
 template<typename T>
-struct alignas(sizeof(T) * 4) Vec<T,4> final {
+struct Vec<T,4> final {
 
 	union {
 		struct { T x, y, z, w; };
@@ -352,10 +352,6 @@ struct alignas(sizeof(T) * 4) Vec<T,4> final {
 using f32x4 = Vec<f32, 4>;  static_assert(sizeof(f32x4) == sizeof(f32) * 4, "");
 using i32x4 = Vec<i32, 4>;  static_assert(sizeof(i32x4) == sizeof(i32) * 4, "");
 using u8x4 =  Vec<u8, 4>;   static_assert(sizeof(u8x4) == sizeof(u8) * 4, "");
-
-static_assert(alignof(f32x4) == 16, "");
-static_assert(alignof(i32x4) == 16, "");
-static_assert(alignof(u8x4) == 4, "");
 
 template<typename T, u32 N>
 constexpr Vec<T,N> operator* (T s, Vec<T,N> v) { return v * s; }
