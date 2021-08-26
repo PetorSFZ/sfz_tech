@@ -514,4 +514,15 @@ inline f32x4 round(f32x4 v) { return f32x4(round(v.x), round(v.y), round(v.z), r
 
 } // namespace sfz
 
+using sfz::f32x2;
+using sfz::f32x3;
+using sfz::f32x4;
+
+using sfz::i32x2;
+using sfz::i32x3;
+using sfz::i32x4;
+
+using sfz::u8x2;
+using sfz::u8x4;
+
 #endif
