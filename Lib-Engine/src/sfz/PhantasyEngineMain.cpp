@@ -458,10 +458,10 @@ void gameLoopIteration(void* gameLoopStatePtr) noexcept
 			sfz::MouseState& mouse = state.rawFrameInput.mouse;
 			mouse.windowDims = state.rawFrameInput.windowDims;
 			
-			int x = 0;
-			int y = 0;
+			i32 x = 0;
+			i32 y = 0;
 			u32 buttonState = SDL_GetMouseState(&x, &y);
-			sfz_assert(y < mouse.windowDims.y);
+			y = sfz::min(y, mouse.windowDims.y - 1);
 			mouse.pos = sfz::i32x2(x, mouse.windowDims.y - y - 1);
 			
 			u32 buttonState2 = SDL_GetRelativeMouseState(&mouse.delta.x, &mouse.delta.y);
