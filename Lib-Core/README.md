@@ -26,6 +26,7 @@ The modules in sfz_core are:
 * `skipifzero.hpp`: (__Mandatory__) Assert macros, Allocator interface, vector primitive, memory helpers and math functions.
 * `skipifzero_allocators.hpp`: Standard implementations of the allocator interface.
 * `skipifzero_arrays.hpp`: Arrays (replacements for `std::vector`, etc).
+* `skipifzero_defer.hpp`: Basic implementation of a `defer` keyword.
 * `skipifzero_geometry.hpp`: Geometric objects and algorithms (e.g. rays, boxes, spheres, intersection tests, etc).
 * `skipifzero_hash_maps.hpp`: Hash functions, hash maps (replacements for `std::unordered_map`, etc).
 * `skipifzero_image_view.hpp`: Types used to specify the view of an image.
