@@ -26,10 +26,6 @@
 
 namespace zg {
 
-using sfz::f32x2;
-using sfz::f32x3;
-using sfz::f32x4;
-
 // Helper structs
 // ------------------------------------------------------------------------------------------------
 
@@ -46,7 +42,7 @@ struct ImGuiCommand {
 	u32 idxBufferOffset = 0;
 	u32 numIndices = 0;
 	u32 padding[2];
-	sfz::f32x4 clipRect = sfz::f32x4(0.0f);
+	f32x4 clipRect = f32x4(0.0f);
 };
 static_assert(sizeof(ImGuiCommand) == sizeof(u32) * 8, "ImguiCommand is padded");
 
@@ -349,11 +345,11 @@ void imguiRender(
 	f32 imguiHeight = fbHeight * imguiScaleFactor;
 
 	// Calculate and set ImGui projection matrix
-	sfz::f32x4 projMatrix[4] = {
-		sfz::f32x4(2.0f / imguiWidth, 0.0f, 0.0f, -1.0f),
-		sfz::f32x4(0.0f, 2.0f / -imguiHeight, 0.0f, 1.0f),
-		sfz::f32x4(0.0f, 0.0f, 0.5f, 0.5f),
-		sfz::f32x4(0.0f, 0.0f, 0.0f, 1.0f)
+	f32x4 projMatrix[4] = {
+		f32x4(2.0f / imguiWidth, 0.0f, 0.0f, -1.0f),
+		f32x4(0.0f, 2.0f / -imguiHeight, 0.0f, 1.0f),
+		f32x4(0.0f, 0.0f, 0.5f, 0.5f),
+		f32x4(0.0f, 0.0f, 0.0f, 1.0f)
 	};
 	ASSERT_ZG cmdList.setPushConstant(0, &projMatrix, sizeof(f32) * 16);
 

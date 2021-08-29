@@ -48,10 +48,6 @@ using sfz::ImageViewConst;
 using sfz::mat34;
 using sfz::str48;
 using sfz::strID;
-using sfz::f32x2;
-using sfz::i32x2;
-using sfz::f32x3;
-using sfz::f32x4;
 
 // ZeroUI Context + initialization
 // ------------------------------------------------------------------------------------------------

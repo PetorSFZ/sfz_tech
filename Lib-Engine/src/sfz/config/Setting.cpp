@@ -20,6 +20,7 @@
 #include "sfz/config/Setting.hpp"
 
 #include <skipifzero.hpp>
+#include <skipifzero_math.hpp>
 
 namespace sfz {
 

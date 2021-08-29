@@ -27,7 +27,6 @@
 
 using sfz::AABB;
 using sfz::Ray;
-using sfz::f32x3;
 using sfz::eqf;
 
 // AABB tests

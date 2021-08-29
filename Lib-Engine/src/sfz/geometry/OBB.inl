@@ -24,9 +24,9 @@ namespace sfz {
 inline OBB::OBB(f32x3 center, f32x3 xAxis, f32x3 yAxis, f32x3 zAxis, f32x3 extents) noexcept
 {
 	this->center = center;
-	this->xAxis() = xAxis;
-	this->yAxis() = yAxis;
-	this->zAxis() = zAxis;
+	rotation.row(0) = xAxis;
+	rotation.row(1) = yAxis;
+	rotation.row(2) = zAxis;
 	this->halfExtents = extents * 0.5f;
 	ensureCorrectAxes();
 	ensureCorrectExtents();
@@ -96,7 +96,7 @@ inline OBB OBB::transformOBB(const mat34& transform) const noexcept
 	return OBB(newPos, newAxes, newHalfExt * 2.0f);
 }
 
-inline OBB OBB::transformOBB(quat quaternion) const noexcept
+inline OBB OBB::transformOBB(Quat quaternion) const noexcept
 {
 	sfz_assert(eqf(length(quaternion), 1.0f));
 	OBB tmp = *this;
@@ -139,9 +139,9 @@ inline void OBB::setZExtent(f32 newZExtent) noexcept
 inline void OBB::ensureCorrectAxes() const noexcept
 {
 	// Check if axes are orthogonal
-	sfz_assert(eqf(dot(rotation.row(0), rotation.row(1)), 0.0f));
-	sfz_assert(eqf(dot(rotation.row(0), rotation.row(2)), 0.0f));
-	sfz_assert(eqf(dot(rotation.row(1), rotation.row(2)), 0.0f));
+	sfz_assert(eqf(dot(f32x3(rotation.row(0)), f32x3(rotation.row(1))), 0.0f));
+	sfz_assert(eqf(dot(f32x3(rotation.row(0)), f32x3(rotation.row(2))), 0.0f));
+	sfz_assert(eqf(dot(f32x3(rotation.row(1)), f32x3(rotation.row(2))), 0.0f));
 
 	// Check if axes are normalized
 	sfz_assert(eqf(length(rotation.row(0)), 1.0f));

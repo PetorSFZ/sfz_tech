@@ -22,6 +22,7 @@
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_hash_maps.hpp>
+#include <skipifzero_math.hpp>
 #include <skipifzero_new.hpp>
 #include <skipifzero_strings.hpp>
 

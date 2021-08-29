@@ -615,7 +615,7 @@ void GameStateEditor::destroy() noexcept
 void GameStateEditor::render(GameStateHeader* state) noexcept
 {
 	// Begin window
-	ImGui::SetNextWindowSize(sfz::f32x2(720.0f, 750.0f), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(f32x2(720.0f, 750.0f), ImGuiCond_FirstUseEver);
 	ImGuiWindowFlags windowFlags = 0;
 	//windowFlags |= ImGuiWindowFlags_NoResize;
 	//windowFlags |= ImGuiWindowFlags_NoScrollbar;
@@ -712,7 +712,7 @@ void GameStateEditor::renderSingletonEditor(GameStateHeader* state) noexcept
 
 void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 {
-	const sfz::f32x4 INACTIVE_TEXT_COLOR = sfz::f32x4(0.35f, 0.35f, 0.35f, 1.0f);
+	const f32x4 INACTIVE_TEXT_COLOR = f32x4(0.35f, 0.35f, 0.35f, 1.0f);
 
 	// We need component info for each component type in ECS
 	sfz_assert(state->numComponentTypes == mNumComponentInfos);
@@ -763,20 +763,20 @@ void GameStateEditor::renderEcsEditor(GameStateHeader* state) noexcept
 	}
 
 	// New entity button
-	if (ImGui::Button("New", sfz::f32x2(136.0f, 0))) {
+	if (ImGui::Button("New", f32x2(136.0f, 0))) {
 		Entity entity = state->createEntity();
 		if (entity != NULL_ENTITY) mCurrentSelectedEntityId = entity.id();
 	}
 
 	// Clone entity button
-	if (ImGui::Button("Clone", sfz::f32x2(136.0f, 0))) {
+	if (ImGui::Button("Clone", f32x2(136.0f, 0))) {
 		u8 gen = state->entityGenerations()[mCurrentSelectedEntityId];
 		Entity entity = state->cloneEntity(Entity::create(mCurrentSelectedEntityId, gen));
 		if (entity != NULL_ENTITY) mCurrentSelectedEntityId = entity.id();
 	}
 
 	// Delete entity button
-	if (ImGui::Button("Delete", sfz::f32x2(136.0f, 0))) {
+	if (ImGui::Button("Delete", f32x2(136.0f, 0))) {
 		state->deleteEntity(mCurrentSelectedEntityId);
 
 		// Select previous active entity
@@ -938,14 +938,14 @@ void GameStateEditor::renderInfoViewer(GameStateHeader* state) noexcept
 	ImGui::Spacing();
 
 	// Save to file button
-	if (ImGui::Button("Save to file (.phstate)", sfz::f32x2(280, 0))) {
+	if (ImGui::Button("Save to file (.phstate)", f32x2(280, 0))) {
 		saveDialog(state);
 	}
 
 	ImGui::Spacing();
 
 	// Load from file button
-	if (ImGui::Button("Load from file (.phstate)", sfz::f32x2(280, 0))) {
+	if (ImGui::Button("Load from file (.phstate)", f32x2(280, 0))) {
 		loadDialog(state);
 	}
 #endif

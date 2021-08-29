@@ -69,6 +69,14 @@ static_assert(sizeof(AABB) == sizeof(f32) * 6, "AABB is padded");
 // Ray VS AABB intersection test
 // ------------------------------------------------------------------------------------------------
 
+constexpr f32x3 invSafe(f32x3 d, f32 eps = 0.000'000'1f)
+{
+	return f32x3(
+		d.x == 0.0f ? 1.0f / eps : 1.0f / d.x,
+		d.y == 0.0f ? 1.0f / eps : 1.0f / d.y,
+		d.z == 0.0f ? 1.0f / eps : 1.0f / d.z);
+}
+
 // Branchless ray vs AABB intersection test
 //
 // 2 versions, a "low-level" version that is a good buildig block for algorithms that do a lot of
@@ -86,7 +94,7 @@ constexpr void rayVsAABB(f32x3 origin, f32x3 invDir, const AABB& aabb, f32& tMin
 inline f32 rayVsAABB(const Ray& ray, const AABB& aabb, f32* tMinOut = nullptr, f32* tMaxOut = nullptr)
 {
 	const f32x3 origin = ray.origin;
-	const f32x3 invDir = divSafe(f32x3(1.0f), ray.dir);
+	const f32x3 invDir = invSafe(ray.dir);
 	f32 tMin, tMax;
 	rayVsAABB(origin, invDir, aabb, tMin, tMax);
 	if (tMinOut != nullptr) *tMinOut = tMin;

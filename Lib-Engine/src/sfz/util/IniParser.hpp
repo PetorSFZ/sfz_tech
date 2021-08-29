@@ -171,10 +171,9 @@ private:
 
 	struct Item final {
 		ItemType type;
-		union {
-			struct { i32 i; f32 f; };
-			bool b;
-		};
+		i32 i;
+		f32 f;
+		bool b;
 		str192 str; // Name or comment depending on ItemType
 	};
 

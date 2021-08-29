@@ -57,12 +57,12 @@
 //---- Define constructor and implicit cast operators to convert back<>forth between your math types and ImVec2/ImVec4.
 // This will be inlined as part of ImVec2 and ImVec4 class declarations.
 #define IM_VEC2_CLASS_EXTRA                                                 \
-        ImVec2(const sfz::f32x2& f) { x = f.x; y = f.y; }                       \
-        operator sfz::f32x2() const { return sfz::f32x2(x,y); }
+        ImVec2(const f32x2& f) { x = f.x; y = f.y; }                       \
+        operator f32x2() const { return f32x2(x,y); }
 
 #define IM_VEC4_CLASS_EXTRA                                                 \
-        ImVec4(const sfz::f32x4& f) { x = f.x; y = f.y; z = f.z; w = f.w; }     \
-        operator sfz::f32x4() const { return sfz::f32x4(x,y,z,w); }
+        ImVec4(const f32x4& f) { x = f.x; y = f.y; z = f.z; w = f.w; }     \
+        operator f32x4() const { return f32x4(x,y,z,w); }
 
 //---- Using 32-bits vertex indices (default is 16-bits) is one way to allow large meshes with more than 64K vertices.
 // Your renderer back-end will need to support it (most example renderer back-ends support both 16/32-bits indices).

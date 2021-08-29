@@ -21,6 +21,7 @@
 
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
+#include <skipifzero_math.hpp>
 
 // Forward declare SDL_GameController
 extern "C" {

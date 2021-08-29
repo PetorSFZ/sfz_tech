@@ -24,7 +24,6 @@
 
 namespace zui {
 
-using sfz::f32x4;
 using sfz::mat44;
 
 // Attributes
@@ -378,14 +377,14 @@ static void treeEntryDrawDefault(
 		color = focusColor;
 	}
 	else if (data.base.timeSinceFocusEndedSecs < 0.25f) {
-		color = lerp(focusColor, baseColor, data.base.timeSinceFocusEndedSecs * 4.0f);
+		color = sfz::lerp(focusColor, baseColor, data.base.timeSinceFocusEndedSecs * 4.0f);
 	}
 
 	if (data.base.activated) {
 		color = activateColor;
 	}
 	else if (data.base.timeSinceActivationSecs < 1.0f) {
-		color = lerp(activateColor, color, data.base.timeSinceActivationSecs);
+		color = sfz::lerp(activateColor, color, data.base.timeSinceActivationSecs);
 	}
 
 	if (!data.enabled) {
@@ -760,14 +759,14 @@ static void buttonDrawDefault(
 		color = focusColor;
 	}
 	else if (data.base.timeSinceFocusEndedSecs < 0.25f) {
-		color = lerp(focusColor, baseColor, data.base.timeSinceFocusEndedSecs * 4.0f);
+		color = sfz::lerp(focusColor, baseColor, data.base.timeSinceFocusEndedSecs * 4.0f);
 	}
 
 	if (data.base.activated) {
 		color = activateColor;
 	}
 	else if (data.base.timeSinceActivationSecs < 1.0f) {
-		color = lerp(activateColor, color, data.base.timeSinceActivationSecs);
+		color = sfz::lerp(activateColor, color, data.base.timeSinceActivationSecs);
 	}
 
 	if (!data.enabled) {

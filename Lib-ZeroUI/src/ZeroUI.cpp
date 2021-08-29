@@ -387,7 +387,7 @@ void surfaceBegin(const SurfaceDesc& desc)
 	// Input transform
 	const mat4 fbToSurf = sfz::inverse(surfToFb);
 	surface.inputTransform = mat34(fbToSurf);
-	surface.pointerPosSS = sfz::transformPoint(fbToSurf, f32x3(surface.desc.input.pointerPos, 0.0f)).xy;
+	surface.pointerPosSS = sfz::transformPoint(fbToSurf, f32x3(surface.desc.input.pointerPos, 0.0f)).xy();
 }
 
 f32x2 surfaceGetDims()

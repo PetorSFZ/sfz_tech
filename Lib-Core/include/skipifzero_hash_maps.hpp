@@ -29,26 +29,38 @@ namespace sfz {
 // sfz::hash
 // ------------------------------------------------------------------------------------------------
 
-constexpr u64 hash(u8 value) { return u64(value); }
-constexpr u64 hash(u16 value) { return u64(value); }
-constexpr u64 hash(u32 value) { return u64(value); }
-constexpr u64 hash(u64 value) { return u64(value); }
+constexpr u64 hash(u8 v) { return u64(v); }
+constexpr u64 hash(u16 v) { return u64(v); }
+constexpr u64 hash(u32 v) { return u64(v); }
+constexpr u64 hash(u64 v) { return u64(v); }
 
-constexpr u64 hash(i16 value) { return u64(value); }
-constexpr u64 hash(i32 value) { return u64(value); }
-constexpr u64 hash(i64 value) { return u64(value); }
+constexpr u64 hash(i16 v) { return u64(v); }
+constexpr u64 hash(i32 v) { return u64(v); }
+constexpr u64 hash(i64 v) { return u64(v); }
 
-constexpr u64 hash(const void* value) { return u64(uintptr_t(value)); }
+constexpr u64 hash(const void* v) { return u64(uintptr_t(v)); }
 
-template<typename T, u32 N>
-constexpr u64 hash(Vec<T,N> v)
+constexpr u64 hash(u8x2 v) { return (u64(v.x) << 8) | u64(v.y); }
+constexpr u64 hash(u8x4 v) { return (u64(v.x) << 24) | (u64(v.y) << 16) | (u64(v.z) << 8) | u64(v.w); }
+
+constexpr u64 hash(i32x2 v) { return (u64(v.x) << 32) | u64(v.y); }
+constexpr u64 hash(i32x3 v)
 {
-	u64 hash = 0;
-	for (u32 i = 0; i < N; i++) {
-		// hash_combine algorithm from boost
-		hash ^= sfz::hash(v[i]) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-	}
-	return hash;
+	const u64 h1 = hash(v.xy());
+	const u64 h2 = hash(v.z);
+	// hash_combine algorithm from boost
+	u64 h = h1 + 0x9e3779b9;
+	h ^= h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2);
+	return h;
+}
+constexpr u64 hash(i32x4 v)
+{
+	const u64 h1 = hash(v.xy());
+	const u64 h2 = hash(v.zw());
+	// hash_combine algorithm from boost
+	u64 h = h1 + 0x9e3779b9;
+	h ^= h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2);
+	return h;
 }
 
 // HashMap helpers

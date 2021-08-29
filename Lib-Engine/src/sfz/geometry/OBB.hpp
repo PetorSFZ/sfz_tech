@@ -64,7 +64,7 @@ struct OBB final {
 	OBBCorners corners() const noexcept;
 	void corners(f32x3* arrayOut) const noexcept;
 	OBB transformOBB(const mat34& transform) const noexcept;
-	OBB transformOBB(quat quaternion) const noexcept;
+	OBB transformOBB(Quat quaternion) const noexcept;
 
 	// Getters/setters
 	// --------------------------------------------------------------------------------------------
@@ -79,15 +79,10 @@ struct OBB final {
 	void setYExtent(f32 newYExtent) noexcept;
 	void setZExtent(f32 newZExtent) noexcept;
 
-	f32x3& axis(u32 idx) noexcept { return rotation.row(idx); }
-	const f32x3& axis(u32 idx) const noexcept { return rotation.row(idx); }
-
-	f32x3& xAxis() noexcept { return rotation.row(0); }
-	const f32x3& xAxis() const noexcept { return rotation.row(0); }
-	f32x3& yAxis() noexcept { return rotation.row(1); }
-	const f32x3& yAxis() const noexcept { return rotation.row(1); }
-	f32x3& zAxis() noexcept { return rotation.row(2); }
-	const f32x3& zAxis() const noexcept { return rotation.row(2); }
+	f32x3 axis(u32 idx) const noexcept { return rotation.row(idx); }
+	f32x3 xAxis() const noexcept { return rotation.row(0); }
+	f32x3 yAxis() const noexcept { return rotation.row(1); }
+	f32x3 zAxis() const noexcept { return rotation.row(2); }
 
 	// Helper methods
 	// --------------------------------------------------------------------------------------------

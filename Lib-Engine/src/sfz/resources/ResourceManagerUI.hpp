@@ -539,7 +539,7 @@ inline void renderVoxelMaterialsTab(ResourceManager& resources, ResourceManagerS
 
 		{
 			f32x4 color;
-			color.xyz = clamp((f32x3(material.originalColor.xyz)) * (1.0f / 255.0f), 0.0f, 1.0f);
+			color.xyz() = clamp(f32x4(material.originalColor).xyz() * (1.0f / 255.0f), 0.0f, 1.0f);
 			color.w = 1.0f;
 			ImGui::ColorButton(str320("##%s", nameExt.str()).str(), color, ImGuiColorEditFlags_NoLabel);
 			ImGui::SameLine();

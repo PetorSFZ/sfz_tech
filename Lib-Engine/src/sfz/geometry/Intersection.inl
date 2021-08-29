@@ -116,7 +116,7 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 	mat3 R;
 	for (u32 i = 0; i < 3; i++) {
 		for (u32 j = 0; j < 3; j++) {
-			R.at(i, j) = dot(aU.row(i), bU.row(j));
+			R.at(i, j) = dot(f32x3(aU.row(i)), f32x3(bU.row(j)));
 		}
 	}
 
@@ -233,8 +233,8 @@ inline bool overlaps(const Circle& circle, const AABB2D& rect) noexcept
 	// If the length between the center of the circle and the closest point on the rectangle is
 	// less than or equal to the circles radius they overlap. Both sides of the equation is
 	// squared to avoid somewhat expensive sqrt() function.
-	f32x2 e = max(rect.min - circle.pos, 0.0f);
-	e += max(circle.pos - rect.max, 0.0f);
+	f32x2 e = max(rect.min - circle.pos, f32x2(0.0f));
+	e += max(circle.pos - rect.max, f32x2(0.0f));
 	return dot(e, e) <= circle.radius * circle.radius;
 }
 
@@ -369,7 +369,7 @@ inline f32x3 closestPoint(const OBB& obb, const f32x3& point) noexcept
 		dist = dot(distToPoint, obb.rotation.row(i));
 		if (dist > obb.halfExtents[i]) dist = obb.halfExtents[i];
 		if (dist < -obb.halfExtents[i]) dist = -obb.halfExtents[i];
-		res += (dist * obb.rotation.row(i));
+		res += (dist * f32x3(obb.rotation.row(i)));
 	}
 
 	return res;

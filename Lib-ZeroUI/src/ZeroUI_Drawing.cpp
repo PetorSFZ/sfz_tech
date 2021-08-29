@@ -218,7 +218,7 @@ static void fontstashRenderDraw(
 		Vertex v;
 		v.pos = f32x3(pos, 0.0f);
 		v.texcoord = f32x2(texcoordX, texcoordY);
-		v.colorLinear = drawingCtx.fontColor.xyz;
+		v.colorLinear = drawingCtx.fontColor.xyz();
 		v.alphaLinear = drawingCtx.fontColor.w;
 		drawingCtx.renderData.vertices.add(v);
 	}
@@ -462,25 +462,25 @@ void drawRect(
 	Vertex verts[4];
 	verts[0].pos = f32x3(-halfDims.x, -halfDims.y, 0.0f);
 	verts[0].texcoord = f32x2(0.0f, 0.0f);
-	verts[0].colorLinear = color.xyz;
+	verts[0].colorLinear = color.xyz();
 	verts[0].alphaLinear = color.w;
 
 	// Bottom right
 	verts[1].pos = f32x3(halfDims.x, -halfDims.y, 0.0f);
 	verts[1].texcoord = f32x2(1.0f, 0.0f);
-	verts[1].colorLinear = color.xyz;
+	verts[1].colorLinear = color.xyz();
 	verts[1].alphaLinear = color.w;
 
 	// Top left
 	verts[2].pos = f32x3(-halfDims.x, halfDims.y, 0.0f);
 	verts[2].texcoord = f32x2(0.0f, 1.0f);
-	verts[2].colorLinear = color.xyz;
+	verts[2].colorLinear = color.xyz();
 	verts[2].alphaLinear = color.w;
 
 	// Top right
 	verts[3].pos = f32x3(halfDims.x, halfDims.y, 0.0f);
 	verts[3].texcoord = f32x2(1.0f, 1.0f);
-	verts[3].colorLinear = color.xyz;
+	verts[3].colorLinear = color.xyz();
 	verts[3].alphaLinear = color.w;
 
 	const u32 indices[6] = {
@@ -506,9 +506,9 @@ void drawBorder(
 	auto createVertex = [&](f32x2 pos) -> Vertex {
 		Vertex v;
 		v.pos = f32x3(pos, 0.0f);
-		f32x2 interp = saturate((pos - cornerBottomLeft) / (cornerTopRight - cornerBottomLeft));
+		f32x2 interp = sfz::clamp((pos - cornerBottomLeft) / (cornerTopRight - cornerBottomLeft), 0.0f, 1.0f);
 		v.texcoord = f32x2(sfz::lerp(0.0f, 1.0f, interp.x), sfz::lerp(0.0f, 1.0f, interp.y));
-		v.colorLinear = color.xyz;
+		v.colorLinear = color.xyz();
 		v.alphaLinear = color.w;
 		return v;
 	};

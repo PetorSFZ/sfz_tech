@@ -19,6 +19,7 @@
 #pragma once
 
 #include <skipifzero.hpp>
+#include <skipifzero_math.hpp>
 
 namespace sfz {
 

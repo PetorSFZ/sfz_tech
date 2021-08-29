@@ -27,9 +27,6 @@ namespace sfz {
 
 using sfz::Array;
 using sfz::strID;
-using sfz::f32x2;
-using sfz::f32x3;
-using sfz::u8x4;
 
 // Vertex struct
 // ------------------------------------------------------------------------------------------------
