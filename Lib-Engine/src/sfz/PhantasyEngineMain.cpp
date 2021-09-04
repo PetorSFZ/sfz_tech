@@ -144,6 +144,7 @@ static sfz::ShaderManager shaderManager;
 static sfz::Renderer renderer;
 static sfz::AudioEngine audioEngine;
 static sfz::ProfilingStats profilingStats;
+static sfz::str320 userDataDir;
 
 static void setupContext() noexcept
 {
@@ -701,29 +702,33 @@ int main(int argc, char* argv[])
 	// function.
 	sfz::InitOptions options = PhantasyEngineUserMain(argc, argv);
 
+	// Setup user directory in context
+
+	// Setup user-data dir
+	if (options.iniLocation == sfz::IniLocation::NEXT_TO_EXECUTABLE) {
+		userDataDir = basePath();
+		userDataDir.removeChars(1);
+	}
+	else if (options.iniLocation == sfz::IniLocation::MY_GAMES_DIR) {
+
+		// Create user data directory
+		ensureAppUserDataDirExists(options.appName);
+
+		userDataDir = sfz::gameBaseFolderPath();
+		userDataDir.appendf("%s", options.appName);
+	}
+	else {
+		sfz_assert_hard(false);
+	}
+	sfz::getContext()->userDataDir = userDataDir.str();
+	SFZ_INFO("PhantasyEngine", "User data directory set to: \"%s\"", sfz::getUserDataDir());
+
 	// Load global settings
 	sfz::GlobalConfig& cfg = sfz::getGlobalConfig();
 	{
-		// Init config with ini location
-		if (options.iniLocation == sfz::IniLocation::NEXT_TO_EXECUTABLE) {
-			sfz::str192 iniFileName("%s.ini", options.appName);
-			cfg.init(basePath(), iniFileName, sfz::getDefaultAllocator());
-			SFZ_INFO("PhantasyEngine", "Ini location set to: %s%s", basePath(), iniFileName.str());
-		}
-		else if (options.iniLocation == sfz::IniLocation::MY_GAMES_DIR) {
-
-			// Create user data directory
-			ensureAppUserDataDirExists(options.appName);
-
-			// Initialize ini
-			sfz::str192 iniFileName("%s/%s.ini", options.appName, options.appName);
-			cfg.init(sfz::gameBaseFolderPath(), iniFileName, sfz::getDefaultAllocator());
-			SFZ_INFO("PhantasyEngine", "Ini location set to: %s%s",
-				sfz::gameBaseFolderPath(), iniFileName.str());
-		}
-		else {
-			sfz_assert_hard(false);
-		}
+		sfz::str192 iniFileName("%s.ini", options.appName);
+		cfg.init(sfz::getUserDataDir(), iniFileName, sfz::getDefaultAllocator());
+		SFZ_INFO("PhantasyEngine", "Ini location set to: %s/%s", sfz::getUserDataDir(), iniFileName.str());
 
 		// Load ini file
 		cfg.load();

@@ -59,6 +59,10 @@ struct Context final {
 	// The current logger used, see "sfz/Logging.hpp" for logging macros which use it.
 	LoggingInterface* logger = nullptr;
 
+	// The user data dir where the game should store user data. This can be e.g. next to executable
+	// or in "My Games/AppName/" depending on engine settings.
+	const char* userDataDir = nullptr;
+
 	// The global config system which keeps track of key/value pair of settings.
 	GlobalConfig* config = nullptr;
 
@@ -96,6 +100,7 @@ void setContext(Context* context) noexcept;
 
 inline SfzAllocator* getDefaultAllocator() { return getContext()->defaultAllocator; }
 inline LoggingInterface* getLogger() { return getContext()->logger; }
+inline const char* getUserDataDir() { return getContext()->userDataDir; }
 inline GlobalConfig& getGlobalConfig() { return *getContext()->config; }
 inline ResourceManager& getResourceManager() { return *getContext()->resources; }
 inline ShaderManager& getShaderManager() { return *getContext()->shaders; }

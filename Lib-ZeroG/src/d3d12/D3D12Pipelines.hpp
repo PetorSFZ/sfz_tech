@@ -167,7 +167,8 @@ ZgResult createPipelineComputeFileHLSL(
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	IDxcIncludeHandler* dxcIncludeHandler,
-	ID3D12Device3& device) noexcept;
+	ID3D12Device3& device,
+	const char* pipelineCacheDir) noexcept;
 
 // D3D12PipelineRender functions
 // ------------------------------------------------------------------------------------------------
@@ -179,7 +180,8 @@ ZgResult createPipelineRenderFileHLSL(
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	IDxcIncludeHandler* dxcIncludeHandler,
-	ID3D12Device3& device) noexcept;
+	ID3D12Device3& device,
+	const char* pipelineCacheDir) noexcept;
 
 ZgResult createPipelineRenderSourceHLSL(
 	ZgPipelineRender** pipelineOut,
@@ -188,4 +190,5 @@ ZgResult createPipelineRenderSourceHLSL(
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	IDxcIncludeHandler* dxcIncludeHandler,
-	ID3D12Device3& device) noexcept;
+	ID3D12Device3& device,
+	const char* pipelineCacheDir) noexcept;

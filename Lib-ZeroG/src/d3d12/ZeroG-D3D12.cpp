@@ -121,6 +121,10 @@ struct ZgContextState final {
 	bool allowTearing = false;
 	bool vsyncEnabled = false;
 
+	// Pipeline caching
+	bool allowPipelineCaching = false;
+	sfz::str320 pipelineCacheDir;
+
 	// Memory
 	std::atomic_uint64_t resourceUniqueIdentifierCounter = 1;
 };
@@ -588,6 +592,14 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 	ctxState->width = 0;
 	ctxState->height = 0;
 
+	// Store pipeline caching settings
+	ctxState->allowPipelineCaching = settings.autoCachePipelines == ZG_TRUE ? true : false;
+	if (ctxState->allowPipelineCaching) {
+		sfz_assert(settings.autoCachePipelinesDir != nullptr);
+		ctxState->pipelineCacheDir.appendf("%s", settings.autoCachePipelinesDir);
+		ZG_INFO("Pipeline auto-cache enabled in dir: \"%s\"", ctxState->pipelineCacheDir.str());
+	}
+
 	return ZG_SUCCESS;
 }
 
@@ -820,7 +832,8 @@ ZG_API ZgResult zgPipelineComputeCreateFromFileHLSL(
 		*ctxState->dxcLibrary.Get(),
 		*ctxState->dxcCompiler.Get(),
 		ctxState->dxcIncludeHandler,
-		*ctxState->device.Get());
+		*ctxState->device.Get(),
+		ctxState->allowPipelineCaching ? ctxState->pipelineCacheDir.str() : nullptr);
 }
 
 ZG_API void zgPipelineComputeDestroy(
@@ -873,7 +886,8 @@ ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 		*ctxState->dxcLibrary.Get(),
 		*ctxState->dxcCompiler.Get(),
 		ctxState->dxcIncludeHandler,
-		*ctxState->device.Get());
+		*ctxState->device.Get(),
+		ctxState->allowPipelineCaching ? ctxState->pipelineCacheDir.str() : nullptr);
 }
 
 ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
@@ -899,7 +913,8 @@ ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
 		*ctxState->dxcLibrary.Get(),
 		*ctxState->dxcCompiler.Get(),
 		ctxState->dxcIncludeHandler,
-		*ctxState->device.Get());
+		*ctxState->device.Get(),
+		ctxState->allowPipelineCaching ? ctxState->pipelineCacheDir.str() : nullptr);
 }
 
 ZG_API void zgPipelineRenderDestroy(

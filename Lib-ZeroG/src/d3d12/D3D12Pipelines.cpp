@@ -34,15 +34,11 @@ using time_point = std::chrono::high_resolution_clock::time_point;
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-static f32 calculateDeltaMillis(time_point& previousTime) noexcept
+static f32 timeSinceLastTimestampMillis(const time_point& previousTime) noexcept
 {
 	time_point currentTime = std::chrono::high_resolution_clock::now();
-
 	using FloatMS = std::chrono::duration<f32, std::milli>;
-	f32 delta = std::chrono::duration_cast<FloatMS>(currentTime - previousTime).count();
-
-	previousTime = currentTime;
-	return delta;
+	return std::chrono::duration_cast<FloatMS>(currentTime - previousTime).count();
 }
 
 static sfz::Array<u8> readBinaryFile(const char* path) noexcept
@@ -75,6 +71,59 @@ static sfz::Array<u8> readBinaryFile(const char* path) noexcept
 	// Close file and return data
 	std::fclose(file);
 	return data;
+}
+
+static bool writeBinaryFile(const char* path, const void* data, size_t numBytes) noexcept
+{
+	// Open file
+	if (path == nullptr) return false;
+	std::FILE* file = std::fopen(path, "wb");
+	if (file == NULL) return false;
+
+	size_t numWritten = std::fwrite(data, 1, numBytes, file);
+	std::fclose(file);
+	return (numWritten == numBytes);
+}
+
+static time_t getFileLastModifiedDate(const char* path) noexcept
+{
+	static_assert(sizeof(time_t) == sizeof(__time64_t), "");
+	// struct _stat64i32
+	// {
+	//	_dev_t         st_dev;
+	//	_ino_t         st_ino;
+	//	unsigned short st_mode;
+	//	short          st_nlink;
+	//	short          st_uid;
+	//	short          st_gid;
+	//	_dev_t         st_rdev;
+	//	_off_t         st_size;
+	//	__time64_t     st_atime;
+	//	__time64_t     st_mtime;
+	//	__time64_t     st_ctime;
+	//};
+	struct _stat64i32 buffer = {};
+	int res = _stat(path, &buffer);
+	if (res < 0) {
+		return time_t(0);
+	}
+	sfz_assert(res == 0);
+	return buffer.st_mtime;
+}
+
+static const char* filenameFromPath(const char* path) noexcept
+{
+	const char* strippedFile1 = std::strrchr(path, '\\');
+	const char* strippedFile2 = std::strrchr(path, '/');
+	if (strippedFile1 == nullptr && strippedFile2 == nullptr) {
+		return path;
+	}
+	else if (strippedFile2 == nullptr) {
+		return strippedFile1 + 1;
+	}
+	else {
+		return strippedFile2 + 1;
+	}
 }
 
 static bool relativeToAbsolute(char* pathOut, u32 pathOutSize, const char* pathIn) noexcept
@@ -163,16 +212,58 @@ enum class ShaderType {
 };
 
 static ZgResult compileHlslShader(
+	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	IDxcIncludeHandler* dxcIncludeHandler,
 	ComPtr<IDxcBlob>& blobOut,
-	ComPtr<ID3D12ShaderReflection>& reflectionOut,
-	const ComPtr<IDxcBlobEncoding>& encodingBlob,
+	bool isSource,
+	const char* pathOrSource,
 	const char* shaderName,
 	const char* entryName,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
-	ShaderType shaderType) noexcept
+	ShaderType shaderType,
+	const char* pipelineCacheDir,
+	bool& wasCached) noexcept
 {
+	// Calculate path used to cache this shader blob
+	str320 cachePath;
+	if (!isSource && pipelineCacheDir != nullptr) {
+		const time_t lastModified = getFileLastModifiedDate(pathOrSource);
+		if (lastModified == 0) return ZG_ERROR_SHADER_COMPILE_ERROR;
+		str320 hlslName = filenameFromPath(pathOrSource);
+		hlslName.removeChars(5);
+		cachePath.appendf("%s/%s_%s_%lli.dxil", pipelineCacheDir, hlslName.str(), entryName, lastModified);
+		//ZG_INFO("%s", cachePath.str());
+	}
+
+	// Attempt to read binary from cache and exit if possible
+	if (cachePath != "") {
+		// Convert cache path to absolute wide string
+		WCHAR cachePathWide[MAX_PATH] = { 0 };
+		if (!fixPath(cachePathWide, MAX_PATH, cachePath.str())) {
+			return ZG_ERROR_SHADER_COMPILE_ERROR;
+		}
+
+		// Load bin from file
+		ComPtr<IDxcBlobEncoding> tmpBlob;
+		if (SUCCEEDED(dxcLibrary.CreateBlobFromFile(cachePathWide, 0, &tmpBlob))) {
+			blobOut = tmpBlob;
+			wasCached = true;
+			return ZG_SUCCESS;
+		}
+	}
+
+	// Grab shader from file
+	ComPtr<IDxcBlobEncoding> encodingBlob;
+	if (isSource) {
+		ZgResult res = dxcCreateHlslBlobFromSource(dxcLibrary, pathOrSource, encodingBlob);
+		if (res != ZG_SUCCESS) return res;
+	}
+	else {
+		ZgResult res = dxcCreateHlslBlobFromFile(dxcLibrary, pathOrSource, encodingBlob);
+		if (res != ZG_SUCCESS) return res;
+	}
+
 	// Convert entry point to wide string
 	WCHAR shaderEntryWide[256] = { 0 };
 	if (!utf8ToWide(shaderEntryWide, 256, entryName)) {
@@ -280,9 +371,9 @@ static ZgResult compileHlslShader(
 		return ZG_ERROR_SHADER_COMPILE_ERROR;
 	}
 
-	// Attempt to get reflection data
-	if (D3D12_FAIL(getShaderReflection(blobOut, reflectionOut))) {
-		return ZG_ERROR_SHADER_COMPILE_ERROR;
+	// Attempt to write compiled binary to cache if possible
+	if (cachePath != "") {
+		writeBinaryFile(cachePath.str(), blobOut->GetBufferPointer(), blobOut->GetBufferSize());
 	}
 
 	return ZG_SUCCESS;
@@ -449,7 +540,9 @@ static void logPipelineComputeInfo(
 	u32 groupDimX,
 	u32 groupDimY,
 	u32 groupDimZ,
-	f32 compileTimeMs) noexcept
+	f32 compileTimeMs,
+	f32 computeBlobCompileTime,
+	bool computeBlobWasCached) noexcept
 {
 	sfz::str4096 tmpStr;
 
@@ -459,7 +552,9 @@ static void logPipelineComputeInfo(
 		computeShaderName, createInfo.computeShaderEntry);
 
 	// Print compile time
-	tmpStr.appendf("Compile time: %.2fms\n", compileTimeMs);
+	tmpStr.appendf("Total compile time: %.2fms\n", compileTimeMs);
+	tmpStr.appendf(" - Compute DXIL: %.2fms%s\n",
+		computeBlobCompileTime, computeBlobWasCached ? " (cached)" : "");
 
 	// Print group dim
 	tmpStr.appendf("\nGroup dimensions: %u x %u x %u\n", groupDimX, groupDimY, groupDimZ);
@@ -478,29 +573,17 @@ static void logPipelineComputeInfo(
 
 	// Print unordered buffers
 	if (bindingsSignature.numUnorderedBuffers > 0) {
-		tmpStr.appendf("\nUnordered buffers (%u):\n", bindingsSignature.numUnorderedBuffers);
-		for (u32 i = 0; i < bindingsSignature.numUnorderedBuffers; i++) {
-			const ZgUnorderedBufferBindingDesc& buffer = bindingsSignature.unorderedBuffers[i];
-			tmpStr.appendf(" - Register: %u\n", buffer.unorderedRegister);
-		}
+		tmpStr.appendf("\nUnordered buffers: %u:", bindingsSignature.numUnorderedBuffers);
 	}
 
 	// Print textures
 	if (bindingsSignature.numTextures > 0) {
-		tmpStr.appendf("\nTextures (%u):\n", bindingsSignature.numTextures);
-		for (u32 i = 0; i < bindingsSignature.numTextures; i++) {
-			const ZgTextureBindingDesc& texture = bindingsSignature.textures[i];
-			tmpStr.appendf(" - Register: %u\n", texture.textureRegister);
-		}
+		tmpStr.appendf("\nTextures: %u", bindingsSignature.numTextures);
 	}
 
 	// Print unordered textures
 	if (bindingsSignature.numUnorderedTextures > 0) {
-		tmpStr.appendf("\nUnordered textures (%u):\n", bindingsSignature.numUnorderedTextures);
-		for (u32 i = 0; i < bindingsSignature.numUnorderedTextures; i++) {
-			const ZgUnorderedTextureBindingDesc& texture = bindingsSignature.unorderedTextures[i];
-			tmpStr.appendf(" - Register: %u\n", texture.unorderedRegister);
-		}
+		tmpStr.appendf("\nUnordered textures: %u", bindingsSignature.numUnorderedTextures);
 	}
 
 	// Log
@@ -513,7 +596,11 @@ static void logPipelineRenderInfo(
 	const char* pixelShaderName,
 	const ZgPipelineBindingsSignature& bindingsSignature,
 	const ZgPipelineRenderSignature& renderSignature,
-	f32 compileTimeMs) noexcept
+	f32 compileTimeMs,
+	f32 vertexBlobCompileTime,
+	bool vertexBlobWasCached,
+	f32 pixelBlobCompileTime,
+	bool pixelBlobWasCached) noexcept
 {
 	sfz::str4096 tmpStr;
 
@@ -525,7 +612,11 @@ static void logPipelineRenderInfo(
 		pixelShaderName, createInfo.pixelShaderEntry);
 
 	// Print compile time
-	tmpStr.appendf("Compile time: %.2fms\n", compileTimeMs);
+	tmpStr.appendf("Total compile time: %.2fms\n", compileTimeMs);
+	tmpStr.appendf(" - Vertex DXIL: %.2fms%s\n",
+		vertexBlobCompileTime, vertexBlobWasCached ? " (cached)" : "");
+	tmpStr.appendf(" - Pixel DXIL: %.2fms%s\n",
+		pixelBlobCompileTime, pixelBlobWasCached ? " (cached)" : "");
 
 	// Print vertex attributes
 	if (renderSignature.numVertexAttributes > 0) {
@@ -552,29 +643,17 @@ static void logPipelineRenderInfo(
 	
 	// Print unordered buffers
 	if (bindingsSignature.numUnorderedBuffers > 0) {
-		tmpStr.appendf("\nUnordered buffers (%u):\n", bindingsSignature.numUnorderedBuffers);
-		for (u32 i = 0; i < bindingsSignature.numUnorderedBuffers; i++) {
-			const ZgUnorderedBufferBindingDesc& buffer = bindingsSignature.unorderedBuffers[i];
-			tmpStr.appendf(" - Register: %u\n", buffer.unorderedRegister);
-		}
+		tmpStr.appendf("\nUnordered buffers: %u", bindingsSignature.numUnorderedBuffers);
 	}
 
 	// Print textures
 	if (bindingsSignature.numTextures > 0) {
-		tmpStr.appendf("\nTextures (%u):\n", bindingsSignature.numTextures);
-		for (u32 i = 0; i < bindingsSignature.numTextures; i++) {
-			const ZgTextureBindingDesc& texture = bindingsSignature.textures[i];
-			tmpStr.appendf(" - Register: %u\n", texture.textureRegister);
-		}
+		tmpStr.appendf("\nTextures: %u", bindingsSignature.numTextures);
 	}
 
 	// Print unordered textures
 	if (bindingsSignature.numUnorderedTextures > 0) {
-		tmpStr.appendf("\nUnordered textures (%u):\n", bindingsSignature.numUnorderedTextures);
-		for (u32 i = 0; i < bindingsSignature.numUnorderedTextures; i++) {
-			const ZgUnorderedTextureBindingDesc& texture = bindingsSignature.unorderedTextures[i];
-			tmpStr.appendf(" - Register: %u\n", texture.unorderedRegister);
-		}
+		tmpStr.appendf("\nUnordered textures: %u", bindingsSignature.numUnorderedTextures);
 	}
 
 	// Log
@@ -997,27 +1076,42 @@ static ZgResult createPipelineComputeInternal(
 	ZgPipelineCompute** pipelineOut,
 	const ZgPipelineComputeDesc& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
-	time_point compileStartTime,
-	const ComPtr<IDxcBlobEncoding>& encodingBlob,
+	bool isSource,
+	const char* pathOrSource,
 	const char* computeShaderName,
+	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	IDxcIncludeHandler* dxcIncludeHandler,
-	ID3D12Device3& device) noexcept
+	ID3D12Device3& device,
+	const char* pipelineCacheDir) noexcept
 {
+	// Start measuring compile-time
+	time_point compileStartTime = std::chrono::high_resolution_clock::now();
+
 	// Compile compute shader
 	ComPtr<IDxcBlob> computeBlob;
-	ComPtr<ID3D12ShaderReflection> computeReflection;
+	bool computeBlobWasCached = false;
 	ZgResult computeShaderRes = compileHlslShader(
+		dxcLibrary,
 		dxcCompiler,
 		dxcIncludeHandler,
 		computeBlob,
-		computeReflection,
-		encodingBlob,
+		isSource,
+		pathOrSource,
 		computeShaderName,
 		createInfo.computeShaderEntry,
 		compileSettings,
-		ShaderType::COMPUTE);
+		ShaderType::COMPUTE,
+		pipelineCacheDir,
+		computeBlobWasCached);
 	if (computeShaderRes != ZG_SUCCESS) return computeShaderRes;
+	const f32 computeBlobCompileTimeMs = timeSinceLastTimestampMillis(compileStartTime);
+
+	// Attempt to get reflection data
+	ComPtr<ID3D12ShaderReflection> computeReflection;
+	if (D3D12_FAIL(getShaderReflection(computeBlob, computeReflection))) {
+		return ZG_ERROR_SHADER_COMPILE_ERROR;
+	}
 
 	// Get shader description froms reflection data
 	D3D12_SHADER_DESC computeDesc = {};
@@ -1081,7 +1175,7 @@ static ZgResult createPipelineComputeInternal(
 	sfz_assert(groupDimZ != 0);
 
 	// Log information about the pipeline
-	f32 compileTimeMs = calculateDeltaMillis(compileStartTime);
+	f32 compileTimeMs = timeSinceLastTimestampMillis(compileStartTime);
 	logPipelineComputeInfo(
 		createInfo,
 		computeShaderName,
@@ -1089,7 +1183,9 @@ static ZgResult createPipelineComputeInternal(
 		groupDimX,
 		groupDimY,
 		groupDimZ,
-		compileTimeMs);
+		compileTimeMs,
+		computeBlobCompileTimeMs,
+		computeBlobWasCached);
 
 	// Allocate pipeline
 	ZgPipelineCompute* pipeline = sfz_new<ZgPipelineCompute>(getAllocator(), sfz_dbg("ZgPipelineCompute"));
@@ -1114,28 +1210,21 @@ ZgResult createPipelineComputeFileHLSL(
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	IDxcIncludeHandler* dxcIncludeHandler,
-	ID3D12Device3& device) noexcept
+	ID3D12Device3& device,
+	const char* pipelineCacheDir) noexcept
 {
-	// Start measuring compile-time
-	time_point compileStartTime;
-	calculateDeltaMillis(compileStartTime);
-
-	// Read compute shader from file
-	ComPtr<IDxcBlobEncoding> encodingBlob;
-	ZgResult blobReadRes =
-		dxcCreateHlslBlobFromFile(dxcLibrary, createInfo.computeShader, encodingBlob);
-	if (blobReadRes != ZG_SUCCESS) return blobReadRes;
-
 	return createPipelineComputeInternal(
 		pipelineOut,
 		createInfo,
 		compileSettings,
-		compileStartTime,
-		encodingBlob,
+		false,
 		createInfo.computeShader,
+		createInfo.computeShader,
+		dxcLibrary,
 		dxcCompiler,
 		dxcIncludeHandler,
-		device);
+		device,
+		pipelineCacheDir);
 }
 
 // D3D12PipelineRender functions
@@ -1145,44 +1234,70 @@ static ZgResult createPipelineRenderInternal(
 	ZgPipelineRender** pipelineOut,
 	const ZgPipelineRenderDesc& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
-	time_point compileStartTime,
-	const ComPtr<IDxcBlobEncoding>& vertexEncodingBlob,
-	const ComPtr<IDxcBlobEncoding> pixelEncodingBlob,
+	bool isSource,
+	const char* vertexPathOrSource,
+	const char* pixelPathOrSource,
 	const char* vertexShaderName,
 	const char* pixelShaderName,
+	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	IDxcIncludeHandler* dxcIncludeHandler,
-	ID3D12Device3& device) noexcept
+	ID3D12Device3& device,
+	const char* pipelineCacheDir) noexcept
 {
+	// Start measuring compile-time
+	const time_point compileStartTime = std::chrono::high_resolution_clock::now();
+
 	// Compile vertex shader
 	ComPtr<IDxcBlob> vertexBlob;
-	ComPtr<ID3D12ShaderReflection> vertexReflection;
+	bool vertexBlobWasCached = false;
 	ZgResult vertexShaderRes = compileHlslShader(
+		dxcLibrary,
 		dxcCompiler,
 		dxcIncludeHandler,
 		vertexBlob,
-		vertexReflection,
-		vertexEncodingBlob,
+		isSource,
+		vertexPathOrSource,
 		vertexShaderName,
 		createInfo.vertexShaderEntry,
 		compileSettings,
-		ShaderType::VERTEX);
+		ShaderType::VERTEX,
+		pipelineCacheDir,
+		vertexBlobWasCached);
 	if (vertexShaderRes != ZG_SUCCESS) return vertexShaderRes;
+	const f32 vertexBlobCompileTimeMs = timeSinceLastTimestampMillis(compileStartTime);
+
+	// Vertex reflection
+	ComPtr<ID3D12ShaderReflection> vertexReflection;
+	if (D3D12_FAIL(getShaderReflection(vertexBlob, vertexReflection))) {
+		return ZG_ERROR_SHADER_COMPILE_ERROR;
+	}
 
 	// Compile pixel shader
+	const time_point pixelCompileStartTime = std::chrono::high_resolution_clock::now();
 	ComPtr<IDxcBlob> pixelBlob;
-	ComPtr<ID3D12ShaderReflection> pixelReflection;
+	bool pixelBlobWasCached = false;
 	ZgResult pixelShaderRes = compileHlslShader(
+		dxcLibrary,
 		dxcCompiler,
 		dxcIncludeHandler,
 		pixelBlob,
-		pixelReflection,
-		pixelEncodingBlob,
+		isSource,
+		pixelPathOrSource,
 		pixelShaderName,
 		createInfo.pixelShaderEntry,
 		compileSettings,
-		ShaderType::PIXEL);
+		ShaderType::PIXEL,
+		pipelineCacheDir,
+		pixelBlobWasCached);
 	if (pixelShaderRes != ZG_SUCCESS) return pixelShaderRes;
+	const f32 pixelBlobCompileTimeMs = timeSinceLastTimestampMillis(pixelCompileStartTime);
+
+	// Pixel reflection
+	ComPtr<ID3D12ShaderReflection> pixelReflection;
+	if (D3D12_FAIL(getShaderReflection(pixelBlob, pixelReflection))) {
+		return ZG_ERROR_SHADER_COMPILE_ERROR;
+	}
 
 	// Get shader description froms reflection data
 	D3D12_SHADER_DESC vertexDesc = {};
@@ -1572,14 +1687,18 @@ static ZgResult createPipelineRenderInternal(
 	}
 
 	// Log information about the pipeline
-	f32 compileTimeMs = calculateDeltaMillis(compileStartTime);
+	f32 compileTimeMs = timeSinceLastTimestampMillis(compileStartTime);
 	logPipelineRenderInfo(
 		createInfo,
 		vertexShaderName,
 		pixelShaderName,
 		bindings.toZgSignature(),
 		renderSignature,
-		compileTimeMs);
+		compileTimeMs,
+		vertexBlobCompileTimeMs,
+		vertexBlobWasCached,
+		pixelBlobCompileTimeMs,
+		pixelBlobWasCached);
 
 	// Allocate pipeline
 	ZgPipelineRender* pipeline =
@@ -1605,43 +1724,23 @@ ZgResult createPipelineRenderFileHLSL(
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	IDxcIncludeHandler* dxcIncludeHandler,
-	ID3D12Device3& device) noexcept
+	ID3D12Device3& device,
+	const char* pipelineCacheDir) noexcept
 {
-	// Start measuring compile-time
-	time_point compileStartTime;
-	calculateDeltaMillis(compileStartTime);
-
-	// Read vertex shader from file
-	ComPtr<IDxcBlobEncoding> vertexEncodingBlob;
-	ZgResult vertexBlobReadRes =
-		dxcCreateHlslBlobFromFile(dxcLibrary, createInfo.vertexShader, vertexEncodingBlob);
-	if (vertexBlobReadRes != ZG_SUCCESS) return vertexBlobReadRes;
-
-	// Read pixel shader from file
-	ComPtr<IDxcBlobEncoding> pixelEncodingBlob;
-	bool vertexAndPixelSameEncodingBlob =
-		std::strcmp(createInfo.vertexShader, createInfo.pixelShader) == 0;
-	if (vertexAndPixelSameEncodingBlob) {
-		pixelEncodingBlob = vertexEncodingBlob;
-	}
-	else {
-		ZgResult pixelBlobReadRes =
-			dxcCreateHlslBlobFromFile(dxcLibrary, createInfo.pixelShader, pixelEncodingBlob);
-		if (pixelBlobReadRes != ZG_SUCCESS) return pixelBlobReadRes;
-	}
-
 	return createPipelineRenderInternal(
 		pipelineOut,
 		createInfo,
 		compileSettings,
-		compileStartTime,
-		vertexEncodingBlob,
-		pixelEncodingBlob,
+		false,
 		createInfo.vertexShader,
 		createInfo.pixelShader,
+		createInfo.vertexShader,
+		createInfo.pixelShader,
+		dxcLibrary,
 		dxcCompiler,
 		dxcIncludeHandler,
-		device);
+		device,
+		pipelineCacheDir);
 }
 
 ZgResult createPipelineRenderSourceHLSL(
@@ -1651,34 +1750,21 @@ ZgResult createPipelineRenderSourceHLSL(
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	IDxcIncludeHandler* dxcIncludeHandler,
-	ID3D12Device3& device) noexcept
+	ID3D12Device3& device,
+	const char* pipelineCacheDir) noexcept
 {
-	// Start measuring compile-time
-	time_point compileStartTime;
-	calculateDeltaMillis(compileStartTime);
-
-	// Create encoding blob from source
-	ComPtr<IDxcBlobEncoding> vertexEncodingBlob;
-	ZgResult vertexBlobReadRes =
-		dxcCreateHlslBlobFromSource(dxcLibrary, createInfo.vertexShader, vertexEncodingBlob);
-	if (vertexBlobReadRes != ZG_SUCCESS) return vertexBlobReadRes;
-
-	// Create encoding blob from source
-	ComPtr<IDxcBlobEncoding> pixelEncodingBlob;
-	ZgResult pixelBlobReadRes =
-		dxcCreateHlslBlobFromSource(dxcLibrary, createInfo.pixelShader, pixelEncodingBlob);
-	if (pixelBlobReadRes != ZG_SUCCESS) return pixelBlobReadRes;
-
 	return createPipelineRenderInternal(
 		pipelineOut,
 		createInfo,
 		compileSettings,
-		compileStartTime,
-		vertexEncodingBlob,
-		pixelEncodingBlob,
+		true,
+		createInfo.vertexShader,
+		createInfo.pixelShader,
 		"<From source, no vertex name>",
 		"<From source, no pixel name>",
+		dxcLibrary,
 		dxcCompiler,
 		dxcIncludeHandler,
-		device);
+		device,
+		pipelineCacheDir);
 }

@@ -21,8 +21,9 @@
 
 #include <SDL_syswm.h>
 
+#include "sfz/Logging.hpp"
 #include "sfz/config/GlobalConfig.hpp"
-#include <sfz/Logging.hpp>
+#include "sfz/util/IO.hpp"
 
 namespace sfz {
 
@@ -113,6 +114,9 @@ bool initializeZeroG(
 		cfg.sanitizeBool("ZeroG", "OnStartup_SoftwareRenderer", true, false);
 	Setting* d3d12DredAutoSetting =
 		cfg.sanitizeBool("ZeroG", "OnStartup_DredAutoBreadcrumbs", true, false);
+	Setting* cacheShaders =
+		cfg.sanitizeBool("ZeroG", "OnStartup_CacheShaders", true, true);
+
 
 	int w = 0, h = 0;
 	SDL_GL_GetDrawableSize(window, &w, &h);
@@ -125,6 +129,10 @@ bool initializeZeroG(
 	initSettings.logger = getPhantasyEngineZeroGLogger();
 	initSettings.allocator = allocator;
 	initSettings.nativeHandle = getNativeHandle(window);
+	initSettings.autoCachePipelines = cacheShaders->boolValue() ? ZG_TRUE : ZG_FALSE;
+	str320 pipelineCacheDir = str320("%s/shader_cache", sfz::getUserDataDir());
+	sfz::createDirectory(pipelineCacheDir.str());
+	initSettings.autoCachePipelinesDir = pipelineCacheDir.str();
 	initSettings.d3d12.debugMode = debugModeSetting->boolValue() ? ZG_TRUE : ZG_FALSE;
 	initSettings.d3d12.debugModeGpuBased = debugModeGpuBasedSetting->boolValue() ? ZG_TRUE : ZG_FALSE;
 	initSettings.d3d12.useSoftwareRenderer = softwareRendererSetting->boolValue() ? ZG_TRUE : ZG_FALSE;

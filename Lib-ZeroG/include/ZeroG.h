@@ -75,7 +75,7 @@ typedef enum {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const u32 ZG_COMPILED_API_VERSION = 38;
+static const u32 ZG_COMPILED_API_VERSION = 39;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -2009,6 +2009,10 @@ sfz_struct(ZgContextInitSettings) {
 	// Need to be kept alive for the remaining duration of the program if specified. MUST be
 	// thread-safe.
 	SfzAllocator* allocator;
+
+	// [Optional] Whether to auto-cache pipelines to disk or not.
+	ZgBool autoCachePipelines;
+	const char* autoCachePipelinesDir;
 
 	// [Optional] D3D12 specific settings
 	ZgContextInitSettingsD3D12 d3d12;

@@ -54,7 +54,7 @@ void GlobalConfig::init(const char* basePath, const char* fileName, SfzAllocator
 	mImpl->allocator = allocator;
 
 	// Initialize IniParser with path
-	str256 tmpPath("%s%s", basePath, fileName);
+	str320 tmpPath("%s/%s", basePath, fileName);
 	mImpl->ini = IniParser(tmpPath);
 
 	// Initialize settings array with allocator
