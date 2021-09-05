@@ -543,9 +543,6 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 		}
 	}
 
-	// Disable Alt+Enter fullscreen toogle
-	CHECK_D3D12 dxgiFactory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);
-
 	// Perform early hacky initializiation of the D3D12 framebuffers to prepare them for
 	// swapchain use
 	// TODO: Unify this with the more general case somehow?
