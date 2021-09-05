@@ -34,34 +34,27 @@ constexpr u64 hash(u16 v) { return u64(v); }
 constexpr u64 hash(u32 v) { return u64(v); }
 constexpr u64 hash(u64 v) { return u64(v); }
 
+constexpr u64 hash(i8 v) { return u64(v); }
 constexpr u64 hash(i16 v) { return u64(v); }
 constexpr u64 hash(i32 v) { return u64(v); }
 constexpr u64 hash(i64 v) { return u64(v); }
 
-constexpr u64 hash(const void* v) { return u64(uintptr_t(v)); }
+constexpr u64 hash(const void* v) { return u64(v); }
+
+constexpr u64 hashCombine(u64 h1, u64 h2)
+{
+	// hash_combine algorithm from boost
+	u64 h = h1 + 0x9e3779b9;
+	h ^= h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2);
+	return h;
+}
 
 constexpr u64 hash(u8x2 v) { return (u64(v.x) << 8) | u64(v.y); }
 constexpr u64 hash(u8x4 v) { return (u64(v.x) << 24) | (u64(v.y) << 16) | (u64(v.z) << 8) | u64(v.w); }
 
 constexpr u64 hash(i32x2 v) { return (u64(v.x) << 32) | u64(v.y); }
-constexpr u64 hash(i32x3 v)
-{
-	const u64 h1 = hash(v.xy());
-	const u64 h2 = hash(v.z);
-	// hash_combine algorithm from boost
-	u64 h = h1 + 0x9e3779b9;
-	h ^= h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2);
-	return h;
-}
-constexpr u64 hash(i32x4 v)
-{
-	const u64 h1 = hash(v.xy());
-	const u64 h2 = hash(v.zw());
-	// hash_combine algorithm from boost
-	u64 h = h1 + 0x9e3779b9;
-	h ^= h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2);
-	return h;
-}
+constexpr u64 hash(i32x3 v) { return hashCombine(hash(v.xy()), hash(v.z)); }
+constexpr u64 hash(i32x4 v) { return hashCombine(hash(v.xy()), hash(v.zw())); }
 
 // HashMap helpers
 // ------------------------------------------------------------------------------------------------
