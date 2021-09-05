@@ -327,7 +327,7 @@ UTEST(RingBuffer, state_methods)
 #ifdef NDEBUG
 UTEST(RingBuffer, multi_threading)
 {
-	sfz::StandardAllocator allocator;
+	SfzAllocator allocator = sfz::createStandardAllocator();
 
 	// Slow Producer & fast consumer (add() & pop())
 	{
