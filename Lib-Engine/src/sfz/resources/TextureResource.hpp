@@ -36,7 +36,7 @@ struct TextureResource final {
 	strID name;
 
 	zg::Texture texture;
-	ZgTextureFormat format = ZG_TEXTURE_FORMAT_UNDEFINED;
+	ZgFormat format = ZG_FORMAT_UNDEFINED;
 	i32x2 res = i32x2(0);
 	u32 numMipmaps = 1;
 	bool committedAllocation = false;
@@ -70,7 +70,7 @@ struct TextureResource final {
 
 	static TextureResource createFixedSize(
 		const char* name,
-		ZgTextureFormat format,
+		ZgFormat format,
 		i32x2 res,
 		u32 numMipmaps = 1,
 		ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT,
@@ -78,7 +78,7 @@ struct TextureResource final {
 
 	static TextureResource createScreenRelative(
 		const char* name,
-		ZgTextureFormat format,
+		ZgFormat format,
 		i32x2 screenRes,
 		f32 scale,
 		Setting* scaleSetting = nullptr,
@@ -88,7 +88,7 @@ struct TextureResource final {
 
 	static TextureResource createSettingControlled(
 		const char* name,
-		ZgTextureFormat format,
+		ZgFormat format,
 		Setting* resSetting,
 		u32 numMipmaps = 1,
 		ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT,
@@ -98,6 +98,6 @@ struct TextureResource final {
 // Texture functions
 // ------------------------------------------------------------------------------------------------
 
-ZgTextureFormat toZeroGImageFormat(ImageType imageType) noexcept;
+ZgFormat toZeroGImageFormat(ImageType imageType) noexcept;
 
 } // namespace sfz

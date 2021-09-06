@@ -839,13 +839,6 @@ ZG_API void zgPipelineComputeDestroy(
 	sfz_delete(getAllocator(), pipeline);
 }
 
-ZG_API void zgPipelineComputeGetBindingsSignature(
-	const ZgPipelineCompute* pipeline,
-	ZgPipelineBindingsSignature* bindingsSignatureOut)
-{
-	*bindingsSignatureOut = pipeline->bindingsSignature.toZgSignature();
-}
-
 ZG_API void zgPipelineComputeGetGroupDimensions(
 	const ZgPipelineCompute* pipeline,
 	u32* groupDimXOut,
@@ -1121,24 +1114,24 @@ ZG_API ZgResult zgCommandListSetPipelineCompute(
 	return commandList->setPipelineCompute(pipeline);
 }
 
-ZG_API ZgResult zgCommandListUnorderedBarrierBuffer(
+ZG_API ZgResult zgCommandListUAVBarrierBuffer(
 	ZgCommandList* commandList,
 	ZgBuffer* buffer)
 {
-	return commandList->unorderedBarrierBuffer(buffer);
+	return commandList->uavBarrierBuffer(buffer);
 }
 
-ZG_API ZgResult zgCommandListUnorderedBarrierTexture(
+ZG_API ZgResult zgCommandListUAVBarrierTexture(
 	ZgCommandList* commandList,
 	ZgTexture* texture)
 {
-	return commandList->unorderedBarrierTexture(texture);
+	return commandList->uavBarrierTexture(texture);
 }
 
-ZG_API ZgResult zgCommandListUnorderedBarrierAll(
+ZG_API ZgResult zgCommandListUAVBarrierAll(
 	ZgCommandList* commandList)
 {
-	return commandList->unorderedBarrierAll();
+	return commandList->uavBarrierAll();
 }
 
 ZG_API ZgResult zgCommandListDispatchCompute(

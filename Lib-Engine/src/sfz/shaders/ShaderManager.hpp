@@ -72,7 +72,7 @@ struct ShaderRender final {
 	str32 vertexShaderEntry = "VSMain";
 	str32 pixelShaderEntry = "PSMain";
 	VertexInputLayout inputLayout;
-	ArrayLocal<ZgTextureFormat, ZG_MAX_NUM_RENDER_TARGETS> renderTargets;
+	ArrayLocal<ZgFormat, ZG_MAX_NUM_RENDER_TARGETS> renderTargets;
 	ZgComparisonFunc depthFunc = ZG_COMPARISON_FUNC_NONE;
 	bool cullingEnabled = false;
 	bool cullFrontFacing = false;

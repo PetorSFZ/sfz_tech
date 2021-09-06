@@ -146,63 +146,6 @@ inline void shaderManagerUI(ShaderManagerState& state)
 			ImGui::Unindent(20.0f);
 		}
 
-		// Print bindings
-		ZgPipelineBindingsSignature bindings = {};
-		if (shader.type == ShaderType::RENDER) {
-			bindings = shader.render.pipeline.getSignature().bindings;
-		}
-		else if (shader.type == ShaderType::COMPUTE) {
-			bindings = shader.compute.pipeline.getBindingsSignature();
-		}
-
-		// Print constant buffers
-		if (bindings.numConstBuffers > 0) {
-			ImGui::Spacing();
-			ImGui::Text("Constant buffers (%u):", bindings.numConstBuffers);
-			ImGui::Indent(20.0f);
-			for (u32 j = 0; j < bindings.numConstBuffers; j++) {
-				const ZgConstantBufferBindingDesc& cbuffer = bindings.constBuffers[j];
-				ImGui::Text("- Register: %u -- Size: %u bytes -- Push constant: %s",
-					cbuffer.bufferRegister,
-					cbuffer.sizeInBytes,
-					cbuffer.pushConstant == ZG_TRUE ? "YES" : "NO");
-			}
-			ImGui::Unindent(20.0f);
-		}
-
-		// Print textures
-		if (bindings.numTextures > 0) {
-			ImGui::Spacing();
-			ImGui::Text("Textures (%u):  ", bindings.numTextures);
-			for (u32 j = 0; j < bindings.numTextures; j++) {
-				const ZgTextureBindingDesc& texture = bindings.textures[j];
-				ImGui::SameLine();
-				ImGui::Text("%u, ", texture.textureRegister);
-			}
-		}
-
-		// Print unordered buffers
-		if (bindings.numUnorderedBuffers > 0) {
-			ImGui::Spacing();
-			ImGui::Text("Unordered buffers (%u):  ", bindings.numUnorderedBuffers);
-			for (u32 j = 0; j < bindings.numUnorderedBuffers; j++) {
-				const ZgUnorderedBufferBindingDesc& buffer = bindings.unorderedBuffers[j];
-				ImGui::SameLine();
-				ImGui::Text("%u, ", buffer.unorderedRegister);
-			}
-		}
-
-		// Print unordered textures
-		if (bindings.numUnorderedTextures > 0) {
-			ImGui::Spacing();
-			ImGui::Text("Unordered textures (%u):  ", bindings.numUnorderedTextures);
-			for (u32 j = 0; j < bindings.numUnorderedTextures; j++) {
-				const ZgUnorderedTextureBindingDesc& texture = bindings.unorderedTextures[j];
-				ImGui::SameLine();
-				ImGui::Text("%u, ", texture.unorderedRegister);
-			}
-		}
-
 		// Print samplers
 		if (shader.samplers.size() > 0) {
 			ImGui::Spacing();

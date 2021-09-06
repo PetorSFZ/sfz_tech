@@ -26,24 +26,24 @@
 
 namespace sfz {
 
-inline const char* textureFormatToString(ZgTextureFormat format)
+inline const char* textureFormatToString(ZgFormat format)
 {
 	switch (format) {
-	case ZG_TEXTURE_FORMAT_UNDEFINED: return "UNDEFINED";
+	case ZG_FORMAT_UNDEFINED: return "UNDEFINED";
 
-	case ZG_TEXTURE_FORMAT_R_U8_UNORM: return "R_U8_UNORM";
-	case ZG_TEXTURE_FORMAT_RG_U8_UNORM: return "RG_U8_UNORM";
-	case ZG_TEXTURE_FORMAT_RGBA_U8_UNORM: return "RGBA_U8_UNORM";
+	case ZG_FORMAT_R_U8_UNORM: return "R_U8_UNORM";
+	case ZG_FORMAT_RG_U8_UNORM: return "RG_U8_UNORM";
+	case ZG_FORMAT_RGBA_U8_UNORM: return "RGBA_U8_UNORM";
 
-	case ZG_TEXTURE_FORMAT_R_F16: return "R_F16";
-	case ZG_TEXTURE_FORMAT_RG_F16: return "RG_F16";
-	case ZG_TEXTURE_FORMAT_RGBA_F16: return "RGBA_F16";
+	case ZG_FORMAT_R_F16: return "R_F16";
+	case ZG_FORMAT_RG_F16: return "RG_F16";
+	case ZG_FORMAT_RGBA_F16: return "RGBA_F16";
 
-	case ZG_TEXTURE_FORMAT_R_F32: return "R_F32";
-	case ZG_TEXTURE_FORMAT_RG_F32: return "RG_F32";
-	case ZG_TEXTURE_FORMAT_RGBA_F32: return "RGBA_F32";
+	case ZG_FORMAT_R_F32: return "R_F32";
+	case ZG_FORMAT_RG_F32: return "RG_F32";
+	case ZG_FORMAT_RGBA_F32: return "RGBA_F32";
 
-	case ZG_TEXTURE_FORMAT_DEPTH_F32: return "DEPTH_F32";
+	case ZG_FORMAT_DEPTH_F32: return "DEPTH_F32";
 	}
 	sfz_assert(false);
 	return "";

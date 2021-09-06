@@ -125,7 +125,7 @@ inline ZgResult createFramebuffer(
 		ZG_ARG_CHECK(width != depthBuffer->width, "All depth buffers must be same size");
 		ZG_ARG_CHECK(height != depthBuffer->height, "All depth buffers must be same size");
 		ZG_ARG_CHECK(depthBuffer->numMipmaps != 1, "Depth buffers may not have mipmaps");
-		ZG_ARG_CHECK(depthBuffer->zgFormat != ZG_TEXTURE_FORMAT_DEPTH_F32, "Depth buffer may only be ZG_TEXTURE_FORMAT_DEPTH_F32 format");
+		ZG_ARG_CHECK(depthBuffer->zgFormat != ZG_FORMAT_DEPTH_F32, "Depth buffer may only be ZG_TEXTURE_FORMAT_DEPTH_F32 format");
 	}
 
 	// Create render target descriptors
@@ -179,7 +179,7 @@ inline ZgResult createFramebuffer(
 	if (createInfo.depthBuffer != nullptr) {
 
 		ZgTexture* texture = createInfo.depthBuffer;
-		sfz_assert(texture->zgFormat == ZG_TEXTURE_FORMAT_DEPTH_F32);
+		sfz_assert(texture->zgFormat == ZG_FORMAT_DEPTH_F32);
 		sfz_assert(texture->format == DXGI_FORMAT_D32_FLOAT);
 
 		// Create descriptor heap

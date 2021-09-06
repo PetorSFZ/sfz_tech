@@ -106,42 +106,38 @@ void HighLevelCmdList::setBindings(const Bindings& bindings)
 
 	for (const BindingHL& binding : bindings.bindings) {
 
-		if (binding.type == ZG_BINDING_TYPE_CONST_BUFFER) {
-			BufferResource* resource = mResources->getBuffer(binding.handle);
-			sfz_assert(resource != nullptr);
+		BufferResource* bufferRes = nullptr;
+		ZgBuffer* buffer = nullptr;
+		if (binding.type == ZG_BINDING_TYPE_BUFFER_CONST ||
+			binding.type == ZG_BINDING_TYPE_BUFFER_STRUCTURED ||
+			binding.type == ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV) {
+
+			bufferRes = mResources->getBuffer(binding.handle);
+			sfz_assert(bufferRes != nullptr);
 			sfz_assert(binding.reg != ~0u);
 
-			ZgBuffer* buffer = nullptr;
-			if (resource->type == BufferResourceType::STATIC) {
-				buffer = resource->staticMem.buffer.handle;
+			buffer = nullptr;
+			if (bufferRes->type == BufferResourceType::STATIC) {
+				buffer = bufferRes->staticMem.buffer.handle;
 			}
-			else if (resource->type == BufferResourceType::STREAMING) {
-				buffer = resource->streamingMem.data(mCurrFrameIdx).deviceBuffer.handle;
+			else if (bufferRes->type == BufferResourceType::STREAMING) {
+				buffer = bufferRes->streamingMem.data(mCurrFrameIdx).deviceBuffer.handle;
 			}
 			else {
 				sfz_assert_hard(false);
 			}
-
-			zgBindings.addConstBuffer(binding.reg, buffer);
 		}
 
-		else if (binding.type == ZG_BINDING_TYPE_UNORDERED_BUFFER) {
-			BufferResource* resource = mResources->getBuffer(binding.handle);
-			sfz_assert(resource != nullptr);
-			sfz_assert(binding.reg != ~0u);
+		if (binding.type == ZG_BINDING_TYPE_BUFFER_CONST) {
+			zgBindings.addBufferConst(binding.reg, buffer);
+		}
 
-			ZgBuffer* buffer = nullptr;
-			if (resource->type == BufferResourceType::STATIC) {
-				buffer = resource->staticMem.buffer.handle;
-			}
-			else if (resource->type == BufferResourceType::STREAMING) {
-				buffer = resource->streamingMem.data(mCurrFrameIdx).deviceBuffer.handle;
-			}
-			else {
-				sfz_assert_hard(false);
-			}
+		else if (binding.type == ZG_BINDING_TYPE_BUFFER_STRUCTURED) {
+			zgBindings.addBufferStructured(binding.reg, buffer, bufferRes->elementSizeBytes, bufferRes->maxNumElements);
+		}
 
-			zgBindings.addUnorderedBuffer(binding.reg, buffer, resource->elementSizeBytes, resource->maxNumElements);
+		else if (binding.type == ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV) {
+			zgBindings.addBufferStructuredUAV(binding.reg, buffer, bufferRes->elementSizeBytes, bufferRes->maxNumElements);
 		}
 
 		else if (binding.type == ZG_BINDING_TYPE_TEXTURE) {
@@ -151,12 +147,12 @@ void HighLevelCmdList::setBindings(const Bindings& bindings)
 			zgBindings.addTexture(binding.reg, resource->texture.handle);
 		}
 
-		else if (binding.type == ZG_BINDING_TYPE_UNORDERED_TEXTURE) {
+		else if (binding.type == ZG_BINDING_TYPE_TEXTURE_UAV) {
 			TextureResource* resource = mResources->getTexture(binding.handle);
 			sfz_assert(resource != nullptr);
 			sfz_assert(binding.reg != ~0u);
 			sfz_assert(binding.mipLevel < resource->numMipmaps);
-			zgBindings.addUnorderedTexture(binding.reg, resource->texture.handle, binding.mipLevel);
+			zgBindings.addTextureUAV(binding.reg, resource->texture.handle, binding.mipLevel);
 		}
 	}
 
@@ -262,12 +258,12 @@ void HighLevelCmdList::dispatchCompute(i32 groupCountX, i32 groupCountY, i32 gro
 	CHECK_ZG mCmdList.dispatchCompute(groupCountX, groupCountY, groupCountZ);
 }
 
-void HighLevelCmdList::unorderedBarrierAll()
+void HighLevelCmdList::uavBarrierAll()
 {
-	CHECK_ZG mCmdList.unorderedBarrier();
+	CHECK_ZG mCmdList.uavBarrier();
 }
 
-void HighLevelCmdList::unorderedBarrierBuffer(SfzHandle handle)
+void HighLevelCmdList::uavBarrierBuffer(SfzHandle handle)
 {
 	BufferResource* resource = mResources->getBuffer(handle);
 	sfz_assert(resource != nullptr);
@@ -283,14 +279,14 @@ void HighLevelCmdList::unorderedBarrierBuffer(SfzHandle handle)
 		sfz_assert_hard(false);
 	}
 
-	CHECK_ZG mCmdList.unorderedBarrier(*buffer);
+	CHECK_ZG mCmdList.uavBarrier(*buffer);
 }
 
-void HighLevelCmdList::unorderedBarrierTexture(SfzHandle handle)
+void HighLevelCmdList::uavBarrierTexture(SfzHandle handle)
 {
 	TextureResource* resource = mResources->getTexture(handle);
 	sfz_assert(resource != nullptr);
-	CHECK_ZG mCmdList.unorderedBarrier(resource->texture);
+	CHECK_ZG mCmdList.uavBarrier(resource->texture);
 }
 
 } // namespace sfz

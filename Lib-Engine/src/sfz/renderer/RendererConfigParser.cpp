@@ -102,24 +102,24 @@ static ZgComparisonFunc comparisonFuncFromString(const str256& str) noexcept
 	return ZG_COMPARISON_FUNC_NONE;
 }
 
-static ZgTextureFormat textureFormatFromString(const str256& str) noexcept
+static ZgFormat textureFormatFromString(const str256& str) noexcept
 {
-	if (str == "R_U8_UNORM") return ZG_TEXTURE_FORMAT_R_U8_UNORM;
-	if (str == "RG_U8_UNORM") return ZG_TEXTURE_FORMAT_RG_U8_UNORM;
-	if (str == "RGBA_U8_UNORM") return ZG_TEXTURE_FORMAT_RGBA_U8_UNORM;
+	if (str == "R_U8_UNORM") return ZG_FORMAT_R_U8_UNORM;
+	if (str == "RG_U8_UNORM") return ZG_FORMAT_RG_U8_UNORM;
+	if (str == "RGBA_U8_UNORM") return ZG_FORMAT_RGBA_U8_UNORM;
 
-	if (str == "R_F16") return ZG_TEXTURE_FORMAT_R_F16;
-	if (str == "RG_F16") return ZG_TEXTURE_FORMAT_RG_F16;
-	if (str == "RGBA_F16") return ZG_TEXTURE_FORMAT_RGBA_F16;
+	if (str == "R_F16") return ZG_FORMAT_R_F16;
+	if (str == "RG_F16") return ZG_FORMAT_RG_F16;
+	if (str == "RGBA_F16") return ZG_FORMAT_RGBA_F16;
 
-	if (str == "R_F32") return ZG_TEXTURE_FORMAT_R_F32;
-	if (str == "RG_F32") return ZG_TEXTURE_FORMAT_RG_F32;
-	if (str == "RGBA_F32") return ZG_TEXTURE_FORMAT_RGBA_F32;
+	if (str == "R_F32") return ZG_FORMAT_R_F32;
+	if (str == "RG_F32") return ZG_FORMAT_RG_F32;
+	if (str == "RGBA_F32") return ZG_FORMAT_RGBA_F32;
 
-	if (str == "DEPTH_F32") return ZG_TEXTURE_FORMAT_DEPTH_F32;
+	if (str == "DEPTH_F32") return ZG_FORMAT_DEPTH_F32;
 
 	sfz_assert(false);
-	return ZG_TEXTURE_FORMAT_UNDEFINED;
+	return ZG_FORMAT_UNDEFINED;
 }
 
 static PipelineBlendMode blendModeFromString(const str256& str) noexcept

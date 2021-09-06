@@ -49,21 +49,25 @@ struct Bindings final {
 	ResourceManager* res = &getResourceManager();
 	ArrayLocal<BindingHL, ZG_MAX_NUM_BINDINGS> bindings;
 
-	Bindings& addConstBuffer(const char* name, u32 reg) { return addConstBuffer(strID(name), reg); }
-	Bindings& addConstBuffer(strID name, u32 reg) { return addConstBuffer(res->getBufferHandle(name), reg); }
-	Bindings& addConstBuffer(SfzHandle handle, u32 reg) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_CONST_BUFFER, reg)); return *this; }
+	Bindings& addBufferConst(const char* name, u32 reg) { return addBufferConst(strID(name), reg); }
+	Bindings& addBufferConst(strID name, u32 reg) { return addBufferConst(res->getBufferHandle(name), reg); }
+	Bindings& addBufferConst(SfzHandle handle, u32 reg) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_BUFFER_CONST, reg)); return *this; }
 
-	Bindings& addUnorderedBuffer(const char* name, u32 reg) { return addUnorderedBuffer(strID(name), reg); }
-	Bindings& addUnorderedBuffer(strID name, u32 reg) { return addUnorderedBuffer(res->getBufferHandle(name), reg); }
-	Bindings& addUnorderedBuffer(SfzHandle handle, u32 reg) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_UNORDERED_BUFFER, reg)); return *this; }
+	Bindings& addBufferStructured(const char* name, u32 reg) { return addBufferStructured(strID(name), reg); }
+	Bindings& addBufferStructured(strID name, u32 reg) { return addBufferStructured(res->getBufferHandle(name), reg); }
+	Bindings& addBufferStructured(SfzHandle handle, u32 reg) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_BUFFER_STRUCTURED, reg)); return *this; }
+
+	Bindings& addBufferStructuredUAV(const char* name, u32 reg) { return addBufferStructuredUAV(strID(name), reg); }
+	Bindings& addBufferStructuredUAV(strID name, u32 reg) { return addBufferStructuredUAV(res->getBufferHandle(name), reg); }
+	Bindings& addBufferStructuredUAV(SfzHandle handle, u32 reg) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV, reg)); return *this; }
 
 	Bindings& addTexture(const char* name, u32 reg) { return addTexture(strID(name), reg); }
 	Bindings& addTexture(strID name, u32 reg) { return addTexture(res->getTextureHandle(name), reg); }
 	Bindings& addTexture(SfzHandle handle, u32 reg) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_TEXTURE, reg)); return *this; }
 
-	Bindings& addUnorderedTexture(const char* name, u32 reg, u32 mip) { return addUnorderedTexture(strID(name), reg, mip); }
-	Bindings& addUnorderedTexture(strID name, u32 reg, u32 mip) { return addUnorderedTexture(res->getTextureHandle(name), reg, mip); }
-	Bindings& addUnorderedTexture(SfzHandle handle, u32 reg, u32 mip) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_UNORDERED_TEXTURE, reg, mip)); return *this; }
+	Bindings& addTextureUAV(const char* name, u32 reg, u32 mip) { return addTextureUAV(strID(name), reg, mip); }
+	Bindings& addTextureUAV(strID name, u32 reg, u32 mip) { return addTextureUAV(res->getTextureHandle(name), reg, mip); }
+	Bindings& addTextureUAV(SfzHandle handle, u32 reg, u32 mip) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_TEXTURE_UAV, reg, mip)); return *this; }
 };
 
 // HighLevelCmdList
@@ -140,13 +144,13 @@ public:
 	void dispatchCompute(i32x3 groupCount) { dispatchCompute(groupCount.x, groupCount.y, groupCount.z); }
 	void dispatchCompute(i32x2 groupCount) { dispatchCompute(groupCount.x, groupCount.y, 1u); }
 
-	void unorderedBarrierAll();
-	void unorderedBarrierBuffer(const char* name) { unorderedBarrierBuffer(strID(name)); }
-	void unorderedBarrierBuffer(strID name) { unorderedBarrierBuffer(mResources->getBufferHandle(name)); }
-	void unorderedBarrierBuffer(SfzHandle handle);
-	void unorderedBarrierTexture(const char* name) { unorderedBarrierTexture(strID(name)); }
-	void unorderedBarrierTexture(strID name) { unorderedBarrierTexture(mResources->getTextureHandle(name)); }
-	void unorderedBarrierTexture(SfzHandle handle);
+	void uavBarrierAll();
+	void uavBarrierBuffer(const char* name) { uavBarrierBuffer(strID(name)); }
+	void uavBarrierBuffer(strID name) { uavBarrierBuffer(mResources->getBufferHandle(name)); }
+	void uavBarrierBuffer(SfzHandle handle);
+	void uavBarrierTexture(const char* name) { uavBarrierTexture(strID(name)); }
+	void uavBarrierTexture(strID name) { uavBarrierTexture(mResources->getTextureHandle(name)); }
+	void uavBarrierTexture(SfzHandle handle);
 
 private:
 	friend class Renderer;

@@ -278,7 +278,7 @@ TextureResource TextureResource::createFixedSize(
 
 TextureResource TextureResource::createFixedSize(
 	const char* name,
-	ZgTextureFormat format,
+	ZgFormat format,
 	i32x2 res,
 	u32 numMipmaps,
 	ZgTextureUsage usage,
@@ -306,7 +306,7 @@ TextureResource TextureResource::createFixedSize(
 
 TextureResource TextureResource::createScreenRelative(
 	const char* name,
-	ZgTextureFormat format,
+	ZgFormat format,
 	i32x2 screenRes,
 	f32 scale,
 	Setting* scaleSetting,
@@ -334,7 +334,7 @@ TextureResource TextureResource::createScreenRelative(
 
 TextureResource TextureResource::createSettingControlled(
 	const char* name,
-	ZgTextureFormat format,
+	ZgFormat format,
 	Setting* resSetting,
 	u32 numMipmaps,
 	ZgTextureUsage usage,
@@ -365,20 +365,20 @@ TextureResource TextureResource::createSettingControlled(
 // Texture functions
 // ------------------------------------------------------------------------------------------------
 
-ZgTextureFormat toZeroGImageFormat(ImageType imageType) noexcept
+ZgFormat toZeroGImageFormat(ImageType imageType) noexcept
 {
 	switch (imageType) {
-	case ImageType::UNDEFINED: return ZG_TEXTURE_FORMAT_UNDEFINED;
-	case ImageType::R_U8: return ZG_TEXTURE_FORMAT_R_U8_UNORM;
-	case ImageType::RG_U8: return ZG_TEXTURE_FORMAT_RG_U8_UNORM;
-	case ImageType::RGBA_U8: return ZG_TEXTURE_FORMAT_RGBA_U8_UNORM;
+	case ImageType::UNDEFINED: return ZG_FORMAT_UNDEFINED;
+	case ImageType::R_U8: return ZG_FORMAT_R_U8_UNORM;
+	case ImageType::RG_U8: return ZG_FORMAT_RG_U8_UNORM;
+	case ImageType::RGBA_U8: return ZG_FORMAT_RGBA_U8_UNORM;
 
-	case ImageType::R_F32: return ZG_TEXTURE_FORMAT_R_F32;
-	case ImageType::RG_F32: return ZG_TEXTURE_FORMAT_RG_F32;
-	case ImageType::RGBA_F32: return ZG_TEXTURE_FORMAT_RGBA_F32;
+	case ImageType::R_F32: return ZG_FORMAT_R_F32;
+	case ImageType::RG_F32: return ZG_FORMAT_RG_F32;
+	case ImageType::RGBA_F32: return ZG_FORMAT_RGBA_F32;
 	}
 	sfz_assert(false);
-	return ZG_TEXTURE_FORMAT_UNDEFINED;
+	return ZG_FORMAT_UNDEFINED;
 }
 
 } // namespace sfz

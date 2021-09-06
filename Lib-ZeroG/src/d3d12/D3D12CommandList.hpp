@@ -34,20 +34,20 @@
 // Helpers
 // ------------------------------------------------------------------------------------------------
 
-inline u32 numBytesPerPixelForFormat(ZgTextureFormat format) noexcept
+inline u32 numBytesPerPixelForFormat(ZgFormat format) noexcept
 {
 	switch (format) {
-	case ZG_TEXTURE_FORMAT_R_U8_UNORM: return 1 * sizeof(u8);
-	case ZG_TEXTURE_FORMAT_RG_U8_UNORM: return 2 * sizeof(u8);
-	case ZG_TEXTURE_FORMAT_RGBA_U8_UNORM: return 4 * sizeof(u8);
+	case ZG_FORMAT_R_U8_UNORM: return 1 * sizeof(u8);
+	case ZG_FORMAT_RG_U8_UNORM: return 2 * sizeof(u8);
+	case ZG_FORMAT_RGBA_U8_UNORM: return 4 * sizeof(u8);
 
-	case ZG_TEXTURE_FORMAT_R_F16: return 1 * sizeof(u16);
-	case ZG_TEXTURE_FORMAT_RG_F16: return 2 * sizeof(u16);
-	case ZG_TEXTURE_FORMAT_RGBA_F16: return 4 * sizeof(u16);
+	case ZG_FORMAT_R_F16: return 1 * sizeof(u16);
+	case ZG_FORMAT_RG_F16: return 2 * sizeof(u16);
+	case ZG_FORMAT_RGBA_F16: return 4 * sizeof(u16);
 
-	case ZG_TEXTURE_FORMAT_R_F32: return 1 * sizeof(f32);
-	case ZG_TEXTURE_FORMAT_RG_F32: return 2 * sizeof(f32);
-	case ZG_TEXTURE_FORMAT_RGBA_F32: return 4 * sizeof(f32);
+	case ZG_FORMAT_R_F32: return 1 * sizeof(f32);
+	case ZG_FORMAT_RG_F32: return 2 * sizeof(f32);
+	case ZG_FORMAT_RGBA_F32: return 4 * sizeof(f32);
 	}
 	sfz_assert(false);
 	return 0;
@@ -332,44 +332,44 @@ struct ZgCommandList final {
 	{
 		sfz_assert(hasBoundPipeline());
 
-		// Get root signature
-		const D3D12RootSignature* rootSignaturePtr = nullptr;
-		if (boundPipelineRender != nullptr) rootSignaturePtr = &boundPipelineRender->rootSignature;
-		else if (boundPipelineCompute != nullptr) rootSignaturePtr = &boundPipelineCompute->rootSignature;
+		// Get root signature mapping
+		const RootSignatureMapping* rootMapping = nullptr;
+		if (boundPipelineRender != nullptr) rootMapping = &boundPipelineRender->mapping;
+		else if (boundPipelineCompute != nullptr) rootMapping = &boundPipelineCompute->mapping;
 		else return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 
 		// Linear search to find push constant maping
-		const D3D12PushConstantMapping* mappingPtr =
-			rootSignaturePtr->getPushConstantMapping(shaderRegister);
+		const PushConstMapping* mappingPtr = rootMapping->pushConsts.find(
+			[&](const PushConstMapping& m) { return m.reg == shaderRegister; });
 		if (mappingPtr == nullptr) return ZG_ERROR_INVALID_ARGUMENT;
-		const D3D12PushConstantMapping& mapping = *mappingPtr;
+		const PushConstMapping& mapping = *mappingPtr;
 
 		// Sanity check to attempt to see if user provided enough bytes to read
-		if (mapping.sizeInBytes != dataSizeInBytes) {
+		if (mapping.sizeBytes != dataSizeInBytes) {
 			ZG_ERROR("Push constant at shader register %u is %u bytes, provided data is %u bytes",
-				shaderRegister, mapping.sizeInBytes, dataSizeInBytes);
+				shaderRegister, mapping.sizeBytes, dataSizeInBytes);
 			return ZG_ERROR_INVALID_ARGUMENT;
 		}
 
 		// Set push constant
 		if (boundPipelineRender != nullptr) {
-			if (mapping.sizeInBytes == 4) {
+			if (mapping.sizeBytes == 4) {
 				u32 data = *reinterpret_cast<const u32*>(dataPtr);
-				commandList->SetGraphicsRoot32BitConstant(mapping.parameterIndex, data, 0);
+				commandList->SetGraphicsRoot32BitConstant(mapping.paramIdx, data, 0);
 			}
 			else {
 				commandList->SetGraphicsRoot32BitConstants(
-					mapping.parameterIndex, mapping.sizeInBytes / 4, dataPtr, 0);
+					mapping.paramIdx, mapping.sizeBytes / 4, dataPtr, 0);
 			}
 		}
 		else {
-			if (mapping.sizeInBytes == 4) {
+			if (mapping.sizeBytes == 4) {
 				u32 data = *reinterpret_cast<const u32*>(dataPtr);
-				commandList->SetComputeRoot32BitConstant(mapping.parameterIndex, data, 0);
+				commandList->SetComputeRoot32BitConstant(mapping.paramIdx, data, 0);
 			}
 			else {
 				commandList->SetComputeRoot32BitConstants(
-					mapping.parameterIndex, mapping.sizeInBytes / 4, dataPtr, 0);
+					mapping.paramIdx, mapping.sizeBytes / 4, dataPtr, 0);
 			}
 		}
 
@@ -381,25 +381,20 @@ struct ZgCommandList final {
 	{
 		sfz_assert(hasBoundPipeline());
 
-		// Get root signature
-		const D3D12RootSignature* rootSignaturePtr = nullptr;
-		if (boundPipelineRender != nullptr) rootSignaturePtr = &boundPipelineRender->rootSignature;
-		else if (boundPipelineCompute != nullptr) rootSignaturePtr = &boundPipelineCompute->rootSignature;
-		else return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
-
-		const u32 numConstantBuffers = rootSignaturePtr->constBuffers.size();
-		const u32 numUnorderedBuffers = rootSignaturePtr->unorderedBuffers.size();
-		const u32 numUnorderedTextures = rootSignaturePtr->unorderedTextures.size();
-		const u32 numTextures = rootSignaturePtr->textures.size();
-
 		// If no bindings specified, do nothing.
 		if (bindings.numBindings == 0) return ZG_SUCCESS;
+
+		// Get root signature mapping
+		const RootSignatureMapping* rootMapping = nullptr;
+		if (boundPipelineRender != nullptr) rootMapping = &boundPipelineRender->mapping;
+		else if (boundPipelineCompute != nullptr) rootMapping = &boundPipelineCompute->mapping;
+		else return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 
 		// Lambda to find binding
 		auto findBinding = [&](ZgBindingType type, u32 reg) -> const ZgBinding* {
 			for (u32 i = 0; i < bindings.numBindings; i++) {
 				const ZgBinding& binding = bindings.bindings[i];
-				if (binding.type == type && binding.shaderRegister == reg) return &binding;
+				if (binding.type == type && binding.reg == reg) return &binding;
 			}
 			return nullptr;
 		};
@@ -408,11 +403,11 @@ struct ZgCommandList final {
 		D3D12_CPU_DESCRIPTOR_HANDLE rangeStartCpu = {};
 		D3D12_GPU_DESCRIPTOR_HANDLE rangeStartGpu = {};
 		ZgResult allocRes = mDescriptorBuffer->allocateDescriptorRange(
-			numConstantBuffers + numUnorderedBuffers + numUnorderedTextures + numTextures, rangeStartCpu, rangeStartGpu);
+			rootMapping->dynamicTableSize, rangeStartCpu, rangeStartGpu);
 		if (allocRes != ZG_SUCCESS) return allocRes;
 
-		// Create constant buffer views and fill (CPU) descriptors
-		for (const D3D12ConstantBufferMapping& mapping : rootSignaturePtr->constBuffers) {
+		// CBVs
+		for (const CBVMapping& mapping : rootMapping->CBVs) {
 
 			// Get the CPU descriptor
 			D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor;
@@ -420,7 +415,7 @@ struct ZgCommandList final {
 				rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
 
 			// Linear search to find matching argument among the bindings
-			const ZgBinding* binding = findBinding(ZG_BINDING_TYPE_CONST_BUFFER, mapping.bufferRegister);
+			const ZgBinding* binding = findBinding(ZG_BINDING_TYPE_BUFFER_CONST, mapping.reg);
 			
 			// Not sure if this case is possible to implement
 			if (binding == nullptr) {
@@ -433,14 +428,14 @@ struct ZgCommandList final {
 
 			// D3D12 requires that a Constant Buffer View is at least 256 bytes, and a multiple of 256.
 			// Round up constant buffer size to nearest 256 alignment
-			sfz_assert(mapping.sizeInBytes != 0);
-			u32 bufferSize256Aligned = (mapping.sizeInBytes + 255) & 0xFFFFFF00u;
+			sfz_assert(mapping.sizeBytes != 0);
+			const u32 bufferSize256Aligned = (mapping.sizeBytes + 255) & 0xFFFFFF00u;
 
 			// Check that buffer is large enough
 			if (buffer->resource.allocation->GetSize() < bufferSize256Aligned) {
 				ZG_ERROR("Constant buffer at shader register %u requires a buffer that is at"
 					" least %u bytes, specified buffer is %u bytes.",
-					mapping.bufferRegister, bufferSize256Aligned, u32(buffer->resource.allocation->GetSize()));
+					mapping.reg, bufferSize256Aligned, u32(buffer->resource.allocation->GetSize()));
 				return ZG_ERROR_INVALID_ARGUMENT;
 			}
 
@@ -455,77 +450,11 @@ struct ZgCommandList final {
 				*this->commandList.Get(), this->tracking, buffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 		}
 
-		// Create unordered resource views and fill (CPU) descriptors for unordered buffers
-		for (const D3D12UnorderedBufferMapping& mapping : rootSignaturePtr->unorderedBuffers) {
-
-			// Get the CPU descriptor
-			D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor;
-			cpuDescriptor.ptr =
-				rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
-
-			// Linear search to find matching argument among the bindings
-			const ZgBinding* binding = findBinding(ZG_BINDING_TYPE_UNORDERED_BUFFER, mapping.unorderedRegister);
-
-			// If we can't find argument we need to insert null descriptor
-			if (binding == nullptr) {
-				// TODO: Is definitely possible
-				sfz_assert(false);
-				return ZG_WARNING_UNIMPLEMENTED;
-			}
-
-			ZgBuffer* buffer = binding->buffer;
-
-			// Create unordered access view
-			D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-			uavDesc.Format = DXGI_FORMAT_UNKNOWN; // TODO: Unsure about this one
-			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-			uavDesc.Buffer.FirstElement = binding->unorderedBuffer.firstElementIdx;
-			uavDesc.Buffer.NumElements = binding->unorderedBuffer.numElements;
-			uavDesc.Buffer.StructureByteStride = binding->unorderedBuffer.elementStrideBytes;
-			uavDesc.Buffer.CounterOffsetInBytes = 0; // We don't have a counter
-			uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE; // TODO: This need to be set if RWByteAddressBuffer
-			mDevice->CreateUnorderedAccessView(buffer->resource.resource, nullptr, &uavDesc, cpuDescriptor);
-
-			// Set buffer resource state
-			requireResourceStateBuffer(
-				*this->commandList.Get(), this->tracking, buffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-		}
-
-		// Create unordered access views and fill (CPU) descriptors for unordered textures
-		for (const D3D12UnorderedTextureMapping& mapping : rootSignaturePtr->unorderedTextures) {
-
-			// Get the CPU descriptor
-			D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor;
-			cpuDescriptor.ptr =
-				rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
-
-			// Linear search to find matching argument among the bindings
-			const ZgBinding* binding = findBinding(ZG_BINDING_TYPE_UNORDERED_TEXTURE, mapping.unorderedRegister);
-
-			// If we can't find argument we need to insert null descriptor
-			if (binding == nullptr) {
-				// TODO: Is definitely possible
-				sfz_assert(false);
-				return ZG_WARNING_UNIMPLEMENTED;
-			}
-
-			ZgTexture* texture = binding->texture;
-
-			// Create unordered access view
-			D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-			uavDesc.Format = texture->format;
-			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-			uavDesc.Texture2D.MipSlice = binding->unorderedTex.mipLevel;
-			uavDesc.Texture2D.PlaneSlice = 0;
-			mDevice->CreateUnorderedAccessView(texture->resource.resource, nullptr, &uavDesc, cpuDescriptor);
-
-			// Set texture resource state
-			requireResourceStateTextureMip(
-				*this->commandList.Get(), this->tracking, texture, binding->unorderedTex.mipLevel, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-		}
-
-		// Create shader resource views and fill (CPU) descriptors
-		for (const D3D12TextureMapping& mapping : rootSignaturePtr->textures) {
+		// SRVs
+		for (const SRVMapping& mapping : rootMapping->SRVs) {
+			sfz_assert(
+				mapping.type == ZG_BINDING_TYPE_BUFFER_STRUCTURED ||
+				mapping.type == ZG_BINDING_TYPE_TEXTURE);
 
 			// Get the CPU descriptor;
 			D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor;
@@ -533,54 +462,146 @@ struct ZgCommandList final {
 				rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
 
 			// Linear search to find matching argument among the bindings
-			const ZgBinding* binding = findBinding(ZG_BINDING_TYPE_TEXTURE, mapping.textureRegister);
+			const ZgBinding* binding = findBinding(mapping.type, mapping.reg);
 
-			// If binding found, get D3D12 texture and its resource and format. Otherwise set default
-			// in order to create null descriptor
-			ZgTexture* texture = nullptr;
-			ID3D12Resource* resource = nullptr;
-			DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM;
-			if (binding != nullptr) {
-				texture = binding->texture;
-				resource = texture->resource.resource;
-				format = texture->format;
+			if (mapping.type == ZG_BINDING_TYPE_BUFFER_STRUCTURED) {
+
+				// If we can't find argument we need to insert null descriptor
+				if (binding == nullptr) {
+					// TODO: Is definitely possible
+					sfz_assert(false);
+					return ZG_WARNING_UNIMPLEMENTED;
+				}
+
+				// Get buffer from binding
+				ZgBuffer* buffer = binding->buffer;
+
+				// Create shader resource view
+				D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+				srvDesc.Format = DXGI_FORMAT_UNKNOWN; // Unknown for structured buffer
+				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+				srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+				srvDesc.Buffer.FirstElement = binding->firstElementIdx;
+				srvDesc.Buffer.NumElements = binding->numElements;
+				srvDesc.Buffer.StructureByteStride = binding->elementStrideBytes;
+				srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE; // TODO: "RAW" needed for anything?
+				mDevice->CreateShaderResourceView(buffer->resource.resource, &srvDesc, cpuDescriptor);
+
+				// Set texture resource state if not null descriptor
+				if (binding != nullptr) {
+					// Set buffer resource state
+					requireResourceStateBuffer(
+						*this->commandList.Get(), this->tracking, buffer,
+						D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+				}
 			}
 
-			// If depth format, convert to SRV compatible format
-			if (format == DXGI_FORMAT_D32_FLOAT) {
-				format = DXGI_FORMAT_R32_FLOAT;
+			else if (mapping.type == ZG_BINDING_TYPE_TEXTURE) {
+
+				// If binding found, get D3D12 texture and its resource and format. Otherwise set default
+				// in order to create null descriptor
+				ZgTexture* texture = nullptr;
+				ID3D12Resource* resource = nullptr;
+				DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM;
+				if (binding != nullptr) {
+					texture = binding->texture;
+					resource = texture->resource.resource;
+					format = texture->format;
+				}
+
+				// If depth format, convert to SRV compatible format
+				if (format == DXGI_FORMAT_D32_FLOAT) {
+					format = DXGI_FORMAT_R32_FLOAT;
+				}
+
+				// Create shader resource view
+				// Will be null descriptor if no binding found
+				D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+				srvDesc.Format = format;
+				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+				srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+				srvDesc.Texture2D.MostDetailedMip = 0;
+				srvDesc.Texture2D.MipLevels = (u32)-1; // All mip-levels from most detailed and downwards
+				srvDesc.Texture2D.PlaneSlice = 0;
+				srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+				mDevice->CreateShaderResourceView(resource, &srvDesc, cpuDescriptor);
+
+				// Set texture resource state if not null descriptor
+				if (binding != nullptr) {
+					// Set texture resource state
+					requireResourceStateTextureAllMips(
+						*this->commandList.Get(), this->tracking, texture,
+						D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+				}
+			}
+		}
+
+		// UAVs
+		for (const UAVMapping& mapping : rootMapping->UAVs) {
+			sfz_assert(
+				mapping.type == ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV ||
+				mapping.type == ZG_BINDING_TYPE_TEXTURE_UAV);
+
+			// Get the CPU descriptor
+			D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor;
+			cpuDescriptor.ptr =
+				rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
+
+			// Linear search to find matching argument among the bindings
+			const ZgBinding* binding = findBinding(mapping.type, mapping.reg);
+
+			// If we can't find argument we need to insert null descriptor
+			if (binding == nullptr) {
+				// TODO: Is definitely possible
+				sfz_assert(false);
+				return ZG_WARNING_UNIMPLEMENTED;
 			}
 
-			// Create shader resource view
-			// Will be null descriptor if no binding found
-			D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-			srvDesc.Format = format;
-			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-			srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-			srvDesc.Texture2D.MostDetailedMip = 0;
-			srvDesc.Texture2D.MipLevels = (u32)-1; // All mip-levels from most detailed and downwards
-			srvDesc.Texture2D.PlaneSlice = 0;
-			srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-			mDevice->CreateShaderResourceView(resource, &srvDesc, cpuDescriptor);
+			if (binding->type == ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV) {
+				ZgBuffer* buffer = binding->buffer;
 
-			// Set texture resource state if not null descriptor
-			if (binding != nullptr) {
+				// Create unordered access view
+				D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+				uavDesc.Format = DXGI_FORMAT_UNKNOWN; // TODO: Unsure about this one
+				uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+				uavDesc.Buffer.FirstElement = binding->firstElementIdx;
+				uavDesc.Buffer.NumElements = binding->numElements;
+				uavDesc.Buffer.StructureByteStride = binding->elementStrideBytes;
+				uavDesc.Buffer.CounterOffsetInBytes = 0; // We don't have a counter
+				uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE; // TODO: This need to be set if RWByteAddressBuffer
+				mDevice->CreateUnorderedAccessView(buffer->resource.resource, nullptr, &uavDesc, cpuDescriptor);
+
+				// Set buffer resource state
+				requireResourceStateBuffer(
+					*this->commandList.Get(), this->tracking, buffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+			}
+			else if (binding->type == ZG_BINDING_TYPE_TEXTURE_UAV) {
+				ZgTexture* texture = binding->texture;
+
+				// Create unordered access view
+				D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+				uavDesc.Format = texture->format;
+				uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+				uavDesc.Texture2D.MipSlice = binding->mipLevel;
+				uavDesc.Texture2D.PlaneSlice = 0;
+				mDevice->CreateUnorderedAccessView(texture->resource.resource, nullptr, &uavDesc, cpuDescriptor);
 
 				// Set texture resource state
-				requireResourceStateTextureAllMips(
-					*this->commandList.Get(), this->tracking, texture,
-					D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+				requireResourceStateTextureMip(
+					*this->commandList.Get(), this->tracking, texture, binding->mipLevel, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+			}
+			else {
+				sfz_assert(false);
+				return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
 			}
 		}
 
 		// Set descriptor table to root signature
 		if (boundPipelineRender != nullptr) {
-			commandList->SetGraphicsRootDescriptorTable(
-				rootSignaturePtr->dynamicBuffersParameterIndex, rangeStartGpu);
+			commandList->SetGraphicsRootDescriptorTable(rootMapping->dynamicParamIdx, rangeStartGpu);
 		}
 		else {
-			commandList->SetComputeRootDescriptorTable(
-				rootSignaturePtr->dynamicBuffersParameterIndex, rangeStartGpu);
+			commandList->SetComputeRootDescriptorTable(rootMapping->dynamicParamIdx, rangeStartGpu);
 		}
 
 		return ZG_SUCCESS;
@@ -594,12 +615,12 @@ struct ZgCommandList final {
 
 		// Set compute pipeline
 		commandList->SetPipelineState(pipeline->pipelineState.Get());
-		commandList->SetComputeRootSignature(pipeline->rootSignature.rootSignature.Get());
+		commandList->SetComputeRootSignature(pipeline->rootSignature.Get());
 
 		return ZG_SUCCESS;
 	}
 
-	ZgResult unorderedBarrierBuffer(
+	ZgResult uavBarrierBuffer(
 		ZgBuffer* buffer) noexcept
 	{
 		D3D12_RESOURCE_BARRIER barrier = {};
@@ -610,7 +631,7 @@ struct ZgCommandList final {
 		return ZG_SUCCESS;
 	}
 
-	ZgResult unorderedBarrierTexture(
+	ZgResult uavBarrierTexture(
 		ZgTexture* texture) noexcept
 	{
 		D3D12_RESOURCE_BARRIER barrier = {};
@@ -621,7 +642,7 @@ struct ZgCommandList final {
 		return ZG_SUCCESS;
 	}
 
-	ZgResult unorderedBarrierAll() noexcept
+	ZgResult uavBarrierAll() noexcept
 	{
 		D3D12_RESOURCE_BARRIER barrier = {};
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
@@ -649,7 +670,7 @@ struct ZgCommandList final {
 
 		// Set render pipeline
 		commandList->SetPipelineState(pipeline->pipelineState.Get());
-		commandList->SetGraphicsRootSignature(pipeline->rootSignature.rootSignature.Get());
+		commandList->SetGraphicsRootSignature(pipeline->rootSignature.Get());
 
 		return ZG_SUCCESS;
 	}

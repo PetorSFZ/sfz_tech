@@ -74,7 +74,7 @@ struct ZgTexture final {
 	// A unique identifier for this texture
 	u64 identifier = 0;
 
-	ZgTextureFormat zgFormat = ZG_TEXTURE_FORMAT_UNDEFINED;
+	ZgFormat zgFormat = ZG_FORMAT_UNDEFINED;
 	ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT;
 	ZgOptimalClearValue optimalClearValue = ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED;
 	DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
@@ -251,7 +251,7 @@ inline ZgResult createTexture(
 	std::atomic_uint64_t* resourceUniqueIdentifierCounter) noexcept
 {
 	if (createInfo.usage == ZG_TEXTURE_USAGE_DEPTH_BUFFER) {
-		ZG_ARG_CHECK(createInfo.format != ZG_TEXTURE_FORMAT_DEPTH_F32,
+		ZG_ARG_CHECK(createInfo.format != ZG_FORMAT_DEPTH_F32,
 			"Can only use DEPTH formats for DEPTH_BUFFERs");
 	}
 

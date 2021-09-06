@@ -75,7 +75,7 @@ typedef enum {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const u32 ZG_COMPILED_API_VERSION = 40;
+static const u32 ZG_COMPILED_API_VERSION = 41;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -245,24 +245,24 @@ public:
 static const u32 ZG_MAX_NUM_MIPMAPS = 12;
 
 typedef enum {
-	ZG_TEXTURE_FORMAT_UNDEFINED = 0,
+	ZG_FORMAT_UNDEFINED = 0,
 
-	ZG_TEXTURE_FORMAT_R_U8_UNORM, // Normalized between [0, 1]
-	ZG_TEXTURE_FORMAT_RG_U8_UNORM, // Normalized between [0, 1]
-	ZG_TEXTURE_FORMAT_RGBA_U8_UNORM, // Normalized between [0, 1]
+	ZG_FORMAT_R_U8_UNORM, // Normalized between [0, 1]
+	ZG_FORMAT_RG_U8_UNORM, // Normalized between [0, 1]
+	ZG_FORMAT_RGBA_U8_UNORM, // Normalized between [0, 1]
 
-	ZG_TEXTURE_FORMAT_R_F16,
-	ZG_TEXTURE_FORMAT_RG_F16,
-	ZG_TEXTURE_FORMAT_RGBA_F16,
+	ZG_FORMAT_R_F16,
+	ZG_FORMAT_RG_F16,
+	ZG_FORMAT_RGBA_F16,
 
-	ZG_TEXTURE_FORMAT_R_F32,
-	ZG_TEXTURE_FORMAT_RG_F32,
-	ZG_TEXTURE_FORMAT_RGBA_F32,
+	ZG_FORMAT_R_F32,
+	ZG_FORMAT_RG_F32,
+	ZG_FORMAT_RGBA_F32,
 
-	ZG_TEXTURE_FORMAT_DEPTH_F32,
+	ZG_FORMAT_DEPTH_F32,
 
-	ZG_TEXTURE_FORMAT_FORCE_I32 = I32_MAX
-} ZgTextureFormat;
+	ZG_FORMAT_FORCE_I32 = I32_MAX
+} ZgFormat;
 
 typedef enum {
 	ZG_TEXTURE_USAGE_DEFAULT = 0,
@@ -281,7 +281,7 @@ typedef enum {
 sfz_struct(ZgTextureDesc) {
 
 	// The format of the texture
-	ZgTextureFormat format;
+	ZgFormat format;
 
 	// Whether this should be a committed allocation (VK_KHR_dedicated_allocation in Vulkan) or not.
 	// (Large, such as framebuffers and render targets) committed allocations have better
@@ -359,77 +359,16 @@ static const u32 ZG_MAX_NUM_UNORDERED_TEXTURES = 16;
 // The maximum number of samplers allowed on a single pipeline.
 static const u32 ZG_MAX_NUM_SAMPLERS = 8;
 
-sfz_struct(ZgConstantBufferBindingDesc) {
-
-	// Which register this buffer corresponds to in the shader. In D3D12 this is the "register"
-	// keyword, i.e. a value of 0 would mean "register(b0)".
-	u32 bufferRegister;
-
-	// Size of the buffer in bytes
-	u32 sizeInBytes;
-
-	// Whether the buffer is a push constant or not
-	//
-	// The size of a push constant must be a multiple of 4 bytes, i.e. an even (32-bit) word.
-	//
-	// In D3D12, a push constant is stored directly in the root signature. Note that the maximum
-	// size of a root signature in D3D12 is 64 32-bit words. Therefore ZeroG imposes an limit of a
-	// maximum size of 32 32-bit words (128 bytes) per push constant. Microsoft recommends keeping
-	// the root signature smaller than 16 words to maximize performance on some hardware.
-	ZgBool pushConstant;
-};
-
-sfz_struct(ZgUnorderedBufferBindingDesc) {
-
-	// Which register this buffer corresponds to in the shader.In D3D12 this is the "register"
-	// keyword, i.e. a value of 0 would mean "register(u0)".
-	u32 unorderedRegister;
-};
-
-sfz_struct(ZgTextureBindingDesc) {
-
-	// Which register this texture corresponds to in the shader.
-	u32 textureRegister;
-};
-
-sfz_struct(ZgUnorderedTextureBindingDesc) {
-
-	// Which register this texture corresponds to in the shader.
-	u32 unorderedRegister;
-};
-
-// A struct representing the signature of a pipeline, indicating what resources can be bound to it.
-//
-// The signature contains all information necessary to know how to bind input and output to a
-// pipeline. This information is inferred by performing reflection on the shaders being compiled.
-sfz_struct(ZgPipelineBindingsSignature) {
-
-	// The constant buffers
-	u32 numConstBuffers;
-	ZgConstantBufferBindingDesc constBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
-
-	// The unordered buffers
-	u32 numUnorderedBuffers;
-	ZgUnorderedBufferBindingDesc unorderedBuffers[ZG_MAX_NUM_UNORDERED_BUFFERS];
-
-	// The textures
-	u32 numTextures;
-	ZgTextureBindingDesc textures[ZG_MAX_NUM_TEXTURES];
-
-	// The unordered textures
-	u32 numUnorderedTextures;
-	ZgUnorderedTextureBindingDesc unorderedTextures[ZG_MAX_NUM_UNORDERED_TEXTURES];
-};
-
 // The maximum number of bindings.
 static const u32 ZG_MAX_NUM_BINDINGS = 32;
 
 typedef enum {
 	ZG_BINDING_TYPE_UNDEFINED = 0,
-	ZG_BINDING_TYPE_CONST_BUFFER,
-	ZG_BINDING_TYPE_UNORDERED_BUFFER,
+	ZG_BINDING_TYPE_BUFFER_CONST,
+	ZG_BINDING_TYPE_BUFFER_STRUCTURED,
+	ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV,
 	ZG_BINDING_TYPE_TEXTURE,
-	ZG_BINDING_TYPE_UNORDERED_TEXTURE,
+	ZG_BINDING_TYPE_TEXTURE_UAV,
 	ZG_BINDING_TYPE_FORCE_I32 = I32_MAX
 } ZgBindingType;
 
@@ -442,21 +381,19 @@ sfz_struct(ZgBinding) {
 	//
 	// In D3D12 this corresponds to "register(x0)" where x can be b, u or t depending on resource
 	// type.
-	u32 shaderRegister;
+	u32 reg;
 
 	// The resource to bind, only buffer or texture can be set, not both.
 	ZgBuffer* buffer;
 	ZgTexture* texture;
 
-	struct {
-		u32 elementStrideBytes; // The stride (size most of the time) between elements in the buffer in bytes
-		u32 numElements; // The number of elements to bind in the buffer
-		u32 firstElementIdx; // The first element in the buffer (0 to bind from start of buffer)
-	} unorderedBuffer;
+	// Additional data required for some (but not all) buffer bindings
+	u32 elementStrideBytes; // The stride (size most of the time) between elements in the buffer in bytes
+	u32 numElements; // The number of elements to bind in the buffer
+	u32 firstElementIdx; // The first element in the buffer (0 to bind from start of buffer)
 
-	struct {
-		u32 mipLevel; // The mip level to bind
-	} unorderedTex;
+	// Additional data required for some (but not all) texture bindings
+	u32 mipLevel; // The mip level to bind
 };
 
 sfz_struct(ZgPipelineBindings) {
@@ -472,16 +409,16 @@ sfz_struct(ZgPipelineBindings) {
 		return *this;
 	}
 
-	ZgPipelineBindings& addConstBuffer(u32 reg, ZgBuffer* buffer)
+	ZgPipelineBindings& addBufferConst(u32 reg, ZgBuffer* buffer)
 	{
 		ZgBinding binding = {};
-		binding.type = ZG_BINDING_TYPE_CONST_BUFFER;
-		binding.shaderRegister = reg;
+		binding.type = ZG_BINDING_TYPE_BUFFER_CONST;
+		binding.reg = reg;
 		binding.buffer = buffer;
 		return addBinding(binding);
 	}
 
-	ZgPipelineBindings& addUnorderedBuffer(
+	ZgPipelineBindings& addBufferStructured(
 		u32 reg,
 		ZgBuffer* buffer,
 		u32 elementStrideBytes,
@@ -489,12 +426,29 @@ sfz_struct(ZgPipelineBindings) {
 		u32 firstElementIdx = 0)
 	{
 		ZgBinding binding = {};
-		binding.type = ZG_BINDING_TYPE_UNORDERED_BUFFER;
-		binding.shaderRegister = reg;
+		binding.type = ZG_BINDING_TYPE_BUFFER_STRUCTURED;
+		binding.reg = reg;
 		binding.buffer = buffer;
-		binding.unorderedBuffer.elementStrideBytes = elementStrideBytes;
-		binding.unorderedBuffer.numElements = numElements;
-		binding.unorderedBuffer.firstElementIdx = firstElementIdx;
+		binding.elementStrideBytes = elementStrideBytes;
+		binding.numElements = numElements;
+		binding.firstElementIdx = firstElementIdx;
+		return addBinding(binding);
+	}
+
+	ZgPipelineBindings& addBufferStructuredUAV(
+		u32 reg,
+		ZgBuffer* buffer,
+		u32 elementStrideBytes,
+		u32 numElements,
+		u32 firstElementIdx = 0)
+	{
+		ZgBinding binding = {};
+		binding.type = ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV;
+		binding.reg = reg;
+		binding.buffer = buffer;
+		binding.elementStrideBytes = elementStrideBytes;
+		binding.numElements = numElements;
+		binding.firstElementIdx = firstElementIdx;
 		return addBinding(binding);
 	}
 
@@ -502,18 +456,18 @@ sfz_struct(ZgPipelineBindings) {
 	{
 		ZgBinding binding = {};
 		binding.type = ZG_BINDING_TYPE_TEXTURE;
-		binding.shaderRegister = reg;
+		binding.reg = reg;
 		binding.texture = texture;
 		return addBinding(binding);
 	}
 
-	ZgPipelineBindings& addUnorderedTexture(u32 reg, ZgTexture* texture, u32 mipLevel)
+	ZgPipelineBindings& addTextureUAV(u32 reg, ZgTexture* texture, u32 mipLevel)
 	{
 		ZgBinding binding = {};
-		binding.type = ZG_BINDING_TYPE_UNORDERED_TEXTURE;
-		binding.shaderRegister = reg;
+		binding.type = ZG_BINDING_TYPE_TEXTURE_UAV;
+		binding.reg = reg;
 		binding.texture = texture;
-		binding.unorderedTex.mipLevel = mipLevel;
+		binding.mipLevel = mipLevel;
 		return addBinding(binding);
 	}
 #endif
@@ -639,10 +593,6 @@ ZG_API ZgResult zgPipelineComputeCreateFromFileHLSL(
 ZG_API void zgPipelineComputeDestroy(
 	ZgPipelineCompute* pipeline);
 
-ZG_API void zgPipelineComputeGetBindingsSignature(
-	const ZgPipelineCompute* pipeline,
-	ZgPipelineBindingsSignature* bindingsSignatureOut);
-
 ZG_API void zgPipelineComputeGetGroupDimensions(
 	const ZgPipelineCompute* pipeline,
 	u32* groupDimXOut,
@@ -661,13 +611,6 @@ public:
 		this->destroy();
 		return zgPipelineComputeCreateFromFileHLSL(
 			&this->handle, &desc, &compileSettings);
-	}
-
-	ZgPipelineBindingsSignature getBindingsSignature() const
-	{
-		ZgPipelineBindingsSignature tmp = {};
-		zgPipelineComputeGetBindingsSignature(this->handle, &tmp);
-		return tmp;
 	}
 
 	void getGroupDims(u32& groupDimXOut, u32& groupDimYOut, u32& groupDimZOut) const
@@ -820,16 +763,13 @@ sfz_struct(ZgVertexAttribute) {
 // pipeline. It's is mainly provided here as a convenience.
 sfz_struct(ZgPipelineRenderSignature) {
 
-	// The bindings signnature
-	ZgPipelineBindingsSignature bindings;
-
 	// The vertex attributes to the vertex shader
 	u32 numVertexAttributes;
 	ZgVertexAttribute vertexAttributes[ZG_MAX_NUM_VERTEX_ATTRIBUTES];
 
 	// Render targets
 	u32 numRenderTargets;
-	ZgTextureFormat renderTargets[ZG_MAX_NUM_RENDER_TARGETS];
+	ZgFormat renderTargets[ZG_MAX_NUM_RENDER_TARGETS];
 };
 
 // Pipeline Render
@@ -951,7 +891,7 @@ sfz_struct(ZgPipelineRenderDesc) {
 
 	// A list of render targets used by the pipeline
 	u32 numRenderTargets;
-	ZgTextureFormat renderTargets[ZG_MAX_NUM_RENDER_TARGETS];
+	ZgFormat renderTargets[ZG_MAX_NUM_RENDER_TARGETS];
 
 	// Rasterizer settings
 	ZgRasterizerSettings rasterizer;
@@ -1116,7 +1056,7 @@ public:
 		return addSampler(samplerRegister, sampler);
 	}
 
-	PipelineRenderBuilder& addRenderTarget(ZgTextureFormat format)
+	PipelineRenderBuilder& addRenderTarget(ZgFormat format)
 	{
 		sfz_assert(desc.numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
 		desc.renderTargets[desc.numRenderTargets] = format;
@@ -1425,7 +1365,7 @@ sfz_struct(ZgRect) {
 };
 
 sfz_struct(ZgImageViewConstCpu) {
-	ZgTextureFormat format;
+	ZgFormat format;
 	const void* data;
 	u32 width;
 	u32 height;
@@ -1495,30 +1435,30 @@ ZG_API ZgResult zgCommandListSetPipelineCompute(
 	ZgCommandList* commandList,
 	ZgPipelineCompute* pipeline);
 
-// Inserts an UAV barrier for the specified buffer, meaning all unordered reads/writes must finish
+// Inserts an UAV barrier for the specified buffer, meaning all UAV reads/writes must finish
 // before any new ones start.
 //
 // "You don't need to insert a UAV barrier between 2 draw or dispatch calls that only read a UAV.
 //  Additionally, you don't need to insert a UAV barrier between 2 draw or dispatch calls that
 //  write to the same UAV if you know that it's safe to execute the UAV accesses in any order."
-ZG_API ZgResult zgCommandListUnorderedBarrierBuffer(
+ZG_API ZgResult zgCommandListUAVBarrierBuffer(
 	ZgCommandList* commandList,
 	ZgBuffer* buffer);
 
-// Inserts an UAV barrier for the specified texture, meaning all unordered reads/writes must finish
+// Inserts an UAV barrier for the specified texture, meaning all UAV reads/writes must finish
 // before any new ones start.
 //
 // "You don't need to insert a UAV barrier between 2 draw or dispatch calls that only read a UAV.
 //  Additionally, you don't need to insert a UAV barrier between 2 draw or dispatch calls that
 //  write to the same UAV if you know that it's safe to execute the UAV accesses in any order."
-ZG_API ZgResult zgCommandListUnorderedBarrierTexture(
+ZG_API ZgResult zgCommandListUAVBarrierTexture(
 	ZgCommandList* commandList,
 	ZgTexture* texture);
 
-// Inserts an UAV barrier for all unordered resources, meaning that all read/writes must finish
+// Inserts an UAV barrier for all UAV resources, meaning that all read/writes must finish
 // before any new read/writes start.
 // "The resource can be NULL, which indicates that any UAV access could require the barrier.
-ZG_API ZgResult zgCommandListUnorderedBarrierAll(
+ZG_API ZgResult zgCommandListUAVBarrierAll(
 	ZgCommandList* commandList);
 
 ZG_API ZgResult zgCommandListDispatchCompute(
@@ -1681,19 +1621,19 @@ public:
 		return zgCommandListSetPipelineCompute(this->handle, pipeline.handle);
 	}
 
-	ZgResult unorderedBarrier(Buffer& buffer)
+	ZgResult uavBarrier(Buffer& buffer)
 	{
-		return zgCommandListUnorderedBarrierBuffer(this->handle, buffer.handle);
+		return zgCommandListUAVBarrierBuffer(this->handle, buffer.handle);
 	}
 
-	ZgResult unorderedBarrier(Texture& texture)
+	ZgResult uavBarrier(Texture& texture)
 	{
-		return zgCommandListUnorderedBarrierTexture(this->handle, texture.handle);
+		return zgCommandListUAVBarrierTexture(this->handle, texture.handle);
 	}
 
-	ZgResult unorderedBarrier()
+	ZgResult uavBarrier()
 	{
-		return zgCommandListUnorderedBarrierAll(this->handle);
+		return zgCommandListUAVBarrierAll(this->handle);
 	}
 
 	ZgResult dispatchCompute(

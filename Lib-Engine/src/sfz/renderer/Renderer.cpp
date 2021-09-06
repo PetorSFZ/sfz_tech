@@ -95,7 +95,7 @@ bool Renderer::init(
 		cfg.sanitizeFloat("Imgui", "scale", true, FloatBounds(1.5f, 1.0f, 3.0f));
 	sfz_assert(fontTexture.type == ImageType::R_U8);
 	ZgImageViewConstCpu zgFontTextureView = {};
-	zgFontTextureView.format = ZG_TEXTURE_FORMAT_R_U8_UNORM;
+	zgFontTextureView.format = ZG_FORMAT_R_U8_UNORM;
 	zgFontTextureView.data = fontTexture.rawData;
 	zgFontTextureView.width = fontTexture.width;
 	zgFontTextureView.height = fontTexture.height;

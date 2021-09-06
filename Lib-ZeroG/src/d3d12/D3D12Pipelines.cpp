@@ -481,6 +481,21 @@ static const char* vertexAttributeTypeToString(ZgVertexAttributeType type) noexc
 	return "";
 }
 
+static const char* bindingTypeToString(ZgBindingType type) noexcept
+{
+	switch (type) {
+	case ZG_BINDING_TYPE_UNDEFINED: return "UNDEFINED";
+	case ZG_BINDING_TYPE_BUFFER_CONST: return "BUFFER_CONST";
+	case ZG_BINDING_TYPE_BUFFER_STRUCTURED: return "BUFFER_STRUCTURED";
+	case ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV: return "BUFFER_STRUCTURED_UAV";
+	case ZG_BINDING_TYPE_TEXTURE: return "TEXTURE";
+	case ZG_BINDING_TYPE_TEXTURE_UAV: return "TEXTURE_UAV";
+	default: break;
+	}
+	sfz_assert(false);
+	return "";
+}
+
 static ZgVertexAttributeType vertexReflectionToAttribute(
 	D3D_REGISTER_COMPONENT_TYPE compType, BYTE mask) noexcept
 {
@@ -536,7 +551,7 @@ static D3D12_TEXTURE_ADDRESS_MODE wrappingModeToD3D12(ZgWrappingMode wrappingMod
 static void logPipelineComputeInfo(
 	const ZgPipelineComputeDesc& createInfo,
 	const char* computeShaderName,
-	const ZgPipelineBindingsSignature& bindingsSignature,
+	const RootSignatureMapping& rootMapping,
 	u32 groupDimX,
 	u32 groupDimY,
 	u32 groupDimZ,
@@ -559,31 +574,44 @@ static void logPipelineComputeInfo(
 	// Print group dim
 	tmpStr.appendf("\nGroup dimensions: %u x %u x %u\n", groupDimX, groupDimY, groupDimZ);
 
-	// Print constant buffers
-	if (bindingsSignature.numConstBuffers > 0) {
-		tmpStr.appendf("\nConstant buffers (%u):\n", bindingsSignature.numConstBuffers);
-		for (u32 i = 0; i < bindingsSignature.numConstBuffers; i++) {
-			const ZgConstantBufferBindingDesc& cbuffer = bindingsSignature.constBuffers[i];
-			tmpStr.appendf(" - Register: %u -- Size: %u bytes -- Push constant: %s\n",
-				cbuffer.bufferRegister,
-				cbuffer.sizeInBytes,
-				cbuffer.pushConstant ? "YES" : "NO");
+	// Print push constants
+	if (rootMapping.pushConsts.size() > 0) {
+		tmpStr.appendf("\nPush constants (%u):\n", rootMapping.pushConsts.size());
+		for (u32 i = 0; i < rootMapping.pushConsts.size(); i++) {
+			const PushConstMapping& pushConst = rootMapping.pushConsts[i];
+			tmpStr.appendf(" - Register: %u -- Size: %u bytes\n",
+				pushConst.reg,
+				pushConst.sizeBytes);
 		}
 	}
 
-	// Print unordered buffers
-	if (bindingsSignature.numUnorderedBuffers > 0) {
-		tmpStr.appendf("\nUnordered buffers: %u:", bindingsSignature.numUnorderedBuffers);
+	// Print constant buffers
+	if (rootMapping.CBVs.size() > 0) {
+		tmpStr.appendf("\nConstant buffers (%u):\n", rootMapping.CBVs.size());
+		for (u32 i = 0; i < rootMapping.CBVs.size(); i++) {
+			const CBVMapping& cbuffer = rootMapping.CBVs[i];
+			tmpStr.appendf(" - Register: %u -- Size: %u bytes\n",
+				cbuffer.reg,
+				cbuffer.sizeBytes);
+		}
 	}
 
-	// Print textures
-	if (bindingsSignature.numTextures > 0) {
-		tmpStr.appendf("\nTextures: %u", bindingsSignature.numTextures);
+	// Print SRVs
+	if (rootMapping.SRVs.size() > 0) {
+		tmpStr.appendf("\nSRVs (%u):\n", rootMapping.SRVs.size());
+		for (u32 i = 0; i < rootMapping.SRVs.size(); i++) {
+			const SRVMapping& srv = rootMapping.SRVs[i];
+			tmpStr.appendf(" - Register: %u -- Type: %s\n", srv.reg, bindingTypeToString(srv.type));
+		}
 	}
 
-	// Print unordered textures
-	if (bindingsSignature.numUnorderedTextures > 0) {
-		tmpStr.appendf("\nUnordered textures: %u", bindingsSignature.numUnorderedTextures);
+	// Print UAVs
+	if (rootMapping.UAVs.size() > 0) {
+		tmpStr.appendf("\nUAVs (%u):\n", rootMapping.UAVs.size());
+		for (u32 i = 0; i < rootMapping.UAVs.size(); i++) {
+			const UAVMapping& uav = rootMapping.UAVs[i];
+			tmpStr.appendf(" - Register: %u -- Type: %s\n", uav.reg, bindingTypeToString(uav.type));
+		}
 	}
 
 	// Log
@@ -594,7 +622,7 @@ static void logPipelineRenderInfo(
 	const ZgPipelineRenderDesc& createInfo,
 	const char* vertexShaderName,
 	const char* pixelShaderName,
-	const ZgPipelineBindingsSignature& bindingsSignature,
+	const RootSignatureMapping& rootMapping,
 	const ZgPipelineRenderSignature& renderSignature,
 	f32 compileTimeMs,
 	f32 vertexBlobCompileTime,
@@ -629,367 +657,357 @@ static void logPipelineRenderInfo(
 		}
 	}
 	
-	// Print constant buffers
-	if (bindingsSignature.numConstBuffers > 0) {
-		tmpStr.appendf("\nConstant buffers (%u):\n", bindingsSignature.numConstBuffers);
-		for (u32 i = 0; i < bindingsSignature.numConstBuffers; i++) {
-			const ZgConstantBufferBindingDesc& cbuffer = bindingsSignature.constBuffers[i];
-			tmpStr.appendf(" - Register: %u -- Size: %u bytes -- Push constant: %s\n",
-				cbuffer.bufferRegister,
-				cbuffer.sizeInBytes,
-				cbuffer.pushConstant ? "YES" : "NO");
+	// Print push constants
+	if (rootMapping.pushConsts.size() > 0) {
+		tmpStr.appendf("\nPush constants (%u):\n", rootMapping.pushConsts.size());
+		for (u32 i = 0; i < rootMapping.pushConsts.size(); i++) {
+			const PushConstMapping& pushConst = rootMapping.pushConsts[i];
+			tmpStr.appendf(" - Register: %u -- Size: %u bytes\n",
+				pushConst.reg,
+				pushConst.sizeBytes);
 		}
 	}
-	
-	// Print unordered buffers
-	if (bindingsSignature.numUnorderedBuffers > 0) {
-		tmpStr.appendf("\nUnordered buffers: %u", bindingsSignature.numUnorderedBuffers);
+
+	// Print constant buffers
+	if (rootMapping.CBVs.size() > 0) {
+		tmpStr.appendf("\nConstant buffers (%u):\n", rootMapping.CBVs.size());
+		for (u32 i = 0; i < rootMapping.CBVs.size(); i++) {
+			const CBVMapping& cbuffer = rootMapping.CBVs[i];
+			tmpStr.appendf(" - Register: %u -- Size: %u bytes\n",
+				cbuffer.reg,
+				cbuffer.sizeBytes);
+		}
 	}
 
-	// Print textures
-	if (bindingsSignature.numTextures > 0) {
-		tmpStr.appendf("\nTextures: %u", bindingsSignature.numTextures);
+	// Print SRVs
+	if (rootMapping.SRVs.size() > 0) {
+		tmpStr.appendf("\nSRVs (%u):\n", rootMapping.SRVs.size());
+		for (u32 i = 0; i < rootMapping.SRVs.size(); i++) {
+			const SRVMapping& srv = rootMapping.SRVs[i];
+			tmpStr.appendf(" - Register: %u -- Type: %s\n", srv.reg, bindingTypeToString(srv.type));
+		}
 	}
 
-	// Print unordered textures
-	if (bindingsSignature.numUnorderedTextures > 0) {
-		tmpStr.appendf("\nUnordered textures: %u", bindingsSignature.numUnorderedTextures);
+	// Print UAVs
+	if (rootMapping.UAVs.size() > 0) {
+		tmpStr.appendf("\nUAVs (%u):\n", rootMapping.UAVs.size());
+		for (u32 i = 0; i < rootMapping.UAVs.size(); i++) {
+			const UAVMapping& uav = rootMapping.UAVs[i];
+			tmpStr.appendf(" - Register: %u -- Type: %s\n", uav.reg, bindingTypeToString(uav.type));
+		}
 	}
 
 	// Log
 	ZG_NOISE("%s", tmpStr.str());
 }
 
-static ZgResult bindingsFromReflection(
-	const ComPtr<ID3D12ShaderReflection>& reflection,
-	const sfz::ArrayLocal<u32, ZG_MAX_NUM_CONSTANT_BUFFERS>& pushConstantRegisters,
-	D3D12PipelineBindingsSignature& bindingsOut) noexcept
+static ZgResult rootSignatureMappingFromReflection(
+	ID3D12ShaderReflection* refl1,
+	ID3D12ShaderReflection* refl2,
+	const sfz::ArrayLocal<u32, ZG_MAX_NUM_CONSTANT_BUFFERS>& pushConstRegs,
+	RootSignatureMapping& mappingOut)
 {
-	// Get shader description from reflection
-	D3D12_SHADER_DESC shaderDesc = {};
-	CHECK_D3D12 reflection->GetDesc(&shaderDesc);
+	// Get shader descriptions from reflections
+	D3D12_SHADER_DESC shaderDesc1 = {};
+	D3D12_SHADER_DESC shaderDesc2 = {};
+	CHECK_D3D12 refl1->GetDesc(&shaderDesc1);
+	if (refl2 != nullptr) CHECK_D3D12 refl2->GetDesc(&shaderDesc2);
 
-	// Go through all bound resources
-	for (u32 i = 0; i < shaderDesc.BoundResources; i++) {
+	// Push constants and constant buffers
+	{
+		for (u32 i = 0; i < shaderDesc1.BoundResources; i++) {
+			D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
+			CHECK_D3D12 refl1->GetResourceBindingDesc(i, &resDesc);
+			if (resDesc.Type != D3D_SIT_CBUFFER) continue;
 
-		// Get resource desc
-		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
-		CHECK_D3D12 reflection->GetResourceBindingDesc(i, &resDesc);
-		
-		// Error out if another register space than 0 is used
-		if (resDesc.Space != 0) {
-			ZG_ERROR("Shader resource %s (register = %u) uses register space %u, only 0 is allowed",
-				resDesc.Name, resDesc.BindPoint, resDesc.Space);
-			return ZG_ERROR_SHADER_COMPILE_ERROR;
-		}
+			sfz_assert(resDesc.Space == 0);
+			sfz_assert(resDesc.BindCount == 1);
+			if (resDesc.Space != 0) return ZG_ERROR_SHADER_COMPILE_ERROR;
 
-		// Error out if resource uses more than 1 register
-		// TODO: This should probably be relaxed
-		if (resDesc.BindCount != 1) {
-			ZG_ERROR("Multiple registers for a single resource not allowed");
-			return ZG_ERROR_SHADER_COMPILE_ERROR;
-		}
-
-		// Constant buffer
-		if (resDesc.Type == D3D_SIT_CBUFFER) {
-
-			// Error out if we have too many constant buffers
-			if (bindingsOut.constBuffers.isFull()) {
-				ZG_ERROR("Too many constant buffers, only %u allowed",
-					bindingsOut.constBuffers.capacity());
-				return ZG_ERROR_SHADER_COMPILE_ERROR;
-			}
-
-			// Get constant buffer reflection
-			ID3D12ShaderReflectionConstantBuffer* cbufferReflection =
-				reflection->GetConstantBufferByName(resDesc.Name);
 			D3D12_SHADER_BUFFER_DESC cbufferDesc = {};
-			CHECK_D3D12 cbufferReflection->GetDesc(&cbufferDesc);
+			CHECK_D3D12 refl1->GetConstantBufferByName(resDesc.Name)->GetDesc(&cbufferDesc);
 
-			// Check if push constant
-			bool isPushConstant = pushConstantRegisters.findElement(resDesc.BindPoint) != nullptr;
+			const bool isPushConst = pushConstRegs.findElement(resDesc.BindPoint) != nullptr;
+			if (isPushConst) {
+				sfz_assert(!mappingOut.pushConsts.isFull());
+				if (mappingOut.pushConsts.isFull()) return ZG_ERROR_SHADER_COMPILE_ERROR;
 
-			// Add constant buffer binding
-			ZgConstantBufferBindingDesc binding = {};
-			binding.bufferRegister = resDesc.BindPoint;
-			binding.sizeInBytes = cbufferDesc.Size;
-			binding.pushConstant = isPushConstant ? ZG_TRUE : ZG_FALSE;
-			bindingsOut.constBuffers.add(binding);
-		}
-
-		// Unordered buffer
-		else if (resDesc.Type == D3D_SIT_UAV_RWSTRUCTURED) {
-
-			// Error out if we have too many unordered buffers
-			if (bindingsOut.unorderedBuffers.isFull()) {
-				ZG_ERROR("Too many unordered buffers, only %u allowed",
-					bindingsOut.unorderedBuffers.capacity());
-				return ZG_ERROR_SHADER_COMPILE_ERROR;
+				PushConstMapping& mapping = mappingOut.pushConsts.add();
+				mapping.reg = resDesc.BindPoint;
+				mapping.paramIdx = ~0u; // Deferred to later
+				mapping.sizeBytes = cbufferDesc.Size;
 			}
+			else {
+				sfz_assert(!mappingOut.CBVs.isFull());
+				if (mappingOut.CBVs.isFull()) return ZG_ERROR_SHADER_COMPILE_ERROR;
 
-			// Add unordered buffer binding
-			ZgUnorderedBufferBindingDesc binding = {};
-			binding.unorderedRegister = resDesc.BindPoint;
-			bindingsOut.unorderedBuffers.add(binding);
-		}
-
-		// Texture
-		else if (resDesc.Type == D3D_SIT_TEXTURE) {
-
-			// Error out if we have too many textures
-			if (bindingsOut.textures.isFull()) {
-				ZG_ERROR("Too many textures, only %u allowed", bindingsOut.textures.capacity());
-				return ZG_ERROR_SHADER_COMPILE_ERROR;
+				CBVMapping& mapping = mappingOut.CBVs.add();
+				mapping.reg = resDesc.BindPoint;
+				mapping.tableOffset = ~0u; // Deferred to later
+				mapping.sizeBytes = cbufferDesc.Size;
 			}
-
-			// Add texture binding
-			ZgTextureBindingDesc binding = {};
-			binding.textureRegister = resDesc.BindPoint;
-			bindingsOut.textures.add(binding);
 		}
-		
-		// Unordered texture
-		else if (resDesc.Type == D3D_SIT_UAV_RWTYPED) {
 
-			// Error out if we have too many unordered textures
-			if (bindingsOut.textures.isFull()) {
-				ZG_ERROR("Too many unordered textures, only %u allowed",
-					bindingsOut.unorderedTextures.capacity());
-				return ZG_ERROR_SHADER_COMPILE_ERROR;
+		for (u32 i = 0; i < shaderDesc2.BoundResources; i++) {
+			D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
+			CHECK_D3D12 refl2->GetResourceBindingDesc(i, &resDesc);
+			if (resDesc.Type != D3D_SIT_CBUFFER) continue;
+
+			sfz_assert(resDesc.Space == 0);
+			sfz_assert(resDesc.BindCount == 1);
+			if (resDesc.Space != 0) return ZG_ERROR_SHADER_COMPILE_ERROR;
+
+			// Skip if already registered in previous reflection
+			const bool pushConstAlreadyRegistered =  mappingOut.pushConsts
+				.find([&](const PushConstMapping& m) { return m.reg == resDesc.BindPoint; }) != nullptr;
+			const bool cbvAlreadyRegistered = mappingOut.CBVs
+				.find([&](const CBVMapping& m) { return m.reg == resDesc.BindPoint; }) != nullptr;
+			if (pushConstAlreadyRegistered || cbvAlreadyRegistered) continue;
+
+			D3D12_SHADER_BUFFER_DESC cbufferDesc = {};
+			CHECK_D3D12 refl2->GetConstantBufferByName(resDesc.Name)->GetDesc(&cbufferDesc);
+
+			const bool isPushConst = pushConstRegs.findElement(resDesc.BindPoint) != nullptr;
+			if (isPushConst) {
+				sfz_assert(!mappingOut.pushConsts.isFull());
+				if (mappingOut.pushConsts.isFull()) return ZG_ERROR_SHADER_COMPILE_ERROR;
+
+				PushConstMapping& mapping = mappingOut.pushConsts.add();
+				mapping.reg = resDesc.BindPoint;
+				mapping.paramIdx = ~0u; // Deferred to later
+				mapping.sizeBytes = cbufferDesc.Size;
 			}
+			else {
+				sfz_assert(!mappingOut.CBVs.isFull());
+				if (mappingOut.CBVs.isFull()) return ZG_ERROR_SHADER_COMPILE_ERROR;
 
-			// Add unordered texture binding
-			ZgUnorderedTextureBindingDesc binding = {};
-			binding.unorderedRegister = resDesc.BindPoint;
-			bindingsOut.unorderedTextures.add(binding);
+				CBVMapping& mapping = mappingOut.CBVs.add();
+				mapping.reg = resDesc.BindPoint;
+				mapping.tableOffset = ~0u; // Deferred to later
+				mapping.sizeBytes = cbufferDesc.Size;
+			}
 		}
 
-		// Samplers
-		else if (resDesc.Type == D3D_SIT_SAMPLER) {
-			// Note: We don't expose dynamic samplers currently
-		}
-
-		// Unsupported resource type
-		else {
-			ZG_ERROR("Shader resource %s (register = %u) is of unsupported resource type",
-				resDesc.Name, resDesc.BindPoint);
-			return ZG_ERROR_SHADER_COMPILE_ERROR;
-		}
+		// Sort push constants and CBVs
+		mappingOut.pushConsts.sort([](const PushConstMapping& lhs, const PushConstMapping& rhs) {
+			return lhs.reg < rhs.reg;
+		});
+		mappingOut.CBVs.sort([](const CBVMapping& lhs, const CBVMapping& rhs) {
+			return lhs.reg < rhs.reg;
+		});
 	}
 
-	// Sort constant buffers by register
-	bindingsOut.constBuffers.sort(
-		[](const ZgConstantBufferBindingDesc& lhs, const ZgConstantBufferBindingDesc& rhs) {
-			return lhs.bufferRegister < rhs.bufferRegister;
-		});
+	// SRVs
+	{
+		for (u32 i = 0; i < shaderDesc1.BoundResources; i++) {
+			D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
+			CHECK_D3D12 refl1->GetResourceBindingDesc(i, &resDesc);
+			if (resDesc.Type != D3D_SIT_TEXTURE &&
+				resDesc.Type != D3D_SIT_STRUCTURED) continue;
 
-	// Sort unordered buffers by register
-	bindingsOut.unorderedBuffers.sort(
-		[](const ZgUnorderedBufferBindingDesc& lhs, const ZgUnorderedBufferBindingDesc& rhs) {
-			return lhs.unorderedRegister < rhs.unorderedRegister;
-		});
+			sfz_assert(resDesc.Space == 0);
+			sfz_assert(resDesc.BindCount == 1);
+			if (resDesc.Space != 0) return ZG_ERROR_SHADER_COMPILE_ERROR;
 
-	// Sort textures by register
-	bindingsOut.textures.sort(
-		[](const ZgTextureBindingDesc& lhs, const ZgTextureBindingDesc& rhs) {
-			return lhs.textureRegister < rhs.textureRegister;
+			sfz_assert(!mappingOut.SRVs.isFull());
+			if (mappingOut.SRVs.isFull()) return ZG_ERROR_SHADER_COMPILE_ERROR;
+
+			SRVMapping& mapping = mappingOut.SRVs.add();
+			mapping.reg = resDesc.BindPoint;
+			mapping.tableOffset = ~0u; // Deferred to later
+
+			if (resDesc.Type == D3D_SIT_TEXTURE) {
+				mapping.type = ZG_BINDING_TYPE_TEXTURE;
+			}
+			else if (resDesc.Type == D3D_SIT_STRUCTURED) {
+				mapping.type = ZG_BINDING_TYPE_BUFFER_STRUCTURED;
+			}
+		}
+
+		for (u32 i = 0; i < shaderDesc2.BoundResources; i++) {
+			D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
+			CHECK_D3D12 refl2->GetResourceBindingDesc(i, &resDesc);
+			if (resDesc.Type != D3D_SIT_TEXTURE &&
+				resDesc.Type != D3D_SIT_STRUCTURED) continue;
+
+			// Skip if already registered in previous reflection
+			const bool srvAlreadyRegistered = mappingOut.SRVs
+				.find([&](const SRVMapping& m) { return m.reg == resDesc.BindPoint; }) != nullptr;
+			if (srvAlreadyRegistered) continue;
+
+			sfz_assert(resDesc.Space == 0);
+			sfz_assert(resDesc.BindCount == 1);
+			if (resDesc.Space != 0) return ZG_ERROR_SHADER_COMPILE_ERROR;
+
+			sfz_assert(!mappingOut.SRVs.isFull());
+			if (mappingOut.SRVs.isFull()) return ZG_ERROR_SHADER_COMPILE_ERROR;
+
+			SRVMapping& mapping = mappingOut.SRVs.add();
+			mapping.reg = resDesc.BindPoint;
+			mapping.tableOffset = ~0u;
+
+			if (resDesc.Type == D3D_SIT_TEXTURE) {
+				mapping.type = ZG_BINDING_TYPE_TEXTURE;
+			}
+			else if (resDesc.Type == D3D_SIT_STRUCTURED) {
+				mapping.type = ZG_BINDING_TYPE_BUFFER_STRUCTURED;
+			}
+		}
+
+		// Sort SRVs
+		mappingOut.SRVs.sort([](const SRVMapping& lhs, const SRVMapping& rhs) {
+			return lhs.reg < rhs.reg;
 		});
+	}
+
+	// UAVs
+	{
+		for (u32 i = 0; i < shaderDesc1.BoundResources; i++) {
+			D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
+			CHECK_D3D12 refl1->GetResourceBindingDesc(i, &resDesc);
+			if (resDesc.Type != D3D_SIT_UAV_RWTYPED &&
+				resDesc.Type != D3D11_SIT_UAV_RWSTRUCTURED) continue;
+
+			sfz_assert(resDesc.Space == 0);
+			sfz_assert(resDesc.BindCount == 1);
+			if (resDesc.Space != 0) return ZG_ERROR_SHADER_COMPILE_ERROR;
+
+			sfz_assert(!mappingOut.UAVs.isFull());
+			if (mappingOut.UAVs.isFull()) return ZG_ERROR_SHADER_COMPILE_ERROR;
+
+			UAVMapping& mapping = mappingOut.UAVs.add();
+			mapping.reg = resDesc.BindPoint;
+			mapping.tableOffset = ~0u; // Deferred to later
+
+			if (resDesc.Type == D3D_SIT_UAV_RWTYPED) {
+				mapping.type = ZG_BINDING_TYPE_TEXTURE_UAV;
+			}
+			else if (resDesc.Type == D3D11_SIT_UAV_RWSTRUCTURED) {
+				mapping.type = ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV;
+			}
+		}
+
+		for (u32 i = 0; i < shaderDesc2.BoundResources; i++) {
+			D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
+			CHECK_D3D12 refl2->GetResourceBindingDesc(i, &resDesc);
+			if (resDesc.Type != D3D_SIT_UAV_RWTYPED &&
+				resDesc.Type != D3D11_SIT_UAV_RWSTRUCTURED) continue;
+
+			// Skip if already registered in previous reflection
+			const bool uavAlreadyRegistered = mappingOut.UAVs
+				.find([&](const UAVMapping& m) { return m.reg == resDesc.BindPoint; }) != nullptr;
+			if (uavAlreadyRegistered) continue;
+
+			sfz_assert(resDesc.Space == 0);
+			sfz_assert(resDesc.BindCount == 1);
+			if (resDesc.Space != 0) return ZG_ERROR_SHADER_COMPILE_ERROR;
+
+			sfz_assert(!mappingOut.UAVs.isFull());
+			if (mappingOut.UAVs.isFull()) return ZG_ERROR_SHADER_COMPILE_ERROR;
+
+			UAVMapping& mapping = mappingOut.UAVs.add();
+			mapping.reg = resDesc.BindPoint;
+			mapping.tableOffset = ~0u; // Deferred to later
+
+			if (resDesc.Type == D3D_SIT_UAV_RWTYPED) {
+				mapping.type = ZG_BINDING_TYPE_TEXTURE_UAV;
+			}
+			else if (resDesc.Type == D3D11_SIT_UAV_RWSTRUCTURED) {
+				mapping.type = ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV;
+			}
+		}
+
+		// Sort UAVs
+		mappingOut.UAVs.sort([](const UAVMapping& lhs, const UAVMapping& rhs) {
+			return lhs.reg < rhs.reg;
+		});
+	}
 
 	return ZG_SUCCESS;
 }
 
 static ZgResult createRootSignature(
-	D3D12RootSignature& rootSignatureOut,
-	const D3D12PipelineBindingsSignature& bindings,
+	RootSignatureMapping& mapping,
+	ComPtr<ID3D12RootSignature>& rootSignatureOut,
 	const ArrayLocal<ZgSampler, ZG_MAX_NUM_SAMPLERS>& zgSamplers,
-	ID3D12Device3& device) noexcept
+	ID3D12Device3& device)
 {
-	// Allow root signature access from all shader stages, opt in to using an input layout
-	D3D12_ROOT_SIGNATURE_FLAGS flags =
-		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-
 	// Root signature parameters
 	// We know that we can't have more than 64 root parameters as maximum (i.e. 64 words)
 	constexpr u32 MAX_NUM_ROOT_PARAMETERS = 64;
-	ArrayLocal<CD3DX12_ROOT_PARAMETER1, MAX_NUM_ROOT_PARAMETERS> parameters;
+	ArrayLocal<CD3DX12_ROOT_PARAMETER1, MAX_NUM_ROOT_PARAMETERS> params;
 
 	// Add push constants
-	for (u32 i = 0; i < bindings.constBuffers.size(); i++) {
-		const ZgConstantBufferBindingDesc& cbuffer = bindings.constBuffers[i];
-		if (cbuffer.pushConstant == ZG_FALSE) continue;
+	for (PushConstMapping& mapping : mapping.pushConsts) {
+		mapping.paramIdx = params.size();
 
-		// Get parameter index for the push constant
-		sfz_assert(!parameters.isFull());
-		u32 parameterIndex = parameters.size();
-
-		// Create root parameter
-		CD3DX12_ROOT_PARAMETER1 parameter;
-		sfz_assert((cbuffer.sizeInBytes % 4) == 0);
-		sfz_assert(cbuffer.sizeInBytes <= 1024);
-		parameter.InitAsConstants(
-			cbuffer.sizeInBytes / 4, cbuffer.bufferRegister, 0, D3D12_SHADER_VISIBILITY_ALL);
-		parameters.add(sfz_move(parameter));
-		sfz_assert(!parameters.isFull());
-
-		// Add to push constants mappings
-		D3D12PushConstantMapping mapping;
-		mapping.bufferRegister = cbuffer.bufferRegister;
-		mapping.parameterIndex = parameterIndex;
-		mapping.sizeInBytes = cbuffer.sizeInBytes;
-		rootSignatureOut.pushConstants.add(mapping);
+		CD3DX12_ROOT_PARAMETER1& param = params.add();
+		sfz_assert((mapping.sizeBytes % 4) == 0);
+		sfz_assert(mapping.sizeBytes <= 1024);
+		param.InitAsConstants(mapping.sizeBytes / 4, mapping.reg, 0, D3D12_SHADER_VISIBILITY_ALL);
+		sfz_assert(!params.isFull());
 	}
 
 	// The offset into the dynamic table
+	constexpr u32 MAX_NUM_RANGES = 3; // CBVs, UAVs and SRVs
+	ArrayLocal<CD3DX12_DESCRIPTOR_RANGE1, MAX_NUM_RANGES> ranges;
 	u32 currentTableOffset = 0;
 
-	// Add dynamic constant buffers(non-push constants) mappings
-	u32 dynamicConstBuffersFirstRegister = ~0u; // TODO: THIS IS PROBABLY BAD
-	for (const ZgConstantBufferBindingDesc& cbuffer : bindings.constBuffers) {
-		if (cbuffer.pushConstant == ZG_TRUE) continue;
-
-		if (dynamicConstBuffersFirstRegister == ~0u) {
-			dynamicConstBuffersFirstRegister = cbuffer.bufferRegister;
-		}
-
-		// Add to constant buffer mappings
-		D3D12ConstantBufferMapping mapping;
-		mapping.bufferRegister = cbuffer.bufferRegister;
-		mapping.tableOffset = currentTableOffset;
-		mapping.sizeInBytes = cbuffer.sizeInBytes;
-		rootSignatureOut.constBuffers.add(mapping);
-
-		// Increment table offset
-		currentTableOffset += 1;
-	}
-
-	// Note: Both unordered textures and buffers uses the same unordered register range. This means
-	//       that we need to combine them so that we get the registers in the right order in the range.
-	struct UnorderedBindingDesc {
-		bool isBuffer = false;
-		u32 unorderedRegister = 0;
-	};
-
-	constexpr u32 MAX_NUM_UNORDERED_RESOURCES =
-		ZG_MAX_NUM_UNORDERED_BUFFERS + ZG_MAX_NUM_UNORDERED_TEXTURES;
-	ArrayLocal<UnorderedBindingDesc, MAX_NUM_UNORDERED_RESOURCES> unorderedResources;
-
-	for (const ZgUnorderedBufferBindingDesc& buffer : bindings.unorderedBuffers) {
-		UnorderedBindingDesc desc;
-		desc.isBuffer = true;
-		desc.unorderedRegister = buffer.unorderedRegister;
-		unorderedResources.add(desc);
-	}
-	for (const ZgUnorderedTextureBindingDesc& texture : bindings.unorderedTextures) {
-		UnorderedBindingDesc desc;
-		desc.isBuffer = false;
-		desc.unorderedRegister = texture.unorderedRegister;
-		unorderedResources.add(desc);
-	}
-
-	// Ensure all unordered resources are sorted by the registers
-	unorderedResources.sort([](const auto& lhs, const auto& rhs) {
-		return lhs.unorderedRegister < rhs.unorderedRegister;
-	});
-
-
-	// The first and last unordered register used
-	u32 firstDynamicUnorderedRegister = U32_MAX;
-	u32 lastDynamicUnorderedRegister = 0;
-
-	// Add unordered resources
-	for (const UnorderedBindingDesc& desc : unorderedResources) {
-
-		firstDynamicUnorderedRegister = sfz::min(firstDynamicUnorderedRegister, desc.unorderedRegister);
-		lastDynamicUnorderedRegister = sfz::max(lastDynamicUnorderedRegister, desc.unorderedRegister);
-
-		// Add to unordered buffer/texture mappings
-		if (desc.isBuffer) {
-			D3D12UnorderedBufferMapping mapping;
-			mapping.unorderedRegister = desc.unorderedRegister;
+	// CBVs
+	// TODO: We currently assume that the CBVs are in a continuous range, i.e. not intermixed with
+	//       push constants.
+	if (!mapping.CBVs.isEmpty()) {
+		for (CBVMapping& mapping : mapping.CBVs) {
 			mapping.tableOffset = currentTableOffset;
-			rootSignatureOut.unorderedBuffers.add(mapping);
+			currentTableOffset += 1;
 		}
-		else {
-			// Add to unordered texture mappings
-			D3D12UnorderedTextureMapping mapping;
-			mapping.unorderedRegister = desc.unorderedRegister;
+		CD3DX12_DESCRIPTOR_RANGE1& rangeCBV = ranges.add();
+		rangeCBV.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV,
+			mapping.CBVs.size(), mapping.CBVs[0].reg);
+	}
+
+	// UAVs
+	// TODO: Assuming all UAVs are in a continuous range.
+	if (!mapping.UAVs.isEmpty()) {
+		for (UAVMapping& mapping : mapping.UAVs) {
 			mapping.tableOffset = currentTableOffset;
-			rootSignatureOut.unorderedTextures.add(mapping);
+			currentTableOffset += 1;
 		}
-
-		// Increment table offset
-		currentTableOffset += 1;
+		CD3DX12_DESCRIPTOR_RANGE1& rangeUAV = ranges.add();
+		rangeUAV.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV,
+			mapping.UAVs.size(), mapping.UAVs[0].reg);
 	}
 
-	// Sort of assume we have a coherent range
-	// TODO: Can probably be removed, but make sure that's fine first or if we need to make some logic changes
-	const u32 numUnorderedRegisters = lastDynamicUnorderedRegister - firstDynamicUnorderedRegister + 1;
-	if (!rootSignatureOut.unorderedBuffers.isEmpty() || !rootSignatureOut.unorderedTextures.isEmpty()) {
-		sfz_assert(numUnorderedRegisters == rootSignatureOut.unorderedBuffers.size() + rootSignatureOut.unorderedTextures.size());
-	}
-
-	// Add texture mappings
-	u32 dynamicTexturesFirstRegister = ~0u; // TODO: THIS IS PROBABLY BAD
-	for (const ZgTextureBindingDesc& texDesc : bindings.textures) {
-		if (dynamicTexturesFirstRegister == ~0u) {
-			dynamicTexturesFirstRegister = texDesc.textureRegister;
+	// SRVs
+	// TODO: Assuming all SRVs are in a continuous range.
+	if (!mapping.SRVs.isEmpty()) {
+		for (SRVMapping& mapping : mapping.SRVs) {
+			mapping.tableOffset = currentTableOffset;
+			currentTableOffset += 1;
 		}
-
-		// Add to texture mappings
-		D3D12TextureMapping mapping;
-		mapping.textureRegister = texDesc.textureRegister;
-		mapping.tableOffset = currentTableOffset;
-		rootSignatureOut.textures.add(mapping);
-
-		// Increment table offset
-		currentTableOffset += 1;
+		CD3DX12_DESCRIPTOR_RANGE1& rangeSRV = ranges.add();
+		rangeSRV.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
+			mapping.SRVs.size(), mapping.SRVs[0].reg);
 	}
+
+	mapping.dynamicTableSize = currentTableOffset;
 
 	// Add dynamic table parameter if we need to
-	if (!rootSignatureOut.constBuffers.isEmpty() || 
-		!rootSignatureOut.unorderedBuffers.isEmpty() ||
-		!rootSignatureOut.textures.isEmpty() ||
-		!rootSignatureOut.unorderedTextures.isEmpty()) {
-
+	if (!ranges.isEmpty()) {
+		
 		// Store parameter index of dynamic table
-		sfz_assert(!parameters.isFull());
-		rootSignatureOut.dynamicBuffersParameterIndex = parameters.size();
-
-		// TODO: Currently using the assumption that the shader register range is continuous,
-		//       which is probably not at all reasonable in practice
-		constexpr u32 MAX_NUM_RANGES = 3; // CBVs, UAVs and SRVs
-		ArrayLocal<CD3DX12_DESCRIPTOR_RANGE1, MAX_NUM_RANGES> ranges;
-		if (!rootSignatureOut.constBuffers.isEmpty()) {
-			CD3DX12_DESCRIPTOR_RANGE1 range;
-			range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV,
-				rootSignatureOut.constBuffers.size(), dynamicConstBuffersFirstRegister);
-			ranges.add(sfz_move(range));
-		}
-		if (!rootSignatureOut.unorderedBuffers.isEmpty() || !rootSignatureOut.unorderedTextures.isEmpty()) {
-			CD3DX12_DESCRIPTOR_RANGE1 range;
-			range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV,
-				numUnorderedRegisters,
-				firstDynamicUnorderedRegister);
-			ranges.add(sfz_move(range));
-		}
-		if (!rootSignatureOut.textures.isEmpty()) {
-			CD3DX12_DESCRIPTOR_RANGE1 range;
-			range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
-				rootSignatureOut.textures.size(), dynamicTexturesFirstRegister);
-			ranges.add(sfz_move(range));
-		}
+		sfz_assert(!params.isFull());
+		mapping.dynamicParamIdx = params.size();
 
 		// Create dynamic table parameter
-		CD3DX12_ROOT_PARAMETER1 parameter;
-		parameter.InitAsDescriptorTable(ranges.size(), ranges.data());
-		parameters.add(sfz_move(parameter));
+		CD3DX12_ROOT_PARAMETER1& param = params.add();
+		param.InitAsDescriptorTable(ranges.size(), ranges.data());
 	}
 
 	// Add static samplers
-	ArrayLocal<D3D12_STATIC_SAMPLER_DESC, ZG_MAX_NUM_SAMPLERS> samplers;
+	ArrayLocal<D3D12_STATIC_SAMPLER_DESC, ZG_MAX_NUM_SAMPLERS> samplerDescs;
 	for (const ZgSampler& zgSampler : zgSamplers) {
-		
-		D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
+		D3D12_STATIC_SAMPLER_DESC& samplerDesc = samplerDescs.add();
 		samplerDesc.Filter = samplingModeToD3D12(zgSampler.samplingMode);
 		samplerDesc.AddressU = wrappingModeToD3D12(zgSampler.wrappingModeU);
 		samplerDesc.AddressV = wrappingModeToD3D12(zgSampler.wrappingModeV);
@@ -1012,61 +1030,34 @@ static ZgResult createRootSignature(
 		samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
 		samplerDesc.MinLOD = 0.0f;
 		samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
-		samplerDesc.ShaderRegister = samplers.size();
+		samplerDesc.ShaderRegister = samplerDescs.size() - 1;
 		samplerDesc.RegisterSpace = 0;
 		samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // TODO: Check this from reflection
-		samplers.add(samplerDesc);
 	}
 
-	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC desc;
-	desc.Init_1_1(parameters.size(), parameters.data(), samplers.size(), samplers.data(), flags);
+	// Allow root signature access from all shader stages, opt in to using an input layout
+	D3D12_ROOT_SIGNATURE_FLAGS flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootDesc;
+	rootDesc.Init_1_1(params.size(), params.data(), samplerDescs.size(), samplerDescs.data(), flags);
 
 	// Serialize the root signature.
 	ComPtr<ID3DBlob> blob;
 	ComPtr<ID3DBlob> errorBlob;
 	if (D3D12_FAIL(D3DX12SerializeVersionedRootSignature(
-		&desc, D3D_ROOT_SIGNATURE_VERSION_1_1, &blob, &errorBlob))) {
+		&rootDesc, D3D_ROOT_SIGNATURE_VERSION_1_1, &blob, &errorBlob))) {
 
 		ZG_ERROR("D3DX12SerializeVersionedRootSignature() failed: %s\n",
 			(const char*)errorBlob->GetBufferPointer());
-		return ZG_ERROR_GENERIC;
+		return ZG_ERROR_SHADER_COMPILE_ERROR;
 	}
 
 	// Create root signature
 	if (D3D12_FAIL(device.CreateRootSignature(
-		0, blob->GetBufferPointer(), blob->GetBufferSize(), IID_PPV_ARGS(&rootSignatureOut.rootSignature)))) {
-		return ZG_ERROR_GENERIC;
+		0, blob->GetBufferPointer(), blob->GetBufferSize(), IID_PPV_ARGS(&rootSignatureOut)))) {
+		return ZG_ERROR_SHADER_COMPILE_ERROR;
 	}
 
 	return ZG_SUCCESS;
-}
-
-// D3D12RootSignature
-// ------------------------------------------------------------------------------------------------
-
-const D3D12PushConstantMapping* D3D12RootSignature::getPushConstantMapping(u32 bufferRegister) const noexcept
-{
-	return pushConstants.find([&](const auto& e) { return e.bufferRegister == bufferRegister; });
-}
-
-const D3D12ConstantBufferMapping* D3D12RootSignature::getConstBufferMapping(u32 bufferRegister) const noexcept
-{
-	return constBuffers.find([&](const auto& e) { return e.bufferRegister == bufferRegister; });
-}
-
-const D3D12TextureMapping* D3D12RootSignature::getTextureMapping(u32 textureRegister) const noexcept
-{
-	return textures.find([&](const auto& e) { return e.textureRegister == textureRegister; });
-}
-
-const D3D12UnorderedBufferMapping* D3D12RootSignature::getUnorderedBufferMapping(u32 unorderedRegister) const noexcept
-{
-	return unorderedBuffers.find([&](const auto& e) { return e.unorderedRegister == unorderedRegister; });
-}
-
-const D3D12UnorderedTextureMapping* D3D12RootSignature::getUnorderedTextureMapping(u32 unorderedRegister) const noexcept
-{
-	return unorderedTextures.find([&](const auto& e) { return e.unorderedRegister == unorderedRegister; });
 }
 
 // D3D12PipelineCompute functions
@@ -1117,23 +1108,26 @@ static ZgResult createPipelineComputeInternal(
 	D3D12_SHADER_DESC computeDesc = {};
 	CHECK_D3D12 computeReflection->GetDesc(&computeDesc);
 
-	// Get pipeline bindings signature
-	D3D12PipelineBindingsSignature bindings = {};
+	// Get root signature mapping from reflection
+	RootSignatureMapping mapping = {};
 	{
-		sfz::ArrayLocal<u32, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstantRegisters;
-		pushConstantRegisters.add(createInfo.pushConstantRegisters, createInfo.numPushConstants);
+		sfz::ArrayLocal<u32, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstRegs;
+		pushConstRegs.add(createInfo.pushConstantRegisters, createInfo.numPushConstants);
 
-		ZgResult bindingsRes = bindingsFromReflection(
-			computeReflection, pushConstantRegisters, bindings);
-		if (bindingsRes != ZG_SUCCESS) return bindingsRes;
+		ZgResult res = rootSignatureMappingFromReflection(
+			computeReflection.Get(),
+			nullptr,
+			pushConstRegs,
+			mapping);
+		if (res != ZG_SUCCESS) return res;
 	}
 
 	// Create root signature
-	D3D12RootSignature rootSignature;
+	ComPtr<ID3D12RootSignature> rootSignature;
 	{
 		ArrayLocal<ZgSampler, ZG_MAX_NUM_SAMPLERS> samplers;
 		samplers.add(createInfo.samplers, createInfo.numSamplers);
-		ZgResult res = createRootSignature(rootSignature, bindings, samplers, device);
+		ZgResult res = createRootSignature(mapping, rootSignature, samplers, device);
 		if (res != ZG_SUCCESS) return res;
 	}
 
@@ -1150,7 +1144,7 @@ static ZgResult createPipelineComputeInternal(
 
 		// Create our token stream and set root signature
 		PipelineStateStream stream = {};
-		stream.rootSignature = rootSignature.rootSignature.Get();
+		stream.rootSignature = rootSignature.Get();
 
 		// Set compute shader
 		stream.computeShader = CD3DX12_SHADER_BYTECODE(
@@ -1179,7 +1173,7 @@ static ZgResult createPipelineComputeInternal(
 	logPipelineComputeInfo(
 		createInfo,
 		computeShaderName,
-		bindings.toZgSignature(),
+		mapping,
 		groupDimX,
 		groupDimY,
 		groupDimZ,
@@ -1193,7 +1187,7 @@ static ZgResult createPipelineComputeInternal(
 	// Store pipeline state
 	pipeline->pipelineState = pipelineState;
 	pipeline->rootSignature = rootSignature;
-	pipeline->bindingsSignature = bindings;
+	pipeline->mapping = mapping;
 	pipeline->groupDimX = groupDimX;
 	pipeline->groupDimY = groupDimY;
 	pipeline->groupDimZ = groupDimZ;
@@ -1299,21 +1293,26 @@ static ZgResult createPipelineRenderInternal(
 		return ZG_ERROR_SHADER_COMPILE_ERROR;
 	}
 
+	// Get root signature mapping from reflection
+	RootSignatureMapping mapping = {};
+	{
+		sfz::ArrayLocal<u32, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstRegs;
+		pushConstRegs.add(createInfo.pushConstantRegisters, createInfo.numPushConstants);
+
+		ZgResult res = rootSignatureMappingFromReflection(
+			vertexReflection.Get(),
+			pixelReflection.Get(),
+			pushConstRegs,
+			mapping);
+		if (res != ZG_SUCCESS) return res;
+	}
+
 	// Get shader description froms reflection data
 	D3D12_SHADER_DESC vertexDesc = {};
 	CHECK_D3D12 vertexReflection->GetDesc(&vertexDesc);
 	D3D12_SHADER_DESC pixelDesc = {};
 	CHECK_D3D12 pixelReflection->GetDesc(&pixelDesc);
 
-	// Validate that the user has specified correct number of vertex attributes
-	// TODO: This doesn't seem to work. InputParameter also counts compiler generated inputs, such
-	//       as SV_VertexID.
-	/*if (createInfo.numVertexAttributes != vertexDesc.InputParameters) {
-		ZG_ERROR("Invalid ZgPipelineRenderingCreateInfo. It specifies %u vertex"
-			" attributes, shader reflection finds %u",
-			createInfo.numVertexAttributes, vertexDesc.InputParameters);
-		return ZG_ERROR_INVALID_ARGUMENT;
-	}*/
 	ZgPipelineRenderSignature renderSignature = {};
 	renderSignature.numVertexAttributes = createInfo.numVertexAttributes;
 
@@ -1354,175 +1353,6 @@ static ZgResult createPipelineRenderInternal(
 		renderSignature.vertexAttributes[i] = attrib;
 	}
 
-	// Get pipeline bindings signature
-	D3D12PipelineBindingsSignature bindings = {};
-	{
-		sfz::ArrayLocal<u32, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstantRegisters;
-		pushConstantRegisters.add(createInfo.pushConstantRegisters, createInfo.numPushConstants);
-
-		ZgResult vertexBindingsRes = bindingsFromReflection(
-			vertexReflection, pushConstantRegisters, bindings);
-		if (vertexBindingsRes != ZG_SUCCESS) return vertexBindingsRes;
-
-		D3D12PipelineBindingsSignature pixelBindings = {};
-		ZgResult pixelBindingsRes = bindingsFromReflection(
-			pixelReflection, pushConstantRegisters, pixelBindings);
-		if (pixelBindingsRes != ZG_SUCCESS) return pixelBindingsRes;
-
-		// Merge constant buffers
-		for (const ZgConstantBufferBindingDesc& binding : pixelBindings.constBuffers) {
-
-			// Add binding if we don't already have it
-			bool haveBinding = bindings.constBuffers.find(
-				[&](const auto& e) { return e.bufferRegister == binding.bufferRegister; }) != nullptr;
-			if (!haveBinding) {
-
-				// Ensure we don't have too many constants buffers
-				if (bindings.constBuffers.isFull()) {
-					ZG_ERROR("Too many constant buffers, only %u allowed",
-						bindings.constBuffers.capacity());
-					return ZG_ERROR_SHADER_COMPILE_ERROR;
-				}
-				
-				// Add it
-				bindings.constBuffers.add(binding);
-			}
-		}
-
-		// Merge unordered buffers
-		for (const ZgUnorderedBufferBindingDesc& binding : pixelBindings.unorderedBuffers) {
-
-			// Add binding if we don't already have it
-			bool haveBinding = bindings.unorderedBuffers.find(
-				[&](const auto& e) { return e.unorderedRegister == binding.unorderedRegister; }) != nullptr;
-			if (!haveBinding) {
-
-				// Ensure we don't have too many constants buffers
-				if (bindings.unorderedBuffers.isFull()) {
-					ZG_ERROR("Too many unordered buffers, only %u allowed",
-						bindings.unorderedBuffers.capacity());
-					return ZG_ERROR_SHADER_COMPILE_ERROR;
-				}
-
-				// Add it
-				bindings.unorderedBuffers.add(binding);
-			}
-		}
-
-		// Merge textures
-		for (const ZgTextureBindingDesc& binding : pixelBindings.textures) {
-
-			// Add binding if we don't already have it
-			bool haveBinding = bindings.textures.find(
-				[&](const auto& e) { return e.textureRegister == binding.textureRegister; }) != nullptr;
-			if (!haveBinding) {
-
-				// Ensure we don't have too many textures
-				if (bindings.textures.isFull()) {
-					ZG_ERROR("Too many textures, only %u allowed", bindings.textures.capacity());
-					return ZG_ERROR_SHADER_COMPILE_ERROR;
-				}
-
-				// Add it
-				bindings.textures.add(binding);
-			}
-		}
-
-		// Merge unordered textures
-		for (const ZgUnorderedTextureBindingDesc& binding : pixelBindings.unorderedTextures) {
-
-			// Add binding if we don't already have it
-			bool haveBinding = bindings.unorderedTextures.find(
-				[&](const auto& e) { return e.unorderedRegister == binding.unorderedRegister; }) != nullptr;
-			if (!haveBinding) {
-
-				// Ensure we don't have too many textures
-				if (bindings.textures.isFull()) {
-					ZG_ERROR("Too many unordered textures, only %u allowed",
-						bindings.unorderedTextures.capacity());
-					return ZG_ERROR_SHADER_COMPILE_ERROR;
-				}
-
-				// Add it
-				bindings.unorderedTextures.add(binding);
-			}
-		}
-
-		// Sort buffers by register
-		bindings.constBuffers.sort(
-			[](const ZgConstantBufferBindingDesc& lhs, const ZgConstantBufferBindingDesc& rhs) {
-				return lhs.bufferRegister < rhs.bufferRegister;
-			});
-
-		// Sort unordered buffers by register
-		bindings.unorderedBuffers.sort(
-			[](const ZgUnorderedBufferBindingDesc& lhs, const ZgUnorderedBufferBindingDesc& rhs) {
-				return lhs.unorderedRegister < rhs.unorderedRegister;
-			});
-
-		// Sort textures by register
-		bindings.textures.sort(
-			[](const ZgTextureBindingDesc& lhs, const ZgTextureBindingDesc& rhs) {
-				return lhs.textureRegister < rhs.textureRegister;
-			});
-
-		// Sort unordered textures by register
-		bindings.unorderedTextures.sort(
-			[](const ZgUnorderedTextureBindingDesc& lhs, const ZgUnorderedTextureBindingDesc& rhs) {
-				return lhs.unorderedRegister < rhs.unorderedRegister;
-			});
-	}
-
-	// Check that all necessary sampler data is available
-	ArrayLocal<bool, ZG_MAX_NUM_SAMPLERS> samplerSet;
-	samplerSet.add(false, ZG_MAX_NUM_SAMPLERS);
-	for (u32 i = 0; i < vertexDesc.BoundResources; i++) {
-		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
-		CHECK_D3D12 vertexReflection->GetResourceBindingDesc(i, &resDesc);
-
-		// Continue if not a sampler
-		if (resDesc.Type != D3D_SIT_SAMPLER) continue;
-
-		// Error out if sampler has invalid register
-		if (resDesc.BindPoint >= createInfo.numSamplers) {
-			ZG_ERROR("Sampler %s is bound to register %u, num specified samplers is %u",
-				resDesc.Name, resDesc.BindPoint, createInfo.numSamplers);
-			return ZG_ERROR_INVALID_ARGUMENT;
-
-		}
-		sfz_assert(resDesc.BindCount == 1);
-
-		// Mark sampler as found
-		samplerSet[resDesc.BindPoint] = true;
-	}
-	for (u32 i = 0; i < pixelDesc.BoundResources; i++) {
-		D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
-		CHECK_D3D12 pixelReflection->GetResourceBindingDesc(i, &resDesc);
-
-		// Continue if not a sampler
-		if (resDesc.Type != D3D_SIT_SAMPLER) continue;
-
-		// Error out if sampler has invalid register
-		if (resDesc.BindPoint >= createInfo.numSamplers) {
-			ZG_ERROR("Sampler %s is bound to register %u, num specified samplers is %u",
-				resDesc.Name, resDesc.BindPoint, createInfo.numSamplers);
-			return ZG_ERROR_INVALID_ARGUMENT;
-
-		}
-		sfz_assert(resDesc.BindCount == 1);
-
-		// Mark sampler as found
-		samplerSet[resDesc.BindPoint] = true;
-	}
-	for (u32 i = 0; i < createInfo.numSamplers; i++) {
-		if (!samplerSet[i]) {
-			ZG_ERROR(
-				"%u samplers were specified, however sampler %u is not used by the pipeline",
-				createInfo.numSamplers, i);
-			return ZG_ERROR_INVALID_ARGUMENT;
-		}
-	}
-
 	// Check that the correct number of render targets is specified
 	const u32 numRenderTargets = pixelDesc.OutputParameters;
 	if (numRenderTargets != createInfo.numRenderTargets) {
@@ -1555,11 +1385,11 @@ static ZgResult createPipelineRenderInternal(
 	}
 
 	// Create root signature
-	D3D12RootSignature rootSignature;
+	ComPtr<ID3D12RootSignature> rootSignature;
 	{
 		ArrayLocal<ZgSampler, ZG_MAX_NUM_SAMPLERS> samplers;
 		samplers.add(createInfo.samplers, createInfo.numSamplers);
-		ZgResult res = createRootSignature(rootSignature, bindings, samplers, device);
+		ZgResult res = createRootSignature(mapping, rootSignature, samplers, device);
 		if (res != ZG_SUCCESS) return res;
 	}
 
@@ -1589,7 +1419,7 @@ static ZgResult createPipelineRenderInternal(
 
 		// Create our token stream and set root signature
 		PipelineStateStreamNoInputLayout stream = {};
-		stream.rootSignature = rootSignature.rootSignature.Get();
+		stream.rootSignature = rootSignature.Get();
 
 		// Set primitive topology
 		// We only allow triangles for now
@@ -1692,7 +1522,7 @@ static ZgResult createPipelineRenderInternal(
 		createInfo,
 		vertexShaderName,
 		pixelShaderName,
-		bindings.toZgSignature(),
+		mapping,
 		renderSignature,
 		compileTimeMs,
 		vertexBlobCompileTimeMs,
@@ -1707,9 +1537,8 @@ static ZgResult createPipelineRenderInternal(
 	// Store pipeline state
 	pipeline->pipelineState = pipelineState;
 	pipeline->rootSignature = rootSignature;
-	pipeline->bindingsSignature = bindings;
+	pipeline->mapping = mapping;
 	pipeline->renderSignature = renderSignature;
-	pipeline->renderSignature.bindings = bindings.toZgSignature();
 	pipeline->createInfo = createInfo;
 
 	// Return pipeline

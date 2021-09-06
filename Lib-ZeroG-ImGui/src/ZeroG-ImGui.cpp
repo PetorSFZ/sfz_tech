@@ -164,7 +164,7 @@ ZgResult imguiInitRenderState(
 			.addVertexBufferInfo(0, sizeof(ImGuiVertex))
 			.addPushConstant(0)
 			.addSampler(0, ZG_SAMPLING_MODE_TRILINEAR)
-			.addRenderTarget(ZG_TEXTURE_FORMAT_RGBA_U8_UNORM)
+			.addRenderTarget(ZG_FORMAT_RGBA_U8_UNORM)
 			.setCullingEnabled(false)
 			.setBlendingEnabled(true)
 			.setBlendFuncColor(ZG_BLEND_FUNC_ADD, ZG_BLEND_FACTOR_SRC_ALPHA, ZG_BLEND_FACTOR_SRC_INV_ALPHA)
@@ -177,9 +177,9 @@ ZgResult imguiInitRenderState(
 	// Allocate memory for font texture
 
 	{
-		sfz_assert_hard(fontTexture.format == ZG_TEXTURE_FORMAT_R_U8_UNORM);
+		sfz_assert_hard(fontTexture.format == ZG_FORMAT_R_U8_UNORM);
 		ZgTextureDesc desc = {};
-		desc.format = ZG_TEXTURE_FORMAT_R_U8_UNORM;
+		desc.format = ZG_FORMAT_R_U8_UNORM;
 		desc.width = fontTexture.width;
 		desc.height = fontTexture.height;
 		desc.numMipmaps = 1; // TODO: Mipmaps
