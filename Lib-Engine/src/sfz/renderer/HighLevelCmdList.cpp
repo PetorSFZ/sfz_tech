@@ -102,76 +102,62 @@ void HighLevelCmdList::setPushConstantUntyped(u32 reg, const void* data, u32 num
 
 void HighLevelCmdList::setBindings(const Bindings& bindings)
 {
-	zg::PipelineBindings zgBindings;
+	ZgPipelineBindings zgBindings = {};
 
-	// Constant buffers
-	for (const BindingHL& binding : bindings.constBuffers) {
+	for (const BindingHL& binding : bindings.bindings) {
 
-		BufferResource* resource = mResources->getBuffer(binding.handle);
-		sfz_assert(resource != nullptr);
-		sfz_assert(binding.reg != ~0u);
+		if (binding.type == ZG_BINDING_TYPE_CONST_BUFFER) {
+			BufferResource* resource = mResources->getBuffer(binding.handle);
+			sfz_assert(resource != nullptr);
+			sfz_assert(binding.reg != ~0u);
 
-		ZgBuffer* buffer = nullptr;
-		if (resource->type == BufferResourceType::STATIC) {
-			buffer = resource->staticMem.buffer.handle;
+			ZgBuffer* buffer = nullptr;
+			if (resource->type == BufferResourceType::STATIC) {
+				buffer = resource->staticMem.buffer.handle;
+			}
+			else if (resource->type == BufferResourceType::STREAMING) {
+				buffer = resource->streamingMem.data(mCurrFrameIdx).deviceBuffer.handle;
+			}
+			else {
+				sfz_assert_hard(false);
+			}
+
+			zgBindings.addConstBuffer(binding.reg, buffer);
 		}
-		else if (resource->type == BufferResourceType::STREAMING) {
-			buffer = resource->streamingMem.data(mCurrFrameIdx).deviceBuffer.handle;
+
+		else if (binding.type == ZG_BINDING_TYPE_UNORDERED_BUFFER) {
+			BufferResource* resource = mResources->getBuffer(binding.handle);
+			sfz_assert(resource != nullptr);
+			sfz_assert(binding.reg != ~0u);
+
+			ZgBuffer* buffer = nullptr;
+			if (resource->type == BufferResourceType::STATIC) {
+				buffer = resource->staticMem.buffer.handle;
+			}
+			else if (resource->type == BufferResourceType::STREAMING) {
+				buffer = resource->streamingMem.data(mCurrFrameIdx).deviceBuffer.handle;
+			}
+			else {
+				sfz_assert_hard(false);
+			}
+
+			zgBindings.addUnorderedBuffer(binding.reg, buffer, resource->elementSizeBytes, resource->maxNumElements);
 		}
-		else {
-			sfz_assert_hard(false);
+
+		else if (binding.type == ZG_BINDING_TYPE_TEXTURE) {
+			TextureResource* resource = mResources->getTexture(binding.handle);
+			sfz_assert(resource != nullptr);
+			sfz_assert(binding.reg != ~0u);
+			zgBindings.addTexture(binding.reg, resource->texture.handle);
 		}
 
-		ZgConstantBufferBinding cbufferBinding = {};
-		cbufferBinding.buffer = buffer;
-		cbufferBinding.bufferRegister = binding.reg;
-		zgBindings.addConstantBuffer(cbufferBinding);
-	}
-
-	// Unordered buffers
-	for (const BindingHL& binding : bindings.unorderedBuffers) {
-
-		BufferResource* resource = mResources->getBuffer(binding.handle);
-		sfz_assert(resource != nullptr);
-		sfz_assert(binding.reg != ~0u);
-
-		ZgBuffer* buffer = nullptr;
-		if (resource->type == BufferResourceType::STATIC) {
-			buffer = resource->staticMem.buffer.handle;
+		else if (binding.type == ZG_BINDING_TYPE_UNORDERED_TEXTURE) {
+			TextureResource* resource = mResources->getTexture(binding.handle);
+			sfz_assert(resource != nullptr);
+			sfz_assert(binding.reg != ~0u);
+			sfz_assert(binding.mipLevel < resource->numMipmaps);
+			zgBindings.addUnorderedTexture(binding.reg, resource->texture.handle, binding.mipLevel);
 		}
-		else if (resource->type == BufferResourceType::STREAMING) {
-			buffer = resource->streamingMem.data(mCurrFrameIdx).deviceBuffer.handle;
-		}
-		else {
-			sfz_assert_hard(false);
-		}
-		
-		ZgUnorderedBufferBinding zgBinding = {};
-		zgBinding.unorderedRegister = binding.reg;
-		zgBinding.firstElementIdx = 0;
-		zgBinding.numElements = resource->maxNumElements;
-		zgBinding.elementStrideBytes = resource->elementSizeBytes;
-		zgBinding.buffer = buffer;
-		zgBindings.addUnorderedBuffer(zgBinding);
-	}
-
-	// Textures
-	for (const BindingHL& binding : bindings.textures) {
-
-		TextureResource* resource = mResources->getTexture(binding.handle);
-		sfz_assert(resource != nullptr);
-		sfz_assert(binding.reg != ~0u);
-		zgBindings.addTexture(binding.reg, resource->texture);
-	}
-
-	// Unordered textures
-	for (const BindingHL& binding : bindings.unorderedTextures) {
-
-		TextureResource* resource = mResources->getTexture(binding.handle);
-		sfz_assert(resource != nullptr);
-		sfz_assert(binding.reg != ~0u);
-		sfz_assert(binding.mipLevel < resource->numMipmaps);
-		zgBindings.addUnorderedTexture(binding.reg, binding.mipLevel, resource->texture);
 	}
 
 	CHECK_ZG mCmdList.setPipelineBindings(zgBindings);

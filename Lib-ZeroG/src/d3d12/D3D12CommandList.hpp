@@ -393,10 +393,16 @@ struct ZgCommandList final {
 		const u32 numTextures = rootSignaturePtr->textures.size();
 
 		// If no bindings specified, do nothing.
-		if (bindings.numConstantBuffers == 0 &&
-			bindings.numUnorderedBuffers == 0 &&
-			bindings.numUnorderedTextures == 0 &&
-			bindings.numTextures == 0) return ZG_SUCCESS;
+		if (bindings.numBindings == 0) return ZG_SUCCESS;
+
+		// Lambda to find binding
+		auto findBinding = [&](ZgBindingType type, u32 reg) -> const ZgBinding* {
+			for (u32 i = 0; i < bindings.numBindings; i++) {
+				const ZgBinding& binding = bindings.bindings[i];
+				if (binding.type == type && binding.shaderRegister == reg) return &binding;
+			}
+			return nullptr;
+		};
 
 		// Allocate descriptors
 		D3D12_CPU_DESCRIPTOR_HANDLE rangeStartCpu = {};
@@ -414,24 +420,16 @@ struct ZgCommandList final {
 				rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
 
 			// Linear search to find matching argument among the bindings
-			u32 bindingIdx = ~0u;
-			for (u32 j = 0; j < bindings.numConstantBuffers; j++) {
-				const ZgConstantBufferBinding& binding = bindings.constantBuffers[j];
-				if (binding.bufferRegister == mapping.bufferRegister) {
-					bindingIdx = j;
-					break;
-				}
-			}
-
-			// If we can't find argument we need to insert null descriptor
-			if (bindingIdx == ~0u) {
-				// TODO: Not sure if possible to implement?
+			const ZgBinding* binding = findBinding(ZG_BINDING_TYPE_CONST_BUFFER, mapping.bufferRegister);
+			
+			// Not sure if this case is possible to implement
+			if (binding == nullptr) {
 				sfz_assert(false);
 				return ZG_WARNING_UNIMPLEMENTED;
 			}
 
 			// Get buffer from binding
-			ZgBuffer* buffer = bindings.constantBuffers[bindingIdx].buffer;
+			ZgBuffer* buffer = binding->buffer;
 
 			// D3D12 requires that a Constant Buffer View is at least 256 bytes, and a multiple of 256.
 			// Round up constant buffer size to nearest 256 alignment
@@ -466,33 +464,24 @@ struct ZgCommandList final {
 				rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
 
 			// Linear search to find matching argument among the bindings
-			u32 bindingIdx = ~0u;
-			for (u32 j = 0; j < bindings.numUnorderedBuffers; j++) {
-				const ZgUnorderedBufferBinding& binding = bindings.unorderedBuffers[j];
-				if (binding.unorderedRegister == mapping.unorderedRegister) {
-					bindingIdx = j;
-					break;
-				}
-			}
+			const ZgBinding* binding = findBinding(ZG_BINDING_TYPE_UNORDERED_BUFFER, mapping.unorderedRegister);
 
 			// If we can't find argument we need to insert null descriptor
-			if (bindingIdx == ~0u) {
+			if (binding == nullptr) {
 				// TODO: Is definitely possible
 				sfz_assert(false);
 				return ZG_WARNING_UNIMPLEMENTED;
 			}
 
-			// Get binding and buffer
-			const ZgUnorderedBufferBinding& binding = bindings.unorderedBuffers[bindingIdx];
-			ZgBuffer* buffer = binding.buffer;
+			ZgBuffer* buffer = binding->buffer;
 
 			// Create unordered access view
 			D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 			uavDesc.Format = DXGI_FORMAT_UNKNOWN; // TODO: Unsure about this one
 			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-			uavDesc.Buffer.FirstElement = binding.firstElementIdx;
-			uavDesc.Buffer.NumElements = binding.numElements;
-			uavDesc.Buffer.StructureByteStride = binding.elementStrideBytes;
+			uavDesc.Buffer.FirstElement = binding->unorderedBuffer.firstElementIdx;
+			uavDesc.Buffer.NumElements = binding->unorderedBuffer.numElements;
+			uavDesc.Buffer.StructureByteStride = binding->unorderedBuffer.elementStrideBytes;
 			uavDesc.Buffer.CounterOffsetInBytes = 0; // We don't have a counter
 			uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE; // TODO: This need to be set if RWByteAddressBuffer
 			mDevice->CreateUnorderedAccessView(buffer->resource.resource, nullptr, &uavDesc, cpuDescriptor);
@@ -511,37 +500,28 @@ struct ZgCommandList final {
 				rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
 
 			// Linear search to find matching argument among the bindings
-			u32 bindingIdx = ~0u;
-			for (u32 j = 0; j < bindings.numUnorderedTextures; j++) {
-				const ZgUnorderedTextureBinding& binding = bindings.unorderedTextures[j];
-				if (binding.unorderedRegister == mapping.unorderedRegister) {
-					bindingIdx = j;
-					break;
-				}
-			}
+			const ZgBinding* binding = findBinding(ZG_BINDING_TYPE_UNORDERED_TEXTURE, mapping.unorderedRegister);
 
 			// If we can't find argument we need to insert null descriptor
-			if (bindingIdx == ~0u) {
+			if (binding == nullptr) {
 				// TODO: Is definitely possible
 				sfz_assert(false);
 				return ZG_WARNING_UNIMPLEMENTED;
 			}
 
-			// Get binding and texture
-			const ZgUnorderedTextureBinding& binding = bindings.unorderedTextures[bindingIdx];
-			ZgTexture* texture = binding.texture;
+			ZgTexture* texture = binding->texture;
 
 			// Create unordered access view
 			D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 			uavDesc.Format = texture->format;
 			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-			uavDesc.Texture2D.MipSlice = binding.mipLevel;
+			uavDesc.Texture2D.MipSlice = binding->unorderedTex.mipLevel;
 			uavDesc.Texture2D.PlaneSlice = 0;
 			mDevice->CreateUnorderedAccessView(texture->resource.resource, nullptr, &uavDesc, cpuDescriptor);
 
 			// Set texture resource state
 			requireResourceStateTextureMip(
-				*this->commandList.Get(), this->tracking, texture, binding.mipLevel, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+				*this->commandList.Get(), this->tracking, texture, binding->unorderedTex.mipLevel, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		}
 
 		// Create shader resource views and fill (CPU) descriptors
@@ -553,22 +533,15 @@ struct ZgCommandList final {
 				rangeStartCpu.ptr + mDescriptorBuffer->descriptorSize * mapping.tableOffset;
 
 			// Linear search to find matching argument among the bindings
-			u32 bindingIdx = ~0u;
-			for (u32 j = 0; j < bindings.numTextures; j++) {
-				const ZgTextureBinding& binding = bindings.textures[j];
-				if (binding.textureRegister == mapping.textureRegister) {
-					bindingIdx = j;
-					break;
-				}
-			}
+			const ZgBinding* binding = findBinding(ZG_BINDING_TYPE_TEXTURE, mapping.textureRegister);
 
 			// If binding found, get D3D12 texture and its resource and format. Otherwise set default
 			// in order to create null descriptor
 			ZgTexture* texture = nullptr;
 			ID3D12Resource* resource = nullptr;
 			DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM;
-			if (bindingIdx != ~0u) {
-				texture = bindings.textures[bindingIdx].texture;
+			if (binding != nullptr) {
+				texture = binding->texture;
 				resource = texture->resource.resource;
 				format = texture->format;
 			}
@@ -590,8 +563,8 @@ struct ZgCommandList final {
 			srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 			mDevice->CreateShaderResourceView(resource, &srvDesc, cpuDescriptor);
 
-			// Set texture resource state and insert into residency set if not null descriptor
-			if (bindingIdx != ~0u) {
+			// Set texture resource state if not null descriptor
+			if (binding != nullptr) {
 
 				// Set texture resource state
 				requireResourceStateTextureAllMips(

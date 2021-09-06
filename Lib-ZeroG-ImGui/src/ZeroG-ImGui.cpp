@@ -334,8 +334,9 @@ void imguiRender(
 	ASSERT_ZG cmdList.setVertexBuffer(0, imguiFrame.uploadVertexBuffer);
 
 	// Bind pipeline parameters
-	ASSERT_ZG cmdList.setPipelineBindings(zg::PipelineBindings()
-		.addTexture(0, state->fontTexture));
+	ZgPipelineBindings bindings = {};
+	bindings.addTexture(0, state->fontTexture.handle);
+	ASSERT_ZG cmdList.setPipelineBindings(bindings);
 
 	// Retrieve imgui scale factor
 	f32 imguiScaleFactor = 1.0f;

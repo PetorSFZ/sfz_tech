@@ -75,7 +75,7 @@ typedef enum {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const u32 ZG_COMPILED_API_VERSION = 39;
+static const u32 ZG_COMPILED_API_VERSION = 40;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -421,165 +421,103 @@ sfz_struct(ZgPipelineBindingsSignature) {
 	ZgUnorderedTextureBindingDesc unorderedTextures[ZG_MAX_NUM_UNORDERED_TEXTURES];
 };
 
-sfz_struct(ZgConstantBufferBinding) {
-	u32 bufferRegister;
+// The maximum number of bindings.
+static const u32 ZG_MAX_NUM_BINDINGS = 32;
+
+typedef enum {
+	ZG_BINDING_TYPE_UNDEFINED = 0,
+	ZG_BINDING_TYPE_CONST_BUFFER,
+	ZG_BINDING_TYPE_UNORDERED_BUFFER,
+	ZG_BINDING_TYPE_TEXTURE,
+	ZG_BINDING_TYPE_UNORDERED_TEXTURE,
+	ZG_BINDING_TYPE_FORCE_I32 = I32_MAX
+} ZgBindingType;
+
+sfz_struct(ZgBinding) {
+
+	// The binding type
+	ZgBindingType type;
+
+	// The register this binding is bound to in the shader.
+	//
+	// In D3D12 this corresponds to "register(x0)" where x can be b, u or t depending on resource
+	// type.
+	u32 shaderRegister;
+
+	// The resource to bind, only buffer or texture can be set, not both.
 	ZgBuffer* buffer;
-};
-
-sfz_struct(ZgUnorderedBufferBinding) {
-
-	// Register the unordered buffer is bound to
-	u32 unorderedRegister;
-
-	// The first element in the buffer (0 to bind from start of buffer)
-	u32 firstElementIdx;
-
-	// The number of elements to bind in the buffer
-	u32 numElements;
-
-	// The stride (size most of the time) between elements in the buffer in bytes
-	u32 elementStrideBytes;
-
-	// The buffer to bind as an unordered buffer
-	ZgBuffer* buffer;
-};
-
-sfz_struct(ZgTextureBinding) {
-	u32 textureRegister;
 	ZgTexture* texture;
-};
 
-sfz_struct(ZgUnorderedTextureBinding) {
+	struct {
+		u32 elementStrideBytes; // The stride (size most of the time) between elements in the buffer in bytes
+		u32 numElements; // The number of elements to bind in the buffer
+		u32 firstElementIdx; // The first element in the buffer (0 to bind from start of buffer)
+	} unorderedBuffer;
 
-	// Register the unordered texture is bound to
-	u32 unorderedRegister;
-
-	// The mip level to bind
-	u32 mipLevel;
-
-	// The texture to bind as an unordered texture
-	ZgTexture* texture;
+	struct {
+		u32 mipLevel; // The mip level to bind
+	} unorderedTex;
 };
 
 sfz_struct(ZgPipelineBindings) {
-
-	// The constant buffers to bind
-	u32 numConstantBuffers;
-	ZgConstantBufferBinding constantBuffers[ZG_MAX_NUM_CONSTANT_BUFFERS];
-
-	// The unordered buffers to bind
-	u32 numUnorderedBuffers;
-	ZgUnorderedBufferBinding unorderedBuffers[ZG_MAX_NUM_UNORDERED_BUFFERS];
-
-	// The textures to bind
-	u32 numTextures;
-	ZgTextureBinding textures[ZG_MAX_NUM_TEXTURES];
-
-	// The unordered textures to bind
-	u32 numUnorderedTextures;
-	ZgUnorderedTextureBinding unorderedTextures[ZG_MAX_NUM_UNORDERED_TEXTURES];
-};
+	u32 numBindings;
+	ZgBinding bindings[ZG_MAX_NUM_BINDINGS];
 
 #ifdef __cplusplus
-namespace zg {
-
-class PipelineBindings final {
-public:
-	ZgPipelineBindings bindings = {};
-
-	PipelineBindings() = default;
-	PipelineBindings(const PipelineBindings&) = default;
-	PipelineBindings& operator= (const PipelineBindings&) = default;
-	~PipelineBindings() = default;
-
-	PipelineBindings& addConstantBuffer(ZgConstantBufferBinding binding)
+	ZgPipelineBindings& addBinding(const ZgBinding& binding)
 	{
-		sfz_assert(bindings.numConstantBuffers < ZG_MAX_NUM_CONSTANT_BUFFERS);
-		bindings.constantBuffers[bindings.numConstantBuffers] = binding;
-		bindings.numConstantBuffers += 1;
+		sfz_assert(numBindings < ZG_MAX_NUM_BINDINGS);
+		bindings[numBindings] = binding;
+		numBindings += 1;
 		return *this;
 	}
 
-	PipelineBindings& addConstantBuffer(u32 bufferRegister, Buffer& buffer)
+	ZgPipelineBindings& addConstBuffer(u32 reg, ZgBuffer* buffer)
 	{
-		ZgConstantBufferBinding binding = {};
-		binding.bufferRegister = bufferRegister;
-		binding.buffer = buffer.handle;
-		return this->addConstantBuffer(binding);
+		ZgBinding binding = {};
+		binding.type = ZG_BINDING_TYPE_CONST_BUFFER;
+		binding.shaderRegister = reg;
+		binding.buffer = buffer;
+		return addBinding(binding);
 	}
 
-	PipelineBindings& addUnorderedBuffer(ZgUnorderedBufferBinding binding)
-	{
-		sfz_assert(bindings.numUnorderedBuffers < ZG_MAX_NUM_UNORDERED_BUFFERS);
-		bindings.unorderedBuffers[bindings.numUnorderedBuffers] = binding;
-		bindings.numUnorderedBuffers += 1;
-		return *this;
-	}
-
-	PipelineBindings& addUnorderedBuffer(
-		u32 unorderedRegister,
-		u32 numElements,
+	ZgPipelineBindings& addUnorderedBuffer(
+		u32 reg,
+		ZgBuffer* buffer,
 		u32 elementStrideBytes,
-		Buffer& buffer)
-	{
-		return this->addUnorderedBuffer(unorderedRegister, 0, numElements, elementStrideBytes, buffer);
-	}
-
-	PipelineBindings& addUnorderedBuffer(
-		u32 unorderedRegister,
-		u32 firstElementIdx,
 		u32 numElements,
-		u32 elementStrideBytes,
-		Buffer& buffer)
+		u32 firstElementIdx = 0)
 	{
-		ZgUnorderedBufferBinding binding = {};
-		binding.unorderedRegister = unorderedRegister;
-		binding.firstElementIdx = firstElementIdx;
-		binding.numElements = numElements;
-		binding.elementStrideBytes = elementStrideBytes;
-		binding.buffer = buffer.handle;
-		return this->addUnorderedBuffer(binding);
+		ZgBinding binding = {};
+		binding.type = ZG_BINDING_TYPE_UNORDERED_BUFFER;
+		binding.shaderRegister = reg;
+		binding.buffer = buffer;
+		binding.unorderedBuffer.elementStrideBytes = elementStrideBytes;
+		binding.unorderedBuffer.numElements = numElements;
+		binding.unorderedBuffer.firstElementIdx = firstElementIdx;
+		return addBinding(binding);
 	}
 
-	PipelineBindings& addTexture(ZgTextureBinding binding)
+	ZgPipelineBindings& addTexture(u32 reg, ZgTexture* texture)
 	{
-		sfz_assert(bindings.numTextures < ZG_MAX_NUM_TEXTURES);
-		bindings.textures[bindings.numTextures] = binding;
-		bindings.numTextures += 1;
-		return *this;
+		ZgBinding binding = {};
+		binding.type = ZG_BINDING_TYPE_TEXTURE;
+		binding.shaderRegister = reg;
+		binding.texture = texture;
+		return addBinding(binding);
 	}
 
-	PipelineBindings& addTexture(u32 textureRegister, Texture& texture)
+	ZgPipelineBindings& addUnorderedTexture(u32 reg, ZgTexture* texture, u32 mipLevel)
 	{
-		ZgTextureBinding binding;
-		binding.textureRegister = textureRegister;
-		binding.texture = texture.handle;
-		return this->addTexture(binding);
+		ZgBinding binding = {};
+		binding.type = ZG_BINDING_TYPE_UNORDERED_TEXTURE;
+		binding.shaderRegister = reg;
+		binding.texture = texture;
+		binding.unorderedTex.mipLevel = mipLevel;
+		return addBinding(binding);
 	}
-
-	PipelineBindings& addUnorderedTexture(ZgUnorderedTextureBinding binding)
-	{
-		sfz_assert(bindings.numUnorderedTextures < ZG_MAX_NUM_UNORDERED_TEXTURES);
-		bindings.unorderedTextures[bindings.numUnorderedTextures] = binding;
-		bindings.numUnorderedTextures += 1;
-		return *this;
-	}
-
-	PipelineBindings& addUnorderedTexture(
-		u32 unorderedRegister,
-		u32 mipLevel,
-		Texture& texture)
-	{
-		ZgUnorderedTextureBinding binding = {};
-		binding.unorderedRegister = unorderedRegister;
-		binding.mipLevel = mipLevel;
-		binding.texture = texture.handle;
-		return this->addUnorderedTexture(binding);
-	}
-};
-
-} // namespace zg
 #endif
+};
 
 // Pipeline Compiler Settings
 // ------------------------------------------------------------------------------------------------
@@ -1733,9 +1671,9 @@ public:
 			this->handle, shaderRegister, data, dataSizeInBytes);
 	}
 
-	ZgResult setPipelineBindings(const PipelineBindings& bindings)
+	ZgResult setPipelineBindings(const ZgPipelineBindings& bindings)
 	{
-		return zgCommandListSetPipelineBindings(this->handle, &bindings.bindings);
+		return zgCommandListSetPipelineBindings(this->handle, &bindings);
 	}
 
 	ZgResult setPipeline(PipelineCompute& pipeline)

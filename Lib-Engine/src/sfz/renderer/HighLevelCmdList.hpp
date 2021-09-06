@@ -37,35 +37,33 @@ namespace sfz {
 
 struct BindingHL final {
 	SfzHandle handle = SFZ_NULL_HANDLE;
+	ZgBindingType type = ZG_BINDING_TYPE_UNDEFINED;
 	u32 reg = ~0u;
 	u32 mipLevel = 0; // Only used for unordered textures
 
 	BindingHL() = default;
-	BindingHL(SfzHandle handle, u32 reg, u32 mipLevel = 0) : handle(handle), reg(reg), mipLevel(mipLevel) {}
+	BindingHL(SfzHandle handle, ZgBindingType type, u32 reg, u32 mipLevel = 0) : handle(handle), type(type), reg(reg), mipLevel(mipLevel) {}
 };
 
 struct Bindings final {
 	ResourceManager* res = &getResourceManager();
-	ArrayLocal<BindingHL, ZG_MAX_NUM_CONSTANT_BUFFERS> constBuffers;
-	ArrayLocal<BindingHL, ZG_MAX_NUM_UNORDERED_BUFFERS> unorderedBuffers;
-	ArrayLocal<BindingHL, ZG_MAX_NUM_TEXTURES> textures;
-	ArrayLocal<BindingHL, ZG_MAX_NUM_UNORDERED_TEXTURES> unorderedTextures;
+	ArrayLocal<BindingHL, ZG_MAX_NUM_BINDINGS> bindings;
 
 	Bindings& addConstBuffer(const char* name, u32 reg) { return addConstBuffer(strID(name), reg); }
 	Bindings& addConstBuffer(strID name, u32 reg) { return addConstBuffer(res->getBufferHandle(name), reg); }
-	Bindings& addConstBuffer(SfzHandle handle, u32 reg) { constBuffers.add(BindingHL(handle, reg)); return *this; }
+	Bindings& addConstBuffer(SfzHandle handle, u32 reg) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_CONST_BUFFER, reg)); return *this; }
 
 	Bindings& addUnorderedBuffer(const char* name, u32 reg) { return addUnorderedBuffer(strID(name), reg); }
 	Bindings& addUnorderedBuffer(strID name, u32 reg) { return addUnorderedBuffer(res->getBufferHandle(name), reg); }
-	Bindings& addUnorderedBuffer(SfzHandle handle, u32 reg) { unorderedBuffers.add(BindingHL(handle, reg)); return *this; }
+	Bindings& addUnorderedBuffer(SfzHandle handle, u32 reg) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_UNORDERED_BUFFER, reg)); return *this; }
 
 	Bindings& addTexture(const char* name, u32 reg) { return addTexture(strID(name), reg); }
 	Bindings& addTexture(strID name, u32 reg) { return addTexture(res->getTextureHandle(name), reg); }
-	Bindings& addTexture(SfzHandle handle, u32 reg) { textures.add(BindingHL(handle, reg)); return *this; }
+	Bindings& addTexture(SfzHandle handle, u32 reg) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_TEXTURE, reg)); return *this; }
 
 	Bindings& addUnorderedTexture(const char* name, u32 reg, u32 mip) { return addUnorderedTexture(strID(name), reg, mip); }
 	Bindings& addUnorderedTexture(strID name, u32 reg, u32 mip) { return addUnorderedTexture(res->getTextureHandle(name), reg, mip); }
-	Bindings& addUnorderedTexture(SfzHandle handle, u32 reg, u32 mip) { unorderedTextures.add(BindingHL(handle, reg, mip)); return *this; }
+	Bindings& addUnorderedTexture(SfzHandle handle, u32 reg, u32 mip) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_UNORDERED_TEXTURE, reg, mip)); return *this; }
 };
 
 // HighLevelCmdList
