@@ -50,8 +50,8 @@ static_assert(sizeof(ImGuiCommand) == sizeof(u32) * 8, "ImguiCommand is padded")
 // ------------------------------------------------------------------------------------------------
 
 struct ImGuiFrameState final {
-	zg::Buffer uploadVertexBuffer;
-	zg::Buffer uploadIndexBuffer;
+	zg::Buffer vertexBuffer;
+	zg::Buffer indexBuffer;
 };
 
 struct ImGuiRenderState final {
@@ -146,6 +146,7 @@ ZgResult imguiInitRenderState(
 	ImGuiRenderState*& stateOut,
 	u32 frameLatency,
 	SfzAllocator* allocator,
+	ZgUploader* uploader,
 	zg::CommandQueue& copyQueue,
 	const ZgImageViewConstCpu& fontTexture) noexcept
 {
@@ -175,7 +176,6 @@ ZgResult imguiInitRenderState(
 	}
 
 	// Allocate memory for font texture
-
 	{
 		sfz_assert_hard(fontTexture.format == ZG_FORMAT_R_U8_UNORM);
 		ZgTextureDesc desc = {};
@@ -190,33 +190,25 @@ ZgResult imguiInitRenderState(
 
 	// Upload font texture to GPU
 	{
-		// Utilize vertex and index buffer upload heap to upload font texture
-		// Create temporary upload buffer
-		zg::Buffer tmpUploadBuffer;
-		ASSERT_ZG tmpUploadBuffer.create(stateOut->fontTexture.sizeInBytes(), ZG_MEMORY_TYPE_UPLOAD);
-
 		// Copy to the texture
 		zg::CommandList commandList;
 		ASSERT_ZG copyQueue.beginCommandListRecording(commandList);
-		ASSERT_ZG commandList.memcpyToTexture(stateOut->fontTexture, 0, fontTexture, tmpUploadBuffer);
+		ASSERT_ZG commandList.uploadToTexture(uploader, stateOut->fontTexture.handle, 0, &fontTexture);
 		ASSERT_ZG commandList.enableQueueTransition(stateOut->fontTexture);
 		ASSERT_ZG copyQueue.executeCommandList(commandList);
 		ASSERT_ZG copyQueue.flush();
 	}
 
-	// Actually create the vertex and index buffers
-	u64 uploadHeapOffset = 0;
+	// Create the vertex and index buffers
 	stateOut->frameStates.init(frameLatency, allocator, sfz_dbg(""));
 	for (u32 i = 0; i < frameLatency; i++) {
 		ImGuiFrameState& frame = stateOut->frameStates.add();
 
-		ASSERT_ZG frame.uploadVertexBuffer.create(
-			IMGUI_VERTEX_BUFFER_SIZE, ZG_MEMORY_TYPE_UPLOAD, false, sfz::str32("ImGui_VertexBuffer_%u", i));
-		uploadHeapOffset += IMGUI_VERTEX_BUFFER_SIZE;
+		ASSERT_ZG frame.vertexBuffer.create(
+			IMGUI_VERTEX_BUFFER_SIZE, ZG_MEMORY_TYPE_DEVICE, false, sfz::str32("ImGui_VertexBuffer_%u", i));
 
-		ASSERT_ZG frame.uploadIndexBuffer.create(
-			IMGUI_INDEX_BUFFER_SIZE, ZG_MEMORY_TYPE_UPLOAD, false, sfz::str32("ImGui_IndexBuffer_%u", i));
-		uploadHeapOffset += IMGUI_INDEX_BUFFER_SIZE;
+		ASSERT_ZG frame.indexBuffer.create(
+			IMGUI_INDEX_BUFFER_SIZE, ZG_MEMORY_TYPE_DEVICE, false, sfz::str32("ImGui_IndexBuffer_%u", i));
 	}
 
 	// TODO: Remove
@@ -240,6 +232,7 @@ void imguiRender(
 	ImGuiRenderState* state,
 	u64 frameIdx,
 	zg::CommandList& cmdList,
+	ZgUploader* uploader,
 	u32 fbWidth,
 	u32 fbHeight,
 	f32 scale,
@@ -313,12 +306,6 @@ void imguiRender(
 	// specified correct frame latency which THEY are syncing on.
 	ImGuiFrameState& imguiFrame = state->getFrameState(frameIdx);
 
-	// Memcpy vertices and indices to imgui upload buffers
-	ASSERT_ZG imguiFrame.uploadVertexBuffer.memcpyUpload(
-		0, state->tmpVertices.data(), state->tmpVertices.size() * sizeof(ImGuiVertex));
-	ASSERT_ZG imguiFrame.uploadIndexBuffer.memcpyUpload(
-		0, state->tmpIndices.data(), state->tmpIndices.size() * sizeof(u32));
-
 	// Begin event
 	ASSERT_ZG cmdList.beginEvent("ImGui");
 
@@ -328,10 +315,19 @@ void imguiRender(
 		ASSERT_ZG cmdList.profileBegin(*profiler, *measurmentIdOut);
 	}
 
+	// Memcpy vertices and indices to imgui upload buffers
+	// Copy vertices and indices to GPU
+	const u32 numVerticesBytes = state->tmpVertices.size() * sizeof(ImGuiVertex);
+	const u32 numIndicesBytes = state->tmpIndices.size() * sizeof(u32);
+	ASSERT_ZG cmdList.uploadToBuffer(
+		uploader, imguiFrame.vertexBuffer.handle, 0, state->tmpVertices.data(), numVerticesBytes);
+	ASSERT_ZG cmdList.uploadToBuffer(
+		uploader, imguiFrame.indexBuffer.handle, 0, state->tmpIndices.data(), numIndicesBytes);
+
 	// Set ImGui pipeline
 	ASSERT_ZG cmdList.setPipeline(state->pipeline);
-	ASSERT_ZG cmdList.setIndexBuffer(imguiFrame.uploadIndexBuffer, ZG_INDEX_BUFFER_TYPE_UINT32);
-	ASSERT_ZG cmdList.setVertexBuffer(0, imguiFrame.uploadVertexBuffer);
+	ASSERT_ZG cmdList.setIndexBuffer(imguiFrame.indexBuffer, ZG_INDEX_BUFFER_TYPE_UINT32);
+	ASSERT_ZG cmdList.setVertexBuffer(0, imguiFrame.vertexBuffer);
 
 	// Bind pipeline parameters
 	ZgPipelineBindings bindings = {};

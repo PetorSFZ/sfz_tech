@@ -83,7 +83,8 @@ void meshResourceUploadBlocking(
 	MeshResource& gpuMesh,
 	const Mesh& cpuMesh,
 	SfzAllocator* cpuAllocator,
-	zg::CommandQueue& copyQueue) noexcept
+	zg::CommandQueue& copyQueue,
+	zg::Uploader& uploaderCopy) noexcept
 {
 	ResourceManager& resources = getResourceManager();
 	sfz_assert(gpuMesh.vertexBuffer != SFZ_NULL_HANDLE);
@@ -105,24 +106,18 @@ void meshResourceUploadBlocking(
 	zg::Buffer& materialsBuffer = materialsBufferResource->staticMem.buffer;
 
 	// Begin recording copy queue command list
-	zg::CommandList commandList;
-	CHECK_ZG copyQueue.beginCommandListRecording(commandList);
+	zg::CommandList cmdList;
+	CHECK_ZG copyQueue.beginCommandListRecording(cmdList);
 
-	// Allocate vertex upload buffer, memcpy data to it and queue upload command
-	u32 vertexBufferSizeBytes = cpuMesh.vertices.size() * sizeof(Vertex);
-	zg::Buffer vertexUploadBuffer;
-	CHECK_ZG vertexUploadBuffer.create(vertexBufferSizeBytes, ZG_MEMORY_TYPE_UPLOAD);
-	CHECK_ZG vertexUploadBuffer.memcpyUpload(0, cpuMesh.vertices.data(), vertexBufferSizeBytes);
-	CHECK_ZG commandList.memcpyBufferToBuffer(
-		vertexBuffer, 0, vertexUploadBuffer, 0, vertexBufferSizeBytes);
+	// Upload vertex buffer
+	const u32 vertexBufferSizeBytes = cpuMesh.vertices.size() * sizeof(Vertex);
+	CHECK_ZG cmdList.uploadToBuffer(
+		uploaderCopy.handle, vertexBuffer.handle, 0, cpuMesh.vertices.data(), vertexBufferSizeBytes);
 
-	// Allocate index upload buffer, memcpy data to it and queue upload command
-	u32 indexBufferSizeBytes = cpuMesh.indices.size() * sizeof(u32);
-	zg::Buffer indexUploadBuffer;
-	CHECK_ZG indexUploadBuffer.create(indexBufferSizeBytes, ZG_MEMORY_TYPE_UPLOAD);
-	CHECK_ZG indexUploadBuffer.memcpyUpload(0, cpuMesh.indices.data(), indexBufferSizeBytes);
-	CHECK_ZG commandList.memcpyBufferToBuffer(
-		indexBuffer, 0, indexUploadBuffer, 0, indexBufferSizeBytes);
+	// Upload index buffer
+	const u32 indexBufferSizeBytes = cpuMesh.indices.size() * sizeof(u32);
+	CHECK_ZG cmdList.uploadToBuffer(
+		uploaderCopy.handle, indexBuffer.handle, 0, cpuMesh.indices.data(), indexBufferSizeBytes);
 
 	// Allocate (cpu) memory for temporary materials buffer and fill it
 	sfz_assert(gpuMesh.numMaterials == cpuMesh.materials.size());
@@ -133,13 +128,10 @@ void meshResourceUploadBlocking(
 		gpuMaterials[i] = cpuMaterialToShaderMaterial(cpuMesh.materials[i]);
 	}
 
-	// Allocate temporary materials upload buffer, memcpy data to it and queue upload command
-	u32 materialsBufferSizeBytes = cpuMesh.materials.size() * sizeof(ShaderMaterial);
-	zg::Buffer materialsUploadBuffer;
-	CHECK_ZG materialsUploadBuffer.create(materialsBufferSizeBytes, ZG_MEMORY_TYPE_UPLOAD);
-	CHECK_ZG materialsUploadBuffer.memcpyUpload(0, gpuMaterials.data(), materialsBufferSizeBytes);
-	CHECK_ZG commandList.memcpyBufferToBuffer(
-		materialsBuffer, 0, materialsUploadBuffer, 0, materialsBufferSizeBytes);
+	// Upload materials buffer
+	const u32 materialsBufferSizeBytes = cpuMesh.materials.size() * sizeof(ShaderMaterial);
+	CHECK_ZG cmdList.uploadToBuffer(
+		uploaderCopy.handle, materialsBuffer.handle, 0, gpuMaterials.data(), materialsBufferSizeBytes);
 
 	// Copy components
 	sfz_assert(cpuMesh.components.size() == gpuMesh.components.size());
@@ -157,12 +149,12 @@ void meshResourceUploadBlocking(
 	}
 	
 	// Enable resources to be used on other queues than copy queue
-	CHECK_ZG commandList.enableQueueTransition(vertexBuffer);
-	CHECK_ZG commandList.enableQueueTransition(indexBuffer);
-	CHECK_ZG commandList.enableQueueTransition(materialsBuffer);
+	CHECK_ZG cmdList.enableQueueTransition(vertexBuffer);
+	CHECK_ZG cmdList.enableQueueTransition(indexBuffer);
+	CHECK_ZG cmdList.enableQueueTransition(materialsBuffer);
 
 	// Execute command list to upload all data
-	CHECK_ZG copyQueue.executeCommandList(commandList);
+	CHECK_ZG copyQueue.executeCommandList(cmdList);
 	CHECK_ZG copyQueue.flush();
 }
 

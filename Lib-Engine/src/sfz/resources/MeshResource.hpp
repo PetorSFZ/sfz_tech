@@ -57,6 +57,7 @@ void meshResourceUploadBlocking(
 	MeshResource& gpuMesh,
 	const Mesh& cpuMesh,
 	SfzAllocator* cpuAllocator,
-	zg::CommandQueue& copyQueue) noexcept;
+	zg::CommandQueue& copyQueue,
+	zg::Uploader& uploaderCopy) noexcept;
 
 } // namespace sfz

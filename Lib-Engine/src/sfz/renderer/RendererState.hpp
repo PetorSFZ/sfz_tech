@@ -73,6 +73,10 @@ struct RendererState final {
 	zg::CommandQueue presentQueue;
 	zg::CommandQueue copyQueue;
 
+	// Uploaders
+	zg::Uploader uploaderCopy;
+	zg::Uploader uploaderPresent;
+
 	// Profiler
 	zg::Profiler profiler;
 	PerFrameData<FrameProfilingIDs> frameMeasurementIds;

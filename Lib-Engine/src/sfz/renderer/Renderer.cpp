@@ -82,6 +82,19 @@ bool Renderer::init(
 	mState->presentQueue = zg::CommandQueue::getPresentQueue();
 	mState->copyQueue = zg::CommandQueue::getCopyQueue();
 
+	// Initialize uploaders
+	{
+		ZgUploaderDesc desc = {};
+		desc.debugName = "UploaderCopyQueue";
+		desc.sizeBytes = 256 * 1024 * 1024; // 256 MiB should be enough for anyone
+		CHECK_ZG mState->uploaderCopy.create(desc);
+
+		desc = {};
+		desc.debugName = "UploaderPresentQueue";
+		desc.sizeBytes = 128 * 1024 * 1024; // 128 MiB should be enough for anyone
+		CHECK_ZG mState->uploaderPresent.create(desc);
+	}
+
 	// Initialize profiler
 	{
 		ZgProfilerDesc desc = {};
@@ -104,6 +117,7 @@ bool Renderer::init(
 		mState->imguiRenderState,
 		mState->frameLatency,
 		mState->allocator,
+		mState->uploaderCopy.handle,
 		mState->copyQueue,
 		zgFontTextureView);
 	if (!imguiInitSuccess) {
@@ -203,7 +217,7 @@ bool Renderer::uploadTextureBlocking(
 	// Create resource and upload blocking
 	TextureResource resource = TextureResource::createFixedSize(id.str(), image, generateMipmaps);
 	sfz_assert(resource.texture.valid());
-	resource.uploadBlocking(image, mState->allocator, mState->copyQueue);
+	resource.uploadBlocking(image, mState->allocator, mState->uploaderCopy.handle, mState->copyQueue);
 	
 	// Add to resource manager
 	resources.addTexture(sfz_move(resource));
@@ -238,7 +252,7 @@ bool Renderer::uploadMeshBlocking(strID id, const Mesh& mesh) noexcept
 
 	// Upload memory to mesh
 	meshResourceUploadBlocking(
-		gpuMesh, mesh, mState->allocator, mState->copyQueue);
+		gpuMesh, mesh, mState->allocator, mState->copyQueue, mState->uploaderCopy);
 
 	// Store mesh
 	resources.addMesh(sfz_move(gpuMesh));
@@ -367,7 +381,8 @@ HighLevelCmdList Renderer::beginCommandList(const char* cmdListName)
 
 	// Create high level command list
 	HighLevelCmdList cmdList;
-	cmdList.init(cmdListName, mState->currentFrameIdx, sfz_move(zgCmdList), &mState->windowFramebuffer);
+	cmdList.init(
+		cmdListName, mState->currentFrameIdx, sfz_move(zgCmdList), &mState->uploaderPresent, &mState->windowFramebuffer);
 
 	return cmdList;
 }
@@ -426,6 +441,7 @@ void Renderer::frameFinish()
 			mState->imguiRenderState,
 			mState->currentFrameIdx,
 			cmdList,
+			mState->uploaderPresent.handle,
 			u32(mState->windowRes.x),
 			u32(mState->windowRes.y),
 			mState->imguiScaleSetting->floatValue(),

@@ -42,6 +42,7 @@
 #include "d3d12/D3D12Memory.hpp"
 #include "d3d12/D3D12Pipelines.hpp"
 #include "d3d12/D3D12Profiler.hpp"
+#include "d3d12/D3D12Uploader.hpp"
 
 // Implementation notes
 // ------------------------------------------------------------------------------------------------
@@ -811,6 +812,23 @@ ZG_API u32 zgTextureSizeInBytes(
 	return u32(texture->totalSizeInBytes);
 }
 
+// Uploader
+// ------------------------------------------------------------------------------------------------
+
+ZG_API ZgResult zgUploaderCreate(
+	ZgUploader** uploaderOut,
+	const ZgUploaderDesc* desc)
+{
+	return createUploader(*uploaderOut, *desc, ctxState->d3d12Allocator);
+}
+
+ZG_API void zgUploaderDestroy(
+	ZgUploader* uploader)
+{
+	if (uploader == nullptr) return;
+	sfz_delete(getAllocator(), uploader);
+}
+
 // Pipeline Compute
 // ------------------------------------------------------------------------------------------------
 
@@ -1040,6 +1058,27 @@ ZG_API ZgResult zgCommandListEndEvent(
 	return commandList->endEvent();
 }
 
+ZG_API ZgResult zgCommandListUploadToBuffer(
+	ZgCommandList* commandList,
+	ZgUploader* uploader,
+	ZgBuffer* dstBuffer,
+	u64 dstBufferOffsetBytes,
+	const void* src,
+	u64 numBytes)
+{
+	return commandList->uploadToBuffer(uploader, dstBuffer, dstBufferOffsetBytes, src, numBytes);
+}
+
+ZG_API ZgResult zgCommandListUploadToTexture(
+	ZgCommandList* commandList,
+	ZgUploader* uploader,
+	ZgTexture* dstTexture,
+	u32 dstTextureMipLevel,
+	const ZgImageViewConstCpu* srcImageCpu)
+{
+	return commandList->uploadToTexture(uploader, dstTexture, dstTextureMipLevel, srcImageCpu);
+}
+
 ZG_API ZgResult zgCommandListMemcpyBufferToBuffer(
 	ZgCommandList* commandList,
 	ZgBuffer* dstBuffer,
@@ -1055,25 +1094,6 @@ ZG_API ZgResult zgCommandListMemcpyBufferToBuffer(
 		srcBuffer,
 		srcBufferOffsetBytes,
 		numBytes);
-}
-
-ZG_API ZgResult zgCommandListMemcpyToTexture(
-	ZgCommandList* commandList,
-	ZgTexture* dstTexture,
-	u32 dstTextureMipLevel,
-	const ZgImageViewConstCpu* srcImageCpu,
-	ZgBuffer* tempUploadBuffer)
-{
-	ZG_ARG_CHECK(srcImageCpu->data == nullptr, "");
-	ZG_ARG_CHECK(srcImageCpu->width == 0, "");
-	ZG_ARG_CHECK(srcImageCpu->height == 0, "");
-	ZG_ARG_CHECK(srcImageCpu->pitchInBytes < srcImageCpu->width, "");
-	ZG_ARG_CHECK(dstTextureMipLevel >= ZG_MAX_NUM_MIPMAPS, "Invalid target mip level");
-	return commandList->memcpyToTexture(
-		dstTexture,
-		dstTextureMipLevel,
-		*srcImageCpu,
-		tempUploadBuffer);
 }
 
 ZG_API ZgResult zgCommandListEnableQueueTransitionBuffer(

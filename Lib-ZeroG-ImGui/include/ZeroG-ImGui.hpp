@@ -33,6 +33,7 @@ ZgResult imguiInitRenderState(
 	ImGuiRenderState*& stateOut,
 	u32 frameLatency,
 	SfzAllocator* allocator,
+	ZgUploader* uploader,
 	zg::CommandQueue& copyQueue,
 	const ZgImageViewConstCpu& fontTexture) noexcept;
 
@@ -42,6 +43,7 @@ void imguiRender(
 	ImGuiRenderState* state,
 	u64 frameIdx,
 	zg::CommandList& cmdList,
+	ZgUploader* uploader,
 	u32 fbWidth,
 	u32 fbHeight,
 	f32 scale,

@@ -27,6 +27,7 @@
 // will also get the definitions for the lightweight C++ wrapper API (mainly for managing memory
 // using RAII).
 
+
 // Macros and includes
 // ------------------------------------------------------------------------------------------------
 
@@ -48,12 +49,13 @@
 	struct name; \
 	typedef struct name name
 
+
 // ZeroG handles
 // ------------------------------------------------------------------------------------------------
 
 ZG_HANDLE(ZgBuffer);
 ZG_HANDLE(ZgTexture);
-ZG_HANDLE(ZgMemoryHeap);
+ZG_HANDLE(ZgUploader);
 ZG_HANDLE(ZgPipelineCompute);
 ZG_HANDLE(ZgPipelineRender);
 ZG_HANDLE(ZgFramebuffer);
@@ -61,6 +63,7 @@ ZG_HANDLE(ZgFence);
 ZG_HANDLE(ZgProfiler);
 ZG_HANDLE(ZgCommandList);
 ZG_HANDLE(ZgCommandQueue);
+
 
 // Bool
 // ------------------------------------------------------------------------------------------------
@@ -71,17 +74,19 @@ typedef enum {
 	ZG_BOOL_FORCE_I32 = I32_MAX
 } ZgBool;
 
+
 // Version information
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const u32 ZG_COMPILED_API_VERSION = 41;
+static const u32 ZG_COMPILED_API_VERSION = 42;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
 // As long as the DLL has the same API version as the version you compiled with it should be
 // compatible.
 ZG_API u32 zgApiLinkedVersion(void);
+
 
 // Backends
 // ------------------------------------------------------------------------------------------------
@@ -96,6 +101,7 @@ typedef enum {
 
 // Returns the backend compiled into this API
 ZG_API ZgBackendType zgBackendCompiledType(void);
+
 
 // Results
 // ------------------------------------------------------------------------------------------------
@@ -131,6 +137,7 @@ inline ZgBool zgIsSuccess(ZgResult res) { return res == ZG_SUCCESS ? ZG_TRUE : Z
 inline ZgBool zgIsWarning(ZgResult res) { return res > 0 ? ZG_TRUE : ZG_FALSE; }
 inline ZgBool zgIsError(ZgResult res) { return res < 0 ? ZG_TRUE : ZG_FALSE; }
 
+
 // Common C++ Wrapper Stuff
 // ------------------------------------------------------------------------------------------------
 
@@ -159,6 +166,7 @@ struct ManagedHandle {
 
 } // namespace zg
 #endif
+
 
 // Buffer
 // ------------------------------------------------------------------------------------------------
@@ -238,6 +246,7 @@ public:
 
 } // namespace zg
 #endif
+
 
 // Textures
 // ------------------------------------------------------------------------------------------------
@@ -340,6 +349,44 @@ public:
 
 } // namespace zg
 #endif
+
+
+// Uploader
+// ------------------------------------------------------------------------------------------------
+
+sfz_struct(ZgUploaderDesc) {
+
+	// Debug name of this uploader
+	const char* debugName;
+
+	// The size of the backing buffer used by the uploader in bytes. This should be big enough to
+	// fit all the uploads done using the uploader, plus some slack. On D3D12 this corresponds to
+	// a committed allocation of an UPLOAD buffer.
+	u64 sizeBytes;
+};
+
+ZG_API ZgResult zgUploaderCreate(
+	ZgUploader** uploaderOut,
+	const ZgUploaderDesc* desc);
+
+ZG_API void zgUploaderDestroy(
+	ZgUploader* uploader);
+
+#ifdef __cplusplus
+namespace zg {
+
+class Uploader final : public ManagedHandle<ZgUploader, zgUploaderDestroy> {
+public:
+	ZgResult create(const ZgUploaderDesc& desc)
+	{
+		this->destroy();
+		return zgUploaderCreate(&this->handle, &desc);
+	}
+};
+
+} // namespace zg
+#endif
+
 
 // Pipeline Bindings
 // ------------------------------------------------------------------------------------------------
@@ -473,6 +520,7 @@ sfz_struct(ZgPipelineBindings) {
 #endif
 };
 
+
 // Pipeline Compiler Settings
 // ------------------------------------------------------------------------------------------------
 
@@ -501,6 +549,7 @@ sfz_struct(ZgPipelineCompileSettingsHLSL) {
 	// Flags to the DXC compiler
 	const char* dxcCompilerFlags[ZG_MAX_NUM_DXC_COMPILER_FLAGS];
 };
+
 
 // Pipeline Compute
 // ------------------------------------------------------------------------------------------------
@@ -697,6 +746,7 @@ public:
 } // namespace zg
 #endif
 
+
 // Pipeline Render Signature
 // ------------------------------------------------------------------------------------------------
 
@@ -771,6 +821,7 @@ sfz_struct(ZgPipelineRenderSignature) {
 	u32 numRenderTargets;
 	ZgFormat renderTargets[ZG_MAX_NUM_RENDER_TARGETS];
 };
+
 
 // Pipeline Render
 // ------------------------------------------------------------------------------------------------
@@ -1164,6 +1215,7 @@ public:
 } // namespace zg
 #endif
 
+
 // Framebuffer
 // ------------------------------------------------------------------------------------------------
 
@@ -1241,6 +1293,7 @@ public:
 } // namespace zg
 #endif
 
+
 // Profiler
 // ------------------------------------------------------------------------------------------------
 
@@ -1293,6 +1346,7 @@ public:
 
 } // namespace zg
 #endif
+
 
 // Fence
 // ------------------------------------------------------------------------------------------------
@@ -1357,6 +1411,7 @@ public:
 } // namespace zg
 #endif
 
+
 // Command list
 // ------------------------------------------------------------------------------------------------
 
@@ -1380,6 +1435,21 @@ ZG_API ZgResult zgCommandListBeginEvent(
 ZG_API ZgResult zgCommandListEndEvent(
 	ZgCommandList* commandList);
 
+ZG_API ZgResult zgCommandListUploadToBuffer(
+	ZgCommandList* commandList,
+	ZgUploader* uploader,
+	ZgBuffer* dstBuffer,
+	u64 dstBufferOffsetBytes,
+	const void* src,
+	u64 numBytes);
+
+ZG_API ZgResult zgCommandListUploadToTexture(
+	ZgCommandList* commandList,
+	ZgUploader* uploader,
+	ZgTexture* dstTexture,
+	u32 dstTextureMipLevel,
+	const ZgImageViewConstCpu* srcImageCpu);
+
 ZG_API ZgResult zgCommandListMemcpyBufferToBuffer(
 	ZgCommandList* commandList,
 	ZgBuffer* dstBuffer,
@@ -1387,20 +1457,6 @@ ZG_API ZgResult zgCommandListMemcpyBufferToBuffer(
 	ZgBuffer* srcBuffer,
 	u64 srcBufferOffsetBytes,
 	u64 numBytes);
-
-// Copies an image from the CPU to a texture on the GPU.
-//
-// The CPU image (srcImageCpu) is first (synchronously) copied to a temporary upload buffer
-// (tempUploadBuffer), and then asynchronously copied from this upload buffer to the specified
-// texture (dstTexture). In other words, the CPU memory containing the image can freely be removed
-// after this call. The temporary upload buffer must not be touched until this command list has
-// finished executing.
-ZG_API ZgResult zgCommandListMemcpyToTexture(
-	ZgCommandList* commandList,
-	ZgTexture* dstTexture,
-	u32 dstTextureMipLevel,
-	const ZgImageViewConstCpu* srcImageCpu,
-	ZgBuffer* tempUploadBuffer);
 
 // Transitions the specified buffer from copy queue -> other queues and vice versa.
 //
@@ -1564,6 +1620,36 @@ public:
 		return zgCommandListEndEvent(this->handle);
 	}
 
+	ZgResult uploadToBuffer(
+		ZgUploader* uploader,
+		ZgBuffer* dstBuffer,
+		u64 dstBufferOffsetBytes,
+		const void* src,
+		u64 numBytes)
+	{
+		return zgCommandListUploadToBuffer(
+			this->handle,
+			uploader,
+			dstBuffer,
+			dstBufferOffsetBytes,
+			src,
+			numBytes);
+	}
+
+	ZgResult uploadToTexture(
+		ZgUploader* uploader,
+		ZgTexture* dstTexture,
+		u32 dstTextureMipLevel,
+		const ZgImageViewConstCpu* srcImageCpu)
+	{
+		return zgCommandListUploadToTexture(
+			this->handle,
+			uploader,
+			dstTexture,
+			dstTextureMipLevel,
+			srcImageCpu);
+	}
+
 	ZgResult memcpyBufferToBuffer(
 		Buffer& dstBuffer,
 		u64 dstBufferOffsetBytes,
@@ -1578,20 +1664,6 @@ public:
 			srcBuffer.handle,
 			srcBufferOffsetBytes,
 			numBytes);
-	}
-
-	ZgResult memcpyToTexture(
-		Texture& dstTexture,
-		u32 dstTextureMipLevel,
-		const ZgImageViewConstCpu& srcImageCpu,
-		Buffer& tempUploadBuffer)
-	{
-		return zgCommandListMemcpyToTexture(
-			this->handle,
-			dstTexture.handle,
-			dstTextureMipLevel,
-			&srcImageCpu,
-			tempUploadBuffer.handle);
 	}
 
 	ZgResult enableQueueTransition(Buffer& buffer)
@@ -1728,6 +1800,7 @@ public:
 } // namespace zg
 #endif
 
+
 // Command queue
 // ------------------------------------------------------------------------------------------------
 
@@ -1812,6 +1885,7 @@ public:
 } // namespace zg
 #endif
 
+
 // Logging interface
 // ------------------------------------------------------------------------------------------------
 
@@ -1838,6 +1912,7 @@ sfz_struct(ZgLogger) {
 	// User specified pointer that is provied to each log() call.
 	void* userPtr;
 };
+
 
 // Context
 // ------------------------------------------------------------------------------------------------
@@ -2030,6 +2105,7 @@ sfz_struct(ZgFeatureSupport) {
 };
 
 ZG_API ZgResult zgContextGetFeatureSupport(ZgFeatureSupport* featureSupportOut);
+
 
 // Transformation and projection matrices
 // ------------------------------------------------------------------------------------------------

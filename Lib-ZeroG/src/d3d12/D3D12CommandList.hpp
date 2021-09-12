@@ -30,6 +30,7 @@
 #include "d3d12/D3D12Pipelines.hpp"
 #include "d3d12/D3D12Profiler.hpp"
 #include "d3d12/D3D12ResourceTracking.hpp"
+#include "d3d12/D3D12Uploader.hpp"
 
 // Helpers
 // ------------------------------------------------------------------------------------------------
@@ -180,6 +181,95 @@ struct ZgCommandList final {
 		return ZG_SUCCESS;
 	}
 
+	ZgResult uploadToBuffer(
+		ZgUploader* uploader,
+		ZgBuffer* dstBuffer,
+		u64 dstBufferOffsetBytes,
+		const void* src,
+		u64 numBytes)
+	{
+		// Allocate memory range in uploader
+		const UploaderRange range = uploader->allocRange(numBytes);
+		if (range.numBytes == 0) return ZG_ERROR_CPU_OUT_OF_MEMORY;
+
+		// Copy memory to uploader range
+		ZgResult res = uploader->memcpy(range, src, numBytes);
+		if (res != ZG_SUCCESS) return res;
+
+		// Set dst buffers required resource state
+		requireResourceStateBuffer(
+			*this->commandList.Get(), this->tracking, dstBuffer, D3D12_RESOURCE_STATE_COPY_DEST);
+
+		// Issue memcpy to command list
+		commandList->CopyBufferRegion(
+			dstBuffer->resource.resource,
+			dstBufferOffsetBytes,
+			uploader->resource,
+			range.idx,
+			numBytes);
+
+		return ZG_SUCCESS;
+	}
+
+	ZgResult uploadToTexture(
+		ZgUploader* uploader,
+		ZgTexture* dstTexture,
+		u32 dstTextureMipLevel,
+		const ZgImageViewConstCpu* srcImageCpu)
+	{
+		// Check that mip level is valid
+		if (dstTextureMipLevel >= dstTexture->numMipmaps) return ZG_ERROR_INVALID_ARGUMENT;
+
+		// Calculate width and height of this mip level
+		u32 dstTexMipWidth = dstTexture->width;
+		u32 dstTexMipHeight = dstTexture->height;
+		for (u32 i = 0; i < dstTextureMipLevel; i++) {
+			dstTexMipWidth /= 2;
+			dstTexMipHeight /= 2;
+		}
+
+		// Check that CPU image has correct dimensions and format
+		if (srcImageCpu->format != dstTexture->zgFormat) return ZG_ERROR_INVALID_ARGUMENT;
+		if (srcImageCpu->width != dstTexMipWidth) return ZG_ERROR_INVALID_ARGUMENT;
+		if (srcImageCpu->height != dstTexMipHeight) return ZG_ERROR_INVALID_ARGUMENT;
+
+		// Allocate memory range in uploader
+		const u32 numBytesPerPixel = numBytesPerPixelForFormat(srcImageCpu->format);
+		const u32 numBytesPerRow = srcImageCpu->width * numBytesPerPixel;
+		const u32 pitch = (u32)sfz::roundUpAligned(
+			numBytesPerRow, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
+		const u32 requiredUploadSize = pitch * srcImageCpu->height;
+		const UploaderRange range = uploader->allocRange(requiredUploadSize);
+		if (range.numBytes == 0) return ZG_ERROR_CPU_OUT_OF_MEMORY;
+
+		// Memcpy cpu image to uploader
+		for (u32 y = 0; y < srcImageCpu->height; y++) {
+			const u8* rowPtr = ((const u8*)srcImageCpu->data) + srcImageCpu->pitchInBytes * y;
+			u8* dstPtr = uploader->mappedPtr + range.idx + pitch * y;
+			memcpy(dstPtr, rowPtr, numBytesPerRow);
+		}
+
+		// Set texture resource state
+		requireResourceStateTextureMip(
+			*this->commandList.Get(), this->tracking, dstTexture, dstTextureMipLevel, D3D12_RESOURCE_STATE_COPY_DEST);
+
+		// Issue copy command
+		D3D12_TEXTURE_COPY_LOCATION tmpCopyLoc = {};
+		tmpCopyLoc.pResource = uploader->resource;
+		tmpCopyLoc.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+		tmpCopyLoc.PlacedFootprint = dstTexture->subresourceFootprints[dstTextureMipLevel];
+		tmpCopyLoc.PlacedFootprint.Offset = range.idx;
+
+		D3D12_TEXTURE_COPY_LOCATION dstCopyLoc = {};
+		dstCopyLoc.pResource = dstTexture->resource.resource;
+		dstCopyLoc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+		dstCopyLoc.SubresourceIndex = dstTextureMipLevel;
+
+		commandList->CopyTextureRegion(&dstCopyLoc, 0, 0, 0, &tmpCopyLoc, nullptr);
+
+		return ZG_SUCCESS;
+	}
+
 	ZgResult memcpyBufferToBuffer(
 		ZgBuffer* dstBuffer,
 		u64 dstBufferOffsetBytes,
@@ -207,97 +297,6 @@ struct ZgCommandList final {
 			srcBuffer->resource.resource,
 			srcBufferOffsetBytes,
 			numBytes);
-
-		return ZG_SUCCESS;
-	}
-
-	ZgResult memcpyToTexture(
-		ZgTexture* dstTextureIn,
-		u32 dstTextureMipLevel,
-		const ZgImageViewConstCpu& srcImageCpu,
-		ZgBuffer* tempUploadBufferIn) noexcept
-	{
-		ZgTexture& dstTexture = *dstTextureIn;
-		ZgBuffer& tmpBuffer = *tempUploadBufferIn;
-
-		// Check that mip level is valid
-		if (dstTextureMipLevel >= dstTexture.numMipmaps) return ZG_ERROR_INVALID_ARGUMENT;
-
-		// Calculate width and height of this mip level
-		u32 dstTexMipWidth = dstTexture.width;
-		u32 dstTexMipHeight = dstTexture.height;
-		for (u32 i = 0; i < dstTextureMipLevel; i++) {
-			dstTexMipWidth /= 2;
-			dstTexMipHeight /= 2;
-		}
-
-		// Check that CPU image has correct dimensions and format
-		if (srcImageCpu.format != dstTexture.zgFormat) return ZG_ERROR_INVALID_ARGUMENT;
-		if (srcImageCpu.width != dstTexMipWidth) return ZG_ERROR_INVALID_ARGUMENT;
-		if (srcImageCpu.height != dstTexMipHeight) return ZG_ERROR_INVALID_ARGUMENT;
-
-		// Check that temp buffer is upload
-		if (tmpBuffer.memoryType != ZG_MEMORY_TYPE_UPLOAD) return ZG_ERROR_INVALID_ARGUMENT;
-
-		// Check that upload buffer is big enough
-		u32 numBytesPerPixel = numBytesPerPixelForFormat(srcImageCpu.format);
-		u32 numBytesPerRow = srcImageCpu.width * numBytesPerPixel;
-		u32 tmpBufferPitch = ((numBytesPerRow + D3D12_TEXTURE_DATA_PITCH_ALIGNMENT - 1) /
-			D3D12_TEXTURE_DATA_PITCH_ALIGNMENT) * D3D12_TEXTURE_DATA_PITCH_ALIGNMENT;
-		u32 tmpBufferRequiredSize = tmpBufferPitch * srcImageCpu.height;
-		if (tmpBuffer.resource.allocation->GetSize() < tmpBufferRequiredSize) {
-			ZG_ERROR("Temporary buffer is too small, it is %u bytes, but %u bytes is required."
-				" The pitch of the upload buffer is required to be %u byte aligned.",
-				u32(tmpBuffer.resource.allocation->GetSize()),
-				tmpBufferRequiredSize,
-				D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
-			return ZG_ERROR_INVALID_ARGUMENT;
-		}
-
-		// Not gonna read from temp buffer
-		D3D12_RANGE readRange = {};
-		readRange.Begin = 0;
-		readRange.End = 0;
-
-		// Map buffer
-		void* mappedPtr = nullptr;
-		if (D3D12_FAIL(tmpBuffer.resource.resource->Map(0, &readRange, &mappedPtr))) {
-			return ZG_ERROR_GENERIC;
-		}
-
-		// Memcpy cpu image to tmp buffer
-		for (u32 y = 0; y < srcImageCpu.height; y++) {
-			const u8* rowPtr = ((const u8*)srcImageCpu.data) + srcImageCpu.pitchInBytes * y;
-			u8* dstPtr = reinterpret_cast<u8*>(mappedPtr) + tmpBufferPitch * y;
-			memcpy(dstPtr, rowPtr, numBytesPerRow);
-		}
-
-		// Unmap buffer
-		tmpBuffer.resource.resource->Unmap(0, nullptr);
-
-		// Set texture resource state
-		requireResourceStateTextureMip(
-			*this->commandList.Get(), this->tracking, &dstTexture, dstTextureMipLevel, D3D12_RESOURCE_STATE_COPY_DEST);
-
-		// Issue copy command
-		D3D12_TEXTURE_COPY_LOCATION tmpCopyLoc = {};
-		tmpCopyLoc.pResource = tmpBuffer.resource.resource;
-		tmpCopyLoc.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
-		tmpCopyLoc.PlacedFootprint = dstTexture.subresourceFootprints[dstTextureMipLevel];
-
-		// TODO: THIS IS A HACK
-		// Essentially, in D3D12 you are meant to upload all of your subresources (i.e. mip levels)
-		// at the same time. All of these mip levels will be in THE SAME temporary upload buffer. What
-		// we instead have done here is said that each mip level will be in its own temporary upload
-		// buffer, thus we need to modify the placed footprint so that it does not have an offset.
-		tmpCopyLoc.PlacedFootprint.Offset = 0;
-
-		D3D12_TEXTURE_COPY_LOCATION dstCopyLoc = {};
-		dstCopyLoc.pResource = dstTexture.resource.resource;
-		dstCopyLoc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-		dstCopyLoc.SubresourceIndex = dstTextureMipLevel;
-
-		commandList->CopyTextureRegion(&dstCopyLoc, 0, 0, 0, &tmpCopyLoc, nullptr);
 
 		return ZG_SUCCESS;
 	}

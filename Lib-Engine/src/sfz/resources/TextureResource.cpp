@@ -193,6 +193,7 @@ ZgResult TextureResource::build(i32x2 screenRes)
 void TextureResource::uploadBlocking(
 	const ImageViewConst& image,
 	SfzAllocator* cpuAllocator,
+	ZgUploader* uploader,
 	zg::CommandQueue& copyQueue)
 {
 	sfz_assert(texture.valid());
@@ -227,20 +228,11 @@ void TextureResource::uploadBlocking(
 		imageViews[i + 1] = toZeroGImageView(mipmaps[i]);
 	}
 
-	// Allocate temporary upload buffers
-	zg::Buffer tmpUploadBuffers[ZG_MAX_NUM_MIPMAPS];
-	for (u32 i = 0; i < numMipmaps; i++) {
-		// TODO: Figure out exactly how much memory is needed
-		u32 bufferSize = (imageViews[i].pitchInBytes * imageViews[i].height) + 65536;
-		CHECK_ZG tmpUploadBuffers[i].create(bufferSize, ZG_MEMORY_TYPE_UPLOAD);
-		sfz_assert(tmpUploadBuffers[i].valid());
-	}
-
 	// Copy texture to GPU
 	zg::CommandList commandList;
 	CHECK_ZG copyQueue.beginCommandListRecording(commandList);
 	for (u32 i = 0; i < numMipmaps; i++) {
-		CHECK_ZG commandList.memcpyToTexture(texture, i, imageViews[i], tmpUploadBuffers[i]);
+		CHECK_ZG commandList.uploadToTexture(uploader, texture.handle, i, &imageViews[i]);
 	}
 	CHECK_ZG commandList.enableQueueTransition(texture);
 	CHECK_ZG copyQueue.executeCommandList(commandList);

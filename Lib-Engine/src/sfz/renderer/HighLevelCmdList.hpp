@@ -81,6 +81,7 @@ public:
 		const char* cmdListName,
 		u64 currFrameIdx,
 		zg::CommandList cmdList,
+		zg::Uploader* uploader,
 		zg::Framebuffer* defaultFB);
 	void destroy() noexcept;
 
@@ -157,6 +158,7 @@ private:
 	strID mName;
 	u64 mCurrFrameIdx = 0;
 	zg::CommandList mCmdList;
+	zg::Uploader* mUploader = nullptr;
 	ResourceManager* mResources = nullptr;
 	ShaderManager* mShaders = nullptr;
 	Shader* mBoundShader = nullptr;

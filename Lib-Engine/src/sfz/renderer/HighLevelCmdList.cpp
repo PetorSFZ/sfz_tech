@@ -33,12 +33,14 @@ void HighLevelCmdList::init(
 	const char* cmdListName,
 	u64 currFrameIdx,
 	zg::CommandList cmdList,
+	zg::Uploader* uploader,
 	zg::Framebuffer* defaultFB)
 {
 	this->destroy();
 	mName = strID(cmdListName);
 	mCurrFrameIdx = currFrameIdx;
 	mCmdList = sfz_move(cmdList);
+	mUploader = uploader;
 	mResources = &sfz::getResourceManager();
 	mShaders = &sfz::getShaderManager();
 	mDefaultFB = defaultFB;
@@ -121,7 +123,7 @@ void HighLevelCmdList::setBindings(const Bindings& bindings)
 				buffer = bufferRes->staticMem.buffer.handle;
 			}
 			else if (bufferRes->type == BufferResourceType::STREAMING) {
-				buffer = bufferRes->streamingMem.data(mCurrFrameIdx).deviceBuffer.handle;
+				buffer = bufferRes->streamingMem.data(mCurrFrameIdx).buffer.handle;
 			}
 			else {
 				sfz_assert_hard(false);
@@ -179,12 +181,9 @@ void HighLevelCmdList::uploadToStreamingBufferUntyped(
 	// Only allowed to upload to streaming buffer once per frame
 	sfz_assert(memory.lastFrameIdxTouched < mCurrFrameIdx);
 	memory.lastFrameIdxTouched = mCurrFrameIdx;
-
-	// Memcpy to upload buffer
-	CHECK_ZG memory.uploadBuffer.memcpyUpload(0, data, numBytes);
-
-	// Schedule memcpy from upload buffer to device buffer
-	CHECK_ZG mCmdList.memcpyBufferToBuffer(memory.deviceBuffer, 0, memory.uploadBuffer, 0, numBytes);
+	
+	// Upload to buffer
+	CHECK_ZG mCmdList.uploadToBuffer(mUploader->handle, memory.buffer.handle, 0, data, numBytes);
 }
 
 void HighLevelCmdList::setVertexBuffer(u32 slot, SfzHandle handle)
@@ -197,7 +196,7 @@ void HighLevelCmdList::setVertexBuffer(u32 slot, SfzHandle handle)
 		buffer = &resource->staticMem.buffer;
 	}
 	else if (resource->type == BufferResourceType::STREAMING) {
-		buffer = &resource->streamingMem.data(mCurrFrameIdx).deviceBuffer;
+		buffer = &resource->streamingMem.data(mCurrFrameIdx).buffer;
 	}
 	else {
 		sfz_assert_hard(false);
@@ -216,7 +215,7 @@ void HighLevelCmdList::setIndexBuffer(SfzHandle handle, ZgIndexBufferType indexT
 		buffer = &resource->staticMem.buffer;
 	}
 	else if (resource->type == BufferResourceType::STREAMING) {
-		buffer = &resource->streamingMem.data(mCurrFrameIdx).deviceBuffer;
+		buffer = &resource->streamingMem.data(mCurrFrameIdx).buffer;
 	}
 	else {
 		sfz_assert_hard(false);
@@ -273,7 +272,7 @@ void HighLevelCmdList::uavBarrierBuffer(SfzHandle handle)
 		buffer = &resource->staticMem.buffer;
 	}
 	else if (resource->type == BufferResourceType::STREAMING) {
-		buffer = &resource->streamingMem.data(mCurrFrameIdx).deviceBuffer;
+		buffer = &resource->streamingMem.data(mCurrFrameIdx).buffer;
 	}
 	else {
 		sfz_assert_hard(false);

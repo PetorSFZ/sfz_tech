@@ -938,13 +938,13 @@ static ZgResult createRootSignature(
 	ArrayLocal<CD3DX12_ROOT_PARAMETER1, MAX_NUM_ROOT_PARAMETERS> params;
 
 	// Add push constants
-	for (PushConstMapping& mapping : mapping.pushConsts) {
-		mapping.paramIdx = params.size();
+	for (PushConstMapping& push : mapping.pushConsts) {
+		push.paramIdx = params.size();
 
 		CD3DX12_ROOT_PARAMETER1& param = params.add();
-		sfz_assert((mapping.sizeBytes % 4) == 0);
-		sfz_assert(mapping.sizeBytes <= 1024);
-		param.InitAsConstants(mapping.sizeBytes / 4, mapping.reg, 0, D3D12_SHADER_VISIBILITY_ALL);
+		sfz_assert((push.sizeBytes % 4) == 0);
+		sfz_assert(push.sizeBytes <= 1024);
+		param.InitAsConstants(push.sizeBytes / 4, push.reg, 0, D3D12_SHADER_VISIBILITY_ALL);
 		sfz_assert(!params.isFull());
 	}
 
@@ -957,8 +957,8 @@ static ZgResult createRootSignature(
 	// TODO: We currently assume that the CBVs are in a continuous range, i.e. not intermixed with
 	//       push constants.
 	if (!mapping.CBVs.isEmpty()) {
-		for (CBVMapping& mapping : mapping.CBVs) {
-			mapping.tableOffset = currentTableOffset;
+		for (CBVMapping& cbv : mapping.CBVs) {
+			cbv.tableOffset = currentTableOffset;
 			currentTableOffset += 1;
 		}
 		CD3DX12_DESCRIPTOR_RANGE1& rangeCBV = ranges.add();
@@ -969,8 +969,8 @@ static ZgResult createRootSignature(
 	// UAVs
 	// TODO: Assuming all UAVs are in a continuous range.
 	if (!mapping.UAVs.isEmpty()) {
-		for (UAVMapping& mapping : mapping.UAVs) {
-			mapping.tableOffset = currentTableOffset;
+		for (UAVMapping& uav : mapping.UAVs) {
+			uav.tableOffset = currentTableOffset;
 			currentTableOffset += 1;
 		}
 		CD3DX12_DESCRIPTOR_RANGE1& rangeUAV = ranges.add();
@@ -981,8 +981,8 @@ static ZgResult createRootSignature(
 	// SRVs
 	// TODO: Assuming all SRVs are in a continuous range.
 	if (!mapping.SRVs.isEmpty()) {
-		for (SRVMapping& mapping : mapping.SRVs) {
-			mapping.tableOffset = currentTableOffset;
+		for (SRVMapping& srv : mapping.SRVs) {
+			srv.tableOffset = currentTableOffset;
 			currentTableOffset += 1;
 		}
 		CD3DX12_DESCRIPTOR_RANGE1& rangeSRV = ranges.add();

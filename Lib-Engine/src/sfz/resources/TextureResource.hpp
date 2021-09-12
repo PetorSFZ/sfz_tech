@@ -59,6 +59,7 @@ struct TextureResource final {
 	void uploadBlocking(
 		const ImageViewConst& image,
 		SfzAllocator* cpuAllocator,
+		ZgUploader* uploader,
 		zg::CommandQueue& copyQueue);
 
 	static TextureResource createFixedSize(

@@ -89,12 +89,9 @@ BufferResource BufferResource::createStreaming(
 	const bool committedAllocation = false;
 	u32 frameIdx = 0;
 	resource.streamingMem.init(frameLatency, [&](StreamingBufferMemory& memory) {
-		str256 uploadDebugName("%s_upload_%u", name, frameIdx);
-		str256 deviceDebugName("%s_device_%u", name, frameIdx);
+		str256 deviceDebugName("%s_%u", name, frameIdx);
 		frameIdx += 1;
-		CHECK_ZG memory.uploadBuffer.create(
-			sizeBytes, ZG_MEMORY_TYPE_UPLOAD, committedAllocation, uploadDebugName.str());
-		CHECK_ZG memory.deviceBuffer.create(
+		CHECK_ZG memory.buffer.create(
 			sizeBytes, ZG_MEMORY_TYPE_DEVICE, committedAllocation, deviceDebugName.str());
 	});
 

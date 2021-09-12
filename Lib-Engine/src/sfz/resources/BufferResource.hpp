@@ -42,8 +42,7 @@ struct StaticBufferMemory final {
 
 struct StreamingBufferMemory final {
 	u64 lastFrameIdxTouched = 0;
-	zg::Buffer uploadBuffer;
-	zg::Buffer deviceBuffer;
+	zg::Buffer buffer;
 };
 
 struct BufferResource final {
