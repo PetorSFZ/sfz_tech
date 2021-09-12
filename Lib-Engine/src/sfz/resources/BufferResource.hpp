@@ -57,15 +57,17 @@ struct BufferResource final {
 	void uploadBlocking(
 		const T* data,
 		u32 numElements,
+		ZgUploader* uploader,
 		zg::CommandQueue& copyQueue)
 	{
-		uploadBlockingUntyped((const T*)data, sizeof(T), numElements, copyQueue);
+		uploadBlockingUntyped((const T*)data, sizeof(T), numElements, uploader, copyQueue);
 	}
 
 	void uploadBlockingUntyped(
 		const void* data,
 		u32 elementSize,
 		u32 numElements,
+		ZgUploader* uploader,
 		zg::CommandQueue& copyQueue);
 
 	static BufferResource createStatic(

@@ -51,12 +51,14 @@ namespace sfz {
 bool Renderer::init(
 	SDL_Window* window,
 	const ImageViewConst& fontTexture,
-	SfzAllocator* allocator) noexcept
+	SfzAllocator* allocator,
+	zg::Uploader&& uploader)
 {
 	this->destroy();
 	mState = sfz_new<RendererState>(allocator, sfz_dbg("RendererState"));
 	mState->allocator = allocator;
 	mState->window = window;
+	mState->uploader = sfz_move(uploader);
 
 	// Settings
 	GlobalConfig& cfg = getGlobalConfig();
@@ -70,8 +72,9 @@ bool Renderer::init(
 		cfg.sanitizeBool("Renderer", "emitDebugEvents", false, true);
 
 	// Initialize fences
-	mState->frameFences.init(mState->frameLatency, [](zg::Fence& fence) {
-		CHECK_ZG fence.create();
+	mState->frameFences.init(mState->frameLatency, [&](FrameFenceData& data) {
+		CHECK_ZG data.fence.create();
+		CHECK_ZG mState->uploader.getCurrentOffset(data.safeUploaderOffset);
 	});
 
 	// Get window resolution
@@ -81,19 +84,6 @@ bool Renderer::init(
 	// Get command queues
 	mState->presentQueue = zg::CommandQueue::getPresentQueue();
 	mState->copyQueue = zg::CommandQueue::getCopyQueue();
-
-	// Initialize uploaders
-	{
-		ZgUploaderDesc desc = {};
-		desc.debugName = "UploaderCopyQueue";
-		desc.sizeBytes = 256 * 1024 * 1024; // 256 MiB should be enough for anyone
-		CHECK_ZG mState->uploaderCopy.create(desc);
-
-		desc = {};
-		desc.debugName = "UploaderPresentQueue";
-		desc.sizeBytes = 128 * 1024 * 1024; // 128 MiB should be enough for anyone
-		CHECK_ZG mState->uploaderPresent.create(desc);
-	}
 
 	// Initialize profiler
 	{
@@ -117,7 +107,7 @@ bool Renderer::init(
 		mState->imguiRenderState,
 		mState->frameLatency,
 		mState->allocator,
-		mState->uploaderCopy.handle,
+		mState->uploader.handle,
 		mState->copyQueue,
 		zgFontTextureView);
 	if (!imguiInitSuccess) {
@@ -135,7 +125,7 @@ bool Renderer::init(
 	return true;
 }
 
-bool Renderer::loadConfiguration(const char* jsonConfigPath) noexcept
+bool Renderer::loadConfiguration(const char* jsonConfigPath)
 {
 	if (!this->active()) {
 		sfz_assert(false);
@@ -153,12 +143,7 @@ bool Renderer::loadConfiguration(const char* jsonConfigPath) noexcept
 	return true;
 }
 
-void Renderer::swap(Renderer& other) noexcept
-{
-	sfz::swap(this->mState, other.mState);
-}
-
-void Renderer::destroy() noexcept
+void Renderer::destroy()
 {
 	if (mState != nullptr) {
 
@@ -180,26 +165,31 @@ void Renderer::destroy() noexcept
 // Renderer: Getters
 // ------------------------------------------------------------------------------------------------
 
-u64 Renderer::currentFrameIdx() const noexcept
+u64 Renderer::currentFrameIdx() const
 {
 	return mState->currentFrameIdx;
 }
 
-i32x2 Renderer::windowResolution() const noexcept
+i32x2 Renderer::windowResolution() const
 {
 	return mState->windowRes;
 }
 
-void Renderer::frameTimeMs(u64& frameIdxOut, f32& frameTimeMsOut) const noexcept
+void Renderer::frameTimeMs(u64& frameIdxOut, f32& frameTimeMsOut) const
 {
 	frameIdxOut = mState->lastRetrievedFrameTimeFrameIdx;
 	frameTimeMsOut = mState->lastRetrievedFrameTimeMs;
 }
 
+ZgUploader* Renderer::getUploader()
+{
+	return mState->uploader.handle;
+}
+
 // Renderer: ImGui UI methods
 // ------------------------------------------------------------------------------------------------
 
-void Renderer::renderImguiUI() noexcept
+void Renderer::renderImguiUI()
 {
 	mState->ui.render(*mState);
 }
@@ -208,7 +198,7 @@ void Renderer::renderImguiUI() noexcept
 // ------------------------------------------------------------------------------------------------
 
 bool Renderer::uploadTextureBlocking(
-	strID id, const ImageViewConst& image, bool generateMipmaps) noexcept
+	strID id, const ImageViewConst& image, bool generateMipmaps)
 {
 	// Error out and return false if texture already exists
 	ResourceManager& resources = getResourceManager();
@@ -217,7 +207,7 @@ bool Renderer::uploadTextureBlocking(
 	// Create resource and upload blocking
 	TextureResource resource = TextureResource::createFixedSize(id.str(), image, generateMipmaps);
 	sfz_assert(resource.texture.valid());
-	resource.uploadBlocking(image, mState->allocator, mState->uploaderCopy.handle, mState->copyQueue);
+	resource.uploadBlocking(image, mState->allocator, mState->uploader.handle, mState->copyQueue);
 	
 	// Add to resource manager
 	resources.addTexture(sfz_move(resource));
@@ -225,13 +215,13 @@ bool Renderer::uploadTextureBlocking(
 	return true;
 }
 
-bool Renderer::textureLoaded(strID id) const noexcept
+bool Renderer::textureLoaded(strID id) const
 {
 	ResourceManager& resources = getResourceManager();
 	return resources.getTextureHandle(id) != SFZ_NULL_HANDLE;
 }
 
-void Renderer::removeTextureGpuBlocking(strID id) noexcept
+void Renderer::removeTextureGpuBlocking(strID id)
 {
 	// Ensure not between frameBegin() and frameFinish()
 	sfz_assert(!mState->windowFramebuffer.valid());
@@ -240,7 +230,7 @@ void Renderer::removeTextureGpuBlocking(strID id) noexcept
 	resources.removeTexture(id);
 }
 
-bool Renderer::uploadMeshBlocking(strID id, const Mesh& mesh) noexcept
+bool Renderer::uploadMeshBlocking(strID id, const Mesh& mesh)
 {
 	// Error out and return false if mesh already exists
 	ResourceManager& resources = getResourceManager();
@@ -252,7 +242,7 @@ bool Renderer::uploadMeshBlocking(strID id, const Mesh& mesh) noexcept
 
 	// Upload memory to mesh
 	meshResourceUploadBlocking(
-		gpuMesh, mesh, mState->allocator, mState->copyQueue, mState->uploaderCopy);
+		gpuMesh, mesh, mState->copyQueue, mState->uploader);
 
 	// Store mesh
 	resources.addMesh(sfz_move(gpuMesh));
@@ -260,13 +250,13 @@ bool Renderer::uploadMeshBlocking(strID id, const Mesh& mesh) noexcept
 	return true;
 }
 
-bool Renderer::meshLoaded(strID id) const noexcept
+bool Renderer::meshLoaded(strID id) const
 {
 	ResourceManager& resources = getResourceManager();
 	return resources.getMeshHandle(id) != SFZ_NULL_HANDLE;
 }
 
-void Renderer::removeMeshGpuBlocking(strID id) noexcept
+void Renderer::removeMeshGpuBlocking(strID id)
 {
 	// Ensure not between frameBegin() and frameFinish()
 	sfz_assert(!mState->windowFramebuffer.valid());
@@ -284,7 +274,11 @@ void Renderer::frameBegin()
 	mState->currentFrameIdx += 1;
 
 	// Wait on fence to ensure we have finished rendering frame that previously used this data
-	CHECK_ZG mState->frameFences.data(mState->currentFrameIdx).waitOnCpuBlocking();
+	FrameFenceData& frameFenceData = mState->frameFences.data(mState->currentFrameIdx);
+	CHECK_ZG frameFenceData.fence.waitOnCpuBlocking();
+	
+	// Once we have reached this fence, it is safe to repurpose memory in the uploader
+	CHECK_ZG mState->uploader.setSafeOffset(frameFenceData.safeUploaderOffset);
 
 	// Get frame profiling data for frame that was previously rendered using these resources
 	ProfilingStats& stats = getProfilingStats();
@@ -382,7 +376,7 @@ HighLevelCmdList Renderer::beginCommandList(const char* cmdListName)
 	// Create high level command list
 	HighLevelCmdList cmdList;
 	cmdList.init(
-		cmdListName, mState->currentFrameIdx, sfz_move(zgCmdList), &mState->uploaderPresent, &mState->windowFramebuffer);
+		cmdListName, mState->currentFrameIdx, sfz_move(zgCmdList), &mState->uploader, &mState->windowFramebuffer);
 
 	return cmdList;
 }
@@ -441,7 +435,7 @@ void Renderer::frameFinish()
 			mState->imguiRenderState,
 			mState->currentFrameIdx,
 			cmdList,
-			mState->uploaderPresent.handle,
+			mState->uploader.handle,
 			u32(mState->windowRes.x),
 			u32(mState->windowRes.y),
 			mState->imguiScaleSetting->floatValue(),
@@ -457,9 +451,10 @@ void Renderer::frameFinish()
 	CHECK_ZG zgContextSwapchainFinishFrame(mState->profiler.handle, frameIds.frameId);
 	mState->windowFramebuffer.destroy();
 
-	// Signal that we are done rendering use these resources
-	zg::Fence& frameFence = mState->frameFences.data(mState->currentFrameIdx);
-	CHECK_ZG mState->presentQueue.signalOnGpu(frameFence);
+	// Signal that we are done rendering use these resources, record offset in uploader at this time
+	FrameFenceData& frameFenceData = mState->frameFences.data(mState->currentFrameIdx);
+	CHECK_ZG mState->uploader.getCurrentOffset(frameFenceData.safeUploaderOffset);
+	CHECK_ZG mState->presentQueue.signalOnGpu(frameFenceData.fence);
 
 	// Flush queues if requested
 	if (mState->flushPresentQueueEachFrame->boolValue()) {

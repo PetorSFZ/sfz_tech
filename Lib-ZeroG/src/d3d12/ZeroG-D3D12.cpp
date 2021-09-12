@@ -769,15 +769,6 @@ ZG_API void zgBufferDestroy(
 	sfz_delete(getAllocator(), buffer);
 }
 
-ZG_API ZgResult zgBufferMemcpyUpload(
-	ZgBuffer* dstBuffer,
-	u64 dstBufferOffsetBytes,
-	const void* srcMemory,
-	u64 numBytes)
-{
-	return bufferMemcpyUpload(*dstBuffer, dstBufferOffsetBytes, srcMemory, numBytes);
-}
-
 ZG_API ZgResult zgBufferMemcpyDownload(
 	void* dstMemory,
 	ZgBuffer* srcBuffer,
@@ -827,6 +818,22 @@ ZG_API void zgUploaderDestroy(
 {
 	if (uploader == nullptr) return;
 	sfz_delete(getAllocator(), uploader);
+}
+
+ZG_API ZgResult zgUploaderGetCurrentOffset(
+	const ZgUploader* uploader,
+	u64* offsetOut)
+{
+	*offsetOut = uploader->headIdx;
+	return ZG_SUCCESS;
+}
+
+ZG_API ZgResult zgUploaderSetSafeOffset(
+	ZgUploader* uploader,
+	u64 offset)
+{
+	uploader->safeOffset = offset;
+	return ZG_SUCCESS;
 }
 
 // Pipeline Compute

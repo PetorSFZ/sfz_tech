@@ -34,11 +34,12 @@ namespace sfz {
 // ResourceManager: State methods
 // ------------------------------------------------------------------------------------------------
 
-void ResourceManager::init(u32 maxNumResources, SfzAllocator* allocator) noexcept
+void ResourceManager::init(u32 maxNumResources, SfzAllocator* allocator, ZgUploader* uploader) noexcept
 {
 	sfz_assert(mState == nullptr);
 	mState = sfz_new<ResourceManagerState>(allocator, sfz_dbg(""));
 	mState->allocator = allocator;
+	mState->uploader = uploader;
 
 	mState->bufferHandles.init(maxNumResources, allocator, sfz_dbg(""));
 	mState->buffers.init(maxNumResources, allocator, sfz_dbg(""));
@@ -144,6 +145,11 @@ bool ResourceManager::updateVoxelModels()
 		}
 	}
 	return updated;
+}
+
+ZgUploader* ResourceManager::getUploader()
+{
+	return mState->uploader;
 }
 
 // ResourceManager: Buffer methods
@@ -440,7 +446,7 @@ void ResourceManager::syncVoxelMaterialsToGpuBlocking()
 
 	// Note: We are doing this using the present queue because the copy queue can't change the
 	//       resource state of the buffer. Plus, the buffer may be in use on the present queue.
-	buffer->uploadBlocking<ShaderVoxelMaterial>(cpu.data(), pool.arraySize(), presentQueue);
+	buffer->uploadBlocking<ShaderVoxelMaterial>(cpu.data(), pool.arraySize(), mState->uploader, presentQueue);
 }
 
 SfzHandle ResourceManager::getVoxelMaterialShaderBufferHandle() const

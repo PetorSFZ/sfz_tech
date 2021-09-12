@@ -174,39 +174,6 @@ inline ZgResult createBuffer(
 	return ZG_SUCCESS;
 }
 
-inline ZgResult bufferMemcpyUpload(
-	ZgBuffer& dstBuffer,
-	u64 dstBufferOffsetBytes,
-	const void* srcMemory,
-	u64 numBytes) noexcept
-{
-	if (dstBuffer.memoryType != ZG_MEMORY_TYPE_UPLOAD) return ZG_ERROR_INVALID_ARGUMENT;
-
-	// Not gonna read from buffer
-	D3D12_RANGE readRange = {};
-	readRange.Begin = 0;
-	readRange.End = 0;
-
-	// Map buffer
-	void* mappedPtr = nullptr;
-	if (D3D12_FAIL(dstBuffer.resource.resource->Map(0, &readRange, &mappedPtr))) {
-		return ZG_ERROR_GENERIC;
-	}
-
-	// Memcpy to buffer
-	memcpy(reinterpret_cast<u8*>(mappedPtr) + dstBufferOffsetBytes, srcMemory, numBytes);
-
-	// The range we memcpy'd to
-	D3D12_RANGE writeRange = {};
-	writeRange.Begin = dstBufferOffsetBytes;
-	writeRange.End = writeRange.Begin + numBytes;
-
-	// Unmap buffer
-	dstBuffer.resource.resource->Unmap(0, &writeRange);
-
-	return ZG_SUCCESS;
-}
-
 inline ZgResult bufferMemcpyDownload(
 	ZgBuffer& srcBuffer,
 	u64 srcBufferOffsetBytes,

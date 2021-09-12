@@ -41,6 +41,9 @@ struct MeshResource final {
 	u32 numMaterials = 0;
 	Array<MeshComponent> components;
 	Array<Material> cpuMaterials;
+	Array<ShaderMaterial> gpuMaterials;
+	
+	void convertCpuMaterialsToGpu();
 };
 
 // GpuMesh functions
@@ -56,7 +59,6 @@ MeshResource meshResourceAllocate(
 void meshResourceUploadBlocking(
 	MeshResource& gpuMesh,
 	const Mesh& cpuMesh,
-	SfzAllocator* cpuAllocator,
 	zg::CommandQueue& copyQueue,
 	zg::Uploader& uploaderCopy) noexcept;
 

@@ -79,7 +79,7 @@ typedef enum {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const u32 ZG_COMPILED_API_VERSION = 42;
+static const u32 ZG_COMPILED_API_VERSION = 43;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -201,12 +201,6 @@ ZG_API ZgResult zgBufferCreate(
 ZG_API void zgBufferDestroy(
 	ZgBuffer* buffer);
 
-ZG_API ZgResult zgBufferMemcpyUpload(
-	ZgBuffer* dstBuffer,
-	u64 dstBufferOffsetBytes,
-	const void* srcMemory,
-	u64 numBytes);
-
 ZG_API ZgResult zgBufferMemcpyDownload(
 	void* dstMemory,
 	ZgBuffer* srcBuffer,
@@ -231,11 +225,6 @@ public:
 		desc.committedAllocation = committedAllocation ? ZG_TRUE : ZG_FALSE;
 		desc.debugName = debugName;
 		return zgBufferCreate(&handle, &desc);
-	}
-
-	ZgResult memcpyUpload(u64 bufferOffsetBytes, const void* srcMemory, u64 numBytes)
-	{
-		return zgBufferMemcpyUpload(this->handle, bufferOffsetBytes, srcMemory, numBytes);
 	}
 
 	ZgResult memcpyDownload(void* dstMemory, u64 srcBufferOffsetBytes, u64 numBytes)
@@ -372,6 +361,14 @@ ZG_API ZgResult zgUploaderCreate(
 ZG_API void zgUploaderDestroy(
 	ZgUploader* uploader);
 
+ZG_API ZgResult zgUploaderGetCurrentOffset(
+	const ZgUploader* uploader,
+	u64* offsetOut);
+
+ZG_API ZgResult zgUploaderSetSafeOffset(
+	ZgUploader* uploader,
+	u64 offset);
+
 #ifdef __cplusplus
 namespace zg {
 
@@ -381,6 +378,16 @@ public:
 	{
 		this->destroy();
 		return zgUploaderCreate(&this->handle, &desc);
+	}
+
+	ZgResult getCurrentOffset(u64& offsetOut) const
+	{
+		return zgUploaderGetCurrentOffset(this->handle, &offsetOut);
+	}
+
+	ZgResult setSafeOffset(u64 offset)
+	{
+		return zgUploaderSetSafeOffset(this->handle, offset);
 	}
 };
 

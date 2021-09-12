@@ -22,6 +22,8 @@
 #include <skipifzero_pool.hpp>
 #include <skipifzero_strings.hpp>
 
+struct ZgUploader;
+
 namespace sfz {
 
 struct BufferResource;
@@ -39,7 +41,7 @@ struct ResourceManagerState;
 class ResourceManager final {
 public:
 	SFZ_DECLARE_DROP_TYPE(ResourceManager);
-	void init(u32 maxNumResources, SfzAllocator* allocator) noexcept;
+	void init(u32 maxNumResources, SfzAllocator* allocator, ZgUploader* uploader) noexcept;
 	void destroy() noexcept;
 
 	// Methods
@@ -53,6 +55,8 @@ public:
 	// Updates all voxel models, returns whether any model was updated. Not required to call,
 	// mainly used during development when file watching .vox files.
 	bool updateVoxelModels();
+
+	ZgUploader* getUploader();
 
 	// Buffer methods
 	// --------------------------------------------------------------------------------------------

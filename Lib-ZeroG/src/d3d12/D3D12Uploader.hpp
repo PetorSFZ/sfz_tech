@@ -57,9 +57,9 @@ struct ZgUploader final {
 		// Only allocate 256 aligned ranges
 		numBytes = sfz::roundUpAligned(numBytes, 256);
 
-		// Can only allocate at most a 4th of the uploaders backing buffer at once
+		// Can only allocate at most half of the uploader's backing buffer at once
 		if (numBytes == 0) return {};
-		if (numBytes >= (sizeBytes / 4)) return {};
+		if (numBytes >= (sizeBytes / 2)) return {};
 
 		// Try to allocate a range in the buffer. If range is too big and stretches "both ends" of
 		// the buffer try again.
@@ -69,6 +69,14 @@ struct ZgUploader final {
 			beginIdxInf = headIdx.fetch_add(numBytes);
 			beginIdxMapped = beginIdxInf % sizeBytes;
 			if ((beginIdxMapped + numBytes) > sizeBytes) return {};
+		}
+
+		// Check if we have allocated too much memory from uploader
+		const u64 safeCompareOffset = (beginIdxInf + numBytes) - sizeBytes;
+		if (safeCompareOffset >= safeOffset) {
+			const u32 tooManyBytes = u32(safeCompareOffset - safeOffset);
+			ZG_ERROR("Allocated too much memory from uploader (off by: %u bytes)", tooManyBytes);
+			return {};
 		}
 
 		// Return range
@@ -90,6 +98,7 @@ struct ZgUploader final {
 	u64 sizeBytes = 0;
 	u8* mappedPtr = nullptr;
 	std::atomic_uint64_t headIdx = 0;
+	u64 safeOffset = 0;
 };
 
 
@@ -158,6 +167,8 @@ inline ZgResult createUploader(
 	uploader->allocation = allocation;
 	uploader->mappedPtr = reinterpret_cast<u8*>(mappedPtr);
 	uploader->sizeBytes = sfz::roundUpAligned(uploaderDesc.sizeBytes, 256);
+	uploader->headIdx = uploader->sizeBytes * 2;
+	uploader->safeOffset = uploader->headIdx;
 	uploaderOut = uploader;
 	return ZG_SUCCESS;
 }

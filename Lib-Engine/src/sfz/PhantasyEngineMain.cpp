@@ -792,9 +792,26 @@ int main(int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 
+	// Create main ZeroG uploader
+	zg::Uploader uploader;
+	{
+		ZgUploaderDesc desc = {};
+		desc.debugName = "MainUploader";
+		desc.sizeBytes = 384 * 1024 * 1024; // 384 MiB should be enough for anyone
+		ZgResult res = uploader.create(desc);
+		if (res != ZG_SUCCESS) {
+			SFZ_ERROR("PhantasyEngine", "Failed to allocate main ZeroG uploader, exiting");
+			res = zgContextDeinit();
+			sfz_assert(res == ZG_SUCCESS);
+			SDL_Quit();
+			return EXIT_FAILURE;
+		}
+	}
+	
+
 	// Initialize resource manager
 	SFZ_INFO("PhantasyEngine", "Initializing resource manager");
-	sfz::getResourceManager().init(options.maxNumResources, sfz::getDefaultAllocator());
+	sfz::getResourceManager().init(options.maxNumResources, sfz::getDefaultAllocator(), uploader.handle);
 
 	// Initialize shader manager
 	SFZ_INFO("PhantasyEngine", "Initializing shader manager");
@@ -806,7 +823,7 @@ int main(int argc, char* argv[])
 
 	// Initialize renderer
 	SFZ_INFO("PhantasyEngine", "Initializing renderer");
-	bool rendererInitSuccess = sfz::getRenderer().init(window, imguiFontTexView, sfz::getDefaultAllocator());
+	bool rendererInitSuccess = sfz::getRenderer().init(window, imguiFontTexView, sfz::getDefaultAllocator(), sfz_move(uploader));
 	if (!rendererInitSuccess) {
 		SFZ_ERROR("PhantasyEngine", "Renderer::init() failed");
 		SDL_Quit();

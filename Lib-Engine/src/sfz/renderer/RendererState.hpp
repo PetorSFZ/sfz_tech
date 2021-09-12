@@ -52,6 +52,11 @@ struct FrameProfilingIDs final {
 	Arr64<GroupProfilingID> groupIds;
 };
 
+struct FrameFenceData final {
+	zg::Fence fence;
+	u64 safeUploaderOffset = 0;
+};
+
 struct RendererState final {
 
 	// Members
@@ -63,19 +68,18 @@ struct RendererState final {
 	// The current index of the frame, increments at every frameBegin()
 	u64 currentFrameIdx = 0;
 
+	// Uploader
+	zg::Uploader uploader;
+
 	// Synchronization primitives to make sure we have finished rendering using a given set of
 	//" PerFrameData" resources so we can start uploading new data to them.
 	u32 frameLatency = 2;
-	PerFrameData<zg::Fence> frameFences;
+	PerFrameData<FrameFenceData> frameFences;
 
 	i32x2 windowRes = i32x2(0);
 	zg::Framebuffer windowFramebuffer;
 	zg::CommandQueue presentQueue;
 	zg::CommandQueue copyQueue;
-
-	// Uploaders
-	zg::Uploader uploaderCopy;
-	zg::Uploader uploaderPresent;
 
 	// Profiler
 	zg::Profiler profiler;

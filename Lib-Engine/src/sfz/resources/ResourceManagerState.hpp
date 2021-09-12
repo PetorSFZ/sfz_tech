@@ -39,6 +39,7 @@ namespace sfz {
 // you probably shouldn't be accessing this directly.
 struct ResourceManagerState final {
 	SfzAllocator* allocator = nullptr;
+	ZgUploader* uploader = nullptr;
 
 	HashMap<strID, SfzHandle> bufferHandles;
 	Pool<BufferResource> buffers;

@@ -44,43 +44,34 @@ struct RendererState;
 
 class Renderer final {
 public:
-	// Constructors & destructors
-	// --------------------------------------------------------------------------------------------
+	SFZ_DECLARE_DROP_TYPE(Renderer);
 
-	Renderer() noexcept = default;
-	Renderer(const Renderer&) = delete;
-	Renderer& operator= (const Renderer&) = delete;
-	Renderer(Renderer&& o) noexcept { this->swap(o); }
-	Renderer& operator= (Renderer&& o) noexcept { this->swap(o); return *this; }
-	~Renderer() noexcept { this->destroy(); }
-
-	// State methods
-	// --------------------------------------------------------------------------------------------
-
-	bool active() const noexcept { return mState != nullptr; }
+	bool active() const { return mState != nullptr; }
 	bool init(
 		SDL_Window* window,
 		const ImageViewConst& fontTexture,
-		SfzAllocator* allocator) noexcept;
-	bool loadConfiguration(const char* jsonConfigPath) noexcept;
-	void swap(Renderer& other) noexcept;
-	void destroy() noexcept;
+		SfzAllocator* allocator,
+		zg::Uploader&& uploader);
+	bool loadConfiguration(const char* jsonConfigPath);
+	void destroy();
 
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
-	RendererState& directAccessInternalState() noexcept { return *mState; }
+	RendererState& directAccessInternalState() { return *mState; }
 
-	u64 currentFrameIdx() const noexcept; // Incremented each frameBegin()
-	i32x2 windowResolution() const noexcept;
+	u64 currentFrameIdx() const; // Incremented each frameBegin()
+	i32x2 windowResolution() const;
 
 	// Returns the latest frame time retrieved and which frame idx it was related to.
-	void frameTimeMs(u64& frameIdxOut, f32& frameTimeMsOut) const noexcept;
+	void frameTimeMs(u64& frameIdxOut, f32& frameTimeMsOut) const;
+
+	ZgUploader* getUploader();
 
 	// ImGui UI methods
 	// --------------------------------------------------------------------------------------------
 
-	void renderImguiUI() noexcept;
+	void renderImguiUI();
 
 	// Resource methods
 	// --------------------------------------------------------------------------------------------
@@ -94,10 +85,10 @@ public:
 	//
 	// Returns whether succesful or not
 	bool uploadTextureBlocking(
-		strID id, const ImageViewConst& image, bool generateMipmaps) noexcept;
+		strID id, const ImageViewConst& image, bool generateMipmaps);
 
 	// Check if a texture is loaded or not
-	bool textureLoaded(strID id) const noexcept;
+	bool textureLoaded(strID id) const;
 
 	// Removes a texture from the renderer, will flush rendering.
 	//
@@ -106,7 +97,7 @@ public:
 	// cause frame stutter.
 	//
 	// WARNING: This must NOT be called between frameBegin() and frameFinish().
-	void removeTextureGpuBlocking(strID id) noexcept;
+	void removeTextureGpuBlocking(strID id);
 
 	// Uploads a mesh to the renderer, blocks until done.
 	//
@@ -116,10 +107,10 @@ public:
 	// directory in the same directory as the executable.
 	//
 	// Returns whether succesful or not.
-	bool uploadMeshBlocking(strID id, const Mesh& mesh) noexcept;
+	bool uploadMeshBlocking(strID id, const Mesh& mesh);
 
 	// Check if a mesh is loaded or not
-	bool meshLoaded(strID id) const noexcept;
+	bool meshLoaded(strID id) const;
 
 	// Removes a mesh from the renderer, will flush rendering.
 	//
@@ -128,7 +119,7 @@ public:
 	// cause frame stutter.
 	//
 	// WARNING: This must NOT be called between frameBegin() and frameFinish().
-	void removeMeshGpuBlocking(strID id) noexcept;
+	void removeMeshGpuBlocking(strID id);
 
 	// Render methods
 	// --------------------------------------------------------------------------------------------

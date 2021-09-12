@@ -419,28 +419,19 @@ inline void renderMeshesTab(ResourceManagerState& state)
 					CHECK_ZG presentQueue.flush();
 					CHECK_ZG copyQueue.flush();
 
-					// Allocate temporary upload buffer
-					zg::Buffer uploadBuffer;
-					CHECK_ZG uploadBuffer.create(sizeof(ShaderMaterial), ZG_MEMORY_TYPE_UPLOAD);
-					sfz_assert(uploadBuffer.valid());
-
-					// Convert new material to shader material
-					ShaderMaterial shaderMaterial = cpuMaterialToShaderMaterial(material);
-
-					// Memcpy to temporary upload buffer
-					CHECK_ZG uploadBuffer.memcpyUpload(0, &shaderMaterial, sizeof(ShaderMaterial));
+					// Build new array of shader materials
+					mesh.convertCpuMaterialsToGpu();
 
 					// Grab materials buffer
 					BufferResource* materialBufferResource = state.buffers.get(mesh.materialsBuffer);
 					sfz_assert(materialBufferResource->type == BufferResourceType::STATIC);
 					zg::Buffer& materialsBuffer = materialBufferResource->staticMem.buffer;
 
-					// Replace material in mesh with new material
+					// Reupload gpu materials
 					zg::CommandList commandList;
 					CHECK_ZG presentQueue.beginCommandListRecording(commandList);
-					u64 dstOffset = sizeof(ShaderMaterial) * i;
-					CHECK_ZG commandList.memcpyBufferToBuffer(
-						materialsBuffer, dstOffset, uploadBuffer, 0, sizeof(ShaderMaterial));
+					CHECK_ZG commandList.uploadToBuffer(
+						state.uploader, materialsBuffer.handle, 0, mesh.gpuMaterials.data(), mesh.gpuMaterials.size() * sizeof(ShaderMaterial));
 					CHECK_ZG presentQueue.executeCommandList(commandList);
 					CHECK_ZG presentQueue.flush();
 				}
