@@ -126,6 +126,7 @@ inline const char* comparisonFuncToString(ZgComparisonFunc func)
 	case ZG_COMPARISON_FUNC_NOT_EQUAL: return "NOT_EQUAL";
 	case ZG_COMPARISON_FUNC_GREATER: return "GREATER";
 	case ZG_COMPARISON_FUNC_GREATER_EQUAL: return "GREATER_EQUAL";
+	case ZG_COMPARISON_FUNC_ALWAYS: return "ALWAYS";
 	}
 	sfz_assert(false);
 	return "";

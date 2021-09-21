@@ -397,6 +397,7 @@ static D3D12_COMPARISON_FUNC toD3D12ComparsionFunc(ZgComparisonFunc func) noexce
 	case ZG_COMPARISON_FUNC_NOT_EQUAL: return D3D12_COMPARISON_FUNC_NOT_EQUAL;
 	case ZG_COMPARISON_FUNC_GREATER: return D3D12_COMPARISON_FUNC_GREATER;
 	case ZG_COMPARISON_FUNC_GREATER_EQUAL: return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
+	case ZG_COMPARISON_FUNC_ALWAYS: return D3D12_COMPARISON_FUNC_ALWAYS;
 	}
 	sfz_assert(false);
 	return D3D12_COMPARISON_FUNC(0);
@@ -1354,11 +1355,30 @@ static ZgResult createPipelineRenderInternal(
 	}
 
 	// Check that the correct number of render targets is specified
-	const u32 numRenderTargets = pixelDesc.OutputParameters;
+	u32 numRenderTargets = pixelDesc.OutputParameters;
 	if (numRenderTargets != createInfo.numRenderTargets) {
-		ZG_ERROR("%u render targets were specified, however %u is used by the pipeline",
-			createInfo.numRenderTargets, numRenderTargets);
-		return ZG_ERROR_INVALID_ARGUMENT;
+
+		bool hasDepthOutput = false;
+		for (u32 i = 0; i < numRenderTargets; i++) {
+			D3D12_SIGNATURE_PARAMETER_DESC outDesc = {};
+			CHECK_D3D12 pixelReflection->GetOutputParameterDesc(i, &outDesc);
+			sfz::str32 semanticName = sfz::str32("%s", outDesc.SemanticName);
+			semanticName.toLower();
+			if (semanticName == "sv_depth") {
+				hasDepthOutput = true;
+				break;
+			}
+		}
+
+		if (hasDepthOutput) {
+			numRenderTargets -= 1;
+		}
+
+		if (numRenderTargets != createInfo.numRenderTargets) {
+			ZG_ERROR("%u render targets were specified, however %u is used by the pipeline",
+				createInfo.numRenderTargets, numRenderTargets);
+			return ZG_ERROR_INVALID_ARGUMENT;
+		}
 	}
 
 	// Copy render target info to signature

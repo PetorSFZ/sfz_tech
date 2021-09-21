@@ -79,7 +79,7 @@ typedef enum {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const u32 ZG_COMPILED_API_VERSION = 43;
+static const u32 ZG_COMPILED_API_VERSION = 44;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -590,6 +590,7 @@ typedef enum {
 	ZG_COMPARISON_FUNC_NOT_EQUAL,
 	ZG_COMPARISON_FUNC_GREATER,
 	ZG_COMPARISON_FUNC_GREATER_EQUAL,
+	ZG_COMPARISON_FUNC_ALWAYS,
 	ZG_COMPARISON_FUNC_FORCE_I32 = I32_MAX
 } ZgComparisonFunc;
 
