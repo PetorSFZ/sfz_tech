@@ -79,7 +79,7 @@ typedef enum {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const u32 ZG_COMPILED_API_VERSION = 44;
+static const u32 ZG_COMPILED_API_VERSION = 45;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -177,10 +177,6 @@ typedef enum {
 	// as intermediary.
 	ZG_MEMORY_TYPE_DEVICE = 0,
 
-	// Memory suitable for uploading data to GPU.
-	// Can not be used as a shader UAV, only as vertex shader input.
-	ZG_MEMORY_TYPE_UPLOAD,
-
 	// Memory suitable for downloading data from GPU.
 	ZG_MEMORY_TYPE_DOWNLOAD,
 
@@ -248,6 +244,10 @@ typedef enum {
 	ZG_FORMAT_R_U8_UNORM, // Normalized between [0, 1]
 	ZG_FORMAT_RG_U8_UNORM, // Normalized between [0, 1]
 	ZG_FORMAT_RGBA_U8_UNORM, // Normalized between [0, 1]
+
+	ZG_FORMAT_R_U8,
+	ZG_FORMAT_RG_U8,
+	ZG_FORMAT_RGBA_U8,
 
 	ZG_FORMAT_R_F16,
 	ZG_FORMAT_RG_F16,
@@ -419,6 +419,7 @@ static const u32 ZG_MAX_NUM_BINDINGS = 32;
 typedef enum {
 	ZG_BINDING_TYPE_UNDEFINED = 0,
 	ZG_BINDING_TYPE_BUFFER_CONST,
+	ZG_BINDING_TYPE_BUFFER_TYPED,
 	ZG_BINDING_TYPE_BUFFER_STRUCTURED,
 	ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV,
 	ZG_BINDING_TYPE_TEXTURE,
@@ -442,6 +443,7 @@ sfz_struct(ZgBinding) {
 	ZgTexture* texture;
 
 	// Additional data required for some (but not all) buffer bindings
+	ZgFormat format; // The format to read the buffer as, only used for typed buffers
 	u32 elementStrideBytes; // The stride (size most of the time) between elements in the buffer in bytes
 	u32 numElements; // The number of elements to bind in the buffer
 	u32 firstElementIdx; // The first element in the buffer (0 to bind from start of buffer)
@@ -469,6 +471,23 @@ sfz_struct(ZgPipelineBindings) {
 		binding.type = ZG_BINDING_TYPE_BUFFER_CONST;
 		binding.reg = reg;
 		binding.buffer = buffer;
+		return addBinding(binding);
+	}
+
+	ZgPipelineBindings& addBufferTyped(
+		u32 reg,
+		ZgBuffer* buffer,
+		ZgFormat format,
+		u32 numElements,
+		u32 firstElementIdx = 0)
+	{
+		ZgBinding binding = {};
+		binding.type = ZG_BINDING_TYPE_BUFFER_TYPED;
+		binding.reg = reg;
+		binding.buffer = buffer;
+		binding.format = format;
+		binding.numElements = numElements;
+		binding.firstElementIdx = firstElementIdx;
 		return addBinding(binding);
 	}
 

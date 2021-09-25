@@ -100,7 +100,6 @@ inline ZgResult createBuffer(
 {
 	D3D12_RESOURCE_STATES initialResourceState = [&]() {
 		switch (createInfo.memoryType) {
-		case ZG_MEMORY_TYPE_UPLOAD: return D3D12_RESOURCE_STATE_GENERIC_READ;
 		case ZG_MEMORY_TYPE_DOWNLOAD: return D3D12_RESOURCE_STATE_COPY_DEST;
 		case ZG_MEMORY_TYPE_DEVICE: return D3D12_RESOURCE_STATE_COMMON;
 		}
@@ -131,7 +130,6 @@ inline ZgResult createBuffer(
 	allocationDesc.Flags = createInfo.committedAllocation ? D3D12MA::ALLOCATION_FLAG_COMMITTED : D3D12MA::ALLOCATION_FLAG_NONE;
 	allocationDesc.HeapType = [&]() {
 		switch (createInfo.memoryType) {
-		case ZG_MEMORY_TYPE_UPLOAD: return D3D12_HEAP_TYPE_UPLOAD;
 		case ZG_MEMORY_TYPE_DOWNLOAD: return D3D12_HEAP_TYPE_READBACK;
 		case ZG_MEMORY_TYPE_DEVICE: return D3D12_HEAP_TYPE_DEFAULT;
 		}

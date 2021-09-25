@@ -111,6 +111,7 @@ void HighLevelCmdList::setBindings(const Bindings& bindings)
 		BufferResource* bufferRes = nullptr;
 		ZgBuffer* buffer = nullptr;
 		if (binding.type == ZG_BINDING_TYPE_BUFFER_CONST ||
+			binding.type == ZG_BINDING_TYPE_BUFFER_TYPED ||
 			binding.type == ZG_BINDING_TYPE_BUFFER_STRUCTURED ||
 			binding.type == ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV) {
 
@@ -132,6 +133,10 @@ void HighLevelCmdList::setBindings(const Bindings& bindings)
 
 		if (binding.type == ZG_BINDING_TYPE_BUFFER_CONST) {
 			zgBindings.addBufferConst(binding.reg, buffer);
+		}
+
+		else if (binding.type == ZG_BINDING_TYPE_BUFFER_TYPED) {
+			zgBindings.addBufferTyped(binding.reg, buffer, binding.format, bufferRes->maxNumElements);
 		}
 
 		else if (binding.type == ZG_BINDING_TYPE_BUFFER_STRUCTURED) {

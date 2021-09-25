@@ -35,6 +35,10 @@ inline const char* textureFormatToString(ZgFormat format)
 	case ZG_FORMAT_RG_U8_UNORM: return "RG_U8_UNORM";
 	case ZG_FORMAT_RGBA_U8_UNORM: return "RGBA_U8_UNORM";
 
+	case ZG_FORMAT_R_U8: return "R_U8";
+	case ZG_FORMAT_RG_U8: return "RG_U8";
+	case ZG_FORMAT_RGBA_U8: return "RGBA_U8";
+
 	case ZG_FORMAT_R_F16: return "R_F16";
 	case ZG_FORMAT_RG_F16: return "RG_F16";
 	case ZG_FORMAT_RGBA_F16: return "RGBA_F16";

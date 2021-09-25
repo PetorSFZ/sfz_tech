@@ -40,9 +40,11 @@ struct BindingHL final {
 	ZgBindingType type = ZG_BINDING_TYPE_UNDEFINED;
 	u32 reg = ~0u;
 	u32 mipLevel = 0; // Only used for unordered textures
+	ZgFormat format = ZG_FORMAT_UNDEFINED; // Only used for typed buffers
 
 	BindingHL() = default;
 	BindingHL(SfzHandle handle, ZgBindingType type, u32 reg, u32 mipLevel = 0) : handle(handle), type(type), reg(reg), mipLevel(mipLevel) {}
+	BindingHL(SfzHandle handle, ZgBindingType type, u32 reg, ZgFormat format) : handle(handle), type(type), reg(reg), format(format) {}
 };
 
 struct Bindings final {
@@ -52,6 +54,10 @@ struct Bindings final {
 	Bindings& addBufferConst(const char* name, u32 reg) { return addBufferConst(strID(name), reg); }
 	Bindings& addBufferConst(strID name, u32 reg) { return addBufferConst(res->getBufferHandle(name), reg); }
 	Bindings& addBufferConst(SfzHandle handle, u32 reg) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_BUFFER_CONST, reg)); return *this; }
+
+	Bindings& addBufferTyped(const char* name, u32 reg, ZgFormat format) { return addBufferTyped(strID(name), reg, format); }
+	Bindings& addBufferTyped(strID name, u32 reg, ZgFormat format) { return addBufferTyped(res->getBufferHandle(name), reg, format); }
+	Bindings& addBufferTyped(SfzHandle handle, u32 reg, ZgFormat format) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_BUFFER_TYPED, reg, format)); return *this; }
 
 	Bindings& addBufferStructured(const char* name, u32 reg) { return addBufferStructured(strID(name), reg); }
 	Bindings& addBufferStructured(strID name, u32 reg) { return addBufferStructured(res->getBufferHandle(name), reg); }

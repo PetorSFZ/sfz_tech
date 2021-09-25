@@ -487,6 +487,7 @@ static const char* bindingTypeToString(ZgBindingType type) noexcept
 	switch (type) {
 	case ZG_BINDING_TYPE_UNDEFINED: return "UNDEFINED";
 	case ZG_BINDING_TYPE_BUFFER_CONST: return "BUFFER_CONST";
+	case ZG_BINDING_TYPE_BUFFER_TYPED: return "BUFFER_TYPED";
 	case ZG_BINDING_TYPE_BUFFER_STRUCTURED: return "BUFFER_STRUCTURED";
 	case ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV: return "BUFFER_STRUCTURED_UAV";
 	case ZG_BINDING_TYPE_TEXTURE: return "TEXTURE";
@@ -818,7 +819,12 @@ static ZgResult rootSignatureMappingFromReflection(
 			mapping.tableOffset = ~0u; // Deferred to later
 
 			if (resDesc.Type == D3D_SIT_TEXTURE) {
-				mapping.type = ZG_BINDING_TYPE_TEXTURE;
+				if (resDesc.Dimension == D3D_SRV_DIMENSION_BUFFER) {
+					mapping.type = ZG_BINDING_TYPE_BUFFER_TYPED;
+				}
+				else if (resDesc.Dimension == D3D_SRV_DIMENSION_TEXTURE2D) {
+					mapping.type = ZG_BINDING_TYPE_TEXTURE;
+				}
 			}
 			else if (resDesc.Type == D3D_SIT_STRUCTURED) {
 				mapping.type = ZG_BINDING_TYPE_BUFFER_STRUCTURED;
@@ -848,7 +854,12 @@ static ZgResult rootSignatureMappingFromReflection(
 			mapping.tableOffset = ~0u;
 
 			if (resDesc.Type == D3D_SIT_TEXTURE) {
-				mapping.type = ZG_BINDING_TYPE_TEXTURE;
+				if (resDesc.Dimension == D3D_SRV_DIMENSION_BUFFER) {
+					mapping.type = ZG_BINDING_TYPE_BUFFER_TYPED;
+				}
+				else if (resDesc.Dimension == D3D_SRV_DIMENSION_TEXTURE2D) {
+					mapping.type = ZG_BINDING_TYPE_TEXTURE;
+				}
 			}
 			else if (resDesc.Type == D3D_SIT_STRUCTURED) {
 				mapping.type = ZG_BINDING_TYPE_BUFFER_STRUCTURED;

@@ -283,9 +283,6 @@ struct ZgCommandList final {
 		// Wanted resource states
 		D3D12_RESOURCE_STATES dstTargetState = D3D12_RESOURCE_STATE_COPY_DEST;
 		D3D12_RESOURCE_STATES srcTargetState = D3D12_RESOURCE_STATE_COPY_SOURCE;
-		if (srcBuffer->memoryType == ZG_MEMORY_TYPE_UPLOAD) {
-			srcTargetState = D3D12_RESOURCE_STATE_GENERIC_READ;
-		}
 
 		// Set buffer resource states
 		requireResourceStateBuffer(*this->commandList.Get(), this->tracking, dstBuffer, dstTargetState);
@@ -304,8 +301,7 @@ struct ZgCommandList final {
 	ZgResult enableQueueTransitionBuffer(ZgBuffer* buffer) noexcept
 	{
 		// Check that it is a device buffer
-		if (buffer->memoryType == ZG_MEMORY_TYPE_UPLOAD ||
-			buffer->memoryType == ZG_MEMORY_TYPE_DOWNLOAD) {
+		if (buffer->memoryType == ZG_MEMORY_TYPE_DOWNLOAD) {
 			ZG_ERROR("enableQueueTransitionBuffer(): Can't transition upload and download buffers");
 			return ZG_ERROR_INVALID_ARGUMENT;
 		}
@@ -452,6 +448,7 @@ struct ZgCommandList final {
 		// SRVs
 		for (const SRVMapping& mapping : rootMapping->SRVs) {
 			sfz_assert(
+				mapping.type == ZG_BINDING_TYPE_BUFFER_TYPED ||
 				mapping.type == ZG_BINDING_TYPE_BUFFER_STRUCTURED ||
 				mapping.type == ZG_BINDING_TYPE_TEXTURE);
 
@@ -463,7 +460,39 @@ struct ZgCommandList final {
 			// Linear search to find matching argument among the bindings
 			const ZgBinding* binding = findBinding(mapping.type, mapping.reg);
 
-			if (mapping.type == ZG_BINDING_TYPE_BUFFER_STRUCTURED) {
+			if (mapping.type == ZG_BINDING_TYPE_BUFFER_TYPED) {
+
+				// If we can't find argument we need to insert null descriptor
+				if (binding == nullptr) {
+					// TODO: Is definitely possible
+					sfz_assert(false);
+					return ZG_WARNING_UNIMPLEMENTED;
+				}
+
+				// Get buffer from binding
+				ZgBuffer* buffer = binding->buffer;
+
+				sfz_assert(binding->format != ZG_FORMAT_UNDEFINED);
+
+				// Create shader resource view
+				D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+				srvDesc.Format = zgToDxgiTextureFormat(binding->format);
+				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+				srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+				srvDesc.Buffer.FirstElement = binding->firstElementIdx;
+				srvDesc.Buffer.NumElements = binding->numElements;
+				srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+				mDevice->CreateShaderResourceView(buffer->resource.resource, &srvDesc, cpuDescriptor);
+
+				// Set texture resource state if not null descriptor
+				if (binding != nullptr) {
+					// Set buffer resource state
+					requireResourceStateBuffer(
+						*this->commandList.Get(), this->tracking, buffer,
+						D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+				}
+			}
+			else if (mapping.type == ZG_BINDING_TYPE_BUFFER_STRUCTURED) {
 
 				// If we can't find argument we need to insert null descriptor
 				if (binding == nullptr) {
@@ -922,18 +951,11 @@ struct ZgCommandList final {
 		ZgBuffer* indexBuffer,
 		ZgIndexBufferType type) noexcept
 	{
+		if (indexBuffer->memoryType != ZG_MEMORY_TYPE_DEVICE) return ZG_ERROR_INVALID_ARGUMENT;
+
 		// Set buffer resource state
-		if (indexBuffer->memoryType == ZG_MEMORY_TYPE_DEVICE) {
-			requireResourceStateBuffer(
-				*this->commandList.Get(), this->tracking, indexBuffer, D3D12_RESOURCE_STATE_INDEX_BUFFER);
-		}
-		else if (indexBuffer->memoryType == ZG_MEMORY_TYPE_UPLOAD) {
-			requireResourceStateBuffer(
-				*this->commandList.Get(), this->tracking, indexBuffer, D3D12_RESOURCE_STATE_GENERIC_READ);
-		}
-		else {
-			return ZG_ERROR_INVALID_ARGUMENT;
-		}
+		requireResourceStateBuffer(
+			*this->commandList.Get(), this->tracking, indexBuffer, D3D12_RESOURCE_STATE_INDEX_BUFFER);
 
 		// Create index buffer view
 		D3D12_INDEX_BUFFER_VIEW indexBufferView = {};
@@ -962,17 +984,9 @@ struct ZgCommandList final {
 		}
 
 		// Set buffer resource state
-		if (vertexBuffer->memoryType == ZG_MEMORY_TYPE_DEVICE) {
-			requireResourceStateBuffer(
-				*this->commandList.Get(), this->tracking, vertexBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-		}
-		else if (vertexBuffer->memoryType == ZG_MEMORY_TYPE_UPLOAD) {
-			requireResourceStateBuffer(
-				*this->commandList.Get(), this->tracking, vertexBuffer, D3D12_RESOURCE_STATE_GENERIC_READ);
-		}
-		else {
-			return ZG_ERROR_INVALID_ARGUMENT;
-		}
+		if (vertexBuffer->memoryType != ZG_MEMORY_TYPE_DEVICE) return ZG_ERROR_INVALID_ARGUMENT;
+		requireResourceStateBuffer(
+			*this->commandList.Get(), this->tracking, vertexBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
 		// Create vertex buffer view
 		D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};

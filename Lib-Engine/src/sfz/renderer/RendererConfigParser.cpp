@@ -108,6 +108,10 @@ static ZgFormat textureFormatFromString(const str256& str) noexcept
 	if (str == "RG_U8_UNORM") return ZG_FORMAT_RG_U8_UNORM;
 	if (str == "RGBA_U8_UNORM") return ZG_FORMAT_RGBA_U8_UNORM;
 
+	if (str == "R_U8") return ZG_FORMAT_R_U8;
+	if (str == "RG_U8") return ZG_FORMAT_RG_U8;
+	if (str == "RGBA_U8") return ZG_FORMAT_RGBA_U8;
+
 	if (str == "R_F16") return ZG_FORMAT_R_F16;
 	if (str == "RG_F16") return ZG_FORMAT_RG_F16;
 	if (str == "RGBA_F16") return ZG_FORMAT_RGBA_F16;
