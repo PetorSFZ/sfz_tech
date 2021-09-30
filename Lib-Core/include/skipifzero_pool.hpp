@@ -248,7 +248,7 @@ private:
 		slot.bits = POOL_SLOT_ACTIVE_BIT_MASK | newVersion;
 
 		// Create and return handle
-		SfzHandle handle = SfzHandle(idx, newVersion);
+		SfzHandle handle = SfzHandle::create(idx, newVersion);
 		return handle;
 	}
 	

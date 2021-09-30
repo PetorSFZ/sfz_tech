@@ -733,13 +733,14 @@ sfz_struct(SfzHandle) {
 	u32 idx() const { return bits & SFZ_HANDLE_INDEX_MASK; }
 	u8 version() const { return u8((bits & SFZ_HANDLE_VERSION_MASK) >> SFZ_HANDLE_INDEX_NUM_BITS); }
 	
-	SfzHandle() = default;
-	constexpr SfzHandle(u32 idx, u8 version)
-		: bits((u32(version) << SFZ_HANDLE_INDEX_NUM_BITS) | idx)
+	static SfzHandle create(u32 idx, u8 version)
 	{
 		sfz_assert((idx & SFZ_HANDLE_INDEX_MASK) == idx);
 		sfz_assert((version & u8(0x7F)) == version);
 		sfz_assert(version != 0);
+		SfzHandle handle;
+		handle.bits = (u32(version) << SFZ_HANDLE_INDEX_NUM_BITS) | idx;
+		return handle;
 	}
 
 	constexpr bool operator== (SfzHandle other) const { return this->bits == other.bits; }

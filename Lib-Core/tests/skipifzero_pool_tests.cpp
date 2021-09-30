@@ -156,7 +156,7 @@ UTEST(Pool, allocating_and_deallocating)
 		ASSERT_TRUE(pool.arraySize() == CAPACITY);
 
 		for (u32 i = 0; i < CAPACITY; i++) {
-			SfzHandle handle = SfzHandle(i, 1);
+			SfzHandle handle = SfzHandle::create(i, 1);
 			ASSERT_TRUE(pool.handleIsValid(handle));
 			ASSERT_TRUE(*pool.get(handle) == i);
 			pool.deallocate(i);
