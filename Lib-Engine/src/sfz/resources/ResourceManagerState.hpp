@@ -56,12 +56,6 @@ struct ResourceManagerState final {
 	Setting* voxelModelFileWatch = nullptr;
 	HashMap<strID, SfzHandle> voxelModelHandles;
 	Pool<VoxelModelResource> voxelModels;
-
-	HashMap<strID, SfzHandle> voxelMaterialHandles;
-	HashMap<u8x4, SfzHandle> voxelMaterialColors;
-	Pool<VoxelMaterial> voxelMaterials;
-	Array<ShaderVoxelMaterial> voxelMaterialShaderBufferCpu;
-	SfzHandle voxelMaterialShaderBufferHandle = SFZ_NULL_HANDLE;
 };
 
 } // namespace sfz

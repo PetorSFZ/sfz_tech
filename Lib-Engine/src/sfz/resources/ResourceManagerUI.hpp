@@ -501,103 +501,10 @@ inline void renderVoxelModelsTab(ResourceManagerState& state)
 	}
 }
 
-inline void renderVoxelMaterialsTab(ResourceManager& resources, ResourceManagerState& state)
-{
-	constexpr f32 offset = 200.0f;
-	constexpr f32x4 normalTextColor = f32x4(1.0f);
-	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
-	static str128 filter;
-
-	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
-	ImGui::InputText("Filter##VoxelMaterialsTab", filter.mRawStr, filter.capacity());
-	ImGui::PopStyleColor();
-	filter.toLower();
-
-	const bool filterMode = filter != "";
-
-	for (HashMapPair<strID, SfzHandle> itemItr : state.voxelMaterialHandles) {
-		const u32 idx = itemItr.value.idx();
-		VoxelMaterial& material = state.voxelMaterials[itemItr.value];
-		str320 nameExt = str320("%s - [%u %u %u]",
-			itemItr.key.str(),
-			u32(material.originalColor.x),
-			u32(material.originalColor.y),
-			u32(material.originalColor.z));
-
-		str320 lowerCaseName = nameExt;
-		lowerCaseName.toLower();
-		if (!filter.isPartOf(lowerCaseName.str())) continue;
-
-		{
-			f32x4 color;
-			color.xyz() = clamp(f32x4(material.originalColor).xyz() * (1.0f / 255.0f), 0.0f, 1.0f);
-			color.w = 1.0f;
-			ImGui::ColorButton(str320("##%s", nameExt.str()).str(), color, ImGuiColorEditFlags_NoLabel);
-			ImGui::SameLine();
-		}
-
-		if (filterMode) {
-			imguiRenderFilteredText(nameExt.str(), filter.str(), normalTextColor, filterTextColor);
-		}
-		else {
-			if (!ImGui::CollapsingHeader(nameExt.str())) continue;
-		}
-
-		ImGui::Indent(20.0f);
-
-		alignedEdit("Original color", offset, [&](const char* name) {
-			str64 orignalColorStr = str64("%u %u %u", 
-				u32(material.originalColor.x),
-				u32(material.originalColor.y),
-				u32(material.originalColor.z));
-			ImGui::InputText(
-				str128("##%s%u", name, idx),
-				orignalColorStr.mRawStr,
-				orignalColorStr.capacity(),
-				ImGuiInputTextFlags_ReadOnly);
-		});
-
-		bool materialModified = false;
-
-		alignedEdit("Albedo", offset, [&](const char* name) {
-			bool edited = ImGui::ColorEdit3(str128("##%s%u", name, idx), material.albedo.data(), 0);
-			materialModified = materialModified || edited;
-		});
-
-		alignedEdit("Roughness", offset, [&](const char* name) {
-			bool edited = ImGui::InputFloat(str128("##%s%u", name, idx), &material.roughness);
-			material.roughness = clamp(material.roughness, 0.0f, 1.0f);
-			materialModified = materialModified || edited;
-		});
-
-		alignedEdit("Metallic", offset, [&](const char* name) {
-			bool edited = ImGui::InputFloat(str128("##%s%u", name, idx), &material.metallic);
-			material.metallic = clamp(material.metallic, 0.0f, 1.0f);
-			materialModified = materialModified || edited;
-		});
-
-		alignedEdit("Emissive (color)", offset, [&](const char* name) {
-			bool edited = ImGui::ColorEdit3(str128("##%s%u", name, idx), material.emissiveColor.data());
-			materialModified = materialModified || edited;
-		});
-
-		alignedEdit("Emissive (strength)", offset, [&](const char* name) {
-			bool edited = ImGui::InputFloat(str128("##%s%u", name, idx), &material.emissiveStrength);
-			materialModified = materialModified || edited;
-		});
-
-		if (materialModified) {
-			resources.syncVoxelMaterialsToGpuBlocking();
-		}
-
-		ImGui::Unindent(20.0f);
-	}
-}
-
 // ResourceManagerUI
 // ------------------------------------------------------------------------------------------------
 
-inline void resourceManagerUI(ResourceManager& resources, ResourceManagerState& state)
+inline void resourceManagerUI(ResourceManagerState& state)
 {
 	if (!ImGui::Begin("Resources", nullptr, ImGuiWindowFlags_NoFocusOnAppearing)) {
 		ImGui::End();
@@ -633,12 +540,6 @@ inline void resourceManagerUI(ResourceManager& resources, ResourceManagerState& 
 		if (ImGui::BeginTabItem("Voxel Models")) {
 			ImGui::Spacing();
 			renderVoxelModelsTab(state);
-			ImGui::EndTabItem();
-		}
-
-		if (ImGui::BeginTabItem("Voxel Materials")) {
-			ImGui::Spacing();
-			renderVoxelMaterialsTab(resources, state);
 			ImGui::EndTabItem();
 		}
 

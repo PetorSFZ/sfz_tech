@@ -58,19 +58,9 @@ void ResourceManager::init(u32 maxNumResources, SfzAllocator* allocator, ZgUploa
 	mState->voxelModelHandles.init(maxNumResources, allocator, sfz_dbg(""));
 	mState->voxelModels.init(maxNumResources, allocator, sfz_dbg(""));
 
-	mState->voxelMaterialHandles.init(maxNumResources, allocator, sfz_dbg(""));
-	mState->voxelMaterialColors.init(maxNumResources, allocator, sfz_dbg(""));
-	mState->voxelMaterials.init(maxNumResources, allocator, sfz_dbg(""));
-	mState->voxelMaterialShaderBufferCpu.init(maxNumResources, allocator, sfz_dbg(""));
-
 	// Sets allocator for opengametools
 	// TODO: Might want to place somewhere else
 	setOpenGameToolsAllocator(allocator);
-
-	// Create voxel shader material buffer
-	mState->voxelMaterialShaderBufferCpu.add(ShaderVoxelMaterial{}, maxNumResources);
-	mState->voxelMaterialShaderBufferHandle = addBuffer(BufferResource::createStatic(
-		"voxel_material_buffer", sizeof(ShaderVoxelMaterial), maxNumResources));
 }
 
 void ResourceManager::destroy() noexcept
@@ -91,7 +81,7 @@ void ResourceManager::destroy() noexcept
 
 void ResourceManager::renderDebugUI()
 {
-	resourceManagerUI(*this, *mState);
+	resourceManagerUI(*mState);
 }
 
 void ResourceManager::updateResolution(i32x2 screenRes)
@@ -363,95 +353,6 @@ void ResourceManager::removeVoxelModel(strID name)
 	if (handle == SFZ_NULL_HANDLE) return;
 	mState->voxelModelHandles.remove(name);
 	mState->voxelModels.deallocate(handle);
-}
-
-// ResourceManager: VoxelMaterial methods
-// ------------------------------------------------------------------------------------------------
-
-SfzHandle ResourceManager::getVoxelMaterialHandle(const char* name) const
-{
-	return this->getVoxelMaterialHandle(strID(name));
-}
-
-SfzHandle ResourceManager::getVoxelMaterialHandle(strID name) const
-{
-	const SfzHandle* handle = mState->voxelMaterialHandles.get(name);
-	if (handle == nullptr) return SFZ_NULL_HANDLE;
-	return *handle;
-}
-
-SfzHandle ResourceManager::getVoxelMaterialHandle(u8x4 color) const
-{
-	const SfzHandle* handle = mState->voxelMaterialColors.get(color);
-	if (handle == nullptr) return SFZ_NULL_HANDLE;
-	return *handle;
-}
-
-VoxelMaterial* ResourceManager::getVoxelMaterial(SfzHandle handle)
-{
-	return mState->voxelMaterials.get(handle);
-}
-
-SfzHandle ResourceManager::addVoxelMaterial(VoxelMaterial&& resource)
-{
-	strID name = resource.name;
-	u8x4 originalColor = resource.originalColor;
-	sfz_assert(name.isValid());
-	sfz_assert(mState->voxelMaterialHandles.get(name) == nullptr);
-	sfz_assert(mState->voxelMaterialColors.get(originalColor) == nullptr);
-	SfzHandle handle = mState->voxelMaterials.allocate(sfz_move(resource));
-	mState->voxelMaterialHandles.put(name, handle);
-	mState->voxelMaterialColors.put(originalColor, handle);
-	sfz_assert(mState->voxelMaterialHandles.size() == mState->voxelMaterials.numAllocated());
-	sfz_assert(mState->voxelMaterialColors.size() == mState->voxelMaterials.numAllocated());
-	return handle;
-}
-
-void ResourceManager::removeVoxelMaterial(strID name)
-{
-	SfzHandle handle = this->getVoxelMaterialHandle(name);
-	if (handle == SFZ_NULL_HANDLE) return;
-	VoxelMaterial material = mState->voxelMaterials[handle];
-	sfz_assert(handle == this->getVoxelMaterialHandle(material.originalColor));
-	mState->voxelMaterialHandles.remove(name);
-	mState->voxelMaterialColors.remove(material.originalColor);
-	mState->voxelMaterials.deallocate(handle);
-}
-
-void ResourceManager::syncVoxelMaterialsToGpuBlocking()
-{
-	// Flush present queue
-	zg::CommandQueue presentQueue = zg::CommandQueue::getPresentQueue();
-	CHECK_ZG presentQueue.flush();
-
-	BufferResource* buffer = getBuffer(mState->voxelMaterialShaderBufferHandle);
-	sfz_assert(buffer != nullptr);
-
-	Array<ShaderVoxelMaterial>& cpu = mState->voxelMaterialShaderBufferCpu;
-	Pool<VoxelMaterial>& pool = mState->voxelMaterials;
-	sfz_assert(cpu.size() >= pool.arraySize());
-	for (u32 i = 0; i < pool.arraySize(); i++) {
-		const VoxelMaterial& src = pool.data()[i];
-		ShaderVoxelMaterial& dst = cpu[i];
-		dst.albedo = src.albedo;
-		dst.roughness = src.roughness;
-		dst.metallic = src.metallic;
-
-		const f32x3 emissiveColorLinear = f32x3(
-			powf(src.emissiveColor.x, 2.2f),
-			powf(src.emissiveColor.y, 2.2f),
-			powf(src.emissiveColor.z, 2.2f));
-		dst.emissive = emissiveColorLinear * src.emissiveStrength;
-	}
-
-	// Note: We are doing this using the present queue because the copy queue can't change the
-	//       resource state of the buffer. Plus, the buffer may be in use on the present queue.
-	buffer->uploadBlocking<ShaderVoxelMaterial>(cpu.data(), pool.arraySize(), mState->uploader, presentQueue);
-}
-
-SfzHandle ResourceManager::getVoxelMaterialShaderBufferHandle() const
-{
-	return mState->voxelMaterialShaderBufferHandle;
 }
 
 } // namespace sfz

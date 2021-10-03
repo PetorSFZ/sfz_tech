@@ -103,18 +103,6 @@ public:
 	SfzHandle addVoxelModel(VoxelModelResource&& resource);
 	void removeVoxelModel(strID name);
 
-	// VoxelMaterial methods
-	// --------------------------------------------------------------------------------------------
-
-	SfzHandle getVoxelMaterialHandle(const char* name) const;
-	SfzHandle getVoxelMaterialHandle(strID name) const;
-	SfzHandle getVoxelMaterialHandle(u8x4 color) const;
-	VoxelMaterial* getVoxelMaterial(SfzHandle handle);
-	SfzHandle addVoxelMaterial(VoxelMaterial&& resource);
-	void removeVoxelMaterial(strID name);
-	void syncVoxelMaterialsToGpuBlocking();
-	SfzHandle getVoxelMaterialShaderBufferHandle() const;
-
 private:
 	ResourceManagerState* mState = nullptr;
 };
