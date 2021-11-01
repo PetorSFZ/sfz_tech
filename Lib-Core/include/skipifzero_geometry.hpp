@@ -20,34 +20,10 @@
 #define SKIPIFZERO_GEOMETRY_HPP
 #pragma once
 
+#include "sfz_geom.h"
 #include "skipifzero.hpp"
 
 namespace sfz {
-
-// Ray
-// ------------------------------------------------------------------------------------------------
-
-constexpr f32 RAY_MAX_DIST = 1'000'000.0f; // F32_MAX causes issues in some algorithms
-
-struct Ray final {
-	f32x3 origin = f32x3(0.0f);
-	f32x3 dir = f32x3(0.0f);
-	f32 maxDist = RAY_MAX_DIST;
-
-	Ray() = default;
-	Ray(f32x3 origin, f32x3 dir, f32 maxDist = RAY_MAX_DIST)
-		: origin(origin), dir(dir), maxDist(maxDist)
-	{
-		sfz_assert(eqf(length(dir), 1.0f));
-		sfz_assert(0.0f < maxDist && maxDist <= RAY_MAX_DIST);
-	}
-
-	static Ray createOffset(f32x3 origin, f32x3 dir, f32 minDist, f32 maxDist = RAY_MAX_DIST)
-	{
-		return Ray(origin + dir * minDist, dir, maxDist);
-	}
-};
-static_assert(sizeof(Ray) == sizeof(f32) * 7, "Ray is padded");
 
 // AABB
 // ------------------------------------------------------------------------------------------------
@@ -91,7 +67,7 @@ constexpr void rayVsAABB(f32x3 origin, f32x3 invDir, const AABB& aabb, f32& tMin
 }
 
 // Returns distance to closest intersection with AABB, negative number on no hit
-inline f32 rayVsAABB(const Ray& ray, const AABB& aabb, f32* tMinOut = nullptr, f32* tMaxOut = nullptr)
+inline f32 rayVsAABB(const SfzRay& ray, const AABB& aabb, f32* tMinOut = nullptr, f32* tMaxOut = nullptr)
 {
 	const f32x3 origin = ray.origin;
 	const f32x3 invDir = invSafe(ray.dir);

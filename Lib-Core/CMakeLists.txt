@@ -103,6 +103,7 @@ set(TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
 set(INCLUDE_FILES
 	${INCLUDE_DIR}/sfz.h
+	${INCLUDE_DIR}/sfz_geom.h
 	${INCLUDE_DIR}/skipifzero.hpp
 	${INCLUDE_DIR}/skipifzero_allocators.hpp
 	${INCLUDE_DIR}/skipifzero_arrays.hpp
