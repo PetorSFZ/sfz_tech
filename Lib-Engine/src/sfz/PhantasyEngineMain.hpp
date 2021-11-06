@@ -36,10 +36,12 @@ enum class UpdateOp : u32 {
 	REINIT_CONTROLLERS
 };
 
-enum class IniLocation {
+enum class UserDataLocation {
 	
-	// The ini file is placed next to the exe file.
-	NEXT_TO_EXECUTABLE,
+	// The user data directory is the same as the directory containing the exe file, for portable
+	// "installations". This behaviour can always be forced by placing a file called "portable.txt`
+	// next to the exe file.
+	SAME_AS_EXE,
 
 	// "C:\Users\<username>\Documents\My Games" on Windows, i.e. where many games store their
 	// save files and config files. On macOS (and Linux) this is instead "~/My Games".
@@ -67,8 +69,8 @@ struct InitOptions final {
 	// Whether you want to append build time to window title
 	bool appendBuildTimeToWindowTitle = false;
 
-	// Location of Ini file
-	IniLocation iniLocation = IniLocation::NEXT_TO_EXECUTABLE;
+	// Location of user data
+	UserDataLocation userDataLocation = UserDataLocation::SAME_AS_EXE;
 
 	// Maximum number of each type of resource
 	u32 maxNumResources = 4096;

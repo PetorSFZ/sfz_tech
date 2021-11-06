@@ -702,14 +702,22 @@ int main(int argc, char* argv[])
 	// function.
 	sfz::InitOptions options = PhantasyEngineUserMain(argc, argv);
 
+	// On Windows, check if there is a "portable.txt" directory next to executable. If so, change
+	// INI
+#ifdef _WIN32
+	if (sfz::fileExists("portable.txt")) {
+		options.userDataLocation = sfz::UserDataLocation::SAME_AS_EXE;
+	}
+#endif
+
 	// Setup user directory in context
 
 	// Setup user-data dir
-	if (options.iniLocation == sfz::IniLocation::NEXT_TO_EXECUTABLE) {
+	if (options.userDataLocation == sfz::UserDataLocation::SAME_AS_EXE) {
 		userDataDir = basePath();
 		userDataDir.removeChars(1);
 	}
-	else if (options.iniLocation == sfz::IniLocation::MY_GAMES_DIR) {
+	else if (options.userDataLocation == sfz::UserDataLocation::MY_GAMES_DIR) {
 
 		// Create user data directory
 		ensureAppUserDataDirExists(options.appName);
