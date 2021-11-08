@@ -33,7 +33,7 @@ static WidgetBase* baseGetBase(void* widgetData)
 	return &reinterpret_cast<BaseContainerData*>(widgetData)->base;
 }
 
-static void baseGetNextWidgetBox(WidgetCmd* cmd, strID childID, Box* boxOut)
+static void baseGetNextWidgetBox(WidgetCmd* cmd, SfzStrID childID, Box* boxOut)
 {
 	(void)childID;
 	BaseContainerData& data = *cmd->data<BaseContainerData>();
@@ -75,7 +75,7 @@ static void baseDraw(
 	const BaseContainerData& data = *cmd->data<BaseContainerData>();
 
 	// Set attributes and backup old ones
-	sfz::Map16<strID, Attribute> backup;
+	sfz::Map16<SfzStrID, Attribute> backup;
 	sfz_assert(data.newValues.size() <= data.newValues.capacity());
 	for (const auto& pair : data.newValues) {
 	
@@ -116,7 +116,7 @@ void initZeroUI(SfzAllocator* allocator, u32 surfaceTmpMemoryBytes, u32 oversamp
 
 	globalCtx = sfz_new<Context>(allocator, sfz_dbg(""));
 	ctx().heapAllocator = allocator;
-	ctx().defaultID = strID("default");
+	ctx().defaultID = sfzStrIDCreate("default");
 
 	// Initialize widgets
 	ctx().widgetTypes.init(32, allocator, sfz_dbg(""));
@@ -171,11 +171,11 @@ void setFontTextureHandle(u64 handle)
 
 bool registerFont(const char* name, const char* path, f32 size, bool defaultFont)
 {
-	strID nameID = strID(name);
+	SfzStrID nameID = sfzStrIDCreate(name);
 	bool success = internalDrawAddFont(name, nameID, path, size);
 	if (defaultFont) {
 		sfz_assert_hard(success);
-		ctx().defaultAttributes.put(strID("default_font"), nameID);
+		ctx().defaultAttributes.put(sfzStrIDCreate("default_font"), nameID);
 	}
 	return success;
 }
@@ -185,14 +185,14 @@ bool registerFont(const char* name, const char* path, f32 size, bool defaultFont
 
 void registerDefaultAttribute(const char* attribName, const char* value)
 {
-	strID attribID = strID(attribName);
+	SfzStrID attribID = sfzStrIDCreate(attribName);
 	sfz_assert(ctx().defaultAttributes.get(attribID) == nullptr);
-	ctx().defaultAttributes.put(attribID, strID(value));
+	ctx().defaultAttributes.put(attribID, sfzStrIDCreate(value));
 }
 
 void registerDefaultAttribute(const char* attribName, Attribute attribute)
 {
-	strID attribID = strID(attribName);
+	SfzStrID attribID = sfzStrIDCreate(attribName);
 	sfz_assert(ctx().defaultAttributes.get(attribID) == nullptr);
 	ctx().defaultAttributes.put(attribID, attribute);
 }
@@ -242,7 +242,7 @@ void defaultPassthroughDrawFunc(
 
 void registerWidget(const char* name, const WidgetDesc& desc)
 {
-	strID nameID = strID(name);
+	SfzStrID nameID = sfzStrIDCreate(name);
 	sfz_assert(ctx().widgetTypes.get(nameID) == nullptr);
 	WidgetType& type = ctx().widgetTypes.put(nameID, {});
 	sfz_assert(desc.widgetDataSizeBytes >= sizeof(WidgetBase));
@@ -261,10 +261,10 @@ void registerWidget(const char* name, const WidgetDesc& desc)
 
 void registerArchetype(const char* widgetName, const char* archetypeName, DrawFunc* drawFunc)
 {
-	strID widgetID = strID(widgetName);
+	SfzStrID widgetID = sfzStrIDCreate(widgetName);
 	WidgetType* type = ctx().widgetTypes.get(widgetID);
 	sfz_assert(type != nullptr);
-	strID archetypeID = strID(archetypeName);
+	SfzStrID archetypeID = sfzStrIDCreate(archetypeName);
 	sfz_assert(type->archetypes.get(archetypeID) == nullptr);
 	WidgetArchetype& archetype = type->archetypes.put(archetypeID, {});
 	archetype.drawFunc = drawFunc;
@@ -272,17 +272,17 @@ void registerArchetype(const char* widgetName, const char* archetypeName, DrawFu
 
 void pushArchetype(const char* widgetName, const char* archetypeName)
 {
-	strID widgetID = strID(widgetName);
+	SfzStrID widgetID = sfzStrIDCreate(widgetName);
 	WidgetType* type = ctx().widgetTypes.get(widgetID);
 	sfz_assert(type != nullptr);
-	strID archetypeID = strID(archetypeName);
+	SfzStrID archetypeID = sfzStrIDCreate(archetypeName);
 	sfz_assert(type->archetypes.get(archetypeID) != nullptr);
 	type->archetypeStack.add(archetypeID);
 }
 
 void popArchetype(const char* widgetName)
 {
-	strID widgetID = strID(widgetName);
+	SfzStrID widgetID = sfzStrIDCreate(widgetName);
 	WidgetType* type = ctx().widgetTypes.get(widgetID);
 	sfz_assert(type != nullptr);
 	sfz_assert(type->archetypeStack.size() > 1);
@@ -508,7 +508,7 @@ void baseBegin(BaseContainerData* data)
 	surface.pushMakeParent(&parent.children.last());
 }
 
-void baseBegin(strID id)
+void baseBegin(SfzStrID id)
 {
 	BaseContainerData* data = ctx().getWidgetData<BaseContainerData>(id);
 	baseBegin(data);
@@ -522,15 +522,15 @@ void baseBegin(const char* id)
 
 void baseAttribute(const char* id, Attribute attrib)
 {
-	baseAttribute(strID(id), attrib);
+	baseAttribute(sfzStrIDCreate(id), attrib);
 }
 
 void baseAttribute(const char* id, const char* value)
 {
-	baseAttribute(strID(id), strID(value));
+	baseAttribute(sfzStrIDCreate(id), sfzStrIDCreate(value));
 }
 
-void baseAttribute(strID id, Attribute attrib)
+void baseAttribute(SfzStrID id, Attribute attrib)
 {
 	WidgetCmd& parent = ctx().activeSurface->getCurrentParent();
 	sfz_assert(parent.widgetID == BASE_CON_ID);

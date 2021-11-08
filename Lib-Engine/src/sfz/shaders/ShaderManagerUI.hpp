@@ -60,17 +60,17 @@ inline void shaderManagerUI(ShaderManagerState& state)
 		CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
 
 		// Rebuild shaders
-		for (HashMapPair<strID, SfzHandle> itemItr : state.shaderHandles) {
+		for (HashMapPair<SfzStrID, SfzHandle> itemItr : state.shaderHandles) {
 			Shader& shader = state.shaders[itemItr.value];
 			bool success = shader.build();
 			if (!success) {
-				SFZ_WARNING("Shaders", "Failed to rebuild shader: \"%s\"", shader.name.str());
+				SFZ_WARNING("Shaders", "Failed to rebuild shader: \"%s\"", sfzStrIDGetStr(shader.name));
 			}
 		}
 	}
 
-	for (HashMapPair<strID, SfzHandle> itemItr : state.shaderHandles) {
-		const char* name = itemItr.key.str();
+	for (HashMapPair<SfzStrID, SfzHandle> itemItr : state.shaderHandles) {
+		const char* name = sfzStrIDGetStr(itemItr.key);
 		const u32 idx = itemItr.value.idx();
 		Shader& shader = state.shaders[itemItr.value];
 

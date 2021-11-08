@@ -30,8 +30,6 @@
 
 namespace zui {
 
-using sfz::strID;
-
 // Initialization and internal interface
 // ------------------------------------------------------------------------------------------------
 
@@ -42,7 +40,7 @@ void internalDrawInit(SfzAllocator* allocator, u32 fontOversampling);
 void internalDrawDeinit();
 void internalDrawSetFontHandle(u64 handle);
 
-bool internalDrawAddFont(const char* name, strID nameID, const char* path, f32 atlasSize);
+bool internalDrawAddFont(const char* name, SfzStrID nameID, const char* path, f32 atlasSize);
 bool internalDrawFontTextureUpdated();
 ImageViewConst internalDrawGetFontTexture();
 
@@ -68,7 +66,7 @@ void drawAddCommand(
 
 f32 drawTextFmtCentered(
 	const mat34& transform,
-	strID fontID,
+	SfzStrID fontID,
 	f32 size,
 	f32x4 color,
 	const char* text);
@@ -92,6 +90,6 @@ void drawBorder(
 
 // TODO: This might be a tiny bit broken
 f32 drawTextFmt(
-	f32x2 pos, HAlign halign, VAlign valign, strID fontID, f32 size, f32x4 color, const char* format, ...);
+	f32x2 pos, HAlign halign, VAlign valign, SfzStrID fontID, f32 size, f32x4 color, const char* format, ...);
 
 } // namespace zui

@@ -30,7 +30,7 @@ namespace sfz {
 
 struct ImageAndPath final {
 	Image image;
-	strID globalPathId;
+	SfzStrID globalPathId = SFZ_STR_ID_NULL;
 };
 
 // Loads all meshes, textures and materials from a .gltf file.
@@ -45,7 +45,7 @@ bool loadAssetsFromGltf(
 	Mesh& meshOut,
 	Array<ImageAndPath>& texturesOut,
 	SfzAllocator* allocator,
-	bool (*checkIfTextureIsLoaded)(strID id, void* userPtr),
+	bool (*checkIfTextureIsLoaded)(SfzStrID id, void* userPtr),
 	void* userPtr) noexcept;
 
 } // namespace sfz

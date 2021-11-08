@@ -88,7 +88,7 @@ void ResourceManager::updateResolution(i32x2 screenRes)
 {
 	// Check if any textures need rebuilding
 	bool anyTexNeedRebuild = false;
-	for (HashMapPair<strID, SfzHandle> itemItr : mState->textureHandles) {
+	for (HashMapPair<SfzStrID, SfzHandle> itemItr : mState->textureHandles) {
 		const TextureResource& resource = mState->textures[itemItr.value];
 		anyTexNeedRebuild = anyTexNeedRebuild || resource.needRebuild(screenRes);
 	}
@@ -104,7 +104,7 @@ void ResourceManager::updateResolution(i32x2 screenRes)
 		CHECK_ZG copyQueue.flush();
 
 		// Rebuild textures
-		for (HashMapPair<strID, SfzHandle> itemItr : mState->textureHandles) {
+		for (HashMapPair<SfzStrID, SfzHandle> itemItr : mState->textureHandles) {
 			TextureResource& resource = mState->textures[itemItr.value];
 			if (resource.screenRelativeResolution || resource.settingControlledRes) {
 				CHECK_ZG resource.build(screenRes);
@@ -112,7 +112,7 @@ void ResourceManager::updateResolution(i32x2 screenRes)
 		}
 
 		// Rebuild framebuffers
-		for (HashMapPair<strID, SfzHandle> itemItr : mState->framebufferHandles) {
+		for (HashMapPair<SfzStrID, SfzHandle> itemItr : mState->framebufferHandles) {
 			FramebufferResource& resource = mState->framebuffers[itemItr.value];
 			if (resource.screenRelativeResolution || resource.controlledResSetting) {
 				CHECK_ZG resource.build(screenRes);
@@ -125,7 +125,7 @@ bool ResourceManager::updateVoxelModels()
 {
 	bool updated = false;
 	if (mState->voxelModelFileWatch->boolValue()) {
-		for (HashMapPair<strID, SfzHandle> itemItr : mState->voxelModelHandles) {
+		for (HashMapPair<SfzStrID, SfzHandle> itemItr : mState->voxelModelHandles) {
 			VoxelModelResource& resource = mState->voxelModels[itemItr.value];
 			const time_t newLastModifiedDate = sfz::fileLastModifiedDate(resource.path.str());
 			if (resource.lastModifiedDate < newLastModifiedDate) {
@@ -147,10 +147,10 @@ ZgUploader* ResourceManager::getUploader()
 
 SfzHandle ResourceManager::getBufferHandle(const char* name) const
 {
-	return this->getBufferHandle(strID(name));
+	return this->getBufferHandle(sfzStrIDCreate(name));
 }
 
-SfzHandle ResourceManager::getBufferHandle(strID name) const
+SfzHandle ResourceManager::getBufferHandle(SfzStrID name) const
 {
 	const SfzHandle* handle = mState->bufferHandles.get(name);
 	if (handle == nullptr) return SFZ_NULL_HANDLE;
@@ -164,8 +164,8 @@ BufferResource* ResourceManager::getBuffer(SfzHandle handle)
 
 SfzHandle ResourceManager::addBuffer(BufferResource&& resource)
 {
-	strID name = resource.name;
-	sfz_assert(name.isValid());
+	SfzStrID name = resource.name;
+	sfz_assert(name != SFZ_STR_ID_NULL);
 	sfz_assert(mState->bufferHandles.get(name) == nullptr);
 	SfzHandle handle = mState->buffers.allocate(sfz_move(resource));
 	mState->bufferHandles.put(name, handle);
@@ -173,7 +173,7 @@ SfzHandle ResourceManager::addBuffer(BufferResource&& resource)
 	return handle;
 }
 
-void ResourceManager::removeBuffer(strID name)
+void ResourceManager::removeBuffer(SfzStrID name)
 {
 	// TODO: Currently blocking, can probably be made async.
 	CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
@@ -190,10 +190,10 @@ void ResourceManager::removeBuffer(strID name)
 
 SfzHandle ResourceManager::getTextureHandle(const char* name) const
 {
-	return this->getTextureHandle(strID(name));
+	return this->getTextureHandle(sfzStrIDCreate(name));
 }
 
-SfzHandle ResourceManager::getTextureHandle(strID name) const
+SfzHandle ResourceManager::getTextureHandle(SfzStrID name) const
 {
 	const SfzHandle* handle = mState->textureHandles.get(name);
 	if (handle == nullptr) return SFZ_NULL_HANDLE;
@@ -207,8 +207,8 @@ TextureResource* ResourceManager::getTexture(SfzHandle handle)
 
 SfzHandle ResourceManager::addTexture(TextureResource&& resource)
 {
-	strID name = resource.name;
-	sfz_assert(name.isValid());
+	SfzStrID name = resource.name;
+	sfz_assert(name != SFZ_STR_ID_NULL);
 	sfz_assert(mState->textureHandles.get(name) == nullptr);
 	SfzHandle handle = mState->textures.allocate(sfz_move(resource));
 	mState->textureHandles.put(name, handle);
@@ -216,7 +216,7 @@ SfzHandle ResourceManager::addTexture(TextureResource&& resource)
 	return handle;
 }
 
-void ResourceManager::removeTexture(strID name)
+void ResourceManager::removeTexture(SfzStrID name)
 {
 	// TODO: Currently blocking, can probably be made async if we just add it to a list of textures
 	//       to remove and then remove it in a frame or two.
@@ -234,10 +234,10 @@ void ResourceManager::removeTexture(strID name)
 
 SfzHandle ResourceManager::getFramebufferHandle(const char* name) const
 {
-	return this->getFramebufferHandle(strID(name));
+	return this->getFramebufferHandle(sfzStrIDCreate(name));
 }
 
-SfzHandle ResourceManager::getFramebufferHandle(strID name) const
+SfzHandle ResourceManager::getFramebufferHandle(SfzStrID name) const
 {
 	const SfzHandle* handle = mState->framebufferHandles.get(name);
 	if (handle == nullptr) return SFZ_NULL_HANDLE;
@@ -251,8 +251,8 @@ FramebufferResource* ResourceManager::getFramebuffer(SfzHandle handle)
 
 SfzHandle ResourceManager::addFramebuffer(FramebufferResource&& resource)
 {
-	strID name = resource.name;
-	sfz_assert(name.isValid());
+	SfzStrID name = resource.name;
+	sfz_assert(name != SFZ_STR_ID_NULL);
 	sfz_assert(mState->framebufferHandles.get(name) == nullptr);
 	SfzHandle handle = mState->framebuffers.allocate(sfz_move(resource));
 	mState->framebufferHandles.put(name, handle);
@@ -260,7 +260,7 @@ SfzHandle ResourceManager::addFramebuffer(FramebufferResource&& resource)
 	return handle;
 }
 
-void ResourceManager::removeFramebuffer(strID name)
+void ResourceManager::removeFramebuffer(SfzStrID name)
 {
 	// TODO: Currently blocking, can probably be made async.
 	CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
@@ -277,10 +277,10 @@ void ResourceManager::removeFramebuffer(strID name)
 
 SfzHandle ResourceManager::getMeshHandle(const char* name) const
 {
-	return this->getMeshHandle(strID(name));
+	return this->getMeshHandle(sfzStrIDCreate(name));
 }
 
-SfzHandle ResourceManager::getMeshHandle(strID name) const
+SfzHandle ResourceManager::getMeshHandle(SfzStrID name) const
 {
 	const SfzHandle* handle = mState->meshHandles.get(name);
 	if (handle == nullptr) return SFZ_NULL_HANDLE;
@@ -294,8 +294,8 @@ MeshResource* ResourceManager::getMesh(SfzHandle handle)
 
 SfzHandle ResourceManager::addMesh(MeshResource&& resource)
 {
-	strID name = resource.name;
-	sfz_assert(name.isValid());
+	SfzStrID name = resource.name;
+	sfz_assert(name != SFZ_STR_ID_NULL);
 	sfz_assert(mState->meshHandles.get(name) == nullptr);
 	SfzHandle handle = mState->meshes.allocate(sfz_move(resource));
 	mState->meshHandles.put(name, handle);
@@ -303,7 +303,7 @@ SfzHandle ResourceManager::addMesh(MeshResource&& resource)
 	return handle;
 }
 
-void ResourceManager::removeMesh(strID name)
+void ResourceManager::removeMesh(SfzStrID name)
 {
 	// TODO: Currently blocking, can probably be made async if we just add it to a list of meshes
 	//       to remove and then remove it in a frame or two.
@@ -321,10 +321,10 @@ void ResourceManager::removeMesh(strID name)
 
 SfzHandle ResourceManager::getVoxelModelHandle(const char* name) const
 {
-	return this->getVoxelModelHandle(strID(name));
+	return this->getVoxelModelHandle(sfzStrIDCreate(name));
 }
 
-SfzHandle ResourceManager::getVoxelModelHandle(strID name) const
+SfzHandle ResourceManager::getVoxelModelHandle(SfzStrID name) const
 {
 	const SfzHandle* handle = mState->voxelModelHandles.get(name);
 	if (handle == nullptr) return SFZ_NULL_HANDLE;
@@ -338,8 +338,8 @@ VoxelModelResource* ResourceManager::getVoxelModel(SfzHandle handle)
 
 SfzHandle ResourceManager::addVoxelModel(VoxelModelResource&& resource)
 {
-	strID name = resource.name;
-	sfz_assert(name.isValid());
+	SfzStrID name = resource.name;
+	sfz_assert(name != SFZ_STR_ID_NULL);
 	sfz_assert(mState->voxelModelHandles.get(name) == nullptr);
 	SfzHandle handle = mState->voxelModels.allocate(sfz_move(resource));
 	mState->voxelModelHandles.put(name, handle);
@@ -347,7 +347,7 @@ SfzHandle ResourceManager::addVoxelModel(VoxelModelResource&& resource)
 	return handle;
 }
 
-void ResourceManager::removeVoxelModel(strID name)
+void ResourceManager::removeVoxelModel(SfzStrID name)
 {
 	SfzHandle handle = this->getVoxelModelHandle(name);
 	if (handle == SFZ_NULL_HANDLE) return;

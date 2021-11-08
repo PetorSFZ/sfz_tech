@@ -186,7 +186,7 @@ ZgResult TextureResource::build(i32x2 screenRes)
 	desc.width = res.x;
 	desc.height = res.y;
 	desc.numMipmaps = numMipmaps;
-	desc.debugName = name.str();
+	desc.debugName = sfzStrIDGetStr(name);
 	return texture.create(desc);
 }
 
@@ -282,7 +282,7 @@ TextureResource TextureResource::createFixedSize(
 	sfz_assert(numMipmaps <= ZG_MAX_NUM_MIPMAPS);
 
 	TextureResource resource;
-	resource.name = strID(name);
+	resource.name = sfzStrIDCreate(name);
 	resource.format = format;
 	resource.res = res;
 	resource.numMipmaps = numMipmaps;
@@ -307,7 +307,7 @@ TextureResource TextureResource::createScreenRelative(
 	f32 resScaleSettingScale)
 {
 	TextureResource resource;
-	resource.name = strID(name);
+	resource.name = sfzStrIDCreate(name);
 	resource.format = format;
 	resource.numMipmaps = 1;
 	resource.committedAllocation = committedAllocation;
@@ -337,7 +337,7 @@ TextureResource TextureResource::createSettingControlled(
 	sfz_assert(numMipmaps <= ZG_MAX_NUM_MIPMAPS);
 
 	TextureResource resource;
-	resource.name = strID(name);
+	resource.name = sfzStrIDCreate(name);
 	resource.format = format;
 	resource.res = i32x2(resSetting->intValue());
 	resource.numMipmaps = numMipmaps;

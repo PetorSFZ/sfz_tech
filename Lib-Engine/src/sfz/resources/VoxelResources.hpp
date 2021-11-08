@@ -32,7 +32,7 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 struct VoxelMaterial final {
-	strID name;
+	SfzStrID name = SFZ_STR_ID_NULL;
 	u8x4 originalColor = u8x4(u8(0)); // Gamma space
 
 	f32x3 albedo = f32x3(1.0f, 0.0f, 0.0f); // Gamma space, usually same as original color
@@ -59,7 +59,7 @@ static_assert(sizeof(ShaderVoxelMaterial) == sizeof(f32) * 8, "ShaderVoxelMateri
 // voxel. The value 0 is reserved for unused voxels. Other values are used to index into the
 // color palette.
 struct VoxelModelResource final {
-	strID name;
+	SfzStrID name = SFZ_STR_ID_NULL;
 	time_t lastModifiedDate = 0;
 	str256 path;
 

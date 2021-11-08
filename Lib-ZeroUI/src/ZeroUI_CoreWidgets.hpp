@@ -33,7 +33,7 @@ struct ListData final {
 };
 
 void listBegin(ListData* data, f32 widgetHeight, f32 vertSpacing = 0.0f);
-void listBegin(strID id, f32 widgetHeight, f32 vertSpacing = 0.0f);
+void listBegin(SfzStrID id, f32 widgetHeight, f32 vertSpacing = 0.0f);
 void listBegin(const char* id, f32 widgetHeight, f32 vertSpacing = 0.0f);
 void listEnd();
 
@@ -58,17 +58,17 @@ struct TreeEntryData final {
 };
 
 void treeBegin(TreeBaseData* data, f32x2 entryDims, f32 entryVertSpacing = 0.0f, f32 horizSpacing = 0.0f);
-void treeBegin(strID id, f32x2 entryDims, f32 entryVertSpacing = 0.0f, f32 horizSpacing = 0.0f);
+void treeBegin(SfzStrID id, f32x2 entryDims, f32 entryVertSpacing = 0.0f, f32 horizSpacing = 0.0f);
 void treeBegin(const char* id, f32x2 entryDims, f32 entryVertSpacing = 0.0f, f32 horizSpacing = 0.0f);
 void treeEnd();
 
 bool treeCollapsableBegin(TreeEntryData* data, const char* text, bool enabled = true);
-bool treeCollapsableBegin(strID id, const char* text, bool enabled = true);
+bool treeCollapsableBegin(SfzStrID id, const char* text, bool enabled = true);
 bool treeCollapsableBegin(const char* id, const char* text, bool enabled = true);
 void treeCollapsableEnd();
 
 bool treeButton(TreeEntryData* data, const char* text, bool enabled = true);
-bool treeButton(strID id, const char* text, bool enabled = true);
+bool treeButton(SfzStrID id, const char* text, bool enabled = true);
 bool treeButton(const char* id, const char* text, bool enabled = true);
 
 // Textfmt
@@ -80,7 +80,7 @@ struct TextfmtData final {
 };
 
 void textfmt(TextfmtData* data, const char* format, ...);
-void textfmt(strID id, const char* format, ...);
+void textfmt(SfzStrID id, const char* format, ...);
 void textfmt(const char* id, const char* format, ...);
 
 // Rectangle
@@ -92,7 +92,7 @@ struct RectData final {
 };
 
 void rect(RectData* data, f32x4 linearColor = f32x4(1.0f));
-void rect(strID id, f32x4 linearColor = f32x4(1.0f));
+void rect(SfzStrID id, f32x4 linearColor = f32x4(1.0f));
 void rect(const char* id, f32x4 linearColor = f32x4(1.0f));
 
 // Image
@@ -104,11 +104,11 @@ struct ImageData final {
 };
 
 void image(ImageData* data, u64 imageHandle);
-void image(strID id, u64 imageHandle);
+void image(SfzStrID id, u64 imageHandle);
 void image(const char* id, u64 imageHandle);
 
 void image(ImageData* data, const char* imageHandleID);
-void image(strID id, const char* imageHandleID);
+void image(SfzStrID id, const char* imageHandleID);
 void image(const char* id, const char* imageHandleID);
 
 // Button
@@ -121,7 +121,7 @@ struct ButtonData final {
 };
 
 bool button(ButtonData* data, const char* text, bool enabled = true);
-bool button(strID id, const char* text, bool enabled = true);
+bool button(SfzStrID id, const char* text, bool enabled = true);
 bool button(const char* id, const char* text, bool enabled = true);
 
 // Initialization

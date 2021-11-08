@@ -202,12 +202,12 @@ struct DeserializerVisitor final {
 		}
 	}
 
-	void deserialize(const JsonNode& node, strID& valOut)
+	void deserialize(const JsonNode& node, SfzStrID& valOut)
 	{
 		if (!ensureNodeIsValid(node)) return;
 		str256 tmpStr;
 		extractValue(node.valueStr256(), tmpStr);
-		if (this->success) valOut = strID(tmpStr);
+		if (this->success) valOut = sfzStrIDCreate(tmpStr);
 	}
 
 	void deserialize(const JsonNode& node, str32& valOut)

@@ -46,7 +46,7 @@ struct StreamingBufferMemory final {
 };
 
 struct BufferResource final {
-	strID name;
+	SfzStrID name = SFZ_STR_ID_NULL;
 	u32 elementSizeBytes = 0;
 	u32 maxNumElements = 0;
 	BufferResourceType type = BufferResourceType::STATIC;

@@ -763,4 +763,22 @@ struct name final { \
 #define SFZ_TYPED_HANDLE(name) typedef struct name { SfzHandle h; } name;
 #endif
 
+
+// String ID
+// ------------------------------------------------------------------------------------------------
+
+// The hash of a string, it's "ID". Used to cheaply compare strings (e.g. in an hash map). 0 is
+// reserved for invalid hashes, recommended to initialize as "SfzStrID anID = SFZ_STR_ID_NULL;".
+
+sfz_struct(SfzStrID) {
+	u64 id;
+
+#ifdef __cplusplus
+	constexpr bool operator== (SfzStrID o) const { return this->id == o.id; }
+	constexpr bool operator!= (SfzStrID o) const { return this->id != o.id; }
+#endif
+};
+
+sfz_constant SfzStrID SFZ_STR_ID_NULL = {};
+
 #endif // SFZ_H

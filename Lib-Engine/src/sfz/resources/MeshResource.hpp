@@ -34,7 +34,7 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 struct MeshResource final {
-	strID name;
+	SfzStrID name = SFZ_STR_ID_NULL;
 	SfzHandle vertexBuffer = SFZ_NULL_HANDLE;
 	SfzHandle indexBuffer = SFZ_NULL_HANDLE;
 	SfzHandle materialsBuffer = SFZ_NULL_HANDLE;

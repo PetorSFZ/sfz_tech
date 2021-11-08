@@ -35,7 +35,7 @@ ZgResult FramebufferResource::build(i32x2 screenRes)
 	CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
 	CHECK_ZG zg::CommandQueue::getCopyQueue().flush();
 
-	sfz_assert(!renderTargetNames.isEmpty() || depthBufferName.isValid());
+	sfz_assert(!renderTargetNames.isEmpty() || depthBufferName != SFZ_STR_ID_NULL);
 	ResourceManager& resources = getResourceManager();
 
 	// Set resolution and resolution scale if screen relative
@@ -53,7 +53,7 @@ ZgResult FramebufferResource::build(i32x2 screenRes)
 
 	zg::FramebufferBuilder fbBuilder;
 
-	for (strID renderTargetName : renderTargetNames) {
+	for (SfzStrID renderTargetName : renderTargetNames) {
 		TextureResource* tex = resources.getTexture(resources.getTextureHandle(renderTargetName));
 		sfz_assert(tex != nullptr);
 		sfz_assert(tex->texture.valid());
@@ -65,7 +65,7 @@ ZgResult FramebufferResource::build(i32x2 screenRes)
 		fbBuilder.addRenderTarget(tex->texture);
 	}
 
-	if (depthBufferName.isValid()) {
+	if (depthBufferName != SFZ_STR_ID_NULL) {
 		TextureResource* tex = resources.getTexture(resources.getTextureHandle(depthBufferName));
 		sfz_assert(tex != nullptr);
 		sfz_assert(tex->texture.valid());
@@ -124,10 +124,10 @@ FramebufferResourceBuilder& FramebufferResourceBuilder::setSettingControlledRes(
 
 FramebufferResourceBuilder& FramebufferResourceBuilder::addRenderTarget(const char* textureName)
 {
-	return this->addRenderTarget(strID(textureName));
+	return this->addRenderTarget(sfzStrIDCreate(textureName));
 }
 
-FramebufferResourceBuilder& FramebufferResourceBuilder::addRenderTarget(strID textureName)
+FramebufferResourceBuilder& FramebufferResourceBuilder::addRenderTarget(SfzStrID textureName)
 {
 	this->renderTargetNames.add(textureName);
 	return *this;
@@ -135,10 +135,10 @@ FramebufferResourceBuilder& FramebufferResourceBuilder::addRenderTarget(strID te
 
 FramebufferResourceBuilder& FramebufferResourceBuilder::setDepthBuffer(const char* textureName)
 {
-	return this->setDepthBuffer(strID(textureName));
+	return this->setDepthBuffer(sfzStrIDCreate(textureName));
 }
 
-FramebufferResourceBuilder& FramebufferResourceBuilder::setDepthBuffer(strID textureName)
+FramebufferResourceBuilder& FramebufferResourceBuilder::setDepthBuffer(SfzStrID textureName)
 {
 	this->depthBufferName = textureName;
 	return *this;
@@ -147,7 +147,7 @@ FramebufferResourceBuilder& FramebufferResourceBuilder::setDepthBuffer(strID tex
 FramebufferResource FramebufferResourceBuilder::build(i32x2 screenRes)
 {
 	FramebufferResource resource;
-	resource.name = strID(this->name);
+	resource.name = sfzStrIDCreate(this->name);
 	resource.renderTargetNames = this->renderTargetNames;
 	resource.depthBufferName = this->depthBufferName;
 	resource.res = this->res;

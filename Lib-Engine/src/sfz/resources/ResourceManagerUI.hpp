@@ -44,8 +44,8 @@ inline void renderBuffersTab(ResourceManagerState& state)
 
 	const bool filterMode = filter != "";
 
-	for (HashMapPair<strID, SfzHandle> itemItr : state.bufferHandles) {
-		const char* name = itemItr.key.str();
+	for (HashMapPair<SfzStrID, SfzHandle> itemItr : state.bufferHandles) {
+		const char* name = sfzStrIDGetStr(itemItr.key);
 		const BufferResource& resource = state.buffers[itemItr.value];
 
 		str320 lowerCaseName = name;
@@ -103,8 +103,8 @@ inline void renderTexturesTab(ResourceManagerState& state)
 
 	const bool filterMode = filter != "";
 
-	for (HashMapPair<strID, SfzHandle> itemItr : state.textureHandles) {
-		const char* name = itemItr.key.str();
+	for (HashMapPair<SfzStrID, SfzHandle> itemItr : state.textureHandles) {
+		const char* name = sfzStrIDGetStr(itemItr.key);
 		const TextureResource& resource = state.textures[itemItr.value];
 
 		str320 lowerCaseName = name;
@@ -192,8 +192,8 @@ inline void renderFramebuffersTab(ResourceManagerState& state)
 
 	const bool filterMode = filter != "";
 
-	for (HashMapPair<strID, SfzHandle> itemItr : state.framebufferHandles) {
-		const char* name = itemItr.key.str();
+	for (HashMapPair<SfzStrID, SfzHandle> itemItr : state.framebufferHandles) {
+		const char* name = sfzStrIDGetStr(itemItr.key);
 		const FramebufferResource& resource = state.framebuffers[itemItr.value];
 
 		str320 lowerCaseName = name;
@@ -241,20 +241,20 @@ inline void renderFramebuffersTab(ResourceManagerState& state)
 		if (!resource.renderTargetNames.isEmpty()) {
 			ImGui::Spacing();
 			for (u32 i = 0; i < resource.renderTargetNames.size(); i++) {
-				strID renderTargetName = resource.renderTargetNames[i];
+				SfzStrID renderTargetName = resource.renderTargetNames[i];
 				const TextureResource* renderTarget =
 					state.textures.get(*state.textureHandles.get(renderTargetName));
 				sfz_assert(renderTarget != nullptr);
 				alignedEdit(str64("Render target %u", i).str(), offset, [&](const char*) {
-					ImGui::Text("%s  --  %s", renderTargetName.str(), textureFormatToString(renderTarget->format));
+					ImGui::Text("%s  --  %s", sfzStrIDGetStr(renderTargetName), textureFormatToString(renderTarget->format));
 				});
 			}
 		}
 		
-		if (resource.depthBufferName.isValid()) {
+		if (resource.depthBufferName != SFZ_STR_ID_NULL) {
 			ImGui::Spacing();
 			alignedEdit("Depth buffer", offset, [&](const char*) {
-				ImGui::Text("%s", resource.depthBufferName.str());
+				ImGui::Text("%s", sfzStrIDGetStr(resource.depthBufferName));
 			});
 		}
 
@@ -276,7 +276,7 @@ inline void renderMeshesTab(ResourceManagerState& state)
 		if (mesh.materialsBuffer == SFZ_NULL_HANDLE) meshValid = false;
 
 		// Mesh name
-		ImGui::Text("\"%s\"", itemItr.key.str());
+		ImGui::Text("\"%s\"", sfzStrIDGetStr(itemItr.key));
 		if (!meshValid) {
 			ImGui::SameLine();
 			ImGui::Text("-- NOT VALID");
@@ -303,15 +303,15 @@ inline void renderMeshesTab(ResourceManagerState& state)
 		auto f32ToU8 = [](f32x4 v) { return u8x4(v * 255.0f); };
 
 		// Lambda for converting texture index to combo string label
-		auto textureToComboStr = [&](strID strId) {
+		auto textureToComboStr = [&](SfzStrID strId) {
 			str128 texStr;
-			if (!strId.isValid()) texStr.appendf("NO TEXTURE");
-			else texStr= str128("%s", strId.str());
+			if (strId == SFZ_STR_ID_NULL) texStr.appendf("NO TEXTURE");
+			else texStr= str128("%s", sfzStrIDGetStr(strId));
 			return texStr;
 		};
 
 		// Lambda for creating a combo box to select texture
-		auto textureComboBox = [&](const char* comboName, strID& texId, bool& updateMesh) {
+		auto textureComboBox = [&](const char* comboName, SfzStrID& texId, bool& updateMesh) {
 			(void)updateMesh;
 			(void)comboName;
 			str128 selectedTexStr = textureToComboStr(texId);
@@ -319,16 +319,16 @@ inline void renderMeshesTab(ResourceManagerState& state)
 
 				// Special case for no texture (~0)
 				{
-					bool isSelected = !texId.isValid();
+					bool isSelected = texId == SFZ_STR_ID_NULL;
 					if (ImGui::Selectable("NO TEXTURE", isSelected)) {
-						texId = STR_ID_INVALID;
+						texId = SFZ_STR_ID_NULL;
 						updateMesh = true;
 					}
 				}
 
 				// Existing textures
 				for (auto itemItr : state.textureHandles) {
-					strID id = itemItr.key;
+					SfzStrID id = itemItr.key;
 
 					// Convert index to string and check if it is selected
 					str128 texStr = textureToComboStr(id);
@@ -458,8 +458,8 @@ inline void renderVoxelModelsTab(ResourceManagerState& state)
 
 	const bool filterMode = filter != "";
 
-	for (HashMapPair<strID, SfzHandle> itemItr : state.voxelModelHandles) {
-		const char* name = itemItr.key.str();
+	for (HashMapPair<SfzStrID, SfzHandle> itemItr : state.voxelModelHandles) {
+		const char* name = sfzStrIDGetStr(itemItr.key);
 		const VoxelModelResource& resource = state.voxelModels[itemItr.value];
 
 		str320 lowerCaseName = name;

@@ -41,20 +41,20 @@ struct ResourceManagerState final {
 	SfzAllocator* allocator = nullptr;
 	ZgUploader* uploader = nullptr;
 
-	HashMap<strID, SfzHandle> bufferHandles;
+	HashMap<SfzStrID, SfzHandle> bufferHandles;
 	Pool<BufferResource> buffers;
 
-	HashMap<strID, SfzHandle> textureHandles;
+	HashMap<SfzStrID, SfzHandle> textureHandles;
 	Pool<TextureResource> textures;
 
-	HashMap<strID, SfzHandle> framebufferHandles;
+	HashMap<SfzStrID, SfzHandle> framebufferHandles;
 	Pool<FramebufferResource> framebuffers;
 
-	HashMap<strID, SfzHandle> meshHandles;
+	HashMap<SfzStrID, SfzHandle> meshHandles;
 	Pool<MeshResource> meshes;
 
 	Setting* voxelModelFileWatch = nullptr;
-	HashMap<strID, SfzHandle> voxelModelHandles;
+	HashMap<SfzStrID, SfzHandle> voxelModelHandles;
 	Pool<VoxelModelResource> voxelModels;
 };
 

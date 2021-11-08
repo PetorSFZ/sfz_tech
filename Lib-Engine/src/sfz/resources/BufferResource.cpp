@@ -54,7 +54,7 @@ BufferResource BufferResource::createStatic(
 	sfz_assert(elementSize > 0);
 	sfz_assert(maxNumElements > 0);
 	BufferResource resource;
-	resource.name = strID(name);
+	resource.name = sfzStrIDCreate(name);
 	resource.elementSizeBytes = elementSize;
 	resource.maxNumElements = maxNumElements;
 	resource.type = BufferResourceType::STATIC;
@@ -72,7 +72,7 @@ BufferResource BufferResource::createStreaming(
 	sfz_assert(elementSize > 0);
 	sfz_assert(maxNumElements > 0);
 	BufferResource resource;
-	resource.name = strID(name);
+	resource.name = sfzStrIDCreate(name);
 	resource.elementSizeBytes = elementSize;
 	resource.maxNumElements = maxNumElements;
 	resource.type = BufferResourceType::STREAMING;

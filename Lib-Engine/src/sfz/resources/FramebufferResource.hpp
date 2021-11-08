@@ -33,11 +33,11 @@ class Setting;
 // ------------------------------------------------------------------------------------------------
 
 struct FramebufferResource final {
-	strID name;
+	SfzStrID name = SFZ_STR_ID_NULL;
 
 	zg::Framebuffer framebuffer;
-	ArrayLocal<strID, ZG_MAX_NUM_RENDER_TARGETS> renderTargetNames;
-	strID depthBufferName;
+	ArrayLocal<SfzStrID, ZG_MAX_NUM_RENDER_TARGETS> renderTargetNames;
+	SfzStrID depthBufferName = SFZ_STR_ID_NULL;
 	i32x2 res = i32x2(0);
 
 	// Whether resolution should be scaled relative screen resolution
@@ -57,8 +57,8 @@ struct FramebufferResource final {
 
 struct FramebufferResourceBuilder final {
 	str128 name;
-	ArrayLocal<strID, ZG_MAX_NUM_RENDER_TARGETS> renderTargetNames;
-	strID depthBufferName;
+	ArrayLocal<SfzStrID, ZG_MAX_NUM_RENDER_TARGETS> renderTargetNames;
+	SfzStrID depthBufferName = SFZ_STR_ID_NULL;
 	i32x2 res = i32x2(0);
 
 	bool screenRelativeResolution = false;
@@ -77,9 +77,9 @@ struct FramebufferResourceBuilder final {
 	FramebufferResourceBuilder& setScreenRelativeRes(Setting* scaleSetting);
 	FramebufferResourceBuilder& setSettingControlledRes(Setting* resSetting);
 	FramebufferResourceBuilder& addRenderTarget(const char* textureName);
-	FramebufferResourceBuilder& addRenderTarget(strID textureName);
+	FramebufferResourceBuilder& addRenderTarget(SfzStrID textureName);
 	FramebufferResourceBuilder& setDepthBuffer(const char* textureName);
-	FramebufferResourceBuilder& setDepthBuffer(strID textureName);
+	FramebufferResourceBuilder& setDepthBuffer(SfzStrID textureName);
 	FramebufferResource build(i32x2 screenRes);
 };
 

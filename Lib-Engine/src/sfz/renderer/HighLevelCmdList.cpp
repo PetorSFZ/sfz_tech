@@ -37,7 +37,7 @@ void HighLevelCmdList::init(
 	zg::Framebuffer* defaultFB)
 {
 	this->destroy();
-	mName = strID(cmdListName);
+	mName = sfzStrIDCreate(cmdListName);
 	mCurrFrameIdx = currFrameIdx;
 	mCmdList = sfz_move(cmdList);
 	mUploader = uploader;

@@ -29,15 +29,15 @@ using sfz::mat44;
 // Attributes
 // ------------------------------------------------------------------------------------------------
 
-static constexpr strID DEFAULT_FONT_ATTRIB_ID = strID(sfz::hash("default_font"));
-static constexpr strID FONT_COLOR = strID(sfz::hash("font_color"));
-static constexpr strID BASE_COLOR = strID(sfz::hash("base_color"));
-static constexpr strID FOCUS_COLOR = strID(sfz::hash("focus_color"));
-static constexpr strID ACTIVATE_COLOR = strID(sfz::hash("activate_color"));
+static constexpr SfzStrID DEFAULT_FONT_ATTRIB_ID = SfzStrID{ sfz::hash("default_font") };
+static constexpr SfzStrID FONT_COLOR = SfzStrID{ sfz::hash("font_color") };
+static constexpr SfzStrID BASE_COLOR = SfzStrID{ sfz::hash("base_color") };
+static constexpr SfzStrID FOCUS_COLOR = SfzStrID{ sfz::hash("focus_color") };
+static constexpr SfzStrID ACTIVATE_COLOR = SfzStrID{ sfz::hash("activate_color") };
 
-static constexpr strID BUTTON_TEXT_SCALING = strID(sfz::hash("button_text_scaling"));
-static constexpr strID BUTTON_BORDER_WIDTH = strID(sfz::hash("button_border_width"));
-static constexpr strID BUTTON_DISABLED_COLOR = strID(sfz::hash("button_disabled_color"));
+static constexpr SfzStrID BUTTON_TEXT_SCALING = SfzStrID{ sfz::hash("button_text_scaling") };
+static constexpr SfzStrID BUTTON_BORDER_WIDTH = SfzStrID{ sfz::hash("button_border_width") };
+static constexpr SfzStrID BUTTON_DISABLED_COLOR = SfzStrID{ sfz::hash("button_disabled_color") };
 
 // Statics
 // ------------------------------------------------------------------------------------------------
@@ -66,7 +66,7 @@ static void noMoveInput(WidgetCmd* cmd, Input* input, bool* moveActive)
 	(void)moveActive;
 }
 
-static void commonAddChildLogic(strID id, void* dataPtr, WidgetBase* base)
+static void commonAddChildLogic(SfzStrID id, void* dataPtr, WidgetBase* base)
 {
 	Surface& surface = *ctx().activeSurface;
 
@@ -85,9 +85,9 @@ static void commonAddChildLogic(strID id, void* dataPtr, WidgetBase* base)
 // ------------------------------------------------------------------------------------------------
 
 static constexpr char LIST_NAME[] = "list";
-constexpr strID LIST_ID = strID(sfz::hash(LIST_NAME));
+constexpr SfzStrID LIST_ID = SfzStrID{ sfz::hash(LIST_NAME) };
 
-static void listGetNextWidgetBox(WidgetCmd* cmd, strID childID, Box* boxOut)
+static void listGetNextWidgetBox(WidgetCmd* cmd, SfzStrID childID, Box* boxOut)
 {
 	(void)childID;
 	ListData& data = *cmd->data<ListData>();
@@ -150,7 +150,7 @@ void listBegin(ListData* data, f32 widgetHeight, f32 vertSpacing)
 	surface.pushMakeParent(&parent.children.last());
 }
 
-void listBegin(strID id, f32 widgetHeight, f32 vertSpacing)
+void listBegin(SfzStrID id, f32 widgetHeight, f32 vertSpacing)
 {
 	ListData* data = ctx().getWidgetData<ListData>(id);
 	listBegin(data, widgetHeight, vertSpacing);
@@ -175,12 +175,12 @@ void listEnd()
 // ------------------------------------------------------------------------------------------------
 
 static constexpr char TREE_BASE_NAME[] = "tree_base";
-constexpr strID TREE_BASE_ID = strID(sfz::hash(TREE_BASE_NAME));
+constexpr SfzStrID TREE_BASE_ID = SfzStrID{ sfz::hash(TREE_BASE_NAME) };
 
 static constexpr char TREE_ENTRY_NAME[] = "tree_entry";
-constexpr strID TREE_ENTRY_ID = strID(sfz::hash(TREE_ENTRY_NAME));
+constexpr SfzStrID TREE_ENTRY_ID = SfzStrID{ sfz::hash(TREE_ENTRY_NAME) };
 
-static void treeBaseGetNextWidgetBox(WidgetCmd * cmd, strID childID, Box* boxOut)
+static void treeBaseGetNextWidgetBox(WidgetCmd* cmd, SfzStrID childID, Box* boxOut)
 {
 	// You can only place tree entries inside a tree
 	sfz_assert(childID == TREE_ENTRY_ID);
@@ -260,7 +260,7 @@ void treeBegin(TreeBaseData* data, f32x2 entryDims, f32 entryVertSpacing, f32 ho
 	surface.pushMakeParent(&parent.children.last());
 }
 
-void treeBegin(strID id, f32x2 entryDims, f32 entryVertSpacing, f32 horizSpacing)
+void treeBegin(SfzStrID id, f32x2 entryDims, f32 entryVertSpacing, f32 horizSpacing)
 {
 	treeBegin(ctx().getWidgetData<TreeBaseData>(id), entryDims, entryVertSpacing, horizSpacing);
 }
@@ -279,7 +279,7 @@ void treeEnd()
 	surface.popParent();
 }
 
-static void treeEntryGetNextWidgetBox(WidgetCmd* cmd, strID childID, Box* boxOut)
+static void treeEntryGetNextWidgetBox(WidgetCmd* cmd, SfzStrID childID, Box* boxOut)
 {
 	// Tree entry can only have 1 child, and it MUST be a base container.
 	sfz_assert(cmd->children.isEmpty());
@@ -363,7 +363,7 @@ static void treeEntryDrawDefault(
 	const TreeEntryData& data = *cmd->data<TreeEntryData>();
 
 	// Check attributes
-	strID defaultFontID = attributes->get(DEFAULT_FONT_ATTRIB_ID)->as<strID>();
+	SfzStrID defaultFontID = attributes->get(DEFAULT_FONT_ATTRIB_ID)->as<SfzStrID>();
 	f32x4 fontColor = attributes->get(FONT_COLOR)->as<f32x4>();
 	f32x4 baseColor = attributes->get(BASE_COLOR)->as<f32x4>();
 	f32x4 focusColor = attributes->get(FOCUS_COLOR)->as<f32x4>();
@@ -463,7 +463,7 @@ bool treeCollapsableBegin(TreeEntryData* data, const char* text, bool enabled)
 	return data->base.activated;
 }
 
-bool treeCollapsableBegin(strID id, const char* text, bool enabled)
+bool treeCollapsableBegin(SfzStrID id, const char* text, bool enabled)
 {
 	return treeCollapsableBegin(ctx().getWidgetData<TreeEntryData>(id), text, enabled);
 }
@@ -510,7 +510,7 @@ bool treeButton(TreeEntryData* data, const char* text, bool enabled)
 	return data->base.activated;
 }
 
-bool treeButton(strID id, const char* text, bool enabled)
+bool treeButton(SfzStrID id, const char* text, bool enabled)
 {
 	return treeButton(ctx().getWidgetData<TreeEntryData>(id), text, enabled);
 }
@@ -524,7 +524,7 @@ bool treeButton(const char* id, const char* text, bool enabled)
 // ------------------------------------------------------------------------------------------------
 
 static constexpr char TEXTFMT_NAME[] = "textfmt";
-constexpr strID TEXTFMT_ID = strID(sfz::hash(TEXTFMT_NAME));
+constexpr SfzStrID TEXTFMT_ID = SfzStrID{ sfz::hash(TEXTFMT_NAME) };
 
 static void textfmtDrawDefault(
 	const WidgetCmd* cmd,
@@ -537,7 +537,7 @@ static void textfmtDrawDefault(
 	const TextfmtData& data = *cmd->data<TextfmtData>();
 
 	// Check attributes
-	strID defaultFontID = attributes->get(DEFAULT_FONT_ATTRIB_ID)->as<strID>();
+	SfzStrID defaultFontID = attributes->get(DEFAULT_FONT_ATTRIB_ID)->as<SfzStrID>();
 	f32x4 fontColor = attributes->get(FONT_COLOR)->as<f32x4>();
 
 	mat34 transform =
@@ -562,7 +562,7 @@ void textfmt(TextfmtData* data, const char* format, ...)
 	data->base.activated = false;
 }
 
-void textfmt(strID id, const char* format, ...)
+void textfmt(SfzStrID id, const char* format, ...)
 {
 	TextfmtData* data = ctx().getWidgetData<TextfmtData>(id);
 
@@ -602,7 +602,7 @@ void textfmt(const char* id, const char* format, ...)
 // ------------------------------------------------------------------------------------------------
 
 static constexpr char RECT_NAME[] = "rect";
-constexpr strID RECT_ID = strID(sfz::hash(RECT_NAME));
+constexpr SfzStrID RECT_ID = SfzStrID{ sfz::hash(RECT_NAME) };
 
 static void rectDrawDefault(
 	const WidgetCmd* cmd,
@@ -630,7 +630,7 @@ void rect(RectData* data, f32x4 linearColor)
 	data->base.activated = false;
 }
 
-void rect(strID id, f32x4 linearColor)
+void rect(SfzStrID id, f32x4 linearColor)
 {
 	RectData* data = ctx().getWidgetData<RectData>(id);
 	rect(data, linearColor);
@@ -646,7 +646,7 @@ void rect(const char* id, f32x4 linearColor)
 // ------------------------------------------------------------------------------------------------
 
 static constexpr char IMAGE_NAME[] = "image";
-constexpr strID IMAGE_ID = strID(sfz::hash(IMAGE_NAME));
+constexpr SfzStrID IMAGE_ID = SfzStrID{ sfz::hash(IMAGE_NAME) };
 
 static void imageDrawDefault(
 	const WidgetCmd* cmd,
@@ -674,7 +674,7 @@ void image(ImageData* data, u64 imageHandle)
 	data->base.activated = false;
 }
 
-void image(strID id, u64 imageHandle)
+void image(SfzStrID id, u64 imageHandle)
 {
 	ImageData* data = ctx().getWidgetData<ImageData>(id);
 	image(data, imageHandle);
@@ -688,24 +688,24 @@ void image(const char* id, u64 imageHandle)
 
 void image(ImageData* data, const char* imageHandleID)
 {
-	image(data, strID(imageHandleID));
+	image(data, sfzStrIDCreate(imageHandleID).id);
 }
 
-void image(strID id, const char* imageHandleID)
+void image(SfzStrID id, const char* imageHandleID)
 {
-	image(id, strID(imageHandleID));
+	image(id, sfzStrIDCreate(imageHandleID).id);
 }
 
 void image(const char* id, const char* imageHandleID)
 {
-	image(id, strID(imageHandleID));
+	image(id, sfzStrIDCreate(imageHandleID).id);
 }
 
 // Button
 // ------------------------------------------------------------------------------------------------
 
 static constexpr char BUTTON_NAME[] = "button";
-constexpr strID BUTTON_ID = strID(sfz::hash(BUTTON_NAME));
+constexpr SfzStrID BUTTON_ID = SfzStrID{ sfz::hash(BUTTON_NAME) };
 
 static void buttonHandlePointerInput(WidgetCmd* cmd, f32x2 pointerPosSS)
 {
@@ -745,7 +745,7 @@ static void buttonDrawDefault(
 	const ButtonData& data = *cmd->data<ButtonData>();
 
 	// Check attributes
-	strID defaultFontID = attributes->get(DEFAULT_FONT_ATTRIB_ID)->as<strID>();
+	SfzStrID defaultFontID = attributes->get(DEFAULT_FONT_ATTRIB_ID)->as<SfzStrID>();
 	f32x4 fontColor = attributes->get(FONT_COLOR)->as<f32x4>();
 	f32x4 baseColor = attributes->get(BASE_COLOR)->as<f32x4>();
 	f32x4 focusColor = attributes->get(FOCUS_COLOR)->as<f32x4>();
@@ -806,7 +806,7 @@ bool button(ButtonData* data, const char* text, bool enabled)
 	return data->base.activated;
 }
 
-bool button(strID id, const char* text, bool enabled)
+bool button(SfzStrID id, const char* text, bool enabled)
 {
 	ButtonData* data = ctx().getWidgetData<ButtonData>(id);
 	return button(data, text, enabled);

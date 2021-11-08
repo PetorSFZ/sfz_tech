@@ -198,14 +198,14 @@ void Renderer::renderImguiUI()
 // ------------------------------------------------------------------------------------------------
 
 bool Renderer::uploadTextureBlocking(
-	strID id, const ImageViewConst& image, bool generateMipmaps)
+	SfzStrID id, const ImageViewConst& image, bool generateMipmaps)
 {
 	// Error out and return false if texture already exists
 	ResourceManager& resources = getResourceManager();
 	if (resources.getTextureHandle(id) != SFZ_NULL_HANDLE) return false;
 
 	// Create resource and upload blocking
-	TextureResource resource = TextureResource::createFixedSize(id.str(), image, generateMipmaps);
+	TextureResource resource = TextureResource::createFixedSize(sfzStrIDGetStr(id), image, generateMipmaps);
 	sfz_assert(resource.texture.valid());
 	resource.uploadBlocking(image, mState->allocator, mState->uploader.handle, mState->copyQueue);
 	
@@ -215,13 +215,13 @@ bool Renderer::uploadTextureBlocking(
 	return true;
 }
 
-bool Renderer::textureLoaded(strID id) const
+bool Renderer::textureLoaded(SfzStrID id) const
 {
 	ResourceManager& resources = getResourceManager();
 	return resources.getTextureHandle(id) != SFZ_NULL_HANDLE;
 }
 
-void Renderer::removeTextureGpuBlocking(strID id)
+void Renderer::removeTextureGpuBlocking(SfzStrID id)
 {
 	// Ensure not between frameBegin() and frameFinish()
 	sfz_assert(!mState->windowFramebuffer.valid());
@@ -230,15 +230,15 @@ void Renderer::removeTextureGpuBlocking(strID id)
 	resources.removeTexture(id);
 }
 
-bool Renderer::uploadMeshBlocking(strID id, const Mesh& mesh)
+bool Renderer::uploadMeshBlocking(SfzStrID id, const Mesh& mesh)
 {
 	// Error out and return false if mesh already exists
 	ResourceManager& resources = getResourceManager();
-	sfz_assert(id.isValid());
+	sfz_assert(id != SFZ_STR_ID_NULL);
 	if (resources.getMeshHandle(id) != SFZ_NULL_HANDLE) return false;
 
 	// Allocate memory for mesh
-	MeshResource gpuMesh = meshResourceAllocate(id.str(), mesh, mState->allocator);
+	MeshResource gpuMesh = meshResourceAllocate(sfzStrIDGetStr(id), mesh, mState->allocator);
 
 	// Upload memory to mesh
 	meshResourceUploadBlocking(
@@ -250,13 +250,13 @@ bool Renderer::uploadMeshBlocking(strID id, const Mesh& mesh)
 	return true;
 }
 
-bool Renderer::meshLoaded(strID id) const
+bool Renderer::meshLoaded(SfzStrID id) const
 {
 	ResourceManager& resources = getResourceManager();
 	return resources.getMeshHandle(id) != SFZ_NULL_HANDLE;
 }
 
-void Renderer::removeMeshGpuBlocking(strID id)
+void Renderer::removeMeshGpuBlocking(SfzStrID id)
 {
 	// Ensure not between frameBegin() and frameFinish()
 	sfz_assert(!mState->windowFramebuffer.valid());
@@ -293,7 +293,7 @@ void Renderer::frameBegin()
 		u64 frameIdx = mState->lastRetrievedFrameTimeFrameIdx;
 		f32 groupTimeMs = 0.0f;
 		CHECK_ZG mState->profiler.getMeasurement(groupId.id, groupTimeMs);
-		const char* label = groupId.groupName.str();
+		const char* label = sfzStrIDGetStr(groupId.groupName);
 		stats.addSample("gpu", label, frameIdx, groupTimeMs);
 	}
 	if (frameIds.imguiId != ~0ull) {
@@ -370,7 +370,7 @@ HighLevelCmdList Renderer::beginCommandList(const char* cmdListName)
 	// Insert call to profile begin
 	FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
 	GroupProfilingID& groupId = frameIds.groupIds.add();
-	groupId.groupName = strID(cmdListName);
+	groupId.groupName = sfzStrIDCreate(cmdListName);
 	CHECK_ZG zgCmdList.profileBegin(mState->profiler, groupId.id);
 
 	// Create high level command list
@@ -387,7 +387,7 @@ void Renderer::executeCommandList(HighLevelCmdList cmdList)
 
 	// Insert profile end call
 	FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
-	strID cmdListName = cmdList.mName;
+	SfzStrID cmdListName = cmdList.mName;
 	GroupProfilingID* groupId = frameIds.groupIds.find([&](const GroupProfilingID& e) {
 		return e.groupName == cmdListName;
 	});

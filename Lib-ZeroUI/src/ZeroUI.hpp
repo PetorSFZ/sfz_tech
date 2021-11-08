@@ -47,7 +47,6 @@ namespace zui {
 using sfz::ImageViewConst;
 using sfz::mat34;
 using sfz::str48;
-using sfz::strID;
 
 // ZeroUI Context + initialization
 // ------------------------------------------------------------------------------------------------
@@ -192,7 +191,7 @@ struct alignas(16) Attribute final {
 	}
 };
 
-using AttributeSet = sfz::HashMap<strID, Attribute>;
+using AttributeSet = sfz::HashMap<SfzStrID, Attribute>;
 
 // Register default attributes that will be in the intial AttributeSet when the recursive rendering
 // of the widgets starts. It is highly recommended that you register default attributes for any
@@ -316,7 +315,7 @@ using GetWidgetBaseFunc = WidgetBase*(void* widgetData);
 
 // For containers only: Return the position and size of the next widget being placed. Widgets don't
 // determine their own size, they must always ask their parent what their size is.
-using GetNextWidgetBoxFunc = void(WidgetCmd* cmd, strID childID, Box* boxOut);
+using GetNextWidgetBoxFunc = void(WidgetCmd* cmd, SfzStrID childID, Box* boxOut);
 
 // Handle mouse/touch input. Typically things should be setFocused() if the pointer is overlapping the
 // widget's box, otherwise setUnfocused(). MUST call all children's corresponding handle pointer input
@@ -419,7 +418,7 @@ void popArchetype(const char* widgetName);
 // Functions used when automatically allocating widget data structs. See ZeroUI_Storage.hpp for a
 // default implementation.
 using InitWidgetFunc = void(void* widgetData);
-using GetWidgetDataFunc = void* (void* userPtr, strID id, u32 sizeBytes, InitWidgetFunc* initFunc);
+using GetWidgetDataFunc = void* (void* userPtr, SfzStrID id, u32 sizeBytes, InitWidgetFunc* initFunc);
 
 struct SurfaceDesc final {
 
@@ -489,19 +488,19 @@ RenderDataView getRenderData();
 
 struct BaseContainerData final {
 	WidgetBase base;
-	sfz::Map16<strID, Attribute> newValues;
+	sfz::Map16<SfzStrID, Attribute> newValues;
 	f32x2 nextPos = f32x2(0.0f);
 	Align nextAlign;
 	f32x2 nextDims = f32x2(0.0f);
 };
 
 void baseBegin(BaseContainerData* data);
-void baseBegin(strID id);
+void baseBegin(SfzStrID id);
 void baseBegin(const char* id);
 
 void baseAttribute(const char* id, Attribute attrib);
 void baseAttribute(const char* id, const char* value);
-void baseAttribute(strID id, Attribute attrib);
+void baseAttribute(SfzStrID id, Attribute attrib);
 
 void baseSetPos(f32 x, f32 y);
 void baseSetPos(f32x2 pos);

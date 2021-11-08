@@ -30,10 +30,10 @@
 #include "skipifzero_hash_maps.hpp"
 #endif
 
-namespace sfz {
-
 // String hashing
 // ------------------------------------------------------------------------------------------------
+
+namespace sfz {
 
 // FNV-1a hash function, based on public domain reference code by "chongo <Landon Curt Noll> /\oo/\"
 // See http://isthe.com/chongo/tech/comp/fnv/
@@ -71,45 +71,34 @@ constexpr u64 hashBytesFNV1a(const u8* bytes, u64 numBytes)
 // Hash strings with FNV-1a by default
 constexpr u64 hash(const char* str) { return hashStringFNV1a(str); }
 
-// strID
+} // namespace sfz
+
+// SfzStrID
 // ------------------------------------------------------------------------------------------------
 
-// A string id represents the hash of a string. Used to cheaply compare strings (e.g. in a hash map).
-struct strID final {
-	u64 id = 0; // 0 is reserved for invalid hashes
+SFZ_EXTERN_C SfzStrID sfzStrIDCreate(const char* str);
+SFZ_EXTERN_C const char* sfzStrIDGetStr(SfzStrID id);
 
-	constexpr strID() = default;
-	constexpr explicit strID(u64 hashId) : id(hashId) {}
-	strID(const char* str);
-
-	bool isValid() const { return id != 0; }
-	const char* str() const;
-	bool operator== (strID o) const { return this->id == o.id; }
-	bool operator!= (strID o) const { return this->id != o.id; }
-	operator u64() const { return id; }
-};
-static_assert(sizeof(strID) == sizeof(u64), "strID is padded");
-
-constexpr strID STR_ID_INVALID = strID();
-
-constexpr u64 hash(strID str) { return str.id; }
+namespace sfz {
+constexpr u64 hash(SfzStrID str) { return str.id; }
+}
 
 #ifdef SFZ_STR_ID_IMPLEMENTATION
 
-struct StringStorage final {
+struct SfzStringStorage final {
 	SfzAllocator* allocator = nullptr;
-	HashMap<strID, char*> strs;
+	sfz::HashMap<SfzStrID, char*> strs;
 
-	StringStorage(u32 initialCapacity, SfzAllocator* allocator)
+	SfzStringStorage(u32 initialCapacity, SfzAllocator* allocator)
 	{
 		this->allocator = allocator;
 		this->strs.init(initialCapacity, allocator, sfz_dbg(""));
 	}
 
-	StringStorage(const StringStorage&) = delete;
-	StringStorage& operator= (const StringStorage&) = delete;
+	SfzStringStorage(const SfzStringStorage&) = delete;
+	SfzStringStorage& operator= (const SfzStringStorage&) = delete;
 
-	~StringStorage()
+	~SfzStringStorage()
 	{
 		for (auto pair : strs) {
 			char* str = pair.value;
@@ -120,30 +109,33 @@ struct StringStorage final {
 	}
 };
 
-static StringStorage* strStorage = nullptr;
+static SfzStringStorage* sfzStrStorage = nullptr;
 
-strID::strID(const char* str)
+SFZ_EXTERN_C SfzStrID sfzStrIDCreate(const char* str)
 {
-	sfz_assert(strStorage != nullptr);
-	this->id = strID(sfz::hash(str));
-	sfz_assert_hard(this->isValid());
-
+	sfz_assert(sfzStrStorage != nullptr);
+	SfzStrID id = SFZ_STR_ID_NULL;
+	id.id = sfz::hash(str);
+	sfz_assert_hard(id != SFZ_STR_ID_NULL);
+	
 	// Add string to storage and check for collisions
-	char** storedStr = strStorage->strs.get(strID(id));
+	char** storedStr = sfzStrStorage->strs.get(id);
 	if (storedStr == nullptr) {
 		u32 strLen = u32(strlen(str));
-		char* newStr = reinterpret_cast<char*>(strStorage->allocator->alloc(sfz_dbg(""), strLen + 1));
+		char* newStr = reinterpret_cast<char*>(sfzStrStorage->allocator->alloc(sfz_dbg(""), strLen + 1));
 		memcpy(newStr, str, strLen);
 		newStr[strLen] = '\0';
-		storedStr = &strStorage->strs.put(strID(id), newStr);
+		storedStr = &sfzStrStorage->strs.put(id, newStr);
 	}
 	sfz_assert_hard(strcmp(str, *storedStr) == 0);
+
+	return id;
 }
 
-const char* strID::str() const
+SFZ_EXTERN_C const char* sfzStrIDGetStr(SfzStrID id)
 {
-	sfz_assert(strStorage != nullptr);
-	const char* const* strPtr = strStorage->strs.get(strID(id));
+	sfz_assert(sfzStrStorage != nullptr);
+	const char* const* strPtr = sfzStrStorage->strs.get(id);
 	if (strPtr == nullptr) return "";
 	return *strPtr;
 }
@@ -152,6 +144,8 @@ const char* strID::str() const
 
 // StringLocal
 // ------------------------------------------------------------------------------------------------
+
+namespace sfz {
 
 template<u16 N>
 struct StringLocal final {

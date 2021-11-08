@@ -117,7 +117,7 @@ bool VoxelModelResource::build(SfzAllocator* allocator)
 VoxelModelResource VoxelModelResource::load(const char* path, SfzAllocator* allocator)
 {
 	VoxelModelResource resource;
-	resource.name = strID(path);
+	resource.name = sfzStrIDCreate(path);
 	resource.path = path;
 
 	bool success = resource.build(allocator);

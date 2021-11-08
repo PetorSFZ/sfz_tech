@@ -168,7 +168,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		shader.type = ShaderType::RENDER;
 
 		str256 name = CHECK_JSON pipelineNode.accessMap("name").valueStr256();
-		shader.name = strID(name);
+		shader.name = sfzStrIDCreate(name);
 
 		shader.shaderPath =
 			CHECK_JSON pipelineNode.accessMap("path").valueStr256();
@@ -305,7 +305,7 @@ bool parseRendererConfig(RendererState& state, const char* configPath) noexcept
 		shader.type = ShaderType::COMPUTE;
 
 		str256 name = CHECK_JSON pipelineNode.accessMap("name").valueStr256();
-		shader.name = strID(name);
+		shader.name = sfzStrIDCreate(name);
 
 		shader.shaderPath =
 			CHECK_JSON pipelineNode.accessMap("path").valueStr256();

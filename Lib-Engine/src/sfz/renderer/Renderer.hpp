@@ -85,10 +85,10 @@ public:
 	//
 	// Returns whether succesful or not
 	bool uploadTextureBlocking(
-		strID id, const ImageViewConst& image, bool generateMipmaps);
+		SfzStrID id, const ImageViewConst& image, bool generateMipmaps);
 
 	// Check if a texture is loaded or not
-	bool textureLoaded(strID id) const;
+	bool textureLoaded(SfzStrID id) const;
 
 	// Removes a texture from the renderer, will flush rendering.
 	//
@@ -97,7 +97,7 @@ public:
 	// cause frame stutter.
 	//
 	// WARNING: This must NOT be called between frameBegin() and frameFinish().
-	void removeTextureGpuBlocking(strID id);
+	void removeTextureGpuBlocking(SfzStrID id);
 
 	// Uploads a mesh to the renderer, blocks until done.
 	//
@@ -107,10 +107,10 @@ public:
 	// directory in the same directory as the executable.
 	//
 	// Returns whether succesful or not.
-	bool uploadMeshBlocking(strID id, const Mesh& mesh);
+	bool uploadMeshBlocking(SfzStrID id, const Mesh& mesh);
 
 	// Check if a mesh is loaded or not
-	bool meshLoaded(strID id) const;
+	bool meshLoaded(SfzStrID id) const;
 
 	// Removes a mesh from the renderer, will flush rendering.
 	//
@@ -119,7 +119,7 @@ public:
 	// cause frame stutter.
 	//
 	// WARNING: This must NOT be called between frameBegin() and frameFinish().
-	void removeMeshGpuBlocking(strID id);
+	void removeMeshGpuBlocking(SfzStrID id);
 
 	// Render methods
 	// --------------------------------------------------------------------------------------------

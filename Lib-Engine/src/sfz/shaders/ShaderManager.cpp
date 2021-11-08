@@ -223,10 +223,10 @@ void ShaderManager::renderDebugUI()
 
 SfzHandle ShaderManager::getShaderHandle(const char* name) const
 {
-	return this->getShaderHandle(strID(name));
+	return this->getShaderHandle(sfzStrIDCreate(name));
 }
 
-SfzHandle ShaderManager::getShaderHandle(strID name) const
+SfzHandle ShaderManager::getShaderHandle(SfzStrID name) const
 {
 	const SfzHandle* handle = mState->shaderHandles.get(name);
 	if (handle == nullptr) return SFZ_NULL_HANDLE;
@@ -240,8 +240,8 @@ Shader* ShaderManager::getShader(SfzHandle handle)
 
 SfzHandle ShaderManager::addShader(Shader&& shader)
 {
-	strID name = shader.name;
-	sfz_assert(name.isValid());
+	SfzStrID name = shader.name;
+	sfz_assert(name != SFZ_STR_ID_NULL);
 	sfz_assert(mState->shaderHandles.get(name) == nullptr);
 	SfzHandle handle = mState->shaders.allocate(sfz_move(shader));
 	mState->shaderHandles.put(name, handle);
@@ -249,7 +249,7 @@ SfzHandle ShaderManager::addShader(Shader&& shader)
 	return handle;
 }
 
-void ShaderManager::removeShader(strID name)
+void ShaderManager::removeShader(SfzStrID name)
 {
 	// TODO: Currently blocking, can probably be made async.
 	CHECK_ZG zg::CommandQueue::getPresentQueue().flush();

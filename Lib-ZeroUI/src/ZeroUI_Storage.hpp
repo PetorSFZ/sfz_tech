@@ -81,7 +81,7 @@ template<u32 MAX_NUM_WIDGETS, u32 NUM_BYTES>
 struct UIStorageFrame final {
 
 	u64 FRAME_CANARY_SIZEOF = sizeof(UIStorageFrame<MAX_NUM_WIDGETS, NUM_BYTES>);
-	sfz::HashMapLocal<sfz::strID, WidgetOffset, MAX_NUM_WIDGETS> offsets;
+	sfz::HashMapLocal<SfzStrID, WidgetOffset, MAX_NUM_WIDGETS> offsets;
 	sfz::ArrayLocal<u8, NUM_BYTES> bytes;
 
 	void clear()
@@ -132,7 +132,7 @@ struct UIStorage final {
 };
 
 template<u32 MAX_NUM_WIDGETS, u32 MAX_NUM_BYTES>
-inline void* storageGetWidgetData(void* userPtr, strID id, u32 sizeBytes, zui::InitWidgetFunc* initFunc)
+inline void* storageGetWidgetData(void* userPtr, SfzStrID id, u32 sizeBytes, zui::InitWidgetFunc* initFunc)
 {
 	UIStorage<MAX_NUM_WIDGETS, MAX_NUM_BYTES>& storage =
 		*reinterpret_cast<UIStorage<MAX_NUM_WIDGETS, MAX_NUM_BYTES>*>(userPtr);\

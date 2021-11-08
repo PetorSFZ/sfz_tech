@@ -51,11 +51,11 @@ ShaderMaterial cpuMaterialToShaderMaterial(const Material& cpuMaterial) noexcept
 	dst.emissive.xyz() = cpuMaterial.emissive;
 	dst.roughness = f32(cpuMaterial.roughness) * (1.0f / 255.0f);
 	dst.metallic = f32(cpuMaterial.metallic) * (1.0f / 255.0f);
-	dst.hasAlbedoTex = cpuMaterial.albedoTex.isValid() ? 1 : 0;
-	dst.hasMetallicRoughnessTex = cpuMaterial.metallicRoughnessTex.isValid() ? 1 : 0;
-	dst.hasNormalTex = cpuMaterial.normalTex.isValid() ? 1 : 0;
-	dst.hasOcclusionTex = cpuMaterial.occlusionTex.isValid() ? 1 : 0;
-	dst.hasEmissiveTex = cpuMaterial.emissiveTex.isValid() ? 1 : 0;
+	dst.hasAlbedoTex = cpuMaterial.albedoTex != SFZ_STR_ID_NULL ? 1 : 0;
+	dst.hasMetallicRoughnessTex = cpuMaterial.metallicRoughnessTex != SFZ_STR_ID_NULL ? 1 : 0;
+	dst.hasNormalTex = cpuMaterial.normalTex != SFZ_STR_ID_NULL ? 1 : 0;
+	dst.hasOcclusionTex = cpuMaterial.occlusionTex != SFZ_STR_ID_NULL ? 1 : 0;
+	dst.hasEmissiveTex = cpuMaterial.emissiveTex != SFZ_STR_ID_NULL ? 1 : 0;
 	return dst;
 }
 
@@ -68,7 +68,7 @@ MeshResource meshResourceAllocate(
 
 	MeshResource gpuMesh;
 
-	gpuMesh.name = strID(meshName);
+	gpuMesh.name = sfzStrIDCreate(meshName);
 
 	// Allocate GPU buffers
 	gpuMesh.vertexBuffer = resources.addBuffer(BufferResource::createStatic(

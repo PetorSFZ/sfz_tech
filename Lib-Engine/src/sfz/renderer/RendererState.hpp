@@ -42,7 +42,7 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 struct GroupProfilingID final {
-	strID groupName;
+	SfzStrID groupName = SFZ_STR_ID_NULL;
 	u64 id = ~0ull;
 };
 

@@ -93,7 +93,7 @@ struct ShaderCompute final {
 };
 
 struct Shader final {
-	strID name;
+	SfzStrID name = SFZ_STR_ID_NULL;
 	time_t lastModified = 0;
 	ShaderType type = ShaderType::RENDER;
 	str192 shaderPath;
@@ -123,10 +123,10 @@ public:
 	void renderDebugUI();
 
 	SfzHandle getShaderHandle(const char* name) const;
-	SfzHandle getShaderHandle(strID name) const;
+	SfzHandle getShaderHandle(SfzStrID name) const;
 	Shader* getShader(SfzHandle handle);
 	SfzHandle addShader(Shader&& shader);
-	void removeShader(strID name);
+	void removeShader(SfzStrID name);
 
 private:
 	ShaderManagerState* mState = nullptr;

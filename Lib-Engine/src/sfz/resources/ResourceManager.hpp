@@ -62,46 +62,46 @@ public:
 	// --------------------------------------------------------------------------------------------
 
 	SfzHandle getBufferHandle(const char* name) const;
-	SfzHandle getBufferHandle(strID name) const;
+	SfzHandle getBufferHandle(SfzStrID name) const;
 	BufferResource* getBuffer(SfzHandle handle);
 	SfzHandle addBuffer(BufferResource&& resource);
-	void removeBuffer(strID name);
+	void removeBuffer(SfzStrID name);
 
 	// Texture methods
 	// --------------------------------------------------------------------------------------------
 
 	SfzHandle getTextureHandle(const char* name) const;
-	SfzHandle getTextureHandle(strID name) const;
+	SfzHandle getTextureHandle(SfzStrID name) const;
 	TextureResource* getTexture(SfzHandle handle);
 	SfzHandle addTexture(TextureResource&& resource);
-	void removeTexture(strID name);
+	void removeTexture(SfzStrID name);
 
 	// Framebuffer methods
 	// --------------------------------------------------------------------------------------------
 
 	SfzHandle getFramebufferHandle(const char* name) const;
-	SfzHandle getFramebufferHandle(strID name) const;
+	SfzHandle getFramebufferHandle(SfzStrID name) const;
 	FramebufferResource* getFramebuffer(SfzHandle handle);
 	SfzHandle addFramebuffer(FramebufferResource&& resource);
-	void removeFramebuffer(strID name);
+	void removeFramebuffer(SfzStrID name);
 
 	// Mesh methods
 	// --------------------------------------------------------------------------------------------
 
 	SfzHandle getMeshHandle(const char* name) const;
-	SfzHandle getMeshHandle(strID name) const;
+	SfzHandle getMeshHandle(SfzStrID name) const;
 	MeshResource* getMesh(SfzHandle handle);
 	SfzHandle addMesh(MeshResource&& resource);
-	void removeMesh(strID name);
+	void removeMesh(SfzStrID name);
 
 	// VoxelModel methods
 	// --------------------------------------------------------------------------------------------
 
 	SfzHandle getVoxelModelHandle(const char* name) const;
-	SfzHandle getVoxelModelHandle(strID name) const;
+	SfzHandle getVoxelModelHandle(SfzStrID name) const;
 	VoxelModelResource* getVoxelModel(SfzHandle handle);
 	SfzHandle addVoxelModel(VoxelModelResource&& resource);
-	void removeVoxelModel(strID name);
+	void removeVoxelModel(SfzStrID name);
 
 private:
 	ResourceManagerState* mState = nullptr;

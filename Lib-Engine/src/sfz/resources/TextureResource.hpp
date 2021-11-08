@@ -33,7 +33,7 @@ class Setting;
 // ------------------------------------------------------------------------------------------------
 
 struct TextureResource final {
-	strID name;
+	SfzStrID name = SFZ_STR_ID_NULL;
 
 	zg::Texture texture;
 	ZgFormat format = ZG_FORMAT_UNDEFINED;

@@ -113,7 +113,7 @@ struct DrawingCtx final {
 	SfzAllocator* allocator = nullptr;
 
 	FONScontext* fontstashCtx = nullptr;
-	sfz::HashMap<strID, FontInfo> fonts;
+	sfz::HashMap<SfzStrID, FontInfo> fonts;
 	u32 fontOversampling = 1;
 	sfz::ImageView fontstashImageView;
 	bool fontstashImageUpdated = false;
@@ -292,7 +292,7 @@ void internalDrawSetFontHandle(u64 handle)
 	drawingCtx.fontUserHandle = handle;
 }
 
-bool internalDrawAddFont(const char* name, strID nameID, const char* path, f32 atlasSize)
+bool internalDrawAddFont(const char* name, SfzStrID nameID, const char* path, f32 atlasSize)
 {
 	if (drawingCtx.fonts.get(nameID) != nullptr) {
 		sfz_assert(false); // Font already registered
@@ -379,7 +379,7 @@ void drawAddCommand(
 
 f32 drawTextFmtCentered(
 	const mat34& transform,
-	strID fontID,
+	SfzStrID fontID,
 	f32 size,
 	f32x4 color,
 	const char* text)
@@ -588,7 +588,7 @@ void drawBorder(
 }
 
 f32 drawTextFmt(
-	f32x2 pos, HAlign halign, VAlign valign, strID fontID, f32 size, f32x4 color, const char* format, ...)
+	f32x2 pos, HAlign halign, VAlign valign, SfzStrID fontID, f32 size, f32x4 color, const char* format, ...)
 {
 	// Resolve formated string
 	drawingCtx.fontTmpStr.clear();

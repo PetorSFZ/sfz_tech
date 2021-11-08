@@ -33,7 +33,7 @@ namespace sfz {
 struct ShaderManagerState final {
 	SfzAllocator* allocator = nullptr;
 
-	HashMap<strID, SfzHandle> shaderHandles;
+	HashMap<SfzStrID, SfzHandle> shaderHandles;
 	Pool<Shader> shaders;
 	
 	Setting* shaderFileWatchEnabled;

@@ -156,7 +156,7 @@ static void setupContext() noexcept
 	context->defaultAllocator = allocator;
 
 	// String storage
-	sfz::strStorage = sfz_new<sfz::StringStorage>(allocator, sfz_dbg(""), 4096, allocator);
+	sfzStrStorage = sfz_new<SfzStringStorage>(allocator, sfz_dbg(""), 4096, allocator);
 
 	// Set terminal logger
 	terminalLogger.init(256, allocator);
@@ -925,7 +925,7 @@ int main(int argc, char* argv[])
 	SDL_Quit();
 
 	SFZ_INFO("PhantasyEngine", "Destroying string ID storage");
-	sfz_delete(sfz::getDefaultAllocator(), sfz::strStorage);
+	sfz_delete(sfz::getDefaultAllocator(), sfzStrStorage);
 
 	return EXIT_SUCCESS;
 }

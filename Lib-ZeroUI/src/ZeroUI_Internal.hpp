@@ -38,13 +38,12 @@
 namespace zui {
 
 using sfz::mat4;
-using sfz::strID;
 
 // Base Container
 // ------------------------------------------------------------------------------------------------
 
 constexpr char BASE_CON_NAME[] = "BASE_CON";
-constexpr strID BASE_CON_ID = strID(sfz::hash(BASE_CON_NAME));
+constexpr SfzStrID BASE_CON_ID = SfzStrID{ sfz::hash(BASE_CON_NAME) };
 
 // Helper functions
 // ------------------------------------------------------------------------------------------------
@@ -67,12 +66,12 @@ struct WidgetType {
 	GetNextWidgetBoxFunc* getNextWidgetBoxFunc = nullptr;
 	HandlePointerInputFunc* handlePointerInputFunc = nullptr;
 	HandleMoveInputFunc* handleMoveInputFunc = nullptr;
-	sfz::Map32<strID, WidgetArchetype> archetypes;
-	sfz::Array<strID> archetypeStack;
+	sfz::Map32<SfzStrID, WidgetArchetype> archetypes;
+	sfz::Array<SfzStrID> archetypeStack;
 	DrawFunc* getCurrentArchetypeDrawFunc() const
 	{
 		sfz_assert(!archetypeStack.isEmpty());
-		strID lastID = archetypeStack.last();
+		SfzStrID lastID = archetypeStack.last();
 		const WidgetArchetype* archetype = archetypes.get(lastID);
 		sfz_assert(archetype != nullptr);
 		return archetype->drawFunc;
@@ -80,19 +79,19 @@ struct WidgetType {
 };
 
 struct WidgetCmd final {
-	strID widgetID;
+	SfzStrID widgetID;
 	void* dataPtr = nullptr;
 	DrawFunc* archetypeDrawFunc = nullptr;
 	sfz::Array<WidgetCmd> children;
 
 	WidgetCmd() = default;
-	WidgetCmd(strID id, void* ptr);
+	WidgetCmd(SfzStrID id, void* ptr);
 
 	template<typename T> T* data() { return (T*)dataPtr; }
 	template<typename T> const T* data() const { return (const T*)dataPtr; }
 	u32 sizeOfWidgetData() const;
 	WidgetBase* getBase();
-	void getNextWidgetBox(strID childID, Box* boxOut);
+	void getNextWidgetBox(SfzStrID childID, Box* boxOut);
 	void handlePointerInput(f32x2 pointerPosSS);
 	void handleMoveInput(Input* input, bool* moveActive);
 	void draw(AttributeSet* attributes, const mat34& surfaceTransform, f32 lagSinceSurfaceEndSecs) const;
@@ -152,10 +151,10 @@ struct Surface final {
 struct Context final {
 
 	SfzAllocator* heapAllocator = nullptr;
-	strID defaultID;
+	SfzStrID defaultID = SFZ_STR_ID_NULL;
 
 	// Widgets
-	sfz::HashMap<strID, WidgetType> widgetTypes;
+	sfz::HashMap<SfzStrID, WidgetType> widgetTypes;
 
 	// Surfaces
 	Surface* activeSurface = nullptr;
@@ -172,7 +171,7 @@ struct Context final {
 	}
 
 	template<typename T>
-	T* getWidgetData(strID id)
+	T* getWidgetData(SfzStrID id)
 	{
 		sfz_assert(activeSurface != nullptr);
 		Surface& surface = *activeSurface;
@@ -185,7 +184,7 @@ struct Context final {
 	}
 
 	template<typename T>
-	T* getWidgetData(const char* id) { return getWidgetData<T>(strID(id)); }
+	T* getWidgetData(const char* id) { return getWidgetData<T>(sfzStrIDCreate(id)); }
 
 	// AttributeSet used when rendering
 	AttributeSet attributes;
@@ -195,7 +194,7 @@ struct Context final {
 // Getter for the global static ZeroUI context, lives in ZeroUI.cpp.
 Context& ctx();
 
-inline WidgetCmd::WidgetCmd(strID id, void* ptr)
+inline WidgetCmd::WidgetCmd(SfzStrID id, void* ptr)
 {
 	widgetID = id;
 	dataPtr = ptr;
@@ -205,23 +204,23 @@ inline WidgetCmd::WidgetCmd(strID id, void* ptr)
 
 inline u32 WidgetCmd::sizeOfWidgetData() const
 {
-	WidgetType* type = ctx().widgetTypes.get(strID(widgetID));
+	WidgetType* type = ctx().widgetTypes.get(widgetID);
 	sfz_assert(type != nullptr);
 	return type->widgetDataSizeBytes;
 }
 
 inline WidgetBase* WidgetCmd::getBase()
 {
-	WidgetType* type = ctx().widgetTypes.get(strID(widgetID));
+	WidgetType* type = ctx().widgetTypes.get(widgetID);
 	sfz_assert(type != nullptr);
 	if (dataPtr == nullptr) return nullptr;
 	sfz_assert(type->getBaseFunc != nullptr);
 	return type->getBaseFunc(dataPtr);
 }
 
-inline void WidgetCmd::getNextWidgetBox(strID childID, Box* boxOut)
+inline void WidgetCmd::getNextWidgetBox(SfzStrID childID, Box* boxOut)
 {
-	WidgetType* type = ctx().widgetTypes.get(strID(widgetID));
+	WidgetType* type = ctx().widgetTypes.get(widgetID);
 	sfz_assert(type != nullptr);
 	sfz_assert(type->getNextWidgetBoxFunc != nullptr);
 	type->getNextWidgetBoxFunc(this, childID, boxOut);
@@ -229,7 +228,7 @@ inline void WidgetCmd::getNextWidgetBox(strID childID, Box* boxOut)
 
 inline void WidgetCmd::handlePointerInput(f32x2 pointerPosSS)
 {
-	WidgetType* type = ctx().widgetTypes.get(strID(widgetID));
+	WidgetType* type = ctx().widgetTypes.get(widgetID);
 	sfz_assert(type != nullptr);
 	sfz_assert(type->handlePointerInputFunc != nullptr);
 	type->handlePointerInputFunc(this, pointerPosSS);
@@ -237,7 +236,7 @@ inline void WidgetCmd::handlePointerInput(f32x2 pointerPosSS)
 
 inline void WidgetCmd::handleMoveInput(Input* input, bool* moveActive)
 {
-	WidgetType* type = ctx().widgetTypes.get(strID(widgetID));
+	WidgetType* type = ctx().widgetTypes.get(widgetID);
 	sfz_assert(type != nullptr);
 	sfz_assert(type->handleMoveInputFunc != nullptr);
 	type->handleMoveInputFunc(this, input, moveActive);
