@@ -24,7 +24,7 @@ if(WIN32)
 
 	# Use bundled SDL2 on Windows
 	set(SDL2_FOUND true)
-	set(SDL2_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Windows/SDL2-2.0.14)
+	set(SDL2_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Windows/SDL2-2.0.16)
 	set(SDL2_INCLUDE_DIR ${SDL2_DIR}/include)
 
 	find_library(SDL2_LIB
