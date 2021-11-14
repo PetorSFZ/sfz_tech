@@ -30,8 +30,6 @@ struct BufferResource;
 struct FramebufferResource;
 struct MeshResource;
 struct TextureResource;
-struct VoxelModelResource;
-struct VoxelMaterial;
 
 // ResourceManager
 // ------------------------------------------------------------------------------------------------
@@ -51,10 +49,6 @@ public:
 
 	// Updates all resources that depend on screen resolution
 	void updateResolution(i32x2 screenRes);
-
-	// Updates all voxel models, returns whether any model was updated. Not required to call,
-	// mainly used during development when file watching .vox files.
-	bool updateVoxelModels();
 
 	ZgUploader* getUploader();
 
@@ -93,15 +87,6 @@ public:
 	MeshResource* getMesh(SfzHandle handle);
 	SfzHandle addMesh(MeshResource&& resource);
 	void removeMesh(SfzStrID name);
-
-	// VoxelModel methods
-	// --------------------------------------------------------------------------------------------
-
-	SfzHandle getVoxelModelHandle(const char* name) const;
-	SfzHandle getVoxelModelHandle(SfzStrID name) const;
-	VoxelModelResource* getVoxelModel(SfzHandle handle);
-	SfzHandle addVoxelModel(VoxelModelResource&& resource);
-	void removeVoxelModel(SfzStrID name);
 
 private:
 	ResourceManagerState* mState = nullptr;

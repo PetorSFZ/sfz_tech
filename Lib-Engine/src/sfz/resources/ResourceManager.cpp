@@ -53,11 +53,6 @@ void ResourceManager::init(u32 maxNumResources, SfzAllocator* allocator, ZgUploa
 	mState->meshHandles.init(maxNumResources, allocator, sfz_dbg(""));
 	mState->meshes.init(maxNumResources, allocator, sfz_dbg(""));
 
-	GlobalConfig& cfg = getGlobalConfig();
-	mState->voxelModelFileWatch = cfg.sanitizeBool("Resources", "voxelModelFileWatch", true, false);
-	mState->voxelModelHandles.init(maxNumResources, allocator, sfz_dbg(""));
-	mState->voxelModels.init(maxNumResources, allocator, sfz_dbg(""));
-
 	// Sets allocator for opengametools
 	// TODO: Might want to place somewhere else
 	setOpenGameToolsAllocator(allocator);
@@ -119,22 +114,6 @@ void ResourceManager::updateResolution(i32x2 screenRes)
 			}
 		}
 	}
-}
-
-bool ResourceManager::updateVoxelModels()
-{
-	bool updated = false;
-	if (mState->voxelModelFileWatch->boolValue()) {
-		for (HashMapPair<SfzStrID, SfzHandle> itemItr : mState->voxelModelHandles) {
-			VoxelModelResource& resource = mState->voxelModels[itemItr.value];
-			const time_t newLastModifiedDate = sfz::fileLastModifiedDate(resource.path.str());
-			if (resource.lastModifiedDate < newLastModifiedDate) {
-				resource.build(mState->allocator);
-				updated = true;
-			}
-		}
-	}
-	return updated;
 }
 
 ZgUploader* ResourceManager::getUploader()
@@ -314,45 +293,6 @@ void ResourceManager::removeMesh(SfzStrID name)
 	if (handle == SFZ_NULL_HANDLE) return;
 	mState->meshHandles.remove(name);
 	mState->meshes.deallocate(handle);
-}
-
-// ResourceManager: VoxelModel methods
-// ------------------------------------------------------------------------------------------------
-
-SfzHandle ResourceManager::getVoxelModelHandle(const char* name) const
-{
-	return this->getVoxelModelHandle(sfzStrIDCreate(name));
-}
-
-SfzHandle ResourceManager::getVoxelModelHandle(SfzStrID name) const
-{
-	const SfzHandle* handle = mState->voxelModelHandles.get(name);
-	if (handle == nullptr) return SFZ_NULL_HANDLE;
-	return *handle;
-}
-
-VoxelModelResource* ResourceManager::getVoxelModel(SfzHandle handle)
-{
-	return mState->voxelModels.get(handle);
-}
-
-SfzHandle ResourceManager::addVoxelModel(VoxelModelResource&& resource)
-{
-	SfzStrID name = resource.name;
-	sfz_assert(name != SFZ_STR_ID_NULL);
-	sfz_assert(mState->voxelModelHandles.get(name) == nullptr);
-	SfzHandle handle = mState->voxelModels.allocate(sfz_move(resource));
-	mState->voxelModelHandles.put(name, handle);
-	sfz_assert(mState->voxelModelHandles.size() == mState->voxelModels.numAllocated());
-	return handle;
-}
-
-void ResourceManager::removeVoxelModel(SfzStrID name)
-{
-	SfzHandle handle = this->getVoxelModelHandle(name);
-	if (handle == SFZ_NULL_HANDLE) return;
-	mState->voxelModelHandles.remove(name);
-	mState->voxelModels.deallocate(handle);
 }
 
 } // namespace sfz

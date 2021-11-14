@@ -444,63 +444,6 @@ inline void renderMeshesTab(ResourceManagerState& state)
 	}
 }
 
-inline void renderVoxelModelsTab(ResourceManagerState& state)
-{
-	constexpr f32 offset = 200.0f;
-	constexpr f32x4 normalTextColor = f32x4(1.0f);
-	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
-	static str128 filter;
-
-	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
-	ImGui::InputText("Filter##VoxelModelsTab", filter.mRawStr, filter.capacity());
-	ImGui::PopStyleColor();
-	filter.toLower();
-
-	const bool filterMode = filter != "";
-
-	for (HashMapPair<SfzStrID, SfzHandle> itemItr : state.voxelModelHandles) {
-		const char* name = sfzStrIDGetStr(itemItr.key);
-		const VoxelModelResource& resource = state.voxelModels[itemItr.value];
-
-		str320 lowerCaseName = name;
-		lowerCaseName.toLower();
-		if (!filter.isPartOf(lowerCaseName.str())) continue;
-
-		if (filterMode) {
-			imguiRenderFilteredText(name, filter.str(), normalTextColor, filterTextColor);
-		}
-		else {
-			if (!ImGui::CollapsingHeader(name)) continue;
-		}
-
-		ImGui::Indent(20.0f);
-
-		alignedEdit("Path", offset, [&](const char*) {
-			ImGui::Text("\"%s\"", resource.path.str());
-		});
-
-		alignedEdit("Dims", offset, [&](const char*) {
-			ImGui::Text("%u x %u x %u", resource.dims.x, resource.dims.y, resource.dims.z);
-		});
-
-		alignedEdit("Num voxels", offset, [&](const char*) {
-			ImGui::Text("%u", resource.numVoxels);
-		});
-
-		alignedEdit("Num colors", offset, [&](const char*) {
-			ImGui::Text("%u", resource.palette.size());
-		});
-
-		if (resource.userHandle != SFZ_NULL_HANDLE) {
-			alignedEdit("User handle", offset, [&](const char*) {
-				ImGui::Text("%u @ v%u", resource.userHandle.idx(), resource.userHandle.version());
-			});
-		}
-
-		ImGui::Unindent(20.0f);
-	}
-}
-
 // ResourceManagerUI
 // ------------------------------------------------------------------------------------------------
 
@@ -534,12 +477,6 @@ inline void resourceManagerUI(ResourceManagerState& state)
 		if (ImGui::BeginTabItem("Meshes")) {
 			ImGui::Spacing();
 			renderMeshesTab(state);
-			ImGui::EndTabItem();
-		}
-
-		if (ImGui::BeginTabItem("Voxel Models")) {
-			ImGui::Spacing();
-			renderVoxelModelsTab(state);
 			ImGui::EndTabItem();
 		}
 

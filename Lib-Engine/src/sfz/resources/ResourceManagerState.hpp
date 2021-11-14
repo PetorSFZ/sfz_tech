@@ -28,7 +28,6 @@
 #include "sfz/resources/MeshResource.hpp"
 #include "sfz/resources/ResourceManager.hpp"
 #include "sfz/resources/TextureResource.hpp"
-#include "sfz/resources/VoxelResources.hpp"
 
 namespace sfz {
 
@@ -52,10 +51,6 @@ struct ResourceManagerState final {
 
 	HashMap<SfzStrID, SfzHandle> meshHandles;
 	Pool<MeshResource> meshes;
-
-	Setting* voxelModelFileWatch = nullptr;
-	HashMap<SfzStrID, SfzHandle> voxelModelHandles;
-	Pool<VoxelModelResource> voxelModels;
 };
 
 } // namespace sfz
