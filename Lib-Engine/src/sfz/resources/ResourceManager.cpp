@@ -26,7 +26,6 @@
 #include "sfz/resources/ResourceManagerState.hpp"
 #include "sfz/resources/ResourceManagerUI.hpp"
 #include "sfz/resources/TextureResource.hpp"
-#include "sfz/resources/VoxelResources.hpp"
 #include "sfz/util/IO.hpp"
 
 namespace sfz {
@@ -52,10 +51,6 @@ void ResourceManager::init(u32 maxNumResources, SfzAllocator* allocator, ZgUploa
 
 	mState->meshHandles.init(maxNumResources, allocator, sfz_dbg(""));
 	mState->meshes.init(maxNumResources, allocator, sfz_dbg(""));
-
-	// Sets allocator for opengametools
-	// TODO: Might want to place somewhere else
-	setOpenGameToolsAllocator(allocator);
 }
 
 void ResourceManager::destroy() noexcept
