@@ -32,7 +32,6 @@ namespace sfz {
 inline void renderBuffersTab(ResourceManagerState& state)
 {
 	constexpr f32 offset = 200.0f;
-	constexpr f32 offset2 = 220.0f;
 	constexpr f32x4 normalTextColor = f32x4(1.0f);
 	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
 	static str128 filter;
@@ -290,7 +289,6 @@ inline void renderMeshesTab(ResourceManagerState& state)
 			for (u32 i = 0; i < mesh.components.size(); i++) {
 
 				const MeshComponent& comp = mesh.components[i];
-				constexpr f32 offset = 250.0f;
 				ImGui::Text("Component %u -- Material Index: %u -- NumIndices: %u",
 					i, comp.materialIdx, comp.numIndices);
 			}
