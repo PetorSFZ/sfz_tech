@@ -45,15 +45,6 @@ sfz_struct(SfzRay) {
 	{
 		return SfzRay::create(origin + dir * minDist, dir, maxDist);
 	}
-
-	static SfzRay createFromPoints(f32x3 start, f32x3 end)
-	{
-		const f32x3 diff = end - start;
-		const f32 len = sfz::length(diff);
-		sfz_assert(len > 0.0001f);
-		const f32x3 dir = diff / len;
-		return SfzRay::create(start, dir, len);
-	}
 #endif
 };
 
