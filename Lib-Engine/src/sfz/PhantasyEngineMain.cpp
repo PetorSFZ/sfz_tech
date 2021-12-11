@@ -757,8 +757,8 @@ int main(int argc, char* argv[])
 	logSDL2Version();
 
 	// Window settings
-	sfz::Setting* width = cfg.sanitizeInt("Window", "width", false, 1280, 128, 3840, 8);
-	sfz::Setting* height = cfg.sanitizeInt("Window", "height", false, 800, 128, 2160, 8);
+	sfz::Setting* width = cfg.sanitizeInt("Window", "width", false, 1024, 128, 3840, 8);
+	sfz::Setting* height = cfg.sanitizeInt("Window", "height", false, 600, 128, 2160, 8);
 	sfz::Setting* fullscreen = cfg.sanitizeBool("Window", "fullscreen", false, false);
 	sfz::Setting* maximized = cfg.sanitizeBool("Window", "maximized", false, false);
 	if (fullscreen->boolValue() && maximized->boolValue()) {
