@@ -141,16 +141,16 @@ inline void renderTexturesTab(ResourceManagerState& state)
 			});
 		}
 
-		if (resource.screenRelativeResolution) {
+		if (resource.screenRelativeRes) {
 			ImGui::Text("Screen relative resolution");
 			ImGui::Indent(20.0f);
 			alignedEdit("Fixed scale", offset2, [&](const char*) {
-				ImGui::Text("%.2f", resource.resolutionScale);
+				ImGui::Text("%.2f", resource.resScale);
 			});
 			alignedEdit("Scale setting", offset2, [&](const char*) {
 				ImGui::Text("%s.%s",
-					resource.resolutionScaleSetting->section().str(),
-					resource.resolutionScaleSetting->key().str());
+					resource.resScaleSetting->section().str(),
+					resource.resScaleSetting->key().str());
 			});
 			if (resource.resScaleSettingScale != 1.0f) {
 				alignedEdit("Scale setting scale", offset2, [&](const char*) {
@@ -212,16 +212,16 @@ inline void renderFramebuffersTab(ResourceManagerState& state)
 			ImGui::Text("%u x %u", resource.res.x, resource.res.y);
 		});
 
-		if (resource.screenRelativeResolution) {
+		if (resource.screenRelativeRes) {
 			ImGui::Text("Screen relative resolution");
 			ImGui::Indent(20.0f);
 			alignedEdit("Fixed scale", offset2, [&](const char*) {
-				ImGui::Text("%.2f", resource.resolutionScale);
+				ImGui::Text("%.2f", resource.resScale);
 			});
 			alignedEdit("Scale setting", offset2, [&](const char*) {
 				ImGui::Text("%s.%s",
-					resource.resolutionScaleSetting->section().str(),
-					resource.resolutionScaleSetting->key().str());
+					resource.resScaleSetting->section().str(),
+					resource.resScaleSetting->key().str());
 			});
 			ImGui::Unindent(20.0f);
 		}

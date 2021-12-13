@@ -41,9 +41,10 @@ struct FramebufferResource final {
 	i32x2 res = i32x2(0);
 
 	// Whether resolution should be scaled relative screen resolution
-	bool screenRelativeResolution = false;
-	f32 resolutionScale = 1.0f;
-	Setting* resolutionScaleSetting = nullptr;
+	bool screenRelativeRes = false;
+	f32 resScale = 1.0f;
+	Setting* resScaleSetting = nullptr;
+	Setting* resScaleSetting2 = nullptr;
 
 	// Whether resolution is directly controlled by a setting
 	bool settingControlledRes = false;
@@ -61,9 +62,10 @@ struct FramebufferResourceBuilder final {
 	SfzStrID depthBufferName = SFZ_STR_ID_NULL;
 	i32x2 res = i32x2(0);
 
-	bool screenRelativeResolution = false;
-	f32 resolutionScale = 1.0f;
-	Setting* resolutionScaleSetting = nullptr;
+	bool screenRelativeRes = false;
+	f32 resScale = 1.0f;
+	Setting* resScaleSetting = nullptr;
+	Setting* resScaleSetting2 = nullptr;
 
 	bool settingControlledRes = false;
 	Setting* controlledResSetting = nullptr;
@@ -74,7 +76,7 @@ struct FramebufferResourceBuilder final {
 	FramebufferResourceBuilder& setName(const char* name);
 	FramebufferResourceBuilder& setFixedRes(i32x2 res);
 	FramebufferResourceBuilder& setScreenRelativeRes(f32 scale);
-	FramebufferResourceBuilder& setScreenRelativeRes(Setting* scaleSetting);
+	FramebufferResourceBuilder& setScreenRelativeRes(Setting* scaleSetting, Setting* scaleSetting2 = nullptr);
 	FramebufferResourceBuilder& setSettingControlledRes(Setting* resSetting);
 	FramebufferResourceBuilder& addRenderTarget(const char* textureName);
 	FramebufferResourceBuilder& addRenderTarget(SfzStrID textureName);

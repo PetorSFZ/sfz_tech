@@ -39,11 +39,14 @@ ZgResult FramebufferResource::build(i32x2 screenRes)
 	ResourceManager& resources = getResourceManager();
 
 	// Set resolution and resolution scale if screen relative
-	if (screenRelativeResolution) {
-		if (this->resolutionScaleSetting != nullptr) {
-			this->resolutionScale = resolutionScaleSetting->floatValue();
+	if (screenRelativeRes) {
+		if (this->resScaleSetting != nullptr) {
+			this->resScale = resScaleSetting->floatValue();
+			if (resScaleSetting2 != nullptr) {
+				this->resScale *= resScaleSetting2->floatValue();
+			}
 		}
-		f32x2 scaledRes = f32x2(screenRes) * this->resolutionScale;
+		f32x2 scaledRes = f32x2(screenRes) * this->resScale;
 		this->res.x = u32(::roundf(scaledRes.x));
 		this->res.y = u32(::roundf(scaledRes.y));
 	}
@@ -94,24 +97,26 @@ FramebufferResourceBuilder& FramebufferResourceBuilder::setFixedRes(i32x2 resIn)
 	sfz_assert(resIn.x > 0);
 	sfz_assert(resIn.y > 0);
 	this->res = resIn;
-	this->screenRelativeResolution = false;
-	this->resolutionScale = 1.0f;
-	this->resolutionScaleSetting = nullptr;
+	this->screenRelativeRes = false;
+	this->resScale = 1.0f;
+	this->resScaleSetting = nullptr;
+	this->resScaleSetting2 = nullptr;
 	return *this;
 }
 
 FramebufferResourceBuilder& FramebufferResourceBuilder::setScreenRelativeRes(f32 scale)
 {
-	this->screenRelativeResolution = true;
-	this->resolutionScale = scale;
+	this->screenRelativeRes = true;
+	this->resScale = scale;
 	return *this;
 }
 
-FramebufferResourceBuilder& FramebufferResourceBuilder::setScreenRelativeRes(Setting* scaleSetting)
+FramebufferResourceBuilder& FramebufferResourceBuilder::setScreenRelativeRes(Setting* scaleSetting, Setting* scaleSetting2)
 {
-	this->screenRelativeResolution = true;
-	this->resolutionScale = 1.0f;
-	this->resolutionScaleSetting = scaleSetting;
+	this->screenRelativeRes = true;
+	this->resScale = 1.0f;
+	this->resScaleSetting = scaleSetting;
+	this->resScaleSetting2 = scaleSetting2;
 	return *this;
 }
 
@@ -151,9 +156,10 @@ FramebufferResource FramebufferResourceBuilder::build(i32x2 screenRes)
 	resource.renderTargetNames = this->renderTargetNames;
 	resource.depthBufferName = this->depthBufferName;
 	resource.res = this->res;
-	resource.screenRelativeResolution = this->screenRelativeResolution;
-	resource.resolutionScale = this->resolutionScale;
-	resource.resolutionScaleSetting = this->resolutionScaleSetting;
+	resource.screenRelativeRes = this->screenRelativeRes;
+	resource.resScale = this->resScale;
+	resource.resScaleSetting = this->resScaleSetting;
+	resource.resScaleSetting2 = this->resScaleSetting2;
 	resource.settingControlledRes = this->settingControlledRes;
 	resource.controlledResSetting = this->controlledResSetting;
 	CHECK_ZG resource.build(screenRes);

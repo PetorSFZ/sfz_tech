@@ -129,12 +129,15 @@ bool TextureResource::needRebuild(i32x2 screenRes) const
 	if (!this->texture.valid()) return true;
 
 	i32x2 newRes = i32x2(0);
-	if (screenRelativeResolution) {
-		f32 resScale = this->resolutionScale;
-		if (this->resolutionScaleSetting != nullptr) {
-			resScale = resolutionScaleSetting->floatValue() * this->resScaleSettingScale;
+	if (screenRelativeRes) {
+		f32 resoScale = this->resScale;
+		if (this->resScaleSetting != nullptr) {
+			resoScale = resScaleSetting->floatValue() * this->resScaleSettingScale;
+			if (this->resScaleSetting2 != nullptr) {
+				resoScale *= resScaleSetting2->floatValue();
+			}
 		}
-		f32x2 scaledRes = f32x2(screenRes) * resScale;
+		f32x2 scaledRes = f32x2(screenRes) * resoScale;
 		newRes.x = u32(::roundf(scaledRes.x));
 		newRes.y = u32(::roundf(scaledRes.y));
 	}
@@ -153,11 +156,14 @@ ZgResult TextureResource::build(i32x2 screenRes)
 {
 	// Set resolution and resolution scale if screen relative
 	i32x2 newRes = i32x2(0);
-	if (screenRelativeResolution) {
-		if (this->resolutionScaleSetting != nullptr) {
-			this->resolutionScale = resolutionScaleSetting->floatValue() * this->resScaleSettingScale;
+	if (screenRelativeRes) {
+		if (this->resScaleSetting != nullptr) {
+			this->resScale = resScaleSetting->floatValue() * this->resScaleSettingScale;
+			if (this->resScaleSetting2 != nullptr) {
+				this->resScale *= resScaleSetting2->floatValue();
+			}
 		}
-		f32x2 scaledRes = f32x2(screenRes) * this->resolutionScale;
+		f32x2 scaledRes = f32x2(screenRes) * this->resScale;
 		newRes.x = u32(::roundf(scaledRes.x));
 		newRes.y = u32(::roundf(scaledRes.y));
 	}
@@ -304,6 +310,7 @@ TextureResource TextureResource::createScreenRelative(
 	Setting* scaleSetting,
 	ZgTextureUsage usage,
 	bool committedAllocation,
+	Setting* scaleSetting2,
 	f32 resScaleSettingScale)
 {
 	TextureResource resource;
@@ -314,9 +321,10 @@ TextureResource TextureResource::createScreenRelative(
 	resource.usage = usage;
 	resource.optimalClearValue = ZG_OPTIMAL_CLEAR_VALUE_ZERO;
 
-	resource.screenRelativeResolution = true;
-	resource.resolutionScale = scale;
-	resource.resolutionScaleSetting = scaleSetting;
+	resource.screenRelativeRes = true;
+	resource.resScale = scale;
+	resource.resScaleSetting = scaleSetting;
+	resource.resScaleSetting2 = scaleSetting2;
 	resource.resScaleSettingScale = resScaleSettingScale;
 	
 	CHECK_ZG resource.build(screenRes);

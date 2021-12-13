@@ -96,7 +96,7 @@ void ResourceManager::updateResolution(i32x2 screenRes)
 		// Rebuild textures
 		for (HashMapPair<SfzStrID, SfzHandle> itemItr : mState->textureHandles) {
 			TextureResource& resource = mState->textures[itemItr.value];
-			if (resource.screenRelativeResolution || resource.settingControlledRes) {
+			if (resource.screenRelativeRes || resource.settingControlledRes) {
 				CHECK_ZG resource.build(screenRes);
 			}
 		}
@@ -104,7 +104,7 @@ void ResourceManager::updateResolution(i32x2 screenRes)
 		// Rebuild framebuffers
 		for (HashMapPair<SfzStrID, SfzHandle> itemItr : mState->framebufferHandles) {
 			FramebufferResource& resource = mState->framebuffers[itemItr.value];
-			if (resource.screenRelativeResolution || resource.controlledResSetting) {
+			if (resource.screenRelativeRes || resource.controlledResSetting) {
 				CHECK_ZG resource.build(screenRes);
 			}
 		}
