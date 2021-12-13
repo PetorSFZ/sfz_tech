@@ -257,8 +257,6 @@ set(SRC_FILES
 	${SRC_DIR}/sfz/renderer/HighLevelCmdList.cpp
 	${SRC_DIR}/sfz/renderer/Renderer.hpp
 	${SRC_DIR}/sfz/renderer/Renderer.cpp
-	${SRC_DIR}/sfz/renderer/RendererConfigParser.hpp
-	${SRC_DIR}/sfz/renderer/RendererConfigParser.cpp
 	${SRC_DIR}/sfz/renderer/RendererState.hpp
 	${SRC_DIR}/sfz/renderer/RendererUI.hpp
 	${SRC_DIR}/sfz/renderer/RendererUI.cpp

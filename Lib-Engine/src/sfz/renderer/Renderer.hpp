@@ -52,7 +52,6 @@ public:
 		const ImageViewConst& fontTexture,
 		SfzAllocator* allocator,
 		zg::Uploader&& uploader);
-	bool loadConfiguration(const char* jsonConfigPath);
 	void destroy();
 
 	// Getters

@@ -34,7 +34,6 @@
 #include "sfz/debug/ProfilingStats.hpp"
 #include "sfz/Logging.hpp"
 #include "sfz/config/GlobalConfig.hpp"
-#include "sfz/renderer/RendererConfigParser.hpp"
 #include "sfz/renderer/RendererState.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
 #include "sfz/resources/BufferResource.hpp"
@@ -121,24 +120,6 @@ bool Renderer::init(
 		StatsVisualizationType::FIRST_INDIVIDUALLY_REST_ADDED);
 	stats.createLabel("gpu", "frametime", f32x4(1.0f, 0.0f, 0.0f, 1.0f), 0.0f);
 	stats.createLabel("gpu", "imgui");
-
-	return true;
-}
-
-bool Renderer::loadConfiguration(const char* jsonConfigPath)
-{
-	if (!this->active()) {
-		sfz_assert(false);
-		return false;
-	}
-
-	// Parse config
-	bool parseSuccess = parseRendererConfig(*mState, jsonConfigPath);
-	if (!parseSuccess) {
-		// TODO: Maybe this is a bit too extreme?
-		this->destroy();
-		return false;
-	}
 
 	return true;
 }
