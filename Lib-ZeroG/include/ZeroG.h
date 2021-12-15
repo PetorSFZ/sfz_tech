@@ -764,6 +764,7 @@ public:
 		compileSettings.dxcCompilerFlags[0] = "-Zi";
 		compileSettings.dxcCompilerFlags[1] = "-Qembed_debug";
 		compileSettings.dxcCompilerFlags[2] = "-O3";
+		compileSettings.dxcCompilerFlags[3] = "-HV 2021";
 
 		// Build pipeline
 		return pipelineOut.createFromFileHLSL(desc, compileSettings);
@@ -1215,6 +1216,7 @@ public:
 		compileSettings.dxcCompilerFlags[0] = "-Zi";
 		compileSettings.dxcCompilerFlags[1] = "-Qembed_debug";
 		compileSettings.dxcCompilerFlags[2] = "-O3";
+		compileSettings.dxcCompilerFlags[3] = "-HV 2021";
 
 		// Build pipeline
 		return pipelineOut.createFromFileHLSL(desc, compileSettings);
@@ -1233,6 +1235,7 @@ public:
 		compileSettings.dxcCompilerFlags[0] = "-Zi";
 		compileSettings.dxcCompilerFlags[1] = "-Qembed_debug";
 		compileSettings.dxcCompilerFlags[2] = "-O3";
+		compileSettings.dxcCompilerFlags[3] = "-HV 2021";
 
 		// Build pipeline
 		return pipelineOut.createFromSourceHLSL(desc, compileSettings);
