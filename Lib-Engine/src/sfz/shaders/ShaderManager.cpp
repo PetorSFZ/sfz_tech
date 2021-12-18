@@ -145,7 +145,7 @@ bool Shader::build() noexcept
 
 		// Build pipeline
 		zg::PipelineCompute tmpPipeline;
-		buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileHLSL(tmpPipeline, ZG_SHADER_MODEL_6_1);
+		buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileHLSL(tmpPipeline);
 		if (buildSuccess) {
 			this->compute.pipeline = sfz_move(tmpPipeline);
 			this->lastModified = sfz::fileLastModifiedDate(this->shaderPath);

@@ -753,7 +753,7 @@ public:
 	}
 
 	ZgResult buildFromFileHLSL(
-		PipelineCompute& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0)
+		PipelineCompute& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_2)
 	{
 		// Set path
 		desc.computeShader = this->computeShaderPath;
@@ -765,6 +765,8 @@ public:
 		compileSettings.dxcCompilerFlags[1] = "-Qembed_debug";
 		compileSettings.dxcCompilerFlags[2] = "-O3";
 		compileSettings.dxcCompilerFlags[3] = "-HV 2021";
+		compileSettings.dxcCompilerFlags[4] = "-no-legacy-cbuf-layout";
+		compileSettings.dxcCompilerFlags[5] = "-enable-16bit-types";
 
 		// Build pipeline
 		return pipelineOut.createFromFileHLSL(desc, compileSettings);
@@ -1204,7 +1206,7 @@ public:
 	}
 
 	ZgResult buildFromFileHLSL(
-		PipelineRender& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0)
+		PipelineRender& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_2)
 	{
 		// Set path
 		desc.vertexShader = this->vertexShaderPath;
@@ -1217,13 +1219,15 @@ public:
 		compileSettings.dxcCompilerFlags[1] = "-Qembed_debug";
 		compileSettings.dxcCompilerFlags[2] = "-O3";
 		compileSettings.dxcCompilerFlags[3] = "-HV 2021";
+		compileSettings.dxcCompilerFlags[4] = "-no-legacy-cbuf-layout";
+		compileSettings.dxcCompilerFlags[5] = "-enable-16bit-types";
 
 		// Build pipeline
 		return pipelineOut.createFromFileHLSL(desc, compileSettings);
 	}
 
 	ZgResult buildFromSourceHLSL(
-		PipelineRender& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_0)
+		PipelineRender& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_2)
 	{
 		// Set source
 		desc.vertexShader = this->vertexShaderSrc;
@@ -1236,6 +1240,8 @@ public:
 		compileSettings.dxcCompilerFlags[1] = "-Qembed_debug";
 		compileSettings.dxcCompilerFlags[2] = "-O3";
 		compileSettings.dxcCompilerFlags[3] = "-HV 2021";
+		compileSettings.dxcCompilerFlags[4] = "-no-legacy-cbuf-layout";
+		compileSettings.dxcCompilerFlags[5] = "-enable-16bit-types";
 
 		// Build pipeline
 		return pipelineOut.createFromSourceHLSL(desc, compileSettings);
