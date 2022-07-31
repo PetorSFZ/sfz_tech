@@ -19,9 +19,7 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
-
-namespace sfz {
+#include <sfz.h>
 
 // ProfilingStats
 // ------------------------------------------------------------------------------------------------
@@ -29,31 +27,31 @@ namespace sfz {
 constexpr u32 PROFILING_STATS_MAX_NUM_CATEGORIES = 8;
 constexpr u32 PROFILING_STATS_MAX_NUM_LABELS = 80;
 
-struct LabelStats final {
+struct SfzLabelStats final {
 	f32 avg = 0.0f;
 	f32 std = 0.0f;
 	f32 min = 0.0f;
 	f32 max = 0.0f;
 };
 
-enum class StatsVisualizationType : u32 {
+enum class SfzStatsVisualizationType : u32 {
 	INDIVIDUALLY,
 	FIRST_INDIVIDUALLY_REST_ADDED
 };
 
-struct ProfilingStatsState; // Pimpl pattern
+struct SfzProfilingStatsState; // Pimpl pattern
 
-class ProfilingStats final {
+struct SfzProfilingStats final {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	ProfilingStats() noexcept = default;
-	ProfilingStats(const ProfilingStats&) = delete;
-	ProfilingStats& operator= (const ProfilingStats&) = delete;
-	ProfilingStats(ProfilingStats&&) = delete;
-	ProfilingStats& operator= (ProfilingStats&&) = delete;
-	~ProfilingStats() noexcept { this->destroy(); }
+	SfzProfilingStats() noexcept = default;
+	SfzProfilingStats(const SfzProfilingStats&) = delete;
+	SfzProfilingStats& operator= (const SfzProfilingStats&) = delete;
+	SfzProfilingStats(SfzProfilingStats&&) = delete;
+	SfzProfilingStats& operator= (SfzProfilingStats&&) = delete;
+	~SfzProfilingStats() noexcept { this->destroy(); }
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
@@ -79,11 +77,11 @@ public:
 	const char* sampleUnit(const char* category) const noexcept;
 	const char* idxUnit(const char* category) const noexcept;
 	f32 smallestPlotMax(const char* category) const noexcept;
-	StatsVisualizationType visualizationType(const char* category) const noexcept;
+	SfzStatsVisualizationType visualizationType(const char* category) const noexcept;
 
 	const f32* samples(const char* category, const char* label) const noexcept;
 	f32x4 color(const char* category, const char* label) const noexcept;
-	LabelStats stats(const char* category, const char* label) const noexcept;
+	SfzLabelStats stats(const char* category, const char* label) const noexcept;
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
@@ -95,7 +93,7 @@ public:
 		const char* sampleUnit,
 		const char* idxUnit,
 		f32 smallestPlotMax = 10.0f,
-		StatsVisualizationType visType = StatsVisualizationType::INDIVIDUALLY) noexcept;
+		SfzStatsVisualizationType visType = SfzStatsVisualizationType::INDIVIDUALLY) noexcept;
 
 	void createLabel(
 		const char* category,
@@ -107,7 +105,5 @@ public:
 		const char* category, const char* label, u64 sampleIdx, f32 sample) noexcept;
 
 private:
-	ProfilingStatsState* mState = nullptr;
+	SfzProfilingStatsState* mState = nullptr;
 };
-
-} // namespace sfz

@@ -57,15 +57,13 @@ struct UAVMapping {
 	ZgBindingType type = ZgBindingType::ZG_BINDING_TYPE_UNDEFINED;
 };
 
-constexpr u32 MAX_NUM_MAPPINGS = 16;
-
 struct RootSignatureMapping {
 	u32 dynamicParamIdx = ~0u;
 	u32 dynamicTableSize = 0;
-	ArrayLocal<PushConstMapping, MAX_NUM_MAPPINGS> pushConsts;
-	ArrayLocal<CBVMapping, MAX_NUM_MAPPINGS> CBVs;
-	ArrayLocal<SRVMapping, MAX_NUM_MAPPINGS> SRVs;
-	ArrayLocal<UAVMapping, MAX_NUM_MAPPINGS> UAVs;
+	ArrayLocal<PushConstMapping, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConsts;
+	ArrayLocal<CBVMapping, ZG_MAX_NUM_CONSTANT_BUFFERS> CBVs;
+	ArrayLocal<SRVMapping, ZG_MAX_NUM_TEXTURES> SRVs;
+	ArrayLocal<UAVMapping, ZG_MAX_NUM_UNORDERED_TEXTURES> UAVs;
 };
 
 // D3D12PipelineCompute
@@ -127,6 +125,7 @@ ZgResult createPipelineRenderFileHLSL(
 
 ZgResult createPipelineRenderSourceHLSL(
 	ZgPipelineRender** pipelineOut,
+	const char* src,
 	const ZgPipelineRenderDesc& desc,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,

@@ -21,6 +21,14 @@
 
 #include <skipifzero.hpp>
 
+struct SfzConfig;
+struct SfzGlobalConfig;
+struct SfzProfilingStats;
+struct SfzShaderManager;
+struct SfzStrIDs;
+struct SfzResourceManager;
+struct SfzRenderer;
+
 namespace sfz {
 
 // Console
@@ -43,7 +51,7 @@ public:
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void init(SfzAllocator* allocator, u32 numWindowsToDock, const char* const* windowNames) noexcept;
+	void init(SfzAllocator* allocator, SfzGlobalConfig* cfg, u32 numWindowsToDock, const char* const* windowNames) noexcept;
 	void swap(Console& other) noexcept;
 	void destroy() noexcept;
 
@@ -52,9 +60,16 @@ public:
 
 	// If the console is active the game should be paused
 	void toggleActive() noexcept;
-	bool active() noexcept;
+	bool active() const noexcept;
 
-	void render(i32x2 windowRes) noexcept;
+	void render(
+		i32x2 windowRes,
+		SfzStrIDs* ids,
+		SfzConfig* cfg,
+		SfzRenderer* renderer,
+		SfzShaderManager* shaderMan,
+		SfzResourceManager* resMan,
+		const SfzProfilingStats* profStats) noexcept;
 
 private:
 	// Private members

@@ -21,8 +21,7 @@
 
 #include <imgui.h>
 
-#include "sfz/Context.hpp"
-#include "sfz/Logging.hpp"
+#include "sfz/SfzLogging.h"
 #include "sfz/renderer/RendererState.hpp"
 #include "sfz/renderer/RenderingEnumsToFromString.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
@@ -56,7 +55,7 @@ void RendererUI::destroy() noexcept
 // RendererUI: Methods
 // ------------------------------------------------------------------------------------------------
 
-void RendererUI::render(RendererState& state) noexcept
+void RendererUI::render(SfzRendererState& state) noexcept
 {
 	ImGuiWindowFlags windowFlags = 0;
 	windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
@@ -66,9 +65,6 @@ void RendererUI::render(RendererState& state) noexcept
 	}
 
 	constexpr f32 offset = 250.0f;
-	alignedEdit("Config path", offset, [&](const char*) {
-		ImGui::Text("\"%s\"", state.configPath.str());
-	});
 	alignedEdit("Current frame index", offset, [&](const char*) {
 		ImGui::Text("%llu", state.currentFrameIdx);
 	});

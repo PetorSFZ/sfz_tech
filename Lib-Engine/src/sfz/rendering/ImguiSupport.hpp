@@ -21,17 +21,20 @@
 
 #include <imgui.h>
 
+#include <SDL.h>
+
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
 
 #include "sfz/input/RawInputState.hpp"
 #include "sfz/renderer/Renderer.hpp"
-#include "sfz/PhantasyEngineMain.hpp"
+
+struct SfzConfig;
 
 namespace sfz {
 
 // Initializes imgui, returns font image view to be sent to renderers initImgui() function.
-ImageView initializeImgui(SfzAllocator* allocator) noexcept;
+SfzImageView initializeImgui(SfzAllocator* allocator) noexcept;
 
 void deinitializeImgui() noexcept;
 
@@ -39,7 +42,8 @@ void updateImgui(
 	i32x2 windowResolution,
 	const RawInputState& rawInputState,
 	const SDL_Event* keyboardEvents,
-	u32 numKeyboardEvents) noexcept;
+	u32 numKeyboardEvents,
+	SfzConfig* cfg) noexcept;
 
 // The fonts initialized with Imgui
 ImFont* imguiFontDefault() noexcept;

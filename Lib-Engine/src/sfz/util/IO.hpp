@@ -18,13 +18,9 @@
 
 #pragma once
 
-#include <ctime>
-
 #include <skipifzero.hpp>
 
 #include <skipifzero_arrays.hpp>
-
-#include "sfz/strings/DynString.hpp"
 
 namespace sfz {
 
@@ -45,7 +41,7 @@ const char* getFileNameFromPath(const char* path) noexcept;
 // Filewatch related IO functions
 // ------------------------------------------------------------------------------------------------
 
-time_t fileLastModifiedDate(const char* path) noexcept;
+i64 fileLastModifiedDate(const char* path) noexcept;
 
 // IO functions
 // ------------------------------------------------------------------------------------------------
@@ -81,10 +77,10 @@ i32 readBinaryFile(const char* path, u8* dataOut, size_t maxNumBytes) noexcept;
 // Reads binary file, returns empty Array if error.
 Array<u8> readBinaryFile(
 	const char* path,
-	SfzAllocator* allocator = getDefaultAllocator()) noexcept;
+	SfzAllocator* allocator) noexcept;
 
 // Reads text file, returns empty string if error.
-DynString readTextFile(const char* path, SfzAllocator* allocator = getDefaultAllocator()) noexcept;
+Array<char> readTextFile(const char* path, SfzAllocator* allocator) noexcept;
 
 // Writes memory to binary file, returns whether successful or not.
 bool writeBinaryFile(const char* path, const u8* data, size_t numBytes) noexcept;

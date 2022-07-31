@@ -68,6 +68,14 @@ inline DXGI_FORMAT zgToDxgiTextureFormat(ZgFormat format) noexcept
 	case ZG_FORMAT_RG_U8: return DXGI_FORMAT_R8G8_UINT;
 	case ZG_FORMAT_RGBA_U8: return DXGI_FORMAT_R8G8B8A8_UINT;
 
+	case ZG_FORMAT_R_U16: return DXGI_FORMAT_R16_UINT;
+	case ZG_FORMAT_RG_U16: return DXGI_FORMAT_R16G16_UINT;
+	case ZG_FORMAT_RGBA_U16: return DXGI_FORMAT_R16G16B16A16_UINT;
+
+	case ZG_FORMAT_R_I32: return DXGI_FORMAT_R32_SINT;
+	case ZG_FORMAT_RG_I32: return DXGI_FORMAT_R32G32_SINT;
+	case ZG_FORMAT_RGBA_I32: return DXGI_FORMAT_R32G32B32A32_SINT;
+
 	case ZG_FORMAT_R_F16: return DXGI_FORMAT_R16_FLOAT;
 	case ZG_FORMAT_RG_F16: return DXGI_FORMAT_R16G16_FLOAT;
 	case ZG_FORMAT_RGBA_F16: return DXGI_FORMAT_R16G16B16A16_FLOAT;
@@ -187,18 +195,14 @@ struct CheckD3D12Impl final {
 	}
 };
 
-inline void setDebugName(ID3D12Resource* resource, const char* name) noexcept
+inline void setDebugName(ID3D12Object* object, const char* name) noexcept
 {
-	// Small hack to fix D3D12 bug with debug name shorter than 4 chars
-	char tmpBuffer[256] = {};
-	snprintf(tmpBuffer, 256, "zg__%s", name);
-
 	// Convert to wide
 	WCHAR tmpBufferWide[256] = {};
-	utf8ToWide(tmpBufferWide, 256, tmpBuffer);
+	utf8ToWide(tmpBufferWide, 256, name);
 
 	// Set debug name
-	CHECK_D3D12 resource->SetName(tmpBufferWide);
+	CHECK_D3D12 object->SetName(tmpBufferWide);
 }
 
 

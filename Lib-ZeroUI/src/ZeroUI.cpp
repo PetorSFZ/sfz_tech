@@ -16,198 +16,355 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include "ZeroUI.hpp"
+#include "ZeroUI.h"
 #include "ZeroUI_Internal.hpp"
 #include "ZeroUI_Drawing.hpp"
 #include "ZeroUI_CoreWidgets.hpp"
 
 #include "skipifzero_new.hpp"
 
-namespace zui {
-
-// Statics
+// Base Container
 // ------------------------------------------------------------------------------------------------
 
-static WidgetBase* baseGetBase(void* widgetData)
-{
-	return &reinterpret_cast<BaseContainerData*>(widgetData)->base;
-}
+constexpr char ZUI_BASE_CON_NAME[] = "BASE_CON";
+constexpr ZuiID ZUI_BASE_CON_ID = zuiName(ZUI_BASE_CON_NAME);
 
-static void baseGetNextWidgetBox(WidgetCmd* cmd, SfzStrID childID, Box* boxOut)
+struct ZuiBaseContainerData final {
+	ZuiWidgetBase base;
+	sfz::Map16<u64, ZuiAttrib> newValues;
+	f32x2 nextPos = f32x2(0.0f);
+	ZuiAlign nextAlign;
+	f32x2 nextDims = f32x2(0.0f);
+};
+
+static void baseGetNextWidgetBox(ZuiCtx* zui, ZuiWidget* widget, ZuiID childID, ZuiBox* boxOut)
 {
+	(void)zui;
 	(void)childID;
-	BaseContainerData& data = *cmd->data<BaseContainerData>();
+	ZuiBaseContainerData& data = *widget->data<ZuiBaseContainerData>();
 	f32x2 bottomLeftPos = data.base.box.min;
 	f32x2 centerPos = calcCenterPos(data.nextPos, data.nextAlign, data.nextDims);
 	f32x2 nextPos = bottomLeftPos + centerPos;
-	*boxOut = Box(nextPos, data.nextDims);
+	*boxOut = zuiBoxInit(nextPos, data.nextDims);
 }
 
-static void baseHandlePointerInput(WidgetCmd* cmd, f32x2 pointerPosSS)
+static void baseHandlePointerInput(ZuiCtx* zui, ZuiWidget* widget, f32x2 pointerPosSS)
 {
-	for (WidgetCmd& child : cmd->children) {
-		child.handlePointerInput(pointerPosSS);
+	for (ZuiWidget& child : widget->children) {
+		child.handlePointerInput(zui, pointerPosSS);
 	}
 }
 
-static void baseHandleMoveInput(WidgetCmd* cmd, Input* input, bool* moveActive)
+static void baseHandleMoveInput(ZuiCtx* zui, ZuiWidget* widget, ZuiInput* input, bool* moveActive)
 {
-	if (input->action == InputAction::UP) {
-		for (u32 cmdIdx = cmd->children.size(); cmdIdx > 0; cmdIdx--) {
-			WidgetCmd& child = cmd->children[cmdIdx - 1];
-			child.handleMoveInput(input, moveActive);
+	if (input->action == ZUI_INPUT_UP) {
+		for (u32 widgetIdx = widget->children.size(); widgetIdx > 0; widgetIdx--) {
+			ZuiWidget& child = widget->children[widgetIdx - 1];
+			child.handleMoveInput(zui, input, moveActive);
 		}
 	}
 	else {
-		for (u32 cmdIdx = 0; cmdIdx < cmd->children.size(); cmdIdx++) {
-			WidgetCmd& child = cmd->children[cmdIdx];
-			child.handleMoveInput(input, moveActive);
+		for (u32 widgetIdx = 0; widgetIdx < widget->children.size(); widgetIdx++) {
+			ZuiWidget& child = widget->children[widgetIdx];
+			child.handleMoveInput(zui, input, moveActive);
 		}
 	}
 }
 
 static void baseDraw(
-	const WidgetCmd* cmd,
-	AttributeSet* attributes,
-	const mat34& surfaceTransform,
-	f32 lagSinceSurfaceEndSecs)
+	ZuiCtx* zui,
+	const ZuiWidget* widget,
+	const SfzMat34* surfaceTransform,
+	f32 lagSinceInputEndSecs)
 {
-	const BaseContainerData& data = *cmd->data<BaseContainerData>();
+	const ZuiBaseContainerData& data = *widget->data<ZuiBaseContainerData>();
 
 	// Set attributes and backup old ones
-	sfz::Map16<SfzStrID, Attribute> backup;
+	sfz::Map16<u64, ZuiAttrib> backup;
 	sfz_assert(data.newValues.size() <= data.newValues.capacity());
 	for (const auto& pair : data.newValues) {
-	
+
 		// Backup old attribute
-		Attribute* oldAttrib = attributes->get(pair.key);
+		ZuiAttrib* oldAttrib = zui->attribs.get(pair.key);
 		if (oldAttrib != nullptr) {
 			backup.put(pair.key, *oldAttrib);
 		}
 
 		// Set new one
-		attributes->put(pair.key, pair.value);
+		zui->attribs.put(pair.key, pair.value);
 	}
 
 	// Render child
-	for (const WidgetCmd& child : cmd->children) {
-		child.draw(attributes, surfaceTransform, lagSinceSurfaceEndSecs);
+	for (const ZuiWidget& child : widget->children) {
+		child.draw(zui, surfaceTransform, lagSinceInputEndSecs);
 	}
 
 	// Restore old attributes
 	for (const auto& pair : backup) {
-		attributes->put(pair.key, pair.value);
+		zui->attribs.put(pair.key, pair.value);
 	}
 }
 
-// ZeroUI Context + initialization
+// Context
 // ------------------------------------------------------------------------------------------------
 
-static Context* globalCtx = nullptr;
-
-Context& ctx()
+SFZ_EXTERN_C ZuiCtx* zuiCtxInit(ZuiCfg* cfg, SfzAllocator* allocator)
 {
-	return *globalCtx;
-}
+	ZuiCtx* zui = sfz_new<ZuiCtx>(allocator, sfz_dbg(""));
+	*zui = {};
 
-void initZeroUI(SfzAllocator* allocator, u32 surfaceTmpMemoryBytes, u32 oversampleFonts)
-{
-	sfz_assert(globalCtx == nullptr);
-
-	globalCtx = sfz_new<Context>(allocator, sfz_dbg(""));
-	ctx().heapAllocator = allocator;
-	ctx().defaultID = sfzStrIDCreate("default");
-
-	// Initialize widgets
-	ctx().widgetTypes.init(32, allocator, sfz_dbg(""));
-
-	// Initialize drawing module
-	internalDrawInit(allocator, oversampleFonts);
-
-	// Initialize surfaces
-	ctx().surfaces.init(32, allocator, sfz_dbg(""));
-	ctx().recycledSurfaces.init(32, allocator, sfz_dbg(""));
-	ctx().surfaceTmpMemoryBytes = surfaceTmpMemoryBytes;
+	zui->heapAllocator = allocator;
 	
+	// Initialize draw context
+	const bool drawSuccess = zuiInternalDrawCtxInit(&zui->drawCtx, cfg, zui->heapAllocator);
+	if (!drawSuccess) {
+		sfz_delete(allocator, zui);
+		return nullptr;
+	}
+
+	// Initialize widget types
+	zui->widgetTypes.init(32, allocator, sfz_dbg(""));
+
+	// Initialize widget trees
+	zui->inputIdx = 0;
+	zui->widgetTrees[0].arena.init(allocator, cfg->arenaMemoryLimitBytes, sfz_dbg("ZeroUI::arena1"));
+	zui->widgetTrees[1].arena.init(allocator, cfg->arenaMemoryLimitBytes, sfz_dbg("ZeroUI::arena2"));
+	zui->widgetTrees[0].clear();
+	zui->widgetTrees[1].clear();
+
 	// Initialize attribute set
-	ctx().attributes.init(256, allocator, sfz_dbg(""));
-	ctx().defaultAttributes.init(256, allocator, sfz_dbg(""));
+	zui->attribs.init(256, allocator, sfz_dbg(""));
+	zui->defaultAttribs.init(256, allocator, sfz_dbg(""));
 
 	// Initialize base container
 	{
-		WidgetDesc desc = {};
-		desc.widgetDataSizeBytes = sizeof(BaseContainerData);
-		desc.getWidgetBaseFunc = baseGetBase;
+		ZuiWidgetDesc desc = {};
+		desc.widgetDataSizeBytes = sizeof(ZuiBaseContainerData);
 		desc.getNextWidgetBoxFunc = baseGetNextWidgetBox;
 		desc.handlePointerInputFunc = baseHandlePointerInput;
 		desc.handleMoveInputFunc = baseHandleMoveInput;
 		desc.drawFunc = baseDraw;
-		registerWidget(BASE_CON_NAME, desc);
+		zuiRegisterWidget(zui, ZUI_BASE_CON_NAME, &desc);
 	}
 
 	// Initialize core widgets
-	internalCoreWidgetsInit();
+	internalCoreWidgetsInit(zui);
+
+	return zui;
 }
 
-void deinitZeroUI()
+SFZ_EXTERN_C void zuiCtxDestroy(ZuiCtx* zui)
 {
-	sfz_assert(globalCtx != nullptr);
-	SfzAllocator* allocator = ctx().heapAllocator;
+	if (zui == nullptr) return;
+	SfzAllocator* allocator = zui->heapAllocator;
+	zuiInternalDrawCtxDestroy(&zui->drawCtx);
+	sfz_delete(allocator, zui);
+}
 
-	internalDrawDeinit();
+// Input
+// ------------------------------------------------------------------------------------------------
 
-	sfz_delete(allocator, globalCtx);
-	globalCtx = nullptr;
+SFZ_EXTERN_C void zuiInputBegin(ZuiCtx* zui, const ZuiInput* input)
+{
+	// New input, clear oldest tree to make room for new widgets
+	zui->inputIdx += 1;
+	ZuiWidgetTree& currTree = zui->currTree();
+	currTree.clear();
+
+	// Set active surface and clear input
+	zui->input = *input;
+	{
+		zui->transform = sfz::mat34::identity();
+		zui->inputTransform = sfz::mat34::identity();
+		zui->pointerPosSS = f32x2(-F32_MAX);
+	}
+
+	// Clear all archetype stacks and set default archetype
+	for (auto pair : zui->widgetTypes) {
+		pair.value.archetypeStack.clear();
+		pair.value.archetypeStack.add(ZUI_DEFAULT_ID);
+	}
+
+	// Setup default base container for surface as root
+	{
+		currTree.root.id = zuiName("root_widget");
+		currTree.root.widgetTypeID = ZUI_BASE_CON_ID;
+		currTree.root.dataPtr = sfz_new<ZuiBaseContainerData>(currTree.arena.getArena(), sfz_dbg(""));
+		currTree.root.archetypeDrawFunc = baseDraw;
+		currTree.pushMakeParent(&currTree.root);
+		ZuiWidget& root = currTree.getCurrentParent();
+		ZuiBaseContainerData& rootData = *root.data<ZuiBaseContainerData>();
+		rootData.base.box = zuiBoxInit(input->dims * 0.5f, input->dims);
+		rootData.nextPos = input->dims * 0.5f;
+		rootData.nextDims = input->dims;
+	}
+
+	// Get size of surface on framebuffer
+	i32x2 dimsOnFB = input->dimsOnFB;
+	if (dimsOnFB == i32x2(0)) dimsOnFB = input->fbDims;
+
+	// Get internal size of surface
+	if (sfz::eqf(input->dims, f32x2(0.0f))) {
+		zui->input.dims = f32x2(dimsOnFB);
+	}
+	
+	// Calculate transform
+	const f32x3 fbToClipScale = f32x3(2.0f / f32x2(input->fbDims), 1.0f);
+	const f32x3 fbToClipTransl = f32x3(-1.0f, -1.0f, 0.0f);
+	const mat4 fbToClip = mat4::translation3(fbToClipTransl) * mat4::scaling3(fbToClipScale);
+
+	f32x2 halfOffset = f32x2(0.0f);
+	switch (input->alignOnFB) {
+	case ZUI_BOTTOM_LEFT:
+		halfOffset = f32x2(0.0f, 0.0f);
+		break;
+	case ZUI_BOTTOM_CENTER:
+		halfOffset = f32x2(-0.5f * f32(dimsOnFB.x), 0.0f);
+		break;
+	case ZUI_BOTTOM_RIGHT:
+		halfOffset = f32x2(-1.0f * f32(dimsOnFB.x), 0.0f);
+		break;
+	case ZUI_MID_LEFT:
+		halfOffset = f32x2(0.0f, -0.5f * f32(dimsOnFB.y));
+		break;
+	case ZUI_MID_CENTER:
+		halfOffset = f32x2(-0.5f * f32(dimsOnFB.x), -0.5f * f32(dimsOnFB.y));
+		break;
+	case ZUI_MID_RIGHT:
+		halfOffset = f32x2(-1.0f * f32(dimsOnFB.x), -0.5f * f32(dimsOnFB.y));
+		break;
+	case ZUI_TOP_LEFT:
+		halfOffset = f32x2(0.0f, -1.0f * f32(dimsOnFB.y));
+		break;
+	case ZUI_TOP_CENTER:
+		halfOffset = f32x2(-0.5f * f32(dimsOnFB.x), -1.0f * f32(dimsOnFB.y));
+		break;
+	case ZUI_TOP_RIGHT:
+		halfOffset = f32x2(-1.0f * f32(dimsOnFB.x), -1.0f * f32(dimsOnFB.y));
+		break;
+	default: sfz_assert_hard(false);
+	}
+
+	const f32x3 surfToFbScale = f32x3((1.0f / zui->input.dims) * f32x2(dimsOnFB), 1.0f);
+	const f32x3 surfToFbTransl = f32x3(f32x2(input->posOnFB) + halfOffset, 0.0f);
+	const mat4 surfToFb = mat4::translation3(surfToFbTransl) * mat4::scaling3(surfToFbScale);
+
+	zui->transform = sfz::mat34(fbToClip * surfToFb);
+
+	// Input transform
+	const mat4 fbToSurf = sfz::inverse(surfToFb);
+	zui->inputTransform = sfz::mat34(fbToSurf);
+	zui->pointerPosSS = sfz::transformPoint(fbToSurf, f32x3(zui->input.pointerPos, 0.0f)).xy();
+}
+
+SFZ_EXTERN_C void zuiInputEnd(ZuiCtx* zui)
+{
+	ZuiWidgetTree& currTree = zui->currTree();
+
+	// Update pointer if pointer move
+	if (zui->input.action == ZUI_INPUT_POINTER_MOVE) {
+		currTree.root.handlePointerInput(zui, zui->pointerPosSS);
+	}
+
+	else {
+		ZuiInput input = zui->input;
+		bool moveActive = false;
+		currTree.root.handleMoveInput(zui, &input, &moveActive);
+		
+		// Attempt to fix some edge cases where move action wasn't consumed
+		if (zuiIsMoveAction(input.action)) {
+			moveActive = true;
+			currTree.root.handleMoveInput(zui, &input, &moveActive);
+		}
+	}
+}
+
+// Rendering
+// ------------------------------------------------------------------------------------------------
+
+SFZ_EXTERN_C void zuiRender(ZuiCtx* zui, f32 lagSinceInputEndSecs)
+{
+	// Clear render data
+	zui->drawCtx.vertices.clear();
+	zui->drawCtx.indices.clear();
+	zui->drawCtx.renderCmds.clear();
+
+	// Clear attribute set and set defaults
+	zui->attribs.clear();
+	for (const auto& pair : zui->defaultAttribs) {
+		zui->attribs.put(pair.key, pair.value);
+	}
+
+	// Draw recursively
+	zui->currTree().root.draw(zui, &zui->transform, lagSinceInputEndSecs);
+}
+
+SFZ_EXTERN_C ZuiRenderDataView zuiGetRenderData(const ZuiCtx* zui)
+{
+	ZuiRenderDataView view = {};
+	view.vertices = zui->drawCtx.vertices.data();
+	view.numVertices = zui->drawCtx.vertices.size();
+	view.indices = zui->drawCtx.indices.data();
+	view.numIndices = zui->drawCtx.indices.size();
+	view.cmds = zui->drawCtx.renderCmds.data();
+	view.numCmds = zui->drawCtx.renderCmds.size();
+	return view;
 }
 
 // Fonts
 // ------------------------------------------------------------------------------------------------
 
-void setFontTextureHandle(u64 handle)
+SFZ_EXTERN_C void zuiFontSetTextureHandle(ZuiCtx* zui, u64 handle)
 {
-	sfz_assert(globalCtx != nullptr);
-	internalDrawSetFontHandle(handle);
+	zui->drawCtx.userFontTexHandle = handle;
 }
 
-bool registerFont(const char* name, const char* path, f32 size, bool defaultFont)
+SFZ_EXTERN_C bool zuiFontRegister(ZuiCtx* zui, const char* name, const char* ttfPath, f32 size, bool defaultFont)
 {
-	SfzStrID nameID = sfzStrIDCreate(name);
-	bool success = internalDrawAddFont(name, nameID, path, size);
+	const ZuiID id = zuiName(name);
+	bool success = zuiInternalDrawAddFont(&zui->drawCtx, id, ttfPath, size, zui->heapAllocator);
 	if (defaultFont) {
 		sfz_assert_hard(success);
-		ctx().defaultAttributes.put(sfzStrIDCreate("default_font"), nameID);
+		zuiAttribRegisterDefault(zui, "default_font", zuiAttribInit(id));
 	}
 	return success;
+}
+
+SFZ_EXTERN_C bool zuiHasFontTextureUpdate(const ZuiCtx* zui)
+{
+	return zui->drawCtx.fontImgModified;
+}
+
+SFZ_EXTERN_C SfzImageViewConst zuiGetFontTexture(ZuiCtx* zui)
+{
+	zui->drawCtx.fontImgModified = false;
+	SfzImageViewConst view = {};
+	view.rawData = zui->drawCtx.fontImg.data();
+	view.type = SFZ_IMAGE_TYPE_R_U8;
+	view.width = zui->drawCtx.fontImgRes;
+	view.height = zui->drawCtx.fontImgRes;
+	return view;
 }
 
 // Attributes
 // ------------------------------------------------------------------------------------------------
 
-void registerDefaultAttribute(const char* attribName, const char* value)
+SFZ_EXTERN_C void zuiAttribRegisterDefault(ZuiCtx* zui, const char* attribName, ZuiAttrib attrib)
 {
-	SfzStrID attribID = sfzStrIDCreate(attribName);
-	sfz_assert(ctx().defaultAttributes.get(attribID) == nullptr);
-	ctx().defaultAttributes.put(attribID, sfzStrIDCreate(value));
+	const ZuiID attribID = zuiName(attribName);
+	sfz_assert(zui->defaultAttribs.get(attribID.id) == nullptr);
+	zui->defaultAttribs.put(attribID.id, attrib);
 }
 
-void registerDefaultAttribute(const char* attribName, Attribute attribute)
+SFZ_EXTERN_C void zuiAttribRegisterDefaultNameID(ZuiCtx* zui, const char* attribName, const char* valName)
 {
-	SfzStrID attribID = sfzStrIDCreate(attribName);
-	sfz_assert(ctx().defaultAttributes.get(attribID) == nullptr);
-	ctx().defaultAttributes.put(attribID, attribute);
+	zuiAttribRegisterDefault(zui, attribName, zuiAttribInit(zuiName(valName)));
 }
 
 // Widget
 // ------------------------------------------------------------------------------------------------
 
-void WidgetBase::incrementTimers(f32 deltaSecs)
-{
-	timeSinceFocusStartedSecs += deltaSecs;
-	timeSinceFocusEndedSecs += deltaSecs;
-	timeSinceActivationSecs += deltaSecs;
-}
-
-void WidgetBase::setFocused()
+void ZuiWidgetBase::setFocused()
 {
 	if (!focused) {
 		timeSinceFocusStartedSecs = 0.0f;
@@ -215,7 +372,7 @@ void WidgetBase::setFocused()
 	focused = true;
 }
 
-void WidgetBase::setUnfocused()
+void ZuiWidgetBase::setUnfocused()
 {
 	if (focused) {
 		timeSinceFocusEndedSecs = 0.0f;
@@ -223,389 +380,135 @@ void WidgetBase::setUnfocused()
 	focused = false;
 }
 
-void WidgetBase::setActivated()
+void ZuiWidgetBase::setActivated()
 {
 	timeSinceActivationSecs = 0.0f;
 	activated = true;
 }
 
-void defaultPassthroughDrawFunc(
-	const WidgetCmd* cmd,
-	AttributeSet* attributes,
-	const mat34& transform,
-	f32 lagSinceSurfaceEndSecs)
+void zuiDefaultPassthroughDrawFunc(
+	ZuiCtx* zui,
+	const ZuiWidget* widget,
+	const SfzMat34* transform,
+	f32 lagSinceInputEndSecs)
 {
-	for (const WidgetCmd& child : cmd->children) {
-		child.draw(attributes, transform, lagSinceSurfaceEndSecs);
+	for (const ZuiWidget& child : widget->children) {
+		child.draw(zui, transform, lagSinceInputEndSecs);
 	}
 }
 
-void registerWidget(const char* name, const WidgetDesc& desc)
+SFZ_EXTERN_C void zuiRegisterWidget(ZuiCtx* zui, const char* name, const ZuiWidgetDesc* desc)
 {
-	SfzStrID nameID = sfzStrIDCreate(name);
-	sfz_assert(ctx().widgetTypes.get(nameID) == nullptr);
-	WidgetType& type = ctx().widgetTypes.put(nameID, {});
-	sfz_assert(desc.widgetDataSizeBytes >= sizeof(WidgetBase));
-	type.widgetDataSizeBytes = desc.widgetDataSizeBytes;
-	type.getBaseFunc = desc.getWidgetBaseFunc;
-	type.getNextWidgetBoxFunc = desc.getNextWidgetBoxFunc;
-	type.handlePointerInputFunc = desc.handlePointerInputFunc;
-	type.handleMoveInputFunc = desc.handleMoveInputFunc;
-	WidgetArchetype& archetype = type.archetypes.put(ctx().defaultID, {});
-	archetype.drawFunc = desc.drawFunc;
-	type.archetypeStack.init(64, ctx().heapAllocator, sfz_dbg(""));
+	const ZuiID nameID = zuiName(name);
+	sfz_assert(zui->widgetTypes.get(nameID.id) == nullptr);
+	ZuiWidgetType& type = zui->widgetTypes.put(nameID.id, {});
+	sfz_assert(desc->widgetDataSizeBytes >= sizeof(ZuiWidgetBase));
+	type.widgetDataSizeBytes = desc->widgetDataSizeBytes;
+	type.getNextWidgetBoxFunc = desc->getNextWidgetBoxFunc;
+	type.handlePointerInputFunc = desc->handlePointerInputFunc;
+	type.handleMoveInputFunc = desc->handleMoveInputFunc;
+	ZuiWidgetArchetype& archetype = type.archetypes.put(ZUI_DEFAULT_ID.id, {});
+	archetype.drawFunc = desc->drawFunc;
+	type.archetypeStack.init(64, zui->heapAllocator, sfz_dbg(""));
 }
 
 // Archetypes
 // ------------------------------------------------------------------------------------------------
 
-void registerArchetype(const char* widgetName, const char* archetypeName, DrawFunc* drawFunc)
+SFZ_EXTERN_C void zuiArchetypeRegister(ZuiCtx* zui, const char* widgetName, const char* archetypeName, ZuiDrawFunc* drawFunc)
 {
-	SfzStrID widgetID = sfzStrIDCreate(widgetName);
-	WidgetType* type = ctx().widgetTypes.get(widgetID);
+	const ZuiID widgetID = zuiName(widgetName);
+	ZuiWidgetType* type = zui->widgetTypes.get(widgetID.id);
 	sfz_assert(type != nullptr);
-	SfzStrID archetypeID = sfzStrIDCreate(archetypeName);
-	sfz_assert(type->archetypes.get(archetypeID) == nullptr);
-	WidgetArchetype& archetype = type->archetypes.put(archetypeID, {});
+	const ZuiID archetypeID = zuiName(archetypeName);
+	sfz_assert(type->archetypes.get(archetypeID.id) == nullptr);
+	ZuiWidgetArchetype& archetype = type->archetypes.put(archetypeID.id, {});
 	archetype.drawFunc = drawFunc;
 }
 
-void pushArchetype(const char* widgetName, const char* archetypeName)
+SFZ_EXTERN_C void zuiArchetypePush(ZuiCtx* zui, const char* widgetName, const char* archetypeName)
 {
-	SfzStrID widgetID = sfzStrIDCreate(widgetName);
-	WidgetType* type = ctx().widgetTypes.get(widgetID);
+	const ZuiID widgetID = zuiName(widgetName);
+	ZuiWidgetType* type = zui->widgetTypes.get(widgetID.id);
 	sfz_assert(type != nullptr);
-	SfzStrID archetypeID = sfzStrIDCreate(archetypeName);
-	sfz_assert(type->archetypes.get(archetypeID) != nullptr);
+	const ZuiID archetypeID = zuiName(archetypeName);
+	sfz_assert(type->archetypes.get(archetypeID.id) != nullptr);
 	type->archetypeStack.add(archetypeID);
 }
 
-void popArchetype(const char* widgetName)
+SFZ_EXTERN_C void zuiArchetypePop(ZuiCtx* zui, const char* widgetName)
 {
-	SfzStrID widgetID = sfzStrIDCreate(widgetName);
-	WidgetType* type = ctx().widgetTypes.get(widgetID);
+	const ZuiID widgetID = zuiName(widgetName);
+	ZuiWidgetType* type = zui->widgetTypes.get(widgetID.id);
 	sfz_assert(type != nullptr);
 	sfz_assert(type->archetypeStack.size() > 1);
 	type->archetypeStack.pop();
 }
 
-// Input & rendering functions
-// ------------------------------------------------------------------------------------------------
-
-void clearSurfaces()
-{
-	// Recycle in use surfaces and then clear list
-	for (Surface& surface : ctx().surfaces) {
-		surface.clear();
-		ctx().recycledSurfaces.add(sfz_move(surface));
-	}
-	ctx().surfaces.clear();
-}
-
-void clearSurface(const char* name)
-{
-	Surface* surface = ctx().surfaces.find([&](const auto& e) {
-		return e.desc.name == name;
-	});
-	if (surface != nullptr) {
-		surface->clear();
-		ctx().recycledSurfaces.add(sfz_move(*surface));
-		ctx().surfaces.removeQuickSwap(u32(surface - ctx().surfaces.data()));
-	}
-}
-
-void surfaceBegin(const SurfaceDesc& desc)
-{
-	// Set active surface and make sure it is cleared
-	sfz_assert(ctx().activeSurface == nullptr);
-	{
-		// Try to find existing surface with same name, otherwise create new one.
-		Surface* existingSurface = ctx().surfaces.find([&](const Surface& surface) {
-			return surface.desc.name == desc.name;
-		});
-		if (existingSurface == nullptr) {
-			ctx().createNewSurface();
-		}
-		else {
-			existingSurface->clear();
-			ctx().activeSurface = existingSurface;
-		}
-	}
-	Surface& surface = *ctx().activeSurface;
-	surface.desc = desc;
-
-	// Clear all archetype stacks and set default archetype
-	for (auto pair : ctx().widgetTypes) {
-		pair.value.archetypeStack.clear();
-		pair.value.archetypeStack.add(ctx().defaultID);
-	}
-
-	// Setup default base container for surface as root
-	{
-		surface.cmdRoot.widgetID = BASE_CON_ID;
-		surface.cmdRoot.dataPtr = sfz_new<BaseContainerData>(surface.arena.getArena(), sfz_dbg(""));
-		surface.cmdRoot.archetypeDrawFunc = baseDraw;
-		surface.pushMakeParent(&surface.cmdRoot);
-		WidgetCmd& root = surface.getCurrentParent();
-		BaseContainerData& rootData = *root.data<BaseContainerData>();
-		rootData.base.box = Box(desc.dims * 0.5f, desc.dims);
-		rootData.nextPos = desc.dims * 0.5f;
-		rootData.nextDims = desc.dims;
-	}
-
-	// Get size of surface on framebuffer
-	i32x2 dimsOnFB = desc.dimsOnFB;
-	if (dimsOnFB == i32x2(0)) dimsOnFB = desc.fbDims;
-
-	// Get internal size of surface
-	if (sfz::eqf(desc.dims, f32x2(0.0f))) {
-		surface.desc.dims = f32x2(dimsOnFB);
-	}
-	
-	// Calculate transform
-	const f32x3 fbToClipScale = f32x3(2.0f / f32x2(desc.fbDims), 1.0f);
-	const f32x3 fbToClipTransl = f32x3(-1.0f, -1.0f, 0.0f);
-	const mat4 fbToClip = mat4::translation3(fbToClipTransl) * mat4::scaling3(fbToClipScale);
-
-	f32x2 halfOffset = f32x2(0.0f);
-	if (desc.halignOnFB == HAlign::LEFT) halfOffset.x = 0.0f;
-	else if (desc.halignOnFB == HAlign::CENTER) halfOffset.x = -0.5f * f32(dimsOnFB.x);
-	else if (desc.halignOnFB == HAlign::RIGHT) halfOffset.x = -1.0f * f32(dimsOnFB.x);
-	else sfz_assert_hard(false);
-
-	if (desc.valignOnFB == VAlign::BOTTOM) halfOffset.y = 0.0f;
-	else if (desc.valignOnFB == VAlign::CENTER) halfOffset.y = -0.5f * f32(dimsOnFB.y);
-	else if (desc.valignOnFB == VAlign::TOP) halfOffset.y = -1.0f * f32(dimsOnFB.y);
-	else sfz_assert_hard(false);
-
-	const f32x3 surfToFbScale = f32x3((1.0f / surface.desc.dims) * f32x2(dimsOnFB), 1.0f);
-	const f32x3 surfToFbTransl = f32x3(f32x2(desc.posOnFB) + halfOffset, 0.0f);
-	const mat4 surfToFb = mat4::translation3(surfToFbTransl) * mat4::scaling3(surfToFbScale);
-
-	surface.transform = mat34(fbToClip * surfToFb);
-
-	// Input transform
-	const mat4 fbToSurf = sfz::inverse(surfToFb);
-	surface.inputTransform = mat34(fbToSurf);
-	surface.pointerPosSS = sfz::transformPoint(fbToSurf, f32x3(surface.desc.input.pointerPos, 0.0f)).xy();
-}
-
-f32x2 surfaceGetDims()
-{
-	sfz_assert(ctx().activeSurface != nullptr);
-	Surface& surface = *ctx().activeSurface;
-	return surface.desc.dims;
-}
-
-void surfaceEnd()
-{
-	// Get surface and make it inactive
-	sfz_assert(ctx().activeSurface != nullptr);
-	Surface& surface = *ctx().activeSurface;
-	ctx().activeSurface = nullptr;
-
-	// Update pointer if pointer move
-	if (surface.desc.input.action == InputAction::POINTER_MOVE) {
-		surface.cmdRoot.handlePointerInput(surface.pointerPosSS);
-	}
-
-	else {
-		Input input = surface.desc.input;
-		bool moveActive = false;
-		surface.cmdRoot.handleMoveInput(&input, &moveActive);
-		
-		// Attempt to fix some edge cases where move action wasn't consumed
-		if (isMoveAction(input.action)) {
-			moveActive = true;
-			surface.cmdRoot.handleMoveInput(&input, &moveActive);
-		}
-	}
-
-	// Go through all commands and copy widget data so that we no longer rely on pointers being
-	// valid.
-
-	// Setup stack to traverse
-	SfzAllocator* arena = surface.arena.getArena();
-	sfz::Array<WidgetCmd*> stack;
-	stack.init(surface.cmdParentStack.size(), arena, sfz_dbg(""));
-	stack.add(&surface.cmdRoot);
-
-	// Recursively traverse command tree
-	while (!stack.isEmpty()) {
-		WidgetCmd* cmd = stack.pop();
-
-		// Allocate memory for copy of widget data and then copy to it.
-		u32 sizeOfWidgetData = cmd->sizeOfWidgetData();
-		void* copy = arena->alloc(sfz_dbg(""), sizeOfWidgetData);
-		memcpy(copy, cmd->dataPtr, sizeOfWidgetData);
-		cmd->dataPtr = copy;
-
-		// Add childrens to stack
-		for (u32 i = cmd->children.size(); i > 0; i--) {
-			stack.add(&cmd->children[i - 1]);
-		}
-	}
-}
-
-void render(f32 lagSinceSurfaceEndSecs)
-{
-	// Clear render data
-	internalDrawClearRenderData();
-
-	for (u32 surfaceIdx = 0; surfaceIdx < ctx().surfaces.size(); surfaceIdx++) {
-		Surface& surface = ctx().surfaces[surfaceIdx];
-
-		// Clear attribute set and set defaults
-		ctx().attributes.clear();
-		for (const auto& pair : ctx().defaultAttributes) {
-			ctx().attributes.put(pair.key, pair.value);
-		}
-
-		// Draw recursively
-		surface.cmdRoot.draw(&ctx().attributes, surface.transform, lagSinceSurfaceEndSecs);
-	}
-}
-
-bool hasFontTextureUpdate()
-{
-	return internalDrawFontTextureUpdated();
-}
-
-ImageViewConst getFontTexture()
-{
-	return internalDrawGetFontTexture();
-}
-
-RenderDataView getRenderData()
-{
-	return internalDrawGetRenderDataView();
-}
-
 // Base container widget
 // ------------------------------------------------------------------------------------------------
 
-void baseBegin(BaseContainerData* data)
+SFZ_EXTERN_C void zuiBaseBegin(ZuiCtx* zui, ZuiID id)
 {
-	sfz_assert(data->newValues.size() <= data->newValues.capacity());
-	Surface& surface = *ctx().activeSurface;
-
-	// Get button position and dimensions from current parent
-	WidgetCmd& parent = surface.getCurrentParent();
-	parent.getNextWidgetBox(BASE_CON_ID, &data->base.box);
-
+	ZuiBaseContainerData* data = zui->createWidgetParent<ZuiBaseContainerData>(id, ZUI_BASE_CON_ID);
+	
 	// Set initial next widget dimensions/position to cover entire container
 	data->nextDims = data->base.box.dims();
 	data->nextPos = data->nextDims * 0.5f;
 
-	// Update timers
-	data->base.incrementTimers(surface.desc.deltaTimeSecs);
-
 	// Can't activate absolute container
 	data->base.activated = false;
-
-	// Add command and make parent
-	parent.children.add(WidgetCmd(BASE_CON_ID, data));
-	surface.pushMakeParent(&parent.children.last());
 }
 
-void baseBegin(SfzStrID id)
+SFZ_EXTERN_C void zuiBaseAttrib(ZuiCtx* zui, const char* attribName, ZuiAttrib attrib)
 {
-	BaseContainerData* data = ctx().getWidgetData<BaseContainerData>(id);
-	baseBegin(data);
-}
-
-void baseBegin(const char* id)
-{
-	BaseContainerData* data = ctx().getWidgetData<BaseContainerData>(id);
-	baseBegin(data);
-}
-
-void baseAttribute(const char* id, Attribute attrib)
-{
-	baseAttribute(sfzStrIDCreate(id), attrib);
-}
-
-void baseAttribute(const char* id, const char* value)
-{
-	baseAttribute(sfzStrIDCreate(id), sfzStrIDCreate(value));
-}
-
-void baseAttribute(SfzStrID id, Attribute attrib)
-{
-	WidgetCmd& parent = ctx().activeSurface->getCurrentParent();
-	sfz_assert(parent.widgetID == BASE_CON_ID);
-	BaseContainerData& data = *parent.data<BaseContainerData>();
-	data.newValues.put(id, attrib);
+	const ZuiID attribID = zuiName(attribName);
+	ZuiWidget& parent = zui->currTree().getCurrentParent();
+	sfz_assert(parent.widgetTypeID == ZUI_BASE_CON_ID);
+	ZuiBaseContainerData& data = *parent.data<ZuiBaseContainerData>();
+	data.newValues.put(attribID.id, attrib);
 	sfz_assert(data.newValues.size() <= data.newValues.capacity());
 }
 
-void baseSetPos(f32 x, f32 y)
+SFZ_EXTERN_C void zuiBaseAttribNameID(ZuiCtx* zui, const char* attribName, const char* valName)
 {
-	baseSetPos(f32x2(x, y));
+	zuiBaseAttrib(zui, attribName, zuiAttribInit(zuiName(valName)));
 }
 
-void baseSetPos(f32x2 pos)
+SFZ_EXTERN_C void zuiBaseSetPos(ZuiCtx* zui, f32x2 pos)
 {
-	WidgetCmd& parent = ctx().activeSurface->getCurrentParent();
-	sfz_assert(parent.widgetID == BASE_CON_ID);
-	parent.data<BaseContainerData>()->nextPos = pos;
+	ZuiWidget& parent = zui->currTree().getCurrentParent();
+	sfz_assert(parent.widgetTypeID == ZUI_BASE_CON_ID);
+	parent.data<ZuiBaseContainerData>()->nextPos = pos;
 }
 
-void baseSetAlign(HAlign halign, VAlign valign)
+SFZ_EXTERN_C void zuiBaseSetAlign(ZuiCtx* zui, ZuiAlign align)
 {
-	baseSetAlign(Align(halign, valign));
+	ZuiWidget& parent = zui->currTree().getCurrentParent();
+	sfz_assert(parent.widgetTypeID == ZUI_BASE_CON_ID);
+	parent.data<ZuiBaseContainerData>()->nextAlign = align;
 }
 
-void baseSetAlign(Align align)
+SFZ_EXTERN_C void zuiBaseSetDims(ZuiCtx* zui, f32x2 dims)
 {
-	WidgetCmd& parent = ctx().activeSurface->getCurrentParent();
-	sfz_assert(parent.widgetID == BASE_CON_ID);
-	parent.data<BaseContainerData>()->nextAlign = align;
+	ZuiWidget& parent = zui->currTree().getCurrentParent();
+	sfz_assert(parent.widgetTypeID == ZUI_BASE_CON_ID);
+	parent.data<ZuiBaseContainerData>()->nextDims = dims;
 }
 
-void baseSetDims(f32 width, f32 height)
+SFZ_EXTERN_C void zuiBaseSet(ZuiCtx* zui, f32x2 pos, ZuiAlign align, f32x2 dims)
 {
-	baseSetDims(f32x2(width, height));
+	zuiBaseSetPos(zui, pos);
+	zuiBaseSetAlign(zui, align);
+	zuiBaseSetDims(zui, dims);
 }
 
-void baseSetDims(f32x2 dims)
+SFZ_EXTERN_C void zuiBaseSet2(ZuiCtx* zui, f32 x, f32 y, ZuiAlign align, f32 w, f32 h)
 {
-	WidgetCmd& parent = ctx().activeSurface->getCurrentParent();
-	sfz_assert(parent.widgetID == BASE_CON_ID);
-	parent.data<BaseContainerData>()->nextDims = dims;
+	zuiBaseSet(zui, f32x2(x, y), align, f32x2(w, h));
 }
 
-void baseSet(f32 x, f32 y, f32 width, f32 height)
+SFZ_EXTERN_C void zuiBaseEnd(ZuiCtx* zui)
 {
-	baseSet(f32x2(x, y), f32x2(width, height));
+	zui->popWidgetParent(ZUI_BASE_CON_ID);
 }
-
-void baseSet(f32x2 pos, f32x2 dims)
-{
-	baseSetPos(pos);
-	baseSetAlign(H_CENTER, V_CENTER);
-	baseSetDims(dims);
-}
-
-void baseSet(f32 x, f32 y, HAlign halign, VAlign valign, f32 width, f32 height)
-{
-	baseSet(f32x2(x, y), Align(halign, valign), f32x2(width, height));
-}
-
-void baseSet(f32x2 pos, Align align, f32x2 dims)
-{
-	baseSetPos(pos);
-	baseSetAlign(align);
-	baseSetDims(dims);
-}
-
-void baseEnd()
-{
-	Surface& surface = *ctx().activeSurface;
-	WidgetCmd& parent = surface.getCurrentParent();
-	sfz_assert(parent.widgetID == BASE_CON_ID);
-	sfz_assert(surface.cmdParentStack.size() > 1); // Don't remove default base container
-	surface.popParent();
-}
-
-} // namespace zui

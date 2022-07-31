@@ -42,7 +42,7 @@ struct SfzDeferMaker final {
 #define SFZ_DEFER_NAME_1(x, y) x##y
 #define SFZ_DEFER_NAME_2(x, y) SFZ_DEFER_NAME_1(x, y)
 
-#define sfz_defer auto SFZ_DEFER_NAME_2(deferCallable, __COUNTER__) = SfzDeferMaker() << [&]()
+#define sfz_defer auto SFZ_DEFER_NAME_2(deferCallable, __COUNTER__) = SfzDeferMaker() <<
 
 #endif
 

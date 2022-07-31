@@ -52,11 +52,6 @@ In addition, some headers have additional standard library header requirements. 
 * `<malloc.h>`: (Windows only): Needed for `_aligned_malloc()`.
 * `<new>`: Needed for placement `new`, which AFAIK is the only way to properly construct C++ objects in raw memory.
 
-## Building and running tests
-
-The `gen_scripts` directory contains various generation scripts that generate build solutions using `CMake`. You only need to do this if you are interested in running the tests.
-
 ## License
 
 Licensed under zlib, this means that you can basically use the code however you want as long as you give credit and don't claim you wrote it yourself. See LICENSE file for more info.
-

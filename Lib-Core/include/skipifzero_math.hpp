@@ -22,6 +22,9 @@
 
 #include <math.h> // std::sqrt, std::fmodf
 
+#include "sfz.h"
+#include "sfz_matrix.h"
+
 #include "skipifzero.hpp"
 
 #ifdef _WIN32
@@ -273,6 +276,17 @@ struct Mat final {
 		static_assert(H == 4 && W == 4, "Only for 4x4 matrices");
 		row(0) = row0; row(1) = row1; row(2) = row2; row(3) = row3;
 	}
+	constexpr Mat(const SfzMat44& m)
+	{
+		static_assert(H == 4 && W == 4, "Only for 4x4 matrices");
+		
+	}
+	constexpr Mat(const SfzMat34& m)
+	{
+		static_assert((H == 3 || H == 4) && W == 4, "Only for 4x4 and 3x4 matrices");
+		row(0) = m.rows[0]; row(1) = m.rows[1]; row(2) = m.rows[2];
+		if constexpr (H == 4) row(3) = f32x4(0.0f, 0.0f, 0.0f, 1.0f);
+	}
 
 	// Constructs Matrix from one of difference size. Will add "identity" matrix if target is
 	// bigger, and remove components from source if target is smaller.
@@ -365,6 +379,27 @@ struct Mat final {
 		return true;
 	}
 	constexpr bool operator!= (const Mat& o) const { return !(*this == o); }
+
+	constexpr operator SfzMat34() const
+	{
+		static_assert((H == 3 || H == 4) && W == 4, "Only for 4x4 and 3x4 matrices");
+		SfzMat34 m = {};
+		m.rows[0] = row(0);
+		m.rows[1] = row(1);
+		m.rows[2] = row(2);
+		return m;
+	}
+	constexpr operator SfzMat44() const
+	{
+		static_assert((H == 3 || H == 4) && W == 4, "Only for 4x4 and 3x4 matrices");
+		SfzMat44 m = {};
+		m.rows[0] = row(0);
+		m.rows[1] = row(1);
+		m.rows[2] = row(2);
+		if constexpr (H == 4) m.rows[3] = row(3);
+		else m.rows[3] = f32x4(0.0f, 0.0f, 0.0f, 1.0f);
+		return m;
+	}
 };
 
 using mat22 = Mat<2,2>; static_assert(sizeof(mat22) == sizeof(f32) * 4, "");

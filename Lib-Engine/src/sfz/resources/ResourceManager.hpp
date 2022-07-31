@@ -24,72 +24,58 @@
 
 struct ZgUploader;
 
-namespace sfz {
+struct SfzBufferResource;
+struct SfzFramebufferResource;
+struct SfzTextureResource;
 
-struct BufferResource;
-struct FramebufferResource;
-struct MeshResource;
-struct TextureResource;
-
-// ResourceManager
+// SfzResourceManager
 // ------------------------------------------------------------------------------------------------
 
-struct ResourceManagerState;
+struct SfzResourceManagerState;
 
-class ResourceManager final {
+struct SfzResourceManager final {
 public:
-	SFZ_DECLARE_DROP_TYPE(ResourceManager);
+	SFZ_DECLARE_DROP_TYPE(SfzResourceManager);
 	void init(u32 maxNumResources, SfzAllocator* allocator, ZgUploader* uploader) noexcept;
 	void destroy() noexcept;
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	void renderDebugUI();
+	void renderDebugUI(SfzStrIDs* ids);
 
 	// Updates all resources that depend on screen resolution
-	void updateResolution(i32x2 screenRes);
+	void updateResolution(i32x2 screenRes, SfzStrIDs* ids);
 
 	ZgUploader* getUploader();
 
 	// Buffer methods
 	// --------------------------------------------------------------------------------------------
 
-	SfzHandle getBufferHandle(const char* name) const;
+	SfzHandle getBufferHandle(SfzStrIDs* ids, const char* name) const;
 	SfzHandle getBufferHandle(SfzStrID name) const;
-	BufferResource* getBuffer(SfzHandle handle);
-	SfzHandle addBuffer(BufferResource&& resource);
+	SfzBufferResource* getBuffer(SfzHandle handle);
+	SfzHandle addBuffer(SfzBufferResource&& resource, bool allowReplace = false);
 	void removeBuffer(SfzStrID name);
 
 	// Texture methods
 	// --------------------------------------------------------------------------------------------
 
-	SfzHandle getTextureHandle(const char* name) const;
+	SfzHandle getTextureHandle(SfzStrIDs* ids, const char* name) const;
 	SfzHandle getTextureHandle(SfzStrID name) const;
-	TextureResource* getTexture(SfzHandle handle);
-	SfzHandle addTexture(TextureResource&& resource);
+	SfzTextureResource* getTexture(SfzHandle handle);
+	SfzHandle addTexture(SfzTextureResource&& resource);
 	void removeTexture(SfzStrID name);
 
 	// Framebuffer methods
 	// --------------------------------------------------------------------------------------------
 
-	SfzHandle getFramebufferHandle(const char* name) const;
+	SfzHandle getFramebufferHandle(SfzStrIDs* ids, const char* name) const;
 	SfzHandle getFramebufferHandle(SfzStrID name) const;
-	FramebufferResource* getFramebuffer(SfzHandle handle);
-	SfzHandle addFramebuffer(FramebufferResource&& resource);
+	SfzFramebufferResource* getFramebuffer(SfzHandle handle);
+	SfzHandle addFramebuffer(SfzFramebufferResource&& resource);
 	void removeFramebuffer(SfzStrID name);
 
-	// Mesh methods
-	// --------------------------------------------------------------------------------------------
-
-	SfzHandle getMeshHandle(const char* name) const;
-	SfzHandle getMeshHandle(SfzStrID name) const;
-	MeshResource* getMesh(SfzHandle handle);
-	SfzHandle addMesh(MeshResource&& resource);
-	void removeMesh(SfzStrID name);
-
 private:
-	ResourceManagerState* mState = nullptr;
+	SfzResourceManagerState* mState = nullptr;
 };
-
-} // namespace sfz

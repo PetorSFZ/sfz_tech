@@ -24,55 +24,42 @@
 
 #include <soloud.h>
 
-namespace sfz {
-
-// AudioEngineState
+// Types
 // ------------------------------------------------------------------------------------------------
 
-struct AudioEngineState final {
-
+sfz_struct(SfzAudioEngine) {
 	SfzAllocator* allocator = nullptr;
-
 	SoLoud::Soloud soloud;
 };
 
-// AudioEngine:: State methods
+// AudioEngine
 // ------------------------------------------------------------------------------------------------
 
-bool AudioEngine::init(SfzAllocator* allocator) noexcept
+SFZ_EXTERN_C SfzAudioEngine* sfzAudioCreate(SfzAllocator* allocator)
 {
-	this->destroy();
-	mState = sfz_new<AudioEngineState>(allocator, sfz_dbg(""));
-	mState->allocator = allocator;
+	SfzAudioEngine* audio = sfz_new<SfzAudioEngine>(allocator, sfz_dbg(""));
+	audio->allocator = allocator;
 
 	// Initialize SoLoud
-	mState->soloud.init();
+	audio->soloud.init();
 
-	return true;
+	return audio;
 }
 
-void AudioEngine::swap(AudioEngine& other) noexcept
+SFZ_EXTERN_C void sfzAudioDestroy(SfzAudioEngine* audio)
 {
-	sfz::swap(this->mState, other.mState);
-}
-
-void AudioEngine::destroy() noexcept
-{
-	if (mState == nullptr) return;
+	if (audio == nullptr) return;
+	SfzAllocator* allocator = audio->allocator;
 
 	// Deinitialize SoLoud
-	mState->soloud.deinit();
+	audio->soloud.deinit();
 
-	SfzAllocator* allocator = mState->allocator;
-	sfz_delete(allocator, mState);
-	mState = nullptr;
+	sfz_delete(allocator, audio);
 }
 
-// AudioEngine:: State methods
-// ------------------------------------------------------------------------------------------------
-
-void AudioEngine::renderDebugUI() noexcept
+SFZ_EXTERN_C void sfzAudioRenderDebugUI(SfzAudioEngine* audio)
 {
+	(void)audio;
 	ImGuiWindowFlags windowFlags = 0;
 	windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
 	if (!ImGui::Begin("Audio", nullptr, windowFlags)) {
@@ -82,5 +69,3 @@ void AudioEngine::renderDebugUI() noexcept
 
 	ImGui::End();
 }
-
-} // namespace sfz

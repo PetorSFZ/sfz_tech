@@ -24,7 +24,7 @@
 #include <skipifzero.hpp>
 #include <skipifzero_math.hpp>
 
-#include "sfz/Logging.hpp"
+#include "sfz/SfzLogging.h"
 #include "sfz/util/IO.hpp"
 
 namespace sfz {
@@ -37,18 +37,19 @@ static bool isWhitespace(char c) noexcept
 	return c == ' ' || c == '\t';
 }
 
-static void printLoadError(const DynString& path, u32 line, const char* message) noexcept
+static void printLoadError(const str320& path, u32 line, const char* message) noexcept
 {
-	SFZ_ERROR("sfzCore", "Failed to load \"%s\" at line %u: %s\n", path.str(), line, message);
+	SFZ_LOG_ERROR("Failed to load \"%s\" at line %u: %s\n", path.str(), line, message);
 }
 
 // IniParser: Constructors & destructors
 // ------------------------------------------------------------------------------------------------
 
-IniParser::IniParser(const char* path) noexcept
+IniParser::IniParser(const char* path, SfzAllocator* allocator) noexcept
 :
+	mAllocator(allocator),
 	mPath(path),
-	mSections(0, getDefaultAllocator(), sfz_dbg("IniParser: mSections"))
+	mSections(0, allocator, sfz_dbg("IniParser: mSections"))
 { }
 
 // IniParser: Loading and saving to file functions
@@ -58,12 +59,12 @@ bool IniParser::load() noexcept
 {
 	// Check if a path is available
 	if (mPath.str() == nullptr) {
-		SFZ_ERROR("sfzCore", "Can't load ini file without path.");
+		SFZ_LOG_ERROR("Can't load ini file without path.");
 		return false;
 	}
 
 	// Read file
-	DynString fileContents = readTextFile(mPath.str());
+	Array<char> fileContents = readTextFile(mPath.str(), mAllocator);
 	if (fileContents.size() == 0) {
 		printLoadError(mPath, 0, "Ini file is empty.");
 		return false;
@@ -75,12 +76,12 @@ bool IniParser::load() noexcept
 		u32 startIndex = u32(~0);
 		u32 length = u32(~0);
 	};
-	Array<LineInfo> lines(256, getDefaultAllocator(), sfz_dbg(""));
+	Array<LineInfo> lines(256, mAllocator, sfz_dbg(""));
 	{
 		LineInfo tmp;
 		tmp.lineNumber = 1;
 		for (u32 i = 0; i < fileContents.size(); i++) {
-			char c = fileContents.str()[i];
+			char c = fileContents[i];
 
 			// Special case when line has not yet started
 			if (tmp.startIndex == u32(~0)) {
@@ -117,12 +118,12 @@ bool IniParser::load() noexcept
 	}
 
 	// Create temporary parse tree and add the first initial empty section
-	Array<Section> newSections(64, getDefaultAllocator(), sfz_dbg(""));
-	newSections.add(Section(""));
+	Array<Section> newSections(64, mAllocator, sfz_dbg(""));
+	newSections.add(Section("", mAllocator));
 
 	// Parse contents of ini file
 	for (LineInfo line : lines) {
-		const char* startPtr = fileContents.str() + line.startIndex;
+		const char* startPtr = fileContents.data() + line.startIndex;
 		char firstChar = startPtr[0];
 
 		// Comment
@@ -167,6 +168,7 @@ bool IniParser::load() noexcept
 			Section& tmpSection = newSections.add();
 			tmpSection.name.clear();
 			tmpSection.name.appendChars(startPtr + 1, nameLength);
+			tmpSection.items.init(0, mAllocator, sfz_dbg(""));
 
 			// Find start of optional comment
 			index += 1; // Next token after ']'
@@ -333,17 +335,17 @@ bool IniParser::save() noexcept
 	}
 
 	// Create string representation from parse tree
-	DynString str("", memoryReqs);
+	str4096 str;
 	for (u32 sectIndex = 0; sectIndex < mSections.size(); sectIndex++) {
 		Section& section = mSections[sectIndex];
 
 		// Print section header
 		if (section.name != "") {
-			str.printfAppend("[%s]", section.name.str());
+			str.appendf("[%s]", section.name.str());
 			if (section.items.size() >= 1 && section.items[0].type == ItemType::COMMENT_APPEND_PREVIOUS_ROW) {
-				str.printfAppend(" ;%s", section.items[0].str.str());
+				str.appendf(" ;%s", section.items[0].str.str());
 			}
-			str.printfAppend("\n");
+			str.appendf("\n");
 		}
 
 		for (u32 i = 0; i < section.items.size(); i++) {
@@ -353,16 +355,16 @@ bool IniParser::save() noexcept
 			switch (item.type) {
 			case ItemType::NUMBER:
 				if (sfz::eqf(::roundf(item.f), item.f)) {
-					str.printfAppend("%s=%i", item.str.str(), item.i);
+					str.appendf("%s=%i", item.str.str(), item.i);
 				} else {
-					str.printfAppend("%s=%f", item.str.str(), item.f);
+					str.appendf("%s=%f", item.str.str(), item.f);
 				}
 				break;
 			case ItemType::BOOL:
-				str.printfAppend("%s=%s", item.str.str(), item.b ? "true" : "false");
+				str.appendf("%s=%s", item.str.str(), item.b ? "true" : "false");
 				break;
 			case ItemType::COMMENT_OWN_ROW:
-				str.printfAppend(";%s", item.str.str());
+				str.appendf(";%s", item.str.str());
 				break;
 			case ItemType::COMMENT_APPEND_PREVIOUS_ROW:
 				continue;
@@ -372,21 +374,21 @@ bool IniParser::save() noexcept
 			if ((i + 1) < section.items.size()) {
 				Item& nextItem = section.items[i + 1];
 				if (nextItem.type == ItemType::COMMENT_APPEND_PREVIOUS_ROW) {
-					str.printfAppend(" ;%s", nextItem.str.str());
+					str.appendf(" ;%s", nextItem.str.str());
 				}
 			}
-			str.printfAppend("\n");
+			str.appendf("\n");
 		}
 
 		if ((sectIndex + 1) < mSections.size()) {
-			str.printfAppend("\n");
+			str.appendf("\n");
 		}
 	}
 
 	// Write string to file
 	bool success = sfz::writeBinaryFile(mPath.str(), reinterpret_cast<const u8*>(str.str()), str.size());
 	if (!success) {
-		SFZ_ERROR("sfzCore", "Failed to write ini file \"%s\"", mPath.str());
+		SFZ_LOG_ERROR("Failed to write ini file \"%s\"", mPath.str());
 		return false;
 	}
 
@@ -680,7 +682,7 @@ IniParser::Item* IniParser::findItemEnsureExists(const char* section, const char
 
 	// Create section if it does not exist
 	if (sectPtr == nullptr) {
-		mSections.add(Section(section));
+		mSections.add(Section(section, mAllocator));
 		sectPtr = &mSections.last();
 	}
 

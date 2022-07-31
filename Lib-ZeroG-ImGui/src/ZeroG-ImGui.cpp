@@ -158,20 +158,44 @@ ZgResult imguiInitRenderState(
 
 	// Build ImGui pipeline
 	{
-		ZgResult res = zg::PipelineRenderBuilder()
-			.addVertexAttribute(0, 0, ZG_VERTEX_ATTRIBUTE_F32_2, offsetof(ImGuiVertex, pos))
-			.addVertexAttribute(1, 0, ZG_VERTEX_ATTRIBUTE_F32_2, offsetof(ImGuiVertex, texcoord))
-			.addVertexAttribute(2, 0, ZG_VERTEX_ATTRIBUTE_F32_4, offsetof(ImGuiVertex, color))
-			.addVertexBufferInfo(0, sizeof(ImGuiVertex))
-			.addPushConstant(0)
-			.addSampler(0, ZG_SAMPLING_MODE_TRILINEAR)
-			.addRenderTarget(ZG_FORMAT_RGBA_U8_UNORM)
-			.setCullingEnabled(false)
-			.setBlendingEnabled(true)
-			.setBlendFuncColor(ZG_BLEND_FUNC_ADD, ZG_BLEND_FACTOR_SRC_ALPHA, ZG_BLEND_FACTOR_SRC_INV_ALPHA)
-			.addVertexShaderSource("VSMain", IMGUI_SHADER_HLSL_SRC)
-			.addPixelShaderSource("PSMain", IMGUI_SHADER_HLSL_SRC)
-			.buildFromSourceHLSL(stateOut->pipeline, ZG_SHADER_MODEL_6_2);
+		ZgPipelineRenderDesc desc = {};
+		desc.setPathAndEntry("");
+		
+		desc.numVertexAttributes = 3;
+		desc.vertexAttributes[0].location = 0;
+		desc.vertexAttributes[0].vertexBufferSlot = 0;
+		desc.vertexAttributes[0].type = ZG_VERTEX_ATTRIBUTE_F32_2;
+		desc.vertexAttributes[0].offsetToFirstElementInBytes = offsetof(ImGuiVertex, pos);
+		desc.vertexAttributes[1].location = 1;
+		desc.vertexAttributes[1].vertexBufferSlot = 0;
+		desc.vertexAttributes[1].type = ZG_VERTEX_ATTRIBUTE_F32_2;
+		desc.vertexAttributes[1].offsetToFirstElementInBytes = offsetof(ImGuiVertex, texcoord);
+		desc.vertexAttributes[2].location = 2;
+		desc.vertexAttributes[2].vertexBufferSlot = 0;
+		desc.vertexAttributes[2].type = ZG_VERTEX_ATTRIBUTE_F32_4;
+		desc.vertexAttributes[2].offsetToFirstElementInBytes = offsetof(ImGuiVertex, color);
+
+		desc.numVertexBufferSlots = 1;
+		desc.vertexBufferStridesBytes[0] = sizeof(ImGuiVertex);
+
+		desc.addPushConst(0);
+		desc.addSampler(0, ZG_SAMPLE_TRILINEAR);
+		desc.addRenderTarget(ZG_FORMAT_RGBA_U8_UNORM);
+		
+		desc.blending.blendingEnabled = ZG_TRUE;
+		desc.blending.blendFuncColor = ZG_BLEND_FUNC_ADD;
+		desc.blending.srcValColor = ZG_BLEND_FACTOR_SRC_ALPHA;
+		desc.blending.dstValColor = ZG_BLEND_FACTOR_SRC_INV_ALPHA;
+
+		ZgPipelineCompileSettingsHLSL compileSettings = {};
+		compileSettings.shaderModel = ZG_SHADER_MODEL_6_2;
+		compileSettings.addFlag("-Zi");
+		compileSettings.addFlag("-Qembed_debug");
+		compileSettings.addFlag("-O3");
+		compileSettings.addFlag("-HV 2021");
+		compileSettings.addFlag("-enable-16bit-types");
+
+		ZgResult res = stateOut->pipeline.createFromSourceHLSL(IMGUI_SHADER_HLSL_SRC, desc, compileSettings);
 		if (!zgIsSuccess(res)) return res;
 	}
 

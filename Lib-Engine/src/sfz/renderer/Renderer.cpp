@@ -32,7 +32,8 @@
 #include <ZeroG-ImGui.hpp>
 
 #include "sfz/debug/ProfilingStats.hpp"
-#include "sfz/Logging.hpp"
+#include "sfz/SfzLogging.h"
+#include "sfz/config/SfzConfig.h"
 #include "sfz/config/GlobalConfig.hpp"
 #include "sfz/renderer/RendererState.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
@@ -42,33 +43,28 @@
 #include "sfz/resources/TextureResource.hpp"
 #include "sfz/util/IO.hpp"
 
-namespace sfz {
-
-// Renderer: State methods
+// SfzRenderer: State methods
 // ------------------------------------------------------------------------------------------------
 
-bool Renderer::init(
+bool SfzRenderer::init(
 	SDL_Window* window,
-	const ImageViewConst& fontTexture,
+	const SfzImageViewConst& fontTexture,
 	SfzAllocator* allocator,
+	SfzConfig* cfg,
+	SfzProfilingStats* profStats,
 	zg::Uploader&& uploader)
 {
 	this->destroy();
-	mState = sfz_new<RendererState>(allocator, sfz_dbg("RendererState"));
+	mState = sfz_new<SfzRendererState>(allocator, sfz_dbg("SfzRendererState"));
 	mState->allocator = allocator;
 	mState->window = window;
 	mState->uploader = sfz_move(uploader);
 
 	// Settings
-	GlobalConfig& cfg = getGlobalConfig();
-	mState->vsync =
-		cfg.sanitizeBool("Renderer", "vsync", true, false);
-	mState->flushPresentQueueEachFrame =
-		cfg.sanitizeBool("Renderer", "flushPresentQueueEachFrame", false, false);
-	mState->flushCopyQueueEachFrame =
-		cfg.sanitizeBool("Renderer", "flushCopyQueueEachFrame", false, false);
-	mState->emitDebugEvents =
-		cfg.sanitizeBool("Renderer", "emitDebugEvents", false, true);
+	mState->vsync = sfzCfgGetSetting(cfg, "Renderer.vsync");
+	mState->flushPresentQueueEachFrame = sfzCfgGetSetting(cfg, "Renderer.flushPresentQueueEachFrame");
+	mState->flushCopyQueueEachFrame = sfzCfgGetSetting(cfg, "Renderer.flushCopyQueueEachFrame");
+	mState->emitDebugEvents = sfzCfgGetSetting(cfg, "Renderer.emitDebugEvents");
 
 	// Initialize fences
 	mState->frameFences.init(mState->frameLatency, [&](FrameFenceData& data) {
@@ -93,9 +89,8 @@ bool Renderer::init(
 	}
 
 	// Initialize ImGui rendering state
-	mState->imguiScaleSetting =
-		cfg.sanitizeFloat("Imgui", "scale", true, FloatBounds(1.5f, 1.0f, 3.0f));
-	sfz_assert(fontTexture.type == ImageType::R_U8);
+	mState->imguiScaleSetting = sfzCfgGetSetting(cfg, "Imgui.scale");
+	sfz_assert(fontTexture.type == SFZ_IMAGE_TYPE_R_U8);
 	ZgImageViewConstCpu zgFontTextureView = {};
 	zgFontTextureView.format = ZG_FORMAT_R_U8_UNORM;
 	zgFontTextureView.data = fontTexture.rawData;
@@ -115,16 +110,15 @@ bool Renderer::init(
 	}
 
 	// Initialize profiling stats
-	ProfilingStats& stats = getProfilingStats();
-	stats.createCategory("gpu", 300, 66.7f, "ms", "frame", 20.0f,
-		StatsVisualizationType::FIRST_INDIVIDUALLY_REST_ADDED);
-	stats.createLabel("gpu", "frametime", f32x4(1.0f, 0.0f, 0.0f, 1.0f), 0.0f);
-	stats.createLabel("gpu", "imgui");
+	profStats->createCategory("gpu", 300, 66.7f, "ms", "frame", 20.0f,
+		SfzStatsVisualizationType::FIRST_INDIVIDUALLY_REST_ADDED);
+	profStats->createLabel("gpu", "frametime", f32x4(1.0f, 0.0f, 0.0f, 1.0f), 0.0f);
+	profStats->createLabel("gpu", "imgui");
 
 	return true;
 }
 
-void Renderer::destroy()
+void SfzRenderer::destroy()
 {
 	if (mState != nullptr) {
 
@@ -143,113 +137,75 @@ void Renderer::destroy()
 	mState = nullptr;
 }
 
-// Renderer: Getters
+// SfzRenderer: Getters
 // ------------------------------------------------------------------------------------------------
 
-u64 Renderer::currentFrameIdx() const
+u64 SfzRenderer::currentFrameIdx() const
 {
 	return mState->currentFrameIdx;
 }
 
-i32x2 Renderer::windowResolution() const
+i32x2 SfzRenderer::windowResolution() const
 {
 	return mState->windowRes;
 }
 
-void Renderer::frameTimeMs(u64& frameIdxOut, f32& frameTimeMsOut) const
+void SfzRenderer::frameTimeMs(u64& frameIdxOut, f32& frameTimeMsOut) const
 {
 	frameIdxOut = mState->lastRetrievedFrameTimeFrameIdx;
 	frameTimeMsOut = mState->lastRetrievedFrameTimeMs;
 }
 
-ZgUploader* Renderer::getUploader()
+ZgUploader* SfzRenderer::getUploader()
 {
 	return mState->uploader.handle;
 }
 
-// Renderer: ImGui UI methods
+// SfzRenderer: ImGui UI methods
 // ------------------------------------------------------------------------------------------------
 
-void Renderer::renderImguiUI()
+void SfzRenderer::renderImguiUI()
 {
 	mState->ui.render(*mState);
 }
 
-// Renderer: Resource methods
+// SfzRenderer: Resource methods
 // ------------------------------------------------------------------------------------------------
 
-bool Renderer::uploadTextureBlocking(
-	SfzStrID id, const ImageViewConst& image, bool generateMipmaps)
+bool SfzRenderer::uploadTextureBlocking(
+	SfzStrID id, const SfzImageViewConst& image, bool generateMipmaps, SfzStrIDs* ids, SfzResourceManager* resMan)
 {
 	// Error out and return false if texture already exists
-	ResourceManager& resources = getResourceManager();
-	if (resources.getTextureHandle(id) != SFZ_NULL_HANDLE) return false;
+	if (resMan->getTextureHandle(id) != SFZ_NULL_HANDLE) return false;
 
 	// Create resource and upload blocking
-	TextureResource resource = TextureResource::createFixedSize(sfzStrIDGetStr(id), image, generateMipmaps);
+	SfzTextureResource resource = SfzTextureResource::createFixedSize(sfzStrIDGetStr(ids, id), ids, image, generateMipmaps);
 	sfz_assert(resource.texture.valid());
 	resource.uploadBlocking(image, mState->allocator, mState->uploader.handle, mState->copyQueue);
 	
 	// Add to resource manager
-	resources.addTexture(sfz_move(resource));
+	resMan->addTexture(sfz_move(resource));
 
 	return true;
 }
 
-bool Renderer::textureLoaded(SfzStrID id) const
+bool SfzRenderer::textureLoaded(SfzStrID id, const SfzResourceManager* resMan) const
 {
-	ResourceManager& resources = getResourceManager();
-	return resources.getTextureHandle(id) != SFZ_NULL_HANDLE;
+	return resMan->getTextureHandle(id) != SFZ_NULL_HANDLE;
 }
 
-void Renderer::removeTextureGpuBlocking(SfzStrID id)
-{
-	// Ensure not between frameBegin() and frameFinish()
-	sfz_assert(!mState->windowFramebuffer.valid());
-
-	ResourceManager& resources = getResourceManager();
-	resources.removeTexture(id);
-}
-
-bool Renderer::uploadMeshBlocking(SfzStrID id, const Mesh& mesh)
-{
-	// Error out and return false if mesh already exists
-	ResourceManager& resources = getResourceManager();
-	sfz_assert(id != SFZ_STR_ID_NULL);
-	if (resources.getMeshHandle(id) != SFZ_NULL_HANDLE) return false;
-
-	// Allocate memory for mesh
-	MeshResource gpuMesh = meshResourceAllocate(sfzStrIDGetStr(id), mesh, mState->allocator);
-
-	// Upload memory to mesh
-	meshResourceUploadBlocking(
-		gpuMesh, mesh, mState->copyQueue, mState->uploader);
-
-	// Store mesh
-	resources.addMesh(sfz_move(gpuMesh));
-
-	return true;
-}
-
-bool Renderer::meshLoaded(SfzStrID id) const
-{
-	ResourceManager& resources = getResourceManager();
-	return resources.getMeshHandle(id) != SFZ_NULL_HANDLE;
-}
-
-void Renderer::removeMeshGpuBlocking(SfzStrID id)
+void SfzRenderer::removeTextureGpuBlocking(SfzStrID id, SfzResourceManager* resMan)
 {
 	// Ensure not between frameBegin() and frameFinish()
 	sfz_assert(!mState->windowFramebuffer.valid());
-
-	ResourceManager& resources = getResourceManager();
-	resources.removeMesh(id);
+	resMan->removeTexture(id);
 }
 
-// Renderer: Render methods
+// SfzRenderer: Render methods
 // ------------------------------------------------------------------------------------------------
 
-void Renderer::frameBegin()
+void SfzRenderer::frameBegin(
+	SfzStrIDs* ids, SfzShaderManager* shaderMan, SfzResourceManager* resMan, SfzProfilingStats* profStats)
 {
 	// Increment frame index
 	mState->currentFrameIdx += 1;
@@ -262,26 +218,25 @@ void Renderer::frameBegin()
 	CHECK_ZG mState->uploader.setSafeOffset(frameFenceData.safeUploaderOffset);
 
 	// Get frame profiling data for frame that was previously rendered using these resources
-	ProfilingStats& stats = getProfilingStats();
 	FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
 	if (frameIds.frameId != ~0ull) {
 		CHECK_ZG mState->profiler.getMeasurement(frameIds.frameId, mState->lastRetrievedFrameTimeMs);
 		mState->lastRetrievedFrameTimeFrameIdx = mState->currentFrameIdx - mState->frameLatency;
-		stats.addSample("gpu", "frametime",
+		profStats->addSample("gpu", "frametime",
 			mState->lastRetrievedFrameTimeFrameIdx, mState->lastRetrievedFrameTimeMs);
 	}
 	for (const GroupProfilingID& groupId : frameIds.groupIds) {
 		u64 frameIdx = mState->lastRetrievedFrameTimeFrameIdx;
 		f32 groupTimeMs = 0.0f;
 		CHECK_ZG mState->profiler.getMeasurement(groupId.id, groupTimeMs);
-		const char* label = sfzStrIDGetStr(groupId.groupName);
-		stats.addSample("gpu", label, frameIdx, groupTimeMs);
+		const char* label = sfzStrIDGetStr(ids, groupId.groupName);
+		profStats->addSample("gpu", label, frameIdx, groupTimeMs);
 	}
 	if (frameIds.imguiId != ~0ull) {
 		u64 frameIdx = mState->lastRetrievedFrameTimeFrameIdx;
 		f32 imguiTimeMs = 0.0f;
 		CHECK_ZG mState->profiler.getMeasurement(frameIds.imguiId, imguiTimeMs);
-		stats.addSample("gpu", "imgui", frameIdx, imguiTimeMs);
+		profStats->addSample("gpu", "imgui", frameIdx, imguiTimeMs);
 		frameIds.imguiId = ~0ull;
 	}
 	frameIds.groupIds.clear();
@@ -295,8 +250,7 @@ void Renderer::frameBegin()
 	// If resolution has changed, resize swapchain
 	if (resolutionChanged) {
 
-		SFZ_INFO("Renderer",
-			"Resolution changed, new resolution: %i x %i. Updating framebuffers...",
+		SFZ_LOG_INFO("Resolution changed, new resolution: %i x %i. Updating framebuffers...",
 			newResX, newResY);
 
 		// Set new resolution
@@ -315,12 +269,10 @@ void Renderer::frameBegin()
 	}
 
 	// Update shaders
-	ShaderManager& shaders = getShaderManager();
-	shaders.update();
+	shaderMan->update();
 
 	// Update resources with current resolution
-	ResourceManager& resources = getResourceManager();
-	resources.updateResolution(i32x2(newResX, newResY));
+	resMan->updateResolution(i32x2(newResX, newResY), ids);
 
 	// Set vsync settings
 	CHECK_ZG zgContextSwapchainSetVsync(mState->vsync->boolValue() ? ZG_TRUE : ZG_FALSE);
@@ -331,10 +283,15 @@ void Renderer::frameBegin()
 		&mState->windowFramebuffer.handle, mState->profiler.handle, &frameIds.frameId);
 }
 
-HighLevelCmdList Renderer::beginCommandList(const char* cmdListName)
+sfz::HighLevelCmdList SfzRenderer::beginCommandList(
+	const char* cmdListName,
+	SfzStrIDs* ids,
+	SfzProfilingStats* profStats,
+	SfzShaderManager* shaderMan,
+	SfzResourceManager* resMan)
 {
 	// Create profiling stats label if it doesn't exist
-	ProfilingStats& stats = getProfilingStats();
+	SfzProfilingStats& stats = *profStats;
 	if (!stats.labelExists("gpu", cmdListName)) {
 		stats.createLabel("gpu", cmdListName);
 	}
@@ -351,18 +308,25 @@ HighLevelCmdList Renderer::beginCommandList(const char* cmdListName)
 	// Insert call to profile begin
 	FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
 	GroupProfilingID& groupId = frameIds.groupIds.add();
-	groupId.groupName = sfzStrIDCreate(cmdListName);
+	groupId.groupName = sfzStrIDCreateRegister(ids, cmdListName);
 	CHECK_ZG zgCmdList.profileBegin(mState->profiler, groupId.id);
 
 	// Create high level command list
-	HighLevelCmdList cmdList;
+	sfz::HighLevelCmdList cmdList;
 	cmdList.init(
-		cmdListName, mState->currentFrameIdx, sfz_move(zgCmdList), &mState->uploader, &mState->windowFramebuffer);
+		cmdListName,
+		mState->currentFrameIdx,
+		sfz_move(zgCmdList),
+		&mState->uploader,
+		&mState->windowFramebuffer,
+		ids,
+		resMan,
+		shaderMan);
 
 	return cmdList;
 }
 
-void Renderer::executeCommandList(HighLevelCmdList cmdList)
+void SfzRenderer::executeCommandList(sfz::HighLevelCmdList cmdList)
 {
 	sfz_assert(cmdList.mCmdList.valid());
 
@@ -385,7 +349,7 @@ void Renderer::executeCommandList(HighLevelCmdList cmdList)
 	CHECK_ZG mState->presentQueue.executeCommandList(cmdList.mCmdList);
 }
 
-void Renderer::frameFinish()
+void SfzRenderer::frameFinish()
 {
 	FrameProfilingIDs& frameIds = mState->frameMeasurementIds.data(mState->currentFrameIdx);
 
@@ -445,5 +409,3 @@ void Renderer::frameFinish()
 		CHECK_ZG mState->copyQueue.flush();
 	}
 }
-
-} // namespace sfz

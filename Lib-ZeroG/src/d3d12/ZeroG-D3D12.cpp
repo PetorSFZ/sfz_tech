@@ -62,7 +62,7 @@
 //       ZeroG. A bit annoying, but don't have a good solution to it for now.
 
 // The version of the Agility SDK we are using, see https://devblogs.microsoft.com/directx/directx12agility/
-extern "C" { _declspec(dllexport) extern const UINT D3D12SDKVersion = 4; }
+extern "C" { _declspec(dllexport) extern const UINT D3D12SDKVersion = 602; }
 
 // Specifies that D3D12Core.dll will be available in a directory called D3D12 next to the exe.
 extern "C" { _declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\\"; }
@@ -316,6 +316,12 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 		if (res != ZG_SUCCESS) return res;
 	}
 
+	// Set stable power state if requested
+	if (settings.d3d12.callSetStablePowerState) {
+		CHECK_D3D12 ctxState->device->SetStablePowerState(
+			settings.d3d12.stablePowerEnabled != ZG_FALSE ? TRUE : FALSE);
+	}
+
 	// Initialize D3D12 Memory Allocator
 	{
 		D3D12MA::ALLOCATOR_DESC desc = {};
@@ -543,6 +549,15 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 			return ZG_ERROR_NO_SUITABLE_DEVICE;
 		}
 	}
+
+	// Disable Alt+Enter to fullscreen
+	//
+	// This is to fix issues with DXGI_PRESENT_ALLOW_TEARING, which is required for Adaptive Sync to work correctly
+	// with windowed applications.
+	//
+	// The default Alt+Enter shortcut enters "true" fullscreen (same as calling SetFullscreenState(TRUE)), which
+	// is not what we want if we only want to support e.g. borderless fullscreen.
+	CHECK_D3D12 dxgiFactory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);
 
 	// Perform early hacky initializiation of the D3D12 framebuffers to prepare them for
 	// swapchain use
@@ -886,14 +901,10 @@ ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 	ZG_ARG_CHECK(createInfo == nullptr, "");
 	ZG_ARG_CHECK(compileSettings == nullptr, "");
 	ZG_ARG_CHECK(pipelineOut == nullptr, "");
-	ZG_ARG_CHECK(createInfo->vertexShader == nullptr, "");
-	ZG_ARG_CHECK(createInfo->vertexShaderEntry == nullptr, "");
-	ZG_ARG_CHECK(createInfo->pixelShader == nullptr, "");
-	ZG_ARG_CHECK(createInfo->pixelShaderEntry == nullptr, "");
 	ZG_ARG_CHECK(compileSettings->shaderModel == ZG_SHADER_MODEL_UNDEFINED, "Must specify shader model");
 	ZG_ARG_CHECK(createInfo->numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex attributes specified");
 	ZG_ARG_CHECK(createInfo->numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex buffers specified");
-	ZG_ARG_CHECK(createInfo->numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
+	ZG_ARG_CHECK(createInfo->numPushConsts >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
 	return createPipelineRenderFileHLSL(
 		pipelineOut,
 		*createInfo,
@@ -907,22 +918,20 @@ ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 
 ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
 	ZgPipelineRender** pipelineOut,
+	const char* src,
 	const ZgPipelineRenderDesc* createInfo,
 	const ZgPipelineCompileSettingsHLSL* compileSettings)
 {
 	ZG_ARG_CHECK(createInfo == nullptr, "");
 	ZG_ARG_CHECK(compileSettings == nullptr, "");
 	ZG_ARG_CHECK(pipelineOut == nullptr, "");
-	ZG_ARG_CHECK(createInfo->vertexShader == nullptr, "");
-	ZG_ARG_CHECK(createInfo->vertexShaderEntry == nullptr, "");
-	ZG_ARG_CHECK(createInfo->pixelShader == nullptr, "");
-	ZG_ARG_CHECK(createInfo->pixelShaderEntry == nullptr, "");
 	ZG_ARG_CHECK(compileSettings->shaderModel == ZG_SHADER_MODEL_UNDEFINED, "Must specify shader model");
 	ZG_ARG_CHECK(createInfo->numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex attributes specified");
 	ZG_ARG_CHECK(createInfo->numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex buffers specified");
-	ZG_ARG_CHECK(createInfo->numPushConstants >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
+	ZG_ARG_CHECK(createInfo->numPushConsts >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
 	return createPipelineRenderSourceHLSL(
 		pipelineOut,
+		src,
 		*createInfo,
 		*compileSettings,
 		*ctxState->dxcLibrary.Get(),

@@ -19,9 +19,11 @@
 
 #pragma once
 
+#include <sfz.h>
+#include <sfz_image_view.h>
+
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
-#include <skipifzero_image_view.hpp>
 
 namespace sfz {
 
@@ -30,18 +32,18 @@ namespace sfz {
 
 struct Image final {
 	Array<u8> rawData;
-	ImageType type = ImageType::UNDEFINED;
+	SfzImageType type = SFZ_IMAGE_TYPE_UNDEFINED;
 	i32 width = -1;
 	i32 height = -1;
 	i32 bytesPerPixel = -1;
 
 	static Image allocate(
-		i32 width, i32 height, ImageType type, SfzAllocator* allocator) noexcept;
+		i32 width, i32 height, SfzImageType type, SfzAllocator* allocator) noexcept;
 
-	inline ImageView toImageView() noexcept;
-	inline ImageViewConst toImageView() const noexcept;
-	operator ImageView() noexcept { return this->toImageView(); }
-	operator ImageViewConst() const noexcept { return this->toImageView(); }
+	inline SfzImageView toImageView() noexcept;
+	inline SfzImageViewConst toImageView() const noexcept;
+	operator SfzImageView() noexcept { return this->toImageView(); }
+	operator SfzImageViewConst() const noexcept { return this->toImageView(); }
 };
 
 // Image functions
@@ -69,9 +71,9 @@ bool saveImagePng(const Image& image, const char* path) noexcept;
 // Image struct implementation
 // ------------------------------------------------------------------------------------------------
 
-inline ImageView Image::toImageView() noexcept
+inline SfzImageView Image::toImageView() noexcept
 {
-	ImageView tmp;
+	SfzImageView tmp = {};
 	tmp.rawData = this->rawData.data();
 	tmp.type = this->type;
 	tmp.width = this->width;
@@ -79,9 +81,9 @@ inline ImageView Image::toImageView() noexcept
 	return tmp;
 }
 
-inline ImageViewConst Image::toImageView() const noexcept
+inline SfzImageViewConst Image::toImageView() const noexcept
 {
-	ImageViewConst tmp;
+	SfzImageViewConst tmp = {};
 	tmp.rawData = this->rawData.data();
 	tmp.type = this->type;
 	tmp.width = this->width;

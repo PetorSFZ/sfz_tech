@@ -28,108 +28,61 @@
 
 #include <ZeroG.h>
 
-namespace sfz {
+struct SfzConfig;
 
 // Shader
 // ------------------------------------------------------------------------------------------------
 
-enum class ShaderType : u32 {
+enum class SfzShaderType : u32 {
 	RENDER = 0,
 	COMPUTE = 1
 };
 
-struct SamplerItem final {
-	u32 samplerRegister = ~0u;
-	ZgSampler sampler = {};
-
-	SamplerItem() = default;
-	SamplerItem(u32 samplerRegisterIn, ZgSamplingMode sampling, ZgWrappingMode wrapping)
-	{
-		samplerRegister = samplerRegisterIn;
-		sampler.samplingMode = sampling;
-		sampler.wrappingModeU = wrapping;
-		sampler.wrappingModeV = wrapping;
-	}
-};
-
-enum class PipelineBlendMode  : u32 {
-	NO_BLENDING = 0,
-	ALPHA_BLENDING,
-	ADDITIVE_BLENDING
-};
-
-struct VertexInputLayout final {
-	bool standardVertexLayout = false;
-	u32 vertexSizeBytes = 0;
-	ArrayLocal<ZgVertexAttribute, ZG_MAX_NUM_VERTEX_ATTRIBUTES> attributes;
-};
-
-struct ShaderRender final {
-	// The pipeline
-	zg::PipelineRender pipeline;
-
-	// Parsed information
-	str32 vertexShaderEntry = "VSMain";
-	str32 pixelShaderEntry = "PSMain";
-	VertexInputLayout inputLayout;
-	ArrayLocal<ZgFormat, ZG_MAX_NUM_RENDER_TARGETS> renderTargets;
-	ZgComparisonFunc depthFunc = ZG_COMPARISON_FUNC_NONE;
-	bool cullingEnabled = false;
-	bool cullFrontFacing = false;
-	bool frontFacingIsCounterClockwise = false;
-	i32 depthBias = 0;
-	f32 depthBiasSlopeScaled = 0.0f;
-	f32 depthBiasClamp = 0.0f;
-	bool wireframeRenderingEnabled = false;
-	PipelineBlendMode blendMode = PipelineBlendMode::NO_BLENDING;
-};
-
-struct ShaderCompute final {
-	// The pipeline
-	zg::PipelineCompute pipeline;
-
-	// Parsed information
-	str32 computeShaderEntry = "CSMain";
-};
-
-struct Shader final {
+struct SfzShader final {
 	SfzStrID name = SFZ_STR_ID_NULL;
-	time_t lastModified = 0;
-	ShaderType type = ShaderType::RENDER;
-	str192 shaderPath;
-	ShaderRender render;
-	ShaderCompute compute;
-	ArrayLocal<u32, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstRegisters;
-	ArrayLocal<SamplerItem, ZG_MAX_NUM_SAMPLERS> samplers;
+	i64 lastModified = 0;
+	SfzShaderType type = SfzShaderType::RENDER;
+	ZgPipelineCompileSettingsHLSL compileSettings = {};
+
+	ZgPipelineRenderDesc renderDesc = {};
+	zg::PipelineRender renderPipeline;
+
+	ZgPipelineComputeDesc computeDesc = {};
+	zg::PipelineCompute computePipeline;
 
 	bool build() noexcept;
 };
 
-// ShaderManager
+// SfzShaderManager
 // ------------------------------------------------------------------------------------------------
 
-struct ShaderManagerState;
+struct SfzShaderManagerState;
 
-class ShaderManager final {
+struct SfzShaderManager final {
 public:
-	SFZ_DECLARE_DROP_TYPE(ShaderManager);
-	void init(u32 maxNumShaders, SfzAllocator* allocator) noexcept;
+	SFZ_DECLARE_DROP_TYPE(SfzShaderManager);
+	void init(u32 maxNumShaders, SfzConfig* cfg, SfzAllocator* allocator) noexcept;
 	void destroy() noexcept;
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
 	void update();
-	void renderDebugUI();
+	void renderDebugUI(SfzStrIDs* ids);
 
-	SfzHandle getShaderHandle(const char* name) const;
+	SfzHandle getShaderHandle(SfzStrIDs* ids, const char* name) const;
 	SfzHandle getShaderHandle(SfzStrID name) const;
-	Shader* getShader(SfzHandle handle);
-	SfzHandle addShader(Shader&& shader);
+	SfzShader* getShader(SfzHandle handle);
+	SfzHandle addShaderRender(
+		const ZgPipelineRenderDesc& desc,
+		const ZgPipelineCompileSettingsHLSL& settings,
+		SfzStrIDs* ids);
+	SfzHandle addShaderCompute(
+		const ZgPipelineComputeDesc& desc,
+		const ZgPipelineCompileSettingsHLSL& settings,
+		SfzStrIDs* ids);
 	void removeShader(SfzStrID name);
 
 private:
-	ShaderManagerState* mState = nullptr;
+	SfzShaderManagerState* mState = nullptr;
 };
-
-} // namespace sfz

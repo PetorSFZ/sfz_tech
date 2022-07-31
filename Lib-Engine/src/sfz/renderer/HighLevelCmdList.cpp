@@ -34,15 +34,19 @@ void HighLevelCmdList::init(
 	u64 currFrameIdx,
 	zg::CommandList cmdList,
 	zg::Uploader* uploader,
-	zg::Framebuffer* defaultFB)
+	zg::Framebuffer* defaultFB,
+	SfzStrIDs* ids,
+	SfzResourceManager* resMan,
+	SfzShaderManager* shaderMan)
 {
 	this->destroy();
-	mName = sfzStrIDCreate(cmdListName);
+	mName = sfzStrIDCreateRegister(ids, cmdListName);
 	mCurrFrameIdx = currFrameIdx;
 	mCmdList = sfz_move(cmdList);
 	mUploader = uploader;
-	mResources = &sfz::getResourceManager();
-	mShaders = &sfz::getShaderManager();
+	mIds = ids;
+	mResources = resMan;
+	mShaders = shaderMan;
 	mDefaultFB = defaultFB;
 }
 
@@ -65,17 +69,17 @@ void HighLevelCmdList::setShader(SfzHandle handle)
 	mBoundShader = mShaders->getShader(handle);
 	sfz_assert(mBoundShader != nullptr);
 
-	if (mBoundShader->type == ShaderType::COMPUTE) {
-		CHECK_ZG mCmdList.setPipeline(mBoundShader->compute.pipeline);
+	if (mBoundShader->type == SfzShaderType::COMPUTE) {
+		CHECK_ZG mCmdList.setPipeline(mBoundShader->computePipeline);
 	}
 	else {
-		CHECK_ZG mCmdList.setPipeline(mBoundShader->render.pipeline);
+		CHECK_ZG mCmdList.setPipeline(mBoundShader->renderPipeline);
 	}
 }
 
 void HighLevelCmdList::setFramebuffer(SfzHandle handle)
 {
-	FramebufferResource* fb = mResources->getFramebuffer(handle);
+	SfzFramebufferResource* fb = mResources->getFramebuffer(handle);
 	sfz_assert(fb != nullptr);
 	CHECK_ZG mCmdList.setFramebuffer(fb->framebuffer);
 }
@@ -108,22 +112,24 @@ void HighLevelCmdList::setBindings(const Bindings& bindings)
 
 	for (const BindingHL& binding : bindings.bindings) {
 
-		BufferResource* bufferRes = nullptr;
+		SfzBufferResource* bufferRes = nullptr;
 		ZgBuffer* buffer = nullptr;
 		if (binding.type == ZG_BINDING_TYPE_BUFFER_CONST ||
 			binding.type == ZG_BINDING_TYPE_BUFFER_TYPED ||
 			binding.type == ZG_BINDING_TYPE_BUFFER_STRUCTURED ||
-			binding.type == ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV) {
+			binding.type == ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV ||
+			binding.type == ZG_BINDING_TYPE_BUFFER_BYTEADDRESS ||
+			binding.type == ZG_BINDING_TYPE_BUFFER_BYTEADDRESS_UAV) {
 
 			bufferRes = mResources->getBuffer(binding.handle);
 			sfz_assert(bufferRes != nullptr);
 			sfz_assert(binding.reg != ~0u);
 
 			buffer = nullptr;
-			if (bufferRes->type == BufferResourceType::STATIC) {
+			if (bufferRes->type == SfzBufferResourceType::STATIC) {
 				buffer = bufferRes->staticMem.buffer.handle;
 			}
-			else if (bufferRes->type == BufferResourceType::STREAMING) {
+			else if (bufferRes->type == SfzBufferResourceType::STREAMING) {
 				buffer = bufferRes->streamingMem.data(mCurrFrameIdx).buffer.handle;
 			}
 			else {
@@ -147,15 +153,23 @@ void HighLevelCmdList::setBindings(const Bindings& bindings)
 			zgBindings.addBufferStructuredUAV(binding.reg, buffer, bufferRes->elementSizeBytes, bufferRes->maxNumElements);
 		}
 
+		else if (binding.type == ZG_BINDING_TYPE_BUFFER_BYTEADDRESS) {
+			zgBindings.addBufferByteAddress(binding.reg, buffer);
+		}
+
+		else if (binding.type == ZG_BINDING_TYPE_BUFFER_BYTEADDRESS_UAV) {
+			zgBindings.addBufferByteAddressUAV(binding.reg, buffer);
+		}
+
 		else if (binding.type == ZG_BINDING_TYPE_TEXTURE) {
-			TextureResource* resource = mResources->getTexture(binding.handle);
+			SfzTextureResource* resource = mResources->getTexture(binding.handle);
 			sfz_assert(resource != nullptr);
 			sfz_assert(binding.reg != ~0u);
 			zgBindings.addTexture(binding.reg, resource->texture.handle);
 		}
 
 		else if (binding.type == ZG_BINDING_TYPE_TEXTURE_UAV) {
-			TextureResource* resource = mResources->getTexture(binding.handle);
+			SfzTextureResource* resource = mResources->getTexture(binding.handle);
 			sfz_assert(resource != nullptr);
 			sfz_assert(binding.reg != ~0u);
 			sfz_assert(binding.mipLevel < resource->numMipmaps);
@@ -170,9 +184,9 @@ void HighLevelCmdList::uploadToStreamingBufferUntyped(
 	SfzHandle handle, const void* data, u32 elementSize, u32 numElements)
 {
 	// Get streaming buffer
-	BufferResource* resource = mResources->getBuffer(handle);
+	SfzBufferResource* resource = mResources->getBuffer(handle);
 	sfz_assert(resource != nullptr);
-	sfz_assert(resource->type == BufferResourceType::STREAMING);
+	sfz_assert(resource->type == SfzBufferResourceType::STREAMING);
 
 	// Calculate number of bytes to copy to streaming buffer
 	const u32 numBytes = elementSize * numElements;
@@ -181,7 +195,7 @@ void HighLevelCmdList::uploadToStreamingBufferUntyped(
 	sfz_assert(elementSize == resource->elementSizeBytes); // TODO: Might want to remove this assert
 
 	// Grab this frame's memory
-	StreamingBufferMemory& memory = resource->streamingMem.data(mCurrFrameIdx);
+	SfzStreamingBufferMemory& memory = resource->streamingMem.data(mCurrFrameIdx);
 
 	// Only allowed to upload to streaming buffer once per frame
 	sfz_assert(memory.lastFrameIdxTouched < mCurrFrameIdx);
@@ -193,14 +207,14 @@ void HighLevelCmdList::uploadToStreamingBufferUntyped(
 
 void HighLevelCmdList::setVertexBuffer(u32 slot, SfzHandle handle)
 {
-	BufferResource* resource = mResources->getBuffer(handle);
+	SfzBufferResource* resource = mResources->getBuffer(handle);
 	sfz_assert(resource != nullptr);
 
 	zg::Buffer* buffer = nullptr;
-	if (resource->type == BufferResourceType::STATIC) {
+	if (resource->type == SfzBufferResourceType::STATIC) {
 		buffer = &resource->staticMem.buffer;
 	}
-	else if (resource->type == BufferResourceType::STREAMING) {
+	else if (resource->type == SfzBufferResourceType::STREAMING) {
 		buffer = &resource->streamingMem.data(mCurrFrameIdx).buffer;
 	}
 	else {
@@ -212,14 +226,14 @@ void HighLevelCmdList::setVertexBuffer(u32 slot, SfzHandle handle)
 
 void HighLevelCmdList::setIndexBuffer(SfzHandle handle, ZgIndexBufferType indexType)
 {
-	BufferResource* resource = mResources->getBuffer(handle);
+	SfzBufferResource* resource = mResources->getBuffer(handle);
 	sfz_assert(resource != nullptr);
 
 	zg::Buffer* buffer = nullptr;
-	if (resource->type == BufferResourceType::STATIC) {
+	if (resource->type == SfzBufferResourceType::STATIC) {
 		buffer = &resource->staticMem.buffer;
 	}
-	else if (resource->type == BufferResourceType::STREAMING) {
+	else if (resource->type == SfzBufferResourceType::STREAMING) {
 		buffer = &resource->streamingMem.data(mCurrFrameIdx).buffer;
 	}
 	else {
@@ -232,30 +246,30 @@ void HighLevelCmdList::setIndexBuffer(SfzHandle handle, ZgIndexBufferType indexT
 void HighLevelCmdList::drawTriangles(u32 startVertex, u32 numVertices)
 {
 	sfz_assert(mBoundShader != nullptr);
-	sfz_assert(mBoundShader->type == ShaderType::RENDER);
+	sfz_assert(mBoundShader->type == SfzShaderType::RENDER);
 	CHECK_ZG mCmdList.drawTriangles(startVertex, numVertices);
 }
 
 void HighLevelCmdList::drawTrianglesIndexed(u32 firstIndex, u32 numIndices)
 {
 	sfz_assert(mBoundShader != nullptr);
-	sfz_assert(mBoundShader->type == ShaderType::RENDER);
+	sfz_assert(mBoundShader->type == SfzShaderType::RENDER);
 	CHECK_ZG mCmdList.drawTrianglesIndexed(firstIndex, numIndices);
 }
 
 i32x3 HighLevelCmdList::getComputeGroupDims() const
 {
 	sfz_assert(mBoundShader != nullptr);
-	sfz_assert(mBoundShader->type == ShaderType::COMPUTE);
+	sfz_assert(mBoundShader->type == SfzShaderType::COMPUTE);
 	u32 x = 0, y = 0, z = 0;
-	mBoundShader->compute.pipeline.getGroupDims(x, y, z);
+	mBoundShader->computePipeline.getGroupDims(x, y, z);
 	return i32x3(x, y, z);
 }
 
 void HighLevelCmdList::dispatchCompute(i32 groupCountX, i32 groupCountY, i32 groupCountZ)
 {
 	sfz_assert(mBoundShader != nullptr);
-	sfz_assert(mBoundShader->type == ShaderType::COMPUTE);
+	sfz_assert(mBoundShader->type == SfzShaderType::COMPUTE);
 	sfz_assert(groupCountX > 0);
 	sfz_assert(groupCountY > 0);
 	sfz_assert(groupCountZ > 0);
@@ -269,14 +283,14 @@ void HighLevelCmdList::uavBarrierAll()
 
 void HighLevelCmdList::uavBarrierBuffer(SfzHandle handle)
 {
-	BufferResource* resource = mResources->getBuffer(handle);
+	SfzBufferResource* resource = mResources->getBuffer(handle);
 	sfz_assert(resource != nullptr);
 
 	zg::Buffer* buffer = nullptr;
-	if (resource->type == BufferResourceType::STATIC) {
+	if (resource->type == SfzBufferResourceType::STATIC) {
 		buffer = &resource->staticMem.buffer;
 	}
-	else if (resource->type == BufferResourceType::STREAMING) {
+	else if (resource->type == SfzBufferResourceType::STREAMING) {
 		buffer = &resource->streamingMem.data(mCurrFrameIdx).buffer;
 	}
 	else {
@@ -288,7 +302,7 @@ void HighLevelCmdList::uavBarrierBuffer(SfzHandle handle)
 
 void HighLevelCmdList::uavBarrierTexture(SfzHandle handle)
 {
-	TextureResource* resource = mResources->getTexture(handle);
+	SfzTextureResource* resource = mResources->getTexture(handle);
 	sfz_assert(resource != nullptr);
 	CHECK_ZG mCmdList.uavBarrier(resource->texture);
 }

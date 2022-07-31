@@ -19,10 +19,12 @@
 
 #include "sfz/renderer/ZeroGUtils.hpp"
 
+#include <skipifzero_strings.hpp>
+
 #include <SDL_syswm.h>
 
-#include "sfz/Logging.hpp"
-#include "sfz/config/GlobalConfig.hpp"
+#include "sfz/SfzLogging.h"
+#include "sfz/config/SfzConfig.h"
 #include "sfz/util/IO.hpp"
 
 namespace sfz {
@@ -45,19 +47,19 @@ static void zeroGLog(
 	void* userPtr, const char* file, int line, ZgLogLevel level, const char* message)
 {
 	(void)userPtr;
-	sfz::LogLevel errorLevel = [&]() {
+	SfzLogLevel errorLevel = [&]() {
 		switch (level) {
-		case ZG_LOG_LEVEL_NOISE: return sfz::LogLevel::NOISE;
-		case ZG_LOG_LEVEL_INFO: return sfz::LogLevel::INFO;
-		case ZG_LOG_LEVEL_WARNING: return sfz::LogLevel::WARNING;
-		case ZG_LOG_LEVEL_ERROR: return sfz::LogLevel::ERROR_LVL;
+		case ZG_LOG_LEVEL_NOISE: return SFZ_LOG_LEVEL_NOISE;
+		case ZG_LOG_LEVEL_INFO: return SFZ_LOG_LEVEL_INFO;
+		case ZG_LOG_LEVEL_WARNING: return SFZ_LOG_LEVEL_WARNING;
+		case ZG_LOG_LEVEL_ERROR: return SFZ_LOG_LEVEL_ERROR;
 		}
 		sfz_assert(false);
-		return sfz::LogLevel::ERROR_LVL;
+		return SFZ_LOG_LEVEL_ERROR;
 	}();
 
-	sfz::getLogger()->log(file, line, errorLevel, "ZeroG",
-		"%s", message);
+	SfzLogger* logger = sfzLoggingGetLogger();
+	logger->log(logger->implData, file, line, errorLevel, "%s", message);
 }
 
 ZgLogger getPhantasyEngineZeroGLogger() noexcept
@@ -83,12 +85,14 @@ bool CheckZgImpl::operator% (ZgResult result) noexcept
 {
 	if (zgIsSuccess(result)) return true;
 	if (zgIsWarning(result)) {
-		sfz::getLogger()->log(file, line, sfz::LogLevel::WARNING, "ZeroG",
-			"zg::Result: %s", zgResultToString(result));
+		SfzLogger* logger = sfzLoggingGetLogger();
+		logger->log(logger->implData, file, line, SFZ_LOG_LEVEL_WARNING,
+			"ZgResult: %s", zgResultToString(result));
 	}
 	else {
-		sfz::getLogger()->log(file, line, sfz::LogLevel::ERROR_LVL, "ZeroG",
-			"zg::Result: %s", zgResultToString(result));
+		SfzLogger* logger = sfzLoggingGetLogger();
+		logger->log(logger->implData, file, line, SFZ_LOG_LEVEL_ERROR,
+			"ZgResult: %s", zgResultToString(result));
 	}
 	return false;
 }
@@ -98,25 +102,17 @@ bool CheckZgImpl::operator% (ZgResult result) noexcept
 
 bool initializeZeroG(
 	SDL_Window* window,
+	const char* userDataDir,
 	SfzAllocator* allocator,
+	SfzConfig* cfg,
 	bool vsync) noexcept
 {
 	// Log compiled and linked version of ZeroG
-	SFZ_INFO("ZeroG", "ZeroG compiled API version: %u, linked version: %u",
+	SFZ_LOG_INFO("ZeroG compiled API version: %u, linked version: %u",
 		ZG_COMPILED_API_VERSION, zgApiLinkedVersion());
 
-	GlobalConfig& cfg = getGlobalConfig();
-	Setting* debugModeSetting =
-		cfg.sanitizeBool("ZeroG", "OnStartup_DebugMode", true, false);
-	Setting* debugModeGpuBasedSetting =
-		cfg.sanitizeBool("ZeroG", "OnStartup_DebugModeGpuBased", true, false);
-	Setting* softwareRendererSetting =
-		cfg.sanitizeBool("ZeroG", "OnStartup_SoftwareRenderer", true, false);
-	Setting* d3d12DredAutoSetting =
-		cfg.sanitizeBool("ZeroG", "OnStartup_DredAutoBreadcrumbs", true, false);
-	Setting* cacheShaders =
-		cfg.sanitizeBool("ZeroG", "OnStartup_CacheShaders", true, true);
-
+	const bool callSetStablePowerState = sfzCfgGetBool(cfg, "ZeroG.OnStartup_CallSetStablePowerState");
+	const bool stablePowerEnabled = sfzCfgGetBool(cfg, "ZeroG.OnStartup_StablePowerEnabled");
 
 	int w = 0, h = 0;
 	SDL_GL_GetDrawableSize(window, &w, &h);
@@ -129,14 +125,16 @@ bool initializeZeroG(
 	initSettings.logger = getPhantasyEngineZeroGLogger();
 	initSettings.allocator = allocator;
 	initSettings.nativeHandle = getNativeHandle(window);
-	initSettings.autoCachePipelines = cacheShaders->boolValue() ? ZG_TRUE : ZG_FALSE;
-	str320 pipelineCacheDir = str320("%s/shader_cache", sfz::getUserDataDir());
+	initSettings.autoCachePipelines = sfzCfgGetBool(cfg, "ZeroG.OnStartup_CacheShaders") ? ZG_TRUE : ZG_FALSE;
+	str320 pipelineCacheDir = str320("%s/shader_cache", userDataDir);
 	sfz::createDirectory(pipelineCacheDir.str());
 	initSettings.autoCachePipelinesDir = pipelineCacheDir.str();
-	initSettings.d3d12.debugMode = debugModeSetting->boolValue() ? ZG_TRUE : ZG_FALSE;
-	initSettings.d3d12.debugModeGpuBased = debugModeGpuBasedSetting->boolValue() ? ZG_TRUE : ZG_FALSE;
-	initSettings.d3d12.useSoftwareRenderer = softwareRendererSetting->boolValue() ? ZG_TRUE : ZG_FALSE;
-	initSettings.d3d12.enableDredAutoBreadcrumbs = d3d12DredAutoSetting->boolValue() ? ZG_TRUE : ZG_FALSE;
+	initSettings.d3d12.debugMode = sfzCfgGetBool(cfg, "ZeroG.OnStartup_DebugMode") ? ZG_TRUE : ZG_FALSE;
+	initSettings.d3d12.debugModeGpuBased = sfzCfgGetBool(cfg, "ZeroG.OnStartup_DebugModeGpuBased") ? ZG_TRUE : ZG_FALSE;
+	initSettings.d3d12.useSoftwareRenderer = sfzCfgGetBool(cfg, "ZeroG.OnStartup_SoftwareRenderer") ? ZG_TRUE : ZG_FALSE;
+	initSettings.d3d12.enableDredAutoBreadcrumbs = sfzCfgGetBool(cfg, "ZeroG.OnStartup_DredAutoBreadcrumbs") ? ZG_TRUE : ZG_FALSE;
+	initSettings.d3d12.callSetStablePowerState = callSetStablePowerState ? ZG_TRUE : ZG_FALSE;
+	initSettings.d3d12.stablePowerEnabled = stablePowerEnabled ? ZG_TRUE : ZG_FALSE;
 
 	// Initialize ZeroG
 	bool initSuccess = CHECK_ZG zgContextInit(&initSettings);

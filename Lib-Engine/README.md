@@ -1,25 +1,5 @@
 # Phantasy Engine
 
-Phantasy Engine is a barebones, cross-platform, DIY, game engine. DIY in the sense that you are expected to configure a lot of stuff specifically for your use case. It is mainly written to be the base for [skipifzero](skipifzero)'s games, but you are free to use it yourself if you are interested.
+Phantasy Engine WAS developed to be a barebones, cross-platform, DIY game engine. This was good education, but that the goal was impractical for a variety of reasons. You should more or less never develop a general purpose game engine, that's bad bang for the buck. Instead, it's way more efficient to develop an engine for a very slim specific purpose (i.e. the specific game you are making). That way you can skip all the stuff you don't need and make the stuff you care about better than what is common.
 
-The engine is cross-platform, however it uses [ZeroG](https://github.com/PetorSFZ/ZeroG) for rendering. In other words, only platforms supported by ZeroG can be deployed on. At the time of writing ZeroG only has a D3D12 implementation, meaning Windows is the only possible target.
-
-Before the switch to ZeroG, OpenGL was used. Then the engine could be compiled and deploy on the following platforms:
-
-* Windows
-* macOS
-* iOS
-* Web (via Emscripten)
-
-If you are interested in trying out that version of the engine, check out the [LegacyRenderer](https://github.com/PetorSFZ/PhantasyEngine/tree/LegacyRenderer) branch.
-
-## Usage/testing
-
-If you want to try out Phantasy Engine for yourself, the best starting position is the [PhantasyTestbed](https://github.com/PetorSFZ/PhantasyTestbed). PhantasyTestbed is a small testbed application which loads and renders the classic Sponza testscene.
-
-## License
-
-Licensed under zlib, this means that you can basically use the code however you want as long as you give credit and don't claim you wrote it yourself. See LICENSE file for more info.
-
-Libraries used by PhantasyEngine fall under various licenses, see their respective LICENSE files.
-
+Currently, the engine is in a bit of a limbo. Code is moved, removed and rewritten all the time to suit its new purpose as the backend for Apocatropics. You should definitely not use Phantasy Engine yourself, unless you plan on completely forking it and continue development on your own.

@@ -24,8 +24,6 @@
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_strings.hpp>
 
-#include "sfz/strings/DynString.hpp"
-
 namespace sfz {
 
 using std::numeric_limits;
@@ -48,7 +46,7 @@ public:
 
 	/// Creates a IniParser with the specified path. Will not load or parse anything until load()
 	/// is called.
-	IniParser(const char* path) noexcept;
+	IniParser(const char* path, SfzAllocator* allocator) noexcept;
 
 	// Loading and saving to file functions
 	// --------------------------------------------------------------------------------------------
@@ -180,8 +178,8 @@ private:
 	struct Section final {
 		str64 name;
 		Array<Item> items;
-		Section() : items(0, getDefaultAllocator(), sfz_dbg("")) {}
-		Section(const char* name) : name(name), items(0, getDefaultAllocator(), sfz_dbg("")) { }
+		Section() = default;
+		Section(const char* name, SfzAllocator* allocator) : name(name), items(0, allocator, sfz_dbg("")) { }
 	};
 
 	// Private methods
@@ -196,7 +194,8 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	DynString mPath;
+	SfzAllocator* mAllocator = nullptr;
+	str320 mPath;
 	Array<Section> mSections;
 };
 

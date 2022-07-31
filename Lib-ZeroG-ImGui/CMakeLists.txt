@@ -16,11 +16,11 @@
 #    misrepresented as being the original software.
 # 3. This notice may not be removed or altered from any source distribution.
 
-cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-project("ZeroG-ImGui" LANGUAGES CXX)
-
-# Check if built individually or part of a project
+# Ensure this CMake file is included as part of a larger CMake project
 get_directory_property(hasParent PARENT_DIRECTORY)
+if(NOT hasParent)
+	message(FATAL_ERROR "Please include ZeroG-ImGui using add_subdirectory")
+endif()
 
 # Dependencies
 # ------------------------------------------------------------------------------------------------
@@ -60,8 +60,6 @@ target_link_libraries(ZeroG-ImGui
 # Output variables
 # ------------------------------------------------------------------------------------------------
 
-if (hasParent)
-	set(ZEROG_IMGUI_FOUND true PARENT_SCOPE)
-	set(ZEROG_IMGUI_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
-	set(ZEROG_IMGUI_LIBRARIES ZeroG-ImGui PARENT_SCOPE)
-endif()
+set(ZEROG_IMGUI_FOUND true PARENT_SCOPE)
+set(ZEROG_IMGUI_INCLUDE_DIRS ${INCLUDE_DIR} PARENT_SCOPE)
+set(ZEROG_IMGUI_LIBRARIES ZeroG-ImGui PARENT_SCOPE)

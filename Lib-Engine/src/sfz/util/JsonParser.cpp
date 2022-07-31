@@ -30,7 +30,7 @@
 #include "sajson.h"
 #include <sfz/PopWarnings.hpp>
 
-#include <sfz/Logging.hpp>
+#include <sfz/SfzLogging.h>
 #include <sfz/util/IO.hpp>
 
 namespace sfz {
@@ -413,7 +413,7 @@ ParsedJson ParsedJson::parseString(
 {
 	// Ensure json string is not nullptr
 	if (jsonString == nullptr) {
-		SFZ_ERROR("JSON", "JSON string may not be nullptr");
+		SFZ_LOG_ERROR("JSON string may not be nullptr");
 		return ParsedJson();
 	}
 
@@ -427,7 +427,7 @@ ParsedJson ParsedJson::parseString(
 	u64 jsonStringLen = std::strlen(jsonString);
 	if (jsonStringLen == 0) {
 		sfz_delete(allocator, parsedJson.mImpl);
-		SFZ_ERROR("JSON", "JSON string must be longer than 0");
+		SFZ_LOG_ERROR("JSON string must be longer than 0");
 		return ParsedJson();
 	}
 	impl.jsonStringCopy = reinterpret_cast<char*>(
@@ -460,7 +460,7 @@ ParsedJson ParsedJson::parseString(
 	impl.doc = sfz_new<sajson::document>(allocator, sfz_dbg("sajson::document"), 
 		sajson::parse(impl.astAllocation, impl.jsongStringView));
 	if (!impl.doc->is_valid()) {
-		SFZ_ERROR("JSON", "Json parse failed at %i:%i: %s",
+		SFZ_LOG_ERROR("Json parse failed at %i:%i: %s",
 			(int)impl.doc->get_error_line(), (int)impl.doc->get_error_column(), impl.doc->get_error_message_as_cstring());
 		parsedJson.destroy();
 		return ParsedJson();
@@ -472,12 +472,12 @@ ParsedJson ParsedJson::parseString(
 ParsedJson ParsedJson::parseFile(
 	const char* jsonPath, SfzAllocator* allocator, bool allowCppComments) noexcept
 {
-	sfz::DynString jsonString = sfz::readTextFile(jsonPath, allocator);
+	sfz::Array<char> jsonString = sfz::readTextFile(jsonPath, allocator);
 	if (jsonString.size() == 0) {
-		SFZ_ERROR("JSON", "Failed to load JSON file at: %s", jsonPath);
+		SFZ_LOG_ERROR("Failed to load JSON file at: %s", jsonPath);
 		return ParsedJson();
 	}
-	return ParsedJson::parseString(jsonString.str(), allocator, allowCppComments);
+	return ParsedJson::parseString(jsonString.data(), allocator, allowCppComments);
 }
 
 // ParsedJson: State methods

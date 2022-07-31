@@ -21,15 +21,10 @@
 
 #include <skipifzero_strings.hpp>
 
-namespace sfz {
-
-using sfz::str32;
-using sfz::str48;
-
 // Value type enum
 // ------------------------------------------------------------------------------------------------
 
-enum class ValueType : u32 {
+enum class SfzValueType : u32 {
 	INT = 0,
 	FLOAT = 1,
 	BOOL = 2,
@@ -38,14 +33,14 @@ enum class ValueType : u32 {
 // Bounds structs
 // ------------------------------------------------------------------------------------------------
 
-struct IntBounds final {
+struct SfzIntBounds final {
 	i32 defaultValue;
 	i32 minValue;
 	i32 maxValue;
 	i32 step;
 
-	IntBounds() noexcept = default;
-	explicit IntBounds(
+	SfzIntBounds() noexcept = default;
+	explicit SfzIntBounds(
 		i32 defaultValue,
 		i32 minValue = I32_MIN,
 		i32 maxValue = I32_MAX,
@@ -58,13 +53,13 @@ struct IntBounds final {
 	{ }
 };
 
-struct FloatBounds final {
+struct SfzFloatBounds final {
 	f32 defaultValue;
 	f32 minValue;
 	f32 maxValue;
 
-	FloatBounds() noexcept = default;
-	explicit FloatBounds(
+	SfzFloatBounds() noexcept = default;
+	explicit SfzFloatBounds(
 		f32 defaultValue,
 		f32 minValue = -F32_MAX,
 		f32 maxValue = F32_MAX) noexcept
@@ -75,46 +70,46 @@ struct FloatBounds final {
 	{ }
 };
 
-struct BoolBounds final {
+struct SfzBoolBounds final {
 	bool defaultValue;
 
-	BoolBounds() noexcept = default;
-	explicit BoolBounds(bool defaultValue) noexcept : defaultValue(defaultValue) { }
+	SfzBoolBounds() noexcept = default;
+	explicit SfzBoolBounds(bool defaultValue) noexcept : defaultValue(defaultValue) { }
 };
 
 // C++ Value structs
 // ------------------------------------------------------------------------------------------------
 
-struct IntValue final {
+struct SfzIntValue final {
 	i32 value;
-	IntBounds bounds;
+	SfzIntBounds bounds;
 
-	IntValue() noexcept = default;
-	explicit IntValue(i32 value, const IntBounds& bounds = IntBounds(0)) noexcept
+	SfzIntValue() noexcept = default;
+	explicit SfzIntValue(i32 value, const SfzIntBounds& bounds = SfzIntBounds(0)) noexcept
 	:
 		value(value),
 		bounds(bounds)
 	{ }
 };
 
-struct FloatValue final {
+struct SfzFloatValue final {
 	f32 value;
-	FloatBounds bounds;
+	SfzFloatBounds bounds;
 
-	FloatValue() noexcept = default;
-	explicit FloatValue(f32 value, const FloatBounds& bounds = FloatBounds(0.0f)) noexcept
+	SfzFloatValue() noexcept = default;
+	explicit SfzFloatValue(f32 value, const SfzFloatBounds& bounds = SfzFloatBounds(0.0f)) noexcept
 	:
 		value(value),
 		bounds(bounds)
 	{ }
 };
 
-struct BoolValue final {
+struct SfzBoolValue final {
 	bool value;
-	BoolBounds bounds;
+	SfzBoolBounds bounds;
 
-	BoolValue() noexcept = default;
-	explicit BoolValue(bool value, const BoolBounds& bounds = BoolBounds(false)) noexcept
+	SfzBoolValue() noexcept = default;
+	explicit SfzBoolValue(bool value, const SfzBoolBounds& bounds = SfzBoolBounds(false)) noexcept
 	:
 		value(value),
 		bounds(bounds)
@@ -124,67 +119,67 @@ struct BoolValue final {
 // Setting value struct
 // ------------------------------------------------------------------------------------------------
 
-struct SettingValue final {
-	ValueType type;
+struct SfzSettingValue final {
+	SfzValueType type;
 	bool writeToFile;
 	union {
-		IntValue i;
-		FloatValue f;
-		BoolValue b;
+		SfzIntValue i;
+		SfzFloatValue f;
+		SfzBoolValue b;
 	};
 
-	SettingValue() noexcept = default;
-	SettingValue(const SettingValue&) noexcept = default;
-	SettingValue& operator= (const SettingValue&) noexcept = default;
+	SfzSettingValue() noexcept = default;
+	SfzSettingValue(const SfzSettingValue&) noexcept = default;
+	SfzSettingValue& operator= (const SfzSettingValue&) noexcept = default;
 
-	static SettingValue createInt(
+	static SfzSettingValue createInt(
 		i32 value = 0,
 		bool writeToFile = true,
-		const IntBounds& bounds = IntBounds(0));
+		const SfzIntBounds& bounds = SfzIntBounds(0));
 
-	static SettingValue createFloat(
+	static SfzSettingValue createFloat(
 		f32 value = 0.0f,
 		bool writeToFile = true,
-		const FloatBounds& bounds = FloatBounds(0.0f));
+		const SfzFloatBounds& bounds = SfzFloatBounds(0.0f));
 
-	static SettingValue createBool(
+	static SfzSettingValue createBool(
 		bool value = false,
 		bool writeToFile = true,
-		const BoolBounds& bounds = BoolBounds(false));
+		const SfzBoolBounds& bounds = SfzBoolBounds(false));
 };
 
 // Setting class
 // ------------------------------------------------------------------------------------------------
 
-class Setting final {
+struct SfzSetting final {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	Setting() = delete;
-	Setting(const Setting&) = delete;
-	Setting& operator= (const Setting&) = delete;
-	Setting(Setting&&) = delete;
-	Setting& operator= (Setting&&) = delete;
-	~Setting() noexcept = default;
+	SfzSetting() = delete;
+	SfzSetting(const SfzSetting&) = delete;
+	SfzSetting& operator= (const SfzSetting&) = delete;
+	SfzSetting(SfzSetting&&) = delete;
+	SfzSetting& operator= (SfzSetting&&) = delete;
+	~SfzSetting() noexcept = default;
 
-	Setting(const char* section, const char* key) noexcept;
+	SfzSetting(const char* section, const char* key) noexcept;
 
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
-	const str32& section() const noexcept { return mSection; }
-	const str48& key() const noexcept { return mKey; }
-	const SettingValue& value() const noexcept { return mValue; }
-	ValueType type() const noexcept { return mValue.type; }
+	const sfz::str32& section() const noexcept { return mSection; }
+	const sfz::str48& key() const noexcept { return mKey; }
+	const SfzSettingValue& value() const noexcept { return mValue; }
+	SfzValueType type() const noexcept { return mValue.type; }
 
 	i32 intValue() const noexcept;
 	f32 floatValue() const noexcept;
 	bool boolValue() const noexcept;
 
-	const IntBounds& intBounds() const noexcept;
-	const FloatBounds& floatBounds() const noexcept;
-	const BoolBounds& boolBounds() const noexcept;
+	const SfzIntBounds& intBounds() const noexcept;
+	const SfzFloatBounds& floatBounds() const noexcept;
+	const SfzBoolBounds& boolBounds() const noexcept;
 
 	// Setters
 	// --------------------------------------------------------------------------------------------
@@ -200,15 +195,13 @@ public:
 
 	// Changes the setting to the specified value (type, bounds, value). Returns true on success,
 	// false if the value is invalid in some way.
-	bool create(const SettingValue& value) noexcept;
+	bool create(const SfzSettingValue& value) noexcept;
 
 private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	SettingValue mValue;
-	str32 mSection;
-	str48 mKey;
+	SfzSettingValue mValue;
+	sfz::str32 mSection;
+	sfz::str48 mKey;
 };
-
-} // namespace sfz

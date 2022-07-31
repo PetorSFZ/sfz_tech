@@ -45,34 +45,13 @@ static_assert(sizeof(AABB) == sizeof(f32) * 6, "AABB is padded");
 // Ray VS AABB intersection test
 // ------------------------------------------------------------------------------------------------
 
-constexpr f32x3 invSafe(f32x3 d, f32 eps = 0.000'000'1f)
-{
-	return f32x3(
-		d.x == 0.0f ? 1.0f / eps : 1.0f / d.x,
-		d.y == 0.0f ? 1.0f / eps : 1.0f / d.y,
-		d.z == 0.0f ? 1.0f / eps : 1.0f / d.z);
-}
-
-// Branchless ray vs AABB intersection test
-//
-// 2 versions, a "low-level" version that is a good buildig block for algorithms that do a lot of
-// tests and a high-level version with some convenience features.
-
-constexpr void rayVsAABB(f32x3 origin, f32x3 invDir, const AABB& aabb, f32& tMinOut, f32& tMaxOut)
-{
-	const f32x3 t0 = (aabb.min - origin) * invDir;
-	const f32x3 t1 = (aabb.max - origin) * invDir;
-	tMinOut = sfz::elemMax(sfz::min(t0, t1));
-	tMaxOut = sfz::elemMin(sfz::max(t0, t1));
-}
-
 // Returns distance to closest intersection with AABB, negative number on no hit
 inline f32 rayVsAABB(const SfzRay& ray, const AABB& aabb, f32* tMinOut = nullptr, f32* tMaxOut = nullptr)
 {
 	const f32x3 origin = ray.origin;
-	const f32x3 invDir = invSafe(ray.dir);
+	const f32x3 invDir = sfzInvertRayDir(ray.dir);
 	f32 tMin, tMax;
-	rayVsAABB(origin, invDir, aabb, tMin, tMax);
+	sfzRayVsAABB(origin, invDir, aabb.min, aabb.max, &tMin, &tMax);
 	if (tMinOut != nullptr) *tMinOut = tMin;
 	if (tMaxOut != nullptr) *tMaxOut = tMax;
 	const bool hit = tMin <= tMax && 0.0f <= tMax && tMin <= ray.maxDist;

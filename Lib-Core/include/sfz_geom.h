@@ -18,6 +18,7 @@
 
 #ifndef SFZ_GEOM_H
 #define SFZ_GEOM_H
+#pragma once
 
 #include "sfz.h"
 
@@ -47,5 +48,31 @@ sfz_struct(SfzRay) {
 	}
 #endif
 };
+
+// Minimal ray vs AABB test
+// ------------------------------------------------------------------------------------------------
+
+sfz_constexpr_func f32x3 sfzInvertRayDir(f32x3 dir)
+{
+	sfz_constant f32 INV_MIN_EPS = 0.000'000'1f;
+	sfz_constant f32 ZERO_DIV_RES = 1.0f / INV_MIN_EPS;
+	const f32x3 invDir = f32x3(
+		sfz::abs(dir.x) < INV_MIN_EPS ? ZERO_DIV_RES : 1.0f / dir.x,
+		sfz::abs(dir.y) < INV_MIN_EPS ? ZERO_DIV_RES : 1.0f / dir.y,
+		sfz::abs(dir.z) < INV_MIN_EPS ? ZERO_DIV_RES : 1.0f / dir.z
+	);
+	return invDir;
+}
+
+SFZ_EXTERN_C sfz_constexpr_func void sfzRayVsAABB(
+	f32x3 origin, f32x3 invDir, f32x3 aabbMin, f32x3 aabbMax, f32* tMinOut, f32* tMaxOut)
+{
+	const f32x3 t0 = (aabbMin - origin) * invDir;
+	const f32x3 t1 = (aabbMax - origin) * invDir;
+	const f32x3 tmpTMin = sfz::min(t0, t1);
+	const f32x3 tmpTMax = sfz::max(t0, t1);
+	*tMinOut = sfz::max(sfz::max(tmpTMin.x, tmpTMin.y), tmpTMin.z);
+	*tMaxOut = sfz::min(sfz::min(tmpTMax.x, tmpTMax.y), tmpTMax.z);
+}
 
 #endif // SFZ_GEOM_H

@@ -1,3 +1,0 @@
-URL: https://github.com/jkuhlmann/cgltf
-Version: 1.8 (commit = 7eb7442b6624d9c12c343029340841ae627df252)
-Downloaded: 2020-10-17

@@ -25,18 +25,14 @@
 
 #include "sfz/shaders/ShaderManager.hpp"
 
-namespace sfz {
-
-// ShaderManagerState
+// SfzShaderManagerState
 // ------------------------------------------------------------------------------------------------
 
-struct ShaderManagerState final {
+struct SfzShaderManagerState final {
 	SfzAllocator* allocator = nullptr;
 
-	HashMap<SfzStrID, SfzHandle> shaderHandles;
-	Pool<Shader> shaders;
+	sfz::HashMap<SfzStrID, SfzHandle> shaderHandles;
+	sfz::Pool<SfzShader> shaders;
 	
-	Setting* shaderFileWatchEnabled;
+	SfzSetting* shaderFileWatchEnabled;
 };
-
-} // namespace sfz

@@ -19,12 +19,10 @@
 
 #include "sfz/resources/BufferResource.hpp"
 
-namespace sfz {
-
-// BufferResource
+// SfzBufferResource
 // ------------------------------------------------------------------------------------------------
 
-void BufferResource::uploadBlockingUntyped(
+void SfzBufferResource::uploadBlockingUntyped(
 	const void* data,
 	u32 elementSizeIn,
 	u32 numElements,
@@ -35,7 +33,7 @@ void BufferResource::uploadBlockingUntyped(
 	const u64 numBytes = elementSizeIn * numElements;
 	sfz_assert(numBytes <= bufferSizeBytes);
 	sfz_assert(elementSizeIn == this->elementSizeBytes);
-	sfz_assert_hard(this->type == BufferResourceType::STATIC);
+	sfz_assert_hard(this->type == SfzBufferResourceType::STATIC);
 
 	// Copy data to GPU
 	zg::CommandList cmdList;
@@ -46,42 +44,44 @@ void BufferResource::uploadBlockingUntyped(
 	CHECK_ZG copyQueue.flush();
 }
 
-BufferResource BufferResource::createStatic(
+SfzBufferResource SfzBufferResource::createStatic(
 	const char* name,
 	u32 elementSize,
-	u32 maxNumElements)
+	u32 maxNumElements,
+	SfzStrIDs* ids)
 {
 	sfz_assert(elementSize > 0);
 	sfz_assert(maxNumElements > 0);
-	BufferResource resource;
-	resource.name = sfzStrIDCreate(name);
+	SfzBufferResource resource;
+	resource.name = sfzStrIDCreateRegister(ids, name);
 	resource.elementSizeBytes = elementSize;
 	resource.maxNumElements = maxNumElements;
-	resource.type = BufferResourceType::STATIC;
+	resource.type = SfzBufferResourceType::STATIC;
 	CHECK_ZG resource.staticMem.buffer.create(
 		elementSize * maxNumElements, ZG_MEMORY_TYPE_DEVICE, false, name);
 	return resource;
 }
 
-BufferResource BufferResource::createStreaming(
+SfzBufferResource SfzBufferResource::createStreaming(
 	const char* name,
 	u32 elementSize,
 	u32 maxNumElements,
-	u32 frameLatency)
+	u32 frameLatency,
+	SfzStrIDs* ids)
 {
 	sfz_assert(elementSize > 0);
 	sfz_assert(maxNumElements > 0);
-	BufferResource resource;
-	resource.name = sfzStrIDCreate(name);
+	SfzBufferResource resource;
+	resource.name = sfzStrIDCreateRegister(ids, name);
 	resource.elementSizeBytes = elementSize;
 	resource.maxNumElements = maxNumElements;
-	resource.type = BufferResourceType::STREAMING;
+	resource.type = SfzBufferResourceType::STREAMING;
 
 	const u64 sizeBytes = elementSize * maxNumElements;
 	const bool committedAllocation = false;
 	u32 frameIdx = 0;
-	resource.streamingMem.init(frameLatency, [&](StreamingBufferMemory& memory) {
-		str256 deviceDebugName("%s_%u", name, frameIdx);
+	resource.streamingMem.init(frameLatency, [&](SfzStreamingBufferMemory& memory) {
+		sfz::str256 deviceDebugName("%s_%u", name, frameIdx);
 		frameIdx += 1;
 		CHECK_ZG memory.buffer.create(
 			sizeBytes, ZG_MEMORY_TYPE_DEVICE, committedAllocation, deviceDebugName.str());
@@ -89,5 +89,3 @@ BufferResource BufferResource::createStreaming(
 
 	return resource;
 }
-
-} // namespace sfz

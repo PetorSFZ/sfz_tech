@@ -33,11 +33,9 @@
 // String hashing
 // ------------------------------------------------------------------------------------------------
 
-namespace sfz {
-
 // FNV-1a hash function, based on public domain reference code by "chongo <Landon Curt Noll> /\oo/\"
 // See http://isthe.com/chongo/tech/comp/fnv/
-constexpr u64 hashStringFNV1a(const char* str)
+constexpr u64 sfzHashStringFNV1a(const char* str)
 {
 	constexpr u64 FNV_64_MAGIC_PRIME = u64(0x100000001B3);
 
@@ -53,7 +51,7 @@ constexpr u64 hashStringFNV1a(const char* str)
 }
 
 // Alternate version of hashStringFNV1a() which hashes a number of raw bytes (i.e. not a string)
-constexpr u64 hashBytesFNV1a(const u8* bytes, u64 numBytes)
+constexpr u64 sfzHashBytesFNV1a(const u8* bytes, u64 numBytes)
 {
 	constexpr u64 FNV_64_MAGIC_PRIME = u64(0x100000001B3);
 
@@ -68,16 +66,21 @@ constexpr u64 hashBytesFNV1a(const u8* bytes, u64 numBytes)
 	return tmp;
 }
 
+namespace sfz {
+
 // Hash strings with FNV-1a by default
-constexpr u64 hash(const char* str) { return hashStringFNV1a(str); }
+constexpr u64 hash(const char* str) { return sfzHashStringFNV1a(str); }
 
 } // namespace sfz
 
 // SfzStrID
 // ------------------------------------------------------------------------------------------------
 
-SFZ_EXTERN_C SfzStrID sfzStrIDCreate(const char* str);
-SFZ_EXTERN_C const char* sfzStrIDGetStr(SfzStrID id);
+struct SfzStrIDs;
+
+SFZ_EXTERN_C sfz_constexpr_func SfzStrID sfzStrIDCreate(const char* str) { return { sfzHashStringFNV1a(str) }; }
+SFZ_EXTERN_C SfzStrID sfzStrIDCreateRegister(SfzStrIDs* ids, const char* str);
+SFZ_EXTERN_C const char* sfzStrIDGetStr(const SfzStrIDs* ids, SfzStrID id);
 
 namespace sfz {
 constexpr u64 hash(SfzStrID str) { return str.id; }
@@ -85,20 +88,20 @@ constexpr u64 hash(SfzStrID str) { return str.id; }
 
 #ifdef SFZ_STR_ID_IMPLEMENTATION
 
-struct SfzStringStorage final {
+struct SfzStrIDs final {
 	SfzAllocator* allocator = nullptr;
 	sfz::HashMap<SfzStrID, char*> strs;
 
-	SfzStringStorage(u32 initialCapacity, SfzAllocator* allocator)
+	SfzStrIDs(u32 initialCapacity, SfzAllocator* allocator)
 	{
 		this->allocator = allocator;
 		this->strs.init(initialCapacity, allocator, sfz_dbg(""));
 	}
 
-	SfzStringStorage(const SfzStringStorage&) = delete;
-	SfzStringStorage& operator= (const SfzStringStorage&) = delete;
+	SfzStrIDs(const SfzStrIDs&) = delete;
+	SfzStrIDs& operator= (const SfzStrIDs&) = delete;
 
-	~SfzStringStorage()
+	~SfzStrIDs()
 	{
 		for (auto pair : strs) {
 			char* str = pair.value;
@@ -109,34 +112,32 @@ struct SfzStringStorage final {
 	}
 };
 
-static SfzStringStorage* sfzStrStorage = nullptr;
-
-SFZ_EXTERN_C SfzStrID sfzStrIDCreate(const char* str)
+SFZ_EXTERN_C SfzStrID sfzStrIDCreateRegister(SfzStrIDs* ids, const char* str)
 {
-	sfz_assert(sfzStrStorage != nullptr);
+	sfz_assert(ids != nullptr);
 	SfzStrID id = SFZ_STR_ID_NULL;
 	id.id = sfz::hash(str);
 	sfz_assert_hard(id != SFZ_STR_ID_NULL);
 	
 	// Add string to storage and check for collisions
-	char** storedStr = sfzStrStorage->strs.get(id);
+	char** storedStr = ids->strs.get(id);
 	if (storedStr == nullptr) {
 		u32 strLen = u32(strlen(str));
-		char* newStr = reinterpret_cast<char*>(sfzStrStorage->allocator->alloc(sfz_dbg(""), strLen + 1));
+		char* newStr = reinterpret_cast<char*>(ids->allocator->alloc(sfz_dbg(""), strLen + 1));
 		memcpy(newStr, str, strLen);
 		newStr[strLen] = '\0';
-		storedStr = &sfzStrStorage->strs.put(id, newStr);
+		storedStr = &ids->strs.put(id, newStr);
 	}
 	sfz_assert_hard(strcmp(str, *storedStr) == 0);
 
 	return id;
 }
 
-SFZ_EXTERN_C const char* sfzStrIDGetStr(SfzStrID id)
+SFZ_EXTERN_C const char* sfzStrIDGetStr(const SfzStrIDs* ids, SfzStrID id)
 {
-	sfz_assert(sfzStrStorage != nullptr);
-	const char* const* strPtr = sfzStrStorage->strs.get(id);
-	if (strPtr == nullptr) return "";
+	sfz_assert(ids != nullptr);
+	const char* const* strPtr = ids->strs.get(id);
+	if (strPtr == nullptr) return "<unknown>";
 	return *strPtr;
 }
 

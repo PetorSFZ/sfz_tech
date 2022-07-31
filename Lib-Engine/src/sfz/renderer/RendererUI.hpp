@@ -19,13 +19,12 @@
 
 #pragma once
 
+struct SfzRendererState;
+
 namespace sfz {
 
 // RendererUI class
 // ------------------------------------------------------------------------------------------------
-
-struct RendererState;
-struct RendererConfigurableState;
 
 class RendererUI final {
 public:
@@ -48,7 +47,7 @@ public:
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	void render(RendererState& state) noexcept;
+	void render(SfzRendererState& state) noexcept;
 };
 
 } // namespace sfz

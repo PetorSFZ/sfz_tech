@@ -29,7 +29,7 @@ namespace sfz {
 // Helper functions
 // ------------------------------------------------------------------------------------------------
 
-inline void renderBuffersTab(ResourceManagerState& state)
+inline void renderBuffersTab(SfzResourceManagerState& state, const SfzStrIDs* ids)
 {
 	constexpr f32 offset = 200.0f;
 	constexpr f32x4 normalTextColor = f32x4(1.0f);
@@ -44,8 +44,8 @@ inline void renderBuffersTab(ResourceManagerState& state)
 	const bool filterMode = filter != "";
 
 	for (HashMapPair<SfzStrID, SfzHandle> itemItr : state.bufferHandles) {
-		const char* name = sfzStrIDGetStr(itemItr.key);
-		const BufferResource& resource = state.buffers[itemItr.value];
+		const char* name = sfzStrIDGetStr(ids, itemItr.key);
+		const SfzBufferResource& resource = state.buffers[itemItr.value];
 
 		str320 lowerCaseName = name;
 		lowerCaseName.toLower();
@@ -60,7 +60,7 @@ inline void renderBuffersTab(ResourceManagerState& state)
 
 		ImGui::Indent(20.0f);
 		alignedEdit("Type", offset, [&](const char*) {
-			ImGui::Text("%s", resource.type == BufferResourceType::STATIC ? "STATIC" : "STREAMING");
+			ImGui::Text("%s", resource.type == SfzBufferResourceType::STATIC ? "STATIC" : "STREAMING");
 		});
 		alignedEdit("Size", offset, [&](const char*) {
 			const u32 numElements = resource.maxNumElements;
@@ -87,7 +87,7 @@ inline void renderBuffersTab(ResourceManagerState& state)
 	}
 }
 
-inline void renderTexturesTab(ResourceManagerState& state)
+inline void renderTexturesTab(SfzResourceManagerState& state, const SfzStrIDs* ids)
 {
 	constexpr f32 offset = 200.0f;
 	constexpr f32 offset2 = 240.0f;
@@ -103,8 +103,8 @@ inline void renderTexturesTab(ResourceManagerState& state)
 	const bool filterMode = filter != "";
 
 	for (HashMapPair<SfzStrID, SfzHandle> itemItr : state.textureHandles) {
-		const char* name = sfzStrIDGetStr(itemItr.key);
-		const TextureResource& resource = state.textures[itemItr.value];
+		const char* name = sfzStrIDGetStr(ids, itemItr.key);
+		const SfzTextureResource& resource = state.textures[itemItr.value];
 
 		str320 lowerCaseName = name;
 		lowerCaseName.toLower();
@@ -176,7 +176,7 @@ inline void renderTexturesTab(ResourceManagerState& state)
 	}
 }
 
-inline void renderFramebuffersTab(ResourceManagerState& state)
+inline void renderFramebuffersTab(SfzResourceManagerState& state, const SfzStrIDs* ids)
 {
 	constexpr f32 offset = 200.0f;
 	constexpr f32 offset2 = 220.0f;
@@ -192,8 +192,8 @@ inline void renderFramebuffersTab(ResourceManagerState& state)
 	const bool filterMode = filter != "";
 
 	for (HashMapPair<SfzStrID, SfzHandle> itemItr : state.framebufferHandles) {
-		const char* name = sfzStrIDGetStr(itemItr.key);
-		const FramebufferResource& resource = state.framebuffers[itemItr.value];
+		const char* name = sfzStrIDGetStr(ids, itemItr.key);
+		const SfzFramebufferResource& resource = state.framebuffers[itemItr.value];
 
 		str320 lowerCaseName = name;
 		lowerCaseName.toLower();
@@ -241,11 +241,11 @@ inline void renderFramebuffersTab(ResourceManagerState& state)
 			ImGui::Spacing();
 			for (u32 i = 0; i < resource.renderTargetNames.size(); i++) {
 				SfzStrID renderTargetName = resource.renderTargetNames[i];
-				const TextureResource* renderTarget =
+				const SfzTextureResource* renderTarget =
 					state.textures.get(*state.textureHandles.get(renderTargetName));
 				sfz_assert(renderTarget != nullptr);
 				alignedEdit(str64("Render target %u", i).str(), offset, [&](const char*) {
-					ImGui::Text("%s  --  %s", sfzStrIDGetStr(renderTargetName), textureFormatToString(renderTarget->format));
+					ImGui::Text("%s  --  %s", sfzStrIDGetStr(ids, renderTargetName), textureFormatToString(renderTarget->format));
 				});
 			}
 		}
@@ -253,7 +253,7 @@ inline void renderFramebuffersTab(ResourceManagerState& state)
 		if (resource.depthBufferName != SFZ_STR_ID_NULL) {
 			ImGui::Spacing();
 			alignedEdit("Depth buffer", offset, [&](const char*) {
-				ImGui::Text("%s", sfzStrIDGetStr(resource.depthBufferName));
+				ImGui::Text("%s", sfzStrIDGetStr(ids, resource.depthBufferName));
 			});
 		}
 
@@ -263,191 +263,12 @@ inline void renderFramebuffersTab(ResourceManagerState& state)
 	}
 }
 
-inline void renderMeshesTab(ResourceManagerState& state)
-{
-	for (auto itemItr : state.meshHandles) {
-		MeshResource& mesh = state.meshes[itemItr.value];
-
-		// Check if mesh is valid
-		bool meshValid = true;
-		if (mesh.vertexBuffer == SFZ_NULL_HANDLE) meshValid = false;
-		if (mesh.indexBuffer == SFZ_NULL_HANDLE) meshValid = false;
-		if (mesh.materialsBuffer == SFZ_NULL_HANDLE) meshValid = false;
-
-		// Mesh name
-		ImGui::Text("\"%s\"", sfzStrIDGetStr(itemItr.key));
-		if (!meshValid) {
-			ImGui::SameLine();
-			ImGui::Text("-- NOT VALID");
-		}
-
-		// Components
-		ImGui::Indent(20.0f);
-		if (ImGui::CollapsingHeader(str64("Components (%u):##%llu", mesh.components.size(), itemItr.key))) {
-
-			ImGui::Indent(20.0f);
-			for (u32 i = 0; i < mesh.components.size(); i++) {
-
-				const MeshComponent& comp = mesh.components[i];
-				ImGui::Text("Component %u -- Material Index: %u -- NumIndices: %u",
-					i, comp.materialIdx, comp.numIndices);
-			}
-			ImGui::Unindent(20.0f);
-		}
-		ImGui::Unindent(20.0f);
-
-		// Lambdas for converting u8x4 to vec4_f32 and back
-		auto u8ToF32 = [](u8x4 v) { return f32x4(v) * (1.0f / 255.0f); };
-		auto f32ToU8 = [](f32x4 v) { return u8x4(v * 255.0f); };
-
-		// Lambda for converting texture index to combo string label
-		auto textureToComboStr = [&](SfzStrID strId) {
-			str128 texStr;
-			if (strId == SFZ_STR_ID_NULL) texStr.appendf("NO TEXTURE");
-			else texStr= str128("%s", sfzStrIDGetStr(strId));
-			return texStr;
-		};
-
-		// Lambda for creating a combo box to select texture
-		auto textureComboBox = [&](const char* comboName, SfzStrID& texId, bool& updateMesh) {
-			(void)updateMesh;
-			(void)comboName;
-			str128 selectedTexStr = textureToComboStr(texId);
-			if (ImGui::BeginCombo(comboName, selectedTexStr)) {
-
-				// Special case for no texture (~0)
-				{
-					bool isSelected = texId == SFZ_STR_ID_NULL;
-					if (ImGui::Selectable("NO TEXTURE", isSelected)) {
-						texId = SFZ_STR_ID_NULL;
-						updateMesh = true;
-					}
-				}
-
-				// Existing textures
-				for (auto itemItr : state.textureHandles) {
-					SfzStrID id = itemItr.key;
-
-					// Convert index to string and check if it is selected
-					str128 texStr = textureToComboStr(id);
-					bool isSelected = id == texId;
-
-					// Report index to ImGui combo button and update current if it has changed
-					if (ImGui::Selectable(texStr, isSelected)) {
-						texId = id;
-						updateMesh = true;
-					}
-				}
-				ImGui::EndCombo();
-			}
-		};
-
-		// Materials
-		ImGui::Indent(20.0f);
-		if (ImGui::CollapsingHeader(str64("Materials (%u):##%llu", mesh.cpuMaterials.size(), itemItr.key))) {
-
-			ImGui::Indent(20.0f);
-			for (u32 i = 0; i < mesh.cpuMaterials.size(); i++) {
-				Material& material = mesh.cpuMaterials[i];
-
-				// Edit CPU material
-				bool updateMesh = false;
-				if (ImGui::CollapsingHeader(str64("Material %u##%llu", i, itemItr.key))) {
-
-					ImGui::Indent(20.0f);
-					constexpr f32 offset = 310.0f;
-
-					// Albedo
-					f32x4 colorFloat = u8ToF32(material.albedo);
-					alignedEdit("Albedo Factor", offset, [&](const char* name) {
-						if (ImGui::ColorEdit4(str128("%s##%u_%llu", name, i, itemItr.key), colorFloat.data(),
-							ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_Float)) {
-							material.albedo = f32ToU8(colorFloat);
-							updateMesh = true;
-						}
-					});
-					alignedEdit("Albedo Texture", offset, [&](const char* name) {
-						textureComboBox(str128("##%s_%u_%llu", name, i, itemItr.key), material.albedoTex, updateMesh);
-					});
-
-					// Emissive
-					alignedEdit("Emissive Factor", offset, [&](const char* name) {
-						if (ImGui::ColorEdit3(str128("%s##%u_%llu", name, i, itemItr.key), material.emissive.data(),
-							ImGuiColorEditFlags_Float)) {
-							updateMesh = true;
-						}
-					});
-					alignedEdit("Emissive Texture", offset, [&](const char* name) {
-						textureComboBox(str128("##%s_%u_%llu", name, i, itemItr.key), material.emissiveTex, updateMesh);
-					});
-
-					// Metallic & roughness
-					u8x4 metallicRoughnessU8(material.metallic, material.roughness, 0, 0);
-					f32x4 metallicRoughness = u8ToF32(metallicRoughnessU8);
-					alignedEdit("Metallic Roughness Factors", offset, [&](const char* name) {
-						if (ImGui::SliderFloat2(str128("%s##%u_%llu", name, i, itemItr.key), metallicRoughness.data(), 0.0f, 1.0f)) {
-							metallicRoughnessU8 = f32ToU8(metallicRoughness);
-							material.metallic = metallicRoughnessU8.x;
-							material.roughness = metallicRoughnessU8.y;
-							updateMesh = true;
-						}
-					});
-					alignedEdit("Metallic Roughness Texture", offset, [&](const char* name) {
-						textureComboBox(str64("##%s_%u_%llu", name, i, itemItr.key), material.metallicRoughnessTex, updateMesh);
-					});
-
-					// Normal and Occlusion textures
-					alignedEdit("Normal Texture", offset, [&](const char* name) {
-						textureComboBox(str64("##%s_%u_%llu", name, i, itemItr.key), material.normalTex, updateMesh);
-					});
-					alignedEdit("Occlusion Texture", offset, [&](const char* name) {
-						textureComboBox(str64("##%s_%u_%llu", name, i, itemItr.key), material.occlusionTex, updateMesh);
-					});
-
-					ImGui::Unindent(20.0f);
-				}
-
-				// If material was edited, update mesh
-				if (updateMesh) {
-
-					zg::CommandQueue presentQueue = zg::CommandQueue::getPresentQueue();
-					zg::CommandQueue copyQueue = zg::CommandQueue::getCopyQueue();
-
-					// Flush ZeroG queues
-					CHECK_ZG presentQueue.flush();
-					CHECK_ZG copyQueue.flush();
-
-					// Build new array of shader materials
-					mesh.convertCpuMaterialsToGpu();
-
-					// Grab materials buffer
-					BufferResource* materialBufferResource = state.buffers.get(mesh.materialsBuffer);
-					sfz_assert(materialBufferResource->type == BufferResourceType::STATIC);
-					zg::Buffer& materialsBuffer = materialBufferResource->staticMem.buffer;
-
-					// Reupload gpu materials
-					zg::CommandList commandList;
-					CHECK_ZG presentQueue.beginCommandListRecording(commandList);
-					CHECK_ZG commandList.uploadToBuffer(
-						state.uploader, materialsBuffer.handle, 0, mesh.gpuMaterials.data(), mesh.gpuMaterials.size() * sizeof(ShaderMaterial));
-					CHECK_ZG presentQueue.executeCommandList(commandList);
-					CHECK_ZG presentQueue.flush();
-				}
-			}
-			ImGui::Unindent(20.0f);
-		}
-		ImGui::Unindent(20.0f);
-
-		ImGui::Spacing();
-	}
-}
-
 // ResourceManagerUI
 // ------------------------------------------------------------------------------------------------
 
-inline void resourceManagerUI(ResourceManagerState& state)
+inline void resourceManagerUI(SfzResourceManagerState& state, const SfzStrIDs* ids)
 {
-	if (!ImGui::Begin("Resources", nullptr, ImGuiWindowFlags_NoFocusOnAppearing)) {
+	if (!ImGui::Begin("Res", nullptr, ImGuiWindowFlags_NoFocusOnAppearing)) {
 		ImGui::End();
 		return;
 	}
@@ -456,25 +277,19 @@ inline void resourceManagerUI(ResourceManagerState& state)
 
 		if (ImGui::BeginTabItem("Buffers")) {
 			ImGui::Spacing();
-			renderBuffersTab(state);
+			renderBuffersTab(state, ids);
 			ImGui::EndTabItem();
 		}
 
 		if (ImGui::BeginTabItem("Textures")) {
 			ImGui::Spacing();
-			renderTexturesTab(state);
+			renderTexturesTab(state, ids);
 			ImGui::EndTabItem();
 		}
 
 		if (ImGui::BeginTabItem("Framebuffers")) {
 			ImGui::Spacing();
-			renderFramebuffersTab(state);
-			ImGui::EndTabItem();
-		}
-
-		if (ImGui::BeginTabItem("Meshes")) {
-			ImGui::Spacing();
-			renderMeshesTab(state);
+			renderFramebuffersTab(state, ids);
 			ImGui::EndTabItem();
 		}
 

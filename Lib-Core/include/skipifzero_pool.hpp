@@ -159,6 +159,7 @@ public:
 	PoolSlot getSlot(u32 idx) const { sfz_assert(idx < mArraySize); return mSlots[idx]; }
 	u8 getVersion(u32 idx) const { sfz_assert(idx < mArraySize); return mSlots[idx].version(); }
 	bool slotIsActive(u32 idx) const { sfz_assert(idx < mArraySize); return mSlots[idx].active(); }
+	SfzHandle getHandle(u32 idx) const { sfz_assert(idx < mArraySize); return SfzHandle::create(idx, mSlots[idx].version()); }
 
 	bool handleIsValid(SfzHandle handle) const
 	{

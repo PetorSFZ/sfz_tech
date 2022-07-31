@@ -24,7 +24,7 @@
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_strings.hpp>
 
-#include <sfz/Logging.hpp>
+#include <sfz/SfzLogging.h>
 #include <sfz/serialization/SerializationTypes.hpp>
 #include <sfz/util/JsonParser.hpp>
 
@@ -35,6 +35,7 @@ namespace sfz {
 
 struct DeserializerVisitor final {
 	SfzAllocator* allocator = nullptr;
+	SfzStrIDs* ids = nullptr;
 	JsonNode parentNode;
 	bool success = true;
 	bool errorMessagesEnabled = true;
@@ -73,7 +74,7 @@ struct DeserializerVisitor final {
 	{
 		if (errorMessagesEnabled) {
 			if (errorPath != nullptr) {
-				SFZ_ERROR("Deserializer", "\"%s\": %s", errorPath->str(), message);
+				SFZ_LOG_ERROR("\"%s\": %s", errorPath->str(), message);
 			}
 		}
 	}
@@ -207,7 +208,7 @@ struct DeserializerVisitor final {
 		if (!ensureNodeIsValid(node)) return;
 		str256 tmpStr;
 		extractValue(node.valueStr256(), tmpStr);
-		if (this->success) valOut = sfzStrIDCreate(tmpStr);
+		if (this->success) valOut = sfzStrIDCreateRegister(ids, tmpStr);
 	}
 
 	void deserialize(const JsonNode& node, str32& valOut)
@@ -364,7 +365,7 @@ bool deserialize(T& valOut, const char* jsonPath, SfzAllocator* allocator)
 
 	ParsedJson json = ParsedJson::parseFile(jsonPath, allocator);
 	if (!json.isValid()) {
-		SFZ_ERROR("Deserializer", "Failed to parse json at: \"%s\"", jsonPath);
+		SFZ_LOG_ERROR("Failed to parse json at: \"%s\"", jsonPath);
 		return false;
 	}
 

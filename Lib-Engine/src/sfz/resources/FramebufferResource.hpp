@@ -25,64 +25,61 @@
 
 #include <ZeroG.h>
 
-namespace sfz {
+struct SfzResourceManager;
+struct SfzSetting;
 
-class Setting;
-
-// FramebufferResource
+// SfzFramebufferResource
 // ------------------------------------------------------------------------------------------------
 
-struct FramebufferResource final {
+struct SfzFramebufferResource final {
 	SfzStrID name = SFZ_STR_ID_NULL;
 
 	zg::Framebuffer framebuffer;
-	ArrayLocal<SfzStrID, ZG_MAX_NUM_RENDER_TARGETS> renderTargetNames;
+	sfz::ArrayLocal<SfzStrID, ZG_MAX_NUM_RENDER_TARGETS> renderTargetNames;
 	SfzStrID depthBufferName = SFZ_STR_ID_NULL;
 	i32x2 res = i32x2(0);
 
 	// Whether resolution should be scaled relative screen resolution
 	bool screenRelativeRes = false;
 	f32 resScale = 1.0f;
-	Setting* resScaleSetting = nullptr;
-	Setting* resScaleSetting2 = nullptr;
+	SfzSetting* resScaleSetting = nullptr;
+	SfzSetting* resScaleSetting2 = nullptr;
 
 	// Whether resolution is directly controlled by a setting
 	bool settingControlledRes = false;
-	Setting* controlledResSetting = nullptr;
+	SfzSetting* controlledResSetting = nullptr;
 
-	[[nodiscard]] ZgResult build(i32x2 screenRes);
+	[[nodiscard]] ZgResult build(i32x2 screenRes, SfzStrIDs* ids, SfzResourceManager* resMan);
 };
 
-// FramebufferResourceBuilder
+// SfzFramebufferResourceBuilder
 // ------------------------------------------------------------------------------------------------
 
-struct FramebufferResourceBuilder final {
-	str128 name;
-	ArrayLocal<SfzStrID, ZG_MAX_NUM_RENDER_TARGETS> renderTargetNames;
+struct SfzFramebufferResourceBuilder final {
+	sfz::str128 name;
+	sfz::ArrayLocal<SfzStrID, ZG_MAX_NUM_RENDER_TARGETS> renderTargetNames;
 	SfzStrID depthBufferName = SFZ_STR_ID_NULL;
 	i32x2 res = i32x2(0);
 
 	bool screenRelativeRes = false;
 	f32 resScale = 1.0f;
-	Setting* resScaleSetting = nullptr;
-	Setting* resScaleSetting2 = nullptr;
+	SfzSetting* resScaleSetting = nullptr;
+	SfzSetting* resScaleSetting2 = nullptr;
 
 	bool settingControlledRes = false;
-	Setting* controlledResSetting = nullptr;
+	SfzSetting* controlledResSetting = nullptr;
 
-	FramebufferResourceBuilder() = default;
-	FramebufferResourceBuilder(const char* name) : name("%s", name) {}
+	SfzFramebufferResourceBuilder() = default;
+	SfzFramebufferResourceBuilder(const char* name) : name("%s", name) {}
 
-	FramebufferResourceBuilder& setName(const char* name);
-	FramebufferResourceBuilder& setFixedRes(i32x2 res);
-	FramebufferResourceBuilder& setScreenRelativeRes(f32 scale);
-	FramebufferResourceBuilder& setScreenRelativeRes(Setting* scaleSetting, Setting* scaleSetting2 = nullptr);
-	FramebufferResourceBuilder& setSettingControlledRes(Setting* resSetting);
-	FramebufferResourceBuilder& addRenderTarget(const char* textureName);
-	FramebufferResourceBuilder& addRenderTarget(SfzStrID textureName);
-	FramebufferResourceBuilder& setDepthBuffer(const char* textureName);
-	FramebufferResourceBuilder& setDepthBuffer(SfzStrID textureName);
-	FramebufferResource build(i32x2 screenRes);
+	SfzFramebufferResourceBuilder& setName(const char* name);
+	SfzFramebufferResourceBuilder& setFixedRes(i32x2 res);
+	SfzFramebufferResourceBuilder& setScreenRelativeRes(f32 scale);
+	SfzFramebufferResourceBuilder& setScreenRelativeRes(SfzSetting* scaleSetting, SfzSetting* scaleSetting2 = nullptr);
+	SfzFramebufferResourceBuilder& setSettingControlledRes(SfzSetting* resSetting);
+	SfzFramebufferResourceBuilder& addRenderTarget(SfzStrIDs* ids, const char* textureName);
+	SfzFramebufferResourceBuilder& addRenderTarget(SfzStrID textureName);
+	SfzFramebufferResourceBuilder& setDepthBuffer(SfzStrIDs* ids, const char* textureName);
+	SfzFramebufferResourceBuilder& setDepthBuffer(SfzStrID textureName);
+	SfzFramebufferResource build(i32x2 screenRes, SfzStrIDs* ids, SfzResourceManager* resMan);
 };
-
-} // namespace sfz

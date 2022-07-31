@@ -39,6 +39,14 @@ inline const char* textureFormatToString(ZgFormat format)
 	case ZG_FORMAT_RG_U8: return "RG_U8";
 	case ZG_FORMAT_RGBA_U8: return "RGBA_U8";
 
+	case ZG_FORMAT_R_U16: return "R_U16";
+	case ZG_FORMAT_RG_U16: return "RG_U16";
+	case ZG_FORMAT_RGBA_U16: return "RGBA_U16";
+
+	case ZG_FORMAT_R_I32: return "R_I32";
+	case ZG_FORMAT_RG_I32: return "RG_I32";
+	case ZG_FORMAT_RGBA_I32: return "RGBA_I32";
+
 	case ZG_FORMAT_R_F16: return "R_F16";
 	case ZG_FORMAT_RG_F16: return "RG_F16";
 	case ZG_FORMAT_RGBA_F16: return "RGBA_F16";
@@ -99,49 +107,41 @@ inline const char* vertexAttributeTypeToString(ZgVertexAttributeType type)
 	return "";
 }
 
-inline const char* samplingModeToString(ZgSamplingMode mode)
+inline const char* sampleModeToString(ZgSampleMode sample)
 {
-	switch (mode) {
-	case ZG_SAMPLING_MODE_NEAREST: return "NEAREST";
-	case ZG_SAMPLING_MODE_TRILINEAR: return "TRILINEAR";
-	case ZG_SAMPLING_MODE_ANISOTROPIC: return "ANISOTROPIC";
+	switch (sample) {
+	case ZG_SAMPLE_NEAREST: return "NEAREST";
+	case ZG_SAMPLE_TRILINEAR: return "TRILINEAR";
+	case ZG_SAMPLE_ANISOTROPIC_2X: return "ANISOTROPIC_2X";
+	case ZG_SAMPLE_ANISOTROPIC_4X: return "ANISOTROPIC_4X";
+	case ZG_SAMPLE_ANISOTROPIC_8X: return "ANISOTROPIC_8X";
+	case ZG_SAMPLE_ANISOTROPIC_16X: return "ANISOTROPIC_16X";
 	}
 	sfz_assert(false);
 	return "UNDEFINED";
 }
 
-inline const char* wrappingModeToString(ZgWrappingMode mode)
+inline const char* wrapModeToString(ZgWrapMode wrap)
 {
-	switch (mode) {
-	case ZG_WRAPPING_MODE_CLAMP: return "CLAMP";
-	case ZG_WRAPPING_MODE_REPEAT: return "REPEAT";
+	switch (wrap) {
+	case ZG_WRAP_CLAMP: return "CLAMP";
+	case ZG_WRAP_REPEAT: return "REPEAT";
 	}
 	sfz_assert(false);
 	return "UNDEFINED";
 }
 
-inline const char* comparisonFuncToString(ZgComparisonFunc func)
+inline const char* compFuncToString(ZgCompFunc func)
 {
 	switch (func) {
-	case ZG_COMPARISON_FUNC_NONE: return "NONE";
-	case ZG_COMPARISON_FUNC_LESS: return "LESS";
-	case ZG_COMPARISON_FUNC_LESS_EQUAL: return "LESS_EQUAL";
-	case ZG_COMPARISON_FUNC_EQUAL: return "EQUAL";
-	case ZG_COMPARISON_FUNC_NOT_EQUAL: return "NOT_EQUAL";
-	case ZG_COMPARISON_FUNC_GREATER: return "GREATER";
-	case ZG_COMPARISON_FUNC_GREATER_EQUAL: return "GREATER_EQUAL";
-	case ZG_COMPARISON_FUNC_ALWAYS: return "ALWAYS";
-	}
-	sfz_assert(false);
-	return "";
-}
-
-inline const char* blendModeToString(PipelineBlendMode mode)
-{
-	switch (mode) {
-	case PipelineBlendMode::NO_BLENDING: return "no_blending";
-	case PipelineBlendMode::ALPHA_BLENDING: return "alpha_blending";
-	case PipelineBlendMode::ADDITIVE_BLENDING: return "additive_blending";
+	case ZG_COMP_FUNC_NONE: return "NONE";
+	case ZG_COMP_FUNC_LESS: return "LESS";
+	case ZG_COMP_FUNC_LESS_EQUAL: return "LESS_EQUAL";
+	case ZG_COMP_FUNC_EQUAL: return "EQUAL";
+	case ZG_COMP_FUNC_NOT_EQUAL: return "NOT_EQUAL";
+	case ZG_COMP_FUNC_GREATER: return "GREATER";
+	case ZG_COMP_FUNC_GREATER_EQUAL: return "GREATER_EQUAL";
+	case ZG_COMP_FUNC_ALWAYS: return "ALWAYS";
 	}
 	sfz_assert(false);
 	return "";

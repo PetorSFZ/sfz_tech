@@ -22,6 +22,7 @@
 #undef near
 #undef far
 
+#include <skipifzero_allocators.hpp>
 #include <skipifzero_strings.hpp>
 
 #include "sfz/util/IO.hpp"
@@ -67,6 +68,8 @@ UTEST(IO, create_directory_directory_exists_delete_directory)
 
 UTEST(IO, write_binary_file_read_binary_file_sizeof_file)
 {
+	SfzAllocator allocator = sfz::createStandardAllocator();
+
 	const char* fpath = stupidFileName;
 	const uint8_t data[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0xA, 0xB, 0xC, 0xD, 0xE};
 	uint8_t data2[sizeof(data)];
@@ -80,7 +83,7 @@ UTEST(IO, write_binary_file_read_binary_file_sizeof_file)
 
 	ASSERT_TRUE(sfz::writeBinaryFile(fpath, data, sizeof(data)));
 	ASSERT_TRUE(sfz::readBinaryFile(fpath, data2, sizeof(data2)) == 0);
-	auto data3 = sfz::readBinaryFile(fpath);
+	auto data3 = sfz::readBinaryFile(fpath, &allocator);
 	ASSERT_TRUE(data3.size() == sizeof(data));
 	ASSERT_TRUE(sizeof(data) == (size_t)sfz::sizeofFile(fpath));
 
@@ -93,13 +96,15 @@ UTEST(IO, write_binary_file_read_binary_file_sizeof_file)
 	ASSERT_TRUE(!sfz::fileExists(fpath));
 
 	// nullptrs
-	ASSERT_TRUE(sfz::readBinaryFile(nullptr).data() == nullptr);
-	ASSERT_TRUE(sfz::readTextFile(nullptr) == "");
+	ASSERT_TRUE(sfz::readBinaryFile(nullptr, &allocator).data() == nullptr);
+	ASSERT_TRUE(sfz::readTextFile(nullptr, &allocator).size() == 1);
 	ASSERT_TRUE(!sfz::writeBinaryFile(nullptr, nullptr, 0));
 }
 
 UTEST(IO, read_text_file)
 {
+	SfzAllocator allocator = sfz::createStandardAllocator();
+
 	const char* fpath = stupidFileName;
 	const char* strToWrite = "Hello World!\nHello World 2!\nHello World 3!";
 	size_t strToWriteLen = strlen(strToWrite);
@@ -114,24 +119,26 @@ UTEST(IO, read_text_file)
 	ASSERT_TRUE(sfz::writeBinaryFile(fpath, (const uint8_t*)strToWrite, strToWriteLen));
 	ASSERT_TRUE(sfz::fileExists(fpath));
 
-	sfz::DynString fileStr = sfz::readTextFile(fpath);
-	ASSERT_TRUE(fileStr.size() == strToWriteLen);
-	ASSERT_TRUE(fileStr.size() == strlen(fileStr.str()));
-	ASSERT_TRUE(fileStr == strToWrite);
+	sfz::Array<char> fileStr = sfz::readTextFile(fpath, &allocator);
+	ASSERT_TRUE(fileStr.size() == (strToWriteLen + 1));
+	ASSERT_TRUE(fileStr.size() == (strlen(fileStr.data()) + 1));
+	ASSERT_TRUE(strcmp(fileStr.data(), strToWrite) == 0);
 
 	ASSERT_TRUE(sfz::deleteFile(fpath));
 
 	// Empty file
 	ASSERT_TRUE(sfz::writeBinaryFile(fpath, (const uint8_t*)"", 0));
 	ASSERT_TRUE(sfz::fileExists(fpath));
-	sfz::DynString emptyStr = sfz::readTextFile(fpath);
-	ASSERT_TRUE(emptyStr.size() == 0);
-	ASSERT_TRUE(emptyStr == "");
+	sfz::Array<char> emptyStr = sfz::readTextFile(fpath, &allocator);
+	ASSERT_TRUE(emptyStr.size() == 1);
+	ASSERT_TRUE(strcmp(emptyStr.data(), "") == 0);
 	ASSERT_TRUE(sfz::deleteFile(fpath));
 }
 
 UTEST(IO, write_text_file)
 {
+	SfzAllocator allocator = sfz::createStandardAllocator();
+
 	const char* fpath = stupidFileName;
 	sfz::str320 strToWrite("Hello World!\nHello World 2!\nHello World 3!");
 
@@ -145,10 +152,10 @@ UTEST(IO, write_text_file)
 	ASSERT_TRUE(sfz::writeTextFile(fpath, strToWrite));
 	ASSERT_TRUE(sfz::fileExists(fpath));
 
-	sfz::DynString fileStr = sfz::readTextFile(fpath);
-	ASSERT_TRUE(fileStr.size() == strToWrite.size());
-	ASSERT_TRUE(fileStr.size() == strlen(fileStr.str()));
-	ASSERT_TRUE(fileStr == strToWrite.str());
+	sfz::Array<char> fileStr = sfz::readTextFile(fpath, &allocator);
+	ASSERT_TRUE(fileStr.size() == (strToWrite.size() + 1));
+	ASSERT_TRUE(fileStr.size() == (strlen(fileStr.data()) + 1));
+	ASSERT_TRUE(strcmp(fileStr.data(), strToWrite.str()) == 0);
 
 	ASSERT_TRUE(sfz::deleteFile(fpath));
 
@@ -156,10 +163,10 @@ UTEST(IO, write_text_file)
 	ASSERT_TRUE(sfz::writeTextFile(fpath, strToWrite, 13));
 	ASSERT_TRUE(sfz::fileExists(fpath));
 
-	fileStr = sfz::readTextFile(fpath);
-	ASSERT_TRUE(fileStr.size() == 13);
-	ASSERT_TRUE(fileStr.size() == strlen(fileStr.str()));
-	ASSERT_TRUE(fileStr == "Hello World!\n");
+	fileStr = sfz::readTextFile(fpath, &allocator);
+	ASSERT_TRUE(fileStr.size() == 14);
+	ASSERT_TRUE(fileStr.size() == (strlen(fileStr.data()) + 1));
+	ASSERT_TRUE(strcmp(fileStr.data(), "Hello World!\n") == 0);
 
 	ASSERT_TRUE(sfz::deleteFile(fpath));
 
@@ -167,9 +174,9 @@ UTEST(IO, write_text_file)
 	// Empty file
 	ASSERT_TRUE(sfz::writeTextFile(fpath, ""));
 	ASSERT_TRUE(sfz::fileExists(fpath));
-	sfz::DynString emptyStr = sfz::readTextFile(fpath);
-	ASSERT_TRUE(emptyStr.size() == 0);
-	ASSERT_TRUE(emptyStr == "");
+	sfz::Array<char> emptyStr = sfz::readTextFile(fpath, &allocator);
+	ASSERT_TRUE(emptyStr.size() == 1);
+	ASSERT_TRUE(strcmp(emptyStr.data(), "") == 0);
 	ASSERT_TRUE(sfz::deleteFile(fpath));
 }
 

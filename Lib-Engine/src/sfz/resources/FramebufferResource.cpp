@@ -19,24 +19,20 @@
 
 #include "sfz/resources/FramebufferResource.hpp"
 
-#include "sfz/Context.hpp"
 #include "sfz/config/Setting.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
 #include "sfz/resources/ResourceManager.hpp"
 #include "sfz/resources/TextureResource.hpp"
 
-namespace sfz {
-
-// FramebufferResource
+// SfzFramebufferResource
 // ------------------------------------------------------------------------------------------------
 
-ZgResult FramebufferResource::build(i32x2 screenRes)
+ZgResult SfzFramebufferResource::build(i32x2 screenRes, SfzStrIDs* ids, SfzResourceManager* resMan)
 {
 	CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
 	CHECK_ZG zg::CommandQueue::getCopyQueue().flush();
 
 	sfz_assert(!renderTargetNames.isEmpty() || depthBufferName != SFZ_STR_ID_NULL);
-	ResourceManager& resources = getResourceManager();
 
 	// Set resolution and resolution scale if screen relative
 	if (screenRelativeRes) {
@@ -57,24 +53,24 @@ ZgResult FramebufferResource::build(i32x2 screenRes)
 	zg::FramebufferBuilder fbBuilder;
 
 	for (SfzStrID renderTargetName : renderTargetNames) {
-		TextureResource* tex = resources.getTexture(resources.getTextureHandle(renderTargetName));
+		SfzTextureResource* tex = resMan->getTexture(resMan->getTextureHandle(renderTargetName));
 		sfz_assert(tex != nullptr);
 		sfz_assert(tex->texture.valid());
 		sfz_assert(tex->usage == ZG_TEXTURE_USAGE_RENDER_TARGET);
 		if (this->res != tex->res) {
-			CHECK_ZG tex->build(screenRes);
+			CHECK_ZG tex->build(screenRes, ids);
 		}
 		sfz_assert(this->res == tex->res);
 		fbBuilder.addRenderTarget(tex->texture);
 	}
 
 	if (depthBufferName != SFZ_STR_ID_NULL) {
-		TextureResource* tex = resources.getTexture(resources.getTextureHandle(depthBufferName));
+		SfzTextureResource* tex = resMan->getTexture(resMan->getTextureHandle(depthBufferName));
 		sfz_assert(tex != nullptr);
 		sfz_assert(tex->texture.valid());
 		sfz_assert(tex->usage == ZG_TEXTURE_USAGE_DEPTH_BUFFER);
 		if (this->res != tex->res) {
-			CHECK_ZG tex->build(screenRes);
+			CHECK_ZG tex->build(screenRes, ids);
 		}
 		sfz_assert(this->res == tex->res);
 		fbBuilder.setDepthBuffer(tex->texture);
@@ -83,16 +79,16 @@ ZgResult FramebufferResource::build(i32x2 screenRes)
 	return fbBuilder.build(framebuffer);
 }
 
-// FramebufferResourceBuilder
+// SfzFramebufferResourceBuilder
 // ------------------------------------------------------------------------------------------------
 
-FramebufferResourceBuilder& FramebufferResourceBuilder::setName(const char* nameIn)
+SfzFramebufferResourceBuilder& SfzFramebufferResourceBuilder::setName(const char* nameIn)
 {
-	this->name = str128("%s", nameIn);
+	this->name = sfz::str128("%s", nameIn);
 	return *this;
 }
 
-FramebufferResourceBuilder& FramebufferResourceBuilder::setFixedRes(i32x2 resIn)
+SfzFramebufferResourceBuilder& SfzFramebufferResourceBuilder::setFixedRes(i32x2 resIn)
 {
 	sfz_assert(resIn.x > 0);
 	sfz_assert(resIn.y > 0);
@@ -104,14 +100,14 @@ FramebufferResourceBuilder& FramebufferResourceBuilder::setFixedRes(i32x2 resIn)
 	return *this;
 }
 
-FramebufferResourceBuilder& FramebufferResourceBuilder::setScreenRelativeRes(f32 scale)
+SfzFramebufferResourceBuilder& SfzFramebufferResourceBuilder::setScreenRelativeRes(f32 scale)
 {
 	this->screenRelativeRes = true;
 	this->resScale = scale;
 	return *this;
 }
 
-FramebufferResourceBuilder& FramebufferResourceBuilder::setScreenRelativeRes(Setting* scaleSetting, Setting* scaleSetting2)
+SfzFramebufferResourceBuilder& SfzFramebufferResourceBuilder::setScreenRelativeRes(SfzSetting* scaleSetting, SfzSetting* scaleSetting2)
 {
 	this->screenRelativeRes = true;
 	this->resScale = 1.0f;
@@ -120,39 +116,39 @@ FramebufferResourceBuilder& FramebufferResourceBuilder::setScreenRelativeRes(Set
 	return *this;
 }
 
-FramebufferResourceBuilder& FramebufferResourceBuilder::setSettingControlledRes(Setting* resSetting)
+SfzFramebufferResourceBuilder& SfzFramebufferResourceBuilder::setSettingControlledRes(SfzSetting* resSetting)
 {
 	this->settingControlledRes = true;
 	this->controlledResSetting = resSetting;
 	return *this;
 }
 
-FramebufferResourceBuilder& FramebufferResourceBuilder::addRenderTarget(const char* textureName)
+SfzFramebufferResourceBuilder& SfzFramebufferResourceBuilder::addRenderTarget(SfzStrIDs* ids, const char* textureName)
 {
-	return this->addRenderTarget(sfzStrIDCreate(textureName));
+	return this->addRenderTarget(sfzStrIDCreateRegister(ids, textureName));
 }
 
-FramebufferResourceBuilder& FramebufferResourceBuilder::addRenderTarget(SfzStrID textureName)
+SfzFramebufferResourceBuilder& SfzFramebufferResourceBuilder::addRenderTarget(SfzStrID textureName)
 {
 	this->renderTargetNames.add(textureName);
 	return *this;
 }
 
-FramebufferResourceBuilder& FramebufferResourceBuilder::setDepthBuffer(const char* textureName)
+SfzFramebufferResourceBuilder& SfzFramebufferResourceBuilder::setDepthBuffer(SfzStrIDs* ids, const char* textureName)
 {
-	return this->setDepthBuffer(sfzStrIDCreate(textureName));
+	return this->setDepthBuffer(sfzStrIDCreateRegister(ids, textureName));
 }
 
-FramebufferResourceBuilder& FramebufferResourceBuilder::setDepthBuffer(SfzStrID textureName)
+SfzFramebufferResourceBuilder& SfzFramebufferResourceBuilder::setDepthBuffer(SfzStrID textureName)
 {
 	this->depthBufferName = textureName;
 	return *this;
 }
 
-FramebufferResource FramebufferResourceBuilder::build(i32x2 screenRes)
+SfzFramebufferResource SfzFramebufferResourceBuilder::build(i32x2 screenRes, SfzStrIDs* ids, SfzResourceManager* resMan)
 {
-	FramebufferResource resource;
-	resource.name = sfzStrIDCreate(this->name);
+	SfzFramebufferResource resource;
+	resource.name = sfzStrIDCreateRegister(ids, this->name);
 	resource.renderTargetNames = this->renderTargetNames;
 	resource.depthBufferName = this->depthBufferName;
 	resource.res = this->res;
@@ -162,8 +158,6 @@ FramebufferResource FramebufferResourceBuilder::build(i32x2 screenRes)
 	resource.resScaleSetting2 = this->resScaleSetting2;
 	resource.settingControlledRes = this->settingControlledRes;
 	resource.controlledResSetting = this->controlledResSetting;
-	CHECK_ZG resource.build(screenRes);
+	CHECK_ZG resource.build(screenRes, ids, resMan);
 	return resource;
 }
-
-} // namespace sfz

@@ -32,7 +32,7 @@ namespace sfz {
 constexpr f32 ARRAY_DYNAMIC_GROW_RATE = 1.75;
 constexpr u32 ARRAY_DYNAMIC_DEFAULT_INITIAL_CAPACITY = 64;
 constexpr u32 ARRAY_DYNAMIC_MIN_CAPACITY = 2;
-constexpr u32 ARRAY_DYNAMIC_MAX_CAPACITY = u32(U32_MAX / ARRAY_DYNAMIC_GROW_RATE) - 1;
+constexpr u32 ARRAY_DYNAMIC_MAX_CAPACITY = U32_MAX - 1;
 
 // A class managing a dynamic array, somewhat like std::vector.
 //

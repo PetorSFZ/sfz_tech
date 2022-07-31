@@ -27,28 +27,26 @@
 #include "sfz/renderer/ZeroGUtils.hpp"
 #include "sfz/rendering/Image.hpp"
 
-namespace sfz {
-
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-static u32 sizeOfElement(ImageType imageType) noexcept
+static u32 sizeOfElement(SfzImageType imageType) noexcept
 {
 	switch (imageType) {
-	case ImageType::UNDEFINED: return 0;
-	case ImageType::R_U8: return 1 * sizeof(u8);
-	case ImageType::RG_U8: return 2 * sizeof(u8);
-	case ImageType::RGBA_U8: return 4 * sizeof(u8);
+	case SFZ_IMAGE_TYPE_UNDEFINED: return 0;
+	case SFZ_IMAGE_TYPE_R_U8: return 1 * sizeof(u8);
+	case SFZ_IMAGE_TYPE_RG_U8: return 2 * sizeof(u8);
+	case SFZ_IMAGE_TYPE_RGBA_U8: return 4 * sizeof(u8);
 
-	case ImageType::R_F32: return 1 * sizeof(f32);
-	case ImageType::RG_F32: return 2 * sizeof(f32);
-	case ImageType::RGBA_F32: return 4 * sizeof(f32);
+	case SFZ_IMAGE_TYPE_R_F32: return 1 * sizeof(f32);
+	case SFZ_IMAGE_TYPE_RG_F32: return 2 * sizeof(f32);
+	case SFZ_IMAGE_TYPE_RGBA_F32: return 4 * sizeof(f32);
 	}
 	sfz_assert(false);
 	return 0;
 }
 
-static ZgImageViewConstCpu toZeroGImageView(const ImageViewConst& phView) noexcept
+static ZgImageViewConstCpu toZeroGImageView(const SfzImageViewConst& phView) noexcept
 {
 	ZgImageViewConstCpu zgView = {};
 	zgView.format = toZeroGImageFormat(phView.type);
@@ -61,7 +59,7 @@ static ZgImageViewConstCpu toZeroGImageView(const ImageViewConst& phView) noexce
 
 template<typename T, typename Averager>
 void generateMipmapSpecific(
-	const ImageViewConst& prevLevel, Image& currLevel, Averager averager) noexcept
+	const SfzImageViewConst& prevLevel, sfz::Image& currLevel, Averager averager) noexcept
 {
 	const T* srcImg = reinterpret_cast<const T*>(prevLevel.rawData);
 	T* dstImg = reinterpret_cast<T*>(currLevel.rawData.data());
@@ -86,45 +84,45 @@ void generateMipmapSpecific(
 // b) We should probably do something smarter than naive averaging
 // c) We should not read from previous level, but from the original level when calculating a
 //    specific level.
-static void generateMipmap(const ImageViewConst& prevLevel, Image& currLevel) noexcept
+static void generateMipmap(const SfzImageViewConst& prevLevel, sfz::Image& currLevel) noexcept
 {
 	sfz_assert(prevLevel.type == currLevel.type);
 	switch (currLevel.type) {
-	case ImageType::R_U8:
+	case SFZ_IMAGE_TYPE_R_U8:
 		generateMipmapSpecific<u8>(prevLevel, currLevel, [](u8 a, u8 b, u8 c, u8 d) {
 			return u8((u32(a) + u32(b) + u32(c) + u32(d)) / 4u);
 		});
 		break;
-	case ImageType::RG_U8:
+	case SFZ_IMAGE_TYPE_RG_U8:
 		generateMipmapSpecific<u8x2>(prevLevel, currLevel, [](u8x2 a, u8x2 b, u8x2 c, u8x2 d) {
 			return u8x2((i32x2(a) + i32x2(b) + i32x2(c) + i32x2(d)) / 4u);
 		});
 		break;
-	case ImageType::RGBA_U8:
+	case SFZ_IMAGE_TYPE_RGBA_U8:
 		generateMipmapSpecific<u8x4>(prevLevel, currLevel, [](u8x4 a, u8x4 b, u8x4 c, u8x4 d) {
 			return u8x4((i32x4(a) + i32x4(b) + i32x4(c) + i32x4(d)) / 4u);
 		});
 		break;
 
-	case ImageType::RGBA_F32:
+	case SFZ_IMAGE_TYPE_RGBA_F32:
 		generateMipmapSpecific<f32x4>(prevLevel, currLevel, [](f32x4 a, f32x4 b, f32x4 c, f32x4 d) {
 			return (a + b + c + d) * (1.0f / 4.0f);
 		});
 		break;
 	
-	case ImageType::UNDEFINED:
-	case ImageType::R_F32:
-	case ImageType::RG_F32:
+	case SFZ_IMAGE_TYPE_UNDEFINED:
+	case SFZ_IMAGE_TYPE_R_F32:
+	case SFZ_IMAGE_TYPE_RG_F32:
 	default:
 		sfz_assert_hard(false);
 		break;
 	};
 }
 
-// TextureResource
+// SfzTextureResource
 // ------------------------------------------------------------------------------------------------
 
-bool TextureResource::needRebuild(i32x2 screenRes) const
+bool SfzTextureResource::needRebuild(i32x2 screenRes) const
 {
 	if (!this->texture.valid()) return true;
 
@@ -152,7 +150,7 @@ bool TextureResource::needRebuild(i32x2 screenRes) const
 	return newRes != this->res;
 }
 
-ZgResult TextureResource::build(i32x2 screenRes)
+ZgResult SfzTextureResource::build(i32x2 screenRes, SfzStrIDs* ids)
 {
 	// Set resolution and resolution scale if screen relative
 	i32x2 newRes = i32x2(0);
@@ -192,12 +190,12 @@ ZgResult TextureResource::build(i32x2 screenRes)
 	desc.width = res.x;
 	desc.height = res.y;
 	desc.numMipmaps = numMipmaps;
-	desc.debugName = sfzStrIDGetStr(name);
+	desc.debugName = sfzStrIDGetStr(ids, name);
 	return texture.create(desc);
 }
 
-void TextureResource::uploadBlocking(
-	const ImageViewConst& image,
+void SfzTextureResource::uploadBlocking(
+	const SfzImageViewConst& image,
 	SfzAllocator* cpuAllocator,
 	ZgUploader* uploader,
 	zg::CommandQueue& copyQueue)
@@ -211,16 +209,16 @@ void TextureResource::uploadBlocking(
 	sfz_assert(format == view.format);
 
 	// Generate mipmaps (on CPU)
-	Image mipmaps[ZG_MAX_NUM_MIPMAPS - 1];
+	sfz::Image mipmaps[ZG_MAX_NUM_MIPMAPS - 1];
 	for (u32 i = 0; i < (numMipmaps - 1); i++) {
 
 		// Get previous mipmap level
-		ImageViewConst prevLevel;
+		SfzImageViewConst prevLevel;
 		if (i == 0) prevLevel = image;
 		else prevLevel = mipmaps[i - 1];
 
 		// Allocate mipmap memory
-		mipmaps[i] = Image::allocate(
+		mipmaps[i] = sfz::Image::allocate(
 			prevLevel.width / 2, prevLevel.height / 2, prevLevel.type, cpuAllocator);
 
 		// Generate mipmap
@@ -245,15 +243,16 @@ void TextureResource::uploadBlocking(
 	CHECK_ZG copyQueue.flush();
 }
 
-TextureResource TextureResource::createFixedSize(
+SfzTextureResource SfzTextureResource::createFixedSize(
 	const char* name,
-	const ImageViewConst& image,
+	SfzStrIDs* ids,
+	const SfzImageViewConst& image,
 	bool allocateMipmaps,
 	ZgTextureUsage usage,
 	bool committedAllocation)
 {
-	sfz_assert(isPowerOfTwo(image.width));
-	sfz_assert(isPowerOfTwo(image.height));
+	sfz_assert(sfz::isPowerOfTwo(image.width));
+	sfz_assert(sfz::isPowerOfTwo(image.height));
 
 	// Calculate number of mipmaps if requested
 	u32 numMipmaps = 1;
@@ -265,8 +264,9 @@ TextureResource TextureResource::createFixedSize(
 	}
 	sfz_assert(numMipmaps != 0);
 
-	return TextureResource::createFixedSize(
+	return SfzTextureResource::createFixedSize(
 		name,
+		ids,
 		toZeroGImageFormat(image.type),
 		i32x2(image.width, image.height),
 		numMipmaps,
@@ -274,8 +274,9 @@ TextureResource TextureResource::createFixedSize(
 		committedAllocation);
 }
 
-TextureResource TextureResource::createFixedSize(
+SfzTextureResource SfzTextureResource::createFixedSize(
 	const char* name,
+	SfzStrIDs* ids,
 	ZgFormat format,
 	i32x2 res,
 	u32 numMipmaps,
@@ -287,8 +288,8 @@ TextureResource TextureResource::createFixedSize(
 	sfz_assert(numMipmaps > 0);
 	sfz_assert(numMipmaps <= ZG_MAX_NUM_MIPMAPS);
 
-	TextureResource resource;
-	resource.name = sfzStrIDCreate(name);
+	SfzTextureResource resource;
+	resource.name = sfzStrIDCreateRegister(ids, name);
 	resource.format = format;
 	resource.res = res;
 	resource.numMipmaps = numMipmaps;
@@ -297,24 +298,25 @@ TextureResource TextureResource::createFixedSize(
 	resource.optimalClearValue =
 		usage != ZG_TEXTURE_USAGE_DEFAULT ? ZG_OPTIMAL_CLEAR_VALUE_ZERO : ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED;
 
-	CHECK_ZG resource.build(i32x2(0));
+	CHECK_ZG resource.build(i32x2(0), ids);
 
 	return resource;
 }
 
-TextureResource TextureResource::createScreenRelative(
+SfzTextureResource SfzTextureResource::createScreenRelative(
 	const char* name,
+	SfzStrIDs* ids,
 	ZgFormat format,
 	i32x2 screenRes,
 	f32 scale,
-	Setting* scaleSetting,
+	SfzSetting* scaleSetting,
 	ZgTextureUsage usage,
 	bool committedAllocation,
-	Setting* scaleSetting2,
+	SfzSetting* scaleSetting2,
 	f32 resScaleSettingScale)
 {
-	TextureResource resource;
-	resource.name = sfzStrIDCreate(name);
+	SfzTextureResource resource;
+	resource.name = sfzStrIDCreateRegister(ids, name);
 	resource.format = format;
 	resource.numMipmaps = 1;
 	resource.committedAllocation = committedAllocation;
@@ -327,15 +329,16 @@ TextureResource TextureResource::createScreenRelative(
 	resource.resScaleSetting2 = scaleSetting2;
 	resource.resScaleSettingScale = resScaleSettingScale;
 	
-	CHECK_ZG resource.build(screenRes);
+	CHECK_ZG resource.build(screenRes, ids);
 	
 	return resource;
 }
 
-TextureResource TextureResource::createSettingControlled(
+SfzTextureResource SfzTextureResource::createSettingControlled(
 	const char* name,
+	SfzStrIDs* ids,
 	ZgFormat format,
-	Setting* resSetting,
+	SfzSetting* resSetting,
 	u32 numMipmaps,
 	ZgTextureUsage usage,
 	bool committedAllocation)
@@ -344,8 +347,8 @@ TextureResource TextureResource::createSettingControlled(
 	sfz_assert(numMipmaps > 0);
 	sfz_assert(numMipmaps <= ZG_MAX_NUM_MIPMAPS);
 
-	TextureResource resource;
-	resource.name = sfzStrIDCreate(name);
+	SfzTextureResource resource;
+	resource.name = sfzStrIDCreateRegister(ids, name);
 	resource.format = format;
 	resource.res = i32x2(resSetting->intValue());
 	resource.numMipmaps = numMipmaps;
@@ -357,7 +360,7 @@ TextureResource TextureResource::createSettingControlled(
 	resource.settingControlledRes = true;
 	resource.controlledResSetting = resSetting;
 
-	CHECK_ZG resource.build(i32x2(0));
+	CHECK_ZG resource.build(i32x2(0), ids);
 
 	return resource;
 }
@@ -365,20 +368,18 @@ TextureResource TextureResource::createSettingControlled(
 // Texture functions
 // ------------------------------------------------------------------------------------------------
 
-ZgFormat toZeroGImageFormat(ImageType imageType) noexcept
+ZgFormat toZeroGImageFormat(SfzImageType imageType) noexcept
 {
 	switch (imageType) {
-	case ImageType::UNDEFINED: return ZG_FORMAT_UNDEFINED;
-	case ImageType::R_U8: return ZG_FORMAT_R_U8_UNORM;
-	case ImageType::RG_U8: return ZG_FORMAT_RG_U8_UNORM;
-	case ImageType::RGBA_U8: return ZG_FORMAT_RGBA_U8_UNORM;
+	case SFZ_IMAGE_TYPE_UNDEFINED: return ZG_FORMAT_UNDEFINED;
+	case SFZ_IMAGE_TYPE_R_U8: return ZG_FORMAT_R_U8_UNORM;
+	case SFZ_IMAGE_TYPE_RG_U8: return ZG_FORMAT_RG_U8_UNORM;
+	case SFZ_IMAGE_TYPE_RGBA_U8: return ZG_FORMAT_RGBA_U8_UNORM;
 
-	case ImageType::R_F32: return ZG_FORMAT_R_F32;
-	case ImageType::RG_F32: return ZG_FORMAT_RG_F32;
-	case ImageType::RGBA_F32: return ZG_FORMAT_RGBA_F32;
+	case SFZ_IMAGE_TYPE_R_F32: return ZG_FORMAT_R_F32;
+	case SFZ_IMAGE_TYPE_RG_F32: return ZG_FORMAT_RG_F32;
+	case SFZ_IMAGE_TYPE_RGBA_F32: return ZG_FORMAT_RGBA_F32;
 	}
 	sfz_assert(false);
 	return ZG_FORMAT_UNDEFINED;
 }
-
-} // namespace sfz

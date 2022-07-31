@@ -22,160 +22,54 @@
 #include <skipifzero_new.hpp>
 
 #include "sfz/config/GlobalConfig.hpp"
+#include "sfz/config/SfzConfig.h"
 #include "sfz/renderer/ZeroGUtils.hpp"
-#include "sfz/rendering/Mesh.hpp"
 #include "sfz/shaders/ShaderManagerState.hpp"
 #include "sfz/shaders/ShaderManagerUI.hpp"
 #include "sfz/util/IO.hpp"
 
-namespace sfz {
-
-// Shader
+// SfzShader
 // ------------------------------------------------------------------------------------------------
 
-bool Shader::build() noexcept
+bool SfzShader::build() noexcept
 {
 	bool buildSuccess = false;
-	if (this->type == ShaderType::RENDER) {
-		// Create pipeline builder
-		zg::PipelineRenderBuilder pipelineBuilder;
-		pipelineBuilder
-			.addVertexShaderPath(render.vertexShaderEntry, shaderPath)
-			.addPixelShaderPath(render.pixelShaderEntry, shaderPath);
-
-		// Set vertex attributes
-		if (render.inputLayout.standardVertexLayout) {
-			pipelineBuilder
-				.addVertexBufferInfo(0, sizeof(Vertex))
-				.addVertexAttribute(0, 0, ZG_VERTEX_ATTRIBUTE_F32_3, offsetof(Vertex, pos))
-				.addVertexAttribute(1, 0, ZG_VERTEX_ATTRIBUTE_F32_3, offsetof(Vertex, normal))
-				.addVertexAttribute(2, 0, ZG_VERTEX_ATTRIBUTE_F32_2, offsetof(Vertex, texcoord));
-		}
-		else {
-			pipelineBuilder.addVertexBufferInfo(0, render.inputLayout.vertexSizeBytes);
-			for (const ZgVertexAttribute& attribute : render.inputLayout.attributes) {
-				pipelineBuilder.addVertexAttribute(attribute);
-			}
-		}
-
-		// Set push constants
-		for (u32 i = 0; i < pushConstRegisters.size(); i++) {
-			pipelineBuilder.addPushConstant(pushConstRegisters[i]);
-		}
-
-		// Samplers
-		for (u32 i = 0; i < samplers.size(); i++) {
-			SamplerItem& sampler = samplers[i];
-			pipelineBuilder.addSampler(sampler.samplerRegister, sampler.sampler);
-		}
-
-		// Render targets
-		for (u32 i = 0; i < render.renderTargets.size(); i++) {
-			pipelineBuilder.addRenderTarget(render.renderTargets[i]);
-		}
-
-		// Depth test
-		pipelineBuilder.setDepthFunc(render.depthFunc);
-
-		// Culling
-		if (render.cullingEnabled) {
-			pipelineBuilder
-				.setCullingEnabled(true)
-				.setCullMode(render.cullFrontFacing, render.frontFacingIsCounterClockwise);
-		}
-		else {
-			pipelineBuilder
-				.setCullingEnabled(false)
-				.setCullMode(false, render.frontFacingIsCounterClockwise);
-		}
-
-		// Depth bias
-		pipelineBuilder
-			.setDepthBias(render.depthBias, render.depthBiasSlopeScaled, render.depthBiasClamp);
-
-		// Wireframe rendering
-		if (render.wireframeRenderingEnabled) {
-			pipelineBuilder.setWireframeRendering(true);
-		}
-
-		// Blend mode
-		if (render.blendMode == PipelineBlendMode::NO_BLENDING) {
-			pipelineBuilder.setBlendingEnabled(false);
-		}
-		else if (render.blendMode == PipelineBlendMode::ALPHA_BLENDING) {
-			pipelineBuilder
-				.setBlendingEnabled(true)
-				.setBlendFuncColor(ZG_BLEND_FUNC_ADD, ZG_BLEND_FACTOR_SRC_ALPHA, ZG_BLEND_FACTOR_SRC_INV_ALPHA)
-				.setBlendFuncAlpha(ZG_BLEND_FUNC_ADD, ZG_BLEND_FACTOR_ONE, ZG_BLEND_FACTOR_ZERO);
-		}
-		else if (render.blendMode == PipelineBlendMode::ADDITIVE_BLENDING) {
-			pipelineBuilder
-				.setBlendingEnabled(true)
-				.setBlendFuncColor(ZG_BLEND_FUNC_ADD, ZG_BLEND_FACTOR_ONE, ZG_BLEND_FACTOR_ONE)
-				.setBlendFuncAlpha(ZG_BLEND_FUNC_ADD, ZG_BLEND_FACTOR_ONE, ZG_BLEND_FACTOR_ONE);
-		}
-		else {
-			sfz_assert(false);
-		}
-
-		// Build pipeline
-		zg::PipelineRender tmpPipeline;
-		buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileHLSL(tmpPipeline);
+	if (this->type == SfzShaderType::RENDER) {
+		buildSuccess = CHECK_ZG this->renderPipeline.createFromFileHLSL(
+			this->renderDesc, this->compileSettings);
 		if (buildSuccess) {
-			this->render.pipeline = sfz_move(tmpPipeline);
-			this->lastModified = sfz::fileLastModifiedDate(this->shaderPath);
+			this->lastModified = sfz::fileLastModifiedDate(this->renderDesc.path);
 		}
 	}
-	else if (this->type == ShaderType::COMPUTE) {
-		// Create pipeline builder
-		zg::PipelineComputeBuilder pipelineBuilder;
-		pipelineBuilder
-			.addComputeShaderPath(compute.computeShaderEntry, shaderPath);
-
-		// Set push constants
-		for (u32 i = 0; i < pushConstRegisters.size(); i++) {
-			pipelineBuilder.addPushConstant(pushConstRegisters[i]);
-		}
-
-		// Samplers
-		for (u32 i = 0; i < samplers.size(); i++) {
-			SamplerItem& sampler = samplers[i];
-			pipelineBuilder.addSampler(sampler.samplerRegister, sampler.sampler);
-		}
-
-		// Build pipeline
-		zg::PipelineCompute tmpPipeline;
-		buildSuccess = CHECK_ZG pipelineBuilder.buildFromFileHLSL(tmpPipeline);
+	else if (this->type == SfzShaderType::COMPUTE) {
+		buildSuccess = CHECK_ZG this->computePipeline.createFromFileHLSL(
+			this->computeDesc, this->compileSettings);
 		if (buildSuccess) {
-			this->compute.pipeline = sfz_move(tmpPipeline);
-			this->lastModified = sfz::fileLastModifiedDate(this->shaderPath);
+			this->lastModified = sfz::fileLastModifiedDate(this->computeDesc.path);
 		}
-		return buildSuccess;
 	}
 	else {
 		sfz_assert_hard(false);
 	}
-
 	return buildSuccess;
 }
 
-// ShaderManager
+// SfzShaderManager
 // ------------------------------------------------------------------------------------------------
 
-void ShaderManager::init(u32 maxNumShaders, SfzAllocator* allocator) noexcept
+void SfzShaderManager::init(u32 maxNumShaders, SfzConfig* cfg, SfzAllocator* allocator) noexcept
 {
 	sfz_assert(mState == nullptr);
-	mState = sfz_new<ShaderManagerState>(allocator, sfz_dbg(""));
+	mState = sfz_new<SfzShaderManagerState>(allocator, sfz_dbg(""));
 	mState->allocator = allocator;
 
 	mState->shaderHandles.init(maxNumShaders, allocator, sfz_dbg(""));
 	mState->shaders.init(maxNumShaders, allocator, sfz_dbg(""));
 
-	GlobalConfig& cfg = getGlobalConfig();
-	mState->shaderFileWatchEnabled = cfg.sanitizeBool("Resources", "shaderFileWatch", true, false);
+	mState->shaderFileWatchEnabled = sfzCfgGetSetting(cfg, "Resources.shaderFileWatch");
 }
 
-void ShaderManager::destroy() noexcept
+void SfzShaderManager::destroy() noexcept
 {
 	if (mState == nullptr) return;
 
@@ -188,19 +82,25 @@ void ShaderManager::destroy() noexcept
 	mState = nullptr;
 }
 
-// ShaderManager: Methods
+// SfzShaderManager: Methods
 // ------------------------------------------------------------------------------------------------
 
-void ShaderManager::update()
+void SfzShaderManager::update()
 {
 	// Nothing to do (for now) if shader file watch is disabled. In future we could potentially have
 	// async shader loading which could be updated here.
 	if (!mState->shaderFileWatchEnabled->boolValue()) return;
 
 	for (auto pair : mState->shaderHandles) {
-		Shader& shader = mState->shaders[pair.value];
+		SfzShader& shader = mState->shaders[pair.value];
 
-		time_t newLastModified = sfz::fileLastModifiedDate(shader.shaderPath);
+		i64 newLastModified = 0;
+		if (shader.type == SfzShaderType::RENDER) {
+			newLastModified = sfz::fileLastModifiedDate(shader.renderDesc.path);
+		} 
+		else if (shader.type == SfzShaderType::COMPUTE) {
+			newLastModified = sfz::fileLastModifiedDate(shader.computeDesc.path);
+		}
 		if (shader.lastModified < newLastModified) {
 			
 			// Flush present queue to ensure shader is not in use
@@ -216,40 +116,79 @@ void ShaderManager::update()
 	}
 }
 
-void ShaderManager::renderDebugUI()
+void SfzShaderManager::renderDebugUI(SfzStrIDs* ids)
 {
-	shaderManagerUI(*mState);
+	sfz::shaderManagerUI(*mState, ids);
 }
 
-SfzHandle ShaderManager::getShaderHandle(const char* name) const
+SfzHandle SfzShaderManager::getShaderHandle(SfzStrIDs* ids, const char* name) const
 {
-	return this->getShaderHandle(sfzStrIDCreate(name));
+	return this->getShaderHandle(sfzStrIDCreateRegister(ids, name));
 }
 
-SfzHandle ShaderManager::getShaderHandle(SfzStrID name) const
+SfzHandle SfzShaderManager::getShaderHandle(SfzStrID name) const
 {
 	const SfzHandle* handle = mState->shaderHandles.get(name);
 	if (handle == nullptr) return SFZ_NULL_HANDLE;
 	return *handle;
 }
 
-Shader* ShaderManager::getShader(SfzHandle handle)
+SfzShader* SfzShaderManager::getShader(SfzHandle handle)
 {
 	return mState->shaders.get(handle);
 }
 
-SfzHandle ShaderManager::addShader(Shader&& shader)
+SfzHandle SfzShaderManager::addShaderRender(
+	const ZgPipelineRenderDesc& desc,
+	const ZgPipelineCompileSettingsHLSL& settings,
+	SfzStrIDs* ids)
 {
-	SfzStrID name = shader.name;
-	sfz_assert(name != SFZ_STR_ID_NULL);
-	sfz_assert(mState->shaderHandles.get(name) == nullptr);
-	SfzHandle handle = mState->shaders.allocate(sfz_move(shader));
-	mState->shaderHandles.put(name, handle);
+	const SfzHandle handle = mState->shaders.allocate();
+	SfzShader* shader = mState->shaders.get(handle);
+	shader->name = sfzStrIDCreateRegister(ids, desc.name);
+	sfz_assert(mState->shaderHandles.get(shader->name) == nullptr);
+	shader->type = SfzShaderType::RENDER;
+	shader->compileSettings = settings;
+	shader->renderDesc = desc;
+
+	const bool buildSuccess = shader->build();
+	if (!buildSuccess) {
+		SFZ_LOG_ERROR("Couldn't build shader \"%s\"", desc.name);
+		mState->shaders.deallocate(handle);
+		return SFZ_NULL_HANDLE;
+	}
+
+	mState->shaderHandles.put(shader->name, handle);
 	sfz_assert(mState->shaderHandles.size() == mState->shaders.numAllocated());
 	return handle;
 }
 
-void ShaderManager::removeShader(SfzStrID name)
+SfzHandle SfzShaderManager::addShaderCompute(
+	const ZgPipelineComputeDesc& desc,
+	const ZgPipelineCompileSettingsHLSL& settings,
+	SfzStrIDs* ids)
+{
+	const SfzHandle handle = mState->shaders.allocate();
+	SfzShader* shader = mState->shaders.get(handle);
+	shader->name = sfzStrIDCreateRegister(ids, desc.name);
+	sfz_assert(mState->shaderHandles.get(shader->name) == nullptr);
+	shader->type = SfzShaderType::COMPUTE;
+	shader->compileSettings = settings;
+	shader->computeDesc = desc;
+
+	const bool buildSuccess = shader->build();
+	if (!buildSuccess) {
+		SFZ_LOG_ERROR("Couldn't build shader \"%s\"", desc.name);
+		mState->shaders.deallocate(handle);
+		return SFZ_NULL_HANDLE;
+	}
+
+	mState->shaderHandles.put(shader->name, handle);
+	sfz_assert(mState->shaderHandles.size() == mState->shaders.numAllocated());
+	return handle;
+}
+
+void SfzShaderManager::removeShader(SfzStrID name)
 {
 	// TODO: Currently blocking, can probably be made async.
 	CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
@@ -260,5 +199,3 @@ void ShaderManager::removeShader(SfzStrID name)
 	mState->shaderHandles.remove(name);
 	mState->shaders.deallocate(handle);
 }
-
-} // namespace sfz

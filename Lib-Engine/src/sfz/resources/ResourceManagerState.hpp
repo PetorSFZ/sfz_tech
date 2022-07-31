@@ -25,32 +25,24 @@
 
 #include "sfz/resources/BufferResource.hpp"
 #include "sfz/resources/FramebufferResource.hpp"
-#include "sfz/resources/MeshResource.hpp"
 #include "sfz/resources/ResourceManager.hpp"
 #include "sfz/resources/TextureResource.hpp"
 
-namespace sfz {
-
-// ResourceManagerState
+// SfzResourceManagerState
 // ------------------------------------------------------------------------------------------------
 
 // This is the internal state of the Resource Manager. If you are just using the ResourceManager
 // you probably shouldn't be accessing this directly.
-struct ResourceManagerState final {
+struct SfzResourceManagerState final {
 	SfzAllocator* allocator = nullptr;
 	ZgUploader* uploader = nullptr;
 
-	HashMap<SfzStrID, SfzHandle> bufferHandles;
-	Pool<BufferResource> buffers;
+	sfz::HashMap<SfzStrID, SfzHandle> bufferHandles;
+	sfz::Pool<SfzBufferResource> buffers;
 
-	HashMap<SfzStrID, SfzHandle> textureHandles;
-	Pool<TextureResource> textures;
+	sfz::HashMap<SfzStrID, SfzHandle> textureHandles;
+	sfz::Pool<SfzTextureResource> textures;
 
-	HashMap<SfzStrID, SfzHandle> framebufferHandles;
-	Pool<FramebufferResource> framebuffers;
-
-	HashMap<SfzStrID, SfzHandle> meshHandles;
-	Pool<MeshResource> meshes;
+	sfz::HashMap<SfzStrID, SfzHandle> framebufferHandles;
+	sfz::Pool<SfzFramebufferResource> framebuffers;
 };
-
-} // namespace sfz

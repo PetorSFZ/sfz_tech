@@ -26,7 +26,6 @@
 
 #include <ZeroG.h>
 
-#include <sfz/Context.hpp>
 #include <sfz/resources/ResourceManager.hpp>
 #include <sfz/shaders/ShaderManager.hpp>
 
@@ -48,31 +47,42 @@ struct BindingHL final {
 };
 
 struct Bindings final {
-	ResourceManager* res = &getResourceManager();
+	SfzResourceManager* resMan = nullptr;
 	ArrayLocal<BindingHL, ZG_MAX_NUM_BINDINGS> bindings;
 
+	Bindings() = default;
+	Bindings(SfzResourceManager* resMan) : resMan(resMan) {}
+
 	Bindings& addBufferConst(const char* name, u32 reg) { return addBufferConst(sfzStrIDCreate(name), reg); }
-	Bindings& addBufferConst(SfzStrID name, u32 reg) { return addBufferConst(res->getBufferHandle(name), reg); }
+	Bindings& addBufferConst(SfzStrID name, u32 reg) { return addBufferConst(resMan->getBufferHandle(name), reg); }
 	Bindings& addBufferConst(SfzHandle handle, u32 reg) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_BUFFER_CONST, reg)); return *this; }
 
 	Bindings& addBufferTyped(const char* name, u32 reg, ZgFormat format) { return addBufferTyped(sfzStrIDCreate(name), reg, format); }
-	Bindings& addBufferTyped(SfzStrID name, u32 reg, ZgFormat format) { return addBufferTyped(res->getBufferHandle(name), reg, format); }
+	Bindings& addBufferTyped(SfzStrID name, u32 reg, ZgFormat format) { return addBufferTyped(resMan->getBufferHandle(name), reg, format); }
 	Bindings& addBufferTyped(SfzHandle handle, u32 reg, ZgFormat format) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_BUFFER_TYPED, reg, format)); return *this; }
 
 	Bindings& addBufferStructured(const char* name, u32 reg) { return addBufferStructured(sfzStrIDCreate(name), reg); }
-	Bindings& addBufferStructured(SfzStrID name, u32 reg) { return addBufferStructured(res->getBufferHandle(name), reg); }
+	Bindings& addBufferStructured(SfzStrID name, u32 reg) { return addBufferStructured(resMan->getBufferHandle(name), reg); }
 	Bindings& addBufferStructured(SfzHandle handle, u32 reg) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_BUFFER_STRUCTURED, reg)); return *this; }
 
 	Bindings& addBufferStructuredUAV(const char* name, u32 reg) { return addBufferStructuredUAV(sfzStrIDCreate(name), reg); }
-	Bindings& addBufferStructuredUAV(SfzStrID name, u32 reg) { return addBufferStructuredUAV(res->getBufferHandle(name), reg); }
+	Bindings& addBufferStructuredUAV(SfzStrID name, u32 reg) { return addBufferStructuredUAV(resMan->getBufferHandle(name), reg); }
 	Bindings& addBufferStructuredUAV(SfzHandle handle, u32 reg) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV, reg)); return *this; }
 
+	Bindings& addBufferByteAddress(const char* name, u32 reg) { return addBufferByteAddress(sfzStrIDCreate(name), reg); }
+	Bindings& addBufferByteAddress(SfzStrID name, u32 reg) { return addBufferByteAddress(resMan->getBufferHandle(name), reg); }
+	Bindings& addBufferByteAddress(SfzHandle handle, u32 reg) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_BUFFER_BYTEADDRESS, reg)); return *this; }
+
+	Bindings& addBufferByteAddressUAV(const char* name, u32 reg) { return addBufferByteAddressUAV(sfzStrIDCreate(name), reg); }
+	Bindings& addBufferByteAddressUAV(SfzStrID name, u32 reg) { return addBufferByteAddressUAV(resMan->getBufferHandle(name), reg); }
+	Bindings& addBufferByteAddressUAV(SfzHandle handle, u32 reg) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_BUFFER_BYTEADDRESS_UAV, reg)); return *this; }
+
 	Bindings& addTexture(const char* name, u32 reg) { return addTexture(sfzStrIDCreate(name), reg); }
-	Bindings& addTexture(SfzStrID name, u32 reg) { return addTexture(res->getTextureHandle(name), reg); }
+	Bindings& addTexture(SfzStrID name, u32 reg) { return addTexture(resMan->getTextureHandle(name), reg); }
 	Bindings& addTexture(SfzHandle handle, u32 reg) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_TEXTURE, reg)); return *this; }
 
 	Bindings& addTextureUAV(const char* name, u32 reg, u32 mip) { return addTextureUAV(sfzStrIDCreate(name), reg, mip); }
-	Bindings& addTextureUAV(SfzStrID name, u32 reg, u32 mip) { return addTextureUAV(res->getTextureHandle(name), reg, mip); }
+	Bindings& addTextureUAV(SfzStrID name, u32 reg, u32 mip) { return addTextureUAV(resMan->getTextureHandle(name), reg, mip); }
 	Bindings& addTextureUAV(SfzHandle handle, u32 reg, u32 mip) { bindings.add(BindingHL(handle, ZG_BINDING_TYPE_TEXTURE_UAV, reg, mip)); return *this; }
 };
 
@@ -88,7 +98,10 @@ public:
 		u64 currFrameIdx,
 		zg::CommandList cmdList,
 		zg::Uploader* uploader,
-		zg::Framebuffer* defaultFB);
+		zg::Framebuffer* defaultFB,
+		SfzStrIDs* ids,
+		SfzResourceManager* resMan,
+		SfzShaderManager* shaderMan);
 	void destroy() noexcept;
 
 	// Methods
@@ -121,7 +134,7 @@ public:
 	template<typename T>
 	void uploadToStreamingBuffer(const char* name, const T* data, u32 numElements)
 	{
-		uploadToStreamingBuffer<T>(sfzStrIDCreate(name), data, numElements);
+		uploadToStreamingBuffer<T>(sfzStrIDCreateRegister(mIds, name), data, numElements);
 	}
 	template<typename T>
 	void uploadToStreamingBuffer(SfzStrID name, const T* data, u32 numElements)
@@ -159,15 +172,15 @@ public:
 	void uavBarrierTexture(SfzStrID name) { uavBarrierTexture(mResources->getTextureHandle(name)); }
 	void uavBarrierTexture(SfzHandle handle);
 
-private:
-	friend class Renderer;
+public: // Minor hack, this thing (class) might not have been the best idea.
 	SfzStrID mName = SFZ_STR_ID_NULL;
 	u64 mCurrFrameIdx = 0;
 	zg::CommandList mCmdList;
 	zg::Uploader* mUploader = nullptr;
-	ResourceManager* mResources = nullptr;
-	ShaderManager* mShaders = nullptr;
-	Shader* mBoundShader = nullptr;
+	SfzStrIDs* mIds = nullptr;
+	SfzResourceManager* mResources = nullptr;
+	SfzShaderManager* mShaders = nullptr;
+	SfzShader* mBoundShader = nullptr;
 	zg::Framebuffer* mDefaultFB = nullptr;
 };
 

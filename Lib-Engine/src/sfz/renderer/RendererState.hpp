@@ -29,14 +29,11 @@
 #include <ZeroG-ImGui.hpp>
 
 #include "sfz/config/GlobalConfig.hpp"
-#include "sfz/resources/MeshResource.hpp"
 #include "sfz/renderer/RendererUI.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
 #include "sfz/shaders/ShaderManager.hpp"
 
 struct SDL_Window;
-
-namespace sfz {
 
 // RendererState
 // ------------------------------------------------------------------------------------------------
@@ -49,7 +46,7 @@ struct GroupProfilingID final {
 struct FrameProfilingIDs final {
 	u64 frameId = ~0ull;
 	u64 imguiId = ~0ull;
-	Arr64<GroupProfilingID> groupIds;
+	sfz::Arr64<GroupProfilingID> groupIds;
 };
 
 struct FrameFenceData final {
@@ -57,7 +54,7 @@ struct FrameFenceData final {
 	u64 safeUploaderOffset = 0;
 };
 
-struct RendererState final {
+struct SfzRendererState final {
 
 	// Members
 	// --------------------------------------------------------------------------------------------
@@ -74,7 +71,7 @@ struct RendererState final {
 	// Synchronization primitives to make sure we have finished rendering using a given set of
 	//" PerFrameData" resources so we can start uploading new data to them.
 	u32 frameLatency = 2;
-	PerFrameData<FrameFenceData> frameFences;
+	sfz::PerFrameData<FrameFenceData> frameFences;
 
 	i32x2 windowRes = i32x2(0);
 	zg::Framebuffer windowFramebuffer;
@@ -83,25 +80,20 @@ struct RendererState final {
 
 	// Profiler
 	zg::Profiler profiler;
-	PerFrameData<FrameProfilingIDs> frameMeasurementIds;
+	sfz::PerFrameData<FrameProfilingIDs> frameMeasurementIds;
 	f32 lastRetrievedFrameTimeMs = 0.0f;
 	u64 lastRetrievedFrameTimeFrameIdx = ~0ull;
 
 	// UI
-	RendererUI ui;
+	sfz::RendererUI ui;
 
 	// Imgui renderer
-	const Setting* imguiScaleSetting = nullptr;
+	const SfzSetting* imguiScaleSetting = nullptr;
 	zg::ImGuiRenderState* imguiRenderState = nullptr;;
 
 	// Settings
-	const Setting* vsync = nullptr;
-	const Setting* flushPresentQueueEachFrame = nullptr;
-	const Setting* flushCopyQueueEachFrame = nullptr;
-	const Setting* emitDebugEvents = nullptr;
-
-	// Path to current configuration
-	str320 configPath;
+	const SfzSetting* vsync = nullptr;
+	const SfzSetting* flushPresentQueueEachFrame = nullptr;
+	const SfzSetting* flushCopyQueueEachFrame = nullptr;
+	const SfzSetting* emitDebugEvents = nullptr;
 };
-
-} // namespace sfz

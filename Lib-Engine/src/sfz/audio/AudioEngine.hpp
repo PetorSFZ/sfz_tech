@@ -18,49 +18,17 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
-#include <skipifzero_strings.hpp>
+#include <sfz.h>
 
-namespace sfz {
+// Types
+// ------------------------------------------------------------------------------------------------
+
+struct SfzAudioEngine;
 
 // AudioEngine
 // ------------------------------------------------------------------------------------------------
 
-struct AudioEngineState; // Pimpl pattern
+SFZ_EXTERN_C SfzAudioEngine* sfzAudioCreate(SfzAllocator* allocator);
+SFZ_EXTERN_C void sfzAudioDestroy(SfzAudioEngine* audio);
 
-class AudioEngine final {
-public:
-	// Constructors & destructors
-	// --------------------------------------------------------------------------------------------
-
-	AudioEngine() noexcept = default;
-	AudioEngine(const AudioEngine&) = delete;
-	AudioEngine& operator= (const AudioEngine&) = delete;
-	AudioEngine(AudioEngine&& o) noexcept { this->swap(o); }
-	AudioEngine& operator= (AudioEngine&& o) noexcept { this->swap(o); return *this; }
-	~AudioEngine() noexcept { this->destroy(); }
-
-	// State methods
-	// --------------------------------------------------------------------------------------------
-
-	bool active() const noexcept { return mState != nullptr; }
-	bool init(SfzAllocator* allocator) noexcept;
-	void swap(AudioEngine& other) noexcept;
-	void destroy() noexcept;
-
-	// Methods
-	// --------------------------------------------------------------------------------------------
-
-	void renderDebugUI() noexcept;
-
-
-
-
-	// Private members
-	// --------------------------------------------------------------------------------------------
-private:
-
-	AudioEngineState* mState = nullptr;
-};
-
-} // namespace sfz
+SFZ_EXTERN_C void sfzAudioRenderDebugUI(SfzAudioEngine* audio);

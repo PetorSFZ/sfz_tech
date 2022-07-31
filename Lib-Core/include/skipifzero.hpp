@@ -205,16 +205,6 @@ constexpr bool eqf(f32x2 l, f32x2 r, f32 eps = EQF_EPS) { return eqf(l.x, r.x, e
 constexpr bool eqf(f32x3 l, f32x3 r, f32 eps = EQF_EPS) { return eqf(l.x, r.x, eps) && eqf(l.y, r.y, eps) && eqf(l.z, r.z, eps); }
 constexpr bool eqf(f32x4 l, f32x4 r, f32 eps = EQF_EPS) { return eqf(l.x, r.x, eps) && eqf(l.y, r.y, eps) && eqf(l.z, r.z, eps) && eqf(l.w, r.w, eps); }
 
-constexpr f32 abs(f32 v) { return v >= 0.0f ? v : -v; }
-constexpr f32x2 abs(f32x2 v) { return f32x2(sfz::abs(v.x), sfz::abs(v.y)); }
-constexpr f32x3 abs(f32x3 v) { return f32x3(sfz::abs(v.x), sfz::abs(v.y), sfz::abs(v.z)); }
-constexpr f32x4 abs(f32x4 v) { return f32x4(sfz::abs(v.x), sfz::abs(v.y), sfz::abs(v.z), sfz::abs(v.w)); }
-
-constexpr i32 abs(i32 v) { return v >= 0 ? v : -v; }
-constexpr i32x2 abs(i32x2 v) { return i32x2(sfz::abs(v.x), sfz::abs(v.y)); }
-constexpr i32x3 abs(i32x3 v) { return i32x3(sfz::abs(v.x), sfz::abs(v.y), sfz::abs(v.z)); }
-constexpr i32x4 abs(i32x4 v) { return i32x4(sfz::abs(v.x), sfz::abs(v.y), sfz::abs(v.z), sfz::abs(v.w)); }
-
 constexpr f32 elemMax(f32x2 v) { return sfz::max(v.x, v.y); }
 constexpr f32 elemMax(f32x3 v) { return sfz::max(sfz::max(v.x, v.y), v.z); }
 constexpr f32 elemMax(f32x4 v) { return sfz::max(sfz::max(sfz::max(v.x, v.y), v.z), v.w); }

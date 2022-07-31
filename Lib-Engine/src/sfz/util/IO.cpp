@@ -19,11 +19,13 @@
 #include "sfz/util/IO.hpp"
 
 #include <skipifzero.hpp>
+#include <skipifzero_strings.hpp>
 
-#include "sfz/Logging.hpp"
+#include "sfz/SfzLogging.h"
 
 #include <cstdlib>
 #include <cstdio> // fopen, fwrite, BUFSIZ
+#include <ctime>
 #include <cstring>
 
 #include "sfz/PushWarnings.hpp"
@@ -36,7 +38,7 @@
 #include <direct.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-static_assert(sizeof(time_t) == sizeof(__time64_t), "");
+static_assert(sizeof(time_t) == sizeof(i64), "");
 
 #elif defined(__APPLE__)
 #include <sys/stat.h>
@@ -98,44 +100,35 @@ static Array<T> readFileInternal(const char* path, bool binaryMode, SfzAllocator
 
 const char* myDocumentsPath() noexcept
 {
-	static const char* path = []() {
+	static const str320 path = []() -> str320 {
+		str320 tmp = {};
+
 #ifdef _WIN32
-		char* tmp = static_cast<char*>(getDefaultAllocator()->alloc(sfz_dbg("sfz::myDocumentsPath()"), MAX_PATH + 2, 32));
-		HRESULT result = SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, tmp);
-		if (result != S_OK) SFZ_ERROR_AND_EXIT("sfzCore", "%s", "Could not retrieve MyDocuments path.");
+		HRESULT result = SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, tmp.mRawStr);
+		if (result != S_OK) {
+			SFZ_LOG_ERROR("%s", "Could not retrieve MyDocuments path.");
+			sfz_assert_hard(false);
+		}
 
 		// Add path separator
-		size_t pathLen = std::strlen(tmp);
-		tmp[pathLen] = '/';
-		tmp[pathLen+1] = '\0';
-
-		return tmp;
+		tmp.appendChars("/\0", 2);
 #else
 		const char* envHome = std::getenv("HOME");
-		size_t pathLen = std::strlen(envHome);
-
-		char* tmp = static_cast<char*>(getDefaultAllocator()->allocate(sfz_dbg("sfz::myDocumentsPath()"), pathLen + 2, 32));
-		std::strncpy(tmp, envHome, pathLen);
-
-		// Add path separator
-		tmp[pathLen] = '/';
-		tmp[pathLen + 1] = '\0';
-		return tmp;
+		tmp.appendf("%s/\0", envHome);
 #endif
+
+		return tmp;
 	}();
-	return path;
+	return path.str();
 }
 
 const char* gameBaseFolderPath() noexcept
 {
-	static const char* path = []() {
-		const char* myDocuments = myDocumentsPath();
-		size_t len = std::strlen(myDocuments);
-		char* tmp = static_cast<char*>(getDefaultAllocator()->alloc(sfz_dbg("sfz::gameBaseFolderPath()"), len + 32, 32));
-#ifdef __APPLE__
-		std::snprintf(tmp, len + 32, "%s%s", myDocuments, "Library/Application Support/");
-#else
-		std::snprintf(tmp, len + 32, "%s%s", myDocuments, "My Games/");
+	static const str320 path = []() {
+		str320 tmp = {};
+		tmp.appendf("%s", myDocumentsPath());
+#ifdef _WIN32
+		tmp.appendf("My Games/");
 #endif
 		return tmp;
 	}();
@@ -160,7 +153,7 @@ const char* getFileNameFromPath(const char* path) noexcept
 // Filewatch related IO functions
 // ------------------------------------------------------------------------------------------------
 
-time_t fileLastModifiedDate(const char* path) noexcept
+i64 fileLastModifiedDate(const char* path) noexcept
 {
 #ifdef _WIN32
 	// struct _stat64i32
@@ -180,13 +173,13 @@ time_t fileLastModifiedDate(const char* path) noexcept
 	struct _stat64i32 buffer = {};
 	int res = _stat(path, &buffer);
 	if (res < 0) {
-		SFZ_ERROR("IO", "Couldn't _stat(%s), errno: %s", path, strerror(errno));
+		SFZ_LOG_ERROR("Couldn't _stat(%s), errno: %s", path, strerror(errno));
 		return time_t(0);
 	}
 	sfz_assert(res == 0);
 	return buffer.st_mtime;
 #else
-	SFZ_ERROR("IO", "NOT IMPLEMENTED");
+	SFZ_LOG_ERROR("NOT IMPLEMENTED");
 	sfz_assert(false);
 	return time_t(0);
 #endif
@@ -324,7 +317,7 @@ Array<u8> readBinaryFile(const char* path, SfzAllocator* allocator) noexcept
 	return readFileInternal<u8>(path, true, allocator);
 }
 
-DynString readTextFile(const char* path, SfzAllocator* allocator) noexcept
+Array<char> readTextFile(const char* path, SfzAllocator* allocator) noexcept
 {
 	Array<char> strData = readFileInternal<char>(path, false, allocator);
 	if (strData.size() == 0 || strData[strData.size() - 1] != '\0') {
@@ -333,11 +326,7 @@ DynString readTextFile(const char* path, SfzAllocator* allocator) noexcept
 		}
 		strData.add('\0');
 	}
-
-	DynString tmp;
-	tmp.internalArray().swap(strData);
-
-	return tmp;
+	return strData;
 }
 
 bool writeBinaryFile(const char* path, const u8* data, size_t numBytes) noexcept

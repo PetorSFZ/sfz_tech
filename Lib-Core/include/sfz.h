@@ -18,6 +18,7 @@
 
 #ifndef SFZ_H
 #define SFZ_H
+#pragma once
 
 #if defined(min) || defined(max)
 #undef min
@@ -54,6 +55,12 @@
 #define sfz_constant static const
 #endif
 
+#ifdef __cplusplus
+#define sfz_constexpr_func constexpr
+#else
+#define sfz_constexpr_func inline
+#endif
+
 
 // Scalar primitives
 // ------------------------------------------------------------------------------------------------
@@ -87,6 +94,14 @@ static_assert(sizeof(f32) == 4, "f32 is wrong size");
 static_assert(sizeof(f64) == 8, "f64 is wrong size");
 
 namespace sfz {
+
+constexpr i8 abs(i8 v) { return v >= 0 ? v : -v; }
+constexpr i16 abs(i16 v) { return v >= 0 ? v : -v; }
+constexpr i32 abs(i32 v) { return v >= 0 ? v : -v; }
+constexpr i64 abs(i64 v) { return v >= 0 ? v : -v; }
+
+constexpr f32 abs(f32 v) { return v >= 0.0f ? v : -v; }
+constexpr f64 abs(f64 v) { return v >= 0.0 ? v : -v; }
 
 constexpr i8 min(i8 l, i8 r) { return (l < r) ? l : r; }
 constexpr i16 min(i16 l, i16 r) { return (l < r) ? l : r; }
@@ -161,12 +176,30 @@ SFZ_EXTERN_C __declspec(noreturn) void __cdecl abort(void);
 SFZ_EXTERN_C void __cdecl __debugbreak(void);
 
 #ifndef NDEBUG
-#define sfz_assert(cond) do { if (!(cond)) { __debugbreak(); abort(); } } while(0)
+#define sfz_assert(cond) \
+	do { \
+		if (!(cond)) { \
+			__debugbreak(); \
+			volatile int assertDummyVal = 3; \
+			(void)assertDummyVal; \
+		} \
+	} while(0)
 #else
-#define sfz_assert(cond) do { (void)sizeof(cond); } while(0)
+#define sfz_assert(cond) \
+	do { \
+		(void)sizeof(cond); \
+	} while(0)
 #endif
 
-#define sfz_assert_hard(cond) do { if (!(cond)) { __debugbreak(); abort(); } } while(0)
+#define sfz_assert_hard(cond) \
+	do { \
+		if (!(cond)) { \
+			__debugbreak(); \
+			volatile int assertDummyVal = 3; \
+			(void)assertDummyVal; \
+			abort(); \
+		} \
+	} while(0)
 
 #else
 #error "Not implemented for this compiler"
@@ -338,6 +371,10 @@ constexpr f32 dot(f32x2 l, f32x2 r) { return l.x * r.x + l.y * r.y; }
 constexpr f32 dot(f32x3 l, f32x3 r) { return l.x * r.x + l.y * r.y + l.z * r.z; }
 constexpr f32 dot(f32x4 l, f32x4 r) { return l.x * r.x + l.y * r.y + l.z * r.z + l.w * r.w; }
 constexpr f32x3 cross(f32x3 l, f32x3 r) { return f32x3(l.y * r.z - l.z * r.y, l.z * r.x - l.x * r.z, l.x * r.y - l.y * r.x); }
+
+constexpr f32x2 abs(f32x2 v) { return f32x2(sfz::abs(v.x), sfz::abs(v.y)); }
+constexpr f32x3 abs(f32x3 v) { return f32x3(sfz::abs(v.x), sfz::abs(v.y), sfz::abs(v.z)); }
+constexpr f32x4 abs(f32x4 v) { return f32x4(sfz::abs(v.x), sfz::abs(v.y), sfz::abs(v.z), sfz::abs(v.w)); }
 
 constexpr f32x2 min(f32x2 l, f32x2 r) { return f32x2(sfz::min(l.x, r.x), sfz::min(l.y, r.y)); }
 constexpr f32x3 min(f32x3 l, f32x3 r) { return f32x3(sfz::min(l.x, r.x), sfz::min(l.y, r.y), sfz::min(l.z, r.z)); }
@@ -525,6 +562,10 @@ constexpr i32 dot(i32x2 l, i32x2 r) { return l.x * r.x + l.y * r.y; }
 constexpr i32 dot(i32x3 l, i32x3 r) { return l.x * r.x + l.y * r.y + l.z * r.z; }
 constexpr i32 dot(i32x4 l, i32x4 r) { return l.x * r.x + l.y * r.y + l.z * r.z + l.w * r.w; }
 constexpr i32x3 cross(i32x3 l, i32x3 r) { return i32x3(l.y * r.z - l.z * r.y, l.z * r.x - l.x * r.z, l.x * r.y - l.y * r.x); }
+
+constexpr i32x2 abs(i32x2 v) { return i32x2(sfz::abs(v.x), sfz::abs(v.y)); }
+constexpr i32x3 abs(i32x3 v) { return i32x3(sfz::abs(v.x), sfz::abs(v.y), sfz::abs(v.z)); }
+constexpr i32x4 abs(i32x4 v) { return i32x4(sfz::abs(v.x), sfz::abs(v.y), sfz::abs(v.z), sfz::abs(v.w)); }
 
 constexpr i32x2 min(i32x2 l, i32x2 r) { return i32x2(sfz::min(l.x, r.x), sfz::min(l.y, r.y)); }
 constexpr i32x3 min(i32x3 l, i32x3 r) { return i32x3(sfz::min(l.x, r.x), sfz::min(l.y, r.y), sfz::min(l.z, r.z)); }
@@ -749,19 +790,6 @@ sfz_struct(SfzHandle) {
 };
 
 sfz_constant SfzHandle SFZ_NULL_HANDLE = {};
-
-#ifdef __cplusplus
-#define SFZ_TYPED_HANDLE(name) \
-struct name final { \
-	SfzHandle h; \
-	bool operator== (name other) const { return this->h == other.h; } \
-	bool operator!= (name other) const { return this->h != other.h; } \
-	bool operator== (SfzHandle other) const { return this->h == other; } \
-	bool operator!= (SfzHandle other) const { return this->h != other; } \
-};
-#else
-#define SFZ_TYPED_HANDLE(name) typedef struct name { SfzHandle h; } name;
-#endif
 
 
 // String ID

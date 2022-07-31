@@ -68,7 +68,7 @@ Feel free to try it out, but be aware that the API isn't stable and things might
 
 ## Dependencies and building
 
-ZeroUI depends on [skipifzero core](https://github.com/PetorSFZ/sfz_tech/tree/master/Lib-Core), [fontstash](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/fontstash) and [stb_truetype.h](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/stb). You can easily gather all the required headers from these libraries and dump them inside the same directory as the ZeroUI files and you are good to go.
+ZeroUI depends on [skipifzero core](https://github.com/PetorSFZ/sfz_tech/tree/master/Lib-Core) and [stb_truetype.h](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/stb). You can easily gather all the required headers from these libraries and dump them inside the same directory as the ZeroUI files and you are good to go.
 
 
 ## Documentation and samples

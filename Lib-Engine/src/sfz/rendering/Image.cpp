@@ -21,7 +21,7 @@
 
 #include <skipifzero_strings.hpp>
 
-#include <sfz/Logging.hpp>
+#include <sfz/SfzLogging.h>
 
 // stb_image implementation
 // ------------------------------------------------------------------------------------------------
@@ -119,17 +119,17 @@ static void padRgbFloat(f32x4* dstImg, const f32x3* srcImg, i32 w, i32 h) noexce
 	}
 }
 
-static u32 sizeOfElement(ImageType imageType) noexcept
+static u32 sizeOfElement(SfzImageType imageType) noexcept
 {
 	switch (imageType) {
-	case ImageType::UNDEFINED: return 0;
-	case ImageType::R_U8: return 1 * sizeof(u8);
-	case ImageType::RG_U8: return 2 * sizeof(u8);
-	case ImageType::RGBA_U8: return 4 * sizeof(u8);
+	case SFZ_IMAGE_TYPE_UNDEFINED: return 0;
+	case SFZ_IMAGE_TYPE_R_U8: return 1 * sizeof(u8);
+	case SFZ_IMAGE_TYPE_RG_U8: return 2 * sizeof(u8);
+	case SFZ_IMAGE_TYPE_RGBA_U8: return 4 * sizeof(u8);
 
-	case ImageType::R_F32: return 1 * sizeof(f32);
-	case ImageType::RG_F32: return 2 * sizeof(f32);
-	case ImageType::RGBA_F32: return 4 * sizeof(f32);
+	case SFZ_IMAGE_TYPE_R_F32: return 1 * sizeof(f32);
+	case SFZ_IMAGE_TYPE_RG_F32: return 2 * sizeof(f32);
+	case SFZ_IMAGE_TYPE_RGBA_F32: return 4 * sizeof(f32);
 	}
 	sfz_assert(false);
 	return 0;
@@ -138,7 +138,7 @@ static u32 sizeOfElement(ImageType imageType) noexcept
 // Implementations of functions from header
 // ------------------------------------------------------------------------------------------------
 
-Image Image::allocate(i32 width, i32 height, ImageType type, SfzAllocator* allocator) noexcept
+Image Image::allocate(i32 width, i32 height, SfzImageType type, SfzAllocator* allocator) noexcept
 {
 	Image image;
 	image.type = type;
@@ -160,12 +160,11 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 {
 	// Some input error handling
 	if (basePath == nullptr || fileName == nullptr) {
-		SFZ_WARNING("PhantasyEngine", "Invalid path to image");
+		SFZ_LOG_WARNING("Invalid path to image");
 		return Image();
 	}
 	if (staticAllocator == nullptr) {
-		SFZ_WARNING("PhantasyEngine",
-			"Allocator not specified, call setLoadImageAllocator() first");
+		SFZ_LOG_WARNING("Allocator not specified, call setLoadImageAllocator() first");
 		return Image();
 	}
 
@@ -189,12 +188,12 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 
 	// Error checking
 	if (img == nullptr) {
-		SFZ_WARNING("PhantasyEngine", "Unable to load image \"%s\", reason: %s",
+		SFZ_LOG_WARNING("Unable to load image \"%s\", reason: %s",
 			path.str(), stbi_failure_reason());
 		return Image();
 	}
 	if (numChannels != 1 && numChannels != 2 && numChannels != 3 && numChannels != 4) {
-		SFZ_WARNING("PhantasyEngine", "Image \"%s\" has unsupported number of channels: %i",
+		SFZ_LOG_WARNING("Image \"%s\" has unsupported number of channels: %i",
 			path.str(), numChannels);
 		stbi_image_free(img);
 		return Image();
@@ -215,27 +214,27 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 			reinterpret_cast<const f32x3*>(img),
 			width,
 			height);
-		tmp.type = ImageType::RGBA_F32;
+		tmp.type = SFZ_IMAGE_TYPE_RGBA_F32;
 		tmp.bytesPerPixel = 4 * channelSize;
 	}
 	else {
 		switch (numChannels) {
 		case 1:
 			tmp.rawData.add(img, numBytes);
-			tmp.type = ImageType::R_U8;
+			tmp.type = SFZ_IMAGE_TYPE_R_U8;
 			break;
 		case 2:
 			tmp.rawData.add(img, numBytes);
-			tmp.type = ImageType::RG_U8;
+			tmp.type = SFZ_IMAGE_TYPE_RG_U8;
 			break;
 		case 3:
 			padRgb(tmp.rawData, img, width, height);
-			tmp.type = ImageType::RGBA_U8;
+			tmp.type = SFZ_IMAGE_TYPE_RGBA_U8;
 			tmp.bytesPerPixel = 4 * channelSize;
 			break;
 		case 4:
 			tmp.rawData.add(img, numBytes);
-			tmp.type = ImageType::RGBA_U8;
+			tmp.type = SFZ_IMAGE_TYPE_RGBA_U8;
 			break;
 		default:
 			sfz_assert_hard(false);
@@ -243,7 +242,7 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 	}
 
 	// Free temp memory used by stb_image and return image
-	SFZ_NOISE("PhantasyEngine", "Image \"%s\" loaded succesfully", path.str());
+	SFZ_LOG_NOISE("Image \"%s\" loaded succesfully", path.str());
 	stbi_image_free(img);
 	return tmp;
 }

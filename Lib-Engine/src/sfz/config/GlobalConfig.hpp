@@ -24,12 +24,10 @@
 
 #include "sfz/config/Setting.hpp"
 
-namespace sfz {
-
 // GlobalConfig
 // ------------------------------------------------------------------------------------------------
 
-struct GlobalConfigImpl; // Pimpl pattern
+struct SfzGlobalConfigImpl; // Pimpl pattern
 
 /// A global configuration class
 ///
@@ -49,18 +47,18 @@ struct GlobalConfigImpl; // Pimpl pattern
 /// Settings are expected to stay relatively static during the runtime of a program. They are not
 /// meant for communication and should not be changed unless the user specifically requests for
 /// them to be changed.
-class GlobalConfig {
+struct SfzGlobalConfig {
 public:
 	// Constructors & destructors
 	// --------------------------------------------------------------------------------------------
 
-	inline GlobalConfig() noexcept : mImpl(nullptr) {} // Compile fix for Emscripten
-	GlobalConfig(const GlobalConfig&) = delete;
-	GlobalConfig& operator= (const GlobalConfig&) = delete;
-	GlobalConfig(GlobalConfig&&) = delete;
-	GlobalConfig& operator= (GlobalConfig&&) = delete;
+	inline SfzGlobalConfig() noexcept : mImpl(nullptr) {} // Compile fix for Emscripten
+	SfzGlobalConfig(const SfzGlobalConfig&) = delete;
+	SfzGlobalConfig& operator= (const SfzGlobalConfig&) = delete;
+	SfzGlobalConfig(SfzGlobalConfig&&) = delete;
+	SfzGlobalConfig& operator= (SfzGlobalConfig&&) = delete;
 
-	~GlobalConfig() noexcept { this->destroy(); }
+	~SfzGlobalConfig() noexcept { this->destroy(); }
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
@@ -76,23 +74,24 @@ public:
 
 	/// Gets the specified Setting. If it does not exist it will be created (type int with value 0).
 	/// The optional parameter "created" returns whether the Setting was created or already existed.
-	Setting* createSetting(const char* section, const char* key, bool* created = nullptr) noexcept;
+	SfzSetting* createSetting(const char* section, const char* key, bool* created = nullptr) noexcept;
 
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
 	/// Gets the specified Setting. Returns nullptr if it does not exist.
-	Setting* getSetting(const char* section, const char* key) noexcept;
-	Setting* getSetting(const char* key) noexcept;
+	SfzSetting* getSetting(const char* section, const char* key) noexcept;
+	const SfzSetting* getSetting(const char* section, const char* key) const noexcept;
+	SfzSetting* getSetting(const char* key) noexcept;
 
 	/// Returns pointers to all available settings
-	void getAllSettings(Array<Setting*>& settings) noexcept;
+	void getAllSettings(sfz::Array<SfzSetting*>& settings) noexcept;
 
 	/// Returns all sections available
-	void getSections(Array<str32>& sections) noexcept;
+	void getSections(sfz::Array<sfz::str32>& sections) noexcept;
 
 	/// Returns all settings available in a given section
-	void getSectionSettings(const char* section, Array<Setting*>& settings) noexcept;
+	void getSectionSettings(const char* section, sfz::Array<SfzSetting*>& settings) noexcept;
 
 	// Sanitizers
 	// --------------------------------------------------------------------------------------------
@@ -102,22 +101,22 @@ public:
 	/// specified bounds. If the setting does not exist or is of an incompatible type it will be
 	/// set to the specified default value.
 
-	Setting* sanitizeInt(
+	SfzSetting* sanitizeInt(
 		const char* section, const char* key,
 		bool writeToFile = true,
-		const IntBounds& bounds = IntBounds(0)) noexcept;
+		const SfzIntBounds& bounds = SfzIntBounds(0)) noexcept;
 
-	Setting* sanitizeFloat(
+	SfzSetting* sanitizeFloat(
 		const char* section, const char* key,
 		bool writeToFile = true,
-		const FloatBounds& bounds = FloatBounds(0.0f)) noexcept;
+		const SfzFloatBounds& bounds = SfzFloatBounds(0.0f)) noexcept;
 
-	Setting* sanitizeBool(
+	SfzSetting* sanitizeBool(
 		const char* section, const char* key,
 		bool writeToFile = true,
-		const BoolBounds& bounds = BoolBounds(false)) noexcept;
+		const SfzBoolBounds& bounds = SfzBoolBounds(false)) noexcept;
 
-	Setting* sanitizeInt(
+	SfzSetting* sanitizeInt(
 		const char* section, const char* key,
 		bool writeToFile = true,
 		i32 defaultValue = 0,
@@ -125,14 +124,14 @@ public:
 		i32 maxValue = I32_MAX,
 		i32 step = 1) noexcept;
 
-	Setting* sanitizeFloat(
+	SfzSetting* sanitizeFloat(
 		const char* section, const char* key,
 		bool writeToFile = true,
 		f32 defaultValue = 0.0f,
 		f32 minValue = -F32_MAX,
 		f32 maxValue = F32_MAX) noexcept;
 
-	Setting* sanitizeBool(
+	SfzSetting* sanitizeBool(
 		const char* section, const char* key,
 		bool writeToFile = true,
 		bool defaultValue = false) noexcept;
@@ -141,7 +140,5 @@ private:
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	GlobalConfigImpl* mImpl;
+	SfzGlobalConfigImpl* mImpl;
 };
-
-} // namespace sfz

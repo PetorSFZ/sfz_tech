@@ -42,6 +42,18 @@ inline u32 numBytesPerPixelForFormat(ZgFormat format) noexcept
 	case ZG_FORMAT_RG_U8_UNORM: return 2 * sizeof(u8);
 	case ZG_FORMAT_RGBA_U8_UNORM: return 4 * sizeof(u8);
 
+	case ZG_FORMAT_R_U8: return 1 * sizeof(u8);
+	case ZG_FORMAT_RG_U8: return 2 * sizeof(u8);
+	case ZG_FORMAT_RGBA_U8: return 4 * sizeof(u8);
+
+	case ZG_FORMAT_R_U16: return 1 * sizeof(u16);
+	case ZG_FORMAT_RG_U16: return 2 * sizeof(u16);
+	case ZG_FORMAT_RGBA_U16: return 4 * sizeof(u16);
+
+	case ZG_FORMAT_R_I32: return 1 * sizeof(i32);
+	case ZG_FORMAT_RG_I32: return 2 * sizeof(i32);
+	case ZG_FORMAT_RGBA_I32: return 4 * sizeof(i32);
+
 	case ZG_FORMAT_R_F16: return 1 * sizeof(u16);
 	case ZG_FORMAT_RG_F16: return 2 * sizeof(u16);
 	case ZG_FORMAT_RGBA_F16: return 4 * sizeof(u16);
@@ -450,6 +462,7 @@ struct ZgCommandList final {
 			sfz_assert(
 				mapping.type == ZG_BINDING_TYPE_BUFFER_TYPED ||
 				mapping.type == ZG_BINDING_TYPE_BUFFER_STRUCTURED ||
+				mapping.type == ZG_BINDING_TYPE_BUFFER_BYTEADDRESS ||
 				mapping.type == ZG_BINDING_TYPE_TEXTURE);
 
 			// Get the CPU descriptor;
@@ -512,7 +525,36 @@ struct ZgCommandList final {
 				srvDesc.Buffer.FirstElement = binding->firstElementIdx;
 				srvDesc.Buffer.NumElements = binding->numElements;
 				srvDesc.Buffer.StructureByteStride = binding->elementStrideBytes;
-				srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE; // TODO: "RAW" needed for anything?
+				srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+				mDevice->CreateShaderResourceView(buffer->resource.resource, &srvDesc, cpuDescriptor);
+
+				// Set texture resource state if not null descriptor
+				if (binding != nullptr) {
+					// Set buffer resource state
+					requireResourceStateBuffer(
+						*this->commandList.Get(), this->tracking, buffer,
+						D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+				}
+			}
+			else if (mapping.type == ZG_BINDING_TYPE_BUFFER_BYTEADDRESS) {
+				// If we can't find argument we need to insert null descriptor
+				if (binding == nullptr) {
+					// TODO: Is definitely possible
+					sfz_assert(false);
+					return ZG_WARNING_UNIMPLEMENTED;
+				}
+
+				// Get buffer from binding
+				ZgBuffer* buffer = binding->buffer;
+
+				// Create shader resource view
+				D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+				srvDesc.Format = DXGI_FORMAT_R32_TYPELESS; 
+				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+				srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+				srvDesc.Buffer.FirstElement = 0;
+				srvDesc.Buffer.NumElements = u32(buffer->sizeBytes / 4);
+				srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_RAW;
 				mDevice->CreateShaderResourceView(buffer->resource.resource, &srvDesc, cpuDescriptor);
 
 				// Set texture resource state if not null descriptor
@@ -568,7 +610,8 @@ struct ZgCommandList final {
 		for (const UAVMapping& mapping : rootMapping->UAVs) {
 			sfz_assert(
 				mapping.type == ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV ||
-				mapping.type == ZG_BINDING_TYPE_TEXTURE_UAV);
+				mapping.type == ZG_BINDING_TYPE_TEXTURE_UAV ||
+				mapping.type == ZG_BINDING_TYPE_BUFFER_BYTEADDRESS_UAV);
 
 			// Get the CPU descriptor
 			D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor;
@@ -596,7 +639,24 @@ struct ZgCommandList final {
 				uavDesc.Buffer.NumElements = binding->numElements;
 				uavDesc.Buffer.StructureByteStride = binding->elementStrideBytes;
 				uavDesc.Buffer.CounterOffsetInBytes = 0; // We don't have a counter
-				uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE; // TODO: This need to be set if RWByteAddressBuffer
+				uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE; 
+				mDevice->CreateUnorderedAccessView(buffer->resource.resource, nullptr, &uavDesc, cpuDescriptor);
+
+				// Set buffer resource state
+				requireResourceStateBuffer(
+					*this->commandList.Get(), this->tracking, buffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+			}
+			else if (binding->type == ZG_BINDING_TYPE_BUFFER_BYTEADDRESS_UAV) {
+				ZgBuffer* buffer = binding->buffer;
+
+				// Create unordered access view
+				D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+				uavDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+				uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+				uavDesc.Buffer.FirstElement = 0;
+				uavDesc.Buffer.NumElements = u32(buffer->sizeBytes / 4);
+				uavDesc.Buffer.CounterOffsetInBytes = 0; // We don't have a counter
+				uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_RAW;
 				mDevice->CreateUnorderedAccessView(buffer->resource.resource, nullptr, &uavDesc, cpuDescriptor);
 
 				// Set buffer resource state

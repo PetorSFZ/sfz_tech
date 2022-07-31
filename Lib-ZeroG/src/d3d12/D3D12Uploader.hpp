@@ -58,8 +58,9 @@ struct ZgUploader final {
 		numBytes = sfz::roundUpAligned(numBytes, 256);
 
 		// Can only allocate at most half of the uploader's backing buffer at once
+		// TODO: WHY? This is stupid, disabling for now.
 		if (numBytes == 0) return {};
-		if (numBytes >= (sizeBytes / 2)) return {};
+		//if (numBytes >= (sizeBytes / 2)) return {};
 
 		// Try to allocate a range in the buffer. If range is too big and stretches "both ends" of
 		// the buffer try again.
@@ -75,7 +76,8 @@ struct ZgUploader final {
 		const u64 safeCompareOffset = (beginIdxInf + numBytes) - sizeBytes;
 		if (safeCompareOffset >= safeOffset) {
 			const u32 tooManyBytes = u32(safeCompareOffset - safeOffset);
-			ZG_ERROR("Allocated too much memory from uploader (off by: %u bytes)", tooManyBytes);
+			ZG_ERROR("Allocated too much memory from uploader (off by: %u bytes [%.2f MiB])",
+				tooManyBytes, f32(tooManyBytes) / (1024.0f * 1024.0f));
 			return {};
 		}
 

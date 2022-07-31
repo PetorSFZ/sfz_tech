@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "ZeroUI.hpp"
+#include "ZeroUI.h"
 
 // About
 // ------------------------------------------------------------------------------------------------
@@ -28,24 +28,20 @@
 // You should typically only include this header if you are implementing a custom widget rendering
 // function, e.g. an archetype.
 
-namespace zui {
-
 // Initialization and internal interface
 // ------------------------------------------------------------------------------------------------
+
+struct ZuiDrawCtx;
 
 // These functions are used to initialize and handle communication with the drawing module, these
 // are automatically called by ZeroUI and should not be called manually by the user.
 
-void internalDrawInit(SfzAllocator* allocator, u32 fontOversampling);
-void internalDrawDeinit();
-void internalDrawSetFontHandle(u64 handle);
+bool zuiInternalDrawCtxInit(ZuiDrawCtx* drawCtx, const ZuiCfg* cfg, SfzAllocator* allocator);
 
-bool internalDrawAddFont(const char* name, SfzStrID nameID, const char* path, f32 atlasSize);
-bool internalDrawFontTextureUpdated();
-ImageViewConst internalDrawGetFontTexture();
+void zuiInternalDrawCtxDestroy(ZuiDrawCtx* drawCtx);
 
-void internalDrawClearRenderData();
-RenderDataView internalDrawGetRenderDataView();
+bool zuiInternalDrawAddFont(
+	ZuiDrawCtx* drawCtx, ZuiID id, const char* ttfPath, f32 atlasSize, SfzAllocator* allocator);
 
 // Low-level drawing functions
 // ------------------------------------------------------------------------------------------------
@@ -55,41 +51,39 @@ RenderDataView internalDrawGetRenderDataView();
 // intermixed with your normal UI code is undefined behaviour, as actually rendering the UI is
 // deferred and not done immediately.
 
-void drawAddCommand(
-	const mat34& transform,
-	const Vertex* vertices,
+void zuiDrawAddCommand(
+	ZuiDrawCtx* drawCtx,
+	const SfzMat34& transform,
+	const ZuiVertex* vertices,
 	u32 numVertices,
 	const u32* indices,
 	u32 numIndices,
-	u64 imageHandle = 0,
-	bool isAlphaTexture = false);
+	u64 imageHandle,
+	ZuiCmdType cmdType);
 
-f32 drawTextFmtCentered(
-	const mat34& transform,
-	SfzStrID fontID,
+f32 zuiDrawTextCentered(
+	ZuiDrawCtx* drawCtx,
+	const SfzMat34& transform,
+	ZuiID fontID,
 	f32 size,
 	f32x4 color,
 	const char* text);
 
-void drawImage(
-	const mat34& transform,
+void zuiDrawImage(
+	ZuiDrawCtx* drawCtx,
+	const SfzMat34& transform,
 	f32x2 dims,
-	u64 imageHandle,
-	bool isAlphaTexture = false);
+	u64 imageHandle);
 
-void drawRect(
-	const mat34& transform,
+void zuiDrawRect(
+	ZuiDrawCtx* drawCtx,
+	const SfzMat34& transform,
 	f32x2 dims,
 	f32x4 color);
 
-void drawBorder(
-	const mat34& transform,
+void zuiDrawBorder(
+	ZuiDrawCtx* drawCtx,
+	const SfzMat34& transform,
 	f32x2 dims,
 	f32 thickness,
 	f32x4 color);
-
-// TODO: This might be a tiny bit broken
-f32 drawTextFmt(
-	f32x2 pos, HAlign halign, VAlign valign, SfzStrID fontID, f32 size, f32x4 color, const char* format, ...);
-
-} // namespace zui

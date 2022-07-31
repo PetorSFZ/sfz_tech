@@ -24,8 +24,8 @@
 #include <skipifzero_math.hpp>
 #include <skipifzero_new.hpp>
 
-#include "sfz/Context.hpp"
-#include "sfz/config/GlobalConfig.hpp"
+#include "sfz/config/SfzConfig.h"
+#include "sfz/config/Setting.hpp"
 
 namespace sfz {
 
@@ -49,7 +49,7 @@ struct ImGuiState final {
 
 static ImGuiState* imguiState = nullptr;
 
-ImageView initializeImgui(SfzAllocator* allocator) noexcept
+SfzImageView initializeImgui(SfzAllocator* allocator) noexcept
 {
 	// Replace Imgui allocators with SfzAllocator
 	ImGui::SetAllocatorFunctions(imguiAllocFunc, imguiFreeFunc, allocator);
@@ -193,9 +193,9 @@ ImageView initializeImgui(SfzAllocator* allocator) noexcept
 		io.Fonts->AddFontFromFileTTF(SECONDARY_FONT_PATH, FONT_SIZE_PIXELS, &fontConfig);
 
 	// Rasterize default font and return view
-	ImageView fontTexView;
+	SfzImageView fontTexView = {};
 	io.Fonts->GetTexDataAsAlpha8(&fontTexView.rawData, &fontTexView.width, &fontTexView.height);
-	fontTexView.type = ImageType::R_U8;
+	fontTexView.type = SFZ_IMAGE_TYPE_R_U8;
 	return fontTexView;
 }
 
@@ -210,7 +210,8 @@ void updateImgui(
 	i32x2 windowResolution,
 	const RawInputState& rawInputState,
 	const SDL_Event* keyboardEvents,
-	u32 numKeyboardEvents) noexcept
+	u32 numKeyboardEvents,
+	SfzConfig* cfg) noexcept
 {
 	// Note, these should actually be freed using SDL_FreeCursor(). But I don't think it matters
 	// that much.
@@ -227,23 +228,16 @@ void updateImgui(
 		return true;
 	}();
 
-	static Setting* invertedScrollSetting = nullptr;
+	static SfzSetting* invertedScrollSetting = nullptr;
 	if (invertedScrollSetting == nullptr) {
-		GlobalConfig& cfg = getGlobalConfig();
-		bool defaultVal = false;
-#ifdef __APPLE__
-		defaultVal = true;
-#endif
-		invertedScrollSetting = cfg.sanitizeBool("Imgui", "invertMouseScrollY", true, defaultVal);
+		invertedScrollSetting = sfzCfgGetSetting(cfg, "Imgui.invertMouseScrollY");
 	}
 
 	ImGuiIO& io = ImGui::GetIO();
 
 
 	// Retrieve scale factor from config
-	sfz::GlobalConfig& cfg = sfz::getGlobalConfig();
-	const sfz::Setting* imguiScaleSetting =
-		cfg.sanitizeFloat("Imgui", "scale", true, sfz::FloatBounds(2.0f, 1.0f, 3.0f));
+	const SfzSetting* imguiScaleSetting = sfzCfgGetSetting(cfg, "Imgui.scale");
 	f32 scaleFactor = 1.0f / imguiScaleSetting->floatValue();
 
 	// Set display dimensions

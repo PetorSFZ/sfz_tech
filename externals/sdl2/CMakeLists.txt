@@ -1,5 +1,4 @@
 # Author: Peter Hillerström (https://github.com/PetorSFZ)
-# https://github.com/PhantasyEngine/Dependency-SDL2
 # License: Public Domain (do whatever you want with this file,
 #                         but it would be nice if you kept this header)
 # SDL2 License: zlib
@@ -24,7 +23,7 @@ if(WIN32)
 
 	# Use bundled SDL2 on Windows
 	set(SDL2_FOUND true)
-	set(SDL2_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Windows/SDL2-2.0.16)
+	set(SDL2_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Windows/SDL2-2.0.22)
 	set(SDL2_INCLUDE_DIR ${SDL2_DIR}/include)
 
 	find_library(SDL2_LIB
@@ -51,23 +50,25 @@ if(WIN32)
 
 elseif(CMAKE_SYSTEM_NAME STREQUAL "iOS")
 
+	message(FATAL_ERROR "Not implemented")
+
 	# Don't support 32 bit iOS build
-	if (BITS32)
-		message(FATAL_ERROR "No support for 32bit build")
-	endif()
+	#if (BITS32)
+	#	message(FATAL_ERROR "No support for 32bit build")
+	#endif()
 
 	# Use bundled SDL2
-	set(SDL2_FOUND true)
-	set(SDL2_DIR ${CMAKE_CURRENT_SOURCE_DIR}/iOS)
-	set(SDL2_INCLUDE_DIR ${SDL2_DIR}/include)
-	set(SDL2_LIBRARY ${SDL2_DIR}/lib/libSDL2.a)
+	#set(SDL2_FOUND true)
+	#set(SDL2_DIR ${CMAKE_CURRENT_SOURCE_DIR}/iOS)
+	#set(SDL2_INCLUDE_DIR ${SDL2_DIR}/include)
+	#set(SDL2_LIBRARY ${SDL2_DIR}/lib/libSDL2.a)
 
 	# Grab all headers from include dir and add to empty custom target for IDE
-	file(GLOB_RECURSE SDL2_HEADER_FILES
-		"iOS/*.h"
-	)
-	source_group(TREE ${SDL2_DIR} FILES ${SDL2_HEADER_FILES})
-	add_custom_target(SDL2 SOURCES ${SDL2_HEADER_FILES})
+	#file(GLOB_RECURSE SDL2_HEADER_FILES
+	#	"iOS/*.h"
+	#)
+	#source_group(TREE ${SDL2_DIR} FILES ${SDL2_HEADER_FILES})
+	#add_custom_target(SDL2 SOURCES ${SDL2_HEADER_FILES})
 
 elseif(EMSCRIPTEN)
 	# Do nothing. Emscripten has SDL2 built in.

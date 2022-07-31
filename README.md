@@ -18,11 +18,8 @@ That said, just because the projects are in the same repository does NOT mean th
 
 ## Third-party libraries
 
-* [cgltf](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/cgltf) - [Original source](https://github.com/jkuhlmann/cgltf) - glTF loader written in C.
 * [dear-imgui](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/dear-imgui) - [Original source](https://github.com/ocornut/imgui) - Immediate mode gui library.
-* [fontstash](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/fontstash) - [Original source](https://github.com/memononen/fontstash) - A light-weight online font texture atlas builder.
 * [imgui-plot](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/imgui-plot) - [Original source](https://github.com/soulthreads/imgui-plot) - Improved plot widget for dear-imgui.
-* [nativefiledialog](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/nativefiledialog) - [Original source](https://github.com/mlabbe/nativefiledialog) - Portable library for native file open/save dialogs.
 * [sajson](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/sajson) - [Original source](https://github.com/chadaustin/sajson) - Single-allocation JSON parser.
 * [SDL2](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/sdl2) - [Original source](https://www.libsdl.org/) - Cross-platform low-level input/windowing API.
 * [SoLoud](https://github.com/PetorSFZ/sfz_tech/tree/master/externals/soloud) - [Original source](https://github.com/jarikomppa/soloud) - Free, easy, portable audio engine for games.

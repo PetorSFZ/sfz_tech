@@ -26,6 +26,8 @@
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
 
+struct SfzConfig;
+
 namespace sfz {
 
 // ZeroG logger
@@ -56,7 +58,9 @@ struct CheckZgImpl final {
 
 bool initializeZeroG(
 	SDL_Window* window,
+	const char* userDataDir,
 	SfzAllocator* allocator,
+	SfzConfig* cfg,
 	bool vsync) noexcept;
 
 void* getNativeHandle(SDL_Window* window) noexcept;

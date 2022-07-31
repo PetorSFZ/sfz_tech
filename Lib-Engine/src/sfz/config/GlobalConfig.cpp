@@ -22,24 +22,25 @@
 #include <skipifzero_math.hpp>
 #include <skipifzero_new.hpp>
 
-#include "sfz/Context.hpp"
-#include "sfz/Logging.hpp"
+#include "sfz/SfzLogging.h"
 #include "sfz/util/IniParser.hpp"
-
-namespace sfz {
 
 // GlobalConfigImpl
 // ------------------------------------------------------------------------------------------------
 
+namespace {
+
 struct Section final {
-	str32 sectionKey;
-	Array<UniquePtr<Setting>> settings;
+	sfz::str32 sectionKey;
+	sfz::Array<sfz::UniquePtr<SfzSetting>> settings;
 };
 
-struct GlobalConfigImpl final {
+}
+
+struct SfzGlobalConfigImpl final {
 	SfzAllocator* allocator = nullptr;
-	IniParser ini;
-	Array<Section> sections;
+	sfz::IniParser ini;
+	sfz::Array<Section> sections;
 	bool loaded = false; // Can only be loaded once... for now
 	bool noSaveMode = false;
 };
@@ -47,21 +48,21 @@ struct GlobalConfigImpl final {
 // GlobalConfig: Methods
 // ------------------------------------------------------------------------------------------------
 
-void GlobalConfig::init(const char* basePath, const char* fileName, SfzAllocator* allocator) noexcept
+void SfzGlobalConfig::init(const char* basePath, const char* fileName, SfzAllocator* allocator) noexcept
 {
 	if (mImpl != nullptr) this->destroy();
-	mImpl = sfz_new<GlobalConfigImpl>(allocator, sfz_dbg("GlobalConfigImpl"));
+	mImpl = sfz_new<SfzGlobalConfigImpl>(allocator, sfz_dbg("GlobalConfigImpl"));
 	mImpl->allocator = allocator;
 
 	// Initialize IniParser with path
-	str320 tmpPath("%s/%s", basePath, fileName);
-	mImpl->ini = IniParser(tmpPath);
+	sfz::str320 tmpPath("%s/%s", basePath, fileName);
+	mImpl->ini = sfz::IniParser(tmpPath, allocator);
 
 	// Initialize settings array with allocator
 	mImpl->sections.init(64, allocator, sfz_dbg(""));
 }
 
-void GlobalConfig::destroy() noexcept
+void SfzGlobalConfig::destroy() noexcept
 {
 	if (mImpl == nullptr) return;
 	SfzAllocator* allocator = mImpl->allocator;
@@ -69,22 +70,22 @@ void GlobalConfig::destroy() noexcept
 	mImpl = nullptr;
 }
 
-void GlobalConfig::setNoSaveConfigMode()
+void SfzGlobalConfig::setNoSaveConfigMode()
 {
 	mImpl->noSaveMode = true;
 }
 
-void GlobalConfig::load() noexcept
+void SfzGlobalConfig::load() noexcept
 {
 	sfz_assert(mImpl != nullptr);
 	sfz_assert(!mImpl->loaded); // TODO: Make it possible to reload settings from file
 
 	// Load ini file
-	IniParser& ini = mImpl->ini;
+	sfz::IniParser & ini = mImpl->ini;
 	if (ini.load()) {
-		SFZ_INFO("PhantasyEngine", "Succesfully loaded config ini file");
+		SFZ_LOG_INFO("Succesfully loaded config ini file");
 	} else {
-		SFZ_INFO("PhantasyEngine", "Failed to load config ini file, expected if this is first run");
+		SFZ_LOG_INFO("Failed to load config ini file, expected if this is first run");
 	}
 
 	// Create setting items of all ini items
@@ -110,33 +111,33 @@ void GlobalConfig::load() noexcept
 
 		// Create new setting
 		section->settings.add(
-			makeUnique<Setting>(mImpl->allocator, sfz_dbg(""), item.getSection(), item.getKey()));
-		Setting& setting = *section->settings.last();
+			sfz::makeUnique<SfzSetting>(mImpl->allocator, sfz_dbg(""), item.getSection(), item.getKey()));
+		SfzSetting& setting = *section->settings.last();
 
 		// Get value of setting
 		if (item.getFloat() != nullptr) {
 			f32 floatVal = *item.getFloat();
 			i32 intVal = *item.getInt();
-			if (eqf(floatVal, f32(intVal))) {
-				setting.create(SettingValue::createInt(intVal, true, IntBounds(0)));
+			if (sfz::eqf(floatVal, f32(intVal))) {
+				setting.create(SfzSettingValue::createInt(intVal, true, SfzIntBounds(0)));
 			}
 			else {
-				setting.create(SettingValue::createFloat(floatVal, true, FloatBounds(0.0f)));
+				setting.create(SfzSettingValue::createFloat(floatVal, true, SfzFloatBounds(0.0f)));
 			}
 		}
 		else if (item.getBool() != nullptr) {
 			bool boolVal = *item.getBool();
-			setting.create(SettingValue::createBool(boolVal, true, BoolBounds(false)));
+			setting.create(SfzSettingValue::createBool(boolVal, true, SfzBoolBounds(false)));
 		}
 	}
 
 	mImpl->loaded = true;
 }
 
-bool GlobalConfig::save() noexcept
+bool SfzGlobalConfig::save() noexcept
 {
 	sfz_assert(mImpl != nullptr);
-	IniParser& ini = mImpl->ini;
+	sfz::IniParser& ini = mImpl->ini;
 
 	if (mImpl->noSaveMode) return false;
 
@@ -149,19 +150,19 @@ bool GlobalConfig::save() noexcept
 			if (!setting->value().writeToFile)
 			{
 				switch (setting->type()) {
-				case ValueType::INT:
+				case SfzValueType::INT:
 					if (ini.getInt(setting->section(), setting->key()) == nullptr) {
 						ini.setInt(setting->section(), setting->key(),
 							setting->intBounds().defaultValue);
 					}
 					break;
-				case ValueType::FLOAT:
+				case SfzValueType::FLOAT:
 					if (ini.getFloat(setting->section(), setting->key()) == nullptr) {
 						ini.setFloat(setting->section(), setting->key(),
 							setting->floatBounds().defaultValue);
 					}
 					break;
-				case ValueType::BOOL:
+				case SfzValueType::BOOL:
 					if (ini.getBool(setting->section(), setting->key()) == nullptr) {
 						ini.setBool(setting->section(), setting->key(),
 							setting->boolBounds().defaultValue);
@@ -172,13 +173,13 @@ bool GlobalConfig::save() noexcept
 			}
 
 			switch (setting->type()) {
-			case ValueType::INT:
+			case SfzValueType::INT:
 				ini.setInt(setting->section(), setting->key(), setting->intValue());
 				break;
-			case ValueType::FLOAT:
+			case SfzValueType::FLOAT:
 				ini.setFloat(setting->section(), setting->key(), setting->floatValue());
 				break;
-			case ValueType::BOOL:
+			case SfzValueType::BOOL:
 				ini.setBool(setting->section(), setting->key(), setting->boolValue());
 				break;
 			}
@@ -189,9 +190,9 @@ bool GlobalConfig::save() noexcept
 	return ini.save();
 }
 
-Setting* GlobalConfig::createSetting(const char* section, const char* key, bool* created) noexcept
+SfzSetting* SfzGlobalConfig::createSetting(const char* section, const char* key, bool* created) noexcept
 {
-	Setting* setting = this->getSetting(section, key);
+	SfzSetting* setting = this->getSetting(section, key);
 
 	// Return setting if it already exists
 	if (setting != nullptr) {
@@ -218,7 +219,7 @@ Setting* GlobalConfig::createSetting(const char* section, const char* key, bool*
 	}
 
 	// Create and return section
-	sectionPtr->settings.add(makeUnique<Setting>(getDefaultAllocator(), sfz_dbg(""), section, key));
+	sectionPtr->settings.add(sfz::makeUnique<SfzSetting>(mImpl->allocator, sfz_dbg(""), section, key));
 	if (created != nullptr) *created = true;
 	return sectionPtr->settings.last().get();
 }
@@ -226,7 +227,7 @@ Setting* GlobalConfig::createSetting(const char* section, const char* key, bool*
 // GlobalConfig: Getters
 // ------------------------------------------------------------------------------------------------
 
-Setting* GlobalConfig::getSetting(const char* section, const char* key) noexcept
+SfzSetting* SfzGlobalConfig::getSetting(const char* section, const char* key) noexcept
 {
 	sfz_assert(mImpl != nullptr);
 	for (auto& sec : mImpl->sections) {
@@ -238,12 +239,24 @@ Setting* GlobalConfig::getSetting(const char* section, const char* key) noexcept
 	return nullptr;
 }
 
-Setting* GlobalConfig::getSetting(const char* key) noexcept
+const SfzSetting* SfzGlobalConfig::getSetting(const char* section, const char* key) const noexcept
+{
+	sfz_assert(mImpl != nullptr);
+	for (auto& sec : mImpl->sections) {
+		if (sec.sectionKey != section) continue;
+		for (auto& setting : sec.settings) {
+			if (setting->key() == key) return setting.get();
+		}
+	}
+	return nullptr;
+}
+
+SfzSetting* SfzGlobalConfig::getSetting(const char* key) noexcept
 {
 	return this->getSetting("", key);
 }
 
-void GlobalConfig::getAllSettings(Array<Setting*>& settings) noexcept
+void SfzGlobalConfig::getAllSettings(sfz::Array<SfzSetting*>& settings) noexcept
 {
 	sfz_assert(mImpl != nullptr);
 	for (auto& section : mImpl->sections) {
@@ -253,7 +266,7 @@ void GlobalConfig::getAllSettings(Array<Setting*>& settings) noexcept
 	}
 }
 
-void GlobalConfig::getSections(Array<str32>& sections) noexcept
+void SfzGlobalConfig::getSections(sfz::Array<sfz::str32>& sections) noexcept
 {
 	sfz_assert(mImpl != nullptr);
 	sections.ensureCapacity(mImpl->sections.size() + sections.size());
@@ -262,7 +275,7 @@ void GlobalConfig::getSections(Array<str32>& sections) noexcept
 	}
 }
 
-void GlobalConfig::getSectionSettings(const char* section, Array<Setting*>& settings) noexcept
+void SfzGlobalConfig::getSectionSettings(const char* section, sfz::Array<SfzSetting*>& settings) noexcept
 {
 	sfz_assert(mImpl != nullptr);
 
@@ -288,36 +301,36 @@ void GlobalConfig::getSectionSettings(const char* section, Array<Setting*>& sett
 // GlobalConfig: Sanitizers
 // ------------------------------------------------------------------------------------------------
 
-Setting* GlobalConfig::sanitizeInt(
+SfzSetting* SfzGlobalConfig::sanitizeInt(
 	const char* section, const char* key,
 	bool writeToFile,
-	const IntBounds& bounds) noexcept
+	const SfzIntBounds& bounds) noexcept
 {
 	bool created = false;
-	Setting* setting = this->createSetting(section, key, &created);
+	SfzSetting* setting = this->createSetting(section, key, &created);
 
 	// Store previous value
 	i32 previousValue = 0;
 	switch (setting->type()) {
-	case ValueType::INT:
+	case SfzValueType::INT:
 		previousValue = setting->intValue();
 		break;
-	case ValueType::FLOAT:
+	case SfzValueType::FLOAT:
 		previousValue = i32(::roundf(setting->floatValue()));
 		break;
-	case ValueType::BOOL:
+	case SfzValueType::BOOL:
 		previousValue = setting->boolValue() ? 1 : 0;
 		break;
 	}
 
 	// Create setting according to bounds
 	bool boundsGood =
-		setting->create(SettingValue::createInt(bounds.defaultValue, writeToFile, bounds));
+		setting->create(SfzSettingValue::createInt(bounds.defaultValue, writeToFile, bounds));
 
 	// Check if bounds were good
 	if (!boundsGood) {
-		SFZ_ERROR("PhantasyEngine", "Provided bad bounds for setting: %s - %s", section, key);
-		setting->create(SettingValue::createInt(0));
+		SFZ_LOG_ERROR("Provided bad bounds for setting: %s - %s", section, key);
+		setting->create(SfzSettingValue::createInt(0));
 	}
 
 	// If not created, restore previous value (will be sanitized here)
@@ -328,36 +341,36 @@ Setting* GlobalConfig::sanitizeInt(
 	return setting;
 }
 
-Setting* GlobalConfig::sanitizeFloat(
+SfzSetting* SfzGlobalConfig::sanitizeFloat(
 	const char* section, const char* key,
 	bool writeToFile,
-	const FloatBounds& bounds) noexcept
+	const SfzFloatBounds& bounds) noexcept
 {
 	bool created = false;
-	Setting* setting = this->createSetting(section, key, &created);
+	SfzSetting* setting = this->createSetting(section, key, &created);
 
 	// Store previous value
 	f32 previousValue = 0.0f;
 	switch (setting->type()) {
-	case ValueType::INT:
+	case SfzValueType::INT:
 		previousValue = f32(setting->intValue());
 		break;
-	case ValueType::FLOAT:
+	case SfzValueType::FLOAT:
 		previousValue = setting->floatValue();
 		break;
-	case ValueType::BOOL:
+	case SfzValueType::BOOL:
 		previousValue = setting->boolValue() ? 1.0f : 0.0f;
 		break;
 	}
 
 	// Create setting according to bounds
 	bool boundsGood =
-		setting->create(SettingValue::createFloat(bounds.defaultValue, writeToFile, bounds));
+		setting->create(SfzSettingValue::createFloat(bounds.defaultValue, writeToFile, bounds));
 
 	// Check if bounds were good
 	if (!boundsGood) {
-		SFZ_ERROR("PhantasyEngine", "Provided bad bounds for setting: %s - %s", section, key);
-		setting->create(SettingValue::createFloat(0.0f));
+		SFZ_LOG_ERROR("Provided bad bounds for setting: %s - %s", section, key);
+		setting->create(SfzSettingValue::createFloat(0.0f));
 	}
 
 	// If not created, restore previous value (will be sanitized here)
@@ -368,36 +381,36 @@ Setting* GlobalConfig::sanitizeFloat(
 	return setting;
 }
 
-Setting* GlobalConfig::sanitizeBool(
+SfzSetting* SfzGlobalConfig::sanitizeBool(
 	const char* section, const char* key,
 	bool writeToFile,
-	const BoolBounds& bounds) noexcept
+	const SfzBoolBounds& bounds) noexcept
 {
 	bool created = false;
-	Setting* setting = this->createSetting(section, key, &created);
+	SfzSetting* setting = this->createSetting(section, key, &created);
 
 	// Store previous value
 	bool previousValue = false;
 	switch (setting->type()) {
-	case ValueType::INT:
+	case SfzValueType::INT:
 		previousValue = setting->intValue() == 0 ? false : true;
 		break;
-	case ValueType::FLOAT:
+	case SfzValueType::FLOAT:
 		previousValue = setting->floatValue() == 0.0f ? false : true;
 		break;
-	case ValueType::BOOL:
+	case SfzValueType::BOOL:
 		previousValue = setting->boolValue();
 		break;
 	}
 
 	// Create setting according to bounds
 	bool boundsGood =
-		setting->create(SettingValue::createBool(bounds.defaultValue, writeToFile, bounds));
+		setting->create(SfzSettingValue::createBool(bounds.defaultValue, writeToFile, bounds));
 
 	// Check if bounds were good
 	if (!boundsGood) {
-		SFZ_ERROR("PhantasyEngine", "Provided bad bounds for setting: %s - %s", section, key);
-		setting->create(SettingValue::createBool(false));
+		SFZ_LOG_ERROR("Provided bad bounds for setting: %s - %s", section, key);
+		setting->create(SfzSettingValue::createBool(false));
 	}
 
 	// If not created, restore previous value (will be sanitized here)
@@ -408,7 +421,7 @@ Setting* GlobalConfig::sanitizeBool(
 	return setting;
 }
 
-Setting* GlobalConfig::sanitizeInt(
+SfzSetting* SfzGlobalConfig::sanitizeInt(
 	const char* section, const char* key,
 	bool writeToFile,
 	i32 defaultValue,
@@ -417,10 +430,10 @@ Setting* GlobalConfig::sanitizeInt(
 	i32 step) noexcept
 {
 	return this->sanitizeInt(section, key, writeToFile,
-		IntBounds(defaultValue, minValue, maxValue, step));
+		SfzIntBounds(defaultValue, minValue, maxValue, step));
 }
 
-Setting* GlobalConfig::sanitizeFloat(
+SfzSetting* SfzGlobalConfig::sanitizeFloat(
 	const char* section, const char* key,
 	bool writeToFile,
 	f32 defaultValue,
@@ -428,16 +441,14 @@ Setting* GlobalConfig::sanitizeFloat(
 	f32 maxValue) noexcept
 {
 	return this->sanitizeFloat(section, key, writeToFile,
-		FloatBounds(defaultValue, minValue, maxValue));
+		SfzFloatBounds(defaultValue, minValue, maxValue));
 }
 
-Setting* GlobalConfig::sanitizeBool(
+SfzSetting* SfzGlobalConfig::sanitizeBool(
 	const char* section, const char* key,
 	bool writeToFile,
 	bool defaultValue) noexcept
 {
 	return this->sanitizeBool(section, key, writeToFile,
-		BoolBounds(defaultValue));
+		SfzBoolBounds(defaultValue));
 }
-
-} // namespace sfz

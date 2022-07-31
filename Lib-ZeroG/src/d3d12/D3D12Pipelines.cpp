@@ -20,6 +20,7 @@
 
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
+#include <skipifzero_hash_maps.hpp>
 #include <skipifzero_new.hpp>
 #include <skipifzero_strings.hpp>
 
@@ -220,6 +221,7 @@ static ZgResult compileHlslShader(
 	const char* pathOrSource,
 	const char* shaderName,
 	const char* entryName,
+	u64 descHash,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	ShaderType shaderType,
 	const char* pipelineCacheDir,
@@ -227,13 +229,12 @@ static ZgResult compileHlslShader(
 {
 	// Calculate path used to cache this shader blob
 	str320 cachePath;
-	if (!isSource && pipelineCacheDir != nullptr) {
-		const time_t lastModified = getFileLastModifiedDate(pathOrSource);
-		if (lastModified == 0) return ZG_ERROR_SHADER_COMPILE_ERROR;
-		str320 hlslName = filenameFromPath(pathOrSource);
-		hlslName.removeChars(5);
-		cachePath.appendf("%s/%s_%s_%lli.dxil", pipelineCacheDir, hlslName.str(), entryName, lastModified);
-		//ZG_INFO("%s", cachePath.str());
+	if (pipelineCacheDir != nullptr) {
+		const u64 compileSettingsHash = sfzHashBytesFNV1a(
+			(const u8*)&compileSettings, sizeof(ZgPipelineCompileSettingsHLSL));
+		const u64 modifiedTimeHash = isSource ? 0 : u64(getFileLastModifiedDate(pathOrSource));
+		const u64 totalHash = sfz::hashCombine(sfz::hashCombine(descHash, compileSettingsHash), modifiedTimeHash);
+		cachePath.appendf("%s/%u.dxil", pipelineCacheDir, u32(totalHash));
 	}
 
 	// Attempt to read binary from cache and exit if possible
@@ -324,13 +325,12 @@ static ZgResult compileHlslShader(
 	}();
 
 	// Split and convert args to wide strings :(
-	WCHAR argsContainer[ZG_MAX_NUM_DXC_COMPILER_FLAGS][32] = {};
+	WCHAR argsContainer[ZG_MAX_NUM_DXC_COMPILER_FLAGS][48] = {};
 	LPCWSTR args[ZG_MAX_NUM_DXC_COMPILER_FLAGS] = {};
 
 	u32 numArgs = 0;
-	for (u32 i = 0; i < ZG_MAX_NUM_DXC_COMPILER_FLAGS; i++) {
-		if (compileSettings.dxcCompilerFlags[i] == nullptr) continue;
-		utf8ToWide(argsContainer[numArgs], 32, compileSettings.dxcCompilerFlags[i]);
+	for (u32 i = 0; i < compileSettings.numFlags; i++) {
+		utf8ToWide(argsContainer[numArgs], 48, compileSettings.flags[i]);
 		args[numArgs] = argsContainer[numArgs];
 		numArgs++;
 	}
@@ -387,17 +387,17 @@ static D3D12_CULL_MODE toD3D12CullMode(
 	else return D3D12_CULL_MODE_FRONT;
 }
 
-static D3D12_COMPARISON_FUNC toD3D12ComparsionFunc(ZgComparisonFunc func) noexcept
+static D3D12_COMPARISON_FUNC toD3D12ComparsionFunc(ZgCompFunc func) noexcept
 {
 	switch (func) {
-	case ZG_COMPARISON_FUNC_NONE: return D3D12_COMPARISON_FUNC(0);
-	case ZG_COMPARISON_FUNC_LESS: return D3D12_COMPARISON_FUNC_LESS;
-	case ZG_COMPARISON_FUNC_LESS_EQUAL: return D3D12_COMPARISON_FUNC_LESS_EQUAL;
-	case ZG_COMPARISON_FUNC_EQUAL: return D3D12_COMPARISON_FUNC_EQUAL;
-	case ZG_COMPARISON_FUNC_NOT_EQUAL: return D3D12_COMPARISON_FUNC_NOT_EQUAL;
-	case ZG_COMPARISON_FUNC_GREATER: return D3D12_COMPARISON_FUNC_GREATER;
-	case ZG_COMPARISON_FUNC_GREATER_EQUAL: return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
-	case ZG_COMPARISON_FUNC_ALWAYS: return D3D12_COMPARISON_FUNC_ALWAYS;
+	case ZG_COMP_FUNC_NONE: return D3D12_COMPARISON_FUNC(0);
+	case ZG_COMP_FUNC_LESS: return D3D12_COMPARISON_FUNC_LESS;
+	case ZG_COMP_FUNC_LESS_EQUAL: return D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	case ZG_COMP_FUNC_EQUAL: return D3D12_COMPARISON_FUNC_EQUAL;
+	case ZG_COMP_FUNC_NOT_EQUAL: return D3D12_COMPARISON_FUNC_NOT_EQUAL;
+	case ZG_COMP_FUNC_GREATER: return D3D12_COMPARISON_FUNC_GREATER;
+	case ZG_COMP_FUNC_GREATER_EQUAL: return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
+	case ZG_COMP_FUNC_ALWAYS: return D3D12_COMPARISON_FUNC_ALWAYS;
 	}
 	sfz_assert(false);
 	return D3D12_COMPARISON_FUNC(0);
@@ -490,6 +490,8 @@ static const char* bindingTypeToString(ZgBindingType type) noexcept
 	case ZG_BINDING_TYPE_BUFFER_TYPED: return "BUFFER_TYPED";
 	case ZG_BINDING_TYPE_BUFFER_STRUCTURED: return "BUFFER_STRUCTURED";
 	case ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV: return "BUFFER_STRUCTURED_UAV";
+	case ZG_BINDING_TYPE_BUFFER_BYTEADDRESS: return "BUFFER_BYTEADDRESS";
+	case ZG_BINDING_TYPE_BUFFER_BYTEADDRESS_UAV: return "BUFFER_BYTEADDRESS_UAV";
 	case ZG_BINDING_TYPE_TEXTURE: return "TEXTURE";
 	case ZG_BINDING_TYPE_TEXTURE_UAV: return "TEXTURE_UAV";
 	default: break;
@@ -529,22 +531,25 @@ static ZgVertexAttributeType vertexReflectionToAttribute(
 	return ZG_VERTEX_ATTRIBUTE_UNDEFINED;
 }
 
-static D3D12_FILTER samplingModeToD3D12(ZgSamplingMode samplingMode) noexcept
+static D3D12_FILTER samplingModeToD3D12(ZgSampleMode sampleMode) noexcept
 {
-	switch (samplingMode) {
-	case ZG_SAMPLING_MODE_NEAREST: return D3D12_FILTER_MIN_MAG_MIP_POINT;
-	case ZG_SAMPLING_MODE_TRILINEAR: return D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-	case ZG_SAMPLING_MODE_ANISOTROPIC: return D3D12_FILTER_ANISOTROPIC;
+	switch (sampleMode) {
+	case ZG_SAMPLE_NEAREST: return D3D12_FILTER_MIN_MAG_MIP_POINT;
+	case ZG_SAMPLE_TRILINEAR: return D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	case ZG_SAMPLE_ANISOTROPIC_2X: return D3D12_FILTER_ANISOTROPIC;
+	case ZG_SAMPLE_ANISOTROPIC_4X: return D3D12_FILTER_ANISOTROPIC;
+	case ZG_SAMPLE_ANISOTROPIC_8X: return D3D12_FILTER_ANISOTROPIC;
+	case ZG_SAMPLE_ANISOTROPIC_16X: return D3D12_FILTER_ANISOTROPIC;
 	}
 	sfz_assert(false);
 	return D3D12_FILTER_MIN_MAG_MIP_POINT;
 }
 
-static D3D12_TEXTURE_ADDRESS_MODE wrappingModeToD3D12(ZgWrappingMode wrappingMode) noexcept
+static D3D12_TEXTURE_ADDRESS_MODE wrappingModeToD3D12(ZgWrapMode wrap) noexcept
 {
-	switch (wrappingMode) {
-	case ZG_WRAPPING_MODE_CLAMP: return D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	case ZG_WRAPPING_MODE_REPEAT: return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	switch (wrap) {
+	case ZG_WRAP_CLAMP: return D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	case ZG_WRAP_REPEAT: return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	}
 	sfz_assert(false);
 	return D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
@@ -552,7 +557,6 @@ static D3D12_TEXTURE_ADDRESS_MODE wrappingModeToD3D12(ZgWrappingMode wrappingMod
 
 static void logPipelineComputeInfo(
 	const ZgPipelineComputeDesc& createInfo,
-	const char* computeShaderName,
 	const RootSignatureMapping& rootMapping,
 	u32 groupDimX,
 	u32 groupDimY,
@@ -564,9 +568,8 @@ static void logPipelineComputeInfo(
 	sfz::str4096 tmpStr;
 
 	// Print header
-	tmpStr.appendf("Compiled ZgPipelineCompute with:\n");
-	tmpStr.appendf(" - Compute shader: \"%s\" -- %s()\n\n",
-		computeShaderName, createInfo.computeShaderEntry);
+	tmpStr.appendf("Compiled ZgPipelineCompute (\"%s\") with:\n", createInfo.name);
+	tmpStr.appendf(" - Compute shader: %s()\n\n", createInfo.entry);
 
 	// Print compile time
 	tmpStr.appendf("Total compile time: %.2fms\n", compileTimeMs);
@@ -622,8 +625,6 @@ static void logPipelineComputeInfo(
 
 static void logPipelineRenderInfo(
 	const ZgPipelineRenderDesc& createInfo,
-	const char* vertexShaderName,
-	const char* pixelShaderName,
 	const RootSignatureMapping& rootMapping,
 	const ZgPipelineRenderSignature& renderSignature,
 	f32 compileTimeMs,
@@ -635,11 +636,9 @@ static void logPipelineRenderInfo(
 	sfz::str4096 tmpStr;
 
 	// Print header
-	tmpStr.appendf("Compiled ZgPipelineRendering with:\n");
-	tmpStr.appendf(" - Vertex shader: \"%s\" -- %s()\n",
-		vertexShaderName, createInfo.vertexShaderEntry);
-	tmpStr.appendf(" - Pixel shader: \"%s\" -- %s()\n\n",
-		pixelShaderName, createInfo.pixelShaderEntry);
+	tmpStr.appendf("Compiled ZgPipelineRender (\"%s\") with:\n", createInfo.name);
+	tmpStr.appendf(" - Vertex shader: %s()\n", createInfo.entryVS);
+	tmpStr.appendf(" - Pixel shader: %s()\n\n", createInfo.entryPS);
 
 	// Print compile time
 	tmpStr.appendf("Total compile time: %.2fms\n", compileTimeMs);
@@ -805,7 +804,8 @@ static ZgResult rootSignatureMappingFromReflection(
 			D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
 			CHECK_D3D12 refl1->GetResourceBindingDesc(i, &resDesc);
 			if (resDesc.Type != D3D_SIT_TEXTURE &&
-				resDesc.Type != D3D_SIT_STRUCTURED) continue;
+				resDesc.Type != D3D_SIT_STRUCTURED &&
+				resDesc.Type != D3D_SIT_BYTEADDRESS) continue;
 
 			sfz_assert(resDesc.Space == 0);
 			sfz_assert(resDesc.BindCount == 1);
@@ -829,13 +829,17 @@ static ZgResult rootSignatureMappingFromReflection(
 			else if (resDesc.Type == D3D_SIT_STRUCTURED) {
 				mapping.type = ZG_BINDING_TYPE_BUFFER_STRUCTURED;
 			}
+			else if (resDesc.Type == D3D_SIT_BYTEADDRESS) {
+				mapping.type = ZG_BINDING_TYPE_BUFFER_BYTEADDRESS;
+			}
 		}
 
 		for (u32 i = 0; i < shaderDesc2.BoundResources; i++) {
 			D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
 			CHECK_D3D12 refl2->GetResourceBindingDesc(i, &resDesc);
 			if (resDesc.Type != D3D_SIT_TEXTURE &&
-				resDesc.Type != D3D_SIT_STRUCTURED) continue;
+				resDesc.Type != D3D_SIT_STRUCTURED &&
+				resDesc.Type != D3D_SIT_BYTEADDRESS) continue;
 
 			// Skip if already registered in previous reflection
 			const bool srvAlreadyRegistered = mappingOut.SRVs
@@ -864,6 +868,9 @@ static ZgResult rootSignatureMappingFromReflection(
 			else if (resDesc.Type == D3D_SIT_STRUCTURED) {
 				mapping.type = ZG_BINDING_TYPE_BUFFER_STRUCTURED;
 			}
+			else if (resDesc.Type == D3D_SIT_BYTEADDRESS) {
+				mapping.type = ZG_BINDING_TYPE_BUFFER_BYTEADDRESS;
+			}
 		}
 
 		// Sort SRVs
@@ -878,7 +885,8 @@ static ZgResult rootSignatureMappingFromReflection(
 			D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
 			CHECK_D3D12 refl1->GetResourceBindingDesc(i, &resDesc);
 			if (resDesc.Type != D3D_SIT_UAV_RWTYPED &&
-				resDesc.Type != D3D11_SIT_UAV_RWSTRUCTURED) continue;
+				resDesc.Type != D3D_SIT_UAV_RWSTRUCTURED &&
+				resDesc.Type != D3D_SIT_UAV_RWBYTEADDRESS) continue;
 
 			sfz_assert(resDesc.Space == 0);
 			sfz_assert(resDesc.BindCount == 1);
@@ -894,8 +902,11 @@ static ZgResult rootSignatureMappingFromReflection(
 			if (resDesc.Type == D3D_SIT_UAV_RWTYPED) {
 				mapping.type = ZG_BINDING_TYPE_TEXTURE_UAV;
 			}
-			else if (resDesc.Type == D3D11_SIT_UAV_RWSTRUCTURED) {
+			else if (resDesc.Type == D3D_SIT_UAV_RWSTRUCTURED) {
 				mapping.type = ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV;
+			}
+			else if (resDesc.Type == D3D_SIT_UAV_RWBYTEADDRESS) {
+				mapping.type = ZG_BINDING_TYPE_BUFFER_BYTEADDRESS_UAV;
 			}
 		}
 
@@ -903,7 +914,8 @@ static ZgResult rootSignatureMappingFromReflection(
 			D3D12_SHADER_INPUT_BIND_DESC resDesc = {};
 			CHECK_D3D12 refl2->GetResourceBindingDesc(i, &resDesc);
 			if (resDesc.Type != D3D_SIT_UAV_RWTYPED &&
-				resDesc.Type != D3D11_SIT_UAV_RWSTRUCTURED) continue;
+				resDesc.Type != D3D_SIT_UAV_RWSTRUCTURED &&
+				resDesc.Type != D3D_SIT_UAV_RWBYTEADDRESS) continue;
 
 			// Skip if already registered in previous reflection
 			const bool uavAlreadyRegistered = mappingOut.UAVs
@@ -926,6 +938,9 @@ static ZgResult rootSignatureMappingFromReflection(
 			}
 			else if (resDesc.Type == D3D11_SIT_UAV_RWSTRUCTURED) {
 				mapping.type = ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV;
+			}
+			else if (resDesc.Type == D3D_SIT_UAV_RWBYTEADDRESS) {
+				mapping.type = ZG_BINDING_TYPE_BUFFER_BYTEADDRESS_UAV;
 			}
 		}
 
@@ -1020,18 +1035,22 @@ static ZgResult createRootSignature(
 	ArrayLocal<D3D12_STATIC_SAMPLER_DESC, ZG_MAX_NUM_SAMPLERS> samplerDescs;
 	for (const ZgSampler& zgSampler : zgSamplers) {
 		D3D12_STATIC_SAMPLER_DESC& samplerDesc = samplerDescs.add();
-		samplerDesc.Filter = samplingModeToD3D12(zgSampler.samplingMode);
-		samplerDesc.AddressU = wrappingModeToD3D12(zgSampler.wrappingModeU);
-		samplerDesc.AddressV = wrappingModeToD3D12(zgSampler.wrappingModeV);
+		samplerDesc.Filter = samplingModeToD3D12(zgSampler.sampleMode);
+		samplerDesc.AddressU = wrappingModeToD3D12(zgSampler.wrapU);
+		samplerDesc.AddressV = wrappingModeToD3D12(zgSampler.wrapV);
 		samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 		samplerDesc.MipLODBias = zgSampler.mipLodBias;
-		samplerDesc.MaxAnisotropy = 16;
-		samplerDesc.ComparisonFunc = toD3D12ComparsionFunc(zgSampler.comparisonFunc);
+		samplerDesc.MaxAnisotropy = 0;
+		if (zgSampler.sampleMode == ZG_SAMPLE_ANISOTROPIC_2X) samplerDesc.MaxAnisotropy = 2;
+		if (zgSampler.sampleMode == ZG_SAMPLE_ANISOTROPIC_4X) samplerDesc.MaxAnisotropy = 4;
+		if (zgSampler.sampleMode == ZG_SAMPLE_ANISOTROPIC_8X) samplerDesc.MaxAnisotropy = 8;
+		if (zgSampler.sampleMode == ZG_SAMPLE_ANISOTROPIC_16X) samplerDesc.MaxAnisotropy = 16;
+		samplerDesc.ComparisonFunc = toD3D12ComparsionFunc(zgSampler.compFunc);
 		if (samplerDesc.ComparisonFunc != 0) {
-			if (zgSampler.samplingMode == ZG_SAMPLING_MODE_NEAREST) {
+			if (zgSampler.sampleMode == ZG_SAMPLE_NEAREST) {
 				samplerDesc.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
 			}
-			else if (zgSampler.samplingMode == ZG_SAMPLING_MODE_TRILINEAR) {
+			else if (zgSampler.sampleMode == ZG_SAMPLE_TRILINEAR) {
 				samplerDesc.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
 			}
 			else {
@@ -1081,7 +1100,6 @@ static ZgResult createPipelineComputeInternal(
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	bool isSource,
 	const char* pathOrSource,
-	const char* computeShaderName,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	IDxcIncludeHandler* dxcIncludeHandler,
@@ -1090,6 +1108,13 @@ static ZgResult createPipelineComputeInternal(
 {
 	// Start measuring compile-time
 	time_point compileStartTime = std::chrono::high_resolution_clock::now();
+
+	// Hash desc, to be used for caching
+	u64 descHash = sfzHashBytesFNV1a((const u8*)&createInfo, sizeof(ZgPipelineComputeDesc));
+	if (isSource) {
+		const u64 sourceHash = sfzHashStringFNV1a(pathOrSource);
+		descHash = sfz::hashCombine(descHash, sourceHash);
+	}
 
 	// Compile compute shader
 	ComPtr<IDxcBlob> computeBlob;
@@ -1101,8 +1126,9 @@ static ZgResult createPipelineComputeInternal(
 		computeBlob,
 		isSource,
 		pathOrSource,
-		computeShaderName,
-		createInfo.computeShaderEntry,
+		createInfo.name,
+		createInfo.entry,
+		descHash,
 		compileSettings,
 		ShaderType::COMPUTE,
 		pipelineCacheDir,
@@ -1124,7 +1150,7 @@ static ZgResult createPipelineComputeInternal(
 	RootSignatureMapping mapping = {};
 	{
 		sfz::ArrayLocal<u32, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstRegs;
-		pushConstRegs.add(createInfo.pushConstantRegisters, createInfo.numPushConstants);
+		pushConstRegs.add(createInfo.pushConstsRegs, createInfo.numPushConsts);
 
 		ZgResult res = rootSignatureMappingFromReflection(
 			computeReflection.Get(),
@@ -1180,11 +1206,13 @@ static ZgResult createPipelineComputeInternal(
 	sfz_assert(groupDimY != 0);
 	sfz_assert(groupDimZ != 0);
 
+	// Set debug name
+	setDebugName(pipelineState.Get(), createInfo.name);
+
 	// Log information about the pipeline
 	f32 compileTimeMs = timeSinceLastTimestampMillis(compileStartTime);
 	logPipelineComputeInfo(
 		createInfo,
-		computeShaderName,
 		mapping,
 		groupDimX,
 		groupDimY,
@@ -1224,8 +1252,7 @@ ZgResult createPipelineComputeFileHLSL(
 		createInfo,
 		compileSettings,
 		false,
-		createInfo.computeShader,
-		createInfo.computeShader,
+		createInfo.path,
 		dxcLibrary,
 		dxcCompiler,
 		dxcIncludeHandler,
@@ -1241,10 +1268,7 @@ static ZgResult createPipelineRenderInternal(
 	const ZgPipelineRenderDesc& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	bool isSource,
-	const char* vertexPathOrSource,
-	const char* pixelPathOrSource,
-	const char* vertexShaderName,
-	const char* pixelShaderName,
+	const char* pathOrSource,
 	IDxcLibrary& dxcLibrary,
 	IDxcCompiler& dxcCompiler,
 	IDxcIncludeHandler* dxcIncludeHandler,
@@ -1253,6 +1277,16 @@ static ZgResult createPipelineRenderInternal(
 {
 	// Start measuring compile-time
 	const time_point compileStartTime = std::chrono::high_resolution_clock::now();
+
+	// Hash desc, to be used for caching
+	u64 descHashCommon = sfzHashBytesFNV1a((const u8*)&createInfo, sizeof(ZgPipelineRenderDesc));
+	if (isSource) {
+		const u64 sourceHash = sfzHashStringFNV1a(pathOrSource);
+		descHashCommon = sfz::hashCombine(descHashCommon, sourceHash);
+	}
+	const u64 descHashVS = sfz::hashCombine(descHashCommon, sfzHashStringFNV1a(createInfo.entryVS));
+	const u64 descHashPS = sfz::hashCombine(descHashCommon, sfzHashStringFNV1a(createInfo.entryPS));
+	sfz_assert(descHashVS != descHashPS);
 
 	// Compile vertex shader
 	ComPtr<IDxcBlob> vertexBlob;
@@ -1263,9 +1297,10 @@ static ZgResult createPipelineRenderInternal(
 		dxcIncludeHandler,
 		vertexBlob,
 		isSource,
-		vertexPathOrSource,
-		vertexShaderName,
-		createInfo.vertexShaderEntry,
+		pathOrSource,
+		createInfo.name,
+		createInfo.entryVS,
+		descHashVS,
 		compileSettings,
 		ShaderType::VERTEX,
 		pipelineCacheDir,
@@ -1289,9 +1324,10 @@ static ZgResult createPipelineRenderInternal(
 		dxcIncludeHandler,
 		pixelBlob,
 		isSource,
-		pixelPathOrSource,
-		pixelShaderName,
-		createInfo.pixelShaderEntry,
+		pathOrSource,
+		createInfo.name,
+		createInfo.entryPS,
+		descHashPS,
 		compileSettings,
 		ShaderType::PIXEL,
 		pipelineCacheDir,
@@ -1309,7 +1345,7 @@ static ZgResult createPipelineRenderInternal(
 	RootSignatureMapping mapping = {};
 	{
 		sfz::ArrayLocal<u32, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstRegs;
-		pushConstRegs.add(createInfo.pushConstantRegisters, createInfo.numPushConstants);
+		pushConstRegs.add(createInfo.pushConstsRegs, createInfo.numPushConsts);
 
 		ZgResult res = rootSignatureMappingFromReflection(
 			vertexReflection.Get(),
@@ -1482,7 +1518,7 @@ static ZgResult createPipelineRenderInternal(
 			D3D12_FILL_MODE_SOLID : D3D12_FILL_MODE_WIREFRAME;
 		rasterizerDesc.CullMode = toD3D12CullMode(createInfo.rasterizer);
 		rasterizerDesc.FrontCounterClockwise =
-			(createInfo.rasterizer.frontFacingIsCounterClockwise == ZG_FALSE) ? FALSE : TRUE;
+			(createInfo.rasterizer.frontFacingIsClockwise != ZG_FALSE) ? FALSE : TRUE;
 		rasterizerDesc.DepthBias = createInfo.rasterizer.depthBias;
 		rasterizerDesc.DepthBiasClamp = createInfo.rasterizer.depthBiasClamp;
 		rasterizerDesc.SlopeScaledDepthBias = createInfo.rasterizer.depthBiasSlopeScaled;
@@ -1513,7 +1549,7 @@ static ZgResult createPipelineRenderInternal(
 		// Set depth and stencil state
 		D3D12_DEPTH_STENCIL_DESC1 depthStencilDesc = {};
 		depthStencilDesc.DepthEnable =
-			(createInfo.depthFunc != ZG_COMPARISON_FUNC_NONE) ? TRUE : FALSE;
+			(createInfo.depthFunc != ZG_COMP_FUNC_NONE) ? TRUE : FALSE;
 		depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 		depthStencilDesc.DepthFunc = toD3D12ComparsionFunc(createInfo.depthFunc);
 		depthStencilDesc.StencilEnable = FALSE;
@@ -1547,12 +1583,13 @@ static ZgResult createPipelineRenderInternal(
 		}
 	}
 
+	// Set debug name
+	setDebugName(pipelineState.Get(), createInfo.name);
+
 	// Log information about the pipeline
 	f32 compileTimeMs = timeSinceLastTimestampMillis(compileStartTime);
 	logPipelineRenderInfo(
 		createInfo,
-		vertexShaderName,
-		pixelShaderName,
 		mapping,
 		renderSignature,
 		compileTimeMs,
@@ -1592,10 +1629,7 @@ ZgResult createPipelineRenderFileHLSL(
 		createInfo,
 		compileSettings,
 		false,
-		createInfo.vertexShader,
-		createInfo.pixelShader,
-		createInfo.vertexShader,
-		createInfo.pixelShader,
+		createInfo.path,
 		dxcLibrary,
 		dxcCompiler,
 		dxcIncludeHandler,
@@ -1605,6 +1639,7 @@ ZgResult createPipelineRenderFileHLSL(
 
 ZgResult createPipelineRenderSourceHLSL(
 	ZgPipelineRender** pipelineOut,
+	const char* src,
 	const ZgPipelineRenderDesc& createInfo,
 	const ZgPipelineCompileSettingsHLSL& compileSettings,
 	IDxcLibrary& dxcLibrary,
@@ -1618,10 +1653,7 @@ ZgResult createPipelineRenderSourceHLSL(
 		createInfo,
 		compileSettings,
 		true,
-		createInfo.vertexShader,
-		createInfo.pixelShader,
-		"<From source, no vertex name>",
-		"<From source, no pixel name>",
+		src,
 		dxcLibrary,
 		dxcCompiler,
 		dxcIncludeHandler,

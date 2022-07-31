@@ -19,20 +19,19 @@
 
 #pragma once
 
+#include <sfz_image_view.h>
+
 #include <skipifzero.hpp>
-#include <skipifzero_image_view.hpp>
 #include <skipifzero_strings.hpp>
 
 #include <ZeroG.h>
 
-namespace sfz {
+struct SfzSetting;
 
-class Setting;
-
-// TextureResource
+// SfzTextureResource
 // ------------------------------------------------------------------------------------------------
 
-struct TextureResource final {
+struct SfzTextureResource final {
 	SfzStrID name = SFZ_STR_ID_NULL;
 
 	zg::Texture texture;
@@ -46,53 +45,57 @@ struct TextureResource final {
 	// Whether resolution should be scaled relative screen resolution
 	bool screenRelativeRes = false;
 	f32 resScale = 1.0f;
-	Setting* resScaleSetting = nullptr;
-	Setting* resScaleSetting2 = nullptr; // Amount to scale versus value in first setting
+	SfzSetting* resScaleSetting = nullptr;
+	SfzSetting* resScaleSetting2 = nullptr; // Amount to scale versus value in first setting
 	f32 resScaleSettingScale = 1.0f; // Amount to scale versus value in setting
 
 	// Whether resolution is directly controlled by a setting
 	bool settingControlledRes = false;
-	Setting* controlledResSetting = nullptr;
+	SfzSetting* controlledResSetting = nullptr;
 
 	bool needRebuild(i32x2 screenRes) const;
-	[[nodiscard]] ZgResult build(i32x2 screenRes);
+	[[nodiscard]] ZgResult build(i32x2 screenRes, SfzStrIDs* ids);
 
 	void uploadBlocking(
-		const ImageViewConst& image,
+		const SfzImageViewConst& image,
 		SfzAllocator* cpuAllocator,
 		ZgUploader* uploader,
 		zg::CommandQueue& copyQueue);
 
-	static TextureResource createFixedSize(
+	static SfzTextureResource createFixedSize(
 		const char* name,
-		const ImageViewConst& image,
+		SfzStrIDs* ids,
+		const SfzImageViewConst& image,
 		bool allocateMipmaps = true,
 		ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT,
 		bool committedAllocation = false);
 
-	static TextureResource createFixedSize(
+	static SfzTextureResource createFixedSize(
 		const char* name,
+		SfzStrIDs* ids,
 		ZgFormat format,
 		i32x2 res,
 		u32 numMipmaps = 1,
 		ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT,
 		bool committedAllocation = false);
 
-	static TextureResource createScreenRelative(
+	static SfzTextureResource createScreenRelative(
 		const char* name,
+		SfzStrIDs* ids,
 		ZgFormat format,
 		i32x2 screenRes,
 		f32 scale,
-		Setting* scaleSetting = nullptr,
+		SfzSetting* scaleSetting = nullptr,
 		ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT,
 		bool committedAllocation = false,
-		Setting* scaleSetting2 = nullptr,
+		SfzSetting* scaleSetting2 = nullptr,
 		f32 resScaleSettingScale = 1.0f);
 
-	static TextureResource createSettingControlled(
+	static SfzTextureResource createSettingControlled(
 		const char* name,
+		SfzStrIDs* ids,
 		ZgFormat format,
-		Setting* resSetting,
+		SfzSetting* resSetting,
 		u32 numMipmaps = 1,
 		ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT,
 		bool committedAllocation = false);
@@ -101,6 +104,4 @@ struct TextureResource final {
 // Texture functions
 // ------------------------------------------------------------------------------------------------
 
-ZgFormat toZeroGImageFormat(ImageType imageType) noexcept;
-
-} // namespace sfz
+ZgFormat toZeroGImageFormat(SfzImageType imageType) noexcept;

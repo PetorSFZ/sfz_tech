@@ -20,44 +20,14 @@
 
 #include <skipifzero_allocators.hpp>
 
-#include "sfz/Context.hpp"
-#include "sfz/Logging.hpp"
+#include "sfz/SfzLogging.h"
 #include "sfz/config/GlobalConfig.hpp"
 #include "sfz/debug/ProfilingStats.hpp"
-#include "sfz/util/StandardLogger.hpp"
 
 UTEST_STATE();
 
-// This is the global PhantasyEngine context, a pointer to it will be set using setContext().
-static SfzAllocator standardAllocator = sfz::createStandardAllocator();
-static sfz::Context phantasyEngineContext;
-static sfz::GlobalConfig globalConfig;
-static sfz::ProfilingStats profilingStats;
-
-static void setupContext() noexcept
-{
-	sfz::Context* context = &phantasyEngineContext;
-
-	// Set standard allocator
-	SfzAllocator* allocator = &standardAllocator;
-	context->defaultAllocator = allocator;
-
-	// Set standard logger
-	context->logger = sfz::getStandardLogger();
-
-	// Set global config
-	context->config = &globalConfig;
-
-	// Profiling stats
-	profilingStats.init(allocator);
-	context->profilingStats = &profilingStats;
-
-	// Set Phantasy Engine context
-	sfz::setContext(context);
-}
-
 int main(int argc, char* argv[])
 {
-	setupContext();
+	sfzLoggingSetLogger(sfzLoggingGetModulesLogger());
 	return utest_main(argc, argv);
 }

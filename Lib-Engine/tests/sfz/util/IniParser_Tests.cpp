@@ -22,6 +22,7 @@
 #undef near
 #undef far
 
+#include <skipifzero_allocators.hpp>
 #include <skipifzero_math.hpp>
 
 #include "sfz/util/IniParser.hpp"
@@ -36,9 +37,10 @@ static const char* stupidFileName = "fafeafeafeafaefa.ini";
 
 UTEST(IniParser, basic_tests)
 {
+	SfzAllocator allocator = sfz::createStandardAllocator();
 	const char* fpath = stupidFileName;
 
-	IniParser ini1(fpath);
+	IniParser ini1(fpath, &allocator);
 
 	ini1.setBool("Section1", "bBool1", true);
 	ini1.setBool("Section1", "bBool2", false);
@@ -53,7 +55,7 @@ UTEST(IniParser, basic_tests)
 	sfz::deleteFile(fpath);
 	ASSERT_TRUE(ini1.save());
 
-	IniParser ini2(fpath);
+	IniParser ini2(fpath, &allocator);
 	ASSERT_TRUE(ini2.load());
 
 	ASSERT_TRUE(*ini2.getBool("Section1", "bBool1"));
@@ -71,11 +73,13 @@ UTEST(IniParser, basic_tests)
 
 UTEST(IniParser, sanitizer_methods)
 {
+	SfzAllocator allocator = sfz::createStandardAllocator();
+
 	// sanitizeInt()
 	{
 		const char* fpath = stupidFileName;
 		sfz::deleteFile(fpath);
-		IniParser ini(fpath);
+		IniParser ini(fpath, &allocator);
 
 		ASSERT_TRUE(ini.getInt("", "val1") == nullptr);
 		ASSERT_TRUE(ini.sanitizeInt("", "val1") == 0);
@@ -96,7 +100,7 @@ UTEST(IniParser, sanitizer_methods)
 	{
 		const char* fpath = stupidFileName;
 		sfz::deleteFile(fpath);
-		IniParser ini(fpath);
+		IniParser ini(fpath, &allocator);
 
 		ASSERT_TRUE(ini.getFloat("", "val1") == nullptr);
 		ASSERT_TRUE(eqf(ini.sanitizeFloat("", "val1"), 0.0f));
@@ -117,7 +121,7 @@ UTEST(IniParser, sanitizer_methods)
 	{
 		const char* fpath = stupidFileName;
 		sfz::deleteFile(fpath);
-		IniParser ini(fpath);
+		IniParser ini(fpath, &allocator);
 
 		ASSERT_TRUE(ini.getBool("", "val1") == nullptr);
 		ASSERT_TRUE(ini.sanitizeBool("", "val1") == false);
@@ -184,6 +188,8 @@ var2=false
 var=true
 )";
 
+	SfzAllocator allocator = sfz::createStandardAllocator();
+
 	// First ini
 	{
 		const char* cpath = "test_ini_1.ini";
@@ -191,7 +197,7 @@ var=true
 		deleteFile(cpath);
 		ASSERT_TRUE(writeBinaryFile(cpath, reinterpret_cast<const uint8_t*>(INPUT_INI_1), sizeof(INPUT_INI_1)));
 
-		IniParser ini(cpath);
+		IniParser ini(cpath, &allocator);
 		ASSERT_TRUE(ini.load());
 
 		ASSERT_TRUE(ini.getInt("sect1", "first") != nullptr);
@@ -254,8 +260,8 @@ var=true
 
 		ASSERT_TRUE(ini.save());
 
-		DynString output = readTextFile(cpath);
-		ASSERT_TRUE(output == OUTPUT_INI_1);
+		sfz::Array<char> output = readTextFile(cpath, &allocator);
+		ASSERT_TRUE(strcmp(output.data(), OUTPUT_INI_1) == 0);
 		deleteFile(cpath);
 	}
 
@@ -266,7 +272,7 @@ var=true
 		deleteFile(cpath);
 		ASSERT_TRUE(writeBinaryFile(cpath, reinterpret_cast<const uint8_t*>(INPUT_INI_2), sizeof(INPUT_INI_2)));
 
-		IniParser ini(cpath);
+		IniParser ini(cpath, &allocator);
 		ASSERT_TRUE(ini.load());
 
 		// Adding var2 = false
@@ -277,8 +283,8 @@ var=true
 
 		ASSERT_TRUE(ini.save());
 
-		DynString output = readTextFile(cpath);
-		ASSERT_TRUE(output == OUTPUT_INI_2);
+		sfz::Array<char> output = readTextFile(cpath, &allocator);
+		ASSERT_TRUE(strcmp(output.data(), OUTPUT_INI_2) == 0);
 		deleteFile(cpath);
 	}
 }

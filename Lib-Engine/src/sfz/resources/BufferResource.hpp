@@ -26,32 +26,30 @@
 
 #include "sfz/renderer/ZeroGUtils.hpp"
 
-namespace sfz {
-
-// BufferResource
+// SfzBufferResource
 // ------------------------------------------------------------------------------------------------
 
-enum class BufferResourceType : u32 {
+enum class SfzBufferResourceType : u32 {
 	STATIC = 0,
 	STREAMING = 1
 };
 
-struct StaticBufferMemory final {
+struct SfzStaticBufferMemory final {
 	zg::Buffer buffer;
 };
 
-struct StreamingBufferMemory final {
+struct SfzStreamingBufferMemory final {
 	u64 lastFrameIdxTouched = 0;
 	zg::Buffer buffer;
 };
 
-struct BufferResource final {
+struct SfzBufferResource final {
 	SfzStrID name = SFZ_STR_ID_NULL;
 	u32 elementSizeBytes = 0;
 	u32 maxNumElements = 0;
-	BufferResourceType type = BufferResourceType::STATIC;
-	StaticBufferMemory staticMem;
-	PerFrameData<StreamingBufferMemory> streamingMem;
+	SfzBufferResourceType type = SfzBufferResourceType::STATIC;
+	SfzStaticBufferMemory staticMem;
+	sfz::PerFrameData<SfzStreamingBufferMemory> streamingMem;
 	
 	template<typename T>
 	void uploadBlocking(
@@ -70,16 +68,16 @@ struct BufferResource final {
 		ZgUploader* uploader,
 		zg::CommandQueue& copyQueue);
 
-	static BufferResource createStatic(
-		const char* name,
-		u32 elementSize,
-		u32 maxNumElements);
-
-	static BufferResource createStreaming(
+	static SfzBufferResource createStatic(
 		const char* name,
 		u32 elementSize,
 		u32 maxNumElements,
-		u32 frameLatency);
-};
+		SfzStrIDs* ids);
 
-} // namespace sfz
+	static SfzBufferResource createStreaming(
+		const char* name,
+		u32 elementSize,
+		u32 maxNumElements,
+		u32 frameLatency,
+		SfzStrIDs* ids);
+};

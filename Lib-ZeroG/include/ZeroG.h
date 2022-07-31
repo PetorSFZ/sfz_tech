@@ -79,7 +79,7 @@ typedef enum {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const u32 ZG_COMPILED_API_VERSION = 45;
+static const u32 ZG_COMPILED_API_VERSION = 54;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -249,6 +249,14 @@ typedef enum {
 	ZG_FORMAT_RG_U8,
 	ZG_FORMAT_RGBA_U8,
 
+	ZG_FORMAT_R_U16,
+	ZG_FORMAT_RG_U16,
+	ZG_FORMAT_RGBA_U16,
+
+	ZG_FORMAT_R_I32,
+	ZG_FORMAT_RG_I32,
+	ZG_FORMAT_RGBA_I32,
+
 	ZG_FORMAT_R_F16,
 	ZG_FORMAT_RG_F16,
 	ZG_FORMAT_RGBA_F16,
@@ -405,7 +413,7 @@ static const u32 ZG_MAX_NUM_CONSTANT_BUFFERS = 16;
 static const u32 ZG_MAX_NUM_UNORDERED_BUFFERS = 16;
 
 // The maximum number of textures allowed on a single pipeline.
-static const u32 ZG_MAX_NUM_TEXTURES = 16;
+static const u32 ZG_MAX_NUM_TEXTURES = 32;
 
 // The maximum number of unordered textures on a single pipeline.
 static const u32 ZG_MAX_NUM_UNORDERED_TEXTURES = 16;
@@ -422,6 +430,8 @@ typedef enum {
 	ZG_BINDING_TYPE_BUFFER_TYPED,
 	ZG_BINDING_TYPE_BUFFER_STRUCTURED,
 	ZG_BINDING_TYPE_BUFFER_STRUCTURED_UAV,
+	ZG_BINDING_TYPE_BUFFER_BYTEADDRESS,
+	ZG_BINDING_TYPE_BUFFER_BYTEADDRESS_UAV,
 	ZG_BINDING_TYPE_TEXTURE,
 	ZG_BINDING_TYPE_TEXTURE_UAV,
 	ZG_BINDING_TYPE_FORCE_I32 = I32_MAX
@@ -525,6 +535,28 @@ sfz_struct(ZgPipelineBindings) {
 		return addBinding(binding);
 	}
 
+	ZgPipelineBindings& addBufferByteAddress(
+		u32 reg,
+		ZgBuffer* buffer)
+	{
+		ZgBinding binding = {};
+		binding.type = ZG_BINDING_TYPE_BUFFER_BYTEADDRESS;
+		binding.reg = reg;
+		binding.buffer = buffer;
+		return addBinding(binding);
+	}
+
+	ZgPipelineBindings& addBufferByteAddressUAV(
+		u32 reg,
+		ZgBuffer* buffer)
+	{
+		ZgBinding binding = {};
+		binding.type = ZG_BINDING_TYPE_BUFFER_BYTEADDRESS_UAV;
+		binding.reg = reg;
+		binding.buffer = buffer;
+		return addBinding(binding);
+	}
+
 	ZgPipelineBindings& addTexture(u32 reg, ZgTexture* texture)
 	{
 		ZgBinding binding = {};
@@ -564,7 +596,7 @@ typedef enum {
 } ZgShaderModel;
 
 // The maximum number of compiler flags allowed to the DXC shader compiler
-static const u32 ZG_MAX_NUM_DXC_COMPILER_FLAGS = 8;
+static const u32 ZG_MAX_NUM_DXC_COMPILER_FLAGS = 20;
 
 // Compile settings to the HLSL compiler
 sfz_struct(ZgPipelineCompileSettingsHLSL) {
@@ -573,55 +605,73 @@ sfz_struct(ZgPipelineCompileSettingsHLSL) {
 	ZgShaderModel shaderModel;
 
 	// Flags to the DXC compiler
-	const char* dxcCompilerFlags[ZG_MAX_NUM_DXC_COMPILER_FLAGS];
-};
+	u32 numFlags;
+	char flags[ZG_MAX_NUM_DXC_COMPILER_FLAGS][40];
 
+#ifdef __cplusplus
+	void addFlag(const char* flagIn)
+	{
+		sfz_assert(this->numFlags < ZG_MAX_NUM_DXC_COMPILER_FLAGS);
+		u32 i = 0;
+		for (; i < 39; i++) {
+			if (flagIn[i] == '\0') break;
+			this->flags[numFlags][i] = flagIn[i];
+		}
+		sfz_assert(i < 39); // Sacrifice 1 char in order for some peace of mind.
+		this->flags[numFlags][i] = '\0';
+		this->numFlags += 1;
+	}
+#endif
+};
 
 // Pipeline Compute
 // ------------------------------------------------------------------------------------------------
 
 // Sample mode of a sampler
 typedef enum {
-	ZG_SAMPLING_MODE_UNDEFINED = 0,
+	ZG_SAMPLE_UNDEFINED = 0,
 
-	ZG_SAMPLING_MODE_NEAREST, // D3D12_FILTER_MIN_MAG_MIP_POINT
-	ZG_SAMPLING_MODE_TRILINEAR, // D3D12_FILTER_MIN_MAG_MIP_LINEAR
-	ZG_SAMPLING_MODE_ANISOTROPIC, // D3D12_FILTER_ANISOTROPIC
+	ZG_SAMPLE_NEAREST, // D3D12_FILTER_MIN_MAG_MIP_POINT
+	ZG_SAMPLE_TRILINEAR, // D3D12_FILTER_MIN_MAG_MIP_LINEAR
+	ZG_SAMPLE_ANISOTROPIC_2X, // D3D12_FILTER_ANISOTROPIC
+	ZG_SAMPLE_ANISOTROPIC_4X,
+	ZG_SAMPLE_ANISOTROPIC_8X,
+	ZG_SAMPLE_ANISOTROPIC_16X,
 
-	ZG_SAMPLING_MODE_FORCE_I32 = I32_MAX
-} ZgSamplingMode;
+	ZG_SAMPLE_FORCE_I32 = I32_MAX
+} ZgSampleMode;
 
 // Wrapping mode of a sampler
 typedef enum {
-	ZG_WRAPPING_MODE_UNDEFINED = 0,
+	ZG_WRAP_UNDEFINED = 0,
 
-	ZG_WRAPPING_MODE_CLAMP, // D3D12_TEXTURE_ADDRESS_MODE_CLAMP
-	ZG_WRAPPING_MODE_REPEAT, // D3D12_TEXTURE_ADDRESS_MODE_WRAP
+	ZG_WRAP_CLAMP, // D3D12_TEXTURE_ADDRESS_MODE_CLAMP
+	ZG_WRAP_REPEAT, // D3D12_TEXTURE_ADDRESS_MODE_WRAP
 
-	ZG_WRAPPING_MODE_FORCE_I32 = I32_MAX
-} ZgWrappingMode;
+	ZG_WRAP_FORCE_I32 = I32_MAX
+} ZgWrapMode;
 
 typedef enum {
-	ZG_COMPARISON_FUNC_NONE = 0,
-	ZG_COMPARISON_FUNC_LESS,
-	ZG_COMPARISON_FUNC_LESS_EQUAL,
-	ZG_COMPARISON_FUNC_EQUAL,
-	ZG_COMPARISON_FUNC_NOT_EQUAL,
-	ZG_COMPARISON_FUNC_GREATER,
-	ZG_COMPARISON_FUNC_GREATER_EQUAL,
-	ZG_COMPARISON_FUNC_ALWAYS,
-	ZG_COMPARISON_FUNC_FORCE_I32 = I32_MAX
-} ZgComparisonFunc;
+	ZG_COMP_FUNC_NONE = 0,
+	ZG_COMP_FUNC_LESS,
+	ZG_COMP_FUNC_LESS_EQUAL,
+	ZG_COMP_FUNC_EQUAL,
+	ZG_COMP_FUNC_NOT_EQUAL,
+	ZG_COMP_FUNC_GREATER,
+	ZG_COMP_FUNC_GREATER_EQUAL,
+	ZG_COMP_FUNC_ALWAYS,
+	ZG_COMP_FUNC_FORCE_I32 = I32_MAX
+} ZgCompFunc;
 
 // A struct defining a texture sampler
 sfz_struct(ZgSampler) {
 
 	// The sampling mode of the sampler
-	ZgSamplingMode samplingMode;
+	ZgSampleMode sampleMode;
 
 	// The wrapping mode of the sampler (u == x, v == y)
-	ZgWrappingMode wrappingModeU;
-	ZgWrappingMode wrappingModeV;
+	ZgWrapMode wrapU;
+	ZgWrapMode wrapV;
 
 	// Offset from the calculated mipmap level. E.g., if mipmap level 2 is calculated in the shader
 	// and the lod bias is -1, then level 1 will be used instead. Level 0 is the highest resolution
@@ -635,22 +685,25 @@ sfz_struct(ZgSampler) {
 	// instead of "SamplerState" in HLSL. It also modifies the sampling mode to a "comparison"
 	// sampling mode. E.g. ZG_SAMPLING_MODE_NEAREST gives D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT
 	// instead of D3D12_FILTER_MIN_MAG_MIP_POINT.
-	ZgComparisonFunc comparisonFunc;
+	ZgCompFunc compFunc;
 };
 
 sfz_struct(ZgPipelineComputeDesc) {
 
-	// Path to the shader source or the source directly depending on what create function is called.
-	const char* computeShader;
+	// Name of this pipeline
+	char name[64];
+
+	// Path to the shader source, ignored if source is provided directly.
+	char path[256];
 
 	// The name of the entry function
-	const char* computeShaderEntry;
+	char entry[32];
 
 	// A list of constant buffer registers which should be declared as push constants. This is an
 	// optimization, however it can lead to worse performance if used improperly. Can be left empty
 	// if unsure.
-	u32 numPushConstants;
-	u32 pushConstantRegisters[ZG_MAX_NUM_CONSTANT_BUFFERS];
+	u32 numPushConsts;
+	u32 pushConstsRegs[ZG_MAX_NUM_CONSTANT_BUFFERS];
 
 	// A list of samplers used by the pipeline
 	//
@@ -659,6 +712,57 @@ sfz_struct(ZgPipelineComputeDesc) {
 	//       registers 0, 1, 2.
 	u32 numSamplers;
 	ZgSampler samplers[ZG_MAX_NUM_SAMPLERS];
+
+#ifdef __cplusplus
+	void setName(const char* nameIn)
+	{
+		u32 i = 0;
+		for (; i < 63; i++) {
+			if (nameIn[i] == '\0') break;
+			this->name[i] = nameIn[i];
+		}
+		this->name[i] = '\0';
+	}
+
+	void setPathAndEntry(const char* pathIn, const char* entryIn = "CSMain")
+	{
+		u32 i = 0;
+		for (; i < 255; i++) {
+			if (pathIn[i] == '\0') break;
+			this->path[i] = pathIn[i];
+		}
+		this->path[i] = '\0';
+		i = 0;
+		for (; i < 31; i++) {
+			if (entryIn[i] == '\0') break;
+			this->entry[i] = entryIn[i];
+		}
+		this->entry[i] = '\0';
+	}
+
+	void addPushConst(u32 reg)
+	{
+		sfz_assert(this->numPushConsts < ZG_MAX_NUM_CONSTANT_BUFFERS);
+		pushConstsRegs[numPushConsts] = reg;
+		numPushConsts += 1;
+	}
+
+	void addSampler(
+		u32 reg,
+		ZgSampleMode sampleMode,
+		ZgWrapMode wrapU = ZG_WRAP_CLAMP,
+		ZgWrapMode wrapV = ZG_WRAP_CLAMP,
+		f32 mipLodBias = 0.0f)
+	{
+		sfz_assert(reg == this->numSamplers);
+		sfz_assert(this->numSamplers < ZG_MAX_NUM_SAMPLERS);
+		samplers[reg].sampleMode = sampleMode;
+		samplers[reg].wrapU = wrapU;
+		samplers[reg].wrapV = wrapV;
+		samplers[reg].mipLodBias = mipLodBias;
+		numSamplers += 1;
+	}
+#endif
 };
 
 ZG_API ZgResult zgPipelineComputeCreateFromFileHLSL(
@@ -684,92 +788,18 @@ public:
 		const ZgPipelineComputeDesc& desc,
 		const ZgPipelineCompileSettingsHLSL& compileSettings)
 	{
-		this->destroy();
-		return zgPipelineComputeCreateFromFileHLSL(
-			&this->handle, &desc, &compileSettings);
+		ZgPipelineCompute* tmpHandle = nullptr;
+		ZgResult res = zgPipelineComputeCreateFromFileHLSL(&tmpHandle, &desc, &compileSettings);
+		if (res == ZG_SUCCESS) {
+			this->destroy();
+			this->handle = tmpHandle;
+		}
+		return res;
 	}
 
 	void getGroupDims(u32& groupDimXOut, u32& groupDimYOut, u32& groupDimZOut) const
 	{
 		zgPipelineComputeGetGroupDimensions(this->handle, &groupDimXOut, &groupDimYOut, &groupDimZOut);
-	}
-};
-
-class PipelineComputeBuilder final {
-public:
-	ZgPipelineComputeDesc desc = {};
-	const char* computeShaderPath = nullptr;
-	const char* computeShaderSrc = nullptr;
-
-	PipelineComputeBuilder() = default;
-	PipelineComputeBuilder(const PipelineComputeBuilder&) = default;
-	PipelineComputeBuilder& operator= (const PipelineComputeBuilder&) = default;
-	~PipelineComputeBuilder() = default;
-
-	PipelineComputeBuilder& addComputeShaderPath(const char* entry, const char* path)
-	{
-		desc.computeShaderEntry = entry;
-		computeShaderPath = path;
-		return *this;
-	}
-
-	PipelineComputeBuilder& addComputeShaderSource(const char* entry, const char* src)
-	{
-		desc.computeShaderEntry = entry;
-		computeShaderSrc = src;
-		return *this;
-	}
-
-	PipelineComputeBuilder& addPushConstant(u32 constantBufferRegister)
-	{
-		sfz_assert(desc.numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
-		desc.pushConstantRegisters[desc.numPushConstants] = constantBufferRegister;
-		desc.numPushConstants += 1;
-		return *this;
-	}
-
-	PipelineComputeBuilder& addSampler(u32 samplerRegister, ZgSampler sampler)
-	{
-		sfz_assert(samplerRegister == desc.numSamplers);
-		sfz_assert(desc.numSamplers < ZG_MAX_NUM_SAMPLERS);
-		desc.samplers[samplerRegister] = sampler;
-		desc.numSamplers += 1;
-		return *this;
-	}
-
-	PipelineComputeBuilder& addSampler(
-		u32 samplerRegister,
-		ZgSamplingMode samplingMode,
-		ZgWrappingMode wrappingModeU = ZG_WRAPPING_MODE_CLAMP,
-		ZgWrappingMode wrappingModeV = ZG_WRAPPING_MODE_CLAMP,
-		f32 mipLodBias = 0.0f)
-	{
-		ZgSampler sampler = {};
-		sampler.samplingMode = samplingMode;
-		sampler.wrappingModeU = wrappingModeU;
-		sampler.wrappingModeV = wrappingModeV;
-		sampler.mipLodBias = mipLodBias;
-		return addSampler(samplerRegister, sampler);
-	}
-
-	ZgResult buildFromFileHLSL(
-		PipelineCompute& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_2)
-	{
-		// Set path
-		desc.computeShader = this->computeShaderPath;
-
-		// Create compile settings
-		ZgPipelineCompileSettingsHLSL compileSettings = {};
-		compileSettings.shaderModel = model;
-		compileSettings.dxcCompilerFlags[0] = "-Zi";
-		compileSettings.dxcCompilerFlags[1] = "-Qembed_debug";
-		compileSettings.dxcCompilerFlags[2] = "-O3";
-		compileSettings.dxcCompilerFlags[3] = "-HV 2021";
-		compileSettings.dxcCompilerFlags[4] = "-no-legacy-cbuf-layout";
-		compileSettings.dxcCompilerFlags[5] = "-enable-16bit-types";
-
-		// Build pipeline
-		return pipelineOut.createFromFileHLSL(desc, compileSettings);
 	}
 };
 
@@ -870,9 +900,8 @@ sfz_struct(ZgRasterizerSettings) {
 
 	// Which winding order of a triangle is considered front-facing.
 	//
-	// Default is ZG_FALSE, in other words clockwise (left-hand rule). This is also the default
-	// of D3D12.
-	ZgBool frontFacingIsCounterClockwise;
+	// Default is ZG_FALSE, in other words counter-clockwise (right-hand rule).
+	ZgBool frontFacingIsClockwise;
 
 	// Depth bias added to each pixel.
 	//
@@ -937,13 +966,15 @@ sfz_struct(ZgBlendSettings) {
 // The common information required to create a render pipeline
 sfz_struct(ZgPipelineRenderDesc) {
 
-	// Path to the shader source or the source directly depending on what create function is called.
-	const char* vertexShader;
-	const char* pixelShader;
+	// Name of this pipeline
+	char name[64];
 
-	// The names of the entry functions
-	const char* vertexShaderEntry;
-	const char* pixelShaderEntry;
+	// Path to the shader source, ignored if source is provided directly.
+	char path[256];
+
+	// The name of the entry functions
+	char entryVS[32];
+	char entryPS[32];
 
 	// The vertex attributes to the vertex shader
 	u32 numVertexAttributes;
@@ -959,8 +990,8 @@ sfz_struct(ZgPipelineRenderDesc) {
 	// A list of constant buffer registers which should be declared as push constants. This is an
 	// optimization, however it can lead to worse performance if used improperly. Can be left empty
 	// if unsure.
-	u32 numPushConstants;
-	u32 pushConstantRegisters[ZG_MAX_NUM_CONSTANT_BUFFERS];
+	u32 numPushConsts;
+	u32 pushConstsRegs[ZG_MAX_NUM_CONSTANT_BUFFERS];
 
 	// A list of samplers used by the pipeline
 	//
@@ -981,7 +1012,70 @@ sfz_struct(ZgPipelineRenderDesc) {
 	ZgBlendSettings blending;
 
 	// Depth test settings, default is no depth test (ZG_COMPARISON_FUNC_NONE).
-	ZgComparisonFunc depthFunc;
+	ZgCompFunc depthFunc;
+
+#ifdef __cplusplus
+	void setName(const char* nameIn) {
+		u32 i = 0;
+		for (; i < 63; i++) {
+			if (nameIn[i] == '\0') break;
+			this->name[i] = nameIn[i];
+		}
+		this->name[i] = '\0';
+	}
+
+	void setPathAndEntry(const char* pathIn, const char* entryVSIn = "VSMain", const char* entryPSIn = "PSMain")
+	{
+		u32 i = 0;
+		for (; i < 255; i++) {
+			if (pathIn[i] == '\0') break;
+			this->path[i] = pathIn[i];
+		}
+		this->path[i] = '\0';
+		i = 0;
+		for (; i < 31; i++) {
+			if (entryVSIn[i] == '\0') break;
+			this->entryVS[i] = entryVSIn[i];
+		}
+		this->entryVS[i] = '\0';
+		i = 0;
+		for (; i < 31; i++) {
+			if (entryPSIn[i] == '\0') break;
+			this->entryPS[i] = entryPSIn[i];
+		}
+		this->entryPS[i] = '\0';
+	}
+
+	void addPushConst(u32 reg)
+	{
+		sfz_assert(this->numPushConsts < ZG_MAX_NUM_CONSTANT_BUFFERS);
+		pushConstsRegs[numPushConsts] = reg;
+		numPushConsts += 1;
+	}
+
+	void addSampler(
+		u32 reg,
+		ZgSampleMode sampleMode,
+		ZgWrapMode wrapU = ZG_WRAP_CLAMP,
+		ZgWrapMode wrapV = ZG_WRAP_CLAMP,
+		f32 mipLodBias = 0.0f)
+	{
+		sfz_assert(reg == this->numSamplers);
+		sfz_assert(this->numSamplers < ZG_MAX_NUM_SAMPLERS);
+		samplers[reg].sampleMode = sampleMode;
+		samplers[reg].wrapU = wrapU;
+		samplers[reg].wrapV = wrapV;
+		samplers[reg].mipLodBias = mipLodBias;
+		numSamplers += 1;
+	}
+
+	void addRenderTarget(ZgFormat format)
+	{
+		sfz_assert(this->numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
+		renderTargets[numRenderTargets] = format;
+		numRenderTargets += 1;
+	}
+#endif
 };
 
 ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
@@ -991,6 +1085,7 @@ ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 
 ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
 	ZgPipelineRender** pipelineOut,
+	const char* src,
 	const ZgPipelineRenderDesc* desc,
 	const ZgPipelineCompileSettingsHLSL* compileSettings);
 
@@ -1010,18 +1105,27 @@ public:
 		const ZgPipelineRenderDesc& desc,
 		const ZgPipelineCompileSettingsHLSL& compileSettings)
 	{
-		this->destroy();
-		return zgPipelineRenderCreateFromFileHLSL(
-			&this->handle, &desc, &compileSettings);
+		ZgPipelineRender* tmpHandle = nullptr;
+		ZgResult res = zgPipelineRenderCreateFromFileHLSL(&tmpHandle, &desc, &compileSettings);
+		if (res == ZG_SUCCESS) {
+			this->destroy();
+			this->handle = tmpHandle;
+		}
+		return res;
 	}
 
 	ZgResult createFromSourceHLSL(
+		const char* src,
 		const ZgPipelineRenderDesc& desc,
 		const ZgPipelineCompileSettingsHLSL& compileSettings)
 	{
-		this->destroy();
-		return zgPipelineRenderCreateFromSourceHLSL(
-			&this->handle, &desc, &compileSettings);
+		ZgPipelineRender* tmpHandle = nullptr;
+		ZgResult res = zgPipelineRenderCreateFromSourceHLSL(&tmpHandle, src, &desc, &compileSettings);
+		if (res == ZG_SUCCESS) {
+			this->destroy();
+			this->handle = tmpHandle;
+		}
+		return res;
 	}
 
 	ZgPipelineRenderSignature getSignature() const
@@ -1029,222 +1133,6 @@ public:
 		ZgPipelineRenderSignature tmp = {};
 		zgPipelineRenderGetSignature(this->handle, &tmp);
 		return tmp;
-	}
-};
-
-class PipelineRenderBuilder final {
-public:
-	ZgPipelineRenderDesc desc = {};
-	const char* vertexShaderPath = nullptr;
-	const char* pixelShaderPath = nullptr;
-	const char* vertexShaderSrc = nullptr;
-	const char* pixelShaderSrc = nullptr;
-
-	PipelineRenderBuilder() = default;
-	PipelineRenderBuilder(const PipelineRenderBuilder&) = default;
-	PipelineRenderBuilder& operator= (const PipelineRenderBuilder&) = default;
-	~PipelineRenderBuilder() = default;
-
-	PipelineRenderBuilder& addVertexShaderPath(const char* entry, const char* path)
-	{
-		desc.vertexShaderEntry = entry;
-		vertexShaderPath = path;
-		return *this;
-	}
-
-	PipelineRenderBuilder& addPixelShaderPath(const char* entry, const char* path)
-	{
-		desc.pixelShaderEntry = entry;
-		pixelShaderPath = path;
-		return *this;
-	}
-
-	PipelineRenderBuilder& addVertexShaderSource(const char* entry, const char* src)
-	{
-		desc.vertexShaderEntry = entry;
-		vertexShaderSrc = src;
-		return *this;
-	}
-
-	PipelineRenderBuilder& addPixelShaderSource(const char* entry, const char* src)
-	{
-		desc.pixelShaderEntry = entry;
-		pixelShaderSrc = src;
-		return *this;
-	}
-
-	PipelineRenderBuilder& addVertexAttribute(ZgVertexAttribute attribute)
-	{
-		sfz_assert(desc.numVertexAttributes < ZG_MAX_NUM_VERTEX_ATTRIBUTES);
-		desc.vertexAttributes[desc.numVertexAttributes] = attribute;
-		desc.numVertexAttributes += 1;
-		return *this;
-	}
-
-	PipelineRenderBuilder& addVertexAttribute(
-		u32 location,
-		u32 vertexBufferSlot,
-		ZgVertexAttributeType type,
-		u32 offsetInBuffer)
-	{
-		ZgVertexAttribute attribute = {};
-		attribute.location = location;
-		attribute.vertexBufferSlot = vertexBufferSlot;
-		attribute.type = type;
-		attribute.offsetToFirstElementInBytes = offsetInBuffer;
-		return addVertexAttribute(attribute);
-	}
-
-	PipelineRenderBuilder& addVertexBufferInfo(
-		u32 slot, u32 vertexBufferStrideBytes)
-	{
-		sfz_assert(slot == desc.numVertexBufferSlots);
-		sfz_assert(desc.numVertexBufferSlots < ZG_MAX_NUM_VERTEX_ATTRIBUTES);
-		desc.vertexBufferStridesBytes[slot] = vertexBufferStrideBytes;
-		desc.numVertexBufferSlots += 1;
-		return *this;
-	}
-
-	PipelineRenderBuilder& addPushConstant(u32 constantBufferRegister)
-	{
-		sfz_assert(desc.numPushConstants < ZG_MAX_NUM_CONSTANT_BUFFERS);
-		desc.pushConstantRegisters[desc.numPushConstants] = constantBufferRegister;
-		desc.numPushConstants += 1;
-		return *this;
-	}
-
-	PipelineRenderBuilder& addSampler(u32 samplerRegister, ZgSampler sampler)
-	{
-		sfz_assert(samplerRegister == desc.numSamplers);
-		sfz_assert(desc.numSamplers < ZG_MAX_NUM_SAMPLERS);
-		desc.samplers[samplerRegister] = sampler;
-		desc.numSamplers += 1;
-		return *this;
-	}
-
-	PipelineRenderBuilder& addSampler(
-		u32 samplerRegister,
-		ZgSamplingMode samplingMode,
-		ZgWrappingMode wrappingModeU = ZG_WRAPPING_MODE_CLAMP,
-		ZgWrappingMode wrappingModeV = ZG_WRAPPING_MODE_CLAMP,
-		f32 mipLodBias = 0.0f)
-	{
-		ZgSampler sampler = {};
-		sampler.samplingMode = samplingMode;
-		sampler.wrappingModeU = wrappingModeU;
-		sampler.wrappingModeV = wrappingModeV;
-		sampler.mipLodBias = mipLodBias;
-		return addSampler(samplerRegister, sampler);
-	}
-
-	PipelineRenderBuilder& addRenderTarget(ZgFormat format)
-	{
-		sfz_assert(desc.numRenderTargets < ZG_MAX_NUM_RENDER_TARGETS);
-		desc.renderTargets[desc.numRenderTargets] = format;
-		desc.numRenderTargets += 1;
-		return *this;
-	}
-
-	PipelineRenderBuilder& setWireframeRendering(bool wireframeEnabled)
-	{
-		desc.rasterizer.wireframeMode = wireframeEnabled ? ZG_TRUE : ZG_FALSE;
-		return *this;
-	}
-
-	PipelineRenderBuilder& setCullingEnabled(bool cullingEnabled)
-	{
-		desc.rasterizer.cullingEnabled = cullingEnabled ? ZG_TRUE : ZG_FALSE;
-		return *this;
-	}
-
-	PipelineRenderBuilder& setCullMode(
-		bool cullFrontFacing, bool fontFacingIsCounterClockwise = false)
-	{
-		desc.rasterizer.cullFrontFacing = cullFrontFacing ? ZG_TRUE : ZG_FALSE;
-		desc.rasterizer.frontFacingIsCounterClockwise =
-			fontFacingIsCounterClockwise ? ZG_TRUE : ZG_FALSE;
-		return *this;
-	}
-
-	PipelineRenderBuilder& setDepthBias(
-		i32 bias, f32 biasSlopeScaled, f32 biasClamp = 0.0f)
-	{
-		desc.rasterizer.depthBias = bias;
-		desc.rasterizer.depthBiasSlopeScaled = biasSlopeScaled;
-		desc.rasterizer.depthBiasClamp = biasClamp;
-		return *this;
-	}
-
-	PipelineRenderBuilder& setBlendingEnabled(bool blendingEnabled)
-	{
-		desc.blending.blendingEnabled = blendingEnabled ? ZG_TRUE : ZG_FALSE;
-		return *this;
-	}
-
-	PipelineRenderBuilder& setBlendFuncColor(
-		ZgBlendFunc func, ZgBlendFactor srcFactor, ZgBlendFactor dstFactor)
-	{
-		desc.blending.blendFuncColor = func;
-		desc.blending.srcValColor = srcFactor;
-		desc.blending.dstValColor = dstFactor;
-		return *this;
-	}
-
-	PipelineRenderBuilder& setBlendFuncAlpha(
-		ZgBlendFunc func, ZgBlendFactor srcFactor, ZgBlendFactor dstFactor)
-	{
-		desc.blending.blendFuncAlpha = func;
-		desc.blending.srcValAlpha = srcFactor;
-		desc.blending.dstValAlpha = dstFactor;
-		return *this;
-	}
-
-	PipelineRenderBuilder& setDepthFunc(ZgComparisonFunc depthFunc)
-	{
-		desc.depthFunc = depthFunc;
-		return *this;
-	}
-
-	ZgResult buildFromFileHLSL(
-		PipelineRender& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_2)
-	{
-		// Set path
-		desc.vertexShader = this->vertexShaderPath;
-		desc.pixelShader = this->pixelShaderPath;
-
-		// Create compile settings
-		ZgPipelineCompileSettingsHLSL compileSettings = {};
-		compileSettings.shaderModel = model;
-		compileSettings.dxcCompilerFlags[0] = "-Zi";
-		compileSettings.dxcCompilerFlags[1] = "-Qembed_debug";
-		compileSettings.dxcCompilerFlags[2] = "-O3";
-		compileSettings.dxcCompilerFlags[3] = "-HV 2021";
-		compileSettings.dxcCompilerFlags[4] = "-no-legacy-cbuf-layout";
-		compileSettings.dxcCompilerFlags[5] = "-enable-16bit-types";
-
-		// Build pipeline
-		return pipelineOut.createFromFileHLSL(desc, compileSettings);
-	}
-
-	ZgResult buildFromSourceHLSL(
-		PipelineRender& pipelineOut, ZgShaderModel model = ZG_SHADER_MODEL_6_2)
-	{
-		// Set source
-		desc.vertexShader = this->vertexShaderSrc;
-		desc.pixelShader = this->pixelShaderSrc;
-
-		// Create compile settings
-		ZgPipelineCompileSettingsHLSL compileSettings = {};
-		compileSettings.shaderModel = model;
-		compileSettings.dxcCompilerFlags[0] = "-Zi";
-		compileSettings.dxcCompilerFlags[1] = "-Qembed_debug";
-		compileSettings.dxcCompilerFlags[2] = "-O3";
-		compileSettings.dxcCompilerFlags[3] = "-HV 2021";
-		compileSettings.dxcCompilerFlags[4] = "-no-legacy-cbuf-layout";
-		compileSettings.dxcCompilerFlags[5] = "-enable-16bit-types";
-
-		// Build pipeline
-		return pipelineOut.createFromSourceHLSL(desc, compileSettings);
 	}
 };
 
@@ -1967,6 +1855,14 @@ sfz_struct(ZgContextInitSettingsD3D12) {
 	// [Optional] Enable DRED (Device Removed Extended Data) Auto-Breadcrumbs
 	// See: https://docs.microsoft.com/en-us/windows/win32/direct3d12/use-dred
 	ZgBool enableDredAutoBreadcrumbs;
+
+	// [Optional] Whether to call "setStablePowerState()" and wether to enable stable power or not.
+	//            WARNING: This will crash if developer mode is not enabled.
+	//            Useful for profiling. Note that this is probably system wide, so you likely want
+	//            to call again with stable power "NOT enabled" when you are done.
+	// 
+	ZgBool callSetStablePowerState;
+	ZgBool stablePowerEnabled;
 };
 
 sfz_struct(ZgContextInitSettingsVulkan) {

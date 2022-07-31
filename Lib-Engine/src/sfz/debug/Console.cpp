@@ -31,15 +31,16 @@
 
 #include <imgui_plot.h>
 
+#include "sfz/SfzLogging.h"
 #include "sfz/audio/AudioEngine.hpp"
 #include "sfz/config/GlobalConfig.hpp"
+#include "sfz/config/SfzConfig.h"
 #include "sfz/debug/ProfilingStats.hpp"
 #include "sfz/renderer/Renderer.hpp"
 #include "sfz/resources/ResourceManager.hpp"
 #include "sfz/shaders/ShaderManager.hpp"
 #include "sfz/util/ImGuiHelpers.hpp"
 #include "sfz/util/IO.hpp"
-#include "sfz/util/TerminalLogger.hpp"
 
 namespace sfz {
 
@@ -53,27 +54,27 @@ struct ConsoleState final {
 	// Console settings
 	bool active = false;
 	bool imguiFirstRun = false;
-	Setting* imguiScale = nullptr;
+	SfzSetting* imguiScale = nullptr;
 
 	// Performance
-	Setting* showInGamePerf = nullptr;
-	Setting* inGamePerfWidth = nullptr;
-	Setting* inGamePerfHeight = nullptr;
+	SfzSetting* showInGamePerf = nullptr;
+	SfzSetting* inGamePerfWidth = nullptr;
+	SfzSetting* inGamePerfHeight = nullptr;
 	str64 categoryStr = str64("default");
 	ArrayLocal<Array<f32>, PROFILING_STATS_MAX_NUM_LABELS> processedValues;
 
 	// Global Config
 	str32 configFilterString;
 	Array<str32> cfgSections;
-	Array<Setting*> cfgSectionSettings;
+	Array<SfzSetting*> cfgSectionSettings;
 
 	// Log
-	Setting* showInGameLog = nullptr;
-	Setting* inGameLogWidth = nullptr;
-	Setting* inGameLogHeight = nullptr;
-	Setting* inGameLogMaxAgeSecs = nullptr;
-	Setting* logMinLevelSetting = nullptr;
-	str96 logTagFilter;
+	SfzSetting* showInGameLog = nullptr;
+	SfzSetting* inGameLogWidth = nullptr;
+	SfzSetting* inGameLogHeight = nullptr;
+	SfzSetting* inGameLogMaxAgeSecs = nullptr;
+	SfzSetting* logMinLevelSetting = nullptr;
+	str96 logFilter;
 
 	// Injected windows
 	Arr32<str96> injectedWindowNames;
@@ -82,9 +83,9 @@ struct ConsoleState final {
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-static bool anyContainsFilter(const Array<Setting*>& settings, const char* filter) noexcept
+static bool anyContainsFilter(const Array<SfzSetting*>& settings, const char* filter) noexcept
 {
-	for (Setting* setting : settings) {
+	for (SfzSetting* setting : settings) {
 		if (strstr(setting->key(), filter) != nullptr) {
 			return true;
 		}
@@ -104,30 +105,29 @@ static void timeToString(str96& stringOut, time_t timestamp) noexcept
 }
 
 // Returns whether window is docked or not, small hack to create initial docked layout
-static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcept
+static void renderPerformanceWindow(
+	ConsoleState& state, bool isPreview, const SfzProfilingStats* profStats) noexcept
 {
-	ProfilingStats& stats = getProfilingStats();
-
 	// Get information about the selected category from the stats
-	const u32 numLabels = stats.numLabels(state.categoryStr);
-	const u32 numSamples = stats.numSamples(state.categoryStr);
-	const char* const* labelStrs = stats.labels(state.categoryStr);
-	const char* idxUnit = stats.idxUnit(state.categoryStr);
-	const char* sampleUnit = stats.sampleUnit(state.categoryStr);
-	StatsVisualizationType visType = stats.visualizationType(state.categoryStr);
+	const u32 numLabels = profStats->numLabels(state.categoryStr);
+	const u32 numSamples = profStats->numSamples(state.categoryStr);
+	const char* const* labelStrs = profStats->labels(state.categoryStr);
+	const char* idxUnit = profStats->idxUnit(state.categoryStr);
+	const char* sampleUnit = profStats->sampleUnit(state.categoryStr);
+	SfzStatsVisualizationType visType = profStats->visualizationType(state.categoryStr);
 
 	// Retrieve sample arrays, colors and stats for each label in the selected category
 	// Also get the worst max
 	ArrayLocal<const f32*, PROFILING_STATS_MAX_NUM_LABELS> valuesList;
 	ArrayLocal<ImU32, PROFILING_STATS_MAX_NUM_LABELS> colorsList;
-	ArrayLocal<LabelStats, PROFILING_STATS_MAX_NUM_LABELS> labelStats;
+	ArrayLocal<SfzLabelStats, PROFILING_STATS_MAX_NUM_LABELS> labelStats;
 	f32 worstMax = -F32_MAX;
 	u32 longestLabelStr = 0;
 	for (u32 i = 0; i < numLabels; i++) {
 
 		// Get samples
 		const char* label = labelStrs[i];
-		const f32* samples = stats.samples(state.categoryStr, label);
+		const f32* samples = profStats->samples(state.categoryStr, label);
 
 		// Process samples and copy them to temp array, add temp array to valuesList
 		Array<f32>& processed = state.processedValues[i];
@@ -137,9 +137,9 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 		valuesList.add(processed.data());
 
 		// Get color and stats
-		f32x4 color = stats.color(state.categoryStr, label);
+		f32x4 color = profStats->color(state.categoryStr, label);
 		colorsList.add(ImGui::GetColorU32(color));
-		LabelStats labelStat = stats.stats(state.categoryStr, label);
+		SfzLabelStats labelStat = profStats->stats(state.categoryStr, label);
 		labelStats.add(labelStat);
 
 		// Calculate worst max from stats and longest label string
@@ -148,7 +148,7 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 	}
 
 	// Combine samples if requested
-	if (visType == StatsVisualizationType::FIRST_INDIVIDUALLY_REST_ADDED) {
+	if (visType == SfzStatsVisualizationType::FIRST_INDIVIDUALLY_REST_ADDED) {
 		for (u32 i = 1; i < numLabels; i++) {
 			Array<f32>& targetVals = state.processedValues[i];
 			for (u32 j = i + 1; j < numLabels; j++) {
@@ -162,14 +162,14 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 
 	// Create (most of) plot config
 	ImGui::PlotConfig conf;
-	conf.values.xs = stats.sampleIndicesFloat(state.categoryStr);
+	conf.values.xs = profStats->sampleIndicesFloat(state.categoryStr);
 	conf.values.count = int(numSamples);
 	conf.values.ys_count = int(numLabels);
 	conf.values.ys_list = valuesList.data();
 	conf.values.colors = colorsList.data();
 
 	conf.scale.min = 0.0f;
-	const f32 smallestPlotMax = stats.smallestPlotMax(state.categoryStr);
+	const f32 smallestPlotMax = profStats->smallestPlotMax(state.categoryStr);
 	conf.scale.max = sfz::max(worstMax, smallestPlotMax);
 
 	conf.tooltip.show = true;
@@ -242,12 +242,12 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 		windowFlags |= ImGuiWindowFlags_NoScrollbar;
 		windowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
 		windowFlags |= ImGuiWindowFlags_NoNav;
-		ImGui::Begin("Performance", nullptr, windowFlags);
+		ImGui::Begin("Perf", nullptr, windowFlags);
 
 		// Tab bar
 		if (ImGui::BeginTabBar("PerformanceTabBar")) {
-			const u32 numCategories = stats.numCategories();
-			const char* const* categories = stats.categories();
+			const u32 numCategories = profStats->numCategories();
+			const char* const* categories = profStats->categories();
 			for (u32 i = 0; i < numCategories; i++) {
 				if (ImGui::BeginTabItem(str96("%s##PerfBar", categories[i]))) {
 					state.categoryStr.clear();
@@ -281,16 +281,15 @@ static void renderPerformanceWindow(ConsoleState& state, bool isPreview) noexcep
 
 static void renderLogWindow(ConsoleState& state, f32x2 imguiWindowRes, bool isPreview, f32 maxAgeSecs = 6.0f) noexcept
 {
-	TerminalLogger& logger = *reinterpret_cast<TerminalLogger*>(getLogger());
 	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
 	str96 timeStr;
 
-	auto getMessageColor = [](LogLevel level) -> f32x4 {
+	auto getMessageColor = [](SfzLogLevel level) -> f32x4 {
 		switch (level) {
-		case LogLevel::NOISE: return f32x4(0.6f, 0.6f, 0.8f, 1.0f);
-		case LogLevel::INFO: return f32x4(0.8f, 0.8f, 0.8f, 1.0f);
-		case LogLevel::WARNING: return f32x4(1.0f, 1.0f, 0.0f, 1.0f);
-		case LogLevel::ERROR_LVL: return f32x4(1.0f, 0.0f, 0.0f, 1.0f);
+		case SFZ_LOG_LEVEL_NOISE: return f32x4(0.6f, 0.6f, 0.8f, 1.0f);
+		case SFZ_LOG_LEVEL_INFO: return f32x4(0.8f, 0.8f, 0.8f, 1.0f);
+		case SFZ_LOG_LEVEL_WARNING: return f32x4(1.0f, 1.0f, 0.0f, 1.0f);
+		case SFZ_LOG_LEVEL_ERROR: return f32x4(1.0f, 0.0f, 0.0f, 1.0f);
 		}
 		sfz_assert(false);
 		return f32x4(1.0f);
@@ -299,18 +298,8 @@ static void renderLogWindow(ConsoleState& state, f32x2 imguiWindowRes, bool isPr
 	if (isPreview) {
 
 		// Find how many active messages there are
-		const time_t now = std::time(nullptr);
-		const u32 numMessages = logger.numMessages();
-		u32 numActiveMessages = 0;
-		for (u32 i = 0; i < numMessages; i++) {
-			// Reverse order, newest first
-			const TerminalMessageItem& msg = logger.getMessage(numMessages - i - 1);
-			const f32 age = f32(now - msg.timestamp);
-			if (age > maxAgeSecs) {
-				break;
-			}
-			numActiveMessages = i + 1;
-		}
+		const u32 numMessages = sfzLoggingCurrentNumMessages();
+		const u32 numActiveMessages = sfzLoggingGetNumMessagesWithAgeLessThan(maxAgeSecs);
 
 		// Exit if no active messages
 		if (numActiveMessages == 0) return;
@@ -340,25 +329,26 @@ static void renderLogWindow(ConsoleState& state, f32x2 imguiWindowRes, bool isPr
 
 		for (u32 i = 0; i < numActiveMessages; i++) {
 			// Reverse order, newest first
-			const TerminalMessageItem& msg = logger.getMessage(numMessages - i - 1);
+			const u32 msgIdx = numMessages - i - 1;
+			const char* msgFile = sfzLoggingGetMessageFile(msgIdx);
+			const i32 msgLine = sfzLoggingGetMessageLine(msgIdx);
+			const SfzLogLevel msgLevel = sfzLoggingGetMessageLevel(msgIdx);
+			const time_t msgTimestamp = time_t(sfzLoggingGetMessageTimestamp(msgIdx));
+			const char* msg = sfzLoggingGetMessageMessage(msgIdx);
 
 			// Skip if log level is too low
-			if (i32(msg.level) < state.logMinLevelSetting->intValue()) continue;
+			if (i32(msgLevel) < state.logMinLevelSetting->intValue()) continue;
 
 			// Print message header
-			const f32x4 messageColor = getMessageColor(msg.level);
-			timeToString(timeStr, msg.timestamp);
-			imguiPrintText(str64("[%s] - [", timeStr.str()), messageColor);
-			ImGui::SameLine();
-			imguiRenderFilteredText(msg.tag, state.logTagFilter, messageColor, filterTextColor);
-			ImGui::SameLine();
-			imguiPrintText(str96("] - [%s:%i]", msg.file.str(), msg.lineNumber), messageColor);
+			const f32x4 messageColor = getMessageColor(msgLevel);
+			timeToString(timeStr, msgTimestamp);
+			imguiPrintText(str64("[%s] - [%s:%i]", timeStr.str(), msgFile, msgLine), messageColor);
 
 			ImGui::Spacing();
 
 			// Print message
 			ImGui::PushStyleColor(ImGuiCol_Text, messageColor);
-			ImGui::TextWrapped("%s", msg.message.str());
+			ImGui::TextWrapped("%s", msg);
 			ImGui::PopStyleColor();
 
 			ImGui::Spacing();
@@ -389,16 +379,22 @@ static void renderLogWindow(ConsoleState& state, f32x2 imguiWindowRes, bool isPr
 	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
 
 	ImGui::PushItemWidth(ImGui::GetWindowWidth() - 160.0f - 160.0f - 40.0f);
-	ImGui::InputText("##Tag filter", state.logTagFilter.mRawStr, state.logTagFilter.capacity());
+	ImGui::InputText("##Tag filter", state.logFilter.mRawStr, state.logFilter.capacity());
 	ImGui::PopItemWidth();
 	ImGui::SameLine();
-	state.logTagFilter.toLower();
-	bool tagFilterMode = state.logTagFilter != "";
+	state.logFilter.toLower();
+	const bool logFilterMode = state.logFilter != "";
 
 	int logMinLevelVal = state.logMinLevelSetting->intValue();
 	ImGui::PushItemWidth(160.0f);
-	ImGui::Combo("##Minimum log level", &logMinLevelVal, sfz::LOG_LEVEL_STRINGS,
-		IM_ARRAYSIZE(sfz::LOG_LEVEL_STRINGS));
+	constexpr const char* LOG_LEVEL_STRINGS[] = {
+		"NOISE",
+		"INFO",
+		"WARNING",
+		"ERROR"
+	};
+	ImGui::Combo("##Minimum log level", &logMinLevelVal, LOG_LEVEL_STRINGS,
+		IM_ARRAYSIZE(LOG_LEVEL_STRINGS));
 	ImGui::PopItemWidth();
 	state.logMinLevelSetting->setInt(logMinLevelVal);
 
@@ -406,41 +402,46 @@ static void renderLogWindow(ConsoleState& state, f32x2 imguiWindowRes, bool isPr
 
 	ImGui::SameLine(ImGui::GetWindowWidth() - 160.0f);
 	if (ImGui::Button("Clear messages")) {
-		logger.clearMessages();
+		sfzLoggingClearMessages();
 	}
 
 	// Print all messages
 	ImGui::BeginChild("LogItems");
-	u32 numLogMessages = logger.numMessages();
+	const u32 numLogMessages = sfzLoggingCurrentNumMessages();
 	for (u32 i = 0; i < numLogMessages; i++) {
 		// Reverse order, newest first
-		const TerminalMessageItem& message = logger.getMessage(numLogMessages - i - 1);
+		const u32 msgIdx = numLogMessages - i - 1;
+		const char* msgFile = sfzLoggingGetMessageFile(msgIdx);
+		const i32 msgLine = sfzLoggingGetMessageLine(msgIdx);
+		const SfzLogLevel msgLevel = sfzLoggingGetMessageLevel(msgIdx);
+		const time_t msgTimestamp = time_t(sfzLoggingGetMessageTimestamp(msgIdx));
+		const char* msg = sfzLoggingGetMessageMessage(msgIdx);
 
 		// Skip if log level is too low
-		if (i32(message.level) < state.logMinLevelSetting->intValue()) continue;
+		if (i32(msgLevel) < state.logMinLevelSetting->intValue()) continue;
 
-		// Skip section if nothing matches when filtering
-		if (tagFilterMode) {
-			str32 tagLowerStr("%s", message.tag.str());
-			tagLowerStr.toLower();
-			bool tagFilter = strstr(tagLowerStr.str(), state.logTagFilter.str()) != nullptr;
+		// Skip message if nothing matches when filtering
+		if (logFilterMode) {
+			str128 fileLowerStr("%s", msgFile);
+			fileLowerStr.toLower();
+			bool tagFilter = strstr(fileLowerStr.str(), state.logFilter.str()) != nullptr;
 			if (!tagFilter) continue;
 		}
 
 		// Print message header
-		const f32x4 messageColor = getMessageColor(message.level);
-		timeToString(timeStr, message.timestamp);
+		const f32x4 messageColor = getMessageColor(msgLevel);
+		timeToString(timeStr, msgTimestamp);
 		imguiPrintText(str64("[%s] - [", timeStr.str()), messageColor);
 		ImGui::SameLine();
-		imguiRenderFilteredText(message.tag, state.logTagFilter, messageColor, filterTextColor);
+		imguiRenderFilteredText(msgFile, state.logFilter, messageColor, filterTextColor);
 		ImGui::SameLine();
-		imguiPrintText(str96("] - [%s:%i]", message.file.str(), message.lineNumber), messageColor);
+		imguiPrintText(str96(": %i ]", msgLine), messageColor);
 
 		ImGui::Spacing();
 
 		// Print message
 		ImGui::PushStyleColor(ImGuiCol_Text, messageColor);
-		ImGui::TextWrapped("%s", message.message.str());
+		ImGui::TextWrapped("%s", msg);
 		ImGui::PopStyleColor();
 
 		ImGui::Spacing();
@@ -458,13 +459,12 @@ static void renderLogWindow(ConsoleState& state, f32x2 imguiWindowRes, bool isPr
 	ImGui::End();
 }
 
-static void renderConfigWindow(ConsoleState& state) noexcept
+static void renderConfigWindow(ConsoleState& state, SfzGlobalConfig& cfg) noexcept
 {
 	const f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
 	str256 tmpStr;
 
 	// Get Global Config sections
-	GlobalConfig& cfg = getGlobalConfig();
 	state.cfgSections.clear();
 	cfg.getSections(state.cfgSections);
 
@@ -480,7 +480,7 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 	configWindowFlags |= ImGuiWindowFlags_NoFocusOnAppearing;
 
 	// Begin window
-	ImGui::Begin("Config", nullptr, configWindowFlags);
+	ImGui::Begin("Cfg", nullptr, configWindowFlags);
 
 	// Config filter string
 	//ImGui::PushItemWidth(-1.0f);
@@ -535,7 +535,7 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 		ImGui::SetColumnWidth(1, windowWidth - 275.0f);
 		ImGui::SetColumnWidth(2, 200.0f);
 
-		for (Setting* setting : state.cfgSectionSettings) {
+		for (SfzSetting* setting : state.cfgSectionSettings) {
 
 			// Combine key strings
 			str128 combinedKeyStr("%s%s", sectionKey.str(), setting->key().str());
@@ -570,7 +570,7 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 			tmpStr.clear();
 			tmpStr.appendf("##%s_%s___valueInput___", setting->section().str(), setting->key().str());
 			switch (setting->type()) {
-			case ValueType::INT:
+			case SfzValueType::INT:
 				{
 					i32 i = setting->intValue();
 					if (ImGui::InputInt(tmpStr, &i, setting->value().i.bounds.step)) {
@@ -578,7 +578,7 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 					}
 				}
 				break;
-			case ValueType::FLOAT:
+			case SfzValueType::FLOAT:
 				{
 					f32 f = setting->floatValue();
 					if (ImGui::InputFloat(tmpStr, &f, 0.25f, 0.0f, "%.4f")) {
@@ -586,7 +586,7 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 					}
 				}
 				break;
-			case ValueType::BOOL:
+			case SfzValueType::BOOL:
 				{
 					bool b = setting->boolValue();
 					if (ImGui::Checkbox(tmpStr, &b)) {
@@ -610,7 +610,7 @@ static void renderConfigWindow(ConsoleState& state) noexcept
 // Console: State methods
 // ------------------------------------------------------------------------------------------------
 
-void Console::init(SfzAllocator* allocator, u32 numWindowsToDock, const char* const* windowNames) noexcept
+void Console::init(SfzAllocator* allocator, SfzGlobalConfig* cfg, u32 numWindowsToDock, const char* const* windowNames) noexcept
 {
 	// Allocate ConsoleState and set allocator
 	this->destroy();
@@ -626,17 +626,16 @@ void Console::init(SfzAllocator* allocator, u32 numWindowsToDock, const char* co
 	}
 
 	// Pick out console settings
-	GlobalConfig& cfg = getGlobalConfig();
-	mState->imguiScale = cfg.getSetting("Imgui", "scale");
+	mState->imguiScale = cfg->sanitizeFloat("Imgui", "scale", true, 1.25f, 1.0f, 3.0f);
 	mState->showInGamePerf =
-		cfg.sanitizeBool("Console", "showInPerfPreview", true, BoolBounds(false));
-	mState->inGamePerfWidth = cfg.sanitizeInt("Console", "inGamePerfWidth", true, IntBounds(1200, 700, 1500, 50));
-	mState->inGamePerfHeight = cfg.sanitizeInt("Console", "inGamePerfHeight", true, IntBounds(150, 100, 500, 25));
-	mState->showInGameLog = cfg.sanitizeBool("Console", "showInGameLog", true, true);
-	mState->inGameLogWidth = cfg.sanitizeInt("Console", "inGameLogWidth", true, IntBounds(1000, 700, 1500, 50));
-	mState->inGameLogHeight = cfg.sanitizeInt("Console", "inGameLogHeight", true, IntBounds(600, 400, 2000, 50));
-	mState->inGameLogMaxAgeSecs = cfg.sanitizeFloat("Console", "inGameLogMaxAgeSecs", false, 2.0f, 0.1f, 10.0f);
-	mState->logMinLevelSetting = cfg.sanitizeInt("Console", "logMinLevel", false, IntBounds(0, 0, 3));
+		cfg->sanitizeBool("Console", "showInPerfPreview", true, SfzBoolBounds(false));
+	mState->inGamePerfWidth = cfg->sanitizeInt("Console", "inGamePerfWidth", true, SfzIntBounds(700, 500, 1500, 50));
+	mState->inGamePerfHeight = cfg->sanitizeInt("Console", "inGamePerfHeight", true, SfzIntBounds(100, 50, 500, 25));
+	mState->showInGameLog = cfg->sanitizeBool("Console", "showInGameLog", true, true);
+	mState->inGameLogWidth = cfg->sanitizeInt("Console", "inGameLogWidth", true, SfzIntBounds(1000, 700, 1500, 50));
+	mState->inGameLogHeight = cfg->sanitizeInt("Console", "inGameLogHeight", true, SfzIntBounds(600, 400, 2000, 50));
+	mState->inGameLogMaxAgeSecs = cfg->sanitizeFloat("Console", "inGameLogMaxAgeSecs", false, 2.0f, 0.1f, 10.0f);
+	mState->logMinLevelSetting = cfg->sanitizeInt("Console", "logMinLevel", false, SfzIntBounds(0, 0, 3));
 
 	// Global Config
 	mState->cfgSections.init(32, allocator, sfz_dbg("ConsoleState member"));
@@ -669,18 +668,25 @@ void Console::toggleActive() noexcept
 	mState->active = !mState->active;
 }
 
-bool Console::active() noexcept
+bool Console::active() const noexcept
 {
 	return mState->active;
 }
 
-void Console::render(i32x2 windowRes) noexcept
+void Console::render(
+	i32x2 windowRes,
+	SfzStrIDs* ids,
+	SfzConfig* cfg,
+	SfzRenderer* renderer,
+	SfzShaderManager* shaderMan,
+	SfzResourceManager* resMan,
+	const SfzProfilingStats* profStats) noexcept
 {
 	const f32x2 imguiWindowRes = f32x2(windowRes) / mState->imguiScale->floatValue();
 
 	// Render in-game previews
 	if (!mState->active && mState->showInGamePerf->boolValue()) {
-		renderPerformanceWindow(*mState, true);
+		renderPerformanceWindow(*mState, true, profStats);
 	}
 	if (!mState->active && mState->showInGameLog->boolValue()) {
 		renderLogWindow(*mState, imguiWindowRes, true, mState->inGameLogMaxAgeSecs->floatValue());
@@ -699,12 +705,12 @@ void Console::render(i32x2 windowRes) noexcept
 
 	// Render console windows
 	renderLogWindow(*mState, imguiWindowRes, false);
-	renderConfigWindow(*mState);
-	renderPerformanceWindow(*mState, false);
-	getResourceManager().renderDebugUI();
-	getShaderManager().renderDebugUI();
-	getRenderer().renderImguiUI();
-	getAudioEngine().renderDebugUI();
+	renderConfigWindow(*mState, *sfzCfgGetLegacyConfig(cfg));
+	renderPerformanceWindow(*mState, false, profStats);
+	resMan->renderDebugUI(ids);
+	shaderMan->renderDebugUI(ids);
+	renderer->renderImguiUI();
+	//getAudioEngine().renderDebugUI();
 
 	// Initialize dockspace with default docked layout if first run
 	if (mState->imguiFirstRun) {
@@ -717,16 +723,16 @@ void Console::render(i32x2 windowRes) noexcept
 		ImGui::DockBuilderSetNodeSize(dockSpaceId, ImGui::GetMainViewport()->Size);
 
 		ImGuiID dockMain = dockSpaceId;
-		ImGuiID dockLeft = ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Left, 0.5f, NULL, &dockMain);
-		ImGuiID dockBottom = ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Down, 0.5f, NULL, &dockMain);
+		ImGuiID dockLeft = ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Left, 0.35f, NULL, &dockMain);
+		ImGuiID dockBottom = ImGui::DockBuilderSplitNode(dockMain, ImGuiDir_Down, 0.35f, NULL, &dockMain);
 
 		ImGui::DockBuilderDockWindow("Log", dockBottom);
-		ImGui::DockBuilderDockWindow("Config", dockLeft);
-		ImGui::DockBuilderDockWindow("Performance", dockLeft);
-		ImGui::DockBuilderDockWindow("Resources", dockLeft);
+		ImGui::DockBuilderDockWindow("Cfg", dockLeft);
+		ImGui::DockBuilderDockWindow("Perf", dockLeft);
+		ImGui::DockBuilderDockWindow("Res", dockLeft);
 		ImGui::DockBuilderDockWindow("Shaders", dockLeft);
 		ImGui::DockBuilderDockWindow("Renderer", dockLeft);
-		ImGui::DockBuilderDockWindow("Audio", dockLeft);
+		//ImGui::DockBuilderDockWindow("Audio", dockLeft);
 
 		for (u32 i = 0; i < mState->injectedWindowNames.size(); i++) {
 			const char* windowName = mState->injectedWindowNames[i].str();

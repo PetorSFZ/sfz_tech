@@ -28,51 +28,49 @@
 
 #include "sfz/util/RandomColors.hpp"
 
-namespace sfz {
-
 // ProfilingStatsState
 // ------------------------------------------------------------------------------------------------
 
-struct StatsLabel final {
+struct SfzStatsLabel final {
 	f32x4 color = f32x4(1.0f);
 	f32 defaultValue = 0.0f;
-	Array<f32> samples;
+	sfz::Array<f32> samples;
 };
 
-struct StatsCategory final {
+struct SfzStatsCategory final {
 	u32 numSamples = 0;
 	f32 sampleOutlierMax = F32_MAX;
-	str16 sampleUnit;
-	str16 idxUnit;
+	sfz::str16 sampleUnit;
+	sfz::str16 idxUnit;
 	f32 smallestPlotMax = 0.0f;
-	StatsVisualizationType visualizationType = StatsVisualizationType::INDIVIDUALLY;
+	SfzStatsVisualizationType visualizationType = SfzStatsVisualizationType::INDIVIDUALLY;
 
-	HashMapLocal<str32, StatsLabel, PROFILING_STATS_MAX_NUM_LABELS> labels;
-	ArrayLocal<str32, PROFILING_STATS_MAX_NUM_LABELS> labelStringBackings;
-	ArrayLocal<const char*, PROFILING_STATS_MAX_NUM_LABELS> labelStrings;
+	sfz::HashMapLocal<sfz::str32, SfzStatsLabel, PROFILING_STATS_MAX_NUM_LABELS> labels;
+	sfz::ArrayLocal<sfz::str32, PROFILING_STATS_MAX_NUM_LABELS> labelStringBackings;
+	sfz::ArrayLocal<const char*, PROFILING_STATS_MAX_NUM_LABELS> labelStrings;
 
-	Array<u64> indices;
-	Array<f32> indicesAsFloat;
+	sfz::Array<u64> indices;
+	sfz::Array<f32> indicesAsFloat;
 };
 
-struct ProfilingStatsState final {
+struct SfzProfilingStatsState final {
 	SfzAllocator* allocator = nullptr;
-	HashMapLocal<str32, StatsCategory, PROFILING_STATS_MAX_NUM_CATEGORIES> categories;
-	ArrayLocal<str32, PROFILING_STATS_MAX_NUM_CATEGORIES> categoryStringBackings;
-	ArrayLocal<const char*, PROFILING_STATS_MAX_NUM_CATEGORIES> categoryStrings;
+	sfz::HashMapLocal<sfz::str32, SfzStatsCategory, PROFILING_STATS_MAX_NUM_CATEGORIES> categories;
+	sfz::ArrayLocal<sfz::str32, PROFILING_STATS_MAX_NUM_CATEGORIES> categoryStringBackings;
+	sfz::ArrayLocal<const char*, PROFILING_STATS_MAX_NUM_CATEGORIES> categoryStrings;
 };
 
-// ProfilingStats: State methods
+// SfzProfilingStats: State methods
 // ------------------------------------------------------------------------------------------------
 
-void ProfilingStats::init(SfzAllocator* allocator) noexcept
+void SfzProfilingStats::init(SfzAllocator* allocator) noexcept
 {
 	this->destroy();
-	mState = sfz_new<ProfilingStatsState>(allocator, sfz_dbg("ProfilingStatsState"));
+	mState = sfz_new<SfzProfilingStatsState>(allocator, sfz_dbg("SfzProfilingStatsState"));
 	mState->allocator = allocator;
 }
 
-void ProfilingStats::destroy() noexcept
+void SfzProfilingStats::destroy() noexcept
 {
 	if (mState == nullptr) return;
 	SfzAllocator* allocator = mState->allocator;
@@ -80,123 +78,123 @@ void ProfilingStats::destroy() noexcept
 	mState = nullptr;
 }
 
-// ProfilingStats: Getters
+// SfzProfilingStats: Getters
 // ------------------------------------------------------------------------------------------------
 
-u32 ProfilingStats::numCategories() const noexcept
+u32 SfzProfilingStats::numCategories() const noexcept
 {
 	return mState->categoryStrings.size();
 }
 
-const char* const* ProfilingStats::categories() const noexcept
+const char* const* SfzProfilingStats::categories() const noexcept
 {
 	return mState->categoryStrings.data();
 }
 
-u32 ProfilingStats::numLabels(const char* category) const noexcept
+u32 SfzProfilingStats::numLabels(const char* category) const noexcept
 {
-	const StatsCategory* cat = mState->categories.get(category);
+	const SfzStatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
 	return cat->labelStrings.size();
 }
 
-const char* const* ProfilingStats::labels(const char* category) const noexcept
+const char* const* SfzProfilingStats::labels(const char* category) const noexcept
 {
-	const StatsCategory* cat = mState->categories.get(category);
+	const SfzStatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
 	return cat->labelStrings.data();
 }
 
-bool ProfilingStats::categoryExists(const char* category) const noexcept
+bool SfzProfilingStats::categoryExists(const char* category) const noexcept
 {
-	const StatsCategory* cat = mState->categories.get(category);
+	const SfzStatsCategory* cat = mState->categories.get(category);
 	return cat != nullptr;
 }
 
-bool ProfilingStats::labelExists(const char* category, const char* label) const noexcept
+bool SfzProfilingStats::labelExists(const char* category, const char* label) const noexcept
 {
-	const StatsCategory* cat = mState->categories.get(category);
+	const SfzStatsCategory* cat = mState->categories.get(category);
 	if (cat == nullptr) return false;
-	const StatsLabel* lab = cat->labels.get(label);
+	const SfzStatsLabel* lab = cat->labels.get(label);
 	return lab != nullptr;
 }
 
-u32 ProfilingStats::numSamples(const char* category) const noexcept
+u32 SfzProfilingStats::numSamples(const char* category) const noexcept
 {
-	const StatsCategory* cat = mState->categories.get(category);
+	const SfzStatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
 	return cat->numSamples;
 }
 
-const u64* ProfilingStats::sampleIndices(const char* category) const noexcept
+const u64* SfzProfilingStats::sampleIndices(const char* category) const noexcept
 {
-	const StatsCategory* cat = mState->categories.get(category);
+	const SfzStatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
 	return cat->indices.data();
 }
 
-const f32* ProfilingStats::sampleIndicesFloat(const char* category) const noexcept
+const f32* SfzProfilingStats::sampleIndicesFloat(const char* category) const noexcept
 {
-	const StatsCategory* cat = mState->categories.get(category);
+	const SfzStatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
 	return cat->indicesAsFloat.data();
 }
 
-const char* ProfilingStats::sampleUnit(const char* category) const noexcept
+const char* SfzProfilingStats::sampleUnit(const char* category) const noexcept
 {
-	const StatsCategory* cat = mState->categories.get(category);
+	const SfzStatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
 	return cat->sampleUnit;
 }
 
-const char* ProfilingStats::idxUnit(const char* category) const noexcept
+const char* SfzProfilingStats::idxUnit(const char* category) const noexcept
 {
-	const StatsCategory* cat = mState->categories.get(category);
+	const SfzStatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
 	return cat->idxUnit;
 }
 
-f32 ProfilingStats::smallestPlotMax(const char* category) const noexcept
+f32 SfzProfilingStats::smallestPlotMax(const char* category) const noexcept
 {
-	const StatsCategory* cat = mState->categories.get(category);
+	const SfzStatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
 	return cat->smallestPlotMax;
 }
 
-StatsVisualizationType ProfilingStats::visualizationType(const char* category) const noexcept
+SfzStatsVisualizationType SfzProfilingStats::visualizationType(const char* category) const noexcept
 {
-	const StatsCategory* cat = mState->categories.get(category);
+	const SfzStatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
 	return cat->visualizationType;
 }
 
-const f32* ProfilingStats::samples(const char* category, const char* label) const noexcept
+const f32* SfzProfilingStats::samples(const char* category, const char* label) const noexcept
 {
-	const StatsCategory* cat = mState->categories.get(category);
+	const SfzStatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
-	const StatsLabel* lab = cat->labels.get(label);
+	const SfzStatsLabel* lab = cat->labels.get(label);
 	sfz_assert(lab != nullptr);
 	return lab->samples.data();
 }
 
-f32x4 ProfilingStats::color(const char* category, const char* label) const noexcept
+f32x4 SfzProfilingStats::color(const char* category, const char* label) const noexcept
 {
-	const StatsCategory* cat = mState->categories.get(category);
+	const SfzStatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
-	const StatsLabel* lab = cat->labels.get(label);
+	const SfzStatsLabel* lab = cat->labels.get(label);
 	sfz_assert(lab != nullptr);
 	return lab->color;
 }
 
-LabelStats ProfilingStats::stats(const char* category, const char* label) const noexcept
+SfzLabelStats SfzProfilingStats::stats(const char* category, const char* label) const noexcept
 {
-	const StatsCategory* cat = mState->categories.get(category);
+	const SfzStatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
-	const StatsLabel* lab = cat->labels.get(label);
+	const SfzStatsLabel* lab = cat->labels.get(label);
 	sfz_assert(lab != nullptr);
 
 	// Calculate number of valid samples, total, min, max and average of the valid samples
-	LabelStats stats;
+	SfzLabelStats stats;
 	u32 numValidSamples = 0;
 	f32 total = 0.0f;
 	stats.min = F32_MAX;
@@ -234,17 +232,17 @@ LabelStats ProfilingStats::stats(const char* category, const char* label) const 
 	return stats;
 }
 
-// ProfilingStats: Methods
+// SfzProfilingStats: Methods
 // ------------------------------------------------------------------------------------------------
 
-void ProfilingStats::createCategory(
+void SfzProfilingStats::createCategory(
 	const char* category,
 	u32 numSamples,
 	f32 sampleOutlierMax,
 	const char* sampleUnit,
 	const char* idxUnit,
 	f32 smallestPlotMax,
-	StatsVisualizationType visualizationType) noexcept
+	SfzStatsVisualizationType visualizationType) noexcept
 {
 	sfz_assert(mState->categories.get(category) == nullptr);
 	sfz_assert(strnlen(category, 33) < 32);
@@ -252,7 +250,7 @@ void ProfilingStats::createCategory(
 	sfz_assert(strnlen(idxUnit, 9) < 8);
 
 	// Add category
-	StatsCategory& cat = mState->categories.put(category, {});
+	SfzStatsCategory& cat = mState->categories.put(category, {});
 	cat.numSamples = numSamples;
 	cat.sampleOutlierMax = sampleOutlierMax;
 	cat.sampleUnit.appendf("%s", sampleUnit);
@@ -261,7 +259,7 @@ void ProfilingStats::createCategory(
 	cat.visualizationType = visualizationType;
 
 	// Add category string
-	mState->categoryStringBackings.add(str32("%s", category));
+	mState->categoryStringBackings.add(sfz::str32("%s", category));
 	mState->categoryStrings.add(mState->categoryStringBackings.last());
 
 	// Add indices (0), fudge f32 variant so it has negative values until last one
@@ -276,7 +274,7 @@ void ProfilingStats::createCategory(
 	sfz_assert(cat.indicesAsFloat.capacity() == cat.numSamples);
 }
 
-void ProfilingStats::createLabel(
+void SfzProfilingStats::createLabel(
 	const char* category,
 	const char* label,
 	f32x4 color,
@@ -284,35 +282,35 @@ void ProfilingStats::createLabel(
 {
 	sfz_assert(strnlen(label, 33) < 32);
 
-	StatsCategory* cat = mState->categories.get(category);
+	SfzStatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
 	sfz_assert(cat->labels.get(label) == nullptr);
 
 	// Add label and fill with default values
-	StatsLabel& lab = cat->labels.put(label, {});
+	SfzStatsLabel& lab = cat->labels.put(label, {});
 	lab.defaultValue = defaultValue;
 	lab.samples.init(cat->numSamples, mState->allocator, sfz_dbg(""));
 	lab.samples.add(defaultValue, cat->numSamples);
 
 	// If no color specified, get random color
-	if (elemMax(color) < 0.0f) {
-		lab.color = f32x4(getRandomColor(cat->labels.size() - 1), 1.0f);
+	if (sfz::elemMax(color) < 0.0f) {
+		lab.color = f32x4(sfz::getRandomColor(cat->labels.size() - 1), 1.0f);
 	}
 	else {
 		lab.color = color;
 	}
 
 	// Add label string
-	cat->labelStringBackings.add(str32("%s", label));
+	cat->labelStringBackings.add(sfz::str32("%s", label));
 	cat->labelStrings.add(cat->labelStringBackings.last());
 }
 
-void ProfilingStats::addSample(
+void SfzProfilingStats::addSample(
 	const char* category, const char* label, u64 sampleIdx, f32 sample) noexcept
 {
-	StatsCategory* cat = mState->categories.get(category);
+	SfzStatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
-	StatsLabel* lab = cat->labels.get(label);
+	SfzStatsLabel* lab = cat->labels.get(label);
 	sfz_assert(lab != nullptr);
 
 	// Clamp sample against ceiling for this category
@@ -358,5 +356,3 @@ void ProfilingStats::addSample(
 		lab->samples.last() = sample;
 	}
 }
-
-} // namespace sfz

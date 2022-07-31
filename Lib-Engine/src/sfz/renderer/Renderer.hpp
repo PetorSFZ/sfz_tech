@@ -19,45 +19,49 @@
 
 #pragma once
 
+#include <sfz.h>
+#include <sfz_image_view.h>
+
 #include <skipifzero.hpp>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_hash_maps.hpp>
-#include <skipifzero_image_view.hpp>
 #include <skipifzero_strings.hpp>
 
 #include <ZeroG.h>
 
-#include "sfz/Context.hpp"
 #include "sfz/renderer/HighLevelCmdList.hpp"
-#include "sfz/rendering/Mesh.hpp"
 
 // Forward declarations
 struct SDL_Window;
-struct phContext;
 
-namespace sfz {
+struct SfzConfig;
+struct SfzProfilingStats;
+struct SfzResourceManager;
+struct SfzShaderManager;
 
 // Renderer
 // ------------------------------------------------------------------------------------------------
 
-struct RendererState;
+struct SfzRendererState;
 
-class Renderer final {
+struct SfzRenderer final {
 public:
-	SFZ_DECLARE_DROP_TYPE(Renderer);
+	SFZ_DECLARE_DROP_TYPE(SfzRenderer);
 
 	bool active() const { return mState != nullptr; }
 	bool init(
 		SDL_Window* window,
-		const ImageViewConst& fontTexture,
+		const SfzImageViewConst& fontTexture,
 		SfzAllocator* allocator,
+		SfzConfig* cfg,
+		SfzProfilingStats* profStats,
 		zg::Uploader&& uploader);
 	void destroy();
 
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
-	RendererState& directAccessInternalState() { return *mState; }
+	SfzRendererState& directAccessInternalState() { return *mState; }
 
 	u64 currentFrameIdx() const; // Incremented each frameBegin()
 	i32x2 windowResolution() const;
@@ -84,10 +88,10 @@ public:
 	//
 	// Returns whether succesful or not
 	bool uploadTextureBlocking(
-		SfzStrID id, const ImageViewConst& image, bool generateMipmaps);
+		SfzStrID id, const SfzImageViewConst& image, bool generateMipmaps, SfzStrIDs* ids, SfzResourceManager* resMan);
 
 	// Check if a texture is loaded or not
-	bool textureLoaded(SfzStrID id) const;
+	bool textureLoaded(SfzStrID id, const SfzResourceManager* resMan) const;
 
 	// Removes a texture from the renderer, will flush rendering.
 	//
@@ -96,45 +100,27 @@ public:
 	// cause frame stutter.
 	//
 	// WARNING: This must NOT be called between frameBegin() and frameFinish().
-	void removeTextureGpuBlocking(SfzStrID id);
-
-	// Uploads a mesh to the renderer, blocks until done.
-	//
-	// The "id" is a unique string identifier for this mesh. This should normally be, assuming the
-	// mesh is read from file, the "global path" (i.e. the relative path from the game
-	// executable) to the mesh. E.g. "res/path/to/model.gltf" if the mesh is in the "res"
-	// directory in the same directory as the executable.
-	//
-	// Returns whether succesful or not.
-	bool uploadMeshBlocking(SfzStrID id, const Mesh& mesh);
-
-	// Check if a mesh is loaded or not
-	bool meshLoaded(SfzStrID id) const;
-
-	// Removes a mesh from the renderer, will flush rendering.
-	//
-	// This operation flushes the rendering so we can guarantee no operation in progress is using
-	// the texture to be removed. This of course means that this is a slow operation that will
-	// cause frame stutter.
-	//
-	// WARNING: This must NOT be called between frameBegin() and frameFinish().
-	void removeMeshGpuBlocking(SfzStrID id);
+	void removeTextureGpuBlocking(SfzStrID id, SfzResourceManager* resMan);
 
 	// Render methods
 	// --------------------------------------------------------------------------------------------
 
 	// Begins the frame, must be called before any other stage methods are called for a given frame.
-	void frameBegin();
+	void frameBegin(
+		SfzStrIDs* ids, SfzShaderManager* shaderMan, SfzResourceManager* resMan, SfzProfilingStats* profStats);
 
 	// Command list methods
-	HighLevelCmdList beginCommandList(const char* cmdListName);
-	void executeCommandList(HighLevelCmdList cmdList);
+	sfz::HighLevelCmdList beginCommandList(
+		const char* cmdListName,
+		SfzStrIDs* ids,
+		SfzProfilingStats* profStats,
+		SfzShaderManager* shaderMan,
+		SfzResourceManager* resMan);
+	void executeCommandList(sfz::HighLevelCmdList cmdList);
 
 	// Finished the frame, no additional stage methods may be called after this.
 	void frameFinish();
 
 private:
-	RendererState* mState = nullptr;
+	SfzRendererState* mState = nullptr;
 };
-
-} // namespace sfz
