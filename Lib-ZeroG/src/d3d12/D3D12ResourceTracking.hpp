@@ -102,7 +102,7 @@ inline void requireResourceStateTextureAllMips(
 	}
 
 	// Get pointers to pending states
-	sfz::ArrayLocal<PendingTextureState*, ZG_MAX_NUM_MIPMAPS> pendingStates;
+	SfzArrayLocal<PendingTextureState*, ZG_MAX_NUM_MIPMAPS> pendingStates;
 	for (u32 i = 0; i < texture->numMipmaps; i++) {
 		PendingTextureState* pendingState =
 			cmdListState.pendingTextureMips.get(TextureMip(texture, i));
@@ -111,7 +111,7 @@ inline void requireResourceStateTextureAllMips(
 	}
 
 	// Create all necessary barriers
-	sfz::ArrayLocal<CD3DX12_RESOURCE_BARRIER, ZG_MAX_NUM_MIPMAPS> barriers;
+	SfzArrayLocal<CD3DX12_RESOURCE_BARRIER, ZG_MAX_NUM_MIPMAPS> barriers;
 	for (u32 i = 0; i < texture->numMipmaps; i++) {
 		if (pendingStates[i]->currentState != requiredState) {
 			barriers.add(CD3DX12_RESOURCE_BARRIER::Transition(

@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 
 #include <skipifzero_arrays.hpp>
 
@@ -68,19 +68,19 @@ bool deleteDirectory(const char* path) noexcept;
 bool copyFile(const char* srcPath, const char* dstPath) noexcept;
 
 // Returns size of file in bytes, negative value if error.
-int64_t sizeofFile(const char* path) noexcept;
+i64 sizeofFile(const char* path) noexcept;
 
 // Reads binary file to pre-allocated memory.
 // \return 0 on success, -1 on error, -2 if file was larger than pre-allocated memory
 i32 readBinaryFile(const char* path, u8* dataOut, size_t maxNumBytes) noexcept;
 
 // Reads binary file, returns empty Array if error.
-Array<u8> readBinaryFile(
+SfzArray<u8> readBinaryFile(
 	const char* path,
 	SfzAllocator* allocator) noexcept;
 
 // Reads text file, returns empty string if error.
-Array<char> readTextFile(const char* path, SfzAllocator* allocator) noexcept;
+SfzArray<char> readTextFile(const char* path, SfzAllocator* allocator) noexcept;
 
 // Writes memory to binary file, returns whether successful or not.
 bool writeBinaryFile(const char* path, const u8* data, size_t numBytes) noexcept;

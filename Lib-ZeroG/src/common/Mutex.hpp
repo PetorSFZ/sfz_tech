@@ -20,7 +20,7 @@
 
 #include <mutex>
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 
 // Mutex template
 // ------------------------------------------------------------------------------------------------
@@ -96,8 +96,8 @@ public:
 
 	void swap(MutexAccessor& other) noexcept
 	{
-		sfz::swap(this->mMutex, other.mMutex);
-		sfz::swap(this->mData, other.mData);
+		sfzSwap(this->mMutex, other.mMutex);
+		sfzSwap(this->mData, other.mData);
 	}
 
 	void destroy() noexcept

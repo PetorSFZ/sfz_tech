@@ -19,8 +19,6 @@
 
 #include "sfz/shaders/ShaderManager.hpp"
 
-#include <skipifzero_new.hpp>
-
 #include "sfz/config/GlobalConfig.hpp"
 #include "sfz/config/SfzConfig.h"
 #include "sfz/renderer/ZeroGUtils.hpp"

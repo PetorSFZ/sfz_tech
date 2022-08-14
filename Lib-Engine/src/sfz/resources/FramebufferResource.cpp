@@ -19,6 +19,8 @@
 
 #include "sfz/resources/FramebufferResource.hpp"
 
+#include <sfz_math.h>
+
 #include "sfz/config/Setting.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
 #include "sfz/resources/ResourceManager.hpp"
@@ -32,7 +34,7 @@ ZgResult SfzFramebufferResource::build(i32x2 screenRes, SfzStrIDs* ids, SfzResou
 	CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
 	CHECK_ZG zg::CommandQueue::getCopyQueue().flush();
 
-	sfz_assert(!renderTargetNames.isEmpty() || depthBufferName != SFZ_STR_ID_NULL);
+	sfz_assert(!renderTargetNames.isEmpty() || depthBufferName != SFZ_NULL_STR_ID);
 
 	// Set resolution and resolution scale if screen relative
 	if (screenRelativeRes) {
@@ -42,12 +44,12 @@ ZgResult SfzFramebufferResource::build(i32x2 screenRes, SfzStrIDs* ids, SfzResou
 				this->resScale *= resScaleSetting2->floatValue();
 			}
 		}
-		f32x2 scaledRes = f32x2(screenRes) * this->resScale;
-		this->res.x = u32(::roundf(scaledRes.x));
-		this->res.y = u32(::roundf(scaledRes.y));
+		f32x2 scaledRes = f32x2_from_i32(screenRes) * this->resScale;
+		this->res.x = u32(sfz::round(scaledRes.x));
+		this->res.y = u32(sfz::round(scaledRes.y));
 	}
 	else if (settingControlledRes) {
-		this->res = i32x2(controlledResSetting->intValue());
+		this->res = i32x2_splat(controlledResSetting->intValue());
 	}
 
 	zg::FramebufferBuilder fbBuilder;
@@ -64,7 +66,7 @@ ZgResult SfzFramebufferResource::build(i32x2 screenRes, SfzStrIDs* ids, SfzResou
 		fbBuilder.addRenderTarget(tex->texture);
 	}
 
-	if (depthBufferName != SFZ_STR_ID_NULL) {
+	if (depthBufferName != SFZ_NULL_STR_ID) {
 		SfzTextureResource* tex = resMan->getTexture(resMan->getTextureHandle(depthBufferName));
 		sfz_assert(tex != nullptr);
 		sfz_assert(tex->texture.valid());
@@ -84,7 +86,7 @@ ZgResult SfzFramebufferResource::build(i32x2 screenRes, SfzStrIDs* ids, SfzResou
 
 SfzFramebufferResourceBuilder& SfzFramebufferResourceBuilder::setName(const char* nameIn)
 {
-	this->name = sfz::str128("%s", nameIn);
+	this->name = sfzStr96Init(nameIn);
 	return *this;
 }
 
@@ -148,7 +150,7 @@ SfzFramebufferResourceBuilder& SfzFramebufferResourceBuilder::setDepthBuffer(Sfz
 SfzFramebufferResource SfzFramebufferResourceBuilder::build(i32x2 screenRes, SfzStrIDs* ids, SfzResourceManager* resMan)
 {
 	SfzFramebufferResource resource;
-	resource.name = sfzStrIDCreateRegister(ids, this->name);
+	resource.name = sfzStrIDCreateRegister(ids, this->name.str);
 	resource.renderTargetNames = this->renderTargetNames;
 	resource.depthBufferName = this->depthBufferName;
 	resource.res = this->res;

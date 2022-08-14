@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_hash_maps.hpp>
 #include <skipifzero_pool.hpp>
 
@@ -31,7 +31,7 @@
 struct SfzShaderManagerState final {
 	SfzAllocator* allocator = nullptr;
 
-	sfz::HashMap<SfzStrID, SfzHandle> shaderHandles;
+	SfzHashMap<SfzStrID, SfzHandle> shaderHandles;
 	sfz::Pool<SfzShader> shaders;
 	
 	SfzSetting* shaderFileWatchEnabled;

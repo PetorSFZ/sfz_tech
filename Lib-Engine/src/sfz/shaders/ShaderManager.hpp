@@ -21,14 +21,14 @@
 
 #include <ctime>
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_pool.hpp>
-#include <skipifzero_strings.hpp>
 
 #include <ZeroG.h>
 
 struct SfzConfig;
+struct SfzStrIDs;
 
 // Shader
 // ------------------------------------------------------------------------------------------------
@@ -39,7 +39,7 @@ enum class SfzShaderType : u32 {
 };
 
 struct SfzShader final {
-	SfzStrID name = SFZ_STR_ID_NULL;
+	SfzStrID name = SFZ_NULL_STR_ID;
 	i64 lastModified = 0;
 	SfzShaderType type = SfzShaderType::RENDER;
 	ZgPipelineCompileSettingsHLSL compileSettings = {};

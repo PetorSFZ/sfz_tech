@@ -19,11 +19,7 @@
 #define ZG_DLL_EXPORT
 #include "ZeroG.h"
 
-#include <cmath>
-#include <cstring>
 #include <mutex>
-
-#include <skipifzero_new.hpp>
 
 // Must be first so we don't accidentally include system d3d12.h
 #include "d3d12/D3D12Common.hpp"
@@ -62,7 +58,7 @@
 //       ZeroG. A bit annoying, but don't have a good solution to it for now.
 
 // The version of the Agility SDK we are using, see https://devblogs.microsoft.com/directx/directx12agility/
-extern "C" { _declspec(dllexport) extern const UINT D3D12SDKVersion = 602; }
+extern "C" { _declspec(dllexport) extern const UINT D3D12SDKVersion = 606; }
 
 // Specifies that D3D12Core.dll will be available in a directory called D3D12 next to the exe.
 extern "C" { _declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\\"; }
@@ -124,7 +120,7 @@ struct ZgContextState final {
 
 	// Pipeline caching
 	bool allowPipelineCaching = false;
-	sfz::str320 pipelineCacheDir;
+	SfzStr320 pipelineCacheDir = {};
 
 	// Memory
 	std::atomic_uint64_t resourceUniqueIdentifierCounter = 1;
@@ -140,7 +136,7 @@ static void* d3d12MemAllocAllocate(size_t size, size_t alignment, void* userData
 	(void)userData;
 	SfzAllocator* allocator = getAllocator();
 	return allocator->alloc(
-		sfz_dbg("D3D12MemAlloc"), u64(size), sfz::max(u32(alignment), 32u));
+		sfz_dbg("D3D12MemAlloc"), u64(size), u32_max(u32(alignment), 32u));
 }
 
 static void d3d12MemAllocFree(void* memory, void* userData) noexcept
@@ -609,8 +605,8 @@ static ZgResult init(const ZgContextInitSettings& settings) noexcept
 	ctxState->allowPipelineCaching = settings.autoCachePipelines == ZG_TRUE ? true : false;
 	if (ctxState->allowPipelineCaching) {
 		sfz_assert(settings.autoCachePipelinesDir != nullptr);
-		ctxState->pipelineCacheDir.appendf("%s", settings.autoCachePipelinesDir);
-		ZG_INFO("Pipeline auto-cache enabled in dir: \"%s\"", ctxState->pipelineCacheDir.str());
+		sfzStr320Appendf(&ctxState->pipelineCacheDir, "%s", settings.autoCachePipelinesDir);
+		ZG_INFO("Pipeline auto-cache enabled in dir: \"%s\"", ctxState->pipelineCacheDir.str);
 	}
 
 	return ZG_SUCCESS;
@@ -870,7 +866,7 @@ ZG_API ZgResult zgPipelineComputeCreateFromFileHLSL(
 		*ctxState->dxcCompiler.Get(),
 		ctxState->dxcIncludeHandler,
 		*ctxState->device.Get(),
-		ctxState->allowPipelineCaching ? ctxState->pipelineCacheDir.str() : nullptr);
+		ctxState->allowPipelineCaching ? ctxState->pipelineCacheDir.str : nullptr);
 }
 
 ZG_API void zgPipelineComputeDestroy(
@@ -902,8 +898,6 @@ ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 	ZG_ARG_CHECK(compileSettings == nullptr, "");
 	ZG_ARG_CHECK(pipelineOut == nullptr, "");
 	ZG_ARG_CHECK(compileSettings->shaderModel == ZG_SHADER_MODEL_UNDEFINED, "Must specify shader model");
-	ZG_ARG_CHECK(createInfo->numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex attributes specified");
-	ZG_ARG_CHECK(createInfo->numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex buffers specified");
 	ZG_ARG_CHECK(createInfo->numPushConsts >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
 	return createPipelineRenderFileHLSL(
 		pipelineOut,
@@ -913,7 +907,7 @@ ZG_API ZgResult zgPipelineRenderCreateFromFileHLSL(
 		*ctxState->dxcCompiler.Get(),
 		ctxState->dxcIncludeHandler,
 		*ctxState->device.Get(),
-		ctxState->allowPipelineCaching ? ctxState->pipelineCacheDir.str() : nullptr);
+		ctxState->allowPipelineCaching ? ctxState->pipelineCacheDir.str : nullptr);
 }
 
 ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
@@ -926,8 +920,6 @@ ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
 	ZG_ARG_CHECK(compileSettings == nullptr, "");
 	ZG_ARG_CHECK(pipelineOut == nullptr, "");
 	ZG_ARG_CHECK(compileSettings->shaderModel == ZG_SHADER_MODEL_UNDEFINED, "Must specify shader model");
-	ZG_ARG_CHECK(createInfo->numVertexAttributes >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex attributes specified");
-	ZG_ARG_CHECK(createInfo->numVertexBufferSlots >= ZG_MAX_NUM_VERTEX_ATTRIBUTES, "Too many vertex buffers specified");
 	ZG_ARG_CHECK(createInfo->numPushConsts >= ZG_MAX_NUM_CONSTANT_BUFFERS, "Too many push constants specified");
 	return createPipelineRenderSourceHLSL(
 		pipelineOut,
@@ -938,7 +930,7 @@ ZG_API ZgResult zgPipelineRenderCreateFromSourceHLSL(
 		*ctxState->dxcCompiler.Get(),
 		ctxState->dxcIncludeHandler,
 		*ctxState->device.Get(),
-		ctxState->allowPipelineCaching ? ctxState->pipelineCacheDir.str() : nullptr);
+		ctxState->allowPipelineCaching ? ctxState->pipelineCacheDir.str : nullptr);
 }
 
 ZG_API void zgPipelineRenderDestroy(
@@ -1252,15 +1244,6 @@ ZG_API ZgResult zgCommandListSetIndexBuffer(
 	ZgIndexBufferType type)
 {
 	return commandList->setIndexBuffer(indexBuffer, type);
-}
-
-ZG_API ZgResult zgCommandListSetVertexBuffer(
-	ZgCommandList* commandList,
-	u32 vertexBufferSlot,
-	ZgBuffer* vertexBuffer)
-{
-	return commandList->setVertexBuffer(
-		vertexBufferSlot, vertexBuffer);
 }
 
 ZG_API ZgResult zgCommandListDrawTriangles(

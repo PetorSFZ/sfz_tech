@@ -126,9 +126,9 @@ bool initializeZeroG(
 	initSettings.allocator = allocator;
 	initSettings.nativeHandle = getNativeHandle(window);
 	initSettings.autoCachePipelines = sfzCfgGetBool(cfg, "ZeroG.OnStartup_CacheShaders") ? ZG_TRUE : ZG_FALSE;
-	str320 pipelineCacheDir = str320("%s/shader_cache", userDataDir);
-	sfz::createDirectory(pipelineCacheDir.str());
-	initSettings.autoCachePipelinesDir = pipelineCacheDir.str();
+	SfzStr320 pipelineCacheDir = sfzStr320InitFmt("%s/shader_cache", userDataDir);
+	sfz::createDirectory(pipelineCacheDir.str);
+	initSettings.autoCachePipelinesDir = pipelineCacheDir.str;
 	initSettings.d3d12.debugMode = sfzCfgGetBool(cfg, "ZeroG.OnStartup_DebugMode") ? ZG_TRUE : ZG_FALSE;
 	initSettings.d3d12.debugModeGpuBased = sfzCfgGetBool(cfg, "ZeroG.OnStartup_DebugModeGpuBased") ? ZG_TRUE : ZG_FALSE;
 	initSettings.d3d12.useSoftwareRenderer = sfzCfgGetBool(cfg, "ZeroG.OnStartup_SoftwareRenderer") ? ZG_TRUE : ZG_FALSE;

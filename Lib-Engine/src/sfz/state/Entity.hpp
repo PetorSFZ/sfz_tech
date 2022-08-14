@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 
 namespace sfz {
 

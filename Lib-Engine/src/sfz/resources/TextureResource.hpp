@@ -19,9 +19,8 @@
 
 #pragma once
 
+#include <sfz.h>
 #include <sfz_image_view.h>
-
-#include <skipifzero.hpp>
 #include <skipifzero_strings.hpp>
 
 #include <ZeroG.h>
@@ -32,11 +31,11 @@ struct SfzSetting;
 // ------------------------------------------------------------------------------------------------
 
 struct SfzTextureResource final {
-	SfzStrID name = SFZ_STR_ID_NULL;
+	SfzStrID name = SFZ_NULL_STR_ID;
 
 	zg::Texture texture;
 	ZgFormat format = ZG_FORMAT_UNDEFINED;
-	i32x2 res = i32x2(0);
+	i32x2 res = i32x2_splat(0);
 	u32 numMipmaps = 1;
 	bool committedAllocation = false;
 	ZgTextureUsage usage = ZG_TEXTURE_USAGE_DEFAULT;

@@ -57,15 +57,15 @@ sfz_struct(SfzLogger) {
 // Gets this module's static SfzLogger. This logger should typically be retrieved (only) in the
 // main module at program boot, then set using "sfzLoggingSetLogger()" in this same module and all
 // following modules (DLLs).
-SFZ_EXTERN_C SfzLogger* sfzLoggingGetModulesLogger(void);
+sfz_extern_c SfzLogger* sfzLoggingGetModulesLogger(void);
 
 // Sets/gets the global logger. Typically the program should set the global logger right after
 // creating it at program boot.
 //
 // If using multiple DLLs, the logger needs to be passed to each DLL so they can set it for their
 // global variable space.
-SFZ_EXTERN_C void sfzLoggingSetLogger(SfzLogger* logger);
-SFZ_EXTERN_C SfzLogger* sfzLoggingGetLogger(void);
+sfz_extern_c void sfzLoggingSetLogger(SfzLogger* logger);
+sfz_extern_c SfzLogger* sfzLoggingGetLogger(void);
 
 // Logging macros
 // ------------------------------------------------------------------------------------------------
@@ -95,12 +95,12 @@ SFZ_EXTERN_C SfzLogger* sfzLoggingGetLogger(void);
 // Unlike the logger itself, these functions are not thread-safe. In practice this should probably
 // not be a major issue.
 
-SFZ_EXTERN_C u32 sfzLoggingCurrentNumMessages(void);
-SFZ_EXTERN_C u32 sfzLoggingGetNumMessagesWithAgeLessThan(f32 maxAgeSecs);
-SFZ_EXTERN_C i32 sfzLoggingGetMessageLine(u32 msgIdx);
-SFZ_EXTERN_C const char* sfzLoggingGetMessageFile(u32 msgIdx);
-SFZ_EXTERN_C SfzLogLevel sfzLoggingGetMessageLevel(u32 msgIdx);
-SFZ_EXTERN_C i64 sfzLoggingGetMessageTimestamp(u32 msgIdx);
-SFZ_EXTERN_C const char* sfzLoggingGetMessageMessage(u32 msgIdx);
+sfz_extern_c u32 sfzLoggingCurrentNumMessages(void);
+sfz_extern_c u32 sfzLoggingGetNumMessagesWithAgeLessThan(f32 maxAgeSecs);
+sfz_extern_c i32 sfzLoggingGetMessageLine(u32 msgIdx);
+sfz_extern_c const char* sfzLoggingGetMessageFile(u32 msgIdx);
+sfz_extern_c SfzLogLevel sfzLoggingGetMessageLevel(u32 msgIdx);
+sfz_extern_c i64 sfzLoggingGetMessageTimestamp(u32 msgIdx);
+sfz_extern_c const char* sfzLoggingGetMessageMessage(u32 msgIdx);
 
-SFZ_EXTERN_C void sfzLoggingClearMessages(void);
+sfz_extern_c void sfzLoggingClearMessages(void);

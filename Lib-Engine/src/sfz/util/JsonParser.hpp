@@ -19,12 +19,10 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_strings.hpp>
 
 namespace sfz {
-
-using sfz::str256;
 
 // JsonNodeType enum
 // ------------------------------------------------------------------------------------------------
@@ -123,12 +121,9 @@ public:
 	JsonNodeValue<i32> valueInt() const noexcept;
 	JsonNodeValue<f32> valueFloat() const noexcept;
 	JsonNodeValue<double> valueDouble() const noexcept;
-	JsonNodeValue<str32> valueStr32() const noexcept;
-	JsonNodeValue<str64> valueStr64() const noexcept;
-	JsonNodeValue<str96> valueStr96() const noexcept;
-	JsonNodeValue<str128> valueStr128() const noexcept;
-	JsonNodeValue<str256> valueStr256() const noexcept;
-	JsonNodeValue<str320> valueStr320() const noexcept;
+	JsonNodeValue<SfzStr32> valueSfzStr32() const noexcept;
+	JsonNodeValue<SfzStr96> valueSfzStr96() const noexcept;
+	JsonNodeValue<SfzStr320> valueSfzStr320() const noexcept;
 
 private:
 	// Private members

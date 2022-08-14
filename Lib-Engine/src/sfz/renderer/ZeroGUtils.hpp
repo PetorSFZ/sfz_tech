@@ -23,7 +23,7 @@
 
 #include <ZeroG.h>
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_arrays.hpp>
 
 struct SfzConfig;
@@ -114,7 +114,7 @@ public:
 	const T& data(u64 frameIdx) const { return mData[frameIdx % mData.size()]; }
 
 private:
-	ArrayLocal<T, MAX_NUM_FRAME_LATENCY> mData;
+	SfzArrayLocal<T, MAX_NUM_FRAME_LATENCY> mData;
 };
 
 } // namespace sfz

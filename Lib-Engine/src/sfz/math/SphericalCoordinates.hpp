@@ -16,7 +16,7 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 
 namespace sfz {
 
@@ -38,24 +38,24 @@ struct SphericalCoord final {
 inline const SphericalCoord toSpherical(f32x3 v)
 {
 	SphericalCoord coord = {};
-	coord.r = length(v);
+	coord.r = f32x3_length(v);
 	if (coord.r == 0.0f) return coord;
-	coord.phi = atan2f(v.y, v.x) * sfz::RAD_TO_DEG; // Range [-180, 180]
+	coord.phi = sfz_atan2(v.y, v.x) * SFZ_RAD_TO_DEG; // Range [-180, 180]
 	if (coord.phi < 0.0f) coord.phi += 360.0f; // Move into range [0, 360]
 	if (coord.phi >= 360.0f) coord.phi -= 360.0f; // Move into range [0, 360)
-	coord.theta = acosf(v.z / coord.r) * sfz::RAD_TO_DEG; // Range [0, 180]
-	coord.theta = sfz::clamp(coord.theta, 0.0f, 180.0f);
+	coord.theta = sfz_acos(v.z / coord.r) * SFZ_RAD_TO_DEG; // Range [0, 180]
+	coord.theta = f32_clamp(coord.theta, 0.0f, 180.0f);
 	return coord;
 }
 
 inline const f32x3 fromSpherical(SphericalCoord c)
 {
-	const f32 thetaRads = c.theta * sfz::DEG_TO_RAD;
-	const f32 phiRads = c.phi * sfz::DEG_TO_RAD;
+	const f32 thetaRads = c.theta * SFZ_DEG_TO_RAD;
+	const f32 phiRads = c.phi * SFZ_DEG_TO_RAD;
 	f32x3 v;
-	v.x = c.r * sinf(thetaRads) * cosf(phiRads);
-	v.y = c.r * sinf(thetaRads) * sinf(phiRads);
-	v.z = c.r * cosf(thetaRads);
+	v.x = c.r * sfz_sin(thetaRads) * sfz_cos(phiRads);
+	v.y = c.r * sfz_sin(thetaRads) * sfz_sin(phiRads);
+	v.z = c.r * sfz_cos(thetaRads);
 	return v;
 }
 

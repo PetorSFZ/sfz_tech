@@ -18,9 +18,8 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_arrays.hpp>
-#include <skipifzero_new.hpp>
 
 #include "common/Mutex.hpp"
 #include "d3d12/D3D12Common.hpp"
@@ -34,7 +33,7 @@ struct D3D12ProfilerState final {
 	u64 nextMeasurementId = 0;
 	u32 maxNumMeasurements = 0;
 
-	sfz::Array<u64> ticksPerSecond;
+	SfzArray<u64> ticksPerSecond;
 
 	ComPtr<ID3D12QueryHeap> queryHeap;
 

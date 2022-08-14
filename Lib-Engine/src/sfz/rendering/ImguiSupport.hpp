@@ -23,7 +23,7 @@
 
 #include <SDL.h>
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_arrays.hpp>
 
 #include "sfz/input/RawInputState.hpp"

@@ -19,9 +19,7 @@
 
 #include "sfz/state/ArrayHeader.hpp"
 
-#include <cstring>
-
-#include <skipifzero.hpp>
+#include <sfz.h>
 
 namespace sfz {
 

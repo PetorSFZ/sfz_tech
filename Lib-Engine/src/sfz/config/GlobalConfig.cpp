@@ -19,8 +19,8 @@
 
 #include "sfz/config/GlobalConfig.hpp"
 
-#include <skipifzero_math.hpp>
-#include <skipifzero_new.hpp>
+#include <sfz_math.h>
+#include <sfz_unique_ptr.hpp>
 
 #include "sfz/SfzLogging.h"
 #include "sfz/util/IniParser.hpp"
@@ -31,8 +31,8 @@
 namespace {
 
 struct Section final {
-	sfz::str32 sectionKey;
-	sfz::Array<sfz::UniquePtr<SfzSetting>> settings;
+	SfzStr32 sectionKey;
+	SfzArray<SfzUniquePtr<SfzSetting>> settings;
 };
 
 }
@@ -40,7 +40,7 @@ struct Section final {
 struct SfzGlobalConfigImpl final {
 	SfzAllocator* allocator = nullptr;
 	sfz::IniParser ini;
-	sfz::Array<Section> sections;
+	SfzArray<Section> sections;
 	bool loaded = false; // Can only be loaded once... for now
 	bool noSaveMode = false;
 };
@@ -55,8 +55,8 @@ void SfzGlobalConfig::init(const char* basePath, const char* fileName, SfzAlloca
 	mImpl->allocator = allocator;
 
 	// Initialize IniParser with path
-	sfz::str320 tmpPath("%s/%s", basePath, fileName);
-	mImpl->ini = sfz::IniParser(tmpPath, allocator);
+	SfzStr320 tmpPath = sfzStr320InitFmt("%s/%s", basePath, fileName);
+	mImpl->ini = sfz::IniParser(tmpPath.str, allocator);
 
 	// Initialize settings array with allocator
 	mImpl->sections.init(64, allocator, sfz_dbg(""));
@@ -104,14 +104,14 @@ void SfzGlobalConfig::load() noexcept
 		if (section == nullptr) {
 			mImpl->sections.add(Section());
 			section = &mImpl->sections.last();
-			section->sectionKey.clear();
-			section->sectionKey.appendf("%s", item.getSection());
+			sfzStr32Clear(&section->sectionKey);
+			sfzStr32Appendf(&section->sectionKey, "%s", item.getSection());
 			section->settings.init(64, mImpl->allocator, sfz_dbg(""));
 		}
 
 		// Create new setting
 		section->settings.add(
-			sfz::makeUnique<SfzSetting>(mImpl->allocator, sfz_dbg(""), item.getSection(), item.getKey()));
+			sfzMakeUnique<SfzSetting>(mImpl->allocator, sfz_dbg(""), item.getSection(), item.getKey()));
 		SfzSetting& setting = *section->settings.last();
 
 		// Get value of setting
@@ -151,20 +151,20 @@ bool SfzGlobalConfig::save() noexcept
 			{
 				switch (setting->type()) {
 				case SfzValueType::INT:
-					if (ini.getInt(setting->section(), setting->key()) == nullptr) {
-						ini.setInt(setting->section(), setting->key(),
+					if (ini.getInt(setting->section().str, setting->key().str) == nullptr) {
+						ini.setInt(setting->section().str, setting->key().str,
 							setting->intBounds().defaultValue);
 					}
 					break;
 				case SfzValueType::FLOAT:
-					if (ini.getFloat(setting->section(), setting->key()) == nullptr) {
-						ini.setFloat(setting->section(), setting->key(),
+					if (ini.getFloat(setting->section().str, setting->key().str) == nullptr) {
+						ini.setFloat(setting->section().str, setting->key().str,
 							setting->floatBounds().defaultValue);
 					}
 					break;
 				case SfzValueType::BOOL:
-					if (ini.getBool(setting->section(), setting->key()) == nullptr) {
-						ini.setBool(setting->section(), setting->key(),
+					if (ini.getBool(setting->section().str, setting->key().str) == nullptr) {
+						ini.setBool(setting->section().str, setting->key().str,
 							setting->boolBounds().defaultValue);
 					}
 					break;
@@ -174,13 +174,13 @@ bool SfzGlobalConfig::save() noexcept
 
 			switch (setting->type()) {
 			case SfzValueType::INT:
-				ini.setInt(setting->section(), setting->key(), setting->intValue());
+				ini.setInt(setting->section().str, setting->key().str, setting->intValue());
 				break;
 			case SfzValueType::FLOAT:
-				ini.setFloat(setting->section(), setting->key(), setting->floatValue());
+				ini.setFloat(setting->section().str, setting->key().str, setting->floatValue());
 				break;
 			case SfzValueType::BOOL:
-				ini.setBool(setting->section(), setting->key(), setting->boolValue());
+				ini.setBool(setting->section().str, setting->key().str, setting->boolValue());
 				break;
 			}
 		}
@@ -213,13 +213,13 @@ SfzSetting* SfzGlobalConfig::createSetting(const char* section, const char* key,
 	if (sectionPtr == nullptr) {
 		mImpl->sections.add(Section());
 		sectionPtr = &mImpl->sections.last();
-		sectionPtr->sectionKey.clear();
-		sectionPtr->sectionKey.appendf("%s", section);
+		sfzStr32Clear(&sectionPtr->sectionKey);
+		sfzStr32Appendf(&sectionPtr->sectionKey, "%s", section);
 		sectionPtr->settings.init(64, mImpl->allocator, sfz_dbg(""));
 	}
 
 	// Create and return section
-	sectionPtr->settings.add(sfz::makeUnique<SfzSetting>(mImpl->allocator, sfz_dbg(""), section, key));
+	sectionPtr->settings.add(sfzMakeUnique<SfzSetting>(mImpl->allocator, sfz_dbg(""), section, key));
 	if (created != nullptr) *created = true;
 	return sectionPtr->settings.last().get();
 }
@@ -256,7 +256,7 @@ SfzSetting* SfzGlobalConfig::getSetting(const char* key) noexcept
 	return this->getSetting("", key);
 }
 
-void SfzGlobalConfig::getAllSettings(sfz::Array<SfzSetting*>& settings) noexcept
+void SfzGlobalConfig::getAllSettings(SfzArray<SfzSetting*>& settings) noexcept
 {
 	sfz_assert(mImpl != nullptr);
 	for (auto& section : mImpl->sections) {
@@ -266,7 +266,7 @@ void SfzGlobalConfig::getAllSettings(sfz::Array<SfzSetting*>& settings) noexcept
 	}
 }
 
-void SfzGlobalConfig::getSections(sfz::Array<sfz::str32>& sections) noexcept
+void SfzGlobalConfig::getSections(SfzArray<SfzStr32>& sections) noexcept
 {
 	sfz_assert(mImpl != nullptr);
 	sections.ensureCapacity(mImpl->sections.size() + sections.size());
@@ -275,7 +275,7 @@ void SfzGlobalConfig::getSections(sfz::Array<sfz::str32>& sections) noexcept
 	}
 }
 
-void SfzGlobalConfig::getSectionSettings(const char* section, sfz::Array<SfzSetting*>& settings) noexcept
+void SfzGlobalConfig::getSectionSettings(const char* section, SfzArray<SfzSetting*>& settings) noexcept
 {
 	sfz_assert(mImpl != nullptr);
 

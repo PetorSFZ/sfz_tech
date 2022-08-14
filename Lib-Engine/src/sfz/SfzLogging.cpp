@@ -46,8 +46,8 @@ struct SfzLogMessageItem final {
 	i32 line;
 	SfzLogLevel level;
 	time_t timestamp;
-	sfz::str64 file;
-	sfz::str2048 message;
+	SfzStr96 file;
+	SfzStr2560 message;
 };
 
 struct SfzLoggerImpl {
@@ -71,13 +71,13 @@ static void sfzLogFunc(void* implData, const char* file, int line, SfzLogLevel l
 	item.line = line;
 	item.level = level;
 	item.timestamp = ::time(nullptr);
-	item.file.clear();
-	item.file.appendf("%s", strippedFile);
-	item.message.clear();
+	sfzStr96Clear(&item.file);
+	sfzStr96Appendf(&item.file, "%s", strippedFile);
+	sfzStr2560Clear(&item.message);
 	
 	va_list args;
 	va_start(args, format);
-	vsnprintf(item.message.mRawStr, item.message.capacity(), format, args);
+	vsnprintf(item.message.str, sfzStr2560ToView(&item.message).capacity, format, args);
 	va_end(args);
 
 	if (SFZ_LOGGER_LOG_TO_TERMINAL) {
@@ -102,19 +102,19 @@ static void sfzLogFunc(void* implData, const char* file, int line, SfzLogLevel l
 
 		// Get time string
 		tm* tmPtr = ::localtime(&item.timestamp);
-		sfz::str32 timeStr;
-		size_t res = ::strftime(timeStr.mRawStr, timeStr.capacity(), "%H:%M:%S", tmPtr);
+		SfzStr32 timeStr;
+		size_t res = ::strftime(timeStr.str, sfzStr32ToView(&timeStr).capacity, "%H:%M:%S", tmPtr);
 		if (res == 0) {
-			timeStr.clear();
-			timeStr.appendf("INVALID TIME");
+			sfzStr32Clear(&timeStr);
+			sfzStr32Appendf(&timeStr, "INVALID TIME");
 		}
 
 		// Print log level, file and line number.
 		printf("[%s] - [%s] - [%s:%i]\n",
-			timeStr.str(), sfzLogLevelToString(level), strippedFile, line);
+			timeStr.str, sfzLogLevelToString(level), strippedFile, line);
 
 		// Print message
-		printf("%s", item.message.str());
+		printf("%s", item.message.str);
 		// Print newline
 		printf("\n\n");
 
@@ -141,19 +141,19 @@ static SfzLogger sfzLoggerData = {};
 // other DLLs this should be set using sfzLoggingSetLogger() to the main module's.
 static SfzLogger* sfzGlobalLogger = nullptr;
 
-SFZ_EXTERN_C SfzLogger* sfzLoggingGetModulesLogger(void)
+sfz_extern_c SfzLogger* sfzLoggingGetModulesLogger(void)
 {
 	sfzLoggerData.log = sfzLogFunc;
 	sfzLoggerData.implData = &sfzLoggerImpl;
 	return &sfzLoggerData;
 }
 
-SFZ_EXTERN_C void sfzLoggingSetLogger(SfzLogger* logger)
+sfz_extern_c void sfzLoggingSetLogger(SfzLogger* logger)
 {
 	sfzGlobalLogger = logger;
 }
 
-SFZ_EXTERN_C SfzLogger* sfzLoggingGetLogger(void)
+sfz_extern_c SfzLogger* sfzLoggingGetLogger(void)
 {
 	return sfzGlobalLogger;
 }
@@ -172,14 +172,14 @@ static SfzLogMessageItem* sfzLoggingGetItem(u32 msgIdxIn)
 	return &sfzLoggerImpl.messages[msgIdx];
 }
 
-SFZ_EXTERN_C u32 sfzLoggingCurrentNumMessages(void)
+sfz_extern_c u32 sfzLoggingCurrentNumMessages(void)
 {
 	const u64 numMessages = sfzLoggerImpl.nextMsgIdx;
 	if (numMessages > u64(SFZ_LOGGER_MAX_NUM_MESSAGES)) return SFZ_LOGGER_MAX_NUM_MESSAGES;
 	return u32(numMessages);
 }
 
-SFZ_EXTERN_C u32 sfzLoggingGetNumMessagesWithAgeLessThan(f32 maxAgeSecs)
+sfz_extern_c u32 sfzLoggingGetNumMessagesWithAgeLessThan(f32 maxAgeSecs)
 {
 	const time_t now = ::time(nullptr);
 	const u32 numMessages = sfzLoggingCurrentNumMessages();
@@ -196,37 +196,37 @@ SFZ_EXTERN_C u32 sfzLoggingGetNumMessagesWithAgeLessThan(f32 maxAgeSecs)
 	return numActiveMessages;
 }
 
-SFZ_EXTERN_C i32 sfzLoggingGetMessageLine(u32 msgIdx)
+sfz_extern_c i32 sfzLoggingGetMessageLine(u32 msgIdx)
 {
 	const SfzLogMessageItem* item = sfzLoggingGetItem(msgIdx);
 	return item->line;
 }
 
-SFZ_EXTERN_C const char* sfzLoggingGetMessageFile(u32 msgIdx)
+sfz_extern_c const char* sfzLoggingGetMessageFile(u32 msgIdx)
 {
 	const SfzLogMessageItem* item = sfzLoggingGetItem(msgIdx);
-	return item->file.str();
+	return item->file.str;
 }
 
-SFZ_EXTERN_C SfzLogLevel sfzLoggingGetMessageLevel(u32 msgIdx)
+sfz_extern_c SfzLogLevel sfzLoggingGetMessageLevel(u32 msgIdx)
 {
 	const SfzLogMessageItem* item = sfzLoggingGetItem(msgIdx);
 	return item->level;
 }
 
-SFZ_EXTERN_C i64 sfzLoggingGetMessageTimestamp(u32 msgIdx)
+sfz_extern_c i64 sfzLoggingGetMessageTimestamp(u32 msgIdx)
 {
 	const SfzLogMessageItem* item = sfzLoggingGetItem(msgIdx);
 	return i64(item->timestamp);
 }
 
-SFZ_EXTERN_C const char* sfzLoggingGetMessageMessage(u32 msgIdx)
+sfz_extern_c const char* sfzLoggingGetMessageMessage(u32 msgIdx)
 {
 	const SfzLogMessageItem* item = sfzLoggingGetItem(msgIdx);
-	return item->message.str();
+	return item->message.str;
 }
 
-SFZ_EXTERN_C void sfzLoggingClearMessages(void)
+sfz_extern_c void sfzLoggingClearMessages(void)
 {
 	sfzLoggerImpl.nextMsgIdx = 0;
 }

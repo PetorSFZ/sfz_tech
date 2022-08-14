@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <skipifzero_strings.hpp>
+#include <sfz.h>
 
 // Value type enum
 // ------------------------------------------------------------------------------------------------
@@ -168,8 +168,8 @@ public:
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
-	const sfz::str32& section() const noexcept { return mSection; }
-	const sfz::str48& key() const noexcept { return mKey; }
+	const SfzStr32& section() const noexcept { return mSection; }
+	const SfzStr96& key() const noexcept { return mKey; }
 	const SfzSettingValue& value() const noexcept { return mValue; }
 	SfzValueType type() const noexcept { return mValue.type; }
 
@@ -202,6 +202,6 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	SfzSettingValue mValue;
-	sfz::str32 mSection;
-	sfz::str48 mKey;
+	SfzStr32 mSection;
+	SfzStr96 mKey;
 };

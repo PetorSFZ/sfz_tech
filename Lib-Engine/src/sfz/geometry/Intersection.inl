@@ -27,7 +27,7 @@ inline bool intersectsPlane(const Plane& plane, const f32x3& position, f32 proje
 {
 	// Part of plane SAT algorithm from Real-Time Collision Detection
 	f32 dist = plane.signedDistance(position);
-	return std::abs(dist) <= projectedRadius;
+	return f32_abs(dist) <= projectedRadius;
 }
 
 inline bool abovePlane(const Plane& plane, const f32x3& position, f32 projectedRadius) noexcept
@@ -62,7 +62,7 @@ inline bool pointInside(const OBB& box, const f32x3& point) noexcept
 	const f32x3 distToPoint = point - box.center;
 	f32 dist;
 	for (u32 i = 0; i < 3; i++) {
-		dist = dot(distToPoint, box.rotation.row(i));
+		dist = f32x3_dot(distToPoint, box.rotation.rows[i]);
 		if (dist > box.halfExtents[i]) return false;
 		if (dist < -box.halfExtents[i]) return false;
 	}
@@ -72,7 +72,7 @@ inline bool pointInside(const OBB& box, const f32x3& point) noexcept
 inline bool pointInside(const Sphere& sphere, const f32x3& point) noexcept
 {
 	const f32x3 distToPoint = point - sphere.position;
-	return dot(distToPoint, distToPoint) < (sphere.radius * sphere.radius);
+	return f32x3_dot(distToPoint, distToPoint) < (sphere.radius * sphere.radius);
 }
 
 inline bool pointInside(const Circle& circle, f32x2 point) noexcept
@@ -81,7 +81,7 @@ inline bool pointInside(const Circle& circle, f32x2 point) noexcept
 	// the radius then the Circle overlaps the point. Both sides of the equation is squared to
 	// avoid somewhat expensive sqrt() function.
 	f32x2 dist = point - circle.pos;
-	return dot(dist, dist) <= (circle.radius*circle.radius);
+	return f32x2_dot(dist, dist) <= (circle.radius*circle.radius);
 }
 
 inline bool pointInside(const AABB2D& rect, f32x2 point) noexcept
@@ -113,25 +113,25 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 	const f32x3& bE = b.halfExtents;
 
 	// Compute the rotation matrix from b to a
-	mat3 R;
+	SfzMat33 R;
 	for (u32 i = 0; i < 3; i++) {
 		for (u32 j = 0; j < 3; j++) {
-			R.at(i, j) = dot(f32x3(aU.row(i)), f32x3(bU.row(j)));
+			R.at(i, j) = f32x3_dot(f32x3(aU.rows[i]), f32x3(bU.rows[j]));
 		}
 	}
 
 	// Compute common subexpressions, epsilon term to counteract arithmetic errors
 	const f32 EPSILON = 0.00001f;
-	mat3 AbsR;
+	SfzMat33 AbsR;
 	for (u32 i = 0; i < 3; i++) {
 		for (u32 j = 0; j < 3; j++) {
-			AbsR.at(i, j) = std::abs(R.at(i, j)) + EPSILON;
+			AbsR.at(i, j) = f32_abs(R.at(i, j)) + EPSILON;
 		}
 	}
 
 	// Calculate translation vector from a to b and bring it into a's frame of reference
 	f32x3 t = b.center - a.center;
-	t = f32x3{dot(t, aU.row(0)), dot(t, aU.row(1)), dot(t, aU.row(2))};
+	t = f32x3_init(f32x3_dot(t, aU.rows[0]), f32x3_dot(t, aU.rows[1]), f32x3_dot(t, aU.rows[2]));
 
 	f32 ra, rb;
 
@@ -139,60 +139,60 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 	for (u32 i = 0; i < 3; i++) {
 		ra = aE[i];
 		rb = bE[0]*AbsR.at(i,0) + bE[1]*AbsR.at(i,1) + bE[2]*AbsR.at(i,2);
-		if (std::abs(t[i]) > ra + rb) return false;
+		if (f32_abs(t[i]) > ra + rb) return false;
 	}
 
 	// Test axes L = bU[0], bU[1], bU[2]
 	for (u32 i = 0; i < 3; i++) {
 		ra = aE[0]*AbsR.at(0,i) + aE[1]*AbsR.at(1,i) + aE[2]*AbsR.at(2,i);
 		rb = bE[i];
-		if (std::abs(t[0]*R.at(0,i) + t[1]*R.at(1,i) + t[2]*R.at(2,i)) > ra + rb) return false;
+		if (f32_abs(t[0]*R.at(0,i) + t[1]*R.at(1,i) + t[2]*R.at(2,i)) > ra + rb) return false;
 	}
 
 	// Test axis L = aU[0] x bU[0]
 	ra = aE[1]*AbsR.at(2,0) + aE[2]*AbsR.at(1,0);
 	rb = bE[1]*AbsR.at(0,2) + bE[2]*AbsR.at(0,1);
-	if (std::abs(t[2]*R.at(1,0) - t[1]*R.at(2,0)) > ra + rb) return false;
+	if (f32_abs(t[2]*R.at(1,0) - t[1]*R.at(2,0)) > ra + rb) return false;
 
 	// Test axis L = aU[0] x bU[1]
 	ra = aE[1]*AbsR.at(2,1) + aE[2]*AbsR.at(1,1);
 	rb = bE[0]*AbsR.at(0,2) + bE[2]*AbsR.at(0,0);
-	if (std::abs(t[2]*R.at(1,1) - t[1]*R.at(2,1)) > ra + rb) return false;
+	if (f32_abs(t[2]*R.at(1,1) - t[1]*R.at(2,1)) > ra + rb) return false;
 
 	// Test axis L = aU[0] x bU[2]
 	ra = aE[1]*AbsR.at(2,2) + aE[2]*AbsR.at(1,2);
 	rb = bE[0]*AbsR.at(0,1) + bE[1]*AbsR.at(0,0);
-	if (std::abs(t[2]*R.at(1,2) - t[1]*R.at(2,2)) > ra + rb) return false;
+	if (f32_abs(t[2]*R.at(1,2) - t[1]*R.at(2,2)) > ra + rb) return false;
 
 	// Test axis L = aU[1] x bU[0]
 	ra = aE[0]*AbsR.at(2,0) + aE[2]*AbsR.at(0,0);
 	rb = bE[1]*AbsR.at(1,2) + bE[2]*AbsR.at(1,1);
-	if (std::abs(t[0]*R.at(2,0) - t[2]*R.at(0,0)) > ra + rb) return false;
+	if (f32_abs(t[0]*R.at(2,0) - t[2]*R.at(0,0)) > ra + rb) return false;
 
 	// Test axis L = aU[1] x bU[1]
 	ra = aE[0]*AbsR.at(2,1) + aE[2]*AbsR.at(0,1);
 	rb = bE[0]*AbsR.at(1,2) + bE[2]*AbsR.at(1,0);
-	if (std::abs(t[0]*R.at(2,1) - t[2]*R.at(0,1)) > ra + rb) return false;
+	if (f32_abs(t[0]*R.at(2,1) - t[2]*R.at(0,1)) > ra + rb) return false;
 
 	// Test axis L = aU[1] x bU[2]
 	ra = aE[0]*AbsR.at(2,2) + aE[2]*AbsR.at(0,2);
 	rb = bE[0]*AbsR.at(1,1) + bE[1]*AbsR.at(1,0);
-	if (std::abs(t[0]*R.at(2,2) - t[2]*R.at(0,2)) > ra + rb) return false;
+	if (f32_abs(t[0]*R.at(2,2) - t[2]*R.at(0,2)) > ra + rb) return false;
 
 	// Test axis L = aU[2] x bU[0]
 	ra = aE[0]*AbsR.at(1,0) + aE[1]*AbsR.at(0,0);
 	rb = bE[1]*AbsR.at(2,2) + bE[2]*AbsR.at(2,1);
-	if (std::abs(t[1]*R.at(0,0) - t[0]*R.at(1,0)) > ra + rb) return false;
+	if (f32_abs(t[1]*R.at(0,0) - t[0]*R.at(1,0)) > ra + rb) return false;
 
 	// Test axis L = aU[2] x bU[1]
 	ra = aE[0]*AbsR.at(1,1) + aE[1]*AbsR.at(0,1);
 	rb = bE[0]*AbsR.at(2,2) + bE[2]*AbsR.at(2,0);
-	if (std::abs(t[1]*R.at(0,1) - t[0]*R.at(1,1)) > ra + rb) return false;
+	if (f32_abs(t[1]*R.at(0,1) - t[0]*R.at(1,1)) > ra + rb) return false;
 
 	// Test axis L = aU[2] x bU[2]
 	ra = aE[0]*AbsR.at(1,2) + aE[1]*AbsR.at(0,2);
 	rb = bE[0]*AbsR.at(2,1) + bE[1]*AbsR.at(2,0);
-	if (std::abs(t[1]*R.at(0,2) - t[0]*R.at(1,2)) > ra + rb) return false;
+	if (f32_abs(t[1]*R.at(0,2) - t[0]*R.at(1,2)) > ra + rb) return false;
 
 	// If no separating axis can be found then the OBBs must be intersecting.
 	return true;
@@ -201,7 +201,7 @@ inline bool intersects(const OBB& a, const OBB& b) noexcept
 inline bool intersects(const Sphere& sphereA, const Sphere& sphereB) noexcept
 {
 	const f32x3 distVec = sphereA.position - sphereB.position;
-	const f32 squaredDist = dot(distVec, distVec);
+	const f32 squaredDist = f32x3_dot(distVec, distVec);
 	const f32 radiusSum = sphereA.radius + sphereB.radius;
 	const f32 squaredRadiusSum = radiusSum * radiusSum;
 	return squaredDist <= squaredRadiusSum;
@@ -212,7 +212,7 @@ inline bool overlaps(const Circle& lhs, const Circle& rhs) noexcept
 	// If the length between the center of the two circles is less than or equal to the the sum of
 	// the circle's radiuses they overlap. Both sides of the equation is squared to avoid somewhat
 	// expensive sqrt() function.
-	f32 distSquared = dot(lhs.pos - rhs.pos, lhs.pos - rhs.pos);
+	f32 distSquared = f32x2_dot(lhs.pos - rhs.pos, lhs.pos - rhs.pos);
 	f32 radiusSum = lhs.radius + rhs.radius;
 	return distSquared <= (radiusSum * radiusSum);
 }
@@ -233,9 +233,9 @@ inline bool overlaps(const Circle& circle, const AABB2D& rect) noexcept
 	// If the length between the center of the circle and the closest point on the rectangle is
 	// less than or equal to the circles radius they overlap. Both sides of the equation is
 	// squared to avoid somewhat expensive sqrt() function.
-	f32x2 e = max(rect.min - circle.pos, f32x2(0.0f));
-	e += max(circle.pos - rect.max, f32x2(0.0f));
-	return dot(e, e) <= circle.radius * circle.radius;
+	f32x2 e = f32x2_max(rect.min - circle.pos, f32x2_splat(0.0f));
+	e += f32x2_max(circle.pos - rect.max, f32x2_splat(0.0f));
+	return f32x2_dot(e, e) <= circle.radius * circle.radius;
 }
 
 inline bool overlaps(const AABB2D& rect, const Circle& circle) noexcept
@@ -251,9 +251,9 @@ inline bool intersects(const Plane& plane, const AABB& aabb) noexcept
 	// SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 
 	// Projected radius on line towards closest point on plane
-	f32 projectedRadius = aabb.halfDimX() * std::abs(plane.normal()[0])
-	                      + aabb.halfDimY() * std::abs(plane.normal()[1])
-	                      + aabb.halfDimZ() * std::abs(plane.normal()[2]);
+	f32 projectedRadius = aabb.halfDimX() * f32_abs(plane.normal()[0])
+	                      + aabb.halfDimY() * f32_abs(plane.normal()[1])
+	                      + aabb.halfDimZ() * f32_abs(plane.normal()[2]);
 
 	return detail::intersectsPlane(plane, aabb.pos(), projectedRadius);
 }
@@ -268,9 +268,9 @@ inline bool abovePlane(const Plane& plane, const AABB& aabb) noexcept
 	// Modified SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 
 	// Projected radius on line towards closest point on plane
-	f32 projectedRadius = aabb.halfDimX() * std::abs(plane.normal()[0])
-	                      + aabb.halfDimY() * std::abs(plane.normal()[1])
-	                      + aabb.halfDimZ() * std::abs(plane.normal()[2]);
+	f32 projectedRadius = aabb.halfDimX() * f32_abs(plane.normal()[0])
+	                      + aabb.halfDimY() * f32_abs(plane.normal()[1])
+	                      + aabb.halfDimZ() * f32_abs(plane.normal()[2]);
 
 	return detail::abovePlane(plane, aabb.pos(), projectedRadius);
 }
@@ -279,9 +279,9 @@ inline bool belowPlane(const Plane& plane, const AABB& aabb) noexcept
 {
 	// Modified SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 	// Projected radius on line towards closest point on plane
-	f32 projectedRadius = aabb.halfDimX() * std::abs(plane.normal()[0])
-	                      + aabb.halfDimY() * std::abs(plane.normal()[1])
-	                      + aabb.halfDimZ() * std::abs(plane.normal()[2]);
+	f32 projectedRadius = aabb.halfDimX() * f32_abs(plane.normal()[0])
+	                      + aabb.halfDimY() * f32_abs(plane.normal()[1])
+	                      + aabb.halfDimZ() * f32_abs(plane.normal()[2]);
 
 	return detail::belowPlane(plane, aabb.pos(), projectedRadius);
 }
@@ -293,9 +293,9 @@ inline bool intersects(const Plane& plane, const OBB& obb) noexcept
 {
 	// SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 	// Projected radius on line towards closest point on plane
-	f32 projectedRadius = obb.halfExtents.x * std::abs(dot(plane.normal(), obb.xAxis()))
-	                      + obb.halfExtents.y * std::abs(dot(plane.normal(), obb.yAxis()))
-	                      + obb.halfExtents.z * std::abs(dot(plane.normal(), obb.zAxis()));
+	f32 projectedRadius = obb.halfExtents.x * f32_abs(f32x3_dot(plane.normal(), obb.xAxis()))
+	                      + obb.halfExtents.y * f32_abs(f32x3_dot(plane.normal(), obb.yAxis()))
+	                      + obb.halfExtents.z * f32_abs(f32x3_dot(plane.normal(), obb.zAxis()));
 
 	return detail::intersectsPlane(plane, obb.center, projectedRadius);
 }
@@ -309,9 +309,9 @@ inline bool abovePlane(const Plane& plane, const OBB& obb) noexcept
 {
 	// Modified SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 	// Projected radius on line towards closest point on plane
-	f32 projectedRadius = obb.halfExtents.x * std::abs(dot(plane.normal(), obb.xAxis()))
-	                      + obb.halfExtents.y * std::abs(dot(plane.normal(), obb.yAxis()))
-	                      + obb.halfExtents.z * std::abs(dot(plane.normal(), obb.zAxis()));
+	f32 projectedRadius = obb.halfExtents.x * f32_abs(f32x3_dot(plane.normal(), obb.xAxis()))
+	                      + obb.halfExtents.y * f32_abs(f32x3_dot(plane.normal(), obb.yAxis()))
+	                      + obb.halfExtents.z * f32_abs(f32x3_dot(plane.normal(), obb.zAxis()));
 
 	return detail::abovePlane(plane, obb.center, projectedRadius);
 }
@@ -320,9 +320,9 @@ inline bool belowPlane(const Plane& plane, const OBB& obb) noexcept
 {
 	// Modified SAT algorithm from Real-Time Collision Detection (chapter 5.2.3)
 	// Projected radius on line towards closest point on plane
-	f32 projectedRadius = obb.halfExtents.x * std::abs(dot(plane.normal(), obb.xAxis()))
-	                      + obb.halfExtents.y * std::abs(dot(plane.normal(), obb.yAxis()))
-	                      + obb.halfExtents.z * std::abs(dot(plane.normal(), obb.zAxis()));
+	f32 projectedRadius = obb.halfExtents.x * f32_abs(f32x3_dot(plane.normal(), obb.xAxis()))
+	                      + obb.halfExtents.y * f32_abs(f32x3_dot(plane.normal(), obb.yAxis()))
+	                      + obb.halfExtents.z * f32_abs(f32x3_dot(plane.normal(), obb.zAxis()));
 
 	return detail::belowPlane(plane, obb.center, projectedRadius);
 }
@@ -355,7 +355,7 @@ inline bool belowPlane(const Plane& plane, const Sphere& sphere) noexcept
 
 inline f32x3 closestPoint(const AABB& aabb, const f32x3& point) noexcept
 {
-	return min(max(point, aabb.min), aabb.max);
+	return f32x3_min(f32x3_max(point, aabb.min), aabb.max);
 }
 
 inline f32x3 closestPoint(const OBB& obb, const f32x3& point) noexcept
@@ -366,10 +366,10 @@ inline f32x3 closestPoint(const OBB& obb, const f32x3& point) noexcept
 
 	f32 dist;
 	for (u32 i = 0; i < 3; i++) {
-		dist = dot(distToPoint, obb.rotation.row(i));
+		dist = f32x3_dot(distToPoint, obb.rotation.rows[i]);
 		if (dist > obb.halfExtents[i]) dist = obb.halfExtents[i];
 		if (dist < -obb.halfExtents[i]) dist = -obb.halfExtents[i];
-		res += (dist * f32x3(obb.rotation.row(i)));
+		res += (dist * f32x3(obb.rotation.rows[i]));
 	}
 
 	return res;
@@ -384,8 +384,8 @@ inline f32x3 closestPoint(const Sphere& sphere, const f32x3& point) noexcept
 {
 	const f32x3 distToPoint = point - sphere.position;
 	f32x3 res = point;
-	if (dot(distToPoint, distToPoint) > (sphere.radius * sphere.radius)) {
-		res = sphere.position + normalize(distToPoint) * sphere.radius;
+	if (f32x3_dot(distToPoint, distToPoint) > (sphere.radius * sphere.radius)) {
+		res = sphere.position + f32x3_normalize(distToPoint) * sphere.radius;
 	}
 	return res;
 }

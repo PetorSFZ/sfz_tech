@@ -16,891 +16,420 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-#include "utest.h"
-#undef near
-#undef far
+#include <doctest.h>
 
-#include <skipifzero.hpp>
-#include <skipifzero_math.hpp>
-
-#include "sfz/math/MathPrimitiveToStrings.hpp"
-
-#include <type_traits>
+#include <sfz.h>
+#include <sfz_math.h>
+#include <sfz_matrix.h>
 
 using namespace sfz;
 
-UTEST(Matrix, matrix_general_definition)
+TEST_CASE("SfzMat33")
 {
-	// Array pointer constructor
-	{
-		const f32 arr1[] = {1.0f, 2.0f, 3.0f, 4.0f};
-		Mat<1,4> m1(arr1);
-		ASSERT_TRUE(m1.at(0, 0) == 1.0f);
-		ASSERT_TRUE(m1.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m1.at(0, 2) == 3.0f);
-		ASSERT_TRUE(m1.at(0, 3) == 4.0f);
-
-		const f32 arr2[] = {6.0f, 5.0f, 4.0f,
-		                      3.0f, 2.0f, 1.0f};
-		Mat<2,3> m3(arr2);
-		ASSERT_TRUE(m3.at(0, 0) == 6.0f);
-		ASSERT_TRUE(m3.at(0, 1) == 5.0f);
-		ASSERT_TRUE(m3.at(0, 2) == 4.0f);
-		ASSERT_TRUE(m3.at(1, 0) == 3.0f);
-		ASSERT_TRUE(m3.at(1, 1) == 2.0f);
-		ASSERT_TRUE(m3.at(1, 2) == 1.0f);
-		ASSERT_TRUE(m3.column(0) == f32x2(6.0f, 3.0f));
-		ASSERT_TRUE(m3.column(1) == f32x2(5.0f, 2.0f));
-		ASSERT_TRUE(m3.column(2) == f32x2(4.0f, 1.0f));
-	}
-}
-
-UTEST(Matrix, matrix_2x2_specialization)
-{
-	// Array pointer constructor
-	{
-		const f32 arr1[] = {1.0f, 2.0f,
-		                      3.0f, 4.0f};
-		mat22 m1(arr1);
-		ASSERT_TRUE(m1.at(0, 0) == 1.0f);
-		ASSERT_TRUE(m1.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m1.at(1, 0) == 3.0f);
-		ASSERT_TRUE(m1.at(1, 1) == 4.0f);
-		ASSERT_TRUE(m1.row(0) == f32x2(1.0f, 2.0f));
-		ASSERT_TRUE(m1.row(1) == f32x2(3.0f, 4.0f));
-		ASSERT_TRUE(m1.column(0) == f32x2(1.0f, 3.0f));
-		ASSERT_TRUE(m1.column(1) == f32x2(2.0f, 4.0f));
-	}
 	// Individual element constructor
 	{
-		mat22 m1(1.0f, 2.0f,
-		         3.0f, 4.0f);
-		ASSERT_TRUE(m1.at(0, 0) == 1.0f);
-		ASSERT_TRUE(m1.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m1.at(1, 0) == 3.0f);
-		ASSERT_TRUE(m1.at(1, 1) == 4.0f);
-		ASSERT_TRUE(m1.row(0) == f32x2(1.0f, 2.0f));
-		ASSERT_TRUE(m1.row(1) == f32x2(3.0f, 4.0f));
-		ASSERT_TRUE(m1.column(0) == f32x2(1.0f, 3.0f));
-		ASSERT_TRUE(m1.column(1) == f32x2(2.0f, 4.0f));
+		SfzMat33 m1 = sfzMat33InitElems(
+			1.0f, 2.0f, 3.0f,
+			4.0f, 5.0f, 6.0f,
+			7.0f, 8.0f, 9.0f);
+		CHECK(m1.at(0, 0) == 1.0f);
+		CHECK(m1.at(0, 1) == 2.0f);
+		CHECK(m1.at(0, 2) == 3.0f);
+		CHECK(m1.at(1, 0) == 4.0f);
+		CHECK(m1.at(1, 1) == 5.0f);
+		CHECK(m1.at(1, 2) == 6.0f);
+		CHECK(m1.at(2, 0) == 7.0f);
+		CHECK(m1.at(2, 1) == 8.0f);
+		CHECK(m1.at(2, 2) == 9.0f);
+		CHECK(m1.rows[0] == f32x3_init(1.0f, 2.0f, 3.0f));
+		CHECK(m1.rows[1] == f32x3_init(4.0f, 5.0f, 6.0f));
+		CHECK(m1.rows[2] == f32x3_init(7.0f, 8.0f, 9.0f));
+		CHECK(m1.column(0) == f32x3_init(1.0f, 4.0f, 7.0f));
+		CHECK(m1.column(1) == f32x3_init(2.0f, 5.0f, 8.0f));
+		CHECK(m1.column(2) == f32x3_init(3.0f, 6.0f, 9.0f));
 	}
 	// Row constructor
 	{
-		mat22 m1(f32x2(1.0f, 2.0f),
-		         f32x2(3.0f, 4.0f));
-		ASSERT_TRUE(m1.at(0, 0) == 1.0f);
-		ASSERT_TRUE(m1.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m1.at(1, 0) == 3.0f);
-		ASSERT_TRUE(m1.at(1, 1) == 4.0f);
-		ASSERT_TRUE(m1.row(0) == f32x2(1.0f, 2.0f));
-		ASSERT_TRUE(m1.row(1) == f32x2(3.0f, 4.0f));
-		ASSERT_TRUE(m1.column(0) == f32x2(1.0f, 3.0f));
-		ASSERT_TRUE(m1.column(1) == f32x2(2.0f, 4.0f));
-	}
-	// fill() constructor function
-	{
-		mat22 zero = mat22::fill(0.0f);
-		ASSERT_TRUE(zero.at(0, 0) == 0.0f);
-		ASSERT_TRUE(zero.at(0, 1) == 0.0f);
-		ASSERT_TRUE(zero.at(1, 0) == 0.0f);
-		ASSERT_TRUE(zero.at(1, 1) == 0.0f);
-
-		mat22 one = mat22::fill(1.0f);
-		ASSERT_TRUE(one.at(0, 0) == 1.0f);
-		ASSERT_TRUE(one.at(0, 1) == 1.0f);
-		ASSERT_TRUE(one.at(1, 0) == 1.0f);
-		ASSERT_TRUE(one.at(1, 1) == 1.0f);
-	}
-	// identity() constructor function
-	{
-		mat22 ident = mat22::identity();
-		ASSERT_TRUE(ident.at(0, 0) == 1.0f);
-		ASSERT_TRUE(ident.at(0, 1) == 0.0f);
-		ASSERT_TRUE(ident.at(1, 0) == 0.0f);
-		ASSERT_TRUE(ident.at(1, 1) == 1.0f);
-	}
-	// scaling2() constructor function
-	{
-		mat22 scale = mat22::scaling2(2.0f);
-		ASSERT_TRUE(scale.at(0, 0) == 2.0f);
-		ASSERT_TRUE(scale.at(0, 1) == 0.0f);
-		ASSERT_TRUE(scale.at(1, 0) == 0.0f);
-		ASSERT_TRUE(scale.at(1, 1) == 2.0f);
-
-		mat22 scale2 = mat22::scaling2(f32x2(1.0f, 2.0f));
-		ASSERT_TRUE(scale2.at(0, 0) == 1.0f);
-		ASSERT_TRUE(scale2.at(0, 1) == 0.0f);
-		ASSERT_TRUE(scale2.at(1, 0) == 0.0f);
-		ASSERT_TRUE(scale2.at(1, 1) == 2.0f);
-	}
-}
-
-UTEST(Matrix, matrix_3x3_specialization)
-{
-	// Array pointer constructor
-	{
-		const f32 arr1[] = {1.0f, 2.0f, 3.0f,
-		                      4.0f, 5.0f, 6.0f,
-		                      7.0f, 8.0f, 9.0f};
-		mat33 m1(arr1);
-		ASSERT_TRUE(m1.at(0, 0) == 1.0f);
-		ASSERT_TRUE(m1.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m1.at(0, 2) == 3.0f);
-		ASSERT_TRUE(m1.at(1, 0) == 4.0f);
-		ASSERT_TRUE(m1.at(1, 1) == 5.0f);
-		ASSERT_TRUE(m1.at(1, 2) == 6.0f);
-		ASSERT_TRUE(m1.at(2, 0) == 7.0f);
-		ASSERT_TRUE(m1.at(2, 1) == 8.0f);
-		ASSERT_TRUE(m1.at(2, 2) == 9.0f);
-		ASSERT_TRUE(m1.row(0) == f32x3(1.0f, 2.0f, 3.0f));
-		ASSERT_TRUE(m1.row(1) == f32x3(4.0f, 5.0f, 6.0f));
-		ASSERT_TRUE(m1.row(2) == f32x3(7.0f, 8.0f, 9.0f));
-		ASSERT_TRUE(m1.column(0) == f32x3(1.0f, 4.0f, 7.0f));
-		ASSERT_TRUE(m1.column(1) == f32x3(2.0f, 5.0f, 8.0f));
-		ASSERT_TRUE(m1.column(2) == f32x3(3.0f, 6.0f, 9.0f));
-	}
-	// Individual element constructor
-	{
-		mat33 m1(1.0f, 2.0f, 3.0f,
-		         4.0f, 5.0f, 6.0f,
-		         7.0f, 8.0f, 9.0f);
-		ASSERT_TRUE(m1.at(0, 0) == 1.0f);
-		ASSERT_TRUE(m1.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m1.at(0, 2) == 3.0f);
-		ASSERT_TRUE(m1.at(1, 0) == 4.0f);
-		ASSERT_TRUE(m1.at(1, 1) == 5.0f);
-		ASSERT_TRUE(m1.at(1, 2) == 6.0f);
-		ASSERT_TRUE(m1.at(2, 0) == 7.0f);
-		ASSERT_TRUE(m1.at(2, 1) == 8.0f);
-		ASSERT_TRUE(m1.at(2, 2) == 9.0f);
-		ASSERT_TRUE(m1.row(0) == f32x3(1.0f, 2.0f, 3.0f));
-		ASSERT_TRUE(m1.row(1) == f32x3(4.0f, 5.0f, 6.0f));
-		ASSERT_TRUE(m1.row(2) == f32x3(7.0f, 8.0f, 9.0f));
-		ASSERT_TRUE(m1.column(0) == f32x3(1.0f, 4.0f, 7.0f));
-		ASSERT_TRUE(m1.column(1) == f32x3(2.0f, 5.0f, 8.0f));
-		ASSERT_TRUE(m1.column(2) == f32x3(3.0f, 6.0f, 9.0f));
-	}
-	// Row constructor
-	{
-		mat33 m1(f32x3(1.0f, 2.0f, 3.0f),
-		         f32x3(4.0f, 5.0f, 6.0f),
-		         f32x3(7.0f, 8.0f, 9.0f));
-		ASSERT_TRUE(m1.at(0, 0) == 1.0f);
-		ASSERT_TRUE(m1.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m1.at(0, 2) == 3.0f);
-		ASSERT_TRUE(m1.at(1, 0) == 4.0f);
-		ASSERT_TRUE(m1.at(1, 1) == 5.0f);
-		ASSERT_TRUE(m1.at(1, 2) == 6.0f);
-		ASSERT_TRUE(m1.at(2, 0) == 7.0f);
-		ASSERT_TRUE(m1.at(2, 1) == 8.0f);
-		ASSERT_TRUE(m1.at(2, 2) == 9.0f);
-		ASSERT_TRUE(m1.row(0) == f32x3(1.0f, 2.0f, 3.0f));
-		ASSERT_TRUE(m1.row(1) == f32x3(4.0f, 5.0f, 6.0f));
-		ASSERT_TRUE(m1.row(2) == f32x3(7.0f, 8.0f, 9.0f));
-		ASSERT_TRUE(m1.column(0) == f32x3(1.0f, 4.0f, 7.0f));
-		ASSERT_TRUE(m1.column(1) == f32x3(2.0f, 5.0f, 8.0f));
-		ASSERT_TRUE(m1.column(2) == f32x3(3.0f, 6.0f, 9.0f));
-	}
-	// 3x4 matrix constructor
-	{
-		mat34 m1(1.0f, 2.0f, 3.0f, 4.0f,
-		         5.0f, 6.0f, 7.0f, 8.0f,
-		         9.0f, 10.0f, 11.0f, 12.0f);
-		mat33 m2(m1);
-		ASSERT_TRUE(m2.at(0, 0) == 1.0f);
-		ASSERT_TRUE(m2.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m2.at(0, 2) == 3.0f);
-		ASSERT_TRUE(m2.at(1, 0) == 5.0f);
-		ASSERT_TRUE(m2.at(1, 1) == 6.0f);
-		ASSERT_TRUE(m2.at(1, 2) == 7.0f);
-		ASSERT_TRUE(m2.at(2, 0) == 9.0f);
-		ASSERT_TRUE(m2.at(2, 1) == 10.0f);
-		ASSERT_TRUE(m2.at(2, 2) == 11.0f);
+		SfzMat33 m1 = sfzMat33InitRows(
+			f32x3_init(1.0f, 2.0f, 3.0f),
+			f32x3_init(4.0f, 5.0f, 6.0f),
+			f32x3_init(7.0f, 8.0f, 9.0f));
+		CHECK(m1.at(0, 0) == 1.0f);
+		CHECK(m1.at(0, 1) == 2.0f);
+		CHECK(m1.at(0, 2) == 3.0f);
+		CHECK(m1.at(1, 0) == 4.0f);
+		CHECK(m1.at(1, 1) == 5.0f);
+		CHECK(m1.at(1, 2) == 6.0f);
+		CHECK(m1.at(2, 0) == 7.0f);
+		CHECK(m1.at(2, 1) == 8.0f);
+		CHECK(m1.at(2, 2) == 9.0f);
+		CHECK(m1.rows[0] == f32x3_init(1.0f, 2.0f, 3.0f));
+		CHECK(m1.rows[1] == f32x3_init(4.0f, 5.0f, 6.0f));
+		CHECK(m1.rows[2] == f32x3_init(7.0f, 8.0f, 9.0f));
+		CHECK(m1.column(0) == f32x3_init(1.0f, 4.0f, 7.0f));
+		CHECK(m1.column(1) == f32x3_init(2.0f, 5.0f, 8.0f));
+		CHECK(m1.column(2) == f32x3_init(3.0f, 6.0f, 9.0f));
 	}
 	// 4x4 matrix constructor
 	{
-		mat44 m1(1.0f, 2.0f, 3.0f, 4.0f,
-		         5.0f, 6.0f, 7.0f, 8.0f,
-		         9.0f, 10.0f, 11.0f, 12.0f,
-		         13.0f, 14.0f, 15.0f, 16.0f);
-		mat33 m2(m1);
-		ASSERT_TRUE(m2.at(0, 0) == 1.0f);
-		ASSERT_TRUE(m2.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m2.at(0, 2) == 3.0f);
-		ASSERT_TRUE(m2.at(1, 0) == 5.0f);
-		ASSERT_TRUE(m2.at(1, 1) == 6.0f);
-		ASSERT_TRUE(m2.at(1, 2) == 7.0f);
-		ASSERT_TRUE(m2.at(2, 0) == 9.0f);
-		ASSERT_TRUE(m2.at(2, 1) == 10.0f);
-		ASSERT_TRUE(m2.at(2, 2) == 11.0f);
-	}
-	// fill() constructor function
-	{
-		mat33 zero = mat33::fill(0.0f);
-		ASSERT_TRUE(zero.at(0, 0) == 0.0f);
-		ASSERT_TRUE(zero.at(0, 1) == 0.0f);
-		ASSERT_TRUE(zero.at(0, 2) == 0.0f);
-		ASSERT_TRUE(zero.at(1, 0) == 0.0f);
-		ASSERT_TRUE(zero.at(1, 1) == 0.0f);
-		ASSERT_TRUE(zero.at(1, 2) == 0.0f);
-		ASSERT_TRUE(zero.at(2, 0) == 0.0f);
-		ASSERT_TRUE(zero.at(2, 1) == 0.0f);
-		ASSERT_TRUE(zero.at(2, 2) == 0.0f);
-
-		mat33 one = mat33::fill(1.0f);
-		ASSERT_TRUE(one.at(0, 0) == 1.0f);
-		ASSERT_TRUE(one.at(0, 1) == 1.0f);
-		ASSERT_TRUE(one.at(0, 2) == 1.0f);
-		ASSERT_TRUE(one.at(1, 0) == 1.0f);
-		ASSERT_TRUE(one.at(1, 1) == 1.0f);
-		ASSERT_TRUE(one.at(1, 2) == 1.0f);
-		ASSERT_TRUE(one.at(2, 0) == 1.0f);
-		ASSERT_TRUE(one.at(2, 1) == 1.0f);
-		ASSERT_TRUE(one.at(2, 2) == 1.0f);
+		const SfzMat44 m1 = sfzMat44InitElems(
+			1.0f, 2.0f, 3.0f, 4.0f,
+			5.0f, 6.0f, 7.0f, 8.0f,
+			9.0f, 10.0f, 11.0f, 12.0f,
+			13.0f, 14.0f, 15.0f, 16.0f);
+		const SfzMat33 m2 = sfzMat33FromMat44(m1);
+		CHECK(m2.at(0, 0) == 1.0f);
+		CHECK(m2.at(0, 1) == 2.0f);
+		CHECK(m2.at(0, 2) == 3.0f);
+		CHECK(m2.at(1, 0) == 5.0f);
+		CHECK(m2.at(1, 1) == 6.0f);
+		CHECK(m2.at(1, 2) == 7.0f);
+		CHECK(m2.at(2, 0) == 9.0f);
+		CHECK(m2.at(2, 1) == 10.0f);
+		CHECK(m2.at(2, 2) == 11.0f);
 	}
 	// identity() constructor function
 	{
-		mat33 ident = mat33::identity();
-		ASSERT_TRUE(ident.at(0, 0) == 1.0f);
-		ASSERT_TRUE(ident.at(0, 1) == 0.0f);
-		ASSERT_TRUE(ident.at(0, 2) == 0.0f);
-		ASSERT_TRUE(ident.at(1, 0) == 0.0f);
-		ASSERT_TRUE(ident.at(1, 1) == 1.0f);
-		ASSERT_TRUE(ident.at(1, 2) == 0.0f);
-		ASSERT_TRUE(ident.at(2, 0) == 0.0f);
-		ASSERT_TRUE(ident.at(2, 1) == 0.0f);
-		ASSERT_TRUE(ident.at(2, 2) == 1.0f);
+		SfzMat33 ident = sfzMat33Identity();
+		CHECK(ident.at(0, 0) == 1.0f);
+		CHECK(ident.at(0, 1) == 0.0f);
+		CHECK(ident.at(0, 2) == 0.0f);
+		CHECK(ident.at(1, 0) == 0.0f);
+		CHECK(ident.at(1, 1) == 1.0f);
+		CHECK(ident.at(1, 2) == 0.0f);
+		CHECK(ident.at(2, 0) == 0.0f);
+		CHECK(ident.at(2, 1) == 0.0f);
+		CHECK(ident.at(2, 2) == 1.0f);
 	}
 	// scaling3() constructor function
 	{
-		mat33 scale = mat33::scaling3(2.0f);
-		ASSERT_TRUE(scale.at(0, 0) == 2.0f);
-		ASSERT_TRUE(scale.at(0, 1) == 0.0f);
-		ASSERT_TRUE(scale.at(0, 2) == 0.0f);
-		ASSERT_TRUE(scale.at(1, 0) == 0.0f);
-		ASSERT_TRUE(scale.at(1, 1) == 2.0f);
-		ASSERT_TRUE(scale.at(1, 2) == 0.0f);
-		ASSERT_TRUE(scale.at(2, 0) == 0.0f);
-		ASSERT_TRUE(scale.at(2, 1) == 0.0f);
-		ASSERT_TRUE(scale.at(2, 2) == 2.0f);
+		const SfzMat33 scale = sfzMat33Scaling3(f32x3_splat(2.0f));
+		CHECK(scale.at(0, 0) == 2.0f);
+		CHECK(scale.at(0, 1) == 0.0f);
+		CHECK(scale.at(0, 2) == 0.0f);
+		CHECK(scale.at(1, 0) == 0.0f);
+		CHECK(scale.at(1, 1) == 2.0f);
+		CHECK(scale.at(1, 2) == 0.0f);
+		CHECK(scale.at(2, 0) == 0.0f);
+		CHECK(scale.at(2, 1) == 0.0f);
+		CHECK(scale.at(2, 2) == 2.0f);
 
-		mat33 scale2 = mat33::scaling3(f32x3(1.0f, 2.0f, 3.0f));
-		ASSERT_TRUE(scale2.at(0, 0) == 1.0f);
-		ASSERT_TRUE(scale2.at(0, 1) == 0.0f);
-		ASSERT_TRUE(scale2.at(0, 2) == 0.0f);
-		ASSERT_TRUE(scale2.at(1, 0) == 0.0f);
-		ASSERT_TRUE(scale2.at(1, 1) == 2.0f);
-		ASSERT_TRUE(scale2.at(1, 2) == 0.0f);
-		ASSERT_TRUE(scale2.at(2, 0) == 0.0f);
-		ASSERT_TRUE(scale2.at(2, 1) == 0.0f);
-		ASSERT_TRUE(scale2.at(2, 2) == 3.0f);
+		const SfzMat33 scale2 = sfzMat33Scaling3(f32x3_init(1.0f, 2.0f, 3.0f));
+		CHECK(scale2.at(0, 0) == 1.0f);
+		CHECK(scale2.at(0, 1) == 0.0f);
+		CHECK(scale2.at(0, 2) == 0.0f);
+		CHECK(scale2.at(1, 0) == 0.0f);
+		CHECK(scale2.at(1, 1) == 2.0f);
+		CHECK(scale2.at(1, 2) == 0.0f);
+		CHECK(scale2.at(2, 0) == 0.0f);
+		CHECK(scale2.at(2, 1) == 0.0f);
+		CHECK(scale2.at(2, 2) == 3.0f);
 	}
 	// rotation3() constructor function
 	{
-		f32x3 startPoint(1.0f, 0.0f, 0.0f);
-		f32x3 axis = f32x3(1.0f, 1.0f, 0.0f);
-		mat33 rot = mat33::rotation3(axis, PI);
-		ASSERT_TRUE(eqf(rot * startPoint, f32x3(0.0f, 1.0, 0.0f)));
+		f32x3 startPoint = f32x3_init(1.0f, 0.0f, 0.0f);
+		f32x3 axis = f32x3_init(1.0f, 1.0f, 0.0f);
+		SfzMat33 rot = sfzMat33Rotation3(axis, SFZ_PI);
+		CHECK(eqf(rot * startPoint, f32x3_init(0.0f, 1.0, 0.0f)));
 
-		mat33 xRot90 = mat33::rotation3(f32x3(1.0f, 0.0f, 0.0f), PI/2.0f);
-		ASSERT_TRUE(eqf(xRot90.row(0), f32x3(1.0f, 0.0f, 0.0f)));
-		ASSERT_TRUE(eqf(xRot90.row(1), f32x3(0.0f, 0.0f, -1.0f)));
-		ASSERT_TRUE(eqf(xRot90.row(2), f32x3(0.0f, 1.0f, 0.0f)));
+		SfzMat33 xRot90 = sfzMat33Rotation3(f32x3_init(1.0f, 0.0f, 0.0f), SFZ_PI/2.0f);
+		CHECK(eqf(xRot90.rows[0], f32x3_init(1.0f, 0.0f, 0.0f)));
+		CHECK(eqf(xRot90.rows[1], f32x3_init(0.0f, 0.0f, -1.0f)));
+		CHECK(eqf(xRot90.rows[2], f32x3_init(0.0f, 1.0f, 0.0f)));
 
-		f32x3 v = xRot90 * f32x3(1.0f);
-		ASSERT_TRUE(eqf(v, f32x3(1.0f, -1.0f, 1.0f)));
+		f32x3 v = xRot90 * f32x3_splat(1.0f);
+		CHECK(eqf(v, f32x3_init(1.0f, -1.0f, 1.0f)));
 	}
 }
 
-UTEST(Matrix, matrix_3x4_specialization)
+TEST_CASE("SfzMat44")
 {
-	// Array pointer constructor
-	{
-		const f32 arr1[] = {1.0f, 2.0f, 3.0f, 4.0f,
-		                      5.0f, 6.0f, 7.0f, 8.0f,
-		                      9.0f, 10.0f, 11.0f, 12.0f};
-		mat34 m1(arr1);
-		ASSERT_TRUE(m1.at(0, 0) == 1.0f);
-		ASSERT_TRUE(m1.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m1.at(0, 2) == 3.0f);
-		ASSERT_TRUE(m1.at(0, 3) == 4.0f);
-		ASSERT_TRUE(m1.at(1, 0) == 5.0f);
-		ASSERT_TRUE(m1.at(1, 1) == 6.0f);
-		ASSERT_TRUE(m1.at(1, 2) == 7.0f);
-		ASSERT_TRUE(m1.at(1, 3) == 8.0f);
-		ASSERT_TRUE(m1.at(2, 0) == 9.0f);
-		ASSERT_TRUE(m1.at(2, 1) == 10.0f);
-		ASSERT_TRUE(m1.at(2, 2) == 11.0f);
-		ASSERT_TRUE(m1.at(2, 3) == 12.0f);
-		ASSERT_TRUE(m1.row(0) == f32x4(1.0f, 2.0f, 3.0f, 4.0f));
-		ASSERT_TRUE(m1.row(1) == f32x4(5.0f, 6.0f, 7.0f, 8.0f));
-		ASSERT_TRUE(m1.row(2) == f32x4(9.0f, 10.0f, 11.0f, 12.0f));
-		ASSERT_TRUE(m1.column(0) == f32x3(1.0f, 5.0f, 9.0f));
-		ASSERT_TRUE(m1.column(1) == f32x3(2.0f, 6.0f, 10.0f));
-		ASSERT_TRUE(m1.column(2) == f32x3(3.0f, 7.0f, 11.0f));
-		ASSERT_TRUE(m1.column(3) == f32x3(4.0f, 8.0f, 12.0f));
-	}
 	// Individual element constructor
 	{
-		mat34 m1(1.0f, 2.0f, 3.0f, 4.0f,
-		         5.0f, 6.0f, 7.0f, 8.0f,
-		         9.0f, 10.0f, 11.0f, 12.0f);
-		ASSERT_TRUE(m1.at(0, 0) == 1.0f);
-		ASSERT_TRUE(m1.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m1.at(0, 2) == 3.0f);
-		ASSERT_TRUE(m1.at(0, 3) == 4.0f);
-		ASSERT_TRUE(m1.at(1, 0) == 5.0f);
-		ASSERT_TRUE(m1.at(1, 1) == 6.0f);
-		ASSERT_TRUE(m1.at(1, 2) == 7.0f);
-		ASSERT_TRUE(m1.at(1, 3) == 8.0f);
-		ASSERT_TRUE(m1.at(2, 0) == 9.0f);
-		ASSERT_TRUE(m1.at(2, 1) == 10.0f);
-		ASSERT_TRUE(m1.at(2, 2) == 11.0f);
-		ASSERT_TRUE(m1.at(2, 3) == 12.0f);
-		ASSERT_TRUE(m1.row(0) == f32x4(1.0f, 2.0f, 3.0f, 4.0f));
-		ASSERT_TRUE(m1.row(1) == f32x4(5.0f, 6.0f, 7.0f, 8.0f));
-		ASSERT_TRUE(m1.row(2) == f32x4(9.0f, 10.0f, 11.0f, 12.0f));
-		ASSERT_TRUE(m1.column(0) == f32x3(1.0f, 5.0f, 9.0f));
-		ASSERT_TRUE(m1.column(1) == f32x3(2.0f, 6.0f, 10.0f));
-		ASSERT_TRUE(m1.column(2) == f32x3(3.0f, 7.0f, 11.0f));
-		ASSERT_TRUE(m1.column(3) == f32x3(4.0f, 8.0f, 12.0f));
+		const SfzMat44 m1 = sfzMat44InitElems(
+			1.0f, 2.0f, 3.0f, 4.0f,
+			5.0f, 6.0f, 7.0f, 8.0f,
+			9.0f, 10.0f, 11.0f, 12.0f,
+			13.0f, 14.0f, 15.0f, 16.0f);
+		CHECK(m1.at(0, 0) == 1.0f);
+		CHECK(m1.at(0, 1) == 2.0f);
+		CHECK(m1.at(0, 2) == 3.0f);
+		CHECK(m1.at(0, 3) == 4.0f);
+		CHECK(m1.at(1, 0) == 5.0f);
+		CHECK(m1.at(1, 1) == 6.0f);
+		CHECK(m1.at(1, 2) == 7.0f);
+		CHECK(m1.at(1, 3) == 8.0f);
+		CHECK(m1.at(2, 0) == 9.0f);
+		CHECK(m1.at(2, 1) == 10.0f);
+		CHECK(m1.at(2, 2) == 11.0f);
+		CHECK(m1.at(2, 3) == 12.0f);
+		CHECK(m1.at(3, 0) == 13.0f);
+		CHECK(m1.at(3, 1) == 14.0f);
+		CHECK(m1.at(3, 2) == 15.0f);
+		CHECK(m1.at(3, 3) == 16.0f);
+		CHECK(m1.rows[0] == f32x4_init(1.0f, 2.0f, 3.0f, 4.0f));
+		CHECK(m1.rows[1] == f32x4_init(5.0f, 6.0f, 7.0f, 8.0f));
+		CHECK(m1.rows[2] == f32x4_init(9.0f, 10.0f, 11.0f, 12.0f));
+		CHECK(m1.rows[3] == f32x4_init(13.0f, 14.0f, 15.0f, 16.0f));
+		CHECK(m1.column(0) == f32x4_init(1.0f, 5.0f, 9.0f, 13.0f));
+		CHECK(m1.column(1) == f32x4_init(2.0f, 6.0f, 10.0f, 14.0f));
+		CHECK(m1.column(2) == f32x4_init(3.0f, 7.0f, 11.0f, 15.0f));
+		CHECK(m1.column(3) == f32x4_init(4.0f, 8.0f, 12.0f, 16.0f));
 	}
 	// Row constructor
 	{
-		mat34 m1(f32x4(1.0f, 2.0f, 3.0f, 4.0f),
-		         f32x4(5.0f, 6.0f, 7.0f, 8.0f),
-		         f32x4(9.0f, 10.0f, 11.0f, 12.0f));
-		ASSERT_TRUE(m1.at(0, 0) == 1.0f);
-		ASSERT_TRUE(m1.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m1.at(0, 2) == 3.0f);
-		ASSERT_TRUE(m1.at(0, 3) == 4.0f);
-		ASSERT_TRUE(m1.at(1, 0) == 5.0f);
-		ASSERT_TRUE(m1.at(1, 1) == 6.0f);
-		ASSERT_TRUE(m1.at(1, 2) == 7.0f);
-		ASSERT_TRUE(m1.at(1, 3) == 8.0f);
-		ASSERT_TRUE(m1.at(2, 0) == 9.0f);
-		ASSERT_TRUE(m1.at(2, 1) == 10.0f);
-		ASSERT_TRUE(m1.at(2, 2) == 11.0f);
-		ASSERT_TRUE(m1.at(2, 3) == 12.0f);
-		ASSERT_TRUE(m1.row(0) == f32x4(1.0f, 2.0f, 3.0f, 4.0f));
-		ASSERT_TRUE(m1.row(1) == f32x4(5.0f, 6.0f, 7.0f, 8.0f));
-		ASSERT_TRUE(m1.row(2) == f32x4(9.0f, 10.0f, 11.0f, 12.0f));
-		ASSERT_TRUE(m1.column(0) == f32x3(1.0f, 5.0f, 9.0f));
-		ASSERT_TRUE(m1.column(1) == f32x3(2.0f, 6.0f, 10.0f));
-		ASSERT_TRUE(m1.column(2) == f32x3(3.0f, 7.0f, 11.0f));
-		ASSERT_TRUE(m1.column(3) == f32x3(4.0f, 8.0f, 12.0f));
+		const SfzMat44 m1 = sfzMat44InitRows(
+			f32x4_init(1.0f, 2.0f, 3.0f, 4.0f),
+			f32x4_init(5.0f, 6.0f, 7.0f, 8.0f),
+			f32x4_init(9.0f, 10.0f, 11.0f, 12.0f),
+			f32x4_init(13.0f, 14.0f, 15.0f, 16.0f));
+		CHECK(m1.at(0, 0) == 1.0f);
+		CHECK(m1.at(0, 1) == 2.0f);
+		CHECK(m1.at(0, 2) == 3.0f);
+		CHECK(m1.at(0, 3) == 4.0f);
+		CHECK(m1.at(1, 0) == 5.0f);
+		CHECK(m1.at(1, 1) == 6.0f);
+		CHECK(m1.at(1, 2) == 7.0f);
+		CHECK(m1.at(1, 3) == 8.0f);
+		CHECK(m1.at(2, 0) == 9.0f);
+		CHECK(m1.at(2, 1) == 10.0f);
+		CHECK(m1.at(2, 2) == 11.0f);
+		CHECK(m1.at(2, 3) == 12.0f);
+		CHECK(m1.at(3, 0) == 13.0f);
+		CHECK(m1.at(3, 1) == 14.0f);
+		CHECK(m1.at(3, 2) == 15.0f);
+		CHECK(m1.at(3, 3) == 16.0f);
+		CHECK(m1.rows[0] == f32x4_init(1.0f, 2.0f, 3.0f, 4.0f));
+		CHECK(m1.rows[1] == f32x4_init(5.0f, 6.0f, 7.0f, 8.0f));
+		CHECK(m1.rows[2] == f32x4_init(9.0f, 10.0f, 11.0f, 12.0f));
+		CHECK(m1.rows[3] == f32x4_init(13.0f, 14.0f, 15.0f, 16.0f));
+		CHECK(m1.column(0) == f32x4_init(1.0f, 5.0f, 9.0f, 13.0f));
+		CHECK(m1.column(1) == f32x4_init(2.0f, 6.0f, 10.0f, 14.0f));
+		CHECK(m1.column(2) == f32x4_init(3.0f, 7.0f, 11.0f, 15.0f));
+		CHECK(m1.column(3) == f32x4_init(4.0f, 8.0f, 12.0f, 16.0f));
 	}
 	// 3x3 matrix constructor
 	{
-		mat33 m1(1.0f, 2.0f, 3.0f,
-		         4.0f, 5.0f, 6.0f,
-		         7.0f, 8.0f, 9.0f);
-		mat34 m2(m1);
-		ASSERT_TRUE(m2.at(0, 0) == 1.0f);
-		ASSERT_TRUE(m2.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m2.at(0, 2) == 3.0f);
-		ASSERT_TRUE(m2.at(0, 3) == 0.0f);
-		ASSERT_TRUE(m2.at(1, 0) == 4.0f);
-		ASSERT_TRUE(m2.at(1, 1) == 5.0f);
-		ASSERT_TRUE(m2.at(1, 2) == 6.0f);
-		ASSERT_TRUE(m2.at(1, 3) == 0.0f);
-		ASSERT_TRUE(m2.at(2, 0) == 7.0f);
-		ASSERT_TRUE(m2.at(2, 1) == 8.0f);
-		ASSERT_TRUE(m2.at(2, 2) == 9.0f);
-		ASSERT_TRUE(m2.at(2, 3) == 0.0f);
-	}
-	// 4x4 matrix constructor
-	{
-		mat44 m1(1.0f, 2.0f, 3.0f, 4.0f,
-		         5.0f, 6.0f, 7.0f, 8.0f,
-		         9.0f, 10.0f, 11.0f, 12.0f,
-		         13.0f, 14.0f, 15.0f, 16.0f);
-		mat34 m2(m1);
-		ASSERT_TRUE(m2.at(0, 0) == 1.0f);
-		ASSERT_TRUE(m2.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m2.at(0, 2) == 3.0f);
-		ASSERT_TRUE(m2.at(0, 3) == 4.0f);
-		ASSERT_TRUE(m2.at(1, 0) == 5.0f);
-		ASSERT_TRUE(m2.at(1, 1) == 6.0f);
-		ASSERT_TRUE(m2.at(1, 2) == 7.0f);
-		ASSERT_TRUE(m2.at(1, 3) == 8.0f);
-		ASSERT_TRUE(m2.at(2, 0) == 9.0f);
-		ASSERT_TRUE(m2.at(2, 1) == 10.0f);
-		ASSERT_TRUE(m2.at(2, 2) == 11.0f);
-		ASSERT_TRUE(m2.at(2, 3) == 12.0f);
-	}
-	// fill() constructor function
-	{
-		mat34 zero = mat34::fill(0.0f);
-		ASSERT_TRUE(zero.at(0, 0) == 0.0f);
-		ASSERT_TRUE(zero.at(0, 1) == 0.0f);
-		ASSERT_TRUE(zero.at(0, 2) == 0.0f);
-		ASSERT_TRUE(zero.at(0, 3) == 0.0f);
-		ASSERT_TRUE(zero.at(1, 0) == 0.0f);
-		ASSERT_TRUE(zero.at(1, 1) == 0.0f);
-		ASSERT_TRUE(zero.at(1, 2) == 0.0f);
-		ASSERT_TRUE(zero.at(1, 3) == 0.0f);
-		ASSERT_TRUE(zero.at(2, 0) == 0.0f);
-		ASSERT_TRUE(zero.at(2, 1) == 0.0f);
-		ASSERT_TRUE(zero.at(2, 2) == 0.0f);
-		ASSERT_TRUE(zero.at(2, 3) == 0.0f);
-
-		mat34 one = mat34::fill(1.0f);
-		ASSERT_TRUE(one.at(0, 0) == 1.0f);
-		ASSERT_TRUE(one.at(0, 1) == 1.0f);
-		ASSERT_TRUE(one.at(0, 2) == 1.0f);
-		ASSERT_TRUE(one.at(0, 3) == 1.0f);
-		ASSERT_TRUE(one.at(1, 0) == 1.0f);
-		ASSERT_TRUE(one.at(1, 1) == 1.0f);
-		ASSERT_TRUE(one.at(1, 2) == 1.0f);
-		ASSERT_TRUE(one.at(1, 3) == 1.0f);
-		ASSERT_TRUE(one.at(2, 0) == 1.0f);
-		ASSERT_TRUE(one.at(2, 1) == 1.0f);
-		ASSERT_TRUE(one.at(2, 2) == 1.0f);
-		ASSERT_TRUE(one.at(2, 3) == 1.0f);
+		const SfzMat33 m1 = sfzMat33InitElems(
+			1.0f, 2.0f, 3.0f,
+			4.0f, 5.0f, 6.0f,
+			7.0f, 8.0f, 9.0f);
+		const SfzMat44 m2 = sfzMat44FromMat33(m1);
+		CHECK(m2.at(0, 0) == 1.0f);
+		CHECK(m2.at(0, 1) == 2.0f);
+		CHECK(m2.at(0, 2) == 3.0f);
+		CHECK(m2.at(0, 3) == 0.0f);
+		CHECK(m2.at(1, 0) == 4.0f);
+		CHECK(m2.at(1, 1) == 5.0f);
+		CHECK(m2.at(1, 2) == 6.0f);
+		CHECK(m2.at(1, 3) == 0.0f);
+		CHECK(m2.at(2, 0) == 7.0f);
+		CHECK(m2.at(2, 1) == 8.0f);
+		CHECK(m2.at(2, 2) == 9.0f);
+		CHECK(m2.at(2, 3) == 0.0f);
+		CHECK(m2.at(3, 0) == 0.0f);
+		CHECK(m2.at(3, 1) == 0.0f);
+		CHECK(m2.at(3, 2) == 0.0f);
+		CHECK(m2.at(3, 3) == 1.0f);
 	}
 	// identity() constructor function
 	{
-		mat34 ident = mat34::identity();
-		ASSERT_TRUE(ident.at(0, 0) == 1.0f);
-		ASSERT_TRUE(ident.at(0, 1) == 0.0f);
-		ASSERT_TRUE(ident.at(0, 2) == 0.0f);
-		ASSERT_TRUE(ident.at(0, 3) == 0.0f);
-		ASSERT_TRUE(ident.at(1, 0) == 0.0f);
-		ASSERT_TRUE(ident.at(1, 1) == 1.0f);
-		ASSERT_TRUE(ident.at(1, 2) == 0.0f);
-		ASSERT_TRUE(ident.at(1, 3) == 0.0f);
-		ASSERT_TRUE(ident.at(2, 0) == 0.0f);
-		ASSERT_TRUE(ident.at(2, 1) == 0.0f);
-		ASSERT_TRUE(ident.at(2, 2) == 1.0f);
-		ASSERT_TRUE(ident.at(2, 3) == 0.0f);
+		SfzMat44 ident = sfzMat44Identity();
+		CHECK(ident.at(0, 0) == 1.0f);
+		CHECK(ident.at(0, 1) == 0.0f);
+		CHECK(ident.at(0, 2) == 0.0f);
+		CHECK(ident.at(0, 3) == 0.0f);
+		CHECK(ident.at(1, 0) == 0.0f);
+		CHECK(ident.at(1, 1) == 1.0f);
+		CHECK(ident.at(1, 2) == 0.0f);
+		CHECK(ident.at(1, 3) == 0.0f);
+		CHECK(ident.at(2, 0) == 0.0f);
+		CHECK(ident.at(2, 1) == 0.0f);
+		CHECK(ident.at(2, 2) == 1.0f);
+		CHECK(ident.at(2, 3) == 0.0f);
+		CHECK(ident.at(3, 0) == 0.0f);
+		CHECK(ident.at(3, 1) == 0.0f);
+		CHECK(ident.at(3, 2) == 0.0f);
+		CHECK(ident.at(3, 3) == 1.0f);
 	}
 	// scaling3() constructor function
 	{
-		mat34 scale = mat34::scaling3(2.0f);
-		ASSERT_TRUE(scale.at(0, 0) == 2.0f);
-		ASSERT_TRUE(scale.at(0, 1) == 0.0f);
-		ASSERT_TRUE(scale.at(0, 2) == 0.0f);
-		ASSERT_TRUE(scale.at(0, 3) == 0.0f);
-		ASSERT_TRUE(scale.at(1, 0) == 0.0f);
-		ASSERT_TRUE(scale.at(1, 1) == 2.0f);
-		ASSERT_TRUE(scale.at(1, 2) == 0.0f);
-		ASSERT_TRUE(scale.at(1, 3) == 0.0f);
-		ASSERT_TRUE(scale.at(2, 0) == 0.0f);
-		ASSERT_TRUE(scale.at(2, 1) == 0.0f);
-		ASSERT_TRUE(scale.at(2, 2) == 2.0f);
-		ASSERT_TRUE(scale.at(2, 3) == 0.0f);
+		SfzMat44 scale = sfzMat44Scaling3(f32x3_splat(2.0f));
+		CHECK(scale.at(0, 0) == 2.0f);
+		CHECK(scale.at(0, 1) == 0.0f);
+		CHECK(scale.at(0, 2) == 0.0f);
+		CHECK(scale.at(0, 3) == 0.0f);
+		CHECK(scale.at(1, 0) == 0.0f);
+		CHECK(scale.at(1, 1) == 2.0f);
+		CHECK(scale.at(1, 2) == 0.0f);
+		CHECK(scale.at(1, 3) == 0.0f);
+		CHECK(scale.at(2, 0) == 0.0f);
+		CHECK(scale.at(2, 1) == 0.0f);
+		CHECK(scale.at(2, 2) == 2.0f);
+		CHECK(scale.at(2, 3) == 0.0f);
+		CHECK(scale.at(3, 0) == 0.0f);
+		CHECK(scale.at(3, 1) == 0.0f);
+		CHECK(scale.at(3, 2) == 0.0f);
+		CHECK(scale.at(3, 3) == 1.0f);
 
-		mat34 scale2 = mat34::scaling3(f32x3(1.0f, 2.0f, 3.0f));
-		ASSERT_TRUE(scale2.at(0, 0) == 1.0f);
-		ASSERT_TRUE(scale2.at(0, 1) == 0.0f);
-		ASSERT_TRUE(scale2.at(0, 2) == 0.0f);
-		ASSERT_TRUE(scale2.at(0, 3) == 0.0f);
-		ASSERT_TRUE(scale2.at(1, 0) == 0.0f);
-		ASSERT_TRUE(scale2.at(1, 1) == 2.0f);
-		ASSERT_TRUE(scale2.at(1, 2) == 0.0f);
-		ASSERT_TRUE(scale2.at(1, 3) == 0.0f);
-		ASSERT_TRUE(scale2.at(2, 0) == 0.0f);
-		ASSERT_TRUE(scale2.at(2, 1) == 0.0f);
-		ASSERT_TRUE(scale2.at(2, 2) == 3.0f);
-		ASSERT_TRUE(scale2.at(2, 3) == 0.0f);
+		SfzMat44 scale2 = sfzMat44Scaling3(f32x3_init(1.0f, 2.0f, 3.0f));
+		CHECK(scale2.at(0, 0) == 1.0f);
+		CHECK(scale2.at(0, 1) == 0.0f);
+		CHECK(scale2.at(0, 2) == 0.0f);
+		CHECK(scale2.at(0, 3) == 0.0f);
+		CHECK(scale2.at(1, 0) == 0.0f);
+		CHECK(scale2.at(1, 1) == 2.0f);
+		CHECK(scale2.at(1, 2) == 0.0f);
+		CHECK(scale2.at(1, 3) == 0.0f);
+		CHECK(scale2.at(2, 0) == 0.0f);
+		CHECK(scale2.at(2, 1) == 0.0f);
+		CHECK(scale2.at(2, 2) == 3.0f);
+		CHECK(scale2.at(2, 3) == 0.0f);
+		CHECK(scale2.at(3, 0) == 0.0f);
+		CHECK(scale2.at(3, 1) == 0.0f);
+		CHECK(scale2.at(3, 2) == 0.0f);
+		CHECK(scale2.at(3, 3) == 1.0f);
 	}
 	// rotation3() constructor function
 	{
-		f32x3 startPoint(1.0f, 0.0f, 0.0f);
-		f32x3 axis = f32x3(1.0f, 1.0f, 0.0f);
-		mat34 rot = mat34::rotation3(axis, PI);
-		ASSERT_TRUE(eqf(transformPoint(rot, startPoint), f32x3(0.0f, 1.0, 0.0f)));
+		f32x4 startPoint = f32x4_init(1.0f, 0.0f, 0.0f, 1.0f);
+		f32x3 axis = f32x3_init(1.0f, 1.0f, 0.0f);
+		SfzMat44 rot = sfzMat44Rotation3(axis, SFZ_PI);
+		CHECK(eqf(rot * startPoint, f32x4_init(0.0f, 1.0, 0.0f, 1.0f)));
 
-		mat34 xRot90 = mat34::rotation3(f32x3(1.0f, 0.0f, 0.0f), PI/2.0f);
-		ASSERT_TRUE(eqf(xRot90.row(0), f32x4(1.0f, 0.0f, 0.0f, 0.0f)));
-		ASSERT_TRUE(eqf(xRot90.row(1), f32x4(0.0f, 0.0f, -1.0f, 0.0f)));
-		ASSERT_TRUE(eqf(xRot90.row(2), f32x4(0.0f, 1.0f, 0.0f, 0.0f)));
+		SfzMat44 xRot90 = sfzMat44Rotation3(f32x3_init(1.0f, 0.0f, 0.0f), SFZ_PI/2.0f);
+		CHECK(eqf(xRot90.rows[0], f32x4_init(1.0f, 0.0f, 0.0f, 0.0f)));
+		CHECK(eqf(xRot90.rows[1], f32x4_init(0.0f, 0.0f, -1.0f, 0.0f)));
+		CHECK(eqf(xRot90.rows[2], f32x4_init(0.0f, 1.0f, 0.0f, 0.0f)));
+		CHECK(eqf(xRot90.rows[3], f32x4_init(0.0f, 0.0f, 0.0f, 1.0f)));
 
-		f32x3 v = transformPoint(xRot90, f32x3(1.0f));
-		ASSERT_TRUE(eqf(v, f32x3(1.0f, -1.0f, 1.0f)));
+		f32x4 v = xRot90 * f32x4_splat(1.0f);
+		CHECK(eqf(v, f32x4_init(1.0f, -1.0f, 1.0f, 1.0f)));
 	}
 	// translation3() constructor function
 	{
-		f32x4 v1(1.0f, 1.0f, 1.0f, 1.0f);
-		mat44 m = mat44::translation3(f32x3(-2.0f, 1.0f, 0.0f));
-		ASSERT_TRUE(eqf(m.at(0, 0), 1.0f));
-		ASSERT_TRUE(eqf(m.at(0, 1), 0.0f));
-		ASSERT_TRUE(eqf(m.at(0, 2), 0.0f));
-		ASSERT_TRUE(eqf(m.at(0, 3), -2.0f));
-		ASSERT_TRUE(eqf(m.at(1, 0), 0.0f));
-		ASSERT_TRUE(eqf(m.at(1, 1), 1.0f));
-		ASSERT_TRUE(eqf(m.at(1, 2), 0.0f));
-		ASSERT_TRUE(eqf(m.at(1, 3), 1.0f));
-		ASSERT_TRUE(eqf(m.at(2, 0), 0.0f));
-		ASSERT_TRUE(eqf(m.at(2, 1), 0.0f));
-		ASSERT_TRUE(eqf(m.at(2, 2), 1.0f));
-		ASSERT_TRUE(eqf(m.at(2, 3), 0.0f));
-		ASSERT_TRUE(eqf(m.at(3, 0), 0.0f));
-		ASSERT_TRUE(eqf(m.at(3, 1), 0.0f));
-		ASSERT_TRUE(eqf(m.at(3, 2), 0.0f));
-		ASSERT_TRUE(eqf(m.at(3, 3), 1.0f));
+		f32x4 v1 = f32x4_init(1.0f, 1.0f, 1.0f, 1.0f);
+		SfzMat44 m = sfzMat44Translation3(f32x3_init(-2.0f, 1.0f, 0.0f));
+		CHECK(eqf(m.at(0, 0), 1.0f));
+		CHECK(eqf(m.at(0, 1), 0.0f));
+		CHECK(eqf(m.at(0, 2), 0.0f));
+		CHECK(eqf(m.at(0, 3), -2.0f));
+		CHECK(eqf(m.at(1, 0), 0.0f));
+		CHECK(eqf(m.at(1, 1), 1.0f));
+		CHECK(eqf(m.at(1, 2), 0.0f));
+		CHECK(eqf(m.at(1, 3), 1.0f));
+		CHECK(eqf(m.at(2, 0), 0.0f));
+		CHECK(eqf(m.at(2, 1), 0.0f));
+		CHECK(eqf(m.at(2, 2), 1.0f));
+		CHECK(eqf(m.at(2, 3), 0.0f));
+		CHECK(eqf(m.at(3, 0), 0.0f));
+		CHECK(eqf(m.at(3, 1), 0.0f));
+		CHECK(eqf(m.at(3, 2), 0.0f));
+		CHECK(eqf(m.at(3, 3), 1.0f));
 		f32x4 v2 = m * v1;
-		ASSERT_TRUE(eqf(v2.x, -1.0f));
-		ASSERT_TRUE(eqf(v2.y, 2.0f));
-		ASSERT_TRUE(eqf(v2.z, 1.0f));
-		ASSERT_TRUE(eqf(v2.w, 1.0f));
+		CHECK(eqf(v2.x, -1.0f));
+		CHECK(eqf(v2.y, 2.0f));
+		CHECK(eqf(v2.z, 1.0f));
+		CHECK(eqf(v2.w, 1.0f));
 	}
 }
 
-UTEST(Matrix, matrix_4x4_specialization)
-{
-	// Array pointer constructor
-	{
-		const f32 arr1[] = {1.0f, 2.0f, 3.0f, 4.0f,
-		                      5.0f, 6.0f, 7.0f, 8.0f,
-		                      9.0f, 10.0f, 11.0f, 12.0f,
-		                      13.0f, 14.0f, 15.0f, 16.0f};
-		mat44 m1(arr1);
-		ASSERT_TRUE(m1.at(0, 0) == 1.0f);
-		ASSERT_TRUE(m1.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m1.at(0, 2) == 3.0f);
-		ASSERT_TRUE(m1.at(0, 3) == 4.0f);
-		ASSERT_TRUE(m1.at(1, 0) == 5.0f);
-		ASSERT_TRUE(m1.at(1, 1) == 6.0f);
-		ASSERT_TRUE(m1.at(1, 2) == 7.0f);
-		ASSERT_TRUE(m1.at(1, 3) == 8.0f);
-		ASSERT_TRUE(m1.at(2, 0) == 9.0f);
-		ASSERT_TRUE(m1.at(2, 1) == 10.0f);
-		ASSERT_TRUE(m1.at(2, 2) == 11.0f);
-		ASSERT_TRUE(m1.at(2, 3) == 12.0f);
-		ASSERT_TRUE(m1.at(3, 0) == 13.0f);
-		ASSERT_TRUE(m1.at(3, 1) == 14.0f);
-		ASSERT_TRUE(m1.at(3, 2) == 15.0f);
-		ASSERT_TRUE(m1.at(3, 3) == 16.0f);
-		ASSERT_TRUE(m1.row(0) == f32x4(1.0f, 2.0f, 3.0f, 4.0f));
-		ASSERT_TRUE(m1.row(1) == f32x4(5.0f, 6.0f, 7.0f, 8.0f));
-		ASSERT_TRUE(m1.row(2) == f32x4(9.0f, 10.0f, 11.0f, 12.0f));
-		ASSERT_TRUE(m1.row(3) == f32x4(13.0f, 14.0f, 15.0f, 16.0f));
-		ASSERT_TRUE(m1.column(0) == f32x4(1.0f, 5.0f, 9.0f, 13.0f));
-		ASSERT_TRUE(m1.column(1) == f32x4(2.0f, 6.0f, 10.0f, 14.0f));
-		ASSERT_TRUE(m1.column(2) == f32x4(3.0f, 7.0f, 11.0f, 15.0f));
-		ASSERT_TRUE(m1.column(3) == f32x4(4.0f, 8.0f, 12.0f, 16.0f));
-	}
-	// Individual element constructor
-	{
-		mat44 m1(1.0f, 2.0f, 3.0f, 4.0f,
-		         5.0f, 6.0f, 7.0f, 8.0f,
-		         9.0f, 10.0f, 11.0f, 12.0f,
-		         13.0f, 14.0f, 15.0f, 16.0f);
-		ASSERT_TRUE(m1.at(0, 0) == 1.0f);
-		ASSERT_TRUE(m1.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m1.at(0, 2) == 3.0f);
-		ASSERT_TRUE(m1.at(0, 3) == 4.0f);
-		ASSERT_TRUE(m1.at(1, 0) == 5.0f);
-		ASSERT_TRUE(m1.at(1, 1) == 6.0f);
-		ASSERT_TRUE(m1.at(1, 2) == 7.0f);
-		ASSERT_TRUE(m1.at(1, 3) == 8.0f);
-		ASSERT_TRUE(m1.at(2, 0) == 9.0f);
-		ASSERT_TRUE(m1.at(2, 1) == 10.0f);
-		ASSERT_TRUE(m1.at(2, 2) == 11.0f);
-		ASSERT_TRUE(m1.at(2, 3) == 12.0f);
-		ASSERT_TRUE(m1.at(3, 0) == 13.0f);
-		ASSERT_TRUE(m1.at(3, 1) == 14.0f);
-		ASSERT_TRUE(m1.at(3, 2) == 15.0f);
-		ASSERT_TRUE(m1.at(3, 3) == 16.0f);
-		ASSERT_TRUE(m1.row(0) == f32x4(1.0f, 2.0f, 3.0f, 4.0f));
-		ASSERT_TRUE(m1.row(1) == f32x4(5.0f, 6.0f, 7.0f, 8.0f));
-		ASSERT_TRUE(m1.row(2) == f32x4(9.0f, 10.0f, 11.0f, 12.0f));
-		ASSERT_TRUE(m1.row(3) == f32x4(13.0f, 14.0f, 15.0f, 16.0f));
-		ASSERT_TRUE(m1.column(0) == f32x4(1.0f, 5.0f, 9.0f, 13.0f));
-		ASSERT_TRUE(m1.column(1) == f32x4(2.0f, 6.0f, 10.0f, 14.0f));
-		ASSERT_TRUE(m1.column(2) == f32x4(3.0f, 7.0f, 11.0f, 15.0f));
-		ASSERT_TRUE(m1.column(3) == f32x4(4.0f, 8.0f, 12.0f, 16.0f));
-	}
-	// Row constructor
-	{
-		mat44 m1(f32x4(1.0f, 2.0f, 3.0f, 4.0f),
-		         f32x4(5.0f, 6.0f, 7.0f, 8.0f),
-		         f32x4(9.0f, 10.0f, 11.0f, 12.0f),
-		         f32x4(13.0f, 14.0f, 15.0f, 16.0f));
-		ASSERT_TRUE(m1.at(0, 0) == 1.0f);
-		ASSERT_TRUE(m1.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m1.at(0, 2) == 3.0f);
-		ASSERT_TRUE(m1.at(0, 3) == 4.0f);
-		ASSERT_TRUE(m1.at(1, 0) == 5.0f);
-		ASSERT_TRUE(m1.at(1, 1) == 6.0f);
-		ASSERT_TRUE(m1.at(1, 2) == 7.0f);
-		ASSERT_TRUE(m1.at(1, 3) == 8.0f);
-		ASSERT_TRUE(m1.at(2, 0) == 9.0f);
-		ASSERT_TRUE(m1.at(2, 1) == 10.0f);
-		ASSERT_TRUE(m1.at(2, 2) == 11.0f);
-		ASSERT_TRUE(m1.at(2, 3) == 12.0f);
-		ASSERT_TRUE(m1.at(3, 0) == 13.0f);
-		ASSERT_TRUE(m1.at(3, 1) == 14.0f);
-		ASSERT_TRUE(m1.at(3, 2) == 15.0f);
-		ASSERT_TRUE(m1.at(3, 3) == 16.0f);
-		ASSERT_TRUE(m1.row(0) == f32x4(1.0f, 2.0f, 3.0f, 4.0f));
-		ASSERT_TRUE(m1.row(1) == f32x4(5.0f, 6.0f, 7.0f, 8.0f));
-		ASSERT_TRUE(m1.row(2) == f32x4(9.0f, 10.0f, 11.0f, 12.0f));
-		ASSERT_TRUE(m1.row(3) == f32x4(13.0f, 14.0f, 15.0f, 16.0f));
-		ASSERT_TRUE(m1.column(0) == f32x4(1.0f, 5.0f, 9.0f, 13.0f));
-		ASSERT_TRUE(m1.column(1) == f32x4(2.0f, 6.0f, 10.0f, 14.0f));
-		ASSERT_TRUE(m1.column(2) == f32x4(3.0f, 7.0f, 11.0f, 15.0f));
-		ASSERT_TRUE(m1.column(3) == f32x4(4.0f, 8.0f, 12.0f, 16.0f));
-	}
-	// 3x3 matrix constructor
-	{
-		mat33 m1(1.0f, 2.0f, 3.0f,
-		         4.0f, 5.0f, 6.0f,
-		         7.0f, 8.0f, 9.0f);
-		mat44 m2(m1);
-		ASSERT_TRUE(m2.at(0, 0) == 1.0f);
-		ASSERT_TRUE(m2.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m2.at(0, 2) == 3.0f);
-		ASSERT_TRUE(m2.at(0, 3) == 0.0f);
-		ASSERT_TRUE(m2.at(1, 0) == 4.0f);
-		ASSERT_TRUE(m2.at(1, 1) == 5.0f);
-		ASSERT_TRUE(m2.at(1, 2) == 6.0f);
-		ASSERT_TRUE(m2.at(1, 3) == 0.0f);
-		ASSERT_TRUE(m2.at(2, 0) == 7.0f);
-		ASSERT_TRUE(m2.at(2, 1) == 8.0f);
-		ASSERT_TRUE(m2.at(2, 2) == 9.0f);
-		ASSERT_TRUE(m2.at(2, 3) == 0.0f);
-		ASSERT_TRUE(m2.at(3, 0) == 0.0f);
-		ASSERT_TRUE(m2.at(3, 1) == 0.0f);
-		ASSERT_TRUE(m2.at(3, 2) == 0.0f);
-		ASSERT_TRUE(m2.at(3, 3) == 1.0f);
-	}
-	// 3x4 matrix constructor
-	{
-		mat34 m1(1.0f, 2.0f, 3.0f, 4.0f,
-		         5.0f, 6.0f, 7.0f, 8.0f,
-		         9.0f, 10.0f, 11.0f, 12.0f);
-		mat44 m2(m1);
-		ASSERT_TRUE(m2.at(0, 0) == 1.0f);
-		ASSERT_TRUE(m2.at(0, 1) == 2.0f);
-		ASSERT_TRUE(m2.at(0, 2) == 3.0f);
-		ASSERT_TRUE(m2.at(0, 3) == 4.0f);
-		ASSERT_TRUE(m2.at(1, 0) == 5.0f);
-		ASSERT_TRUE(m2.at(1, 1) == 6.0f);
-		ASSERT_TRUE(m2.at(1, 2) == 7.0f);
-		ASSERT_TRUE(m2.at(1, 3) == 8.0f);
-		ASSERT_TRUE(m2.at(2, 0) == 9.0f);
-		ASSERT_TRUE(m2.at(2, 1) == 10.0f);
-		ASSERT_TRUE(m2.at(2, 2) == 11.0f);
-		ASSERT_TRUE(m2.at(2, 3) == 12.0f);
-		ASSERT_TRUE(m2.at(3, 0) == 0.0f);
-		ASSERT_TRUE(m2.at(3, 1) == 0.0f);
-		ASSERT_TRUE(m2.at(3, 2) == 0.0f);
-		ASSERT_TRUE(m2.at(3, 3) == 1.0f);
-	}
-	// fill() constructor function
-	{
-		mat44 zero = mat44::fill(0.0f);
-		ASSERT_TRUE(zero.at(0, 0) == 0.0f);
-		ASSERT_TRUE(zero.at(0, 1) == 0.0f);
-		ASSERT_TRUE(zero.at(0, 2) == 0.0f);
-		ASSERT_TRUE(zero.at(0, 3) == 0.0f);
-		ASSERT_TRUE(zero.at(1, 0) == 0.0f);
-		ASSERT_TRUE(zero.at(1, 1) == 0.0f);
-		ASSERT_TRUE(zero.at(1, 2) == 0.0f);
-		ASSERT_TRUE(zero.at(1, 3) == 0.0f);
-		ASSERT_TRUE(zero.at(2, 0) == 0.0f);
-		ASSERT_TRUE(zero.at(2, 1) == 0.0f);
-		ASSERT_TRUE(zero.at(2, 2) == 0.0f);
-		ASSERT_TRUE(zero.at(2, 3) == 0.0f);
-		ASSERT_TRUE(zero.at(3, 0) == 0.0f);
-		ASSERT_TRUE(zero.at(3, 1) == 0.0f);
-		ASSERT_TRUE(zero.at(3, 2) == 0.0f);
-		ASSERT_TRUE(zero.at(3, 3) == 0.0f);
-
-		mat44 one = mat44::fill(1.0f);
-		ASSERT_TRUE(one.at(0, 0) == 1.0f);
-		ASSERT_TRUE(one.at(0, 1) == 1.0f);
-		ASSERT_TRUE(one.at(0, 2) == 1.0f);
-		ASSERT_TRUE(one.at(0, 3) == 1.0f);
-		ASSERT_TRUE(one.at(1, 0) == 1.0f);
-		ASSERT_TRUE(one.at(1, 1) == 1.0f);
-		ASSERT_TRUE(one.at(1, 2) == 1.0f);
-		ASSERT_TRUE(one.at(1, 3) == 1.0f);
-		ASSERT_TRUE(one.at(2, 0) == 1.0f);
-		ASSERT_TRUE(one.at(2, 1) == 1.0f);
-		ASSERT_TRUE(one.at(2, 2) == 1.0f);
-		ASSERT_TRUE(one.at(2, 3) == 1.0f);
-		ASSERT_TRUE(one.at(3, 0) == 1.0f);
-		ASSERT_TRUE(one.at(3, 1) == 1.0f);
-		ASSERT_TRUE(one.at(3, 2) == 1.0f);
-		ASSERT_TRUE(one.at(3, 3) == 1.0f);
-	}
-	// identity() constructor function
-	{
-		mat44 ident = mat44::identity();
-		ASSERT_TRUE(ident.at(0, 0) == 1.0f);
-		ASSERT_TRUE(ident.at(0, 1) == 0.0f);
-		ASSERT_TRUE(ident.at(0, 2) == 0.0f);
-		ASSERT_TRUE(ident.at(0, 3) == 0.0f);
-		ASSERT_TRUE(ident.at(1, 0) == 0.0f);
-		ASSERT_TRUE(ident.at(1, 1) == 1.0f);
-		ASSERT_TRUE(ident.at(1, 2) == 0.0f);
-		ASSERT_TRUE(ident.at(1, 3) == 0.0f);
-		ASSERT_TRUE(ident.at(2, 0) == 0.0f);
-		ASSERT_TRUE(ident.at(2, 1) == 0.0f);
-		ASSERT_TRUE(ident.at(2, 2) == 1.0f);
-		ASSERT_TRUE(ident.at(2, 3) == 0.0f);
-		ASSERT_TRUE(ident.at(3, 0) == 0.0f);
-		ASSERT_TRUE(ident.at(3, 1) == 0.0f);
-		ASSERT_TRUE(ident.at(3, 2) == 0.0f);
-		ASSERT_TRUE(ident.at(3, 3) == 1.0f);
-	}
-	// scaling3() constructor function
-	{
-		mat44 scale = mat44::scaling3(2.0f);
-		ASSERT_TRUE(scale.at(0, 0) == 2.0f);
-		ASSERT_TRUE(scale.at(0, 1) == 0.0f);
-		ASSERT_TRUE(scale.at(0, 2) == 0.0f);
-		ASSERT_TRUE(scale.at(0, 3) == 0.0f);
-		ASSERT_TRUE(scale.at(1, 0) == 0.0f);
-		ASSERT_TRUE(scale.at(1, 1) == 2.0f);
-		ASSERT_TRUE(scale.at(1, 2) == 0.0f);
-		ASSERT_TRUE(scale.at(1, 3) == 0.0f);
-		ASSERT_TRUE(scale.at(2, 0) == 0.0f);
-		ASSERT_TRUE(scale.at(2, 1) == 0.0f);
-		ASSERT_TRUE(scale.at(2, 2) == 2.0f);
-		ASSERT_TRUE(scale.at(2, 3) == 0.0f);
-		ASSERT_TRUE(scale.at(3, 0) == 0.0f);
-		ASSERT_TRUE(scale.at(3, 1) == 0.0f);
-		ASSERT_TRUE(scale.at(3, 2) == 0.0f);
-		ASSERT_TRUE(scale.at(3, 3) == 1.0f);
-
-		mat44 scale2 = mat44::scaling3(f32x3(1.0f, 2.0f, 3.0f));
-		ASSERT_TRUE(scale2.at(0, 0) == 1.0f);
-		ASSERT_TRUE(scale2.at(0, 1) == 0.0f);
-		ASSERT_TRUE(scale2.at(0, 2) == 0.0f);
-		ASSERT_TRUE(scale2.at(0, 3) == 0.0f);
-		ASSERT_TRUE(scale2.at(1, 0) == 0.0f);
-		ASSERT_TRUE(scale2.at(1, 1) == 2.0f);
-		ASSERT_TRUE(scale2.at(1, 2) == 0.0f);
-		ASSERT_TRUE(scale2.at(1, 3) == 0.0f);
-		ASSERT_TRUE(scale2.at(2, 0) == 0.0f);
-		ASSERT_TRUE(scale2.at(2, 1) == 0.0f);
-		ASSERT_TRUE(scale2.at(2, 2) == 3.0f);
-		ASSERT_TRUE(scale2.at(2, 3) == 0.0f);
-		ASSERT_TRUE(scale2.at(3, 0) == 0.0f);
-		ASSERT_TRUE(scale2.at(3, 1) == 0.0f);
-		ASSERT_TRUE(scale2.at(3, 2) == 0.0f);
-		ASSERT_TRUE(scale2.at(3, 3) == 1.0f);
-	}
-	// rotation3() constructor function
-	{
-		f32x4 startPoint(1.0f, 0.0f, 0.0f, 1.0f);
-		f32x3 axis = f32x3(1.0f, 1.0f, 0.0f);
-		mat44 rot = mat44::rotation3(axis, PI);
-		ASSERT_TRUE(eqf(rot * startPoint, f32x4(0.0f, 1.0, 0.0f, 1.0f)));
-
-		mat44 xRot90 = mat44::rotation3(f32x3(1.0f, 0.0f, 0.0f), PI/2.0f);
-		ASSERT_TRUE(eqf(xRot90.row(0), f32x4(1.0f, 0.0f, 0.0f, 0.0f)));
-		ASSERT_TRUE(eqf(xRot90.row(1), f32x4(0.0f, 0.0f, -1.0f, 0.0f)));
-		ASSERT_TRUE(eqf(xRot90.row(2), f32x4(0.0f, 1.0f, 0.0f, 0.0f)));
-		ASSERT_TRUE(eqf(xRot90.row(3), f32x4(0.0f, 0.0f, 0.0f, 1.0f)));
-
-		f32x4 v = xRot90 * f32x4(1.0f);
-		ASSERT_TRUE(eqf(v, f32x4(1.0f, -1.0f, 1.0f, 1.0f)));
-	}
-	// translation3() constructor function
-	{
-		f32x4 v1(1.0f, 1.0f, 1.0f, 1.0f);
-		mat44 m = mat44::translation3(f32x3(-2.0f, 1.0f, 0.0f));
-		ASSERT_TRUE(eqf(m.at(0, 0), 1.0f));
-		ASSERT_TRUE(eqf(m.at(0, 1), 0.0f));
-		ASSERT_TRUE(eqf(m.at(0, 2), 0.0f));
-		ASSERT_TRUE(eqf(m.at(0, 3), -2.0f));
-		ASSERT_TRUE(eqf(m.at(1, 0), 0.0f));
-		ASSERT_TRUE(eqf(m.at(1, 1), 1.0f));
-		ASSERT_TRUE(eqf(m.at(1, 2), 0.0f));
-		ASSERT_TRUE(eqf(m.at(1, 3), 1.0f));
-		ASSERT_TRUE(eqf(m.at(2, 0), 0.0f));
-		ASSERT_TRUE(eqf(m.at(2, 1), 0.0f));
-		ASSERT_TRUE(eqf(m.at(2, 2), 1.0f));
-		ASSERT_TRUE(eqf(m.at(2, 3), 0.0f));
-		ASSERT_TRUE(eqf(m.at(3, 0), 0.0f));
-		ASSERT_TRUE(eqf(m.at(3, 1), 0.0f));
-		ASSERT_TRUE(eqf(m.at(3, 2), 0.0f));
-		ASSERT_TRUE(eqf(m.at(3, 3), 1.0f));
-		f32x4 v2 = m * v1;
-		ASSERT_TRUE(eqf(v2.x, -1.0f));
-		ASSERT_TRUE(eqf(v2.y, 2.0f));
-		ASSERT_TRUE(eqf(v2.z, 1.0f));
-		ASSERT_TRUE(eqf(v2.w, 1.0f));
-	}
-}
-
-UTEST(Matrix, arithmetic_assignment_operators)
+TEST_CASE("Matrix: arithmetic_assignment_operators")
 {
 	// +=
 	{
-		mat22 m1(1.0f, 2.0f,
-			3.0f, 4.0f);
-		mat22 m2(1.0f, 2.0f,
-			3.0f, 4.0f);
-		mat22 m3(-2.0f, -1.0f,
-			3.0f, 33.0f);
+		SfzMat44 m1 = sfzMat44InitElems(
+			1.0f, 2.0f, 0.0f, 0.0f,
+			3.0f, 4.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
+		SfzMat44 m2 = sfzMat44InitElems(
+			1.0f, 2.0f, 0.0f, 0.0f,
+			3.0f, 4.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
+		SfzMat44 m3 = sfzMat44InitElems(
+			-2.0f, -1.0f, 0.0f, 0.0f,
+			3.0f, 33.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f, 
+			0.0f, 0.0f, 0.0f, 0.0f);
 
 		m1 += m2;
 		m2 += m3;
 
-		ASSERT_TRUE(eqf(m1.at(0, 0), 2.0f));
-		ASSERT_TRUE(eqf(m1.at(0, 1), 4.0f));
-		ASSERT_TRUE(eqf(m1.at(1, 0), 6.0f));
-		ASSERT_TRUE(eqf(m1.at(1, 1), 8.0f));
+		CHECK(eqf(m1.at(0, 0), 2.0f));
+		CHECK(eqf(m1.at(0, 1), 4.0f));
+		CHECK(eqf(m1.at(1, 0), 6.0f));
+		CHECK(eqf(m1.at(1, 1), 8.0f));
 
-		ASSERT_TRUE(eqf(m2.at(0, 0), -1.0f));
-		ASSERT_TRUE(eqf(m2.at(0, 1), 1.0f));
-		ASSERT_TRUE(eqf(m2.at(1, 0), 6.0f));
-		ASSERT_TRUE(eqf(m2.at(1, 1), 37.0f));
+		CHECK(eqf(m2.at(0, 0), -1.0f));
+		CHECK(eqf(m2.at(0, 1), 1.0f));
+		CHECK(eqf(m2.at(1, 0), 6.0f));
+		CHECK(eqf(m2.at(1, 1), 37.0f));
 	}
 	// -=
 	{
-		mat22 m1(1.0f, 2.0f,
-			3.0f, 4.0f);
-		mat22 m2(1.0f, 2.0f,
-			3.0f, 4.0f);
-		mat22 m3(-2.0f, -1.0f,
-			3.0f, 33.0f);
+		SfzMat44 m1 = sfzMat44InitElems(
+			1.0f, 2.0f, 0.0f, 0.0f,
+			3.0f, 4.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
+		SfzMat44 m2 = sfzMat44InitElems(
+			1.0f, 2.0f, 0.0f, 0.0f,
+			3.0f, 4.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
+		SfzMat44 m3 = sfzMat44InitElems(
+			-2.0f, -1.0f, 0.0f, 0.0f,
+			3.0f, 33.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
 
 		m1 -= m2;
 		m2 -= m3;
 
-		ASSERT_TRUE(eqf(m1.at(0, 0), 0.0f));
-		ASSERT_TRUE(eqf(m1.at(0, 1), 0.0f));
-		ASSERT_TRUE(eqf(m1.at(1, 0), 0.0f));
-		ASSERT_TRUE(eqf(m1.at(1, 1), 0.0f));
+		CHECK(eqf(m1.at(0, 0), 0.0f));
+		CHECK(eqf(m1.at(0, 1), 0.0f));
+		CHECK(eqf(m1.at(1, 0), 0.0f));
+		CHECK(eqf(m1.at(1, 1), 0.0f));
 
-		ASSERT_TRUE(eqf(m2.at(0, 0), 3.0f));
-		ASSERT_TRUE(eqf(m2.at(0, 1), 3.0f));
-		ASSERT_TRUE(eqf(m2.at(1, 0), 0.0f));
-		ASSERT_TRUE(eqf(m2.at(1, 1), -29.0f));
+		CHECK(eqf(m2.at(0, 0), 3.0f));
+		CHECK(eqf(m2.at(0, 1), 3.0f));
+		CHECK(eqf(m2.at(1, 0), 0.0f));
+		CHECK(eqf(m2.at(1, 1), -29.0f));
 	}
 	// *= (scalar)
 	{
-		mat22 m1(1.0f, 2.0f,
-			3.0f, 4.0f);
-		mat22 m2(1.0f, 2.0f,
-			3.0f, 4.0f);
-		mat22 m3(-2.0f, -1.0f,
-			3.0f, 33.0f);
+		SfzMat44 m1 = sfzMat44InitElems(
+			1.0f, 2.0f, 0.0f, 0.0f,
+			3.0f, 4.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
+		SfzMat44 m2 = sfzMat44InitElems(
+			1.0f, 2.0f, 0.0f, 0.0f,
+			3.0f, 4.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
+		SfzMat44 m3 = sfzMat44InitElems(
+			-2.0f, -1.0f, 0.0f, 0.0f,
+			3.0f, 33.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
 
 		m1 *= 2.0f;
-		ASSERT_TRUE(eqf(m1.at(0, 0), 2.0f));
-		ASSERT_TRUE(eqf(m1.at(0, 1), 4.0f));
-		ASSERT_TRUE(eqf(m1.at(1, 0), 6.0f));
-		ASSERT_TRUE(eqf(m1.at(1, 1), 8.0f));
+		CHECK(eqf(m1.at(0, 0), 2.0f));
+		CHECK(eqf(m1.at(0, 1), 4.0f));
+		CHECK(eqf(m1.at(1, 0), 6.0f));
+		CHECK(eqf(m1.at(1, 1), 8.0f));
 
 		m3 *= -1.0f;
-		ASSERT_TRUE(eqf(m3.at(0, 0), 2.0f));
-		ASSERT_TRUE(eqf(m3.at(0, 1), 1.0f));
-		ASSERT_TRUE(eqf(m3.at(1, 0), -3.0f));
-		ASSERT_TRUE(eqf(m3.at(1, 1), -33.0f));
+		CHECK(eqf(m3.at(0, 0), 2.0f));
+		CHECK(eqf(m3.at(0, 1), 1.0f));
+		CHECK(eqf(m3.at(1, 0), -3.0f));
+		CHECK(eqf(m3.at(1, 1), -33.0f));
 	}
 	// *= (matrix of same size)
-	{
+	/*{
 		mat22 m1(1.0f, 2.0f,
 			3.0f, 4.0f);
 		mat22 m2(1.0f, 2.0f,
@@ -913,130 +442,164 @@ UTEST(Matrix, arithmetic_assignment_operators)
 		auto m1cpy = m1;
 		m1cpy *= m4;
 
-		ASSERT_TRUE(eqf(m1cpy.at(0, 0), 1.0f));
-		ASSERT_TRUE(eqf(m1cpy.at(0, 1), 2.0f));
-		ASSERT_TRUE(eqf(m1cpy.at(1, 0), 3.0f));
-		ASSERT_TRUE(eqf(m1cpy.at(1, 1), 4.0f));
+		CHECK(eqf(m1cpy.at(0, 0), 1.0f));
+		CHECK(eqf(m1cpy.at(0, 1), 2.0f));
+		CHECK(eqf(m1cpy.at(1, 0), 3.0f));
+		CHECK(eqf(m1cpy.at(1, 1), 4.0f));
 
 		m4 *= m1;
-		ASSERT_TRUE(eqf(m4.at(0, 0), 1.0f));
-		ASSERT_TRUE(eqf(m4.at(0, 1), 2.0f));
-		ASSERT_TRUE(eqf(m4.at(1, 0), 3.0f));
-		ASSERT_TRUE(eqf(m4.at(1, 1), 4.0f));
-	}
+		CHECK(eqf(m4.at(0, 0), 1.0f));
+		CHECK(eqf(m4.at(0, 1), 2.0f));
+		CHECK(eqf(m4.at(1, 0), 3.0f));
+		CHECK(eqf(m4.at(1, 1), 4.0f));
+	}*/
 }
 
-UTEST(Matrix, arithmetic_operators)
+TEST_CASE("Matrix: arithmetic_operators")
 {
 	// +
 	{
-		mat22 m1(1.0f, 2.0f,
-			3.0f, 4.0f);
-		mat22 m2(0.0f, 1.0f,
-			0.0f, 0.0f);
-		f32 m3arr[] = { 1.0f, 2.0f, 3.0f,
-			4.0f, 5.0f, 6.0f };
-		Mat<2, 3> m3(m3arr);
-		f32 m4arr[] = { 1.0f, 0.0f,
-			0.0f, 1.0f,
-			0.0f, 0.0f };
-		Mat<3, 2> m4(m4arr);
+		SfzMat44 m1 = sfzMat44InitElems(
+			1.0f, 2.0f, 0.0f, 0.0f,
+			3.0f, 4.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
+		SfzMat44 m2 = sfzMat44InitElems(
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
+		SfzMat44 m3 = sfzMat44InitElems(
+			1.0f, 2.0f, 3.0f, 0.0f,
+			4.0f, 5.0f, 6.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
+		SfzMat44 m4 = sfzMat44InitElems(
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
 
-		auto res1 = m1 + m2;
-		ASSERT_TRUE(eqf(res1.at(0, 0), 1.0f));
-		ASSERT_TRUE(eqf(res1.at(0, 1), 3.0f));
-		ASSERT_TRUE(eqf(res1.at(1, 0), 3.0f));
-		ASSERT_TRUE(eqf(res1.at(1, 1), 4.0f));
+		SfzMat44 res1 = m1 + m2;
+		CHECK(eqf(res1.at(0, 0), 1.0f));
+		CHECK(eqf(res1.at(0, 1), 3.0f));
+		CHECK(eqf(res1.at(1, 0), 3.0f));
+		CHECK(eqf(res1.at(1, 1), 4.0f));
 
-		auto res2 = m3 + m3;
-		ASSERT_TRUE(eqf(res2.at(0, 0), 2.0f));
-		ASSERT_TRUE(eqf(res2.at(0, 1), 4.0f));
-		ASSERT_TRUE(eqf(res2.at(0, 2), 6.0f));
-		ASSERT_TRUE(eqf(res2.at(1, 0), 8.0f));
-		ASSERT_TRUE(eqf(res2.at(1, 1), 10.0f));
-		ASSERT_TRUE(eqf(res2.at(1, 2), 12.0f));
+		SfzMat44 res2 = m3 + m3;
+		CHECK(eqf(res2.at(0, 0), 2.0f));
+		CHECK(eqf(res2.at(0, 1), 4.0f));
+		CHECK(eqf(res2.at(0, 2), 6.0f));
+		CHECK(eqf(res2.at(1, 0), 8.0f));
+		CHECK(eqf(res2.at(1, 1), 10.0f));
+		CHECK(eqf(res2.at(1, 2), 12.0f));
 	}
 	// -
 	{
-		mat22 m1(1.0f, 2.0f,
-			3.0f, 4.0f);
-		mat22 m2(0.0f, 1.0f,
-			0.0f, 0.0f);
-		f32 m3arr[] = { 1.0f, 2.0f, 3.0f,
-			4.0f, 5.0f, 6.0f };
-		Mat<2, 3> m3(m3arr);
-		f32 m4arr[] = { 1.0f, 0.0f,
-			0.0f, 1.0f,
-			0.0f, 0.0f };
-		Mat<3, 2> m4(m4arr);
+		SfzMat44 m1 = sfzMat44InitElems(
+			1.0f, 2.0f, 0.0f, 0.0f,
+			3.0f, 4.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
+		SfzMat44 m2 = sfzMat44InitElems(
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
+		SfzMat44 m3 = sfzMat44InitElems(
+			1.0f, 2.0f, 3.0f, 0.0f,
+			4.0f, 5.0f, 6.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
+		SfzMat44 m4 = sfzMat44InitElems(
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
 
-		auto res1 = m1 - m2;
-		auto res2 = m2 - m1;
+		SfzMat44 res1 = m1 - m2;
+		SfzMat44 res2 = m2 - m1;
 
-		ASSERT_TRUE(res1 != res2);
+		CHECK(eqf(res1.at(0, 0), 1.0f));
+		CHECK(eqf(res1.at(0, 1), 1.0f));
+		CHECK(eqf(res1.at(1, 0), 3.0f));
+		CHECK(eqf(res1.at(1, 1), 4.0f));
 
-		ASSERT_TRUE(eqf(res1.at(0, 0), 1.0f));
-		ASSERT_TRUE(eqf(res1.at(0, 1), 1.0f));
-		ASSERT_TRUE(eqf(res1.at(1, 0), 3.0f));
-		ASSERT_TRUE(eqf(res1.at(1, 1), 4.0f));
-
-		ASSERT_TRUE(eqf(res2.at(0, 0), -1.0f));
-		ASSERT_TRUE(eqf(res2.at(0, 1), -1.0f));
-		ASSERT_TRUE(eqf(res2.at(1, 0), -3.0f));
-		ASSERT_TRUE(eqf(res2.at(1, 1), -4.0f));
+		CHECK(eqf(res2.at(0, 0), -1.0f));
+		CHECK(eqf(res2.at(0, 1), -1.0f));
+		CHECK(eqf(res2.at(1, 0), -3.0f));
+		CHECK(eqf(res2.at(1, 1), -4.0f));
 	}
 	// - (negation)
 	{
-		mat22 m1(1.0f, 2.0f,
-			3.0f, 4.0f);
-		mat22 m2(0.0f, 1.0f,
-			0.0f, 0.0f);
-		f32 m3arr[] = { 1.0f, 2.0f, 3.0f,
-			4.0f, 5.0f, 6.0f };
-		Mat<2, 3> m3(m3arr);
-		f32 m4arr[] = { 1.0f, 0.0f,
-			0.0f, 1.0f,
-			0.0f, 0.0f };
-		Mat<3, 2> m4(m4arr);
+		SfzMat44 m1 = sfzMat44InitElems(
+			1.0f, 2.0f, 0.0f, 0.0f,
+			3.0f, 4.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
+		SfzMat44 m2 = sfzMat44InitElems(
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
+		SfzMat44 m3 = sfzMat44InitElems(
+			1.0f, 2.0f, 3.0f, 0.0f,
+			4.0f, 5.0f, 6.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
+		SfzMat44 m4 = sfzMat44InitElems(
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
 
-		auto res1 = -m1;
+		SfzMat44 res1 = -m1;
 
-		ASSERT_TRUE(eqf(res1.at(0, 0), -1.0f));
-		ASSERT_TRUE(eqf(res1.at(0, 1), -2.0f));
-		ASSERT_TRUE(eqf(res1.at(1, 0), -3.0f));
-		ASSERT_TRUE(eqf(res1.at(1, 1), -4.0f));
+		CHECK(eqf(res1.at(0, 0), -1.0f));
+		CHECK(eqf(res1.at(0, 1), -2.0f));
+		CHECK(eqf(res1.at(1, 0), -3.0f));
+		CHECK(eqf(res1.at(1, 1), -4.0f));
 	}
 	// * (matrix)
-	{
-		mat22 m1(1.0f, 2.0f,
-			3.0f, 4.0f);
-		mat22 m2(0.0f, 1.0f,
-			0.0f, 0.0f);
-		f32 m3arr[] = { 1.0f, 2.0f, 3.0f,
-			4.0f, 5.0f, 6.0f };
-		Mat<2, 3> m3(m3arr);
-		f32 m4arr[] = { 1.0f, 0.0f,
-			0.0f, 1.0f,
-			0.0f, 0.0f };
-		Mat<3, 2> m4(m4arr);
+	/*{
+		mat44 m1(
+			1.0f, 2.0f, 0.0f, 0.0f,
+			3.0f, 4.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
+		mat44 m2(
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
+		mat44 m3(
+			1.0f, 2.0f, 3.0f, 0.0f,
+			4.0f, 5.0f, 6.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
+		mat44 m4(
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
 
 		auto res1 = m1*m2;
-		ASSERT_TRUE(eqf(res1.at(0, 0), 0.0f));
-		ASSERT_TRUE(eqf(res1.at(0, 1), 1.0f));
-		ASSERT_TRUE(eqf(res1.at(1, 0), 0.0f));
-		ASSERT_TRUE(eqf(res1.at(1, 1), 3.0f));
+		CHECK(eqf(res1.at(0, 0), 0.0f));
+		CHECK(eqf(res1.at(0, 1), 1.0f));
+		CHECK(eqf(res1.at(1, 0), 0.0f));
+		CHECK(eqf(res1.at(1, 1), 3.0f));
 
 		auto res2 = m2*m1;
-		ASSERT_TRUE(eqf(res2.at(0, 0), 3.0f));
-		ASSERT_TRUE(eqf(res2.at(0, 1), 4.0f));
-		ASSERT_TRUE(eqf(res2.at(1, 0), 0.0f));
-		ASSERT_TRUE(eqf(res2.at(1, 1), 0.0f));
+		CHECK(eqf(res2.at(0, 0), 3.0f));
+		CHECK(eqf(res2.at(0, 1), 4.0f));
+		CHECK(eqf(res2.at(1, 0), 0.0f));
+		CHECK(eqf(res2.at(1, 1), 0.0f));
 
 		auto res3 = m3*m4;
-		ASSERT_TRUE(eqf(res3.at(0, 0), 1.0f));
-		ASSERT_TRUE(eqf(res3.at(0, 1), 2.0f));
-		ASSERT_TRUE(eqf(res3.at(1, 0), 4.0f));
-		ASSERT_TRUE(eqf(res3.at(1, 1), 5.0f));
+		CHECK(eqf(res3.at(0, 0), 1.0f));
+		CHECK(eqf(res3.at(0, 1), 2.0f));
+		CHECK(eqf(res3.at(1, 0), 4.0f));
+		CHECK(eqf(res3.at(1, 1), 5.0f));
 	}
 	// * (vector)
 	{
@@ -1055,247 +618,142 @@ UTEST(Matrix, arithmetic_operators)
 		f32x2 v1(1.0f, -2.0f);
 
 		f32x2 res1 = m1 * v1;
-		ASSERT_TRUE(eqf(res1.x, -3.0f));
-		ASSERT_TRUE(eqf(res1.y, -5.0f));
+		CHECK(eqf(res1.x, -3.0f));
+		CHECK(eqf(res1.y, -5.0f));
 
 		f32x3 res2 = m4 * v1;
-		ASSERT_TRUE(eqf(res2.x, 1.0f));
-		ASSERT_TRUE(eqf(res2.y, -2.0f));
-		ASSERT_TRUE(eqf(res2.z, 0.0f));
+		CHECK(eqf(res2.x, 1.0f));
+		CHECK(eqf(res2.y, -2.0f));
+		CHECK(eqf(res2.z, 0.0f));
 
 		mat34 m5(1.0f, 2.0f, 3.0f, 4.0f,
 		         5.0f, 6.0f, 7.0f, 8.0f,
 		         9.0f, 10.0f, 11.0f, 12.0f);
-		ASSERT_TRUE(eqf(m5 * f32x4(1.0f), f32x3(10.0f, 26.0f, 42.0f)));
-	}
+		CHECK(eqf(m5 * f32x4(1.0f), f32x3(10.0f, 26.0f, 42.0f)));
+	}*/
 	// * (scalar)
 	{
-		mat22 m1(1.0f, 2.0f,
-			3.0f, 4.0f);
-		mat22 m2(0.0f, 1.0f,
-			0.0f, 0.0f);
-		f32 m3arr[] = { 1.0f, 2.0f, 3.0f,
-			4.0f, 5.0f, 6.0f };
-		Mat<2, 3> m3(m3arr);
-		f32 m4arr[] = { 1.0f, 0.0f,
-			0.0f, 1.0f,
-			0.0f, 0.0f };
-		Mat<3, 2> m4(m4arr);
+		SfzMat44 m1 = sfzMat44InitElems(
+			1.0f, 2.0f, 0.0f, 0.0f,
+			3.0f, 4.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
+		SfzMat44 m2 = sfzMat44InitElems(
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f);
 
-		auto res1 = m1 * 2.0f;
-		ASSERT_TRUE(eqf(res1.at(0, 0), 2.0f));
-		ASSERT_TRUE(eqf(res1.at(0, 1), 4.0f));
-		ASSERT_TRUE(eqf(res1.at(1, 0), 6.0f));
-		ASSERT_TRUE(eqf(res1.at(1, 1), 8.0f));
+		SfzMat44 res1 = m1 * 2.0f;
+		CHECK(eqf(res1.at(0, 0), 2.0f));
+		CHECK(eqf(res1.at(0, 1), 4.0f));
+		CHECK(eqf(res1.at(1, 0), 6.0f));
+		CHECK(eqf(res1.at(1, 1), 8.0f));
 
-		auto res2 = -1.0f * m2;
-		ASSERT_TRUE(eqf(res2.at(0, 0), 0.0f));
-		ASSERT_TRUE(eqf(res2.at(0, 1), -1.0f));
-		ASSERT_TRUE(eqf(res2.at(1, 0), 0.0f));
-		ASSERT_TRUE(eqf(res2.at(1, 1), 0.0f));
+		SfzMat44 res2 = -1.0f * m2;
+		CHECK(eqf(res2.at(0, 0), 0.0f));
+		CHECK(eqf(res2.at(0, 1), -1.0f));
+		CHECK(eqf(res2.at(1, 0), 0.0f));
+		CHECK(eqf(res2.at(1, 1), 0.0f));
 	}
 }
 
-UTEST(Matrix, comparison_operators)
+TEST_CASE("Matrix: transpose")
 {
-	mat22 m1(1.0f, 2.0f,
-	         3.0f, 4.0f);
-	mat22 m2(1.0f, 2.0f,
-	         3.0f, 4.0f);
-	mat22 m3(-2.0f, -1.0f,
-	         3.0f, 33.0f);
-
-	ASSERT_TRUE(m1 == m2);
-	ASSERT_TRUE(m2 == m1);
-	ASSERT_TRUE(!(m1 == m3));
-	ASSERT_TRUE(!(m3 == m1));
-	ASSERT_TRUE(!(m2 == m3));
-	ASSERT_TRUE(!(m3 == m2));
-
-	ASSERT_TRUE(m1 != m3);
-	ASSERT_TRUE(m3 != m1);
-	ASSERT_TRUE(m2 != m3);
-	ASSERT_TRUE(m3 != m2);
-	ASSERT_TRUE(!(m1 != m2));
-	ASSERT_TRUE(!(m2 != m1));
+	SfzMat44 m = sfzMat44InitElems(
+		1.0f, 2.0f, 3.0f, 4.0f,
+		5.0f, 6.0f, 7.0f, 8.0f,
+		9.0f, 10.0f, 11.0f, 12.0f,
+		13.0f, 14.0f, 15.0f, 16.0f);
+	SfzMat44 mTransp = sfzMat44Transpose(m);
+	CHECK(eqf(mTransp.rows[0], f32x4_init(1.0f, 5.0f, 9.0f, 13.0f)));
+	CHECK(eqf(mTransp.rows[1], f32x4_init(2.0f, 6.0f, 10.0f, 14.0f)));
+	CHECK(eqf(mTransp.rows[2], f32x4_init(3.0f, 7.0f, 11.0f, 15.0f)));
+	CHECK(eqf(mTransp.rows[3], f32x4_init(4.0f, 8.0f, 12.0f, 16.0f)));
 }
 
-UTEST(Matrix, element_wise_multiplication)
+TEST_CASE("Matrix: transforming_3d_vector")
 {
-	mat22 m(1.0f, 2.0f,
-		3.0f, 4.0f);
-	mat22 res = elemMult(m, m);
-
-	ASSERT_TRUE(eqf(res.at(0, 0), 1.0f));
-	ASSERT_TRUE(eqf(res.at(0, 1), 4.0f));
-	ASSERT_TRUE(eqf(res.at(1, 0), 9.0f));
-	ASSERT_TRUE(eqf(res.at(1, 1), 16.0f));
-}
-
-UTEST(Matrix, transpose)
-{
-	f32 arr[] ={1.0f, 2.0f, 3.0f,
-		4.0f, 5.0f, 6.0f};
-	Mat<2, 3> m1(arr);
-
-	Mat<3, 2> m2 = transpose(m1);
-	ASSERT_TRUE(eqf(m2.at(0, 0), 1.0f));
-	ASSERT_TRUE(eqf(m2.at(0, 1), 4.0f));
-	ASSERT_TRUE(eqf(m2.at(1, 0), 2.0f));
-	ASSERT_TRUE(eqf(m2.at(1, 1), 5.0f));
-	ASSERT_TRUE(eqf(m2.at(2, 0), 3.0f));
-	ASSERT_TRUE(eqf(m2.at(2, 1), 6.0f));
-
-	mat44 m3(1.0f, 2.0f, 3.0f, 4.0f,
-	         5.0f, 6.0f, 7.0f, 8.0f,
-	         9.0f, 10.0f, 11.0f, 12.0f,
-	         13.0f, 14.0f, 15.0f, 16.0f);
-	mat44 m3transp = transpose(m3);
-	ASSERT_TRUE(eqf(m3transp.row(0), f32x4(1.0f, 5.0f, 9.0f, 13.0f)));
-	ASSERT_TRUE(eqf(m3transp.row(1), f32x4(2.0f, 6.0f, 10.0f, 14.0f)));
-	ASSERT_TRUE(eqf(m3transp.row(2), f32x4(3.0f, 7.0f, 11.0f, 15.0f)));
-	ASSERT_TRUE(eqf(m3transp.row(3), f32x4(4.0f, 8.0f, 12.0f, 16.0f)));
-}
-
-UTEST(Matrix, transforming_3d_vector_with_3x4_and_4x4_matrix)
-{
-	// transformPoint() 3x4
-	{
-		mat34 m1(2.0f, 0.0f, 0.0f, 1.0f,
-			0.0f, 2.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 2.0f, 0.0f);
-		mat44 m2(2.0f, 0.0f, 0.0f, 1.0f,
-			0.0f, 2.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 2.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f);
-		f32x3 v(1.0f, 1.0f, 1.0f);
-
-		f32x3 v2 = transformPoint(m1, v);
-		ASSERT_TRUE(eqf(v2.x, 3.0f));
-		ASSERT_TRUE(eqf(v2.y, 2.0f));
-		ASSERT_TRUE(eqf(v2.z, 2.0f));
-	}
 	// transformPoint() 4x4
 	{
-		mat34 m1(2.0f, 0.0f, 0.0f, 1.0f,
-			0.0f, 2.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 2.0f, 0.0f);
-		mat44 m2(2.0f, 0.0f, 0.0f, 1.0f,
+		SfzMat44 m = sfzMat44InitElems(
+			2.0f, 0.0f, 0.0f, 1.0f,
 			0.0f, 2.0f, 0.0f, 0.0f,
 			0.0f, 0.0f, 2.0f, 0.0f,
 			0.0f, 0.0f, 0.0f, 1.0f);
-		f32x3 v(1.0f, 1.0f, 1.0f);
-
-		f32x3 v2 = transformPoint(m2, v);
-		ASSERT_TRUE(eqf(v2.x, 3.0f));
-		ASSERT_TRUE(eqf(v2.y, 2.0f));
-		ASSERT_TRUE(eqf(v2.z, 2.0f));
+		f32x3 v = f32x3_init(1.0f, 1.0f, 1.0f);
+		f32x3 v2 = sfzMat44TransformPoint(m, v);
+		CHECK(eqf(v2.x, 3.0f));
+		CHECK(eqf(v2.y, 2.0f));
+		CHECK(eqf(v2.z, 2.0f));
 	}
-	// transformDir() 3x4
-	{
-		mat34 m1(2.0f, 0.0f, 0.0f, 1.0f,
-			0.0f, 2.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 2.0f, 0.0f);
-		mat44 m2(2.0f, 0.0f, 0.0f, 1.0f,
-			0.0f, 2.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 2.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f);
-		f32x3 v(1.0f, 1.0f, 1.0f);
 
-		f32x3 v2 = transformDir(m1, v);
-		ASSERT_TRUE(eqf(v2.x, 2.0f));
-		ASSERT_TRUE(eqf(v2.y, 2.0f));
-		ASSERT_TRUE(eqf(v2.z, 2.0f));
-	}
 	// transformDir() 4x4
 	{
-		mat34 m1(2.0f, 0.0f, 0.0f, 1.0f,
-			0.0f, 2.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 2.0f, 0.0f);
-		mat44 m2(2.0f, 0.0f, 0.0f, 1.0f,
+		SfzMat44 m = sfzMat44InitElems(
+			2.0f, 0.0f, 0.0f, 1.0f,
 			0.0f, 2.0f, 0.0f, 0.0f,
 			0.0f, 0.0f, 2.0f, 0.0f,
 			0.0f, 0.0f, 0.0f, 1.0f);
-		f32x3 v(1.0f, 1.0f, 1.0f);
+		f32x3 v = f32x3_init(1.0f, 1.0f, 1.0f);
 
-		f32x3 v2 = transformDir(m2, v);
-		ASSERT_TRUE(eqf(v2.x, 2.0f));
-		ASSERT_TRUE(eqf(v2.y, 2.0f));
-		ASSERT_TRUE(eqf(v2.z, 2.0f));
+		f32x3 v2 = sfzMat44TransformDir(m, v);
+		CHECK(eqf(v2.x, 2.0f));
+		CHECK(eqf(v2.y, 2.0f));
+		CHECK(eqf(v2.z, 2.0f));
 	}
 }
 
-UTEST(Matrix, determinants)
+TEST_CASE("Matrix: determinants")
 {
-	mat22 m1(1.0f, 2.0f,
-	         3.0f, 4.0f);
-	ASSERT_TRUE(eqf(determinant(m1), -2.0f));
+	SfzMat33 m2 = sfzMat33InitElems(
+		-1.0f, 1.0f, 0.0f,
+		3.0f, 5.0f, 1.0f,
+		7.0f, 8.0f, 9.0f);
+	CHECK(eqf(sfzMat33Determinant(m2), -57.0f));
 
-	mat33 m2(-1.0f, 1.0f, 0.0f,
-	         3.0f, 5.0f, 1.0f,
-	         7.0f, 8.0f, 9.0f);
-	ASSERT_TRUE(eqf(determinant(m2), -57.0f));
+	SfzMat33 m3 = sfzMat33InitElems(
+		99.0f, -2.0f, 5.0f,
+		8.0f, -4.0f, -1.0f,
+		6.0f, 1.0f, -88.0f);
+	CHECK(eqf(sfzMat33Determinant(m3), 33711.0f));
 
-	mat33 m3(99.0f, -2.0f, 5.0f,
-	         8.0f, -4.0f, -1.0f,
-	         6.0f, 1.0f, -88.0f);
-	ASSERT_TRUE(eqf(determinant(m3), 33711.0f));
-
-	mat44 m4(1.0f, -2.0f, 1.0f, 3.0f,
-	         1.0f, 4.0f, -5.0f, 0.0f,
-	         -10.0f, 0.0f, 4.0f, 2.0f,
-	         -1.0f, 0.0f, 2.0f, 0.0f);
-	ASSERT_TRUE(eqf(determinant(m4), -204.0f));
+	SfzMat44 m4 = sfzMat44InitElems(
+		1.0f, -2.0f, 1.0f, 3.0f,
+		1.0f, 4.0f, -5.0f, 0.0f,
+		-10.0f, 0.0f, 4.0f, 2.0f,
+		-1.0f, 0.0f, 2.0f, 0.0f);
+	CHECK(eqf(sfzMat44Determinant(m4), -204.0f));
 }
 
-UTEST(Matrix, inverse)
+TEST_CASE("Matrix: inverse")
 {
-	mat22 m1(1.0f, 1.0f,
-	         1.0f, 2.0f);
-	mat22 m1Inv(2.0f, -1.0f,
-	            -1.0f, 1.0f);
-	mat22 m1CalcInv = inverse(m1);
-	ASSERT_TRUE(eqf(m1CalcInv.row(0), m1Inv.row(0)));
-	ASSERT_TRUE(eqf(m1CalcInv.row(1), m1Inv.row(1)));
+	SfzMat33 m3 = sfzMat33InitElems(
+		1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 2.0f,
+		1.0f, 2.0f, 3.0f);
+	SfzMat33 m3Inv = sfzMat33InitElems(
+		1.0f, 1.0f, -1.0f,
+		1.0f, -2.0f, 1.0f,
+		-1.0f, 1.0f, 0.0f);
+	SfzMat33 m3CalcInv = sfzMat33Inverse(m3);
+	CHECK(eqf(m3CalcInv.rows[0], m3Inv.rows[0]));
+	CHECK(eqf(m3CalcInv.rows[1], m3Inv.rows[1]));
+	CHECK(eqf(m3CalcInv.rows[2], m3Inv.rows[2]));
 
-	mat33 m3(1.0f, 1.0f, 1.0f,
-	         1.0f, 1.0f, 2.0f,
-	         1.0f, 2.0f, 3.0f);
-	mat33 m3Inv(1.0f, 1.0f, -1.0f,
-	            1.0f, -2.0f, 1.0f,
-	            -1.0f, 1.0f, 0.0f);
-	mat33 m3CalcInv = inverse(m3);
-	ASSERT_TRUE(eqf(m3CalcInv.row(0), m3Inv.row(0)));
-	ASSERT_TRUE(eqf(m3CalcInv.row(1), m3Inv.row(1)));
-	ASSERT_TRUE(eqf(m3CalcInv.row(2), m3Inv.row(2)));
-
-	mat44 m5(1.0f, 1.0f, 1.0f, 1.0f,
-	         1.0f, 1.0f, 2.0f, 3.0f,
-	         1.0f, 2.0f, 3.0f, 4.0f,
-	         1.0f, 2.0f, 2.0f, 1.0f);
-	mat44 m5Inv(1.0f, 1.0f, -1.0f, 0.0f,
-	            2.0f, -3.0f, 2.0f, -1.0f,
-	            -3.0f, 3.0f, -2.0f, 2.0f,
-	            1.0f, -1.0f, 1.0f, -1.0f);
-	mat44 m5CalcInv = inverse(m5);
-	ASSERT_TRUE(eqf(m5CalcInv.row(0), m5Inv.row(0)));
-	ASSERT_TRUE(eqf(m5CalcInv.row(1), m5Inv.row(1)));
-	ASSERT_TRUE(eqf(m5CalcInv.row(2), m5Inv.row(2)));
-	ASSERT_TRUE(eqf(m5CalcInv.row(3), m5Inv.row(3)));
-}
-
-UTEST(Matrix, matrix_is_proper_pod)
-{
-	ASSERT_TRUE(std::is_trivially_default_constructible<sfz::mat4>::value);
-	ASSERT_TRUE(std::is_trivially_copyable<sfz::mat4>::value);
-	ASSERT_TRUE(std::is_trivial<sfz::mat4>::value);
-	ASSERT_TRUE(std::is_standard_layout<sfz::mat4>::value);
-	ASSERT_TRUE(std::is_pod<sfz::mat4>::value);
-}
-
-UTEST(Matrix, matrix_to_string)
-{
-	mat4 m1{{1.0f, 2.0f, 3.0f, 4.0f}, {5.0f, 6.0f, 7.0f, 8.0f}, {9.0f, 10.0f, 11.0f, 12.0f}, {13.0f, 14.0f, 15.0f, 16.0f}};
-	auto mStr1 = toString(m1, false, 1);
-	ASSERT_TRUE(mStr1 == "[[1.0, 2.0, 3.0, 4.0], [5.0, 6.0, 7.0, 8.0], [9.0, 10.0, 11.0, 12.0], [13.0, 14.0, 15.0, 16.0]]");
+	SfzMat44 m5 = sfzMat44InitElems(
+		1.0f, 1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 2.0f, 3.0f,
+		1.0f, 2.0f, 3.0f, 4.0f,
+		1.0f, 2.0f, 2.0f, 1.0f);
+	SfzMat44 m5Inv = sfzMat44InitElems(
+		1.0f, 1.0f, -1.0f, 0.0f,
+		2.0f, -3.0f, 2.0f, -1.0f,
+		-3.0f, 3.0f, -2.0f, 2.0f,
+		1.0f, -1.0f, 1.0f, -1.0f);
+	SfzMat44 m5CalcInv = sfzMat44Inverse(m5);
+	CHECK(eqf(m5CalcInv.rows[0], m5Inv.rows[0]));
+	CHECK(eqf(m5CalcInv.rows[1], m5Inv.rows[1]));
+	CHECK(eqf(m5CalcInv.rows[2], m5Inv.rows[2]));
+	CHECK(eqf(m5CalcInv.rows[3], m5Inv.rows[3]));
 }

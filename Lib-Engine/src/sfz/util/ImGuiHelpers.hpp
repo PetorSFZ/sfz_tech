@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_strings.hpp>
 
 #include <imgui.h>
@@ -33,7 +33,7 @@ inline void alignedEdit(const char* name, f32 xOffset, Func editor)
 {
 	ImGui::Text("%s", name);
 	ImGui::SameLine(xOffset);
-	editor(str96("##%s_invisible", name).str());
+	editor(sfzStr96InitFmt("##%s_invisible", name).str);
 }
 
 template<typename Fun>
@@ -41,7 +41,7 @@ static void alignedEdit(const char* name, const char* unique, u32 idx, f32 xOffs
 {
 	ImGui::Text("%s:", name);
 	ImGui::SameLine(xOffset);
-	editor(str256("##%u_%s_%s", idx, name, unique).str());
+	editor(sfzStr320InitFmt("##%u_%s_%s", idx, name, unique).str);
 }
 
 // Filtered text helpers
@@ -60,11 +60,11 @@ inline void imguiRenderFilteredText(
 	f32x4 stringColor,
 	f32x4 filterColor)
 {
-	str320 lowerStackStr("%s", str);
-	lowerStackStr.toLower();
+	SfzStr320 lowerStackStr = sfzStr320InitFmt("%s", str);
+	sfzStr320ToLower(&lowerStackStr);
 
 	const char* currStr = str;
-	const char* currLowerStr = lowerStackStr.str();
+	const char* currLowerStr = lowerStackStr.str;
 	const size_t filterLen = strlen(filter);
 
 	if (filterLen == 0) {

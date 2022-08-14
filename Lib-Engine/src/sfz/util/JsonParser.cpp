@@ -20,10 +20,7 @@
 #include "sfz/util/JsonParser.hpp"
 
 #include <algorithm>
-#include <cstring>
 #include <type_traits>
-
-#include <skipifzero_new.hpp>
 
 #include <sfz/PushWarnings.hpp>
 #define SAJSON_NO_STD_STRING
@@ -121,8 +118,8 @@ JsonNode JsonNode::copy() const noexcept
 
 void JsonNode::swap(JsonNode& other) noexcept
 {
-	sfz::memswp(this->mImpl, other.mImpl, sizeof(mImpl));
-	sfz::swap(this->mActive, other.mActive);
+	sfz_memswp(this->mImpl, other.mImpl, sizeof(mImpl));
+	sfzSwap(this->mActive, other.mActive);
 }
 
 void JsonNode::destroy() noexcept
@@ -298,7 +295,7 @@ bool JsonNode::value(char* strOut, u32 strCapacity) const noexcept
 	if (strLen >= strCapacity) return false; // >= so we guarantee space for null-terminator
 
 	// Copy out string
-	std::memcpy(strOut, value.as_cstring(), strLen);
+	memcpy(strOut, value.as_cstring(), strLen);
 	strOut[strLen] = '\0'; // Ensure string is null-terminated
 	return true;
 }
@@ -348,45 +345,24 @@ JsonNodeValue<double> JsonNode::valueDouble() const noexcept
 	return tmp;
 }
 
-JsonNodeValue<str32> JsonNode::valueStr32() const noexcept
+JsonNodeValue<SfzStr32> JsonNode::valueSfzStr32() const noexcept
 {
-	JsonNodeValue<str32> tmp;
-	tmp.exists = this->value(tmp.value.mRawStr, tmp.value.capacity());
+	JsonNodeValue<SfzStr32> tmp;
+	tmp.exists = this->value(tmp.value.str, sfzStr32ToView(&tmp.value).capacity);
 	return tmp;
 }
 
-JsonNodeValue<str64> JsonNode::valueStr64() const noexcept
+JsonNodeValue<SfzStr96> JsonNode::valueSfzStr96() const noexcept
 {
-	JsonNodeValue<str64> tmp;
-	tmp.exists = this->value(tmp.value.mRawStr, tmp.value.capacity());
+	JsonNodeValue<SfzStr96> tmp;
+	tmp.exists = this->value(tmp.value.str, sfzStr96ToView(&tmp.value).capacity);
 	return tmp;
 }
 
-JsonNodeValue<str96> JsonNode::valueStr96() const noexcept
+JsonNodeValue<SfzStr320> JsonNode::valueSfzStr320() const noexcept
 {
-	JsonNodeValue<str96> tmp;
-	tmp.exists = this->value(tmp.value.mRawStr, tmp.value.capacity());
-	return tmp;
-}
-
-JsonNodeValue<str128> JsonNode::valueStr128() const noexcept
-{
-	JsonNodeValue<str128> tmp;
-	tmp.exists = this->value(tmp.value.mRawStr, tmp.value.capacity());
-	return tmp;
-}
-
-JsonNodeValue<str256> JsonNode::valueStr256() const noexcept
-{
-	JsonNodeValue<str256> tmp;
-	tmp.exists = this->value(tmp.value.mRawStr, tmp.value.capacity());
-	return tmp;
-}
-
-JsonNodeValue<str320> JsonNode::valueStr320() const noexcept
-{
-	JsonNodeValue<str320> tmp;
-	tmp.exists = this->value(tmp.value.mRawStr, tmp.value.capacity());
+	JsonNodeValue<SfzStr320> tmp;
+	tmp.exists = this->value(tmp.value.str, sfzStr320ToView(&tmp.value).capacity);
 	return tmp;
 }
 
@@ -472,7 +448,7 @@ ParsedJson ParsedJson::parseString(
 ParsedJson ParsedJson::parseFile(
 	const char* jsonPath, SfzAllocator* allocator, bool allowCppComments) noexcept
 {
-	sfz::Array<char> jsonString = sfz::readTextFile(jsonPath, allocator);
+	SfzArray<char> jsonString = sfz::readTextFile(jsonPath, allocator);
 	if (jsonString.size() == 0) {
 		SFZ_LOG_ERROR("Failed to load JSON file at: %s", jsonPath);
 		return ParsedJson();
@@ -485,7 +461,7 @@ ParsedJson ParsedJson::parseFile(
 
 void ParsedJson::swap(ParsedJson& other) noexcept
 {
-	sfz::swap(this->mImpl, other.mImpl);
+	sfzSwap(this->mImpl, other.mImpl);
 }
 
 void ParsedJson::destroy() noexcept

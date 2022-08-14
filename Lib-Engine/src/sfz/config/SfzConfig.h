@@ -31,26 +31,26 @@ struct SfzSetting;
 // Config
 // ------------------------------------------------------------------------------------------------
 
-SFZ_EXTERN_C SfzConfig* sfzCfgCreate(const char* basePath, const char* fileName, SfzAllocator* allocator);
-SFZ_EXTERN_C void sfzCfgDestroy(SfzConfig* cfg);
+sfz_extern_c SfzConfig* sfzCfgCreate(const char* basePath, const char* fileName, SfzAllocator* allocator);
+sfz_extern_c void sfzCfgDestroy(SfzConfig* cfg);
 
 // Getters
 // ------------------------------------------------------------------------------------------------
 
-SFZ_EXTERN_C SfzGlobalConfig* sfzCfgGetLegacyConfig(SfzConfig* cfg);
-SFZ_EXTERN_C const SfzGlobalConfig* sfzCfgGetLegacyConfigConst(const SfzConfig* cfg);
+sfz_extern_c SfzGlobalConfig* sfzCfgGetLegacyConfig(SfzConfig* cfg);
+sfz_extern_c const SfzGlobalConfig* sfzCfgGetLegacyConfigConst(const SfzConfig* cfg);
 
-SFZ_EXTERN_C SfzSetting* sfzCfgGetSetting(SfzConfig* cfg, const char* name);
-SFZ_EXTERN_C const SfzSetting* sfzCfgGetSettingConst(const SfzConfig* cfg, const char* name);
+sfz_extern_c SfzSetting* sfzCfgGetSetting(SfzConfig* cfg, const char* name);
+sfz_extern_c const SfzSetting* sfzCfgGetSettingConst(const SfzConfig* cfg, const char* name);
 
-SFZ_EXTERN_C i32 sfzCfgGetI32(const SfzConfig* cfg, const char* name);
-SFZ_EXTERN_C f32 sfzCfgGetF32(const SfzConfig* cfg, const char* name);
-SFZ_EXTERN_C bool sfzCfgGetBool(const SfzConfig* cfg, const char* name);
+sfz_extern_c i32 sfzCfgGetI32(const SfzConfig* cfg, const char* name);
+sfz_extern_c f32 sfzCfgGetF32(const SfzConfig* cfg, const char* name);
+sfz_extern_c bool sfzCfgGetBool(const SfzConfig* cfg, const char* name);
 
 // Sanitizers
 // ------------------------------------------------------------------------------------------------
 
-SFZ_EXTERN_C i32 sfzCfgSanitizeI32(
+sfz_extern_c i32 sfzCfgSanitizeI32(
 	SfzConfig* cfg,
 	const char* name,
 	bool writeToFile,
@@ -59,7 +59,7 @@ SFZ_EXTERN_C i32 sfzCfgSanitizeI32(
 	i32 maxVal,
 	i32 step);
 
-SFZ_EXTERN_C f32 sfzCfgSanitizeF32(
+sfz_extern_c f32 sfzCfgSanitizeF32(
 	SfzConfig* cfg,
 	const char* name,
 	bool writeToFile,
@@ -67,7 +67,7 @@ SFZ_EXTERN_C f32 sfzCfgSanitizeF32(
 	f32 minVal,
 	f32 maxVal);
 
-SFZ_EXTERN_C bool sfzCfgSanitizeBool(
+sfz_extern_c bool sfzCfgSanitizeBool(
 	SfzConfig* cfg,
 	const char* name,
 	bool writeToFile,
@@ -76,7 +76,7 @@ SFZ_EXTERN_C bool sfzCfgSanitizeBool(
 // Setters
 // ------------------------------------------------------------------------------------------------
 
-SFZ_EXTERN_C void sfzCfgSetI32(SfzConfig* cfg, const char* name, i32 val);
-SFZ_EXTERN_C void sfzCfgSetF32(SfzConfig* cfg, const char* name, f32 val);
-SFZ_EXTERN_C void sfzCfgSetBool(SfzConfig* cfg, const char* name, bool val);
-SFZ_EXTERN_C void sfzCfgToggleBool(SfzConfig* cfg, const char* name);
+sfz_extern_c void sfzCfgSetI32(SfzConfig* cfg, const char* name, i32 val);
+sfz_extern_c void sfzCfgSetF32(SfzConfig* cfg, const char* name, f32 val);
+sfz_extern_c void sfzCfgSetBool(SfzConfig* cfg, const char* name, bool val);
+sfz_extern_c void sfzCfgToggleBool(SfzConfig* cfg, const char* name);

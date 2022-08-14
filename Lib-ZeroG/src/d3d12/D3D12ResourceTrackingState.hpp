@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_hash_maps.hpp>
 
@@ -84,16 +84,7 @@ struct TextureMip {
 	bool operator!= (TextureMip other) const { return !(*this == other); }
 };
 
-namespace sfz {
-	inline u64 hash(const TextureMip& val)
-	{
-		// hash_combine algorithm from boost
-		u64 hash = 0;
-		hash ^= sfz::hash(val.tex) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-		hash ^= sfz::hash(val.mipLevel) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-		return hash;
-	}
-}
+inline u64 sfzHash(const TextureMip& val) { return sfzHashCombine(sfzHash(val.tex), sfzHash(val.mipLevel)); }
 
 struct ZgTrackerCommandListState final {
 	SFZ_DECLARE_DROP_TYPE(ZgTrackerCommandListState);
@@ -110,6 +101,6 @@ struct ZgTrackerCommandListState final {
 		this->pendingTextureMips.destroy();
 	}
 
-	sfz::HashMap<ZgBuffer*, PendingBufferState> pendingBuffers;
-	sfz::HashMap<TextureMip, PendingTextureState> pendingTextureMips;
+	SfzHashMap<ZgBuffer*, PendingBufferState> pendingBuffers;
+	SfzHashMap<TextureMip, PendingTextureState> pendingTextureMips;
 };

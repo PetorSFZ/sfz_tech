@@ -82,12 +82,10 @@ static void sfz_free_wrapper(void* ptr)
 
 namespace sfz {
 
-using sfz::str320;
-
 // Static helper functions
 // ------------------------------------------------------------------------------------------------
 
-static void padRgb(Array<u8>& dst, const u8* src, i32 w, i32 h) noexcept
+static void padRgb(SfzArray<u8>& dst, const u8* src, i32 w, i32 h) noexcept
 {
 	const i32 srcPitch = w * 3;
 	const i32 dstPitch = w * 4;
@@ -114,7 +112,7 @@ static void padRgbFloat(f32x4* dstImg, const f32x3* srcImg, i32 w, i32 h) noexce
 		f32x4* dstRow = dstImg + w * y;
 		const f32x3* srcRow = srcImg + w * y;
 		for (i32 x = 0; x < w; x++) {
-			dstRow[x] = f32x4(srcRow[x], 1.0f);
+			dstRow[x] = f32x4_init3(srcRow[x], 1.0f);
 		}
 	}
 }
@@ -142,8 +140,7 @@ Image Image::allocate(i32 width, i32 height, SfzImageType type, SfzAllocator* al
 {
 	Image image;
 	image.type = type;
-	image.width = width;
-	image.height = height;
+	image.res = i32x2_init(width, height);
 	image.bytesPerPixel = sizeOfElement(type);
 	image.rawData.init(width * height * image.bytesPerPixel, allocator, sfz_dbg(""));
 	image.rawData.hackSetSize(image.rawData.capacity());
@@ -169,32 +166,32 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 	}
 
 	// Concatenate path
-	str320 path("%s%s", basePath, fileName);
+	SfzStr320 path = sfzStr320InitFmt("%s%s", basePath, fileName);
 
 	// Load image
-	const bool isHDR = path.endsWith(".hdr");
+	const bool isHDR = sfzStr320EndsWith(&path, ".hdr");
 	int width = 0, height = 0, numChannels = 0;
 	int channelSize = 0;
 	u8* img = nullptr;
 	if (isHDR) {
-		f32* floatImg = stbi_loadf(path, &width, &height, &numChannels, 0);
+		f32* floatImg = stbi_loadf(path.str, &width, &height, &numChannels, 0);
 		img = reinterpret_cast<u8*>(floatImg);
 		channelSize = sizeof(f32);
 	}
 	else {
-		img = stbi_load(path, &width, &height, &numChannels, 0);
+		img = stbi_load(path.str, &width, &height, &numChannels, 0);
 		channelSize = sizeof(u8);
 	}
 
 	// Error checking
 	if (img == nullptr) {
 		SFZ_LOG_WARNING("Unable to load image \"%s\", reason: %s",
-			path.str(), stbi_failure_reason());
+			path.str, stbi_failure_reason());
 		return Image();
 	}
 	if (numChannels != 1 && numChannels != 2 && numChannels != 3 && numChannels != 4) {
 		SFZ_LOG_WARNING("Image \"%s\" has unsupported number of channels: %i",
-			path.str(), numChannels);
+			path.str, numChannels);
 		stbi_image_free(img);
 		return Image();
 	}
@@ -203,8 +200,7 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 	const u32 numBytes = u32(width * height * numChannels * channelSize);
 	Image tmp;
 	tmp.rawData.init(numBytes, staticAllocator, sfz_dbg(""));
-	tmp.width = width;
-	tmp.height = height;
+	tmp.res = i32x2_init(width, height);
 	tmp.bytesPerPixel = numChannels * channelSize;
 	if (isHDR) {
 		sfz_assert_hard(numChannels == 3);
@@ -242,7 +238,7 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 	}
 
 	// Free temp memory used by stb_image and return image
-	SFZ_LOG_NOISE("Image \"%s\" loaded succesfully", path.str());
+	SFZ_LOG_NOISE("Image \"%s\" loaded succesfully", path.str);
 	stbi_image_free(img);
 	return tmp;
 }
@@ -250,14 +246,14 @@ Image loadImage(const char* basePath, const char* fileName) noexcept
 void flipVertically(Image& image, SfzAllocator* allocator) noexcept
 {
 	sfz_assert(image.rawData.data() != nullptr);
-	sfz_assert((image.height % 2) == 0);
+	sfz_assert((image.res.y % 2) == 0);
 
-	i32 pitch = image.width * image.bytesPerPixel;
+	i32 pitch = image.res.x * image.bytesPerPixel;
 	u8* buffer = (u8*)allocator->alloc(sfz_dbg(""), u64(pitch), 32);
 
-	for (i32 i = 0; i < (image.height / 2); i++) {
+	for (i32 i = 0; i < (image.res.y / 2); i++) {
 		u8* begin = image.rawData.data() + i * pitch;
-		u8* end = image.rawData.data() + (image.height - i - 1) * pitch;
+		u8* end = image.rawData.data() + (image.res.y - i - 1) * pitch;
 
 		memcpy(buffer, begin, pitch);
 		memcpy(begin, end, pitch);
@@ -270,11 +266,11 @@ void flipVertically(Image& image, SfzAllocator* allocator) noexcept
 bool saveImagePng(const Image& image, const char* path) noexcept
 {
 	sfz_assert(image.rawData.data() != nullptr);
-	sfz_assert(image.width > 0);
-	sfz_assert(image.height > 0);
+	sfz_assert(image.res.x > 0);
+	sfz_assert(image.res.y > 0);
 
 	int res = stbi_write_png(
-		path, image.width, image.height, image.bytesPerPixel, image.rawData.data(), 0);
+		path, image.res.x, image.res.y, image.bytesPerPixel, image.rawData.data(), 0);
 
 	return res != 0;
 }

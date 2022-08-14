@@ -18,6 +18,8 @@
 
 #include "ZeroUI_Drawing.hpp"
 
+#include <stdio.h>
+
 #include "ZeroUI_Internal.hpp"
 
 #include <skipifzero_arrays.hpp>
@@ -93,31 +95,31 @@ static bool zuiDecodeUTF8(u32* state, u32* codep, u32 byte)
 static_assert(sizeof(stbtt_pack_context) == stbtt_pack_context_size, "");
 static_assert(sizeof(stbtt_packedchar) == stbtt_packedchar_size, "");
 
-static sfz::Array<u8> zuiReadBinaryFile(const char* path, SfzAllocator* allocator)
+static SfzArray<u8> zuiReadBinaryFile(const char* path, SfzAllocator* allocator)
 {
 	// Open file
 	FILE* file = fopen(path, "rb");
-	if (file == NULL) return sfz::Array<u8>();
+	if (file == NULL) return SfzArray<u8>();
 
 	// Get size of file
 	fseek(file, 0, SEEK_END);
 	i64 size = ftell(file);
 	if (size <= 0) {
 		fclose(file);
-		return sfz::Array<u8>();
+		return SfzArray<u8>();
 	}
 	fseek(file, 0, SEEK_SET);
 
 	// Allocate memory for file
-	sfz::Array<u8> data;
+	SfzArray<u8> data;
 	data.init(u32(size), allocator, sfz_dbg(""));
 	data.hackSetSize(u32(size));
 
 	// Read file
-	size_t bytesRead = std::fread(data.data(), 1, data.size(), file);
+	size_t bytesRead = fread(data.data(), 1, data.size(), file);
 	if (bytesRead != size_t(size)) {
 		fclose(file);
-		return sfz::Array<u8>();
+		return SfzArray<u8>();
 	}
 
 	// Close file and return data
@@ -166,7 +168,11 @@ bool zuiInternalDrawCtxInit(ZuiDrawCtx* drawCtx, const ZuiCfg* cfg, SfzAllocator
 	// Initialize render data
 	drawCtx->vertices.init(8192, allocator, sfz_dbg("ZeroUI::vertices"));
 	drawCtx->indices.init(8192, allocator, sfz_dbg("ZeroUI::indices"));
+	drawCtx->transforms.init(512, allocator, sfz_dbg("ZeroUI::transforms"));
 	drawCtx->renderCmds.init(512, allocator, sfz_dbg("ZeroUI::renderCmds"));
+
+	// Initialize clip stack
+	drawCtx->clipStack.init(128, allocator, sfz_dbg("ZeroUI::clipStack"));
 
 	// Allocate memory for font image
 	drawCtx->fontImgRes = ZUI_FONT_TEX_RES;
@@ -211,7 +217,7 @@ bool zuiInternalDrawAddFont(
 	if (drawCtx->fonts.get(id.id) != nullptr) return false;
 
 	// Read .ttf file, exit out on failure
-	sfz::Array<u8> ttfData = zuiReadBinaryFile(ttfPath, allocator);
+	SfzArray<u8> ttfData = zuiReadBinaryFile(ttfPath, allocator);
 	if (ttfData.isEmpty()) return false;
 
 	// Load font from file
@@ -248,13 +254,13 @@ bool zuiInternalDrawAddFont(
 
 void zuiDrawAddCommand(
 	ZuiDrawCtx* drawCtx,
-	const SfzMat34& transform,
+	const SfzMat44& transform,
 	const ZuiVertex* vertices,
 	u32 numVertices,
 	const u32* indices,
 	u32 numIndices,
-	u64 imageHandle,
-	ZuiCmdType cmdType)
+	ZuiCmdType cmdType,
+	u64 imageHandle)
 {
 	// Add vertices and indices
 	const u32 startIndex = drawCtx->indices.size();
@@ -262,22 +268,28 @@ void zuiDrawAddCommand(
 	drawCtx->vertices.add(vertices, numVertices);
 	for (u32 i = 0; i < numIndices; i++) {
 		u32 idx = startVertex + indices[i];
-		sfz_assert(idx < UINT16_MAX);
-		drawCtx->indices.add(uint16_t(idx));
+		sfz_assert(idx < U16_MAX);
+		drawCtx->indices.add(u16(idx));
 	}
+
+	// Setup transform
+	const u32 transformIdx = drawCtx->transforms.size();
+	drawCtx->transforms.add(transform);
 
 	// Create command
 	ZuiRenderCmd& cmd = drawCtx->renderCmds.add();
+	cmd = {};
+	cmd.cmdType = cmdType;
+	cmd.transformIdx = transformIdx;
 	cmd.startIndex = startIndex;
 	cmd.numIndices = numIndices;
-	cmd.transform = transform;
+	cmd.clip = drawCtx->clipStack.last();
 	cmd.imageHandle = imageHandle;
-	cmd.cmdType = cmdType;
 }
 
 f32 zuiDrawTextCentered(
 	ZuiDrawCtx* drawCtx,
-	const SfzMat34& transform,
+	const SfzMat44& transform,
 	ZuiID fontID,
 	f32 size,
 	f32x4 color,
@@ -293,7 +305,7 @@ f32 zuiDrawTextCentered(
 		// Iterate over codepoints in string
 		u32 state = 0;
 		u32 codepoint = 0;
-		f32x2 p = f32x2(0.0f);
+		f32x2 p = f32x2_splat(0.0f);
 		for (const char* textItr = text; *textItr; textItr++) {
 			const u8 byte = *textItr;
 			if (zuiDecodeUTF8(&state, &codepoint, byte)) continue;
@@ -302,21 +314,29 @@ f32 zuiDrawTextCentered(
 		stringLen = p.x;
 	}
 
-	// Setup initial render command, including transform
+	// Setup initial transform
+	const u32 transformIdx = drawCtx->transforms.size();
+	{
+		SfzMat44& xform = drawCtx->transforms.add();
+		xform =
+			transform *
+			sfzMat44Scaling3(f32x3_splat(scale)) *
+			sfzMat44Translation3(f32x3_init(-stringLen * 0.5f, -fontInfo->atlasSize * 0.3f, 0.0f));
+	}
+
+	// Setup initial render command
 	ZuiRenderCmd& cmd = drawCtx->renderCmds.add();
 	cmd = {};
-	cmd.transform = sfz::mat34(
-		sfz::mat44(transform) *
-		sfz::mat44::scaling3(scale) *
-		sfz::mat44::translation3(f32x3(-stringLen * 0.5f, -fontInfo->atlasSize * 0.3f, 0.0f)));
 	cmd.cmdType = ZUI_CMD_FONT_ATLAS;
-	cmd.imageHandle = drawCtx->userFontTexHandle;
+	cmd.transformIdx = transformIdx;
 	cmd.startIndex = drawCtx->indices.size();
+	cmd.clip = drawCtx->clipStack.last();
+	cmd.imageHandle = drawCtx->userFontTexHandle;
 
 	// Iterate over codepoints in string
 	u32 state = 0;
 	u32 codepoint = 0;
-	f32x2 p = f32x2(0.0f);
+	f32x2 p = f32x2_splat(0.0f);
 	for (const char* textItr = text; *textItr; textItr++) {
 		const u8 byte = *textItr;
 		if (zuiDecodeUTF8(&state, &codepoint, byte)) continue;
@@ -326,32 +346,32 @@ f32 zuiDrawTextCentered(
 		{
 			// Bottom left
 			ZuiVertex& v = drawCtx->vertices.add();
-			v.pos = f32x2(quad.x0, -quad.y1);
-			v.texcoord = f32x2(quad.s0, quad.t1);
+			v.pos = f32x2_init(quad.x0, -quad.y1);
+			v.texcoord = f32x2_init(quad.s0, quad.t1);
 			v.color = color.xyz();
 			v.alpha = color.w;
 		}
 		{
 			// Bottom right
 			ZuiVertex& v = drawCtx->vertices.add();
-			v.pos = f32x2(quad.x1, -quad.y1);
-			v.texcoord = f32x2(quad.s1, quad.t1);
+			v.pos = f32x2_init(quad.x1, -quad.y1);
+			v.texcoord = f32x2_init(quad.s1, quad.t1);
 			v.color = color.xyz();
 			v.alpha = color.w;
 		}
 		{
 			// Top left
 			ZuiVertex& v = drawCtx->vertices.add();
-			v.pos = f32x2(quad.x0, -quad.y0);
-			v.texcoord = f32x2(quad.s0, quad.t0);
+			v.pos = f32x2_init(quad.x0, -quad.y0);
+			v.texcoord = f32x2_init(quad.s0, quad.t0);
 			v.color = color.xyz();
 			v.alpha = color.w;
 		}
 		{
 			// Top right
 			ZuiVertex& v = drawCtx->vertices.add();
-			v.pos = f32x2(quad.x1, -quad.y0);
-			v.texcoord = f32x2(quad.s1, quad.t0);
+			v.pos = f32x2_init(quad.x1, -quad.y0);
+			v.texcoord = f32x2_init(quad.s1, quad.t0);
 			v.color = color.xyz();
 			v.alpha = color.w;
 		}
@@ -370,7 +390,7 @@ f32 zuiDrawTextCentered(
 
 void zuiDrawImage(
 	ZuiDrawCtx* drawCtx,
-	const SfzMat34& transform,
+	const SfzMat44& transform,
 	f32x2 dims,
 	u64 imageHandle)
 {
@@ -378,27 +398,27 @@ void zuiDrawImage(
 
 	// Bottom left
 	ZuiVertex verts[4];
-	verts[0].pos = f32x2(-halfDims.x, -halfDims.y);
-	verts[0].texcoord = drawCtx->imgFlipY ? f32x2(0.0f, 1.0f) : f32x2(0.0f, 0.0f);
-	verts[0].color = f32x3(1.0f);
+	verts[0].pos = f32x2_init(-halfDims.x, -halfDims.y);
+	verts[0].texcoord = drawCtx->imgFlipY ? f32x2_init(0.0f, 1.0f) : f32x2_init(0.0f, 0.0f);
+	verts[0].color = f32x3_splat(1.0f);
 	verts[0].alpha = 1.0f;
 
 	// Bottom right
-	verts[1].pos = f32x2(halfDims.x, -halfDims.y);
-	verts[1].texcoord = drawCtx->imgFlipY ? f32x2(1.0f, 1.0f) : f32x2(1.0f, 0.0f);
-	verts[1].color = f32x3(1.0f);
+	verts[1].pos = f32x2_init(halfDims.x, -halfDims.y);
+	verts[1].texcoord = drawCtx->imgFlipY ? f32x2_init(1.0f, 1.0f) : f32x2_init(1.0f, 0.0f);
+	verts[1].color = f32x3_splat(1.0f);
 	verts[1].alpha = 1.0f;
 
 	// Top left
-	verts[2].pos = f32x2(-halfDims.x, halfDims.y);
-	verts[2].texcoord = drawCtx->imgFlipY ? f32x2(0.0f, 0.0f) : f32x2(0.0f, 1.0f);
-	verts[2].color = f32x3(1.0f);
+	verts[2].pos = f32x2_init(-halfDims.x, halfDims.y);
+	verts[2].texcoord = drawCtx->imgFlipY ? f32x2_init(0.0f, 0.0f) : f32x2_init(0.0f, 1.0f);
+	verts[2].color = f32x3_splat(1.0f);
 	verts[2].alpha = 1.0f;
 
 	// Top right
-	verts[3].pos = f32x2(halfDims.x, halfDims.y);
-	verts[3].texcoord = drawCtx->imgFlipY ? f32x2(1.0f, 0.0f) : f32x2(1.0f, 1.0f);
-	verts[3].color = f32x3(1.0f);
+	verts[3].pos = f32x2_init(halfDims.x, halfDims.y);
+	verts[3].texcoord = drawCtx->imgFlipY ? f32x2_init(1.0f, 0.0f) : f32x2_init(1.0f, 1.0f);
+	verts[3].color = f32x3_splat(1.0f);
 	verts[3].alpha = 1.0f;
 
 	const u32 indices[6] = {
@@ -406,12 +426,12 @@ void zuiDrawImage(
 		1, 3, 2
 	};
 
-	zuiDrawAddCommand(drawCtx, transform, verts, 4, indices, 6, imageHandle, ZUI_CMD_TEXTURE);
+	zuiDrawAddCommand(drawCtx, transform, verts, 4, indices, 6, ZUI_CMD_TEXTURE, imageHandle);
 }
 
 void zuiDrawRect(
 	ZuiDrawCtx* drawCtx,
-	const SfzMat34& transform,
+	const SfzMat44& transform,
 	f32x2 dims,
 	f32x4 color)
 {
@@ -419,26 +439,26 @@ void zuiDrawRect(
 
 	// Bottom left
 	ZuiVertex verts[4];
-	verts[0].pos = f32x2(-halfDims.x, -halfDims.y);
-	verts[0].texcoord = f32x2(0.0f, 0.0f);
+	verts[0].pos = f32x2_init(-halfDims.x, -halfDims.y);
+	verts[0].texcoord = f32x2_init(0.0f, 0.0f);
 	verts[0].color = color.xyz();
 	verts[0].alpha = color.w;
 
 	// Bottom right
-	verts[1].pos = f32x2(halfDims.x, -halfDims.y);
-	verts[1].texcoord = f32x2(1.0f, 0.0f);
+	verts[1].pos = f32x2_init(halfDims.x, -halfDims.y);
+	verts[1].texcoord = f32x2_init(1.0f, 0.0f);
 	verts[1].color = color.xyz();
 	verts[1].alpha = color.w;
 
 	// Top left
-	verts[2].pos = f32x2(-halfDims.x, halfDims.y);
-	verts[2].texcoord = f32x2(0.0f, 1.0f);
+	verts[2].pos = f32x2_init(-halfDims.x, halfDims.y);
+	verts[2].texcoord = f32x2_init(0.0f, 1.0f);
 	verts[2].color = color.xyz();
 	verts[2].alpha = color.w;
 
 	// Top right
-	verts[3].pos = f32x2(halfDims.x, halfDims.y);
-	verts[3].texcoord = f32x2(1.0f, 1.0f);
+	verts[3].pos = f32x2_init(halfDims.x, halfDims.y);
+	verts[3].texcoord = f32x2_init(1.0f, 1.0f);
 	verts[3].color = color.xyz();
 	verts[3].alpha = color.w;
 
@@ -447,27 +467,27 @@ void zuiDrawRect(
 		1, 3, 2
 	};
 
-	zuiDrawAddCommand(drawCtx, transform, verts, 4, indices, 6, 0, ZUI_CMD_COLOR);
+	zuiDrawAddCommand(drawCtx, transform, verts, 4, indices, 6, ZUI_CMD_COLOR, 0);
 }
 
 void zuiDrawBorder(
 	ZuiDrawCtx* drawCtx,
-	const SfzMat34& transform,
+	const SfzMat44& transform,
 	f32x2 dims,
 	f32 thickness,
 	f32x4 color)
 {
 	const f32x2 halfDims = dims * 0.5f;
 	const f32x2 cornerBottomLeft = -halfDims;
-	const f32x2 cornerBottomRight = f32x2(halfDims.x, -halfDims.y);
-	const f32x2 cornerTopLeft = f32x2(-halfDims.x, halfDims.y);
+	const f32x2 cornerBottomRight = f32x2_init(halfDims.x, -halfDims.y);
+	const f32x2 cornerTopLeft = f32x2_init(-halfDims.x, halfDims.y);
 	const f32x2 cornerTopRight = halfDims;
 
 	auto createVertex = [&](f32x2 pos) -> ZuiVertex {
 		ZuiVertex v;
 		v.pos = pos;
-		f32x2 interp = sfz::clamp((pos - cornerBottomLeft) / (cornerTopRight - cornerBottomLeft), 0.0f, 1.0f);
-		v.texcoord = f32x2(sfz::lerp(0.0f, 1.0f, interp.x), sfz::lerp(0.0f, 1.0f, interp.y));
+		f32x2 interp = f32x2_clamps((pos - cornerBottomLeft) / (cornerTopRight - cornerBottomLeft), 0.0f, 1.0f);
+		v.texcoord = f32x2_init(sfz::lerp(0.0f, 1.0f, interp.x), sfz::lerp(0.0f, 1.0f, interp.y));
 		v.color = color.xyz();
 		v.alpha = color.w;
 		return v;
@@ -475,8 +495,8 @@ void zuiDrawBorder(
 
 	constexpr u32 MAX_NUM_VERTICES = 16;
 	constexpr u32 MAX_NUM_INDICES = 24;
-	sfz::ArrayLocal<ZuiVertex, MAX_NUM_VERTICES> verts;
-	sfz::ArrayLocal<u32, MAX_NUM_INDICES> indices;
+	SfzArrayLocal<ZuiVertex, MAX_NUM_VERTICES> verts;
+	SfzArrayLocal<u32, MAX_NUM_INDICES> indices;
 
 	auto addTriangleIndices = [&](u32 base, u32 idx0, u32 idx1, u32 idx2) {
 		indices.add(base + idx0);
@@ -486,10 +506,10 @@ void zuiDrawBorder(
 
 	// Top line
 	{
-		const f32x2 bottomLeft = f32x2(-halfDims.x, halfDims.y - thickness);
-		const f32x2 bottomRight = f32x2(halfDims.x, halfDims.y - thickness);
-		const f32x2 topLeft = f32x2(-halfDims.x, halfDims.y);
-		const f32x2 topRight = f32x2(halfDims.x, halfDims.y);
+		const f32x2 bottomLeft = f32x2_init(-halfDims.x, halfDims.y - thickness);
+		const f32x2 bottomRight = f32x2_init(halfDims.x, halfDims.y - thickness);
+		const f32x2 topLeft = f32x2_init(-halfDims.x, halfDims.y);
+		const f32x2 topRight = f32x2_init(halfDims.x, halfDims.y);
 
 		verts.add() = createVertex(bottomLeft);
 		verts.add() = createVertex(bottomRight);
@@ -501,10 +521,10 @@ void zuiDrawBorder(
 
 	// Bottom line
 	{
-		const f32x2 bottomLeft = f32x2(-halfDims.x, -halfDims.y);
-		const f32x2 bottomRight = f32x2(halfDims.x, -halfDims.y);
-		const f32x2 topLeft = f32x2(-halfDims.x, -halfDims.y + thickness);
-		const f32x2 topRight = f32x2(halfDims.x, -halfDims.y + thickness);
+		const f32x2 bottomLeft = f32x2_init(-halfDims.x, -halfDims.y);
+		const f32x2 bottomRight = f32x2_init(halfDims.x, -halfDims.y);
+		const f32x2 topLeft = f32x2_init(-halfDims.x, -halfDims.y + thickness);
+		const f32x2 topRight = f32x2_init(halfDims.x, -halfDims.y + thickness);
 
 		verts.add() = createVertex(bottomLeft);
 		verts.add() = createVertex(bottomRight);
@@ -516,10 +536,10 @@ void zuiDrawBorder(
 
 	// Left line
 	{
-		const f32x2 bottomLeft = f32x2(-halfDims.x, -halfDims.y + thickness);
-		const f32x2 bottomRight = f32x2(-halfDims.x + thickness, -halfDims.y + thickness);
-		const f32x2 topLeft = f32x2(-halfDims.x, halfDims.y - thickness);
-		const f32x2 topRight = f32x2(-halfDims.x + thickness, halfDims.y - thickness);
+		const f32x2 bottomLeft = f32x2_init(-halfDims.x, -halfDims.y + thickness);
+		const f32x2 bottomRight = f32x2_init(-halfDims.x + thickness, -halfDims.y + thickness);
+		const f32x2 topLeft = f32x2_init(-halfDims.x, halfDims.y - thickness);
+		const f32x2 topRight = f32x2_init(-halfDims.x + thickness, halfDims.y - thickness);
 
 		verts.add() = createVertex(bottomLeft);
 		verts.add() = createVertex(bottomRight);
@@ -531,10 +551,10 @@ void zuiDrawBorder(
 
 	// Right line
 	{
-		const f32x2 bottomLeft = f32x2(halfDims.x - thickness, -halfDims.y + thickness);
-		const f32x2 bottomRight = f32x2(halfDims.x, -halfDims.y + thickness);
-		const f32x2 topLeft = f32x2(halfDims.x - thickness, halfDims.y - thickness);
-		const f32x2 topRight = f32x2(halfDims.x, halfDims.y - thickness);
+		const f32x2 bottomLeft = f32x2_init(halfDims.x - thickness, -halfDims.y + thickness);
+		const f32x2 bottomRight = f32x2_init(halfDims.x, -halfDims.y + thickness);
+		const f32x2 topLeft = f32x2_init(halfDims.x - thickness, halfDims.y - thickness);
+		const f32x2 topRight = f32x2_init(halfDims.x, halfDims.y - thickness);
 
 		verts.add() = createVertex(bottomLeft);
 		verts.add() = createVertex(bottomRight);
@@ -544,5 +564,6 @@ void zuiDrawBorder(
 		addTriangleIndices(12, 1, 3, 2);
 	}
 
-	zuiDrawAddCommand(drawCtx, transform, verts.data(), verts.size(), indices.data(), indices.size(), 0, ZUI_CMD_COLOR);
+	zuiDrawAddCommand(
+		drawCtx, transform, verts.data(), verts.size(), indices.data(), indices.size(), ZUI_CMD_COLOR, 0);
 }

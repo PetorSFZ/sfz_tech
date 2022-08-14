@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_allocators.hpp>
 
 #include "ZeroG.h"

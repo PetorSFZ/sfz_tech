@@ -60,10 +60,10 @@ struct UAVMapping {
 struct RootSignatureMapping {
 	u32 dynamicParamIdx = ~0u;
 	u32 dynamicTableSize = 0;
-	ArrayLocal<PushConstMapping, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConsts;
-	ArrayLocal<CBVMapping, ZG_MAX_NUM_CONSTANT_BUFFERS> CBVs;
-	ArrayLocal<SRVMapping, ZG_MAX_NUM_TEXTURES> SRVs;
-	ArrayLocal<UAVMapping, ZG_MAX_NUM_UNORDERED_TEXTURES> UAVs;
+	SfzArrayLocal<PushConstMapping, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConsts;
+	SfzArrayLocal<CBVMapping, ZG_MAX_NUM_CONSTANT_BUFFERS> CBVs;
+	SfzArrayLocal<SRVMapping, ZG_MAX_NUM_TEXTURES> SRVs;
+	SfzArrayLocal<UAVMapping, ZG_MAX_NUM_UNORDERED_TEXTURES> UAVs;
 };
 
 // D3D12PipelineCompute

@@ -19,8 +19,6 @@
 
 #include "sfz/state/GameState.hpp"
 
-#include <cstring>
-
 namespace sfz {
 
 // GameState: Singleton state API
@@ -381,7 +379,7 @@ bool createGameState(
 		singleRegistryEntries[i].sizeInBytes = singletonSizes[i];
 
 		// Calculate next 16-byte aligned offset and update totalSizeBytes
-		totalSizeBytes += u32(roundUpAligned(singletonSizes[i], 16));
+		totalSizeBytes += sfzRoundUpAlignedU32(singletonSizes[i], 16);
 	}
 
 	// Components registry (+ 1 for active bit)

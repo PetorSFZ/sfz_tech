@@ -19,7 +19,6 @@
 #include "ZeroG-ImGui.hpp"
 
 #include <skipifzero_arrays.hpp>
-#include <skipifzero_new.hpp>
 #include <skipifzero_strings.hpp>
 
 #include <imgui.h>
@@ -42,7 +41,7 @@ struct ImGuiCommand {
 	u32 idxBufferOffset = 0;
 	u32 numIndices = 0;
 	u32 padding[2];
-	f32x4 clipRect = f32x4(0.0f);
+	f32x4 clipRect = f32x4_splat(0.0f);
 };
 static_assert(sizeof(ImGuiCommand) == sizeof(u32) * 8, "ImguiCommand is padded");
 
@@ -64,14 +63,14 @@ struct ImGuiRenderState final {
 	zg::Texture fontTexture;
 
 	// Per frame state
-	sfz::Array<ImGuiFrameState> frameStates;
+	SfzArray<ImGuiFrameState> frameStates;
 	ImGuiFrameState& getFrameState(u64 idx) { return frameStates[idx % frameStates.size()]; }
 
 	// Temp arrays
 	// TODO: Remove
-	sfz::Array<ImGuiVertex> tmpVertices;
-	sfz::Array<u32> tmpIndices;
-	sfz::Array<ImGuiCommand> tmpCommands;
+	SfzArray<ImGuiVertex> tmpVertices;
+	SfzArray<u32> tmpIndices;
+	SfzArray<ImGuiCommand> tmpCommands;
 };
 
 // Constants
@@ -91,10 +90,14 @@ cbuffer TransformsCB : register(b0) {
 	row_major float4x4 projMatrix;
 }
 
+struct ImGuiVertex {
+	float2 position;
+	float2 texcoord;
+	float4 color;
+};
+
 struct VSInput {
-	float2 position : TEXCOORD0;
-	float2 texcoord : TEXCOORD1;
-	float4 color : TEXCOORD2;
+	uint vertexIdx : SV_VertexID;
 };
 
 struct VSOutput {
@@ -108,18 +111,21 @@ struct PSInput {
 	float4 color : PARAM_1;
 };
 
-Texture2D fontTexture : register(t0);
+ByteAddressBuffer vertices : register(t0);
+Texture2D fontTexture : register(t1);
 
 SamplerState fontSampler : register(s0);
 
 VSOutput VSMain(VSInput input)
 {
+	const ImGuiVertex v = vertices.Load<ImGuiVertex>(input.vertexIdx * sizeof(ImGuiVertex));
+
 	VSOutput output;
 
-	output.texcoord = input.texcoord;
-	output.color = input.color;
+	output.texcoord = v.texcoord;
+	output.color = v.color;
 
-	output.position = mul(projMatrix, float4(input.position, 0.0f, 1.0f));
+	output.position = mul(projMatrix, float4(v.position, 0.0f, 1.0f));
 
 	return output;
 }
@@ -160,23 +166,6 @@ ZgResult imguiInitRenderState(
 	{
 		ZgPipelineRenderDesc desc = {};
 		desc.setPathAndEntry("");
-		
-		desc.numVertexAttributes = 3;
-		desc.vertexAttributes[0].location = 0;
-		desc.vertexAttributes[0].vertexBufferSlot = 0;
-		desc.vertexAttributes[0].type = ZG_VERTEX_ATTRIBUTE_F32_2;
-		desc.vertexAttributes[0].offsetToFirstElementInBytes = offsetof(ImGuiVertex, pos);
-		desc.vertexAttributes[1].location = 1;
-		desc.vertexAttributes[1].vertexBufferSlot = 0;
-		desc.vertexAttributes[1].type = ZG_VERTEX_ATTRIBUTE_F32_2;
-		desc.vertexAttributes[1].offsetToFirstElementInBytes = offsetof(ImGuiVertex, texcoord);
-		desc.vertexAttributes[2].location = 2;
-		desc.vertexAttributes[2].vertexBufferSlot = 0;
-		desc.vertexAttributes[2].type = ZG_VERTEX_ATTRIBUTE_F32_4;
-		desc.vertexAttributes[2].offsetToFirstElementInBytes = offsetof(ImGuiVertex, color);
-
-		desc.numVertexBufferSlots = 1;
-		desc.vertexBufferStridesBytes[0] = sizeof(ImGuiVertex);
 
 		desc.addPushConst(0);
 		desc.addSampler(0, ZG_SAMPLE_TRILINEAR);
@@ -229,10 +218,10 @@ ZgResult imguiInitRenderState(
 		ImGuiFrameState& frame = stateOut->frameStates.add();
 
 		ASSERT_ZG frame.vertexBuffer.create(
-			IMGUI_VERTEX_BUFFER_SIZE, ZG_MEMORY_TYPE_DEVICE, false, sfz::str32("ImGui_VertexBuffer_%u", i));
+			IMGUI_VERTEX_BUFFER_SIZE, ZG_MEMORY_TYPE_DEVICE, false, sfzStr32InitFmt("ImGui_VertexBuffer_%u", i).str);
 
 		ASSERT_ZG frame.indexBuffer.create(
-			IMGUI_INDEX_BUFFER_SIZE, ZG_MEMORY_TYPE_DEVICE, false, sfz::str32("ImGui_IndexBuffer_%u", i));
+			IMGUI_INDEX_BUFFER_SIZE, ZG_MEMORY_TYPE_DEVICE, false, sfzStr32InitFmt("ImGui_IndexBuffer_%u", i).str);
 	}
 
 	// TODO: Remove
@@ -287,8 +276,8 @@ void imguiRender(
 			const ImDrawVert& imguiVertex = imCmdList.VtxBuffer[j];
 
 			ImGuiVertex convertedVertex;
-			convertedVertex.pos = f32x2(imguiVertex.pos.x, imguiVertex.pos.y);
-			convertedVertex.texcoord = f32x2(imguiVertex.uv.x, imguiVertex.uv.y);
+			convertedVertex.pos = f32x2_init(imguiVertex.pos.x, imguiVertex.pos.y);
+			convertedVertex.texcoord = f32x2_init(imguiVertex.uv.x, imguiVertex.uv.y);
 			convertedVertex.color = [&]() {
 				f32x4 color;
 				color.x = f32(imguiVertex.col & 0xFFu) * (1.0f / 255.0f);
@@ -351,11 +340,11 @@ void imguiRender(
 	// Set ImGui pipeline
 	ASSERT_ZG cmdList.setPipeline(state->pipeline);
 	ASSERT_ZG cmdList.setIndexBuffer(imguiFrame.indexBuffer, ZG_INDEX_BUFFER_TYPE_UINT32);
-	ASSERT_ZG cmdList.setVertexBuffer(0, imguiFrame.vertexBuffer);
 
 	// Bind pipeline parameters
 	ZgPipelineBindings bindings = {};
-	bindings.addTexture(0, state->fontTexture.handle);
+	bindings.addBufferByteAddress(0, imguiFrame.vertexBuffer.handle);
+	bindings.addTexture(1, state->fontTexture.handle);
 	ASSERT_ZG cmdList.setPipelineBindings(bindings);
 
 	// Retrieve imgui scale factor
@@ -367,10 +356,10 @@ void imguiRender(
 
 	// Calculate and set ImGui projection matrix
 	f32x4 projMatrix[4] = {
-		f32x4(2.0f / imguiWidth, 0.0f, 0.0f, -1.0f),
-		f32x4(0.0f, 2.0f / -imguiHeight, 0.0f, 1.0f),
-		f32x4(0.0f, 0.0f, 0.5f, 0.5f),
-		f32x4(0.0f, 0.0f, 0.0f, 1.0f)
+		f32x4_init(2.0f / imguiWidth, 0.0f, 0.0f, -1.0f),
+		f32x4_init(0.0f, 2.0f / -imguiHeight, 0.0f, 1.0f),
+		f32x4_init(0.0f, 0.0f, 0.5f, 0.5f),
+		f32x4_init(0.0f, 0.0f, 0.0f, 1.0f)
 	};
 	ASSERT_ZG cmdList.setPushConstant(0, &projMatrix, sizeof(f32) * 16);
 

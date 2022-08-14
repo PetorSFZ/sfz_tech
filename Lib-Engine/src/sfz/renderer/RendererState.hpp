@@ -19,10 +19,9 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_hash_maps.hpp>
-#include <skipifzero_strings.hpp>
 
 #include <ZeroG.h>
 
@@ -39,14 +38,14 @@ struct SDL_Window;
 // ------------------------------------------------------------------------------------------------
 
 struct GroupProfilingID final {
-	SfzStrID groupName = SFZ_STR_ID_NULL;
+	SfzStrID groupName = SFZ_NULL_STR_ID;
 	u64 id = ~0ull;
 };
 
 struct FrameProfilingIDs final {
 	u64 frameId = ~0ull;
 	u64 imguiId = ~0ull;
-	sfz::Arr64<GroupProfilingID> groupIds;
+	SfzArr64<GroupProfilingID> groupIds;
 };
 
 struct FrameFenceData final {
@@ -73,7 +72,7 @@ struct SfzRendererState final {
 	u32 frameLatency = 2;
 	sfz::PerFrameData<FrameFenceData> frameFences;
 
-	i32x2 windowRes = i32x2(0);
+	i32x2 windowRes = i32x2_splat(0);
 	zg::Framebuffer windowFramebuffer;
 	zg::CommandQueue presentQueue;
 	zg::CommandQueue copyQueue;

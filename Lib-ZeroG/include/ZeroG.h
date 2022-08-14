@@ -35,9 +35,9 @@
 
 #if defined(_WIN32)
 #if defined(ZG_DLL_EXPORT)
-#define ZG_API SFZ_EXTERN_C __declspec(dllexport)
+#define ZG_API sfz_extern_c __declspec(dllexport)
 #else
-#define ZG_API SFZ_EXTERN_C __declspec(dllimport)
+#define ZG_API sfz_extern_c __declspec(dllimport)
 #endif
 #else
 #define ZG_API
@@ -79,7 +79,7 @@ typedef enum {
 // ------------------------------------------------------------------------------------------------
 
 // The API version used to compile ZeroG.
-static const u32 ZG_COMPILED_API_VERSION = 54;
+static const u32 ZG_COMPILED_API_VERSION = 55;
 
 // Returns the API version of the ZeroG DLL you have linked with
 //
@@ -107,7 +107,7 @@ ZG_API ZgBackendType zgBackendCompiledType(void);
 // ------------------------------------------------------------------------------------------------
 
 // The results, 0 is success, negative values are errors and positive values are warnings.
-typedef enum SFZ_NODISCARD {
+typedef enum sfz_nodiscard {
 	// Success (0)
 	ZG_SUCCESS = 0,
 
@@ -810,72 +810,10 @@ public:
 // Pipeline Render Signature
 // ------------------------------------------------------------------------------------------------
 
-// The maximum number of vertex attributes allowed as input to a vertex shader
-static const u32 ZG_MAX_NUM_VERTEX_ATTRIBUTES = 8;
-
 // The maximum number of render targets allowed on a single pipeline
 static const u32 ZG_MAX_NUM_RENDER_TARGETS = 8;
 
-// The type of data contained in a vertex
-typedef enum {
-	ZG_VERTEX_ATTRIBUTE_UNDEFINED = 0,
-
-	ZG_VERTEX_ATTRIBUTE_F32,
-	ZG_VERTEX_ATTRIBUTE_F32_2,
-	ZG_VERTEX_ATTRIBUTE_F32_3,
-	ZG_VERTEX_ATTRIBUTE_F32_4,
-
-	ZG_VERTEX_ATTRIBUTE_S32,
-	ZG_VERTEX_ATTRIBUTE_S32_2,
-	ZG_VERTEX_ATTRIBUTE_S32_3,
-	ZG_VERTEX_ATTRIBUTE_S32_4,
-
-	ZG_VERTEX_ATTRIBUTE_U32,
-	ZG_VERTEX_ATTRIBUTE_U32_2,
-	ZG_VERTEX_ATTRIBUTE_U32_3,
-	ZG_VERTEX_ATTRIBUTE_U32_4,
-
-	ZG_VERTEX_ATTRIBUTE_FORCE_I32 = I32_MAX
-} ZgVertexAttributeType;
-
-// A struct defining a vertex attribute
-sfz_struct(ZgVertexAttribute) {
-	// The location of the attribute in the vertex input.
-	//
-	// For HLSL the semantic name need to be "TEXCOORD<attributeLocation>"
-	// E.g.:
-	// struct VSInput {
-	//     f323 position : TEXCOORD0;
-	//     f323 normal : TEXCOORD1;
-	// }
-	u32 location;
-
-	// Which vertex buffer slot the attribute should be read from.
-	//
-	// If you are storing all vertex attributes in the same buffer (e.g. your buffer is an array
-	// of a vertex struct of some kind), this parameter should typically be 0.
-	//
-	// This corresponds to the "vertexBufferSlot" parameter in zgCommandListSetVertexBuffer().
-	u32 vertexBufferSlot;
-
-	// The data type
-	ZgVertexAttributeType type;
-
-	// Offset in bytes from start of buffer to the first element of this type.
-	u32 offsetToFirstElementInBytes;
-};
-
-// A struct representing the rendering signature of a render pipeline.
-//
-// In addition to the contents of ZgPipelineBindingsSignature, this also contains render pipeline
-// specific input (i.e., how vertex data is read and render target information). The additional
-// data cannot be inferred by reflection and is actually specified by the user when creating the
-// pipeline. It's is mainly provided here as a convenience.
 sfz_struct(ZgPipelineRenderSignature) {
-
-	// The vertex attributes to the vertex shader
-	u32 numVertexAttributes;
-	ZgVertexAttribute vertexAttributes[ZG_MAX_NUM_VERTEX_ATTRIBUTES];
 
 	// Render targets
 	u32 numRenderTargets;
@@ -975,17 +913,6 @@ sfz_struct(ZgPipelineRenderDesc) {
 	// The name of the entry functions
 	char entryVS[32];
 	char entryPS[32];
-
-	// The vertex attributes to the vertex shader
-	u32 numVertexAttributes;
-	ZgVertexAttribute vertexAttributes[ZG_MAX_NUM_VERTEX_ATTRIBUTES];
-
-	// The number of vertex buffer slots used by the vertex attributes
-	//
-	// If only one buffer is used (i.e. array of vertex struct) then numVertexBufferSlots should be
-	// 1 and vertexBufferStrides[0] should be sizeof(Vertex) stored in your buffer.
-	u32 numVertexBufferSlots;
-	u32 vertexBufferStridesBytes[ZG_MAX_NUM_VERTEX_ATTRIBUTES];
 
 	// A list of constant buffer registers which should be declared as push constants. This is an
 	// optimization, however it can lead to worse performance if used improperly. Can be left empty
@@ -1500,11 +1427,6 @@ ZG_API ZgResult zgCommandListSetIndexBuffer(
 	ZgBuffer* indexBuffer,
 	ZgIndexBufferType type);
 
-ZG_API ZgResult zgCommandListSetVertexBuffer(
-	ZgCommandList* commandList,
-	u32 vertexBufferSlot,
-	ZgBuffer* vertexBuffer);
-
 ZG_API ZgResult zgCommandListDrawTriangles(
 	ZgCommandList* commandList,
 	u32 startVertexIndex,
@@ -1691,12 +1613,6 @@ public:
 	ZgResult setIndexBuffer(Buffer& indexBuffer, ZgIndexBufferType type)
 	{
 		return zgCommandListSetIndexBuffer(this->handle, indexBuffer.handle, type);
-	}
-
-	ZgResult setVertexBuffer(u32 vertexBufferSlot, Buffer& vertexBuffer)
-	{
-		return zgCommandListSetVertexBuffer(
-			this->handle, vertexBufferSlot, vertexBuffer.handle);
 	}
 
 	ZgResult drawTriangles(u32 startVertexIndex, u32 numVertices)
@@ -2079,46 +1995,46 @@ ZG_API ZgResult zgContextGetFeatureSupport(ZgFeatureSupport* featureSupportOut);
 // then switching to zgUtilCreatePerspectiveProjectionReverseInfinite() when feeling more confident.
 
 ZG_API void zgUtilCreateViewMatrix(
-	f32 rowMajorMatrixOut[16],
+	SfzMat44* matrixOut,
 	const f32 origin[3],
 	const f32 dir[3],
 	const f32 up[3]);
 
 ZG_API void zgUtilCreatePerspectiveProjection(
-	f32 rowMajorMatrixOut[16],
+	SfzMat44* matrixOut,
 	f32 vertFovDegs,
 	f32 aspect,
 	f32 nearPlane,
 	f32 farPlane);
 
 ZG_API void zgUtilCreatePerspectiveProjectionInfinite(
-	f32 rowMajorMatrixOut[16],
+	SfzMat44* matrixOut,
 	f32 vertFovDegs,
 	f32 aspect,
 	f32 nearPlane);
 
 ZG_API void zgUtilCreatePerspectiveProjectionReverse(
-	f32 rowMajorMatrixOut[16],
+	SfzMat44* matrixOut,
 	f32 vertFovDegs,
 	f32 aspect,
 	f32 nearPlane,
 	f32 farPlane);
 
 ZG_API void zgUtilCreatePerspectiveProjectionReverseInfinite(
-	f32 rowMajorMatrixOut[16],
+	SfzMat44* matrixOut,
 	f32 vertFovDegs,
 	f32 aspect,
 	f32 nearPlane);
 
 ZG_API void zgUtilCreateOrthographicProjection(
-	f32 rowMajorMatrixOut[16],
+	SfzMat44* matrixOut,
 	f32 width,
 	f32 height,
 	f32 nearPlane,
 	f32 farPlane);
 
 ZG_API void zgUtilCreateOrthographicProjectionReverse(
-	f32 rowMajorMatrixOut[16],
+	SfzMat44* matrixOut,
 	f32 width,
 	f32 height,
 	f32 nearPlane,

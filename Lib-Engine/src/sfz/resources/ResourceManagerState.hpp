@@ -18,10 +18,9 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_hash_maps.hpp>
 #include <skipifzero_pool.hpp>
-#include <skipifzero_strings.hpp>
 
 #include "sfz/resources/BufferResource.hpp"
 #include "sfz/resources/FramebufferResource.hpp"
@@ -37,12 +36,12 @@ struct SfzResourceManagerState final {
 	SfzAllocator* allocator = nullptr;
 	ZgUploader* uploader = nullptr;
 
-	sfz::HashMap<SfzStrID, SfzHandle> bufferHandles;
+	SfzHashMap<SfzStrID, SfzHandle> bufferHandles;
 	sfz::Pool<SfzBufferResource> buffers;
 
-	sfz::HashMap<SfzStrID, SfzHandle> textureHandles;
+	SfzHashMap<SfzStrID, SfzHandle> textureHandles;
 	sfz::Pool<SfzTextureResource> textures;
 
-	sfz::HashMap<SfzStrID, SfzHandle> framebufferHandles;
+	SfzHashMap<SfzStrID, SfzHandle> framebufferHandles;
 	sfz::Pool<SfzFramebufferResource> framebuffers;
 };

@@ -13,16 +13,20 @@ The included licenses apply to the following files:
 
 ## Changelog
 
-## Changes in SDK Version 1.602.4
+### Version 1.606.0 (Upcoming Version)
 
-Bug fixes
+New features:
 
-- Fix GBV bounds checks for static descriptors that keep bounds checks
-- Fix false OBJECT_DELETED_WHILE_STILL_IN_USE errors from debug layer
-- Fix deadlock in debug layer while validating placed resource virtual addresses
-- Fix crash in ResolveQueryData due to race
+- Shader Model 6.7.
+- d3dconfig: settings import/export.
+- d3dconfig: option to allow application control over storage filters
+- DRED: 'markers only breadcrumbs' stores breadcrumbs only for PIX markers and events.
 
-### Version 1.602.0
+Bug fixes:
+
+- Various debug layer stability fixes.
+
+### Version 1.602.0 (Current Version)
 
 New features:
 
@@ -32,13 +36,13 @@ New features:
 - Negative height viewports flip y-axis intepretation
 - Alpha/InvAlpha blend factors
 
-Bug fixes
+Bugfixes
 
 - Fixes a crash using GBV with shader patch mode TRACKING_ONLY. 
-- Fixes false debug validation output resulting from depth slice state being confused with depth slice state. 
+- Fixes false debug validation output resulting from depth slice state being confused with stencil slice state. 
 - Fixes a bug causing promoted COPY_DEST to not decay back to COMMON. 
-- Report live objects when encountering device removed from a kernel memory failure. 
-
+- Report live objects when encountering device removed from a kernel memory failure.  
+  
 ### Version 1.600.10
 
 Fixes threading bug (intermittent crash) in runtime for apps doing multithreaded creation of raytracing state objects.

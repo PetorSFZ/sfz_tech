@@ -22,8 +22,7 @@
 
 #include <D3D12MemAlloc.h>
 
-#include <skipifzero.hpp>
-#include <skipifzero_new.hpp>
+#include <sfz.h>
 
 #include "ZeroG.h"
 #include "d3d12/D3D12Common.hpp"
@@ -55,7 +54,7 @@ struct ZgUploader final {
 	UploaderRange allocRange(u64 numBytes)
 	{
 		// Only allocate 256 aligned ranges
-		numBytes = sfz::roundUpAligned(numBytes, 256);
+		numBytes = sfzRoundUpAlignedU64(numBytes, 256);
 
 		// Can only allocate at most half of the uploader's backing buffer at once
 		// TODO: WHY? This is stupid, disabling for now.
@@ -117,7 +116,7 @@ inline ZgResult createUploader(
 		D3D12_RESOURCE_DESC resDesc = {};
 		resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 		resDesc.Alignment = 0;
-		resDesc.Width = sfz::roundUpAligned(uploaderDesc.sizeBytes, 256);
+		resDesc.Width = sfzRoundUpAlignedU64(uploaderDesc.sizeBytes, 256);
 		resDesc.Height = 1;
 		resDesc.DepthOrArraySize = 1;
 		resDesc.MipLevels = 1;
@@ -168,7 +167,7 @@ inline ZgResult createUploader(
 	uploader->resource = resource;
 	uploader->allocation = allocation;
 	uploader->mappedPtr = reinterpret_cast<u8*>(mappedPtr);
-	uploader->sizeBytes = sfz::roundUpAligned(uploaderDesc.sizeBytes, 256);
+	uploader->sizeBytes = sfzRoundUpAlignedU64(uploaderDesc.sizeBytes, 256);
 	uploader->headIdx = uploader->sizeBytes * 2;
 	uploader->safeOffset = uploader->headIdx;
 	uploaderOut = uploader;

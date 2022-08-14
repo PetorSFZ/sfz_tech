@@ -21,7 +21,7 @@
 
 #include <type_traits>
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 
 #include "sfz/state/ArrayHeader.hpp"
 #include "sfz/state/CompMask.hpp"
@@ -392,7 +392,7 @@ constexpr u32 calcSizeOfGameStateBytes(
 
 	// Singleton structs
 	for (u32 i = 0; i < numSingletons; i++) {
-		totalSizeBytes += u32(roundUpAligned(singletonSizes[i], 16));
+		totalSizeBytes += sfzRoundUpAlignedU32(singletonSizes[i], 16);
 	}
 
 	// Component registry (+ 1 for active bit)

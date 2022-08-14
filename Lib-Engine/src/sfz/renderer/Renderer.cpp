@@ -23,9 +23,7 @@
 
 #include <imgui.h>
 
-#include <skipifzero.hpp>
-#include <skipifzero_math.hpp>
-#include <skipifzero_new.hpp>
+#include <sfz.h>
 
 #include <ZeroG.h>
 
@@ -94,9 +92,9 @@ bool SfzRenderer::init(
 	ZgImageViewConstCpu zgFontTextureView = {};
 	zgFontTextureView.format = ZG_FORMAT_R_U8_UNORM;
 	zgFontTextureView.data = fontTexture.rawData;
-	zgFontTextureView.width = fontTexture.width;
-	zgFontTextureView.height = fontTexture.height;
-	zgFontTextureView.pitchInBytes = fontTexture.width * sizeof(u8);
+	zgFontTextureView.width = u32(fontTexture.res.x);
+	zgFontTextureView.height = u32(fontTexture.res.y);
+	zgFontTextureView.pitchInBytes = fontTexture.res.x * sizeof(u8);
 	bool imguiInitSuccess = CHECK_ZG zg::imguiInitRenderState(
 		mState->imguiRenderState,
 		mState->frameLatency,
@@ -112,7 +110,7 @@ bool SfzRenderer::init(
 	// Initialize profiling stats
 	profStats->createCategory("gpu", 300, 66.7f, "ms", "frame", 20.0f,
 		SfzStatsVisualizationType::FIRST_INDIVIDUALLY_REST_ADDED);
-	profStats->createLabel("gpu", "frametime", f32x4(1.0f, 0.0f, 0.0f, 1.0f), 0.0f);
+	profStats->createLabel("gpu", "frametime", f32x4_init(1.0f, 0.0f, 0.0f, 1.0f), 0.0f);
 	profStats->createLabel("gpu", "imgui");
 
 	return true;
@@ -272,7 +270,7 @@ void SfzRenderer::frameBegin(
 	shaderMan->update();
 
 	// Update resources with current resolution
-	resMan->updateResolution(i32x2(newResX, newResY), ids);
+	resMan->updateResolution(i32x2_init(newResX, newResY), ids);
 
 	// Set vsync settings
 	CHECK_ZG zgContextSwapchainSetVsync(mState->vsync->boolValue() ? ZG_TRUE : ZG_FALSE);

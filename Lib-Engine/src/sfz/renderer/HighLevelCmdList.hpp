@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_pool.hpp>
 #include <skipifzero_strings.hpp>
@@ -48,7 +48,7 @@ struct BindingHL final {
 
 struct Bindings final {
 	SfzResourceManager* resMan = nullptr;
-	ArrayLocal<BindingHL, ZG_MAX_NUM_BINDINGS> bindings;
+	SfzArrayLocal<BindingHL, ZG_MAX_NUM_BINDINGS> bindings;
 
 	Bindings() = default;
 	Bindings(SfzResourceManager* resMan) : resMan(resMan) {}
@@ -116,6 +116,9 @@ public:
 	void setFramebuffer(SfzHandle handle);
 	void setFramebufferDefault(); // Sets the default framebuffer
 
+	void setScissorDefault();
+	void setScissor(ZgRect rect);
+
 	void clearRenderTargetsOptimal();
 	void clearDepthBufferOptimal();
 
@@ -147,10 +150,6 @@ public:
 		uploadToStreamingBufferUntyped(handle, data, sizeof(T), numElements);
 	}
 
-	void setVertexBuffer(u32 slot, const char* name) { setVertexBuffer(slot, sfzStrIDCreate(name)); }
-	void setVertexBuffer(u32 slot, SfzStrID name) { setVertexBuffer(slot, mResources->getBufferHandle(name)); }
-	void setVertexBuffer(u32 slot, SfzHandle handle);
-
 	void setIndexBuffer(const char* name, ZgIndexBufferType indexType = ZG_INDEX_BUFFER_TYPE_UINT32) { setIndexBuffer(sfzStrIDCreate(name), indexType); }
 	void setIndexBuffer(SfzStrID name, ZgIndexBufferType indexType = ZG_INDEX_BUFFER_TYPE_UINT32) { setIndexBuffer(mResources->getBufferHandle(name), indexType); }
 	void setIndexBuffer(SfzHandle handle, ZgIndexBufferType indexType = ZG_INDEX_BUFFER_TYPE_UINT32);
@@ -173,7 +172,7 @@ public:
 	void uavBarrierTexture(SfzHandle handle);
 
 public: // Minor hack, this thing (class) might not have been the best idea.
-	SfzStrID mName = SFZ_STR_ID_NULL;
+	SfzStrID mName = SFZ_NULL_STR_ID;
 	u64 mCurrFrameIdx = 0;
 	zg::CommandList mCmdList;
 	zg::Uploader* mUploader = nullptr;

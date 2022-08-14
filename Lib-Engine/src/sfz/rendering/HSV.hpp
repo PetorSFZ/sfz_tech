@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
-#include <skipifzero_math.hpp>
+#include <sfz.h>
+#include <sfz_math.h>
 
 namespace sfz {
 
@@ -70,7 +70,7 @@ inline f32x3 rgbToHSV(f32x3 rgb)
 
 	if (hue < 0.0f) hue += 360.0f;
 
-	return f32x3(hue, sat, val);
+	return f32x3_init(hue, sat, val);
 }
 
 inline f32x3 hsvToRGB(f32x3 hsv)
@@ -83,29 +83,29 @@ inline f32x3 hsvToRGB(f32x3 hsv)
 	sfz_assert(0.0f <= val && val <= 1.0f);
 
 	const f32 chroma = val * sat;
-	const f32 X = chroma * (1.0f - sfz::abs(fmodf(hue / 60.0f, 2) - 1.0f));
+	const f32 X = chroma * (1.0f - f32_abs(fmodf(hue / 60.0f, 2) - 1.0f));
 
 	f32x3 rgb;
 	if (hue < 60.0f) {
-		rgb = f32x3(chroma, X, 0.0f);
+		rgb = f32x3_init(chroma, X, 0.0f);
 	}
 	else if (hue < 120.0f) {
-		rgb = f32x3(X, chroma, 0.0f);
+		rgb = f32x3_init(X, chroma, 0.0f);
 	}
 	else if (hue < 180.0f) {
-		rgb = f32x3(0.0f, chroma, X);
+		rgb = f32x3_init(0.0f, chroma, X);
 	}
 	else if (hue < 240.0f) {
-		rgb = f32x3(0.0f, X, chroma);
+		rgb = f32x3_init(0.0f, X, chroma);
 	}
 	else if (hue < 300.0f) {
-		rgb = f32x3(X, 0.0f, chroma);
+		rgb = f32x3_init(X, 0.0f, chroma);
 	}
 	else if (hue <= 360.0f) {
-		rgb = f32x3(chroma, 0.0f, X);
+		rgb = f32x3_init(chroma, 0.0f, X);
 	}
 
-	rgb += f32x3(val - chroma);
+	rgb += f32x3_splat(val - chroma);
 	return rgb;
 }
 

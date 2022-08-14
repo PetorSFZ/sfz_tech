@@ -19,11 +19,9 @@
 
 #include "sfz/debug/ProfilingStats.hpp"
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_hash_maps.hpp>
-#include <skipifzero_math.hpp>
-#include <skipifzero_new.hpp>
 #include <skipifzero_strings.hpp>
 
 #include "sfz/util/RandomColors.hpp"
@@ -32,32 +30,32 @@
 // ------------------------------------------------------------------------------------------------
 
 struct SfzStatsLabel final {
-	f32x4 color = f32x4(1.0f);
+	f32x4 color = f32x4_splat(1.0f);
 	f32 defaultValue = 0.0f;
-	sfz::Array<f32> samples;
+	SfzArray<f32> samples;
 };
 
 struct SfzStatsCategory final {
 	u32 numSamples = 0;
 	f32 sampleOutlierMax = F32_MAX;
-	sfz::str16 sampleUnit;
-	sfz::str16 idxUnit;
+	SfzStr32 sampleUnit;
+	SfzStr32 idxUnit;
 	f32 smallestPlotMax = 0.0f;
 	SfzStatsVisualizationType visualizationType = SfzStatsVisualizationType::INDIVIDUALLY;
 
-	sfz::HashMapLocal<sfz::str32, SfzStatsLabel, PROFILING_STATS_MAX_NUM_LABELS> labels;
-	sfz::ArrayLocal<sfz::str32, PROFILING_STATS_MAX_NUM_LABELS> labelStringBackings;
-	sfz::ArrayLocal<const char*, PROFILING_STATS_MAX_NUM_LABELS> labelStrings;
+	SfzHashMapLocal<SfzStr32, SfzStatsLabel, PROFILING_STATS_MAX_NUM_LABELS> labels;
+	SfzArrayLocal<SfzStr32, PROFILING_STATS_MAX_NUM_LABELS> labelStringBackings;
+	SfzArrayLocal<const char*, PROFILING_STATS_MAX_NUM_LABELS> labelStrings;
 
-	sfz::Array<u64> indices;
-	sfz::Array<f32> indicesAsFloat;
+	SfzArray<u64> indices;
+	SfzArray<f32> indicesAsFloat;
 };
 
 struct SfzProfilingStatsState final {
 	SfzAllocator* allocator = nullptr;
-	sfz::HashMapLocal<sfz::str32, SfzStatsCategory, PROFILING_STATS_MAX_NUM_CATEGORIES> categories;
-	sfz::ArrayLocal<sfz::str32, PROFILING_STATS_MAX_NUM_CATEGORIES> categoryStringBackings;
-	sfz::ArrayLocal<const char*, PROFILING_STATS_MAX_NUM_CATEGORIES> categoryStrings;
+	SfzHashMapLocal<SfzStr32, SfzStatsCategory, PROFILING_STATS_MAX_NUM_CATEGORIES> categories;
+	SfzArrayLocal<SfzStr32, PROFILING_STATS_MAX_NUM_CATEGORIES> categoryStringBackings;
+	SfzArrayLocal<const char*, PROFILING_STATS_MAX_NUM_CATEGORIES> categoryStrings;
 };
 
 // SfzProfilingStats: State methods
@@ -144,14 +142,14 @@ const char* SfzProfilingStats::sampleUnit(const char* category) const noexcept
 {
 	const SfzStatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
-	return cat->sampleUnit;
+	return cat->sampleUnit.str;
 }
 
 const char* SfzProfilingStats::idxUnit(const char* category) const noexcept
 {
 	const SfzStatsCategory* cat = mState->categories.get(category);
 	sfz_assert(cat != nullptr);
-	return cat->idxUnit;
+	return cat->idxUnit.str;
 }
 
 f32 SfzProfilingStats::smallestPlotMax(const char* category) const noexcept
@@ -210,8 +208,8 @@ SfzLabelStats SfzProfilingStats::stats(const char* category, const char* label) 
 		// Update total, min and max
 		f32 sample = lab->samples[i - 1];
 		total += sample;
-		stats.min = sfz::min(stats.min, sample);
-		stats.max = sfz::max(stats.max, sample);
+		stats.min = f32_min(stats.min, sample);
+		stats.max = f32_max(stats.max, sample);
 	}
 	stats.avg = numValidSamples != 0 ? total / f32(numValidSamples) : 0.0f;
 	
@@ -253,14 +251,14 @@ void SfzProfilingStats::createCategory(
 	SfzStatsCategory& cat = mState->categories.put(category, {});
 	cat.numSamples = numSamples;
 	cat.sampleOutlierMax = sampleOutlierMax;
-	cat.sampleUnit.appendf("%s", sampleUnit);
-	cat.idxUnit.appendf("%s", idxUnit);
+	sfzStr32Appendf(&cat.sampleUnit, "%s", sampleUnit);
+	sfzStr32Appendf(&cat.idxUnit, "%s", idxUnit);
 	cat.smallestPlotMax = smallestPlotMax;
 	cat.visualizationType = visualizationType;
 
 	// Add category string
-	mState->categoryStringBackings.add(sfz::str32("%s", category));
-	mState->categoryStrings.add(mState->categoryStringBackings.last());
+	mState->categoryStringBackings.add(sfzStr32Init(category));
+	mState->categoryStrings.add(mState->categoryStringBackings.last().str);
 
 	// Add indices (0), fudge f32 variant so it has negative values until last one
 	cat.indices.init(cat.numSamples, mState->allocator, sfz_dbg(""));
@@ -293,16 +291,16 @@ void SfzProfilingStats::createLabel(
 	lab.samples.add(defaultValue, cat->numSamples);
 
 	// If no color specified, get random color
-	if (sfz::elemMax(color) < 0.0f) {
-		lab.color = f32x4(sfz::getRandomColor(cat->labels.size() - 1), 1.0f);
+	if (f32_max(f32_max(f32_max(color.x, color.y), color.z), color.w) < 0.0f) {
+		lab.color = f32x4_init3(sfz::getRandomColor(cat->labels.size() - 1), 1.0f);
 	}
 	else {
 		lab.color = color;
 	}
 
 	// Add label string
-	cat->labelStringBackings.add(sfz::str32("%s", label));
-	cat->labelStrings.add(cat->labelStringBackings.last());
+	cat->labelStringBackings.add(sfzStr32Init(label));
+	cat->labelStrings.add(cat->labelStringBackings.last().str);
 }
 
 void SfzProfilingStats::addSample(
@@ -314,7 +312,7 @@ void SfzProfilingStats::addSample(
 	sfz_assert(lab != nullptr);
 
 	// Clamp sample against ceiling for this category
-	sample = sfz::min(sample, cat->sampleOutlierMax);
+	sample = f32_min(sample, cat->sampleOutlierMax);
 
 	// Find latest matching idx
 	sfz_assert(sampleIdx >= cat->indices.first());

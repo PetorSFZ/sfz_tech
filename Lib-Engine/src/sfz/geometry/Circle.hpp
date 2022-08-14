@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include "sfz.h"
 
 namespace sfz {
 
@@ -47,7 +47,7 @@ struct Circle final {
 
 	inline Circle(f32 centerX, f32 centerY, f32 radius) noexcept
 	:
-		pos(centerX, centerY),
+		pos(f32x2_init(centerX, centerY)),
 		radius(radius)
 	{ }
 

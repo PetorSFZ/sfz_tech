@@ -19,12 +19,13 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
-#include <skipifzero_strings.hpp>
+#include <sfz.h>
 
 #include <ZeroG.h>
 
 #include "sfz/renderer/ZeroGUtils.hpp"
+
+struct SfzStrIDs;
 
 // SfzBufferResource
 // ------------------------------------------------------------------------------------------------
@@ -44,7 +45,7 @@ struct SfzStreamingBufferMemory final {
 };
 
 struct SfzBufferResource final {
-	SfzStrID name = SFZ_STR_ID_NULL;
+	SfzStrID name = SFZ_NULL_STR_ID;
 	u32 elementSizeBytes = 0;
 	u32 maxNumElements = 0;
 	SfzBufferResourceType type = SfzBufferResourceType::STATIC;

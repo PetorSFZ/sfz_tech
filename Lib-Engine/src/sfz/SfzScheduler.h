@@ -30,8 +30,8 @@ struct SfzTask;
 // Scheduler
 // ------------------------------------------------------------------------------------------------
 
-SFZ_EXTERN_C SfzScheduler* sfzSchedulerCreate(SfzAllocator* allocator);
-SFZ_EXTERN_C void sfzSchedulerDestroy(SfzScheduler* scheduler);
+sfz_extern_c SfzScheduler* sfzSchedulerCreate(SfzAllocator* allocator);
+sfz_extern_c void sfzSchedulerDestroy(SfzScheduler* scheduler);
 
-SFZ_EXTERN_C void sfzSchedulerScheduleTask(SfzScheduler* scheduler, const SfzTask* task);
-SFZ_EXTERN_C void sfzSchedulerRunTasks(SfzScheduler* scheduler, SfzCtx* ctx);
+sfz_extern_c void sfzSchedulerScheduleTask(SfzScheduler* scheduler, const SfzTask* task);
+sfz_extern_c void sfzSchedulerRunTasks(SfzScheduler* scheduler, SfzCtx* ctx);

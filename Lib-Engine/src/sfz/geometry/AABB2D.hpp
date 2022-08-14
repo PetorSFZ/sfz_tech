@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 
 namespace sfz {
 
@@ -46,8 +46,8 @@ struct AABB2D final {
 
 	inline AABB2D(f32 centerX, f32 centerY, f32 width, f32 height) noexcept
 	:
-		min(f32x2(centerX - (width * 0.5f), centerY - (height * 0.5f))),
-		max(f32x2(centerX + (width * 0.5f), centerY + (height * 0.5f)))
+		min(f32x2_init(centerX - (width * 0.5f), centerY - (height * 0.5f))),
+		max(f32x2_init(centerX + (width * 0.5f), centerY + (height * 0.5f)))
 	{ }
 
 	// Public getters

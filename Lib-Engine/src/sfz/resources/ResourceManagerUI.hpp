@@ -32,27 +32,27 @@ namespace sfz {
 inline void renderBuffersTab(SfzResourceManagerState& state, const SfzStrIDs* ids)
 {
 	constexpr f32 offset = 200.0f;
-	constexpr f32x4 normalTextColor = f32x4(1.0f);
-	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
-	static str128 filter;
+	constexpr f32x4 normalTextColor = f32x4_splat(1.0f);
+	constexpr f32x4 filterTextColor = f32x4_init(1.0f, 0.0f, 0.0f, 1.0f);
+	static SfzStr96 filter;
 
 	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
-	ImGui::InputText("Filter##BuffersTab", filter.mRawStr, filter.capacity());
+	ImGui::InputText("Filter##BuffersTab", filter.str, sfzStr96ToView(&filter).capacity);
 	ImGui::PopStyleColor();
-	filter.toLower();
+	sfzStr96ToLower(&filter);
 
 	const bool filterMode = filter != "";
 
-	for (HashMapPair<SfzStrID, SfzHandle> itemItr : state.bufferHandles) {
+	for (SfzHashMapPair<SfzStrID, SfzHandle> itemItr : state.bufferHandles) {
 		const char* name = sfzStrIDGetStr(ids, itemItr.key);
 		const SfzBufferResource& resource = state.buffers[itemItr.value];
 
-		str320 lowerCaseName = name;
-		lowerCaseName.toLower();
-		if (!filter.isPartOf(lowerCaseName.str())) continue;
+		SfzStr320 lowerCaseName = sfzStr320Init(name);
+		sfzStr320ToLower(&lowerCaseName);
+		if (!sfzStr96IsPartOf(&filter, lowerCaseName.str)) continue;
 
 		if (filterMode) {
-			imguiRenderFilteredText(name, filter.str(), normalTextColor, filterTextColor);
+			imguiRenderFilteredText(name, filter.str, normalTextColor, filterTextColor);
 		}
 		else {
 			if (!ImGui::CollapsingHeader(name)) continue;
@@ -91,27 +91,27 @@ inline void renderTexturesTab(SfzResourceManagerState& state, const SfzStrIDs* i
 {
 	constexpr f32 offset = 200.0f;
 	constexpr f32 offset2 = 240.0f;
-	constexpr f32x4 normalTextColor = f32x4(1.0f);
-	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
-	static str128 filter;
+	constexpr f32x4 normalTextColor = f32x4_splat(1.0f);
+	constexpr f32x4 filterTextColor = f32x4_init(1.0f, 0.0f, 0.0f, 1.0f);
+	static SfzStr96 filter;
 
 	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
-	ImGui::InputText("Filter##TexturesTab", filter.mRawStr, filter.capacity());
+	ImGui::InputText("Filter##TexturesTab", filter.str, sfzStr96ToView(&filter).capacity);
 	ImGui::PopStyleColor();
-	filter.toLower();
+	sfzStr96ToLower(&filter);
 
 	const bool filterMode = filter != "";
 
-	for (HashMapPair<SfzStrID, SfzHandle> itemItr : state.textureHandles) {
+	for (SfzHashMapPair<SfzStrID, SfzHandle> itemItr : state.textureHandles) {
 		const char* name = sfzStrIDGetStr(ids, itemItr.key);
 		const SfzTextureResource& resource = state.textures[itemItr.value];
 
-		str320 lowerCaseName = name;
-		lowerCaseName.toLower();
-		if (!filter.isPartOf(lowerCaseName.str())) continue;
+		SfzStr320 lowerCaseName = sfzStr320Init(name);
+		sfzStr320ToLower(&lowerCaseName);
+		if (!sfzStr96IsPartOf(&filter, lowerCaseName.str)) continue;
 
 		if (filterMode) {
-			imguiRenderFilteredText(name, filter.str(), normalTextColor, filterTextColor);
+			imguiRenderFilteredText(name, filter.str, normalTextColor, filterTextColor);
 		}
 		else {
 			if (!ImGui::CollapsingHeader(name)) continue;
@@ -149,8 +149,8 @@ inline void renderTexturesTab(SfzResourceManagerState& state, const SfzStrIDs* i
 			});
 			alignedEdit("Scale setting", offset2, [&](const char*) {
 				ImGui::Text("%s.%s",
-					resource.resScaleSetting->section().str(),
-					resource.resScaleSetting->key().str());
+					resource.resScaleSetting->section().str,
+					resource.resScaleSetting->key().str);
 			});
 			if (resource.resScaleSettingScale != 1.0f) {
 				alignedEdit("Scale setting scale", offset2, [&](const char*) {
@@ -165,8 +165,8 @@ inline void renderTexturesTab(SfzResourceManagerState& state, const SfzStrIDs* i
 			ImGui::Indent(20.0f);
 			alignedEdit("Res setting", offset2, [&](const char*) {
 				ImGui::Text("%s.%s",
-					resource.controlledResSetting->section().str(),
-					resource.controlledResSetting->key().str());
+					resource.controlledResSetting->section().str,
+					resource.controlledResSetting->key().str);
 			});
 			ImGui::Unindent(20.0f);
 		}
@@ -180,27 +180,27 @@ inline void renderFramebuffersTab(SfzResourceManagerState& state, const SfzStrID
 {
 	constexpr f32 offset = 200.0f;
 	constexpr f32 offset2 = 220.0f;
-	constexpr f32x4 normalTextColor = f32x4(1.0f);
-	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
-	static str128 filter;
+	constexpr f32x4 normalTextColor = f32x4_splat(1.0f);
+	constexpr f32x4 filterTextColor = f32x4_init(1.0f, 0.0f, 0.0f, 1.0f);
+	static SfzStr96 filter;
 
 	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
-	ImGui::InputText("Filter##FramebuffersTab", filter.mRawStr, filter.capacity());
+	ImGui::InputText("Filter##FramebuffersTab", filter.str, sfzStr96ToView(&filter).capacity);
 	ImGui::PopStyleColor();
-	filter.toLower();
+	sfzStr96ToLower(&filter);
 
 	const bool filterMode = filter != "";
 
-	for (HashMapPair<SfzStrID, SfzHandle> itemItr : state.framebufferHandles) {
+	for (SfzHashMapPair<SfzStrID, SfzHandle> itemItr : state.framebufferHandles) {
 		const char* name = sfzStrIDGetStr(ids, itemItr.key);
 		const SfzFramebufferResource& resource = state.framebuffers[itemItr.value];
 
-		str320 lowerCaseName = name;
-		lowerCaseName.toLower();
-		if (!filter.isPartOf(lowerCaseName.str())) continue;
+		SfzStr320 lowerCaseName = sfzStr320Init(name);
+		sfzStr320ToLower(&lowerCaseName);
+		if (!sfzStr96IsPartOf(&filter, lowerCaseName.str)) continue;
 
 		if (filterMode) {
-			imguiRenderFilteredText(name, filter.str(), normalTextColor, filterTextColor);
+			imguiRenderFilteredText(name, filter.str, normalTextColor, filterTextColor);
 		}
 		else {
 			if (!ImGui::CollapsingHeader(name)) continue;
@@ -220,8 +220,8 @@ inline void renderFramebuffersTab(SfzResourceManagerState& state, const SfzStrID
 			});
 			alignedEdit("Scale setting", offset2, [&](const char*) {
 				ImGui::Text("%s.%s",
-					resource.resScaleSetting->section().str(),
-					resource.resScaleSetting->key().str());
+					resource.resScaleSetting->section().str,
+					resource.resScaleSetting->key().str);
 			});
 			ImGui::Unindent(20.0f);
 		}
@@ -231,8 +231,8 @@ inline void renderFramebuffersTab(SfzResourceManagerState& state, const SfzStrID
 			ImGui::Indent(20.0f);
 			alignedEdit("Res setting", offset2, [&](const char*) {
 				ImGui::Text("%s.%s",
-					resource.controlledResSetting->section().str(),
-					resource.controlledResSetting->key().str());
+					resource.controlledResSetting->section().str,
+					resource.controlledResSetting->key().str);
 			});
 			ImGui::Unindent(20.0f);
 		}
@@ -244,13 +244,13 @@ inline void renderFramebuffersTab(SfzResourceManagerState& state, const SfzStrID
 				const SfzTextureResource* renderTarget =
 					state.textures.get(*state.textureHandles.get(renderTargetName));
 				sfz_assert(renderTarget != nullptr);
-				alignedEdit(str64("Render target %u", i).str(), offset, [&](const char*) {
+				alignedEdit(sfzStr96InitFmt("Render target %u", i).str, offset, [&](const char*) {
 					ImGui::Text("%s  --  %s", sfzStrIDGetStr(ids, renderTargetName), textureFormatToString(renderTarget->format));
 				});
 			}
 		}
 		
-		if (resource.depthBufferName != SFZ_STR_ID_NULL) {
+		if (resource.depthBufferName != SFZ_NULL_STR_ID) {
 			ImGui::Spacing();
 			alignedEdit("Depth buffer", offset, [&](const char*) {
 				ImGui::Text("%s", sfzStrIDGetStr(ids, resource.depthBufferName));

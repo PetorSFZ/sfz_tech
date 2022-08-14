@@ -22,8 +22,7 @@
 
 #include <D3D12MemAlloc.h>
 
-#include <skipifzero.hpp>
-#include <skipifzero_new.hpp>
+#include <sfz.h>
 
 #include "ZeroG.h"
 #include "common/ErrorReporting.hpp"
@@ -69,7 +68,7 @@ struct ZgBuffer final {
 
 struct ZgTexture final {
 	ZgResource resource;
-	sfz::ArrayLocal<ZgTrackerResourceState, ZG_MAX_NUM_MIPMAPS> mipTrackings;
+	SfzArrayLocal<ZgTrackerResourceState, ZG_MAX_NUM_MIPMAPS> mipTrackings;
 
 	// A unique identifier for this texture
 	u64 identifier = 0;
@@ -113,7 +112,7 @@ inline ZgResult createBuffer(
 	D3D12_RESOURCE_DESC desc = {};
 	desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 	desc.Alignment = 0;
-	desc.Width = sfz::roundUpAligned(createInfo.sizeInBytes, 256);
+	desc.Width = sfzRoundUpAlignedU64(createInfo.sizeInBytes, 256);
 	desc.Height = 1;
 	desc.DepthOrArraySize = 1;
 	desc.MipLevels = 1;

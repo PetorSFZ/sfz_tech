@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_strings.hpp>
 
@@ -27,17 +27,18 @@
 
 struct SfzResourceManager;
 struct SfzSetting;
+struct SfzStrIDs;
 
 // SfzFramebufferResource
 // ------------------------------------------------------------------------------------------------
 
 struct SfzFramebufferResource final {
-	SfzStrID name = SFZ_STR_ID_NULL;
+	SfzStrID name = SFZ_NULL_STR_ID;
 
 	zg::Framebuffer framebuffer;
-	sfz::ArrayLocal<SfzStrID, ZG_MAX_NUM_RENDER_TARGETS> renderTargetNames;
-	SfzStrID depthBufferName = SFZ_STR_ID_NULL;
-	i32x2 res = i32x2(0);
+	SfzArrayLocal<SfzStrID, ZG_MAX_NUM_RENDER_TARGETS> renderTargetNames;
+	SfzStrID depthBufferName = SFZ_NULL_STR_ID;
+	i32x2 res = i32x2_splat(0);
 
 	// Whether resolution should be scaled relative screen resolution
 	bool screenRelativeRes = false;
@@ -56,10 +57,10 @@ struct SfzFramebufferResource final {
 // ------------------------------------------------------------------------------------------------
 
 struct SfzFramebufferResourceBuilder final {
-	sfz::str128 name;
-	sfz::ArrayLocal<SfzStrID, ZG_MAX_NUM_RENDER_TARGETS> renderTargetNames;
-	SfzStrID depthBufferName = SFZ_STR_ID_NULL;
-	i32x2 res = i32x2(0);
+	SfzStr96 name;
+	SfzArrayLocal<SfzStrID, ZG_MAX_NUM_RENDER_TARGETS> renderTargetNames;
+	SfzStrID depthBufferName = SFZ_NULL_STR_ID;
+	i32x2 res = i32x2_splat(0);
 
 	bool screenRelativeRes = false;
 	f32 resScale = 1.0f;
@@ -70,7 +71,7 @@ struct SfzFramebufferResourceBuilder final {
 	SfzSetting* controlledResSetting = nullptr;
 
 	SfzFramebufferResourceBuilder() = default;
-	SfzFramebufferResourceBuilder(const char* name) : name("%s", name) {}
+	SfzFramebufferResourceBuilder(const char* name) : name(sfzStr96InitFmt("%s", name)) {}
 
 	SfzFramebufferResourceBuilder& setName(const char* name);
 	SfzFramebufferResourceBuilder& setFixedRes(i32x2 res);

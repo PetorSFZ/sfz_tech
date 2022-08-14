@@ -1,3 +1,0 @@
-https://github.com/sheredom/utest.h
-commit 9e4f32de20710bff2ad0b6dd70e9ae14fbe16c11
-2020-10-03

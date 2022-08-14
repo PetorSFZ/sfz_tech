@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_arrays.hpp>
 
 #include "ZeroG.h"
@@ -248,7 +248,7 @@ struct ZgCommandList final {
 		// Allocate memory range in uploader
 		const u32 numBytesPerPixel = numBytesPerPixelForFormat(srcImageCpu->format);
 		const u32 numBytesPerRow = srcImageCpu->width * numBytesPerPixel;
-		const u32 pitch = (u32)sfz::roundUpAligned(
+		const u32 pitch = sfzRoundUpAlignedU32(
 			numBytesPerRow, D3D12_TEXTURE_DATA_PITCH_ALIGNMENT);
 		const u32 requiredUploadSize = pitch * srcImageCpu->height;
 		const UploaderRange range = uploader->allocRange(requiredUploadSize);
@@ -1026,36 +1026,6 @@ struct ZgCommandList final {
 
 		// Set index buffer
 		commandList->IASetIndexBuffer(&indexBufferView);
-
-		return ZG_SUCCESS;
-	}
-
-	ZgResult setVertexBuffer(
-		u32 vertexBufferSlot,
-		ZgBuffer* vertexBuffer) noexcept
-	{
-		// Need to have a pipeline set to verify vertex buffer binding
-		if (boundPipelineRender == nullptr) return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
-
-		// Check that the vertex buffer slot is not out of bounds for the bound pipeline
-		const ZgPipelineRenderDesc& pipelineInfo = boundPipelineRender->createInfo;
-		if (pipelineInfo.numVertexBufferSlots <= vertexBufferSlot) {
-			return ZG_ERROR_INVALID_COMMAND_LIST_STATE;
-		}
-
-		// Set buffer resource state
-		if (vertexBuffer->memoryType != ZG_MEMORY_TYPE_DEVICE) return ZG_ERROR_INVALID_ARGUMENT;
-		requireResourceStateBuffer(
-			*this->commandList.Get(), this->tracking, vertexBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
-
-		// Create vertex buffer view
-		D3D12_VERTEX_BUFFER_VIEW vertexBufferView = {};
-		vertexBufferView.BufferLocation = vertexBuffer->resource.resource->GetGPUVirtualAddress();
-		vertexBufferView.StrideInBytes = pipelineInfo.vertexBufferStridesBytes[vertexBufferSlot];
-		vertexBufferView.SizeInBytes = u32(vertexBuffer->sizeBytes);
-
-		// Set vertex buffer
-		commandList->IASetVertexBuffers(vertexBufferSlot, 1, &vertexBufferView);
 
 		return ZG_SUCCESS;
 	}

@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 
 struct SfzConfig;
 struct SfzGlobalConfig;

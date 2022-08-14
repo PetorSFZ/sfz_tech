@@ -18,14 +18,14 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_pool.hpp>
-#include <skipifzero_strings.hpp>
 
 struct ZgUploader;
 
 struct SfzBufferResource;
 struct SfzFramebufferResource;
+struct SfzStrIDs;
 struct SfzTextureResource;
 
 // SfzResourceManager

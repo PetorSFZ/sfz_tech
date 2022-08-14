@@ -20,9 +20,10 @@
 
 #include <imgui.h>
 
-#include <skipifzero_new.hpp>
-
 #include <soloud.h>
+
+#include <sfz.h>
+#include <sfz_cpp.hpp>
 
 // Types
 // ------------------------------------------------------------------------------------------------
@@ -35,7 +36,7 @@ sfz_struct(SfzAudioEngine) {
 // AudioEngine
 // ------------------------------------------------------------------------------------------------
 
-SFZ_EXTERN_C SfzAudioEngine* sfzAudioCreate(SfzAllocator* allocator)
+sfz_extern_c SfzAudioEngine* sfzAudioCreate(SfzAllocator* allocator)
 {
 	SfzAudioEngine* audio = sfz_new<SfzAudioEngine>(allocator, sfz_dbg(""));
 	audio->allocator = allocator;
@@ -46,7 +47,7 @@ SFZ_EXTERN_C SfzAudioEngine* sfzAudioCreate(SfzAllocator* allocator)
 	return audio;
 }
 
-SFZ_EXTERN_C void sfzAudioDestroy(SfzAudioEngine* audio)
+sfz_extern_c void sfzAudioDestroy(SfzAudioEngine* audio)
 {
 	if (audio == nullptr) return;
 	SfzAllocator* allocator = audio->allocator;
@@ -57,7 +58,7 @@ SFZ_EXTERN_C void sfzAudioDestroy(SfzAudioEngine* audio)
 	sfz_delete(allocator, audio);
 }
 
-SFZ_EXTERN_C void sfzAudioRenderDebugUI(SfzAudioEngine* audio)
+sfz_extern_c void sfzAudioRenderDebugUI(SfzAudioEngine* audio)
 {
 	(void)audio;
 	ImGuiWindowFlags windowFlags = 0;

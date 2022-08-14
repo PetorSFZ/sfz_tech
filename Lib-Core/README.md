@@ -4,53 +4,27 @@ sfz_core is a minimal header-only base library for most skipifzero applications.
 
 Main features:
 
-* Data-oriented design
-* Compact
-* Simple to read
+* C-compatible with C++ enhancements, suitable for C API's.
+* Compact and minimal
+* Fast to compile
 * Modular, easy to include in your project
-* C-compatible subset
+* Header only, no build step
 * No dependencies beside standard library
 * No exceptions
 * No RTTI
 * All dynamic memory allocation done through fully customizable allocator interface
 
+In short, it's designed in such a way that I can really quickly throw in a couple of headers if I need something in a new project. Some of the design goals are at odds, header only and being fast to compile are not always friends. If something would really benefit from having a compilation unit (`.cpp` file) then it should probably be excluded from this library. Above all else, it must be friction free to include only what you need from this library into new projects.
+
 ## Modular
 
-sfz_core is split up into a number of modules (headers). There are two main headers (`sfz.h` and `skipifzero.hpp`), other modules are allowed to include these headers. Otherwise, modules are not allowed to depend on other modules. It's a completely flat dependency graph. This means that you can pick and choose which headers you want to use.
+sfz_core is split up into a number of modules (headers). There are two main headers (`sfz.h` and `sfz_cpp.hpp`), other modules are allowed to include these headers. Otherwise, modules are not allowed to depend on other modules. It's a completely flat dependency graph. This means that you can pick and choose which headers you want to use, the only mandator headers are `sfz.h` for the C-subset and `sfz_cpp.hpp` for C++ headers.
 
-There are two sets of headers, a C-compatible set (prefixed with `sfz_` and ends with `.h`) and a C++ one (`skipifzero_` and `.hpp`). The C++ set is a superset of the C one, particularly `sfz.h` is included by `skipifzero.hpp`.
-
-The modules in sfz_core are:
-
-* `sfz.h`: (__Mandatory__) Core structures and helpers. Can be used in both C and C++.
-* `skipifzero.hpp`: (__Mandatory__) Assert macros, Allocator interface, vector primitive, memory helpers and math functions.
-* `skipifzero_allocators.hpp`: Standard implementations of the allocator interface.
-* `skipifzero_arrays.hpp`: Arrays (replacements for `std::vector`, etc).
-* `skipifzero_defer.hpp`: Basic implementation of a `defer` keyword.
-* `skipifzero_geometry.hpp`: Geometric objects and algorithms (e.g. rays, boxes, spheres, intersection tests, etc).
-* `skipifzero_hash_maps.hpp`: Hash functions, hash maps (replacements for `std::unordered_map`, etc).
-* `skipifzero_image_view.hpp`: Types used to specify the view of an image.
-* `skipifzero_math.hpp`: Linear algebra math primitives and functions.
-* `skipifzero_new.hpp`: new/delete operators and smart pointers using sfz allocators.
-* `skipifzero_pool.hpp`: Datastructure which is somewhat of a mix between an array, an allocator and the entity allocation part of an ECS system.
-* `skipifzero_ring_buffers.hpp`: Ring buffers (replacements for `std::deque` and such).
-* `skipifzero_strings.hpp`: Strings (replacements for `std::string`, etc).
+There are two sets of headers, a C-compatible set (ends with `.h`) and a C++ one (ends with `.hpp`). The C++ set is a superset of the C one, particularly `sfz.h` is included by `sfz_cpp.hpp`.
 
 ## (No) dependencies
 
-sfz_core has __no__ dependencies beside the C++ standard library, and even then it tries to minimize usage. `sfz.h` doesn't depend on the standard library, for `skipifzero.hpp` following standard headers are __mandatory__:
-
-* `<math.h>`: Needed for `sqrt()`, could be replaced with platform specific intrinsics.
-* `<string.h>`: Needed for `mempcpy()` and other memory and string related functionality.
-
-In addition, some headers have additional standard library header requirements. These __optional__ standard headers are:
-
-* `<atomic>`: Needed for atomic integers.
-* `<cstdarg>`: Needed for `va_list` and related functionality.
-* `<cstdio>`: Needed for `vsnprintf()`.
-* `<cctype>`: Needed for `tolower()`
-* `<malloc.h>`: (Windows only): Needed for `_aligned_malloc()`.
-* `<new>`: Needed for placement `new`, which AFAIK is the only way to properly construct C++ objects in raw memory.
+sfz_core has __no__ dependencies beside the C++ standard library, and even then it tries to minimize usage. In particular, `sfz.h` and `sfz_cpp.hpp` are not allowed to include \~any\~ standard headers whatsoever. In order to accomplish this there are some compiler specific trickery where subsets of standard headers are forward declared.
 
 ## License
 

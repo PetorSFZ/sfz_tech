@@ -99,6 +99,21 @@ void HighLevelCmdList::clearDepthBufferOptimal()
 	CHECK_ZG mCmdList.clearDepthBufferOptimal();
 }
 
+void HighLevelCmdList::setScissorDefault()
+{
+	ZgRect rect = {};
+	rect.topLeftX = 0;
+	rect.topLeftY = 0;
+	rect.width = U16_MAX;
+	rect.height = U16_MAX;
+	CHECK_ZG mCmdList.setFramebufferScissor(rect);
+}
+
+void HighLevelCmdList::setScissor(ZgRect rect)
+{
+	CHECK_ZG mCmdList.setFramebufferScissor(rect);
+}
+
 void HighLevelCmdList::setPushConstantUntyped(u32 reg, const void* data, u32 numBytes)
 {
 	sfz_assert(numBytes > 0);
@@ -205,25 +220,6 @@ void HighLevelCmdList::uploadToStreamingBufferUntyped(
 	CHECK_ZG mCmdList.uploadToBuffer(mUploader->handle, memory.buffer.handle, 0, data, numBytes);
 }
 
-void HighLevelCmdList::setVertexBuffer(u32 slot, SfzHandle handle)
-{
-	SfzBufferResource* resource = mResources->getBuffer(handle);
-	sfz_assert(resource != nullptr);
-
-	zg::Buffer* buffer = nullptr;
-	if (resource->type == SfzBufferResourceType::STATIC) {
-		buffer = &resource->staticMem.buffer;
-	}
-	else if (resource->type == SfzBufferResourceType::STREAMING) {
-		buffer = &resource->streamingMem.data(mCurrFrameIdx).buffer;
-	}
-	else {
-		sfz_assert_hard(false);
-	}
-
-	CHECK_ZG mCmdList.setVertexBuffer(slot, *buffer);
-}
-
 void HighLevelCmdList::setIndexBuffer(SfzHandle handle, ZgIndexBufferType indexType)
 {
 	SfzBufferResource* resource = mResources->getBuffer(handle);
@@ -263,7 +259,7 @@ i32x3 HighLevelCmdList::getComputeGroupDims() const
 	sfz_assert(mBoundShader->type == SfzShaderType::COMPUTE);
 	u32 x = 0, y = 0, z = 0;
 	mBoundShader->computePipeline.getGroupDims(x, y, z);
-	return i32x3(x, y, z);
+	return i32x3_init(x, y, z);
 }
 
 void HighLevelCmdList::dispatchCompute(i32 groupCountX, i32 groupCountY, i32 groupCountZ)

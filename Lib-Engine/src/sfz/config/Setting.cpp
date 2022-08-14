@@ -19,8 +19,9 @@
 
 #include "sfz/config/Setting.hpp"
 
-#include <skipifzero.hpp>
-#include <skipifzero_math.hpp>
+#include <sfz.h>
+#include <sfz_math.h>
+#include <skipifzero_strings.hpp>
 
 // SettingValue
 // ------------------------------------------------------------------------------------------------
@@ -69,8 +70,8 @@ SfzSettingValue SfzSettingValue::createBool(
 
 SfzSetting::SfzSetting(const char* section, const char* key) noexcept
 :
-	mSection(section),
-	mKey(key)
+	mSection(sfzStr32Init(section)),
+	mKey(sfzStr96Init(key))
 {
 	mValue = SfzSettingValue::createInt();
 }
@@ -122,14 +123,14 @@ bool SfzSetting::setInt(i32 value) noexcept
 	if (this->type() != SfzValueType::INT) return false;
 
 	// Clamp value
-	value = sfz::clamp(value, mValue.i.bounds.minValue, mValue.i.bounds.maxValue);
+	value = i32_clamp(value, mValue.i.bounds.minValue, mValue.i.bounds.maxValue);
 
 	// Ensure value is of a valid step
 	i64 diff = i64(value) - i64(mValue.i.bounds.minValue);
 	f64 stepsFractions = f64(diff) / f64(mValue.i.bounds.step);
-	i64 steps = i64(::round(stepsFractions));
+	i64 steps = i64(sfz::round(f32(stepsFractions)));
 	value = i32(i64(mValue.i.bounds.minValue) + steps * i64(mValue.i.bounds.step));
-	mValue.i.value = sfz::clamp(value, mValue.i.bounds.minValue, mValue.i.bounds.maxValue);
+	mValue.i.value = i32_clamp(value, mValue.i.bounds.minValue, mValue.i.bounds.maxValue);
 
 	return true;
 }
@@ -137,7 +138,7 @@ bool SfzSetting::setInt(i32 value) noexcept
 bool SfzSetting::setFloat(f32 value) noexcept
 {
 	if (this->type() != SfzValueType::FLOAT) return false;
-	mValue.f.value = sfz::clamp(value, mValue.f.bounds.minValue, mValue.f.bounds.maxValue);
+	mValue.f.value = f32_clamp(value, mValue.f.bounds.minValue, mValue.f.bounds.maxValue);
 	return true;
 }
 

@@ -19,6 +19,8 @@
 
 #include "sfz/resources/BufferResource.hpp"
 
+#include <skipifzero_strings.hpp>
+
 // SfzBufferResource
 // ------------------------------------------------------------------------------------------------
 
@@ -81,10 +83,10 @@ SfzBufferResource SfzBufferResource::createStreaming(
 	const bool committedAllocation = false;
 	u32 frameIdx = 0;
 	resource.streamingMem.init(frameLatency, [&](SfzStreamingBufferMemory& memory) {
-		sfz::str256 deviceDebugName("%s_%u", name, frameIdx);
+		SfzStr320 deviceDebugName = sfzStr320InitFmt("%s_%u", name, frameIdx);
 		frameIdx += 1;
 		CHECK_ZG memory.buffer.create(
-			sizeBytes, ZG_MEMORY_TYPE_DEVICE, committedAllocation, deviceDebugName.str());
+			sizeBytes, ZG_MEMORY_TYPE_DEVICE, committedAllocation, deviceDebugName.str);
 	});
 
 	return resource;

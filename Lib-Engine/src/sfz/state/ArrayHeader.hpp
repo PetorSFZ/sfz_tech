@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 
 namespace sfz {
 
@@ -123,7 +123,7 @@ static_assert(sizeof(ArrayHeader) == 16, "ArrayHeader is not 16-byte");
 
 constexpr u32 calcArrayHeaderSizeBytes(u32 componentSize, u32 numComponents)
 {
-	return u32(roundUpAligned(sizeof(ArrayHeader) + componentSize * numComponents, 16));
+	return sfzRoundUpAlignedU32(sizeof(ArrayHeader) + componentSize * numComponents, 16);
 }
 
 } // namespace sfz

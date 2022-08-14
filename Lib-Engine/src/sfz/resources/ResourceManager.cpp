@@ -18,8 +18,6 @@
 
 #include "sfz/resources/ResourceManager.hpp"
 
-#include <skipifzero_new.hpp>
-
 #include "sfz/SfzLogging.h"
 #include "sfz/renderer/ZeroGUtils.hpp"
 #include "sfz/resources/FramebufferResource.hpp"
@@ -73,7 +71,7 @@ void SfzResourceManager::updateResolution(i32x2 screenRes, SfzStrIDs* ids)
 {
 	// Check if any textures need rebuilding
 	bool anyTexNeedRebuild = false;
-	for (sfz::HashMapPair<SfzStrID, SfzHandle> itemItr : mState->textureHandles) {
+	for (SfzHashMapPair<SfzStrID, SfzHandle> itemItr : mState->textureHandles) {
 		const SfzTextureResource& resource = mState->textures[itemItr.value];
 		anyTexNeedRebuild = anyTexNeedRebuild || resource.needRebuild(screenRes);
 	}
@@ -89,7 +87,7 @@ void SfzResourceManager::updateResolution(i32x2 screenRes, SfzStrIDs* ids)
 		CHECK_ZG copyQueue.flush();
 
 		// Rebuild textures
-		for (sfz::HashMapPair<SfzStrID, SfzHandle> itemItr : mState->textureHandles) {
+		for (SfzHashMapPair<SfzStrID, SfzHandle> itemItr : mState->textureHandles) {
 			SfzTextureResource& resource = mState->textures[itemItr.value];
 			if (resource.screenRelativeRes || resource.settingControlledRes) {
 				CHECK_ZG resource.build(screenRes, ids);
@@ -97,7 +95,7 @@ void SfzResourceManager::updateResolution(i32x2 screenRes, SfzStrIDs* ids)
 		}
 
 		// Rebuild framebuffers
-		for (sfz::HashMapPair<SfzStrID, SfzHandle> itemItr : mState->framebufferHandles) {
+		for (SfzHashMapPair<SfzStrID, SfzHandle> itemItr : mState->framebufferHandles) {
 			SfzFramebufferResource& resource = mState->framebuffers[itemItr.value];
 			if (resource.screenRelativeRes || resource.controlledResSetting) {
 				CHECK_ZG resource.build(screenRes, ids, this);
@@ -134,7 +132,7 @@ SfzBufferResource* SfzResourceManager::getBuffer(SfzHandle handle)
 SfzHandle SfzResourceManager::addBuffer(SfzBufferResource&& resource, bool allowReplace)
 {
 	SfzStrID name = resource.name;
-	sfz_assert(name != SFZ_STR_ID_NULL);
+	sfz_assert(name != SFZ_NULL_STR_ID);
 	sfz_assert(allowReplace || mState->bufferHandles.get(name) == nullptr);
 	if (allowReplace && mState->bufferHandles.get(name) != nullptr) {
 		removeBuffer(name);
@@ -180,7 +178,7 @@ SfzTextureResource* SfzResourceManager::getTexture(SfzHandle handle)
 SfzHandle SfzResourceManager::addTexture(SfzTextureResource&& resource)
 {
 	SfzStrID name = resource.name;
-	sfz_assert(name != SFZ_STR_ID_NULL);
+	sfz_assert(name != SFZ_NULL_STR_ID);
 	sfz_assert(mState->textureHandles.get(name) == nullptr);
 	SfzHandle handle = mState->textures.allocate(sfz_move(resource));
 	mState->textureHandles.put(name, handle);
@@ -224,7 +222,7 @@ SfzFramebufferResource* SfzResourceManager::getFramebuffer(SfzHandle handle)
 SfzHandle SfzResourceManager::addFramebuffer(SfzFramebufferResource&& resource)
 {
 	SfzStrID name = resource.name;
-	sfz_assert(name != SFZ_STR_ID_NULL);
+	sfz_assert(name != SFZ_NULL_STR_ID);
 	sfz_assert(mState->framebufferHandles.get(name) == nullptr);
 	SfzHandle handle = mState->framebuffers.allocate(sfz_move(resource));
 	mState->framebufferHandles.put(name, handle);

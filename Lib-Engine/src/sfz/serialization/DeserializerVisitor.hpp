@@ -20,7 +20,7 @@
 
 #include "visit_struct/visit_struct.hpp"
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_strings.hpp>
 
@@ -39,21 +39,21 @@ struct DeserializerVisitor final {
 	JsonNode parentNode;
 	bool success = true;
 	bool errorMessagesEnabled = true;
-	str320* errorPath = nullptr; // Point to an empty str320 to get better debug output
+	SfzStr320* errorPath = nullptr; // Point to an empty SfzStr320 to get better debug output
 
 	void appendErrorPath(const char* name)
 	{
-		if (errorPath != nullptr) errorPath->appendf(".%s", name);
+		if (errorPath != nullptr) sfzStr320Appendf(errorPath, ".%s", name);
 	}
 
 	void appendErrorPathArray(u32 idx)
 	{
-		if (errorPath != nullptr) errorPath->appendf("[%u]", idx);
+		if (errorPath != nullptr) sfzStr320Appendf(errorPath, "[%u]", idx);
 	}
 
 	void restoreErrorPath(const char* name)
 	{
-		if (errorPath != nullptr) errorPath->removeChars(u32(strnlen(name, 100)) + 1);
+		if (errorPath != nullptr) sfzStr320RemoveChars(errorPath, u32(strnlen(name, 100)) + 1);
 	}
 
 	void restoreErrorPathArray(u32 idx)
@@ -67,14 +67,14 @@ struct DeserializerVisitor final {
 		else if (idx < 100'000) numDigits = 5;
 		else if (idx < 1'000'000) numDigits = 6;
 		else if (idx < 10'000'000) numDigits = 7;
-		if (errorPath != nullptr) errorPath->removeChars(numDigits + 2);
+		if (errorPath != nullptr) sfzStr320RemoveChars(errorPath, numDigits + 2);
 	}
 
 	void printErrorMessage(const char* message)
 	{
 		if (errorMessagesEnabled) {
 			if (errorPath != nullptr) {
-				SFZ_LOG_ERROR("\"%s\": %s", errorPath->str(), message);
+				SFZ_LOG_ERROR("\"%s\": %s", errorPath->str, message);
 			}
 		}
 	}
@@ -206,45 +206,27 @@ struct DeserializerVisitor final {
 	void deserialize(const JsonNode& node, SfzStrID& valOut)
 	{
 		if (!ensureNodeIsValid(node)) return;
-		str256 tmpStr;
-		extractValue(node.valueStr256(), tmpStr);
-		if (this->success) valOut = sfzStrIDCreateRegister(ids, tmpStr);
+		SfzStr320 tmpStr;
+		extractValue(node.valueSfzStr320(), tmpStr);
+		if (this->success) valOut = sfzStrIDCreateRegister(ids, tmpStr.str);
 	}
 
-	void deserialize(const JsonNode& node, str32& valOut)
+	void deserialize(const JsonNode& node, SfzStr32& valOut)
 	{
 		if (!ensureNodeIsValid(node)) return;
-		extractValue(node.valueStr32(), valOut);
+		extractValue(node.valueSfzStr32(), valOut);
 	}
 
-	void deserialize(const JsonNode& node, str64& valOut)
+	void deserialize(const JsonNode& node, SfzStr96& valOut)
 	{
 		if (!ensureNodeIsValid(node)) return;
-		extractValue(node.valueStr64(), valOut);
+		extractValue(node.valueSfzStr96(), valOut);
 	}
 
-	void deserialize(const JsonNode& node, str96& valOut)
+	void deserialize(const JsonNode& node, SfzStr320& valOut)
 	{
 		if (!ensureNodeIsValid(node)) return;
-		extractValue(node.valueStr96(), valOut);
-	}
-
-	void deserialize(const JsonNode& node, str128& valOut)
-	{
-		if (!ensureNodeIsValid(node)) return;
-		extractValue(node.valueStr128(), valOut);
-	}
-
-	void deserialize(const JsonNode& node, str256& valOut)
-	{
-		if (!ensureNodeIsValid(node)) return;
-		extractValue(node.valueStr256(), valOut);
-	}
-
-	void deserialize(const JsonNode& node, str320& valOut)
-	{
-		if (!ensureNodeIsValid(node)) return;
-		extractValue(node.valueStr320(), valOut);
+		extractValue(node.valueSfzStr320(), valOut);
 	}
 
 	template<typename T>
@@ -265,7 +247,7 @@ struct DeserializerVisitor final {
 	}
 
 	template<typename T>
-	void deserialize(const JsonNode& node, Array<T>& valOut)
+	void deserialize(const JsonNode& node, SfzArray<T>& valOut)
 	{
 		if (!ensureNodeIsValid(node)) return;
 
@@ -293,7 +275,7 @@ struct DeserializerVisitor final {
 	}
 
 	template<typename T, u32 N>
-	void deserialize(const JsonNode& node, ArrayLocal<T,N>& valOut)
+	void deserialize(const JsonNode& node, SfzArrayLocal<T,N>& valOut)
 	{
 		if (!ensureNodeIsValid(node)) return;
 
@@ -317,7 +299,7 @@ struct DeserializerVisitor final {
 				}
 			}
 			else {
-				printErrorMessage(str128("Json array is too big (%u) for local array (%u)",
+				printErrorMessage(SfzStr96("Json array is too big (%u) for local array (%u)",
 					len, valOut.capacity()).str());
 				this->success = false;
 			}
@@ -369,7 +351,7 @@ bool deserialize(T& valOut, const char* jsonPath, SfzAllocator* allocator)
 		return false;
 	}
 
-	str320 tmpErrorPath = "root";
+	SfzStr320 tmpErrorPath = sfzStr320Init("root");
 	DeserializerVisitor deserializer;
 	deserializer.allocator = allocator;
 	deserializer.parentNode = json.root();

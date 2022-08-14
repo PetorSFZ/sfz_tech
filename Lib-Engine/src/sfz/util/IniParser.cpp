@@ -21,8 +21,8 @@
 #include <algorithm>
 #include <cctype> // std::tolower()
 
-#include <skipifzero.hpp>
-#include <skipifzero_math.hpp>
+#include <sfz.h>
+#include <sfz_math.h>
 
 #include "sfz/SfzLogging.h"
 #include "sfz/util/IO.hpp"
@@ -37,9 +37,9 @@ static bool isWhitespace(char c) noexcept
 	return c == ' ' || c == '\t';
 }
 
-static void printLoadError(const str320& path, u32 line, const char* message) noexcept
+static void printLoadError(const SfzStr320& path, u32 line, const char* message) noexcept
 {
-	SFZ_LOG_ERROR("Failed to load \"%s\" at line %u: %s\n", path.str(), line, message);
+	SFZ_LOG_ERROR("Failed to load \"%s\" at line %u: %s\n", path.str, line, message);
 }
 
 // IniParser: Constructors & destructors
@@ -48,7 +48,7 @@ static void printLoadError(const str320& path, u32 line, const char* message) no
 IniParser::IniParser(const char* path, SfzAllocator* allocator) noexcept
 :
 	mAllocator(allocator),
-	mPath(path),
+	mPath(sfzStr320Init(path)),
 	mSections(0, allocator, sfz_dbg("IniParser: mSections"))
 { }
 
@@ -58,13 +58,13 @@ IniParser::IniParser(const char* path, SfzAllocator* allocator) noexcept
 bool IniParser::load() noexcept
 {
 	// Check if a path is available
-	if (mPath.str() == nullptr) {
+	if (mPath == "") {
 		SFZ_LOG_ERROR("Can't load ini file without path.");
 		return false;
 	}
 
 	// Read file
-	Array<char> fileContents = readTextFile(mPath.str(), mAllocator);
+	SfzArray<char> fileContents = readTextFile(mPath.str, mAllocator);
 	if (fileContents.size() == 0) {
 		printLoadError(mPath, 0, "Ini file is empty.");
 		return false;
@@ -76,7 +76,7 @@ bool IniParser::load() noexcept
 		u32 startIndex = u32(~0);
 		u32 length = u32(~0);
 	};
-	Array<LineInfo> lines(256, mAllocator, sfz_dbg(""));
+	SfzArray<LineInfo> lines(256, mAllocator, sfz_dbg(""));
 	{
 		LineInfo tmp;
 		tmp.lineNumber = 1;
@@ -118,7 +118,7 @@ bool IniParser::load() noexcept
 	}
 
 	// Create temporary parse tree and add the first initial empty section
-	Array<Section> newSections(64, mAllocator, sfz_dbg(""));
+	SfzArray<Section> newSections(64, mAllocator, sfz_dbg(""));
 	newSections.add(Section("", mAllocator));
 
 	// Parse contents of ini file
@@ -134,8 +134,8 @@ bool IniParser::load() noexcept
 			}
 			Item comment;
 			comment.type = ItemType::COMMENT_OWN_ROW;
-			comment.str.clear();
-			comment.str.appendChars(startPtr + 1, min(u32(191), line.length - 1));
+			sfzStr320Clear(&comment.str);
+			sfzStr320AppendChars(&comment.str, startPtr + 1, u32_min(u32(191), line.length - 1));
 			newSections.last().items.add(comment);
 			continue;
 		}
@@ -166,8 +166,8 @@ bool IniParser::load() noexcept
 
 			// Insert section
 			Section& tmpSection = newSections.add();
-			tmpSection.name.clear();
-			tmpSection.name.appendChars(startPtr + 1, nameLength);
+			sfzStr96Clear(&tmpSection.name);
+			sfzStr96AppendChars(&tmpSection.name, startPtr + 1, nameLength);
 			tmpSection.items.init(0, mAllocator, sfz_dbg(""));
 
 			// Find start of optional comment
@@ -198,8 +198,8 @@ bool IniParser::load() noexcept
 
 				Item item;
 				item.type = ItemType::COMMENT_APPEND_PREVIOUS_ROW;
-				item.str.clear();
-				item.str.appendChars(startPtr + index, commentLength);
+				sfzStr320Clear(&item.str);
+				sfzStr320AppendChars(&item.str, startPtr + index, commentLength);
 				newSections.last().items.add(item);
 			}
 		}
@@ -241,8 +241,8 @@ bool IniParser::load() noexcept
 
 			// Insert name into item
 			Item item;
-			item.str.clear();
-			item.str.appendChars(startPtr, nameLength);
+			sfzStr320Clear(&item.str);
+			sfzStr320AppendChars(&item.str, startPtr, nameLength);
 
 			// Find first char of value
 			u32 valueIndex = u32(~0);
@@ -310,8 +310,8 @@ bool IniParser::load() noexcept
 
 				Item commentItem;
 				commentItem.type = ItemType::COMMENT_APPEND_PREVIOUS_ROW;
-				commentItem.str.clear();
-				commentItem.str.appendChars(startPtr + index, commentLength);
+				sfzStr320Clear(&commentItem.str);
+				sfzStr320AppendChars(&commentItem.str, startPtr + index, commentLength);
 				newSections.last().items.add(commentItem);
 			}
 		}
@@ -325,7 +325,7 @@ bool IniParser::load() noexcept
 bool IniParser::save() noexcept
 {
 	// Delete current file
-	deleteFile(mPath.str());
+	deleteFile(mPath.str);
 
 	// Calculate upper bound for the memory requirements of the string representation
 	u32 memoryReqs = 0;
@@ -335,17 +335,17 @@ bool IniParser::save() noexcept
 	}
 
 	// Create string representation from parse tree
-	str4096 str;
+	SfzStr2560 str = {};
 	for (u32 sectIndex = 0; sectIndex < mSections.size(); sectIndex++) {
 		Section& section = mSections[sectIndex];
 
 		// Print section header
 		if (section.name != "") {
-			str.appendf("[%s]", section.name.str());
+			sfzStr2560Appendf(&str, "[%s]", section.name.str);
 			if (section.items.size() >= 1 && section.items[0].type == ItemType::COMMENT_APPEND_PREVIOUS_ROW) {
-				str.appendf(" ;%s", section.items[0].str.str());
+				sfzStr2560Appendf(&str, " ;%s", section.items[0].str.str);
 			}
-			str.appendf("\n");
+			sfzStr2560Appendf(&str, "\n");
 		}
 
 		for (u32 i = 0; i < section.items.size(); i++) {
@@ -355,16 +355,16 @@ bool IniParser::save() noexcept
 			switch (item.type) {
 			case ItemType::NUMBER:
 				if (sfz::eqf(::roundf(item.f), item.f)) {
-					str.appendf("%s=%i", item.str.str(), item.i);
+					sfzStr2560Appendf(&str, "%s=%i", item.str.str, item.i);
 				} else {
-					str.appendf("%s=%f", item.str.str(), item.f);
+					sfzStr2560Appendf(&str, "%s=%f", item.str.str, item.f);
 				}
 				break;
 			case ItemType::BOOL:
-				str.appendf("%s=%s", item.str.str(), item.b ? "true" : "false");
+				sfzStr2560Appendf(&str, "%s=%s", item.str.str, item.b ? "true" : "false");
 				break;
 			case ItemType::COMMENT_OWN_ROW:
-				str.appendf(";%s", item.str.str());
+				sfzStr2560Appendf(&str, ";%s", item.str.str);
 				break;
 			case ItemType::COMMENT_APPEND_PREVIOUS_ROW:
 				continue;
@@ -374,21 +374,21 @@ bool IniParser::save() noexcept
 			if ((i + 1) < section.items.size()) {
 				Item& nextItem = section.items[i + 1];
 				if (nextItem.type == ItemType::COMMENT_APPEND_PREVIOUS_ROW) {
-					str.appendf(" ;%s", nextItem.str.str());
+					sfzStr2560Appendf(&str, " ;%s", nextItem.str.str);
 				}
 			}
-			str.appendf("\n");
+			sfzStr2560Appendf(&str, "\n");
 		}
 
 		if ((sectIndex + 1) < mSections.size()) {
-			str.appendf("\n");
+			sfzStr2560Appendf(&str, "\n");
 		}
 	}
 
 	// Write string to file
-	bool success = sfz::writeBinaryFile(mPath.str(), reinterpret_cast<const u8*>(str.str()), str.size());
+	bool success = sfz::writeBinaryFile(mPath.str, reinterpret_cast<const u8*>(str.str), sfzStr2560Size(&str));
 	if (!success) {
-		SFZ_LOG_ERROR("Failed to write ini file \"%s\"", mPath.str());
+		SFZ_LOG_ERROR("Failed to write ini file \"%s\"", mPath.str);
 		return false;
 	}
 
@@ -530,12 +530,12 @@ IniParser::ItemAccessor::ItemAccessor(IniParser& iniParser, u32 sectionIndex, u3
 
 const char* IniParser::ItemAccessor::getSection() const noexcept
 {
-	return mIniParser->mSections[mSectionIndex].name.str();
+	return mIniParser->mSections[mSectionIndex].name.str;
 }
 
 const char* IniParser::ItemAccessor::getKey() const noexcept
 {
-	return mIniParser->mSections[mSectionIndex].items[mKeyIndex].str.str();
+	return mIniParser->mSections[mSectionIndex].items[mKeyIndex].str.str;
 }
 
 const i32* IniParser::ItemAccessor::getInt() const noexcept
@@ -698,7 +698,7 @@ IniParser::Item* IniParser::findItemEnsureExists(const char* section, const char
 	// Create item if it does not exist
 	if (itemPtr == nullptr) {
 		Item tmp;
-		tmp.str.appendf(key);
+		sfzStr320Appendf(&tmp.str, key);
 		sectPtr->items.add(tmp);
 		itemPtr = &sectPtr->items.last();
 	}

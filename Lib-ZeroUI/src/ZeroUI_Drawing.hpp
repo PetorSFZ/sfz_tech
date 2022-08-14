@@ -53,17 +53,17 @@ bool zuiInternalDrawAddFont(
 
 void zuiDrawAddCommand(
 	ZuiDrawCtx* drawCtx,
-	const SfzMat34& transform,
+	const SfzMat44& transform,
 	const ZuiVertex* vertices,
 	u32 numVertices,
 	const u32* indices,
 	u32 numIndices,
-	u64 imageHandle,
-	ZuiCmdType cmdType);
+	ZuiCmdType cmdType,
+	u64 imageHandle);
 
 f32 zuiDrawTextCentered(
 	ZuiDrawCtx* drawCtx,
-	const SfzMat34& transform,
+	const SfzMat44& transform,
 	ZuiID fontID,
 	f32 size,
 	f32x4 color,
@@ -71,19 +71,19 @@ f32 zuiDrawTextCentered(
 
 void zuiDrawImage(
 	ZuiDrawCtx* drawCtx,
-	const SfzMat34& transform,
+	const SfzMat44& transform,
 	f32x2 dims,
 	u64 imageHandle);
 
 void zuiDrawRect(
 	ZuiDrawCtx* drawCtx,
-	const SfzMat34& transform,
+	const SfzMat44& transform,
 	f32x2 dims,
 	f32x4 color);
 
 void zuiDrawBorder(
 	ZuiDrawCtx* drawCtx,
-	const SfzMat34& transform,
+	const SfzMat44& transform,
 	f32x2 dims,
 	f32 thickness,
 	f32x4 color);

@@ -19,9 +19,9 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
+#include <sfz_math.h>
 #include <skipifzero_arrays.hpp>
-#include <skipifzero_math.hpp>
 
 // Forward declare SDL_GameController
 extern "C" {
@@ -42,10 +42,10 @@ struct KeyboardState final {
 };
 
 struct MouseState final {
-	i32x2 windowDims = i32x2(0); // Position and delta is in range [0, windowDims]
-	i32x2 pos = i32x2(0); // [0, 0] in bottom left corner
-	i32x2 delta = i32x2(0); // Delta mouse has moved since last frame
-	i32x2 wheel = i32x2(0); // Pos-y "up", neg-y "down", but can vary with touchpads
+	i32x2 windowDims = i32x2_splat(0); // Position and delta is in range [0, windowDims]
+	i32x2 pos = i32x2_splat(0); // [0, 0] in bottom left corner
+	i32x2 delta = i32x2_splat(0); // Delta mouse has moved since last frame
+	i32x2 wheel = i32x2_splat(0); // Pos-y "up", neg-y "down", but can vary with touchpads
 	u8 left = 0;
 	u8 middle = 0;
 	u8 right = 0;
@@ -87,7 +87,7 @@ constexpr u32 GPD_DPAD_RIGHT = 24;
 constexpr u32 GPD_MAX_NUM_BUTTONS = 25;
 
 // The approximate dead zone (as specified by SDL2) for gamepad sticks.
-constexpr f32 GPD_STICK_APPROX_DEADZONE = f32(8000) / f32(INT16_MAX);
+constexpr f32 GPD_STICK_APPROX_DEADZONE = f32(8000) / f32(I16_MAX);
 
 struct GamepadState final {
 
@@ -102,8 +102,8 @@ struct GamepadState final {
 	// Sticks are in range [-1, 1]. Do not however that no deadzone has been applied. Stick's
 	// neutral should be somewhere in the range ~[-0.24, 0.24], but this will vary from gamepad to
 	// gamepad.
-	f32x2 leftStick = f32x2(0.0f);
-	f32x2 rightStick = f32x2(0.0f);
+	f32x2 leftStick = f32x2_splat(0.0f);
+	f32x2 rightStick = f32x2_splat(0.0f);
 
 	f32 lt = 0.0f;
 	f32 rt = 0.0f;
@@ -116,29 +116,29 @@ inline f32x2 applyDeadzone(f32x2 stick, f32 deadzone)
 {
 	if (deadzone <= 0.0f) return stick;
 	sfz_assert(deadzone < 1.0f);
-	const f32 stickLen = sfz::length(stick);
+	const f32 stickLen = f32x2_length(stick);
 	if (stickLen >= deadzone) {
 		const f32 scale = 1.0f / (1.0f - deadzone);
-		const f32 adjustedLen = sfz::min(sfz::max(0.0f, stickLen - deadzone) * scale, 1.0f);
+		const f32 adjustedLen = f32_min(f32_max(0.0f, stickLen - deadzone) * scale, 1.0f);
 		const f32x2 dir = stick * (1.0f / stickLen);
 		const f32x2 adjustedStick = dir * adjustedLen;
 		return adjustedStick;
 	}
-	return f32x2(0.0f);
+	return f32x2_splat(0.0f);
 }
 
 struct TouchState final {
-	int64_t id = -1;
-	f32x2 pos = f32x2(0.0f); // Range [0, 1]
+	i64 id = -1;
+	f32x2 pos = f32x2_splat(0.0f); // Range [0, 1]
 	f32 pressure = 0.0f; // Range [0, 1]. Haven't found anything that activates it, avoid using?
 };
 
 struct RawInputState final {
-	i32x2 windowDims = i32x2(0);
+	i32x2 windowDims = i32x2_splat(0);
 	KeyboardState kb;
 	MouseState mouse;
-	Arr6<GamepadState> gamepads;
-	Arr8<TouchState> touches;
+	SfzArr6<GamepadState> gamepads;
+	SfzArr8<TouchState> touches;
 };
 
 }

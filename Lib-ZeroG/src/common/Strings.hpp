@@ -18,10 +18,10 @@
 
 #pragma once
 
-#include <cstdarg>
-#include <cstdio>
+#include <stdarg.h>
+#include <stdio.h>
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 
 // String helper functions
 // ------------------------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ inline void printfAppend(char*& str, u32& bytesLeft, const char* format, ...) no
 {
 	va_list args;
 	va_start(args, format);
-	int res = std::vsnprintf(str, bytesLeft, format, args);
+	int res = vsnprintf(str, bytesLeft, format, args);
 	va_end(args);
 
 	sfz_assert(res >= 0);

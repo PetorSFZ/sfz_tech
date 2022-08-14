@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_strings.hpp>
 
@@ -49,10 +49,7 @@
 
 #include "common/Logging.hpp"
 
- using Microsoft::WRL::ComPtr;
-
-using sfz::ArrayLocal;
-using sfz::str320;
+using Microsoft::WRL::ComPtr;
 
 // TextureFormats conversion
 // ------------------------------------------------------------------------------------------------

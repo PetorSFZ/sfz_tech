@@ -18,15 +18,14 @@
 
 #include "sfz/util/IO.hpp"
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_strings.hpp>
 
 #include "sfz/SfzLogging.h"
 
-#include <cstdlib>
-#include <cstdio> // fopen, fwrite, BUFSIZ
-#include <ctime>
-#include <cstring>
+#include <stdlib.h>
+#include <stdio.h> // fopen, fwrite, BUFSIZ
+#include <time.h>
 
 #include "sfz/PushWarnings.hpp"
 
@@ -55,43 +54,43 @@ namespace sfz {
 // ------------------------------------------------------------------------------------------------
 
 template<typename T>
-static Array<T> readFileInternal(const char* path, bool binaryMode, SfzAllocator* allocator) noexcept
+static SfzArray<T> readFileInternal(const char* path, bool binaryMode, SfzAllocator* allocator) noexcept
 {
 	// Open file
-	if (path == nullptr) return Array<T>();
-	std::FILE* file = std::fopen(path, binaryMode ? "rb" : "r");
-	if (file == NULL) return Array<T>();
+	if (path == nullptr) return SfzArray<T>();
+	FILE* file = fopen(path, binaryMode ? "rb" : "r");
+	if (file == NULL) return SfzArray<T>();
 
 	// Get size of file
-	std::fseek(file, 0, SEEK_END);
-	int64_t size = std::ftell(file);
-	std::rewind(file); // Rewind position to beginning of file
+	fseek(file, 0, SEEK_END);
+	i64 size = ftell(file);
+	rewind(file); // Rewind position to beginning of file
 	if (size < 0) {
-		std::fclose(file);
-		return Array<T>();
+		fclose(file);
+		return SfzArray<T>();
 	}
 
 	// Create array with enough capacity to fit file
-	Array<T> temp(u32(size + 1), allocator, sfz_dbg("readFileInternal()"));
+	SfzArray<T> temp(u32(size + 1), allocator, sfz_dbg("readFileInternal()"));
 
 	// Read the file into the array
 	u8 buffer[BUFSIZ];
 	size_t readSize;
 	size_t currOffs = 0;
-	while ((readSize = std::fread(buffer, 1, BUFSIZ, file)) > 0) {
+	while ((readSize = fread(buffer, 1, BUFSIZ, file)) > 0) {
 
 		// Ensure array has space.
 		temp.ensureCapacity(u32(currOffs + readSize));
 
 		// Copy chunk into array
-		std::memcpy(temp.data() + currOffs, buffer, readSize);
+		memcpy(temp.data() + currOffs, buffer, readSize);
 		currOffs += readSize;
 	}
 
 	// Set size of array
 	temp.hackSetSize(u32(currOffs));
 
-	std::fclose(file);
+	fclose(file);
 	return sfz_move(temp);
 }
 
@@ -100,18 +99,18 @@ static Array<T> readFileInternal(const char* path, bool binaryMode, SfzAllocator
 
 const char* myDocumentsPath() noexcept
 {
-	static const str320 path = []() -> str320 {
-		str320 tmp = {};
+	static const SfzStr320 path = []() -> SfzStr320 {
+		SfzStr320 tmp = {};
 
 #ifdef _WIN32
-		HRESULT result = SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, tmp.mRawStr);
+		HRESULT result = SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, tmp.str);
 		if (result != S_OK) {
 			SFZ_LOG_ERROR("%s", "Could not retrieve MyDocuments path.");
 			sfz_assert_hard(false);
 		}
 
 		// Add path separator
-		tmp.appendChars("/\0", 2);
+		sfzStr320AppendChars(&tmp, "/\0", 2);
 #else
 		const char* envHome = std::getenv("HOME");
 		tmp.appendf("%s/\0", envHome);
@@ -119,26 +118,26 @@ const char* myDocumentsPath() noexcept
 
 		return tmp;
 	}();
-	return path.str();
+	return path.str;
 }
 
 const char* gameBaseFolderPath() noexcept
 {
-	static const str320 path = []() {
-		str320 tmp = {};
-		tmp.appendf("%s", myDocumentsPath());
+	static const SfzStr320 path = []() {
+		SfzStr320 tmp = {};
+		sfzStr320Appendf(&tmp, "%s", myDocumentsPath());
 #ifdef _WIN32
-		tmp.appendf("My Games/");
+		sfzStr320Appendf(&tmp, "My Games/");
 #endif
 		return tmp;
 	}();
-	return path;
+	return path.str;
 }
 
 const char* getFileNameFromPath(const char* path) noexcept
 {
-	const char* strippedFile1 = std::strrchr(path, '\\');
-	const char* strippedFile2 = std::strrchr(path, '/');
+	const char* strippedFile1 = strrchr(path, '\\');
+	const char* strippedFile2 = strrchr(path, '/');
 	if (strippedFile1 == nullptr && strippedFile2 == nullptr) {
 		return path;
 	}
@@ -190,23 +189,23 @@ i64 fileLastModifiedDate(const char* path) noexcept
 
 bool fileExists(const char* path) noexcept
 {
-	std::FILE* file = std::fopen(path, "r");
+	FILE* file = fopen(path, "r");
 	if (file == NULL) return false;
-	std::fclose(file);
+	fclose(file);
 	return true;
 }
 
 bool directoryExists(const char* path) noexcept
 {
 #ifdef _WIN32
-	std::FILE* file = std::fopen(path, "r");
+	FILE* file = fopen(path, "r");
 	if (file == NULL) {
 		DWORD ftyp = GetFileAttributesA(path);
 		if (ftyp == INVALID_FILE_ATTRIBUTES) return false;
 		if (ftyp & FILE_ATTRIBUTE_DIRECTORY) return true;
 		return false;
 	}
-	std::fclose(file);
+	fclose(file);
 	return true;
 #else
 	std::FILE* file = std::fopen(path, "r");
@@ -218,9 +217,9 @@ bool directoryExists(const char* path) noexcept
 
 bool createFile(const char* path) noexcept
 {
-	std::FILE* file = std::fopen(path, "w");
+	FILE* file = fopen(path, "w");
 	if (file == NULL) return false;
-	std::fclose(file);
+	fclose(file);
 	return true;
 }
 
@@ -237,7 +236,7 @@ bool createDirectory(const char* path) noexcept
 
 bool deleteFile(const char* path) noexcept
 {
-	int res = std::remove(path);
+	int res = remove(path);
 	return res == 0;
 }
 
@@ -256,70 +255,70 @@ bool copyFile(const char* srcPath, const char* dstPath) noexcept
 {
 	u8 buffer[BUFSIZ];
 
-	std::FILE* source = std::fopen(srcPath, "rb");
+	FILE* source = fopen(srcPath, "rb");
 	if (source == NULL) return false;
-	std::FILE* destination = std::fopen(dstPath, "wb");
+	FILE* destination = fopen(dstPath, "wb");
 	if (destination == NULL) {
-		std::fclose(source);
+		fclose(source);
 		return false;
 	}
 
 	size_t size;
-	while ((size = std::fread(buffer, 1, BUFSIZ, source)) > 0) {
-		std::fwrite(buffer, 1, size, destination);
+	while ((size = fread(buffer, 1, BUFSIZ, source)) > 0) {
+		fwrite(buffer, 1, size, destination);
 	}
 
-	std::fclose(source);
-	std::fclose(destination);
+	fclose(source);
+	fclose(destination);
 
 	return true;
 }
 
-int64_t sizeofFile(const char* path) noexcept
+i64 sizeofFile(const char* path) noexcept
 {
-	std::FILE* file = std::fopen(path, "rb");
+	FILE* file = fopen(path, "rb");
 	if (file == NULL) return -1;
-	std::fseek(file, 0, SEEK_END);
-	int64_t size = std::ftell(file);
-	std::fclose(file);
+	fseek(file, 0, SEEK_END);
+	i64 size = ftell(file);
+	fclose(file);
 	return size;
 }
 
 i32 readBinaryFile(const char* path, u8* dataOut, size_t maxNumBytes) noexcept
 {
 	// Open file
-	std::FILE* file = std::fopen(path, "rb");
+	FILE* file = fopen(path, "rb");
 	if (file == NULL) return -1;
 
 	// Read the file into memory
 	u8 buffer[BUFSIZ];
 	size_t readSize;
 	size_t currOffs = 0;
-	while ((readSize = std::fread(buffer, 1, BUFSIZ, file)) > 0) {
+	while ((readSize = fread(buffer, 1, BUFSIZ, file)) > 0) {
 
 		// Check if memory has enough space left
 		if ((currOffs + readSize) > maxNumBytes) {
-			std::fclose(file);
-			std::memcpy(dataOut + currOffs, buffer, maxNumBytes - currOffs);
+			fclose(file);
+			memcpy(dataOut + currOffs, buffer, maxNumBytes - currOffs);
 			return -2;
 		}
 
-		std::memcpy(dataOut + currOffs, buffer, readSize);
+		memcpy(dataOut + currOffs, buffer, readSize);
 		currOffs += readSize;
 	}
 
-	std::fclose(file);
+	fclose(file);
 	return 0;
 }
 
-Array<u8> readBinaryFile(const char* path, SfzAllocator* allocator) noexcept
+SfzArray<u8> readBinaryFile(const char* path, SfzAllocator* allocator) noexcept
 {
 	return readFileInternal<u8>(path, true, allocator);
 }
 
-Array<char> readTextFile(const char* path, SfzAllocator* allocator) noexcept
+SfzArray<char> readTextFile(const char* path, SfzAllocator* allocator) noexcept
 {
-	Array<char> strData = readFileInternal<char>(path, false, allocator);
+	SfzArray<char> strData = readFileInternal<char>(path, false, allocator);
 	if (strData.size() == 0 || strData[strData.size() - 1] != '\0') {
 		if (strData.data() == nullptr) {
 			strData.init(0, allocator, sfz_dbg("readTextFile()"));
@@ -333,11 +332,11 @@ bool writeBinaryFile(const char* path, const u8* data, size_t numBytes) noexcept
 {
 	// Open file
 	if (path == nullptr) return false;
-	std::FILE* file = std::fopen(path, "wb");
+	FILE* file = fopen(path, "wb");
 	if (file == NULL) return false;
 
-	size_t numWritten = std::fwrite(data, 1, numBytes, file);
-	std::fclose(file);
+	size_t numWritten = fwrite(data, 1, numBytes, file);
+	fclose(file);
 	return (numWritten == numBytes);
 }
 
@@ -345,15 +344,15 @@ bool writeTextFile(const char* path, const char* str, size_t numChars) noexcept
 {
 	// Open file
 	if (path == nullptr) return false;
-	std::FILE* file = std::fopen(path, "w");
+	FILE* file = fopen(path, "w");
 	if (file == NULL) return false;
 
 	// Get length of string if numChars not specified
-	if (numChars == 0) numChars = std::strlen(str);
+	if (numChars == 0) numChars = strlen(str);
 
 	// Write string
-	size_t numWritten = std::fwrite(str, 1, numChars, file);
-	std::fclose(file);
+	size_t numWritten = fwrite(str, 1, numChars, file);
+	fclose(file);
 	return (numWritten == numChars);
 }
 

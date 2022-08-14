@@ -18,8 +18,6 @@
 
 #pragma once
 
-#include <skipifzero_new.hpp>
-
 #include "ZeroG.h"
 #include "d3d12/D3D12Common.hpp"
 #include "d3d12/D3D12Memory.hpp"

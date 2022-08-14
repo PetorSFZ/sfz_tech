@@ -19,7 +19,6 @@
 #include "sfz/SfzScheduler.h"
 
 #include <skipifzero_arrays.hpp>
-#include <skipifzero_new.hpp>
 
 #include "sfz/SfzContext.h"
 #include "sfz/SfzTask.h"
@@ -29,13 +28,13 @@
 
 sfz_struct(SfzScheduler) {
 	SfzAllocator* allocator;
-	sfz::Array<SfzTask> tasks;
+	SfzArray<SfzTask> tasks;
 };
 
 // Scheduler
 // ------------------------------------------------------------------------------------------------
 
-SFZ_EXTERN_C SfzScheduler* sfzSchedulerCreate(SfzAllocator* allocator)
+sfz_extern_c SfzScheduler* sfzSchedulerCreate(SfzAllocator* allocator)
 {
 	SfzScheduler* scheduler = sfz_new<SfzScheduler>(allocator, sfz_dbg("SfzScheduler"));
 	scheduler->allocator = allocator;
@@ -44,21 +43,21 @@ SFZ_EXTERN_C SfzScheduler* sfzSchedulerCreate(SfzAllocator* allocator)
 	return scheduler;
 }
 
-SFZ_EXTERN_C void sfzSchedulerDestroy(SfzScheduler* scheduler)
+sfz_extern_c void sfzSchedulerDestroy(SfzScheduler* scheduler)
 {
 	if (scheduler == nullptr) return;
 	SfzAllocator* allocator = scheduler->allocator;
 	sfz_delete(allocator, scheduler);
 }
 
-SFZ_EXTERN_C void sfzSchedulerScheduleTask(SfzScheduler* scheduler, const SfzTask* task)
+sfz_extern_c void sfzSchedulerScheduleTask(SfzScheduler* scheduler, const SfzTask* task)
 {
 	sfz_assert(task->taskFunc != nullptr);
 	sfz_assert((task->readAccess & task->writeAccess) == task->writeAccess);
 	scheduler->tasks.add(*task);
 }
 
-SFZ_EXTERN_C void sfzSchedulerRunTasks(SfzScheduler* scheduler, SfzCtx* ctx)
+sfz_extern_c void sfzSchedulerRunTasks(SfzScheduler* scheduler, SfzCtx* ctx)
 {
 	const u32 numTasks = scheduler->tasks.size();
 	for (u32 i = 0; i < numTasks; i++) {

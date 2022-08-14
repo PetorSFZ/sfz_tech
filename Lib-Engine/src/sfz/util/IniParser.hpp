@@ -172,14 +172,14 @@ private:
 		i32 i;
 		f32 f;
 		bool b;
-		str192 str; // Name or comment depending on ItemType
+		SfzStr320 str = {}; // Name or comment depending on ItemType
 	};
 
 	struct Section final {
-		str64 name;
-		Array<Item> items;
+		SfzStr96 name = {};
+		SfzArray<Item> items;
 		Section() = default;
-		Section(const char* name, SfzAllocator* allocator) : name(name), items(0, allocator, sfz_dbg("")) { }
+		Section(const char* name, SfzAllocator* allocator) : name(sfzStr96Init(name)), items(0, allocator, sfz_dbg("")) { }
 	};
 
 	// Private methods
@@ -195,8 +195,8 @@ private:
 	// --------------------------------------------------------------------------------------------
 
 	SfzAllocator* mAllocator = nullptr;
-	str320 mPath;
-	Array<Section> mSections;
+	SfzStr320 mPath = {};
+	SfzArray<Section> mSections;
 };
 
 } // namespace sfz

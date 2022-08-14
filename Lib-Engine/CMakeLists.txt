@@ -97,20 +97,8 @@ target_link_libraries(PhantasyEngine
 # PhantasyEngine tests
 # ------------------------------------------------------------------------------------------------
 
-if(PHANTASY_ENGINE_BUILD_TESTS)
-
-	# Find all test files
-	file(GLOB_RECURSE TEST_FILES CONFIGURE_DEPENDS ${TESTS_DIR}/*.hpp ${TESTS_DIR}/*.cpp ${TESTS_DIR}/*.h ${TESTS_DIR}/*.c)
-	
-	add_executable(PhantasyEngineTests ${TEST_FILES})
-	target_include_directories(PhantasyEngineTests PRIVATE
-		${SRC_DIR}
-		${SFZ_CORE_HEADERS_INCLUDE_DIRS}
-		${UTESTH_INCLUDE_DIRS}
-	)
-	target_link_libraries(PhantasyEngineTests PhantasyEngine)
-
-endif()
+# Find all test files
+file(GLOB_RECURSE TEST_FILES CONFIGURE_DEPENDS ${TESTS_DIR}/*.hpp ${TESTS_DIR}/*.cpp ${TESTS_DIR}/*.h ${TESTS_DIR}/*.c)
 
 # Output variables
 # ------------------------------------------------------------------------------------------------
@@ -119,3 +107,4 @@ set(PHANTASY_ENGINE_FOUND true PARENT_SCOPE)
 set(PHANTASY_ENGINE_INCLUDE_DIRS ${SRC_DIR} PARENT_SCOPE)
 set(PHANTASY_ENGINE_LIBRARIES PhantasyEngine PARENT_SCOPE)
 set(PHANTASY_ENGINE_RUNTIME_DIR ${RESOURCES_DIR} PARENT_SCOPE)
+set(PHANTASY_ENGINE_TEST_FILES ${TEST_FILES} PARENT_SCOPE)

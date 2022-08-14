@@ -21,7 +21,8 @@
 
 #include <algorithm>
 
-#include <skipifzero.hpp>
+#include <sfz.h>
+#include <sfz_math.h>
 
 #include "sfz/config/Setting.hpp"
 #include "sfz/renderer/ZeroGUtils.hpp"
@@ -51,9 +52,9 @@ static ZgImageViewConstCpu toZeroGImageView(const SfzImageViewConst& phView) noe
 	ZgImageViewConstCpu zgView = {};
 	zgView.format = toZeroGImageFormat(phView.type);
 	zgView.data = phView.rawData;
-	zgView.width = phView.width;
-	zgView.height = phView.height;
-	zgView.pitchInBytes = phView.width * sizeOfElement(phView.type);
+	zgView.width = phView.res.x;
+	zgView.height = phView.res.y;
+	zgView.pitchInBytes = phView.res.x * sizeOfElement(phView.type);
 	return zgView;
 }
 
@@ -64,12 +65,12 @@ void generateMipmapSpecific(
 	const T* srcImg = reinterpret_cast<const T*>(prevLevel.rawData);
 	T* dstImg = reinterpret_cast<T*>(currLevel.rawData.data());
 
-	for (i32 y = 0; y < currLevel.height; y++) {
-		T* dstRow = dstImg + y * currLevel.width;
-		const T* srcRow0 = srcImg + ((y * 2) + 0) * prevLevel.width;
-		const T* srcRow1 = srcImg + ((y * 2) + 1) * prevLevel.width;
+	for (i32 y = 0; y < currLevel.res.y; y++) {
+		T* dstRow = dstImg + y * currLevel.res.x;
+		const T* srcRow0 = srcImg + ((y * 2) + 0) * prevLevel.res.x;
+		const T* srcRow1 = srcImg + ((y * 2) + 1) * prevLevel.res.x;
 
-		for (i32 x = 0; x < currLevel.width; x++) {
+		for (i32 x = 0; x < currLevel.res.x; x++) {
 			const T* srcPixelRow0 = srcRow0 + (x * 2);
 			const T* srcPixelRow1 = srcRow1 + (x * 2);
 			dstRow[x] = averager(
@@ -95,12 +96,12 @@ static void generateMipmap(const SfzImageViewConst& prevLevel, sfz::Image& currL
 		break;
 	case SFZ_IMAGE_TYPE_RG_U8:
 		generateMipmapSpecific<u8x2>(prevLevel, currLevel, [](u8x2 a, u8x2 b, u8x2 c, u8x2 d) {
-			return u8x2((i32x2(a) + i32x2(b) + i32x2(c) + i32x2(d)) / 4u);
+			return u8x2_from_i32((i32x2_from_u8(a) + i32x2_from_u8(b) + i32x2_from_u8(c) + i32x2_from_u8(d)) / 4u);
 		});
 		break;
 	case SFZ_IMAGE_TYPE_RGBA_U8:
 		generateMipmapSpecific<u8x4>(prevLevel, currLevel, [](u8x4 a, u8x4 b, u8x4 c, u8x4 d) {
-			return u8x4((i32x4(a) + i32x4(b) + i32x4(c) + i32x4(d)) / 4u);
+			return u8x4_from_i32((i32x4_from_u8(a) + i32x4_from_u8(b) + i32x4_from_u8(c) + i32x4_from_u8(d)) / 4u);
 		});
 		break;
 
@@ -126,7 +127,7 @@ bool SfzTextureResource::needRebuild(i32x2 screenRes) const
 {
 	if (!this->texture.valid()) return true;
 
-	i32x2 newRes = i32x2(0);
+	i32x2 newRes = i32x2_splat(0);
 	if (screenRelativeRes) {
 		f32 resoScale = this->resScale;
 		if (this->resScaleSetting != nullptr) {
@@ -135,13 +136,13 @@ bool SfzTextureResource::needRebuild(i32x2 screenRes) const
 				resoScale *= resScaleSetting2->floatValue();
 			}
 		}
-		f32x2 scaledRes = f32x2(screenRes) * resoScale;
+		f32x2 scaledRes = f32x2_from_i32(screenRes) * resoScale;
 		newRes.x = u32(::roundf(scaledRes.x));
 		newRes.y = u32(::roundf(scaledRes.y));
 	}
 	else if (settingControlledRes) {
 		sfz_assert(0 < controlledResSetting->intValue() && controlledResSetting->intValue() <= 16384);
-		newRes = i32x2(controlledResSetting->intValue());
+		newRes = i32x2_splat(controlledResSetting->intValue());
 	}
 	else {
 		newRes = this->res;
@@ -153,7 +154,7 @@ bool SfzTextureResource::needRebuild(i32x2 screenRes) const
 ZgResult SfzTextureResource::build(i32x2 screenRes, SfzStrIDs* ids)
 {
 	// Set resolution and resolution scale if screen relative
-	i32x2 newRes = i32x2(0);
+	i32x2 newRes = i32x2_splat(0);
 	if (screenRelativeRes) {
 		if (this->resScaleSetting != nullptr) {
 			this->resScale = resScaleSetting->floatValue() * this->resScaleSettingScale;
@@ -161,13 +162,13 @@ ZgResult SfzTextureResource::build(i32x2 screenRes, SfzStrIDs* ids)
 				this->resScale *= resScaleSetting2->floatValue();
 			}
 		}
-		f32x2 scaledRes = f32x2(screenRes) * this->resScale;
+		f32x2 scaledRes = f32x2_from_i32(screenRes) * this->resScale;
 		newRes.x = u32(::roundf(scaledRes.x));
 		newRes.y = u32(::roundf(scaledRes.y));
 	}
 	else if (settingControlledRes) {
 		sfz_assert(0 < controlledResSetting->intValue() && controlledResSetting->intValue() <= 16384);
-		newRes = i32x2(controlledResSetting->intValue());
+		newRes = i32x2_splat(controlledResSetting->intValue());
 	}
 	else {
 		newRes = this->res;
@@ -201,8 +202,7 @@ void SfzTextureResource::uploadBlocking(
 	zg::CommandQueue& copyQueue)
 {
 	sfz_assert(texture.valid());
-	sfz_assert(image.width == res.x);
-	sfz_assert(image.height == res.y);
+	sfz_assert(image.res == res);
 	
 	// Convert to ZeroG Image View
 	ZgImageViewConstCpu view = toZeroGImageView(image);
@@ -219,7 +219,7 @@ void SfzTextureResource::uploadBlocking(
 
 		// Allocate mipmap memory
 		mipmaps[i] = sfz::Image::allocate(
-			prevLevel.width / 2, prevLevel.height / 2, prevLevel.type, cpuAllocator);
+			prevLevel.res.x / 2, prevLevel.res.y / 2, prevLevel.type, cpuAllocator);
 
 		// Generate mipmap
 		generateMipmap(prevLevel, mipmaps[i]);
@@ -251,14 +251,14 @@ SfzTextureResource SfzTextureResource::createFixedSize(
 	ZgTextureUsage usage,
 	bool committedAllocation)
 {
-	sfz_assert(sfz::isPowerOfTwo(image.width));
-	sfz_assert(sfz::isPowerOfTwo(image.height));
+	sfz_assert(sfzIsPow2_u32(image.res.x));
+	sfz_assert(sfzIsPow2_u32(image.res.y));
 
 	// Calculate number of mipmaps if requested
 	u32 numMipmaps = 1;
 	if (allocateMipmaps) {
-		u32 logWidth = sfz::max(u32(log2(image.width)), 1u);
-		u32 logHeight = sfz::max(u32(log2(image.height)), 1u);
+		u32 logWidth = u32_max(u32(log2(image.res.x)), 1u);
+		u32 logHeight = u32_max(u32(log2(image.res.y)), 1u);
 		u32 logMin = std::min(logWidth, logHeight);
 		numMipmaps = std::min(logMin, (ZG_MAX_NUM_MIPMAPS - 1));
 	}
@@ -268,7 +268,7 @@ SfzTextureResource SfzTextureResource::createFixedSize(
 		name,
 		ids,
 		toZeroGImageFormat(image.type),
-		i32x2(image.width, image.height),
+		image.res,
 		numMipmaps,
 		usage,
 		committedAllocation);
@@ -298,7 +298,7 @@ SfzTextureResource SfzTextureResource::createFixedSize(
 	resource.optimalClearValue =
 		usage != ZG_TEXTURE_USAGE_DEFAULT ? ZG_OPTIMAL_CLEAR_VALUE_ZERO : ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED;
 
-	CHECK_ZG resource.build(i32x2(0), ids);
+	CHECK_ZG resource.build(i32x2_splat(0), ids);
 
 	return resource;
 }
@@ -350,7 +350,7 @@ SfzTextureResource SfzTextureResource::createSettingControlled(
 	SfzTextureResource resource;
 	resource.name = sfzStrIDCreateRegister(ids, name);
 	resource.format = format;
-	resource.res = i32x2(resSetting->intValue());
+	resource.res = i32x2_splat(resSetting->intValue());
 	resource.numMipmaps = numMipmaps;
 	resource.committedAllocation = committedAllocation;
 	resource.usage = usage;
@@ -360,7 +360,7 @@ SfzTextureResource SfzTextureResource::createSettingControlled(
 	resource.settingControlledRes = true;
 	resource.controlledResSetting = resSetting;
 
-	CHECK_ZG resource.build(i32x2(0), ids);
+	CHECK_ZG resource.build(i32x2_splat(0), ids);
 
 	return resource;
 }

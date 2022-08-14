@@ -20,7 +20,7 @@
 
 #include <mutex>
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_ring_buffers.hpp>
 
@@ -145,7 +145,7 @@ struct ZgCommandQueue final {
 	u64 mCommandQueueFenceValue = 0;
 	HANDLE mCommandQueueFenceEvent = nullptr;
 
-	sfz::Array<ZgCommandList> mCommandListStorage;
+	SfzArray<ZgCommandList> mCommandListStorage;
 	sfz::RingBuffer<ZgCommandList*> mCommandListQueue;
 
 	// Virtual methods

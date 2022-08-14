@@ -18,9 +18,11 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
+#include <sfz_math.h>
+#include <sfz_matrix.h>
+#include <sfz_quat.h>
 #include <skipifzero_geometry.hpp>
-#include <skipifzero_math.hpp>
 
 namespace sfz {
 
@@ -40,7 +42,7 @@ struct OBB final {
 	// Members
 	// --------------------------------------------------------------------------------------------
 
-	mat33 rotation;
+	SfzMat33 rotation;
 	f32x3 center;
 	f32x3 halfExtents;
 
@@ -63,8 +65,8 @@ struct OBB final {
 
 	OBBCorners corners() const noexcept;
 	void corners(f32x3* arrayOut) const noexcept;
-	OBB transformOBB(const mat34& transform) const noexcept;
-	OBB transformOBB(Quat quaternion) const noexcept;
+	OBB transformOBB(const SfzMat44& transform) const noexcept;
+	OBB transformOBB(SfzQuat quaternion) const noexcept;
 
 	// Getters/setters
 	// --------------------------------------------------------------------------------------------
@@ -79,10 +81,10 @@ struct OBB final {
 	void setYExtent(f32 newYExtent) noexcept;
 	void setZExtent(f32 newZExtent) noexcept;
 
-	f32x3 axis(u32 idx) const noexcept { return rotation.row(idx); }
-	f32x3 xAxis() const noexcept { return rotation.row(0); }
-	f32x3 yAxis() const noexcept { return rotation.row(1); }
-	f32x3 zAxis() const noexcept { return rotation.row(2); }
+	f32x3 axis(u32 idx) const noexcept { return rotation.rows[idx]; }
+	f32x3 xAxis() const noexcept { return rotation.rows[0]; }
+	f32x3 yAxis() const noexcept { return rotation.rows[1]; }
+	f32x3 zAxis() const noexcept { return rotation.rows[2]; }
 
 	// Helper methods
 	// --------------------------------------------------------------------------------------------

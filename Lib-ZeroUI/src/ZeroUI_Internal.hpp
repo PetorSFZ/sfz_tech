@@ -18,17 +18,14 @@
 
 #pragma once
 
-#include <cstdio>
-
 #include "ZeroUI.h"
 
+#include <sfz_math.h>
+#include <sfz_matrix.h>
 #include <skipifzero_allocators.hpp>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_hash_maps.hpp>
-#include <skipifzero_math.hpp>
 #include <skipifzero_strings.hpp>
-
-using sfz::mat4;
 
 // About
 // ------------------------------------------------------------------------------------------------
@@ -38,172 +35,6 @@ using sfz::mat4;
 //
 // You should normally NOT include this if you are only using ZeroUI. Rather, this header is meant
 // for people who are extending ZeroUI and creating their own widgets.
-
-// Box
-// ------------------------------------------------------------------------------------------------
-
-sfz_struct(ZuiBox) {
-	f32x2 min, max;
-
-#ifdef __cplusplus
-	constexpr f32x2 center() const { return (min + max) * 0.5f; }
-	constexpr f32x2 dims() const { return max - min; }
-	constexpr bool pointInside(f32x2 p) const
-	{
-		return min.x <= p.x && p.x <= max.x && min.y <= p.y && p.y <= max.y;
-	}
-	constexpr bool overlaps(ZuiBox o) const
-	{
-		return min.x <= o.max.x && max.x >= o.min.x && min.y <= o.max.y && max.y >= o.min.y;
-	}
-#endif
-};
-
-sfz_constexpr_func ZuiBox zuiBoxInit(f32x2 center, f32x2 dims)
-{
-	return ZuiBox{ center - dims * 0.5f, center + dims * 0.5f };
-}
-
-// Widget
-// ------------------------------------------------------------------------------------------------
-
-// A Widget is a type of UI item, e.g. button. In ZeroUI there is only one "built-in" widget (base
-// container), all other widgets are added as extensions. Thus there is no difference between a
-// widget created by the user and the ones shipped with the library (see ZeroUI_CoreWidgets.hpp).
-//
-// There are two distinct types of widgets, containers and leafs. The difference is simple,
-// containers contain other widgets, while leafs do not. E.g., a button widget is typically a leaf,
-// if it is activated it simply performs some user specified logic. A list widget is a container,
-// it contains a list of widgets, which can in turn be other containers or leafs.
-//
-// To create a widget you need to do 3 things:
-// * Design a suitable immediate-mode (~ish) API, e.g. ("if (zui::button("Button")) { /* do work*/ }")
-// * Design a data struct that contains all the information needed by the widget.
-// * Implement the above API function, in addition to the below specified logic and rendering functions.
-//
-// For the API it's suggested to take a look at ZeroUI_CoreWidgets.hpp to see how the API works for
-// those widgets, including looking at the implementation to get a feel for what is appropriate.
-// In the end, these API functions are responsible for registering/deregistering the widget with
-// the current surface in the correct way, so it's the most important thing to get right.
-//
-// Each Widget type need to define a data struct that contains all data needed for the widget. This
-// includes logic, current state, configuration parameters, rendering info, etc. See
-// "BaseContainerData" below as an example. What data it should contain is completely up to you,
-// and depends on what your implementation of input handling and rendering requires.
-//
-// There are a couple of common rules that should apply for most (or all) widget data structs:
-// * They should only contain primitive types and be default copyable (e.g. via memcpy()).
-// * They must contain a copy of WidgetBase (see below)
-// * The user should NEVER need to initialize a data struct, just create a copy (and run the default
-//   constructor). All parameters should be applied via the widget API function.
-//
-// Lastly, for each widget the logic needs to be implemented. This is done by implementing the
-// functions in "WidgetDesc". Not all functions are necessary for all widgets. There is no need
-// for leafs to implement "GetNextWidgetBoxFunc" as they don't contain widgets. For containers
-// all functions need to be specified, but many of them can often be "passthroughs" (i.e., just
-// calling their childrens corresponding functions).
-
-struct ZuiWidgetBase final {
-	ZuiBox box; // The location and size of the widget on the surface
-	f32 timeSinceFocusStartedSecs = F32_MAX;
-	f32 timeSinceFocusEndedSecs = F32_MAX;
-	f32 timeSinceActivationSecs = F32_MAX;
-	bool focused = false;
-	bool activated = false;
-	u8 ___PADDING___[2] = {};
-
-	void setFocused();
-	void setUnfocused();
-	void setActivated();
-};
-
-// Wrapper type for internal use (or when implementing widget logic), see ZeroUI_Internal.hpp.
-struct ZuiWidget;
-
-// For containers only: Return the position and size of the next widget being placed. Widgets don't
-// determine their own size, they must always ask their parent what their size is.
-typedef void ZuiGetNextWidgetBoxFunc(ZuiCtx* zui, ZuiWidget* widget, ZuiID childWidgetTypeID, ZuiBox* boxOut);
-
-// Handle mouse/touch input. Typically things should be setFocused() if the pointer is overlapping the
-// widget's box, otherwise setUnfocused(). MUST call all children's corresponding handle pointer input
-// function.
-typedef void ZuiHandlePointerInputFunc(ZuiCtx* zui, ZuiWidget* widget, f32x2 pointerPosSS);
-
-// Handle move input (i.e. gamepad or keyboard). This is probably the most complicated part of the
-// logic, so it deserves some extra explanation.
-//
-// The "input" and "moveActive" parameters are global and shared with the entire widget tree when
-// recursively executing this function. "input" starts of with action specified by the user (NONE,
-// UP, DOWN, LEFT, RIGHT), "moveActive" starts of as "false". The idea is that the logic can
-// "consume" the input, but only if it is active.
-//
-// As an example, take a button which can be focused. If a button comes across the input DOWN with
-// moveActive=false, then it calls setUnfocused() and sets moveActive to true. On the other hand,
-// if it comes across DOWN with moveActive=true it calls setFocused() and then sets input to NONE
-// and moveActive to false. The input is consumed and will not affect any upcoming widgets.
-//
-// MUST call all children's corresponding move input functions the correct way (see other containers
-// in ZeroUI_CoreWidgets.hpp as example).
-typedef void ZuiHandleMoveInputFunc(ZuiCtx* zui, ZuiWidget* widget, ZuiInput* input, bool* moveActive);
-
-// Default draw function which is just a pass through, only useful for containers.
-void zuiDefaultPassthroughDrawFunc(
-	ZuiCtx* zui,
-	const ZuiWidget* widget,
-	const SfzMat34* surfaceTransform,
-	f32 lagSinceInputEndSecs);
-
-// The description of a widget with all the necessary functions.
-sfz_struct(ZuiWidgetDesc) {
-	u32 widgetDataSizeBytes;
-	ZuiGetNextWidgetBoxFunc* getNextWidgetBoxFunc;
-	ZuiHandlePointerInputFunc* handlePointerInputFunc;
-	ZuiHandleMoveInputFunc* handleMoveInputFunc;
-	ZuiDrawFunc* drawFunc;
-};
-
-// Registers a widget type
-SFZ_EXTERN_C void zuiRegisterWidget(ZuiCtx* zui, const char* name, const ZuiWidgetDesc* desc);
-
-
-// Helper functions
-// ------------------------------------------------------------------------------------------------
-
-inline f32x2 calcCenterPos(f32x2 pos, ZuiAlign align, f32x2 dims)
-{
-	f32x2 offset = f32x2(0.0f);
-	switch (align) {
-	case ZUI_BOTTOM_LEFT:
-		offset = f32x2(-1.0f, -1.0f);
-		break;
-	case ZUI_BOTTOM_CENTER:
-		offset = f32x2(0.0f, -1.0f);
-		break;
-	case ZUI_BOTTOM_RIGHT:
-		offset = f32x2(1.0f, -1.0f);
-		break;
-	case ZUI_MID_LEFT:
-		offset = f32x2(-1.0f, 0.0f);
-		break;
-	case ZUI_MID_CENTER:
-		offset = f32x2(0.0f, 0.0f);
-		break;
-	case ZUI_MID_RIGHT:
-		offset = f32x2(1.0f, 0.0f);
-		break;
-	case ZUI_TOP_LEFT:
-		offset = f32x2(-1.0f, 1.0f);
-		break;
-	case ZUI_TOP_CENTER:
-		offset = f32x2(0.0f, 1.0f);
-		break;
-	case ZUI_TOP_RIGHT:
-		offset = f32x2(1.0f, 1.0f);
-		break;
-	default: sfz_assert_hard(false);
-	}
-	return pos - offset * 0.5f * dims;
-}
 
 // Draw context
 // ------------------------------------------------------------------------------------------------
@@ -234,7 +65,7 @@ sfz_constant u32 ZUI_NUM_EXTRA_CHARS = sizeof(ZUI_EXTRA_RANGE_CHARS) / sizeof(i3
 sfz_constant u32 ZUI_FONT_TEX_RES = 4096;
 
 sfz_struct(ZuiFontInfo) {
-	sfz::Array<u8> ttfData;
+	SfzArray<u8> ttfData;
 	f32 atlasSize;
 	u8 asciiPackRaw[stbtt_packedchar_size * ZUI_NUM_PRINTABLE_ASCII_CHARS];
 	u8 extraPackRaw[stbtt_packedchar_size * ZUI_NUM_EXTRA_CHARS];
@@ -242,23 +73,80 @@ sfz_struct(ZuiFontInfo) {
 
 sfz_struct(ZuiDrawCtx) {
 	// Render data
-	sfz::Array<ZuiVertex> vertices;
-	sfz::Array<uint16_t> indices;
-	sfz::Array<ZuiRenderCmd> renderCmds;
+	SfzArray<ZuiVertex> vertices;
+	SfzArray<u16> indices;
+	SfzArray<SfzMat44> transforms;
+	SfzArray<ZuiRenderCmd> renderCmds;
 	
+	// Clip stack
+	SfzArray<ZuiBox> clipStack;
+
 	// Font image
 	i32 fontImgRes;
-	sfz::Array<u8> fontImg;
+	SfzArray<u8> fontImg;
 	bool fontImgModified;
 	u64 userFontTexHandle;
 
 	// Fonts
-	sfz::HashMap<u64, ZuiFontInfo> fonts;
+	SfzHashMap<u64, ZuiFontInfo> fonts;
 	u8 packCtxRaw[stbtt_pack_context_size];
 	stbtt_pack_context* packCtx() { return reinterpret_cast<stbtt_pack_context*>(packCtxRaw); }
 
 	// Whether to vertically flip images or not
 	bool imgFlipY = true;
+};
+
+// Widget
+// ------------------------------------------------------------------------------------------------
+
+sfz_struct(ZuiWidgetBase) {
+	ZuiBox box; // The location and size of the widget on the surface
+	f32 timeSinceFocusStartedSecs = F32_MAX;
+	f32 timeSinceFocusEndedSecs = F32_MAX;
+	f32 timeSinceActivationSecs = F32_MAX;
+	bool focused = false;
+	bool activated = false;
+
+	void setFocused()
+	{
+		if (!focused) {
+			timeSinceFocusStartedSecs = 0.0f;
+		}
+		focused = true;
+	}
+	void setUnfocused()
+	{
+		if (focused) {
+			timeSinceFocusEndedSecs = 0.0f;
+		}
+		focused = false;
+	}
+	void setActivated()
+	{
+		timeSinceActivationSecs = 0.0f;
+		activated = true;
+	}
+};
+
+struct ZuiWidget;
+
+// For containers only: Return the position and size of the next widget being placed. Widgets don't
+// determine their own size, they must always ask their parent what their size is.
+typedef void ZuiGetNextWidgetBoxFunc(ZuiCtx* zui, ZuiWidget* widget, ZuiID childWidgetTypeID, ZuiBox* boxOut);
+
+typedef i32 ZuiWidgetGetNextChildIdx(const ZuiWidget* w, ZuiInputAction action, i32 currIdx);
+
+typedef void ZuiWidgetScrollInput(ZuiWidget* w, f32x2 scroll);
+
+// The description of a widget with all the necessary functions.
+sfz_struct(ZuiWidgetDesc) {
+	u32 widgetDataSizeBytes;
+	bool focuseable;
+	bool activateable;
+	ZuiGetNextWidgetBoxFunc* getNextWidgetBoxFunc;
+	ZuiWidgetGetNextChildIdx* getNextChildIdxFunc;
+	ZuiWidgetScrollInput* scrollInputFunc;
+	ZuiDrawFunc* drawFunc;
 };
 
 // Context
@@ -272,11 +160,13 @@ struct ZuiWidgetArchetype final {
 
 struct ZuiWidgetType {
 	u32 widgetDataSizeBytes = 0;
+	bool focuseable = false;
+	bool activateable = false;
 	ZuiGetNextWidgetBoxFunc* getNextWidgetBoxFunc = nullptr;
-	ZuiHandlePointerInputFunc* handlePointerInputFunc = nullptr;
-	ZuiHandleMoveInputFunc* handleMoveInputFunc = nullptr;
-	sfz::Map32<u64, ZuiWidgetArchetype> archetypes;
-	sfz::Array<ZuiID> archetypeStack;
+	ZuiWidgetGetNextChildIdx* getNextChildIdxFunc = nullptr;
+	ZuiWidgetScrollInput* scrollInputFunc = nullptr;
+	SfzMap32<u64, ZuiWidgetArchetype> archetypes;
+	SfzArray<ZuiID> archetypeStack;
 	ZuiDrawFunc* getCurrentArchetypeDrawFunc() const
 	{
 		sfz_assert(!archetypeStack.isEmpty());
@@ -289,21 +179,137 @@ struct ZuiWidgetType {
 struct ZuiWidget final {
 	ZuiID id;
 	ZuiID widgetTypeID;
+	ZuiWidgetBase base;
 	void* dataPtr = nullptr;
 	ZuiDrawFunc* archetypeDrawFunc = nullptr;
-	sfz::Array<ZuiWidget> children;
-
-	ZuiWidget() = default;
-	ZuiWidget(ZuiCtx* zui, ZuiID id, void* ptr);
+	SfzArray<ZuiWidget> children;
 
 	template<typename T> T* data() { return (T*)dataPtr; }
 	template<typename T> const T* data() const { return (const T*)dataPtr; }
-	u32 sizeOfWidgetData(ZuiCtx* zui) const;
-	void getNextWidgetBox(ZuiCtx* zui, ZuiID childWidgetTypeID, ZuiBox* boxOut);
-	void handlePointerInput(ZuiCtx* zui, f32x2 pointerPosSS);
-	void handleMoveInput(ZuiCtx* zui, ZuiInput* input, bool* moveActive);
-	void draw(ZuiCtx* zui, const SfzMat34* surfaceTransform, f32 lagSinceSurfaceEndSecs) const;
 };
+
+struct ZuiWidgetTree final {
+	sfz::ArenaHeap arena;
+	ZuiWidget root;
+	SfzArray<ZuiWidget*> parentStack;
+};
+
+using AttributeSet = SfzHashMap<u64, ZuiAttrib>;
+
+struct ZuiCtx final {
+	SfzAllocator* heapAllocator = nullptr;
+
+	ZuiDrawCtx drawCtx;
+
+	// Widget types
+	SfzHashMap<u64, ZuiWidgetType> widgetTypes;
+
+	// Widget trees
+	u64 inputIdx; // Incremented each zuiInputBegin()
+	ZuiWidgetTree widgetTrees[2];
+	ZuiWidgetTree& currTree() { return widgetTrees[inputIdx % 2]; }
+	ZuiWidgetTree& prevTree() { return widgetTrees[(inputIdx + 1) % 2]; }
+
+	ZuiInput input = {};
+
+	// Transforms
+	SfzMat44 surfToFB = sfzMat44Identity();
+	SfzMat44 transform = sfzMat44Identity();
+	SfzMat44 inputTransform = sfzMat44Identity();
+	f32x2 pointerPosSS = f32x2_splat(-F32_MAX); // SS = Surface Space
+
+	// AttributeSet used when rendering
+	AttributeSet attribs;
+	AttributeSet defaultAttribs;
+};
+
+// Box functions
+// ------------------------------------------------------------------------------------------------
+
+sfz_constexpr_func ZuiBox zuiBoxInit(f32x2 center, f32x2 dims)
+{
+	return ZuiBox{ center - dims * 0.5f, center + dims * 0.5f };
+}
+
+// Default widget implementation functions
+// ------------------------------------------------------------------------------------------------
+
+inline i32 zuiWidgetGetNextChildIdxDefault(const ZuiWidget* w, ZuiInputAction action, i32 currIdx)
+{
+	i32 nextIdx = -1;
+	if (action == ZUI_INPUT_DOWN) {
+		nextIdx = currIdx + 1;
+	}
+	else if (action == ZUI_INPUT_UP) {
+		if (currIdx == -1) currIdx = i32(w->children.size());
+		nextIdx = currIdx - 1;
+	}
+	return nextIdx;
+}
+
+// Widget functions
+// ------------------------------------------------------------------------------------------------
+
+inline void zuiWidgetDraw(const ZuiWidget* w, ZuiCtx* zui, const SfzMat44* surfaceTransform, f32 lagSinceInputEndSecs)
+{
+	w->archetypeDrawFunc(zui, w, surfaceTransform, lagSinceInputEndSecs);
+}
+
+// Widget tree functions
+// ------------------------------------------------------------------------------------------------
+
+inline void zuiWidgetTreeClear(ZuiWidgetTree* tree)
+{
+	tree->root.children.destroy();
+	tree->parentStack.destroy();
+	tree->arena.resetArena();
+	tree->parentStack.init(64, tree->arena.getArena(), sfz_dbg(""));
+}
+
+inline void zuiWidgetTreeInit(ZuiWidgetTree* tree, u32 surfaceTmpMemoryBytes, SfzAllocator* allocator)
+{
+	tree->arena.init(allocator, surfaceTmpMemoryBytes, sfz_dbg(""));
+	zuiWidgetTreeClear(tree);
+}
+
+inline ZuiWidget& zuiWidgetTreeGetCurrentParent(ZuiWidgetTree* tree)
+{
+	sfz_assert(!tree->parentStack.isEmpty());
+	return *tree->parentStack.last();
+}
+
+inline void zuiWidgetTreePushMakeParent(ZuiWidgetTree* tree, ZuiWidget* widget, u32 numChildrenHint = 64)
+{
+	sfz_assert(widget->children.allocator() == nullptr);
+	sfz_assert(widget->children.isEmpty());
+	widget->children.init(numChildrenHint, tree->arena.getArena(), sfz_dbg(""));
+	tree->parentStack.add(widget);
+}
+
+inline void zuiWidgetTreePopParent(ZuiWidgetTree* tree)
+{
+	tree->parentStack.pop();
+	sfz_assert(!tree->parentStack.isEmpty());
+}
+
+// Context functions
+// ------------------------------------------------------------------------------------------------
+
+inline void zuiCtxRegisterWidget(ZuiCtx* zui, const char* name, const ZuiWidgetDesc* desc)
+{
+	const ZuiID nameID = zuiName(name);
+	sfz_assert(zui->widgetTypes.get(nameID.id) == nullptr);
+	ZuiWidgetType& type = zui->widgetTypes.put(nameID.id, {});
+	type.widgetDataSizeBytes = desc->widgetDataSizeBytes;
+	type.focuseable = desc->focuseable;
+	type.activateable = desc->activateable;
+	type.getNextWidgetBoxFunc = desc->getNextWidgetBoxFunc;
+	type.getNextChildIdxFunc = desc->getNextChildIdxFunc;
+	type.scrollInputFunc = desc->scrollInputFunc;
+	ZuiWidgetArchetype& archetype = type.archetypes.put(ZUI_DEFAULT_ID.id, {});
+	archetype.drawFunc = desc->drawFunc;
+	type.archetypeStack.init(64, zui->heapAllocator, sfz_dbg(""));
+}
 
 inline ZuiWidget* zuiFindWidgetFromID(ZuiWidget* widget, ZuiID id)
 {
@@ -315,180 +321,124 @@ inline ZuiWidget* zuiFindWidgetFromID(ZuiWidget* widget, ZuiID id)
 	return nullptr;
 }
 
-struct ZuiWidgetTree final {
-	sfz::ArenaHeap arena;
-	ZuiWidget root;
-	sfz::Array<ZuiWidget*> parentStack;
-
-	void init(u32 surfaceTmpMemoryBytes, SfzAllocator* allocator)
-	{
-		arena.init(allocator, surfaceTmpMemoryBytes, sfz_dbg(""));
-		this->clear();
-	}
-
-	void clear()
-	{
-		root.children.destroy();
-		parentStack.destroy();
-		arena.resetArena();
-		parentStack.init(64, arena.getArena(), sfz_dbg(""));
-	}
-
-	ZuiWidget& getCurrentParent()
-	{
-		sfz_assert(!parentStack.isEmpty());
-		return *parentStack.last();
-	}
-	void pushMakeParent(ZuiWidget* widget, u32 numChildrenHint = 64)
-	{
-		sfz_assert(widget->children.allocator() == nullptr);
-		sfz_assert(widget->children.isEmpty());
-		widget->children.init(numChildrenHint, arena.getArena(), sfz_dbg(""));
-		parentStack.add(widget);
-	}
-	void popParent()
-	{
-		parentStack.pop();
-		sfz_assert(!parentStack.isEmpty());
-	}
-};
-
-using AttributeSet = sfz::HashMap<u64, ZuiAttrib>;
-
-struct ZuiCtx final {
-
-	SfzAllocator* heapAllocator = nullptr;
-
-	ZuiDrawCtx drawCtx;
-
-	// Widget types
-	sfz::HashMap<u64, ZuiWidgetType> widgetTypes;
-
-	// Widget trees
-	u64 inputIdx; // Incremented each zuiInputBegin()
-	ZuiWidgetTree widgetTrees[2];
-	ZuiWidgetTree& currTree() { return widgetTrees[inputIdx % 2]; }
-	ZuiWidgetTree& prevTree() { return widgetTrees[(inputIdx + 1) % 2]; }
-
-	ZuiInput input = {};
-
-	// Transforms
-	SfzMat34 transform = sfz::mat34::identity();
-	SfzMat34 inputTransform = sfz::mat34::identity();
-	f32x2 pointerPosSS = f32x2(-F32_MAX); // SS = Surface Space
-
-	// AttributeSet used when rendering
-	AttributeSet attribs;
-	AttributeSet defaultAttribs;
-
-	template<typename T>
-	T* createWidget(ZuiID id, ZuiID widgetTypeID, ZuiWidget** widgetOut = nullptr)
-	{
-		// Get widget type
-		const ZuiWidgetType* type = widgetTypes.get(widgetTypeID.id);
-		sfz_assert(type != nullptr);
-
-		// Check if it already exists in prev tree
-		ZuiWidgetTree& prevTree = this->prevTree();
-		ZuiWidget* prevWidget = zuiFindWidgetFromID(&prevTree.root, id);
-
-		// Create in curr tree and set members
-		ZuiWidgetTree& tree = this->currTree();
-		SfzAllocator* allocator = tree.arena.getArena();
-		ZuiWidget& parent =  tree.getCurrentParent();
-		ZuiWidget& widget = parent.children.add();
-		widget.id = id;
-		widget.widgetTypeID = widgetTypeID;
-		widget.dataPtr = allocator->alloc(sfz_dbg(""), type->widgetDataSizeBytes);
-		sfz_assert(type->widgetDataSizeBytes == sizeof(T));
-		if (prevWidget != nullptr) {
-			sfz_assert(prevWidget->id == id);
-			sfz_assert(prevWidget->widgetTypeID == widgetTypeID);
-			sfz_assert(prevWidget->dataPtr != nullptr);
-			memcpy(widget.dataPtr, prevWidget->dataPtr, type->widgetDataSizeBytes);
-		}
-		else {
-			new (widget.dataPtr) T();
-			*widget.data<T>() = {};
-		}
-		ZuiWidgetBase& base = widget.data<T>()->base;
-		parent.getNextWidgetBox(this, widgetTypeID, &base.box);
-		widget.archetypeDrawFunc = type->getCurrentArchetypeDrawFunc();
-		
-		// Update timers
-		base.timeSinceFocusStartedSecs += input.deltaTimeSecs;
-		base.timeSinceFocusEndedSecs += input.deltaTimeSecs;
-		base.timeSinceActivationSecs += input.deltaTimeSecs;
-
-		// Return command if requested
-		if (widgetOut != nullptr) {
-			*widgetOut = &widget;
-		}
-
-		// Return widget data
-		return widget.data<T>();
-	}
-
-	template<typename T>
-	T* createWidgetParent(ZuiID id, ZuiID widgetTypeID, u32 numChildrenHint = 64)
-	{
-		ZuiWidget* widget = nullptr;
-		T* data = this->createWidget<T>(id, widgetTypeID, &widget);
-		currTree().pushMakeParent(widget, numChildrenHint);
-		return data;
-	}
-
-	// Default function for popping parent widgets unless you need to do something special
-	void popWidgetParent(ZuiID widgetTypeID)
-	{
-		ZuiWidgetTree& tree = this->currTree();
-		ZuiWidget& parent = tree.getCurrentParent();
-		sfz_assert(parent.widgetTypeID == widgetTypeID);
-		sfz_assert(tree.parentStack.size() > 1); // Don't remove default base container
-		tree.popParent();
-	}
-};
-
-inline ZuiWidget::ZuiWidget(ZuiCtx* zui, ZuiID id, void* ptr)
+template<typename T>
+ZuiWidget* zuiCtxCreateWidget(ZuiCtx* zui, ZuiID id, ZuiID widgetTypeID, bool* wasCreated = nullptr)
 {
-	widgetTypeID = id;
-	dataPtr = ptr;
-	archetypeDrawFunc = zui->widgetTypes.get(id.id)->getCurrentArchetypeDrawFunc();
-	sfz_assert(archetypeDrawFunc != nullptr);
-}
-
-inline u32 ZuiWidget::sizeOfWidgetData(ZuiCtx* zui) const
-{
-	ZuiWidgetType* type = zui->widgetTypes.get(widgetTypeID.id);
+	// Get widget type
+	const ZuiWidgetType* type = zui->widgetTypes.get(widgetTypeID.id);
 	sfz_assert(type != nullptr);
-	return type->widgetDataSizeBytes;
+
+	// Check if it already exists in prev tree
+	ZuiWidgetTree& prevTree = zui->prevTree();
+	ZuiWidget* prevWidget = zuiFindWidgetFromID(&prevTree.root, id);
+	
+	// Get parent and type
+	ZuiWidgetTree& tree = zui->currTree();
+	ZuiWidget& parent = zuiWidgetTreeGetCurrentParent(&tree);
+	const ZuiWidgetType* parentType = zui->widgetTypes.get(parent.widgetTypeID.id);
+	sfz_assert(parentType != nullptr);
+
+	// Create in curr tree and set members
+	SfzAllocator* allocator = tree.arena.getArena();
+	ZuiWidget& widget = parent.children.add();
+	widget.id = id;
+	widget.widgetTypeID = widgetTypeID;
+	widget.dataPtr = allocator->alloc(sfz_dbg(""), type->widgetDataSizeBytes);
+	sfz_assert(type->widgetDataSizeBytes == sizeof(T));
+	if (prevWidget != nullptr) {
+		sfz_assert(prevWidget->id == id);
+		sfz_assert(prevWidget->widgetTypeID == widgetTypeID);
+		sfz_assert(prevWidget->dataPtr != nullptr);
+		memcpy(widget.dataPtr, prevWidget->dataPtr, type->widgetDataSizeBytes);
+		memcpy(&widget.base, &prevWidget->base, sizeof(ZuiWidgetBase));
+		if (wasCreated != nullptr) *wasCreated = false;
+	}
+	else {
+		new (widget.dataPtr) T();
+		*widget.data<T>() = {};
+		widget.base = {};
+		if (wasCreated != nullptr) *wasCreated = true;
+	}
+	sfz_assert(parentType->getNextWidgetBoxFunc != nullptr);
+	parentType->getNextWidgetBoxFunc(zui, &parent, widgetTypeID, &widget.base.box);
+	widget.archetypeDrawFunc = type->getCurrentArchetypeDrawFunc();
+
+	// Update timers
+	widget.base.timeSinceFocusStartedSecs += zui->input.deltaTimeSecs;
+	widget.base.timeSinceFocusEndedSecs += zui->input.deltaTimeSecs;
+	widget.base.timeSinceActivationSecs += zui->input.deltaTimeSecs;
+
+	// Return widget data
+	return &widget;
 }
 
-inline void ZuiWidget::getNextWidgetBox(ZuiCtx* zui, ZuiID childWidgetTypeID, ZuiBox* boxOut)
+template<typename T>
+ZuiWidget* zuiCtxCreateWidgetParent(ZuiCtx* zui, ZuiID id, ZuiID widgetTypeID, bool* wasCreated = nullptr, u32 numChildrenHint = 64)
 {
-	ZuiWidgetType* type = zui->widgetTypes.get(widgetTypeID.id);
-	sfz_assert(type != nullptr);
-	sfz_assert(type->getNextWidgetBoxFunc != nullptr);
-	type->getNextWidgetBoxFunc(zui, this, childWidgetTypeID, boxOut);
+	ZuiWidget* widget = zuiCtxCreateWidget<T>(zui, id, widgetTypeID, wasCreated);
+	zuiWidgetTreePushMakeParent(&zui->currTree(), widget, numChildrenHint);
+	return widget;
 }
 
-inline void ZuiWidget::handlePointerInput(ZuiCtx* zui, f32x2 pointerPosSS)
+// Default function for popping parent widgets unless you need to do something special
+inline void zuiCtxPopWidgetParent(ZuiCtx* zui, ZuiID widgetTypeID)
 {
-	ZuiWidgetType* type = zui->widgetTypes.get(widgetTypeID.id);
-	sfz_assert(type != nullptr);
-	sfz_assert(type->handlePointerInputFunc != nullptr);
-	type->handlePointerInputFunc(zui, this, pointerPosSS);
+	ZuiWidgetTree& tree = zui->currTree();
+	ZuiWidget& parent = zuiWidgetTreeGetCurrentParent(&tree);
+	sfz_assert(parent.widgetTypeID == widgetTypeID);
+	sfz_assert(tree.parentStack.size() > 1); // Don't remove default base container
+	zuiWidgetTreePopParent(&tree);
 }
 
-inline void ZuiWidget::handleMoveInput(ZuiCtx* zui, ZuiInput* input, bool* moveActive)
+// Helper functions
+// ------------------------------------------------------------------------------------------------
+
+inline f32x2 zuiCalcCenterPos(f32x2 pos, ZuiAlign align, f32x2 dims)
 {
-	ZuiWidgetType* type = zui->widgetTypes.get(widgetTypeID.id);
-	sfz_assert(type != nullptr);
-	sfz_assert(type->handleMoveInputFunc != nullptr);
-	type->handleMoveInputFunc(zui, this, input, moveActive);
+	f32x2 offset = f32x2_splat(0.0f);
+	switch (align) {
+	case ZUI_BOTTOM_LEFT:
+		offset = f32x2_init(-1.0f, -1.0f);
+		break;
+	case ZUI_BOTTOM_CENTER:
+		offset = f32x2_init(0.0f, -1.0f);
+		break;
+	case ZUI_BOTTOM_RIGHT:
+		offset = f32x2_init(1.0f, -1.0f);
+		break;
+	case ZUI_MID_LEFT:
+		offset = f32x2_init(-1.0f, 0.0f);
+		break;
+	case ZUI_MID_CENTER:
+		offset = f32x2_init(0.0f, 0.0f);
+		break;
+	case ZUI_MID_RIGHT:
+		offset = f32x2_init(1.0f, 0.0f);
+		break;
+	case ZUI_TOP_LEFT:
+		offset = f32x2_init(-1.0f, 1.0f);
+		break;
+	case ZUI_TOP_CENTER:
+		offset = f32x2_init(0.0f, 1.0f);
+		break;
+	case ZUI_TOP_RIGHT:
+		offset = f32x2_init(1.0f, 1.0f);
+		break;
+	default: sfz_assert_hard(false);
+	}
+	return pos - offset * 0.5f * dims;
 }
 
-inline void ZuiWidget::draw(ZuiCtx* zui, const SfzMat34* surfaceTransform, f32 lagSinceInputEndSecs) const
+// Default draw function which is just a pass through, only useful for containers.
+inline void zuiDefaultPassthroughDrawFunc(
+	ZuiCtx* zui,
+	const ZuiWidget* widget,
+	const SfzMat44* transform,
+	f32 lagSinceInputEndSecs)
 {
-	archetypeDrawFunc(zui, this, surfaceTransform, lagSinceInputEndSecs);
+	zui->drawCtx.clipStack.add(widget->base.box);
+	for (const ZuiWidget& child : widget->children) {
+		zuiWidgetDraw(&child, zui, transform, lagSinceInputEndSecs);
+	}
+	zui->drawCtx.clipStack.pop();
 }

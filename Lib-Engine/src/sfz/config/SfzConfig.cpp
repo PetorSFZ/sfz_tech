@@ -19,7 +19,7 @@
 
 #include "sfz/config/SfzConfig.h"
 
-#include <skipifzero_new.hpp>
+#include <skipifzero_strings.hpp>
 
 #include <sfz/config/GlobalConfig.hpp>
 #include <sfz/config/Setting.hpp>
@@ -35,21 +35,21 @@ sfz_struct(SfzConfig) {
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-static bool extractSectionKey(const char* name, sfz::str128& sectionOut, sfz::str128& keyOut)
+static bool extractSectionKey(const char* name, SfzStr96& sectionOut, SfzStr96& keyOut)
 {
 	const char* dot = strchr(name, '.');
 	sfz_assert(dot != nullptr);
 	if (dot == nullptr) return false;
 	const u32 sectionLen = u32(dot - name);
-	sectionOut.appendChars(name, sectionLen);
-	keyOut = (dot + 1);
+	sfzStr96AppendChars(&sectionOut, name, sectionLen);
+	keyOut = sfzStr96Init(dot + 1);
 	return true;
 }
 
 // Config
 // ------------------------------------------------------------------------------------------------
 
-SFZ_EXTERN_C SfzConfig* sfzCfgCreate(const char* basePath, const char* fileName, SfzAllocator* allocator)
+sfz_extern_c SfzConfig* sfzCfgCreate(const char* basePath, const char* fileName, SfzAllocator* allocator)
 {
 	SfzConfig* cfg = sfz_new<SfzConfig>(allocator, sfz_dbg(""));
 	cfg->allocator = allocator;
@@ -58,7 +58,7 @@ SFZ_EXTERN_C SfzConfig* sfzCfgCreate(const char* basePath, const char* fileName,
 	return cfg;
 }
 
-SFZ_EXTERN_C void sfzCfgDestroy(SfzConfig* cfg)
+sfz_extern_c void sfzCfgDestroy(SfzConfig* cfg)
 {
 	if (cfg == nullptr) return;
 	SfzAllocator* allocator = cfg->allocator;
@@ -68,55 +68,60 @@ SFZ_EXTERN_C void sfzCfgDestroy(SfzConfig* cfg)
 // Getters
 // ------------------------------------------------------------------------------------------------
 
-SFZ_EXTERN_C SfzGlobalConfig* sfzCfgGetLegacyConfig(SfzConfig* cfg)
+sfz_extern_c SfzGlobalConfig* sfzCfgGetLegacyConfig(SfzConfig* cfg)
 {
 	return &cfg->globalCfg;
 }
 
-SFZ_EXTERN_C const SfzGlobalConfig* sfzCfgGetLegacyConfigConst(const SfzConfig* cfg)
+sfz_extern_c const SfzGlobalConfig* sfzCfgGetLegacyConfigConst(const SfzConfig* cfg)
 {
 	return &cfg->globalCfg;
 }
 
-SFZ_EXTERN_C SfzSetting* sfzCfgGetSetting(SfzConfig* cfg, const char* nameIn)
+sfz_extern_c SfzSetting* sfzCfgGetSetting(SfzConfig* cfg, const char* nameIn)
 {
-	sfz::str128 section, key;
+	SfzStr96 section = {};
+	SfzStr96 key = {};
 	if (!extractSectionKey(nameIn, section, key)) return nullptr;
-	return cfg->globalCfg.getSetting(section.str(), key.str());
+	return cfg->globalCfg.getSetting(section.str, key.str);
 }
 
-SFZ_EXTERN_C const SfzSetting* sfzCfgGetSettingConst(const SfzConfig* cfg, const char* nameIn)
+sfz_extern_c const SfzSetting* sfzCfgGetSettingConst(const SfzConfig* cfg, const char* nameIn)
 {
-	sfz::str128 section, key;
+	SfzStr96 section = {};
+	SfzStr96 key = {};
 	if (!extractSectionKey(nameIn, section, key)) return nullptr;
-	return cfg->globalCfg.getSetting(section.str(), key.str());
+	return cfg->globalCfg.getSetting(section.str, key.str);
 }
 
-SFZ_EXTERN_C i32 sfzCfgGetI32(const SfzConfig* cfg, const char* nameIn)
+sfz_extern_c i32 sfzCfgGetI32(const SfzConfig* cfg, const char* nameIn)
 {
-	sfz::str128 section, key;
+	SfzStr96 section = {};
+	SfzStr96 key = {};
 	if (!extractSectionKey(nameIn, section, key)) return 0;
-	return cfg->globalCfg.getSetting(section.str(), key.str())->intValue();
+	return cfg->globalCfg.getSetting(section.str, key.str)->intValue();
 }
 
-SFZ_EXTERN_C f32 sfzCfgGetF32(const SfzConfig* cfg, const char* nameIn)
+sfz_extern_c f32 sfzCfgGetF32(const SfzConfig* cfg, const char* nameIn)
 {
-	sfz::str128 section, key;
+	SfzStr96 section = {};
+	SfzStr96 key = {};
 	if (!extractSectionKey(nameIn, section, key)) return 0.0f;
-	return cfg->globalCfg.getSetting(section.str(), key.str())->floatValue();
+	return cfg->globalCfg.getSetting(section.str, key.str)->floatValue();
 }
 
-SFZ_EXTERN_C bool sfzCfgGetBool(const SfzConfig* cfg, const char* nameIn)
+sfz_extern_c bool sfzCfgGetBool(const SfzConfig* cfg, const char* nameIn)
 {
-	sfz::str128 section, key;
+	SfzStr96 section = {};
+	SfzStr96 key = {};
 	if (!extractSectionKey(nameIn, section, key)) return false;
-	return cfg->globalCfg.getSetting(section.str(), key.str())->boolValue();
+	return cfg->globalCfg.getSetting(section.str, key.str)->boolValue();
 }
 
 // Sanitizers
 // ------------------------------------------------------------------------------------------------
 
-SFZ_EXTERN_C i32 sfzCfgSanitizeI32(
+sfz_extern_c i32 sfzCfgSanitizeI32(
 	SfzConfig* cfg,
 	const char* nameIn,
 	bool writeToFile,
@@ -125,12 +130,13 @@ SFZ_EXTERN_C i32 sfzCfgSanitizeI32(
 	i32 maxVal,
 	i32 step)
 {
-	sfz::str128 section, key;
+	SfzStr96 section = {};
+	SfzStr96 key = {};
 	if (!extractSectionKey(nameIn, section, key)) return 0;
-	return cfg->globalCfg.sanitizeInt(section.str(), key.str(), writeToFile, defaultVal, minVal, maxVal, step)->intValue();
+	return cfg->globalCfg.sanitizeInt(section.str, key.str, writeToFile, defaultVal, minVal, maxVal, step)->intValue();
 }
 
-SFZ_EXTERN_C f32 sfzCfgSanitizeF32(
+sfz_extern_c f32 sfzCfgSanitizeF32(
 	SfzConfig* cfg,
 	const char* nameIn,
 	bool writeToFile,
@@ -138,56 +144,61 @@ SFZ_EXTERN_C f32 sfzCfgSanitizeF32(
 	f32 minVal,
 	f32 maxVal)
 {
-	sfz::str128 section, key;
+	SfzStr96 section = {};
+	SfzStr96 key = {};
 	if (!extractSectionKey(nameIn, section, key)) return 0.0f;
-	return cfg->globalCfg.sanitizeFloat(section.str(), key.str(), writeToFile, defaultVal, minVal, maxVal)->floatValue();
+	return cfg->globalCfg.sanitizeFloat(section.str, key.str, writeToFile, defaultVal, minVal, maxVal)->floatValue();
 }
 
-SFZ_EXTERN_C bool sfzCfgSanitizeBool(
+sfz_extern_c bool sfzCfgSanitizeBool(
 	SfzConfig* cfg,
 	const char* nameIn,
 	bool writeToFile,
 	bool defaultVal)
 {
-	sfz::str128 section, key;
+	SfzStr96 section = {};
+	SfzStr96 key = {};
 	if (!extractSectionKey(nameIn, section, key)) return false;
-	return cfg->globalCfg.sanitizeBool(section.str(), key.str(), writeToFile, defaultVal)->boolValue();
+	return cfg->globalCfg.sanitizeBool(section.str, key.str, writeToFile, defaultVal)->boolValue();
 }
 
 // Setters
 // ------------------------------------------------------------------------------------------------
 
-SFZ_EXTERN_C void sfzCfgSetI32(SfzConfig* cfg, const char* nameIn, i32 val)
+sfz_extern_c void sfzCfgSetI32(SfzConfig* cfg, const char* nameIn, i32 val)
 {
-	sfz::str128 section, key;
+	SfzStr96 section = {};
+	SfzStr96 key = {};
 	if (!extractSectionKey(nameIn, section, key)) return;
-	SfzSetting* setting = cfg->globalCfg.getSetting(section.str(), key.str());
+	SfzSetting* setting = cfg->globalCfg.getSetting(section.str, key.str);
 	sfz_assert(setting != nullptr);
 	const bool success = setting->setInt(val);
 	sfz_assert(success);
 }
 
-SFZ_EXTERN_C void sfzCfgSetF32(SfzConfig* cfg, const char* nameIn, f32 val)
+sfz_extern_c void sfzCfgSetF32(SfzConfig* cfg, const char* nameIn, f32 val)
 {
-	sfz::str128 section, key;
+	SfzStr96 section = {};
+	SfzStr96 key = {};
 	if (!extractSectionKey(nameIn, section, key)) return;
-	SfzSetting* setting = cfg->globalCfg.getSetting(section.str(), key.str());
+	SfzSetting* setting = cfg->globalCfg.getSetting(section.str, key.str);
 	sfz_assert(setting != nullptr);
 	const bool success = setting->setFloat(val);
 	sfz_assert(success);
 }
 
-SFZ_EXTERN_C void sfzCfgSetBool(SfzConfig* cfg, const char* nameIn, bool val)
+sfz_extern_c void sfzCfgSetBool(SfzConfig* cfg, const char* nameIn, bool val)
 {
-	sfz::str128 section, key;
+	SfzStr96 section = {};
+	SfzStr96 key = {};
 	if (!extractSectionKey(nameIn, section, key)) return;
-	SfzSetting* setting = cfg->globalCfg.getSetting(section.str(), key.str());
+	SfzSetting* setting = cfg->globalCfg.getSetting(section.str, key.str);
 	sfz_assert(setting != nullptr);
 	const bool success = setting->setBool(val);
 	sfz_assert(success);
 }
 
-SFZ_EXTERN_C void sfzCfgToggleBool(SfzConfig* cfg, const char* nameIn)
+sfz_extern_c void sfzCfgToggleBool(SfzConfig* cfg, const char* nameIn)
 {
 	const bool val = sfzCfgGetBool(cfg, nameIn);
 	sfzCfgSetBool(cfg, nameIn, !val);

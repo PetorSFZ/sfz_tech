@@ -21,9 +21,6 @@
 
 #include <SDL.h>
 
-#include <skipifzero_math.hpp>
-#include <skipifzero_new.hpp>
-
 #include "sfz/config/SfzConfig.h"
 #include "sfz/config/Setting.hpp"
 
@@ -66,11 +63,11 @@ SfzImageView initializeImgui(SfzAllocator* allocator) noexcept
 	ImGui::StyleColorsDark(&style);
 
 	style.Alpha = 1.0f;
-	style.WindowPadding = f32x2(12.0f);
+	style.WindowPadding = f32x2_splat(12.0f);
 	style.WindowRounding = 4.0f;
-	style.FramePadding = f32x2(8.0f, 5.0f);
-	style.ItemSpacing = f32x2(12.0f, 8.0f);
-	style.ItemInnerSpacing = f32x2(6.0f);
+	style.FramePadding = f32x2_init(8.0f, 5.0f);
+	style.ItemSpacing = f32x2_init(12.0f, 8.0f);
+	style.ItemInnerSpacing = f32x2_splat(6.0f);
 	style.IndentSpacing = 30.0f;
 	style.ScrollbarSize = 12.0f;
 	style.ScrollbarRounding = 5.0f;
@@ -79,7 +76,7 @@ SfzImageView initializeImgui(SfzAllocator* allocator) noexcept
 
 	//style.Colors[ImGuiCol_Text];
 	//style.Colors[ImGuiCol_TextDisabled];
-	style.Colors[ImGuiCol_WindowBg] = f32x4(0.05f, 0.05f, 0.05f, 0.75f);
+	style.Colors[ImGuiCol_WindowBg] = f32x4_init(0.05f, 0.05f, 0.05f, 0.75f);
 	//style.Colors[ImGuiCol_ChildBg];               // Background of child windows
 	//style.Colors[ImGuiCol_PopupBg];               // Background of popups, menus, tooltips windows
 	//style.Colors[ImGuiCol_Border];
@@ -152,8 +149,8 @@ SfzImageView initializeImgui(SfzAllocator* allocator) noexcept
 	io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
 
 	// Disable draw function and set all window sizes to 1 (will be set proper in update)
-	io.DisplaySize = f32x2(1.0f);
-	io.DisplayFramebufferScale = f32x2(1.0f);
+	io.DisplaySize = f32x2_splat(1.0f);
+	io.DisplayFramebufferScale = f32x2_splat(1.0f);
 
 	// Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
 	io.KeyMap[ImGuiKey_Tab] = SDLK_TAB;
@@ -186,7 +183,7 @@ SfzImageView initializeImgui(SfzAllocator* allocator) noexcept
 	ImFontConfig fontConfig;
 	fontConfig.OversampleH = 4;
 	fontConfig.OversampleV = 4;
-	fontConfig.GlyphExtraSpacing = f32x2(1.0f);
+	fontConfig.GlyphExtraSpacing = f32x2_splat(1.0f);
 	imguiState->defaultFont =
 		io.Fonts->AddFontFromFileTTF(DEFAULT_FONT_PATH, FONT_SIZE_PIXELS, &fontConfig);
 	imguiState->monospaceFont =
@@ -194,7 +191,7 @@ SfzImageView initializeImgui(SfzAllocator* allocator) noexcept
 
 	// Rasterize default font and return view
 	SfzImageView fontTexView = {};
-	io.Fonts->GetTexDataAsAlpha8(&fontTexView.rawData, &fontTexView.width, &fontTexView.height);
+	io.Fonts->GetTexDataAsAlpha8(&fontTexView.rawData, &fontTexView.res.x, &fontTexView.res.y);
 	fontTexView.type = SFZ_IMAGE_TYPE_R_U8;
 	return fontTexView;
 }
@@ -241,7 +238,7 @@ void updateImgui(
 	f32 scaleFactor = 1.0f / imguiScaleSetting->floatValue();
 
 	// Set display dimensions
-	f32x2 imguiDims = f32x2(windowResolution) * scaleFactor;
+	f32x2 imguiDims = f32x2_from_i32(windowResolution) * scaleFactor;
 	io.DisplaySize = imguiDims;
 
 	// Update mouse
@@ -331,10 +328,10 @@ void updateImgui(
 
 		// scroll / move window (w/ PadMenu) // e.g. Left Analog Stick Left/Right/Up/Down
 		f32x2 leftStick = sfz::applyDeadzone(gpd.leftStick, sfz::GPD_STICK_APPROX_DEADZONE);
-		io.NavInputs[ImGuiNavInput_LStickUp] = sfz::max(leftStick.y, 0.0f);
-		io.NavInputs[ImGuiNavInput_LStickDown] = sfz::abs(sfz::min(leftStick.y, 0.0f));
-		io.NavInputs[ImGuiNavInput_LStickLeft] = sfz::abs(sfz::min(leftStick.x, 0.0f));
-		io.NavInputs[ImGuiNavInput_LStickRight] = sfz::max(leftStick.x, 0.0f);
+		io.NavInputs[ImGuiNavInput_LStickUp] = f32_max(leftStick.y, 0.0f);
+		io.NavInputs[ImGuiNavInput_LStickDown] = f32_abs(f32_min(leftStick.y, 0.0f));
+		io.NavInputs[ImGuiNavInput_LStickLeft] = f32_abs(f32_min(leftStick.x, 0.0f));
+		io.NavInputs[ImGuiNavInput_LStickRight] = f32_max(leftStick.x, 0.0f);
 
 		// next window (w/ PadMenu) // e.g. L1 or L2 (PS4), LB or LT (Xbox), L or ZL (Switch)
 		io.NavInputs[ImGuiNavInput_FocusPrev] = f32(gpd.buttons[GPD_LB]);

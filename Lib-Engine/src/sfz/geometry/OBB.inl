@@ -24,9 +24,9 @@ namespace sfz {
 inline OBB::OBB(f32x3 center, f32x3 xAxis, f32x3 yAxis, f32x3 zAxis, f32x3 extents) noexcept
 {
 	this->center = center;
-	rotation.row(0) = xAxis;
-	rotation.row(1) = yAxis;
-	rotation.row(2) = zAxis;
+	rotation.rows[0] = xAxis;
+	rotation.rows[1] = yAxis;
+	rotation.rows[2] = zAxis;
 	this->halfExtents = extents * 0.5f;
 	ensureCorrectAxes();
 	ensureCorrectExtents();
@@ -40,13 +40,13 @@ inline OBB::OBB(f32x3 center, const f32x3 axes[3], f32x3 extents) noexcept
 inline OBB::OBB(f32x3 center, f32x3 xAxis, f32x3 yAxis, f32x3 zAxis,
 	f32 xExtent, f32 yExtent, f32 zExtent) noexcept
 :
-	OBB(center, xAxis, yAxis, zAxis, f32x3(xExtent, yExtent, zExtent))
+	OBB(center, xAxis, yAxis, zAxis, f32x3_init(xExtent, yExtent, zExtent))
 { }
 
 inline OBB::OBB(const AABB& aabb) noexcept
 :
 	OBB(aabb.pos(),
-		f32x3(1.0f, 0.0f, 0.0f), f32x3(0.0f, 1.0f, 0.0f), f32x3(0.0f, 0.0f, 1.0f),
+		f32x3_init(1.0f, 0.0f, 0.0f), f32x3_init(0.0f, 1.0f, 0.0f), f32x3_init(0.0f, 0.0f, 1.0f),
 		aabb.dims())
 { }
 
@@ -75,19 +75,19 @@ inline void OBB::corners(f32x3* arrayOut) const noexcept
 	arrayOut[7] = center + halfXExtVec + halfYExtVec + halfZExtVec; // Front-top-right
 }
 
-inline OBB OBB::transformOBB(const mat34& transform) const noexcept
+inline OBB OBB::transformOBB(const SfzMat44& transform) const noexcept
 {
-	const f32x3 newPos = transformPoint(transform, center);
+	const f32x3 newPos = sfzMat44TransformPoint(transform, center);
 
 	const f32x3 xAxisHalfExt = xAxis() * halfExtents.x;
 	const f32x3 yAxisHalfExt = yAxis() * halfExtents.y;
 	const f32x3 zAxisHalfExt = zAxis() * halfExtents.z;
-	const f32x3 newXAxisHalfExt = transformDir(transform, xAxisHalfExt);
-	const f32x3 newYAxisHalfExt = transformDir(transform, yAxisHalfExt);
-	const f32x3 newZAxisHalfExt = transformDir(transform, zAxisHalfExt);
+	const f32x3 newXAxisHalfExt = sfzMat44TransformDir(transform, xAxisHalfExt);
+	const f32x3 newYAxisHalfExt = sfzMat44TransformDir(transform, yAxisHalfExt);
+	const f32x3 newZAxisHalfExt = sfzMat44TransformDir(transform, zAxisHalfExt);
 
 	const f32x3 newHalfExt =
-		f32x3(length(newXAxisHalfExt), length(newYAxisHalfExt), length(newZAxisHalfExt));
+		f32x3_init(f32x3_length(newXAxisHalfExt), f32x3_length(newYAxisHalfExt), f32x3_length(newZAxisHalfExt));
 	f32x3 newAxes[3];
 	newAxes[0] = newXAxisHalfExt / newHalfExt.x;
 	newAxes[1] = newYAxisHalfExt / newHalfExt.y;
@@ -96,13 +96,13 @@ inline OBB OBB::transformOBB(const mat34& transform) const noexcept
 	return OBB(newPos, newAxes, newHalfExt * 2.0f);
 }
 
-inline OBB OBB::transformOBB(Quat quaternion) const noexcept
+inline OBB OBB::transformOBB(SfzQuat quaternion) const noexcept
 {
-	sfz_assert(eqf(length(quaternion), 1.0f));
+	sfz_assert(eqf(sfzQuatLength(quaternion), 1.0f));
 	OBB tmp = *this;
-	tmp.rotation.row(0) = rotate(quaternion, tmp.rotation.row(0));
-	tmp.rotation.row(1) = rotate(quaternion, tmp.rotation.row(1));
-	tmp.rotation.row(2) = rotate(quaternion, tmp.rotation.row(2));
+	tmp.rotation.rows[0] = sfzQuatRotateUnit(quaternion, tmp.rotation.rows[0]);
+	tmp.rotation.rows[1] = sfzQuatRotateUnit(quaternion, tmp.rotation.rows[1]);
+	tmp.rotation.rows[2] = sfzQuatRotateUnit(quaternion, tmp.rotation.rows[2]);
 	return tmp;
 }
 
@@ -139,14 +139,14 @@ inline void OBB::setZExtent(f32 newZExtent) noexcept
 inline void OBB::ensureCorrectAxes() const noexcept
 {
 	// Check if axes are orthogonal
-	sfz_assert(eqf(dot(f32x3(rotation.row(0)), f32x3(rotation.row(1))), 0.0f));
-	sfz_assert(eqf(dot(f32x3(rotation.row(0)), f32x3(rotation.row(2))), 0.0f));
-	sfz_assert(eqf(dot(f32x3(rotation.row(1)), f32x3(rotation.row(2))), 0.0f));
+	sfz_assert(eqf(f32x3_dot(f32x3(rotation.rows[0]), f32x3(rotation.rows[1])), 0.0f));
+	sfz_assert(eqf(f32x3_dot(f32x3(rotation.rows[0]), f32x3(rotation.rows[2])), 0.0f));
+	sfz_assert(eqf(f32x3_dot(f32x3(rotation.rows[1]), f32x3(rotation.rows[2])), 0.0f));
 
 	// Check if axes are normalized
-	sfz_assert(eqf(length(rotation.row(0)), 1.0f));
-	sfz_assert(eqf(length(rotation.row(1)), 1.0f));
-	sfz_assert(eqf(length(rotation.row(2)), 1.0f));
+	sfz_assert(eqf(f32x3_length(rotation.rows[0]), 1.0f));
+	sfz_assert(eqf(f32x3_length(rotation.rows[1]), 1.0f));
+	sfz_assert(eqf(f32x3_length(rotation.rows[2]), 1.0f));
 }
 
 inline void OBB::ensureCorrectExtents() const noexcept

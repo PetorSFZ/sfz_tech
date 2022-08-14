@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 
 #include <ZeroG.h>
 
@@ -78,30 +78,6 @@ inline const char* clearValueToString(ZgOptimalClearValue clearValue)
 	case ZG_OPTIMAL_CLEAR_VALUE_UNDEFINED: return "UNDEFINED";
 	case ZG_OPTIMAL_CLEAR_VALUE_ZERO: return "ZERO";
 	case ZG_OPTIMAL_CLEAR_VALUE_ONE: return "ONE";
-	}
-	sfz_assert(false);
-	return "";
-}
-
-inline const char* vertexAttributeTypeToString(ZgVertexAttributeType type)
-{
-	switch (type) {
-	case ZG_VERTEX_ATTRIBUTE_F32: return "ZG_VERTEX_ATTRIBUTE_F32";
-	case ZG_VERTEX_ATTRIBUTE_F32_2: return "ZG_VERTEX_ATTRIBUTE_F32_2";
-	case ZG_VERTEX_ATTRIBUTE_F32_3: return "ZG_VERTEX_ATTRIBUTE_F32_3";
-	case ZG_VERTEX_ATTRIBUTE_F32_4: return "ZG_VERTEX_ATTRIBUTE_F32_4";
-
-	case ZG_VERTEX_ATTRIBUTE_S32: return "ZG_VERTEX_ATTRIBUTE_S32";
-	case ZG_VERTEX_ATTRIBUTE_S32_2: return "ZG_VERTEX_ATTRIBUTE_S32_2";
-	case ZG_VERTEX_ATTRIBUTE_S32_3: return "ZG_VERTEX_ATTRIBUTE_S32_3";
-	case ZG_VERTEX_ATTRIBUTE_S32_4: return "ZG_VERTEX_ATTRIBUTE_S32_4";
-
-	case ZG_VERTEX_ATTRIBUTE_U32: return "ZG_VERTEX_ATTRIBUTE_U32";
-	case ZG_VERTEX_ATTRIBUTE_U32_2: return "ZG_VERTEX_ATTRIBUTE_U32_2";
-	case ZG_VERTEX_ATTRIBUTE_U32_3: return "ZG_VERTEX_ATTRIBUTE_U32_3";
-	case ZG_VERTEX_ATTRIBUTE_U32_4: return "ZG_VERTEX_ATTRIBUTE_U32_4";
-
-	default: break;
 	}
 	sfz_assert(false);
 	return "";

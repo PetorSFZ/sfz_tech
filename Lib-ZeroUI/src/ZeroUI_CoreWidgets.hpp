@@ -27,17 +27,6 @@
 void zuiListBegin(ZuiCtx* zui, ZuiID id, f32 widgetHeight, f32 vertSpacing);
 void zuiListEnd(ZuiCtx* zui);
 
-// Tree
-// ------------------------------------------------------------------------------------------------
-
-void zuiTreeBegin(ZuiCtx* zui, ZuiID id, f32x2 entryDims, f32 entryVertSpacing = 0.0f, f32 horizSpacing = 0.0f);
-void zuiTreeEnd(ZuiCtx* zui);
-
-bool zuiTreeCollapsableBegin(ZuiCtx* zui, ZuiID id, const char* text, bool enabled = true);
-void zuiTreeCollapsableEnd(ZuiCtx* zui);
-
-bool zuiTreeButton(ZuiCtx* zui, ZuiID id, const char* text, bool enabled = true);
-
 // Textfmt
 // ------------------------------------------------------------------------------------------------
 
@@ -46,7 +35,7 @@ void zuiTextfmt(ZuiCtx* zui, ZuiID id, const char* format, ...);
 // Rectangle
 // ------------------------------------------------------------------------------------------------
 
-void zuiRect(ZuiCtx* zui, ZuiID id, f32x4 linearColor = f32x4(1.0f));
+void zuiRect(ZuiCtx* zui, ZuiID id, f32x4 linearColor = f32x4_splat(1.0f));
 
 // Image
 // ------------------------------------------------------------------------------------------------
@@ -56,7 +45,7 @@ void zuiImage(ZuiCtx* zui, ZuiID id, u64 imageHandle);
 // Button
 // ------------------------------------------------------------------------------------------------
 
-bool zuiButton(ZuiCtx* zui, ZuiID id, const char* text, bool enabled = true);
+bool zuiButton(ZuiCtx* zui, ZuiID id, const char* text);
 
 // Initialization
 // ------------------------------------------------------------------------------------------------

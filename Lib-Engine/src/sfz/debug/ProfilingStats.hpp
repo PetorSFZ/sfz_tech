@@ -98,7 +98,7 @@ public:
 	void createLabel(
 		const char* category,
 		const char* label,
-		f32x4 color = f32x4(-1.0f),
+		f32x4 color = f32x4_splat(-1.0f),
 		f32 defaultValue = 0.0f) noexcept;
 
 	void addSample(

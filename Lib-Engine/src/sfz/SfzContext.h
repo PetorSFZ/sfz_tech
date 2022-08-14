@@ -40,10 +40,10 @@ struct SfzStrIDs;
 
 typedef void SfzCtxTypeDestroyFunc(void* bytes);
 
-SFZ_EXTERN_C SfzCtx* sfzCtxCreate(SfzAllocator* globalAllocator);
-SFZ_EXTERN_C void sfzCtxDestroy(SfzCtx* ctx);
+sfz_extern_c SfzCtx* sfzCtxCreate(SfzAllocator* globalAllocator);
+sfz_extern_c void sfzCtxDestroy(SfzCtx* ctx);
 
-SFZ_EXTERN_C void sfzCtxRegisterType(
+sfz_extern_c void sfzCtxRegisterType(
 	SfzCtx* ctx,
 	u64 type,
 	void* data,
@@ -52,14 +52,14 @@ SFZ_EXTERN_C void sfzCtxRegisterType(
 // SfzCtxView
 // ------------------------------------------------------------------------------------------------
 
-SFZ_EXTERN_C SfzCtxView* sfzCtxCreateView(SfzCtx* ctx, u64 readAccess, u64 writeAccess);
-SFZ_EXTERN_C void sfzCtxDestroyView(SfzCtx* ctx, SfzCtxView* view);
+sfz_extern_c SfzCtxView* sfzCtxCreateView(SfzCtx* ctx, u64 readAccess, u64 writeAccess);
+sfz_extern_c void sfzCtxDestroyView(SfzCtx* ctx, SfzCtxView* view);
 
-SFZ_EXTERN_C u64 sfzCtxViewReadAccess(SfzCtxView* view);
-SFZ_EXTERN_C u64 sfzCtxViewWriteAccess(SfzCtxView* view);
+sfz_extern_c u64 sfzCtxViewReadAccess(SfzCtxView* view);
+sfz_extern_c u64 sfzCtxViewWriteAccess(SfzCtxView* view);
 
-SFZ_EXTERN_C void* sfzCtxViewGet(const SfzCtxView* view, u64 type);
-SFZ_EXTERN_C const void* sfzCtxViewGetConst(const SfzCtxView* view, u64 type);
+sfz_extern_c void* sfzCtxViewGet(const SfzCtxView* view, u64 type);
+sfz_extern_c const void* sfzCtxViewGetConst(const SfzCtxView* view, u64 type);
 
 // Known types
 // ------------------------------------------------------------------------------------------------

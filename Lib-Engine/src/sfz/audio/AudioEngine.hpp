@@ -28,7 +28,7 @@ struct SfzAudioEngine;
 // AudioEngine
 // ------------------------------------------------------------------------------------------------
 
-SFZ_EXTERN_C SfzAudioEngine* sfzAudioCreate(SfzAllocator* allocator);
-SFZ_EXTERN_C void sfzAudioDestroy(SfzAudioEngine* audio);
+sfz_extern_c SfzAudioEngine* sfzAudioCreate(SfzAllocator* allocator);
+sfz_extern_c void sfzAudioDestroy(SfzAudioEngine* audio);
 
-SFZ_EXTERN_C void sfzAudioRenderDebugUI(SfzAudioEngine* audio);
+sfz_extern_c void sfzAudioRenderDebugUI(SfzAudioEngine* audio);

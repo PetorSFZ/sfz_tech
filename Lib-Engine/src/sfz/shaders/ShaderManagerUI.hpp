@@ -39,20 +39,20 @@ inline void shaderManagerUI(SfzShaderManagerState& state, SfzStrIDs* ids)
 	}
 
 	constexpr f32 offset = 150.0f;
-	constexpr f32x4 normalTextColor = f32x4(1.0f);
-	constexpr f32x4 filterTextColor = f32x4(1.0f, 0.0f, 0.0f, 1.0f);
-	static str128 filter;
+	constexpr f32x4 normalTextColor = f32x4_splat(1.0f);
+	constexpr f32x4 filterTextColor = f32x4_init(1.0f, 0.0f, 0.0f, 1.0f);
+	static SfzStr96 filter;
 
 	ImGui::PushStyleColor(ImGuiCol_Text, filterTextColor);
-	ImGui::InputText("Filter##BuffersTab", filter.mRawStr, filter.capacity());
+	ImGui::InputText("Filter##BuffersTab", filter.str, sfzStr96ToView(&filter).capacity);
 	ImGui::PopStyleColor();
-	filter.toLower();
+	sfzStr96ToLower(&filter);
 
 	const bool filterMode = filter != "";
 
 	// Reload all button
 	ImGui::SameLine(ImGui::GetWindowWidth() - 130.0f);
-	if (ImGui::Button("Reload All##__shaders", f32x2(120.0f, 0.0f))) {
+	if (ImGui::Button("Reload All##__shaders", f32x2_init(120.0f, 0.0f))) {
 
 		SFZ_LOG_INFO("Reloading all shaders...");
 
@@ -60,7 +60,7 @@ inline void shaderManagerUI(SfzShaderManagerState& state, SfzStrIDs* ids)
 		CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
 
 		// Rebuild shaders
-		for (HashMapPair<SfzStrID, SfzHandle> itemItr : state.shaderHandles) {
+		for (SfzHashMapPair<SfzStrID, SfzHandle> itemItr : state.shaderHandles) {
 			SfzShader& shader = state.shaders[itemItr.value];
 			bool success = shader.build();
 			if (!success) {
@@ -69,17 +69,17 @@ inline void shaderManagerUI(SfzShaderManagerState& state, SfzStrIDs* ids)
 		}
 	}
 
-	for (HashMapPair<SfzStrID, SfzHandle> itemItr : state.shaderHandles) {
+	for (SfzHashMapPair<SfzStrID, SfzHandle> itemItr : state.shaderHandles) {
 		const char* name = sfzStrIDGetStr(ids, itemItr.key);
 		const u32 idx = itemItr.value.idx();
 		SfzShader& shader = state.shaders[itemItr.value];
 
-		str320 lowerCaseName = name;
-		lowerCaseName.toLower();
-		if (!filter.isPartOf(lowerCaseName.str())) continue;
+		SfzStr320 lowerCaseName = sfzStr320Init(name);
+		sfzStr320ToLower(&lowerCaseName);
+		if (!sfzStr96IsPartOf(&filter, lowerCaseName.str)) continue;
 
 		// Reload button
-		if (ImGui::Button(str64("Reload##__shader%u", idx), f32x2(80.0f, 0.0f))) {
+		if (ImGui::Button(sfzStr96InitFmt("Reload##__shader%u", idx).str, f32x2_init(80.0f, 0.0f))) {
 
 			CHECK_ZG zg::CommandQueue::getPresentQueue().flush();
 
@@ -94,7 +94,7 @@ inline void shaderManagerUI(SfzShaderManagerState& state, SfzStrIDs* ids)
 
 		// Shader name
 		if (filterMode) {
-			imguiRenderFilteredText(name, filter.str(), normalTextColor, filterTextColor);
+			imguiRenderFilteredText(name, filter.str, normalTextColor, filterTextColor);
 		}
 		else {
 			if (!ImGui::CollapsingHeader(name)) continue;
@@ -152,7 +152,7 @@ inline void shaderManagerUI(SfzShaderManagerState& state, SfzStrIDs* ids)
 				constexpr f32 samplerXOffset = 260.0f;
 				alignedEdit(" - Sample Mode", "sampler", j, samplerXOffset, [&](const char* name) {
 					ImGui::SetNextItemWidth(160.0f);
-					if (ImGui::BeginCombo(str128("##%u%s", idx, name).str(), sampleModeToString(sampler.sampleMode))) {
+					if (ImGui::BeginCombo(sfzStr96InitFmt("##%u%s", idx, name).str, sampleModeToString(sampler.sampleMode))) {
 						if (ImGui::Selectable(sampleModeToString(ZG_SAMPLE_NEAREST), sampler.sampleMode == ZG_SAMPLE_NEAREST)) {
 							sampler.sampleMode = ZG_SAMPLE_NEAREST;
 						}
@@ -176,7 +176,7 @@ inline void shaderManagerUI(SfzShaderManagerState& state, SfzStrIDs* ids)
 				});
 				alignedEdit(" - Wrap U", "sampler", j, samplerXOffset, [&](const char* name) {
 					ImGui::SetNextItemWidth(150.0f);
-					if (ImGui::BeginCombo(str128("##%u%s", idx, name).str(), wrapModeToString(sampler.wrapU))) {
+					if (ImGui::BeginCombo(sfzStr96InitFmt("##%u%s", idx, name).str, wrapModeToString(sampler.wrapU))) {
 						if (ImGui::Selectable(wrapModeToString(ZG_WRAP_CLAMP), sampler.wrapU == ZG_WRAP_CLAMP)) {
 							sampler.wrapU = ZG_WRAP_CLAMP;
 						}
@@ -188,7 +188,7 @@ inline void shaderManagerUI(SfzShaderManagerState& state, SfzStrIDs* ids)
 				});
 				alignedEdit(" - Wrap V", "sampler", j, samplerXOffset, [&](const char* name) {
 					ImGui::SetNextItemWidth(150.0f);
-					if (ImGui::BeginCombo(str128("##%u%s", idx, name).str(), wrapModeToString(sampler.wrapV))) {
+					if (ImGui::BeginCombo(sfzStr96InitFmt("##%u%s", idx, name).str, wrapModeToString(sampler.wrapV))) {
 						if (ImGui::Selectable(wrapModeToString(ZG_WRAP_CLAMP), sampler.wrapV == ZG_WRAP_CLAMP)) {
 							sampler.wrapV = ZG_WRAP_CLAMP;
 						}
@@ -229,7 +229,7 @@ inline void shaderManagerUI(SfzShaderManagerState& state, SfzStrIDs* ids)
 			ImGui::Spacing();
 			alignedEdit("Culling", xOffset, [&](const char* name) {
 				bool enabled = render.rasterizer.cullingEnabled != ZG_FALSE;
-				if (ImGui::Checkbox(str128("##%s", name).str(), &enabled)) {
+				if (ImGui::Checkbox(sfzStr96InitFmt("##%s", name).str, &enabled)) {
 					render.rasterizer.cullingEnabled = enabled ? ZG_TRUE : ZG_FALSE;
 				}
 				ImGui::SameLine();
@@ -248,15 +248,15 @@ inline void shaderManagerUI(SfzShaderManagerState& state, SfzStrIDs* ids)
 			ImGui::Indent(20.0f);
 			alignedEdit("Bias", xOffset, [&](const char* name) {
 				ImGui::SetNextItemWidth(165.0f);
-				ImGui::InputInt(str128("%s##render_%u", name, idx), &render.rasterizer.depthBias);
+				ImGui::InputInt(sfzStr96InitFmt("%s##render_%u", name, idx).str, &render.rasterizer.depthBias);
 			});
 			alignedEdit("Bias Slope Scaled", xOffset, [&](const char* name) {
 				ImGui::SetNextItemWidth(100.0f);
-				ImGui::InputFloat(str128("%s##render_%u", name, idx), &render.rasterizer.depthBiasSlopeScaled, 0.0f, 0.0f, "%.4f");
+				ImGui::InputFloat(sfzStr96InitFmt("%s##render_%u", name, idx).str, &render.rasterizer.depthBiasSlopeScaled, 0.0f, 0.0f, "%.4f");
 			});
 			alignedEdit("Bias Clamp", xOffset, [&](const char* name) {
 				ImGui::SetNextItemWidth(100.0f);
-				ImGui::InputFloat(str128("%s##render_%u", name, idx), &render.rasterizer.depthBiasClamp, 0.0f, 0.0f, "%.4f");
+				ImGui::InputFloat(sfzStr96InitFmt("%s##render_%u", name, idx).str, &render.rasterizer.depthBiasClamp, 0.0f, 0.0f, "%.4f");
 			});
 			ImGui::Unindent(20.0f);
 
@@ -264,7 +264,7 @@ inline void shaderManagerUI(SfzShaderManagerState& state, SfzStrIDs* ids)
 			ImGui::Spacing();
 			alignedEdit("Wireframe Rendering", xOffset, [&](const char* name) {
 				bool enabled = render.rasterizer.wireframeMode != ZG_FALSE;
-				if (ImGui::Checkbox(str128("##%s", name).str(), &enabled)) {
+				if (ImGui::Checkbox(sfzStr96InitFmt("##%s", name).str, &enabled)) {
 					render.rasterizer.wireframeMode = enabled ? ZG_TRUE : ZG_FALSE;
 				}
 				ImGui::SameLine();

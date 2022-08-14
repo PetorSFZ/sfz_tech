@@ -18,16 +18,13 @@
 
 #pragma once
 
-#include <cmath>
-#include <cstring>
-
 #include "ZeroG.h"
 
 // Transformation and projection matrices
 // ------------------------------------------------------------------------------------------------
 
 ZG_API void zgUtilCreateViewMatrix(
-	f32 rowMajorMatrixOut[16],
+	SfzMat44* matrixOut,
 	const f32 origin[3],
 	const f32 dir[3],
 	const f32 up[3])
@@ -37,7 +34,7 @@ ZG_API void zgUtilCreateViewMatrix(
 	};
 
 	auto normalize = [&](f32 v[3]) {
-		f32 length = std::sqrt(dot(v, v));
+		f32 length = sfz_sqrt(dot(v, v));
 		v[0] /= length;
 		v[1] /= length;
 		v[2] /= length;
@@ -72,11 +69,11 @@ ZG_API void zgUtilCreateViewMatrix(
 		zAxis[0], zAxis[1], zAxis[2], -dot(zAxis, origin),
 		0.0f,     0.0f,     0.0f,     1.0f
 	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(f32) * 16);
+	memcpy(matrixOut, matrix, sizeof(f32) * 16);
 }
 
 ZG_API void zgUtilCreatePerspectiveProjection(
-	f32 rowMajorMatrixOut[16],
+	SfzMat44* matrixOut,
 	f32 vertFovDegs,
 	f32 aspect,
 	f32 nearPlane,
@@ -101,7 +98,7 @@ ZG_API void zgUtilCreatePerspectiveProjection(
 
 	constexpr f32 DEG_TO_RAD = 3.14159265358979323846f / 180.0f;
 	const f32 vertFovRads = vertFovDegs * DEG_TO_RAD;
-	const f32 yScale = 1.0f / std::tan(vertFovRads * 0.5f);
+	const f32 yScale = 1.0f / sfz_tan(vertFovRads * 0.5f);
 	const f32 xScale = yScale / aspect;
 	f32 matrix[16] = {
 		xScale, 0.0f, 0.0f, 0.0f,
@@ -109,11 +106,11 @@ ZG_API void zgUtilCreatePerspectiveProjection(
 		0.0f, 0.0f, farPlane / (nearPlane - farPlane), nearPlane* farPlane / (nearPlane - farPlane),
 		0.0f, 0.0f, -1.0f, 0.0f
 	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(f32) * 16);
+	memcpy(matrixOut, matrix, sizeof(f32) * 16);
 }
 
 ZG_API void zgUtilCreatePerspectiveProjectionInfinite(
-	f32 rowMajorMatrixOut[16],
+	SfzMat44* matrixOut,
 	f32 vertFovDegs,
 	f32 aspect,
 	f32 nearPlane)
@@ -127,7 +124,7 @@ ZG_API void zgUtilCreatePerspectiveProjectionInfinite(
 
 	constexpr f32 DEG_TO_RAD = 3.14159265358979323846f / 180.0f;
 	const f32 vertFovRads = vertFovDegs * DEG_TO_RAD;
-	const f32 yScale = 1.0f / std::tan(vertFovRads * 0.5f);
+	const f32 yScale = 1.0f / sfz_tan(vertFovRads * 0.5f);
 	const f32 xScale = yScale / aspect;
 	f32 matrix[16] = {
 		xScale, 0.0f, 0.0f, 0.0f,
@@ -135,11 +132,11 @@ ZG_API void zgUtilCreatePerspectiveProjectionInfinite(
 		0.0f, 0.0f, -1.0f,-nearPlane,
 		0.0f, 0.0f, -1.0f, 0.0f
 	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(f32) * 16);
+	memcpy(matrixOut, matrix, sizeof(f32) * 16);
 }
 
 ZG_API void zgUtilCreatePerspectiveProjectionReverse(
-	f32 rowMajorMatrixOut[16],
+	SfzMat44* matrixOut,
 	f32 vertFovDegs,
 	f32 aspect,
 	f32 nearPlane,
@@ -160,7 +157,7 @@ ZG_API void zgUtilCreatePerspectiveProjectionReverse(
 
 	constexpr f32 DEG_TO_RAD = 3.14159265358979323846f / 180.0f;
 	const f32 vertFovRads = vertFovDegs * DEG_TO_RAD;
-	const f32 yScale = 1.0f / std::tan(vertFovRads * 0.5f);
+	const f32 yScale = 1.0f / sfz_tan(vertFovRads * 0.5f);
 	const f32 xScale = yScale / aspect;
 	f32 matrix[16] = {
 		xScale, 0.0f, 0.0f, 0.0f,
@@ -168,11 +165,11 @@ ZG_API void zgUtilCreatePerspectiveProjectionReverse(
 		0.0f, 0.0f, -(farPlane / (nearPlane - farPlane)) - 1.0f, -(nearPlane * farPlane / (nearPlane - farPlane)),
 		0.0f, 0.0f, -1.0f, 0.0f
 	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(f32) * 16);
+	memcpy(matrixOut, matrix, sizeof(f32) * 16);
 }
 
 ZG_API void zgUtilCreatePerspectiveProjectionReverseInfinite(
-	f32 rowMajorMatrixOut[16],
+	SfzMat44* matrixOut,
 	f32 vertFovDegs,
 	f32 aspect,
 	f32 nearPlane)
@@ -191,7 +188,7 @@ ZG_API void zgUtilCreatePerspectiveProjectionReverseInfinite(
 
 	constexpr f32 DEG_TO_RAD = 3.14159265358979323846f / 180.0f;
 	const f32 vertFovRads = vertFovDegs * DEG_TO_RAD;
-	const f32 yScale = 1.0f / std::tan(vertFovRads * 0.5f);
+	const f32 yScale = 1.0f / sfz_tan(vertFovRads * 0.5f);
 	const f32 xScale = yScale / aspect;
 	f32 matrix[16] = {
 		xScale, 0.0f, 0.0f, 0.0f,
@@ -199,11 +196,11 @@ ZG_API void zgUtilCreatePerspectiveProjectionReverseInfinite(
 		0.0f, 0.0f, 0.0f, nearPlane,
 		0.0f, 0.0f, -1.0f, 0.0f
 	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(f32) * 16);
+	memcpy(matrixOut, matrix, sizeof(f32) * 16);
 }
 
 ZG_API void zgUtilCreateOrthographicProjection(
-	f32 rowMajorMatrixOut[16],
+	SfzMat44* matrixOut,
 	f32 width,
 	f32 height,
 	f32 nearPlane,
@@ -228,11 +225,11 @@ ZG_API void zgUtilCreateOrthographicProjection(
 		0.0f, 0.0f, 1.0f / (nearPlane - farPlane), nearPlane / (nearPlane - farPlane),
 		0.0f, 0.0f, 0.0f, 1.0f
 	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(f32) * 16);
+	memcpy(matrixOut, matrix, sizeof(f32) * 16);
 }
 
 ZG_API void zgUtilCreateOrthographicProjectionReverse(
-	f32 rowMajorMatrixOut[16],
+	SfzMat44* matrixOut,
 	f32 width,
 	f32 height,
 	f32 nearPlane,
@@ -256,6 +253,6 @@ ZG_API void zgUtilCreateOrthographicProjectionReverse(
 		0.0f, 0.0f, -1.0f / (nearPlane - farPlane), 1.0f - (nearPlane / (nearPlane - farPlane)),
 		0.0f, 0.0f, 0.0f, 1.0f
 	};
-	memcpy(rowMajorMatrixOut, matrix, sizeof(f32) * 16);
+	memcpy(matrixOut, matrix, sizeof(f32) * 16);
 }
 

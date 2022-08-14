@@ -21,7 +21,6 @@
 #include <sfz_math.h>
 
 #include <skipifzero_arrays.hpp>
-#include <skipifzero_new.hpp>
 #include <skipifzero_pool.hpp>
 
 // Type impls
@@ -43,14 +42,14 @@ sfz_struct(SfzCtxView) {
 
 sfz_struct(SfzCtx) {
 	SfzAllocator* allocator = nullptr;
-	sfz::Array<SfzCtxType> types;
+	SfzArray<SfzCtxType> types;
 	sfz::Pool<SfzCtxView> views;
 };
 
 // SfzCtx
 // ------------------------------------------------------------------------------------------------
 
-SFZ_EXTERN_C SfzCtx* sfzCtxCreate(SfzAllocator* globalAllocator)
+sfz_extern_c SfzCtx* sfzCtxCreate(SfzAllocator* globalAllocator)
 {
 	SfzCtx* ctx = sfz_new<SfzCtx>(globalAllocator, sfz_dbg(""));
 	ctx->allocator = globalAllocator;
@@ -71,7 +70,7 @@ SFZ_EXTERN_C SfzCtx* sfzCtxCreate(SfzAllocator* globalAllocator)
 	return ctx;
 }
 
-SFZ_EXTERN_C void sfzCtxDestroy(SfzCtx* ctx)
+sfz_extern_c void sfzCtxDestroy(SfzCtx* ctx)
 {
 	if (ctx == nullptr) return;
 	SfzAllocator* allocator = ctx->allocator;
@@ -88,7 +87,7 @@ SFZ_EXTERN_C void sfzCtxDestroy(SfzCtx* ctx)
 	sfz_delete(allocator, ctx);
 }
 
-SFZ_EXTERN_C void sfzCtxRegisterType(
+sfz_extern_c void sfzCtxRegisterType(
 	SfzCtx* ctx,
 	u64 type,
 	void* data,
@@ -108,7 +107,7 @@ SFZ_EXTERN_C void sfzCtxRegisterType(
 // SfzCtxView
 // ------------------------------------------------------------------------------------------------
 
-SFZ_EXTERN_C SfzCtxView* sfzCtxCreateView(SfzCtx* ctx, u64 readAccess, u64 writeAccess)
+sfz_extern_c SfzCtxView* sfzCtxCreateView(SfzCtx* ctx, u64 readAccess, u64 writeAccess)
 {
 	sfz_assert((readAccess & writeAccess) == writeAccess);
 	SfzHandle handle = ctx->views.allocate();
@@ -120,24 +119,24 @@ SFZ_EXTERN_C SfzCtxView* sfzCtxCreateView(SfzCtx* ctx, u64 readAccess, u64 write
 	return view;
 }
 
-SFZ_EXTERN_C void sfzCtxDestroyView(SfzCtx* ctx, SfzCtxView* view)
+sfz_extern_c void sfzCtxDestroyView(SfzCtx* ctx, SfzCtxView* view)
 {
 	sfz_assert(view->handle != SFZ_NULL_HANDLE);
 	sfz_assert(ctx->views.handleIsValid(view->handle));
 	ctx->views.deallocate(view->handle);
 }
 
-SFZ_EXTERN_C u64 sfzCtxViewReadAccess(SfzCtxView* view)
+sfz_extern_c u64 sfzCtxViewReadAccess(SfzCtxView* view)
 {
 	return view->readAccess;
 }
 
-SFZ_EXTERN_C u64 sfzCtxViewWriteAccess(SfzCtxView* view)
+sfz_extern_c u64 sfzCtxViewWriteAccess(SfzCtxView* view)
 {
 	return view->writeAccess;
 }
 
-SFZ_EXTERN_C void* sfzCtxViewGet(const SfzCtxView* view, u64 type)
+sfz_extern_c void* sfzCtxViewGet(const SfzCtxView* view, u64 type)
 {
 	sfz_assert(type != 0);
 	sfz_assert(sfzNextPow2_u64(type) == type);
@@ -156,7 +155,7 @@ SFZ_EXTERN_C void* sfzCtxViewGet(const SfzCtxView* view, u64 type)
 	return ctxType.data;
 }
 
-SFZ_EXTERN_C const void* sfzCtxViewGetConst(const SfzCtxView* view, u64 type)
+sfz_extern_c const void* sfzCtxViewGetConst(const SfzCtxView* view, u64 type)
 {
 	sfz_assert(type != 0);
 	sfz_assert(sfzNextPow2_u64(type) == type);

@@ -18,47 +18,37 @@
 
 #include "d3d12/D3D12Pipelines.hpp"
 
-#include <skipifzero.hpp>
+#include <sfz.h>
+#include <sfz_time.h>
 #include <skipifzero_arrays.hpp>
 #include <skipifzero_hash_maps.hpp>
-#include <skipifzero_new.hpp>
 #include <skipifzero_strings.hpp>
 
 #include <algorithm>
-#include <chrono>
 #include <cstdio>
 
 #include "common/Strings.hpp"
 
-using time_point = std::chrono::high_resolution_clock::time_point;
-
 // Statics
 // ------------------------------------------------------------------------------------------------
 
-static f32 timeSinceLastTimestampMillis(const time_point& previousTime) noexcept
-{
-	time_point currentTime = std::chrono::high_resolution_clock::now();
-	using FloatMS = std::chrono::duration<f32, std::milli>;
-	return std::chrono::duration_cast<FloatMS>(currentTime - previousTime).count();
-}
-
-static sfz::Array<u8> readBinaryFile(const char* path) noexcept
+static SfzArray<u8> readBinaryFile(const char* path) noexcept
 {
 	// Open file
 	std::FILE* file = std::fopen(path, "rb");
-	if (file == NULL) return sfz::Array<u8>();
+	if (file == NULL) return SfzArray<u8>();
 
 	// Get size of file
 	std::fseek(file, 0, SEEK_END);
 	i64 size = std::ftell(file);
 	if (size <= 0) {
 		std::fclose(file);
-		return sfz::Array<u8>();
+		return SfzArray<u8>();
 	}
 	std::fseek(file, 0, SEEK_SET);
 
 	// Allocate memory for file
-	sfz::Array<u8> data;
+	SfzArray<u8> data;
 	data.init(u32(size), getAllocator(), sfz_dbg("binary file"));
 	data.hackSetSize(u32(size));
 
@@ -66,7 +56,7 @@ static sfz::Array<u8> readBinaryFile(const char* path) noexcept
 	size_t bytesRead = std::fread(data.data(), 1, data.size(), file);
 	if (bytesRead != size_t(size)) {
 		std::fclose(file);
-		return sfz::Array<u8>();
+		return SfzArray<u8>();
 	}
 
 	// Close file and return data
@@ -228,20 +218,20 @@ static ZgResult compileHlslShader(
 	bool& wasCached) noexcept
 {
 	// Calculate path used to cache this shader blob
-	str320 cachePath;
+	SfzStr320 cachePath = {};
 	if (pipelineCacheDir != nullptr) {
 		const u64 compileSettingsHash = sfzHashBytesFNV1a(
 			(const u8*)&compileSettings, sizeof(ZgPipelineCompileSettingsHLSL));
 		const u64 modifiedTimeHash = isSource ? 0 : u64(getFileLastModifiedDate(pathOrSource));
-		const u64 totalHash = sfz::hashCombine(sfz::hashCombine(descHash, compileSettingsHash), modifiedTimeHash);
-		cachePath.appendf("%s/%u.dxil", pipelineCacheDir, u32(totalHash));
+		const u64 totalHash = sfzHashCombine(sfzHashCombine(descHash, compileSettingsHash), modifiedTimeHash);
+		sfzStr320Appendf(&cachePath, "%s/%u.dxil", pipelineCacheDir, u32(totalHash));
 	}
 
 	// Attempt to read binary from cache and exit if possible
 	if (cachePath != "") {
 		// Convert cache path to absolute wide string
 		WCHAR cachePathWide[MAX_PATH] = { 0 };
-		if (!fixPath(cachePathWide, MAX_PATH, cachePath.str())) {
+		if (!fixPath(cachePathWide, MAX_PATH, cachePath.str)) {
 			return ZG_ERROR_SHADER_COMPILE_ERROR;
 		}
 
@@ -373,7 +363,7 @@ static ZgResult compileHlslShader(
 
 	// Attempt to write compiled binary to cache if possible
 	if (cachePath != "") {
-		writeBinaryFile(cachePath.str(), blobOut->GetBufferPointer(), blobOut->GetBufferSize());
+		writeBinaryFile(cachePath.str, blobOut->GetBufferPointer(), blobOut->GetBufferSize());
 	}
 
 	return ZG_SUCCESS;
@@ -434,54 +424,6 @@ static D3D12_BLEND toD3D12BlendFactor(ZgBlendFactor val) noexcept
 	return D3D12_BLEND_ZERO;
 }
 
-static DXGI_FORMAT vertexAttributeTypeToFormat(ZgVertexAttributeType type) noexcept
-{
-	switch (type) {
-	case ZG_VERTEX_ATTRIBUTE_F32: return DXGI_FORMAT_R32_FLOAT;
-	case ZG_VERTEX_ATTRIBUTE_F32_2: return DXGI_FORMAT_R32G32_FLOAT;
-	case ZG_VERTEX_ATTRIBUTE_F32_3: return DXGI_FORMAT_R32G32B32_FLOAT;
-	case ZG_VERTEX_ATTRIBUTE_F32_4: return DXGI_FORMAT_R32G32B32A32_FLOAT;
-
-	case ZG_VERTEX_ATTRIBUTE_S32: return DXGI_FORMAT_R32_SINT;
-	case ZG_VERTEX_ATTRIBUTE_S32_2: return DXGI_FORMAT_R32G32_SINT;
-	case ZG_VERTEX_ATTRIBUTE_S32_3: return DXGI_FORMAT_R32G32B32_SINT;
-	case ZG_VERTEX_ATTRIBUTE_S32_4: return DXGI_FORMAT_R32G32B32A32_SINT;
-
-	case ZG_VERTEX_ATTRIBUTE_U32: return DXGI_FORMAT_R32_UINT;
-	case ZG_VERTEX_ATTRIBUTE_U32_2: return DXGI_FORMAT_R32G32_UINT;
-	case ZG_VERTEX_ATTRIBUTE_U32_3: return DXGI_FORMAT_R32G32B32_UINT;
-	case ZG_VERTEX_ATTRIBUTE_U32_4: return DXGI_FORMAT_R32G32B32A32_UINT;
-
-	default: break;
-	}
-	sfz_assert(false);
-	return DXGI_FORMAT_UNKNOWN;
-}
-
-static const char* vertexAttributeTypeToString(ZgVertexAttributeType type) noexcept
-{
-	switch (type) {
-	case ZG_VERTEX_ATTRIBUTE_F32: return "ZG_VERTEX_ATTRIBUTE_F32";
-	case ZG_VERTEX_ATTRIBUTE_F32_2: return "ZG_VERTEX_ATTRIBUTE_F32_2";
-	case ZG_VERTEX_ATTRIBUTE_F32_3: return "ZG_VERTEX_ATTRIBUTE_F32_3";
-	case ZG_VERTEX_ATTRIBUTE_F32_4: return "ZG_VERTEX_ATTRIBUTE_F32_4";
-
-	case ZG_VERTEX_ATTRIBUTE_S32: return "ZG_VERTEX_ATTRIBUTE_S32";
-	case ZG_VERTEX_ATTRIBUTE_S32_2: return "ZG_VERTEX_ATTRIBUTE_S32_2";
-	case ZG_VERTEX_ATTRIBUTE_S32_3: return "ZG_VERTEX_ATTRIBUTE_S32_3";
-	case ZG_VERTEX_ATTRIBUTE_S32_4: return "ZG_VERTEX_ATTRIBUTE_S32_4";
-
-	case ZG_VERTEX_ATTRIBUTE_U32: return "ZG_VERTEX_ATTRIBUTE_U32";
-	case ZG_VERTEX_ATTRIBUTE_U32_2: return "ZG_VERTEX_ATTRIBUTE_U32_2";
-	case ZG_VERTEX_ATTRIBUTE_U32_3: return "ZG_VERTEX_ATTRIBUTE_U32_3";
-	case ZG_VERTEX_ATTRIBUTE_U32_4: return "ZG_VERTEX_ATTRIBUTE_U32_4";
-
-	default: break;
-	}
-	sfz_assert(false);
-	return "";
-}
-
 static const char* bindingTypeToString(ZgBindingType type) noexcept
 {
 	switch (type) {
@@ -498,37 +440,6 @@ static const char* bindingTypeToString(ZgBindingType type) noexcept
 	}
 	sfz_assert(false);
 	return "";
-}
-
-static ZgVertexAttributeType vertexReflectionToAttribute(
-	D3D_REGISTER_COMPONENT_TYPE compType, BYTE mask) noexcept
-{
-	sfz_assert(compType == D3D_REGISTER_COMPONENT_FLOAT32
-		|| compType == D3D_REGISTER_COMPONENT_SINT32
-		|| compType == D3D_REGISTER_COMPONENT_UINT32);
-	sfz_assert(mask == 1 || mask == 3 || mask == 7 || mask == 15);
-
-	if (compType == D3D_REGISTER_COMPONENT_FLOAT32) {
-		if (mask == 1) return ZG_VERTEX_ATTRIBUTE_F32;
-		if (mask == 3) return ZG_VERTEX_ATTRIBUTE_F32_2;
-		if (mask == 7) return ZG_VERTEX_ATTRIBUTE_F32_3;
-		if (mask == 15)return ZG_VERTEX_ATTRIBUTE_F32_4;
-	}
-	else if (compType == D3D_REGISTER_COMPONENT_SINT32) {
-		if (mask == 1) return ZG_VERTEX_ATTRIBUTE_S32;
-		if (mask == 3) return ZG_VERTEX_ATTRIBUTE_S32_2;
-		if (mask == 7) return ZG_VERTEX_ATTRIBUTE_S32_3;
-		if (mask == 15)return ZG_VERTEX_ATTRIBUTE_S32_4;
-	}
-	else if (compType == D3D_REGISTER_COMPONENT_UINT32) {
-		if (mask == 1) return ZG_VERTEX_ATTRIBUTE_U32;
-		if (mask == 3) return ZG_VERTEX_ATTRIBUTE_U32_2;
-		if (mask == 7) return ZG_VERTEX_ATTRIBUTE_U32_3;
-		if (mask == 15)return ZG_VERTEX_ATTRIBUTE_U32_4;
-	}
-
-	sfz_assert(false);
-	return ZG_VERTEX_ATTRIBUTE_UNDEFINED;
 }
 
 static D3D12_FILTER samplingModeToD3D12(ZgSampleMode sampleMode) noexcept
@@ -565,26 +476,26 @@ static void logPipelineComputeInfo(
 	f32 computeBlobCompileTime,
 	bool computeBlobWasCached) noexcept
 {
-	sfz::str4096 tmpStr;
+	SfzStr2560 tmpStr = {};
 
 	// Print header
-	tmpStr.appendf("Compiled ZgPipelineCompute (\"%s\") with:\n", createInfo.name);
-	tmpStr.appendf(" - Compute shader: %s()\n\n", createInfo.entry);
+	sfzStr2560Appendf(&tmpStr, "Compiled ZgPipelineCompute (\"%s\") with:\n", createInfo.name);
+	sfzStr2560Appendf(&tmpStr, " - Compute shader: %s()\n\n", createInfo.entry);
 
 	// Print compile time
-	tmpStr.appendf("Total compile time: %.2fms\n", compileTimeMs);
-	tmpStr.appendf(" - Compute DXIL: %.2fms%s\n",
+	sfzStr2560Appendf(&tmpStr, "Total compile time: %.2fms\n", compileTimeMs);
+	sfzStr2560Appendf(&tmpStr, " - Compute DXIL: %.2fms%s\n",
 		computeBlobCompileTime, computeBlobWasCached ? " (cached)" : "");
 
 	// Print group dim
-	tmpStr.appendf("\nGroup dimensions: %u x %u x %u\n", groupDimX, groupDimY, groupDimZ);
+	sfzStr2560Appendf(&tmpStr, "\nGroup dimensions: %u x %u x %u\n", groupDimX, groupDimY, groupDimZ);
 
 	// Print push constants
 	if (rootMapping.pushConsts.size() > 0) {
-		tmpStr.appendf("\nPush constants (%u):\n", rootMapping.pushConsts.size());
+		sfzStr2560Appendf(&tmpStr, "\nPush constants (%u):\n", rootMapping.pushConsts.size());
 		for (u32 i = 0; i < rootMapping.pushConsts.size(); i++) {
 			const PushConstMapping& pushConst = rootMapping.pushConsts[i];
-			tmpStr.appendf(" - Register: %u -- Size: %u bytes\n",
+			sfzStr2560Appendf(&tmpStr, " - Register: %u -- Size: %u bytes\n",
 				pushConst.reg,
 				pushConst.sizeBytes);
 		}
@@ -592,10 +503,10 @@ static void logPipelineComputeInfo(
 
 	// Print constant buffers
 	if (rootMapping.CBVs.size() > 0) {
-		tmpStr.appendf("\nConstant buffers (%u):\n", rootMapping.CBVs.size());
+		sfzStr2560Appendf(&tmpStr, "\nConstant buffers (%u):\n", rootMapping.CBVs.size());
 		for (u32 i = 0; i < rootMapping.CBVs.size(); i++) {
 			const CBVMapping& cbuffer = rootMapping.CBVs[i];
-			tmpStr.appendf(" - Register: %u -- Size: %u bytes\n",
+			sfzStr2560Appendf(&tmpStr, " - Register: %u -- Size: %u bytes\n",
 				cbuffer.reg,
 				cbuffer.sizeBytes);
 		}
@@ -603,67 +514,55 @@ static void logPipelineComputeInfo(
 
 	// Print SRVs
 	if (rootMapping.SRVs.size() > 0) {
-		tmpStr.appendf("\nSRVs (%u):\n", rootMapping.SRVs.size());
+		sfzStr2560Appendf(&tmpStr, "\nSRVs (%u):\n", rootMapping.SRVs.size());
 		for (u32 i = 0; i < rootMapping.SRVs.size(); i++) {
 			const SRVMapping& srv = rootMapping.SRVs[i];
-			tmpStr.appendf(" - Register: %u -- Type: %s\n", srv.reg, bindingTypeToString(srv.type));
+			sfzStr2560Appendf(&tmpStr, " - Register: %u -- Type: %s\n", srv.reg, bindingTypeToString(srv.type));
 		}
 	}
 
 	// Print UAVs
 	if (rootMapping.UAVs.size() > 0) {
-		tmpStr.appendf("\nUAVs (%u):\n", rootMapping.UAVs.size());
+		sfzStr2560Appendf(&tmpStr, "\nUAVs (%u):\n", rootMapping.UAVs.size());
 		for (u32 i = 0; i < rootMapping.UAVs.size(); i++) {
 			const UAVMapping& uav = rootMapping.UAVs[i];
-			tmpStr.appendf(" - Register: %u -- Type: %s\n", uav.reg, bindingTypeToString(uav.type));
+			sfzStr2560Appendf(&tmpStr, " - Register: %u -- Type: %s\n", uav.reg, bindingTypeToString(uav.type));
 		}
 	}
 
 	// Log
-	ZG_NOISE("%s", tmpStr.str());
+	ZG_NOISE("%s", tmpStr.str);
 }
 
 static void logPipelineRenderInfo(
 	const ZgPipelineRenderDesc& createInfo,
 	const RootSignatureMapping& rootMapping,
-	const ZgPipelineRenderSignature& renderSignature,
 	f32 compileTimeMs,
 	f32 vertexBlobCompileTime,
 	bool vertexBlobWasCached,
 	f32 pixelBlobCompileTime,
 	bool pixelBlobWasCached) noexcept
 {
-	sfz::str4096 tmpStr;
+	SfzStr2560 tmpStr = {};
 
 	// Print header
-	tmpStr.appendf("Compiled ZgPipelineRender (\"%s\") with:\n", createInfo.name);
-	tmpStr.appendf(" - Vertex shader: %s()\n", createInfo.entryVS);
-	tmpStr.appendf(" - Pixel shader: %s()\n\n", createInfo.entryPS);
+	sfzStr2560Appendf(&tmpStr, "Compiled ZgPipelineRender (\"%s\") with:\n", createInfo.name);
+	sfzStr2560Appendf(&tmpStr, " - Vertex shader: %s()\n", createInfo.entryVS);
+	sfzStr2560Appendf(&tmpStr, " - Pixel shader: %s()\n\n", createInfo.entryPS);
 
 	// Print compile time
-	tmpStr.appendf("Total compile time: %.2fms\n", compileTimeMs);
-	tmpStr.appendf(" - Vertex DXIL: %.2fms%s\n",
+	sfzStr2560Appendf(&tmpStr, "Total compile time: %.2fms\n", compileTimeMs);
+	sfzStr2560Appendf(&tmpStr, " - Vertex DXIL: %.2fms%s\n",
 		vertexBlobCompileTime, vertexBlobWasCached ? " (cached)" : "");
-	tmpStr.appendf(" - Pixel DXIL: %.2fms%s\n",
+	sfzStr2560Appendf(&tmpStr, " - Pixel DXIL: %.2fms%s\n",
 		pixelBlobCompileTime, pixelBlobWasCached ? " (cached)" : "");
 
-	// Print vertex attributes
-	if (renderSignature.numVertexAttributes > 0) {
-		tmpStr.appendf("\nVertex attributes (%u):\n", renderSignature.numVertexAttributes);
-		for (u32 i = 0; i < renderSignature.numVertexAttributes; i++) {
-			const ZgVertexAttribute& attrib = renderSignature.vertexAttributes[i];
-			tmpStr.appendf(" - Location: %u -- Type: %s\n",
-				attrib.location,
-				vertexAttributeTypeToString(attrib.type));
-		}
-	}
-	
 	// Print push constants
 	if (rootMapping.pushConsts.size() > 0) {
-		tmpStr.appendf("\nPush constants (%u):\n", rootMapping.pushConsts.size());
+		sfzStr2560Appendf(&tmpStr, "\nPush constants (%u):\n", rootMapping.pushConsts.size());
 		for (u32 i = 0; i < rootMapping.pushConsts.size(); i++) {
 			const PushConstMapping& pushConst = rootMapping.pushConsts[i];
-			tmpStr.appendf(" - Register: %u -- Size: %u bytes\n",
+			sfzStr2560Appendf(&tmpStr, " - Register: %u -- Size: %u bytes\n",
 				pushConst.reg,
 				pushConst.sizeBytes);
 		}
@@ -671,10 +570,10 @@ static void logPipelineRenderInfo(
 
 	// Print constant buffers
 	if (rootMapping.CBVs.size() > 0) {
-		tmpStr.appendf("\nConstant buffers (%u):\n", rootMapping.CBVs.size());
+		sfzStr2560Appendf(&tmpStr, "\nConstant buffers (%u):\n", rootMapping.CBVs.size());
 		for (u32 i = 0; i < rootMapping.CBVs.size(); i++) {
 			const CBVMapping& cbuffer = rootMapping.CBVs[i];
-			tmpStr.appendf(" - Register: %u -- Size: %u bytes\n",
+			sfzStr2560Appendf(&tmpStr, " - Register: %u -- Size: %u bytes\n",
 				cbuffer.reg,
 				cbuffer.sizeBytes);
 		}
@@ -682,30 +581,30 @@ static void logPipelineRenderInfo(
 
 	// Print SRVs
 	if (rootMapping.SRVs.size() > 0) {
-		tmpStr.appendf("\nSRVs (%u):\n", rootMapping.SRVs.size());
+		sfzStr2560Appendf(&tmpStr, "\nSRVs (%u):\n", rootMapping.SRVs.size());
 		for (u32 i = 0; i < rootMapping.SRVs.size(); i++) {
 			const SRVMapping& srv = rootMapping.SRVs[i];
-			tmpStr.appendf(" - Register: %u -- Type: %s\n", srv.reg, bindingTypeToString(srv.type));
+			sfzStr2560Appendf(&tmpStr, " - Register: %u -- Type: %s\n", srv.reg, bindingTypeToString(srv.type));
 		}
 	}
 
 	// Print UAVs
 	if (rootMapping.UAVs.size() > 0) {
-		tmpStr.appendf("\nUAVs (%u):\n", rootMapping.UAVs.size());
+		sfzStr2560Appendf(&tmpStr, "\nUAVs (%u):\n", rootMapping.UAVs.size());
 		for (u32 i = 0; i < rootMapping.UAVs.size(); i++) {
 			const UAVMapping& uav = rootMapping.UAVs[i];
-			tmpStr.appendf(" - Register: %u -- Type: %s\n", uav.reg, bindingTypeToString(uav.type));
+			sfzStr2560Appendf(&tmpStr, " - Register: %u -- Type: %s\n", uav.reg, bindingTypeToString(uav.type));
 		}
 	}
 
 	// Log
-	ZG_NOISE("%s", tmpStr.str());
+	ZG_NOISE("%s", tmpStr.str);
 }
 
 static ZgResult rootSignatureMappingFromReflection(
 	ID3D12ShaderReflection* refl1,
 	ID3D12ShaderReflection* refl2,
-	const sfz::ArrayLocal<u32, ZG_MAX_NUM_CONSTANT_BUFFERS>& pushConstRegs,
+	const SfzArrayLocal<u32, ZG_MAX_NUM_CONSTANT_BUFFERS>& pushConstRegs,
 	RootSignatureMapping& mappingOut)
 {
 	// Get shader descriptions from reflections
@@ -956,13 +855,13 @@ static ZgResult rootSignatureMappingFromReflection(
 static ZgResult createRootSignature(
 	RootSignatureMapping& mapping,
 	ComPtr<ID3D12RootSignature>& rootSignatureOut,
-	const ArrayLocal<ZgSampler, ZG_MAX_NUM_SAMPLERS>& zgSamplers,
+	const SfzArrayLocal<ZgSampler, ZG_MAX_NUM_SAMPLERS>& zgSamplers,
 	ID3D12Device3& device)
 {
 	// Root signature parameters
 	// We know that we can't have more than 64 root parameters as maximum (i.e. 64 words)
 	constexpr u32 MAX_NUM_ROOT_PARAMETERS = 64;
-	ArrayLocal<CD3DX12_ROOT_PARAMETER1, MAX_NUM_ROOT_PARAMETERS> params;
+	SfzArrayLocal<CD3DX12_ROOT_PARAMETER1, MAX_NUM_ROOT_PARAMETERS> params;
 
 	// Add push constants
 	for (PushConstMapping& push : mapping.pushConsts) {
@@ -977,7 +876,7 @@ static ZgResult createRootSignature(
 
 	// The offset into the dynamic table
 	constexpr u32 MAX_NUM_RANGES = 3; // CBVs, UAVs and SRVs
-	ArrayLocal<CD3DX12_DESCRIPTOR_RANGE1, MAX_NUM_RANGES> ranges;
+	SfzArrayLocal<CD3DX12_DESCRIPTOR_RANGE1, MAX_NUM_RANGES> ranges;
 	u32 currentTableOffset = 0;
 
 	// CBVs
@@ -1032,7 +931,7 @@ static ZgResult createRootSignature(
 	}
 
 	// Add static samplers
-	ArrayLocal<D3D12_STATIC_SAMPLER_DESC, ZG_MAX_NUM_SAMPLERS> samplerDescs;
+	SfzArrayLocal<D3D12_STATIC_SAMPLER_DESC, ZG_MAX_NUM_SAMPLERS> samplerDescs;
 	for (const ZgSampler& zgSampler : zgSamplers) {
 		D3D12_STATIC_SAMPLER_DESC& samplerDesc = samplerDescs.add();
 		samplerDesc.Filter = samplingModeToD3D12(zgSampler.sampleMode);
@@ -1107,13 +1006,13 @@ static ZgResult createPipelineComputeInternal(
 	const char* pipelineCacheDir) noexcept
 {
 	// Start measuring compile-time
-	time_point compileStartTime = std::chrono::high_resolution_clock::now();
+	const SfzTime compileStartTime = sfzTimeNow();
 
 	// Hash desc, to be used for caching
 	u64 descHash = sfzHashBytesFNV1a((const u8*)&createInfo, sizeof(ZgPipelineComputeDesc));
 	if (isSource) {
 		const u64 sourceHash = sfzHashStringFNV1a(pathOrSource);
-		descHash = sfz::hashCombine(descHash, sourceHash);
+		descHash = sfzHashCombine(descHash, sourceHash);
 	}
 
 	// Compile compute shader
@@ -1134,7 +1033,7 @@ static ZgResult createPipelineComputeInternal(
 		pipelineCacheDir,
 		computeBlobWasCached);
 	if (computeShaderRes != ZG_SUCCESS) return computeShaderRes;
-	const f32 computeBlobCompileTimeMs = timeSinceLastTimestampMillis(compileStartTime);
+	const f32 computeBlobCompileTimeMs = sfzTimeDiff(compileStartTime, sfzTimeNow()).ms();
 
 	// Attempt to get reflection data
 	ComPtr<ID3D12ShaderReflection> computeReflection;
@@ -1149,7 +1048,7 @@ static ZgResult createPipelineComputeInternal(
 	// Get root signature mapping from reflection
 	RootSignatureMapping mapping = {};
 	{
-		sfz::ArrayLocal<u32, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstRegs;
+		SfzArrayLocal<u32, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstRegs;
 		pushConstRegs.add(createInfo.pushConstsRegs, createInfo.numPushConsts);
 
 		ZgResult res = rootSignatureMappingFromReflection(
@@ -1163,7 +1062,7 @@ static ZgResult createPipelineComputeInternal(
 	// Create root signature
 	ComPtr<ID3D12RootSignature> rootSignature;
 	{
-		ArrayLocal<ZgSampler, ZG_MAX_NUM_SAMPLERS> samplers;
+		SfzArrayLocal<ZgSampler, ZG_MAX_NUM_SAMPLERS> samplers;
 		samplers.add(createInfo.samplers, createInfo.numSamplers);
 		ZgResult res = createRootSignature(mapping, rootSignature, samplers, device);
 		if (res != ZG_SUCCESS) return res;
@@ -1210,7 +1109,7 @@ static ZgResult createPipelineComputeInternal(
 	setDebugName(pipelineState.Get(), createInfo.name);
 
 	// Log information about the pipeline
-	f32 compileTimeMs = timeSinceLastTimestampMillis(compileStartTime);
+	f32 compileTimeMs = sfzTimeDiff(compileStartTime, sfzTimeNow()).ms();
 	logPipelineComputeInfo(
 		createInfo,
 		mapping,
@@ -1276,16 +1175,16 @@ static ZgResult createPipelineRenderInternal(
 	const char* pipelineCacheDir) noexcept
 {
 	// Start measuring compile-time
-	const time_point compileStartTime = std::chrono::high_resolution_clock::now();
+	const SfzTime compileStartTime = sfzTimeNow();
 
 	// Hash desc, to be used for caching
 	u64 descHashCommon = sfzHashBytesFNV1a((const u8*)&createInfo, sizeof(ZgPipelineRenderDesc));
 	if (isSource) {
 		const u64 sourceHash = sfzHashStringFNV1a(pathOrSource);
-		descHashCommon = sfz::hashCombine(descHashCommon, sourceHash);
+		descHashCommon = sfzHashCombine(descHashCommon, sourceHash);
 	}
-	const u64 descHashVS = sfz::hashCombine(descHashCommon, sfzHashStringFNV1a(createInfo.entryVS));
-	const u64 descHashPS = sfz::hashCombine(descHashCommon, sfzHashStringFNV1a(createInfo.entryPS));
+	const u64 descHashVS = sfzHashCombine(descHashCommon, sfzHashStringFNV1a(createInfo.entryVS));
+	const u64 descHashPS = sfzHashCombine(descHashCommon, sfzHashStringFNV1a(createInfo.entryPS));
 	sfz_assert(descHashVS != descHashPS);
 
 	// Compile vertex shader
@@ -1306,7 +1205,7 @@ static ZgResult createPipelineRenderInternal(
 		pipelineCacheDir,
 		vertexBlobWasCached);
 	if (vertexShaderRes != ZG_SUCCESS) return vertexShaderRes;
-	const f32 vertexBlobCompileTimeMs = timeSinceLastTimestampMillis(compileStartTime);
+	const f32 vertexBlobCompileTimeMs = sfzTimeDiff(compileStartTime, sfzTimeNow()).ms();;
 
 	// Vertex reflection
 	ComPtr<ID3D12ShaderReflection> vertexReflection;
@@ -1315,7 +1214,7 @@ static ZgResult createPipelineRenderInternal(
 	}
 
 	// Compile pixel shader
-	const time_point pixelCompileStartTime = std::chrono::high_resolution_clock::now();
+	const SfzTime pixelCompileStartTime = sfzTimeNow();
 	ComPtr<IDxcBlob> pixelBlob;
 	bool pixelBlobWasCached = false;
 	ZgResult pixelShaderRes = compileHlslShader(
@@ -1333,7 +1232,7 @@ static ZgResult createPipelineRenderInternal(
 		pipelineCacheDir,
 		pixelBlobWasCached);
 	if (pixelShaderRes != ZG_SUCCESS) return pixelShaderRes;
-	const f32 pixelBlobCompileTimeMs = timeSinceLastTimestampMillis(pixelCompileStartTime);
+	const f32 pixelBlobCompileTimeMs = sfzTimeDiff(pixelCompileStartTime, sfzTimeNow()).ms();
 
 	// Pixel reflection
 	ComPtr<ID3D12ShaderReflection> pixelReflection;
@@ -1344,7 +1243,7 @@ static ZgResult createPipelineRenderInternal(
 	// Get root signature mapping from reflection
 	RootSignatureMapping mapping = {};
 	{
-		sfz::ArrayLocal<u32, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstRegs;
+		SfzArrayLocal<u32, ZG_MAX_NUM_CONSTANT_BUFFERS> pushConstRegs;
 		pushConstRegs.add(createInfo.pushConstsRegs, createInfo.numPushConsts);
 
 		ZgResult res = rootSignatureMappingFromReflection(
@@ -1362,44 +1261,6 @@ static ZgResult createPipelineRenderInternal(
 	CHECK_D3D12 pixelReflection->GetDesc(&pixelDesc);
 
 	ZgPipelineRenderSignature renderSignature = {};
-	renderSignature.numVertexAttributes = createInfo.numVertexAttributes;
-
-	// Validate vertex attributes
-	for (u32 i = 0; i < createInfo.numVertexAttributes; i++) {
-
-		const ZgVertexAttribute& attrib = createInfo.vertexAttributes[i];
-
-		// Get signature for the i:th vertex attribute
-		D3D12_SIGNATURE_PARAMETER_DESC sign = {};
-		CHECK_D3D12 vertexReflection->GetInputParameterDesc(i, &sign);
-
-		// Get the type found in the shader
-		ZgVertexAttributeType reflectedType =
-			vertexReflectionToAttribute(sign.ComponentType, sign.Mask);
-
-		// Check that the reflected type is the same as the specified type
-		if (reflectedType != attrib.type) {
-			ZG_ERROR("Invalid ZgPipelineRenderingCreateInfo. It specifies that the %u:th"
-				" vertex attribute is of type %s, shader reflection finds %s",
-				i,
-				vertexAttributeTypeToString(attrib.type),
-				vertexAttributeTypeToString(reflectedType));
-			return ZG_ERROR_INVALID_ARGUMENT;
-		}
-
-		// Check that the attribute location (semantic index) is the same
-		if (sign.SemanticIndex != createInfo.vertexAttributes[i].location) {
-			ZG_ERROR("Invalid ZgPipelineRenderingCreateInfo. It specifies that the %u:th"
-				" vertex attribute has location %u, shader reflection finds %u",
-				i,
-				attrib.location,
-				sign.SemanticIndex);
-			return ZG_ERROR_INVALID_ARGUMENT;
-		}
-
-		// Set vertex attribute in signature
-		renderSignature.vertexAttributes[i] = attrib;
-	}
 
 	// Check that the correct number of render targets is specified
 	u32 numRenderTargets = pixelDesc.OutputParameters;
@@ -1409,8 +1270,8 @@ static ZgResult createPipelineRenderInternal(
 		for (u32 i = 0; i < numRenderTargets; i++) {
 			D3D12_SIGNATURE_PARAMETER_DESC outDesc = {};
 			CHECK_D3D12 pixelReflection->GetOutputParameterDesc(i, &outDesc);
-			sfz::str32 semanticName = sfz::str32("%s", outDesc.SemanticName);
-			semanticName.toLower();
+			SfzStr32 semanticName = sfzStr32InitFmt("%s", outDesc.SemanticName);
+			sfzStr32ToLower(&semanticName);
 			if (semanticName == "sv_depth") {
 				hasDepthOutput = true;
 				break;
@@ -1434,27 +1295,10 @@ static ZgResult createPipelineRenderInternal(
 		renderSignature.renderTargets[i] = createInfo.renderTargets[i];
 	}
 
-	// Convert ZgVertexAttribute's to D3D12_INPUT_ELEMENT_DESC
-	// This is the "input layout"
-	ArrayLocal<D3D12_INPUT_ELEMENT_DESC, ZG_MAX_NUM_VERTEX_ATTRIBUTES> attributes;
-	for (u32 i = 0; i < createInfo.numVertexAttributes; i++) {
-
-		const ZgVertexAttribute& attribute = createInfo.vertexAttributes[i];
-		D3D12_INPUT_ELEMENT_DESC desc = {};
-		desc.SemanticName = "TEXCOORD";
-		desc.SemanticIndex = attribute.location;
-		desc.Format = vertexAttributeTypeToFormat(attribute.type);
-		desc.InputSlot = attribute.vertexBufferSlot;
-		desc.AlignedByteOffset = attribute.offsetToFirstElementInBytes;
-		desc.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-		desc.InstanceDataStepRate = 0;
-		attributes.add(desc);
-	}
-
 	// Create root signature
 	ComPtr<ID3D12RootSignature> rootSignature;
 	{
-		ArrayLocal<ZgSampler, ZG_MAX_NUM_SAMPLERS> samplers;
+		SfzArrayLocal<ZgSampler, ZG_MAX_NUM_SAMPLERS> samplers;
 		samplers.add(createInfo.samplers, createInfo.numSamplers);
 		ZgResult res = createRootSignature(mapping, rootSignature, samplers, device);
 		if (res != ZG_SUCCESS) return res;
@@ -1466,7 +1310,7 @@ static ZgResult createPipelineRenderInternal(
 		// Essentially tokens are sent to Device->CreatePipelineState(), it does not matter
 		// what order the tokens are sent in. For this reason we create our own struct with
 		// the tokens we care about.
-		struct PipelineStateStreamNoInputLayout {
+		struct PipelineStateStream {
 			CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE rootSignature;
 			
 			CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY primitiveTopology;
@@ -1479,13 +1323,8 @@ static ZgResult createPipelineRenderInternal(
 			CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL1 depthStencil;
 		};
 		
-		struct PipelineStateStream {
-			PipelineStateStreamNoInputLayout stream;
-			CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT inputLayout;
-		};
-
 		// Create our token stream and set root signature
-		PipelineStateStreamNoInputLayout stream = {};
+		PipelineStateStream stream = {};
 		stream.rootSignature = rootSignature.Get();
 
 		// Set primitive topology
@@ -1557,29 +1396,11 @@ static ZgResult createPipelineRenderInternal(
 		stream.depthStencil = CD3DX12_DEPTH_STENCIL_DESC1(depthStencilDesc);
 
 		// Create pipeline state, different paths depending on if there is an input layout or not.
-		if (!attributes.isEmpty()) {
-			PipelineStateStream inputLayoutStream = {};
-			inputLayoutStream.stream = stream;
-
-			D3D12_INPUT_LAYOUT_DESC inputLayoutDesc = {};
-			inputLayoutDesc.pInputElementDescs = attributes.data();
-			inputLayoutDesc.NumElements = attributes.size();
-			inputLayoutStream.inputLayout = inputLayoutDesc;
-
-			D3D12_PIPELINE_STATE_STREAM_DESC streamDesc = {};
-			streamDesc.pPipelineStateSubobjectStream = &inputLayoutStream;
-			streamDesc.SizeInBytes = sizeof(PipelineStateStream);
-			if (D3D12_FAIL(device.CreatePipelineState(&streamDesc, IID_PPV_ARGS(&pipelineState)))) {
-				return ZG_ERROR_GENERIC;
-			}
-		}
-		else {
-			D3D12_PIPELINE_STATE_STREAM_DESC streamDesc = {};
-			streamDesc.pPipelineStateSubobjectStream = &stream;
-			streamDesc.SizeInBytes = sizeof(PipelineStateStreamNoInputLayout);
-			if (D3D12_FAIL(device.CreatePipelineState(&streamDesc, IID_PPV_ARGS(&pipelineState)))) {
-				return ZG_ERROR_GENERIC;
-			}
+		D3D12_PIPELINE_STATE_STREAM_DESC streamDesc = {};
+		streamDesc.pPipelineStateSubobjectStream = &stream;
+		streamDesc.SizeInBytes = sizeof(PipelineStateStream);
+		if (D3D12_FAIL(device.CreatePipelineState(&streamDesc, IID_PPV_ARGS(&pipelineState)))) {
+			return ZG_ERROR_GENERIC;
 		}
 	}
 
@@ -1587,11 +1408,10 @@ static ZgResult createPipelineRenderInternal(
 	setDebugName(pipelineState.Get(), createInfo.name);
 
 	// Log information about the pipeline
-	f32 compileTimeMs = timeSinceLastTimestampMillis(compileStartTime);
+	f32 compileTimeMs = sfzTimeDiff(compileStartTime, sfzTimeNow()).ms();
 	logPipelineRenderInfo(
 		createInfo,
 		mapping,
-		renderSignature,
 		compileTimeMs,
 		vertexBlobCompileTimeMs,
 		vertexBlobWasCached,

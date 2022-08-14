@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <skipifzero.hpp>
+#include <sfz.h>
 #include <skipifzero_arrays.hpp>
 
 #include "sfz/config/Setting.hpp"
@@ -85,13 +85,13 @@ public:
 	SfzSetting* getSetting(const char* key) noexcept;
 
 	/// Returns pointers to all available settings
-	void getAllSettings(sfz::Array<SfzSetting*>& settings) noexcept;
+	void getAllSettings(SfzArray<SfzSetting*>& settings) noexcept;
 
 	/// Returns all sections available
-	void getSections(sfz::Array<sfz::str32>& sections) noexcept;
+	void getSections(SfzArray<SfzStr32>& sections) noexcept;
 
 	/// Returns all settings available in a given section
-	void getSectionSettings(const char* section, sfz::Array<SfzSetting*>& settings) noexcept;
+	void getSectionSettings(const char* section, SfzArray<SfzSetting*>& settings) noexcept;
 
 	// Sanitizers
 	// --------------------------------------------------------------------------------------------
