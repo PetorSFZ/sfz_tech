@@ -31,7 +31,7 @@ namespace sfz {
 struct AABB final {
 	f32x3 min, max;
 
-	static constexpr AABB fromPosDims(f32x3 pos, f32x3 dims) { f32x3 halfDims = dims * 0.5f; return { pos - halfDims, pos + halfDims }; }
+	static constexpr AABB fromPosDims(f32x3 pos, f32x3 dims) { f32x3 half_dims = dims * 0.5f; return { pos - half_dims, pos + half_dims }; }
 	static constexpr AABB fromCorners(f32x3 min, f32x3 max) { return { min, max }; }
 
 	constexpr f32x3 pos() const { return (this->min + this->max) * 0.5f; }
@@ -46,16 +46,16 @@ static_assert(sizeof(AABB) == sizeof(f32) * 6, "AABB is padded");
 // ------------------------------------------------------------------------------------------------
 
 // Returns distance to closest intersection with AABB, negative number on no hit
-inline f32 rayVsAABB(const SfzRay& ray, const AABB& aabb, f32* tMinOut = nullptr, f32* tMaxOut = nullptr)
+inline f32 rayVsAABB(const SfzRay& ray, const AABB& aabb, f32* t_min_out = nullptr, f32* t_max_out = nullptr)
 {
 	const f32x3 origin = ray.origin;
-	const f32x3 invDir = sfzInvertRayDir(ray.dir);
-	f32 tMin, tMax;
-	sfzRayVsAABB(origin, invDir, aabb.min, aabb.max, &tMin, &tMax);
-	if (tMinOut != nullptr) *tMinOut = tMin;
-	if (tMaxOut != nullptr) *tMaxOut = tMax;
-	const bool hit = tMin <= tMax && 0.0f <= tMax && tMin <= ray.maxDist;
-	return hit ? f32_max(0.0f, tMin) : -1.0f;
+	const f32x3 inv_dir = sfzInvertRayDir(ray.dir);
+	f32 t_min, t_max;
+	sfzRayVsAABB(origin, inv_dir, aabb.min, aabb.max, &t_min, &t_max);
+	if (t_min_out != nullptr) *t_min_out = t_min;
+	if (t_max_out != nullptr) *t_max_out = t_max;
+	const bool hit = t_min <= t_max && 0.0f <= t_max && t_min <= ray.max_dist;
+	return hit ? f32_max(0.0f, t_min) : -1.0f;
 }
 
 } // namespace sfz

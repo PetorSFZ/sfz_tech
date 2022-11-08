@@ -1,0 +1,4 @@
+Stripped down version of https://github.com/chadaustin/sajson by Chad Austin.
+
+Commit: ec644013e34f9984a3cc9ba568cab97a391db9cd
+Downloaded: 2022-08-29

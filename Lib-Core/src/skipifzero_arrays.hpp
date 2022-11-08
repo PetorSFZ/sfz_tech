@@ -50,9 +50,9 @@ class SfzArray final {
 public:
 	SFZ_DECLARE_DROP_TYPE(SfzArray);
 
-	explicit SfzArray(u32 capacity, SfzAllocator* allocator, SfzDbgInfo allocDbg) noexcept
+	explicit SfzArray(u32 capacity, SfzAllocator* allocator, SfzDbgInfo alloc_dbg) noexcept
 	{
-		this->init(capacity, allocator, allocDbg);
+		this->init(capacity, allocator, alloc_dbg);
 	}
 
 	// State methods
@@ -60,88 +60,88 @@ public:
 
 	// Initializes with specified parameters. Guaranteed to only set allocator and not allocate
 	// memory if a capacity of 0 is requested.
-	void init(u32 capacity, SfzAllocator* allocator, SfzDbgInfo allocDbg)
+	void init(u32 capacity, SfzAllocator* allocator, SfzDbgInfo alloc_dbg)
 	{
 		this->destroy();
-		mAllocator = allocator;
-		this->setCapacity(capacity, allocDbg);
+		m_allocator = allocator;
+		this->setCapacity(capacity, alloc_dbg);
 	}
 
 	// Removes all elements without deallocating memory.
-	void clear() { sfz_assert(mSize <= mCapacity); for (u32 i = 0; i < mSize; i++) mData[i].~T(); mSize = 0; }
+	void clear() { sfz_assert(m_size <= m_capacity); for (u32 i = 0; i < m_size; i++) m_data[i].~T(); m_size = 0; }
 
 	// Destroys all elements, deallocates memory and removes allocator.
 	void destroy()
 	{
 		this->clear();
-		if (mData != nullptr) mAllocator->dealloc(mData);
-		mCapacity = 0;
-		mData = nullptr;
-		mAllocator = nullptr;
+		if (m_data != nullptr) m_allocator->dealloc(m_data);
+		m_capacity = 0;
+		m_data = nullptr;
+		m_allocator = nullptr;
 	}
 
 	// Directly sets the size without touching or initializing any elements. Only safe if T is a
 	// trivial type and you know what you are doing, use at your own risk.
-	void hackSetSize(u32 size) { mSize = (size <= mCapacity) ? size : mCapacity; }
+	void hackSetSize(u32 size) { m_size = (size <= m_capacity) ? size : m_capacity; }
 
 	// Sets the capacity, allocating memory and moving elements if necessary.
-	void setCapacity(u32 capacity, SfzDbgInfo allocDbg = sfz_dbg("Array"))
+	void setCapacity(u32 capacity, SfzDbgInfo alloc_dbg = sfz_dbg("Array"))
 	{
-		if (mSize > capacity) capacity = mSize;
-		if (mCapacity == capacity) return;
+		if (m_size > capacity) capacity = m_size;
+		if (m_capacity == capacity) return;
 		if (capacity < SFZ_ARRAY_DYNAMIC_MIN_CAPACITY) capacity = SFZ_ARRAY_DYNAMIC_MIN_CAPACITY;
-		sfz_assert_hard(mAllocator != nullptr);
+		sfz_assert_hard(m_allocator != nullptr);
 		sfz_assert_hard(capacity < SFZ_ARRAY_DYNAMIC_MAX_CAPACITY);
 
 		// Allocate memory and move/copy over elements from old memory
-		T* newAllocation = capacity == 0 ? nullptr : (T*)mAllocator->alloc(
-			allocDbg, capacity * sizeof(T), alignof(T) < 32 ? 32 : alignof(T));
-		for (u32 i = 0; i < mSize; i++) new(newAllocation + i) T(sfz_move(mData[i]));
+		T* new_allocation = capacity == 0 ? nullptr : (T*)m_allocator->alloc(
+			alloc_dbg, capacity * sizeof(T), alignof(T) < 32 ? 32 : alignof(T));
+		for (u32 i = 0; i < m_size; i++) new(new_allocation + i) T(sfz_move(m_data[i]));
 
 		// Destroy old memory and replace state with new memory and values
-		u32 sizeBackup = mSize;
-		SfzAllocator* allocatorBackup = mAllocator;
+		u32 size_backup = m_size;
+		SfzAllocator* allocator_backup = m_allocator;
 		this->destroy();
-		mSize = sizeBackup;
-		mCapacity = capacity;
-		mData = newAllocation;
-		mAllocator = allocatorBackup;
+		m_size = size_backup;
+		m_capacity = capacity;
+		m_data = new_allocation;
+		m_allocator = allocator_backup;
 	}
-	void ensureCapacity(u32 capacity) { if (mCapacity < capacity) setCapacity(capacity); }
+	void ensureCapacity(u32 capacity) { if (m_capacity < capacity) setCapacity(capacity); }
 
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
-	u32 size() const { return mSize; }
-	u32 capacity() const { return mCapacity; }
-	const T* data() const { return mData; }
-	T* data() { return mData; }
-	SfzAllocator* allocator() const { return mAllocator; }
+	u32 size() const { return m_size; }
+	u32 capacity() const { return m_capacity; }
+	const T* data() const { return m_data; }
+	T* data() { return m_data; }
+	SfzAllocator* allocator() const { return m_allocator; }
 
-	bool isEmpty() const { return mSize == 0; }
+	bool isEmpty() const { return m_size == 0; }
 
-	T& operator[] (u32 idx) { sfz_assert(idx < mSize); return mData[idx]; }
-	const T& operator[] (u32 idx) const { sfz_assert(idx < mSize); return mData[idx]; }
+	T& operator[] (u32 idx) { sfz_assert(idx < m_size); return m_data[idx]; }
+	const T& operator[] (u32 idx) const { sfz_assert(idx < m_size); return m_data[idx]; }
 
-	T& first() { sfz_assert(mSize > 0); return mData[0]; }
-	const T& first() const { sfz_assert(mSize > 0); return mData[0]; }
+	T& first() { sfz_assert(m_size > 0); return m_data[0]; }
+	const T& first() const { sfz_assert(m_size > 0); return m_data[0]; }
 
-	T& last() { sfz_assert(mSize > 0); return mData[mSize - 1]; }
-	const T& last() const { sfz_assert(mSize > 0); return mData[mSize - 1]; }
+	T& last() { sfz_assert(m_size > 0); return m_data[m_size - 1]; }
+	const T& last() const { sfz_assert(m_size > 0); return m_data[m_size - 1]; }
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
 	// Copy element numCopies times to the back of this array. Increases capacity if needed.
-	void add(const T& value, u32 numCopies = 1) { addImpl<const T&>(value, numCopies); }
+	void add(const T& value, u32 num_copies = 1) { addImpl<const T&>(value, num_copies); }
 	void add(T&& value) { addImpl<T>(sfz_move(value), 1); }
 
 	// Copy numElements elements to the back of this array. Increases capacity if needed.
-	void add(const T* ptr, u32 numElements)
+	void add(const T* ptr, u32 num_elements)
 	{
-		growIfNeeded(numElements);
-		for (u32 i = 0; i < numElements; i++) new (this->mData + mSize + i) T(ptr[i]);
-		mSize += numElements;
+		growIfNeeded(num_elements);
+		for (u32 i = 0; i < num_elements; i++) new (this->m_data + m_size + i) T(ptr[i]);
+		m_size += num_elements;
 	}
 
 	// Adds a zero:ed element and returns reference to it.
@@ -149,156 +149,156 @@ public:
 
 	// Insert elements into the array at the specified position. Increases capacity if needed.
 	void insert(u32 pos, const T& value) { insertImpl(pos, &value, 1); }
-	void insert(u32 pos, const T* ptr, u32 numElements) { insertImpl(pos, ptr, numElements); }
+	void insert(u32 pos, const T* ptr, u32 num_elements) { insertImpl(pos, ptr, num_elements); }
 
 	// Removes and returns the last element. Undefined if array is empty.
 	T pop()
 	{
-		sfz_assert(mSize > 0);
-		mSize -= 1;
-		T tmp = sfz_move(mData[mSize]);
-		mData[mSize].~T();
+		sfz_assert(m_size > 0);
+		m_size -= 1;
+		T tmp = sfz_move(m_data[m_size]);
+		m_data[m_size].~T();
 		return sfz_move(tmp);
 	}
 
 	// Remove numElements elements starting at the specified position.
-	void remove(u32 pos, u32 numElements = 1)
+	void remove(u32 pos, u32 num_elements = 1)
 	{
 		// Destroy elements
-		sfz_assert(pos < mSize);
-		if (numElements > (mSize - pos)) numElements = (mSize - pos);
-		for (u32 i = 0; i < numElements; i++) mData[pos + i].~T();
+		sfz_assert(pos < m_size);
+		if (num_elements > (m_size - pos)) num_elements = (m_size - pos);
+		for (u32 i = 0; i < num_elements; i++) m_data[pos + i].~T();
 
 		// Move the elements after the removed elements
-		u32 numElementsToMove = mSize - pos - numElements;
-		for (u32 i = 0; i < numElementsToMove; i++) {
-			new (mData + pos + i) T(sfz_move(mData[pos + i + numElements]));
-			mData[pos + i + numElements].~T();
+		u32 num_elements_to_move = m_size - pos - num_elements;
+		for (u32 i = 0; i < num_elements_to_move; i++) {
+			new (m_data + pos + i) T(sfz_move(m_data[pos + i + num_elements]));
+			m_data[pos + i + num_elements].~T();
 		}
-		mSize -= numElements;
+		m_size -= num_elements;
 	}
 
 	// Removes element at given position by swapping it with the last element in array.
 	// O(1) operation unlike remove(), but obviously does not maintain internal array order.
-	void removeQuickSwap(u32 pos) { sfz_assert(pos < mSize); sfzSwap(mData[pos], last()); remove(mSize - 1); }
+	void removeQuickSwap(u32 pos) { sfz_assert(pos < m_size); sfzSwap(m_data[pos], last()); remove(m_size - 1); }
 
 	// Finds the first instance of the given element, nullptr if not found.
-	T* findElement(const T& ref) { return findImpl(mData, [&](const T& e) { return e == ref; }); }
-	const T* findElement(const T& ref) const { return findImpl(mData, [&](const T& e) { return e == ref; }); }
+	T* findElement(const T& ref) { return findImpl(m_data, [&](const T& e) { return e == ref; }); }
+	const T* findElement(const T& ref) const { return findImpl(m_data, [&](const T& e) { return e == ref; }); }
 
 	// Finds the first element that satisfies the given function.
 	// Function should have signature: bool func(const T& element)
-	template<typename F> T* find(F func) { return findImpl(mData, func); }
-	template<typename F> const T* find(F func) const { return findImpl(mData, func); }
+	template<typename F> T* find(F func) { return findImpl(m_data, func); }
+	template<typename F> const T* find(F func) const { return findImpl(m_data, func); }
 
 	// Finds the last element that satisfies the given function.
 	// Function should have signature: bool func(const T& element)
-	template<typename F> T* findLast(F func) { return findLastImpl(mData, func); }
-	template<typename F> const T* findLast(F func) const { return findLastImpl(mData, func); }
+	template<typename F> T* findLast(F func) { return findLastImpl(m_data, func); }
+	template<typename F> const T* findLast(F func) const { return findLastImpl(m_data, func); }
 
 	// Sorts the elements in the array, same sort of comparator as std::sort().
 	void sort() { sortImpl([](const T& lhs, const T& rhs) { return lhs < rhs; }); }
-	template<typename F> void sort(F compareFunc) { sortImpl<F>(compareFunc); }
+	template<typename F> void sort(F compare_func) { sortImpl<F>(compare_func); }
 
 	// Iterator methods
 	// --------------------------------------------------------------------------------------------
 
-	T* begin() { return mData; }
-	const T* begin() const { return mData; }
-	const T* cbegin() const { return mData; }
+	T* begin() { return m_data; }
+	const T* begin() const { return m_data; }
+	const T* cbegin() const { return m_data; }
 
-	T* end() { return mData + mSize; }
-	const T* end() const { return mData + mSize; }
-	const T* cend() const { return mData + mSize; }
+	T* end() { return m_data + m_size; }
+	const T* end() const { return m_data + m_size; }
+	const T* cend() const { return m_data + m_size; }
 
 private:
 	// Private methods
 	// --------------------------------------------------------------------------------------------
 
-	void growIfNeeded(u32 elementsToAdd)
+	void growIfNeeded(u32 elements_to_add)
 	{
-		u32 newSize = mSize + elementsToAdd;
-		if (newSize <= mCapacity) return;
-		u32 newCapacity = (mCapacity == 0) ? SFZ_ARRAY_DYNAMIC_DEFAULT_INITIAL_CAPACITY :
-			u32_max(u32(mCapacity * SFZ_ARRAY_DYNAMIC_GROW_RATE), newSize);
-		setCapacity(newCapacity);
+		u32 new_size = m_size + elements_to_add;
+		if (new_size <= m_capacity) return;
+		u32 new_capacity = (m_capacity == 0) ? SFZ_ARRAY_DYNAMIC_DEFAULT_INITIAL_CAPACITY :
+			u32_max(u32(m_capacity * SFZ_ARRAY_DYNAMIC_GROW_RATE), new_size);
+		setCapacity(new_capacity);
 	}
 
 	template<typename ForwardT>
-	void addImpl(ForwardT&& value, u32 numCopies)
+	void addImpl(ForwardT&& value, u32 num_copies)
 	{
 		// Perfect forwarding: const reference: ForwardT == const T&, rvalue: ForwardT == T
 		// std::forward<ForwardT>(value) will then return the correct version of value
-		this->growIfNeeded(numCopies);
-		for(u32 i = 0; i < numCopies; i++) new (mData + mSize + i) T(sfz_forward(value));
-		mSize += numCopies;
+		this->growIfNeeded(num_copies);
+		for(u32 i = 0; i < num_copies; i++) new (m_data + m_size + i) T(sfz_forward(value));
+		m_size += num_copies;
 	}
 
-	void insertImpl(u32 pos, const T* ptr, u32 numElements)
+	void insertImpl(u32 pos, const T* ptr, u32 num_elements)
 	{
-		sfz_assert(pos <= mSize);
-		growIfNeeded(numElements);
+		sfz_assert(pos <= m_size);
+		growIfNeeded(num_elements);
 
 		// Move elements
-		T* dstPtr = mData + pos + numElements;
-		T* srcPtr = mData + pos;
-		u32 numElementsToMove = (mSize - pos);
-		for (u32 i = numElementsToMove; i > 0; i--) {
+		T* dst_ptr = m_data + pos + num_elements;
+		T* src_ptr = m_data + pos;
+		u32 num_elements_to_move = (m_size - pos);
+		for (u32 i = num_elements_to_move; i > 0; i--) {
 			u32 offs = i - 1;
-			new (dstPtr + offs) T(sfz_move(srcPtr[offs]));
-			srcPtr[offs].~T();
+			new (dst_ptr + offs) T(sfz_move(src_ptr[offs]));
+			src_ptr[offs].~T();
 		}
 
 		// Insert elements
-		for (u32 i = 0; i < numElements; ++i) new (this->mData + pos + i) T(ptr[i]);
-		mSize += numElements;
+		for (u32 i = 0; i < num_elements; ++i) new (this->m_data + pos + i) T(ptr[i]);
+		m_size += num_elements;
 	}
 
 	template<typename F>
 	T* findImpl(T* data, F func) const
 	{
-		for (u32 i = 0; i < mSize; ++i) if (func(data[i])) return &data[i];
+		for (u32 i = 0; i < m_size; ++i) if (func(data[i])) return &data[i];
 		return nullptr;
 	}
 
 	template<typename F>
 	T* findLastImpl(T* data, F func) const
 	{
-		for (u32 i = mSize; i > 0; i--) if (func(data[i - 1])) return &data[i - 1];
+		for (u32 i = m_size; i > 0; i--) if (func(data[i - 1])) return &data[i - 1];
 		return nullptr;
 	}
 
 	template<typename F>
-	void sortImpl(F cppCompareFunc)
+	void sortImpl(F cpp_compare_func)
 	{
-		if (mSize == 0) return;
+		if (m_size == 0) return;
 
 		// Store pointer to compare in temp variable, fix so lambda don't have to capture.
-		static thread_local const F* cppCompareFuncPtr = nullptr;
-		cppCompareFuncPtr = &cppCompareFunc;
+		static thread_local const F* cpp_compare_func_ptr = nullptr;
+		cpp_compare_func_ptr = &cpp_compare_func;
 
 		// Convert C++ compare function to qsort compatible C compare function
 		using CCompareT = int(const void*, const void*);
-		CCompareT* cCompareFunc = [](const void* rawLhs, const void* rawRhs) -> int {
-			const T& lhs = *static_cast<const T*>(rawLhs);
-			const T& rhs = *static_cast<const T*>(rawRhs);
-			const bool lhsSmaller = (*cppCompareFuncPtr)(lhs, rhs);
-			if (lhsSmaller) return -1;
-			const bool rhsSmaller = (*cppCompareFuncPtr)(rhs, lhs);
-			if (rhsSmaller) return 1;
+		CCompareT* c_compare_func = [](const void* raw_lhs, const void* raw_rhs) -> int {
+			const T& lhs = *static_cast<const T*>(raw_lhs);
+			const T& rhs = *static_cast<const T*>(raw_rhs);
+			const bool lhs_smaller = (*cpp_compare_func_ptr)(lhs, rhs);
+			if (lhs_smaller) return -1;
+			const bool rhs_smaller = (*cpp_compare_func_ptr)(rhs, lhs);
+			if (rhs_smaller) return 1;
 			return 0;
 		};
 
 		// Sort using C's qsort()
-		std::qsort(mData, mSize, sizeof(T), cCompareFunc);
+		qsort(m_data, m_size, sizeof(T), c_compare_func);
 	}
 
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	u32 mSize = 0, mCapacity = 0;
-	T* mData = nullptr;
-	SfzAllocator* mAllocator = nullptr;
+	u32 m_size = 0, m_capacity = 0;
+	T* m_data = nullptr;
+	SfzAllocator* m_allocator = nullptr;
 };
 
 // SfzArrayLocal
@@ -324,46 +324,46 @@ public:
 
 	void swap(SfzArrayLocal& other)
 	{
-		for (u32 i = 0; i < Capacity; i++) sfzSwap(this->mData[i], other.mData[i]);
-		sfzSwap(this->mSize, other.mSize);
+		for (u32 i = 0; i < Capacity; i++) sfzSwap(this->m_data[i], other.m_data[i]);
+		sfzSwap(this->m_size, other.m_size);
 	}
 
-	void clear() { sfz_assert(mSize <= Capacity); for (u32 i = 0; i < mSize; i++) mData[i] = {}; mSize = 0; }
-	void setSize(u32 size) { sfz_assert(size <= Capacity); mSize = size; }
+	void clear() { sfz_assert(m_size <= Capacity); for (u32 i = 0; i < m_size; i++) m_data[i] = {}; m_size = 0; }
+	void setSize(u32 size) { sfz_assert(size <= Capacity); m_size = size; }
 
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
-	u32 size() const { return mSize; }
+	u32 size() const { return m_size; }
 	u32 capacity() const { return Capacity; }
-	const T* data() const { return mData; }
-	T* data() { return mData; }
+	const T* data() const { return m_data; }
+	T* data() { return m_data; }
 
-	bool isEmpty() const { return mSize == 0; }
-	bool isFull() const { return mSize == Capacity; }
+	bool isEmpty() const { return m_size == 0; }
+	bool isFull() const { return m_size == Capacity; }
 
-	T& operator[] (u32 idx) { sfz_assert(idx < mSize); return mData[idx]; }
-	const T& operator[] (u32 idx) const { sfz_assert(idx < mSize); return mData[idx]; }
+	T& operator[] (u32 idx) { sfz_assert(idx < m_size); return m_data[idx]; }
+	const T& operator[] (u32 idx) const { sfz_assert(idx < m_size); return m_data[idx]; }
 
-	T& first() { sfz_assert(mSize > 0); return mData[0]; }
-	const T& first() const { sfz_assert(mSize > 0); return mData[0]; }
+	T& first() { sfz_assert(m_size > 0); return m_data[0]; }
+	const T& first() const { sfz_assert(m_size > 0); return m_data[0]; }
 
-	T& last() { sfz_assert(mSize > 0); return mData[mSize - 1]; }
-	const T& last() const { sfz_assert(mSize > 0); return mData[mSize - 1]; }
+	T& last() { sfz_assert(m_size > 0); return m_data[m_size - 1]; }
+	const T& last() const { sfz_assert(m_size > 0); return m_data[m_size - 1]; }
 
 	// Methods
 	// --------------------------------------------------------------------------------------------
 
-	// Copy element numCopies times to the back of this array.
-	void add(const T& value, u32 numCopies = 1) { addImpl<const T&>(value, numCopies); }
+	// Copy element num_copies times to the back of this array.
+	void add(const T& value, u32 num_copies = 1) { addImpl<const T&>(value, num_copies); }
 	void add(T&& value) { addImpl<T>(sfz_move(value), 1); }
 
-	// Copy numElements elements to the back of this array.
-	void add(const T* ptr, u32 numElements)
+	// Copy num_elements elements to the back of this array.
+	void add(const T* ptr, u32 num_elements)
 	{
-		sfz_assert((mSize + numElements) <= Capacity);
-		for (u32 i = 0; i < numElements; i++) mData[mSize + i] = ptr[i];
-		mSize += numElements;
+		sfz_assert((m_size + num_elements) <= Capacity);
+		for (u32 i = 0; i < num_elements; i++) m_data[m_size + i] = ptr[i];
+		m_size += num_elements;
 	}
 
 	// Adds a zero:ed element and returns reference to it.
@@ -371,156 +371,156 @@ public:
 
 	// Insert elements into the array at the specified position.
 	void insert(u32 pos, const T& value) { insertImpl(pos, &value, 1); }
-	void insert(u32 pos, const T* ptr, u32 numElements) { insertImpl(pos, ptr, numElements); }
+	void insert(u32 pos, const T* ptr, u32 num_elements) { insertImpl(pos, ptr, num_elements); }
 
 	// Removes and returns the last element. Undefined if array is empty.
 	T pop()
 	{
-		sfz_assert(mSize > 0);
-		mSize -= 1;
-		T tmp = sfz_move(mData[mSize]);
-		mData[mSize].~T();
+		sfz_assert(m_size > 0);
+		m_size -= 1;
+		T tmp = sfz_move(m_data[m_size]);
+		m_data[m_size].~T();
 		return sfz_move(tmp);
 	}
 
 	// Remove numElements elements starting at the specified position.
-	void remove(u32 pos, u32 numElements = 1)
+	void remove(u32 pos, u32 num_elements = 1)
 	{
 		// Destroy elements
-		sfz_assert(pos < mSize);
-		if (numElements > (mSize - pos)) numElements = (mSize - pos);
-		for (u32 i = 0; i < numElements; i++) mData[pos + i] = {};
+		sfz_assert(pos < m_size);
+		if (num_elements > (m_size - pos)) num_elements = (m_size - pos);
+		for (u32 i = 0; i < num_elements; i++) m_data[pos + i] = {};
 
 		// Move the elements after the removed elements
-		u32 numElementsToMove = mSize - pos - numElements;
-		for (u32 i = 0; i < numElementsToMove; i++) {
-			mData[pos + i] = sfz_move(mData[pos + i + numElements]);
+		u32 num_elements_to_move = m_size - pos - num_elements;
+		for (u32 i = 0; i < num_elements_to_move; i++) {
+			m_data[pos + i] = sfz_move(m_data[pos + i + num_elements]);
 		}
-		mSize -= numElements;
+		m_size -= num_elements;
 	}
 
 	// Removes element at given position by swapping it with the last element in array.
 	// O(1) operation unlike remove(), but obviously does not maintain internal array order.
-	void removeQuickSwap(u32 pos) { sfz_assert(pos < mSize); sfzSwap(mData[pos], last()); remove(mSize - 1); }
+	void removeQuickSwap(u32 pos) { sfz_assert(pos < m_size); sfzSwap(m_data[pos], last()); remove(m_size - 1); }
 
 	// Finds the first instance of the given element, nullptr if not found.
-	T* findElement(const T& ref) { return findImpl(mData, [&](const T& e) { return e == ref; }); }
-	const T* findElement(const T& ref) const { return findImpl(mData, [&](const T& e) { return e == ref; }); }
+	T* findElement(const T& ref) { return findImpl(m_data, [&](const T& e) { return e == ref; }); }
+	const T* findElement(const T& ref) const { return findImpl(m_data, [&](const T& e) { return e == ref; }); }
 
 	// Finds the first element that satisfies the given function.
 	// Function should have signature: bool func(const T& element)
-	template<typename F> T* find(F func) { return findImpl(mData, func); }
-	template<typename F> const T* find(F func) const { return findImpl(mData, func); }
+	template<typename F> T* find(F func) { return findImpl(m_data, func); }
+	template<typename F> const T* find(F func) const { return findImpl(m_data, func); }
 
 	// Finds the last element that satisfies the given function.
 	// Function should have signature: bool func(const T& element)
-	template<typename F> T* findLast(F func) { return findLastImpl(mData, func); }
-	template<typename F> const T* findLast(F func) const { return findLastImpl(mData, func); }
+	template<typename F> T* findLast(F func) { return findLastImpl(m_data, func); }
+	template<typename F> const T* findLast(F func) const { return findLastImpl(m_data, func); }
 
 	// Sorts the elements in the array, same sort of comparator as std::sort().
 	void sort() { sortImpl([](const T& lhs, const T& rhs) { return lhs < rhs; }); }
-	template<typename F> void sort(F compareFunc) { sortImpl<F>(compareFunc); }
+	template<typename F> void sort(F compare_func) { sortImpl<F>(compare_func); }
 
 	// Iterator methods
 	// --------------------------------------------------------------------------------------------
 
-	T* begin() { return mData; }
-	const T* begin() const { return mData; }
-	const T* cbegin() const { return mData; }
+	T* begin() { return m_data; }
+	const T* begin() const { return m_data; }
+	const T* cbegin() const { return m_data; }
 
-	T* end() { return mData + mSize; }
-	const T* end() const { return mData + mSize; }
-	const T* cend() const { return mData + mSize; }
+	T* end() { return m_data + m_size; }
+	const T* end() const { return m_data + m_size; }
+	const T* cend() const { return m_data + m_size; }
 
 private:
 	// Private methods
 	// --------------------------------------------------------------------------------------------
 
 	template<typename ForwardT>
-	void addImpl(ForwardT&& value, u32 numCopies)
+	void addImpl(ForwardT&& value, u32 num_copies)
 	{
 		// Perfect forwarding: const reference: ForwardT == const T&, rvalue: ForwardT == T
 		// std::forward<ForwardT>(value) will then return the correct version of value
-		sfz_assert((mSize + numCopies) <= Capacity);
-		for(u32 i = 0; i < numCopies; i++) mData[mSize + i] = sfz_forward(value);
-		mSize += numCopies;
+		sfz_assert((m_size + num_copies) <= Capacity);
+		for(u32 i = 0; i < num_copies; i++) m_data[m_size + i] = sfz_forward(value);
+		m_size += num_copies;
 	}
 
-	void insertImpl(u32 pos, const T* ptr, u32 numElements)
+	void insertImpl(u32 pos, const T* ptr, u32 num_elements)
 	{
-		sfz_assert(pos <= mSize);
-		sfz_assert((mSize + numElements) <= Capacity);
+		sfz_assert(pos <= m_size);
+		sfz_assert((m_size + num_elements) <= Capacity);
 
 		// Move elements
-		T* dstPtr = mData + pos + numElements;
-		T* srcPtr = mData + pos;
-		u32 numElementsToMove = (mSize - pos);
-		for (u32 i = numElementsToMove; i > 0; i--) dstPtr[i - 1] = sfz_move(srcPtr[i - 1]);
+		T* dstPtr = m_data + pos + num_elements;
+		T* srcPtr = m_data + pos;
+		u32 num_elements_to_move = (m_size - pos);
+		for (u32 i = num_elements_to_move; i > 0; i--) dstPtr[i - 1] = sfz_move(srcPtr[i - 1]);
 
 		// Insert elements
-		for (u32 i = 0; i < numElements; ++i) mData[pos + i] = ptr[i];
-		mSize += numElements;
+		for (u32 i = 0; i < num_elements; ++i) m_data[pos + i] = ptr[i];
+		m_size += num_elements;
 	}
 
 	template<typename F>
 	T* findImpl(T* data, F func)
 	{
-		for (u32 i = 0; i < mSize; ++i) if (func(data[i])) return &data[i];
+		for (u32 i = 0; i < m_size; ++i) if (func(data[i])) return &data[i];
 		return nullptr;
 	}
 
 	template<typename F>
 	const T* findImpl(const T* data, F func) const
 	{
-		for (u32 i = 0; i < mSize; ++i) if (func(data[i])) return &data[i];
+		for (u32 i = 0; i < m_size; ++i) if (func(data[i])) return &data[i];
 		return nullptr;
 	}
 
 	template<typename F>
 	T* findLastImpl(T* data, F func)
 	{
-		for (u32 i = mSize; i > 0; i--) if (func(data[i - 1])) return &data[i - 1];
+		for (u32 i = m_size; i > 0; i--) if (func(data[i - 1])) return &data[i - 1];
 		return nullptr;
 	}
 
 	template<typename F>
 	const T* findLastImpl(const T* data, F func) const
 	{
-		for (u32 i = mSize; i > 0; i--) if (func(data[i - 1])) return &data[i - 1];
+		for (u32 i = m_size; i > 0; i--) if (func(data[i - 1])) return &data[i - 1];
 		return nullptr;
 	}
 
 	template<typename F>
-	void sortImpl(F cppCompareFunc)
+	void sortImpl(F cpp_compare_func)
 	{
-		if (mSize == 0) return;
+		if (m_size == 0) return;
 
 		// Store pointer to compare in temp variable, fix so lambda don't have to capture.
-		static thread_local const F* cppCompareFuncPtr = nullptr;
-		cppCompareFuncPtr = &cppCompareFunc;
+		static thread_local const F* cpp_compare_func_ptr = nullptr;
+		cpp_compare_func_ptr = &cpp_compare_func;
 
 		// Convert C++ compare function to qsort compatible C compare function
 		using CCompareT = int(const void*, const void*);
-		CCompareT* cCompareFunc = [](const void* rawLhs, const void* rawRhs) -> int {
-			const T& lhs = *static_cast<const T*>(rawLhs);
-			const T& rhs = *static_cast<const T*>(rawRhs);
-			const bool lhsSmaller = (*cppCompareFuncPtr)(lhs, rhs);
-			if (lhsSmaller) return -1;
-			const bool rhsSmaller = (*cppCompareFuncPtr)(rhs, lhs);
-			if (rhsSmaller) return 1;
+		CCompareT* c_compare_func = [](const void* raw_lhs, const void* raw_rhs) -> int {
+			const T& lhs = *static_cast<const T*>(raw_lhs);
+			const T& rhs = *static_cast<const T*>(raw_rhs);
+			const bool lhs_smaller = (*cpp_compare_func_ptr)(lhs, rhs);
+			if (lhs_smaller) return -1;
+			const bool rhs_smaller = (*cpp_compare_func_ptr)(rhs, lhs);
+			if (rhs_smaller) return 1;
 			return 0;
 		};
 
 		// Sort using C's qsort()
-		std::qsort(mData, mSize, sizeof(T), cCompareFunc);
+		qsort(m_data, m_size, sizeof(T), c_compare_func);
 	}
 
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	T mData[Capacity] = {};
-	u32 mSize = 0;
-	u32 mPadding[3] = {};
+	T m_data[Capacity] = {};
+	u32 m_size = 0;
+	u32 m_padding[3] = {};
 };
 
 template<typename T> using SfzArr4 = SfzArrayLocal<T, 4>;

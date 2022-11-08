@@ -10,6 +10,11 @@ if (NOT SFZ_CORE_FOUND)
 	message(FATAL_ERROR "Dependency-imgui requires sfzCore.")
 endif()
 
+if (MSVC)
+	string(REPLACE "/W4" "" TMP1 ${CMAKE_CXX_FLAGS})
+	set(CMAKE_CXX_FLAGS "${TMP1} /W0")
+endif()
+
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 

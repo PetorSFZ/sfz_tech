@@ -38,51 +38,51 @@ public:
 	SFZ_DECLARE_DROP_TYPE(SfzDeferPtr);
 
 	SfzDeferPtr(std::nullptr_t) noexcept {};
-	SfzDeferPtr(T* object, SfzDeferPtrDestroyFunc<T>* destroyFunc) { this->init(object, destroyFunc); }
+	SfzDeferPtr(T* object, SfzDeferPtrDestroyFunc<T>* destroy_func) { this->init(object, destroy_func); }
 
-	void init(T* object, SfzDeferPtrDestroyFunc<T>* destroyFunc)
+	void init(T* object, SfzDeferPtrDestroyFunc<T>* destroy_func)
 	{
 		sfz_assert(object != nullptr);
-		sfz_assert(destroyFunc != nullptr);
+		sfz_assert(destroy_func != nullptr);
 		this->destroy();
-		mPtr = object;
-		mDestroyFunc = destroyFunc;
+		m_ptr = object;
+		m_destroy_func = destroy_func;
 	}
 
 	void destroy() noexcept
 	{
-		if (mPtr == nullptr) return;
-		mDestroyFunc(mPtr);
-		mPtr = nullptr;
-		mDestroyFunc = nullptr;
+		if (m_ptr == nullptr) return;
+		m_destroy_func(m_ptr);
+		m_ptr = nullptr;
+		m_destroy_func = nullptr;
 	}
 
-	T* get() const { return mPtr; }
+	T* get() const { return m_ptr; }
 	
 	// Caller takes ownership of the internal pointer
 	T* take() noexcept
 	{
-		T* tmp = mPtr;
-		mPtr = nullptr;
-		mDestroyFunc = nullptr;
+		T* tmp = m_ptr;
+		m_ptr = nullptr;
+		m_destroy_func = nullptr;
 		return tmp;
 	}
 
-	operator T*() { return mPtr; }
-	operator const T*() const { return mPtr; }
+	operator T*() { return m_ptr; }
+	operator const T*() const { return m_ptr; }
 
-	T& operator* () const { return *mPtr; }
-	T* operator-> () const { return mPtr; }
+	T& operator* () const { return *m_ptr; }
+	T* operator-> () const { return m_ptr; }
 
-	bool operator== (const SfzDeferPtr& other) const { return this->mPtr == other.mPtr; }
+	bool operator== (const SfzDeferPtr& other) const { return this->m_ptr == other.m_ptr; }
 	bool operator!= (const SfzDeferPtr& other) const { return !(*this == other); }
 
-	bool operator== (std::nullptr_t) const { return this->mPtr == nullptr; }
-	bool operator!= (std::nullptr_t) const { return this->mPtr != nullptr; }
+	bool operator== (std::nullptr_t) const { return this->m_ptr == nullptr; }
+	bool operator!= (std::nullptr_t) const { return this->m_ptr != nullptr; }
 
 private:
-	T* mPtr = nullptr;
-	SfzDeferPtrDestroyFunc<T>* mDestroyFunc = nullptr;
+	T* m_ptr = nullptr;
+	SfzDeferPtrDestroyFunc<T>* m_destroy_func = nullptr;
 };
 
 #endif // __cplusplus

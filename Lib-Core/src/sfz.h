@@ -50,6 +50,14 @@
 
 #define sfz_forceinline __forceinline
 
+#ifndef NULL
+#ifdef __cplusplus
+#define NULL 0
+#else
+#define NULL ((void *)0)
+#endif
+#endif
+
 
 // Scalar primitives
 // ------------------------------------------------------------------------------------------------
@@ -368,6 +376,11 @@ sfz_constexpr_func u8x2 u8x2_from_i32(i32x2 o) { return u8x2_init(u8(o.x), u8(o.
 sfz_constexpr_func u8x4 u8x4_from_f32(f32x4 o) { return u8x4_init(u8(o.x), u8(o.y), u8(o.z), u8(o.w)); }
 sfz_constexpr_func u8x4 u8x4_from_i32(i32x4 o) { return u8x4_init(u8(o.x), u8(o.y), u8(o.z), u8(o.w)); }
 
+sfz_forceinline f32 f32_floor(f32 v) { return floorf(v); }
+sfz_forceinline f32x2 f32x2_floor(f32x2 v) { return f32x2_init(floorf(v.x), floorf(v.y)); }
+sfz_forceinline f32x3 f32x3_floor(f32x3 v) { return f32x3_init(floorf(v.x), floorf(v.y), floorf(v.z)); }
+sfz_forceinline f32x4 f32x4_floor(f32x4 v) { return f32x4_init(floorf(v.x), floorf(v.y), floorf(v.z), floorf(v.w)); }
+
 sfz_constexpr_func u32 sfzRoundUpAlignedU32(u32 v, u32 align) { return ((v + align - 1) / align) * align; }
 sfz_constexpr_func u64 sfzRoundUpAlignedU64(u64 v, u64 align) { return ((v + align - 1) / align) * align; }
 
@@ -552,6 +565,8 @@ constexpr bool operator!= (u8x4 v, u8x4 o) { return !(v == o); }
 // Primitive static asserts
 // ------------------------------------------------------------------------------------------------
 
+sfz_static_assert(sizeof(bool) == 1); // a) We require c99 bools. b) We require bools to be sane.
+
 sfz_static_assert(sizeof(i8) == 1);
 sfz_static_assert(sizeof(i16) == 2);
 sfz_static_assert(sizeof(i32) == 4);
@@ -644,7 +659,7 @@ sfz_constexpr_func SfzQuat sfzQuatInit(f32x3 v, f32 w) { return SfzQuat{ v, w };
 // Assert macros. Lots of magic here to avoid including assert.h or other headers.
 //
 // sfz_assert() => No-op when NDEBUG is defined (i.e. in release builds)
-// sfz_assert_hard() => ALways runs, even in release builds.
+// sfz_assert_hard() => Always runs, even in release builds.
 
 #if defined(_MSC_VER)
 
@@ -660,8 +675,8 @@ sfz_extern_c void __cdecl __debugbreak(void);
 	do { \
 		if (!(cond)) { \
 			__debugbreak(); \
-			volatile int assertDummyVal = 3; \
-			(void)assertDummyVal; \
+			volatile int assert_dummy_val = 3; \
+			(void)assert_dummy_val; \
 		} \
 	} while(0)
 #else
@@ -675,8 +690,8 @@ sfz_extern_c void __cdecl __debugbreak(void);
 	do { \
 		if (!(cond)) { \
 			__debugbreak(); \
-			volatile int assertDummyVal = 3; \
-			(void)assertDummyVal; \
+			volatile int assert_dummy_val = 3; \
+			(void)assert_dummy_val; \
 			abort(); \
 		} \
 	} while(0)
@@ -706,26 +721,26 @@ sfz_extern_c void* __cdecl memset(void* _Dst, i32 _Val, u64 _Size);
 // Tiny struct that contains debug information, i.e. file, line number and a message.
 // Note that all members are mandatory and MUST be compile-time constants, especially the strings.
 sfz_struct(SfzDbgInfo) {
-	const char* staticMsg;
+	const char* static_msg;
 	const char* file;
 	u32 line;
 };
 
 // Tiny macro that creates a SfzDbgInfo struct with current file and line number. Message must be a
 // compile time constant, i.e. string must be valid for the remaining duration of the program.
-#define sfz_dbg(staticMsg) SfzDbgInfo{staticMsg, __FILE__, u32(__LINE__)}
+#define sfz_dbg(static_msg) SfzDbgInfo{static_msg, __FILE__, u32(__LINE__)}
 
 
 // Allocator
 // ------------------------------------------------------------------------------------------------
 
 // Allocates size bytes aligned to align, returns null on failure.
-typedef void* SfzAllocFunc(void* implData, SfzDbgInfo dbg, u64 size, u64 align);
+typedef void* SfzAllocFunc(void* impl_data, SfzDbgInfo dbg, u64 size, u64 align);
 
 // Deallocates memory previously allocated with the same allocator. Deallocating null is required
 // to be safe and no-op. Attempting to deallocate memory allocated with another allocator is
 // potentially catastrophic undefined behavior.
-typedef void SfzDeallocFunc(void* implData, void* ptr);
+typedef void SfzDeallocFunc(void* impl_data, void* ptr);
 
 // A memory allocator.
 // * Typically a few allocators are created and then kept alive for the remaining duration of
@@ -736,13 +751,13 @@ typedef void SfzDeallocFunc(void* implData, void* ptr);
 //   before the allocator itself is removed. Often this means that an allocator need to be kept
 //   alive for the remaining lifetime of the program.
 sfz_struct(SfzAllocator) {
-	void* implData;
-	SfzAllocFunc* allocFunc;
-	SfzDeallocFunc* deallocFunc;
+	void* impl_data;
+	SfzAllocFunc* alloc_func;
+	SfzDeallocFunc* dealloc_func;
 
 #ifdef __cplusplus
-	void* alloc(SfzDbgInfo dbg, u64 size, u64 align = 32) { return allocFunc(implData, dbg, size, align); }
-	void dealloc(void* ptr) { return deallocFunc(implData, ptr); }
+	void* alloc(SfzDbgInfo dbg, u64 size, u64 align = 32) { return alloc_func(impl_data, dbg, size, align); }
+	void dealloc(void* ptr) { return dealloc_func(impl_data, ptr); }
 #endif
 };
 

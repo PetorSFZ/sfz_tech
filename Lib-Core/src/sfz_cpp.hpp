@@ -70,11 +70,11 @@ template<typename T, typename... Args>
 T* sfz_new(SfzAllocator* allocator, SfzDbgInfo dbg, Args&&... args) noexcept
 {
 	// Allocate memory (minimum 32-byte alignment), return nullptr on failure
-	void* memPtr = allocator->alloc(dbg, sizeof(T), alignof(T) < 32 ? 32 : alignof(T));
-	if (memPtr == nullptr) return nullptr;
+	void* mem_ptr = allocator->alloc(dbg, sizeof(T), alignof(T) < 32 ? 32 : alignof(T));
+	if (mem_ptr == nullptr) return nullptr;
 
 	// Creates object (placement new), terminates program if constructor throws exception.
-	return new(memPtr) T(sfz_forward(args)...);
+	return new(mem_ptr) T(sfz_forward(args)...);
 }
 
 // Deconstructs a C++ object created using sfz_new.
@@ -108,8 +108,8 @@ void sfzSwap(T& lhs, T& rhs)
 // the exception that its safe to call if both pointers are the same (i.e. point to the same buffer).
 sfz_constexpr_func void sfz_memswp(void* __restrict a, void* __restrict b, u64 size)
 {
-	u8* __restrict aBytes = (u8* __restrict)a;
-	u8* __restrict bBytes = (u8* __restrict)b;
+	u8* __restrict a_bytes = (u8* __restrict)a;
+	u8* __restrict b_bytes = (u8* __restrict)b;
 
 	const u64 MEMSWP_TMP_BUFFER_SIZE = 64;
 	u8 tmpBuffer[MEMSWP_TMP_BUFFER_SIZE] = {};
@@ -117,19 +117,19 @@ sfz_constexpr_func void sfz_memswp(void* __restrict a, void* __restrict b, u64 s
 	// Swap buffers in temp buffer sized chunks
 	u64 bytesLeft = size;
 	while (bytesLeft >= MEMSWP_TMP_BUFFER_SIZE) {
-		memcpy(tmpBuffer, aBytes, MEMSWP_TMP_BUFFER_SIZE);
-		memcpy(aBytes, bBytes, MEMSWP_TMP_BUFFER_SIZE);
-		memcpy(bBytes, tmpBuffer, MEMSWP_TMP_BUFFER_SIZE);
-		aBytes += MEMSWP_TMP_BUFFER_SIZE;
-		bBytes += MEMSWP_TMP_BUFFER_SIZE;
+		memcpy(tmpBuffer, a_bytes, MEMSWP_TMP_BUFFER_SIZE);
+		memcpy(a_bytes, b_bytes, MEMSWP_TMP_BUFFER_SIZE);
+		memcpy(b_bytes, tmpBuffer, MEMSWP_TMP_BUFFER_SIZE);
+		a_bytes += MEMSWP_TMP_BUFFER_SIZE;
+		b_bytes += MEMSWP_TMP_BUFFER_SIZE;
 		bytesLeft -= MEMSWP_TMP_BUFFER_SIZE;
 	}
 
 	// Swap remaining bytes
 	if (bytesLeft > 0) {
-		memcpy(tmpBuffer, aBytes, bytesLeft);
-		memcpy(aBytes, bBytes, bytesLeft);
-		memcpy(bBytes, tmpBuffer, bytesLeft);
+		memcpy(tmpBuffer, a_bytes, bytesLeft);
+		memcpy(a_bytes, b_bytes, bytesLeft);
+		memcpy(b_bytes, tmpBuffer, bytesLeft);
 	}
 }
 

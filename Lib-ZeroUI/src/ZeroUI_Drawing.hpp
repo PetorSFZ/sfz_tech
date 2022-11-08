@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) 2020-2022 Peter Hillerström (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -26,7 +26,7 @@
 // This header contains low-level drawing functions used to implement custom widget rendering.
 //
 // You should typically only include this header if you are implementing a custom widget rendering
-// function, e.g. an archetype.
+// function.
 
 // Initialization and internal interface
 // ------------------------------------------------------------------------------------------------
@@ -36,12 +36,12 @@ struct ZuiDrawCtx;
 // These functions are used to initialize and handle communication with the drawing module, these
 // are automatically called by ZeroUI and should not be called manually by the user.
 
-bool zuiInternalDrawCtxInit(ZuiDrawCtx* drawCtx, const ZuiCfg* cfg, SfzAllocator* allocator);
+bool zuiInternalDrawCtxInit(ZuiDrawCtx* draw_ctx, const ZuiCfg* cfg, SfzAllocator* allocator);
 
-void zuiInternalDrawCtxDestroy(ZuiDrawCtx* drawCtx);
+void zuiInternalDrawCtxDestroy(ZuiDrawCtx* draw_ctx);
 
 bool zuiInternalDrawAddFont(
-	ZuiDrawCtx* drawCtx, ZuiID id, const char* ttfPath, f32 atlasSize, SfzAllocator* allocator);
+	ZuiDrawCtx* draw_ctx, ZuiID id, const char* ttf_path, f32 atlas_size, SfzAllocator* allocator);
 
 // Low-level drawing functions
 // ------------------------------------------------------------------------------------------------
@@ -52,37 +52,38 @@ bool zuiInternalDrawAddFont(
 // deferred and not done immediately.
 
 void zuiDrawAddCommand(
-	ZuiDrawCtx* drawCtx,
+	ZuiDrawCtx* draw_ctx,
 	const SfzMat44& transform,
 	const ZuiVertex* vertices,
-	u32 numVertices,
+	u32 num_vertices,
 	const u32* indices,
-	u32 numIndices,
-	ZuiCmdType cmdType,
-	u64 imageHandle);
+	u32 num_indices,
+	ZuiCmdType cmd_type,
+	u64 image_handle);
 
-f32 zuiDrawTextCentered(
-	ZuiDrawCtx* drawCtx,
+f32 zuiDrawText(
+	ZuiDrawCtx* draw_ctx,
 	const SfzMat44& transform,
-	ZuiID fontID,
+	ZuiAlign align,
+	ZuiID font_id,
 	f32 size,
 	f32x4 color,
 	const char* text);
 
 void zuiDrawImage(
-	ZuiDrawCtx* drawCtx,
+	ZuiDrawCtx* draw_ctx,
 	const SfzMat44& transform,
 	f32x2 dims,
-	u64 imageHandle);
+	u64 image_handle);
 
 void zuiDrawRect(
-	ZuiDrawCtx* drawCtx,
+	ZuiDrawCtx* draw_ctx,
 	const SfzMat44& transform,
 	f32x2 dims,
 	f32x4 color);
 
 void zuiDrawBorder(
-	ZuiDrawCtx* drawCtx,
+	ZuiDrawCtx* draw_ctx,
 	const SfzMat44& transform,
 	f32x2 dims,
 	f32 thickness,

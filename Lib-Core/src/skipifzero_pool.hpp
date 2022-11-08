@@ -86,15 +86,15 @@ class Pool final {
 public:
 	SFZ_DECLARE_DROP_TYPE(Pool);
 
-	explicit Pool(u32 capacity, SfzAllocator* allocator, SfzDbgInfo allocDbg) noexcept
+	explicit Pool(u32 capacity, SfzAllocator* allocator, SfzDbgInfo alloc_dbg) noexcept
 	{
-		this->init(capacity, allocator, allocDbg);
+		this->init(capacity, allocator, alloc_dbg);
 	}
 
 	// State methods
 	// --------------------------------------------------------------------------------------------
 
-	void init(u32 capacity, SfzAllocator* allocator, SfzDbgInfo allocDbg)
+	void init(u32 capacity, SfzAllocator* allocator, SfzDbgInfo alloc_dbg)
 	{
 		sfz_assert(capacity != 0); // We don't support resize, so this wouldn't make sense.
 		sfz_assert(capacity <= POOL_MAX_CAPACITY);
@@ -105,63 +105,63 @@ public:
 		
 		// Calculate offsets, allocate memory and clear it
 		const u32 alignment = 32;
-		const u32 slotsOffset = sfzRoundUpAlignedU32(sizeof(T) * capacity, alignment);
-		const u32 freeIndicesOffset =
-			slotsOffset + sfzRoundUpAlignedU32(sizeof(PoolSlot) * capacity, alignment);
-		const u32 numBytesNeeded =
-			freeIndicesOffset + sfzRoundUpAlignedU32(sizeof(u32) * capacity, alignment);
+		const u32 slots_offset = sfzRoundUpAlignedU32(sizeof(T) * capacity, alignment);
+		const u32 free_indices_offset =
+			slots_offset + sfzRoundUpAlignedU32(sizeof(PoolSlot) * capacity, alignment);
+		const u32 num_bytes_needed =
+			free_indices_offset + sfzRoundUpAlignedU32(sizeof(u32) * capacity, alignment);
 		u8* memory = reinterpret_cast<u8*>(
-			allocator->alloc(allocDbg, numBytesNeeded, alignment));
-		memset(memory, 0, numBytesNeeded);
+			allocator->alloc(alloc_dbg, num_bytes_needed, alignment));
+		memset(memory, 0, num_bytes_needed);
 
 		// Set members
-		mAllocator = allocator;
-		mCapacity = capacity;
-		mData = reinterpret_cast<T*>(memory);
-		mSlots = reinterpret_cast<PoolSlot*>(memory + slotsOffset);
-		mFreeIndices = reinterpret_cast<u32*>(memory + freeIndicesOffset);
+		m_allocator = allocator;
+		m_capacity = capacity;
+		m_data = reinterpret_cast<T*>(memory);
+		m_slots = reinterpret_cast<PoolSlot*>(memory + slots_offset);
+		m_free_indices = reinterpret_cast<u32*>(memory + free_indices_offset);
 	}
 
 	void destroy()
 	{
-		if (mData != nullptr) {
-			for (u32 i = 0; i < mArraySize; i++) {
-				mData[i].~T();
+		if (m_data != nullptr) {
+			for (u32 i = 0; i < m_array_size; i++) {
+				m_data[i].~T();
 			}
-			mAllocator->dealloc(mData);
+			m_allocator->dealloc(m_data);
 		}
-		mNumAllocated = 0;
-		mArraySize = 0;
-		mCapacity = 0;
-		mData = nullptr;
-		mSlots = nullptr;
-		mFreeIndices = nullptr;
-		mAllocator = nullptr;
+		m_num_allocated = 0;
+		m_array_size = 0;
+		m_capacity = 0;
+		m_data = nullptr;
+		m_slots = nullptr;
+		m_free_indices = nullptr;
+		m_allocator = nullptr;
 	}
 
 	// Getters
 	// --------------------------------------------------------------------------------------------
 
-	u32 numAllocated() const { return mNumAllocated; }
-	u32 numHoles() const { return mArraySize - mNumAllocated; }
-	u32 arraySize() const { return mArraySize; }
-	u32 capacity() const { return mCapacity; }
-	bool isFull() const { return mNumAllocated >= mCapacity; }
-	const T* data() const { return mData; }
-	T* data() { return mData; }
-	const PoolSlot* slots() const { return mSlots; }
-	SfzAllocator* allocator() const { return mAllocator; }
+	u32 numAllocated() const { return m_num_allocated; }
+	u32 numHoles() const { return m_array_size - m_num_allocated; }
+	u32 arraySize() const { return m_array_size; }
+	u32 capacity() const { return m_capacity; }
+	bool isFull() const { return m_num_allocated >= m_capacity; }
+	const T* data() const { return m_data; }
+	T* data() { return m_data; }
+	const PoolSlot* slots() const { return m_slots; }
+	SfzAllocator* allocator() const { return m_allocator; }
 
-	PoolSlot getSlot(u32 idx) const { sfz_assert(idx < mArraySize); return mSlots[idx]; }
-	u8 getVersion(u32 idx) const { sfz_assert(idx < mArraySize); return mSlots[idx].version(); }
-	bool slotIsActive(u32 idx) const { sfz_assert(idx < mArraySize); return mSlots[idx].active(); }
-	SfzHandle getHandle(u32 idx) const { sfz_assert(idx < mArraySize); return sfzHandleInit(idx, mSlots[idx].version()); }
+	PoolSlot getSlot(u32 idx) const { sfz_assert(idx < m_array_size); return m_slots[idx]; }
+	u8 getVersion(u32 idx) const { sfz_assert(idx < m_array_size); return m_slots[idx].version(); }
+	bool slotIsActive(u32 idx) const { sfz_assert(idx < m_array_size); return m_slots[idx].active(); }
+	SfzHandle getHandle(u32 idx) const { sfz_assert(idx < m_array_size); return sfzHandleInit(idx, m_slots[idx].version()); }
 
 	bool handleIsValid(SfzHandle handle) const
 	{
 		const u32 idx = handle.idx();
-		if (idx >= mArraySize) return false;
-		PoolSlot slot = mSlots[idx];
+		if (idx >= m_array_size) return false;
+		PoolSlot slot = m_slots[idx];
 		if (!slot.active()) return false;
 		if (handle.version() != slot.version()) return false;
 		sfz_assert(slot.version() != u8(0));
@@ -172,11 +172,11 @@ public:
 	{
 		const u8 version = handle.version();
 		const u32 idx = handle.idx();
-		if (idx >= mArraySize) return nullptr;
-		PoolSlot slot = mSlots[idx];
+		if (idx >= m_array_size) return nullptr;
+		PoolSlot slot = m_slots[idx];
 		if (slot.version() != version) return nullptr;
 		if (!slot.active()) return nullptr;
-		return &mData[idx];
+		return &m_data[idx];
 	}
 	const T* get(SfzHandle handle) const { return const_cast<Pool<T>*>(this)->get(handle); }
 
@@ -208,44 +208,44 @@ private:
 	template<typename ForwardT>
 	SfzHandle allocateImpl(ForwardT&& value)
 	{
-		sfz_assert(mNumAllocated < mCapacity);
+		sfz_assert(m_num_allocated < m_capacity);
 
 		// Different path depending on if there are holes or not
 		const u32 holes = numHoles();
 		u32 idx = ~0u;
 		if (holes > 0) {
-			idx = mFreeIndices[holes - 1];
-			mFreeIndices[holes - 1] = 0;
+			idx = m_free_indices[holes - 1];
+			m_free_indices[holes - 1] = 0;
 		
 			// If we are reusing a slot the memory should already be constructed, therefore we
 			// should use move/copy assignment in order to make sure we don't skip running a
 			// destructor.
-			mData[idx] = sfz_forward(value);
+			m_data[idx] = sfz_forward(value);
 		}
 		else {
-			idx = mArraySize;
-			mArraySize += 1;
+			idx = m_array_size;
+			m_array_size += 1;
 
 			// First time we are using this slot, memory is uninitialized and need to be
 			// initialized before usage. Therefore use placement new move/copy constructor.
-			new (mData + idx) T(sfz_forward(value));
+			new (m_data + idx) T(sfz_forward(value));
 		}
 
 		// Update number of allocated
-		mNumAllocated += 1;
-		sfz_assert(idx < mArraySize);
-		sfz_assert(mArraySize <= mCapacity);
-		sfz_assert(mNumAllocated <= mArraySize);
+		m_num_allocated += 1;
+		sfz_assert(idx < m_array_size);
+		sfz_assert(m_array_size <= m_capacity);
+		sfz_assert(m_num_allocated <= m_array_size);
 
 		// Update active bit and version in slot
-		PoolSlot& slot = mSlots[idx];
+		PoolSlot& slot = m_slots[idx];
 		sfz_assert(!slot.active());
-		u8 newVersion = slot.bits + 1;
-		if (newVersion > 127) newVersion = 1;
-		slot.bits = POOL_SLOT_ACTIVE_BIT_MASK | newVersion;
+		u8 new_version = slot.bits + 1;
+		if (new_version > 127) new_version = 1;
+		slot.bits = POOL_SLOT_ACTIVE_BIT_MASK | new_version;
 
 		// Create and return handle
-		SfzHandle handle = sfzHandleInit(idx, newVersion);
+		SfzHandle handle = sfzHandleInit(idx, new_version);
 		return handle;
 	}
 	
@@ -253,7 +253,7 @@ private:
 	void deallocateImpl(SfzHandle handle, ForwardT&& emptyValue)
 	{
 		const u32 idx = handle.idx();
-		sfz_assert(idx < mArraySize);
+		sfz_assert(idx < m_array_size);
 		sfz_assert(handle.version() == getVersion(idx));
 		deallocateImpl<ForwardT>(idx, sfz_forward(emptyValue));
 	}
@@ -261,33 +261,33 @@ private:
 	template<typename ForwardT>
 	void deallocateImpl(u32 idx, ForwardT&& emptyValue)
 	{
-		sfz_assert(mNumAllocated > 0);
-		sfz_assert(idx < mArraySize);
-		PoolSlot& slot = mSlots[idx];
+		sfz_assert(m_num_allocated > 0);
+		sfz_assert(idx < m_array_size);
+		PoolSlot& slot = m_slots[idx];
 		sfz_assert(slot.active());
 		sfz_assert(slot.version() != 0);
 
 		// Set version and empty value
 		slot.bits = slot.version(); // Remove active bit
-		mData[idx] = sfz_forward(emptyValue);
-		mNumAllocated -= 1;
+		m_data[idx] = sfz_forward(emptyValue);
+		m_num_allocated -= 1;
 
 		// Store the new hole in free indices
 		const u32 holes = numHoles();
 		sfz_assert(holes > 0);
-		mFreeIndices[holes - 1] = idx;
+		m_free_indices[holes - 1] = idx;
 	}
 	
 	// Private members
 	// --------------------------------------------------------------------------------------------
 
-	u32 mNumAllocated = 0;
-	u32 mArraySize = 0;
-	u32 mCapacity = 0;
-	T* mData = nullptr;
-	PoolSlot* mSlots = nullptr;
-	u32* mFreeIndices = nullptr;
-	SfzAllocator* mAllocator = nullptr;
+	u32 m_num_allocated = 0;
+	u32 m_array_size = 0;
+	u32 m_capacity = 0;
+	T* m_data = nullptr;
+	PoolSlot* m_slots = nullptr;
+	u32* m_free_indices = nullptr;
+	SfzAllocator* m_allocator = nullptr;
 };
 
 } // namespace sfz

@@ -56,33 +56,33 @@ sfz_constexpr_func SfzQuat sfzQuatIdentity() { return sfzQuatInit(f32x3_init(0.0
 
 // Creates a unit quaternion representing a (right-handed) rotation around the specified axis.
 // The given axis will be automatically normalized.
-inline SfzQuat sfzQuatRotationRad(f32x3 axis, f32 angleRad)
+inline SfzQuat sfzQuatRotationRad(f32x3 axis, f32 angle_rad)
 {
-	const f32 halfAngleRad = angleRad * 0.5f;
-	const f32x3 normalizedAxis = f32x3_normalize(axis);
-	return sfzQuatInit(sinf(halfAngleRad) * normalizedAxis, cosf(halfAngleRad));
+	const f32 half_angle_rad = angle_rad * 0.5f;
+	const f32x3 normalized_axis = f32x3_normalize(axis);
+	return sfzQuatInit(sinf(half_angle_rad) * normalized_axis, cosf(half_angle_rad));
 }
-inline SfzQuat sfzQuatRotationDeg(f32x3 axis, f32 angleDeg) { return sfzQuatRotationRad(axis, angleDeg * SFZ_DEG_TO_RAD); }
+inline SfzQuat sfzQuatRotationDeg(f32x3 axis, f32 angle_deg) { return sfzQuatRotationRad(axis, angle_deg * SFZ_DEG_TO_RAD); }
 
 // Constructs a Quaternion from Euler angles. The rotation around the z axis is performed first,
 // then y and last x axis.
-inline SfzQuat sfzQuatFromEuler(f32x3 anglesDeg)
+inline SfzQuat sfzQuatFromEuler(f32x3 angles_deg)
 {
-	f32 xDeg = anglesDeg.x, yDeg = anglesDeg.y, zDeg = anglesDeg.z;
+	f32 x_deg = angles_deg.x, y_deg = angles_deg.y, z_deg = angles_deg.z;
 	const f32 DEG_ANGLE_TO_RAD_HALF_ANGLE = (f32(3.14159265358979323846f) / f32(180.0f)) / f32(2.0f);
 
-	f32 cosZ = sfz_cos(zDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
-	f32 sinZ = sfz_sin(zDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
-	f32 cosY = sfz_cos(yDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
-	f32 sinY = sfz_sin(yDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
-	f32 cosX = sfz_cos(xDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
-	f32 sinX = sfz_sin(xDeg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+	f32 cos_z = sfz_cos(z_deg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+	f32 sin_z = sfz_sin(z_deg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+	f32 cos_y = sfz_cos(y_deg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+	f32 sin_y = sfz_sin(y_deg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+	f32 cos_x = sfz_cos(x_deg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
+	f32 sin_x = sfz_sin(x_deg * DEG_ANGLE_TO_RAD_HALF_ANGLE);
 
 	SfzQuat tmp;
-	tmp.v.x = cosZ * sinX * cosY - sinZ * cosX * sinY;
-	tmp.v.y = cosZ * cosX * sinY + sinZ * sinX * cosY;
-	tmp.v.z = sinZ * cosX * cosY - cosZ * sinX * sinY;
-	tmp.w = cosZ * cosX * cosY + sinZ * sinX * sinY;
+	tmp.v.x = cos_z * sin_x * cos_y - sin_z * cos_x * sin_y;
+	tmp.v.y = cos_z * cos_x * sin_y + sin_z * sin_x * cos_y;
+	tmp.v.z = sin_z * cos_x * cos_y - cos_z * sin_x * sin_y;
+	tmp.w = cos_z * cos_x * cos_y + sin_z * sin_x * sin_y;
 	return tmp;
 }
 
@@ -135,8 +135,8 @@ inline f32x3 sfzQuatRotationAxis(SfzQuat q) { return f32x3_normalizeSafe(q.v); }
 inline f32 sfzQuatRotationAngleDeg(SfzQuat q)
 {
 	const f32 RAD_ANGLE_TO_DEG_NON_HALF_ANGLE = (180.0f / 3.14159265358979323846f) * 2.0f;
-	f32 halfAngleRad = sfz_acos(q.w);
-	return halfAngleRad * RAD_ANGLE_TO_DEG_NON_HALF_ANGLE;
+	f32 half_angle_rad = sfz_acos(q.w);
+	return half_angle_rad * RAD_ANGLE_TO_DEG_NON_HALF_ANGLE;
 }
 
 // Returns a Euler angle (degrees) representation of this Quaternion. Assumes the Quaternion
@@ -195,10 +195,10 @@ constexpr SfzQuat sfzQuatInverse(SfzQuat q) { return (1.0f / f32x4_dot(f32x4_ini
 // be specified manually, or it can be calculated automatically from the given Quaternion. When
 // it is calculated automatically it is assumed that the Quaternion is unit, so the inverse is
 // the conjugate.
-constexpr f32x3 sfzQuatRotate(SfzQuat q, f32x3 v, SfzQuat qInv)
+constexpr f32x3 sfzQuatRotate(SfzQuat q, f32x3 v, SfzQuat q_inv)
 {
 	SfzQuat tmp = sfzQuatInit(v, 0.0f);
-	tmp = q * tmp * qInv;
+	tmp = q * tmp * q_inv;
 	return tmp.v;
 }
 

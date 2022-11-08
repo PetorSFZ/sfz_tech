@@ -43,13 +43,13 @@ typedef enum SfzImageType {
 // ------------------------------------------------------------------------------------------------
 
 sfz_struct(SfzImageViewConst) {
-	const u8* rawData;
+	const u8* raw_data;
 	SfzImageType type;
 	i32x2 res;
 
 #ifdef __cplusplus
 	template<typename T>
-	const T* rowPtr(i32 y) const { return reinterpret_cast<const T*>(rawData) + res.x * y; }
+	const T* rowPtr(i32 y) const { return reinterpret_cast<const T*>(raw_data) + res.x * y; }
 
 	template<typename T>
 	const T* at(i32 x, i32 y) const { return this->rowPtr<T>(y) + x; }
@@ -57,13 +57,13 @@ sfz_struct(SfzImageViewConst) {
 };
 
 sfz_struct(SfzImageView) {
-	u8* rawData;
+	u8* raw_data;
 	SfzImageType type;
 	i32x2 res;
 
 #ifdef __cplusplus
 	template<typename T>
-	T* rowPtr(i32 y) { return reinterpret_cast<T*>(rawData) + res.x * y; }
+	T* rowPtr(i32 y) { return reinterpret_cast<T*>(raw_data) + res.x * y; }
 
 	template<typename T>
 	T* at(i32 x, i32 y) { return this->rowPtr<T>(y) + x; }
@@ -72,7 +72,7 @@ sfz_struct(SfzImageView) {
 	operator SfzImageViewConst() const
 	{
 		SfzImageViewConst cview = {};
-		cview.rawData = rawData;
+		cview.raw_data = raw_data;
 		cview.type = type;
 		cview.res = res;
 		return cview;

@@ -66,25 +66,25 @@ sfz_constexpr_func u64 sfzNextPow2_u64(u64 v)
 	return v;
 }
 
-sfz_constexpr_func u32 sfzLog2OfPow2_u32(u32 pow2Value)
+sfz_constexpr_func u32 sfzLog2OfPow2_u32(u32 pow2_val)
 {
 	// https://graphics.stanford.edu/~seander/bithacks.html#IntegerLogDeBruijn
 	const u32 multiplyDeBruijnBitPosition2[32] = {
 		0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
 		31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
 	};
-	return multiplyDeBruijnBitPosition2[(u32)(pow2Value * 0x077CB531U) >> 27];
+	return multiplyDeBruijnBitPosition2[(u32)(pow2_val * 0x077CB531U) >> 27];
 }
 
-sfz_constexpr_func u64 sfzLog2OfPow2_u64(u64 pow2Value)
+sfz_constexpr_func u64 sfzLog2OfPow2_u64(u64 pow2_val)
 {
-	if (pow2Value == (u64(1) << u64(32))) return 32;
-	const u32 highBits = u32(pow2Value >> u64(32));
-	const u32 highBitsLog2 = sfzLog2OfPow2_u32(highBits);
-	if (highBitsLog2 != 0) return highBitsLog2 + 32;
-	const u32 lowBits = u32(pow2Value);
-	const u32 lowBitsLog2 = sfzLog2OfPow2_u32(lowBits);
-	return lowBitsLog2;
+	if (pow2_val == (u64(1) << u64(32))) return 32;
+	const u32 high_bits = u32(pow2_val >> u64(32));
+	const u32 high_bits_log2 = sfzLog2OfPow2_u32(high_bits);
+	if (high_bits_log2 != 0) return high_bits_log2 + 32;
+	const u32 low_bits = u32(pow2_val);
+	const u32 low_bits_log2 = sfzLog2OfPow2_u32(low_bits);
+	return low_bits_log2;
 }
 
 // Morton Encoding

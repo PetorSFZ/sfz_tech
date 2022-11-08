@@ -53,7 +53,7 @@ sfz_constexpr_func u64 sfzHashStringFNV1a(const char* str)
 }
 
 // Alternate version of hashStringFNV1a() which hashes a number of raw bytes (i.e. not a string)
-sfz_constexpr_func u64 sfzHashBytesFNV1a(const u8* bytes, u64 numBytes)
+sfz_constexpr_func u64 sfzHashBytesFNV1a(const u8* bytes, u64 num_bytes)
 {
 	constexpr u64 FNV_64_MAGIC_PRIME = u64(0x100000001B3);
 
@@ -61,7 +61,7 @@ sfz_constexpr_func u64 sfzHashBytesFNV1a(const u8* bytes, u64 numBytes)
 	u64 tmp = u64(0xCBF29CE484222325);
 
 	// Hash all bytes
-	for (u64 i = 0; i < numBytes; i++) {
+	for (u64 i = 0; i < num_bytes; i++) {
 		tmp ^= u64(bytes[i]); // Xor bottom with current byte
 		tmp *= FNV_64_MAGIC_PRIME; // Multiply with FNV magic prime
 	}
@@ -87,10 +87,10 @@ struct SfzStrIDs final {
 	SfzAllocator* allocator = nullptr;
 	SfzHashMap<SfzStrID, char*> strs;
 
-	SfzStrIDs(u32 initialCapacity, SfzAllocator* allocator)
+	SfzStrIDs(u32 initial_capacity, SfzAllocator* allocator)
 	{
 		this->allocator = allocator;
-		this->strs.init(initialCapacity, allocator, sfz_dbg(""));
+		this->strs.init(initial_capacity, allocator, sfz_dbg(""));
 	}
 
 	SfzStrIDs(const SfzStrIDs&) = delete;
@@ -115,15 +115,15 @@ sfz_extern_c SfzStrID sfzStrIDCreateRegister(SfzStrIDs* ids, const char* str)
 	sfz_assert_hard(id != SFZ_NULL_STR_ID);
 	
 	// Add string to storage and check for collisions
-	char** storedStr = ids->strs.get(id);
-	if (storedStr == nullptr) {
-		u32 strLen = u32(strlen(str));
-		char* newStr = reinterpret_cast<char*>(ids->allocator->alloc(sfz_dbg(""), strLen + 1));
-		memcpy(newStr, str, strLen);
-		newStr[strLen] = '\0';
-		storedStr = &ids->strs.put(id, newStr);
+	char** stored_str = ids->strs.get(id);
+	if (stored_str == nullptr) {
+		u32 str_len = u32(strlen(str));
+		char* new_str = reinterpret_cast<char*>(ids->allocator->alloc(sfz_dbg(""), str_len + 1));
+		memcpy(new_str, str, str_len);
+		new_str[str_len] = '\0';
+		stored_str = &ids->strs.put(id, new_str);
 	}
-	sfz_assert_hard(strcmp(str, *storedStr) == 0);
+	sfz_assert_hard(strcmp(str, *stored_str) == 0);
 
 	return id;
 }
@@ -156,9 +156,9 @@ sfz_constexpr_func void sfzStr2560Clear(SfzStr2560* s) { sfzStrClear(sfzStr2560T
 inline void sfzStrVAppendf(SfzStrView v, const char* fmt, va_list args)
 {
 	u32 len = sfzStrSize(sfzStrViewToConst(v));
-	u32 capacityLeft = v.capacity - len;
-	int numWritten = vsnprintf(v.str + len, capacityLeft, fmt, args);
-	sfz_assert(numWritten >= 0);
+	u32 capacity_left = v.capacity - len;
+	int num_written = vsnprintf(v.str + len, capacity_left, fmt, args);
+	sfz_assert(num_written >= 0);
 }
 inline void sfzStr32VAppendf(SfzStr32* s, const char* fmt, va_list args) { sfzStrVAppendf(sfzStr32ToView(s), fmt, args); }
 inline void sfzStr96VAppendf(SfzStr96* s, const char* fmt, va_list args) { sfzStrVAppendf(sfzStr96ToView(s), fmt, args); }
@@ -200,24 +200,24 @@ inline SfzStr96 sfzStr96InitFmt(const char* fmt, ...) { SfzStr96 s = {}; va_list
 inline SfzStr320 sfzStr320InitFmt(const char* fmt, ...) { SfzStr320 s = {}; va_list va; va_start(va, fmt); sfzStr320VAppendf(&s, fmt, va); va_end(va); return s; }
 inline SfzStr2560 sfzStr2560InitFmt(const char* fmt, ...) { SfzStr2560 s = {}; va_list va; va_start(va, fmt); sfzStr2560VAppendf(&s, fmt, va); va_end(va); return s; }
 
-inline void sfzStrAppendChars(SfzStrView v, const char* chars, u32 numChars)
+inline void sfzStrAppendChars(SfzStrView v, const char* chars, u32 num_chars)
 {
 	u32 len = sfzStrSize(sfzStrViewToConst(v));
-	u32 capacityLeft = v.capacity - len;
-	sfz_assert(numChars < capacityLeft);
-	strncpy(v.str + len, chars, size_t(numChars));
-	v.str[len + numChars] = '\0';
+	u32 capacity_left = v.capacity - len;
+	sfz_assert(num_chars < capacity_left);
+	strncpy(v.str + len, chars, size_t(num_chars));
+	v.str[len + num_chars] = '\0';
 }
 inline void sfzStr32AppendChars(SfzStr32* s, const char* chars, u32 numChars) { return sfzStrAppendChars(sfzStr32ToView(s), chars, numChars); }
 inline void sfzStr96AppendChars(SfzStr96* s, const char* chars, u32 numChars) { return sfzStrAppendChars(sfzStr96ToView(s), chars, numChars); }
 inline void sfzStr320AppendChars(SfzStr320* s, const char* chars, u32 numChars) { return sfzStrAppendChars(sfzStr320ToView(s), chars, numChars); }
 inline void sfzStr2560AppendChars(SfzStr2560* s, const char* chars, u32 numChars) { return sfzStrAppendChars(sfzStr2560ToView(s), chars, numChars); }
 
-inline void sfzStrRemoveChars(SfzStrView v, u32 numChars)
+inline void sfzStrRemoveChars(SfzStrView v, u32 num_chars)
 {
 	const u32 len = sfzStrSize(sfzStrViewToConst(v));
-	const u32 numToRemove = u32_min(numChars, len);
-	v.str[len - numToRemove] = '\0';
+	const u32 num_to_remove = u32_min(num_chars, len);
+	v.str[len - num_to_remove] = '\0';
 }
 inline void sfzStr32RemoveChars(SfzStr32* s, u32 numChars) { return sfzStrRemoveChars(sfzStr32ToView(s), numChars); }
 inline void sfzStr96RemoveChars(SfzStr96* s, u32 numChars) { return sfzStrRemoveChars(sfzStr96ToView(s), numChars); }
@@ -242,34 +242,34 @@ inline void sfzStrTrim(SfzStrView v)
 	const u32 len = sfzStrSize(sfzStrViewToConst(v));
 	if (len == 0) return;
 
-	u32 firstNonWhitespace = 0;
-	bool nonWhitespaceFound = false;
+	u32 first_none_whitespace = 0;
+	bool none_whitespace_found = false;
 	for (u32 i = 0; i < len; i++) {
 		char c = v.str[i];
 		if (!(c == ' ' || c == '\t' || c == '\n')) {
-			nonWhitespaceFound = true;
-			firstNonWhitespace = i;
+			none_whitespace_found = true;
+			first_none_whitespace = i;
 			break;
 		}
 	}
 
-	if (!nonWhitespaceFound) {
+	if (!none_whitespace_found) {
 		sfzStrClear(v);
 		return;
 	}
 
-	u32 lastNonWhitespace = len - 1;
+	u32 last_none_whitespace = len - 1;
 	for (u32 i = len; i > 0; i--) {
 		char c = v.str[i - 1];
 		if (!(c == ' ' || c == '\t' || c == '\n')) {
-			lastNonWhitespace = i - 1;
+			last_none_whitespace = i - 1;
 			break;
 		}
 	}
 
-	const u32 newLen = lastNonWhitespace - firstNonWhitespace + 1;
+	const u32 newLen = last_none_whitespace - first_none_whitespace + 1;
 	if (newLen == len) return;
-	memmove(v.str, v.str + firstNonWhitespace, newLen);
+	memmove(v.str, v.str + first_none_whitespace, newLen);
 	v.str[newLen] = '\0';
 }
 inline void sfzStr32Trim(SfzStr32* s) { return sfzStrTrim(sfzStr32ToView(s)); }
@@ -280,13 +280,13 @@ inline void sfzStr2560Trim(SfzStr2560* s) { return sfzStrTrim(sfzStr2560ToView(s
 inline bool sfzStrEndsWith(SfzStrViewConst v, const char* ending)
 {
 	const u32 len = sfzStrSize(v);
-	const u32 endingLen = u32(strnlen(ending, v.capacity));
-	if (endingLen > len) return false;
+	const u32 ending_len = u32(strnlen(ending, v.capacity));
+	if (ending_len > len) return false;
 
-	u32 endingIdx = 0;
-	for (u32 i = len - endingLen; i < len; i++) {
-		if (ending[endingIdx] != v.str[i]) return false;
-		endingIdx += 1;
+	u32 ending_idx = 0;
+	for (u32 i = len - ending_len; i < len; i++) {
+		if (ending[ending_idx] != v.str[i]) return false;
+		ending_idx += 1;
 	}
 
 	return true;

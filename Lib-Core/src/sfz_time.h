@@ -83,11 +83,11 @@ inline SfzTime sfzTimeDiff(SfzTime before, SfzTime after)
 	return diff;
 }
 
-inline SfzTime sfzTimeSinceLastCall(SfzTime* lastTime)
+inline SfzTime sfzTimeSinceLastCall(SfzTime* last_time)
 {
-	const SfzTime currTime = sfzTimeNow();
-	const SfzTime diff = sfzTimeDiff(*lastTime, currTime);
-	*lastTime = currTime;
+	const SfzTime curr_time = sfzTimeNow();
+	const SfzTime diff = sfzTimeDiff(*last_time, curr_time);
+	*last_time = curr_time;
 	return diff;
 }
 

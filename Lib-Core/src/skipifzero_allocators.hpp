@@ -66,8 +66,8 @@ inline void sfzStandardDealloc(void*, void* ptr)
 inline SfzAllocator createStandardAllocator()
 {
 	SfzAllocator alloc = {};
-	alloc.allocFunc = sfzStandardAlloc;
-	alloc.deallocFunc = sfzStandardDealloc;
+	alloc.alloc_func = sfzStandardAlloc;
+	alloc.dealloc_func = sfzStandardDealloc;
 	return alloc;
 }
 
@@ -91,24 +91,24 @@ inline SfzAllocator createStandardAllocator()
 
 struct AllocatorArenaState final {
 	u8* memory = nullptr;
-	u64 memorySizeBytes = 0;
-	u64 currentOffsetBytes = 0;
-	u64 numPaddingBytes = 0;
+	u64 memory_size_bytes = 0;
+	u64 current_offset_bytes = 0;
+	u64 num_padding_bytes = 0;
 
-	void init(void* memoryIn, u64 memorySizeBytesIn)
+	void init(void* memory_in, u64 memory_size_bytes_in)
 	{
-		sfz_assert(memoryIn != nullptr);
-		sfz_assert(isAligned(memoryIn, 32));
-		this->memory = reinterpret_cast<u8*>(memoryIn);
-		this->memorySizeBytes = memorySizeBytesIn;
-		this->currentOffsetBytes = 0;
-		this->numPaddingBytes = 0;
+		sfz_assert(memory_in != nullptr);
+		sfz_assert(isAligned(memory_in, 32));
+		this->memory = reinterpret_cast<u8*>(memory_in);
+		this->memory_size_bytes = memory_size_bytes_in;
+		this->current_offset_bytes = 0;
+		this->num_padding_bytes = 0;
 	}
 
 	void reset()
 	{
-		currentOffsetBytes = 0;
-		numPaddingBytes = 0;
+		current_offset_bytes = 0;
+		num_padding_bytes = 0;
 	}
 };
 
@@ -119,21 +119,21 @@ inline void* sfzArenaAlloc(void* rawArenaState, SfzDbgInfo, u64 size, u64 align)
 
 	// Get next suitable offset for allocation
 	u64 padding = 0;
-	if (!isAligned(state.memory + state.currentOffsetBytes, align)) {
+	if (!isAligned(state.memory + state.current_offset_bytes, align)) {
 
 		// Calculate padding
-		u64 alignmentOffset = u64(state.memory + state.currentOffsetBytes) & (align - 1);
+		u64 alignmentOffset = u64(state.memory + state.current_offset_bytes) & (align - 1);
 		padding = align - alignmentOffset;
-		sfz_assert(isAligned(state.memory + state.currentOffsetBytes + padding, align));
+		sfz_assert(isAligned(state.memory + state.current_offset_bytes + padding, align));
 	}
 
 	// Check if there is enough space left
-	if ((state.currentOffsetBytes + size + padding) > state.memorySizeBytes) return nullptr;
+	if ((state.current_offset_bytes + size + padding) > state.memory_size_bytes) return nullptr;
 
 	// Allocate memory from arena and return pointer
-	u8* ptr = state.memory + state.currentOffsetBytes + padding;
-	state.currentOffsetBytes += padding + size;
-	state.numPaddingBytes += padding;
+	u8* ptr = state.memory + state.current_offset_bytes + padding;
+	state.current_offset_bytes += padding + size;
+	state.num_padding_bytes += padding;
 	return ptr;
 }
 
@@ -148,32 +148,32 @@ class ArenaHeap final {
 public:
 	SFZ_DECLARE_DROP_TYPE(ArenaHeap);
 
-	void init(SfzAllocator* allocator, u64 memorySizeBytes, SfzDbgInfo info)
+	void init(SfzAllocator* allocator, u64 memory_size_bytes, SfzDbgInfo info)
 	{
 		this->destroy();
-		mAllocator = allocator;
-		u64 arenaSize = sfzRoundUpAlignedU64(sizeof(SfzAllocator) + sizeof(AllocatorArenaState), 32);
-		u64 blockPlusAllocatorBytes = arenaSize + memorySizeBytes;
-		mMemoryBlock = reinterpret_cast<u8*>(allocator->alloc(info, blockPlusAllocatorBytes, 32));
+		m_allocator = allocator;
+		u64 arena_size = sfzRoundUpAlignedU64(sizeof(SfzAllocator) + sizeof(AllocatorArenaState), 32);
+		u64 block_plus_allocator_bytes = arena_size + memory_size_bytes;
+		m_memory_block = reinterpret_cast<u8*>(allocator->alloc(info, block_plus_allocator_bytes, 32));
 
 		SfzAllocator* allocMem = getArena();
 		AllocatorArenaState* arenaState = getState();
 
-		allocMem->allocFunc = sfzArenaAlloc;
-		allocMem->deallocFunc = sfzArenaDealloc;
-		allocMem->implData = arenaState;
+		allocMem->alloc_func = sfzArenaAlloc;
+		allocMem->dealloc_func = sfzArenaDealloc;
+		allocMem->impl_data = arenaState;
 
 		*arenaState = {};
-		arenaState->memory = mMemoryBlock + arenaSize;
-		arenaState->memorySizeBytes = memorySizeBytes;
+		arenaState->memory = m_memory_block + arena_size;
+		arenaState->memory_size_bytes = memory_size_bytes;
 	}
 
 	void destroy()
 	{
-		if (mMemoryBlock != nullptr) {
-			mAllocator->dealloc(mMemoryBlock);
-			mAllocator = nullptr;
-			mMemoryBlock = nullptr;
+		if (m_memory_block != nullptr) {
+			m_allocator->dealloc(m_memory_block);
+			m_allocator = nullptr;
+			m_memory_block = nullptr;
 		}
 	}
 
@@ -184,17 +184,17 @@ public:
 
 	SfzAllocator* getArena()
 	{
-		return reinterpret_cast<SfzAllocator*>(mMemoryBlock);
+		return reinterpret_cast<SfzAllocator*>(m_memory_block);
 	}
 
 	AllocatorArenaState* getState()
 	{
-		return reinterpret_cast<AllocatorArenaState*>(mMemoryBlock + sizeof(SfzAllocator));
+		return reinterpret_cast<AllocatorArenaState*>(m_memory_block + sizeof(SfzAllocator));
 	}
 
 private:
-	SfzAllocator* mAllocator = nullptr;
-	u8* mMemoryBlock = nullptr;
+	SfzAllocator* m_allocator = nullptr;
+	u8* m_memory_block = nullptr;
 };
 
 } // namespace sfz

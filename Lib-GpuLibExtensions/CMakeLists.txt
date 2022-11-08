@@ -1,0 +1,13 @@
+set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+set(SRC_FILES
+	${SRC_DIR}/GpuLibImguiConsoleExtD3D12.h
+	${SRC_DIR}/GpuLibImguiConsoleExtD3D12.cpp
+	${SRC_DIR}/ImGuiGpuNativeExtD3D12.h
+	${SRC_DIR}/ImGuiGpuNativeExtD3D12.cpp
+	${SRC_DIR}/ZeroUIGpuNativeExtD3D12.h
+	${SRC_DIR}/ZeroUIGpuNativeExtD3D12.cpp
+)
+
+set(LIB_GPU_EXTENSIONS_INCLUDE_DIR ${SRC_DIR} PARENT_SCOPE)
+set(LIB_GPU_SRC_FILES ${SRC_FILES} PARENT_SCOPE)
