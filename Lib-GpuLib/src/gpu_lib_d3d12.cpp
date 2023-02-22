@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström 2022 (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter Hillerström 2022-2023 (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -224,7 +224,7 @@ sfz_extern_c GpuLib* gpuLibInit(const GpuLibInitCfg* cfg_in)
 		const bool supports_shader_dynamic_resources =
 			(options.ResourceBindingTier == D3D12_RESOURCE_BINDING_TIER_3) &&
 			(shader_model.HighestShaderModel >= D3D_SHADER_MODEL_6_6);
-		
+
 		auto shaderModelToStr = [](D3D_SHADER_MODEL model) {
 			switch (model) {
 			case D3D_SHADER_MODEL_5_1: return "5.1";
@@ -311,7 +311,7 @@ RTX support: %s)",
 			return nullptr;
 		}
 	}
-	
+
 
 	// Create timestamp stuff
 	ComPtr<ID3D12QueryHeap> timestamp_query_heap;
@@ -338,8 +338,7 @@ RTX support: %s)",
 		heap_props.VisibleNodeMask = 0;
 
 		const D3D12_HEAP_FLAGS heap_flags =
-			D3D12_HEAP_FLAG_ALLOW_SHADER_ATOMICS |
-			D3D12_HEAP_FLAG_CREATE_NOT_ZEROED;
+			D3D12_HEAP_FLAG_ALLOW_SHADER_ATOMICS;
 
 		D3D12_RESOURCE_DESC desc = {};
 		desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
@@ -483,7 +482,7 @@ RTX support: %s)",
 	}
 
 	// Initialize texture pool
-	sfz::Pool<GpuTexInfo> textures;
+	SfzPool<GpuTexInfo> textures;
 	{
 		textures.init(cfg.max_num_textures, cfg.cpu_allocator, sfz_dbg("GpuLib::textures"));
 		const SfzHandle null_slot = textures.allocate();
@@ -855,10 +854,10 @@ sfz_extern_c void gpuLibDestroy(GpuLib* gpu)
 
 	// Destroy native extensions
 	GpuNativeExt* native_exts = gpu->native_exts.data();
-	const sfz::PoolSlot* slots = gpu->native_exts.slots();
+	const SfzPoolSlot* slots = gpu->native_exts.slots();
 	const u32 array_size = gpu->native_exts.arraySize();
 	for (u32 idx = 0; idx < array_size; idx++) {
-		const sfz::PoolSlot slot = slots[idx];
+		const SfzPoolSlot slot = slots[idx];
 		if (!slot.active()) continue;
 		GpuNativeExt& ext = native_exts[idx];
 		if (ext.destroy_func != nullptr) {
@@ -938,7 +937,7 @@ sfz_extern_c void gpuFree(GpuLib* gpu, GpuPtr ptr)
 sfz_extern_c GpuConstBuffer gpuConstBufferInit(GpuLib* gpu, u32 num_bytes, const char* name)
 {
 	sfz_assert(name != nullptr);
-	
+
 	ComPtr<ID3D12Resource> buffer;
 	{
 		D3D12_HEAP_PROPERTIES heap_props = {};
@@ -1011,6 +1010,18 @@ sfz_extern_c const char* gpuFormatToString(GpuFormat format)
 	case GPU_FORMAT_R_U8_UNORM: return "GPU_FORMAT_R_U8_UNORM";
 	case GPU_FORMAT_RG_U8_UNORM: return "GPU_FORMAT_RG_U8_UNORM";
 	case GPU_FORMAT_RGBA_U8_UNORM: return "GPU_FORMAT_RGBA_U8_UNORM";
+
+	case GPU_FORMAT_R_U16_UNORM: return "GPU_FORMAT_R_U16_UNORM";
+	case GPU_FORMAT_RG_U16_UNORM: return "GPU_FORMAT_RG_U16_UNORM";
+	case GPU_FORMAT_RGBA_U16_UNORM: return "GPU_FORMAT_RGBA_U16_UNORM";
+
+	case GPU_FORMAT_R_U8_SNORM: return "GPU_FORMAT_R_U8_SNORM";
+	case GPU_FORMAT_RG_U8_SNORM: return "GPU_FORMAT_RG_U8_SNORM";
+	case GPU_FORMAT_RGBA_U8_SNORM: return "GPU_FORMAT_RGBA_U8_SNORM";
+
+	case GPU_FORMAT_R_U16_SNORM: return "GPU_FORMAT_R_U16_SNORM";
+	case GPU_FORMAT_RG_U16_SNORM: return "GPU_FORMAT_RG_U16_SNORM";
+	case GPU_FORMAT_RGBA_U16_SNORM: return "GPU_FORMAT_RGBA_U16_SNORM";
 
 	case GPU_FORMAT_R_F16: return "GPU_FORMAT_R_F16";
 	case GPU_FORMAT_RG_F16: return "GPU_FORMAT_RG_F16";
@@ -1101,7 +1112,7 @@ static GpuTexIdx gpuTexInitInternal(GpuLib* gpu, GpuTexDesc desc, const SfzHandl
 
 		const bool success = CHECK_D3D12(gpu->device->CreateCommittedResource(
 			&heap_props,
-			D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+			D3D12_HEAP_FLAG_NONE,
 			&res_desc,
 			texStateToD3D12(desc.tex_state),
 			nullptr,
@@ -1998,7 +2009,7 @@ sfz_extern_c void gpuQueueDispatch(
 	}
 
 	// Ensure heap is in correct state
-	const D3D12_RESOURCE_STATES correct_heap_state = kernel_info->desc.write_enabled_heap ? 
+	const D3D12_RESOURCE_STATES correct_heap_state = kernel_info->desc.write_enabled_heap ?
 		D3D12_RESOURCE_STATE_UNORDERED_ACCESS : D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
 	if (gpu->gpu_heap_state != correct_heap_state) {
 		D3D12_RESOURCE_BARRIER barrier = {};
@@ -2116,7 +2127,7 @@ sfz_extern_c void gpuQueueBarriers(GpuLib* gpu, const GpuBarrier* barriers, u32 
 				continue;
 			}
 		}
-		
+
 		D3D12_RESOURCE_BARRIER& dst = gpu->tmp_barriers.add();
 		if (src.uav_barrier) {
 			ID3D12Resource* res = nullptr;
@@ -2318,7 +2329,7 @@ sfz_extern_c void gpuSubmitQueuedWork(GpuLib* gpu)
 
 	// Check if there are any old pending downloads that should be killed
 	{
-		const sfz::PoolSlot* slots = gpu->downloads.slots();
+		const SfzPoolSlot* slots = gpu->downloads.slots();
 		const GpuPendingDownload* downloads = gpu->downloads.data();
 		const u32 size = gpu->downloads.arraySize();
 		for (u32 i = 0; i < size; i++) {
@@ -2354,7 +2365,7 @@ sfz_extern_c void gpuSwapchainPresent(GpuLib* gpu, bool vsync)
 
 		// Not sure if we actually need the sync below given that we are syncing on submitting
 		// command lists. But sure, why not.
-		
+
 		// Signal that we have finished presenting
 		{
 			if (!CHECK_D3D12(gpu->cmd_queue->Signal(gpu->cmd_queue_fence.Get(), gpu->cmd_queue_fence_value))) {
@@ -2455,7 +2466,7 @@ sfz_extern_c void gpuSwapchainPresent(GpuLib* gpu, bool vsync)
 
 			const bool rt_success = CHECK_D3D12(gpu->device->CreateCommittedResource(
 				&heap_props,
-				D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+				D3D12_HEAP_FLAG_NONE,
 				&desc,
 				D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
 				nullptr,
@@ -2473,10 +2484,10 @@ sfz_extern_c void gpuSwapchainPresent(GpuLib* gpu, bool vsync)
 
 		// Rebuild all swapchain relative textures
 		GpuTexInfo* tex_infos = gpu->textures.data();
-		const sfz::PoolSlot* tex_slots = gpu->textures.slots();
+		const SfzPoolSlot* tex_slots = gpu->textures.slots();
 		const u32 tex_array_size = gpu->textures.arraySize();
 		for (u32 idx = GPU_SWAPCHAIN_TEX_IDX + 1; idx < tex_array_size; idx++) {
-			const sfz::PoolSlot slot = tex_slots[idx];
+			const SfzPoolSlot slot = tex_slots[idx];
 			if (!slot.active()) continue;
 			GpuTexInfo& tex_info = tex_infos[idx];
 			if (!tex_info.desc.swapchain_relative) continue;
@@ -2504,7 +2515,7 @@ sfz_extern_c void gpuSwapchainPresent(GpuLib* gpu, bool vsync)
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		gpu->cmd_list->ResourceBarrier(1, &barrier);
-		
+
 		constexpr f32x4 CLEAR_COLOR = f32x4_splat(0.0f);
 		gpu->cmd_list->ClearRenderTargetView(bbuf.rtv_descriptor, &CLEAR_COLOR.x, 0, nullptr);
 	}

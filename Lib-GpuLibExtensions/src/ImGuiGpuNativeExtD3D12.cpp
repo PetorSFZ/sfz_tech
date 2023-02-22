@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström 2022 (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter Hillerström 2022-2023 (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -31,9 +31,9 @@
 struct ImGuiVertex final {
 	f32x2 pos;
 	f32x2 texcoord;
-	f32x4 color;
+	u32 color;
 };
-static_assert(sizeof(ImGuiVertex) == 32, "ImGuiVertex is padded");
+static_assert(sizeof(ImGuiVertex) == 20, "ImGuiVertex is padded");
 
 // TODO: Remove
 struct ImGuiCommand {
@@ -112,14 +112,7 @@ static void imguiD3D12Run(GpuLib* gpu, void* ext_data_ptr, void* params_in, u32 
 			ImGuiVertex converted_vertex;
 			converted_vertex.pos = f32x2_init(imgui_vertex.pos.x, imgui_vertex.pos.y);
 			converted_vertex.texcoord = f32x2_init(imgui_vertex.uv.x, imgui_vertex.uv.y);
-			converted_vertex.color = [&]() {
-				f32x4 color;
-				color.x = f32(imgui_vertex.col & 0xFFu) * (1.0f / 255.0f);
-				color.y = f32((imgui_vertex.col >> 8u) & 0xFFu)* (1.0f / 255.0f);
-				color.z = f32((imgui_vertex.col >> 16u) & 0xFFu)* (1.0f / 255.0f);
-				color.w = f32((imgui_vertex.col >> 24u) & 0xFFu)* (1.0f / 255.0f);
-				return color;
-			}();
+			converted_vertex.color = imgui_vertex.col;
 
 			state.tmp_vertices.add(converted_vertex);
 		}
@@ -251,7 +244,7 @@ static void imguiD3D12Run(GpuLib* gpu, void* ext_data_ptr, void* params_in, u32 
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 	gpu->cmd_list->RSSetViewports(1, &viewport);
-	
+
 	// Set shader
 	gpu->cmd_list->SetPipelineState(state.imgui_pso.Get());
 	gpu->cmd_list->SetGraphicsRootSignature(state.imgui_root_sig.Get());
@@ -315,7 +308,7 @@ static void imguiD3D12Destroy(GpuLib* gpu, void* ext_data_ptr)
 
 	gpuFree(gpu, state->vertex_buffer);
 	gpuFree(gpu, state->transforms_buffer);
-	
+
 	sfz_delete(gpu->cfg.cpu_allocator, state);
 }
 
@@ -327,8 +320,12 @@ constexpr const char IMGUI_SHADER_SRC[] = R"(
 struct ImGuiVertex {
 	float2 position;
 	float2 texcoord;
-	float4 color;
+	uint color_r : 8;
+	uint color_g : 8;
+	uint color_b : 8;
+	uint color_a : 8;
 };
+static_assert(sizeof(ImGuiVertex) == 20);
 
 struct ImGuiLaunchParams {
 	GpuPtr vertex_buffer;
@@ -363,7 +360,10 @@ VSOutput VSMain(VSInput input)
 
 	VSOutput output;
 	output.texcoord = v.texcoord;
-	output.color = v.color;
+	output.color.r = float(v.color_r) * (1.0f / 255.0f);
+	output.color.g = float(v.color_g) * (1.0f / 255.0f);
+	output.color.b = float(v.color_b) * (1.0f / 255.0f);
+	output.color.a = float(v.color_a) * (1.0f / 255.0f);
 	output.position = mul(proj_matrix, float4(v.position, 0.0f, 1.0f));
 	return output;
 }
@@ -372,14 +372,18 @@ float4 PSMain(PSInput input) : SV_TARGET
 {
 	Texture2D tex = getTex(params.tex_idx);
 	SamplerState tex_sampler = getSampler(GPU_LINEAR, GPU_CLAMP, GPU_CLAMP);
+	float4 res = float4(0.0f, 0.0f, 0.0f, 1.0f);
 	if (params.is_font_tex) {
-		const float font_alpha = tex.Sample(tex_sampler, input.texcoord).r;
-		return float4(input.color.rgb, input.color.a * font_alpha);
+		// Note: The clamped texcoord below is to fix an Intel driver bug.
+		const float font_alpha = tex.Sample(tex_sampler, clamp(input.texcoord, 0.0f, 1.0f)).r;
+		//const float font_alpha = tex.Sample(tex_sampler, input.texcoord).r;
+		res = float4(input.color.rgb, input.color.a * font_alpha);
 	}
 	else {
 		const float3 val = tex.Sample(tex_sampler, input.texcoord).rgb;
-		return float4(val, 1.0);
+		res.rgb = val;
 	}
+	return res;
 }
 )";
 constexpr u32 IMGUI_SHADER_SRC_SIZE = sizeof(IMGUI_SHADER_SRC);
@@ -497,7 +501,7 @@ sfz_extern_c GpuNativeExt imguiGpuNativeExtD3D12Init(GpuLib* gpu)
 			D3D12_SHADER_DESC vs_shader_desc = {};
 			CHECK_D3D12(vs_reflection->GetDesc(&vs_shader_desc));
 			sfz_assert(vs_shader_desc.ConstantBuffers == 1);
-			
+
 			ID3D12ShaderReflectionConstantBuffer* cbuffer_reflection = vs_reflection->GetConstantBufferByIndex(0);
 			D3D12_SHADER_BUFFER_DESC cbuffer = {};
 			CHECK_D3D12(cbuffer_reflection->GetDesc(&cbuffer));

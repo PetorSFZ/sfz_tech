@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) 2020-2023 Peter Hillerström (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -175,7 +175,7 @@ sfz_struct(ZuiInput) {
 
 	// Input
 	ZuiInputAction action;
-	
+
 	// Only for ZUI_INPUT_POINTER_MOVE. Position of the mouse cursor (or finger touching the screen)
 	// in screen pixel dimensions, (0,0) in lower-left corner, pos-y up.
 	f32x2 pointer_pos;
@@ -303,7 +303,7 @@ sfz_static_assert(sizeof(ZuiAttrib) == 32);
 #ifdef __cplusplus
 template<typename T>
 inline ZuiAttrib zuiAttribInit(const T& val)
-{ 
+{
 	ZuiAttrib a = {};
 	a.size = sizeof(T);
 	a.as<T>() = val;

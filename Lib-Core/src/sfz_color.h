@@ -24,7 +24,7 @@
 
 #include <sfz.h>
 
-// HSV
+// HSV (f32)
 // ------------------------------------------------------------------------------------------------
 
 // For the below functions:
@@ -128,5 +128,53 @@ inline f32x3 sfzGetRandomColor(u32 idx, f32 sat, f32 val, f32 start_noise)
 	return sfzHsvToRGB(hsv);
 }
 inline f32x3 sfzGetRandomColorDefaults(u32 idx) { return sfzGetRandomColor(idx, 0.5f, 0.95f, 0.0f); }
+
+// HSV (u8)
+// ------------------------------------------------------------------------------------------------
+
+// Unlike the f32 versions, in this one we are always in range [0, 255] to utilize the u8's to
+// their fullest. I.e.:
+//
+// RGB in range: [0, 255]
+// HSV:
+//    Hue (r): [0, 255]
+//    Saturation (g): [0, 255]
+//    Value (b): [0, 255]
+
+sfz_constexpr_func u8x4 sfzRgbToHSV_u8(u8x4 rgb)
+{
+	const u8 r = rgb.x;
+	const u8 g = rgb.y;
+	const u8 b = rgb.z;
+	u8 hue = 0;
+	u8 sat = 0;
+	u8 val = 0;
+
+	// Calculate value
+	const u8 x_max = u8_max(u8_max(r, g), b);
+	val = x_max;
+	if (val != 0) {
+
+		// Calculate saturation
+		const u8 x_min = u8_min(u8_min(r, g), b);
+		const u8 chroma = x_max - x_min;
+		sat = u8(255 * i32(chroma) / i32(val));
+		if (sat != 0) {
+
+			// Calculate hue
+			if (x_max == r) {
+				hue = 43 * (g - b) / chroma;
+			}
+			else if (x_max == g) {
+				hue = 85 + 43 * (b - r) / chroma;
+			}
+			else {
+				hue = 171 + 43 * (r - g) / chroma;
+			}
+		}
+	}
+
+	return u8x4_init(hue, sat, val, 0);
+}
 
 #endif // SFZ_COLOR_H

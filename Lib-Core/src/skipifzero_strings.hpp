@@ -53,10 +53,11 @@ sfz_constexpr_func u64 sfzHashStringFNV1a(const char* str)
 }
 
 // Alternate version of hashStringFNV1a() which hashes a number of raw bytes (i.e. not a string)
-sfz_constexpr_func u64 sfzHashBytesFNV1a(const u8* bytes, u64 num_bytes)
+sfz_constexpr_func u64 sfzHashBytesFNV1a(const void* bytes_in, u64 num_bytes)
 {
 	constexpr u64 FNV_64_MAGIC_PRIME = u64(0x100000001B3);
-
+	const u8* bytes = (const u8*)bytes_in;
+	
 	// Set initial value to FNV-0 hash of "chongo <Landon Curt Noll> /\../\"
 	u64 tmp = u64(0xCBF29CE484222325);
 
@@ -291,10 +292,10 @@ inline bool sfzStrEndsWith(SfzStrViewConst v, const char* ending)
 
 	return true;
 }
-inline u32 sfzStr32EndsWith(const SfzStr32* s, const char* ending) { return sfzStrEndsWith(sfzStr32ToViewConst(s), ending); }
-inline u32 sfzStr96EndsWith(const SfzStr96* s, const char* ending) { return sfzStrEndsWith(sfzStr96ToViewConst(s), ending); }
-inline u32 sfzStr320EndsWith(const SfzStr320* s, const char* ending) { return sfzStrEndsWith(sfzStr320ToViewConst(s), ending); }
-inline u32 sfzStr2560EndsWith(const SfzStr2560* s, const char* ending) { return sfzStrEndsWith(sfzStr2560ToViewConst(s), ending); }
+inline bool sfzStr32EndsWith(const SfzStr32* s, const char* ending) { return sfzStrEndsWith(sfzStr32ToViewConst(s), ending); }
+inline bool sfzStr96EndsWith(const SfzStr96* s, const char* ending) { return sfzStrEndsWith(sfzStr96ToViewConst(s), ending); }
+inline bool sfzStr320EndsWith(const SfzStr320* s, const char* ending) { return sfzStrEndsWith(sfzStr320ToViewConst(s), ending); }
+inline bool sfzStr2560EndsWith(const SfzStr2560* s, const char* ending) { return sfzStrEndsWith(sfzStr2560ToViewConst(s), ending); }
 
 inline bool sfzStrContains(SfzStrViewConst v, const char* substr)
 {

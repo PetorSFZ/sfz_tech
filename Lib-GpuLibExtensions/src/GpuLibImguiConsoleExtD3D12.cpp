@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström 2022 (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter Hillerström 2022-2023 (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -42,11 +42,11 @@ static void alignedEdit(const char* name, const char* unique, u32 idx, f32 x_off
 
 static void gpuKernelConsole(GpuLib* gpu)
 {
-	const sfz::PoolSlot* kernel_slots = gpu->kernels.slots();
+	const SfzPoolSlot* kernel_slots = gpu->kernels.slots();
 	GpuKernelInfo* kernel_infos = gpu->kernels.data();
 	const u32 max_num_kernels = gpu->kernels.arraySize();
 	for (u32 idx = 0; idx < max_num_kernels; idx++) {
-		const sfz::PoolSlot slot = kernel_slots[idx];
+		const SfzPoolSlot slot = kernel_slots[idx];
 		if (!slot.active()) continue;
 		GpuKernelInfo& kernel_info = kernel_infos[idx];
 		const GpuKernel kernel = GpuKernel{ gpu->kernels.getHandle(idx).bits };
@@ -66,11 +66,11 @@ static void gpuKernelConsole(GpuLib* gpu)
 
 static void gpuTexturesConsole(GpuLib* gpu)
 {
-	const sfz::PoolSlot* tex_slots = gpu->textures.slots();
+	const SfzPoolSlot* tex_slots = gpu->textures.slots();
 	GpuTexInfo* tex_infos = gpu->textures.data();
 	const u32 max_num_textures = gpu->textures.arraySize();
 	for (u32 idx = GPU_SWAPCHAIN_TEX_IDX + 1; idx < max_num_textures; idx++) {
-		const sfz::PoolSlot slot = tex_slots[idx];
+		const SfzPoolSlot slot = tex_slots[idx];
 		if (!slot.active()) continue;
 		GpuTexInfo& tex_info = tex_infos[idx];
 

@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström 2022 (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter Hillerström 2022-2023 (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -158,10 +158,10 @@ sfz_struct(GpuLib) {
 	u8* download_heap_mapped_ptr;
 	u64 download_heap_offset;
 	u64 download_heap_safe_offset;
-	sfz::Pool<GpuPendingDownload> downloads;
+	SfzPool<GpuPendingDownload> downloads;
 
 	// Const buffers
-	sfz::Pool<GpuConstBufferInfo> const_buffers;
+	SfzPool<GpuConstBufferInfo> const_buffers;
 
 	// Texture descriptor heap
 	ComPtr<ID3D12DescriptorHeap> tex_descriptor_heap;
@@ -171,7 +171,7 @@ sfz_struct(GpuLib) {
 	D3D12_GPU_DESCRIPTOR_HANDLE tex_descriptor_heap_start_gpu;
 
 	// Textures
-	sfz::Pool<GpuTexInfo> textures;
+	SfzPool<GpuTexInfo> textures;
 
 	// DXC compiler
 	ComPtr<IDxcUtils> dxc_utils; // Not thread-safe
@@ -179,7 +179,7 @@ sfz_struct(GpuLib) {
 	ComPtr<IDxcIncludeHandler> dxc_include_handler; // Not thread-safe
 
 	// Kernels
-	sfz::Pool<GpuKernelInfo> kernels;
+	SfzPool<GpuKernelInfo> kernels;
 
 	// Swapchain
 	bool allow_tearing;
@@ -197,7 +197,7 @@ sfz_struct(GpuLib) {
 	ComPtr<ID3D12RootSignature> swapchain_copy_root_sig;
 
 	// Native extensions
-	sfz::Pool<GpuNativeExt> native_exts;
+	SfzPool<GpuNativeExt> native_exts;
 
 	// Tmp barriers
 	SfzArray<D3D12_RESOURCE_BARRIER> tmp_barriers;
@@ -234,6 +234,18 @@ inline DXGI_FORMAT formatToD3D12(GpuFormat fmt)
 	case GPU_FORMAT_RG_U8_UNORM: return DXGI_FORMAT_R8G8_UNORM;
 	case GPU_FORMAT_RGBA_U8_UNORM: return DXGI_FORMAT_R8G8B8A8_UNORM;
 
+	case GPU_FORMAT_R_U16_UNORM: return DXGI_FORMAT_R16_UNORM;
+	case GPU_FORMAT_RG_U16_UNORM: return DXGI_FORMAT_R16G16_UNORM;
+	case GPU_FORMAT_RGBA_U16_UNORM: return DXGI_FORMAT_R16G16B16A16_UNORM;
+
+	case GPU_FORMAT_R_U8_SNORM: return DXGI_FORMAT_R8_SNORM;
+	case GPU_FORMAT_RG_U8_SNORM: return DXGI_FORMAT_R8G8_SNORM;
+	case GPU_FORMAT_RGBA_U8_SNORM: return DXGI_FORMAT_R8G8B8A8_SNORM;
+
+	case GPU_FORMAT_R_U16_SNORM: return DXGI_FORMAT_R16_SNORM;
+	case GPU_FORMAT_RG_U16_SNORM: return DXGI_FORMAT_R16G16_SNORM;
+	case GPU_FORMAT_RGBA_U16_SNORM: return DXGI_FORMAT_R16G16B16A16_SNORM;
+
 	case GPU_FORMAT_R_F16: return DXGI_FORMAT_R16_FLOAT;
 	case GPU_FORMAT_RG_F16: return DXGI_FORMAT_R16G16_FLOAT;
 	case GPU_FORMAT_RGBA_F16: return DXGI_FORMAT_R16G16B16A16_FLOAT;
@@ -254,6 +266,18 @@ inline u32 formatToPixelSize(GpuFormat fmt)
 	case GPU_FORMAT_R_U8_UNORM: return 1 * sizeof(u8);
 	case GPU_FORMAT_RG_U8_UNORM: return 2 * sizeof(u8);
 	case GPU_FORMAT_RGBA_U8_UNORM: return 4 * sizeof(u8);
+
+	case GPU_FORMAT_R_U16_UNORM: return 1 * sizeof(u16);
+	case GPU_FORMAT_RG_U16_UNORM: return 2 * sizeof(u16);
+	case GPU_FORMAT_RGBA_U16_UNORM: return 4 * sizeof(u16);
+
+	case GPU_FORMAT_R_U8_SNORM: return 1 * sizeof(u8);
+	case GPU_FORMAT_RG_U8_SNORM: return 2 * sizeof(u8);
+	case GPU_FORMAT_RGBA_U8_SNORM: return 4 * sizeof(u8);
+
+	case GPU_FORMAT_R_U16_SNORM: return 1 * sizeof(u16);
+	case GPU_FORMAT_RG_U16_SNORM: return 2 * sizeof(u16);
+	case GPU_FORMAT_RGBA_U16_SNORM: return 4 * sizeof(u16);
 
 	case GPU_FORMAT_R_F16: return 1 * sizeof(u16);
 	case GPU_FORMAT_RG_F16: return 2 * sizeof(u16);
@@ -660,7 +684,7 @@ inline ComPtr<ID3D12RootSignature> gpuCreateDefaultRootSignature(
 	desc_ranges[1].RegisterSpace = 1;
 	desc_ranges[1].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE | D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE;
 	desc_ranges[1].OffsetInDescriptorsFromTableStart = gpu->cfg.max_num_textures * GPU_MAX_NUM_MIPS;
-	
+
 	root_params[GPU_ROOT_PARAM_TEX_HEAP_IDX].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	root_params[GPU_ROOT_PARAM_TEX_HEAP_IDX].DescriptorTable.NumDescriptorRanges = 2;
 	root_params[GPU_ROOT_PARAM_TEX_HEAP_IDX].DescriptorTable.pDescriptorRanges = desc_ranges;

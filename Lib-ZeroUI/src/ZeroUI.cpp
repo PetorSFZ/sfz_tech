@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) 2020-2023 Peter Hillerström (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -49,7 +49,7 @@ sfz_extern_c ZuiCtx* zuiCtxInit(ZuiCfg* cfg, SfzAllocator* allocator)
 	*zui = {};
 
 	zui->heap_allocator = allocator;
-	
+
 	// Initialize draw context
 	const bool draw_success = zuiInternalDrawCtxInit(&zui->draw_ctx, cfg, zui->heap_allocator);
 	if (!draw_success) {
@@ -120,7 +120,7 @@ sfz_extern_c void zuiInputBegin(ZuiCtx* zui, const ZuiInput* input)
 	if (sfz::eqf(input->dims, f32x2_splat(0.0f))) {
 		zui->input.dims = f32x2_from_i32(dims_on_fb);
 	}
-	
+
 	// Calculate transform
 	const f32x3 fb_to_clip_scale = f32x3_init2(2.0f / f32x2_from_i32(input->fb_dims), 1.0f);
 	const f32x3 fb_to_clip_transl = f32x3_init(-1.0f, -1.0f, 0.0f);
@@ -324,7 +324,7 @@ sfz_extern_c bool zuiInputEnd(ZuiCtx* zui)
 			}
 		}
 		break;
-	
+
 	case ZUI_INPUT_POINTER_MOVE:
 		zuiInputPointerMoveLogic(zui, root);
 		break;
@@ -357,6 +357,9 @@ sfz_extern_c bool zuiInputEnd(ZuiCtx* zui)
 		break;
 
 	case ZUI_INPUT_NONE:
+		// If no input was sent in, then of course it was used.
+		input_used = true;
+		break;
 	default:
 		// Do nothing
 		break;
@@ -663,7 +666,7 @@ sfz_extern_c void zuiBaseBegin(ZuiCtx* zui, ZuiID id)
 {
 	ZuiWidget* w = zuiCtxCreateWidgetParent<ZuiBaseConData>(zui, id, ZUI_BASE_ID);
 	ZuiBaseConData* data = w->data<ZuiBaseConData>();
-	
+
 	// Set initial next widget dimensions/position to cover entire container
 	data->next_dims = w->base.box.dims();
 	data->next_pos = data->next_dims * 0.5f;

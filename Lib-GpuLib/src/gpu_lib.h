@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström 2022 (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter Hillerström 2022-2023 (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -28,7 +28,7 @@
 // This constant defines the number of command lists that can be in-flight at the same time. It's
 // important for synchronization, if you are downloading data from the GPU every frame you should
 // typically have a lag of this many frames before you get the data.
-sfz_constant u32 GPU_NUM_CONCURRENT_SUBMITS = 3;
+sfz_constant u32 GPU_NUM_CONCURRENT_SUBMITS = 2;
 
 sfz_constant u32 GPU_HEAP_SYSTEM_RESERVED_SIZE = 8 * 1024 * 1024;
 sfz_constant u32 GPU_HEAP_MIN_SIZE = GPU_HEAP_SYSTEM_RESERVED_SIZE;
@@ -118,7 +118,7 @@ sfz_extern_c void gpuFree(GpuLib* gpu, GpuPtr ptr);
 // big shared constant buffer between all your kernels. This is technically doable using the
 // normal pointer API, but for these constants it's reassuring to know you have the fastest
 // possible path the underlying API exposes.
-// 
+//
 // You can bind a single constant buffer to each kernel dispatch. You can create a very limited
 // number (GPU_MAX_NUM_CONST_BUFFERS) of constant buffers in total (ideally, you are supposed to
 // have a single one for all your kernels!). You can only write to constant buffers using
@@ -164,6 +164,18 @@ typedef enum {
 	GPU_FORMAT_R_U8_UNORM, // Normalized between [0, 1]
 	GPU_FORMAT_RG_U8_UNORM, // Normalized between [0, 1]
 	GPU_FORMAT_RGBA_U8_UNORM, // Normalized between [0, 1]
+
+	GPU_FORMAT_R_U16_UNORM, // Normalized between [0, 1]
+	GPU_FORMAT_RG_U16_UNORM, // Normalized between [0, 1]
+	GPU_FORMAT_RGBA_U16_UNORM, // Normalized between [0, 1]
+
+	GPU_FORMAT_R_U8_SNORM, // Normalized between [-1, 1]
+	GPU_FORMAT_RG_U8_SNORM, // Normalized between [-1, 1]
+	GPU_FORMAT_RGBA_U8_SNORM, // Normalized between [-1, 1]
+
+	GPU_FORMAT_R_U16_SNORM, // Normalized between [-1, 1]
+	GPU_FORMAT_RG_U16_SNORM, // Normalized between [-1, 1]
+	GPU_FORMAT_RGBA_U16_SNORM, // Normalized between [-1, 1]
 
 	GPU_FORMAT_R_F16,
 	GPU_FORMAT_RG_F16,

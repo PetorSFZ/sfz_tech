@@ -1,4 +1,4 @@
-// Copyright (c) Peter Hillerström 2022 (skipifzero.com, peter@hstroem.se)
+// Copyright (c) Peter Hillerström 2022-2023 (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -230,7 +230,7 @@ static void zerouiD3D12Destroy(GpuLib* gpu, void* ext_data_ptr)
 
 	gpuFree(gpu, state->vertex_buffer);
 	gpuFree(gpu, state->transforms_buffer);
-	
+
 	sfz_delete(gpu->cfg.cpu_allocator, state);
 }
 
@@ -428,7 +428,7 @@ sfz_extern_c GpuNativeExt zerouiGpuNativeExtD3D12Init(GpuLib* gpu)
 			D3D12_SHADER_DESC vs_shader_desc = {};
 			CHECK_D3D12(vs_reflection->GetDesc(&vs_shader_desc));
 			sfz_assert(vs_shader_desc.ConstantBuffers == 1);
-			
+
 			ID3D12ShaderReflectionConstantBuffer* cbuffer_reflection = vs_reflection->GetConstantBufferByIndex(0);
 			D3D12_SHADER_BUFFER_DESC cbuffer = {};
 			CHECK_D3D12(cbuffer_reflection->GetDesc(&cbuffer));

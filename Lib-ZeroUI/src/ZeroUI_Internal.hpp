@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 Peter Hillerström (skipifzero.com, peter@hstroem.se)
+// Copyright (c) 2020-2023 Peter Hillerström (skipifzero.com, peter@hstroem.se)
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -77,7 +77,7 @@ sfz_struct(ZuiDrawCtx) {
 	SfzArray<u16> indices;
 	SfzArray<SfzMat44> transforms;
 	SfzArray<ZuiRenderCmd> render_cmds;
-	
+
 	// Clip stack
 	SfzArray<ZuiBox> clip_stack;
 
@@ -310,7 +310,7 @@ ZuiWidget* zuiCtxCreateWidget(ZuiCtx* zui, ZuiID id, ZuiID widget_type_id, bool*
 	// Check if it already exists in prev tree
 	ZuiWidgetTree& prev_tree = zui->prevTree();
 	ZuiWidget* prev_widget = zuiFindWidgetFromID(&prev_tree.root, id);
-	
+
 	// Get parent and type
 	ZuiWidgetTree& tree = zui->currTree();
 	ZuiWidget& parent = zuiWidgetTreeGetCurrentParent(&tree);
@@ -345,7 +345,7 @@ ZuiWidget* zuiCtxCreateWidget(ZuiCtx* zui, ZuiID id, ZuiID widget_type_id, bool*
 	else {
 		widget.base.box = parent.base.box;
 	}
-	
+
 	widget.draw_func = type->getCurrentDrawFunc();
 
 	// Update timers

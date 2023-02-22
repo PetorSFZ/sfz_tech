@@ -45,6 +45,31 @@
 	__VA_OPT__(SFZ_FOR_EACH_AGAIN SFZ_PARENS (macro, __VA_ARGS__))
 #define SFZ_FOR_EACH_AGAIN() SFZ_FOR_EACH_HELPER
 
+// visit struct type traits
+// ------------------------------------------------------------------------------------------------
+
+#ifdef __cplusplus
+
+// Function to check if two types are the same. This is useful if using a function as visitor to
+// sfzForEachMember() with constexpr if. Example:
+//
+// template<typename T>
+// void visitFunc(const char* name, T& member)
+// {
+//     if constexpr (sfzIsSameType<T, int>()) {
+//         // Path if member type is int
+//     }
+//     if constexpr (sfzIsSameType<T, float>()) {
+//         // Path if member type is float
+//     }
+// }
+
+template<typename T1, typename T2> struct SfzIsSameType { static constexpr bool value = false; };
+template<typename T> struct SfzIsSameType<T, T> { static constexpr bool value = true; };
+template<typename T1, typename T2> constexpr bool sfzIsSameType() { return SfzIsSameType<T1, T2>::value; }
+
+#endif // __cplusplus
+
 // Visit struct
 // ------------------------------------------------------------------------------------------------
 
@@ -71,7 +96,7 @@
 //
 // PrintVisitor v;
 // Foo foo = { 2, 3.0f };
-// sfzVisitStruct(v, foo);
+// sfzForEachMember(v, foo);
 // static_assert(sfzIsVisitable<Foo>(), "Can use this to check if a type is visitable");
 
 #ifdef __cplusplus
@@ -80,12 +105,22 @@
 
 #define SFZ_VISITABLE(T, ...) \
 template<typename V> \
-void sfzVisitStruct(T& type, V& v) \
+void sfzForEachMember(T& type, V& v) \
 { \
 	SFZ_FOR_EACH(SFZ_VISIT_MEMBER, __VA_ARGS__) \
 } \
 template<typename V> \
-void sfzVisitStruct(const T& type, V& v) \
+void sfzForEachMember(T& type, V&& v) \
+{ \
+	SFZ_FOR_EACH(SFZ_VISIT_MEMBER, __VA_ARGS__) \
+} \
+template<typename V> \
+void sfzForEachMember(const T& type, V& v) \
+{ \
+	SFZ_FOR_EACH(SFZ_VISIT_MEMBER, __VA_ARGS__) \
+} \
+template<typename V> \
+void sfzForEachMember(const T& type, V&& v) \
 { \
 	SFZ_FOR_EACH(SFZ_VISIT_MEMBER, __VA_ARGS__) \
 } \
